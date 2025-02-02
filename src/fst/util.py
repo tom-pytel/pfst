@@ -6,7 +6,7 @@ __all__ = ['aststr', 'astfield', 'get_node_field']
 
 
 class aststr(str):
-    """Easy mapping between char and encoded byte indices (including 1 past last valid unit). Only positive indexes."""
+    """Easy mapping between char and encoded byte index (including 1 past last valid unit). Only positive indices."""
 
     _c2b: array  # character to byte indices
     _b2c: array  # byte to character indices

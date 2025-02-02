@@ -14,11 +14,14 @@ __all__ = list(__all_other__ | {
 
 
 class FST:
+    """AST formatting information and easy manipulation."""
+
     ast:    AST
     parent: Optional['FST']
     pfield: astfield | None
     root:   'FST'
-    _lines: list[aststr] | None
+    _lines: list[aststr]  # MAY NOT EXIST!
+    _pos:   tuple[int, int, int, int] | None  # MAY NOT EXIST!
 
     @property
     def is_root(self) -> bool:
@@ -33,10 +36,45 @@ class FST:
 
     @property
     def str(self) -> str:
-        if self.is_root:
-            return '\n'.join(self._lines)
+        return '\n'.join(self.lines)
 
-        raise NotImplementedError  # TODO: snip and return that src
+    @property
+    def pos(self) -> tuple[int, int, int, int] | None:
+        try:
+            return self._pos
+        except AttributeError:
+            pass
+
+        try:
+            anode   = self.ast
+            ln      = anode.lineno - 1
+            col     = self.root._lines[ln].b2c(anode.col_offset)
+            end_ln  = anode.end_lineno - 1
+            end_col = self.root._lines[end_ln].b2c(anode.end_col_offset)
+            pos     = (ln, col, end_ln, end_col)
+
+        except AttributeError:
+            pos = None
+
+        self._pos = pos
+
+        return pos
+
+    @property
+    def ln(self) -> int:
+        return (p := self.pos) and p[0]
+
+    @property
+    def col(self) -> int:
+        return (p := self.pos) and p[1]
+
+    @property
+    def end_ln(self) -> int:
+        return (p := self.pos) and p[2]
+
+    @property
+    def end_col(self) -> int:
+        return (p := self.pos) and p[3]
 
     def _make_ftree(self):
         "Create tree of FST nodes for each AST node from root. Call only on root."
@@ -54,8 +92,17 @@ class FST:
                 elif isinstance(child, ast.AST):
                     stack.append(FST(child, fnode, astfield(field)))
 
-    def __repr__(self):
-        return ('<FST root ' if self.is_root else '<FST ') + repr(self.ast)[1:]
+    def _repr_tail(self) -> str:
+        tail = ' ROOT' if self.is_root else ''
+        pos  = self.pos
+
+        return tail + f'; {pos[0]},{pos[1]} -> {pos[2]},{pos[3]}' if pos else tail
+
+    def __repr__(self) -> str:
+        tail = self._repr_tail()
+        rast = repr(self.ast)
+
+        return f'<fst{rast[4 : -1]}{tail}>' if rast.startswith('<') else f'fst.{rast[:-1]}{tail})'
 
     def __init__(self, anode: AST, parent: Optional['FST'] = None, pfield: astfield | None = None, *,
                  lines: list[str] | None = None):
@@ -65,8 +112,7 @@ class FST:
         anode.f     = self
 
         if parent is not None:
-            self.root   = parent.root
-            self._lines = None
+            self.root = parent.root
 
         else:
             self.root   = self
@@ -74,8 +120,8 @@ class FST:
 
             self._make_ftree()
 
-    @classmethod
-    def fromast(cls, anode: AST) -> 'FST':
+    @staticmethod
+    def from_ast(anode: AST) -> 'FST':
         raise NotImplementedError  # TODO: fill in location info, unparse and create FST
 
     @staticmethod
@@ -90,6 +136,26 @@ class FST:
     def unparse(ast_obj) -> str:
         return ast_obj.f.str
 
+    def dump(self, indent: str = '', full: bool = False, prefix: str = ''):
+        print(f'{indent}{prefix}<{self.ast.__class__.__qualname__}{self._repr_tail()}>')
+
+        for field in self.ast._fields:
+            child = getattr(self.ast, field)
+
+            if full or (child != []):
+                print(f'  {indent}.{field}:')
+
+            if isinstance(child, list):
+                for i, anode in enumerate(child):
+                    if isinstance(anode, ast.AST):
+                        anode.f.dump(indent + '    ', full, f'{i}: ')
+                    else:
+                        print(f'    {indent}{i}: {anode!r}')
+
+            elif isinstance(child, ast.AST):
+                child.f.dump(indent + '    ', full)
+            else:
+                print(f'    {indent}{child!r}')
 
 
 
@@ -98,9 +164,14 @@ class FST:
 
 
 
-
-
-
+    # mutate()
+    # ^^^^^^^^
+    # copy()
+    # cut()
+    # remove()
+    # append()
+    # insert()
+    # replace()
 
 
 
