@@ -3,7 +3,7 @@ __all_other__ = set(globals())
 from ast import *
 __all_other__ = set(globals()) - __all_other__
 
-import ast
+import ast as ast_
 from typing import Optional
 
 from .util import *
@@ -45,16 +45,37 @@ class FST:
         except AttributeError:
             pass
 
+        anode = self.ast
+
         try:
-            anode   = self.ast
-            ln      = anode.lineno - 1
-            col     = self.root._lines[ln].b2c(anode.col_offset)
-            end_ln  = anode.end_lineno - 1
-            end_col = self.root._lines[end_ln].b2c(anode.end_col_offset)
+            col     = self.root._lines[(ln := anode.lineno - 1)].b2c(anode.col_offset)
+            end_col = self.root._lines[(end_ln := anode.end_lineno - 1)].b2c(anode.end_col_offset)
             pos     = (ln, col, end_ln, end_col)
 
         except AttributeError:
-            pos = None
+            max_ln = max_col = -(min_ln := (min_col := (inf := float('inf'))))
+
+            for child in iter_child_nodes(anode):
+                if child_pos := child.f.pos:
+                    ln, col, end_ln, end_col = child_pos
+
+                    if ln < min_ln:
+                        min_ln  = ln
+                        min_col = col
+
+                    elif ln == min_ln:
+                        if col < min_col:
+                            min_col = col
+
+                    if end_ln > max_ln:
+                        max_ln  = end_ln
+                        max_col = end_col
+
+                    elif end_ln == max_ln:
+                        if end_col > max_col:
+                            max_col = end_col
+
+            pos = None if min_ln == inf else (min_ln, min_col, max_ln, max_col)
 
         self._pos = pos
 
@@ -85,18 +106,20 @@ class FST:
             fnode = stack.pop()
             anode = fnode.ast
 
-            for field in anode._fields:
-                if isinstance(child := getattr(anode, field, None), list):
-                    stack.extend(FST(anode, fnode, astfield(field, idx))
-                                 for idx, anode in enumerate(child) if isinstance(anode, ast.AST))
-                elif isinstance(child, ast.AST):
+            for field, child in iter_fields(anode):
+                if isinstance(child, AST):
                     stack.append(FST(child, fnode, astfield(field)))
+                elif isinstance(child, list):
+                    stack.extend(FST(anode, fnode, astfield(field, idx))
+                                 for idx, anode in enumerate(child) if isinstance(anode, AST))
 
     def _repr_tail(self) -> str:
         tail = ' ROOT' if self.is_root else ''
         pos  = self.pos
 
-        return tail + f'; {pos[0]},{pos[1]} -> {pos[2]},{pos[3]}' if pos else tail
+        # return tail + f' # {pos[0]},{pos[1]} -> {pos[2]},{pos[3]}' if pos else tail
+        # return tail + f' ({pos[0]},{pos[1]} -> {pos[2]},{pos[3]})' if pos else tail
+        return tail + f' {pos[0]},{pos[1]} -> {pos[2]},{pos[3]}' if pos else tail
 
     def __repr__(self) -> str:
         tail = self._repr_tail()
@@ -121,12 +144,30 @@ class FST:
             self._make_ftree()
 
     @staticmethod
-    def from_ast(anode: AST) -> 'FST':
-        raise NotImplementedError  # TODO: fill in location info, unparse and create FST
+    def from_ast(ast: AST, *, calc_pos: bool = True) -> 'FST':
+        """Add FST to existing AST.
+
+        Args:
+            ast: The root AST node.
+            calc_pos: Get actual node positions by unparsing then parsing again. Use when you are not certain node
+                positions are correct or even present. Default True.
+        """
+
+        src   = ast_.unparse(ast)
+        lines = src.split('\n')
+
+        if calc_pos:
+            ast = ast_.parse(src)
+
+
+            # TODO: 'inplace' or 'copy'?
+
+
+        return FST(ast, lines=lines)
 
     @staticmethod
     def parse(source, filename='<unknown>', mode='exec', *args, type_comments=False, feature_version=None, **kwargs) -> 'FST':
-        anode = ast.parse(source, filename, mode, *args, type_comments=type_comments, feature_version=feature_version, **kwargs)
+        anode = ast_.parse(source, filename, mode, *args, type_comments=type_comments, feature_version=feature_version, **kwargs)
 
         FST(anode, lines=source.split('\n'))
 
@@ -137,25 +178,25 @@ class FST:
         return ast_obj.f.str
 
     def dump(self, indent: str = '', full: bool = False, prefix: str = ''):
-        print(f'{indent}{prefix}<{self.ast.__class__.__qualname__}{self._repr_tail()}>')
+        tail = self._repr_tail()
 
-        for field in self.ast._fields:
-            child = getattr(self.ast, field)
+        print(f'{indent}{prefix}{self.ast.__class__.__qualname__}{" .." * bool(tail)}{tail}')
 
+        for field, child in iter_fields(self.ast):
             if full or (child != []):
-                print(f'  {indent}.{field}:')
+                print(f'  {indent}.{field}')
 
-            if isinstance(child, list):
+            if isinstance(child, AST):
+                child.f.dump(indent + '    ', full)
+            elif not isinstance(child, list):
+                print(f'    {indent}{child!r}')
+
+            else:
                 for i, anode in enumerate(child):
-                    if isinstance(anode, ast.AST):
+                    if isinstance(anode, AST):
                         anode.f.dump(indent + '    ', full, f'{i}: ')
                     else:
                         print(f'    {indent}{i}: {anode!r}')
-
-            elif isinstance(child, ast.AST):
-                child.f.dump(indent + '    ', full)
-            else:
-                print(f'    {indent}{child!r}')
 
 
 

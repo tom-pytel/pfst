@@ -1,6 +1,6 @@
 from array import array
 from ast import *
-from typing import NamedTuple
+from typing import Iterator, NamedTuple
 
 __all__ = ['aststr', 'astfield', 'get_node_field']
 
