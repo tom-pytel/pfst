@@ -187,26 +187,26 @@ class FST:
         return FST(ast, lines=lines)
 
     @staticmethod
-    def from_ast(ast: AST, *, type_comments: bool | None = False, calc_pos: bool | Literal['copy'] = True) -> 'FST':
+    def from_ast(ast: AST, *, type_comments: bool | None = False, calc_loc: bool | Literal['copy'] = True) -> 'FST':
         """Add FST to existing AST, optionally copying positions from reparsed AST (default) or whole AST for new FST.
 
         Args:
             ast: The root AST node.
-            type_comments: Whether for copy when calc_pos != False, should parse and compare with type comments or not.
+            type_comments: Whether for copy when calc_loc != False, should parse and compare with type comments or not.
                 If set to None then this will be determined from input ast.
-            calc_pos: Get actual node positions by unparsing then parsing again. Use when you are not certain node
+            calc_loc: Get actual node positions by unparsing then parsing again. Use when you are not certain node
                 positions are correct or even present. Updates original ast unless set to "copy", in which a copy AST
                 is used. Set to False when you know positions are correct and want to use given AST. Default True.
 
         WARNING!
-            Do not set calc_pos to False unless you parsed the ast from a previous output of ast.unparse(), otherwise
+            Do not set calc_loc to False unless you parsed the ast from a previous output of ast.unparse(), otherwise
             there will almost certaionly be problems!
         """
 
         src   = ast_.unparse(ast)
         lines = src.split('\n')
 
-        if calc_pos:
+        if calc_loc:
             if type_comments is None:
                 type_comments = has_type_comments(ast)
 
@@ -219,7 +219,7 @@ class FST:
                 if astp.__class__ is not ast.__class__:
                     raise RuntimeError('could not reproduce ast')
 
-            if calc_pos == 'copy':
+            if calc_loc == 'copy':
                 if not compare(astp, ast, type_comments=type_comments):
                     raise RuntimeError('could not reparse ast identically')
 

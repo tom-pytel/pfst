@@ -5,7 +5,7 @@ from fst.util import *
 
 
 class TestUtil(unittest.TestCase):
-    def test_aststr(self):
+    def test_bistr(self):
         s = bistr('\x7f' * 127)
 
         self.assertEqual(s.c2b(0), 0)

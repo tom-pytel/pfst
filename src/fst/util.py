@@ -125,7 +125,7 @@ def guess_parse_mode(ast: AST) -> Literal['exec'] | Literal['eval'] | Literal['s
 
 class Walk2Fail(Exception): pass
 
-def walk2(ast1: AST, ast2: AST, cbnonast: Callable[[str, Any, Any], bool] | None = None) -> Iterator[tuple[AST, AST]]:
+def walk2(ast1: AST, ast2: AST, cb_primitive: Callable[[str, Any, Any], bool] | None = None) -> Iterator[tuple[AST, AST]]:
     """Walk two asts simultaneously ensuring they have the same structure."""
 
     if ast1.__class__ is not ast2.__class__:
@@ -165,7 +165,7 @@ def walk2(ast1: AST, ast2: AST, cbnonast: Callable[[str, Any, Any], bool] | None
                     stack1.extend(n for n in child1 if isinstance(n, AST))
                     stack2.extend(n for n in child2 if isinstance(n, AST))
 
-            elif cbnonast and cbnonast(name1, child1, child2) is False:
+            elif cb_primitive and cb_primitive(name1, child1, child2) is False:
                 raise Walk2Fail
 
     if stack1 or stack2:
@@ -176,12 +176,12 @@ def walk2(ast1: AST, ast2: AST, cbnonast: Callable[[str, Any, Any], bool] | None
 
 def compare(ast1: AST, ast2: AST, *, locations: bool = False, type_comments: bool = False) -> bool:
     if type_comments:
-        cbnonast = lambda f, n1, n2: n1.__class__ is n2.__class__ and n1 == n2
+        cb_primitive = lambda f, n1, n2: n1.__class__ is n2.__class__ and n1 == n2
     else:
-        cbnonast = lambda f, n1, n2: f == 'type_comment' or (n1.__class__ is n2.__class__ and n1 == n2)
+        cb_primitive = lambda f, n1, n2: f == 'type_comment' or (n1.__class__ is n2.__class__ and n1 == n2)
 
     try:
-        for n1, n2 in walk2(ast1, ast2, cbnonast):
+        for n1, n2 in walk2(ast1, ast2, cb_primitive):
             if locations:
                 if (getattr(n1, 'lineno', None) != getattr(n2, 'lineno', None) or
                     getattr(n1, 'col_offset', None) != getattr(n2, 'col_offset', None) or
@@ -198,14 +198,14 @@ def compare(ast1: AST, ast2: AST, *, locations: bool = False, type_comments: boo
 
 def copy_attributes(src: AST, dst: AST, attrs: Sequence[str], *, compare: bool = False, type_comments: bool = False) -> bool:
     if type_comments:
-        cbnonast = lambda f, n1, n2: n1.__class__ is n2.__class__ and n1 == n2
+        cb_primitive = lambda f, n1, n2: n1.__class__ is n2.__class__ and n1 == n2
     else:
-        cbnonast = lambda f, n1, n2: f == 'type_comment' or (n1.__class__ is n2.__class__ and n1 == n2)
+        cb_primitive = lambda f, n1, n2: f == 'type_comment' or (n1.__class__ is n2.__class__ and n1 == n2)
 
     try:
-        for ns, nd in walk2(src, dst, cbnonast):
+        for ns, nd in walk2(src, dst, cb_primitive):
             for attr in attrs:
-                if (val := getattr(ns, attr, cbnonast)) is not cbnonast:  # cbnonast is sentinel
+                if (val := getattr(ns, attr, cb_primitive)) is not cb_primitive:  # cb_primitive is sentinel
                     setattr(nd, attr, val)
                 elif hasattr(nd, attr):
                     delattr(nd, attr)
