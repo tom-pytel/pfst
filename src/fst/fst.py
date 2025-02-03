@@ -60,25 +60,33 @@ class FST:
         except AttributeError:
             max_ln = max_col = -(min_ln := (min_col := (inf := float('inf'))))
 
-            for child in iter_child_nodes(ast):
-                if child_pos := child.f.pos:
-                    ln, col, end_ln, end_col = child_pos
+            for _, child in iter_fields(ast):
+                if isinstance(child, AST):
+                    child = (child,)
+                elif not isinstance(child, list):
+                    continue
+                elif len(child) > 2:  # we only look at first and last elements of `body` and other space-ordered lists
+                    child = (child[0], child[-1])
 
-                    if ln < min_ln:
-                        min_ln  = ln
-                        min_col = col
+                for child in child:
+                    if child_pos := child.f.pos:
+                        ln, col, end_ln, end_col = child_pos
 
-                    elif ln == min_ln:
-                        if col < min_col:
+                        if ln < min_ln:
+                            min_ln  = ln
                             min_col = col
 
-                    if end_ln > max_ln:
-                        max_ln  = end_ln
-                        max_col = end_col
+                        elif ln == min_ln:
+                            if col < min_col:
+                                min_col = col
 
-                    elif end_ln == max_ln:
-                        if end_col > max_col:
+                        if end_ln > max_ln:
+                            max_ln  = end_ln
                             max_col = end_col
+
+                        elif end_ln == max_ln:
+                            if end_col > max_col:
+                                max_col = end_col
 
             pos = None if min_ln == inf else (min_ln, min_col, max_ln, max_col)
 
@@ -175,21 +183,27 @@ class FST:
         return FST(ast, lines=lines)
 
     @staticmethod
-    def from_ast(ast: AST, *, calc_pos: bool | Literal['copy'] = True) -> 'FST':
-        """Add FST to existing AST.
+    def compare(ast: AST, *, type_comments: bool | None = False, calc_pos: bool | Literal['copy'] = True) -> 'FST':
+        """Add FST to existing AST, optionally copying positions from reparsed AST (default) or whole AST for new FST.
 
         Args:
             ast: The root AST node.
+            type_comments: Whether for copy when calc_pos != False, should parse and compare with type comments or not.
+                If set to None then this will be determined from input ast.
             calc_pos: Get actual node positions by unparsing then parsing again. Use when you are not certain node
-                positions are correct or even present. Updates original ast unless set to "copy". Default True.
+                positions are correct or even present. Updates original ast unless set to "copy", in which a copy AST
+                is used. Set to False when you know positions are correct and want to use given AST. Default True.
         """
 
         src   = ast_.unparse(ast)
         lines = src.split('\n')
 
         if calc_pos:
+            if type_comments is None:
+                type_comments = has_type_comments(ast)
+
             mode = guess_parse_mode(ast)
-            astp = ast_.parse(src, mode=mode, type_comments=has_type_comments(ast))
+            astp = ast_.parse(src, mode=mode, type_comments=type_comments)
 
             if astp.__class__ is not ast.__class__:
                 astp = astp.body if isinstance(astp, Expression) else astp.body[0]
@@ -197,13 +211,16 @@ class FST:
                 if astp.__class__ is not ast.__class__:
                     raise RuntimeError('could not reproduce ast')
 
-            if not compare_asts(astp, ast, type_comments=True):
-                raise RuntimeError('could not reparse ast identically')
-
             if calc_pos == 'copy':
+                if not compare(astp, ast, type_comments=type_comments):
+                    raise RuntimeError('could not reparse ast identically')
+
                 ast = astp
+
             else:
-                copy_ast_attributes(astp, ast)
+                if not copy_attributes(astp, ast, ('lineno', 'col_offset', 'end_lineno', 'end_col_offset'),
+                                       compare=True, type_comments=type_comments):
+                    raise RuntimeError('could not reparse ast identically')
 
         return FST(ast, lines=lines)
 
@@ -231,7 +248,7 @@ class FST:
                 print(f'    {indent}{child!r}')
 
     def touch(self):  # -> Self:
-        """AST node was modified, clear out any cached info."""
+        """AST node was modified, clear out any cached info (except lines)."""
 
         try:
             del self._pos
