@@ -125,7 +125,7 @@ def guess_parse_mode(ast: AST) -> Literal['exec'] | Literal['eval'] | Literal['s
 
 class Walk2Fail(Exception): pass
 
-def walk2(ast1: AST, ast2: AST, cb_primitive: Callable[[str, Any, Any], bool] | None = None) -> Iterator[tuple[AST, AST]]:
+def walk2(ast1: AST, ast2: AST, cb_primitive: Callable[[Any, Any, str, int], bool] | None = None) -> Iterator[tuple[AST, AST]]:
     """Walk two asts simultaneously ensuring they have the same structure."""
 
     if ast1.__class__ is not ast2.__class__:
@@ -162,10 +162,18 @@ def walk2(ast1: AST, ast2: AST, cb_primitive: Callable[[str, Any, Any], bool] | 
                     raise Walk2Fail
 
                 else:
-                    stack1.extend(n for n in child1 if isinstance(n, AST))
-                    stack2.extend(n for n in child2 if isinstance(n, AST))
+                    for i, (c1, c2) in enumerate(zip(child1, child2)):
+                        if (is_ast := isinstance(c1, AST)) ^ isinstance(c2, AST):
+                            raise Walk2Fail
 
-            elif cb_primitive and cb_primitive(name1, child1, child2) is False:
+                        if is_ast:
+                            stack1.append(c1)
+                            stack2.append(c2)
+
+                        elif cb_primitive and cb_primitive(c1, c2, name1, i) is False:
+                            raise Walk2Fail
+
+            elif cb_primitive and cb_primitive(child1, child2, name1, None) is False:
                 raise Walk2Fail
 
     if stack1 or stack2:
@@ -174,11 +182,13 @@ def walk2(ast1: AST, ast2: AST, cb_primitive: Callable[[str, Any, Any], bool] | 
     return True
 
 
+_compare_primitive_type_comments_func = (
+    (lambda p1, p2, n, i: n == 'type_comment' or (p1.__class__ is p2.__class__ and p1 == p2)),
+    (lambda p1, p2, n, i: p1.__class__ is p2.__class__ and p1 == p2),
+)
+
 def compare(ast1: AST, ast2: AST, *, locations: bool = False, type_comments: bool = False) -> bool:
-    if type_comments:
-        cb_primitive = lambda f, n1, n2: n1.__class__ is n2.__class__ and n1 == n2
-    else:
-        cb_primitive = lambda f, n1, n2: f == 'type_comment' or (n1.__class__ is n2.__class__ and n1 == n2)
+    cb_primitive = _compare_primitive_type_comments_func[bool(type_comments)]
 
     try:
         for n1, n2 in walk2(ast1, ast2, cb_primitive):
@@ -197,10 +207,7 @@ def compare(ast1: AST, ast2: AST, *, locations: bool = False, type_comments: boo
 
 
 def copy_attributes(src: AST, dst: AST, attrs: Sequence[str], *, compare: bool = False, type_comments: bool = False) -> bool:
-    if type_comments:
-        cb_primitive = lambda f, n1, n2: n1.__class__ is n2.__class__ and n1 == n2
-    else:
-        cb_primitive = lambda f, n1, n2: f == 'type_comment' or (n1.__class__ is n2.__class__ and n1 == n2)
+    cb_primitive = _compare_primitive_type_comments_func[bool(type_comments)]
 
     try:
         for ns, nd in walk2(src, dst, cb_primitive):

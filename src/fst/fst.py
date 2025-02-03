@@ -17,11 +17,11 @@ class FST:
     """AST formatting information and easy manipulation."""
 
     ast:    AST
-    parent: Optional['FST']
-    pfield: astfield | None
-    root:   'FST'
-    _lines: list[bistr]  # MAY NOT EXIST!
+    parent: Optional['FST']                   # None in root node
+    pfield: astfield | None                   # None in root node
+    root:   'FST'                             # self in root node
     _loc:   tuple[int, int, int, int] | None  # MAY NOT EXIST!
+    _lines: list[bistr]                       # ROOT ONLY!
 
     @property
     def is_root(self) -> bool:
