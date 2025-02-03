@@ -21,7 +21,7 @@ class FST:
     pfield: astfield | None
     root:   'FST'
     _lines: list[aststr]  # MAY NOT EXIST!
-    _pos:   tuple[int, int, int, int] | None  # MAY NOT EXIST!
+    _loc:   tuple[int, int, int, int] | None  # MAY NOT EXIST!
 
     @property
     def is_root(self) -> bool:
@@ -44,9 +44,9 @@ class FST:
         return '\n'.join(self.lines)
 
     @property
-    def pos(self) -> tuple[int, int, int, int] | None:
+    def loc(self) -> tuple[int, int, int, int] | None:
         try:
-            return self._pos
+            return self._loc
         except AttributeError:
             pass
 
@@ -55,7 +55,7 @@ class FST:
         try:
             col     = self.root._lines[(ln := ast.lineno - 1)].b2c(ast.col_offset)
             end_col = self.root._lines[(end_ln := ast.end_lineno - 1)].b2c(ast.end_col_offset)
-            pos     = (ln, col, end_ln, end_col)
+            loc     = (ln, col, end_ln, end_col)
 
         except AttributeError:
             max_ln = max_col = -(min_ln := (min_col := (inf := float('inf'))))
@@ -65,11 +65,15 @@ class FST:
                     child = (child,)
                 elif not isinstance(child, list):
                     continue
-                elif len(child) > 2:  # we only look at first and last elements of `body` and other space-ordered lists
-                    child = (child[0], child[-1])
+
+                else:
+                    child = [c for c in child if isinstance(c, AST)]
+
+                    if len(child) > 2:  # we only look at first and last elements of `body` and other space-ordered lists
+                        child = (child[0], child[-1])
 
                 for child in child:
-                    if child_pos := child.f.pos:
+                    if child_pos := child.f.loc:
                         ln, col, end_ln, end_col = child_pos
 
                         if ln < min_ln:
@@ -88,43 +92,43 @@ class FST:
                             if end_col > max_col:
                                 max_col = end_col
 
-            pos = None if min_ln == inf else (min_ln, min_col, max_ln, max_col)
+            loc = None if min_ln == inf else (min_ln, min_col, max_ln, max_col)
 
-        self._pos = pos
+        self._loc = loc
 
-        return pos
+        return loc
 
     @property
     def ln(self) -> int:  # 0 based
-        return (p := self.pos) and p[0]
+        return (l := self.loc) and l[0]
 
     @property
     def col(self) -> int:  # char index
-        return (p := self.pos) and p[1]
+        return (l := self.loc) and l[1]
 
     @property
     def end_ln(self) -> int:  # 0 based
-        return (p := self.pos) and p[2]
+        return (l := self.loc) and l[2]
 
     @property
     def end_col(self) -> int:  # char index
-        return (p := self.pos) and p[3]
+        return (l := self.loc) and l[3]
 
     @property
     def lineno(self) -> int:  # 1 based
-        return (p := self.pos) and p[0] + 1
+        return (l := self.loc) and l[0] + 1
 
     @property
     def col_offset(self) -> int:  # byte index
-        return (p := self.pos) and self.root._lines[p[0]].c2b(p[1])
+        return (l := self.loc) and self.root._lines[l[0]].c2b(l[1])
 
     @property
     def end_lineno(self) -> int:  # 1 based
-        return (p := self.pos) and p[2] + 1
+        return (l := self.loc) and l[2] + 1
 
     @property
     def end_col_offset(self) -> int:  # byte index
-        return (p := self.pos) and self.root._lines[p[2]].c2b(p[3])
+        return (l := self.loc) and self.root._lines[l[2]].c2b(l[3])
 
     def _make_fst_tree(self):
         "Create tree of FST nodes for each AST node from root. Call only on root."
@@ -144,9 +148,9 @@ class FST:
 
     def _repr_tail(self) -> str:
         tail = ' ROOT' if self.is_root else ''
-        pos  = self.pos
+        loc  = self.loc
 
-        return tail + f' {pos[0]},{pos[1]} -> {pos[2]},{pos[3]}' if pos else tail
+        return tail + f' {loc[0]},{loc[1]} -> {loc[2]},{loc[3]}' if loc else tail
 
     def __repr__(self) -> str:
         tail = self._repr_tail()
@@ -183,7 +187,7 @@ class FST:
         return FST(ast, lines=lines)
 
     @staticmethod
-    def compare(ast: AST, *, type_comments: bool | None = False, calc_pos: bool | Literal['copy'] = True) -> 'FST':
+    def from_ast(ast: AST, *, type_comments: bool | None = False, calc_pos: bool | Literal['copy'] = True) -> 'FST':
         """Add FST to existing AST, optionally copying positions from reparsed AST (default) or whole AST for new FST.
 
         Args:
@@ -193,6 +197,10 @@ class FST:
             calc_pos: Get actual node positions by unparsing then parsing again. Use when you are not certain node
                 positions are correct or even present. Updates original ast unless set to "copy", in which a copy AST
                 is used. Set to False when you know positions are correct and want to use given AST. Default True.
+
+        WARNING!
+            Do not set calc_pos to False unless you parsed the ast from a previous output of ast.unparse(), otherwise
+            there will almost certaionly be problems!
         """
 
         src   = ast_.unparse(ast)
@@ -251,7 +259,7 @@ class FST:
         """AST node was modified, clear out any cached info (except lines)."""
 
         try:
-            del self._pos
+            del self._loc
         except AttributeError:
             pass
 
