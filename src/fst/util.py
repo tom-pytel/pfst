@@ -3,7 +3,7 @@ from ast import *
 from typing import Any, Callable, Iterator, Literal, NamedTuple, Sequence
 
 __all__ = [
-    'bistr', 'astfield', 'get_field', 'has_type_comments', 'guess_parse_mode', 'Walk2Fail', 'walk2',
+    'bistr', 'astfield', 'get_field', 'has_type_comments', 'get_parse_mode', 'Walk2Fail', 'walk2',
     'compare', 'copy_attributes',
 ]
 
@@ -108,7 +108,7 @@ def has_type_comments(ast: AST) -> bool:
     return False
 
 
-def guess_parse_mode(ast: AST) -> Literal['exec'] | Literal['eval'] | Literal['single']:
+def get_parse_mode(ast: AST) -> Literal['exec'] | Literal['eval'] | Literal['single']:
     if isinstance(ast, stmt):
         return 'exec'
     if isinstance(ast, expr):

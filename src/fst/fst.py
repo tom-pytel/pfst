@@ -4,7 +4,8 @@ from ast import *
 __all_other__ = set(globals()) - __all_other__
 
 import ast as ast_
-from typing import Literal, Optional
+import functools
+from typing import Any, Literal, Optional
 
 from .util import *
 
@@ -13,15 +14,27 @@ __all__ = list(__all_other__ | {
 })
 
 
+def only_root(func):
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        if not args[0].is_root:
+            raise RuntimeError(f"'{func.__qualname__}' can only be called on the root node")
+
+        return func(*args, **kwargs)
+
+    return wrapper
+
+
 class FST:
     """AST formatting information and easy manipulation."""
 
-    ast:    AST
-    parent: Optional['FST']                   # None in root node
-    pfield: astfield | None                   # None in root node
-    root:   'FST'                             # self in root node
-    _loc:   tuple[int, int, int, int] | None  # MAY NOT EXIST!
-    _lines: list[bistr]                       # ROOT ONLY!
+    ast:           AST
+    parent:        Optional['FST']                   # None in root node
+    pfield:        astfield | None                   # None in root node
+    root:          'FST'                             # self in root node
+    _loc:          tuple[int, int, int, int] | None  # MAY NOT EXIST!
+    _lines:        list[bistr]                       # ROOT ONLY!
+    _parse_params: dict[str, Any]                    # ROOT ONLY!
 
     @property
     def is_root(self) -> bool:
@@ -40,7 +53,7 @@ class FST:
 
 
     @property
-    def str(self) -> str:
+    def text(self) -> str:
         return '\n'.join(self.lines)
 
     @property
@@ -158,8 +171,7 @@ class FST:
 
         return f'<fst{rast[4 : -1]}{tail}>' if rast.startswith('<') else f'fst.{rast[:-1]}{tail})'
 
-    def __init__(self, ast: AST, parent: Optional['FST'] = None, pfield: astfield | None = None, *,
-                 lines: list[str] | None = None):
+    def __init__(self, ast: AST, parent: Optional['FST'] = None, pfield: astfield | None = None, **root_params):
         self.ast    = ast
         self.parent = parent
         self.pfield = pfield
@@ -168,32 +180,39 @@ class FST:
         if parent is not None:
             self.root = parent.root
 
-        else:
-            self.root   = self
-            self._lines = [bistr(s) for s in lines]
+            return
 
-            self._make_fst_tree()
+        # ROOT
+        self.root          = self
+        self._lines        = [bistr(s) for s in root_params['lines']]
+        self._parse_params = root_params.get('parse_params') or {}
+
+        self._make_fst_tree()
 
     @staticmethod
-    def from_src(source, filename='<unknown>', mode='exec', *args, type_comments=False, feature_version=None, **kwargs) -> 'FST':
+    def from_src(source, filename='<unknown>', mode='exec', *,
+                 type_comments=False, feature_version=None, **parse_params) -> 'FST':
         if isinstance(source, str):
             lines  = source.split('\n')
         else:
             lines  = source
             source = '\n'.join(lines)
 
-        ast = ast_.parse(source, filename, mode, *args, type_comments=type_comments, feature_version=feature_version, **kwargs)
+        parse_params = dict(parse_params, type_comments=type_comments, feature_version=feature_version)
+        ast          = ast_.parse(source, filename, mode, **parse_params)
 
-        return FST(ast, lines=lines)
+        return FST(ast, lines=lines, parse_params=parse_params)
 
     @staticmethod
-    def from_ast(ast: AST, *, type_comments: bool | None = False, calc_loc: bool | Literal['copy'] = True) -> 'FST':
+    def from_ast(ast: AST, *, calc_loc: bool | Literal['copy'] = True,
+                 type_comments: bool | None = False, feature_version=None, **parse_params) -> 'FST':
         """Add FST to existing AST, optionally copying positions from reparsed AST (default) or whole AST for new FST.
 
         Args:
             ast: The root AST node.
             type_comments: Whether for copy when calc_loc != False, should parse and compare with type comments or not.
                 If set to None then this will be determined from input ast.
+            feature_version:
             calc_loc: Get actual node positions by unparsing then parsing again. Use when you are not certain node
                 positions are correct or even present. Updates original ast unless set to "copy", in which a copy AST
                 is used. Set to False when you know positions are correct and want to use given AST. Default True.
@@ -206,12 +225,14 @@ class FST:
         src   = ast_.unparse(ast)
         lines = src.split('\n')
 
-        if calc_loc:
-            if type_comments is None:
-                type_comments = has_type_comments(ast)
+        if type_comments is None:
+            type_comments = has_type_comments(ast)
 
-            mode = guess_parse_mode(ast)
-            astp = ast_.parse(src, mode=mode, type_comments=type_comments)
+        parse_params = dict(parse_params, type_comments=type_comments, feature_version=feature_version)
+
+        if calc_loc:
+            mode = get_parse_mode(ast)
+            astp = ast_.parse(src, mode=mode, **parse_params)
 
             if astp.__class__ is not ast.__class__:
                 astp = astp.body if isinstance(astp, Expression) else astp.body[0]
@@ -230,7 +251,7 @@ class FST:
                                        compare=True, type_comments=type_comments):
                     raise RuntimeError('could not reparse ast identically')
 
-        return FST(ast, lines=lines)
+        return FST(ast, lines=lines, parse_params=parse_params)
 
     def dump(self, indent: str = '', full: bool = False, prefix: str = ''):
         tail = self._repr_tail()
@@ -265,9 +286,18 @@ class FST:
 
         return self
 
+    @only_root
+    def verify(self):  # -> Self:
+        """Sanity check, make sure parsed source matches ast."""
 
+        ast          = self.ast
+        parse_params = self._parse_params
+        astp         = ast_.parse(self.text, mode=get_parse_mode(ast), **parse_params)
 
+        if not compare(astp, ast, locations=True, type_comments=parse_params['type_comments']):
+            raise RuntimeError('verify failed')
 
+        return self
 
 
 
@@ -289,4 +319,4 @@ def parse(source, filename='<unknown>', mode='exec', *args, type_comments=False,
     return FST.from_src(source, filename, mode, *args, type_comments=type_comments, feature_version=feature_version, **kwargs).ast
 
 def unparse(ast_obj):
-    return f.str if (f := getattr(ast_obj, 'f', None)) else ast_.unparse(ast_obj)
+    return f.text if (f := getattr(ast_obj, 'f', None)) else ast_.unparse(ast_obj)
