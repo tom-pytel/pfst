@@ -20,7 +20,7 @@ class FST:
     parent: Optional['FST']
     pfield: astfield | None
     root:   'FST'
-    _lines: list[aststr]  # MAY NOT EXIST!
+    _lines: list[bistr]  # MAY NOT EXIST!
     _loc:   tuple[int, int, int, int] | None  # MAY NOT EXIST!
 
     @property
@@ -139,11 +139,11 @@ class FST:
             fst = stack.pop()
             ast = fst.ast
 
-            for field, child in iter_fields(ast):
+            for name, child in iter_fields(ast):
                 if isinstance(child, AST):
-                    stack.append(FST(child, fst, astfield(field)))
+                    stack.append(FST(child, fst, astfield(name)))
                 elif isinstance(child, list):
-                    stack.extend(FST(ast, fst, astfield(field, idx))
+                    stack.extend(FST(ast, fst, astfield(name, idx))
                                  for idx, ast in enumerate(child) if isinstance(ast, AST))
 
     def _repr_tail(self) -> str:
@@ -170,7 +170,7 @@ class FST:
 
         else:
             self.root   = self
-            self._lines = [aststr(s) for s in lines]
+            self._lines = [bistr(s) for s in lines]
 
             self._make_fst_tree()
 
@@ -237,11 +237,11 @@ class FST:
 
         print(f'{indent}{prefix}{self.ast.__class__.__qualname__}{" .." * bool(tail)}{tail}')
 
-        for field, child in iter_fields(self.ast):
+        for name, child in iter_fields(self.ast):
             is_list = isinstance(child, list)
 
             if full or (child != []):
-                print(f'  {indent}.{field}{f"[{len(child)}]" if is_list else ""}')
+                print(f'  {indent}.{name}{f"[{len(child)}]" if is_list else ""}')
 
             if is_list:
                 for i, ast in enumerate(child):

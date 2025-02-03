@@ -6,7 +6,7 @@ from fst.util import *
 
 class TestUtil(unittest.TestCase):
     def test_aststr(self):
-        s = aststr('\x7f' * 127)
+        s = bistr('\x7f' * 127)
 
         self.assertEqual(s.c2b(0), 0)
         self.assertEqual(s.b2c(0), 0)
@@ -15,7 +15,7 @@ class TestUtil(unittest.TestCase):
         self.assertEqual(s.c2b(128), 128)
         self.assertEqual(s.b2c(128), 128)
 
-        s = aststr('\u00ff' * 127)
+        s = bistr('\u00ff' * 127)
 
         self.assertEqual(s.c2b(0), 0)
         self.assertEqual(s.b2c(0), 0)
@@ -30,7 +30,7 @@ class TestUtil(unittest.TestCase):
             self.assertEqual(i, s.b2c(s.c2b(i)))
             self.assertEqual(i, s.b2c(s.c2b(i) + 1))
 
-        s = aststr('\u00ff' * 128)
+        s = bistr('\u00ff' * 128)
 
         self.assertEqual(s.c2b(0), 0)
         self.assertEqual(s.b2c(0), 0)
@@ -45,7 +45,7 @@ class TestUtil(unittest.TestCase):
             self.assertEqual(i, s.b2c(s.c2b(i)))
             self.assertEqual(i, s.b2c(s.c2b(i) + 1))
 
-        s = aststr('\u00ff' * 256)
+        s = bistr('\u00ff' * 256)
 
         self.assertEqual(s.c2b(0), 0)
         self.assertEqual(s.b2c(0), 0)

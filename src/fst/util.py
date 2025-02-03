@@ -3,12 +3,12 @@ from ast import *
 from typing import Any, Callable, Iterator, Literal, NamedTuple, Sequence
 
 __all__ = [
-    'aststr', 'astfield', 'get_field', 'has_type_comments', 'guess_parse_mode', 'Walk2Fail', 'walk2',
+    'bistr', 'astfield', 'get_field', 'has_type_comments', 'guess_parse_mode', 'Walk2Fail', 'walk2',
     'compare', 'copy_attributes',
 ]
 
 
-class aststr(str):
+class bistr(str):
     """Easy mapping between char and encoded byte index (including 1 past last valid unit). Only positive indices."""
 
     _c2b: array  # character to byte indices
@@ -16,8 +16,12 @@ class aststr(str):
 
     _i2i_same = lambda idx: idx
 
-    def __new__(cls, s: str) -> 'aststr':
-        return s if s.__class__ is aststr else str.__new__(cls, s)
+    @property
+    def lenbytes(self) -> int:
+        return self.c2b(len(self))
+
+    def __new__(cls, s: str) -> 'bistr':
+        return s if s.__class__ is bistr else str.__new__(cls, s)
 
     @staticmethod
     def _make_array(len_array: int, highest_value: int) -> array:
@@ -35,7 +39,7 @@ class aststr(str):
 
     def c2b(self, idx: int) -> int:
         if (lc := len(self)) == (lb := len(self.encode())):
-            self.c2b = self.b2c = aststr._i2i_same
+            self.c2b = self.b2c = bistr._i2i_same
 
             return idx
 
@@ -88,34 +92,32 @@ class aststr(str):
 
 
 class astfield(NamedTuple):
-    field: str
-    idx:   int | None = None
+    name: str
+    idx:  int | None = None
 
 
-def get_field(node: AST, field: str, idx: int | None = None) -> AST:
-    field = getattr(node, field)
-
-    return field if idx is None else field[idx]
+def get_field(ast: AST, name: str, idx: int | None = None) -> AST:
+    return getattr(ast, name) if idx is None else getattr(ast, name)[idx]
 
 
-def has_type_comments(node: AST) -> bool:
-    for n in walk(node):
+def has_type_comments(ast: AST) -> bool:
+    for n in walk(ast):
         if getattr(n, 'type_comments', None) is not None:
             return True
 
     return False
 
 
-def guess_parse_mode(node: AST) -> Literal['exec'] | Literal['eval'] | Literal['single']:
-    if isinstance(node, stmt):
+def guess_parse_mode(ast: AST) -> Literal['exec'] | Literal['eval'] | Literal['single']:
+    if isinstance(ast, stmt):
         return 'exec'
-    if isinstance(node, expr):
+    if isinstance(ast, expr):
         return 'eval'
-    if isinstance(node, Module):
+    if isinstance(ast, Module):
         return 'exec'
-    if isinstance(node, Expression):
+    if isinstance(ast, Expression):
         return 'eval'
-    if isinstance(node, Interactive):
+    if isinstance(ast, Interactive):
         return 'single'
 
     raise ValueError('can not determine parse mode')
@@ -123,47 +125,47 @@ def guess_parse_mode(node: AST) -> Literal['exec'] | Literal['eval'] | Literal['
 
 class Walk2Fail(Exception): pass
 
-def walk2(node1: AST, node2: AST, cbnonast: Callable[[str, Any, Any], bool] | None = None) -> Iterator[tuple[AST, AST]]:
+def walk2(ast1: AST, ast2: AST, cbnonast: Callable[[str, Any, Any], bool] | None = None) -> Iterator[tuple[AST, AST]]:
     """Walk two asts simultaneously ensuring they have the same structure."""
 
-    if node1.__class__ is not node2.__class__:
+    if ast1.__class__ is not ast2.__class__:
         raise Walk2Fail
 
-    stack1 = [node1]
-    stack2 = [node2]
+    stack1 = [ast1]
+    stack2 = [ast2]
 
     while stack1 and stack2:
-        node1 = stack1.pop()
-        node2 = stack2.pop()
+        ast1 = stack1.pop()
+        ast2 = stack2.pop()
 
-        yield node1, node2
+        yield ast1, ast2
 
-        fields1 = list(iter_fields(node1))
-        fields2 = list(iter_fields(node2))
+        fields1 = list(iter_fields(ast1))
+        fields2 = list(iter_fields(ast2))
 
         if len(fields1) != len(fields2):
             raise Walk2Fail
 
-        for (name1, value1), (name2, value2) in zip(fields1, fields2):
+        for (name1, child1), (name2, child2) in zip(fields1, fields2):
             if name1 != name2:
                 raise Walk2Fail
 
-            if (is_ast := isinstance(value1, AST)) or isinstance(value1, list) or isinstance(value2, (AST, list)):
-                if value1.__class__ is not value2.__class__:
+            if (is_ast := isinstance(child1, AST)) or isinstance(child1, list) or isinstance(child2, (AST, list)):
+                if child1.__class__ is not child2.__class__:
                     raise Walk2Fail
 
                 if is_ast:
-                    stack1.append(value1)
-                    stack2.append(value2)
+                    stack1.append(child1)
+                    stack2.append(child2)
 
-                elif len(value1) != len(value2):
+                elif len(child1) != len(child2):
                     raise Walk2Fail
 
                 else:
-                    stack1.extend(n for n in value1 if isinstance(n, AST))
-                    stack2.extend(n for n in value2 if isinstance(n, AST))
+                    stack1.extend(n for n in child1 if isinstance(n, AST))
+                    stack2.extend(n for n in child2 if isinstance(n, AST))
 
-            elif cbnonast and cbnonast(name1, value1, value2) is False:
+            elif cbnonast and cbnonast(name1, child1, child2) is False:
                 raise Walk2Fail
 
     if stack1 or stack2:
