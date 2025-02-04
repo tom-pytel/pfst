@@ -5,13 +5,17 @@ __all_other__ = set(globals()) - __all_other__
 
 import ast as ast_
 import functools
-from typing import Any, Literal, Optional
+import re
+from typing import Any, Literal, Optional, Union
 
 from .util import *
 
 __all__ = list(__all_other__ | {
     'FST', 'parse', 'unparse',
 })
+
+_re_empty_line         = re.compile(r'^\s*$')     # completely empty or space-filled line
+_re_line_continuation  = re.compile(r'.*\\\s*$')  # line continuation with backslash
 
 
 def only_root(func):
@@ -25,6 +29,14 @@ def only_root(func):
     return wrapper
 
 
+def parse(source, filename='<unknown>', mode='exec', *args, type_comments=False, feature_version=None, **kwargs):
+    return FST.from_src(source, filename, mode, *args, type_comments=type_comments, feature_version=feature_version, **kwargs).ast
+
+
+def unparse(ast_obj):
+    return f.text if (f := getattr(ast_obj, 'f', None)) else ast_.unparse(ast_obj)
+
+
 class FST:
     """AST formatting information and easy manipulation."""
 
@@ -32,6 +44,7 @@ class FST:
     parent:        Optional['FST']                   # None in root node
     pfield:        astfield | None                   # None in root node
     root:          'FST'                             # self in root node
+    indent:        str                               # ROOT ONLY!
     _loc:          tuple[int, int, int, int] | None  # MAY NOT EXIST!
     _lines:        list[bistr]                       # ROOT ONLY!
     _parse_params: dict[str, Any]                    # ROOT ONLY!
@@ -80,10 +93,21 @@ class FST:
                     continue
 
                 else:
-                    child = [c for c in child if isinstance(c, AST)]
+                    # child = [c for c in child if isinstance(c, AST)]
+                    for first_child in child:
+                        if isinstance(first_child, AST):
+                            break
+                    else:
+                        continue
 
-                    if len(child) > 2:  # we only look at first and last elements of `body` and other space-ordered lists
-                        child = (child[0], child[-1])
+                    for last_child in reversed(child):
+                        if isinstance(last_child, AST):
+                            break
+
+                    if last_child is first_child:
+                        child = (first_child,)
+                    else:
+                        child = (first_child, last_child)
 
                 for child in child:
                     if child_pos := child.f.loc:
@@ -165,6 +189,8 @@ class FST:
 
         return tail + f' {loc[0]},{loc[1]} -> {loc[2]},{loc[3]}' if loc else tail
 
+    # ------------------------------------------------------------------------------------------------------------------
+
     def __repr__(self) -> str:
         tail = self._repr_tail()
         rast = repr(self.ast)
@@ -184,6 +210,7 @@ class FST:
 
         # ROOT
         self.root          = self
+        self.indent        = root_params.get('indent', '    ')
         self._lines        = [bistr(s) for s in root_params['lines']]
         self._parse_params = root_params.get('parse_params') or {}
 
@@ -276,7 +303,7 @@ class FST:
             else:
                 print(f'    {indent}{child!r}')
 
-    def touch(self):  # -> Self:
+    def touch(self) -> 'FST':  # -> Self:
         """AST node was modified, clear out any cached info (except lines)."""
 
         try:
@@ -287,7 +314,7 @@ class FST:
         return self
 
     @only_root
-    def verify(self):  # -> Self:
+    def verify(self, *, do_raise: bool = True) -> Union['FST', None]:  # -> Self | None:
         """Sanity check, make sure parsed source matches ast."""
 
         ast          = self.ast
@@ -295,9 +322,73 @@ class FST:
         astp         = ast_.parse(self.text, mode=get_parse_mode(ast), **parse_params)
 
         if not compare(astp, ast, locations=True, type_comments=parse_params['type_comments']):
-            raise RuntimeError('verify failed')
+            if do_raise:
+                raise RuntimeError('verify failed')
+            else:
+                return None
 
         return self
+
+
+
+
+
+
+
+    @only_root
+    def sniploc(self, ln: int, col: int, end_ln: int, end_col: int) -> list[str]:
+        if end_ln == ln:
+            return [self._lines[ln][col : end_col]]
+        else:
+            return [(l := self._lines)[ln][col:]] + l[ln + 1 : end_ln] + [l[end_ln][:end_col]]
+
+    def snip(self) -> list[str]:
+        return self.root.sniploc(*self.loc)
+
+    def starts_new_line(self) -> str | None:
+        """ Returns line prefix text if this node starts a new line and is not a line continuation or following a
+        semicolon, None otherwise."""
+
+        if (ln := self.ln) is None:
+            return None
+
+        col  = self.col
+        root = self.root
+
+        if (_re_empty_line.match(pre := (lines := root._lines)[ln][:col]) and
+            (not ln or not _re_line_continuation.match(lines[ln - 1]))):
+            return pre
+
+        return None
+
+    def get_indent(self) -> str:
+        "Determine indentation of node at `stmt` or `mod` level at or above self, otherwise at root node."
+
+        while (parent := self.parent) and not isinstance(self.ast, (stmt, mod)):
+            self = parent
+
+        root         = self.root
+        extra_indent = ''  # may result from unknown indent in single line "if something: whats_my_stmt_indentation?"
+
+        while parent:
+            siblings = getattr(parent.ast, (pfield := self.pfield).name)
+
+            if pfield.idx is None:
+                siblings = [siblings]
+
+            for sibling in siblings:
+                if (line_start := sibling.f.starts_new_line()) is not None:
+                    return line_start + extra_indent
+
+            extra_indent += root.indent
+            self          = parent
+            parent        = self.parent
+
+        return extra_indent
+
+
+
+
 
 
 
@@ -314,9 +405,3 @@ class FST:
 
 
 
-
-def parse(source, filename='<unknown>', mode='exec', *args, type_comments=False, feature_version=None, **kwargs):
-    return FST.from_src(source, filename, mode, *args, type_comments=type_comments, feature_version=feature_version, **kwargs).ast
-
-def unparse(ast_obj):
-    return f.text if (f := getattr(ast_obj, 'f', None)) else ast_.unparse(ast_obj)

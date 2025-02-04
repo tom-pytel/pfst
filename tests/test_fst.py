@@ -59,6 +59,85 @@ class TestFST(unittest.TestCase):
             walktest(fst.ast)
             fst.verify()
 
+    def test_verify(self):
+        ast = parse('i = 1')
+
+        ast.f.verify()
+
+        ast.body[0].lineno = 100
+
+        self.assertRaises(RuntimeError, ast.f.verify)
+        self.assertEqual(None, ast.f.verify(do_raise=False))
+
+    def test_starts_new_line(self):
+        ast = parse('i = 1; j = 2')
+
+        self.assertEqual('', ast.body[0].f.starts_new_line())
+        self.assertEqual(None, ast.body[1].f.starts_new_line())
+
+        ast = parse('def f(): \\\n i = 1')
+
+        self.assertEqual('', ast.body[0].f.starts_new_line())
+        self.assertEqual(None, ast.body[0].body[0].f.starts_new_line())
+
+        ast = parse('class cls: i = 1')
+
+        self.assertEqual('', ast.body[0].f.starts_new_line())
+        self.assertEqual(None, ast.body[0].body[0].f.starts_new_line())
+
+        ast = parse('class cls: i = 1; \\\n    j = 2')
+
+        self.assertEqual(None, ast.body[0].body[0].f.starts_new_line())
+        self.assertEqual(None, ast.body[0].body[1].f.starts_new_line())
+
+        ast = parse('class cls:\n  i = 1; \\\n    j = 2')
+
+        self.assertEqual('  ', ast.body[0].body[0].f.starts_new_line())
+        self.assertEqual(None, ast.body[0].body[1].f.starts_new_line())
+
+    def test_get_indent(self):
+        ast = parse('i = 1; j = 2')
+
+        self.assertEqual('', ast.body[0].f.get_indent())
+        self.assertEqual('', ast.body[1].f.get_indent())
+
+        ast = parse('def f(): \\\n i = 1')
+
+        self.assertEqual('', ast.body[0].f.get_indent())
+        self.assertEqual(ast.f.root.indent, ast.body[0].body[0].f.get_indent())
+
+        ast = parse('class cls: i = 1')
+
+        self.assertEqual('', ast.body[0].f.get_indent())
+        self.assertEqual(ast.f.root.indent, ast.body[0].body[0].f.get_indent())
+
+        ast = parse('class cls: i = 1; \\\n    j = 2')
+
+        self.assertEqual(ast.f.root.indent, ast.body[0].body[0].f.get_indent())
+        self.assertEqual(ast.f.root.indent, ast.body[0].body[1].f.get_indent())
+
+        ast = parse('class cls:\n  i = 1; \\\n    j = 2')
+
+        self.assertEqual('  ', ast.body[0].body[0].f.get_indent())
+        self.assertEqual('  ', ast.body[0].body[1].f.get_indent())
+
+        ast = parse('class cls:\n   def f(): i = 1')
+
+        self.assertEqual('   ', ast.body[0].body[0].f.get_indent())
+        self.assertEqual('   ' + ast.f.root.indent, ast.body[0].body[0].body[0].f.get_indent())
+
+    def test_snip(self):
+        src = 'class cls:\n if True:\n  i = 1\n else:\n  j = 2'
+        ast = parse(src)
+
+        self.assertEqual(src.split('\n'), ast.f.snip())
+        self.assertEqual(src.split('\n'), ast.body[0].f.snip())
+        self.assertEqual('if True:\n  i = 1\n else:\n  j = 2'.split('\n'), ast.body[0].body[0].f.snip())
+        self.assertEqual(['i = 1'], ast.body[0].body[0].body[0].f.snip())
+        self.assertEqual(['j = 2'], ast.body[0].body[0].orelse[0].f.snip())
+
+        self.assertEqual(['True:', '  i'], ast.f.root.sniploc(1, 4, 2, 3))
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -95,9 +95,12 @@ class astfield(NamedTuple):
     name: str
     idx:  int | None = None
 
+    def get(self, node: AST) -> Any:
+        return getattr(node, self.name) if self.idx is None else getattr(node, self.name)[self.idx]
 
-def get_field(ast: AST, name: str, idx: int | None = None) -> AST:
-    return getattr(ast, name) if idx is None else getattr(ast, name)[idx]
+
+def get_field(node: AST, name: str, idx: int | None = None) -> AST:
+    return getattr(node, name) if idx is None else getattr(node, name)[idx]
 
 
 def has_type_comments(ast: AST) -> bool:
@@ -108,16 +111,16 @@ def has_type_comments(ast: AST) -> bool:
     return False
 
 
-def get_parse_mode(ast: AST) -> Literal['exec'] | Literal['eval'] | Literal['single']:
-    if isinstance(ast, stmt):
+def get_parse_mode(node: AST) -> Literal['exec'] | Literal['eval'] | Literal['single']:
+    if isinstance(node, stmt):
         return 'exec'
-    if isinstance(ast, expr):
+    if isinstance(node, expr):
         return 'eval'
-    if isinstance(ast, Module):
+    if isinstance(node, Module):
         return 'exec'
-    if isinstance(ast, Expression):
+    if isinstance(node, Expression):
         return 'eval'
-    if isinstance(ast, Interactive):
+    if isinstance(node, Interactive):
         return 'single'
 
     raise ValueError('can not determine parse mode')
