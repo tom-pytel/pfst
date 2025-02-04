@@ -168,7 +168,7 @@ class FST:
         return (l := self.loc) and self.root._lines[l[2]].c2b(l[3])
 
     def _make_fst_tree(self):
-        "Create tree of FST nodes for each AST node from root. Call only on root."
+        """Create tree of FST nodes for each AST node from root. Call only on root."""
 
         stack = [self]
 
@@ -238,18 +238,17 @@ class FST:
                  type_comments: bool | None = False, feature_version=None, **parse_params) -> 'FST':
         """Add FST to existing AST, optionally copying positions from reparsed AST (default) or whole AST for new FST.
 
+        Do not set `calc_loc` to `False` unless you parsed the `ast` from a previous output of ast.unparse(), otherwise
+        there will almost certaionly be problems!
+
         Args:
             ast: The root AST node.
             calc_loc: Get actual node positions by unparsing then parsing again. Use when you are not certain node
                 positions are correct or even present. Updates original ast unless set to "copy", in which case a copied
-                AST is used. Set to False when you know positions are correct and want to use given AST. Default True.
+                AST is used. Set to `False` when you know positions are correct and want to use given AST. Default True.
             type_comments: ast.parse() parameter.
             feature_version: ast.parse() parameter.
             parse_params: Other parameters to ast.parse().
-
-        WARNING!
-            Do not set calc_loc to False unless you parsed the ast from a previous output of ast.unparse(), otherwise
-            there will almost certaionly be problems!
         """
 
         src   = ast_.unparse(ast)
@@ -306,6 +305,89 @@ class FST:
         else:
             return [(l := self._lines)[ln][col:]] + l[ln + 1 : end_ln] + [l[end_ln][:end_col]]
 
+    # @only_root
+    # def offset(self, lineno: int, col_offset: int, dlineno: int, dcol_offset: int, *, inclusive: bool = False) -> 'FST':  # -> Self
+    #     """Offset all node positions on or after lineno / col_offset by delta line / col_offset (byte positions).
+
+    #     Args:
+    #         lineno: Line (1 based) of offset point.
+    #         col_offset: Column of offset point (byte index).
+    #         dlineno: Number of lines to offset everything on or after offset point, can be 0.
+    #         dcol_offset: Column offset to apply to everything ON the offset point line (byte index). Columns on lines
+    #             AFTER the offset line will not be changed.
+    #         inclusive: Whether to offset endpoint if it falls exactly at lineno / col_offset or not.
+    #     """
+
+    #     for n in walk(self.ast):
+    #         if not (nend_lineno := getattr(n, 'end_lineno', None)):  # will never be 0
+    #             continue
+
+    #         nend_coloffset = n.end_col_offset
+
+    #         if nend_lineno > lineno:
+    #             n.end_lineno = nend_lineno + dlineno
+
+    #         elif nend_lineno == lineno and (nend_coloffset >= col_offset if inclusive else nend_coloffset > col_offset):
+    #             n.end_lineno     = nend_lineno + dlineno
+    #             n.end_col_offset = nend_coloffset + dcol_offset
+
+    #         else:
+    #             continue
+
+    #         if (lineno := n.lineno) > lineno:
+    #             n.lineno = lineno + dlineno
+
+    #         elif lineno == lineno and (col_offset := n.col_offset) >= col_offset:
+    #             n.lineno     = lineno + dlineno
+    #             n.col_offset = col_offset + dcol_offset
+
+    #         n.f.touch()
+
+    #     return self
+
+    @only_root
+    def offset(self, ln: int, col: int, dln: int, dcol_offset: int, inc: bool = False) -> 'FST':  # -> Self
+        """Offset all node positions in the tree on or after ln / col by delta line / col_offset (col byte offset).
+
+        This only offsets the positions in the AST nodes, doesn't change any text, so make sure that is correct before
+        getting any FST locations from affected nodes otherwise they will be wrong.
+
+        Args:
+            ln: Line of offset point.
+            col: Column of offset point (char index).
+            dln: Number of lines to offset everything on or after offset point, can be 0.
+            dcol_offset: Column offset to apply to everything ON the offset point line (in bytes). Columns on lines
+                AFTER the offset line will not be changed.
+            inc: Whether to offset endpoint if it falls exactly at ln / col or not (inclusive).
+        """
+
+        for a in walk(self.ast):
+            if (fend_ln := (f := a.f).end_ln) is None or not hasattr(a, 'end_col_offset'):
+                f.touch()  # can't determine if before or after offset point or ast node doesn't have loc so touch just in case
+
+                continue
+
+            if fend_ln > ln:
+                a.end_lineno += dln
+
+            elif fend_ln == ln and (f.end_col >= col if inc else f.end_col > col):
+                a.end_lineno     += dln
+                a.end_col_offset += dcol_offset
+
+            else:
+                continue
+
+            if (fln := f.ln) > ln:
+                a.lineno += dln
+
+            elif fln == ln and f.col >= col:
+                a.lineno     += dln
+                a.col_offset += dcol_offset
+
+            f.touch()
+
+        return self
+
 
 
 
@@ -348,7 +430,7 @@ class FST:
         return self.root.sniploc(*self.loc)
 
     def starts_new_line(self) -> str | None:
-        """ Returns line prefix text if this node starts a new line and is not a line continuation or following a
+        """Returns line prefix text if this node starts a new line and is not a line continuation or following a
         semicolon, None otherwise."""
 
         if (ln := self.ln) is None:
@@ -364,7 +446,7 @@ class FST:
         return None
 
     def get_indent(self) -> str:
-        "Determine indentation of node at `stmt` or `mod` level at or above self, otherwise at root node."
+        """Determine indentation of node at `stmt` or `mod` level at or above self, otherwise at root node."""
 
         while (parent := self.parent) and not isinstance(self.ast, (stmt, mod)):
             self = parent
