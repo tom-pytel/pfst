@@ -156,10 +156,6 @@ class FST:
         return bloc
 
     @property
-    def bln(self) -> int:  # 0 based
-        return (l := self.bloc) and l[0]
-
-    @property
     def ln(self) -> int:  # 0 based
         return (l := self.loc) and l[0]
 
@@ -174,6 +170,14 @@ class FST:
     @property
     def end_col(self) -> int:  # char index
         return (l := self.loc) and l[3]
+
+    @property
+    def bln(self) -> int:  # bounding location including @decorators
+        return (l := self.bloc) and l[0]
+
+    bcol     = col
+    bend_ln  = end_ln
+    bend_col = end_col
 
     @property
     def lineno(self) -> int:  # 1 based
@@ -322,6 +326,47 @@ class FST:
 
         return self
 
+    def dump(self, indent: int = 3, full: bool = False, cind: str = '', prefix: str = '', linefunc: Callable = print):
+        tail = self._repr_tail()
+        sind = ' ' * indent
+
+        linefunc(f'{cind}{prefix}{self.ast.__class__.__qualname__}{" .." * bool(tail)}{tail}')
+
+        for name, child in iter_fields(self.ast):
+            is_list = isinstance(child, list)
+
+            if full or (child != []):
+                linefunc(f'{sind}{cind}.{name}{f"[{len(child)}]" if is_list else ""}')
+
+            if is_list:
+                for i, ast in enumerate(child):
+                    if isinstance(ast, AST):
+                        ast.f.dump(indent, full, cind + ' ' * indent, f'{i}: ')
+                    else:
+                        linefunc(f'{sind}{sind}{cind}{i}: {ast!r}')
+
+            elif isinstance(child, AST):
+                child.f.dump(indent, full, cind + sind * 2)
+            else:
+                linefunc(f'{sind}{sind}{cind}{child!r}')
+
+    # ------------------------------------------------------------------------------------------------------------------
+
+    def is_continuation_line(self, ln: int) -> bool:
+        return bool(ln and _re_line_continuation.match(self.root._lines[ln - 1]))
+
+    def is_text_line_start(self, ln: int, col: int) -> bool:
+        return bool(_re_empty_line.match(self.root._lines[ln][:col]))
+
+    def starts_new_line(self) -> str | None:
+        """Returns line prefix text if this node starts a new line and is not a line continuation or following a
+        semicolon, None otherwise."""
+
+        if (ln := self.ln) is not None and self.is_text_line_start(ln, col := self.col) and not self.is_continuation_line(ln):
+            return self.root._lines[ln][:col]
+
+        return None
+
     @only_root
     def sniploc(self, ln: int, col: int, end_ln: int, end_col: int) -> list[str]:
         if end_ln == ln:
@@ -332,6 +377,22 @@ class FST:
     # @only_root
     def sniploc_text(self, ln: int, col: int, end_ln: int, end_col: int) -> str:
         return '\n'.join(self.sniploc(ln, col, end_ln, end_col))
+
+    def snip(self) -> list[str]:
+        return self.root.sniploc(*self.loc)
+
+    def snip_text(self) -> str:
+        return '\n'.join(self.snip())
+
+    def touch(self) -> 'FST':  # -> Self:
+        """AST node was modified, clear out any cached info (except lines)."""
+
+        try:
+            del self._loc, self._bloc  # _bloc only exists if _loc does
+        except AttributeError:
+            pass
+
+        return self
 
     @only_root
     def offset(self, ln: int, col: int, dln: int, dcol_offset: int, inc: bool = False) -> 'FST':  # -> Self
@@ -376,55 +437,66 @@ class FST:
 
         return self
 
+    def get_indentable_lns(self, exclude_first: bool = True) -> set[int]:
+        """Get set of indentable lines (past the first one usually because that is normally handled specially)."""
 
+        lns = set(range(self.bln + bool(exclude_first), self.bend_ln + 1))
 
+        for a in walk(self.ast):  # find multiline strings and exclude their unindentable lines
+            if isinstance(a, Constant) and (
+                (isinstance((v := a.value), str) and '\n' in v) or
+                (isinstance(v, bytes) and b'\n' in v)):
 
+                lns -= set(range(a.lineno, a.end_lineno))  # specifically leave first line of multiline string because that is indentable
 
+        return lns
 
+    def offset_tail(self, dcol_offset: int, lns: set[int] | None = None) -> set[int]:
+        """Offset ast col byte offsets past the first line by a delta and return set of indentable lines. Can be called
+        in two parts, first to get the indentable lines and then to actually offset."""
 
-    # # @only_root
-    # def _offset_tail(self, ast: AST, dcol_offset: int) -> set[int] | None:
-    #     """Utility function to offset ast columns past the first line by a delta and return set of indentable lines."""
+        if lns is None:
+            lns = self.get_indentable_lns()
 
-    #     lines  = self._lines
-    #     ilines = set(range(1, len(lines)))
+        if dcol_offset:
+            for a in walk(self.ast):  # now offset columns where it is allowed
+                if not (end_col_offset := getattr(a, 'end_col_offset', None)):  # can never be 0
+                    a.f.touch()  # just in case
 
-    #     for a in walk(ast):  # first find the multiline strings and exclude their unindentable lines
-    #         if isinstance(a, Constant) and (
-    #             (isinstance((v := a.value), str) and '\n' in v) or
-    #             (isinstance(v, bytes) and b'\n' in v)):
+                else:
+                    if t1 := a.lineno - 1 in lns:
+                        a.col_offset += dcol_offset
 
-    #             ilines -= set(range(a.lineno, a.end_lineno))  # specifically exclude first line of multiline string because that is indentable
+                    if t2 := a.end_lineno - 1 in lns:
+                        a.end_col_offset += dcol_offset
 
-    #     if dcol_offset:
-    #         for a in walk(ast):  # now offset columns where it is allowed
-    #             if lineno := getattr(a, 'lineno', None):  # can never be 0
-    #                 if lineno - 1 in ilines:
-    #                     a.col_offset += dcol_offset
+                    if t1 or t2:
+                        a.f.touch()
 
-    #                 if a.end_lineno - 1 in ilines:
-    #                     a.end_col_offset += dcol_offset
+        return lns
 
-    #     return ilines
+    def indent_tail(self, indent: str) -> set[int]:
+        """Indent all indentable lines past the first one according with `indent` and adjust node locations accordingly.
+        Does not modify node columns on first line."""
 
-    # # @only_root
-    # def _indent_trailing_lines(node: ast.AST, lines: list[str], indent: str) -> tuple[list[str], set[int]]:  # node and lines must both be present and synced, modifies node and lines
-    #     """Indent all indentable lines past the first one according with 'indent' and adjust node locations accordingly.
-    #     Does not modify node columns on first line."""
+        if lns := self.offset_tail(len(indent.encode())):
+            lines = self.root._lines
 
-    #     if ilines := _offset_trailing_nodes(node, lines, len(indent)):
-    #         for il in ilines:
-    #             if l := lines[il]:
-    #                 lines[il] = (indent + l).rstrip()  # .rstrip() to keep empty lines empty
+            for ln in lns:
+                if l := lines[ln]:  # only indent non-empty lines
+                    lines[ln] = indent + l
 
-    #     return lines, ilines
+        return lns
 
-    # # @only_root
-    # def _dedent_trailing_lines(node: ast.AST, lines: list[str], indent: str) -> tuple[list[str], set[int]]:  # node and lines must both be present and synced, modifies node and lines
-    #     """Dendent all indentable lines past the first one by removing 'indent' prefix and adjust node locations
-    #     accordingly. Does not modify node columns on first line."""
+    # def dedent_tail(self, indent: str) -> tuple[list[str], set[int]]:
+    #     """Dendent all indentable lines past the first one by removing `indent` prefix and adjust node locations
+    #     accordingly. Does not modify node columns on first line. Raises if `indent` is not prefix to all indentable
+    #     lines which are not line continuations (dedents those as much as possible).
+    #     """
 
-    #     if ilines := _offset_trailing_nodes(node, lines, -len(indent)):
+    #     lns = self.get_indentable_lns()
+
+    #     if ilines := offset_tail(node, lines, -len(indent)):
     #         for il in ilines:
     #             if l := lines[il]:
     #                 lines[il] = l.removeprefix(indent).rstrip()
@@ -447,69 +519,6 @@ class FST:
 
 
 
-
-
-
-
-
-
-
-
-    def dump(self, indent: int = 3, full: bool = False, cind: str = '', prefix: str = '', linefunc: Callable = print):
-        tail = self._repr_tail()
-        sind = ' ' * indent
-
-        linefunc(f'{cind}{prefix}{self.ast.__class__.__qualname__}{" .." * bool(tail)}{tail}')
-
-        for name, child in iter_fields(self.ast):
-            is_list = isinstance(child, list)
-
-            if full or (child != []):
-                linefunc(f'{sind}{cind}.{name}{f"[{len(child)}]" if is_list else ""}')
-
-            if is_list:
-                for i, ast in enumerate(child):
-                    if isinstance(ast, AST):
-                        ast.f.dump(indent, full, cind + ' ' * indent, f'{i}: ')
-                    else:
-                        linefunc(f'{sind}{sind}{cind}{i}: {ast!r}')
-
-            elif isinstance(child, AST):
-                child.f.dump(indent, full, cind + sind * 2)
-            else:
-                linefunc(f'{sind}{sind}{cind}{child!r}')
-
-    def touch(self) -> 'FST':  # -> Self:
-        """AST node was modified, clear out any cached info (except lines)."""
-
-        try:
-            del self._loc, self._bloc  # _bloc only exists if _loc does
-        except AttributeError:
-            pass
-
-        return self
-
-    def snip(self) -> list[str]:
-        return self.root.sniploc(*self.loc)
-
-    def snip_text(self) -> str:
-        return '\n'.join(self.snip())
-
-    def starts_new_line(self) -> str | None:
-        """Returns line prefix text if this node starts a new line and is not a line continuation or following a
-        semicolon, None otherwise."""
-
-        if (ln := self.ln) is None:
-            return None
-
-        col  = self.col
-        root = self.root
-
-        if (_re_empty_line.match(pre := (lines := root._lines)[ln][:col]) and
-            (not ln or not _re_line_continuation.match(lines[ln - 1]))):
-            return pre
-
-        return None
 
     def get_indent(self) -> str:
         """Determine indentation of node at `stmt` or `mod` level at or above self, otherwise at root node."""
