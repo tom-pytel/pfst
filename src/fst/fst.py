@@ -6,7 +6,7 @@ __all_other__ = set(globals()) - __all_other__
 import ast as ast_
 import functools
 import re
-from typing import Any, Literal, Optional, Union
+from typing import Any, Callable, Literal, Optional, Union
 
 from .util import *
 
@@ -217,8 +217,11 @@ class FST:
         self._make_fst_tree()
 
     @staticmethod
-    def from_src(source, filename='<unknown>', mode='exec', *,
-                 type_comments=False, feature_version=None, **parse_params) -> 'FST':
+    def from_src(source: str | bytes | list[str], filename: str = '<unknown>', mode: str = 'exec', *,
+                 type_comments: bool = False, feature_version: tuple[int, int] | None = None, **parse_params) -> 'FST':
+        if isinstance(source, bytes):
+            source = source.decode()
+
         if isinstance(source, str):
             lines  = source.split('\n')
         else:
@@ -237,12 +240,12 @@ class FST:
 
         Args:
             ast: The root AST node.
-            type_comments: Whether for copy when calc_loc != False, should parse and compare with type comments or not.
-                If set to None then this will be determined from input ast.
-            feature_version:
             calc_loc: Get actual node positions by unparsing then parsing again. Use when you are not certain node
-                positions are correct or even present. Updates original ast unless set to "copy", in which a copy AST
-                is used. Set to False when you know positions are correct and want to use given AST. Default True.
+                positions are correct or even present. Updates original ast unless set to "copy", in which case a copied
+                AST is used. Set to False when you know positions are correct and want to use given AST. Default True.
+            type_comments: ast.parse() parameter.
+            feature_version: ast.parse() parameter.
+            parse_params: Other parameters to ast.parse().
 
         WARNING!
             Do not set calc_loc to False unless you parsed the ast from a previous output of ast.unparse(), otherwise
@@ -280,39 +283,6 @@ class FST:
 
         return FST(ast, lines=lines, parse_params=parse_params)
 
-    def dump(self, indent: str = '', full: bool = False, prefix: str = ''):
-        tail = self._repr_tail()
-
-        print(f'{indent}{prefix}{self.ast.__class__.__qualname__}{" .." * bool(tail)}{tail}')
-
-        for name, child in iter_fields(self.ast):
-            is_list = isinstance(child, list)
-
-            if full or (child != []):
-                print(f'  {indent}.{name}{f"[{len(child)}]" if is_list else ""}')
-
-            if is_list:
-                for i, ast in enumerate(child):
-                    if isinstance(ast, AST):
-                        ast.f.dump(indent + '    ', full, f'{i}: ')
-                    else:
-                        print(f'    {indent}{i}: {ast!r}')
-
-            elif isinstance(child, AST):
-                child.f.dump(indent + '    ', full)
-            else:
-                print(f'    {indent}{child!r}')
-
-    def touch(self) -> 'FST':  # -> Self:
-        """AST node was modified, clear out any cached info (except lines)."""
-
-        try:
-            del self._loc
-        except AttributeError:
-            pass
-
-        return self
-
     @only_root
     def verify(self, *, do_raise: bool = True) -> Union['FST', None]:  # -> Self | None:
         """Sanity check, make sure parsed source matches ast."""
@@ -329,18 +299,50 @@ class FST:
 
         return self
 
-
-
-
-
-
-
     @only_root
     def sniploc(self, ln: int, col: int, end_ln: int, end_col: int) -> list[str]:
         if end_ln == ln:
             return [self._lines[ln][col : end_col]]
         else:
             return [(l := self._lines)[ln][col:]] + l[ln + 1 : end_ln] + [l[end_ln][:end_col]]
+
+
+
+
+
+    def dump(self, indent: int = 3, full: bool = False, cind: str = '', prefix: str = '', linefunc: Callable = print):
+        tail = self._repr_tail()
+        sind = ' ' * indent
+
+        linefunc(f'{cind}{prefix}{self.ast.__class__.__qualname__}{" .." * bool(tail)}{tail}')
+
+        for name, child in iter_fields(self.ast):
+            is_list = isinstance(child, list)
+
+            if full or (child != []):
+                linefunc(f'{sind}{cind}.{name}{f"[{len(child)}]" if is_list else ""}')
+
+            if is_list:
+                for i, ast in enumerate(child):
+                    if isinstance(ast, AST):
+                        ast.f.dump(indent, full, cind + ' ' * indent, f'{i}: ')
+                    else:
+                        linefunc(f'{sind}{sind}{cind}{i}: {ast!r}')
+
+            elif isinstance(child, AST):
+                child.f.dump(indent, full, cind + sind * 2)
+            else:
+                linefunc(f'{sind}{sind}{cind}{child!r}')
+
+    def touch(self) -> 'FST':  # -> Self:
+        """AST node was modified, clear out any cached info (except lines)."""
+
+        try:
+            del self._loc
+        except AttributeError:
+            pass
+
+        return self
 
     def snip(self) -> list[str]:
         return self.root.sniploc(*self.loc)

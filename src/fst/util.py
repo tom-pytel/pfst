@@ -170,6 +170,9 @@ def walk2(ast1: AST, ast2: AST, cb_primitive: Callable[[Any, Any, str, int], boo
                             raise Walk2Fail
 
                         if is_ast:
+                            if c1.__class__ is not c2.__class__:
+                                raise Walk2Fail
+
                             stack1.append(c1)
                             stack2.append(c2)
 
