@@ -6,7 +6,7 @@ __all_other__ = set(globals()) - __all_other__
 import ast as ast_
 import functools
 import re
-from typing import Any, Callable, Literal, Optional, Union
+from typing import Any, Callable, Literal, Optional, Union, cast
 
 from .util import *
 
@@ -14,8 +14,9 @@ __all__ = list(__all_other__ | {
     'FST', 'parse', 'unparse',
 })
 
-_re_empty_line         = re.compile(r'^\s*$')     # completely empty or space-filled line
-_re_line_continuation  = re.compile(r'.*\\\s*$')  # line continuation with backslash
+_re_empty_line_start   = re.compile(r'^\s*')   # start of completely empty or space-filled line
+_re_empty_line         = re.compile(r'^\s*$')   # completely empty or space-filled line
+_re_line_continuation  = re.compile(r'^.*\\$')  # line continuation with backslash
 
 
 def only_root(func):
@@ -352,17 +353,21 @@ class FST:
 
     # ------------------------------------------------------------------------------------------------------------------
 
-    def is_continuation_line(self, ln: int) -> bool:
+    def is_line_continuation(self, ln: int) -> bool:
+        """Is a continuation line from previous line ending with '\\'?"""
+
         return bool(ln and _re_line_continuation.match(self.root._lines[ln - 1]))
 
-    def is_text_line_start(self, ln: int, col: int) -> bool:
+    def is_text_line_start_pos(self, ln: int, col: int) -> bool:
+        """Starts this current text line? (irrespective of if is continuation from previous text line via '\\')"""
+
         return bool(_re_empty_line.match(self.root._lines[ln][:col]))
 
     def starts_new_line(self) -> str | None:
         """Returns line prefix text if this node starts a new line and is not a line continuation or following a
         semicolon, None otherwise."""
 
-        if (ln := self.ln) is not None and self.is_text_line_start(ln, col := self.col) and not self.is_continuation_line(ln):
+        if (ln := self.ln) is not None and self.is_text_line_start_pos(ln, col := self.col) and not self.is_line_continuation(ln):
             return self.root._lines[ln][:col]
 
         return None
@@ -384,8 +389,44 @@ class FST:
     def snip_text(self) -> str:
         return '\n'.join(self.snip())
 
+    def get_indent(self) -> str:
+        """Determine indentation of node at `stmt` or `mod` level at or above self, otherwise at root node."""
+
+        while (parent := self.parent) and not isinstance(self.ast, (stmt, mod)):
+            self = parent
+
+        root         = self.root
+        extra_indent = ''  # may result from unknown indent in single line "if something: whats_my_stmt_indentation?"
+
+        while parent:
+            siblings = getattr(parent.ast, (pfield := self.pfield).name)
+
+            if pfield.idx is None:
+                siblings = [siblings]
+
+            for sibling in siblings:
+                if (line_start := sibling.f.starts_new_line()) is not None:
+                    return line_start + extra_indent
+
+            extra_indent += root.indent
+            self          = parent
+            parent        = self.parent
+
+        return extra_indent
+
+    def get_indentable_lns(self, skip: int = 1) -> set[int]:
+        """Get set of indentable lines (past the first one usually because that is normally handled specially)."""
+
+        lns = set(range(self.bln + skip, self.bend_ln + 1))
+
+        for a in walk(self.ast):  # find multiline strings and exclude their unindentable lines
+            if isinstance(a, Constant) and (isinstance(a.value, (str, bytes))):
+                lns -= set(range(a.lineno, a.end_lineno))  # specifically leave first line of multiline string because that is indentable
+
+        return lns
+
     def touch(self) -> 'FST':  # -> Self:
-        """AST node was modified, clear out any cached info (except lines)."""
+        """AST node was modified, clear out any cached info."""
 
         try:
             del self._loc, self._bloc  # _bloc only exists if _loc does
@@ -396,7 +437,7 @@ class FST:
 
     @only_root
     def offset(self, ln: int, col: int, dln: int, dcol_offset: int, inc: bool = False) -> 'FST':  # -> Self
-        """Offset all node positions in the tree on or after ln / col by delta line / col_offset (col byte offset).
+        """Offset ast node positions in the tree on or after ln / col by delta line / col_offset (col byte offset).
 
         This only offsets the positions in the AST nodes, doesn't change any text, so make sure that is correct before
         getting any FST locations from affected nodes otherwise they will be wrong.
@@ -437,26 +478,8 @@ class FST:
 
         return self
 
-    def get_indentable_lns(self, exclude_first: bool = True) -> set[int]:
-        """Get set of indentable lines (past the first one usually because that is normally handled specially)."""
-
-        lns = set(range(self.bln + bool(exclude_first), self.bend_ln + 1))
-
-        for a in walk(self.ast):  # find multiline strings and exclude their unindentable lines
-            if isinstance(a, Constant) and (
-                (isinstance((v := a.value), str) and '\n' in v) or
-                (isinstance(v, bytes) and b'\n' in v)):
-
-                lns -= set(range(a.lineno, a.end_lineno))  # specifically leave first line of multiline string because that is indentable
-
-        return lns
-
-    def offset_tail(self, dcol_offset: int, lns: set[int] | None = None) -> set[int]:
-        """Offset ast col byte offsets past the first line by a delta and return set of indentable lines. Can be called
-        in two parts, first to get the indentable lines and then to actually offset."""
-
-        if lns is None:
-            lns = self.get_indentable_lns()
+    def offset_cols(self, dcol_offset: int, lns: set[int]) -> set[int]:
+        """Offset ast col byte offsets in `lns` by a delta and return same set of indentable lines."""
 
         if dcol_offset:
             for a in walk(self.ast):  # now offset columns where it is allowed
@@ -468,40 +491,99 @@ class FST:
                         a.col_offset += dcol_offset
 
                     if t2 := a.end_lineno - 1 in lns:
-                        a.end_col_offset += dcol_offset
+                        a.end_col_offset = end_col_offset + dcol_offset
 
                     if t1 or t2:
                         a.f.touch()
 
         return lns
 
-    def indent_tail(self, indent: str) -> set[int]:
+    def offset_cols_lookup(self, dcol_offsets: dict[int, int]) -> dict[int, int]:
+        """Offset ast col byte offsets by a specific delta per line and return same dict of indentable lines."""
+
+        for a in walk(self.ast):  # now offset columns where it is allowed
+            if not (end_col_offset := getattr(a, 'end_col_offset', None)):  # can never be 0
+                a.f.touch()  # just in case
+
+            else:
+                if t1 := (dcol_offset := dcol_offsets.get(a.lineno - 1)) is not None:
+                    a.col_offset += dcol_offset
+
+                if t2 := (dcol_offset := dcol_offsets.get(a.end_lineno - 1)) is not None:
+                    a.end_col_offset = end_col_offset + dcol_offset
+
+                if t1 or t2:
+                    a.f.touch()
+
+        return dcol_offsets
+
+    def indent_tail(self, indent: str, skip: int = 1) -> set[int]:
         """Indent all indentable lines past the first one according with `indent` and adjust node locations accordingly.
         Does not modify node columns on first line."""
 
-        if lns := self.offset_tail(len(indent.encode())):
-            lines = self.root._lines
+        if not (lns := self.offset_cols(len(indent.encode()), self.get_indentable_lns(skip))) or not indent:
+            return lns
 
-            for ln in lns:
-                if l := lines[ln]:  # only indent non-empty lines
-                    lines[ln] = indent + l
+        lines = self.root._lines
+
+        for ln in lns:
+            if l := lines[ln]:  # only indent non-empty lines
+                lines[ln] = bistr(indent + l)
 
         return lns
 
-    # def dedent_tail(self, indent: str) -> tuple[list[str], set[int]]:
-    #     """Dendent all indentable lines past the first one by removing `indent` prefix and adjust node locations
-    #     accordingly. Does not modify node columns on first line. Raises if `indent` is not prefix to all indentable
-    #     lines which are not line continuations (dedents those as much as possible).
-    #     """
+    def dedent_tail(self, indent: str, skip: int = 1) -> set[int]:
+        """Dedent all indentable lines past the first one by removing `indent` prefix and adjust node locations
+        accordingly. Does not modify columns on first line. Raises if `indent` is not prefix to all indentable lines
+        which are not line continuations (which are dedented as much as possible).
+        """
 
-    #     lns = self.get_indentable_lns()
+        if not (lns := self.get_indentable_lns(skip)) or not indent:
+            return lns
 
-    #     if ilines := offset_tail(node, lines, -len(indent)):
-    #         for il in ilines:
-    #             if l := lines[il]:
-    #                 lines[il] = l.removeprefix(indent).rstrip()
+        lines        = self.root._lines
+        lindent      = len(indent)
+        dcol_offsets = None
+        newlines     = []
 
-    #     return lines, ilines
+        def dedent(l, lindent):
+            if dcol_offsets is not None:
+                dcol_offsets[ln] = -lindent
+
+            return bistr(l[lindent:])
+
+        for ln in lns:
+            if l := lines[ln]:  # only dedent non-empty lines
+                if l.startswith(indent) or _re_empty_line.match(l):
+                    l = dedent(l, lindent)
+
+                elif self.is_line_continuation(ln):
+                    if (lstart := _re_empty_line_start.match(l).end()) >= lindent:
+                        l = dedent(l, lindent)
+
+                    else:
+                        if not dcol_offsets:
+                            dcol_offsets = {}
+
+                            for ln2 in lns:
+                                if ln2 is ln:
+                                    break
+
+                                dcol_offsets[ln2] = -lindent
+
+                        l = dedent(l, lstart)
+
+                else:
+                    raise ValueError('can not dedent lines')
+
+            newlines.append(l)
+
+        if dcol_offsets:
+            self.offset_cols_lookup(dcol_offsets)
+        else:
+            self.offset_cols(-lindent, lns)
+
+        return lns
 
 
 
@@ -513,37 +595,6 @@ class FST:
 
 
 
-
-
-
-
-
-
-
-    def get_indent(self) -> str:
-        """Determine indentation of node at `stmt` or `mod` level at or above self, otherwise at root node."""
-
-        while (parent := self.parent) and not isinstance(self.ast, (stmt, mod)):
-            self = parent
-
-        root         = self.root
-        extra_indent = ''  # may result from unknown indent in single line "if something: whats_my_stmt_indentation?"
-
-        while parent:
-            siblings = getattr(parent.ast, (pfield := self.pfield).name)
-
-            if pfield.idx is None:
-                siblings = [siblings]
-
-            for sibling in siblings:
-                if (line_start := sibling.f.starts_new_line()) is not None:
-                    return line_start + extra_indent
-
-            extra_indent += root.indent
-            self          = parent
-            parent        = self.parent
-
-        return extra_indent
 
 
 
