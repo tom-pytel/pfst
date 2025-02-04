@@ -31,6 +31,18 @@ class TestFST(unittest.TestCase):
     def test_calculated_loc_matchcase(self):
         self.assertEqual((1, 7, 1, 24), parse('match a:\n  case 2 if a == 1: pass').body[0].cases[0].f.loc)
 
+    def test_bloc(self):
+        ast = parse('@deco\nclass cls:\n @deco\n def meth():\n  @deco\n  class fcls: pass')
+
+        self.assertEqual((0, 0, 5, 18), ast.f.loc)
+        self.assertEqual((0, 0, 5, 18), ast.f.bloc)
+        self.assertEqual((1, 0, 5, 18), ast.body[0].f.loc)
+        self.assertEqual((0, 0, 5, 18), ast.body[0].f.bloc)
+        self.assertEqual((3, 1, 5, 18), ast.body[0].body[0].f.loc)
+        self.assertEqual((2, 1, 5, 18), ast.body[0].body[0].f.bloc)
+        self.assertEqual((5, 2, 5, 18), ast.body[0].body[0].body[0].f.loc)
+        self.assertEqual((4, 2, 5, 18), ast.body[0].body[0].body[0].f.bloc)
+
     def test_from_src(self):
         for fnm in PYFNMS:
             fst = FST.from_src(read(fnm))
@@ -188,9 +200,6 @@ class TestFST(unittest.TestCase):
         self.assertEqual((2, 4, 3, 4), ((n := ast.body[1].value).lineno, n.col_offset, n.end_lineno, n.end_col_offset))
         self.assertEqual((4, 0, 4, 1), ((n := ast.body[2].targets[0]).lineno, n.col_offset, n.end_lineno, n.end_col_offset))
         self.assertEqual((4, 4, 4, 5), ((n := ast.body[2].value).lineno, n.col_offset, n.end_lineno, n.end_col_offset))
-
-
-
 
 
 

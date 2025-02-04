@@ -18,15 +18,20 @@ def main():
                         help='attributes always included, here for compatibility')
     parser.add_argument('-i', '--indent', type=int, default=2,
                         help='indentation of nodes (number of spaces)')
+    parser.add_argument('--no-verify', default=True, action='store_false',
+                        help="don't verify parse AST")
 
     args = parser.parse_args()
 
     with args.infile as infile:
         source = infile.read()
 
-    tree = parse(source, args.infile.name, args.mode, type_comments=args.no_type_comments)
+    ast = parse(source, args.infile.name, args.mode, type_comments=args.no_type_comments)
 
-    tree.f.dump(indent=args.indent)
+    if args.no_verify:
+        ast.f.verify()
+
+    ast.f.dump(indent=args.indent)
 
 
 if __name__ == '__main__':

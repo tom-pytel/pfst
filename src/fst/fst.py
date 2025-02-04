@@ -44,8 +44,10 @@ class FST:
     parent:        Optional['FST']                   # None in root node
     pfield:        astfield | None                   # None in root node
     root:          'FST'                             # self in root node
-    indent:        str                               # ROOT ONLY!
     _loc:          tuple[int, int, int, int] | None  # MAY NOT EXIST!
+    _bloc:         tuple[int, int, int, int] | None  # MAY NOT EXIST! bounding location, including preceding decorators
+
+    indent:        str                               # ROOT ONLY! default indentation to use when unknown
     _lines:        list[bistr]                       # ROOT ONLY!
     _parse_params: dict[str, Any]                    # ROOT ONLY!
 
@@ -110,8 +112,8 @@ class FST:
                         child = (first_child, last_child)
 
                 for child in child:
-                    if child_pos := child.f.loc:
-                        ln, col, end_ln, end_col = child_pos
+                    if child_bloc := child.f.bloc:
+                        ln, col, end_ln, end_col = child_bloc
 
                         if ln < min_ln:
                             min_ln  = ln
@@ -134,6 +136,28 @@ class FST:
         self._loc = loc
 
         return loc
+
+    @property
+    def bloc(self) -> tuple[int, int, int, int]:
+        try:
+            return self._bloc
+        except AttributeError:
+            pass
+
+        if not (loc := self.loc):
+            bloc = None
+        elif not (decos := getattr(self.ast, 'decorator_list', None)):
+            bloc = loc
+        else:
+            bloc = (decos[0].f.ln, loc[1], loc[2], loc[3])  # column of deco '@' will be same as our column
+
+        self._bloc = bloc
+
+        return bloc
+
+    @property
+    def bln(self) -> int:  # 0 based
+        return (l := self.bloc) and l[0]
 
     @property
     def ln(self) -> int:  # 0 based
@@ -167,6 +191,12 @@ class FST:
     def end_col_offset(self) -> int:  # byte index
         return (l := self.loc) and self.root._lines[l[2]].c2b(l[3])
 
+    def _repr_tail(self) -> str:
+        tail = ' ROOT' if self.is_root else ''
+        loc  = self.loc
+
+        return tail + f' {loc[0]},{loc[1]} -> {loc[2]},{loc[3]}' if loc else tail
+
     def _make_fst_tree(self):
         """Create tree of FST nodes for each AST node from root. Call only on root."""
 
@@ -182,12 +212,6 @@ class FST:
                 elif isinstance(child, list):
                     stack.extend(FST(ast, fst, astfield(name, idx))
                                  for idx, ast in enumerate(child) if isinstance(ast, AST))
-
-    def _repr_tail(self) -> str:
-        tail = ' ROOT' if self.is_root else ''
-        loc  = self.loc
-
-        return tail + f' {loc[0]},{loc[1]} -> {loc[2]},{loc[3]}' if loc else tail
 
     # ------------------------------------------------------------------------------------------------------------------
 
@@ -306,44 +330,8 @@ class FST:
             return [(l := self._lines)[ln][col:]] + l[ln + 1 : end_ln] + [l[end_ln][:end_col]]
 
     # @only_root
-    # def offset(self, lineno: int, col_offset: int, dlineno: int, dcol_offset: int, *, inclusive: bool = False) -> 'FST':  # -> Self
-    #     """Offset all node positions on or after lineno / col_offset by delta line / col_offset (byte positions).
-
-    #     Args:
-    #         lineno: Line (1 based) of offset point.
-    #         col_offset: Column of offset point (byte index).
-    #         dlineno: Number of lines to offset everything on or after offset point, can be 0.
-    #         dcol_offset: Column offset to apply to everything ON the offset point line (byte index). Columns on lines
-    #             AFTER the offset line will not be changed.
-    #         inclusive: Whether to offset endpoint if it falls exactly at lineno / col_offset or not.
-    #     """
-
-    #     for n in walk(self.ast):
-    #         if not (nend_lineno := getattr(n, 'end_lineno', None)):  # will never be 0
-    #             continue
-
-    #         nend_coloffset = n.end_col_offset
-
-    #         if nend_lineno > lineno:
-    #             n.end_lineno = nend_lineno + dlineno
-
-    #         elif nend_lineno == lineno and (nend_coloffset >= col_offset if inclusive else nend_coloffset > col_offset):
-    #             n.end_lineno     = nend_lineno + dlineno
-    #             n.end_col_offset = nend_coloffset + dcol_offset
-
-    #         else:
-    #             continue
-
-    #         if (lineno := n.lineno) > lineno:
-    #             n.lineno = lineno + dlineno
-
-    #         elif lineno == lineno and (col_offset := n.col_offset) >= col_offset:
-    #             n.lineno     = lineno + dlineno
-    #             n.col_offset = col_offset + dcol_offset
-
-    #         n.f.touch()
-
-    #     return self
+    def sniploc_text(self, ln: int, col: int, end_ln: int, end_col: int) -> str:
+        return '\n'.join(self.sniploc(ln, col, end_ln, end_col))
 
     @only_root
     def offset(self, ln: int, col: int, dln: int, dcol_offset: int, inc: bool = False) -> 'FST':  # -> Self
@@ -392,6 +380,81 @@ class FST:
 
 
 
+
+
+    # # @only_root
+    # def _offset_tail(self, ast: AST, dcol_offset: int) -> set[int] | None:
+    #     """Utility function to offset ast columns past the first line by a delta and return set of indentable lines."""
+
+    #     lines  = self._lines
+    #     ilines = set(range(1, len(lines)))
+
+    #     for a in walk(ast):  # first find the multiline strings and exclude their unindentable lines
+    #         if isinstance(a, Constant) and (
+    #             (isinstance((v := a.value), str) and '\n' in v) or
+    #             (isinstance(v, bytes) and b'\n' in v)):
+
+    #             ilines -= set(range(a.lineno, a.end_lineno))  # specifically exclude first line of multiline string because that is indentable
+
+    #     if dcol_offset:
+    #         for a in walk(ast):  # now offset columns where it is allowed
+    #             if lineno := getattr(a, 'lineno', None):  # can never be 0
+    #                 if lineno - 1 in ilines:
+    #                     a.col_offset += dcol_offset
+
+    #                 if a.end_lineno - 1 in ilines:
+    #                     a.end_col_offset += dcol_offset
+
+    #     return ilines
+
+    # # @only_root
+    # def _indent_trailing_lines(node: ast.AST, lines: list[str], indent: str) -> tuple[list[str], set[int]]:  # node and lines must both be present and synced, modifies node and lines
+    #     """Indent all indentable lines past the first one according with 'indent' and adjust node locations accordingly.
+    #     Does not modify node columns on first line."""
+
+    #     if ilines := _offset_trailing_nodes(node, lines, len(indent)):
+    #         for il in ilines:
+    #             if l := lines[il]:
+    #                 lines[il] = (indent + l).rstrip()  # .rstrip() to keep empty lines empty
+
+    #     return lines, ilines
+
+    # # @only_root
+    # def _dedent_trailing_lines(node: ast.AST, lines: list[str], indent: str) -> tuple[list[str], set[int]]:  # node and lines must both be present and synced, modifies node and lines
+    #     """Dendent all indentable lines past the first one by removing 'indent' prefix and adjust node locations
+    #     accordingly. Does not modify node columns on first line."""
+
+    #     if ilines := _offset_trailing_nodes(node, lines, -len(indent)):
+    #         for il in ilines:
+    #             if l := lines[il]:
+    #                 lines[il] = l.removeprefix(indent).rstrip()
+
+    #     return lines, ilines
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     def dump(self, indent: int = 3, full: bool = False, cind: str = '', prefix: str = '', linefunc: Callable = print):
         tail = self._repr_tail()
         sind = ' ' * indent
@@ -420,7 +483,7 @@ class FST:
         """AST node was modified, clear out any cached info (except lines)."""
 
         try:
-            del self._loc
+            del self._loc, self._bloc  # _bloc only exists if _loc does
         except AttributeError:
             pass
 
@@ -428,6 +491,9 @@ class FST:
 
     def snip(self) -> list[str]:
         return self.root.sniploc(*self.loc)
+
+    def snip_text(self) -> str:
+        return '\n'.join(self.snip())
 
     def starts_new_line(self) -> str | None:
         """Returns line prefix text if this node starts a new line and is not a line continuation or following a
