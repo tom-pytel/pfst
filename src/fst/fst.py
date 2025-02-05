@@ -327,7 +327,7 @@ class FST:
 
         return self
 
-    def dump(self, indent: int = 3, full: bool = False, cind: str = '', prefix: str = '', linefunc: Callable = print):
+    def dump(self, indent: int = 2, full: bool = False, cind: str = '', prefix: str = '', linefunc: Callable = print):
         tail = self._repr_tail()
         sind = ' ' * indent
 
@@ -358,17 +358,21 @@ class FST:
 
         return bool(ln and _re_line_continuation.match(self.root._lines[ln - 1]))
 
-    def is_text_line_start_pos(self, ln: int, col: int) -> bool:
-        """Starts this current text line? (irrespective of if is continuation from previous text line via '\\')"""
+    def line_empty_before(self, ln: int, col: int) -> str | None:
+        """Is the text line empty before this position (irrespective of if is continuation from previous text line via
+        '\\')? If so then return the string up to this point, else return None."""
 
-        return bool(_re_empty_line.match(self.root._lines[ln][:col]))
+        return s if _re_empty_line.match(s := self.root._lines[ln][:col]) else None
 
-    def starts_new_line(self) -> str | None:
-        """Returns line prefix text if this node starts a new line and is not a line continuation or following a
+    def logical_line_empty_before(self) -> str | None:
+        """Returns line prefix text if this node starts a new logical line and is not a line continuation or following a
         semicolon, None otherwise."""
 
-        if (ln := self.ln) is not None and self.is_text_line_start_pos(ln, col := self.col) and not self.is_line_continuation(ln):
-            return self.root._lines[ln][:col]
+        if ((ln := self.ln) is not None and
+            (s := self.line_empty_before(ln, self.col)) is not None and
+            not self.is_line_continuation(ln)
+        ):
+            return s
 
         return None
 
@@ -405,7 +409,7 @@ class FST:
                 siblings = [siblings]
 
             for sibling in siblings:
-                if (line_start := sibling.f.starts_new_line()) is not None:
+                if (line_start := sibling.f.logical_line_empty_before()) is not None:
                     return line_start + extra_indent
 
             extra_indent += root.indent
@@ -584,6 +588,21 @@ class FST:
             self.offset_cols(-lindent, lns)
 
         return lns
+
+
+
+
+
+
+
+    def slice(self, *, decorators: bool = True, cut: bool = False) -> 'FST':
+        pass
+
+
+
+
+
+
 
 
 

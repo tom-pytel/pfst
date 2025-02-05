@@ -80,31 +80,31 @@ class TestFST(unittest.TestCase):
         self.assertRaises(RuntimeError, ast.f.verify)
         self.assertEqual(None, ast.f.verify(do_raise=False))
 
-    def test_starts_new_line(self):
+    def test_logical_line_empty_before(self):
         ast = parse('i = 1; j = 2')
 
-        self.assertEqual('', ast.body[0].f.starts_new_line())
-        self.assertEqual(None, ast.body[1].f.starts_new_line())
+        self.assertEqual('', ast.body[0].f.logical_line_empty_before())
+        self.assertEqual(None, ast.body[1].f.logical_line_empty_before())
 
         ast = parse('def f(): \\\n i = 1')
 
-        self.assertEqual('', ast.body[0].f.starts_new_line())
-        self.assertEqual(None, ast.body[0].body[0].f.starts_new_line())
+        self.assertEqual('', ast.body[0].f.logical_line_empty_before())
+        self.assertEqual(None, ast.body[0].body[0].f.logical_line_empty_before())
 
         ast = parse('class cls: i = 1')
 
-        self.assertEqual('', ast.body[0].f.starts_new_line())
-        self.assertEqual(None, ast.body[0].body[0].f.starts_new_line())
+        self.assertEqual('', ast.body[0].f.logical_line_empty_before())
+        self.assertEqual(None, ast.body[0].body[0].f.logical_line_empty_before())
 
         ast = parse('class cls: i = 1; \\\n    j = 2')
 
-        self.assertEqual(None, ast.body[0].body[0].f.starts_new_line())
-        self.assertEqual(None, ast.body[0].body[1].f.starts_new_line())
+        self.assertEqual(None, ast.body[0].body[0].f.logical_line_empty_before())
+        self.assertEqual(None, ast.body[0].body[1].f.logical_line_empty_before())
 
         ast = parse('class cls:\n  i = 1; \\\n    j = 2')
 
-        self.assertEqual('  ', ast.body[0].body[0].f.starts_new_line())
-        self.assertEqual(None, ast.body[0].body[1].f.starts_new_line())
+        self.assertEqual('  ', ast.body[0].body[0].f.logical_line_empty_before())
+        self.assertEqual(None, ast.body[0].body[1].f.logical_line_empty_before())
 
     def test_get_indent(self):
         ast = parse('i = 1; j = 2')
