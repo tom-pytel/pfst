@@ -291,11 +291,59 @@ class TestFST(unittest.TestCase):
         self.assertEqual({8, 9}, lns)
         self.assertEqual('class cls:\n if True:\n  i = """\nj\n"""\n  k = 3\n else:\n  j \\\n  =\\\n   2', ast.f.text)
 
+        src = '@decorator\nclass cls:\n pass'
+
+        ast = parse(src)
+        lns = ast.f.indent_tail('  ')
+        self.assertEqual({1, 2}, lns)
+        self.assertEqual('@decorator\n  class cls:\n   pass', ast.f.text)
+
     def test_dedent_tail(self):
-        pass
+        src = 'class cls:\n if True:\n  i = """\nj\n"""\n  k = 3\n else:\n  j \\\n=\\\n 2'
 
+        ast = parse(src)
+        lns = ast.f.dedent_tail(' ')
+        self.assertEqual({1, 2, 5, 6, 7, 8, 9}, lns)
+        self.assertEqual('class cls:\nif True:\n i = """\nj\n"""\n k = 3\nelse:\n j \\\n=\\\n2', ast.f.text)
 
-        # TODO: this
+        ast = parse(src)
+        self.assertRaises(ValueError, ast.f.dedent_tail, '  ')
+
+        ast = parse(src)
+        lns = ast.body[0].body[0].f.dedent_tail(' ')
+        self.assertEqual({2, 5, 6, 7, 8, 9}, lns)
+        self.assertEqual('class cls:\n if True:\n i = """\nj\n"""\n k = 3\nelse:\n j \\\n=\\\n2', ast.f.text)
+
+        ast = parse(src)
+        lns = ast.body[0].body[0].body[0].f.dedent_tail(' ')
+        self.assertEqual(set(), lns)
+        self.assertEqual('class cls:\n if True:\n  i = """\nj\n"""\n  k = 3\n else:\n  j \\\n=\\\n 2', ast.f.text)
+
+        ast = parse(src)
+        lns = ast.body[0].body[0].orelse[0].f.dedent_tail(' ')
+        self.assertEqual({8, 9}, lns)
+        self.assertEqual('class cls:\n if True:\n  i = """\nj\n"""\n  k = 3\n else:\n  j \\\n=\\\n2', ast.f.text)
+
+        src = '@decorator\nclass cls:\n pass'
+
+        ast = parse(src)
+        lns = ast.body[0].body[0].f.dedent_tail(' ')
+        self.assertEqual(set(), lns)
+        self.assertEqual('@decorator\nclass cls:\n pass', ast.f.text)
+
+        ast = parse(src)
+        lns = ast.body[0].body[0].f.dedent_tail(' ', skip=0)
+        self.assertEqual({2}, lns)
+        self.assertEqual('@decorator\nclass cls:\npass', ast.f.text)
+
+    # def test_copy(self):
+    #     for fnm in PYFNMS:
+    #         ast = FST.from_src(read(fnm)).ast
+
+    #         for a in walk(ast):
+    #             f = a.f.copy()
+    #             f.verify()
+
 
 
 

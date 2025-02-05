@@ -1,9 +1,9 @@
 from array import array
 from ast import *
-from typing import Any, Callable, Iterator, Literal, NamedTuple, Sequence
+from typing import Any, Callable, Iterator, Literal, NamedTuple
 
 __all__ = [
-    'bistr', 'astfield', 'get_field', 'has_type_comments', 'get_parse_mode', 'Walk2Fail', 'walk2',
+    'bistr', 'astfield', 'get_field', 'has_type_comments', 'is_parsable', 'get_parse_mode', 'Walk2Fail', 'walk2',
     'compare', 'copy_attributes', 'copy',
 ]
 
@@ -109,6 +109,19 @@ def has_type_comments(ast: AST) -> bool:
             return True
 
     return False
+
+
+def is_parsable(node: AST) -> bool:
+    if not isinstance(node, AST) or isinstance(node, (Load, Store, Del,
+            Attribute, ExceptHandler, Starred, Slice, FormattedValue,
+            expr_context, operator, cmpop, boolop, alias, unaryop, arguments, arg, keyword, comprehension,
+            withitem)):
+        return False
+
+    if isinstance(node, Call) and not is_parsable(node.func):
+        return False
+
+    return True
 
 
 def get_parse_mode(node: AST) -> Literal['exec'] | Literal['eval'] | Literal['single']:

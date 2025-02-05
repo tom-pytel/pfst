@@ -6,7 +6,7 @@ __all_other__ = set(globals()) - __all_other__
 import ast as ast_
 import functools
 import re
-from typing import Any, Callable, Literal, Optional, Union, cast
+from typing import Any, Callable, Literal, NamedTuple, Optional, Union
 
 from .util import *
 
@@ -38,19 +38,26 @@ def unparse(ast_obj):
     return f.text if (f := getattr(ast_obj, 'f', None)) else ast_.unparse(ast_obj)
 
 
+class fstloc(NamedTuple):
+    ln:      int
+    col:     int
+    end_ln:  int
+    end_col: int
+
+
 class FST:
     """AST formatting information and easy manipulation."""
 
     ast:           AST
-    parent:        Optional['FST']                   # None in root node
-    pfield:        astfield | None                   # None in root node
-    root:          'FST'                             # self in root node
-    _loc:          tuple[int, int, int, int] | None  # MAY NOT EXIST!
-    _bloc:         tuple[int, int, int, int] | None  # MAY NOT EXIST! bounding location, including preceding decorators
+    parent:        Optional['FST']  # None in root node
+    pfield:        astfield | None  # None in root node
+    root:          'FST'            # self in root node
+    _loc:          fstloc | None    # MAY NOT EXIST!
+    _bloc:         fstloc | None    # MAY NOT EXIST! bounding location, including preceding decorators
 
-    indent:        str                               # ROOT ONLY! default indentation to use when unknown
-    _lines:        list[bistr]                       # ROOT ONLY!
-    _parse_params: dict[str, Any]                    # ROOT ONLY!
+    indent:        str              # ROOT ONLY! default indentation to use when unknown
+    _lines:        list[bistr]      # ROOT ONLY!
+    _parse_params: dict[str, Any]   # ROOT ONLY!
 
     @property
     def is_root(self) -> bool:
@@ -73,7 +80,7 @@ class FST:
         return '\n'.join(self.lines)
 
     @property
-    def loc(self) -> tuple[int, int, int, int] | None:
+    def loc(self) -> fstloc | None:
         try:
             return self._loc
         except AttributeError:
@@ -82,9 +89,10 @@ class FST:
         ast = self.ast
 
         try:
-            col     = self.root._lines[(ln := ast.lineno - 1)].b2c(ast.col_offset)
-            end_col = self.root._lines[(end_ln := ast.end_lineno - 1)].b2c(ast.end_col_offset)
-            loc     = (ln, col, end_ln, end_col)
+            ln             = ast.lineno - 1
+            col_offset     = ast.col_offset
+            end_ln         = ast.end_lineno - 1
+            end_col_offset = ast.end_col_offset
 
         except AttributeError:
             max_ln = max_col = -(min_ln := (min_col := (inf := float('inf'))))
@@ -132,14 +140,19 @@ class FST:
                             if end_col > max_col:
                                 max_col = end_col
 
-            loc = None if min_ln == inf else (min_ln, min_col, max_ln, max_col)
+            loc = None if min_ln == inf else fstloc(min_ln, min_col, max_ln, max_col)
+
+        else:
+            col     = self.root._lines[ln].b2c(col_offset)
+            end_col = self.root._lines[end_ln].b2c(end_col_offset)
+            loc     = fstloc(ln, col, end_ln, end_col)
 
         self._loc = loc
 
         return loc
 
     @property
-    def bloc(self) -> tuple[int, int, int, int]:
+    def bloc(self) -> fstloc:
         try:
             return self._bloc
         except AttributeError:
@@ -150,7 +163,7 @@ class FST:
         elif not (decos := getattr(self.ast, 'decorator_list', None)):
             bloc = loc
         else:
-            bloc = (decos[0].f.ln, loc[1], loc[2], loc[3])  # column of deco '@' will be same as our column
+            bloc = fstloc(decos[0].f.ln, loc[1], loc[2], loc[3])  # column of deco '@' will be same as our column
 
         self._bloc = bloc
 
@@ -242,12 +255,13 @@ class FST:
         self.root   = self
         self._lines = [bistr(s) for s in root_params['lines']]
 
-        if from_ := root_params.get('from'):  # copy params from source tree
-            self.indent        = from_.indent
-            self._parse_params = from_._parse_params
+        if from_ := root_params.get('from_'):  # copy params from source tree
+            root               = from_.root
+            self.indent        = root.indent
+            self._parse_params = root._parse_params
 
         self.indent        = root_params.get('indent', getattr(self, 'indent', '    '))
-        self._parse_params = root_params.get('parse_params', getattr(self, 'parse_params', {}))
+        self._parse_params = root_params.get('parse_params', getattr(self, '_parse_params', {}))
 
         self._make_fst_tree()
 
@@ -316,19 +330,35 @@ class FST:
 
         return FST(ast, lines=lines, parse_params=parse_params)
 
-    @only_root
     def verify(self, *, do_raise: bool = True) -> Union['FST', None]:  # -> Self | None:
         """Sanity check, make sure parsed source matches ast."""
 
-        ast          = self.ast
-        parse_params = self._parse_params
-        astp         = ast_.parse(self.text, mode=get_parse_mode(ast), **parse_params)
+        root         = self.root
+        ast          = root.ast
+        parse_params = root._parse_params
+        astp         = ast_.parse(root.text, mode=get_parse_mode(ast), **parse_params)
 
-        if not compare(astp, ast, locations=True, type_comments=parse_params['type_comments']):
-            if do_raise:
-                raise RuntimeError('verify failed')
+        if not isinstance(ast, mod):
+            if isinstance(astp, Expression):
+                astp = astp.body
+            elif len(astp.body) != 1:
+                raise ValueError('verify failed reparse')
             else:
-                return None
+                astp = astp.body[0]
+
+        # if ast.__class__ is astp.__class__:
+        #     for name, child in iter_fields(ast):
+        #         if isinstance(child, (Load, Store, Del)):
+        #             setattr(astp, name, child)
+
+
+
+
+
+
+
+        if not compare(astp, ast, locations=True, type_comments=parse_params['type_comments'], do_raise=do_raise):
+            return None
 
         return self
 
@@ -381,14 +411,23 @@ class FST:
 
         return None
 
-    @only_root
+    def is_parsable(self) -> bool:
+        if not is_parsable(self.ast):
+            return False
+
+
+
+
+
+
+        return True
+
     def sniploc(self, ln: int, col: int, end_ln: int, end_col: int) -> list[str]:
         if end_ln == ln:
-            return [self._lines[ln][col : end_col]]
+            return [bistr(self.root._lines[ln][col : end_col])]
         else:
-            return [(l := self._lines)[ln][col:]] + l[ln + 1 : end_ln] + [l[end_ln][:end_col]]
+            return [bistr((l := self.root._lines)[ln][col:])] + l[ln + 1 : end_ln] + [bistr(l[end_ln][:end_col])]
 
-    # @only_root
     def sniploc_text(self, ln: int, col: int, end_ln: int, end_col: int) -> str:
         return '\n'.join(self.sniploc(ln, col, end_ln, end_col))
 
@@ -434,19 +473,25 @@ class FST:
 
         return lns
 
-    def touch(self) -> 'FST':  # -> Self:
+    def touch(self, recurse: bool = False) -> 'FST':  # -> Self:
         """AST node was modified, clear out any cached info."""
 
-        try:
-            del self._loc, self._bloc  # _bloc only exists if _loc does
-        except AttributeError:
-            pass
+        if recurse:
+            for ast in walk(self.ast):
+                ast.f.touch()
+
+        else:
+            try:
+                del self._loc, self._bloc  # _bloc only exists if _loc does
+            except AttributeError:
+                pass
 
         return self
 
-    @only_root
     def offset(self, ln: int, col: int, dln: int, dcol_offset: int, inc: bool = False) -> 'FST':  # -> Self
         """Offset ast node positions in the tree on or after ln / col by delta line / col_offset (col byte offset).
+
+        Only modifies ast but needs incoming matching lines.
 
         This only offsets the positions in the AST nodes, doesn't change any text, so make sure that is correct before
         getting any FST locations from affected nodes otherwise they will be wrong.
@@ -488,7 +533,10 @@ class FST:
         return self
 
     def offset_cols(self, dcol_offset: int, lns: set[int]) -> set[int]:
-        """Offset ast col byte offsets in `lns` by a delta and return same set of indentable lines."""
+        """Offset ast col byte offsets in `lns` by a delta and return same set of indentable lines.
+
+        Only modifies ast.
+        """
 
         if dcol_offset:
             for a in walk(self.ast):  # now offset columns where it is allowed
@@ -508,7 +556,10 @@ class FST:
         return lns
 
     def offset_cols_mapped(self, dcol_offsets: dict[int, int]) -> dict[int, int]:
-        """Offset ast col byte offsets by a specific delta per line and return same dict of indentable lines."""
+        """Offset ast col byte offsets by a specific delta per line and return same dict of indentable lines.
+
+        Only modifies ast.
+        """
 
         for a in walk(self.ast):  # now offset columns where it is allowed
             if not (end_col_offset := getattr(a, 'end_col_offset', None)):  # can never be 0
@@ -561,7 +612,9 @@ class FST:
 
             return bistr(l[lindent:])
 
-        for ln in lns:
+        lns_seq = list(lns)
+
+        for ln in lns_seq:
             if l := lines[ln]:  # only dedent non-empty lines
                 if l.startswith(indent) or _re_empty_line.match(l):
                     l = dedent(l, lindent)
@@ -574,7 +627,7 @@ class FST:
                         if not dcol_offsets:
                             dcol_offsets = {}
 
-                            for ln2 in lns:
+                            for ln2 in lns_seq:
                                 if ln2 is ln:
                                     break
 
@@ -586,6 +639,9 @@ class FST:
                     raise ValueError('can not dedent lines')
 
             newlines.append(l)
+
+        for ln, l in zip(lns_seq, newlines):
+            lines[ln] = l
 
         if dcol_offsets:
             self.offset_cols_mapped(dcol_offsets)
@@ -605,8 +661,69 @@ class FST:
 
 
 
+    @only_root
+    def isafe(self) -> 'FST':
+        """Inplace make safe (to make cut or copied subtrees parsable if is not)."""
+
+        ast   = self.ast
+        lines = self.lines
+
+        ln, col, end_ln, end_col = self.loc
+
+        if isinstance(ast, If) and lines[ln][col : col + 4] == 'elif':  # elif -> if
+            self.offset(ln, col + 2, 0, -2)
+
+            lines[ln] = bistr((l := lines[ln])[:col] + l[col + 2:])
+
+        elif isinstance(ast, expr):  # if expression not parsing then try parenthesize
+            mode = get_parse_mode(ast)
+
+            try:
+                ast_.parse(self.text, mode=mode, **self._parse_params)
+
+            except SyntaxError:
+                ast_.parse(f'({self.text})', mode=mode, **self._parse_params)
+
+                self.offset(ln, col, 0, 1)
+
+                lines[ln]     = bistr(f'{(l := lines[ln])[:col]}({l[col:]}')
+                lines[end_ln] = bistr(f'{(l := lines[end_ln])[:end_col]}){l[end_col:]}')
+
+        return self
+
+
+
+
+
+
     def copy(self, *, decorators: bool = True) -> 'FST':
-        pass
+        lines  = self.root._lines
+        indent = self.get_indent()
+        ast    = copy(self.ast)
+
+        if decorators:
+            loc = self.bloc
+
+        else:
+            loc = self.loc
+
+            if hasattr(ast, 'decorator_list'):
+                ast.decorator_list.clear()
+
+        fst = FST(ast, lines=lines, from_=self)  # we use original lines for nodes offset calc before putting new lines
+
+        fst.offset(loc.ln, loc.col, -loc.ln, -loc.col)
+
+        fst._lines = self.sniploc(*loc)
+
+        fst.touch(True)
+        fst.dedent_tail(indent)
+
+        return fst
+
+
+
+
 
 
 
