@@ -18,5 +18,5 @@ test:  ## Run basic unit tests
 
 .PHONY: clean
 clean:  ## Delete all generated files and directories
-	rm -rf src/f_ast.egg-info/
+	rm -rf src/py_fst.egg-info/
 	find . -name __pycache__ -type d -exec rm -rf {} +

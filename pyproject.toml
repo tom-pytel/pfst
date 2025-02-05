@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 
 [project]
-name = "f-ast"
+name = "py-fst"
 description = "A fun AST processing library"
 authors = [{name = "Tomasz Pytel", email = "tompytel@gmail.com"}]
 license = { text = "MIT" }
