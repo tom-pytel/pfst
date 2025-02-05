@@ -238,10 +238,16 @@ class FST:
             return
 
         # ROOT
-        self.root          = self
-        self.indent        = root_params.get('indent', '    ')
-        self._lines        = [bistr(s) for s in root_params['lines']]
-        self._parse_params = root_params.get('parse_params') or {}
+
+        self.root   = self
+        self._lines = [bistr(s) for s in root_params['lines']]
+
+        if from_ := root_params.get('from'):  # copy params from source tree
+            self.indent        = from_.indent
+            self._parse_params = from_._parse_params
+
+        self.indent        = root_params.get('indent', getattr(self, 'indent', '    '))
+        self._parse_params = root_params.get('parse_params', getattr(self, 'parse_params', {}))
 
         self._make_fst_tree()
 
@@ -305,8 +311,7 @@ class FST:
                 ast = astp
 
             else:
-                if not copy_attributes(astp, ast, ('lineno', 'col_offset', 'end_lineno', 'end_col_offset'),
-                                       compare=True, type_comments=type_comments):
+                if not copy_attributes(astp, ast, compare=True, type_comments=type_comments):
                     raise RuntimeError('could not reparse ast identically')
 
         return FST(ast, lines=lines, parse_params=parse_params)
@@ -502,7 +507,7 @@ class FST:
 
         return lns
 
-    def offset_cols_lookup(self, dcol_offsets: dict[int, int]) -> dict[int, int]:
+    def offset_cols_mapped(self, dcol_offsets: dict[int, int]) -> dict[int, int]:
         """Offset ast col byte offsets by a specific delta per line and return same dict of indentable lines."""
 
         for a in walk(self.ast):  # now offset columns where it is allowed
@@ -583,7 +588,7 @@ class FST:
             newlines.append(l)
 
         if dcol_offsets:
-            self.offset_cols_lookup(dcol_offsets)
+            self.offset_cols_mapped(dcol_offsets)
         else:
             self.offset_cols(-lindent, lns)
 
@@ -595,11 +600,13 @@ class FST:
 
 
 
-    def slice(self, *, decorators: bool = True, cut: bool = False) -> 'FST':
+    # def slice(self, *, decorators: bool = True, cut: bool = False) -> 'FST':
+    #     pass
+
+
+
+    def copy(self, *, decorators: bool = True) -> 'FST':
         pass
-
-
-
 
 
 

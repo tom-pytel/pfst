@@ -4,7 +4,7 @@ from typing import Any, Callable, Iterator, Literal, NamedTuple, Sequence
 
 __all__ = [
     'bistr', 'astfield', 'get_field', 'has_type_comments', 'get_parse_mode', 'Walk2Fail', 'walk2',
-    'compare', 'copy_attributes',
+    'compare', 'copy_attributes', 'copy',
 ]
 
 
@@ -195,7 +195,9 @@ _compare_primitive_type_comments_func = (
     (lambda p1, p2, n, i: p1.__class__ is p2.__class__ and p1 == p2),
 )
 
-def compare(ast1: AST, ast2: AST, *, locations: bool = False, type_comments: bool = False) -> bool:
+def compare(ast1: AST, ast2: AST, *, locations: bool = False, type_comments: bool = False, do_raise: bool = False) -> bool:
+    """Copy two trees including possibly locations and type comments."""
+
     cb_primitive = _compare_primitive_type_comments_func[bool(type_comments)]
 
     try:
@@ -209,23 +211,64 @@ def compare(ast1: AST, ast2: AST, *, locations: bool = False, type_comments: boo
                     raise Walk2Fail(f"locations differ in '{n1.__class__.__qualname__}'")
 
     except Walk2Fail:
+        if do_raise:
+            raise
+
         return False
 
     return True
 
 
-def copy_attributes(src: AST, dst: AST, attrs: Sequence[str], *, compare: bool = False, type_comments: bool = False) -> bool:
-    cb_primitive = _compare_primitive_type_comments_func[bool(type_comments)]
+def copy_attributes(src: AST, dst: AST, *, compare: bool = True, type_comments: bool = False, do_raise: bool = False) -> bool:
+    """Copy attributes from one tree to another checking structure equality in the process."""
+
+    cb_primitive = _compare_primitive_type_comments_func[bool(type_comments)] if compare else lambda p1, p2, n, i: True
 
     try:
         for ns, nd in walk2(src, dst, cb_primitive):
-            for attr in attrs:
-                if (val := getattr(ns, attr, cb_primitive)) is not cb_primitive:  # cb_primitive is sentinel
+            for attr in ns._attributes:
+                if (val := getattr(ns, attr, cb_primitive)) is not cb_primitive:
                     setattr(nd, attr, val)
                 elif hasattr(nd, attr):
                     delattr(nd, attr)
 
     except Walk2Fail:
+        if do_raise:
+            raise
+
         return False
 
     return True
+
+
+def copy(ast: AST) -> AST:
+    """Copy a tree."""
+
+    params = {}
+
+    for field in ast._fields:
+        child = getattr(ast, field)
+
+        if isinstance(child, AST):
+            params[field] = copy(child)
+        elif not isinstance(child, list):
+            params[field] = child
+
+        else:
+            children = []
+
+            for c in child:
+                if isinstance(c, AST):
+                    children.append(copy(c))
+                elif not isinstance(c, list):
+                    children.append(c)
+
+            params[field] = children
+
+    ret = ast.__class__(**params)
+
+    for attr in ast._attributes:
+        if (val := getattr(ast, attr, ret)) is not ret:
+            setattr(ret, attr, val)
+
+    return ret

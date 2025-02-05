@@ -1,7 +1,20 @@
 #!/usr/bin/env python
 
+import os
 import unittest
+
+import ast as ast_
 from fst.util import *
+
+PYFNMS = sum((
+    [os.path.join(path, fnm) for path, _, fnms in os.walk(top) for fnm in fnms if fnm.endswith('.py')]
+    for top in ('src', 'tests')),
+    start=[]
+)
+
+def read(fnm):
+    with open(fnm) as f:
+        return f.read()
 
 
 class TestUtil(unittest.TestCase):
@@ -60,6 +73,21 @@ class TestUtil(unittest.TestCase):
         for i in range(256):
             self.assertEqual(i, s.b2c(s.c2b(i)))
             self.assertEqual(i, s.b2c(s.c2b(i) + 1))
+
+
+    # TODO: other tests
+
+
+    def test_copy(self):
+        for fnm in PYFNMS:
+            with open(fnm) as f:
+                src = f.read()
+
+            for type_comments in (False, True):
+                ast = ast_.parse(src, type_comments=type_comments)
+                dst = copy(ast)
+
+                compare(ast, dst, locations=True, type_comments=type_comments, do_raise=True)
 
 
 if __name__ == '__main__':

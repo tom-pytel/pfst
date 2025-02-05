@@ -248,12 +248,12 @@ class TestFST(unittest.TestCase):
         self.assertEqual((2, 2, 2, 3), ast.body[0].body[0].body[0].targets[0].f.loc)
         self.assertEqual((2, 6, 4, 3), ast.body[0].body[0].body[0].value.f.loc)
 
-    def test_offset_cols_lookup(self):
+    def test_offset_cols_mapped(self):
         src = 'i = 1\nj = 2\nk = 3\nl = \\\n4'
         ast = parse(src)
         off = {0: 0, 1: 1, 2: 2, 3: 3, 4: 4}
 
-        self.assertEqual(off, ast.f.offset_cols_lookup(off))
+        self.assertEqual(off, ast.f.offset_cols_mapped(off))
         self.assertEqual((0, 0, 4, 5), ast.f.loc)
         self.assertEqual((0, 0, 0, 5), ast.body[0].f.loc)
         self.assertEqual((0, 0, 0, 1), ast.body[0].targets[0].f.loc)
