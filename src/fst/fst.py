@@ -15,7 +15,6 @@ __all__ = list(__all_other__ | {
 })
 
 _re_empty_line_start   = re.compile(r'^\s*')    # start of completely empty or space-filled line
-_re_comment_line_start = re.compile(r'^\s*#')   # start of pure comment line
 _re_empty_line         = re.compile(r'^\s*$')   # completely empty or space-filled line
 _re_line_continuation  = re.compile(r'^.*\\$')  # line continuation with backslash
 
@@ -380,11 +379,6 @@ class FST:
 
         return s if _re_empty_line.match(s := l[:col]) else None
 
-    # def comment_line_start(self, l: str) -> str | None:
-    #     """Beginning empty space of pure comment line if is one, otherwise None."""
-
-    #     return l[:m.end()] if (m := _re_comment_line_start.match(l)) else None
-
     def logical_line_empty_before(self) -> str | None:
         """Returns line prefix text if this node starts a new logical line and is not a line continuation or following a
         semicolon, None otherwise."""
@@ -586,11 +580,10 @@ class FST:
 
         return lns
 
-    def dedent_tail(self, indent: str, skip: int = 1, strict: bool = False) -> set[int]:
+    def dedent_tail(self, indent: str, skip: int = 1) -> set[int]:
         """Dedent all indentable lines past the first one by removing `indent` prefix and adjust node locations
-        accordingly. Does not modify columns on first line. If `strict` is False then if can not dedent entire amount
-        will dedent as much as possible. Otherwise raises if `indent` is not prefix to all indentable lines which are
-        not line continuations or pure comment lines (which are dedented as much as possible).
+        accordingly. Does not modify columns on first line. If cannot dedent entire amount will dedent as much as
+        possible.
         """
 
         if not (lns := self.get_indentable_lns(skip)) or not indent:
@@ -611,44 +604,20 @@ class FST:
 
         for ln in lns_seq:
             if l := lines[ln]:  # only dedent non-empty lines
-                if not strict:
-                    if l.startswith(indent) or (lempty_start := _re_empty_line_start.match(l).end()) >= lindent:
-                        l = dedent(l, lindent)
-
-                    else:
-                        if not dcol_offsets:
-                            dcol_offsets = {}
-
-                            for ln2 in lns_seq:
-                                if ln2 is ln:
-                                    break
-
-                                dcol_offsets[ln2] = -lindent
-
-                        l = dedent(l, lempty_start)
+                if l.startswith(indent) or (lempty_start := _re_empty_line_start.match(l).end()) >= lindent:
+                    l = dedent(l, lindent)
 
                 else:
-                    if l.startswith(indent) or _re_empty_line.match(l):
-                        l = dedent(l, lindent)
+                    if not dcol_offsets:
+                        dcol_offsets = {}
 
-                    elif self.is_continuation_line(ln) or _re_comment_line_start.match(l):
-                        if (lstart := _re_empty_line_start.match(l).end()) >= lindent:
-                            l = dedent(l, lindent)
+                        for ln2 in lns_seq:
+                            if ln2 is ln:
+                                break
 
-                        else:
-                            if not dcol_offsets:
-                                dcol_offsets = {}
+                            dcol_offsets[ln2] = -lindent
 
-                                for ln2 in lns_seq:
-                                    if ln2 is ln:
-                                        break
-
-                                    dcol_offsets[ln2] = -lindent
-
-                            l = dedent(l, lstart)
-
-                    else:
-                        raise ValueError('can not dedent lines')
+                    l = dedent(l, lempty_start)
 
             newlines.append(l)
 
@@ -715,7 +684,7 @@ class FST:
 
     def copy(self, *, decorators: bool = True, safe: bool = True) -> 'FST':
         if not (loc := self.bloc if decorators else self.loc):
-            raise ValueError('can not copy ast without location')
+            raise ValueError('cannot copy ast without location')
 
         lines  = self.root._lines
         indent = self.get_indent()

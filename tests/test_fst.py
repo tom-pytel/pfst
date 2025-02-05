@@ -307,9 +307,6 @@ class TestFST(unittest.TestCase):
         self.assertEqual('class cls:\nif True:\n i = """\nj\n"""\n k = 3\nelse:\n j \\\n=\\\n2', ast.f.text)
 
         ast = parse(src)
-        self.assertRaises(ValueError, ast.f.dedent_tail, '  ', strict=True)
-
-        ast = parse(src)
         lns = ast.body[0].body[0].f.dedent_tail(' ')
         self.assertEqual({2, 5, 6, 7, 8, 9}, lns)
         self.assertEqual('class cls:\n if True:\n i = """\nj\n"""\n k = 3\nelse:\n j \\\n=\\\n2', ast.f.text)
