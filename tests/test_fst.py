@@ -77,7 +77,7 @@ class TestFST(unittest.TestCase):
 
         ast.body[0].lineno = 100
 
-        self.assertRaises(RuntimeError, ast.f.verify)
+        self.assertRaises(Walk2Fail, ast.f.verify)
         self.assertEqual(None, ast.f.verify(do_raise=False))
 
     def test_logical_line_empty_before(self):
@@ -307,7 +307,7 @@ class TestFST(unittest.TestCase):
         self.assertEqual('class cls:\nif True:\n i = """\nj\n"""\n k = 3\nelse:\n j \\\n=\\\n2', ast.f.text)
 
         ast = parse(src)
-        self.assertRaises(ValueError, ast.f.dedent_tail, '  ')
+        self.assertRaises(ValueError, ast.f.dedent_tail, '  ', strict=True)
 
         ast = parse(src)
         lns = ast.body[0].body[0].f.dedent_tail(' ')
@@ -336,18 +336,34 @@ class TestFST(unittest.TestCase):
         self.assertEqual({2}, lns)
         self.assertEqual('@decorator\nclass cls:\npass', ast.f.text)
 
-    # def test_copy(self):
-    #     for fnm in PYFNMS:
-    #         ast = FST.from_src(read(fnm)).ast
+    def test_safe(self):
+        f = FST.from_src('if 1:\n a\nelif 2:\n b')
+        fc = f.ast.body[0].orelse[0].f.copy(safe=False)
+        self.assertEqual(fc.lines[0], 'elif 2:')
+        fc.safe()
+        self.assertEqual(fc.lines[0], 'if 2:')
 
-    #         for a in walk(ast):
-    #             f = a.f.copy()
-    #             f.verify()
+        f = FST.from_src('(1 +\n2)')
+        fc = f.ast.body[0].value.f.copy(safe=False)
+        self.assertEqual(fc.text, '1 +\n2')
+        fc.safe()
+        self.assertEqual(fc.text, '(1 +\n2)')
 
+        f = FST.from_src('i = 1')
+        self.assertIs(f.ast.body[0].targets[0].ctx.__class__, Store)
+        fc = f.ast.body[0].targets[0].f.copy(safe=False)
+        self.assertIs(fc.ast.ctx.__class__, Store)
+        fc.safe()
+        self.assertIs(fc.ast.ctx.__class__, Load)
 
+    def test_copy(self):
+        for fnm in PYFNMS:
+            ast = FST.from_src(read(fnm)).ast
 
-
-
+            for a in walk(ast):
+                if a.f.is_parsable():
+                    f = a.f.copy()
+                    f.verify()
 
 
 

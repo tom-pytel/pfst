@@ -14,10 +14,10 @@ __all__ = list(__all_other__ | {
     'FST', 'parse', 'unparse',
 })
 
-_re_empty_line_start   = re.compile(r'^\s*')   # start of completely empty or space-filled line
+_re_empty_line_start   = re.compile(r'^\s*')    # start of completely empty or space-filled line
+_re_comment_line_start = re.compile(r'^\s*#')   # start of pure comment line
 _re_empty_line         = re.compile(r'^\s*$')   # completely empty or space-filled line
 _re_line_continuation  = re.compile(r'^.*\\$')  # line continuation with backslash
-
 
 def only_root(func):
     @functools.wraps(func)
@@ -65,15 +65,7 @@ class FST:
 
     @property
     def lines(self) -> list[str]:
-        if self.is_root:
-            return self._lines
-
-
-        raise NotImplementedError  # TODO: snip and return those lines
-
-
-
-
+        return self._lines if self.is_root else self.root._lines[self.ln : self.end_ln]
 
     @property
     def text(self) -> str:
@@ -346,17 +338,6 @@ class FST:
             else:
                 astp = astp.body[0]
 
-        # if ast.__class__ is astp.__class__:
-        #     for name, child in iter_fields(ast):
-        #         if isinstance(child, (Load, Store, Del)):
-        #             setattr(astp, name, child)
-
-
-
-
-
-
-
         if not compare(astp, ast, locations=True, type_comments=parse_params['type_comments'], do_raise=do_raise):
             return None
 
@@ -388,37 +369,50 @@ class FST:
 
     # ------------------------------------------------------------------------------------------------------------------
 
-    def is_line_continuation(self, ln: int) -> bool:
+    def is_continuation_line(self, ln: int) -> bool:
         """Is a continuation line from previous line ending with '\\'?"""
 
         return bool(ln and _re_line_continuation.match(self.root._lines[ln - 1]))
 
-    def line_empty_before(self, ln: int, col: int) -> str | None:
+    def line_empty_before(self, l: str, col: int) -> str | None:
         """Is the text line empty before this position (irrespective of if is continuation from previous text line via
         '\\')? If so then return the string up to this point, else return None."""
 
-        return s if _re_empty_line.match(s := self.root._lines[ln][:col]) else None
+        return s if _re_empty_line.match(s := l[:col]) else None
+
+    # def comment_line_start(self, l: str) -> str | None:
+    #     """Beginning empty space of pure comment line if is one, otherwise None."""
+
+    #     return l[:m.end()] if (m := _re_comment_line_start.match(l)) else None
 
     def logical_line_empty_before(self) -> str | None:
         """Returns line prefix text if this node starts a new logical line and is not a line continuation or following a
         semicolon, None otherwise."""
 
         if ((ln := self.ln) is not None and
-            (s := self.line_empty_before(ln, self.col)) is not None and
-            not self.is_line_continuation(ln)
+            (s := self.line_empty_before(self.root._lines[ln], self.col)) is not None and
+            not self.is_continuation_line(ln)
         ):
             return s
 
         return None
 
     def is_parsable(self) -> bool:
-        if not is_parsable(self.ast):
+        if not self.loc or not is_parsable(self.ast):
             return False
 
+        ast    = self.ast
+        parent = self
 
+        while parent := parent.parent:
+            if isinstance((past := parent.ast), JoinedStr):
+                if (end_col_offset := getattr(ast, 'end_col_offset', None)) is not None:
+                    if (ast.lineno == past.lineno and ast.col_offset == past.col_offset and
+                        ast.end_lineno == past.end_lineno and end_col_offset == past.end_col_offset
+                    ):
+                        return False
 
-
-
+                break
 
         return True
 
@@ -592,10 +586,11 @@ class FST:
 
         return lns
 
-    def dedent_tail(self, indent: str, skip: int = 1) -> set[int]:
+    def dedent_tail(self, indent: str, skip: int = 1, strict: bool = False) -> set[int]:
         """Dedent all indentable lines past the first one by removing `indent` prefix and adjust node locations
-        accordingly. Does not modify columns on first line. Raises if `indent` is not prefix to all indentable lines
-        which are not line continuations (which are dedented as much as possible).
+        accordingly. Does not modify columns on first line. If `strict` is False then if can not dedent entire amount
+        will dedent as much as possible. Otherwise raises if `indent` is not prefix to all indentable lines which are
+        not line continuations or pure comment lines (which are dedented as much as possible).
         """
 
         if not (lns := self.get_indentable_lns(skip)) or not indent:
@@ -616,11 +611,8 @@ class FST:
 
         for ln in lns_seq:
             if l := lines[ln]:  # only dedent non-empty lines
-                if l.startswith(indent) or _re_empty_line.match(l):
-                    l = dedent(l, lindent)
-
-                elif self.is_line_continuation(ln):
-                    if (lstart := _re_empty_line_start.match(l).end()) >= lindent:
+                if not strict:
+                    if l.startswith(indent) or (lempty_start := _re_empty_line_start.match(l).end()) >= lindent:
                         l = dedent(l, lindent)
 
                     else:
@@ -633,10 +625,30 @@ class FST:
 
                                 dcol_offsets[ln2] = -lindent
 
-                        l = dedent(l, lstart)
+                        l = dedent(l, lempty_start)
 
                 else:
-                    raise ValueError('can not dedent lines')
+                    if l.startswith(indent) or _re_empty_line.match(l):
+                        l = dedent(l, lindent)
+
+                    elif self.is_continuation_line(ln) or _re_comment_line_start.match(l):
+                        if (lstart := _re_empty_line_start.match(l).end()) >= lindent:
+                            l = dedent(l, lindent)
+
+                        else:
+                            if not dcol_offsets:
+                                dcol_offsets = {}
+
+                                for ln2 in lns_seq:
+                                    if ln2 is ln:
+                                        break
+
+                                    dcol_offsets[ln2] = -lindent
+
+                            l = dedent(l, lstart)
+
+                    else:
+                        raise ValueError('can not dedent lines')
 
             newlines.append(l)
 
@@ -650,20 +662,9 @@ class FST:
 
         return lns
 
-
-
-
-
-
-
-    # def slice(self, *, decorators: bool = True, cut: bool = False) -> 'FST':
-    #     pass
-
-
-
     @only_root
-    def isafe(self) -> 'FST':
-        """Inplace make safe (to make cut or copied subtrees parsable if is not)."""
+    def safe(self) -> 'FST':
+        """Inplace make safe (to make cut or copied subtrees parsable if the cut made them not so they are not)."""
 
         ast   = self.ast
         lines = self.lines
@@ -675,40 +676,53 @@ class FST:
 
             lines[ln] = bistr((l := lines[ln])[:col] + l[col + 2:])
 
-        elif isinstance(ast, expr):  # if expression not parsing then try parenthesize
+        elif isinstance(ast, expr):
             mode = get_parse_mode(ast)
 
             try:
                 ast_.parse(self.text, mode=mode, **self._parse_params)
 
-            except SyntaxError:
+            except SyntaxError:  # if expression not parsing then try parenthesize
                 ast_.parse(f'({self.text})', mode=mode, **self._parse_params)
 
                 self.offset(ln, col, 0, 1)
 
-                lines[ln]     = bistr(f'{(l := lines[ln])[:col]}({l[col:]}')
+                if isinstance(ast, Tuple):
+                    ast.col_offset     -= 1
+                    ast.end_col_offset += 1  # no touch needed because was touched in offset()
+
                 lines[end_ln] = bistr(f'{(l := lines[end_ln])[:end_col]}){l[end_col:]}')
+                lines[ln]     = bistr(f'{(l := lines[ln])[:col]}({l[col:]}')
+
+            stack = [ast]
+
+            while stack:  # anything that might have been a ctx Store or Del before (outside NamedExpr) set to Load
+                a = stack.pop()
+
+                if ((is_seq := isinstance(a, (Tuple, List))) or (is_starred := isinstance(a, Starred)) or
+                    isinstance(a, (Name, Subscript, Attribute))
+                ):
+                    f       = FST(Load(), a.f, a.ctx.f.pfield)
+                    f.ast.f = f
+                    a.ctx   = f.ast
+
+                    if is_seq:
+                        stack.extend(a.elts)
+                    elif is_starred:
+                        stack.append(a.value)
 
         return self
 
+    def copy(self, *, decorators: bool = True, safe: bool = True) -> 'FST':
+        if not (loc := self.bloc if decorators else self.loc):
+            raise ValueError('can not copy ast without location')
 
-
-
-
-
-    def copy(self, *, decorators: bool = True) -> 'FST':
         lines  = self.root._lines
         indent = self.get_indent()
         ast    = copy(self.ast)
 
-        if decorators:
-            loc = self.bloc
-
-        else:
-            loc = self.loc
-
-            if hasattr(ast, 'decorator_list'):
-                ast.decorator_list.clear()
+        if not decorators and hasattr(ast, 'decorator_list'):
+            ast.decorator_list.clear()
 
         fst = FST(ast, lines=lines, from_=self)  # we use original lines for nodes offset calc before putting new lines
 
@@ -719,7 +733,7 @@ class FST:
         fst.touch(True)
         fst.dedent_tail(indent)
 
-        return fst
+        return fst.safe() if safe else fst
 
 
 

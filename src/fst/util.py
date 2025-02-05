@@ -113,7 +113,7 @@ def has_type_comments(ast: AST) -> bool:
 
 def is_parsable(node: AST) -> bool:
     if not isinstance(node, AST) or isinstance(node, (Load, Store, Del,
-            Attribute, ExceptHandler, Starred, Slice, FormattedValue,
+            ExceptHandler, Starred, Slice, FormattedValue,
             expr_context, operator, cmpop, boolop, alias, unaryop, arguments, arg, keyword, comprehension,
             withitem)):
         return False
@@ -221,7 +221,9 @@ def compare(ast1: AST, ast2: AST, *, locations: bool = False, type_comments: boo
                     getattr(n1, 'end_lineno', None) != getattr(n2, 'end_lineno', None) or
                     getattr(n1, 'end_col_offset', None) != getattr(n2, 'end_col_offset', None)
                 ):
-                    raise Walk2Fail(f"locations differ in '{n1.__class__.__qualname__}'")
+                    raise Walk2Fail(f"locations differ in '{n1.__class__.__qualname__}, "
+                                    f"{(n1.lineno, n1.col_offset, n1.end_lineno, n1.end_col_offset)} vs. "
+                                    f"{(n2.lineno, n2.col_offset, n2.end_lineno, n2.end_col_offset)}")
 
     except Walk2Fail:
         if do_raise:
