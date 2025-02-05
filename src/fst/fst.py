@@ -398,8 +398,14 @@ class FST:
         ast    = self.ast
         parent = self
 
+        if isinstance(ast, JoinedStr) and (pfield := self.pfield) and pfield.name == 'format_spec':
+            return False
+
         while parent := parent.parent:
             if isinstance((past := parent.ast), JoinedStr):
+                if isinstance(ast, Constant):
+                    return False
+
                 if (end_col_offset := getattr(ast, 'end_col_offset', None)) is not None:
                     if (ast.lineno == past.lineno and ast.col_offset == past.col_offset and
                         ast.end_lineno == past.end_lineno and end_col_offset == past.end_col_offset
