@@ -16,9 +16,9 @@ __all__ = list(__all_other__ | {
     'FST', 'parse', 'unparse',
 })
 
-_re_empty_line_start   = re.compile(r'^\s*')    # start of completely empty or space-filled line
-_re_empty_line         = re.compile(r'^\s*$')   # completely empty or space-filled line
-_re_line_continuation  = re.compile(r'^.*\\$')  # line continuation with backslash
+_re_empty_line_start   = re.compile(r'^[ \t]*')   # start of completely empty or space-filled line
+_re_empty_line         = re.compile(r'^[ \t]*$')  # completely empty or space-filled line
+_re_line_continuation  = re.compile(r'^.*\\$')    # line continuation with backslash
 
 
 def only_root(func):
@@ -67,7 +67,7 @@ class FST:
 
     @property
     def lines(self) -> list[str]:
-        return self._lines if self.is_root else self.root._lines[self.ln : self.end_ln]
+        return self._lines if self.is_root else self.root._lines[self.ln : self.end_ln + 1] if self.ln is not None else []
 
     @property
     def text(self) -> str:
@@ -397,14 +397,19 @@ class FST:
         if not self.loc or not is_parsable(self.a):
             return False
 
-        if parent := self.parent:
-            ast = self.a
+        ast = self.a
 
-            if isinstance(ast, JoinedStr):
+        if isinstance(ast, Tuple):  # tuple of slices used in indexing (like numpy)
+            for e in ast.elts:
+                if isinstance(e, Slice):
+                    return False
+
+        elif parent := self.parent:
+            if isinstance(ast, JoinedStr):  # formatspec '.1f' type strings without quote delimiters
                 if self.pfield.name == 'format_spec' and isinstance(parent.a, FormattedValue):
                     return False
 
-            elif isinstance(ast, Constant):
+            elif isinstance(ast, Constant):  # string parts of f-string without quote delimiters
                 if self.pfield.name == 'values' and isinstance(parent.a, JoinedStr) and isinstance(ast.value, str):
                     return False
 
@@ -531,7 +536,7 @@ class FST:
 
         if dcol_offset:
             for a in walk(self.a):  # now offset columns where it is allowed
-                if not (end_col_offset := getattr(a, 'end_col_offset', None)):  # can never be 0
+                if (end_col_offset := getattr(a, 'end_col_offset', None)) is None:
                     a.f.touch()  # just in case
 
                 else:
@@ -553,7 +558,7 @@ class FST:
         """
 
         for a in walk(self.a):  # now offset columns where it is allowed
-            if not (end_col_offset := getattr(a, 'end_col_offset', None)):  # can never be 0
+            if (end_col_offset := getattr(a, 'end_col_offset', None)) is None:
                 a.f.touch()  # just in case
 
             else:
@@ -651,10 +656,11 @@ class FST:
 
         ln, col, end_ln, end_col = self.loc
 
-        if isinstance(ast, If) and lines[ln][col : col + 4] == 'elif':  # elif -> if
-            self.offset(ln, col + 2, 0, -2)
+        if isinstance(ast, If):
+            if lines[ln][col : col + 4] == 'elif':  # elif -> if
+                self.offset(ln, col + 2, 0, -2)
 
-            lines[ln] = bistr((l := lines[ln])[:col] + l[col + 2:])
+                lines[ln] = bistr((l := lines[ln])[:col] + l[col + 2:])
 
         elif isinstance(ast, MatchStar):
             pass  # ast.pattern that can't be converted to expression
@@ -668,7 +674,9 @@ class FST:
 
             except SyntaxError:  # if expression not parsing then try parenthesize
                 try:
-                    a = ast_.parse(f'({text})', mode='eval', **self._parse_params)
+                    tail = (',)' if isinstance(ast, Tuple) and len(ast.elts) == 1 and
+                            lines[self.end_ln][self.end_col - 1] != ',' else ')')
+                    a    = ast_.parse(f'({text}{tail}', mode='eval', **self._parse_params)
 
                 except SyntaxError:
                     if do_raise:
@@ -676,10 +684,11 @@ class FST:
 
                     return None
 
-                lines[end_ln] = bistr(f'{(l := lines[end_ln])[:end_col]}){l[end_col:]}')
+                lines[end_ln] = bistr(f'{(l := lines[end_ln])[:end_col]}{tail}{l[end_col:]}')
                 lines[ln]     = bistr(f'{(l := lines[ln])[:col]}({l[col:]}')
 
-            self.a = a.body
+            self.a   = a.body
+            self.a.f = self
 
             self.touch()
             self._make_fst_tree()
@@ -731,7 +740,8 @@ class FST:
 
                 self._lines = [bistr(s) for s in newlines]
 
-            self.a = a.body[0]
+            self.a   = a.body[0]
+            self.a.f = self
 
             self.touch()
             self._make_fst_tree()
@@ -748,15 +758,16 @@ class FST:
         if not (loc := self.bloc if decorators else self.loc):
             raise ValueError('cannot copy ast without location')
 
+        lines  = self.root._lines
         indent = self.get_indent()
         ast    = copy(self.a)
 
         if not decorators and hasattr(ast, 'decorator_list'):
             ast.decorator_list.clear()
 
-        fst = FST(ast, lines=self.root._lines, from_=self)  # we use original lines for nodes offset calc before putting new lines
+        fst = FST(ast, lines=lines, from_=self)  # we use original lines for nodes offset calc before putting new lines
 
-        fst.offset(loc.ln, loc.col, -loc.ln, -loc.col)
+        fst.offset(loc.ln, loc.col, -loc.ln, -lines[loc.ln].c2b(loc.col))
 
         fst._lines = self.sniploc(*loc)
 

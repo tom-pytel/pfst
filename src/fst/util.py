@@ -236,7 +236,7 @@ def compare(ast1: AST, ast2: AST, *, locations: bool = False, type_comments: boo
                     getattr(n1, 'end_lineno', None) != getattr(n2, 'end_lineno', None) or
                     getattr(n1, 'end_col_offset', None) != getattr(n2, 'end_col_offset', None)
                 ):
-                    raise WalkFail(f"locations differ in '{n1.__class__.__qualname__}, "
+                    raise WalkFail(f"locations differ in '{n1.__class__.__qualname__}', "
                                    f"{(n1.lineno, n1.col_offset, n1.end_lineno, n1.end_col_offset)} vs. "
                                    f"{(n2.lineno, n2.col_offset, n2.end_lineno, n2.end_col_offset)}")
 
