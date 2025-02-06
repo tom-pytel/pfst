@@ -145,6 +145,8 @@ def get_parse_mode(node: AST) -> Literal['exec'] | Literal['eval'] | Literal['si
         return 'eval'
     if isinstance(node, Interactive):
         return 'single'
+    if isinstance(node, (MatchValue, MatchSingleton, MatchSequence, MatchMapping, MatchClass, MatchAs, MatchOr, TypeVar)):
+        return 'eval'  # because can be reparsed as such
 
     raise ValueError('can not determine parse mode')
 
@@ -179,7 +181,7 @@ def walk2(ast1: AST, ast2: AST, cb_primitive: Callable[[Any, Any, str, int], boo
             if (is_ast := isinstance(child1, AST)) or isinstance(child1, list) or isinstance(child2, (AST, list)):
                 if child1.__class__ is not child2.__class__:
                     raise WalkFail(f"child classes differ at .{name1} in '{a1.__class__.__qualname__}', "
-                                    f"'{child1.__class__.__qualname__}' vs. '{child2.__class__.__qualname__}'")
+                                   f"'{child1.__class__.__qualname__}' vs. '{child2.__class__.__qualname__}'")
 
                 if is_ast:
                     stack1.append(child1)
@@ -196,7 +198,7 @@ def walk2(ast1: AST, ast2: AST, cb_primitive: Callable[[Any, Any, str, int], boo
                         if is_ast:
                             if c1.__class__ is not c2.__class__:
                                 raise WalkFail(f"child element classes differ at .{name1}[{i}] in '{a1.__class__.__qualname__}', "
-                                                f"'{c1.__class__.__qualname__}' vs. '{c2.__class__.__qualname__}'")
+                                               f"'{c1.__class__.__qualname__}' vs. '{c2.__class__.__qualname__}'")
 
                             stack1.append(c1)
                             stack2.append(c2)
@@ -232,8 +234,8 @@ def compare(ast1: AST, ast2: AST, *, locations: bool = False, type_comments: boo
                     getattr(n1, 'end_col_offset', None) != getattr(n2, 'end_col_offset', None)
                 ):
                     raise WalkFail(f"locations differ in '{n1.__class__.__qualname__}, "
-                                    f"{(n1.lineno, n1.col_offset, n1.end_lineno, n1.end_col_offset)} vs. "
-                                    f"{(n2.lineno, n2.col_offset, n2.end_lineno, n2.end_col_offset)}")
+                                   f"{(n1.lineno, n1.col_offset, n1.end_lineno, n1.end_col_offset)} vs. "
+                                   f"{(n2.lineno, n2.col_offset, n2.end_lineno, n2.end_col_offset)}")
 
     except WalkFail:
         if do_raise:

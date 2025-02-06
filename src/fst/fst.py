@@ -635,8 +635,10 @@ class FST:
         return lns
 
     @only_root
-    def safe(self) -> 'FST':
-        """Inplace make safe to parse (to make cut or copied subtrees parsable if the source is not by itself)."""
+    def safe(self, *, do_raise: bool = False) -> Union['FST', None]:
+        """Inplace make safe to parse (to make cut or copied subtrees parsable if the source is not by itself). Possibly
+        reparses which may change type of ast.
+        """
 
         ast   = self.a
         lines = self.lines
@@ -648,68 +650,41 @@ class FST:
 
             lines[ln] = bistr((l := lines[ln])[:col] + l[col + 2:])
 
-            return self
 
-        if isinstance(ast, pattern):
-            raise NotImplementedError  # MatchValue, MatchSingleton, MatchSequence, MatchMapping, MatchClass, MatchAs, MatchOr
+        # TODO: Assign, AnnAssign  - surround `value` with parens if can't parse assignment
 
-        if isinstance(ast, TypeVar):
-            if ast.bound is not None:
-                if ast.default_value is not None:
-                    raise NotImplementedError
 
-                else:
-                    raise NotImplementedError
+        elif isinstance(ast, MatchStar):
+            pass
 
-            elif ast.default_value is not None:
-                raise NotImplementedError
-
+        elif isinstance(ast, (expr, pattern, TypeVar)):
+            if isinstance(ast, TypeVar) and (ast.bound is not None or ast.default_value is not None):
+                mode = 'exec'
             else:
-                self.a  = ast = Name(id=ast.name, lineno=ast.lineno, col_offset=ast.col_offset,
-                                     end_lineno=ast.end_lineno, end_col_offset=ast.end_col_offset)
-                ast.f   = self
-                f       = FST(Load(), self, astfield('ctx'))
-                f.a.f   = f
-                ast.ctx = f.a
-
-        if isinstance(ast, expr):
-            mode = get_parse_mode(ast)
+                mode = get_parse_mode(ast)
 
             try:
-                ast_.parse(self.text, mode=mode, **self._parse_params)
+                a = ast_.parse(self.text, mode=mode, **self._parse_params)
 
             except SyntaxError:  # if expression not parsing then try parenthesize
-                ast_.parse(f'({self.text})', mode=mode, **self._parse_params)
-
-                self.offset(ln, col, 0, 1)
-
-                if isinstance(ast, Tuple):
-                    ast.col_offset     -= 1
-                    ast.end_col_offset += 1  # no touch needed because was touched in offset()
+                a = ast_.parse(f'({self.text})', mode=mode, **self._parse_params)
 
                 lines[end_ln] = bistr(f'{(l := lines[end_ln])[:end_col]}){l[end_col:]}')
                 lines[ln]     = bistr(f'{(l := lines[ln])[:col]}({l[col:]}')
 
-            stack = [ast]
+            self.a = a.body if isinstance(a, Expression) else a.body[0]
 
-            while stack:  # anything that might have been a ctx Store or Del before (outside NamedExpr) set to Load
-                a = stack.pop()
+            self._make_fst_tree()
 
-                if ((is_seq := isinstance(a, (Tuple, List))) or (is_starred := isinstance(a, Starred)) or
-                    isinstance(a, (Name, Subscript, Attribute))
-                ):
-                    f     = FST(Load(), a.f, a.ctx.f.pfield)
-                    f.a.f = f
-                    a.ctx = f.a
+        if not self.is_parsable():
+            if do_raise:
+                raise ValueError('ast could not be made safe to parse')
 
-                    if is_seq:
-                        stack.extend(a.elts)
-                    elif is_starred:
-                        stack.append(a.value)
+            return False
 
         return self
 
-    def copy(self, *, decorators: bool = True, safe: bool = True) -> 'FST':
+    def copy(self, *, decorators: bool = True, safe: bool = True, do_raise: bool = False) -> 'FST':
         if not (loc := self.bloc if decorators else self.loc):
             raise ValueError('cannot copy ast without location')
 
@@ -729,7 +704,7 @@ class FST:
         fst.touch(True)
         fst.dedent_tail(indent)
 
-        return fst.safe() if safe else fst
+        return fst.safe(do_raise=do_raise) if safe else fst
 
 
 
