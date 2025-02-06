@@ -118,34 +118,37 @@ def has_type_comments(ast: AST) -> bool:
     return False
 
 
-def is_parsable(node: AST) -> bool:
-    if not isinstance(node, AST):
+def is_parsable(ast: AST) -> bool:
+    """Really means the `ast` is `unparse()`able, meaning that a parse could get it to this top level AST node."""
+
+    if not isinstance(ast, AST):
         return False
 
-    if isinstance(node, (Load, Store, Del,
+    if isinstance(ast, (Load, Store, Del, Add, Sub, Mult, Div, Mod, Pow, LShift, RShift, BitOr, BitXor, BitAnd,
+        FloorDiv, Eq, NotEq, Lt, LtE, Gt, GtE, Is, IsNot, In, NotIn, And, Or,
         ExceptHandler, Slice, FormattedValue, Starred, MatchStar,
+        MatchValue, MatchSingleton, MatchSequence, MatchMapping, MatchClass, MatchAs, MatchOr,
         expr_context, operator, cmpop, boolop, alias, unaryop, arguments, comprehension, withitem, match_case,
-        MatchValue, MatchSingleton, MatchSequence, MatchMapping, MatchClass, MatchAs, MatchOr,  # TODO: all except MatchStar can be made parsable
-        arg, keyword,  # TODO: can be made safe()
-        ParamSpec, TypeVarTuple,  # py 3.12+
+        arg, keyword,
+        TypeVar, ParamSpec, TypeVarTuple,  # py 3.12+
     )):
         return False
 
     return True
 
 
-def get_parse_mode(node: AST) -> Literal['exec'] | Literal['eval'] | Literal['single']:
-    if isinstance(node, stmt):
+def get_parse_mode(ast: AST) -> Literal['exec'] | Literal['eval'] | Literal['single']:
+    if isinstance(ast, stmt):
         return 'exec'
-    if isinstance(node, expr):
+    if isinstance(ast, expr):
         return 'eval'
-    if isinstance(node, Module):
+    if isinstance(ast, Module):
         return 'exec'
-    if isinstance(node, Expression):
+    if isinstance(ast, Expression):
         return 'eval'
-    if isinstance(node, Interactive):
+    if isinstance(ast, Interactive):
         return 'single'
-    if isinstance(node, (MatchValue, MatchSingleton, MatchSequence, MatchMapping, MatchClass, MatchAs, MatchOr, TypeVar)):
+    if isinstance(ast, (MatchValue, MatchSingleton, MatchSequence, MatchMapping, MatchClass, MatchAs, MatchOr, TypeVar)):
         return 'eval'  # because can be reparsed as such
 
     raise ValueError('can not determine parse mode')

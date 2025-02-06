@@ -635,9 +635,15 @@ class FST:
         return lns
 
     @only_root
-    def safe(self, *, do_raise: bool = True) -> Union['FST', None]:
-        """Inplace make safe to parse (to make cut or copied subtrees parsable if the source is not by itself). Possibly
-        reparses which may change type of ast.
+    def safe(self, *, do_assign: bool = True, do_raise: bool = True) -> Union['FST', None]:  # -> Self | None
+        """Make safe to parse (to make cut or copied subtrees parsable if the source is not by itself). Possibly
+        reparses which may change type of ast, e.g. `keyword` "i=1" to `Assign` "i=1".
+
+        If make safe fails the ast may be left changed.
+
+        Args:
+            do_assign: Whether to allow conversion to Assign or AnnAssign statement.
+            do_raise: Whether to raise on failure to make safe (default: True) or return None (False).
         """
 
         ast   = self.a
@@ -650,37 +656,91 @@ class FST:
 
             lines[ln] = bistr((l := lines[ln])[:col] + l[col + 2:])
 
-
-        # TODO: Assign, AnnAssign  - surround `value` with parens if can't parse assignment, for when allow copy `arg` or `keyword`
-
-
         elif isinstance(ast, MatchStar):
-            pass
+            pass  # ast.pattern that can't be converted to expression
 
-        elif isinstance(ast, (expr, pattern, TypeVar)):
-            if isinstance(ast, TypeVar) and (ast.bound is not None or ast.default_value is not None):
-                mode = 'exec'
-            else:
-                mode = get_parse_mode(ast)
-
+        elif (isinstance(ast, (expr, pattern)) or
+            (isinstance(ast, arg) and not ast.annotation) or
+            (isinstance(ast, TypeVar) and not ast.bound and not ast.default_value
+        )):
             try:
-                a = ast_.parse(self.text, mode=mode, **self._parse_params)
+                a = ast_.parse(text := self.text, mode='eval', **self._parse_params)
 
             except SyntaxError:  # if expression not parsing then try parenthesize
-                a = ast_.parse(f'({self.text})', mode=mode, **self._parse_params)
+                try:
+                    a = ast_.parse(f'({text})', mode='eval', **self._parse_params)
+
+                except SyntaxError:
+                    if do_raise:
+                        raise
+
+                    return None
 
                 lines[end_ln] = bistr(f'{(l := lines[end_ln])[:end_col]}){l[end_col:]}')
                 lines[ln]     = bistr(f'{(l := lines[ln])[:col]}({l[col:]}')
 
-            self.a = a.body if isinstance(a, Expression) else a.body[0]
+            self.a = a.body
 
+            self.touch()
+            self._make_fst_tree()
+
+        elif do_assign and (
+            (is_keyword := isinstance(ast, keyword)) or
+            ((is_arg := isinstance(ast, arg)) and ast.annotation) or
+            (isinstance(ast, TypeVar) and (ast.bound or ast.default_value)
+        )):
+            try:
+                a = ast_.parse(self.text, mode='exec', **self._parse_params)
+
+            except SyntaxError:  # if assign not parsing then try sanitize it
+                newlines = lines[:]
+
+                def maybe_replace(text, ln, col, end_ln, end_col):
+                    if end_ln != ln:
+                        newlines[ln] = newlines[ln][:col] + text + newlines[end_ln][end_col:]
+
+                        del newlines[ln + 1 : end_ln + 1]
+
+                if is_keyword:
+                    maybe_replace(' = ', self.ln, self.col + len(ast.arg), (v := ast.value.f).ln, v.col)
+                elif is_arg:
+                    maybe_replace(': ', self.ln, self.col + len(ast.arg), (an := ast.annotation.f).ln, an.col)
+
+                else:  # is_typevar
+                    b = ast.bound
+
+                    if (dv := ast.default_value):
+                        if b:
+                            maybe_replace(' = ', b.f.end_ln, b.f.end_col, dv.f.ln, dv.f.col)
+                            maybe_replace(': ', self.ln, self.col + len(ast.name), b.f.ln, b.f.col)
+
+                        else:
+                            maybe_replace(' = ', self.ln, self.col + len(ast.name), dv.f.ln, dv.f.col)
+
+                    else:  # b must be present
+                        maybe_replace(': ', self.ln, self.col + len(ast.name), b.f.ln, b.f.col)
+
+                try:
+                    a = ast_.parse('\n'.join(newlines), mode='exec', **self._parse_params)
+
+                except SyntaxError:
+                    if do_raise:
+                        raise
+
+                    return None
+
+                self._lines = [bistr(s) for s in newlines]
+
+            self.a = a.body[0]
+
+            self.touch()
             self._make_fst_tree()
 
         if not self.is_parsable():
             if do_raise:
                 raise ValueError('ast could not be made safe to parse')
 
-            return False
+            return None
 
         return self
 
@@ -688,14 +748,13 @@ class FST:
         if not (loc := self.bloc if decorators else self.loc):
             raise ValueError('cannot copy ast without location')
 
-        lines  = self.root._lines
         indent = self.get_indent()
         ast    = copy(self.a)
 
         if not decorators and hasattr(ast, 'decorator_list'):
             ast.decorator_list.clear()
 
-        fst = FST(ast, lines=lines, from_=self)  # we use original lines for nodes offset calc before putting new lines
+        fst = FST(ast, lines=self.root._lines, from_=self)  # we use original lines for nodes offset calc before putting new lines
 
         fst.offset(loc.ln, loc.col, -loc.ln, -loc.col)
 
