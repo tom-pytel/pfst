@@ -339,64 +339,64 @@ class TestFST(unittest.TestCase):
 
     def test_safe(self):
         f = FST.from_src('if 1:\n a\nelif 2:\n b')
-        fc = f.a.body[0].orelse[0].f.copy(safe=False)
+        fc = f.a.body[0].orelse[0].f.copy(safe=False, do_raise=True)
         self.assertEqual(fc.lines[0], 'elif 2:')
         fc.safe()
         self.assertEqual(fc.lines[0], 'if 2:')
 
         f = FST.from_src('(1 +\n2)')
-        fc = f.a.body[0].value.f.copy(safe=False)
+        fc = f.a.body[0].value.f.copy(safe=False, do_raise=True)
         self.assertEqual(fc.text, '1 +\n2')
         fc.safe()
         self.assertEqual(fc.text, '(1 +\n2)')
 
         f = FST.from_src('i = 1')
         self.assertIs(f.a.body[0].targets[0].ctx.__class__, Store)
-        fc = f.a.body[0].targets[0].f.copy(safe=False)
+        fc = f.a.body[0].targets[0].f.copy(safe=False, do_raise=True)
         self.assertIs(fc.a.ctx.__class__, Store)
         fc.safe()
         self.assertIs(fc.a.ctx.__class__, Load)
 
         f = FST.from_src('match a:\n case 2: pass')
-        f = f.a.body[0].cases[0].pattern.f.copy(safe=False)
+        f = f.a.body[0].cases[0].pattern.f.copy(safe=False, do_raise=True)
         self.assertIs(f.a.__class__, MatchValue)
         f.safe()
         self.assertIs(f.a.__class__, Constant)
         self.assertEqual(f.a.value, 2)
 
         f = FST.from_src('match a:\n case True: pass')
-        f = f.a.body[0].cases[0].pattern.f.copy(safe=False)
+        f = f.a.body[0].cases[0].pattern.f.copy(safe=False, do_raise=True)
         self.assertIs(f.a.__class__, MatchSingleton)
         f.safe()
         self.assertIs(f.a.__class__, Constant)
         self.assertIs(f.a.value, True)
 
         f = FST.from_src('match a:\n case (1, a): pass')
-        f = f.a.body[0].cases[0].pattern.f.copy(safe=False)
+        f = f.a.body[0].cases[0].pattern.f.copy(safe=False, do_raise=True)
         self.assertIs(f.a.__class__, MatchSequence)
         f.safe()
         self.assertIs(f.a.__class__, Tuple)
 
         f = FST.from_src('match a:\n case [1, a]: pass')
-        f = f.a.body[0].cases[0].pattern.f.copy(safe=False)
+        f = f.a.body[0].cases[0].pattern.f.copy(safe=False, do_raise=True)
         self.assertIs(f.a.__class__, MatchSequence)
         f.safe()
         self.assertIs(f.a.__class__, List)
 
         f = FST.from_src('match a:\n case {1: a}: pass')
-        f = f.a.body[0].cases[0].pattern.f.copy(safe=False)
+        f = f.a.body[0].cases[0].pattern.f.copy(safe=False, do_raise=True)
         self.assertIs(f.a.__class__, MatchMapping)
         f.safe()
         self.assertIs(f.a.__class__, Dict)
 
         f = FST.from_src('match a:\n case a: pass')
-        f = f.a.body[0].cases[0].pattern.f.copy(safe=False)
+        f = f.a.body[0].cases[0].pattern.f.copy(safe=False, do_raise=True)
         self.assertIs(f.a.__class__, MatchAs)
         f.safe()
         self.assertIs(f.a.__class__, Name)
 
         f = FST.from_src('match a:\n case 1 | 2: pass')
-        f = f.a.body[0].cases[0].pattern.f.copy(safe=False)
+        f = f.a.body[0].cases[0].pattern.f.copy(safe=False, do_raise=True)
         self.assertIs(f.a.__class__, MatchOr)
         f.safe()
         self.assertIs(f.a.__class__, BinOp)
@@ -404,14 +404,14 @@ class TestFST(unittest.TestCase):
 
         if sys.version_info[:2] >= (3, 12):
             f = FST.from_src('type t[T] = ...')
-            f = f.a.body[0].type_params[0].f.copy(safe=False)
+            f = f.a.body[0].type_params[0].f.copy(safe=False, do_raise=True)
             self.assertIs(f.a.__class__, TypeVar)
             f.safe()
             self.assertIs(f.a.__class__, Name)
             self.assertEqual(f.a.id, "T")
 
             f = FST.from_src('type t[T: int] = ...')
-            f = f.a.body[0].type_params[0].f.copy(safe=False)
+            f = f.a.body[0].type_params[0].f.copy(safe=False, do_raise=True)
             self.assertIs(f.a.__class__, TypeVar)
             f.safe()
             self.assertIs(f.a.__class__, AnnAssign)
@@ -424,7 +424,7 @@ class TestFST(unittest.TestCase):
             self.assertIs(f.a.value, None)
 
             f = FST.from_src('type t[T = str] = ...')
-            f = f.a.body[0].type_params[0].f.copy(safe=False)
+            f = f.a.body[0].type_params[0].f.copy(safe=False, do_raise=True)
             self.assertIs(f.a.__class__, TypeVar)
             f.safe()
             self.assertIs(f.a.__class__, Assign)
@@ -437,7 +437,7 @@ class TestFST(unittest.TestCase):
             self.assertEqual(f.a.value.id, "str")
 
             f = FST.from_src('type t[T: int = str] = ...')
-            f = f.a.body[0].type_params[0].f.copy(safe=False)
+            f = f.a.body[0].type_params[0].f.copy(safe=False, do_raise=True)
             self.assertIs(f.a.__class__, TypeVar)
             f.safe()
             self.assertIs(f.a.__class__, AnnAssign)
@@ -457,13 +457,13 @@ class TestFST(unittest.TestCase):
 
             for a in walk(ast):
                 if a.f.is_parsable():
-                    f = a.f.copy()
+                    f = a.f.copy(safe=True, do_raise=True)
                     f.verify(do_raise=True)
 
     def test_copy(self):
         f = FST.from_src('@decorator\nclass cls:\n  pass')
-        self.assertEqual(f.a.body[0].f.copy().text, '@decorator\nclass cls:\n  pass')
-        self.assertEqual(f.a.body[0].f.copy(decorators=False).text, 'class cls:\n  pass')
+        self.assertEqual(f.a.body[0].f.copy(safe=False, do_raise=True).text, '@decorator\nclass cls:\n  pass')
+        self.assertEqual(f.a.body[0].f.copy(decorators=False, safe=False, do_raise=True).text, 'class cls:\n  pass')
 
 
 

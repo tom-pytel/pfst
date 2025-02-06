@@ -220,7 +220,7 @@ _compare_primitive_type_comments_func = (
     (lambda p1, p2, n, i: p1.__class__ is p2.__class__ and p1 == p2),
 )
 
-def compare(ast1: AST, ast2: AST, *, locations: bool = False, type_comments: bool = False, do_raise: bool = False) -> bool:
+def compare(ast1: AST, ast2: AST, *, locations: bool = False, type_comments: bool = False, do_raise: bool = True) -> bool:
     """Copy two trees including possibly locations and type comments."""
 
     cb_primitive = _compare_primitive_type_comments_func[bool(type_comments)]
@@ -246,7 +246,7 @@ def compare(ast1: AST, ast2: AST, *, locations: bool = False, type_comments: boo
     return True
 
 
-def copy_attributes(src: AST, dst: AST, *, compare: bool = True, type_comments: bool = False, do_raise: bool = False) -> bool:
+def copy_attributes(src: AST, dst: AST, *, compare: bool = True, type_comments: bool = False, do_raise: bool = True) -> bool:
     """Copy attributes from one tree to another checking structure equality in the process."""
 
     cb_primitive = _compare_primitive_type_comments_func[bool(type_comments)] if compare else lambda p1, p2, n, i: True

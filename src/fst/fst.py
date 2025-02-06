@@ -323,7 +323,7 @@ class FST:
 
         return FST(ast, lines=lines, parse_params=parse_params)
 
-    def verify(self, *, do_raise: bool = False) -> Union['FST', None]:  # -> Self | None:
+    def verify(self, *, do_raise: bool = True) -> Union['FST', None]:  # -> Self | None:
         """Sanity check, make sure parsed source matches ast."""
 
         root         = self.root
@@ -635,7 +635,7 @@ class FST:
         return lns
 
     @only_root
-    def safe(self, *, do_raise: bool = False) -> Union['FST', None]:
+    def safe(self, *, do_raise: bool = True) -> Union['FST', None]:
         """Inplace make safe to parse (to make cut or copied subtrees parsable if the source is not by itself). Possibly
         reparses which may change type of ast.
         """
@@ -651,7 +651,7 @@ class FST:
             lines[ln] = bistr((l := lines[ln])[:col] + l[col + 2:])
 
 
-        # TODO: Assign, AnnAssign  - surround `value` with parens if can't parse assignment
+        # TODO: Assign, AnnAssign  - surround `value` with parens if can't parse assignment, for when allow copy `arg` or `keyword`
 
 
         elif isinstance(ast, MatchStar):
@@ -684,7 +684,7 @@ class FST:
 
         return self
 
-    def copy(self, *, decorators: bool = True, safe: bool = True, do_raise: bool = False) -> 'FST':
+    def copy(self, *, decorators: bool = True, safe: bool = True, do_raise: bool = True) -> 'FST':
         if not (loc := self.bloc if decorators else self.loc):
             raise ValueError('cannot copy ast without location')
 
