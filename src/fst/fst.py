@@ -323,7 +323,7 @@ class FST:
 
         return FST(ast, lines=lines, parse_params=parse_params)
 
-    def verify(self, *, do_raise: bool = True) -> Union['FST', None]:  # -> Self | None:
+    def verify(self, *, do_raise: bool = False) -> Union['FST', None]:  # -> Self | None:
         """Sanity check, make sure parsed source matches ast."""
 
         root         = self.root
@@ -649,6 +649,9 @@ class FST:
             lines[ln] = bistr((l := lines[ln])[:col] + l[col + 2:])
 
             return self
+
+        if isinstance(ast, pattern):
+            raise NotImplementedError  # MatchValue, MatchSingleton, MatchSequence, MatchMapping, MatchClass, MatchAs, MatchOr
 
         if isinstance(ast, TypeVar):
             if ast.bound is not None:

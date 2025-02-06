@@ -4,7 +4,7 @@ from ast import *
 from typing import Any, Callable, Iterator, Literal, NamedTuple
 
 __all__ = [
-    'bistr', 'astfield', 'get_field', 'has_type_comments', 'is_parsable', 'get_parse_mode', 'Walk2Fail', 'walk2',
+    'bistr', 'astfield', 'get_field', 'has_type_comments', 'is_parsable', 'get_parse_mode', 'WalkFail', 'walk2',
     'compare', 'copy_attributes', 'copy',
 ]
 
@@ -93,7 +93,7 @@ class bistr(str):
 
 
 if sys.version_info[:2] < (3, 12):
-    class TypeVar: pass  # for isinstance checks (which will always fail)
+    class TypeVar: pass  # for isinstance() checks
     class ParamSpec: pass
     class TypeVarTuple: pass
 
@@ -123,12 +123,12 @@ def is_parsable(node: AST) -> bool:
         return False
 
     if isinstance(node, (Load, Store, Del,
-        ExceptHandler, Slice, FormattedValue, Starred,
-        MatchStar, MatchValue, MatchSingleton, MatchSequence, MatchMapping, MatchClass, MatchAs, MatchOr,  # all except MatchStar can be made parsable
+        ExceptHandler, Slice, FormattedValue, Starred, MatchStar,
+        expr_context, operator, cmpop, boolop, alias, unaryop, arguments, comprehension, withitem, match_case,
+        MatchValue, MatchSingleton, MatchSequence, MatchMapping, MatchClass, MatchAs, MatchOr,  # TODO: all except MatchStar can be made parsable
+        arg, keyword,  # TODO: can be made safe()
         ParamSpec, TypeVarTuple,  # py 3.12+
-        expr_context, operator, cmpop, boolop, alias, unaryop, arguments, arg, keyword, comprehension,
-        withitem, match_case)
-    ):
+    )):
         return False
 
     return True
@@ -149,13 +149,13 @@ def get_parse_mode(node: AST) -> Literal['exec'] | Literal['eval'] | Literal['si
     raise ValueError('can not determine parse mode')
 
 
-class Walk2Fail(Exception): pass
+class WalkFail(Exception): pass
 
 def walk2(ast1: AST, ast2: AST, cb_primitive: Callable[[Any, Any, str, int], bool] | None = None) -> Iterator[tuple[AST, AST]]:
     """Walk two asts simultaneously ensuring they have the same structure."""
 
     if ast1.__class__ is not ast2.__class__:
-        raise Walk2Fail(f"top level nodes differ in '{ast1.__class__.__qualname__}' vs. '{ast1.__class__.__qualname__}'")
+        raise WalkFail(f"top level nodes differ in '{ast1.__class__.__qualname__}' vs. '{ast1.__class__.__qualname__}'")
 
     stack1 = [ast1]
     stack2 = [ast2]
@@ -170,15 +170,15 @@ def walk2(ast1: AST, ast2: AST, cb_primitive: Callable[[Any, Any, str, int], boo
         fields2 = list(iter_fields(a2))
 
         if len(fields1) != len(fields2):
-            raise Walk2Fail(f"number of fields differ in '{a1.__class__.__qualname__}'")
+            raise WalkFail(f"number of fields differ in '{a1.__class__.__qualname__}'")
 
         for (name1, child1), (name2, child2) in zip(fields1, fields2):
             if name1 != name2:
-                raise Walk2Fail(f"field names differ in '{a1.__class__.__qualname__}', '{name1}' vs. '{name2}'")
+                raise WalkFail(f"field names differ in '{a1.__class__.__qualname__}', '{name1}' vs. '{name2}'")
 
             if (is_ast := isinstance(child1, AST)) or isinstance(child1, list) or isinstance(child2, (AST, list)):
                 if child1.__class__ is not child2.__class__:
-                    raise Walk2Fail(f"child classes differ at .{name1} in '{a1.__class__.__qualname__}', "
+                    raise WalkFail(f"child classes differ at .{name1} in '{a1.__class__.__qualname__}', "
                                     f"'{child1.__class__.__qualname__}' vs. '{child2.__class__.__qualname__}'")
 
                 if is_ast:
@@ -186,29 +186,29 @@ def walk2(ast1: AST, ast2: AST, cb_primitive: Callable[[Any, Any, str, int], boo
                     stack2.append(child2)
 
                 elif len(child1) != len(child2):
-                    raise Walk2Fail(f"child list lengths differ at .{name1} in '{a1.__class__.__qualname__}'")
+                    raise WalkFail(f"child list lengths differ at .{name1} in '{a1.__class__.__qualname__}'")
 
                 else:
                     for i, (c1, c2) in enumerate(zip(child1, child2)):
                         if (is_ast := isinstance(c1, AST)) ^ isinstance(c2, AST):
-                            raise Walk2Fail(f"child elements differ at .{name1}[{i}] in '{a1.__class__.__qualname__}'")
+                            raise WalkFail(f"child elements differ at .{name1}[{i}] in '{a1.__class__.__qualname__}'")
 
                         if is_ast:
                             if c1.__class__ is not c2.__class__:
-                                raise Walk2Fail(f"child element classes differ at .{name1}[{i}] in '{a1.__class__.__qualname__}', "
+                                raise WalkFail(f"child element classes differ at .{name1}[{i}] in '{a1.__class__.__qualname__}', "
                                                 f"'{c1.__class__.__qualname__}' vs. '{c2.__class__.__qualname__}'")
 
                             stack1.append(c1)
                             stack2.append(c2)
 
                         elif cb_primitive and cb_primitive(c1, c2, name1, i) is False:
-                            raise Walk2Fail(f"primitives differ at .{name1}[{i}] in '{a1.__class__.__qualname__}', {c1!r} vs. {c2!r}")
+                            raise WalkFail(f"primitives differ at .{name1}[{i}] in '{a1.__class__.__qualname__}', {c1!r} vs. {c2!r}")
 
             elif cb_primitive and cb_primitive(child1, child2, name1, None) is False:
-                raise Walk2Fail(f"primitives differ at .{name1} in '{a1.__class__.__qualname__}', {child1!r} vs. {child2!r}")
+                raise WalkFail(f"primitives differ at .{name1} in '{a1.__class__.__qualname__}', {child1!r} vs. {child2!r}")
 
     if stack1 or stack2:
-        raise Walk2Fail('structure lengths differ')
+        raise WalkFail('structure lengths differ')
 
     return True
 
@@ -231,11 +231,11 @@ def compare(ast1: AST, ast2: AST, *, locations: bool = False, type_comments: boo
                     getattr(n1, 'end_lineno', None) != getattr(n2, 'end_lineno', None) or
                     getattr(n1, 'end_col_offset', None) != getattr(n2, 'end_col_offset', None)
                 ):
-                    raise Walk2Fail(f"locations differ in '{n1.__class__.__qualname__}, "
+                    raise WalkFail(f"locations differ in '{n1.__class__.__qualname__}, "
                                     f"{(n1.lineno, n1.col_offset, n1.end_lineno, n1.end_col_offset)} vs. "
                                     f"{(n2.lineno, n2.col_offset, n2.end_lineno, n2.end_col_offset)}")
 
-    except Walk2Fail:
+    except WalkFail:
         if do_raise:
             raise
 
@@ -257,7 +257,7 @@ def copy_attributes(src: AST, dst: AST, *, compare: bool = True, type_comments: 
                 elif hasattr(nd, attr):
                     delattr(nd, attr)
 
-    except Walk2Fail:
+    except WalkFail:
         if do_raise:
             raise
 

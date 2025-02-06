@@ -51,36 +51,36 @@ class TestFST(unittest.TestCase):
             fst = FST.from_src(read(fnm))
 
             walktest(fst.a)
-            fst.verify()
+            fst.verify(do_raise=True)
 
     def test_from_ast_calc_loc_False_bulk(self):
         for fnm in PYFNMS:
             fst = FST.from_ast(ast_.parse(ast_.unparse(ast_.parse(read(fnm)))), calc_loc=False)
 
             walktest(fst.a)
-            fst.verify()
+            fst.verify(do_raise=True)
 
     def test_from_ast_calc_loc_True_bulk(self):
         for fnm in PYFNMS:
             fst = FST.from_ast(ast_.parse(read(fnm)), calc_loc=True)
 
             walktest(fst.a)
-            fst.verify()
+            fst.verify(do_raise=True)
 
     def test_from_ast_calc_loc_copy_bulk(self):
         for fnm in PYFNMS:
             fst = FST.from_ast(ast_.parse(read(fnm)), calc_loc='copy')
 
             walktest(fst.a)
-            fst.verify()
+            fst.verify(do_raise=True)
 
     def test_verify(self):
         ast = parse('i = 1')
-        ast.f.verify()
+        ast.f.verify(do_raise=True)
 
         ast.body[0].lineno = 100
 
-        self.assertRaises(Walk2Fail, ast.f.verify)
+        self.assertRaises(WalkFail, ast.f.verify, do_raise=True)
         self.assertEqual(None, ast.f.verify(do_raise=False))
 
     def test_logical_line_empty_before(self):
@@ -375,7 +375,7 @@ class TestFST(unittest.TestCase):
             for a in walk(ast):
                 if a.f.is_parsable():
                     f = a.f.copy()
-                    f.verify()
+                    f.verify(do_raise=True)
 
     def test_copy(self):
         f = FST.from_src('@decorator\nclass cls:\n  pass')
