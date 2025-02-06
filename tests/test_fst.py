@@ -50,28 +50,28 @@ class TestFST(unittest.TestCase):
         for fnm in PYFNMS:
             fst = FST.from_src(read(fnm))
 
-            walktest(fst.ast)
+            walktest(fst.a)
             fst.verify()
 
     def test_from_ast_calc_loc_False_bulk(self):
         for fnm in PYFNMS:
             fst = FST.from_ast(ast_.parse(ast_.unparse(ast_.parse(read(fnm)))), calc_loc=False)
 
-            walktest(fst.ast)
+            walktest(fst.a)
             fst.verify()
 
     def test_from_ast_calc_loc_True_bulk(self):
         for fnm in PYFNMS:
             fst = FST.from_ast(ast_.parse(read(fnm)), calc_loc=True)
 
-            walktest(fst.ast)
+            walktest(fst.a)
             fst.verify()
 
     def test_from_ast_calc_loc_copy_bulk(self):
         for fnm in PYFNMS:
             fst = FST.from_ast(ast_.parse(read(fnm)), calc_loc='copy')
 
-            walktest(fst.ast)
+            walktest(fst.a)
             fst.verify()
 
     def test_verify(self):
@@ -339,30 +339,30 @@ class TestFST(unittest.TestCase):
 
     def test_safe(self):
         f = FST.from_src('if 1:\n a\nelif 2:\n b')
-        fc = f.ast.body[0].orelse[0].f.copy(safe=False)
+        fc = f.a.body[0].orelse[0].f.copy(safe=False)
         self.assertEqual(fc.lines[0], 'elif 2:')
         fc.safe()
         self.assertEqual(fc.lines[0], 'if 2:')
 
         f = FST.from_src('(1 +\n2)')
-        fc = f.ast.body[0].value.f.copy(safe=False)
+        fc = f.a.body[0].value.f.copy(safe=False)
         self.assertEqual(fc.text, '1 +\n2')
         fc.safe()
         self.assertEqual(fc.text, '(1 +\n2)')
 
         f = FST.from_src('i = 1')
-        self.assertIs(f.ast.body[0].targets[0].ctx.__class__, Store)
-        fc = f.ast.body[0].targets[0].f.copy(safe=False)
-        self.assertIs(fc.ast.ctx.__class__, Store)
+        self.assertIs(f.a.body[0].targets[0].ctx.__class__, Store)
+        fc = f.a.body[0].targets[0].f.copy(safe=False)
+        self.assertIs(fc.a.ctx.__class__, Store)
         fc.safe()
-        self.assertIs(fc.ast.ctx.__class__, Load)
+        self.assertIs(fc.a.ctx.__class__, Load)
 
         if sys.version_info[:2] >= (3, 12):
             f = FST.from_src('type t[T] = ...')
-            f = f.ast.body[0].type_params[0].f.copy(safe=False)
-            self.assertIs(f.ast.__class__, TypeVar)
+            f = f.a.body[0].type_params[0].f.copy(safe=False)
+            self.assertIs(f.a.__class__, TypeVar)
             f.safe()
-            self.assertIs(f.ast.__class__, Name)
+            self.assertIs(f.a.__class__, Name)
 
 
 
@@ -370,7 +370,7 @@ class TestFST(unittest.TestCase):
 
     def test_copy_bulk(self):
         for fnm in PYFNMS:
-            ast = FST.from_src(read(fnm)).ast
+            ast = FST.from_src(read(fnm)).a
 
             for a in walk(ast):
                 if a.f.is_parsable():
@@ -379,8 +379,8 @@ class TestFST(unittest.TestCase):
 
     def test_copy(self):
         f = FST.from_src('@decorator\nclass cls:\n  pass')
-        self.assertEqual(f.ast.body[0].f.copy().text, '@decorator\nclass cls:\n  pass')
-        self.assertEqual(f.ast.body[0].f.copy(decorators=False).text, 'class cls:\n  pass')
+        self.assertEqual(f.a.body[0].f.copy().text, '@decorator\nclass cls:\n  pass')
+        self.assertEqual(f.a.body[0].f.copy(decorators=False).text, 'class cls:\n  pass')
 
 
 

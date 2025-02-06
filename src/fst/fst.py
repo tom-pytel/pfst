@@ -33,7 +33,7 @@ def only_root(func):
 
 
 def parse(source, filename='<unknown>', mode='exec', *args, type_comments=False, feature_version=None, **kwargs):
-    return FST.from_src(source, filename, mode, *args, type_comments=type_comments, feature_version=feature_version, **kwargs).ast
+    return FST.from_src(source, filename, mode, *args, type_comments=type_comments, feature_version=feature_version, **kwargs).a
 
 
 def unparse(ast_obj):
@@ -50,7 +50,7 @@ class fstloc(NamedTuple):
 class FST:
     """AST formatting information and easy manipulation."""
 
-    ast:           AST
+    a:             AST
     parent:        Optional['FST']  # None in root node
     pfield:        astfield | None  # None in root node
     root:          'FST'            # self in root node
@@ -80,7 +80,7 @@ class FST:
         except AttributeError:
             pass
 
-        ast = self.ast
+        ast = self.a
 
         try:
             ln             = ast.lineno - 1
@@ -153,7 +153,7 @@ class FST:
 
         if not (loc := self.loc):
             bloc = None
-        elif not (decos := getattr(self.ast, 'decorator_list', None)):
+        elif not (decos := getattr(self.a, 'decorator_list', None)):
             bloc = loc
         else:
             bloc = fstloc(decos[0].f.ln, loc[1], loc[2], loc[3])  # column of deco '@' will be same as our column
@@ -215,7 +215,7 @@ class FST:
 
         while stack:
             fst = stack.pop()
-            ast = fst.ast
+            ast = fst.a
 
             for name, child in iter_fields(ast):
                 if isinstance(child, AST):
@@ -228,12 +228,12 @@ class FST:
 
     def __repr__(self) -> str:
         tail = self._repr_tail()
-        rast = repr(self.ast)
+        rast = repr(self.a)
 
         return f'<fst{rast[4 : -1]}{tail}>' if rast.startswith('<') else f'fst.{rast[:-1]}{tail})'
 
     def __init__(self, ast: AST, parent: Optional['FST'] = None, pfield: astfield | None = None, **root_params):
-        self.ast    = ast
+        self.a      = ast
         self.parent = parent
         self.pfield = pfield
         ast.f       = self
@@ -327,7 +327,7 @@ class FST:
         """Sanity check, make sure parsed source matches ast."""
 
         root         = self.root
-        ast          = root.ast
+        ast          = root.a
         parse_params = root._parse_params
         astp         = ast_.parse(root.text, mode=get_parse_mode(ast), **parse_params)
 
@@ -348,9 +348,9 @@ class FST:
         tail = self._repr_tail()
         sind = ' ' * indent
 
-        linefunc(f'{cind}{prefix}{self.ast.__class__.__qualname__}{" .." * bool(tail)}{tail}')
+        linefunc(f'{cind}{prefix}{self.a.__class__.__qualname__}{" .." * bool(tail)}{tail}')
 
-        for name, child in iter_fields(self.ast):
+        for name, child in iter_fields(self.a):
             is_list = isinstance(child, list)
 
             if full or (child != []):
@@ -394,18 +394,18 @@ class FST:
         return None
 
     def is_parsable(self) -> bool:
-        if not self.loc or not is_parsable(self.ast):
+        if not self.loc or not is_parsable(self.a):
             return False
 
         if parent := self.parent:
-            ast = self.ast
+            ast = self.a
 
             if isinstance(ast, JoinedStr):
-                if self.pfield.name == 'format_spec' and isinstance(parent.ast, FormattedValue):
+                if self.pfield.name == 'format_spec' and isinstance(parent.a, FormattedValue):
                     return False
 
             elif isinstance(ast, Constant):
-                if self.pfield.name == 'values' and isinstance(parent.ast, JoinedStr) and isinstance(ast.value, str):
+                if self.pfield.name == 'values' and isinstance(parent.a, JoinedStr) and isinstance(ast.value, str):
                     return False
 
         return True
@@ -428,14 +428,14 @@ class FST:
     def get_indent(self) -> str:
         """Determine indentation of node at `stmt` or `mod` level at or above self, otherwise at root node."""
 
-        while (parent := self.parent) and not isinstance(self.ast, (stmt, mod)):
+        while (parent := self.parent) and not isinstance(self.a, (stmt, mod)):
             self = parent
 
         root         = self.root
         extra_indent = ''  # may result from unknown indent in single line "if something: whats_my_stmt_indentation?"
 
         while parent:
-            siblings = getattr(parent.ast, (pfield := self.pfield).name)
+            siblings = getattr(parent.a, (pfield := self.pfield).name)
 
             if pfield.idx is None:
                 siblings = [siblings]
@@ -455,10 +455,10 @@ class FST:
 
         lns = set(range(self.bln + 1, self.bend_ln + 1))
 
-        while (parent := self.parent) and not isinstance(self.ast, (stmt, mod)):  # because statement guaranteed not to be inside multiline
+        while (parent := self.parent) and not isinstance(self.a, (stmt, mod)):  # because statement guaranteed not to be inside multiline
             self = parent
 
-        for a in walk(self.ast):  # find multiline strings and exclude their unindentable lines
+        for a in walk(self.a):  # find multiline strings and exclude their unindentable lines
             if isinstance(a, Constant) and (isinstance(a.value, (str, bytes))):
                 lns -= set(range(a.lineno, a.end_lineno))  # specifically leave first line of multiline string because that is indentable
 
@@ -468,7 +468,7 @@ class FST:
         """AST node was modified, clear out any cached info."""
 
         if recurse:
-            for ast in walk(self.ast):
+            for ast in walk(self.a):
                 ast.f.touch()
 
         else:
@@ -496,7 +496,7 @@ class FST:
             inc: Whether to offset endpoint if it falls exactly at ln / col or not (inclusive).
         """
 
-        for a in walk(self.ast):
+        for a in walk(self.a):
             if (fend_ln := (f := a.f).end_ln) is None or not hasattr(a, 'end_col_offset'):
                 f.touch()  # can't determine if before or after offset point or ast node doesn't have loc so touch just in case
 
@@ -530,7 +530,7 @@ class FST:
         """
 
         if dcol_offset:
-            for a in walk(self.ast):  # now offset columns where it is allowed
+            for a in walk(self.a):  # now offset columns where it is allowed
                 if not (end_col_offset := getattr(a, 'end_col_offset', None)):  # can never be 0
                     a.f.touch()  # just in case
 
@@ -552,7 +552,7 @@ class FST:
         Only modifies ast.
         """
 
-        for a in walk(self.ast):  # now offset columns where it is allowed
+        for a in walk(self.a):  # now offset columns where it is allowed
             if not (end_col_offset := getattr(a, 'end_col_offset', None)):  # can never be 0
                 a.f.touch()  # just in case
 
@@ -638,7 +638,7 @@ class FST:
     def safe(self) -> 'FST':
         """Inplace make safe to parse (to make cut or copied subtrees parsable if the source is not by itself)."""
 
-        ast   = self.ast
+        ast   = self.a
         lines = self.lines
 
         ln, col, end_ln, end_col = self.loc
@@ -662,12 +662,12 @@ class FST:
                 raise NotImplementedError
 
             else:
-                self.ast = ast = Name(id=ast.name, lineno=ast.lineno, col_offset=ast.col_offset,
-                                      end_lineno=ast.end_lineno, end_col_offset=ast.end_col_offset)
-                ast.f    = self
-                f        = FST(Load(), self, astfield('ctx'))
-                f.ast.f  = f
-                ast.ctx  = f.ast
+                self.a  = ast = Name(id=ast.name, lineno=ast.lineno, col_offset=ast.col_offset,
+                                     end_lineno=ast.end_lineno, end_col_offset=ast.end_col_offset)
+                ast.f   = self
+                f       = FST(Load(), self, astfield('ctx'))
+                f.a.f   = f
+                ast.ctx = f.a
 
         if isinstance(ast, expr):
             mode = get_parse_mode(ast)
@@ -695,9 +695,9 @@ class FST:
                 if ((is_seq := isinstance(a, (Tuple, List))) or (is_starred := isinstance(a, Starred)) or
                     isinstance(a, (Name, Subscript, Attribute))
                 ):
-                    f       = FST(Load(), a.f, a.ctx.f.pfield)
-                    f.ast.f = f
-                    a.ctx   = f.ast
+                    f     = FST(Load(), a.f, a.ctx.f.pfield)
+                    f.a.f = f
+                    a.ctx = f.a
 
                     if is_seq:
                         stack.extend(a.elts)
@@ -712,7 +712,7 @@ class FST:
 
         lines  = self.root._lines
         indent = self.get_indent()
-        ast    = copy(self.ast)
+        ast    = copy(self.a)
 
         if not decorators and hasattr(ast, 'decorator_list'):
             ast.decorator_list.clear()
