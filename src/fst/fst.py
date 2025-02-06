@@ -18,6 +18,7 @@ _re_empty_line_start   = re.compile(r'^\s*')    # start of completely empty or s
 _re_empty_line         = re.compile(r'^\s*$')   # completely empty or space-filled line
 _re_line_continuation  = re.compile(r'^.*\\$')  # line continuation with backslash
 
+
 def only_root(func):
     @functools.wraps(func)
     def wrapper(*args, **kwargs):
@@ -95,7 +96,6 @@ class FST:
                     continue
 
                 else:
-                    # child = [c for c in child if isinstance(c, AST)]
                     for first_child in child:
                         if isinstance(first_child, AST):
                             break
@@ -395,24 +395,57 @@ class FST:
         if not self.loc or not is_parsable(self.ast):
             return False
 
-        ast    = self.ast
-        parent = self
+        # ast    = self.ast
+        # parent = self
 
-        if isinstance(ast, JoinedStr) and (pfield := self.pfield) and pfield.name == 'format_spec':
-            return False
+        # if isinstance(ast, JoinedStr) and (pfield := self.pfield) and pfield.name == 'format_spec' and isinstance(parent, FormattedValue):
+        #     return False
 
-        while parent := parent.parent:
-            if isinstance((past := parent.ast), JoinedStr):
-                if isinstance(ast, Constant):
+        # while parent := parent.parent:
+        #     # # if isinstance((past := parent.ast), JoinedStr):
+        #     # if isinstance(parent.ast, JoinedStr):
+        #     #     if isinstance(ast, Constant):
+        #     #         return False
+
+        #     #     # if (end_col_offset := getattr(ast, 'end_col_offset', None)) is not None:
+        #     #     #     if (ast.lineno == past.lineno and ast.col_offset == past.col_offset and
+        #     #     #         ast.end_lineno == past.end_lineno and end_col_offset == past.end_col_offset
+        #     #     #     ):
+        #     #     #         return False
+
+        #     #     break
+
+        #     if isinstance((past := parent.ast), JoinedStr):
+        #         if isinstance(ast, Constant) and (end_col_offset := getattr(ast, 'end_col_offset', None)) is not None:
+        #             if (ast.lineno == past.lineno and ast.col_offset == past.col_offset and
+        #                 ast.end_lineno == past.end_lineno and end_col_offset == past.end_col_offset
+        #             ):
+        #                 return False
+
+        #         break
+
+
+        # if parent := self.parent:
+        #     ast    = self.ast
+        #     pfield = self.pfield
+
+        #     if isinstance(ast, JoinedStr) and pfield.name == 'format_spec' and isinstance(parent.ast, FormattedValue):
+        #         return False
+
+        #     if isinstance(ast, Constant) and pfield.name == 'values' and isinstance(parent.ast, JoinedStr) and isinstance(ast.value, str):
+        #         return False
+
+
+        if parent := self.parent:
+            ast = self.ast
+
+            if isinstance(ast, JoinedStr):
+                if self.pfield.name == 'format_spec' and isinstance(parent.ast, FormattedValue):
                     return False
 
-                if (end_col_offset := getattr(ast, 'end_col_offset', None)) is not None:
-                    if (ast.lineno == past.lineno and ast.col_offset == past.col_offset and
-                        ast.end_lineno == past.end_lineno and end_col_offset == past.end_col_offset
-                    ):
-                        return False
-
-                break
+            elif isinstance(ast, Constant):
+                if self.pfield.name == 'values' and isinstance(parent.ast, JoinedStr) and isinstance(ast.value, str):
+                    return False
 
         return True
 
@@ -456,10 +489,13 @@ class FST:
 
         return extra_indent
 
-    def get_indentable_lns(self, skip: int = 1) -> set[int]:
+    def get_indentable_lns(self) -> set[int]:
         """Get set of indentable lines (past the first one usually because that is normally handled specially)."""
 
-        lns = set(range(self.bln + skip, self.bend_ln + 1))
+        lns = set(range(self.bln + 1, self.bend_ln + 1))
+
+        while (parent := self.parent) and not isinstance(self.ast, (stmt, mod)):  # because statement guaranteed not to be inside multiline
+            self = parent
 
         for a in walk(self.ast):  # find multiline strings and exclude their unindentable lines
             if isinstance(a, Constant) and (isinstance(a.value, (str, bytes))):
@@ -571,11 +607,11 @@ class FST:
 
         return dcol_offsets
 
-    def indent_tail(self, indent: str, skip: int = 1) -> set[int]:
+    def indent_tail(self, indent: str) -> set[int]:
         """Indent all indentable lines past the first one according with `indent` and adjust node locations accordingly.
         Does not modify node columns on first line."""
 
-        if not (lns := self.offset_cols(len(indent.encode()), self.get_indentable_lns(skip))) or not indent:
+        if not (lns := self.offset_cols(len(indent.encode()), self.get_indentable_lns())) or not indent:
             return lns
 
         lines = self.root._lines
@@ -586,13 +622,13 @@ class FST:
 
         return lns
 
-    def dedent_tail(self, indent: str, skip: int = 1) -> set[int]:
+    def dedent_tail(self, indent: str) -> set[int]:
         """Dedent all indentable lines past the first one by removing `indent` prefix and adjust node locations
         accordingly. Does not modify columns on first line. If cannot dedent entire amount will dedent as much as
         possible.
         """
 
-        if not (lns := self.get_indentable_lns(skip)) or not indent:
+        if not (lns := self.get_indentable_lns()) or not indent:
             return lns
 
         lines        = self.root._lines
@@ -737,12 +773,12 @@ class FST:
 
     # mutate()
     # ^^^^^^^^
-    # copy()
-    # cut()
-    # remove()
-    # append()
-    # insert()
-    # replace()
+    # * copy()
+    #   cut()
+    #   remove()
+    #   append()
+    #   insert()
+    #   replace()
 
 
 

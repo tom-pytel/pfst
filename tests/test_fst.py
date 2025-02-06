@@ -43,28 +43,28 @@ class TestFST(unittest.TestCase):
         self.assertEqual((5, 2, 5, 18), ast.body[0].body[0].body[0].f.loc)
         self.assertEqual((4, 2, 5, 18), ast.body[0].body[0].body[0].f.bloc)
 
-    def test_bulk_from_src(self):
+    def test_from_src_bulk(self):
         for fnm in PYFNMS:
             fst = FST.from_src(read(fnm))
 
             walktest(fst.ast)
             fst.verify()
 
-    def test_bulk_from_ast_calc_loc_False(self):
+    def test_from_ast_calc_loc_False_bulk(self):
         for fnm in PYFNMS:
             fst = FST.from_ast(ast_.parse(ast_.unparse(ast_.parse(read(fnm)))), calc_loc=False)
 
             walktest(fst.ast)
             fst.verify()
 
-    def test_bulk_from_ast_calc_loc_True(self):
+    def test_from_ast_calc_loc_True_bulk(self):
         for fnm in PYFNMS:
             fst = FST.from_ast(ast_.parse(read(fnm)), calc_loc=True)
 
             walktest(fst.ast)
             fst.verify()
 
-    def test_bulk_from_ast_calc_loc_copy(self):
+    def test_from_ast_calc_loc_copy_bulk(self):
         for fnm in PYFNMS:
             fst = FST.from_ast(ast_.parse(read(fnm)), calc_loc='copy')
 
@@ -153,7 +153,8 @@ class TestFST(unittest.TestCase):
         src = 'class cls:\n if True:\n  i = """\nj\n"""\n  k = "... \\\n2"\n else:\n  j \\\n=\\\n 2'
         ast = parse(src)
 
-        self.assertEqual({0, 1, 2, 5, 7, 8, 9, 10}, ast.f.get_indentable_lns(0))
+        self.assertEqual({1, 2, 5, 7, 8, 9, 10}, ast.f.get_indentable_lns())
+        # self.assertEqual({0, 1, 2, 5, 7, 8, 9, 10}, ast.f.get_indentable_lns(0))
 
     def test_offset(self):
         src = 'i = 1\nj = 2\nk = 3'
@@ -328,10 +329,10 @@ class TestFST(unittest.TestCase):
         self.assertEqual(set(), lns)
         self.assertEqual('@decorator\nclass cls:\n pass', ast.f.text)
 
-        ast = parse(src)
-        lns = ast.body[0].body[0].f.dedent_tail(' ', skip=0)
-        self.assertEqual({2}, lns)
-        self.assertEqual('@decorator\nclass cls:\npass', ast.f.text)
+        # ast = parse(src)
+        # lns = ast.body[0].body[0].f.dedent_tail(' ', skip=0)
+        # self.assertEqual({2}, lns)
+        # self.assertEqual('@decorator\nclass cls:\npass', ast.f.text)
 
     def test_safe(self):
         f = FST.from_src('if 1:\n a\nelif 2:\n b')
@@ -353,7 +354,7 @@ class TestFST(unittest.TestCase):
         fc.safe()
         self.assertIs(fc.ast.ctx.__class__, Load)
 
-    def test_bulk_copy(self):
+    def test_copy_bulk(self):
         for fnm in PYFNMS:
             ast = FST.from_src(read(fnm)).ast
 

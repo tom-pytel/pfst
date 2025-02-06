@@ -118,8 +118,8 @@ def is_parsable(node: AST) -> bool:
             withitem)):
         return False
 
-    if isinstance(node, Call) and not is_parsable(node.func):
-        return False
+    # if isinstance(node, Call) and not is_parsable(node.func):
+    #     return False
 
     return True
 
