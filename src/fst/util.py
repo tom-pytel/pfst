@@ -1,3 +1,4 @@
+import sys
 from array import array
 from ast import *
 from typing import Any, Callable, Iterator, Literal, NamedTuple
@@ -91,6 +92,12 @@ class bistr(str):
             pass
 
 
+if sys.version_info[:2] < (3, 12):
+    class TypeVar: pass  # for isinstance checks (which will always fail)
+    class ParamSpec: pass
+    class TypeVarTuple: pass
+
+
 class astfield(NamedTuple):
     name: str
     idx:  int | None = None
@@ -112,14 +119,17 @@ def has_type_comments(ast: AST) -> bool:
 
 
 def is_parsable(node: AST) -> bool:
-    if not isinstance(node, AST) or isinstance(node, (Load, Store, Del,
-            ExceptHandler, Starred, Slice, FormattedValue,
-            expr_context, operator, cmpop, boolop, alias, unaryop, arguments, arg, keyword, comprehension,
-            withitem)):
+    if not isinstance(node, AST):
         return False
 
-    # if isinstance(node, Call) and not is_parsable(node.func):
-    #     return False
+    if isinstance(node, (Load, Store, Del,
+        ExceptHandler, Slice, FormattedValue, Starred,
+        MatchStar, MatchValue, MatchSingleton, MatchSequence, MatchMapping, MatchClass, MatchAs, MatchOr,  # all except MatchStar can be made parsable
+        ParamSpec, TypeVarTuple,  # py 3.12+
+        expr_context, operator, cmpop, boolop, alias, unaryop, arguments, arg, keyword, comprehension,
+        withitem, match_case)
+    ):
+        return False
 
     return True
 

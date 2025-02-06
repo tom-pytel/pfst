@@ -1,9 +1,10 @@
 #!/usr/bin/env python
 
 import os
+import sys
 import unittest
-
 import ast as ast_
+
 from fst import *
 
 PYFNMS = sum((
@@ -12,9 +13,11 @@ PYFNMS = sum((
     start=[]
 )
 
+
 def read(fnm):
     with open(fnm) as f:
         return f.read()
+
 
 def walktest(ast):
     for ast in walk(ast):
@@ -353,6 +356,17 @@ class TestFST(unittest.TestCase):
         self.assertIs(fc.ast.ctx.__class__, Store)
         fc.safe()
         self.assertIs(fc.ast.ctx.__class__, Load)
+
+        if sys.version_info[:2] >= (3, 12):
+            f = FST.from_src('type t[T] = ...')
+            f = f.ast.body[0].type_params[0].f.copy(safe=False)
+            self.assertIs(f.ast.__class__, TypeVar)
+            f.safe()
+            self.assertIs(f.ast.__class__, Name)
+
+
+
+
 
     def test_copy_bulk(self):
         for fnm in PYFNMS:

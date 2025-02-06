@@ -2,12 +2,12 @@ from .fst import parse
 
 
 def main():
+    import sys
     import argparse
 
     parser = argparse.ArgumentParser(prog='python -m fst')
 
-    parser.add_argument('infile', type=argparse.FileType(mode='rb'), nargs='?',
-                        default='-',
+    parser.add_argument('infile', nargs='?', default='-',
                         help='the file to parse; defaults to stdin')
     parser.add_argument('-m', '--mode', default='exec',
                         choices=('exec', 'single', 'eval', 'func_type'),
@@ -23,10 +23,15 @@ def main():
 
     args = parser.parse_args()
 
-    with args.infile as infile:
-        source = infile.read()
+    if args.infile == '-':
+        name = '<stdin>'
+        source = sys.stdin.buffer.read()
+    else:
+        name = args.infile
+        with open(args.infile, 'rb') as infile:
+            source = infile.read()
 
-    ast = parse(source, args.infile.name, args.mode, type_comments=args.no_type_comments)
+    ast = parse(source, name, args.mode, type_comments=args.no_type_comments)
 
     if args.no_verify:
         ast.f.verify()

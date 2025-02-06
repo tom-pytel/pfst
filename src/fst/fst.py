@@ -9,8 +9,10 @@ import re
 from typing import Any, Callable, Literal, NamedTuple, Optional, Union
 
 from .util import *
+from .util import TypeVar, ParamSpec, TypeVarTuple  # for py < 3.12
 
 __all__ = list(__all_other__ | {
+    'TypeVar', 'ParamSpec', 'TypeVarTuple',
     'FST', 'parse', 'unparse',
 })
 
@@ -395,47 +397,6 @@ class FST:
         if not self.loc or not is_parsable(self.ast):
             return False
 
-        # ast    = self.ast
-        # parent = self
-
-        # if isinstance(ast, JoinedStr) and (pfield := self.pfield) and pfield.name == 'format_spec' and isinstance(parent, FormattedValue):
-        #     return False
-
-        # while parent := parent.parent:
-        #     # # if isinstance((past := parent.ast), JoinedStr):
-        #     # if isinstance(parent.ast, JoinedStr):
-        #     #     if isinstance(ast, Constant):
-        #     #         return False
-
-        #     #     # if (end_col_offset := getattr(ast, 'end_col_offset', None)) is not None:
-        #     #     #     if (ast.lineno == past.lineno and ast.col_offset == past.col_offset and
-        #     #     #         ast.end_lineno == past.end_lineno and end_col_offset == past.end_col_offset
-        #     #     #     ):
-        #     #     #         return False
-
-        #     #     break
-
-        #     if isinstance((past := parent.ast), JoinedStr):
-        #         if isinstance(ast, Constant) and (end_col_offset := getattr(ast, 'end_col_offset', None)) is not None:
-        #             if (ast.lineno == past.lineno and ast.col_offset == past.col_offset and
-        #                 ast.end_lineno == past.end_lineno and end_col_offset == past.end_col_offset
-        #             ):
-        #                 return False
-
-        #         break
-
-
-        # if parent := self.parent:
-        #     ast    = self.ast
-        #     pfield = self.pfield
-
-        #     if isinstance(ast, JoinedStr) and pfield.name == 'format_spec' and isinstance(parent.ast, FormattedValue):
-        #         return False
-
-        #     if isinstance(ast, Constant) and pfield.name == 'values' and isinstance(parent.ast, JoinedStr) and isinstance(ast.value, str):
-        #         return False
-
-
         if parent := self.parent:
             ast = self.ast
 
@@ -675,7 +636,7 @@ class FST:
 
     @only_root
     def safe(self) -> 'FST':
-        """Inplace make safe (to make cut or copied subtrees parsable if the cut made them not so they are not)."""
+        """Inplace make safe to parse (to make cut or copied subtrees parsable if the source is not by itself)."""
 
         ast   = self.ast
         lines = self.lines
@@ -687,7 +648,28 @@ class FST:
 
             lines[ln] = bistr((l := lines[ln])[:col] + l[col + 2:])
 
-        elif isinstance(ast, expr):
+            return self
+
+        if isinstance(ast, TypeVar):
+            if ast.bound is not None:
+                if ast.default_value is not None:
+                    raise NotImplementedError
+
+                else:
+                    raise NotImplementedError
+
+            elif ast.default_value is not None:
+                raise NotImplementedError
+
+            else:
+                self.ast = ast = Name(id=ast.name, lineno=ast.lineno, col_offset=ast.col_offset,
+                                      end_lineno=ast.end_lineno, end_col_offset=ast.end_col_offset)
+                ast.f    = self
+                f        = FST(Load(), self, astfield('ctx'))
+                f.ast.f  = f
+                ast.ctx  = f.ast
+
+        if isinstance(ast, expr):
             mode = get_parse_mode(ast)
 
             try:
