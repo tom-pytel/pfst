@@ -119,20 +119,15 @@ def has_type_comments(ast: AST) -> bool:
 
 
 def is_parsable(ast: AST) -> bool:
-    """Really means the `ast` is `unparse()`able, meaning that a parse could get it to this top level AST node."""
+    """Really means the `ast` is `unparse()`able and that a parse could get it to this top level AST node."""
 
     if not isinstance(ast, AST):
         return False
 
     if isinstance(ast, (
-        Load, Store, Del,  # expr_context
-        And, Or,  # boolop
-        Add, Sub, Mult, MatMult, Div, Mod, Pow, LShift, RShift, BitOr, BitXor, BitAnd, FloorDiv,  # operator
-        Invert, Not, UAdd, USub,  # unaryop
-        Eq, NotEq, Lt, LtE, Gt, GtE, Is, IsNot, In, NotIn,  # typeignore
-        ExceptHandler, Slice, FormattedValue, Starred, MatchStar,
-        MatchValue, MatchSingleton, MatchSequence, MatchMapping, MatchClass, MatchAs, MatchOr,
-        expr_context, operator, cmpop, boolop, alias, unaryop, arguments, comprehension, withitem, match_case,
+        ExceptHandler, Slice, FormattedValue, Starred,
+        expr_context, unaryop, boolop, operator, cmpop,
+        alias, arguments, comprehension, withitem, match_case, pattern, type_ignore,
         arg, keyword,
         TypeVar, ParamSpec, TypeVarTuple,  # py 3.12+
     )):

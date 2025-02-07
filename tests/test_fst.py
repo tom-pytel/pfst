@@ -152,6 +152,13 @@ class TestFST(unittest.TestCase):
 
         self.assertEqual(['True:', '  i'], ast.f.root.sniploc(1, 4, 2, 3))
 
+    def test_get_indent(self):
+        pass
+
+
+
+
+
     def test_get_indentable_lns(self):
         src = 'class cls:\n if True:\n  i = """\nj\n"""\n  k = "... \\\n2"\n else:\n  j \\\n=\\\n 2'
         ast = parse(src)

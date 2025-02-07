@@ -16,9 +16,11 @@ __all__ = list(__all_other__ | {
     'FST', 'parse', 'unparse',
 })
 
-_re_empty_line_start   = re.compile(r'^[ \t]*')   # start of completely empty or space-filled line
-_re_empty_line         = re.compile(r'^[ \t]*$')  # completely empty or space-filled line
-_re_line_continuation  = re.compile(r'^.*\\$')    # line continuation with backslash
+_STATEMENTISH = (mod, stmt, ExceptHandler, match_case)  # except for mod: always in lists, part of blocks can not be in multiline and statementish start lines
+
+_re_line_continuation = re.compile(r'^.*\\$')    # line continuation with backslash
+_re_empty_line_start  = re.compile(r'^[ \t]*')   # start of completely empty or space-filled line
+_re_empty_line        = re.compile(r'^[ \t]*$')  # completely empty or space-filled line
 
 
 def only_root(func):
@@ -430,6 +432,20 @@ class FST:
     def snip_text(self) -> str:
         return '\n'.join(self.snip())
 
+    def get_indentable_lns(self) -> set[int]:
+        """Get set of indentable lines (past the first one usually because that is normally handled specially)."""
+
+        lns = set(range(self.bln + 1, self.bend_ln + 1))
+
+        while (parent := self.parent) and not isinstance(self.a, _STATEMENTISH):
+            self = parent
+
+        for a in walk(self.a):  # find multiline strings and exclude their unindentable lines
+            if isinstance(a, Constant) and (isinstance(a.value, (str, bytes))):
+                lns -= set(range(a.lineno, a.end_lineno))  # specifically leave first line of multiline string because that is indentable
+
+        return lns
+
     def get_indent(self) -> str:
         """Determine indentation of node at `stmt` or `mod` level at or above self, otherwise at root node."""
 
@@ -455,39 +471,32 @@ class FST:
 
         return extra_indent
 
-    def get_indentable_lns(self) -> set[int]:
-        """Get set of indentable lines (past the first one usually because that is normally handled specially)."""
-
-        lns = set(range(self.bln + 1, self.bend_ln + 1))
-
-        while (parent := self.parent) and not isinstance(self.a, (stmt, mod)):  # because statement guaranteed not to be inside multiline
-            self = parent
-
-        for a in walk(self.a):  # find multiline strings and exclude their unindentable lines
-            if isinstance(a, Constant) and (isinstance(a.value, (str, bytes))):
-                lns -= set(range(a.lineno, a.end_lineno))  # specifically leave first line of multiline string because that is indentable
-
-        return lns
+    # ------------------------------------------------------------------------------------------------------------------
 
     def touch(self, recurse: bool = False) -> 'FST':  # -> Self:
         """AST node was modified, clear out any cached info."""
 
-        if recurse:
-            for ast in walk(self.a):
-                ast.f.touch()
-
-        else:
+        if not recurse:
             try:
                 del self._loc, self._bloc  # _bloc only exists if _loc does
             except AttributeError:
                 pass
+
+        else:
+            for a in walk(self.a):
+                try:
+                    del a.f._loc, a.f._bloc
+                except AttributeError:
+                    pass
 
         return self
 
     def offset(self, ln: int, col: int, dln: int, dcol_offset: int, inc: bool = False) -> 'FST':  # -> Self
         """Offset ast node positions in the tree on or after ln / col by delta line / col_offset (col byte offset).
 
-        Only modifies ast but needs incoming matching lines.
+        Only modifies ast.
+
+        Other nodes outside this tree might need offsetting so use only on root unless special circumstances.
 
         This only offsets the positions in the AST nodes, doesn't change any text, so make sure that is correct before
         getting any FST locations from affected nodes otherwise they will be wrong.
@@ -503,7 +512,7 @@ class FST:
 
         for a in walk(self.a):
             if (fend_ln := (f := a.f).end_ln) is None or not hasattr(a, 'end_col_offset'):
-                f.touch()  # can't determine if before or after offset point or ast node doesn't have loc so touch just in case
+                f.touch()  # can't determine if before or after offset point or ast node with calculated loc so touch just in case
 
                 continue
 
@@ -775,22 +784,6 @@ class FST:
         fst.dedent_tail(indent)
 
         return fst.safe(do_raise=do_raise) if safe else fst
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
