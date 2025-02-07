@@ -103,45 +103,38 @@ class FST:
 
             for _, child in iter_fields(ast):
                 if isinstance(child, AST):
-                    child = (child,)
+                    if not (start := (end := child.f.bloc)):
+                        continue
+
                 elif not isinstance(child, list):
                     continue
 
                 else:
-                    for first_child in child:
-                        if isinstance(first_child, AST):
+                    for c in child:
+                        if isinstance(c, AST) and (start := c.f.bloc):
                             break
                     else:
                         continue
 
-                    for last_child in reversed(child):
-                        if isinstance(last_child, AST):
+                    for c in reversed(child):
+                        if isinstance(c, AST) and (end := c.f.bloc):
                             break
 
-                    if last_child is first_child:
-                        child = (first_child,)
-                    else:
-                        child = (first_child, last_child)
+                if start.ln < min_ln:
+                    min_ln  = start.ln
+                    min_col = start.col
 
-                for child in child:
-                    if child_bloc := child.f.bloc:
-                        ln, col, end_ln, end_col = child_bloc
+                elif start.ln == min_ln:
+                    if start.col < min_col:
+                        min_col = start.col
 
-                        if ln < min_ln:
-                            min_ln  = ln
-                            min_col = col
+                if end.end_ln > max_ln:
+                    max_ln  = end.end_ln
+                    max_col = end.end_col
 
-                        elif ln == min_ln:
-                            if col < min_col:
-                                min_col = col
-
-                        if end_ln > max_ln:
-                            max_ln  = end_ln
-                            max_col = end_col
-
-                        elif end_ln == max_ln:
-                            if end_col > max_col:
-                                max_col = end_col
+                elif end.end_ln == max_ln:
+                    if end.end_col > max_col:
+                        max_col = end.end_col
 
             if min_ln != inf:
                 loc = fstloc(min_ln, min_col, max_ln, max_col)
@@ -537,12 +530,10 @@ class FST:
     def offset(self, ln: int, col: int, dln: int, dcol_offset: int, inc: bool = False) -> 'FST':  # -> Self
         """Offset ast node positions in the tree on or after ln / col by delta line / col_offset (col byte offset).
 
-        Only modifies ast.
-
-        Other nodes outside this tree might need offsetting so use only on root unless special circumstances.
-
         This only offsets the positions in the AST nodes, doesn't change any text, so make sure that is correct before
         getting any FST locations from affected nodes otherwise they will be wrong.
+
+        Other nodes outside this tree might need offsetting so use only on root unless special circumstances.
 
         Args:
             ln: Line of offset point.
@@ -554,27 +545,25 @@ class FST:
         """
 
         for a in walk(self.a):
-            if (fend_ln := (f := a.f).end_ln) is None or not hasattr(a, 'end_col_offset'):
-                f.touch()  # can't determine if before or after offset point or ast node with calculated loc so touch just in case
+            f = a.f
 
-                continue
+            if (end_col_offset := getattr(a, 'end_col_offset', None)) is not None:
+                if (fend_ln := f.end_ln) > ln:
+                    a.end_lineno += dln
 
-            if fend_ln > ln:
-                a.end_lineno += dln
+                elif fend_ln == ln and (f.end_col >= col if inc else f.end_col > col):
+                    a.end_lineno     += dln
+                    a.end_col_offset  = end_col_offset + dcol_offset
 
-            elif fend_ln == ln and (f.end_col >= col if inc else f.end_col > col):
-                a.end_lineno     += dln
-                a.end_col_offset += dcol_offset
+                else:
+                    continue
 
-            else:
-                continue
+                if (fln := f.ln) > ln:
+                    a.lineno += dln
 
-            if (fln := f.ln) > ln:
-                a.lineno += dln
-
-            elif fln == ln and f.col >= col:
-                a.lineno     += dln
-                a.col_offset += dcol_offset
+                elif fln == ln and f.col >= col:
+                    a.lineno     += dln
+                    a.col_offset += dcol_offset
 
             f.touch()
 
