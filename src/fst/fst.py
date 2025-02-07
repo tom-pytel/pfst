@@ -55,16 +55,17 @@ class fstloc(NamedTuple):
 class FST:
     """AST formatting information and easy manipulation."""
 
-    a:             AST
-    parent:        Optional['FST']  # None in root node
-    pfield:        astfield | None  # None in root node
-    root:          'FST'            # self in root node
-    _loc:          fstloc | None    # MAY NOT EXIST!
-    _bloc:         fstloc | None    # MAY NOT EXIST! bounding location, including preceding decorators
+    a:              AST
+    parent:         Optional['FST']  # None in root node
+    pfield:         astfield | None  # None in root node
+    root:           'FST'            # self in root node
+    _loc:           fstloc | None    # MAY NOT EXIST!
+    _bloc:          fstloc | None    # MAY NOT EXIST! bounding location, including preceding decorators
 
-    indent:        str              # ROOT ONLY! default indentation to use when unknown
-    _lines:        list[bistr]      # ROOT ONLY!
-    _parse_params: dict[str, Any]   # ROOT ONLY!
+    indent:         str              # ROOT ONLY! default indentation to use when unknown
+    _lines:         list[bistr]      # ROOT ONLY!
+    _parse_params:  dict[str, Any]   # ROOT ONLY!
+    _line_ast_ends: list[int]        # ROOT ONLY!
 
     @property
     def is_root(self) -> bool:
@@ -210,6 +211,43 @@ class FST:
     def end_col_offset(self) -> int:  # byte index
         return (l := self.loc) and self.root._lines[l[2]].c2b(l[3])
 
+    @property
+    def line_ast_ends(self) -> list[int]:
+        root = self.root
+
+        try:
+            return root._line_ast_ends
+        except AttributeError:
+            pass
+
+        lines    = root._lines
+        lastends = [0] * (root.bend_ln + 1)
+        stack    = [root.a]
+
+        while stack:
+            lastends[end_ln] = max(lastends[(end_ln := (a := stack.pop()).f.bend_ln)], a.f.bend_col)  # we know end_ln is not None
+
+            if isinstance(a, Constant):
+                if isinstance(a.value, (str, bytes)):  # multiline str?
+                    for i in range(a.f.ln, a.f.end_ln):  # specifically leave out last line
+                        lastends[i] = len(lines[i])
+
+                continue
+
+            for _, child in iter_fields(a):
+                if isinstance(child, AST):
+                    if child.f.bloc is not None:
+                        stack.append(child)
+
+                elif isinstance(child, list):
+                    for c in child:
+                        if isinstance(c, AST) and c.f.bloc is not None:
+                            stack.append(c)
+
+        root._line_ast_ends = lastends
+
+        return lastends
+
     def _repr_tail(self) -> str:
         tail = ' ROOT' if self.is_root else ''
         loc  = self.loc
@@ -232,46 +270,42 @@ class FST:
                     stack.extend(FST(ast, fst, astfield(name, idx))
                                  for idx, ast in enumerate(child) if isinstance(ast, AST))
 
-    def _get_preceding_lineends(self, ln: int) -> list[int]:
-        """Get line positions past all asts on line (for comment and line continuation checking). Positions may include
-        parts of statements (like a simple class def), but not '#' or '\' chars."""
+    # def _get_preceding_lineends(self, ln: int) -> list[int]:
+    #     """Get line positions past all asts on line (for comment and line continuation checking). Positions may include
+    #     parts of statements (like a simple class def), but not '#' or '\' chars."""
 
-        lines    = self.root._lines
-        lineends = [0] * ln
+    #     lines    = self.root._lines
+    #     lineends = [0] * ln
+    #     stack    = [self.root.a, *decos] if (decos := getattr(self, 'decorator_list', None)) else [self.root.a]
 
-        if self.root.bloc is None:
-            return lineends
+    #     while stack:
+    #         if (end_ln := (a := stack.pop()).f.bend_ln) < ln:  # we know is not None
+    #             lineends[end_ln] = max(lineends[end_ln], a.f.bend_col)
 
-        stack = [self.root.a, *decos] if (decos := getattr(self, 'decorator_list', None)) else [self.root.a]
+    #         if isinstance(a, Constant):
+    #             if isinstance(a.value, (str, bytes)):  # multiline str?
+    #                 for i in range(a.f.ln, a.f.end_ln):  # specifically leave out last line
+    #                     lineends[i] = len(lines[i])
 
-        while stack:
-            if (end_ln := (a := stack.pop()).f.bend_ln) < ln:  # we know is not None
-                lineends[end_ln] = max(lineends[end_ln], a.f.bend_col)
+    #             continue
 
-            if isinstance(a, Constant):
-                if isinstance(a.value, (str, bytes)):  # multiline str?
-                    for i in range(a.f.ln, a.f.end_ln):  # specifically leave out last line
-                        lineends[i] = len(lines[i])
+    #         for _, child in iter_fields(a):
+    #             if isinstance(child, AST):
+    #                 if child is not self and (cln := child.f.bln) is not None and cln < ln:
+    #                     stack.append(child)
 
-                continue
+    #             elif isinstance(child, list):
+    #                 for c in child:
+    #                     if c is self:
+    #                         break
+    #                     if not isinstance(c, AST) or (cln := c.f.bln) is None:
+    #                         continue
+    #                     if cln >= ln:
+    #                         break
 
-            for _, child in iter_fields(a):
-                if isinstance(child, AST):
-                    if child is not self and (cln := child.f.bln) is not None and cln < ln:
-                        stack.append(child)
+    #                     stack.append(c)
 
-                elif isinstance(child, list):
-                    for c in child:
-                        if c is self:
-                            break
-                        if not isinstance(c, AST) or (cln := c.f.bln) is None:
-                            continue
-                        if cln >= ln:
-                            break
-
-                        stack.append(c)
-
-        return lineends
+    #     return lineends
 
     # ------------------------------------------------------------------------------------------------------------------
 
@@ -301,6 +335,9 @@ class FST:
             root               = from_.root
             self.indent        = root.indent
             self._parse_params = root._parse_params
+
+            if (_line_ast_ends := getattr(root, '_line_ast_ends', None)) is not None:
+                self._line_ast_ends = _line_ast_ends
 
         self.indent        = root_params.get('indent', getattr(self, 'indent', '    '))
         self._parse_params = root_params.get('parse_params', getattr(self, '_parse_params', {}))
@@ -480,7 +517,7 @@ class FST:
             f = parent
 
         lines        = (root := f.root)._lines
-        lineends     = None
+        lastends     = None
         extra_indent = ''  # may result from unknown indent in single line "if something: whats_my_stmt_indentation?"
 
         while parent:
@@ -493,10 +530,10 @@ class FST:
                 if not ln or not (last_line := lines[(last_ln := ln - 1)]).endswith('\\'):
                     return line_start + extra_indent
 
-                if not lineends:
-                    lineends = f._get_preceding_lineends(ln)
+                if lastends is None:
+                    lastends = f.line_ast_ends
 
-                if not _re_line_continuation.match(last_line[lineends[last_ln]:]):
+                if not _re_line_continuation.match(last_line[lastends[last_ln]:]):
                     return line_start + extra_indent
 
             extra_indent += root.indent
@@ -510,7 +547,7 @@ class FST:
     # ------------------------------------------------------------------------------------------------------------------
 
     def touch(self, recurse: bool = False) -> 'FST':  # -> Self:
-        """AST node was modified, clear out any cached info."""
+        """AST node was modified, clear out any cached info for this node specifically, call for each node in walk."""
 
         if not recurse:
             try:
@@ -524,6 +561,19 @@ class FST:
                     del a.f._loc, a.f._bloc
                 except AttributeError:
                     pass
+
+        return self
+
+    def flush(self, touch: bool = True) -> 'FST':  # -> Self:
+        """AST node was modified, clear out any cached info globally and in other nodes, call once for entire walk."""
+
+        try:
+            del self.root._line_ast_ends
+        except AttributeError:
+            pass
+
+        if touch:
+            self.touch(True)
 
         return self
 
@@ -567,50 +617,48 @@ class FST:
 
             f.touch()
 
+        self.flush(False)
+
         return self
 
     def offset_cols(self, dcol_offset: int, lns: set[int]) -> set[int]:
         """Offset ast col byte offsets in `lns` by a delta and return same set of indentable lines.
 
-        Only modifies ast.
+        Only modifies ast, not lines.
         """
 
         if dcol_offset:
             for a in walk(self.a):  # now offset columns where it is allowed
-                if (end_col_offset := getattr(a, 'end_col_offset', None)) is None:
-                    a.f.touch()  # just in case
-
-                else:
-                    if t1 := a.lineno - 1 in lns:
+                if (end_col_offset := getattr(a, 'end_col_offset', None)) is not None:
+                    if a.lineno - 1 in lns:
                         a.col_offset += dcol_offset
 
-                    if t2 := a.end_lineno - 1 in lns:
+                    if a.end_lineno - 1 in lns:
                         a.end_col_offset = end_col_offset + dcol_offset
 
-                    if t1 or t2:
-                        a.f.touch()
+                a.f.touch()
+
+        self.flush(False)
 
         return lns
 
     def offset_cols_mapped(self, dcol_offsets: dict[int, int]) -> dict[int, int]:
         """Offset ast col byte offsets by a specific delta per line and return same dict of indentable lines.
 
-        Only modifies ast.
+        Only modifies ast, not lines.
         """
 
         for a in walk(self.a):  # now offset columns where it is allowed
-            if (end_col_offset := getattr(a, 'end_col_offset', None)) is None:
-                a.f.touch()  # just in case
-
-            else:
-                if t1 := (dcol_offset := dcol_offsets.get(a.lineno - 1)) is not None:
+            if (end_col_offset := getattr(a, 'end_col_offset', None)) is not None:
+                if (dcol_offset := dcol_offsets.get(a.lineno - 1)) is not None:
                     a.col_offset += dcol_offset
 
-                if t2 := (dcol_offset := dcol_offsets.get(a.end_lineno - 1)) is not None:
+                if (dcol_offset := dcol_offsets.get(a.end_lineno - 1)) is not None:
                     a.end_col_offset = end_col_offset + dcol_offset
 
-                if t1 or t2:
-                    a.f.touch()
+            a.f.touch()
+
+        self.flush(False)
 
         return dcol_offsets
 
@@ -812,7 +860,7 @@ class FST:
 
         fst._lines = self.sniploc(*loc)
 
-        fst.touch(True)
+        fst.flush()
         fst.dedent_tail(indent)
 
         return fst.safe(do_raise=do_raise) if safe else fst

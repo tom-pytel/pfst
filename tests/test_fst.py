@@ -83,10 +83,14 @@ class TestFST(unittest.TestCase):
         self.assertRaises(WalkFail, ast.f.verify, do_raise=True)
         self.assertEqual(None, ast.f.verify(do_raise=False))
 
-    def test_get_preceding_lineends(self):
-        self.assertEqual([0, 6, 11, 10, 5],
-                         parse('class cls:\n @deco\n def f(self):\n  """ this\n  """\n  that')
-                         .body[0].body[0].body[1].f._get_preceding_lineends(5))
+    # def test_get_preceding_lineends(self):
+    #     self.assertEqual([0, 6, 11, 10, 5],
+    #                      parse('class cls:\n @deco\n def f(self):\n  """ this\n  """\n  that')
+    #                      .body[0].body[0].body[1].f._get_preceding_lineends(5))
+
+    def test_line_ast_ends(self):
+        self.assertEqual([0, 6, 11, 10, 5, 6],
+                         parse('class cls:\n @deco\n def f(self):\n  """ this\n  """\n  that').f.line_ast_ends)
 
     def test_get_indent(self):
         ast = parse('i = 1; j = 2')
