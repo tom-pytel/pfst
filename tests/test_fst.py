@@ -83,31 +83,10 @@ class TestFST(unittest.TestCase):
         self.assertRaises(WalkFail, ast.f.verify, do_raise=True)
         self.assertEqual(None, ast.f.verify(do_raise=False))
 
-    def test_logical_line_empty_before(self):
-        ast = parse('i = 1; j = 2')
-
-        self.assertEqual('', ast.body[0].f.logical_line_empty_before())
-        self.assertEqual(None, ast.body[1].f.logical_line_empty_before())
-
-        ast = parse('def f(): \\\n i = 1')
-
-        self.assertEqual('', ast.body[0].f.logical_line_empty_before())
-        self.assertEqual(None, ast.body[0].body[0].f.logical_line_empty_before())
-
-        ast = parse('class cls: i = 1')
-
-        self.assertEqual('', ast.body[0].f.logical_line_empty_before())
-        self.assertEqual(None, ast.body[0].body[0].f.logical_line_empty_before())
-
-        ast = parse('class cls: i = 1; \\\n    j = 2')
-
-        self.assertEqual(None, ast.body[0].body[0].f.logical_line_empty_before())
-        self.assertEqual(None, ast.body[0].body[1].f.logical_line_empty_before())
-
-        ast = parse('class cls:\n  i = 1; \\\n    j = 2')
-
-        self.assertEqual('  ', ast.body[0].body[0].f.logical_line_empty_before())
-        self.assertEqual(None, ast.body[0].body[1].f.logical_line_empty_before())
+    def test_get_preceding_lineends(self):
+        self.assertEqual([0, 6, 11, 10, 5],
+                         parse('class cls:\n @deco\n def f(self):\n  """ this\n  """\n  that')
+                         .body[0].body[0].body[1].f._get_preceding_lineends(5))
 
     def test_get_indent(self):
         ast = parse('i = 1; j = 2')
@@ -153,11 +132,30 @@ class TestFST(unittest.TestCase):
         self.assertEqual(['True:', '  i'], ast.f.root.sniploc(1, 4, 2, 3))
 
     def test_get_indent(self):
-        pass
+        self.assertEqual('   ', parse('def f():\n   1').body[0].body[0].f.get_indent())
+        self.assertEqual('    ', parse('def f(): 1').body[0].body[0].f.get_indent())
+        self.assertEqual('    ', parse('def f(): \\\n  1').body[0].body[0].f.get_indent())
+        self.assertEqual('  ', parse('def f(): # \\\n  1').body[0].body[0].f.get_indent())
 
+        self.assertEqual('    ', parse('class cls:\n def f():\n    1').body[0].body[0].body[0].f.get_indent())
+        self.assertEqual('     ', parse('class cls:\n def f(): 1').body[0].body[0].body[0].f.get_indent())
+        self.assertEqual('     ', parse('class cls:\n def f(): \\\n   1').body[0].body[0].body[0].f.get_indent())
+        self.assertEqual('   ', parse('class cls:\n def f(): # \\\n   1').body[0].body[0].body[0].f.get_indent())
 
+        self.assertEqual('  ', parse('if 1:\n  2\nelse:\n   3').body[0].body[0].f.get_indent())
+        self.assertEqual('    ', parse('if 1: 2\nelse:\n   3').body[0].body[0].f.get_indent())
+        self.assertEqual('    ', parse('if 1: \\\n 2\nelse:\n   3').body[0].body[0].f.get_indent())
+        self.assertEqual('  ', parse('if 1: # \\\n  2\nelse:\n   3').body[0].body[0].f.get_indent())
 
+        self.assertEqual('   ', parse('if 1:\n  2\nelse:\n   3').body[0].orelse[0].f.get_indent())
+        self.assertEqual('    ', parse('if 1:\n  2\nelse: 3').body[0].orelse[0].f.get_indent())
+        self.assertEqual('    ', parse('if 1:\n  2\nelse: \\\n 3').body[0].orelse[0].f.get_indent())
+        self.assertEqual('   ', parse('if 1:\n  2\nelse: # \\\n   3').body[0].orelse[0].f.get_indent())
 
+        self.assertEqual('   ', parse('def f():\n   1; 2').body[0].body[1].f.get_indent())
+        self.assertEqual('    ', parse('def f(): 1; 2').body[0].body[1].f.get_indent())
+        self.assertEqual('    ', parse('def f(): \\\n  1; 2').body[0].body[1].f.get_indent())
+        self.assertEqual('  ', parse('def f(): # \\\n  1; 2').body[0].body[1].f.get_indent())
 
     def test_get_indentable_lns(self):
         src = 'class cls:\n if True:\n  i = """\nj\n"""\n  k = "... \\\n2"\n else:\n  j \\\n=\\\n 2'

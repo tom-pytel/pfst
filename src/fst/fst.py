@@ -1,3 +1,5 @@
+"""Most of the code in this module deals with line continuations via backslash."""
+
 __all_other__ = None
 __all_other__ = set(globals())
 from ast import *
@@ -18,9 +20,10 @@ __all__ = list(__all_other__ | {
 
 _STATEMENTISH = (mod, stmt, ExceptHandler, match_case)  # except for mod: always in lists, part of blocks can not be in multiline and statementish start lines
 
-_re_line_continuation = re.compile(r'^.*\\$')    # line continuation with backslash
-_re_empty_line_start  = re.compile(r'^[ \t]*')   # start of completely empty or space-filled line
-_re_empty_line        = re.compile(r'^[ \t]*$')  # completely empty or space-filled line
+# _re_line_continuation = re.compile(r'^.*\\$')    # line continuation with backslash
+_re_empty_line_start  = re.compile(r'^[ \t]*')    # start of completely empty or space-filled line
+_re_empty_line        = re.compile(r'^[ \t]*$')   # completely empty or space-filled line
+_re_line_continuation = re.compile(r'^[^#]*\\$')  # line continuation with backslash not following a comment start '#' (assumed no asts contained in line)
 
 
 def only_root(func):
@@ -69,7 +72,12 @@ class FST:
 
     @property
     def lines(self) -> list[str]:
-        return self._lines if self.is_root else self.root._lines[self.ln : self.end_ln + 1] if self.ln is not None else []
+        if self.is_root:
+            return self._lines
+        elif self.ln is not None:
+            return self.root._lines[self.ln : self.end_ln + 1]
+        else:
+            return self.parent.lines
 
     @property
     def text(self) -> str:
@@ -135,7 +143,12 @@ class FST:
                             if end_col > max_col:
                                 max_col = end_col
 
-            loc = None if min_ln == inf else fstloc(min_ln, min_col, max_ln, max_col)
+            if min_ln != inf:
+                loc = fstloc(min_ln, min_col, max_ln, max_col)
+            elif self.is_root:
+                loc = fstloc(0, 0, 0, 0)  # root must have location
+            else:
+                loc = None
 
         else:
             col     = self.root._lines[ln].b2c(col_offset)
@@ -225,6 +238,47 @@ class FST:
                 elif isinstance(child, list):
                     stack.extend(FST(ast, fst, astfield(name, idx))
                                  for idx, ast in enumerate(child) if isinstance(ast, AST))
+
+    def _get_preceding_lineends(self, ln: int) -> list[int]:
+        """Get line positions past all asts on line (for comment and line continuation checking). Positions may include
+        parts of statements (like a simple class def), but not '#' or '\' chars."""
+
+        lines    = self.root._lines
+        lineends = [0] * ln
+
+        if self.root.bloc is None:
+            return lineends
+
+        stack = [self.root.a, *decos] if (decos := getattr(self, 'decorator_list', None)) else [self.root.a]
+
+        while stack:
+            if (end_ln := (a := stack.pop()).f.bend_ln) < ln:  # we know is not None
+                lineends[end_ln] = max(lineends[end_ln], a.f.bend_col)
+
+            if isinstance(a, Constant):
+                if isinstance(a.value, (str, bytes)):  # multiline str?
+                    for i in range(a.f.ln, a.f.end_ln):  # specifically leave out last line
+                        lineends[i] = len(lines[i])
+
+                continue
+
+            for _, child in iter_fields(a):
+                if isinstance(child, AST):
+                    if child is not self and (cln := child.f.bln) is not None and cln < ln:
+                        stack.append(child)
+
+                elif isinstance(child, list):
+                    for c in child:
+                        if c is self:
+                            break
+                        if not isinstance(c, AST) or (cln := c.f.bln) is None:
+                            continue
+                        if cln >= ln:
+                            break
+
+                        stack.append(c)
+
+        return lineends
 
     # ------------------------------------------------------------------------------------------------------------------
 
@@ -372,29 +426,6 @@ class FST:
 
     # ------------------------------------------------------------------------------------------------------------------
 
-    def is_continuation_line(self, ln: int) -> bool:
-        """Is a continuation line from previous line ending with '\\'?"""
-
-        return bool(ln and _re_line_continuation.match(self.root._lines[ln - 1]))
-
-    def line_empty_before(self, l: str, col: int) -> str | None:
-        """Is the text line empty before this position (irrespective of if is continuation from previous text line via
-        '\\')? If so then return the string up to this point, else return None."""
-
-        return s if _re_empty_line.match(s := l[:col]) else None
-
-    def logical_line_empty_before(self) -> str | None:
-        """Returns line prefix text if this node starts a new logical line and is not a line continuation or following a
-        semicolon, None otherwise."""
-
-        if ((ln := self.ln) is not None and
-            (s := self.line_empty_before(self.root._lines[ln], self.col)) is not None and
-            not self.is_continuation_line(ln)
-        ):
-            return s
-
-        return None
-
     def is_parsable(self) -> bool:
         if not self.loc or not is_parsable(self.a):
             return False
@@ -447,27 +478,39 @@ class FST:
         return lns
 
     def get_indent(self) -> str:
-        """Determine indentation of node at `stmt` or `mod` level at or above self, otherwise at root node."""
+        """Determine proper indentation of node at `stmt` (or other similar) level at or above self, otherwise at root
+        node. Even if it is a continuation or on same line as block statement."""
 
-        while (parent := self.parent) and not isinstance(self.a, (stmt, mod)):
-            self = parent
+        f = self
 
-        root         = self.root
+        while (parent := f.parent) and not isinstance(f.a, _STATEMENTISH):
+            f = parent
+
+        lines        = (root := f.root)._lines
+        lineends     = None
         extra_indent = ''  # may result from unknown indent in single line "if something: whats_my_stmt_indentation?"
 
         while parent:
-            siblings = getattr(parent.a, (pfield := self.pfield).name)
+            a = getattr(parent.a, (pfield := f.pfield).name)
 
-            if pfield.idx is None:
-                siblings = [siblings]
+            if pfield.idx is not None:
+                f = a[0].f  # we specifically want first statment / exception handler / match case in list
 
-            for sibling in siblings:
-                if (line_start := sibling.f.logical_line_empty_before()) is not None:
+            if _re_empty_line.match(line_start := lines[(ln := f.ln)][:f.col]):
+                if not ln or not (last_line := lines[(last_ln := ln - 1)]).endswith('\\'):
+                    return line_start + extra_indent
+
+                if not lineends:
+                    lineends = f._get_preceding_lineends(ln)
+
+                if not _re_line_continuation.match(last_line[lineends[last_ln]:]):
                     return line_start + extra_indent
 
             extra_indent += root.indent
-            self          = parent
-            parent        = self.parent
+            f             = parent
+            parent        = f.parent
+
+        # TODO: handle possibility of syntactically incorrect but indented root node
 
         return extra_indent
 
