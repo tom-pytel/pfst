@@ -640,14 +640,14 @@ class FST:
         return lns
 
     @only_root
-    def safe(self, *, do_assign: bool = True, do_raise: bool = True) -> Union['FST', None]:  # -> Self | None
+    def safe(self, *, assign: bool = True, do_raise: bool = True) -> Union['FST', None]:  # -> Self | None
         """Make safe to parse (to make cut or copied subtrees parsable if the source is not by itself). Possibly
         reparses which may change type of ast, e.g. `keyword` "i=1" to `Assign` "i=1".
 
         If make safe fails the ast may be left changed.
 
         Args:
-            do_assign: Whether to allow conversion to Assign or AnnAssign statement.
+            assign: Whether to allow conversion to Assign or AnnAssign statement.
             do_raise: Whether to raise on failure to make safe (default: True) or return None (False).
         """
 
@@ -693,7 +693,7 @@ class FST:
             self.touch()
             self._make_fst_tree()
 
-        elif do_assign and (
+        elif assign and (
             (is_keyword := isinstance(ast, keyword)) or
             ((is_arg := isinstance(ast, arg)) and ast.annotation) or
             (isinstance(ast, TypeVar) and (ast.bound or ast.default_value)
@@ -754,7 +754,7 @@ class FST:
 
         return self
 
-    def copy(self, *, decorators: bool = True, safe: bool = True, do_raise: bool = True) -> 'FST':
+    def copy(self, *, decorators: bool = True, safe: bool = False, do_raise: bool = True) -> 'FST':
         if not (loc := self.bloc if decorators else self.loc):
             raise ValueError('cannot copy ast without location')
 

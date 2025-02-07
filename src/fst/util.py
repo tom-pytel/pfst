@@ -124,8 +124,12 @@ def is_parsable(ast: AST) -> bool:
     if not isinstance(ast, AST):
         return False
 
-    if isinstance(ast, (Load, Store, Del, Add, Sub, Mult, Div, Mod, Pow, LShift, RShift, BitOr, BitXor, BitAnd,
-        FloorDiv, Eq, NotEq, Lt, LtE, Gt, GtE, Is, IsNot, In, NotIn, And, Or,
+    if isinstance(ast, (
+        Load, Store, Del,  # expr_context
+        And, Or,  # boolop
+        Add, Sub, Mult, MatMult, Div, Mod, Pow, LShift, RShift, BitOr, BitXor, BitAnd, FloorDiv,  # operator
+        Invert, Not, UAdd, USub,  # unaryop
+        Eq, NotEq, Lt, LtE, Gt, GtE, Is, IsNot, In, NotIn,  # typeignore
         ExceptHandler, Slice, FormattedValue, Starred, MatchStar,
         MatchValue, MatchSingleton, MatchSequence, MatchMapping, MatchClass, MatchAs, MatchOr,
         expr_context, operator, cmpop, boolop, alias, unaryop, arguments, comprehension, withitem, match_case,

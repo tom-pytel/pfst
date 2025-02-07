@@ -503,9 +503,26 @@ class TestFST(unittest.TestCase):
         self.assertEqual(f.a.body[0].f.copy(safe=False, do_raise=True).text, '@decorator\nclass cls:\n  pass')
         self.assertEqual(f.a.body[0].f.copy(decorators=False, safe=False, do_raise=True).text, 'class cls:\n  pass')
 
+        l = FST.from_src("['\\u007f', '\\u0080', 'ʁ', 'ᛇ', '時', '🐍', '\\ud800', 'Źdźbło']").a.body[0].value.elts
+        self.assertEqual("'\\u007f'", l[0].f.copy().text)
+        self.assertEqual("'\\u0080'", l[1].f.copy().text)
+        self.assertEqual("'ʁ'", l[2].f.copy().text)
+        self.assertEqual("'ᛇ'", l[3].f.copy().text)
+        self.assertEqual("'時'", l[4].f.copy().text)
+        self.assertEqual("'🐍'", l[5].f.copy().text)
+        self.assertEqual("'\\ud800'", l[6].f.copy().text)
+        self.assertEqual("'Źdźbło'", l[7].f.copy().text)
 
+        f = FST.from_src('match w := x,:\n case 0: pass').a.body[0].subject.f.copy(safe=True)
+        self.assertEqual('(w := x,)', f.text)
 
+        f = FST.from_src('a[1:2, 3:4]').a.body[0].value.slice.f.copy(safe=False)
+        self.assertRaises(SyntaxError, f.safe)
+        self.assertIs(None, f.safe(do_raise=False))
 
+        if sys.version_info[:2] >= (3, 12):
+            f = FST.from_src('tuple[*tuple[int, ...]]').a.body[0].value.slice.f.copy(safe=True)
+            self.assertEqual('(*tuple[int, ...],)', f.text)
 
 
 if __name__ == '__main__':
