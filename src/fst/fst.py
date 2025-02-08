@@ -19,6 +19,35 @@ __all__ = list(__all_other__ | {
 })
 
 
+AST_FIELDS_NEXT: dict[tuple[type[AST], str], str | None] = dict(sum((  # next field name from AST class and current field name
+    [] if not fields else
+    [((cls, fields[0]), None)] if len(fields) == 1 else
+    [((cls, fields[i]), fields[i + 1]) for i in range(len(fields) - 1)] + [((cls, fields[-1]), None)]
+    for cls, fields in AST_FIELDS.items()), start=[])
+)
+
+AST_FIELDS_NEXT[(Dict, 'keys')]             = 0  # special cases
+AST_FIELDS_NEXT[(Dict, 'values')]           = 1
+AST_FIELDS_NEXT[(Compare, 'ops')]           = 2
+AST_FIELDS_NEXT[(Compare, 'comparators')]   = 3
+AST_FIELDS_NEXT[(Compare, 'left')]          = 'comparators'  # black magic juju
+AST_FIELDS_NEXT[(MatchMapping, 'keys')]     = 4
+AST_FIELDS_NEXT[(MatchMapping, 'patterns')] = 5
+
+AST_FIELDS_PREV: dict[tuple[type[AST], str], str | None] = dict(sum((  # previous field name from AST class and current field name
+    [] if not fields else
+    [((cls, fields[0]), None)] if len(fields) == 1 else
+    [((cls, fields[i + 1]), fields[i]) for i in range(len(fields) - 1)] + [((cls, fields[0]), None)]
+    for cls, fields in AST_FIELDS.items()), start=[])
+)
+
+AST_FIELDS_PREV[(Dict, 'keys')]             = 0  # special cases
+AST_FIELDS_PREV[(Dict, 'values')]           = 1
+AST_FIELDS_PREV[(Compare, 'ops')]           = 2
+AST_FIELDS_PREV[(Compare, 'comparators')]   = 3
+AST_FIELDS_PREV[(MatchMapping, 'keys')]     = 4
+AST_FIELDS_PREV[(MatchMapping, 'patterns')] = 5
+
 STATEMENTISH = (mod, stmt, ExceptHandler, match_case)  # except for mod: always in lists, part of blocks can not be in multiline and statementish start lines
 
 re_empty_line_start  = re.compile(r'^[ \t]*')    # start of completely empty or space-filled line
@@ -213,6 +242,8 @@ class FST:
 
     @property
     def line_ast_ends(self) -> list[int]:
+        """Map of column positions of last AST node on each given line. Useful for checking comments and '\' continuations."""
+
         root = self.root
 
         try:
@@ -418,6 +449,242 @@ class FST:
                 linefunc(f'{sind}{sind}{cind}{child!r}')
 
     # ------------------------------------------------------------------------------------------------------------------
+
+    def next(self, loc: bool = True) -> Union['FST', None]:
+        """Get next sibling in syntactic order. If `loc` is `True` (default) then only ASTs with locations returned.
+        Returns `None` if last valid sibling in parent.
+        """
+
+        if not (parent := self.parent):
+            return None
+
+        parenta   = parent.a
+        name, idx = self.pfield
+
+        while True:
+            next = AST_FIELDS_NEXT[(parenta.__class__, name)]
+
+            if isinstance(next, int):  # special case?
+                while True:
+                    match next:
+                        case 0:  # from Dict.keys
+                            f    = getattr(parenta, 'values')[idx].f
+                            next = 1
+
+                        case 1:  # from Dict.values
+                            try:
+                                f    = getattr(parenta, 'keys')[(idx := idx + 1)].f
+                                next = 0
+
+                            except IndexError:
+                                return None
+
+                        case 2:  # from Compare.ops
+                            f    = getattr(parenta, 'comparators')[idx].f
+                            next = 3
+
+                        case 3:  # from Compare.comparators
+                            try:
+                                f    = getattr(parenta, 'ops')[(idx := idx + 1)].f
+                                next = 2
+
+                            except IndexError:
+                                return None
+
+                        case 4:  # from MatchMapping.keys
+                            f    = getattr(parenta, 'patterns')[idx].f
+                            next = 5
+
+                        case 5:  # from MatchMapping.patterns
+                            try:
+                                f    = getattr(parenta, 'keys')[(idx := idx + 1)].f
+                                next = 4
+
+                            except IndexError:
+                                return None
+
+                    if not loc or f.loc:
+                        return f
+
+            elif idx is not None:
+                sibling = getattr(parenta, name)
+
+                while True:
+                    try:
+                        f = sibling[(idx := idx + 1)].f
+                    except IndexError:
+                        break
+
+                    if not loc or f.loc:
+                        return f
+
+            while next is not None:
+                if isinstance(next, str):
+                    name = next
+
+                    if isinstance(sibling := getattr(parenta, next, None), AST):  # None because could have fields from future python versions
+                        if (f := sibling.f).loc or not loc:
+                            return f
+
+                    elif isinstance(sibling, list) and sibling:
+                        idx = -1
+
+                        break
+
+                    next = AST_FIELDS_NEXT[(parenta.__class__, name)]
+
+                    continue
+
+                # non-str next, special case
+
+                match next:
+                    case 2:  # from Compare.left
+                        name = 'comparators'
+                        idx  = -1
+
+                break
+
+            else:
+                break
+
+            continue
+
+        return None
+
+    def prev(self, loc: bool = True) -> Union['FST', None]:
+        """Get previous sibling in syntactic order. If `loc` is `True` (default) then only ASTs with locations returned.
+        Returns `None` if first valid sibling in parent.
+        """
+
+        if not (parent := self.parent):
+            return None
+
+        parenta   = parent.a
+        name, idx = self.pfield
+
+        while True:
+            prev = AST_FIELDS_PREV[(parenta.__class__, name)]
+
+            if isinstance(prev, int):  # special case?
+                while True:
+                    match prev:
+                        case 0:  # from Dict.keys
+                            if not idx:
+                                return None
+
+                            else:
+                                f    = getattr(parenta, 'values')[(idx := idx - 1)].f
+                                prev = 1
+
+                        case 1:  # from Dict.values
+                            f    = getattr(parenta, 'keys')[idx].f
+                            prev = 0
+
+                        case 2:  # from Compare.ops
+                            if not idx:
+                                prev = 'left'
+
+                                break
+
+                            else:
+                                f    = getattr(parenta, 'comparators')[(idx := idx - 1)].f
+                                prev = 3
+
+                        case 3:  # from Compare.comparators
+                            f    = getattr(parenta, 'ops')[idx].f
+                            prev = 2
+
+                        case 4:  # from Keys.keys
+                            if not idx:
+                                return None
+
+                            else:
+                                f    = getattr(parenta, 'patterns')[(idx := idx - 1)].f
+                                prev = 5
+
+                        case 5:  # from Keys.patterns
+                            f    = getattr(parenta, 'keys')[idx].f
+                            prev = 4
+
+                    if not loc or f.loc:
+                        return f
+
+            else:
+                sibling = getattr(parenta, name)
+
+                while idx:
+                    f = sibling[(idx := idx - 1)].f
+
+                    if not loc or f.loc:
+                        return f
+
+            while prev is not None:
+                if isinstance(prev, str):
+                    name = prev
+
+                    if isinstance(sibling := getattr(parenta, prev, None), AST):  # None because could have fields from future python versions
+                        if (f := sibling.f).loc or not loc:
+                            return f
+
+                    elif isinstance(sibling, list) and (idx := len(sibling)):
+                        break
+
+                    prev = AST_FIELDS_PREV[(parenta.__class__, name)]
+
+                    continue
+
+                # non-str prev, special case
+
+                raise RuntimeError('should not get here')  # when entrable special cases from ahead appear in future py versions add them here
+
+                break
+
+            else:
+                break
+
+            continue
+
+        return None
+
+    def first_child(self, loc: bool = True) -> Union['FST', None]:
+        """Get first child in syntactic order. If `loc` is `True` (default) then only ASTs with locations returned.
+        Returns `None` if no valid children.
+        """
+
+        for name in AST_FIELDS[(a := self.a).__class__]:
+            if (child := getattr(a, name, None)):
+                if isinstance(child, AST) and ((f := child.f).loc or not loc):
+                    return f
+
+                if isinstance(child, list):
+                    for c in child:
+                        if isinstance(c, AST) and ((f := c.f).loc or not loc):
+                            return f
+
+        return None
+
+    def last_child(self, loc: bool = True) -> Union['FST', None]:
+        """Get last child in syntactic order. If `loc` is `True` (default) then only ASTs with locations returned.
+        Returns `None` if no valid children.
+        """
+
+        for name in reversed(AST_FIELDS[(a := self.a).__class__]):
+            if (child := getattr(a, name, None)):
+                if isinstance(child, AST) and ((f := child.f).loc or not loc):
+                    return f
+
+                if isinstance(child, list):
+                    for c in reversed(child):
+                        if isinstance(c, AST) and ((f := c.f).loc or not loc):
+                            return f
+
+        return None
+
+    def next_child(self, from_child: Union['FST', None], loc: bool = True) -> Union['FST', None]:
+        return self.first_child(loc) if from_child is None else from_child.next(loc)
+
+    def prev_child(self, from_child: Union['FST', None], loc: bool = True) -> Union['FST', None]:
+        return self.last_child(loc) if from_child is None else from_child.prev(loc)
 
     def is_parsable(self) -> bool:
         if not self.loc or not is_parsable(self.a):

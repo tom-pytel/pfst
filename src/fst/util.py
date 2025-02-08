@@ -4,92 +4,10 @@ from ast import *
 from typing import Any, Callable, Iterator, Literal, NamedTuple
 
 __all__ = [
-    'bistr', 'AST_FIELDS', 'astfield', 'get_field', 'has_type_comments', 'is_parsable', 'get_parse_mode',
+    'FIELDS', 'AST_FIELDS',
+    'bistr', 'astfield', 'get_field', 'has_type_comments', 'is_parsable', 'get_parse_mode',
     'WalkFail', 'walk2', 'compare', 'copy_attributes', 'copy',
 ]
-
-
-class bistr(str):
-    """Easy mapping between char and encoded byte index (including 1 past last valid unit). Only positive indices."""
-
-    _c2b: array  # character to byte indices
-    _b2c: array  # byte to character indices
-
-    _i2i_same = lambda idx: idx
-
-    @property
-    def lenbytes(self) -> int:
-        return self.c2b(len(self))
-
-    def __new__(cls, s: str) -> 'bistr':
-        return s if s.__class__ is bistr else str.__new__(cls, s)
-
-    @staticmethod
-    def _make_array(len_array: int, highest_value: int) -> array:
-        if highest_value < 0x100:
-            return array('B', b'\x00' * (len_array + 1))
-        if highest_value < 0x10000:
-            return array('H', b'\x00\x00' * (len_array + 1))
-        if highest_value < 0x100000000:
-            return array('I', b'\x00\x00\x00\x00' * (len_array + 1))
-
-        return array('Q', b'\x00\x00\x00\x00\x00\x00\x00\x00' * (len_array + 1))
-
-    def c2b_lookup(self, idx):
-        return self._c2b[idx]
-
-    def c2b(self, idx: int) -> int:
-        if (lc := len(self)) == (lb := len(self.encode())):
-            self.c2b = self.b2c = bistr._i2i_same
-
-            return idx
-
-        c2b = self._c2b = self._make_array(lc, lb)
-        j   = 0
-
-        for i, c in enumerate(self):
-            c2b[i]  = j
-            j      += len(c.encode())
-
-        c2b[-1]  = j
-        self.c2b = self.c2b_lookup
-
-        return c2b[idx]
-
-    def b2c_lookup(self, idx):
-        return self._b2c[idx]
-
-    def b2c(self, idx: int) -> int:
-        if (lb := self.c2b(lc := len(self))) == lc:
-            return idx  # no chars > '\x7f' so funcs are `_i2i_same` identity
-
-        b2c = self._b2c = self._make_array(lb, lc)
-
-        for i, j in enumerate(self._c2b):
-            b2c[j] = i
-
-        k = 0
-
-        for i, j in enumerate(b2c):  # set off-boundary utf8 byte indices for safety
-            if j:
-                k = j
-            else:
-                b2c[i] = k
-
-        self.b2c = self.b2c_lookup
-
-        return b2c[idx]
-
-    def clear_cache(self):
-        try:
-            del self.c2b, self._c2b
-        except AttributeError:
-            pass
-
-        try:
-            del self.b2c, self._b2c
-        except AttributeError:
-            pass
 
 
 if sys.version_info[:2] < (3, 12):
@@ -105,8 +23,7 @@ if sys.version_info[:2] < (3, 12):
 #   Dict          - interleaved `keys` and `values`
 #   Compare       - interleaved `ops` and `comparators`
 #   MatchMapping  - interleaved `keys` and `patterns`
-#   MatchClass    - interleaved `kwd_attrs` and `kwd_patterns`
-AST_FIELDS = [
+FIELDS = dict([
     (Module,             (('body', 'stmt*'), ('type_ignores', 'type_ignore*'))),
     (Interactive,        (('body', 'stmt*'),)),
     (Expression,         (('body', 'expr'),)),
@@ -139,6 +56,7 @@ AST_FIELDS = [
     (Pass,               ()),
     (Break,              ()),
     (Continue,           ()),
+
     (BoolOp,             (('op', 'boolop'), ('values', 'expr*'))),
     (NamedExpr,          (('target', 'expr'), ('value', 'expr'))),
     (BinOp,              (('left', 'expr'), ('op', 'operator'), ('right', 'expr'))),
@@ -225,7 +143,95 @@ AST_FIELDS = [
     (TypeVar,            (('name', 'identifier'), ('bound', 'expr?'), ('default_value', 'expr?'))),
     (ParamSpec,          (('name', 'identifier'), ('default_value', 'expr?'))),
     (TypeVarTuple,       (('name', 'identifier'), ('default_value', 'expr?'))),
-]
+])
+
+# only fields which can contain an AST
+AST_FIELDS = {cls: tuple(f for f, t in fields
+                         if not t.startswith('int') and not t.startswith('string') and not t.startswith('identifier'))
+              for cls, fields in FIELDS.items()}
+
+
+class bistr(str):
+    """Easy mapping between char and encoded byte index (including 1 past last valid unit). Only positive indices."""
+
+    _c2b: array  # character to byte indices
+    _b2c: array  # byte to character indices
+
+    _i2i_same = lambda idx: idx
+
+    @property
+    def lenbytes(self) -> int:
+        return self.c2b(len(self))
+
+    def __new__(cls, s: str) -> 'bistr':
+        return s if s.__class__ is bistr else str.__new__(cls, s)
+
+    @staticmethod
+    def _make_array(len_array: int, highest_value: int) -> array:
+        if highest_value < 0x100:
+            return array('B', b'\x00' * (len_array + 1))
+        if highest_value < 0x10000:
+            return array('H', b'\x00\x00' * (len_array + 1))
+        if highest_value < 0x100000000:
+            return array('I', b'\x00\x00\x00\x00' * (len_array + 1))
+
+        return array('Q', b'\x00\x00\x00\x00\x00\x00\x00\x00' * (len_array + 1))
+
+    def c2b_lookup(self, idx):
+        return self._c2b[idx]
+
+    def c2b(self, idx: int) -> int:
+        if (lc := len(self)) == (lb := len(self.encode())):
+            self.c2b = self.b2c = bistr._i2i_same
+
+            return idx
+
+        c2b = self._c2b = self._make_array(lc, lb)
+        j   = 0
+
+        for i, c in enumerate(self):
+            c2b[i]  = j
+            j      += len(c.encode())
+
+        c2b[-1]  = j
+        self.c2b = self.c2b_lookup
+
+        return c2b[idx]
+
+    def b2c_lookup(self, idx):
+        return self._b2c[idx]
+
+    def b2c(self, idx: int) -> int:
+        if (lb := self.c2b(lc := len(self))) == lc:
+            return idx  # no chars > '\x7f' so funcs are `_i2i_same` identity
+
+        b2c = self._b2c = self._make_array(lb, lc)
+
+        for i, j in enumerate(self._c2b):
+            b2c[j] = i
+
+        k = 0
+
+        for i, j in enumerate(b2c):  # set off-boundary utf8 byte indices for safety
+            if j:
+                k = j
+            else:
+                b2c[i] = k
+
+        self.b2c = self.b2c_lookup
+
+        return b2c[idx]
+
+    def clear_cache(self):
+        try:
+            del self.c2b, self._c2b
+        except AttributeError:
+            pass
+
+        try:
+            del self.b2c, self._b2c
+        except AttributeError:
+            pass
 
 
 class astfield(NamedTuple):
@@ -347,7 +353,7 @@ def walk2(ast1: AST, ast2: AST, cb_primitive: Callable[[Any, Any, str, int], boo
     return True
 
 
-_compare_primitive_type_comments_func = (
+compare_primitive_type_comments_func = (
     (lambda p1, p2, n, i: n == 'type_comment' or (p1.__class__ is p2.__class__ and p1 == p2)),
     (lambda p1, p2, n, i: p1.__class__ is p2.__class__ and p1 == p2),
 )
@@ -355,7 +361,7 @@ _compare_primitive_type_comments_func = (
 def compare(ast1: AST, ast2: AST, *, locations: bool = False, type_comments: bool = False, do_raise: bool = True) -> bool:
     """Copy two trees including possibly locations and type comments."""
 
-    cb_primitive = _compare_primitive_type_comments_func[bool(type_comments)]
+    cb_primitive = compare_primitive_type_comments_func[bool(type_comments)]
 
     try:
         for n1, n2 in walk2(ast1, ast2, cb_primitive):
@@ -381,7 +387,7 @@ def compare(ast1: AST, ast2: AST, *, locations: bool = False, type_comments: boo
 def copy_attributes(src: AST, dst: AST, *, compare: bool = True, type_comments: bool = False, do_raise: bool = True) -> bool:
     """Copy attributes from one tree to another checking structure equality in the process."""
 
-    cb_primitive = _compare_primitive_type_comments_func[bool(type_comments)] if compare else lambda p1, p2, n, i: True
+    cb_primitive = compare_primitive_type_comments_func[bool(type_comments)] if compare else lambda p1, p2, n, i: True
 
     try:
         for ns, nd in walk2(src, dst, cb_primitive):
