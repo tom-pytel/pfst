@@ -19,7 +19,9 @@ def main():
     parser.add_argument('-i', '--indent', type=int, default=2,
                         help='indentation of nodes (number of spaces)')
     parser.add_argument('--no-verify', default=True, action='store_false',
-                        help="don't verify parse AST")
+                        help="don't verify parsed AST")
+    parser.add_argument('-f', '--full', default=False, action='store_true',
+                        help="show full tree including empty nodes")
 
     args = parser.parse_args()
 

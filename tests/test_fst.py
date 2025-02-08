@@ -83,11 +83,6 @@ class TestFST(unittest.TestCase):
         self.assertRaises(WalkFail, ast.f.verify, do_raise=True)
         self.assertEqual(None, ast.f.verify(do_raise=False))
 
-    # def test_get_preceding_lineends(self):
-    #     self.assertEqual([0, 6, 11, 10, 5],
-    #                      parse('class cls:\n @deco\n def f(self):\n  """ this\n  """\n  that')
-    #                      .body[0].body[0].body[1].f._get_preceding_lineends(5))
-
     def test_line_ast_ends(self):
         self.assertEqual([0, 6, 11, 10, 5, 6],
                          parse('class cls:\n @deco\n def f(self):\n  """ this\n  """\n  that').f.line_ast_ends)
@@ -166,7 +161,7 @@ class TestFST(unittest.TestCase):
         ast = parse(src)
 
         self.assertEqual({1, 2, 5, 7, 8, 9, 10}, ast.f.get_indentable_lns())
-        # self.assertEqual({0, 1, 2, 5, 7, 8, 9, 10}, ast.f.get_indentable_lns(0))
+        self.assertEqual({0, 1, 2, 5, 7, 8, 9, 10}, ast.f.get_indentable_lns(0))
 
     def test_offset(self):
         src = 'i = 1\nj = 2\nk = 3'
@@ -223,7 +218,8 @@ class TestFST(unittest.TestCase):
         src = 'class cls:\n if True:\n  i = """\nj\n"""\n  k = 3\n else:\n  j = 2'
 
         ast = parse(src)
-        lns = ast.f.offset_cols(1, ast.f.get_indentable_lns())
+        lns = ast.f.get_indentable_lns()
+        ast.f.offset_cols(1, lns)
         self.assertEqual({1, 2, 5, 6, 7}, lns)
         self.assertEqual((0, 0, 7, 8), ast.f.loc)
         self.assertEqual((0, 0, 7, 8), ast.body[0].f.loc)
@@ -240,7 +236,8 @@ class TestFST(unittest.TestCase):
         self.assertEqual((7, 7, 7, 8), ast.body[0].body[0].orelse[0].value.f.loc)
 
         ast = parse(src)
-        lns = ast.body[0].body[0].f.offset_cols(1, ast.body[0].body[0].f.get_indentable_lns())
+        lns = ast.body[0].body[0].f.get_indentable_lns()
+        ast.body[0].body[0].f.offset_cols(1, lns)
         self.assertEqual({2, 5, 6, 7}, lns)
         self.assertEqual((1, 1, 7, 8), ast.body[0].body[0].f.loc)
         self.assertEqual((1, 4, 1, 8), ast.body[0].body[0].test.f.loc)
@@ -255,7 +252,8 @@ class TestFST(unittest.TestCase):
         self.assertEqual((7, 7, 7, 8), ast.body[0].body[0].orelse[0].value.f.loc)
 
         ast = parse(src)
-        lns = ast.body[0].body[0].body[0].f.offset_cols(1, ast.body[0].body[0].body[0].f.get_indentable_lns())
+        lns = ast.body[0].body[0].body[0].f.get_indentable_lns()
+        ast.body[0].body[0].body[0].f.offset_cols(1, lns)
         self.assertEqual(set(), lns)
         self.assertEqual((2, 2, 4, 3), ast.body[0].body[0].body[0].f.loc)
         self.assertEqual((2, 2, 2, 3), ast.body[0].body[0].body[0].targets[0].f.loc)
@@ -266,7 +264,7 @@ class TestFST(unittest.TestCase):
         ast = parse(src)
         off = {0: 0, 1: 1, 2: 2, 3: 3, 4: 4}
 
-        self.assertEqual(off, ast.f.offset_cols_mapped(off))
+        ast.f.offset_cols_mapped(off)
         self.assertEqual((0, 0, 4, 5), ast.f.loc)
         self.assertEqual((0, 0, 0, 5), ast.body[0].f.loc)
         self.assertEqual((0, 0, 0, 1), ast.body[0].targets[0].f.loc)

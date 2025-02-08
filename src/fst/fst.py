@@ -11,19 +11,19 @@ import re
 from typing import Any, Callable, Literal, NamedTuple, Optional, Union
 
 from .util import *
-from .util import TypeVar, ParamSpec, TypeVarTuple  # for py < 3.12
+from .util import TryStar, TypeVar, ParamSpec, TypeVarTuple, TypeAlias  # for py < 3.12
 
 __all__ = list(__all_other__ | {
-    'TypeVar', 'ParamSpec', 'TypeVarTuple',
+    'TryStar', 'TypeVar', 'ParamSpec', 'TypeVarTuple', 'TypeAlias',
     'FST', 'parse', 'unparse',
 })
 
-_STATEMENTISH = (mod, stmt, ExceptHandler, match_case)  # except for mod: always in lists, part of blocks can not be in multiline and statementish start lines
 
-# _re_line_continuation = re.compile(r'^.*\\$')    # line continuation with backslash
-_re_empty_line_start  = re.compile(r'^[ \t]*')    # start of completely empty or space-filled line
-_re_empty_line        = re.compile(r'^[ \t]*$')   # completely empty or space-filled line
-_re_line_continuation = re.compile(r'^[^#]*\\$')  # line continuation with backslash not following a comment start '#' (assumed no asts contained in line)
+STATEMENTISH = (mod, stmt, ExceptHandler, match_case)  # except for mod: always in lists, part of blocks can not be in multiline and statementish start lines
+
+re_empty_line_start  = re.compile(r'^[ \t]*')    # start of completely empty or space-filled line
+re_empty_line        = re.compile(r'^[ \t]*$')   # completely empty or space-filled line
+re_line_continuation = re.compile(r'^[^#]*\\$')  # line continuation with backslash not following a comment start '#' (assumed no asts contained in line)
 
 
 def only_root(func):
@@ -270,43 +270,6 @@ class FST:
                     stack.extend(FST(ast, fst, astfield(name, idx))
                                  for idx, ast in enumerate(child) if isinstance(ast, AST))
 
-    # def _get_preceding_lineends(self, ln: int) -> list[int]:
-    #     """Get line positions past all asts on line (for comment and line continuation checking). Positions may include
-    #     parts of statements (like a simple class def), but not '#' or '\' chars."""
-
-    #     lines    = self.root._lines
-    #     lineends = [0] * ln
-    #     stack    = [self.root.a, *decos] if (decos := getattr(self, 'decorator_list', None)) else [self.root.a]
-
-    #     while stack:
-    #         if (end_ln := (a := stack.pop()).f.bend_ln) < ln:  # we know is not None
-    #             lineends[end_ln] = max(lineends[end_ln], a.f.bend_col)
-
-    #         if isinstance(a, Constant):
-    #             if isinstance(a.value, (str, bytes)):  # multiline str?
-    #                 for i in range(a.f.ln, a.f.end_ln):  # specifically leave out last line
-    #                     lineends[i] = len(lines[i])
-
-    #             continue
-
-    #         for _, child in iter_fields(a):
-    #             if isinstance(child, AST):
-    #                 if child is not self and (cln := child.f.bln) is not None and cln < ln:
-    #                     stack.append(child)
-
-    #             elif isinstance(child, list):
-    #                 for c in child:
-    #                     if c is self:
-    #                         break
-    #                     if not isinstance(c, AST) or (cln := c.f.bln) is None:
-    #                         continue
-    #                     if cln >= ln:
-    #                         break
-
-    #                     stack.append(c)
-
-    #     return lineends
-
     # ------------------------------------------------------------------------------------------------------------------
 
     def __repr__(self) -> str:
@@ -493,12 +456,12 @@ class FST:
     def snip_text(self) -> str:
         return '\n'.join(self.snip())
 
-    def get_indentable_lns(self) -> set[int]:
+    def get_indentable_lns(self, skip: int = 1) -> set[int]:
         """Get set of indentable lines (past the first one usually because that is normally handled specially)."""
 
-        lns = set(range(self.bln + 1, self.bend_ln + 1))
+        lns = set(range(self.bln + skip, self.bend_ln + 1))
 
-        while (parent := self.parent) and not isinstance(self.a, _STATEMENTISH):
+        while (parent := self.parent) and not isinstance(self.a, STATEMENTISH):
             self = parent
 
         for a in walk(self.a):  # find multiline strings and exclude their unindentable lines
@@ -513,7 +476,7 @@ class FST:
 
         f = self
 
-        while (parent := f.parent) and not isinstance(f.a, _STATEMENTISH):
+        while (parent := f.parent) and not isinstance(f.a, STATEMENTISH):
             f = parent
 
         lines        = (root := f.root)._lines
@@ -526,14 +489,14 @@ class FST:
             if pfield.idx is not None:
                 f = a[0].f  # we specifically want first statment / exception handler / match case in list
 
-            if _re_empty_line.match(line_start := lines[(ln := f.ln)][:f.col]):
+            if re_empty_line.match(line_start := lines[(ln := f.ln)][:f.col]):
                 if not ln or not (last_line := lines[(last_ln := ln - 1)]).endswith('\\'):
                     return line_start + extra_indent
 
                 if lastends is None:
                     lastends = f.line_ast_ends
 
-                if not _re_line_continuation.match(last_line[lastends[last_ln]:]):
+                if not re_line_continuation.match(last_line[lastends[last_ln]:]):
                     return line_start + extra_indent
 
             extra_indent += root.indent
@@ -621,7 +584,7 @@ class FST:
 
         return self
 
-    def offset_cols(self, dcol_offset: int, lns: set[int]) -> set[int]:
+    def offset_cols(self, dcol_offset: int, lns: set[int]) -> 'FST':  # -> Self
         """Offset ast col byte offsets in `lns` by a delta and return same set of indentable lines.
 
         Only modifies ast, not lines.
@@ -640,9 +603,9 @@ class FST:
 
         self.flush(False)
 
-        return lns
+        return self
 
-    def offset_cols_mapped(self, dcol_offsets: dict[int, int]) -> dict[int, int]:
+    def offset_cols_mapped(self, dcol_offsets: dict[int, int]) -> 'FST':  # -> Self
         """Offset ast col byte offsets by a specific delta per line and return same dict of indentable lines.
 
         Only modifies ast, not lines.
@@ -660,14 +623,16 @@ class FST:
 
         self.flush(False)
 
-        return dcol_offsets
+        return self
 
     def indent_tail(self, indent: str) -> set[int]:
         """Indent all indentable lines past the first one according with `indent` and adjust node locations accordingly.
         Does not modify node columns on first line."""
 
-        if not (lns := self.offset_cols(len(indent.encode()), self.get_indentable_lns())) or not indent:
+        if not (lns := self.get_indentable_lns()) or not indent:
             return lns
+
+        self.offset_cols(len(indent.encode()), lns)
 
         lines = self.root._lines
 
@@ -701,7 +666,7 @@ class FST:
 
         for ln in lns_seq:
             if l := lines[ln]:  # only dedent non-empty lines
-                if l.startswith(indent) or (lempty_start := _re_empty_line_start.match(l).end()) >= lindent:
+                if l.startswith(indent) or (lempty_start := re_empty_line_start.match(l).end()) >= lindent:
                     l = dedent(l, lindent)
 
                 else:

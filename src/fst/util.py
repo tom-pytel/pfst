@@ -4,8 +4,8 @@ from ast import *
 from typing import Any, Callable, Iterator, Literal, NamedTuple
 
 __all__ = [
-    'bistr', 'astfield', 'get_field', 'has_type_comments', 'is_parsable', 'get_parse_mode', 'WalkFail', 'walk2',
-    'compare', 'copy_attributes', 'copy',
+    'bistr', 'AST_FIELDS', 'astfield', 'get_field', 'has_type_comments', 'is_parsable', 'get_parse_mode',
+    'WalkFail', 'walk2', 'compare', 'copy_attributes', 'copy',
 ]
 
 
@@ -93,9 +93,139 @@ class bistr(str):
 
 
 if sys.version_info[:2] < (3, 12):
+    class TryStar: pass
     class TypeVar: pass  # for isinstance() checks
     class ParamSpec: pass
     class TypeVarTuple: pass
+    class TypeAlias: pass
+
+
+# Mostly in syntax order except a few SPECIAL CASES:
+#   BoolOp        - multiple locations for `op`
+#   Dict          - interleaved `keys` and `values`
+#   Compare       - interleaved `ops` and `comparators`
+#   MatchMapping  - interleaved `keys` and `patterns`
+#   MatchClass    - interleaved `kwd_attrs` and `kwd_patterns`
+AST_FIELDS = [
+    (Module,             (('body', 'stmt*'), ('type_ignores', 'type_ignore*'))),
+    (Interactive,        (('body', 'stmt*'),)),
+    (Expression,         (('body', 'expr'),)),
+    (FunctionType,       (('argtypes', 'expr*'), ('returns', 'expr'))),
+    (FunctionDef,        (('decorator_list', 'expr*'), ('name', 'identifier'), ('type_params', 'type_param*'), ('args', 'arguments'), ('returns', 'expr?'), ('body', 'stmt*'), ('type_comment', 'string?'))),
+    (AsyncFunctionDef,   (('decorator_list', 'expr*'), ('name', 'identifier'), ('type_params', 'type_param*'), ('args', 'arguments'), ('returns', 'expr?'), ('body', 'stmt*'), ('type_comment', 'string?'))),
+    (ClassDef,           (('decorator_list', 'expr*'), ('name', 'identifier'), ('type_params', 'type_param*'), ('bases', 'expr*'), ('keywords', 'keyword*'), ('body', 'stmt*'))),
+    (Return,             (('value', 'expr?'),)),
+    (Delete,             (('targets', 'expr*'),)),
+    (Assign,             (('targets', 'expr*'), ('value', 'expr'), ('type_comment', 'string?'))),
+    (TypeAlias,          (('name', 'expr'), ('type_params', 'type_param*'), ('value', 'expr'))),
+    (AugAssign,          (('target', 'expr'), ('op', 'operator'), ('value', 'expr'))),
+    (AnnAssign,          (('target', 'expr'), ('annotation', 'expr'), ('value', 'expr?'), ('simple', 'int'))),
+    (For,                (('target', 'expr'), ('iter', 'expr'), ('body', 'stmt*'), ('orelse', 'stmt*'), ('type_comment', 'string?'))),
+    (AsyncFor,           (('target', 'expr'), ('iter', 'expr'), ('body', 'stmt*'), ('orelse', 'stmt*'), ('type_comment', 'string?'))),
+    (While,              (('test', 'expr'), ('body', 'stmt*'), ('orelse', 'stmt*'))),
+    (If,                 (('test', 'expr'), ('body', 'stmt*'), ('orelse', 'stmt*'))),
+    (With,               (('items', 'withitem*'), ('body', 'stmt*'), ('type_comment', 'string?'))),
+    (AsyncWith,          (('items', 'withitem*'), ('body', 'stmt*'), ('type_comment', 'string?'))),
+    (Match,              (('subject', 'expr'), ('cases', 'match_case*'))),
+    (Raise,              (('exc', 'expr?'), ('cause', 'expr?'))),
+    (Try,                (('body', 'stmt*'), ('handlers', 'excepthandler*'), ('orelse', 'stmt*'), ('finalbody', 'stmt*'))),
+    (TryStar,            (('body', 'stmt*'), ('handlers', 'excepthandler*'), ('orelse', 'stmt*'), ('finalbody', 'stmt*'))),
+    (Assert,             (('test', 'expr'), ('msg', 'expr?'))),
+    (Import,             (('names', 'alias*'),)),
+    (ImportFrom,         (('module', 'identifier?'), ('names', 'alias*'), ('level', 'int?'))),
+    (Global,             (('names', 'identifier*'),)),
+    (Nonlocal,           (('names', 'identifier*'),)),
+    (Expr,               (('value', 'expr'),)),
+    (Pass,               ()),
+    (Break,              ()),
+    (Continue,           ()),
+    (BoolOp,             (('op', 'boolop'), ('values', 'expr*'))),
+    (NamedExpr,          (('target', 'expr'), ('value', 'expr'))),
+    (BinOp,              (('left', 'expr'), ('op', 'operator'), ('right', 'expr'))),
+    (UnaryOp,            (('op', 'unaryop'), ('operand', 'expr'))),
+    (Lambda,             (('args', 'arguments'), ('body', 'expr'))),
+    (IfExp,              (('body', 'expr'), ('test', 'expr'), ('orelse', 'expr'))),
+    (Dict,               (('keys', 'expr*'), ('values', 'expr*'))),
+    (Set,                (('elts', 'expr*'),)),
+    (ListComp,           (('elt', 'expr'), ('generators', 'comprehension*'))),
+    (SetComp,            (('elt', 'expr'), ('generators', 'comprehension*'))),
+    (DictComp,           (('key', 'expr'), ('value', 'expr'), ('generators', 'comprehension*'))),
+    (GeneratorExp,       (('elt', 'expr'), ('generators', 'comprehension*'))),
+    (Await,              (('value', 'expr'),)),
+    (Yield,              (('value', 'expr?'),)),
+    (YieldFrom,          (('value', 'expr'),)),
+    (Compare,            (('left', 'expr'), ('ops', 'cmpop*'), ('comparators', 'expr*'))),
+    (Call,               (('func', 'expr'), ('args', 'expr*'), ('keywords', 'keyword*'))),
+    (FormattedValue,     (('value', 'expr'), ('format_spec', 'expr?'), ('conversion', 'int'))),
+    (JoinedStr,          (('values', 'expr*'),)),
+    (Constant,           (('value', 'constant'), ('kind', 'string?'))),
+    (Attribute,          (('value', 'expr'), ('attr', 'identifier'), ('ctx', 'expr_context'))),
+    (Subscript,          (('value', 'expr'), ('slice', 'expr'), ('ctx', 'expr_context'))),
+    (Starred,            (('value', 'expr'), ('ctx', 'expr_context'))),
+    (Name,               (('id', 'identifier'), ('ctx', 'expr_context'))),
+    (List,               (('elts', 'expr*'), ('ctx', 'expr_context'))),
+    (Tuple,              (('elts', 'expr*'), ('ctx', 'expr_context'))),
+    (Slice,              (('lower', 'expr?'), ('upper', 'expr?'), ('step', 'expr?'))),
+
+    (Load,               ()),
+    (Store,              ()),
+    (Del,                ()),
+    (And,                ()),
+    (Or,                 ()),
+    (Add,                ()),
+    (Sub,                ()),
+    (Mult,               ()),
+    (MatMult,            ()),
+    (Div,                ()),
+    (Mod,                ()),
+    (Pow,                ()),
+    (LShift,             ()),
+    (RShift,             ()),
+    (BitOr,              ()),
+    (BitXor,             ()),
+    (BitAnd,             ()),
+    (FloorDiv,           ()),
+    (Invert,             ()),
+    (Not,                ()),
+    (UAdd,               ()),
+    (USub,               ()),
+    (Eq,                 ()),
+    (NotEq,              ()),
+    (Lt,                 ()),
+    (LtE,                ()),
+    (Gt,                 ()),
+    (GtE,                ()),
+    (Is,                 ()),
+    (IsNot,              ()),
+    (In,                 ()),
+    (NotIn,              ()),
+
+    (comprehension,      (('target', 'expr'), ('iter', 'expr'), ('ifs', 'expr*'), ('is_async', 'int'))),
+
+    (ExceptHandler,      (('type', 'expr?'), ('name', 'identifier?'), ('body', 'stmt*'))),
+
+    (arguments,          (('posonlyargs', 'arg*'), ('args', 'arg*'), ('vararg', 'arg?'), ('kwonlyargs', 'arg*'), ('kwarg', 'arg?'), ('defaults', 'expr*'), ('kw_defaults', 'expr*'))),
+    (arg,                (('arg', 'identifier'), ('annotation', 'expr?'), ('type_comment', 'string?'))),
+    (keyword,            (('arg', 'identifier?'), ('value', 'expr'))),
+    (alias,              (('name', 'identifier'), ('asname', 'identifier?'))),
+    (withitem,           (('context_expr', 'expr'), ('optional_vars', 'expr?'))),
+    (match_case,         (('pattern', 'pattern'), ('guard', 'expr?'), ('body', 'stmt*'))),
+
+    (MatchValue,         (('value', 'expr'),)),
+    (MatchSingleton,     (('value', 'constant'),)),
+    (MatchSequence,      (('patterns', 'pattern*'),)),
+    (MatchMapping,       (('keys', 'expr*'), ('patterns', 'pattern*'), ('rest', 'identifier?'))),
+    (MatchClass,         (('cls', 'expr'), ('patterns', 'pattern*'), ('kwd_attrs', 'identifier*'), ('kwd_patterns', 'pattern*'))),
+    (MatchStar,          (('name', 'identifier?'),)),
+    (MatchAs,            (('pattern', 'pattern?'), ('name', 'identifier?'))),
+    (MatchOr,            (('patterns', 'pattern*'),)),
+
+    (TypeIgnore,         (('lineno', 'int'), ('tag', 'string'))),
+
+    (TypeVar,            (('name', 'identifier'), ('bound', 'expr?'), ('default_value', 'expr?'))),
+    (ParamSpec,          (('name', 'identifier'), ('default_value', 'expr?'))),
+    (TypeVarTuple,       (('name', 'identifier'), ('default_value', 'expr?'))),
+]
 
 
 class astfield(NamedTuple):
