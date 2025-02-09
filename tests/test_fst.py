@@ -25,13 +25,10 @@ def walktest(ast):
 
 
 class TestFST(unittest.TestCase):
-    def test_calculated_loc_arguments(self):
+    def test_loc(self):
+        # from children
         self.assertEqual((0, 6, 0, 9), parse('def f(i=1): pass').body[0].args.f.loc)
-
-    def test_calculated_loc_withitem(self):
         self.assertEqual((0, 5, 0, 13), parse('with f() as f: pass').body[0].items[0].f.loc)
-
-    def test_calculated_loc_matchcase(self):
         self.assertEqual((1, 7, 1, 24), parse('match a:\n  case 2 if a == 1: pass').body[0].cases[0].f.loc)
 
     def test_bloc(self):

@@ -129,45 +129,8 @@ class FST:
             end_col_offset = ast.end_col_offset
 
         except AttributeError:
-            max_ln = max_col = -(min_ln := (min_col := (inf := float('inf'))))
-
-            for _, child in iter_fields(ast):
-                if isinstance(child, AST):
-                    if not (start := (end := child.f.bloc)):
-                        continue
-
-                elif not isinstance(child, list):
-                    continue
-
-                else:
-                    for c in child:
-                        if isinstance(c, AST) and (start := c.f.bloc):
-                            break
-                    else:
-                        continue
-
-                    for c in reversed(child):
-                        if isinstance(c, AST) and (end := c.f.bloc):
-                            break
-
-                if start.ln < min_ln:
-                    min_ln  = start.ln
-                    min_col = start.col
-
-                elif start.ln == min_ln:
-                    if start.col < min_col:
-                        min_col = start.col
-
-                if end.end_ln > max_ln:
-                    max_ln  = end.end_ln
-                    max_col = end.end_col
-
-                elif end.end_ln == max_ln:
-                    if end.end_col > max_col:
-                        max_col = end.end_col
-
-            if min_ln != inf:
-                loc = fstloc(min_ln, min_col, max_ln, max_col)
+            if first := self.first_child():
+                loc = fstloc(first.bln, first.bcol, (last := self.last_child()).bend_ln, last.bend_col)
             elif self.is_root:
                 loc = fstloc(0, 0, 0, 0)  # root must have location
             else:
