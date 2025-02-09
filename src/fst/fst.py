@@ -468,42 +468,51 @@ class FST:
                 while True:
                     match next:
                         case 0:  # from Dict.keys
-                            f    = getattr(parenta, 'values')[idx].f
                             next = 1
 
-                        case 1:  # from Dict.values
-                            try:
-                                f    = getattr(parenta, 'keys')[(idx := idx + 1)].f
-                                next = 0
+                            if not (a := getattr(parenta, 'values')[idx]):
+                                continue
 
+                        case 1:  # from Dict.values
+                            next = 0
+
+                            try:
+                                if not (a := getattr(parenta, 'keys')[(idx := idx + 1)]):
+                                    continue
                             except IndexError:
                                 return None
 
                         case 2:  # from Compare.ops
-                            f    = getattr(parenta, 'comparators')[idx].f
                             next = 3
 
-                        case 3:  # from Compare.comparators
-                            try:
-                                f    = getattr(parenta, 'ops')[(idx := idx + 1)].f
-                                next = 2
+                            if not (a := getattr(parenta, 'comparators')[idx]):
+                                continue
 
+                        case 3:  # from Compare.comparators
+                            next = 2
+
+                            try:
+                                if not (a := getattr(parenta, 'ops')[(idx := idx + 1)]):
+                                    continue
                             except IndexError:
                                 return None
 
                         case 4:  # from MatchMapping.keys
-                            f    = getattr(parenta, 'patterns')[idx].f
                             next = 5
 
-                        case 5:  # from MatchMapping.patterns
-                            try:
-                                f    = getattr(parenta, 'keys')[(idx := idx + 1)].f
-                                next = 4
+                            if not (a := getattr(parenta, 'patterns')[idx]):
+                                continue
 
+                        case 5:  # from MatchMapping.patterns
+                            next = 4
+
+                            try:
+                                if not (a := getattr(parenta, 'keys')[(idx := idx + 1)]):
+                                    continue
                             except IndexError:
                                 return None
 
-                    if not loc or f.loc:
+                    if (f := a.f).loc or not loc:
                         return f
 
             elif idx is not None:
@@ -511,11 +520,13 @@ class FST:
 
                 while True:
                     try:
-                        f = sibling[(idx := idx + 1)].f
+                        if not (a := sibling[(idx := idx + 1)]):  # who knows where a None might pop up next these days...
+                            continue
+
                     except IndexError:
                         break
 
-                    if not loc or f.loc:
+                    if (f := a.f).loc or not loc:
                         return f
 
             while next is not None:
@@ -573,12 +584,16 @@ class FST:
                                 return None
 
                             else:
-                                f    = getattr(parenta, 'values')[(idx := idx - 1)].f
                                 prev = 1
 
+                                if not (a := getattr(parenta, 'values')[(idx := idx - 1)]):
+                                    continue
+
                         case 1:  # from Dict.values
-                            f    = getattr(parenta, 'keys')[idx].f
                             prev = 0
+
+                            if not (a := getattr(parenta, 'keys')[idx]):
+                                continue
 
                         case 2:  # from Compare.ops
                             if not idx:
@@ -587,35 +602,44 @@ class FST:
                                 break
 
                             else:
-                                f    = getattr(parenta, 'comparators')[(idx := idx - 1)].f
                                 prev = 3
 
+                                if not (a := getattr(parenta, 'comparators')[(idx := idx - 1)]):
+                                    continue
+
                         case 3:  # from Compare.comparators
-                            f    = getattr(parenta, 'ops')[idx].f
                             prev = 2
+
+                            if not (a := getattr(parenta, 'ops')[idx]):
+                                continue
 
                         case 4:  # from Keys.keys
                             if not idx:
                                 return None
 
                             else:
-                                f    = getattr(parenta, 'patterns')[(idx := idx - 1)].f
                                 prev = 5
 
+                                if not (a := getattr(parenta, 'patterns')[(idx := idx - 1)]):
+                                    continue
+
                         case 5:  # from Keys.patterns
-                            f    = getattr(parenta, 'keys')[idx].f
                             prev = 4
 
-                    if not loc or f.loc:
+                            if not (a := getattr(parenta, 'keys')[idx]):
+                                continue
+
+                    if (f := a.f).loc or not loc:
                         return f
 
             else:
                 sibling = getattr(parenta, name)
 
                 while idx:
-                    f = sibling[(idx := idx - 1)].f
+                    if not (a := sibling[(idx := idx - 1)]):
+                        continue
 
-                    if not loc or f.loc:
+                    if (f := a.f).loc or not loc:
                         return f
 
             while prev is not None:
