@@ -1,8 +1,9 @@
-"""Most of the code in this module deals with line continuations via backslash."""
+"""Line continuations suck."""
 
 __all_other__ = None
 __all_other__ = set(globals())
 from ast import *
+from .util import TryStar, TypeVar, ParamSpec, TypeVarTuple, TypeAlias  # for py < 3.12
 __all_other__ = set(globals()) - __all_other__
 
 import ast as ast_
@@ -11,10 +12,8 @@ import re
 from typing import Any, Callable, Literal, NamedTuple, Optional, Union
 
 from .util import *
-from .util import TryStar, TypeVar, ParamSpec, TypeVarTuple, TypeAlias  # for py < 3.12
 
 __all__ = list(__all_other__ | {
-    'TryStar', 'TypeVar', 'ParamSpec', 'TypeVarTuple', 'TypeAlias',
     'FST', 'parse', 'unparse',
 })
 
@@ -48,7 +47,7 @@ AST_FIELDS_PREV[(Compare, 'comparators')]   = 3
 AST_FIELDS_PREV[(MatchMapping, 'keys')]     = 4
 AST_FIELDS_PREV[(MatchMapping, 'patterns')] = 5
 
-STATEMENTISH = (mod, stmt, ExceptHandler, match_case)  # except for mod: always in lists, part of blocks can not be in multiline and statementish start lines
+STATEMENTISH = (stmt, ExceptHandler, match_case)  # always in lists, can not be inside multilines
 
 re_empty_line_start  = re.compile(r'^[ \t]*')    # start of completely empty or space-filled line
 re_empty_line        = re.compile(r'^[ \t]*$')   # completely empty or space-filled line
@@ -104,14 +103,21 @@ class FST:
     def lines(self) -> list[str]:
         if self.is_root:
             return self._lines
-        elif self.ln is not None:
-            return self.root._lines[self.ln : self.end_ln + 1]
+        elif (loc := self.loc) is not None:
+            return self.root._lines[loc.ln : loc.end_ln + 1]
         else:
             return self.parent.lines
 
     @property
     def text(self) -> str:
         return '\n'.join(self.lines)
+        # while True:
+        #     if self.is_root:
+        #         return '\n'.join(self._lines)
+        #     elif (loc := self.loc) is not None:
+        #         return '\n'.join(self.sniploc(*loc))
+
+        #     self = self.parent
 
     @property
     def loc(self) -> fstloc | None:
@@ -254,23 +260,17 @@ class FST:
         stack = [self]
 
         while stack:
-            fst = stack.pop()
-            ast = fst.a
+            f = stack.pop()
+            a = f.a
 
-            for name, child in iter_fields(ast):
+            for name, child in iter_fields(a):
                 if isinstance(child, AST):
-                    stack.append(FST(child, fst, astfield(name)))
+                    stack.append(FST(child, f, astfield(name)))
                 elif isinstance(child, list):
-                    stack.extend(FST(ast, fst, astfield(name, idx))
-                                 for idx, ast in enumerate(child) if isinstance(ast, AST))
+                    stack.extend(FST(a, f, astfield(name, idx))
+                                 for idx, a in enumerate(child) if isinstance(a, AST))
 
     # ------------------------------------------------------------------------------------------------------------------
-
-    def __repr__(self) -> str:
-        tail = self._repr_tail()
-        rast = repr(self.a)
-
-        return f'<fst{rast[4 : -1]}{tail}>' if rast.startswith('<') else f'fst.{rast[:-1]}{tail})'
 
     def __init__(self, ast: AST, parent: Optional['FST'] = None, pfield: astfield | None = None, **root_params):
         self.a      = ast
@@ -300,6 +300,12 @@ class FST:
         self._parse_params = root_params.get('parse_params', getattr(self, '_parse_params', {}))
 
         self._make_fst_tree()
+
+    def __repr__(self) -> str:
+        tail = self._repr_tail()
+        rast = repr(self.a)
+
+        return f'<fst{rast[4 : -1]}{tail}>' if rast.startswith('<') else f'fst.{rast[:-1]}{tail})'
 
     @staticmethod
     def from_src(source: str | bytes | list[str], filename: str = '<unknown>', mode: str = 'exec', *,
@@ -483,7 +489,7 @@ class FST:
 
                 while True:
                     try:
-                        if not (a := sibling[(idx := idx + 1)]):  # who knows where a None might pop up next these days...
+                        if not (a := sibling[(idx := idx + 1)]):  # who knows where a `None` might pop up "next" these days... xD
                             continue
 
                     except IndexError:
@@ -496,7 +502,7 @@ class FST:
                 if isinstance(next, str):
                     name = next
 
-                    if isinstance(sibling := getattr(parenta, next, None), AST):  # None because could have fields from future python versions
+                    if isinstance(sibling := getattr(parenta, next, None), AST):  # None because we know about fields from future python versions
                         if (f := sibling.f).loc or not loc:
                             return f
 
@@ -513,7 +519,7 @@ class FST:
 
                 match next:
                     case 2:  # from Compare.left
-                        name = 'comparators'
+                        name = 'comparators'  # will cause to get .ops[0]
                         idx  = -1
 
                 break
@@ -734,30 +740,44 @@ class FST:
             f = parent
 
         lines        = (root := f.root)._lines
-        lastends     = None
         extra_indent = ''  # may result from unknown indent in single line "if something: whats_my_stmt_indentation?"
 
         while parent:
-            a = getattr(parent.a, (pfield := f.pfield).name)
+            siblings = getattr(parent.a, f.pfield.name)
 
-            if pfield.idx is not None:
-                f = a[0].f  # we specifically want first statment / exception handler / match case in list
+            for i in range(1, len(siblings)):  # first try simple rules for all elements past first one
+                f = siblings[i].f
 
-            if re_empty_line.match(line_start := lines[(ln := f.ln)][:f.col]):
-                if not ln or not (last_line := lines[(last_ln := ln - 1)]).endswith('\\'):
+                if re_empty_line.match(line_start := lines[(ln := f.ln)][:f.col]):
+                    prev    = f.prev()  # there must be one
+                    end_col = 0 if prev.end_ln < (preceding_ln := ln - 1) else prev.end_col
+
+                    if not re_line_continuation.match(lines[preceding_ln][end_col:]):
+                        return line_start + extra_indent
+
+            f           = siblings[0].f  # didn't find in siblings[1:], now the special rules for the first one
+            ln          = f.ln
+            col         = f.col
+            prev        = f.prev()  # there may not be one ("try" at start of module)
+            prev_end_ln = prev.end_ln if prev else -2
+
+            while ln > prev_end_ln and re_empty_line.match(line_start := lines[ln][:col]):
+                end_col = 0 if (preceding_ln := ln - 1) != prev_end_ln else prev.end_col
+
+                if not ln or not re_line_continuation.match((l := lines[preceding_ln])[end_col:]):
                     return line_start + extra_indent
 
-                if lastends is None:
-                    lastends = f.line_ast_ends
+                ln  = preceding_ln
+                col = len(l) - 1  # was line continuation so last char is '\' and rest should be empty
 
-                if not re_line_continuation.match(last_line[lastends[last_ln]:]):
-                    return line_start + extra_indent
+            if isinstance(parent, mod):  # otherwise would add extra level of indentation
+                break
 
             extra_indent += root.indent
             f             = parent
             parent        = f.parent
 
-        # TODO: handle possibility of syntactically incorrect but indented root node
+        # TODO: handle possibility of syntactically incorrect but indented root node?
 
         return extra_indent
 
@@ -1079,7 +1099,7 @@ class FST:
 
         fst._lines = self.sniploc(*loc)
 
-        fst.flush()
+        # fst.flush()
         fst.dedent_tail(indent)
 
         return fst.safe(do_raise=do_raise) if safe else fst

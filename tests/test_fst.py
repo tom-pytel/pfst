@@ -153,6 +153,19 @@ class TestFST(unittest.TestCase):
         self.assertEqual('    ', parse('def f(): \\\n  1; 2').body[0].body[1].f.get_indent())
         self.assertEqual('  ', parse('def f(): # \\\n  1; 2').body[0].body[1].f.get_indent())
 
+        self.assertEqual('  ', parse('try:\n\n  \\\ni\n  j\nexcept: pass').body[0].body[1].f.get_indent())
+        self.assertEqual('  ', parse('try:\n\n  \\\ni\n  j\nexcept: pass').body[0].body[0].f.get_indent())
+        self.assertEqual('  ', parse('try:\n  \\\ni\n  j\nexcept: pass').body[0].body[1].f.get_indent())
+        self.assertEqual('  ', parse('try:\n  \\\ni\n  j\nexcept: pass').body[0].body[0].f.get_indent())
+
+        self.assertEqual('   ', parse('def f():\n   i; j').body[0].body[0].f.get_indent())
+        self.assertEqual('   ', parse('def f():\n   i; j').body[0].body[1].f.get_indent())
+        self.assertEqual('    ', parse('def f(): i; j').body[0].body[0].f.get_indent())
+        self.assertEqual('    ', parse('def f(): i; j').body[0].body[1].f.get_indent())
+
+        self.assertEqual('', parse('\\\ni').body[0].f.get_indent())
+        self.assertEqual('    ', parse('try: i\nexcept: pass').body[0].body[0].f.get_indent())
+
     def test_get_indentable_lns(self):
         src = 'class cls:\n if True:\n  i = """\nj\n"""\n  k = "... \\\n2"\n else:\n  j \\\n=\\\n 2'
         ast = parse(src)

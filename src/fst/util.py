@@ -10,16 +10,16 @@ __all__ = [
 ]
 
 
-if sys.version_info[:2] < (3, 12):
-    class TryStar: pass
-    class TypeVar: pass  # for isinstance() checks
-    class ParamSpec: pass
-    class TypeVarTuple: pass
-    class TypeAlias: pass
+if sys.version_info[:2] < (3, 12):  # for isinstance() checks
+    class TryStar(AST): pass
+    class TypeVar(AST): pass
+    class ParamSpec(AST): pass
+    class TypeVarTuple(AST): pass
+    class TypeAlias(AST): pass
 
 
 # Mostly in syntax order except a few SPECIAL CASES:
-#   BoolOp        - multiple locations for `op`
+#   BoolOp        - multiple simultaneous locations possible for single `op`
 #   Dict          - interleaved `keys` and `values`
 #   Compare       - interleaved `ops` and `comparators`
 #   MatchMapping  - interleaved `keys` and `patterns`
