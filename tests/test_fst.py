@@ -295,29 +295,29 @@ class TestFST(unittest.TestCase):
         ast = parse(src)
         lns = ast.f._indent_tail('  ')
         self.assertEqual({1, 2, 5, 6, 7, 8, 9}, lns)
-        self.assertEqual('class cls:\n   if True:\n    i = """\nj\n"""\n    k = 3\n   else:\n    j \\\n  =\\\n   2', ast.f.text)
+        self.assertEqual('class cls:\n   if True:\n    i = """\nj\n"""\n    k = 3\n   else:\n    j \\\n  =\\\n   2', ast.f.src)
 
         ast = parse(src)
         lns = ast.body[0].body[0].f._indent_tail('  ')
         self.assertEqual({2, 5, 6, 7, 8, 9}, lns)
-        self.assertEqual('class cls:\n if True:\n    i = """\nj\n"""\n    k = 3\n   else:\n    j \\\n  =\\\n   2', ast.f.text)
+        self.assertEqual('class cls:\n if True:\n    i = """\nj\n"""\n    k = 3\n   else:\n    j \\\n  =\\\n   2', ast.f.src)
 
         ast = parse(src)
         lns = ast.body[0].body[0].body[0].f._indent_tail('  ')
         self.assertEqual(set(), lns)
-        self.assertEqual('class cls:\n if True:\n  i = """\nj\n"""\n  k = 3\n else:\n  j \\\n=\\\n 2', ast.f.text)
+        self.assertEqual('class cls:\n if True:\n  i = """\nj\n"""\n  k = 3\n else:\n  j \\\n=\\\n 2', ast.f.src)
 
         ast = parse(src)
         lns = ast.body[0].body[0].orelse[0].f._indent_tail('  ')
         self.assertEqual({8, 9}, lns)
-        self.assertEqual('class cls:\n if True:\n  i = """\nj\n"""\n  k = 3\n else:\n  j \\\n  =\\\n   2', ast.f.text)
+        self.assertEqual('class cls:\n if True:\n  i = """\nj\n"""\n  k = 3\n else:\n  j \\\n  =\\\n   2', ast.f.src)
 
         src = '@decorator\nclass cls:\n pass'
 
         ast = parse(src)
         lns = ast.f._indent_tail('  ')
         self.assertEqual({1, 2}, lns)
-        self.assertEqual('@decorator\n  class cls:\n   pass', ast.f.text)
+        self.assertEqual('@decorator\n  class cls:\n   pass', ast.f.src)
 
     def test__dedent_tail(self):
         src = 'class cls:\n if True:\n  i = """\nj\n"""\n  k = 3\n else:\n  j \\\n=\\\n 2'
@@ -325,34 +325,34 @@ class TestFST(unittest.TestCase):
         ast = parse(src)
         lns = ast.f._dedent_tail(' ')
         self.assertEqual({1, 2, 5, 6, 7, 8, 9}, lns)
-        self.assertEqual('class cls:\nif True:\n i = """\nj\n"""\n k = 3\nelse:\n j \\\n=\\\n2', ast.f.text)
+        self.assertEqual('class cls:\nif True:\n i = """\nj\n"""\n k = 3\nelse:\n j \\\n=\\\n2', ast.f.src)
 
         ast = parse(src)
         lns = ast.body[0].body[0].f._dedent_tail(' ')
         self.assertEqual({2, 5, 6, 7, 8, 9}, lns)
-        self.assertEqual('class cls:\n if True:\n i = """\nj\n"""\n k = 3\nelse:\n j \\\n=\\\n2', ast.f.text)
+        self.assertEqual('class cls:\n if True:\n i = """\nj\n"""\n k = 3\nelse:\n j \\\n=\\\n2', ast.f.src)
 
         ast = parse(src)
         lns = ast.body[0].body[0].body[0].f._dedent_tail(' ')
         self.assertEqual(set(), lns)
-        self.assertEqual('class cls:\n if True:\n  i = """\nj\n"""\n  k = 3\n else:\n  j \\\n=\\\n 2', ast.f.text)
+        self.assertEqual('class cls:\n if True:\n  i = """\nj\n"""\n  k = 3\n else:\n  j \\\n=\\\n 2', ast.f.src)
 
         ast = parse(src)
         lns = ast.body[0].body[0].orelse[0].f._dedent_tail(' ')
         self.assertEqual({8, 9}, lns)
-        self.assertEqual('class cls:\n if True:\n  i = """\nj\n"""\n  k = 3\n else:\n  j \\\n=\\\n2', ast.f.text)
+        self.assertEqual('class cls:\n if True:\n  i = """\nj\n"""\n  k = 3\n else:\n  j \\\n=\\\n2', ast.f.src)
 
         src = '@decorator\nclass cls:\n pass'
 
         ast = parse(src)
         lns = ast.body[0].body[0].f._dedent_tail(' ')
         self.assertEqual(set(), lns)
-        self.assertEqual('@decorator\nclass cls:\n pass', ast.f.text)
+        self.assertEqual('@decorator\nclass cls:\n pass', ast.f.src)
 
         # ast = parse(src)
         # lns = ast.body[0].body[0].f._dedent_tail(' ', skip=0)
         # self.assertEqual({2}, lns)
-        # self.assertEqual('@decorator\nclass cls:\npass', ast.f.text)
+        # self.assertEqual('@decorator\nclass cls:\npass', ast.f.src)
 
     def test_safe(self):
         f = FST.fromsrc('if 1:\n a\nelif 2:\n b')
@@ -364,9 +364,9 @@ class TestFST(unittest.TestCase):
 
         f = FST.fromsrc('(1 +\n2)')
         fc = f.a.body[0].value.f.copy(safe=False, do_raise=True)
-        self.assertEqual(fc.text, '1 +\n2')
+        self.assertEqual(fc.src, '1 +\n2')
         fc.safe()
-        self.assertEqual(fc.text, '(1 +\n2)')
+        self.assertEqual(fc.src, '(1 +\n2)')
         fc.verify(do_raise=True)
 
         f = FST.fromsrc('i = 1')
@@ -434,7 +434,7 @@ class TestFST(unittest.TestCase):
         self.assertIs(f.a.__class__, arg)
         f.safe(do_raise=True)
         self.assertIs(f.a.__class__, AnnAssign)
-        self.assertEqual(f.text, 'a: int')
+        self.assertEqual(f.src, 'a: int')
         f.verify(do_raise=True)
 
         f = FST.fromsrc('f( \n a \n = \n 1 \n )')
@@ -442,7 +442,7 @@ class TestFST(unittest.TestCase):
         self.assertIs(f.a.__class__, keyword)
         f.safe(do_raise=True)
         self.assertIs(f.a.__class__, Assign)
-        self.assertEqual(f.text, 'a = 1')
+        self.assertEqual(f.src, 'a = 1')
         f.verify(do_raise=True)
 
         if sys.version_info[:2] >= (3, 12):
@@ -503,7 +503,7 @@ class TestFST(unittest.TestCase):
             self.assertIs(f.a.__class__, TypeVar)
             f.safe(do_raise=True)
             self.assertIs(f.a.__class__, AnnAssign)
-            self.assertEqual(f.text, 'T: int = str')
+            self.assertEqual(f.src, 'T: int = str')
             f.verify(do_raise=True)
 
     def test_copy_bulk(self):
@@ -517,21 +517,21 @@ class TestFST(unittest.TestCase):
 
     def test_copy(self):
         f = FST.fromsrc('@decorator\nclass cls:\n  pass')
-        self.assertEqual(f.a.body[0].f.copy(safe=False, do_raise=True).text, '@decorator\nclass cls:\n  pass')
-        self.assertEqual(f.a.body[0].f.copy(decorators=False, safe=False, do_raise=True).text, 'class cls:\n  pass')
+        self.assertEqual(f.a.body[0].f.copy(safe=False, do_raise=True).src, '@decorator\nclass cls:\n  pass')
+        self.assertEqual(f.a.body[0].f.copy(decorators=False, safe=False, do_raise=True).src, 'class cls:\n  pass')
 
         l = FST.fromsrc("['\\u007f', '\\u0080', 'ʁ', 'ᛇ', '時', '🐍', '\\ud800', 'Źdźbło']").a.body[0].value.elts
-        self.assertEqual("'\\u007f'", l[0].f.copy().text)
-        self.assertEqual("'\\u0080'", l[1].f.copy().text)
-        self.assertEqual("'ʁ'", l[2].f.copy().text)
-        self.assertEqual("'ᛇ'", l[3].f.copy().text)
-        self.assertEqual("'時'", l[4].f.copy().text)
-        self.assertEqual("'🐍'", l[5].f.copy().text)
-        self.assertEqual("'\\ud800'", l[6].f.copy().text)
-        self.assertEqual("'Źdźbło'", l[7].f.copy().text)
+        self.assertEqual("'\\u007f'", l[0].f.copy().src)
+        self.assertEqual("'\\u0080'", l[1].f.copy().src)
+        self.assertEqual("'ʁ'", l[2].f.copy().src)
+        self.assertEqual("'ᛇ'", l[3].f.copy().src)
+        self.assertEqual("'時'", l[4].f.copy().src)
+        self.assertEqual("'🐍'", l[5].f.copy().src)
+        self.assertEqual("'\\ud800'", l[6].f.copy().src)
+        self.assertEqual("'Źdźbło'", l[7].f.copy().src)
 
         f = FST.fromsrc('match w := x,:\n case 0: pass').a.body[0].subject.f.copy(safe=True)
-        self.assertEqual('(w := x,)', f.text)
+        self.assertEqual('(w := x,)', f.src)
 
         f = FST.fromsrc('a[1:2, 3:4]').a.body[0].value.slice.f.copy(safe=False)
         self.assertRaises(SyntaxError, f.safe)
@@ -539,7 +539,7 @@ class TestFST(unittest.TestCase):
 
         if sys.version_info[:2] >= (3, 12):
             f = FST.fromsrc('tuple[*tuple[int, ...]]').a.body[0].value.slice.f.copy(safe=True)
-            self.assertEqual('(*tuple[int, ...],)', f.text)
+            self.assertEqual('(*tuple[int, ...],)', f.src)
 
 
 if __name__ == '__main__':

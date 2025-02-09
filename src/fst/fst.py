@@ -70,7 +70,7 @@ def parse(source, filename='<unknown>', mode='exec', *args, type_comments=False,
 
 
 def unparse(ast_obj):
-    return f.text if (f := getattr(ast_obj, 'f', None)) else ast_.unparse(ast_obj)
+    return f.src if (f := getattr(ast_obj, 'f', None)) else ast_.unparse(ast_obj)
 
 
 class fstloc(NamedTuple):
@@ -108,7 +108,7 @@ class FST:
             return None
 
     @property
-    def text(self) -> str | None:
+    def src(self) -> str | None:
         if self.is_root:
             return '\n'.join(self._lines)
         elif loc := self.loc:
@@ -486,7 +486,7 @@ class FST:
         root         = self.root
         ast          = root.a
         parse_params = root._parse_params
-        astp         = ast_.parse(root.text, mode=get_parse_mode(ast), **parse_params)
+        astp         = ast_.parse(root.src, mode=get_parse_mode(ast), **parse_params)
 
         if not isinstance(ast, mod):
             if isinstance(astp, Expression):
@@ -980,7 +980,7 @@ class FST:
             (isinstance(ast, TypeVar) and not ast.bound and not ast.default_value
         )):
             try:
-                a = ast_.parse(text := self.text, mode='eval', **self._parse_params)
+                a = ast_.parse(text := self.src, mode='eval', **self._parse_params)
 
             except SyntaxError:  # if expression not parsing then try parenthesize
                 try:
@@ -1009,7 +1009,7 @@ class FST:
             (isinstance(ast, TypeVar) and (ast.bound or ast.default_value)
         )):
             try:
-                a = ast_.parse(self.text, mode='exec', **self._parse_params)
+                a = ast_.parse(self.src, mode='exec', **self._parse_params)
 
             except SyntaxError:  # if assign not parsing then try sanitize it
                 newlines = lines[:]
