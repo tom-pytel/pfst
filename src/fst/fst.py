@@ -480,7 +480,7 @@ class FST:
 
         return FST(ast, lines=[bistr(s) for s in lines], parse_params=parse_params)
 
-    def verify(self, *, do_raise: bool = True) -> Union['FST', None]:  # -> Self | None:
+    def verify(self, *, raise_: bool = True) -> Union['FST', None]:  # -> Self | None:
         """Sanity check, make sure parsed source matches ast."""
 
         root         = self.root
@@ -496,7 +496,7 @@ class FST:
             else:
                 astp = astp.body[0]
 
-        if not compare(astp, ast, locs=True, type_comments=parse_params['type_comments'], do_raise=do_raise):
+        if not compare(astp, ast, locs=True, type_comments=parse_params['type_comments'], raise_=raise_):
             return None
 
         return self
@@ -960,7 +960,7 @@ class FST:
             self.touch()
 
     @only_root
-    def safe(self, *, assign: bool = True, do_raise: bool = True) -> Union['FST', None]:  # -> Self | None
+    def safe(self, *, assign: bool = True, raise_: bool = True) -> Union['FST', None]:  # -> Self | None
         """Make safe to parse (to make cut or copied subtrees parsable if the source is not by itself). Possibly
         reparses which may change type of ast, e.g. `keyword` "i=1" to `Assign` "i=1".
 
@@ -968,7 +968,7 @@ class FST:
 
         Args:
             assign: Whether to allow conversion to Assign or AnnAssign statement.
-            do_raise: Whether to raise on failure to make safe (default: True) or return None (False).
+            raise_: Whether to raise on failure to make safe (default: True) or return None (False).
         """
 
         ast   = self.a
@@ -999,7 +999,7 @@ class FST:
                     a    = ast_.parse(f'({text}{tail}', mode='eval', **self._parse_params)
 
                 except SyntaxError:
-                    if do_raise:
+                    if raise_:
                         raise
 
                     return None
@@ -1053,7 +1053,7 @@ class FST:
                     a = ast_.parse('\n'.join(newlines), mode='exec', **self._parse_params)
 
                 except SyntaxError:
-                    if do_raise:
+                    if raise_:
                         raise
 
                     return None
@@ -1067,14 +1067,14 @@ class FST:
             self._make_fst_tree()
 
         if not self.is_parsable():
-            if do_raise:
+            if raise_:
                 raise ValueError('ast could not be made safe to parse')
 
             return None
 
         return self
 
-    def copy(self, *, decorators: bool = True, safe: bool = False, do_raise: bool = True) -> 'FST':
+    def copy(self, *, decorators: bool = True, safe: bool = False, raise_: bool = True) -> 'FST':
         if not (loc := self.bloc if decorators else self.loc):
             raise ValueError('cannot copy ast without location')
 
@@ -1093,7 +1093,7 @@ class FST:
 
         fst._dedent_tail(indent)
 
-        return fst.safe(do_raise=do_raise) if safe else fst
+        return fst.safe(raise_=raise_) if safe else fst
 
 
 
@@ -1102,7 +1102,7 @@ class FST:
 
     @only_root
     def fix(self, mode: None | Literal['src'] | Literal['ast'], *,
-            inplace: bool = False, do_raise: bool = True) -> Union['FST', None]:  # -> Self | None
+            inplace: bool = False, raise_: bool = True) -> Union['FST', None]:  # -> Self | None
         """Make safe to parse (to make cut or copied subtrees parsable if the source is not by itself). Possibly
         reparses which may change type of ast, e.g. `keyword` "i=1" to `Assign` "i=1". If fails the ast will be
         unchanged. Is meant to be a quick fix after copy or cut, not full check, for that use `.verify()`.
@@ -1110,13 +1110,13 @@ class FST:
         Args:
             mode: 'src' just fixes source and possibly `ctx` nodes, 'ast' can change AST classes as well as source. None
                 doesn't attempt to fix anything but does test with `is_parsable()`.
-            do_raise: Whether to raise on fail (default: True) or return None (False).
+            raise_: Whether to raise on fail (default: True) or return None (False).
         """
 
         def check_parsable():
             if self.is_parsable():
                 return self
-            if do_raise:
+            if raise_:
                 raise ValueError('ast could not be made safe to parse')
 
             return None
@@ -1164,7 +1164,7 @@ class FST:
         #             a    = ast_.parse(f'({text}{tail}', mode='eval', **self._parse_params)
 
         #         except SyntaxError:
-        #             if do_raise:
+        #             if raise_:
         #                 raise
 
         #             return None
@@ -1221,7 +1221,7 @@ class FST:
         #             a = ast_.parse('\n'.join(newlines), mode='exec', **self._parse_params)
 
         #         except SyntaxError:
-        #             if do_raise:
+        #             if raise_:
         #                 raise
 
         #             return None

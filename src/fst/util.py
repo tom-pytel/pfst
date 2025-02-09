@@ -357,7 +357,7 @@ compare_primitive_type_comments_func = (
 )
 
 def compare(ast1: AST, ast2: AST, *, locs: bool = False, type_comments: bool = False, recurse: bool = True,
-            do_raise: bool = True) -> bool:
+            raise_: bool = True) -> bool:
     """Copy two trees including possibly locations and type comments."""
 
     cb_primitive = compare_primitive_type_comments_func[bool(type_comments)]
@@ -375,7 +375,7 @@ def compare(ast1: AST, ast2: AST, *, locs: bool = False, type_comments: bool = F
                                    f"{(n2.lineno, n2.col_offset, n2.end_lineno, n2.end_col_offset)}")
 
     except WalkFail:
-        if do_raise:
+        if raise_:
             raise
 
         return False
@@ -383,7 +383,7 @@ def compare(ast1: AST, ast2: AST, *, locs: bool = False, type_comments: bool = F
     return True
 
 
-def copy_attributes(src: AST, dst: AST, *, compare: bool = True, type_comments: bool = False, do_raise: bool = True) -> bool:
+def copy_attributes(src: AST, dst: AST, *, compare: bool = True, type_comments: bool = False, raise_: bool = True) -> bool:
     """Copy attributes from one tree to another checking structure equality in the process."""
 
     cb_primitive = compare_primitive_type_comments_func[bool(type_comments)] if compare else lambda p1, p2, n, i: True
@@ -397,7 +397,7 @@ def copy_attributes(src: AST, dst: AST, *, compare: bool = True, type_comments: 
                     delattr(nd, attr)
 
     except WalkFail:
-        if do_raise:
+        if raise_:
             raise
 
         return False
