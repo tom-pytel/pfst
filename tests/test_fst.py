@@ -274,7 +274,7 @@ class TestFST(unittest.TestCase):
         self.assertEqual(['i = 1'], ast.body[0].body[0].body[0].f.snip())
         self.assertEqual(['j = 2'], ast.body[0].body[0].orelse[0].f.snip())
 
-        self.assertEqual(['True:', '  i'], ast.f.root.sniploc(1, 4, 2, 3))
+        self.assertEqual(['True:', '  i'], ast.f.root.snip(1, 4, 2, 3))
 
     def test_get_indent(self):
         ast = parse('i = 1; j = 2')

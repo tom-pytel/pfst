@@ -112,7 +112,7 @@ class FST:
         if self.is_root:
             return '\n'.join(self._lines)
         elif loc := self.loc:
-            return '\n'.join(self.sniploc(*loc))
+            return '\n'.join(self.snip(*loc))
         else:
             return None
 
@@ -792,8 +792,8 @@ class FST:
         return self.last_child(loc) if from_child is None else from_child.prev(loc)
 
     def is_parsable(self) -> bool:
-        """Really means the `ast` is `unparse()`able and that a `parse()` could get it to this top level AST node. Is
-        really for root node otherwise parsable things may be flagged."""
+        """Really means the AST is `unparse()`able and then re`parse()`able which will get it to this top level AST node
+        surrounded by the appropriate `ast.mod`. The source may change a bit though, parentheses, 'if' <-> 'elif'."""
 
         if not self.loc or not is_parsable(self.a):
             return False
@@ -806,16 +806,6 @@ class FST:
                 if isinstance(e, Slice):
                     return False
 
-        # elif isinstance(ast, If):  # if statement can be 'if' or 'elif'
-        #     if not self.root._lines[self.ln].startswith(
-        #         'elif' if self.pfield == ('orelse', 0) and (self.col) == parent.col else 'if', self.col
-        #     ):
-        #         return False
-
-        # elif isinstance(ast, NamedExpr):  # can't be outside of parens
-        #     if not self.root._lines[self.ln].startswith('(', self.col):
-        #         return False
-
         elif parent:
             if isinstance(ast, JoinedStr):  # formatspec '.1f' type strings without quote delimiters
                 if self.pfield.name == 'format_spec' and isinstance(parent.a, FormattedValue):
@@ -827,20 +817,17 @@ class FST:
 
         return True
 
-    def sniploc(self, ln: int, col: int, end_ln: int, end_col: int) -> list[str]:
+    def snip(self, ln: int | None = None, col: int | None = None, end_ln: int | None = None, end_col: int | None = None) -> list[str]:
+        if ln is None:
+            ln, col, end_ln, end_col = self.loc
+
         if end_ln == ln:
             return [bistr(self.root._lines[ln][col : end_col])]
         else:
             return [bistr((l := self.root._lines)[ln][col:])] + l[ln + 1 : end_ln] + [bistr(l[end_ln][:end_col])]
 
-    def sniploc_text(self, ln: int, col: int, end_ln: int, end_col: int) -> str:
-        return '\n'.join(self.sniploc(ln, col, end_ln, end_col))
-
-    def snip(self) -> list[str]:
-        return self.sniploc(*self.loc)
-
-    def snip_text(self) -> str:
-        return '\n'.join(self.sniploc(*self.loc))
+    def snipsrc(self, ln: int | None = None, col: int | None = None, end_ln: int | None = None, end_col: int | None = None) -> str:
+        return '\n'.join(self.snip(ln, col, end_ln, end_col))
 
     def get_indent(self) -> str:
         """Determine proper indentation of node at `stmt` (or other similar) level at or above self, otherwise at root
@@ -963,9 +950,10 @@ class FST:
 
     @only_root
     def fix(self, *, inplace: bool = False, raise_: bool = True) -> Union['FST', None]:  # -> Self | None
-        """Correct certain basic changes on cut or copy ast (to make cut or copied subtrees parsable if the source is
-        not by itself). Possibly reparses in order to verify expression. If fails the ast will be unchanged. Is meant to
-        be a quick fix after copy or cut, not full check, for that use `.verify()`.
+        """Correct certain basic changes on cut or copy AST (to make subtrees parsable if the source is not by itself).
+        Possibly reparses in order to verify expression. If fails the ast will be unchanged. Is meant to be a quick fix
+        after an operation, not full check, for that use `.verify()`. Basically just fixes everything that succeeds
+        `.is_parsable()` and then basic names and expressions on top of that (match patterns count as expressions).
 
         Args:
             inplace: If `True` then changes will be made to self. If `False` then self may be returned if no changes
@@ -1058,7 +1046,7 @@ class FST:
 
         fst._offset(loc.ln, loc.col, -loc.ln, -lines[loc.ln].c2b(loc.col))
 
-        fst._lines = self.sniploc(*loc)
+        fst._lines = self.snip(*loc)
 
         fst._dedent_tail(indent)
 
