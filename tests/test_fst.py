@@ -82,7 +82,7 @@ class TestFST(unittest.TestCase):
 
     def test_line_ast_ends(self):
         self.assertEqual([0, 6, 11, 10, 5, 6],
-                         parse('class cls:\n @deco\n def f(self):\n  """ this\n  """\n  that').f.line_ast_ends)
+                         parse('class cls:\n @deco\n def f(self):\n  """ this\n  """\n  that').f.get_line_ast_ends())
 
     def test_get_indent(self):
         ast = parse('i = 1; j = 2')
@@ -173,11 +173,11 @@ class TestFST(unittest.TestCase):
         self.assertEqual({1, 2, 5, 7, 8, 9, 10}, ast.f.get_indentable_lns())
         self.assertEqual({0, 1, 2, 5, 7, 8, 9, 10}, ast.f.get_indentable_lns(0))
 
-    def test_offset(self):
+    def test__offset(self):
         src = 'i = 1\nj = 2\nk = 3'
 
         ast = parse(src)
-        ast.f.offset(1, 4, 0, 1)
+        ast.f._offset(1, 4, 0, 1)
         self.assertEqual((1, 4, 1, 5), ((n := ast.body[0].value).lineno, n.col_offset, n.end_lineno, n.end_col_offset))
         self.assertEqual((2, 0, 2, 1), ((n := ast.body[1].targets[0]).lineno, n.col_offset, n.end_lineno, n.end_col_offset))
         self.assertEqual((2, 5, 2, 6), ((n := ast.body[1].value).lineno, n.col_offset, n.end_lineno, n.end_col_offset))
@@ -185,7 +185,7 @@ class TestFST(unittest.TestCase):
         self.assertEqual((3, 4, 3, 5), ((n := ast.body[2].value).lineno, n.col_offset, n.end_lineno, n.end_col_offset))
 
         ast = parse(src)
-        ast.f.offset(1, 5, 0, 1)
+        ast.f._offset(1, 5, 0, 1)
         self.assertEqual((1, 4, 1, 5), ((n := ast.body[0].value).lineno, n.col_offset, n.end_lineno, n.end_col_offset))
         self.assertEqual((2, 0, 2, 1), ((n := ast.body[1].targets[0]).lineno, n.col_offset, n.end_lineno, n.end_col_offset))
         self.assertEqual((2, 4, 2, 5), ((n := ast.body[1].value).lineno, n.col_offset, n.end_lineno, n.end_col_offset))
@@ -193,7 +193,7 @@ class TestFST(unittest.TestCase):
         self.assertEqual((3, 4, 3, 5), ((n := ast.body[2].value).lineno, n.col_offset, n.end_lineno, n.end_col_offset))
 
         ast = parse(src)
-        ast.f.offset(1, 5, 0, 1, inc=True)
+        ast.f._offset(1, 5, 0, 1, inc=True)
         self.assertEqual((1, 4, 1, 5), ((n := ast.body[0].value).lineno, n.col_offset, n.end_lineno, n.end_col_offset))
         self.assertEqual((2, 0, 2, 1), ((n := ast.body[1].targets[0]).lineno, n.col_offset, n.end_lineno, n.end_col_offset))
         self.assertEqual((2, 4, 2, 6), ((n := ast.body[1].value).lineno, n.col_offset, n.end_lineno, n.end_col_offset))
@@ -201,7 +201,7 @@ class TestFST(unittest.TestCase):
         self.assertEqual((3, 4, 3, 5), ((n := ast.body[2].value).lineno, n.col_offset, n.end_lineno, n.end_col_offset))
 
         ast = parse(src)
-        ast.f.offset(1, 4, 1, -1)
+        ast.f._offset(1, 4, 1, -1)
         self.assertEqual((1, 4, 1, 5), ((n := ast.body[0].value).lineno, n.col_offset, n.end_lineno, n.end_col_offset))
         self.assertEqual((2, 0, 2, 1), ((n := ast.body[1].targets[0]).lineno, n.col_offset, n.end_lineno, n.end_col_offset))
         self.assertEqual((3, 3, 3, 4), ((n := ast.body[1].value).lineno, n.col_offset, n.end_lineno, n.end_col_offset))
@@ -209,7 +209,7 @@ class TestFST(unittest.TestCase):
         self.assertEqual((4, 4, 4, 5), ((n := ast.body[2].value).lineno, n.col_offset, n.end_lineno, n.end_col_offset))
 
         ast = parse(src)
-        ast.f.offset(1, 5, 1, -1)
+        ast.f._offset(1, 5, 1, -1)
         self.assertEqual((1, 4, 1, 5), ((n := ast.body[0].value).lineno, n.col_offset, n.end_lineno, n.end_col_offset))
         self.assertEqual((2, 0, 2, 1), ((n := ast.body[1].targets[0]).lineno, n.col_offset, n.end_lineno, n.end_col_offset))
         self.assertEqual((2, 4, 2, 5), ((n := ast.body[1].value).lineno, n.col_offset, n.end_lineno, n.end_col_offset))
@@ -217,19 +217,19 @@ class TestFST(unittest.TestCase):
         self.assertEqual((4, 4, 4, 5), ((n := ast.body[2].value).lineno, n.col_offset, n.end_lineno, n.end_col_offset))
 
         ast = parse(src)
-        ast.f.offset(1, 5, 1, -1, inc=True)
+        ast.f._offset(1, 5, 1, -1, inc=True)
         self.assertEqual((1, 4, 1, 5), ((n := ast.body[0].value).lineno, n.col_offset, n.end_lineno, n.end_col_offset))
         self.assertEqual((2, 0, 2, 1), ((n := ast.body[1].targets[0]).lineno, n.col_offset, n.end_lineno, n.end_col_offset))
         self.assertEqual((2, 4, 3, 4), ((n := ast.body[1].value).lineno, n.col_offset, n.end_lineno, n.end_col_offset))
         self.assertEqual((4, 0, 4, 1), ((n := ast.body[2].targets[0]).lineno, n.col_offset, n.end_lineno, n.end_col_offset))
         self.assertEqual((4, 4, 4, 5), ((n := ast.body[2].value).lineno, n.col_offset, n.end_lineno, n.end_col_offset))
 
-    def test_offset_cols(self):
+    def test__offset_cols(self):
         src = 'class cls:\n if True:\n  i = """\nj\n"""\n  k = 3\n else:\n  j = 2'
 
         ast = parse(src)
         lns = ast.f.get_indentable_lns()
-        ast.f.offset_cols(1, lns)
+        ast.f._offset_cols(1, lns)
         self.assertEqual({1, 2, 5, 6, 7}, lns)
         self.assertEqual((0, 0, 7, 8), ast.f.loc)
         self.assertEqual((0, 0, 7, 8), ast.body[0].f.loc)
@@ -247,7 +247,7 @@ class TestFST(unittest.TestCase):
 
         ast = parse(src)
         lns = ast.body[0].body[0].f.get_indentable_lns()
-        ast.body[0].body[0].f.offset_cols(1, lns)
+        ast.body[0].body[0].f._offset_cols(1, lns)
         self.assertEqual({2, 5, 6, 7}, lns)
         self.assertEqual((1, 1, 7, 8), ast.body[0].body[0].f.loc)
         self.assertEqual((1, 4, 1, 8), ast.body[0].body[0].test.f.loc)
@@ -263,18 +263,18 @@ class TestFST(unittest.TestCase):
 
         ast = parse(src)
         lns = ast.body[0].body[0].body[0].f.get_indentable_lns()
-        ast.body[0].body[0].body[0].f.offset_cols(1, lns)
+        ast.body[0].body[0].body[0].f._offset_cols(1, lns)
         self.assertEqual(set(), lns)
         self.assertEqual((2, 2, 4, 3), ast.body[0].body[0].body[0].f.loc)
         self.assertEqual((2, 2, 2, 3), ast.body[0].body[0].body[0].targets[0].f.loc)
         self.assertEqual((2, 6, 4, 3), ast.body[0].body[0].body[0].value.f.loc)
 
-    def test_offset_cols_mapped(self):
+    def test__offset_cols_mapped(self):
         src = 'i = 1\nj = 2\nk = 3\nl = \\\n4'
         ast = parse(src)
         off = {0: 0, 1: 1, 2: 2, 3: 3, 4: 4}
 
-        ast.f.offset_cols_mapped(off)
+        ast.f._offset_cols_mapped(off)
         self.assertEqual((0, 0, 4, 5), ast.f.loc)
         self.assertEqual((0, 0, 0, 5), ast.body[0].f.loc)
         self.assertEqual((0, 0, 0, 1), ast.body[0].targets[0].f.loc)
@@ -289,68 +289,68 @@ class TestFST(unittest.TestCase):
         self.assertEqual((3, 3, 3, 4), ast.body[3].targets[0].f.loc)
         self.assertEqual((4, 4, 4, 5), ast.body[3].value.f.loc)
 
-    def test_indent_tail(self):
+    def test__indent_tail(self):
         src = 'class cls:\n if True:\n  i = """\nj\n"""\n  k = 3\n else:\n  j \\\n=\\\n 2'
 
         ast = parse(src)
-        lns = ast.f.indent_tail('  ')
+        lns = ast.f._indent_tail('  ')
         self.assertEqual({1, 2, 5, 6, 7, 8, 9}, lns)
         self.assertEqual('class cls:\n   if True:\n    i = """\nj\n"""\n    k = 3\n   else:\n    j \\\n  =\\\n   2', ast.f.text)
 
         ast = parse(src)
-        lns = ast.body[0].body[0].f.indent_tail('  ')
+        lns = ast.body[0].body[0].f._indent_tail('  ')
         self.assertEqual({2, 5, 6, 7, 8, 9}, lns)
         self.assertEqual('class cls:\n if True:\n    i = """\nj\n"""\n    k = 3\n   else:\n    j \\\n  =\\\n   2', ast.f.text)
 
         ast = parse(src)
-        lns = ast.body[0].body[0].body[0].f.indent_tail('  ')
+        lns = ast.body[0].body[0].body[0].f._indent_tail('  ')
         self.assertEqual(set(), lns)
         self.assertEqual('class cls:\n if True:\n  i = """\nj\n"""\n  k = 3\n else:\n  j \\\n=\\\n 2', ast.f.text)
 
         ast = parse(src)
-        lns = ast.body[0].body[0].orelse[0].f.indent_tail('  ')
+        lns = ast.body[0].body[0].orelse[0].f._indent_tail('  ')
         self.assertEqual({8, 9}, lns)
         self.assertEqual('class cls:\n if True:\n  i = """\nj\n"""\n  k = 3\n else:\n  j \\\n  =\\\n   2', ast.f.text)
 
         src = '@decorator\nclass cls:\n pass'
 
         ast = parse(src)
-        lns = ast.f.indent_tail('  ')
+        lns = ast.f._indent_tail('  ')
         self.assertEqual({1, 2}, lns)
         self.assertEqual('@decorator\n  class cls:\n   pass', ast.f.text)
 
-    def test_dedent_tail(self):
+    def test__dedent_tail(self):
         src = 'class cls:\n if True:\n  i = """\nj\n"""\n  k = 3\n else:\n  j \\\n=\\\n 2'
 
         ast = parse(src)
-        lns = ast.f.dedent_tail(' ')
+        lns = ast.f._dedent_tail(' ')
         self.assertEqual({1, 2, 5, 6, 7, 8, 9}, lns)
         self.assertEqual('class cls:\nif True:\n i = """\nj\n"""\n k = 3\nelse:\n j \\\n=\\\n2', ast.f.text)
 
         ast = parse(src)
-        lns = ast.body[0].body[0].f.dedent_tail(' ')
+        lns = ast.body[0].body[0].f._dedent_tail(' ')
         self.assertEqual({2, 5, 6, 7, 8, 9}, lns)
         self.assertEqual('class cls:\n if True:\n i = """\nj\n"""\n k = 3\nelse:\n j \\\n=\\\n2', ast.f.text)
 
         ast = parse(src)
-        lns = ast.body[0].body[0].body[0].f.dedent_tail(' ')
+        lns = ast.body[0].body[0].body[0].f._dedent_tail(' ')
         self.assertEqual(set(), lns)
         self.assertEqual('class cls:\n if True:\n  i = """\nj\n"""\n  k = 3\n else:\n  j \\\n=\\\n 2', ast.f.text)
 
         ast = parse(src)
-        lns = ast.body[0].body[0].orelse[0].f.dedent_tail(' ')
+        lns = ast.body[0].body[0].orelse[0].f._dedent_tail(' ')
         self.assertEqual({8, 9}, lns)
         self.assertEqual('class cls:\n if True:\n  i = """\nj\n"""\n  k = 3\n else:\n  j \\\n=\\\n2', ast.f.text)
 
         src = '@decorator\nclass cls:\n pass'
 
         ast = parse(src)
-        lns = ast.body[0].body[0].f.dedent_tail(' ')
+        lns = ast.body[0].body[0].f._dedent_tail(' ')
         self.assertEqual(set(), lns)
         self.assertEqual('@decorator\nclass cls:\n pass', ast.f.text)
 
         # ast = parse(src)
-        # lns = ast.body[0].body[0].f.dedent_tail(' ', skip=0)
+        # lns = ast.body[0].body[0].f._dedent_tail(' ', skip=0)
         # self.assertEqual({2}, lns)
         # self.assertEqual('@decorator\nclass cls:\npass', ast.f.text)
 
