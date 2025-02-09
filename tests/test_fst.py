@@ -725,5 +725,31 @@ class TestFST(unittest.TestCase):
             self.assertEqual('(*tuple[int, ...],)', f.src)
 
 
+
+
+    def test_fix(self):
+        f = FST.fromsrc('if 1: pass\nelif 2: pass').a.body[0].orelse[0].f.copy(safe=False)
+        self.assertEqual('elif 2: pass', f.src)
+        self.assertRaises(ValueError, f.fix, None)
+        self.assertEqual(f.fix(None, do_raise=False), None)
+
+        g = f.fix('src', inplace=False)
+        self.assertIsNot(g, f)
+        self.assertEqual('if 2: pass', g.src)
+        self.assertEqual('elif 2: pass', f.src)
+
+        g = f.fix('src', inplace=True)
+        self.assertIs(g, f)
+        self.assertEqual('if 2: pass', g.src)
+        self.assertEqual('if 2: pass', f.src)
+
+
+
+
+
+
+
+
+
 if __name__ == '__main__':
     unittest.main()

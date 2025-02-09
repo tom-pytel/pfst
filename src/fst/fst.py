@@ -397,7 +397,7 @@ class FST:
         # ROOT
 
         self.root   = self
-        self._lines = [bistr(s) for s in root_params['lines']]
+        self._lines = root_params['lines']
 
         if from_ := root_params.get('from_'):  # copy params from source tree
             root               = from_.root
@@ -430,7 +430,7 @@ class FST:
         parse_params = dict(parse_params, type_comments=type_comments, feature_version=feature_version)
         ast          = ast_.parse(source, filename, mode, **parse_params)
 
-        return FST(ast, lines=lines, parse_params=parse_params)
+        return FST(ast, lines=[bistr(s) for s in lines], parse_params=parse_params)
 
     @staticmethod
     def fromast(ast: AST, *, calc_loc: bool | Literal['copy'] = True,
@@ -478,7 +478,7 @@ class FST:
                 if not copy_attributes(astp, ast, compare=True, type_comments=type_comments):
                     raise RuntimeError('could not reparse ast identically')
 
-        return FST(ast, lines=lines, parse_params=parse_params)
+        return FST(ast, lines=[bistr(s) for s in lines], parse_params=parse_params)
 
     def verify(self, *, do_raise: bool = True) -> Union['FST', None]:  # -> Self | None:
         """Sanity check, make sure parsed source matches ast."""
@@ -792,17 +792,27 @@ class FST:
         return self.last_child(loc) if from_child is None else from_child.prev(loc)
 
     def is_parsable(self) -> bool:
+        """Really means the `ast` is `unparse()`able and that a `parse()` could get it to this top level AST node. Is
+        really for root node otherwise parsable things may be flagged."""
+
         if not self.loc or not is_parsable(self.a):
             return False
 
-        ast = self.a
+        ast    = self.a
+        parent = self.parent
 
         if isinstance(ast, Tuple):  # tuple of slices used in indexing (like numpy)
             for e in ast.elts:
                 if isinstance(e, Slice):
                     return False
 
-        elif parent := self.parent:
+        elif isinstance(ast, If):  # if statement can be 'if' or 'elif'
+            if not self.root._lines[self.ln].startswith(
+                'elif' if self.pfield == ('orelse', 0) and (self.col) == parent.col else 'if', self.col
+            ):
+                return False
+
+        elif parent:
             if isinstance(ast, JoinedStr):  # formatspec '.1f' type strings without quote delimiters
                 if self.pfield.name == 'format_spec' and isinstance(parent.a, FormattedValue):
                     return False
@@ -1084,6 +1094,156 @@ class FST:
         fst._dedent_tail(indent)
 
         return fst.safe(do_raise=do_raise) if safe else fst
+
+
+
+
+
+
+    @only_root
+    def fix(self, mode: None | Literal['src'] | Literal['ast'], *,
+            inplace: bool = False, do_raise: bool = True) -> Union['FST', None]:  # -> Self | None
+        """Make safe to parse (to make cut or copied subtrees parsable if the source is not by itself). Possibly
+        reparses which may change type of ast, e.g. `keyword` "i=1" to `Assign` "i=1". If fails the ast will be
+        unchanged. Is meant to be a quick fix after copy or cut, not full check, for that use `.verify()`.
+
+        Args:
+            mode: 'src' just fixes source and possibly `ctx` nodes, 'ast' can change AST classes as well as source. None
+                doesn't attempt to fix anything but does test with `is_parsable()`.
+            do_raise: Whether to raise on fail (default: True) or return None (False).
+        """
+
+        def check_parsable():
+            if self.is_parsable():
+                return self
+            if do_raise:
+                raise ValueError('ast could not be made safe to parse')
+
+            return None
+
+        if not mode:
+            return check_parsable()
+
+        ast   = self.a
+        lines = self._lines
+
+        ln, col, end_ln, end_col = self.loc
+
+        if isinstance(ast, If):
+            if (l := lines[ln]).startswith('if', col):
+                return self
+            if not l.startswith('elif', col):
+                raise ValueError(f'unexpected start of If statement: {l[col:]!r}')
+
+            if not inplace:
+                self = FST(copy(ast), lines=(lines := lines[:]), from_=self)
+
+            self._offset(ln, col + 2, 0, -2)
+
+            lines[ln] = bistr((l := lines[ln])[:col] + l[col + 2:])
+
+            return self
+
+
+
+
+        # elif isinstance(ast, MatchStar):
+        #     pass  # ast.pattern that can't be converted to expression
+
+        # elif (isinstance(ast, (expr, pattern)) or
+        #     (isinstance(ast, arg) and not ast.annotation) or
+        #     (isinstance(ast, TypeVar) and not ast.bound and not ast.default_value
+        # )):
+        #     try:
+        #         a = ast_.parse(text := self.src, mode='eval', **self._parse_params)
+
+        #     except SyntaxError:  # if expression not parsing then try parenthesize
+        #         try:
+        #             tail = (',)' if isinstance(ast, Tuple) and len(ast.elts) == 1 and
+        #                     lines[self.end_ln][self.end_col - 1] != ',' else ')')
+        #             a    = ast_.parse(f'({text}{tail}', mode='eval', **self._parse_params)
+
+        #         except SyntaxError:
+        #             if do_raise:
+        #                 raise
+
+        #             return None
+
+        #         lines[end_ln] = bistr(f'{(l := lines[end_ln])[:end_col]}{tail}{l[end_col:]}')
+        #         lines[ln]     = bistr(f'{(l := lines[ln])[:col]}({l[col:]}')
+
+        #     self.a   = a.body
+        #     self.a.f = self
+
+        #     self.touch()
+        #     self._make_fst_tree()
+
+
+
+
+        # elif mode == 'ast' and (
+        #     (is_keyword := isinstance(ast, keyword)) or
+        #     ((is_arg := isinstance(ast, arg)) and ast.annotation) or
+        #     (isinstance(ast, TypeVar) and (ast.bound or ast.default_value)
+        # )):
+        #     try:
+        #         a = ast_.parse(self.src, mode='exec', **self._parse_params)
+
+        #     except SyntaxError:  # if assign not parsing then try sanitize it
+        #         newlines = lines[:]
+
+        #         def maybe_replace(text, ln, col, end_ln, end_col):
+        #             if end_ln != ln:
+        #                 newlines[ln] = newlines[ln][:col] + text + newlines[end_ln][end_col:]
+
+        #                 del newlines[ln + 1 : end_ln + 1]
+
+        #         if is_keyword:
+        #             maybe_replace(' = ', self.ln, self.col + len(ast.arg), (v := ast.value.f).ln, v.col)
+        #         elif is_arg:
+        #             maybe_replace(': ', self.ln, self.col + len(ast.arg), (an := ast.annotation.f).ln, an.col)
+
+        #         else:  # is_typevar
+        #             b = ast.bound
+
+        #             if (dv := ast.default_value):
+        #                 if b:
+        #                     maybe_replace(' = ', b.f.end_ln, b.f.end_col, dv.f.ln, dv.f.col)
+        #                     maybe_replace(': ', self.ln, self.col + len(ast.name), b.f.ln, b.f.col)
+
+        #                 else:
+        #                     maybe_replace(' = ', self.ln, self.col + len(ast.name), dv.f.ln, dv.f.col)
+
+        #             else:  # b must be present
+        #                 maybe_replace(': ', self.ln, self.col + len(ast.name), b.f.ln, b.f.col)
+
+        #         try:
+        #             a = ast_.parse('\n'.join(newlines), mode='exec', **self._parse_params)
+
+        #         except SyntaxError:
+        #             if do_raise:
+        #                 raise
+
+        #             return None
+
+        #         self._lines = [bistr(s) for s in newlines]
+
+        #     self.a   = a.body[0]
+        #     self.a.f = self
+
+        #     self.touch()
+        #     self._make_fst_tree()
+
+
+
+
+
+
+
+
+        return check_parsable(self)
+
+
 
 
 

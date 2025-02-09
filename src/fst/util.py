@@ -255,7 +255,8 @@ def has_type_comments(ast: AST) -> bool:
 
 
 def is_parsable(ast: AST) -> bool:
-    """Really means the `ast` is `unparse()`able and that a parse could get it to this top level AST node."""
+    """Really means the `ast` is `unparse()`able and that a `parse()` could get it to this top level AST node. Is
+    really for root node otherwise parsable things may be flagged."""
 
     if not isinstance(ast, AST):
         return False
