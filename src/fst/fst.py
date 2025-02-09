@@ -102,21 +102,19 @@ class FST:
     def lines(self) -> list[str]:
         if self.is_root:
             return self._lines
-        elif (loc := self.loc) is not None:
+        elif loc := self.loc:
             return self.root._lines[loc.ln : loc.end_ln + 1]
         else:
             return self.parent.lines
 
     @property
     def text(self) -> str:
-        return '\n'.join(self.lines)
-        # while True:
-        #     if self.is_root:
-        #         return '\n'.join(self._lines)
-        #     elif (loc := self.loc) is not None:
-        #         return '\n'.join(self.sniploc(*loc))
-
-        #     self = self.parent
+        if self.is_root:
+            return '\n'.join(self._lines)
+        elif loc := self.loc:
+            return '\n'.join(self.sniploc(*loc))
+        else:
+            return self.parent.text
 
     @property
     def loc(self) -> fstloc | None:
@@ -270,7 +268,7 @@ class FST:
 
             f.touch()
 
-        self.flush(False)
+        self.touchup()
 
         return self
 
@@ -291,7 +289,7 @@ class FST:
 
                 a.f.touch()
 
-        self.flush(False)
+        self.touchup()
 
         return self
 
@@ -311,7 +309,7 @@ class FST:
 
             a.f.touch()
 
-        self.flush(False)
+        self.touchup()
 
         return self
 
@@ -821,7 +819,7 @@ class FST:
         return '\n'.join(self.sniploc(ln, col, end_ln, end_col))
 
     def snip(self) -> list[str]:
-        return self.root.sniploc(*self.loc)
+        return self.sniploc(*self.loc)
 
     def snip_text(self) -> str:
         return '\n'.join(self.snip())
@@ -830,31 +828,29 @@ class FST:
         """Determine proper indentation of node at `stmt` (or other similar) level at or above self, otherwise at root
         node. Even if it is a continuation or on same line as block statement."""
 
-        f = self
+        while (parent := self.parent) and not isinstance(self.a, STATEMENTISH):
+            self = parent
 
-        while (parent := f.parent) and not isinstance(f.a, STATEMENTISH):
-            f = parent
-
-        lines        = (root := f.root)._lines
+        lines        = (root := self.root)._lines
         extra_indent = ''  # may result from unknown indent in single line "if something: whats_my_stmt_indentation?"
 
         while parent:
-            siblings = getattr(parent.a, f.pfield.name)
+            siblings = getattr(parent.a, self.pfield.name)
 
             for i in range(1, len(siblings)):  # first try simple rules for all elements past first one
-                f = siblings[i].f
+                self = siblings[i].f
 
-                if re_empty_line.match(line_start := lines[(ln := f.ln)][:f.col]):
-                    prev    = f.prev()  # there must be one
+                if re_empty_line.match(line_start := lines[(ln := self.ln)][:self.col]):
+                    prev    = self.prev()  # there must be one
                     end_col = 0 if prev.end_ln < (preceding_ln := ln - 1) else prev.end_col
 
                     if not re_line_continuation.match(lines[preceding_ln][end_col:]):
                         return line_start + extra_indent
 
-            f           = siblings[0].f  # didn't find in siblings[1:], now the special rules for the first one
-            ln          = f.ln
-            col         = f.col
-            prev        = f.prev()  # there may not be one ("try" at start of module)
+            self        = siblings[0].f  # didn't find in siblings[1:], now the special rules for the first one
+            ln          = self.ln
+            col         = self.col
+            prev        = self.prev()  # there may not be one ("try" at start of module)
             prev_end_ln = prev.end_ln if prev else -2
 
             while ln > prev_end_ln and re_empty_line.match(line_start := lines[ln][:col]):
@@ -870,8 +866,8 @@ class FST:
                 break
 
             extra_indent += root.indent
-            f             = parent
-            parent        = f.parent
+            self          = parent
+            parent        = self.parent
 
         # TODO: handle possibility of syntactically incorrect but indented root node?
 
@@ -925,31 +921,29 @@ class FST:
 
     # ------------------------------------------------------------------------------------------------------------------
 
-    def touch(self, recurse: bool = False) -> 'FST':  # -> Self:
-        """AST node was modified, clear out any cached info for this node specifically, call for each node in walk."""
+    def touch(self) -> 'FST':  # -> Self:
+        """AST node was modified, clear out any cached info for this node specifically, call this for each node in walk."""
 
-        if not recurse:
-            try:
-                del self._loc, self._bloc  # _bloc only exists if _loc does
-            except AttributeError:
-                pass
-
-        else:
-            for a in walk(self.a):
-                try:
-                    del a.f._loc, a.f._bloc
-                except AttributeError:
-                    pass
+        try:
+            del self._loc, self._bloc  # _bloc only exists if _loc does
+        except AttributeError:
+            pass
 
         return self
 
-    def flush(self, touch: bool = True) -> 'FST':  # -> Self:
-        """AST node was modified, clear out any cached info globally and in other nodes, call once for entire walk."""
+    def touchall(self) -> 'FST':  # -> Self:
+        """AST node and some/all children were modified, clear out any cached info for tree down from this node."""
 
-        if touch:
-            self.touch(True)
+        for a in walk(self.a):
+            a.f.touch()
 
         return self
+
+    def touchup(self) -> 'FST':  # -> Self:
+        """Touch going up the tree so that all containers of modified nodes are up to date."""
+
+        while self := self.parent:
+            self.touch()
 
     @only_root
     def safe(self, *, assign: bool = True, do_raise: bool = True) -> Union['FST', None]:  # -> Self | None
@@ -1083,7 +1077,6 @@ class FST:
 
         fst._lines = self.sniploc(*loc)
 
-        # fst.flush()
         fst._dedent_tail(indent)
 
         return fst.safe(do_raise=do_raise) if safe else fst
