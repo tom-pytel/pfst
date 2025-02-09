@@ -80,9 +80,201 @@ class TestFST(unittest.TestCase):
         self.assertRaises(WalkFail, ast.f.verify, do_raise=True)
         self.assertEqual(None, ast.f.verify(do_raise=False))
 
-    def test_line_ast_ends(self):
-        self.assertEqual([0, 6, 11, 10, 5, 6],
-                         parse('class cls:\n @deco\n def f(self):\n  """ this\n  """\n  that').f.get_line_ast_ends())
+    def test_next_prev(self):
+        fst = parse('a and b and c and d').body[0].value.f
+        a = fst.a
+        f = None
+        self.assertIs((f := fst.next_child(f, True)), a.values[0].f)
+        self.assertIs((f := fst.next_child(f, True)), a.values[1].f)
+        self.assertIs((f := fst.next_child(f, True)), a.values[2].f)
+        self.assertIs((f := fst.next_child(f, True)), a.values[3].f)
+        self.assertIs((f := fst.next_child(f, True)), None)
+        f = None
+        self.assertIs((f := fst.next_child(f, False)), a.op.f)
+        self.assertIs((f := fst.next_child(f, False)), a.values[0].f)
+        self.assertIs((f := fst.next_child(f, False)), a.values[1].f)
+        self.assertIs((f := fst.next_child(f, False)), a.values[2].f)
+        self.assertIs((f := fst.next_child(f, False)), a.values[3].f)
+        self.assertIs((f := fst.next_child(f, False)), None)
+        f = None
+        self.assertIs((f := fst.prev_child(f, True)), a.values[3].f)
+        self.assertIs((f := fst.prev_child(f, True)), a.values[2].f)
+        self.assertIs((f := fst.prev_child(f, True)), a.values[1].f)
+        self.assertIs((f := fst.prev_child(f, True)), a.values[0].f)
+        self.assertIs((f := fst.prev_child(f, True)), None)
+        f = None
+        self.assertIs((f := fst.prev_child(f, False)), a.values[3].f)
+        self.assertIs((f := fst.prev_child(f, False)), a.values[2].f)
+        self.assertIs((f := fst.prev_child(f, False)), a.values[1].f)
+        self.assertIs((f := fst.prev_child(f, False)), a.values[0].f)
+        self.assertIs((f := fst.prev_child(f, False)), a.op.f)
+        self.assertIs((f := fst.prev_child(f, False)), None)
+
+        if sys.version_info[:2] >= (3, 12):
+            fst = parse('@deco\ndef f[T, U](a, /, b: int, *, c: int = 2) -> str: pass').body[0].f
+            a = fst.a
+            f = None
+            self.assertIs((f := fst.next_child(f, True)), a.decorator_list[0].f)
+            self.assertIs((f := fst.next_child(f, True)), a.type_params[0].f)
+            self.assertIs((f := fst.next_child(f, True)), a.type_params[1].f)
+            self.assertIs((f := fst.next_child(f, True)), a.args.f)
+            self.assertIs((f := fst.next_child(f, True)), a.returns.f)
+            self.assertIs((f := fst.next_child(f, True)), a.body[0].f)
+            self.assertIs((f := fst.next_child(f, True)), None)
+            f = None
+            self.assertIs((f := fst.next_child(f, False)), a.decorator_list[0].f)
+            self.assertIs((f := fst.next_child(f, False)), a.type_params[0].f)
+            self.assertIs((f := fst.next_child(f, False)), a.type_params[1].f)
+            self.assertIs((f := fst.next_child(f, False)), a.args.f)
+            self.assertIs((f := fst.next_child(f, False)), a.returns.f)
+            self.assertIs((f := fst.next_child(f, False)), a.body[0].f)
+            self.assertIs((f := fst.next_child(f, False)), None)
+            f = None
+            self.assertIs((f := fst.prev_child(f, True)), a.body[0].f)
+            self.assertIs((f := fst.prev_child(f, True)), a.returns.f)
+            self.assertIs((f := fst.prev_child(f, True)), a.args.f)
+            self.assertIs((f := fst.prev_child(f, True)), a.type_params[1].f)
+            self.assertIs((f := fst.prev_child(f, True)), a.type_params[0].f)
+            self.assertIs((f := fst.prev_child(f, True)), a.decorator_list[0].f)
+            self.assertIs((f := fst.prev_child(f, True)), None)
+            f = None
+            self.assertIs((f := fst.prev_child(f, False)), a.body[0].f)
+            self.assertIs((f := fst.prev_child(f, False)), a.returns.f)
+            self.assertIs((f := fst.prev_child(f, False)), a.args.f)
+            self.assertIs((f := fst.prev_child(f, False)), a.type_params[1].f)
+            self.assertIs((f := fst.prev_child(f, False)), a.type_params[0].f)
+            self.assertIs((f := fst.prev_child(f, False)), a.decorator_list[0].f)
+            self.assertIs((f := fst.prev_child(f, False)), None)
+
+        fst = parse('@deco\ndef f(a, /, b: int, *, c: int = 2) -> str: pass').body[0].f
+        a = fst.a
+        f = None
+        self.assertIs((f := fst.next_child(f, True)), a.decorator_list[0].f)
+        self.assertIs((f := fst.next_child(f, True)), a.args.f)
+        self.assertIs((f := fst.next_child(f, True)), a.returns.f)
+        self.assertIs((f := fst.next_child(f, True)), a.body[0].f)
+        self.assertIs((f := fst.next_child(f, True)), None)
+        f = None
+        self.assertIs((f := fst.next_child(f, False)), a.decorator_list[0].f)
+        self.assertIs((f := fst.next_child(f, False)), a.args.f)
+        self.assertIs((f := fst.next_child(f, False)), a.returns.f)
+        self.assertIs((f := fst.next_child(f, False)), a.body[0].f)
+        self.assertIs((f := fst.next_child(f, False)), None)
+        f = None
+        self.assertIs((f := fst.prev_child(f, True)), a.body[0].f)
+        self.assertIs((f := fst.prev_child(f, True)), a.returns.f)
+        self.assertIs((f := fst.prev_child(f, True)), a.args.f)
+        self.assertIs((f := fst.prev_child(f, True)), a.decorator_list[0].f)
+        self.assertIs((f := fst.prev_child(f, True)), None)
+        f = None
+        self.assertIs((f := fst.prev_child(f, False)), a.body[0].f)
+        self.assertIs((f := fst.prev_child(f, False)), a.returns.f)
+        self.assertIs((f := fst.prev_child(f, False)), a.args.f)
+        self.assertIs((f := fst.prev_child(f, False)), a.decorator_list[0].f)
+        self.assertIs((f := fst.prev_child(f, False)), None)
+
+        fst = parse('a <= b == c >= d').body[0].value.f
+        a = fst.a
+        f = None
+        self.assertIs((f := fst.next_child(f, True)), a.left.f)
+        self.assertIs((f := fst.next_child(f, True)), a.comparators[0].f)
+        self.assertIs((f := fst.next_child(f, True)), a.comparators[1].f)
+        self.assertIs((f := fst.next_child(f, True)), a.comparators[2].f)
+        self.assertIs((f := fst.next_child(f, True)), None)
+        f = None
+        self.assertIs((f := fst.next_child(f, False)), a.left.f)
+        self.assertIs((f := fst.next_child(f, False)), a.ops[0].f)
+        self.assertIs((f := fst.next_child(f, False)), a.comparators[0].f)
+        self.assertIs((f := fst.next_child(f, False)), a.ops[1].f)
+        self.assertIs((f := fst.next_child(f, False)), a.comparators[1].f)
+        self.assertIs((f := fst.next_child(f, False)), a.ops[2].f)
+        self.assertIs((f := fst.next_child(f, False)), a.comparators[2].f)
+        self.assertIs((f := fst.next_child(f, False)), None)
+        f = None
+        self.assertIs((f := fst.prev_child(f, True)), a.comparators[2].f)
+        self.assertIs((f := fst.prev_child(f, True)), a.comparators[1].f)
+        self.assertIs((f := fst.prev_child(f, True)), a.comparators[0].f)
+        self.assertIs((f := fst.prev_child(f, True)), a.left.f)
+        self.assertIs((f := fst.prev_child(f, True)), None)
+        f = None
+        self.assertIs((f := fst.prev_child(f, False)), a.comparators[2].f)
+        self.assertIs((f := fst.prev_child(f, False)), a.ops[2].f)
+        self.assertIs((f := fst.prev_child(f, False)), a.comparators[1].f)
+        self.assertIs((f := fst.prev_child(f, False)), a.ops[1].f)
+        self.assertIs((f := fst.prev_child(f, False)), a.comparators[0].f)
+        self.assertIs((f := fst.prev_child(f, False)), a.ops[0].f)
+        self.assertIs((f := fst.prev_child(f, False)), a.left.f)
+        self.assertIs((f := fst.prev_child(f, False)), None)
+
+        fst = parse('match a:\n case {1: a, 2: b, **rest}: pass').body[0].cases[0].pattern.f
+        a = fst.a
+        f = None
+        self.assertIs((f := fst.next_child(f, True)), a.keys[0].f)
+        self.assertIs((f := fst.next_child(f, True)), a.patterns[0].f)
+        self.assertIs((f := fst.next_child(f, True)), a.keys[1].f)
+        self.assertIs((f := fst.next_child(f, True)), a.patterns[1].f)
+        self.assertIs((f := fst.next_child(f, True)), None)
+        f = None
+        self.assertIs((f := fst.next_child(f, False)), a.keys[0].f)
+        self.assertIs((f := fst.next_child(f, False)), a.patterns[0].f)
+        self.assertIs((f := fst.next_child(f, False)), a.keys[1].f)
+        self.assertIs((f := fst.next_child(f, False)), a.patterns[1].f)
+        self.assertIs((f := fst.next_child(f, False)), None)
+        f = None
+        self.assertIs((f := fst.prev_child(f, True)), a.patterns[1].f)
+        self.assertIs((f := fst.prev_child(f, True)), a.keys[1].f)
+        self.assertIs((f := fst.prev_child(f, True)), a.patterns[0].f)
+        self.assertIs((f := fst.prev_child(f, True)), a.keys[0].f)
+        self.assertIs((f := fst.prev_child(f, True)), None)
+        f = None
+        self.assertIs((f := fst.prev_child(f, False)), a.patterns[1].f)
+        self.assertIs((f := fst.prev_child(f, False)), a.keys[1].f)
+        self.assertIs((f := fst.prev_child(f, False)), a.patterns[0].f)
+        self.assertIs((f := fst.prev_child(f, False)), a.keys[0].f)
+        self.assertIs((f := fst.prev_child(f, False)), None)
+
+        fst = parse('match a:\n case cls(1, 2, a=3, b=4): pass').body[0].cases[0].pattern.f
+        a = fst.a
+        f = None
+        self.assertIs((f := fst.next_child(f, True)), a.cls.f)
+        self.assertIs((f := fst.next_child(f, True)), a.patterns[0].f)
+        self.assertIs((f := fst.next_child(f, True)), a.patterns[1].f)
+        self.assertIs((f := fst.next_child(f, True)), a.kwd_patterns[0].f)
+        self.assertIs((f := fst.next_child(f, True)), a.kwd_patterns[1].f)
+        self.assertIs((f := fst.next_child(f, True)), None)
+        f = None
+        self.assertIs((f := fst.next_child(f, False)), a.cls.f)
+        self.assertIs((f := fst.next_child(f, False)), a.patterns[0].f)
+        self.assertIs((f := fst.next_child(f, False)), a.patterns[1].f)
+        self.assertIs((f := fst.next_child(f, False)), a.kwd_patterns[0].f)
+        self.assertIs((f := fst.next_child(f, False)), a.kwd_patterns[1].f)
+        self.assertIs((f := fst.next_child(f, False)), None)
+        f = None
+        self.assertIs((f := fst.prev_child(f, True)), a.kwd_patterns[1].f)
+        self.assertIs((f := fst.prev_child(f, True)), a.kwd_patterns[0].f)
+        self.assertIs((f := fst.prev_child(f, True)), a.patterns[1].f)
+        self.assertIs((f := fst.prev_child(f, True)), a.patterns[0].f)
+        self.assertIs((f := fst.prev_child(f, True)), a.cls.f)
+        self.assertIs((f := fst.prev_child(f, True)), None)
+        f = None
+        self.assertIs((f := fst.prev_child(f, False)), a.kwd_patterns[1].f)
+        self.assertIs((f := fst.prev_child(f, False)), a.kwd_patterns[0].f)
+        self.assertIs((f := fst.prev_child(f, False)), a.patterns[1].f)
+        self.assertIs((f := fst.prev_child(f, False)), a.patterns[0].f)
+        self.assertIs((f := fst.prev_child(f, False)), a.cls.f)
+        self.assertIs((f := fst.prev_child(f, False)), None)
+
+    def test_snip(self):
+        src = 'class cls:\n if True:\n  i = 1\n else:\n  j = 2'
+        ast = parse(src)
+
+        self.assertEqual(src.split('\n'), ast.f.snip())
+        self.assertEqual(src.split('\n'), ast.body[0].f.snip())
+        self.assertEqual('if True:\n  i = 1\n else:\n  j = 2'.split('\n'), ast.body[0].body[0].f.snip())
+        self.assertEqual(['i = 1'], ast.body[0].body[0].body[0].f.snip())
+        self.assertEqual(['j = 2'], ast.body[0].body[0].orelse[0].f.snip())
+
+        self.assertEqual(['True:', '  i'], ast.f.root.sniploc(1, 4, 2, 3))
 
     def test_get_indent(self):
         ast = parse('i = 1; j = 2')
@@ -115,19 +307,6 @@ class TestFST(unittest.TestCase):
         self.assertEqual('   ', ast.body[0].body[0].f.get_indent())
         self.assertEqual('   ' + ast.f.root.indent, ast.body[0].body[0].body[0].f.get_indent())
 
-    def test_snip(self):
-        src = 'class cls:\n if True:\n  i = 1\n else:\n  j = 2'
-        ast = parse(src)
-
-        self.assertEqual(src.split('\n'), ast.f.snip())
-        self.assertEqual(src.split('\n'), ast.body[0].f.snip())
-        self.assertEqual('if True:\n  i = 1\n else:\n  j = 2'.split('\n'), ast.body[0].body[0].f.snip())
-        self.assertEqual(['i = 1'], ast.body[0].body[0].body[0].f.snip())
-        self.assertEqual(['j = 2'], ast.body[0].body[0].orelse[0].f.snip())
-
-        self.assertEqual(['True:', '  i'], ast.f.root.sniploc(1, 4, 2, 3))
-
-    def test_get_indent(self):
         self.assertEqual('   ', parse('def f():\n   1').body[0].body[0].f.get_indent())
         self.assertEqual('    ', parse('def f(): 1').body[0].body[0].f.get_indent())
         self.assertEqual('    ', parse('def f(): \\\n  1').body[0].body[0].f.get_indent())
@@ -172,6 +351,10 @@ class TestFST(unittest.TestCase):
 
         self.assertEqual({1, 2, 5, 7, 8, 9, 10}, ast.f.get_indentable_lns())
         self.assertEqual({0, 1, 2, 5, 7, 8, 9, 10}, ast.f.get_indentable_lns(0))
+
+    def test_line_ast_ends(self):
+        self.assertEqual([0, 6, 11, 10, 5, 6],
+                         parse('class cls:\n @deco\n def f(self):\n  """ this\n  """\n  that').f.get_line_ast_ends())
 
     def test__offset(self):
         src = 'i = 1\nj = 2\nk = 3'
