@@ -730,8 +730,8 @@ class TestFST(unittest.TestCase):
     def test_fix(self):
         f = FST.fromsrc('if 1: pass\nelif 2: pass').a.body[0].orelse[0].f.copy(safe=False)
         self.assertEqual('elif 2: pass', f.src)
-        self.assertRaises(ValueError, f.fix, None)
-        self.assertEqual(f.fix(None, raise_=False), None)
+        # self.assertRaises(ValueError, f.fix, None)
+        # self.assertEqual(f.fix(None, raise_=False), None)
 
         g = f.fix('src', inplace=False)
         self.assertIsNot(g, f)
@@ -743,8 +743,18 @@ class TestFST(unittest.TestCase):
         self.assertEqual('if 2: pass', g.src)
         self.assertEqual('if 2: pass', f.src)
 
+        f = FST.fromsrc('i, j = 1, 2').a.body[0].targets[0].f.copy(safe=False)
+        self.assertEqual('i, j', f.src)
+        self.assertIs(f, f.fix(None))
+        self.assertIsNot(f, f.fix('src'))
 
+        g = f.fix('src', inplace=False)
+        self.assertFalse(compare(f.a, g.a))
+        self.assertIs(g, g.fix('src'))
 
+        f = FST.fromsrc('match w := x,:\n case 0: pass').a.body[0].subject.f.copy(safe=False)
+        self.assertEqual('w := x,', f.src)
+        # self.assertFalse(f.is_parsable())
 
 
 

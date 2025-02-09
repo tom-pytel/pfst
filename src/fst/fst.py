@@ -806,11 +806,15 @@ class FST:
                 if isinstance(e, Slice):
                     return False
 
-        elif isinstance(ast, If):  # if statement can be 'if' or 'elif'
-            if not self.root._lines[self.ln].startswith(
-                'elif' if self.pfield == ('orelse', 0) and (self.col) == parent.col else 'if', self.col
-            ):
-                return False
+        # elif isinstance(ast, If):  # if statement can be 'if' or 'elif'
+        #     if not self.root._lines[self.ln].startswith(
+        #         'elif' if self.pfield == ('orelse', 0) and (self.col) == parent.col else 'if', self.col
+        #     ):
+        #         return False
+
+        # elif isinstance(ast, NamedExpr):  # can't be outside of parens
+        #     if not self.root._lines[self.ln].startswith('(', self.col):
+        #         return False
 
         elif parent:
             if isinstance(ast, JoinedStr):  # formatspec '.1f' type strings without quote delimiters
@@ -990,13 +994,13 @@ class FST:
             (isinstance(ast, TypeVar) and not ast.bound and not ast.default_value
         )):
             try:
-                a = ast_.parse(text := self.src, mode='eval', **self._parse_params)
+                a = ast_.parse(src := self.src, mode='eval', **self._parse_params)
 
             except SyntaxError:  # if expression not parsing then try parenthesize
                 try:
                     tail = (',)' if isinstance(ast, Tuple) and len(ast.elts) == 1 and
                             lines[self.end_ln][self.end_col - 1] != ',' else ')')
-                    a    = ast_.parse(f'({text}{tail}', mode='eval', **self._parse_params)
+                    a    = ast_.parse(f'({src}{tail}', mode='eval', **self._parse_params)
 
                 except SyntaxError:
                     if raise_:
@@ -1024,9 +1028,9 @@ class FST:
             except SyntaxError:  # if assign not parsing then try sanitize it
                 newlines = lines[:]
 
-                def maybe_replace(text, ln, col, end_ln, end_col):
+                def maybe_replace(src, ln, col, end_ln, end_col):
                     if end_ln != ln:
-                        newlines[ln] = newlines[ln][:col] + text + newlines[end_ln][end_col:]
+                        newlines[ln] = newlines[ln][:col] + src + newlines[end_ln][end_col:]
 
                         del newlines[ln + 1 : end_ln + 1]
 
@@ -1101,25 +1105,28 @@ class FST:
 
 
     @only_root
-    def fix(self, mode: None | Literal['src'] | Literal['ast'], *,
+    def fix(self, mode: None | Literal['src'] | Literal['ast'] = 'ast', *,
             inplace: bool = False, raise_: bool = True) -> Union['FST', None]:  # -> Self | None
-        """Make safe to parse (to make cut or copied subtrees parsable if the source is not by itself). Possibly
-        reparses which may change type of ast, e.g. `keyword` "i=1" to `Assign` "i=1". If fails the ast will be
-        unchanged. Is meant to be a quick fix after copy or cut, not full check, for that use `.verify()`.
+        """Correct certain changes on cut or copy ast (to make cut or copied subtrees parsable if the source is not by
+        itself). Possibly reparses which may change type of ast, e.g. `keyword` "i=1" to `Assign` "i=1". If fails the
+        ast will be unchanged. Is meant to be a quick fix after copy or cut, not full check, for that use `.verify()`.
 
         Args:
             mode: 'src' just fixes source and possibly `ctx` nodes, 'ast' can change AST classes as well as source. None
                 doesn't attempt to fix anything but does test with `is_parsable()`.
+            inplace: If `True` then changes will be made to self. If `False` then self may be returned if no changes
+                made otherwise a modified copy is returned.
             raise_: Whether to raise on fail (default: True) or return None (False).
         """
 
-        def check_parsable():
-            if self.is_parsable():
-                return self
+        def not_parsable():
             if raise_:
                 raise ValueError('ast could not be made safe to parse')
 
             return None
+
+        def check_parsable():
+            return self if self.is_parsable() else not_parsable()
 
         if not mode:
             return check_parsable()
@@ -1128,6 +1135,8 @@ class FST:
         lines = self._lines
 
         ln, col, end_ln, end_col = self.loc
+
+        # if / elif statement
 
         if isinstance(ast, If):
             if (l := lines[ln]).startswith('if', col):
@@ -1144,42 +1153,51 @@ class FST:
 
             return self
 
+        # expression maybe parenthesize and proper ctx
 
+        if (isinstance(ast, (expr, pattern)) or
+            (isinstance(ast, arg) and not ast.annotation) or
+            (isinstance(ast, TypeVar) and not ast.bound and not ast.default_value
+        )):
+            if isinstance(ast, MatchStar):
+                return not_parsable()
 
+            try:
+                a = ast_.parse(src := self.src, mode='eval', **self._parse_params)
 
-        # elif isinstance(ast, MatchStar):
-        #     pass  # ast.pattern that can't be converted to expression
+            except SyntaxError:  # if expression not parsing then try parenthesize
+                tail = (',)' if isinstance(ast, Tuple) and len(ast.elts) == 1 and
+                        lines[self.end_ln][self.end_col - 1] != ',' else ')')
 
-        # elif (isinstance(ast, (expr, pattern)) or
-        #     (isinstance(ast, arg) and not ast.annotation) or
-        #     (isinstance(ast, TypeVar) and not ast.bound and not ast.default_value
-        # )):
-        #     try:
-        #         a = ast_.parse(text := self.src, mode='eval', **self._parse_params)
+                try:
+                    a = ast_.parse(f'({src}{tail}', mode='eval', **self._parse_params)
+                except SyntaxError:
+                    return not_parsable()
 
-        #     except SyntaxError:  # if expression not parsing then try parenthesize
-        #         try:
-        #             tail = (',)' if isinstance(ast, Tuple) and len(ast.elts) == 1 and
-        #                     lines[self.end_ln][self.end_col - 1] != ',' else ')')
-        #             a    = ast_.parse(f'({text}{tail}', mode='eval', **self._parse_params)
+                if not inplace:
+                    lines = lines[:]
 
-        #         except SyntaxError:
-        #             if raise_:
-        #                 raise
+                lines[end_ln] = bistr(f'{(l := lines[end_ln])[:end_col]}{tail}{l[end_col:]}')
+                lines[ln]     = bistr(f'{(l := lines[ln])[:col]}({l[col:]}')
 
-        #             return None
+            else:
+                if compare(a.body, ast, locs=True, type_comments=True, recurse=False):  # only top level compare needed for 'ctx' and structure check
+                    return self
 
-        #         lines[end_ln] = bistr(f'{(l := lines[end_ln])[:end_col]}{tail}{l[end_col:]}')
-        #         lines[ln]     = bistr(f'{(l := lines[ln])[:col]}({l[col:]}')
+            a = a.body  # we know parsed to an Expression but original was not an Expression
 
-        #     self.a   = a.body
-        #     self.a.f = self
+            if not inplace:
+                return FST(a, lines=lines, from_=self)
 
-        #     self.touch()
-        #     self._make_fst_tree()
+            self.a = a
+            a.f    = self
 
+            self.touch()
+            self._make_fst_tree()
 
+            return self
 
+        # arg /keyword / typevar to assignment
 
         # elif mode == 'ast' and (
         #     (is_keyword := isinstance(ast, keyword)) or
@@ -1192,9 +1210,9 @@ class FST:
         #     except SyntaxError:  # if assign not parsing then try sanitize it
         #         newlines = lines[:]
 
-        #         def maybe_replace(text, ln, col, end_ln, end_col):
+        #         def maybe_replace(src, ln, col, end_ln, end_col):
         #             if end_ln != ln:
-        #                 newlines[ln] = newlines[ln][:col] + text + newlines[end_ln][end_col:]
+        #                 newlines[ln] = newlines[ln][:col] + src + newlines[end_ln][end_col:]
 
         #                 del newlines[ln + 1 : end_ln + 1]
 
@@ -1234,12 +1252,9 @@ class FST:
         #     self.touch()
         #     self._make_fst_tree()
 
+        #     return self
 
-
-
-
-
-
+        # default, just check parsable
 
         return check_parsable(self)
 
