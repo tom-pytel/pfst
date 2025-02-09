@@ -496,7 +496,7 @@ class FST:
             else:
                 astp = astp.body[0]
 
-        if not compare(astp, ast, locations=True, type_comments=parse_params['type_comments'], do_raise=do_raise):
+        if not compare(astp, ast, locs=True, type_comments=parse_params['type_comments'], do_raise=do_raise):
             return None
 
         return self

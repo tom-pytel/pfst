@@ -78,6 +78,21 @@ class TestUtil(unittest.TestCase):
     # TODO: other tests
 
 
+    def test_compare(self):
+        ast1 = ast_.parse('def f():\n  i = 1\n  j = 2').body[0]
+        ast2 = ast_.parse('def f():\n  i = 1\n  j = 2').body[0]
+        ast3 = ast_.parse('def f():\n  i = 1\n  j =  2').body[0]
+        ast4 = ast_.parse('def f():\n  i = 1\n  k = 3').body[0]
+        ast5 = ast_.parse('def f():\n  i = 1').body[0]
+
+        self.assertTrue(compare(ast1, ast2))
+        self.assertTrue(compare(ast1, ast3, locs=False))
+        self.assertRaises(WalkFail, compare, ast1, ast3, locs=True)
+        self.assertFalse(compare(ast1, ast3, locs=True, do_raise=False))
+        self.assertFalse(compare(ast1, ast4, do_raise=False))
+        self.assertTrue(compare(ast1, ast4, recurse=False, do_raise=False))
+        self.assertFalse(compare(ast1, ast5, recurse=False, do_raise=False))
+
     def test_copy(self):
         for fnm in PYFNMS:
             with open(fnm) as f:
@@ -87,7 +102,7 @@ class TestUtil(unittest.TestCase):
                 ast = ast_.parse(src, type_comments=type_comments)
                 dst = copy(ast)
 
-                compare(ast, dst, locations=True, type_comments=type_comments, do_raise=True)
+                compare(ast, dst, locs=True, type_comments=type_comments, do_raise=True)
 
 
 if __name__ == '__main__':

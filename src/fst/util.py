@@ -291,18 +291,18 @@ def get_parse_mode(ast: AST) -> Literal['exec'] | Literal['eval'] | Literal['sin
 
 class WalkFail(Exception): pass
 
-def walk2(ast1: AST, ast2: AST, cb_primitive: Callable[[Any, Any, str, int], bool] | None = None) -> Iterator[tuple[AST, AST]]:
+def walk2(ast1: AST, ast2: AST, cb_primitive: Callable[[Any, Any, str, int], bool] | None = None, *,
+          recurse: bool = True) -> Iterator[tuple[AST, AST]]:
     """Walk two asts simultaneously ensuring they have the same structure."""
 
     if ast1.__class__ is not ast2.__class__:
         raise WalkFail(f"top level nodes differ in '{ast1.__class__.__qualname__}' vs. '{ast1.__class__.__qualname__}'")
 
-    stack1 = [ast1]
-    stack2 = [ast2]
+    stack      = [(ast1, ast2)]
+    next_stack = stack if recurse else []
 
-    while stack1 and stack2:
-        a1 = stack1.pop()
-        a2 = stack2.pop()
+    while stack:
+        a1, a2 = stack.pop()
 
         yield a1, a2
 
@@ -322,8 +322,7 @@ def walk2(ast1: AST, ast2: AST, cb_primitive: Callable[[Any, Any, str, int], boo
                                    f"'{child1.__class__.__qualname__}' vs. '{child2.__class__.__qualname__}'")
 
                 if is_ast:
-                    stack1.append(child1)
-                    stack2.append(child2)
+                    stack.append((child1, child2))
 
                 elif len(child1) != len(child2):
                     raise WalkFail(f"child list lengths differ at .{name1} in '{a1.__class__.__qualname__}'")
@@ -338,8 +337,7 @@ def walk2(ast1: AST, ast2: AST, cb_primitive: Callable[[Any, Any, str, int], boo
                                 raise WalkFail(f"child element classes differ at .{name1}[{i}] in '{a1.__class__.__qualname__}', "
                                                f"'{c1.__class__.__qualname__}' vs. '{c2.__class__.__qualname__}'")
 
-                            stack1.append(c1)
-                            stack2.append(c2)
+                            stack.append((c1, c2))
 
                         elif cb_primitive and cb_primitive(c1, c2, name1, i) is False:
                             raise WalkFail(f"primitives differ at .{name1}[{i}] in '{a1.__class__.__qualname__}', {c1!r} vs. {c2!r}")
@@ -347,8 +345,7 @@ def walk2(ast1: AST, ast2: AST, cb_primitive: Callable[[Any, Any, str, int], boo
             elif cb_primitive and cb_primitive(child1, child2, name1, None) is False:
                 raise WalkFail(f"primitives differ at .{name1} in '{a1.__class__.__qualname__}', {child1!r} vs. {child2!r}")
 
-    if stack1 or stack2:
-        raise WalkFail('structure lengths differ')
+        stack = next_stack
 
     return True
 
@@ -358,14 +355,15 @@ compare_primitive_type_comments_func = (
     (lambda p1, p2, n, i: p1.__class__ is p2.__class__ and p1 == p2),
 )
 
-def compare(ast1: AST, ast2: AST, *, locations: bool = False, type_comments: bool = False, do_raise: bool = True) -> bool:
+def compare(ast1: AST, ast2: AST, *, locs: bool = False, type_comments: bool = False, recurse: bool = True,
+            do_raise: bool = True) -> bool:
     """Copy two trees including possibly locations and type comments."""
 
     cb_primitive = compare_primitive_type_comments_func[bool(type_comments)]
 
     try:
-        for n1, n2 in walk2(ast1, ast2, cb_primitive):
-            if locations:
+        for n1, n2 in walk2(ast1, ast2, cb_primitive, recurse=recurse):
+            if locs:
                 if (getattr(n1, 'lineno', None) != getattr(n2, 'lineno', None) or
                     getattr(n1, 'col_offset', None) != getattr(n2, 'col_offset', None) or
                     getattr(n1, 'end_lineno', None) != getattr(n2, 'end_lineno', None) or
