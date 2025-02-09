@@ -99,22 +99,22 @@ class FST:
         return self.parent is None
 
     @property
-    def lines(self) -> list[str]:
+    def lines(self) -> list[str] | None:
         if self.is_root:
             return self._lines
         elif loc := self.loc:
             return self.root._lines[loc.ln : loc.end_ln + 1]
         else:
-            return self.parent.lines
+            return None
 
     @property
-    def text(self) -> str:
+    def text(self) -> str | None:
         if self.is_root:
             return '\n'.join(self._lines)
         elif loc := self.loc:
             return '\n'.join(self.sniploc(*loc))
         else:
-            return self.parent.text
+            return None
 
     @property
     def loc(self) -> fstloc | None:
@@ -782,9 +782,13 @@ class FST:
         return None
 
     def next_child(self, from_child: Union['FST', None], loc: bool = True) -> Union['FST', None]:
+        """Meant for simple iteration."""
+
         return self.first_child(loc) if from_child is None else from_child.next(loc)
 
     def prev_child(self, from_child: Union['FST', None], loc: bool = True) -> Union['FST', None]:
+        """Meant for simple iteration."""
+
         return self.last_child(loc) if from_child is None else from_child.prev(loc)
 
     def is_parsable(self) -> bool:
@@ -822,7 +826,7 @@ class FST:
         return self.sniploc(*self.loc)
 
     def snip_text(self) -> str:
-        return '\n'.join(self.snip())
+        return '\n'.join(self.sniploc(*self.loc))
 
     def get_indent(self) -> str:
         """Determine proper indentation of node at `stmt` (or other similar) level at or above self, otherwise at root
