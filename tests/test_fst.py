@@ -43,30 +43,30 @@ class TestFST(unittest.TestCase):
         self.assertEqual((5, 2, 5, 18), ast.body[0].body[0].body[0].f.loc)
         self.assertEqual((4, 2, 5, 18), ast.body[0].body[0].body[0].f.bloc)
 
-    def test_from_src_bulk(self):
+    def test_fromsrc_bulk(self):
         for fnm in PYFNMS:
-            fst = FST.from_src(read(fnm))
+            fst = FST.fromsrc(read(fnm))
 
             walktest(fst.a)
             fst.verify(do_raise=True)
 
-    def test_from_ast_calc_loc_False_bulk(self):
+    def test_fromast_calc_loc_False_bulk(self):
         for fnm in PYFNMS:
-            fst = FST.from_ast(ast_.parse(ast_.unparse(ast_.parse(read(fnm)))), calc_loc=False)
+            fst = FST.fromast(ast_.parse(ast_.unparse(ast_.parse(read(fnm)))), calc_loc=False)
 
             walktest(fst.a)
             fst.verify(do_raise=True)
 
-    def test_from_ast_calc_loc_True_bulk(self):
+    def test_fromast_calc_loc_True_bulk(self):
         for fnm in PYFNMS:
-            fst = FST.from_ast(ast_.parse(read(fnm)), calc_loc=True)
+            fst = FST.fromast(ast_.parse(read(fnm)), calc_loc=True)
 
             walktest(fst.a)
             fst.verify(do_raise=True)
 
-    def test_from_ast_calc_loc_copy_bulk(self):
+    def test_fromast_calc_loc_copy_bulk(self):
         for fnm in PYFNMS:
-            fst = FST.from_ast(ast_.parse(read(fnm)), calc_loc='copy')
+            fst = FST.fromast(ast_.parse(read(fnm)), calc_loc='copy')
 
             walktest(fst.a)
             fst.verify(do_raise=True)
@@ -355,21 +355,21 @@ class TestFST(unittest.TestCase):
         # self.assertEqual('@decorator\nclass cls:\npass', ast.f.text)
 
     def test_safe(self):
-        f = FST.from_src('if 1:\n a\nelif 2:\n b')
+        f = FST.fromsrc('if 1:\n a\nelif 2:\n b')
         fc = f.a.body[0].orelse[0].f.copy(safe=False, do_raise=True)
         self.assertEqual(fc.lines[0], 'elif 2:')
         fc.safe()
         self.assertEqual(fc.lines[0], 'if 2:')
         fc.verify(do_raise=True)
 
-        f = FST.from_src('(1 +\n2)')
+        f = FST.fromsrc('(1 +\n2)')
         fc = f.a.body[0].value.f.copy(safe=False, do_raise=True)
         self.assertEqual(fc.text, '1 +\n2')
         fc.safe()
         self.assertEqual(fc.text, '(1 +\n2)')
         fc.verify(do_raise=True)
 
-        f = FST.from_src('i = 1')
+        f = FST.fromsrc('i = 1')
         self.assertIs(f.a.body[0].targets[0].ctx.__class__, Store)
         fc = f.a.body[0].targets[0].f.copy(safe=False, do_raise=True)
         self.assertIs(fc.a.ctx.__class__, Store)
@@ -377,7 +377,7 @@ class TestFST(unittest.TestCase):
         self.assertIs(fc.a.ctx.__class__, Load)
         fc.verify(do_raise=True)
 
-        f = FST.from_src('match a:\n case 2: pass')
+        f = FST.fromsrc('match a:\n case 2: pass')
         f = f.a.body[0].cases[0].pattern.f.copy(safe=False, do_raise=True)
         self.assertIs(f.a.__class__, MatchValue)
         f.safe(do_raise=True)
@@ -385,7 +385,7 @@ class TestFST(unittest.TestCase):
         self.assertEqual(f.a.value, 2)
         f.verify(do_raise=True)
 
-        f = FST.from_src('match a:\n case True: pass')
+        f = FST.fromsrc('match a:\n case True: pass')
         f = f.a.body[0].cases[0].pattern.f.copy(safe=False, do_raise=True)
         self.assertIs(f.a.__class__, MatchSingleton)
         f.safe(do_raise=True)
@@ -393,35 +393,35 @@ class TestFST(unittest.TestCase):
         self.assertIs(f.a.value, True)
         f.verify(do_raise=True)
 
-        f = FST.from_src('match a:\n case (1, a): pass')
+        f = FST.fromsrc('match a:\n case (1, a): pass')
         f = f.a.body[0].cases[0].pattern.f.copy(safe=False, do_raise=True)
         self.assertIs(f.a.__class__, MatchSequence)
         f.safe(do_raise=True)
         self.assertIs(f.a.__class__, Tuple)
         f.verify(do_raise=True)
 
-        f = FST.from_src('match a:\n case [1, a]: pass')
+        f = FST.fromsrc('match a:\n case [1, a]: pass')
         f = f.a.body[0].cases[0].pattern.f.copy(safe=False, do_raise=True)
         self.assertIs(f.a.__class__, MatchSequence)
         f.safe(do_raise=True)
         self.assertIs(f.a.__class__, List)
         f.verify(do_raise=True)
 
-        f = FST.from_src('match a:\n case {1: a}: pass')
+        f = FST.fromsrc('match a:\n case {1: a}: pass')
         f = f.a.body[0].cases[0].pattern.f.copy(safe=False, do_raise=True)
         self.assertIs(f.a.__class__, MatchMapping)
         f.safe(do_raise=True)
         self.assertIs(f.a.__class__, Dict)
         f.verify(do_raise=True)
 
-        f = FST.from_src('match a:\n case a: pass')
+        f = FST.fromsrc('match a:\n case a: pass')
         f = f.a.body[0].cases[0].pattern.f.copy(safe=False, do_raise=True)
         self.assertIs(f.a.__class__, MatchAs)
         f.safe(do_raise=True)
         self.assertIs(f.a.__class__, Name)
         f.verify(do_raise=True)
 
-        f = FST.from_src('match a:\n case 1 | 2: pass')
+        f = FST.fromsrc('match a:\n case 1 | 2: pass')
         f = f.a.body[0].cases[0].pattern.f.copy(safe=False, do_raise=True)
         self.assertIs(f.a.__class__, MatchOr)
         f.safe(do_raise=True)
@@ -429,7 +429,7 @@ class TestFST(unittest.TestCase):
         self.assertIs(f.a.op.__class__, BitOr)
         f.verify(do_raise=True)
 
-        f = FST.from_src('def f( \n a \n : \n int \n ): pass')
+        f = FST.fromsrc('def f( \n a \n : \n int \n ): pass')
         f = f.a.body[0].args.args[0].f.copy(safe=False, do_raise=True)
         self.assertIs(f.a.__class__, arg)
         f.safe(do_raise=True)
@@ -437,7 +437,7 @@ class TestFST(unittest.TestCase):
         self.assertEqual(f.text, 'a: int')
         f.verify(do_raise=True)
 
-        f = FST.from_src('f( \n a \n = \n 1 \n )')
+        f = FST.fromsrc('f( \n a \n = \n 1 \n )')
         f = f.a.body[0].value.keywords[0].f.copy(safe=False, do_raise=True)
         self.assertIs(f.a.__class__, keyword)
         f.safe(do_raise=True)
@@ -446,7 +446,7 @@ class TestFST(unittest.TestCase):
         f.verify(do_raise=True)
 
         if sys.version_info[:2] >= (3, 12):
-            f = FST.from_src('type t[T] = ...')
+            f = FST.fromsrc('type t[T] = ...')
             f = f.a.body[0].type_params[0].f.copy(safe=False, do_raise=True)
             self.assertIs(f.a.__class__, TypeVar)
             f.safe(do_raise=True)
@@ -454,7 +454,7 @@ class TestFST(unittest.TestCase):
             self.assertEqual(f.a.id, "T")
             f.verify(do_raise=True)
 
-            f = FST.from_src('type t[T: int] = ...')
+            f = FST.fromsrc('type t[T: int] = ...')
             f = f.a.body[0].type_params[0].f.copy(safe=False, do_raise=True)
             self.assertIs(f.a.__class__, TypeVar)
             f.safe(do_raise=True)
@@ -468,7 +468,7 @@ class TestFST(unittest.TestCase):
             self.assertIs(f.a.value, None)
             f.verify(do_raise=True)
 
-            f = FST.from_src('type t[T = str] = ...')
+            f = FST.fromsrc('type t[T = str] = ...')
             f = f.a.body[0].type_params[0].f.copy(safe=False, do_raise=True)
             self.assertIs(f.a.__class__, TypeVar)
             f.safe(do_raise=True)
@@ -482,7 +482,7 @@ class TestFST(unittest.TestCase):
             self.assertEqual(f.a.value.id, "str")
             f.verify(do_raise=True)
 
-            f = FST.from_src('type t[T: int = str] = ...')
+            f = FST.fromsrc('type t[T: int = str] = ...')
             f = f.a.body[0].type_params[0].f.copy(safe=False, do_raise=True)
             self.assertIs(f.a.__class__, TypeVar)
             f.safe(do_raise=True)
@@ -498,7 +498,7 @@ class TestFST(unittest.TestCase):
             self.assertEqual(f.a.value.id, "str")
             f.verify(do_raise=True)
 
-            f = FST.from_src('type t[\n T \n : \n int \n = \n str \n] = ...')
+            f = FST.fromsrc('type t[\n T \n : \n int \n = \n str \n] = ...')
             f = f.a.body[0].type_params[0].f.copy(safe=False, do_raise=True)
             self.assertIs(f.a.__class__, TypeVar)
             f.safe(do_raise=True)
@@ -508,7 +508,7 @@ class TestFST(unittest.TestCase):
 
     def test_copy_bulk(self):
         for fnm in PYFNMS:
-            ast = FST.from_src(read(fnm)).a
+            ast = FST.fromsrc(read(fnm)).a
 
             for a in walk(ast):
                 if a.f.is_parsable():
@@ -516,11 +516,11 @@ class TestFST(unittest.TestCase):
                     f.verify(do_raise=True)
 
     def test_copy(self):
-        f = FST.from_src('@decorator\nclass cls:\n  pass')
+        f = FST.fromsrc('@decorator\nclass cls:\n  pass')
         self.assertEqual(f.a.body[0].f.copy(safe=False, do_raise=True).text, '@decorator\nclass cls:\n  pass')
         self.assertEqual(f.a.body[0].f.copy(decorators=False, safe=False, do_raise=True).text, 'class cls:\n  pass')
 
-        l = FST.from_src("['\\u007f', '\\u0080', 'ʁ', 'ᛇ', '時', '🐍', '\\ud800', 'Źdźbło']").a.body[0].value.elts
+        l = FST.fromsrc("['\\u007f', '\\u0080', 'ʁ', 'ᛇ', '時', '🐍', '\\ud800', 'Źdźbło']").a.body[0].value.elts
         self.assertEqual("'\\u007f'", l[0].f.copy().text)
         self.assertEqual("'\\u0080'", l[1].f.copy().text)
         self.assertEqual("'ʁ'", l[2].f.copy().text)
@@ -530,15 +530,15 @@ class TestFST(unittest.TestCase):
         self.assertEqual("'\\ud800'", l[6].f.copy().text)
         self.assertEqual("'Źdźbło'", l[7].f.copy().text)
 
-        f = FST.from_src('match w := x,:\n case 0: pass').a.body[0].subject.f.copy(safe=True)
+        f = FST.fromsrc('match w := x,:\n case 0: pass').a.body[0].subject.f.copy(safe=True)
         self.assertEqual('(w := x,)', f.text)
 
-        f = FST.from_src('a[1:2, 3:4]').a.body[0].value.slice.f.copy(safe=False)
+        f = FST.fromsrc('a[1:2, 3:4]').a.body[0].value.slice.f.copy(safe=False)
         self.assertRaises(SyntaxError, f.safe)
         self.assertIs(None, f.safe(do_raise=False))
 
         if sys.version_info[:2] >= (3, 12):
-            f = FST.from_src('tuple[*tuple[int, ...]]').a.body[0].value.slice.f.copy(safe=True)
+            f = FST.fromsrc('tuple[*tuple[int, ...]]').a.body[0].value.slice.f.copy(safe=True)
             self.assertEqual('(*tuple[int, ...],)', f.text)
 
 

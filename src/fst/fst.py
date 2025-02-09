@@ -66,7 +66,7 @@ def only_root(func):
 
 
 def parse(source, filename='<unknown>', mode='exec', *args, type_comments=False, feature_version=None, **kwargs):
-    return FST.from_src(source, filename, mode, *args, type_comments=type_comments, feature_version=feature_version, **kwargs).a
+    return FST.fromsrc(source, filename, mode, *args, type_comments=type_comments, feature_version=feature_version, **kwargs).a
 
 
 def unparse(ast_obj):
@@ -416,7 +416,7 @@ class FST:
         return f'<fst{rast[4 : -1]}{tail}>' if rast.startswith('<') else f'fst.{rast[:-1]}{tail})'
 
     @staticmethod
-    def from_src(source: str | bytes | list[str], filename: str = '<unknown>', mode: str = 'exec', *,
+    def fromsrc(source: str | bytes | list[str], filename: str = '<unknown>', mode: str = 'exec', *,
                  type_comments: bool = False, feature_version: tuple[int, int] | None = None, **parse_params) -> 'FST':
         if isinstance(source, bytes):
             source = source.decode()
@@ -433,7 +433,7 @@ class FST:
         return FST(ast, lines=lines, parse_params=parse_params)
 
     @staticmethod
-    def from_ast(ast: AST, *, calc_loc: bool | Literal['copy'] = True,
+    def fromast(ast: AST, *, calc_loc: bool | Literal['copy'] = True,
                  type_comments: bool | None = False, feature_version=None, **parse_params) -> 'FST':
         """Add FST to existing AST, optionally copying positions from reparsed AST (default) or whole AST for new FST.
 
