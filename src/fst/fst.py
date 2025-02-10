@@ -1106,29 +1106,35 @@ class FST:
 
         return self
 
-    def copy(self, *, decorators: bool = True, fix: bool | Literal['mutate'] = True) -> 'FST':
-        ast = copy(self.a)
 
-        if self.is_root:
-            return FST(ast, lines=self._lines[:], from_=self)
 
-        if not (loc := self.bloc if decorators else self.loc):
-            raise ValueError('cannot copy ast which does not have location')
-
-        if not decorators and hasattr(ast, 'decorator_list'):
-            ast.decorator_list.clear()
-
-        # ...
-        indent = self.get_indent()
+    def _copy_and_dedent(self, indentfst: AST, newast: AST, loc: fstloc, prefix_len: int = 0) -> 'FST':
+        indent = indentfst.get_indent()
         lines  = self.root._lines
-        fst    = FST(ast, lines=lines, from_=self)  # we use original lines for nodes offset calc before putting new lines
+        fst    = FST(newast, lines=lines, from_=self)  # we use original lines for nodes offset calc before putting new lines
 
-        fst._offset(loc.ln, loc.col, -loc.ln, -lines[loc.ln].c2b(loc.col))
+        fst._offset(loc.ln, loc.col, -loc.ln, -lines[loc.ln].c2b(loc.col - prefix_len))
 
         fst._lines = self.sniploc(*loc)
 
         fst._dedent_tail(indent)
-        # ...
+
+        return fst
+
+
+    def copy(self, *, decorators: bool = True, fix: bool | Literal['mutate'] = True) -> 'FST':
+        newast = copy(self.a)
+
+        if self.is_root:
+            return FST(newast, lines=self._lines[:], from_=self)
+
+        if not (loc := self.bloc if decorators else self.loc):
+            raise ValueError('cannot copy ast which does not have location')
+
+        if not decorators and hasattr(newast, 'decorator_list'):
+            newast.decorator_list.clear()
+
+        fst = self._copy_and_dedent(self, newast, loc)
 
         return fst.fix(mutate=(fix == 'mutate'), inplace=True) if fix else fst
 
@@ -1187,17 +1193,7 @@ class FST:
             newast.body[0].col_offset += 2
             loc                        = fstloc(loc.ln, loc.col + 2, loc.end_ln, loc.end_col)
 
-        # ...
-        indent = afirst.f.get_indent()
-        lines  = self.root._lines
-        fst    = FST(newast, lines=lines, from_=self)  # we use original lines for nodes offset calc before putting new lines
-
-        fst._offset(loc.ln, loc.col, -loc.ln, -lines[loc.ln].c2b(loc.col))
-
-        fst._lines = self.sniploc(*loc)
-
-        fst._dedent_tail(indent)
-        # ...
+        fst = self._copy_and_dedent(afirst.f, newast, loc)
 
         return fst
 
@@ -1251,19 +1247,7 @@ class FST:
                 prefix = '['
                 suffix = ']'
 
-        newast = Expression(body=newseq)
-
-        # ...
-        indent = afirst.f.get_indent()
-        lines  = self.root._lines
-        fst    = FST(newast, lines=lines, from_=self)  # we use original lines for nodes offset calc before putting new lines
-
-        fst._offset(loc.ln, loc.col, -loc.ln, -lines[loc.ln].c2b(loc.col - 1))  # loc.col-1 to account for prefix that will be added
-
-        fst._lines = self.sniploc(*loc)
-
-        fst._dedent_tail(indent)
-        # ...
+        fst = self._copy_and_dedent(afirst.f, Expression(body=newseq), loc, 1)
 
         lines                 = fst._lines
         lines[-1]             = bistr(lines[-1] + suffix)
