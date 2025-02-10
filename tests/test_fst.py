@@ -24,6 +24,11 @@ def walktest(ast):
         ast.f.loc
 
 
+def dumptest(self, fst, dump, src):
+    self.assertEqual(dump.strip(), '\n'.join(fst.dump(print=False)))
+    self.assertEqual(src, fst.src)
+
+
 class TestFST(unittest.TestCase):
     def test_loc(self):
         # from children
@@ -822,6 +827,392 @@ class TestFST(unittest.TestCase):
         if sys.version_info[:2] >= (3, 12):
             f = FST.fromsrc('tuple[*tuple[int, ...]]').a.body[0].value.slice.f.copy(fix=True)
             self.assertEqual('(*tuple[int, ...],)', f.src)
+
+    def test_slice(self):
+        self.assertEqual('\n'.join(parse("""
+def f():
+    i = 1
+    j = 1
+    k = 1
+    l = 1
+            """.strip()).body[0].f.slice(-2).dump(print=False)), """
+Module .. ROOT 0,0 -> 1,5
+  .body[2]
+  0] Assign .. 0,0 -> 0,5
+    .targets[1]
+    0] Name .. 0,0 -> 0,1
+      .id
+        'k'
+      .ctx
+        Store
+    .value
+      Constant .. 0,4 -> 0,5
+        .value
+          1
+        .kind
+          None
+    .type_comment
+      None
+  1] Assign .. 1,0 -> 1,5
+    .targets[1]
+    0] Name .. 1,0 -> 1,1
+      .id
+        'l'
+      .ctx
+        Store
+    .value
+      Constant .. 1,4 -> 1,5
+        .value
+          1
+        .kind
+          None
+    .type_comment
+      None
+            """.strip())
+
+        self.assertEqual('\n'.join(parse("""
+try: pass
+except ValueError: pass
+except RuntimeError: pass
+except IndexError: pass
+except TypeError: pass
+            """.strip()).body[0].f.slice(-1, field='handlers').dump(print=False)), """
+Module .. ROOT 0,0 -> 0,22
+  .body[1]
+  0] ExceptHandler .. 0,0 -> 0,22
+    .type
+      Name .. 0,7 -> 0,16
+        .id
+          'TypeError'
+        .ctx
+          Load
+    .name
+      None
+    .body[1]
+    0] Pass .. 0,18 -> 0,22
+            """.strip())
+
+        self.assertEqual('\n'.join(parse("""
+match a:
+    case 1: pass
+    case f: pass
+    case None: pass
+    case 3 | 4: pass
+            """.strip()).body[0].f.slice(1, 3).dump(print=False)), """
+Module .. ROOT 0,0 -> 1,15
+  .body[2]
+  0] match_case .. 0,0 -> 0,7
+    .pattern
+      MatchAs .. 0,0 -> 0,1
+        .pattern
+          None
+        .name
+          'f'
+    .guard
+      None
+    .body[1]
+    0] Pass .. 0,3 -> 0,7
+  1] match_case .. 1,5 -> 1,15
+    .pattern
+      MatchSingleton .. 1,5 -> 1,9
+        .value
+          None
+    .guard
+      None
+    .body[1]
+    0] Pass .. 1,11 -> 1,15
+            """.strip())
+
+
+        dumptest(self, parse("""
+if 1: pass
+elif 2: pass
+            """.strip()).body[0].f.slice(field='orelse'), """
+Module .. ROOT 0,0 -> 0,10
+  .body[1]
+  0] If .. 0,0 -> 0,10
+    .test
+      Constant .. 0,3 -> 0,4
+        .value
+          2
+        .kind
+          None
+    .body[1]
+    0] Pass .. 0,6 -> 0,10
+            """.strip(), 'if 2: pass')
+
+        dumptest(self, parse("""
+if 1: pass
+else:
+  if 2: pass
+            """.strip()).body[0].f.slice(field='orelse'), """
+Module .. ROOT 0,0 -> 0,10
+  .body[1]
+  0] If .. 0,0 -> 0,10
+    .test
+      Constant .. 0,3 -> 0,4
+        .value
+          2
+        .kind
+          None
+    .body[1]
+    0] Pass .. 0,6 -> 0,10
+            """.strip(), 'if 2: pass')
+
+        dumptest(self, parse("""
+(1, 2, 3, 4)
+            """.strip()).body[0].value.f.slice(1, 3), """
+Expression .. ROOT 0,0 -> 0,6
+  .body
+    Tuple .. 0,0 -> 0,6
+      .elts[2]
+      0] Constant .. 0,1 -> 0,2
+        .value
+          2
+        .kind
+          None
+      1] Constant .. 0,4 -> 0,5
+        .value
+          3
+        .kind
+          None
+      .ctx
+        Load
+            """.strip(), '(2, 3)')
+
+        dumptest(self, parse("""
+(1, 2, 3, 4)
+            """.strip()).body[0].value.f.slice(-1), """
+Expression .. ROOT 0,0 -> 0,4
+  .body
+    Tuple .. 0,0 -> 0,4
+      .elts[1]
+      0] Constant .. 0,1 -> 0,2
+        .value
+          4
+        .kind
+          None
+      .ctx
+        Load
+            """.strip(), '(4,)')
+
+        dumptest(self, parse("""
+(1, 2, 3, 4)
+            """.strip()).body[0].value.f.slice(), """
+Expression .. ROOT 0,0 -> 0,12
+  .body
+    Tuple .. 0,0 -> 0,12
+      .elts[4]
+      0] Constant .. 0,1 -> 0,2
+        .value
+          1
+        .kind
+          None
+      1] Constant .. 0,4 -> 0,5
+        .value
+          2
+        .kind
+          None
+      2] Constant .. 0,7 -> 0,8
+        .value
+          3
+        .kind
+          None
+      3] Constant .. 0,10 -> 0,11
+        .value
+          4
+        .kind
+          None
+      .ctx
+        Load
+            """.strip(), '(1, 2, 3, 4)')
+
+        dumptest(self, parse("""
+(1, 2, 3, 4)
+            """.strip()).body[0].value.f.slice(1, 1), """
+Expression .. ROOT 0,0 -> 0,2
+  .body
+    Tuple .. 0,0 -> 0,2
+      .ctx
+        Load
+
+            """.strip(), '()')
+
+        dumptest(self, parse("""
+[1, 2, 3, 4]
+            """.strip()).body[0].value.f.slice(1, 3), """
+Expression .. ROOT 0,0 -> 0,6
+  .body
+    List .. 0,0 -> 0,6
+      .elts[2]
+      0] Constant .. 0,1 -> 0,2
+        .value
+          2
+        .kind
+          None
+      1] Constant .. 0,4 -> 0,5
+        .value
+          3
+        .kind
+          None
+      .ctx
+        Load
+            """.strip(), '[2, 3]')
+
+        dumptest(self, parse("""
+[1, 2, 3, 4]
+            """.strip()).body[0].value.f.slice(-1), """
+Expression .. ROOT 0,0 -> 0,3
+  .body
+    List .. 0,0 -> 0,3
+      .elts[1]
+      0] Constant .. 0,1 -> 0,2
+        .value
+          4
+        .kind
+          None
+      .ctx
+        Load
+            """.strip(), '[4]')
+
+        dumptest(self, parse("""
+[1, 2, 3, 4]
+            """.strip()).body[0].value.f.slice(), """
+Expression .. ROOT 0,0 -> 0,12
+  .body
+    List .. 0,0 -> 0,12
+      .elts[4]
+      0] Constant .. 0,1 -> 0,2
+        .value
+          1
+        .kind
+          None
+      1] Constant .. 0,4 -> 0,5
+        .value
+          2
+        .kind
+          None
+      2] Constant .. 0,7 -> 0,8
+        .value
+          3
+        .kind
+          None
+      3] Constant .. 0,10 -> 0,11
+        .value
+          4
+        .kind
+          None
+      .ctx
+        Load
+            """.strip(), '[1, 2, 3, 4]')
+
+        dumptest(self, parse("""
+[1, 2, 3, 4]
+            """.strip()).body[0].value.f.slice(1, 1), """
+Expression .. ROOT 0,0 -> 0,2
+  .body
+    List .. 0,0 -> 0,2
+      .ctx
+        Load
+            """.strip(), '[]')
+
+        dumptest(self, parse("""
+{1, 2, 3, 4}
+            """.strip()).body[0].value.f.slice(1, 3), """
+Expression .. ROOT 0,0 -> 0,6
+  .body
+    Set .. 0,0 -> 0,6
+      .elts[2]
+      0] Constant .. 0,1 -> 0,2
+        .value
+          2
+        .kind
+          None
+      1] Constant .. 0,4 -> 0,5
+        .value
+          3
+        .kind
+          None
+            """.strip(), '{2, 3}')
+
+        dumptest(self, parse("""
+{1, 2, 3, 4}
+            """.strip()).body[0].value.f.slice(-1), """
+Expression .. ROOT 0,0 -> 0,3
+  .body
+    Set .. 0,0 -> 0,3
+      .elts[1]
+      0] Constant .. 0,1 -> 0,2
+        .value
+          4
+        .kind
+          None
+            """.strip(), '{4}')
+
+        dumptest(self, parse("""
+{1, 2, 3, 4}
+            """.strip()).body[0].value.f.slice(), """
+Expression .. ROOT 0,0 -> 0,12
+  .body
+    Set .. 0,0 -> 0,12
+      .elts[4]
+      0] Constant .. 0,1 -> 0,2
+        .value
+          1
+        .kind
+          None
+      1] Constant .. 0,4 -> 0,5
+        .value
+          2
+        .kind
+          None
+      2] Constant .. 0,7 -> 0,8
+        .value
+          3
+        .kind
+          None
+      3] Constant .. 0,10 -> 0,11
+        .value
+          4
+        .kind
+          None
+            """.strip(), '{1, 2, 3, 4}')
+
+        dumptest(self, parse("""
+{1, 2, 3, 4}
+            """.strip()).body[0].value.f.slice(1, 1), """
+Expression .. ROOT 0,0 -> 0,5
+  .body
+    Call .. 0,0 -> 0,5
+      .func
+        Name .. 0,0 -> 0,3
+          .id
+            'set'
+          .ctx
+            Load
+            """.strip(), 'set()')
+
+        dumptest(self, parse("""
+
+(1, 2, 3, 4)
+            """.strip()).body[0].value.f.slice(1, 3), """
+Expression .. ROOT 0,0 -> 0,6
+  .body
+    Tuple .. 0,0 -> 0,6
+      .elts[2]
+      0] Constant .. 0,1 -> 0,2
+        .value
+          2
+        .kind
+          None
+      1] Constant .. 0,4 -> 0,5
+        .value
+          3
+        .kind
+          None
+      .ctx
+        Load
+            """.strip(), '(2, 3)')
 
 
 if __name__ == '__main__':

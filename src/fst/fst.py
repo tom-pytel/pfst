@@ -214,6 +214,8 @@ class FST:
     def end_col_offset(self) -> int:  # byte index
         return (loc := self.loc) and self.root._lines[loc[2]].c2b(loc[3])
 
+    # ------------------------------------------------------------------------------------------------------------------
+
     def _repr_tail(self) -> str:
         tail = ' ROOT' if self.is_root else ''
         loc  = self.loc
@@ -235,6 +237,30 @@ class FST:
                 elif isinstance(child, list):
                     stack.extend(FST(a, f, astfield(name, idx))
                                  for idx, a in enumerate(child) if isinstance(a, AST))
+
+    def _dump(self, full: bool = False, indent: int = 2, cind: str = '', prefix: str = '', linefunc: Callable = print):
+        tail = self._repr_tail()
+        sind = ' ' * indent
+
+        linefunc(f'{cind}{prefix}{self.a.__class__.__qualname__}{" .." * bool(tail)}{tail}')
+
+        for name, child in iter_fields(self.a):
+            is_list = isinstance(child, list)
+
+            if full or (child != []):
+                linefunc(f'{sind}{cind}.{name}{f"[{len(child)}]" if is_list else ""}')
+
+            if is_list:
+                for i, ast in enumerate(child):
+                    if isinstance(ast, AST):
+                        ast.f._dump(full, indent, cind + ' ' * indent, f'{i}] ', linefunc)
+                    else:
+                        linefunc(f'{sind}{sind}{cind}{i}] {ast!r}')
+
+            elif isinstance(child, AST):
+                child.f._dump(full, indent, cind + sind * 2, '', linefunc)
+            else:
+                linefunc(f'{sind}{sind}{cind}{child!r}')
 
     def _offset(self, ln: int, col: int, dln: int, dcol_offset: int, inc: bool = False) -> 'FST':  # -> Self
         """Offset ast node positions in the tree on or after ln / col by delta line / col_offset (col byte offset).
@@ -509,29 +535,15 @@ class FST:
 
         return self
 
-    def dump(self, indent: int = 2, full: bool = False, cind: str = '', prefix: str = '', linefunc: Callable = print):
-        tail = self._repr_tail()
-        sind = ' ' * indent
+    def dump(self, full: bool = False, indent: int = 2, print: bool = True) -> list[str] | None:
+        if print:
+            return self._dump(full, indent)
 
-        linefunc(f'{cind}{prefix}{self.a.__class__.__qualname__}{" .." * bool(tail)}{tail}')
+        lines = []
 
-        for name, child in iter_fields(self.a):
-            is_list = isinstance(child, list)
+        self._dump(full, indent, linefunc=lines.append)
 
-            if full or (child != []):
-                linefunc(f'{sind}{cind}.{name}{f"[{len(child)}]" if is_list else ""}')
-
-            if is_list:
-                for i, ast in enumerate(child):
-                    if isinstance(ast, AST):
-                        ast.f.dump(indent, full, cind + ' ' * indent, f'{i}] ')
-                    else:
-                        linefunc(f'{sind}{sind}{cind}{i}] {ast!r}')
-
-            elif isinstance(child, AST):
-                child.f.dump(indent, full, cind + sind * 2)
-            else:
-                linefunc(f'{sind}{sind}{cind}{child!r}')
+        return lines
 
     # ------------------------------------------------------------------------------------------------------------------
 
