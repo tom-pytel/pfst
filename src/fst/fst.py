@@ -199,19 +199,19 @@ class FST:
 
     @property
     def lineno(self) -> int:  # 1 based
-        return (l := self.loc) and l[0] + 1
+        return (loc := self.loc) and loc[0] + 1
 
     @property
     def col_offset(self) -> int:  # byte index
-        return (l := self.loc) and self.root._lines[l[0]].c2b(l[1])
+        return (loc := self.loc) and self.root._lines[loc[0]].c2b(loc[1])
 
     @property
     def end_lineno(self) -> int:  # 1 based
-        return (l := self.loc) and l[2] + 1
+        return (loc := self.loc) and loc[2] + 1
 
     @property
     def end_col_offset(self) -> int:  # byte index
-        return (l := self.loc) and self.root._lines[l[2]].c2b(l[3])
+        return (loc := self.loc) and self.root._lines[loc[2]].c2b(loc[3])
 
     def _repr_tail(self) -> str:
         tail = ' ROOT' if self.is_root else ''
@@ -962,7 +962,7 @@ class FST:
         return self
 
     @only_root
-    def fix(self, mutate: bool = False, *, inplace: bool = False, raise_: bool = True) -> Union['FST', None]:  # -> Self | None
+    def fix(self, mutate: bool = False, *, inplace: bool = False) -> Union['FST', None]:  # -> Self | None
         """Correct certain basic changes on cut or copy AST (to make subtrees parsable if the source is not by itself).
         Possibly reparses in order to verify expression. If fails the ast will be unchanged. Is meant to be a quick fix
         after an operation, not full check, for that use `.verify()`. Basically just fixes everything that succeeds
@@ -973,14 +973,7 @@ class FST:
                 in case of TypeVar `type T[>>> i: cls = sub <<<]` to AnnAssign `i: cls = sub`.
             inplace: If `True` then changes will be made to self. If `False` then self may be returned if no changes
                 made otherwise a modified copy is returned.
-            raise_: Whether to raise on fail (default: True) or return None (False).
         """
-
-        def not_fixable():
-            if raise_:
-                raise ValueError('ast could not be fixed')
-
-            return None
 
         ast   = self.a
         lines = self._lines
@@ -1019,10 +1012,7 @@ class FST:
                 tail = (',)' if isinstance(ast, Tuple) and len(ast.elts) == 1 and
                         lines[self.end_ln][self.end_col - 1] != ',' else ')')
 
-                try:
-                    a = ast_.parse(f'({src}{tail}', mode='eval', **self._parse_params)
-                except SyntaxError:
-                    return not_fixable()
+                a = ast_.parse(f'({src}{tail}', mode='eval', **self._parse_params)
 
                 if not inplace:
                     lines = lines[:]
@@ -1079,10 +1069,7 @@ class FST:
                     maybe_replace(' = ', b.f.end_ln, b.f.end_col, dv.f.ln, dv.f.col)
                     maybe_replace(': ', self.ln, self.col + len(ast.name), b.f.ln, b.f.col)
 
-                try:
-                    a = ast_.parse('\n'.join(newlines), mode='exec', **self._parse_params)
-                except SyntaxError:
-                    return not_fixable()
+                a = ast_.parse('\n'.join(newlines), mode='exec', **self._parse_params)
 
                 if not inplace:
                     lines = newlines
@@ -1106,7 +1093,7 @@ class FST:
 
         return self
 
-    def copy(self, *, decorators: bool = True, fix: bool | Literal['mutate'] = True, raise_: bool = True) -> 'FST':
+    def copy(self, *, decorators: bool = True, fix: bool | Literal['mutate'] = True) -> 'FST':
 
         # TODO: copy multiple items
 
@@ -1128,11 +1115,7 @@ class FST:
 
         fst._dedent_tail(indent)
 
-        return fst.fix(mutate=(fix == 'mutate'), inplace=True, raise_=raise_) if fix else fst
-
-
-
-
+        return fst.fix(mutate=(fix == 'mutate'), inplace=True) if fix else fst
 
 
 
