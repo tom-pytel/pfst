@@ -1,5 +1,3 @@
-"""Line continuations suck."""
-
 __all_other__ = None
 __all_other__ = set(globals())
 from ast import *
@@ -527,9 +525,9 @@ class FST:
 
     # ------------------------------------------------------------------------------------------------------------------
 
-    def next(self, loc: bool = True) -> Union['FST', None]:
-        """Get next sibling in syntactic order. If `loc` is `True` (default) then only ASTs with locations returned.
-        Returns `None` if last valid sibling in parent.
+    def next(self, only_with_loc: bool = False) -> Union['FST', None]:
+        """Get next sibling in syntactic order. If `only_with_loc` is `True` (default) then only ASTs with locations
+        returned. Returns `None` if last valid sibling in parent.
         """
 
         if not (parent := self.parent):
@@ -589,7 +587,7 @@ class FST:
                             except IndexError:
                                 return None
 
-                    if (f := a.f).loc or not loc:
+                    if (f := a.f).loc or not only_with_loc:
                         return f
 
             elif idx is not None:
@@ -603,7 +601,7 @@ class FST:
                     except IndexError:
                         break
 
-                    if (f := a.f).loc or not loc:
+                    if (f := a.f).loc or not only_with_loc:
                         return f
 
             while next is not None:
@@ -611,7 +609,7 @@ class FST:
                     name = next
 
                     if isinstance(sibling := getattr(parenta, next, None), AST):  # None because we know about fields from future python versions
-                        if (f := sibling.f).loc or not loc:
+                        if (f := sibling.f).loc or not only_with_loc:
                             return f
 
                     elif isinstance(sibling, list) and sibling:
@@ -639,9 +637,9 @@ class FST:
 
         return None
 
-    def prev(self, loc: bool = True) -> Union['FST', None]:
-        """Get previous sibling in syntactic order. If `loc` is `True` (default) then only ASTs with locations returned.
-        Returns `None` if first valid sibling in parent.
+    def prev(self, only_with_loc: bool = False) -> Union['FST', None]:
+        """Get previous sibling in syntactic order. If `only_with_loc` is `True` (default) then only ASTs with locations
+        returned. Returns `None` if first valid sibling in parent.
         """
 
         if not (parent := self.parent):
@@ -706,7 +704,7 @@ class FST:
                             if not (a := getattr(parenta, 'keys')[idx]):
                                 continue
 
-                    if (f := a.f).loc or not loc:
+                    if (f := a.f).loc or not only_with_loc:
                         return f
 
             else:
@@ -716,7 +714,7 @@ class FST:
                     if not (a := sibling[(idx := idx - 1)]):
                         continue
 
-                    if (f := a.f).loc or not loc:
+                    if (f := a.f).loc or not only_with_loc:
                         return f
 
             while prev is not None:
@@ -724,7 +722,7 @@ class FST:
                     name = prev
 
                     if isinstance(sibling := getattr(parenta, prev, None), AST):  # None because could have fields from future python versions
-                        if (f := sibling.f).loc or not loc:
+                        if (f := sibling.f).loc or not only_with_loc:
                             return f
 
                     elif isinstance(sibling, list) and (idx := len(sibling)):
@@ -747,49 +745,49 @@ class FST:
 
         return None
 
-    def first_child(self, loc: bool = True) -> Union['FST', None]:
-        """Get first child in syntactic order. If `loc` is `True` (default) then only ASTs with locations returned.
+    def first_child(self, only_with_loc: bool = False) -> Union['FST', None]:
+        """Get first child in syntactic order. If `only_with_loc` is `True` (default) then only ASTs with locations returned.
         Returns `None` if no valid children.
         """
 
         for name in AST_FIELDS[(a := self.a).__class__]:
             if (child := getattr(a, name, None)):
-                if isinstance(child, AST) and ((f := child.f).loc or not loc):
+                if isinstance(child, AST) and ((f := child.f).loc or not only_with_loc):
                     return f
 
                 if isinstance(child, list):
                     for c in child:
-                        if isinstance(c, AST) and ((f := c.f).loc or not loc):
+                        if isinstance(c, AST) and ((f := c.f).loc or not only_with_loc):
                             return f
 
         return None
 
-    def last_child(self, loc: bool = True) -> Union['FST', None]:
-        """Get last child in syntactic order. If `loc` is `True` (default) then only ASTs with locations returned.
+    def last_child(self, only_with_loc: bool = False) -> Union['FST', None]:
+        """Get last child in syntactic order. If `only_with_loc` is `True` (default) then only ASTs with locations returned.
         Returns `None` if no valid children.
         """
 
         for name in reversed(AST_FIELDS[(a := self.a).__class__]):
             if (child := getattr(a, name, None)):
-                if isinstance(child, AST) and ((f := child.f).loc or not loc):
+                if isinstance(child, AST) and ((f := child.f).loc or not only_with_loc):
                     return f
 
                 if isinstance(child, list):
                     for c in reversed(child):
-                        if isinstance(c, AST) and ((f := c.f).loc or not loc):
+                        if isinstance(c, AST) and ((f := c.f).loc or not only_with_loc):
                             return f
 
         return None
 
-    def next_child(self, from_child: Union['FST', None], loc: bool = True) -> Union['FST', None]:
+    def next_child(self, from_child: Union['FST', None], only_with_loc: bool = False) -> Union['FST', None]:
         """Meant for simple iteration."""
 
-        return self.first_child(loc) if from_child is None else from_child.next(loc)
+        return self.first_child(only_with_loc) if from_child is None else from_child.next(only_with_loc)
 
-    def prev_child(self, from_child: Union['FST', None], loc: bool = True) -> Union['FST', None]:
+    def prev_child(self, from_child: Union['FST', None], only_with_loc: bool = False) -> Union['FST', None]:
         """Meant for simple iteration."""
 
-        return self.last_child(loc) if from_child is None else from_child.prev(loc)
+        return self.last_child(only_with_loc) if from_child is None else from_child.prev(only_with_loc)
 
     def is_parsable(self) -> bool:
         """Really means the AST is `unparse()`able and then re`parse()`able which will get it to this top level AST node
@@ -849,7 +847,7 @@ class FST:
                 self = siblings[i].f
 
                 if re_empty_line.match(line_start := lines[(ln := self.ln)][:self.col]):
-                    prev    = self.prev()  # there must be one
+                    prev    = self.prev(True)  # there must be one
                     end_col = 0 if prev.end_ln < (preceding_ln := ln - 1) else prev.end_col
 
                     if not re_line_continuation.match(lines[preceding_ln][end_col:]):
@@ -858,7 +856,7 @@ class FST:
             self        = siblings[0].f  # didn't find in siblings[1:], now the special rules for the first one
             ln          = self.ln
             col         = self.col
-            prev        = self.prev()  # there may not be one ("try" at start of module)
+            prev        = self.prev(True)  # there may not be one ("try" at start of module)
             prev_end_ln = prev.end_ln if prev else -2
 
             while ln > prev_end_ln and re_empty_line.match(line_start := lines[ln][:col]):
@@ -1100,6 +1098,9 @@ class FST:
         return self
 
     def copy(self, *, decorators: bool = True, fix: bool | Literal['mutate'] = True, raise_: bool = True) -> 'FST':
+
+        # TODO: copy multiple items
+
         if not (loc := self.bloc if decorators else self.loc):
             raise ValueError('cannot copy ast without location')
 
