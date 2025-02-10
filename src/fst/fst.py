@@ -68,7 +68,16 @@ def parse(source, filename='<unknown>', mode='exec', *args, type_comments=False,
 
 
 def unparse(ast_obj):
-    return f.src if (f := getattr(ast_obj, 'f', None)) else ast_.unparse(ast_obj)
+    if (f := getattr(ast_obj, 'f', None)) and f.loc:
+        if f.is_root:
+            return f.src
+
+        try:
+            return f.copy(fix=True).src
+        except Exception:
+            pass
+
+    return ast_.unparse(ast_obj)
 
 
 class fstloc(NamedTuple):
@@ -1120,7 +1129,6 @@ class FST:
         fst._dedent_tail(indent)
 
         return fst.fix(mutate=(fix == 'mutate'), inplace=True, raise_=raise_) if fix else fst
-
 
 
 
