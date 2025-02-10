@@ -1106,22 +1106,6 @@ class FST:
 
         return self
 
-
-
-    def _copy_and_dedent(self, indentfst: AST, newast: AST, loc: fstloc, prefix_len: int = 0) -> 'FST':
-        indent = indentfst.get_indent()
-        lines  = self.root._lines
-        fst    = FST(newast, lines=lines, from_=self)  # we use original lines for nodes offset calc before putting new lines
-
-        fst._offset(loc.ln, loc.col, -loc.ln, -lines[loc.ln].c2b(loc.col - prefix_len))
-
-        fst._lines = self.sniploc(*loc)
-
-        fst._dedent_tail(indent)
-
-        return fst
-
-
     def copy(self, *, decorators: bool = True, fix: bool | Literal['mutate'] = True) -> 'FST':
         newast = copy(self.a)
 
@@ -1134,10 +1118,39 @@ class FST:
         if not decorators and hasattr(newast, 'decorator_list'):
             newast.decorator_list.clear()
 
-        fst = self._copy_and_dedent(self, newast, loc)
+        fst = self._make_fst_and_dedent(self, newast, loc)
 
         return fst.fix(mutate=(fix == 'mutate'), inplace=True) if fix else fst
 
+
+
+
+    def _make_fst_and_dedent(self, indentfst: AST, newast: AST, loc: fstloc, prefix_len: int = 0) -> 'FST':
+        indent = indentfst.get_indent()
+        lines  = self.root._lines
+        fst    = FST(newast, lines=lines, from_=self)  # we use original lines for nodes offset calc before putting new lines
+
+        fst._offset(loc.ln, loc.col, -loc.ln, -lines[loc.ln].c2b(loc.col - prefix_len))
+
+        fst._lines = self.sniploc(*loc)
+
+        fst._dedent_tail(indent)
+
+        return fst
+
+    def _make_Expression_fst_and_dedent(self, indentfst: AST, newast: AST, loc: fstloc, prefix: str = '', suffix: str = '') -> 'FST':
+        fst = self._make_fst_and_dedent(indentfst, Expression(body=newast), loc, len(prefix))
+
+        lines                 = fst._lines
+        lines[-1]             = bistr(lines[-1] + suffix)
+        lines[0]              = bistr(prefix + lines[0])
+        newast.col_offset     = 0
+        newast.end_col_offset = lines[-1].lenbytes
+
+        newast.f.touch()
+        fst.touch()
+
+        return fst
 
     @staticmethod
     def _slice_fixup_index(ast, body, field, start, stop) -> tuple[int, int]:
@@ -1160,7 +1173,6 @@ class FST:
             raise ValueError('cannot copy asts which do not have locations')
 
         return start, stop
-
 
     def _slice_stmt(self, start, stop, field, fix, cut) -> 'FST':
         if cut: raise NotImplementedError  # TODO: THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS!
@@ -1193,11 +1205,9 @@ class FST:
             newast.body[0].col_offset += 2
             loc                        = fstloc(loc.ln, loc.col + 2, loc.end_ln, loc.end_col)
 
-        fst = self._copy_and_dedent(afirst.f, newast, loc)
+        fst = self._make_fst_and_dedent(afirst.f, newast, loc)
 
         return fst
-
-
 
     def _slice_tuple_list_or_set(self, start, stop, fix, cut) -> 'FST':
         if cut: raise NotImplementedError  # TODO: THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS!
@@ -1233,7 +1243,7 @@ class FST:
             suffix = '}'
 
         else:
-            newseq = ast.__class__(elts=asts, ctx=ctx, lineno=afirst.lineno, col_offset=afirst.col_offset,
+            newseq = ast.__class__(elts=asts, ctx=ctx, lineno=afirst.lineno, col_offset=afirst.col_offset,  # we only set location for what we know for sure is in lines
                                    end_lineno=alast.end_lineno, end_col_offset=alast.end_col_offset)
 
             if fix and not isinstance(ast.ctx, Load):
@@ -1247,18 +1257,29 @@ class FST:
                 prefix = '['
                 suffix = ']'
 
-        fst = self._copy_and_dedent(afirst.f, Expression(body=newseq), loc, 1)
+        return self._make_Expression_fst_and_dedent(afirst.f, newseq, loc, prefix, suffix)
 
-        lines                 = fst._lines
-        lines[-1]             = bistr(lines[-1] + suffix)
-        lines[0]              = bistr(prefix + lines[0])
-        newseq.col_offset     = 0
-        newseq.end_col_offset = lines[-1].lenbytes
+    def _slice_dict(self, start, stop, fix, cut) -> 'FST':
+        if cut: raise NotImplementedError  # TODO: THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS!
 
-        newseq.f.touch()  # because the previously set end_col_offset == -1 got cached
-        fst.touch()
+        ast         = self.a
+        keys        = ast.keys
+        start, stop = self._slice_fixup_index(ast, keys, 'keys', start, stop)
 
-        return fst
+        if start == stop:
+            return FST(Expression(body=Dict(keys=[], values=[], lineno=1, col_offset=0, end_lineno=1, end_col_offset=2
+                                            )), lines=[bistr('{}')], from_=self)
+
+        values  = ast.values
+        afirst  = keys[start]
+        loc     = fstloc((f := afirst.f).ln, f.col, (l := (alast := values[stop - 1]).f.loc).end_ln, l.end_col)
+        akeys   = [copy(keys[i]) for i in range(start, stop)]
+        avalues = [copy(values[i]) for i in range(start, stop)]
+        newmap  = Dict(keys=akeys, values=avalues, lineno=afirst.lineno, col_offset=afirst.col_offset,
+                       end_lineno=alast.end_lineno, end_col_offset=alast.end_col_offset)
+
+        return self._make_Expression_fst_and_dedent(afirst.f, newmap, loc, '{', '}')
+
 
 
     def slice(self, start: int | None = None, stop: int | None = None, *, field: str | None = None,
@@ -1272,6 +1293,9 @@ class FST:
 
         if isinstance(self.a, (Tuple, List, Set)):
             return self._slice_tuple_list_or_set(start, stop, fix, cut)
+
+        if isinstance(self.a, Dict):
+            return self._slice_dict(start, stop, fix, cut)
 
         raise NotImplementedError  # TODO: THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS!
 
@@ -1289,7 +1313,7 @@ class FST:
 
     # + copy()
     #   cut()
-    # . slice()
+    # + slice()
     #   remove()
     #   append()
     #   insert()

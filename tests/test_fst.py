@@ -1214,6 +1214,114 @@ Expression .. ROOT 0,0 -> 0,6
         Load
             """.strip(), '(2, 3)')
 
+        dumptest(self, parse("""
+{1: 2, 3: 4, 5: 6, 7: 8}
+            """.strip()).body[0].value.f.slice(1, 3), """
+Expression .. ROOT 0,0 -> 0,12
+  .body
+    Dict .. 0,0 -> 0,12
+      .keys[2]
+      0] Constant .. 0,1 -> 0,2
+        .value
+          3
+        .kind
+          None
+      1] Constant .. 0,7 -> 0,8
+        .value
+          5
+        .kind
+          None
+      .values[2]
+      0] Constant .. 0,4 -> 0,5
+        .value
+          4
+        .kind
+          None
+      1] Constant .. 0,10 -> 0,11
+        .value
+          6
+        .kind
+          None
+            """.strip(), '{3: 4, 5: 6}')
+
+        dumptest(self, parse("""
+{1: 2, 3: 4, 5: 6, 7: 8}
+            """.strip()).body[0].value.f.slice(-1), """
+Expression .. ROOT 0,0 -> 0,6
+  .body
+    Dict .. 0,0 -> 0,6
+      .keys[1]
+      0] Constant .. 0,1 -> 0,2
+        .value
+          7
+        .kind
+          None
+      .values[1]
+      0] Constant .. 0,4 -> 0,5
+        .value
+          8
+        .kind
+          None
+            """.strip(), '{7: 8}')
+
+        dumptest(self, parse("""
+{1: 2, 3: 4, 5: 6, 7: 8}
+            """.strip()).body[0].value.f.slice(), """
+Expression .. ROOT 0,0 -> 0,24
+  .body
+    Dict .. 0,0 -> 0,24
+      .keys[4]
+      0] Constant .. 0,1 -> 0,2
+        .value
+          1
+        .kind
+          None
+      1] Constant .. 0,7 -> 0,8
+        .value
+          3
+        .kind
+          None
+      2] Constant .. 0,13 -> 0,14
+        .value
+          5
+        .kind
+          None
+      3] Constant .. 0,19 -> 0,20
+        .value
+          7
+        .kind
+          None
+      .values[4]
+      0] Constant .. 0,4 -> 0,5
+        .value
+          2
+        .kind
+          None
+      1] Constant .. 0,10 -> 0,11
+        .value
+          4
+        .kind
+          None
+      2] Constant .. 0,16 -> 0,17
+        .value
+          6
+        .kind
+          None
+      3] Constant .. 0,22 -> 0,23
+        .value
+          8
+        .kind
+          None
+            """.strip(), '{1: 2, 3: 4, 5: 6, 7: 8}')
+
+        dumptest(self, parse("""
+{1: 2, 3: 4, 5: 6, 7: 8}
+            """.strip()).body[0].value.f.slice(1, 1), """
+Expression .. ROOT 0,0 -> 0,2
+  .body
+    Dict .. 0,0 -> 0,2
+            """.strip(), '{}')
+
 
 if __name__ == '__main__':
     unittest.main()
