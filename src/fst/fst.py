@@ -524,9 +524,9 @@ class FST:
             if is_list:
                 for i, ast in enumerate(child):
                     if isinstance(ast, AST):
-                        ast.f.dump(indent, full, cind + ' ' * indent, f'{i}: ')
+                        ast.f.dump(indent, full, cind + ' ' * indent, f'{i}] ')
                     else:
-                        linefunc(f'{sind}{sind}{cind}{i}: {ast!r}')
+                        linefunc(f'{sind}{sind}{cind}{i}] {ast!r}')
 
             elif isinstance(child, AST):
                 child.f.dump(indent, full, cind + sind * 2)
@@ -1144,7 +1144,7 @@ class FST:
         return start, stop
 
 
-    def _slice_stmt(self, start, stop, field, cut) -> 'FST':
+    def _slice_stmt(self, start, stop, field, fix, cut) -> 'FST':
         if cut: raise NotImplementedError  # TODO: THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS!
 
         ast = self.a
@@ -1161,16 +1161,19 @@ class FST:
             raise ValueError(f"{ast.__class__.__name__} has no 'body' list to slice")
 
         start, stop = self._slice_fixup_index(ast, body, field, start, stop)
-        afirst      = body[start]
-        loc         = fstloc((f := afirst.f).ln, f.col, (l := body[stop - 1].f.loc).end_ln, l.end_col)
-        newasts     = [copy(body[i]) for i in range(start, stop)]
-        newast      = Module(body=newasts)
 
-        if (field == 'orelse' and not start and (stop - start) == 1 and afirst.col_offset == ast.col_offset and
+        if start == stop:
+            return FST(Module(body=[]), lines=[bistr('')], from_=self)
+
+        afirst = body[start]
+        loc    = fstloc((f := afirst.f).ln, f.col, (l := body[stop - 1].f.loc).end_ln, l.end_col)
+        newast = Module(body=[copy(body[i]) for i in range(start, stop)])
+
+        if (fix and field == 'orelse' and not start and (stop - start) == 1 and afirst.col_offset == ast.col_offset and
             isinstance(ast, If) and isinstance(afirst, If)
         ):  # 'elif' -> 'if'
-            newasts[0].col_offset += 2
-            loc                    = fstloc(loc.ln, loc.col + 2, loc.end_ln, loc.end_col)
+            newast.body[0].col_offset += 2
+            loc                        = fstloc(loc.ln, loc.col + 2, loc.end_ln, loc.end_col)
 
         # ...
         indent = afirst.f.get_indent()
@@ -1188,42 +1191,91 @@ class FST:
 
 
 
-    def _slice_tuple_list_or_set(self, start, stop, cut) -> 'FST':
+    def _slice_tuple_list_or_set(self, start, stop, fix, cut) -> 'FST':
         if cut: raise NotImplementedError  # TODO: THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS!
 
         ast         = self.a
         body        = ast.elts
+        is_set      = isinstance(ast, Set)
+        ctx         = None if is_set else Load() if fix else ast.ctx.__class__()
         start, stop = self._slice_fixup_index(ast, body, 'elts', start, stop)
-        afirst      = body[start]
-        loc         = fstloc((f := afirst.f).ln, f.col, (l := body[stop - 1].f.loc).end_ln, l.end_col)
-        newasts     = [copy(body[i]) for i in range(start, stop)]
+
+        if start == stop:
+            if is_set:
+                return FST(Expression(body=Call(
+                    func=Name(id='set', ctx=Load(), lineno=1, col_offset=0, end_lineno=1, end_col_offset=3),
+                    args=[], keywords=[], lineno=1, col_offset=0, end_lineno=1, end_col_offset=5
+                )), lines=[bistr('set()')], from_=self)
+
+            elif isinstance(ast, Tuple):
+                return FST(Expression(body=Tuple(elts=[], ctx=ctx, lineno=1, col_offset=0, end_lineno=1, end_col_offset=2
+                                                 )), lines=[bistr('()')], from_=self)
+            else:  # list
+                return FST(Expression(body=List(elts=[], ctx=ctx, lineno=1, col_offset=0, end_lineno=1, end_col_offset=2
+                                                 )), lines=[bistr('[]')], from_=self)
+
+        afirst = body[start]
+        loc    = fstloc((f := afirst.f).ln, f.col, (l := (alast := body[stop - 1]).f.loc).end_ln, l.end_col)
+        asts   = [copy(body[i]) for i in range(start, stop)]
+
+        if is_set:
+            newseq = Set(elts=asts, lineno=afirst.lineno, col_offset=afirst.col_offset,
+                         end_lineno=alast.end_lineno, end_col_offset=alast.end_col_offset)
+            prefix = '{'
+            suffix = '}'
+
+        else:
+            newseq = ast.__class__(elts=asts, ctx=ctx, lineno=afirst.lineno, col_offset=afirst.col_offset,
+                                   end_lineno=alast.end_lineno, end_col_offset=alast.end_col_offset)
+
+            if fix and not isinstance(ast.ctx, Load):
+                set_ctx(newseq, Load)
+
+            if isinstance(ast, Tuple):
+                prefix = '('
+                suffix = ',)' if len(asts) == 1 else ')'
+
+            else:  # list
+                prefix = '['
+                suffix = ']'
+
+        newast = Expression(body=newseq)
+
+        # ...
+        indent = afirst.f.get_indent()
+        lines  = self.root._lines
+        fst    = FST(newast, lines=lines, from_=self)  # we use original lines for nodes offset calc before putting new lines
+
+        fst._offset(loc.ln, loc.col, -loc.ln, -lines[loc.ln].c2b(loc.col - 1))  # loc.col-1 to account for prefix that will be added
+
+        fst._lines = self.sniploc(*loc)
+
+        fst._dedent_tail(indent)
+        # ...
+
+        lines                 = fst._lines
+        lines[-1]             = bistr(lines[-1] + suffix)
+        lines[0]              = bistr(prefix + lines[0])
+        newseq.col_offset     = 0
+        newseq.end_col_offset = lines[-1].lenbytes
+
+        newseq.f.touch()  # because the previously set end_col_offset == -1 got cached
+        fst.touch()
+
+        return fst
 
 
-
-
-        # newast      = Expression(body=newasts)
-
-
-        # set of 0 items src -> "set()"
-        # wrap tuple
-
-
-
-
-
-
-    def slice(self, start: int | None = None, stop: int | None = None, *, field: str | None = None, cut: bool = False) -> 'FST':
+    def slice(self, start: int | None = None, stop: int | None = None, *, field: str | None = None,
+              fix: bool | Literal['mutate'] = True, cut: bool = False
+    ) -> 'FST':
         if isinstance(self.a, STATEMENTISH_OR_STMTMOD):
-            return self._slice_stmt(start, stop, field, cut)
-
-        if field is not None:
-            raise ValueError('cannot specify field for expression slice')
+            return self._slice_stmt(start, stop, field, fix, cut)
 
         if isinstance(self.a, Expression):
             self = self.a.body.f
 
         if isinstance(self.a, (Tuple, List, Set)):
-            return self._slice_tuple_list_or_set(start, stop, field, cut)
+            return self._slice_tuple_list_or_set(start, stop, fix, cut)
 
         raise NotImplementedError  # TODO: THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS!
 
@@ -1241,7 +1293,7 @@ class FST:
 
     # + copy()
     #   cut()
-    #   slice()
+    # . slice()
     #   remove()
     #   append()
     #   insert()

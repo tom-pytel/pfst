@@ -6,7 +6,7 @@ from typing import Any, Callable, Iterator, Literal, NamedTuple
 __all__ = [
     'FIELDS', 'AST_FIELDS',
     'bistr', 'astfield', 'get_field', 'has_type_comments', 'is_parsable', 'get_parse_mode',
-    'WalkFail', 'walk2', 'compare', 'copy_attributes', 'copy',
+    'WalkFail', 'walk2', 'compare', 'copy_attributes', 'copy', 'set_ctx',
 ]
 
 
@@ -430,3 +430,20 @@ def copy(ast: AST) -> AST:
             setattr(ret, attr, val)
 
     return ret
+
+
+def set_ctx(ast: AST, ctx: type[expr_context]):
+    stack = [ast]
+
+    while stack:  # anything that might have been a ctx Store or Del before (outside NamedExpr) set to Load
+        a = stack.pop()
+
+        if ((is_seq := isinstance(a, (Tuple, List))) or (is_starred := isinstance(a, Starred)) or
+            isinstance(a, (Name, Subscript, Attribute))
+        ):
+            a.ctx = ctx()
+
+            if is_seq:
+                stack.extend(a.elts)
+            elif is_starred:
+                stack.append(a.value)
