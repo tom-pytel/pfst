@@ -45,11 +45,12 @@ AST_FIELDS_PREV[(Compare, 'comparators')]   = 3
 AST_FIELDS_PREV[(MatchMapping, 'keys')]     = 4
 AST_FIELDS_PREV[(MatchMapping, 'patterns')] = 5
 
-STATEMENTISH = (stmt, ExceptHandler, match_case)  # always in lists, can not be inside multilines
+STATEMENTISH            = (stmt, ExceptHandler, match_case)  # always in lists, cannot be inside multilines
+STATEMENTISH_OR_STMTMOD = (stmt, ExceptHandler, match_case, Module, Interactive)
 
-re_empty_line_start  = re.compile(r'^[ \t]*')    # start of completely empty or space-filled line
-re_empty_line        = re.compile(r'^[ \t]*$')   # completely empty or space-filled line
-re_line_continuation = re.compile(r'^[^#]*\\$')  # line continuation with backslash not following a comment start '#' (assumed no asts contained in line)
+re_empty_line_start     = re.compile(r'^[ \t]*')    # start of completely empty or space-filled line
+re_empty_line           = re.compile(r'^[ \t]*$')   # completely empty or space-filled line
+re_line_continuation    = re.compile(r'^[^#]*\\$')  # line continuation with backslash not following a comment start '#' (assumed no asts contained in line)
 
 
 def only_root(func):
@@ -542,11 +543,11 @@ class FST:
         if not (parent := self.parent):
             return None
 
-        parenta   = parent.a
+        aparent   = parent.a
         name, idx = self.pfield
 
         while True:
-            next = AST_FIELDS_NEXT[(parenta.__class__, name)]
+            next = AST_FIELDS_NEXT[(aparent.__class__, name)]
 
             if isinstance(next, int):  # special case?
                 while True:
@@ -554,14 +555,14 @@ class FST:
                         case 0:  # from Dict.keys
                             next = 1
 
-                            if not (a := getattr(parenta, 'values')[idx]):
+                            if not (a := getattr(aparent, 'values')[idx]):
                                 continue
 
                         case 1:  # from Dict.values
                             next = 0
 
                             try:
-                                if not (a := getattr(parenta, 'keys')[(idx := idx + 1)]):
+                                if not (a := getattr(aparent, 'keys')[(idx := idx + 1)]):
                                     continue
                             except IndexError:
                                 return None
@@ -569,14 +570,14 @@ class FST:
                         case 2:  # from Compare.ops
                             next = 3
 
-                            if not (a := getattr(parenta, 'comparators')[idx]):
+                            if not (a := getattr(aparent, 'comparators')[idx]):
                                 continue
 
                         case 3:  # from Compare.comparators
                             next = 2
 
                             try:
-                                if not (a := getattr(parenta, 'ops')[(idx := idx + 1)]):
+                                if not (a := getattr(aparent, 'ops')[(idx := idx + 1)]):
                                     continue
                             except IndexError:
                                 return None
@@ -584,14 +585,14 @@ class FST:
                         case 4:  # from MatchMapping.keys
                             next = 5
 
-                            if not (a := getattr(parenta, 'patterns')[idx]):
+                            if not (a := getattr(aparent, 'patterns')[idx]):
                                 continue
 
                         case 5:  # from MatchMapping.patterns
                             next = 4
 
                             try:
-                                if not (a := getattr(parenta, 'keys')[(idx := idx + 1)]):
+                                if not (a := getattr(aparent, 'keys')[(idx := idx + 1)]):
                                     continue
                             except IndexError:
                                 return None
@@ -600,7 +601,7 @@ class FST:
                         return f
 
             elif idx is not None:
-                sibling = getattr(parenta, name)
+                sibling = getattr(aparent, name)
 
                 while True:
                     try:
@@ -617,7 +618,7 @@ class FST:
                 if isinstance(next, str):
                     name = next
 
-                    if isinstance(sibling := getattr(parenta, next, None), AST):  # None because we know about fields from future python versions
+                    if isinstance(sibling := getattr(aparent, next, None), AST):  # None because we know about fields from future python versions
                         if (f := sibling.f).loc or not only_with_loc:
                             return f
 
@@ -626,7 +627,7 @@ class FST:
 
                         break
 
-                    next = AST_FIELDS_NEXT[(parenta.__class__, name)]
+                    next = AST_FIELDS_NEXT[(aparent.__class__, name)]
 
                     continue
 
@@ -654,11 +655,11 @@ class FST:
         if not (parent := self.parent):
             return None
 
-        parenta   = parent.a
+        aparent   = parent.a
         name, idx = self.pfield
 
         while True:
-            prev = AST_FIELDS_PREV[(parenta.__class__, name)]
+            prev = AST_FIELDS_PREV[(aparent.__class__, name)]
 
             if isinstance(prev, int):  # special case?
                 while True:
@@ -670,13 +671,13 @@ class FST:
                             else:
                                 prev = 1
 
-                                if not (a := getattr(parenta, 'values')[(idx := idx - 1)]):
+                                if not (a := getattr(aparent, 'values')[(idx := idx - 1)]):
                                     continue
 
                         case 1:  # from Dict.values
                             prev = 0
 
-                            if not (a := getattr(parenta, 'keys')[idx]):
+                            if not (a := getattr(aparent, 'keys')[idx]):
                                 continue
 
                         case 2:  # from Compare.ops
@@ -688,13 +689,13 @@ class FST:
                             else:
                                 prev = 3
 
-                                if not (a := getattr(parenta, 'comparators')[(idx := idx - 1)]):
+                                if not (a := getattr(aparent, 'comparators')[(idx := idx - 1)]):
                                     continue
 
                         case 3:  # from Compare.comparators
                             prev = 2
 
-                            if not (a := getattr(parenta, 'ops')[idx]):
+                            if not (a := getattr(aparent, 'ops')[idx]):
                                 continue
 
                         case 4:  # from Keys.keys
@@ -704,20 +705,20 @@ class FST:
                             else:
                                 prev = 5
 
-                                if not (a := getattr(parenta, 'patterns')[(idx := idx - 1)]):
+                                if not (a := getattr(aparent, 'patterns')[(idx := idx - 1)]):
                                     continue
 
                         case 5:  # from Keys.patterns
                             prev = 4
 
-                            if not (a := getattr(parenta, 'keys')[idx]):
+                            if not (a := getattr(aparent, 'keys')[idx]):
                                 continue
 
                     if (f := a.f).loc or not only_with_loc:
                         return f
 
             else:
-                sibling = getattr(parenta, name)
+                sibling = getattr(aparent, name)
 
                 while idx:
                     if not (a := sibling[(idx := idx - 1)]):
@@ -730,14 +731,14 @@ class FST:
                 if isinstance(prev, str):
                     name = prev
 
-                    if isinstance(sibling := getattr(parenta, prev, None), AST):  # None because could have fields from future python versions
+                    if isinstance(sibling := getattr(aparent, prev, None), AST):  # None because could have fields from future python versions
                         if (f := sibling.f).loc or not only_with_loc:
                             return f
 
                     elif isinstance(sibling, list) and (idx := len(sibling)):
                         break
 
-                    prev = AST_FIELDS_PREV[(parenta.__class__, name)]
+                    prev = AST_FIELDS_PREV[(aparent.__class__, name)]
 
                     continue
 
@@ -1094,30 +1095,137 @@ class FST:
         return self
 
     def copy(self, *, decorators: bool = True, fix: bool | Literal['mutate'] = True) -> 'FST':
+        ast = copy(self.a)
 
-        # TODO: copy multiple items
+        if self.is_root:
+            return FST(ast, lines=self._lines[:], from_=self)
 
         if not (loc := self.bloc if decorators else self.loc):
-            raise ValueError('cannot copy ast without location')
-
-        lines  = self.root._lines
-        indent = self.get_indent()
-        ast    = copy(self.a)
+            raise ValueError('cannot copy ast which does not have location')
 
         if not decorators and hasattr(ast, 'decorator_list'):
             ast.decorator_list.clear()
 
-        fst = FST(ast, lines=lines, from_=self)  # we use original lines for nodes offset calc before putting new lines
+        # ...
+        indent = self.get_indent()
+        lines  = self.root._lines
+        fst    = FST(ast, lines=lines, from_=self)  # we use original lines for nodes offset calc before putting new lines
 
         fst._offset(loc.ln, loc.col, -loc.ln, -lines[loc.ln].c2b(loc.col))
 
         fst._lines = self.sniploc(*loc)
 
         fst._dedent_tail(indent)
+        # ...
 
         return fst.fix(mutate=(fix == 'mutate'), inplace=True) if fix else fst
 
 
+    @staticmethod
+    def _slice_fixup_index(ast, body, field, start, stop) -> tuple[int, int]:
+        len_body = len(body)
+
+        if start is None:
+            start = 0
+        elif start < 0:
+            start += len_body
+
+        if stop is None:
+            stop = len_body
+        elif stop < 0:
+            stop += len_body
+
+        if start < 0 or start > len_body or stop < 0 or stop > len_body:
+            raise IndexError(f"{ast.__class__.__name__}.{field} index out of range")
+
+        if not body[start].f.loc or not body[stop - 1].f.loc:
+            raise ValueError('cannot copy asts which do not have locations')
+
+        return start, stop
+
+
+    def _slice_stmt(self, start, stop, field, cut) -> 'FST':
+        if cut: raise NotImplementedError  # TODO: THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS!
+
+        ast = self.a
+
+        if field is not None:
+            if not isinstance(body := getattr(ast, field, None), list):
+                raise ValueError(f"invalid {ast.__class__.__name__} field '{field}'")
+
+        elif isinstance(ast, Match):
+            field = 'cases'
+            body  = ast.cases
+
+        elif (body := getattr(ast, field := 'body', None)) is None or not isinstance(body, list):
+            raise ValueError(f"{ast.__class__.__name__} has no 'body' list to slice")
+
+        start, stop = self._slice_fixup_index(ast, body, field, start, stop)
+        afirst      = body[start]
+        loc         = fstloc((f := afirst.f).ln, f.col, (l := body[stop - 1].f.loc).end_ln, l.end_col)
+        newasts     = [copy(body[i]) for i in range(start, stop)]
+        newast      = Module(body=newasts)
+
+        if (field == 'orelse' and not start and (stop - start) == 1 and afirst.col_offset == ast.col_offset and
+            isinstance(ast, If) and isinstance(afirst, If)
+        ):  # 'elif' -> 'if'
+            newasts[0].col_offset += 2
+            loc                    = fstloc(loc.ln, loc.col + 2, loc.end_ln, loc.end_col)
+
+        # ...
+        indent = afirst.f.get_indent()
+        lines  = self.root._lines
+        fst    = FST(newast, lines=lines, from_=self)  # we use original lines for nodes offset calc before putting new lines
+
+        fst._offset(loc.ln, loc.col, -loc.ln, -lines[loc.ln].c2b(loc.col))
+
+        fst._lines = self.sniploc(*loc)
+
+        fst._dedent_tail(indent)
+        # ...
+
+        return fst
+
+
+
+    def _slice_tuple_list_or_set(self, start, stop, cut) -> 'FST':
+        if cut: raise NotImplementedError  # TODO: THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS!
+
+        ast         = self.a
+        body        = ast.elts
+        start, stop = self._slice_fixup_index(ast, body, 'elts', start, stop)
+        afirst      = body[start]
+        loc         = fstloc((f := afirst.f).ln, f.col, (l := body[stop - 1].f.loc).end_ln, l.end_col)
+        newasts     = [copy(body[i]) for i in range(start, stop)]
+
+
+
+
+        # newast      = Expression(body=newasts)
+
+
+        # set of 0 items src -> "set()"
+        # wrap tuple
+
+
+
+
+
+
+    def slice(self, start: int | None = None, stop: int | None = None, *, field: str | None = None, cut: bool = False) -> 'FST':
+        if isinstance(self.a, STATEMENTISH_OR_STMTMOD):
+            return self._slice_stmt(start, stop, field, cut)
+
+        if field is not None:
+            raise ValueError('cannot specify field for expression slice')
+
+        if isinstance(self.a, Expression):
+            self = self.a.body.f
+
+        if isinstance(self.a, (Tuple, List, Set)):
+            return self._slice_tuple_list_or_set(start, stop, field, cut)
+
+        raise NotImplementedError  # TODO: THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS!
 
 
 
@@ -1128,12 +1236,16 @@ class FST:
 
 
 
-    # + copy()  multi
-    #   cut()  multi
-    #   remove()  multi
-    #   append()  multi
-    #   insert()  multi
-    #   replace()  multi
+
+
+
+    # + copy()
+    #   cut()
+    #   slice()
+    #   remove()
+    #   append()
+    #   insert()
+    #   replace()
 
 
 

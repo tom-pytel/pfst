@@ -418,19 +418,10 @@ def copy(ast: AST) -> AST:
 
         if isinstance(child, AST):
             params[field] = copy(child)
-        elif not isinstance(child, list):
-            params[field] = child
-
+        elif isinstance(child, list):
+            params[field] = [copy(c) if isinstance(c, AST) else c for c in child]
         else:
-            children = []
-
-            for c in child:
-                if isinstance(c, AST):
-                    children.append(copy(c))
-                elif not isinstance(c, list):
-                    children.append(c)
-
-            params[field] = children
+            params[field] = child
 
     ret = ast.__class__(**params)
 
