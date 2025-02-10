@@ -293,7 +293,7 @@ def get_parse_mode(ast: AST) -> Literal['exec'] | Literal['eval'] | Literal['sin
 class WalkFail(Exception): pass
 
 def walk2(ast1: AST, ast2: AST, cb_primitive: Callable[[Any, Any, str, int], bool] | None = None, *,
-          recurse: bool = True) -> Iterator[tuple[AST, AST]]:
+          ctx: bool = True, recurse: bool = True) -> Iterator[tuple[AST, AST]]:
     """Walk two asts simultaneously ensuring they have the same structure."""
 
     if ast1.__class__ is not ast2.__class__:
@@ -319,6 +319,9 @@ def walk2(ast1: AST, ast2: AST, cb_primitive: Callable[[Any, Any, str, int], boo
 
             if (is_ast := isinstance(child1, AST)) or isinstance(child1, list) or isinstance(child2, (AST, list)):
                 if child1.__class__ is not child2.__class__:
+                    if not ctx and is_ast and isinstance(child1, expr_context) and isinstance(child2, expr_context):
+                        continue
+
                     raise WalkFail(f"child classes differ at .{name1} in '{a1.__class__.__qualname__}', "
                                    f"'{child1.__class__.__qualname__}' vs. '{child2.__class__.__qualname__}'")
 
@@ -356,14 +359,14 @@ compare_primitive_type_comments_func = (
     (lambda p1, p2, n, i: p1.__class__ is p2.__class__ and p1 == p2),
 )
 
-def compare(ast1: AST, ast2: AST, *, locs: bool = False, type_comments: bool = False, recurse: bool = True,
-            raise_: bool = False) -> bool:
+def compare(ast1: AST, ast2: AST, *, locs: bool = False, type_comments: bool = False, ctx: bool = True,
+            recurse: bool = True, raise_: bool = False) -> bool:
     """Copy two trees including possibly locations and type comments."""
 
     cb_primitive = compare_primitive_type_comments_func[bool(type_comments)]
 
     try:
-        for n1, n2 in walk2(ast1, ast2, cb_primitive, recurse=recurse):
+        for n1, n2 in walk2(ast1, ast2, cb_primitive, ctx=ctx, recurse=recurse):
             if locs:
                 if (getattr(n1, 'lineno', None) != getattr(n2, 'lineno', None) or
                     getattr(n1, 'col_offset', None) != getattr(n2, 'col_offset', None) or

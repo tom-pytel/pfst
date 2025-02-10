@@ -112,7 +112,7 @@ class FST:
         if self.is_root:
             return '\n'.join(self._lines)
         elif loc := self.loc:
-            return '\n'.join(self.snip(*loc))
+            return '\n'.join(self.sniploc(*loc))
         else:
             return None
 
@@ -817,17 +817,20 @@ class FST:
 
         return True
 
-    def snip(self, ln: int | None = None, col: int | None = None, end_ln: int | None = None, end_col: int | None = None) -> list[str]:
-        if ln is None:
-            ln, col, end_ln, end_col = self.loc
-
+    def sniploc(self, ln: int, col: int, end_ln: int, end_col: int) -> list[str]:
         if end_ln == ln:
             return [bistr(self.root._lines[ln][col : end_col])]
         else:
             return [bistr((l := self.root._lines)[ln][col:])] + l[ln + 1 : end_ln] + [bistr(l[end_ln][:end_col])]
 
-    def snipsrc(self, ln: int | None = None, col: int | None = None, end_ln: int | None = None, end_col: int | None = None) -> str:
-        return '\n'.join(self.snip(ln, col, end_ln, end_col))
+    def snip(self) -> list[str]:
+        return self.sniploc(*self.loc)
+
+    def sniploc_src(self, ln: int, col: int, end_ln: int, end_col: int) -> str:
+        return '\n'.join(self.sniploc(ln, col, end_ln, end_col))
+
+    def snip_src(self) -> str:
+        return '\n'.join(self.sniploc(*self.loc))
 
     def get_indent(self) -> str:
         """Determine proper indentation of node at `stmt` (or other similar) level at or above self, otherwise at root
@@ -934,28 +937,33 @@ class FST:
 
         return self
 
-    def touchall(self) -> 'FST':  # -> Self:
-        """AST node and some/all children were modified, clear out any cached info for tree down from this node."""
-
-        for a in walk(self.a):
-            a.f.touch()
-
-        return self
-
     def touchup(self) -> 'FST':  # -> Self:
         """Touch going up the tree so that all containers of modified nodes are up to date."""
 
         while self := self.parent:
             self.touch()
 
+    def touchall(self, up: bool = True) -> 'FST':  # -> Self:
+        """AST node and some/all children were modified, clear out any cached info for tree down from this node."""
+
+        for a in walk(self.a):
+            a.f.touch()
+
+        if up:
+            self.touchup()
+
+        return self
+
     @only_root
-    def fix(self, *, inplace: bool = False, raise_: bool = True) -> Union['FST', None]:  # -> Self | None
+    def fix(self, mutate: bool = False, *, inplace: bool = False, raise_: bool = True) -> Union['FST', None]:  # -> Self | None
         """Correct certain basic changes on cut or copy AST (to make subtrees parsable if the source is not by itself).
         Possibly reparses in order to verify expression. If fails the ast will be unchanged. Is meant to be a quick fix
         after an operation, not full check, for that use `.verify()`. Basically just fixes everything that succeeds
         `.is_parsable()` and then basic names and expressions on top of that (match patterns count as expressions).
 
         Args:
+            mutate: If `True` then is allowed to mutate AST nodes to match what the source looks like, may be weird like
+                in case of TypeVar `type T[>>> i: cls = sub <<<]` to AnnAssign `i: cls = sub`.
             inplace: If `True` then changes will be made to self. If `False` then self may be returned if no changes
                 made otherwise a modified copy is returned.
             raise_: Whether to raise on fail (default: True) or return None (False).
@@ -987,14 +995,15 @@ class FST:
 
             lines[ln] = bistr((l := lines[ln])[:col] + l[col + 2:])
 
-        # expression maybe parenthesize and proper ctx, also simple names
+        # expression maybe parenthesize and proper ctx, also simple match expressions to normal expressions if mutate
 
-        elif (isinstance(ast, (expr, pattern)) or
+        elif (isinstance(ast, expr) if not mutate else (
+            isinstance(ast, (expr, pattern)) or
             (isinstance(ast, arg) and not ast.annotation) or
             (isinstance(ast, TypeVar) and not ast.bound and not ast.default_value
-        )):
+        ))):
             if isinstance(ast, MatchStar):
-                return not_fixable()
+                return self
 
             try:
                 a = ast_.parse(src := self.src, mode='eval', **self._parse_params)
@@ -1018,7 +1027,66 @@ class FST:
                 if compare(a.body, ast, locs=True, type_comments=True, recurse=False):  # only top level compare needed for `ctx` and structure check
                     return self
 
+                if not inplace:
+                    lines = lines[:]
+
             a = a.body  # we know parsed to an Expression but original was not an Expression
+
+            if not inplace:
+                return FST(a, lines=lines, from_=self)
+
+            self.a = a
+            a.f    = self
+
+            self.touch()
+            self._make_fst_tree()
+
+        # source which looks like assignment to actual assignment only if mutate
+
+        elif mutate and (
+            (is_keyword := isinstance(ast, keyword)) or
+            ((is_arg := isinstance(ast, arg)) and ast.annotation) or
+            (isinstance(ast, TypeVar) and (ast.bound or ast.default_value)
+        )):
+            try:
+                a = ast_.parse(self.src, mode='exec', **self._parse_params)
+
+            except SyntaxError:  # if assign not parsing then try sanitize it
+                newlines = lines[:]
+
+                def maybe_replace(src, ln, col, end_ln, end_col):
+                    if end_ln != ln:
+                        newlines[ln] = bistr(f'{newlines[ln][:col]}{src}{newlines[end_ln][end_col:]}')
+
+                        del newlines[ln + 1 : end_ln + 1]
+
+                if is_keyword:
+                    maybe_replace(' = ', self.ln, self.col + len(ast.arg), (v := ast.value.f).ln, v.col)
+                elif is_arg:
+                    maybe_replace(': ', self.ln, self.col + len(ast.arg), (an := ast.annotation.f).ln, an.col)
+                elif not (dv := ast.default_value):  # is_typevar
+                    maybe_replace(': ', self.ln, self.col + len(ast.name), (b := ast.bound).f.ln, b.f.col)  # b must be present
+                elif not (b := ast.bound):
+                    maybe_replace(' = ', self.ln, self.col + len(ast.name), dv.f.ln, dv.f.col)
+                else:
+                    maybe_replace(' = ', b.f.end_ln, b.f.end_col, dv.f.ln, dv.f.col)
+                    maybe_replace(': ', self.ln, self.col + len(ast.name), b.f.ln, b.f.col)
+
+                try:
+                    a = ast_.parse('\n'.join(newlines), mode='exec', **self._parse_params)
+                except SyntaxError:
+                    return not_fixable()
+
+                if not inplace:
+                    lines = newlines
+                else:
+                    self._lines = newlines
+
+            else:
+                if not inplace:
+                    lines = lines[:]
+
+            a = a.body[0]  # we know parsed to an Expression but original was not an Expression
 
             if not inplace:
                 return FST(a, lines=lines, from_=self)
@@ -1031,7 +1099,7 @@ class FST:
 
         return self
 
-    def copy(self, *, decorators: bool = True, fix: bool = True, raise_: bool = True) -> 'FST':
+    def copy(self, *, decorators: bool = True, fix: bool | Literal['mutate'] = True, raise_: bool = True) -> 'FST':
         if not (loc := self.bloc if decorators else self.loc):
             raise ValueError('cannot copy ast without location')
 
@@ -1046,11 +1114,11 @@ class FST:
 
         fst._offset(loc.ln, loc.col, -loc.ln, -lines[loc.ln].c2b(loc.col))
 
-        fst._lines = self.snip(*loc)
+        fst._lines = self.sniploc(*loc)
 
         fst._dedent_tail(indent)
 
-        return fst.fix(inplace=True, raise_=raise_) if fix else fst
+        return fst.fix(mutate=(fix == 'mutate'), inplace=True, raise_=raise_) if fix else fst
 
 
 
@@ -1068,14 +1136,12 @@ class FST:
 
 
 
-    # mutate()
-    # ^^^^^^^^
-    # * copy()
-    #   cut()
-    #   remove()
-    #   append()
-    #   insert()
-    #   replace()
+    # + copy()  multi
+    #   cut()  multi
+    #   remove()  multi
+    #   append()  multi
+    #   insert()  multi
+    #   replace()  multi
 
 
 
