@@ -273,13 +273,13 @@ class TestFST(unittest.TestCase):
         src = 'class cls:\n if True:\n  i = 1\n else:\n  j = 2'
         ast = parse(src)
 
-        self.assertEqual(src.split('\n'), ast.f.snip())
-        self.assertEqual(src.split('\n'), ast.body[0].f.snip())
-        self.assertEqual('if True:\n  i = 1\n else:\n  j = 2'.split('\n'), ast.body[0].body[0].f.snip())
-        self.assertEqual(['i = 1'], ast.body[0].body[0].body[0].f.snip())
-        self.assertEqual(['j = 2'], ast.body[0].body[0].orelse[0].f.snip())
+        self.assertEqual(src.split('\n'), ast.f.copy_lines())
+        self.assertEqual(src.split('\n'), ast.body[0].f.copy_lines())
+        self.assertEqual('if True:\n  i = 1\n else:\n  j = 2'.split('\n'), ast.body[0].body[0].f.copy_lines())
+        self.assertEqual(['i = 1'], ast.body[0].body[0].body[0].f.copy_lines())
+        self.assertEqual(['j = 2'], ast.body[0].body[0].orelse[0].f.copy_lines())
 
-        self.assertEqual(['True:', '  i'], ast.f.root.sniploc(1, 4, 2, 3))
+        self.assertEqual(['True:', '  i'], ast.f.root.copyl_lines(1, 4, 2, 3))
 
     def test_get_indent(self):
         ast = parse('i = 1; j = 2')

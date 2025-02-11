@@ -121,7 +121,7 @@ class FST:
         if self.is_root:
             return '\n'.join(self._lines)
         elif loc := self.loc:
-            return '\n'.join(self.sniploc(*loc))
+            return self.copyl_src(*loc)
         else:
             return None
 
@@ -838,20 +838,20 @@ class FST:
 
         return True
 
-    def sniploc(self, ln: int, col: int, end_ln: int, end_col: int) -> list[str]:
+    def copyl_lines(self, ln: int, col: int, end_ln: int, end_col: int) -> list[str]:
         if end_ln == ln:
             return [bistr(self.root._lines[ln][col : end_col])]
         else:
             return [bistr((l := self.root._lines)[ln][col:])] + l[ln + 1 : end_ln] + [bistr(l[end_ln][:end_col])]
 
-    def snip(self) -> list[str]:
-        return self.sniploc(*self.loc)
+    def copy_lines(self) -> list[str]:
+        return self.copyl_lines(*self.loc)
 
-    def sniploc_src(self, ln: int, col: int, end_ln: int, end_col: int) -> str:
-        return '\n'.join(self.sniploc(ln, col, end_ln, end_col))
+    def copyl_src(self, ln: int, col: int, end_ln: int, end_col: int) -> str:
+        return '\n'.join(self.copyl_lines(ln, col, end_ln, end_col))
 
-    def snip_src(self) -> str:
-        return '\n'.join(self.sniploc(*self.loc))
+    def copy_src(self) -> str:
+        return '\n'.join(self.copyl_lines(*self.loc))
 
     def get_indent(self) -> str:
         """Determine proper indentation of node at `stmt` (or other similar) level at or above self, otherwise at root
@@ -1187,7 +1187,7 @@ class FST:
 
         fst._offset(loc.ln, loc.col, -loc.ln, -lines[loc.ln].c2b(loc.col - prefix_len))
 
-        fst._lines = self.sniploc(*loc)
+        fst._lines = self.copyl_lines(*loc)
 
         fst._dedent_tail(indent)
 
