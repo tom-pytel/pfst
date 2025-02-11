@@ -842,7 +842,7 @@ class FST:
         if end_ln == ln:
             return [bistr(self.root._lines[ln][col : end_col])]
         else:
-            return [bistr((l := self.root._lines)[ln][col:])] + l[ln + 1 : end_ln] + [bistr(l[end_ln][:end_col])]
+            return [bistr((ls := self.root._lines)[ln][col:])] + ls[ln + 1 : end_ln] + [bistr(ls[end_ln][:end_col])]
 
     def copy_lines(self) -> list[str]:
         return self.copyl_lines(*self.loc)
@@ -974,6 +974,44 @@ class FST:
             self.touchup()
 
         return self
+
+    def dell_lines(self, ln: int, col: int, end_ln: int, end_col: int) -> list[str]:
+        ls = self.root._lines
+
+        if end_ln == ln:
+            ls[ln] = bistr((l := ls[ln])[:col] + l[end_col:])
+
+        else:
+            ls[end_ln] = bistr(ls[ln][:col]) + bistr(ls[end_ln][end_col:])
+
+            del ls[ln : end_ln]
+
+    def del_lines(self) -> list[str]:
+        return self.dell_lines(*self.loc)
+
+    def cutl_lines(self, ln: int, col: int, end_ln: int, end_col: int) -> list[str]:
+        ls = self.root._lines
+
+        if end_ln == ln:
+            ret    = [bistr((l := ls[ln])[col : end_col])]
+            ls[ln] = bistr(l[:col] + l[end_col:])
+
+        else:
+            ret        = [bistr((l := ls[ln])[col:])] + ls[ln + 1 : end_ln] + [bistr((le := ls[end_ln])[:end_col])]
+            ls[end_ln] = bistr(l[:col]) + bistr(le[end_col:])
+
+            del ls[ln : end_ln]
+
+        return ret
+
+    def cut_lines(self) -> list[str]:
+        return self.cutl_lines(*self.loc)
+
+    def cutl_src(self, ln: int, col: int, end_ln: int, end_col: int) -> str:
+        return '\n'.join(self.cutl_lines(ln, col, end_ln, end_col))
+
+    def cut_src(self) -> str:
+        return '\n'.join(self.cutl_lines(*self.loc))
 
     @only_root
     def fix(self, mutate: bool = False, *, inplace: bool = False) -> Union['FST', None]:  # -> Self | None
@@ -1180,21 +1218,22 @@ class FST:
 
 
 
-    def _make_fst_and_dedent(self, findent: AST, newast: AST, loc: fstloc, prefix_len: int = 0) -> 'FST':
+    def _make_fst_and_dedent(self, findent: AST, newast: AST, copy_loc: fstloc, cut_loc: fstloc | None = None,
+                             prefix_len: int = 0) -> 'FST':
         indent = findent.get_indent()
         lines  = self.root._lines
         fst    = FST(newast, lines=lines, from_=self)  # we use original lines for nodes offset calc before putting new lines
 
-        fst._offset(loc.ln, loc.col, -loc.ln, -lines[loc.ln].c2b(loc.col - prefix_len))
+        fst._offset(copy_loc.ln, copy_loc.col, -copy_loc.ln, -lines[copy_loc.ln].c2b(copy_loc.col - prefix_len))
 
-        fst._lines = self.copyl_lines(*loc)
+        fst._lines = self.copyl_lines(*copy_loc) if cut_loc is None else self.cutl_lines(*cut_loc)
 
         fst._dedent_tail(indent)
 
         return fst
 
     def _make_Expression_fst_and_dedent(self, ffirst: AST, newast: AST, loc: fstloc, prefix: str = '', suffix: str = '') -> 'FST':
-        fst = self._make_fst_and_dedent(ffirst, Expression(body=newast), loc, len(prefix))
+        fst = self._make_fst_and_dedent(ffirst, Expression(body=newast), loc, None, len(prefix))
 
         lines                 = fst._lines
         lines[-1]             = bistr(lines[-1] + suffix)
