@@ -48,10 +48,10 @@ AST_FIELDS_PREV[(MatchMapping, 'patterns')] = 5
 STATEMENTISH            = (stmt, ExceptHandler, match_case)  # always in lists, cannot be inside multilines
 STATEMENTISH_OR_STMTMOD = (stmt, ExceptHandler, match_case, Module, Interactive)
 
-re_empty_line_start     = re.compile(r'[ \t]*')    # start of completely empty or space-filled line (from start pos)
-re_empty_line           = re.compile(r'[ \t]*$')   # completely empty or space-filled line (from start pos)
+re_empty_line_start     = re.compile(r'[ \t]*')    # start of completely empty or space-filled line (from start pos, start of line indentation)
+re_empty_line           = re.compile(r'[ \t]*$')   # completely empty or space-filled line (from start pos, start of line indentation)
 re_line_continuation    = re.compile(r'[^#]*\\$')  # line continuation with backslash not following a comment start '#' (from start pos, assumed no asts contained in line)
-re_next_code            = re.compile(r'^[ \t]*([^ \t#\\])')
+re_next_code            = re.compile(r'\s*([^\s#\\]+)')  # next non-space non-comment non-continuation code string
 
 
 def only_root(func):
@@ -1126,8 +1126,62 @@ class FST:
 
 
 
-    def _make_fst_and_dedent(self, indentfst: AST, newast: AST, loc: fstloc, prefix_len: int = 0) -> 'FST':
-        indent = indentfst.get_indent()
+    def _next_code(self, ln: int, col: int, end_ln: int, end_col: int) -> tuple[str, int, int] | None:
+        """Get next non-comment non-continuation non-space position. Assuming start pos not inside str or comment. Code
+        is not necessarily AST stuff, it can be commas, colons, the 'try' keyword, etc... Code can include multiple
+        AST nodes in return str if there are no spaces between them like 'a+b'."""
+
+        lines = self.root._lines
+
+        if end_ln == ln:
+            return (ln, m.start(1), m.group(1)) if (m := re_next_code.match(lines[ln], col, end_col)) else None
+
+        for i in range(ln, end_ln):
+            if m := re_next_code.match(lines[i], col):
+                return i, m.start(1), m.group(1)
+
+            col = 0
+
+        if m := re_next_code.match(lines[end_ln], 0, end_col):
+            return end_ln, m.start(1), m.group(1)
+
+        return None
+
+    def _prev_code(self, ln: int, col: int, end_ln: int, end_col: int) -> tuple[str, int, int] | None:
+        """Same rules as `_next_code()` but return the LAST occurance of code in the span."""
+
+        lines = self.root._lines
+
+        def last_match(l, c, ec):
+            ret = None
+
+            while m := re_next_code.match(l, c, ec):
+                if l[(c := (ret := m).end(1)) : c + 1] in '#\\':
+                    break
+
+            return ret
+
+        if end_ln == ln:
+            return (ln, m.start(1), m.group(1)) if (m := last_match(lines[ln], col, end_col)) else None
+
+        for i in range(end_ln, ln, -1):
+            if m := last_match(lines[i], 0, end_col):
+                return i, m.start(1), m.group(1)
+
+            end_col = 0x7fffffffffffffff
+
+        if m := last_match(lines[ln], col, end_col):
+            return ln, m.start(1), m.group(1)
+
+        return None
+
+
+
+
+
+
+    def _make_fst_and_dedent(self, findent: AST, newast: AST, loc: fstloc, prefix_len: int = 0) -> 'FST':
+        indent = findent.get_indent()
         lines  = self.root._lines
         fst    = FST(newast, lines=lines, from_=self)  # we use original lines for nodes offset calc before putting new lines
 
@@ -1139,8 +1193,8 @@ class FST:
 
         return fst
 
-    def _make_Expression_fst_and_dedent(self, indentfst: AST, newast: AST, loc: fstloc, prefix: str = '', suffix: str = '') -> 'FST':
-        fst = self._make_fst_and_dedent(indentfst, Expression(body=newast), loc, len(prefix))
+    def _make_Expression_fst_and_dedent(self, ffirst: AST, newast: AST, loc: fstloc, prefix: str = '', suffix: str = '') -> 'FST':
+        fst = self._make_fst_and_dedent(ffirst, Expression(body=newast), loc, len(prefix))
 
         lines                 = fst._lines
         lines[-1]             = bistr(lines[-1] + suffix)
