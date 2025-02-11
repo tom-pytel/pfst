@@ -51,7 +51,8 @@ STATEMENTISH_OR_STMTMOD = (stmt, ExceptHandler, match_case, Module, Interactive)
 re_empty_line_start     = re.compile(r'[ \t]*')    # start of completely empty or space-filled line (from start pos, start of line indentation)
 re_empty_line           = re.compile(r'[ \t]*$')   # completely empty or space-filled line (from start pos, start of line indentation)
 re_line_continuation    = re.compile(r'[^#]*\\$')  # line continuation with backslash not following a comment start '#' (from start pos, assumed no asts contained in line)
-re_next_code            = re.compile(r'\s*([^\s#\\]+)')  # next non-space non-comment non-continuation code string
+re_next_code            = re.compile(r'\s*([^\s#\\]+)')      # next non-space non-continuation non-comment code text, don't look into strings with this!
+re_next_code_or_comment = re.compile(r'\s*([^\s#\\]+|#.*)')  # next non-space non-continuation code or comment text, don't look into strings with this!
 
 
 def only_root(func):
@@ -87,6 +88,59 @@ class fstloc(NamedTuple):
     col:     int
     end_ln:  int
     end_col: int
+
+
+def _next_code(lines: list[str], ln: int, col: int, end_ln: int, end_col: int, comment: bool = False
+               ) -> tuple[str, int, int] | None:
+    """Get next non-space non-continuation maybe non-comment position. Assuming start pos not inside str or comment.
+    Code is not necessarily AST stuff, it can be commas, colons, the 'try' keyword, etc... Code can include multiple
+    AST nodes in return str if there are no spaces between them like 'a+b'."""
+
+    re_pat = re_next_code_or_comment if comment else re_next_code
+
+    if end_ln == ln:
+        return (ln, m.start(1), m.group(1)) if (m := re_pat.match(lines[ln], col, end_col)) else None
+
+    for i in range(ln, end_ln):
+        if m := re_pat.match(lines[i], col):
+            return i, m.start(1), m.group(1)
+
+        col = 0
+
+    if m := re_pat.match(lines[end_ln], 0, end_col):
+        return end_ln, m.start(1), m.group(1)
+
+    return None
+
+
+def _prev_code(lines: list[str], ln: int, col: int, end_ln: int, end_col: int, comment: bool = False
+               ) -> tuple[str, int, int] | None:
+    """Same rules as `_next_code()` but return the LAST occurance of code or maybe comment in the span."""
+
+    re_pat = re_next_code_or_comment if comment else re_next_code
+
+    def last_match(l, c, ec):
+        ret = None
+
+        while m := re_pat.match(l, c, ec):
+            if l[(c := (ret := m).end(1)) : c + 1] in '#\\':
+                break
+
+        return ret
+
+    if end_ln == ln:
+        return (ln, m.start(1), m.group(1)) if (m := last_match(lines[ln], col, end_col)) else None
+
+    for i in range(end_ln, ln, -1):
+        if m := last_match(lines[i], 0, end_col):
+            return i, m.start(1), m.group(1)
+
+        end_col = 0x7fffffffffffffff
+
+    if m := last_match(lines[ln], col, end_col):
+        return ln, m.start(1), m.group(1)
+
+    return None
 
 
 class FST:
@@ -1164,61 +1218,9 @@ class FST:
 
 
 
-    def _next_code(self, ln: int, col: int, end_ln: int, end_col: int) -> tuple[str, int, int] | None:
-        """Get next non-comment non-continuation non-space position. Assuming start pos not inside str or comment. Code
-        is not necessarily AST stuff, it can be commas, colons, the 'try' keyword, etc... Code can include multiple
-        AST nodes in return str if there are no spaces between them like 'a+b'."""
-
-        lines = self.root._lines
-
-        if end_ln == ln:
-            return (ln, m.start(1), m.group(1)) if (m := re_next_code.match(lines[ln], col, end_col)) else None
-
-        for i in range(ln, end_ln):
-            if m := re_next_code.match(lines[i], col):
-                return i, m.start(1), m.group(1)
-
-            col = 0
-
-        if m := re_next_code.match(lines[end_ln], 0, end_col):
-            return end_ln, m.start(1), m.group(1)
-
-        return None
-
-    def _prev_code(self, ln: int, col: int, end_ln: int, end_col: int) -> tuple[str, int, int] | None:
-        """Same rules as `_next_code()` but return the LAST occurance of code in the span."""
-
-        lines = self.root._lines
-
-        def last_match(l, c, ec):
-            ret = None
-
-            while m := re_next_code.match(l, c, ec):
-                if l[(c := (ret := m).end(1)) : c + 1] in '#\\':
-                    break
-
-            return ret
-
-        if end_ln == ln:
-            return (ln, m.start(1), m.group(1)) if (m := last_match(lines[ln], col, end_col)) else None
-
-        for i in range(end_ln, ln, -1):
-            if m := last_match(lines[i], 0, end_col):
-                return i, m.start(1), m.group(1)
-
-            end_col = 0x7fffffffffffffff
-
-        if m := last_match(lines[ln], col, end_col):
-            return ln, m.start(1), m.group(1)
-
-        return None
 
 
-
-
-
-
-    def _make_fst_and_dedent(self, findent: AST, newast: AST, copy_loc: fstloc, cut_loc: fstloc | None = None,
+    def _make_fst_and_dedent(self, findent: AST, newast: AST, copy_loc: fstloc, del_loc: fstloc | None = None,
                              prefix_len: int = 0) -> 'FST':
         indent = findent.get_indent()
         lines  = self.root._lines
@@ -1226,7 +1228,10 @@ class FST:
 
         fst._offset(copy_loc.ln, copy_loc.col, -copy_loc.ln, -lines[copy_loc.ln].c2b(copy_loc.col - prefix_len))
 
-        fst._lines = self.copyl_lines(*copy_loc) if cut_loc is None else self.cutl_lines(*cut_loc)
+        fst._lines = self.copyl_lines(*copy_loc)
+
+        if del_loc:
+            self.dell_lines(*del_loc)
 
         fst._dedent_tail(indent)
 
