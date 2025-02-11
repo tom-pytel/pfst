@@ -48,9 +48,10 @@ AST_FIELDS_PREV[(MatchMapping, 'patterns')] = 5
 STATEMENTISH            = (stmt, ExceptHandler, match_case)  # always in lists, cannot be inside multilines
 STATEMENTISH_OR_STMTMOD = (stmt, ExceptHandler, match_case, Module, Interactive)
 
-re_empty_line_start     = re.compile(r'^[ \t]*')    # start of completely empty or space-filled line
-re_empty_line           = re.compile(r'^[ \t]*$')   # completely empty or space-filled line
-re_line_continuation    = re.compile(r'^[^#]*\\$')  # line continuation with backslash not following a comment start '#' (assumed no asts contained in line)
+re_empty_line_start     = re.compile(r'[ \t]*')    # start of completely empty or space-filled line (from start pos)
+re_empty_line           = re.compile(r'[ \t]*$')   # completely empty or space-filled line (from start pos)
+re_line_continuation    = re.compile(r'[^#]*\\$')  # line continuation with backslash not following a comment start '#' (from start pos, assumed no asts contained in line)
+re_next_code            = re.compile(r'^[ \t]*([^ \t#\\])')
 
 
 def only_root(func):
@@ -868,12 +869,12 @@ class FST:
             for i in range(1, len(siblings)):  # first try simple rules for all elements past first one
                 self = siblings[i].f
 
-                if re_empty_line.match(line_start := lines[(ln := self.ln)][:self.col]):
+                if re_empty_line.match(line_start := lines[(ln := self.ln)], 0, col := self.col):
                     prev    = self.prev(True)  # there must be one
                     end_col = 0 if prev.end_ln < (preceding_ln := ln - 1) else prev.end_col
 
-                    if not re_line_continuation.match(lines[preceding_ln][end_col:]):
-                        return line_start + extra_indent
+                    if not re_line_continuation.match(lines[preceding_ln], end_col):
+                        return line_start[:col] + extra_indent
 
             self        = siblings[0].f  # didn't find in siblings[1:], now the special rules for the first one
             ln          = self.ln
@@ -881,11 +882,11 @@ class FST:
             prev        = self.prev(True)  # there may not be one ("try" at start of module)
             prev_end_ln = prev.end_ln if prev else -2
 
-            while ln > prev_end_ln and re_empty_line.match(line_start := lines[ln][:col]):
+            while ln > prev_end_ln and re_empty_line.match(line_start := lines[ln], 0, col):
                 end_col = 0 if (preceding_ln := ln - 1) != prev_end_ln else prev.end_col
 
-                if not ln or not re_line_continuation.match((l := lines[preceding_ln])[end_col:]):
-                    return line_start + extra_indent
+                if not ln or not re_line_continuation.match((l := lines[preceding_ln]), end_col):
+                    return line_start[:col] + extra_indent
 
                 ln  = preceding_ln
                 col = len(l) - 1  # was line continuation so last char is '\' and rest should be empty
@@ -1283,8 +1284,7 @@ class FST:
 
 
     def slice(self, start: int | None = None, stop: int | None = None, *, field: str | None = None,
-              fix: bool | Literal['mutate'] = True, cut: bool = False
-    ) -> 'FST':
+              fix: bool | Literal['mutate'] = True, cut: bool = False) -> 'FST':
         if isinstance(self.a, STATEMENTISH_OR_STMTMOD):
             return self._slice_stmt(start, stop, field, fix, cut)
 
@@ -1297,7 +1297,8 @@ class FST:
         if isinstance(self.a, Dict):
             return self._slice_dict(start, stop, fix, cut)
 
-        raise NotImplementedError  # TODO: THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS!
+        raise ValueError(f"cannot slice a '{self.a.__class__.__name__}'")
+
 
 
 
