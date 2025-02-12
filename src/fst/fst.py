@@ -1262,32 +1262,40 @@ class FST:
         if is_last_in_seq:  # last element in sequence
             copy_end_col = (self_end_col -
                 ((copy_end_ln != self_end_ln or copy_end_col != self_end_col) and
-                 lines[self_end_ln].startswith(suffix, self_end_col - 1)))
+                 lines[self_end_ln].startswith(suffix, self_end_col - 1))
+            )
             copy_end_ln  = self_end_ln
 
         else:  # not last element in sequence
-            comma_ln, comma_col, s = _next_code(lines, copy_end_ln, copy_end_col, self_end_ln, self_end_col)  # technically, end of span should be start of next element but end of self works as well
+            comma_ln, comma_col, s = _next_code(lines, copy_end_ln, copy_end_col, self_end_ln, self_end_col, True)  # technically, end of span should be start of next element but end of self works as well
+
+            if has_pre_comma_comment := s.startswith('#'):
+                comma_ln, comma_col, s = _next_code(lines, comma_ln + 1, 0, self_end_ln, self_end_col)
 
             assert s.startswith(',')
 
-            end_ln = _next_code(lines, comma_ln, comma_col + 1, self_end_ln, self_end_col)[0]
+            end_ln, _, s = _next_code(lines, comma_ln, comma_col + 1, self_end_ln, self_end_col, True)
 
-            if end_ln != comma_ln:
+            if has_post_comma_comment := s.startswith('#'):
+                end_ln = _next_code(lines, end_ln + 1, 0, self_end_ln, self_end_col)[0]
 
-                # TODO: what if comma is not on same line as flast
-
+            if has_pre_comma_comment or has_post_comma_comment:
                 copy_end_ln  = end_ln
                 copy_end_col = 0
 
-        copy_loc = fstloc(copy_ln, copy_col, copy_end_ln, copy_end_col)
+        newast.lineno         = copy_ln + 1
+        newast.col_offset     = lines[copy_ln].c2b(copy_col)
+        newast.end_lineno     = copy_end_ln + 1
+        newast.end_col_offset = lines[copy_end_ln].c2b(copy_end_col)
+        copy_loc              = fstloc(copy_ln, copy_col, copy_end_ln, copy_end_col)
 
         fst = self._make_fst_and_dedent(ffirst, Expression(body=newast), copy_loc, None, len(prefix))
 
         lines                 = fst._lines
         lines[-1]             = bistr(lines[-1] + suffix)
         lines[0]              = bistr(prefix + lines[0])
-        newast.col_offset     = 0
-        newast.end_col_offset = lines[-1].lenbytes
+        newast.col_offset     = 0  # before prefix
+        newast.end_col_offset = lines[-1].lenbytes  # after suffix
 
         newast.f.touch()
         fst.touch()
@@ -1317,7 +1325,7 @@ class FST:
         return start, stop
 
     def _slice_stmt(self, start, stop, field, fix, cut) -> 'FST':
-        if cut: raise NotImplementedError  # TODO: THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS!
+        if cut: raise NotImplementedError  # TODO: THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS!
 
         ast = self.a
 
@@ -1352,11 +1360,12 @@ class FST:
         return fst
 
     def _slice_tuple_list_or_set(self, start, stop, fix, cut) -> 'FST':
-        if cut: raise NotImplementedError  # TODO: THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS!
+        if cut: raise NotImplementedError  # TODO: THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS!
 
         ast         = self.a
         elts        = ast.elts
         is_set      = isinstance(ast, Set)
+        is_tuple    = not is_set and isinstance(ast, Tuple)
         ctx         = None if is_set else Load() if fix else ast.ctx.__class__()
         start, stop = self._slice_fixup_index(ast, elts, 'elts', start, stop)
 
@@ -1367,7 +1376,7 @@ class FST:
                     args=[], keywords=[], lineno=1, col_offset=0, end_lineno=1, end_col_offset=5
                 )), lines=[bistr('set()')], from_=self)
 
-            elif isinstance(ast, Tuple):
+            elif is_tuple:
                 return FST(Expression(body=Tuple(elts=[], ctx=ctx, lineno=1, col_offset=0, end_lineno=1, end_col_offset=2
                                                  )), lines=[bistr('()')], from_=self)
             else:  # list
@@ -1379,30 +1388,37 @@ class FST:
         asts   = [copy(elts[i]) for i in range(start, stop)]
 
         if is_set:
-            newseq = Set(elts=asts, lineno=afirst.lineno, col_offset=afirst.col_offset,
-                         end_lineno=alast.end_lineno, end_col_offset=alast.end_col_offset)
+            newseq = Set(elts=asts)  # location will be set later when span is potentially grown
             prefix = '{'
             suffix = '}'
 
         else:
-            newseq = ast.__class__(elts=asts, ctx=ctx, lineno=afirst.lineno, col_offset=afirst.col_offset,  # we only set location for what we know for sure is in lines
-                                   end_lineno=alast.end_lineno, end_col_offset=alast.end_col_offset)
+            newseq = ast.__class__(elts=asts, ctx=ctx)
 
             if fix and not isinstance(ast.ctx, Load):
                 set_ctx(newseq, Load)
 
-            if isinstance(ast, Tuple):
+            if is_tuple:
                 prefix = '('
-                suffix = ')'  # ',)' if len(asts) == 1 else ')'
+                suffix = ')'
 
             else:  # list
                 prefix = '['
                 suffix = ']'
 
-        return self._make_Expression_copy_seq_and_dedent(afirst.f, alast.f, newseq, cut, stop == len(elts), prefix, suffix)
+        fst = self._make_Expression_copy_seq_and_dedent(afirst.f, alast.f, newseq, cut, stop == len(elts), prefix, suffix)
+
+        if is_tuple and len(asts) == 1:  # maybe need to add a postfix comma
+
+            # TODO: this
+
+            pass
+
+
+        return fst
 
     def _slice_dict(self, start, stop, fix, cut) -> 'FST':
-        if cut: raise NotImplementedError  # TODO: THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS!
+        if cut: raise NotImplementedError  # TODO: THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS!
 
         ast         = self.a
         keys        = ast.keys
