@@ -91,7 +91,7 @@ class fstloc(NamedTuple):
 
 
 def _next_code(lines: list[str], ln: int, col: int, end_ln: int, end_col: int, comment: bool = False
-               ) -> tuple[str, int, int] | None:
+               ) -> tuple[int, int, str] | None:
     """Get next non-space non-continuation maybe non-comment position. Assuming start pos not inside str or comment.
     Code is not necessarily AST stuff, it can be commas, colons, the 'try' keyword, etc... Code can include multiple
     AST nodes in return str if there are no spaces between them like 'a+b'."""
@@ -114,7 +114,7 @@ def _next_code(lines: list[str], ln: int, col: int, end_ln: int, end_col: int, c
 
 
 def _prev_code(lines: list[str], ln: int, col: int, end_ln: int, end_col: int, comment: bool = False
-               ) -> tuple[str, int, int] | None:
+               ) -> tuple[int, int, str] | None:
     """Same rules as `_next_code()` but return the LAST occurance of code or maybe comment in the span."""
 
     re_pat = re_next_code_or_comment if comment else re_next_code
@@ -1237,8 +1237,51 @@ class FST:
 
         return fst
 
-    def _make_Expression_fst_and_dedent(self, ffirst: AST, newast: AST, loc: fstloc, prefix: str = '', suffix: str = '') -> 'FST':
-        fst = self._make_fst_and_dedent(ffirst, Expression(body=newast), loc, None, len(prefix))
+    def _make_Expression_copy_seq_and_dedent(self, ffirst: AST, flast: AST, newast: AST, cut: bool, is_last_in_seq: bool,
+                                             prefix: str = '', suffix: str = '') -> 'FST':
+        lines        = self.root._lines
+        self_end_ln  = self.end_ln
+        self_end_col = self.end_col
+        copy_ln      = ffirst.ln
+        copy_col     = ffirst.col
+        copy_end_ln  = flast.end_ln
+        copy_end_col = flast.end_col
+
+        if not ffirst.pfield.idx:  # first element in sequence
+            if lines[(start_ln := self.ln)].startswith(prefix, start_col := self.col):
+                start_col += 1
+
+            if code := _next_code(lines, start_ln, start_col, copy_ln, copy_col, True):
+                copy_ln  = code[0]
+                copy_col = start_col if copy_ln == start_ln else 0
+
+        else:  # not first element in sequence
+            if re_empty_line.match(lines[copy_ln], 0, copy_col):
+                copy_col = len(lines[(copy_ln := copy_ln - 1)])
+
+        if is_last_in_seq:  # last element in sequence
+            copy_end_col = (self_end_col -
+                ((copy_end_ln != self_end_ln or copy_end_col != self_end_col) and
+                 lines[self_end_ln].startswith(suffix, self_end_col - 1)))
+            copy_end_ln  = self_end_ln
+
+        else:  # not last element in sequence
+            comma_ln, comma_col, s = _next_code(lines, copy_end_ln, copy_end_col, self_end_ln, self_end_col)  # technically, end of span should be start of next element but end of self works as well
+
+            assert s.startswith(',')
+
+            end_ln = _next_code(lines, comma_ln, comma_col + 1, self_end_ln, self_end_col)[0]
+
+            if end_ln != comma_ln:
+
+                # TODO: what if comma is not on same line as flast
+
+                copy_end_ln  = end_ln
+                copy_end_col = 0
+
+        copy_loc = fstloc(copy_ln, copy_col, copy_end_ln, copy_end_col)
+
+        fst = self._make_fst_and_dedent(ffirst, Expression(body=newast), copy_loc, None, len(prefix))
 
         lines                 = fst._lines
         lines[-1]             = bistr(lines[-1] + suffix)
@@ -1312,10 +1355,10 @@ class FST:
         if cut: raise NotImplementedError  # TODO: THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS!
 
         ast         = self.a
-        body        = ast.elts
+        elts        = ast.elts
         is_set      = isinstance(ast, Set)
         ctx         = None if is_set else Load() if fix else ast.ctx.__class__()
-        start, stop = self._slice_fixup_index(ast, body, 'elts', start, stop)
+        start, stop = self._slice_fixup_index(ast, elts, 'elts', start, stop)
 
         if start == stop:
             if is_set:
@@ -1331,9 +1374,9 @@ class FST:
                 return FST(Expression(body=List(elts=[], ctx=ctx, lineno=1, col_offset=0, end_lineno=1, end_col_offset=2
                                                  )), lines=[bistr('[]')], from_=self)
 
-        afirst = body[start]
-        loc    = fstloc((f := afirst.f).ln, f.col, (l := (alast := body[stop - 1]).f.loc).end_ln, l.end_col)
-        asts   = [copy(body[i]) for i in range(start, stop)]
+        afirst = elts[start]
+        alast  = elts[stop - 1]
+        asts   = [copy(elts[i]) for i in range(start, stop)]
 
         if is_set:
             newseq = Set(elts=asts, lineno=afirst.lineno, col_offset=afirst.col_offset,
@@ -1350,13 +1393,13 @@ class FST:
 
             if isinstance(ast, Tuple):
                 prefix = '('
-                suffix = ',)' if len(asts) == 1 else ')'
+                suffix = ')'  # ',)' if len(asts) == 1 else ')'
 
             else:  # list
                 prefix = '['
                 suffix = ']'
 
-        return self._make_Expression_fst_and_dedent(afirst.f, newseq, loc, prefix, suffix)
+        return self._make_Expression_copy_seq_and_dedent(afirst.f, alast.f, newseq, cut, stop == len(elts), prefix, suffix)
 
     def _slice_dict(self, start, stop, fix, cut) -> 'FST':
         if cut: raise NotImplementedError  # TODO: THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS!
@@ -1371,15 +1414,13 @@ class FST:
 
         values  = ast.values
         afirst  = keys[start]
-        loc     = fstloc((f := afirst.f).ln, f.col, (l := (alast := values[stop - 1]).f.loc).end_ln, l.end_col)
+        alast   = values[stop - 1]
         akeys   = [copy(keys[i]) for i in range(start, stop)]
         avalues = [copy(values[i]) for i in range(start, stop)]
         newmap  = Dict(keys=akeys, values=avalues, lineno=afirst.lineno, col_offset=afirst.col_offset,
                        end_lineno=alast.end_lineno, end_col_offset=alast.end_col_offset)
 
-        return self._make_Expression_fst_and_dedent(afirst.f, newmap, loc, '{', '}')
-
-
+        return self._make_Expression_copy_seq_and_dedent(afirst.f, alast.f, newmap, cut, stop == len(keys), '{', '}')
 
     def slice(self, start: int | None = None, stop: int | None = None, *, field: str | None = None,
               fix: bool | Literal['mutate'] = True, cut: bool = False) -> 'FST':

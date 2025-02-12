@@ -828,7 +828,7 @@ class TestFST(unittest.TestCase):
             f = FST.fromsrc('tuple[*tuple[int, ...]]').a.body[0].value.slice.f.copy(fix=True)
             self.assertEqual('(*tuple[int, ...],)', f.src)
 
-    def test_slice(self):
+    def test_slice_stmt(self):
         self.assertEqual('\n'.join(parse("""
 def f():
     i = 1
@@ -959,6 +959,7 @@ Module .. ROOT 0,0 -> 0,10
     0] Pass .. 0,6 -> 0,10
             """.strip(), 'if 2: pass')
 
+    def test_slice_seq_expr(self):
         dumptest(self, parse("""
 (1, 2, 3, 4)
             """.strip()).body[0].value.f.slice(1, 3), """
