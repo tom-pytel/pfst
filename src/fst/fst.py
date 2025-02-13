@@ -1237,47 +1237,47 @@ class FST:
 
         return fst
 
-    def _make_Expression_seq_copy_and_dedent(self, ffirst: AST, flast: AST, newast: AST, cut: bool, is_last_in_seq: bool,
-                                             prefix: str = '', suffix: str = '') -> 'FST':
+    def _make_Expression_seq_copy_and_dedent(self, newast: AST, cut: bool, ffirst: AST, flast: AST, seq_loc: fstloc,
+                                             is_last_in_seq: bool, prefix: str = '', suffix: str = '') -> 'FST':
         lines        = self.root._lines
-        self_end_ln  = self.end_ln
-        self_end_col = self.end_col
+        seq_end_ln   = seq_loc.end_ln
+        seq_end_col  = seq_loc.end_col
         copy_ln      = ffirst.ln
         copy_col     = ffirst.col
         copy_end_ln  = flast.end_ln
         copy_end_col = flast.end_col
 
         if not ffirst.pfield.idx:  # first element in sequence
-            if lines[(start_ln := self.ln)].startswith(prefix, start_col := self.col):
-                start_col += 1
+            copy_ln  = seq_loc.ln
+            copy_col = seq_loc.col
 
-            if code := _next_code(lines, start_ln, start_col, copy_ln, copy_col, True):
-                copy_ln  = code[0]
-                copy_col = start_col if copy_ln == start_ln else 0
+            # if code := _next_code(lines, seq_loc.ln, seq_loc.col, copy_ln, copy_col, True):
+            #     copy_ln  = code[0]
+            #     copy_col = seq_loc.col if copy_ln == seq_loc.ln else 0
 
         else:  # not first element in sequence
             if re_empty_line.match(lines[copy_ln], 0, copy_col):
                 copy_col = len(lines[(copy_ln := copy_ln - 1)])
 
         if is_last_in_seq:  # last element in sequence
-            copy_end_col = (self_end_col -
-                ((copy_end_ln != self_end_ln or copy_end_col != self_end_col) and
-                 lines[self_end_ln].startswith(suffix, self_end_col - 1))
+            copy_end_col = (seq_end_col -
+                ((copy_end_ln != seq_end_ln or copy_end_col != seq_end_col) and
+                 lines[seq_end_ln].startswith(suffix, seq_end_col - 1))
             )
-            copy_end_ln  = self_end_ln
+            copy_end_ln  = seq_end_ln
 
         else:  # not last element in sequence
-            comma_ln, comma_col, s = _next_code(lines, copy_end_ln, copy_end_col, self_end_ln, self_end_col, True)  # technically, end of span should be start of next element but end of self works as well
+            comma_ln, comma_col, s = _next_code(lines, copy_end_ln, copy_end_col, seq_end_ln, seq_end_col, True)  # technically, end of span should be start of next element but end of self works as well
 
             if has_pre_comma_comment := s.startswith('#'):
-                comma_ln, comma_col, s = _next_code(lines, comma_ln + 1, 0, self_end_ln, self_end_col)
+                comma_ln, comma_col, s = _next_code(lines, comma_ln + 1, 0, seq_end_ln, seq_end_col)
 
             assert s.startswith(',')
 
-            end_ln, _, s = _next_code(lines, comma_ln, comma_col + 1, self_end_ln, self_end_col, True)
+            end_ln, _, s = _next_code(lines, comma_ln, comma_col + 1, seq_end_ln, seq_end_col, True)
 
             if has_post_comma_comment := s.startswith('#'):
-                end_ln = _next_code(lines, end_ln + 1, 0, self_end_ln, self_end_col)[0]
+                end_ln = _next_code(lines, end_ln + 1, 0, seq_end_ln, seq_end_col)[0]
 
             if has_pre_comma_comment or has_post_comma_comment:
                 copy_end_ln  = end_ln
@@ -1406,7 +1406,25 @@ class FST:
                 prefix = '['
                 suffix = ']'
 
-        fst = self._make_Expression_seq_copy_and_dedent(afirst.f, alast.f, newseq, cut, stop == len(elts), prefix, suffix)
+        if not is_tuple:
+            seq_loc = fstloc(self.ln, self.col + 1, self.end_ln, self.end_col - 1)
+
+            assert self.root._lines[self.ln].startswith(prefix, self.col)
+            assert self.root._lines[seq_loc.end_ln].startswith(suffix, seq_loc.end_col)
+
+        else:
+            if (self.root._lines[(ln := self.ln)].startswith('(', col := self.col) and
+                (ln != (f0 := elts[0].f).ln or col != f0.col)
+            ):
+                seq_loc = fstloc(ln, col + 1, self.end_ln, self.end_col - 1)
+
+                assert self.root._lines[seq_loc.end_ln].startswith(')', seq_loc.end_col)
+
+            else:
+                seq_loc = fstloc(ln, col, self.end_ln, self.end_col)
+
+        fst = self._make_Expression_seq_copy_and_dedent(newseq, cut, afirst.f, alast.f, seq_loc, stop == len(elts),
+                                                        prefix, suffix)
 
         if is_tuple and len(asts) == 1:  # need to add a postfix comma to a single element tuple if is not already there
             f = (body := fst.a.body).elts[-1].f
@@ -1438,8 +1456,13 @@ class FST:
         avalues = [copy(values[i]) for i in range(start, stop)]
         newmap  = Dict(keys=akeys, values=avalues, lineno=afirst.lineno, col_offset=afirst.col_offset,
                        end_lineno=alast.end_lineno, end_col_offset=alast.end_col_offset)
+        seq_loc = fstloc(self.ln, self.col + 1, self.end_ln, self.end_col - 1)
 
-        return self._make_Expression_seq_copy_and_dedent(afirst.f, alast.f, newmap, cut, stop == len(keys), '{', '}')
+        assert self.root._lines[self.ln].startswith('{', self.col)
+        assert self.root._lines[seq_loc.end_ln].startswith('}', seq_loc.end_col)
+
+        return self._make_Expression_seq_copy_and_dedent(newmap, cut, afirst.f, alast.f, seq_loc, stop == len(keys),
+                                                         '{', '}')
 
     def slice(self, start: int | None = None, stop: int | None = None, *, field: str | None = None,
               fix: bool | Literal['mutate'] = True, cut: bool = False) -> 'FST':
