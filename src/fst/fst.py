@@ -1237,7 +1237,7 @@ class FST:
 
         return fst
 
-    def _make_Expression_copy_seq_and_dedent(self, ffirst: AST, flast: AST, newast: AST, cut: bool, is_last_in_seq: bool,
+    def _make_Expression_seq_copy_and_dedent(self, ffirst: AST, flast: AST, newast: AST, cut: bool, is_last_in_seq: bool,
                                              prefix: str = '', suffix: str = '') -> 'FST':
         lines        = self.root._lines
         self_end_ln  = self.end_ln
@@ -1406,14 +1406,17 @@ class FST:
                 prefix = '['
                 suffix = ']'
 
-        fst = self._make_Expression_copy_seq_and_dedent(afirst.f, alast.f, newseq, cut, stop == len(elts), prefix, suffix)
+        fst = self._make_Expression_seq_copy_and_dedent(afirst.f, alast.f, newseq, cut, stop == len(elts), prefix, suffix)
 
-        if is_tuple and len(asts) == 1:  # maybe need to add a postfix comma
+        if is_tuple and len(asts) == 1:  # need to add a postfix comma to a single element tuple if is not already there
+            f = (body := fst.a.body).elts[-1].f
 
-            # TODO: this
+            if not _next_code(fst._lines, f.end_ln, f.end_col, fst.end_ln, fst.end_col)[2].startswith(','):
+                fst._lines[end_ln]   = bistr(f'{(l := fst._lines[(end_ln := f.end_ln)])[:(c := f.end_col)]},{l[c:]}')
+                body.end_col_offset += 1
 
-            pass
-
+                body.f.touch()
+                fst.touch()
 
         return fst
 
@@ -1436,7 +1439,7 @@ class FST:
         newmap  = Dict(keys=akeys, values=avalues, lineno=afirst.lineno, col_offset=afirst.col_offset,
                        end_lineno=alast.end_lineno, end_col_offset=alast.end_col_offset)
 
-        return self._make_Expression_copy_seq_and_dedent(afirst.f, alast.f, newmap, cut, stop == len(keys), '{', '}')
+        return self._make_Expression_seq_copy_and_dedent(afirst.f, alast.f, newmap, cut, stop == len(keys), '{', '}')
 
     def slice(self, start: int | None = None, stop: int | None = None, *, field: str | None = None,
               fix: bool | Literal['mutate'] = True, cut: bool = False) -> 'FST':

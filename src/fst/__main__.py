@@ -38,7 +38,7 @@ def main():
     if args.no_verify:
         ast.f.verify()
 
-    ast.f.dump(indent=args.indent)
+    ast.f.dump(full=args.full, indent=args.indent)
 
 
 if __name__ == '__main__':
