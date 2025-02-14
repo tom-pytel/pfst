@@ -1251,15 +1251,15 @@ class FST:
 
         return fst
 
-    def _make_Expression_seq_copy_and_dedent(self, newast: AST, cut: bool,
-                                             ffirst: 'FST', flast: 'FST', fpast: Union['FST', None],
+    def _make_Expression_seq_copy_and_dedent(self, newast: AST, cut: bool, ffirst: 'FST', flast: 'FST',
+                                             fpre: Union['FST', None], fpost: Union['FST', None],
                                              seq_loc: fstloc, prefix: str, suffix: str) -> 'FST':
 
         # start of special sauce  # TODO: make this specialer? (specifiable behavior options, better multiline handling, etc...)
 
         lines = self.root._lines
 
-        if not ffirst.pfield.idx:  # first element in sequence
+        if not fpre:  # first element in sequence
             copy_ln  = del_ln  = seq_loc.ln
             copy_col = del_col = seq_loc.col
 
@@ -1270,28 +1270,31 @@ class FST:
             if re_empty_line.match(lines[copy_ln], 0, copy_col):
                 copy_col = len(lines[(copy_ln := copy_ln - 1)])  # include previous newline as prefix
 
-        if not fpast:  # last element in sequence
+        if not fpost:  # last element in sequence
             copy_end_ln  = del_end_ln  = seq_loc.end_ln
             copy_end_col = del_end_col = seq_loc.end_col
 
-            if ffirst.pfield.idx and (ln := ffirst.ln) != del_end_ln and re_empty_line.match(lines[ln], 0, ffirst.col):  # expand del_col for better alignment of multiline closing suffix, NOT SURE ABOUT THIS?!?
-                del_col = min(del_col, del_end_col)
+            if fpre:
+                if ffirst.ln == fpre.end_ln:  # only comma between them
+                    del_col = fpre.end_col
+                if (ln := ffirst.ln) != del_end_ln and re_empty_line.match(lines[ln], 0, ffirst.col):  # expand del_col for better alignment of multiline closing suffix, NOT SURE ABOUT THIS?!?
+                    del_col = min(del_col, del_end_col)
 
         else:  # not last element in sequence
-            del_end_ln   = fpast.ln
-            del_end_col  = fpast.col
+            del_end_ln  = fpost.ln
+            del_end_col = fpost.col
 
-            if flast.end_ln == fpast.ln:  # only comma between them
+            if flast.end_ln == fpost.ln:  # only comma between them
                 copy_end_ln  = flast.end_ln
                 copy_end_col = flast.end_col
 
             else:  # preserve formatting newlines and comments
-                ln, col, s = _next_code(lines, flast.end_ln, flast.end_col, copy_end_ln := fpast.ln, fpast.col)
+                ln, col, s = _next_code(lines, flast.end_ln, flast.end_col, copy_end_ln := fpost.ln, fpost.col)
 
                 assert s.startswith(',')
 
                 if ln != copy_end_ln:
-                    copy_end_col = re_empty_line_start.match(lines[seq_loc.end_ln], 0, fpast.col).end(0)  # maybe dedent from multiline elements depending on what last line of whole expr does, NOT SURE ABOUT THIS?!?
+                    copy_end_col = re_empty_line_start.match(lines[seq_loc.end_ln], 0, fpost.col).end(0)  # maybe dedent from multiline elements depending on what last line of whole expr does, NOT SURE ABOUT THIS?!?
                 else:
                     copy_end_col = col + 1  # comma not on last element line but on same line as next past last element, preserve its position
 
@@ -1405,7 +1408,8 @@ class FST:
         f0     = elts[0].f
         ffirst = elts[start].f
         flast  = elts[stop - 1].f
-        fpast  = None if stop == len(elts) else elts[stop].f
+        fpre   = elts[start - 1].f if start else None
+        fpost  = None if stop == len(elts) else elts[stop].f
 
         if not cut:
             asts = [copy(elts[i]) for i in range(start, stop)]
@@ -1453,7 +1457,7 @@ class FST:
             else:
                 seq_loc = fstloc(ln, col, self.end_ln, self.end_col)
 
-        fst = self._make_Expression_seq_copy_and_dedent(newast, cut, ffirst, flast, fpast, seq_loc, prefix, suffix)
+        fst = self._make_Expression_seq_copy_and_dedent(newast, cut, ffirst, flast, fpre, fpost, seq_loc, prefix, suffix)
 
         if is_tuple:
             if len(asts) == 1:  # maybe need to add a postfix comma to copied single element tuple if is not already there
@@ -1506,7 +1510,8 @@ class FST:
         values = ast.values
         ffirst = keys[start].f
         flast  = values[stop - 1].f
-        fpast  = None if stop == len(keys) else keys[stop].f
+        fpre   = values[start - 1].f if start else None
+        fpost  = None if stop == len(keys) else keys[stop].f
 
         if not cut:
             akeys   = [copy(keys[i]) for i in range(start, stop)]
@@ -1525,7 +1530,7 @@ class FST:
         assert self.root._lines[self.ln].startswith('{', self.col)
         assert self.root._lines[seq_loc.end_ln].startswith('}', seq_loc.end_col)
 
-        return self._make_Expression_seq_copy_and_dedent(newast, cut, ffirst, flast, fpast, seq_loc, '{', '}')
+        return self._make_Expression_seq_copy_and_dedent(newast, cut, ffirst, flast, fpre, fpost, seq_loc, '{', '}')
 
     def slice(self, start: int | None = None, stop: int | None = None, *, field: str | None = None,
               fix: bool | Literal['mutate'] = True, cut: bool = False) -> 'FST':

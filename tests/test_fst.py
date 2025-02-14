@@ -13,6 +13,289 @@ PYFNMS = sum((
     start=[]
 )
 
+CUT_DATA = [
+("""
+(       # hello
+    1,  # last line
+    2,  # second line
+    3,  # third line
+)
+""", 'body[0].value', None, None, """
+()
+""", """
+(       # hello
+    1,  # last line
+    2,  # second line
+    3,  # third line
+)
+"""),
+
+("""
+(       # hello
+    1,  # last line
+    2,  # second line
+    3,  # third line
+)
+""", 'body[0].value', 0, 2, """
+(3,  # third line
+)
+""", """
+(       # hello
+    1,  # last line
+    2,  # second line
+)
+"""),
+
+("""
+(       # hello
+    1,  # last line
+    2,  # second line
+    3,  # third line
+)
+""", 'body[0].value', 1, 2, """
+(       # hello
+    1,  # last line
+    3,  # third line
+)
+""", """
+(
+    2,  # second line
+)
+"""),
+
+("""
+(       # hello
+    1,  # last line
+    2,  # second line
+    3,  # third line
+)
+""", 'body[0].value', 2, None, """
+(       # hello
+    1,  # last line
+    2,  # second line
+)
+""", """
+(
+    3,  # third line
+)
+"""),
+
+("""
+(           # hello
+    1, 2, 3 # last line
+)
+""", 'body[0].value', None, None, """
+()
+""", """
+(           # hello
+    1, 2, 3 # last line
+)
+"""),
+
+("""
+(           # hello
+    1, 2, 3 # last line
+)
+""", 'body[0].value', 0, 2, """
+(3, # last line
+)
+""", """
+(           # hello
+    1, 2)
+"""),
+
+("""
+(           # hello
+    1, 2, 3 # last line
+)
+""", 'body[0].value', 1, 2, """
+(           # hello
+    1, 3 # last line
+)
+""", """
+(2,)
+"""),
+
+("""
+(           # hello
+    1, 2, 3 # last line
+)
+""", 'body[0].value', 2, None, """
+(           # hello
+    1, 2)
+""", """
+(3, # last line
+)
+"""),
+
+("""
+1, 2, 3, 4
+""", 'body[0].value', 1, 3, """
+1, 4
+""", """
+(2, 3)
+"""),
+
+("""
+1, 2, 3, 4
+""", 'body[0].value', -1, None, """
+1, 2, 3
+""", """
+(4,)
+"""),
+
+("""
+1, 2, 3, 4
+""", 'body[0].value', None, None, """
+()
+""", """
+(1, 2, 3, 4)
+"""),
+
+("""
+1, 2, 3, 4
+""", 'body[0].value', 1, 1, """
+1, 2, 3, 4
+""", """
+()
+"""),
+
+("""
+1, 2, 3, 4
+""", 'body[0].value', 1, None, """
+1,
+""", """
+(2, 3, 4)
+"""),
+
+("""
+1, 2, 3, 4
+""", 'body[0].value', 0, 3, """
+4,
+""", """
+(1, 2, 3)
+"""),
+
+("""
+(1, 2
+  ,  # comment
+3, 4)
+""", 'body[0].value', 1, 2, """
+(1, 3, 4)
+""", """
+(2
+  ,  # comment
+)
+"""),
+
+("""
+(1, 2
+  ,
+3, 4)
+""", 'body[0].value', 1, 2, """
+(1, 3, 4)
+""", """
+(2
+  ,
+)
+"""),
+
+("""
+(1, 2
+  , 3, 4)
+""", 'body[0].value', 1, 2, """
+(1, 3, 4)
+""", """
+(2
+  ,)
+"""),
+
+("""
+(1, 2  # comment
+  , 3, 4)
+""", 'body[0].value', 1, 2, """
+(1, 3, 4)
+""", """
+(2  # comment
+  ,)
+"""),
+
+("""
+if 1:
+    (       # hello
+        1,  # last line
+        2,  # second line
+        3,  # third line
+    )
+""", 'body[0].body[0].value', None, None, """
+if 1:
+    ()
+""", """
+(       # hello
+    1,  # last line
+    2,  # second line
+    3,  # third line
+)
+"""),
+
+("""
+if 1:
+    (       # hello
+        1,  # last line
+        2,  # second line
+        3,  # third line
+    )
+""", 'body[0].body[0].value', 0, 2, """
+if 1:
+    (3,  # third line
+    )
+""", """
+(       # hello
+    1,  # last line
+    2,  # second line
+)
+"""),
+
+("""
+if 1:
+    (       # hello
+        1,  # last line
+        2,  # second line
+        3,  # third line
+    )
+""", 'body[0].body[0].value', 1, 2, """
+if 1:
+    (       # hello
+        1,  # last line
+        3,  # third line
+    )
+""", """
+(
+    2,  # second line
+)
+"""),
+
+("""
+if 1:
+    (       # hello
+        1,  # last line
+        2,  # second line
+        3,  # third line
+    )
+""", 'body[0].body[0].value', 2, None, """
+if 1:
+    (       # hello
+        1,  # last line
+        2,  # second line
+    )
+""", """
+(
+    3,  # third line
+)
+"""),
+
+]  # END OF CUT_DATA
+
 
 def read(fnm):
     with open(fnm) as f:
@@ -1849,8 +2132,17 @@ Expression .. ROOT 0,0 -> 2,1
         #     """.strip(), """
         #     """.strip())
 
-    def test_cut(seld):
-        pass
+    def test_cut(self):
+        for src, elt, start, stop, cut_src, cut_slice in CUT_DATA:
+            src  = src.strip()
+            t    = parse(src)
+            f    = eval(f't.{elt}', {'t': t}).f
+            s    = f.slice(start, stop, cut=True)
+            tsrc = t.f.src
+            ssrc = s.src
+
+            self.assertEqual(tsrc, cut_src.strip())
+            self.assertEqual(ssrc, cut_slice.strip())
 
 
 
@@ -1864,16 +2156,36 @@ Expression .. ROOT 0,0 -> 2,1
 
 
 
+def _regen_cut_data():
+    newlines = []
 
+    for src, elt, start, stop, *_ in CUT_DATA:
+        src  = src.strip()
+        t    = parse(src)
+        f    = eval(f't.{elt}', {'t': t}).f
+        s    = f.slice(start, stop, cut=True)
+        tsrc = t.f.src
+        ssrc = s.src
 
+        assert not tsrc.startswith('\n') or tsrc.endswith('\n')
+        assert not ssrc.startswith('\n') or ssrc.endswith('\n')
 
+        newlines.extend(f'''("""\n{src}\n""", {elt!r}, {start}, {stop}, """\n{tsrc}\n""", """\n{ssrc}\n"""),\n'''.split('\n'))
 
+    with open(sys.argv[0]) as f:
+        lines = f.read().split('\n')
 
+    start = lines.index('CUT_DATA = [')
+    stop  = lines.index(']  # END OF CUT_DATA')
+
+    lines[start + 1 : stop] = newlines
+
+    with open(sys.argv[0], 'w') as f:
+        lines = f.write('\n'.join(lines))
 
 
 if __name__ == '__main__':
     import argparse
-    import sys
 
     parser = argparse.ArgumentParser(prog='python -m fst')
 
@@ -1883,6 +2195,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     if args.regen:
+        _regen_cut_data()
         sys.exit(0)
 
     unittest.main()
