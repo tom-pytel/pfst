@@ -329,8 +329,8 @@ class FST:
             ln: Line of offset point.
             col: Column of offset point (char index).
             dln: Number of lines to offset everything on or after offset point, can be 0.
-            dcol_offset: Column offset to apply to everything ON the offset point line (in bytes). Columns on lines
-                AFTER the offset line will not be changed.
+            dcol_offset: Column offset to apply to everything ON the offset point line `ln` (in bytes). Columns not on
+                this line will not be changed.
             inc: Whether to offset endpoint if it falls exactly at ln / col or not (inclusive).
         """
 
@@ -1012,19 +1012,22 @@ class FST:
 
         return self
 
-    def touchup(self) -> 'FST':  # -> Self:
+    def touchup(self, touch_self: bool = False) -> 'FST':  # -> Self:
         """Touch going up the tree so that all containers of modified nodes are up to date."""
+
+        if touch_self:
+            self.touch()
 
         while self := self.parent:
             self.touch()
 
-    def touchall(self, up: bool = True) -> 'FST':  # -> Self:
+    def touchall(self, touch_up: bool = True) -> 'FST':  # -> Self:
         """AST node and some/all children were modified, clear out any cached info for tree down from this node."""
 
         for a in walk(self.a):
             a.f.touch()
 
-        if up:
+        if touch_up:
             self.touchup()
 
         return self
@@ -1036,7 +1039,7 @@ class FST:
             ls[ln] = bistr((l := ls[ln])[:col] + l[end_col:])
 
         else:
-            ls[end_ln] = bistr(ls[ln][:col]) + bistr(ls[end_ln][end_col:])
+            ls[end_ln] = bistr(ls[ln][:col] + ls[end_ln][end_col:])
 
             del ls[ln : end_ln]
 
@@ -1221,16 +1224,18 @@ class FST:
 
 
     def _make_fst_and_dedent(self, findent: 'FST', newast: AST, copy_loc: fstloc, del_loc: fstloc | None = None,
-                             prefix_len: int = 0) -> 'FST':
+                             copy_prefix_len: int = 0) -> 'FST':
         indent = findent.get_indent()
         lines  = self.root._lines
         fst    = FST(newast, lines=lines, from_=self)  # we use original lines for nodes offset calc before putting new lines
 
-        fst._offset(copy_loc.ln, copy_loc.col, -copy_loc.ln, -lines[copy_loc.ln].c2b(copy_loc.col - prefix_len))
+        fst._offset(copy_loc.ln, copy_loc.col, -copy_loc.ln, -lines[copy_loc.ln].c2b(copy_loc.col - copy_prefix_len))
 
         fst._lines = self.copyl_lines(*copy_loc)
 
         if del_loc:
+            self.root._offset(del_loc.end_ln, del_loc.end_col, del_loc.ln - del_loc.end_ln,
+                              lines[del_loc.ln].c2b(del_loc.col) - lines[del_loc.end_ln].c2b(del_loc.end_col), True)  # True because we may have an unparenthesized tuple that shrinks to a span length of 0
             self.dell_lines(*del_loc)
 
         fst._dedent_tail(indent)
@@ -1241,58 +1246,52 @@ class FST:
                                              ffirst: 'FST', flast: 'FST', fpast: Union['FST', None],
                                              seq_loc: fstloc, prefix: str, suffix: str) -> 'FST':
 
-        # start of special sauce  # TODO: make this specialer?
+        # start of special sauce  # TODO: make this specialer? (behavior options, better multiline handling, etc...)
 
         lines = self.root._lines
 
         if not ffirst.pfield.idx:  # first element in sequence
-            copy_ln  = seq_loc.ln
-            copy_col = seq_loc.col
+            copy_ln  = del_ln  = seq_loc.ln
+            copy_col = del_col = seq_loc.col
 
         else:  # not first element in sequence
-            if re_empty_line.match(lines[(copy_ln := ffirst.ln)], 0, copy_col := ffirst.col):
+            copy_ln  = del_ln  = ffirst.ln
+            copy_col = del_col = ffirst.col
+
+            if re_empty_line.match(lines[copy_ln], 0, copy_col):
                 copy_col = len(lines[(copy_ln := copy_ln - 1)])  # include previous newline as prefix
 
         if not fpast:  # last element in sequence
-            copy_end_ln  = seq_loc.end_ln
-            copy_end_col = seq_loc.end_col
+            copy_end_ln  = del_end_ln  = seq_loc.end_ln
+            copy_end_col = del_end_col = seq_loc.end_col
+
+            if ffirst.pfield.idx and (ln := ffirst.ln) != del_end_ln and re_empty_line.match(lines[ln], 0, ffirst.col):  # expand del_col for better alignment of multiline closing suffix, NOT SURE ABOUT THIS?!?
+                del_col = min(del_col, del_end_col)
 
         else:  # not last element in sequence
+            del_end_ln   = fpast.ln
+            del_end_col  = fpast.col
+
             if flast.end_ln == fpast.ln:  # only comma between them
                 copy_end_ln  = flast.end_ln
                 copy_end_col = flast.end_col
 
             else:  # preserve formatting newlines and comments
-                copy_end_ln = fpast.ln
-
-                comma_ln, comma_col, s = _next_code(lines, flast.end_ln, flast.end_col, copy_end_ln, fpast.col)
+                ln, col, s = _next_code(lines, flast.end_ln, flast.end_col, copy_end_ln := fpast.ln, fpast.col)
 
                 assert s.startswith(',')
 
-                if comma_ln != copy_end_ln:
-                    copy_end_col = re_empty_line_start.match(lines[seq_loc.end_ln], 0, fpast.col).end(0)  # maybe dedent from multiline elements
+                if ln != copy_end_ln:
+                    copy_end_col = re_empty_line_start.match(lines[seq_loc.end_ln], 0, fpast.col).end(0)  # maybe dedent from multiline elements depending on what last line of whole expr does, NOT SURE ABOUT THIS?!?
                 else:
-                    copy_end_col = comma_col + 1  # comma in weird place, preserve its position
+                    copy_end_col = col + 1  # comma not on last element line but on same line as next past last element, preserve its position
 
         copy_loc = fstloc(copy_ln, copy_col, copy_end_ln, copy_end_col)
-        del_loc  = None
 
-        # if not cut:
-        #     del_loc = None
-
-        # else:
-        #     del_ln      = copy_ln
-        #     del_col     = copy_col
-        #     del_end_ln  = flast.end_ln
-        #     del_end_col = flast.end_col
-
-        #     if not is_first_in_seq and copy_prefix_newline:
-
-
-
-
-
-        #     del_loc = fstloc(del_ln, del_col, del_end_ln, del_end_col)
+        if not cut:
+            del_loc = None
+        else:
+            del_loc = fstloc(del_ln, del_col, del_end_ln, del_end_col)
 
         # end of special sauce
 
@@ -1372,7 +1371,7 @@ class FST:
         return fst
 
     def _slice_tuple_list_or_set(self, start, stop, fix, cut) -> 'FST':
-        if cut: raise NotImplementedError  # TODO: THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS!
+        # if cut: raise NotImplementedError  # TODO: THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS!
 
         ast         = self.a
         elts        = ast.elts
@@ -1395,6 +1394,7 @@ class FST:
                 return FST(Expression(body=List(elts=[], ctx=ctx, lineno=1, col_offset=0, end_lineno=1, end_col_offset=2
                                                  )), lines=[bistr('[]')], from_=self)
 
+        f0     = elts[0].f
         ffirst = elts[start].f
         flast  = elts[stop - 1].f
         fpast  = None if stop == len(elts) else elts[stop].f
@@ -1433,9 +1433,7 @@ class FST:
             assert self.root._lines[seq_loc.end_ln].startswith(suffix, seq_loc.end_col)
 
         else:
-            if (self.root._lines[(ln := self.ln)].startswith('(', col := self.col) and
-                (ln != (f0 := elts[0].f).ln or col != f0.col)
-            ):
+            if (self.root._lines[(ln := self.ln)].startswith('(', col := self.col) and (ln != f0.ln or col != f0.col)):
                 seq_loc = fstloc(ln, col + 1, self.end_ln, self.end_col - 1)
 
                 assert self.root._lines[seq_loc.end_ln].startswith(')', seq_loc.end_col)
