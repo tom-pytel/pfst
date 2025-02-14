@@ -1651,9 +1651,9 @@ Expression .. ROOT 0,0 -> 2,1
   ,
 3, 4)
             """.strip()).body[0].value.f.slice(1, 2), """
-Expression .. ROOT 0,0 -> 0,4
+Expression .. ROOT 0,0 -> 2,1
   .body
-    Tuple .. 0,0 -> 0,4
+    Tuple .. 0,0 -> 2,1
       .elts[1]
       0] Constant .. 0,1 -> 0,2
         .value
@@ -1663,16 +1663,18 @@ Expression .. ROOT 0,0 -> 0,4
       .ctx
         Load
             """.strip(), """
-(2,)
+(2
+  ,
+)
             """.strip())
 
         dumptest(self, parse("""
 (1, 2
   , 3, 4)
             """.strip()).body[0].value.f.slice(1, 2), """
-Expression .. ROOT 0,0 -> 0,4
+Expression .. ROOT 0,0 -> 1,4
   .body
-    Tuple .. 0,0 -> 0,4
+    Tuple .. 0,0 -> 1,4
       .elts[1]
       0] Constant .. 0,1 -> 0,2
         .value
@@ -1682,16 +1684,17 @@ Expression .. ROOT 0,0 -> 0,4
       .ctx
         Load
             """.strip(), """
-(2,)
+(2
+  ,)
             """.strip())
 
         dumptest(self, parse("""
 (1, 2  # comment
   , 3, 4)
             """.strip()).body[0].value.f.slice(1, 2), """
-Expression .. ROOT 0,0 -> 1,2
+Expression .. ROOT 0,0 -> 1,4
   .body
-    Tuple .. 0,0 -> 1,2
+    Tuple .. 0,0 -> 1,4
       .elts[1]
       0] Constant .. 0,1 -> 0,2
         .value
@@ -1701,8 +1704,8 @@ Expression .. ROOT 0,0 -> 1,2
       .ctx
         Load
             """.strip(), """
-(2,  # comment
-)
+(2  # comment
+  ,)
             """.strip())
 
     def test_slice_seq_expr_5(self):
@@ -1846,7 +1849,8 @@ Expression .. ROOT 0,0 -> 2,1
         #     """.strip(), """
         #     """.strip())
 
-
+    def test_cut(seld):
+        pass
 
 
 
@@ -1868,4 +1872,17 @@ Expression .. ROOT 0,0 -> 2,1
 
 
 if __name__ == '__main__':
+    import argparse
+    import sys
+
+    parser = argparse.ArgumentParser(prog='python -m fst')
+
+    parser.add_argument('--regen', default=False, action='store_true',
+                        help="regenerate stuff")
+
+    args = parser.parse_args()
+
+    if args.regen:
+        sys.exit(0)
+
     unittest.main()

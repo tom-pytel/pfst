@@ -1220,7 +1220,7 @@ class FST:
 
 
 
-    def _make_fst_and_dedent(self, findent: AST, newast: AST, copy_loc: fstloc, del_loc: fstloc | None = None,
+    def _make_fst_and_dedent(self, findent: 'FST', newast: AST, copy_loc: fstloc, del_loc: fstloc | None = None,
                              prefix_len: int = 0) -> 'FST':
         indent = findent.get_indent()
         lines  = self.root._lines
@@ -1237,48 +1237,42 @@ class FST:
 
         return fst
 
-    def _make_Expression_seq_copy_and_dedent(self, newast: AST, cut: bool, ffirst: AST, flast: AST, seq_loc: fstloc,
-                                             is_last_in_seq: bool, prefix: str = '', suffix: str = '') -> 'FST':
+    def _make_Expression_seq_copy_and_dedent(self, newast: AST, cut: bool,
+                                             ffirst: 'FST', flast: 'FST', fpast: Union['FST', None],
+                                             seq_loc: fstloc, prefix: str, suffix: str) -> 'FST':
 
         # start of special sauce  # TODO: make this specialer?
 
-        lines        = self.root._lines
-        seq_end_ln   = seq_loc.end_ln
-        seq_end_col  = seq_loc.end_col
-        copy_ln      = ffirst.ln
-        copy_col     = ffirst.col
-        copy_end_ln  = flast.end_ln
-        copy_end_col = flast.end_col
+        lines = self.root._lines
 
-        if not (is_first_in_seq := ffirst.pfield.idx):  # first element in sequence
-            if copy_ln != seq_loc.ln:
-                copy_ln  = seq_loc.ln
-                copy_col = seq_loc.col
+        if not ffirst.pfield.idx:  # first element in sequence
+            copy_ln  = seq_loc.ln
+            copy_col = seq_loc.col
 
         else:  # not first element in sequence
-            if copy_prefix_newline := bool(re_empty_line.match(lines[copy_ln], 0, copy_col)):
-                copy_col = len(lines[(copy_ln := copy_ln - 1)])
+            if re_empty_line.match(lines[(copy_ln := ffirst.ln)], 0, copy_col := ffirst.col):
+                copy_col = len(lines[(copy_ln := copy_ln - 1)])  # include previous newline as prefix
 
-        if is_last_in_seq:  # last element in sequence
-            copy_end_ln  = seq_end_ln
-            copy_end_col = seq_end_col
+        if not fpast:  # last element in sequence
+            copy_end_ln  = seq_loc.end_ln
+            copy_end_col = seq_loc.end_col
 
         else:  # not last element in sequence
-            comma_ln, comma_col, s = _next_code(lines, copy_end_ln, copy_end_col, seq_end_ln, seq_end_col, True)  # technically, end of span should be start of next element but end of self works as well
+            if flast.end_ln == fpast.ln:  # only comma between them
+                copy_end_ln  = flast.end_ln
+                copy_end_col = flast.end_col
 
-            if has_pre_comma_comment := s.startswith('#'):
-                comma_ln, comma_col, s = _next_code(lines, comma_ln + 1, 0, seq_end_ln, seq_end_col)
+            else:  # preserve formatting newlines and comments
+                copy_end_ln = fpast.ln
 
-            assert s.startswith(',')
+                comma_ln, comma_col, s = _next_code(lines, flast.end_ln, flast.end_col, copy_end_ln, fpast.col)
 
-            end_ln, _, s = _next_code(lines, comma_ln, comma_col + 1, seq_end_ln, seq_end_col, True)
+                assert s.startswith(',')
 
-            if has_post_comma_comment := s.startswith('#'):
-                end_ln = _next_code(lines, end_ln + 1, 0, seq_end_ln, seq_end_col)[0]
-
-            if has_pre_comma_comment or has_post_comma_comment:
-                copy_end_ln  = end_ln
-                copy_end_col = 0
+                if comma_ln != copy_end_ln:
+                    copy_end_col = re_empty_line_start.match(lines[seq_loc.end_ln], 0, fpast.col).end(0)  # maybe dedent from multiline elements
+                else:
+                    copy_end_col = comma_col + 1  # comma in weird place, preserve its position
 
         copy_loc = fstloc(copy_ln, copy_col, copy_end_ln, copy_end_col)
         del_loc  = None
@@ -1401,7 +1395,17 @@ class FST:
                 return FST(Expression(body=List(elts=[], ctx=ctx, lineno=1, col_offset=0, end_lineno=1, end_col_offset=2
                                                  )), lines=[bistr('[]')], from_=self)
 
-        asts = [copy(elts[i]) for i in range(start, stop)]
+        ffirst = elts[start].f
+        flast  = elts[stop - 1].f
+        fpast  = None if stop == len(elts) else elts[stop].f
+
+        if not cut:
+            asts = [copy(elts[i]) for i in range(start, stop)]
+
+        else:
+            asts = elts[start : stop]
+
+            del elts[start : stop]
 
         if is_set:
             newast = Set(elts=asts)  # location will be set later when span is potentially grown
@@ -1439,8 +1443,7 @@ class FST:
             else:
                 seq_loc = fstloc(ln, col, self.end_ln, self.end_col)
 
-        fst = self._make_Expression_seq_copy_and_dedent(newast, cut, elts[start].f, elts[stop - 1].f, seq_loc,
-                                                        stop == len(elts), prefix, suffix)
+        fst = self._make_Expression_seq_copy_and_dedent(newast, cut, ffirst, flast, fpast, seq_loc, prefix, suffix)
 
         if is_tuple and len(asts) == 1:  # need to add a postfix comma to a single element tuple if is not already there
             f = (body := fst.a.body).elts[-1].f
@@ -1463,21 +1466,21 @@ class FST:
             return FST(Expression(body=Dict(keys=[], values=[], lineno=1, col_offset=0, end_lineno=1, end_col_offset=2
                                             )), lines=[bistr('{}')], from_=self)
 
-        is_last_in_seq = stop == len(keys)
-        values         = ast.values
-        ffirst         = keys[start].f
-        flast          = values[stop - 1].f
+        values = ast.values
+        ffirst = keys[start].f
+        flast  = values[stop - 1].f
+        fpast  = None if stop == len(keys) else keys[stop].f
 
-        if cut:
+        if not cut:
+            akeys   = [copy(keys[i]) for i in range(start, stop)]
+            avalues = [copy(values[i]) for i in range(start, stop)]
+
+        else:
             akeys   = keys[start : stop]
             avalues = values[start : stop]
 
             del keys[start : stop]
             del values[start : stop]
-
-        else:
-            akeys   = [copy(keys[i]) for i in range(start, stop)]
-            avalues = [copy(values[i]) for i in range(start, stop)]
 
         newast  = Dict(keys=akeys, values=avalues)
         seq_loc = fstloc(self.ln, self.col + 1, self.end_ln, self.end_col - 1)
@@ -1485,7 +1488,7 @@ class FST:
         assert self.root._lines[self.ln].startswith('{', self.col)
         assert self.root._lines[seq_loc.end_ln].startswith('}', seq_loc.end_col)
 
-        return self._make_Expression_seq_copy_and_dedent(newast, cut, ffirst, flast, seq_loc, is_last_in_seq, '{', '}')
+        return self._make_Expression_seq_copy_and_dedent(newast, cut, ffirst, flast, fpast, seq_loc, '{', '}')
 
     def slice(self, start: int | None = None, stop: int | None = None, *, field: str | None = None,
               fix: bool | Literal['mutate'] = True, cut: bool = False) -> 'FST':
