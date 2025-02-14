@@ -269,7 +269,7 @@ class TestFST(unittest.TestCase):
         self.assertIs((f := fst.prev_child(f, False)), a.cls.f)
         self.assertIs((f := fst.prev_child(f, False)), None)
 
-    def test_snip(self):
+    def test_copy_lines(self):
         src = 'class cls:\n if True:\n  i = 1\n else:\n  j = 2'
         ast = parse(src)
 

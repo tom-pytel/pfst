@@ -325,6 +325,10 @@ class FST:
 
         Other nodes outside this tree might need offsetting so use only on root unless special circumstances.
 
+        If offsetting a zero-length node (which can result from deleting elements of an unparenthesized tuple), both the
+        start and end location will be moved if exactly at offset point if `inc` is `False`. Otherwise if `inc` is
+        `True` then the start position will remain and the end position will be expanded.
+
         Args:
             ln: Line of offset point.
             col: Column of offset point (char index).
@@ -338,20 +342,25 @@ class FST:
             f = a.f
 
             if (end_col_offset := getattr(a, 'end_col_offset', None)) is not None:
-                if (fend_ln := f.end_ln) > ln:
+                fln, fcol, fend_ln, fend_col = f.loc
+
+                if fend_ln > ln:
                     a.end_lineno += dln
 
-                elif fend_ln == ln and (f.end_col >= col if inc else f.end_col > col):
+                elif fend_ln == ln and (
+                        fend_col >= col if (inc or (fend_col == fcol and fend_ln == fln)) else fend_col > col):
                     a.end_lineno     += dln
                     a.end_col_offset  = end_col_offset + dcol_offset
 
                 else:
                     continue
 
-                if (fln := f.ln) > ln:
+                if fln > ln:
                     a.lineno += dln
 
-                elif fln == ln and f.col >= col:
+                elif fln == ln and (
+                        fcol >= col if (not (inc or (fend_col == fcol and fend_ln == fln)) or
+                                        dln < 0 or (not dln and dcol_offset < 0)) else fcol > col):
                     a.lineno     += dln
                     a.col_offset += dcol_offset
 
@@ -1246,7 +1255,7 @@ class FST:
                                              ffirst: 'FST', flast: 'FST', fpast: Union['FST', None],
                                              seq_loc: fstloc, prefix: str, suffix: str) -> 'FST':
 
-        # start of special sauce  # TODO: make this specialer? (behavior options, better multiline handling, etc...)
+        # start of special sauce  # TODO: make this specialer? (specifiable behavior options, better multiline handling, etc...)
 
         lines = self.root._lines
 
@@ -1308,8 +1317,7 @@ class FST:
         newast.col_offset     = 0  # before prefix
         newast.end_col_offset = lines[-1].lenbytes  # after suffix
 
-        newast.f.touch()
-        fst.touch()
+        newast.f.touchup(True)
 
         return fst
 
@@ -1407,6 +1415,9 @@ class FST:
 
             del elts[start : stop]
 
+            for i in range(start, len(elts)):
+                elts[i].f.pfield = astfield('elts', i)
+
         if is_set:
             newast = Set(elts=asts)  # location will be set later when span is potentially grown
             prefix = '{'
@@ -1433,7 +1444,8 @@ class FST:
             assert self.root._lines[seq_loc.end_ln].startswith(suffix, seq_loc.end_col)
 
         else:
-            if (self.root._lines[(ln := self.ln)].startswith('(', col := self.col) and (ln != f0.ln or col != f0.col)):
+            if has_parentheses := (self.root._lines[(ln := self.ln)].startswith('(', col := self.col) and
+                                   (ln != f0.ln or col != f0.col)):
                 seq_loc = fstloc(ln, col + 1, self.end_ln, self.end_col - 1)
 
                 assert self.root._lines[seq_loc.end_ln].startswith(')', seq_loc.end_col)
@@ -1443,15 +1455,42 @@ class FST:
 
         fst = self._make_Expression_seq_copy_and_dedent(newast, cut, ffirst, flast, fpast, seq_loc, prefix, suffix)
 
-        if is_tuple and len(asts) == 1:  # need to add a postfix comma to a single element tuple if is not already there
-            f = (body := fst.a.body).elts[-1].f
+        if is_tuple:
+            if len(asts) == 1:  # maybe need to add a postfix comma to copied single element tuple if is not already there
+                f = (body := fst.a.body).elts[-1].f
 
-            if not _next_code(fst._lines, f.end_ln, f.end_col, fst.end_ln, fst.end_col)[2].startswith(','):
-                fst._lines[end_ln]   = bistr(f'{(l := fst._lines[(end_ln := f.end_ln)])[:(c := f.end_col)]},{l[c:]}')
-                body.end_col_offset += 1
+                if not _next_code(fst._lines, f.end_ln, f.end_col, fst.end_ln, fst.end_col)[2].startswith(','):
+                    fst._lines[end_ln]   = bistr(f'{(l := fst._lines[(end_ln := f.end_ln)])[:(c := f.end_col)]},{l[c:]}')
+                    body.end_col_offset += 1
 
-                body.f.touch()
-                fst.touch()
+                    body.f.touchup(True)
+
+            if not elts:  # if is unparenthesized tuple and nothing left then need to add parentheses
+                if not has_parentheses:
+                    ln, col, end_ln, end_col = self.loc
+
+                    assert ln == end_ln and col == end_col
+
+                    root  = self.root
+                    lines = root.lines
+
+                    root._offset(ln, col, 0, 2, True)  # TODO: WARNING! This may not be safe if another preceding non-containing node ends EXACTLY where the unparenthesized tuple starts, does this ever happen?
+                    self.touchup(True)
+
+                    lines[ln] = bistr(f'{(l := lines[ln])[:col]}(){l[col:]}')
+
+            elif len(elts) == 1:
+                f     = elts[0].f
+                root  = self.root
+                lines = root._lines
+
+                if (not (res := _next_code(lines, f.end_ln, f.end_col, self.end_ln, self.end_col)) or
+                    not res[2].startswith(',')
+                ):
+                    lines[end_ln]          = bistr(f'{(l := lines[(end_ln := f.end_ln)])[:(c := f.end_col)]},{l[c:]}')
+                    self.a.end_col_offset += 1
+
+                    self.touchup(True)
 
         return fst
 
