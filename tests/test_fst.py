@@ -294,6 +294,72 @@ if 1:
 )
 """),
 
+("""
+{1: 2, **b, **c}
+""", 'body[0].value', 1, 2, """
+{1: 2, **c}
+""", """
+{**b}
+"""),
+
+("""
+{1: 2, **b, **c}
+""", 'body[0].value', None, None, """
+{}
+""", """
+{1: 2, **b, **c}
+"""),
+
+("""
+{1: 2, **b, **c}
+""", 'body[0].value', 2, None, """
+{1: 2, **b}
+""", """
+{**c}
+"""),
+
+("""
+i =                (self.__class__.__name__, self._name,
+                (self._handle & (_sys.maxsize*2 + 1)),
+                id(self) & (_sys.maxsize*2 + 1))
+""", 'body[0].value', 0, 3, """
+i =                (id(self) & (_sys.maxsize*2 + 1),)
+""", """
+(self.__class__.__name__, self._name,
+                (self._handle & (_sys.maxsize*2 + 1)),
+                )
+"""),
+
+("""
+i = namespace = {**__main__.__builtins__.__dict__,
+             **__main__.__dict__}
+""", 'body[0].value', 0, 1, """
+i = namespace = {**__main__.__dict__}
+""", """
+{**__main__.__builtins__.__dict__,
+             }
+"""),
+
+("""
+env = {
+    **{k.upper(): v for k, v in os.environ.items() if k.upper() not in ignore},
+    "PYLAUNCHER_DEBUG": "1",
+    "PYLAUNCHER_DRYRUN": "1",
+    "PYLAUNCHER_LIMIT_TO_COMPANY": "",
+    **{k.upper(): v for k, v in (env or {}).items()},
+}
+""", 'body[0].value', None, 2, """
+env = {"PYLAUNCHER_DRYRUN": "1",
+    "PYLAUNCHER_LIMIT_TO_COMPANY": "",
+    **{k.upper(): v for k, v in (env or {}).items()},
+}
+""", """
+{
+    **{k.upper(): v for k, v in os.environ.items() if k.upper() not in ignore},
+    "PYLAUNCHER_DEBUG": "1",
+}
+"""),
+
 ]  # END OF CUT_DATA
 
 

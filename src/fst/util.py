@@ -408,8 +408,11 @@ def copy_attributes(src: AST, dst: AST, *, compare: bool = True, type_comments: 
     return True
 
 
-def copy(ast: AST) -> AST:
+def copy(ast: AST | None) -> AST:
     """Copy a tree."""
+
+    if ast is None:
+        return None
 
     params = {}
 
