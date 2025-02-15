@@ -489,6 +489,21 @@ class FST:
 
         return lns
 
+    def _fix_singleton_tuple(self):
+        """Maybe add comma to singleton tuple if not already there."""
+
+        felt  = self.a.elts[0].f
+        root  = self.root
+        lines = root._lines
+
+        if (not (res := _next_code(lines, felt.end_ln, felt.end_col, self.end_ln, self.end_col)) or
+            not res[2].startswith(',')
+        ):
+            lines[end_ln]          = bistr(f'{(l := lines[(end_ln := felt.end_ln)])[:(c := felt.end_col)]},{l[c:]}')
+            self.a.end_col_offset += 1
+
+            self.touchup(True)
+
     # ------------------------------------------------------------------------------------------------------------------
 
     def __init__(self, ast: AST, parent: Optional['FST'] = None, pfield: astfield | None = None, **root_params):
@@ -1474,15 +1489,6 @@ class FST:
         fst = self._make_Expression_seq_copy_and_dedent(newast, cut, lfirst, llast, lpre, lpost, seq_loc, prefix, suffix)
 
         if is_tuple:
-            if len(asts) == 1:  # maybe need to add a postfix comma to copied single element tuple if is not already there
-                f = (body := fst.a.body).elts[-1].f
-
-                if not _next_code(fst._lines, f.end_ln, f.end_col, fst.end_ln, fst.end_col)[2].startswith(','):
-                    fst._lines[end_ln]   = bistr(f'{(l := fst._lines[(end_ln := f.end_ln)])[:(c := f.end_col)]},{l[c:]}')
-                    body.end_col_offset += 1
-
-                    body.f.touchup(True)
-
             if not elts:  # if is unparenthesized tuple and nothing left then need to add parentheses
                 if not has_parentheses:
                     ln, col, end_ln, end_col = self.loc
@@ -1498,17 +1504,10 @@ class FST:
                     lines[ln] = bistr(f'{(l := lines[ln])[:col]}(){l[col:]}')
 
             elif len(elts) == 1:
-                f     = elts[0].f
-                root  = self.root
-                lines = root._lines
+                self._fix_singleton_tuple()
 
-                if (not (res := _next_code(lines, f.end_ln, f.end_col, self.end_ln, self.end_col)) or
-                    not res[2].startswith(',')
-                ):
-                    lines[end_ln]          = bistr(f'{(l := lines[(end_ln := f.end_ln)])[:(c := f.end_col)]},{l[c:]}')
-                    self.a.end_col_offset += 1
-
-                    self.touchup(True)
+            if len(asts) == 1:  # maybe need to add a postfix comma to copied single element tuple if is not already there
+                fst.a.body.f._fix_singleton_tuple()
 
         return fst
 
