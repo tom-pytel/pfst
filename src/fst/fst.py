@@ -1243,14 +1243,21 @@ class FST:
 
 
     def _make_fst_and_dedent(self, findent: 'FST', newast: AST, copy_loc: fstloc, del_loc: fstloc | None = None,
-                             copy_prefix_len: int = 0) -> 'FST':
+                             prefix: str | None = None, suffix: str | None = None) -> 'FST':
         indent = findent.get_indent()
         lines  = self.root._lines
         fst    = FST(newast, lines=lines, from_=self)  # we use original lines for nodes offset calc before putting new lines
 
-        fst._offset(copy_loc.ln, copy_loc.col, -copy_loc.ln, -lines[copy_loc.ln].c2b(copy_loc.col - copy_prefix_len))
+        fst._offset(copy_loc.ln, copy_loc.col, -copy_loc.ln,
+                    (len(prefix.encode()) if prefix else 0) - lines[copy_loc.ln].c2b(copy_loc.col))
 
-        fst._lines = self.copyl_lines(*copy_loc)
+        fst._lines = fst_lines = self.copyl_lines(*copy_loc)
+
+        if prefix:
+            fst_lines[0] = bistr(prefix + fst_lines[0])
+
+        if suffix:
+            fst_lines[-1] = bistr(fst_lines[-1] + suffix)
 
         if del_loc:
             self.root._offset(del_loc.end_ln, del_loc.end_col, del_loc.ln - del_loc.end_ln,
@@ -1265,7 +1272,7 @@ class FST:
                                              lpre: Union['FST', None], lpost: Union['FST', None],
                                              seq_loc: fstloc, prefix: str, suffix: str) -> 'FST':
 
-        # start of special sauce  # TODO: make this specialer? (specifiable behavior options, better multiline handling, etc...)
+        # start of special sauce  # TODO: make this specialer? (specifiable behavior options, prettier multiline handling, etc...)
 
         lines = self.root._lines
 
@@ -1322,13 +1329,10 @@ class FST:
         newast.end_lineno     = copy_end_ln + 1
         newast.end_col_offset = lines[copy_end_ln].c2b(copy_end_col)
 
-        fst = self._make_fst_and_dedent(self, Expression(body=newast), copy_loc, del_loc, len(prefix))
+        fst = self._make_fst_and_dedent(self, Expression(body=newast), copy_loc, del_loc, prefix, suffix)
 
-        lines                 = fst._lines
-        lines[-1]             = bistr(lines[-1] + suffix)
-        lines[0]              = bistr(prefix + lines[0])
         newast.col_offset     = 0  # before prefix
-        newast.end_col_offset = lines[-1].lenbytes  # after suffix
+        newast.end_col_offset = fst._lines[-1].lenbytes  # after suffix
 
         newast.f.touchup(True)
 

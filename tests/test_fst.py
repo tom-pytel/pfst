@@ -360,6 +360,18 @@ env = {"PYLAUNCHER_DRYRUN": "1",
 }
 """),
 
+("""
+(None, False, True, 12345, 123.45, 'abcde', 'абвгд', b'abcde',
+            datetime.datetime(2004, 10, 26, 10, 33, 33),
+            bytearray(b'abcde'), [12, 345], (12, 345), {'12': 345})
+""", 'body[0].value', 5, 7, """
+(None, False, True, 12345, 123.45, b'abcde',
+            datetime.datetime(2004, 10, 26, 10, 33, 33),
+            bytearray(b'abcde'), [12, 345], (12, 345), {'12': 345})
+""", """
+('abcde', 'абвгд')
+"""),
+
 ]  # END OF CUT_DATA
 
 
