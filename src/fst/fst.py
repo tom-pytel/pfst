@@ -143,6 +143,26 @@ def _prev_code(lines: list[str], ln: int, col: int, end_ln: int, end_col: int, c
     return None
 
 
+def _slice_fixup_index(ast, body, field, start, stop) -> tuple[int, int]:
+    len_body = len(body)
+
+    if start is None:
+        start = 0
+    elif start < 0:
+        start += len_body
+
+    if stop is None:
+        stop = len_body
+    elif stop < 0:
+        stop += len_body
+
+    if start < 0 or start > len_body or stop < 0 or stop > len_body:
+        raise IndexError(f"{ast.__class__.__name__}.{field} index out of range")
+
+    return start, stop
+
+
+
 class FST:
     """AST formatting information and easy manipulation."""
 
@@ -489,6 +509,272 @@ class FST:
 
         return lns
 
+    def _make_fst_and_dedent(self, findent: 'FST', newast: AST, copy_loc: fstloc, del_loc: fstloc | None = None,
+                             prefix: str | None = None, suffix: str | None = None) -> 'FST':
+        indent = findent.get_indent()
+        lines  = self.root._lines
+        fst    = FST(newast, lines=lines, from_=self)  # we use original lines for nodes offset calc before putting new lines
+
+        fst._offset(copy_loc.ln, copy_loc.col, -copy_loc.ln,
+                    (len(prefix.encode()) if prefix else 0) - lines[copy_loc.ln].c2b(copy_loc.col))
+
+        fst._lines = fst_lines = self.copyl_lines(*copy_loc)
+
+        if prefix:
+            fst_lines[0] = bistr(prefix + fst_lines[0])
+
+        if suffix:
+            fst_lines[-1] = bistr(fst_lines[-1] + suffix)
+
+        if del_loc:
+            self.root._offset(del_loc.end_ln, del_loc.end_col, del_loc.ln - del_loc.end_ln,
+                              lines[del_loc.ln].c2b(del_loc.col) - lines[del_loc.end_ln].c2b(del_loc.end_col), True)  # True because we may have an unparenthesized tuple that shrinks to a span length of 0
+            self.dell_lines(*del_loc)
+
+        fst._dedent_tail(indent)
+
+        return fst
+
+    def _make_Expression_seq_copy_and_dedent(self, newast: AST, cut: bool, lfirst: 'FST', llast: 'FST',
+                                             lpre: Union['FST', None], lpost: Union['FST', None],
+                                             seq_loc: fstloc, prefix: str, suffix: str) -> 'FST':
+
+        # start of special sauce  # TODO: make this specialer? (specifiable behavior options, prettier multiline handling, etc...)
+
+        lines = self.root._lines
+
+        if not lpre:  # first element in sequence
+            copy_ln  = del_ln  = seq_loc.ln
+            copy_col = del_col = seq_loc.col
+
+        else:  # not first element in sequence
+            copy_ln  = del_ln  = lfirst.ln
+            copy_col = del_col = lfirst.col
+
+            if re_empty_line.match(lines[copy_ln], 0, copy_col):
+                copy_col = len(lines[(copy_ln := copy_ln - 1)])  # include previous newline as prefix
+
+        if not lpost:  # last element in sequence
+            copy_end_ln  = del_end_ln  = seq_loc.end_ln
+            copy_end_col = del_end_col = seq_loc.end_col
+
+            if lpre:
+                if lfirst.ln == lpre.end_ln:  # only comma between them
+                    del_col = lpre.end_col
+                if (ln := lfirst.ln) != del_end_ln and re_empty_line.match(lines[ln], 0, lfirst.col):  # expand del_col for better alignment of multiline closing suffix, NOT SURE ABOUT THIS?!?
+                    del_col = min(del_col, del_end_col)
+
+        else:  # not last element in sequence
+            del_end_ln  = lpost.ln
+            del_end_col = lpost.col
+
+            if llast.end_ln == lpost.ln:  # only comma between them
+                copy_end_ln  = llast.end_ln
+                copy_end_col = llast.end_col
+
+            else:  # preserve formatting newlines and comments
+                ln, col, s = _next_code(lines, llast.end_ln, llast.end_col, copy_end_ln := lpost.ln, lpost.col)
+
+                assert s.endswith(',')  # can be preceded by closing non-tuple parentheses
+
+                if ln != copy_end_ln:
+                    copy_end_col = re_empty_line_start.match(lines[seq_loc.end_ln], 0, lpost.col).end(0)  # maybe dedent from multiline elements depending on what last line of whole expr does, NOT SURE ABOUT THIS?!?
+                else:
+                    copy_end_col = col + len(s)  # comma not on last element line but on same line as next past last element, preserve its position
+
+        copy_loc = fstloc(copy_ln, copy_col, copy_end_ln, copy_end_col)
+
+        if not cut:
+            del_loc = None
+        else:
+            del_loc = fstloc(del_ln, del_col, del_end_ln, del_end_col)
+
+        # end of special sauce
+
+        newast.lineno         = copy_ln + 1
+        newast.col_offset     = lines[copy_ln].c2b(copy_col)
+        newast.end_lineno     = copy_end_ln + 1
+        newast.end_col_offset = lines[copy_end_ln].c2b(copy_end_col)
+
+        fst = self._make_fst_and_dedent(self, Expression(body=newast), copy_loc, del_loc, prefix, suffix)
+
+        newast.col_offset     = 0  # before prefix
+        newast.end_col_offset = fst._lines[-1].lenbytes  # after suffix
+
+        newast.f.touchup(True)
+
+        return fst
+
+    def _slice_stmt(self, start, stop, field, fix, cut) -> 'FST':
+        if cut: raise NotImplementedError  # TODO: THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS!
+
+        ast = self.a
+
+        if field is not None:
+            if not isinstance(body := getattr(ast, field, None), list):
+                raise ValueError(f"invalid {ast.__class__.__name__} field '{field}'")
+
+        elif isinstance(ast, Match):
+            field = 'cases'
+            body  = ast.cases
+
+        elif (body := getattr(ast, field := 'body', None)) is None or not isinstance(body, list):
+            raise ValueError(f"{ast.__class__.__name__} has no 'body' list to slice")
+
+        start, stop = _slice_fixup_index(ast, body, field, start, stop)
+
+        if start == stop:
+            return FST(Module(body=[]), lines=[bistr('')], from_=self)
+
+        afirst = body[start]
+        loc    = fstloc((f := afirst.f).ln, f.col, (l := body[stop - 1].f.loc).end_ln, l.end_col)
+        newast = Module(body=[copy(body[i]) for i in range(start, stop)])
+
+        if (fix and field == 'orelse' and not start and (stop - start) == 1 and afirst.col_offset == ast.col_offset and
+            isinstance(ast, If) and isinstance(afirst, If)
+        ):  # 'elif' -> 'if'
+            newast.body[0].col_offset += 2
+            loc                        = fstloc(loc.ln, loc.col + 2, loc.end_ln, loc.end_col)
+
+        fst = self._make_fst_and_dedent(afirst.f, newast, loc)
+
+        return fst
+
+    def _slice_tuple_list_or_set(self, start, stop, fix, cut) -> 'FST':
+        # if cut: raise NotImplementedError  # TODO: THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS!
+
+        ast         = self.a
+        elts        = ast.elts
+        is_set      = isinstance(ast, Set)
+        is_tuple    = not is_set and isinstance(ast, Tuple)
+        ctx         = None if is_set else Load() if fix else ast.ctx.__class__()
+        start, stop = _slice_fixup_index(ast, elts, 'elts', start, stop)
+
+        if start == stop:
+            if is_set:
+                return FST(Expression(body=Call(
+                    func=Name(id='set', ctx=Load(), lineno=1, col_offset=0, end_lineno=1, end_col_offset=3),
+                    args=[], keywords=[], lineno=1, col_offset=0, end_lineno=1, end_col_offset=5
+                )), lines=[bistr('set()')], from_=self)
+
+            elif is_tuple:
+                return FST(Expression(body=Tuple(elts=[], ctx=ctx, lineno=1, col_offset=0, end_lineno=1, end_col_offset=2
+                                                 )), lines=[bistr('()')], from_=self)
+            else:  # list
+                return FST(Expression(body=List(elts=[], ctx=ctx, lineno=1, col_offset=0, end_lineno=1, end_col_offset=2
+                                                 )), lines=[bistr('[]')], from_=self)
+
+        f0     = elts[0].f
+        lfirst = elts[start].f
+        llast  = elts[stop - 1].f
+        lpre   = elts[start - 1].f if start else None
+        lpost  = None if stop == len(elts) else elts[stop].f
+
+        if not cut:
+            asts = [copy(elts[i]) for i in range(start, stop)]
+
+        else:
+            asts = elts[start : stop]
+
+            del elts[start : stop]
+
+            for i in range(start, len(elts)):
+                elts[i].f.pfield = astfield('elts', i)
+
+        if is_set:
+            newast = Set(elts=asts)  # location will be set later when span is potentially grown
+            prefix = '{'
+            suffix = '}'
+
+        else:
+            newast = ast.__class__(elts=asts, ctx=ctx)
+
+            if fix and not isinstance(ast.ctx, Load):
+                set_ctx(newast, Load)
+
+            if is_tuple:
+                prefix = '('
+                suffix = ')'
+
+            else:  # list
+                prefix = '['
+                suffix = ']'
+
+        if not is_tuple:
+            seq_loc = fstloc(self.ln, self.col + 1, self.end_ln, self.end_col - 1)
+
+            assert self.root._lines[self.ln].startswith(prefix, self.col)
+            assert self.root._lines[seq_loc.end_ln].startswith(suffix, seq_loc.end_col)
+
+        else:
+            if has_parentheses := (self.root._lines[(ln := self.ln)].startswith('(', col := self.col) and
+                                   (ln != f0.ln or col != f0.col)):
+                seq_loc = fstloc(ln, col + 1, self.end_ln, self.end_col - 1)
+
+                assert self.root._lines[seq_loc.end_ln].startswith(')', seq_loc.end_col)
+
+            else:
+                seq_loc = fstloc(ln, col, self.end_ln, self.end_col)
+
+        fst = self._make_Expression_seq_copy_and_dedent(newast, cut, lfirst, llast, lpre, lpost, seq_loc, prefix, suffix)
+
+        if is_tuple:
+            if not elts:  # if is unparenthesized tuple and nothing left then need to add parentheses
+                if not has_parentheses:
+                    ln, col, end_ln, end_col = self.loc
+
+                    assert ln == end_ln and col == end_col
+
+                    root  = self.root
+                    lines = root.lines
+
+                    root._offset(ln, col, 0, 2, True)  # TODO: WARNING! This may not be safe if another preceding non-containing node ends EXACTLY where the unparenthesized tuple starts, does this ever happen?
+                    self.touchup(True)
+
+                    lines[ln] = bistr(f'{(l := lines[ln])[:col]}(){l[col:]}')
+
+            elif len(elts) == 1:
+                self._fix_singleton_tuple()
+
+            if len(asts) == 1:  # maybe need to add a postfix comma to copied single element tuple if is not already there
+                fst.a.body.f._fix_singleton_tuple()
+
+        return fst
+
+    def _slice_dict(self, start, stop, fix, cut) -> 'FST':
+        ast         = self.a
+        values      = ast.values
+        start, stop = _slice_fixup_index(ast, values, 'values', start, stop)
+
+        if start == stop:
+            return FST(Expression(body=Dict(keys=[], values=[], lineno=1, col_offset=0, end_lineno=1, end_col_offset=2
+                                            )), lines=[bistr('{}')], from_=self)
+
+        keys   = ast.keys
+        lfirst = self._dict_key_or_mock_loc(keys[start], values[start].f)
+        llast  = values[stop - 1].f
+        lpre   = values[start - 1].f if start else None
+        lpost  = None if stop == len(keys) else self._dict_key_or_mock_loc(keys[stop], values[stop].f)
+
+        if not cut:
+            akeys   = [copy(keys[i]) for i in range(start, stop)]
+            avalues = [copy(values[i]) for i in range(start, stop)]
+
+        else:
+            akeys   = keys[start : stop]
+            avalues = values[start : stop]
+
+            del keys[start : stop]
+            del values[start : stop]
+
+        newast  = Dict(keys=akeys, values=avalues)
+        seq_loc = fstloc(self.ln, self.col + 1, self.end_ln, self.end_col - 1)
+
+        assert self.root._lines[self.ln].startswith('{', self.col)
+        assert self.root._lines[seq_loc.end_ln].startswith('}', seq_loc.end_col)
+
+        return self._make_Expression_seq_copy_and_dedent(newast, cut, lfirst, llast, lpre, lpost, seq_loc, '{', '}')
+
     def _fix_singleton_tuple(self):
         """Maybe add comma to singleton tuple if not already there."""
 
@@ -540,7 +826,7 @@ class FST:
 
     @staticmethod
     def fromsrc(source: str | bytes | list[str], filename: str = '<unknown>', mode: str = 'exec', *,
-                 type_comments: bool = False, feature_version: tuple[int, int] | None = None, **parse_params) -> 'FST':
+                type_comments: bool = False, feature_version: tuple[int, int] | None = None, **parse_params) -> 'FST':
         if isinstance(source, bytes):
             source = source.decode()
 
@@ -557,11 +843,11 @@ class FST:
 
     @staticmethod
     def fromast(ast: AST, *, calc_loc: bool | Literal['copy'] = True,
-                 type_comments: bool | None = False, feature_version=None, **parse_params) -> 'FST':
+                type_comments: bool | None = False, feature_version=None, **parse_params) -> 'FST':
         """Add FST to existing AST, optionally copying positions from reparsed AST (default) or whole AST for new FST.
 
-        Do not set `calc_loc` to `False` unless you parsed the `ast` from a previous output of ast.unparse(), otherwise
-        there will almost certaionly be problems!
+        Do not set `calc_loc` to `False` unless you parsed the `ast` from a previous output of `ast.unparse()`,
+        otherwise there will almost certaionly be problems!
 
         Args:
             ast: The root AST node.
@@ -1251,299 +1537,6 @@ class FST:
         fst = self._make_fst_and_dedent(self, newast, loc)
 
         return fst.fix(mutate=(fix == 'mutate'), inplace=True) if fix else fst
-
-
-
-
-
-
-    def _make_fst_and_dedent(self, findent: 'FST', newast: AST, copy_loc: fstloc, del_loc: fstloc | None = None,
-                             prefix: str | None = None, suffix: str | None = None) -> 'FST':
-        indent = findent.get_indent()
-        lines  = self.root._lines
-        fst    = FST(newast, lines=lines, from_=self)  # we use original lines for nodes offset calc before putting new lines
-
-        fst._offset(copy_loc.ln, copy_loc.col, -copy_loc.ln,
-                    (len(prefix.encode()) if prefix else 0) - lines[copy_loc.ln].c2b(copy_loc.col))
-
-        fst._lines = fst_lines = self.copyl_lines(*copy_loc)
-
-        if prefix:
-            fst_lines[0] = bistr(prefix + fst_lines[0])
-
-        if suffix:
-            fst_lines[-1] = bistr(fst_lines[-1] + suffix)
-
-        if del_loc:
-            self.root._offset(del_loc.end_ln, del_loc.end_col, del_loc.ln - del_loc.end_ln,
-                              lines[del_loc.ln].c2b(del_loc.col) - lines[del_loc.end_ln].c2b(del_loc.end_col), True)  # True because we may have an unparenthesized tuple that shrinks to a span length of 0
-            self.dell_lines(*del_loc)
-
-        fst._dedent_tail(indent)
-
-        return fst
-
-    def _make_Expression_seq_copy_and_dedent(self, newast: AST, cut: bool, lfirst: 'FST', llast: 'FST',
-                                             lpre: Union['FST', None], lpost: Union['FST', None],
-                                             seq_loc: fstloc, prefix: str, suffix: str) -> 'FST':
-
-        # start of special sauce  # TODO: make this specialer? (specifiable behavior options, prettier multiline handling, etc...)
-
-        lines = self.root._lines
-
-        if not lpre:  # first element in sequence
-            copy_ln  = del_ln  = seq_loc.ln
-            copy_col = del_col = seq_loc.col
-
-        else:  # not first element in sequence
-            copy_ln  = del_ln  = lfirst.ln
-            copy_col = del_col = lfirst.col
-
-            if re_empty_line.match(lines[copy_ln], 0, copy_col):
-                copy_col = len(lines[(copy_ln := copy_ln - 1)])  # include previous newline as prefix
-
-        if not lpost:  # last element in sequence
-            copy_end_ln  = del_end_ln  = seq_loc.end_ln
-            copy_end_col = del_end_col = seq_loc.end_col
-
-            if lpre:
-                if lfirst.ln == lpre.end_ln:  # only comma between them
-                    del_col = lpre.end_col
-                if (ln := lfirst.ln) != del_end_ln and re_empty_line.match(lines[ln], 0, lfirst.col):  # expand del_col for better alignment of multiline closing suffix, NOT SURE ABOUT THIS?!?
-                    del_col = min(del_col, del_end_col)
-
-        else:  # not last element in sequence
-            del_end_ln  = lpost.ln
-            del_end_col = lpost.col
-
-            if llast.end_ln == lpost.ln:  # only comma between them
-                copy_end_ln  = llast.end_ln
-                copy_end_col = llast.end_col
-
-            else:  # preserve formatting newlines and comments
-                ln, col, s = _next_code(lines, llast.end_ln, llast.end_col, copy_end_ln := lpost.ln, lpost.col)
-
-                assert s.endswith(',')  # can be preceded by closing non-tuple parentheses
-
-                if ln != copy_end_ln:
-                    copy_end_col = re_empty_line_start.match(lines[seq_loc.end_ln], 0, lpost.col).end(0)  # maybe dedent from multiline elements depending on what last line of whole expr does, NOT SURE ABOUT THIS?!?
-                else:
-                    copy_end_col = col + len(s)  # comma not on last element line but on same line as next past last element, preserve its position
-
-        copy_loc = fstloc(copy_ln, copy_col, copy_end_ln, copy_end_col)
-
-        if not cut:
-            del_loc = None
-        else:
-            del_loc = fstloc(del_ln, del_col, del_end_ln, del_end_col)
-
-        # end of special sauce
-
-        newast.lineno         = copy_ln + 1
-        newast.col_offset     = lines[copy_ln].c2b(copy_col)
-        newast.end_lineno     = copy_end_ln + 1
-        newast.end_col_offset = lines[copy_end_ln].c2b(copy_end_col)
-
-        fst = self._make_fst_and_dedent(self, Expression(body=newast), copy_loc, del_loc, prefix, suffix)
-
-        newast.col_offset     = 0  # before prefix
-        newast.end_col_offset = fst._lines[-1].lenbytes  # after suffix
-
-        newast.f.touchup(True)
-
-        return fst
-
-    @staticmethod
-    def _slice_fixup_index(ast, body, field, start, stop) -> tuple[int, int]:
-        len_body = len(body)
-
-        if start is None:
-            start = 0
-        elif start < 0:
-            start += len_body
-
-        if stop is None:
-            stop = len_body
-        elif stop < 0:
-            stop += len_body
-
-        if start < 0 or start > len_body or stop < 0 or stop > len_body:
-            raise IndexError(f"{ast.__class__.__name__}.{field} index out of range")
-
-        if not body[start].f.loc or not body[stop - 1].f.loc:
-            raise ValueError('cannot copy asts which do not have locations')
-
-        return start, stop
-
-    def _slice_stmt(self, start, stop, field, fix, cut) -> 'FST':
-        if cut: raise NotImplementedError  # TODO: THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS!
-
-        ast = self.a
-
-        if field is not None:
-            if not isinstance(body := getattr(ast, field, None), list):
-                raise ValueError(f"invalid {ast.__class__.__name__} field '{field}'")
-
-        elif isinstance(ast, Match):
-            field = 'cases'
-            body  = ast.cases
-
-        elif (body := getattr(ast, field := 'body', None)) is None or not isinstance(body, list):
-            raise ValueError(f"{ast.__class__.__name__} has no 'body' list to slice")
-
-        start, stop = self._slice_fixup_index(ast, body, field, start, stop)
-
-        if start == stop:
-            return FST(Module(body=[]), lines=[bistr('')], from_=self)
-
-        afirst = body[start]
-        loc    = fstloc((f := afirst.f).ln, f.col, (l := body[stop - 1].f.loc).end_ln, l.end_col)
-        newast = Module(body=[copy(body[i]) for i in range(start, stop)])
-
-        if (fix and field == 'orelse' and not start and (stop - start) == 1 and afirst.col_offset == ast.col_offset and
-            isinstance(ast, If) and isinstance(afirst, If)
-        ):  # 'elif' -> 'if'
-            newast.body[0].col_offset += 2
-            loc                        = fstloc(loc.ln, loc.col + 2, loc.end_ln, loc.end_col)
-
-        fst = self._make_fst_and_dedent(afirst.f, newast, loc)
-
-        return fst
-
-    def _slice_tuple_list_or_set(self, start, stop, fix, cut) -> 'FST':
-        # if cut: raise NotImplementedError  # TODO: THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS!
-
-        ast         = self.a
-        elts        = ast.elts
-        is_set      = isinstance(ast, Set)
-        is_tuple    = not is_set and isinstance(ast, Tuple)
-        ctx         = None if is_set else Load() if fix else ast.ctx.__class__()
-        start, stop = self._slice_fixup_index(ast, elts, 'elts', start, stop)
-
-        if start == stop:
-            if is_set:
-                return FST(Expression(body=Call(
-                    func=Name(id='set', ctx=Load(), lineno=1, col_offset=0, end_lineno=1, end_col_offset=3),
-                    args=[], keywords=[], lineno=1, col_offset=0, end_lineno=1, end_col_offset=5
-                )), lines=[bistr('set()')], from_=self)
-
-            elif is_tuple:
-                return FST(Expression(body=Tuple(elts=[], ctx=ctx, lineno=1, col_offset=0, end_lineno=1, end_col_offset=2
-                                                 )), lines=[bistr('()')], from_=self)
-            else:  # list
-                return FST(Expression(body=List(elts=[], ctx=ctx, lineno=1, col_offset=0, end_lineno=1, end_col_offset=2
-                                                 )), lines=[bistr('[]')], from_=self)
-
-        f0     = elts[0].f
-        lfirst = elts[start].f
-        llast  = elts[stop - 1].f
-        lpre   = elts[start - 1].f if start else None
-        lpost  = None if stop == len(elts) else elts[stop].f
-
-        if not cut:
-            asts = [copy(elts[i]) for i in range(start, stop)]
-
-        else:
-            asts = elts[start : stop]
-
-            del elts[start : stop]
-
-            for i in range(start, len(elts)):
-                elts[i].f.pfield = astfield('elts', i)
-
-        if is_set:
-            newast = Set(elts=asts)  # location will be set later when span is potentially grown
-            prefix = '{'
-            suffix = '}'
-
-        else:
-            newast = ast.__class__(elts=asts, ctx=ctx)
-
-            if fix and not isinstance(ast.ctx, Load):
-                set_ctx(newast, Load)
-
-            if is_tuple:
-                prefix = '('
-                suffix = ')'
-
-            else:  # list
-                prefix = '['
-                suffix = ']'
-
-        if not is_tuple:
-            seq_loc = fstloc(self.ln, self.col + 1, self.end_ln, self.end_col - 1)
-
-            assert self.root._lines[self.ln].startswith(prefix, self.col)
-            assert self.root._lines[seq_loc.end_ln].startswith(suffix, seq_loc.end_col)
-
-        else:
-            if has_parentheses := (self.root._lines[(ln := self.ln)].startswith('(', col := self.col) and
-                                   (ln != f0.ln or col != f0.col)):
-                seq_loc = fstloc(ln, col + 1, self.end_ln, self.end_col - 1)
-
-                assert self.root._lines[seq_loc.end_ln].startswith(')', seq_loc.end_col)
-
-            else:
-                seq_loc = fstloc(ln, col, self.end_ln, self.end_col)
-
-        fst = self._make_Expression_seq_copy_and_dedent(newast, cut, lfirst, llast, lpre, lpost, seq_loc, prefix, suffix)
-
-        if is_tuple:
-            if not elts:  # if is unparenthesized tuple and nothing left then need to add parentheses
-                if not has_parentheses:
-                    ln, col, end_ln, end_col = self.loc
-
-                    assert ln == end_ln and col == end_col
-
-                    root  = self.root
-                    lines = root.lines
-
-                    root._offset(ln, col, 0, 2, True)  # TODO: WARNING! This may not be safe if another preceding non-containing node ends EXACTLY where the unparenthesized tuple starts, does this ever happen?
-                    self.touchup(True)
-
-                    lines[ln] = bistr(f'{(l := lines[ln])[:col]}(){l[col:]}')
-
-            elif len(elts) == 1:
-                self._fix_singleton_tuple()
-
-            if len(asts) == 1:  # maybe need to add a postfix comma to copied single element tuple if is not already there
-                fst.a.body.f._fix_singleton_tuple()
-
-        return fst
-
-    def _slice_dict(self, start, stop, fix, cut) -> 'FST':
-        ast         = self.a
-        values      = ast.values
-        start, stop = self._slice_fixup_index(ast, values, 'values', start, stop)
-
-        if start == stop:
-            return FST(Expression(body=Dict(keys=[], values=[], lineno=1, col_offset=0, end_lineno=1, end_col_offset=2
-                                            )), lines=[bistr('{}')], from_=self)
-
-        keys   = ast.keys
-        lfirst = self._dict_key_or_mock_loc(keys[start], values[start].f)
-        llast  = values[stop - 1].f
-        lpre   = values[start - 1].f if start else None
-        lpost  = None if stop == len(keys) else self._dict_key_or_mock_loc(keys[stop], values[stop].f)
-
-        if not cut:
-            akeys   = [copy(keys[i]) for i in range(start, stop)]
-            avalues = [copy(values[i]) for i in range(start, stop)]
-
-        else:
-            akeys   = keys[start : stop]
-            avalues = values[start : stop]
-
-            del keys[start : stop]
-            del values[start : stop]
-
-        newast  = Dict(keys=akeys, values=avalues)
-        seq_loc = fstloc(self.ln, self.col + 1, self.end_ln, self.end_col - 1)
-
-        assert self.root._lines[self.ln].startswith('{', self.col)
-        assert self.root._lines[seq_loc.end_ln].startswith('}', seq_loc.end_col)
-
-        return self._make_Expression_seq_copy_and_dedent(newast, cut, lfirst, llast, lpre, lpost, seq_loc, '{', '}')
 
     def slice(self, start: int | None = None, stop: int | None = None, *, field: str | None = None,
               fix: bool | Literal['mutate'] = True, cut: bool = False) -> 'FST':
