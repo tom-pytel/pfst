@@ -55,6 +55,19 @@ re_next_code            = re.compile(r'\s*([^\s#\\]+)')      # next non-space no
 re_next_code_or_comment = re.compile(r'\s*([^\s#\\]+|#.*)')  # next non-space non-continuation code or comment text, don't look into strings with this!
 
 
+class fstloc(NamedTuple):
+    ln:      int
+    col:     int
+    end_ln:  int
+    end_col: int
+
+
+class srccode(NamedTuple):
+    ln:  int
+    col: int
+    src: str
+
+
 def only_root(func):
     @functools.wraps(func)
     def wrapper(*args, **kwargs):
@@ -83,15 +96,8 @@ def unparse(ast_obj):
     return ast_.unparse(ast_obj)
 
 
-class fstloc(NamedTuple):
-    ln:      int
-    col:     int
-    end_ln:  int
-    end_col: int
-
-
 def _next_code(lines: list[str], ln: int, col: int, end_ln: int, end_col: int, comment: bool = False
-               ) -> tuple[int, int, str] | None:
+               ) -> srccode | None:
     """Get next non-space non-continuation maybe non-comment position. Assuming start pos not inside str or comment.
     Code is not necessarily AST stuff, it can be commas, colons, the 'try' keyword, etc... Code can include multiple
     AST nodes in return str if there are no spaces between them like 'a+b'."""
@@ -99,22 +105,22 @@ def _next_code(lines: list[str], ln: int, col: int, end_ln: int, end_col: int, c
     re_pat = re_next_code_or_comment if comment else re_next_code
 
     if end_ln == ln:
-        return (ln, m.start(1), m.group(1)) if (m := re_pat.match(lines[ln], col, end_col)) else None
+        return srccode(ln, m.start(1), m.group(1)) if (m := re_pat.match(lines[ln], col, end_col)) else None
 
     for i in range(ln, end_ln):
         if m := re_pat.match(lines[i], col):
-            return i, m.start(1), m.group(1)
+            return srccode(i, m.start(1), m.group(1))
 
         col = 0
 
     if m := re_pat.match(lines[end_ln], 0, end_col):
-        return end_ln, m.start(1), m.group(1)
+        return srccode(end_ln, m.start(1), m.group(1))
 
     return None
 
 
 def _prev_code(lines: list[str], ln: int, col: int, end_ln: int, end_col: int, comment: bool = False
-               ) -> tuple[int, int, str] | None:
+               ) -> srccode | None:
     """Same rules as `_next_code()` but return the LAST occurance of code or maybe comment in the span."""
 
     re_pat = re_next_code_or_comment if comment else re_next_code
@@ -129,16 +135,16 @@ def _prev_code(lines: list[str], ln: int, col: int, end_ln: int, end_col: int, c
         return ret
 
     if end_ln == ln:
-        return (ln, m.start(1), m.group(1)) if (m := last_match(lines[ln], col, end_col)) else None
+        return srccode(ln, m.start(1), m.group(1)) if (m := last_match(lines[ln], col, end_col)) else None
 
     for i in range(end_ln, ln, -1):
         if m := last_match(lines[i], 0, end_col):
-            return i, m.start(1), m.group(1)
+            return srccode(i, m.start(1), m.group(1))
 
         end_col = 0x7fffffffffffffff
 
     if m := last_match(lines[ln], col, end_col):
-        return ln, m.start(1), m.group(1)
+        return srccode(ln, m.start(1), m.group(1))
 
     return None
 
@@ -445,7 +451,7 @@ class FST:
         """Indent all indentable lines past the first one according with `indent` and adjust node locations accordingly.
         Does not modify node columns on first line."""
 
-        if not (lns := self.get_indentable_lns()) or not indent:
+        if not (lns := self.get_indentable_lns(1)) or not indent:
             return lns
 
         self._offset_cols(len(indent.encode()), lns)
@@ -464,7 +470,7 @@ class FST:
         possible.
         """
 
-        if not (lns := self.get_indentable_lns()) or not indent:
+        if not (lns := self.get_indentable_lns(1)) or not indent:
             return lns
 
         lines        = self.root._lines
@@ -509,22 +515,36 @@ class FST:
 
         return lns
 
+    def _fix_singleton_tuple(self):
+        """Maybe add comma to singleton tuple if not already there."""
+
+        felt  = self.a.elts[0].f
+        root  = self.root
+        lines = root._lines
+
+        if (not (code := _next_code(lines, felt.end_ln, felt.end_col, self.end_ln, self.end_col)) or
+            not code.src.startswith(',')
+        ):
+            lines[end_ln]          = bistr(f'{(l := lines[(end_ln := felt.end_ln)])[:(c := felt.end_col)]},{l[c:]}')
+            self.a.end_col_offset += 1
+
+            self.touchup(True)
+
     def _make_fst_and_dedent(self, findent: 'FST', newast: AST, copy_loc: fstloc, del_loc: fstloc | None = None,
-                             prefix: str | None = None, suffix: str | None = None) -> 'FST':
+                             prefix: str = '', suffix: str = '') -> 'FST':
         indent = findent.get_indent()
         lines  = self.root._lines
         fst    = FST(newast, lines=lines, from_=self)  # we use original lines for nodes offset calc before putting new lines
 
-        fst._offset(copy_loc.ln, copy_loc.col, -copy_loc.ln,
-                    (len(prefix.encode()) if prefix else 0) - lines[copy_loc.ln].c2b(copy_loc.col))
+        fst._offset(copy_loc.ln, copy_loc.col, -copy_loc.ln, len(prefix) - lines[copy_loc.ln].c2b(copy_loc.col))  # WARNING! `prefix` is expected to have only 1byte characters
 
         fst._lines = fst_lines = self.copyl_lines(*copy_loc)
 
-        if prefix:
-            fst_lines[0] = bistr(prefix + fst_lines[0])
-
         if suffix:
             fst_lines[-1] = bistr(fst_lines[-1] + suffix)
+
+        if prefix:
+            fst_lines[0] = bistr(prefix + fst_lines[0])
 
         if del_loc:
             self.root._offset(del_loc.end_ln, del_loc.end_col, del_loc.ln - del_loc.end_ln,
@@ -664,11 +684,11 @@ class FST:
                 return FST(Expression(body=List(elts=[], ctx=ctx, lineno=1, col_offset=0, end_lineno=1, end_col_offset=2
                                                  )), lines=[bistr('[]')], from_=self)
 
-        f0     = elts[0].f
-        lfirst = elts[start].f
-        llast  = elts[stop - 1].f
-        lpre   = elts[start - 1].f if start else None
-        lpost  = None if stop == len(elts) else elts[stop].f
+        is_paren = is_tuple and self.is_tuple_parenthesized()
+        lfirst   = elts[start].f
+        llast    = elts[stop - 1].f
+        lpre     = elts[start - 1].f if start else None
+        lpost    = None if stop == len(elts) else elts[stop].f
 
         if not cut:
             asts = [copy(elts[i]) for i in range(start, stop)]
@@ -707,20 +727,19 @@ class FST:
             assert self.root._lines[seq_loc.end_ln].startswith(suffix, seq_loc.end_col)
 
         else:
-            if has_parentheses := (self.root._lines[(ln := self.ln)].startswith('(', col := self.col) and
-                                   (ln != f0.ln or col != f0.col)):
-                seq_loc = fstloc(ln, col + 1, self.end_ln, self.end_col - 1)
-
-                assert self.root._lines[seq_loc.end_ln].startswith(')', seq_loc.end_col)
+            if not is_paren:
+                seq_loc = self.loc
 
             else:
-                seq_loc = fstloc(ln, col, self.end_ln, self.end_col)
+                seq_loc = fstloc(self.ln, self.col + 1, self.end_ln, self.end_col - 1)
+
+                assert self.root._lines[seq_loc.end_ln].startswith(')', seq_loc.end_col)
 
         fst = self._make_Expression_seq_copy_and_dedent(newast, cut, lfirst, llast, lpre, lpost, seq_loc, prefix, suffix)
 
         if is_tuple:
             if not elts:  # if is unparenthesized tuple and nothing left then need to add parentheses
-                if not has_parentheses:
+                if not is_paren:
                     ln, col, end_ln, end_col = self.loc
 
                     assert ln == end_ln and col == end_col
@@ -774,21 +793,6 @@ class FST:
         assert self.root._lines[seq_loc.end_ln].startswith('}', seq_loc.end_col)
 
         return self._make_Expression_seq_copy_and_dedent(newast, cut, lfirst, llast, lpre, lpost, seq_loc, '{', '}')
-
-    def _fix_singleton_tuple(self):
-        """Maybe add comma to singleton tuple if not already there."""
-
-        felt  = self.a.elts[0].f
-        root  = self.root
-        lines = root._lines
-
-        if (not (res := _next_code(lines, felt.end_ln, felt.end_col, self.end_ln, self.end_col)) or
-            not res[2].startswith(',')
-        ):
-            lines[end_ln]          = bistr(f'{(l := lines[(end_ln := felt.end_ln)])[:(c := felt.end_col)]},{l[c:]}')
-            self.a.end_col_offset += 1
-
-            self.touchup(True)
 
     # ------------------------------------------------------------------------------------------------------------------
 
@@ -1212,6 +1216,12 @@ class FST:
 
         return True
 
+    def is_tuple_parenthesized(self) -> bool:
+        assert isinstance(self.a, Tuple)
+
+        return (self.root._lines[(ln := self.ln)].startswith('(', col := self.col) and
+                (not (e := self.a.elts) or (ln != (f0 := e[0].f).ln or col != f0.col)))
+
     def copyl_lines(self, ln: int, col: int, end_ln: int, end_col: int) -> list[str]:
         if end_ln == ln:
             return [bistr(self.root._lines[ln][col : end_col])]
@@ -1276,7 +1286,7 @@ class FST:
 
         return extra_indent
 
-    def get_indentable_lns(self, skip: int = 1) -> set[int]:
+    def get_indentable_lns(self, skip: int = 0) -> set[int]:
         """Get set of indentable lines (past the first one usually because that is normally handled specially)."""
 
         lns = set(range(self.bln + skip, self.bend_ln + 1))
@@ -1391,23 +1401,24 @@ class FST:
         return '\n'.join(self.cutl_lines(*self.loc))
 
     @only_root
-    def fix(self, mutate: bool = False, *, inplace: bool = False) -> Union['FST', None]:  # -> Self | None
+    def fix(self, *, inplace: bool = False) -> Union['FST', None]:  # -> Self | None
         """Correct certain basic changes on cut or copy AST (to make subtrees parsable if the source is not by itself).
         Possibly reparses in order to verify expression. If fails the ast will be unchanged. Is meant to be a quick fix
         after an operation, not full check, for that use `.verify()`. Basically just fixes everything that succeeds
-        `.is_parsable()` and then basic names and expressions on top of that (match patterns count as expressions).
+        `.is_parsable()` and set `ctx` to `Load` for expressions.
 
         Args:
-            mutate: If `True` then is allowed to mutate AST nodes to match what the source looks like, may be weird like
-                in case of TypeVar `type T[>>> i: cls = sub <<<]` to AnnAssign `i: cls = sub`.
             inplace: If `True` then changes will be made to self. If `False` then self may be returned if no changes
                 made otherwise a modified copy is returned.
         """
 
+        if not (loc := self.loc):
+            return self
+
+        ln, col, end_ln, end_col = loc
+
         ast   = self.a
         lines = self._lines
-
-        ln, col, end_ln, end_col = self.loc
 
         # if / elif statement
 
@@ -1424,15 +1435,63 @@ class FST:
 
             lines[ln] = bistr((l := lines[ln])[:col] + l[col + 2:])
 
-        # expression maybe parenthesize and proper ctx, also simple match expressions to normal expressions if mutate
+        # expression maybe parenthesize and proper ctx (Load)
 
-        elif (isinstance(ast, expr) if not mutate else (
-            isinstance(ast, (expr, pattern)) or
-            (isinstance(ast, arg) and not ast.annotation) or
-            (isinstance(ast, TypeVar) and not ast.bound and not ast.default_value
-        ))):
-            if isinstance(ast, MatchStar):
+        elif (isinstance(ast, expr)):
+            if not self.is_parsable():
                 return self
+
+            # need_ctx   = set_ctx(ast, Load, doit=False)
+            # need_paren = None
+
+            # if is_tuple := isinstance(ast, Tuple):
+            #     if self.is_tuple_parenthesized():
+            #         need_paren = False
+            #     elif any(isinstance(e, NamedExpr) for e in ast.elts):
+            #         need_paren = True
+
+            # elif (isinstance(ast, (Constant, Name, List, Set, Dict, ListComp, SetComp, DictComp, GeneratorExp)) or
+            #       ((code := _prev_code(self._lines, 0, 0, ln, col)) and code.src.endswith('('))):
+            #     need_paren = False
+
+            # elif isinstance(ast, NamedExpr):
+            #     need_paren = True
+
+            # if need_paren is None:
+            #     need_paren = True
+
+            #     pass  # TODO: determine need based on multiline
+
+
+            # if (need_ctx or need_paren) and not inplace:
+            #     ast   = copy(ast)
+            #     lines = lines[:]
+            #     self  = FST(ast, lines=lines, from_=self)
+
+            # if need_ctx:
+            #     set_ctx(ast, Load)
+
+            # if need_paren:
+            #     lines[end_ln] = bistr(f'{(l := lines[end_ln])[:end_col]}){l[end_col:]}')
+            #     lines[ln]     = bistr(f'{(l := lines[ln])[:col]}({l[col:]}')
+
+            #     self._offset(ln, col, 0, 1)
+
+            #     if is_tuple:
+            #         ast.col_offset     -= 1
+            #         ast.end_col_offset += 1
+
+            #     self.touchup(True)
+
+
+
+
+
+
+
+
+
+
 
             try:
                 a = ast_.parse(src := self.src, mode='eval', **self._parse_params)
@@ -1467,62 +1526,9 @@ class FST:
             self.touch()
             self._make_fst_tree()
 
-        # source which looks like assignment to actual assignment only if mutate
-
-        elif mutate and (
-            (is_keyword := isinstance(ast, keyword)) or
-            ((is_arg := isinstance(ast, arg)) and ast.annotation) or
-            (isinstance(ast, TypeVar) and (ast.bound or ast.default_value)
-        )):
-            try:
-                a = ast_.parse(self.src, mode='exec', **self._parse_params)
-
-            except SyntaxError:  # if assign not parsing then try sanitize it
-                newlines = lines[:]
-
-                def maybe_replace(src, ln, col, end_ln, end_col):
-                    if end_ln != ln:
-                        newlines[ln] = bistr(f'{newlines[ln][:col]}{src}{newlines[end_ln][end_col:]}')
-
-                        del newlines[ln + 1 : end_ln + 1]
-
-                if is_keyword:
-                    maybe_replace(' = ', self.ln, self.col + len(ast.arg), (v := ast.value.f).ln, v.col)
-                elif is_arg:
-                    maybe_replace(': ', self.ln, self.col + len(ast.arg), (an := ast.annotation.f).ln, an.col)
-                elif not (dv := ast.default_value):  # is_typevar
-                    maybe_replace(': ', self.ln, self.col + len(ast.name), (b := ast.bound).f.ln, b.f.col)  # b must be present
-                elif not (b := ast.bound):
-                    maybe_replace(' = ', self.ln, self.col + len(ast.name), dv.f.ln, dv.f.col)
-                else:
-                    maybe_replace(' = ', b.f.end_ln, b.f.end_col, dv.f.ln, dv.f.col)
-                    maybe_replace(': ', self.ln, self.col + len(ast.name), b.f.ln, b.f.col)
-
-                a = ast_.parse('\n'.join(newlines), mode='exec', **self._parse_params)
-
-                if not inplace:
-                    lines = newlines
-                else:
-                    self._lines = newlines
-
-            else:
-                if not inplace:
-                    lines = lines[:]
-
-            a = a.body[0]  # we know parsed to an Expression but original was not an Expression
-
-            if not inplace:
-                return FST(a, lines=lines, from_=self)
-
-            self.a = a
-            a.f    = self
-
-            self.touch()
-            self._make_fst_tree()
-
         return self
 
-    def copy(self, *, decorators: bool = True, fix: bool | Literal['mutate'] = True) -> 'FST':
+    def copy(self, *, decorators: bool = True, fix: bool = True) -> 'FST':
         newast = copy(self.a)
 
         if self.is_root:
@@ -1536,7 +1542,7 @@ class FST:
 
         fst = self._make_fst_and_dedent(self, newast, loc)
 
-        return fst.fix(mutate=(fix == 'mutate'), inplace=True) if fix else fst
+        return fst.fix(inplace=True) if fix else fst
 
     def slice(self, start: int | None = None, stop: int | None = None, *, field: str | None = None,
               fix: bool | Literal['mutate'] = True, cut: bool = False) -> 'FST':

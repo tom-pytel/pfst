@@ -284,8 +284,6 @@ def get_parse_mode(ast: AST) -> Literal['exec'] | Literal['eval'] | Literal['sin
         return 'eval'
     if isinstance(ast, Interactive):
         return 'single'
-    if isinstance(ast, (MatchValue, MatchSingleton, MatchSequence, MatchMapping, MatchClass, MatchAs, MatchOr, TypeVar)):
-        return 'eval'  # because can be reparsed as such
 
     raise ValueError('can not determine parse mode')
 
@@ -435,18 +433,24 @@ def copy(ast: AST | None) -> AST:
     return ret
 
 
-def set_ctx(ast: AST, ctx: type[expr_context]):
-    stack = [ast]
+def set_ctx(ast: AST, ctx: type[expr_context], *, doit=True) -> bool:
+    change = False
+    stack  = [ast]
 
     while stack:  # anything that might have been a ctx Store or Del before (outside NamedExpr) set to Load
         a = stack.pop()
 
-        if ((is_seq := isinstance(a, (Tuple, List))) or (is_starred := isinstance(a, Starred)) or
-            isinstance(a, (Name, Subscript, Attribute))
+        if (((is_seq := isinstance(a, (Tuple, List))) or (is_starred := isinstance(a, Starred)) or
+            isinstance(a, (Name, Subscript, Attribute))) and not isinstance(a.ctx, ctx)
         ):
-            a.ctx = ctx()
+            change = True
+
+            if doit:
+                a.ctx = ctx()
 
             if is_seq:
                 stack.extend(a.elts)
             elif is_starred:
                 stack.append(a.value)
+
+    return change

@@ -715,7 +715,7 @@ class TestFST(unittest.TestCase):
         src = 'class cls:\n if True:\n  i = """\nj\n"""\n  k = "... \\\n2"\n else:\n  j \\\n=\\\n 2'
         ast = parse(src)
 
-        self.assertEqual({1, 2, 5, 7, 8, 9, 10}, ast.f.get_indentable_lns())
+        self.assertEqual({1, 2, 5, 7, 8, 9, 10}, ast.f.get_indentable_lns(1))
         self.assertEqual({0, 1, 2, 5, 7, 8, 9, 10}, ast.f.get_indentable_lns(0))
 
     def test_line_ast_ends(self):
@@ -777,7 +777,7 @@ class TestFST(unittest.TestCase):
         src = 'class cls:\n if True:\n  i = """\nj\n"""\n  k = 3\n else:\n  j = 2'
 
         ast = parse(src)
-        lns = ast.f.get_indentable_lns()
+        lns = ast.f.get_indentable_lns(1)
         ast.f._offset_cols(1, lns)
         self.assertEqual({1, 2, 5, 6, 7}, lns)
         self.assertEqual((0, 0, 7, 8), ast.f.loc)
@@ -795,7 +795,7 @@ class TestFST(unittest.TestCase):
         self.assertEqual((7, 7, 7, 8), ast.body[0].body[0].orelse[0].value.f.loc)
 
         ast = parse(src)
-        lns = ast.body[0].body[0].f.get_indentable_lns()
+        lns = ast.body[0].body[0].f.get_indentable_lns(1)
         ast.body[0].body[0].f._offset_cols(1, lns)
         self.assertEqual({2, 5, 6, 7}, lns)
         self.assertEqual((1, 1, 7, 8), ast.body[0].body[0].f.loc)
@@ -811,7 +811,7 @@ class TestFST(unittest.TestCase):
         self.assertEqual((7, 7, 7, 8), ast.body[0].body[0].orelse[0].value.f.loc)
 
         ast = parse(src)
-        lns = ast.body[0].body[0].body[0].f.get_indentable_lns()
+        lns = ast.body[0].body[0].body[0].f.get_indentable_lns(1)
         ast.body[0].body[0].body[0].f._offset_cols(1, lns)
         self.assertEqual(set(), lns)
         self.assertEqual((2, 2, 4, 3), ast.body[0].body[0].body[0].f.loc)
@@ -926,205 +926,6 @@ class TestFST(unittest.TestCase):
         self.assertIs(fc.a.ctx.__class__, Load)
         fc.verify(raise_=True)
 
-        f = FST.fromsrc('match a:\n case 2: pass')
-        f = f.a.body[0].cases[0].pattern.f.copy(fix=False)
-        self.assertIs(f.a.__class__, MatchValue)
-        f.fix(inplace=True)
-        self.assertIs(f.a.__class__, MatchValue)
-        lines = f._lines
-        self.assertIsNot(lines, f.fix(mutate=True, inplace=False)._lines)
-        f.fix(mutate=True, inplace=True)
-        self.assertIs(lines, f._lines)
-        self.assertIs(f.a.__class__, Constant)
-        self.assertEqual(f.a.value, 2)
-        f.verify(raise_=True)
-
-        f = FST.fromsrc('match a:\n case True: pass')
-        f = f.a.body[0].cases[0].pattern.f.copy(fix=False)
-        self.assertIs(f.a.__class__, MatchSingleton)
-        f.fix(inplace=True)
-        self.assertIs(f.a.__class__, MatchSingleton)
-        lines = f._lines
-        self.assertIsNot(lines, f.fix(mutate=True, inplace=False)._lines)
-        f.fix(mutate=True, inplace=True)
-        self.assertIs(lines, f._lines)
-        self.assertIs(f.a.__class__, Constant)
-        self.assertIs(f.a.value, True)
-        f.verify(raise_=True)
-
-        f = FST.fromsrc('match a:\n case (1, a): pass')
-        f = f.a.body[0].cases[0].pattern.f.copy(fix=False)
-        self.assertIs(f.a.__class__, MatchSequence)
-        f.fix(inplace=True)
-        self.assertIs(f.a.__class__, MatchSequence)
-        lines = f._lines
-        self.assertIsNot(lines, f.fix(mutate=True, inplace=False)._lines)
-        f.fix(mutate=True, inplace=True)
-        self.assertIs(lines, f._lines)
-        self.assertIs(f.a.__class__, Tuple)
-        f.verify(raise_=True)
-
-        f = FST.fromsrc('match a:\n case [1, a]: pass')
-        f = f.a.body[0].cases[0].pattern.f.copy(fix=False)
-        self.assertIs(f.a.__class__, MatchSequence)
-        f.fix(inplace=True)
-        self.assertIs(f.a.__class__, MatchSequence)
-        lines = f._lines
-        self.assertIsNot(lines, f.fix(mutate=True, inplace=False)._lines)
-        f.fix(mutate=True, inplace=True)
-        self.assertIs(lines, f._lines)
-        self.assertIs(f.a.__class__, List)
-        f.verify(raise_=True)
-
-        f = FST.fromsrc('match a:\n case {1: a}: pass')
-        f = f.a.body[0].cases[0].pattern.f.copy(fix=False)
-        self.assertIs(f.a.__class__, MatchMapping)
-        f.fix(inplace=True)
-        self.assertIs(f.a.__class__, MatchMapping)
-        lines = f._lines
-        self.assertIsNot(lines, f.fix(mutate=True, inplace=False)._lines)
-        f.fix(mutate=True, inplace=True)
-        self.assertIs(lines, f._lines)
-        self.assertIs(f.a.__class__, Dict)
-        f.verify(raise_=True)
-
-        f = FST.fromsrc('match a:\n case a: pass')
-        f = f.a.body[0].cases[0].pattern.f.copy(fix=False)
-        self.assertIs(f.a.__class__, MatchAs)
-        f.fix(inplace=True)
-        self.assertIs(f.a.__class__, MatchAs)
-        lines = f._lines
-        self.assertIsNot(lines, f.fix(mutate=True, inplace=False)._lines)
-        f.fix(mutate=True, inplace=True)
-        self.assertIs(lines, f._lines)
-        self.assertIs(f.a.__class__, Name)
-        f.verify(raise_=True)
-
-        f = FST.fromsrc('match a:\n case 1 | 2: pass')
-        f = f.a.body[0].cases[0].pattern.f.copy(fix=False)
-        self.assertIs(f.a.__class__, MatchOr)
-        f.fix(inplace=True)
-        self.assertIs(f.a.__class__, MatchOr)
-        lines = f._lines
-        self.assertIsNot(lines, f.fix(mutate=True, inplace=False)._lines)
-        f.fix(mutate=True, inplace=True)
-        self.assertIs(lines, f._lines)
-        self.assertIs(f.a.__class__, BinOp)
-        self.assertIs(f.a.op.__class__, BitOr)
-        f.verify(raise_=True)
-
-        f = FST.fromsrc('def f( \n a \n : \n int \n ): pass')
-        f = f.a.body[0].args.args[0].f.copy(fix=False)
-        self.assertIs(f.a.__class__, arg)
-        f.fix(inplace=True)
-        self.assertIs(f.a.__class__, arg)
-        lines = f._lines
-        self.assertIsNot(lines, f.fix(mutate=True, inplace=False)._lines)
-        f.fix(mutate=True, inplace=True)
-        self.assertIsNot(lines, f._lines)
-        self.assertIs(f.a.__class__, AnnAssign)
-        self.assertEqual(f.src, 'a: int')
-        f.verify(raise_=True)
-
-        f = FST.fromsrc('f( \n a \n = \n 1 \n )')
-        f = f.a.body[0].value.keywords[0].f.copy(fix=False)
-        self.assertIs(f.a.__class__, keyword)
-        f.fix(inplace=True)
-        self.assertIs(f.a.__class__, keyword)
-        lines = f._lines
-        self.assertIsNot(lines, f.fix(mutate=True, inplace=False)._lines)
-        f.fix(mutate=True, inplace=True)
-        self.assertIsNot(lines, f._lines)
-        self.assertIs(f.a.__class__, Assign)
-        self.assertEqual(f.src, 'a = 1')
-        f.verify(raise_=True)
-
-        if sys.version_info[:2] >= (3, 12):
-            f = FST.fromsrc('type t[T] = ...')
-            f = f.a.body[0].type_params[0].f.copy(fix=False)
-            self.assertIs(f.a.__class__, TypeVar)
-            f.fix(inplace=True)
-            self.assertIs(f.a.__class__, TypeVar)
-            lines = f._lines
-            self.assertIsNot(lines, f.fix(mutate=True, inplace=False)._lines)
-            f.fix(mutate=True, inplace=True)
-            self.assertIs(lines, f._lines)
-            self.assertIs(f.a.__class__, Name)
-            self.assertEqual(f.a.id, "T")
-            f.verify(raise_=True)
-
-            f = FST.fromsrc('type t[T: int] = ...')
-            f = f.a.body[0].type_params[0].f.copy(fix=False)
-            self.assertIs(f.a.__class__, TypeVar)
-            f.fix(inplace=True)
-            self.assertIs(f.a.__class__, TypeVar)
-            lines = f._lines
-            self.assertIsNot(lines, f.fix(mutate=True, inplace=False)._lines)
-            f.fix(mutate=True, inplace=True)
-            self.assertIs(lines, f._lines)
-            self.assertIs(f.a.__class__, AnnAssign)
-            self.assertIs(f.a.target.__class__, Name)
-            self.assertIs(f.a.target.ctx.__class__, Store)
-            self.assertEqual(f.a.target.id, "T")
-            self.assertIs(f.a.annotation.__class__, Name)
-            self.assertIs(f.a.annotation.ctx.__class__, Load)
-            self.assertEqual(f.a.annotation.id, "int")
-            self.assertIs(f.a.value, None)
-            f.verify(raise_=True)
-
-            f = FST.fromsrc('type t[T = str] = ...')
-            f = f.a.body[0].type_params[0].f.copy(fix=False)
-            self.assertIs(f.a.__class__, TypeVar)
-            f.fix(inplace=True)
-            self.assertIs(f.a.__class__, TypeVar)
-            lines = f._lines
-            self.assertIsNot(lines, f.fix(mutate=True, inplace=False)._lines)
-            f.fix(mutate=True, inplace=True)
-            self.assertIs(lines, f._lines)
-            self.assertIs(f.a.__class__, Assign)
-            self.assertEqual(len(f.a.targets), 1)
-            self.assertIs(f.a.targets[0].__class__, Name)
-            self.assertIs(f.a.targets[0].ctx.__class__, Store)
-            self.assertEqual(f.a.targets[0].id, "T")
-            self.assertIs(f.a.value.__class__, Name)
-            self.assertIs(f.a.value.ctx.__class__, Load)
-            self.assertEqual(f.a.value.id, "str")
-            f.verify(raise_=True)
-
-            f = FST.fromsrc('type t[T: int = str] = ...')
-            f = f.a.body[0].type_params[0].f.copy(fix=False)
-            self.assertIs(f.a.__class__, TypeVar)
-            f.fix(inplace=True)
-            self.assertIs(f.a.__class__, TypeVar)
-            lines = f._lines
-            self.assertIsNot(lines, f.fix(mutate=True, inplace=False)._lines)
-            f.fix(mutate=True, inplace=True)
-            self.assertIs(lines, f._lines)
-            self.assertIs(f.a.__class__, AnnAssign)
-            self.assertIs(f.a.target.__class__, Name)
-            self.assertIs(f.a.target.ctx.__class__, Store)
-            self.assertEqual(f.a.target.id, "T")
-            self.assertIs(f.a.annotation.__class__, Name)
-            self.assertIs(f.a.annotation.ctx.__class__, Load)
-            self.assertEqual(f.a.annotation.id, "int")
-            self.assertIs(f.a.value.__class__, Name)
-            self.assertIs(f.a.value.ctx.__class__, Load)
-            self.assertEqual(f.a.value.id, "str")
-            f.verify(raise_=True)
-
-            f = FST.fromsrc('type t[\n T \n : \n int \n = \n str \n] = ...')
-            f = f.a.body[0].type_params[0].f.copy(fix=False)
-            self.assertIs(f.a.__class__, TypeVar)
-            f.fix(inplace=True)
-            self.assertIs(f.a.__class__, TypeVar)
-            lines = f._lines
-            self.assertIsNot(lines, f.fix(mutate=True, inplace=False)._lines)
-            f.fix(mutate=True, inplace=True)
-            self.assertIsNot(lines, f._lines)
-            self.assertIs(f.a.__class__, AnnAssign)
-            self.assertEqual(f.src, 'T: int = str')
-            f.verify(raise_=True)
-
         f = FST.fromsrc('if 1: pass\nelif 2: pass').a.body[0].orelse[0].f.copy(fix=False)
         self.assertEqual('elif 2: pass', f.src)
 
@@ -1150,6 +951,7 @@ class TestFST(unittest.TestCase):
         self.assertEqual('w := x,', f.src)
 
         g = f.fix(inplace=False)
+        self.assertEqual('(w := x,)', g.src)
         self.assertTrue(compare(f.a, g.a, locs=False))
         self.assertFalse(compare(f.a, g.a, locs=True))
         self.assertIs(g, g.fix())
@@ -1182,7 +984,8 @@ class TestFST(unittest.TestCase):
         self.assertEqual('(w := x,)', f.src)
 
         f = FST.fromsrc('a[1:2, 3:4]').a.body[0].value.slice.f.copy(fix=False)
-        self.assertRaises(SyntaxError, f.fix)
+        self.assertIs(f.fix(), f)
+        # self.assertRaises(SyntaxError, f.fix)
         # self.assertIs(None, f.fix(raise_=False))
 
         if sys.version_info[:2] >= (3, 12):
@@ -2234,7 +2037,7 @@ Expression .. ROOT 0,0 -> 2,1
 
 
 
-def _regen_cut_data():
+def regen_cut_data():
     newlines = []
 
     for src, elt, start, stop, *_ in CUT_DATA:
@@ -2273,7 +2076,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     if args.regen:
-        _regen_cut_data()
+        regen_cut_data()
         sys.exit(0)
 
     unittest.main()
