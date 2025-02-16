@@ -326,22 +326,6 @@ class FST:
 
     # ------------------------------------------------------------------------------------------------------------------
 
-    def _repr_tail(self) -> str:
-        tail = ' ROOT' if self.is_root else ''
-        loc  = self.loc
-
-        return tail + f' {loc[0]},{loc[1]} -> {loc[2]},{loc[3]}' if loc else tail
-
-    def _dict_key_or_mock_loc(self, key: AST | None, value: 'FST') -> Union['FST', fstloc]:
-        if key:
-            return key.f
-
-        ln, col, s = _prev_code(self.root._lines, self.ln, self.col, value.ln, value.col)
-
-        assert s.endswith('**')
-
-        return fstloc(ln, col, ln, col + len(s))
-
     def _make_fst_tree(self):
         """Create tree of FST nodes for each AST node from root. Call only on root."""
 
@@ -357,6 +341,12 @@ class FST:
                 elif isinstance(child, list):
                     stack.extend(FST(a, f, astfield(name, idx))
                                  for idx, a in enumerate(child) if isinstance(a, AST))
+
+    def _repr_tail(self) -> str:
+        tail = ' ROOT' if self.is_root else ''
+        loc  = self.loc
+
+        return tail + f' {loc[0]},{loc[1]} -> {loc[2]},{loc[3]}' if loc else tail
 
     def _dump(self, full: bool = False, indent: int = 2, cind: str = '', prefix: str = '', linefunc: Callable = print):
         tail = self._repr_tail()
@@ -381,6 +371,56 @@ class FST:
                 child.f._dump(full, indent, cind + sind * 2, '', linefunc)
             else:
                 linefunc(f'{sind}{sind}{cind}{child!r}')
+
+    def _dict_key_or_mock_loc(self, key: AST | None, value: 'FST') -> Union['FST', fstloc]:
+        if key:
+            return key.f
+
+        ln, col, s = _prev_code(self.root._lines, self.ln, self.col, value.ln, value.col)
+
+        assert s.endswith('**')
+
+        return fstloc(ln, col, ln, col + len(s))
+
+    def _maybe_add_singleton_tuple_comma(self) -> 'FST':  # -> Self
+        """Maybe add comma to singleton tuple if not already there, parenthesization not checked or taken into account.
+        `self` must be a singleton tuple."""
+
+        # assert isinstance(self.a, Tuple) and len(self.a.elts) == 1
+
+        felt  = self.a.elts[0].f
+        root  = self.root
+        lines = root._lines
+
+        if (not (code := _next_code(lines, felt.end_ln, felt.end_col, self.end_ln, self.end_col)) or
+            not code.src.startswith(',')
+        ):
+            lines[end_ln]          = bistr(f'{(l := lines[(end_ln := felt.end_ln)])[:(c := felt.end_col)]},{l[c:]}')
+            self.a.end_col_offset += 1
+
+            self.touchup(True)
+
+        return self
+
+    def _reparse_docstring(self) -> 'FST':  # -> Self
+        """`self` must be something that can have a docstring in the body (function, class, module). Node and source
+        lines are assumed to be correct, just the docstring value needs to be reset."""
+
+        # assert isistance(self, (FunctionDef, AsyncFunctionDef, ClassDef, Module))
+
+        if ((body := self.a.body) and isinstance(b0 := body[0], Expr) and isinstance(v := b0.value, Constant) and
+            isinstance(v.value, str)
+        ):
+            v.value = literal_eval(b0.f.copy_src())
+
+        return self
+
+    def _reparse_docstrings(self) -> 'FST':  # -> Self
+        """Reparse docstrings in self and all descendants."""
+
+        for a in walk(self.a):
+            if isinstance(a, (FunctionDef, AsyncFunctionDef, ClassDef, Module)):
+                a.f._reparse_docstring()
 
     def _offset(self, ln: int, col: int, dln: int, dcol_offset: int, inc: bool = False) -> 'FST':  # -> Self
         """Offset ast node positions in the tree on or after ln / col by delta line / col_offset (col byte offset).
@@ -476,7 +516,7 @@ class FST:
 
         return self
 
-    def _get_indentable_lns(self, skip: int = 0) -> set[int]:
+    def _get_indentable_lns(self, skip: int = 0, *, docstring: bool = True) -> set[int]:
         """Get set of indentable lines (past the first one usually because that is normally handled specially)."""
 
         lns = set(range(self.bln + skip, self.bend_ln + 1))
@@ -484,21 +524,26 @@ class FST:
         while (parent := self.parent) and not isinstance(self.a, STATEMENTISH):
             self = parent
 
-        for a in walk(self.a):  # find multiline strings and exclude their unindentable lines
-            if isinstance(a, Constant) and (isinstance(a.value, (str, bytes))):
-            # if (isinstance(a, Constant) and (f := a.f).end_ln != f.ln and not ((parent := f.parent) and   # and isinstance(a.value, (str, bytes)): is a given if end_ln != ln
-            #     isinstance(parent.a, Expr) and (pparent := parent.parent) and parent.pfield == ('body', 0) and
-            #     isinstance(pparent.a, (FunctionDef, AsyncFunctionDef, ClassDef, Module)))
-            # ):
-                lns -= set(range(a.lineno, a.end_lineno))  # specifically leave first line of multiline string because that is indentable
+        if not docstring:
+            for a in walk(self.a):  # find multiline strings and exclude their unindentable lines
+                if isinstance(a, Constant) and (isinstance(a.value, (str, bytes))):
+                    lns -= set(range(a.lineno, a.end_lineno))  # specifically leave first line of multiline string because that is indentable
+
+        else:
+            for a in walk(self.a):
+                if (isinstance(a, Constant) and (f := a.f).end_ln != f.ln and not ((parent := f.parent) and   # and isinstance(a.value, (str, bytes)): is a given if end_ln != ln
+                    isinstance(parent.a, Expr) and (pparent := parent.parent) and parent.pfield == ('body', 0) and
+                    isinstance(pparent.a, (FunctionDef, AsyncFunctionDef, ClassDef, Module)))
+                ):
+                    lns -= set(range(a.lineno, a.end_lineno))
 
         return lns
 
-    def _indent_tail(self, indent: str) -> set[int]:
+    def _indent_tail(self, indent: str, *, docstring: bool = True) -> set[int]:
         """Indent all indentable lines past the first one according with `indent` and adjust node locations accordingly.
         Does not modify node columns on first line."""
 
-        if not (lns := self._get_indentable_lns(1)) or not indent:
+        if not (lns := self._get_indentable_lns(1, docstring=docstring)) or not indent:
             return lns
 
         self._offset_cols(len(indent.encode()), lns)
@@ -509,15 +554,18 @@ class FST:
             if l := lines[ln]:  # only indent non-empty lines
                 lines[ln] = bistr(indent + l)
 
+        if docstring:
+            self._reparse_docstrings()
+
         return lns
 
-    def _dedent_tail(self, indent: str) -> set[int]:
+    def _dedent_tail(self, indent: str, *, docstring: bool = True) -> set[int]:
         """Dedent all indentable lines past the first one by removing `indent` prefix and adjust node locations
         accordingly. Does not modify columns on first line. If cannot dedent entire amount will dedent as much as
         possible.
         """
 
-        if not (lns := self._get_indentable_lns(1)) or not indent:
+        if not (lns := self._get_indentable_lns(1, docstring=docstring)) or not indent:
             return lns
 
         lines        = self.root._lines
@@ -560,26 +608,10 @@ class FST:
         else:
             self._offset_cols(-lindent, lns)
 
+        if docstring:
+            self._reparse_docstrings()
+
         return lns
-
-    def _maybe_add_singleton_tuple_comma(self) -> 'FST':  # -> Self
-        """Maybe add comma to singleton tuple if not already there."""
-
-        # assert len(self.a.elts) == 1
-
-        felt  = self.a.elts[0].f
-        root  = self.root
-        lines = root._lines
-
-        if (not (code := _next_code(lines, felt.end_ln, felt.end_col, self.end_ln, self.end_col)) or
-            not code.src.startswith(',')
-        ):
-            lines[end_ln]          = bistr(f'{(l := lines[(end_ln := felt.end_ln)])[:(c := felt.end_col)]},{l[c:]}')
-            self.a.end_col_offset += 1
-
-            self.touchup(True)
-
-        return self
 
     def _make_fst_and_dedent(self, findent: 'FST', newast: AST, copy_loc: fstloc, del_loc: fstloc | None = None,
                              prefix: str = '', suffix: str = '') -> 'FST':

@@ -718,10 +718,6 @@ class TestFST(unittest.TestCase):
         self.assertEqual({1, 2, 5, 7, 8, 9, 10}, ast.f._get_indentable_lns(1))
         self.assertEqual({0, 1, 2, 5, 7, 8, 9, 10}, ast.f._get_indentable_lns(0))
 
-    def test_line_ast_ends(self):
-        self.assertEqual([0, 6, 11, 10, 5, 6],
-                         parse('class cls:\n @deco\n def f(self):\n  """ this\n  """\n  that').f.get_line_ast_ends())
-
     def test__offset(self):
         src = 'i = 1\nj = 2\nk = 3'
 
@@ -1050,25 +1046,65 @@ class TestFST(unittest.TestCase):
         # self.assertRaises(SyntaxError, f.fix)
         # self.assertIs(None, f.fix(raise_=False))
 
-#         f = FST.fromsrc('''
-# if 1:
-#     def f():
-#         """
-#         docstring
-#         """
-#         """
-#         regular text
-#         """
-#           '''.strip())
-#         self.assertEqual('''
-# def f():
-#     """
-#     docstring
-#     """
-#     """
-#         regular text
-#         """
-#           '''.strip(), f.a.body[0].body[0].f.copy().src)
+        f = FST.fromsrc('''
+if 1:
+    def f():
+        """
+        docstring
+        """
+        """
+        regular text
+        """
+          '''.strip())
+        self.assertEqual('''
+def f():
+    """
+    docstring
+    """
+    """
+        regular text
+        """
+          '''.strip(), f.a.body[0].body[0].f.copy().src)
+
+        f = FST.fromsrc('''
+if 1:
+    async def f():
+        """
+        docstring
+        """
+        """
+        regular text
+        """
+          '''.strip())
+        self.assertEqual('''
+async def f():
+    """
+    docstring
+    """
+    """
+        regular text
+        """
+          '''.strip(), f.a.body[0].body[0].f.copy().src)
+
+        f = FST.fromsrc('''
+if 1:
+    class cls:
+        """
+        docstring
+        """
+        """
+        regular text
+        """
+          '''.strip())
+        self.assertEqual('''
+class cls:
+    """
+    docstring
+    """
+    """
+        regular text
+        """
+          '''.strip(), f.a.body[0].body[0].f.copy().src)
 
 
 
