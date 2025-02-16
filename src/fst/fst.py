@@ -1361,36 +1361,6 @@ class FST:
 
         return extra_indent
 
-    def get_line_ast_ends(self) -> list[int]:
-        """Map of column positions of last AST node on each given line. Useful for checking comments and '\' continuations."""
-
-        root     = self.root
-        lines    = root._lines
-        lastends = [0] * (root.bend_ln + 1)
-        stack    = [root.a]
-
-        while stack:
-            lastends[end_ln] = max(lastends[(end_ln := (a := stack.pop()).f.bend_ln)], a.f.bend_col)  # we know end_ln is not None
-
-            if isinstance(a, Constant):
-                if isinstance(a.value, (str, bytes)):  # multiline str?
-                    for i in range(a.f.ln, a.f.end_ln):  # specifically leave out last line
-                        lastends[i] = len(lines[i])
-
-                continue
-
-            for _, child in iter_fields(a):
-                if isinstance(child, AST):
-                    if child.f.bloc is not None:
-                        stack.append(child)
-
-                elif isinstance(child, list):
-                    for c in child:
-                        if isinstance(c, AST) and c.f.bloc is not None:
-                            stack.append(c)
-
-        return lastends
-
     # ------------------------------------------------------------------------------------------------------------------
 
     def touch(self) -> 'FST':  # -> Self:
