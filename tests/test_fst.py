@@ -711,12 +711,12 @@ class TestFST(unittest.TestCase):
         self.assertEqual('', parse('\\\ni').body[0].f.get_indent())
         self.assertEqual('    ', parse('try: i\nexcept: pass').body[0].body[0].f.get_indent())
 
-    def test__get_indentable_lns(self):
+    def test__indentable_lns(self):
         src = 'class cls:\n if True:\n  i = """\nj\n"""\n  k = "... \\\n2"\n else:\n  j \\\n=\\\n 2'
         ast = parse(src)
 
-        self.assertEqual({1, 2, 5, 7, 8, 9, 10}, ast.f._get_indentable_lns(1))
-        self.assertEqual({0, 1, 2, 5, 7, 8, 9, 10}, ast.f._get_indentable_lns(0))
+        self.assertEqual({1, 2, 5, 7, 8, 9, 10}, ast.f._indentable_lns(1))
+        self.assertEqual({0, 1, 2, 5, 7, 8, 9, 10}, ast.f._indentable_lns(0))
 
     def test__offset(self):
         src = 'i = 1\nj = 2\nk = 3'
@@ -773,7 +773,7 @@ class TestFST(unittest.TestCase):
         src = 'class cls:\n if True:\n  i = """\nj\n"""\n  k = 3\n else:\n  j = 2'
 
         ast = parse(src)
-        lns = ast.f._get_indentable_lns(1)
+        lns = ast.f._indentable_lns(1)
         ast.f._offset_cols(1, lns)
         self.assertEqual({1, 2, 5, 6, 7}, lns)
         self.assertEqual((0, 0, 7, 8), ast.f.loc)
@@ -791,7 +791,7 @@ class TestFST(unittest.TestCase):
         self.assertEqual((7, 7, 7, 8), ast.body[0].body[0].orelse[0].value.f.loc)
 
         ast = parse(src)
-        lns = ast.body[0].body[0].f._get_indentable_lns(1)
+        lns = ast.body[0].body[0].f._indentable_lns(1)
         ast.body[0].body[0].f._offset_cols(1, lns)
         self.assertEqual({2, 5, 6, 7}, lns)
         self.assertEqual((1, 1, 7, 8), ast.body[0].body[0].f.loc)
@@ -807,7 +807,7 @@ class TestFST(unittest.TestCase):
         self.assertEqual((7, 7, 7, 8), ast.body[0].body[0].orelse[0].value.f.loc)
 
         ast = parse(src)
-        lns = ast.body[0].body[0].body[0].f._get_indentable_lns(1)
+        lns = ast.body[0].body[0].body[0].f._indentable_lns(1)
         ast.body[0].body[0].body[0].f._offset_cols(1, lns)
         self.assertEqual(set(), lns)
         self.assertEqual((2, 2, 4, 3), ast.body[0].body[0].body[0].f.loc)

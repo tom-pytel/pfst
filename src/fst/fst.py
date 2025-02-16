@@ -57,6 +57,14 @@ re_next_code_or_comment          = re.compile(r'\s*([^\s#\\]+|#.*)')      # next
 re_next_code_or_comment_or_lcont = re.compile(r'\s*([^\s#\\]+|#.*|\\$)')  # next non-space non-continuation code or comment text including logical line end, don't look into strings with this!
 
 
+class astfield(NamedTuple):
+    name: str
+    idx:  int | None = None
+
+    def get(self, node: AST) -> Any:
+        return getattr(node, self.name) if self.idx is None else getattr(node, self.name)[self.idx]
+
+
 class fstloc(NamedTuple):
     ln:      int
     col:     int
@@ -375,6 +383,8 @@ class FST:
                 linefunc(f'{sind}{sind}{cind}{child!r}')
 
     def _dict_key_or_mock_loc(self, key: AST | None, value: 'FST') -> Union['FST', fstloc]:
+        """Return same dictionary key FST if exists else create and return a location for the preceding '**' code."""
+
         if key:
             return key.f
 
@@ -519,8 +529,13 @@ class FST:
 
         return self
 
-    def _get_indentable_lns(self, skip: int = 0, *, docstring: bool = True) -> set[int]:
+    def _indentable_lns(self, skip: int = 0, *, docstring: bool = True) -> set[int]:
         """Get set of indentable lines (past the first one usually because that is normally handled specially)."""
+
+        def multiline(a: AST):
+            nonlocal lns
+
+            lns -= set(range(a.lineno, a.end_lineno))  # specifically leave first line of multiline string because that is indentable
 
         lns = set(range(self.bln + skip, self.bend_ln + 1))
 
@@ -529,16 +544,16 @@ class FST:
 
         if not docstring:
             for a in walk(self.a):  # find multiline strings and exclude their unindentable lines
-                if isinstance(a, Constant) and (isinstance(a.value, (str, bytes))):
-                    lns -= set(range(a.lineno, a.end_lineno))  # specifically leave first line of multiline string because that is indentable
+                if isinstance(a, Constant) and (f := a.f).end_ln != f.ln:   # and isinstance(a.value, (str, bytes))  is a given if end_ln != ln
+                    multiline(a)
 
         else:
             for a in walk(self.a):
-                if (isinstance(a, Constant) and (f := a.f).end_ln != f.ln and not ((parent := f.parent) and   # and isinstance(a.value, (str, bytes)): is a given if end_ln != ln
+                if (isinstance(a, Constant) and (f := a.f).end_ln != f.ln and not ((parent := f.parent) and
                     isinstance(parent.a, Expr) and (pparent := parent.parent) and parent.pfield == ('body', 0) and
                     isinstance(pparent.a, (FunctionDef, AsyncFunctionDef, ClassDef, Module)))
                 ):
-                    lns -= set(range(a.lineno, a.end_lineno))
+                    multiline(a)
 
         return lns
 
@@ -546,7 +561,7 @@ class FST:
         """Indent all indentable lines past the first one according with `indent` and adjust node locations accordingly.
         Does not modify node columns on first line."""
 
-        if not (lns := self._get_indentable_lns(1, docstring=docstring)) or not indent:
+        if not (lns := self._indentable_lns(1, docstring=docstring)) or not indent:
             return lns
 
         self._offset_cols(len(indent.encode()), lns)
@@ -568,7 +583,7 @@ class FST:
         possible.
         """
 
-        if not (lns := self._get_indentable_lns(1, docstring=docstring)) or not indent:
+        if not (lns := self._indentable_lns(1, docstring=docstring)) or not indent:
             return lns
 
         lines        = self.root._lines

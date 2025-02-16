@@ -1,11 +1,11 @@
 import sys
 from array import array
 from ast import *
-from typing import Any, Callable, Iterator, Literal, NamedTuple
+from typing import Any, Callable, Iterator, Literal
 
 __all__ = [
     'FIELDS', 'AST_FIELDS',
-    'bistr', 'astfield', 'get_field', 'has_type_comments', 'is_parsable', 'get_parse_mode',
+    'bistr', 'get_field', 'has_type_comments', 'is_parsable', 'get_parse_mode',
     'WalkFail', 'walk2', 'compare', 'copy_attributes', 'copy', 'set_ctx',
 ]
 
@@ -232,14 +232,6 @@ class bistr(str):
             del self.b2c, self._b2c
         except AttributeError:
             pass
-
-
-class astfield(NamedTuple):
-    name: str
-    idx:  int | None = None
-
-    def get(self, node: AST) -> Any:
-        return getattr(node, self.name) if self.idx is None else getattr(node, self.name)[self.idx]
 
 
 def get_field(node: AST, name: str, idx: int | None = None) -> AST:
