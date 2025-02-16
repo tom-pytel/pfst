@@ -1,7 +1,6 @@
 __all_other__ = None
 __all_other__ = set(globals())
 from ast import *
-from .util import TryStar, TypeVar, ParamSpec, TypeVarTuple, TypeAlias  # for py < 3.12
 __all_other__ = set(globals()) - __all_other__
 
 import ast as ast_
@@ -51,6 +50,11 @@ STATEMENTISH_OR_STMTMOD = (stmt, ExceptHandler, match_case, Module, Interactive)
 re_empty_line_start     = re.compile(r'[ \t]*')    # start of completely empty or space-filled line (from start pos, start of line indentation)
 re_empty_line           = re.compile(r'[ \t]*$')   # completely empty or space-filled line (from start pos, start of line indentation)
 re_line_continuation    = re.compile(r'[^#]*\\$')  # line continuation with backslash not following a comment start '#' (from start pos, assumed no asts contained in line)
+
+re_oneline_str          = re.compile(r'(?:b|r|rb|br|u|)  (?:  \'(?:\\.|[^\\\'])*\'  |  "(?:\\.|[^\\"])*"  )', re.IGNORECASE | re.VERBOSE)  # I f^\\\'])*\'ng hate these!
+re_multiline_str_start  = re.compile(r'(?:b|r|rb|br|u|)  (\'\'\'|""")', re.IGNORECASE | re.VERBOSE)
+re_multiline_str_end_sq = re.compile(r'(?:\\.|[^\\\'])*  \'\'\'')
+re_multiline_str_end_dq = re.compile(r'(?:\\.|[^\\"])*  """')
 
 re_next_code                     = re.compile(r'\s*([^\s#\\]+)')          # next non-space non-continuation non-comment code text, don't look into strings with this!
 re_next_code_or_comment          = re.compile(r'\s*([^\s#\\]+|#.*)')      # next non-space non-continuation code or comment text, don't look into strings with this!
@@ -532,7 +536,7 @@ class FST:
     def _indentable_lns(self, skip: int = 0, *, docstring: bool = True) -> set[int]:
         """Get set of indentable lines (past the first one usually because that is normally handled specially)."""
 
-        def multiline(a: AST):
+        def multiline(f: 'FST'):
             nonlocal lns
 
             lns -= set(range(a.lineno, a.end_lineno))  # specifically leave first line of multiline string because that is indentable
@@ -542,18 +546,24 @@ class FST:
         while (parent := self.parent) and not isinstance(self.a, STATEMENTISH):
             self = parent
 
-        if not docstring:
-            for a in walk(self.a):  # find multiline strings and exclude their unindentable lines
-                if isinstance(a, Constant) and (f := a.f).end_ln != f.ln:   # and isinstance(a.value, (str, bytes))  is a given if end_ln != ln
-                    multiline(a)
+        for f in (gen := self.walk()):  # find multiline strings and exclude their unindentable lines
+            if isinstance(a := f.a, JoinedStr):  # f-string  TODO: deal with this promordial evil properly at some point
+                if f.end_ln != f.ln:
+                    lns -= set(range(a.lineno, a.end_lineno))
 
-        else:
-            for a in walk(self.a):
-                if (isinstance(a, Constant) and (f := a.f).end_ln != f.ln and not ((parent := f.parent) and
-                    isinstance(parent.a, Expr) and (pparent := parent.parent) and parent.pfield == ('body', 0) and
-                    isinstance(pparent.a, (FunctionDef, AsyncFunctionDef, ClassDef, Module)))
-                ):
-                    multiline(a)
+                gen.send(True)  # skip everything inside regardless
+
+            elif isinstance(a, Constant):
+                if (f.end_ln != f.ln and (  # and isinstance(f.a.value, (str, bytes))  is a given if end_ln != ln
+                    not docstring or
+                    not ((parent := f.parent) and
+                         isinstance(parent.a, Expr) and (pparent := parent.parent) and parent.pfield == ('body', 0) and
+                         isinstance(pparent.a, (FunctionDef, AsyncFunctionDef, ClassDef, Module))
+                ))):
+                    multiline(f)
+
+            elif f.bend_ln == f.bln:
+                gen.send(True)  # everything on one line, don't need to recurse
 
         return lns
 
