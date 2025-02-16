@@ -956,6 +956,68 @@ class TestFST(unittest.TestCase):
         self.assertFalse(compare(f.a, g.a, locs=True))
         self.assertIs(g, g.fix())
 
+        f = FST.fromsrc('(1 +\n2)')
+        fc = f.a.body[0].value.f.copy(fix=False)
+        self.assertEqual('1 +\n2', fc.src)
+        fd = fc.fix()
+        self.assertEqual('(1 +\n2)', fd.src)
+        fc.fix(inplace=True)
+        self.assertEqual('(1 +\n2)', fc.src)
+
+        f = FST.fromsrc('yield a1, a2')
+        fc = f.a.body[0].value.f.copy(fix=False)
+        self.assertEqual('yield a1, a2', fc.src)
+        fd = fc.fix()
+        self.assertEqual('(yield a1, a2)', fd.src)
+        fc.fix(inplace=True)
+        self.assertEqual('(yield a1, a2)', fc.src)
+
+        f = FST.fromsrc("""[
+"Bad value substitution: option {!r} in section {!r} contains "
+               "an interpolation key {!r} which is not a valid option name. "
+               "Raw value: {!r}".format
+]""".strip())
+        fc = f.a.body[0].value.elts[0].f.copy(fix=False)
+        self.assertEqual("""
+"Bad value substitution: option {!r} in section {!r} contains "
+               "an interpolation key {!r} which is not a valid option name. "
+               "Raw value: {!r}".format""".strip(), fc.src)
+        fd = fc.fix()
+        self.assertEqual("""
+("Bad value substitution: option {!r} in section {!r} contains "
+               "an interpolation key {!r} which is not a valid option name. "
+               "Raw value: {!r}".format)""".strip(), fd.src)
+        fc.fix(inplace=True)
+        self.assertEqual("""
+("Bad value substitution: option {!r} in section {!r} contains "
+               "an interpolation key {!r} which is not a valid option name. "
+               "Raw value: {!r}".format)""".strip(), fc.src)
+
+        f = FST.fromsrc("""
+((is_seq := isinstance(a, (Tuple, List))) or (is_starred := isinstance(a, Starred)) or
+            isinstance(a, (Name, Subscript, Attribute)))
+        """.strip())
+        fc = f.a.body[0].value.f.copy(fix=False)
+        self.assertEqual("""
+(is_seq := isinstance(a, (Tuple, List))) or (is_starred := isinstance(a, Starred)) or
+            isinstance(a, (Name, Subscript, Attribute))""".strip(), fc.src)
+        fd = fc.fix()
+        self.assertEqual("""
+((is_seq := isinstance(a, (Tuple, List))) or (is_starred := isinstance(a, Starred)) or
+            isinstance(a, (Name, Subscript, Attribute)))""".strip(), fd.src)
+        fc.fix(inplace=True)
+        self.assertEqual("""
+((is_seq := isinstance(a, (Tuple, List))) or (is_starred := isinstance(a, Starred)) or
+            isinstance(a, (Name, Subscript, Attribute)))""".strip(), fc.src)
+
+        if sys.version_info[:2] >= (3, 12):
+            fc = FST.fromsrc('tuple[*tuple[int, ...]]').a.body[0].value.slice.f.copy(fix=False)
+            self.assertEqual('*tuple[int, ...]', fc.src)
+            fd = fc.fix()
+            self.assertEqual('(*tuple[int, ...],)', fd.src)
+            fc.fix(inplace=True)
+            self.assertEqual('(*tuple[int, ...],)', fc.src)
+
     def test_copy_bulk(self):
         for fnm in PYFNMS:
             ast = FST.fromsrc(read(fnm)).a

@@ -51,8 +51,10 @@ STATEMENTISH_OR_STMTMOD = (stmt, ExceptHandler, match_case, Module, Interactive)
 re_empty_line_start     = re.compile(r'[ \t]*')    # start of completely empty or space-filled line (from start pos, start of line indentation)
 re_empty_line           = re.compile(r'[ \t]*$')   # completely empty or space-filled line (from start pos, start of line indentation)
 re_line_continuation    = re.compile(r'[^#]*\\$')  # line continuation with backslash not following a comment start '#' (from start pos, assumed no asts contained in line)
-re_next_code            = re.compile(r'\s*([^\s#\\]+)')      # next non-space non-continuation non-comment code text, don't look into strings with this!
-re_next_code_or_comment = re.compile(r'\s*([^\s#\\]+|#.*)')  # next non-space non-continuation code or comment text, don't look into strings with this!
+
+re_next_code                     = re.compile(r'\s*([^\s#\\]+)')          # next non-space non-continuation non-comment code text, don't look into strings with this!
+re_next_code_or_comment          = re.compile(r'\s*([^\s#\\]+|#.*)')      # next non-space non-continuation code or comment text, don't look into strings with this!
+re_next_code_or_comment_or_lcont = re.compile(r'\s*([^\s#\\]+|#.*|\\$)')  # next non-space non-continuation code or comment text including logical line end, don't look into strings with this!
 
 
 class fstloc(NamedTuple):
@@ -145,6 +147,33 @@ def _prev_code(lines: list[str], ln: int, col: int, end_ln: int, end_col: int, c
 
     if m := last_match(lines[ln], col, end_col):
         return srccode(ln, m.start(1), m.group(1))
+
+    return None
+
+
+def _next_code_lline(lines: list[str], ln: int, col: int, end_ln: int, end_col: int, comment: bool = False
+                     ) -> srccode | None:
+    """Same rules as `_next_code()` but do not exceed logical line during search."""
+
+    re_pat = re_next_code_or_comment if comment else re_next_code
+
+    if end_ln == ln:
+        return srccode(ln, m.start(1), m.group(1)) if (m := re_pat.match(lines[ln], col, end_col)) else None
+
+    for i in range(ln, end_ln):
+        if not (m := re_next_code_or_comment_or_lcont.match(lines[i], col)):
+            return None
+
+        if (s := m.group(1)).startswith('#'):
+            return srccode(i, m.start(1), s) if comment else None
+
+        if not s.startswith('\\'):
+            return srccode(i, m.start(1), s)
+
+        col = 0
+
+    if m := re_pat.match(lines[end_ln], 0, end_col):
+        return srccode(end_ln, m.start(1), m.group(1))
 
     return None
 
@@ -515,8 +544,10 @@ class FST:
 
         return lns
 
-    def _fix_singleton_tuple(self):
+    def _maybe_add_singleton_tuple_comma(self) -> 'FST':  # -> Self
         """Maybe add comma to singleton tuple if not already there."""
+
+        # assert len(self.a.elts) == 1
 
         felt  = self.a.elts[0].f
         root  = self.root
@@ -529,6 +560,8 @@ class FST:
             self.a.end_col_offset += 1
 
             self.touchup(True)
+
+        return self
 
     def _make_fst_and_dedent(self, findent: 'FST', newast: AST, copy_loc: fstloc, del_loc: fstloc | None = None,
                              prefix: str = '', suffix: str = '') -> 'FST':
@@ -661,8 +694,6 @@ class FST:
         return fst
 
     def _slice_tuple_list_or_set(self, start, stop, fix, cut) -> 'FST':
-        # if cut: raise NotImplementedError  # TODO: THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS!
-
         ast         = self.a
         elts        = ast.elts
         is_set      = isinstance(ast, Set)
@@ -753,10 +784,10 @@ class FST:
                     lines[ln] = bistr(f'{(l := lines[ln])[:col]}(){l[col:]}')
 
             elif len(elts) == 1:
-                self._fix_singleton_tuple()
+                self._maybe_add_singleton_tuple_comma()
 
             if len(asts) == 1:  # maybe need to add a postfix comma to copied single element tuple if is not already there
-                fst.a.body.f._fix_singleton_tuple()
+                fst.a.body.f._maybe_add_singleton_tuple_comma()
 
         return fst
 
@@ -926,7 +957,7 @@ class FST:
 
     # ------------------------------------------------------------------------------------------------------------------
 
-    def next(self, only_with_loc: bool = False) -> Union['FST', None]:
+    def next(self, only_with_loc: bool = True) -> Union['FST', None]:
         """Get next sibling in syntactic order. If `only_with_loc` is `True` (default) then only ASTs with locations
         returned. Returns `None` if last valid sibling in parent.
         """
@@ -1038,7 +1069,7 @@ class FST:
 
         return None
 
-    def prev(self, only_with_loc: bool = False) -> Union['FST', None]:
+    def prev(self, only_with_loc: bool = True) -> Union['FST', None]:
         """Get previous sibling in syntactic order. If `only_with_loc` is `True` (default) then only ASTs with locations
         returned. Returns `None` if first valid sibling in parent.
         """
@@ -1146,7 +1177,7 @@ class FST:
 
         return None
 
-    def first_child(self, only_with_loc: bool = False) -> Union['FST', None]:
+    def first_child(self, only_with_loc: bool = True) -> Union['FST', None]:
         """Get first child in syntactic order. If `only_with_loc` is `True` (default) then only ASTs with locations returned.
         Returns `None` if no valid children.
         """
@@ -1163,7 +1194,7 @@ class FST:
 
         return None
 
-    def last_child(self, only_with_loc: bool = False) -> Union['FST', None]:
+    def last_child(self, only_with_loc: bool = True) -> Union['FST', None]:
         """Get last child in syntactic order. If `only_with_loc` is `True` (default) then only ASTs with locations returned.
         Returns `None` if no valid children.
         """
@@ -1180,15 +1211,38 @@ class FST:
 
         return None
 
-    def next_child(self, from_child: Union['FST', None], only_with_loc: bool = False) -> Union['FST', None]:
+    def next_child(self, from_child: Union['FST', None], only_with_loc: bool = True) -> Union['FST', None]:
         """Meant for simple iteration."""
 
         return self.first_child(only_with_loc) if from_child is None else from_child.next(only_with_loc)
 
-    def prev_child(self, from_child: Union['FST', None], only_with_loc: bool = False) -> Union['FST', None]:
+    def prev_child(self, from_child: Union['FST', None], only_with_loc: bool = True) -> Union['FST', None]:
         """Meant for simple iteration."""
 
         return self.last_child(only_with_loc) if from_child is None else from_child.prev(only_with_loc)
+
+    def walk_children(self, only_with_loc: bool = True):
+        """Walk descendants in syntactic order, send() once Trueish value to skip recursion into child."""
+
+        child = None
+
+        while child := self.next_child(child, only_with_loc):
+            if (sent := (yield child)) is not None:
+                yield
+
+            if not sent:
+                yield from child.walk_children(only_with_loc)
+
+    def walk(self, only_with_loc: bool = True):
+        """Walk self and descendants in syntactic order, send() once Trueish value to skip recursion into child."""
+
+        if (sent := (yield self)) is not None:
+            yield
+
+            if sent:
+                return
+
+        yield from self.walk_children(only_with_loc)
 
     def is_parsable(self) -> bool:
         """Really means the AST is `unparse()`able and then re`parse()`able which will get it to this top level AST node
@@ -1216,8 +1270,11 @@ class FST:
 
         return True
 
+    def is_parenthesized(self) -> bool:
+        return ((code := _prev_code(self.root._lines, 0, 0, self.ln, self.col)) and code.src.endswith('('))
+
     def is_tuple_parenthesized(self) -> bool:
-        assert isinstance(self.a, Tuple)
+        # assert isinstance(self.a, Tuple)
 
         return (self.root._lines[(ln := self.ln)].startswith('(', col := self.col) and
                 (not (e := self.a.elts) or (ln != (f0 := e[0].f).ln or col != f0.col)))
@@ -1438,95 +1495,100 @@ class FST:
         # expression maybe parenthesize and proper ctx (Load)
 
         elif (isinstance(ast, expr)):
-            if not self.is_parsable():
+            if not self.is_parsable():  # may be Slice or Starred
                 return self
 
-            # need_ctx   = set_ctx(ast, Load, doit=False)
-            # need_paren = None
+            need_paren = None
 
-            # if is_tuple := isinstance(ast, Tuple):
-            #     if self.is_tuple_parenthesized():
-            #         need_paren = False
-            #     elif any(isinstance(e, NamedExpr) for e in ast.elts):
-            #         need_paren = True
+            if is_tuple := isinstance(ast, Tuple):
+                if self.is_tuple_parenthesized():
+                    need_paren = False
 
-            # elif (isinstance(ast, (Constant, Name, List, Set, Dict, ListComp, SetComp, DictComp, GeneratorExp)) or
-            #       ((code := _prev_code(self._lines, 0, 0, ln, col)) and code.src.endswith('('))):
-            #     need_paren = False
+                elif (not (elts := ast.elts) or any(isinstance(e, NamedExpr) for e in elts) or (len(elts) == 1 and (
+                      not (code := _next_code_lline(lines, (f0 := elts[0].f).end_ln, f0.end_col, end_ln, end_col)) or  # if comma not on logical line then definitely need to add parens, if no comma then the parens are incidental but we want that code path
+                      not code.src.startswith(',')))):
+                    need_paren = True
 
-            # elif isinstance(ast, NamedExpr):
-            #     need_paren = True
+            elif (isinstance(ast, (Name, List, Set, Dict, ListComp, SetComp, DictComp, GeneratorExp)) or
+                  self.is_parenthesized()):
+                need_paren = False
 
-            # if need_paren is None:
-            #     need_paren = True
+            elif isinstance(ast, (NamedExpr, Yield, YieldFrom)):
+                need_paren = True
 
-            #     pass  # TODO: determine need based on multiline
+            elif end_ln == ln:
+                need_paren = False
 
+            if need_paren is None:
+                try:
+                    a = ast_.parse(src := self.src, mode='eval', **self._parse_params)
 
-            # if (need_ctx or need_paren) and not inplace:
-            #     ast   = copy(ast)
-            #     lines = lines[:]
-            #     self  = FST(ast, lines=lines, from_=self)
+                except SyntaxError:  # if expression not parsing then try parenthesize
+                    tail = (',)' if is_tuple and len(ast.elts) == 1 and lines[end_ln][end_col - 1] != ',' else ')')  # TODO: WARNING! this won't work for expressions followed by comments
 
-            # if need_ctx:
-            #     set_ctx(ast, Load)
+                    a = ast_.parse(f'({src}{tail}', mode='eval', **self._parse_params)
 
-            # if need_paren:
-            #     lines[end_ln] = bistr(f'{(l := lines[end_ln])[:end_col]}){l[end_col:]}')
-            #     lines[ln]     = bistr(f'{(l := lines[ln])[:col]}({l[col:]}')
+                    if not inplace:
+                        lines = lines[:]
 
-            #     self._offset(ln, col, 0, 1)
+                    lines[end_ln] = bistr(f'{(l := lines[end_ln])[:end_col]}{tail}{l[end_col:]}')
+                    lines[ln]     = bistr(f'{(l := lines[ln])[:col]}({l[col:]}')
 
-            #     if is_tuple:
-            #         ast.col_offset     -= 1
-            #         ast.end_col_offset += 1
+                else:
+                    if compare(a.body, ast, locs=True, type_comments=True, recurse=False):  # only top level compare needed for `ctx` and structure check
+                        return self
 
-            #     self.touchup(True)
+                    if not inplace:
+                        lines = lines[:]
 
-
-
-
-
-
-
-
-
-
-
-            try:
-                a = ast_.parse(src := self.src, mode='eval', **self._parse_params)
-
-            except SyntaxError:  # if expression not parsing then try parenthesize
-                tail = (',)' if isinstance(ast, Tuple) and len(ast.elts) == 1 and
-                        lines[self.end_ln][self.end_col - 1] != ',' else ')')
-
-                a = ast_.parse(f'({src}{tail}', mode='eval', **self._parse_params)
+                a = a.body  # we know parsed to an Expression but original was not an Expression
 
                 if not inplace:
-                    lines = lines[:]
+                    return FST(a, lines=lines, from_=self)
 
-                lines[end_ln] = bistr(f'{(l := lines[end_ln])[:end_col]}{tail}{l[end_col:]}')
+                self.a = a
+                a.f    = self
+
+                self.touch()
+                self._make_fst_tree()
+
+                return self
+
+            need_ctx = set_ctx(ast, Load, doit=False)
+
+            if (need_ctx or need_paren) and not inplace:
+                ast   = copy(ast)
+                lines = lines[:]
+                self  = FST(ast, lines=lines, from_=self)
+
+            if need_ctx:
+                set_ctx(ast, Load)
+
+            if need_paren:
+                lines[end_ln] = bistr(f'{(l := lines[end_ln])[:end_col]}){l[end_col:]}')
                 lines[ln]     = bistr(f'{(l := lines[ln])[:col]}({l[col:]}')
 
-            else:
-                if compare(a.body, ast, locs=True, type_comments=True, recurse=False):  # only top level compare needed for `ctx` and structure check
-                    return self
+                self._offset(ln, col, 0, 1)
 
-                if not inplace:
-                    lines = lines[:]
+                if is_tuple:
+                    ast.col_offset     -= 1
+                    ast.end_col_offset += 1
 
-            a = a.body  # we know parsed to an Expression but original was not an Expression
+                self.touch()
 
-            if not inplace:
-                return FST(a, lines=lines, from_=self)
-
-            self.a = a
-            a.f    = self
-
-            self.touch()
-            self._make_fst_tree()
+                if is_tuple and len(ast.elts) == 1:
+                    self._maybe_add_singleton_tuple_comma()
 
         return self
+
+
+
+
+
+
+
+
+
 
     def copy(self, *, decorators: bool = True, fix: bool = True) -> 'FST':
         newast = copy(self.a)
