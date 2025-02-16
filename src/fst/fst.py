@@ -51,10 +51,13 @@ re_empty_line_start     = re.compile(r'[ \t]*')    # start of completely empty o
 re_empty_line           = re.compile(r'[ \t]*$')   # completely empty or space-filled line (from start pos, start of line indentation)
 re_line_continuation    = re.compile(r'[^#]*\\$')  # line continuation with backslash not following a comment start '#' (from start pos, assumed no asts contained in line)
 
-re_oneline_str          = re.compile(r'(?:b|r|rb|br|u|)  (?:  \'(?:\\.|[^\\\'])*\'  |  "(?:\\.|[^\\"])*"  )', re.IGNORECASE | re.VERBOSE)  # I f^\\\'])*\'ng hate these!
-re_multiline_str_start  = re.compile(r'(?:b|r|rb|br|u|)  (\'\'\'|""")', re.IGNORECASE | re.VERBOSE)
-re_multiline_str_end_sq = re.compile(r'(?:\\.|[^\\\'])*  \'\'\'')
-re_multiline_str_end_dq = re.compile(r'(?:\\.|[^\\"])*  """')
+re_oneline_str          = re.compile(r'(?:b|r|rb|br|u|)  (?:  \'(?:\\.|[^\\\'])*?\'  |  "(?:\\.|[^\\"])*?"  )', re.VERBOSE | re.IGNORECASE)  # I f^\\\'])*\'ng hate these!
+re_contline_str_start   = re.compile(r'(?:b|r|rb|br|u|)  (\'|")', re.VERBOSE | re.IGNORECASE)
+re_contline_str_end_sq  = re.compile(r'(?:\\.|[^\\\'])*?  \'', re.VERBOSE)
+re_contline_str_end_dq  = re.compile(r'(?:\\.|[^\\"])*?  "', re.VERBOSE)
+re_multiline_str_start  = re.compile(r'(?:b|r|rb|br|u|)  (\'\'\'|""")', re.VERBOSE | re.IGNORECASE)
+re_multiline_str_end_sq = re.compile(r'(?:\\.|[^\\])*?  \'\'\'', re.VERBOSE)
+re_multiline_str_end_dq = re.compile(r'(?:\\.|[^\\])*?  """', re.VERBOSE)
 
 re_next_code                     = re.compile(r'\s*([^\s#\\]+)')          # next non-space non-continuation non-comment code text, don't look into strings with this!
 re_next_code_or_comment          = re.compile(r'\s*([^\s#\\]+|#.*)')      # next non-space non-continuation code or comment text, don't look into strings with this!
@@ -534,36 +537,74 @@ class FST:
         return self
 
     def _indentable_lns(self, skip: int = 0, *, docstring: bool = True) -> set[int]:
-        """Get set of indentable lines (past the first one usually because that is normally handled specially)."""
+        """Get set of indentable lines."""
 
-        def multiline(f: 'FST'):
-            nonlocal lns
+        def walk_multiline(cur_ln, end_ln, m, re_str_end):
+            nonlocal lns, lines
 
-            lns -= set(range(a.lineno, a.end_lineno))  # specifically leave first line of multiline string because that is indentable
+            col = m.end(0)
 
-        lns = set(range(self.bln + skip, self.bend_ln + 1))
+            for ln in range(cur_ln, end_ln + 1):
+                if m := re_str_end.match(lines[ln], col):
+                    break
+
+                col = 0
+
+            else:
+                raise RuntimeError('this should not happen')
+
+            lns -= set(range(cur_ln + 1, ln + 1))  # specifically leave out first line of multiline string because that is indentable
+
+            return ln, m.end(0)
+
+        def multiline_str(f: 'FST'):
+            nonlocal lns, lines
+
+            cur_ln, cur_col, end_ln, end_col = f.loc
+
+            while True:
+                if not (m := re_multiline_str_start.match(l := lines[cur_ln], cur_col)):
+                    if m := re_oneline_str.match(l, cur_col):
+                        cur_col = m.end(0)
+
+                    else:  # UGH! a line continuation string, pffft...
+                        m               = re_contline_str_start.match(l, cur_col)
+                        re_str_end      = re_contline_str_end_sq if m.group(1) == "'" else re_contline_str_end_dq
+                        cur_ln, cur_col = walk_multiline(cur_ln, end_ln, m, re_str_end)  # find end of multiline line continuation string
+
+                else:
+                    re_str_end      = re_multiline_str_end_sq if m.group(1) == "'''" else re_multiline_str_end_dq
+                    cur_ln, cur_col = walk_multiline(cur_ln, end_ln, m, re_str_end)  # find end of multiline string
+
+                if cur_ln == end_ln and cur_col == end_col:
+                    break
+
+                cur_ln, cur_col, _ = _next_code(lines, cur_ln, cur_col, end_ln, end_col)  # there must be a next one
+
+        lines = self.root.lines
+        lns   = set(range(self.bln + skip, self.bend_ln + 1))
 
         while (parent := self.parent) and not isinstance(self.a, STATEMENTISH):
             self = parent
 
         for f in (gen := self.walk()):  # find multiline strings and exclude their unindentable lines
-            if isinstance(a := f.a, JoinedStr):  # f-string  TODO: deal with this promordial evil properly at some point
+            if isinstance(a := f.a, JoinedStr):  # f-string  TODO: deal with this promordial evil properly at some point, for now just mark all unindentable
                 if f.end_ln != f.ln:
                     lns -= set(range(a.lineno, a.end_lineno))
 
-                gen.send(True)  # skip everything inside regardless
+                gen.send(False)  # skip everything inside regardless, because it is evil
 
             elif isinstance(a, Constant):
-                if (f.end_ln != f.ln and (  # and isinstance(f.a.value, (str, bytes))  is a given if end_ln != ln
+                if (f.end_ln != f.ln and (  # and isinstance(f.a.value, (str, bytes)) is a given if end_ln != ln
                     not docstring or
-                    not ((parent := f.parent) and
+                    not ((parent := f.parent) and  # not (is docstring)
                          isinstance(parent.a, Expr) and (pparent := parent.parent) and parent.pfield == ('body', 0) and
                          isinstance(pparent.a, (FunctionDef, AsyncFunctionDef, ClassDef, Module))
                 ))):
-                    multiline(f)
+                    multiline_str(f)
 
             elif f.bend_ln == f.bln:
-                gen.send(True)  # everything on one line, don't need to recurse
+                gen.send(False)  # everything on one line, don't need to recurse
 
         return lns
 
@@ -1298,28 +1339,30 @@ class FST:
 
         return self.last_child(only_with_loc) if from_child is None else from_child.prev(only_with_loc)
 
-    def walk_children(self, only_with_loc: bool = True) -> Generator['FST', bool | None, None]:
-        """Walk descendants in syntactic order, send() once Trueish value to skip recursion into child."""
+    def walk_children(self, only_with_loc: bool = True) -> Generator['FST', bool, None]:
+        """Walk descendants in syntactic order, send() `True` to skip recursion into child."""
 
         child = None
 
         while child := self.next_child(child, only_with_loc):
-            if (sent := (yield child)) is not None:
-                yield
+            recurse = True
 
-            if not sent:
+            while (sent := (yield child)) is not None:
+                recurse = sent
+
+            if recurse:
                 yield from child.walk_children(only_with_loc)
 
-    def walk(self, only_with_loc: bool = True) -> Generator['FST', bool | None, None]:
-        """Walk self and descendants in syntactic order, send() once Trueish value to skip recursion into child."""
+    def walk(self, only_with_loc: bool = True) -> Generator['FST', bool, None]:
+        """Walk self and descendants in syntactic order, send() `True` to skip recursion into child."""
 
-        if (sent := (yield self)) is not None:
-            yield
+        recurse = True
 
-            if sent:
-                return
+        while (sent := (yield self)) is not None:
+            recurse = sent
 
-        yield from self.walk_children(only_with_loc)
+        if recurse:
+            yield from self.walk_children(only_with_loc)
 
     def is_parsable(self) -> bool:
         """Really means the AST is `unparse()`able and then re`parse()`able which will get it to this top level AST node
@@ -1347,8 +1390,8 @@ class FST:
 
         return True
 
-    def is_parenthesized(self) -> bool:
-        return ((code := _prev_code(self.root._lines, 0, 0, self.ln, self.col)) and code.src.endswith('('))
+    def is_parenthesized(self, from_ln: int = 0, from_col: int = 0) -> bool:
+        return ((code := _prev_code(self.root._lines, from_ln, from_col, self.ln, self.col)) and code.src.endswith('('))
 
     def is_tuple_parenthesized(self) -> bool:
         # assert isinstance(self.a, Tuple)
