@@ -121,6 +121,33 @@ def _next_code(lines: list[str], ln: int, col: int, end_ln: int, end_col: int, c
     return None
 
 
+def _next_code_lline(lines: list[str], ln: int, col: int, end_ln: int, end_col: int, comment: bool = False
+                     ) -> srccode | None:
+    """Same rules as `_next_code()` but do not exceed logical line during search."""
+
+    re_pat = re_next_code_or_comment if comment else re_next_code
+
+    if end_ln == ln:
+        return srccode(ln, m.start(1), m.group(1)) if (m := re_pat.match(lines[ln], col, end_col)) else None
+
+    for i in range(ln, end_ln):
+        if not (m := re_next_code_or_comment_or_lcont.match(lines[i], col)):
+            return None
+
+        if (s := m.group(1)).startswith('#'):
+            return srccode(i, m.start(1), s) if comment else None
+
+        if not s.startswith('\\'):
+            return srccode(i, m.start(1), s)
+
+        col = 0
+
+    if m := re_pat.match(lines[end_ln], 0, end_col):
+        return srccode(end_ln, m.start(1), m.group(1))
+
+    return None
+
+
 def _prev_code(lines: list[str], ln: int, col: int, end_ln: int, end_col: int, comment: bool = False
                ) -> srccode | None:
     """Same rules as `_next_code()` but return the LAST occurance of code or maybe comment in the span."""
@@ -147,33 +174,6 @@ def _prev_code(lines: list[str], ln: int, col: int, end_ln: int, end_col: int, c
 
     if m := last_match(lines[ln], col, end_col):
         return srccode(ln, m.start(1), m.group(1))
-
-    return None
-
-
-def _next_code_lline(lines: list[str], ln: int, col: int, end_ln: int, end_col: int, comment: bool = False
-                     ) -> srccode | None:
-    """Same rules as `_next_code()` but do not exceed logical line during search."""
-
-    re_pat = re_next_code_or_comment if comment else re_next_code
-
-    if end_ln == ln:
-        return srccode(ln, m.start(1), m.group(1)) if (m := re_pat.match(lines[ln], col, end_col)) else None
-
-    for i in range(ln, end_ln):
-        if not (m := re_next_code_or_comment_or_lcont.match(lines[i], col)):
-            return None
-
-        if (s := m.group(1)).startswith('#'):
-            return srccode(i, m.start(1), s) if comment else None
-
-        if not s.startswith('\\'):
-            return srccode(i, m.start(1), s)
-
-        col = 0
-
-    if m := re_pat.match(lines[end_ln], 0, end_col):
-        return srccode(end_ln, m.start(1), m.group(1))
 
     return None
 
@@ -476,11 +476,29 @@ class FST:
 
         return self
 
+    def _get_indentable_lns(self, skip: int = 0) -> set[int]:
+        """Get set of indentable lines (past the first one usually because that is normally handled specially)."""
+
+        lns = set(range(self.bln + skip, self.bend_ln + 1))
+
+        while (parent := self.parent) and not isinstance(self.a, STATEMENTISH):
+            self = parent
+
+        for a in walk(self.a):  # find multiline strings and exclude their unindentable lines
+            if isinstance(a, Constant) and (isinstance(a.value, (str, bytes))):
+            # if (isinstance(a, Constant) and (f := a.f).end_ln != f.ln and not ((parent := f.parent) and   # and isinstance(a.value, (str, bytes)): is a given if end_ln != ln
+            #     isinstance(parent.a, Expr) and (pparent := parent.parent) and parent.pfield == ('body', 0) and
+            #     isinstance(pparent.a, (FunctionDef, AsyncFunctionDef, ClassDef, Module)))
+            # ):
+                lns -= set(range(a.lineno, a.end_lineno))  # specifically leave first line of multiline string because that is indentable
+
+        return lns
+
     def _indent_tail(self, indent: str) -> set[int]:
         """Indent all indentable lines past the first one according with `indent` and adjust node locations accordingly.
         Does not modify node columns on first line."""
 
-        if not (lns := self.get_indentable_lns(1)) or not indent:
+        if not (lns := self._get_indentable_lns(1)) or not indent:
             return lns
 
         self._offset_cols(len(indent.encode()), lns)
@@ -499,7 +517,7 @@ class FST:
         possible.
         """
 
-        if not (lns := self.get_indentable_lns(1)) or not indent:
+        if not (lns := self._get_indentable_lns(1)) or not indent:
             return lns
 
         lines        = self.root._lines
@@ -1342,20 +1360,6 @@ class FST:
         # TODO: handle possibility of syntactically incorrect but indented root node?
 
         return extra_indent
-
-    def get_indentable_lns(self, skip: int = 0) -> set[int]:
-        """Get set of indentable lines (past the first one usually because that is normally handled specially)."""
-
-        lns = set(range(self.bln + skip, self.bend_ln + 1))
-
-        while (parent := self.parent) and not isinstance(self.a, STATEMENTISH):
-            self = parent
-
-        for a in walk(self.a):  # find multiline strings and exclude their unindentable lines
-            if isinstance(a, Constant) and (isinstance(a.value, (str, bytes))):
-                lns -= set(range(a.lineno, a.end_lineno))  # specifically leave first line of multiline string because that is indentable
-
-        return lns
 
     def get_line_ast_ends(self) -> list[int]:
         """Map of column positions of last AST node on each given line. Useful for checking comments and '\' continuations."""
