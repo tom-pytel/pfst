@@ -7,7 +7,7 @@ __all_other__ = set(globals()) - __all_other__
 import ast as ast_
 import functools
 import re
-from typing import Any, Callable, Literal, NamedTuple, Optional, Union
+from typing import Any, Callable, Generator, Literal, NamedTuple, Optional, Union
 
 from .util import *
 
@@ -326,7 +326,7 @@ class FST:
 
     # ------------------------------------------------------------------------------------------------------------------
 
-    def _make_fst_tree(self):
+    def _make_fst_tree(self) -> 'FST':  # -> Self
         """Create tree of FST nodes for each AST node from root. Call only on root."""
 
         stack = [self]
@@ -341,6 +341,8 @@ class FST:
                 elif isinstance(child, list):
                     stack.extend(FST(a, f, astfield(name, idx))
                                  for idx, a in enumerate(child) if isinstance(a, AST))
+
+        return self
 
     def _repr_tail(self) -> str:
         tail = ' ROOT' if self.is_root else ''
@@ -384,21 +386,22 @@ class FST:
 
     def _maybe_add_singleton_tuple_comma(self) -> 'FST':  # -> Self
         """Maybe add comma to singleton tuple if not already there, parenthesization not checked or taken into account.
-        `self` must be a singleton tuple."""
+        `self` must be a tuple."""
 
-        # assert isinstance(self.a, Tuple) and len(self.a.elts) == 1
+        # assert isinstance(self.a, Tuple)
 
-        felt  = self.a.elts[0].f
-        root  = self.root
-        lines = root._lines
+        if (elts := self.a.elts) and len(elts) == 1:
+            felt  = elts[0].f
+            root  = self.root
+            lines = root._lines
 
-        if (not (code := _next_code(lines, felt.end_ln, felt.end_col, self.end_ln, self.end_col)) or
-            not code.src.startswith(',')
-        ):
-            lines[end_ln]          = bistr(f'{(l := lines[(end_ln := felt.end_ln)])[:(c := felt.end_col)]},{l[c:]}')
-            self.a.end_col_offset += 1
+            if (not (code := _next_code(lines, felt.end_ln, felt.end_col, self.end_ln, self.end_col)) or
+                not code.src.startswith(',')
+            ):
+                lines[end_ln]          = bistr(f'{(l := lines[(end_ln := felt.end_ln)])[:(c := felt.end_col)]},{l[c:]}')
+                self.a.end_col_offset += 1
 
-            self.touchup(True)
+                self.touchup(True)
 
         return self
 
@@ -819,7 +822,12 @@ class FST:
         fst = self._make_Expression_seq_copy_and_dedent(newast, cut, lfirst, llast, lpre, lpost, seq_loc, prefix, suffix)
 
         if is_tuple:
-            if not elts:  # if is unparenthesized tuple and nothing left then need to add parentheses
+            fst.a.body.f._maybe_add_singleton_tuple_comma()  # maybe need to add a postfix comma to copied single element tuple if is not already there
+
+            if elts:
+                self._maybe_add_singleton_tuple_comma()
+
+            else:  # if is unparenthesized tuple and nothing left then need to add parentheses
                 if not is_paren:
                     ln, col, end_ln, end_col = self.loc
 
@@ -832,12 +840,6 @@ class FST:
                     self.touchup(True)
 
                     lines[ln] = bistr(f'{(l := lines[ln])[:col]}(){l[col:]}')
-
-            elif len(elts) == 1:
-                self._maybe_add_singleton_tuple_comma()
-
-            if len(asts) == 1:  # maybe need to add a postfix comma to copied single element tuple if is not already there
-                fst.a.body.f._maybe_add_singleton_tuple_comma()
 
         return fst
 
@@ -1271,7 +1273,7 @@ class FST:
 
         return self.last_child(only_with_loc) if from_child is None else from_child.prev(only_with_loc)
 
-    def walk_children(self, only_with_loc: bool = True):
+    def walk_children(self, only_with_loc: bool = True) -> Generator['FST', bool | None, None]:
         """Walk descendants in syntactic order, send() once Trueish value to skip recursion into child."""
 
         child = None
@@ -1283,7 +1285,7 @@ class FST:
             if not sent:
                 yield from child.walk_children(only_with_loc)
 
-    def walk(self, only_with_loc: bool = True):
+    def walk(self, only_with_loc: bool = True) -> Generator['FST', bool | None, None]:
         """Walk self and descendants in syntactic order, send() once Trueish value to skip recursion into child."""
 
         if (sent := (yield self)) is not None:
@@ -1582,19 +1584,10 @@ class FST:
 
                 self.touch()
 
-                if is_tuple and len(ast.elts) == 1:
+                if is_tuple:
                     self._maybe_add_singleton_tuple_comma()
 
         return self
-
-
-
-
-
-
-
-
-
 
     def copy(self, *, decorators: bool = True, fix: bool = True) -> 'FST':
         newast = copy(self.a)
