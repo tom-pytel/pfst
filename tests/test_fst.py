@@ -776,7 +776,7 @@ class TestFST(unittest.TestCase):
         lns = ast.f._indentable_lns(1)
         ast.f._offset_cols(1, lns)
         self.assertEqual({1, 2, 5, 6, 7}, lns)
-        self.assertEqual((0, 0, 7, 8), ast.f.loc)
+        self.assertEqual((0, 0, 7, 7), ast.f.loc)
         self.assertEqual((0, 0, 7, 8), ast.body[0].f.loc)
         self.assertEqual((1, 2, 7, 8), ast.body[0].body[0].f.loc)
         self.assertEqual((1, 5, 1, 9), ast.body[0].body[0].test.f.loc)
@@ -820,7 +820,7 @@ class TestFST(unittest.TestCase):
         off = {0: 0, 1: 1, 2: 2, 3: 3, 4: 4}
 
         ast.f._offset_cols_mapped(off)
-        self.assertEqual((0, 0, 4, 5), ast.f.loc)
+        self.assertEqual((0, 0, 4, 1), ast.f.loc)
         self.assertEqual((0, 0, 0, 5), ast.body[0].f.loc)
         self.assertEqual((0, 0, 0, 1), ast.body[0].targets[0].f.loc)
         self.assertEqual((0, 4, 0, 5), ast.body[0].value.f.loc)
@@ -1807,9 +1807,9 @@ Expression .. ROOT 0,0 -> 0,4
     1, 2, 3 # last line
 )
             """.strip()).body[0].value.f.slice(2), """
-Expression .. ROOT 0,0 -> 1,2
+Expression .. ROOT 0,0 -> 1,1
   .body
-    Tuple .. 0,0 -> 1,2
+    Tuple .. 0,0 -> 1,1
       .elts[1]
       0] Constant .. 0,1 -> 0,2
         .value

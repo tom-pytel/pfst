@@ -1,5 +1,4 @@
 import ast as ast_
-import functools
 import re
 from ast import *
 from typing import Any, Callable, Generator, Literal, NamedTuple, Optional, Union
@@ -81,22 +80,16 @@ class srccode(NamedTuple):
     src: str
 
 
-def only_root(func):
-    @functools.wraps(func)
-    def wrapper(*args, **kwargs):
-        if not args[0].is_root:
-            raise RuntimeError(f"'{func.__qualname__}' can only be called on the root node")
-
-        return func(*args, **kwargs)
-
-    return wrapper
-
-
 def parse(source, filename='<unknown>', mode='exec', *, type_comments=False, feature_version=None, **kwargs):
+    """Executes `ast.parse()` and then adds `FST` nodes to the parsed tree. Drop-in replacement for `ast.parse()`. For
+    parameters, see `ast.parse()`."""
+
     return FST.fromsrc(source, filename, mode, type_comments=type_comments, feature_version=feature_version, **kwargs).a
 
 
 def unparse(ast_obj):
+    """Returns the formatted source that is kept for this tree. Drop-in replacement for `ast.unparse()`."""
+
     if (f := getattr(ast_obj, 'f', None)) and isinstance(f, FST) and f.loc:
         if f.is_root:
             return f.src
@@ -208,9 +201,16 @@ def _slice_fixup_index(ast, body, field, start, stop) -> tuple[int, int]:
     return start, stop
 
 
-
 class FST:
-    """AST formatting information and easy manipulation."""
+    """Preserve AST formatting information and easy manipulation.
+
+    **Attributes:**
+    - `a`: The actual `AST` node.
+    - `parent`: Parent `FST` node, `None` in root node.
+    - `pfield`: The `astfield` location of this node in the parent, `None` in root node.
+    - `root`: The root node of this tree, `self` in root node.
+    - `indent`: The default indentation for this tree (not necessarily used everywhere).
+    """
 
     a:             AST
     parent:        Optional['FST']  # None in root node
@@ -229,6 +229,8 @@ class FST:
 
     @property
     def lines(self) -> list[str] | None:
+        """Whole lines which contain this node, may also contain parts of enclosing nodes. All source lines at root."""
+
         if self.is_root:
             return self._lines
         elif loc := self.loc:
@@ -238,6 +240,9 @@ class FST:
 
     @property
     def src(self) -> str | None:
+        """Source code of this node clipped out of `lines` as a single string, without any dedentation. Whole source
+        at root."""
+
         if self.is_root:
             return '\n'.join(self._lines)
         elif loc := self.loc:
@@ -247,6 +252,8 @@ class FST:
 
     @property
     def loc(self) -> fstloc | None:
+        """Location of node (may not be entire location if node has decorators). Not all nodes have locations."""
+
         try:
             return self._loc
         except AttributeError:
@@ -261,10 +268,10 @@ class FST:
             end_col_offset = ast.end_col_offset
 
         except AttributeError:
-            if first := self.first_child():
+            if not self.parent:
+                loc = fstloc(0, 0, len(ls := self._lines) - 1, len(ls[-1]))
+            elif first := self.first_child():
                 loc = fstloc(first.bln, first.bcol, (last := self.last_child()).bend_ln, last.bend_col)
-            elif self.is_root:
-                loc = fstloc(0, 0, 0, 0)  # root must have location
             else:
                 loc = None
 
@@ -279,6 +286,8 @@ class FST:
 
     @property
     def bloc(self) -> fstloc:
+        """Entire location of node, including any preceding decorators. Not all nodes have locations."""
+
         try:
             return self._bloc
         except AttributeError:
@@ -296,23 +305,33 @@ class FST:
         return bloc
 
     @property
-    def ln(self) -> int:  # 0 based
+    def ln(self) -> int:
+        """Line number of the first line of this node (0 based)."""
+
         return (l := self.loc) and l[0]
 
     @property
     def col(self) -> int:  # char index
+        """CHARACTER index of the start of this node (0 based)."""
+
         return (l := self.loc) and l[1]
 
     @property
     def end_ln(self) -> int:  # 0 based
+        """Line number of the LAST LINE of this node (0 based)."""
+
         return (l := self.loc) and l[2]
 
     @property
     def end_col(self) -> int:  # char index
+        """CHARACTER index one past the end of this node (0 based)."""
+
         return (l := self.loc) and l[3]
 
     @property
     def bln(self) -> int:  # bounding location including @decorators
+        """Line number of the first line of this node or the first preceding decorator (0 based)."""
+
         return (l := self.bloc) and l[0]
 
     bcol     = col
@@ -321,18 +340,26 @@ class FST:
 
     @property
     def lineno(self) -> int:  # 1 based
+        """Line number of the first line of this node (1 based)."""
+
         return (loc := self.loc) and loc[0] + 1
 
     @property
     def col_offset(self) -> int:  # byte index
+        """BYTE index of the start of this node (0 based)."""
+
         return (loc := self.loc) and self.root._lines[loc[0]].c2b(loc[1])
 
     @property
     def end_lineno(self) -> int:  # 1 based
+        """Line number of the LAST LINE of this node (1 based)."""
+
         return (loc := self.loc) and loc[2] + 1
 
     @property
     def end_col_offset(self) -> int:  # byte index
+        """CHARACTER index one past the end of this node (0 based)."""
+
         return (loc := self.loc) and self.root._lines[loc[2]].c2b(loc[3])
 
     # ------------------------------------------------------------------------------------------------------------------
@@ -378,7 +405,7 @@ class FST:
                     if isinstance(ast, AST):
                         ast.f._dump(full, indent, cind + ' ' * indent, f'{i}] ', linefunc)
                     else:
-                        linefunc(f'{sind}{sind}{cind}{i}] {ast!r}')
+                        linefunc(f'{sind}{cind}{i}] {ast!r}')
 
             elif isinstance(child, AST):
                 child.f._dump(full, indent, cind + sind * 2, '', linefunc)
@@ -397,9 +424,14 @@ class FST:
 
         return fstloc(ln, col, ln, col + len(s))
 
-    def _maybe_add_singleton_tuple_comma(self) -> 'FST':  # -> Self
+    def _maybe_add_singleton_tuple_comma(self, offset: bool = True) -> 'FST':  # -> Self
         """Maybe add comma to singleton tuple if not already there, parenthesization not checked or taken into account.
-        `self` must be a tuple."""
+        `self` must be a tuple.
+
+        **Parameters:**
+        - `offset`: If `True` then will apply `_offset()` to entire tree for new comma. Use `False` when sure tuple is
+            at top level.
+        """
 
         # assert isinstance(self.a, Tuple)
 
@@ -411,10 +443,15 @@ class FST:
             if (not (code := _next_code(lines, felt.end_ln, felt.end_col, self.end_ln, self.end_col)) or
                 not code.src.startswith(',')
             ):
-                lines[end_ln]          = bistr(f'{(l := lines[(end_ln := felt.end_ln)])[:(c := felt.end_col)]},{l[c:]}')
-                self.a.end_col_offset += 1
+                lines[end_ln] = bistr(f'{(l := lines[(end_ln := felt.end_ln)])[:(c := felt.end_col)]},{l[c:]}')
 
-                self.touchup(True)
+                if offset:
+                    raise NotImplementedError  # need to offset other stuff for the new comma
+
+                elif end_ln == self.end_ln:
+                    self.a.end_col_offset += 1
+
+                    self.touchup(True)
 
         return self
 
@@ -450,17 +487,17 @@ class FST:
         start and end location will be moved if exactly at offset point if `inc` is `False`. Otherwise if `inc` is
         `True` then the start position will remain and the end position will be expanded.
 
-        Args:
-            ln: Line of offset point.
-            col: Column of offset point (char index).
-            dln: Number of lines to offset everything on or after offset point, can be 0.
-            dcol_offset: Column offset to apply to everything ON the offset point line `ln` (in bytes). Columns not on
-                this line will not be changed.
-            inc: Whether to offset endpoint if it falls exactly at ln / col or not (inclusive).
+        **Parameters:**
+        - `ln`: Line of offset point.
+        - `col`: Column of offset point (char index).
+        - `dln`: Number of lines to offset everything on or after offset point, can be 0.
+        - `dcol_offset`: Column offset to apply to everything ON the offset point line `ln` (in bytes). Columns not on
+            this line will not be changed.
+        - `inc`: Whether to offset endpoint if it falls exactly at ln / col or not (inclusive).
         """
 
-        for a in walk(self.a):  # TODO: optimize this (don't touch stuff that wasn't moved)
-            f = a.f
+        for f in (gen := self.walk(False)):
+            a = f.a
 
             if (end_col_offset := getattr(a, 'end_col_offset', None)) is not None:
                 fln, fcol, fend_ln, fend_col = f.loc
@@ -474,6 +511,8 @@ class FST:
                     a.end_col_offset  = end_col_offset + dcol_offset
 
                 else:
+                    gen.send(False)  # no need to walk into something whose bounding block ends before offset point
+
                     continue
 
                 if fln > ln:
@@ -884,10 +923,10 @@ class FST:
         fst = self._make_Expression_seq_copy_and_dedent(newast, cut, lfirst, llast, lpre, lpost, seq_loc, prefix, suffix)
 
         if is_tuple:
-            fst.a.body.f._maybe_add_singleton_tuple_comma()  # maybe need to add a postfix comma to copied single element tuple if is not already there
+            fst.a.body.f._maybe_add_singleton_tuple_comma(False)  # maybe need to add a postfix comma to copied single element tuple if is not already there
 
             if elts:
-                self._maybe_add_singleton_tuple_comma()
+                self._maybe_add_singleton_tuple_comma(False)
 
             else:  # if is unparenthesized tuple and nothing left then need to add parentheses
                 if not is_paren:
@@ -993,19 +1032,20 @@ class FST:
     @staticmethod
     def fromast(ast: AST, *, type_comments: bool | None = False, feature_version=None,
                 calc_loc: bool | Literal['copy'] = True, **parse_params) -> 'FST':
-        """Add FST to existing AST, optionally copying positions from reparsed AST (default) or whole AST for new FST.
+        """Add `FST` to existing `AST`, optionally copying positions from reparsed `AST` (default) or whole `AST` for
+        new `FST`.
 
-        Do not set `calc_loc` to `False` unless you parsed the `ast` from a previous output of `ast.unparse()`,
+        Do not set `calc_loc` to `False` unless you parsed the `AST` from a previous output of `ast.unparse()`,
         otherwise there will almost certaionly be problems!
 
-        Args:
-            ast: The root AST node.
-            calc_loc: Get actual node positions by unparsing then parsing again. Use when you are not certain node
-                positions are correct or even present. Updates original ast unless set to "copy", in which case a copied
-                AST is used. Set to `False` when you know positions are correct and want to use given AST. Default True.
-            type_comments: ast.parse() parameter.
-            feature_version: ast.parse() parameter.
-            parse_params: Other parameters to ast.parse().
+        **Parameters:**
+        - `ast`: The root `AST` node.
+        - `calc_loc`: Get actual node positions by unparsing then parsing again. Use when you are not certain node
+            positions are correct or even present. Updates original ast unless set to "copy", in which case a copied
+            `AST` is used. Set to `False` when you know positions are correct and want to use given `AST`. Default True.
+        - `type_comments`: `ast.parse()` parameter.
+        - `feature_version`: `ast.parse()` parameter.
+        - `parse_params`: Other parameters to `ast.parse()`.
         """
 
         src   = ast_.unparse(ast)
@@ -1071,9 +1111,14 @@ class FST:
 
     # ------------------------------------------------------------------------------------------------------------------
 
-    def next(self, only_with_loc: bool = True) -> Optional['FST']:
-        """Get next sibling in syntactic order. If `only_with_loc` is `True` (default) then only ASTs with locations
-        returned. Returns `None` if last valid sibling in parent.
+    def next(self, with_loc: bool = True) -> Optional['FST']:
+        """Get next sibling in syntactic order.
+
+        **Parameters:**
+        - `with_loc`: If `True` then only nodes with locations returned, otherwise all nodes.
+
+        **Returns:**
+        - `None` if last valid sibling in parent, otherwise next node.
         """
 
         if not (parent := self.parent):
@@ -1133,7 +1178,7 @@ class FST:
                             except IndexError:
                                 return None
 
-                    if (f := a.f).loc or not only_with_loc:
+                    if (f := a.f).loc or not with_loc:
                         return f
 
             elif idx is not None:
@@ -1147,7 +1192,7 @@ class FST:
                     except IndexError:
                         break
 
-                    if (f := a.f).loc or not only_with_loc:
+                    if (f := a.f).loc or not with_loc:
                         return f
 
             while next is not None:
@@ -1155,7 +1200,7 @@ class FST:
                     name = next
 
                     if isinstance(sibling := getattr(aparent, next, None), AST):  # None because we know about fields from future python versions
-                        if (f := sibling.f).loc or not only_with_loc:
+                        if (f := sibling.f).loc or not with_loc:
                             return f
 
                     elif isinstance(sibling, list) and sibling:
@@ -1183,9 +1228,14 @@ class FST:
 
         return None
 
-    def prev(self, only_with_loc: bool = True) -> Optional['FST']:
-        """Get previous sibling in syntactic order. If `only_with_loc` is `True` (default) then only ASTs with locations
-        returned. Returns `None` if first valid sibling in parent.
+    def prev(self, with_loc: bool = True) -> Optional['FST']:
+        """Get previous sibling in syntactic order.
+
+        **Parameters:**
+        - `with_loc`: If `True` then only nodes with locations returned, otherwise all nodes.
+
+        **Returns:**
+        - `None` if first valid sibling in parent, otherwise previous node.
         """
 
         if not (parent := self.parent):
@@ -1250,7 +1300,7 @@ class FST:
                             if not (a := getattr(aparent, 'keys')[idx]):
                                 continue
 
-                    if (f := a.f).loc or not only_with_loc:
+                    if (f := a.f).loc or not with_loc:
                         return f
 
             else:
@@ -1260,7 +1310,7 @@ class FST:
                     if not (a := sibling[(idx := idx - 1)]):
                         continue
 
-                    if (f := a.f).loc or not only_with_loc:
+                    if (f := a.f).loc or not with_loc:
                         return f
 
             while prev is not None:
@@ -1268,7 +1318,7 @@ class FST:
                     name = prev
 
                     if isinstance(sibling := getattr(aparent, prev, None), AST):  # None because could have fields from future python versions
-                        if (f := sibling.f).loc or not only_with_loc:
+                        if (f := sibling.f).loc or not with_loc:
                             return f
 
                     elif isinstance(sibling, list) and (idx := len(sibling)):
@@ -1291,66 +1341,124 @@ class FST:
 
         return None
 
-    def first_child(self, only_with_loc: bool = True) -> Optional['FST']:
-        """Get first child in syntactic order. If `only_with_loc` is `True` (default) then only ASTs with locations returned.
-        Returns `None` if no valid children.
+    def first_child(self, with_loc: bool = True) -> Optional['FST']:
+        """Get first valid child in syntactic order.
+
+        **Parameters:**
+        - `with_loc`: If `True` then only nodes with locations returned, otherwise all nodes.
+
+        **Returns:**
+        - `None` if no valid children, otherwise first valid child.
         """
 
         for name in AST_FIELDS[(a := self.a).__class__]:
             if (child := getattr(a, name, None)):
-                if isinstance(child, AST) and ((f := child.f).loc or not only_with_loc):
-                    return f
+                if isinstance(child, AST):
+                    if (f := child.f).loc or not with_loc:
+                        return f
 
-                if isinstance(child, list):
-                    for c in child:
-                        if isinstance(c, AST) and ((f := c.f).loc or not only_with_loc):
-                            return f
+                elif isinstance(child, list):
+                    if (c := child[0]) and ((f := c.f).loc or not with_loc):
+                        return f
+
+                    if (f := FST(Load(), self, astfield(name, 0)).next(with_loc)):  # Load() is a hack just to have a simple AST node
+                        return f
 
         return None
 
-    def last_child(self, only_with_loc: bool = True) -> Optional['FST']:
-        """Get last child in syntactic order. If `only_with_loc` is `True` (default) then only ASTs with locations returned.
-        Returns `None` if no valid children.
+    def last_child(self, with_loc: bool = True) -> Optional['FST']:
+        """Get last child in syntactic order.
+
+        **Parameters:**
+        - `with_loc`: If `True` then only nodes with locations returned, otherwise all nodes.
+
+        **Returns:**
+        - `None` if no valid children, otherwise last valid child.
         """
 
         for name in reversed(AST_FIELDS[(a := self.a).__class__]):
             if (child := getattr(a, name, None)):
-                if isinstance(child, AST) and ((f := child.f).loc or not only_with_loc):
-                    return f
+                if isinstance(child, AST):
+                    if (f := child.f).loc or not with_loc:
+                        return f
 
-                if isinstance(child, list):
-                    for c in reversed(child):
-                        if isinstance(c, AST) and ((f := c.f).loc or not only_with_loc):
-                            return f
+                elif isinstance(child, list):
+                    if (c := child[-1]) and ((f := c.f).loc or not with_loc):
+                        return f
+
+                    if (f := FST(Load(), self, astfield(name, len(child) - 1)).prev(with_loc)):  # Load() is a hack just to have a simple AST node
+                        return f
 
         return None
 
-    def next_child(self, from_child: Optional['FST'], only_with_loc: bool = True) -> Optional['FST']:
-        """Meant for simple iteration."""
+    def next_child(self, from_child: Optional['FST'], with_loc: bool = True) -> Optional['FST']:
+        """Get next child in syntactic order. Meant for simple iteration.
 
-        return self.first_child(only_with_loc) if from_child is None else from_child.next(only_with_loc)
+        **Parameters:**
+        - `from_child`: Child node we are coming from which may or may not have location.
+        - `with_loc`: If `True` then only nodes with locations returned, otherwise all nodes.
 
-    def prev_child(self, from_child: Optional['FST'], only_with_loc: bool = True) -> Optional['FST']:
-        """Meant for simple iteration."""
+        **Returns:**
+        - `None` if last valid child in `self`, otherwise next child node.
+        """
 
-        return self.last_child(only_with_loc) if from_child is None else from_child.prev(only_with_loc)
+        return self.first_child(with_loc) if from_child is None else from_child.next(with_loc)
 
-    def walk_children(self, only_with_loc: bool = True) -> Generator['FST', bool, None]:
-        """Walk descendants in syntactic order, send() `True` to skip recursion into child."""
+    def prev_child(self, from_child: Optional['FST'], with_loc: bool = True) -> Optional['FST']:
+        """Get previous child in syntactic order. Meant for simple iteration.
+
+        **Parameters:**
+        - `from_child`: Child node we are coming from which may or may not have location.
+        - `with_loc`: If `True` then only nodes with locations returned, otherwise all nodes.
+
+        **Returns:**
+        - `None` if first valid child in `self`, otherwise previous child node.
+        """
+
+        return self.last_child(with_loc) if from_child is None else from_child.prev(with_loc)
+
+    def walk_children(self, with_loc: bool = True) -> Generator['FST', bool, None]:
+        """Walk descendants in syntactic order, `send(False)` to skip recursion into node. Can send multiple times, last
+        value sent takes effect.
+
+        **Parameters:**
+        - `with_loc`: If `True` then only nodes with locations returned, otherwise all nodes.
+
+        **Example:**
+        ```py
+        for node in (gen := target.walk_children()):
+            ...
+            if i_dont_like_the_node:
+                gen.send(False)  # skip walking this node's children
+        ```
+        """
 
         child = None
 
-        while child := self.next_child(child, only_with_loc):
+        while child := self.next_child(child, with_loc):
             recurse = True
 
             while (sent := (yield child)) is not None:
                 recurse = sent
 
             if recurse:
-                yield from child.walk_children(only_with_loc)
+                yield from child.walk_children(with_loc)
 
-    def walk(self, only_with_loc: bool = True) -> Generator['FST', bool, None]:
-        """Walk self and descendants in syntactic order, send() `True` to skip recursion into child."""
+    def walk(self, with_loc: bool = True) -> Generator['FST', bool, None]:
+        """Walk self and descendants in syntactic order, `send(False)` to skip recursion into node. Can send multiple
+        times, last value sent takes effect.
+
+        **Parameters:**
+        - `with_loc`: If `True` then only nodes with locations returned, otherwise all nodes.
+
+        **Example:**
+        ```py
+        for node in (gen := target.walk()):
+            ...
+            if i_dont_like_the_node:
+                gen.send(False)  # skip walking this node's children
+        ```
+        """
 
         recurse = True
 
@@ -1358,7 +1466,7 @@ class FST:
             recurse = sent
 
         if recurse:
-            yield from self.walk_children(only_with_loc)
+            yield from self.walk_children(with_loc)
 
     def is_parsable(self) -> bool:
         """Really means the AST is `unparse()`able and then re`parse()`able which will get it to this top level AST node
@@ -1529,17 +1637,23 @@ class FST:
     def cut_src(self) -> str:
         return '\n'.join(self.cutl_lines(*self.loc))
 
-    @only_root
     def fix(self, *, inplace: bool = False) -> Optional['FST']:  # -> Self | None
-        """Correct certain basic changes on cut or copy AST (to make subtrees parsable if the source is not by itself).
-        Possibly reparses in order to verify expression. If fails the ast will be unchanged. Is meant to be a quick fix
-        after an operation, not full check, for that use `.verify()`. Basically just fixes everything that succeeds
-        `.is_parsable()` and set `ctx` to `Load` for expressions.
+        """Fix source and `ctx` values for cut or copied nodes (to make subtrees parsable if the source is not after
+        the operation). Possibly reparses in order to verify expression. If can not fix or ast is not parsable by itself
+        then ast will be unchanged. Is meant to be a quick fix after an operation, not full check, for that use
+        `verify()`. Possible source changes are `elif` to `if` and parentheses where needed and commas for singleton
+        tuples.
 
-        Args:
-            inplace: If `True` then changes will be made to self. If `False` then self may be returned if no changes
-                made otherwise a modified copy is returned.
+        **Parameters:**
+        - `inplace`: If `True` then changes will be made to self. If `False` then `self` may be returned if no changes
+            made otherwise a modified copy is returned.
+
+        **Returns:**
+        - `self` if unchanged or modified in place or a new `FST` object otherwise.
         """
+
+        if not self.is_root:
+            raise RuntimeError('can only be called on a root node')
 
         if not (loc := self.loc):
             return self
@@ -1649,7 +1763,7 @@ class FST:
                 self.touch()
 
                 if is_tuple:
-                    self._maybe_add_singleton_tuple_comma()
+                    self._maybe_add_singleton_tuple_comma(False)
 
         return self
 
@@ -1669,8 +1783,8 @@ class FST:
 
         return fst.fix(inplace=True) if fix else fst
 
-    def slice(self, start: int | None = None, stop: int | None = None, *, field: str | None = None,
-              fix: bool | Literal['mutate'] = True, cut: bool = False) -> 'FST':
+    def slice(self, start: int | None = None, stop: int | None = None, *,
+              field: str | None = None, fix: bool = True, cut: bool = False) -> 'FST':
         if isinstance(self.a, STATEMENTISH_OR_STMTMOD):
             return self._slice_stmt(start, stop, field, fix, cut)
 
@@ -1705,7 +1819,3 @@ class FST:
     #   append()
     #   insert()
     #   replace()
-
-
-
-
