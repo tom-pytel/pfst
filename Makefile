@@ -8,7 +8,7 @@ help:  ## Get help
 
 .PHONY: install
 install:  ## Install locally from current directory
-	pip install -e .[dev]
+	pip install -e ."[dev]"
 
 
 .PHONY: test

@@ -704,7 +704,7 @@ class FST:
         return fst
 
     def _make_Expression_seq_copy_and_dedent(self, newast: AST, cut: bool, lfirst: 'FST', llast: 'FST',
-                                             lpre: Union['FST', None], lpost: Union['FST', None],
+                                             lpre: Optional['FST'], lpost: Optional['FST'],
                                              seq_loc: fstloc, prefix: str, suffix: str) -> 'FST':
 
         # start of special sauce  # TODO: make this specialer? (specifiable behavior options, prettier multiline handling, etc...)
@@ -1038,7 +1038,7 @@ class FST:
 
         return FST(ast, lines=[bistr(s) for s in lines], parse_params=parse_params)
 
-    def verify(self, *, raise_: bool = True) -> Union['FST', None]:  # -> Self | None:
+    def verify(self, *, raise_: bool = True) -> Optional['FST']:  # -> Self | None:
         """Sanity check, make sure parsed source matches ast."""
 
         root         = self.root
@@ -1071,7 +1071,7 @@ class FST:
 
     # ------------------------------------------------------------------------------------------------------------------
 
-    def next(self, only_with_loc: bool = True) -> Union['FST', None]:
+    def next(self, only_with_loc: bool = True) -> Optional['FST']:
         """Get next sibling in syntactic order. If `only_with_loc` is `True` (default) then only ASTs with locations
         returned. Returns `None` if last valid sibling in parent.
         """
@@ -1183,7 +1183,7 @@ class FST:
 
         return None
 
-    def prev(self, only_with_loc: bool = True) -> Union['FST', None]:
+    def prev(self, only_with_loc: bool = True) -> Optional['FST']:
         """Get previous sibling in syntactic order. If `only_with_loc` is `True` (default) then only ASTs with locations
         returned. Returns `None` if first valid sibling in parent.
         """
@@ -1291,7 +1291,7 @@ class FST:
 
         return None
 
-    def first_child(self, only_with_loc: bool = True) -> Union['FST', None]:
+    def first_child(self, only_with_loc: bool = True) -> Optional['FST']:
         """Get first child in syntactic order. If `only_with_loc` is `True` (default) then only ASTs with locations returned.
         Returns `None` if no valid children.
         """
@@ -1308,7 +1308,7 @@ class FST:
 
         return None
 
-    def last_child(self, only_with_loc: bool = True) -> Union['FST', None]:
+    def last_child(self, only_with_loc: bool = True) -> Optional['FST']:
         """Get last child in syntactic order. If `only_with_loc` is `True` (default) then only ASTs with locations returned.
         Returns `None` if no valid children.
         """
@@ -1325,12 +1325,12 @@ class FST:
 
         return None
 
-    def next_child(self, from_child: Union['FST', None], only_with_loc: bool = True) -> Union['FST', None]:
+    def next_child(self, from_child: Optional['FST'], only_with_loc: bool = True) -> Optional['FST']:
         """Meant for simple iteration."""
 
         return self.first_child(only_with_loc) if from_child is None else from_child.next(only_with_loc)
 
-    def prev_child(self, from_child: Union['FST', None], only_with_loc: bool = True) -> Union['FST', None]:
+    def prev_child(self, from_child: Optional['FST'], only_with_loc: bool = True) -> Optional['FST']:
         """Meant for simple iteration."""
 
         return self.last_child(only_with_loc) if from_child is None else from_child.prev(only_with_loc)
@@ -1530,7 +1530,7 @@ class FST:
         return '\n'.join(self.cutl_lines(*self.loc))
 
     @only_root
-    def fix(self, *, inplace: bool = False) -> Union['FST', None]:  # -> Self | None
+    def fix(self, *, inplace: bool = False) -> Optional['FST']:  # -> Self | None
         """Correct certain basic changes on cut or copy AST (to make subtrees parsable if the source is not by itself).
         Possibly reparses in order to verify expression. If fails the ast will be unchanged. Is meant to be a quick fix
         after an operation, not full check, for that use `.verify()`. Basically just fixes everything that succeeds
