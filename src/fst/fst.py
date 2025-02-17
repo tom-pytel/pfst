@@ -1,18 +1,14 @@
-__all_other__ = None
-__all_other__ = set(globals())
-from ast import *
-__all_other__ = set(globals()) - __all_other__
-
 import ast as ast_
 import functools
 import re
+from ast import *
 from typing import Any, Callable, Generator, Literal, NamedTuple, Optional, Union
 
 from .util import *
 
-__all__ = list(__all_other__ | {
+__all__ = [
     'FST', 'parse', 'unparse',
-})
+]
 
 
 AST_FIELDS_NEXT: dict[tuple[type[AST], str], str | None] = dict(sum((  # next field name from AST class and current field name
@@ -96,8 +92,8 @@ def only_root(func):
     return wrapper
 
 
-def parse(source, filename='<unknown>', mode='exec', *args, type_comments=False, feature_version=None, **kwargs):
-    return FST.fromsrc(source, filename, mode, *args, type_comments=type_comments, feature_version=feature_version, **kwargs).a
+def parse(source, filename='<unknown>', mode='exec', *, type_comments=False, feature_version=None, **kwargs):
+    return FST.fromsrc(source, filename, mode, type_comments=type_comments, feature_version=feature_version, **kwargs).a
 
 
 def unparse(ast_obj):
@@ -995,8 +991,8 @@ class FST:
         return FST(ast, lines=[bistr(s) for s in lines], parse_params=parse_params)
 
     @staticmethod
-    def fromast(ast: AST, *, calc_loc: bool | Literal['copy'] = True,
-                type_comments: bool | None = False, feature_version=None, **parse_params) -> 'FST':
+    def fromast(ast: AST, *, type_comments: bool | None = False, feature_version=None,
+                calc_loc: bool | Literal['copy'] = True, **parse_params) -> 'FST':
         """Add FST to existing AST, optionally copying positions from reparsed AST (default) or whole AST for new FST.
 
         Do not set `calc_loc` to `False` unless you parsed the `ast` from a previous output of `ast.unparse()`,

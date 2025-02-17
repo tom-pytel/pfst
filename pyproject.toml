@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 
 [project]
-name = "py-fst"
+name = "pfst"
 description = "A fun AST processing library"
 authors = [{name = "Tomasz Pytel", email = "tompytel@gmail.com"}]
 license = { text = "MIT" }
@@ -22,6 +22,12 @@ classifiers = [
 ]
 
 dependencies = [
+]
+
+[project.optional-dependencies]
+
+dev = [
+  "pdoc==15.0.1",
 ]
 
 
