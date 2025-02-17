@@ -375,6 +375,34 @@ env = {"PYLAUNCHER_DRYRUN": "1",
 ]  # END OF CUT_DATA
 
 
+def regen_cut_data():
+    newlines = []
+
+    for src, elt, start, stop, *_ in CUT_DATA:
+        src  = src.strip()
+        t    = parse(src)
+        f    = eval(f't.{elt}', {'t': t}).f
+        s    = f.slice(start, stop, cut=True)
+        tsrc = t.f.src
+        ssrc = s.src
+
+        assert not tsrc.startswith('\n') or tsrc.endswith('\n')
+        assert not ssrc.startswith('\n') or ssrc.endswith('\n')
+
+        newlines.extend(f'''("""\n{src}\n""", {elt!r}, {start}, {stop}, """\n{tsrc}\n""", """\n{ssrc}\n"""),\n'''.split('\n'))
+
+    with open(sys.argv[0]) as f:
+        lines = f.read().split('\n')
+
+    start = lines.index('CUT_DATA = [')
+    stop  = lines.index(']  # END OF CUT_DATA')
+
+    lines[start + 1 : stop] = newlines
+
+    with open(sys.argv[0], 'w') as f:
+        lines = f.write('\n'.join(lines))
+
+
 def read(fnm):
     with open(fnm) as f:
         return f.read()
@@ -393,9 +421,10 @@ def dumptest(self, fst, dump, src):
 class TestFST(unittest.TestCase):
     def test_loc(self):
         # from children
-        self.assertEqual((0, 6, 0, 9), parse('def f(i=1): pass').body[0].args.f.loc)
-        self.assertEqual((0, 5, 0, 13), parse('with f() as f: pass').body[0].items[0].f.loc)
-        self.assertEqual((1, 7, 1, 24), parse('match a:\n  case 2 if a == 1: pass').body[0].cases[0].f.loc)
+        self.assertEqual((0, 6, 0, 9), parse('def f(i=1): pass').body[0].args.f.loc)  # arguments
+        self.assertEqual((0, 5, 0, 13), parse('with f() as f: pass').body[0].items[0].f.loc)  # withitem
+        self.assertEqual((1, 7, 1, 24), parse('match a:\n  case 2 if a == 1: pass').body[0].cases[0].f.loc)  # match_case
+        self.assertEqual((0, 7, 0, 20), parse('[i for i in range(5)]').body[0].value.generators[0].f.loc)  # comprehension
 
     def test_bloc(self):
         ast = parse('@deco\nclass cls:\n @deco\n def meth():\n  @deco\n  class fcls: pass')
@@ -717,6 +746,49 @@ class TestFST(unittest.TestCase):
 
         self.assertEqual({1, 2, 5, 7, 8, 9, 10}, ast.f._indentable_lns(1))
         self.assertEqual({0, 1, 2, 5, 7, 8, 9, 10}, ast.f._indentable_lns(0))
+
+        f = FST.fromsrc('''
+def _splitext(p, sep, altsep, extsep):
+    """Split the extension from a pathname.
+
+    Extension is everything from the last dot to the end, ignoring
+    leading dots.  Returns "(root, ext)"; ext may be empty."""
+    # NOTE: This code must work for text and bytes strings.
+
+    sepIndex = p.rfind(sep)
+            '''.strip())
+        self.assertEqual({0, 1, 2, 3, 4, 5, 6, 7}, f._indentable_lns(docstring=True))
+        self.assertEqual({0, 1, 5, 6, 7}, f._indentable_lns(docstring=False))
+
+        f = FST.fromsrc(r'''
+_CookiePattern = re.compile(r"""
+    \s*                            # Optional whitespace at start of cookie
+    (?P<key>                       # Start of group 'key'
+    [""" + _LegalKeyChars + r"""]+?   # Any word of at least one letter
+    )                              # End of group 'key'
+    (                              # Optional group: there may not be a value.
+    \s*=\s*                          # Equal Sign
+    (?P<val>                         # Start of group 'val'
+    "(?:[^\\"]|\\.)*"                  # Any doublequoted string
+    |                                  # or
+    \w{3},\s[\w\d\s-]{9,11}\s[\d:]{8}\sGMT  # Special case for "expires" attr
+    |                                  # or
+    [""" + _LegalValueChars + r"""]*      # Any word or empty string
+    )                                # End of group 'val'
+    )?                             # End of optional value group
+    \s*                            # Any number of spaces.
+    (\s+|;|$)                      # Ending either at space, semicolon, or EOS.
+    """, re.ASCII | re.VERBOSE)    # re.ASCII may be removed if safe.
+            '''.strip())
+        self.assertEqual({0}, f._indentable_lns(docstring=True))
+        self.assertEqual({0}, f._indentable_lns(docstring=False))
+
+        f = FST.fromsrc('''
+"distutils.command.sdist.check_metadata is deprecated, \\
+        use the check command instead"
+            '''.strip())
+        self.assertEqual({0, 1}, f._indentable_lns(docstring=True))
+        self.assertEqual({0}, f._indentable_lns(docstring=False))
 
     def test__offset(self):
         src = 'i = 1\nj = 2\nk = 3'
@@ -1055,7 +1127,7 @@ if 1:
         """
         regular text
         """
-          '''.strip())
+            '''.strip())
         self.assertEqual('''
 def f():
     """
@@ -1064,7 +1136,7 @@ def f():
     """
         regular text
         """
-          '''.strip(), f.a.body[0].body[0].f.copy().src)
+            '''.strip(), f.a.body[0].body[0].f.copy().src)
 
         f = FST.fromsrc('''
 if 1:
@@ -1075,7 +1147,7 @@ if 1:
         """
         regular text
         """
-          '''.strip())
+            '''.strip())
         self.assertEqual('''
 async def f():
     """
@@ -1084,7 +1156,7 @@ async def f():
     """
         regular text
         """
-          '''.strip(), f.a.body[0].body[0].f.copy().src)
+            '''.strip(), f.a.body[0].body[0].f.copy().src)
 
         f = FST.fromsrc('''
 if 1:
@@ -1104,12 +1176,18 @@ class cls:
     """
         regular text
         """
-          '''.strip(), f.a.body[0].body[0].f.copy().src)
+            '''.strip(), f.a.body[0].body[0].f.copy().src)
 
+        f = FST.fromsrc('''
+# start
 
+"""docstring"""
 
+i = 1
 
-
+# end
+            '''.strip())
+        self.assertEqual(f.copy().copy_src(), f.src)
 
         if sys.version_info[:2] >= (3, 12):
             f = FST.fromsrc('tuple[*tuple[int, ...]]').a.body[0].value.slice.f.copy(fix=True)
@@ -2110,32 +2188,6 @@ Expression .. ROOT 0,0 -> 2,1
 )
             """.strip())
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        # dumptest(self, parse("""
-        #     """.strip()).body[0].value.f.slice(0, 2), """
-        #     """.strip(), """
-        #     """.strip())
-
     def test_cut(self):
         for src, elt, start, stop, cut_src, cut_slice in CUT_DATA:
             src  = src.strip()
@@ -2147,45 +2199,6 @@ Expression .. ROOT 0,0 -> 2,1
 
             self.assertEqual(tsrc, cut_src.strip())
             self.assertEqual(ssrc, cut_slice.strip())
-
-
-
-
-
-
-
-
-
-
-
-
-
-def regen_cut_data():
-    newlines = []
-
-    for src, elt, start, stop, *_ in CUT_DATA:
-        src  = src.strip()
-        t    = parse(src)
-        f    = eval(f't.{elt}', {'t': t}).f
-        s    = f.slice(start, stop, cut=True)
-        tsrc = t.f.src
-        ssrc = s.src
-
-        assert not tsrc.startswith('\n') or tsrc.endswith('\n')
-        assert not ssrc.startswith('\n') or ssrc.endswith('\n')
-
-        newlines.extend(f'''("""\n{src}\n""", {elt!r}, {start}, {stop}, """\n{tsrc}\n""", """\n{ssrc}\n"""),\n'''.split('\n'))
-
-    with open(sys.argv[0]) as f:
-        lines = f.read().split('\n')
-
-    start = lines.index('CUT_DATA = [')
-    stop  = lines.index(']  # END OF CUT_DATA')
-
-    lines[start + 1 : stop] = newlines
-
-    with open(sys.argv[0], 'w') as f:
-        lines = f.write('\n'.join(lines))
 
 
 if __name__ == '__main__':

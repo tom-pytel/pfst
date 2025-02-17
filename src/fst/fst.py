@@ -63,8 +63,14 @@ class astfield(NamedTuple):
     name: str
     idx:  int | None = None
 
-    def get(self, node: AST) -> Any:
-        return getattr(node, self.name) if self.idx is None else getattr(node, self.name)[self.idx]
+    def get(self, parent: AST) -> Any:
+        return getattr(parent, self.name) if self.idx is None else getattr(parent, self.name)[self.idx]
+
+    def set(self, parent: AST, node: AST):
+        if self.idx is None:
+            setattr(parent, self.name, node)
+        else:
+            getattr(parent, self.name)[self.idx] = node
 
 
 class fstloc(NamedTuple):
@@ -372,6 +378,12 @@ class FST:
         while stack:
             f = stack.pop()
             a = f.a
+
+            if isinstance(a, (expr_context, unaryop, operator, boolop, cmpop)) and (parent := f.parent):  # ast.parse() reuses simple objects, we need all objects to be unique
+                f.a = a = a.__class__()
+                a.f = f
+
+                f.pfield.set(parent.a, a)
 
             for name, child in iter_fields(a):
                 if isinstance(child, AST):
@@ -969,6 +981,12 @@ class FST:
 
             del keys[start : stop]
             del values[start : stop]
+
+            for i in range(start, len(keys)):
+                values[i].f.pfield = astfield('values', i)
+
+                if keys[i]:  # could be None from **
+                    keys[i].f.pfield = astfield('keys', i)
 
         newast  = Dict(keys=akeys, values=avalues)
         seq_loc = fstloc(self.ln, self.col + 1, self.end_ln, self.end_col - 1)
