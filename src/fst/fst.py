@@ -10,6 +10,8 @@ __all__ = [
 ]
 
 
+FULL_REPR = False  # for debugging
+
 AST_FIELDS_NEXT: dict[tuple[type[AST], str], str | None] = dict(sum((  # next field name from AST class and current field name
     [] if not fields else
     [((cls, fields[0]), None)] if len(fields) == 1 else
@@ -63,14 +65,14 @@ class astfield(NamedTuple):
     name: str
     idx:  int | None = None
 
-    def get(self, parent: AST) -> Any:
-        return getattr(parent, self.name) if self.idx is None else getattr(parent, self.name)[self.idx]
+    def get(self, node: AST) -> Any:
+        return getattr(node, self.name) if self.idx is None else getattr(node, self.name)[self.idx]
 
-    def set(self, parent: AST, node: AST):
+    def set(self, node: AST, child: AST):
         if self.idx is None:
-            setattr(parent, self.name, node)
+            setattr(node, self.name, child)
         else:
-            getattr(parent, self.name)[self.idx] = node
+            getattr(node, self.name)[self.idx] = child
 
 
 class fstloc(NamedTuple):
@@ -188,7 +190,22 @@ def _prev_code(lines: list[str], ln: int, col: int, end_ln: int, end_col: int, c
     return None
 
 
-def _slice_fixup_index(ast, body, field, start, stop) -> tuple[int, int]:
+def _fixup_field_body(ast: AST, field: str | None = None) -> tuple[str, 'AST']:
+    if field is not None:
+        if not isinstance(body := getattr(ast, field, None), list):
+            raise ValueError(f"invalid {ast.__class__.__name__} field '{field}'")
+
+    elif isinstance(ast, Match):
+        field = 'cases'
+        body  = ast.cases
+
+    elif (body := getattr(ast, field := 'body', None)) is None:
+        raise ValueError(f"{ast.__class__.__name__} has no 'body'")
+
+    return field, body
+
+
+def _fixup_slice_index(ast, body, field, start, stop) -> tuple[int, int]:
     len_body = len(body)
 
     if start is None:
@@ -395,8 +412,14 @@ class FST:
         return self
 
     def _repr_tail(self) -> str:
+        try:
+            loc = self.loc
+        except Exception:  # maybe in middle of operation changing locations and lines
+            loc = '????'
+
+        self.touch() if hasattr(self.a, 'end_col_offset') else self.touchall()  # for debugging because we may have cached locs which would not have otherwise been cached during execution
+
         tail = ' ROOT' if self.is_root else ''
-        loc  = self.loc
 
         return tail + f' {loc[0]},{loc[1]} -> {loc[2]},{loc[3]}' if loc else tail
 
@@ -441,8 +464,8 @@ class FST:
         `self` must be a tuple.
 
         **Parameters:**
-        - `offset`: If `True` then will apply `_offset()` to entire tree for new comma. Use `False` when sure tuple is
-            at top level.
+        - `offset`: If `True` then will apply `_offset()` to entire tree for new comma. If `False` then will just offset
+            the end of the Tuple, use this when sure tuple is at top level.
         """
 
         # assert isinstance(self.a, Tuple)
@@ -508,7 +531,7 @@ class FST:
         - `inc`: Whether to offset endpoint if it falls exactly at ln / col or not (inclusive).
         """
 
-        for f in (gen := self.walk(False)):
+        for f in (gen := self.walk(True)):
             a = f.a
 
             if (end_col_offset := getattr(a, 'end_col_offset', None)) is not None:
@@ -827,27 +850,20 @@ class FST:
     def _slice_stmt(self, start, stop, field, fix, cut) -> 'FST':
         if cut: raise NotImplementedError  # TODO: THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS!
 
-        ast = self.a
+        ast         = self.a
+        field, body = _fixup_field_body(ast, field)
 
-        if field is not None:
-            if not isinstance(body := getattr(ast, field, None), list):
-                raise ValueError(f"invalid {ast.__class__.__name__} field '{field}'")
+        if not isinstance(body, list):
+            raise ValueError(f"{ast.__class__.__name__} '{field}' is not a list so can't be sliced")
 
-        elif isinstance(ast, Match):
-            field = 'cases'
-            body  = ast.cases
-
-        elif (body := getattr(ast, field := 'body', None)) is None or not isinstance(body, list):
-            raise ValueError(f"{ast.__class__.__name__} has no 'body' list to slice")
-
-        start, stop = _slice_fixup_index(ast, body, field, start, stop)
+        start, stop = _fixup_slice_index(ast, body, field, start, stop)
 
         if start == stop:
             return FST(Module(body=[]), lines=[bistr('')], from_=self)
 
         afirst = body[start]
         loc    = fstloc((f := afirst.f).ln, f.col, (l := body[stop - 1].f.loc).end_ln, l.end_col)
-        newast = Module(body=[copy(body[i]) for i in range(start, stop)])
+        newast = Module(body=[copy_ast(body[i]) for i in range(start, stop)])
 
         if (fix and field == 'orelse' and not start and (stop - start) == 1 and afirst.col_offset == ast.col_offset and
             isinstance(ast, If) and isinstance(afirst, If)
@@ -865,7 +881,7 @@ class FST:
         is_set      = isinstance(ast, Set)
         is_tuple    = not is_set and isinstance(ast, Tuple)
         ctx         = None if is_set else Load() if fix else ast.ctx.__class__()
-        start, stop = _slice_fixup_index(ast, elts, 'elts', start, stop)
+        start, stop = _fixup_slice_index(ast, elts, 'elts', start, stop)
 
         if start == stop:
             if is_set:
@@ -888,7 +904,7 @@ class FST:
         lpost    = None if stop == len(elts) else elts[stop].f
 
         if not cut:
-            asts = [copy(elts[i]) for i in range(start, stop)]
+            asts = [copy_ast(elts[i]) for i in range(start, stop)]
 
         else:
             asts = elts[start : stop]
@@ -959,7 +975,7 @@ class FST:
     def _slice_dict(self, start, stop, fix, cut) -> 'FST':
         ast         = self.a
         values      = ast.values
-        start, stop = _slice_fixup_index(ast, values, 'values', start, stop)
+        start, stop = _fixup_slice_index(ast, values, 'values', start, stop)
 
         if start == stop:
             return FST(Expression(body=Dict(keys=[], values=[], lineno=1, col_offset=0, end_lineno=1, end_col_offset=2
@@ -972,8 +988,8 @@ class FST:
         lpost  = None if stop == len(keys) else self._dict_key_or_mock_loc(keys[stop], values[stop].f)
 
         if not cut:
-            akeys   = [copy(keys[i]) for i in range(start, stop)]
-            avalues = [copy(values[i]) for i in range(start, stop)]
+            akeys   = [copy_ast(keys[i]) for i in range(start, stop)]
+            avalues = [copy_ast(values[i]) for i in range(start, stop)]
 
         else:
             akeys   = keys[start : stop]
@@ -1027,8 +1043,31 @@ class FST:
     def __repr__(self) -> str:
         tail = self._repr_tail()
         rast = repr(self.a)
+        head = f'<fst{rast[4 : -1]}{tail}>' if rast.startswith('<') else f'fst.{rast[:-1]}{tail})'
 
-        return f'<fst{rast[4 : -1]}{tail}>' if rast.startswith('<') else f'fst.{rast[:-1]}{tail})'
+        if not FULL_REPR:
+            return head
+
+        try:
+            ln, col, end_ln, end_col = self.bloc
+
+            if end_ln - ln + 1 <= 10:
+                ls = self.root._lines[ln : end_ln + 1]
+            else:
+                ls = self.root._lines[ln : ln + 5] + ['...'] + self.root._lines[end_ln - 4 : end_ln + 1]
+
+            ls[-1] = ls[-1][:end_col]
+            ls[0]  = ' ' * col + ls[0][col:]
+
+            return '\n'.join([head] + ls)
+
+        except Exception:
+            pass
+
+        return head + '\n???'
+
+    def __getitem__(self, index: int | str | slice) -> Optional['FST']:
+        return self.get(index.start, index.stop, index.step) if isinstance(index, slice) else self.get(index)
 
     @staticmethod
     def fromsrc(source: str | bytes | list[str], filename: str = '<unknown>', mode: str = 'exec', *,
@@ -1435,12 +1474,13 @@ class FST:
 
         return self.last_child(with_loc) if from_child is None else from_child.prev(with_loc)
 
-    def walk_children(self, with_loc: bool = True) -> Generator['FST', bool, None]:
+    def walk_children(self, with_loc: bool = True, *, recurse: bool = True) -> Generator['FST', bool, None]:
         """Walk descendants in syntactic order, `send(False)` to skip recursion into node. Can send multiple times, last
         value sent takes effect.
 
         **Parameters:**
         - `with_loc`: If `True` then only nodes with locations returned, otherwise all nodes.
+        - `recurse`: Whether to recurse into children by default, `send()` for a given node will always override this.
 
         **Example:**
         ```py
@@ -1454,12 +1494,12 @@ class FST:
         child = None
 
         while child := self.next_child(child, with_loc):
-            recurse = True
+            recurse_child = recurse
 
             while (sent := (yield child)) is not None:
-                recurse = sent
+                recurse_child = sent
 
-            if recurse:
+            if recurse_child:
                 yield from child.walk_children(with_loc)
 
     def walk(self, with_loc: bool = True) -> Generator['FST', bool, None]:
@@ -1474,7 +1514,7 @@ class FST:
         for node in (gen := target.walk()):
             ...
             if i_dont_like_the_node:
-                gen.send(False)  # skip walking this node's children
+                gen.send(False)  # skip walking this node's children, don't use return value here, keep using for loop as normal
         ```
         """
 
@@ -1513,28 +1553,13 @@ class FST:
         return True
 
     def is_parenthesized(self, from_ln: int = 0, from_col: int = 0) -> bool:
-        return ((code := _prev_code(self.root._lines, from_ln, from_col, self.ln, self.col)) and code.src.endswith('('))
+        return ((code := _prev_code(self.root._lines, from_ln, from_col, self.ln, self.col)) and code.src.endswith('('))  # we don't check for statements or other delimiting structures because they will not have a trailing open paren for a false positive
 
     def is_tuple_parenthesized(self) -> bool:
-        # assert isinstance(self.a, Tuple)
+        assert isinstance(self.a, Tuple)
 
         return (self.root._lines[(ln := self.ln)].startswith('(', col := self.col) and
                 (not (e := self.a.elts) or (ln != (f0 := e[0].f).ln or col != f0.col)))
-
-    def copyl_lines(self, ln: int, col: int, end_ln: int, end_col: int) -> list[str]:
-        if end_ln == ln:
-            return [bistr(self.root._lines[ln][col : end_col])]
-        else:
-            return [bistr((ls := self.root._lines)[ln][col:])] + ls[ln + 1 : end_ln] + [bistr(ls[end_ln][:end_col])]
-
-    def copy_lines(self) -> list[str]:
-        return self.copyl_lines(*self.loc)
-
-    def copyl_src(self, ln: int, col: int, end_ln: int, end_col: int) -> str:
-        return '\n'.join(self.copyl_lines(ln, col, end_ln, end_col))
-
-    def copy_src(self) -> str:
-        return '\n'.join(self.copyl_lines(*self.loc))
 
     def get_indent(self) -> str:
         """Determine proper indentation of node at `stmt` (or other similar) level at or above self, otherwise at root
@@ -1617,7 +1642,22 @@ class FST:
 
         return self
 
-    def dell_lines(self, ln: int, col: int, end_ln: int, end_col: int) -> list[str]:
+    def copyl_lines(self, ln: int, col: int, end_ln: int, end_col: int) -> list[str]:
+        if end_ln == ln:
+            return [bistr(self.root._lines[ln][col : end_col])]
+        else:
+            return [bistr((ls := self.root._lines)[ln][col:])] + ls[ln + 1 : end_ln] + [bistr(ls[end_ln][:end_col])]
+
+    def copy_lines(self) -> list[str]:
+        return self.copyl_lines(*self.loc)
+
+    def copyl_src(self, ln: int, col: int, end_ln: int, end_col: int) -> str:
+        return '\n'.join(self.copyl_lines(ln, col, end_ln, end_col))
+
+    def copy_src(self) -> str:
+        return '\n'.join(self.copyl_lines(*self.loc))
+
+    def dell_lines(self, ln: int, col: int, end_ln: int, end_col: int):
         ls = self.root._lines
 
         if end_ln == ln:
@@ -1628,7 +1668,7 @@ class FST:
 
             del ls[ln : end_ln]
 
-    def del_lines(self) -> list[str]:
+    def del_lines(self):
         return self.dell_lines(*self.loc)
 
     def cutl_lines(self, ln: int, col: int, end_ln: int, end_col: int) -> list[str]:
@@ -1686,11 +1726,11 @@ class FST:
         if isinstance(ast, If):
             if (l := lines[ln]).startswith('if', col):
                 return self
-            if not l.startswith('elif', col):
-                raise ValueError(f'unexpected start of If statement: {l[col:]!r}')
+
+            assert l.startswith('elif', col)
 
             if not inplace:
-                self = FST(copy(ast), lines=(lines := lines[:]), from_=self)
+                self = FST(copy_ast(ast), lines=(lines := lines[:]), from_=self)
 
             self._offset(ln, col + 2, 0, -2)
 
@@ -1761,7 +1801,7 @@ class FST:
             need_ctx = set_ctx(ast, Load, doit=False)
 
             if (need_ctx or need_paren) and not inplace:
-                ast   = copy(ast)
+                ast   = copy_ast(ast)
                 lines = lines[:]
                 self  = FST(ast, lines=lines, from_=self)
 
@@ -1785,24 +1825,51 @@ class FST:
 
         return self
 
-    def copy(self, *, decorators: bool = True, fix: bool = True) -> 'FST':
-        newast = copy(self.a)
+    def putl_lines(self, lines: list[str] | None, ln: int, col: int, end_ln: int, end_col: int):
+        if lines is None:
+            self.dell_lines(ln, col, end_ln, end_col)
+
+        raise NotImplementedError
+
+    def put_lines(self, lines: list[str] | None):
+        if lines is None:
+            self.dell_lines(*self.loc)
+
+        raise NotImplementedError
+
+    def putl_src(self, src: str | None, ln: int, col: int, end_ln: int, end_col: int):
+        if src is None:
+            self.dell_lines(ln, col, end_ln, end_col)
+
+        raise NotImplementedError
+
+    def put_src(self, src: str | None):
+        if src is None:
+            self.dell_lines(*self.loc)
+
+        raise NotImplementedError
+
+    def copy(self, *, fix: bool = True, decos: bool = True) -> 'FST':
+        newast = copy_ast(self.a)
 
         if self.is_root:
             return FST(newast, lines=self._lines[:], from_=self)
 
-        if not (loc := self.bloc if decorators else self.loc):
+        if not (loc := self.bloc if decos else self.loc):
             raise ValueError('cannot copy ast which does not have location')
 
-        if not decorators and hasattr(newast, 'decorator_list'):
+        if not decos and hasattr(newast, 'decorator_list'):
             newast.decorator_list.clear()
 
         fst = self._make_fst_and_dedent(self, newast, loc)
 
         return fst.fix(inplace=True) if fix else fst
 
-    def slice(self, start: int | None = None, stop: int | None = None, *,
-              field: str | None = None, fix: bool = True, cut: bool = False) -> 'FST':
+    def cut(self, *, fix: bool = True, decos: bool = True) -> 'FST':
+        raise NotImplementedError
+
+    def slice(self, start: int | None = None, stop: int | None = None, field: str | None = None, *,
+              fix: bool = True, cut: bool = False) -> 'FST':
         if isinstance(self.a, STATEMENTISH_OR_STMTMOD):
             return self._slice_stmt(start, stop, field, fix, cut)
 
@@ -1817,7 +1884,10 @@ class FST:
 
         raise ValueError(f"cannot slice a '{self.a.__class__.__name__}'")
 
+    def get(self, start: int | str | None = None, stop: int | str | None | Literal['False'] = False,
+            field: str | None = None, *, fix: bool = True, cut: bool = False, decos: bool = True) -> Optional['FST']:
 
+        raise NotImplementedError
 
 
 

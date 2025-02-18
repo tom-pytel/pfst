@@ -1098,7 +1098,7 @@ _CookiePattern = re.compile(r"""
     def test_copy(self):
         f = FST.fromsrc('@decorator\nclass cls:\n  pass')
         self.assertEqual(f.a.body[0].f.copy(fix=False).src, '@decorator\nclass cls:\n  pass')
-        self.assertEqual(f.a.body[0].f.copy(decorators=False, fix=False).src, 'class cls:\n  pass')
+        self.assertEqual(f.a.body[0].f.copy(decos=False, fix=False).src, 'class cls:\n  pass')
 
         l = FST.fromsrc("['\\u007f', '\\u0080', 'ʁ', 'ᛇ', '時', '🐍', '\\ud800', 'Źdźbło']").a.body[0].value.elts
         self.assertEqual("'\\u007f'", l[0].f.copy().src)

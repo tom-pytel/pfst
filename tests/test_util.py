@@ -100,7 +100,7 @@ class TestUtil(unittest.TestCase):
 
             for type_comments in (False, True):
                 ast = ast_.parse(src, type_comments=type_comments)
-                dst = copy(ast)
+                dst = copy_ast(ast)
 
                 compare(ast, dst, locs=True, type_comments=type_comments, raise_=True)
 

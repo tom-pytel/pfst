@@ -6,7 +6,7 @@ from typing import Any, Callable, Iterator, Literal
 __all__ = [
     'FIELDS', 'AST_FIELDS',
     'bistr', 'get_field', 'has_type_comments', 'is_parsable', 'get_parse_mode',
-    'WalkFail', 'walk2', 'compare', 'copy_attributes', 'copy', 'set_ctx',
+    'WalkFail', 'walk2', 'compare', 'copy_attributes', 'copy_ast', 'set_ctx',
 ]
 
 
@@ -399,7 +399,7 @@ def copy_attributes(src: AST, dst: AST, *, compare: bool = True, type_comments: 
     return True
 
 
-def copy(ast: AST | None) -> AST:
+def copy_ast(ast: AST | None) -> AST:
     """Copy a tree."""
 
     if ast is None:
@@ -411,9 +411,9 @@ def copy(ast: AST | None) -> AST:
         child = getattr(ast, field)
 
         if isinstance(child, AST):
-            params[field] = copy(child)
+            params[field] = copy_ast(child)
         elif isinstance(child, list):
-            params[field] = [copy(c) if isinstance(c, AST) else c for c in child]
+            params[field] = [copy_ast(c) if isinstance(c, AST) else c for c in child]
         else:
             params[field] = child
 
@@ -447,3 +447,7 @@ def set_ctx(ast: AST, ctx: type[expr_context], *, doit=True) -> bool:
                 stack.append(a.value)
 
     return change
+
+
+def get_func_class_or_ass_by_name(ast: AST, name: str) -> AST | None:
+    pass
