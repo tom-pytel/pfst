@@ -1012,7 +1012,7 @@ _CookiePattern = re.compile(r"""
         self.assertIsNot(f, f.fix())
 
         g = f.fix(inplace=False)
-        self.assertFalse(compare(f.a, g.a))
+        self.assertFalse(compare_asts(f.a, g.a))
         self.assertIs(g, g.fix())
 
         f = FST.fromsrc('match w := x,:\n case 0: pass').a.body[0].subject.f.copy(fix=False)
@@ -1020,8 +1020,8 @@ _CookiePattern = re.compile(r"""
 
         g = f.fix(inplace=False)
         self.assertEqual('(w := x,)', g.src)
-        self.assertTrue(compare(f.a, g.a, locs=False))
-        self.assertFalse(compare(f.a, g.a, locs=True))
+        self.assertTrue(compare_asts(f.a, g.a, locs=False))
+        self.assertFalse(compare_asts(f.a, g.a, locs=True))
         self.assertIs(g, g.fix())
 
         f = FST.fromsrc('(1 +\n2)')

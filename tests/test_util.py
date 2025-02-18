@@ -85,13 +85,13 @@ class TestUtil(unittest.TestCase):
         ast4 = ast_.parse('def f():\n  i = 1\n  k = 3').body[0]
         ast5 = ast_.parse('def f():\n  i = 1').body[0]
 
-        self.assertTrue(compare(ast1, ast2, raise_=True))
-        self.assertTrue(compare(ast1, ast3, locs=False, raise_=True))
-        self.assertRaises(WalkFail, compare, ast1, ast3, locs=True, raise_=True)
-        self.assertFalse(compare(ast1, ast3, locs=True, raise_=False))
-        self.assertFalse(compare(ast1, ast4, raise_=False))
-        self.assertTrue(compare(ast1, ast4, recurse=False, raise_=False))
-        self.assertFalse(compare(ast1, ast5, recurse=False, raise_=False))
+        self.assertTrue(compare_asts(ast1, ast2, raise_=True))
+        self.assertTrue(compare_asts(ast1, ast3, locs=False, raise_=True))
+        self.assertRaises(WalkFail, compare_asts, ast1, ast3, locs=True, raise_=True)
+        self.assertFalse(compare_asts(ast1, ast3, locs=True, raise_=False))
+        self.assertFalse(compare_asts(ast1, ast4, raise_=False))
+        self.assertTrue(compare_asts(ast1, ast4, recurse=False, raise_=False))
+        self.assertFalse(compare_asts(ast1, ast5, recurse=False, raise_=False))
 
     def test_copy(self):
         for fnm in PYFNMS:
@@ -102,7 +102,7 @@ class TestUtil(unittest.TestCase):
                 ast = ast_.parse(src, type_comments=type_comments)
                 dst = copy_ast(ast)
 
-                compare(ast, dst, locs=True, type_comments=type_comments, raise_=True)
+                compare_asts(ast, dst, locs=True, type_comments=type_comments, raise_=True)
 
 
 if __name__ == '__main__':

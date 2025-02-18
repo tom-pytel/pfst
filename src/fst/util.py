@@ -6,7 +6,7 @@ from typing import Any, Callable, Iterator, Literal
 __all__ = [
     'FIELDS', 'AST_FIELDS',
     'bistr', 'get_field', 'has_type_comments', 'is_parsable', 'get_parse_mode',
-    'WalkFail', 'walk2', 'compare', 'copy_attributes', 'copy_ast', 'set_ctx',
+    'WalkFail', 'walk2', 'compare_asts', 'copy_attributes', 'copy_ast', 'set_ctx', 'get_func_class_or_ass_by_name',
 ]
 
 
@@ -345,16 +345,16 @@ def walk2(ast1: AST, ast2: AST, cb_primitive: Callable[[Any, Any, str, int], boo
     return True
 
 
-compare_primitive_type_comments_func = (
+_compare_primitive_type_comments_func = (
     (lambda p1, p2, n, i: n == 'type_comment' or (p1.__class__ is p2.__class__ and p1 == p2)),
     (lambda p1, p2, n, i: p1.__class__ is p2.__class__ and p1 == p2),
 )
 
-def compare(ast1: AST, ast2: AST, *, locs: bool = False, type_comments: bool = False, ctx: bool = True,
+def compare_asts(ast1: AST, ast2: AST, *, locs: bool = False, type_comments: bool = False, ctx: bool = True,
             recurse: bool = True, raise_: bool = False) -> bool:
     """Copy two trees including possibly locations and type comments."""
 
-    cb_primitive = compare_primitive_type_comments_func[bool(type_comments)]
+    cb_primitive = _compare_primitive_type_comments_func[bool(type_comments)]
 
     try:
         for n1, n2 in walk2(ast1, ast2, cb_primitive, ctx=ctx, recurse=recurse):
@@ -380,7 +380,7 @@ def compare(ast1: AST, ast2: AST, *, locs: bool = False, type_comments: bool = F
 def copy_attributes(src: AST, dst: AST, *, compare: bool = True, type_comments: bool = False, raise_: bool = True) -> bool:
     """Copy attributes from one tree to another checking structure equality in the process."""
 
-    cb_primitive = compare_primitive_type_comments_func[bool(type_comments)] if compare else lambda p1, p2, n, i: True
+    cb_primitive = _compare_primitive_type_comments_func[bool(type_comments)] if compare else lambda p1, p2, n, i: True
 
     try:
         for ns, nd in walk2(src, dst, cb_primitive):
@@ -450,4 +450,13 @@ def set_ctx(ast: AST, ctx: type[expr_context], *, doit=True) -> bool:
 
 
 def get_func_class_or_ass_by_name(ast: AST, name: str) -> AST | None:
-    pass
+    for a in iter_child_nodes(ast):
+        if isinstance(a, (FunctionDef, AsyncFunctionDef, ClassDef)):
+            if a.name == name:
+                return a
+
+        elif isinstance(a, (Assign, AnnAssign)):
+            if any(isinstance(t, Name) and t.id == name for t in a.targets):
+                return a
+
+    return None

@@ -41,6 +41,15 @@ AST_FIELDS_PREV[(Compare, 'comparators')]   = 3
 AST_FIELDS_PREV[(MatchMapping, 'keys')]     = 4
 AST_FIELDS_PREV[(MatchMapping, 'patterns')] = 5
 
+AST_DEFAULT_BODY_FIELD  = {cls: field for field, classes in [
+    ('elts',     (Tuple, List, Set)),
+    ('cases',    (Match,)),
+    ('value',    (Expr, Return, Await, Yield, YieldFrom, Constant, Starred, MatchValue, MatchSingleton)),
+    ('patterns', (MatchSequence, MatchOr)),
+    ('pattern',  (MatchAs,)),
+    ('values',   (JoinedStr,)),
+] for cls in classes}
+
 STATEMENTISH            = (stmt, ExceptHandler, match_case)  # always in lists, cannot be inside multilines
 STATEMENTISH_OR_STMTMOD = (stmt, ExceptHandler, match_case, Module, Interactive)
 
@@ -195,12 +204,9 @@ def _fixup_field_body(ast: AST, field: str | None = None) -> tuple[str, 'AST']:
         if not isinstance(body := getattr(ast, field, None), list):
             raise ValueError(f"invalid {ast.__class__.__name__} field '{field}'")
 
-    elif isinstance(ast, Match):
-        field = 'cases'
-        body  = ast.cases
-
-    elif (body := getattr(ast, field := 'body', None)) is None:
-        raise ValueError(f"{ast.__class__.__name__} has no 'body'")
+    elif (field := AST_DEFAULT_BODY_FIELD.get(ast.__class__, 'body')):
+        if (body := getattr(ast, field, None)) is None:
+            raise ValueError(f"{ast.__class__.__name__} has no '{field}'")
 
     return field, body
 
@@ -1124,7 +1130,7 @@ class FST:
                     raise RuntimeError('could not reproduce ast')
 
             if calc_loc == 'copy':
-                if not compare(astp, ast, type_comments=type_comments):
+                if not compare_asts(astp, ast, type_comments=type_comments):
                     raise RuntimeError('could not reparse ast identically')
 
                 ast = astp
@@ -1151,7 +1157,7 @@ class FST:
             else:
                 astp = astp.body[0]
 
-        if not compare(astp, ast, locs=True, type_comments=parse_params['type_comments'], raise_=raise_):
+        if not compare_asts(astp, ast, locs=True, type_comments=parse_params['type_comments'], raise_=raise_):
             return None
 
         return self
@@ -1779,7 +1785,7 @@ class FST:
                     lines[ln]     = bistr(f'{(l := lines[ln])[:col]}({l[col:]}')
 
                 else:
-                    if compare(a.body, ast, locs=True, type_comments=True, recurse=False):  # only top level compare needed for `ctx` and structure check
+                    if compare_asts(a.body, ast, locs=True, type_comments=True, recurse=False):  # only top level compare needed for `ctx` and structure check
                         return self
 
                     if not inplace:
@@ -1887,11 +1893,39 @@ class FST:
     def get(self, start: int | str | None = None, stop: int | str | None | Literal['False'] = False,
             field: str | None = None, *, fix: bool = True, cut: bool = False, decos: bool = True) -> Optional['FST']:
 
-        raise NotImplementedError
+        def check_str_index(idx):
+            if isinstance(idx, str):
+                if not (a := get_func_class_or_ass_by_name(ast, idx)):
+                    raise ValueError(f"'{idx}' not found in {ast.__class__.__name__}")
 
+                if (pfield := a.f.pfield).name != field:
+                    raise ValueError(f"'{idx}' is not in '{field}' in {ast.__class__.__name__}")
 
+                idx = pfield.idx
 
+            return idx
 
+        ast         = self.a
+        field, body = _fixup_field_body(ast, field)
+        start       = check_str_index(start)
+
+        if stop is not False:
+            return self.slice(start, check_str_index(stop), field, fix=fix, cut=cut)
+
+        if start is None:
+            if isinstance(body, list):
+                raise ValueError(f"cannot get singleton item from list '{field}' in {ast.__class__.__name__}")
+
+        else:
+            if not isinstance(body, list):
+                raise ValueError(f"cannot get indexed item from singleton field '{field}' in {ast.__class__.__name__}")
+
+            body = body[start if start >= 0 else start + len(body)]
+
+        if body is None:
+            return body
+
+        return body.f.cut(fix=fix, decos=decos) if cut else body.f.copy(fix=fix, decos=decos)
 
 
 
