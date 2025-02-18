@@ -10,7 +10,7 @@ __all__ = [
 ]
 
 
-FULL_REPR = False  # for debugging
+REPR_SRC_LINES = 0  # for debugging
 
 AST_FIELDS_NEXT: dict[tuple[type[AST], str], str | None] = dict(sum((  # next field name from AST class and current field name
     [] if not fields else
@@ -1065,16 +1065,17 @@ class FST:
         tail = self._repr_tail()
         head = f'<fst.{(a := self.a).__class__.__name__} 0x{id(a):x}{tail}>'
 
-        if not FULL_REPR:
+        if not REPR_SRC_LINES:
             return head
 
         try:
             ln, col, end_ln, end_col = self.bloc
 
-            if end_ln - ln + 1 <= 10:
+            if end_ln - ln + 1 <= REPR_SRC_LINES:
                 ls = self.root._lines[ln : end_ln + 1]
             else:
-                ls = self.root._lines[ln : ln + 5] + ['...'] + self.root._lines[end_ln - 4 : end_ln + 1]
+                ls = (self.root._lines[ln : ln + ((REPR_SRC_LINES + 1) // 2)] + ['...'] +
+                      self.root._lines[end_ln - ((REPR_SRC_LINES - 2) // 2) : end_ln + 1])
 
             ls[-1] = ls[-1][:end_col]
             ls[0]  = ' ' * col + ls[0][col:]

@@ -455,8 +455,12 @@ def get_func_class_or_ass_by_name(ast: AST, name: str) -> AST | None:
             if a.name == name:
                 return a
 
-        elif isinstance(a, (Assign, AnnAssign)):
+        elif isinstance(a, Assign):
             if any(isinstance(t, Name) and t.id == name for t in a.targets):
+                return a
+
+        elif isinstance(a, AnnAssign):
+            if isinstance(t := a.target, Name) and t.id == name:
                 return a
 
     return None
