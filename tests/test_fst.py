@@ -493,7 +493,7 @@ def f(a, /, b, *c, d, **e):
                          [f.arg for f in fst.body[0].walk(recurse='scope') if isinstance(f.a, arg)])
 
         fst = FST.fromsrc("""[z for a in b if (c := a)]""".strip())
-        self.assertEqual(['a', 'c', 'a', 'z'],
+        self.assertEqual(['z', 'a', 'c', 'a'],
                          [f.id for f in fst.body[0].value.walk(recurse='scope') if isinstance(f.a, Name)])
 
         fst = FST.fromsrc("""[z for a in b if (c := a)]""".strip())
@@ -501,7 +501,7 @@ def f(a, /, b, *c, d, **e):
                          [f.id for f in fst.body[0].walk(recurse='scope') if isinstance(f.a, Name)])
 
         fst = FST.fromsrc("""[z for a in b if b in [c := i for i in j if i in {d := k for k in l}]]""".strip())
-        self.assertEqual(['a', 'b', 'j', 'c', 'd', 'z'],
+        self.assertEqual(['z', 'a', 'b', 'c', 'j', 'd'],
                          [f.id for f in fst.body[0].value.walk(recurse='scope') if isinstance(f.a, Name)])
 
     def test_next_prev(self):

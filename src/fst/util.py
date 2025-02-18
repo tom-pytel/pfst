@@ -1,12 +1,16 @@
 import sys
 from array import array
 from ast import *
+from itertools import chain
 from typing import Any, Callable, Iterator, Literal
+
+from_iterable = chain.from_iterable
 
 __all__ = [
     'FIELDS', 'AST_FIELDS',
     'bistr', 'get_field', 'has_type_comments', 'is_parsable', 'get_parse_mode',
     'WalkFail', 'walk2', 'compare_asts', 'copy_attributes', 'copy_ast', 'set_ctx', 'get_func_class_or_ass_by_name',
+    'syntax_ordered_children',
 ]
 
 
@@ -145,9 +149,10 @@ FIELDS = dict([
     (TypeVarTuple,       (('name', 'identifier'), ('default_value', 'expr?'))),
 ])
 
-# only fields which can contain an AST
+# only fields which can contain an AST, {cls: ('field1', 'field2', ...), ...}
 AST_FIELDS = {cls: tuple(f for f, t in fields
-                         if not t.startswith('int') and not t.startswith('string') and not t.startswith('identifier'))
+                         if not t.startswith('int') and not t.startswith('string') and
+                         not t.startswith('identifier') and not t.startswith('constant'))
               for cls, fields in FIELDS.items()}
 
 
@@ -464,3 +469,28 @@ def get_func_class_or_ass_by_name(ast: AST, name: str) -> AST | None:
                 return a
 
     return None
+
+
+
+def _syntax_ordered_children_default(ast):
+    children = []
+
+    for field in AST_FIELDS[ast.__class__]:
+        if child := getattr(ast, field, None):
+            if isinstance(child, list):
+                children.extend(child)
+            else:
+                children.append(child)
+
+    return children
+
+_syntax_ordered_children = {
+    Dict:         lambda ast: list(from_iterable(zip(ast.keys, ast.values))),
+    Compare:      lambda ast: [ast.left] + list(from_iterable(zip(ast.ops, ast.comparators))),
+    MatchMapping: lambda ast: list(from_iterable(zip(ast.keys, ast.patterns))),
+}
+
+def syntax_ordered_children(ast: AST) -> list:
+    """Returned `list` may contain `None` values."""
+
+    return _syntax_ordered_children.get(ast.__class__, _syntax_ordered_children_default)(ast)
