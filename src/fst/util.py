@@ -18,7 +18,7 @@ if sys.version_info[:2] < (3, 12):  # for isinstance() checks
     class TypeAlias(AST): pass
 
 
-# Mostly in syntax order except a few SPECIAL CASES:
+# Mostly in syntax order except a few special cases:
 #   BoolOp        - multiple simultaneous locations possible for single `op`
 #   Dict          - interleaved `keys` and `values`
 #   Compare       - interleaved `ops` and `comparators`

@@ -537,7 +537,7 @@ class FST:
         - `inc`: Whether to offset endpoint if it falls exactly at ln / col or not (inclusive).
         """
 
-        for f in (gen := self.walk(True)):
+        for f in (gen := self.walk()):
             a = f.a
 
             if (end_col_offset := getattr(a, 'end_col_offset', None)) is not None:
@@ -1480,40 +1480,16 @@ class FST:
 
         return self.last_child(with_loc) if from_child is None else from_child.prev(with_loc)
 
-    def walk_children(self, with_loc: bool = True, *, recurse: bool = True) -> Generator['FST', bool, None]:
-        """Walk descendants in syntactic order, `send(False)` to skip recursion into node. Can send multiple times, last
-        value sent takes effect.
-
-        **Parameters:**
-        - `with_loc`: If `True` then only nodes with locations returned, otherwise all nodes.
-        - `recurse`: Whether to recurse into children by default, `send()` for a given node will always override this.
-
-        **Example:**
-        ```py
-        for node in (gen := target.walk_children()):
-            ...
-            if i_dont_like_the_node:
-                gen.send(False)  # skip walking this node's children
-        ```
-        """
-
-        child = None
-
-        while child := self.next_child(child, with_loc):
-            recurse_child = recurse
-
-            while (sent := (yield child)) is not None:
-                recurse_child = sent
-
-            if recurse_child:
-                yield from child.walk_children(with_loc)
-
-    def walk(self, with_loc: bool = True) -> Generator['FST', bool, None]:
-        """Walk self and descendants in syntactic order, `send(False)` to skip recursion into node. Can send multiple
+    def walk(self, with_loc: bool = True, *, walk_self: bool = True, recurse: bool | Literal['scope'] = True
+                 ) -> Generator['FST', bool, None]:
+        """Walk self and descendants in undefined order, `send(False)` to skip recursion into node. Can send multiple
         times, last value sent takes effect.
 
         **Parameters:**
         - `with_loc`: If `True` then only nodes with locations returned, otherwise all nodes.
+        - `walk_self`: If `True` then self will be returned first with the possibility of to skip children on `send()`.
+        - `recurse`: Whether to recurse into children by default, `send()` for a given node will always override this.
+            Will always attempt first level of children unless walking self and `False` is sent first.
 
         **Example:**
         ```py
@@ -1524,13 +1500,83 @@ class FST:
         ```
         """
 
-        recurse = True
+        if recurse == 'scope':  # TODO: this
+            raise NotImplementedError
+
+        recurse_ = True
 
         while (sent := (yield self)) is not None:
-            recurse = sent
+            recurse_ = sent
 
-        if recurse:
-            yield from self.walk_children(with_loc)
+        if not recurse_:
+            return
+
+        stack = []
+        ast   = self.a
+
+        for field in reversed(ast._fields):
+            stack.extend(a[::-1]) if isinstance(a := getattr(ast, field, None), list) else stack.append(a)
+
+        while stack:
+            if not isinstance(ast := stack.pop(), AST) or (with_loc and not (f := ast.f).loc):
+                continue
+
+            recurse_ = recurse
+
+            while (sent := (yield f)) is not None:
+                recurse_ = sent
+
+            if recurse_:
+                for field in reversed(ast._fields):
+                    stack.extend(a[::-1]) if isinstance(a := getattr(ast, field, None), list) else stack.append(a)
+
+    def walk_syn(self, with_loc: bool = True, *, walk_self: bool = True, recurse: bool | Literal['scope'] = True
+                 ) -> Generator['FST', bool, None]:
+        """Walk self and descendants in syntactic order, `send(False)` to skip recursion into node. Can send multiple
+        times, last value sent takes effect.
+
+        **Parameters:**
+        - `with_loc`: If `True` then only nodes with locations returned, otherwise all nodes.
+        - `walk_self`: If `True` then self will be returned first with the possibility of to skip children on `send()`.
+        - `recurse`: Whether to recurse into children by default, `send()` for a given node will always override this.
+            Will always attempt first level of children unless walking self and `False` is sent first.
+
+        **Example:**
+        ```py
+        for node in (gen := target.walk_syn()):
+            ...
+            if i_dont_like_the_node:
+                gen.send(False)  # skip walking this node's children, don't use return value here, keep using for loop as normal
+        ```
+        """
+
+        if recurse == 'scope':  # TODO: this
+            raise NotImplementedError
+
+        recurse_ = True
+
+        while (sent := (yield self)) is not None:
+            recurse_ = sent
+
+        if not recurse_:
+            return
+
+        stack = [(self, None)]
+
+        while stack:
+            node, child = stack.pop()
+
+            while child := node.next_child(child, with_loc):
+                recurse_ = recurse
+
+                while (sent := (yield child)) is not None:
+                    recurse_ = sent
+
+                if recurse_:
+                    stack.append((node, child))
+
+                    node  = child
+                    child = None
 
     def is_parsable(self) -> bool:
         """Really means the AST is `unparse()`able and then re`parse()`able which will get it to this top level AST node
@@ -1618,36 +1664,6 @@ class FST:
 
     # ------------------------------------------------------------------------------------------------------------------
 
-    def touch(self) -> 'FST':  # -> Self:
-        """AST node was modified, clear out any cached info for this node specifically, call this for each node in walk."""
-
-        try:
-            del self._loc, self._bloc  # _bloc only exists if _loc does
-        except AttributeError:
-            pass
-
-        return self
-
-    def touchup(self, touch_self: bool = False) -> 'FST':  # -> Self:
-        """Touch going up the tree so that all containers of modified nodes are up to date."""
-
-        if touch_self:
-            self.touch()
-
-        while self := self.parent:
-            self.touch()
-
-    def touchall(self, touch_up: bool = True) -> 'FST':  # -> Self:
-        """AST node and some/all children were modified, clear out any cached info for tree down from this node."""
-
-        for a in walk(self.a):
-            a.f.touch()
-
-        if touch_up:
-            self.touchup()
-
-        return self
-
     def copyl_lines(self, ln: int, col: int, end_ln: int, end_col: int) -> list[str]:
         if end_ln == ln:
             return [bistr(self.root._lines[ln][col : end_col])]
@@ -1700,6 +1716,62 @@ class FST:
 
     def cut_src(self) -> str:
         return '\n'.join(self.cutl_lines(*self.loc))
+
+    def putl_lines(self, lines: list[str] | None, ln: int, col: int, end_ln: int, end_col: int):
+        if lines is None:
+            self.dell_lines(ln, col, end_ln, end_col)
+
+        raise NotImplementedError
+
+    def put_lines(self, lines: list[str] | None):
+        if lines is None:
+            self.dell_lines(*self.loc)
+
+        return self.putl_lines(lines, *self.loc)
+
+    def putl_src(self, src: str | None, ln: int, col: int, end_ln: int, end_col: int):
+        if src is None:
+            self.dell_lines(ln, col, end_ln, end_col)
+
+        return self.putl_lines(src.split('\n'), ln, col, end_ln, end_col)
+
+    def put_src(self, src: str | None):
+        if src is None:
+            self.dell_lines(*self.loc)
+
+        return self.putl_lines(src.split('\n'), *self.loc)
+
+    # ------------------------------------------------------------------------------------------------------------------
+
+    def touch(self) -> 'FST':  # -> Self:
+        """AST node was modified, clear out any cached info for this node specifically, call this for each node in walk."""
+
+        try:
+            del self._loc, self._bloc  # _bloc only exists if _loc does
+        except AttributeError:
+            pass
+
+        return self
+
+    def touchup(self, touch_self: bool = False) -> 'FST':  # -> Self:
+        """Touch going up the tree so that all containers of modified nodes are up to date."""
+
+        if touch_self:
+            self.touch()
+
+        while self := self.parent:
+            self.touch()
+
+    def touchall(self, touch_up: bool = True) -> 'FST':  # -> Self:
+        """AST node and some/all children were modified, clear out any cached info for tree down from this node."""
+
+        for a in walk(self.a):
+            a.f.touch()
+
+        if touch_up:
+            self.touchup()
+
+        return self
 
     def fix(self, *, inplace: bool = False) -> Optional['FST']:  # -> Self | None
         """Fix source and `ctx` values for cut or copied nodes (to make subtrees parsable if the source is not after
@@ -1831,30 +1903,6 @@ class FST:
 
         return self
 
-    def putl_lines(self, lines: list[str] | None, ln: int, col: int, end_ln: int, end_col: int):
-        if lines is None:
-            self.dell_lines(ln, col, end_ln, end_col)
-
-        raise NotImplementedError
-
-    def put_lines(self, lines: list[str] | None):
-        if lines is None:
-            self.dell_lines(*self.loc)
-
-        raise NotImplementedError
-
-    def putl_src(self, src: str | None, ln: int, col: int, end_ln: int, end_col: int):
-        if src is None:
-            self.dell_lines(ln, col, end_ln, end_col)
-
-        raise NotImplementedError
-
-    def put_src(self, src: str | None):
-        if src is None:
-            self.dell_lines(*self.loc)
-
-        raise NotImplementedError
-
     def copy(self, *, fix: bool = True, decos: bool = True) -> 'FST':
         newast = copy_ast(self.a)
 
@@ -1871,8 +1919,20 @@ class FST:
 
         return fst.fix(inplace=True) if fix else fst
 
+
+
+
     def cut(self, *, fix: bool = True, decos: bool = True) -> 'FST':
+        if self.is_root:
+            raise ValueError('cannot cut root node')
+
+        if not (loc := self.bloc if decos else self.loc):
+            raise ValueError('cannot cut ast which does not have location')
+
         raise NotImplementedError
+
+
+
 
     def slice(self, start: int | None = None, stop: int | None = None, field: str | None = None, *,
               fix: bool = True, cut: bool = False) -> 'FST':
@@ -1889,6 +1949,9 @@ class FST:
             return self._slice_dict(start, stop, fix, cut)
 
         raise ValueError(f"cannot slice a '{self.a.__class__.__name__}'")
+
+
+
 
     def get(self, start: int | str | None = None, stop: int | str | None | Literal['False'] = False,
             field: str | None = None, *, fix: bool = True, cut: bool = False, decos: bool = True) -> Optional['FST']:
@@ -1926,6 +1989,17 @@ class FST:
             return body
 
         return body.f.cut(fix=fix, decos=decos) if cut else body.f.copy(fix=fix, decos=decos)
+
+
+
+
+    def put(self, thing: Union['FST', AST, list[str], str],
+            start: int | str | None = None, stop: int | str | None | Literal['False'] = False,
+            field: str | None = None) -> Optional['FST']:
+
+        raise NotImplementedError
+
+
 
 
 
