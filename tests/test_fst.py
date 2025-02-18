@@ -475,6 +475,32 @@ class TestFST(unittest.TestCase):
         self.assertRaises(WalkFail, ast.f.verify, raise_=True)
         self.assertEqual(None, ast.f.verify(raise_=False))
 
+    def test_walk_scope(self):
+        fst = FST.fromsrc("""
+def f(a, /, b, *c, d, **e):
+    f = 1
+    [i for i in g if i]
+    {k: v for k, v in h if k and v}
+    @deco1
+    def func(l=m): hidden
+    @deco2
+    class sup(cls, meta=moto): hidden
+    lambda n=o, **kw: hidden
+            """.strip())
+        self.assertEqual(['f', 'g', 'h', 'deco1', 'm', 'deco2', 'cls', 'moto', 'o'],
+                         [f.id for f in fst.body[0].walk(recurse='scope') if isinstance(f.a, Name)])
+        self.assertEqual(['a', 'b', 'c', 'd', 'e'],
+                         [f.arg for f in fst.body[0].walk(recurse='scope') if isinstance(f.a, arg)])
+
+        fst = FST.fromsrc("""[z for a in b if (c := a)]""".strip())
+        self.assertEqual(['a', 'c', 'a', 'z'],
+                         [f.id for f in fst.body[0].value.walk(recurse='scope') if isinstance(f.a, Name)])
+
+        fst = FST.fromsrc("""[z for a in b if (c := a)]""".strip())
+        self.assertEqual(['b'],
+                         [f.id for f in fst.body[0].walk(recurse='scope') if isinstance(f.a, Name)])
+
+
     def test_next_prev(self):
         fst = parse('a and b and c and d').body[0].value.f
         a = fst.a
