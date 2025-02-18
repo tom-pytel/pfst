@@ -2212,6 +2212,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     if args.regen:
+        print('Regenerating cut data...')
         regen_cut_data()
         sys.exit(0)
 

@@ -97,6 +97,17 @@ class srccode(NamedTuple):
     src: str
 
 
+class listfproxy:
+    def __init__(self, l):
+        self.l = l
+
+    def __getitem__(self, index) -> Any:
+        return a.f if isinstance(a := self.l[index], AST) else a
+
+    def __repr__(self) -> str:
+        return f'f{list(self)}'
+
+
 def parse(source, filename='<unknown>', mode='exec', *, type_comments=False, feature_version=None, **kwargs):
     """Executes `ast.parse()` and then adds `FST` nodes to the parsed tree. Drop-in replacement for `ast.parse()`. For
     parameters, see `ast.parse()`."""
@@ -391,6 +402,10 @@ class FST:
 
         return (loc := self.loc) and self.root._lines[loc[2]].c2b(loc[3])
 
+    @property
+    def f(self):
+        raise RuntimeError("you probably think you're accessing an AST node, but you're not, you're accessing an FST node")
+
     # ------------------------------------------------------------------------------------------------------------------
 
     def _make_fst_tree(self) -> 'FST':  # -> Self
@@ -427,7 +442,7 @@ class FST:
 
         tail = ' ROOT' if self.is_root else ''
 
-        return tail + f' {loc[0]},{loc[1]} -> {loc[2]},{loc[3]}' if loc else tail
+        return f'{tail} {loc[0]},{loc[1]} -> {loc[2]},{loc[3]}' if loc else tail
 
     def _dump(self, full: bool = False, indent: int = 2, cind: str = '', prefix: str = '', linefunc: Callable = print):
         tail = self._repr_tail()
@@ -1048,8 +1063,7 @@ class FST:
 
     def __repr__(self) -> str:
         tail = self._repr_tail()
-        rast = repr(self.a)
-        head = f'<fst{rast[4 : -1]}{tail}>' if rast.startswith('<') else f'fst.{rast[:-1]}{tail})'
+        head = f'<fst.{(a := self.a).__class__.__name__} 0x{id(a):x}{tail}>'
 
         if not FULL_REPR:
             return head
@@ -1071,6 +1085,9 @@ class FST:
             pass
 
         return head + '\n???'
+
+    def __getattr__(self, name) -> Any:
+        return listfproxy(child) if (child := getattr(self.a, name)) and isinstance(child, list) else child
 
     def __getitem__(self, index: int | str | slice) -> Optional['FST']:
         return self.get(index.start, index.stop, index.step) if isinstance(index, slice) else self.get(index)
@@ -1482,7 +1499,7 @@ class FST:
 
     def walk(self, with_loc: bool = True, *, walk_self: bool = True, recurse: bool | Literal['scope'] = True
                  ) -> Generator['FST', bool, None]:
-        """Walk self and descendants in undefined order, `send(False)` to skip recursion into node. Can send multiple
+        """Walk self and descendants in uspecified order, `send(False)` to skip recursion into node. Can send multiple
         times, last value sent takes effect.
 
         **Parameters:**
@@ -2015,3 +2032,6 @@ class FST:
     #   append()
     #   insert()
     #   replace()
+
+
+
