@@ -497,9 +497,12 @@ def f(a, /, b, *c, d, **e):
                          [f.id for f in fst.body[0].value.walk(recurse='scope') if isinstance(f.a, Name)])
 
         fst = FST.fromsrc("""[z for a in b if (c := a)]""".strip())
-        self.assertEqual(['b'],
+        self.assertEqual(['b', 'c'],
                          [f.id for f in fst.body[0].walk(recurse='scope') if isinstance(f.a, Name)])
 
+        fst = FST.fromsrc("""[z for a in b if b in [c := i for i in j if i in {d := k for k in l}]]""".strip())
+        self.assertEqual(['a', 'b', 'j', 'c', 'd', 'z'],
+                         [f.id for f in fst.body[0].value.walk(recurse='scope') if isinstance(f.a, Name)])
 
     def test_next_prev(self):
         fst = parse('a and b and c and d').body[0].value.f

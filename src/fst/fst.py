@@ -1607,9 +1607,18 @@ class FST:
                         stack.extend(ast.args.defaults[::-1])
 
                     elif isinstance(ast, (ListComp, SetComp, DictComp, GeneratorExp)):
-                        stack.append(ast.generators[0].iter)
+                        comp_iter = ast.generators[0].iter
 
-                    elif isinstance(ast, comprehension):
+                        for f in (gen := ast.f.walk(with_loc, walk_self=False, recurse='scope')):  # all NamedExpr assignments visible here, yeah, its ugly
+                            if a is comp_iter:
+                                gen.send(False)  # that one will be walked normally
+                            elif (isinstance(a := f.a, Name) and isinstance(f.parent.a, NamedExpr) and
+                                  f.pfield.name == 'target'):
+                                stack.append(a)
+
+                        stack.append(comp_iter)
+
+                    elif isinstance(ast, comprehension):  # this only comes from top comprehension, not ones encountered here
                         if a := ast.ifs:
                             stack.extend(a)
 
