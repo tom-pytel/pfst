@@ -28,6 +28,13 @@ AST_FIELDS_NEXT[(MatchMapping, 'keys')]     = 4
 AST_FIELDS_NEXT[(MatchMapping, 'patterns')] = 5
 AST_FIELDS_NEXT[(Call, 'args')]             = 6
 AST_FIELDS_NEXT[(Call, 'keywords')]         = 6
+AST_FIELDS_NEXT[(arguments, 'posonlyargs')] = 7
+AST_FIELDS_NEXT[(arguments, 'args')]        = 7
+AST_FIELDS_NEXT[(arguments, 'vararg')]      = 7
+AST_FIELDS_NEXT[(arguments, 'kwonlyargs')]  = 7
+AST_FIELDS_NEXT[(arguments, 'defaults')]    = 7
+AST_FIELDS_NEXT[(arguments, 'kw_defaults')] = 7
+# AST_FIELDS_NEXT[(arguments, 'kwarg')]       = 7
 
 AST_FIELDS_PREV: dict[tuple[type[AST], str], str | None] = dict(sum((  # previous field name from AST class and current field name
     [] if not fields else
@@ -1247,7 +1254,7 @@ class FST:
                             except IndexError:
                                 return None
 
-                        case 6:  # all the logic for Call.args and Call.keywords here
+                        case 6:  # all the logic for Call.args and Call.keywords
                             if not (keywords := aparent.keywords):  # no keywords
                                 try:
                                     a = aparent.args[(idx := idx + 1)]
@@ -1280,16 +1287,14 @@ class FST:
                                     try:
                                         a = args[(idx := idx + 1)]
 
-                                        if a is star:  # reached star, find its position in keywords
-                                            star_pos = (star.lineno, star.col_offset)
+                                        if (a is star and ((kw := keywords[0]).lineno, kw.col_offset) <
+                                            (star.lineno, star.col_offset)
+                                        ):  # reached star and there is a keyword before it
+                                            name = 'keywords'
+                                            idx  = 0
+                                            a    = kw
 
-                                            for i in range(len(keywords) - 1, -1, -1):
-                                                if ((kw := keywords[i]).lineno, kw.col_offset) < star_pos:
-                                                    name = 'keywords'
-                                                    idx  = i
-                                                    a    = kw
-
-                                                    break
+                                            break
 
                                     except IndexError:  # ran off the end of args, past star, find first kw after it (if any)
                                         star_pos = (star.lineno, star.col_offset)
@@ -1322,6 +1327,107 @@ class FST:
                                             name = 'args'
                                             idx  = len(args) - 1
                                             a    = star
+
+                        case 7:  # all the logic arguments
+                            while True:
+                                match name:
+                                    case 'posonlyargs':
+                                        posonlyargs = aparent.posonlyargs
+                                        defaults    = aparent.defaults
+
+                                        if (not defaults or (didx := (idx + ((ldefaults := len(defaults)) -
+                                            len(args := aparent.args) - len(posonlyargs)))) < 0 or didx >= ldefaults
+                                        ):
+                                            try:
+                                                a = posonlyargs[(idx := idx + 1)]
+
+                                            except IndexError:
+                                                name = 'args'
+                                                idx  = -1
+
+                                                continue
+
+                                        else:
+                                            name = 'defaults'
+                                            a    = defaults[idx := didx]
+
+                                    case 'args':
+                                        args     = aparent.args
+                                        defaults = aparent.defaults
+
+                                        if (not defaults or (didx := (idx + ((ldefaults := len(defaults)) -
+                                            len(args := aparent.args)))) < 0  # or didx >= ldefaults
+                                        ):
+                                            try:
+                                                a = args[(idx := idx + 1)]
+
+                                            except IndexError:
+                                                name = 'vararg'
+
+                                                if not (a := aparent.vararg):
+                                                    continue
+
+                                        else:
+                                            name = 'defaults'
+                                            a    = defaults[idx := didx]
+
+                                    case 'vararg':
+                                        if kwonlyargs := aparent.kwonlyargs:
+                                            name = 'kwonlyargs'
+                                            a    = kwonlyargs[(idx := 0)]
+
+                                        elif a := aparent.kwarg:
+                                            name = 'kwarg'
+                                        else:
+                                            return None
+
+                                    case 'kwonlyargs':
+                                        kwonlyargs = aparent.kwonlyargs
+
+                                        if a := aparent.kw_defaults[idx]:
+                                            name = 'kw_defaults'
+
+                                        else:
+                                            try:
+                                                a = kwonlyargs[(idx := idx + 1)]
+
+                                            except IndexError:
+                                                if a := aparent.kwarg:
+                                                    name = 'kwarg'
+                                                else:
+                                                    return None
+
+                                    case 'defaults':
+                                        if idx == (ldefaults := len(aparent.defaults)) - 1:  # end of defaults
+                                            name = 'vararg'
+
+                                            if not (a := aparent.vararg):
+                                                continue
+
+                                        elif (idx := idx + len(args := aparent.args) - ldefaults + 1) >= 0:
+                                            name = 'args'
+                                            a    = args[idx]
+
+                                        else:
+                                            name = 'posonlyargs'
+                                            a    = (posonlyargs := aparent.posonlyargs)[(idx := idx + len(posonlyargs))]
+
+                                    case 'kw_defaults':
+                                        try:
+                                            a = aparent.kwonlyargs[(idx := idx + 1)]
+
+                                        except IndexError:
+                                            if a := aparent.kwarg:
+                                                name = 'kwarg'
+                                            else:
+                                                return None
+
+                                        name = 'kwonlyargs'
+
+                                    case 'kwarg':
+                                        raise NotImplementedError  # TODO: THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS!
+
+                                break
 
                         case 4:  # from MatchMapping.keys
                             next = 5
@@ -1375,6 +1481,9 @@ class FST:
                     case 2:  # from Compare.left
                         name = 'comparators'  # will cause to get .ops[0]
                         idx  = -1
+
+                    case 6:  # from Call.func
+                        idx  = -1  # will cause to get .args[0]
 
                 break
 
@@ -1538,7 +1647,8 @@ class FST:
         return None
 
     def next_child(self, from_child: Optional['FST'], with_loc: bool = True) -> Optional['FST']:
-        """Get next child in syntactic order. Meant for simple iteration.
+        """Get next child in syntactic order. Meant for simple iteration. This is a slow way to iterate, `walk()` is
+        faster.
 
         **Parameters:**
         - `from_child`: Child node we are coming from which may or may not have location.

@@ -602,6 +602,10 @@ def f(a, /, b, *c, d, **e):
 
                 self.assertTrue(f.bln > bln or (f.bln == bln and f.bcol >= bcol))
 
+                l, c = [], None
+                while c := f.next_child(c, True): l.append(c)
+                self.assertTrue(l == list(f.walk(True, walk_self=False, recurse=False)))
+
                 bln, bcol = f.bln, f.bcol
 
     def test_next_prev(self):
@@ -787,6 +791,30 @@ def f(a, /, b, *c, d, **e):
         self.assertIs((f := fst.prev_child(f, False)), a.patterns[0].f)
         self.assertIs((f := fst.prev_child(f, False)), a.cls.f)
         self.assertIs((f := fst.prev_child(f, False)), None)
+
+    def test_next_prev_vs_walk(self):
+        def test1(src):
+            l, c, f = [], None, FST.fromsrc(src).body[0].args
+            while c := f.next_child(c): l.append(c)
+            self.assertEqual(l, list(f.walk(walk_self=False, recurse=False)))
+
+        test1('def f(a=1, b=2, *e): pass')
+        test1('def f(a, b, /, c, d, *e): pass')
+        test1('def f(a, b, /, c, d=1, *e): pass')
+        test1('def f(a, b, /, c=2, d=1, *e): pass')
+        test1('def f(a, b=3, /, c=2, d=1, *e): pass')
+        test1('def f(a=4, b=3, /, c=2, d=1, *e): pass')
+        test1('def f(a, b=1, /, c=2, d=3, *e, f=4, **g): pass')
+        test1('def __init__(self, max_size=0, *, ctx, pending_work_items, shutdown_lock, thread_wakeup): pass')
+
+        def test2(src):
+            l, c, f = [], None, FST.fromsrc(src).body[0].value
+            while c := f.next_child(c): l.append(c)
+            self.assertEqual(l, list(f.walk(walk_self=False, recurse=False)))
+
+        test2('call()')
+        test2('call(a, b=1, *c, d=2, **e)')
+        test2('system_message(message, level=level, type=type,*children, **kwargs)')
 
     def test_copy_lines(self):
         src = 'class cls:\n if True:\n  i = 1\n else:\n  j = 2'
