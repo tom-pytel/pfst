@@ -1,6 +1,6 @@
-import ast as ast_
 import re
 from ast import *
+from ast import parse as ast_parse, unparse as ast_unparse
 from typing import Any, Callable, Generator, Literal, NamedTuple, Optional, Union
 
 from .util import *
@@ -127,7 +127,7 @@ def unparse(ast_obj):
         except Exception:
             pass
 
-    return ast_.unparse(ast_obj)
+    return ast_unparse(ast_obj)
 
 
 def _next_code(lines: list[str], ln: int, col: int, end_ln: int, end_col: int, comment: bool = False
@@ -1112,7 +1112,7 @@ class FST:
             source = '\n'.join(lines)
 
         parse_params = dict(parse_params, type_comments=type_comments, feature_version=feature_version)
-        ast          = ast_.parse(source, filename, mode, **parse_params)
+        ast          = ast_parse(source, filename, mode, **parse_params)
 
         return FST(ast, lines=[bistr(s) for s in lines], parse_params=parse_params)
 
@@ -1135,7 +1135,7 @@ class FST:
         - `parse_params`: Other parameters to `ast.parse()`.
         """
 
-        src   = ast_.unparse(ast)
+        src   = ast_unparse(ast)
         lines = src.split('\n')
 
         if type_comments is None:
@@ -1145,7 +1145,7 @@ class FST:
 
         if calc_loc:
             mode = get_parse_mode(ast)
-            astp = ast_.parse(src, mode=mode, **parse_params)
+            astp = ast_parse(src, mode=mode, **parse_params)
 
             if astp.__class__ is not ast.__class__:
                 astp = astp.body if isinstance(astp, Expression) else astp.body[0]
@@ -1171,7 +1171,7 @@ class FST:
         root         = self.root
         ast          = root.a
         parse_params = root._parse_params
-        astp         = ast_.parse(root.src, mode=get_parse_mode(ast), **parse_params)
+        astp         = ast_parse(root.src, mode=get_parse_mode(ast), **parse_params)
 
         if not isinstance(ast, mod):
             if isinstance(astp, Expression):
@@ -1898,12 +1898,12 @@ class FST:
 
             if need_paren is None:
                 try:
-                    a = ast_.parse(src := self.src, mode='eval', **self._parse_params)
+                    a = ast_parse(src := self.src, mode='eval', **self._parse_params)
 
                 except SyntaxError:  # if expression not parsing then try parenthesize
                     tail = (',)' if is_tuple and len(ast.elts) == 1 and lines[end_ln][end_col - 1] != ',' else ')')  # TODO: WARNING! this won't work for expressions followed by comments
 
-                    a = ast_.parse(f'({src}{tail}', mode='eval', **self._parse_params)
+                    a = ast_parse(f'({src}{tail}', mode='eval', **self._parse_params)
 
                     if not inplace:
                         lines = lines[:]
