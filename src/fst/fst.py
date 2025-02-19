@@ -50,6 +50,13 @@ AST_FIELDS_PREV[(MatchMapping, 'keys')]     = 4
 AST_FIELDS_PREV[(MatchMapping, 'patterns')] = 5
 AST_FIELDS_PREV[(Call, 'args')]             = 6
 AST_FIELDS_PREV[(Call, 'keywords')]         = 6
+# AST_FIELDS_PREV[(arguments, 'posonlyargs')] = 7
+# AST_FIELDS_PREV[(arguments, 'args')]        = 7
+# AST_FIELDS_PREV[(arguments, 'vararg')]      = 7
+# AST_FIELDS_PREV[(arguments, 'kwonlyargs')]  = 7
+# AST_FIELDS_PREV[(arguments, 'defaults')]    = 7
+# AST_FIELDS_PREV[(arguments, 'kw_defaults')] = 7
+# AST_FIELDS_PREV[(arguments, 'kwarg')]       = 7
 
 AST_DEFAULT_BODY_FIELD  = {cls: field for field, classes in [
     ('elts',     (Tuple, List, Set)),
@@ -562,7 +569,7 @@ class FST:
         - `inc`: Whether to offset endpoint if it falls exactly at ln / col or not (inclusive).
         """
 
-        for f in (gen := self.walk()):
+        for f in (gen := self.walk(False)):
             a = f.a
 
             if (end_col_offset := getattr(a, 'end_col_offset', None)) is not None:
@@ -688,7 +695,7 @@ class FST:
         while (parent := self.parent) and not isinstance(self.a, STATEMENTISH):
             self = parent
 
-        for f in (gen := self.walk()):  # find multiline strings and exclude their unindentable lines
+        for f in (gen := self.walk(False)):  # find multiline strings and exclude their unindentable lines
             if isinstance(a := f.a, JoinedStr):  # f-string  TODO: deal with this promordial evil properly at some point, for now just mark all unindentable
                 if f.end_ln != f.ln:
                     lns -= set(range(a.lineno, a.end_lineno))
@@ -1426,7 +1433,7 @@ class FST:
                                         name = 'kwonlyargs'
 
                                     case 'kwarg':
-                                        raise NotImplementedError  # TODO: THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS!
+                                        raise RuntimeError('should never get here')
 
                                 break
 
@@ -1442,8 +1449,8 @@ class FST:
                             except IndexError:
                                 return None
 
-                    if (f := a.f).loc or not with_loc:
-                        return f
+                    if not with_loc or a.f.loc:
+                        return a.f
 
             elif idx is not None:
                 sibling = getattr(aparent, name)
@@ -1456,16 +1463,16 @@ class FST:
                     except IndexError:
                         break
 
-                    if (f := a.f).loc or not with_loc:
-                        return f
+                    if not with_loc or a.f.loc:
+                        return a.f
 
             while next is not None:
                 if isinstance(next, str):
                     name = next
 
                     if isinstance(sibling := getattr(aparent, next, None), AST):  # None because we know about fields from future python versions
-                        if (f := sibling.f).loc or not with_loc:
-                            return f
+                        if not with_loc or sibling.f.loc:
+                            return sibling.f
 
                     elif isinstance(sibling, list) and sibling:
                         idx = -1
@@ -1618,46 +1625,36 @@ class FST:
                                     else:
                                         a = keywords[(idx := idx - 1)]
 
-                                        if ((a.lineno, a.col_offset) < star_pos and ((sa := self.a).lineno, sa.col_offset) >
-                                            star_pos
+                                        if ((a.lineno, a.col_offset) < star_pos and
+                                            ((sa := self.a).lineno, sa.col_offset) > star_pos
                                         ):  # crossed star walking back, return star
                                             name = 'args'
                                             idx  = len(args) - 1
                                             a    = star
 
+                        case 7:
+                            while True:
+                                match name:
+                                    case 'posonlyargs':
+                                        raise NotImplementedError  # TODO: THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS!
 
+                                    case 'args':
+                                        raise NotImplementedError  # TODO: THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS!
 
+                                    case 'vararg':
+                                        raise NotImplementedError  # TODO: THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS!
 
+                                    case 'kwonlyargs':
+                                        raise NotImplementedError  # TODO: THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS!
 
+                                    case 'defaults':
+                                        raise NotImplementedError  # TODO: THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS!
 
+                                    case 'kw_defaults':
+                                        raise NotImplementedError  # TODO: THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS!
 
-                                # raise NotImplementedError  # TOOD: this! this! this! this! this! this! this! this! this! this! this! this! this! this! this!
-
-
-
-
-                            #     else:  # name == 'keywords'
-                            #         try:
-                            #             a = keywords[(idx := idx + 1)]
-
-                            #         except IndexError:  # ran off the end of keywords, now need to check if star lives here
-                            #             if ((sa := self.a).lineno, sa.col_offset) < (star.lineno, star.col_offset):
-                            #                 name = 'args'
-                            #                 idx  = len(args) - 1
-                            #                 a    = star
-
-                            #             else:
-                            #                 return None
-
-                            #         else:
-                            #             star_pos = (star.lineno, star.col_offset)
-
-                            #             if (((sa := self.a).lineno, sa.col_offset) < star_pos and
-                            #                 (a.lineno, a.col_offset) > star_pos
-                            #             ):  # crossed star, jump back to it
-                            #                 name = 'args'
-                            #                 idx  = len(args) - 1
-                            #                 a    = star
+                                    case 'kwarg':
+                                        raise NotImplementedError  # TODO: THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS!
 
 
 
@@ -1676,8 +1673,8 @@ class FST:
                             prev = 4
                             a    = aparent.keys[idx]
 
-                    if (f := a.f).loc or not with_loc:
-                        return f
+                    if not with_loc or a.f.loc:
+                        return a.f
 
             else:
                 sibling = getattr(aparent, name)
@@ -1686,16 +1683,16 @@ class FST:
                     if not (a := sibling[(idx := idx - 1)]):
                         continue
 
-                    if (f := a.f).loc or not with_loc:
-                        return f
+                    if not with_loc or a.f.loc:
+                        return a.f
 
             while prev is not None:
                 if isinstance(prev, str):
                     name = prev
 
                     if isinstance(sibling := getattr(aparent, prev, None), AST):  # None because could have fields from future python versions
-                        if (f := sibling.f).loc or not with_loc:
-                            return f
+                        if not with_loc or sibling.f.loc:
+                            return sibling.f
 
                     elif isinstance(sibling, list) and (idx := len(sibling)):
                         break
@@ -1729,12 +1726,13 @@ class FST:
         for name in AST_FIELDS[(a := self.a).__class__]:
             if (child := getattr(a, name, None)):
                 if isinstance(child, AST):
-                    if (f := child.f).loc or not with_loc:
-                        return f
+                    if not with_loc or child.f.loc:
+                        return child.f
 
                 elif isinstance(child, list):
-                    if (c := child[0]) and ((f := c.f).loc or not with_loc):
-                        return f
+                    # if (c := child[0]) and ((f := c.f).loc or not with_loc):
+                    if (c := child[0]) and (not with_loc or c.f.loc):
+                        return c.f
 
                     if (f := FST(Load(), self, astfield(name, 0)).next(with_loc)):  # Load() is a hack just to have a simple AST node
                         return f
@@ -1754,12 +1752,12 @@ class FST:
         for name in reversed(AST_FIELDS[(a := self.a).__class__]):
             if (child := getattr(a, name, None)):
                 if isinstance(child, AST):
-                    if (f := child.f).loc or not with_loc:
-                        return f
+                    if not with_loc or child.f.loc:
+                        return child.f
 
                 elif isinstance(child, list):
-                    if (c := child[-1]) and ((f := c.f).loc or not with_loc):
-                        return f
+                    if (c := child[-1]) and (not with_loc or c.f.loc):
+                        return c.f
 
                     if (f := FST(Load(), self, astfield(name, len(child) - 1)).prev(with_loc)):  # Load() is a hack just to have a simple AST node
                         return f
@@ -1793,7 +1791,7 @@ class FST:
 
         return self.last_child(with_loc) if from_child is None else from_child.prev(with_loc)
 
-    def walk(self, with_loc: bool = True, *, walk_self: bool = True, recurse: bool | Literal['scope'] = True
+    def walk(self, with_loc: bool = False, *, walk_self: bool = True, recurse: bool | Literal['scope'] = True
              ) -> Generator['FST', bool, None]:
         """Walk self and descendants in syntactic order, `send(False)` to skip recursion into node. Can send multiple
         times, last value sent takes effect.
@@ -1865,7 +1863,12 @@ class FST:
             stack = syntax_ordered_children(ast)[::-1]
 
         while stack:
-            if not (ast := stack.pop()) or (not (f := ast.f).loc and with_loc):
+            if not (ast := stack.pop()):
+                continue
+
+            f = ast.f
+
+            if with_loc and not f.loc:
                 continue
 
             recurse_ = recurse
@@ -1927,7 +1930,7 @@ class FST:
         """Really means the AST is `unparse()`able and then re`parse()`able which will get it to this top level AST node
         surrounded by the appropriate `ast.mod`. The source may change a bit though, parentheses, 'if' <-> 'elif'."""
 
-        if not self.loc or not is_parsable(self.a):
+        if not is_parsable(self.a) or not self.loc:
             return False
 
         ast    = self.a

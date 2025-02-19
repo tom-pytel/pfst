@@ -128,7 +128,6 @@ FIELDS = dict([
 
     (ExceptHandler,      (('type', 'expr?'), ('name', 'identifier?'), ('body', 'stmt*'))),
 
-    # (arguments,          (('posonlyargs', 'arg*'), ('args', 'arg*'), ('vararg', 'arg?'), ('kwonlyargs', 'arg*'), ('defaults', 'expr*'), ('kw_defaults', 'expr*'), ('kwarg', 'arg?'))),
     (arguments,          (('posonlyargs', 'arg*'), ('args', 'arg*'), ('defaults', 'expr*'), ('vararg', 'arg?'), ('kwonlyargs', 'arg*'), ('kw_defaults', 'expr*'), ('kwarg', 'arg?'))),
     (arg,                (('arg', 'identifier'), ('annotation', 'expr?'), ('type_comment', 'string?'))),
     (keyword,            (('arg', 'identifier?'), ('value', 'expr'))),

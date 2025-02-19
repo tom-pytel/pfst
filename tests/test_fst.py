@@ -479,7 +479,7 @@ class TestFST(unittest.TestCase):
         a = parse("""
 def f(a, b=1, *c, d=2, **e): pass
             """.strip()).body[0].args
-        l = list(a.f.walk())
+        l = list(a.f.walk(True))
         self.assertIs(l[0], a.f)
         self.assertIs(l[1], a.args[0].f)
         self.assertIs(l[2], a.args[1].f)
@@ -492,7 +492,7 @@ def f(a, b=1, *c, d=2, **e): pass
         a = parse("""
 def f(*, a, b, c=1, d=2, **e): pass
             """.strip()).body[0].args
-        l = list(a.f.walk())
+        l = list(a.f.walk(True))
         self.assertIs(l[0], a.f)
         self.assertIs(l[1], a.kwonlyargs[0].f)
         self.assertIs(l[2], a.kwonlyargs[1].f)
@@ -507,7 +507,7 @@ def f(*, a, b, c=1, d=2, **e): pass
         a = parse("""
 def f(a, b=1, /, c=2, d=3, *e, f=4, **g): pass
             """.strip()).body[0].args
-        l = list(a.f.walk())
+        l = list(a.f.walk(True))
         self.assertIs(l[0], a.f)
         self.assertIs(l[1], a.posonlyargs[0].f)
         self.assertIs(l[2], a.posonlyargs[1].f)
@@ -524,7 +524,7 @@ def f(a, b=1, /, c=2, d=3, *e, f=4, **g): pass
         a = parse("""
 def f(a=1, /, b=2): pass
             """.strip()).body[0].args
-        l = list(a.f.walk())
+        l = list(a.f.walk(True))
         self.assertIs(l[0], a.f)
         self.assertIs(l[1], a.posonlyargs[0].f)
         self.assertIs(l[2], a.defaults[0].f)
@@ -534,7 +534,7 @@ def f(a=1, /, b=2): pass
         a = parse("""
 call(a, b=1, *c, d=2, **e)
             """.strip()).body[0].value
-        l = list(a.f.walk())
+        l = list(a.f.walk(True))
         self.assertIs(l[0], a.f)
         self.assertIs(l[1], a.func.f)
         self.assertIs(l[2], a.args[0].f)
@@ -551,7 +551,7 @@ call(a, b=1, *c, d=2, **e)
 i = 1
 self.save_reduce(obj=obj, *rv)
             """.strip()).body[1].value
-        l = list(a.f.walk())
+        l = list(a.f.walk(True))
         self.assertIs(l[0], a.f)
         self.assertIs(l[1], a.func.f)
         self.assertIs(l[2], a.func.value.f)
@@ -594,7 +594,7 @@ def f(a, /, b, *c, d, **e):
             ast       = FST.fromsrc(read(fnm)).a
             bln, bcol = 0, 0
 
-            for f in (gen := ast.f.walk()):
+            for f in (gen := ast.f.walk(True)):
                 if isinstance(f.a, JoinedStr):  # these are borked
                     gen.send(False)
 
@@ -796,7 +796,7 @@ def f(a, /, b, *c, d, **e):
         def test1(src):
             l, c, f = [], None, FST.fromsrc(src).body[0].args
             while c := f.next_child(c): l.append(c)
-            self.assertEqual(l, list(f.walk(walk_self=False, recurse=False)))
+            self.assertEqual(l, list(f.walk(True, walk_self=False, recurse=False)))
 
         test1('def f(a=1, b=2, *e): pass')
         test1('def f(a, b, /, c, d, *e): pass')
@@ -810,7 +810,7 @@ def f(a, /, b, *c, d, **e):
         def test2(src):
             l, c, f = [], None, FST.fromsrc(src).body[0].value
             while c := f.next_child(c): l.append(c)
-            self.assertEqual(l, list(f.walk(walk_self=False, recurse=False)))
+            self.assertEqual(l, list(f.walk(True, walk_self=False, recurse=False)))
 
         test2('call()')
         test2('call(a, b=1, *c, d=2, **e)')
