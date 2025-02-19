@@ -147,6 +147,12 @@ def unparse(ast_obj):
     return ast_unparse(ast_obj)
 
 
+def _with_loc(a: AST) -> bool:
+    return not (isinstance(a, (expr_context, boolop, operator, unaryop, cmpop)) or
+                (isinstance(a, arguments) and not a.posonlyargs and not a.args and not a.vararg and not a.kwonlyargs
+                 and not a.kwarg))
+
+
 def _next_code(lines: list[str], ln: int, col: int, end_ln: int, end_col: int, comment: bool = False
                ) -> srccode | None:
     """Get next non-space non-continuation maybe non-comment position. Assuming start pos not inside str or comment.
@@ -1449,7 +1455,7 @@ class FST:
                             except IndexError:
                                 return None
 
-                    if not with_loc or a.f.loc:
+                    if not with_loc or _with_loc(a):  # a.f.loc:
                         return a.f
 
             elif idx is not None:
@@ -1463,7 +1469,7 @@ class FST:
                     except IndexError:
                         break
 
-                    if not with_loc or a.f.loc:
+                    if not with_loc or _with_loc(a):  # a.f.loc:
                         return a.f
 
             while next is not None:
@@ -1471,7 +1477,7 @@ class FST:
                     name = next
 
                     if isinstance(sibling := getattr(aparent, next, None), AST):  # None because we know about fields from future python versions
-                        if not with_loc or sibling.f.loc:
+                        if not with_loc or _with_loc(sibling):  # sibling.f.loc:
                             return sibling.f
 
                     elif isinstance(sibling, list) and sibling:
@@ -1682,7 +1688,7 @@ class FST:
                             prev = 4
                             a    = aparent.keys[idx]
 
-                    if not with_loc or a.f.loc:
+                    if not with_loc or _with_loc(a):  # a.f.loc:
                         return a.f
 
             else:
@@ -1692,7 +1698,7 @@ class FST:
                     if not (a := sibling[(idx := idx - 1)]):
                         continue
 
-                    if not with_loc or a.f.loc:
+                    if not with_loc or _with_loc(a):  # a.f.loc:
                         return a.f
 
             while prev is not None:
@@ -1700,7 +1706,7 @@ class FST:
                     name = prev
 
                     if isinstance(sibling := getattr(aparent, prev, None), AST):  # None because could have fields from future python versions
-                        if not with_loc or sibling.f.loc:
+                        if not with_loc or _with_loc(sibling):  # sibling.f.loc:
                             return sibling.f
 
                     elif isinstance(sibling, list) and (idx := len(sibling)):
@@ -1735,12 +1741,12 @@ class FST:
         for name in AST_FIELDS[(a := self.a).__class__]:
             if (child := getattr(a, name, None)):
                 if isinstance(child, AST):
-                    if not with_loc or child.f.loc:
+                    if not with_loc or _with_loc(child):  # child.f.loc:
                         return child.f
 
                 elif isinstance(child, list):
                     # if (c := child[0]) and ((f := c.f).loc or not with_loc):
-                    if (c := child[0]) and (not with_loc or c.f.loc):
+                    if (c := child[0]) and (not with_loc or _with_loc(c)):  # c.f.loc):
                         return c.f
 
                     if (f := FST(Load(), self, astfield(name, 0)).next(with_loc)):  # Load() is a hack just to have a simple AST node
@@ -1765,11 +1771,11 @@ class FST:
         for name in reversed(AST_FIELDS[(a := self.a).__class__]):
             if (child := getattr(a, name, None)):
                 if isinstance(child, AST):
-                    if not with_loc or child.f.loc:
+                    if not with_loc or _with_loc(child):  # child.f.loc:
                         return child.f
 
                 elif isinstance(child, list):
-                    if (c := child[-1]) and (not with_loc or c.f.loc):
+                    if (c := child[-1]) and (not with_loc or _with_loc(c)):  # c.f.loc):
                         return c.f
 
                     # if (f := FST(Load(), self, astfield(name, len(child) - 1)).prev(with_loc)):  # Load() is a hack just to have a simple AST node
@@ -1882,7 +1888,7 @@ class FST:
 
             f = ast.f
 
-            if with_loc and not f.loc:
+            if with_loc and not _with_loc(f.a):  # not f.loc:
                 continue
 
             recurse_ = recurse
