@@ -1525,13 +1525,14 @@ class FST:
         ```
         """
 
-        recurse_ = True
+        if walk_self:
+            recurse_ = True
 
-        while (sent := (yield self)) is not None:
-            recurse_ = sent
+            while (sent := (yield self)) is not None:
+                recurse_ = sent
 
-        if not recurse_:
-            return
+            if not recurse_:
+                return
 
         stack = None
         ast   = self.a
