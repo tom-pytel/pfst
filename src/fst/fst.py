@@ -34,7 +34,6 @@ AST_FIELDS_NEXT[(arguments, 'vararg')]      = 7
 AST_FIELDS_NEXT[(arguments, 'kwonlyargs')]  = 7
 AST_FIELDS_NEXT[(arguments, 'defaults')]    = 7
 AST_FIELDS_NEXT[(arguments, 'kw_defaults')] = 7
-# AST_FIELDS_NEXT[(arguments, 'kwarg')]       = 7
 
 AST_FIELDS_PREV: dict[tuple[type[AST], str], str | None] = dict(sum((  # previous field name from AST class and current field name
     [] if not fields else
@@ -49,6 +48,8 @@ AST_FIELDS_PREV[(Compare, 'ops')]           = 2
 AST_FIELDS_PREV[(Compare, 'comparators')]   = 3
 AST_FIELDS_PREV[(MatchMapping, 'keys')]     = 4
 AST_FIELDS_PREV[(MatchMapping, 'patterns')] = 5
+AST_FIELDS_PREV[(Call, 'args')]             = 6
+AST_FIELDS_PREV[(Call, 'keywords')]         = 6
 
 AST_DEFAULT_BODY_FIELD  = {cls: field for field, classes in [
     ('elts',     (Tuple, List, Set)),
@@ -1543,6 +1544,125 @@ class FST:
                         case 3:  # from Compare.comparators
                             prev = 2
                             a    = aparent.ops[idx]
+
+                        case 6:
+                            if not (keywords := aparent.keywords):  # no keywords
+                                if idx:
+                                    a = aparent.args[(idx := idx - 1)]
+
+                                else:
+                                    name = 'func'
+                                    a    = aparent.func
+
+                            elif not (args := aparent.args):  # no args
+                                if idx:
+                                    a = keywords[(idx := idx - 1)]
+
+                                else:
+                                    name = 'func'
+                                    a    = aparent.func
+
+                            elif not isinstance(star := args[-1], Starred):  # both args and keywords but no Starred
+                                if name == 'args':
+                                    if idx:
+                                        a = aparent.args[(idx := idx - 1)]
+
+                                    else:
+                                        name = 'func'
+                                        a    = aparent.func
+
+                                else:
+                                    if idx:
+                                        a = keywords[(idx := idx - 1)]
+
+                                    else:
+                                        name = 'args'
+                                        a    = args[(idx := len(args) - 1)]
+
+                            else:  # args, keywords AND Starred
+                                if name == 'args':
+                                    if not idx:
+                                        name = 'func'
+                                        a    = aparent.func
+
+                                    elif idx < len(args) - 1:
+                                        a = args[(idx := idx - 1)]
+
+                                    else:  # is star
+                                        star_pos = (star.lineno, star.col_offset)
+
+                                        for i in range(len(keywords) - 1, -1, -1):
+                                            if ((kw := keywords[i]).lineno, kw.col_offset) < star_pos:
+                                                name = 'keywords'
+                                                idx  = i
+                                                a    = kw
+
+                                                break
+
+                                        else:
+                                            a = args[(idx := idx - 1)]
+
+                                else:  # name == 'keywords'
+                                    star_pos = (star.lineno, star.col_offset)
+
+                                    if not idx:
+                                        name = 'args'
+
+                                        if ((kw := keywords[0]).lineno, kw.col_offset) < star_pos:  # some keywords below star so we pass to args before star
+                                            a = args[(idx := len(args) - 2)]
+
+                                        else:  # all keywords above star so now we return star
+                                            idx = len(args) - 1
+                                            a   = star
+
+                                    else:
+                                        a = keywords[(idx := idx - 1)]
+
+                                        if ((a.lineno, a.col_offset) < star_pos and ((sa := self.a).lineno, sa.col_offset) >
+                                            star_pos
+                                        ):  # crossed star walking back, return star
+                                            name = 'args'
+                                            idx  = len(args) - 1
+                                            a    = star
+
+
+
+
+
+
+
+                                # raise NotImplementedError  # TOOD: this! this! this! this! this! this! this! this! this! this! this! this! this! this! this!
+
+
+
+
+                            #     else:  # name == 'keywords'
+                            #         try:
+                            #             a = keywords[(idx := idx + 1)]
+
+                            #         except IndexError:  # ran off the end of keywords, now need to check if star lives here
+                            #             if ((sa := self.a).lineno, sa.col_offset) < (star.lineno, star.col_offset):
+                            #                 name = 'args'
+                            #                 idx  = len(args) - 1
+                            #                 a    = star
+
+                            #             else:
+                            #                 return None
+
+                            #         else:
+                            #             star_pos = (star.lineno, star.col_offset)
+
+                            #             if (((sa := self.a).lineno, sa.col_offset) < star_pos and
+                            #                 (a.lineno, a.col_offset) > star_pos
+                            #             ):  # crossed star, jump back to it
+                            #                 name = 'args'
+                            #                 idx  = len(args) - 1
+                            #                 a    = star
+
+
+
+
+
 
                         case 4:  # from Keys.keys
                             if not idx:

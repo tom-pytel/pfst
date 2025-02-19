@@ -128,7 +128,8 @@ FIELDS = dict([
 
     (ExceptHandler,      (('type', 'expr?'), ('name', 'identifier?'), ('body', 'stmt*'))),
 
-    (arguments,          (('posonlyargs', 'arg*'), ('args', 'arg*'), ('vararg', 'arg?'), ('kwonlyargs', 'arg*'), ('defaults', 'expr*'), ('kw_defaults', 'expr*'), ('kwarg', 'arg?'))),
+    # (arguments,          (('posonlyargs', 'arg*'), ('args', 'arg*'), ('vararg', 'arg?'), ('kwonlyargs', 'arg*'), ('defaults', 'expr*'), ('kw_defaults', 'expr*'), ('kwarg', 'arg?'))),
+    (arguments,          (('posonlyargs', 'arg*'), ('args', 'arg*'), ('defaults', 'expr*'), ('vararg', 'arg?'), ('kwonlyargs', 'arg*'), ('kw_defaults', 'expr*'), ('kwarg', 'arg?'))),
     (arg,                (('arg', 'identifier'), ('annotation', 'expr?'), ('type_comment', 'string?'))),
     (keyword,            (('arg', 'identifier?'), ('value', 'expr'))),
     (alias,              (('name', 'identifier'), ('asname', 'identifier?'))),
@@ -475,18 +476,6 @@ def get_func_class_or_ass_by_name(ast: AST, name: str) -> AST | None:
 
 
 
-def _syntax_ordered_children_default(ast):
-    children = []
-
-    for field in AST_FIELDS[ast.__class__]:
-        if child := getattr(ast, field, None):
-            if isinstance(child, list):
-                children.extend(child)
-            else:
-                children.append(child)
-
-    return children
-
 def _syntax_ordered_children_Call(ast):
     children = [ast.func]
     args     = ast.args
@@ -548,7 +537,80 @@ def _syntax_ordered_children_arguments(ast):
 
     return children
 
+def _syntax_ordered_children_default(ast):
+    children = []
+
+    for field in AST_FIELDS[ast.__class__]:
+        if child := getattr(ast, field, None):
+            if isinstance(child, list):
+                children.extend(child)
+            else:
+                children.append(child)
+
+    return children
+
+_syntax_ordered_children_nothing      = lambda ast: []
+_syntax_ordered_children_value        = lambda ast: [ast.value]
+_syntax_ordered_children_elts         = lambda ast: ast.elts[:]
+_syntax_ordered_children_elts_and_ctx = lambda ast: [*ast.elts, ast.ctx]
+_syntax_ordered_children_ctx          = lambda ast: [ast.ctx]
+
 _syntax_ordered_children = {
+    # quick optimized get
+
+    Return:       _syntax_ordered_children_value,
+    Expr:         _syntax_ordered_children_value,
+    Await:        _syntax_ordered_children_value,
+    Yield:        _syntax_ordered_children_value,
+    YieldFrom:    _syntax_ordered_children_value,
+
+    Set:          _syntax_ordered_children_elts,
+    List:         _syntax_ordered_children_elts_and_ctx,
+    Tuple:        _syntax_ordered_children_elts_and_ctx,
+
+    Name:         _syntax_ordered_children_ctx,
+
+    Pass:         _syntax_ordered_children_nothing,
+    Break:        _syntax_ordered_children_nothing,
+    Continue:     _syntax_ordered_children_nothing,
+
+    Constant:     _syntax_ordered_children_nothing,
+
+    Load:         _syntax_ordered_children_nothing,
+    Store:        _syntax_ordered_children_nothing,
+    Del:          _syntax_ordered_children_nothing,
+    And:          _syntax_ordered_children_nothing,
+    Or:           _syntax_ordered_children_nothing,
+    Add:          _syntax_ordered_children_nothing,
+    Sub:          _syntax_ordered_children_nothing,
+    Mult:         _syntax_ordered_children_nothing,
+    MatMult:      _syntax_ordered_children_nothing,
+    Div:          _syntax_ordered_children_nothing,
+    Mod:          _syntax_ordered_children_nothing,
+    Pow:          _syntax_ordered_children_nothing,
+    LShift:       _syntax_ordered_children_nothing,
+    RShift:       _syntax_ordered_children_nothing,
+    BitOr:        _syntax_ordered_children_nothing,
+    BitXor:       _syntax_ordered_children_nothing,
+    BitAnd:       _syntax_ordered_children_nothing,
+    FloorDiv:     _syntax_ordered_children_nothing,
+    Invert:       _syntax_ordered_children_nothing,
+    Not:          _syntax_ordered_children_nothing,
+    UAdd:         _syntax_ordered_children_nothing,
+    USub:         _syntax_ordered_children_nothing,
+    Eq:           _syntax_ordered_children_nothing,
+    NotEq:        _syntax_ordered_children_nothing,
+    Lt:           _syntax_ordered_children_nothing,
+    LtE:          _syntax_ordered_children_nothing,
+    Gt:           _syntax_ordered_children_nothing,
+    GtE:          _syntax_ordered_children_nothing,
+    Is:           _syntax_ordered_children_nothing,
+    IsNot:        _syntax_ordered_children_nothing,
+    In:           _syntax_ordered_children_nothing,
+    NotIn:        _syntax_ordered_children_nothing,
+
+    # special cases
+
     Dict:         lambda ast: list(from_iterable(zip(ast.keys, ast.values))),
     Compare:      lambda ast: [ast.left] + (list(from_iterable(zip(ops, ast.comparators)))
                                             if len(ops := ast.ops) > 1 else [ops[0], ast.comparators[0]]),
