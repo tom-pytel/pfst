@@ -798,6 +798,13 @@ def f(a, /, b, *c, d, **e):
             while c := f.next_child(c): l.append(c)
             self.assertEqual(l, list(f.walk(True, walk_self=False, recurse=False)))
 
+        test1('def f(a, /): pass')
+        test1('def f(a, /, b): pass')
+        test1('def f(a, /, b, c=1): pass')
+        test1('def f(a, /, b, c=1, *d): pass')
+        test1('def f(a, /, b, c=1, *d, e): pass')
+        test1('def f(a, /, b, c=1, *d, e, f=2): pass')
+        test1('def f(a, /, b, c=1, *d, e, f=2, **g): pass')
         test1('def f(a=1, b=2, *e): pass')
         test1('def f(a, b, /, c, d, *e): pass')
         test1('def f(a, b, /, c, d=1, *e): pass')
@@ -812,7 +819,14 @@ def f(a, /, b, *c, d, **e):
             while c := f.next_child(c): l.append(c)
             self.assertEqual(l, list(f.walk(True, walk_self=False, recurse=False)))
 
+        test2('call(a=1, *b)')
         test2('call()')
+        test2('call(a, b)')
+        test2('call(c=1, d=1)')
+        test2('call(a, b, c=1, d=1)')
+        test2('call(a, b, *c, d)')
+        test2('call(a, b, *c, d=2)')
+        test2('call(a, b=1, *c, d=2)')
         test2('call(a, b=1, *c, d=2, **e)')
         test2('system_message(message, level=level, type=type,*children, **kwargs)')
 

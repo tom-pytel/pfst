@@ -1588,14 +1588,7 @@ class FST:
 
                             else:  # args, keywords AND Starred
                                 if name == 'args':
-                                    if not idx:
-                                        name = 'func'
-                                        a    = aparent.func
-
-                                    elif idx < len(args) - 1:
-                                        a = args[(idx := idx - 1)]
-
-                                    else:  # is star
+                                    if idx == len(args) - 1:  # is star
                                         star_pos = (star.lineno, star.col_offset)
 
                                         for i in range(len(keywords) - 1, -1, -1):
@@ -1607,7 +1600,19 @@ class FST:
                                                 break
 
                                         else:
-                                            a = args[(idx := idx - 1)]
+                                            if idx:
+                                                a = args[(idx := idx - 1)]
+
+                                            else:
+                                                name = 'func'
+                                                a    = aparent.func
+
+                                    elif idx:
+                                        a = args[(idx := idx - 1)]
+
+                                    else:
+                                        name = 'func'
+                                        a    = aparent.func
 
                                 else:  # name == 'keywords'
                                     star_pos = (star.lineno, star.col_offset)
@@ -1615,12 +1620,16 @@ class FST:
                                     if not idx:
                                         name = 'args'
 
-                                        if ((kw := keywords[0]).lineno, kw.col_offset) < star_pos:  # some keywords below star so we pass to args before star
-                                            a = args[(idx := len(args) - 2)]
+                                        if ((sa := self.a).lineno, sa.col_offset) > star_pos:  # all keywords above star so pass on to star
+                                            idx  = len(args) - 1
+                                            a    = star
 
-                                        else:  # all keywords above star so now we return star
-                                            idx = len(args) - 1
-                                            a   = star
+                                        elif (largs := len(args)) < 2:  # no args left, we done here
+                                            name = 'func'
+                                            a    = aparent.func
+
+                                        else:  # some args left, go to those
+                                            a = args[(idx := largs - 2)]
 
                                     else:
                                         a = keywords[(idx := idx - 1)]
@@ -1749,6 +1758,10 @@ class FST:
         - `None` if no valid children, otherwise last valid child.
         """
 
+        if (isinstance(a := self.a, Call)) and a.args and (keywords := a.keywords) and isinstance(a.args[-1], Starred):  # super-special case Call with args and keywords and a Starred, it could be anywhere in there, defer to prev() logic
+            return (FST(Load(lineno=0x7fffffffffffffff, col_offset=0), self, astfield('keywords', len(keywords)))
+                .prev(with_loc))  # Load() is a hack just to have a simple AST node
+
         for name in reversed(AST_FIELDS[(a := self.a).__class__]):
             if (child := getattr(a, name, None)):
                 if isinstance(child, AST):
@@ -1759,8 +1772,9 @@ class FST:
                     if (c := child[-1]) and (not with_loc or c.f.loc):
                         return c.f
 
-                    if (f := FST(Load(), self, astfield(name, len(child) - 1)).prev(with_loc)):  # Load() is a hack just to have a simple AST node
-                        return f
+                    # if (f := FST(Load(), self, astfield(name, len(child) - 1)).prev(with_loc)):  # Load() is a hack just to have a simple AST node
+                    #     return f
+                    return FST(Load(), self, astfield(name, len(child) - 1)).prev(with_loc)  # Load() is a hack just to have a simple AST node
 
         return None
 
