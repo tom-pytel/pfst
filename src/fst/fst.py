@@ -27,7 +27,7 @@ AST_FIELDS_NEXT[(Compare, 'left')]          = 'comparators'  # black magic juju
 AST_FIELDS_NEXT[(MatchMapping, 'keys')]     = 4
 AST_FIELDS_NEXT[(MatchMapping, 'patterns')] = 5
 # AST_FIELDS_NEXT[(Call, 'args')]             = 6
-# AST_FIELDS_NEXT[(Call, 'keywords')]         = 7
+# AST_FIELDS_NEXT[(Call, 'keywords')]         = 6
 
 AST_FIELDS_PREV: dict[tuple[type[AST], str], str | None] = dict(sum((  # previous field name from AST class and current field name
     [] if not fields else
@@ -1224,68 +1224,94 @@ class FST:
                     match next:
                         case 0:  # from Dict.keys
                             next = 1
-
-                            if not (a := getattr(aparent, 'values')[idx]):
-                                continue
+                            a    = aparent.values[idx]
 
                         case 1:  # from Dict.values
                             next = 0
 
                             try:
-                                if not (a := getattr(aparent, 'keys')[(idx := idx + 1)]):
+                                if not (a := aparent.keys[(idx := idx + 1)]):
                                     continue
                             except IndexError:
                                 return None
 
                         case 2:  # from Compare.ops
                             next = 3
-
-                            if not (a := getattr(aparent, 'comparators')[idx]):
-                                continue
+                            a    = aparent.comparators[idx]
 
                         case 3:  # from Compare.comparators or Compare.left (via comparators)
                             next = 2
 
                             try:
-                                if not (a := getattr(aparent, 'ops')[(idx := idx + 1)]):
-                                    continue
+                                a = aparent.ops[(idx := idx + 1)]
                             except IndexError:
                                 return None
 
+                        case 6:  # all the logic for Call.args and Call.keywords here, idx is used for combination of both
+                            if not (keywords := aparent.keywords):  # no keywords
+                                try:
+                                    a = aparent.args[(idx := idx + 1)]
+                                except IndexError:
+                                    return None
+
+                            elif not (args := aparent.args):  # no args
+                                try:
+                                    a = keywords[(idx := idx + 1)]
+                                except IndexError:
+                                    return None
+
+                            elif not isinstance(star := args[-1], Starred):  # both args and keywords but no Starred
+                                if name == 'args':
+                                    try:
+                                        a = args[(idx := idx + 1)]
+
+                                    except IndexError:
+                                        name = 'keywords'
+                                        a    = keywords[(idx := 0)]
+
+                                else:
+                                    try:
+                                        a = keywords[(idx := idx + 1)]
+                                    except IndexError:
+                                        return None
+
+                            else:  # args, keywords AND Starred
+                                if name == 'args':
+                                    try:
+                                        a = args[(idx := idx + 1)]
+
+                                        if a is star:
+                                            raise NotImplementedError
+
+                                    except IndexError:  # ran off the end of args, past star, find first kw after it (if any)
+                                        star_pos = (star.lineno, star.col_offset)
+
+                                        for a in keywords:
+                                            if (a.lineno, a.col_offset) > star_pos:
+                                                break
+                                        else:
+                                            return None
+
+                                else:  # name == 'keywords'
+                                    raise NotImplementedError
+
+
+
+
+
+
+
                         case 4:  # from MatchMapping.keys
                             next = 5
-
-                            if not (a := getattr(aparent, 'patterns')[idx]):
-                                continue
+                            a    = aparent.patterns[idx]
 
                         case 5:  # from MatchMapping.patterns
                             next = 4
 
                             try:
-                                if not (a := getattr(aparent, 'keys')[(idx := idx + 1)]):
-                                    continue
+                                a = aparent.keys[(idx := idx + 1)]
                             except IndexError:
                                 return None
-
-
-
-
-                        case 6:  # its complicated
-                            try:
-                                if isinstance(a := getattr(aparent, 'keys')[(idx := idx + 1)], Starred):
-                                    if aparent.keywords:
-                                        pass
-
-                            except IndexError:
-                                next = 7
-
-                                continue
-
-                        case 7:  # Starred arg may be between keywords here
-                            raise NotImplementedError
-
-
-
 
                     if (f := a.f).loc or not with_loc:
                         return f
@@ -1365,14 +1391,12 @@ class FST:
 
                             else:
                                 prev = 1
-
-                                if not (a := getattr(aparent, 'values')[(idx := idx - 1)]):
-                                    continue
+                                a    = aparent.values[(idx := idx - 1)]
 
                         case 1:  # from Dict.values
                             prev = 0
 
-                            if not (a := getattr(aparent, 'keys')[idx]):
+                            if not (a := aparent.keys[idx]):
                                 continue
 
                         case 2:  # from Compare.ops
@@ -1383,15 +1407,11 @@ class FST:
 
                             else:
                                 prev = 3
-
-                                if not (a := getattr(aparent, 'comparators')[(idx := idx - 1)]):
-                                    continue
+                                a    = aparent.comparators[(idx := idx - 1)]
 
                         case 3:  # from Compare.comparators
                             prev = 2
-
-                            if not (a := getattr(aparent, 'ops')[idx]):
-                                continue
+                            a    = aparent.ops[idx]
 
                         case 4:  # from Keys.keys
                             if not idx:
@@ -1399,15 +1419,11 @@ class FST:
 
                             else:
                                 prev = 5
-
-                                if not (a := getattr(aparent, 'patterns')[(idx := idx - 1)]):
-                                    continue
+                                a    = aparent.patterns[(idx := idx - 1)]
 
                         case 5:  # from Keys.patterns
                             prev = 4
-
-                            if not (a := getattr(aparent, 'keys')[idx]):
-                                continue
+                            a    = aparent.keys[idx]
 
                     if (f := a.f).loc or not with_loc:
                         return f
@@ -1440,7 +1456,6 @@ class FST:
                 # non-str prev, special case
 
                 raise RuntimeError('should not get here')  # when entrable special cases from ahead appear in future py versions add them here
-
                 break
 
             else:
