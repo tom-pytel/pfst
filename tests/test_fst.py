@@ -475,6 +475,78 @@ class TestFST(unittest.TestCase):
         self.assertRaises(WalkFail, ast.f.verify, raise_=True)
         self.assertEqual(None, ast.f.verify(raise_=False))
 
+    def test_walk(self):
+        a = parse("""
+def f(a, b=1, *c, d=2, **e): pass
+            """.strip()).body[0].args
+        l = list(a.f.walk())
+        self.assertIs(l[0], a.f)
+        self.assertIs(l[1], a.args[0].f)
+        self.assertIs(l[2], a.args[1].f)
+        self.assertIs(l[3], a.defaults[0].f)
+        self.assertIs(l[4], a.vararg.f)
+        self.assertIs(l[5], a.kwonlyargs[0].f)
+        self.assertIs(l[6], a.kw_defaults[0].f)
+        self.assertIs(l[7], a.kwarg.f)
+
+        a = parse("""
+def f(*, a, b, c=1, d=2, **e): pass
+            """.strip()).body[0].args
+        l = list(a.f.walk())
+        self.assertIs(l[0], a.f)
+        self.assertIs(l[1], a.kwonlyargs[0].f)
+        self.assertIs(l[2], a.kwonlyargs[1].f)
+        self.assertIs(l[3], a.kwonlyargs[2].f)
+        self.assertIs(None, a.kw_defaults[0])
+        self.assertIs(None, a.kw_defaults[1])
+        self.assertIs(l[4], a.kw_defaults[2].f)
+        self.assertIs(l[5], a.kwonlyargs[3].f)
+        self.assertIs(l[6], a.kw_defaults[3].f)
+        self.assertIs(l[7], a.kwarg.f)
+
+        a = parse("""
+def f(a, b=1, /, c=2, d=3, *e, f=4, **g): pass
+            """.strip()).body[0].args
+        l = list(a.f.walk())
+        self.assertIs(l[0], a.f)
+        self.assertIs(l[1], a.posonlyargs[0].f)
+        self.assertIs(l[2], a.posonlyargs[1].f)
+        self.assertIs(l[3], a.defaults[0].f)
+        self.assertIs(l[4], a.args[0].f)
+        self.assertIs(l[5], a.defaults[1].f)
+        self.assertIs(l[6], a.args[1].f)
+        self.assertIs(l[7], a.defaults[2].f)
+        self.assertIs(l[8], a.vararg.f)
+        self.assertIs(l[9], a.kwonlyargs[0].f)
+        self.assertIs(l[10], a.kw_defaults[0].f)
+        self.assertIs(l[11], a.kwarg.f)
+
+        a = parse("""
+def f(a=1, /, b=2): pass
+            """.strip()).body[0].args
+        l = list(a.f.walk())
+        self.assertIs(l[0], a.f)
+        self.assertIs(l[1], a.posonlyargs[0].f)
+        self.assertIs(l[2], a.defaults[0].f)
+        self.assertIs(l[3], a.args[0].f)
+        self.assertIs(l[4], a.defaults[1].f)
+
+        a = parse("""
+call(a, b=1, *c, d=2, **e)
+            """.strip()).body[0].value
+        l = list(a.f.walk())
+        self.assertIs(l[0], a.f)
+        self.assertIs(l[1], a.func.f)
+        self.assertIs(l[2], a.args[0].f)
+        self.assertIs(l[3], a.keywords[0].f)
+        self.assertIs(l[4], a.keywords[0].value.f)
+        self.assertIs(l[5], a.args[1].f)
+        self.assertIs(l[6], a.args[1].value.f)
+        self.assertIs(l[7], a.keywords[1].f)
+        self.assertIs(l[8], a.keywords[1].value.f)
+        self.assertIs(l[9], a.keywords[2].f)
+        self.assertIs(l[10], a.keywords[2].value.f)
+
     def test_walk_scope(self):
         fst = FST.fromsrc("""
 def f(a, /, b, *c, d, **e):
@@ -503,6 +575,21 @@ def f(a, /, b, *c, d, **e):
         fst = FST.fromsrc("""[z for a in b if b in [c := i for i in j if i in {d := k for k in l}]]""".strip())
         self.assertEqual(['z', 'a', 'b', 'c', 'j', 'd'],
                          [f.id for f in fst.body[0].value.walk(recurse='scope') if isinstance(f.a, Name)])
+
+    def test_walk_bulk(self):
+        for fnm in PYFNMS:
+            ast       = FST.fromsrc(read(fnm)).a
+            bln, bcol = 0, 0
+
+            for f in (gen := ast.f.walk()):
+                if isinstance(f.a, JoinedStr):  # these are borked
+                    gen.send(False)
+
+                    continue
+
+                self.assertTrue(f.bln > bln or (f.bln == bln and f.bcol >= bcol))
+
+                bln, bcol = f.bln, f.bcol
 
     def test_next_prev(self):
         fst = parse('a and b and c and d').body[0].value.f
@@ -1115,15 +1202,6 @@ _CookiePattern = re.compile(r"""
             fc.fix(inplace=True)
             self.assertEqual('(*tuple[int, ...],)', fc.src)
 
-    def test_copy_bulk(self):
-        for fnm in PYFNMS:
-            ast = FST.fromsrc(read(fnm)).a
-
-            for a in walk(ast):
-                if a.f.is_parsable():
-                    f = a.f.copy(fix=True)
-                    f.verify(raise_=True)
-
     def test_copy(self):
         f = FST.fromsrc('@decorator\nclass cls:\n  pass')
         self.assertEqual(f.a.body[0].f.copy(fix=False).src, '@decorator\nclass cls:\n  pass')
@@ -1221,6 +1299,15 @@ i = 1
         if sys.version_info[:2] >= (3, 12):
             f = FST.fromsrc('tuple[*tuple[int, ...]]').a.body[0].value.slice.f.copy(fix=True)
             self.assertEqual('(*tuple[int, ...],)', f.src)
+
+    def test_copy_bulk(self):
+        for fnm in PYFNMS:
+            ast = FST.fromsrc(read(fnm)).a
+
+            for a in walk(ast):
+                if a.f.is_parsable():
+                    f = a.f.copy(fix=True)
+                    f.verify(raise_=True)
 
     def test_slice_stmt(self):
         self.assertEqual('\n'.join(parse("""

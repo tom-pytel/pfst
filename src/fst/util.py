@@ -27,6 +27,8 @@ if sys.version_info[:2] < (3, 12):  # for isinstance() checks
 #   Dict          - interleaved `keys` and `values`
 #   Compare       - interleaved `ops` and `comparators`
 #   MatchMapping  - interleaved `keys` and `patterns`
+#   arguments     - interleaved `posonlyargs`/`args` and `defaults` (partially), interleaved `kwonlyargs` and `kw_defaults`
+#   Call          - `args` type `Starred` can be inside `keywords`
 FIELDS = dict([
     (Module,             (('body', 'stmt*'), ('type_ignores', 'type_ignore*'))),
     (Interactive,        (('body', 'stmt*'),)),
@@ -152,7 +154,8 @@ FIELDS = dict([
 # only fields which can contain an AST, {cls: ('field1', 'field2', ...), ...}
 AST_FIELDS = {cls: tuple(f for f, t in fields
                          if not t.startswith('int') and not t.startswith('string') and
-                         not t.startswith('identifier') and not t.startswith('constant'))
+                         not t.startswith('identifier') and not t.startswith('constant') and
+                         not t.startswith('type_ignore'))
               for cls, fields in FIELDS.items()}
 
 
@@ -484,9 +487,70 @@ def _syntax_ordered_children_default(ast):
 
     return children
 
+def _syntax_ordered_children_Call(ast):
+    children = [ast.func]
+    args     = ast.args
+    keywords = ast.keywords
+
+    if not args or not keywords or not isinstance(args[-1], Starred):
+        children.extend(args)
+        children.extend(keywords)
+
+    else:
+        star            = args[-1]
+        star_lineno     = star.lineno
+        star_col_offset = star.col_offset
+
+        children.extend(args[:-1])
+
+        for i, kw in enumerate(keywords):
+            if (lineno := kw.lineno) < star_lineno or ((lineno == star_lineno) and kw.col_offset < star_col_offset):
+                children.append(kw)
+
+            else:
+                children.append(star)
+                children.extend(keywords[i:])
+
+                break
+
+    return children
+
+def _syntax_ordered_children_arguments(ast):
+    children = []
+
+    if not (defaults := ast.defaults):
+        children.extend(ast.posonlyargs)
+        children.extend(ast.args)
+
+    elif (ldefaults := len(defaults)) <= (largs := len(args := ast.args)):
+        children.extend(ast.posonlyargs)
+        children.extend(args[:-ldefaults])
+        children.extend(from_iterable(zip(args[-ldefaults:], defaults)))
+
+    else:
+        children.extend((posonlyargs := ast.posonlyargs)[:-(lposonly_defaults := ldefaults - largs)])
+        children.extend(from_iterable(zip(posonlyargs[-lposonly_defaults:], defaults[:lposonly_defaults])))
+        children.extend(from_iterable(zip(args, defaults[lposonly_defaults:])))
+
+    if (vararg := ast.vararg):
+        children.append(vararg)
+
+    if not (kw_defaults := ast.kw_defaults):
+        children.extend(ast.kwonlyargs)
+    else:
+        children.extend(from_iterable(zip(ast.kwonlyargs, kw_defaults)))
+
+    if (kwarg := ast.kwarg):
+        children.append(kwarg)
+
+    return children
+
 _syntax_ordered_children = {
     Dict:         lambda ast: list(from_iterable(zip(ast.keys, ast.values))),
-    Compare:      lambda ast: [ast.left] + list(from_iterable(zip(ast.ops, ast.comparators))),
+    Compare:      lambda ast: [ast.left] + (list(from_iterable(zip(ops, ast.comparators)))
+                                            if len(ops := ast.ops) > 1 else [ops[0], ast.comparators[0]]),
+    Call:         _syntax_ordered_children_Call,
+    arguments:    _syntax_ordered_children_arguments,
     MatchMapping: lambda ast: list(from_iterable(zip(ast.keys, ast.patterns))),
 }
 
