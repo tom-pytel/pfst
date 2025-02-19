@@ -513,6 +513,9 @@ def _syntax_ordered_children_Call(ast):
 
                 break
 
+        else:
+            children.append(star)
+
     return children
 
 def _syntax_ordered_children_arguments(ast):

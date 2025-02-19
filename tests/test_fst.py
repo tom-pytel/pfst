@@ -547,6 +547,19 @@ call(a, b=1, *c, d=2, **e)
         self.assertIs(l[9], a.keywords[2].f)
         self.assertIs(l[10], a.keywords[2].value.f)
 
+        a = parse("""
+i = 1
+self.save_reduce(obj=obj, *rv)
+            """.strip()).body[1].value
+        l = list(a.f.walk())
+        self.assertIs(l[0], a.f)
+        self.assertIs(l[1], a.func.f)
+        self.assertIs(l[2], a.func.value.f)
+        self.assertIs(l[3], a.keywords[0].f)
+        self.assertIs(l[4], a.keywords[0].value.f)
+        self.assertIs(l[5], a.args[0].f)
+        self.assertIs(l[6], a.args[0].value.f)
+
     def test_walk_scope(self):
         fst = FST.fromsrc("""
 def f(a, /, b, *c, d, **e):
@@ -560,21 +573,21 @@ def f(a, /, b, *c, d, **e):
     lambda n=o, **kw: hidden
             """.strip())
         self.assertEqual(['f', 'g', 'h', 'deco1', 'm', 'deco2', 'cls', 'moto', 'o'],
-                         [f.id for f in fst.body[0].walk(recurse='scope') if isinstance(f.a, Name)])
+                         [f.a.id for f in fst.a.body[0].f.walk(recurse='scope') if isinstance(f.a, Name)])
         self.assertEqual(['a', 'b', 'c', 'd', 'e'],
-                         [f.arg for f in fst.body[0].walk(recurse='scope') if isinstance(f.a, arg)])
+                         [f.a.arg for f in fst.a.body[0].f.walk(recurse='scope') if isinstance(f.a, arg)])
 
         fst = FST.fromsrc("""[z for a in b if (c := a)]""".strip())
         self.assertEqual(['z', 'a', 'c', 'a'],
-                         [f.id for f in fst.body[0].value.walk(recurse='scope') if isinstance(f.a, Name)])
+                         [f.a.id for f in fst.a.body[0].value.f.walk(recurse='scope') if isinstance(f.a, Name)])
 
         fst = FST.fromsrc("""[z for a in b if (c := a)]""".strip())
         self.assertEqual(['b', 'c'],
-                         [f.id for f in fst.body[0].walk(recurse='scope') if isinstance(f.a, Name)])
+                         [f.a.id for f in fst.a.body[0].f.walk(recurse='scope') if isinstance(f.a, Name)])
 
         fst = FST.fromsrc("""[z for a in b if b in [c := i for i in j if i in {d := k for k in l}]]""".strip())
         self.assertEqual(['z', 'a', 'b', 'c', 'j', 'd'],
-                         [f.id for f in fst.body[0].value.walk(recurse='scope') if isinstance(f.a, Name)])
+                         [f.a.id for f in fst.a.body[0].value.f.walk(recurse='scope') if isinstance(f.a, Name)])
 
     def test_walk_bulk(self):
         for fnm in PYFNMS:

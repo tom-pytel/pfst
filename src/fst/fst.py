@@ -26,6 +26,8 @@ AST_FIELDS_NEXT[(Compare, 'comparators')]   = 3
 AST_FIELDS_NEXT[(Compare, 'left')]          = 'comparators'  # black magic juju
 AST_FIELDS_NEXT[(MatchMapping, 'keys')]     = 4
 AST_FIELDS_NEXT[(MatchMapping, 'patterns')] = 5
+# AST_FIELDS_NEXT[(Call, 'args')]             = 6
+# AST_FIELDS_NEXT[(Call, 'keywords')]         = 7
 
 AST_FIELDS_PREV: dict[tuple[type[AST], str], str | None] = dict(sum((  # previous field name from AST class and current field name
     [] if not fields else
@@ -1241,7 +1243,7 @@ class FST:
                             if not (a := getattr(aparent, 'comparators')[idx]):
                                 continue
 
-                        case 3:  # from Compare.comparators
+                        case 3:  # from Compare.comparators or Compare.left (via comparators)
                             next = 2
 
                             try:
@@ -1264,6 +1266,26 @@ class FST:
                                     continue
                             except IndexError:
                                 return None
+
+
+
+
+                        case 6:  # its complicated
+                            try:
+                                if isinstance(a := getattr(aparent, 'keys')[(idx := idx + 1)], Starred):
+                                    if aparent.keywords:
+                                        pass
+
+                            except IndexError:
+                                next = 7
+
+                                continue
+
+                        case 7:  # Starred arg may be between keywords here
+                            raise NotImplementedError
+
+
+
 
                     if (f := a.f).loc or not with_loc:
                         return f
