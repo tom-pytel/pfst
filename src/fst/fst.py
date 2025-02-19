@@ -26,8 +26,8 @@ AST_FIELDS_NEXT[(Compare, 'comparators')]   = 3
 AST_FIELDS_NEXT[(Compare, 'left')]          = 'comparators'  # black magic juju
 AST_FIELDS_NEXT[(MatchMapping, 'keys')]     = 4
 AST_FIELDS_NEXT[(MatchMapping, 'patterns')] = 5
-# AST_FIELDS_NEXT[(Call, 'args')]             = 6
-# AST_FIELDS_NEXT[(Call, 'keywords')]         = 6
+AST_FIELDS_NEXT[(Call, 'args')]             = 6
+AST_FIELDS_NEXT[(Call, 'keywords')]         = 6
 
 AST_FIELDS_PREV: dict[tuple[type[AST], str], str | None] = dict(sum((  # previous field name from AST class and current field name
     [] if not fields else
@@ -1247,7 +1247,7 @@ class FST:
                             except IndexError:
                                 return None
 
-                        case 6:  # all the logic for Call.args and Call.keywords here, idx is used for combination of both
+                        case 6:  # all the logic for Call.args and Call.keywords here
                             if not (keywords := aparent.keywords):  # no keywords
                                 try:
                                     a = aparent.args[(idx := idx + 1)]
@@ -1280,8 +1280,16 @@ class FST:
                                     try:
                                         a = args[(idx := idx + 1)]
 
-                                        if a is star:
-                                            raise NotImplementedError
+                                        if a is star:  # reached star, find its position in keywords
+                                            star_pos = (star.lineno, star.col_offset)
+
+                                            for i in range(len(keywords) - 1, -1, -1):
+                                                if ((kw := keywords[i]).lineno, kw.col_offset) < star_pos:
+                                                    name = 'keywords'
+                                                    idx  = i
+                                                    a    = kw
+
+                                                    break
 
                                     except IndexError:  # ran off the end of args, past star, find first kw after it (if any)
                                         star_pos = (star.lineno, star.col_offset)
@@ -1293,13 +1301,27 @@ class FST:
                                             return None
 
                                 else:  # name == 'keywords'
-                                    raise NotImplementedError
+                                    try:
+                                        a = keywords[(idx := idx + 1)]
 
+                                    except IndexError:  # ran off the end of keywords, now need to check if star lives here
+                                        if ((sa := self.a).lineno, sa.col_offset) < (star.lineno, star.col_offset):
+                                            name = 'args'
+                                            idx  = len(args) - 1
+                                            a    = star
 
+                                        else:
+                                            return None
 
+                                    else:
+                                        star_pos = (star.lineno, star.col_offset)
 
-
-
+                                        if (((sa := self.a).lineno, sa.col_offset) < star_pos and
+                                            (a.lineno, a.col_offset) > star_pos
+                                        ):  # crossed star, jump back to it
+                                            name = 'args'
+                                            idx  = len(args) - 1
+                                            a    = star
 
                         case 4:  # from MatchMapping.keys
                             next = 5
