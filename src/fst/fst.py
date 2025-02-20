@@ -420,7 +420,7 @@ class FST:
 
     bcol     = col
     bend_ln  = end_ln
-    bend_col = end_col
+    bend_col = end_col  # maybe will eventually include trailing comments
 
     @property
     def lineno(self) -> int:  # 1 based
@@ -725,7 +725,7 @@ class FST:
                 col = 0
 
             else:
-                raise RuntimeError('this should not happen')
+                raise RuntimeError('should not get here')
 
             lns -= set(range(cur_ln + 1, ln + 1))  # specifically leave out first line of multiline string because that is indentable
 
@@ -755,6 +755,34 @@ class FST:
 
                 cur_ln, cur_col, _ = _next_code(lines, cur_ln, cur_col, end_ln, end_col)  # there must be a next one
 
+        def multiline_fstr(f: 'FST'):
+            """Lets try to find indentable lines by incrementally attempting to parse parts of multiline f-string."""
+
+            nonlocal lns, lines
+
+            cur_ln, cur_col, end_ln, _ = f.loc
+
+            while True:
+                ls = [lines[cur_ln][cur_col:].lstrip()]
+
+                for ln in range(cur_ln + 1, end_ln + 1):
+                    try:
+                        ast_parse('\n'.join(ls))
+
+                    except SyntaxError:
+                        lns.remove(ln)
+                        ls.append(lines[ln])
+
+                    else:
+                        break
+
+                if (cur_ln := ln) >= end_ln:
+                    assert cur_ln == end_ln
+
+                    break
+
+                cur_col = 0
+
         lines = self.root.lines
         lns   = set(range(self.bln + skip, self.bend_ln + 1))
 
@@ -762,23 +790,22 @@ class FST:
             self = parent
 
         for f in (gen := self.walk(False)):  # find multiline strings and exclude their unindentable lines
-            if isinstance(a := f.a, JoinedStr):  # f-string  TODO: deal with this promordial evil properly at some point, for now just mark all unindentable
-                if f.end_ln != f.ln:
-                    lns -= set(range(a.lineno, a.end_lineno))
+            if f.bend_ln == f.bln:  # everything on one line, don't need to recurse
+                gen.send(False)
 
-                gen.send(False)  # skip everything inside regardless, because it is evil
-
-            elif isinstance(a, Constant):
-                if (f.end_ln != f.ln and (  # and isinstance(f.a.value, (str, bytes)) is a given if end_ln != ln
+            elif isinstance(a := f.a, Constant):
+                if (  # isinstance(f.a.value, (str, bytes)) is a given if bend_ln != bln
                     not docstring or
-                    not ((parent := f.parent) and  # not (is docstring)
+                    not ((parent := f.parent) and  # not (is_docstring)
                          isinstance(parent.a, Expr) and (pparent := parent.parent) and parent.pfield == ('body', 0) and
                          isinstance(pparent.a, (FunctionDef, AsyncFunctionDef, ClassDef, Module))
-                ))):
+                )):
                     multiline_str(f)
 
-            elif f.bend_ln == f.bln:
-                gen.send(False)  # everything on one line, don't need to recurse
+            elif isinstance(a, JoinedStr):
+                multiline_fstr(f)
+
+                gen.send(False)  # skip everything inside regardless, because it is evil
 
         return lns
 
@@ -1496,7 +1523,7 @@ class FST:
                                         name = 'kwonlyargs'
 
                                     case 'kwarg':
-                                        raise RuntimeError('should never get here')
+                                        raise RuntimeError('should not get here')
 
                                 break
 
@@ -2532,12 +2559,6 @@ class FST:
             field: str | None = None) -> Optional['FST']:
 
         raise NotImplementedError
-
-
-
-
-
-
 
 
 

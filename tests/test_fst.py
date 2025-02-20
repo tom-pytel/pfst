@@ -1257,6 +1257,65 @@ _CookiePattern = re.compile(r"""
         # self.assertEqual({2}, lns)
         # self.assertEqual('@decorator\nclass cls:\npass', ast.f.src)
 
+    def test_dedent_multiline_strings(self):
+        f = parse('''
+class cls:
+    def func():
+        i = """This is a
+        normal
+        multiline string"""
+
+        j = ("This is a "
+        "split "
+        "multiline string")
+
+        k = f"""This is a
+        normal
+        multiline f-string"""
+
+        l = (f"This is a "
+        "split "
+        f"multiline f-string")
+            '''.strip()).body[0].body[0].f
+        self.assertEqual('''
+def func():
+    i = """This is a
+        normal
+        multiline string"""
+
+    j = ("This is a "
+    "split "
+    "multiline string")
+
+    k = f"""This is a
+        normal
+        multiline f-string"""
+
+    l = (f"This is a "
+    "split "
+    f"multiline f-string")
+            '''.strip(), f.copy().src)
+
+        f = parse('''
+class cls:
+    def func():
+        l = (f"This is a "
+        f"split " """
+        super
+        special
+        """
+        f"multiline f-string")
+            '''.strip()).body[0].body[0].f
+        self.assertEqual('''
+def func():
+    l = (f"This is a "
+    f"split " """
+        super
+        special
+        """
+    f"multiline f-string")
+            '''.strip(), f.copy().src)
+
     def test_fix(self):
         f = FST.fromsrc('if 1:\n a\nelif 2:\n b')
         fc = f.a.body[0].orelse[0].f.copy(fix=False)
