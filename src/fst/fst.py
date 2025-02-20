@@ -588,6 +588,44 @@ class FST:
         - `dcol_offset`: Column offset to apply to everything ON the offset point line `ln` (in bytes). Columns not on
             this line will not be changed.
         - `inc`: Whether to offset endpoint if it falls exactly at ln / col or not (inclusive).
+
+        **Behavior:**
+        ```
+              offset here:
+              V
+          |===|
+              |---|
+              |        <- special zero length span
+        0123456789ABC
+
+        +2, inc=False
+              V
+          |===|
+                |---|
+                |
+        0123456789ABC
+
+        +2, inc=True
+              V
+          |=====|
+                |---|
+              |.|
+        0123456789ABC
+
+        -2, inc=False
+              V
+          |===|
+            |---|
+            |
+        0123456789ABC
+
+        -2, inc=True
+              V
+          |=|
+            |---|
+            |
+        0123456789ABC
+        ```
         """
 
         for f in (gen := self.walk(False)):
@@ -612,9 +650,15 @@ class FST:
                 if fln > ln:
                     a.lineno += dln
 
+                # elif fln == ln and (
+                #         fcol >= col if (not (inc or (fend_col == fcol and fend_ln == fln)) or
+                #                         dln < 0 or (not dln and dcol_offset < 0)) else
+                #         fcol > col):
+
                 elif fln == ln and (
-                        fcol >= col if (not (inc or (fend_col == fcol and fend_ln == fln)) or
-                                        dln < 0 or (not dln and dcol_offset < 0)) else fcol > col):
+                        fcol >= col if (not (inc and (fend_col == fcol and fend_ln == fln)) or
+                                        dln < 0 or (not dln and dcol_offset < 0)) else
+                        fcol > col):
                     a.lineno     += dln
                     a.col_offset += dcol_offset
 
@@ -817,7 +861,7 @@ class FST:
         lines  = self.root._lines
         fst    = FST(newast, lines=lines, from_=self)  # we use original lines for nodes offset calc before putting new lines
 
-        fst._offset(copy_loc.ln, copy_loc.col, -copy_loc.ln, len(prefix) - lines[copy_loc.ln].c2b(copy_loc.col))  # WARNING! `prefix` is expected to have only 1byte characters
+        fst._offset(copy_loc.ln, copy_loc.col, -copy_loc.ln, len(prefix) - lines[copy_loc.ln].c2b(copy_loc.col))  # WARNING! `prefix` is expected to have only 1 byte characters
 
         fst._lines = fst_lines = self.copyl_lines(*copy_loc)
 
@@ -2534,14 +2578,6 @@ class FST:
 
 
 
-
-    # + copy()
-    #   cut()
-    # + slice()
-    #   remove()
-    #   append()
-    #   insert()
-    #   replace()
 
 
 
