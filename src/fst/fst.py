@@ -121,9 +121,15 @@ class fstlistproxy:
         self.field = field
         self.start = start
 
-    def __getitem__(self, index: int | slice) -> Any:
+    def __getitem__(self, index: int | str | slice) -> Any:
         if isinstance(index, int):
             return a.f if isinstance(a := self.asts[index], AST) else a
+
+        if isinstance(index, str):
+            if a := get_func_class_or_ass_by_name(self.asts, index):
+                return a.f
+
+            raise IndexError(f"function, class or variable '{index}' not found")
 
         return fstlistproxy((asts := self.asts)[index], self.owner, self.field,
                             start if (start := index.start) >= 0 else start + len(asts))
@@ -649,11 +655,6 @@ class FST:
 
                 if fln > ln:
                     a.lineno += dln
-
-                # elif fln == ln and (
-                #         fcol >= col if (not (inc or (fend_col == fcol and fend_ln == fln)) or
-                #                         dln < 0 or (not dln and dcol_offset < 0)) else
-                #         fcol > col):
 
                 elif fln == ln and (
                         fcol >= col if (not (inc and (fend_col == fcol and fend_ln == fln)) or
@@ -2524,47 +2525,9 @@ class FST:
 
 
 
-    def get(self, start: int | str | None = None, stop: int | str | None | Literal[False] = False,
-            field: str | None = None, *, fix: bool = True, cut: bool = False, decos: bool = True) -> Optional['FST']:
-
-        def check_str_index(idx):
-            if isinstance(idx, str):
-                if not (a := get_func_class_or_ass_by_name(ast, idx)):
-                    raise ValueError(f"'{idx}' not found in {ast.__class__.__name__}")
-
-                if (pfield := a.f.pfield).name != field:
-                    raise ValueError(f"'{idx}' is not in '{field}' in {ast.__class__.__name__}")
-
-                idx = pfield.idx
-
-            return idx
-
-        ast         = self.a
-        field, body = _fixup_field_body(ast, field)
-        start       = check_str_index(start)
-
-        if stop is not False:
-            return self.slice(start, check_str_index(stop), field, fix=fix, cut=cut)
-
-        if start is None:
-            if isinstance(body, list):
-                raise ValueError(f"cannot get singleton item from list '{field}' in {ast.__class__.__name__}")
-
-        else:
-            if not isinstance(body, list):
-                raise ValueError(f"cannot get indexed item from singleton field '{field}' in {ast.__class__.__name__}")
-
-            body = body[start if start >= 0 else start + len(body)]
-
-        if body is None:
-            return body
-
-        return body.f.cut(fix=fix, decos=decos) if cut else body.f.copy(fix=fix, decos=decos)
 
 
-
-
-    def put(self, thing: Union['FST', AST, list[str], str],
+    def put(self, PlAcEhOlDeR: Union['FST', AST, list[str], str],
             start: int | str | None = None, stop: int | str | None | Literal['False'] = False,
             field: str | None = None) -> Optional['FST']:
 

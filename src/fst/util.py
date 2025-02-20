@@ -457,8 +457,8 @@ def set_ctx(ast: AST, ctx: type[expr_context], *, doit=True) -> bool:
     return change
 
 
-def get_func_class_or_ass_by_name(ast: AST, name: str) -> AST | None:
-    for a in iter_child_nodes(ast):
+def get_func_class_or_ass_by_name(asts: list[AST], name: str) -> AST | None:
+    for a in asts:
         if isinstance(a, (FunctionDef, AsyncFunctionDef, ClassDef)):
             if a.name == name:
                 return a
