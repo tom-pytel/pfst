@@ -1112,17 +1112,17 @@ class FST:
 
         return head + '\n???'
 
-    def __getattr__(self, name) -> Any:
-        if child := getattr(self.a, name):
-            if isinstance(child, list):
-                return listfproxy(child)
-            elif isinstance(child, AST):
-                return child.f
+    # def __getattr__(self, name) -> Any:
+    #     if child := getattr(self.a, name):
+    #         if isinstance(child, list):
+    #             return listfproxy(child)
+    #         elif isinstance(child, AST):
+    #             return child.f
 
-        return child
+    #     return child
 
-    def __getitem__(self, index: int | str | slice) -> Optional['FST']:
-        return self.get(index.start, index.stop, index.step) if isinstance(index, slice) else self.get(index)
+    # def __getitem__(self, index: int | str | slice) -> Optional['FST']:
+    #     return self.get(index.start, index.stop, index.step) if isinstance(index, slice) else self.get(index)
 
     @staticmethod
     def fromsrc(source: str | bytes | list[str], filename: str = '<unknown>', mode: str = 'exec', *,
@@ -1885,8 +1885,9 @@ class FST:
 
     def walk(self, with_loc: bool = False, *, walk_self: bool = True, recurse: bool = True, scope: bool = False,
              back: bool = False) -> Generator['FST', bool, None]:
-        """Walk self and descendants in syntactic order, `send(False)` to skip recursion into node. Can send multiple
-        times, last value sent takes effect.
+        """Walk self and descendants in syntactic order, `send(False)` to skip recursion into child. `send(True)` to
+        allow recursion into child if called with `recurse=False` or `scope=True` would otherwise disallow it. Can send
+        multiple times, last value sent takes effect.
 
         **Parameters:**
         - `with_loc`: If `True` then only nodes with locations returned, otherwise all nodes.
@@ -1908,7 +1909,7 @@ class FST:
         """
 
         if walk_self:
-            recurse_ = True
+            recurse_ = 1
 
             while (sent := (yield self)) is not None:
                 recurse_ = sent
@@ -1916,10 +1917,14 @@ class FST:
             if not recurse_:
                 return
 
+            elif recurse_ is True:  # user changed their mind?!?
+                recurse = True
+                scope   = False
+
         stack = None
         ast   = self.a
 
-        if scope:
+        if scope:  # some parts of a FunctionDef or ClassDef are outside its scope
             if isinstance(ast, list):
                 stack = ast[:] if back else ast[::-1]
 
@@ -1977,17 +1982,21 @@ class FST:
             if not (ast := stack.pop()):
                 continue
 
-            f = ast.f
+            fst = ast.f
 
-            if with_loc and not _with_loc(f.a):  # not f.loc:
+            if with_loc and not _with_loc(fst.a):  # not fst.loc:
                 continue
 
             recurse_ = recurse
 
-            while (sent := (yield f)) is not None:
-                recurse_ = sent
+            while (sent := (yield fst)) is not None:
+                recurse_ = 1 if sent else False
 
-            if recurse_:
+            if recurse_ is not True:
+                if recurse_:  # user did send(True), walk this child unconditionally
+                    yield from fst.walk(with_loc, walk_self=False, back=back)
+
+            else:
                 if scope:
                     recurse_ = False
 
@@ -2023,7 +2032,7 @@ class FST:
 
                     elif isinstance(ast, (ListComp, SetComp, DictComp, GeneratorExp)):
                         comp_first_iter = ast.generators[0].iter
-                        gen             = ast.f.walk(with_loc, walk_self=False, back=back)
+                        gen             = fst.walk(with_loc, walk_self=False, back=back)
 
                         for f in gen:  # all NamedExpr assignments below are visible here, yeah, its ugly
                             if (a := f.a) is comp_first_iter or (f.pfield.name == 'target' and isinstance(a, Name) and

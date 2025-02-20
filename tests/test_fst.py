@@ -571,23 +571,31 @@ def f(a, /, b, *c, d, **e):
     @deco2
     class sup(cls, meta=moto): hidden
     lambda n=o, **kw: hidden
-            """.strip())
+            """.strip()).a.body[0].f
         self.assertEqual(['f', 'g', 'h', 'deco1', 'm', 'deco2', 'cls', 'moto', 'o'],
-                         [f.a.id for f in fst.a.body[0].f.walk(scope=True) if isinstance(f.a, Name)])
+                         [f.a.id for f in fst.walk(scope=True) if isinstance(f.a, Name)])
         self.assertEqual(['a', 'b', 'c', 'd', 'e'],
-                         [f.a.arg for f in fst.a.body[0].f.walk(scope=True) if isinstance(f.a, arg)])
+                         [f.a.arg for f in fst.walk(scope=True) if isinstance(f.a, arg)])
 
-        fst = FST.fromsrc("""[z for a in b if (c := a)]""".strip())
+        l = []
+        for f in (gen := fst.walk(True, scope=True)):
+            if isinstance(f.a, Name):
+                l.append(f.a.id)
+            elif isinstance(f.a, ClassDef):
+                gen.send(True)
+        self.assertEqual(['f', 'g', 'h', 'deco1', 'm', 'deco2', 'cls', 'moto', 'hidden', 'o'], l)
+
+        fst = FST.fromsrc("""[z for a in b if (c := a)]""".strip()).a.body[0].value.f
         self.assertEqual(['z', 'a', 'c', 'a'],
-                         [f.a.id for f in fst.a.body[0].value.f.walk(scope=True) if isinstance(f.a, Name)])
+                         [f.a.id for f in fst.walk(scope=True) if isinstance(f.a, Name)])
 
-        fst = FST.fromsrc("""[z for a in b if (c := a)]""".strip())
+        fst = FST.fromsrc("""[z for a in b if (c := a)]""".strip()).a.body[0].f
         self.assertEqual(['b', 'c'],
-                         [f.a.id for f in fst.a.body[0].f.walk(scope=True) if isinstance(f.a, Name)])
+                         [f.a.id for f in fst.walk(scope=True) if isinstance(f.a, Name)])
 
-        fst = FST.fromsrc("""[z for a in b if b in [c := i for i in j if i in {d := k for k in l}]]""".strip())
+        fst = FST.fromsrc("""[z for a in b if b in [c := i for i in j if i in {d := k for k in l}]]""".strip()).a.body[0].value.f
         self.assertEqual(['z', 'a', 'b', 'c', 'j', 'd'],
-                         [f.a.id for f in fst.a.body[0].value.f.walk(scope=True) if isinstance(f.a, Name)])
+                         [f.a.id for f in fst.walk(scope=True) if isinstance(f.a, Name)])
 
     def test_walk_bulk(self):
         for fnm in PYFNMS:
@@ -794,7 +802,7 @@ def f(a, /, b, *c, d, **e):
 
     def test_next_prev_vs_walk(self):
         def test1(src):
-            f = FST.fromsrc(src).body[0].args
+            f = FST.fromsrc(src).a.body[0].args.f
             m = list(f.walk(True, walk_self=False, recurse=False))
 
             l, c = [], None
@@ -841,7 +849,7 @@ def f(a, /, b, *c, d, **e):
         test1('def __init__(self, max_size=0, *, ctx, pending_work_items, shutdown_lock, thread_wakeup): pass')
 
         def test2(src):
-            f = FST.fromsrc(src).body[0].value
+            f = FST.fromsrc(src).a.body[0].value.f
             m = list(f.walk(True, walk_self=False, recurse=False))
 
             l, c = [], None
