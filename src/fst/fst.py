@@ -108,7 +108,7 @@ class fstloc(NamedTuple):
     end_col: int
 
 
-class srccode(NamedTuple):
+class srcwpos(NamedTuple):
     ln:  int
     col: int
     src: str
@@ -175,7 +175,7 @@ def _with_loc(a: AST) -> bool:
 
 
 def _next_code(lines: list[str], ln: int, col: int, end_ln: int, end_col: int, comment: bool = False
-               ) -> srccode | None:
+               ) -> srcwpos | None:
     """Get next non-space non-continuation maybe non-comment position. Assuming start pos not inside str or comment.
     Code is not necessarily AST stuff, it can be commas, colons, the 'try' keyword, etc... Code can include multiple
     AST nodes in return str if there are no spaces between them like 'a+b'."""
@@ -183,49 +183,49 @@ def _next_code(lines: list[str], ln: int, col: int, end_ln: int, end_col: int, c
     re_pat = re_next_code_or_comment if comment else re_next_code
 
     if end_ln == ln:
-        return srccode(ln, m.start(1), m.group(1)) if (m := re_pat.match(lines[ln], col, end_col)) else None
+        return srcwpos(ln, m.start(1), m.group(1)) if (m := re_pat.match(lines[ln], col, end_col)) else None
 
     for i in range(ln, end_ln):
         if m := re_pat.match(lines[i], col):
-            return srccode(i, m.start(1), m.group(1))
+            return srcwpos(i, m.start(1), m.group(1))
 
         col = 0
 
     if m := re_pat.match(lines[end_ln], 0, end_col):
-        return srccode(end_ln, m.start(1), m.group(1))
+        return srcwpos(end_ln, m.start(1), m.group(1))
 
     return None
 
 
 def _next_code_lline(lines: list[str], ln: int, col: int, end_ln: int, end_col: int, comment: bool = False
-                     ) -> srccode | None:
+                     ) -> srcwpos | None:
     """Same rules as `_next_code()` but do not exceed logical line during search."""
 
     re_pat = re_next_code_or_comment if comment else re_next_code
 
     if end_ln == ln:
-        return srccode(ln, m.start(1), m.group(1)) if (m := re_pat.match(lines[ln], col, end_col)) else None
+        return srcwpos(ln, m.start(1), m.group(1)) if (m := re_pat.match(lines[ln], col, end_col)) else None
 
     for i in range(ln, end_ln):
         if not (m := re_next_code_or_comment_or_lcont.match(lines[i], col)):
             return None
 
         if (s := m.group(1)).startswith('#'):
-            return srccode(i, m.start(1), s) if comment else None
+            return srcwpos(i, m.start(1), s) if comment else None
 
         if not s.startswith('\\'):
-            return srccode(i, m.start(1), s)
+            return srcwpos(i, m.start(1), s)
 
         col = 0
 
     if m := re_pat.match(lines[end_ln], 0, end_col):
-        return srccode(end_ln, m.start(1), m.group(1))
+        return srcwpos(end_ln, m.start(1), m.group(1))
 
     return None
 
 
 def _prev_code(lines: list[str], ln: int, col: int, end_ln: int, end_col: int, comment: bool = False
-               ) -> srccode | None:
+               ) -> srcwpos | None:
     """Same rules as `_next_code()` but return the LAST occurance of code or maybe comment in the span."""
 
     re_pat = re_next_code_or_comment if comment else re_next_code
@@ -240,16 +240,16 @@ def _prev_code(lines: list[str], ln: int, col: int, end_ln: int, end_col: int, c
         return ret
 
     if end_ln == ln:
-        return srccode(ln, m.start(1), m.group(1)) if (m := last_match(lines[ln], col, end_col)) else None
+        return srcwpos(ln, m.start(1), m.group(1)) if (m := last_match(lines[ln], col, end_col)) else None
 
     for i in range(end_ln, ln, -1):
         if m := last_match(lines[i], 0, end_col):
-            return srccode(i, m.start(1), m.group(1))
+            return srcwpos(i, m.start(1), m.group(1))
 
         end_col = 0x7fffffffffffffff
 
     if m := last_match(lines[ln], col, end_col):
-        return srccode(ln, m.start(1), m.group(1))
+        return srcwpos(ln, m.start(1), m.group(1))
 
     return None
 
@@ -300,8 +300,8 @@ class FST:
     parent:        Optional['FST']  # None in root node
     pfield:        astfield | None  # None in root node
     root:          'FST'            # self in root node
-    _loc:          fstloc | None    # MAY NOT EXIST!
-    _bloc:         fstloc | None    # MAY NOT EXIST! bounding location, including preceding decorators
+    _loc:          fstloc | None    # cache, MAY NOT EXIST!
+    _bloc:         fstloc | None    # cache, MAY NOT EXIST! bounding location, including preceding decorators
 
     indent:        str              # ROOT ONLY! default indentation to use when unknown
     _lines:        list[bistr]      # ROOT ONLY!
@@ -883,8 +883,8 @@ class FST:
 
         return lns
 
-    def _make_fst_and_dedent(self, findent: 'FST', newast: AST, copy_loc: fstloc, del_loc: fstloc | None = None,
-                             prefix: str = '', suffix: str = '') -> 'FST':
+    def _make_fst_and_dedent(self, findent: 'FST', newast: AST, copy_loc: fstloc, prefix: str = '', suffix: str = '',
+                             put_loc: fstloc | None = None, put_lines: list[str] | None = None) -> 'FST':
         indent = findent.get_indent()
         lines  = self.root._lines
         fst    = FST(newast, lines=lines, from_=self)  # we use original lines for nodes offset calc before putting new lines
@@ -899,17 +899,17 @@ class FST:
         if prefix:
             fst_lines[0] = bistr(prefix + fst_lines[0])
 
-        if del_loc:
-            self.root._offset(del_loc.end_ln, del_loc.end_col, del_loc.ln - del_loc.end_ln,
-                              lines[del_loc.ln].c2b(del_loc.col) - lines[del_loc.end_ln].c2b(del_loc.end_col), True)  # True because we may have an unparenthesized tuple that shrinks to a span length of 0
-            self.dell_lines(*del_loc)
+        if put_loc:
+            self.root._offset(put_loc.end_ln, put_loc.end_col, put_loc.ln - put_loc.end_ln,
+                              lines[put_loc.ln].c2b(put_loc.col) - lines[put_loc.end_ln].c2b(put_loc.end_col), True)  # True because we may have an unparenthesized tuple that shrinks to a span length of 0
+            self.putl_lines(put_lines, *put_loc)
 
         fst._dedent_tail(indent)
 
         return fst
 
     def _make_Expression_seq_copy_and_dedent(self, newast: AST, cut: bool, lfirst: 'FST', llast: 'FST',
-                                             lpre: Optional['FST'], lpost: Optional['FST'],
+                                             lpre: Union['FST', fstloc, None], lpost: Union['FST', fstloc, None],
                                              seq_loc: fstloc, prefix: str, suffix: str) -> 'FST':
 
         # start of special sauce  # TODO: make this specialer? (specifiable behavior options, prettier multiline handling, etc...)
@@ -969,7 +969,7 @@ class FST:
         newast.end_lineno     = copy_end_ln + 1
         newast.end_col_offset = lines[copy_end_ln].c2b(copy_end_col)
 
-        fst = self._make_fst_and_dedent(self, Expression(body=newast), copy_loc, del_loc, prefix, suffix)
+        fst = self._make_fst_and_dedent(self, Expression(body=newast), copy_loc, prefix, suffix, del_loc)
 
         newast.col_offset     = 0  # before prefix
         newast.end_col_offset = fst._lines[-1].lenbytes  # after suffix
@@ -2297,48 +2297,49 @@ class FST:
         if lines is None:
             self.dell_lines(ln, col, end_ln, end_col)
 
-        ls  = self.root._lines
-        dln = end_ln - ln
+        else:
+            ls  = self.root._lines
+            dln = end_ln - ln
 
-        if (nnew_ln := len(lines)) <= 1:
-            s = lines[0] if nnew_ln else ''
+            if (nnew_ln := len(lines)) <= 1:
+                s = lines[0] if nnew_ln else ''
 
-            if not dln:  # replace single line with single or no line
-                ls[ln] = bistr(f'{(l := ls[ln])[:col]}{s}{l[end_col:]}')
+                if not dln:  # replace single line with single or no line
+                    ls[ln] = bistr(f'{(l := ls[ln])[:col]}{s}{l[end_col:]}')
 
-            else:  # replace multiple lines with single or no line
-                ls[ln] = bistr(f'{ls[ln][:col]}{s}{ls[end_ln][end_col:]}')
+                else:  # replace multiple lines with single or no line
+                    ls[ln] = bistr(f'{ls[ln][:col]}{s}{ls[end_ln][end_col:]}')
 
-                del ls[ln + 1 : end_ln + 1]
+                    del ls[ln + 1 : end_ln + 1]
 
-        elif not dln:  # replace single line with multiple lines
-            lend                 = bistr(lines[-1] + (l := ls[ln])[end_col:])
-            ls[ln]               = bistr(l[:col] + lines[0])
-            ls[ln + 1 : ln + 1]  = [bistr(l) for l in lines[1:]]
-            ls[ln + nnew_ln - 1] = lend
+            elif not dln:  # replace single line with multiple lines
+                lend                 = bistr(lines[-1] + (l := ls[ln])[end_col:])
+                ls[ln]               = bistr(l[:col] + lines[0])
+                ls[ln + 1 : ln + 1]  = [bistr(l) for l in lines[1:]]
+                ls[ln + nnew_ln - 1] = lend
 
-        else:  # replace multiple lines with multiple lines
-            ls[ln]              = bistr(ls[ln][:col] + lines[0])
-            ls[end_ln]          = bistr(lines[-1] + ls[end_ln][end_col:])
-            ls[ln + 1 : end_ln] = [bistr(l) for l in lines[1 : -1]]
+            else:  # replace multiple lines with multiple lines
+                ls[ln]              = bistr(ls[ln][:col] + lines[0])
+                ls[end_ln]          = bistr(lines[-1] + ls[end_ln][end_col:])
+                ls[ln + 1 : end_ln] = [bistr(l) for l in lines[1 : -1]]
 
     def put_lines(self, lines: list[str] | None):
         if lines is None:
             self.dell_lines(*self.loc)
-
-        return self.putl_lines(lines, *self.loc)
+        else:
+            self.putl_lines(lines, *self.loc)
 
     def putl_src(self, src: str | None, ln: int, col: int, end_ln: int, end_col: int):
         if src is None:
             self.dell_lines(ln, col, end_ln, end_col)
-
-        return self.putl_lines(src.split('\n'), ln, col, end_ln, end_col)
+        else:
+            self.putl_lines(src.split('\n'), ln, col, end_ln, end_col)
 
     def put_src(self, src: str | None):
         if src is None:
             self.dell_lines(*self.loc)
-
-        return self.putl_lines(src.split('\n'), *self.loc)
+        else:
+            self.putl_lines(src.split('\n'), *self.loc)
 
     # ------------------------------------------------------------------------------------------------------------------
 
