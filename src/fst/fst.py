@@ -50,13 +50,13 @@ AST_FIELDS_PREV[(MatchMapping, 'keys')]     = 4
 AST_FIELDS_PREV[(MatchMapping, 'patterns')] = 5
 AST_FIELDS_PREV[(Call, 'args')]             = 6
 AST_FIELDS_PREV[(Call, 'keywords')]         = 6
-# AST_FIELDS_PREV[(arguments, 'posonlyargs')] = 7
-# AST_FIELDS_PREV[(arguments, 'args')]        = 7
-# AST_FIELDS_PREV[(arguments, 'vararg')]      = 7
-# AST_FIELDS_PREV[(arguments, 'kwonlyargs')]  = 7
-# AST_FIELDS_PREV[(arguments, 'defaults')]    = 7
-# AST_FIELDS_PREV[(arguments, 'kw_defaults')] = 7
-# AST_FIELDS_PREV[(arguments, 'kwarg')]       = 7
+AST_FIELDS_PREV[(arguments, 'posonlyargs')] = 7
+AST_FIELDS_PREV[(arguments, 'args')]        = 7
+AST_FIELDS_PREV[(arguments, 'vararg')]      = 7
+AST_FIELDS_PREV[(arguments, 'kwonlyargs')]  = 7
+AST_FIELDS_PREV[(arguments, 'defaults')]    = 7
+AST_FIELDS_PREV[(arguments, 'kw_defaults')] = 7
+AST_FIELDS_PREV[(arguments, 'kwarg')]       = 7
 
 AST_DEFAULT_BODY_FIELD  = {cls: field for field, classes in [
     ('elts',     (Tuple, List, Set)),
@@ -148,6 +148,8 @@ def unparse(ast_obj):
 
 
 def _with_loc(a: AST) -> bool:
+    """Faster overall than checking `a.f.loc`."""
+
     return not (isinstance(a, (expr_context, boolop, operator, unaryop, cmpop)) or
                 (isinstance(a, arguments) and not a.posonlyargs and not a.args and not a.vararg and not a.kwonlyargs
                  and not a.kwarg))
@@ -1221,7 +1223,7 @@ class FST:
 
     # ------------------------------------------------------------------------------------------------------------------
 
-    def next(self, with_loc: bool = True) -> Optional['FST']:
+    def next(self, with_loc: bool = True) -> Optional['FST']:  # TODO: refactor
         """Get next sibling in syntactic order.
 
         **Parameters:**
@@ -1259,14 +1261,6 @@ class FST:
                         case 2:  # from Compare.ops
                             next = 3
                             a    = aparent.comparators[idx]
-
-                        case 3:  # from Compare.comparators or Compare.left (via comparators)
-                            next = 2
-
-                            try:
-                                a = aparent.ops[(idx := idx + 1)]
-                            except IndexError:
-                                return None
 
                         case 6:  # all the logic for Call.args and Call.keywords
                             if not (keywords := aparent.keywords):  # no keywords
@@ -1342,6 +1336,14 @@ class FST:
                                             idx  = len(args) - 1
                                             a    = star
 
+                        case 3:  # from Compare.comparators or Compare.left (via comparators)
+                            next = 2
+
+                            try:
+                                a = aparent.ops[(idx := idx + 1)]
+                            except IndexError:
+                                return None
+
                         case 7:  # all the logic arguments
                             while True:
                                 match name:
@@ -1385,6 +1387,21 @@ class FST:
                                             name = 'defaults'
                                             a    = defaults[idx := didx]
 
+                                    case 'defaults':
+                                        if idx == (ldefaults := len(aparent.defaults)) - 1:  # end of defaults
+                                            name = 'vararg'
+
+                                            if not (a := aparent.vararg):
+                                                continue
+
+                                        elif (idx := idx + len(args := aparent.args) - ldefaults + 1) >= 0:
+                                            name = 'args'
+                                            a    = args[idx]
+
+                                        else:
+                                            name = 'posonlyargs'
+                                            a    = (posonlyargs := aparent.posonlyargs)[(idx := idx + len(posonlyargs))]
+
                                     case 'vararg':
                                         if kwonlyargs := aparent.kwonlyargs:
                                             name = 'kwonlyargs'
@@ -1410,21 +1427,6 @@ class FST:
                                                     name = 'kwarg'
                                                 else:
                                                     return None
-
-                                    case 'defaults':
-                                        if idx == (ldefaults := len(aparent.defaults)) - 1:  # end of defaults
-                                            name = 'vararg'
-
-                                            if not (a := aparent.vararg):
-                                                continue
-
-                                        elif (idx := idx + len(args := aparent.args) - ldefaults + 1) >= 0:
-                                            name = 'args'
-                                            a    = args[idx]
-
-                                        else:
-                                            name = 'posonlyargs'
-                                            a    = (posonlyargs := aparent.posonlyargs)[(idx := idx + len(posonlyargs))]
 
                                     case 'kw_defaults':
                                         try:
@@ -1508,7 +1510,7 @@ class FST:
 
         return None
 
-    def prev(self, with_loc: bool = True) -> Optional['FST']:
+    def prev(self, with_loc: bool = True) -> Optional['FST']:  # TODO: refactor
         """Get previous sibling in syntactic order.
 
         **Parameters:**
@@ -1543,20 +1545,6 @@ class FST:
 
                             if not (a := aparent.keys[idx]):
                                 continue
-
-                        case 2:  # from Compare.ops
-                            if not idx:
-                                prev = 'left'
-
-                                break
-
-                            else:
-                                prev = 3
-                                a    = aparent.comparators[(idx := idx - 1)]
-
-                        case 3:  # from Compare.comparators
-                            prev = 2
-                            a    = aparent.ops[idx]
 
                         case 6:
                             if not (keywords := aparent.keywords):  # no keywords
@@ -1647,34 +1635,117 @@ class FST:
                                             idx  = len(args) - 1
                                             a    = star
 
+                        case 2:  # from Compare.ops
+                            if not idx:
+                                prev = 'left'
+
+                                break
+
+                            else:
+                                prev = 3
+                                a    = aparent.comparators[(idx := idx - 1)]
+
+                        case 3:  # from Compare.comparators
+                            prev = 2
+                            a    = aparent.ops[idx]
+
                         case 7:
                             while True:
                                 match name:
                                     case 'posonlyargs':
-                                        raise NotImplementedError  # TODO: THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS!
+                                        posonlyargs = aparent.posonlyargs
+                                        defaults    = aparent.defaults
+
+                                        if ((didx := idx - len(aparent.args) - len(posonlyargs) + len(defaults) - 1) >=
+                                            0
+                                        ):
+                                            name = 'defaults'
+                                            a    = defaults[(idx := didx)]
+
+                                        elif idx > 0:
+                                            a = posonlyargs[(idx := idx - 1)]
+                                        else:
+                                            return None
 
                                     case 'args':
-                                        raise NotImplementedError  # TODO: THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS!
+                                        args     = aparent.args
+                                        defaults = aparent.defaults
 
-                                    case 'vararg':
-                                        raise NotImplementedError  # TODO: THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS!
+                                        if (didx := idx - len(args) + len(defaults) - 1) >= 0:
+                                            name = 'defaults'
+                                            a    = defaults[(idx := didx)]
 
-                                    case 'kwonlyargs':
-                                        raise NotImplementedError  # TODO: THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS!
+                                        elif idx > 0:
+                                            a = args[(idx := idx - 1)]
+
+                                        elif posonlyargs := aparent.posonlyargs:
+                                            name = 'posonlyargs'
+                                            a    = posonlyargs[(idx := len(posonlyargs) - 1)]
+
+                                        else:
+                                            return None
 
                                     case 'defaults':
-                                        raise NotImplementedError  # TODO: THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS!
+                                        args     = aparent.args
+                                        defaults = aparent.defaults
+
+                                        if (idx := idx + len(args) - len(defaults)) >= 0:
+                                            name = 'args'
+                                            a    = args[idx]
+
+                                        else:
+                                            name = 'posonlyargs'
+                                            a    = (posonlyargs := aparent.posonlyargs)[idx + len(posonlyargs)]
+
+                                    case 'vararg':
+                                        if defaults := aparent.defaults:
+                                            name = 'defaults'
+                                            a    = defaults[(idx := len(defaults) - 1)]
+
+                                        elif args := aparent.args:
+                                            name = 'args'
+                                            a    = args[(idx := len(args) - 1)]
+
+                                        elif posonlyargs := aparent.posonlyargs:
+                                            name = 'posonlyargs'
+                                            a    = posonlyargs[(idx := len(posonlyargs) - 1)]
+
+                                        else:
+                                            return None
+
+                                    case 'kwonlyargs':
+                                        if not idx:
+                                            name = 'vararg'
+
+                                            if not (a := aparent.vararg):
+                                                continue
+
+                                        elif a := aparent.kw_defaults[(idx := idx - 1)]:
+                                            name = 'kw_defaults'
+
+                                        else:
+                                            a = aparent.kwonlyargs[idx]
 
                                     case 'kw_defaults':
-                                        raise NotImplementedError  # TODO: THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS!
+                                        name = 'kwonlyargs'
+                                        a    = aparent.kwonlyargs[idx]
 
                                     case 'kwarg':
-                                        raise NotImplementedError  # TODO: THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS!
+                                        if kw_defaults := aparent.kw_defaults:
+                                            if a := kw_defaults[(idx := len(kw_defaults) - 1)]:
+                                                name = 'kw_defaults'
 
+                                            else:
+                                                name = 'kwonlyargs'
+                                                a    = (kwonlyargs := aparent.kwonlyargs)[(idx := len(kwonlyargs) - 1)]
 
+                                        else:
+                                            name = 'vararg'
 
+                                            if not (a := aparent.vararg):
+                                                continue
 
-
+                                break
 
                         case 4:  # from Keys.keys
                             if not idx:
@@ -1718,8 +1789,7 @@ class FST:
 
                 # non-str prev, special case
 
-                raise RuntimeError('should not get here')  # when entrable special cases from ahead appear in future py versions add them here
-                break
+                raise RuntimeError('should not get here')  # break  # when entrable special cases from ahead appear in future py versions add them here
 
             else:
                 break
@@ -1764,9 +1834,12 @@ class FST:
         - `None` if no valid children, otherwise last valid child.
         """
 
-        if (isinstance(a := self.a, Call)) and a.args and (keywords := a.keywords) and isinstance(a.args[-1], Starred):  # super-special case Call with args and keywords and a Starred, it could be anywhere in there, defer to prev() logic
-            return (FST(Load(lineno=0x7fffffffffffffff, col_offset=0), self, astfield('keywords', len(keywords)))
-                .prev(with_loc))  # Load() is a hack just to have a simple AST node
+        if (isinstance(a := self.a, Call)) and a.args and (keywords := a.keywords) and isinstance(a.args[-1], Starred):  # super-special case Call with args and keywords and a Starred, it could be anywhere in there, including after last keyword, defer to prev() logic
+            fst          = FST(f := Load(), self, astfield('keywords', len(keywords)))
+            f.lineno     = 0x7fffffffffffffff
+            f.col_offset = 0
+
+            return fst.prev(with_loc)
 
         for name in reversed(AST_FIELDS[(a := self.a).__class__]):
             if (child := getattr(a, name, None)):
@@ -1778,8 +1851,6 @@ class FST:
                     if (c := child[-1]) and (not with_loc or _with_loc(c)):  # c.f.loc):
                         return c.f
 
-                    # if (f := FST(Load(), self, astfield(name, len(child) - 1)).prev(with_loc)):  # Load() is a hack just to have a simple AST node
-                    #     return f
                     return FST(Load(), self, astfield(name, len(child) - 1)).prev(with_loc)  # Load() is a hack just to have a simple AST node
 
         return None

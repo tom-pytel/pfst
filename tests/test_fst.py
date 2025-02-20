@@ -794,10 +794,36 @@ def f(a, /, b, *c, d, **e):
 
     def test_next_prev_vs_walk(self):
         def test1(src):
-            l, c, f = [], None, FST.fromsrc(src).body[0].args
-            while c := f.next_child(c): l.append(c)
-            self.assertEqual(l, list(f.walk(True, walk_self=False, recurse=False)))
+            f = FST.fromsrc(src).body[0].args
+            m = list(f.walk(True, walk_self=False, recurse=False))
 
+            l, c = [], None
+            while c := f.next_child(c): l.append(c)
+            self.assertEqual(l, m)
+
+            l, c = [], None
+            while c := f.prev_child(c): l.append(c)
+            self.assertEqual(l, m[::-1])
+
+        test1('def f(**a): apass')
+        test1('def f(*, e, d, c=3, b=2, **a): pass')
+        test1('def f(*f, e, d, c=3, b=2, **a): pass')
+        test1('def f(g=4, *f, e, d, c=3, b=2, **a): pass')
+        test1('def f(h, g=4, *f, e, d, c=3, b=2, **a): pass')
+        test1('def f(i, /, h, g=4, *f, e, d, c=3, b=2, **a): pass')
+        test1('def f(i=6, /, h=5, g=4, *f, e, d, c=3, b=2, **a): pass')
+        test1('def f(j, i=6, /, h=5, g=4, *f, e, d, c=3, b=2, **a): pass')
+        test1('def f(j=7, i=6, /, h=5, g=4, *f, e, d, c=3, b=2, **a): pass')
+        test1('def f(j=7, i=6, /, h=5, g=4, *f, c=3, b=2, **a): pass')
+        test1('def f(j=7, i=6, /, h=5, g=4, *f, e, d, **a): pass')
+        test1('def f(j=7, i=6, /, h=5, g=4, *f, **a): pass')
+        test1('def f(j=7, i=6, /, h=5, g=4, **a): pass')
+        test1('def f(j, i, /, h, g, **a): pass')
+        test1('def f(j, i, /, **a): pass')
+        test1('def f(j, i, /, *f, **a): pass')
+        test1('def f(j=7, i=6, /, **a): pass')
+        test1('def f(**a): pass')
+        test1('def f(b=1, **a): pass')
         test1('def f(a, /): pass')
         test1('def f(a, /, b): pass')
         test1('def f(a, /, b, c=1): pass')
@@ -815,9 +841,16 @@ def f(a, /, b, *c, d, **e):
         test1('def __init__(self, max_size=0, *, ctx, pending_work_items, shutdown_lock, thread_wakeup): pass')
 
         def test2(src):
-            l, c, f = [], None, FST.fromsrc(src).body[0].value
+            f = FST.fromsrc(src).body[0].value
+            m = list(f.walk(True, walk_self=False, recurse=False))
+
+            l, c = [], None
             while c := f.next_child(c): l.append(c)
-            self.assertEqual(l, list(f.walk(True, walk_self=False, recurse=False)))
+            self.assertEqual(l, m)
+
+            l, c = [], None
+            while c := f.prev_child(c): l.append(c)
+            self.assertEqual(l, m[::-1])
 
         test2('call(a=1, *b)')
         test2('call()')
