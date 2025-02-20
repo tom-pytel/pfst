@@ -842,6 +842,25 @@ def f(a, /, b, *c, d, **e):
 
         self.assertEqual(['True:', '  i'], ast.f.root.copyl_lines(1, 4, 2, 3))
 
+    def test_put_lines(self):
+        f = FST(Load(), lines=[bistr('')])
+        f.putl_src('test', 0, 0, 0, 0)
+        self.assertEqual(f.lines, ['test'])
+        f.putl_src('test', 0, 0, 0, 0)
+        self.assertEqual(f.lines, ['testtest'])
+        f.putl_src('tost', 0, 0, 0, 8)
+        self.assertEqual(f.lines, ['tost'])
+        f.putl_src('a\nb\nc', 0, 2, 0, 2)
+        self.assertEqual(f.lines, ['toa', 'b', 'cst'])
+        f.putl_src('', 0, 3, 2, 1)
+        self.assertEqual(f.lines, ['toast'])
+        f.putl_src('a\nb\nc\nd', 0, 0, 0, 5)
+        self.assertEqual(f.lines, ['a', 'b', 'c', 'd'])
+        f.putl_src('efg\nhij', 1, 0, 2, 1)
+        self.assertEqual(f.lines, ['a', 'efg', 'hij', 'd'])
+        f.putl_src('***', 1, 2, 2, 1)
+        self.assertEqual(f.lines, ['a', 'ef***ij', 'd'])
+
     def test_get_indent(self):
         ast = parse('i = 1; j = 2')
 

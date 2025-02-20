@@ -2089,7 +2089,30 @@ class FST:
         if lines is None:
             self.dell_lines(ln, col, end_ln, end_col)
 
-        raise NotImplementedError
+        ls  = self.root._lines
+        dln = end_ln - ln
+
+        if (nnew_ln := len(lines)) <= 1:
+            s = lines[0] if nnew_ln else ''
+
+            if not dln:  # replace single line with single or no line
+                ls[ln] = bistr(f'{(l := ls[ln])[:col]}{s}{l[end_col:]}')
+
+            else:  # replace multiple lines with single or no line
+                ls[ln] = bistr(f'{ls[ln][:col]}{s}{ls[end_ln][end_col:]}')
+
+                del ls[ln + 1 : end_ln + 1]
+
+        elif not dln:  # replace single line with multiple lines
+            lend                 = bistr(lines[-1] + (l := ls[ln])[end_col:])
+            ls[ln]               = bistr(l[:col] + lines[0])
+            ls[ln + 1 : ln + 1]  = [bistr(l) for l in lines[1:]]
+            ls[ln + nnew_ln - 1] = lend
+
+        else:  # replace multiple lines with multiple lines
+            ls[ln]              = bistr(ls[ln][:col] + lines[0])
+            ls[end_ln]          = bistr(lines[-1] + ls[end_ln][end_col:])
+            ls[ln + 1 : end_ln] = [bistr(l) for l in lines[1 : -1]]
 
     def put_lines(self, lines: list[str] | None):
         if lines is None:
