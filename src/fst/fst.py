@@ -114,15 +114,28 @@ class srccode(NamedTuple):
     src: str
 
 
-class listfproxy:
-    def __init__(self, l):
-        self.l = l
+class fstlistproxy:
+    def __init__(self, asts: list[AST], owner: 'FST', field: str, start: int = 0):
+        self.asts  = asts
+        self.owner = owner
+        self.field = field
+        self.start = start
 
-    def __getitem__(self, index) -> Any:
-        return a.f if isinstance(a := self.l[index], AST) else a
+    def __getitem__(self, index: int | slice) -> Any:
+        if isinstance(index, int):
+            return a.f if isinstance(a := self.asts[index], AST) else a
+
+        return fstlistproxy((asts := self.asts)[index], self.owner, self.field,
+                            start if (start := index.start) >= 0 else start + len(asts))
 
     def __repr__(self) -> str:
         return f'f{list(self)}'
+
+    def copy(self, *, fix: bool = True) -> 'FST':
+        return self.owner.slice(start := self.start, start + len(self.asts), self.field, fix=fix, cut=False)
+
+    def cut(self, *, fix: bool = True) -> 'FST':
+        return self.owner.slice(start := self.start, start + len(self.asts), self.field, fix=fix, cut=True)
 
 
 def parse(source, filename='<unknown>', mode='exec', *, type_comments=False, feature_version=None, **kwargs):
@@ -1112,17 +1125,14 @@ class FST:
 
         return head + '\n???'
 
-    # def __getattr__(self, name) -> Any:
-    #     if child := getattr(self.a, name):
-    #         if isinstance(child, list):
-    #             return listfproxy(child)
-    #         elif isinstance(child, AST):
-    #             return child.f
+    def __getattr__(self, name) -> Any:
+        if child := getattr(self.a, name):
+            if isinstance(child, list):
+                return fstlistproxy(child, self, name)
+            elif isinstance(child, AST):
+                return child.f
 
-    #     return child
-
-    # def __getitem__(self, index: int | str | slice) -> Optional['FST']:
-    #     return self.get(index.start, index.stop, index.step) if isinstance(index, slice) else self.get(index)
+        return child
 
     @staticmethod
     def fromsrc(source: str | bytes | list[str], filename: str = '<unknown>', mode: str = 'exec', *,
