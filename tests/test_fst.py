@@ -573,21 +573,21 @@ def f(a, /, b, *c, d, **e):
     lambda n=o, **kw: hidden
             """.strip())
         self.assertEqual(['f', 'g', 'h', 'deco1', 'm', 'deco2', 'cls', 'moto', 'o'],
-                         [f.a.id for f in fst.a.body[0].f.walk(recurse='scope') if isinstance(f.a, Name)])
+                         [f.a.id for f in fst.a.body[0].f.walk(scope=True) if isinstance(f.a, Name)])
         self.assertEqual(['a', 'b', 'c', 'd', 'e'],
-                         [f.a.arg for f in fst.a.body[0].f.walk(recurse='scope') if isinstance(f.a, arg)])
+                         [f.a.arg for f in fst.a.body[0].f.walk(scope=True) if isinstance(f.a, arg)])
 
         fst = FST.fromsrc("""[z for a in b if (c := a)]""".strip())
         self.assertEqual(['z', 'a', 'c', 'a'],
-                         [f.a.id for f in fst.a.body[0].value.f.walk(recurse='scope') if isinstance(f.a, Name)])
+                         [f.a.id for f in fst.a.body[0].value.f.walk(scope=True) if isinstance(f.a, Name)])
 
         fst = FST.fromsrc("""[z for a in b if (c := a)]""".strip())
         self.assertEqual(['b', 'c'],
-                         [f.a.id for f in fst.a.body[0].f.walk(recurse='scope') if isinstance(f.a, Name)])
+                         [f.a.id for f in fst.a.body[0].f.walk(scope=True) if isinstance(f.a, Name)])
 
         fst = FST.fromsrc("""[z for a in b if b in [c := i for i in j if i in {d := k for k in l}]]""".strip())
         self.assertEqual(['z', 'a', 'b', 'c', 'j', 'd'],
-                         [f.a.id for f in fst.a.body[0].value.f.walk(recurse='scope') if isinstance(f.a, Name)])
+                         [f.a.id for f in fst.a.body[0].value.f.walk(scope=True) if isinstance(f.a, Name)])
 
     def test_walk_bulk(self):
         for fnm in PYFNMS:

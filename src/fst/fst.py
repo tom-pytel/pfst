@@ -1856,7 +1856,7 @@ class FST:
         return None
 
     def next_child(self, from_child: Optional['FST'], with_loc: bool = True) -> Optional['FST']:
-        """Get next child in syntactic order. Meant for simple iteration. This is a slow way to iterate, `walk()` is
+        """Get next child in syntactic order. Meant for simple iteration. This is a slower way to iterate, `walk()` is
         faster.
 
         **Parameters:**
@@ -1870,7 +1870,8 @@ class FST:
         return self.first_child(with_loc) if from_child is None else from_child.next(with_loc)
 
     def prev_child(self, from_child: Optional['FST'], with_loc: bool = True) -> Optional['FST']:
-        """Get previous child in syntactic order. Meant for simple iteration.
+        """Get previous child in syntactic order. Meant for simple iteration. This is a slower way to iterate, `walk()`
+        is faster.
 
         **Parameters:**
         - `from_child`: Child node we are coming from which may or may not have location.
@@ -1882,8 +1883,8 @@ class FST:
 
         return self.last_child(with_loc) if from_child is None else from_child.prev(with_loc)
 
-    def walk(self, with_loc: bool = False, *, walk_self: bool = True, recurse: bool | Literal['scope'] = True
-             ) -> Generator['FST', bool, None]:
+    def walk(self, with_loc: bool = False, *, walk_self: bool = True, recurse: bool = True, scope: bool = False,
+             back: bool = False) -> Generator['FST', bool, None]:
         """Walk self and descendants in syntactic order, `send(False)` to skip recursion into node. Can send multiple
         times, last value sent takes effect.
 
@@ -1891,8 +1892,11 @@ class FST:
         - `with_loc`: If `True` then only nodes with locations returned, otherwise all nodes.
         - `walk_self`: If `True` then self will be returned first with the possibility to skip children on `send()`.
         - `recurse`: Whether to recurse into children by default, `send()` for a given node will always override this.
-            Will always attempt first level of children unless walking self and `False` is sent first. If this is set to
-            "scope" then only this scope is walked and does not recurse into other scopes like lambdas or classes.
+            Will always attempt first level of children unless walking self and `False` is sent first.
+        - `scope`: If `True` then will only walk within the current scope (calling this on a node which creates scope
+            like `FunctionDef` will walk the scope of that node, not the enclosing scope).
+        - `back`: If `True` then walk every node backwards. This is not the same as a full forwards walk reversed due
+            to recursion.
 
         **Example:**
         ```py
@@ -1915,43 +1919,59 @@ class FST:
         stack = None
         ast   = self.a
 
-        if scope := recurse == 'scope':
+        if scope:
             if isinstance(ast, list):
-                stack = ast[::-1]
+                stack = ast[:] if back else ast[::-1]
 
             elif isinstance(ast, (ClassDef, Module, Interactive)):
-                stack = ast.body[::-1]
+                if back:
+                    stack = []
 
-                if type_params := getattr(ast, 'type_params', None):
-                    stack.extend(type_params[::-1])
+                    if type_params := getattr(ast, 'type_params', None):
+                        stack.extend(type_params)
+
+                    stack.extend(ast.body)
+
+                else:
+                    stack = ast.body[::-1]
+
+                    if type_params := getattr(ast, 'type_params', None):
+                        stack.extend(type_params[::-1])
 
             elif (is_func := isinstance(ast, (FunctionDef, AsyncFunctionDef))) or isinstance(ast, Lambda):
-                stack = ast.body[::-1] if is_func else [ast.body]
-                args  = ast.args
+                if back:
+                    stack = []
 
-                if arg := args.kwarg:
-                    stack.append(arg)
+                    if type_params := getattr(ast, 'type_params', None):
+                        stack.extend(type_params)
 
-                stack.extend(args.kwonlyargs[::-1])
+                    stack.append(ast.args)
+                    stack.extend(ast.body) if is_func else stack.append(ast.body)
 
-                if arg := args.vararg:
-                    stack.append(arg)
+                else:
+                    stack = ast.body[::-1] if is_func else [ast.body]
 
-                stack.extend(args.args[::-1])
-                stack.extend(args.posonlyargs[::-1])
+                    stack.append(ast.args)
 
-                if type_params := getattr(ast, 'type_params', None):
-                    stack.extend(type_params[::-1])
+                    if type_params := getattr(ast, 'type_params', None):
+                        stack.extend(type_params[::-1])
 
             elif (is_elt := isinstance(ast, (ListComp, SetComp, GeneratorExp))) or isinstance(ast, DictComp):
-                stack                    = ast.generators[::-1] + ([ast.elt] if is_elt else [ast.value, ast.key])
-                skip_top_comp_first_iter = True
+                if back:
+                    stack = ([ast.elt] if is_elt else [ast.key, ast.value]) + (generators := ast.generators)
+                else:
+                    stack = (generators := ast.generators)[::-1] + ([ast.elt] if is_elt else [ast.value, ast.key])
+
+                skip_iter = generators[0].iter
 
             elif isinstance(ast, Expression):
                 stack = [ast.body]
 
         if stack is None:
-            stack = syntax_ordered_children(ast)[::-1]
+            stack = syntax_ordered_children(ast)
+
+            if not back:
+                stack = stack[::-1]
 
         while stack:
             if not (ast := stack.pop()):
@@ -1972,26 +1992,42 @@ class FST:
                     recurse_ = False
 
                     if isinstance(ast, ClassDef):
-                        stack.extend(ast.keywords[::-1])
-                        stack.extend(ast.bases[::-1])
-                        stack.extend(ast.decorator_list[::-1])
+                        if back:
+                            stack.extend(ast.decorator_list)
+                            stack.extend(ast.bases)
+                            stack.extend(ast.keywords)
+
+                        else:
+                            stack.extend(ast.keywords[::-1])
+                            stack.extend(ast.bases[::-1])
+                            stack.extend(ast.decorator_list[::-1])
 
                     elif isinstance(ast, (FunctionDef, AsyncFunctionDef)):
-                        stack.extend(ast.args.kw_defaults[::-1])
-                        stack.extend(ast.args.defaults[::-1])
-                        stack.extend(ast.decorator_list[::-1])
+                        if back:
+                            stack.extend(ast.decorator_list)
+                            stack.extend(ast.args.defaults)
+                            stack.extend(ast.args.kw_defaults)
+
+                        else:
+                            stack.extend(ast.args.kw_defaults[::-1])
+                            stack.extend(ast.args.defaults[::-1])
+                            stack.extend(ast.decorator_list[::-1])
 
                     elif isinstance(ast, Lambda):
-                        stack.extend(ast.args.kw_defaults[::-1])
-                        stack.extend(ast.args.defaults[::-1])
+                        if back:
+                            stack.extend(ast.args.defaults)
+                            stack.extend(ast.args.kw_defaults)
+                        else:
+                            stack.extend(ast.args.kw_defaults[::-1])
+                            stack.extend(ast.args.defaults[::-1])
 
                     elif isinstance(ast, (ListComp, SetComp, DictComp, GeneratorExp)):
                         comp_first_iter = ast.generators[0].iter
+                        gen             = ast.f.walk(with_loc, walk_self=False, back=back)
 
-                        for f in (gen := ast.f.walk(with_loc, walk_self=False)):  # all NamedExpr assignments below are visible here, yeah, its ugly
-                            if (a := f.a) is comp_first_iter or (isinstance(a, Name) and
-                                                                 isinstance(f.parent.a, NamedExpr) and
-                                                                 f.pfield.name == 'target'):
+                        for f in gen:  # all NamedExpr assignments below are visible here, yeah, its ugly
+                            if (a := f.a) is comp_first_iter or (f.pfield.name == 'target' and isinstance(a, Name) and
+                                                                 isinstance(f.parent.a, NamedExpr)):
                                 subrecurse = recurse
 
                                 while (sent := (yield f)) is not None:
@@ -2000,22 +2036,32 @@ class FST:
                                 if not subrecurse:
                                     gen.send(False)
 
-                    elif isinstance(ast, comprehension):  # this only comes from top comprehension, not ones encountered here
-                        if a := ast.ifs:
-                            stack.extend(a)
+                    elif isinstance(ast, comprehension):  # this only comes from top level comprehension, not ones encountered here
+                        if back:
+                            stack.append(ast.target)
 
-                        if skip_top_comp_first_iter:
-                            skip_top_comp_first_iter = False
+                            if (a := ast.iter) is not skip_iter:
+                                stack.append(a)
+
+                            if a := ast.ifs:
+                                stack.extend(a)
+
                         else:
-                            stack.append(ast.iter)
+                            if a := ast.ifs:
+                                stack.extend(a)
 
-                        stack.append(ast.target)
+                            if (a := ast.iter) is not skip_iter:
+                                stack.append(a)
+
+                            stack.append(ast.target)
 
                     else:
                         recurse_ = True
 
                 if recurse_:
-                    stack.extend(syntax_ordered_children(ast)[::-1])
+                    children = syntax_ordered_children(ast)
+
+                    stack.extend(children if back else children[::-1])
 
     def is_parsable(self) -> bool:
         """Really means the AST is `unparse()`able and then re`parse()`able which will get it to this top level AST node
