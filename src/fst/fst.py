@@ -291,6 +291,19 @@ def _fixup_slice_index(ast, body, field, start, stop) -> tuple[int, int]:
     return start, stop
 
 
+def _normalize_code(code: Code) -> 'FST':
+    if isinstance(code, FST):
+        if not code.is_root:
+            raise ValueError('FST must be root')
+
+        return code
+
+    if isinstance(code, AST):
+        return FST.fromast(code)
+
+    return FST.fromsrc(code)
+
+
 class FST:
     """Preserve AST formatting information and easy manipulation.
 
@@ -458,10 +471,11 @@ class FST:
 
     # ------------------------------------------------------------------------------------------------------------------
 
-    def _make_fst_tree(self) -> 'FST':  # -> Self
+    def _make_fst_tree(self, stack: list['FST'] | None = None) -> 'FST':  # -> Self
         """Create tree of FST nodes for each AST node from root. Call only on root."""
 
-        stack = [self]
+        if stack is None:
+            stack = [self]
 
         while stack:
             f = stack.pop()
@@ -473,12 +487,13 @@ class FST:
 
                 f.pfield.set(parent.a, a)
 
-            for name, child in iter_fields(a):
-                if isinstance(child, AST):
-                    stack.append(FST(child, f, astfield(name)))
-                elif isinstance(child, list):
-                    stack.extend(FST(a, f, astfield(name, idx))
-                                 for idx, a in enumerate(child) if isinstance(a, AST))
+            else:
+                for name, child in iter_fields(a):
+                    if isinstance(child, AST):
+                        stack.append(FST(child, f, astfield(name)))
+                    elif isinstance(child, list):
+                        stack.extend(FST(a, f, astfield(name, idx))
+                                     for idx, a in enumerate(child) if isinstance(a, AST))
 
         return self
 
@@ -525,10 +540,11 @@ class FST:
             return key.f
 
         ln, col, s = _prev_src(self.root._lines, self.ln, self.col, value.ln, value.col)
+        end_col    = col + len(s)
 
         assert s.endswith('**')
 
-        return fstloc(ln, col, ln, col + len(s))
+        return fstloc(ln, end_col - 2, ln, end_col)
 
     def _maybe_add_singleton_tuple_comma(self, offset: bool = True) -> 'FST':  # -> Self
         """Maybe add comma to singleton tuple if not already there, parenthesization not checked or taken into account.
@@ -889,11 +905,11 @@ class FST:
 
         return lns
 
-    def _make_fst_and_dedent(self, findent: 'FST', newast: AST, copy_loc: fstloc, prefix: str = '', suffix: str = '',
+    def _make_fst_and_dedent(self, findent: 'FST', ast: AST, copy_loc: fstloc, prefix: str = '', suffix: str = '',
                              put_loc: fstloc | None = None, put_lines: list[str] | None = None) -> 'FST':
         indent = findent.get_indent()
         lines  = self.root._lines
-        fst    = FST(newast, lines=lines, from_=self)  # we use original lines for nodes offset calc before putting new lines
+        fst    = FST(ast, lines=lines, from_=self)  # we use original lines for nodes offset calc before putting new lines
 
         fst._offset(copy_loc.ln, copy_loc.col, -copy_loc.ln, len(prefix) - lines[copy_loc.ln].c2b(copy_loc.col))  # WARNING! `prefix` is expected to have only 1 byte characters
 
@@ -914,9 +930,10 @@ class FST:
 
         return fst
 
-    def _make_Expression_seq_copy_and_dedent(self, newast: AST, cut: bool, lfirst: 'FST', llast: 'FST',
-                                             lpre: Union['FST', fstloc, None], lpost: Union['FST', fstloc, None],
-                                             seq_loc: fstloc, prefix: str, suffix: str) -> 'FST':
+    def _get_seq_and_dedent(self, ast: AST, cut: bool, seq_loc: fstloc,
+                            lfirst: Union['FST', fstloc], llast: Union['FST', fstloc],
+                            lpre: Union['FST', fstloc, None], lpost: Union['FST', fstloc, None],
+                            prefix: str, suffix: str) -> 'FST':
 
         # start of special sauce  # TODO: make this specialer? (specifiable behavior options, prettier multiline handling, etc...)
 
@@ -970,17 +987,17 @@ class FST:
 
         # end of special sauce
 
-        newast.lineno         = copy_ln + 1
-        newast.col_offset     = lines[copy_ln].c2b(copy_col)
-        newast.end_lineno     = copy_end_ln + 1
-        newast.end_col_offset = lines[copy_end_ln].c2b(copy_end_col)
+        ast.lineno         = copy_ln + 1
+        ast.col_offset     = lines[copy_ln].c2b(copy_col)
+        ast.end_lineno     = copy_end_ln + 1
+        ast.end_col_offset = lines[copy_end_ln].c2b(copy_end_col)
 
-        fst = self._make_fst_and_dedent(self, Expression(body=newast), copy_loc, prefix, suffix, del_loc)
+        fst = self._make_fst_and_dedent(self, Expression(body=ast), copy_loc, prefix, suffix, del_loc)
 
-        newast.col_offset     = 0  # before prefix
-        newast.end_col_offset = fst._lines[-1].lenbytes  # after suffix
+        ast.col_offset     = 0  # before prefix
+        ast.end_col_offset = fst._lines[-1].lenbytes  # after suffix
 
-        newast.f.touchup(True)
+        ast.f.touchup(True)
 
         return fst
 
@@ -1081,7 +1098,7 @@ class FST:
 
                 assert self.root._lines[seq_loc.end_ln].startswith(')', seq_loc.end_col)
 
-        fst = self._make_Expression_seq_copy_and_dedent(newast, cut, lfirst, llast, lpre, lpost, seq_loc, prefix, suffix)
+        fst = self._get_seq_and_dedent(newast, cut, seq_loc, lfirst, llast, lpre, lpost, prefix, suffix)
 
         if is_tuple:
             fst.a.body.f._maybe_add_singleton_tuple_comma(False)  # maybe need to add a postfix comma to copied single element tuple if is not already there
@@ -1134,8 +1151,8 @@ class FST:
             for i in range(start, len(keys)):
                 values[i].f.pfield = astfield('values', i)
 
-                if keys[i]:  # could be None from **
-                    keys[i].f.pfield = astfield('keys', i)
+                if key := keys[i]:  # could be None from **
+                    key.f.pfield = astfield('keys', i)
 
         newast  = Dict(keys=akeys, values=avalues)
         seq_loc = fstloc(self.ln, self.col + 1, self.end_ln, self.end_col - 1)
@@ -1143,7 +1160,7 @@ class FST:
         assert self.root._lines[self.ln].startswith('{', self.col)
         assert self.root._lines[seq_loc.end_ln].startswith('}', seq_loc.end_col)
 
-        return self._make_Expression_seq_copy_and_dedent(newast, cut, lfirst, llast, lpre, lpost, seq_loc, '{', '}')
+        return self._get_seq_and_dedent(newast, cut, seq_loc, lfirst, llast, lpre, lpost, '{', '}')
 
     # ------------------------------------------------------------------------------------------------------------------
 
@@ -2567,10 +2584,121 @@ class FST:
 
         raise ValueError(f"cannot get slice from '{self.a.__class__.__name__}'")
 
+
+
+
+
+    def _put_seq_and_indent(self, fst: 'FST', seq_loc: fstloc,
+                            lfirst: Union['FST', fstloc, None], llast: Union['FST', fstloc, None],
+                            lpre: Union['FST', fstloc, None], lpost: Union['FST', fstloc, None]) -> 'FST':
+        assert fst.is_root
+
+        fst._indent_tail(self.get_indent())
+
+
+
+        # TODO: special sauce (make any own needed offsets)
+        put_loc = fstloc(lfirst.ln, lfirst.col, llast.end_ln, llast.end_col)
+        # TODO: special sauce (make any own needed offsets)
+
+
+
+        put_ln, put_col, put_end_ln, put_end_col = put_loc
+
+        root            = self.root
+        lines           = root._lines
+        fst_lines       = fst._lines
+        fst_dcol_offset = lines[put_ln].c2b(put_col)
+        dln             = (len(fst_lines) - 1) - (put_end_ln - put_ln)
+
+        if not dln:
+            dcol_offset = fst_lines[0].lenbytes + lines[put_ln].c2b(put_col) - lines[put_end_ln].c2b(put_end_col)
+        else:
+            dcol_offset = fst_lines[-1].lenbytes - lines[put_end_ln].c2b(put_end_col)
+
+        self.putl_lines(fst_lines, *put_loc)
+
+        root._offset(put_end_ln, put_end_col, dln, dcol_offset)
+        fst._offset(0, 0, put_ln, fst_dcol_offset)
+
+
+
+
+
+
+
+
+
+    def _put_slice_dict(self, code: Code, start: int, stop: int):
+        newfst      = _normalize_code(code)
+        ast         = self.a
+        values      = ast.values
+        start, stop = _fixup_slice_index(ast, values, 'values', start, stop)
+        dstlen      = stop - start
+
+        if not dstlen and not newfst.keys:  # assign empty slice to empty slice
+            return
+
+        newast   = newfst.a
+        newlines = newfst._lines
+
+        newast.end_col_offset -= 1
+
+        newfst._offset(0, 1, 0, -1)
+
+        assert newlines[0].startswith('{')
+        assert newlines[-1].endswith('}')
+
+        newlines[-1] = bistr(newlines[-1][:-1])
+        newlines[0]  = bistr(newlines[0][1:])
+
+        keys    = ast.keys
+        lpre    = values[start - 1].f if start else None
+        lpost   = None if stop == len(keys) else self._dict_key_or_mock_loc(keys[stop], values[stop].f)
+        seq_loc = fstloc(self.ln, self.col + 1, self.end_ln, self.end_col - 1)
+
+        if not dstlen:
+            lfirst = llast = None
+
+        else:
+            lfirst = self._dict_key_or_mock_loc(keys[start], values[start].f)
+            llast  = values[stop - 1].f
+
+        self._put_seq_and_indent(newfst, seq_loc, lfirst, llast, lpre, lpost)
+
+        keys[start : stop]   = newast.keys
+        values[start : stop] = newast.values
+        srclen               = len(newast.keys)
+        stack                = []
+
+        for i in range(srclen):
+            startplusi = start + i
+
+            stack.append(FST(values[startplusi], self, astfield('values', startplusi)))
+
+            if key := keys[startplusi]:
+                stack.append(FST(key, self, astfield('keys', startplusi)))
+
+        for i in range(start + srclen, len(keys)):
+            values[i].f.pfield = astfield('values', i)
+
+            if key := keys[i]:  # could be None from **
+                key.f.pfield = astfield('keys', i)
+
+        self._make_fst_tree(stack)
+
+
+
+
+
+
+
+
+
     def put_slice(self, code: Code, start: int | None = None, stop: int | None = None, field: str | None = None
                   ) -> 'FST':
         if isinstance(self.a, Dict):
-            return self._get_slice_dict(start, stop)
+            return self._put_slice_dict(code, start, stop)
 
         raise ValueError(f"cannot put slice to '{self.a.__class__.__name__}'")
 
