@@ -992,12 +992,12 @@ class FST:
         ast.end_lineno     = copy_end_ln + 1
         ast.end_col_offset = lines[copy_end_ln].c2b(copy_end_col)
 
-        fst = self._make_fst_and_dedent(self, Expression(body=ast), copy_loc, prefix, suffix, del_loc)
+        fst = self._make_fst_and_dedent(self, ast, copy_loc, prefix, suffix, del_loc)
 
         ast.col_offset     = 0  # before prefix
         ast.end_col_offset = fst._lines[-1].lenbytes  # after suffix
 
-        ast.f.touchup(True)
+        ast.f.touch()
 
         return fst
 
@@ -1035,17 +1035,17 @@ class FST:
 
         if start == stop:
             if is_set:
-                return FST(Expression(body=Call(
+                return FST(Call(
                     func=Name(id='set', ctx=Load(), lineno=1, col_offset=0, end_lineno=1, end_col_offset=3),
                     args=[], keywords=[], lineno=1, col_offset=0, end_lineno=1, end_col_offset=5
-                )), lines=[bistr('set()')], from_=self)
+                ), lines=[bistr('set()')], from_=self)
 
             elif is_tuple:
-                return FST(Expression(body=Tuple(elts=[], ctx=ctx, lineno=1, col_offset=0, end_lineno=1, end_col_offset=2
-                                                 )), lines=[bistr('()')], from_=self)
+                return FST(Tuple(elts=[], ctx=ctx, lineno=1, col_offset=0, end_lineno=1, end_col_offset=2),
+                           lines=[bistr('()')], from_=self)
             else:  # list
-                return FST(Expression(body=List(elts=[], ctx=ctx, lineno=1, col_offset=0, end_lineno=1, end_col_offset=2
-                                                 )), lines=[bistr('[]')], from_=self)
+                return FST(List(elts=[], ctx=ctx, lineno=1, col_offset=0, end_lineno=1, end_col_offset=2),
+                           lines=[bistr('[]')], from_=self)
 
         is_paren = is_tuple and self.is_tuple_parenthesized()
         lfirst   = elts[start].f
@@ -1101,7 +1101,7 @@ class FST:
         fst = self._get_seq_and_dedent(newast, cut, seq_loc, lfirst, llast, lpre, lpost, prefix, suffix)
 
         if is_tuple:
-            fst.a.body.f._maybe_add_singleton_tuple_comma(False)  # maybe need to add a postfix comma to copied single element tuple if is not already there
+            fst._maybe_add_singleton_tuple_comma(False)  # maybe need to add a postfix comma to copied single element tuple if is not already there
 
             if elts:
                 self._maybe_add_singleton_tuple_comma(False)
@@ -1128,8 +1128,8 @@ class FST:
         start, stop = _fixup_slice_index(ast, values, 'values', start, stop)
 
         if start == stop:
-            return FST(Expression(body=Dict(keys=[], values=[], lineno=1, col_offset=0, end_lineno=1, end_col_offset=2
-                                            )), lines=[bistr('{}')], from_=self)
+            return FST(Dict(keys=[], values=[], lineno=1, col_offset=0, end_lineno=1, end_col_offset=2),
+                       lines=[bistr('{}')], from_=self)
 
         keys   = ast.keys
         lfirst = self._dict_key_or_mock_loc(keys[start], values[start].f)
