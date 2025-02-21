@@ -359,7 +359,7 @@ _compare_primitive_type_comments_func = (
 )
 
 def compare_asts(ast1: AST, ast2: AST, *, locs: bool = False, type_comments: bool = False, ctx: bool = True,
-            recurse: bool = True, raise_: bool = False) -> bool:
+                 recurse: bool = True, raise_: bool = False) -> bool:
     """Copy two trees including possibly locations and type comments."""
 
     cb_primitive = _compare_primitive_type_comments_func[bool(type_comments)]

@@ -382,7 +382,7 @@ def regen_cut_data():
         src  = src.strip()
         t    = parse(src)
         f    = eval(f't.{elt}', {'t': t}).f
-        s    = f.slice(start, stop, cut=True)
+        s    = f.get_slice(start, stop, cut=True)
         tsrc = t.f.src
         ssrc = s.src
 
@@ -1545,7 +1545,7 @@ def f():
     j = 1
     k = 1
     l = 1
-            """.strip()).body[0].f.slice(-2).dump(print=False)), """
+            """.strip()).body[0].f.get_slice(-2).dump(print=False)), """
 Module .. ROOT 0,0 -> 1,5
   .body[2]
   0] Assign .. 0,0 -> 0,5
@@ -1586,7 +1586,7 @@ except ValueError: pass
 except RuntimeError: pass
 except IndexError: pass
 except TypeError: pass
-            """.strip()).body[0].f.slice(-1, field='handlers').dump(print=False)), """
+            """.strip()).body[0].f.get_slice(-1, field='handlers').dump(print=False)), """
 Module .. ROOT 0,0 -> 0,22
   .body[1]
   0] ExceptHandler .. 0,0 -> 0,22
@@ -1608,7 +1608,7 @@ match a:
     case f: pass
     case None: pass
     case 3 | 4: pass
-            """.strip()).body[0].f.slice(1, 3).dump(print=False)), """
+            """.strip()).body[0].f.get_slice(1, 3).dump(print=False)), """
 Module .. ROOT 0,0 -> 1,15
   .body[2]
   0] match_case .. 0,0 -> 0,7
@@ -1637,7 +1637,7 @@ Module .. ROOT 0,0 -> 1,15
         dumptest(self, parse("""
 if 1: pass
 elif 2: pass
-            """.strip()).body[0].f.slice(field='orelse'), """
+            """.strip()).body[0].f.get_slice(field='orelse'), """
 Module .. ROOT 0,0 -> 0,10
   .body[1]
   0] If .. 0,0 -> 0,10
@@ -1655,7 +1655,7 @@ Module .. ROOT 0,0 -> 0,10
 if 1: pass
 else:
   if 2: pass
-            """.strip()).body[0].f.slice(field='orelse'), """
+            """.strip()).body[0].f.get_slice(field='orelse'), """
 Module .. ROOT 0,0 -> 0,10
   .body[1]
   0] If .. 0,0 -> 0,10
@@ -1672,7 +1672,7 @@ Module .. ROOT 0,0 -> 0,10
     def test_slice_seq_expr_1(self):
         dumptest(self, parse("""
 (1, 2, 3, 4)
-            """.strip()).body[0].value.f.slice(1, 3), """
+            """.strip()).body[0].value.f.get_slice(1, 3), """
 Expression .. ROOT 0,0 -> 0,6
   .body
     Tuple .. 0,0 -> 0,6
@@ -1693,7 +1693,7 @@ Expression .. ROOT 0,0 -> 0,6
 
         dumptest(self, parse("""
 (1, 2, 3, 4)
-            """.strip()).body[0].value.f.slice(-1), """
+            """.strip()).body[0].value.f.get_slice(-1), """
 Expression .. ROOT 0,0 -> 0,4
   .body
     Tuple .. 0,0 -> 0,4
@@ -1709,7 +1709,7 @@ Expression .. ROOT 0,0 -> 0,4
 
         dumptest(self, parse("""
 (1, 2, 3, 4)
-            """.strip()).body[0].value.f.slice(), """
+            """.strip()).body[0].value.f.get_slice(), """
 Expression .. ROOT 0,0 -> 0,12
   .body
     Tuple .. 0,0 -> 0,12
@@ -1740,7 +1740,7 @@ Expression .. ROOT 0,0 -> 0,12
 
         dumptest(self, parse("""
 (1, 2, 3, 4)
-            """.strip()).body[0].value.f.slice(1, 1), """
+            """.strip()).body[0].value.f.get_slice(1, 1), """
 Expression .. ROOT 0,0 -> 0,2
   .body
     Tuple .. 0,0 -> 0,2
@@ -1751,7 +1751,7 @@ Expression .. ROOT 0,0 -> 0,2
 
         dumptest(self, parse("""
 [1, 2, 3, 4]
-            """.strip()).body[0].value.f.slice(1, 3), """
+            """.strip()).body[0].value.f.get_slice(1, 3), """
 Expression .. ROOT 0,0 -> 0,6
   .body
     List .. 0,0 -> 0,6
@@ -1772,7 +1772,7 @@ Expression .. ROOT 0,0 -> 0,6
 
         dumptest(self, parse("""
 [1, 2, 3, 4]
-            """.strip()).body[0].value.f.slice(-1), """
+            """.strip()).body[0].value.f.get_slice(-1), """
 Expression .. ROOT 0,0 -> 0,3
   .body
     List .. 0,0 -> 0,3
@@ -1788,7 +1788,7 @@ Expression .. ROOT 0,0 -> 0,3
 
         dumptest(self, parse("""
 [1, 2, 3, 4]
-            """.strip()).body[0].value.f.slice(), """
+            """.strip()).body[0].value.f.get_slice(), """
 Expression .. ROOT 0,0 -> 0,12
   .body
     List .. 0,0 -> 0,12
@@ -1819,7 +1819,7 @@ Expression .. ROOT 0,0 -> 0,12
 
         dumptest(self, parse("""
 [1, 2, 3, 4]
-            """.strip()).body[0].value.f.slice(1, 1), """
+            """.strip()).body[0].value.f.get_slice(1, 1), """
 Expression .. ROOT 0,0 -> 0,2
   .body
     List .. 0,0 -> 0,2
@@ -1829,7 +1829,7 @@ Expression .. ROOT 0,0 -> 0,2
 
         dumptest(self, parse("""
 {1, 2, 3, 4}
-            """.strip()).body[0].value.f.slice(1, 3), """
+            """.strip()).body[0].value.f.get_slice(1, 3), """
 Expression .. ROOT 0,0 -> 0,6
   .body
     Set .. 0,0 -> 0,6
@@ -1848,7 +1848,7 @@ Expression .. ROOT 0,0 -> 0,6
 
         dumptest(self, parse("""
 {1, 2, 3, 4}
-            """.strip()).body[0].value.f.slice(-1), """
+            """.strip()).body[0].value.f.get_slice(-1), """
 Expression .. ROOT 0,0 -> 0,3
   .body
     Set .. 0,0 -> 0,3
@@ -1862,7 +1862,7 @@ Expression .. ROOT 0,0 -> 0,3
 
         dumptest(self, parse("""
 {1, 2, 3, 4}
-            """.strip()).body[0].value.f.slice(), """
+            """.strip()).body[0].value.f.get_slice(), """
 Expression .. ROOT 0,0 -> 0,12
   .body
     Set .. 0,0 -> 0,12
@@ -1891,7 +1891,7 @@ Expression .. ROOT 0,0 -> 0,12
 
         dumptest(self, parse("""
 {1, 2, 3, 4}
-            """.strip()).body[0].value.f.slice(1, 1), """
+            """.strip()).body[0].value.f.get_slice(1, 1), """
 Expression .. ROOT 0,0 -> 0,5
   .body
     Call .. 0,0 -> 0,5
@@ -1906,7 +1906,7 @@ Expression .. ROOT 0,0 -> 0,5
         dumptest(self, parse("""
 
 (1, 2, 3, 4)
-            """.strip()).body[0].value.f.slice(1, 3), """
+            """.strip()).body[0].value.f.get_slice(1, 3), """
 Expression .. ROOT 0,0 -> 0,6
   .body
     Tuple .. 0,0 -> 0,6
@@ -1927,7 +1927,7 @@ Expression .. ROOT 0,0 -> 0,6
 
         dumptest(self, parse("""
 {1: 2, 3: 4, 5: 6, 7: 8}
-            """.strip()).body[0].value.f.slice(1, 3), """
+            """.strip()).body[0].value.f.get_slice(1, 3), """
 Expression .. ROOT 0,0 -> 0,12
   .body
     Dict .. 0,0 -> 0,12
@@ -1957,7 +1957,7 @@ Expression .. ROOT 0,0 -> 0,12
 
         dumptest(self, parse("""
 {1: 2, 3: 4, 5: 6, 7: 8}
-            """.strip()).body[0].value.f.slice(-1), """
+            """.strip()).body[0].value.f.get_slice(-1), """
 Expression .. ROOT 0,0 -> 0,6
   .body
     Dict .. 0,0 -> 0,6
@@ -1977,7 +1977,7 @@ Expression .. ROOT 0,0 -> 0,6
 
         dumptest(self, parse("""
 {1: 2, 3: 4, 5: 6, 7: 8}
-            """.strip()).body[0].value.f.slice(), """
+            """.strip()).body[0].value.f.get_slice(), """
 Expression .. ROOT 0,0 -> 0,24
   .body
     Dict .. 0,0 -> 0,24
@@ -2027,7 +2027,7 @@ Expression .. ROOT 0,0 -> 0,24
 
         dumptest(self, parse("""
 {1: 2, 3: 4, 5: 6, 7: 8}
-            """.strip()).body[0].value.f.slice(1, 1), """
+            """.strip()).body[0].value.f.get_slice(1, 1), """
 Expression .. ROOT 0,0 -> 0,2
   .body
     Dict .. 0,0 -> 0,2
@@ -2039,7 +2039,7 @@ Expression .. ROOT 0,0 -> 0,2
     1,  # first line
     2,  # second line
     3,  # third line
-)           """.strip()).body[0].value.f.slice(), """
+)           """.strip()).body[0].value.f.get_slice(), """
 Expression .. ROOT 0,0 -> 4,1
   .body
     Tuple .. 0,0 -> 4,1
@@ -2075,7 +2075,7 @@ Expression .. ROOT 0,0 -> 4,1
     2,  # second line
     3,  # third line
 )
-            """.strip()).body[0].value.f.slice(0, 2), """
+            """.strip()).body[0].value.f.get_slice(0, 2), """
 Expression .. ROOT 0,0 -> 3,1
   .body
     Tuple .. 0,0 -> 3,1
@@ -2105,7 +2105,7 @@ Expression .. ROOT 0,0 -> 3,1
     2,  # second line
     3,  # third line
 )
-            """.strip()).body[0].value.f.slice(1, 2), """
+            """.strip()).body[0].value.f.get_slice(1, 2), """
 Expression .. ROOT 0,0 -> 2,1
   .body
     Tuple .. 0,0 -> 2,1
@@ -2129,7 +2129,7 @@ Expression .. ROOT 0,0 -> 2,1
     2,  # second line
     3,  # third line
 )
-            """.strip()).body[0].value.f.slice(2), """
+            """.strip()).body[0].value.f.get_slice(2), """
 Expression .. ROOT 0,0 -> 2,1
   .body
     Tuple .. 0,0 -> 2,1
@@ -2151,7 +2151,7 @@ Expression .. ROOT 0,0 -> 2,1
 (           # hello
     1, 2, 3 # last line
 )
-            """.strip()).body[0].value.f.slice(), """
+            """.strip()).body[0].value.f.get_slice(), """
 Expression .. ROOT 0,0 -> 2,1
   .body
     Tuple .. 0,0 -> 2,1
@@ -2183,7 +2183,7 @@ Expression .. ROOT 0,0 -> 2,1
 (           # hello
     1, 2, 3 # last line
 )
-            """.strip()).body[0].value.f.slice(0, 2), """
+            """.strip()).body[0].value.f.get_slice(0, 2), """
 Expression .. ROOT 0,0 -> 1,9
   .body
     Tuple .. 0,0 -> 1,9
@@ -2209,7 +2209,7 @@ Expression .. ROOT 0,0 -> 1,9
 (           # hello
     1, 2, 3 # last line
 )
-            """.strip()).body[0].value.f.slice(1, 2), """
+            """.strip()).body[0].value.f.get_slice(1, 2), """
 Expression .. ROOT 0,0 -> 0,4
   .body
     Tuple .. 0,0 -> 0,4
@@ -2229,7 +2229,7 @@ Expression .. ROOT 0,0 -> 0,4
 (           # hello
     1, 2, 3 # last line
 )
-            """.strip()).body[0].value.f.slice(2), """
+            """.strip()).body[0].value.f.get_slice(2), """
 Expression .. ROOT 0,0 -> 1,1
   .body
     Tuple .. 0,0 -> 1,1
@@ -2249,7 +2249,7 @@ Expression .. ROOT 0,0 -> 1,1
     def test_slice_seq_expr_3(self):
         dumptest(self, parse("""
 1, 2, 3, 4
-            """.strip()).body[0].value.f.slice(1, 3), """
+            """.strip()).body[0].value.f.get_slice(1, 3), """
 Expression .. ROOT 0,0 -> 0,6
   .body
     Tuple .. 0,0 -> 0,6
@@ -2272,7 +2272,7 @@ Expression .. ROOT 0,0 -> 0,6
 
         dumptest(self, parse("""
 1, 2, 3, 4
-            """.strip()).body[0].value.f.slice(-1), """
+            """.strip()).body[0].value.f.get_slice(-1), """
 Expression .. ROOT 0,0 -> 0,4
   .body
     Tuple .. 0,0 -> 0,4
@@ -2290,7 +2290,7 @@ Expression .. ROOT 0,0 -> 0,4
 
         dumptest(self, parse("""
 1, 2, 3, 4
-            """.strip()).body[0].value.f.slice(), """
+            """.strip()).body[0].value.f.get_slice(), """
 Expression .. ROOT 0,0 -> 0,12
   .body
     Tuple .. 0,0 -> 0,12
@@ -2323,7 +2323,7 @@ Expression .. ROOT 0,0 -> 0,12
 
         dumptest(self, parse("""
 1, 2, 3, 4
-            """.strip()).body[0].value.f.slice(1, 1), """
+            """.strip()).body[0].value.f.get_slice(1, 1), """
 Expression .. ROOT 0,0 -> 0,2
   .body
     Tuple .. 0,0 -> 0,2
@@ -2338,7 +2338,7 @@ Expression .. ROOT 0,0 -> 0,2
 (1, 2
   ,  # comment
 3, 4)
-            """.strip()).body[0].value.f.slice(1, 2), """
+            """.strip()).body[0].value.f.get_slice(1, 2), """
 Expression .. ROOT 0,0 -> 2,1
   .body
     Tuple .. 0,0 -> 2,1
@@ -2360,7 +2360,7 @@ Expression .. ROOT 0,0 -> 2,1
 (1, 2
   ,
 3, 4)
-            """.strip()).body[0].value.f.slice(1, 2), """
+            """.strip()).body[0].value.f.get_slice(1, 2), """
 Expression .. ROOT 0,0 -> 2,1
   .body
     Tuple .. 0,0 -> 2,1
@@ -2381,7 +2381,7 @@ Expression .. ROOT 0,0 -> 2,1
         dumptest(self, parse("""
 (1, 2
   , 3, 4)
-            """.strip()).body[0].value.f.slice(1, 2), """
+            """.strip()).body[0].value.f.get_slice(1, 2), """
 Expression .. ROOT 0,0 -> 1,4
   .body
     Tuple .. 0,0 -> 1,4
@@ -2401,7 +2401,7 @@ Expression .. ROOT 0,0 -> 1,4
         dumptest(self, parse("""
 (1, 2  # comment
   , 3, 4)
-            """.strip()).body[0].value.f.slice(1, 2), """
+            """.strip()).body[0].value.f.get_slice(1, 2), """
 Expression .. ROOT 0,0 -> 1,4
   .body
     Tuple .. 0,0 -> 1,4
@@ -2425,7 +2425,7 @@ Expression .. ROOT 0,0 -> 1,4
     2,  # second line
     3,  # third line
 )
-            """.strip()).body[0].value.f.slice(), """
+            """.strip()).body[0].value.f.get_slice(), """
 Expression .. ROOT 0,0 -> 4,1
   .body
     Tuple .. 0,0 -> 4,1
@@ -2461,7 +2461,7 @@ Expression .. ROOT 0,0 -> 4,1
     2,  # second line
     3,  # third line
 )
-            """.strip()).body[0].value.f.slice(0, 2), """
+            """.strip()).body[0].value.f.get_slice(0, 2), """
 Expression .. ROOT 0,0 -> 3,1
   .body
     Tuple .. 0,0 -> 3,1
@@ -2491,7 +2491,7 @@ Expression .. ROOT 0,0 -> 3,1
     2,  # second line
     3,  # third line
 )
-            """.strip()).body[0].value.f.slice(1, 2), """
+            """.strip()).body[0].value.f.get_slice(1, 2), """
 Expression .. ROOT 0,0 -> 2,1
   .body
     Tuple .. 0,0 -> 2,1
@@ -2515,7 +2515,7 @@ Expression .. ROOT 0,0 -> 2,1
     2,  # second line
     3,  # third line
 )
-            """.strip()).body[0].value.f.slice(2), """
+            """.strip()).body[0].value.f.get_slice(2), """
 Expression .. ROOT 0,0 -> 2,1
   .body
     Tuple .. 0,0 -> 2,1
@@ -2538,7 +2538,7 @@ Expression .. ROOT 0,0 -> 2,1
             src  = src.strip()
             t    = parse(src)
             f    = eval(f't.{elt}', {'t': t}).f
-            s    = f.slice(start, stop, cut=True)
+            s    = f.get_slice(start, stop, cut=True)
             tsrc = t.f.src
             ssrc = s.src
 

@@ -6,7 +6,8 @@ from typing import Any, Callable, Generator, Literal, NamedTuple, Optional, Unio
 from .util import *
 
 __all__ = [
-    'FST', 'parse', 'unparse',
+    'parse', 'unparse', 'FST',
+    'astfield', 'fstloc', 'srcwpos', 'fstlistproxy',
 ]
 
 
@@ -138,10 +139,10 @@ class fstlistproxy:
         return f'f{list(self)}'
 
     def copy(self, *, fix: bool = True) -> 'FST':
-        return self.owner.slice(start := self.start, start + len(self.asts), self.field, fix=fix, cut=False)
+        return self.owner.get_slice(start := self.start, start + len(self.asts), self.field, fix=fix, cut=False)
 
     def cut(self, *, fix: bool = True) -> 'FST':
-        return self.owner.slice(start := self.start, start + len(self.asts), self.field, fix=fix, cut=True)
+        return self.owner.get_slice(start := self.start, start + len(self.asts), self.field, fix=fix, cut=True)
 
 
 def parse(source, filename='<unknown>', mode='exec', *, type_comments=False, feature_version=None, **kwargs):
@@ -978,7 +979,7 @@ class FST:
 
         return fst
 
-    def _slice_stmt(self, start, stop, field, fix, cut) -> 'FST':
+    def _get_slice_stmt(self, start: int, stop: int, field: str | None, fix: bool, cut: bool) -> 'FST':
         if cut: raise NotImplementedError  # TODO: THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS!
 
         ast         = self.a
@@ -1006,7 +1007,7 @@ class FST:
 
         return fst
 
-    def _slice_tuple_list_or_set(self, start, stop, fix, cut) -> 'FST':
+    def _get_slice_tuple_list_or_set(self, start: int, stop: int, fix: bool, cut: bool) -> 'FST':
         ast         = self.a
         elts        = ast.elts
         is_set      = isinstance(ast, Set)
@@ -1103,7 +1104,7 @@ class FST:
 
         return fst
 
-    def _slice_dict(self, start, stop, fix, cut) -> 'FST':
+    def _get_slice_dict(self, start: int, stop: int, fix: bool, cut: bool) -> 'FST':
         ast         = self.a
         values      = ast.values
         start, stop = _fixup_slice_index(ast, values, 'values', start, stop)
@@ -1166,8 +1167,10 @@ class FST:
             self.indent        = root.indent
             self._parse_params = root._parse_params
 
-        self.indent        = root_params.get('indent', getattr(self, 'indent', '    '))
-        self._parse_params = root_params.get('parse_params', getattr(self, '_parse_params', {}))
+        self.indent        = (v if (v := root_params.get('indent', self)) is not self else
+                              getattr(self, 'indent', '    '))
+        self._parse_params = (v if (v := root_params.get('parse_params', self)) is not self else
+                              getattr(self, '_parse_params', {}))
 
         self._make_fst_tree()
 
@@ -1261,14 +1264,13 @@ class FST:
                     raise RuntimeError('could not reproduce ast')
 
             if calc_loc == 'copy':
-                if not compare_asts(astp, ast, type_comments=type_comments):
+                if not compare_asts(astp, ast, type_comments=type_comments, raise_=False):
                     raise RuntimeError('could not reparse ast identically')
 
                 ast = astp
 
-            else:
-                if not copy_attributes(astp, ast, compare=True, type_comments=type_comments):
-                    raise RuntimeError('could not reparse ast identically')
+            elif not copy_attributes(astp, ast, compare=True, type_comments=type_comments, raise_=False):
+                raise RuntimeError('could not reparse ast identically')
 
         return FST(ast, lines=[bistr(s) for s in lines], parse_params=parse_params)
 
@@ -1278,15 +1280,25 @@ class FST:
         root         = self.root
         ast          = root.a
         parse_params = root._parse_params
-        astp         = ast_parse(root.src, mode=get_parse_mode(ast), **parse_params)
+
+        try:
+            astp = ast_parse(root.src, mode=get_parse_mode(ast), **parse_params)
+
+        except SyntaxError:
+            if raise_:
+                raise
+
+            return None
 
         if not isinstance(ast, mod):
             if isinstance(astp, Expression):
                 astp = astp.body
-            elif len(astp.body) != 1:
+            elif len(astp.body) == 1:
+                astp = astp.body[0]
+            elif raise_:
                 raise ValueError('verify failed reparse')
             else:
-                astp = astp.body[0]
+                return None
 
         if not compare_asts(astp, ast, locs=True, type_comments=parse_params['type_comments'], raise_=raise_):
             return None
@@ -2534,19 +2546,19 @@ class FST:
 
 
 
-    def slice(self, start: int | None = None, stop: int | None = None, field: str | None = None, *,
+    def get_slice(self, start: int | None = None, stop: int | None = None, field: str | None = None, *,
               fix: bool = True, cut: bool = False) -> 'FST':
         if isinstance(self.a, STATEMENTISH_OR_STMTMOD):
-            return self._slice_stmt(start, stop, field, fix, cut)
+            return self._get_slice_stmt(start, stop, field, fix, cut)
 
         if isinstance(self.a, Expression):
             self = self.a.body.f
 
         if isinstance(self.a, (Tuple, List, Set)):
-            return self._slice_tuple_list_or_set(start, stop, fix, cut)
+            return self._get_slice_tuple_list_or_set(start, stop, fix, cut)
 
         if isinstance(self.a, Dict):
-            return self._slice_dict(start, stop, fix, cut)
+            return self._get_slice_dict(start, stop, fix, cut)
 
         raise ValueError(f"cannot slice a '{self.a.__class__.__name__}'")
 
@@ -2554,12 +2566,14 @@ class FST:
 
 
 
+    def get(self, start: int | str | None = None, stop: int | None | Literal[False] = False,
+            field: str | None = None, *, fix: bool = True, cut: bool = False, decos: bool = True) -> Optional['FST']:
+        raise NotImplementedError  # TODO: THIS! THIS! THIS! THIS! THIS! THIS!
 
     def put(self, PlAcEhOlDeR: Union['FST', AST, list[str], str],
-            start: int | str | None = None, stop: int | str | None | Literal['False'] = False,
-            field: str | None = None) -> Optional['FST']:
-
-        raise NotImplementedError
+            start: int | None = None, stop: int | None | Literal['False'] = False,
+            field: str | None = None) -> Optional['FST']:  # -> Self:
+        raise NotImplementedError  # TODO: THIS! THIS! THIS! THIS! THIS! THIS!
 
 
 
