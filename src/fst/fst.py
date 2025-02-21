@@ -1,13 +1,13 @@
 import re
 from ast import *
 from ast import parse as ast_parse, unparse as ast_unparse
-from typing import Any, Callable, Generator, Literal, NamedTuple, Optional, Union
+from typing import Any, Callable, Generator, Literal, NamedTuple, Optional, TypeAlias, Union
 
 from .util import *
 
 __all__ = [
     'parse', 'unparse', 'FST',
-    'astfield', 'fstloc', 'srcwpos', 'fstlistproxy',
+    'fstlistproxy', 'fstloc', 'srcwpos', 'astfield',
 ]
 
 
@@ -62,10 +62,10 @@ AST_FIELDS_PREV[(arguments, 'kwarg')]       = 7
 AST_DEFAULT_BODY_FIELD  = {cls: field for field, classes in [
     ('elts',     (Tuple, List, Set)),
     ('cases',    (Match,)),
-    ('value',    (Expr, Return, Await, Yield, YieldFrom, Constant, Starred, MatchValue, MatchSingleton)),
     ('patterns', (MatchSequence, MatchOr)),
-    ('pattern',  (MatchAs,)),
     ('values',   (JoinedStr,)),
+    # ('value',    (Expr, Return, Await, Yield, YieldFrom, Constant, Starred, MatchValue, MatchSingleton)),  # maybe obvious single bodies in future?
+    # ('pattern',  (MatchAs,)),
 ] for cls in classes}
 
 STATEMENTISH            = (stmt, ExceptHandler, match_case)  # always in lists, cannot be inside multilines
@@ -83,9 +83,13 @@ re_multiline_str_start  = re.compile(r'(?:b|r|rb|br|u|)  (\'\'\'|""")', re.VERBO
 re_multiline_str_end_sq = re.compile(r'(?:\\.|[^\\])*?  \'\'\'', re.VERBOSE)
 re_multiline_str_end_dq = re.compile(r'(?:\\.|[^\\])*?  """', re.VERBOSE)
 
-re_next_code                     = re.compile(r'\s*([^\s#\\]+)')          # next non-space non-continuation non-comment code text, don't look into strings with this!
-re_next_code_or_comment          = re.compile(r'\s*([^\s#\\]+|#.*)')      # next non-space non-continuation code or comment text, don't look into strings with this!
-re_next_code_or_comment_or_lcont = re.compile(r'\s*([^\s#\\]+|#.*|\\$)')  # next non-space non-continuation code or comment text including logical line end, don't look into strings with this!
+re_next_src                     = re.compile(r'\s*([^\s#\\]+)')          # next non-space non-continuation non-comment code text, don't look into strings with this!
+re_next_src_or_comment          = re.compile(r'\s*([^\s#\\]+|#.*)')      # next non-space non-continuation code or comment text, don't look into strings with this!
+re_next_src_or_comment_or_lcont = re.compile(r'\s*([^\s#\\]+|#.*|\\$)')  # next non-space non-continuation code or comment text including logical line end, don't look into strings with this!
+
+Code: TypeAlias = Union['FST', AST, list[str], str]
+
+_sentinel = object()
 
 
 class astfield(NamedTuple):
@@ -175,13 +179,13 @@ def _with_loc(a: AST) -> bool:
                  and not a.kwarg))
 
 
-def _next_code(lines: list[str], ln: int, col: int, end_ln: int, end_col: int, comment: bool = False
+def _next_src(lines: list[str], ln: int, col: int, end_ln: int, end_col: int, comment: bool = False
                ) -> srcwpos | None:
     """Get next non-space non-continuation maybe non-comment position. Assuming start pos not inside str or comment.
     Code is not necessarily AST stuff, it can be commas, colons, the 'try' keyword, etc... Code can include multiple
     AST nodes in return str if there are no spaces between them like 'a+b'."""
 
-    re_pat = re_next_code_or_comment if comment else re_next_code
+    re_pat = re_next_src_or_comment if comment else re_next_src
 
     if end_ln == ln:
         return srcwpos(ln, m.start(1), m.group(1)) if (m := re_pat.match(lines[ln], col, end_col)) else None
@@ -198,17 +202,17 @@ def _next_code(lines: list[str], ln: int, col: int, end_ln: int, end_col: int, c
     return None
 
 
-def _next_code_lline(lines: list[str], ln: int, col: int, end_ln: int, end_col: int, comment: bool = False
+def _next_src_lline(lines: list[str], ln: int, col: int, end_ln: int, end_col: int, comment: bool = False
                      ) -> srcwpos | None:
-    """Same rules as `_next_code()` but do not exceed logical line during search."""
+    """Same rules as `_next_src()` but do not exceed logical line during search."""
 
-    re_pat = re_next_code_or_comment if comment else re_next_code
+    re_pat = re_next_src_or_comment if comment else re_next_src
 
     if end_ln == ln:
         return srcwpos(ln, m.start(1), m.group(1)) if (m := re_pat.match(lines[ln], col, end_col)) else None
 
     for i in range(ln, end_ln):
-        if not (m := re_next_code_or_comment_or_lcont.match(lines[i], col)):
+        if not (m := re_next_src_or_comment_or_lcont.match(lines[i], col)):
             return None
 
         if (s := m.group(1)).startswith('#'):
@@ -225,11 +229,11 @@ def _next_code_lline(lines: list[str], ln: int, col: int, end_ln: int, end_col: 
     return None
 
 
-def _prev_code(lines: list[str], ln: int, col: int, end_ln: int, end_col: int, comment: bool = False
+def _prev_src(lines: list[str], ln: int, col: int, end_ln: int, end_col: int, comment: bool = False
                ) -> srcwpos | None:
-    """Same rules as `_next_code()` but return the LAST occurance of code or maybe comment in the span."""
+    """Same rules as `_next_src()` but return the LAST occurance of code or maybe comment in the span."""
 
-    re_pat = re_next_code_or_comment if comment else re_next_code
+    re_pat = re_next_src_or_comment if comment else re_next_src
 
     def last_match(l, c, ec):
         ret = None
@@ -256,13 +260,14 @@ def _prev_code(lines: list[str], ln: int, col: int, end_ln: int, end_col: int, c
 
 
 def _fixup_field_body(ast: AST, field: str | None = None) -> tuple[str, 'AST']:
-    if field is not None:
-        if not isinstance(body := getattr(ast, field, None), list):
-            raise ValueError(f"invalid {ast.__class__.__name__} field '{field}'")
+    if field is None:
+        field = AST_DEFAULT_BODY_FIELD.get(ast.__class__, 'body')
 
-    elif (field := AST_DEFAULT_BODY_FIELD.get(ast.__class__, 'body')):
-        if (body := getattr(ast, field, None)) is None:
-            raise ValueError(f"{ast.__class__.__name__} has no '{field}'")
+    if (body := getattr(ast, field, _sentinel)) is _sentinel:
+        raise ValueError(f"{ast.__class__.__name__} has no field '{field}'")
+
+    if not isinstance(body, list):
+        raise ValueError(f"invalid {ast.__class__.__name__} field '{field}', must be a list")
 
     return field, body
 
@@ -519,7 +524,7 @@ class FST:
         if key:
             return key.f
 
-        ln, col, s = _prev_code(self.root._lines, self.ln, self.col, value.ln, value.col)
+        ln, col, s = _prev_src(self.root._lines, self.ln, self.col, value.ln, value.col)
 
         assert s.endswith('**')
 
@@ -541,7 +546,7 @@ class FST:
             root  = self.root
             lines = root._lines
 
-            if (not (code := _next_code(lines, felt.end_ln, felt.end_col, self.end_ln, self.end_col)) or
+            if (not (code := _next_src(lines, felt.end_ln, felt.end_col, self.end_ln, self.end_col)) or
                 not code.src.startswith(',')
             ):
                 lines[end_ln] = bistr(f'{(l := lines[(end_ln := felt.end_ln)])[:(c := felt.end_col)]},{l[c:]}')
@@ -754,7 +759,7 @@ class FST:
                 if cur_ln == end_ln and cur_col == end_col:
                     break
 
-                cur_ln, cur_col, _ = _next_code(lines, cur_ln, cur_col, end_ln, end_col)  # there must be a next one
+                cur_ln, cur_col, _ = _next_src(lines, cur_ln, cur_col, end_ln, end_col)  # there must be a next one
 
         def multiline_fstr(f: 'FST'):
             """Lets try to find indentable lines by incrementally attempting to parse parts of multiline f-string."""
@@ -947,7 +952,7 @@ class FST:
                 copy_end_col = llast.end_col
 
             else:  # preserve formatting newlines and comments
-                ln, col, s = _next_code(lines, llast.end_ln, llast.end_col, copy_end_ln := lpost.ln, lpost.col)
+                ln, col, s = _next_src(lines, llast.end_ln, llast.end_col, copy_end_ln := lpost.ln, lpost.col)
 
                 assert s.endswith(',')  # can be preceded by closing non-tuple parentheses
 
@@ -984,10 +989,6 @@ class FST:
 
         ast         = self.a
         field, body = _fixup_field_body(ast, field)
-
-        if not isinstance(body, list):
-            raise ValueError(f"{ast.__class__.__name__} '{field}' is not a list so can't be sliced")
-
         start, stop = _fixup_slice_index(ast, body, field, start, stop)
 
         if start == stop:
@@ -1159,17 +1160,22 @@ class FST:
 
         # ROOT
 
-        self.root   = self
-        self._lines = root_params['lines']
+        self.root = self
+        lines     = root_params['lines']
+
+        if lines[0].__class__ is bistr:
+            self._lines = lines
+        else:
+            self._lines = [bistr(s) for s in lines]
 
         if from_ := root_params.get('from_'):  # copy params from source tree
             root               = from_.root
             self.indent        = root.indent
             self._parse_params = root._parse_params
 
-        self.indent        = (v if (v := root_params.get('indent', self)) is not self else
+        self.indent        = (v if (v := root_params.get('indent', _sentinel)) is not _sentinel else
                               getattr(self, 'indent', '    '))
-        self._parse_params = (v if (v := root_params.get('parse_params', self)) is not self else
+        self._parse_params = (v if (v := root_params.get('parse_params', _sentinel)) is not _sentinel else
                               getattr(self, '_parse_params', {}))
 
         self._make_fst_tree()
@@ -1913,8 +1919,7 @@ class FST:
                     if (c := child[0]) and (not with_loc or _with_loc(c)):  # c.f.loc):
                         return c.f
 
-                    if (f := FST(Load(), self, astfield(name, 0)).next(with_loc)):  # Load() is a hack just to have a simple AST node
-                        return f
+                    return FST(Load(), self, astfield(name, 0)).next(with_loc)  # Load() is a hack just to have a simple AST node
 
         return None
 
@@ -2193,7 +2198,7 @@ class FST:
         return True
 
     def is_parenthesized(self, from_ln: int = 0, from_col: int = 0) -> bool:
-        return ((code := _prev_code(self.root._lines, from_ln, from_col, self.ln, self.col)) and code.src.endswith('('))  # we don't check for statements or other delimiting structures because they will not have a trailing open paren for a false positive
+        return ((code := _prev_src(self.root._lines, from_ln, from_col, self.ln, self.col)) and code.src.endswith('('))  # we don't check for statements or other delimiting structures because they will not have a trailing open paren for a false positive
 
     def is_tuple_parenthesized(self) -> bool:
         assert isinstance(self.a, Tuple)
@@ -2439,7 +2444,7 @@ class FST:
                     need_paren = False
 
                 elif (not (elts := ast.elts) or any(isinstance(e, NamedExpr) for e in elts) or (len(elts) == 1 and (
-                      not (code := _next_code_lline(lines, (f0 := elts[0].f).end_ln, f0.end_col, end_ln, end_col)) or  # if comma not on logical line then definitely need to add parens, if no comma then the parens are incidental but we want that code path
+                      not (code := _next_src_lline(lines, (f0 := elts[0].f).end_ln, f0.end_col, end_ln, end_col)) or  # if comma not on logical line then definitely need to add parens, if no comma then the parens are incidental but we want that code path
                       not code.src.startswith(',')))):
                     need_paren = True
 
@@ -2560,7 +2565,14 @@ class FST:
         if isinstance(self.a, Dict):
             return self._get_slice_dict(start, stop, fix, cut)
 
-        raise ValueError(f"cannot slice a '{self.a.__class__.__name__}'")
+        raise ValueError(f"cannot get slice from '{self.a.__class__.__name__}'")
+
+    def put_slice(self, code: Code, start: int | None = None, stop: int | None = None, field: str | None = None
+                  ) -> 'FST':
+        if isinstance(self.a, Dict):
+            return self._get_slice_dict(start, stop)
+
+        raise ValueError(f"cannot put slice to '{self.a.__class__.__name__}'")
 
 
 
@@ -2570,8 +2582,7 @@ class FST:
             field: str | None = None, *, fix: bool = True, cut: bool = False, decos: bool = True) -> Optional['FST']:
         raise NotImplementedError  # TODO: THIS! THIS! THIS! THIS! THIS! THIS!
 
-    def put(self, PlAcEhOlDeR: Union['FST', AST, list[str], str],
-            start: int | None = None, stop: int | None | Literal['False'] = False,
+    def put(self, code: Code, start: int | None = None, stop: int | None | Literal['False'] = False,
             field: str | None = None) -> Optional['FST']:  # -> Self:
         raise NotImplementedError  # TODO: THIS! THIS! THIS! THIS! THIS! THIS!
 
