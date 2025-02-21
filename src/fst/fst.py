@@ -6,7 +6,7 @@ from typing import Any, Callable, Generator, Literal, NamedTuple, Optional, Type
 from .util import *
 
 __all__ = [
-    'parse', 'unparse', 'FST',
+    'parse', 'unparse', 'FST', 'FSTFormat',
     'fstlistproxy', 'fstloc', 'srcwpos', 'astfield',
 ]
 
@@ -304,8 +304,124 @@ def _normalize_code(code: Code) -> 'FST':
     return FST.fromsrc(code)
 
 
+class FSTFormat:
+    """Source operation formatter."""
+
+    def get_seq(self, src: 'FST', cut: bool, seq_loc: fstloc,
+                lfirst: Union['FST', fstloc], llast: Union['FST', fstloc],
+                lpre: Union['FST', fstloc, None], lpost: Union['FST', fstloc, None],
+    ) -> tuple[fstloc, fstloc | None, list[str] | None]:  # (copy_loc, del/put_loc, put_lines)
+        """Copy or cut from comma delimited sequence.
+
+        The `lfirst`, `llast`, `lpre` and `lpost` parameters are only meant to pass location information so you should
+        only count on their respective `.ln`, `.col`, `.end_ln` and `.end_col` being correct (within `src`).
+
+        **Parameters:**
+        - `src`: The source `FST` container that is being gotten from.
+        - `cut`: If `False` the operation is a copy, `True` means cut.
+        - `seq_loc`: The full location of the sequence in `src`, excluding parentheses/brackets/curlies.
+        - `lfirst`: The first `FST` or `fstloc` being gotten.
+        - `llast`: The last `FST` or `fstloc` being gotten.
+        - `lpre`: The preceding-first `FST` or `fstloc`, not being gotten, may not exist if `lfirst` is first of seq.
+        - `lpost`: The after-last `FST` or `fstloc` being gotten, may not exist if `llast` is last of seq.
+
+        **Returns:**
+        - If `cut=False` then should only return the first return value, which is a location where to copy source from
+        for the new slice. If `cut=True` then should return the copy location, a delete location and optionally lines to
+        replace the deleted portion (which can only be non-coding source).
+        """
+
+        lines = src.root._lines
+
+        if not lpre:  # first element in sequence
+            copy_ln  = del_ln  = seq_loc.ln
+            copy_col = del_col = seq_loc.col
+
+        else:  # not first element in sequence
+            copy_ln  = del_ln  = lfirst.ln
+            copy_col = del_col = lfirst.col
+
+            if re_empty_line.match(lines[copy_ln], 0, copy_col):
+                copy_col = len(lines[(copy_ln := copy_ln - 1)])  # include previous newline as prefix
+
+        if not lpost:  # last element in sequence
+            copy_end_ln  = del_end_ln  = seq_loc.end_ln
+            copy_end_col = del_end_col = seq_loc.end_col
+
+            if lpre:
+                if lfirst.ln == lpre.end_ln:  # only comma between them
+                    del_col = lpre.end_col
+                if (ln := lfirst.ln) != del_end_ln and re_empty_line.match(lines[ln], 0, lfirst.col):  # expand del_col for better alignment of multiline closing suffix, NOT SURE ABOUT THIS?!?
+                    del_col = min(del_col, del_end_col)
+
+        else:  # not last element in sequence
+            del_end_ln  = lpost.ln
+            del_end_col = lpost.col
+
+            if llast.end_ln == lpost.ln:  # only comma between them
+                copy_end_ln  = llast.end_ln
+                copy_end_col = llast.end_col
+
+            else:  # preserve formatting newlines and comments
+                ln, col, s = _next_src(lines, llast.end_ln, llast.end_col, copy_end_ln := lpost.ln, lpost.col)
+
+                assert s.endswith(',')  # can be preceded by closing non-tuple parentheses
+
+                if ln != copy_end_ln:
+                    copy_end_col = re_empty_line_start.match(lines[seq_loc.end_ln], 0, lpost.col).end(0)  # maybe dedent from multiline elements depending on what last line of whole expr does, NOT SURE ABOUT THIS?!?
+                else:
+                    copy_end_col = col + len(s)  # comma not on last element line but on same line as next past last element, preserve its position
+
+        copy_loc = fstloc(copy_ln, copy_col, copy_end_ln, copy_end_col)
+
+        if cut:
+            return copy_loc, fstloc(del_ln, del_col, del_end_ln, del_end_col), None
+        else:
+            return copy_loc, None, None
+
+    def put_seq(self, dst: 'FST', fst: 'FST', indent: str, seq_loc: fstloc,
+                lfirst: Union['FST', fstloc, None], llast: Union['FST', fstloc, None],
+                lpre: Union['FST', fstloc, None], lpost: Union['FST', fstloc, None],
+    ) -> fstloc:  # put_loc
+        """Put to comma delimite sequence.
+
+        The `lfirst`, `llast`, `lpre` and `lpost` parameters are only meant to pass location information so you should
+        only count on their respective `.ln`, `.col`, `.end_ln` and `.end_col` being correct (within `src`).
+
+        If `lfirst` and `llast` are `None`, it means that it is a pure insertion and no elements are being removed. In
+        this case use `lpre` and `lpost` to determine locations, one of which could be missing if the insertion is at
+        the beginning or end of the sequence, both of which missing indicates put to already empty sequence (in which
+        case use `seq_loc` for location).
+
+        The first line of `fst` is unindented and should remain so as it is concatenated with the target line at the
+        point of insertion. The last line of `fst` is likewise prefixed to the line following the deleted location.
+
+        **Parameters:**
+        - `dst`: The destination `FST` container that is being put to.
+        - `fst`: The sequence which is being put, guaranteed to have at least one element. Already indented, mutate this
+            object to change what will be put (both source and `AST` nodes, node locations must be updated if source is
+            changed).
+        - `indent`: The indent string which was already applied to `fst`.
+        - `seq_loc`: The full location of the sequence in `dst`, excluding parentheses/brackets/curlies.
+        - `lfirst`: The first `FST` or `fstloc` being replaced (if `None` then nothing being replaced).
+        - `llast`: The last `FST` or `fstloc` being replaced (if `None` then nothing being replaced).
+        - `lpre`: The preceding-first `FST` or `fstloc`, not being replaced, may not exist if `lfirst` is first of seq.
+        - `lpost`: The after-last `FST` or `fstloc` being replaced, may not exist if `llast` is last of seq.
+
+        **Returns:**
+        - `fstloc` location where the potentially modified `fst` should be put, replacing whatever is at the location
+            currently.
+        """
+
+
+        return fstloc(lfirst.ln, lfirst.col, llast.end_ln, llast.end_col)
+
+
 class FST:
     """Preserve AST formatting information and easy manipulation.
+
+    **Class Attributes:**
+    - `format`: Controls source formatting on copy/cut/put operations. Can also be set on class instances to override.
 
     **Attributes:**
     - `a`: The actual `AST` node.
@@ -468,6 +584,8 @@ class FST:
     @property
     def f(self):
         raise RuntimeError("you probably think you're accessing an AST node, but you're not, you're accessing an FST node")
+
+    format = FSTFormat()
 
     # ------------------------------------------------------------------------------------------------------------------
 
@@ -935,64 +1053,17 @@ class FST:
                             lpre: Union['FST', fstloc, None], lpost: Union['FST', fstloc, None],
                             prefix: str, suffix: str) -> 'FST':
 
-        # start of special sauce  # TODO: make this specialer? (specifiable behavior options, prettier multiline handling, etc...)
+        copy_loc, put_loc, put_lines = self.format.get_seq(self, cut, seq_loc, lfirst, llast, lpre, lpost)
 
-        lines = self.root._lines
+        copy_ln, copy_col, copy_end_ln, copy_end_col = copy_loc
 
-        if not lpre:  # first element in sequence
-            copy_ln  = del_ln  = seq_loc.ln
-            copy_col = del_col = seq_loc.col
-
-        else:  # not first element in sequence
-            copy_ln  = del_ln  = lfirst.ln
-            copy_col = del_col = lfirst.col
-
-            if re_empty_line.match(lines[copy_ln], 0, copy_col):
-                copy_col = len(lines[(copy_ln := copy_ln - 1)])  # include previous newline as prefix
-
-        if not lpost:  # last element in sequence
-            copy_end_ln  = del_end_ln  = seq_loc.end_ln
-            copy_end_col = del_end_col = seq_loc.end_col
-
-            if lpre:
-                if lfirst.ln == lpre.end_ln:  # only comma between them
-                    del_col = lpre.end_col
-                if (ln := lfirst.ln) != del_end_ln and re_empty_line.match(lines[ln], 0, lfirst.col):  # expand del_col for better alignment of multiline closing suffix, NOT SURE ABOUT THIS?!?
-                    del_col = min(del_col, del_end_col)
-
-        else:  # not last element in sequence
-            del_end_ln  = lpost.ln
-            del_end_col = lpost.col
-
-            if llast.end_ln == lpost.ln:  # only comma between them
-                copy_end_ln  = llast.end_ln
-                copy_end_col = llast.end_col
-
-            else:  # preserve formatting newlines and comments
-                ln, col, s = _next_src(lines, llast.end_ln, llast.end_col, copy_end_ln := lpost.ln, lpost.col)
-
-                assert s.endswith(',')  # can be preceded by closing non-tuple parentheses
-
-                if ln != copy_end_ln:
-                    copy_end_col = re_empty_line_start.match(lines[seq_loc.end_ln], 0, lpost.col).end(0)  # maybe dedent from multiline elements depending on what last line of whole expr does, NOT SURE ABOUT THIS?!?
-                else:
-                    copy_end_col = col + len(s)  # comma not on last element line but on same line as next past last element, preserve its position
-
-        copy_loc = fstloc(copy_ln, copy_col, copy_end_ln, copy_end_col)
-
-        if not cut:
-            del_loc = None
-        else:
-            del_loc = fstloc(del_ln, del_col, del_end_ln, del_end_col)
-
-        # end of special sauce
-
+        lines              = self.root._lines
         ast.lineno         = copy_ln + 1
         ast.col_offset     = lines[copy_ln].c2b(copy_col)
         ast.end_lineno     = copy_end_ln + 1
         ast.end_col_offset = lines[copy_end_ln].c2b(copy_end_col)
 
-        fst = self._make_fst_and_dedent(self, ast, copy_loc, prefix, suffix, del_loc)
+        fst = self._make_fst_and_dedent(self, ast, copy_loc, prefix, suffix, put_loc, put_lines)
 
         ast.col_offset     = 0  # before prefix
         ast.end_col_offset = fst._lines[-1].lenbytes  # after suffix
@@ -1002,7 +1073,12 @@ class FST:
         return fst
 
     def _get_slice_stmt(self, start: int, stop: int, field: str | None, fix: bool, cut: bool) -> 'FST':
+
+
+
         if cut: raise NotImplementedError  # TODO: THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS!
+
+
 
         ast         = self.a
         field, body = _fixup_field_body(ast, field)
@@ -1162,6 +1238,92 @@ class FST:
 
         return self._get_seq_and_dedent(newast, cut, seq_loc, lfirst, llast, lpre, lpost, '{', '}')
 
+    def _put_seq_and_indent(self, fst: 'FST', seq_loc: fstloc,
+                            lfirst: Union['FST', fstloc, None], llast: Union['FST', fstloc, None],
+                            lpre: Union['FST', fstloc, None], lpost: Union['FST', fstloc, None]) -> 'FST':
+        assert fst.is_root
+
+        indent = self.get_indent()
+
+        fst._indent_tail(indent)
+
+        put_ln, put_col, put_end_ln, put_end_col = (
+            self.format.put_seq(self, fst, indent, seq_loc, lfirst, llast, lpre, lpost))
+
+        root            = self.root
+        lines           = root._lines
+        fst_lines       = fst._lines
+        fst_dcol_offset = lines[put_ln].c2b(put_col)
+        dln             = (len(fst_lines) - 1) - (put_end_ln - put_ln)
+
+        if not dln:
+            dcol_offset = fst_lines[0].lenbytes + lines[put_ln].c2b(put_col) - lines[put_end_ln].c2b(put_end_col)
+        else:
+            dcol_offset = fst_lines[-1].lenbytes - lines[put_end_ln].c2b(put_end_col)
+
+        self.putl_lines(fst_lines, put_ln, put_col, put_end_ln, put_end_col)
+
+        root._offset(put_end_ln, put_end_col, dln, dcol_offset)
+        fst._offset(0, 0, put_ln, fst_dcol_offset)
+
+    def _put_slice_dict(self, code: Code, start: int, stop: int):
+        newfst      = _normalize_code(code)
+        ast         = self.a
+        values      = ast.values
+        start, stop = _fixup_slice_index(ast, values, 'values', start, stop)
+        dstlen      = stop - start
+
+        if not dstlen and not newfst.keys:  # assigning empty dict to empty slice of dict, noop
+            return
+
+        newast   = newfst.a
+        newlines = newfst._lines
+
+        newast.end_col_offset -= 1
+
+        newfst._offset(0, 1, 0, -1)
+
+        assert newlines[0].startswith('{')
+        assert newlines[-1].endswith('}')
+
+        newlines[-1] = bistr(newlines[-1][:-1])
+        newlines[0]  = bistr(newlines[0][1:])
+
+        keys    = ast.keys
+        lpre    = values[start - 1].f if start else None
+        lpost   = None if stop == len(keys) else self._dict_key_or_mock_loc(keys[stop], values[stop].f)
+        seq_loc = fstloc(self.ln, self.col + 1, self.end_ln, self.end_col - 1)
+
+        if not dstlen:
+            lfirst = llast = None
+
+        else:
+            lfirst = self._dict_key_or_mock_loc(keys[start], values[start].f)
+            llast  = values[stop - 1].f
+
+        self._put_seq_and_indent(newfst, seq_loc, lfirst, llast, lpre, lpost)
+
+        keys[start : stop]   = newast.keys
+        values[start : stop] = newast.values
+        srclen               = len(newast.keys)
+        stack                = []
+
+        for i in range(srclen):
+            startplusi = start + i
+
+            stack.append(FST(values[startplusi], self, astfield('values', startplusi)))
+
+            if key := keys[startplusi]:
+                stack.append(FST(key, self, astfield('keys', startplusi)))
+
+        for i in range(start + srclen, len(keys)):
+            values[i].f.pfield = astfield('values', i)
+
+            if key := keys[i]:  # could be None from **
+                key.f.pfield = astfield('keys', i)
+
+        self._make_fst_tree(stack)
+
     # ------------------------------------------------------------------------------------------------------------------
 
     def __init__(self, ast: AST, parent: Optional['FST'] = None, pfield: astfield | None = None, **root_params):
@@ -1177,23 +1339,18 @@ class FST:
 
         # ROOT
 
-        self.root = self
-        lines     = root_params['lines']
-
-        if lines[0].__class__ is bistr:
-            self._lines = lines
-        else:
-            self._lines = [bistr(s) for s in lines]
+        self.root   = self
+        lines       = root_params['lines']
+        self._lines = lines if lines[0].__class__ is bistr else [bistr(s) for s in lines]
 
         if from_ := root_params.get('from_'):  # copy params from source tree
-            root               = from_.root
-            self.indent        = root.indent
-            self._parse_params = root._parse_params
+            from_root          = from_.root
+            self.indent        = root_params.get('indent', from_root.indent)
+            self._parse_params = root_params.get('parse_params', from_root._parse_params)
 
-        self.indent        = (v if (v := root_params.get('indent', _sentinel)) is not _sentinel else
-                              getattr(self, 'indent', '    '))
-        self._parse_params = (v if (v := root_params.get('parse_params', _sentinel)) is not _sentinel else
-                              getattr(self, '_parse_params', {}))
+        else:
+            self.indent        = root_params.get('indent', '    ')
+            self._parse_params = root_params.get('parse_params', {})
 
         self._make_fst_tree()
 
@@ -2583,112 +2740,6 @@ class FST:
             return self._get_slice_dict(start, stop, fix, cut)
 
         raise ValueError(f"cannot get slice from '{self.a.__class__.__name__}'")
-
-
-
-
-
-    def _put_seq_and_indent(self, fst: 'FST', seq_loc: fstloc,
-                            lfirst: Union['FST', fstloc, None], llast: Union['FST', fstloc, None],
-                            lpre: Union['FST', fstloc, None], lpost: Union['FST', fstloc, None]) -> 'FST':
-        assert fst.is_root
-
-        fst._indent_tail(self.get_indent())
-
-
-
-        # TODO: special sauce (make any own needed offsets)
-        put_loc = fstloc(lfirst.ln, lfirst.col, llast.end_ln, llast.end_col)
-        # TODO: special sauce (make any own needed offsets)
-
-
-
-        put_ln, put_col, put_end_ln, put_end_col = put_loc
-
-        root            = self.root
-        lines           = root._lines
-        fst_lines       = fst._lines
-        fst_dcol_offset = lines[put_ln].c2b(put_col)
-        dln             = (len(fst_lines) - 1) - (put_end_ln - put_ln)
-
-        if not dln:
-            dcol_offset = fst_lines[0].lenbytes + lines[put_ln].c2b(put_col) - lines[put_end_ln].c2b(put_end_col)
-        else:
-            dcol_offset = fst_lines[-1].lenbytes - lines[put_end_ln].c2b(put_end_col)
-
-        self.putl_lines(fst_lines, *put_loc)
-
-        root._offset(put_end_ln, put_end_col, dln, dcol_offset)
-        fst._offset(0, 0, put_ln, fst_dcol_offset)
-
-
-
-
-
-
-
-
-
-    def _put_slice_dict(self, code: Code, start: int, stop: int):
-        newfst      = _normalize_code(code)
-        ast         = self.a
-        values      = ast.values
-        start, stop = _fixup_slice_index(ast, values, 'values', start, stop)
-        dstlen      = stop - start
-
-        if not dstlen and not newfst.keys:  # assign empty slice to empty slice
-            return
-
-        newast   = newfst.a
-        newlines = newfst._lines
-
-        newast.end_col_offset -= 1
-
-        newfst._offset(0, 1, 0, -1)
-
-        assert newlines[0].startswith('{')
-        assert newlines[-1].endswith('}')
-
-        newlines[-1] = bistr(newlines[-1][:-1])
-        newlines[0]  = bistr(newlines[0][1:])
-
-        keys    = ast.keys
-        lpre    = values[start - 1].f if start else None
-        lpost   = None if stop == len(keys) else self._dict_key_or_mock_loc(keys[stop], values[stop].f)
-        seq_loc = fstloc(self.ln, self.col + 1, self.end_ln, self.end_col - 1)
-
-        if not dstlen:
-            lfirst = llast = None
-
-        else:
-            lfirst = self._dict_key_or_mock_loc(keys[start], values[start].f)
-            llast  = values[stop - 1].f
-
-        self._put_seq_and_indent(newfst, seq_loc, lfirst, llast, lpre, lpost)
-
-        keys[start : stop]   = newast.keys
-        values[start : stop] = newast.values
-        srclen               = len(newast.keys)
-        stack                = []
-
-        for i in range(srclen):
-            startplusi = start + i
-
-            stack.append(FST(values[startplusi], self, astfield('values', startplusi)))
-
-            if key := keys[startplusi]:
-                stack.append(FST(key, self, astfield('keys', startplusi)))
-
-        for i in range(start + srclen, len(keys)):
-            values[i].f.pfield = astfield('values', i)
-
-            if key := keys[i]:  # could be None from **
-                key.f.pfield = astfield('keys', i)
-
-        self._make_fst_tree(stack)
-
-
-
 
 
 
