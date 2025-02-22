@@ -303,13 +303,15 @@ def _expr_locs(lines: list[str], loc: fstloc, bound: fstloc) -> tuple[fstloc, fs
     start_ln, start_col, stop_ln,      stop_col      = loc
     bound_ln, bound_col, bound_end_ln, bound_end_col = bound
 
-    at_bound = False
+    at_bound = None
     nparens  = 0
 
     # start locations
 
     while True:
         if not (code := _prev_src(lines, bound_ln, bound_col, start_ln, start_col, True, True)):
+            at_bound = True
+
             if bound_ln != start_ln:
                 copy_ln  = bound_ln
                 copy_col = len(lines[bound_ln])
@@ -319,7 +321,6 @@ def _expr_locs(lines: list[str], loc: fstloc, bound: fstloc) -> tuple[fstloc, fs
             else:
                 copy_ln  = del_ln  = start_ln
                 copy_col = del_col = start_col
-                at_bound = True
 
             break
 
@@ -350,6 +351,8 @@ def _expr_locs(lines: list[str], loc: fstloc, bound: fstloc) -> tuple[fstloc, fs
 
         for c in src[::-1]:
             if done := (c != '('):
+                at_bound = False
+
                 if ln != start_ln:
                     copy_ln  = bound_ln
                     copy_col = len(lines[bound_ln])
@@ -383,7 +386,10 @@ def _expr_locs(lines: list[str], loc: fstloc, bound: fstloc) -> tuple[fstloc, fs
             if nparens:
                 raise ValueError('unclosed parenthesis found')
 
-            if at_bound:  # got to start of bound above and end of bound here, nuke the whole enchilada
+            if at_bound is None:  # undetermined yet
+                at_bound = not _next_src(lines, bound_ln, bound_col, copy_ln, copy_col)
+
+            if at_bound:  # got to start of bound above and end of bound here, copy and nuke the whole enchilada
                 copy_ln      = del_ln      = bound_ln
                 copy_col     = del_col     = bound_col
                 copy_end_ln  = del_end_ln  = bound_end_ln
