@@ -286,13 +286,13 @@ def _prev_src(lines: list[str], ln: int, col: int, end_ln: int, end_col: int,
 
 def _expr_locs(lines: list[str], loc: fstloc, bound: fstloc) -> tuple[fstloc, fstloc]:
     """Get expression copy and delete locations. If there is a trailing comma within bounding span then it is
-    included in the delete location. Any enclosing parentheses within the bounding span are included.
+    included in the delete location. Any enclosing grouping parentheses within the bounding span are included.
 
     **Parameters:**
     - `lines`: The lines corresponding to the expression and its `bound` location.
     - `loc`: The location of the expression, can be multiple or no expressions, just the location matters.
-    - `bound`: The bounding location not to go outside of. Must entirely contain `loc` (can be same as) and should not
-        contain any part of other `AST` nodes.
+    - `bound`: The bounding location not to go outside of. Must entirely contain `loc` (can be same as). Can contain
+        other `AST` nodes like other members of a sequence, useful to decide whether to delete the whole bound or not.
 
     **Returns:**
     - `(copy_loc, del_loc)`: The `copy_loc` is the location of source that should be used if copying the expression.
@@ -300,10 +300,13 @@ def _expr_locs(lines: list[str], loc: fstloc, bound: fstloc) -> tuple[fstloc, fs
         operation.
     """
 
-    start_ln, start_col, end_ln,       end_col       = loc
+    start_ln, start_col, stop_ln,      stop_col      = loc
     bound_ln, bound_col, bound_end_ln, bound_end_col = bound
 
-    parens = 0
+    at_bound = False
+    nparens  = 0
+
+    # start locations
 
     while True:
         if not (code := _prev_src(lines, bound_ln, bound_col, start_ln, start_col, True, True)):
@@ -314,12 +317,9 @@ def _expr_locs(lines: list[str], loc: fstloc, bound: fstloc) -> tuple[fstloc, fs
                 del_col  = 0
 
             else:
-                # copy_ln  = del_ln = start_ln
-                # copy_col = start_col
-                # del_col  = bound_col
                 copy_ln  = del_ln  = start_ln
                 copy_col = del_col = start_col
-                at_bound = True  # TODO: maybe make clear out whole bound if cutting whole contents? Would need to mark here.
+                at_bound = True
 
             break
 
@@ -333,13 +333,13 @@ def _expr_locs(lines: list[str], loc: fstloc, bound: fstloc) -> tuple[fstloc, fs
 
             break
 
-        if src.endswith('\\'):
+        if src == '\\':
             if (ln := ln + 1) == start_ln:
                 copy_ln  = del_ln  = start_ln
                 copy_col = del_col = start_col
 
             else:
-                copy_ln = ln
+                copy_ln  = ln
                 copy_col = len(lines[ln])
                 del_ln   = ln + 1
                 del_col  = 0
@@ -365,19 +365,98 @@ def _expr_locs(lines: list[str], loc: fstloc, bound: fstloc) -> tuple[fstloc, fs
             else:
                 start_ln   = ln
                 start_col  = (col := col - 1)
-                parens    += 1
+                nparens   += 1
 
         if done:
             break
 
+    # end locations
 
+    have_comma = False
+    cur_ln     = stop_ln
+    cur_col    = stop_col
 
+    while True:
+        done = False
 
-    return fstloc(copy_ln, copy_col, 0, 0), fstloc(del_ln, del_col, 0, 0)
+        if not (code := _next_src(lines, cur_ln, cur_col, bound_end_ln, bound_end_col, True, False)):
+            if nparens:
+                raise ValueError('unclosed parenthesis found')
 
+            if at_bound:  # got to start of bound above and end of bound here, nuke the whole enchilada
+                copy_ln      = del_ln      = bound_ln
+                copy_col     = del_col     = bound_col
+                copy_end_ln  = del_end_ln  = bound_end_ln
+                copy_end_col = del_end_col = bound_end_col
 
+            else:
+                done         = True
+                ln           = bound_end_ln
+                col          = bound_end_col
+                copy_end_ln  = stop_ln
+                copy_end_col = stop_col
 
+            break
 
+        ln, col, src = code
+
+        if src.startswith('#'):
+            if ln == stop_ln:  # we only grab the comment on our own ending line
+                stop_ln  = ln + 1
+                stop_col = 0
+
+            col += len(src)
+
+        else:
+            for c in src:
+                col = col + 1
+
+                if c == ')':
+                    if (nparens := nparens - 1) < 0:
+                        raise ValueError('unmatched closing parenthesis found')
+
+                    stop_ln  = ln
+                    stop_col = col
+
+                elif c == ',':
+                    if have_comma:
+                        raise ValueError('multiple commas found')
+
+                    have_comma = True
+                    stop_ln    = ln
+                    stop_col   = col
+
+                else:
+                    if nparens:
+                        raise ValueError('unclosed parenthesis found')
+
+                    done          = True
+                    col          -= 1
+                    copy_end_ln   = stop_ln
+                    copy_end_col  = stop_col
+
+                    break
+
+            if done:
+                break
+
+        cur_ln  = ln
+        cur_col = col
+
+    if done:  # can also come from reaching end of bound
+        if ln != stop_ln:
+            del_end_ln  = stop_ln
+            del_end_col = len(lines[del_end_ln])
+
+        elif stop_col:  # copy ends in line, not on end of line
+            del_end_ln  = ln
+            del_end_col = col
+
+        else:  # copy ends on end of line
+            del_end_ln  = ln
+            del_end_col = 0
+
+    return fstloc(copy_ln, copy_col, copy_end_ln, copy_end_col), fstloc(del_ln, del_col, del_end_ln, del_end_col)
 
 
 
@@ -497,6 +576,17 @@ class FSTFormat:
         location, a delete location and optionally lines to replace the deleted portion (which can only be non-coding
         source).
         """
+
+
+
+
+        copy_loc, del_loc = _expr_locs(src.root._lines, fstloc(lfirst.ln, lfirst.col, llast.end_ln, llast.end_col),
+                                       seq_loc)
+
+        return copy_loc, del_loc, None
+
+
+
 
         # TODO: refine
 
@@ -1404,19 +1494,18 @@ class FST:
             if elts:
                 self._maybe_add_singleton_tuple_comma(False)
 
-            else:  # if is unparenthesized tuple and nothing left then need to add parentheses
-                if not is_paren:
-                    ln, col, end_ln, end_col = self.loc
+            elif not is_paren:  # if is unparenthesized tuple and nothing left then need to add parentheses
+                ln, col, end_ln, end_col = self.loc
 
-                    assert ln == end_ln and col == end_col
+                assert ln == end_ln and col == end_col
 
-                    root  = self.root
-                    lines = root.lines
+                root  = self.root
+                lines = root.lines
 
-                    root._offset(ln, col, 0, 2, True)  # TODO: WARNING! This may not be safe if another preceding non-containing node ends EXACTLY where the unparenthesized tuple starts, does this ever happen?
-                    self.touchup(True)
+                root._offset(ln, col, 0, 2, True)  # TODO: WARNING! This may not be safe if another preceding non-containing node ends EXACTLY where the unparenthesized tuple starts, does this ever happen?
+                self.touchup(True)
 
-                    lines[ln] = bistr(f'{(l := lines[ln])[:col]}(){l[col:]}')
+                lines[ln] = bistr(f'{(l := lines[ln])[:col]}(){l[col:]}')
 
         return fst
 
@@ -2863,7 +2952,7 @@ class FST:
                     need_paren = False
 
                 elif (not (elts := ast.elts) or any(isinstance(e, NamedExpr) for e in elts) or (len(elts) == 1 and (
-                      not (code := _next_src_lline(lines, (f0 := elts[0].f).end_ln, f0.end_col, end_ln, end_col)) or  # if comma not on logical line then definitely need to add parens, if no comma then the parens are incidental but we want that code path
+                      not (code := _next_src_lline(lines, (f0 := elts[0].f).end_ln, f0.end_col, end_ln, end_col)) or  # if comma not on logical line then definitely need to add parens, if no comma then the parens are incidental but we want that code path for adding the comma
                       not code.src.startswith(',')))):
                     need_paren = True
 
