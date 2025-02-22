@@ -86,6 +86,7 @@ re_multiline_str_end_dq = re.compile(r'(?:\\.|[^\\])*?  """', re.VERBOSE)
 
 re_next_src                     = re.compile(r'\s*([^\s#\\]+)')          # next non-space non-continuation non-comment code text, don't look into strings with this!
 re_next_src_or_comment          = re.compile(r'\s*([^\s#\\]+|#.*)')      # next non-space non-continuation code or comment text, don't look into strings with this!
+re_next_src_or_lcont            = re.compile(r'\s*([^\s#\\]+|\\$)')      # next non-space non-comment code including logical line end, don't look into strings with this!
 re_next_src_or_comment_or_lcont = re.compile(r'\s*([^\s#\\]+|#.*|\\$)')  # next non-space non-continuation code or comment text including logical line end, don't look into strings with this!
 
 Code: TypeAlias = Union['FST', AST, list[str], str]
@@ -195,13 +196,17 @@ def _with_loc(a: AST) -> bool:
                  and not a.kwarg))
 
 
-def _next_src(lines: list[str], ln: int, col: int, end_ln: int, end_col: int, comment: bool = False
-               ) -> srcwpos | None:
-    """Get next non-space non-continuation maybe non-comment position. Assuming start pos not inside str or comment.
-    Code is not necessarily AST stuff, it can be commas, colons, the 'try' keyword, etc... Code can include multiple
-    AST nodes in return str if there are no spaces between them like 'a+b'."""
+def _next_src(lines: list[str], ln: int, col: int, end_ln: int, end_col: int,
+              comment: bool = False, lcont: bool = False) -> srcwpos | None:
+    """Get next source code which may or may not include comments or line continuation backslashes. Assuming start pos
+    not inside str or comment. Code is not necessarily AST stuff, it can be commas, colons, the 'try' keyword, etc...
+    Code can include multiple AST nodes in return str if there are no spaces between them like 'a+b'."""
 
-    re_pat = re_next_src_or_comment if comment else re_next_src
+    re_pat = (
+        (re_next_src_or_comment_or_lcont if comment else re_next_src_or_lcont)
+        if lcont else
+        (re_next_src_or_comment if comment else re_next_src)
+    )
 
     if end_ln == ln:
         return srcwpos(ln, m.start(1), m.group(1)) if (m := re_pat.match(lines[ln], col, end_col)) else None
@@ -219,7 +224,7 @@ def _next_src(lines: list[str], ln: int, col: int, end_ln: int, end_col: int, co
 
 
 def _next_src_lline(lines: list[str], ln: int, col: int, end_ln: int, end_col: int, comment: bool = False
-                     ) -> srcwpos | None:
+                    ) -> srcwpos | None:
     """Same rules as `_next_src()` but do not exceed logical line during search."""
 
     re_pat = re_next_src_or_comment if comment else re_next_src
@@ -245,11 +250,15 @@ def _next_src_lline(lines: list[str], ln: int, col: int, end_ln: int, end_col: i
     return None
 
 
-def _prev_src(lines: list[str], ln: int, col: int, end_ln: int, end_col: int, comment: bool = False
-               ) -> srcwpos | None:
+def _prev_src(lines: list[str], ln: int, col: int, end_ln: int, end_col: int,
+              comment: bool = False, lcont: bool = False) -> srcwpos | None:
     """Same rules as `_next_src()` but return the LAST occurance of code or maybe comment in the span."""
 
-    re_pat = re_next_src_or_comment if comment else re_next_src
+    re_pat = (
+        (re_next_src_or_comment_or_lcont if comment else re_next_src_or_lcont)
+        if lcont else
+        (re_next_src_or_comment if comment else re_next_src)
+    )
 
     def last_match(l, c, ec):
         ret = None
@@ -273,6 +282,110 @@ def _prev_src(lines: list[str], ln: int, col: int, end_ln: int, end_col: int, co
         return srcwpos(ln, m.start(1), m.group(1))
 
     return None
+
+
+def _expr_locs(lines: list[str], loc: fstloc, bound: fstloc) -> tuple[fstloc, fstloc]:
+    """Get expression copy and delete locations. If there is a trailing comma within bounding span then it is
+    included in the delete location. Any enclosing parentheses within the bounding span are included.
+
+    **Parameters:**
+    - `lines`: The lines corresponding to the expression and its `bound` location.
+    - `loc`: The location of the expression, can be multiple or no expressions, just the location matters.
+    - `bound`: The bounding location not to go outside of. Must entirely contain `loc` (can be same as) and should not
+        contain any part of other `AST` nodes.
+
+    **Returns:**
+    - `(copy_loc, del_loc)`: The `copy_loc` is the location of source that should be used if copying the expression.
+        The `del_loc` is the location which should be used if removing the expression. Both are used for a cut
+        operation.
+    """
+
+    start_ln, start_col, end_ln,       end_col       = loc
+    bound_ln, bound_col, bound_end_ln, bound_end_col = bound
+
+    parens = 0
+
+    while True:
+        if not (code := _prev_src(lines, bound_ln, bound_col, start_ln, start_col, True, True)):
+            if bound_ln != start_ln:
+                copy_ln  = bound_ln
+                copy_col = len(lines[bound_ln])
+                del_ln   = bound_ln + 1
+                del_col  = 0
+
+            else:
+                # copy_ln  = del_ln = start_ln
+                # copy_col = start_col
+                # del_col  = bound_col
+                copy_ln  = del_ln  = start_ln
+                copy_col = del_col = start_col
+                at_bound = True  # TODO: maybe make clear out whole bound if cutting whole contents? Would need to mark here.
+
+            break
+
+        ln, col, src = code
+
+        if src.startswith('#'):
+            copy_ln  = ln
+            copy_col = len(lines[ln])
+            del_ln   = ln + 1
+            del_col  = 0
+
+            break
+
+        if src.endswith('\\'):
+            if (ln := ln + 1) == start_ln:
+                copy_ln  = del_ln  = start_ln
+                copy_col = del_col = start_col
+
+            else:
+                copy_ln = ln
+                copy_col = len(lines[ln])
+                del_ln   = ln + 1
+                del_col  = 0
+
+            break
+
+        col += len(src)
+
+        for c in src[::-1]:
+            if done := (c != '('):
+                if ln != start_ln:
+                    copy_ln  = bound_ln
+                    copy_col = len(lines[bound_ln])
+                    del_ln   = bound_ln + 1
+                    del_col  = 0
+
+                else:
+                    copy_ln  = del_ln  = start_ln
+                    copy_col = del_col = start_col
+
+                break
+
+            else:
+                start_ln   = ln
+                start_col  = (col := col - 1)
+                parens    += 1
+
+        if done:
+            break
+
+
+
+
+    return fstloc(copy_ln, copy_col, 0, 0), fstloc(del_ln, del_col, 0, 0)
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 def _fixup_field_body(ast: AST, field: str | None = None) -> tuple[str, 'AST']:
@@ -707,15 +820,15 @@ class FST:
 
         if compact:
             if isinstance(ast, Name):
-                linefunc(f'{cind}{prefix}Name .id {ast.id!r} .ctx {ast.ctx.__class__.__qualname__}{" .." * bool(tail)}{tail}')
+                linefunc(f'{cind}{prefix}Name {ast.id!r} {ast.ctx.__class__.__qualname__}{" .." * bool(tail)}{tail}')
 
                 return
 
             if isinstance(ast, Constant):
                 if ast.kind is None:
-                    linefunc(f'{cind}{prefix}Constant .value {ast.value!r}{" .." * bool(tail)}{tail}')
+                    linefunc(f'{cind}{prefix}Constant {ast.value!r}{" .." * bool(tail)}{tail}')
                 else:
-                    linefunc(f'{cind}{prefix}Constant .value {ast.value!r} .kind {ast.kind}{" .." * bool(tail)}{tail}')
+                    linefunc(f'{cind}{prefix}Constant {ast.value!r} {ast.kind}{" .." * bool(tail)}{tail}')
 
                 return
 
