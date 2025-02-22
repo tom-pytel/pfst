@@ -437,7 +437,7 @@ class FSTFormat:
                 lfirst: Union['FST', fstloc, None], llast: Union['FST', fstloc, None],
                 lpre: Union['FST', fstloc, None], lpost: Union['FST', fstloc, None],
     ) -> fstloc:  # put_loc
-        """Put to comma delimite sequence.
+        """Put to comma delimited sequence.
 
         The `lfirst`, `llast`, `lpre` and `lpost` parameters are only meant to pass location information so you should
         only count on their respective `.ln`, `.col`, `.end_ln` and `.end_col` being correct (within `src`).
@@ -466,6 +466,10 @@ class FSTFormat:
         - `fstloc` source location where the potentially modified `fst` source should be put, replacing whatever is at
             the location currently.
         """
+
+        if not lfirst and not llast and not lpre and not lpost:  # assign to empty sequence, just copy
+            return seq_loc
+
 
 
         return fstloc(lfirst.ln, lfirst.col, llast.end_ln, llast.end_col)
@@ -838,37 +842,41 @@ class FST:
         ```
         """
 
+        lno  = ln + 1
+        colo = self.root._lines[ln].c2b(col)
+
         for f in (gen := self.walk(False)):
             a = f.a
 
-            if (end_col_offset := getattr(a, 'end_col_offset', None)) is not None:
-                fln, fcol, fend_ln, fend_col = f.loc
+            if (fend_colo := getattr(a, 'end_col_offset', None)) is not None:
+                flno  = a.lineno
+                fcolo = a.col_offset
 
-                if fend_ln > ln:
+                if (fend_lno := a.end_lineno) > lno:
                     a.end_lineno += dln
 
-                elif fend_ln == ln and (
-                        fend_col >= col if (inc or (fend_col == fcol and fend_ln == fln)) else fend_col > col):
+                elif fend_lno == lno and (
+                        fend_colo >= colo if (inc or (fend_colo == fcolo and fend_lno == flno)) else fend_colo > colo):
                     a.end_lineno     += dln
-                    a.end_col_offset  = end_col_offset + dcol_offset
+                    a.end_col_offset  = fend_colo + dcol_offset
 
                 else:
                     gen.send(False)  # no need to walk into something whose bounding block ends before offset point
 
                     continue
 
-                if fln > ln:
-                    if not dln:
+                if flno > lno:
+                    if not dln and (not (decos := getattr(a, 'decorator_lis', None)) or decos[0].lineno > lno):
                         gen.send(False)  # no need to walk into something past offet point if line change is 0
 
                         continue
 
                     a.lineno += dln
 
-                elif fln == ln and (
-                        fcol >= col if (not (inc and (fend_col == fcol and fend_ln == fln)) or
+                elif flno == lno and (
+                        fcolo >= colo if (not (inc and (fend_colo == fcolo and fend_lno == flno)) or
                                         dln < 0 or (not dln and dcol_offset < 0)) else
-                        fcol > col):
+                        fcolo > colo):
                     a.lineno     += dln
                     a.col_offset += dcol_offset
 
@@ -1336,10 +1344,10 @@ class FST:
         else:
             dcol_offset = fst_lines[-1].lenbytes - lines[put_end_ln].c2b(put_end_col)
 
-        self.putl_lines(fst_lines, put_ln, put_col, put_end_ln, put_end_col)
-
         root._offset(put_end_ln, put_end_col, dln, dcol_offset)
         fst._offset(0, 0, put_ln, fst_dcol_offset)
+
+        self.putl_lines(fst_lines, put_ln, put_col, put_end_ln, put_end_col)
 
     def _put_slice_dict(self, code: Code, start: int, stop: int, field: str | None = None):
         if field is not None:
