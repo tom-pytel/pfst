@@ -1354,11 +1354,11 @@ def func():
 
         f = FST.fromsrc('i, j = 1, 2').a.body[0].targets[0].f.copy(fix=False)
         self.assertEqual('i, j', f.src)
-        self.assertIsNot(f, f.fix())
+        self.assertIsNot(f, f.fix(inplace=False))
 
         g = f.fix(inplace=False)
         self.assertFalse(compare_asts(f.a, g.a))
-        self.assertIs(g, g.fix())
+        self.assertIs(g, g.fix(inplace=False))
 
         f = FST.fromsrc('match w := x,:\n case 0: pass').a.body[0].subject.f.copy(fix=False)
         self.assertEqual('w := x,', f.src)
@@ -1367,12 +1367,12 @@ def func():
         self.assertEqual('(w := x,)', g.src)
         self.assertTrue(compare_asts(f.a, g.a, locs=False))
         self.assertFalse(compare_asts(f.a, g.a, locs=True))
-        self.assertIs(g, g.fix())
+        self.assertIs(g, g.fix(inplace=False))
 
         f = FST.fromsrc('(1 +\n2)')
         fc = f.a.body[0].value.f.copy(fix=False)
         self.assertEqual('1 +\n2', fc.src)
-        fd = fc.fix()
+        fd = fc.fix(inplace=False)
         self.assertEqual('(1 +\n2)', fd.src)
         fc.fix(inplace=True)
         self.assertEqual('(1 +\n2)', fc.src)
@@ -1380,7 +1380,7 @@ def func():
         f = FST.fromsrc('yield a1, a2')
         fc = f.a.body[0].value.f.copy(fix=False)
         self.assertEqual('yield a1, a2', fc.src)
-        fd = fc.fix()
+        fd = fc.fix(inplace=False)
         self.assertEqual('(yield a1, a2)', fd.src)
         fc.fix(inplace=True)
         self.assertEqual('(yield a1, a2)', fc.src)
@@ -1395,7 +1395,7 @@ def func():
 "Bad value substitution: option {!r} in section {!r} contains "
                "an interpolation key {!r} which is not a valid option name. "
                "Raw value: {!r}".format""".strip(), fc.src)
-        fd = fc.fix()
+        fd = fc.fix(inplace=False)
         self.assertEqual("""
 ("Bad value substitution: option {!r} in section {!r} contains "
                "an interpolation key {!r} which is not a valid option name. "
@@ -1414,7 +1414,7 @@ def func():
         self.assertEqual("""
 (is_seq := isinstance(a, (Tuple, List))) or (is_starred := isinstance(a, Starred)) or
             isinstance(a, (Name, Subscript, Attribute))""".strip(), fc.src)
-        fd = fc.fix()
+        fd = fc.fix(inplace=False)
         self.assertEqual("""
 ((is_seq := isinstance(a, (Tuple, List))) or (is_starred := isinstance(a, Starred)) or
             isinstance(a, (Name, Subscript, Attribute)))""".strip(), fd.src)
@@ -1426,7 +1426,7 @@ def func():
         if sys.version_info[:2] >= (3, 12):
             fc = FST.fromsrc('tuple[*tuple[int, ...]]').a.body[0].value.slice.f.copy(fix=False)
             self.assertEqual('*tuple[int, ...]', fc.src)
-            fd = fc.fix()
+            fd = fc.fix(inplace=False)
             self.assertEqual('(*tuple[int, ...],)', fd.src)
             fc.fix(inplace=True)
             self.assertEqual('(*tuple[int, ...],)', fc.src)
@@ -1450,7 +1450,7 @@ def func():
         self.assertEqual('(w := x,)', f.src)
 
         f = FST.fromsrc('a[1:2, 3:4]').a.body[0].value.slice.f.copy(fix=False)
-        self.assertIs(f.fix(), f)
+        self.assertIs(f.fix(inplace=False), f)
         # self.assertRaises(SyntaxError, f.fix)
         # self.assertIs(None, f.fix(raise_=False))
 

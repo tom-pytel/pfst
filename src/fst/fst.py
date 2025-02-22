@@ -317,18 +317,20 @@ class FSTFormat:
         only count on their respective `.ln`, `.col`, `.end_ln` and `.end_col` being correct (within `src`).
 
         **Parameters:**
-        - `src`: The source `FST` container that is being gotten from.
+        - `src`: The source `FST` container that is being gotten from. No text has been changed at this point but the
+            respective `AST` nodes may have been removed if case of `cut`.
         - `cut`: If `False` the operation is a copy, `True` means cut.
-        - `seq_loc`: The full location of the sequence in `src`, excluding parentheses/brackets/curlies.
+        - `seq_loc`: The full location of the sequence in `src`, excluding parentheses / brackets / curlies.
         - `lfirst`: The first `FST` or `fstloc` being gotten.
         - `llast`: The last `FST` or `fstloc` being gotten.
         - `lpre`: The preceding-first `FST` or `fstloc`, not being gotten, may not exist if `lfirst` is first of seq.
         - `lpost`: The after-last `FST` or `fstloc` being gotten, may not exist if `llast` is last of seq.
 
         **Returns:**
-        - If `cut=False` then should only return the first return value, which is a location where to copy source from
-        for the new slice. If `cut=True` then should return the copy location, a delete location and optionally lines to
-        replace the deleted portion (which can only be non-coding source).
+        - If `cut=False` then should return tuple with only the first value set, which is a location where to copy
+        source from for the new slice, with the second two being `None`. If `cut=True` then should return the copy
+        location, a delete location and optionally lines to replace the deleted portion (which can only be non-coding
+        source).
         """
 
         lines = src.root._lines
@@ -388,10 +390,10 @@ class FSTFormat:
         The `lfirst`, `llast`, `lpre` and `lpost` parameters are only meant to pass location information so you should
         only count on their respective `.ln`, `.col`, `.end_ln` and `.end_col` being correct (within `src`).
 
-        If `lfirst` and `llast` are `None`, it means that it is a pure insertion and no elements are being removed. In
+        If `lfirst` and `llast` are `None` it means that it is a pure insertion and no elements are being removed. In
         this case use `lpre` and `lpost` to determine locations, one of which could be missing if the insertion is at
-        the beginning or end of the sequence, both of which missing indicates put to already empty sequence (in which
-        case use `seq_loc` for location).
+        the beginning or end of the sequence, both of which missing indicates put to empty sequence (in which case use
+        `seq_loc` for location).
 
         The first line of `fst` is unindented and should remain so as it is concatenated with the target line at the
         point of insertion. The last line of `fst` is likewise prefixed to the line following the deleted location.
@@ -402,7 +404,7 @@ class FSTFormat:
             object to change what will be put (both source and `AST` nodes, node locations must be updated if source is
             changed).
         - `indent`: The indent string which was already applied to `fst`.
-        - `seq_loc`: The full location of the sequence in `dst`, excluding parentheses/brackets/curlies.
+        - `seq_loc`: The full location of the sequence in `dst`, excluding parentheses / brackets / curlies.
         - `lfirst`: The first `FST` or `fstloc` being replaced (if `None` then nothing being replaced).
         - `llast`: The last `FST` or `fstloc` being replaced (if `None` then nothing being replaced).
         - `lpre`: The preceding-first `FST` or `fstloc`, not being replaced, may not exist if `lfirst` is first of seq.
@@ -421,7 +423,8 @@ class FST:
     """Preserve AST formatting information and easy manipulation.
 
     **Class Attributes:**
-    - `format`: Controls source formatting on copy/cut/put operations. Can also be set on class instances to override.
+    - `format`: Controls source formatting on copy / cut / put operations. Can also be set on class instances to
+        override.
 
     **Attributes:**
     - `a`: The actual `AST` node.
@@ -794,6 +797,11 @@ class FST:
                     continue
 
                 if fln > ln:
+                    if not dln:
+                        gen.send(False)  # no need to walk into something past offet point if line change is 0
+
+                        continue
+
                     a.lineno += dln
 
                 elif fln == ln and (
@@ -816,7 +824,7 @@ class FST:
         """
 
         if dcol_offset:
-            for a in walk(self.a):  # now offset columns where it is allowed
+            for a in walk(self.a):
                 if (end_col_offset := getattr(a, 'end_col_offset', None)) is not None:
                     if a.lineno - 1 in lns:
                         a.col_offset += dcol_offset
@@ -826,7 +834,7 @@ class FST:
 
                 a.f.touch()
 
-        self.touchup()
+            self.touchup()
 
         return self
 
@@ -836,7 +844,7 @@ class FST:
         Only modifies ast, not lines.
         """
 
-        for a in walk(self.a):  # now offset columns where it is allowed
+        for a in walk(self.a):
             if (end_col_offset := getattr(a, 'end_col_offset', None)) is not None:
                 if (dcol_offset := dcol_offsets.get(a.lineno - 1)) is not None:
                     a.col_offset += dcol_offset
@@ -1397,6 +1405,7 @@ class FST:
 
         if isinstance(source, str):
             lines  = source.split('\n')
+
         else:
             lines  = source
             source = '\n'.join(lines)
@@ -1455,7 +1464,14 @@ class FST:
         return FST(ast, lines=[bistr(s) for s in lines], parse_params=parse_params)
 
     def verify(self, *, raise_: bool = True) -> Optional['FST']:  # -> Self | None:
-        """Sanity check, make sure parsed source matches ast."""
+        """Sanity check, make sure parsed source matches ast.
+
+        **Parameters:**
+        - `raise_`: Whether to raise an exception on verify failed or return `None`.
+
+        **Returns:**
+        - `None` on failure to verify, otherwise `self`.
+        """
 
         root         = self.root
         ast          = root.a
@@ -2098,7 +2114,7 @@ class FST:
         return None
 
     def last_child(self, with_loc: bool = True) -> Optional['FST']:
-        """Get last child in syntactic order.
+        """Get last valid child in syntactic order.
 
         **Parameters:**
         - `with_loc`: If `True` then only nodes with locations returned, otherwise all nodes.
@@ -2164,13 +2180,15 @@ class FST:
 
         **Parameters:**
         - `with_loc`: If `True` then only nodes with locations returned, otherwise all nodes.
-        - `walk_self`: If `True` then self will be returned first with the possibility to skip children on `send()`.
+        - `walk_self`: If `True` then self will be returned first with the possibility to skip children with `send()`.
         - `recurse`: Whether to recurse into children by default, `send()` for a given node will always override this.
             Will always attempt first level of children unless walking self and `False` is sent first.
-        - `scope`: If `True` then will only walk within the current scope (calling this on a node which creates scope
-            like `FunctionDef` will walk the scope of that node, not the enclosing scope).
-        - `back`: If `True` then walk every node backwards. This is not the same as a full forwards walk reversed due
-            to recursion.
+        - `scope`: If `True` then will walk only within the scope of `self`. Meaning if called on a `FunctionDef` then
+            will only walk children which are within the function scope. Will yield children which have with their own
+            scopes, and the parts of them which are visible in this scope (like default argument values), but will not
+            recurse into them unless `send(True)` is done for that child.
+        - `back`: If `True` then walk every node in reverse syntactic order. This is not the same as a full forwards
+            walk reversed due to recursion.
 
         **Example:**
         ```py
@@ -2564,7 +2582,7 @@ class FST:
 
         return self
 
-    def fix(self, *, inplace: bool = False) -> Optional['FST']:  # -> Self | None
+    def fix(self, inplace: bool = True) -> Optional['FST']:  # -> Self | None
         """Fix source and `ctx` values for cut or copied nodes (to make subtrees parsable if the source is not after
         the operation). Possibly reparses in order to verify expression. If can not fix or ast is not parsable by itself
         then ast will be unchanged. Is meant to be a quick fix after an operation, not full check, for that use
@@ -2572,8 +2590,8 @@ class FST:
         tuples.
 
         **Parameters:**
-        - `inplace`: If `True` then changes will be made to self. If `False` then `self` may be returned if no changes
-            made otherwise a modified copy is returned.
+        - `inplace`: If `True` then changes will be made to `self`. If `False` then `self` may be returned if no changes
+            made, otherwise a modified copy is returned.
 
         **Returns:**
         - `self` if unchanged or modified in place or a new `FST` object otherwise.

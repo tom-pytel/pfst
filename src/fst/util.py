@@ -160,8 +160,8 @@ AST_FIELDS = {cls: tuple(f for f, t in fields
 
 
 class bistr(str):
-    """Byte-indexed string, easy mapping between char and encoded byte index (including 1 past last valid unit). Only
-    positive indices."""
+    """Byte-indexed string, easy mapping between character and encoded byte index (including 1 past last valid unit).
+    Only positive indices."""
 
     _c2b: array  # character to byte indices
     _b2c: array  # byte to character indices
