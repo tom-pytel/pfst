@@ -385,6 +385,8 @@ class FSTFormat:
         source).
         """
 
+        # TODO: refine
+
         lines = src.root._lines
 
         if not lpre:  # first element in sequence
@@ -436,6 +438,7 @@ class FSTFormat:
     def put_seq(self, dst: 'FST', fst: 'FST', indent: str, seq_loc: fstloc,
                 lfirst: Union['FST', fstloc, None], llast: Union['FST', fstloc, None],
                 lpre: Union['FST', fstloc, None], lpost: Union['FST', fstloc, None],
+                sfirst: Union['FST', fstloc, None], slast: Union['FST', fstloc, None],
     ) -> fstloc:  # put_loc
         """Put to comma delimited sequence.
 
@@ -450,6 +453,9 @@ class FSTFormat:
         The first line of `fst` is unindented and should remain so as it is concatenated with the target line at the
         point of insertion. The last line of `fst` is likewise prefixed to the line following the deleted location.
 
+        There is always an operation if this is called, insertion, deletion, or replacement. It is never an empty
+        assignment to an empty slice.
+
         **Parameters:**
         - `dst`: The destination `FST` container that is being put to.
         - `fst`: The sequence which is being put, guaranteed to have at least one element. Already indented, mutate this
@@ -461,14 +467,21 @@ class FSTFormat:
         - `llast`: The last `FST` or `fstloc` being replaced (if `None` then nothing being replaced).
         - `lpre`: The preceding-first `FST` or `fstloc`, not being replaced, may not exist if `lfirst` is first of seq.
         - `lpost`: The after-last `FST` or `fstloc` being replaced, may not exist if `llast` is last of seq.
+        - `sfirst`: The source first `FST`, else `None` if is assignment from empty sequence (deletion).
+        - `slast`: The source last `FST`, else `None` if is assignment from empty sequence (deletion).
 
         **Returns:**
         - `fstloc` source location where the potentially modified `fst` source should be put, replacing whatever is at
             the location currently.
         """
 
+        # TODO: refine much!
+
         if not lfirst and not llast and not lpre and not lpost:  # assign to empty sequence, just copy
             return seq_loc
+
+
+
 
 
 
@@ -686,13 +699,29 @@ class FST:
 
         return f'{tail} {loc[0]},{loc[1]} -> {loc[2]},{loc[3]}' if loc else tail
 
-    def _dump(self, full: bool = False, indent: int = 2, cind: str = '', prefix: str = '', linefunc: Callable = print):
+    def _dump(self, full: bool = False, indent: int = 2, cind: str = '', prefix: str = '', linefunc: Callable = print,
+              compact: bool = False):
         tail = self._repr_tail()
         sind = ' ' * indent
+        ast  = self.a
 
-        linefunc(f'{cind}{prefix}{self.a.__class__.__qualname__}{" .." * bool(tail)}{tail}')
+        if compact:
+            if isinstance(ast, Name):
+                linefunc(f'{cind}{prefix}Name .id {ast.id!r} .ctx {ast.ctx.__class__.__qualname__}{" .." * bool(tail)}{tail}')
 
-        for name, child in iter_fields(self.a):
+                return
+
+            if isinstance(ast, Constant):
+                if ast.kind is None:
+                    linefunc(f'{cind}{prefix}Constant .value {ast.value!r}{" .." * bool(tail)}{tail}')
+                else:
+                    linefunc(f'{cind}{prefix}Constant .value {ast.value!r} .kind {ast.kind}{" .." * bool(tail)}{tail}')
+
+                return
+
+        linefunc(f'{cind}{prefix}{ast.__class__.__qualname__}{" .." * bool(tail)}{tail}')
+
+        for name, child in iter_fields(ast):
             is_list = isinstance(child, list)
 
             if full or (child != []):
@@ -701,12 +730,12 @@ class FST:
             if is_list:
                 for i, ast in enumerate(child):
                     if isinstance(ast, AST):
-                        ast.f._dump(full, indent, cind + ' ' * indent, f'{i}] ', linefunc)
+                        ast.f._dump(full, indent, cind + ' ' * indent, f'{i}] ', linefunc, compact)
                     else:
                         linefunc(f'{sind}{cind}{i}] {ast!r}')
 
             elif isinstance(child, AST):
-                child.f._dump(full, indent, cind + sind * 2, '', linefunc)
+                child.f._dump(full, indent, cind + sind * 2, '', linefunc, compact)
             else:
                 linefunc(f'{sind}{sind}{cind}{child!r}')
 
@@ -741,7 +770,7 @@ class FST:
             the end of the Tuple, use this when sure tuple is at top level.
         """
 
-        # assert isinstance(self.a, Tuple)
+        assert isinstance(self.a, Tuple)
 
         if (elts := self.a.elts) and len(elts) == 1:
             felt  = elts[0].f
@@ -751,12 +780,12 @@ class FST:
             if (not (code := _next_src(lines, felt.end_ln, felt.end_col, self.end_ln, self.end_col)) or
                 not code.src.startswith(',')
             ):
-                lines[end_ln] = bistr(f'{(l := lines[(end_ln := felt.end_ln)])[:(c := felt.end_col)]},{l[c:]}')
+                lines[ln] = bistr(f'{(l := lines[(ln := felt.end_ln)])[:(col := felt.end_col)]},{l[col:]}')
 
                 if offset:
                     raise NotImplementedError  # need to offset other stuff for the new comma
 
-                elif end_ln == self.end_ln:
+                elif ln == self.end_ln:
                     self.a.end_col_offset += 1
 
                     self.touchup(True)
@@ -1323,7 +1352,8 @@ class FST:
 
     def _put_seq_and_indent(self, fst: 'FST', seq_loc: fstloc,
                             lfirst: Union['FST', fstloc, None], llast: Union['FST', fstloc, None],
-                            lpre: Union['FST', fstloc, None], lpost: Union['FST', fstloc, None]) -> 'FST':
+                            lpre: Union['FST', fstloc, None], lpost: Union['FST', fstloc, None],
+                            sfirst: Union['FST', fstloc, None], slast: Union['FST', fstloc, None]) -> 'FST':
         assert fst.is_root
 
         indent = self.get_indent()
@@ -1331,7 +1361,7 @@ class FST:
         fst._indent_tail(indent)
 
         put_ln, put_col, put_end_ln, put_end_col = (
-            self.format.put_seq(self, fst, indent, seq_loc, lfirst, llast, lpre, lpost))
+            self.format.put_seq(self, fst, indent, seq_loc, lfirst, llast, lpre, lpost, sfirst, slast))
 
         root            = self.root
         lines           = root._lines
@@ -1377,7 +1407,6 @@ class FST:
 
         newlines[-1] = bistr(newlines[-1][:-1])
         newlines[0]  = bistr(newlines[0][1:])
-
         keys    = ast.keys
         lpre    = values[start - 1].f if start else None
         lpost   = None if stop == len(keys) else self._dict_key_or_mock_loc(keys[stop], values[stop].f)
@@ -1390,7 +1419,14 @@ class FST:
             lfirst = self._dict_key_or_mock_loc(keys[start], values[start].f)
             llast  = values[stop - 1].f
 
-        self._put_seq_and_indent(newfst, seq_loc, lfirst, llast, lpre, lpost)
+        if not (skeys := newast.keys):
+            sfirst = slast = None
+
+        else:
+            sfirst = skeys[0].f
+            slast  = newast.values[-1].f
+
+        self._put_seq_and_indent(newfst, seq_loc, lfirst, llast, lpre, lpost, sfirst, slast)
 
         keys[start : stop]   = newast.keys
         values[start : stop] = newast.values
@@ -1582,13 +1618,13 @@ class FST:
 
         return self
 
-    def dump(self, full: bool = False, indent: int = 2, print: bool = True) -> list[str] | None:
+    def dump(self, full: bool = False, indent: int = 2, print: bool = True, compact: bool = False) -> list[str] | None:
         if print:
-            return self._dump(full, indent)
+            return self._dump(full, indent, compact=compact)
 
         lines = []
 
-        self._dump(full, indent, linefunc=lines.append)
+        self._dump(full, indent, linefunc=lines.append, compact=compact)
 
         return lines
 
