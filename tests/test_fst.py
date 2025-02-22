@@ -6,6 +6,7 @@ import unittest
 import ast as ast_
 
 from fst import *
+from fst import fst
 
 PYFNMS = sum((
     [os.path.join(path, fnm) for path, _, fnms in os.walk(top) for fnm in fnms if fnm.endswith('.py')]
@@ -419,6 +420,61 @@ def dumptest(self, fst, dump, src):
 
 
 class TestFST(unittest.TestCase):
+    def test__normalize_code(self):
+        f = fst._normalize_code('i')
+        self.assertIsInstance(f.a, Module)
+        self.assertIsInstance(f.a.body[0], Expr)
+        self.assertIsInstance(f.a.body[0].value, Name)
+
+        f = fst._normalize_code('i', expr_=True)
+        self.assertIsInstance(f.a, Name)
+
+        f = fst._normalize_code(['i'])
+        self.assertIsInstance(f.a, Module)
+        self.assertIsInstance(f.a.body[0], Expr)
+        self.assertIsInstance(f.a.body[0].value, Name)
+
+        f = fst._normalize_code(['i'], expr_=True)
+        self.assertIsInstance(f.a, Name)
+
+        f = fst._normalize_code(ast_.parse('i'))
+        self.assertIsInstance(f.a, Module)
+        self.assertIsInstance(f.a.body[0], Expr)
+        self.assertIsInstance(f.a.body[0].value, Name)
+
+        f = fst._normalize_code(ast_.parse('i', mode='single'))
+        self.assertIsInstance(f.a, Module)
+        self.assertIsInstance(f.a.body[0], Expr)
+        self.assertIsInstance(f.a.body[0].value, Name)
+
+        f = fst._normalize_code(ast_.parse('i'), expr_=True)
+        self.assertIsInstance(f.a, Name)
+
+        f = fst._normalize_code(ast_.parse('i', mode='eval'))
+        self.assertIsInstance(f.a, Name)
+
+        f = fst._normalize_code(ast_.parse('i', mode='eval'), expr_=True)
+        self.assertIsInstance(f.a, Name)
+
+        f = fst._normalize_code(FST.fromsrc('i'))
+        self.assertIsInstance(f.a, Module)
+        self.assertIsInstance(f.a.body[0], Expr)
+        self.assertIsInstance(f.a.body[0].value, Name)
+
+        f = fst._normalize_code(FST.fromsrc('i', mode='single'))
+        self.assertIsInstance(f.a, Module)
+        self.assertIsInstance(f.a.body[0], Expr)
+        self.assertIsInstance(f.a.body[0].value, Name)
+
+        f = fst._normalize_code(FST.fromsrc('i', mode='eval'))
+        self.assertIsInstance(f.a, Name)
+
+        f = fst._normalize_code(FST.fromsrc('i'), expr_=True)
+        self.assertIsInstance(f.a, Name)
+
+        f = fst._normalize_code(FST.fromsrc('i', mode='eval'), expr_=True)
+        self.assertIsInstance(f.a, Name)
+
     def test_loc(self):
         # from children
         self.assertEqual((0, 6, 0, 9), parse('def f(i=1): pass').body[0].args.f.loc)  # arguments

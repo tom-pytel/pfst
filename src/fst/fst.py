@@ -70,6 +70,7 @@ AST_DEFAULT_BODY_FIELD  = {cls: field for field, classes in [
 
 STATEMENTISH            = (stmt, ExceptHandler, match_case)  # always in lists, cannot be inside multilines
 STATEMENTISH_OR_STMTMOD = (stmt, ExceptHandler, match_case, Module, Interactive)
+HAS_DOCSTRING           = (FunctionDef, AsyncFunctionDef, ClassDef, Module)
 
 re_empty_line_start     = re.compile(r'[ \t]*')    # start of completely empty or space-filled line (from start pos, start of line indentation)
 re_empty_line           = re.compile(r'[ \t]*$')   # completely empty or space-filled line (from start pos, start of line indentation)
@@ -131,13 +132,24 @@ class fstlistproxy:
             return a.f if isinstance(a := self.asts[index], AST) else a
 
         if isinstance(index, str):
-            if a := get_func_class_or_ass_by_name(self.asts, index):
-                return a.f
+            if not (a := get_func_class_or_ass_by_name(self.asts, index)):
+                raise IndexError(f"function, class or variable '{index}' not found")
 
-            raise IndexError(f"function, class or variable '{index}' not found")
+            return a.f
 
         return fstlistproxy((asts := self.asts)[index], self.owner, self.field,
                             start if (start := index.start) >= 0 else start + len(asts))
+
+    # def __setitem__(self, index: int | str | slice, item: Code) -> Any:
+    #     if isinstance(index, int):
+    #         raise NotImplementedError
+
+    #     if isinstance(index, str):
+    #         raise NotImplementedError
+
+    #     assert index.step is None
+
+    #     self.owner.put_slice(item, index.start, index.stop, self.field)
 
     def __repr__(self) -> str:
         return f'f{list(self)}'
@@ -291,17 +303,53 @@ def _fixup_slice_index(ast, body, field, start, stop) -> tuple[int, int]:
     return start, stop
 
 
-def _normalize_code(code: Code) -> 'FST':
+def _normalize_code(code: Code, expr_: bool = False) -> 'FST':
+    """Normalize code to an `FST`. If an expression is required then will return an `FST` with a top level `ast.expr`
+    `AST` node if possible, raise otherwise. If expression is not required then will convert to `ast.Module` if is
+    `ast.Interactive` or return single expression node of `ast.Expression` or just return whatever the node currently
+    is."""
+
+    def reduce(ast):
+        if isinstance(ast, Expression):
+            ast = ast.body
+
+        elif expr_:
+            if isinstance(ast, (Module, Interactive)):
+                if len(body := ast.body) != 1 or not isinstance(ast := body[0], Expr):
+                    raise ValueError(f'expecting single expression')
+
+                ast = ast.value
+
+            if not isinstance(ast, expr):
+                raise ValueError(f'expecting expression')
+
+        elif isinstance(ast, Interactive):
+            ast = Module(body=ast.body, type_ignores=[])
+
+        return ast
+
     if isinstance(code, FST):
         if not code.is_root:
-            raise ValueError('FST must be root')
+            raise ValueError('expecting root FST')
 
-        return code
+        rast = reduce(ast := code.a)
+
+        return code if rast is ast else FST(rast, lines=code._lines, from_=code)
 
     if isinstance(code, AST):
-        return FST.fromast(code)
+        return FST.fromast(reduce(code))
 
-    return FST.fromsrc(code)
+    if isinstance(code, str):
+        src   = code
+        lines = code.split('\n')
+
+    else:  # isinstance(code, list):
+        src   = '\n'.join(code)
+        lines = code
+
+    ast = ast_parse(src, mode='eval').body if expr_ else ast_parse(src)
+
+    return FST(ast, lines=lines)
 
 
 class FSTFormat:
@@ -702,7 +750,7 @@ class FST:
         """`self` must be something that can have a docstring in the body (function, class, module). Node and source
         lines are assumed to be correct, just the docstring value needs to be reset."""
 
-        # assert isistance(self, (FunctionDef, AsyncFunctionDef, ClassDef, Module))
+        # assert isistance(self, HAS_DOCSTRING)
 
         if ((body := self.a.body) and isinstance(b0 := body[0], Expr) and isinstance(v := b0.value, Constant) and
             isinstance(v.value, str)
@@ -715,7 +763,7 @@ class FST:
         """Reparse docstrings in self and all descendants."""
 
         for a in walk(self.a):
-            if isinstance(a, (FunctionDef, AsyncFunctionDef, ClassDef, Module)):
+            if isinstance(a, HAS_DOCSTRING):
                 a.f._reparse_docstring()
 
     def _offset(self, ln: int, col: int, dln: int, dcol_offset: int, inc: bool = False) -> 'FST':  # -> Self
@@ -946,7 +994,7 @@ class FST:
                     not docstring or
                     not ((parent := f.parent) and  # not (is_docstring)
                          isinstance(parent.a, Expr) and (pparent := parent.parent) and parent.pfield == ('body', 0) and
-                         isinstance(pparent.a, (FunctionDef, AsyncFunctionDef, ClassDef, Module))
+                         isinstance(pparent.a, HAS_DOCSTRING)
                 )):
                     multiline_str(f)
 
@@ -1109,7 +1157,10 @@ class FST:
 
         return fst
 
-    def _get_slice_tuple_list_or_set(self, start: int, stop: int, fix: bool, cut: bool) -> 'FST':
+    def _get_slice_tuple_list_or_set(self, start: int, stop: int, field: str | None, fix: bool, cut: bool) -> 'FST':
+        if field is not None and field != 'elts':
+            raise ValueError(f"invalid field '{field}' to slice from a {self.a.__class__.__name__}")
+
         ast         = self.a
         elts        = ast.elts
         is_set      = isinstance(ast, Set)
@@ -1206,7 +1257,10 @@ class FST:
 
         return fst
 
-    def _get_slice_dict(self, start: int, stop: int, fix: bool, cut: bool) -> 'FST':
+    def _get_slice_dict(self, start: int, stop: int, field: str | None, fix: bool, cut: bool) -> 'FST':
+        if field is not None:
+            raise ValueError(f"cannot specify a field '{field}' to slice from a Dict")
+
         ast         = self.a
         values      = ast.values
         start, stop = _fixup_slice_index(ast, values, 'values', start, stop)
@@ -1274,8 +1328,16 @@ class FST:
         root._offset(put_end_ln, put_end_col, dln, dcol_offset)
         fst._offset(0, 0, put_ln, fst_dcol_offset)
 
-    def _put_slice_dict(self, code: Code, start: int, stop: int):
-        newfst      = _normalize_code(code)
+    def _put_slice_dict(self, code: Code, start: int, stop: int, field: str | None = None):
+        if field is not None:
+            raise ValueError(f"cannot specify a field '{field}' to assign slice to a Dict")
+
+        newfst = _normalize_code(code, expr_=True)
+        newast = newfst.a
+
+        if not isinstance(newast, Dict):
+            raise ValueError(f"slice being assigned to a Dict must be a Dict, not a '{newast.__class__.__name__}'")
+
         ast         = self.a
         values      = ast.values
         start, stop = _fixup_slice_index(ast, values, 'values', start, stop)
@@ -1284,9 +1346,7 @@ class FST:
         if not dstlen and not newfst.keys:  # assigning empty dict to empty slice of dict, noop
             return
 
-        newast   = newfst.a
-        newlines = newfst._lines
-
+        newlines               = newfst._lines
         newast.end_col_offset -= 1
 
         newfst._offset(0, 1, 0, -1)
@@ -2744,7 +2804,7 @@ class FST:
 
 
     def get_slice(self, start: int | None = None, stop: int | None = None, field: str | None = None, *,
-              fix: bool = True, cut: bool = False) -> 'FST':
+                  fix: bool = True, cut: bool = False) -> 'FST':
         if isinstance(self.a, STATEMENTISH_OR_STMTMOD):
             return self._get_slice_stmt(start, stop, field, fix, cut)
 
@@ -2752,10 +2812,10 @@ class FST:
             self = self.a.body.f
 
         if isinstance(self.a, (Tuple, List, Set)):
-            return self._get_slice_tuple_list_or_set(start, stop, fix, cut)
+            return self._get_slice_tuple_list_or_set(start, stop, field, fix, cut)
 
         if isinstance(self.a, Dict):
-            return self._get_slice_dict(start, stop, fix, cut)
+            return self._get_slice_dict(start, stop, field, fix, cut)
 
         raise ValueError(f"cannot get slice from '{self.a.__class__.__name__}'")
 
@@ -2767,7 +2827,7 @@ class FST:
     def put_slice(self, code: Code, start: int | None = None, stop: int | None = None, field: str | None = None
                   ) -> 'FST':
         if isinstance(self.a, Dict):
-            return self._put_slice_dict(code, start, stop)
+            return self._put_slice_dict(code, start, stop, field)
 
         raise ValueError(f"cannot put slice to '{self.a.__class__.__name__}'")
 
@@ -2777,11 +2837,11 @@ class FST:
 
     def get(self, start: int | str | None = None, stop: int | None | Literal[False] = False,
             field: str | None = None, *, fix: bool = True, cut: bool = False, decos: bool = True) -> Optional['FST']:
-        raise NotImplementedError  # TODO: THIS! THIS! THIS! THIS! THIS! THIS!
+        raise NotImplementedError  # TODO: THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS!
 
     def put(self, code: Code, start: int | None = None, stop: int | None | Literal['False'] = False,
             field: str | None = None) -> Optional['FST']:  # -> Self:
-        raise NotImplementedError  # TODO: THIS! THIS! THIS! THIS! THIS! THIS!
+        raise NotImplementedError  # TODO: THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS!
 
 
 
