@@ -127,32 +127,36 @@ class fstlistproxy:
         self.field = field
         self.start = start
 
-    def __getitem__(self, index: int | str | slice) -> Any:
-        if isinstance(index, int):
-            return a.f if isinstance(a := self.asts[index], AST) else a
+    def __repr__(self) -> str:
+        return f'f{list(self)}'
 
-        if isinstance(index, str):
-            if not (a := get_func_class_or_ass_by_name(self.asts, index)):
-                raise IndexError(f"function, class or variable '{index}' not found")
+    def __getitem__(self, idx: int | str | slice) -> Any:
+        if isinstance(idx, int):
+            return a.f if isinstance(a := self.asts[idx], AST) else a
+
+        if isinstance(idx, str):
+            if not (a := get_func_class_or_ass_by_name(self.asts, idx)):
+                raise IndexError(f"function, class or variable '{idx}' not found")
 
             return a.f
 
-        return fstlistproxy((asts := self.asts)[index], self.owner, self.field,
-                            start if (start := index.start) >= 0 else start + len(asts))
+        return fstlistproxy((asts := self.asts)[idx], self.owner, self.field,
+                            start if (start := idx.start) >= 0 else start + len(asts))
 
-    # def __setitem__(self, index: int | str | slice, item: Code) -> Any:
-    #     if isinstance(index, int):
-    #         raise NotImplementedError
+    def __setitem__(self, idx: int | slice, code: Code):
+        if isinstance(idx, int):
+            self.owner.put(code, idx, field=self.field)
 
-    #     if isinstance(index, str):
-    #         raise NotImplementedError
+        if idx.step is not None:
+            raise ValueError('step slicing not supported')
 
-    #     assert index.step is None
+        self.owner.put_slice(code, idx.start, idx.stop, self.field)
 
-    #     self.owner.put_slice(item, index.start, index.stop, self.field)
+    def append(self, code: Code):
+        self.owner.put(code, self.start + len(self.asts), field=self.field)
 
-    def __repr__(self) -> str:
-        return f'f{list(self)}'
+    def extend(self, code: Code):
+        self.owner.put_slice(code, self.start + len(self.asts), field=self.field)
 
     def copy(self, *, fix: bool = True) -> 'FST':
         return self.owner.get_slice(start := self.start, start + len(self.asts), self.field, fix=fix, cut=False)
@@ -459,8 +463,8 @@ class FSTFormat:
         - `lpost`: The after-last `FST` or `fstloc` being replaced, may not exist if `llast` is last of seq.
 
         **Returns:**
-        - `fstloc` location where the potentially modified `fst` should be put, replacing whatever is at the location
-            currently.
+        - `fstloc` source location where the potentially modified `fst` source should be put, replacing whatever is at
+            the location currently.
         """
 
 
@@ -708,7 +712,16 @@ class FST:
         if key:
             return key.f
 
-        ln, col, s = _prev_src(self.root._lines, self.ln, self.col, value.ln, value.col)
+        if idx := value.pfield.idx:
+            f   = value.parent.values[idx - 1]  # because of multiline strings, could be a fake comment start inside one which hides a valid **
+            ln  = f.end_ln
+            col = f.end_col
+
+        else:
+            ln  = self.ln
+            col = self.ln
+
+        ln, col, s = _prev_src(self.root._lines, ln, col, value.ln, value.col)
         end_col    = col + len(s)
 
         assert s.endswith('**')
@@ -2449,9 +2462,6 @@ class FST:
 
         return True
 
-    def is_parenthesized(self, from_ln: int = 0, from_col: int = 0) -> bool:
-        return ((code := _prev_src(self.root._lines, from_ln, from_col, self.ln, self.col)) and code.src.endswith('('))  # we don't check for statements or other delimiting structures because they will not have a trailing open paren for a false positive
-
     def is_tuple_parenthesized(self) -> bool:
         assert isinstance(self.a, Tuple)
 
@@ -2701,7 +2711,7 @@ class FST:
                     need_paren = True
 
             elif (isinstance(ast, (Name, List, Set, Dict, ListComp, SetComp, DictComp, GeneratorExp)) or
-                  self.is_parenthesized()):
+                  ((code := _prev_src(self.root._lines, 0, 0, self.ln, self.col)) and code.src.endswith('('))):  # is parenthesized?
                 need_paren = False
 
             elif isinstance(ast, (NamedExpr, Yield, YieldFrom)):
@@ -2824,7 +2834,7 @@ class FST:
 
 
 
-    def put_slice(self, code: Code, start: int | None = None, stop: int | None = None, field: str | None = None
+    def put_slice(self, code: Code, start: int | None = None, stop: int | None = None, field: str | None = None,
                   ) -> 'FST':
         if isinstance(self.a, Dict):
             return self._put_slice_dict(code, start, stop, field)

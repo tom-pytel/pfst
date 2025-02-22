@@ -420,6 +420,19 @@ def dumptest(self, fst, dump, src):
 
 
 class TestFST(unittest.TestCase):
+    def test__dict_key_or_mock_loc(self):
+        a = parse('''{
+    a: """test
+two  # fake comment start""", **b
+            }''').body[0].value
+        self.assertEqual((2, 30, 2, 32), a.f._dict_key_or_mock_loc(a.keys[1], a.values[1].f))
+
+        a = parse('''{
+    a: """test""", **  # comment
+    b
+            }''').body[0].value
+        self.assertEqual((1, 19, 1, 21), a.f._dict_key_or_mock_loc(a.keys[1], a.values[1].f))
+
     def test__normalize_code(self):
         f = fst._normalize_code('i')
         self.assertIsInstance(f.a, Module)
@@ -936,37 +949,6 @@ def f(a, /, b, *c, d, **e):
         test2('call(a, b=1, *c, d=2, **e)')
         test2('system_message(message, level=level, type=type,*children, **kwargs)')
 
-    def test_copy_lines(self):
-        src = 'class cls:\n if True:\n  i = 1\n else:\n  j = 2'
-        ast = parse(src)
-
-        self.assertEqual(src.split('\n'), ast.f.copy_lines())
-        self.assertEqual(src.split('\n'), ast.body[0].f.copy_lines())
-        self.assertEqual('if True:\n  i = 1\n else:\n  j = 2'.split('\n'), ast.body[0].body[0].f.copy_lines())
-        self.assertEqual(['i = 1'], ast.body[0].body[0].body[0].f.copy_lines())
-        self.assertEqual(['j = 2'], ast.body[0].body[0].orelse[0].f.copy_lines())
-
-        self.assertEqual(['True:', '  i'], ast.f.root.copyl_lines(1, 4, 2, 3))
-
-    def test_put_lines(self):
-        f = FST(Load(), lines=[bistr('')])
-        f.putl_src('test', 0, 0, 0, 0)
-        self.assertEqual(f.lines, ['test'])
-        f.putl_src('test', 0, 0, 0, 0)
-        self.assertEqual(f.lines, ['testtest'])
-        f.putl_src('tost', 0, 0, 0, 8)
-        self.assertEqual(f.lines, ['tost'])
-        f.putl_src('a\nb\nc', 0, 2, 0, 2)
-        self.assertEqual(f.lines, ['toa', 'b', 'cst'])
-        f.putl_src('', 0, 3, 2, 1)
-        self.assertEqual(f.lines, ['toast'])
-        f.putl_src('a\nb\nc\nd', 0, 0, 0, 5)
-        self.assertEqual(f.lines, ['a', 'b', 'c', 'd'])
-        f.putl_src('efg\nhij', 1, 0, 2, 1)
-        self.assertEqual(f.lines, ['a', 'efg', 'hij', 'd'])
-        f.putl_src('***', 1, 2, 2, 1)
-        self.assertEqual(f.lines, ['a', 'ef***ij', 'd'])
-
     def test_get_indent(self):
         ast = parse('i = 1; j = 2')
 
@@ -1371,6 +1353,37 @@ def func():
         """
     f"multiline f-string")
             '''.strip(), f.copy().src)
+
+    def test_copy_lines(self):
+        src = 'class cls:\n if True:\n  i = 1\n else:\n  j = 2'
+        ast = parse(src)
+
+        self.assertEqual(src.split('\n'), ast.f.copy_lines())
+        self.assertEqual(src.split('\n'), ast.body[0].f.copy_lines())
+        self.assertEqual('if True:\n  i = 1\n else:\n  j = 2'.split('\n'), ast.body[0].body[0].f.copy_lines())
+        self.assertEqual(['i = 1'], ast.body[0].body[0].body[0].f.copy_lines())
+        self.assertEqual(['j = 2'], ast.body[0].body[0].orelse[0].f.copy_lines())
+
+        self.assertEqual(['True:', '  i'], ast.f.root.copyl_lines(1, 4, 2, 3))
+
+    def test_put_lines(self):
+        f = FST(Load(), lines=[bistr('')])
+        f.putl_src('test', 0, 0, 0, 0)
+        self.assertEqual(f.lines, ['test'])
+        f.putl_src('test', 0, 0, 0, 0)
+        self.assertEqual(f.lines, ['testtest'])
+        f.putl_src('tost', 0, 0, 0, 8)
+        self.assertEqual(f.lines, ['tost'])
+        f.putl_src('a\nb\nc', 0, 2, 0, 2)
+        self.assertEqual(f.lines, ['toa', 'b', 'cst'])
+        f.putl_src('', 0, 3, 2, 1)
+        self.assertEqual(f.lines, ['toast'])
+        f.putl_src('a\nb\nc\nd', 0, 0, 0, 5)
+        self.assertEqual(f.lines, ['a', 'b', 'c', 'd'])
+        f.putl_src('efg\nhij', 1, 0, 2, 1)
+        self.assertEqual(f.lines, ['a', 'efg', 'hij', 'd'])
+        f.putl_src('***', 1, 2, 2, 1)
+        self.assertEqual(f.lines, ['a', 'ef***ij', 'd'])
 
     def test_fix(self):
         f = FST.fromsrc('if 1:\n a\nelif 2:\n b')
