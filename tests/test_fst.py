@@ -38,10 +38,11 @@ CUT_DATA = [
     3,  # third line
 )
 """, 'body[0].value', 0, 2, """
-(3,  # third line
+(       # hello
+    3,  # third line
 )
 """, """
-(       # hello
+(
     1,  # last line
     2,  # second line
 )
@@ -98,10 +99,11 @@ CUT_DATA = [
     1, 2, 3 # last line
 )
 """, 'body[0].value', 0, 2, """
-(3, # last line
+(           # hello
+3, # last line
 )
 """, """
-(           # hello
+(
     1, 2)
 """),
 
@@ -194,11 +196,11 @@ CUT_DATA = [
   ,
 3, 4)
 """, 'body[0].value', 1, 2, """
-(1, 3, 4)
+(1,
+3, 4)
 """, """
 (2
-  ,
-)
+  ,)
 """),
 
 ("""
@@ -248,10 +250,11 @@ if 1:
     )
 """, 'body[0].body[0].value', 0, 2, """
 if 1:
-    (3,  # third line
+    (       # hello
+        3,  # third line
     )
 """, """
-(       # hello
+(
     1,  # last line
     2,  # second line
 )
@@ -324,21 +327,21 @@ i =                (self.__class__.__name__, self._name,
                 (self._handle & (_sys.maxsize*2 + 1)),
                 id(self) & (_sys.maxsize*2 + 1))
 """, 'body[0].value', 0, 3, """
-i =                (id(self) & (_sys.maxsize*2 + 1),)
+i =                (
+                id(self) & (_sys.maxsize*2 + 1),)
 """, """
 (self.__class__.__name__, self._name,
-                (self._handle & (_sys.maxsize*2 + 1)),
-                )
+                (self._handle & (_sys.maxsize*2 + 1)),)
 """),
 
 ("""
 i = namespace = {**__main__.__builtins__.__dict__,
              **__main__.__dict__}
 """, 'body[0].value', 0, 1, """
-i = namespace = {**__main__.__dict__}
+i = namespace = {
+             **__main__.__dict__}
 """, """
-{**__main__.__builtins__.__dict__,
-             }
+{**__main__.__builtins__.__dict__,}
 """),
 
 ("""
@@ -350,15 +353,16 @@ env = {
     **{k.upper(): v for k, v in (env or {}).items()},
 }
 """, 'body[0].value', None, 2, """
-env = {"PYLAUNCHER_DRYRUN": "1",
+env = {
+
+    "PYLAUNCHER_DRYRUN": "1",
     "PYLAUNCHER_LIMIT_TO_COMPANY": "",
     **{k.upper(): v for k, v in (env or {}).items()},
 }
 """, """
 {
     **{k.upper(): v for k, v in os.environ.items() if k.upper() not in ignore},
-    "PYLAUNCHER_DEBUG": "1",
-}
+    "PYLAUNCHER_DEBUG": "1",}
 """),
 
 ("""
@@ -2123,7 +2127,7 @@ Tuple .. ROOT 0,0 -> 3,1
   .ctx
     Load
             """.strip(), """
-(       # hello
+(
     1,  # first line
     2,  # second line
 )
@@ -2223,7 +2227,7 @@ Tuple .. ROOT 0,0 -> 1,9
   .ctx
     Load
             """.strip(), """
-(           # hello
+(
     1, 2)
             """.strip())
 
@@ -2369,7 +2373,7 @@ Tuple .. ROOT 0,0 -> 2,1
   ,
 3, 4)
             """.strip()).body[0].value.f.get_slice(1, 2), """
-Tuple .. ROOT 0,0 -> 2,1
+Tuple .. ROOT 0,0 -> 1,4
   .elts[1]
   0] Constant .. 0,1 -> 0,2
     .value
@@ -2380,8 +2384,7 @@ Tuple .. ROOT 0,0 -> 2,1
     Load
             """.strip(), """
 (2
-  ,
-)
+  ,)
             """.strip())
 
         dumptest(self, parse("""
@@ -2477,7 +2480,7 @@ Tuple .. ROOT 0,0 -> 3,1
   .ctx
     Load
             """.strip(), """
-(       # hello
+(
     1,  # first line
     2,  # second line
 )

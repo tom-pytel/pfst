@@ -6,7 +6,7 @@ from typing import Any, Callable, Generator, Literal, NamedTuple, Optional, Type
 from .util import *
 
 __all__ = [
-    'parse', 'unparse', 'FST', 'FSTFormat',
+    'parse', 'unparse', 'FST', 'FSTSrcEdit',
     'fstlistproxy', 'fstloc', 'srcwpos', 'astfield',
 ]
 
@@ -363,8 +363,8 @@ def _expr_src_edit_locs(lines: list[str], loc: fstloc, bound: fstloc, at_seq_end
                     copy_ln  = start_ln
                     copy_col = start_col
 
-                    if at_seq_end and c == ',':  # comma found on same line as start then if previous ends on same line then delete up to it
-                        if col != code_col:  # if not at start of code.src then delete point is here
+                    if at_seq_end and c == ',':  # comma found on same line as start then if previous ends on same line then delete up to it if at end of sequence
+                        if col != code_col:
                             del_ln  = start_ln
                             del_col = col
 
@@ -406,7 +406,7 @@ def _expr_src_edit_locs(lines: list[str], loc: fstloc, bound: fstloc, at_seq_end
         done = False
 
         if not (code := _next_src(lines, cur_ln, cur_col, bound_end_ln, bound_end_col, True, False)):
-            if nparens:
+            if nparens > 0:  # != 0
                 raise ValueError('unclosed parenthesis found')
 
             done         = True
@@ -431,8 +431,10 @@ def _expr_src_edit_locs(lines: list[str], loc: fstloc, bound: fstloc, at_seq_end
                 col = col + 1
 
                 if c == ')':
-                    if (nparens := nparens - 1) < 0:
-                        raise ValueError('unmatched closing parenthesis found')
+                    nparens  = nparens - 1
+                    # if sequence then opening parens may be outside of location so we don't check for this
+                    # if nparens < 0:
+                    #     raise ValueError('unmatched closing parenthesis found')
 
                     stop_ln  = ln
                     stop_col = col
@@ -446,7 +448,7 @@ def _expr_src_edit_locs(lines: list[str], loc: fstloc, bound: fstloc, at_seq_end
                     stop_col   = col
 
                 else:
-                    if nparens:
+                    if nparens > 0:  # != 0
                         raise ValueError('unclosed parenthesis found')
 
                     done          = True
@@ -563,7 +565,7 @@ def _normalize_code(code: Code, expr_: bool = False) -> 'FST':
     return FST(ast, lines=lines)
 
 
-class FSTFormat:
+class FSTSrcEdit:
     """Source operation formatter."""
 
     def get_seq(self, src: 'FST', cut: bool, seq_loc: fstloc,
@@ -674,7 +676,7 @@ class FST:
     """Preserve AST formatting information and easy manipulation.
 
     **Class Attributes:**
-    - `format`: Controls source formatting on copy / cut / put operations. Can also be set on class instances to
+    - `src_edit`: Controls source edit formatting on copy / cut / put operations. Can also be set on class instances to
         override.
 
     **Attributes:**
@@ -839,7 +841,7 @@ class FST:
     def f(self):
         raise RuntimeError("you probably think you're accessing an AST node, but you're not, you're accessing an FST node")
 
-    format = FSTFormat()
+    src_edit = FSTSrcEdit()
 
     # ------------------------------------------------------------------------------------------------------------------
 
@@ -1341,7 +1343,7 @@ class FST:
                             lpre: Union['FST', fstloc, None], lpost: Union['FST', fstloc, None],
                             prefix: str, suffix: str) -> 'FST':
 
-        copy_loc, put_loc, put_lines = self.format.get_seq(self, cut, seq_loc, lfirst, llast, lpre, lpost)
+        copy_loc, put_loc, put_lines = self.src_edit.get_seq(self, cut, seq_loc, lfirst, llast, lpre, lpost)
 
         copy_ln, copy_col, copy_end_ln, copy_end_col = copy_loc
 
@@ -1542,7 +1544,7 @@ class FST:
         fst._indent_tail(indent)
 
         put_ln, put_col, put_end_ln, put_end_col = (
-            self.format.put_seq(self, fst, indent, seq_loc, lfirst, llast, lpre, lpost, sfirst, slast))
+            self.src_edit.put_seq(self, fst, indent, seq_loc, lfirst, llast, lpre, lpost, sfirst, slast))
 
         root            = self.root
         lines           = root._lines
