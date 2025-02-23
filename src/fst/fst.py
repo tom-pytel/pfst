@@ -284,15 +284,15 @@ def _prev_src(lines: list[str], ln: int, col: int, end_ln: int, end_col: int,
     return None
 
 
-def _expr_locs(lines: list[str], loc: fstloc, bound: fstloc) -> tuple[fstloc, fstloc]:
+def _expr_src_edit_locs(lines: list[str], loc: fstloc, bound: fstloc) -> tuple[fstloc, fstloc]:
     """Get expression copy and delete locations. If there is a trailing comma within bounding span then it is
     included in the delete location. Any enclosing grouping parentheses within the bounding span are included.
 
     **Parameters:**
     - `lines`: The lines corresponding to the expression and its `bound` location.
     - `loc`: The location of the expression, can be multiple or no expressions, just the location matters.
-    - `bound`: The bounding location not to go outside of. Must entirely contain `loc` (can be same as). Can contain
-        other `AST` nodes like other members of a sequence, useful to decide whether to delete the whole bound or not.
+    - `bound`: The bounding location not to go outside of. Must entirely contain `loc` (can be same as). Must not
+        contain any part of other `AST` nodes like other members of a sequence.
 
     **Returns:**
     - `(copy_loc, del_loc)`: The `copy_loc` is the location of source that should be used if copying the expression.
@@ -303,15 +303,12 @@ def _expr_locs(lines: list[str], loc: fstloc, bound: fstloc) -> tuple[fstloc, fs
     start_ln, start_col, stop_ln,      stop_col      = loc
     bound_ln, bound_col, bound_end_ln, bound_end_col = bound
 
-    at_bound = None
-    nparens  = 0
+    nparens = 0
 
     # start locations
 
     while True:
         if not (code := _prev_src(lines, bound_ln, bound_col, start_ln, start_col, True, True)):
-            at_bound = True
-
             if bound_ln != start_ln:
                 copy_ln  = bound_ln
                 copy_col = len(lines[bound_ln])
@@ -351,8 +348,6 @@ def _expr_locs(lines: list[str], loc: fstloc, bound: fstloc) -> tuple[fstloc, fs
 
         for c in src[::-1]:
             if done := (c != '('):
-                at_bound = False
-
                 if ln != start_ln:
                     copy_ln  = bound_ln
                     copy_col = len(lines[bound_ln])
@@ -386,21 +381,11 @@ def _expr_locs(lines: list[str], loc: fstloc, bound: fstloc) -> tuple[fstloc, fs
             if nparens:
                 raise ValueError('unclosed parenthesis found')
 
-            if at_bound is None:  # undetermined yet
-                at_bound = not _next_src(lines, bound_ln, bound_col, copy_ln, copy_col)
-
-            if at_bound:  # got to start of bound above and end of bound here, copy and nuke the whole enchilada
-                copy_ln      = del_ln      = bound_ln
-                copy_col     = del_col     = bound_col
-                copy_end_ln  = del_end_ln  = bound_end_ln
-                copy_end_col = del_end_col = bound_end_col
-
-            else:
-                done         = True
-                ln           = bound_end_ln
-                col          = bound_end_col
-                copy_end_ln  = stop_ln
-                copy_end_col = stop_col
+            done         = True
+            ln           = bound_end_ln
+            col          = bound_end_col
+            copy_end_ln  = stop_ln
+            copy_end_col = stop_col
 
             break
 
@@ -583,66 +568,30 @@ class FSTFormat:
         source).
         """
 
+        if lpre:
+            ln  = lpre.end_ln
+            col = lpre.end_col
 
+        elif lpost:
+            ln  = seq_loc.ln
+            col = seq_loc.col
 
+        else:
+            return seq_loc, seq_loc, None
 
-        copy_loc, del_loc = _expr_locs(src.root._lines, fstloc(lfirst.ln, lfirst.col, llast.end_ln, llast.end_col),
-                                       seq_loc)
+        if lpost:
+            end_ln  = lpost.ln
+            end_col = lpost.col
+
+        else:
+            end_ln  = seq_loc.end_ln
+            end_col = seq_loc.end_col
+
+        copy_loc, del_loc = _expr_src_edit_locs(src.root._lines,
+                                                fstloc(lfirst.ln, lfirst.col, llast.end_ln, llast.end_col),
+                                                fstloc(ln, col, end_ln, end_col))
 
         return copy_loc, del_loc, None
-
-
-
-
-        # TODO: refine
-
-        lines = src.root._lines
-
-        if not lpre:  # first element in sequence
-            copy_ln  = del_ln  = seq_loc.ln
-            copy_col = del_col = seq_loc.col
-
-        else:  # not first element in sequence
-            copy_ln  = del_ln  = lfirst.ln
-            copy_col = del_col = lfirst.col
-
-            if re_empty_line.match(lines[copy_ln], 0, copy_col):
-                copy_col = len(lines[(copy_ln := copy_ln - 1)])  # include previous newline as prefix
-
-        if not lpost:  # last element in sequence
-            copy_end_ln  = del_end_ln  = seq_loc.end_ln
-            copy_end_col = del_end_col = seq_loc.end_col
-
-            if lpre:
-                if lfirst.ln == lpre.end_ln:  # only comma between them
-                    del_col = lpre.end_col
-                if (ln := lfirst.ln) != del_end_ln and re_empty_line.match(lines[ln], 0, lfirst.col):  # expand del_col for better alignment of multiline closing suffix, NOT SURE ABOUT THIS?!?
-                    del_col = min(del_col, del_end_col)
-
-        else:  # not last element in sequence
-            del_end_ln  = lpost.ln
-            del_end_col = lpost.col
-
-            if llast.end_ln == lpost.ln:  # only comma between them
-                copy_end_ln  = llast.end_ln
-                copy_end_col = llast.end_col
-
-            else:  # preserve formatting newlines and comments
-                ln, col, s = _next_src(lines, llast.end_ln, llast.end_col, copy_end_ln := lpost.ln, lpost.col)
-
-                assert s.endswith(',')  # can be preceded by closing non-tuple parentheses
-
-                if ln != copy_end_ln:
-                    copy_end_col = re_empty_line_start.match(lines[seq_loc.end_ln], 0, lpost.col).end(0)  # maybe dedent from multiline elements depending on what last line of whole expr does, NOT SURE ABOUT THIS?!?
-                else:
-                    copy_end_col = col + len(s)  # comma not on last element line but on same line as next past last element, preserve its position
-
-        copy_loc = fstloc(copy_ln, copy_col, copy_end_ln, copy_end_col)
-
-        if cut:
-            return copy_loc, fstloc(del_ln, del_col, del_end_ln, del_end_col), None
-        else:
-            return copy_loc, None, None
 
     def put_seq(self, dst: 'FST', fst: 'FST', indent: str, seq_loc: fstloc,
                 lfirst: Union['FST', fstloc, None], llast: Union['FST', fstloc, None],
