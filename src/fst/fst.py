@@ -572,6 +572,59 @@ def _normalize_code(code: Code, expr_: bool = False) -> 'FST':
     return FST(ast, lines=lines)
 
 
+def _new_empty_tuple() -> 'FST':
+    ast                = Tuple(elts=[], ctx=Load())
+    fst                = FST(ast, lines=[bistr('()')])
+    ast.lineno         = ast.end_lineno = 1
+    ast.col_offset     = 0
+    ast.end_col_offset = 2
+
+    return fst
+
+
+def _new_empty_list() -> 'FST':
+    ast                = List(elts=[], ctx=Load())
+    fst                = FST(ast, lines=[bistr('[]')])
+    ast.lineno         = ast.end_lineno = 1
+    ast.col_offset     = 0
+    ast.end_col_offset = 2
+
+    return fst
+
+
+def _new_empty_dict() -> 'FST':
+    ast                = Dict(keys=[], values=[])
+    fst                = FST(ast, lines=[bistr('{}')])
+    ast.lineno         = ast.end_lineno = 1
+    ast.col_offset     = 0
+    ast.end_col_offset = 2
+
+    return fst
+
+
+def _new_empty_set_call() -> 'FST':
+    ast                     = Call(func=Name(id='set', ctx=Load()), args=[], keywords=[])
+    fst                     = FST(ast, lines=[bistr('set()')])
+    ast.lineno              = ast.end_lineno      = 1
+    ast.col_offset          = 0
+    ast.end_col_offset      = 5
+    ast.func.lineno         = ast.func.end_lineno = 1
+    ast.func.col_offset     = 0
+    ast.func.end_col_offset = 3
+
+    return fst
+
+
+def _new_empty_set_curlies() -> 'FST':
+    ast                = Set(elts=[])
+    fst                = FST(ast, lines=[bistr('{}')])
+    ast.lineno         = ast.end_lineno = 1
+    ast.col_offset     = 0
+    ast.end_col_offset = 2
+
+    return fst
+
+
 class FSTSrcEdit:
     """Source operation formatter."""
 
@@ -1346,6 +1399,27 @@ class FST:
 
         return self
 
+    def _maybe_fix_set(self) -> 'FST':  # -> Self
+        # assert isinstance(self.a, Set)
+
+
+        raise NotImplementedError
+
+
+        # if not self.a.elts:
+        #     ln, col, end_ln, end_col = self.loc
+
+        #     assert ln == end_ln and col == end_col - 2
+
+        #     root      = self.root
+        #     lines     = root.lines
+        #     lines[ln] = bistr(f'{(l := lines[ln])[:col]}set(){l[col:]}')
+
+        #     root._offset(ln, col, 0, 5, True)
+        #     self.touchup(True)
+
+        return self
+
     def _make_fst_and_dedent(self, findent: 'FST', ast: AST, copy_loc: fstloc, prefix: str = '', suffix: str = '',
                              put_loc: fstloc | None = None, put_lines: list[str] | None = None) -> 'FST':
         indent = findent.get_indent()
@@ -1437,17 +1511,11 @@ class FST:
 
         if start == stop:
             if is_set:
-                return FST(Call(
-                    func=Name(id='set', ctx=Load(), lineno=1, col_offset=0, end_lineno=1, end_col_offset=3),
-                    args=[], keywords=[], lineno=1, col_offset=0, end_lineno=1, end_col_offset=5
-                ), lines=[bistr('set()')], from_=self)
-
+                return _new_empty_set_call()
             elif is_tuple:
-                return FST(Tuple(elts=[], ctx=ctx, lineno=1, col_offset=0, end_lineno=1, end_col_offset=2),
-                           lines=[bistr('()')], from_=self)
-            else:  # list
-                return FST(List(elts=[], ctx=ctx, lineno=1, col_offset=0, end_lineno=1, end_col_offset=2),
-                           lines=[bistr('[]')], from_=self)
+                return _new_empty_tuple()
+            else:
+                return _new_empty_list()
 
         is_paren = is_tuple and self.is_tuple_parenthesized()
         lfirst   = elts[start].f
@@ -1517,8 +1585,7 @@ class FST:
         start, stop = _fixup_slice_index(ast, values, 'values', start, stop)
 
         if start == stop:
-            return FST(Dict(keys=[], values=[], lineno=1, col_offset=0, end_lineno=1, end_col_offset=2),
-                       lines=[bistr('{}')], from_=self)
+            return _new_empty_dict()
 
         keys   = ast.keys
         lfirst = self._dict_key_or_mock_loc(keys[start], values[start].f)
@@ -1568,17 +1635,13 @@ class FST:
         lines           = root._lines
         fst_lines       = fst._lines
         fst_dcol_offset = lines[put_ln].c2b(put_col)
-        dfst_ln         = len(fst_lines) - 1
-        dln             = dfst_ln - (put_end_ln - put_ln)
-        dcol_offset     = fst_lines[-1].lenbytes - lines[put_end_ln].c2b(put_end_col)
 
-        if not dfst_ln:
-            dcol_offset += lines[put_ln].c2b(put_col)
+        if lpost:
+            self.off_putl_lines(fst_lines, put_ln, put_col, put_end_ln, put_end_col)
+        else:
+            root.off_putl_lines(fst_lines, put_ln, put_col, put_end_ln, put_end_col, True, self)  # because of insertion at end and unparenthesized tuple
 
-        root._offset(put_end_ln, put_end_col, dln, dcol_offset, True)
         fst._offset(0, 0, put_ln, fst_dcol_offset)
-
-        self.putl_lines(fst_lines, put_ln, put_col, put_end_ln, put_end_col)
 
     def _put_slice_tuple_list_or_set(self, code: Code, start: int, stop: int, field: str | None = None):
         if field is not None and field != 'elts':
@@ -1587,7 +1650,7 @@ class FST:
         newfst = _normalize_code(code, expr_=True)
 
         if newfst.is_empty_set_call():
-            newfst = empty_set_curlies.copy()
+            newfst = _new_empty_set_curlies()
 
         newast = newfst.a
 
@@ -1658,6 +1721,8 @@ class FST:
 
         if is_self_tuple:
             self._maybe_fix_tuple(is_self_enclosed)
+        elif isinstance(self, Set):
+            self._maybe_fix_set()
 
     def _put_slice_dict(self, code: Code, start: int, stop: int, field: str | None = None):
         if field is not None:
@@ -2798,7 +2863,6 @@ class FST:
                 (not (e := self.a.elts) or (ln != (f0 := e[0].f).ln or col != f0.col)))
 
     def is_empty_set_call(self) -> bool:
-
         return (isinstance(ast := self.a, Call) and not ast.args and not ast.keywords and
                 isinstance(func := ast.func, Name) and func.id == 'set' and isinstance(func.ctx, Load))
 
@@ -2928,13 +2992,13 @@ class FST:
             elif not dln:  # replace single line with multiple lines
                 lend                 = bistr(lines[-1] + (l := ls[ln])[end_col:])
                 ls[ln]               = bistr(l[:col] + lines[0])
-                ls[ln + 1 : ln + 1]  = [bistr(l) for l in lines[1:]]
+                ls[ln + 1 : ln + 1]  = lines[1:] if lines[0].__class__ is bistr else [bistr(l) for l in lines[1:]]
                 ls[ln + nnew_ln - 1] = lend
 
             else:  # replace multiple lines with multiple lines
                 ls[ln]              = bistr(ls[ln][:col] + lines[0])
                 ls[end_ln]          = bistr(lines[-1] + ls[end_ln][end_col:])
-                ls[ln + 1 : end_ln] = [bistr(l) for l in lines[1 : -1]]
+                ls[ln + 1 : end_ln] = lines[1:-1] if lines[0].__class__ is bistr else [bistr(l) for l in lines[1:-1]]
 
     def put_lines(self, lines: list[str] | None):
         if lines is None:
@@ -2953,6 +3017,23 @@ class FST:
             self.dell_lines(*self.loc)
         else:
             self.putl_lines(src.split('\n'), *self.loc)
+
+    def off_putl_lines(self, lines: list[str] | None, ln: int, col: int, end_ln: int, end_col: int,
+                       inc: bool = False, stop_at: Optional['FST'] = None):
+        if not lines[0].__class__ is bistr:
+            lines = [bistr(s) for s in lines]
+
+        root        = self.root
+        rlines      = root._lines
+        dfst_ln     = len(lines) - 1
+        dln         = dfst_ln - (end_ln - ln)
+        dcol_offset = lines[-1].lenbytes - rlines[end_ln].c2b(end_col)
+
+        if not dfst_ln:
+            dcol_offset += rlines[ln].c2b(col)
+
+        root._offset(end_ln, end_col, dln, dcol_offset, inc, stop_at)
+        self.putl_lines(lines, ln, col, end_ln, end_col)
 
     # ------------------------------------------------------------------------------------------------------------------
 
@@ -2989,11 +3070,11 @@ class FST:
         return self
 
     def fix(self, inplace: bool = True) -> Optional['FST']:  # -> Self | None
-        """Fix source and `ctx` values for cut or copied nodes (to make subtrees parsable if the source is not after
-        the operation). Possibly reparses in order to verify expression. If can not fix or ast is not parsable by itself
-        then ast will be unchanged. Is meant to be a quick fix after an operation, not full check, for that use
-        `verify()`. Possible source changes are `elif` to `if` and parentheses where needed and commas for singleton
-        tuples.
+        """This is really a maybe fix source and `ctx` values for cut or copied nodes (to make subtrees parsable if the
+        source is not after the operation). Possibly reparses in order to verify expression. If can not fix or ast is
+        not parsable by itself then ast will be unchanged. Is meant to be a quick fix after an operation, not full
+        check, for that use `verify()`. Possible source changes are `elif` to `if` and parentheses where needed and
+        commas for singleton tuples.
 
         **Parameters:**
         - `inplace`: If `True` then changes will be made to `self`. If `False` then `self` may be returned if no changes
@@ -3193,16 +3274,3 @@ class FST:
 
 
 
-
-empty_set_curlies                  = FST(Set(elts=[]), lines=['{}'])
-empty_set_curlies.a.lineno         = empty_set_curlies.a.end_lineno = 1
-empty_set_curlies.a.col_offset     = 0
-empty_set_curlies.a.end_col_offset = 2
-
-empty_set                          = FST(Call(func=Name(id='set', ctx=Load()), args=[], keywords=[]), lines=['set()'])
-empty_set.a.lineno                 = empty_set.a.end_lineno         = 1
-empty_set.a.col_offset             = 0
-empty_set.a.end_col_offset         = 5
-empty_set.a.func.lineno            = empty_set.a.func.end_lineno    = 1
-empty_set.a.func.col_offset        = 0
-empty_set.a.func.end_col_offset    = 3

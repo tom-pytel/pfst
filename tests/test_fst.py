@@ -16,6 +16,27 @@ PYFNMS = sum((
 
 CUT_DATA = [
 ("""
+{1, 2}
+""", 'body[0].value', 0, 0, """
+{1, 2}
+""", """
+set()
+""", """
+Module .. ROOT 0,0 -> 0,6
+  .body[1]
+  0] Expr .. 0,0 -> 0,6
+    .value
+      Set .. 0,0 -> 0,6
+        .elts[2]
+        0] Constant 1 .. 0,1 -> 0,2
+        1] Constant 2 .. 0,4 -> 0,5
+""", """
+Call .. ROOT 0,0 -> 0,5
+  .func
+    Name 'set' Load .. 0,0 -> 0,3
+"""),
+
+("""
 (       # hello
     1,  # last line
     2,  # second line
