@@ -871,7 +871,7 @@ class FST:
         except Exception:  # maybe in middle of operation changing locations and lines
             loc = '????'
 
-        self.touch() if hasattr(self.a, 'end_col_offset') else self.touchall()  # for debugging because we may have cached locs which would not have otherwise been cached during execution
+        self.touchall()  # for debugging because we may have cached locs which would not have otherwise been cached during execution
 
         tail = ' ROOT' if self.is_root else ''
 
@@ -1478,13 +1478,12 @@ class FST:
 
                 assert ln == end_ln and col == end_col
 
-                root  = self.root
-                lines = root.lines
+                root      = self.root
+                lines     = root.lines
+                lines[ln] = bistr(f'{(l := lines[ln])[:col]}(){l[col:]}')
 
                 root._offset(ln, col, 0, 2, True)  # TODO: WARNING! This may not be safe if another preceding non-containing node ends EXACTLY where the unparenthesized tuple starts, does this ever happen?
                 self.touchup(True)
-
-                lines[ln] = bistr(f'{(l := lines[ln])[:col]}(){l[col:]}')
 
         return fst
 
@@ -2540,7 +2539,11 @@ class FST:
                         stack.extend(type_params)
 
                     stack.append(ast.args)
-                    stack.extend(ast.body) if is_func else stack.append(ast.body)
+
+                    if is_func:
+                        stack.extend(ast.body)
+                    else:
+                        stack.append(ast.body)
 
                 else:
                     stack = ast.body[::-1] if is_func else [ast.body]
@@ -2848,7 +2851,8 @@ class FST:
     # ------------------------------------------------------------------------------------------------------------------
 
     def touch(self) -> 'FST':  # -> Self:
-        """AST node was modified, clear out any cached info for this node specifically, call this for each node in walk."""
+        """AST node was modified, clear out any cached info for this node specifically, call this for each node in a
+        walk with modified nodes."""
 
         try:
             del self._loc, self._bloc  # _bloc only exists if _loc does
@@ -2857,22 +2861,23 @@ class FST:
 
         return self
 
-    def touchup(self, touch_self: bool = False) -> 'FST':  # -> Self:
-        """Touch going up the tree so that all containers of modified nodes are up to date."""
+    def touchup(self, self_: bool = False) -> 'FST':  # -> Self:
+        """Touch going up the tree so that all containers of modified nodes are up to date, optinally self as well."""
 
-        if touch_self:
+        if self_:
             self.touch()
 
         while self := self.parent:
             self.touch()
 
-    def touchall(self, touch_up: bool = True) -> 'FST':  # -> Self:
-        """AST node and some/all children were modified, clear out any cached info for tree down from this node."""
+    def touchall(self, up: bool = True) -> 'FST':  # -> Self:
+        """AST node and some/all children were modified, clear out any cached info for tree down from this node, and
+        optionally up."""
 
         for a in walk(self.a):
             a.f.touch()
 
-        if touch_up:
+        if up:
             self.touchup()
 
         return self
