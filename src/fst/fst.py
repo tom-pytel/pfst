@@ -654,8 +654,8 @@ class FSTSrcEdit:
             if not (bound := _fixup_bound(seq_loc, lpre, lpost)):
                 return seq_loc
 
-            return _expr_src_edit_locs(self.root._lines,
-                                       fstloc(lfirst.ln, lfirst.col, llast.end_ln, llast.end_col), bound)
+            return _expr_src_edit_locs(dst.root._lines,
+                                       fstloc(lfirst.ln, lfirst.col, llast.end_ln, llast.end_col), bound)[1]
 
         if lfirst:  # llast also exists, replacement
             return fstloc(lfirst.ln, lfirst.col, llast.end_ln, llast.end_col)
@@ -1296,7 +1296,7 @@ class FST:
             the end of the Tuple, use this when sure tuple is at top level.
         """
 
-        assert isinstance(self.a, Tuple)
+        # assert isinstance(self.a, Tuple)
 
         if (elts := self.a.elts) and len(elts) == 1:
             felt  = elts[0].f
@@ -1315,6 +1315,26 @@ class FST:
                     self.a.end_col_offset += 1
 
                     self.touchup(True)
+
+        return self
+
+    def _maybe_fix_tuple(self, is_parenthesized: bool | None = None) -> 'FST':  # -> Self
+        # assert isinstance(self.a, Tuple)
+
+        if self.a.elts:
+            self._maybe_add_singleton_tuple_comma(True)
+
+        elif not (self.is_tuple_parenthesized() if is_parenthesized is None else is_parenthesized):  # if is unparenthesized tuple and empty left then need to add parentheses
+            ln, col, end_ln, end_col = self.loc
+
+            assert ln == end_ln and col == end_col
+
+            root      = self.root
+            lines     = root.lines
+            lines[ln] = bistr(f'{(l := lines[ln])[:col]}(){l[col:]}')
+
+            root._offset(ln, col, 0, 2, True)  # TODO: WARNING! This may not be safe if another preceding non-containing node ends EXACTLY where the unparenthesized tuple starts, does this ever happen?
+            self.touchup(True)
 
         return self
 
@@ -1476,21 +1496,21 @@ class FST:
 
         if is_tuple:
             fst._maybe_add_singleton_tuple_comma(False)  # maybe need to add a postfix comma to copied single element tuple if is not already there
+            self._maybe_fix_tuple(is_paren)
+            # if elts:
+            #     self._maybe_add_singleton_tuple_comma(True)
 
-            if elts:
-                self._maybe_add_singleton_tuple_comma(True)
+            # elif not is_paren:  # if is unparenthesized tuple and nothing left then need to add parentheses
+            #     ln, col, end_ln, end_col = self.loc
 
-            elif not is_paren:  # if is unparenthesized tuple and nothing left then need to add parentheses
-                ln, col, end_ln, end_col = self.loc
+            #     assert ln == end_ln and col == end_col
 
-                assert ln == end_ln and col == end_col
+            #     root      = self.root
+            #     lines     = root.lines
+            #     lines[ln] = bistr(f'{(l := lines[ln])[:col]}(){l[col:]}')
 
-                root      = self.root
-                lines     = root.lines
-                lines[ln] = bistr(f'{(l := lines[ln])[:col]}(){l[col:]}')
-
-                root._offset(ln, col, 0, 2, True)  # TODO: WARNING! This may not be safe if another preceding non-containing node ends EXACTLY where the unparenthesized tuple starts, does this ever happen?
-                self.touchup(True)
+            #     root._offset(ln, col, 0, 2, True)  # TODO: WARNING! This may not be safe if another preceding non-containing node ends EXACTLY where the unparenthesized tuple starts, does this ever happen?
+            #     self.touchup(True)
 
         return fst
 
@@ -1561,10 +1581,99 @@ class FST:
         if not dfst_ln:
             dcol_offset += lines[put_ln].c2b(put_col)
 
-        root._offset(put_end_ln, put_end_col, dln, dcol_offset)
+        root._offset(put_end_ln, put_end_col, dln, dcol_offset, True)
         fst._offset(0, 0, put_ln, fst_dcol_offset)
 
         self.putl_lines(fst_lines, put_ln, put_col, put_end_ln, put_end_col)
+
+    def _put_slice_tuple_list_or_set(self, code: Code, start: int, stop: int, field: str | None = None):
+        if field is not None and field != 'elts':
+            raise ValueError(f"invalid field '{field}' to assign slice to a {self.a.__class__.__name__}")
+
+        newfst = _normalize_code(code, expr_=True)
+        newast = newfst.a
+
+        if (not (is_tuple := isinstance(newast, Tuple)) and not (is_set := isinstance(newast, Set)) and not
+            isinstance(newast, List)
+        ):
+            raise ValueError(f"slice being assigned to a {self.a.__class__.__name__} must be a Tuple, List or Set, not a '{newast.__class__.__name__}'")
+
+        ast         = self.a
+        elts        = ast.elts
+        start, stop = _fixup_slice_index(ast, elts, 'elts', start, stop)
+        dstlen      = stop - start
+
+        if not dstlen and not newfst.elts:  # assigning empty seq to empty slice of seq, noop
+            return
+
+        newlines = newfst._lines
+
+        if not is_tuple:
+            newast.end_col_offset -= 1  # strip enclosing curlies or brackets from source set or list
+
+            newfst._offset(0, 1, 0, -1)
+
+            assert newlines[0].startswith('[{'[is_set])
+            assert newlines[-1].endswith(']}'[is_set])
+
+            newlines[-1] = bistr(newlines[-1][:-1])
+            newlines[0]  = bistr(newlines[0][1:])
+
+        elif newfst.is_tuple_parenthesized():
+            newast.end_col_offset -= 1  # strip enclosing parentheses from source tuple
+
+            newfst._offset(0, 1, 0, -1)
+
+            newlines[-1] = bistr(newlines[-1][:-1])
+            newlines[0]  = bistr(newlines[0][1:])
+
+        is_self_tuple    = isinstance(ast, Tuple)
+        is_self_enclosed = not is_self_tuple or self.is_tuple_parenthesized()
+        lpre             = elts[start - 1].f if start else None
+        lpost            = None if stop == len(elts) else elts[stop].f
+        seq_loc          = fstloc(self.ln, self.col + is_self_enclosed, self.end_ln, self.end_col - is_self_enclosed)
+
+        if not dstlen:
+            lfirst = llast = None
+
+        else:
+            lfirst = elts[start].f
+            llast  = elts[stop - 1].f
+
+        if not (selts := newast.elts):
+            sfirst = slast = None
+
+        else:
+            sfirst = selts[0].f
+            slast  = selts[-1].f
+
+        self._put_seq_and_indent(newfst, seq_loc, lfirst, llast, lpre, lpost, sfirst, slast)
+
+        elts[start : stop] = newast.elts
+        srclen             = len(newast.elts)
+        stack              = [FST(elts[i], self, astfield('values', i)) for i in range(start, start + srclen)]
+
+        for i in range(start + srclen, len(elts)):
+            elts[i].f.pfield = astfield('values', i)
+
+        self._make_fst_tree(stack)
+
+        if is_self_tuple:
+            self._maybe_fix_tuple(is_self_enclosed)
+            # if elts:
+            #     self._maybe_add_singleton_tuple_comma(True)
+
+            # elif not is_self_enclosed:  # if is unparenthesized tuple and nothing left then need to add parentheses
+            #     ln, col, end_ln, end_col = self.loc
+
+            #     assert ln == end_ln and col == end_col
+
+            #     root      = self.root
+            #     lines     = root.lines
+            #     lines[ln] = bistr(f'{(l := lines[ln])[:col]}(){l[col:]}')
+
+            #     root._offset(ln, col, 0, 2, True)  # TODO: WARNING! This may not be safe if another preceding non-containing node ends EXACTLY where the unparenthesized tuple starts, does this ever happen?
+            #     self.touchup(True)
 
     def _put_slice_dict(self, code: Code, start: int, stop: int, field: str | None = None):
         if field is not None:
@@ -1585,7 +1694,7 @@ class FST:
             return
 
         newlines               = newfst._lines
-        newast.end_col_offset -= 1
+        newast.end_col_offset -= 1  # strip enclosing curlies from source dict
 
         newfst._offset(0, 1, 0, -1)
 
@@ -1594,6 +1703,7 @@ class FST:
 
         newlines[-1] = bistr(newlines[-1][:-1])
         newlines[0]  = bistr(newlines[0][1:])
+
         keys    = ast.keys
         lpre    = values[start - 1].f if start else None
         lpost   = None if stop == len(keys) else self._dict_key_or_mock_loc(keys[stop], values[stop].f)
