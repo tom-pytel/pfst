@@ -1386,16 +1386,7 @@ class FST:
             self._maybe_add_singleton_tuple_comma(True)
 
         elif not (self.is_tuple_parenthesized() if is_parenthesized is None else is_parenthesized):  # if is unparenthesized tuple and empty left then need to add parentheses
-            ln, col, end_ln, end_col = self.loc
-
-            assert ln == end_ln and col == end_col
-
-            root      = self.root
-            lines     = root.lines
-            lines[ln] = bistr(f'{(l := lines[ln])[:col]}(){l[col:]}')
-
-            root._offset(ln, col, 0, 2, True)  # TODO: WARNING! This may not be safe if another preceding non-containing node ends EXACTLY where the unparenthesized tuple starts, does this ever happen?
-            self.touchup(True)
+            self.off_putl_lines([bistr('()')], *self.loc, True)  # TODO: WARNING! `True` may not be safe if another preceding non-containing node ends EXACTLY where the unparenthesized tuple starts, does this ever happen?
 
         return self
 
