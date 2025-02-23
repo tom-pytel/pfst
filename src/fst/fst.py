@@ -939,37 +939,6 @@ class FST:
 
         return fstloc(ln, end_col - 2, ln, end_col)
 
-    def _maybe_add_singleton_tuple_comma(self, offset: bool = True) -> 'FST':  # -> Self
-        """Maybe add comma to singleton tuple if not already there, parenthesization not checked or taken into account.
-        `self` must be a tuple.
-
-        **Parameters:**
-        - `offset`: If `True` then will apply `_offset()` to entire tree for new comma. If `False` then will just offset
-            the end of the Tuple, use this when sure tuple is at top level.
-        """
-
-        assert isinstance(self.a, Tuple)
-
-        if (elts := self.a.elts) and len(elts) == 1:
-            felt  = elts[0].f
-            root  = self.root
-            lines = root._lines
-
-            if (not (code := _next_src(lines, felt.end_ln, felt.end_col, self.end_ln, self.end_col)) or
-                not code.src.startswith(',')
-            ):
-                lines[ln] = bistr(f'{(l := lines[(ln := felt.end_ln)])[:(col := felt.end_col)]},{l[col:]}')
-
-                if offset:
-                    raise NotImplementedError  # need to offset other stuff for the new comma
-
-                elif ln == self.end_ln:
-                    self.a.end_col_offset += 1
-
-                    self.touchup(True)
-
-        return self
-
     def _reparse_docstring(self) -> 'FST':  # -> Self
         """`self` must be something that can have a docstring in the body (function, class, module). Node and source
         lines are assumed to be correct, just the docstring value needs to be reset."""
@@ -990,7 +959,8 @@ class FST:
             if isinstance(a, HAS_DOCSTRING):
                 a.f._reparse_docstring()
 
-    def _offset(self, ln: int, col: int, dln: int, dcol_offset: int, inc: bool = False) -> 'FST':  # -> Self
+    def _offset(self, ln: int, col: int, dln: int, dcol_offset: int, inc: bool = False, stop_at: Optional['FST'] = None
+                ) -> 'FST':  # -> Self
         """Offset ast node positions in the tree on or after ln / col by delta line / col_offset (col byte offset).
 
         This only offsets the positions in the AST nodes, doesn't change any text, so make sure that is correct before
@@ -1086,6 +1056,9 @@ class FST:
                         fcolo > colo):
                     a.lineno     += dln
                     a.col_offset += dcol_offset
+
+            if f is stop_at:
+                gen.send(False)
 
             f.touch()
 
@@ -1307,6 +1280,37 @@ class FST:
 
         return lns
 
+    def _maybe_add_singleton_tuple_comma(self, offset: bool = True) -> 'FST':  # -> Self
+        """Maybe add comma to singleton tuple if not already there, parenthesization not checked or taken into account.
+        `self` must be a tuple.
+
+        **Parameters:**
+        - `offset`: If `True` then will apply `_offset()` to entire tree for new comma. If `False` then will just offset
+            the end of the Tuple, use this when sure tuple is at top level.
+        """
+
+        assert isinstance(self.a, Tuple)
+
+        if (elts := self.a.elts) and len(elts) == 1:
+            felt  = elts[0].f
+            root  = self.root
+            lines = root._lines
+
+            if (not (code := _next_src(lines, felt.end_ln, felt.end_col, self.end_ln, self.end_col)) or
+                not code.src.startswith(',')
+            ):
+                lines[ln] = bistr(f'{(l := lines[(ln := felt.end_ln)])[:(col := felt.end_col)]},{l[col:]}')
+
+                if offset:
+                    self.root._offset(ln, col, 0, 1, True, self)
+
+                elif ln == self.end_ln:
+                    self.a.end_col_offset += 1
+
+                    self.touchup(True)
+
+        return self
+
     def _make_fst_and_dedent(self, findent: 'FST', ast: AST, copy_loc: fstloc, prefix: str = '', suffix: str = '',
                              put_loc: fstloc | None = None, put_lines: list[str] | None = None) -> 'FST':
         indent = findent.get_indent()
@@ -1467,7 +1471,7 @@ class FST:
             fst._maybe_add_singleton_tuple_comma(False)  # maybe need to add a postfix comma to copied single element tuple if is not already there
 
             if elts:
-                self._maybe_add_singleton_tuple_comma(False)
+                self._maybe_add_singleton_tuple_comma(True)
 
             elif not is_paren:  # if is unparenthesized tuple and nothing left then need to add parentheses
                 ln, col, end_ln, end_col = self.loc
