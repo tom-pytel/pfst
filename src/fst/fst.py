@@ -344,9 +344,12 @@ def _expr_src_edit_locs(lines: list[str], loc: fstloc, bound: fstloc) -> tuple[f
 
             break
 
-        col += len(src)
+        code_col  = col
+        col      += len(src)
 
         for c in src[::-1]:
+            col = col - 1
+
             if done := (c != '('):
                 if ln != start_ln:
                     copy_ln  = bound_ln
@@ -355,14 +358,37 @@ def _expr_src_edit_locs(lines: list[str], loc: fstloc, bound: fstloc) -> tuple[f
                     del_col  = 0
 
                 else:
-                    copy_ln  = del_ln  = start_ln
-                    copy_col = del_col = start_col
+                    copy_ln  = start_ln
+                    copy_col = start_col
+
+                    if c == ',':  # comma found on same line as start then if previous ends on same line then delete up to it
+                        if col != code_col:  # if not at start of code.src then delete point is here
+                            del_ln  = start_ln
+                            del_col = col
+
+                            break
+
+                        elif code := _prev_src(lines, bound_ln, bound_col, start_ln, col):
+                            if code.ln == start_ln:
+                                del_ln  = start_ln
+                                del_col = code.ln + len(code.src)
+
+                                break
+
+                        elif bound_ln == start_ln:
+                            del_ln  = start_ln
+                            del_col = bound_col
+
+                            break
+
+                    del_ln  = start_ln
+                    del_col = start_col
 
                 break
 
             else:
                 start_ln   = ln
-                start_col  = (col := col - 1)
+                start_col  = col
                 nparens   += 1
 
         if done:
