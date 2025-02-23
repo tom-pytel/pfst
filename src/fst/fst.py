@@ -91,7 +91,7 @@ re_next_src_or_comment_or_lcont = re.compile(r'\s*([^\s#\\]+|#.*|\\$)')  # next 
 
 Code: TypeAlias = Union['FST', AST, list[str], str]
 
-_sentinel = object()
+sentinel = object()
 
 
 class astfield(NamedTuple):
@@ -482,7 +482,7 @@ def _fixup_field_body(ast: AST, field: str | None = None) -> tuple[str, 'AST']:
     if field is None:
         field = AST_DEFAULT_BODY_FIELD.get(ast.__class__, 'body')
 
-    if (body := getattr(ast, field, _sentinel)) is _sentinel:
+    if (body := getattr(ast, field, sentinel)) is sentinel:
         raise ValueError(f"{ast.__class__.__name__} has no field '{field}'")
 
     if not isinstance(body, list):
@@ -664,11 +664,19 @@ class FSTSrcEdit:
             return seq_loc
 
 
+
         # TODO: insertion to non-empty sequence
+
 
 
         raise NotImplementedError
         return fstloc(lfirst.ln, lfirst.col, llast.end_ln, llast.end_col)
+
+
+
+
+
+
 
 
 
@@ -1497,20 +1505,6 @@ class FST:
         if is_tuple:
             fst._maybe_add_singleton_tuple_comma(False)  # maybe need to add a postfix comma to copied single element tuple if is not already there
             self._maybe_fix_tuple(is_paren)
-            # if elts:
-            #     self._maybe_add_singleton_tuple_comma(True)
-
-            # elif not is_paren:  # if is unparenthesized tuple and nothing left then need to add parentheses
-            #     ln, col, end_ln, end_col = self.loc
-
-            #     assert ln == end_ln and col == end_col
-
-            #     root      = self.root
-            #     lines     = root.lines
-            #     lines[ln] = bistr(f'{(l := lines[ln])[:col]}(){l[col:]}')
-
-            #     root._offset(ln, col, 0, 2, True)  # TODO: WARNING! This may not be safe if another preceding non-containing node ends EXACTLY where the unparenthesized tuple starts, does this ever happen?
-            #     self.touchup(True)
 
         return fst
 
@@ -1591,6 +1585,10 @@ class FST:
             raise ValueError(f"invalid field '{field}' to assign slice to a {self.a.__class__.__name__}")
 
         newfst = _normalize_code(code, expr_=True)
+
+        if newfst.is_empty_set_call():
+            newfst = empty_set_curlies.copy()
+
         newast = newfst.a
 
         if (not (is_tuple := isinstance(newast, Tuple)) and not (is_set := isinstance(newast, Set)) and not
@@ -1660,20 +1658,6 @@ class FST:
 
         if is_self_tuple:
             self._maybe_fix_tuple(is_self_enclosed)
-            # if elts:
-            #     self._maybe_add_singleton_tuple_comma(True)
-
-            # elif not is_self_enclosed:  # if is unparenthesized tuple and nothing left then need to add parentheses
-            #     ln, col, end_ln, end_col = self.loc
-
-            #     assert ln == end_ln and col == end_col
-
-            #     root      = self.root
-            #     lines     = root.lines
-            #     lines[ln] = bistr(f'{(l := lines[ln])[:col]}(){l[col:]}')
-
-            #     root._offset(ln, col, 0, 2, True)  # TODO: WARNING! This may not be safe if another preceding non-containing node ends EXACTLY where the unparenthesized tuple starts, does this ever happen?
-            #     self.touchup(True)
 
     def _put_slice_dict(self, code: Code, start: int, stop: int, field: str | None = None):
         if field is not None:
@@ -2813,6 +2797,11 @@ class FST:
         return (self.root._lines[(ln := self.ln)].startswith('(', col := self.col) and
                 (not (e := self.a.elts) or (ln != (f0 := e[0].f).ln or col != f0.col)))
 
+    def is_empty_set_call(self) -> bool:
+
+        return (isinstance(ast := self.a, Call) and not ast.args and not ast.keywords and
+                isinstance(func := ast.func, Name) and func.id == 'set' and isinstance(func.ctx, Load))
+
     def get_indent(self) -> str:
         """Determine proper indentation of node at `stmt` (or other similar) level at or above self, otherwise at root
         node. Even if it is a continuation or on same line as block statement."""
@@ -3145,17 +3134,11 @@ class FST:
 
         return fst.fix(inplace=True) if fix else fst
 
-
-
-
     def cut(self, *, fix: bool = True, decos: bool = True) -> 'FST':
         if self.is_root:
-            raise ValueError('cannot cut root node')
+            raise ValueError('cannot cut out root node')
 
-        if not (loc := self.bloc if decos else self.loc):
-            raise ValueError('cannot cut ast which does not have location')
-
-        raise NotImplementedError
+        return self.parent.get((pfield := self.pfield).idx, field=pfield.name, fix=fix, decos=decos)
 
 
 
@@ -3183,8 +3166,14 @@ class FST:
 
     def put_slice(self, code: Code, start: int | None = None, stop: int | None = None, field: str | None = None,
                   ) -> 'FST':
+        if isinstance(self.a, STATEMENTISH_OR_STMTMOD):
+            raise NotImplementedError  # TODO: THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS!
+
         if isinstance(self.a, Dict):
             return self._put_slice_dict(code, start, stop, field)
+
+        if isinstance(self.a, (Tuple, List, Set)):
+            return self._put_slice_tuple_list_or_set(code, start, stop, field)
 
         raise ValueError(f"cannot put slice to '{self.a.__class__.__name__}'")
 
@@ -3205,3 +3194,15 @@ class FST:
 
 
 
+empty_set_curlies                  = FST(Set(elts=[]), lines=['{}'])
+empty_set_curlies.a.lineno         = empty_set_curlies.a.end_lineno = 1
+empty_set_curlies.a.col_offset     = 0
+empty_set_curlies.a.end_col_offset = 2
+
+empty_set                          = FST(Call(func=Name(id='set', ctx=Load()), args=[], keywords=[]), lines=['set()'])
+empty_set.a.lineno                 = empty_set.a.end_lineno         = 1
+empty_set.a.col_offset             = 0
+empty_set.a.end_col_offset         = 5
+empty_set.a.func.lineno            = empty_set.a.func.end_lineno    = 1
+empty_set.a.func.col_offset        = 0
+empty_set.a.func.end_col_offset    = 3

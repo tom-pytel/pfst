@@ -1142,44 +1142,176 @@ Tuple .. ROOT 0,0 -> 0,18
 
 ]  # END OF CUT_DATA
 
+PUT_SLICE_DATA = [
+("""
+{
+    a: 1
+}
+""", 'body[0].value', 0, 1, """
+{}
+""", """
+{}
+""", """
+Module .. ROOT 0,0 -> 0,2
+  .body[1]
+  0] Expr .. 0,0 -> 0,2
+    .value
+      Dict .. 0,0 -> 0,2
+"""),
 
-def regen_cut_data():
-    newlines = []
+("""
+{
+    a: 1
+}
+""", 'body[0].value', 0, 1, """
+{
+}
+""", """
+{
+}
+""", """
+Module .. ROOT 0,0 -> 1,1
+  .body[1]
+  0] Expr .. 0,0 -> 1,1
+    .value
+      Dict .. 0,0 -> 1,1
+"""),
 
-    for src, elt, start, stop, *_ in CUT_DATA:
-        src   = src.strip()
-        t     = parse(src)
-        f     = eval(f't.{elt}', {'t': t}).f
-        s     = f.get_slice(start, stop, cut=True)
-        tsrc  = t.f.src
-        ssrc  = s.src
-        tdump = t.f.dump(print=False, compact=True)
-        sdump = s.dump(print=False, compact=True)
+("""
+{a: 1}
+""", 'body[0].value', 0, 1, """
+{}
+""", """
+{}
+""", """
+Module .. ROOT 0,0 -> 0,2
+  .body[1]
+  0] Expr .. 0,0 -> 0,2
+    .value
+      Dict .. 0,0 -> 0,2
+"""),
 
-        assert not tsrc.startswith('\n') or tsrc.endswith('\n')
-        assert not ssrc.startswith('\n') or ssrc.endswith('\n')
+("""
+{a: 1}
+""", 'body[0].value', 0, 1, """
+{
+}
+""", """
+{
+}
+""", """
+Module .. ROOT 0,0 -> 1,1
+  .body[1]
+  0] Expr .. 0,0 -> 1,1
+    .value
+      Dict .. 0,0 -> 1,1
+"""),
 
-        t.f.verify()
-        s.verify()
+("""
+(1, 2)
+""", 'body[0].value', 1, 2, """
+()
+""", """
+(1,)
+""", """
+Module .. ROOT 0,0 -> 0,4
+  .body[1]
+  0] Expr .. 0,0 -> 0,4
+    .value
+      Tuple .. 0,0 -> 0,4
+        .elts[1]
+        0] Constant 1 .. 0,1 -> 0,2
+        .ctx
+          Load
+"""),
 
-        newlines.append('("""')
-        newlines.extend(f'''{src}\n""", {elt!r}, {start}, {stop}, """\n{tsrc}\n""", """\n{ssrc}\n""", """'''.split('\n'))
-        newlines.extend(tdump)
-        newlines.append('""", """')
-        newlines.extend(sdump)
-        newlines.append('"""),\n')
+("""
+1, 2
+""", 'body[0].value', 1, 2, """
+()
+""", """
+1,
+""", """
+Module .. ROOT 0,0 -> 0,2
+  .body[1]
+  0] Expr .. 0,0 -> 0,2
+    .value
+      Tuple .. 0,0 -> 0,2
+        .elts[1]
+        0] Constant 1 .. 0,0 -> 0,1
+        .ctx
+          Load
+"""),
 
-    with open(sys.argv[0]) as f:
-        lines = f.read().split('\n')
+("""
+1, 2
+""", 'body[0].value', 0, 2, """
+()
+""", """
+()
+""", """
+Module .. ROOT 0,0 -> 0,2
+  .body[1]
+  0] Expr .. 0,0 -> 0,2
+    .value
+      Tuple .. 0,0 -> 0,2
+        .ctx
+          Load
+"""),
 
-    start = lines.index('CUT_DATA = [')
-    stop  = lines.index(']  # END OF CUT_DATA')
+("""
+(1, 2)
+""", 'body[0].value', 1, 2, """
+set()
+""", """
+(1,)
+""", """
+Module .. ROOT 0,0 -> 0,4
+  .body[1]
+  0] Expr .. 0,0 -> 0,4
+    .value
+      Tuple .. 0,0 -> 0,4
+        .elts[1]
+        0] Constant 1 .. 0,1 -> 0,2
+        .ctx
+          Load
+"""),
 
-    lines[start + 1 : stop] = newlines
+("""
+1, 2
+""", 'body[0].value', 1, 2, """
+set()
+""", """
+1,
+""", """
+Module .. ROOT 0,0 -> 0,2
+  .body[1]
+  0] Expr .. 0,0 -> 0,2
+    .value
+      Tuple .. 0,0 -> 0,2
+        .elts[1]
+        0] Constant 1 .. 0,0 -> 0,1
+        .ctx
+          Load
+"""),
 
-    with open(sys.argv[0], 'w') as f:
-        lines = f.write('\n'.join(lines))
+("""
+1, 2
+""", 'body[0].value', 0, 2, """
+set()
+""", """
+()
+""", """
+Module .. ROOT 0,0 -> 0,2
+  .body[1]
+  0] Expr .. 0,0 -> 0,2
+    .value
+      Tuple .. 0,0 -> 0,2
+        .ctx
+          Load
+"""),
 
+]  # END OF PUT_SLICE_DATA
 
 def read(fnm):
     with open(fnm) as f:
@@ -3319,20 +3451,112 @@ Tuple .. ROOT 0,0 -> 2,1
             self.assertEqual(tdump, src_dump.strip().split('\n'))
             self.assertEqual(sdump, slice_dump.strip().split('\n'))
 
+    def test_put_slice(self):
+        for dst, elt, start, stop, src, put_src, put_dump in PUT_SLICE_DATA:
+            dst = dst.strip()
+            src = src.strip()
+            t   = parse(dst)
+            f   = eval(f't.{elt}', {'t': t}).f
+
+            f.put_slice(src, start, stop)
+
+            tdst  = t.f.src
+            tdump = t.f.dump(print=False, compact=True)
+
+            self.assertEqual(tdst, put_src.strip())
+            self.assertEqual(tdump, put_dump.strip().split('\n'))
+
+
+def regen_cut_data():
+    newlines = []
+
+    for src, elt, start, stop, *_ in CUT_DATA:
+        src   = src.strip()
+        t     = parse(src)
+        f     = eval(f't.{elt}', {'t': t}).f
+        s     = f.get_slice(start, stop, cut=True)
+        tsrc  = t.f.src
+        ssrc  = s.src
+        tdump = t.f.dump(print=False, compact=True)
+        sdump = s.dump(print=False, compact=True)
+
+        assert not tsrc.startswith('\n') or tsrc.endswith('\n')
+        assert not ssrc.startswith('\n') or ssrc.endswith('\n')
+
+        t.f.verify()
+        s.verify()
+
+        newlines.append('("""')
+        newlines.extend(f'''{src}\n""", {elt!r}, {start}, {stop}, """\n{tsrc}\n""", """\n{ssrc}\n""", """'''.split('\n'))
+        newlines.extend(tdump)
+        newlines.append('""", """')
+        newlines.extend(sdump)
+        newlines.append('"""),\n')
+
+    with open(sys.argv[0]) as f:
+        lines = f.read().split('\n')
+
+    start = lines.index('CUT_DATA = [')
+    stop  = lines.index(']  # END OF CUT_DATA')
+
+    lines[start + 1 : stop] = newlines
+
+    with open(sys.argv[0], 'w') as f:
+        lines = f.write('\n'.join(lines))
+
+
+def regen_put_slice_data():
+    newlines = []
+
+    for dst, elt, start, stop, src, put_src, put_dump in PUT_SLICE_DATA:
+        dst = dst.strip()
+        src = src.strip()
+        t   = parse(dst)
+        f   = eval(f't.{elt}', {'t': t}).f
+
+        f.put_slice(src, start, stop)
+
+        tdst  = t.f.src
+        tdump = t.f.dump(print=False, compact=True)
+
+        assert not tdst.startswith('\n') or tdst.endswith('\n')
+
+        t.f.verify()
+
+        newlines.append('("""')
+        newlines.extend(f'''{dst}\n""", {elt!r}, {start}, {stop}, """\n{src}\n""", """\n{tdst}\n""", """'''.split('\n'))
+        newlines.extend(tdump)
+        newlines.append('"""),\n')
+
+    with open(sys.argv[0]) as f:
+        lines = f.read().split('\n')
+
+    start = lines.index('PUT_SLICE_DATA = [')
+    stop  = lines.index(']  # END OF PUT_SLICE_DATA')
+
+    lines[start + 1 : stop] = newlines
+
+    with open(sys.argv[0], 'w') as f:
+        lines = f.write('\n'.join(lines))
+
 
 if __name__ == '__main__':
     import argparse
 
     parser = argparse.ArgumentParser(prog='python -m fst')
 
-    parser.add_argument('--regen-cut', default=False, action='store_true',
-                        help="regenerate stuff")
+    parser.add_argument('--regen-cut', default=False, action='store_true', help="regenerate cut test data")
+    parser.add_argument('--regen-put-slice', default=False, action='store_true', help="regenerate put slice test data")
 
     args = parser.parse_args()
 
     if args.regen_cut:
-        print('Regenerating cut data...')
+        print('Regenerating cut test data...')
         regen_cut_data()
-        sys.exit(0)
 
-    unittest.main()
+    if args.regen_put_slice:
+        print('Regenerating put slice test data...')
+        regen_put_slice_data()
+
+    if not args.regen_cut and not args.regen_put_slice:
+        unittest.main()
