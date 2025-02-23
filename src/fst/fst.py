@@ -225,7 +225,7 @@ def _next_src(lines: list[str], ln: int, col: int, end_ln: int, end_col: int,
 
 def _next_src_lline(lines: list[str], ln: int, col: int, end_ln: int, end_col: int, comment: bool = False
                     ) -> srcwpos | None:
-    """Same rules as `_next_src()` but do not exceed logical line during search."""
+    """Same rules as `_next_src()` but do not exceed logical line during search (even if bounds exceed lline)."""
 
     re_pat = re_next_src_or_comment if comment else re_next_src
 
@@ -510,6 +510,19 @@ def _fixup_slice_index(ast, body, field, start, stop) -> tuple[int, int]:
     return start, stop
 
 
+def _fixup_bound(seq_loc: fstloc, lpre: Union['FST', fstloc, None], lpost: Union['FST', fstloc, None]) -> fstloc | None:
+    if lpre:
+        if lpost:
+            return fstloc(lpre.end_ln, lpre.end_col, lpost.ln, lpost.col)
+        else:
+            return fstloc(lpre.end_ln, lpre.end_col, seq_loc.end_ln, seq_loc.end_col)
+
+    elif lpost:
+        return fstloc(seq_loc.ln, seq_loc.col, lpost.ln, lpost.col)
+    else:
+        return None
+
+
 def _normalize_code(code: Code, expr_: bool = False) -> 'FST':
     """Normalize code to an `FST`. If an expression is required then will return an `FST` with a top level `ast.expr`
     `AST` node if possible, raise otherwise. If expression is not required then will convert to `ast.Module` if is
@@ -588,28 +601,11 @@ class FSTSrcEdit:
         source).
         """
 
-        if lpre:
-            ln  = lpre.end_ln
-            col = lpre.end_col
-
-        elif lpost:
-            ln  = seq_loc.ln
-            col = seq_loc.col
-
-        else:
+        if not (bound := _fixup_bound(seq_loc, lpre, lpost)):
             return seq_loc, seq_loc, None
 
-        if lpost:
-            end_ln  = lpost.ln
-            end_col = lpost.col
-
-        else:
-            end_ln  = seq_loc.end_ln
-            end_col = seq_loc.end_col
-
         copy_loc, del_loc = _expr_src_edit_locs(src.root._lines,
-                                                fstloc(lfirst.ln, lfirst.col, llast.end_ln, llast.end_col),
-                                                fstloc(ln, col, end_ln, end_col))
+                                                fstloc(lfirst.ln, lfirst.col, llast.end_ln, llast.end_col), bound)
 
         return copy_loc, del_loc, None
 
@@ -654,39 +650,27 @@ class FSTSrcEdit:
             the location currently.
         """
 
-        if not lfirst and not llast and not lpre and not lpost:  # assign to empty sequence, just copy
-            return seq_loc
-
-        if not sfirst and not slast:  # pure delete (assign empty sequence)
-            if lpre:
-                ln  = lpre.end_ln
-                col = lpre.end_col
-
-            elif lpost:
-                ln  = seq_loc.ln
-                col = seq_loc.col
-
-            else:
+        if not sfirst:  # slast is also None, pure delete (assign empty sequence)
+            if not (bound := _fixup_bound(seq_loc, lpre, lpost)):
                 return seq_loc
 
-            if lpost:
-                end_ln  = lpost.ln
-                end_col = lpost.col
-
-            else:
-                end_ln  = seq_loc.end_ln
-                end_col = seq_loc.end_col
-
             return _expr_src_edit_locs(self.root._lines,
-                                       fstloc(lfirst.ln, lfirst.col, llast.end_ln, llast.end_col),
-                                       fstloc(ln, col, end_ln, end_col))[1]
+                                       fstloc(lfirst.ln, lfirst.col, llast.end_ln, llast.end_col), bound)
+
+        if lfirst:  # llast also exists, replacement
+            return fstloc(lfirst.ln, lfirst.col, llast.end_ln, llast.end_col)
+
+        if not lpre and not lpost:  # lfirst and llast are None, assign to empty sequence, just copy over whole inside
+            return seq_loc
 
 
+        # TODO: insertion to non-empty sequence
 
 
-
-
+        raise NotImplementedError
         return fstloc(lfirst.ln, lfirst.col, llast.end_ln, llast.end_col)
+
+
 
 
 class FST:
