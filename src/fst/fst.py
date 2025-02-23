@@ -284,7 +284,7 @@ def _prev_src(lines: list[str], ln: int, col: int, end_ln: int, end_col: int,
     return None
 
 
-def _expr_src_edit_locs(lines: list[str], loc: fstloc, bound: fstloc, at_seq_end: bool = False) -> tuple[fstloc, fstloc]:
+def _expr_src_edit_locs(lines: list[str], loc: fstloc, bound: fstloc) -> tuple[fstloc, fstloc]:
     """Get expression copy and delete locations. There can be commas in the bound in which case the expression is
     treated as part of a comma delimited sequence. In this case, if there is a trailing comma within bounding span then
     it is included in the delete location. Any enclosing grouping parentheses within the bounding span are included.
@@ -294,7 +294,6 @@ def _expr_src_edit_locs(lines: list[str], loc: fstloc, bound: fstloc, at_seq_end
     - `loc`: The location of the expression, can be multiple or no expressions, just the location matters.
     - `bound`: The bounding location not to go outside of. Must entirely contain `loc` (can be same as). Must not
         contain any part of other `AST` nodes like other members of a sequence.
-    - `at_seq_end`: Whether the bound location reaches the end of a potential sequence it is a part of or not.
 
     **Returns:**
     - `(copy_loc, del_loc)`: The `copy_loc` is the location of source that should be used if copying the expression.
@@ -305,7 +304,8 @@ def _expr_src_edit_locs(lines: list[str], loc: fstloc, bound: fstloc, at_seq_end
     start_ln, start_col, stop_ln,      stop_col      = loc
     bound_ln, bound_col, bound_end_ln, bound_end_col = bound
 
-    nparens = 0
+    nparens          = 0
+    precomma_del_col = None
 
     # start locations
 
@@ -360,31 +360,19 @@ def _expr_src_edit_locs(lines: list[str], loc: fstloc, bound: fstloc, at_seq_end
                     del_col  = 0
 
                 else:
-                    copy_ln  = start_ln
-                    copy_col = start_col
+                    copy_ln  = del_ln  = start_ln
+                    copy_col = del_col = start_col
 
-                    if at_seq_end and c == ',':  # comma found on same line as start then if previous ends on same line then delete up to it if at end of sequence
+                    if c == ',':  # if comma found on same line as start then if previous ends on same line then maybe delete up to it depending on later end conditions
                         if col != code_col:
-                            del_ln  = start_ln
-                            del_col = col
-
-                            break
+                            precomma_del_col = col
 
                         elif code := _prev_src(lines, bound_ln, bound_col, start_ln, col):
                             if code.ln == start_ln:
-                                del_ln  = start_ln
-                                del_col = code.ln + len(code.src)
-
-                                break
+                                precomma_del_col = code.ln + len(code.src)
 
                         elif bound_ln == start_ln:
-                            del_ln  = start_ln
-                            del_col = bound_col
-
-                            break
-
-                    del_ln  = start_ln
-                    del_col = start_col
+                            precomma_del_col = bound_col
 
                 break
 
@@ -431,11 +419,11 @@ def _expr_src_edit_locs(lines: list[str], loc: fstloc, bound: fstloc, at_seq_end
                 col = col + 1
 
                 if c == ')':
-                    nparens  = nparens - 1
-                    # if sequence then opening parens may be outside of location so we don't check for this
-                    # if nparens < 0:
+                    # if is sequence then opening parens may be inside of location so we don't check for this
+                    # if not nparens:
                     #     raise ValueError('unmatched closing parenthesis found')
 
+                    nparens  = nparens - 1
                     stop_ln  = ln
                     stop_col = col
 
@@ -480,6 +468,12 @@ def _expr_src_edit_locs(lines: list[str], loc: fstloc, bound: fstloc, at_seq_end
             if ln == loc.end_ln:  # does it end on same line as expression?
                 copy_end_ln  = ln
                 copy_end_col = loc.end_col
+
+    if precomma_del_col is not None:  # if this true we know copy and del starts on same line as a preceding comma
+        if not have_comma:  # at end of potential sequence, strip preceding comma
+            del_col = precomma_del_col
+        elif del_end_col == len(lines[del_end_ln]):  # delete ends on newline, adjust del start to strip trailing whitespace from comma
+            del_col = precomma_del_col + 1
 
     return fstloc(copy_ln, copy_col, copy_end_ln, copy_end_col), fstloc(del_ln, del_col, del_end_ln, del_end_col)
 
@@ -615,7 +609,7 @@ class FSTSrcEdit:
 
         copy_loc, del_loc = _expr_src_edit_locs(src.root._lines,
                                                 fstloc(lfirst.ln, lfirst.col, llast.end_ln, llast.end_col),
-                                                fstloc(ln, col, end_ln, end_col), not lpost)
+                                                fstloc(ln, col, end_ln, end_col))
 
         return copy_loc, del_loc, None
 
