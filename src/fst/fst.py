@@ -602,17 +602,16 @@ def _new_empty_dict() -> 'FST':
     return fst
 
 
-def _new_empty_set_call() -> 'FST':
+def _new_empty_set_call(ast_only: bool = False, lineno: int = 1, col_offset: int = 0) -> 'FST':
     ast                     = Call(func=Name(id='set', ctx=Load()), args=[], keywords=[])
-    fst                     = FST(ast, lines=[bistr('set()')])
-    ast.lineno              = ast.end_lineno      = 1
-    ast.col_offset          = 0
-    ast.end_col_offset      = 5
-    ast.func.lineno         = ast.func.end_lineno = 1
-    ast.func.col_offset     = 0
-    ast.func.end_col_offset = 3
+    ast.lineno              = ast.end_lineno = lineno
+    ast.col_offset          = col_offset
+    ast.end_col_offset      = col_offset + 5
+    ast.func.lineno         = ast.func.end_lineno = lineno
+    ast.func.col_offset     = col_offset
+    ast.func.end_col_offset = col_offset + 3
 
-    return fst
+    return ast if ast_only else FST(ast, lines=[bistr('set()')])
 
 
 def _new_empty_set_curlies() -> 'FST':
@@ -1393,21 +1392,18 @@ class FST:
     def _maybe_fix_set(self) -> 'FST':  # -> Self
         # assert isinstance(self.a, Set)
 
+        if not self.a.elts:
+            ln, col, end_ln, end_col = self.loc
 
-        raise NotImplementedError
+            self.put_lines([bistr('set()')], ln, col, end_ln, end_col, True)
 
+            self.a = ast = _new_empty_set_call(True, ln + 1, self.root.lines[ln].c2b(col))
+            ast.f  = self
 
-        # if not self.a.elts:
-        #     ln, col, end_ln, end_col = self.loc
+            if parent := self.parent:
+                self.pfield.set(parent.a, ast)
 
-        #     assert ln == end_ln and col == end_col - 2
-
-        #     root      = self.root
-        #     lines     = root.lines
-        #     lines[ln] = bistr(f'{(l := lines[ln])[:col]}set(){l[col:]}')
-
-        #     root._offset(ln, col, 0, 5, True)
-        #     self.touchall(True, False, True)
+                self._make_fst_tree([FST(ast.func, self, astfield('func'))])
 
         return self
 
@@ -1842,7 +1838,7 @@ class FST:
 
         if is_self_tuple:
             self._maybe_fix_tuple(is_self_enclosed)
-        elif isinstance(self, Set):
+        elif isinstance(ast, Set):
             self._maybe_fix_set()
 
     def _put_slice_dict(self, code: Code, start: int, stop: int, field: str | None = None):

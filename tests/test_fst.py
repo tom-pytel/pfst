@@ -1199,6 +1199,30 @@ Module .. ROOT 0,0 -> 0,2
 """),
 
 ("""
+if 1:
+  {1, 2}
+""", 'body[0].body[0].value', 0, 2, """
+(
+
+   )
+""", """
+if 1:
+  set()
+""", """
+Module .. ROOT 0,0 -> 1,7
+  .body[1]
+  0] If .. 0,0 -> 1,7
+    .test
+      Constant 1 .. 0,3 -> 0,4
+    .body[1]
+    0] Expr .. 1,2 -> 1,7
+      .value
+        Call .. 1,2 -> 1,7
+          .func
+            Name 'set' Load .. 1,2 -> 1,5
+"""),
+
+("""
 {
     a: 1
 }
