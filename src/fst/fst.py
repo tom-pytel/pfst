@@ -284,15 +284,17 @@ def _prev_src(lines: list[str], ln: int, col: int, end_ln: int, end_col: int,
     return None
 
 
-def _expr_src_edit_locs(lines: list[str], loc: fstloc, bound: fstloc) -> tuple[fstloc, fstloc]:
-    """Get expression copy and delete locations. If there is a trailing comma within bounding span then it is
-    included in the delete location. Any enclosing grouping parentheses within the bounding span are included.
+def _expr_src_edit_locs(lines: list[str], loc: fstloc, bound: fstloc, at_seq_end: bool = False) -> tuple[fstloc, fstloc]:
+    """Get expression copy and delete locations. There can be commas in the bound in which case the expression is
+    treated as part of a comma delimited sequence. In this case, if there is a trailing comma within bounding span then
+    it is included in the delete location. Any enclosing grouping parentheses within the bounding span are included.
 
     **Parameters:**
     - `lines`: The lines corresponding to the expression and its `bound` location.
     - `loc`: The location of the expression, can be multiple or no expressions, just the location matters.
     - `bound`: The bounding location not to go outside of. Must entirely contain `loc` (can be same as). Must not
         contain any part of other `AST` nodes like other members of a sequence.
+    - `at_seq_end`: Whether the bound location reaches the end of a potential sequence it is a part of or not.
 
     **Returns:**
     - `(copy_loc, del_loc)`: The `copy_loc` is the location of source that should be used if copying the expression.
@@ -331,7 +333,7 @@ def _expr_src_edit_locs(lines: list[str], loc: fstloc, bound: fstloc) -> tuple[f
 
             break
 
-        if src == '\\':
+        if src == '\\':  # TODO: handle these better if possible
             if (ln := ln + 1) == start_ln:
                 copy_ln  = del_ln  = start_ln
                 copy_col = del_col = start_col
@@ -361,7 +363,7 @@ def _expr_src_edit_locs(lines: list[str], loc: fstloc, bound: fstloc) -> tuple[f
                     copy_ln  = start_ln
                     copy_col = start_col
 
-                    if c == ',':  # comma found on same line as start then if previous ends on same line then delete up to it
+                    if at_seq_end and c == ',':  # comma found on same line as start then if previous ends on same line then delete up to it
                         if col != code_col:  # if not at start of code.src then delete point is here
                             del_ln  = start_ln
                             del_col = col
@@ -460,28 +462,24 @@ def _expr_src_edit_locs(lines: list[str], loc: fstloc, bound: fstloc) -> tuple[f
         cur_ln  = ln
         cur_col = col
 
-    if done:  # can also come from reaching end of bound
+    if done:  # can also come from reaching end of bound or next source
         if ln != stop_ln:
             del_end_ln  = stop_ln
             del_end_col = len(lines[del_end_ln])
 
-        elif stop_col:  # copy ends in line, not on end of line
-            del_end_ln  = ln
-            del_end_col = col
-
-        else:  # copy ends on end of line
+        elif not stop_col:  # copy ends on end of line
             del_end_ln  = ln
             del_end_col = 0
 
+        else:  # copy ends in line, not on end of line
+            del_end_ln  = ln
+            del_end_col = col
+
+            if ln == loc.end_ln:  # does it end on same line as expression?
+                copy_end_ln  = ln
+                copy_end_col = loc.end_col
+
     return fstloc(copy_ln, copy_col, copy_end_ln, copy_end_col), fstloc(del_ln, del_col, del_end_ln, del_end_col)
-
-
-
-
-
-
-
-
 
 
 def _fixup_field_body(ast: AST, field: str | None = None) -> tuple[str, 'AST']:
@@ -615,7 +613,7 @@ class FSTFormat:
 
         copy_loc, del_loc = _expr_src_edit_locs(src.root._lines,
                                                 fstloc(lfirst.ln, lfirst.col, llast.end_ln, llast.end_col),
-                                                fstloc(ln, col, end_ln, end_col))
+                                                fstloc(ln, col, end_ln, end_col), not lpost)
 
         return copy_loc, del_loc, None
 
