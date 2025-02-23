@@ -641,22 +641,45 @@ class FSTSrcEdit:
             changed).
         - `indent`: The indent string which was already applied to `fst`.
         - `seq_loc`: The full location of the sequence in `dst`, excluding parentheses / brackets / curlies.
-        - `lfirst`: The first `FST` or `fstloc` being replaced (if `None` then nothing being replaced).
-        - `llast`: The last `FST` or `fstloc` being replaced (if `None` then nothing being replaced).
-        - `lpre`: The preceding-first `FST` or `fstloc`, not being replaced, may not exist if `lfirst` is first of seq.
-        - `lpost`: The after-last `FST` or `fstloc` being replaced, may not exist if `llast` is last of seq.
-        - `sfirst`: The source first `FST`, else `None` if is assignment from empty sequence (deletion).
-        - `slast`: The source last `FST`, else `None` if is assignment from empty sequence (deletion).
+        - `lfirst`: The first destination `FST` or `fstloc` being replaced (if `None` then nothing being replaced).
+        - `llast`: The last destination `FST` or `fstloc` being replaced (if `None` then nothing being replaced).
+        - `lpre`: The preceding-first destination `FST` or `fstloc`, not being replaced, may not exist if `lfirst` is
+            first of seq.
+        - `lpost`: The after-last destination `FST` or `fstloc` being replaced, may not exist if `llast` is last of seq.
+        - `sfirst`: The first source `FST`, else `None` if is assignment from empty sequence (deletion).
+        - `slast`: The last source `FST`, else `None` if is assignment from empty sequence (deletion).
 
         **Returns:**
         - `fstloc` source location where the potentially modified `fst` source should be put, replacing whatever is at
             the location currently.
         """
 
-        # TODO: refine much!
-
         if not lfirst and not llast and not lpre and not lpost:  # assign to empty sequence, just copy
             return seq_loc
+
+        if not sfirst and not slast:  # pure delete (assign empty sequence)
+            if lpre:
+                ln  = lpre.end_ln
+                col = lpre.end_col
+
+            elif lpost:
+                ln  = seq_loc.ln
+                col = seq_loc.col
+
+            else:
+                return seq_loc
+
+            if lpost:
+                end_ln  = lpost.ln
+                end_col = lpost.col
+
+            else:
+                end_ln  = seq_loc.end_ln
+                end_col = seq_loc.end_col
+
+            return _expr_src_edit_locs(self.root._lines,
+                                       fstloc(lfirst.ln, lfirst.col, llast.end_ln, llast.end_col),
+                                       fstloc(ln, col, end_ln, end_col))[1]
 
 
 
@@ -1547,12 +1570,12 @@ class FST:
         lines           = root._lines
         fst_lines       = fst._lines
         fst_dcol_offset = lines[put_ln].c2b(put_col)
-        dln             = (len(fst_lines) - 1) - (put_end_ln - put_ln)
+        dfst_ln         = len(fst_lines) - 1
+        dln             = dfst_ln - (put_end_ln - put_ln)
+        dcol_offset     = fst_lines[-1].lenbytes - lines[put_end_ln].c2b(put_end_col)
 
-        if not dln:
-            dcol_offset = fst_lines[0].lenbytes + lines[put_ln].c2b(put_col) - lines[put_end_ln].c2b(put_end_col)
-        else:
-            dcol_offset = fst_lines[-1].lenbytes - lines[put_end_ln].c2b(put_end_col)
+        if not dfst_ln:
+            dcol_offset += lines[put_ln].c2b(put_col)
 
         root._offset(put_end_ln, put_end_col, dln, dcol_offset)
         fst._offset(0, 0, put_ln, fst_dcol_offset)
