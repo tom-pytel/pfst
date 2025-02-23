@@ -29,6 +29,22 @@ CUT_DATA = [
     2,  # second line
     3,  # third line
 )
+""", """
+Module .. ROOT 0,0 -> 0,2
+  .body[1]
+  0] Expr .. 0,0 -> 0,2
+    .value
+      Tuple .. 0,0 -> 0,2
+        .ctx
+          Load
+""", """
+Tuple .. ROOT 0,0 -> 4,1
+  .elts[3]
+  0] Constant 1 .. 1,4 -> 1,5
+  1] Constant 2 .. 2,4 -> 2,5
+  2] Constant 3 .. 3,4 -> 3,5
+  .ctx
+    Load
 """),
 
 ("""
@@ -46,6 +62,23 @@ CUT_DATA = [
     1,  # last line
     2,  # second line
 )
+""", """
+Module .. ROOT 0,0 -> 2,1
+  .body[1]
+  0] Expr .. 0,0 -> 2,1
+    .value
+      Tuple .. 0,0 -> 2,1
+        .elts[1]
+        0] Constant 3 .. 1,4 -> 1,5
+        .ctx
+          Load
+""", """
+Tuple .. ROOT 0,0 -> 3,1
+  .elts[2]
+  0] Constant 1 .. 1,4 -> 1,5
+  1] Constant 2 .. 2,4 -> 2,5
+  .ctx
+    Load
 """),
 
 ("""
@@ -63,6 +96,23 @@ CUT_DATA = [
 (
     2,  # second line
 )
+""", """
+Module .. ROOT 0,0 -> 3,1
+  .body[1]
+  0] Expr .. 0,0 -> 3,1
+    .value
+      Tuple .. 0,0 -> 3,1
+        .elts[2]
+        0] Constant 1 .. 1,4 -> 1,5
+        1] Constant 3 .. 2,4 -> 2,5
+        .ctx
+          Load
+""", """
+Tuple .. ROOT 0,0 -> 2,1
+  .elts[1]
+  0] Constant 2 .. 1,4 -> 1,5
+  .ctx
+    Load
 """),
 
 ("""
@@ -80,6 +130,23 @@ CUT_DATA = [
 (
     3,  # third line
 )
+""", """
+Module .. ROOT 0,0 -> 3,1
+  .body[1]
+  0] Expr .. 0,0 -> 3,1
+    .value
+      Tuple .. 0,0 -> 3,1
+        .elts[2]
+        0] Constant 1 .. 1,4 -> 1,5
+        1] Constant 2 .. 2,4 -> 2,5
+        .ctx
+          Load
+""", """
+Tuple .. ROOT 0,0 -> 2,1
+  .elts[1]
+  0] Constant 3 .. 1,4 -> 1,5
+  .ctx
+    Load
 """),
 
 ("""
@@ -92,6 +159,22 @@ CUT_DATA = [
 (           # hello
     1, 2, 3 # last line
 )
+""", """
+Module .. ROOT 0,0 -> 0,2
+  .body[1]
+  0] Expr .. 0,0 -> 0,2
+    .value
+      Tuple .. 0,0 -> 0,2
+        .ctx
+          Load
+""", """
+Tuple .. ROOT 0,0 -> 2,1
+  .elts[3]
+  0] Constant 1 .. 1,4 -> 1,5
+  1] Constant 2 .. 1,7 -> 1,8
+  2] Constant 3 .. 1,10 -> 1,11
+  .ctx
+    Load
 """),
 
 ("""
@@ -105,6 +188,23 @@ CUT_DATA = [
 """, """
 (
     1, 2)
+""", """
+Module .. ROOT 0,0 -> 2,1
+  .body[1]
+  0] Expr .. 0,0 -> 2,1
+    .value
+      Tuple .. 0,0 -> 2,1
+        .elts[1]
+        0] Constant 3 .. 1,0 -> 1,1
+        .ctx
+          Load
+""", """
+Tuple .. ROOT 0,0 -> 1,9
+  .elts[2]
+  0] Constant 1 .. 1,4 -> 1,5
+  1] Constant 2 .. 1,7 -> 1,8
+  .ctx
+    Load
 """),
 
 ("""
@@ -117,6 +217,23 @@ CUT_DATA = [
 )
 """, """
 (2,)
+""", """
+Module .. ROOT 0,0 -> 2,1
+  .body[1]
+  0] Expr .. 0,0 -> 2,1
+    .value
+      Tuple .. 0,0 -> 2,1
+        .elts[2]
+        0] Constant 1 .. 1,4 -> 1,5
+        1] Constant 3 .. 1,7 -> 1,8
+        .ctx
+          Load
+""", """
+Tuple .. ROOT 0,0 -> 0,4
+  .elts[1]
+  0] Constant 2 .. 0,1 -> 0,2
+  .ctx
+    Load
 """),
 
 ("""
@@ -129,6 +246,23 @@ CUT_DATA = [
 """, """
 (3, # last line
 )
+""", """
+Module .. ROOT 0,0 -> 1,9
+  .body[1]
+  0] Expr .. 0,0 -> 1,9
+    .value
+      Tuple .. 0,0 -> 1,9
+        .elts[2]
+        0] Constant 1 .. 1,4 -> 1,5
+        1] Constant 2 .. 1,7 -> 1,8
+        .ctx
+          Load
+""", """
+Tuple .. ROOT 0,0 -> 1,1
+  .elts[1]
+  0] Constant 3 .. 0,1 -> 0,2
+  .ctx
+    Load
 """),
 
 ("""
@@ -137,6 +271,24 @@ CUT_DATA = [
 1, 4
 """, """
 (2, 3)
+""", """
+Module .. ROOT 0,0 -> 0,4
+  .body[1]
+  0] Expr .. 0,0 -> 0,4
+    .value
+      Tuple .. 0,0 -> 0,4
+        .elts[2]
+        0] Constant 1 .. 0,0 -> 0,1
+        1] Constant 4 .. 0,3 -> 0,4
+        .ctx
+          Load
+""", """
+Tuple .. ROOT 0,0 -> 0,6
+  .elts[2]
+  0] Constant 2 .. 0,1 -> 0,2
+  1] Constant 3 .. 0,4 -> 0,5
+  .ctx
+    Load
 """),
 
 ("""
@@ -145,6 +297,24 @@ CUT_DATA = [
 1, 2, 3
 """, """
 (4,)
+""", """
+Module .. ROOT 0,0 -> 0,7
+  .body[1]
+  0] Expr .. 0,0 -> 0,7
+    .value
+      Tuple .. 0,0 -> 0,7
+        .elts[3]
+        0] Constant 1 .. 0,0 -> 0,1
+        1] Constant 2 .. 0,3 -> 0,4
+        2] Constant 3 .. 0,6 -> 0,7
+        .ctx
+          Load
+""", """
+Tuple .. ROOT 0,0 -> 0,4
+  .elts[1]
+  0] Constant 4 .. 0,1 -> 0,2
+  .ctx
+    Load
 """),
 
 ("""
@@ -153,6 +323,23 @@ CUT_DATA = [
 ()
 """, """
 (1, 2, 3, 4)
+""", """
+Module .. ROOT 0,0 -> 0,2
+  .body[1]
+  0] Expr .. 0,0 -> 0,2
+    .value
+      Tuple .. 0,0 -> 0,2
+        .ctx
+          Load
+""", """
+Tuple .. ROOT 0,0 -> 0,12
+  .elts[4]
+  0] Constant 1 .. 0,1 -> 0,2
+  1] Constant 2 .. 0,4 -> 0,5
+  2] Constant 3 .. 0,7 -> 0,8
+  3] Constant 4 .. 0,10 -> 0,11
+  .ctx
+    Load
 """),
 
 ("""
@@ -161,6 +348,23 @@ CUT_DATA = [
 1, 2, 3, 4
 """, """
 ()
+""", """
+Module .. ROOT 0,0 -> 0,10
+  .body[1]
+  0] Expr .. 0,0 -> 0,10
+    .value
+      Tuple .. 0,0 -> 0,10
+        .elts[4]
+        0] Constant 1 .. 0,0 -> 0,1
+        1] Constant 2 .. 0,3 -> 0,4
+        2] Constant 3 .. 0,6 -> 0,7
+        3] Constant 4 .. 0,9 -> 0,10
+        .ctx
+          Load
+""", """
+Tuple .. ROOT 0,0 -> 0,2
+  .ctx
+    Load
 """),
 
 ("""
@@ -169,6 +373,24 @@ CUT_DATA = [
 1,
 """, """
 (2, 3, 4)
+""", """
+Module .. ROOT 0,0 -> 0,2
+  .body[1]
+  0] Expr .. 0,0 -> 0,2
+    .value
+      Tuple .. 0,0 -> 0,2
+        .elts[1]
+        0] Constant 1 .. 0,0 -> 0,1
+        .ctx
+          Load
+""", """
+Tuple .. ROOT 0,0 -> 0,9
+  .elts[3]
+  0] Constant 2 .. 0,1 -> 0,2
+  1] Constant 3 .. 0,4 -> 0,5
+  2] Constant 4 .. 0,7 -> 0,8
+  .ctx
+    Load
 """),
 
 ("""
@@ -177,6 +399,24 @@ CUT_DATA = [
 4,
 """, """
 (1, 2, 3)
+""", """
+Module .. ROOT 0,0 -> 0,2
+  .body[1]
+  0] Expr .. 0,0 -> 0,2
+    .value
+      Tuple .. 0,0 -> 0,2
+        .elts[1]
+        0] Constant 4 .. 0,0 -> 0,1
+        .ctx
+          Load
+""", """
+Tuple .. ROOT 0,0 -> 0,9
+  .elts[3]
+  0] Constant 1 .. 0,1 -> 0,2
+  1] Constant 2 .. 0,4 -> 0,5
+  2] Constant 3 .. 0,7 -> 0,8
+  .ctx
+    Load
 """),
 
 ("""
@@ -189,6 +429,24 @@ CUT_DATA = [
 (2
   ,  # comment
 )
+""", """
+Module .. ROOT 0,0 -> 0,9
+  .body[1]
+  0] Expr .. 0,0 -> 0,9
+    .value
+      Tuple .. 0,0 -> 0,9
+        .elts[3]
+        0] Constant 1 .. 0,1 -> 0,2
+        1] Constant 3 .. 0,4 -> 0,5
+        2] Constant 4 .. 0,7 -> 0,8
+        .ctx
+          Load
+""", """
+Tuple .. ROOT 0,0 -> 2,1
+  .elts[1]
+  0] Constant 2 .. 0,1 -> 0,2
+  .ctx
+    Load
 """),
 
 ("""
@@ -201,6 +459,24 @@ CUT_DATA = [
 """, """
 (2
   ,)
+""", """
+Module .. ROOT 0,0 -> 1,5
+  .body[1]
+  0] Expr .. 0,0 -> 1,5
+    .value
+      Tuple .. 0,0 -> 1,5
+        .elts[3]
+        0] Constant 1 .. 0,1 -> 0,2
+        1] Constant 3 .. 1,0 -> 1,1
+        2] Constant 4 .. 1,3 -> 1,4
+        .ctx
+          Load
+""", """
+Tuple .. ROOT 0,0 -> 1,4
+  .elts[1]
+  0] Constant 2 .. 0,1 -> 0,2
+  .ctx
+    Load
 """),
 
 ("""
@@ -211,6 +487,24 @@ CUT_DATA = [
 """, """
 (2
   ,)
+""", """
+Module .. ROOT 0,0 -> 0,9
+  .body[1]
+  0] Expr .. 0,0 -> 0,9
+    .value
+      Tuple .. 0,0 -> 0,9
+        .elts[3]
+        0] Constant 1 .. 0,1 -> 0,2
+        1] Constant 3 .. 0,4 -> 0,5
+        2] Constant 4 .. 0,7 -> 0,8
+        .ctx
+          Load
+""", """
+Tuple .. ROOT 0,0 -> 1,4
+  .elts[1]
+  0] Constant 2 .. 0,1 -> 0,2
+  .ctx
+    Load
 """),
 
 ("""
@@ -221,6 +515,24 @@ CUT_DATA = [
 """, """
 (2  # comment
   ,)
+""", """
+Module .. ROOT 0,0 -> 0,9
+  .body[1]
+  0] Expr .. 0,0 -> 0,9
+    .value
+      Tuple .. 0,0 -> 0,9
+        .elts[3]
+        0] Constant 1 .. 0,1 -> 0,2
+        1] Constant 3 .. 0,4 -> 0,5
+        2] Constant 4 .. 0,7 -> 0,8
+        .ctx
+          Load
+""", """
+Tuple .. ROOT 0,0 -> 1,4
+  .elts[1]
+  0] Constant 2 .. 0,1 -> 0,2
+  .ctx
+    Load
 """),
 
 ("""
@@ -239,6 +551,26 @@ if 1:
     2,  # second line
     3,  # third line
 )
+""", """
+Module .. ROOT 0,0 -> 1,6
+  .body[1]
+  0] If .. 0,0 -> 1,6
+    .test
+      Constant 1 .. 0,3 -> 0,4
+    .body[1]
+    0] Expr .. 1,4 -> 1,6
+      .value
+        Tuple .. 1,4 -> 1,6
+          .ctx
+            Load
+""", """
+Tuple .. ROOT 0,0 -> 4,1
+  .elts[3]
+  0] Constant 1 .. 1,4 -> 1,5
+  1] Constant 2 .. 2,4 -> 2,5
+  2] Constant 3 .. 3,4 -> 3,5
+  .ctx
+    Load
 """),
 
 ("""
@@ -258,6 +590,27 @@ if 1:
     1,  # last line
     2,  # second line
 )
+""", """
+Module .. ROOT 0,0 -> 3,5
+  .body[1]
+  0] If .. 0,0 -> 3,5
+    .test
+      Constant 1 .. 0,3 -> 0,4
+    .body[1]
+    0] Expr .. 1,4 -> 3,5
+      .value
+        Tuple .. 1,4 -> 3,5
+          .elts[1]
+          0] Constant 3 .. 2,8 -> 2,9
+          .ctx
+            Load
+""", """
+Tuple .. ROOT 0,0 -> 3,1
+  .elts[2]
+  0] Constant 1 .. 1,4 -> 1,5
+  1] Constant 2 .. 2,4 -> 2,5
+  .ctx
+    Load
 """),
 
 ("""
@@ -277,6 +630,27 @@ if 1:
 (
     2,  # second line
 )
+""", """
+Module .. ROOT 0,0 -> 4,5
+  .body[1]
+  0] If .. 0,0 -> 4,5
+    .test
+      Constant 1 .. 0,3 -> 0,4
+    .body[1]
+    0] Expr .. 1,4 -> 4,5
+      .value
+        Tuple .. 1,4 -> 4,5
+          .elts[2]
+          0] Constant 1 .. 2,8 -> 2,9
+          1] Constant 3 .. 3,8 -> 3,9
+          .ctx
+            Load
+""", """
+Tuple .. ROOT 0,0 -> 2,1
+  .elts[1]
+  0] Constant 2 .. 1,4 -> 1,5
+  .ctx
+    Load
 """),
 
 ("""
@@ -296,6 +670,27 @@ if 1:
 (
     3,  # third line
 )
+""", """
+Module .. ROOT 0,0 -> 4,5
+  .body[1]
+  0] If .. 0,0 -> 4,5
+    .test
+      Constant 1 .. 0,3 -> 0,4
+    .body[1]
+    0] Expr .. 1,4 -> 4,5
+      .value
+        Tuple .. 1,4 -> 4,5
+          .elts[2]
+          0] Constant 1 .. 2,8 -> 2,9
+          1] Constant 2 .. 3,8 -> 3,9
+          .ctx
+            Load
+""", """
+Tuple .. ROOT 0,0 -> 2,1
+  .elts[1]
+  0] Constant 3 .. 1,4 -> 1,5
+  .ctx
+    Load
 """),
 
 ("""
@@ -304,6 +699,24 @@ if 1:
 {1: 2, **c}
 """, """
 {**b}
+""", """
+Module .. ROOT 0,0 -> 0,11
+  .body[1]
+  0] Expr .. 0,0 -> 0,11
+    .value
+      Dict .. 0,0 -> 0,11
+        .keys[2]
+        0] Constant 1 .. 0,1 -> 0,2
+        1] None
+        .values[2]
+        0] Constant 2 .. 0,4 -> 0,5
+        1] Name 'c' Load .. 0,9 -> 0,10
+""", """
+Dict .. ROOT 0,0 -> 0,5
+  .keys[1]
+  0] None
+  .values[1]
+  0] Name 'b' Load .. 0,3 -> 0,4
 """),
 
 ("""
@@ -312,6 +725,22 @@ if 1:
 {}
 """, """
 {1: 2, **b, **c}
+""", """
+Module .. ROOT 0,0 -> 0,2
+  .body[1]
+  0] Expr .. 0,0 -> 0,2
+    .value
+      Dict .. 0,0 -> 0,2
+""", """
+Dict .. ROOT 0,0 -> 0,16
+  .keys[3]
+  0] Constant 1 .. 0,1 -> 0,2
+  1] None
+  2] None
+  .values[3]
+  0] Constant 2 .. 0,4 -> 0,5
+  1] Name 'b' Load .. 0,9 -> 0,10
+  2] Name 'c' Load .. 0,14 -> 0,15
 """),
 
 ("""
@@ -320,6 +749,24 @@ if 1:
 {1: 2, **b}
 """, """
 {**c}
+""", """
+Module .. ROOT 0,0 -> 0,11
+  .body[1]
+  0] Expr .. 0,0 -> 0,11
+    .value
+      Dict .. 0,0 -> 0,11
+        .keys[2]
+        0] Constant 1 .. 0,1 -> 0,2
+        1] None
+        .values[2]
+        0] Constant 2 .. 0,4 -> 0,5
+        1] Name 'b' Load .. 0,9 -> 0,10
+""", """
+Dict .. ROOT 0,0 -> 0,5
+  .keys[1]
+  0] None
+  .values[1]
+  0] Name 'c' Load .. 0,3 -> 0,4
 """),
 
 ("""
@@ -332,6 +779,104 @@ i =                (
 """, """
 (self.__class__.__name__, self._name,
                 (self._handle & (_sys.maxsize*2 + 1)),)
+""", """
+Module .. ROOT 0,0 -> 1,49
+  .body[1]
+  0] Assign .. 0,0 -> 1,49
+    .targets[1]
+    0] Name 'i' Store .. 0,0 -> 0,1
+    .value
+      Tuple .. 0,19 -> 1,49
+        .elts[1]
+        0] BinOp .. 1,16 -> 1,47
+          .left
+            Call .. 1,16 -> 1,24
+              .func
+                Name 'id' Load .. 1,16 -> 1,18
+              .args[1]
+              0] Name 'self' Load .. 1,19 -> 1,23
+          .op
+            BitAnd
+          .right
+            BinOp .. 1,28 -> 1,46
+              .left
+                BinOp .. 1,28 -> 1,42
+                  .left
+                    Attribute .. 1,28 -> 1,40
+                      .value
+                        Name '_sys' Load .. 1,28 -> 1,32
+                      .attr
+                        'maxsize'
+                      .ctx
+                        Load
+                  .op
+                    Mult
+                  .right
+                    Constant 2 .. 1,41 -> 1,42
+              .op
+                Add
+              .right
+                Constant 1 .. 1,45 -> 1,46
+        .ctx
+          Load
+    .type_comment
+      None
+""", """
+Tuple .. ROOT 0,0 -> 1,55
+  .elts[3]
+  0] Attribute .. 0,1 -> 0,24
+    .value
+      Attribute .. 0,1 -> 0,15
+        .value
+          Name 'self' Load .. 0,1 -> 0,5
+        .attr
+          '__class__'
+        .ctx
+          Load
+    .attr
+      '__name__'
+    .ctx
+      Load
+  1] Attribute .. 0,26 -> 0,36
+    .value
+      Name 'self' Load .. 0,26 -> 0,30
+    .attr
+      '_name'
+    .ctx
+      Load
+  2] BinOp .. 1,17 -> 1,52
+    .left
+      Attribute .. 1,17 -> 1,29
+        .value
+          Name 'self' Load .. 1,17 -> 1,21
+        .attr
+          '_handle'
+        .ctx
+          Load
+    .op
+      BitAnd
+    .right
+      BinOp .. 1,33 -> 1,51
+        .left
+          BinOp .. 1,33 -> 1,47
+            .left
+              Attribute .. 1,33 -> 1,45
+                .value
+                  Name '_sys' Load .. 1,33 -> 1,37
+                .attr
+                  'maxsize'
+                .ctx
+                  Load
+            .op
+              Mult
+            .right
+              Constant 2 .. 1,46 -> 1,47
+        .op
+          Add
+        .right
+          Constant 1 .. 1,50 -> 1,51
+  .ctx
+    Load
 """),
 
 ("""
@@ -342,6 +887,45 @@ i = namespace = {
              **__main__.__dict__}
 """, """
 {**__main__.__builtins__.__dict__,}
+""", """
+Module .. ROOT 0,0 -> 1,33
+  .body[1]
+  0] Assign .. 0,0 -> 1,33
+    .targets[2]
+    0] Name 'i' Store .. 0,0 -> 0,1
+    1] Name 'namespace' Store .. 0,4 -> 0,13
+    .value
+      Dict .. 0,16 -> 1,33
+        .keys[1]
+        0] None
+        .values[1]
+        0] Attribute .. 1,15 -> 1,32
+          .value
+            Name '__main__' Load .. 1,15 -> 1,23
+          .attr
+            '__dict__'
+          .ctx
+            Load
+    .type_comment
+      None
+""", """
+Dict .. ROOT 0,0 -> 0,35
+  .keys[1]
+  0] None
+  .values[1]
+  0] Attribute .. 0,3 -> 0,33
+    .value
+      Attribute .. 0,3 -> 0,24
+        .value
+          Name '__main__' Load .. 0,3 -> 0,11
+        .attr
+          '__builtins__'
+        .ctx
+          Load
+    .attr
+      '__dict__'
+    .ctx
+      Load
 """),
 
 ("""
@@ -363,6 +947,125 @@ env = {
 {
     **{k.upper(): v for k, v in os.environ.items() if k.upper() not in ignore},
     "PYLAUNCHER_DEBUG": "1",}
+""", """
+Module .. ROOT 0,0 -> 5,1
+  .body[1]
+  0] Assign .. 0,0 -> 5,1
+    .targets[1]
+    0] Name 'env' Store .. 0,0 -> 0,3
+    .value
+      Dict .. 0,6 -> 5,1
+        .keys[3]
+        0] Constant 'PYLAUNCHER_DRYRUN' .. 2,4 -> 2,23
+        1] Constant 'PYLAUNCHER_LIMIT_TO_COMPANY' .. 3,4 -> 3,33
+        2] None
+        .values[3]
+        0] Constant '1' .. 2,25 -> 2,28
+        1] Constant '' .. 3,35 -> 3,37
+        2] DictComp .. 4,6 -> 4,52
+          .key
+            Call .. 4,7 -> 4,16
+              .func
+                Attribute .. 4,7 -> 4,14
+                  .value
+                    Name 'k' Load .. 4,7 -> 4,8
+                  .attr
+                    'upper'
+                  .ctx
+                    Load
+          .value
+            Name 'v' Load .. 4,18 -> 4,19
+          .generators[1]
+          0] comprehension .. 4,24 -> 4,51
+            .target
+              Tuple .. 4,24 -> 4,28
+                .elts[2]
+                0] Name 'k' Store .. 4,24 -> 4,25
+                1] Name 'v' Store .. 4,27 -> 4,28
+                .ctx
+                  Store
+            .iter
+              Call .. 4,32 -> 4,51
+                .func
+                  Attribute .. 4,32 -> 4,49
+                    .value
+                      BoolOp .. 4,33 -> 4,42
+                        .op
+                          Or
+                        .values[2]
+                        0] Name 'env' Load .. 4,33 -> 4,36
+                        1] Dict .. 4,40 -> 4,42
+                    .attr
+                      'items'
+                    .ctx
+                      Load
+            .is_async
+              0
+    .type_comment
+      None
+""", """
+Dict .. ROOT 0,0 -> 2,29
+  .keys[2]
+  0] None
+  1] Constant 'PYLAUNCHER_DEBUG' .. 2,4 -> 2,22
+  .values[2]
+  0] DictComp .. 1,6 -> 1,78
+    .key
+      Call .. 1,7 -> 1,16
+        .func
+          Attribute .. 1,7 -> 1,14
+            .value
+              Name 'k' Load .. 1,7 -> 1,8
+            .attr
+              'upper'
+            .ctx
+              Load
+    .value
+      Name 'v' Load .. 1,18 -> 1,19
+    .generators[1]
+    0] comprehension .. 1,24 -> 1,77
+      .target
+        Tuple .. 1,24 -> 1,28
+          .elts[2]
+          0] Name 'k' Store .. 1,24 -> 1,25
+          1] Name 'v' Store .. 1,27 -> 1,28
+          .ctx
+            Store
+      .iter
+        Call .. 1,32 -> 1,50
+          .func
+            Attribute .. 1,32 -> 1,48
+              .value
+                Attribute .. 1,32 -> 1,42
+                  .value
+                    Name 'os' Load .. 1,32 -> 1,34
+                  .attr
+                    'environ'
+                  .ctx
+                    Load
+              .attr
+                'items'
+              .ctx
+                Load
+      .ifs[1]
+      0] Compare .. 1,54 -> 1,77
+        .left
+          Call .. 1,54 -> 1,63
+            .func
+              Attribute .. 1,54 -> 1,61
+                .value
+                  Name 'k' Load .. 1,54 -> 1,55
+                .attr
+                  'upper'
+                .ctx
+                  Load
+        .ops[1]
+        0] NotIn
+        .comparators[1]
+        0] Name 'ignore' Load .. 1,71 -> 1,77
+      .is_async
+        0
+  1] Constant '1' .. 2,24 -> 2,27
 """),
 
 ("""
@@ -375,6 +1078,66 @@ env = {
             bytearray(b'abcde'), [12, 345], (12, 345), {'12': 345})
 """, """
 ('abcde', 'абвгд')
+""", """
+Module .. ROOT 0,0 -> 2,67
+  .body[1]
+  0] Expr .. 0,0 -> 2,67
+    .value
+      Tuple .. 0,0 -> 2,67
+        .elts[11]
+        0] Constant None .. 0,1 -> 0,5
+        1] Constant False .. 0,7 -> 0,12
+        2] Constant True .. 0,14 -> 0,18
+        3] Constant 12345 .. 0,20 -> 0,25
+        4] Constant 123.45 .. 0,27 -> 0,33
+        5] Constant b'abcde' .. 0,35 -> 0,43
+        6] Call .. 1,12 -> 1,55
+          .func
+            Attribute .. 1,12 -> 1,29
+              .value
+                Name 'datetime' Load .. 1,12 -> 1,20
+              .attr
+                'datetime'
+              .ctx
+                Load
+          .args[6]
+          0] Constant 2004 .. 1,30 -> 1,34
+          1] Constant 10 .. 1,36 -> 1,38
+          2] Constant 26 .. 1,40 -> 1,42
+          3] Constant 10 .. 1,44 -> 1,46
+          4] Constant 33 .. 1,48 -> 1,50
+          5] Constant 33 .. 1,52 -> 1,54
+        7] Call .. 2,12 -> 2,31
+          .func
+            Name 'bytearray' Load .. 2,12 -> 2,21
+          .args[1]
+          0] Constant b'abcde' .. 2,22 -> 2,30
+        8] List .. 2,33 -> 2,42
+          .elts[2]
+          0] Constant 12 .. 2,34 -> 2,36
+          1] Constant 345 .. 2,38 -> 2,41
+          .ctx
+            Load
+        9] Tuple .. 2,44 -> 2,53
+          .elts[2]
+          0] Constant 12 .. 2,45 -> 2,47
+          1] Constant 345 .. 2,49 -> 2,52
+          .ctx
+            Load
+        10] Dict .. 2,55 -> 2,66
+          .keys[1]
+          0] Constant '12' .. 2,56 -> 2,60
+          .values[1]
+          0] Constant 345 .. 2,62 -> 2,65
+        .ctx
+          Load
+""", """
+Tuple .. ROOT 0,0 -> 0,18
+  .elts[2]
+  0] Constant 'abcde' .. 0,1 -> 0,8
+  1] Constant 'абвгд' .. 0,10 -> 0,17
+  .ctx
+    Load
 """),
 
 ]  # END OF CUT_DATA
@@ -384,17 +1147,27 @@ def regen_cut_data():
     newlines = []
 
     for src, elt, start, stop, *_ in CUT_DATA:
-        src  = src.strip()
-        t    = parse(src)
-        f    = eval(f't.{elt}', {'t': t}).f
-        s    = f.get_slice(start, stop, cut=True)
-        tsrc = t.f.src
-        ssrc = s.src
+        src   = src.strip()
+        t     = parse(src)
+        f     = eval(f't.{elt}', {'t': t}).f
+        s     = f.get_slice(start, stop, cut=True)
+        tsrc  = t.f.src
+        ssrc  = s.src
+        tdump = t.f.dump(print=False, compact=True)
+        sdump = s.dump(print=False, compact=True)
 
         assert not tsrc.startswith('\n') or tsrc.endswith('\n')
         assert not ssrc.startswith('\n') or ssrc.endswith('\n')
 
-        newlines.extend(f'''("""\n{src}\n""", {elt!r}, {start}, {stop}, """\n{tsrc}\n""", """\n{ssrc}\n"""),\n'''.split('\n'))
+        t.f.verify()
+        s.verify()
+
+        newlines.append('("""')
+        newlines.extend(f'''{src}\n""", {elt!r}, {start}, {stop}, """\n{tsrc}\n""", """\n{ssrc}\n""", """'''.split('\n'))
+        newlines.extend(tdump)
+        newlines.append('""", """')
+        newlines.extend(sdump)
+        newlines.append('"""),\n')
 
     with open(sys.argv[0]) as f:
         lines = f.read().split('\n')
@@ -2531,16 +3304,20 @@ Tuple .. ROOT 0,0 -> 2,1
             """.strip())
 
     def test_cut(self):
-        for src, elt, start, stop, cut_src, cut_slice in CUT_DATA:
-            src  = src.strip()
-            t    = parse(src)
-            f    = eval(f't.{elt}', {'t': t}).f
-            s    = f.get_slice(start, stop, cut=True)
-            tsrc = t.f.src
-            ssrc = s.src
+        for src, elt, start, stop, src_cut, slice_cut, src_dump, slice_dump in CUT_DATA:
+            src   = src.strip()
+            t     = parse(src)
+            f     = eval(f't.{elt}', {'t': t}).f
+            s     = f.get_slice(start, stop, cut=True)
+            tsrc  = t.f.src
+            ssrc  = s.src
+            tdump = t.f.dump(print=False, compact=True)
+            sdump = s.dump(print=False, compact=True)
 
-            self.assertEqual(tsrc, cut_src.strip())
-            self.assertEqual(ssrc, cut_slice.strip())
+            self.assertEqual(tsrc, src_cut.strip())
+            self.assertEqual(ssrc, slice_cut.strip())
+            self.assertEqual(tdump, src_dump.strip().split('\n'))
+            self.assertEqual(sdump, slice_dump.strip().split('\n'))
 
 
 if __name__ == '__main__':
@@ -2548,12 +3325,12 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(prog='python -m fst')
 
-    parser.add_argument('--regen', default=False, action='store_true',
+    parser.add_argument('--regen-cut', default=False, action='store_true',
                         help="regenerate stuff")
 
     args = parser.parse_args()
 
-    if args.regen:
+    if args.regen_cut:
         print('Regenerating cut data...')
         regen_cut_data()
         sys.exit(0)
