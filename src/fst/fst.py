@@ -783,7 +783,7 @@ class FST:
         if self.is_root:
             return '\n'.join(self._lines)
         elif loc := self.loc:
-            return self.copyl_src(*loc)
+            return '\n'.join(self.get_lines(*loc))
         else:
             return None
 
@@ -1016,7 +1016,7 @@ class FST:
         if ((body := self.a.body) and isinstance(b0 := body[0], Expr) and isinstance(v := b0.value, Constant) and
             isinstance(v.value, str)
         ):
-            v.value = literal_eval(b0.f.copy_src())
+            v.value = literal_eval((f := b0.f).get_src(*f.loc))
 
         return self
 
@@ -1386,7 +1386,7 @@ class FST:
             self._maybe_add_singleton_tuple_comma(True)
 
         elif not (self.is_tuple_parenthesized() if is_parenthesized is None else is_parenthesized):  # if is unparenthesized tuple and empty left then need to add parentheses
-            self.off_putl_lines([bistr('()')], *self.loc, True)  # TODO: WARNING! `True` may not be safe if another preceding non-containing node ends EXACTLY where the unparenthesized tuple starts, does this ever happen?
+            self.put_lines([bistr('()')], *self.loc, True)  # TODO: WARNING! `True` may not be safe if another preceding non-containing node ends EXACTLY where the unparenthesized tuple starts, does this ever happen?
 
         return self
 
@@ -1419,7 +1419,7 @@ class FST:
 
         fst._offset(copy_loc.ln, copy_loc.col, -copy_loc.ln, len(prefix) - lines[copy_loc.ln].c2b(copy_loc.col))  # WARNING! `prefix` is expected to have only 1 byte characters
 
-        fst._lines = fst_lines = self.copyl_lines(*copy_loc)
+        fst._lines = fst_lines = self.get_lines(*copy_loc)
 
         if suffix:
             fst_lines[-1] = bistr(fst_lines[-1] + suffix)
@@ -1430,7 +1430,7 @@ class FST:
         if put_loc:
             self.root._offset(put_loc.end_ln, put_loc.end_col, put_loc.ln - put_loc.end_ln,
                               lines[put_loc.ln].c2b(put_loc.col) - lines[put_loc.end_ln].c2b(put_loc.end_col), True)  # True because we may have an unparenthesized tuple that shrinks to a span length of 0
-            self.putl_lines(put_lines, *put_loc)
+            self.put_lines(put_lines, *put_loc)
 
         fst._dedent_tail(indent)
 
@@ -1628,9 +1628,9 @@ class FST:
         fst_dcol_offset = lines[put_ln].c2b(put_col)
 
         if lpost:
-            self.off_putl_lines(fst_lines, put_ln, put_col, put_end_ln, put_end_col)
+            self.put_lines(fst_lines, put_ln, put_col, put_end_ln, put_end_col, False, None)
         else:
-            root.off_putl_lines(fst_lines, put_ln, put_col, put_end_ln, put_end_col, True, self)  # because of insertion at end and unparenthesized tuple
+            root.put_lines(fst_lines, put_ln, put_col, put_end_ln, put_end_col, True, self)  # because of insertion at end and unparenthesized tuple
 
         fst._offset(0, 0, put_ln, fst_dcol_offset)
 
@@ -2908,65 +2908,48 @@ class FST:
 
     # ------------------------------------------------------------------------------------------------------------------
 
-    def copyl_lines(self, ln: int, col: int, end_ln: int, end_col: int) -> list[str]:
+    def get_lines(self, ln: int, col: int, end_ln: int, end_col: int) -> list[str]:
         if end_ln == ln:
             return [bistr(self.root._lines[ln][col : end_col])]
         else:
             return [bistr((ls := self.root._lines)[ln][col:])] + ls[ln + 1 : end_ln] + [bistr(ls[end_ln][:end_col])]
 
-    def copy_lines(self) -> list[str]:
-        return self.copyl_lines(*self.loc)
+    def get_src(self, ln: int, col: int, end_ln: int, end_col: int) -> list[str]:
+        return '\n'.join(self.get_lines(ln, col, end_ln, end_col))
 
-    def copyl_src(self, ln: int, col: int, end_ln: int, end_col: int) -> str:
-        return '\n'.join(self.copyl_lines(ln, col, end_ln, end_col))
-
-    def copy_src(self) -> str:
-        return '\n'.join(self.copyl_lines(*self.loc))
-
-    def dell_lines(self, ln: int, col: int, end_ln: int, end_col: int):
+    def put_lines(self, lines: list[str] | None, ln: int, col: int, end_ln: int, end_col: int,
+                  inc: bool | None = None, stop_at: Optional['FST'] = None):
         ls = self.root._lines
 
-        if end_ln == ln:
-            ls[ln] = bistr((l := ls[ln])[:col] + l[end_col:])
+        if is_del := not lines:
+            lines = [bistr('')]
+        elif not lines[0].__class__ is bistr:
+            lines = [bistr(s) for s in lines]
+
+        # possibly offset nodes
+
+        if inc is not None:
+            dfst_ln     = len(lines) - 1
+            dln         = dfst_ln - (end_ln - ln)
+            dcol_offset = lines[-1].lenbytes - ls[end_ln].c2b(end_col)
+
+            if not dfst_ln:
+                dcol_offset += ls[ln].c2b(col)
+
+            self.root._offset(end_ln, end_col, dln, dcol_offset, inc, stop_at)
+
+        # put the actual lines (or just delete)
+
+        if is_del:
+            if end_ln == ln:
+                ls[ln] = bistr((l := ls[ln])[:col] + l[end_col:])
+
+            else:
+                ls[end_ln] = bistr(ls[ln][:col] + ls[end_ln][end_col:])
+
+                del ls[ln : end_ln]
 
         else:
-            ls[end_ln] = bistr(ls[ln][:col] + ls[end_ln][end_col:])
-
-            del ls[ln : end_ln]
-
-    def del_lines(self):
-        return self.dell_lines(*self.loc)
-
-    def cutl_lines(self, ln: int, col: int, end_ln: int, end_col: int) -> list[str]:
-        ls = self.root._lines
-
-        if end_ln == ln:
-            ret    = [bistr((l := ls[ln])[col : end_col])]
-            ls[ln] = bistr(l[:col] + l[end_col:])
-
-        else:
-            ret        = [bistr((l := ls[ln])[col:])] + ls[ln + 1 : end_ln] + [bistr((le := ls[end_ln])[:end_col])]
-            ls[end_ln] = bistr(l[:col]) + bistr(le[end_col:])
-
-            del ls[ln : end_ln]
-
-        return ret
-
-    def cut_lines(self) -> list[str]:
-        return self.cutl_lines(*self.loc)
-
-    def cutl_src(self, ln: int, col: int, end_ln: int, end_col: int) -> str:
-        return '\n'.join(self.cutl_lines(ln, col, end_ln, end_col))
-
-    def cut_src(self) -> str:
-        return '\n'.join(self.cutl_lines(*self.loc))
-
-    def putl_lines(self, lines: list[str] | None, ln: int, col: int, end_ln: int, end_col: int):
-        if lines is None:
-            self.dell_lines(ln, col, end_ln, end_col)
-
-        else:
-            ls  = self.root._lines
             dln = end_ln - ln
 
             if (nnew_ln := len(lines)) <= 1:
@@ -2991,40 +2974,9 @@ class FST:
                 ls[end_ln]          = bistr(lines[-1] + ls[end_ln][end_col:])
                 ls[ln + 1 : end_ln] = lines[1:-1] if lines[0].__class__ is bistr else [bistr(l) for l in lines[1:-1]]
 
-    def put_lines(self, lines: list[str] | None):
-        if lines is None:
-            self.dell_lines(*self.loc)
-        else:
-            self.putl_lines(lines, *self.loc)
-
-    def putl_src(self, src: str | None, ln: int, col: int, end_ln: int, end_col: int):
-        if src is None:
-            self.dell_lines(ln, col, end_ln, end_col)
-        else:
-            self.putl_lines(src.split('\n'), ln, col, end_ln, end_col)
-
-    def put_src(self, src: str | None):
-        if src is None:
-            self.dell_lines(*self.loc)
-        else:
-            self.putl_lines(src.split('\n'), *self.loc)
-
-    def off_putl_lines(self, lines: list[str] | None, ln: int, col: int, end_ln: int, end_col: int,
-                       inc: bool = False, stop_at: Optional['FST'] = None):
-        if not lines[0].__class__ is bistr:
-            lines = [bistr(s) for s in lines]
-
-        root        = self.root
-        rlines      = root._lines
-        dfst_ln     = len(lines) - 1
-        dln         = dfst_ln - (end_ln - ln)
-        dcol_offset = lines[-1].lenbytes - rlines[end_ln].c2b(end_col)
-
-        if not dfst_ln:
-            dcol_offset += rlines[ln].c2b(col)
-
-        root._offset(end_ln, end_col, dln, dcol_offset, inc, stop_at)
-        self.putl_lines(lines, ln, col, end_ln, end_col)
+    def put_src(self, src: str | None, ln: int, col: int, end_ln: int, end_col: int,
+                inc: bool = False, stop_at: Optional['FST'] = None):
+        self.put_lines(None if src is None else src.split('\n'), ln, col, end_ln, end_col, inc, stop_at)
 
     # ------------------------------------------------------------------------------------------------------------------
 

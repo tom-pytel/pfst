@@ -1181,6 +1181,24 @@ Module .. ROOT 0,0 -> 0,2
 """),
 
 ("""
+1, 2
+""", 'body[0].value', 0, 2, """
+(
+
+   )
+""", """
+()
+""", """
+Module .. ROOT 0,0 -> 0,2
+  .body[1]
+  0] Expr .. 0,0 -> 0,2
+    .value
+      Tuple .. 0,0 -> 0,2
+        .ctx
+          Load
+"""),
+
+("""
 {
     a: 1
 }
@@ -2288,31 +2306,31 @@ def func():
         src = 'class cls:\n if True:\n  i = 1\n else:\n  j = 2'
         ast = parse(src)
 
-        self.assertEqual(src.split('\n'), ast.f.copy_lines())
-        self.assertEqual(src.split('\n'), ast.body[0].f.copy_lines())
-        self.assertEqual('if True:\n  i = 1\n else:\n  j = 2'.split('\n'), ast.body[0].body[0].f.copy_lines())
-        self.assertEqual(['i = 1'], ast.body[0].body[0].body[0].f.copy_lines())
-        self.assertEqual(['j = 2'], ast.body[0].body[0].orelse[0].f.copy_lines())
+        self.assertEqual(src.split('\n'), ast.f.get_lines(*ast.f.loc))
+        self.assertEqual(src.split('\n'), ast.body[0].f.get_lines(*ast.body[0].f.loc))
+        self.assertEqual('if True:\n  i = 1\n else:\n  j = 2'.split('\n'), ast.body[0].body[0].f.get_lines(*ast.body[0].body[0].f.loc))
+        self.assertEqual(['i = 1'], ast.body[0].body[0].body[0].f.get_lines(*ast.body[0].body[0].body[0].f.loc))
+        self.assertEqual(['j = 2'], ast.body[0].body[0].orelse[0].f.get_lines(*ast.body[0].body[0].orelse[0].f.loc))
 
-        self.assertEqual(['True:', '  i'], ast.f.root.copyl_lines(1, 4, 2, 3))
+        self.assertEqual(['True:', '  i'], ast.f.root.get_lines(1, 4, 2, 3))
 
     def test_put_lines(self):
         f = FST(Load(), lines=[bistr('')])
-        f.putl_src('test', 0, 0, 0, 0)
+        f.put_src('test', 0, 0, 0, 0)
         self.assertEqual(f.lines, ['test'])
-        f.putl_src('test', 0, 0, 0, 0)
+        f.put_src('test', 0, 0, 0, 0)
         self.assertEqual(f.lines, ['testtest'])
-        f.putl_src('tost', 0, 0, 0, 8)
+        f.put_src('tost', 0, 0, 0, 8)
         self.assertEqual(f.lines, ['tost'])
-        f.putl_src('a\nb\nc', 0, 2, 0, 2)
+        f.put_src('a\nb\nc', 0, 2, 0, 2)
         self.assertEqual(f.lines, ['toa', 'b', 'cst'])
-        f.putl_src('', 0, 3, 2, 1)
+        f.put_src('', 0, 3, 2, 1)
         self.assertEqual(f.lines, ['toast'])
-        f.putl_src('a\nb\nc\nd', 0, 0, 0, 5)
+        f.put_src('a\nb\nc\nd', 0, 0, 0, 5)
         self.assertEqual(f.lines, ['a', 'b', 'c', 'd'])
-        f.putl_src('efg\nhij', 1, 0, 2, 1)
+        f.put_src('efg\nhij', 1, 0, 2, 1)
         self.assertEqual(f.lines, ['a', 'efg', 'hij', 'd'])
-        f.putl_src('***', 1, 2, 2, 1)
+        f.put_src('***', 1, 2, 2, 1)
         self.assertEqual(f.lines, ['a', 'ef***ij', 'd'])
 
     def test_fix(self):
@@ -2522,7 +2540,7 @@ i = 1
 
 # end
             '''.strip())
-        self.assertEqual(f.copy().copy_src(), f.src)
+        self.assertEqual((g := f.copy()).get_src(*g.loc), f.src)
 
         if sys.version_info[:2] >= (3, 12):
             f = FST.fromsrc('tuple[*tuple[int, ...]]').a.body[0].value.slice.f.copy(fix=True)
