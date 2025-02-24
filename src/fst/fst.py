@@ -1045,136 +1045,6 @@ class FST:
 
                 self._make_fst_tree([FST(ast.func, self, astfield('func'))])
 
-    def _maybe_fix_single_copy(self, inplace: bool = True) -> Optional['FST']:  # -> Self | None
-        """This is really a maybe fix source and `ctx` values for cut or copied nodes (to make subtrees parsable if the
-        source is not after the operation). Possibly reparses in order to verify expression. If can not fix or ast is
-        not parsable by itself then ast will be unchanged. Is meant to be a quick fix after an operation, not full
-        check, for that use `verify()`. Possible source changes are `elif` to `if` and parentheses where needed and
-        commas for singleton tuples.
-
-        **Parameters:**
-        - `inplace`: If `True` then changes will be made to `self`. If `False` then `self` may be returned if no changes
-            made, otherwise a modified copy is returned.
-
-        **Returns:**
-        - `self` if unchanged or modified in place or a new `FST` object otherwise.
-        """
-
-        if not self.is_root:
-            raise RuntimeError('can only be called on a root node')
-
-        if not (loc := self.loc):
-            return self
-
-        ln, col, end_ln, end_col = loc
-
-        ast   = self.a
-        lines = self._lines
-
-        # if / elif statement
-
-        if isinstance(ast, If):
-            if (l := lines[ln]).startswith('if', col):
-                return self
-
-            assert l.startswith('elif', col)
-
-            if not inplace:
-                self = FST(copy_ast(ast), lines=(lines := lines[:]), from_=self)
-
-            self.offset(ln, col + 2, 0, -2)
-
-            lines[ln] = bistr((l := lines[ln])[:col] + l[col + 2:])
-
-        # expression maybe parenthesize and proper ctx (Load)
-
-        elif (isinstance(ast, expr)):
-            if not self.is_parsable():  # may be Slice or Starred
-                return self
-
-            need_paren = None
-
-            if is_tuple := isinstance(ast, Tuple):
-                if self.is_tuple_parenthesized():
-                    need_paren = False
-
-                elif (not (elts := ast.elts) or any(isinstance(e, NamedExpr) for e in elts) or (len(elts) == 1 and (
-                      not (code := _next_src_lline(lines, (f0 := elts[0].f).end_ln, f0.end_col, end_ln, end_col)) or  # if comma not on logical line then definitely need to add parens, if no comma then the parens are incidental but we want that code path for adding the comma
-                      not code.src.startswith(',')))):
-                    need_paren = True
-
-            elif (isinstance(ast, (Name, List, Set, Dict, ListComp, SetComp, DictComp, GeneratorExp)) or
-                  ((code := _prev_src(self.root._lines, 0, 0, self.ln, self.col)) and code.src.endswith('('))):  # is parenthesized?
-                need_paren = False
-
-            elif isinstance(ast, (NamedExpr, Yield, YieldFrom)):
-                need_paren = True
-
-            elif end_ln == ln:
-                need_paren = False
-
-            if need_paren is None:
-                try:
-                    a = ast_parse(src := self.src, mode='eval', **self._parse_params)
-
-                except SyntaxError:  # if expression not parsing then try parenthesize
-                    tail = (',)' if is_tuple and len(ast.elts) == 1 and lines[end_ln][end_col - 1] != ',' else ')')  # TODO: WARNING! this won't work for expressions followed by comments
-
-                    a = ast_parse(f'({src}{tail}', mode='eval', **self._parse_params)
-
-                    if not inplace:
-                        lines = lines[:]
-
-                    lines[end_ln] = bistr(f'{(l := lines[end_ln])[:end_col]}{tail}{l[end_col:]}')
-                    lines[ln]     = bistr(f'{(l := lines[ln])[:col]}({l[col:]}')
-
-                else:
-                    if compare_asts(a.body, ast, locs=True, type_comments=True, recurse=False):  # only top level compare needed for `ctx` and structure check
-                        return self
-
-                    if not inplace:
-                        lines = lines[:]
-
-                a = a.body  # we know parsed to an Expression but original was not an Expression
-
-                if not inplace:
-                    return FST(a, lines=lines, from_=self)
-
-                self.a = a
-                a.f    = self
-
-                self.touch()
-                self._make_fst_tree()
-
-                return self
-
-            need_ctx = set_ctx(ast, Load, doit=False)
-
-            if (need_ctx or need_paren) and not inplace:
-                ast   = copy_ast(ast)
-                lines = lines[:]
-                self  = FST(ast, lines=lines, from_=self)
-
-            if need_ctx:
-                set_ctx(ast, Load)
-
-            if need_paren:
-                lines[end_ln] = bistr(f'{(l := lines[end_ln])[:end_col]}){l[end_col:]}')
-                lines[ln]     = bistr(f'{(l := lines[ln])[:col]}({l[col:]}')
-
-                self.offset(ln, col, 0, 1)
-
-                if is_tuple:
-                    ast.col_offset     -= 1
-                    ast.end_col_offset += 1
-
-                self.touch()
-
-                if is_tuple:
-                    self._maybe_add_singleton_tuple_comma(False)
-
-        return self
-
     def _make_fst_and_dedent(self, findent: 'FST', ast: AST, copy_loc: fstloc, prefix: str = '', suffix: str = '',
                              put_loc: fstloc | None = None, put_lines: list[str] | None = None) -> 'FST':
         indent = findent.get_indent()
@@ -1789,7 +1659,7 @@ class FST:
 
         fst = self._make_fst_and_dedent(self, newast, loc)
 
-        return fst._maybe_fix_single_copy(inplace=True) if fix else fst
+        return fst.fix(inplace=True) if fix else fst
 
     def cut(self, *, fix: bool = True, decos: bool = True) -> 'FST':
         if self.is_root:
@@ -1909,13 +1779,13 @@ class FST:
             elif not dln:  # replace single line with multiple lines
                 lend                 = bistr(lines[-1] + (l := ls[ln])[end_col:])
                 ls[ln]               = bistr(l[:col] + lines[0])
-                ls[ln + 1 : ln + 1]  = lines[1:] if lines[0].__class__ is bistr else [bistr(l) for l in lines[1:]]
+                ls[ln + 1 : ln + 1]  = lines[1:]
                 ls[ln + nnew_ln - 1] = lend
 
             else:  # replace multiple lines with multiple lines
                 ls[ln]              = bistr(ls[ln][:col] + lines[0])
                 ls[end_ln]          = bistr(lines[-1] + ls[end_ln][end_col:])
-                ls[ln + 1 : end_ln] = lines[1:-1] if lines[0].__class__ is bistr else [bistr(l) for l in lines[1:-1]]
+                ls[ln + 1 : end_ln] = lines[1:-1]
 
     def get_src(self, ln: int, col: int, end_ln: int, end_col: int) -> list[str]:
         return '\n'.join(self.get_lines(ln, col, end_ln, end_col))
@@ -1923,6 +1793,136 @@ class FST:
     def put_src(self, src: str | None, ln: int, col: int, end_ln: int, end_col: int,
                 inc: bool = False, stop_at: Optional['FST'] = None):
         self.put_lines(None if src is None else src.split('\n'), ln, col, end_ln, end_col, inc, stop_at)
+
+    def fix(self, inplace: bool = True) -> Optional['FST']:  # -> Self | None
+        """This is really a maybe fix source and `ctx` values for cut or copied nodes (to make subtrees parsable if the
+        source is not after the operation). Possibly reparses in order to verify expression. If can not fix or ast is
+        not parsable by itself then ast will be unchanged. Is meant to be a quick fix after an operation, not full
+        check, for that use `verify()`. Possible source changes are `elif` to `if` and parentheses where needed and
+        commas for singleton tuples.
+
+        **Parameters:**
+        - `inplace`: If `True` then changes will be made to `self`. If `False` then `self` may be returned if no changes
+            made, otherwise a modified copy is returned.
+
+        **Returns:**
+        - `self` if unchanged or modified in place or a new `FST` object otherwise.
+        """
+
+        if not self.is_root:
+            raise RuntimeError('can only be called on a root node')
+
+        if not (loc := self.loc):
+            return self
+
+        ln, col, end_ln, end_col = loc
+
+        ast   = self.a
+        lines = self._lines
+
+        # if / elif statement
+
+        if isinstance(ast, If):
+            if (l := lines[ln]).startswith('if', col):
+                return self
+
+            assert l.startswith('elif', col)
+
+            if not inplace:
+                self = FST(copy_ast(ast), lines=(lines := lines[:]), from_=self)
+
+            self.offset(ln, col + 2, 0, -2)
+
+            lines[ln] = bistr((l := lines[ln])[:col] + l[col + 2:])
+
+        # expression maybe parenthesize and proper ctx (Load)
+
+        elif (isinstance(ast, expr)):
+            if not self.is_parsable():  # may be Slice or Starred
+                return self
+
+            need_paren = None
+
+            if is_tuple := isinstance(ast, Tuple):
+                if self.is_tuple_parenthesized():
+                    need_paren = False
+
+                elif (not (elts := ast.elts) or any(isinstance(e, NamedExpr) for e in elts) or (len(elts) == 1 and (
+                      not (code := _next_src_lline(lines, (f0 := elts[0].f).end_ln, f0.end_col, end_ln, end_col)) or  # if comma not on logical line then definitely need to add parens, if no comma then the parens are incidental but we want that code path for adding the comma
+                      not code.src.startswith(',')))):
+                    need_paren = True
+
+            elif (isinstance(ast, (Name, List, Set, Dict, ListComp, SetComp, DictComp, GeneratorExp)) or
+                  ((code := _prev_src(self.root._lines, 0, 0, self.ln, self.col)) and code.src.endswith('('))):  # is parenthesized?
+                need_paren = False
+
+            elif isinstance(ast, (NamedExpr, Yield, YieldFrom)):
+                need_paren = True
+
+            elif end_ln == ln:
+                need_paren = False
+
+            if need_paren is None:
+                try:
+                    a = ast_parse(src := self.src, mode='eval', **self._parse_params)
+
+                except SyntaxError:  # if expression not parsing then try parenthesize
+                    tail = (',)' if is_tuple and len(ast.elts) == 1 and lines[end_ln][end_col - 1] != ',' else ')')  # TODO: WARNING! this won't work for expressions followed by comments
+
+                    a = ast_parse(f'({src}{tail}', mode='eval', **self._parse_params)
+
+                    if not inplace:
+                        lines = lines[:]
+
+                    lines[end_ln] = bistr(f'{(l := lines[end_ln])[:end_col]}{tail}{l[end_col:]}')
+                    lines[ln]     = bistr(f'{(l := lines[ln])[:col]}({l[col:]}')
+
+                else:
+                    if compare_asts(a.body, ast, locs=True, type_comments=True, recurse=False):  # only top level compare needed for `ctx` and structure check
+                        return self
+
+                    if not inplace:
+                        lines = lines[:]
+
+                a = a.body  # we know parsed to an Expression but original was not an Expression
+
+                if not inplace:
+                    return FST(a, lines=lines, from_=self)
+
+                self.a = a
+                a.f    = self
+
+                self.touch()
+                self._make_fst_tree()
+
+                return self
+
+            need_ctx = set_ctx(ast, Load, doit=False)
+
+            if (need_ctx or need_paren) and not inplace:
+                ast   = copy_ast(ast)
+                lines = lines[:]
+                self  = FST(ast, lines=lines, from_=self)
+
+            if need_ctx:
+                set_ctx(ast, Load)
+
+            if need_paren:
+                lines[end_ln] = bistr(f'{(l := lines[end_ln])[:end_col]}){l[end_col:]}')
+                lines[ln]     = bistr(f'{(l := lines[ln])[:col]}({l[col:]}')
+
+                self.offset(ln, col, 0, 1)
+
+                if is_tuple:
+                    ast.col_offset     -= 1
+                    ast.end_col_offset += 1
+
+                self.touch()
+
+                if is_tuple:
+                    self._maybe_add_singleton_tuple_comma(False)
+
+        return self
 
 
 
