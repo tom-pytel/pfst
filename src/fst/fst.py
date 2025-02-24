@@ -1382,12 +1382,12 @@ class FST:
 
             elts[start : stop] = newast.elts
             newlen             = len(newast.elts)
-            stack              = [FST(elts[i], self, astfield('values', i)) for i in range(start, start + newlen)]
+            stack              = [FST(elts[i], self, astfield('elts', i)) for i in range(start, start + newlen)]
 
             self._make_fst_tree(stack)
 
         for i in range(start + newlen, len(elts)):
-            elts[i].f.pfield = astfield('values', i)
+            elts[i].f.pfield = astfield('elts', i)
 
         if is_self_tuple:
             self._maybe_fix_tuple(is_self_enclosed)
@@ -1704,23 +1704,60 @@ class FST:
 
     def cut(self, *, fix: bool = True, decos: bool = True) -> 'FST':
         if self.is_root:
-            raise ValueError('cannot cut out root node')
+            raise ValueError('cannot cut root node')
 
-        return self.parent.get((pfield := self.pfield).idx, field=pfield.name, fix=fix, cut=True, decos=decos)
+        parent     = self.parent
+        field, idx = self.pfield
+        parenta    = parent.a
+
+        if isinstance(parenta, STATEMENTISH_OR_STMTMOD):
+            raise NotImplementedError
+
+        if isinstance(parenta, (Tuple, List, Set)):
+            fst = self.copy(fix=fix, decos=decos)
+
+            parent._put_slice_tuple_list_or_set(None, idx, idx + 1, field)
+
+            return fst
+
+        raise ValueError(f"cannot cut a '{parenta.__class__.__name__}'")
 
 
 
 
-
-    def get(self, start: int | str | None = None, stop: int | None | Literal[False] = False,
+    def get(self, start: int | str | None = None, stop: int | str | None | Literal[False] = False,
             field: str | None = None, *, fix: bool = True, decos: bool = True, cut: bool = False) -> Optional['FST']:
-        raise NotImplementedError  # TODO: THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS!
+
+        if isinstance(start, str):
+            raise NotImplementedError
+
+        if stop is not False:
+            if not isinstance(stop, str):
+                return self.get_slice(start, stop, field, fix=fix, cut=cut)
+
+            if field is not None:
+                raise ValueError('cannot specify two field values')
+
+            field = stop
+
+        field, body = _fixup_field_body(self.a, field)
+
+        if cut:
+            return body[start].f.cut(fix=fix, decos=decos)
+        else:
+            return body[start].f.copy(fix=fix, decos=decos)
 
 
 
 
     def put(self, code: Code | None, start: int | None = None, stop: int | None | Literal['False'] = False,
             field: str | None = None) -> Optional['FST']:  # -> Self:
+
+        if stop is not False:
+            return self.put_slice(code, start, stop, field)
+
+        field, body = _fixup_field_body(self.a, field)
+
         raise NotImplementedError  # TODO: THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS!
 
 
@@ -1728,37 +1765,37 @@ class FST:
 
     def get_slice(self, start: int | None = None, stop: int | None = None, field: str | None = None, *,
                   fix: bool = True, cut: bool = False) -> 'FST':
-        if isinstance(self.a, STATEMENTISH_OR_STMTMOD):
+        a = self.a
+
+        if isinstance(a, STATEMENTISH_OR_STMTMOD):
             return self._get_slice_stmt(start, stop, field, fix, cut)
 
-        if isinstance(self.a, Expression):
-            self = self.a.body.f
-
-        if isinstance(self.a, (Tuple, List, Set)):
+        if isinstance(a, (Tuple, List, Set)):
             return self._get_slice_tuple_list_or_set(start, stop, field, fix, cut)
 
-        if isinstance(self.a, Dict):
+        if isinstance(a, Dict):
             return self._get_slice_dict(start, stop, field, fix, cut)
 
-        raise ValueError(f"cannot get slice from a '{self.a.__class__.__name__}'")
+        raise ValueError(f"cannot get slice from a '{a.__class__.__name__}'")
 
 
 
 
 
 
-    def put_slice(self, code: Code | None, start: int | None = None, stop: int | None = None, field: str | None = None,
-                  ) -> 'FST':
-        if isinstance(self.a, STATEMENTISH_OR_STMTMOD):
+    def put_slice(self, code: Code | None, start: int | None = None, stop: int | None = None, field: str | None = None):
+        a = self.a
+
+        if isinstance(a, STATEMENTISH_OR_STMTMOD):
             raise NotImplementedError  # TODO: THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS!
 
-        if isinstance(self.a, (Tuple, List, Set)):
+        if isinstance(a, (Tuple, List, Set)):
             return self._put_slice_tuple_list_or_set(code, start, stop, field)
 
-        if isinstance(self.a, Dict):
+        if isinstance(a, Dict):
             return self._put_slice_dict(code, start, stop, field)
 
-        raise ValueError(f"cannot put slice to a '{self.a.__class__.__name__}'")
+        raise ValueError(f"cannot put slice to a '{a.__class__.__name__}'")
 
 
 
