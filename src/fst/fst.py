@@ -900,7 +900,7 @@ class FST:
     # ------------------------------------------------------------------------------------------------------------------
 
     def _make_fst_tree(self, stack: list['FST'] | None = None):
-        """Create tree of FST nodes for each AST node from root. Call only on root."""
+        """Create tree of FST nodes, one for each AST node from root. Call only on root."""
 
         if stack is None:
             stack = [self]
@@ -922,6 +922,22 @@ class FST:
                     elif isinstance(child, list):
                         stack.extend(FST(a, f, astfield(name, idx))
                                      for idx, a in enumerate(child) if isinstance(a, AST))
+
+    def _unmake_fst_tree(self, stack: list[AST] | None = None, root: Optional['FST'] = None):
+        """Destroy a tree of FST nodes by breaking links. Call only on root."""
+
+        if stack is None:
+            stack = [self.a]
+
+        while stack:  # make sure these bad ASTs can't hurt us anymore
+            a   = stack.pop()
+            f   = a.f
+            f.a = a.f = f.root = f.parent = None
+
+            stack.extend(iter_child_nodes(a))
+
+        if root:
+            root.a.f = root.a = root.root = root.parent = None
 
     def _repr_tail(self) -> str:
         try:
@@ -1311,7 +1327,28 @@ class FST:
         if not slicelen and (not newfst or not newfst.elts):  # deleting or assigning empty seq to empty slice of seq, noop
             return
 
-        if newfst:
+        is_self_tuple    = isinstance(ast, Tuple)
+        is_self_enclosed = not is_self_tuple or self.is_tuple_parenthesized()
+        fpre             = elts[start - 1].f if start else None
+        fpost            = None if stop == len(elts) else elts[stop].f
+        seq_loc          = fstloc(self.ln, self.col + is_self_enclosed, self.end_ln, self.end_col - is_self_enclosed)
+
+        if not slicelen:
+            ffirst = flast = None
+
+        else:
+            ffirst = elts[start].f
+            flast  = elts[stop - 1].f
+
+        if not newfst:
+            self._put_seq_and_indent(None, seq_loc, ffirst, flast, fpre, fpost, None, None)
+            self._unmake_fst_tree(elts[start : stop])
+
+            del elts[start : stop]
+
+            newlen = 0
+
+        else:
             newlines = newfst._lines
 
             if not is_tuple:
@@ -1333,28 +1370,6 @@ class FST:
                 newlines[-1] = bistr(newlines[-1][:-1])
                 newlines[0]  = bistr(newlines[0][1:])
 
-        is_self_tuple    = isinstance(ast, Tuple)
-        is_self_enclosed = not is_self_tuple or self.is_tuple_parenthesized()
-        fpre             = elts[start - 1].f if start else None
-        fpost            = None if stop == len(elts) else elts[stop].f
-        seq_loc          = fstloc(self.ln, self.col + is_self_enclosed, self.end_ln, self.end_col - is_self_enclosed)
-
-        if not slicelen:
-            ffirst = flast = None
-
-        else:
-            ffirst = elts[start].f
-            flast  = elts[stop - 1].f
-
-        if not newfst:
-            self._put_seq_and_indent(None, seq_loc, ffirst, flast, fpre, fpost, None, None)
-
-            del elts[start : stop]
-
-            newlen = 0
-            stack  = []
-
-        else:
             if not (selts := newast.elts):
                 nfirst = nlast = None
 
@@ -1363,15 +1378,16 @@ class FST:
                 nlast  = selts[-1].f
 
             self._put_seq_and_indent(newfst, seq_loc, ffirst, flast, fpre, fpost, nfirst, nlast)
+            self._unmake_fst_tree(elts[start : stop], newfst)
 
             elts[start : stop] = newast.elts
             newlen             = len(newast.elts)
             stack              = [FST(elts[i], self, astfield('values', i)) for i in range(start, start + newlen)]
 
+            self._make_fst_tree(stack)
+
         for i in range(start + newlen, len(elts)):
             elts[i].f.pfield = astfield('values', i)
-
-        self._make_fst_tree(stack)
 
         if is_self_tuple:
             self._maybe_fix_tuple(is_self_enclosed)
@@ -1400,18 +1416,6 @@ class FST:
         if not slicelen and (not newfst or not newfst.keys):  # deleting or assigning empty dict to empty slice of dict, noop
             return
 
-        if newfst:
-            newlines               = newfst._lines
-            newast.end_col_offset -= 1  # strip enclosing curlies from source dict
-
-            newfst.offset(0, 1, 0, -1)
-
-            assert newlines[0].startswith('{')
-            assert newlines[-1].endswith('}')
-
-            newlines[-1] = bistr(newlines[-1][:-1])
-            newlines[0]  = bistr(newlines[0][1:])
-
         keys    = ast.keys
         fpre    = values[start - 1].f if start else None
         fpost   = None if stop == len(keys) else self._dict_key_or_mock_loc(keys[stop], values[stop].f)
@@ -1426,14 +1430,25 @@ class FST:
 
         if not newfst:
             self._put_seq_and_indent(None, seq_loc, ffirst, flast, fpre, fpost, None, None)
+            self._unmake_fst_tree(keys[start : stop] + values[start : stop])
 
             del keys[start : stop]
             del values[start : stop]
 
             newlen = 0
-            stack  = []
 
         else:
+            newlines               = newfst._lines
+            newast.end_col_offset -= 1  # strip enclosing curlies from source dict
+
+            newfst.offset(0, 1, 0, -1)
+
+            assert newlines[0].startswith('{')
+            assert newlines[-1].endswith('}')
+
+            newlines[-1] = bistr(newlines[-1][:-1])
+            newlines[0]  = bistr(newlines[0][1:])
+
             if not (skeys := newast.keys):
                 nfirst = nlast = None
 
@@ -1442,6 +1457,7 @@ class FST:
                 nlast  = newast.values[-1].f
 
             self._put_seq_and_indent(newfst, seq_loc, ffirst, flast, fpre, fpost, nfirst, nlast)
+            self._unmake_fst_tree(keys[start : stop] + values[start : stop], newfst)
 
             keys[start : stop]   = newast.keys
             values[start : stop] = newast.values
@@ -1456,13 +1472,13 @@ class FST:
                 if key := keys[startplusi]:
                     stack.append(FST(key, self, astfield('keys', startplusi)))
 
+            self._make_fst_tree(stack)
+
         for i in range(start + newlen, len(keys)):
             values[i].f.pfield = astfield('values', i)
 
             if key := keys[i]:  # could be None from **
                 key.f.pfield = astfield('keys', i)
-
-        self._make_fst_tree(stack)
 
     # ------------------------------------------------------------------------------------------------------------------
 
@@ -2832,7 +2848,7 @@ class FST:
         continuation or on same line as block statement.
 
         **Returns:**
-        - `str`: indentation string for the block this node lives in.
+        - `str`: Entire indentation string for the block this node lives in (not just one level).
         """
 
         while (parent := self.parent) and not isinstance(self.a, STATEMENTISH):
