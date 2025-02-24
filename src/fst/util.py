@@ -2,7 +2,7 @@ import sys
 from array import array
 from ast import *
 from itertools import chain
-from typing import Any, Callable, Iterator, Literal
+from typing import Any, Callable, Iterable, Iterator, Literal
 
 from_iterable = chain.from_iterable
 
@@ -457,7 +457,7 @@ def set_ctx(ast: AST, ctx: type[expr_context], *, doit=True) -> bool:
     return change
 
 
-def get_func_class_or_ass_by_name(asts: list[AST], name: str) -> AST | None:
+def get_func_class_or_ass_by_name(asts: Iterable[AST], name: str) -> AST | None:
     for a in asts:
         if isinstance(a, (FunctionDef, AsyncFunctionDef, ClassDef)):
             if a.name == name:
@@ -472,7 +472,6 @@ def get_func_class_or_ass_by_name(asts: list[AST], name: str) -> AST | None:
                 return a
 
     return None
-
 
 
 def _syntax_ordered_children_Call(ast):

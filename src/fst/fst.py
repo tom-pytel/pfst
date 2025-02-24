@@ -157,13 +157,15 @@ class fstlistproxy:
         self.owner.put(code, self.start + len(self.asts), field=self.field)
 
     def extend(self, code: Code):
-        self.owner.put_slice(code, self.start + len(self.asts), field=self.field)
+        self.owner.put_slice(code, (end := self.start + len(self.asts)), end, self.field)
 
-    def copy(self, *, fix: bool = True) -> 'FST':
-        return self.owner.get_slice(start := self.start, start + len(self.asts), self.field, fix=fix, cut=False)
+    def copy(self, *, fix: bool = True, decos: bool = True) -> 'FST':
+        return self.owner.get_slice(start := self.start, start + len(self.asts), self.field,
+                                    fix=fix, cut=False, decos=decos)
 
-    def cut(self, *, fix: bool = True) -> 'FST':
-        return self.owner.get_slice(start := self.start, start + len(self.asts), self.field, fix=fix, cut=True)
+    def cut(self, *, fix: bool = True, decos: bool = True) -> 'FST':
+        return self.owner.get_slice(start := self.start, start + len(self.asts), self.field,
+                                    fix=fix, cut=True, decos=decos)
 
 
 def parse(source, filename='<unknown>', mode='exec', *, type_comments=False, feature_version=None, **kwargs):
@@ -552,7 +554,8 @@ def _normalize_code(code: Code, expr_: bool = False) -> 'FST':
         if not code.is_root:
             raise ValueError('expecting root FST')
 
-        rast = reduce(ast := code.a)
+        ast  = code.a
+        rast = reduce(ast)
 
         return code if rast is ast else FST(rast, lines=code._lines, from_=code)
 
@@ -906,7 +909,7 @@ class FST:
 
     # ------------------------------------------------------------------------------------------------------------------
 
-    def _make_fst_tree(self, stack: list['FST'] | None = None) -> 'FST':  # -> Self
+    def _make_fst_tree(self, stack: list['FST'] | None = None):
         """Create tree of FST nodes for each AST node from root. Call only on root."""
 
         if stack is None:
@@ -929,8 +932,6 @@ class FST:
                     elif isinstance(child, list):
                         stack.extend(FST(a, f, astfield(name, idx))
                                      for idx, a in enumerate(child) if isinstance(a, AST))
-
-        return self
 
     def _repr_tail(self) -> str:
         try:
@@ -1006,7 +1007,7 @@ class FST:
 
         return fstloc(ln, end_col - 2, ln, end_col)
 
-    def _reparse_docstring(self) -> 'FST':  # -> Self
+    def _reparse_docstring(self):
         """`self` must be something that can have a docstring in the body (function, class, module). Node and source
         lines are assumed to be correct, just the docstring value needs to be reset."""
 
@@ -1017,9 +1018,7 @@ class FST:
         ):
             v.value = literal_eval((f := b0.f).get_src(*f.loc))
 
-        return self
-
-    def _reparse_docstrings(self) -> 'FST':  # -> Self
+    def _reparse_docstrings(self):
         """Reparse docstrings in self and all descendants."""
 
         for a in walk(self.a):
@@ -1133,7 +1132,7 @@ class FST:
 
         return self
 
-    def _offset_cols(self, dcol_offset: int, lns: set[int]) -> 'FST':  # -> Self
+    def _offset_cols(self, dcol_offset: int, lns: set[int]):
         """Offset ast col byte offsets in `lns` by a delta and return same set of indentable lines.
 
         Only modifies ast, not lines.
@@ -1152,9 +1151,7 @@ class FST:
 
             self.touchall(True, False, False)
 
-        return self
-
-    def _offset_cols_mapped(self, dcol_offsets: dict[int, int]) -> 'FST':  # -> Self
+    def _offset_cols_mapped(self, dcol_offsets: dict[int, int]):
         """Offset ast col byte offsets by a specific delta per line and return same dict of indentable lines.
 
         Only modifies ast, not lines.
@@ -1171,8 +1168,6 @@ class FST:
             a.f.touch()
 
         self.touchall(True, False, False)
-
-        return self
 
     def _indentable_lns(self, skip: int = 0, *, docstring: bool = True) -> set[int]:
         """Get set of indentable lines."""
@@ -1347,7 +1342,7 @@ class FST:
 
         return lns
 
-    def _maybe_add_singleton_tuple_comma(self, offset: bool = True) -> 'FST':  # -> Self
+    def _maybe_add_singleton_tuple_comma(self, offset: bool = True):
         """Maybe add comma to singleton tuple if not already there, parenthesization not checked or taken into account.
         `self` must be a tuple.
 
@@ -1376,9 +1371,7 @@ class FST:
 
                     self.touchall(True, False, True)
 
-        return self
-
-    def _maybe_fix_tuple(self, is_parenthesized: bool | None = None) -> 'FST':  # -> Self
+    def _maybe_fix_tuple(self, is_parenthesized: bool | None = None):
         # assert isinstance(self.a, Tuple)
 
         if self.a.elts:
@@ -1387,9 +1380,7 @@ class FST:
         elif not (self.is_tuple_parenthesized() if is_parenthesized is None else is_parenthesized):  # if is unparenthesized tuple and empty left then need to add parentheses
             self.put_lines([bistr('()')], *self.loc, True)  # TODO: WARNING! `True` may not be safe if another preceding non-containing node ends EXACTLY where the unparenthesized tuple starts, does this ever happen?
 
-        return self
-
-    def _maybe_fix_set(self) -> 'FST':  # -> Self
+    def _maybe_fix_set(self):
         # assert isinstance(self.a, Set)
 
         if not self.a.elts:
@@ -1404,8 +1395,6 @@ class FST:
                 self.pfield.set(parent.a, ast)
 
                 self._make_fst_tree([FST(ast.func, self, astfield('func'))])
-
-        return self
 
     def _maybe_fix_single_copy(self, inplace: bool = True) -> Optional['FST']:  # -> Self | None
         """This is really a maybe fix source and `ctx` values for cut or copied nodes (to make subtrees parsable if the
@@ -2974,7 +2963,7 @@ class FST:
         return True
 
     def is_tuple_parenthesized(self) -> bool:
-        assert isinstance(self.a, Tuple)
+        # assert isinstance(self.a, Tuple)
 
         return (self.root._lines[(ln := self.ln)].startswith('(', col := self.col) and
                 (not (e := self.a.elts) or (ln != (f0 := e[0].f).ln or col != f0.col)))
@@ -3155,7 +3144,7 @@ class FST:
         if isinstance(self.a, Dict):
             return self._get_slice_dict(start, stop, field, fix, cut)
 
-        raise ValueError(f"cannot get slice from '{self.a.__class__.__name__}'")
+        raise ValueError(f"cannot get slice from a '{self.a.__class__.__name__}'")
 
 
 
@@ -3167,23 +3156,26 @@ class FST:
         if isinstance(self.a, STATEMENTISH_OR_STMTMOD):
             raise NotImplementedError  # TODO: THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS!
 
-        if isinstance(self.a, Dict):
-            return self._put_slice_dict(code, start, stop, field)
-
         if isinstance(self.a, (Tuple, List, Set)):
             return self._put_slice_tuple_list_or_set(code, start, stop, field)
 
-        raise ValueError(f"cannot put slice to '{self.a.__class__.__name__}'")
+        if isinstance(self.a, Dict):
+            return self._put_slice_dict(code, start, stop, field)
+
+        raise ValueError(f"cannot put slice to a '{self.a.__class__.__name__}'")
 
 
 
 
 
     def get(self, start: int | str | None = None, stop: int | None | Literal[False] = False,
-            field: str | None = None, *, fix: bool = True, cut: bool = False, decos: bool = True) -> Optional['FST']:
+            field: str | None = None, *, fix: bool = True, decos: bool = True, cut: bool = False) -> Optional['FST']:
         raise NotImplementedError  # TODO: THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS!
 
-    def put(self, code: Code, start: int | None = None, stop: int | None | Literal['False'] = False,
+
+
+
+    def put(self, code: Code | None, start: int | None = None, stop: int | None | Literal['False'] = False,
             field: str | None = None) -> Optional['FST']:  # -> Self:
         raise NotImplementedError  # TODO: THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS!
 
@@ -3199,7 +3191,7 @@ class FST:
             return FST(newast, lines=self._lines[:], from_=self)
 
         if not (loc := self.bloc if decos else self.loc):
-            raise ValueError('cannot copy ast which does not have location')
+            raise ValueError('cannot copy node which does not have location')
 
         if not decos and hasattr(newast, 'decorator_list'):
             newast.decorator_list.clear()
@@ -3212,4 +3204,4 @@ class FST:
         if self.is_root:
             raise ValueError('cannot cut out root node')
 
-        return self.parent.get((pfield := self.pfield).idx, field=pfield.name, fix=fix, decos=decos)
+        return self.parent.get((pfield := self.pfield).idx, field=pfield.name, fix=fix, cut=True, decos=decos)
