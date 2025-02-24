@@ -1550,6 +1550,23 @@ class FST:
         self._make_fst_tree()
 
     @staticmethod
+    def new(filename: str = '<unknown>', mode: str = 'exec', *,
+            type_comments: bool = False, feature_version: tuple[int, int] | None = None, **parse_params) -> 'FST':
+        parse_params = dict(parse_params, filename=filename, type_comments=type_comments,
+                            feature_version=feature_version)
+
+        if mode == 'exec':
+            ast = Module(body=[], type_ignores=[])
+        elif mode == 'eval':
+            ast = Expression(body=None)
+        elif mode == 'single':
+            ast = Interactive(body=[])
+        else:
+            raise ValueError(f"invalid mode '{mode}'")
+
+        return FST(ast, parse_params=parse_params)
+
+    @staticmethod
     def fromsrc(source: str | bytes | list[str], filename: str = '<unknown>', mode: str = 'exec', *,
                 type_comments: bool = False, feature_version: tuple[int, int] | None = None, **parse_params) -> 'FST':
         if isinstance(source, bytes):
