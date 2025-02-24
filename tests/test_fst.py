@@ -2129,7 +2129,7 @@ _CookiePattern = re.compile(r"""
         m.f.offset(0, 6, 0, -2, False)
         self.assertEqual((0, 2, 0, 6), m.body[0].f.loc)
         self.assertEqual((0, 4, 0, 8), m.body[1].f.loc)
-        self.assertEqual((0, 4, 0, 4), m.body[2].f.loc)
+        self.assertEqual((0, 4, 0, 6), m.body[2].f.loc)
 
         m = get()
         m.f.offset(0, 6, 0, -2, True)

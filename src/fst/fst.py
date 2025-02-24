@@ -3064,7 +3064,7 @@ class FST:
               V
           |===|
             |---|
-            |
+            |.|
         0123456789ABC
 
         -2, inc=True
@@ -3089,10 +3089,13 @@ class FST:
                 if (fend_lno := a.end_lineno) > lno:
                     a.end_lineno += dln
 
-                elif fend_lno == lno and (
-                        fend_colo >= colo if (inc or (fend_colo == fcolo and fend_lno == flno)) else fend_colo > colo):
-                    a.end_lineno     += dln
-                    a.end_col_offset  = fend_colo + dcol_offset
+                elif fend_lno == lno:
+                    if (fend_colo >= colo if (inc or (fend_colo == fcolo and fend_lno == flno and
+                                                      (dln > 0 or (not dln and dcol_offset > 0)))) else
+                        fend_colo > colo
+                    ):
+                        a.end_lineno     += dln
+                        a.end_col_offset  = fend_colo + dcol_offset
 
                 else:
                     gen.send(False)  # no need to walk into something whose bounding block ends before offset point
@@ -3109,8 +3112,9 @@ class FST:
 
                 elif flno == lno and (
                         fcolo >= colo if (not (inc and (fend_colo == fcolo and fend_lno == flno)) or
-                                        dln < 0 or (not dln and dcol_offset < 0)) else
-                        fcolo > colo):
+                                          dln < 0 or (not dln and dcol_offset < 0)) else
+                        fcolo > colo
+                ):
                     a.lineno     += dln
                     a.col_offset += dcol_offset
 
