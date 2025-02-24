@@ -477,7 +477,7 @@ def _fixup_bound(seq_loc: fstloc, fpre: Union['FST', fstloc, None], fpost: Union
         return None
 
 
-def _normalize_code(code: Code, expr_: bool = False) -> 'FST':
+def _normalize_code(code: Code, expr_: bool = False, *, parse_params: dict = {}) -> 'FST':
     """Normalize code to an `FST`. If an expression is required then will return an `FST` with a top level `ast.expr`
     `AST` node if possible, raise otherwise. If expression is not required then will convert to `ast.Module` if is
     `ast.Interactive` or return single expression node of `ast.Expression` or just return whatever the node currently
@@ -522,7 +522,7 @@ def _normalize_code(code: Code, expr_: bool = False) -> 'FST':
         src   = '\n'.join(code)
         lines = code
 
-    ast = ast_parse(src, mode='eval').body if expr_ else ast_parse(src)
+    ast = ast_parse(src, mode='eval', **parse_params).body if expr_ else ast_parse(src, **parse_params)
 
     return FST(ast, lines=lines)
 
@@ -1764,7 +1764,7 @@ class FST:
             newfst = None
 
         else:
-            newfst = _normalize_code(code, expr_=True)
+            newfst = _normalize_code(code, expr_=True, parse_params=self.root._parse_params)
 
             if newfst.is_empty_set_call():
                 newfst = _new_empty_set_curlies()
@@ -1860,7 +1860,7 @@ class FST:
             newfst = None
 
         else:
-            newfst = _normalize_code(code, expr_=True)
+            newfst = _normalize_code(code, expr_=True, parse_params=self.root._parse_params)
             newast = newfst.a
 
             if not isinstance(newast, Dict):
@@ -2016,13 +2016,15 @@ class FST:
             lines  = source
             source = '\n'.join(lines)
 
-        parse_params = dict(parse_params, type_comments=type_comments, feature_version=feature_version)
-        ast          = ast_parse(source, filename, mode, **parse_params)
+        parse_params = dict(parse_params, filename=filename, type_comments=type_comments,
+                            feature_version=feature_version)
+        ast          = ast_parse(source, mode=mode, **parse_params)
 
         return FST(ast, lines=[bistr(s) for s in lines], parse_params=parse_params)
 
     @staticmethod
-    def fromast(ast: AST, *, type_comments: bool | None = False, feature_version=None,
+    def fromast(ast: AST, filename: str = '<unknown>', mode: str | None = None, *,
+                type_comments: bool | None = False, feature_version=None,
                 calc_loc: bool | Literal['copy'] = True, **parse_params) -> 'FST':
         """Add `FST` to existing `AST`, optionally copying positions from reparsed `AST` (default) or whole `AST` for
         new `FST`.
@@ -2046,11 +2048,11 @@ class FST:
         if type_comments is None:
             type_comments = has_type_comments(ast)
 
-        parse_params = dict(parse_params, type_comments=type_comments, feature_version=feature_version)
+        parse_params = dict(parse_params, filename=filename, type_comments=type_comments,
+                            feature_version=feature_version)
 
         if calc_loc:
-            mode = get_parse_mode(ast)
-            astp = ast_parse(src, mode=mode, **parse_params)
+            astp = ast_parse(src, mode=get_parse_mode(ast) if mode is None else mode, **parse_params)
 
             if astp.__class__ is not ast.__class__:
                 astp = astp.body if isinstance(astp, Expression) else astp.body[0]
