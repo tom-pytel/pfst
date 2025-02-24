@@ -557,6 +557,16 @@ def _new_empty_dict() -> 'FST':
     return fst
 
 
+def _new_empty_set_curlies() -> 'FST':
+    ast                = Set(elts=[])
+    fst                = FST(ast, lines=[bistr('{}')])
+    ast.lineno         = ast.end_lineno = 1
+    ast.col_offset     = 0
+    ast.end_col_offset = 2
+
+    return fst
+
+
 def _new_empty_set_call(ast_only: bool = False, lineno: int = 1, col_offset: int = 0) -> 'FST':
     ast                     = Call(func=Name(id='set', ctx=Load()), args=[], keywords=[])
     ast.lineno              = ast.end_lineno = lineno
@@ -567,16 +577,6 @@ def _new_empty_set_call(ast_only: bool = False, lineno: int = 1, col_offset: int
     ast.func.end_col_offset = col_offset + 3
 
     return ast if ast_only else FST(ast, lines=[bistr('set()')])
-
-
-def _new_empty_set_curlies() -> 'FST':
-    ast                = Set(elts=[])
-    fst                = FST(ast, lines=[bistr('{}')])
-    ast.lineno         = ast.end_lineno = 1
-    ast.col_offset     = 0
-    ast.end_col_offset = 2
-
-    return fst
 
 
 class fstlistproxy:
@@ -727,42 +727,24 @@ class FSTSrcEdit:
         return fstloc(ffirst.ln, ffirst.col, flast.end_ln, flast.end_col)
 
 
-
-
-
-
-
-
-
-
 class FST:
-    """Preserve AST formatting information and easy manipulation.
+    """Preserve AST formatting information and easy manipulation."""
 
-    **Class Attributes:**
-    - `src_edit`: Controls source edit formatting on copy / cut / put operations. Can also be set on class instances to
-        override.
+    a:             AST              ; """The actual `AST` node."""
+    parent:        Optional['FST']  ; """Parent `FST` node, `None` in root node."""
+    pfield:        astfield | None  ; """The `astfield` location of this node in the parent, `None` in root node."""
+    root:          'FST'            ; """The root node of this tree, `self` in root node."""
+    indent:        str              ; """The default indentation for this tree when not available from context, only present in the root node."""  # ROOT ONLY!
 
-    **Attributes:**
-    - `a`: The actual `AST` node.
-    - `parent`: Parent `FST` node, `None` in root node.
-    - `pfield`: The `astfield` location of this node in the parent, `None` in root node.
-    - `root`: The root node of this tree, `self` in root node.
-    - `indent`: The default indentation for this tree (not necessarily used everywhere).
-    """
-
-    a:             AST
-    parent:        Optional['FST']  # None in root node
-    pfield:        astfield | None  # None in root node
-    root:          'FST'            # self in root node
     _loc:          fstloc | None    # cache, MAY NOT EXIST!
     _bloc:         fstloc | None    # cache, MAY NOT EXIST! bounding location, including preceding decorators
-
-    indent:        str              # ROOT ONLY! default indentation to use when unknown
     _lines:        list[bistr]      # ROOT ONLY!
     _parse_params: dict[str, Any]   # ROOT ONLY!
 
     @property
     def is_root(self) -> bool:
+        """`True` for the root node, `False` otherwise."""
+
         return self.parent is None
 
     @property
@@ -902,9 +884,12 @@ class FST:
 
     @property
     def f(self):
+        """@private"""
+
         raise RuntimeError("you probably think you're accessing an AST node, but you're not, you're accessing an FST node")
 
     src_edit = FSTSrcEdit()
+    """Controls source edit formatting on edit operations. Can also be set on class instances to override."""
 
     # ------------------------------------------------------------------------------------------------------------------
 
@@ -1006,347 +991,12 @@ class FST:
 
         return fstloc(ln, end_col - 2, ln, end_col)
 
-    def _reparse_docstring(self):
-        """`self` must be something that can have a docstring in the body (function, class, module). Node and source
-        lines are assumed to be correct, just the docstring value needs to be reset."""
-
-        # assert isistance(self, HAS_DOCSTRING)
-
-        if ((body := self.a.body) and isinstance(b0 := body[0], Expr) and isinstance(v := b0.value, Constant) and
-            isinstance(v.value, str)
-        ):
-            v.value = literal_eval((f := b0.f).get_src(*f.loc))
-
-    def _reparse_docstrings(self):
-        """Reparse docstrings in self and all descendants."""
-
-        for a in walk(self.a):
-            if isinstance(a, HAS_DOCSTRING):
-                a.f._reparse_docstring()
-
-    def _offset(self, ln: int, col: int, dln: int, dcol_offset: int, inc: bool = False, stop_at: Optional['FST'] = None
-                ) -> 'FST':  # -> Self
-        """Offset ast node positions in the tree on or after ln / col by delta line / col_offset (col byte offset).
-
-        This only offsets the positions in the AST nodes, doesn't change any text, so make sure that is correct before
-        getting any FST locations from affected nodes otherwise they will be wrong.
-
-        Other nodes outside this tree might need offsetting so use only on root unless special circumstances.
-
-        If offsetting a zero-length node (which can result from deleting elements of an unparenthesized tuple), both the
-        start and end location will be moved if exactly at offset point if `inc` is `False`. Otherwise if `inc` is
-        `True` then the start position will remain and the end position will be expanded.
-
-        **Parameters:**
-        - `ln`: Line of offset point.
-        - `col`: Column of offset point (char index).
-        - `dln`: Number of lines to offset everything on or after offset point, can be 0.
-        - `dcol_offset`: Column offset to apply to everything ON the offset point line `ln` (in bytes). Columns not on
-            this line will not be changed.
-        - `inc`: Whether to offset endpoint if it falls exactly at ln / col or not (inclusive).
-
-        **Behavior:**
-        ```
-              offset here:
-              V
-          |===|
-              |---|
-              |        <- special zero length span
-        0123456789ABC
-
-        +2, inc=False
-              V
-          |===|
-                |---|
-                |
-        0123456789ABC
-
-        +2, inc=True
-              V
-          |=====|
-                |---|
-              |.|
-        0123456789ABC
-
-        -2, inc=False
-              V
-          |===|
-            |---|
-            |
-        0123456789ABC
-
-        -2, inc=True
-              V
-          |=|
-            |---|
-            |
-        0123456789ABC
-        ```
-        """
-
-        lno  = ln + 1
-        colo = self.root._lines[ln].c2b(col)
-
-        for f in (gen := self.walk(False)):
-            a = f.a
-
-            if (fend_colo := getattr(a, 'end_col_offset', None)) is not None:
-                flno  = a.lineno
-                fcolo = a.col_offset
-
-                if (fend_lno := a.end_lineno) > lno:
-                    a.end_lineno += dln
-
-                elif fend_lno == lno and (
-                        fend_colo >= colo if (inc or (fend_colo == fcolo and fend_lno == flno)) else fend_colo > colo):
-                    a.end_lineno     += dln
-                    a.end_col_offset  = fend_colo + dcol_offset
-
-                else:
-                    gen.send(False)  # no need to walk into something whose bounding block ends before offset point
-
-                    continue
-
-                if flno > lno:
-                    if not dln and (not (decos := getattr(a, 'decorator_lis', None)) or decos[0].lineno > lno):
-                        gen.send(False)  # no need to walk into something past offet point if line change is 0
-
-                        continue
-
-                    a.lineno += dln
-
-                elif flno == lno and (
-                        fcolo >= colo if (not (inc and (fend_colo == fcolo and fend_lno == flno)) or
-                                        dln < 0 or (not dln and dcol_offset < 0)) else
-                        fcolo > colo):
-                    a.lineno     += dln
-                    a.col_offset += dcol_offset
-
-            if f is stop_at:
-                gen.send(False)
-
-            f.touch()
-
-        self.touchall(True, False, False)
-
-        return self
-
-    def _offset_cols(self, dcol_offset: int, lns: set[int]):
-        """Offset ast col byte offsets in `lns` by a delta and return same set of indentable lines.
-
-        Only modifies ast, not lines.
-        """
-
-        if dcol_offset:
-            for a in walk(self.a):
-                if (end_col_offset := getattr(a, 'end_col_offset', None)) is not None:
-                    if a.lineno - 1 in lns:
-                        a.col_offset += dcol_offset
-
-                    if a.end_lineno - 1 in lns:
-                        a.end_col_offset = end_col_offset + dcol_offset
-
-                a.f.touch()
-
-            self.touchall(True, False, False)
-
-    def _offset_cols_mapped(self, dcol_offsets: dict[int, int]):
-        """Offset ast col byte offsets by a specific delta per line and return same dict of indentable lines.
-
-        Only modifies ast, not lines.
-        """
-
-        for a in walk(self.a):
-            if (end_col_offset := getattr(a, 'end_col_offset', None)) is not None:
-                if (dcol_offset := dcol_offsets.get(a.lineno - 1)) is not None:
-                    a.col_offset += dcol_offset
-
-                if (dcol_offset := dcol_offsets.get(a.end_lineno - 1)) is not None:
-                    a.end_col_offset = end_col_offset + dcol_offset
-
-            a.f.touch()
-
-        self.touchall(True, False, False)
-
-    def _indentable_lns(self, skip: int = 0, *, docstring: bool = True) -> set[int]:
-        """Get set of indentable lines."""
-
-        def walk_multiline(cur_ln, end_ln, m, re_str_end):
-            nonlocal lns, lines
-
-            col = m.end(0)
-
-            for ln in range(cur_ln, end_ln + 1):
-                if m := re_str_end.match(lines[ln], col):
-                    break
-
-                col = 0
-
-            else:
-                raise RuntimeError('should not get here')
-
-            lns -= set(range(cur_ln + 1, ln + 1))  # specifically leave out first line of multiline string because that is indentable
-
-            return ln, m.end(0)
-
-        def multiline_str(f: 'FST'):
-            nonlocal lns, lines
-
-            cur_ln, cur_col, end_ln, end_col = f.loc
-
-            while True:
-                if not (m := re_multiline_str_start.match(l := lines[cur_ln], cur_col)):
-                    if m := re_oneline_str.match(l, cur_col):
-                        cur_col = m.end(0)
-
-                    else:  # UGH! a line continuation string, pffft...
-                        m               = re_contline_str_start.match(l, cur_col)
-                        re_str_end      = re_contline_str_end_sq if m.group(1) == "'" else re_contline_str_end_dq
-                        cur_ln, cur_col = walk_multiline(cur_ln, end_ln, m, re_str_end)  # find end of multiline line continuation string
-
-                else:
-                    re_str_end      = re_multiline_str_end_sq if m.group(1) == "'''" else re_multiline_str_end_dq
-                    cur_ln, cur_col = walk_multiline(cur_ln, end_ln, m, re_str_end)  # find end of multiline string
-
-                if cur_ln == end_ln and cur_col == end_col:
-                    break
-
-                cur_ln, cur_col, _ = _next_src(lines, cur_ln, cur_col, end_ln, end_col)  # there must be a next one
-
-        def multiline_fstr(f: 'FST'):
-            """Lets try to find indentable lines by incrementally attempting to parse parts of multiline f-string."""
-
-            nonlocal lns, lines
-
-            cur_ln, cur_col, end_ln, _ = f.loc
-
-            while True:
-                ls = [lines[cur_ln][cur_col:].lstrip()]
-
-                for ln in range(cur_ln + 1, end_ln + 1):
-                    try:
-                        ast_parse('\n'.join(ls))
-
-                    except SyntaxError:
-                        lns.remove(ln)
-                        ls.append(lines[ln])
-
-                    else:
-                        break
-
-                if (cur_ln := ln) >= end_ln:
-                    assert cur_ln == end_ln
-
-                    break
-
-                cur_col = 0
-
-        lines = self.root.lines
-        lns   = set(range(self.bln + skip, self.bend_ln + 1))
-
-        while (parent := self.parent) and not isinstance(self.a, STATEMENTISH):
-            self = parent
-
-        for f in (gen := self.walk(False)):  # find multiline strings and exclude their unindentable lines
-            if f.bend_ln == f.bln:  # everything on one line, don't need to recurse
-                gen.send(False)
-
-            elif isinstance(a := f.a, Constant):
-                if (  # isinstance(f.a.value, (str, bytes)) is a given if bend_ln != bln
-                    not docstring or
-                    not ((parent := f.parent) and  # not (is_docstring)
-                         isinstance(parent.a, Expr) and (pparent := parent.parent) and parent.pfield == ('body', 0) and
-                         isinstance(pparent.a, HAS_DOCSTRING)
-                )):
-                    multiline_str(f)
-
-            elif isinstance(a, JoinedStr):
-                multiline_fstr(f)
-
-                gen.send(False)  # skip everything inside regardless, because it is evil
-
-        return lns
-
-    def _indent_tail(self, indent: str, *, docstring: bool = True) -> set[int]:
-        """Indent all indentable lines past the first one according with `indent` and adjust node locations accordingly.
-        Does not modify node columns on first line."""
-
-        if not (lns := self._indentable_lns(1, docstring=docstring)) or not indent:
-            return lns
-
-        self._offset_cols(len(indent.encode()), lns)
-
-        lines = self.root._lines
-
-        for ln in lns:
-            if l := lines[ln]:  # only indent non-empty lines
-                lines[ln] = bistr(indent + l)
-
-        if docstring:
-            self._reparse_docstrings()
-
-        return lns
-
-    def _dedent_tail(self, indent: str, *, docstring: bool = True) -> set[int]:
-        """Dedent all indentable lines past the first one by removing `indent` prefix and adjust node locations
-        accordingly. Does not modify columns on first line. If cannot dedent entire amount will dedent as much as
-        possible.
-        """
-
-        if not (lns := self._indentable_lns(1, docstring=docstring)) or not indent:
-            return lns
-
-        lines        = self.root._lines
-        lindent      = len(indent)
-        dcol_offsets = None
-        newlines     = []
-
-        def dedent(l, lindent):
-            if dcol_offsets is not None:
-                dcol_offsets[ln] = -lindent
-
-            return bistr(l[lindent:])
-
-        lns_seq = list(lns)
-
-        for ln in lns_seq:
-            if l := lines[ln]:  # only dedent non-empty lines
-                if l.startswith(indent) or (lempty_start := re_empty_line_start.match(l).end()) >= lindent:
-                    l = dedent(l, lindent)
-
-                else:
-                    if not dcol_offsets:
-                        dcol_offsets = {}
-
-                        for ln2 in lns_seq:
-                            if ln2 is ln:
-                                break
-
-                            dcol_offsets[ln2] = -lindent
-
-                    l = dedent(l, lempty_start)
-
-            newlines.append(l)
-
-        for ln, l in zip(lns_seq, newlines):
-            lines[ln] = l
-
-        if dcol_offsets:
-            self._offset_cols_mapped(dcol_offsets)
-        else:
-            self._offset_cols(-lindent, lns)
-
-        if docstring:
-            self._reparse_docstrings()
-
-        return lns
-
     def _maybe_add_singleton_tuple_comma(self, offset: bool = True):
         """Maybe add comma to singleton tuple if not already there, parenthesization not checked or taken into account.
         `self` must be a tuple.
 
         **Parameters:**
-        - `offset`: If `True` then will apply `_offset()` to entire tree for new comma. If `False` then will just offset
+        - `offset`: If `True` then will apply `offset()` to entire tree for new comma. If `False` then will just offset
             the end of the Tuple, use this when sure tuple is at top level.
         """
 
@@ -1363,7 +1013,7 @@ class FST:
                 lines[ln] = bistr(f'{(l := lines[(ln := felt.end_ln)])[:(col := felt.end_col)]},{l[col:]}')
 
                 if offset:
-                    self.root._offset(ln, col, 0, 1, True, self)
+                    self.root.offset(ln, col, 0, 1, True, self)
 
                 elif ln == self.end_ln:
                     self.a.end_col_offset += 1
@@ -1432,7 +1082,7 @@ class FST:
             if not inplace:
                 self = FST(copy_ast(ast), lines=(lines := lines[:]), from_=self)
 
-            self._offset(ln, col + 2, 0, -2)
+            self.offset(ln, col + 2, 0, -2)
 
             lines[ln] = bistr((l := lines[ln])[:col] + l[col + 2:])
 
@@ -1512,7 +1162,7 @@ class FST:
                 lines[end_ln] = bistr(f'{(l := lines[end_ln])[:end_col]}){l[end_col:]}')
                 lines[ln]     = bistr(f'{(l := lines[ln])[:col]}({l[col:]}')
 
-                self._offset(ln, col, 0, 1)
+                self.offset(ln, col, 0, 1)
 
                 if is_tuple:
                     ast.col_offset     -= 1
@@ -1531,7 +1181,7 @@ class FST:
         lines  = self.root._lines
         fst    = FST(ast, lines=lines, from_=self)  # we use original lines for nodes offset calc before putting new lines
 
-        fst._offset(copy_loc.ln, copy_loc.col, -copy_loc.ln, len(prefix) - lines[copy_loc.ln].c2b(copy_loc.col))  # WARNING! `prefix` is expected to have only 1 byte characters
+        fst.offset(copy_loc.ln, copy_loc.col, -copy_loc.ln, len(prefix) - lines[copy_loc.ln].c2b(copy_loc.col))  # WARNING! `prefix` is expected to have only 1 byte characters
 
         fst._lines = fst_lines = self.get_lines(*copy_loc)
 
@@ -1542,11 +1192,11 @@ class FST:
             fst_lines[0] = bistr(prefix + fst_lines[0])
 
         if put_loc:
-            self.root._offset(put_loc.end_ln, put_loc.end_col, put_loc.ln - put_loc.end_ln,
+            self.root.offset(put_loc.end_ln, put_loc.end_col, put_loc.ln - put_loc.end_ln,
                               lines[put_loc.ln].c2b(put_loc.col) - lines[put_loc.end_ln].c2b(put_loc.end_col), True)  # True because we may have an unparenthesized tuple that shrinks to a span length of 0
             self.put_lines(put_lines, *put_loc)
 
-        fst._dedent_tail(indent)
+        fst.dedent_lns(indent)
 
         return fst
 
@@ -1740,7 +1390,7 @@ class FST:
 
             indent = self.get_indent()
 
-            new._indent_tail(indent)
+            new.indent_lns(indent)
 
             put_ln, put_col, put_end_ln, put_end_col = (
                 self.src_edit.put_seq(self, new, indent, seq_loc, ffirst, flast, fpre, fpost, nfirst, nlast))
@@ -1749,7 +1399,7 @@ class FST:
             fst_lines       = new._lines
             fst_dcol_offset = lines[put_ln].c2b(put_col)
 
-            new._offset(0, 0, put_ln, fst_dcol_offset)
+            new.offset(0, 0, put_ln, fst_dcol_offset)
 
         if fpost:
             root.put_lines(fst_lines, put_ln, put_col, put_end_ln, put_end_col, False, None)
@@ -1791,7 +1441,7 @@ class FST:
             if not is_tuple:
                 newast.end_col_offset -= 1  # strip enclosing curlies or brackets from source set or list
 
-                newfst._offset(0, 1, 0, -1)
+                newfst.offset(0, 1, 0, -1)
 
                 assert newlines[0].startswith('[{'[is_set])
                 assert newlines[-1].endswith(']}'[is_set])
@@ -1802,7 +1452,7 @@ class FST:
             elif newfst.is_tuple_parenthesized():
                 newast.end_col_offset -= 1  # strip enclosing parentheses from source tuple
 
-                newfst._offset(0, 1, 0, -1)
+                newfst.offset(0, 1, 0, -1)
 
                 newlines[-1] = bistr(newlines[-1][:-1])
                 newlines[0]  = bistr(newlines[0][1:])
@@ -1878,7 +1528,7 @@ class FST:
             newlines               = newfst._lines
             newast.end_col_offset -= 1  # strip enclosing curlies from source dict
 
-            newfst._offset(0, 1, 0, -1)
+            newfst.offset(0, 1, 0, -1)
 
             assert newlines[0].startswith('{')
             assert newlines[-1].endswith('}')
@@ -1940,34 +1590,6 @@ class FST:
 
     # ------------------------------------------------------------------------------------------------------------------
 
-    def __init__(self, ast: AST, parent: Optional['FST'] = None, pfield: astfield | None = None, **root_params):
-        self.a      = ast
-        self.parent = parent
-        self.pfield = pfield
-        ast.f       = self
-
-        if parent is not None:
-            self.root = parent.root
-
-            return
-
-        # ROOT
-
-        self.root   = self
-        lines       = root_params['lines']
-        self._lines = lines if lines[0].__class__ is bistr else [bistr(s) for s in lines]
-
-        if from_ := root_params.get('from_'):  # copy params from source tree
-            from_root          = from_.root
-            self.indent        = root_params.get('indent', from_root.indent)
-            self._parse_params = root_params.get('parse_params', from_root._parse_params)
-
-        else:
-            self.indent        = root_params.get('indent', '    ')
-            self._parse_params = root_params.get('parse_params', {})
-
-        self._make_fst_tree()
-
     def __repr__(self) -> str:
         tail = self._repr_tail()
         head = f'<fst.{(a := self.a).__class__.__name__} 0x{id(a):x}{tail}>'
@@ -2002,6 +1624,36 @@ class FST:
                 return child.f
 
         return child
+
+    # ------------------------------------------------------------------------------------------------------------------
+
+    def __init__(self, ast: AST, parent: Optional['FST'] = None, pfield: astfield | None = None, **root_params):
+        self.a      = ast
+        self.parent = parent
+        self.pfield = pfield
+        ast.f       = self
+
+        if parent is not None:
+            self.root = parent.root
+
+            return
+
+        # ROOT
+
+        self.root   = self
+        lines       = root_params['lines']
+        self._lines = lines if lines[0].__class__ is bistr else [bistr(s) for s in lines]
+
+        if from_ := root_params.get('from_'):  # copy params from source tree
+            from_root          = from_.root
+            self.indent        = root_params.get('indent', from_root.indent)
+            self._parse_params = root_params.get('parse_params', from_root._parse_params)
+
+        else:
+            self.indent        = root_params.get('indent', '    ')
+            self._parse_params = root_params.get('parse_params', {})
+
+        self._make_fst_tree()
 
     @staticmethod
     def fromsrc(source: str | bytes | list[str], filename: str = '<unknown>', mode: str = 'exec', *,
@@ -2072,7 +1724,7 @@ class FST:
         return FST(ast, lines=[bistr(s) for s in lines], parse_params=parse_params)
 
     def verify(self, *, raise_: bool = True) -> Optional['FST']:  # -> Self | None:
-        """Sanity check, make sure parsed source matches ast.
+        """Sanity check, make sure source text matches ast (locations and everything).
 
         **Parameters:**
         - `raise_`: Whether to raise an exception on verify failed or return `None`.
@@ -2110,6 +1762,8 @@ class FST:
         return self
 
     def dump(self, full: bool = False, indent: int = 2, print: bool = True, compact: bool = False) -> list[str] | None:
+        """Dump a representation of the tree to stdout or return as a list of lines."""
+
         if print:
             return self._dump(full, indent, compact=compact)
 
@@ -2120,6 +1774,160 @@ class FST:
         return lines
 
     # ------------------------------------------------------------------------------------------------------------------
+
+    def copy(self, *, fix: bool = True, decos: bool = True) -> 'FST':
+        newast = copy_ast(self.a)
+
+        if self.is_root:
+            return FST(newast, lines=self._lines[:], from_=self)
+
+        if not (loc := self.bloc if decos else self.loc):
+            raise ValueError('cannot copy node which does not have location')
+
+        if not decos and hasattr(newast, 'decorator_list'):
+            newast.decorator_list.clear()
+
+        fst = self._make_fst_and_dedent(self, newast, loc)
+
+        return fst._maybe_fix_single_copy(inplace=True) if fix else fst
+
+    def cut(self, *, fix: bool = True, decos: bool = True) -> 'FST':
+        if self.is_root:
+            raise ValueError('cannot cut out root node')
+
+        return self.parent.get((pfield := self.pfield).idx, field=pfield.name, fix=fix, cut=True, decos=decos)
+
+
+
+
+
+    def get(self, start: int | str | None = None, stop: int | None | Literal[False] = False,
+            field: str | None = None, *, fix: bool = True, decos: bool = True, cut: bool = False) -> Optional['FST']:
+        raise NotImplementedError  # TODO: THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS!
+
+
+
+
+    def put(self, code: Code | None, start: int | None = None, stop: int | None | Literal['False'] = False,
+            field: str | None = None) -> Optional['FST']:  # -> Self:
+        raise NotImplementedError  # TODO: THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS!
+
+
+
+
+    def get_slice(self, start: int | None = None, stop: int | None = None, field: str | None = None, *,
+                  fix: bool = True, cut: bool = False) -> 'FST':
+        if isinstance(self.a, STATEMENTISH_OR_STMTMOD):
+            return self._get_slice_stmt(start, stop, field, fix, cut)
+
+        if isinstance(self.a, Expression):
+            self = self.a.body.f
+
+        if isinstance(self.a, (Tuple, List, Set)):
+            return self._get_slice_tuple_list_or_set(start, stop, field, fix, cut)
+
+        if isinstance(self.a, Dict):
+            return self._get_slice_dict(start, stop, field, fix, cut)
+
+        raise ValueError(f"cannot get slice from a '{self.a.__class__.__name__}'")
+
+
+
+
+
+
+    def put_slice(self, code: Code | None, start: int | None = None, stop: int | None = None, field: str | None = None,
+                  ) -> 'FST':
+        if isinstance(self.a, STATEMENTISH_OR_STMTMOD):
+            raise NotImplementedError  # TODO: THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS!
+
+        if isinstance(self.a, (Tuple, List, Set)):
+            return self._put_slice_tuple_list_or_set(code, start, stop, field)
+
+        if isinstance(self.a, Dict):
+            return self._put_slice_dict(code, start, stop, field)
+
+        raise ValueError(f"cannot put slice to a '{self.a.__class__.__name__}'")
+
+
+
+
+
+
+    def get_lines(self, ln: int, col: int, end_ln: int, end_col: int) -> list[str]:
+        if end_ln == ln:
+            return [bistr(self.root._lines[ln][col : end_col])]
+        else:
+            return [bistr((ls := self.root._lines)[ln][col:])] + ls[ln + 1 : end_ln] + [bistr(ls[end_ln][:end_col])]
+
+    def put_lines(self, lines: list[str] | None, ln: int, col: int, end_ln: int, end_col: int,
+                  inc: bool | None = None, stop_at: Optional['FST'] = None):
+        ls = self.root._lines
+
+        if is_del := not lines:
+            lines = [bistr('')]
+        elif not lines[0].__class__ is bistr:
+            lines = [bistr(s) for s in lines]
+
+        # possibly offset nodes
+
+        if inc is not None:
+            dfst_ln     = len(lines) - 1
+            dln         = dfst_ln - (end_ln - ln)
+            dcol_offset = lines[-1].lenbytes - ls[end_ln].c2b(end_col)
+
+            if not dfst_ln:
+                dcol_offset += ls[ln].c2b(col)
+
+            self.root.offset(end_ln, end_col, dln, dcol_offset, inc, stop_at)
+
+        # put the actual lines (or just delete)
+
+        if is_del:
+            if end_ln == ln:
+                ls[ln] = bistr((l := ls[ln])[:col] + l[end_col:])
+
+            else:
+                ls[end_ln] = bistr(ls[ln][:col] + ls[end_ln][end_col:])
+
+                del ls[ln : end_ln]
+
+        else:
+            dln = end_ln - ln
+
+            if (nnew_ln := len(lines)) <= 1:
+                s = lines[0] if nnew_ln else ''
+
+                if not dln:  # replace single line with single or no line
+                    ls[ln] = bistr(f'{(l := ls[ln])[:col]}{s}{l[end_col:]}')
+
+                else:  # replace multiple lines with single or no line
+                    ls[ln] = bistr(f'{ls[ln][:col]}{s}{ls[end_ln][end_col:]}')
+
+                    del ls[ln + 1 : end_ln + 1]
+
+            elif not dln:  # replace single line with multiple lines
+                lend                 = bistr(lines[-1] + (l := ls[ln])[end_col:])
+                ls[ln]               = bistr(l[:col] + lines[0])
+                ls[ln + 1 : ln + 1]  = lines[1:] if lines[0].__class__ is bistr else [bistr(l) for l in lines[1:]]
+                ls[ln + nnew_ln - 1] = lend
+
+            else:  # replace multiple lines with multiple lines
+                ls[ln]              = bistr(ls[ln][:col] + lines[0])
+                ls[end_ln]          = bistr(lines[-1] + ls[end_ln][end_col:])
+                ls[ln + 1 : end_ln] = lines[1:-1] if lines[0].__class__ is bistr else [bistr(l) for l in lines[1:-1]]
+
+    def get_src(self, ln: int, col: int, end_ln: int, end_col: int) -> list[str]:
+        return '\n'.join(self.get_lines(ln, col, end_ln, end_col))
+
+    def put_src(self, src: str | None, ln: int, col: int, end_ln: int, end_col: int,
+                inc: bool = False, stop_at: Optional['FST'] = None):
+        self.put_lines(None if src is None else src.split('\n'), ln, col, end_ln, end_col, inc, stop_at)
+
+
+
+
+# ------------------------------------------------------------------------------------------------------------------
 
     def next(self, with_loc: bool = True) -> Optional['FST']:  # TODO: refactor
         """Get next sibling in syntactic order.
@@ -3012,8 +2820,12 @@ class FST:
                 isinstance(func := ast.func, Name) and func.id == 'set' and isinstance(func.ctx, Load))
 
     def get_indent(self) -> str:
-        """Determine proper indentation of node at `stmt` (or other similar) level at or above self, otherwise at root
-        node. Even if it is a continuation or on same line as block statement."""
+        """Determine proper indentation of node at `stmt` (or other similar) level at or above self. Even if it is a
+        continuation or on same line as block statement.
+
+        **Returns:**
+        - `str`: indentation string for the block this node lives in.
+        """
 
         while (parent := self.parent) and not isinstance(self.a, STATEMENTISH):
             self = parent
@@ -3060,6 +2872,114 @@ class FST:
 
         return extra_indent
 
+    def get_indentable_lns(self, skip: int = 0, *, docstring: bool = True) -> set[int]:
+        """Get set of indentable lines within this node.
+
+        **Parameters:**
+        - `skip`: The number of lines to skip from the start of this node. Useful for skipping the first line for edit
+            operations (since the first line is normally joined to an existing line on add or copied directly from start
+            on cut).
+
+        **Returns:**
+        - `set[int]`: Set of line numbers (zero based) which are sytactically indentable.
+        """
+
+        def walk_multiline(cur_ln, end_ln, m, re_str_end):
+            nonlocal lns, lines
+
+            col = m.end(0)
+
+            for ln in range(cur_ln, end_ln + 1):
+                if m := re_str_end.match(lines[ln], col):
+                    break
+
+                col = 0
+
+            else:
+                raise RuntimeError('should not get here')
+
+            lns -= set(range(cur_ln + 1, ln + 1))  # specifically leave out first line of multiline string because that is indentable
+
+            return ln, m.end(0)
+
+        def multiline_str(f: 'FST'):
+            nonlocal lns, lines
+
+            cur_ln, cur_col, end_ln, end_col = f.loc
+
+            while True:
+                if not (m := re_multiline_str_start.match(l := lines[cur_ln], cur_col)):
+                    if m := re_oneline_str.match(l, cur_col):
+                        cur_col = m.end(0)
+
+                    else:  # UGH! a line continuation string, pffft...
+                        m               = re_contline_str_start.match(l, cur_col)
+                        re_str_end      = re_contline_str_end_sq if m.group(1) == "'" else re_contline_str_end_dq
+                        cur_ln, cur_col = walk_multiline(cur_ln, end_ln, m, re_str_end)  # find end of multiline line continuation string
+
+                else:
+                    re_str_end      = re_multiline_str_end_sq if m.group(1) == "'''" else re_multiline_str_end_dq
+                    cur_ln, cur_col = walk_multiline(cur_ln, end_ln, m, re_str_end)  # find end of multiline string
+
+                if cur_ln == end_ln and cur_col == end_col:
+                    break
+
+                cur_ln, cur_col, _ = _next_src(lines, cur_ln, cur_col, end_ln, end_col)  # there must be a next one
+
+        def multiline_fstr(f: 'FST'):
+            """Lets try to find indentable lines by incrementally attempting to parse parts of multiline f-string."""
+
+            nonlocal lns, lines
+
+            cur_ln, cur_col, end_ln, _ = f.loc
+
+            while True:
+                ls = [lines[cur_ln][cur_col:].lstrip()]
+
+                for ln in range(cur_ln + 1, end_ln + 1):
+                    try:
+                        ast_parse('\n'.join(ls))
+
+                    except SyntaxError:
+                        lns.remove(ln)
+                        ls.append(lines[ln])
+
+                    else:
+                        break
+
+                if (cur_ln := ln) >= end_ln:
+                    assert cur_ln == end_ln
+
+                    break
+
+                cur_col = 0
+
+        lines = self.root.lines
+        lns   = set(range(self.bln + skip, self.bend_ln + 1))
+
+        while (parent := self.parent) and not isinstance(self.a, STATEMENTISH):
+            self = parent
+
+        for f in (gen := self.walk(False)):  # find multiline strings and exclude their unindentable lines
+            if f.bend_ln == f.bln:  # everything on one line, don't need to recurse
+                gen.send(False)
+
+            elif isinstance(a := f.a, Constant):
+                if (  # isinstance(f.a.value, (str, bytes)) is a given if bend_ln != bln
+                    not docstring or
+                    not ((parent := f.parent) and  # not (is_docstring)
+                         isinstance(parent.a, Expr) and (pparent := parent.parent) and parent.pfield == ('body', 0) and
+                         isinstance(pparent.a, HAS_DOCSTRING)
+                )):
+                    multiline_str(f)
+
+            elif isinstance(a, JoinedStr):
+                multiline_fstr(f)
+
+                gen.send(False)  # skip everything inside regardless, because it is evil
+
+        return lns
+
     # ------------------------------------------------------------------------------------------------------------------
 
     def touch(self) -> 'FST':  # -> Self:
@@ -3096,151 +3016,241 @@ class FST:
 
         return self
 
-    def get_lines(self, ln: int, col: int, end_ln: int, end_col: int) -> list[str]:
-        if end_ln == ln:
-            return [bistr(self.root._lines[ln][col : end_col])]
+    def offset(self, ln: int, col: int, dln: int, dcol_offset: int, inc: bool = False, stop_at: Optional['FST'] = None
+                ) -> 'FST':  # -> Self
+        """Offset ast node positions in the tree on or after ln / col by delta line / col_offset (column byte offset).
+
+        This only offsets the positions in the `AST` nodes, doesn't change any text, so make sure that is correct before
+        getting any `FST` locations from affected nodes otherwise they will be wrong.
+
+        Other nodes outside this tree might need offsetting so use only on root unless special circumstances.
+
+        If offsetting a zero-length node (which can result from deleting elements of an unparenthesized tuple), both the
+        start and end location will be moved if exactly at offset point if `inc` is `False`. Otherwise if `inc` is
+        `True` then the start position will remain and the end position will be expanded.
+
+        **Parameters:**
+        - `ln`: Line of offset point.
+        - `col`: Column of offset point (char index).
+        - `dln`: Number of lines to offset everything on or after offset point, can be 0.
+        - `dcol_offset`: Column offset to apply to everything ON the offset point line `ln` (in bytes). Columns not on
+            line `ln` will not be changed.
+        - `inc`: Whether to offset endpoint if it falls exactly at ln / col or not (inclusive).
+
+        **Behavior:**
+        ```
+              offset here
+              V
+          |===|
+              |---|
+              |        <- special zero length span
+        0123456789ABC
+
+        +2, inc=False
+              V
+          |===|
+                |---|
+                |
+        0123456789ABC
+
+        +2, inc=True
+              V
+          |=====|
+                |---|
+              |.|
+        0123456789ABC
+
+        -2, inc=False
+              V
+          |===|
+            |---|
+            |
+        0123456789ABC
+
+        -2, inc=True
+              V
+          |=|
+            |---|
+            |
+        0123456789ABC
+        ```
+        """
+
+        lno  = ln + 1
+        colo = self.root._lines[ln].c2b(col)
+
+        for f in (gen := self.walk(False)):
+            a = f.a
+
+            if (fend_colo := getattr(a, 'end_col_offset', None)) is not None:
+                flno  = a.lineno
+                fcolo = a.col_offset
+
+                if (fend_lno := a.end_lineno) > lno:
+                    a.end_lineno += dln
+
+                elif fend_lno == lno and (
+                        fend_colo >= colo if (inc or (fend_colo == fcolo and fend_lno == flno)) else fend_colo > colo):
+                    a.end_lineno     += dln
+                    a.end_col_offset  = fend_colo + dcol_offset
+
+                else:
+                    gen.send(False)  # no need to walk into something whose bounding block ends before offset point
+
+                    continue
+
+                if flno > lno:
+                    if not dln and (not (decos := getattr(a, 'decorator_lis', None)) or decos[0].lineno > lno):
+                        gen.send(False)  # no need to walk into something past offet point if line change is 0
+
+                        continue
+
+                    a.lineno += dln
+
+                elif flno == lno and (
+                        fcolo >= colo if (not (inc and (fend_colo == fcolo and fend_lno == flno)) or
+                                        dln < 0 or (not dln and dcol_offset < 0)) else
+                        fcolo > colo):
+                    a.lineno     += dln
+                    a.col_offset += dcol_offset
+
+            if f is stop_at:
+                gen.send(False)
+
+            f.touch()
+
+        self.touchall(True, False, False)
+
+        return self
+
+    def offset_cols(self, dcol_offset: int, lns: set[int]):
+        """Offset ast col byte offsets in `lns` by a delta and return same set of indentable lines.
+
+        Only modifies ast, not lines.
+        """
+
+        if dcol_offset:
+            for a in walk(self.a):
+                if (end_col_offset := getattr(a, 'end_col_offset', None)) is not None:
+                    if a.lineno - 1 in lns:
+                        a.col_offset += dcol_offset
+
+                    if a.end_lineno - 1 in lns:
+                        a.end_col_offset = end_col_offset + dcol_offset
+
+                a.f.touch()
+
+            self.touchall(True, False, False)
+
+    def offset_cols_mapped(self, dcol_offsets: dict[int, int]):
+        """Offset ast col byte offsets by a specific delta per line and return same dict of indentable lines.
+
+        Only modifies ast, not lines.
+        """
+
+        for a in walk(self.a):
+            if (end_col_offset := getattr(a, 'end_col_offset', None)) is not None:
+                if (dcol_offset := dcol_offsets.get(a.lineno - 1)) is not None:
+                    a.col_offset += dcol_offset
+
+                if (dcol_offset := dcol_offsets.get(a.end_lineno - 1)) is not None:
+                    a.end_col_offset = end_col_offset + dcol_offset
+
+            a.f.touch()
+
+        self.touchall(True, False, False)
+
+    def indent_lns(self, indent: str, lns: set[int] | None = None, *, docstring: bool = True) -> set[int]:
+        """Indent all indentable lines past the first one according with `indent` and adjust node locations accordingly.
+        Does not modify node columns on first line."""
+
+        if not ((lns := self.get_indentable_lns(1, docstring=docstring)) if lns is None else lns) or not indent:
+            return lns
+
+        self.offset_cols(len(indent.encode()), lns)
+
+        lines = self.root._lines
+
+        for ln in lns:
+            if l := lines[ln]:  # only indent non-empty lines
+                lines[ln] = bistr(indent + l)
+
+        if docstring:
+            self.reparse_docstrings()
+
+        return lns
+
+    def dedent_lns(self, indent: str, lns: set[int] | None = None, *, docstring: bool = True) -> set[int]:
+        """Dedent all indentable lines past the first one by removing `indent` prefix and adjust node locations
+        accordingly. Does not modify columns on first line. If cannot dedent entire amount will dedent as much as
+        possible.
+        """
+
+        if not ((lns := self.get_indentable_lns(1, docstring=docstring)) if lns is None else lns) or not indent:
+            return lns
+
+        lines        = self.root._lines
+        lindent      = len(indent)
+        dcol_offsets = None
+        newlines     = []
+
+        def dedent(l, lindent):
+            if dcol_offsets is not None:
+                dcol_offsets[ln] = -lindent
+
+            return bistr(l[lindent:])
+
+        lns_seq = list(lns)
+
+        for ln in lns_seq:
+            if l := lines[ln]:  # only dedent non-empty lines
+                if l.startswith(indent) or (lempty_start := re_empty_line_start.match(l).end()) >= lindent:
+                    l = dedent(l, lindent)
+
+                else:
+                    if not dcol_offsets:
+                        dcol_offsets = {}
+
+                        for ln2 in lns_seq:
+                            if ln2 is ln:
+                                break
+
+                            dcol_offsets[ln2] = -lindent
+
+                    l = dedent(l, lempty_start)
+
+            newlines.append(l)
+
+        for ln, l in zip(lns_seq, newlines):
+            lines[ln] = l
+
+        if dcol_offsets:
+            self.offset_cols_mapped(dcol_offsets)
         else:
-            return [bistr((ls := self.root._lines)[ln][col:])] + ls[ln + 1 : end_ln] + [bistr(ls[end_ln][:end_col])]
+            self.offset_cols(-lindent, lns)
 
-    def put_lines(self, lines: list[str] | None, ln: int, col: int, end_ln: int, end_col: int,
-                  inc: bool | None = None, stop_at: Optional['FST'] = None):
-        ls = self.root._lines
+        if docstring:
+            self.reparse_docstrings()
 
-        if is_del := not lines:
-            lines = [bistr('')]
-        elif not lines[0].__class__ is bistr:
-            lines = [bistr(s) for s in lines]
+        return lns
 
-        # possibly offset nodes
+    def reparse_docstring(self):
+        """`self` must be something that can have a docstring in the body (function, class, module). Node and source
+        lines are assumed to be correct, just the docstring value needs to be reset."""
 
-        if inc is not None:
-            dfst_ln     = len(lines) - 1
-            dln         = dfst_ln - (end_ln - ln)
-            dcol_offset = lines[-1].lenbytes - ls[end_ln].c2b(end_col)
+        # assert isistance(self, HAS_DOCSTRING)
 
-            if not dfst_ln:
-                dcol_offset += ls[ln].c2b(col)
+        if ((body := self.a.body) and isinstance(b0 := body[0], Expr) and isinstance(v := b0.value, Constant) and
+            isinstance(v.value, str)
+        ):
+            v.value = literal_eval((f := b0.f).get_src(*f.loc))
 
-            self.root._offset(end_ln, end_col, dln, dcol_offset, inc, stop_at)
+    def reparse_docstrings(self):
+        """Reparse docstrings in self and all descendants."""
 
-        # put the actual lines (or just delete)
-
-        if is_del:
-            if end_ln == ln:
-                ls[ln] = bistr((l := ls[ln])[:col] + l[end_col:])
-
-            else:
-                ls[end_ln] = bistr(ls[ln][:col] + ls[end_ln][end_col:])
-
-                del ls[ln : end_ln]
-
-        else:
-            dln = end_ln - ln
-
-            if (nnew_ln := len(lines)) <= 1:
-                s = lines[0] if nnew_ln else ''
-
-                if not dln:  # replace single line with single or no line
-                    ls[ln] = bistr(f'{(l := ls[ln])[:col]}{s}{l[end_col:]}')
-
-                else:  # replace multiple lines with single or no line
-                    ls[ln] = bistr(f'{ls[ln][:col]}{s}{ls[end_ln][end_col:]}')
-
-                    del ls[ln + 1 : end_ln + 1]
-
-            elif not dln:  # replace single line with multiple lines
-                lend                 = bistr(lines[-1] + (l := ls[ln])[end_col:])
-                ls[ln]               = bistr(l[:col] + lines[0])
-                ls[ln + 1 : ln + 1]  = lines[1:] if lines[0].__class__ is bistr else [bistr(l) for l in lines[1:]]
-                ls[ln + nnew_ln - 1] = lend
-
-            else:  # replace multiple lines with multiple lines
-                ls[ln]              = bistr(ls[ln][:col] + lines[0])
-                ls[end_ln]          = bistr(lines[-1] + ls[end_ln][end_col:])
-                ls[ln + 1 : end_ln] = lines[1:-1] if lines[0].__class__ is bistr else [bistr(l) for l in lines[1:-1]]
-
-    def get_src(self, ln: int, col: int, end_ln: int, end_col: int) -> list[str]:
-        return '\n'.join(self.get_lines(ln, col, end_ln, end_col))
-
-    def put_src(self, src: str | None, ln: int, col: int, end_ln: int, end_col: int,
-                inc: bool = False, stop_at: Optional['FST'] = None):
-        self.put_lines(None if src is None else src.split('\n'), ln, col, end_ln, end_col, inc, stop_at)
+        for a in walk(self.a):
+            if isinstance(a, HAS_DOCSTRING):
+                a.f.reparse_docstring()
 
 
 
-
-    def get_slice(self, start: int | None = None, stop: int | None = None, field: str | None = None, *,
-                  fix: bool = True, cut: bool = False) -> 'FST':
-        if isinstance(self.a, STATEMENTISH_OR_STMTMOD):
-            return self._get_slice_stmt(start, stop, field, fix, cut)
-
-        if isinstance(self.a, Expression):
-            self = self.a.body.f
-
-        if isinstance(self.a, (Tuple, List, Set)):
-            return self._get_slice_tuple_list_or_set(start, stop, field, fix, cut)
-
-        if isinstance(self.a, Dict):
-            return self._get_slice_dict(start, stop, field, fix, cut)
-
-        raise ValueError(f"cannot get slice from a '{self.a.__class__.__name__}'")
-
-
-
-
-
-
-    def put_slice(self, code: Code | None, start: int | None = None, stop: int | None = None, field: str | None = None,
-                  ) -> 'FST':
-        if isinstance(self.a, STATEMENTISH_OR_STMTMOD):
-            raise NotImplementedError  # TODO: THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS!
-
-        if isinstance(self.a, (Tuple, List, Set)):
-            return self._put_slice_tuple_list_or_set(code, start, stop, field)
-
-        if isinstance(self.a, Dict):
-            return self._put_slice_dict(code, start, stop, field)
-
-        raise ValueError(f"cannot put slice to a '{self.a.__class__.__name__}'")
-
-
-
-
-
-    def get(self, start: int | str | None = None, stop: int | None | Literal[False] = False,
-            field: str | None = None, *, fix: bool = True, decos: bool = True, cut: bool = False) -> Optional['FST']:
-        raise NotImplementedError  # TODO: THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS!
-
-
-
-
-    def put(self, code: Code | None, start: int | None = None, stop: int | None | Literal['False'] = False,
-            field: str | None = None) -> Optional['FST']:  # -> Self:
-        raise NotImplementedError  # TODO: THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS!
-
-
-
-
-
-
-    def copy(self, *, fix: bool = True, decos: bool = True) -> 'FST':
-        newast = copy_ast(self.a)
-
-        if self.is_root:
-            return FST(newast, lines=self._lines[:], from_=self)
-
-        if not (loc := self.bloc if decos else self.loc):
-            raise ValueError('cannot copy node which does not have location')
-
-        if not decos and hasattr(newast, 'decorator_list'):
-            newast.decorator_list.clear()
-
-        fst = self._make_fst_and_dedent(self, newast, loc)
-
-        return fst._maybe_fix_single_copy(inplace=True) if fix else fst
-
-    def cut(self, *, fix: bool = True, decos: bool = True) -> 'FST':
-        if self.is_root:
-            raise ValueError('cannot cut out root node')
-
-        return self.parent.get((pfield := self.pfield).idx, field=pfield.name, fix=fix, cut=True, decos=decos)

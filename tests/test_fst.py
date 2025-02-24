@@ -1990,12 +1990,12 @@ def f(a, /, b, *c, d, **e):
         self.assertEqual('', parse('\\\ni').body[0].f.get_indent())
         self.assertEqual('    ', parse('try: i\nexcept: pass').body[0].body[0].f.get_indent())
 
-    def test__indentable_lns(self):
+    def test_get_indentable_lns(self):
         src = 'class cls:\n if True:\n  i = """\nj\n"""\n  k = "... \\\n2"\n else:\n  j \\\n=\\\n 2'
         ast = parse(src)
 
-        self.assertEqual({1, 2, 5, 7, 8, 9, 10}, ast.f._indentable_lns(1))
-        self.assertEqual({0, 1, 2, 5, 7, 8, 9, 10}, ast.f._indentable_lns(0))
+        self.assertEqual({1, 2, 5, 7, 8, 9, 10}, ast.f.get_indentable_lns(1))
+        self.assertEqual({0, 1, 2, 5, 7, 8, 9, 10}, ast.f.get_indentable_lns(0))
 
         f = FST.fromsrc('''
 def _splitext(p, sep, altsep, extsep):
@@ -2007,8 +2007,8 @@ def _splitext(p, sep, altsep, extsep):
 
     sepIndex = p.rfind(sep)
             '''.strip())
-        self.assertEqual({0, 1, 2, 3, 4, 5, 6, 7}, f._indentable_lns(docstring=True))
-        self.assertEqual({0, 1, 5, 6, 7}, f._indentable_lns(docstring=False))
+        self.assertEqual({0, 1, 2, 3, 4, 5, 6, 7}, f.get_indentable_lns(docstring=True))
+        self.assertEqual({0, 1, 5, 6, 7}, f.get_indentable_lns(docstring=False))
 
         f = FST.fromsrc(r'''
 _CookiePattern = re.compile(r"""
@@ -2030,21 +2030,21 @@ _CookiePattern = re.compile(r"""
     (\s+|;|$)                      # Ending either at space, semicolon, or EOS.
     """, re.ASCII | re.VERBOSE)    # re.ASCII may be removed if safe.
             '''.strip())
-        self.assertEqual({0}, f._indentable_lns(docstring=True))
-        self.assertEqual({0}, f._indentable_lns(docstring=False))
+        self.assertEqual({0}, f.get_indentable_lns(docstring=True))
+        self.assertEqual({0}, f.get_indentable_lns(docstring=False))
 
         f = FST.fromsrc('''
 "distutils.command.sdist.check_metadata is deprecated, \\
         use the check command instead"
             '''.strip())
-        self.assertEqual({0, 1}, f._indentable_lns(docstring=True))
-        self.assertEqual({0}, f._indentable_lns(docstring=False))
+        self.assertEqual({0, 1}, f.get_indentable_lns(docstring=True))
+        self.assertEqual({0}, f.get_indentable_lns(docstring=False))
 
     def test__offset(self):
         src = 'i = 1\nj = 2\nk = 3'
 
         ast = parse(src)
-        ast.f._offset(1, 4, 0, 1)
+        ast.f.offset(1, 4, 0, 1)
         self.assertEqual((1, 4, 1, 5), ((n := ast.body[0].value).lineno, n.col_offset, n.end_lineno, n.end_col_offset))
         self.assertEqual((2, 0, 2, 1), ((n := ast.body[1].targets[0]).lineno, n.col_offset, n.end_lineno, n.end_col_offset))
         self.assertEqual((2, 5, 2, 6), ((n := ast.body[1].value).lineno, n.col_offset, n.end_lineno, n.end_col_offset))
@@ -2052,7 +2052,7 @@ _CookiePattern = re.compile(r"""
         self.assertEqual((3, 4, 3, 5), ((n := ast.body[2].value).lineno, n.col_offset, n.end_lineno, n.end_col_offset))
 
         ast = parse(src)
-        ast.f._offset(1, 5, 0, 1)
+        ast.f.offset(1, 5, 0, 1)
         self.assertEqual((1, 4, 1, 5), ((n := ast.body[0].value).lineno, n.col_offset, n.end_lineno, n.end_col_offset))
         self.assertEqual((2, 0, 2, 1), ((n := ast.body[1].targets[0]).lineno, n.col_offset, n.end_lineno, n.end_col_offset))
         self.assertEqual((2, 4, 2, 5), ((n := ast.body[1].value).lineno, n.col_offset, n.end_lineno, n.end_col_offset))
@@ -2060,7 +2060,7 @@ _CookiePattern = re.compile(r"""
         self.assertEqual((3, 4, 3, 5), ((n := ast.body[2].value).lineno, n.col_offset, n.end_lineno, n.end_col_offset))
 
         ast = parse(src)
-        ast.f._offset(1, 5, 0, 1, inc=True)
+        ast.f.offset(1, 5, 0, 1, inc=True)
         self.assertEqual((1, 4, 1, 5), ((n := ast.body[0].value).lineno, n.col_offset, n.end_lineno, n.end_col_offset))
         self.assertEqual((2, 0, 2, 1), ((n := ast.body[1].targets[0]).lineno, n.col_offset, n.end_lineno, n.end_col_offset))
         self.assertEqual((2, 4, 2, 6), ((n := ast.body[1].value).lineno, n.col_offset, n.end_lineno, n.end_col_offset))
@@ -2068,7 +2068,7 @@ _CookiePattern = re.compile(r"""
         self.assertEqual((3, 4, 3, 5), ((n := ast.body[2].value).lineno, n.col_offset, n.end_lineno, n.end_col_offset))
 
         ast = parse(src)
-        ast.f._offset(1, 4, 1, -1)
+        ast.f.offset(1, 4, 1, -1)
         self.assertEqual((1, 4, 1, 5), ((n := ast.body[0].value).lineno, n.col_offset, n.end_lineno, n.end_col_offset))
         self.assertEqual((2, 0, 2, 1), ((n := ast.body[1].targets[0]).lineno, n.col_offset, n.end_lineno, n.end_col_offset))
         self.assertEqual((3, 3, 3, 4), ((n := ast.body[1].value).lineno, n.col_offset, n.end_lineno, n.end_col_offset))
@@ -2076,7 +2076,7 @@ _CookiePattern = re.compile(r"""
         self.assertEqual((4, 4, 4, 5), ((n := ast.body[2].value).lineno, n.col_offset, n.end_lineno, n.end_col_offset))
 
         ast = parse(src)
-        ast.f._offset(1, 5, 1, -1)
+        ast.f.offset(1, 5, 1, -1)
         self.assertEqual((1, 4, 1, 5), ((n := ast.body[0].value).lineno, n.col_offset, n.end_lineno, n.end_col_offset))
         self.assertEqual((2, 0, 2, 1), ((n := ast.body[1].targets[0]).lineno, n.col_offset, n.end_lineno, n.end_col_offset))
         self.assertEqual((2, 4, 2, 5), ((n := ast.body[1].value).lineno, n.col_offset, n.end_lineno, n.end_col_offset))
@@ -2084,7 +2084,7 @@ _CookiePattern = re.compile(r"""
         self.assertEqual((4, 4, 4, 5), ((n := ast.body[2].value).lineno, n.col_offset, n.end_lineno, n.end_col_offset))
 
         ast = parse(src)
-        ast.f._offset(1, 5, 1, -1, inc=True)
+        ast.f.offset(1, 5, 1, -1, inc=True)
         self.assertEqual((1, 4, 1, 5), ((n := ast.body[0].value).lineno, n.col_offset, n.end_lineno, n.end_col_offset))
         self.assertEqual((2, 0, 2, 1), ((n := ast.body[1].targets[0]).lineno, n.col_offset, n.end_lineno, n.end_col_offset))
         self.assertEqual((2, 4, 3, 4), ((n := ast.body[1].value).lineno, n.col_offset, n.end_lineno, n.end_col_offset))
@@ -2114,25 +2114,25 @@ _CookiePattern = re.compile(r"""
             return m
 
         m = get()
-        m.f._offset(0, 6, 0, 2, False)
+        m.f.offset(0, 6, 0, 2, False)
         self.assertEqual((0, 2, 0, 6), m.body[0].f.loc)
         self.assertEqual((0, 8, 0, 12), m.body[1].f.loc)
         self.assertEqual((0, 8, 0, 8), m.body[2].f.loc)
 
         m = get()
-        m.f._offset(0, 6, 0, 2, True)
+        m.f.offset(0, 6, 0, 2, True)
         self.assertEqual((0, 2, 0, 8), m.body[0].f.loc)
         self.assertEqual((0, 8, 0, 12), m.body[1].f.loc)
         self.assertEqual((0, 6, 0, 8), m.body[2].f.loc)
 
         m = get()
-        m.f._offset(0, 6, 0, -2, False)
+        m.f.offset(0, 6, 0, -2, False)
         self.assertEqual((0, 2, 0, 6), m.body[0].f.loc)
         self.assertEqual((0, 4, 0, 8), m.body[1].f.loc)
         self.assertEqual((0, 4, 0, 4), m.body[2].f.loc)
 
         m = get()
-        m.f._offset(0, 6, 0, -2, True)
+        m.f.offset(0, 6, 0, -2, True)
         self.assertEqual((0, 2, 0, 4), m.body[0].f.loc)
         self.assertEqual((0, 4, 0, 8), m.body[1].f.loc)
         self.assertEqual((0, 4, 0, 4), m.body[2].f.loc)
@@ -2141,8 +2141,8 @@ _CookiePattern = re.compile(r"""
         src = 'class cls:\n if True:\n  i = """\nj\n"""\n  k = 3\n else:\n  j = 2'
 
         ast = parse(src)
-        lns = ast.f._indentable_lns(1)
-        ast.f._offset_cols(1, lns)
+        lns = ast.f.get_indentable_lns(1)
+        ast.f.offset_cols(1, lns)
         self.assertEqual({1, 2, 5, 6, 7}, lns)
         self.assertEqual((0, 0, 7, 7), ast.f.loc)
         self.assertEqual((0, 0, 7, 8), ast.body[0].f.loc)
@@ -2159,8 +2159,8 @@ _CookiePattern = re.compile(r"""
         self.assertEqual((7, 7, 7, 8), ast.body[0].body[0].orelse[0].value.f.loc)
 
         ast = parse(src)
-        lns = ast.body[0].body[0].f._indentable_lns(1)
-        ast.body[0].body[0].f._offset_cols(1, lns)
+        lns = ast.body[0].body[0].f.get_indentable_lns(1)
+        ast.body[0].body[0].f.offset_cols(1, lns)
         self.assertEqual({2, 5, 6, 7}, lns)
         self.assertEqual((1, 1, 7, 8), ast.body[0].body[0].f.loc)
         self.assertEqual((1, 4, 1, 8), ast.body[0].body[0].test.f.loc)
@@ -2175,8 +2175,8 @@ _CookiePattern = re.compile(r"""
         self.assertEqual((7, 7, 7, 8), ast.body[0].body[0].orelse[0].value.f.loc)
 
         ast = parse(src)
-        lns = ast.body[0].body[0].body[0].f._indentable_lns(1)
-        ast.body[0].body[0].body[0].f._offset_cols(1, lns)
+        lns = ast.body[0].body[0].body[0].f.get_indentable_lns(1)
+        ast.body[0].body[0].body[0].f.offset_cols(1, lns)
         self.assertEqual(set(), lns)
         self.assertEqual((2, 2, 4, 3), ast.body[0].body[0].body[0].f.loc)
         self.assertEqual((2, 2, 2, 3), ast.body[0].body[0].body[0].targets[0].f.loc)
@@ -2187,7 +2187,7 @@ _CookiePattern = re.compile(r"""
         ast = parse(src)
         off = {0: 0, 1: 1, 2: 2, 3: 3, 4: 4}
 
-        ast.f._offset_cols_mapped(off)
+        ast.f.offset_cols_mapped(off)
         self.assertEqual((0, 0, 4, 1), ast.f.loc)
         self.assertEqual((0, 0, 0, 5), ast.body[0].f.loc)
         self.assertEqual((0, 0, 0, 1), ast.body[0].targets[0].f.loc)
@@ -2206,29 +2206,29 @@ _CookiePattern = re.compile(r"""
         src = 'class cls:\n if True:\n  i = """\nj\n"""\n  k = 3\n else:\n  j \\\n=\\\n 2'
 
         ast = parse(src)
-        lns = ast.f._indent_tail('  ')
+        lns = ast.f.indent_lns('  ')
         self.assertEqual({1, 2, 5, 6, 7, 8, 9}, lns)
         self.assertEqual('class cls:\n   if True:\n    i = """\nj\n"""\n    k = 3\n   else:\n    j \\\n  =\\\n   2', ast.f.src)
 
         ast = parse(src)
-        lns = ast.body[0].body[0].f._indent_tail('  ')
+        lns = ast.body[0].body[0].f.indent_lns('  ')
         self.assertEqual({2, 5, 6, 7, 8, 9}, lns)
         self.assertEqual('class cls:\n if True:\n    i = """\nj\n"""\n    k = 3\n   else:\n    j \\\n  =\\\n   2', ast.f.src)
 
         ast = parse(src)
-        lns = ast.body[0].body[0].body[0].f._indent_tail('  ')
+        lns = ast.body[0].body[0].body[0].f.indent_lns('  ')
         self.assertEqual(set(), lns)
         self.assertEqual('class cls:\n if True:\n  i = """\nj\n"""\n  k = 3\n else:\n  j \\\n=\\\n 2', ast.f.src)
 
         ast = parse(src)
-        lns = ast.body[0].body[0].orelse[0].f._indent_tail('  ')
+        lns = ast.body[0].body[0].orelse[0].f.indent_lns('  ')
         self.assertEqual({8, 9}, lns)
         self.assertEqual('class cls:\n if True:\n  i = """\nj\n"""\n  k = 3\n else:\n  j \\\n  =\\\n   2', ast.f.src)
 
         src = '@decorator\nclass cls:\n pass'
 
         ast = parse(src)
-        lns = ast.f._indent_tail('  ')
+        lns = ast.f.indent_lns('  ')
         self.assertEqual({1, 2}, lns)
         self.assertEqual('@decorator\n  class cls:\n   pass', ast.f.src)
 
@@ -2236,34 +2236,34 @@ _CookiePattern = re.compile(r"""
         src = 'class cls:\n if True:\n  i = """\nj\n"""\n  k = 3\n else:\n  j \\\n=\\\n 2'
 
         ast = parse(src)
-        lns = ast.f._dedent_tail(' ')
+        lns = ast.f.dedent_lns(' ')
         self.assertEqual({1, 2, 5, 6, 7, 8, 9}, lns)
         self.assertEqual('class cls:\nif True:\n i = """\nj\n"""\n k = 3\nelse:\n j \\\n=\\\n2', ast.f.src)
 
         ast = parse(src)
-        lns = ast.body[0].body[0].f._dedent_tail(' ')
+        lns = ast.body[0].body[0].f.dedent_lns(' ')
         self.assertEqual({2, 5, 6, 7, 8, 9}, lns)
         self.assertEqual('class cls:\n if True:\n i = """\nj\n"""\n k = 3\nelse:\n j \\\n=\\\n2', ast.f.src)
 
         ast = parse(src)
-        lns = ast.body[0].body[0].body[0].f._dedent_tail(' ')
+        lns = ast.body[0].body[0].body[0].f.dedent_lns(' ')
         self.assertEqual(set(), lns)
         self.assertEqual('class cls:\n if True:\n  i = """\nj\n"""\n  k = 3\n else:\n  j \\\n=\\\n 2', ast.f.src)
 
         ast = parse(src)
-        lns = ast.body[0].body[0].orelse[0].f._dedent_tail(' ')
+        lns = ast.body[0].body[0].orelse[0].f.dedent_lns(' ')
         self.assertEqual({8, 9}, lns)
         self.assertEqual('class cls:\n if True:\n  i = """\nj\n"""\n  k = 3\n else:\n  j \\\n=\\\n2', ast.f.src)
 
         src = '@decorator\nclass cls:\n pass'
 
         ast = parse(src)
-        lns = ast.body[0].body[0].f._dedent_tail(' ')
+        lns = ast.body[0].body[0].f.dedent_lns(' ')
         self.assertEqual(set(), lns)
         self.assertEqual('@decorator\nclass cls:\n pass', ast.f.src)
 
         # ast = parse(src)
-        # lns = ast.body[0].body[0].f._dedent_tail(' ', skip=0)
+        # lns = ast.body[0].body[0].f.dedent_lns(' ', skip=0)
         # self.assertEqual({2}, lns)
         # self.assertEqual('@decorator\nclass cls:\npass', ast.f.src)
 
