@@ -2499,39 +2499,80 @@ def func():
 if 1:
     def f():
         """
-        docstring
+        strict docstring
         """
         """
-        regular text
+        loose docstring
         """
             '''.strip())
         self.assertEqual('''
 def f():
     """
-    docstring
+    strict docstring
     """
     """
-        regular text
-        """
+    loose docstring
+    """
             '''.strip(), f.a.body[0].body[0].f.copy().src)
 
         f = FST.fromsrc('''
 if 1:
     async def f():
         """
-        docstring
+        strict docstring
         """
         """
-        regular text
+        loose docstring
         """
             '''.strip())
         self.assertEqual('''
 async def f():
     """
-    docstring
+    strict docstring
     """
     """
-        regular text
+    loose docstring
+    """
+            '''.strip(), f.a.body[0].body[0].f.copy().src)
+
+        f = FST.fromsrc('''
+if 1:
+    class cls:
+        """
+        strict docstring
+        """
+        """
+        loose docstring
+        """
+          '''.strip())
+        self.assertEqual('''
+class cls:
+    """
+    strict docstring
+    """
+    """
+    loose docstring
+    """
+            '''.strip(), f.a.body[0].body[0].f.copy().src)
+
+        f = FST.fromsrc('''
+if 1:
+    class cls:
+        """
+        strict docstring
+        """
+        """
+        loose docstring
+        """
+          '''.strip())
+        f.docstring = False
+        self.assertEqual('''
+class cls:
+    """
+        strict docstring
+        """
+    """
+        loose docstring
         """
             '''.strip(), f.a.body[0].body[0].f.copy().src)
 
@@ -2539,21 +2580,23 @@ async def f():
 if 1:
     class cls:
         """
-        docstring
+        strict docstring
         """
         """
-        regular text
+        loose docstring
         """
           '''.strip())
+        f.docstring = 'strict'
         self.assertEqual('''
 class cls:
     """
-    docstring
+    strict docstring
     """
     """
-        regular text
+        loose docstring
         """
             '''.strip(), f.a.body[0].body[0].f.copy().src)
+
 
         f = FST.fromsrc('''
 # start

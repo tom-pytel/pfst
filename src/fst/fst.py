@@ -68,6 +68,10 @@ AST_DEFAULT_BODY_FIELD  = {cls: field for field, classes in [
     # ('pattern',  (MatchAs,)),
 ] for cls in classes}
 
+DEFAULT_PARSE_PARAMS    = dict(filename='<unknown>', type_comments=False, feature_version=None)
+DEFAULT_INDENT          = '    '
+DEFAULT_DOCSTRING       = True
+
 STATEMENTISH            = (stmt, ExceptHandler, match_case)  # always in lists, cannot be inside multilines
 STATEMENTISH_OR_STMTMOD = (stmt, ExceptHandler, match_case, Module, Interactive)
 HAS_DOCSTRING           = (FunctionDef, AsyncFunctionDef, ClassDef, Module)
@@ -730,16 +734,18 @@ class FSTSrcEdit:
 class FST:
     """Preserve AST formatting information and easy manipulation."""
 
-    a:             AST              ; """The actual `AST` node."""
-    parent:        Optional['FST']  ; """Parent `FST` node, `None` in root node."""
-    pfield:        astfield | None  ; """The `astfield` location of this node in the parent, `None` in root node."""
-    root:          'FST'            ; """The root node of this tree, `self` in root node."""
-    indent:        str              ; """The default indentation for this tree when not available from context, only present in the root node."""  # ROOT ONLY!
+    a:            AST                       ; """The actual `AST` node."""
+    parent:       Optional['FST']           ; """Parent `FST` node, `None` in root node."""
+    pfield:       astfield | None           ; """The `astfield` location of this node in the parent, `None` in root node."""
+    root:         'FST'                     ; """The root node of this tree, `self` in root node."""
 
-    _loc:          fstloc | None    # cache, MAY NOT EXIST!
-    _bloc:         fstloc | None    # cache, MAY NOT EXIST! bounding location, including preceding decorators
-    _lines:        list[bistr]      # ROOT ONLY!
-    _parse_params: dict[str, Any]   # ROOT ONLY!
+    parse_params: dict[str, Any]            ; """The parameters to use for any `ast.parse()` that needs to be done (filename, type_comments, feature_version), root node only.""" # ROOT ONLY!
+    indent:       str                       ; """The default single level of block indentation for this tree when not available from context, root node only."""  # ROOT ONLY!
+    docstring:    bool | Literal['strict']  ; """The default docstring indent / dedent behavior. `True` means allow indent of all `Expr` multiline strings, `False` means don't touch them and `'strict'` allows for indent multiline strings in standard docstring positions only."""  # ROOT ONLY!
+
+    _loc:         fstloc | None             # cache, MAY NOT EXIST!
+    _bloc:        fstloc | None             # cache, MAY NOT EXIST! bounding location, including preceding decorators
+    _lines:       list[bistr]               # ROOT ONLY!
 
     @property
     def is_root(self) -> bool:
@@ -1284,7 +1290,7 @@ class FST:
             newfst = None
 
         else:
-            newfst = _normalize_code(code, expr_=True, parse_params=self.root._parse_params)
+            newfst = _normalize_code(code, expr_=True, parse_params=self.root.parse_params)
 
             if newfst.is_empty_set_call():
                 newfst = _new_empty_set_curlies()
@@ -1380,7 +1386,7 @@ class FST:
             newfst = None
 
         else:
-            newfst = _normalize_code(code, expr_=True, parse_params=self.root._parse_params)
+            newfst = _normalize_code(code, expr_=True, parse_params=self.root.parse_params)
             newast = newfst.a
 
             if not isinstance(newast, Dict):
@@ -1511,17 +1517,19 @@ class FST:
         # ROOT
 
         self.root   = self
-        lines       = root_params['lines']
+        lines       = root_params.get('lines') or [bistr('')]
         self._lines = lines if lines[0].__class__ is bistr else [bistr(s) for s in lines]
 
         if from_ := root_params.get('from_'):  # copy params from source tree
-            from_root          = from_.root
-            self.indent        = root_params.get('indent', from_root.indent)
-            self._parse_params = root_params.get('parse_params', from_root._parse_params)
+            from_root         = from_.root
+            self.parse_params = root_params.get('parse_params', from_root.parse_params)
+            self.indent       = root_params.get('indent', from_root.indent)
+            self.docstring    = root_params.get('docstring', from_root.docstring)
 
         else:
-            self.indent        = root_params.get('indent', '    ')
-            self._parse_params = root_params.get('parse_params', {})
+            self.parse_params = root_params.get('parse_params', DEFAULT_PARSE_PARAMS)
+            self.indent       = root_params.get('indent', DEFAULT_INDENT)
+            self.docstring    = root_params.get('docstring', DEFAULT_DOCSTRING)
 
         self._make_fst_tree()
 
@@ -1605,7 +1613,7 @@ class FST:
 
         root         = self.root
         ast          = root.a
-        parse_params = root._parse_params
+        parse_params = root.parse_params
 
         try:
             astp = ast_parse(root.src, mode=get_parse_mode(ast), **parse_params)
@@ -1864,12 +1872,12 @@ class FST:
 
             if need_paren is None:
                 try:
-                    a = ast_parse(src := self.src, mode='eval', **self._parse_params)
+                    a = ast_parse(src := self.src, mode='eval', **self.parse_params)
 
                 except SyntaxError:  # if expression not parsing then try parenthesize
                     tail = (',)' if is_tuple and len(ast.elts) == 1 and lines[end_ln][end_col - 1] != ',' else ')')  # TODO: WARNING! this won't work for expressions followed by comments
 
-                    a = ast_parse(f'({src}{tail}', mode='eval', **self._parse_params)
+                    a = ast_parse(f'({src}{tail}', mode='eval', **self.parse_params)
 
                     if not inplace:
                         lines = lines[:]
@@ -2872,13 +2880,16 @@ class FST:
 
         return extra_indent
 
-    def get_indentable_lns(self, skip: int = 0, *, docstring: bool = True) -> set[int]:
+    def get_indentable_lns(self, skip: int = 0, *, docstring: bool | Literal['strict'] | None = None) -> set[int]:
         """Get set of indentable lines within this node.
 
         **Parameters:**
         - `skip`: The number of lines to skip from the start of this node. Useful for skipping the first line for edit
             operations (since the first line is normally joined to an existing line on add or copied directly from start
             on cut).
+        - `docstring`: How to treat multiline string docstring lines. `False` means not indentable, `True` means all
+            `Expr` multiline strings are indentable (as they serve no coding purpose). `'strict'` means only multiline
+            strings in expected docstring positions are indentable.
 
         **Returns:**
         - `set[int]`: Set of line numbers (zero based) which are sytactically indentable.
@@ -2954,8 +2965,12 @@ class FST:
 
                 cur_col = 0
 
-        lines = self.root.lines
-        lns   = set(range(self.bln + skip, self.bend_ln + 1))
+        if docstring is None:
+            docstring = self.root.docstring
+
+        strict = docstring == 'strict'
+        lines  = self.root.lines
+        lns    = set(range(self.bln + skip, self.bend_ln + 1))
 
         while (parent := self.parent) and not isinstance(self.a, STATEMENTISH):
             self = parent
@@ -2967,10 +2982,10 @@ class FST:
             elif isinstance(a := f.a, Constant):
                 if (  # isinstance(f.a.value, (str, bytes)) is a given if bend_ln != bln
                     not docstring or
-                    not ((parent := f.parent) and  # not (is_docstring)
-                         isinstance(parent.a, Expr) and (pparent := parent.parent) and parent.pfield == ('body', 0) and
-                         isinstance(pparent.a, HAS_DOCSTRING)
-                )):
+                    not ((parent := f.parent) and isinstance(parent.a, Expr) and
+                         (not strict or ((pparent := parent.parent) and parent.pfield == ('body', 0) and
+                                         isinstance(pparent.a, HAS_DOCSTRING)
+                )))):
                     multiline_str(f)
 
             elif isinstance(a, JoinedStr):
@@ -3164,36 +3179,72 @@ class FST:
 
         self.touchall(True, False, False)
 
-    def indent_lns(self, indent: str, lns: set[int] | None = None, *, docstring: bool = True) -> set[int]:
+    def indent_lns(self, indent: str | None = None, lns: set[int] | None = None, *,
+                   docstring: bool | Literal['strict'] | None = None) -> set[int]:
         """Indent all indentable lines past the first one according with `indent` and adjust node locations accordingly.
-        Does not modify node columns on first line."""
+        Does not modify node columns on first line.
+
+        **Parameters:**
+        - `indent`: The indentation string to prefix to each indentable line.
+        - `lns`: A `set` of lines to apply identation to. If `None` then will be gotten from `get_indentable_lns()`.
+        - `docstring`: How to treat multiline string docstring lines. `False` means not indentable, `True` means all
+            `Expr` multiline strings are indentable (as they serve no coding purpose). `'strict'` means only multiline
+            strings in expected docstring positions are indentable.
+
+        **Returns:**
+        - `set[int]`: `lns` passed in or otherwise set of line numbers (zero based) which are sytactically indentable.
+        """
+
+        root = self.root
+
+        if indent is None:
+            indent = root.indent
+        if docstring is None:
+            docstring = root.docstring
 
         if not ((lns := self.get_indentable_lns(1, docstring=docstring)) if lns is None else lns) or not indent:
             return lns
 
         self.offset_cols(len(indent.encode()), lns)
 
-        lines = self.root._lines
+        lines = root._lines
 
         for ln in lns:
             if l := lines[ln]:  # only indent non-empty lines
                 lines[ln] = bistr(indent + l)
 
-        if docstring:
-            self.reparse_docstrings()
+        self.reparse_docstrings(docstring)
 
         return lns
 
-    def dedent_lns(self, indent: str, lns: set[int] | None = None, *, docstring: bool = True) -> set[int]:
+    def dedent_lns(self, indent: str | None = None, lns: set[int] | None = None, *,
+                   docstring: bool | Literal['strict'] | None = None) -> set[int]:
         """Dedent all indentable lines past the first one by removing `indent` prefix and adjust node locations
         accordingly. Does not modify columns on first line. If cannot dedent entire amount will dedent as much as
         possible.
+
+        **Parameters:**
+        - `indent`: The indentation string to remove from the beginning of each indentable line (if possible).
+        - `lns`: A `set` of lines to apply dedentation to. If `None` then will be gotten from `get_indentable_lns()`.
+        - `docstring`: How to treat multiline string docstring lines. `False` means not indentable, `True` means all
+            `Expr` multiline strings are indentable (as they serve no coding purpose). `'strict'` means only multiline
+            strings in expected docstring positions are indentable.
+
+        **Returns:**
+        - `set[int]`: `lns` passed in or otherwise set of line numbers (zero based) which are sytactically indentable.
         """
+
+        root = self.root
+
+        if indent is None:
+            indent = root.indent
+        if docstring is None:
+            docstring = root.docstring
 
         if not ((lns := self.get_indentable_lns(1, docstring=docstring)) if lns is None else lns) or not indent:
             return lns
 
-        lines        = self.root._lines
+        lines        = root._lines
         lindent      = len(indent)
         dcol_offsets = None
         newlines     = []
@@ -3233,28 +3284,28 @@ class FST:
         else:
             self.offset_cols(-lindent, lns)
 
-        if docstring:
-            self.reparse_docstrings()
+        self.reparse_docstrings(docstring)
 
         return lns
 
-    def reparse_docstring(self):
-        """`self` must be something that can have a docstring in the body (function, class, module). Node and source
-        lines are assumed to be correct, just the docstring value needs to be reset."""
-
-        # assert isistance(self, HAS_DOCSTRING)
-
-        if ((body := self.a.body) and isinstance(b0 := body[0], Expr) and isinstance(v := b0.value, Constant) and
-            isinstance(v.value, str)
-        ):
-            v.value = literal_eval((f := b0.f).get_src(*f.loc))
-
-    def reparse_docstrings(self):
+    def reparse_docstrings(self, docstring: bool | Literal['strict'] | None = None):
         """Reparse docstrings in self and all descendants."""
 
-        for a in walk(self.a):
-            if isinstance(a, HAS_DOCSTRING):
-                a.f.reparse_docstring()
+        if docstring is None:
+            docstring = self.root.docstring
 
+        if not docstring:
+            return
 
+        if docstring != 'strict':  # True
+            for a in walk(self.a):
+                if isinstance(a, Expr) and isinstance(v := a.value, Constant) and isinstance(v.value, str):
+                    v.value = literal_eval((f := a.f).get_src(*f.loc))
 
+        else:
+            for a in walk(self.a):
+                if isinstance(a, HAS_DOCSTRING):
+                    if ((body := a.body) and isinstance(b0 := body[0], Expr) and isinstance(v := b0.value, Constant) and
+                        isinstance(v.value, str)
+                    ):
+                        v.value = literal_eval((f := b0.f).get_src(*f.loc))
