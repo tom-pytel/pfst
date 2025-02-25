@@ -475,21 +475,21 @@ Tuple .. ROOT 0,0 -> 2,1
   ,
   3, 4)
 """, 'body[0].value', 1, 2, r"""
-(1,   3, 4)
+(1, 3, 4)
 """, r"""
 (2
   ,
 )
 """, """
-Module .. ROOT 0,0 -> 0,11
+Module .. ROOT 0,0 -> 0,9
   .body[1]
-  0] Expr .. 0,0 -> 0,11
+  0] Expr .. 0,0 -> 0,9
     .value
-      Tuple .. 0,0 -> 0,11
+      Tuple .. 0,0 -> 0,9
         .elts[3]
         0] Constant 1 .. 0,1 -> 0,2
-        1] Constant 3 .. 0,6 -> 0,7
-        2] Constant 4 .. 0,9 -> 0,10
+        1] Constant 3 .. 0,4 -> 0,5
+        2] Constant 4 .. 0,7 -> 0,8
         .ctx
           Load
 """, """
@@ -505,21 +505,21 @@ Tuple .. ROOT 0,0 -> 2,1
   , \
   3, 4)
 """, 'body[0].value', 1, 2, r"""
-(1,   3, 4)
+(1, 3, 4)
 """, r"""
 (2 \
   , \
 )
 """, """
-Module .. ROOT 0,0 -> 0,11
+Module .. ROOT 0,0 -> 0,9
   .body[1]
-  0] Expr .. 0,0 -> 0,11
+  0] Expr .. 0,0 -> 0,9
     .value
-      Tuple .. 0,0 -> 0,11
+      Tuple .. 0,0 -> 0,9
         .elts[3]
         0] Constant 1 .. 0,1 -> 0,2
-        1] Constant 3 .. 0,6 -> 0,7
-        2] Constant 4 .. 0,9 -> 0,10
+        1] Constant 3 .. 0,4 -> 0,5
+        2] Constant 4 .. 0,7 -> 0,8
         .ctx
           Load
 """, """
@@ -535,21 +535,21 @@ Tuple .. ROOT 0,0 -> 2,1
   , \
   3, 4)
 """, 'body[0].value', 1, 2, r"""
-(1,   3, 4)
+(1, 3, 4)
 """, r"""
 (2  # comment
   , \
 )
 """, """
-Module .. ROOT 0,0 -> 0,11
+Module .. ROOT 0,0 -> 0,9
   .body[1]
-  0] Expr .. 0,0 -> 0,11
+  0] Expr .. 0,0 -> 0,9
     .value
-      Tuple .. 0,0 -> 0,11
+      Tuple .. 0,0 -> 0,9
         .elts[3]
         0] Constant 1 .. 0,1 -> 0,2
-        1] Constant 3 .. 0,6 -> 0,7
-        2] Constant 4 .. 0,9 -> 0,10
+        1] Constant 3 .. 0,4 -> 0,5
+        2] Constant 4 .. 0,7 -> 0,8
         .ctx
           Load
 """, """
@@ -1015,42 +1015,169 @@ List .. ROOT 0,0 -> 2,1
 """),
 
 (r"""
+[            # hello
+    1, 2, 3,
+    4
+]
+""", 'body[0].value', 2, 3, r"""
+[            # hello
+    1, 2, 4
+]
+""", r"""
+[3,
+]
+""", """
+Module .. ROOT 0,0 -> 2,1
+  .body[1]
+  0] Expr .. 0,0 -> 2,1
+    .value
+      List .. 0,0 -> 2,1
+        .elts[3]
+        0] Constant 1 .. 1,4 -> 1,5
+        1] Constant 2 .. 1,7 -> 1,8
+        2] Constant 4 .. 1,10 -> 1,11
+        .ctx
+          Load
+""", """
+List .. ROOT 0,0 -> 1,1
+  .elts[1]
+  0] Constant 3 .. 0,1 -> 0,2
+  .ctx
+    Load
+"""),
+
+(r"""
+[            # hello
+    1, 2, ( 3
+     ), 4
+]
+""", 'body[0].value', 2, 3, r"""
+[            # hello
+    1, 2, 4
+]
+""", r"""
+[( 3
+     ),]
+""", """
+Module .. ROOT 0,0 -> 2,1
+  .body[1]
+  0] Expr .. 0,0 -> 2,1
+    .value
+      List .. 0,0 -> 2,1
+        .elts[3]
+        0] Constant 1 .. 1,4 -> 1,5
+        1] Constant 2 .. 1,7 -> 1,8
+        2] Constant 4 .. 1,10 -> 1,11
+        .ctx
+          Load
+""", """
+List .. ROOT 0,0 -> 1,8
+  .elts[1]
+  0] Constant 3 .. 0,3 -> 0,4
+  .ctx
+    Load
+"""),
+
+(r"""
+[            # hello
+    1, 2, ( 3
+     ), 4
+]
+""", 'body[0].value', 1, 3, r"""
+[            # hello
+    1, 4
+]
+""", r"""
+[2, ( 3
+     ),]
+""", """
+Module .. ROOT 0,0 -> 2,1
+  .body[1]
+  0] Expr .. 0,0 -> 2,1
+    .value
+      List .. 0,0 -> 2,1
+        .elts[2]
+        0] Constant 1 .. 1,4 -> 1,5
+        1] Constant 4 .. 1,7 -> 1,8
+        .ctx
+          Load
+""", """
+List .. ROOT 0,0 -> 1,8
+  .elts[2]
+  0] Constant 2 .. 0,1 -> 0,2
+  1] Constant 3 .. 0,6 -> 0,7
+  .ctx
+    Load
+"""),
+
+(r"""
+[            # hello
+    1, 2, ( 3
+     ), 4
+]
+""", 'body[0].value', 1, None, r"""
+[            # hello
+    1]
+""", r"""
+[2, ( 3
+     ), 4
+]
+""", """
+Module .. ROOT 0,0 -> 1,6
+  .body[1]
+  0] Expr .. 0,0 -> 1,6
+    .value
+      List .. 0,0 -> 1,6
+        .elts[1]
+        0] Constant 1 .. 1,4 -> 1,5
+        .ctx
+          Load
+""", """
+List .. ROOT 0,0 -> 2,1
+  .elts[3]
+  0] Constant 2 .. 0,1 -> 0,2
+  1] Constant 3 .. 0,6 -> 0,7
+  2] Constant 4 .. 1,8 -> 1,9
+  .ctx
+    Load
+"""),
+
+(r"""
 i =                (self.__class__.__name__, self._name,
                 (self._handle & (_sys.maxsize*2 + 1)),
                 id(self) & (_sys.maxsize*2 + 1))
 """, 'body[0].value', 0, 3, r"""
-i =                (
-                id(self) & (_sys.maxsize*2 + 1),)
+i =                (id(self) & (_sys.maxsize*2 + 1),)
 """, r"""
 (self.__class__.__name__, self._name,
                 (self._handle & (_sys.maxsize*2 + 1)),
 )
 """, """
-Module .. ROOT 0,0 -> 1,49
+Module .. ROOT 0,0 -> 0,53
   .body[1]
-  0] Assign .. 0,0 -> 1,49
+  0] Assign .. 0,0 -> 0,53
     .targets[1]
     0] Name 'i' Store .. 0,0 -> 0,1
     .value
-      Tuple .. 0,19 -> 1,49
+      Tuple .. 0,19 -> 0,53
         .elts[1]
-        0] BinOp .. 1,16 -> 1,47
+        0] BinOp .. 0,20 -> 0,51
           .left
-            Call .. 1,16 -> 1,24
+            Call .. 0,20 -> 0,28
               .func
-                Name 'id' Load .. 1,16 -> 1,18
+                Name 'id' Load .. 0,20 -> 0,22
               .args[1]
-              0] Name 'self' Load .. 1,19 -> 1,23
+              0] Name 'self' Load .. 0,23 -> 0,27
           .op
             BitAnd
           .right
-            BinOp .. 1,28 -> 1,46
+            BinOp .. 0,32 -> 0,50
               .left
-                BinOp .. 1,28 -> 1,42
+                BinOp .. 0,32 -> 0,46
                   .left
-                    Attribute .. 1,28 -> 1,40
+                    Attribute .. 0,32 -> 0,44
                       .value
-                        Name '_sys' Load .. 1,28 -> 1,32
+                        Name '_sys' Load .. 0,32 -> 0,36
                       .attr
                         'maxsize'
                       .ctx
@@ -1058,11 +1185,11 @@ Module .. ROOT 0,0 -> 1,49
                   .op
                     Mult
                   .right
-                    Constant 2 .. 1,41 -> 1,42
+                    Constant 2 .. 0,45 -> 0,46
               .op
                 Add
               .right
-                Constant 1 .. 1,45 -> 1,46
+                Constant 1 .. 0,49 -> 0,50
         .ctx
           Load
     .type_comment
@@ -1129,26 +1256,25 @@ Tuple .. ROOT 0,0 -> 2,1
 i = namespace = {**__main__.__builtins__.__dict__,
              **__main__.__dict__}
 """, 'body[0].value', 0, 1, r"""
-i = namespace = {
-             **__main__.__dict__}
+i = namespace = {**__main__.__dict__}
 """, r"""
 {**__main__.__builtins__.__dict__,
 }
 """, """
-Module .. ROOT 0,0 -> 1,33
+Module .. ROOT 0,0 -> 0,37
   .body[1]
-  0] Assign .. 0,0 -> 1,33
+  0] Assign .. 0,0 -> 0,37
     .targets[2]
     0] Name 'i' Store .. 0,0 -> 0,1
     1] Name 'namespace' Store .. 0,4 -> 0,13
     .value
-      Dict .. 0,16 -> 1,33
+      Dict .. 0,16 -> 0,37
         .keys[1]
         0] None
         .values[1]
-        0] Attribute .. 1,15 -> 1,32
+        0] Attribute .. 0,19 -> 0,36
           .value
-            Name '__main__' Load .. 1,15 -> 1,23
+            Name '__main__' Load .. 0,19 -> 0,27
           .attr
             '__dict__'
           .ctx
