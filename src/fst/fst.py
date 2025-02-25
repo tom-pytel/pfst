@@ -251,7 +251,7 @@ def _prev_src(lines: list[str], ln: int, col: int, end_ln: int, end_col: int,
     return None
 
 
-def _expr_src_edit_locs(lines: list[str], loc: fstloc, bound: fstloc) -> tuple[fstloc, fstloc]:
+def _expr_src_edit_locs(lines: list[str], loc: fstloc, bound: fstloc) -> tuple[fstloc, fstloc, list[str]]:
     """Get expression copy and delete locations. There can be commas in the bound in which case the expression is
     treated as part of a comma delimited sequence. In this case, if there is a trailing comma within bounding span then
     it is included in the delete location. Any enclosing grouping parentheses within the bounding span are included.
@@ -263,9 +263,10 @@ def _expr_src_edit_locs(lines: list[str], loc: fstloc, bound: fstloc) -> tuple[f
         contain any part of other `AST` nodes like other members of a sequence.
 
     **Returns:**
-    - `(copy_loc, del_loc)`: The `copy_loc` is the location of source that should be used if copying the expression.
-        The `del_loc` is the location which should be used if removing the expression. Both are used for a cut
-        operation.
+    - `(copy_loc, del_loc, put_lines)`: The `copy_loc` is the location of source that should be used if copying the
+        expression. The `del_loc` is the location which should be deleted used if removing the expression. Both are used
+        for a cut operation. `put_lines` is an optional set of non-coding source (or `None`) which can be put to
+        `del_loc` for prettier foramtting.
     """
 
     start_ln, start_col, stop_ln,      stop_col      = loc
@@ -419,7 +420,14 @@ def _expr_src_edit_locs(lines: list[str], loc: fstloc, bound: fstloc) -> tuple[f
         elif del_end_col == len(lines[del_end_ln]):  # delete ends on newline, adjust del start to strip trailing whitespace from comma
             del_col = precomma_del_col + 1
 
-    return fstloc(copy_ln, copy_col, copy_end_ln, copy_end_col), fstloc(del_ln, del_col, del_end_ln, del_end_col)
+    if not del_col and del_end_col and (m := re_empty_line_start.match(lines[del_ln])).end():  # delete from start of line to middle of line, maybe there is indentation to apply for prettification
+        put_lines = [m.group()]
+    else:
+        put_lines = None
+
+    return (fstloc(copy_ln, copy_col, copy_end_ln, copy_end_col),
+            fstloc(del_ln, del_col, del_end_ln, del_end_col),
+            put_lines)
 
 
 def _fixup_field_body(ast: AST, field: str | None = None) -> tuple[str, 'AST']:
@@ -648,10 +656,11 @@ class FSTSrcEdit:
         if not (bound := _fixup_bound(seq_loc, fpre, fpost)):
             return seq_loc, seq_loc, None
 
-        copy_loc, del_loc = _expr_src_edit_locs(fst.root._lines,
-                                                fstloc(ffirst.ln, ffirst.col, flast.end_ln, flast.end_col), bound)
+        copy_loc, put_loc, put_lines = _expr_src_edit_locs(fst.root._lines,
+                                                           fstloc(ffirst.ln, ffirst.col, flast.end_ln, flast.end_col),
+                                                           bound)
 
-        return (copy_loc, del_loc, None) if cut else (copy_loc, None, None)
+        return (copy_loc, put_loc, put_lines) if cut else (copy_loc, None, None)
 
     def put_seq(self, fst: 'FST', new: Optional['FST'], indent: str, seq_loc: fstloc,
                 ffirst: Union['FST', fstloc, None], flast: Union['FST', fstloc, None],
@@ -1120,9 +1129,10 @@ class FST:
             fst_lines[0] = bistr(prefix + fst_lines[0])
 
         if put_loc:
-            self.root.offset(put_loc.end_ln, put_loc.end_col, put_loc.ln - put_loc.end_ln,
-                              lines[put_loc.ln].c2b(put_loc.col) - lines[put_loc.end_ln].c2b(put_loc.end_col), True)  # True because we may have an unparenthesized tuple that shrinks to a span length of 0
-            self.put_lines(put_lines, *put_loc)
+            self.put_lines(put_lines, *put_loc, True)
+            # self.root.offset(put_loc.end_ln, put_loc.end_col, put_loc.ln - put_loc.end_ln,
+            #                   lines[put_loc.ln].c2b(put_loc.col) - lines[put_loc.end_ln].c2b(put_loc.end_col), True)  # True because we may have an unparenthesized tuple that shrinks to a span length of 0
+            # self.put_lines(put_lines, *put_loc)
 
         fst.dedent_lns(indent)
 
@@ -3037,7 +3047,7 @@ class FST:
         def walk_multiline(cur_ln, end_ln, m, re_str_end):
             nonlocal lns, lines
 
-            col = m.end(0)
+            col = m.end()
 
             for ln in range(cur_ln, end_ln + 1):
                 if m := re_str_end.match(lines[ln], col):
@@ -3050,7 +3060,7 @@ class FST:
 
             lns -= set(range(cur_ln + 1, ln + 1))  # specifically leave out first line of multiline string because that is indentable
 
-            return ln, m.end(0)
+            return ln, m.end()
 
         def multiline_str(f: 'FST'):
             nonlocal lns, lines
@@ -3060,7 +3070,7 @@ class FST:
             while True:
                 if not (m := re_multiline_str_start.match(l := lines[cur_ln], cur_col)):
                     if m := re_oneline_str.match(l, cur_col):
-                        cur_col = m.end(0)
+                        cur_col = m.end()
 
                     else:  # UGH! a line continuation string, pffft...
                         m               = re_contline_str_start.match(l, cur_col)

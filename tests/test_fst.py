@@ -204,7 +204,7 @@ Tuple .. ROOT 0,0 -> 2,1
 )
 """, 'body[0].value', 0, 2, """
 (           # hello
-3, # last line
+    3, # last line
 )
 """, """
 (
@@ -216,7 +216,7 @@ Module .. ROOT 0,0 -> 2,1
     .value
       Tuple .. 0,0 -> 2,1
         .elts[1]
-        0] Constant 3 .. 1,0 -> 1,1
+        0] Constant 3 .. 1,4 -> 1,5
         .ctx
           Load
 """, """
