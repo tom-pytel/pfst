@@ -278,10 +278,6 @@ def _expr_src_edit_locs(lines: list[str], loc: fstloc, bound: fstloc) -> tuple[f
     while True:
         if not (code := _prev_src(lines, bound_ln, bound_col, start_ln, start_col, True, True)):
             if bound_ln != start_ln:
-                # copy_ln  = bound_ln
-                # copy_col = len(lines[bound_ln])
-                # del_ln   = bound_ln + 1
-                # del_col  = 0
                 copy_ln  = del_ln  = bound_ln
                 copy_col = del_col = len(lines[bound_ln])
 
@@ -302,15 +298,6 @@ def _expr_src_edit_locs(lines: list[str], loc: fstloc, bound: fstloc) -> tuple[f
             break
 
         if src == '\\':  # TODO: handle these better if possible
-            # if (ln := ln + 1) == start_ln:
-            #     copy_ln  = del_ln  = start_ln
-            #     copy_col = del_col = start_col
-
-            # else:
-            #     copy_ln  = ln
-            #     copy_col = len(lines[ln])
-            #     del_ln   = ln + 1
-            #     del_col  = 0
             copy_ln  = del_ln  = ln
             copy_col = del_col = len(lines[ln])
 
@@ -324,10 +311,6 @@ def _expr_src_edit_locs(lines: list[str], loc: fstloc, bound: fstloc) -> tuple[f
 
             if done := (c != '('):  # we don't actually count and check these because there may be other parens inside the `loc` which we can not see here
                 if ln != start_ln:
-                    # copy_ln  = bound_ln
-                    # copy_col = len(lines[bound_ln])
-                    # del_ln   = bound_ln + 1
-                    # del_col  = 0
                     copy_ln  = del_ln  = bound_ln
                     copy_col = del_col = len(lines[bound_ln])
 
@@ -364,11 +347,8 @@ def _expr_src_edit_locs(lines: list[str], loc: fstloc, bound: fstloc) -> tuple[f
 
     while True:
         if not (code := _next_src(lines, cur_ln, cur_col, bound_end_ln, bound_end_col, True, False)):
-            done         = True
-            ln           = bound_end_ln
-            col          = bound_end_col
-            copy_end_ln  = stop_ln
-            copy_end_col = stop_col
+            ln  = bound_end_ln
+            col = bound_end_col
 
             break
 
@@ -398,10 +378,8 @@ def _expr_src_edit_locs(lines: list[str], loc: fstloc, bound: fstloc) -> tuple[f
                     stop_col   = col
 
                 else:
-                    done          = True
-                    col          -= 1
-                    copy_end_ln   = stop_ln
-                    copy_end_col  = stop_col
+                    done  = True
+                    col  -= 1
 
                     break
 
@@ -411,22 +389,29 @@ def _expr_src_edit_locs(lines: list[str], loc: fstloc, bound: fstloc) -> tuple[f
         cur_ln  = ln
         cur_col = col
 
-    if done:  # true if reached end of bound or non-comma non-paren code
-        if ln != stop_ln:
-            del_end_ln  = stop_ln
-            del_end_col = len(lines[del_end_ln])
+    if ln != stop_ln:
+        del_end_ln   = stop_ln
+        del_end_col  = len(lines[del_end_ln])
+        copy_end_ln  = ln
+        copy_end_col = 0
 
-        elif not stop_col:  # copy ends on end of line
-            del_end_ln  = ln
-            del_end_col = 0
+    elif not stop_col:  # copy ends on end of line
+        del_end_ln   = ln
+        del_end_col  = 0
+        copy_end_ln  = stop_ln
+        copy_end_col = stop_col
 
-        else:  # copy ends in line, not on end of line
-            del_end_ln  = ln
-            del_end_col = col
+    else:  # copy ends in line, not on end of line
+        del_end_ln  = ln
+        del_end_col = col
 
-            if ln == loc.end_ln:  # does it end on same line as expression?
-                copy_end_ln  = ln
-                copy_end_col = loc.end_col
+        if ln == loc.end_ln:  # does it end on same line as expression?
+            copy_end_ln  = ln
+            copy_end_col = loc.end_col
+
+        else:
+            copy_end_ln  = stop_ln
+            copy_end_col = stop_col
 
     if precomma_del_col is not None:  # if this true we know copy and del starts on same line as a preceding comma
         if not have_comma:  # at end of potential sequence, strip preceding comma
@@ -479,7 +464,7 @@ def _fixup_bound(seq_loc: fstloc, fpre: Union['FST', fstloc, None], fpost: Union
     elif fpost:
         return fstloc(seq_loc.ln, seq_loc.col, fpost.ln, fpost.col)
     else:
-        return None
+        return None  # no fpre or fpost, inform that entire seq_loc
 
 
 def _normalize_code(code: Code, expr_: bool = False, *, parse_params: dict = {}) -> 'FST':

@@ -479,7 +479,8 @@ Tuple .. ROOT 0,0 -> 2,1
 3, 4)
 """, """
 (2
-  ,)
+  ,
+)
 """, """
 Module .. ROOT 0,0 -> 1,5
   .body[1]
@@ -493,7 +494,7 @@ Module .. ROOT 0,0 -> 1,5
         .ctx
           Load
 """, """
-Tuple .. ROOT 0,0 -> 1,4
+Tuple .. ROOT 0,0 -> 2,1
   .elts[1]
   0] Constant 2 .. 0,1 -> 0,2
   .ctx
@@ -791,6 +792,140 @@ Dict .. ROOT 0,0 -> 0,5
 """),
 
 ("""
+[
+    1,
+    2,
+    3,
+]
+""", 'body[0].value', None, None, """
+[]
+""", """
+[
+    1,
+    2,
+    3,
+]
+""", """
+Module .. ROOT 0,0 -> 0,2
+  .body[1]
+  0] Expr .. 0,0 -> 0,2
+    .value
+      List .. 0,0 -> 0,2
+        .ctx
+          Load
+""", """
+List .. ROOT 0,0 -> 4,1
+  .elts[3]
+  0] Constant 1 .. 1,4 -> 1,5
+  1] Constant 2 .. 2,4 -> 2,5
+  2] Constant 3 .. 3,4 -> 3,5
+  .ctx
+    Load
+"""),
+
+("""
+[
+    1,
+    2,
+    3,
+]
+""", 'body[0].value', 0, 2, """
+[
+    3,
+]
+""", """
+[
+    1,
+    2,
+]
+""", """
+Module .. ROOT 0,0 -> 2,1
+  .body[1]
+  0] Expr .. 0,0 -> 2,1
+    .value
+      List .. 0,0 -> 2,1
+        .elts[1]
+        0] Constant 3 .. 1,4 -> 1,5
+        .ctx
+          Load
+""", """
+List .. ROOT 0,0 -> 3,1
+  .elts[2]
+  0] Constant 1 .. 1,4 -> 1,5
+  1] Constant 2 .. 2,4 -> 2,5
+  .ctx
+    Load
+"""),
+
+("""
+[
+    1,
+    2,
+    3,
+]
+""", 'body[0].value', 1, 2, """
+[
+    1,
+    3,
+]
+""", """
+[
+    2,
+]
+""", """
+Module .. ROOT 0,0 -> 3,1
+  .body[1]
+  0] Expr .. 0,0 -> 3,1
+    .value
+      List .. 0,0 -> 3,1
+        .elts[2]
+        0] Constant 1 .. 1,4 -> 1,5
+        1] Constant 3 .. 2,4 -> 2,5
+        .ctx
+          Load
+""", """
+List .. ROOT 0,0 -> 2,1
+  .elts[1]
+  0] Constant 2 .. 1,4 -> 1,5
+  .ctx
+    Load
+"""),
+
+("""
+[
+    1,
+    2,
+    3,
+]
+""", 'body[0].value', 2, None, """
+[
+    1,
+    2,
+]
+""", """
+[
+    3,
+]
+""", """
+Module .. ROOT 0,0 -> 3,1
+  .body[1]
+  0] Expr .. 0,0 -> 3,1
+    .value
+      List .. 0,0 -> 3,1
+        .elts[2]
+        0] Constant 1 .. 1,4 -> 1,5
+        1] Constant 2 .. 2,4 -> 2,5
+        .ctx
+          Load
+""", """
+List .. ROOT 0,0 -> 2,1
+  .elts[1]
+  0] Constant 3 .. 1,4 -> 1,5
+  .ctx
+    Load
+"""),
+
+("""
 i =                (self.__class__.__name__, self._name,
                 (self._handle & (_sys.maxsize*2 + 1)),
                 id(self) & (_sys.maxsize*2 + 1))
@@ -799,7 +934,8 @@ i =                (
                 id(self) & (_sys.maxsize*2 + 1),)
 """, """
 (self.__class__.__name__, self._name,
-                (self._handle & (_sys.maxsize*2 + 1)),)
+                (self._handle & (_sys.maxsize*2 + 1)),
+)
 """, """
 Module .. ROOT 0,0 -> 1,49
   .body[1]
@@ -843,7 +979,7 @@ Module .. ROOT 0,0 -> 1,49
     .type_comment
       None
 """, """
-Tuple .. ROOT 0,0 -> 1,55
+Tuple .. ROOT 0,0 -> 2,1
   .elts[3]
   0] Attribute .. 0,1 -> 0,24
     .value
@@ -907,7 +1043,8 @@ i = namespace = {**__main__.__builtins__.__dict__,
 i = namespace = {
              **__main__.__dict__}
 """, """
-{**__main__.__builtins__.__dict__,}
+{**__main__.__builtins__.__dict__,
+}
 """, """
 Module .. ROOT 0,0 -> 1,33
   .body[1]
@@ -930,7 +1067,7 @@ Module .. ROOT 0,0 -> 1,33
     .type_comment
       None
 """, """
-Dict .. ROOT 0,0 -> 0,35
+Dict .. ROOT 0,0 -> 1,1
   .keys[1]
   0] None
   .values[1]
@@ -966,7 +1103,8 @@ env = {
 """, """
 {
     **{k.upper(): v for k, v in os.environ.items() if k.upper() not in ignore},
-    "PYLAUNCHER_DEBUG": "1",}
+    "PYLAUNCHER_DEBUG": "1",
+}
 """, """
 Module .. ROOT 0,0 -> 4,1
   .body[1]
@@ -1024,7 +1162,7 @@ Module .. ROOT 0,0 -> 4,1
     .type_comment
       None
 """, """
-Dict .. ROOT 0,0 -> 2,29
+Dict .. ROOT 0,0 -> 3,1
   .keys[2]
   0] None
   1] Constant 'PYLAUNCHER_DEBUG' .. 2,4 -> 2,22
@@ -2751,794 +2889,6 @@ Module .. ROOT 0,0 -> 0,10
     .body[1]
     0] Pass .. 0,6 -> 0,10
             """.strip(), 'if 2: pass')
-
-    def test_slice_seq_expr_1(self):
-        dumptest(self, parse("""
-(1, 2, 3, 4)
-            """.strip()).body[0].value.f.get_slice(1, 3), """
-Tuple .. ROOT 0,0 -> 0,6
-  .elts[2]
-  0] Constant .. 0,1 -> 0,2
-    .value
-      2
-    .kind
-      None
-  1] Constant .. 0,4 -> 0,5
-    .value
-      3
-    .kind
-      None
-  .ctx
-    Load
-            """.strip(), '(2, 3)')
-
-        dumptest(self, parse("""
-(1, 2, 3, 4)
-            """.strip()).body[0].value.f.get_slice(-1), """
-Tuple .. ROOT 0,0 -> 0,4
-  .elts[1]
-  0] Constant .. 0,1 -> 0,2
-    .value
-      4
-    .kind
-      None
-  .ctx
-    Load
-            """.strip(), '(4,)')
-
-        dumptest(self, parse("""
-(1, 2, 3, 4)
-            """.strip()).body[0].value.f.get_slice(), """
-Tuple .. ROOT 0,0 -> 0,12
-  .elts[4]
-  0] Constant .. 0,1 -> 0,2
-    .value
-      1
-    .kind
-      None
-  1] Constant .. 0,4 -> 0,5
-    .value
-      2
-    .kind
-      None
-  2] Constant .. 0,7 -> 0,8
-    .value
-      3
-    .kind
-      None
-  3] Constant .. 0,10 -> 0,11
-    .value
-      4
-    .kind
-      None
-  .ctx
-    Load
-            """.strip(), '(1, 2, 3, 4)')
-
-        dumptest(self, parse("""
-(1, 2, 3, 4)
-            """.strip()).body[0].value.f.get_slice(1, 1), """
-Tuple .. ROOT 0,0 -> 0,2
-  .ctx
-    Load
-            """.strip(), '()')
-
-        dumptest(self, parse("""
-[1, 2, 3, 4]
-            """.strip()).body[0].value.f.get_slice(1, 3), """
-List .. ROOT 0,0 -> 0,6
-  .elts[2]
-  0] Constant .. 0,1 -> 0,2
-    .value
-      2
-    .kind
-      None
-  1] Constant .. 0,4 -> 0,5
-    .value
-      3
-    .kind
-      None
-  .ctx
-    Load
-            """.strip(), '[2, 3]')
-
-        dumptest(self, parse("""
-[1, 2, 3, 4]
-            """.strip()).body[0].value.f.get_slice(-1), """
-List .. ROOT 0,0 -> 0,3
-  .elts[1]
-  0] Constant .. 0,1 -> 0,2
-    .value
-      4
-    .kind
-      None
-  .ctx
-    Load
-            """.strip(), '[4]')
-
-        dumptest(self, parse("""
-[1, 2, 3, 4]
-            """.strip()).body[0].value.f.get_slice(), """
-List .. ROOT 0,0 -> 0,12
-  .elts[4]
-  0] Constant .. 0,1 -> 0,2
-    .value
-      1
-    .kind
-      None
-  1] Constant .. 0,4 -> 0,5
-    .value
-      2
-    .kind
-      None
-  2] Constant .. 0,7 -> 0,8
-    .value
-      3
-    .kind
-      None
-  3] Constant .. 0,10 -> 0,11
-    .value
-      4
-    .kind
-      None
-  .ctx
-    Load
-            """.strip(), '[1, 2, 3, 4]')
-
-        dumptest(self, parse("""
-[1, 2, 3, 4]
-            """.strip()).body[0].value.f.get_slice(1, 1), """
-List .. ROOT 0,0 -> 0,2
-  .ctx
-    Load
-            """.strip(), '[]')
-
-        dumptest(self, parse("""
-{1, 2, 3, 4}
-            """.strip()).body[0].value.f.get_slice(1, 3), """
-Set .. ROOT 0,0 -> 0,6
-  .elts[2]
-  0] Constant .. 0,1 -> 0,2
-    .value
-      2
-    .kind
-      None
-  1] Constant .. 0,4 -> 0,5
-    .value
-      3
-    .kind
-      None
-            """.strip(), '{2, 3}')
-
-        dumptest(self, parse("""
-{1, 2, 3, 4}
-            """.strip()).body[0].value.f.get_slice(-1), """
-Set .. ROOT 0,0 -> 0,3
-  .elts[1]
-  0] Constant .. 0,1 -> 0,2
-    .value
-      4
-    .kind
-      None
-            """.strip(), '{4}')
-
-        dumptest(self, parse("""
-{1, 2, 3, 4}
-            """.strip()).body[0].value.f.get_slice(), """
-Set .. ROOT 0,0 -> 0,12
-  .elts[4]
-  0] Constant .. 0,1 -> 0,2
-    .value
-      1
-    .kind
-      None
-  1] Constant .. 0,4 -> 0,5
-    .value
-      2
-    .kind
-      None
-  2] Constant .. 0,7 -> 0,8
-    .value
-      3
-    .kind
-      None
-  3] Constant .. 0,10 -> 0,11
-    .value
-      4
-    .kind
-      None
-            """.strip(), '{1, 2, 3, 4}')
-
-        dumptest(self, parse("""
-{1, 2, 3, 4}
-            """.strip()).body[0].value.f.get_slice(1, 1), """
-Call .. ROOT 0,0 -> 0,5
-  .func
-    Name .. 0,0 -> 0,3
-      .id
-        'set'
-      .ctx
-        Load
-            """.strip(), 'set()')
-
-        dumptest(self, parse("""
-
-(1, 2, 3, 4)
-            """.strip()).body[0].value.f.get_slice(1, 3), """
-Tuple .. ROOT 0,0 -> 0,6
-  .elts[2]
-  0] Constant .. 0,1 -> 0,2
-    .value
-      2
-    .kind
-      None
-  1] Constant .. 0,4 -> 0,5
-    .value
-      3
-    .kind
-      None
-  .ctx
-    Load
-            """.strip(), '(2, 3)')
-
-        dumptest(self, parse("""
-{1: 2, 3: 4, 5: 6, 7: 8}
-            """.strip()).body[0].value.f.get_slice(1, 3), """
-Dict .. ROOT 0,0 -> 0,12
-  .keys[2]
-  0] Constant .. 0,1 -> 0,2
-    .value
-      3
-    .kind
-      None
-  1] Constant .. 0,7 -> 0,8
-    .value
-      5
-    .kind
-      None
-  .values[2]
-  0] Constant .. 0,4 -> 0,5
-    .value
-      4
-    .kind
-      None
-  1] Constant .. 0,10 -> 0,11
-    .value
-      6
-    .kind
-      None
-            """.strip(), '{3: 4, 5: 6}')
-
-        dumptest(self, parse("""
-{1: 2, 3: 4, 5: 6, 7: 8}
-            """.strip()).body[0].value.f.get_slice(-1), """
-Dict .. ROOT 0,0 -> 0,6
-  .keys[1]
-  0] Constant .. 0,1 -> 0,2
-    .value
-      7
-    .kind
-      None
-  .values[1]
-  0] Constant .. 0,4 -> 0,5
-    .value
-      8
-    .kind
-      None
-            """.strip(), '{7: 8}')
-
-        dumptest(self, parse("""
-{1: 2, 3: 4, 5: 6, 7: 8}
-            """.strip()).body[0].value.f.get_slice(), """
-Dict .. ROOT 0,0 -> 0,24
-  .keys[4]
-  0] Constant .. 0,1 -> 0,2
-    .value
-      1
-    .kind
-      None
-  1] Constant .. 0,7 -> 0,8
-    .value
-      3
-    .kind
-      None
-  2] Constant .. 0,13 -> 0,14
-    .value
-      5
-    .kind
-      None
-  3] Constant .. 0,19 -> 0,20
-    .value
-      7
-    .kind
-      None
-  .values[4]
-  0] Constant .. 0,4 -> 0,5
-    .value
-      2
-    .kind
-      None
-  1] Constant .. 0,10 -> 0,11
-    .value
-      4
-    .kind
-      None
-  2] Constant .. 0,16 -> 0,17
-    .value
-      6
-    .kind
-      None
-  3] Constant .. 0,22 -> 0,23
-    .value
-      8
-    .kind
-      None
-            """.strip(), '{1: 2, 3: 4, 5: 6, 7: 8}')
-
-        dumptest(self, parse("""
-{1: 2, 3: 4, 5: 6, 7: 8}
-            """.strip()).body[0].value.f.get_slice(1, 1), """
-Dict .. ROOT 0,0 -> 0,2
-            """.strip(), '{}')
-
-    def test_slice_seq_expr_2(self):
-        dumptest(self, parse("""
-(       # hello
-    1,  # first line
-    2,  # second line
-    3,  # third line
-)           """.strip()).body[0].value.f.get_slice(), """
-Tuple .. ROOT 0,0 -> 4,1
-  .elts[3]
-  0] Constant .. 1,4 -> 1,5
-    .value
-      1
-    .kind
-      None
-  1] Constant .. 2,4 -> 2,5
-    .value
-      2
-    .kind
-      None
-  2] Constant .. 3,4 -> 3,5
-    .value
-      3
-    .kind
-      None
-  .ctx
-    Load
-            """.strip(), """
-(       # hello
-    1,  # first line
-    2,  # second line
-    3,  # third line
-)
-            """.strip())
-
-        dumptest(self, parse("""
-(       # hello
-    1,  # first line
-    2,  # second line
-    3,  # third line
-)
-            """.strip()).body[0].value.f.get_slice(0, 2), """
-Tuple .. ROOT 0,0 -> 3,1
-  .elts[2]
-  0] Constant .. 1,4 -> 1,5
-    .value
-      1
-    .kind
-      None
-  1] Constant .. 2,4 -> 2,5
-    .value
-      2
-    .kind
-      None
-  .ctx
-    Load
-            """.strip(), """
-(
-    1,  # first line
-    2,  # second line
-)
-            """.strip())
-
-        dumptest(self, parse("""
-(       # hello
-    1,  # first line
-    2,  # second line
-    3,  # third line
-)
-            """.strip()).body[0].value.f.get_slice(1, 2), """
-Tuple .. ROOT 0,0 -> 2,1
-  .elts[1]
-  0] Constant .. 1,4 -> 1,5
-    .value
-      2
-    .kind
-      None
-  .ctx
-    Load
-            """.strip(), """
-(
-    2,  # second line
-)
-            """.strip())
-
-        dumptest(self, parse("""
-(       # hello
-    1,  # first line
-    2,  # second line
-    3,  # third line
-)
-            """.strip()).body[0].value.f.get_slice(2), """
-Tuple .. ROOT 0,0 -> 2,1
-  .elts[1]
-  0] Constant .. 1,4 -> 1,5
-    .value
-      3
-    .kind
-      None
-  .ctx
-    Load
-            """.strip(), """
-(
-    3,  # third line
-)
-            """.strip())
-
-        dumptest(self, parse("""
-(           # hello
-    1, 2, 3 # last line
-)
-            """.strip()).body[0].value.f.get_slice(), """
-Tuple .. ROOT 0,0 -> 2,1
-  .elts[3]
-  0] Constant .. 1,4 -> 1,5
-    .value
-      1
-    .kind
-      None
-  1] Constant .. 1,7 -> 1,8
-    .value
-      2
-    .kind
-      None
-  2] Constant .. 1,10 -> 1,11
-    .value
-      3
-    .kind
-      None
-  .ctx
-    Load
-            """.strip(), """
-(           # hello
-    1, 2, 3 # last line
-)
-            """.strip())
-
-        dumptest(self, parse("""
-(           # hello
-    1, 2, 3 # last line
-)
-            """.strip()).body[0].value.f.get_slice(0, 2), """
-Tuple .. ROOT 0,0 -> 1,9
-  .elts[2]
-  0] Constant .. 1,4 -> 1,5
-    .value
-      1
-    .kind
-      None
-  1] Constant .. 1,7 -> 1,8
-    .value
-      2
-    .kind
-      None
-  .ctx
-    Load
-            """.strip(), """
-(
-    1, 2)
-            """.strip())
-
-        dumptest(self, parse("""
-(           # hello
-    1, 2, 3 # last line
-)
-            """.strip()).body[0].value.f.get_slice(1, 2), """
-Tuple .. ROOT 0,0 -> 0,4
-  .elts[1]
-  0] Constant .. 0,1 -> 0,2
-    .value
-      2
-    .kind
-      None
-  .ctx
-    Load
-            """.strip(), """
-(2,)
-            """.strip())
-
-        dumptest(self, parse("""
-(           # hello
-    1, 2, 3 # last line
-)
-            """.strip()).body[0].value.f.get_slice(2), """
-Tuple .. ROOT 0,0 -> 1,1
-  .elts[1]
-  0] Constant .. 0,1 -> 0,2
-    .value
-      3
-    .kind
-      None
-  .ctx
-    Load
-            """.strip(), """
-(3, # last line
-)
-            """.strip())
-
-    def test_slice_seq_expr_3(self):
-        dumptest(self, parse("""
-1, 2, 3, 4
-            """.strip()).body[0].value.f.get_slice(1, 3), """
-Tuple .. ROOT 0,0 -> 0,6
-  .elts[2]
-  0] Constant .. 0,1 -> 0,2
-    .value
-      2
-    .kind
-      None
-  1] Constant .. 0,4 -> 0,5
-    .value
-      3
-    .kind
-      None
-  .ctx
-    Load
-            """.strip(), """
-(2, 3)
-            """.strip())
-
-        dumptest(self, parse("""
-1, 2, 3, 4
-            """.strip()).body[0].value.f.get_slice(-1), """
-Tuple .. ROOT 0,0 -> 0,4
-  .elts[1]
-  0] Constant .. 0,1 -> 0,2
-    .value
-      4
-    .kind
-      None
-  .ctx
-    Load
-            """.strip(), """
-(4,)
-            """.strip())
-
-        dumptest(self, parse("""
-1, 2, 3, 4
-            """.strip()).body[0].value.f.get_slice(), """
-Tuple .. ROOT 0,0 -> 0,12
-  .elts[4]
-  0] Constant .. 0,1 -> 0,2
-    .value
-      1
-    .kind
-      None
-  1] Constant .. 0,4 -> 0,5
-    .value
-      2
-    .kind
-      None
-  2] Constant .. 0,7 -> 0,8
-    .value
-      3
-    .kind
-      None
-  3] Constant .. 0,10 -> 0,11
-    .value
-      4
-    .kind
-      None
-  .ctx
-    Load
-            """.strip(), """
-(1, 2, 3, 4)
-            """.strip())
-
-        dumptest(self, parse("""
-1, 2, 3, 4
-            """.strip()).body[0].value.f.get_slice(1, 1), """
-Tuple .. ROOT 0,0 -> 0,2
-  .ctx
-    Load
-            """.strip(), """
-()
-            """.strip())
-
-    def test_slice_seq_expr_4(self):
-        dumptest(self, parse("""
-(1, 2
-  ,  # comment
-3, 4)
-            """.strip()).body[0].value.f.get_slice(1, 2), """
-Tuple .. ROOT 0,0 -> 2,1
-  .elts[1]
-  0] Constant .. 0,1 -> 0,2
-    .value
-      2
-    .kind
-      None
-  .ctx
-    Load
-            """.strip(), """
-(2
-  ,  # comment
-)
-            """.strip())
-
-        dumptest(self, parse("""
-(1, 2
-  ,
-3, 4)
-            """.strip()).body[0].value.f.get_slice(1, 2), """
-Tuple .. ROOT 0,0 -> 1,4
-  .elts[1]
-  0] Constant .. 0,1 -> 0,2
-    .value
-      2
-    .kind
-      None
-  .ctx
-    Load
-            """.strip(), """
-(2
-  ,)
-            """.strip())
-
-        dumptest(self, parse("""
-(1, 2
-  , 3, 4)
-            """.strip()).body[0].value.f.get_slice(1, 2), """
-Tuple .. ROOT 0,0 -> 1,4
-  .elts[1]
-  0] Constant .. 0,1 -> 0,2
-    .value
-      2
-    .kind
-      None
-  .ctx
-    Load
-            """.strip(), """
-(2
-  ,)
-            """.strip())
-
-        dumptest(self, parse("""
-(1, 2  # comment
-  , 3, 4)
-            """.strip()).body[0].value.f.get_slice(1, 2), """
-Tuple .. ROOT 0,0 -> 1,4
-  .elts[1]
-  0] Constant .. 0,1 -> 0,2
-    .value
-      2
-    .kind
-      None
-  .ctx
-    Load
-            """.strip(), """
-(2  # comment
-  ,)
-            """.strip())
-
-    def test_slice_seq_expr_5(self):
-        dumptest(self, parse("""
-(       # hello
-    1,  # first line
-    2,  # second line
-    3,  # third line
-)
-            """.strip()).body[0].value.f.get_slice(), """
-Tuple .. ROOT 0,0 -> 4,1
-  .elts[3]
-  0] Constant .. 1,4 -> 1,5
-    .value
-      1
-    .kind
-      None
-  1] Constant .. 2,4 -> 2,5
-    .value
-      2
-    .kind
-      None
-  2] Constant .. 3,4 -> 3,5
-    .value
-      3
-    .kind
-      None
-  .ctx
-    Load
-            """.strip(), """
-(       # hello
-    1,  # first line
-    2,  # second line
-    3,  # third line
-)
-            """.strip())
-
-        dumptest(self, parse("""
-(       # hello
-    1,  # first line
-    2,  # second line
-    3,  # third line
-)
-            """.strip()).body[0].value.f.get_slice(0, 2), """
-Tuple .. ROOT 0,0 -> 3,1
-  .elts[2]
-  0] Constant .. 1,4 -> 1,5
-    .value
-      1
-    .kind
-      None
-  1] Constant .. 2,4 -> 2,5
-    .value
-      2
-    .kind
-      None
-  .ctx
-    Load
-            """.strip(), """
-(
-    1,  # first line
-    2,  # second line
-)
-            """.strip())
-
-        dumptest(self, parse("""
-(       # hello
-    1,  # first line
-    2,  # second line
-    3,  # third line
-)
-            """.strip()).body[0].value.f.get_slice(1, 2), """
-Tuple .. ROOT 0,0 -> 2,1
-  .elts[1]
-  0] Constant .. 1,4 -> 1,5
-    .value
-      2
-    .kind
-      None
-  .ctx
-    Load
-            """.strip(), """
-(
-    2,  # second line
-)
-            """.strip())
-
-        dumptest(self, parse("""
-(       # hello
-    1,  # first line
-    2,  # second line
-    3,  # third line
-)
-            """.strip()).body[0].value.f.get_slice(2), """
-Tuple .. ROOT 0,0 -> 2,1
-  .elts[1]
-  0] Constant .. 1,4 -> 1,5
-    .value
-      3
-    .kind
-      None
-  .ctx
-    Load
-            """.strip(), """
-(
-    3,  # third line
-)
-            """.strip())
 
     def test_cut(self):
         for src, elt, start, stop, src_cut, slice_cut, src_dump, slice_dump in CUT_DATA:
