@@ -959,7 +959,6 @@ env = {
 }
 """, 'body[0].value', None, 2, """
 env = {
-
     "PYLAUNCHER_DRYRUN": "1",
     "PYLAUNCHER_LIMIT_TO_COMPANY": "",
     **{k.upper(): v for k, v in (env or {}).items()},
@@ -969,53 +968,53 @@ env = {
     **{k.upper(): v for k, v in os.environ.items() if k.upper() not in ignore},
     "PYLAUNCHER_DEBUG": "1",}
 """, """
-Module .. ROOT 0,0 -> 5,1
+Module .. ROOT 0,0 -> 4,1
   .body[1]
-  0] Assign .. 0,0 -> 5,1
+  0] Assign .. 0,0 -> 4,1
     .targets[1]
     0] Name 'env' Store .. 0,0 -> 0,3
     .value
-      Dict .. 0,6 -> 5,1
+      Dict .. 0,6 -> 4,1
         .keys[3]
-        0] Constant 'PYLAUNCHER_DRYRUN' .. 2,4 -> 2,23
-        1] Constant 'PYLAUNCHER_LIMIT_TO_COMPANY' .. 3,4 -> 3,33
+        0] Constant 'PYLAUNCHER_DRYRUN' .. 1,4 -> 1,23
+        1] Constant 'PYLAUNCHER_LIMIT_TO_COMPANY' .. 2,4 -> 2,33
         2] None
         .values[3]
-        0] Constant '1' .. 2,25 -> 2,28
-        1] Constant '' .. 3,35 -> 3,37
-        2] DictComp .. 4,6 -> 4,52
+        0] Constant '1' .. 1,25 -> 1,28
+        1] Constant '' .. 2,35 -> 2,37
+        2] DictComp .. 3,6 -> 3,52
           .key
-            Call .. 4,7 -> 4,16
+            Call .. 3,7 -> 3,16
               .func
-                Attribute .. 4,7 -> 4,14
+                Attribute .. 3,7 -> 3,14
                   .value
-                    Name 'k' Load .. 4,7 -> 4,8
+                    Name 'k' Load .. 3,7 -> 3,8
                   .attr
                     'upper'
                   .ctx
                     Load
           .value
-            Name 'v' Load .. 4,18 -> 4,19
+            Name 'v' Load .. 3,18 -> 3,19
           .generators[1]
-          0] comprehension .. 4,24 -> 4,51
+          0] comprehension .. 3,24 -> 3,51
             .target
-              Tuple .. 4,24 -> 4,28
+              Tuple .. 3,24 -> 3,28
                 .elts[2]
-                0] Name 'k' Store .. 4,24 -> 4,25
-                1] Name 'v' Store .. 4,27 -> 4,28
+                0] Name 'k' Store .. 3,24 -> 3,25
+                1] Name 'v' Store .. 3,27 -> 3,28
                 .ctx
                   Store
             .iter
-              Call .. 4,32 -> 4,51
+              Call .. 3,32 -> 3,51
                 .func
-                  Attribute .. 4,32 -> 4,49
+                  Attribute .. 3,32 -> 3,49
                     .value
-                      BoolOp .. 4,33 -> 4,42
+                      BoolOp .. 3,33 -> 3,42
                         .op
                           Or
                         .values[2]
-                        0] Name 'env' Load .. 4,33 -> 4,36
-                        1] Dict .. 4,40 -> 4,42
+                        0] Name 'env' Load .. 3,33 -> 3,36
+                        1] Dict .. 3,40 -> 3,42
                     .attr
                       'items'
                     .ctx

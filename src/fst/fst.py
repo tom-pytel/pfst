@@ -271,7 +271,6 @@ def _expr_src_edit_locs(lines: list[str], loc: fstloc, bound: fstloc) -> tuple[f
     start_ln, start_col, stop_ln,      stop_col      = loc
     bound_ln, bound_col, bound_end_ln, bound_end_col = bound
 
-    nparens          = 0
     precomma_del_col = None
 
     # start locations
@@ -279,10 +278,12 @@ def _expr_src_edit_locs(lines: list[str], loc: fstloc, bound: fstloc) -> tuple[f
     while True:
         if not (code := _prev_src(lines, bound_ln, bound_col, start_ln, start_col, True, True)):
             if bound_ln != start_ln:
-                copy_ln  = bound_ln
-                copy_col = len(lines[bound_ln])
-                del_ln   = bound_ln + 1
-                del_col  = 0
+                # copy_ln  = bound_ln
+                # copy_col = len(lines[bound_ln])
+                # del_ln   = bound_ln + 1
+                # del_col  = 0
+                copy_ln  = del_ln  = bound_ln
+                copy_col = del_col = len(lines[bound_ln])
 
             else:
                 copy_ln  = del_ln  = start_ln
@@ -301,15 +302,17 @@ def _expr_src_edit_locs(lines: list[str], loc: fstloc, bound: fstloc) -> tuple[f
             break
 
         if src == '\\':  # TODO: handle these better if possible
-            if (ln := ln + 1) == start_ln:
-                copy_ln  = del_ln  = start_ln
-                copy_col = del_col = start_col
+            # if (ln := ln + 1) == start_ln:
+            #     copy_ln  = del_ln  = start_ln
+            #     copy_col = del_col = start_col
 
-            else:
-                copy_ln  = ln
-                copy_col = len(lines[ln])
-                del_ln   = ln + 1
-                del_col  = 0
+            # else:
+            #     copy_ln  = ln
+            #     copy_col = len(lines[ln])
+            #     del_ln   = ln + 1
+            #     del_col  = 0
+            copy_ln  = del_ln  = ln
+            copy_col = del_col = len(lines[ln])
 
             break
 
@@ -319,12 +322,14 @@ def _expr_src_edit_locs(lines: list[str], loc: fstloc, bound: fstloc) -> tuple[f
         for c in src[::-1]:
             col = col - 1
 
-            if done := (c != '('):
+            if done := (c != '('):  # we don't actually count and check these because there may be other parens inside the `loc` which we can not see here
                 if ln != start_ln:
-                    copy_ln  = bound_ln
-                    copy_col = len(lines[bound_ln])
-                    del_ln   = bound_ln + 1
-                    del_col  = 0
+                    # copy_ln  = bound_ln
+                    # copy_col = len(lines[bound_ln])
+                    # del_ln   = bound_ln + 1
+                    # del_col  = 0
+                    copy_ln  = del_ln  = bound_ln
+                    copy_col = del_col = len(lines[bound_ln])
 
                 else:
                     copy_ln  = del_ln  = start_ln
@@ -344,9 +349,8 @@ def _expr_src_edit_locs(lines: list[str], loc: fstloc, bound: fstloc) -> tuple[f
                 break
 
             else:
-                start_ln   = ln
-                start_col  = col
-                nparens   += 1
+                start_ln  = ln
+                start_col = col
 
         if done:
             break
@@ -360,9 +364,6 @@ def _expr_src_edit_locs(lines: list[str], loc: fstloc, bound: fstloc) -> tuple[f
 
     while True:
         if not (code := _next_src(lines, cur_ln, cur_col, bound_end_ln, bound_end_col, True, False)):
-            if nparens > 0:  # != 0
-                raise ValueError('unclosed parenthesis found')
-
             done         = True
             ln           = bound_end_ln
             col          = bound_end_col
@@ -385,11 +386,6 @@ def _expr_src_edit_locs(lines: list[str], loc: fstloc, bound: fstloc) -> tuple[f
                 col = col + 1
 
                 if c == ')':
-                    # if is sequence then opening parens may be inside of location so we don't check for this
-                    # if not nparens:
-                    #     raise ValueError('unmatched closing parenthesis found')
-
-                    nparens  = nparens - 1
                     stop_ln  = ln
                     stop_col = col
 
@@ -402,9 +398,6 @@ def _expr_src_edit_locs(lines: list[str], loc: fstloc, bound: fstloc) -> tuple[f
                     stop_col   = col
 
                 else:
-                    if nparens > 0:  # != 0
-                        raise ValueError('unclosed parenthesis found')
-
                     done          = True
                     col          -= 1
                     copy_end_ln   = stop_ln
