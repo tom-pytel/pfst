@@ -668,10 +668,10 @@ class FSTSrcEdit:
 
         return (copy_loc, put_loc, put_lines) if cut else (copy_loc, None, None)
 
-    def put_seq(self, fst: 'FST', new: Optional['FST'], indent: str, seq_loc: fstloc,
+    def put_seq(self, fst: 'FST', put_fst: Optional['FST'], indent: str, seq_loc: fstloc,
                 ffirst: Union['FST', fstloc, None], flast: Union['FST', fstloc, None],
                 fpre: Union['FST', fstloc, None], fpost: Union['FST', fstloc, None],
-                nfirst: Union['FST', fstloc, None], nlast: Union['FST', fstloc, None],
+                pfirst: Union['FST', fstloc, None], plast: Union['FST', fstloc, None],
     ) -> fstloc:  # put_loc
         """Put to comma delimited sequence.
 
@@ -683,33 +683,33 @@ class FSTSrcEdit:
         the beginning or end of the sequence, both of which missing indicates put to empty sequence (in which case use
         `seq_loc` for location).
 
-        The first line of `new` is unindented and should remain so as it is concatenated with the target line at the
-        point of insertion. The last line of `new` is likewise prefixed to the line following the deleted location.
+        The first line of `put_fst` is unindented and should remain so as it is concatenated with the target line at the
+        point of insertion. The last line of `put_fst` is likewise prefixed to the line following the deleted location.
 
         There is always an operation if this is called, insertion, deletion, or replacement. It is never an empty
         assignment to an empty slice.
 
         **Parameters:**
         - `fst`: The destination `FST` container that is being put to.
-        - `new`: The sequence which is being put, may be `None` in case of deletion. Already indented, mutate this
+        - `put_fst`: The sequence which is being put, may be `None` in case of deletion. Already indented, mutate this
             object to change what will be put (both source and `AST` nodes, node locations must be offset if source is
             changed).
-        - `indent`: The indent string which was already applied to `new`.
+        - `indent`: The indent string which was already applied to `put_fst`.
         - `seq_loc`: The full location of the sequence in `fst`, excluding parentheses / brackets / curlies.
         - `ffirst`: The first destination `FST` or `fstloc` being replaced (if `None` then nothing being replaced).
         - `flast`: The last destination `FST` or `fstloc` being replaced (if `None` then nothing being replaced).
         - `fpre`: The preceding-first destination `FST` or `fstloc`, not being replaced, may not exist if `ffirst` is
             first of seq.
         - `fpost`: The after-last destination `FST` or `fstloc` being replaced, may not exist if `flast` is last of seq.
-        - `nfirst`: The first source `FST`, else `None` if is assignment from empty sequence (deletion).
-        - `nlast`: The last source `FST`, else `None` if is assignment from empty sequence (deletion).
+        - `pfirst`: The first source `FST`, else `None` if is assignment from empty sequence (deletion).
+        - `plast`: The last source `FST`, else `None` if is assignment from empty sequence (deletion).
 
         **Returns:**
         - `fstloc` location where the potentially modified `fst` source should be put, replacing whatever is at the
             location currently.
         """
 
-        if not new or not nfirst:  # `nfirst` may be None and `new` not if assigning empty sequence, pure delete (assign empty sequence)
+        if not put_fst or not pfirst:  # `pfirst` may be None and `new` not if assigning empty sequence, pure delete (assign empty sequence)
             if not (bound := _fixup_bound(seq_loc, fpre, fpost)):
                 return seq_loc
 
@@ -1141,7 +1141,7 @@ class FST:
 
         return fst
 
-    def _get_seq_and_dedent(self, ast: AST, cut: bool, seq_loc: fstloc,
+    def _get_seq_and_dedent(self, get_ast: AST, cut: bool, seq_loc: fstloc,
                             ffirst: Union['FST', fstloc], flast: Union['FST', fstloc],
                             fpre: Union['FST', fstloc, None], fpost: Union['FST', fstloc, None],
                             prefix: str, suffix: str) -> 'FST':
@@ -1150,20 +1150,20 @@ class FST:
 
         copy_ln, copy_col, copy_end_ln, copy_end_col = copy_loc
 
-        lines              = self.root._lines
-        ast.lineno         = copy_ln + 1
-        ast.col_offset     = lines[copy_ln].c2b(copy_col)
-        ast.end_lineno     = copy_end_ln + 1
-        ast.end_col_offset = lines[copy_end_ln].c2b(copy_end_col)
+        lines                  = self.root._lines
+        get_ast.lineno         = copy_ln + 1
+        get_ast.col_offset     = lines[copy_ln].c2b(copy_col)
+        get_ast.end_lineno     = copy_end_ln + 1
+        get_ast.end_col_offset = lines[copy_end_ln].c2b(copy_end_col)
 
-        fst = self._make_fst_and_dedent(self, ast, copy_loc, prefix, suffix, put_loc, put_lines)
+        put_fst = self._make_fst_and_dedent(self, get_ast, copy_loc, prefix, suffix, put_loc, put_lines)
 
-        ast.col_offset     = 0  # before prefix
-        ast.end_col_offset = fst._lines[-1].lenbytes  # after suffix
+        get_ast.col_offset     = 0  # before prefix
+        get_ast.end_col_offset = put_fst._lines[-1].lenbytes  # after suffix
 
-        ast.f.touch()
+        get_ast.f.touch()
 
-        return fst
+        return put_fst
 
     def _get_slice_stmt(self, start: int, stop: int, field: str | None, fix: bool, cut: bool) -> 'FST':
 
@@ -1173,9 +1173,9 @@ class FST:
 
 
 
-        ast         = self.a
-        field, body = _fixup_field_body(ast, field)
-        start, stop = _fixup_slice_index(ast, body, field, start, stop)
+        get_ast     = self.a
+        field, body = _fixup_field_body(get_ast, field)
+        start, stop = _fixup_slice_index(get_ast, body, field, start, stop)
 
         if start == stop:
             return FST(Module(body=[]), lines=[bistr('')], from_=self)
@@ -1184,8 +1184,8 @@ class FST:
         loc    = fstloc((f := afirst.f).ln, f.col, (l := body[stop - 1].f.loc).end_ln, l.end_col)
         newast = Module(body=[copy_ast(body[i]) for i in range(start, stop)])
 
-        if (fix and field == 'orelse' and not start and (stop - start) == 1 and afirst.col_offset == ast.col_offset and
-            isinstance(ast, If) and isinstance(afirst, If)
+        if (fix and field == 'orelse' and not start and (stop - start) == 1 and
+            afirst.col_offset == get_ast.col_offset and isinstance(get_ast, If) and isinstance(afirst, If)
         ):  # 'elif' -> 'if'
             newast.body[0].col_offset += 2
             loc                        = fstloc(loc.ln, loc.col + 2, loc.end_ln, loc.end_col)
@@ -1231,15 +1231,15 @@ class FST:
                 elts[i].f.pfield = astfield('elts', i)
 
         if is_set:
-            newast = Set(elts=asts)  # location will be set later when span is potentially grown
-            prefix = '{'
-            suffix = '}'
+            get_ast = Set(elts=asts)  # location will be set later when span is potentially grown
+            prefix  = '{'
+            suffix  = '}'
 
         else:
-            newast = ast.__class__(elts=asts, ctx=ctx)
+            get_ast = ast.__class__(elts=asts, ctx=ctx)
 
             if fix and not isinstance(ast.ctx, Load):
-                set_ctx(newast, Load)
+                set_ctx(get_ast, Load)
 
             if is_tuple:
                 prefix = '('
@@ -1264,7 +1264,7 @@ class FST:
 
                 assert self.root._lines[seq_loc.end_ln].startswith(')', seq_loc.end_col)
 
-        fst = self._get_seq_and_dedent(newast, cut, seq_loc, ffirst, flast, fpre, fpost, prefix, suffix)
+        fst = self._get_seq_and_dedent(get_ast, cut, seq_loc, ffirst, flast, fpre, fpost, prefix, suffix)
 
         if is_tuple:
             fst._maybe_add_singleton_tuple_comma(False)  # maybe need to add a postfix comma to copied single element tuple if is not already there
@@ -1306,74 +1306,74 @@ class FST:
                 if key := keys[i]:  # could be None from **
                     key.f.pfield = astfield('keys', i)
 
-        newast  = Dict(keys=akeys, values=avalues)
+        get_ast = Dict(keys=akeys, values=avalues)
         seq_loc = fstloc(self.ln, self.col + 1, self.end_ln, self.end_col - 1)
 
         assert self.root._lines[self.ln].startswith('{', self.col)
         assert self.root._lines[seq_loc.end_ln].startswith('}', seq_loc.end_col)
 
-        return self._get_seq_and_dedent(newast, cut, seq_loc, ffirst, flast, fpre, fpost, '{', '}')
+        return self._get_seq_and_dedent(get_ast, cut, seq_loc, ffirst, flast, fpre, fpost, '{', '}')
 
-    def _put_seq_and_indent(self, new: Optional['FST'], seq_loc: fstloc,
+    def _put_seq_and_indent(self, put_fst: Optional['FST'], seq_loc: fstloc,
                             ffirst: Union['FST', fstloc, None], flast: Union['FST', fstloc, None],
                             fpre: Union['FST', fstloc, None], fpost: Union['FST', fstloc, None],
-                            nfirst: Union['FST', fstloc, None], nlast: Union['FST', fstloc, None]) -> 'FST':
+                            pfirst: Union['FST', fstloc, None], plast: Union['FST', fstloc, None]) -> 'FST':
         root = self.root
 
-        if not new:  # delete
-            fst_lines = None
+        if not put_fst:  # delete
+            put_lines = None
 
             put_ln, put_col, put_end_ln, put_end_col = (
                 self.src_edit.put_seq(self, None, '', seq_loc, ffirst, flast, fpre, fpost, None, None))
 
         else:
-            assert new.is_root
+            assert put_fst.is_root
 
             indent = self.get_indent()
 
-            new.indent_lns(indent)
+            put_fst.indent_lns(indent)
 
             put_ln, put_col, put_end_ln, put_end_col = (
-                self.src_edit.put_seq(self, new, indent, seq_loc, ffirst, flast, fpre, fpost, nfirst, nlast))
+                self.src_edit.put_seq(self, put_fst, indent, seq_loc, ffirst, flast, fpre, fpost, pfirst, plast))
 
             lines           = root._lines
-            fst_lines       = new._lines
+            put_lines       = put_fst._lines
             fst_dcol_offset = lines[put_ln].c2b(put_col)
 
-            new.offset(0, 0, put_ln, fst_dcol_offset)
+            put_fst.offset(0, 0, put_ln, fst_dcol_offset)
 
         if fpost:
-            root.put_lines(fst_lines, put_ln, put_col, put_end_ln, put_end_col, False, None)
+            root.put_lines(put_lines, put_ln, put_col, put_end_ln, put_end_col, False, None)
         else:
-            root.put_lines(fst_lines, put_ln, put_col, put_end_ln, put_end_col, True, self)  # because of insertion at end and unparenthesized tuple
+            root.put_lines(put_lines, put_ln, put_col, put_end_ln, put_end_col, True, self)  # because of insertion at end and unparenthesized tuple
 
     def _put_slice_tuple_list_or_set(self, code: Code | None, start: int, stop: int, field: str | None = None):
         if field is not None and field != 'elts':
             raise ValueError(f"invalid field '{field}' to assign slice to a {self.a.__class__.__name__}")
 
         if code is None:
-            newfst = None
+            put_fst = None
 
         else:
-            newfst = _normalize_code(code, expr_=True, parse_params=self.root.parse_params)
+            put_fst = _normalize_code(code, expr_=True, parse_params=self.root.parse_params)
 
-            if newfst.is_empty_set_call():
-                newfst = _new_empty_set_curlies()
+            if put_fst.is_empty_set_call():
+                put_fst = _new_empty_set_curlies()
 
-            newast = newfst.a
+            put_ast = put_fst.a
 
-            if (not (is_tuple := isinstance(newast, Tuple)) and not (is_set := isinstance(newast, Set)) and not
-                isinstance(newast, List)
+            if (not (is_tuple := isinstance(put_ast, Tuple)) and not (is_set := isinstance(put_ast, Set)) and not
+                isinstance(put_ast, List)
             ):
                 raise ValueError(f"slice being assigned to a {self.a.__class__.__name__} must be a Tuple, List or Set, "
-                                 f"not a '{newast.__class__.__name__}'")
+                                 f"not a '{put_ast.__class__.__name__}'")
 
         ast         = self.a
         elts        = ast.elts
         start, stop = _fixup_slice_index(ast, elts, 'elts', start, stop)
-        slicelen    = stop - start
+        slice_len   = stop - start
 
-        if not slicelen and (not newfst or not newfst.elts):  # deleting or assigning empty seq to empty slice of seq, noop
+        if not slice_len and (not put_fst or not put_fst.elts):  # deleting or assigning empty seq to empty slice of seq, noop
             return
 
         is_self_tuple    = isinstance(ast, Tuple)
@@ -1382,60 +1382,60 @@ class FST:
         fpost            = None if stop == len(elts) else elts[stop].f
         seq_loc          = fstloc(self.ln, self.col + is_self_enclosed, self.end_ln, self.end_col - is_self_enclosed)
 
-        if not slicelen:
+        if not slice_len:
             ffirst = flast = None
 
         else:
             ffirst = elts[start].f
             flast  = elts[stop - 1].f
 
-        if not newfst:
+        if not put_fst:
             self._put_seq_and_indent(None, seq_loc, ffirst, flast, fpre, fpost, None, None)
             self._unmake_fst_tree(elts[start : stop])
 
             del elts[start : stop]
 
-            newlen = 0
+            put_len = 0
 
         else:
-            newlines = newfst._lines
+            put_lines = put_fst._lines
 
             if not is_tuple:
-                newast.end_col_offset -= 1  # strip enclosing curlies or brackets from source set or list
+                put_ast.end_col_offset -= 1  # strip enclosing curlies or brackets from source set or list
 
-                newfst.offset(0, 1, 0, -1)
+                put_fst.offset(0, 1, 0, -1)
 
-                assert newlines[0].startswith('[{'[is_set])
-                assert newlines[-1].endswith(']}'[is_set])
+                assert put_lines[0].startswith('[{'[is_set])
+                assert put_lines[-1].endswith(']}'[is_set])
 
-                newlines[-1] = bistr(newlines[-1][:-1])
-                newlines[0]  = bistr(newlines[0][1:])
+                put_lines[-1] = bistr(put_lines[-1][:-1])
+                put_lines[0]  = bistr(put_lines[0][1:])
 
-            elif newfst.is_tuple_parenthesized():
-                newast.end_col_offset -= 1  # strip enclosing parentheses from source tuple
+            elif put_fst.is_tuple_parenthesized():
+                put_ast.end_col_offset -= 1  # strip enclosing parentheses from source tuple
 
-                newfst.offset(0, 1, 0, -1)
+                put_fst.offset(0, 1, 0, -1)
 
-                newlines[-1] = bistr(newlines[-1][:-1])
-                newlines[0]  = bistr(newlines[0][1:])
+                put_lines[-1] = bistr(put_lines[-1][:-1])
+                put_lines[0]  = bistr(put_lines[0][1:])
 
-            if not (selts := newast.elts):
-                nfirst = nlast = None
+            if not (selts := put_ast.elts):
+                pfirst = plast = None
 
             else:
-                nfirst = selts[0].f
-                nlast  = selts[-1].f
+                pfirst = selts[0].f
+                plast  = selts[-1].f
 
-            self._put_seq_and_indent(newfst, seq_loc, ffirst, flast, fpre, fpost, nfirst, nlast)
-            self._unmake_fst_tree(elts[start : stop], newfst)
+            self._put_seq_and_indent(put_fst, seq_loc, ffirst, flast, fpre, fpost, pfirst, plast)
+            self._unmake_fst_tree(elts[start : stop], put_fst)
 
-            elts[start : stop] = newast.elts
-            newlen             = len(newast.elts)
-            stack              = [FST(elts[i], self, astfield('elts', i)) for i in range(start, start + newlen)]
+            elts[start : stop] = put_ast.elts
+            put_len            = len(put_ast.elts)
+            stack              = [FST(elts[i], self, astfield('elts', i)) for i in range(start, start + put_len)]
 
             self._make_fst_tree(stack)
 
-        for i in range(start + newlen, len(elts)):
+        for i in range(start + put_len, len(elts)):
             elts[i].f.pfield = astfield('elts', i)
 
         if is_self_tuple:
@@ -1448,21 +1448,21 @@ class FST:
             raise ValueError(f"cannot specify a field '{field}' to assign slice to a Dict")
 
         if code is None:
-            newfst = None
+            put_fst = None
 
         else:
-            newfst = _normalize_code(code, expr_=True, parse_params=self.root.parse_params)
-            newast = newfst.a
+            put_fst = _normalize_code(code, expr_=True, parse_params=self.root.parse_params)
+            put_ast = put_fst.a
 
-            if not isinstance(newast, Dict):
-                raise ValueError(f"slice being assigned to a Dict must be a Dict, not a '{newast.__class__.__name__}'")
+            if not isinstance(put_ast, Dict):
+                raise ValueError(f"slice being assigned to a Dict must be a Dict, not a '{put_ast.__class__.__name__}'")
 
         ast         = self.a
         values      = ast.values
         start, stop = _fixup_slice_index(ast, values, 'values', start, stop)
-        slicelen    = stop - start
+        slice_len   = stop - start
 
-        if not slicelen and (not newfst or not newfst.keys):  # deleting or assigning empty dict to empty slice of dict, noop
+        if not slice_len and (not put_fst or not put_fst.keys):  # deleting or assigning empty dict to empty slice of dict, noop
             return
 
         keys    = ast.keys
@@ -1470,50 +1470,50 @@ class FST:
         fpost   = None if stop == len(keys) else self._dict_key_or_mock_loc(keys[stop], values[stop].f)
         seq_loc = fstloc(self.ln, self.col + 1, self.end_ln, self.end_col - 1)
 
-        if not slicelen:
+        if not slice_len:
             ffirst = flast = None
 
         else:
             ffirst = self._dict_key_or_mock_loc(keys[start], values[start].f)
             flast  = values[stop - 1].f
 
-        if not newfst:
+        if not put_fst:
             self._put_seq_and_indent(None, seq_loc, ffirst, flast, fpre, fpost, None, None)
             self._unmake_fst_tree(keys[start : stop] + values[start : stop])
 
             del keys[start : stop]
             del values[start : stop]
 
-            newlen = 0
+            put_len = 0
 
         else:
-            newlines               = newfst._lines
-            newast.end_col_offset -= 1  # strip enclosing curlies from source dict
+            put_lines               = put_fst._lines
+            put_ast.end_col_offset -= 1  # strip enclosing curlies from source dict
 
-            newfst.offset(0, 1, 0, -1)
+            put_fst.offset(0, 1, 0, -1)
 
-            assert newlines[0].startswith('{')
-            assert newlines[-1].endswith('}')
+            assert put_lines[0].startswith('{')
+            assert put_lines[-1].endswith('}')
 
-            newlines[-1] = bistr(newlines[-1][:-1])
-            newlines[0]  = bistr(newlines[0][1:])
+            put_lines[-1] = bistr(put_lines[-1][:-1])
+            put_lines[0]  = bistr(put_lines[0][1:])
 
-            if not (skeys := newast.keys):
-                nfirst = nlast = None
+            if not (skeys := put_ast.keys):
+                pfirst = plast = None
 
             else:
-                nfirst = skeys[0].f
-                nlast  = newast.values[-1].f
+                pfirst = skeys[0].f
+                plast  = put_ast.values[-1].f
 
-            self._put_seq_and_indent(newfst, seq_loc, ffirst, flast, fpre, fpost, nfirst, nlast)
-            self._unmake_fst_tree(keys[start : stop] + values[start : stop], newfst)
+            self._put_seq_and_indent(put_fst, seq_loc, ffirst, flast, fpre, fpost, pfirst, plast)
+            self._unmake_fst_tree(keys[start : stop] + values[start : stop], put_fst)
 
-            keys[start : stop]   = newast.keys
-            values[start : stop] = newast.values
-            newlen               = len(newast.keys)
+            keys[start : stop]   = put_ast.keys
+            values[start : stop] = put_ast.values
+            put_len              = len(put_ast.keys)
             stack                = []
 
-            for i in range(newlen):
+            for i in range(put_len):
                 startplusi = start + i
 
                 stack.append(FST(values[startplusi], self, astfield('values', startplusi)))
@@ -1523,7 +1523,7 @@ class FST:
 
             self._make_fst_tree(stack)
 
-        for i in range(start + newlen, len(keys)):
+        for i in range(start + put_len, len(keys)):
             values[i].f.pfield = astfield('values', i)
 
             if key := keys[i]:  # could be None from **
