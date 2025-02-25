@@ -4,6 +4,7 @@ from ast import parse as ast_parse, unparse as ast_unparse
 from typing import Any, Callable, Generator, Literal, NamedTuple, Optional, TypeAlias, Union
 
 from .util import *
+from .util import TryStar
 
 __all__ = [
     'parse', 'unparse', 'FST', 'FSTSrcEdit',
@@ -73,8 +74,14 @@ DEFAULT_INDENT          = '    '
 DEFAULT_DOCSTRING       = True
 
 STATEMENTISH            = (stmt, ExceptHandler, match_case)  # always in lists, cannot be inside multilines
+STATEMENTISH_OR_MOD     = (stmt, ExceptHandler, match_case, mod)
 STATEMENTISH_OR_STMTMOD = (stmt, ExceptHandler, match_case, Module, Interactive)
-HAS_DOCSTRING           = (FunctionDef, AsyncFunctionDef, ClassDef, Module)
+NAMED_SCOPE_OR_MOD      = (FunctionDef, AsyncFunctionDef, ClassDef, mod)
+SCOPE_OR_MOD            = (FunctionDef, AsyncFunctionDef, ClassDef, Lambda, ListComp, SetComp, DictComp, GeneratorExp,
+                           mod)
+BLOCK_OR_MOD            = (FunctionDef, AsyncFunctionDef, ClassDef, For, AsyncFor, While, If, With, AsyncWith, Match,
+                           Try, TryStar, ExceptHandler, match_case, mod)
+HAS_DOCSTRING           = (FunctionDef, AsyncFunctionDef, ClassDef)
 
 re_empty_line_start     = re.compile(r'[ \t]*')    # start of completely empty or space-filled line (from start pos, start of line indentation)
 re_empty_line           = re.compile(r'[ \t]*$')   # completely empty or space-filled line (from start pos, start of line indentation)
@@ -125,14 +132,15 @@ class srcwpos(NamedTuple):
     src: str
 
 
-def parse(source, filename='<unknown>', mode='exec', *, type_comments=False, feature_version=None, **kwargs):
+def parse(source, filename='<unknown>', mode='exec', *, type_comments=False, feature_version=None, **kwargs) -> AST:
     """Executes `ast.parse()` and then adds `FST` nodes to the parsed tree. Drop-in replacement for `ast.parse()`. For
-    parameters, see `ast.parse()`."""
+    parameters, see `ast.parse()`. Returned `AST` tree has added `.f` attribute at each node which accesses the parallel
+    `FST` tree."""
 
     return FST.fromsrc(source, filename, mode, type_comments=type_comments, feature_version=feature_version, **kwargs).a
 
 
-def unparse(ast_obj):
+def unparse(ast_obj) -> str:
     """Returns the formatted source that is kept for this tree. Drop-in replacement for `ast.unparse()`."""
 
     if (f := getattr(ast_obj, 'f', None)) and isinstance(f, FST) and f.loc:
@@ -738,20 +746,68 @@ class FST:
     parent:       Optional['FST']           ; """Parent `FST` node, `None` in root node."""
     pfield:       astfield | None           ; """The `astfield` location of this node in the parent, `None` in root node."""
     root:         'FST'                     ; """The root node of this tree, `self` in root node."""
-
-    parse_params: dict[str, Any]            ; """The parameters to use for any `ast.parse()` that needs to be done (filename, type_comments, feature_version), root node only.""" # ROOT ONLY!
-    indent:       str                       ; """The default single level of block indentation for this tree when not available from context, root node only."""  # ROOT ONLY!
-    docstring:    bool | Literal['strict']  ; """The default docstring indent / dedent behavior. `True` means allow indent of all `Expr` multiline strings, `False` means don't touch them and `'strict'` allows for indent multiline strings in standard docstring positions only."""  # ROOT ONLY!
-
     _loc:         fstloc | None             # cache, MAY NOT EXIST!
     _bloc:        fstloc | None             # cache, MAY NOT EXIST! bounding location, including preceding decorators
-    _lines:       list[bistr]               # ROOT ONLY!
+
+    # ROOT ONLY
+    parse_params: dict[str, Any]            ; """The parameters to use for any `ast.parse()` that needs to be done (filename, type_comments, feature_version), root node only."""
+    indent:       str                       ; """The default single level of block indentation string for this tree when not available from context, root node only."""
+    docstring:    bool | Literal['strict']  ; """The default docstring indent / dedent behavior. `True` means allow indent of all `Expr` multiline strings, `False` means don't indent any of them and `'strict'` allows for indenting multiline strings at standard docstring locations only."""
+    _lines:       list[bistr]
 
     @property
     def is_root(self) -> bool:
         """`True` for the root node, `False` otherwise."""
 
         return self.parent is None
+
+    @property
+    def parent_stmt(self) -> Optional['FST']:
+        """The first parent which is a `stmt` or `mod` node (if any)."""
+
+        while (self := self.parent) and not isinstance(self, (stmt, mod)):
+            pass
+
+        return self
+
+    @property
+    def parent_stmtish(self) -> Optional['FST']:
+        """The first parent which is a `stmt`, `ExceptHandler`, `match_case` or `mod` node (if any)."""
+
+        while (self := self.parent) and not isinstance(self, STATEMENTISH_OR_MOD):
+            pass
+
+        return self
+
+    @property
+    def parent_block(self) -> Optional['FST']:
+        """The first parent which opens a block that `self` lives in (if any). Types include `FunctionDef`,
+        `AsyncFunctionDef`, `ClassDef`, `For`, `AsyncFor`, `While`, `If`, `With`, `AsyncWith`, `Match`, `Try`,
+        `TryStar`, `ExceptHandler`, `match_case`, and `mod`."""
+
+        while (self := self.parent) and not isinstance(self, BLOCK_OR_MOD):
+            pass
+        return self
+
+    @property
+    def parent_scope(self) -> Optional['FST']:
+        """The first parent which opens a scope that `self` lives in (if any). Types include `FunctionDef`,
+        `AsyncFunctionDef`, `ClassDef`, `Lambda`, `ListComp`, `SetComp`, `DictComp`, `GeneratorExp`, and `mod`."""
+
+        while (self := self.parent) and not isinstance(self, SCOPE_OR_MOD):
+            pass
+
+        return self
+
+    @property
+    def parent_named_scope(self) -> Optional['FST']:
+        """The first parent which opens a named scope that `self` lives in (if any). Types include `FunctionDef`,
+        `AsyncFunctionDef`, `ClassDef` and `mod`."""
+
+        while (self := self.parent) and not isinstance(self, NAMED_SCOPE_OR_MOD):
+            pass
+
+        return self
 
     @property
     def lines(self) -> list[str] | None:
@@ -778,7 +834,9 @@ class FST:
 
     @property
     def loc(self) -> fstloc | None:
-        """Location of node (may not be entire location if node has decorators). Not all nodes have locations."""
+        """Zero based character indexed location of node (may not be entire location if node has decorators). Not all
+        nodes have locations, specifically leaf nodes like operations and `expr_context`. Other nodes which normally
+        don't have locations like `arguments` have this location calculated from their children."""
 
         try:
             return self._loc
@@ -812,7 +870,8 @@ class FST:
 
     @property
     def bloc(self) -> fstloc:
-        """Entire location of node, including any preceding decorators. Not all nodes have locations."""
+        """Entire location of node, including any preceding decorators. Not all nodes have locations, but any node which
+        has a `.loc` will have a `.bloc`."""
 
         try:
             return self._bloc
@@ -894,8 +953,7 @@ class FST:
 
         raise RuntimeError("you probably think you're accessing an AST node, but you're not, you're accessing an FST node")
 
-    src_edit = FSTSrcEdit()
-    """Controls source edit formatting on edit operations. Can also be set on class instances to override."""
+    src_edit: FSTSrcEdit = FSTSrcEdit()  ; """@private"""
 
     # ------------------------------------------------------------------------------------------------------------------
 
@@ -1551,7 +1609,19 @@ class FST:
 
     @staticmethod
     def new(filename: str = '<unknown>', mode: str = 'exec', *,
-            type_comments: bool = False, feature_version: tuple[int, int] | None = None, **parse_params) -> 'FST':
+            type_comments: bool = False, feature_version: tuple[int, int] | None = None) -> 'FST':
+        """Create a new empty `FST` tree with the top level node dictated by the `mode` parameter.
+
+        **Parameters:**
+        - `filename`: `ast.parse()` parameter.
+        - `mode`: `ast.parse()` parameter.
+        - `type_comments`: `ast.parse()` parameter.
+        - `feature_version`: `ast.parse()` parameter.
+
+        **Returns:**
+        - `AST`: The parsed tree with `.f` attributes added to each `AST` node for `FST` access.
+        """
+
         parse_params = dict(parse_params, filename=filename, type_comments=type_comments,
                             feature_version=feature_version)
 
@@ -1568,7 +1638,21 @@ class FST:
 
     @staticmethod
     def fromsrc(source: str | bytes | list[str], filename: str = '<unknown>', mode: str = 'exec', *,
-                type_comments: bool = False, feature_version: tuple[int, int] | None = None, **parse_params) -> 'FST':
+                type_comments: bool = False, feature_version: tuple[int, int] | None = None) -> 'FST':
+        """Parse and create a new `FST` tree from source, preserving the original source and locations.
+
+        **Parameters:**
+        - `source`: The source to parse as a single `str`, `bytes` or list of individual line strings (without
+            newlines).
+        - `filename`: `ast.parse()` parameter.
+        - `mode`: `ast.parse()` parameter.
+        - `type_comments`: `ast.parse()` parameter.
+        - `feature_version`: `ast.parse()` parameter.
+
+        **Returns:**
+        - `AST`: The parsed tree with `.f` attributes added to each `AST` node for `FST` access.
+        """
+
         if isinstance(source, bytes):
             source = source.decode()
 
@@ -1579,8 +1663,7 @@ class FST:
             lines  = source
             source = '\n'.join(lines)
 
-        parse_params = dict(parse_params, filename=filename, type_comments=type_comments,
-                            feature_version=feature_version)
+        parse_params = dict(filename=filename, type_comments=type_comments, feature_version=feature_version)
         ast          = ast_parse(source, mode=mode, **parse_params)
 
         return FST(ast, lines=[bistr(s) for s in lines], parse_params=parse_params)
@@ -1588,21 +1671,26 @@ class FST:
     @staticmethod
     def fromast(ast: AST, filename: str = '<unknown>', mode: str | None = None, *,
                 type_comments: bool | None = False, feature_version=None,
-                calc_loc: bool | Literal['copy'] = True, **parse_params) -> 'FST':
-        """Add `FST` to existing `AST`, optionally copying positions from reparsed `AST` (default) or whole `AST` for
-        new `FST`.
+                calc_loc: bool | Literal['copy'] = True) -> 'FST':
+        """Add `FST` to existing `AST` tree, optionally copying positions from reparsed `AST` (default) or whole `AST`
+        for new `FST`.
 
         Do not set `calc_loc` to `False` unless you parsed the `AST` from a previous output of `ast.unparse()`,
         otherwise there will almost certaionly be problems!
 
         **Parameters:**
         - `ast`: The root `AST` node.
+        - `filename`: `ast.parse()` parameter.
+        - `mode`: `ast.parse()` parameter. Can be `exec`, `eval, `single` or `None`, in which case the appropriate mode
+            is determined from the structure of the tree itself.
+        - `type_comments`: `ast.parse()` parameter.
+        - `feature_version`: `ast.parse()` parameter.
         - `calc_loc`: Get actual node positions by unparsing then parsing again. Use when you are not certain node
             positions are correct or even present. Updates original ast unless set to "copy", in which case a copied
             `AST` is used. Set to `False` when you know positions are correct and want to use given `AST`. Default True.
-        - `type_comments`: `ast.parse()` parameter.
-        - `feature_version`: `ast.parse()` parameter.
-        - `parse_params`: Other parameters to `ast.parse()`.
+
+        **Returns:**
+        - `AST`: The parsed tree with `.f` attributes added to each `AST` node for `FST` access.
         """
 
         src   = ast_unparse(ast)
@@ -1611,8 +1699,7 @@ class FST:
         if type_comments is None:
             type_comments = has_type_comments(ast)
 
-        parse_params = dict(parse_params, filename=filename, type_comments=type_comments,
-                            feature_version=feature_version)
+        parse_params = dict(filename=filename, type_comments=type_comments, feature_version=feature_version)
 
         if calc_loc:
             astp = ast_parse(src, mode=get_parse_mode(ast) if mode is None else mode, **parse_params)
