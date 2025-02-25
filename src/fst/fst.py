@@ -391,8 +391,14 @@ def _expr_src_edit_locs(lines: list[str], loc: fstloc, bound: fstloc) -> tuple[f
         cur_col = col
 
     if ln != stop_ln:
-        del_end_ln   = stop_ln
-        del_end_col  = len(lines[del_end_ln])
+        if stop_ln == loc.end_ln:  # because of weird comma positioning
+            del_end_ln  = stop_ln
+            del_end_col = len(lines[del_end_ln])
+
+        else:
+            del_end_ln  = ln
+            del_end_col = 0
+
         copy_end_ln  = ln
         copy_end_col = 0
 
@@ -421,7 +427,7 @@ def _expr_src_edit_locs(lines: list[str], loc: fstloc, bound: fstloc) -> tuple[f
             del_col = precomma_del_col + 1
 
     if not del_col and del_end_col and (m := re_empty_line_start.match(lines[del_ln])).end():  # delete from start of line to middle of line, maybe there is indentation to apply for prettification
-        put_lines = [m.group()]
+        put_lines = [bistr(m.group())]
     else:
         put_lines = None
 
@@ -1129,10 +1135,7 @@ class FST:
             fst_lines[0] = bistr(prefix + fst_lines[0])
 
         if put_loc:
-            self.put_lines(put_lines, *put_loc, True)
-            # self.root.offset(put_loc.end_ln, put_loc.end_col, put_loc.ln - put_loc.end_ln,
-            #                   lines[put_loc.ln].c2b(put_loc.col) - lines[put_loc.end_ln].c2b(put_loc.end_col), True)  # True because we may have an unparenthesized tuple that shrinks to a span length of 0
-            # self.put_lines(put_lines, *put_loc)
+            self.put_lines(put_lines, *put_loc, True)  # True because we may have an unparenthesized tuple that shrinks to a span length of 0
 
         fst.dedent_lns(indent)
 
