@@ -1387,7 +1387,7 @@ def walktest(ast):
 
 
 def dumptest(self, fst, dump, src):
-    self.assertEqual(dump.strip(), '\n'.join(fst.dump(print=False)))
+    self.assertEqual(dump.strip(), '\n'.join(fst.dump(linefunc=list)))
     self.assertEqual(src, fst.src)
 
 
@@ -2629,7 +2629,7 @@ def f():
     j = 1
     k = 1
     l = 1
-            """.strip()).body[0].f.get_slice(-2).dump(print=False)), """
+            """.strip()).body[0].f.get_slice(-2).dump(linefunc=list)), """
 Module .. ROOT 0,0 -> 1,5
   .body[2]
   0] Assign .. 0,0 -> 0,5
@@ -2670,7 +2670,7 @@ except ValueError: pass
 except RuntimeError: pass
 except IndexError: pass
 except TypeError: pass
-            """.strip()).body[0].f.get_slice(-1, field='handlers').dump(print=False)), """
+            """.strip()).body[0].f.get_slice(-1, field='handlers').dump(linefunc=list)), """
 Module .. ROOT 0,0 -> 0,22
   .body[1]
   0] ExceptHandler .. 0,0 -> 0,22
@@ -2692,7 +2692,7 @@ match a:
     case f: pass
     case None: pass
     case 3 | 4: pass
-            """.strip()).body[0].f.get_slice(1, 3).dump(print=False)), """
+            """.strip()).body[0].f.get_slice(1, 3).dump(linefunc=list)), """
 Module .. ROOT 0,0 -> 1,15
   .body[2]
   0] match_case .. 0,0 -> 0,7
@@ -3549,8 +3549,8 @@ Tuple .. ROOT 0,0 -> 2,1
             s     = f.get_slice(start, stop, cut=True)
             tsrc  = t.f.src
             ssrc  = s.src
-            tdump = t.f.dump(print=False, compact=True)
-            sdump = s.dump(print=False, compact=True)
+            tdump = t.f.dump(linefunc=list, compact=True)
+            sdump = s.dump(linefunc=list, compact=True)
 
             self.assertEqual(tsrc, src_cut.strip())
             self.assertEqual(ssrc, slice_cut.strip())
@@ -3567,7 +3567,7 @@ Tuple .. ROOT 0,0 -> 2,1
             f.put_slice(src, start, stop)
 
             tdst  = t.f.src
-            tdump = t.f.dump(print=False, compact=True)
+            tdump = t.f.dump(linefunc=list, compact=True)
 
             self.assertEqual(tdst, put_src.strip())
             self.assertEqual(tdump, put_dump.strip().split('\n'))
@@ -3583,8 +3583,8 @@ def regen_cut_data():
         s     = f.get_slice(start, stop, cut=True)
         tsrc  = t.f.src
         ssrc  = s.src
-        tdump = t.f.dump(print=False, compact=True)
-        sdump = s.dump(print=False, compact=True)
+        tdump = t.f.dump(linefunc=list, compact=True)
+        sdump = s.dump(linefunc=list, compact=True)
 
         assert not tsrc.startswith('\n') or tsrc.endswith('\n')
         assert not ssrc.startswith('\n') or ssrc.endswith('\n')
@@ -3623,7 +3623,7 @@ def regen_put_slice_data():
         f.put_slice(src, start, stop)
 
         tdst  = t.f.src
-        tdump = t.f.dump(print=False, compact=True)
+        tdump = t.f.dump(linefunc=list, compact=True)
 
         assert not tdst.startswith('\n') or tdst.endswith('\n')
 

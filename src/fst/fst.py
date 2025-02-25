@@ -1759,17 +1759,21 @@ class FST:
 
         return self
 
-    def dump(self, full: bool = False, indent: int = 2, print: bool = True, compact: bool = False) -> list[str] | None:
+    def dump(self, full: bool = False, indent: int = 2, linefunc: Callable = print, compact: bool = False
+             ) -> list[str] | None:
         """Dump a representation of the tree to stdout or return as a list of lines."""
 
-        if print:
-            return self._dump(full, indent, compact=compact)
+        if linefunc is print:
+            return self._dump(full, indent, linefunc=print, compact=compact)
 
-        lines = []
+        if linefunc in (str, list):
+            lines = []
 
-        self._dump(full, indent, linefunc=lines.append, compact=compact)
+            self._dump(full, indent, linefunc=lines.append, compact=compact)
 
-        return lines
+            return lines if linefunc is list else '\n'.join(lines)
+
+        self._dump(full, indent, linefunc=linefunc, compact=compact)
 
     # ------------------------------------------------------------------------------------------------------------------
 
