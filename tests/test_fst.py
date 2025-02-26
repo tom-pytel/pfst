@@ -1748,6 +1748,2398 @@ Module .. ROOT 0,0 -> 2,1
           Load
 """),
 
+("""
+[            # hello
+    a, b, c
+]
+""", 'body[0].value', 0, 1, """
+[
+    1]
+""", """
+[            # hello
+    1, b, c
+]
+""", """
+Module .. ROOT 0,0 -> 2,1
+  .body[1]
+  0] Expr .. 0,0 -> 2,1
+    .value
+      List .. 0,0 -> 2,1
+        .elts[3]
+        0] Constant 1 .. 1,4 -> 1,5
+        1] Name 'b' Load .. 1,7 -> 1,8
+        2] Name 'c' Load .. 1,10 -> 1,11
+        .ctx
+          Load
+"""),
+
+("""
+[            # hello
+    a, b, c
+]
+""", 'body[0].value', 1, 2, """
+[
+    1]
+""", """
+[            # hello
+    a, 
+    1, c
+]
+""", """
+Module .. ROOT 0,0 -> 3,1
+  .body[1]
+  0] Expr .. 0,0 -> 3,1
+    .value
+      List .. 0,0 -> 3,1
+        .elts[3]
+        0] Name 'a' Load .. 1,4 -> 1,5
+        1] Constant 1 .. 2,4 -> 2,5
+        2] Name 'c' Load .. 2,7 -> 2,8
+        .ctx
+          Load
+"""),
+
+("""
+[            # hello
+    a, b, c
+]
+""", 'body[0].value', 2, 3, """
+[
+    1]
+""", """
+[            # hello
+    a, b, 
+    1]
+""", """
+Module .. ROOT 0,0 -> 2,6
+  .body[1]
+  0] Expr .. 0,0 -> 2,6
+    .value
+      List .. 0,0 -> 2,6
+        .elts[3]
+        0] Name 'a' Load .. 1,4 -> 1,5
+        1] Name 'b' Load .. 1,7 -> 1,8
+        2] Constant 1 .. 2,4 -> 2,5
+        .ctx
+          Load
+"""),
+
+("""
+[            # hello
+    a, b, c
+]
+""", 'body[0].value', 0, 1, """
+[2]
+""", """
+[            # hello
+    2, b, c
+]
+""", """
+Module .. ROOT 0,0 -> 2,1
+  .body[1]
+  0] Expr .. 0,0 -> 2,1
+    .value
+      List .. 0,0 -> 2,1
+        .elts[3]
+        0] Constant 2 .. 1,4 -> 1,5
+        1] Name 'b' Load .. 1,7 -> 1,8
+        2] Name 'c' Load .. 1,10 -> 1,11
+        .ctx
+          Load
+"""),
+
+("""
+[            # hello
+    a, b, c
+]
+""", 'body[0].value', 1, 2, """
+[2]
+""", """
+[            # hello
+    a, 2, c
+]
+""", """
+Module .. ROOT 0,0 -> 2,1
+  .body[1]
+  0] Expr .. 0,0 -> 2,1
+    .value
+      List .. 0,0 -> 2,1
+        .elts[3]
+        0] Name 'a' Load .. 1,4 -> 1,5
+        1] Constant 2 .. 1,7 -> 1,8
+        2] Name 'c' Load .. 1,10 -> 1,11
+        .ctx
+          Load
+"""),
+
+("""
+[            # hello
+    a, b, c
+]
+""", 'body[0].value', 2, 3, """
+[2]
+""", """
+[            # hello
+    a, b, 2]
+""", """
+Module .. ROOT 0,0 -> 1,12
+  .body[1]
+  0] Expr .. 0,0 -> 1,12
+    .value
+      List .. 0,0 -> 1,12
+        .elts[3]
+        0] Name 'a' Load .. 1,4 -> 1,5
+        1] Name 'b' Load .. 1,7 -> 1,8
+        2] Constant 2 .. 1,10 -> 1,11
+        .ctx
+          Load
+"""),
+
+("""
+[            # hello
+    a, b, c
+]
+""", 'body[0].value', 0, 1, """
+[3
+]
+""", """
+[            # hello
+    3,
+    b, c
+]
+""", """
+Module .. ROOT 0,0 -> 3,1
+  .body[1]
+  0] Expr .. 0,0 -> 3,1
+    .value
+      List .. 0,0 -> 3,1
+        .elts[3]
+        0] Constant 3 .. 1,4 -> 1,5
+        1] Name 'b' Load .. 2,4 -> 2,5
+        2] Name 'c' Load .. 2,7 -> 2,8
+        .ctx
+          Load
+"""),
+
+("""
+[            # hello
+    a, b, c
+]
+""", 'body[0].value', 1, 2, """
+[3
+]
+""", """
+[            # hello
+    a, 3,
+    c
+]
+""", """
+Module .. ROOT 0,0 -> 3,1
+  .body[1]
+  0] Expr .. 0,0 -> 3,1
+    .value
+      List .. 0,0 -> 3,1
+        .elts[3]
+        0] Name 'a' Load .. 1,4 -> 1,5
+        1] Constant 3 .. 1,7 -> 1,8
+        2] Name 'c' Load .. 2,4 -> 2,5
+        .ctx
+          Load
+"""),
+
+("""
+[            # hello
+    a, b, c
+]
+""", 'body[0].value', 2, 3, """
+[3
+]
+""", """
+[            # hello
+    a, b, 3
+]
+""", """
+Module .. ROOT 0,0 -> 2,1
+  .body[1]
+  0] Expr .. 0,0 -> 2,1
+    .value
+      List .. 0,0 -> 2,1
+        .elts[3]
+        0] Name 'a' Load .. 1,4 -> 1,5
+        1] Name 'b' Load .. 1,7 -> 1,8
+        2] Constant 3 .. 1,10 -> 1,11
+        .ctx
+          Load
+"""),
+
+("""
+[            # hello
+    a, b, c,
+]
+""", 'body[0].value', 0, 1, """
+[
+    1]
+""", """
+[            # hello
+    1, b, c,
+]
+""", """
+Module .. ROOT 0,0 -> 2,1
+  .body[1]
+  0] Expr .. 0,0 -> 2,1
+    .value
+      List .. 0,0 -> 2,1
+        .elts[3]
+        0] Constant 1 .. 1,4 -> 1,5
+        1] Name 'b' Load .. 1,7 -> 1,8
+        2] Name 'c' Load .. 1,10 -> 1,11
+        .ctx
+          Load
+"""),
+
+("""
+[            # hello
+    a, b, c,
+]
+""", 'body[0].value', 1, 2, """
+[
+    1]
+""", """
+[            # hello
+    a, 
+    1, c,
+]
+""", """
+Module .. ROOT 0,0 -> 3,1
+  .body[1]
+  0] Expr .. 0,0 -> 3,1
+    .value
+      List .. 0,0 -> 3,1
+        .elts[3]
+        0] Name 'a' Load .. 1,4 -> 1,5
+        1] Constant 1 .. 2,4 -> 2,5
+        2] Name 'c' Load .. 2,7 -> 2,8
+        .ctx
+          Load
+"""),
+
+("""
+[            # hello
+    a, b, c,
+]
+""", 'body[0].value', 2, 3, """
+[
+    1]
+""", """
+[            # hello
+    a, b, 
+    1]
+""", """
+Module .. ROOT 0,0 -> 2,6
+  .body[1]
+  0] Expr .. 0,0 -> 2,6
+    .value
+      List .. 0,0 -> 2,6
+        .elts[3]
+        0] Name 'a' Load .. 1,4 -> 1,5
+        1] Name 'b' Load .. 1,7 -> 1,8
+        2] Constant 1 .. 2,4 -> 2,5
+        .ctx
+          Load
+"""),
+
+("""
+[            # hello
+    a, b, c,
+]
+""", 'body[0].value', 0, 1, """
+[2]
+""", """
+[            # hello
+    2, b, c,
+]
+""", """
+Module .. ROOT 0,0 -> 2,1
+  .body[1]
+  0] Expr .. 0,0 -> 2,1
+    .value
+      List .. 0,0 -> 2,1
+        .elts[3]
+        0] Constant 2 .. 1,4 -> 1,5
+        1] Name 'b' Load .. 1,7 -> 1,8
+        2] Name 'c' Load .. 1,10 -> 1,11
+        .ctx
+          Load
+"""),
+
+("""
+[            # hello
+    a, b, c,
+]
+""", 'body[0].value', 1, 2, """
+[2]
+""", """
+[            # hello
+    a, 2, c,
+]
+""", """
+Module .. ROOT 0,0 -> 2,1
+  .body[1]
+  0] Expr .. 0,0 -> 2,1
+    .value
+      List .. 0,0 -> 2,1
+        .elts[3]
+        0] Name 'a' Load .. 1,4 -> 1,5
+        1] Constant 2 .. 1,7 -> 1,8
+        2] Name 'c' Load .. 1,10 -> 1,11
+        .ctx
+          Load
+"""),
+
+("""
+[            # hello
+    a, b, c,
+]
+""", 'body[0].value', 2, 3, """
+[2]
+""", """
+[            # hello
+    a, b, 2]
+""", """
+Module .. ROOT 0,0 -> 1,12
+  .body[1]
+  0] Expr .. 0,0 -> 1,12
+    .value
+      List .. 0,0 -> 1,12
+        .elts[3]
+        0] Name 'a' Load .. 1,4 -> 1,5
+        1] Name 'b' Load .. 1,7 -> 1,8
+        2] Constant 2 .. 1,10 -> 1,11
+        .ctx
+          Load
+"""),
+
+("""
+[            # hello
+    a, b, c,
+]
+""", 'body[0].value', 0, 1, """
+[3
+]
+""", """
+[            # hello
+    3,
+    b, c,
+]
+""", """
+Module .. ROOT 0,0 -> 3,1
+  .body[1]
+  0] Expr .. 0,0 -> 3,1
+    .value
+      List .. 0,0 -> 3,1
+        .elts[3]
+        0] Constant 3 .. 1,4 -> 1,5
+        1] Name 'b' Load .. 2,4 -> 2,5
+        2] Name 'c' Load .. 2,7 -> 2,8
+        .ctx
+          Load
+"""),
+
+("""
+[            # hello
+    a, b, c,
+]
+""", 'body[0].value', 1, 2, """
+[3
+]
+""", """
+[            # hello
+    a, 3,
+    c,
+]
+""", """
+Module .. ROOT 0,0 -> 3,1
+  .body[1]
+  0] Expr .. 0,0 -> 3,1
+    .value
+      List .. 0,0 -> 3,1
+        .elts[3]
+        0] Name 'a' Load .. 1,4 -> 1,5
+        1] Constant 3 .. 1,7 -> 1,8
+        2] Name 'c' Load .. 2,4 -> 2,5
+        .ctx
+          Load
+"""),
+
+("""
+[            # hello
+    a, b, c,
+]
+""", 'body[0].value', 2, 3, """
+[3
+]
+""", """
+[            # hello
+    a, b, 3
+]
+""", """
+Module .. ROOT 0,0 -> 2,1
+  .body[1]
+  0] Expr .. 0,0 -> 2,1
+    .value
+      List .. 0,0 -> 2,1
+        .elts[3]
+        0] Name 'a' Load .. 1,4 -> 1,5
+        1] Name 'b' Load .. 1,7 -> 1,8
+        2] Constant 3 .. 1,10 -> 1,11
+        .ctx
+          Load
+"""),
+
+("""
+[            # hello
+    a, b, c
+]
+""", 'body[0].value', 0, 1, """
+[
+    1,]
+""", """
+[            # hello
+    1, b, c
+]
+""", """
+Module .. ROOT 0,0 -> 2,1
+  .body[1]
+  0] Expr .. 0,0 -> 2,1
+    .value
+      List .. 0,0 -> 2,1
+        .elts[3]
+        0] Constant 1 .. 1,4 -> 1,5
+        1] Name 'b' Load .. 1,7 -> 1,8
+        2] Name 'c' Load .. 1,10 -> 1,11
+        .ctx
+          Load
+"""),
+
+("""
+[            # hello
+    a, b, c
+]
+""", 'body[0].value', 1, 2, """
+[
+    1,]
+""", """
+[            # hello
+    a, 
+    1, c
+]
+""", """
+Module .. ROOT 0,0 -> 3,1
+  .body[1]
+  0] Expr .. 0,0 -> 3,1
+    .value
+      List .. 0,0 -> 3,1
+        .elts[3]
+        0] Name 'a' Load .. 1,4 -> 1,5
+        1] Constant 1 .. 2,4 -> 2,5
+        2] Name 'c' Load .. 2,7 -> 2,8
+        .ctx
+          Load
+"""),
+
+("""
+[            # hello
+    a, b, c
+]
+""", 'body[0].value', 2, 3, """
+[
+    1,]
+""", """
+[            # hello
+    a, b, 
+    1,]
+""", """
+Module .. ROOT 0,0 -> 2,7
+  .body[1]
+  0] Expr .. 0,0 -> 2,7
+    .value
+      List .. 0,0 -> 2,7
+        .elts[3]
+        0] Name 'a' Load .. 1,4 -> 1,5
+        1] Name 'b' Load .. 1,7 -> 1,8
+        2] Constant 1 .. 2,4 -> 2,5
+        .ctx
+          Load
+"""),
+
+("""
+[            # hello
+    a, b, c
+]
+""", 'body[0].value', 0, 1, """
+[2,]
+""", """
+[            # hello
+    2, b, c
+]
+""", """
+Module .. ROOT 0,0 -> 2,1
+  .body[1]
+  0] Expr .. 0,0 -> 2,1
+    .value
+      List .. 0,0 -> 2,1
+        .elts[3]
+        0] Constant 2 .. 1,4 -> 1,5
+        1] Name 'b' Load .. 1,7 -> 1,8
+        2] Name 'c' Load .. 1,10 -> 1,11
+        .ctx
+          Load
+"""),
+
+("""
+[            # hello
+    a, b, c
+]
+""", 'body[0].value', 1, 2, """
+[2,]
+""", """
+[            # hello
+    a, 2, c
+]
+""", """
+Module .. ROOT 0,0 -> 2,1
+  .body[1]
+  0] Expr .. 0,0 -> 2,1
+    .value
+      List .. 0,0 -> 2,1
+        .elts[3]
+        0] Name 'a' Load .. 1,4 -> 1,5
+        1] Constant 2 .. 1,7 -> 1,8
+        2] Name 'c' Load .. 1,10 -> 1,11
+        .ctx
+          Load
+"""),
+
+("""
+[            # hello
+    a, b, c
+]
+""", 'body[0].value', 2, 3, """
+[2,]
+""", """
+[            # hello
+    a, b, 2,]
+""", """
+Module .. ROOT 0,0 -> 1,13
+  .body[1]
+  0] Expr .. 0,0 -> 1,13
+    .value
+      List .. 0,0 -> 1,13
+        .elts[3]
+        0] Name 'a' Load .. 1,4 -> 1,5
+        1] Name 'b' Load .. 1,7 -> 1,8
+        2] Constant 2 .. 1,10 -> 1,11
+        .ctx
+          Load
+"""),
+
+("""
+[            # hello
+    a, b, c
+]
+""", 'body[0].value', 0, 1, """
+[3,
+]
+""", """
+[            # hello
+    3,
+    b, c
+]
+""", """
+Module .. ROOT 0,0 -> 3,1
+  .body[1]
+  0] Expr .. 0,0 -> 3,1
+    .value
+      List .. 0,0 -> 3,1
+        .elts[3]
+        0] Constant 3 .. 1,4 -> 1,5
+        1] Name 'b' Load .. 2,4 -> 2,5
+        2] Name 'c' Load .. 2,7 -> 2,8
+        .ctx
+          Load
+"""),
+
+("""
+[            # hello
+    a, b, c
+]
+""", 'body[0].value', 1, 2, """
+[3,
+]
+""", """
+[            # hello
+    a, 3,
+    c
+]
+""", """
+Module .. ROOT 0,0 -> 3,1
+  .body[1]
+  0] Expr .. 0,0 -> 3,1
+    .value
+      List .. 0,0 -> 3,1
+        .elts[3]
+        0] Name 'a' Load .. 1,4 -> 1,5
+        1] Constant 3 .. 1,7 -> 1,8
+        2] Name 'c' Load .. 2,4 -> 2,5
+        .ctx
+          Load
+"""),
+
+("""
+[            # hello
+    a, b, c
+]
+""", 'body[0].value', 2, 3, """
+[3,
+]
+""", """
+[            # hello
+    a, b, 3,
+]
+""", """
+Module .. ROOT 0,0 -> 2,1
+  .body[1]
+  0] Expr .. 0,0 -> 2,1
+    .value
+      List .. 0,0 -> 2,1
+        .elts[3]
+        0] Name 'a' Load .. 1,4 -> 1,5
+        1] Name 'b' Load .. 1,7 -> 1,8
+        2] Constant 3 .. 1,10 -> 1,11
+        .ctx
+          Load
+"""),
+
+("""
+[            # hello
+    a, b, c,
+]
+""", 'body[0].value', 0, 1, """
+[
+    1,]
+""", """
+[            # hello
+    1, b, c,
+]
+""", """
+Module .. ROOT 0,0 -> 2,1
+  .body[1]
+  0] Expr .. 0,0 -> 2,1
+    .value
+      List .. 0,0 -> 2,1
+        .elts[3]
+        0] Constant 1 .. 1,4 -> 1,5
+        1] Name 'b' Load .. 1,7 -> 1,8
+        2] Name 'c' Load .. 1,10 -> 1,11
+        .ctx
+          Load
+"""),
+
+("""
+[            # hello
+    a, b, c,
+]
+""", 'body[0].value', 1, 2, """
+[
+    1,]
+""", """
+[            # hello
+    a, 
+    1, c,
+]
+""", """
+Module .. ROOT 0,0 -> 3,1
+  .body[1]
+  0] Expr .. 0,0 -> 3,1
+    .value
+      List .. 0,0 -> 3,1
+        .elts[3]
+        0] Name 'a' Load .. 1,4 -> 1,5
+        1] Constant 1 .. 2,4 -> 2,5
+        2] Name 'c' Load .. 2,7 -> 2,8
+        .ctx
+          Load
+"""),
+
+("""
+[            # hello
+    a, b, c,
+]
+""", 'body[0].value', 2, 3, """
+[
+    1,]
+""", """
+[            # hello
+    a, b, 
+    1,]
+""", """
+Module .. ROOT 0,0 -> 2,7
+  .body[1]
+  0] Expr .. 0,0 -> 2,7
+    .value
+      List .. 0,0 -> 2,7
+        .elts[3]
+        0] Name 'a' Load .. 1,4 -> 1,5
+        1] Name 'b' Load .. 1,7 -> 1,8
+        2] Constant 1 .. 2,4 -> 2,5
+        .ctx
+          Load
+"""),
+
+("""
+[            # hello
+    a, b, c,
+]
+""", 'body[0].value', 0, 1, """
+[2,]
+""", """
+[            # hello
+    2, b, c,
+]
+""", """
+Module .. ROOT 0,0 -> 2,1
+  .body[1]
+  0] Expr .. 0,0 -> 2,1
+    .value
+      List .. 0,0 -> 2,1
+        .elts[3]
+        0] Constant 2 .. 1,4 -> 1,5
+        1] Name 'b' Load .. 1,7 -> 1,8
+        2] Name 'c' Load .. 1,10 -> 1,11
+        .ctx
+          Load
+"""),
+
+("""
+[            # hello
+    a, b, c,
+]
+""", 'body[0].value', 1, 2, """
+[2,]
+""", """
+[            # hello
+    a, 2, c,
+]
+""", """
+Module .. ROOT 0,0 -> 2,1
+  .body[1]
+  0] Expr .. 0,0 -> 2,1
+    .value
+      List .. 0,0 -> 2,1
+        .elts[3]
+        0] Name 'a' Load .. 1,4 -> 1,5
+        1] Constant 2 .. 1,7 -> 1,8
+        2] Name 'c' Load .. 1,10 -> 1,11
+        .ctx
+          Load
+"""),
+
+("""
+[            # hello
+    a, b, c,
+]
+""", 'body[0].value', 2, 3, """
+[2,]
+""", """
+[            # hello
+    a, b, 2,]
+""", """
+Module .. ROOT 0,0 -> 1,13
+  .body[1]
+  0] Expr .. 0,0 -> 1,13
+    .value
+      List .. 0,0 -> 1,13
+        .elts[3]
+        0] Name 'a' Load .. 1,4 -> 1,5
+        1] Name 'b' Load .. 1,7 -> 1,8
+        2] Constant 2 .. 1,10 -> 1,11
+        .ctx
+          Load
+"""),
+
+("""
+[            # hello
+    a, b, c,
+]
+""", 'body[0].value', 0, 1, """
+[3,
+]
+""", """
+[            # hello
+    3,
+    b, c,
+]
+""", """
+Module .. ROOT 0,0 -> 3,1
+  .body[1]
+  0] Expr .. 0,0 -> 3,1
+    .value
+      List .. 0,0 -> 3,1
+        .elts[3]
+        0] Constant 3 .. 1,4 -> 1,5
+        1] Name 'b' Load .. 2,4 -> 2,5
+        2] Name 'c' Load .. 2,7 -> 2,8
+        .ctx
+          Load
+"""),
+
+("""
+[            # hello
+    a, b, c,
+]
+""", 'body[0].value', 1, 2, """
+[3,
+]
+""", """
+[            # hello
+    a, 3,
+    c,
+]
+""", """
+Module .. ROOT 0,0 -> 3,1
+  .body[1]
+  0] Expr .. 0,0 -> 3,1
+    .value
+      List .. 0,0 -> 3,1
+        .elts[3]
+        0] Name 'a' Load .. 1,4 -> 1,5
+        1] Constant 3 .. 1,7 -> 1,8
+        2] Name 'c' Load .. 2,4 -> 2,5
+        .ctx
+          Load
+"""),
+
+("""
+[            # hello
+    a, b, c,
+]
+""", 'body[0].value', 2, 3, """
+[3,
+]
+""", """
+[            # hello
+    a, b, 3,
+]
+""", """
+Module .. ROOT 0,0 -> 2,1
+  .body[1]
+  0] Expr .. 0,0 -> 2,1
+    .value
+      List .. 0,0 -> 2,1
+        .elts[3]
+        0] Name 'a' Load .. 1,4 -> 1,5
+        1] Name 'b' Load .. 1,7 -> 1,8
+        2] Constant 3 .. 1,10 -> 1,11
+        .ctx
+          Load
+"""),
+
+("""
+[            # hello
+    a, b, c  # blah
+]
+""", 'body[0].value', 2, 3, """
+[
+    1]
+""", """
+[            # hello
+    a, b, 
+    1]
+""", """
+Module .. ROOT 0,0 -> 2,6
+  .body[1]
+  0] Expr .. 0,0 -> 2,6
+    .value
+      List .. 0,0 -> 2,6
+        .elts[3]
+        0] Name 'a' Load .. 1,4 -> 1,5
+        1] Name 'b' Load .. 1,7 -> 1,8
+        2] Constant 1 .. 2,4 -> 2,5
+        .ctx
+          Load
+"""),
+
+("""
+[            # hello
+    a, b, c  # blah
+]
+""", 'body[0].value', 2, 3, """
+[2]
+""", """
+[            # hello
+    a, b, 2]
+""", """
+Module .. ROOT 0,0 -> 1,12
+  .body[1]
+  0] Expr .. 0,0 -> 1,12
+    .value
+      List .. 0,0 -> 1,12
+        .elts[3]
+        0] Name 'a' Load .. 1,4 -> 1,5
+        1] Name 'b' Load .. 1,7 -> 1,8
+        2] Constant 2 .. 1,10 -> 1,11
+        .ctx
+          Load
+"""),
+
+("""
+[            # hello
+    a, b, c  # blah
+]
+""", 'body[0].value', 2, 3, """
+[3
+]
+""", """
+[            # hello
+    a, b, 3
+]
+""", """
+Module .. ROOT 0,0 -> 2,1
+  .body[1]
+  0] Expr .. 0,0 -> 2,1
+    .value
+      List .. 0,0 -> 2,1
+        .elts[3]
+        0] Name 'a' Load .. 1,4 -> 1,5
+        1] Name 'b' Load .. 1,7 -> 1,8
+        2] Constant 3 .. 1,10 -> 1,11
+        .ctx
+          Load
+"""),
+
+("""
+[            # hello
+    a, b, c  # blah
+]
+""", 'body[0].value', 2, 3, """
+[
+    1,]
+""", """
+[            # hello
+    a, b, 
+    1,]
+""", """
+Module .. ROOT 0,0 -> 2,7
+  .body[1]
+  0] Expr .. 0,0 -> 2,7
+    .value
+      List .. 0,0 -> 2,7
+        .elts[3]
+        0] Name 'a' Load .. 1,4 -> 1,5
+        1] Name 'b' Load .. 1,7 -> 1,8
+        2] Constant 1 .. 2,4 -> 2,5
+        .ctx
+          Load
+"""),
+
+("""
+[            # hello
+    a, b, c  # blah
+]
+""", 'body[0].value', 2, 3, """
+[2,]
+""", """
+[            # hello
+    a, b, 2,]
+""", """
+Module .. ROOT 0,0 -> 1,13
+  .body[1]
+  0] Expr .. 0,0 -> 1,13
+    .value
+      List .. 0,0 -> 1,13
+        .elts[3]
+        0] Name 'a' Load .. 1,4 -> 1,5
+        1] Name 'b' Load .. 1,7 -> 1,8
+        2] Constant 2 .. 1,10 -> 1,11
+        .ctx
+          Load
+"""),
+
+("""
+[            # hello
+    a, b, c  # blah
+]
+""", 'body[0].value', 2, 3, """
+[3,
+]
+""", """
+[            # hello
+    a, b, 3,
+]
+""", """
+Module .. ROOT 0,0 -> 2,1
+  .body[1]
+  0] Expr .. 0,0 -> 2,1
+    .value
+      List .. 0,0 -> 2,1
+        .elts[3]
+        0] Name 'a' Load .. 1,4 -> 1,5
+        1] Name 'b' Load .. 1,7 -> 1,8
+        2] Constant 3 .. 1,10 -> 1,11
+        .ctx
+          Load
+"""),
+
+("""
+[            # hello
+    a, b, c  # blah
+]
+""", 'body[0].value', 2, 3, """
+[
+    1  # comment
+]
+""", """
+[            # hello
+    a, b, 
+    1  # comment
+]
+""", """
+Module .. ROOT 0,0 -> 3,1
+  .body[1]
+  0] Expr .. 0,0 -> 3,1
+    .value
+      List .. 0,0 -> 3,1
+        .elts[3]
+        0] Name 'a' Load .. 1,4 -> 1,5
+        1] Name 'b' Load .. 1,7 -> 1,8
+        2] Constant 1 .. 2,4 -> 2,5
+        .ctx
+          Load
+"""),
+
+("""
+[            # hello
+    a, b, c  # blah
+]
+""", 'body[0].value', 2, 3, """
+[2  # comment
+]
+""", """
+[            # hello
+    a, b, 2  # comment
+]
+""", """
+Module .. ROOT 0,0 -> 2,1
+  .body[1]
+  0] Expr .. 0,0 -> 2,1
+    .value
+      List .. 0,0 -> 2,1
+        .elts[3]
+        0] Name 'a' Load .. 1,4 -> 1,5
+        1] Name 'b' Load .. 1,7 -> 1,8
+        2] Constant 2 .. 1,10 -> 1,11
+        .ctx
+          Load
+"""),
+
+("""
+[            # hello
+    a, b, c  # blah
+]
+""", 'body[0].value', 2, 3, """
+[3  # comment
+]
+""", """
+[            # hello
+    a, b, 3  # comment
+]
+""", """
+Module .. ROOT 0,0 -> 2,1
+  .body[1]
+  0] Expr .. 0,0 -> 2,1
+    .value
+      List .. 0,0 -> 2,1
+        .elts[3]
+        0] Name 'a' Load .. 1,4 -> 1,5
+        1] Name 'b' Load .. 1,7 -> 1,8
+        2] Constant 3 .. 1,10 -> 1,11
+        .ctx
+          Load
+"""),
+
+("""
+[            # hello
+    a, b, c  # blah
+]
+""", 'body[0].value', 2, 3, """
+[
+    1,  # comment
+]
+""", """
+[            # hello
+    a, b, 
+    1,  # comment
+]
+""", """
+Module .. ROOT 0,0 -> 3,1
+  .body[1]
+  0] Expr .. 0,0 -> 3,1
+    .value
+      List .. 0,0 -> 3,1
+        .elts[3]
+        0] Name 'a' Load .. 1,4 -> 1,5
+        1] Name 'b' Load .. 1,7 -> 1,8
+        2] Constant 1 .. 2,4 -> 2,5
+        .ctx
+          Load
+"""),
+
+("""
+[            # hello
+    a, b, c  # blah
+]
+""", 'body[0].value', 2, 3, """
+[2,  # comment
+]
+""", """
+[            # hello
+    a, b, 2,  # comment
+]
+""", """
+Module .. ROOT 0,0 -> 2,1
+  .body[1]
+  0] Expr .. 0,0 -> 2,1
+    .value
+      List .. 0,0 -> 2,1
+        .elts[3]
+        0] Name 'a' Load .. 1,4 -> 1,5
+        1] Name 'b' Load .. 1,7 -> 1,8
+        2] Constant 2 .. 1,10 -> 1,11
+        .ctx
+          Load
+"""),
+
+("""
+[            # hello
+    a, b, c  # blah
+]
+""", 'body[0].value', 2, 3, """
+[3,  # comment
+]
+""", """
+[            # hello
+    a, b, 3,  # comment
+]
+""", """
+Module .. ROOT 0,0 -> 2,1
+  .body[1]
+  0] Expr .. 0,0 -> 2,1
+    .value
+      List .. 0,0 -> 2,1
+        .elts[3]
+        0] Name 'a' Load .. 1,4 -> 1,5
+        1] Name 'b' Load .. 1,7 -> 1,8
+        2] Constant 3 .. 1,10 -> 1,11
+        .ctx
+          Load
+"""),
+
+("""
+[            # hello
+    a, b
+]
+""", 'body[0].value', 0, 0, """
+[
+    1]
+""", """
+[            # hello
+    1, a, b
+]
+""", """
+Module .. ROOT 0,0 -> 2,1
+  .body[1]
+  0] Expr .. 0,0 -> 2,1
+    .value
+      List .. 0,0 -> 2,1
+        .elts[3]
+        0] Constant 1 .. 1,4 -> 1,5
+        1] Name 'a' Load .. 1,7 -> 1,8
+        2] Name 'b' Load .. 1,10 -> 1,11
+        .ctx
+          Load
+"""),
+
+("""
+[            # hello
+    a, b
+]
+""", 'body[0].value', 1, 1, """
+[
+    1]
+""", """
+[            # hello
+    a, 
+    1, b
+]
+""", """
+Module .. ROOT 0,0 -> 3,1
+  .body[1]
+  0] Expr .. 0,0 -> 3,1
+    .value
+      List .. 0,0 -> 3,1
+        .elts[3]
+        0] Name 'a' Load .. 1,4 -> 1,5
+        1] Constant 1 .. 2,4 -> 2,5
+        2] Name 'b' Load .. 2,7 -> 2,8
+        .ctx
+          Load
+"""),
+
+("""
+[            # hello
+    a, b
+]
+""", 'body[0].value', 2, 2, """
+[
+    1]
+""", """
+[            # hello
+    a, b, 
+    1]
+""", """
+Module .. ROOT 0,0 -> 2,6
+  .body[1]
+  0] Expr .. 0,0 -> 2,6
+    .value
+      List .. 0,0 -> 2,6
+        .elts[3]
+        0] Name 'a' Load .. 1,4 -> 1,5
+        1] Name 'b' Load .. 1,7 -> 1,8
+        2] Constant 1 .. 2,4 -> 2,5
+        .ctx
+          Load
+"""),
+
+("""
+[            # hello
+    a, b
+]
+""", 'body[0].value', 0, 0, """
+[2]
+""", """
+[            # hello
+    2, a, b
+]
+""", """
+Module .. ROOT 0,0 -> 2,1
+  .body[1]
+  0] Expr .. 0,0 -> 2,1
+    .value
+      List .. 0,0 -> 2,1
+        .elts[3]
+        0] Constant 2 .. 1,4 -> 1,5
+        1] Name 'a' Load .. 1,7 -> 1,8
+        2] Name 'b' Load .. 1,10 -> 1,11
+        .ctx
+          Load
+"""),
+
+("""
+[            # hello
+    a, b
+]
+""", 'body[0].value', 1, 1, """
+[2]
+""", """
+[            # hello
+    a, 2, b
+]
+""", """
+Module .. ROOT 0,0 -> 2,1
+  .body[1]
+  0] Expr .. 0,0 -> 2,1
+    .value
+      List .. 0,0 -> 2,1
+        .elts[3]
+        0] Name 'a' Load .. 1,4 -> 1,5
+        1] Constant 2 .. 1,7 -> 1,8
+        2] Name 'b' Load .. 1,10 -> 1,11
+        .ctx
+          Load
+"""),
+
+("""
+[            # hello
+    a, b
+]
+""", 'body[0].value', 2, 2, """
+[2]
+""", """
+[            # hello
+    a, b, 2]
+""", """
+Module .. ROOT 0,0 -> 1,12
+  .body[1]
+  0] Expr .. 0,0 -> 1,12
+    .value
+      List .. 0,0 -> 1,12
+        .elts[3]
+        0] Name 'a' Load .. 1,4 -> 1,5
+        1] Name 'b' Load .. 1,7 -> 1,8
+        2] Constant 2 .. 1,10 -> 1,11
+        .ctx
+          Load
+"""),
+
+("""
+[            # hello
+    a, b
+]
+""", 'body[0].value', 0, 0, """
+[3
+]
+""", """
+[            # hello
+    3,
+    a, b
+]
+""", """
+Module .. ROOT 0,0 -> 3,1
+  .body[1]
+  0] Expr .. 0,0 -> 3,1
+    .value
+      List .. 0,0 -> 3,1
+        .elts[3]
+        0] Constant 3 .. 1,4 -> 1,5
+        1] Name 'a' Load .. 2,4 -> 2,5
+        2] Name 'b' Load .. 2,7 -> 2,8
+        .ctx
+          Load
+"""),
+
+("""
+[            # hello
+    a, b
+]
+""", 'body[0].value', 1, 1, """
+[3
+]
+""", """
+[            # hello
+    a, 3,
+    b
+]
+""", """
+Module .. ROOT 0,0 -> 3,1
+  .body[1]
+  0] Expr .. 0,0 -> 3,1
+    .value
+      List .. 0,0 -> 3,1
+        .elts[3]
+        0] Name 'a' Load .. 1,4 -> 1,5
+        1] Constant 3 .. 1,7 -> 1,8
+        2] Name 'b' Load .. 2,4 -> 2,5
+        .ctx
+          Load
+"""),
+
+("""
+[            # hello
+    a, b
+]
+""", 'body[0].value', 2, 2, """
+[3
+]
+""", """
+[            # hello
+    a, b, 3
+]
+""", """
+Module .. ROOT 0,0 -> 2,1
+  .body[1]
+  0] Expr .. 0,0 -> 2,1
+    .value
+      List .. 0,0 -> 2,1
+        .elts[3]
+        0] Name 'a' Load .. 1,4 -> 1,5
+        1] Name 'b' Load .. 1,7 -> 1,8
+        2] Constant 3 .. 1,10 -> 1,11
+        .ctx
+          Load
+"""),
+
+("""
+[            # hello
+    a, b,
+]
+""", 'body[0].value', 0, 0, """
+[
+    1]
+""", """
+[            # hello
+    1, a, b,
+]
+""", """
+Module .. ROOT 0,0 -> 2,1
+  .body[1]
+  0] Expr .. 0,0 -> 2,1
+    .value
+      List .. 0,0 -> 2,1
+        .elts[3]
+        0] Constant 1 .. 1,4 -> 1,5
+        1] Name 'a' Load .. 1,7 -> 1,8
+        2] Name 'b' Load .. 1,10 -> 1,11
+        .ctx
+          Load
+"""),
+
+("""
+[            # hello
+    a, b,
+]
+""", 'body[0].value', 1, 1, """
+[
+    1]
+""", """
+[            # hello
+    a, 
+    1, b,
+]
+""", """
+Module .. ROOT 0,0 -> 3,1
+  .body[1]
+  0] Expr .. 0,0 -> 3,1
+    .value
+      List .. 0,0 -> 3,1
+        .elts[3]
+        0] Name 'a' Load .. 1,4 -> 1,5
+        1] Constant 1 .. 2,4 -> 2,5
+        2] Name 'b' Load .. 2,7 -> 2,8
+        .ctx
+          Load
+"""),
+
+("""
+[            # hello
+    a, b,
+]
+""", 'body[0].value', 2, 2, """
+[
+    1]
+""", """
+[            # hello
+    a, b, 
+    1]
+""", """
+Module .. ROOT 0,0 -> 2,6
+  .body[1]
+  0] Expr .. 0,0 -> 2,6
+    .value
+      List .. 0,0 -> 2,6
+        .elts[3]
+        0] Name 'a' Load .. 1,4 -> 1,5
+        1] Name 'b' Load .. 1,7 -> 1,8
+        2] Constant 1 .. 2,4 -> 2,5
+        .ctx
+          Load
+"""),
+
+("""
+[            # hello
+    a, b,
+]
+""", 'body[0].value', 0, 0, """
+[2]
+""", """
+[            # hello
+    2, a, b,
+]
+""", """
+Module .. ROOT 0,0 -> 2,1
+  .body[1]
+  0] Expr .. 0,0 -> 2,1
+    .value
+      List .. 0,0 -> 2,1
+        .elts[3]
+        0] Constant 2 .. 1,4 -> 1,5
+        1] Name 'a' Load .. 1,7 -> 1,8
+        2] Name 'b' Load .. 1,10 -> 1,11
+        .ctx
+          Load
+"""),
+
+("""
+[            # hello
+    a, b,
+]
+""", 'body[0].value', 1, 1, """
+[2]
+""", """
+[            # hello
+    a, 2, b,
+]
+""", """
+Module .. ROOT 0,0 -> 2,1
+  .body[1]
+  0] Expr .. 0,0 -> 2,1
+    .value
+      List .. 0,0 -> 2,1
+        .elts[3]
+        0] Name 'a' Load .. 1,4 -> 1,5
+        1] Constant 2 .. 1,7 -> 1,8
+        2] Name 'b' Load .. 1,10 -> 1,11
+        .ctx
+          Load
+"""),
+
+("""
+[            # hello
+    a, b,
+]
+""", 'body[0].value', 2, 2, """
+[2]
+""", """
+[            # hello
+    a, b, 2]
+""", """
+Module .. ROOT 0,0 -> 1,12
+  .body[1]
+  0] Expr .. 0,0 -> 1,12
+    .value
+      List .. 0,0 -> 1,12
+        .elts[3]
+        0] Name 'a' Load .. 1,4 -> 1,5
+        1] Name 'b' Load .. 1,7 -> 1,8
+        2] Constant 2 .. 1,10 -> 1,11
+        .ctx
+          Load
+"""),
+
+("""
+[            # hello
+    a, b,
+]
+""", 'body[0].value', 0, 0, """
+[3
+]
+""", """
+[            # hello
+    3,
+    a, b,
+]
+""", """
+Module .. ROOT 0,0 -> 3,1
+  .body[1]
+  0] Expr .. 0,0 -> 3,1
+    .value
+      List .. 0,0 -> 3,1
+        .elts[3]
+        0] Constant 3 .. 1,4 -> 1,5
+        1] Name 'a' Load .. 2,4 -> 2,5
+        2] Name 'b' Load .. 2,7 -> 2,8
+        .ctx
+          Load
+"""),
+
+("""
+[            # hello
+    a, b,
+]
+""", 'body[0].value', 1, 1, """
+[3
+]
+""", """
+[            # hello
+    a, 3,
+    b,
+]
+""", """
+Module .. ROOT 0,0 -> 3,1
+  .body[1]
+  0] Expr .. 0,0 -> 3,1
+    .value
+      List .. 0,0 -> 3,1
+        .elts[3]
+        0] Name 'a' Load .. 1,4 -> 1,5
+        1] Constant 3 .. 1,7 -> 1,8
+        2] Name 'b' Load .. 2,4 -> 2,5
+        .ctx
+          Load
+"""),
+
+("""
+[            # hello
+    a, b,
+]
+""", 'body[0].value', 2, 2, """
+[3
+]
+""", """
+[            # hello
+    a, b, 3
+]
+""", """
+Module .. ROOT 0,0 -> 2,1
+  .body[1]
+  0] Expr .. 0,0 -> 2,1
+    .value
+      List .. 0,0 -> 2,1
+        .elts[3]
+        0] Name 'a' Load .. 1,4 -> 1,5
+        1] Name 'b' Load .. 1,7 -> 1,8
+        2] Constant 3 .. 1,10 -> 1,11
+        .ctx
+          Load
+"""),
+
+("""
+[            # hello
+    a, b
+]
+""", 'body[0].value', 0, 0, """
+[
+    1,]
+""", """
+[            # hello
+    1, a, b
+]
+""", """
+Module .. ROOT 0,0 -> 2,1
+  .body[1]
+  0] Expr .. 0,0 -> 2,1
+    .value
+      List .. 0,0 -> 2,1
+        .elts[3]
+        0] Constant 1 .. 1,4 -> 1,5
+        1] Name 'a' Load .. 1,7 -> 1,8
+        2] Name 'b' Load .. 1,10 -> 1,11
+        .ctx
+          Load
+"""),
+
+("""
+[            # hello
+    a, b
+]
+""", 'body[0].value', 1, 1, """
+[
+    1,]
+""", """
+[            # hello
+    a, 
+    1, b
+]
+""", """
+Module .. ROOT 0,0 -> 3,1
+  .body[1]
+  0] Expr .. 0,0 -> 3,1
+    .value
+      List .. 0,0 -> 3,1
+        .elts[3]
+        0] Name 'a' Load .. 1,4 -> 1,5
+        1] Constant 1 .. 2,4 -> 2,5
+        2] Name 'b' Load .. 2,7 -> 2,8
+        .ctx
+          Load
+"""),
+
+("""
+[            # hello
+    a, b
+]
+""", 'body[0].value', 2, 2, """
+[
+    1,]
+""", """
+[            # hello
+    a, b, 
+    1,]
+""", """
+Module .. ROOT 0,0 -> 2,7
+  .body[1]
+  0] Expr .. 0,0 -> 2,7
+    .value
+      List .. 0,0 -> 2,7
+        .elts[3]
+        0] Name 'a' Load .. 1,4 -> 1,5
+        1] Name 'b' Load .. 1,7 -> 1,8
+        2] Constant 1 .. 2,4 -> 2,5
+        .ctx
+          Load
+"""),
+
+("""
+[            # hello
+    a, b
+]
+""", 'body[0].value', 0, 0, """
+[2,]
+""", """
+[            # hello
+    2, a, b
+]
+""", """
+Module .. ROOT 0,0 -> 2,1
+  .body[1]
+  0] Expr .. 0,0 -> 2,1
+    .value
+      List .. 0,0 -> 2,1
+        .elts[3]
+        0] Constant 2 .. 1,4 -> 1,5
+        1] Name 'a' Load .. 1,7 -> 1,8
+        2] Name 'b' Load .. 1,10 -> 1,11
+        .ctx
+          Load
+"""),
+
+("""
+[            # hello
+    a, b
+]
+""", 'body[0].value', 1, 1, """
+[2,]
+""", """
+[            # hello
+    a, 2, b
+]
+""", """
+Module .. ROOT 0,0 -> 2,1
+  .body[1]
+  0] Expr .. 0,0 -> 2,1
+    .value
+      List .. 0,0 -> 2,1
+        .elts[3]
+        0] Name 'a' Load .. 1,4 -> 1,5
+        1] Constant 2 .. 1,7 -> 1,8
+        2] Name 'b' Load .. 1,10 -> 1,11
+        .ctx
+          Load
+"""),
+
+("""
+[            # hello
+    a, b
+]
+""", 'body[0].value', 2, 2, """
+[2,]
+""", """
+[            # hello
+    a, b, 2,]
+""", """
+Module .. ROOT 0,0 -> 1,13
+  .body[1]
+  0] Expr .. 0,0 -> 1,13
+    .value
+      List .. 0,0 -> 1,13
+        .elts[3]
+        0] Name 'a' Load .. 1,4 -> 1,5
+        1] Name 'b' Load .. 1,7 -> 1,8
+        2] Constant 2 .. 1,10 -> 1,11
+        .ctx
+          Load
+"""),
+
+("""
+[            # hello
+    a, b
+]
+""", 'body[0].value', 0, 0, """
+[3,
+]
+""", """
+[            # hello
+    3,
+    a, b
+]
+""", """
+Module .. ROOT 0,0 -> 3,1
+  .body[1]
+  0] Expr .. 0,0 -> 3,1
+    .value
+      List .. 0,0 -> 3,1
+        .elts[3]
+        0] Constant 3 .. 1,4 -> 1,5
+        1] Name 'a' Load .. 2,4 -> 2,5
+        2] Name 'b' Load .. 2,7 -> 2,8
+        .ctx
+          Load
+"""),
+
+("""
+[            # hello
+    a, b
+]
+""", 'body[0].value', 1, 1, """
+[3,
+]
+""", """
+[            # hello
+    a, 3,
+    b
+]
+""", """
+Module .. ROOT 0,0 -> 3,1
+  .body[1]
+  0] Expr .. 0,0 -> 3,1
+    .value
+      List .. 0,0 -> 3,1
+        .elts[3]
+        0] Name 'a' Load .. 1,4 -> 1,5
+        1] Constant 3 .. 1,7 -> 1,8
+        2] Name 'b' Load .. 2,4 -> 2,5
+        .ctx
+          Load
+"""),
+
+("""
+[            # hello
+    a, b
+]
+""", 'body[0].value', 2, 2, """
+[3,
+]
+""", """
+[            # hello
+    a, b, 3,
+]
+""", """
+Module .. ROOT 0,0 -> 2,1
+  .body[1]
+  0] Expr .. 0,0 -> 2,1
+    .value
+      List .. 0,0 -> 2,1
+        .elts[3]
+        0] Name 'a' Load .. 1,4 -> 1,5
+        1] Name 'b' Load .. 1,7 -> 1,8
+        2] Constant 3 .. 1,10 -> 1,11
+        .ctx
+          Load
+"""),
+
+("""
+[            # hello
+    a, b,
+]
+""", 'body[0].value', 0, 0, """
+[
+    1,]
+""", """
+[            # hello
+    1, a, b,
+]
+""", """
+Module .. ROOT 0,0 -> 2,1
+  .body[1]
+  0] Expr .. 0,0 -> 2,1
+    .value
+      List .. 0,0 -> 2,1
+        .elts[3]
+        0] Constant 1 .. 1,4 -> 1,5
+        1] Name 'a' Load .. 1,7 -> 1,8
+        2] Name 'b' Load .. 1,10 -> 1,11
+        .ctx
+          Load
+"""),
+
+("""
+[            # hello
+    a, b,
+]
+""", 'body[0].value', 1, 1, """
+[
+    1,]
+""", """
+[            # hello
+    a, 
+    1, b,
+]
+""", """
+Module .. ROOT 0,0 -> 3,1
+  .body[1]
+  0] Expr .. 0,0 -> 3,1
+    .value
+      List .. 0,0 -> 3,1
+        .elts[3]
+        0] Name 'a' Load .. 1,4 -> 1,5
+        1] Constant 1 .. 2,4 -> 2,5
+        2] Name 'b' Load .. 2,7 -> 2,8
+        .ctx
+          Load
+"""),
+
+("""
+[            # hello
+    a, b,
+]
+""", 'body[0].value', 2, 2, """
+[
+    1,]
+""", """
+[            # hello
+    a, b, 
+    1,]
+""", """
+Module .. ROOT 0,0 -> 2,7
+  .body[1]
+  0] Expr .. 0,0 -> 2,7
+    .value
+      List .. 0,0 -> 2,7
+        .elts[3]
+        0] Name 'a' Load .. 1,4 -> 1,5
+        1] Name 'b' Load .. 1,7 -> 1,8
+        2] Constant 1 .. 2,4 -> 2,5
+        .ctx
+          Load
+"""),
+
+("""
+[            # hello
+    a, b,
+]
+""", 'body[0].value', 0, 0, """
+[2,]
+""", """
+[            # hello
+    2, a, b,
+]
+""", """
+Module .. ROOT 0,0 -> 2,1
+  .body[1]
+  0] Expr .. 0,0 -> 2,1
+    .value
+      List .. 0,0 -> 2,1
+        .elts[3]
+        0] Constant 2 .. 1,4 -> 1,5
+        1] Name 'a' Load .. 1,7 -> 1,8
+        2] Name 'b' Load .. 1,10 -> 1,11
+        .ctx
+          Load
+"""),
+
+("""
+[            # hello
+    a, b,
+]
+""", 'body[0].value', 1, 1, """
+[2,]
+""", """
+[            # hello
+    a, 2, b,
+]
+""", """
+Module .. ROOT 0,0 -> 2,1
+  .body[1]
+  0] Expr .. 0,0 -> 2,1
+    .value
+      List .. 0,0 -> 2,1
+        .elts[3]
+        0] Name 'a' Load .. 1,4 -> 1,5
+        1] Constant 2 .. 1,7 -> 1,8
+        2] Name 'b' Load .. 1,10 -> 1,11
+        .ctx
+          Load
+"""),
+
+("""
+[            # hello
+    a, b,
+]
+""", 'body[0].value', 2, 2, """
+[2,]
+""", """
+[            # hello
+    a, b, 2,]
+""", """
+Module .. ROOT 0,0 -> 1,13
+  .body[1]
+  0] Expr .. 0,0 -> 1,13
+    .value
+      List .. 0,0 -> 1,13
+        .elts[3]
+        0] Name 'a' Load .. 1,4 -> 1,5
+        1] Name 'b' Load .. 1,7 -> 1,8
+        2] Constant 2 .. 1,10 -> 1,11
+        .ctx
+          Load
+"""),
+
+("""
+[            # hello
+    a, b,
+]
+""", 'body[0].value', 0, 0, """
+[3,
+]
+""", """
+[            # hello
+    3,
+    a, b,
+]
+""", """
+Module .. ROOT 0,0 -> 3,1
+  .body[1]
+  0] Expr .. 0,0 -> 3,1
+    .value
+      List .. 0,0 -> 3,1
+        .elts[3]
+        0] Constant 3 .. 1,4 -> 1,5
+        1] Name 'a' Load .. 2,4 -> 2,5
+        2] Name 'b' Load .. 2,7 -> 2,8
+        .ctx
+          Load
+"""),
+
+("""
+[            # hello
+    a, b,
+]
+""", 'body[0].value', 1, 1, """
+[3,
+]
+""", """
+[            # hello
+    a, 3,
+    b,
+]
+""", """
+Module .. ROOT 0,0 -> 3,1
+  .body[1]
+  0] Expr .. 0,0 -> 3,1
+    .value
+      List .. 0,0 -> 3,1
+        .elts[3]
+        0] Name 'a' Load .. 1,4 -> 1,5
+        1] Constant 3 .. 1,7 -> 1,8
+        2] Name 'b' Load .. 2,4 -> 2,5
+        .ctx
+          Load
+"""),
+
+("""
+[            # hello
+    a, b,
+]
+""", 'body[0].value', 2, 2, """
+[3,
+]
+""", """
+[            # hello
+    a, b, 3,
+]
+""", """
+Module .. ROOT 0,0 -> 2,1
+  .body[1]
+  0] Expr .. 0,0 -> 2,1
+    .value
+      List .. 0,0 -> 2,1
+        .elts[3]
+        0] Name 'a' Load .. 1,4 -> 1,5
+        1] Name 'b' Load .. 1,7 -> 1,8
+        2] Constant 3 .. 1,10 -> 1,11
+        .ctx
+          Load
+"""),
+
+("""
+[            # hello
+    a, b  # blah
+]
+""", 'body[0].value', 2, 2, """
+[
+    1]
+""", """
+[            # hello
+    a, b, 
+    1]
+""", """
+Module .. ROOT 0,0 -> 2,6
+  .body[1]
+  0] Expr .. 0,0 -> 2,6
+    .value
+      List .. 0,0 -> 2,6
+        .elts[3]
+        0] Name 'a' Load .. 1,4 -> 1,5
+        1] Name 'b' Load .. 1,7 -> 1,8
+        2] Constant 1 .. 2,4 -> 2,5
+        .ctx
+          Load
+"""),
+
+("""
+[            # hello
+    a, b  # blah
+]
+""", 'body[0].value', 2, 2, """
+[2]
+""", """
+[            # hello
+    a, b, 2]
+""", """
+Module .. ROOT 0,0 -> 1,12
+  .body[1]
+  0] Expr .. 0,0 -> 1,12
+    .value
+      List .. 0,0 -> 1,12
+        .elts[3]
+        0] Name 'a' Load .. 1,4 -> 1,5
+        1] Name 'b' Load .. 1,7 -> 1,8
+        2] Constant 2 .. 1,10 -> 1,11
+        .ctx
+          Load
+"""),
+
+("""
+[            # hello
+    a, b  # blah
+]
+""", 'body[0].value', 2, 2, """
+[3
+]
+""", """
+[            # hello
+    a, b, 3
+]
+""", """
+Module .. ROOT 0,0 -> 2,1
+  .body[1]
+  0] Expr .. 0,0 -> 2,1
+    .value
+      List .. 0,0 -> 2,1
+        .elts[3]
+        0] Name 'a' Load .. 1,4 -> 1,5
+        1] Name 'b' Load .. 1,7 -> 1,8
+        2] Constant 3 .. 1,10 -> 1,11
+        .ctx
+          Load
+"""),
+
+("""
+[            # hello
+    a, b  # blah
+]
+""", 'body[0].value', 2, 2, """
+[
+    1,]
+""", """
+[            # hello
+    a, b, 
+    1,]
+""", """
+Module .. ROOT 0,0 -> 2,7
+  .body[1]
+  0] Expr .. 0,0 -> 2,7
+    .value
+      List .. 0,0 -> 2,7
+        .elts[3]
+        0] Name 'a' Load .. 1,4 -> 1,5
+        1] Name 'b' Load .. 1,7 -> 1,8
+        2] Constant 1 .. 2,4 -> 2,5
+        .ctx
+          Load
+"""),
+
+("""
+[            # hello
+    a, b  # blah
+]
+""", 'body[0].value', 2, 2, """
+[2,]
+""", """
+[            # hello
+    a, b, 2,]
+""", """
+Module .. ROOT 0,0 -> 1,13
+  .body[1]
+  0] Expr .. 0,0 -> 1,13
+    .value
+      List .. 0,0 -> 1,13
+        .elts[3]
+        0] Name 'a' Load .. 1,4 -> 1,5
+        1] Name 'b' Load .. 1,7 -> 1,8
+        2] Constant 2 .. 1,10 -> 1,11
+        .ctx
+          Load
+"""),
+
+("""
+[            # hello
+    a, b  # blah
+]
+""", 'body[0].value', 2, 2, """
+[3,
+]
+""", """
+[            # hello
+    a, b, 3,
+]
+""", """
+Module .. ROOT 0,0 -> 2,1
+  .body[1]
+  0] Expr .. 0,0 -> 2,1
+    .value
+      List .. 0,0 -> 2,1
+        .elts[3]
+        0] Name 'a' Load .. 1,4 -> 1,5
+        1] Name 'b' Load .. 1,7 -> 1,8
+        2] Constant 3 .. 1,10 -> 1,11
+        .ctx
+          Load
+"""),
+
+("""
+[            # hello
+    a, b  # blah
+]
+""", 'body[0].value', 2, 2, """
+[
+    1  # comment
+]
+""", """
+[            # hello
+    a, b, 
+    1  # comment
+]
+""", """
+Module .. ROOT 0,0 -> 3,1
+  .body[1]
+  0] Expr .. 0,0 -> 3,1
+    .value
+      List .. 0,0 -> 3,1
+        .elts[3]
+        0] Name 'a' Load .. 1,4 -> 1,5
+        1] Name 'b' Load .. 1,7 -> 1,8
+        2] Constant 1 .. 2,4 -> 2,5
+        .ctx
+          Load
+"""),
+
+("""
+[            # hello
+    a, b  # blah
+]
+""", 'body[0].value', 2, 2, """
+[2  # comment
+]
+""", """
+[            # hello
+    a, b, 2  # comment
+]
+""", """
+Module .. ROOT 0,0 -> 2,1
+  .body[1]
+  0] Expr .. 0,0 -> 2,1
+    .value
+      List .. 0,0 -> 2,1
+        .elts[3]
+        0] Name 'a' Load .. 1,4 -> 1,5
+        1] Name 'b' Load .. 1,7 -> 1,8
+        2] Constant 2 .. 1,10 -> 1,11
+        .ctx
+          Load
+"""),
+
+("""
+[            # hello
+    a, b  # blah
+]
+""", 'body[0].value', 2, 2, """
+[3  # comment
+]
+""", """
+[            # hello
+    a, b, 3  # comment
+]
+""", """
+Module .. ROOT 0,0 -> 2,1
+  .body[1]
+  0] Expr .. 0,0 -> 2,1
+    .value
+      List .. 0,0 -> 2,1
+        .elts[3]
+        0] Name 'a' Load .. 1,4 -> 1,5
+        1] Name 'b' Load .. 1,7 -> 1,8
+        2] Constant 3 .. 1,10 -> 1,11
+        .ctx
+          Load
+"""),
+
+("""
+[            # hello
+    a, b  # blah
+]
+""", 'body[0].value', 2, 2, """
+[
+    1,  # comment
+]
+""", """
+[            # hello
+    a, b, 
+    1,  # comment
+]
+""", """
+Module .. ROOT 0,0 -> 3,1
+  .body[1]
+  0] Expr .. 0,0 -> 3,1
+    .value
+      List .. 0,0 -> 3,1
+        .elts[3]
+        0] Name 'a' Load .. 1,4 -> 1,5
+        1] Name 'b' Load .. 1,7 -> 1,8
+        2] Constant 1 .. 2,4 -> 2,5
+        .ctx
+          Load
+"""),
+
+("""
+[            # hello
+    a, b  # blah
+]
+""", 'body[0].value', 2, 2, """
+[2,  # comment
+]
+""", """
+[            # hello
+    a, b, 2,  # comment
+]
+""", """
+Module .. ROOT 0,0 -> 2,1
+  .body[1]
+  0] Expr .. 0,0 -> 2,1
+    .value
+      List .. 0,0 -> 2,1
+        .elts[3]
+        0] Name 'a' Load .. 1,4 -> 1,5
+        1] Name 'b' Load .. 1,7 -> 1,8
+        2] Constant 2 .. 1,10 -> 1,11
+        .ctx
+          Load
+"""),
+
+("""
+[            # hello
+    a, b  # blah
+]
+""", 'body[0].value', 2, 2, """
+[3,  # comment
+]
+""", """
+[            # hello
+    a, b, 3,  # comment
+]
+""", """
+Module .. ROOT 0,0 -> 2,1
+  .body[1]
+  0] Expr .. 0,0 -> 2,1
+    .value
+      List .. 0,0 -> 2,1
+        .elts[3]
+        0] Name 'a' Load .. 1,4 -> 1,5
+        1] Name 'b' Load .. 1,7 -> 1,8
+        2] Constant 3 .. 1,10 -> 1,11
+        .ctx
+          Load
+"""),
+
 ]  # END OF PUT_SLICE_DATA
 
 PUT_SLICE_DEL_DATA = [

@@ -647,7 +647,7 @@ class FSTSrcEdit:
             location currently.
         """
 
-        if not (bound := _fixup_bound(seq_loc, fpre, fpost)):  # if operating on whole sequence then just use the whole sequence location
+        if not (bound := _fixup_bound(seq_loc, fpre, fpost)):  # if operating on whole sequence then just use the whole sequence location, if this doesn't return then one of `fpre` or `fpost` exists
             return seq_loc
 
         if not put_fst or not pfirst:  # `pfirst` may be None and `put_fst` not if assigning empty sequence, regardless, pure delete (or assign empty sequence, same), fflrst/last guaranteed to exist
@@ -660,55 +660,44 @@ class FSTSrcEdit:
             put_end_ln  = flast.end_ln
             put_end_col = flast.end_col
 
+            # del_loc   = _expr_src_edit_locs(fst.root._lines,
+            #                                 fstloc(ffirst.ln, ffirst.col, flast.end_ln, flast.end_col), bound)[1]
+
         elif fpost:  # insertion
-            raise NotImplementedError
             put_end_ln  = put_ln  = fpost.ln
             put_end_col = put_col = fpost.col
 
         else:  # fpre guaranteed to exist, insertion
-            raise NotImplementedError
             put_end_ln  = put_ln  = fpre.end_ln
             put_end_col = put_col = fpre.end_col
 
         lines     = fst.root._lines
         put_lines = put_fst._lines
+        del_loc   = _expr_src_edit_locs(fst.root._lines,
+                                        fstloc(put_ln, put_col, put_end_ln, put_end_col), bound)[1]
 
-        if re_empty_line.match(put_lines[0]) and re_empty_line.match(lines[put_ln], 0, put_col):  # strip leading newline from `put_fst` if location being put already has one
+        if not put_lines[0] and re_empty_line.match(lines[put_ln], 0, put_col):  # strip leading newline from `put_fst` if location being put already has one, NOTE: could also check re_empty_line.match(put_lines[0]) instead of just put_lines[0]
             put_fst.put_lines(None, 0, 0, 1, re_empty_line_start.match(put_lines[1]).end(), False)
 
+        if not put_lines[-1] and not re_empty_line.match(lines[(end_ln := del_loc.end_ln)], del_loc.end_col,  # add indentation to trailing newline in `put_fst` if there is stuff on the starting line of `put_loc` past the start point
+            seq_loc.end_col if seq_loc.end_ln == end_ln else 0x7fffffffffffffff
+        ):
+            put_fst.put_lines([bistr(re_empty_line_start.match(lines[put_ln]).group())], ln := put_fst.end_ln, 0, ln, 0,
+                              True, put_fst)
 
-        # if re_empty_line.match(put_lines[-1]):  # `put_fst` has trailing newline, now it gets complicated
+        if fpre:
+            if (not (code := _next_src(lines, fpre.end_ln, fpre.end_col, del_loc.ln, del_loc.col)) or
+                not code.src.startswith(',')
+            ):
+                put_fst.put_lines([bistr(', ')], 0, 0, 0, 0, False)
 
+        if fpost:
+            if not put_fst._maybe_add_comma(plast.end_ln, plast.end_col, False, True):
+                if put_lines[-1].endswith(',', -1):  # slice being put ends on comma without a space, add one
+                    put_fst.put_lines([bistr(' ')], ln := put_fst.end_ln, col := put_fst.end_col, ln, col, False,
+                                      put_fst)
 
-        # else:  # if `put_fst` ends with comma
-        #     pass
-
-
-
-
-
-
-        #     re_non_coding_line_end.match()
-
-# strip trailing newline from `put_fst` if location ends on a newline
-
-
-
-
-
-        return fstloc(put_ln, put_col, put_end_ln, put_end_col)
-
-
-
-
-
-
-        # TODO: insertion to non-empty sequence
-
-
-
-        raise NotImplementedError
-        return fstloc(ffirst.ln, ffirst.col, flast.end_ln, flast.end_col)
+        return del_loc
 
 
 class FST:
@@ -1043,34 +1032,53 @@ class FST:
 
         return fstloc(ln, end_col - 2, ln, end_col)
 
-    def _maybe_add_singleton_tuple_comma(self, offset: bool = True):
-        """Maybe add comma to singleton tuple if not already there, parenthesization not checked or taken into account.
-        `self` must be a tuple.
+    def _maybe_add_comma(self, ln: int, col: int, offset: bool, space: bool) -> bool:
+        """Maybe add comma at start of span if not already present as first code in span.
+
+        **Parameters:**
+        - `ln`: Line start of span.
+        - `col`: Column start of span.
+        - `offset`: If `True` then will apply `offset()` to entire tree for new comma. If `False` then will just offset
+            the end of self, use this when self is at top level.
+        - `space`: Whether to add a space IF the span is zero length or not.
+
+        **Returns:**
+        - `bool`: Whether a comma was added or not (if wasn't present before or was).
+        """
+
+        root  = self.root
+        lines = root._lines
+
+        if not (code := _next_src(lines, ln, col, self.end_ln, self.end_col)) or not code.src.startswith(','):
+            comma = ', ' if space and ln == self.end_ln and col == self.end_col else ','
+
+            lines[ln] = bistr(f'{(l := lines[ln])[:col]}{comma}{l[col:]}')
+
+            if offset:
+                self.root.offset(ln, col, 0, len(comma), True, self)
+
+            elif ln == self.end_ln:
+                self.a.end_col_offset += len(comma)
+
+                self.touchall(True, False, True)
+
+            return True
+
+        return False
+
+    def _maybe_add_singleton_tuple_comma(self, offset: bool):
+        """Maybe add comma to tuple if is singleton and comma not already there, parenthesization not checked or taken
+        into account. `self.a` must be a `Tuple`.
 
         **Parameters:**
         - `offset`: If `True` then will apply `offset()` to entire tree for new comma. If `False` then will just offset
-            the end of the Tuple, use this when sure tuple is at top level.
+            the end of the `Tuple`, use this when `Tuple` is at top level.
         """
 
         # assert isinstance(self.a, Tuple)
 
         if (elts := self.a.elts) and len(elts) == 1:
-            felt  = elts[0].f
-            root  = self.root
-            lines = root._lines
-
-            if (not (code := _next_src(lines, felt.end_ln, felt.end_col, self.end_ln, self.end_col)) or
-                not code.src.startswith(',')
-            ):
-                lines[ln] = bistr(f'{(l := lines[(ln := felt.end_ln)])[:(col := felt.end_col)]},{l[col:]}')
-
-                if offset:
-                    self.root.offset(ln, col, 0, 1, True, self)
-
-                elif ln == self.end_ln:
-                    self.a.end_col_offset += 1
-
-                    self.touchall(True, False, True)
+            return self._maybe_add_comma((f := elts[0].f).end_ln, f.end_col, offset, False)
 
     def _maybe_fix_tuple(self, is_parenthesized: bool | None = None):
         # assert isinstance(self.a, Tuple)
