@@ -255,14 +255,16 @@ def _prev_src(lines: list[str], ln: int, col: int, end_ln: int, end_col: int,
 def _expr_src_edit_locs(lines: list[bistr], loc: fstloc, bound: fstloc) -> tuple[fstloc, fstloc, list[str]]:
     """Get expression copy and delete locations. There can be commas in the bound in which case the expression is
     treated as part of a comma delimited sequence. In this case, if there is a trailing comma within bounding span then
-    it is included in the delete location. Any enclosing grouping parentheses within the bounding span are included.
+    it is included in the delete location. Any enclosing grouping parentheses within the bounding span are included. Any
+    closing parentheses after the start of or opening parentheses before the end of `bound` are also handled correctly.
 
     **Parameters:**
     - `lines`: The lines corresponding to the expression and its `bound` location.
     - `loc`: The location of the expression, can be multiple or no expressions, just the location matters.
     - `bound`: The bounding location not to go outside of. Must entirely contain `loc` (can be same as). Must not
         contain any part of other `AST` nodes like other members of a sequence. Can contain any number of open and close
-        parentheses for the expression itself.
+        parentheses for the expression itself and closing and opening parentheses belonging to expressions from outside
+        the bound.
 
     **Returns:**
     - `(copy_loc, del_loc)`: `copy_loc` is the location of source that should be used if copying the expression.
@@ -320,7 +322,7 @@ def _expr_src_edit_locs(lines: list[bistr], loc: fstloc, bound: fstloc) -> tuple
         ln, col, src = code
 
         for c in src:
-            if c == '(':  # may not have been included in bounds as is not part of expressions, if so then adjust end bound and done
+            if c == '(':  # may not have been excluded from bounds as is not part of expressions, if so then adjust end bound and done
                 bound_end_ln  = ln
                 bound_end_col = col
 
@@ -965,11 +967,11 @@ class FST:
             stack = [self.a]
 
         while stack:  # make sure these bad ASTs can't hurt us anymore
-            a   = stack.pop()
-            f   = a.f
-            f.a = a.f = f.root = f.parent = None
+            if a := stack.pop():  # could be `None`s in there
+                f   = a.f
+                f.a = a.f = f.root = f.parent = None
 
-            stack.extend(iter_child_nodes(a))
+                stack.extend(iter_child_nodes(a))
 
         if root:
             root.a.f = root.a = root.root = root.parent = None
@@ -1033,15 +1035,15 @@ class FST:
             return key.f
 
         if idx := value.pfield.idx:
-            f   = value.parent.values[idx - 1]  # because of multiline strings, could be a fake comment start inside one which hides a valid **
+            f   = value.parent.values[idx - 1]  # because of multiline strings, could be a fake comment start inside one which hides a valid '**'
             ln  = f.end_ln
             col = f.end_col
 
         else:
             ln  = self.ln
-            col = self.ln
+            col = self.col
 
-        ln, col, s = _prev_src(self.root._lines, ln, col, value.ln, value.col)
+        ln, col, s = _prev_src(self.root._lines, ln, col, value.ln, value.col)  # '**' must be there
         end_col    = col + len(s)
 
         assert s.endswith('**')
@@ -1056,7 +1058,7 @@ class FST:
         - `col`: Column start of span.
         - `offset`: If `True` then will apply `offset()` to entire tree for new comma. If `False` then will just offset
             the end of self, use this when self is at top level.
-        - `space`: Whether to add a space IF the span is zero length or not.
+        - `space`: Whether to add a space IF the span is zero length.
 
         **Returns:**
         - `bool`: Whether a comma was added or not (if wasn't present before or was).
@@ -1505,7 +1507,7 @@ class FST:
                 pfirst = plast = None
 
             else:
-                pfirst = skeys[0].f
+                pfirst = put_fst._dict_key_or_mock_loc(skeys[0], put_ast.values[0].f)
                 plast  = put_ast.values[-1].f
 
             self._put_seq_and_indent(put_fst, seq_loc, ffirst, flast, fpre, fpost, pfirst, plast)
