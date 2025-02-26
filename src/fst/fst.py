@@ -300,9 +300,9 @@ def _expr_src_edit_locs(lines: list[bistr], loc: fstloc, bound: fstloc) -> tuple
             elif c != '(':  # we don't actually count and check these because there may be other parens inside the `loc` which we can not see here
                 raise ValueError(f"expecting comma or open parenthesis, got '{c}'")
 
-            col      = col - 1
-            copy_ln  = ln
-            copy_col = col
+            col      -= 1
+            copy_ln   = ln
+            copy_col  = col
 
         if precomma_end_ln is not None:
             break
@@ -328,7 +328,7 @@ def _expr_src_edit_locs(lines: list[bistr], loc: fstloc, bound: fstloc) -> tuple
 
                 break
 
-            col = col + 1
+            col += 1
 
             if c == ',':
                 if postcomma_have:
@@ -343,6 +343,10 @@ def _expr_src_edit_locs(lines: list[bistr], loc: fstloc, bound: fstloc) -> tuple
 
             elif postcomma_have:
                 raise ValueError('found close parenthesis after comma')
+
+            else:
+                loc_end_ln  = ln  # we update loc because end parens are definitive end of loc, and may not have been checked before calling this function
+                loc_end_col = col
 
             copy_end_ln  = ln
             copy_end_col = col
@@ -730,9 +734,6 @@ class FSTSrcEdit:
             put_end_ln  = flast.end_ln
             put_end_col = flast.end_col
 
-            # del_loc   = _expr_src_edit_locs(fst.root._lines,
-            #                                 fstloc(ffirst.ln, ffirst.col, flast.end_ln, flast.end_col), bound)[1]
-
         elif fpost:  # insertion
             put_end_ln  = put_ln  = fpost.ln
             put_end_col = put_col = fpost.col
@@ -1105,8 +1106,10 @@ class FST:
 
         return fstloc(ln, end_col - 2, ln, end_col)
 
-    def _maybe_add_comma(self, ln: int, col: int, offset: bool, space: bool) -> bool:
-        """Maybe add comma at start of span if not already present as first code in span.
+    def _maybe_add_comma(self, ln: int, col: int, offset: bool, space: bool,
+                         end_ln: int | None = None, end_col: int | None = None) -> bool:
+        """Maybe add comma at start of span if not already present as first code in span. Will skip any closing
+        parentheses for check and add.
 
         **Parameters:**
         - `ln`: Line start of span.
@@ -1122,22 +1125,42 @@ class FST:
         root  = self.root
         lines = root._lines
 
-        if not (code := _next_src(lines, ln, col, self.end_ln, self.end_col)) or not code.src.startswith(','):
-            comma = ', ' if space and ln == self.end_ln and col == self.end_col else ','
+        if end_ln is None:
+            end_ln  = self.end_ln
+            end_col = self.end_col
 
-            lines[ln] = bistr(f'{(l := lines[ln])[:col]}{comma}{l[col:]}')
+        while code := _next_src(lines, ln, col, end_ln, end_col):  # find comma or parens or something else
+            cln, ccol, src = code
 
-            if offset:
-                self.root.offset(ln, col, 0, len(comma), True, self)
+            for c in src:
+                ccol += 1
 
-            elif ln == self.end_ln:
-                self.a.end_col_offset += len(comma)
+                if c == ')':
+                    ln  = cln
+                    col = ccol
 
-                self.touchall(True, False, True)
+                elif c == ',':
+                    return False
+                else:
+                    break
 
-            return True
+            else:
+                continue
 
-        return False
+            break
+
+        comma     = ', ' if space and ln == end_ln and col == end_col else ','
+        lines[ln] = bistr(f'{(l := lines[ln])[:col]}{comma}{l[col:]}')
+
+        if offset:
+            self.root.offset(ln, col, 0, len(comma), True, self)
+
+        elif ln == end_ln:
+            self.a.end_col_offset += len(comma)
+
+            self.touchall(True, False, True)
+
+        return True
 
     def _maybe_add_singleton_tuple_comma(self, offset: bool):
         """Maybe add comma to tuple if is singleton and comma not already there, parenthesization not checked or taken
@@ -1151,7 +1174,8 @@ class FST:
         # assert isinstance(self.a, Tuple)
 
         if (elts := self.a.elts) and len(elts) == 1:
-            return self._maybe_add_comma((f := elts[0].f).end_ln, f.end_col, offset, False)
+            return self._maybe_add_comma((f := elts[0].f).end_ln, f.end_col, offset, False, self.end_ln,
+                                         self.end_col - self.is_tuple_parenthesized())
 
     def _maybe_fix_tuple(self, is_parenthesized: bool | None = None):
         # assert isinstance(self.a, Tuple)
@@ -1216,14 +1240,14 @@ class FST:
         get_ast.end_lineno     = copy_end_ln + 1
         get_ast.end_col_offset = lines[copy_end_ln].c2b(copy_end_col)
 
-        put_fst = self._make_fst_and_dedent(self, get_ast, copy_loc, prefix, suffix, put_loc, put_lines)
+        get_fst = self._make_fst_and_dedent(self, get_ast, copy_loc, prefix, suffix, put_loc, put_lines)
 
         get_ast.col_offset     = 0  # before prefix
-        get_ast.end_col_offset = put_fst._lines[-1].lenbytes  # after suffix
+        get_ast.end_col_offset = get_fst._lines[-1].lenbytes  # after suffix
 
         get_ast.f.touch()
 
-        return put_fst
+        return get_fst
 
     def _get_slice_stmt(self, start: int, stop: int, field: str | None, fix: bool, cut: bool) -> 'FST':
 
@@ -3330,7 +3354,7 @@ class FST:
                     continue
 
                 if flno > lno:
-                    if not dln and (not (decos := getattr(a, 'decorator_lis', None)) or decos[0].lineno > lno):
+                    if not dln and (not (decos := getattr(a, 'decorator_list', None)) or decos[0].lineno > lno):
                         gen.send(False)  # no need to walk into something past offet point if line change is 0
 
                         continue

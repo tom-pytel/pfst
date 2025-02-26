@@ -1057,7 +1057,7 @@ List .. ROOT 0,0 -> 1,1
 ]
 """, r"""
 [( 3
-     ),]
+     )]
 """, """
 Module .. ROOT 0,0 -> 2,1
   .body[1]
@@ -1071,7 +1071,7 @@ Module .. ROOT 0,0 -> 2,1
         .ctx
           Load
 """, """
-List .. ROOT 0,0 -> 1,8
+List .. ROOT 0,0 -> 1,7
   .elts[1]
   0] Constant 3 .. 0,3 -> 0,4
   .ctx
@@ -1089,7 +1089,7 @@ List .. ROOT 0,0 -> 1,8
 ]
 """, r"""
 [2, ( 3
-     ),]
+     )]
 """, """
 Module .. ROOT 0,0 -> 2,1
   .body[1]
@@ -1102,7 +1102,7 @@ Module .. ROOT 0,0 -> 2,1
         .ctx
           Load
 """, """
-List .. ROOT 0,0 -> 1,8
+List .. ROOT 0,0 -> 1,7
   .elts[2]
   0] Constant 2 .. 0,1 -> 0,2
   1] Constant 3 .. 0,6 -> 0,7
