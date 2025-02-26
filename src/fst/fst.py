@@ -1304,7 +1304,6 @@ class FST:
         elts        = ast.elts
         is_set      = isinstance(ast, Set)
         is_tuple    = not is_set and isinstance(ast, Tuple)
-        ctx         = None if is_set else Load() if fix else ast.ctx.__class__()
         start, stop = _fixup_slice_index(ast, elts, 'elts', start, stop)
 
         if start == stop:
@@ -1338,9 +1337,10 @@ class FST:
             suffix  = '}'
 
         else:
-            get_ast = ast.__class__(elts=asts, ctx=ctx)
+            ctx     = ast.ctx.__class__
+            get_ast = ast.__class__(elts=asts, ctx=ctx())
 
-            if fix and not isinstance(ast.ctx, Load):
+            if fix and not issubclass(ctx, Load):
                 set_ctx(get_ast, Load)
 
             if is_tuple:
@@ -1463,11 +1463,11 @@ class FST:
             if put_fst.is_empty_set_call():
                 put_fst = _new_empty_set_curlies()
 
-            put_ast = put_fst.a
+            put_ast  = put_fst.a
+            is_tuple = isinstance(put_ast, Tuple)
+            is_set   = isinstance(put_ast, Set)
 
-            if (not (is_tuple := isinstance(put_ast, Tuple)) and not (is_set := isinstance(put_ast, Set)) and not
-                isinstance(put_ast, List)
-            ):
+            if not is_tuple and not is_set and not isinstance(put_ast, List):
                 raise ValueError(f"slice being assigned to a {self.a.__class__.__name__} must be a Tuple, List or Set, "
                                  f"not a '{put_ast.__class__.__name__}'")
 
@@ -1535,6 +1535,9 @@ class FST:
             elts[start : stop] = put_ast.elts
             put_len            = len(put_ast.elts)
             stack              = [FST(elts[i], self, astfield('elts', i)) for i in range(start, start + put_len)]
+
+            if fix and stack and not is_set:
+                set_ctx([f.a for f in stack], ast.ctx.__class__)
 
             self._make_fst_tree(stack)
 

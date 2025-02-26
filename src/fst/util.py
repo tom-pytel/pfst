@@ -434,25 +434,24 @@ def copy_ast(ast: AST | None) -> AST:
     return ret
 
 
-def set_ctx(ast: AST, ctx: type[expr_context], *, doit=True) -> bool:
+def set_ctx(ast_or_stack: AST | list[AST], ctx: type[expr_context], *, doit=True) -> bool:
     change = False
-    stack  = [ast]
+    stack  = [ast_or_stack] if isinstance(ast_or_stack, AST) else ast_or_stack
 
     while stack:  # anything that might have been a ctx Store or Del before (outside NamedExpr) set to Load
-        a = stack.pop()
+        if a := stack.pop():  # might be `None`s in there
+            if (((is_seq := isinstance(a, (Tuple, List))) or (is_starred := isinstance(a, Starred)) or
+                isinstance(a, (Name, Subscript, Attribute))) and not isinstance(a.ctx, ctx)
+            ):
+                change = True
 
-        if (((is_seq := isinstance(a, (Tuple, List))) or (is_starred := isinstance(a, Starred)) or
-            isinstance(a, (Name, Subscript, Attribute))) and not isinstance(a.ctx, ctx)
-        ):
-            change = True
+                if doit:
+                    a.ctx = ctx()
 
-            if doit:
-                a.ctx = ctx()
-
-            if is_seq:
-                stack.extend(a.elts)
-            elif is_starred:
-                stack.append(a.value)
+                if is_seq:
+                    stack.extend(a.elts)
+                elif is_starred:
+                    stack.append(a.value)
 
     return change
 
