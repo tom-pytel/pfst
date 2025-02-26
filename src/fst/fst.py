@@ -83,9 +83,10 @@ BLOCK_OR_MOD            = (FunctionDef, AsyncFunctionDef, ClassDef, For, AsyncFo
                            Try, TryStar, ExceptHandler, match_case, mod)
 HAS_DOCSTRING           = (FunctionDef, AsyncFunctionDef, ClassDef)
 
-re_empty_line_start     = re.compile(r'[ \t]*')    # start of completely empty or space-filled line (from start pos, start of line indentation)
-re_empty_line           = re.compile(r'[ \t]*$')   # completely empty or space-filled line (from start pos, start of line indentation)
-re_line_continuation    = re.compile(r'[^#]*\\$')  # line continuation with backslash not following a comment start '#' (from start pos, assumed no asts contained in line)
+re_empty_line_start     = re.compile(r'[ \t]*')     # start of completely empty or space-filled line (from start pos, start of line indentation)
+re_empty_line           = re.compile(r'[ \t]*$')    # completely empty or space-filled line (from start pos, start of line indentation)
+re_line_continuation    = re.compile(r'[^#]*\\$')   # line continuation with backslash not following a comment start '#' (from start pos, assumed no asts contained in line)
+re_line_trailing_space  = re.compile(r'.*?(\s*)$')  # location of trailing whitespace at the end of a line
 
 re_oneline_str          = re.compile(r'(?:b|r|rb|br|u|)  (?:  \'(?:\\.|[^\\\'])*?\'  |  "(?:\\.|[^\\"])*?"  )', re.VERBOSE | re.IGNORECASE)  # I f^\\\'])*\'ng hate these!
 re_contline_str_start   = re.compile(r'(?:b|r|rb|br|u|)  (\'|")', re.VERBOSE | re.IGNORECASE)
@@ -319,6 +320,12 @@ def _expr_src_edit_locs(lines: list[bistr], loc: fstloc, bound: fstloc) -> tuple
         ln, col, src = code
 
         for c in src:
+            if c == '(':  # may not have been included in bounds as is not part of expressions, if so then adjust end bound and done
+                bound_end_ln  = ln
+                bound_end_col = col
+
+                break
+
             col = col + 1
 
             if c == ',':
@@ -328,15 +335,20 @@ def _expr_src_edit_locs(lines: list[bistr], loc: fstloc, bound: fstloc) -> tuple
                 postcomma_have = True
 
             elif c != ')':
-                raise ValueError(f"close parenthesis, got '{c}'"
+                raise ValueError(f"not expecting code, got '{src}'"
                                  if postcomma_have else
-                                 f"expecting comma or close parenthesis, got '{c}'")
+                                 f"expecting parenthesis or comma, got '{src}'")
 
             elif postcomma_have:
                 raise ValueError('found close parenthesis after comma')
 
             copy_end_ln  = ln
             copy_end_col = col
+
+        else:
+            continue
+
+        break  # this happens if we found an open parenthesis
 
     # special sauce
 
@@ -676,8 +688,12 @@ class FSTSrcEdit:
         del_loc   = _expr_src_edit_locs(fst.root._lines,
                                         fstloc(put_ln, put_col, put_end_ln, put_end_col), bound)[1]
 
-        if not put_lines[0] and re_empty_line.match(lines[put_ln], 0, put_col):  # strip leading newline from `put_fst` if location being put already has one, NOTE: could also check re_empty_line.match(put_lines[0]) instead of just put_lines[0]
-            put_fst.put_lines(None, 0, 0, 1, re_empty_line_start.match(put_lines[1]).end(), False)
+        if not put_lines[0]:
+            if re_empty_line.match(l := lines[put_ln], 0, put_col):  # strip leading newline from `put_fst` if location being put already has one - NOTE: could also check re_empty_line.match(put_lines[0]) instead of just put_lines[0]
+                put_fst.put_lines(None, 0, 0, 1, re_empty_line_start.match(put_lines[1]).end(), False)
+
+            elif (new_del_col := re_line_trailing_space.match(l, 0, del_col := del_loc.col).start(1)) < del_col:  # move del start to beginning of any trailing whitespace from put location before newline
+                del_loc = fstloc(del_loc.ln, new_del_col, del_loc.end_ln, del_loc.end_col)
 
         if not put_lines[-1] and not re_empty_line.match(lines[(end_ln := del_loc.end_ln)], del_loc.end_col,  # add indentation to trailing newline in `put_fst` if there is stuff on the starting line of `put_loc` past the start point
             seq_loc.end_col if seq_loc.end_ln == end_ln else 0x7fffffffffffffff
@@ -689,12 +705,12 @@ class FSTSrcEdit:
             if (not (code := _next_src(lines, fpre.end_ln, fpre.end_col, del_loc.ln, del_loc.col)) or
                 not code.src.startswith(',')
             ):
-                put_fst.put_lines([bistr(', ')], 0, 0, 0, 0, False)
+                put_fst.put_lines([bistr(', ' if put_lines[0] else ',')], 0, 0, 0, 0, False)
 
         if fpost:
             if not put_fst._maybe_add_comma(plast.end_ln, plast.end_col, False, True):
                 if put_lines[-1].endswith(',', -1):  # slice being put ends on comma without a space, add one
-                    put_fst.put_lines([bistr(' ')], ln := put_fst.end_ln, col := put_fst.end_col, ln, col, False,
+                    put_fst.put_lines([bistr(' ')], ln := put_fst.end_ln, col := put_fst.end_col, ln, col, True,
                                       put_fst)
 
         return del_loc

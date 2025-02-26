@@ -1513,6 +1513,16 @@ Tuple .. ROOT 0,0 -> 0,18
     Load
 """),
 
+# (r"""
+# (self.__class__.__name__, self._name,
+#  (self._handle & (_sys.maxsize*2 + 1)),
+#  id(self) & (_sys.maxsize*2 + 1))
+# """, 'body[0].value', 0, 2, r"""
+# """, r"""
+# """, """
+# """, """
+# """),
+
 ]  # END OF GET_SLICE_CUT_DATA
 
 PUT_SLICE_DATA = [
@@ -1782,7 +1792,7 @@ Module .. ROOT 0,0 -> 2,1
     1]
 """, """
 [            # hello
-    a, 
+    a,
     1, c
 ]
 """, """
@@ -1808,7 +1818,7 @@ Module .. ROOT 0,0 -> 3,1
     1]
 """, """
 [            # hello
-    a, b, 
+    a, b,
     1]
 """, """
 Module .. ROOT 0,0 -> 2,6
@@ -2006,7 +2016,7 @@ Module .. ROOT 0,0 -> 2,1
     1]
 """, """
 [            # hello
-    a, 
+    a,
     1, c,
 ]
 """, """
@@ -2032,7 +2042,7 @@ Module .. ROOT 0,0 -> 3,1
     1]
 """, """
 [            # hello
-    a, b, 
+    a, b,
     1]
 """, """
 Module .. ROOT 0,0 -> 2,6
@@ -2230,7 +2240,7 @@ Module .. ROOT 0,0 -> 2,1
     1,]
 """, """
 [            # hello
-    a, 
+    a,
     1, c
 ]
 """, """
@@ -2256,7 +2266,7 @@ Module .. ROOT 0,0 -> 3,1
     1,]
 """, """
 [            # hello
-    a, b, 
+    a, b,
     1,]
 """, """
 Module .. ROOT 0,0 -> 2,7
@@ -2454,7 +2464,7 @@ Module .. ROOT 0,0 -> 2,1
     1,]
 """, """
 [            # hello
-    a, 
+    a,
     1, c,
 ]
 """, """
@@ -2480,7 +2490,7 @@ Module .. ROOT 0,0 -> 3,1
     1,]
 """, """
 [            # hello
-    a, b, 
+    a, b,
     1,]
 """, """
 Module .. ROOT 0,0 -> 2,7
@@ -2653,7 +2663,7 @@ Module .. ROOT 0,0 -> 2,1
     1]
 """, """
 [            # hello
-    a, b, 
+    a, b,
     1]
 """, """
 Module .. ROOT 0,0 -> 2,6
@@ -2726,7 +2736,7 @@ Module .. ROOT 0,0 -> 2,1
     1,]
 """, """
 [            # hello
-    a, b, 
+    a, b,
     1,]
 """, """
 Module .. ROOT 0,0 -> 2,7
@@ -2800,7 +2810,7 @@ Module .. ROOT 0,0 -> 2,1
 ]
 """, """
 [            # hello
-    a, b, 
+    a, b,
     1  # comment
 ]
 """, """
@@ -2877,7 +2887,7 @@ Module .. ROOT 0,0 -> 2,1
 ]
 """, """
 [            # hello
-    a, b, 
+    a, b,
     1,  # comment
 ]
 """, """
@@ -2978,7 +2988,7 @@ Module .. ROOT 0,0 -> 2,1
     1]
 """, """
 [            # hello
-    a, 
+    a,
     1, b
 ]
 """, """
@@ -3004,7 +3014,7 @@ Module .. ROOT 0,0 -> 3,1
     1]
 """, """
 [            # hello
-    a, b, 
+    a, b,
     1]
 """, """
 Module .. ROOT 0,0 -> 2,6
@@ -3202,7 +3212,7 @@ Module .. ROOT 0,0 -> 2,1
     1]
 """, """
 [            # hello
-    a, 
+    a,
     1, b,
 ]
 """, """
@@ -3228,7 +3238,7 @@ Module .. ROOT 0,0 -> 3,1
     1]
 """, """
 [            # hello
-    a, b, 
+    a, b,
     1]
 """, """
 Module .. ROOT 0,0 -> 2,6
@@ -3426,7 +3436,7 @@ Module .. ROOT 0,0 -> 2,1
     1,]
 """, """
 [            # hello
-    a, 
+    a,
     1, b
 ]
 """, """
@@ -3452,7 +3462,7 @@ Module .. ROOT 0,0 -> 3,1
     1,]
 """, """
 [            # hello
-    a, b, 
+    a, b,
     1,]
 """, """
 Module .. ROOT 0,0 -> 2,7
@@ -3650,7 +3660,7 @@ Module .. ROOT 0,0 -> 2,1
     1,]
 """, """
 [            # hello
-    a, 
+    a,
     1, b,
 ]
 """, """
@@ -3676,7 +3686,7 @@ Module .. ROOT 0,0 -> 3,1
     1,]
 """, """
 [            # hello
-    a, b, 
+    a, b,
     1,]
 """, """
 Module .. ROOT 0,0 -> 2,7
@@ -3849,7 +3859,7 @@ Module .. ROOT 0,0 -> 2,1
     1]
 """, """
 [            # hello
-    a, b, 
+    a, b,
     1]
 """, """
 Module .. ROOT 0,0 -> 2,6
@@ -3922,7 +3932,7 @@ Module .. ROOT 0,0 -> 2,1
     1,]
 """, """
 [            # hello
-    a, b, 
+    a, b,
     1,]
 """, """
 Module .. ROOT 0,0 -> 2,7
@@ -3996,7 +4006,7 @@ Module .. ROOT 0,0 -> 2,1
 ]
 """, """
 [            # hello
-    a, b, 
+    a, b,
     1  # comment
 ]
 """, """
@@ -4073,7 +4083,7 @@ Module .. ROOT 0,0 -> 2,1
 ]
 """, """
 [            # hello
-    a, b, 
+    a, b,
     1,  # comment
 ]
 """, """
@@ -5559,6 +5569,7 @@ Module .. ROOT 0,0 -> 0,10
                 self.assertEqual(ssrc, slice_cut.strip())
                 self.assertEqual(tdump, src_dump.strip().split('\n'))
                 self.assertEqual(sdump, slice_dump.strip().split('\n'))
+
             except Exception:
                 print(elt, start, stop)
                 print('---')
@@ -5567,6 +5578,7 @@ Module .. ROOT 0,0 -> 0,10
                 print(src_cut)
                 print('...')
                 print(slice_cut)
+
                 raise
 
     def test_put_slice(self):
@@ -5581,24 +5593,42 @@ Module .. ROOT 0,0 -> 0,10
             tdst  = t.f.src
             tdump = t.f.dump(linefunc=list, compact=True)
 
-            self.assertEqual(tdst, put_src.strip())
-            self.assertEqual(tdump, put_dump.strip().split('\n'))
+            try:
+                self.assertEqual(tdst, put_src.strip())
+                self.assertEqual(tdump, put_dump.strip().split('\n'))
+
+            except Exception:
+                print(elt, start, stop)
+                print('---')
+                print(dst)
+                print('...')
+                print(src)
+                print('...')
+                print(put_src)
+
+                raise
 
     def test_put_slice_del(self):
-        for dst, elt, start, stop, src, put_src, put_dump in PUT_SLICE_DATA:
+        for dst, elt, start, stop, put_src, put_dump in PUT_SLICE_DEL_DATA:
             dst = dst.strip()
-            src = src.strip()
             t   = parse(dst)
             f   = eval(f't.{elt}', {'t': t}).f
 
-            f.put_slice(src, start, stop)
+            f.put_slice(None, start, stop)
 
             tdst  = t.f.src
             tdump = t.f.dump(linefunc=list, compact=True)
 
-            self.assertEqual(tdst, put_src.strip())
-            self.assertEqual(tdump, put_dump.strip().split('\n'))
+            try:
+                self.assertEqual(tdst, put_src.strip())
+                self.assertEqual(tdump, put_dump.strip().split('\n'))
 
+            except Exception:
+                print(elt, start, stop)
+                print('---')
+                print(dst)
+
+                raise
 
 def regen_get_slice_cut_data():
     newlines = []
