@@ -1080,6 +1080,11 @@ class FST:
         linefunc(f'{cind}{prefix}{ast.__class__.__qualname__}{" .." * bool(tail)}{tail}')
 
         for name, child in iter_fields(ast):
+            if compact and name == 'ctx':
+                linefunc(f'{sind}{cind}.{name} {child.__class__.__qualname__ if isinstance(child, AST) else child}')
+
+                continue
+
             is_list = isinstance(child, list)
 
             if full or (child != []):
@@ -1821,12 +1826,14 @@ class FST:
         - `None` on failure to verify, otherwise `self`.
         """
 
-        root         = self.root
-        ast          = root.a
-        parse_params = root.parse_params
+        if not self.is_root:
+            raise RuntimeError('can only be called on root node')
+
+        ast          = self.a
+        parse_params = self.parse_params
 
         try:
-            astp = ast_parse(root.src, mode=get_parse_mode(ast), **parse_params)
+            astp = ast_parse(self.src, mode=get_parse_mode(ast), **parse_params)
 
         except SyntaxError:
             if raise_:
@@ -2070,7 +2077,7 @@ class FST:
         """
 
         if not self.is_root:
-            raise RuntimeError('can only be called on a root node')
+            raise RuntimeError('can only be called on root node')
 
         if not (loc := self.loc):
             return self

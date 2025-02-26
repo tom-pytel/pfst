@@ -22,6 +22,8 @@ def main():
                         help="don't verify parsed AST")
     parser.add_argument('-f', '--full', default=False, action='store_true',
                         help="show full tree including empty nodes")
+    parser.add_argument('-c', '--compact', default=False, action='store_true',
+                        help="compact view")
 
     args = parser.parse_args()
 
@@ -38,7 +40,7 @@ def main():
     if args.no_verify:
         ast.f.verify()
 
-    ast.f.dump(full=args.full, indent=args.indent)
+    ast.f.dump(full=args.full, indent=args.indent, compact=args.compact)
 
 
 if __name__ == '__main__':

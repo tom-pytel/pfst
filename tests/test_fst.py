@@ -56,16 +56,14 @@ Module .. ROOT 0,0 -> 0,2
   0] Expr .. 0,0 -> 0,2
     .value
       Tuple .. 0,0 -> 0,2
-        .ctx
-          Load
+        .ctx Load
 """, """
 Tuple .. ROOT 0,0 -> 4,1
   .elts[3]
   0] Constant 1 .. 1,4 -> 1,5
   1] Constant 2 .. 2,4 -> 2,5
   2] Constant 3 .. 3,4 -> 3,5
-  .ctx
-    Load
+  .ctx Load
 """),
 
 (r"""
@@ -91,15 +89,13 @@ Module .. ROOT 0,0 -> 2,1
       Tuple .. 0,0 -> 2,1
         .elts[1]
         0] Constant 3 .. 1,4 -> 1,5
-        .ctx
-          Load
+        .ctx Load
 """, """
 Tuple .. ROOT 0,0 -> 3,1
   .elts[2]
   0] Constant 1 .. 1,4 -> 1,5
   1] Constant 2 .. 2,4 -> 2,5
-  .ctx
-    Load
+  .ctx Load
 """),
 
 (r"""
@@ -126,14 +122,12 @@ Module .. ROOT 0,0 -> 3,1
         .elts[2]
         0] Constant 1 .. 1,4 -> 1,5
         1] Constant 3 .. 2,4 -> 2,5
-        .ctx
-          Load
+        .ctx Load
 """, """
 Tuple .. ROOT 0,0 -> 2,1
   .elts[1]
   0] Constant 2 .. 1,4 -> 1,5
-  .ctx
-    Load
+  .ctx Load
 """),
 
 (r"""
@@ -160,14 +154,12 @@ Module .. ROOT 0,0 -> 3,1
         .elts[2]
         0] Constant 1 .. 1,4 -> 1,5
         1] Constant 2 .. 2,4 -> 2,5
-        .ctx
-          Load
+        .ctx Load
 """, """
 Tuple .. ROOT 0,0 -> 2,1
   .elts[1]
   0] Constant 3 .. 1,4 -> 1,5
-  .ctx
-    Load
+  .ctx Load
 """),
 
 (r"""
@@ -186,16 +178,14 @@ Module .. ROOT 0,0 -> 0,2
   0] Expr .. 0,0 -> 0,2
     .value
       Tuple .. 0,0 -> 0,2
-        .ctx
-          Load
+        .ctx Load
 """, """
 Tuple .. ROOT 0,0 -> 2,1
   .elts[3]
   0] Constant 1 .. 1,4 -> 1,5
   1] Constant 2 .. 1,7 -> 1,8
   2] Constant 3 .. 1,10 -> 1,11
-  .ctx
-    Load
+  .ctx Load
 """),
 
 (r"""
@@ -217,15 +207,13 @@ Module .. ROOT 0,0 -> 2,1
       Tuple .. 0,0 -> 2,1
         .elts[1]
         0] Constant 3 .. 1,4 -> 1,5
-        .ctx
-          Load
+        .ctx Load
 """, """
 Tuple .. ROOT 0,0 -> 1,9
   .elts[2]
   0] Constant 1 .. 1,4 -> 1,5
   1] Constant 2 .. 1,7 -> 1,8
-  .ctx
-    Load
+  .ctx Load
 """),
 
 (r"""
@@ -247,14 +235,12 @@ Module .. ROOT 0,0 -> 2,1
         .elts[2]
         0] Constant 1 .. 1,4 -> 1,5
         1] Constant 3 .. 1,7 -> 1,8
-        .ctx
-          Load
+        .ctx Load
 """, """
 Tuple .. ROOT 0,0 -> 0,4
   .elts[1]
   0] Constant 2 .. 0,1 -> 0,2
-  .ctx
-    Load
+  .ctx Load
 """),
 
 (r"""
@@ -276,14 +262,12 @@ Module .. ROOT 0,0 -> 1,9
         .elts[2]
         0] Constant 1 .. 1,4 -> 1,5
         1] Constant 2 .. 1,7 -> 1,8
-        .ctx
-          Load
+        .ctx Load
 """, """
 Tuple .. ROOT 0,0 -> 1,1
   .elts[1]
   0] Constant 3 .. 0,1 -> 0,2
-  .ctx
-    Load
+  .ctx Load
 """),
 
 (r"""
@@ -301,15 +285,13 @@ Module .. ROOT 0,0 -> 0,4
         .elts[2]
         0] Constant 1 .. 0,0 -> 0,1
         1] Constant 4 .. 0,3 -> 0,4
-        .ctx
-          Load
+        .ctx Load
 """, """
 Tuple .. ROOT 0,0 -> 0,6
   .elts[2]
   0] Constant 2 .. 0,1 -> 0,2
   1] Constant 3 .. 0,4 -> 0,5
-  .ctx
-    Load
+  .ctx Load
 """),
 
 (r"""
@@ -328,14 +310,12 @@ Module .. ROOT 0,0 -> 0,7
         0] Constant 1 .. 0,0 -> 0,1
         1] Constant 2 .. 0,3 -> 0,4
         2] Constant 3 .. 0,6 -> 0,7
-        .ctx
-          Load
+        .ctx Load
 """, """
 Tuple .. ROOT 0,0 -> 0,4
   .elts[1]
   0] Constant 4 .. 0,1 -> 0,2
-  .ctx
-    Load
+  .ctx Load
 """),
 
 (r"""
@@ -350,8 +330,7 @@ Module .. ROOT 0,0 -> 0,2
   0] Expr .. 0,0 -> 0,2
     .value
       Tuple .. 0,0 -> 0,2
-        .ctx
-          Load
+        .ctx Load
 """, """
 Tuple .. ROOT 0,0 -> 0,12
   .elts[4]
@@ -359,8 +338,7 @@ Tuple .. ROOT 0,0 -> 0,12
   1] Constant 2 .. 0,4 -> 0,5
   2] Constant 3 .. 0,7 -> 0,8
   3] Constant 4 .. 0,10 -> 0,11
-  .ctx
-    Load
+  .ctx Load
 """),
 
 (r"""
@@ -380,12 +358,10 @@ Module .. ROOT 0,0 -> 0,10
         1] Constant 2 .. 0,3 -> 0,4
         2] Constant 3 .. 0,6 -> 0,7
         3] Constant 4 .. 0,9 -> 0,10
-        .ctx
-          Load
+        .ctx Load
 """, """
 Tuple .. ROOT 0,0 -> 0,2
-  .ctx
-    Load
+  .ctx Load
 """),
 
 (r"""
@@ -402,16 +378,14 @@ Module .. ROOT 0,0 -> 0,2
       Tuple .. 0,0 -> 0,2
         .elts[1]
         0] Constant 1 .. 0,0 -> 0,1
-        .ctx
-          Load
+        .ctx Load
 """, """
 Tuple .. ROOT 0,0 -> 0,9
   .elts[3]
   0] Constant 2 .. 0,1 -> 0,2
   1] Constant 3 .. 0,4 -> 0,5
   2] Constant 4 .. 0,7 -> 0,8
-  .ctx
-    Load
+  .ctx Load
 """),
 
 (r"""
@@ -428,16 +402,14 @@ Module .. ROOT 0,0 -> 0,2
       Tuple .. 0,0 -> 0,2
         .elts[1]
         0] Constant 4 .. 0,0 -> 0,1
-        .ctx
-          Load
+        .ctx Load
 """, """
 Tuple .. ROOT 0,0 -> 0,9
   .elts[3]
   0] Constant 1 .. 0,1 -> 0,2
   1] Constant 2 .. 0,4 -> 0,5
   2] Constant 3 .. 0,7 -> 0,8
-  .ctx
-    Load
+  .ctx Load
 """),
 
 (r"""
@@ -460,14 +432,12 @@ Module .. ROOT 0,0 -> 0,9
         0] Constant 1 .. 0,1 -> 0,2
         1] Constant 3 .. 0,4 -> 0,5
         2] Constant 4 .. 0,7 -> 0,8
-        .ctx
-          Load
+        .ctx Load
 """, """
 Tuple .. ROOT 0,0 -> 2,1
   .elts[1]
   0] Constant 2 .. 0,1 -> 0,2
-  .ctx
-    Load
+  .ctx Load
 """),
 
 (r"""
@@ -490,14 +460,12 @@ Module .. ROOT 0,0 -> 0,9
         0] Constant 1 .. 0,1 -> 0,2
         1] Constant 3 .. 0,4 -> 0,5
         2] Constant 4 .. 0,7 -> 0,8
-        .ctx
-          Load
+        .ctx Load
 """, """
 Tuple .. ROOT 0,0 -> 2,1
   .elts[1]
   0] Constant 2 .. 0,1 -> 0,2
-  .ctx
-    Load
+  .ctx Load
 """),
 
 (r"""
@@ -520,14 +488,12 @@ Module .. ROOT 0,0 -> 0,9
         0] Constant 1 .. 0,1 -> 0,2
         1] Constant 3 .. 0,4 -> 0,5
         2] Constant 4 .. 0,7 -> 0,8
-        .ctx
-          Load
+        .ctx Load
 """, """
 Tuple .. ROOT 0,0 -> 2,1
   .elts[1]
   0] Constant 2 .. 0,1 -> 0,2
-  .ctx
-    Load
+  .ctx Load
 """),
 
 (r"""
@@ -550,14 +516,12 @@ Module .. ROOT 0,0 -> 0,9
         0] Constant 1 .. 0,1 -> 0,2
         1] Constant 3 .. 0,4 -> 0,5
         2] Constant 4 .. 0,7 -> 0,8
-        .ctx
-          Load
+        .ctx Load
 """, """
 Tuple .. ROOT 0,0 -> 2,1
   .elts[1]
   0] Constant 2 .. 0,1 -> 0,2
-  .ctx
-    Load
+  .ctx Load
 """),
 
 (r"""
@@ -580,14 +544,12 @@ Module .. ROOT 0,0 -> 0,9
         0] Constant 1 .. 0,1 -> 0,2
         1] Constant 3 .. 0,4 -> 0,5
         2] Constant 4 .. 0,7 -> 0,8
-        .ctx
-          Load
+        .ctx Load
 """, """
 Tuple .. ROOT 0,0 -> 2,1
   .elts[1]
   0] Constant 2 .. 0,1 -> 0,2
-  .ctx
-    Load
+  .ctx Load
 """),
 
 (r"""
@@ -608,14 +570,12 @@ Module .. ROOT 0,0 -> 0,9
         0] Constant 1 .. 0,1 -> 0,2
         1] Constant 3 .. 0,4 -> 0,5
         2] Constant 4 .. 0,7 -> 0,8
-        .ctx
-          Load
+        .ctx Load
 """, """
 Tuple .. ROOT 0,0 -> 1,4
   .elts[1]
   0] Constant 2 .. 0,1 -> 0,2
-  .ctx
-    Load
+  .ctx Load
 """),
 
 (r"""
@@ -636,14 +596,12 @@ Module .. ROOT 0,0 -> 0,9
         0] Constant 1 .. 0,1 -> 0,2
         1] Constant 3 .. 0,4 -> 0,5
         2] Constant 4 .. 0,7 -> 0,8
-        .ctx
-          Load
+        .ctx Load
 """, """
 Tuple .. ROOT 0,0 -> 1,4
   .elts[1]
   0] Constant 2 .. 0,1 -> 0,2
-  .ctx
-    Load
+  .ctx Load
 """),
 
 (r"""
@@ -672,16 +630,14 @@ Module .. ROOT 0,0 -> 1,6
     0] Expr .. 1,4 -> 1,6
       .value
         Tuple .. 1,4 -> 1,6
-          .ctx
-            Load
+          .ctx Load
 """, """
 Tuple .. ROOT 0,0 -> 4,1
   .elts[3]
   0] Constant 1 .. 1,4 -> 1,5
   1] Constant 2 .. 2,4 -> 2,5
   2] Constant 3 .. 3,4 -> 3,5
-  .ctx
-    Load
+  .ctx Load
 """),
 
 (r"""
@@ -713,15 +669,13 @@ Module .. ROOT 0,0 -> 3,5
         Tuple .. 1,4 -> 3,5
           .elts[1]
           0] Constant 3 .. 2,8 -> 2,9
-          .ctx
-            Load
+          .ctx Load
 """, """
 Tuple .. ROOT 0,0 -> 3,1
   .elts[2]
   0] Constant 1 .. 1,4 -> 1,5
   1] Constant 2 .. 2,4 -> 2,5
-  .ctx
-    Load
+  .ctx Load
 """),
 
 (r"""
@@ -754,14 +708,12 @@ Module .. ROOT 0,0 -> 4,5
           .elts[2]
           0] Constant 1 .. 2,8 -> 2,9
           1] Constant 3 .. 3,8 -> 3,9
-          .ctx
-            Load
+          .ctx Load
 """, """
 Tuple .. ROOT 0,0 -> 2,1
   .elts[1]
   0] Constant 2 .. 1,4 -> 1,5
-  .ctx
-    Load
+  .ctx Load
 """),
 
 (r"""
@@ -794,14 +746,12 @@ Module .. ROOT 0,0 -> 4,5
           .elts[2]
           0] Constant 1 .. 2,8 -> 2,9
           1] Constant 2 .. 3,8 -> 3,9
-          .ctx
-            Load
+          .ctx Load
 """, """
 Tuple .. ROOT 0,0 -> 2,1
   .elts[1]
   0] Constant 3 .. 1,4 -> 1,5
-  .ctx
-    Load
+  .ctx Load
 """),
 
 (r"""
@@ -900,16 +850,14 @@ Module .. ROOT 0,0 -> 0,2
   0] Expr .. 0,0 -> 0,2
     .value
       List .. 0,0 -> 0,2
-        .ctx
-          Load
+        .ctx Load
 """, """
 List .. ROOT 0,0 -> 4,1
   .elts[3]
   0] Constant 1 .. 1,4 -> 1,5
   1] Constant 2 .. 2,4 -> 2,5
   2] Constant 3 .. 3,4 -> 3,5
-  .ctx
-    Load
+  .ctx Load
 """),
 
 (r"""
@@ -935,15 +883,13 @@ Module .. ROOT 0,0 -> 2,1
       List .. 0,0 -> 2,1
         .elts[1]
         0] Constant 3 .. 1,4 -> 1,5
-        .ctx
-          Load
+        .ctx Load
 """, """
 List .. ROOT 0,0 -> 3,1
   .elts[2]
   0] Constant 1 .. 1,4 -> 1,5
   1] Constant 2 .. 2,4 -> 2,5
-  .ctx
-    Load
+  .ctx Load
 """),
 
 (r"""
@@ -970,14 +916,12 @@ Module .. ROOT 0,0 -> 3,1
         .elts[2]
         0] Constant 1 .. 1,4 -> 1,5
         1] Constant 3 .. 2,4 -> 2,5
-        .ctx
-          Load
+        .ctx Load
 """, """
 List .. ROOT 0,0 -> 2,1
   .elts[1]
   0] Constant 2 .. 1,4 -> 1,5
-  .ctx
-    Load
+  .ctx Load
 """),
 
 (r"""
@@ -1004,14 +948,12 @@ Module .. ROOT 0,0 -> 3,1
         .elts[2]
         0] Constant 1 .. 1,4 -> 1,5
         1] Constant 2 .. 2,4 -> 2,5
-        .ctx
-          Load
+        .ctx Load
 """, """
 List .. ROOT 0,0 -> 2,1
   .elts[1]
   0] Constant 3 .. 1,4 -> 1,5
-  .ctx
-    Load
+  .ctx Load
 """),
 
 (r"""
@@ -1036,14 +978,12 @@ Module .. ROOT 0,0 -> 2,1
         0] Constant 1 .. 1,4 -> 1,5
         1] Constant 2 .. 1,7 -> 1,8
         2] Constant 4 .. 1,10 -> 1,11
-        .ctx
-          Load
+        .ctx Load
 """, """
 List .. ROOT 0,0 -> 1,1
   .elts[1]
   0] Constant 3 .. 0,1 -> 0,2
-  .ctx
-    Load
+  .ctx Load
 """),
 
 (r"""
@@ -1068,14 +1008,12 @@ Module .. ROOT 0,0 -> 2,1
         0] Constant 1 .. 1,4 -> 1,5
         1] Constant 2 .. 1,7 -> 1,8
         2] Constant 4 .. 1,10 -> 1,11
-        .ctx
-          Load
+        .ctx Load
 """, """
 List .. ROOT 0,0 -> 1,7
   .elts[1]
   0] Constant 3 .. 0,3 -> 0,4
-  .ctx
-    Load
+  .ctx Load
 """),
 
 (r"""
@@ -1099,15 +1037,13 @@ Module .. ROOT 0,0 -> 2,1
         .elts[2]
         0] Constant 1 .. 1,4 -> 1,5
         1] Constant 4 .. 1,7 -> 1,8
-        .ctx
-          Load
+        .ctx Load
 """, """
 List .. ROOT 0,0 -> 1,7
   .elts[2]
   0] Constant 2 .. 0,1 -> 0,2
   1] Constant 3 .. 0,6 -> 0,7
-  .ctx
-    Load
+  .ctx Load
 """),
 
 (r"""
@@ -1130,16 +1066,14 @@ Module .. ROOT 0,0 -> 1,6
       List .. 0,0 -> 1,6
         .elts[1]
         0] Constant 1 .. 1,4 -> 1,5
-        .ctx
-          Load
+        .ctx Load
 """, """
 List .. ROOT 0,0 -> 2,1
   .elts[3]
   0] Constant 2 .. 0,1 -> 0,2
   1] Constant 3 .. 0,6 -> 0,7
   2] Constant 4 .. 1,8 -> 1,9
-  .ctx
-    Load
+  .ctx Load
 """),
 
 (r"""
@@ -1180,8 +1114,7 @@ Module .. ROOT 0,0 -> 0,53
                         Name '_sys' Load .. 0,32 -> 0,36
                       .attr
                         'maxsize'
-                      .ctx
-                        Load
+                      .ctx Load
                   .op
                     Mult
                   .right
@@ -1190,8 +1123,7 @@ Module .. ROOT 0,0 -> 0,53
                 Add
               .right
                 Constant 1 .. 0,49 -> 0,50
-        .ctx
-          Load
+        .ctx Load
     .type_comment
       None
 """, """
@@ -1204,19 +1136,16 @@ Tuple .. ROOT 0,0 -> 2,1
           Name 'self' Load .. 0,1 -> 0,5
         .attr
           '__class__'
-        .ctx
-          Load
+        .ctx Load
     .attr
       '__name__'
-    .ctx
-      Load
+    .ctx Load
   1] Attribute .. 0,26 -> 0,36
     .value
       Name 'self' Load .. 0,26 -> 0,30
     .attr
       '_name'
-    .ctx
-      Load
+    .ctx Load
   2] BinOp .. 1,17 -> 1,52
     .left
       Attribute .. 1,17 -> 1,29
@@ -1224,8 +1153,7 @@ Tuple .. ROOT 0,0 -> 2,1
           Name 'self' Load .. 1,17 -> 1,21
         .attr
           '_handle'
-        .ctx
-          Load
+        .ctx Load
     .op
       BitAnd
     .right
@@ -1238,8 +1166,7 @@ Tuple .. ROOT 0,0 -> 2,1
                   Name '_sys' Load .. 1,33 -> 1,37
                 .attr
                   'maxsize'
-                .ctx
-                  Load
+                .ctx Load
             .op
               Mult
             .right
@@ -1248,8 +1175,7 @@ Tuple .. ROOT 0,0 -> 2,1
           Add
         .right
           Constant 1 .. 1,50 -> 1,51
-  .ctx
-    Load
+  .ctx Load
 """),
 
 (r"""
@@ -1277,8 +1203,7 @@ Module .. ROOT 0,0 -> 0,37
             Name '__main__' Load .. 0,19 -> 0,27
           .attr
             '__dict__'
-          .ctx
-            Load
+          .ctx Load
     .type_comment
       None
 """, """
@@ -1293,12 +1218,10 @@ Dict .. ROOT 0,0 -> 1,1
           Name '__main__' Load .. 0,3 -> 0,11
         .attr
           '__builtins__'
-        .ctx
-          Load
+        .ctx Load
     .attr
       '__dict__'
-    .ctx
-      Load
+    .ctx Load
 """),
 
 (r"""
@@ -1344,8 +1267,7 @@ Module .. ROOT 0,0 -> 4,1
                     Name 'k' Load .. 3,7 -> 3,8
                   .attr
                     'upper'
-                  .ctx
-                    Load
+                  .ctx Load
           .value
             Name 'v' Load .. 3,18 -> 3,19
           .generators[1]
@@ -1355,8 +1277,7 @@ Module .. ROOT 0,0 -> 4,1
                 .elts[2]
                 0] Name 'k' Store .. 3,24 -> 3,25
                 1] Name 'v' Store .. 3,27 -> 3,28
-                .ctx
-                  Store
+                .ctx Store
             .iter
               Call .. 3,32 -> 3,51
                 .func
@@ -1370,8 +1291,7 @@ Module .. ROOT 0,0 -> 4,1
                         1] Dict .. 3,40 -> 3,42
                     .attr
                       'items'
-                    .ctx
-                      Load
+                    .ctx Load
             .is_async
               0
     .type_comment
@@ -1391,8 +1311,7 @@ Dict .. ROOT 0,0 -> 3,1
               Name 'k' Load .. 1,7 -> 1,8
             .attr
               'upper'
-            .ctx
-              Load
+            .ctx Load
     .value
       Name 'v' Load .. 1,18 -> 1,19
     .generators[1]
@@ -1402,8 +1321,7 @@ Dict .. ROOT 0,0 -> 3,1
           .elts[2]
           0] Name 'k' Store .. 1,24 -> 1,25
           1] Name 'v' Store .. 1,27 -> 1,28
-          .ctx
-            Store
+          .ctx Store
       .iter
         Call .. 1,32 -> 1,50
           .func
@@ -1414,12 +1332,10 @@ Dict .. ROOT 0,0 -> 3,1
                     Name 'os' Load .. 1,32 -> 1,34
                   .attr
                     'environ'
-                  .ctx
-                    Load
+                  .ctx Load
               .attr
                 'items'
-              .ctx
-                Load
+              .ctx Load
       .ifs[1]
       0] Compare .. 1,54 -> 1,77
         .left
@@ -1430,8 +1346,7 @@ Dict .. ROOT 0,0 -> 3,1
                   Name 'k' Load .. 1,54 -> 1,55
                 .attr
                   'upper'
-                .ctx
-                  Load
+                .ctx Load
         .ops[1]
         0] NotIn
         .comparators[1]
@@ -1471,8 +1386,7 @@ Module .. ROOT 0,0 -> 2,67
                 Name 'datetime' Load .. 1,12 -> 1,20
               .attr
                 'datetime'
-              .ctx
-                Load
+              .ctx Load
           .args[6]
           0] Constant 2004 .. 1,30 -> 1,34
           1] Constant 10 .. 1,36 -> 1,38
@@ -1489,39 +1403,25 @@ Module .. ROOT 0,0 -> 2,67
           .elts[2]
           0] Constant 12 .. 2,34 -> 2,36
           1] Constant 345 .. 2,38 -> 2,41
-          .ctx
-            Load
+          .ctx Load
         9] Tuple .. 2,44 -> 2,53
           .elts[2]
           0] Constant 12 .. 2,45 -> 2,47
           1] Constant 345 .. 2,49 -> 2,52
-          .ctx
-            Load
+          .ctx Load
         10] Dict .. 2,55 -> 2,66
           .keys[1]
           0] Constant '12' .. 2,56 -> 2,60
           .values[1]
           0] Constant 345 .. 2,62 -> 2,65
-        .ctx
-          Load
+        .ctx Load
 """, """
 Tuple .. ROOT 0,0 -> 0,18
   .elts[2]
   0] Constant 'abcde' .. 0,1 -> 0,8
   1] Constant 'абвгд' .. 0,10 -> 0,17
-  .ctx
-    Load
+  .ctx Load
 """),
-
-# (r"""
-# (self.__class__.__name__, self._name,
-#  (self._handle & (_sys.maxsize*2 + 1)),
-#  id(self) & (_sys.maxsize*2 + 1))
-# """, 'body[0].value', 0, 2, r"""
-# """, r"""
-# """, """
-# """, """
-# """),
 
 ]  # END OF GET_SLICE_CUT_DATA
 
@@ -1556,8 +1456,7 @@ Module .. ROOT 0,0 -> 0,2
   0] Expr .. 0,0 -> 0,2
     .value
       Tuple .. 0,0 -> 0,2
-        .ctx
-          Load
+        .ctx Load
 """),
 
 ("""
@@ -1646,8 +1545,7 @@ Module .. ROOT 0,0 -> 0,4
       Tuple .. 0,0 -> 0,4
         .elts[1]
         0] Constant 1 .. 0,1 -> 0,2
-        .ctx
-          Load
+        .ctx Load
 """),
 
 ("""
@@ -1664,8 +1562,7 @@ Module .. ROOT 0,0 -> 0,2
       Tuple .. 0,0 -> 0,2
         .elts[1]
         0] Constant 1 .. 0,0 -> 0,1
-        .ctx
-          Load
+        .ctx Load
 """),
 
 ("""
@@ -1680,8 +1577,7 @@ Module .. ROOT 0,0 -> 0,2
   0] Expr .. 0,0 -> 0,2
     .value
       Tuple .. 0,0 -> 0,2
-        .ctx
-          Load
+        .ctx Load
 """),
 
 ("""
@@ -1698,8 +1594,7 @@ Module .. ROOT 0,0 -> 0,4
       Tuple .. 0,0 -> 0,4
         .elts[1]
         0] Constant 1 .. 0,1 -> 0,2
-        .ctx
-          Load
+        .ctx Load
 """),
 
 ("""
@@ -1716,8 +1611,7 @@ Module .. ROOT 0,0 -> 0,2
       Tuple .. 0,0 -> 0,2
         .elts[1]
         0] Constant 1 .. 0,0 -> 0,1
-        .ctx
-          Load
+        .ctx Load
 """),
 
 ("""
@@ -1732,8 +1626,7 @@ Module .. ROOT 0,0 -> 0,2
   0] Expr .. 0,0 -> 0,2
     .value
       Tuple .. 0,0 -> 0,2
-        .ctx
-          Load
+        .ctx Load
 """),
 
 ("""
@@ -1754,8 +1647,7 @@ Module .. ROOT 0,0 -> 2,1
       List .. 0,0 -> 2,1
         .elts[1]
         0] Constant 3 .. 1,4 -> 1,5
-        .ctx
-          Load
+        .ctx Load
 """),
 
 ("""
@@ -1779,8 +1671,7 @@ Module .. ROOT 0,0 -> 2,1
         0] Constant 1 .. 1,4 -> 1,5
         1] Name 'b' Load .. 1,7 -> 1,8
         2] Name 'c' Load .. 1,10 -> 1,11
-        .ctx
-          Load
+        .ctx Load
 """),
 
 ("""
@@ -1805,8 +1696,7 @@ Module .. ROOT 0,0 -> 3,1
         0] Name 'a' Load .. 1,4 -> 1,5
         1] Constant 1 .. 2,4 -> 2,5
         2] Name 'c' Load .. 2,7 -> 2,8
-        .ctx
-          Load
+        .ctx Load
 """),
 
 ("""
@@ -1830,8 +1720,7 @@ Module .. ROOT 0,0 -> 2,6
         0] Name 'a' Load .. 1,4 -> 1,5
         1] Name 'b' Load .. 1,7 -> 1,8
         2] Constant 1 .. 2,4 -> 2,5
-        .ctx
-          Load
+        .ctx Load
 """),
 
 ("""
@@ -1854,8 +1743,7 @@ Module .. ROOT 0,0 -> 2,1
         0] Constant 2 .. 1,4 -> 1,5
         1] Name 'b' Load .. 1,7 -> 1,8
         2] Name 'c' Load .. 1,10 -> 1,11
-        .ctx
-          Load
+        .ctx Load
 """),
 
 ("""
@@ -1878,8 +1766,7 @@ Module .. ROOT 0,0 -> 2,1
         0] Name 'a' Load .. 1,4 -> 1,5
         1] Constant 2 .. 1,7 -> 1,8
         2] Name 'c' Load .. 1,10 -> 1,11
-        .ctx
-          Load
+        .ctx Load
 """),
 
 ("""
@@ -1901,8 +1788,7 @@ Module .. ROOT 0,0 -> 1,12
         0] Name 'a' Load .. 1,4 -> 1,5
         1] Name 'b' Load .. 1,7 -> 1,8
         2] Constant 2 .. 1,10 -> 1,11
-        .ctx
-          Load
+        .ctx Load
 """),
 
 ("""
@@ -1927,8 +1813,7 @@ Module .. ROOT 0,0 -> 3,1
         0] Constant 3 .. 1,4 -> 1,5
         1] Name 'b' Load .. 2,4 -> 2,5
         2] Name 'c' Load .. 2,7 -> 2,8
-        .ctx
-          Load
+        .ctx Load
 """),
 
 ("""
@@ -1953,8 +1838,7 @@ Module .. ROOT 0,0 -> 3,1
         0] Name 'a' Load .. 1,4 -> 1,5
         1] Constant 3 .. 1,7 -> 1,8
         2] Name 'c' Load .. 2,4 -> 2,5
-        .ctx
-          Load
+        .ctx Load
 """),
 
 ("""
@@ -1978,8 +1862,7 @@ Module .. ROOT 0,0 -> 2,1
         0] Name 'a' Load .. 1,4 -> 1,5
         1] Name 'b' Load .. 1,7 -> 1,8
         2] Constant 3 .. 1,10 -> 1,11
-        .ctx
-          Load
+        .ctx Load
 """),
 
 ("""
@@ -2003,8 +1886,7 @@ Module .. ROOT 0,0 -> 2,1
         0] Constant 1 .. 1,4 -> 1,5
         1] Name 'b' Load .. 1,7 -> 1,8
         2] Name 'c' Load .. 1,10 -> 1,11
-        .ctx
-          Load
+        .ctx Load
 """),
 
 ("""
@@ -2029,8 +1911,7 @@ Module .. ROOT 0,0 -> 3,1
         0] Name 'a' Load .. 1,4 -> 1,5
         1] Constant 1 .. 2,4 -> 2,5
         2] Name 'c' Load .. 2,7 -> 2,8
-        .ctx
-          Load
+        .ctx Load
 """),
 
 ("""
@@ -2054,8 +1935,7 @@ Module .. ROOT 0,0 -> 2,6
         0] Name 'a' Load .. 1,4 -> 1,5
         1] Name 'b' Load .. 1,7 -> 1,8
         2] Constant 1 .. 2,4 -> 2,5
-        .ctx
-          Load
+        .ctx Load
 """),
 
 ("""
@@ -2078,8 +1958,7 @@ Module .. ROOT 0,0 -> 2,1
         0] Constant 2 .. 1,4 -> 1,5
         1] Name 'b' Load .. 1,7 -> 1,8
         2] Name 'c' Load .. 1,10 -> 1,11
-        .ctx
-          Load
+        .ctx Load
 """),
 
 ("""
@@ -2102,8 +1981,7 @@ Module .. ROOT 0,0 -> 2,1
         0] Name 'a' Load .. 1,4 -> 1,5
         1] Constant 2 .. 1,7 -> 1,8
         2] Name 'c' Load .. 1,10 -> 1,11
-        .ctx
-          Load
+        .ctx Load
 """),
 
 ("""
@@ -2125,8 +2003,7 @@ Module .. ROOT 0,0 -> 1,12
         0] Name 'a' Load .. 1,4 -> 1,5
         1] Name 'b' Load .. 1,7 -> 1,8
         2] Constant 2 .. 1,10 -> 1,11
-        .ctx
-          Load
+        .ctx Load
 """),
 
 ("""
@@ -2151,8 +2028,7 @@ Module .. ROOT 0,0 -> 3,1
         0] Constant 3 .. 1,4 -> 1,5
         1] Name 'b' Load .. 2,4 -> 2,5
         2] Name 'c' Load .. 2,7 -> 2,8
-        .ctx
-          Load
+        .ctx Load
 """),
 
 ("""
@@ -2177,8 +2053,7 @@ Module .. ROOT 0,0 -> 3,1
         0] Name 'a' Load .. 1,4 -> 1,5
         1] Constant 3 .. 1,7 -> 1,8
         2] Name 'c' Load .. 2,4 -> 2,5
-        .ctx
-          Load
+        .ctx Load
 """),
 
 ("""
@@ -2202,8 +2077,7 @@ Module .. ROOT 0,0 -> 2,1
         0] Name 'a' Load .. 1,4 -> 1,5
         1] Name 'b' Load .. 1,7 -> 1,8
         2] Constant 3 .. 1,10 -> 1,11
-        .ctx
-          Load
+        .ctx Load
 """),
 
 ("""
@@ -2227,8 +2101,7 @@ Module .. ROOT 0,0 -> 2,1
         0] Constant 1 .. 1,4 -> 1,5
         1] Name 'b' Load .. 1,7 -> 1,8
         2] Name 'c' Load .. 1,10 -> 1,11
-        .ctx
-          Load
+        .ctx Load
 """),
 
 ("""
@@ -2253,8 +2126,7 @@ Module .. ROOT 0,0 -> 3,1
         0] Name 'a' Load .. 1,4 -> 1,5
         1] Constant 1 .. 2,4 -> 2,5
         2] Name 'c' Load .. 2,7 -> 2,8
-        .ctx
-          Load
+        .ctx Load
 """),
 
 ("""
@@ -2278,8 +2150,7 @@ Module .. ROOT 0,0 -> 2,7
         0] Name 'a' Load .. 1,4 -> 1,5
         1] Name 'b' Load .. 1,7 -> 1,8
         2] Constant 1 .. 2,4 -> 2,5
-        .ctx
-          Load
+        .ctx Load
 """),
 
 ("""
@@ -2302,8 +2173,7 @@ Module .. ROOT 0,0 -> 2,1
         0] Constant 2 .. 1,4 -> 1,5
         1] Name 'b' Load .. 1,7 -> 1,8
         2] Name 'c' Load .. 1,10 -> 1,11
-        .ctx
-          Load
+        .ctx Load
 """),
 
 ("""
@@ -2326,8 +2196,7 @@ Module .. ROOT 0,0 -> 2,1
         0] Name 'a' Load .. 1,4 -> 1,5
         1] Constant 2 .. 1,7 -> 1,8
         2] Name 'c' Load .. 1,10 -> 1,11
-        .ctx
-          Load
+        .ctx Load
 """),
 
 ("""
@@ -2349,8 +2218,7 @@ Module .. ROOT 0,0 -> 1,13
         0] Name 'a' Load .. 1,4 -> 1,5
         1] Name 'b' Load .. 1,7 -> 1,8
         2] Constant 2 .. 1,10 -> 1,11
-        .ctx
-          Load
+        .ctx Load
 """),
 
 ("""
@@ -2375,8 +2243,7 @@ Module .. ROOT 0,0 -> 3,1
         0] Constant 3 .. 1,4 -> 1,5
         1] Name 'b' Load .. 2,4 -> 2,5
         2] Name 'c' Load .. 2,7 -> 2,8
-        .ctx
-          Load
+        .ctx Load
 """),
 
 ("""
@@ -2401,8 +2268,7 @@ Module .. ROOT 0,0 -> 3,1
         0] Name 'a' Load .. 1,4 -> 1,5
         1] Constant 3 .. 1,7 -> 1,8
         2] Name 'c' Load .. 2,4 -> 2,5
-        .ctx
-          Load
+        .ctx Load
 """),
 
 ("""
@@ -2426,8 +2292,7 @@ Module .. ROOT 0,0 -> 2,1
         0] Name 'a' Load .. 1,4 -> 1,5
         1] Name 'b' Load .. 1,7 -> 1,8
         2] Constant 3 .. 1,10 -> 1,11
-        .ctx
-          Load
+        .ctx Load
 """),
 
 ("""
@@ -2451,8 +2316,7 @@ Module .. ROOT 0,0 -> 2,1
         0] Constant 1 .. 1,4 -> 1,5
         1] Name 'b' Load .. 1,7 -> 1,8
         2] Name 'c' Load .. 1,10 -> 1,11
-        .ctx
-          Load
+        .ctx Load
 """),
 
 ("""
@@ -2477,8 +2341,7 @@ Module .. ROOT 0,0 -> 3,1
         0] Name 'a' Load .. 1,4 -> 1,5
         1] Constant 1 .. 2,4 -> 2,5
         2] Name 'c' Load .. 2,7 -> 2,8
-        .ctx
-          Load
+        .ctx Load
 """),
 
 ("""
@@ -2502,8 +2365,7 @@ Module .. ROOT 0,0 -> 2,7
         0] Name 'a' Load .. 1,4 -> 1,5
         1] Name 'b' Load .. 1,7 -> 1,8
         2] Constant 1 .. 2,4 -> 2,5
-        .ctx
-          Load
+        .ctx Load
 """),
 
 ("""
@@ -2526,8 +2388,7 @@ Module .. ROOT 0,0 -> 2,1
         0] Constant 2 .. 1,4 -> 1,5
         1] Name 'b' Load .. 1,7 -> 1,8
         2] Name 'c' Load .. 1,10 -> 1,11
-        .ctx
-          Load
+        .ctx Load
 """),
 
 ("""
@@ -2550,8 +2411,7 @@ Module .. ROOT 0,0 -> 2,1
         0] Name 'a' Load .. 1,4 -> 1,5
         1] Constant 2 .. 1,7 -> 1,8
         2] Name 'c' Load .. 1,10 -> 1,11
-        .ctx
-          Load
+        .ctx Load
 """),
 
 ("""
@@ -2573,8 +2433,7 @@ Module .. ROOT 0,0 -> 1,13
         0] Name 'a' Load .. 1,4 -> 1,5
         1] Name 'b' Load .. 1,7 -> 1,8
         2] Constant 2 .. 1,10 -> 1,11
-        .ctx
-          Load
+        .ctx Load
 """),
 
 ("""
@@ -2599,8 +2458,7 @@ Module .. ROOT 0,0 -> 3,1
         0] Constant 3 .. 1,4 -> 1,5
         1] Name 'b' Load .. 2,4 -> 2,5
         2] Name 'c' Load .. 2,7 -> 2,8
-        .ctx
-          Load
+        .ctx Load
 """),
 
 ("""
@@ -2625,8 +2483,7 @@ Module .. ROOT 0,0 -> 3,1
         0] Name 'a' Load .. 1,4 -> 1,5
         1] Constant 3 .. 1,7 -> 1,8
         2] Name 'c' Load .. 2,4 -> 2,5
-        .ctx
-          Load
+        .ctx Load
 """),
 
 ("""
@@ -2650,8 +2507,7 @@ Module .. ROOT 0,0 -> 2,1
         0] Name 'a' Load .. 1,4 -> 1,5
         1] Name 'b' Load .. 1,7 -> 1,8
         2] Constant 3 .. 1,10 -> 1,11
-        .ctx
-          Load
+        .ctx Load
 """),
 
 ("""
@@ -2675,8 +2531,7 @@ Module .. ROOT 0,0 -> 2,6
         0] Name 'a' Load .. 1,4 -> 1,5
         1] Name 'b' Load .. 1,7 -> 1,8
         2] Constant 1 .. 2,4 -> 2,5
-        .ctx
-          Load
+        .ctx Load
 """),
 
 ("""
@@ -2698,8 +2553,7 @@ Module .. ROOT 0,0 -> 1,12
         0] Name 'a' Load .. 1,4 -> 1,5
         1] Name 'b' Load .. 1,7 -> 1,8
         2] Constant 2 .. 1,10 -> 1,11
-        .ctx
-          Load
+        .ctx Load
 """),
 
 ("""
@@ -2723,8 +2577,7 @@ Module .. ROOT 0,0 -> 2,1
         0] Name 'a' Load .. 1,4 -> 1,5
         1] Name 'b' Load .. 1,7 -> 1,8
         2] Constant 3 .. 1,10 -> 1,11
-        .ctx
-          Load
+        .ctx Load
 """),
 
 ("""
@@ -2748,8 +2601,7 @@ Module .. ROOT 0,0 -> 2,7
         0] Name 'a' Load .. 1,4 -> 1,5
         1] Name 'b' Load .. 1,7 -> 1,8
         2] Constant 1 .. 2,4 -> 2,5
-        .ctx
-          Load
+        .ctx Load
 """),
 
 ("""
@@ -2771,8 +2623,7 @@ Module .. ROOT 0,0 -> 1,13
         0] Name 'a' Load .. 1,4 -> 1,5
         1] Name 'b' Load .. 1,7 -> 1,8
         2] Constant 2 .. 1,10 -> 1,11
-        .ctx
-          Load
+        .ctx Load
 """),
 
 ("""
@@ -2796,8 +2647,7 @@ Module .. ROOT 0,0 -> 2,1
         0] Name 'a' Load .. 1,4 -> 1,5
         1] Name 'b' Load .. 1,7 -> 1,8
         2] Constant 3 .. 1,10 -> 1,11
-        .ctx
-          Load
+        .ctx Load
 """),
 
 ("""
@@ -2823,8 +2673,7 @@ Module .. ROOT 0,0 -> 3,1
         0] Name 'a' Load .. 1,4 -> 1,5
         1] Name 'b' Load .. 1,7 -> 1,8
         2] Constant 1 .. 2,4 -> 2,5
-        .ctx
-          Load
+        .ctx Load
 """),
 
 ("""
@@ -2848,8 +2697,7 @@ Module .. ROOT 0,0 -> 2,1
         0] Name 'a' Load .. 1,4 -> 1,5
         1] Name 'b' Load .. 1,7 -> 1,8
         2] Constant 2 .. 1,10 -> 1,11
-        .ctx
-          Load
+        .ctx Load
 """),
 
 ("""
@@ -2873,8 +2721,7 @@ Module .. ROOT 0,0 -> 2,1
         0] Name 'a' Load .. 1,4 -> 1,5
         1] Name 'b' Load .. 1,7 -> 1,8
         2] Constant 3 .. 1,10 -> 1,11
-        .ctx
-          Load
+        .ctx Load
 """),
 
 ("""
@@ -2900,8 +2747,7 @@ Module .. ROOT 0,0 -> 3,1
         0] Name 'a' Load .. 1,4 -> 1,5
         1] Name 'b' Load .. 1,7 -> 1,8
         2] Constant 1 .. 2,4 -> 2,5
-        .ctx
-          Load
+        .ctx Load
 """),
 
 ("""
@@ -2925,8 +2771,7 @@ Module .. ROOT 0,0 -> 2,1
         0] Name 'a' Load .. 1,4 -> 1,5
         1] Name 'b' Load .. 1,7 -> 1,8
         2] Constant 2 .. 1,10 -> 1,11
-        .ctx
-          Load
+        .ctx Load
 """),
 
 ("""
@@ -2950,8 +2795,7 @@ Module .. ROOT 0,0 -> 2,1
         0] Name 'a' Load .. 1,4 -> 1,5
         1] Name 'b' Load .. 1,7 -> 1,8
         2] Constant 3 .. 1,10 -> 1,11
-        .ctx
-          Load
+        .ctx Load
 """),
 
 ("""
@@ -2975,8 +2819,7 @@ Module .. ROOT 0,0 -> 2,1
         0] Constant 1 .. 1,4 -> 1,5
         1] Name 'a' Load .. 1,7 -> 1,8
         2] Name 'b' Load .. 1,10 -> 1,11
-        .ctx
-          Load
+        .ctx Load
 """),
 
 ("""
@@ -3001,8 +2844,7 @@ Module .. ROOT 0,0 -> 3,1
         0] Name 'a' Load .. 1,4 -> 1,5
         1] Constant 1 .. 2,4 -> 2,5
         2] Name 'b' Load .. 2,7 -> 2,8
-        .ctx
-          Load
+        .ctx Load
 """),
 
 ("""
@@ -3026,8 +2868,7 @@ Module .. ROOT 0,0 -> 2,6
         0] Name 'a' Load .. 1,4 -> 1,5
         1] Name 'b' Load .. 1,7 -> 1,8
         2] Constant 1 .. 2,4 -> 2,5
-        .ctx
-          Load
+        .ctx Load
 """),
 
 ("""
@@ -3050,8 +2891,7 @@ Module .. ROOT 0,0 -> 2,1
         0] Constant 2 .. 1,4 -> 1,5
         1] Name 'a' Load .. 1,7 -> 1,8
         2] Name 'b' Load .. 1,10 -> 1,11
-        .ctx
-          Load
+        .ctx Load
 """),
 
 ("""
@@ -3074,8 +2914,7 @@ Module .. ROOT 0,0 -> 2,1
         0] Name 'a' Load .. 1,4 -> 1,5
         1] Constant 2 .. 1,7 -> 1,8
         2] Name 'b' Load .. 1,10 -> 1,11
-        .ctx
-          Load
+        .ctx Load
 """),
 
 ("""
@@ -3097,8 +2936,7 @@ Module .. ROOT 0,0 -> 1,12
         0] Name 'a' Load .. 1,4 -> 1,5
         1] Name 'b' Load .. 1,7 -> 1,8
         2] Constant 2 .. 1,10 -> 1,11
-        .ctx
-          Load
+        .ctx Load
 """),
 
 ("""
@@ -3123,8 +2961,7 @@ Module .. ROOT 0,0 -> 3,1
         0] Constant 3 .. 1,4 -> 1,5
         1] Name 'a' Load .. 2,4 -> 2,5
         2] Name 'b' Load .. 2,7 -> 2,8
-        .ctx
-          Load
+        .ctx Load
 """),
 
 ("""
@@ -3149,8 +2986,7 @@ Module .. ROOT 0,0 -> 3,1
         0] Name 'a' Load .. 1,4 -> 1,5
         1] Constant 3 .. 1,7 -> 1,8
         2] Name 'b' Load .. 2,4 -> 2,5
-        .ctx
-          Load
+        .ctx Load
 """),
 
 ("""
@@ -3174,8 +3010,7 @@ Module .. ROOT 0,0 -> 2,1
         0] Name 'a' Load .. 1,4 -> 1,5
         1] Name 'b' Load .. 1,7 -> 1,8
         2] Constant 3 .. 1,10 -> 1,11
-        .ctx
-          Load
+        .ctx Load
 """),
 
 ("""
@@ -3199,8 +3034,7 @@ Module .. ROOT 0,0 -> 2,1
         0] Constant 1 .. 1,4 -> 1,5
         1] Name 'a' Load .. 1,7 -> 1,8
         2] Name 'b' Load .. 1,10 -> 1,11
-        .ctx
-          Load
+        .ctx Load
 """),
 
 ("""
@@ -3225,8 +3059,7 @@ Module .. ROOT 0,0 -> 3,1
         0] Name 'a' Load .. 1,4 -> 1,5
         1] Constant 1 .. 2,4 -> 2,5
         2] Name 'b' Load .. 2,7 -> 2,8
-        .ctx
-          Load
+        .ctx Load
 """),
 
 ("""
@@ -3250,8 +3083,7 @@ Module .. ROOT 0,0 -> 2,6
         0] Name 'a' Load .. 1,4 -> 1,5
         1] Name 'b' Load .. 1,7 -> 1,8
         2] Constant 1 .. 2,4 -> 2,5
-        .ctx
-          Load
+        .ctx Load
 """),
 
 ("""
@@ -3274,8 +3106,7 @@ Module .. ROOT 0,0 -> 2,1
         0] Constant 2 .. 1,4 -> 1,5
         1] Name 'a' Load .. 1,7 -> 1,8
         2] Name 'b' Load .. 1,10 -> 1,11
-        .ctx
-          Load
+        .ctx Load
 """),
 
 ("""
@@ -3298,8 +3129,7 @@ Module .. ROOT 0,0 -> 2,1
         0] Name 'a' Load .. 1,4 -> 1,5
         1] Constant 2 .. 1,7 -> 1,8
         2] Name 'b' Load .. 1,10 -> 1,11
-        .ctx
-          Load
+        .ctx Load
 """),
 
 ("""
@@ -3321,8 +3151,7 @@ Module .. ROOT 0,0 -> 1,12
         0] Name 'a' Load .. 1,4 -> 1,5
         1] Name 'b' Load .. 1,7 -> 1,8
         2] Constant 2 .. 1,10 -> 1,11
-        .ctx
-          Load
+        .ctx Load
 """),
 
 ("""
@@ -3347,8 +3176,7 @@ Module .. ROOT 0,0 -> 3,1
         0] Constant 3 .. 1,4 -> 1,5
         1] Name 'a' Load .. 2,4 -> 2,5
         2] Name 'b' Load .. 2,7 -> 2,8
-        .ctx
-          Load
+        .ctx Load
 """),
 
 ("""
@@ -3373,8 +3201,7 @@ Module .. ROOT 0,0 -> 3,1
         0] Name 'a' Load .. 1,4 -> 1,5
         1] Constant 3 .. 1,7 -> 1,8
         2] Name 'b' Load .. 2,4 -> 2,5
-        .ctx
-          Load
+        .ctx Load
 """),
 
 ("""
@@ -3398,8 +3225,7 @@ Module .. ROOT 0,0 -> 2,1
         0] Name 'a' Load .. 1,4 -> 1,5
         1] Name 'b' Load .. 1,7 -> 1,8
         2] Constant 3 .. 1,10 -> 1,11
-        .ctx
-          Load
+        .ctx Load
 """),
 
 ("""
@@ -3423,8 +3249,7 @@ Module .. ROOT 0,0 -> 2,1
         0] Constant 1 .. 1,4 -> 1,5
         1] Name 'a' Load .. 1,7 -> 1,8
         2] Name 'b' Load .. 1,10 -> 1,11
-        .ctx
-          Load
+        .ctx Load
 """),
 
 ("""
@@ -3449,8 +3274,7 @@ Module .. ROOT 0,0 -> 3,1
         0] Name 'a' Load .. 1,4 -> 1,5
         1] Constant 1 .. 2,4 -> 2,5
         2] Name 'b' Load .. 2,7 -> 2,8
-        .ctx
-          Load
+        .ctx Load
 """),
 
 ("""
@@ -3474,8 +3298,7 @@ Module .. ROOT 0,0 -> 2,7
         0] Name 'a' Load .. 1,4 -> 1,5
         1] Name 'b' Load .. 1,7 -> 1,8
         2] Constant 1 .. 2,4 -> 2,5
-        .ctx
-          Load
+        .ctx Load
 """),
 
 ("""
@@ -3498,8 +3321,7 @@ Module .. ROOT 0,0 -> 2,1
         0] Constant 2 .. 1,4 -> 1,5
         1] Name 'a' Load .. 1,7 -> 1,8
         2] Name 'b' Load .. 1,10 -> 1,11
-        .ctx
-          Load
+        .ctx Load
 """),
 
 ("""
@@ -3522,8 +3344,7 @@ Module .. ROOT 0,0 -> 2,1
         0] Name 'a' Load .. 1,4 -> 1,5
         1] Constant 2 .. 1,7 -> 1,8
         2] Name 'b' Load .. 1,10 -> 1,11
-        .ctx
-          Load
+        .ctx Load
 """),
 
 ("""
@@ -3545,8 +3366,7 @@ Module .. ROOT 0,0 -> 1,13
         0] Name 'a' Load .. 1,4 -> 1,5
         1] Name 'b' Load .. 1,7 -> 1,8
         2] Constant 2 .. 1,10 -> 1,11
-        .ctx
-          Load
+        .ctx Load
 """),
 
 ("""
@@ -3571,8 +3391,7 @@ Module .. ROOT 0,0 -> 3,1
         0] Constant 3 .. 1,4 -> 1,5
         1] Name 'a' Load .. 2,4 -> 2,5
         2] Name 'b' Load .. 2,7 -> 2,8
-        .ctx
-          Load
+        .ctx Load
 """),
 
 ("""
@@ -3597,8 +3416,7 @@ Module .. ROOT 0,0 -> 3,1
         0] Name 'a' Load .. 1,4 -> 1,5
         1] Constant 3 .. 1,7 -> 1,8
         2] Name 'b' Load .. 2,4 -> 2,5
-        .ctx
-          Load
+        .ctx Load
 """),
 
 ("""
@@ -3622,8 +3440,7 @@ Module .. ROOT 0,0 -> 2,1
         0] Name 'a' Load .. 1,4 -> 1,5
         1] Name 'b' Load .. 1,7 -> 1,8
         2] Constant 3 .. 1,10 -> 1,11
-        .ctx
-          Load
+        .ctx Load
 """),
 
 ("""
@@ -3647,8 +3464,7 @@ Module .. ROOT 0,0 -> 2,1
         0] Constant 1 .. 1,4 -> 1,5
         1] Name 'a' Load .. 1,7 -> 1,8
         2] Name 'b' Load .. 1,10 -> 1,11
-        .ctx
-          Load
+        .ctx Load
 """),
 
 ("""
@@ -3673,8 +3489,7 @@ Module .. ROOT 0,0 -> 3,1
         0] Name 'a' Load .. 1,4 -> 1,5
         1] Constant 1 .. 2,4 -> 2,5
         2] Name 'b' Load .. 2,7 -> 2,8
-        .ctx
-          Load
+        .ctx Load
 """),
 
 ("""
@@ -3698,8 +3513,7 @@ Module .. ROOT 0,0 -> 2,7
         0] Name 'a' Load .. 1,4 -> 1,5
         1] Name 'b' Load .. 1,7 -> 1,8
         2] Constant 1 .. 2,4 -> 2,5
-        .ctx
-          Load
+        .ctx Load
 """),
 
 ("""
@@ -3722,8 +3536,7 @@ Module .. ROOT 0,0 -> 2,1
         0] Constant 2 .. 1,4 -> 1,5
         1] Name 'a' Load .. 1,7 -> 1,8
         2] Name 'b' Load .. 1,10 -> 1,11
-        .ctx
-          Load
+        .ctx Load
 """),
 
 ("""
@@ -3746,8 +3559,7 @@ Module .. ROOT 0,0 -> 2,1
         0] Name 'a' Load .. 1,4 -> 1,5
         1] Constant 2 .. 1,7 -> 1,8
         2] Name 'b' Load .. 1,10 -> 1,11
-        .ctx
-          Load
+        .ctx Load
 """),
 
 ("""
@@ -3769,8 +3581,7 @@ Module .. ROOT 0,0 -> 1,13
         0] Name 'a' Load .. 1,4 -> 1,5
         1] Name 'b' Load .. 1,7 -> 1,8
         2] Constant 2 .. 1,10 -> 1,11
-        .ctx
-          Load
+        .ctx Load
 """),
 
 ("""
@@ -3795,8 +3606,7 @@ Module .. ROOT 0,0 -> 3,1
         0] Constant 3 .. 1,4 -> 1,5
         1] Name 'a' Load .. 2,4 -> 2,5
         2] Name 'b' Load .. 2,7 -> 2,8
-        .ctx
-          Load
+        .ctx Load
 """),
 
 ("""
@@ -3821,8 +3631,7 @@ Module .. ROOT 0,0 -> 3,1
         0] Name 'a' Load .. 1,4 -> 1,5
         1] Constant 3 .. 1,7 -> 1,8
         2] Name 'b' Load .. 2,4 -> 2,5
-        .ctx
-          Load
+        .ctx Load
 """),
 
 ("""
@@ -3846,8 +3655,7 @@ Module .. ROOT 0,0 -> 2,1
         0] Name 'a' Load .. 1,4 -> 1,5
         1] Name 'b' Load .. 1,7 -> 1,8
         2] Constant 3 .. 1,10 -> 1,11
-        .ctx
-          Load
+        .ctx Load
 """),
 
 ("""
@@ -3871,8 +3679,7 @@ Module .. ROOT 0,0 -> 2,6
         0] Name 'a' Load .. 1,4 -> 1,5
         1] Name 'b' Load .. 1,7 -> 1,8
         2] Constant 1 .. 2,4 -> 2,5
-        .ctx
-          Load
+        .ctx Load
 """),
 
 ("""
@@ -3894,8 +3701,7 @@ Module .. ROOT 0,0 -> 1,12
         0] Name 'a' Load .. 1,4 -> 1,5
         1] Name 'b' Load .. 1,7 -> 1,8
         2] Constant 2 .. 1,10 -> 1,11
-        .ctx
-          Load
+        .ctx Load
 """),
 
 ("""
@@ -3919,8 +3725,7 @@ Module .. ROOT 0,0 -> 2,1
         0] Name 'a' Load .. 1,4 -> 1,5
         1] Name 'b' Load .. 1,7 -> 1,8
         2] Constant 3 .. 1,10 -> 1,11
-        .ctx
-          Load
+        .ctx Load
 """),
 
 ("""
@@ -3944,8 +3749,7 @@ Module .. ROOT 0,0 -> 2,7
         0] Name 'a' Load .. 1,4 -> 1,5
         1] Name 'b' Load .. 1,7 -> 1,8
         2] Constant 1 .. 2,4 -> 2,5
-        .ctx
-          Load
+        .ctx Load
 """),
 
 ("""
@@ -3967,8 +3771,7 @@ Module .. ROOT 0,0 -> 1,13
         0] Name 'a' Load .. 1,4 -> 1,5
         1] Name 'b' Load .. 1,7 -> 1,8
         2] Constant 2 .. 1,10 -> 1,11
-        .ctx
-          Load
+        .ctx Load
 """),
 
 ("""
@@ -3992,8 +3795,7 @@ Module .. ROOT 0,0 -> 2,1
         0] Name 'a' Load .. 1,4 -> 1,5
         1] Name 'b' Load .. 1,7 -> 1,8
         2] Constant 3 .. 1,10 -> 1,11
-        .ctx
-          Load
+        .ctx Load
 """),
 
 ("""
@@ -4019,8 +3821,7 @@ Module .. ROOT 0,0 -> 3,1
         0] Name 'a' Load .. 1,4 -> 1,5
         1] Name 'b' Load .. 1,7 -> 1,8
         2] Constant 1 .. 2,4 -> 2,5
-        .ctx
-          Load
+        .ctx Load
 """),
 
 ("""
@@ -4044,8 +3845,7 @@ Module .. ROOT 0,0 -> 2,1
         0] Name 'a' Load .. 1,4 -> 1,5
         1] Name 'b' Load .. 1,7 -> 1,8
         2] Constant 2 .. 1,10 -> 1,11
-        .ctx
-          Load
+        .ctx Load
 """),
 
 ("""
@@ -4069,8 +3869,7 @@ Module .. ROOT 0,0 -> 2,1
         0] Name 'a' Load .. 1,4 -> 1,5
         1] Name 'b' Load .. 1,7 -> 1,8
         2] Constant 3 .. 1,10 -> 1,11
-        .ctx
-          Load
+        .ctx Load
 """),
 
 ("""
@@ -4096,8 +3895,7 @@ Module .. ROOT 0,0 -> 3,1
         0] Name 'a' Load .. 1,4 -> 1,5
         1] Name 'b' Load .. 1,7 -> 1,8
         2] Constant 1 .. 2,4 -> 2,5
-        .ctx
-          Load
+        .ctx Load
 """),
 
 ("""
@@ -4121,8 +3919,7 @@ Module .. ROOT 0,0 -> 2,1
         0] Name 'a' Load .. 1,4 -> 1,5
         1] Name 'b' Load .. 1,7 -> 1,8
         2] Constant 2 .. 1,10 -> 1,11
-        .ctx
-          Load
+        .ctx Load
 """),
 
 ("""
@@ -4146,8 +3943,7 @@ Module .. ROOT 0,0 -> 2,1
         0] Name 'a' Load .. 1,4 -> 1,5
         1] Name 'b' Load .. 1,7 -> 1,8
         2] Constant 3 .. 1,10 -> 1,11
-        .ctx
-          Load
+        .ctx Load
 """),
 
 ]  # END OF PUT_SLICE_DATA
@@ -4169,8 +3965,7 @@ Module .. ROOT 0,0 -> 2,1
       List .. 0,0 -> 2,1
         .elts[1]
         0] Constant 3 .. 1,4 -> 1,5
-        .ctx
-          Load
+        .ctx Load
 """),
 
 ]  # END OF PUT_SLICE_DEL_DATA
