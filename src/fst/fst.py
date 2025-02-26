@@ -426,6 +426,7 @@ def _fixup_slice_index(ast, body, field, start, stop) -> tuple[int, int]:
 
 def _fixup_expr_seq_bound(lines: list[str], seq_loc: fstloc,
                           fpre: Union['FST', fstloc, None], fpost: Union['FST', fstloc, None],
+                          flast: Union['FST', fstloc, None],
                           ) -> tuple[fstloc, Union['FST', fstloc, None], Union['FST', fstloc, None]] | None:
     """Depending on existence preceding or following expressions and a full sequence location, return a bound `fstloc`
     that represents a search space in the source for commas and parenteses and the like. Will exclude any closing
@@ -463,10 +464,22 @@ def _fixup_expr_seq_bound(lines: list[str], seq_loc: fstloc,
         stop_col = seq_loc.end_col
 
     else:
+        if flast:  # make sure there are no ASTs where we will be searching because their strings can screw up _prev_src()
+            from_ln  = flast.end_ln
+            from_col = flast.end_col
+
+        elif fpre:
+            from_ln  = start_ln
+            from_col = start_col
+
+        else:
+            from_ln  = seq_loc.ln
+            from_col = seq_loc.col
+
         stop_ln  = fpost.ln
         stop_col = fpost.col
 
-        while code := _prev_src(lines, seq_loc.ln, seq_loc.col, stop_ln, stop_col):  # skip over preceding opening parens of fpost
+        while code := _prev_src(lines, from_ln, from_col, stop_ln, stop_col):  # skip over preceding opening parens of fpost
             ln, col, src  = code
             col          += len(src)
 
@@ -666,7 +679,7 @@ class FSTSrcEdit:
 
         lines = fst.root._lines
 
-        if not (bound_pre_post := _fixup_expr_seq_bound(lines, seq_loc, fpre, fpost)):
+        if not (bound_pre_post := _fixup_expr_seq_bound(lines, seq_loc, fpre, fpost, flast)):
             return seq_loc, seq_loc, None
 
         bound, _, _       = bound_pre_post
@@ -719,7 +732,7 @@ class FSTSrcEdit:
 
         lines = fst.root._lines
 
-        if not (bound_pre_post := _fixup_expr_seq_bound(lines, seq_loc, fpre, fpost)):  # if operating on whole sequence then just use the whole sequence location, if this doesn't return then one of `fpre` or `fpost` exists
+        if not (bound_pre_post := _fixup_expr_seq_bound(lines, seq_loc, fpre, fpost, flast)):  # if operating on whole sequence then just use the whole sequence location, if this doesn't return then one of `fpre` or `fpost` exists
             return seq_loc
 
         bound, fpre, fpost = bound_pre_post
