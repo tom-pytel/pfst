@@ -264,10 +264,9 @@ def _expr_src_edit_locs(lines: list[bistr], loc: fstloc, bound: fstloc) -> tuple
         parentheses for the expression itself.
 
     **Returns:**
-    - `(copy_loc, del_loc, put_lines)`: The `copy_loc` is the location of source that should be used if copying the
-        expression. The `del_loc` is the location which should be deleted used if removing the expression. Both are used
-        for a cut operation. `put_lines` is an optional set of non-coding source (or `None`) which can be put to
-        `del_loc` for prettier foramtting.
+    - `(copy_loc, del_loc)`: `copy_loc` is the location of source that should be used if copying the expression.
+        `del_loc` is the location which should be deleted used if removing the expression. Both are used
+        for a cut operation.
     """
 
     copy_ln,  copy_col,  copy_end_ln,  copy_end_col  = loc
@@ -360,23 +359,19 @@ def _expr_src_edit_locs(lines: list[bistr], loc: fstloc, bound: fstloc) -> tuple
         copy_col = len(lines[copy_ln])
 
     elif copy_ln == precomma_end_ln:  # copy start on same line as preceding comma
-        if postcomma_have:  # most likely other items follow
+        if postcomma_have:  # most likely other items follow, delete up to them (including postcomma)
             del_end_col = bound_end_col
-        elif precomma_end_ln == bound_ln:
+        elif precomma_end_ln == bound_ln:  # no items following, previous item, delete up to end of item past precomma
             del_col = bound_col
-        else:
+        else:  # previous comma not on same line as previous item, preserve its unique and special formatting as a trailing comma at end of sequence
             del_col = precomma_end_col
 
-    if not del_col and del_end_col and (m := re_empty_line_start.match(lines[del_ln])).end():  # delete from start of line to middle of line, maybe there is indentation to apply for prettification
-        put_lines = [bistr(m.group())]
-    else:
-        put_lines = None
+    if not del_col and del_end_col and (col := re_empty_line_start.match(lines[del_ln]).end()):  # delete from start of line to middle of line, maybe there is indentation to leave in place
+        del_col = col
 
     # end of special sauce
 
-    return (fstloc(copy_ln, copy_col, copy_end_ln, copy_end_col),
-            fstloc(del_ln, del_col, del_end_ln, del_end_col),
-            put_lines)
+    return fstloc(copy_ln, copy_col, copy_end_ln, copy_end_col), fstloc(del_ln, del_col, del_end_ln, del_end_col)
 
 
 def _fixup_field_body(ast: AST, field: str | None = None) -> tuple[str, 'AST']:
@@ -605,17 +600,17 @@ class FSTSrcEdit:
         if not (bound := _fixup_bound(seq_loc, fpre, fpost)):
             return seq_loc, seq_loc, None
 
-        copy_loc, put_loc, put_lines = _expr_src_edit_locs(fst.root._lines,
-                                                           fstloc(ffirst.ln, ffirst.col, flast.end_ln, flast.end_col),
-                                                           bound)
+        copy_loc, del_loc = _expr_src_edit_locs(fst.root._lines,
+                                                fstloc(ffirst.ln, ffirst.col, flast.end_ln, flast.end_col),
+                                                bound)
 
-        return (copy_loc, put_loc, put_lines) if cut else (copy_loc, None, None)
+        return (copy_loc, del_loc, None) if cut else (copy_loc, None, None)
 
     def put_seq(self, fst: 'FST', put_fst: Optional['FST'], indent: str, seq_loc: fstloc,
                 ffirst: Union['FST', fstloc, None], flast: Union['FST', fstloc, None],
                 fpre: Union['FST', fstloc, None], fpost: Union['FST', fstloc, None],
                 pfirst: Union['FST', fstloc, None], plast: Union['FST', fstloc, None],
-    ) -> fstloc:  # put_loc
+    ) -> fstloc:  # del_loc
         """Put to comma delimited sequence.
 
         The `ffirst`, `flast`, `fpre` and `fpost` parameters are only meant to pass location information so you should
@@ -648,22 +643,63 @@ class FSTSrcEdit:
         - `plast`: The last source `FST`, else `None` if is assignment from empty sequence or deletion.
 
         **Returns:**
-        - `fstloc` location where the potentially modified `fst` source should be put, replacing whatever is at the
+        - `fstloc`: location where the potentially modified `fst` source should be put, replacing whatever is at the
             location currently.
         """
 
-        if not put_fst or not pfirst:  # `pfirst` may be None and `new` not if assigning empty sequence, pure delete (assign empty sequence)
-            if not (bound := _fixup_bound(seq_loc, fpre, fpost)):
-                return seq_loc
+        if not (bound := _fixup_bound(seq_loc, fpre, fpost)):  # if operating on whole sequence then just use the whole sequence location
+            return seq_loc
 
+        if not put_fst or not pfirst:  # `pfirst` may be None and `put_fst` not if assigning empty sequence, regardless, pure delete (or assign empty sequence, same), fflrst/last guaranteed to exist
             return _expr_src_edit_locs(fst.root._lines,
                                        fstloc(ffirst.ln, ffirst.col, flast.end_ln, flast.end_col), bound)[1]
 
         if ffirst:  # flast also exists, replacement
-            return fstloc(ffirst.ln, ffirst.col, flast.end_ln, flast.end_col)
+            put_ln      = ffirst.ln
+            put_col     = ffirst.col
+            put_end_ln  = flast.end_ln
+            put_end_col = flast.end_col
 
-        if not fpre and not fpost:  # ffirst and flast are None, assign to empty sequence, just copy over whole inside
-            return seq_loc
+        elif fpost:  # insertion
+            raise NotImplementedError
+            put_end_ln  = put_ln  = fpost.ln
+            put_end_col = put_col = fpost.col
+
+        else:  # fpre guaranteed to exist, insertion
+            raise NotImplementedError
+            put_end_ln  = put_ln  = fpre.end_ln
+            put_end_col = put_col = fpre.end_col
+
+        lines     = fst.root._lines
+        put_lines = put_fst._lines
+
+        if re_empty_line.match(put_lines[0]) and re_empty_line.match(lines[put_ln], 0, put_col):  # strip leading newline from `put_fst` if location being put already has one
+            put_fst.put_lines(None, 0, 0, 1, re_empty_line_start.match(put_lines[1]).end(), False)
+
+
+        # if re_empty_line.match(put_lines[-1]):  # `put_fst` has trailing newline, now it gets complicated
+
+
+        # else:  # if `put_fst` ends with comma
+        #     pass
+
+
+
+
+
+
+        #     re_non_coding_line_end.match()
+
+# strip trailing newline from `put_fst` if location ends on a newline
+
+
+
+
+
+        return fstloc(put_ln, put_col, put_end_ln, put_end_col)
+
+
+
 
 
 
@@ -1264,10 +1300,10 @@ class FST:
         root = self.root
 
         if not put_fst:  # delete
-            put_lines = None
-
             put_ln, put_col, put_end_ln, put_end_col = (
                 self.src_edit.put_seq(self, None, '', seq_loc, ffirst, flast, fpre, fpost, None, None))
+
+            put_lines = None
 
         else:
             assert put_fst.is_root

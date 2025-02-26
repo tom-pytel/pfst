@@ -14,7 +14,7 @@ PYFNMS = sum((
     start=[]
 )
 
-CUT_DATA = [
+GET_SLICE_CUT_DATA = [
 (r"""
 {1, 2}
 """, 'body[0].value', 0, 0, r"""
@@ -1513,7 +1513,7 @@ Tuple .. ROOT 0,0 -> 0,18
     Load
 """),
 
-]  # END OF CUT_DATA
+]  # END OF GET_SLICE_CUT_DATA
 
 PUT_SLICE_DATA = [
 ("""
@@ -1726,7 +1726,53 @@ Module .. ROOT 0,0 -> 0,2
           Load
 """),
 
+("""
+[            # hello
+    1, 2, 3
+]
+""", 'body[0].value', 0, 2, """
+()
+""", """
+[            # hello
+    3
+]
+""", """
+Module .. ROOT 0,0 -> 2,1
+  .body[1]
+  0] Expr .. 0,0 -> 2,1
+    .value
+      List .. 0,0 -> 2,1
+        .elts[1]
+        0] Constant 3 .. 1,4 -> 1,5
+        .ctx
+          Load
+"""),
+
 ]  # END OF PUT_SLICE_DATA
+
+PUT_SLICE_DEL_DATA = [
+("""
+[            # hello
+    1, 2, 3
+]
+""", 'body[0].value', 0, 2, """
+[            # hello
+    3
+]
+""", """
+Module .. ROOT 0,0 -> 2,1
+  .body[1]
+  0] Expr .. 0,0 -> 2,1
+    .value
+      List .. 0,0 -> 2,1
+        .elts[1]
+        0] Constant 3 .. 1,4 -> 1,5
+        .ctx
+          Load
+"""),
+
+]  # END OF PUT_SLICE_DEL_DATA
+
 
 def read(fnm):
     with open(fnm) as f:
@@ -2392,7 +2438,7 @@ _CookiePattern = re.compile(r"""
         self.assertEqual({0, 1}, f.get_indentable_lns(docstring=True))
         self.assertEqual({0}, f.get_indentable_lns(docstring=False))
 
-    def test__offset(self):
+    def test_offset(self):
         src = 'i = 1\nj = 2\nk = 3'
 
         ast = parse(src)
@@ -2489,7 +2535,7 @@ _CookiePattern = re.compile(r"""
         self.assertEqual((0, 4, 0, 8), m.body[1].f.loc)
         self.assertEqual((0, 4, 0, 4), m.body[2].f.loc)
 
-    def test__offset_cols(self):
+    def test_offset_cols(self):
         src = 'class cls:\n if True:\n  i = """\nj\n"""\n  k = 3\n else:\n  j = 2'
 
         ast = parse(src)
@@ -2534,7 +2580,7 @@ _CookiePattern = re.compile(r"""
         self.assertEqual((2, 2, 2, 3), ast.body[0].body[0].body[0].targets[0].f.loc)
         self.assertEqual((2, 6, 4, 3), ast.body[0].body[0].body[0].value.f.loc)
 
-    def test__offset_cols_mapped(self):
+    def test_offset_cols_mapped(self):
         src = 'i = 1\nj = 2\nk = 3\nl = \\\n4'
         ast = parse(src)
         off = {0: 0, 1: 1, 2: 2, 3: 3, 4: 4}
@@ -2554,7 +2600,7 @@ _CookiePattern = re.compile(r"""
         self.assertEqual((3, 3, 3, 4), ast.body[3].targets[0].f.loc)
         self.assertEqual((4, 4, 4, 5), ast.body[3].value.f.loc)
 
-    def test__indent_tail(self):
+    def test_indent_lns(self):
         src = 'class cls:\n if True:\n  i = """\nj\n"""\n  k = 3\n else:\n  j \\\n=\\\n 2'
 
         ast = parse(src)
@@ -2584,7 +2630,7 @@ _CookiePattern = re.compile(r"""
         self.assertEqual({1, 2}, lns)
         self.assertEqual('@decorator\n  class cls:\n   pass', ast.f.src)
 
-    def test__dedent_tail(self):
+    def test_dedent_lns(self):
         src = 'class cls:\n if True:\n  i = """\nj\n"""\n  k = 3\n else:\n  j \\\n=\\\n 2'
 
         ast = parse(src)
@@ -3105,8 +3151,8 @@ Module .. ROOT 0,0 -> 0,10
     0] Pass .. 0,6 -> 0,10
             """.strip(), 'if 2: pass')
 
-    def test_cut(self):
-        for src, elt, start, stop, src_cut, slice_cut, src_dump, slice_dump in CUT_DATA:
+    def test_get_slice_cut(self):
+        for src, elt, start, stop, src_cut, slice_cut, src_dump, slice_dump in GET_SLICE_CUT_DATA:
             src   = src.strip()
             t     = parse(src)
             f     = eval(f't.{elt}', {'t': t}).f
@@ -3146,11 +3192,26 @@ Module .. ROOT 0,0 -> 0,10
             self.assertEqual(tdst, put_src.strip())
             self.assertEqual(tdump, put_dump.strip().split('\n'))
 
+    def test_put_slice_del(self):
+        for dst, elt, start, stop, src, put_src, put_dump in PUT_SLICE_DATA:
+            dst = dst.strip()
+            src = src.strip()
+            t   = parse(dst)
+            f   = eval(f't.{elt}', {'t': t}).f
 
-def regen_cut_data():
+            f.put_slice(src, start, stop)
+
+            tdst  = t.f.src
+            tdump = t.f.dump(linefunc=list, compact=True)
+
+            self.assertEqual(tdst, put_src.strip())
+            self.assertEqual(tdump, put_dump.strip().split('\n'))
+
+
+def regen_get_slice_cut_data():
     newlines = []
 
-    for src, elt, start, stop, *_ in CUT_DATA:
+    for src, elt, start, stop, *_ in GET_SLICE_CUT_DATA:
         src   = src.strip()
         t     = parse(src)
         f     = eval(f't.{elt}', {'t': t}).f
@@ -3176,8 +3237,8 @@ def regen_cut_data():
     with open(sys.argv[0]) as f:
         lines = f.read().split('\n')
 
-    start = lines.index('CUT_DATA = [')
-    stop  = lines.index(']  # END OF CUT_DATA')
+    start = lines.index('GET_SLICE_CUT_DATA = [')
+    stop  = lines.index(']  # END OF GET_SLICE_CUT_DATA')
 
     lines[start + 1 : stop] = newlines
 
@@ -3220,23 +3281,62 @@ def regen_put_slice_data():
         lines = f.write('\n'.join(lines))
 
 
+def regen_put_slice_del_data():
+    newlines = []
+
+    for dst, elt, start, stop, put_src, put_dump in PUT_SLICE_DEL_DATA:
+        dst = dst.strip()
+        t   = parse(dst)
+        f   = eval(f't.{elt}', {'t': t}).f
+
+        f.put_slice(None, start, stop)
+
+        tdst  = t.f.src
+        tdump = t.f.dump(linefunc=list, compact=True)
+
+        assert not tdst.startswith('\n') or tdst.endswith('\n')
+
+        t.f.verify()
+
+        newlines.append('("""')
+        newlines.extend(f'''{dst}\n""", {elt!r}, {start}, {stop}, """\n{tdst}\n""", """'''.split('\n'))
+        newlines.extend(tdump)
+        newlines.append('"""),\n')
+
+    with open(sys.argv[0]) as f:
+        lines = f.read().split('\n')
+
+    start = lines.index('PUT_SLICE_DEL_DATA = [')
+    stop  = lines.index(']  # END OF PUT_SLICE_DEL_DATA')
+
+    lines[start + 1 : stop] = newlines
+
+    with open(sys.argv[0], 'w') as f:
+        lines = f.write('\n'.join(lines))
+
+
 if __name__ == '__main__':
     import argparse
 
     parser = argparse.ArgumentParser(prog='python -m fst')
 
-    parser.add_argument('--regen-cut', default=False, action='store_true', help="regenerate cut test data")
+    parser.add_argument('--regen-get-slice-cut', default=False, action='store_true', help="regenerate get slice cut test data")
     parser.add_argument('--regen-put-slice', default=False, action='store_true', help="regenerate put slice test data")
+    parser.add_argument('--regen-put-slice-del', default=False, action='store_true', help="regenerate put slice del test data")
 
     args = parser.parse_args()
 
-    if args.regen_cut:
-        print('Regenerating cut test data...')
-        regen_cut_data()
+    if args.regen_get_slice_cut:
+        print('Regenerating get slice cut test data...')
+        regen_get_slice_cut_data()
 
     if args.regen_put_slice:
         print('Regenerating put slice test data...')
         regen_put_slice_data()
 
-    if not args.regen_cut and not args.regen_put_slice:
+    if args.regen_put_slice_del:
+        print('Regenerating put slice del test data...')
+        regen_put_slice_del_data()
+
+    if not args.regen_get_slice_cut and not args.regen_put_slice and not args.regen_put_slice_del:
         unittest.main()
