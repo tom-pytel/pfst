@@ -1363,7 +1363,7 @@ class FST:
 
         fst = self._get_seq_and_dedent(get_ast, cut, seq_loc, ffirst, flast, fpre, fpost, prefix, suffix)
 
-        if is_tuple:
+        if fix and is_tuple:
             fst._maybe_add_singleton_tuple_comma(False)  # maybe need to add a postfix comma to copied single element tuple if is not already there
             self._maybe_fix_tuple(is_paren)
 
@@ -1444,7 +1444,8 @@ class FST:
         else:
             root.put_lines(put_lines, put_ln, put_col, put_end_ln, put_end_col, True, self)  # because of insertion at end and unparenthesized tuple
 
-    def _put_slice_tuple_list_or_set(self, code: Code | None, start: int, stop: int, field: str | None = None):
+    def _put_slice_tuple_list_or_set(self, code: Code | None, start: int, stop: int, field: str | None = None,
+                                     fix: bool = True):
         if field is not None and field != 'elts':
             raise ValueError(f"invalid field '{field}' to assign slice to a {self.a.__class__.__name__}")
 
@@ -1535,12 +1536,13 @@ class FST:
         for i in range(start + put_len, len(elts)):
             elts[i].f.pfield = astfield('elts', i)
 
-        if is_self_tuple:
-            self._maybe_fix_tuple(is_self_enclosed)
-        elif isinstance(ast, Set):
-            self._maybe_fix_set()
+        if fix:
+            if is_self_tuple:
+                self._maybe_fix_tuple(is_self_enclosed)
+            elif isinstance(ast, Set):
+                self._maybe_fix_set()
 
-    def _put_slice_dict(self, code: Code | None, start: int, stop: int, field: str | None = None):
+    def _put_slice_dict(self, code: Code | None, start: int, stop: int, field: str | None = None, fix: bool = True):
         if field is not None:
             raise ValueError(f"cannot specify a field '{field}' to assign slice to a Dict")
 
@@ -1962,17 +1964,18 @@ class FST:
 
 
 
-    def put_slice(self, code: Code | None, start: int | None = None, stop: int | None = None, field: str | None = None):
+    def put_slice(self, code: Code | None, start: int | None = None, stop: int | None = None, field: str | None = None,
+                  *, fix: bool = True):
         a = self.a
 
         if isinstance(a, STATEMENTISH_OR_STMTMOD):
             raise NotImplementedError  # TODO: THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS!
 
         if isinstance(a, (Tuple, List, Set)):
-            return self._put_slice_tuple_list_or_set(code, start, stop, field)
+            return self._put_slice_tuple_list_or_set(code, start, stop, field, fix)
 
         if isinstance(a, Dict):
-            return self._put_slice_dict(code, start, stop, field)
+            return self._put_slice_dict(code, start, stop, field, fix)
 
         raise ValueError(f"cannot put slice to a '{a.__class__.__name__}'")
 
