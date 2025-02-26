@@ -420,17 +420,66 @@ def _fixup_slice_index(ast, body, field, start, stop) -> tuple[int, int]:
     return start, stop
 
 
-def _fixup_bound(seq_loc: fstloc, fpre: Union['FST', fstloc, None], fpost: Union['FST', fstloc, None]) -> fstloc | None:
-    if fpre:
-        if fpost:
-            return fstloc(fpre.end_ln, fpre.end_col, fpost.ln, fpost.col)
-        else:
-            return fstloc(fpre.end_ln, fpre.end_col, seq_loc.end_ln, seq_loc.end_col)
+def _fixup_expr_seq_bound(lines: list[str], seq_loc: fstloc,
+                          fpre: Union['FST', fstloc, None], fpost: Union['FST', fstloc, None],
+                          ) -> tuple[fstloc, Union['FST', fstloc, None], Union['FST', fstloc, None]] | None:
+    """Depending on existence preceding or following expressions and a full sequence location, return a bound `fstloc`
+    that represents a search space in the source for commas and parenteses and the like. Will exclude any closing
+    parentheses belonging to `fpre` and any opening parenthese belonging to `fpost` from the bound."""
 
-    elif fpost:
-        return fstloc(seq_loc.ln, seq_loc.col, fpost.ln, fpost.col)
+    if not fpre:
+        if not fpost:
+            return None
+
+        start_ln  = seq_loc.ln
+        start_col = seq_loc.col
+
     else:
-        return None  # no fpre or fpost, inform that entire seq_loc
+        start_ln  = fpre.end_ln
+        start_col = fpre.end_col
+
+        while code := _next_src(lines, start_ln, start_col, seq_loc.end_ln, seq_loc.end_col):  # skip over trailing closing parens of fpre
+            ln, col, src = code
+
+            for c in src:
+                col += 1
+
+                if c != ')':
+                    break
+                else:
+                    fpre = fstloc(fpre.ln, fpre.col, start_ln := ln, start_col := col)
+
+            else:
+                continue
+
+            break
+
+    if not fpost:
+        stop_ln  = seq_loc.end_ln
+        stop_col = seq_loc.end_col
+
+    else:
+        stop_ln  = fpost.ln
+        stop_col = fpost.col
+
+        while code := _prev_src(lines, seq_loc.ln, seq_loc.col, stop_ln, stop_col):  # skip over preceding opening parens of fpost
+            ln, col, src  = code
+            col          += len(src)
+
+            for c in src[::-1]:
+                col -= 1
+
+                if c != '(':
+                    break
+                else:
+                    fpost = fstloc(stop_ln := ln, stop_col := col, fpost.end_ln, fpost.end_col)
+
+            else:
+                continue
+
+            break
+
+    return fstloc(start_ln, start_col, stop_ln, stop_col), fpre, fpost
 
 
 def _normalize_code(code: Code, expr_: bool = False, *, parse_params: dict = {}) -> 'FST':
@@ -611,10 +660,13 @@ class FSTSrcEdit:
         source).
         """
 
-        if not (bound := _fixup_bound(seq_loc, fpre, fpost)):
+        lines = fst.root._lines
+
+        if not (bound_pre_post := _fixup_expr_seq_bound(lines, seq_loc, fpre, fpost)):
             return seq_loc, seq_loc, None
 
-        copy_loc, del_loc = _expr_src_edit_locs(fst.root._lines,
+        bound, _, _       = bound_pre_post
+        copy_loc, del_loc = _expr_src_edit_locs(lines,
                                                 fstloc(ffirst.ln, ffirst.col, flast.end_ln, flast.end_col),
                                                 bound)
 
@@ -661,8 +713,12 @@ class FSTSrcEdit:
             location currently.
         """
 
-        if not (bound := _fixup_bound(seq_loc, fpre, fpost)):  # if operating on whole sequence then just use the whole sequence location, if this doesn't return then one of `fpre` or `fpost` exists
+        lines = fst.root._lines
+
+        if not (bound_pre_post := _fixup_expr_seq_bound(lines, seq_loc, fpre, fpost)):  # if operating on whole sequence then just use the whole sequence location, if this doesn't return then one of `fpre` or `fpost` exists
             return seq_loc
+
+        bound, fpre, fpost = bound_pre_post
 
         if not put_fst or not pfirst:  # `pfirst` may be None and `put_fst` not if assigning empty sequence, regardless, pure delete (or assign empty sequence, same), fflrst/last guaranteed to exist
             return _expr_src_edit_locs(fst.root._lines,
@@ -685,7 +741,6 @@ class FSTSrcEdit:
             put_end_ln  = put_ln  = fpre.end_ln
             put_end_col = put_col = fpre.end_col
 
-        lines     = fst.root._lines
         put_lines = put_fst._lines
         del_loc   = _expr_src_edit_locs(fst.root._lines,
                                         fstloc(put_ln, put_col, put_end_ln, put_end_col), bound)[1]
