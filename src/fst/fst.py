@@ -704,6 +704,14 @@ class FSTSrcEdit:
                                                 fstloc(ffirst.ln, ffirst.col, flast.end_ln, flast.end_col),
                                                 bound)
 
+        if not fpost:
+            del_ln, del_col, del_end_ln, del_end_col = del_loc
+
+            if (new_del_col := re_line_trailing_space.match(lines[del_ln],
+                                                            bound.col if del_ln == bound.ln else 0,
+                                                            del_col := del_col).start(1)) < del_col:  # move del start to beginning of any trailing whitespace from put location before end of sequence
+                del_loc = fstloc(del_ln, new_del_col, del_end_ln, del_end_col)
+
         return (copy_loc, del_loc, None) if cut else (copy_loc, None, None)
 
     def put_seq(self, fst: 'FST', put_fst: Optional['FST'], indent: str, seq_loc: fstloc,
