@@ -156,12 +156,24 @@ def unparse(ast_obj) -> str:
     return ast_unparse(ast_obj)
 
 
-def _with_loc(a: AST) -> bool:
-    """Faster overall than checking `a.f.loc`."""
+def _with_loc(ast: AST) -> bool:
+    """Faster overall than checking `ast.f.loc`."""
 
-    return not (isinstance(a, (expr_context, boolop, operator, unaryop, cmpop)) or
-                (isinstance(a, arguments) and not a.posonlyargs and not a.args and not a.vararg and not a.kwonlyargs
-                 and not a.kwarg))
+    return not (isinstance(ast, (expr_context, boolop, operator, unaryop, cmpop)) or
+                (isinstance(ast, arguments) and not ast.posonlyargs and not ast.args and not ast.vararg and
+                 not ast.kwonlyargs and not ast.kwarg))
+
+
+def _set_parents_col_offset(fst: 'FST', lineno: int, col_offset: int, new_col_offset: int):
+    """Walk up parent chain (starting at `fst` itself) setting `.col_offset` to `new_col_offset` wherever the current
+    `.lineno` and `.col_offset` match `lineno` and `col_offset`. Used for correcting parents after an `offset()` which
+    could not avoid modifying them."""
+
+    while fst:
+        if getattr(a := fst.a, 'col_offset', None) == col_offset and a.lineno == lineno:
+            a.col_offset = new_col_offset
+
+        fst = fst.parent
 
 
 def _next_src(lines: list[str], ln: int, col: int, end_ln: int, end_col: int,
@@ -1203,11 +1215,27 @@ class FST:
     def _maybe_fix_tuple(self, is_parenthesized: bool | None = None):
         # assert isinstance(self.a, Tuple)
 
-        if self.a.elts:
+        ast = self.a
+
+        ln, col, end_ln, end_col = self.loc
+
+        if is_parenthesized is None:
+            is_parenthesized = self.is_tuple_parenthesized()
+
+        if ast.elts:
             self._maybe_add_singleton_tuple_comma(True)
 
-        elif not (self.is_tuple_parenthesized() if is_parenthesized is None else is_parenthesized):  # if is unparenthesized tuple and empty left then need to add parentheses
-            self.put_lines([bistr('()')], *self.loc, True)  # TODO: WARNING! `True` may not be safe if another preceding non-containing node ends EXACTLY where the unparenthesized tuple starts, does this ever happen?
+            if not is_parenthesized and end_ln != ln:  # and not self.is_enclosed:  <-- TODO: this, also maybe check for line continuations
+                self.put_lines([bistr(')')], end_ln, end_col, end_ln, end_col, True, self)
+                self.put_lines([bistr('(')], ln, col, ln, col, False)
+
+                _set_parents_col_offset(self, ast.lineno, co := ast.col_offset, co - 1)
+
+        elif not is_parenthesized:  # if is unparenthesized tuple and empty left then need to add parentheses
+            self.put_lines([bistr('()')], ln, col, end_ln, end_col, True)  # WARNING! `True` may not be safe if another preceding non-containing node ends EXACTLY where the unparenthesized tuple starts, but haven't found a case where this can happen
+
+            if end_col == col and end_ln == ln:  # this is tricky because zero length tuple can be at the start of a parent so now we have to correct offset that was applied to all parents start positions
+                _set_parents_col_offset(self, ast.end_lineno, co := ast.end_col_offset, co - 2)
 
     def _maybe_fix_set(self):
         # assert isinstance(self.a, Set)
