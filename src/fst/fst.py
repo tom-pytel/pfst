@@ -164,14 +164,14 @@ def _with_loc(ast: AST) -> bool:
                  not ast.kwonlyargs and not ast.kwarg))
 
 
-def _set_parents_col_offset(fst: 'FST', lineno: int, col_offset: int, new_col_offset: int):
-    """Walk up parent chain (starting at `fst` itself) setting `.col_offset` to `new_col_offset` wherever the current
-    `.lineno` and `.col_offset` match `lineno` and `col_offset`. Used for correcting parents after an `offset()` which
-    could not avoid modifying them."""
+def _reset_parents_start_pos(fst: 'FST', lineno: int, col_offset: int):  # because of stupid evil unparenthesized tuples
+    """Walk up parent chain (starting at `fst` itself) setting `.lineno` and `.col_offset` to `lineno` and `col_offset`
+    if they are past it. Used for correcting parents after an `offset()` which could not avoid modifying them."""
 
     while fst:
-        if getattr(a := fst.a, 'col_offset', None) == col_offset and a.lineno == lineno:
-            a.col_offset = new_col_offset
+        if (lno := getattr(a := fst.a, 'lineno', -1)) > lineno or lno == lineno and a.col_offset > col_offset:
+            a.lineno     = lineno
+            a.col_offset = col_offset
 
         fst = fst.parent
 
@@ -780,7 +780,9 @@ class FSTSrcEdit:
             if re_empty_line.match(l := lines[put_ln], 0, put_col):  # strip leading newline from `put_fst` if location being put already has one - NOTE: could also check re_empty_line.match(put_lines[0]) instead of just put_lines[0]
                 put_fst.put_lines(None, 0, 0, 1, re_empty_line_start.match(put_lines[1]).end(), False)
 
-            elif (new_del_col := re_line_trailing_space.match(l, 0, del_col := del_loc.col).start(1)) < del_col:  # move del start to beginning of any trailing whitespace from put location before newline
+            elif (new_del_col := re_line_trailing_space.match(l,
+                                                              bound.col if put_ln == bound.ln else 0,
+                                                              del_col := del_loc.col).start(1)) < del_col:  # move del start to beginning of any trailing whitespace from put location before newline
                 del_loc = fstloc(del_loc.ln, new_del_col, del_loc.end_ln, del_loc.end_col)
 
         if not put_lines[-1] and not re_empty_line.match(lines[(end_ln := del_loc.end_ln)], del_loc.end_col,  # add indentation to trailing newline in `put_fst` if there is stuff on the starting line of `put_loc` past the start point
@@ -1229,13 +1231,13 @@ class FST:
                 self.put_lines([bistr(')')], end_ln, end_col, end_ln, end_col, True, self)
                 self.put_lines([bistr('(')], ln, col, ln, col, False)
 
-                _set_parents_col_offset(self, ast.lineno, co := ast.col_offset, co - 1)
+                _reset_parents_start_pos(self, ast.lineno, ast.col_offset - 1)
 
         elif not is_parenthesized:  # if is unparenthesized tuple and empty left then need to add parentheses
             self.put_lines([bistr('()')], ln, col, end_ln, end_col, True)  # WARNING! `True` may not be safe if another preceding non-containing node ends EXACTLY where the unparenthesized tuple starts, but haven't found a case where this can happen
 
             if end_col == col and end_ln == ln:  # this is tricky because zero length tuple can be at the start of a parent so now we have to correct offset that was applied to all parents start positions
-                _set_parents_col_offset(self, ast.end_lineno, co := ast.end_col_offset, co - 2)
+                _reset_parents_start_pos(self, ast.end_lineno, ast.end_col_offset - 2)
 
     def _maybe_fix_set(self):
         # assert isinstance(self.a, Set)
@@ -1477,10 +1479,20 @@ class FST:
 
             put_fst.offset(0, 0, put_ln, fst_dcol_offset)
 
+        self_ln, self_col, _, _ = self.loc
+
+        if is_unparen_tuple := put_col == self_col and put_ln == self_ln:  # beginning of stupid evil unparenthesized tuple
+            ast        = self.a
+            lineno     = ast.lineno
+            col_offset = ast.col_offset
+
         if fpost:
             root.put_lines(put_lines, put_ln, put_col, put_end_ln, put_end_col, False, None)
         else:
             root.put_lines(put_lines, put_ln, put_col, put_end_ln, put_end_col, True, self)  # because of insertion at end and unparenthesized tuple
+
+        if is_unparen_tuple:
+            _reset_parents_start_pos(self, lineno, col_offset)  # because of insertion at beginning of unparenthesized tuple, pattern beginning to emerge
 
     def _put_slice_tuple_list_or_set(self, code: Code | None, start: int, stop: int, field: str | None = None,
                                      fix: bool = True):
