@@ -21,7 +21,7 @@ GET_SLICE_CUT_DATA = [
 {1, 2}
 """, r"""
 set()
-""", """
+""", r"""
 Module .. ROOT 0,0 -> 0,6
   .body[1]
   0] Expr .. 0,0 -> 0,6
@@ -30,7 +30,7 @@ Module .. ROOT 0,0 -> 0,6
         .elts[2]
         0] Constant 1 .. 0,1 -> 0,2
         1] Constant 2 .. 0,4 -> 0,5
-""", """
+""", r"""
 Call .. ROOT 0,0 -> 0,5
   .func
     Name 'set' Load .. 0,0 -> 0,3
@@ -50,14 +50,14 @@ Call .. ROOT 0,0 -> 0,5
     2,  # second line
     3,  # third line
 )
-""", """
+""", r"""
 Module .. ROOT 0,0 -> 0,2
   .body[1]
   0] Expr .. 0,0 -> 0,2
     .value
       Tuple .. 0,0 -> 0,2
         .ctx Load
-""", """
+""", r"""
 Tuple .. ROOT 0,0 -> 4,1
   .elts[3]
   0] Constant 1 .. 1,4 -> 1,5
@@ -81,7 +81,7 @@ Tuple .. ROOT 0,0 -> 4,1
     1,  # last line
     2,  # second line
 )
-""", """
+""", r"""
 Module .. ROOT 0,0 -> 2,1
   .body[1]
   0] Expr .. 0,0 -> 2,1
@@ -90,7 +90,7 @@ Module .. ROOT 0,0 -> 2,1
         .elts[1]
         0] Constant 3 .. 1,4 -> 1,5
         .ctx Load
-""", """
+""", r"""
 Tuple .. ROOT 0,0 -> 3,1
   .elts[2]
   0] Constant 1 .. 1,4 -> 1,5
@@ -113,7 +113,7 @@ Tuple .. ROOT 0,0 -> 3,1
 (
     2,  # second line
 )
-""", """
+""", r"""
 Module .. ROOT 0,0 -> 3,1
   .body[1]
   0] Expr .. 0,0 -> 3,1
@@ -123,7 +123,7 @@ Module .. ROOT 0,0 -> 3,1
         0] Constant 1 .. 1,4 -> 1,5
         1] Constant 3 .. 2,4 -> 2,5
         .ctx Load
-""", """
+""", r"""
 Tuple .. ROOT 0,0 -> 2,1
   .elts[1]
   0] Constant 2 .. 1,4 -> 1,5
@@ -145,7 +145,7 @@ Tuple .. ROOT 0,0 -> 2,1
 (
     3,  # third line
 )
-""", """
+""", r"""
 Module .. ROOT 0,0 -> 3,1
   .body[1]
   0] Expr .. 0,0 -> 3,1
@@ -155,7 +155,7 @@ Module .. ROOT 0,0 -> 3,1
         0] Constant 1 .. 1,4 -> 1,5
         1] Constant 2 .. 2,4 -> 2,5
         .ctx Load
-""", """
+""", r"""
 Tuple .. ROOT 0,0 -> 2,1
   .elts[1]
   0] Constant 3 .. 1,4 -> 1,5
@@ -172,14 +172,14 @@ Tuple .. ROOT 0,0 -> 2,1
 (           # hello
     1, 2, 3 # last line
 )
-""", """
+""", r"""
 Module .. ROOT 0,0 -> 0,2
   .body[1]
   0] Expr .. 0,0 -> 0,2
     .value
       Tuple .. 0,0 -> 0,2
         .ctx Load
-""", """
+""", r"""
 Tuple .. ROOT 0,0 -> 2,1
   .elts[3]
   0] Constant 1 .. 1,4 -> 1,5
@@ -199,7 +199,7 @@ Tuple .. ROOT 0,0 -> 2,1
 """, r"""
 (
     1, 2)
-""", """
+""", r"""
 Module .. ROOT 0,0 -> 2,1
   .body[1]
   0] Expr .. 0,0 -> 2,1
@@ -208,7 +208,7 @@ Module .. ROOT 0,0 -> 2,1
         .elts[1]
         0] Constant 3 .. 1,4 -> 1,5
         .ctx Load
-""", """
+""", r"""
 Tuple .. ROOT 0,0 -> 1,9
   .elts[2]
   0] Constant 1 .. 1,4 -> 1,5
@@ -226,7 +226,7 @@ Tuple .. ROOT 0,0 -> 1,9
 )
 """, r"""
 (2,)
-""", """
+""", r"""
 Module .. ROOT 0,0 -> 2,1
   .body[1]
   0] Expr .. 0,0 -> 2,1
@@ -236,7 +236,7 @@ Module .. ROOT 0,0 -> 2,1
         0] Constant 1 .. 1,4 -> 1,5
         1] Constant 3 .. 1,7 -> 1,8
         .ctx Load
-""", """
+""", r"""
 Tuple .. ROOT 0,0 -> 0,4
   .elts[1]
   0] Constant 2 .. 0,1 -> 0,2
@@ -253,7 +253,7 @@ Tuple .. ROOT 0,0 -> 0,4
 """, r"""
 (3, # last line
 )
-""", """
+""", r"""
 Module .. ROOT 0,0 -> 1,9
   .body[1]
   0] Expr .. 0,0 -> 1,9
@@ -263,7 +263,7 @@ Module .. ROOT 0,0 -> 1,9
         0] Constant 1 .. 1,4 -> 1,5
         1] Constant 2 .. 1,7 -> 1,8
         .ctx Load
-""", """
+""", r"""
 Tuple .. ROOT 0,0 -> 1,1
   .elts[1]
   0] Constant 3 .. 0,1 -> 0,2
@@ -276,7 +276,7 @@ Tuple .. ROOT 0,0 -> 1,1
 1, 4
 """, r"""
 (2, 3)
-""", """
+""", r"""
 Module .. ROOT 0,0 -> 0,4
   .body[1]
   0] Expr .. 0,0 -> 0,4
@@ -286,7 +286,7 @@ Module .. ROOT 0,0 -> 0,4
         0] Constant 1 .. 0,0 -> 0,1
         1] Constant 4 .. 0,3 -> 0,4
         .ctx Load
-""", """
+""", r"""
 Tuple .. ROOT 0,0 -> 0,6
   .elts[2]
   0] Constant 2 .. 0,1 -> 0,2
@@ -300,7 +300,7 @@ Tuple .. ROOT 0,0 -> 0,6
 1, 2, 3
 """, r"""
 (4,)
-""", """
+""", r"""
 Module .. ROOT 0,0 -> 0,7
   .body[1]
   0] Expr .. 0,0 -> 0,7
@@ -311,7 +311,7 @@ Module .. ROOT 0,0 -> 0,7
         1] Constant 2 .. 0,3 -> 0,4
         2] Constant 3 .. 0,6 -> 0,7
         .ctx Load
-""", """
+""", r"""
 Tuple .. ROOT 0,0 -> 0,4
   .elts[1]
   0] Constant 4 .. 0,1 -> 0,2
@@ -324,14 +324,14 @@ Tuple .. ROOT 0,0 -> 0,4
 ()
 """, r"""
 (1, 2, 3, 4)
-""", """
+""", r"""
 Module .. ROOT 0,0 -> 0,2
   .body[1]
   0] Expr .. 0,0 -> 0,2
     .value
       Tuple .. 0,0 -> 0,2
         .ctx Load
-""", """
+""", r"""
 Tuple .. ROOT 0,0 -> 0,12
   .elts[4]
   0] Constant 1 .. 0,1 -> 0,2
@@ -347,7 +347,7 @@ Tuple .. ROOT 0,0 -> 0,12
 1, 2, 3, 4
 """, r"""
 ()
-""", """
+""", r"""
 Module .. ROOT 0,0 -> 0,10
   .body[1]
   0] Expr .. 0,0 -> 0,10
@@ -359,7 +359,7 @@ Module .. ROOT 0,0 -> 0,10
         2] Constant 3 .. 0,6 -> 0,7
         3] Constant 4 .. 0,9 -> 0,10
         .ctx Load
-""", """
+""", r"""
 Tuple .. ROOT 0,0 -> 0,2
   .ctx Load
 """),
@@ -370,7 +370,7 @@ Tuple .. ROOT 0,0 -> 0,2
 1,
 """, r"""
 (2, 3, 4)
-""", """
+""", r"""
 Module .. ROOT 0,0 -> 0,2
   .body[1]
   0] Expr .. 0,0 -> 0,2
@@ -379,7 +379,7 @@ Module .. ROOT 0,0 -> 0,2
         .elts[1]
         0] Constant 1 .. 0,0 -> 0,1
         .ctx Load
-""", """
+""", r"""
 Tuple .. ROOT 0,0 -> 0,9
   .elts[3]
   0] Constant 2 .. 0,1 -> 0,2
@@ -394,7 +394,7 @@ Tuple .. ROOT 0,0 -> 0,9
 4,
 """, r"""
 (1, 2, 3)
-""", """
+""", r"""
 Module .. ROOT 0,0 -> 0,2
   .body[1]
   0] Expr .. 0,0 -> 0,2
@@ -403,7 +403,7 @@ Module .. ROOT 0,0 -> 0,2
         .elts[1]
         0] Constant 4 .. 0,0 -> 0,1
         .ctx Load
-""", """
+""", r"""
 Tuple .. ROOT 0,0 -> 0,9
   .elts[3]
   0] Constant 1 .. 0,1 -> 0,2
@@ -422,7 +422,7 @@ Tuple .. ROOT 0,0 -> 0,9
 (2
   ,  # comment
 )
-""", """
+""", r"""
 Module .. ROOT 0,0 -> 0,9
   .body[1]
   0] Expr .. 0,0 -> 0,9
@@ -433,7 +433,7 @@ Module .. ROOT 0,0 -> 0,9
         1] Constant 3 .. 0,4 -> 0,5
         2] Constant 4 .. 0,7 -> 0,8
         .ctx Load
-""", """
+""", r"""
 Tuple .. ROOT 0,0 -> 2,1
   .elts[1]
   0] Constant 2 .. 0,1 -> 0,2
@@ -450,7 +450,7 @@ Tuple .. ROOT 0,0 -> 2,1
 (2
   ,
 )
-""", """
+""", r"""
 Module .. ROOT 0,0 -> 0,9
   .body[1]
   0] Expr .. 0,0 -> 0,9
@@ -461,7 +461,7 @@ Module .. ROOT 0,0 -> 0,9
         1] Constant 3 .. 0,4 -> 0,5
         2] Constant 4 .. 0,7 -> 0,8
         .ctx Load
-""", """
+""", r"""
 Tuple .. ROOT 0,0 -> 2,1
   .elts[1]
   0] Constant 2 .. 0,1 -> 0,2
@@ -478,7 +478,7 @@ Tuple .. ROOT 0,0 -> 2,1
 (2 \
   , \
 )
-""", """
+""", r"""
 Module .. ROOT 0,0 -> 0,9
   .body[1]
   0] Expr .. 0,0 -> 0,9
@@ -489,7 +489,7 @@ Module .. ROOT 0,0 -> 0,9
         1] Constant 3 .. 0,4 -> 0,5
         2] Constant 4 .. 0,7 -> 0,8
         .ctx Load
-""", """
+""", r"""
 Tuple .. ROOT 0,0 -> 2,1
   .elts[1]
   0] Constant 2 .. 0,1 -> 0,2
@@ -506,7 +506,7 @@ Tuple .. ROOT 0,0 -> 2,1
 (2  # comment
   , \
 )
-""", """
+""", r"""
 Module .. ROOT 0,0 -> 0,9
   .body[1]
   0] Expr .. 0,0 -> 0,9
@@ -517,7 +517,7 @@ Module .. ROOT 0,0 -> 0,9
         1] Constant 3 .. 0,4 -> 0,5
         2] Constant 4 .. 0,7 -> 0,8
         .ctx Load
-""", """
+""", r"""
 Tuple .. ROOT 0,0 -> 2,1
   .elts[1]
   0] Constant 2 .. 0,1 -> 0,2
@@ -534,7 +534,7 @@ Tuple .. ROOT 0,0 -> 2,1
 (2
   ,
 )
-""", """
+""", r"""
 Module .. ROOT 0,0 -> 0,9
   .body[1]
   0] Expr .. 0,0 -> 0,9
@@ -545,7 +545,7 @@ Module .. ROOT 0,0 -> 0,9
         1] Constant 3 .. 0,4 -> 0,5
         2] Constant 4 .. 0,7 -> 0,8
         .ctx Load
-""", """
+""", r"""
 Tuple .. ROOT 0,0 -> 2,1
   .elts[1]
   0] Constant 2 .. 0,1 -> 0,2
@@ -560,7 +560,7 @@ Tuple .. ROOT 0,0 -> 2,1
 """, r"""
 (2
   ,)
-""", """
+""", r"""
 Module .. ROOT 0,0 -> 0,9
   .body[1]
   0] Expr .. 0,0 -> 0,9
@@ -571,7 +571,7 @@ Module .. ROOT 0,0 -> 0,9
         1] Constant 3 .. 0,4 -> 0,5
         2] Constant 4 .. 0,7 -> 0,8
         .ctx Load
-""", """
+""", r"""
 Tuple .. ROOT 0,0 -> 1,4
   .elts[1]
   0] Constant 2 .. 0,1 -> 0,2
@@ -586,7 +586,7 @@ Tuple .. ROOT 0,0 -> 1,4
 """, r"""
 (2  # comment
   ,)
-""", """
+""", r"""
 Module .. ROOT 0,0 -> 0,9
   .body[1]
   0] Expr .. 0,0 -> 0,9
@@ -597,7 +597,7 @@ Module .. ROOT 0,0 -> 0,9
         1] Constant 3 .. 0,4 -> 0,5
         2] Constant 4 .. 0,7 -> 0,8
         .ctx Load
-""", """
+""", r"""
 Tuple .. ROOT 0,0 -> 1,4
   .elts[1]
   0] Constant 2 .. 0,1 -> 0,2
@@ -620,7 +620,7 @@ if 1:
     2,  # second line
     3,  # third line
 )
-""", """
+""", r"""
 Module .. ROOT 0,0 -> 1,6
   .body[1]
   0] If .. 0,0 -> 1,6
@@ -631,7 +631,7 @@ Module .. ROOT 0,0 -> 1,6
       .value
         Tuple .. 1,4 -> 1,6
           .ctx Load
-""", """
+""", r"""
 Tuple .. ROOT 0,0 -> 4,1
   .elts[3]
   0] Constant 1 .. 1,4 -> 1,5
@@ -657,7 +657,7 @@ if 1:
     1,  # last line
     2,  # second line
 )
-""", """
+""", r"""
 Module .. ROOT 0,0 -> 3,5
   .body[1]
   0] If .. 0,0 -> 3,5
@@ -670,7 +670,7 @@ Module .. ROOT 0,0 -> 3,5
           .elts[1]
           0] Constant 3 .. 2,8 -> 2,9
           .ctx Load
-""", """
+""", r"""
 Tuple .. ROOT 0,0 -> 3,1
   .elts[2]
   0] Constant 1 .. 1,4 -> 1,5
@@ -695,7 +695,7 @@ if 1:
 (
     2,  # second line
 )
-""", """
+""", r"""
 Module .. ROOT 0,0 -> 4,5
   .body[1]
   0] If .. 0,0 -> 4,5
@@ -709,7 +709,7 @@ Module .. ROOT 0,0 -> 4,5
           0] Constant 1 .. 2,8 -> 2,9
           1] Constant 3 .. 3,8 -> 3,9
           .ctx Load
-""", """
+""", r"""
 Tuple .. ROOT 0,0 -> 2,1
   .elts[1]
   0] Constant 2 .. 1,4 -> 1,5
@@ -733,7 +733,7 @@ if 1:
 (
     3,  # third line
 )
-""", """
+""", r"""
 Module .. ROOT 0,0 -> 4,5
   .body[1]
   0] If .. 0,0 -> 4,5
@@ -747,7 +747,7 @@ Module .. ROOT 0,0 -> 4,5
           0] Constant 1 .. 2,8 -> 2,9
           1] Constant 2 .. 3,8 -> 3,9
           .ctx Load
-""", """
+""", r"""
 Tuple .. ROOT 0,0 -> 2,1
   .elts[1]
   0] Constant 3 .. 1,4 -> 1,5
@@ -760,7 +760,7 @@ Tuple .. ROOT 0,0 -> 2,1
 {1: 2, **c}
 """, r"""
 {**b}
-""", """
+""", r"""
 Module .. ROOT 0,0 -> 0,11
   .body[1]
   0] Expr .. 0,0 -> 0,11
@@ -772,7 +772,7 @@ Module .. ROOT 0,0 -> 0,11
         .values[2]
         0] Constant 2 .. 0,4 -> 0,5
         1] Name 'c' Load .. 0,9 -> 0,10
-""", """
+""", r"""
 Dict .. ROOT 0,0 -> 0,5
   .keys[1]
   0] None
@@ -786,13 +786,13 @@ Dict .. ROOT 0,0 -> 0,5
 {}
 """, r"""
 {1: 2, **b, **c}
-""", """
+""", r"""
 Module .. ROOT 0,0 -> 0,2
   .body[1]
   0] Expr .. 0,0 -> 0,2
     .value
       Dict .. 0,0 -> 0,2
-""", """
+""", r"""
 Dict .. ROOT 0,0 -> 0,16
   .keys[3]
   0] Constant 1 .. 0,1 -> 0,2
@@ -810,7 +810,7 @@ Dict .. ROOT 0,0 -> 0,16
 {1: 2, **b}
 """, r"""
 {**c}
-""", """
+""", r"""
 Module .. ROOT 0,0 -> 0,11
   .body[1]
   0] Expr .. 0,0 -> 0,11
@@ -822,7 +822,7 @@ Module .. ROOT 0,0 -> 0,11
         .values[2]
         0] Constant 2 .. 0,4 -> 0,5
         1] Name 'b' Load .. 0,9 -> 0,10
-""", """
+""", r"""
 Dict .. ROOT 0,0 -> 0,5
   .keys[1]
   0] None
@@ -844,14 +844,14 @@ Dict .. ROOT 0,0 -> 0,5
     2,
     3,
 ]
-""", """
+""", r"""
 Module .. ROOT 0,0 -> 0,2
   .body[1]
   0] Expr .. 0,0 -> 0,2
     .value
       List .. 0,0 -> 0,2
         .ctx Load
-""", """
+""", r"""
 List .. ROOT 0,0 -> 4,1
   .elts[3]
   0] Constant 1 .. 1,4 -> 1,5
@@ -875,7 +875,7 @@ List .. ROOT 0,0 -> 4,1
     1,
     2,
 ]
-""", """
+""", r"""
 Module .. ROOT 0,0 -> 2,1
   .body[1]
   0] Expr .. 0,0 -> 2,1
@@ -884,7 +884,7 @@ Module .. ROOT 0,0 -> 2,1
         .elts[1]
         0] Constant 3 .. 1,4 -> 1,5
         .ctx Load
-""", """
+""", r"""
 List .. ROOT 0,0 -> 3,1
   .elts[2]
   0] Constant 1 .. 1,4 -> 1,5
@@ -907,7 +907,7 @@ List .. ROOT 0,0 -> 3,1
 [
     2,
 ]
-""", """
+""", r"""
 Module .. ROOT 0,0 -> 3,1
   .body[1]
   0] Expr .. 0,0 -> 3,1
@@ -917,7 +917,7 @@ Module .. ROOT 0,0 -> 3,1
         0] Constant 1 .. 1,4 -> 1,5
         1] Constant 3 .. 2,4 -> 2,5
         .ctx Load
-""", """
+""", r"""
 List .. ROOT 0,0 -> 2,1
   .elts[1]
   0] Constant 2 .. 1,4 -> 1,5
@@ -939,7 +939,7 @@ List .. ROOT 0,0 -> 2,1
 [
     3,
 ]
-""", """
+""", r"""
 Module .. ROOT 0,0 -> 3,1
   .body[1]
   0] Expr .. 0,0 -> 3,1
@@ -949,7 +949,7 @@ Module .. ROOT 0,0 -> 3,1
         0] Constant 1 .. 1,4 -> 1,5
         1] Constant 2 .. 2,4 -> 2,5
         .ctx Load
-""", """
+""", r"""
 List .. ROOT 0,0 -> 2,1
   .elts[1]
   0] Constant 3 .. 1,4 -> 1,5
@@ -968,7 +968,7 @@ List .. ROOT 0,0 -> 2,1
 """, r"""
 [3,
 ]
-""", """
+""", r"""
 Module .. ROOT 0,0 -> 2,1
   .body[1]
   0] Expr .. 0,0 -> 2,1
@@ -979,7 +979,7 @@ Module .. ROOT 0,0 -> 2,1
         1] Constant 2 .. 1,7 -> 1,8
         2] Constant 4 .. 1,10 -> 1,11
         .ctx Load
-""", """
+""", r"""
 List .. ROOT 0,0 -> 1,1
   .elts[1]
   0] Constant 3 .. 0,1 -> 0,2
@@ -998,7 +998,7 @@ List .. ROOT 0,0 -> 1,1
 """, r"""
 [( 3
      )]
-""", """
+""", r"""
 Module .. ROOT 0,0 -> 2,1
   .body[1]
   0] Expr .. 0,0 -> 2,1
@@ -1009,7 +1009,7 @@ Module .. ROOT 0,0 -> 2,1
         1] Constant 2 .. 1,7 -> 1,8
         2] Constant 4 .. 1,10 -> 1,11
         .ctx Load
-""", """
+""", r"""
 List .. ROOT 0,0 -> 1,7
   .elts[1]
   0] Constant 3 .. 0,3 -> 0,4
@@ -1028,7 +1028,7 @@ List .. ROOT 0,0 -> 1,7
 """, r"""
 [2, ( 3
      )]
-""", """
+""", r"""
 Module .. ROOT 0,0 -> 2,1
   .body[1]
   0] Expr .. 0,0 -> 2,1
@@ -1038,7 +1038,7 @@ Module .. ROOT 0,0 -> 2,1
         0] Constant 1 .. 1,4 -> 1,5
         1] Constant 4 .. 1,7 -> 1,8
         .ctx Load
-""", """
+""", r"""
 List .. ROOT 0,0 -> 1,7
   .elts[2]
   0] Constant 2 .. 0,1 -> 0,2
@@ -1058,7 +1058,7 @@ List .. ROOT 0,0 -> 1,7
 [2, ( 3
      ), 4
 ]
-""", """
+""", r"""
 Module .. ROOT 0,0 -> 1,6
   .body[1]
   0] Expr .. 0,0 -> 1,6
@@ -1067,7 +1067,7 @@ Module .. ROOT 0,0 -> 1,6
         .elts[1]
         0] Constant 1 .. 1,4 -> 1,5
         .ctx Load
-""", """
+""", r"""
 List .. ROOT 0,0 -> 2,1
   .elts[3]
   0] Constant 2 .. 0,1 -> 0,2
@@ -1086,7 +1086,7 @@ i =                (id(self) & (_sys.maxsize*2 + 1),)
 (self.__class__.__name__, self._name,
                 (self._handle & (_sys.maxsize*2 + 1)),
 )
-""", """
+""", r"""
 Module .. ROOT 0,0 -> 0,53
   .body[1]
   0] Assign .. 0,0 -> 0,53
@@ -1126,7 +1126,7 @@ Module .. ROOT 0,0 -> 0,53
         .ctx Load
     .type_comment
       None
-""", """
+""", r"""
 Tuple .. ROOT 0,0 -> 2,1
   .elts[3]
   0] Attribute .. 0,1 -> 0,24
@@ -1186,7 +1186,7 @@ i = namespace = {**__main__.__dict__}
 """, r"""
 {**__main__.__builtins__.__dict__,
 }
-""", """
+""", r"""
 Module .. ROOT 0,0 -> 0,37
   .body[1]
   0] Assign .. 0,0 -> 0,37
@@ -1206,7 +1206,7 @@ Module .. ROOT 0,0 -> 0,37
           .ctx Load
     .type_comment
       None
-""", """
+""", r"""
 Dict .. ROOT 0,0 -> 1,1
   .keys[1]
   0] None
@@ -1243,7 +1243,7 @@ env = {
     **{k.upper(): v for k, v in os.environ.items() if k.upper() not in ignore},
     "PYLAUNCHER_DEBUG": "1",
 }
-""", """
+""", r"""
 Module .. ROOT 0,0 -> 4,1
   .body[1]
   0] Assign .. 0,0 -> 4,1
@@ -1296,7 +1296,7 @@ Module .. ROOT 0,0 -> 4,1
               0
     .type_comment
       None
-""", """
+""", r"""
 Dict .. ROOT 0,0 -> 3,1
   .keys[2]
   0] None
@@ -1366,7 +1366,7 @@ Dict .. ROOT 0,0 -> 3,1
             bytearray(b'abcde'), [12, 345], (12, 345), {'12': 345})
 """, r"""
 ('abcde', 'абвгд')
-""", """
+""", r"""
 Module .. ROOT 0,0 -> 2,67
   .body[1]
   0] Expr .. 0,0 -> 2,67
@@ -1415,7 +1415,7 @@ Module .. ROOT 0,0 -> 2,67
           .values[1]
           0] Constant 345 .. 2,62 -> 2,65
         .ctx Load
-""", """
+""", r"""
 Tuple .. ROOT 0,0 -> 0,18
   .elts[2]
   0] Constant 'abcde' .. 0,1 -> 0,8
@@ -1423,18 +1423,162 @@ Tuple .. ROOT 0,0 -> 0,18
   .ctx Load
 """),
 
+(r"""
+[a, b] = c
+""", 'body[0].targets[0]', 1, 2, r"""
+[a] = c
+""", r"""
+[b]
+""", r"""
+Module .. ROOT 0,0 -> 0,7
+  .body[1]
+  0] Assign .. 0,0 -> 0,7
+    .targets[1]
+    0] List .. 0,0 -> 0,3
+      .elts[1]
+      0] Name 'a' Store .. 0,1 -> 0,2
+      .ctx Store
+    .value
+      Name 'c' Load .. 0,6 -> 0,7
+    .type_comment
+      None
+""", r"""
+List .. ROOT 0,0 -> 0,3
+  .elts[1]
+  0] Name 'b' Load .. 0,1 -> 0,2
+  .ctx Load
+"""),
+
+(r"""
+{
+            'exception': exc,
+            'future': fut,
+            'message': ('GetQueuedCompletionStatus() returned an '
+                        'unexpected event'),
+            'status': ('err=%s transferred=%s key=%#x address=%#x'
+                       % (err, transferred, key, address),),
+                                                 'addr': address}
+""", 'body[0].value', 1, 4, r"""
+{
+            'exception': exc,
+                                                 'addr': address}
+""", r"""
+{
+            'future': fut,
+            'message': ('GetQueuedCompletionStatus() returned an '
+                        'unexpected event'),
+            'status': ('err=%s transferred=%s key=%#x address=%#x'
+                       % (err, transferred, key, address),),
+}
+""", r"""
+Module .. ROOT 0,0 -> 2,65
+  .body[1]
+  0] Expr .. 0,0 -> 2,65
+    .value
+      Dict .. 0,0 -> 2,65
+        .keys[2]
+        0] Constant 'exception' .. 1,12 -> 1,23
+        1] Constant 'addr' .. 2,49 -> 2,55
+        .values[2]
+        0] Name 'exc' Load .. 1,25 -> 1,28
+        1] Name 'address' Load .. 2,57 -> 2,64
+""", r"""
+Dict .. ROOT 0,0 -> 6,1
+  .keys[3]
+  0] Constant 'future' .. 1,12 -> 1,20
+  1] Constant 'message' .. 2,12 -> 2,21
+  2] Constant 'status' .. 4,12 -> 4,20
+  .values[3]
+  0] Name 'fut' Load .. 1,22 -> 1,25
+  1] Constant 'GetQueuedCompletionStatus() returned an unexpected event' .. 2,24 -> 3,42
+  2] Tuple .. 4,22 -> 5,59
+    .elts[1]
+    0] BinOp .. 4,23 -> 5,57
+      .left
+        Constant 'err=%s transferred=%s key=%#x address=%#x' .. 4,23 -> 4,66
+      .op
+        Mod
+      .right
+        Tuple .. 5,25 -> 5,57
+          .elts[4]
+          0] Name 'err' Load .. 5,26 -> 5,29
+          1] Name 'transferred' Load .. 5,31 -> 5,42
+          2] Name 'key' Load .. 5,44 -> 5,47
+          3] Name 'address' Load .. 5,49 -> 5,56
+          .ctx Load
+    .ctx Load
+"""),
+
+(r"""
+(1, (2), 3)
+""", 'body[0].value', 1, 2, r"""
+(1, 3)
+""", r"""
+((2),)
+""", r"""
+Module .. ROOT 0,0 -> 0,6
+  .body[1]
+  0] Expr .. 0,0 -> 0,6
+    .value
+      Tuple .. 0,0 -> 0,6
+        .elts[2]
+        0] Constant 1 .. 0,1 -> 0,2
+        1] Constant 3 .. 0,4 -> 0,5
+        .ctx Load
+""", r"""
+Tuple .. ROOT 0,0 -> 0,6
+  .elts[1]
+  0] Constant 2 .. 0,2 -> 0,3
+  .ctx Load
+"""),
+
+(r"""
+@patch.dict({'a': 'b'})
+class cls: pass
+""", 'body[0].decorator_list[0].args[0]', 0, 1, r"""
+@patch.dict({})
+class cls: pass
+""", r"""
+{'a': 'b'}
+""", r"""
+Module .. ROOT 0,0 -> 1,15
+  .body[1]
+  0] ClassDef .. 1,0 -> 1,15
+    .name
+      'cls'
+    .body[1]
+    0] Pass .. 1,11 -> 1,15
+    .decorator_list[1]
+    0] Call .. 0,1 -> 0,15
+      .func
+        Attribute .. 0,1 -> 0,11
+          .value
+            Name 'patch' Load .. 0,1 -> 0,6
+          .attr
+            'dict'
+          .ctx Load
+      .args[1]
+      0] Dict .. 0,12 -> 0,14
+""", r"""
+Dict .. ROOT 0,0 -> 0,10
+  .keys[1]
+  0] Constant 'a' .. 0,1 -> 0,4
+  .values[1]
+  0] Constant 'b' .. 0,6 -> 0,9
+"""),
+
 ]  # END OF GET_SLICE_CUT_DATA
 
 PUT_SLICE_DATA = [
-("""
+(r"""
 {
     a: 1
 }
-""", 'body[0].value', 0, 1, """
+""", 'body[0].value', 0, 1, r"""
 {}
-""", """
+""", r"""
 {}
-""", """
+""", r"""
 Module .. ROOT 0,0 -> 0,2
   .body[1]
   0] Expr .. 0,0 -> 0,2
@@ -1442,15 +1586,15 @@ Module .. ROOT 0,0 -> 0,2
       Dict .. 0,0 -> 0,2
 """),
 
-("""
+(r"""
 1, 2
-""", 'body[0].value', 0, 2, """
+""", 'body[0].value', 0, 2, r"""
 (
 
    )
-""", """
+""", r"""
 ()
-""", """
+""", r"""
 Module .. ROOT 0,0 -> 0,2
   .body[1]
   0] Expr .. 0,0 -> 0,2
@@ -1459,17 +1603,17 @@ Module .. ROOT 0,0 -> 0,2
         .ctx Load
 """),
 
-("""
+(r"""
 if 1:
   {1, 2}
-""", 'body[0].body[0].value', 0, 2, """
+""", 'body[0].body[0].value', 0, 2, r"""
 (
 
    )
-""", """
+""", r"""
 if 1:
   set()
-""", """
+""", r"""
 Module .. ROOT 0,0 -> 1,7
   .body[1]
   0] If .. 0,0 -> 1,7
@@ -1483,17 +1627,17 @@ Module .. ROOT 0,0 -> 1,7
             Name 'set' Load .. 1,2 -> 1,5
 """),
 
-("""
+(r"""
 {
     a: 1
 }
-""", 'body[0].value', 0, 1, """
+""", 'body[0].value', 0, 1, r"""
 {
 }
-""", """
+""", r"""
 {
 }
-""", """
+""", r"""
 Module .. ROOT 0,0 -> 1,1
   .body[1]
   0] Expr .. 0,0 -> 1,1
@@ -1501,13 +1645,13 @@ Module .. ROOT 0,0 -> 1,1
       Dict .. 0,0 -> 1,1
 """),
 
-("""
+(r"""
 {a: 1}
-""", 'body[0].value', 0, 1, """
+""", 'body[0].value', 0, 1, r"""
 {}
-""", """
+""", r"""
 {}
-""", """
+""", r"""
 Module .. ROOT 0,0 -> 0,2
   .body[1]
   0] Expr .. 0,0 -> 0,2
@@ -1515,15 +1659,15 @@ Module .. ROOT 0,0 -> 0,2
       Dict .. 0,0 -> 0,2
 """),
 
-("""
+(r"""
 {a: 1}
-""", 'body[0].value', 0, 1, """
+""", 'body[0].value', 0, 1, r"""
 {
 }
-""", """
+""", r"""
 {
 }
-""", """
+""", r"""
 Module .. ROOT 0,0 -> 1,1
   .body[1]
   0] Expr .. 0,0 -> 1,1
@@ -1531,13 +1675,13 @@ Module .. ROOT 0,0 -> 1,1
       Dict .. 0,0 -> 1,1
 """),
 
-("""
+(r"""
 (1, 2)
-""", 'body[0].value', 1, 2, """
+""", 'body[0].value', 1, 2, r"""
 ()
-""", """
+""", r"""
 (1,)
-""", """
+""", r"""
 Module .. ROOT 0,0 -> 0,4
   .body[1]
   0] Expr .. 0,0 -> 0,4
@@ -1548,13 +1692,13 @@ Module .. ROOT 0,0 -> 0,4
         .ctx Load
 """),
 
-("""
+(r"""
 1, 2
-""", 'body[0].value', 1, 2, """
+""", 'body[0].value', 1, 2, r"""
 ()
-""", """
+""", r"""
 1,
-""", """
+""", r"""
 Module .. ROOT 0,0 -> 0,2
   .body[1]
   0] Expr .. 0,0 -> 0,2
@@ -1565,13 +1709,13 @@ Module .. ROOT 0,0 -> 0,2
         .ctx Load
 """),
 
-("""
+(r"""
 1, 2
-""", 'body[0].value', 0, 2, """
+""", 'body[0].value', 0, 2, r"""
 ()
-""", """
+""", r"""
 ()
-""", """
+""", r"""
 Module .. ROOT 0,0 -> 0,2
   .body[1]
   0] Expr .. 0,0 -> 0,2
@@ -1580,13 +1724,13 @@ Module .. ROOT 0,0 -> 0,2
         .ctx Load
 """),
 
-("""
+(r"""
 (1, 2)
-""", 'body[0].value', 1, 2, """
+""", 'body[0].value', 1, 2, r"""
 set()
-""", """
+""", r"""
 (1,)
-""", """
+""", r"""
 Module .. ROOT 0,0 -> 0,4
   .body[1]
   0] Expr .. 0,0 -> 0,4
@@ -1597,13 +1741,13 @@ Module .. ROOT 0,0 -> 0,4
         .ctx Load
 """),
 
-("""
+(r"""
 1, 2
-""", 'body[0].value', 1, 2, """
+""", 'body[0].value', 1, 2, r"""
 set()
-""", """
+""", r"""
 1,
-""", """
+""", r"""
 Module .. ROOT 0,0 -> 0,2
   .body[1]
   0] Expr .. 0,0 -> 0,2
@@ -1614,13 +1758,13 @@ Module .. ROOT 0,0 -> 0,2
         .ctx Load
 """),
 
-("""
+(r"""
 1, 2
-""", 'body[0].value', 0, 2, """
+""", 'body[0].value', 0, 2, r"""
 set()
-""", """
+""", r"""
 ()
-""", """
+""", r"""
 Module .. ROOT 0,0 -> 0,2
   .body[1]
   0] Expr .. 0,0 -> 0,2
@@ -1629,17 +1773,17 @@ Module .. ROOT 0,0 -> 0,2
         .ctx Load
 """),
 
-("""
+(r"""
 [            # hello
     1, 2, 3
 ]
-""", 'body[0].value', 0, 2, """
+""", 'body[0].value', 0, 2, r"""
 ()
-""", """
+""", r"""
 [            # hello
     3
 ]
-""", """
+""", r"""
 Module .. ROOT 0,0 -> 2,1
   .body[1]
   0] Expr .. 0,0 -> 2,1
@@ -1650,18 +1794,18 @@ Module .. ROOT 0,0 -> 2,1
         .ctx Load
 """),
 
-("""
+(r"""
 [            # hello
     a, b, c
 ]
-""", 'body[0].value', 0, 1, """
+""", 'body[0].value', 0, 1, r"""
 [
     1]
-""", """
+""", r"""
 [            # hello
     1, b, c
 ]
-""", """
+""", r"""
 Module .. ROOT 0,0 -> 2,1
   .body[1]
   0] Expr .. 0,0 -> 2,1
@@ -1674,19 +1818,19 @@ Module .. ROOT 0,0 -> 2,1
         .ctx Load
 """),
 
-("""
+(r"""
 [            # hello
     a, b, c
 ]
-""", 'body[0].value', 1, 2, """
+""", 'body[0].value', 1, 2, r"""
 [
     1]
-""", """
+""", r"""
 [            # hello
     a,
     1, c
 ]
-""", """
+""", r"""
 Module .. ROOT 0,0 -> 3,1
   .body[1]
   0] Expr .. 0,0 -> 3,1
@@ -1699,18 +1843,18 @@ Module .. ROOT 0,0 -> 3,1
         .ctx Load
 """),
 
-("""
+(r"""
 [            # hello
     a, b, c
 ]
-""", 'body[0].value', 2, 3, """
+""", 'body[0].value', 2, 3, r"""
 [
     1]
-""", """
+""", r"""
 [            # hello
     a, b,
     1]
-""", """
+""", r"""
 Module .. ROOT 0,0 -> 2,6
   .body[1]
   0] Expr .. 0,0 -> 2,6
@@ -1723,17 +1867,17 @@ Module .. ROOT 0,0 -> 2,6
         .ctx Load
 """),
 
-("""
+(r"""
 [            # hello
     a, b, c
 ]
-""", 'body[0].value', 0, 1, """
+""", 'body[0].value', 0, 1, r"""
 [2]
-""", """
+""", r"""
 [            # hello
     2, b, c
 ]
-""", """
+""", r"""
 Module .. ROOT 0,0 -> 2,1
   .body[1]
   0] Expr .. 0,0 -> 2,1
@@ -1746,17 +1890,17 @@ Module .. ROOT 0,0 -> 2,1
         .ctx Load
 """),
 
-("""
+(r"""
 [            # hello
     a, b, c
 ]
-""", 'body[0].value', 1, 2, """
+""", 'body[0].value', 1, 2, r"""
 [2]
-""", """
+""", r"""
 [            # hello
     a, 2, c
 ]
-""", """
+""", r"""
 Module .. ROOT 0,0 -> 2,1
   .body[1]
   0] Expr .. 0,0 -> 2,1
@@ -1769,16 +1913,16 @@ Module .. ROOT 0,0 -> 2,1
         .ctx Load
 """),
 
-("""
+(r"""
 [            # hello
     a, b, c
 ]
-""", 'body[0].value', 2, 3, """
+""", 'body[0].value', 2, 3, r"""
 [2]
-""", """
+""", r"""
 [            # hello
     a, b, 2]
-""", """
+""", r"""
 Module .. ROOT 0,0 -> 1,12
   .body[1]
   0] Expr .. 0,0 -> 1,12
@@ -1791,19 +1935,19 @@ Module .. ROOT 0,0 -> 1,12
         .ctx Load
 """),
 
-("""
+(r"""
 [            # hello
     a, b, c
 ]
-""", 'body[0].value', 0, 1, """
+""", 'body[0].value', 0, 1, r"""
 [3
 ]
-""", """
+""", r"""
 [            # hello
     3,
     b, c
 ]
-""", """
+""", r"""
 Module .. ROOT 0,0 -> 3,1
   .body[1]
   0] Expr .. 0,0 -> 3,1
@@ -1816,19 +1960,19 @@ Module .. ROOT 0,0 -> 3,1
         .ctx Load
 """),
 
-("""
+(r"""
 [            # hello
     a, b, c
 ]
-""", 'body[0].value', 1, 2, """
+""", 'body[0].value', 1, 2, r"""
 [3
 ]
-""", """
+""", r"""
 [            # hello
     a, 3,
     c
 ]
-""", """
+""", r"""
 Module .. ROOT 0,0 -> 3,1
   .body[1]
   0] Expr .. 0,0 -> 3,1
@@ -1841,18 +1985,18 @@ Module .. ROOT 0,0 -> 3,1
         .ctx Load
 """),
 
-("""
+(r"""
 [            # hello
     a, b, c
 ]
-""", 'body[0].value', 2, 3, """
+""", 'body[0].value', 2, 3, r"""
 [3
 ]
-""", """
+""", r"""
 [            # hello
     a, b, 3
 ]
-""", """
+""", r"""
 Module .. ROOT 0,0 -> 2,1
   .body[1]
   0] Expr .. 0,0 -> 2,1
@@ -1865,18 +2009,18 @@ Module .. ROOT 0,0 -> 2,1
         .ctx Load
 """),
 
-("""
+(r"""
 [            # hello
     a, b, c,
 ]
-""", 'body[0].value', 0, 1, """
+""", 'body[0].value', 0, 1, r"""
 [
     1]
-""", """
+""", r"""
 [            # hello
     1, b, c,
 ]
-""", """
+""", r"""
 Module .. ROOT 0,0 -> 2,1
   .body[1]
   0] Expr .. 0,0 -> 2,1
@@ -1889,19 +2033,19 @@ Module .. ROOT 0,0 -> 2,1
         .ctx Load
 """),
 
-("""
+(r"""
 [            # hello
     a, b, c,
 ]
-""", 'body[0].value', 1, 2, """
+""", 'body[0].value', 1, 2, r"""
 [
     1]
-""", """
+""", r"""
 [            # hello
     a,
     1, c,
 ]
-""", """
+""", r"""
 Module .. ROOT 0,0 -> 3,1
   .body[1]
   0] Expr .. 0,0 -> 3,1
@@ -1914,18 +2058,18 @@ Module .. ROOT 0,0 -> 3,1
         .ctx Load
 """),
 
-("""
+(r"""
 [            # hello
     a, b, c,
 ]
-""", 'body[0].value', 2, 3, """
+""", 'body[0].value', 2, 3, r"""
 [
     1]
-""", """
+""", r"""
 [            # hello
     a, b,
     1]
-""", """
+""", r"""
 Module .. ROOT 0,0 -> 2,6
   .body[1]
   0] Expr .. 0,0 -> 2,6
@@ -1938,17 +2082,17 @@ Module .. ROOT 0,0 -> 2,6
         .ctx Load
 """),
 
-("""
+(r"""
 [            # hello
     a, b, c,
 ]
-""", 'body[0].value', 0, 1, """
+""", 'body[0].value', 0, 1, r"""
 [2]
-""", """
+""", r"""
 [            # hello
     2, b, c,
 ]
-""", """
+""", r"""
 Module .. ROOT 0,0 -> 2,1
   .body[1]
   0] Expr .. 0,0 -> 2,1
@@ -1961,17 +2105,17 @@ Module .. ROOT 0,0 -> 2,1
         .ctx Load
 """),
 
-("""
+(r"""
 [            # hello
     a, b, c,
 ]
-""", 'body[0].value', 1, 2, """
+""", 'body[0].value', 1, 2, r"""
 [2]
-""", """
+""", r"""
 [            # hello
     a, 2, c,
 ]
-""", """
+""", r"""
 Module .. ROOT 0,0 -> 2,1
   .body[1]
   0] Expr .. 0,0 -> 2,1
@@ -1984,16 +2128,16 @@ Module .. ROOT 0,0 -> 2,1
         .ctx Load
 """),
 
-("""
+(r"""
 [            # hello
     a, b, c,
 ]
-""", 'body[0].value', 2, 3, """
+""", 'body[0].value', 2, 3, r"""
 [2]
-""", """
+""", r"""
 [            # hello
     a, b, 2]
-""", """
+""", r"""
 Module .. ROOT 0,0 -> 1,12
   .body[1]
   0] Expr .. 0,0 -> 1,12
@@ -2006,19 +2150,19 @@ Module .. ROOT 0,0 -> 1,12
         .ctx Load
 """),
 
-("""
+(r"""
 [            # hello
     a, b, c,
 ]
-""", 'body[0].value', 0, 1, """
+""", 'body[0].value', 0, 1, r"""
 [3
 ]
-""", """
+""", r"""
 [            # hello
     3,
     b, c,
 ]
-""", """
+""", r"""
 Module .. ROOT 0,0 -> 3,1
   .body[1]
   0] Expr .. 0,0 -> 3,1
@@ -2031,19 +2175,19 @@ Module .. ROOT 0,0 -> 3,1
         .ctx Load
 """),
 
-("""
+(r"""
 [            # hello
     a, b, c,
 ]
-""", 'body[0].value', 1, 2, """
+""", 'body[0].value', 1, 2, r"""
 [3
 ]
-""", """
+""", r"""
 [            # hello
     a, 3,
     c,
 ]
-""", """
+""", r"""
 Module .. ROOT 0,0 -> 3,1
   .body[1]
   0] Expr .. 0,0 -> 3,1
@@ -2056,18 +2200,18 @@ Module .. ROOT 0,0 -> 3,1
         .ctx Load
 """),
 
-("""
+(r"""
 [            # hello
     a, b, c,
 ]
-""", 'body[0].value', 2, 3, """
+""", 'body[0].value', 2, 3, r"""
 [3
 ]
-""", """
+""", r"""
 [            # hello
     a, b, 3
 ]
-""", """
+""", r"""
 Module .. ROOT 0,0 -> 2,1
   .body[1]
   0] Expr .. 0,0 -> 2,1
@@ -2080,18 +2224,18 @@ Module .. ROOT 0,0 -> 2,1
         .ctx Load
 """),
 
-("""
+(r"""
 [            # hello
     a, b, c
 ]
-""", 'body[0].value', 0, 1, """
+""", 'body[0].value', 0, 1, r"""
 [
     1,]
-""", """
+""", r"""
 [            # hello
     1, b, c
 ]
-""", """
+""", r"""
 Module .. ROOT 0,0 -> 2,1
   .body[1]
   0] Expr .. 0,0 -> 2,1
@@ -2104,19 +2248,19 @@ Module .. ROOT 0,0 -> 2,1
         .ctx Load
 """),
 
-("""
+(r"""
 [            # hello
     a, b, c
 ]
-""", 'body[0].value', 1, 2, """
+""", 'body[0].value', 1, 2, r"""
 [
     1,]
-""", """
+""", r"""
 [            # hello
     a,
     1, c
 ]
-""", """
+""", r"""
 Module .. ROOT 0,0 -> 3,1
   .body[1]
   0] Expr .. 0,0 -> 3,1
@@ -2129,18 +2273,18 @@ Module .. ROOT 0,0 -> 3,1
         .ctx Load
 """),
 
-("""
+(r"""
 [            # hello
     a, b, c
 ]
-""", 'body[0].value', 2, 3, """
+""", 'body[0].value', 2, 3, r"""
 [
     1,]
-""", """
+""", r"""
 [            # hello
     a, b,
     1,]
-""", """
+""", r"""
 Module .. ROOT 0,0 -> 2,7
   .body[1]
   0] Expr .. 0,0 -> 2,7
@@ -2153,17 +2297,17 @@ Module .. ROOT 0,0 -> 2,7
         .ctx Load
 """),
 
-("""
+(r"""
 [            # hello
     a, b, c
 ]
-""", 'body[0].value', 0, 1, """
+""", 'body[0].value', 0, 1, r"""
 [2,]
-""", """
+""", r"""
 [            # hello
     2, b, c
 ]
-""", """
+""", r"""
 Module .. ROOT 0,0 -> 2,1
   .body[1]
   0] Expr .. 0,0 -> 2,1
@@ -2176,17 +2320,17 @@ Module .. ROOT 0,0 -> 2,1
         .ctx Load
 """),
 
-("""
+(r"""
 [            # hello
     a, b, c
 ]
-""", 'body[0].value', 1, 2, """
+""", 'body[0].value', 1, 2, r"""
 [2,]
-""", """
+""", r"""
 [            # hello
     a, 2, c
 ]
-""", """
+""", r"""
 Module .. ROOT 0,0 -> 2,1
   .body[1]
   0] Expr .. 0,0 -> 2,1
@@ -2199,16 +2343,16 @@ Module .. ROOT 0,0 -> 2,1
         .ctx Load
 """),
 
-("""
+(r"""
 [            # hello
     a, b, c
 ]
-""", 'body[0].value', 2, 3, """
+""", 'body[0].value', 2, 3, r"""
 [2,]
-""", """
+""", r"""
 [            # hello
     a, b, 2,]
-""", """
+""", r"""
 Module .. ROOT 0,0 -> 1,13
   .body[1]
   0] Expr .. 0,0 -> 1,13
@@ -2221,19 +2365,19 @@ Module .. ROOT 0,0 -> 1,13
         .ctx Load
 """),
 
-("""
+(r"""
 [            # hello
     a, b, c
 ]
-""", 'body[0].value', 0, 1, """
+""", 'body[0].value', 0, 1, r"""
 [3,
 ]
-""", """
+""", r"""
 [            # hello
     3,
     b, c
 ]
-""", """
+""", r"""
 Module .. ROOT 0,0 -> 3,1
   .body[1]
   0] Expr .. 0,0 -> 3,1
@@ -2246,19 +2390,19 @@ Module .. ROOT 0,0 -> 3,1
         .ctx Load
 """),
 
-("""
+(r"""
 [            # hello
     a, b, c
 ]
-""", 'body[0].value', 1, 2, """
+""", 'body[0].value', 1, 2, r"""
 [3,
 ]
-""", """
+""", r"""
 [            # hello
     a, 3,
     c
 ]
-""", """
+""", r"""
 Module .. ROOT 0,0 -> 3,1
   .body[1]
   0] Expr .. 0,0 -> 3,1
@@ -2271,18 +2415,18 @@ Module .. ROOT 0,0 -> 3,1
         .ctx Load
 """),
 
-("""
+(r"""
 [            # hello
     a, b, c
 ]
-""", 'body[0].value', 2, 3, """
+""", 'body[0].value', 2, 3, r"""
 [3,
 ]
-""", """
+""", r"""
 [            # hello
     a, b, 3,
 ]
-""", """
+""", r"""
 Module .. ROOT 0,0 -> 2,1
   .body[1]
   0] Expr .. 0,0 -> 2,1
@@ -2295,18 +2439,18 @@ Module .. ROOT 0,0 -> 2,1
         .ctx Load
 """),
 
-("""
+(r"""
 [            # hello
     a, b, c,
 ]
-""", 'body[0].value', 0, 1, """
+""", 'body[0].value', 0, 1, r"""
 [
     1,]
-""", """
+""", r"""
 [            # hello
     1, b, c,
 ]
-""", """
+""", r"""
 Module .. ROOT 0,0 -> 2,1
   .body[1]
   0] Expr .. 0,0 -> 2,1
@@ -2319,19 +2463,19 @@ Module .. ROOT 0,0 -> 2,1
         .ctx Load
 """),
 
-("""
+(r"""
 [            # hello
     a, b, c,
 ]
-""", 'body[0].value', 1, 2, """
+""", 'body[0].value', 1, 2, r"""
 [
     1,]
-""", """
+""", r"""
 [            # hello
     a,
     1, c,
 ]
-""", """
+""", r"""
 Module .. ROOT 0,0 -> 3,1
   .body[1]
   0] Expr .. 0,0 -> 3,1
@@ -2344,18 +2488,18 @@ Module .. ROOT 0,0 -> 3,1
         .ctx Load
 """),
 
-("""
+(r"""
 [            # hello
     a, b, c,
 ]
-""", 'body[0].value', 2, 3, """
+""", 'body[0].value', 2, 3, r"""
 [
     1,]
-""", """
+""", r"""
 [            # hello
     a, b,
     1,]
-""", """
+""", r"""
 Module .. ROOT 0,0 -> 2,7
   .body[1]
   0] Expr .. 0,0 -> 2,7
@@ -2368,17 +2512,17 @@ Module .. ROOT 0,0 -> 2,7
         .ctx Load
 """),
 
-("""
+(r"""
 [            # hello
     a, b, c,
 ]
-""", 'body[0].value', 0, 1, """
+""", 'body[0].value', 0, 1, r"""
 [2,]
-""", """
+""", r"""
 [            # hello
     2, b, c,
 ]
-""", """
+""", r"""
 Module .. ROOT 0,0 -> 2,1
   .body[1]
   0] Expr .. 0,0 -> 2,1
@@ -2391,17 +2535,17 @@ Module .. ROOT 0,0 -> 2,1
         .ctx Load
 """),
 
-("""
+(r"""
 [            # hello
     a, b, c,
 ]
-""", 'body[0].value', 1, 2, """
+""", 'body[0].value', 1, 2, r"""
 [2,]
-""", """
+""", r"""
 [            # hello
     a, 2, c,
 ]
-""", """
+""", r"""
 Module .. ROOT 0,0 -> 2,1
   .body[1]
   0] Expr .. 0,0 -> 2,1
@@ -2414,16 +2558,16 @@ Module .. ROOT 0,0 -> 2,1
         .ctx Load
 """),
 
-("""
+(r"""
 [            # hello
     a, b, c,
 ]
-""", 'body[0].value', 2, 3, """
+""", 'body[0].value', 2, 3, r"""
 [2,]
-""", """
+""", r"""
 [            # hello
     a, b, 2,]
-""", """
+""", r"""
 Module .. ROOT 0,0 -> 1,13
   .body[1]
   0] Expr .. 0,0 -> 1,13
@@ -2436,19 +2580,19 @@ Module .. ROOT 0,0 -> 1,13
         .ctx Load
 """),
 
-("""
+(r"""
 [            # hello
     a, b, c,
 ]
-""", 'body[0].value', 0, 1, """
+""", 'body[0].value', 0, 1, r"""
 [3,
 ]
-""", """
+""", r"""
 [            # hello
     3,
     b, c,
 ]
-""", """
+""", r"""
 Module .. ROOT 0,0 -> 3,1
   .body[1]
   0] Expr .. 0,0 -> 3,1
@@ -2461,19 +2605,19 @@ Module .. ROOT 0,0 -> 3,1
         .ctx Load
 """),
 
-("""
+(r"""
 [            # hello
     a, b, c,
 ]
-""", 'body[0].value', 1, 2, """
+""", 'body[0].value', 1, 2, r"""
 [3,
 ]
-""", """
+""", r"""
 [            # hello
     a, 3,
     c,
 ]
-""", """
+""", r"""
 Module .. ROOT 0,0 -> 3,1
   .body[1]
   0] Expr .. 0,0 -> 3,1
@@ -2486,18 +2630,18 @@ Module .. ROOT 0,0 -> 3,1
         .ctx Load
 """),
 
-("""
+(r"""
 [            # hello
     a, b, c,
 ]
-""", 'body[0].value', 2, 3, """
+""", 'body[0].value', 2, 3, r"""
 [3,
 ]
-""", """
+""", r"""
 [            # hello
     a, b, 3,
 ]
-""", """
+""", r"""
 Module .. ROOT 0,0 -> 2,1
   .body[1]
   0] Expr .. 0,0 -> 2,1
@@ -2510,18 +2654,18 @@ Module .. ROOT 0,0 -> 2,1
         .ctx Load
 """),
 
-("""
+(r"""
 [            # hello
     a, b, c  # blah
 ]
-""", 'body[0].value', 2, 3, """
+""", 'body[0].value', 2, 3, r"""
 [
     1]
-""", """
+""", r"""
 [            # hello
     a, b,
     1]
-""", """
+""", r"""
 Module .. ROOT 0,0 -> 2,6
   .body[1]
   0] Expr .. 0,0 -> 2,6
@@ -2534,16 +2678,16 @@ Module .. ROOT 0,0 -> 2,6
         .ctx Load
 """),
 
-("""
+(r"""
 [            # hello
     a, b, c  # blah
 ]
-""", 'body[0].value', 2, 3, """
+""", 'body[0].value', 2, 3, r"""
 [2]
-""", """
+""", r"""
 [            # hello
     a, b, 2]
-""", """
+""", r"""
 Module .. ROOT 0,0 -> 1,12
   .body[1]
   0] Expr .. 0,0 -> 1,12
@@ -2556,18 +2700,18 @@ Module .. ROOT 0,0 -> 1,12
         .ctx Load
 """),
 
-("""
+(r"""
 [            # hello
     a, b, c  # blah
 ]
-""", 'body[0].value', 2, 3, """
+""", 'body[0].value', 2, 3, r"""
 [3
 ]
-""", """
+""", r"""
 [            # hello
     a, b, 3
 ]
-""", """
+""", r"""
 Module .. ROOT 0,0 -> 2,1
   .body[1]
   0] Expr .. 0,0 -> 2,1
@@ -2580,18 +2724,18 @@ Module .. ROOT 0,0 -> 2,1
         .ctx Load
 """),
 
-("""
+(r"""
 [            # hello
     a, b, c  # blah
 ]
-""", 'body[0].value', 2, 3, """
+""", 'body[0].value', 2, 3, r"""
 [
     1,]
-""", """
+""", r"""
 [            # hello
     a, b,
     1,]
-""", """
+""", r"""
 Module .. ROOT 0,0 -> 2,7
   .body[1]
   0] Expr .. 0,0 -> 2,7
@@ -2604,16 +2748,16 @@ Module .. ROOT 0,0 -> 2,7
         .ctx Load
 """),
 
-("""
+(r"""
 [            # hello
     a, b, c  # blah
 ]
-""", 'body[0].value', 2, 3, """
+""", 'body[0].value', 2, 3, r"""
 [2,]
-""", """
+""", r"""
 [            # hello
     a, b, 2,]
-""", """
+""", r"""
 Module .. ROOT 0,0 -> 1,13
   .body[1]
   0] Expr .. 0,0 -> 1,13
@@ -2626,18 +2770,18 @@ Module .. ROOT 0,0 -> 1,13
         .ctx Load
 """),
 
-("""
+(r"""
 [            # hello
     a, b, c  # blah
 ]
-""", 'body[0].value', 2, 3, """
+""", 'body[0].value', 2, 3, r"""
 [3,
 ]
-""", """
+""", r"""
 [            # hello
     a, b, 3,
 ]
-""", """
+""", r"""
 Module .. ROOT 0,0 -> 2,1
   .body[1]
   0] Expr .. 0,0 -> 2,1
@@ -2650,20 +2794,20 @@ Module .. ROOT 0,0 -> 2,1
         .ctx Load
 """),
 
-("""
+(r"""
 [            # hello
     a, b, c  # blah
 ]
-""", 'body[0].value', 2, 3, """
+""", 'body[0].value', 2, 3, r"""
 [
     1  # comment
 ]
-""", """
+""", r"""
 [            # hello
     a, b,
     1  # comment
 ]
-""", """
+""", r"""
 Module .. ROOT 0,0 -> 3,1
   .body[1]
   0] Expr .. 0,0 -> 3,1
@@ -2676,18 +2820,18 @@ Module .. ROOT 0,0 -> 3,1
         .ctx Load
 """),
 
-("""
+(r"""
 [            # hello
     a, b, c  # blah
 ]
-""", 'body[0].value', 2, 3, """
+""", 'body[0].value', 2, 3, r"""
 [2  # comment
 ]
-""", """
+""", r"""
 [            # hello
     a, b, 2  # comment
 ]
-""", """
+""", r"""
 Module .. ROOT 0,0 -> 2,1
   .body[1]
   0] Expr .. 0,0 -> 2,1
@@ -2700,18 +2844,18 @@ Module .. ROOT 0,0 -> 2,1
         .ctx Load
 """),
 
-("""
+(r"""
 [            # hello
     a, b, c  # blah
 ]
-""", 'body[0].value', 2, 3, """
+""", 'body[0].value', 2, 3, r"""
 [3  # comment
 ]
-""", """
+""", r"""
 [            # hello
     a, b, 3  # comment
 ]
-""", """
+""", r"""
 Module .. ROOT 0,0 -> 2,1
   .body[1]
   0] Expr .. 0,0 -> 2,1
@@ -2724,20 +2868,20 @@ Module .. ROOT 0,0 -> 2,1
         .ctx Load
 """),
 
-("""
+(r"""
 [            # hello
     a, b, c  # blah
 ]
-""", 'body[0].value', 2, 3, """
+""", 'body[0].value', 2, 3, r"""
 [
     1,  # comment
 ]
-""", """
+""", r"""
 [            # hello
     a, b,
     1,  # comment
 ]
-""", """
+""", r"""
 Module .. ROOT 0,0 -> 3,1
   .body[1]
   0] Expr .. 0,0 -> 3,1
@@ -2750,18 +2894,18 @@ Module .. ROOT 0,0 -> 3,1
         .ctx Load
 """),
 
-("""
+(r"""
 [            # hello
     a, b, c  # blah
 ]
-""", 'body[0].value', 2, 3, """
+""", 'body[0].value', 2, 3, r"""
 [2,  # comment
 ]
-""", """
+""", r"""
 [            # hello
     a, b, 2,  # comment
 ]
-""", """
+""", r"""
 Module .. ROOT 0,0 -> 2,1
   .body[1]
   0] Expr .. 0,0 -> 2,1
@@ -2774,18 +2918,18 @@ Module .. ROOT 0,0 -> 2,1
         .ctx Load
 """),
 
-("""
+(r"""
 [            # hello
     a, b, c  # blah
 ]
-""", 'body[0].value', 2, 3, """
+""", 'body[0].value', 2, 3, r"""
 [3,  # comment
 ]
-""", """
+""", r"""
 [            # hello
     a, b, 3,  # comment
 ]
-""", """
+""", r"""
 Module .. ROOT 0,0 -> 2,1
   .body[1]
   0] Expr .. 0,0 -> 2,1
@@ -2798,18 +2942,18 @@ Module .. ROOT 0,0 -> 2,1
         .ctx Load
 """),
 
-("""
+(r"""
 [            # hello
     a, b
 ]
-""", 'body[0].value', 0, 0, """
+""", 'body[0].value', 0, 0, r"""
 [
     1]
-""", """
+""", r"""
 [            # hello
     1, a, b
 ]
-""", """
+""", r"""
 Module .. ROOT 0,0 -> 2,1
   .body[1]
   0] Expr .. 0,0 -> 2,1
@@ -2822,19 +2966,19 @@ Module .. ROOT 0,0 -> 2,1
         .ctx Load
 """),
 
-("""
+(r"""
 [            # hello
     a, b
 ]
-""", 'body[0].value', 1, 1, """
+""", 'body[0].value', 1, 1, r"""
 [
     1]
-""", """
+""", r"""
 [            # hello
     a,
     1, b
 ]
-""", """
+""", r"""
 Module .. ROOT 0,0 -> 3,1
   .body[1]
   0] Expr .. 0,0 -> 3,1
@@ -2847,18 +2991,18 @@ Module .. ROOT 0,0 -> 3,1
         .ctx Load
 """),
 
-("""
+(r"""
 [            # hello
     a, b
 ]
-""", 'body[0].value', 2, 2, """
+""", 'body[0].value', 2, 2, r"""
 [
     1]
-""", """
+""", r"""
 [            # hello
     a, b,
     1]
-""", """
+""", r"""
 Module .. ROOT 0,0 -> 2,6
   .body[1]
   0] Expr .. 0,0 -> 2,6
@@ -2871,17 +3015,17 @@ Module .. ROOT 0,0 -> 2,6
         .ctx Load
 """),
 
-("""
+(r"""
 [            # hello
     a, b
 ]
-""", 'body[0].value', 0, 0, """
+""", 'body[0].value', 0, 0, r"""
 [2]
-""", """
+""", r"""
 [            # hello
     2, a, b
 ]
-""", """
+""", r"""
 Module .. ROOT 0,0 -> 2,1
   .body[1]
   0] Expr .. 0,0 -> 2,1
@@ -2894,17 +3038,17 @@ Module .. ROOT 0,0 -> 2,1
         .ctx Load
 """),
 
-("""
+(r"""
 [            # hello
     a, b
 ]
-""", 'body[0].value', 1, 1, """
+""", 'body[0].value', 1, 1, r"""
 [2]
-""", """
+""", r"""
 [            # hello
     a, 2, b
 ]
-""", """
+""", r"""
 Module .. ROOT 0,0 -> 2,1
   .body[1]
   0] Expr .. 0,0 -> 2,1
@@ -2917,16 +3061,16 @@ Module .. ROOT 0,0 -> 2,1
         .ctx Load
 """),
 
-("""
+(r"""
 [            # hello
     a, b
 ]
-""", 'body[0].value', 2, 2, """
+""", 'body[0].value', 2, 2, r"""
 [2]
-""", """
+""", r"""
 [            # hello
     a, b, 2]
-""", """
+""", r"""
 Module .. ROOT 0,0 -> 1,12
   .body[1]
   0] Expr .. 0,0 -> 1,12
@@ -2939,19 +3083,19 @@ Module .. ROOT 0,0 -> 1,12
         .ctx Load
 """),
 
-("""
+(r"""
 [            # hello
     a, b
 ]
-""", 'body[0].value', 0, 0, """
+""", 'body[0].value', 0, 0, r"""
 [3
 ]
-""", """
+""", r"""
 [            # hello
     3,
     a, b
 ]
-""", """
+""", r"""
 Module .. ROOT 0,0 -> 3,1
   .body[1]
   0] Expr .. 0,0 -> 3,1
@@ -2964,19 +3108,19 @@ Module .. ROOT 0,0 -> 3,1
         .ctx Load
 """),
 
-("""
+(r"""
 [            # hello
     a, b
 ]
-""", 'body[0].value', 1, 1, """
+""", 'body[0].value', 1, 1, r"""
 [3
 ]
-""", """
+""", r"""
 [            # hello
     a, 3,
     b
 ]
-""", """
+""", r"""
 Module .. ROOT 0,0 -> 3,1
   .body[1]
   0] Expr .. 0,0 -> 3,1
@@ -2989,18 +3133,18 @@ Module .. ROOT 0,0 -> 3,1
         .ctx Load
 """),
 
-("""
+(r"""
 [            # hello
     a, b
 ]
-""", 'body[0].value', 2, 2, """
+""", 'body[0].value', 2, 2, r"""
 [3
 ]
-""", """
+""", r"""
 [            # hello
     a, b, 3
 ]
-""", """
+""", r"""
 Module .. ROOT 0,0 -> 2,1
   .body[1]
   0] Expr .. 0,0 -> 2,1
@@ -3013,18 +3157,18 @@ Module .. ROOT 0,0 -> 2,1
         .ctx Load
 """),
 
-("""
+(r"""
 [            # hello
     a, b,
 ]
-""", 'body[0].value', 0, 0, """
+""", 'body[0].value', 0, 0, r"""
 [
     1]
-""", """
+""", r"""
 [            # hello
     1, a, b,
 ]
-""", """
+""", r"""
 Module .. ROOT 0,0 -> 2,1
   .body[1]
   0] Expr .. 0,0 -> 2,1
@@ -3037,19 +3181,19 @@ Module .. ROOT 0,0 -> 2,1
         .ctx Load
 """),
 
-("""
+(r"""
 [            # hello
     a, b,
 ]
-""", 'body[0].value', 1, 1, """
+""", 'body[0].value', 1, 1, r"""
 [
     1]
-""", """
+""", r"""
 [            # hello
     a,
     1, b,
 ]
-""", """
+""", r"""
 Module .. ROOT 0,0 -> 3,1
   .body[1]
   0] Expr .. 0,0 -> 3,1
@@ -3062,18 +3206,18 @@ Module .. ROOT 0,0 -> 3,1
         .ctx Load
 """),
 
-("""
+(r"""
 [            # hello
     a, b,
 ]
-""", 'body[0].value', 2, 2, """
+""", 'body[0].value', 2, 2, r"""
 [
     1]
-""", """
+""", r"""
 [            # hello
     a, b,
     1]
-""", """
+""", r"""
 Module .. ROOT 0,0 -> 2,6
   .body[1]
   0] Expr .. 0,0 -> 2,6
@@ -3086,17 +3230,17 @@ Module .. ROOT 0,0 -> 2,6
         .ctx Load
 """),
 
-("""
+(r"""
 [            # hello
     a, b,
 ]
-""", 'body[0].value', 0, 0, """
+""", 'body[0].value', 0, 0, r"""
 [2]
-""", """
+""", r"""
 [            # hello
     2, a, b,
 ]
-""", """
+""", r"""
 Module .. ROOT 0,0 -> 2,1
   .body[1]
   0] Expr .. 0,0 -> 2,1
@@ -3109,17 +3253,17 @@ Module .. ROOT 0,0 -> 2,1
         .ctx Load
 """),
 
-("""
+(r"""
 [            # hello
     a, b,
 ]
-""", 'body[0].value', 1, 1, """
+""", 'body[0].value', 1, 1, r"""
 [2]
-""", """
+""", r"""
 [            # hello
     a, 2, b,
 ]
-""", """
+""", r"""
 Module .. ROOT 0,0 -> 2,1
   .body[1]
   0] Expr .. 0,0 -> 2,1
@@ -3132,16 +3276,16 @@ Module .. ROOT 0,0 -> 2,1
         .ctx Load
 """),
 
-("""
+(r"""
 [            # hello
     a, b,
 ]
-""", 'body[0].value', 2, 2, """
+""", 'body[0].value', 2, 2, r"""
 [2]
-""", """
+""", r"""
 [            # hello
     a, b, 2]
-""", """
+""", r"""
 Module .. ROOT 0,0 -> 1,12
   .body[1]
   0] Expr .. 0,0 -> 1,12
@@ -3154,19 +3298,19 @@ Module .. ROOT 0,0 -> 1,12
         .ctx Load
 """),
 
-("""
+(r"""
 [            # hello
     a, b,
 ]
-""", 'body[0].value', 0, 0, """
+""", 'body[0].value', 0, 0, r"""
 [3
 ]
-""", """
+""", r"""
 [            # hello
     3,
     a, b,
 ]
-""", """
+""", r"""
 Module .. ROOT 0,0 -> 3,1
   .body[1]
   0] Expr .. 0,0 -> 3,1
@@ -3179,19 +3323,19 @@ Module .. ROOT 0,0 -> 3,1
         .ctx Load
 """),
 
-("""
+(r"""
 [            # hello
     a, b,
 ]
-""", 'body[0].value', 1, 1, """
+""", 'body[0].value', 1, 1, r"""
 [3
 ]
-""", """
+""", r"""
 [            # hello
     a, 3,
     b,
 ]
-""", """
+""", r"""
 Module .. ROOT 0,0 -> 3,1
   .body[1]
   0] Expr .. 0,0 -> 3,1
@@ -3204,18 +3348,18 @@ Module .. ROOT 0,0 -> 3,1
         .ctx Load
 """),
 
-("""
+(r"""
 [            # hello
     a, b,
 ]
-""", 'body[0].value', 2, 2, """
+""", 'body[0].value', 2, 2, r"""
 [3
 ]
-""", """
+""", r"""
 [            # hello
     a, b, 3
 ]
-""", """
+""", r"""
 Module .. ROOT 0,0 -> 2,1
   .body[1]
   0] Expr .. 0,0 -> 2,1
@@ -3228,18 +3372,18 @@ Module .. ROOT 0,0 -> 2,1
         .ctx Load
 """),
 
-("""
+(r"""
 [            # hello
     a, b
 ]
-""", 'body[0].value', 0, 0, """
+""", 'body[0].value', 0, 0, r"""
 [
     1,]
-""", """
+""", r"""
 [            # hello
     1, a, b
 ]
-""", """
+""", r"""
 Module .. ROOT 0,0 -> 2,1
   .body[1]
   0] Expr .. 0,0 -> 2,1
@@ -3252,19 +3396,19 @@ Module .. ROOT 0,0 -> 2,1
         .ctx Load
 """),
 
-("""
+(r"""
 [            # hello
     a, b
 ]
-""", 'body[0].value', 1, 1, """
+""", 'body[0].value', 1, 1, r"""
 [
     1,]
-""", """
+""", r"""
 [            # hello
     a,
     1, b
 ]
-""", """
+""", r"""
 Module .. ROOT 0,0 -> 3,1
   .body[1]
   0] Expr .. 0,0 -> 3,1
@@ -3277,18 +3421,18 @@ Module .. ROOT 0,0 -> 3,1
         .ctx Load
 """),
 
-("""
+(r"""
 [            # hello
     a, b
 ]
-""", 'body[0].value', 2, 2, """
+""", 'body[0].value', 2, 2, r"""
 [
     1,]
-""", """
+""", r"""
 [            # hello
     a, b,
     1,]
-""", """
+""", r"""
 Module .. ROOT 0,0 -> 2,7
   .body[1]
   0] Expr .. 0,0 -> 2,7
@@ -3301,17 +3445,17 @@ Module .. ROOT 0,0 -> 2,7
         .ctx Load
 """),
 
-("""
+(r"""
 [            # hello
     a, b
 ]
-""", 'body[0].value', 0, 0, """
+""", 'body[0].value', 0, 0, r"""
 [2,]
-""", """
+""", r"""
 [            # hello
     2, a, b
 ]
-""", """
+""", r"""
 Module .. ROOT 0,0 -> 2,1
   .body[1]
   0] Expr .. 0,0 -> 2,1
@@ -3324,17 +3468,17 @@ Module .. ROOT 0,0 -> 2,1
         .ctx Load
 """),
 
-("""
+(r"""
 [            # hello
     a, b
 ]
-""", 'body[0].value', 1, 1, """
+""", 'body[0].value', 1, 1, r"""
 [2,]
-""", """
+""", r"""
 [            # hello
     a, 2, b
 ]
-""", """
+""", r"""
 Module .. ROOT 0,0 -> 2,1
   .body[1]
   0] Expr .. 0,0 -> 2,1
@@ -3347,16 +3491,16 @@ Module .. ROOT 0,0 -> 2,1
         .ctx Load
 """),
 
-("""
+(r"""
 [            # hello
     a, b
 ]
-""", 'body[0].value', 2, 2, """
+""", 'body[0].value', 2, 2, r"""
 [2,]
-""", """
+""", r"""
 [            # hello
     a, b, 2,]
-""", """
+""", r"""
 Module .. ROOT 0,0 -> 1,13
   .body[1]
   0] Expr .. 0,0 -> 1,13
@@ -3369,19 +3513,19 @@ Module .. ROOT 0,0 -> 1,13
         .ctx Load
 """),
 
-("""
+(r"""
 [            # hello
     a, b
 ]
-""", 'body[0].value', 0, 0, """
+""", 'body[0].value', 0, 0, r"""
 [3,
 ]
-""", """
+""", r"""
 [            # hello
     3,
     a, b
 ]
-""", """
+""", r"""
 Module .. ROOT 0,0 -> 3,1
   .body[1]
   0] Expr .. 0,0 -> 3,1
@@ -3394,19 +3538,19 @@ Module .. ROOT 0,0 -> 3,1
         .ctx Load
 """),
 
-("""
+(r"""
 [            # hello
     a, b
 ]
-""", 'body[0].value', 1, 1, """
+""", 'body[0].value', 1, 1, r"""
 [3,
 ]
-""", """
+""", r"""
 [            # hello
     a, 3,
     b
 ]
-""", """
+""", r"""
 Module .. ROOT 0,0 -> 3,1
   .body[1]
   0] Expr .. 0,0 -> 3,1
@@ -3419,18 +3563,18 @@ Module .. ROOT 0,0 -> 3,1
         .ctx Load
 """),
 
-("""
+(r"""
 [            # hello
     a, b
 ]
-""", 'body[0].value', 2, 2, """
+""", 'body[0].value', 2, 2, r"""
 [3,
 ]
-""", """
+""", r"""
 [            # hello
     a, b, 3,
 ]
-""", """
+""", r"""
 Module .. ROOT 0,0 -> 2,1
   .body[1]
   0] Expr .. 0,0 -> 2,1
@@ -3443,18 +3587,18 @@ Module .. ROOT 0,0 -> 2,1
         .ctx Load
 """),
 
-("""
+(r"""
 [            # hello
     a, b,
 ]
-""", 'body[0].value', 0, 0, """
+""", 'body[0].value', 0, 0, r"""
 [
     1,]
-""", """
+""", r"""
 [            # hello
     1, a, b,
 ]
-""", """
+""", r"""
 Module .. ROOT 0,0 -> 2,1
   .body[1]
   0] Expr .. 0,0 -> 2,1
@@ -3467,19 +3611,19 @@ Module .. ROOT 0,0 -> 2,1
         .ctx Load
 """),
 
-("""
+(r"""
 [            # hello
     a, b,
 ]
-""", 'body[0].value', 1, 1, """
+""", 'body[0].value', 1, 1, r"""
 [
     1,]
-""", """
+""", r"""
 [            # hello
     a,
     1, b,
 ]
-""", """
+""", r"""
 Module .. ROOT 0,0 -> 3,1
   .body[1]
   0] Expr .. 0,0 -> 3,1
@@ -3492,18 +3636,18 @@ Module .. ROOT 0,0 -> 3,1
         .ctx Load
 """),
 
-("""
+(r"""
 [            # hello
     a, b,
 ]
-""", 'body[0].value', 2, 2, """
+""", 'body[0].value', 2, 2, r"""
 [
     1,]
-""", """
+""", r"""
 [            # hello
     a, b,
     1,]
-""", """
+""", r"""
 Module .. ROOT 0,0 -> 2,7
   .body[1]
   0] Expr .. 0,0 -> 2,7
@@ -3516,17 +3660,17 @@ Module .. ROOT 0,0 -> 2,7
         .ctx Load
 """),
 
-("""
+(r"""
 [            # hello
     a, b,
 ]
-""", 'body[0].value', 0, 0, """
+""", 'body[0].value', 0, 0, r"""
 [2,]
-""", """
+""", r"""
 [            # hello
     2, a, b,
 ]
-""", """
+""", r"""
 Module .. ROOT 0,0 -> 2,1
   .body[1]
   0] Expr .. 0,0 -> 2,1
@@ -3539,17 +3683,17 @@ Module .. ROOT 0,0 -> 2,1
         .ctx Load
 """),
 
-("""
+(r"""
 [            # hello
     a, b,
 ]
-""", 'body[0].value', 1, 1, """
+""", 'body[0].value', 1, 1, r"""
 [2,]
-""", """
+""", r"""
 [            # hello
     a, 2, b,
 ]
-""", """
+""", r"""
 Module .. ROOT 0,0 -> 2,1
   .body[1]
   0] Expr .. 0,0 -> 2,1
@@ -3562,16 +3706,16 @@ Module .. ROOT 0,0 -> 2,1
         .ctx Load
 """),
 
-("""
+(r"""
 [            # hello
     a, b,
 ]
-""", 'body[0].value', 2, 2, """
+""", 'body[0].value', 2, 2, r"""
 [2,]
-""", """
+""", r"""
 [            # hello
     a, b, 2,]
-""", """
+""", r"""
 Module .. ROOT 0,0 -> 1,13
   .body[1]
   0] Expr .. 0,0 -> 1,13
@@ -3584,19 +3728,19 @@ Module .. ROOT 0,0 -> 1,13
         .ctx Load
 """),
 
-("""
+(r"""
 [            # hello
     a, b,
 ]
-""", 'body[0].value', 0, 0, """
+""", 'body[0].value', 0, 0, r"""
 [3,
 ]
-""", """
+""", r"""
 [            # hello
     3,
     a, b,
 ]
-""", """
+""", r"""
 Module .. ROOT 0,0 -> 3,1
   .body[1]
   0] Expr .. 0,0 -> 3,1
@@ -3609,19 +3753,19 @@ Module .. ROOT 0,0 -> 3,1
         .ctx Load
 """),
 
-("""
+(r"""
 [            # hello
     a, b,
 ]
-""", 'body[0].value', 1, 1, """
+""", 'body[0].value', 1, 1, r"""
 [3,
 ]
-""", """
+""", r"""
 [            # hello
     a, 3,
     b,
 ]
-""", """
+""", r"""
 Module .. ROOT 0,0 -> 3,1
   .body[1]
   0] Expr .. 0,0 -> 3,1
@@ -3634,18 +3778,18 @@ Module .. ROOT 0,0 -> 3,1
         .ctx Load
 """),
 
-("""
+(r"""
 [            # hello
     a, b,
 ]
-""", 'body[0].value', 2, 2, """
+""", 'body[0].value', 2, 2, r"""
 [3,
 ]
-""", """
+""", r"""
 [            # hello
     a, b, 3,
 ]
-""", """
+""", r"""
 Module .. ROOT 0,0 -> 2,1
   .body[1]
   0] Expr .. 0,0 -> 2,1
@@ -3658,18 +3802,18 @@ Module .. ROOT 0,0 -> 2,1
         .ctx Load
 """),
 
-("""
+(r"""
 [            # hello
     a, b  # blah
 ]
-""", 'body[0].value', 2, 2, """
+""", 'body[0].value', 2, 2, r"""
 [
     1]
-""", """
+""", r"""
 [            # hello
     a, b,
     1]
-""", """
+""", r"""
 Module .. ROOT 0,0 -> 2,6
   .body[1]
   0] Expr .. 0,0 -> 2,6
@@ -3682,16 +3826,16 @@ Module .. ROOT 0,0 -> 2,6
         .ctx Load
 """),
 
-("""
+(r"""
 [            # hello
     a, b  # blah
 ]
-""", 'body[0].value', 2, 2, """
+""", 'body[0].value', 2, 2, r"""
 [2]
-""", """
+""", r"""
 [            # hello
     a, b, 2]
-""", """
+""", r"""
 Module .. ROOT 0,0 -> 1,12
   .body[1]
   0] Expr .. 0,0 -> 1,12
@@ -3704,18 +3848,18 @@ Module .. ROOT 0,0 -> 1,12
         .ctx Load
 """),
 
-("""
+(r"""
 [            # hello
     a, b  # blah
 ]
-""", 'body[0].value', 2, 2, """
+""", 'body[0].value', 2, 2, r"""
 [3
 ]
-""", """
+""", r"""
 [            # hello
     a, b, 3
 ]
-""", """
+""", r"""
 Module .. ROOT 0,0 -> 2,1
   .body[1]
   0] Expr .. 0,0 -> 2,1
@@ -3728,18 +3872,18 @@ Module .. ROOT 0,0 -> 2,1
         .ctx Load
 """),
 
-("""
+(r"""
 [            # hello
     a, b  # blah
 ]
-""", 'body[0].value', 2, 2, """
+""", 'body[0].value', 2, 2, r"""
 [
     1,]
-""", """
+""", r"""
 [            # hello
     a, b,
     1,]
-""", """
+""", r"""
 Module .. ROOT 0,0 -> 2,7
   .body[1]
   0] Expr .. 0,0 -> 2,7
@@ -3752,16 +3896,16 @@ Module .. ROOT 0,0 -> 2,7
         .ctx Load
 """),
 
-("""
+(r"""
 [            # hello
     a, b  # blah
 ]
-""", 'body[0].value', 2, 2, """
+""", 'body[0].value', 2, 2, r"""
 [2,]
-""", """
+""", r"""
 [            # hello
     a, b, 2,]
-""", """
+""", r"""
 Module .. ROOT 0,0 -> 1,13
   .body[1]
   0] Expr .. 0,0 -> 1,13
@@ -3774,18 +3918,18 @@ Module .. ROOT 0,0 -> 1,13
         .ctx Load
 """),
 
-("""
+(r"""
 [            # hello
     a, b  # blah
 ]
-""", 'body[0].value', 2, 2, """
+""", 'body[0].value', 2, 2, r"""
 [3,
 ]
-""", """
+""", r"""
 [            # hello
     a, b, 3,
 ]
-""", """
+""", r"""
 Module .. ROOT 0,0 -> 2,1
   .body[1]
   0] Expr .. 0,0 -> 2,1
@@ -3798,20 +3942,20 @@ Module .. ROOT 0,0 -> 2,1
         .ctx Load
 """),
 
-("""
+(r"""
 [            # hello
     a, b  # blah
 ]
-""", 'body[0].value', 2, 2, """
+""", 'body[0].value', 2, 2, r"""
 [
     1  # comment
 ]
-""", """
+""", r"""
 [            # hello
     a, b,
     1  # comment
 ]
-""", """
+""", r"""
 Module .. ROOT 0,0 -> 3,1
   .body[1]
   0] Expr .. 0,0 -> 3,1
@@ -3824,18 +3968,18 @@ Module .. ROOT 0,0 -> 3,1
         .ctx Load
 """),
 
-("""
+(r"""
 [            # hello
     a, b  # blah
 ]
-""", 'body[0].value', 2, 2, """
+""", 'body[0].value', 2, 2, r"""
 [2  # comment
 ]
-""", """
+""", r"""
 [            # hello
     a, b, 2  # comment
 ]
-""", """
+""", r"""
 Module .. ROOT 0,0 -> 2,1
   .body[1]
   0] Expr .. 0,0 -> 2,1
@@ -3848,18 +3992,18 @@ Module .. ROOT 0,0 -> 2,1
         .ctx Load
 """),
 
-("""
+(r"""
 [            # hello
     a, b  # blah
 ]
-""", 'body[0].value', 2, 2, """
+""", 'body[0].value', 2, 2, r"""
 [3  # comment
 ]
-""", """
+""", r"""
 [            # hello
     a, b, 3  # comment
 ]
-""", """
+""", r"""
 Module .. ROOT 0,0 -> 2,1
   .body[1]
   0] Expr .. 0,0 -> 2,1
@@ -3872,20 +4016,20 @@ Module .. ROOT 0,0 -> 2,1
         .ctx Load
 """),
 
-("""
+(r"""
 [            # hello
     a, b  # blah
 ]
-""", 'body[0].value', 2, 2, """
+""", 'body[0].value', 2, 2, r"""
 [
     1,  # comment
 ]
-""", """
+""", r"""
 [            # hello
     a, b,
     1,  # comment
 ]
-""", """
+""", r"""
 Module .. ROOT 0,0 -> 3,1
   .body[1]
   0] Expr .. 0,0 -> 3,1
@@ -3898,18 +4042,18 @@ Module .. ROOT 0,0 -> 3,1
         .ctx Load
 """),
 
-("""
+(r"""
 [            # hello
     a, b  # blah
 ]
-""", 'body[0].value', 2, 2, """
+""", 'body[0].value', 2, 2, r"""
 [2,  # comment
 ]
-""", """
+""", r"""
 [            # hello
     a, b, 2,  # comment
 ]
-""", """
+""", r"""
 Module .. ROOT 0,0 -> 2,1
   .body[1]
   0] Expr .. 0,0 -> 2,1
@@ -3922,18 +4066,18 @@ Module .. ROOT 0,0 -> 2,1
         .ctx Load
 """),
 
-("""
+(r"""
 [            # hello
     a, b  # blah
 ]
-""", 'body[0].value', 2, 2, """
+""", 'body[0].value', 2, 2, r"""
 [3,  # comment
 ]
-""", """
+""", r"""
 [            # hello
     a, b, 3,  # comment
 ]
-""", """
+""", r"""
 Module .. ROOT 0,0 -> 2,1
   .body[1]
   0] Expr .. 0,0 -> 2,1
@@ -3944,6 +4088,130 @@ Module .. ROOT 0,0 -> 2,1
         1] Name 'b' Load .. 1,7 -> 1,8
         2] Constant 3 .. 1,10 -> 1,11
         .ctx Load
+"""),
+
+(r"""
+{
+    'message': ('An open stream was garbage collected prior to '
+                'establishing network connection; '
+                'call "stream.close()" explicitly.')
+}
+""", 'body[0].value', 1, 1, r"""
+{i: j}
+""", r"""
+{
+    'message': ('An open stream was garbage collected prior to '
+                'establishing network connection; '
+                'call "stream.close()" explicitly.'), i: j}
+""", r"""
+Module .. ROOT 0,0 -> 3,59
+  .body[1]
+  0] Expr .. 0,0 -> 3,59
+    .value
+      Dict .. 0,0 -> 3,59
+        .keys[2]
+        0] Constant 'message' .. 1,4 -> 1,13
+        1] Name 'i' Load .. 3,54 -> 3,55
+        .values[2]
+        0] Constant 'An open stream was garbage collected prior to establishing network connection; call "stream.close()" explicitly.' .. 1,16 -> 3,51
+        1] Name 'j' Load .. 3,57 -> 3,58
+"""),
+
+(r"""
+{
+    1: 2,
+    5: 6
+}
+""", 'body[0].value', 1, 1, r"""
+{3: ("4")}
+""", r"""
+{
+    1: 2,
+    3: ("4"), 5: 6
+}
+""", r"""
+Module .. ROOT 0,0 -> 3,1
+  .body[1]
+  0] Expr .. 0,0 -> 3,1
+    .value
+      Dict .. 0,0 -> 3,1
+        .keys[3]
+        0] Constant 1 .. 1,4 -> 1,5
+        1] Constant 3 .. 2,4 -> 2,5
+        2] Constant 5 .. 2,14 -> 2,15
+        .values[3]
+        0] Constant 2 .. 1,7 -> 1,8
+        1] Constant '4' .. 2,8 -> 2,11
+        2] Constant 6 .. 2,17 -> 2,18
+"""),
+
+(r"""
+[
+    # order of patterns matters
+    r'file, line (\\d+)',
+    3,
+]
+""", 'body[0].value', 1, 1, r"""
+(1, 2)
+""", r"""
+[
+    # order of patterns matters
+    r'file, line (\\d+)',
+    1, 2, 3,
+]
+""", r"""
+Module .. ROOT 0,0 -> 4,1
+  .body[1]
+  0] Expr .. 0,0 -> 4,1
+    .value
+      List .. 0,0 -> 4,1
+        .elts[4]
+        0] Constant 'file, line (\\\\d+)' .. 2,4 -> 2,24
+        1] Constant 1 .. 3,4 -> 3,5
+        2] Constant 2 .. 3,7 -> 3,8
+        3] Constant 3 .. 3,10 -> 3,11
+        .ctx Load
+"""),
+
+(r"""
+(IndexError, KeyError, isinstance,)
+""", 'body[0].value', 2, 3, r"""
+()
+""", r"""
+(IndexError, KeyError,)
+""", r"""
+Module .. ROOT 0,0 -> 0,23
+  .body[1]
+  0] Expr .. 0,0 -> 0,23
+    .value
+      Tuple .. 0,0 -> 0,23
+        .elts[2]
+        0] Name 'IndexError' Load .. 0,1 -> 0,11
+        1] Name 'KeyError' Load .. 0,13 -> 0,21
+        .ctx Load
+"""),
+
+(r"""
+[a, b] = c
+""", 'body[0].targets[0]', 2, 2, r"""
+(d,)
+""", r"""
+[a, b, d,] = c
+""", r"""
+Module .. ROOT 0,0 -> 0,14
+  .body[1]
+  0] Assign .. 0,0 -> 0,14
+    .targets[1]
+    0] List .. 0,0 -> 0,10
+      .elts[3]
+      0] Name 'a' Store .. 0,1 -> 0,2
+      1] Name 'b' Store .. 0,4 -> 0,5
+      2] Name 'd' Store .. 0,7 -> 0,8
+      .ctx Store
+    .value
+      Name 'c' Load .. 0,13 -> 0,14
+    .type_comment
+      None
 """),
 
 ]  # END OF PUT_SLICE_DATA
@@ -5445,9 +5713,9 @@ def regen_get_slice_cut_data():
         s.verify()
 
         newlines.append('(r"""')
-        newlines.extend(f'''{src}\n""", {elt!r}, {start}, {stop}, r"""\n{tsrc}\n""", r"""\n{ssrc}\n""", """'''.split('\n'))
+        newlines.extend(f'''{src}\n""", {elt!r}, {start}, {stop}, r"""\n{tsrc}\n""", r"""\n{ssrc}\n""", r"""'''.split('\n'))
         newlines.extend(tdump)
-        newlines.append('""", """')
+        newlines.append('""", r"""')
         newlines.extend(sdump)
         newlines.append('"""),\n')
 
@@ -5481,8 +5749,8 @@ def regen_put_slice_data():
 
         t.f.verify()
 
-        newlines.append('("""')
-        newlines.extend(f'''{dst}\n""", {elt!r}, {start}, {stop}, """\n{src}\n""", """\n{tdst}\n""", """'''.split('\n'))
+        newlines.append('(r"""')
+        newlines.extend(f'''{dst}\n""", {elt!r}, {start}, {stop}, r"""\n{src}\n""", r"""\n{tdst}\n""", r"""'''.split('\n'))
         newlines.extend(tdump)
         newlines.append('"""),\n')
 
