@@ -252,7 +252,7 @@ def _prev_src(lines: list[str], ln: int, col: int, end_ln: int, end_col: int,
     return None
 
 
-def _expr_src_edit_locs(lines: list[bistr], loc: fstloc, bound: fstloc) -> tuple[fstloc, fstloc, list[str]]:
+def _expr_src_edit_locs(lines: list[bistr], loc: fstloc, bound: fstloc, at_end: bool = False) -> tuple[fstloc, fstloc, list[str]]:
     """Get expression copy and delete locations. There can be commas in the bound in which case the expression is
     treated as part of a comma delimited sequence. In this case, if there is a trailing comma within bounding span then
     it is included in the delete location. Any enclosing grouping parentheses within the bounding span are included. Any
@@ -265,6 +265,7 @@ def _expr_src_edit_locs(lines: list[bistr], loc: fstloc, bound: fstloc) -> tuple
         contain any part of other `AST` nodes like other members of a sequence. Can contain any number of open and close
         parentheses for the expression itself and closing and opening parentheses belonging to expressions from outside
         the bound.
+    - `at_end`: Whether `loc` is at the end of a sequence, used to remove trailing whitespace from preceding comma.
 
     **Returns:**
     - `(copy_loc, del_loc)`: `copy_loc` is the location of source that should be used if copying the expression.
@@ -298,7 +299,7 @@ def _expr_src_edit_locs(lines: list[bistr], loc: fstloc, bound: fstloc) -> tuple
                 break
 
             elif c != '(':  # we don't actually count and check these because there may be other parens inside the `loc` which we can not see here
-                raise ValueError(f"expecting comma or open parenthesis, got '{c}'")
+                raise ValueError(f"expecting leading comma or open parenthesis, got '{c}'")
 
             col      -= 1
             copy_ln   = ln
@@ -332,19 +333,19 @@ def _expr_src_edit_locs(lines: list[bistr], loc: fstloc, bound: fstloc) -> tuple
 
             if c == ',':
                 if postcomma_have:
-                    raise ValueError('multiple commas found')
+                    raise ValueError('multiple trailing commas found')
 
                 postcomma_have = True
 
             elif c != ')':
                 raise ValueError(f"not expecting code, got '{src}'"
                                  if postcomma_have else
-                                 f"expecting parenthesis or comma, got '{src}'")
+                                 f"expecting close parenthesis or trailing comma, got '{src}'")
 
-            elif postcomma_have:
-                raise ValueError('found close parenthesis after comma')
+            else:  # c == ')'
+                if postcomma_have:
+                    raise ValueError('found close parenthesis after trailing comma')
 
-            else:
                 loc_end_ln  = ln  # we update loc because end parens are definitive end of loc, and may not have been checked before calling this function
                 loc_end_col = col
 
@@ -356,7 +357,7 @@ def _expr_src_edit_locs(lines: list[bistr], loc: fstloc, bound: fstloc) -> tuple
 
         break  # this happens if we found an open parenthesis
 
-    # special sauce
+    # special sauce, can probably be simplified
 
     del_end_ln = copy_end_ln
 
@@ -377,8 +378,12 @@ def _expr_src_edit_locs(lines: list[bistr], loc: fstloc, bound: fstloc) -> tuple
         copy_col = len(lines[copy_ln])
 
     elif copy_ln == precomma_end_ln:  # copy start on same line as preceding comma
-        if postcomma_have:  # most likely other items follow, delete up to them (including postcomma)
+        if postcomma_have:  # other items follow or explicit trailing comma at end of sequence, delete up to end (including postcomma)
             del_end_col = bound_end_col
+
+            if at_end:  # definitively at end, delete whitespace at end of precomma
+                del_col = precomma_end_col
+
         elif precomma_end_ln == bound_ln:  # no items following, previous item, delete up to end of item past precomma
             del_col = bound_col
         else:  # previous comma not on same line as previous item, preserve its unique and special formatting as a trailing comma at end of sequence
@@ -739,7 +744,7 @@ class FSTSrcEdit:
 
         if not put_fst or not pfirst:  # `pfirst` may be None and `put_fst` not if assigning empty sequence, regardless, pure delete (or assign empty sequence, same), fflrst/last guaranteed to exist
             return _expr_src_edit_locs(fst.root._lines,
-                                       fstloc(ffirst.ln, ffirst.col, flast.end_ln, flast.end_col), bound)[1]
+                                       fstloc(ffirst.ln, ffirst.col, flast.end_ln, flast.end_col), bound, not fpost)[1]
 
         if ffirst:  # flast also exists, replacement
             put_ln      = ffirst.ln
