@@ -1567,6 +1567,115 @@ Dict .. ROOT 0,0 -> 0,10
   0] Constant 'b' .. 0,6 -> 0,9
 """),
 
+(r"""
+class cls:
+    a, b = c
+""", 'body[0].body[0].targets[0]', 0, 2, r"""
+class cls:
+    () = c
+""", r"""
+(a, b)
+""", r"""
+Module .. ROOT 0,0 -> 1,10
+  .body[1]
+  0] ClassDef .. 0,0 -> 1,10
+    .name
+      'cls'
+    .body[1]
+    0] Assign .. 1,4 -> 1,10
+      .targets[1]
+      0] Tuple .. 1,4 -> 1,6
+        .ctx Store
+      .value
+        Name 'c' Load .. 1,9 -> 1,10
+      .type_comment
+        None
+""", r"""
+Tuple .. ROOT 0,0 -> 0,6
+  .elts[2]
+  0] Name 'a' Load .. 0,1 -> 0,2
+  1] Name 'b' Load .. 0,4 -> 0,5
+  .ctx Load
+"""),
+
+(r"""
+if 1:
+    yy, tm, = tm, yy
+""", 'body[0].body[0].targets[0]', 1, 2, r"""
+if 1:
+    yy, = tm, yy
+""", r"""
+(tm,)
+""", r"""
+Module .. ROOT 0,0 -> 1,16
+  .body[1]
+  0] If .. 0,0 -> 1,16
+    .test
+      Constant 1 .. 0,3 -> 0,4
+    .body[1]
+    0] Assign .. 1,4 -> 1,16
+      .targets[1]
+      0] Tuple .. 1,4 -> 1,7
+        .elts[1]
+        0] Name 'yy' Store .. 1,4 -> 1,6
+        .ctx Store
+      .value
+        Tuple .. 1,10 -> 1,16
+          .elts[2]
+          0] Name 'tm' Load .. 1,10 -> 1,12
+          1] Name 'yy' Load .. 1,14 -> 1,16
+          .ctx Load
+      .type_comment
+        None
+""", r"""
+Tuple .. ROOT 0,0 -> 0,5
+  .elts[1]
+  0] Name 'tm' Load .. 0,1 -> 0,3
+  .ctx Load
+"""),
+
+(r"""
+{1, 2}
+""", 'body[0].value', 0, 2, r"""
+set()
+""", r"""
+{1, 2}
+""", r"""
+Module .. ROOT 0,0 -> 0,5
+  .body[1]
+  0] Expr .. 0,0 -> 0,5
+    .value
+      Call .. 0,0 -> 0,5
+        .func
+          Name 'set' Load .. 0,0 -> 0,3
+""", r"""
+Set .. ROOT 0,0 -> 0,6
+  .elts[2]
+  0] Constant 1 .. 0,1 -> 0,2
+  1] Constant 2 .. 0,4 -> 0,5
+"""),
+
+(r"""
+{1, 2}
+""", 'body[0].value', 0, 0, r"""
+{1, 2}
+""", r"""
+set()
+""", r"""
+Module .. ROOT 0,0 -> 0,6
+  .body[1]
+  0] Expr .. 0,0 -> 0,6
+    .value
+      Set .. 0,0 -> 0,6
+        .elts[2]
+        0] Constant 1 .. 0,1 -> 0,2
+        1] Constant 2 .. 0,4 -> 0,5
+""", r"""
+Call .. ROOT 0,0 -> 0,5
+  .func
+    Name 'set' Load .. 0,0 -> 0,3
+"""),
+
 ]  # END OF GET_SLICE_CUT_DATA
 
 PUT_SLICE_DATA = [
@@ -4212,6 +4321,129 @@ Module .. ROOT 0,0 -> 0,14
       Name 'c' Load .. 0,13 -> 0,14
     .type_comment
       None
+"""),
+
+(r"""
+stat_list,
+""", 'body[0].value', 0, 1, r"""
+[ {-1: "stdname",
+                   2: "cumulative"}[field[0]] ]
+""", r"""
+( {-1: "stdname",
+                   2: "cumulative"}[field[0]], )
+""", r"""
+Module .. ROOT 0,0 -> 1,48
+  .body[1]
+  0] Expr .. 0,0 -> 1,48
+    .value
+      Tuple .. 0,0 -> 1,48
+        .elts[1]
+        0] Subscript .. 0,2 -> 1,45
+          .value
+            Dict .. 0,2 -> 1,35
+              .keys[2]
+              0] UnaryOp .. 0,3 -> 0,5
+                .op
+                  USub
+                .operand
+                  Constant 1 .. 0,4 -> 0,5
+              1] Constant 2 .. 1,19 -> 1,20
+              .values[2]
+              0] Constant 'stdname' .. 0,7 -> 0,16
+              1] Constant 'cumulative' .. 1,22 -> 1,34
+          .slice
+            Subscript .. 1,36 -> 1,44
+              .value
+                Name 'field' Load .. 1,36 -> 1,41
+              .slice
+                Constant 0 .. 1,42 -> 1,43
+              .ctx Load
+          .ctx Load
+        .ctx Load
+"""),
+
+(r"""
+for a in a, b:
+    pass
+""", 'body[0].iter', 1, 2, r"""
+(
+c,)
+""", r"""
+for a in (a,
+c,):
+    pass
+""", r"""
+Module .. ROOT 0,0 -> 2,8
+  .body[1]
+  0] For .. 0,0 -> 2,8
+    .target
+      Name 'a' Store .. 0,4 -> 0,5
+    .iter
+      Tuple .. 0,9 -> 1,3
+        .elts[2]
+        0] Name 'a' Load .. 0,10 -> 0,11
+        1] Name 'c' Load .. 1,0 -> 1,1
+        .ctx Load
+    .body[1]
+    0] Pass .. 2,4 -> 2,8
+    .type_comment
+      None
+"""),
+
+(r"""
+result = filename, headers
+""", 'body[0].value', 0, 0, r"""
+(
+c,)
+""", r"""
+result = (
+c, filename, headers)
+""", r"""
+Module .. ROOT 0,0 -> 1,21
+  .body[1]
+  0] Assign .. 0,0 -> 1,21
+    .targets[1]
+    0] Name 'result' Store .. 0,0 -> 0,6
+    .value
+      Tuple .. 0,9 -> 1,21
+        .elts[3]
+        0] Name 'c' Load .. 1,0 -> 1,1
+        1] Name 'filename' Load .. 1,3 -> 1,11
+        2] Name 'headers' Load .. 1,13 -> 1,20
+        .ctx Load
+    .type_comment
+      None
+"""),
+
+(r"""
+return (user if delim else None), host
+""", 'body[0].value', 0, 2, r"""
+()
+""", r"""
+return ()
+""", r"""
+Module .. ROOT 0,0 -> 0,9
+  .body[1]
+  0] Return .. 0,0 -> 0,9
+    .value
+      Tuple .. 0,7 -> 0,9
+        .ctx Load
+"""),
+
+(r"""
+{1, 2}
+""", 'body[0].value', 0, 2, r"""
+()
+""", r"""
+set()
+""", r"""
+Module .. ROOT 0,0 -> 0,5
+  .body[1]
+  0] Expr .. 0,0 -> 0,5
+    .value
+      Call .. 0,0 -> 0,5
+        .func
+          Name 'set' Load .. 0,0 -> 0,3
 """),
 
 ]  # END OF PUT_SLICE_DATA

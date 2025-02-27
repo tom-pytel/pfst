@@ -1227,13 +1227,13 @@ class FST:
 
         ast = self.a
 
-        ln, col, end_ln, end_col = self.loc
-
         if is_parenthesized is None:
             is_parenthesized = self.is_tuple_parenthesized()
 
         if ast.elts:
             self._maybe_add_singleton_tuple_comma(True)
+
+            ln, col, end_ln, end_col = self.loc
 
             if not is_parenthesized and end_ln != ln:  # and not self.is_enclosed:  <-- TODO: this, also maybe check for line continuations
                 self.put_lines([bistr(')')], end_ln, end_col, end_ln, end_col, True, self)
@@ -1242,6 +1242,8 @@ class FST:
                 _reset_parents_start_pos(self, ast.lineno, ast.col_offset - 1)
 
         elif not is_parenthesized:  # if is unparenthesized tuple and empty left then need to add parentheses
+            ln, col, end_ln, end_col = self.loc
+
             self.put_lines([bistr('()')], ln, col, end_ln, end_col, True)  # WARNING! `True` may not be safe if another preceding non-containing node ends EXACTLY where the unparenthesized tuple starts, but haven't found a case where this can happen
 
             if end_col == col and end_ln == ln:  # this is tricky because zero length tuple can be at the start of a parent so now we have to correct offset that was applied to all parents start positions
