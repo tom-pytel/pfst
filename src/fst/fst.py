@@ -1411,9 +1411,13 @@ class FST:
 
         fst = self._get_seq_and_dedent(get_ast, cut, seq_loc, ffirst, flast, fpre, fpost, prefix, suffix)
 
-        if fix and is_tuple:
-            fst._maybe_add_singleton_tuple_comma(False)  # maybe need to add a postfix comma to copied single element tuple if is not already there
-            self._maybe_fix_tuple(is_paren)
+        if fix:
+            if is_set:
+                self._maybe_fix_set()
+
+            elif is_tuple:
+                fst._maybe_add_singleton_tuple_comma(False)  # maybe need to add a postfix comma to copied single element tuple if is not already there
+                self._maybe_fix_tuple(is_paren)
 
         return fst
 
@@ -1514,7 +1518,10 @@ class FST:
             put_fst = _normalize_code(code, expr_=True, parse_params=self.root.parse_params)
 
             if put_fst.is_empty_set_call():
-                put_fst = _new_empty_set_curlies()
+                if fix:
+                    put_fst = _new_empty_set_curlies()
+                else:
+                    raise ValueError(f"cannot put 'set()' as a slice without specifying 'fix=True`")
 
             put_ast  = put_fst.a
             is_tuple = isinstance(put_ast, Tuple)
@@ -1590,7 +1597,7 @@ class FST:
             stack              = [FST(elts[i], self, astfield('elts', i)) for i in range(start, start + put_len)]
 
             if fix and stack and not is_set:
-                set_ctx([f.a for f in stack], ast.ctx.__class__)
+                set_ctx([f.a for f in stack], Load if isinstance(ast, Set) else ast.ctx.__class__)
 
             self._make_fst_tree(stack)
 
@@ -2020,6 +2027,9 @@ class FST:
         if isinstance(a, Dict):
             return self._get_slice_dict(start, stop, field, fix, cut)
 
+        # if self.is_empty_set_call():
+        #     return self._get_slice_empty_set_call(start, stop, field, fix, cut)
+
         raise ValueError(f"cannot get slice from a '{a.__class__.__name__}'")
 
 
@@ -2039,6 +2049,9 @@ class FST:
 
         if isinstance(a, Dict):
             return self._put_slice_dict(code, start, stop, field, fix)
+
+        # if fix and self.is_empty_set_call():
+        #     return self._put_slice_empty_set_call(code, start, stop, field, fix)
 
         raise ValueError(f"cannot put slice to a '{a.__class__.__name__}'")
 
