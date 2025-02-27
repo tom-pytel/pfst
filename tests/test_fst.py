@@ -1676,6 +1676,26 @@ Call .. ROOT 0,0 -> 0,5
     Name 'set' Load .. 0,0 -> 0,3
 """),
 
+(r"""
+set()
+""", 'body[0].value', 0, 0, r"""
+set()
+""", r"""
+set()
+""", r"""
+Module .. ROOT 0,0 -> 0,5
+  .body[1]
+  0] Expr .. 0,0 -> 0,5
+    .value
+      Call .. 0,0 -> 0,5
+        .func
+          Name 'set' Load .. 0,0 -> 0,3
+""", r"""
+Call .. ROOT 0,0 -> 0,5
+  .func
+    Name 'set' Load .. 0,0 -> 0,3
+"""),
+
 ]  # END OF GET_SLICE_CUT_DATA
 
 PUT_SLICE_DATA = [
@@ -4444,6 +4464,39 @@ Module .. ROOT 0,0 -> 0,5
       Call .. 0,0 -> 0,5
         .func
           Name 'set' Load .. 0,0 -> 0,3
+"""),
+
+(r"""
+set()
+""", 'body[0].value', 0, 0, r"""
+()
+""", r"""
+set()
+""", r"""
+Module .. ROOT 0,0 -> 0,5
+  .body[1]
+  0] Expr .. 0,0 -> 0,5
+    .value
+      Call .. 0,0 -> 0,5
+        .func
+          Name 'set' Load .. 0,0 -> 0,3
+"""),
+
+(r"""
+set()
+""", 'body[0].value', 0, 0, r"""
+(1, 2)
+""", r"""
+{1, 2}
+""", r"""
+Module .. ROOT 0,0 -> 0,6
+  .body[1]
+  0] Expr .. 0,0 -> 0,6
+    .value
+      Set .. 0,0 -> 0,6
+        .elts[2]
+        0] Constant 1 .. 0,1 -> 0,2
+        1] Constant 2 .. 0,4 -> 0,5
 """),
 
 ]  # END OF PUT_SLICE_DATA

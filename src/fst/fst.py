@@ -596,14 +596,13 @@ def _new_empty_dict() -> 'FST':
     return fst
 
 
-def _new_empty_set_curlies() -> 'FST':
+def _new_empty_set_curlies(ast_only: bool = False, lineno: int = 1, col_offset: int = 0) -> 'FST':
     ast                = Set(elts=[])
-    fst                = FST(ast, lines=[bistr('{}')])
-    ast.lineno         = ast.end_lineno = 1
-    ast.col_offset     = 0
-    ast.end_col_offset = 2
+    ast.lineno         = ast.end_lineno = lineno
+    ast.col_offset     = col_offset
+    ast.end_col_offset = col_offset + 2
 
-    return fst
+    return ast if ast_only else FST(ast, lines=[bistr('{}')])
 
 
 def _new_empty_set_call(ast_only: bool = False, lineno: int = 1, col_offset: int = 0) -> 'FST':
@@ -1257,13 +1256,14 @@ class FST:
 
             self.put_lines([bistr('set()')], ln, col, end_ln, end_col, True)
 
-            self.a = ast = _new_empty_set_call(True, ln + 1, self.root.lines[ln].c2b(col))
+            ast    = self.a
+            self.a = ast = _new_empty_set_call(True, ast.lineno, ast.col_offset)
             ast.f  = self
 
             if parent := self.parent:
                 self.pfield.set(parent.a, ast)
 
-                self._make_fst_tree([FST(ast.func, self, astfield('func'))])
+            self._make_fst_tree([FST(ast.func, self, astfield('func'))])
 
     def _make_fst_and_dedent(self, findent: 'FST', ast: AST, copy_loc: fstloc, prefix: str = '', suffix: str = '',
                              put_loc: fstloc | None = None, put_lines: list[str] | None = None) -> 'FST':
@@ -1353,7 +1353,7 @@ class FST:
 
         if start == stop:
             if is_set:
-                return _new_empty_set_call()
+                return _new_empty_set_call() if fix else _new_empty_set_curlies()
             elif is_tuple:
                 return _new_empty_tuple()
             else:
@@ -1422,6 +1422,18 @@ class FST:
                 self._maybe_fix_tuple(is_paren)
 
         return fst
+
+    def _get_slice_empty_set_call(self, start: int, stop: int, field: str | None, fix: bool, cut: bool) -> 'FST':
+        if not fix:
+            raise ValueError(f"cannot get slice from a 'set()' without specifying 'fix=True'")
+
+        if field is not None and field != 'elts':
+            raise ValueError(f"invalid field '{field}' to slice from a {self.a.__class__.__name__}")
+
+        if start or stop:
+            raise IndexError(f"Set.{field} index out of range")
+
+        return _new_empty_set_call() if fix else _new_empty_set_curlies()
 
     def _get_slice_dict(self, start: int, stop: int, field: str | None, fix: bool, cut: bool) -> 'FST':
         if field is not None:
@@ -1523,7 +1535,7 @@ class FST:
                 if fix:
                     put_fst = _new_empty_set_curlies()
                 else:
-                    raise ValueError(f"cannot put 'set()' as a slice without specifying 'fix=True`")
+                    raise ValueError(f"cannot put 'set()' as a slice without specifying 'fix=True'")
 
             put_ast  = put_fst.a
             is_tuple = isinstance(put_ast, Tuple)
@@ -1611,6 +1623,29 @@ class FST:
                 self._maybe_fix_tuple(is_self_enclosed)
             elif isinstance(ast, Set):
                 self._maybe_fix_set()
+
+    def _put_slice_empty_set_call(self, code: Code | None, start: int, stop: int, field: str | None = None,
+                                  fix: bool = True):
+        if not fix:
+            raise ValueError(f"cannot put slice to a 'set()' without specifying 'fix=True'")
+
+        ln, col, end_ln, end_col = self.loc
+
+        self.put_lines([bistr('{}')], ln, col, end_ln, end_col, True)
+
+        ast    = self.a
+        self.a = ast = _new_empty_set_curlies(True, ast.lineno, ast.col_offset)
+        ast.f  = self
+
+        if parent := self.parent:
+            self.pfield.set(parent.a, ast)
+
+        try:
+            self._put_slice_tuple_list_or_set(code, start, stop, field, fix)
+
+        finally:
+            if not self.a.elts:
+                self._maybe_fix_set()  # restore 'set()'
 
     def _put_slice_dict(self, code: Code | None, start: int, stop: int, field: str | None = None, fix: bool = True):
         if field is not None:
@@ -2029,8 +2064,8 @@ class FST:
         if isinstance(a, Dict):
             return self._get_slice_dict(start, stop, field, fix, cut)
 
-        # if self.is_empty_set_call():
-        #     return self._get_slice_empty_set_call(start, stop, field, fix, cut)
+        if self.is_empty_set_call():
+            return self._get_slice_empty_set_call(start, stop, field, fix, cut)
 
         raise ValueError(f"cannot get slice from a '{a.__class__.__name__}'")
 
@@ -2052,8 +2087,8 @@ class FST:
         if isinstance(a, Dict):
             return self._put_slice_dict(code, start, stop, field, fix)
 
-        # if fix and self.is_empty_set_call():
-        #     return self._put_slice_empty_set_call(code, start, stop, field, fix)
+        if self.is_empty_set_call():
+            return self._put_slice_empty_set_call(code, start, stop, field, fix)
 
         raise ValueError(f"cannot put slice to a '{a.__class__.__name__}'")
 
