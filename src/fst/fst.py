@@ -709,7 +709,7 @@ class FSTSrcEdit:
 
             if (new_del_col := re_line_trailing_space.match(lines[del_ln],
                                                             bound.col if del_ln == bound.ln else 0,
-                                                            del_col := del_col).start(1)) < del_col:  # move del start to beginning of any trailing whitespace from put location before end of sequence
+                                                            del_col := del_col).start(1)) < del_col:  # move del start to beginning of any trailing whitespace from del location before end of sequence
                 del_loc = fstloc(del_ln, new_del_col, del_end_ln, del_end_col)
 
         return (copy_loc, del_loc, None) if cut else (copy_loc, None, None)
@@ -3135,8 +3135,67 @@ class FST:
     def is_tuple_parenthesized(self) -> bool:
         # assert isinstance(self.a, Tuple)
 
-        return (self.root._lines[(ln := self.ln)].startswith('(', col := self.col) and
-                (not (e := self.a.elts) or (ln != (f0 := e[0].f).ln or col != f0.col)))
+        self_ln, self_col, self_end_ln, self_end_col = self.loc
+
+        lines = self.root._lines
+
+        if not lines[self_end_ln].startswith(')', self_end_col - 1):
+            return False
+
+        if not (elts := self.a.elts):
+            return True
+
+        if not lines[self_ln].startswith('(', self_col):
+            return False
+
+        f0_ln, f0_col, f0_end_ln, f0_end_col = elts[0].f.loc
+
+        if f0_col == self_col and f0_ln == self_ln:
+            return False
+
+        _, _, fn_end_ln, fn_end_col = elts[-1].f.loc
+
+        if fn_end_col == self_end_col and fn_end_ln == self_end_ln:
+            return False
+
+        # dagnabit! have to count parens
+
+        self_end_col -= 1  # because for sure there is a comma between end of first element and end of tuple
+        nparens        = 0
+
+        while code := _next_src(lines, self_ln, self_col, self_end_ln, self_end_col):
+            self_ln, self_col, src = code
+
+            for c in src:
+                if c == '(':
+                    nparens += 1
+                else:
+                    break
+
+            else:
+                self_col += len(src)
+
+                continue
+
+            break
+
+        while code := _next_src(lines, f0_end_ln, f0_end_col, self_end_ln, self_end_col):
+            f0_end_ln, f0_end_col, src = code
+
+            for c in src:
+                if c == ')':
+                    nparens -= 1
+                else:
+                    break
+
+            else:
+                f0_end_col += len(src)
+
+                continue
+
+            break
+
+        return nparens > 0  # don't want to fiddle with checking if f0 is a parenthesized tuple
 
     def is_empty_set_call(self) -> bool:
         return (isinstance(ast := self.a, Call) and not ast.args and not ast.keywords and

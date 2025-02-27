@@ -4784,6 +4784,56 @@ def f(a, /, b, *c, d, **e):
         test2('call(a, b=1, *c, d=2, **e)')
         test2('system_message(message, level=level, type=type,*children, **kwargs)')
 
+    def test_is_tuple_parenthesized(self):
+        self.assertTrue(parse('(1, 2)').body[0].value.f.is_tuple_parenthesized())
+        self.assertTrue(parse('(1,)').body[0].value.f.is_tuple_parenthesized())
+        self.assertTrue(parse('((1),)').body[0].value.f.is_tuple_parenthesized())
+        self.assertTrue(parse('((1,))').body[0].value.f.is_tuple_parenthesized())
+        self.assertTrue(parse('((1,),)').body[0].value.f.is_tuple_parenthesized())
+
+        self.assertTrue(parse('((a), b)').body[0].value.f.is_tuple_parenthesized())
+        self.assertTrue(parse('(a, (b))').body[0].value.f.is_tuple_parenthesized())
+        self.assertTrue(parse('((a), (b))').body[0].value.f.is_tuple_parenthesized())
+
+        self.assertTrue(parse('(\n1,2)').body[0].value.f.is_tuple_parenthesized())
+        self.assertTrue(parse('(1\n,2)').body[0].value.f.is_tuple_parenthesized())
+        self.assertTrue(parse('(1,\n2)').body[0].value.f.is_tuple_parenthesized())
+        self.assertTrue(parse('(1,2\n)').body[0].value.f.is_tuple_parenthesized())
+        self.assertTrue(parse('(1\n,)').body[0].value.f.is_tuple_parenthesized())
+        self.assertTrue(parse('(1,\n)').body[0].value.f.is_tuple_parenthesized())
+        self.assertTrue(parse('(\n(1),)').body[0].value.f.is_tuple_parenthesized())
+        self.assertTrue(parse('((\n1),)').body[0].value.f.is_tuple_parenthesized())
+        self.assertTrue(parse('((1\n),)').body[0].value.f.is_tuple_parenthesized())
+        self.assertTrue(parse('((1)\n,)').body[0].value.f.is_tuple_parenthesized())
+        self.assertTrue(parse('((1),\n)').body[0].value.f.is_tuple_parenthesized())
+        self.assertTrue(parse('(\n(1,))').body[0].value.f.is_tuple_parenthesized())
+        self.assertTrue(parse('((\n1,))').body[0].value.f.is_tuple_parenthesized())
+        self.assertTrue(parse('((1\n,))').body[0].value.f.is_tuple_parenthesized())
+        self.assertTrue(parse('((1,\n))').body[0].value.f.is_tuple_parenthesized())
+        self.assertTrue(parse('((1,)\n)').body[0].value.f.is_tuple_parenthesized())
+        self.assertTrue(parse('(\n(1,),)').body[0].value.f.is_tuple_parenthesized())
+        self.assertTrue(parse('((\n1,),)').body[0].value.f.is_tuple_parenthesized())
+        self.assertTrue(parse('((1\n,),)').body[0].value.f.is_tuple_parenthesized())
+        self.assertTrue(parse('((1,\n),)').body[0].value.f.is_tuple_parenthesized())
+        self.assertTrue(parse('((1,)\n,)').body[0].value.f.is_tuple_parenthesized())
+        self.assertTrue(parse('((1,),\n)').body[0].value.f.is_tuple_parenthesized())
+
+        self.assertTrue(parse('((a), b)').body[0].value.f.is_tuple_parenthesized())
+        self.assertTrue(parse('(a, (b))').body[0].value.f.is_tuple_parenthesized())
+        self.assertTrue(parse('((a), (b))').body[0].value.f.is_tuple_parenthesized())
+
+        self.assertFalse(parse('(1,),').body[0].value.f.is_tuple_parenthesized())
+        self.assertFalse(parse('(1),').body[0].value.f.is_tuple_parenthesized())
+        self.assertFalse(parse('((1)),').body[0].value.f.is_tuple_parenthesized())
+        self.assertFalse(parse('((1,),),').body[0].value.f.is_tuple_parenthesized())
+
+        self.assertFalse(parse('(a), b').body[0].value.f.is_tuple_parenthesized())
+        self.assertFalse(parse('((a)), b').body[0].value.f.is_tuple_parenthesized())
+        self.assertFalse(parse('a, (b)').body[0].value.f.is_tuple_parenthesized())
+        self.assertFalse(parse('a, ((b))').body[0].value.f.is_tuple_parenthesized())
+        self.assertFalse(parse('(a), (b)').body[0].value.f.is_tuple_parenthesized())
+        self.assertFalse(parse('((a)), ((b))').body[0].value.f.is_tuple_parenthesized())
+
     def test_get_indent(self):
         ast = parse('i = 1; j = 2')
 
@@ -5692,6 +5742,7 @@ Module .. ROOT 0,0 -> 0,10
                 print(dst)
 
                 raise
+
 
 def regen_get_slice_cut_data():
     newlines = []
