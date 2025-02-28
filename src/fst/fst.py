@@ -1246,7 +1246,7 @@ class FST:
             self.put_lines([bistr('()')], ln, col, end_ln, end_col, True)  # WARNING! `True` may not be safe if another preceding non-containing node ends EXACTLY where the unparenthesized tuple starts, but haven't found a case where this can happen
 
             if end_col == col and end_ln == ln:  # this is tricky because zero length tuple can be at the start of a parent so now we have to correct offset that was applied to all parents start positions
-                _reset_parents_start_pos(self, ast.end_lineno, ast.end_col_offset - 2)
+                _reset_parents_start_pos(self.parent, ast.lineno, ast.col_offset)  # self will not have the start point moved because of `put_lines(..., True)`
 
     def _maybe_fix_set(self):
         # assert isinstance(self.a, Set)
@@ -1916,8 +1916,9 @@ class FST:
         # ROOT
 
         self.root   = self
-        lines       = root_params.get('lines') or [bistr('')]
-        self._lines = lines if lines[0].__class__ is bistr else [bistr(s) for s in lines]
+        self._lines = ((lines if lines[0].__class__ is bistr else [bistr(s) for s in lines])
+                       if (lines := root_params.get('lines')) else
+                       [bistr('')])
 
         if from_ := root_params.get('from_'):  # copy params from source tree
             from_root         = from_.root
@@ -2302,7 +2303,7 @@ class FST:
 
 # ------------------------------------------------------------------------------------------------------------------
 
-    def next(self, with_loc: bool = True) -> Optional['FST']:  # TODO: refactor
+    def next(self, with_loc: bool = True) -> Optional['FST']:  # TODO: refactor maybe
         """Get next sibling in syntactic order.
 
         **Parameters:**
@@ -2589,7 +2590,7 @@ class FST:
 
         return None
 
-    def prev(self, with_loc: bool = True) -> Optional['FST']:  # TODO: refactor
+    def prev(self, with_loc: bool = True) -> Optional['FST']:  # TODO: refactor maybe
         """Get previous sibling in syntactic order.
 
         **Parameters:**
@@ -3211,7 +3212,7 @@ class FST:
         # dagnabit! have to count parens
 
         self_end_col -= 1  # because for sure there is a comma between end of first element and end of tuple
-        nparens        = 0
+        nparens       = 0
 
         while code := _next_src(lines, self_ln, self_col, self_end_ln, self_end_col):
             self_ln, self_col, src = code
@@ -3418,6 +3419,104 @@ class FST:
                 gen.send(False)  # skip everything inside regardless, because it is evil
 
         return lns
+
+    def pars(self, max_nparens: int = -1) -> 'FST':
+        if not max_nparens or self.is_root or not isinstance(self.a, expr):
+            return self
+
+        parent  = self.parent
+        par_loc = parent.loc
+
+        if prev := self.prev(True):
+            bound_ln  = prev.end_ln
+            bound_col = prev.end_col
+
+        else:
+            bound_ln  = par_loc.ln
+            bound_col = par_loc.col
+
+        if next := self.next(True):
+            bound_end_ln  = next.ln
+            bound_end_col = next.col
+
+        else:
+            bound_end_ln  = par_loc.end_ln
+            bound_end_col = par_loc.end_col
+
+        self_ln, self_col, self_end_ln, self_end_col = self.loc
+        ante_ln, ante_col, ante_end_ln, ante_end_col = self.loc
+
+        lines   = self.root._lines
+        lparens = 0
+        rparens = 0
+
+        while code := _prev_src(lines, bound_ln, bound_col, self_ln, self_col):
+            ln, col, src  = code
+            col          += len(src)
+
+            for c in src[::-1]:
+                col -= 1
+
+                if c != '(':
+                    break
+
+                else:
+                    ante_ln  = self_ln
+                    ante_col = self_col
+                    self_ln  = ln
+                    self_col = col
+
+                    if (lparens := lparens + 1) == max_nparens:
+                        break
+
+            else:
+                continue
+
+            break
+
+        while code := _next_src(lines, self_end_ln, self_end_col, bound_end_ln, bound_end_col):
+            ln, col, src = code
+
+            for c in src:
+                col += 1
+
+                if c != ')':
+                    break
+
+                else:
+                    ante_end_ln  = self_end_ln
+                    ante_end_col = self_end_col
+                    self_end_ln  = ln
+                    self_end_col = col
+
+                    if (rparens := rparens + 1) == max_nparens:
+                        break
+
+            else:
+                continue
+
+            break
+
+        if not lparens or not rparens:
+            return self
+
+        if lparens == rparens - 1:  # unbalanced due to enclosing tuple, will always be unbalanced if at ends of parenthesized tuple (even if solo element) due to commas
+            self_end_ln  = ante_end_ln
+            self_end_col = ante_end_col
+
+        elif rparens == lparens - 1:
+            self_ln  = ante_ln
+            self_col = ante_col
+
+        elif lparens != rparens:
+            raise RuntimeError('should not get here')
+
+        ast      = self.a
+        fst      = FST(ast, parent, self.pfield)
+        ast.f    = self
+        fst._loc = fstloc(self_ln, self_col, self_end_ln, self_end_col)
+
+        return fst
 
     # ------------------------------------------------------------------------------------------------------------------
 
