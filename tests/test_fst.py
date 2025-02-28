@@ -1696,6 +1696,143 @@ Call .. ROOT 0,0 -> 0,5
     Name 'set' Load .. 0,0 -> 0,3
 """),
 
+(r"""
+1, 2, 3,
+""", 'body[0].value', 0, 1, r"""
+2, 3,
+""", r"""
+(1,)
+""", r"""
+Module .. ROOT 0,0 -> 0,5
+  .body[1]
+  0] Expr .. 0,0 -> 0,5
+    .value
+      Tuple .. 0,0 -> 0,5
+        .elts[2]
+        0] Constant 2 .. 0,0 -> 0,1
+        1] Constant 3 .. 0,3 -> 0,4
+        .ctx Load
+""", r"""
+Tuple .. ROOT 0,0 -> 0,4
+  .elts[1]
+  0] Constant 1 .. 0,1 -> 0,2
+  .ctx Load
+"""),
+
+(r"""
+1, 2, 3,
+""", 'body[0].value', 1, 2, r"""
+1, 3,
+""", r"""
+(2,)
+""", r"""
+Module .. ROOT 0,0 -> 0,5
+  .body[1]
+  0] Expr .. 0,0 -> 0,5
+    .value
+      Tuple .. 0,0 -> 0,5
+        .elts[2]
+        0] Constant 1 .. 0,0 -> 0,1
+        1] Constant 3 .. 0,3 -> 0,4
+        .ctx Load
+""", r"""
+Tuple .. ROOT 0,0 -> 0,4
+  .elts[1]
+  0] Constant 2 .. 0,1 -> 0,2
+  .ctx Load
+"""),
+
+(r"""
+1, 2, 3,
+""", 'body[0].value', 2, 3, r"""
+1, 2,
+""", r"""
+(3,)
+""", r"""
+Module .. ROOT 0,0 -> 0,5
+  .body[1]
+  0] Expr .. 0,0 -> 0,5
+    .value
+      Tuple .. 0,0 -> 0,5
+        .elts[2]
+        0] Constant 1 .. 0,0 -> 0,1
+        1] Constant 2 .. 0,3 -> 0,4
+        .ctx Load
+""", r"""
+Tuple .. ROOT 0,0 -> 0,4
+  .elts[1]
+  0] Constant 3 .. 0,1 -> 0,2
+  .ctx Load
+"""),
+
+(r"""
+1, 2, 3,
+""", 'body[0].value', 0, 2, r"""
+3,
+""", r"""
+(1, 2)
+""", r"""
+Module .. ROOT 0,0 -> 0,2
+  .body[1]
+  0] Expr .. 0,0 -> 0,2
+    .value
+      Tuple .. 0,0 -> 0,2
+        .elts[1]
+        0] Constant 3 .. 0,0 -> 0,1
+        .ctx Load
+""", r"""
+Tuple .. ROOT 0,0 -> 0,6
+  .elts[2]
+  0] Constant 1 .. 0,1 -> 0,2
+  1] Constant 2 .. 0,4 -> 0,5
+  .ctx Load
+"""),
+
+(r"""
+1, 2, 3,
+""", 'body[0].value', 1, 3, r"""
+1,
+""", r"""
+(2, 3)
+""", r"""
+Module .. ROOT 0,0 -> 0,2
+  .body[1]
+  0] Expr .. 0,0 -> 0,2
+    .value
+      Tuple .. 0,0 -> 0,2
+        .elts[1]
+        0] Constant 1 .. 0,0 -> 0,1
+        .ctx Load
+""", r"""
+Tuple .. ROOT 0,0 -> 0,6
+  .elts[2]
+  0] Constant 2 .. 0,1 -> 0,2
+  1] Constant 3 .. 0,4 -> 0,5
+  .ctx Load
+"""),
+
+(r"""
+1, 2, 3,
+""", 'body[0].value', 0, 3, r"""
+()
+""", r"""
+(1, 2, 3,)
+""", r"""
+Module .. ROOT 0,0 -> 0,2
+  .body[1]
+  0] Expr .. 0,0 -> 0,2
+    .value
+      Tuple .. 0,0 -> 0,2
+        .ctx Load
+""", r"""
+Tuple .. ROOT 0,0 -> 0,10
+  .elts[3]
+  0] Constant 1 .. 0,1 -> 0,2
+  1] Constant 2 .. 0,4 -> 0,5
+  2] Constant 3 .. 0,7 -> 0,8
+  .ctx Load
+"""),
+
 ]  # END OF GET_SLICE_CUT_DATA
 
 PUT_SLICE_DATA = [
@@ -4499,6 +4636,196 @@ Module .. ROOT 0,0 -> 0,6
         1] Constant 2 .. 0,4 -> 0,5
 """),
 
+(r"""
+1, 2, 3,
+""", 'body[0].value', 0, 0, r"""
+a,
+""", r"""
+a, 1, 2, 3,
+""", r"""
+Module .. ROOT 0,0 -> 0,11
+  .body[1]
+  0] Expr .. 0,0 -> 0,11
+    .value
+      Tuple .. 0,0 -> 0,11
+        .elts[4]
+        0] Name 'a' Load .. 0,0 -> 0,1
+        1] Constant 1 .. 0,3 -> 0,4
+        2] Constant 2 .. 0,6 -> 0,7
+        3] Constant 3 .. 0,9 -> 0,10
+        .ctx Load
+"""),
+
+(r"""
+1, 2, 3,
+""", 'body[0].value', 1, 1, r"""
+a,
+""", r"""
+1, a, 2, 3,
+""", r"""
+Module .. ROOT 0,0 -> 0,11
+  .body[1]
+  0] Expr .. 0,0 -> 0,11
+    .value
+      Tuple .. 0,0 -> 0,11
+        .elts[4]
+        0] Constant 1 .. 0,0 -> 0,1
+        1] Name 'a' Load .. 0,3 -> 0,4
+        2] Constant 2 .. 0,6 -> 0,7
+        3] Constant 3 .. 0,9 -> 0,10
+        .ctx Load
+"""),
+
+(r"""
+1, 2, 3,
+""", 'body[0].value', 2, 2, r"""
+a,
+""", r"""
+1, 2, a, 3,
+""", r"""
+Module .. ROOT 0,0 -> 0,11
+  .body[1]
+  0] Expr .. 0,0 -> 0,11
+    .value
+      Tuple .. 0,0 -> 0,11
+        .elts[4]
+        0] Constant 1 .. 0,0 -> 0,1
+        1] Constant 2 .. 0,3 -> 0,4
+        2] Name 'a' Load .. 0,6 -> 0,7
+        3] Constant 3 .. 0,9 -> 0,10
+        .ctx Load
+"""),
+
+(r"""
+1, 2, 3,
+""", 'body[0].value', 3, 3, r"""
+a,
+""", r"""
+1, 2, 3, a,
+""", r"""
+Module .. ROOT 0,0 -> 0,11
+  .body[1]
+  0] Expr .. 0,0 -> 0,11
+    .value
+      Tuple .. 0,0 -> 0,11
+        .elts[4]
+        0] Constant 1 .. 0,0 -> 0,1
+        1] Constant 2 .. 0,3 -> 0,4
+        2] Constant 3 .. 0,6 -> 0,7
+        3] Name 'a' Load .. 0,9 -> 0,10
+        .ctx Load
+"""),
+
+(r"""
+1, 2, 3,
+""", 'body[0].value', 0, 1, r"""
+a,
+""", r"""
+a, 2, 3,
+""", r"""
+Module .. ROOT 0,0 -> 0,8
+  .body[1]
+  0] Expr .. 0,0 -> 0,8
+    .value
+      Tuple .. 0,0 -> 0,8
+        .elts[3]
+        0] Name 'a' Load .. 0,0 -> 0,1
+        1] Constant 2 .. 0,3 -> 0,4
+        2] Constant 3 .. 0,6 -> 0,7
+        .ctx Load
+"""),
+
+(r"""
+1, 2, 3,
+""", 'body[0].value', 1, 2, r"""
+a,
+""", r"""
+1, a, 3,
+""", r"""
+Module .. ROOT 0,0 -> 0,8
+  .body[1]
+  0] Expr .. 0,0 -> 0,8
+    .value
+      Tuple .. 0,0 -> 0,8
+        .elts[3]
+        0] Constant 1 .. 0,0 -> 0,1
+        1] Name 'a' Load .. 0,3 -> 0,4
+        2] Constant 3 .. 0,6 -> 0,7
+        .ctx Load
+"""),
+
+(r"""
+1, 2, 3,
+""", 'body[0].value', 2, 3, r"""
+a,
+""", r"""
+1, 2, a,
+""", r"""
+Module .. ROOT 0,0 -> 0,8
+  .body[1]
+  0] Expr .. 0,0 -> 0,8
+    .value
+      Tuple .. 0,0 -> 0,8
+        .elts[3]
+        0] Constant 1 .. 0,0 -> 0,1
+        1] Constant 2 .. 0,3 -> 0,4
+        2] Name 'a' Load .. 0,6 -> 0,7
+        .ctx Load
+"""),
+
+(r"""
+1, 2, 3,
+""", 'body[0].value', 0, 2, r"""
+a,
+""", r"""
+a, 3,
+""", r"""
+Module .. ROOT 0,0 -> 0,5
+  .body[1]
+  0] Expr .. 0,0 -> 0,5
+    .value
+      Tuple .. 0,0 -> 0,5
+        .elts[2]
+        0] Name 'a' Load .. 0,0 -> 0,1
+        1] Constant 3 .. 0,3 -> 0,4
+        .ctx Load
+"""),
+
+(r"""
+1, 2, 3,
+""", 'body[0].value', 1, 3, r"""
+a,
+""", r"""
+1, a,
+""", r"""
+Module .. ROOT 0,0 -> 0,5
+  .body[1]
+  0] Expr .. 0,0 -> 0,5
+    .value
+      Tuple .. 0,0 -> 0,5
+        .elts[2]
+        0] Constant 1 .. 0,0 -> 0,1
+        1] Name 'a' Load .. 0,3 -> 0,4
+        .ctx Load
+"""),
+
+(r"""
+1, 2, 3,
+""", 'body[0].value', 0, 3, r"""
+a,
+""", r"""
+a,
+""", r"""
+Module .. ROOT 0,0 -> 0,2
+  .body[1]
+  0] Expr .. 0,0 -> 0,2
+    .value
+      Tuple .. 0,0 -> 0,2
+        .elts[1]
+        0] Name 'a' Load .. 0,0 -> 0,1
+        .ctx Load
+"""),
+
 ]  # END OF PUT_SLICE_DATA
 
 PUT_SLICE_DEL_DATA = [
@@ -4518,6 +4845,165 @@ Module .. ROOT 0,0 -> 2,1
       List .. 0,0 -> 2,1
         .elts[1]
         0] Constant 3 .. 1,4 -> 1,5
+        .ctx Load
+"""),
+
+("""
+1, 2, 3,
+""", 'body[0].value', 0, 0, """
+1, 2, 3,
+""", """
+Module .. ROOT 0,0 -> 0,8
+  .body[1]
+  0] Expr .. 0,0 -> 0,8
+    .value
+      Tuple .. 0,0 -> 0,8
+        .elts[3]
+        0] Constant 1 .. 0,0 -> 0,1
+        1] Constant 2 .. 0,3 -> 0,4
+        2] Constant 3 .. 0,6 -> 0,7
+        .ctx Load
+"""),
+
+("""
+1, 2, 3,
+""", 'body[0].value', 1, 1, """
+1, 2, 3,
+""", """
+Module .. ROOT 0,0 -> 0,8
+  .body[1]
+  0] Expr .. 0,0 -> 0,8
+    .value
+      Tuple .. 0,0 -> 0,8
+        .elts[3]
+        0] Constant 1 .. 0,0 -> 0,1
+        1] Constant 2 .. 0,3 -> 0,4
+        2] Constant 3 .. 0,6 -> 0,7
+        .ctx Load
+"""),
+
+("""
+1, 2, 3,
+""", 'body[0].value', 2, 2, """
+1, 2, 3,
+""", """
+Module .. ROOT 0,0 -> 0,8
+  .body[1]
+  0] Expr .. 0,0 -> 0,8
+    .value
+      Tuple .. 0,0 -> 0,8
+        .elts[3]
+        0] Constant 1 .. 0,0 -> 0,1
+        1] Constant 2 .. 0,3 -> 0,4
+        2] Constant 3 .. 0,6 -> 0,7
+        .ctx Load
+"""),
+
+("""
+1, 2, 3,
+""", 'body[0].value', 3, 3, """
+1, 2, 3,
+""", """
+Module .. ROOT 0,0 -> 0,8
+  .body[1]
+  0] Expr .. 0,0 -> 0,8
+    .value
+      Tuple .. 0,0 -> 0,8
+        .elts[3]
+        0] Constant 1 .. 0,0 -> 0,1
+        1] Constant 2 .. 0,3 -> 0,4
+        2] Constant 3 .. 0,6 -> 0,7
+        .ctx Load
+"""),
+
+("""
+1, 2, 3,
+""", 'body[0].value', 0, 1, """
+2, 3,
+""", """
+Module .. ROOT 0,0 -> 0,5
+  .body[1]
+  0] Expr .. 0,0 -> 0,5
+    .value
+      Tuple .. 0,0 -> 0,5
+        .elts[2]
+        0] Constant 2 .. 0,0 -> 0,1
+        1] Constant 3 .. 0,3 -> 0,4
+        .ctx Load
+"""),
+
+("""
+1, 2, 3,
+""", 'body[0].value', 1, 2, """
+1, 3,
+""", """
+Module .. ROOT 0,0 -> 0,5
+  .body[1]
+  0] Expr .. 0,0 -> 0,5
+    .value
+      Tuple .. 0,0 -> 0,5
+        .elts[2]
+        0] Constant 1 .. 0,0 -> 0,1
+        1] Constant 3 .. 0,3 -> 0,4
+        .ctx Load
+"""),
+
+("""
+1, 2, 3,
+""", 'body[0].value', 2, 3, """
+1, 2,
+""", """
+Module .. ROOT 0,0 -> 0,5
+  .body[1]
+  0] Expr .. 0,0 -> 0,5
+    .value
+      Tuple .. 0,0 -> 0,5
+        .elts[2]
+        0] Constant 1 .. 0,0 -> 0,1
+        1] Constant 2 .. 0,3 -> 0,4
+        .ctx Load
+"""),
+
+("""
+1, 2, 3,
+""", 'body[0].value', 0, 2, """
+3,
+""", """
+Module .. ROOT 0,0 -> 0,2
+  .body[1]
+  0] Expr .. 0,0 -> 0,2
+    .value
+      Tuple .. 0,0 -> 0,2
+        .elts[1]
+        0] Constant 3 .. 0,0 -> 0,1
+        .ctx Load
+"""),
+
+("""
+1, 2, 3,
+""", 'body[0].value', 1, 3, """
+1,
+""", """
+Module .. ROOT 0,0 -> 0,2
+  .body[1]
+  0] Expr .. 0,0 -> 0,2
+    .value
+      Tuple .. 0,0 -> 0,2
+        .elts[1]
+        0] Constant 1 .. 0,0 -> 0,1
+        .ctx Load
+"""),
+
+("""
+1, 2, 3,
+""", 'body[0].value', 0, 3, """
+()
+""", """
+Module .. ROOT 0,0 -> 0,2
+  .body[1]
+  0] Expr .. 0,0 -> 0,2
+    .value
+      Tuple .. 0,0 -> 0,2
         .ctx Load
 """),
 
@@ -6027,6 +6513,79 @@ Module .. ROOT 0,0 -> 0,10
                 print(dst)
 
                 raise
+
+    def test_unparenthesized_tuple_with_line_continuations(self):
+        # backslashes are annoying to include in the regenerable test cases
+
+        a = parse('1, \\\n2, \\\n3')
+        s = a.body[0].value.f.get_slice(0, 1, cut=True)
+        self.assertEqual(a.f.src, '(2, \\\n3)')
+        self.assertEqual(s.src, '(1, \\\n)')
+
+        a = parse('1, \\\n2, \\\n3')
+        s = a.body[0].value.f.get_slice(1, 2, cut=True)
+        self.assertEqual(a.f.src, '(1, \\\n3)')
+        self.assertEqual(s.src, '(\n2, \\\n)')
+
+        a = parse('1, \\\n2, \\\n3')
+        s = a.body[0].value.f.get_slice(2, 3, cut=True)
+        self.assertEqual(a.f.src, '(1, \\\n2, \\\n)')
+        self.assertEqual(s.src, '(\n3,)')
+
+        a = parse('1, \\\n2, \\\n3')
+        s = a.body[0].value.f.get_slice(0, 2, cut=True)
+        self.assertEqual(a.f.src, '3,')
+        self.assertEqual(s.src, '(1, \\\n2, \\\n)')
+
+        a = parse('1, \\\n2, \\\n3')
+        s = a.body[0].value.f.get_slice(1, 3, cut=True)
+        self.assertEqual(a.f.src, '(1, \\\n)')
+        self.assertEqual(s.src, '(\n2, \\\n3)')
+
+        a = parse('1, \\\n2, \\\n3')
+        s = a.body[0].value.f.get_slice(0, 3, cut=True)
+        self.assertEqual(a.f.src, '()')
+        self.assertEqual(s.src, '(1, \\\n2, \\\n3)')
+
+        a = parse('1, \\\n2, \\\n3')
+        a.body[0].value.f.put_slice('(a, \\\n)', 0, 0)
+        self.assertEqual(a.f.src, '(a, \\\n1, \\\n2, \\\n3)')
+
+        a = parse('1, \\\n2, \\\n3')
+        a.body[0].value.f.put_slice('(a, \\\n)', 1, 1)
+        self.assertEqual(a.f.src, '(1, \\\na, \\\n2, \\\n3)')
+
+        a = parse('1, \\\n2, \\\n3')
+        a.body[0].value.f.put_slice('(a, \\\n)', 2, 2)
+        self.assertEqual(a.f.src, '(1, \\\n2, \\\na, \\\n3)')
+
+        a = parse('1, \\\n2, \\\n3')
+        a.body[0].value.f.put_slice('(a, \\\n)', 3, 3)
+        self.assertEqual(a.f.src, '(1, \\\n2, \\\n3, a, \\\n)')
+
+        a = parse('1, \\\n2, \\\n3')
+        a.body[0].value.f.put_slice('(a, \\\n)', 0, 1)
+        self.assertEqual(a.f.src, '(a, \\\n2, \\\n3)')
+
+        a = parse('1, \\\n2, \\\n3')
+        a.body[0].value.f.put_slice('(a, \\\n)', 1, 2)
+        self.assertEqual(a.f.src, '(1, \\\na, \\\n3)')
+
+        a = parse('1, \\\n2, \\\n3')
+        a.body[0].value.f.put_slice('(a, \\\n)', 2, 3)
+        self.assertEqual(a.f.src, '(1, \\\n2, \\\na, \\\n)')
+
+        a = parse('1, \\\n2, \\\n3')
+        a.body[0].value.f.put_slice('(a, \\\n)', 0, 2)
+        self.assertEqual(a.f.src, '(a, \\\n3)')
+
+        a = parse('1, \\\n2, \\\n3')
+        a.body[0].value.f.put_slice('(a, \\\n)', 1, 3)
+        self.assertEqual(a.f.src, '(1, \\\na, \\\n)')
+
+        a = parse('1, \\\n2, \\\n3')
+        a.body[0].value.f.put_slice('(a, \\\n)', 0, 3)
+        self.assertEqual(a.f.src, '(a, \\\n)')
 
 
 def regen_get_slice_cut_data():

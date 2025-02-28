@@ -1234,7 +1234,7 @@ class FST:
 
             ln, col, end_ln, end_col = self.loc
 
-            if not is_parenthesized and end_ln != ln:  # and not self.is_enclosed:  <-- TODO: this, also maybe check for line continuations
+            if not is_parenthesized and end_ln != ln:  # and not self.is_enclosed:  <-- TODO: this, also maybe double check for line continuations?
                 self.put_lines([bistr(')')], end_ln, end_col, end_ln, end_col, True, self)
                 self.put_lines([bistr('(')], ln, col, ln, col, False)
 
