@@ -244,7 +244,7 @@ def _prev_src(lines: list[str], ln: int, col: int, end_ln: int, end_col: int,
         ret = None
 
         while m := re_pat.match(l, c, ec):
-            if l[(c := (ret := m).end(1)) : c + 1] in '#\\':
+            if l.startswith('#\\', c := (ret := m).end(1)):
                 break
 
         return ret
@@ -1319,7 +1319,7 @@ class FST:
                     need_paren = False
 
                 elif (not (elts := ast.elts) or any(isinstance(e, NamedExpr) for e in elts) or (len(elts) == 1 and (
-                      not (code := _next_src_lline(lines, (f0 := elts[0].f).end_ln, f0.end_col, end_ln, end_col)) or  # if comma not on logical line then definitely need to add parens, if no comma then the parens are incidental but we want that code path for adding the comma
+                      not (code := _next_src_lline(lines, (f0 := elts[0].f).end_ln, f0.end_col, end_ln, end_col)) or  # if comma not on logical line then definitely need to add parens, if no comma then the parens are incidental but we want that code path for adding the singleton comma
                       not code.src.startswith(',')))):
                     need_paren = True
 
@@ -2304,7 +2304,7 @@ class FST:
 # ------------------------------------------------------------------------------------------------------------------
 
     def next(self, with_loc: bool = True) -> Optional['FST']:  # TODO: refactor maybe
-        """Get next sibling in syntactic order.
+        """Get next sibling in syntactic order, only within parent.
 
         **Parameters:**
         - `with_loc`: If `True` then only nodes with locations returned, otherwise all nodes.
@@ -2537,7 +2537,7 @@ class FST:
                             except IndexError:
                                 return None
 
-                    if not with_loc or _with_loc(a):  # a.f.loc:
+                    if not with_loc or _with_loc(a):
                         return a.f
 
             elif idx is not None:
@@ -2551,7 +2551,7 @@ class FST:
                     except IndexError:
                         break
 
-                    if not with_loc or _with_loc(a):  # a.f.loc:
+                    if not with_loc or _with_loc(a):
                         return a.f
 
             while next is not None:
@@ -2559,7 +2559,7 @@ class FST:
                     name = next
 
                     if isinstance(sibling := getattr(aparent, next, None), AST):  # None because we know about fields from future python versions
-                        if not with_loc or _with_loc(sibling):  # sibling.f.loc:
+                        if not with_loc or _with_loc(sibling):
                             return sibling.f
 
                     elif isinstance(sibling, list) and sibling:
@@ -2591,7 +2591,7 @@ class FST:
         return None
 
     def prev(self, with_loc: bool = True) -> Optional['FST']:  # TODO: refactor maybe
-        """Get previous sibling in syntactic order.
+        """Get previous sibling in syntactic order, only within parent.
 
         **Parameters:**
         - `with_loc`: If `True` then only nodes with locations returned, otherwise all nodes.
@@ -2839,7 +2839,7 @@ class FST:
                             prev = 4
                             a    = aparent.keys[idx]
 
-                    if not with_loc or _with_loc(a):  # a.f.loc:
+                    if not with_loc or _with_loc(a):
                         return a.f
 
             else:
@@ -2849,7 +2849,7 @@ class FST:
                     if not (a := sibling[(idx := idx - 1)]):
                         continue
 
-                    if not with_loc or _with_loc(a):  # a.f.loc:
+                    if not with_loc or _with_loc(a):
                         return a.f
 
             while prev is not None:
@@ -2857,7 +2857,7 @@ class FST:
                     name = prev
 
                     if isinstance(sibling := getattr(aparent, prev, None), AST):  # None because could have fields from future python versions
-                        if not with_loc or _with_loc(sibling):  # sibling.f.loc:
+                        if not with_loc or _with_loc(sibling):
                             return sibling.f
 
                     elif isinstance(sibling, list) and (idx := len(sibling)):
@@ -2891,15 +2891,14 @@ class FST:
         for name in AST_FIELDS[(a := self.a).__class__]:
             if (child := getattr(a, name, None)):
                 if isinstance(child, AST):
-                    if not with_loc or _with_loc(child):  # child.f.loc:
+                    if not with_loc or _with_loc(child):
                         return child.f
 
                 elif isinstance(child, list):
-                    # if (c := child[0]) and ((f := c.f).loc or not with_loc):
-                    if (c := child[0]) and (not with_loc or _with_loc(c)):  # c.f.loc):
+                    if (c := child[0]) and (not with_loc or _with_loc(c)):
                         return c.f
 
-                    return FST(Load(), self, astfield(name, 0)).next(with_loc)  # Load() is a hack just to have a simple AST node
+                    return FST(Pass(), self, astfield(name, 0)).next(with_loc)  # Pass() is a hack just to have a simple AST node
 
         return None
 
@@ -2914,7 +2913,7 @@ class FST:
         """
 
         if (isinstance(a := self.a, Call)) and a.args and (keywords := a.keywords) and isinstance(a.args[-1], Starred):  # super-special case Call with args and keywords and a Starred, it could be anywhere in there, including after last keyword, defer to prev() logic
-            fst          = FST(f := Load(), self, astfield('keywords', len(keywords)))
+            fst          = FST(f := Pass(), self, astfield('keywords', len(keywords)))
             f.lineno     = 0x7fffffffffffffff
             f.col_offset = 0
 
@@ -2923,14 +2922,14 @@ class FST:
         for name in reversed(AST_FIELDS[(a := self.a).__class__]):
             if (child := getattr(a, name, None)):
                 if isinstance(child, AST):
-                    if not with_loc or _with_loc(child):  # child.f.loc:
+                    if not with_loc or _with_loc(child):
                         return child.f
 
                 elif isinstance(child, list):
-                    if (c := child[-1]) and (not with_loc or _with_loc(c)):  # c.f.loc):
+                    if (c := child[-1]) and (not with_loc or _with_loc(c)):
                         return c.f
 
-                    return FST(Load(), self, astfield(name, len(child) - 1)).prev(with_loc)  # Load() is a hack just to have a simple AST node
+                    return FST(Pass(), self, astfield(name, len(child) - 1)).prev(with_loc)  # Pass() is a hack just to have a simple AST node
 
         return None
 
@@ -3069,7 +3068,7 @@ class FST:
 
             fst = ast.f
 
-            if with_loc and not _with_loc(fst.a):  # not fst.loc:
+            if with_loc and not _with_loc(fst.a):
                 continue
 
             recurse_ = recurse
