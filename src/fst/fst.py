@@ -2961,6 +2961,46 @@ class FST:
 
         return self.last_child(with_loc) if from_child is None else from_child.prev(with_loc)
 
+    def next_step(self, with_loc: bool = True) -> Optional['FST']:
+        """Get next node in syntactic order over entire tree. Will walk up parents and down children to get the next
+        node, returning `None` only when we are at the end of the whole thing.
+
+        **Parameters:**
+        - `with_loc`: If `True` then only nodes with locations returned, otherwise all nodes.
+
+        **Returns:**
+        - `None` if last valid node in tree, otherwise next node in order.
+        """
+
+        if fst := self.first_child(with_loc):
+            return fst
+
+        while not (fst := self.next(with_loc)):
+            if not (self := self.parent):
+                return None
+
+        return fst
+
+    def prev_step(self, with_loc: bool = True) -> Optional['FST']:
+        """Get prev node in syntactic order over entire tree. Will walk up parents and down children to get the next
+        node, returning `None` only when we are at the beginning of the whole thing.
+
+        **Parameters:**
+        - `with_loc`: If `True` then only nodes with locations returned, otherwise all nodes.
+
+        **Returns:**
+        - `None` if first valid node in tree, otherwise prev node in order.
+        """
+
+        if fst := self.last_child(with_loc):
+            return fst
+
+        while not (fst := self.prev(with_loc)):
+            if not (self := self.parent):
+                return None
+
+        return fst
+
     def walk(self, with_loc: bool = False, *, walk_self: bool = True, recurse: bool = True, scope: bool = False,
              back: bool = False) -> Generator['FST', bool, None]:
         """Walk self and descendants in syntactic order, `send(False)` to skip recursion into child. `send(True)` to
@@ -2977,7 +3017,7 @@ class FST:
             scopes, and the parts of them which are visible in this scope (like default argument values), but will not
             recurse into them unless `send(True)` is done for that child.
         - `back`: If `True` then walk every node in reverse syntactic order. This is not the same as a full forwards
-            walk reversed due to recursion.
+            walk reversed due to recursion (parents are still returned before children, only in reverse sibling order).
 
         **Example:**
         ```py
