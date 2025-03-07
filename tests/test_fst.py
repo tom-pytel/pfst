@@ -5149,6 +5149,58 @@ two  # fake comment start""", **b
         self.assertRaises(WalkFail, ast.f.verify, raise_=True)
         self.assertEqual(None, ast.f.verify(raise_=False))
 
+    def test_pars(self):
+        f = parse('''
+( (
+ (
+   a
+  ) )
+)
+        '''.strip()).body[0].value.f
+        p = f.pars(False)
+        self.assertIsInstance(p, fstloc)
+        self.assertEqual(p, (0, 0, 4, 1))
+        p = f.pars(None)
+        self.assertIsInstance(p, fstloc)
+        self.assertEqual(p, (0, 0, 4, 1))
+        p = f.pars(True)
+        self.assertIsInstance(p, FST)
+        self.assertEqual(p.loc, (0, 0, 4, 1))
+
+        f = parse('''
+( (
+ (
+   a
+  ) )
+,)
+        '''.strip()).body[0].value.elts[0].f
+        p = f.pars(False)
+        self.assertIsInstance(p, fstloc)
+        self.assertEqual(p, (0, 2, 3, 5))
+        p = f.pars(None)
+        self.assertIsInstance(p, fstloc)
+        self.assertEqual(p, (0, 2, 3, 5))
+        p = f.pars(True)
+        self.assertIsInstance(p, FST)
+        self.assertEqual(p.loc, (0, 2, 3, 5))
+
+        f = parse('''
+(
+
+   a
+
+,)
+        '''.strip()).body[0].value.elts[0].f
+        p = f.pars(False)
+        self.assertIsInstance(p, fstloc)
+        self.assertEqual(p, (2, 3, 2, 4))
+        p = f.pars(None)
+        self.assertIsInstance(p, FST)
+        self.assertEqual(p.loc, (2, 3, 2, 4))
+        p = f.pars(True)
+        self.assertIsInstance(p, FST)
+        self.assertEqual(p.loc, (2, 3, 2, 4))
+
     def test_walk(self):
         a = parse("""
 def f(a, b=1, *c, d=2, **e): pass
