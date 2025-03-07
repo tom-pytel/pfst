@@ -992,6 +992,12 @@ class FST:
             return None
 
     @property
+    def own_loc(self) -> bool:
+        """`True` when the node has its own `loc` otherwise `False` if no `loc` or `loc` is calculated from children."""
+
+        return hasattr(self.a, 'end_col_offset')
+
+    @property
     def loc(self) -> fstloc | None:
         """Zero based character indexed location of node (may not be entire location if node has decorators). Not all
         nodes have locations, specifically leaf nodes like operations and `expr_context`. Other nodes which normally
@@ -1013,10 +1019,13 @@ class FST:
         except AttributeError:
             if not self.parent:
                 loc = fstloc(0, 0, len(ls := self._lines) - 1, len(ls[-1]))
-            elif first := self.first_child():
-                loc = fstloc(first.bln, first.bcol, (last := self.last_child()).bend_ln, last.bend_col)
+            # elif first := self.first_child():
+            #     loc = fstloc(first.bln, first.bcol, (last := self.last_child()).bend_ln, last.bend_col)
+            # else:
+            #     loc = None
+
             else:
-                loc = None
+                loc = self._loc_from_children()
 
         else:
             col     = self.root._lines[ln].b2c(col_offset)
@@ -1235,6 +1244,46 @@ class FST:
 
         return fstloc(ln, end_col - 2, ln, end_col)
 
+    def _lbound(self) -> tuple[int, int]:
+        """Get a safe left bound to search after any ASTs for this object. This is safe to call for nodes that live
+        inside nodes without their own locations. WARNING! Not entirely safe for non-syntactically correct trees and not
+        for anything adjacent to leaf nodes without locations."""
+
+        while True:
+            if prev := self.prev(True):
+                if not prev.own_loc:  # for comprehension prev to comprehension
+                    prev = prev.last_child(True)
+
+                return prev.end_ln, prev.end_col
+
+            if parent := self.parent:
+                if parent.own_loc:  # because of arguments, withitem, match_case and comprehension
+                    return (loc := parent.loc).ln, loc.col
+
+                return 0, 0
+
+            self = parent
+
+    def _rbound(self) -> tuple[int, int]:
+        """Get a safe right bound to search before any ASTs for this object. This is safe to call for nodes that live
+        inside nodes without their own locations. WARNING! Not entirely safe for non-syntactically correct trees and not
+        for anything adjacent to leaf nodes without locations."""
+
+        while True:
+            if next := self.next(True):
+                if not next.own_loc:  # for comprehension next to comprehension
+                    next = next.first_child(True)
+
+                return next.ln, next.col
+
+            elif parent := self.parent:
+                if not parent.own_loc:  # because of arguments, withitem, match_case and comprehension
+                    return len(lines := self.root._lines) - 1, len(lines[-1])
+
+                return (loc := parent.loc).end_ln, loc.end_col
+
+            self = parent
+
     def _lpars(self) -> tuple[int, int, int, int, int]:
         """Return the `ln` and `col` of the leftmost and ante-leftmost opening parentheses and the total number of
         opening parentheses. Doesn't take into account anything like enclosing argument parentheses, just counts. The
@@ -1246,19 +1295,36 @@ class FST:
             parentheses encountered.
         """
 
-        if prev := self.prev(True):
-            bound_ln  = prev.end_ln
-            bound_col = prev.end_col
+        # self_ln, self_col, _, _ = self.loc
+        # lines                   = self.root._lines
 
-        elif parent := self.parent:
-            par_loc   = parent.loc
-            bound_ln  = par_loc.ln
-            bound_col = par_loc.col
+        # while True:
+        #     if prev := self.prev(True):
+        #         if not prev.own_loc:  # for comprehension prev to comprehension
+        #             prev = prev.last_child(True)
 
-        else:
-            bound_col = bound_ln = 0
+        #         bound_ln  = prev.end_ln
+        #         bound_col = prev.end_col
+
+        #     elif parent := self.parent:
+        #         if not parent.own_loc:  # because of arguments, withitem, match_case and comprehension
+        #             self = parent
+
+        #             continue
+
+        #         par_loc   = parent.loc
+        #         bound_ln  = par_loc.ln
+        #         bound_col = par_loc.col
+
+        #     else:
+        #         bound_col = bound_ln = 0
+
+        #     break
+
+        # return _prev_pars(lines, bound_ln, bound_col, self_ln, self_col)
 
         self_ln, self_col, _, _ = self.loc
+        bound_ln, bound_col     = self._lbound()
 
         return _prev_pars(self.root._lines, bound_ln, bound_col, self_ln, self_col)
 
@@ -1273,24 +1339,118 @@ class FST:
             count of closing parentheses encountered.
         """
 
-        lines = self.root._lines
+        # _, _, self_end_ln, self_end_col = self.loc
+        # lines                           = self.root._lines
 
-        if next := self.next(True):
-            bound_end_ln  = next.ln
-            bound_end_col = next.col
+        # while True:
+        #     if next := self.next(True):
+        #         if not next.own_loc:  # for comprehension next to comprehension
+        #             next = next.first_child(True)
 
-        elif parent := self.parent:
-            par_loc       = parent.loc
-            bound_end_ln  = par_loc.end_ln
-            bound_end_col = par_loc.end_col
+        #         bound_end_ln  = next.ln
+        #         bound_end_col = next.col
 
-        else:
-            bound_end_ln  = len(lines) - 1
-            bound_end_col = len(lines[-1])
+        #     elif parent := self.parent:
+        #         if not parent.own_loc:  # because of arguments, withitem, match_case and comprehension
+        #             self = parent
+
+        #             continue
+
+        #         par_loc       = parent.loc
+        #         bound_end_ln  = par_loc.end_ln
+        #         bound_end_col = par_loc.end_col
+
+        #     else:
+        #         bound_end_ln  = len(lines) - 1
+        #         bound_end_col = len(lines[-1])
+
+        #     break
+
+        # return _next_pars(lines, self_end_ln, self_end_col, bound_end_ln, bound_end_col)
 
         _, _, self_end_ln, self_end_col = self.loc
+        bound_end_ln, bound_end_col     = self._rbound()
 
-        return _next_pars(lines, self_end_ln, self_end_col, bound_end_ln, bound_end_col)
+        return _next_pars(self.root._lines, self_end_ln, self_end_col, bound_end_ln, bound_end_col)
+
+    def _loc_from_children(self) -> fstloc | None:
+        """Meant to handle figuring out `loc` for `arguments`, `withitem`, `match_case` and `comprehension`. Use on
+        other types of nodes may or may not work correctly, especially not on `Tuple`."""
+
+        if not (first := self.first_child(True)):
+            return None
+
+        ast = self.a
+
+        start_ln, start_col, ante_start_ln, ante_start_col, nlpars = first._lpars()
+
+        if not nlpars:  # not really needed, but juuust in case
+            start_ln  = first.bln
+            start_col = first.bcol
+
+        last = self.last_child(True)
+
+        if isinstance(ast, match_case):
+            end_ln  = last.bend_ln
+            end_col = last.bend_col
+
+        else:
+            end_ln, end_col, ante_end_ln, ante_end_col, nrpars = last._rpars()
+
+            if not nrpars:
+                end_ln  = last.bend_ln
+                end_col = last.bend_col
+
+            elif isinstance(ast, comprehension):
+                if ((parent := self.parent) and isinstance(parent.a, GeneratorExp) and  # correct for parenthesized GeneratorExp
+                    self.pfield.idx == len(parent.a.generators) - 1
+                ):
+                    end_ln  = ante_end_ln
+                    end_col = ante_end_col
+
+            if isinstance(ast, arguments):
+                lines = self.root._lines
+
+                if ast.posonlyargs or ast.args:
+                    leading_stars = None  # no leading stars
+                elif ast.vararg or ast.kwonlyargs:
+                    leading_stars = '*'  # leading star just before varname or bare leading star with comma following
+                elif ast.kwarg:
+                    leading_stars = '**'  # leading double star just before varname
+
+                if ((code := _next_src(lines, end_ln, end_col, len(lines) - 1, len(lines[-1])))  # trailing comma
+                    and code[-1].startswith(',')
+                ):
+                    end_ln, end_col, _  = code
+                    end_col            += 1
+
+                elif (parent := self.parent) and isinstance(parent.a, (FunctionDef, AsyncFunctionDef)):
+                    end_ln  = ante_end_ln
+                    end_col = ante_end_col
+
+                    if not leading_stars:
+                        start_ln  = ante_start_ln
+                        start_col = ante_start_col
+
+                if leading_stars:  # find star to the left
+                    bound_ln, bound_col = first._lbound()
+                    ln                  = start_ln
+                    col                 = start_col
+
+                    while code := _prev_src(lines, bound_ln, bound_col, ln, col):
+                        ln, col, src = code
+
+                        if (idx := src.rfind(leading_stars)) != -1:
+                            start_ln  = ln
+                            start_col = col + idx
+
+                            break
+
+                    else:
+                        raise RuntimeError('should not get here')
+
+        return fstloc(start_ln, start_col, end_ln, end_col)
+
 
     def _maybe_add_comma(self, ln: int, col: int, offset: bool, space: bool,
                          end_ln: int | None = None, end_col: int | None = None) -> bool:
@@ -3612,16 +3772,6 @@ class FST:
 
         elif dpars:
             raise RuntimeError('should not get here')
-
-        # if (not dpars and (parent := self.parent) and isinstance(parent, arguments) and
-        #     parent.pfield == ('args', None) and isinstance(parent.parent, (FunctionDef, AsyncFunctionDef)) and
-        #     not parent.posonlyargs and not parent.defaults and not parent.kw_defaults and
-        #     len(parent.args) + len(parent.kwonlyargs) + bool(parent.vararg) + bool(parent.kwarg) == 1
-        # ):  # balanced pars can still include the pars of `arguments` of a `FunctionDef` or `AsyncFunctionDef` if `self` is only element in `arguments`
-        #     pars_ln      = ante_ln
-        #     pars_col     = ante_col
-        #     pars_end_ln  = ante_end_ln
-        #     pars_end_col = ante_end_col
 
         loc = fstloc(pars_ln, pars_col, pars_end_ln, pars_end_col)
 
