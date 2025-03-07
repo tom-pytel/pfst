@@ -231,7 +231,7 @@ def _next_src_lline(lines: list[str], ln: int, col: int, end_ln: int, end_col: i
 
 
 def _prev_src(lines: list[str], ln: int, col: int, end_ln: int, end_col: int,
-              comment: bool = False, lcont: bool = False, state: list | None = None) -> srcwpos | None:
+              comment: bool = False, lcont: bool = False, *, state: list | None = None) -> srcwpos | None:
     """Same rules as `_next_src()` but return the LAST occurance of code or maybe comment in the span.
 
     **Parameters:**
@@ -346,152 +346,6 @@ def _prev_pars(lines: list[str], bound_ln: int, bound_col: int, pars_ln: int, pa
         return pars_ln, pars_col, ante_ln, ante_col, npars
 
 
-def _expr_src_edit_locs(lines: list[bistr], loc: fstloc, bound: fstloc, at_end: bool = False) -> tuple[fstloc, fstloc, list[str]]:
-    """Get expression copy and delete locations. There can be commas in the bound in which case the expression is
-    treated as part of a comma delimited sequence. In this case, if there is a trailing comma within bounding span then
-    it is included in the delete location. Any enclosing grouping parentheses within the bounding span are included. Any
-    closing parentheses after the start of or opening parentheses before the end of `bound` are also handled correctly.
-
-    **Parameters:**
-    - `lines`: The lines corresponding to the expression and its `bound` location.
-    - `loc`: The location of the expression, can be multiple or no expressions, just the location matters.
-    - `bound`: The bounding location not to go outside of. Must entirely contain `loc` (can be same as). Must not
-        contain any part of other `AST` nodes like other members of a sequence. Can contain any number of open and close
-        parentheses for the expression itself and closing and opening parentheses belonging to expressions from outside
-        the bound.
-    - `at_end`: Whether `loc` is at the end of a sequence, used to remove trailing whitespace from preceding comma.
-
-    **Returns:**
-    - `(copy_loc, del_loc)`: `copy_loc` is the location of source that should be used if copying the expression.
-        `del_loc` is the location which should be deleted used if removing the expression. Both are used
-        for a cut operation.
-    """
-
-    copy_ln,  copy_col,  copy_end_ln,  copy_end_col  = loc
-    bound_ln, bound_col, bound_end_ln, bound_end_col = bound
-
-    precomma_end_ln = None
-    state           = []
-
-    while True:
-        if not (code := _prev_src(lines, bound_ln, bound_col, copy_ln, copy_col, state=state)):
-            if bound_ln != copy_ln:
-                copy_col = 0
-
-            break
-
-        ln, col, src  = code
-        col          += len(src)
-
-        for c in src[::-1]:
-            if c == ',':
-                precomma_end_ln  = ln
-                precomma_end_col = col
-
-                if ln != copy_ln:
-                    copy_col = 0
-
-                break
-
-            elif c != '(':  # we don't actually count and check these because there may be other parens inside the `loc` which we can not see here
-                raise ValueError(f"expecting leading comma or open parenthesis, got '{c}'")
-
-            col      -= 1
-            copy_ln   = ln
-            copy_col  = col
-
-        if precomma_end_ln is not None:
-            break
-
-    loc_end_ln     = copy_end_ln
-    loc_end_col    = copy_end_col
-    postcomma_have = None
-
-    while True:
-        if not (code := _next_src(lines, copy_end_ln, copy_end_col, bound_end_ln, bound_end_col)):
-            if bound_end_ln != copy_end_ln:
-                copy_end_ln  = bound_end_ln
-                copy_end_col = 0
-
-            break
-
-        ln, col, src = code
-
-        for c in src:
-            if c == '(':  # may not have been excluded from bounds as is not part of expressions, if so then adjust end bound and done
-                bound_end_ln  = ln
-                bound_end_col = col
-
-                break
-
-            col += 1
-
-            if c == ',':
-                if postcomma_have:
-                    raise ValueError('multiple trailing commas found')
-
-                postcomma_have = True
-
-            elif c != ')':
-                raise ValueError(f"not expecting code, got '{src}'"
-                                 if postcomma_have else
-                                 f"expecting close parenthesis or trailing comma, got '{src}'")
-
-            else:  # c == ')'
-                if postcomma_have:
-                    raise ValueError('found close parenthesis after trailing comma')
-
-                loc_end_ln  = ln  # we update loc because end parens are definitive end of loc, and may not have been checked before calling this function
-                loc_end_col = col
-
-            copy_end_ln  = ln
-            copy_end_col = col
-
-        else:
-            continue
-
-        break  # this happens if we found an open parenthesis
-
-    # special sauce, can probably be simplified
-
-    del_end_ln = copy_end_ln
-
-    if not copy_end_col and precomma_end_ln is not None:  # ends on newline and there is something before
-        del_end_col = 0
-
-    else:
-        del_end_col = bound_end_col
-
-        if postcomma_have and copy_end_ln == loc_end_ln:  # end comma on same line as end of expr, don't copy it
-            copy_end_col = loc_end_col
-
-    del_ln  = copy_ln
-    del_col = copy_col
-
-    if not copy_col and copy_ln != bound_ln:  # starts on newline
-        copy_ln  = copy_ln - 1
-        copy_col = len(lines[copy_ln])
-
-    elif copy_ln == precomma_end_ln:  # copy start on same line as preceding comma
-        if postcomma_have:  # other items follow or explicit trailing comma at end of sequence, delete up to end (including postcomma)
-            del_end_col = bound_end_col
-
-            if at_end:  # definitively at end, delete whitespace at end of precomma
-                del_col = precomma_end_col
-
-        elif precomma_end_ln == bound_ln:  # no items following, previous item, delete up to end of item past precomma
-            del_col = bound_col
-        else:  # previous comma not on same line as previous item, preserve its unique and special formatting as a trailing comma at end of sequence
-            del_col = precomma_end_col
-
-    if not del_col and del_end_col and (col := re_empty_line_start.match(lines[del_ln]).end()):  # delete from start of line to middle of line, maybe there is indentation to leave in place
-        del_col = col
-
-    # end of special sauce
-
-    return fstloc(copy_ln, copy_col, copy_end_ln, copy_end_col), fstloc(del_ln, del_col, del_end_ln, del_end_col)
-
-
 def _fixup_field_body(ast: AST, field: str | None = None) -> tuple[str, 'AST']:
     if field is None:
         field = AST_DEFAULT_BODY_FIELD.get(ast.__class__, 'body')
@@ -522,82 +376,6 @@ def _fixup_slice_index(ast, body, field, start, stop) -> tuple[int, int]:
         raise IndexError(f"{ast.__class__.__name__}.{field} index out of range")
 
     return start, stop
-
-
-def _fixup_expr_seq_bound(lines: list[str], seq_loc: fstloc,
-                          fpre: Union['FST', fstloc, None], fpost: Union['FST', fstloc, None],
-                          flast: Union['FST', fstloc, None],
-                          ) -> tuple[fstloc, Union['FST', fstloc, None], Union['FST', fstloc, None]] | None:
-    """Depending on existence preceding or following expressions and a full sequence location, return a bound `fstloc`
-    that represents a search space in the source for commas and parenteses and the like. Will exclude any closing
-    parentheses belonging to `fpre` and any opening parenthese belonging to `fpost` from the bound."""
-
-    if not fpre:
-        if not fpost:
-            return None
-
-        start_ln  = seq_loc.ln
-        start_col = seq_loc.col
-
-    else:
-        start_ln  = fpre.end_ln
-        start_col = fpre.end_col
-
-        while code := _next_src(lines, start_ln, start_col, seq_loc.end_ln, seq_loc.end_col):  # skip over trailing closing parens of fpre
-            ln, col, src = code
-
-            for c in src:
-                col += 1
-
-                if c != ')':
-                    break
-
-                fpre = fstloc(fpre.ln, fpre.col, start_ln := ln, start_col := col)
-
-            else:
-                continue
-
-            break
-
-    if not fpost:
-        stop_ln  = seq_loc.end_ln
-        stop_col = seq_loc.end_col
-
-    else:
-        if flast:  # make sure there are no ASTs where we will be searching because their strings can screw up _prev_src()
-            from_ln  = flast.end_ln
-            from_col = flast.end_col
-
-        elif fpre:
-            from_ln  = start_ln
-            from_col = start_col
-
-        else:
-            from_ln  = seq_loc.ln
-            from_col = seq_loc.col
-
-        stop_ln  = fpost.ln
-        stop_col = fpost.col
-        state    = []
-
-        while code := _prev_src(lines, from_ln, from_col, stop_ln, stop_col, state=state):  # skip over preceding opening parens of fpost
-            ln, col, src  = code
-            col          += len(src)
-
-            for c in src[::-1]:
-                col -= 1
-
-                if c != '(':
-                    break
-
-                fpost = fstloc(stop_ln := ln, stop_col := col, fpost.end_ln, fpost.end_col)
-
-            else:
-                continue
-
-            break
-
-    return fstloc(start_ln, start_col, stop_ln, stop_col), fpre, fpost
 
 
 def _normalize_code(code: Code, expr_: bool = False, *, parse_params: dict = {}) -> 'FST':
@@ -751,6 +529,228 @@ class fstlistproxy:
 class FSTSrcEdit:
     """Source editing formatter."""
 
+    @staticmethod
+    def _fixup_expr_seq_bound(lines: list[str], seq_loc: fstloc,
+                            fpre: Union['FST', fstloc, None], fpost: Union['FST', fstloc, None],
+                            flast: Union['FST', fstloc, None],
+                            ) -> tuple[fstloc, Union['FST', fstloc, None], Union['FST', fstloc, None]] | None:
+        """Depending on existence preceding or following expressions and a full sequence location, return a bound `fstloc`
+        that represents a search space in the source for commas and parenteses and the like. Will exclude any closing
+        parentheses belonging to `fpre` and any opening parenthese belonging to `fpost` from the bound."""
+
+        if not fpre:
+            if not fpost:
+                return None
+
+            start_ln  = seq_loc.ln
+            start_col = seq_loc.col
+
+        else:
+            start_ln  = fpre.end_ln
+            start_col = fpre.end_col
+
+            while code := _next_src(lines, start_ln, start_col, seq_loc.end_ln, seq_loc.end_col):  # skip over trailing closing parens of fpre
+                ln, col, src = code
+
+                for c in src:
+                    col += 1
+
+                    if c != ')':
+                        break
+
+                    fpre = fstloc(fpre.ln, fpre.col, start_ln := ln, start_col := col)
+
+                else:
+                    continue
+
+                break
+
+        if not fpost:
+            stop_ln  = seq_loc.end_ln
+            stop_col = seq_loc.end_col
+
+        else:
+            if flast:  # make sure there are no ASTs where we will be searching because their strings can screw up _prev_src()
+                from_ln  = flast.end_ln
+                from_col = flast.end_col
+
+            elif fpre:
+                from_ln  = start_ln
+                from_col = start_col
+
+            else:
+                from_ln  = seq_loc.ln
+                from_col = seq_loc.col
+
+            stop_ln  = fpost.ln
+            stop_col = fpost.col
+            state    = []
+
+            while code := _prev_src(lines, from_ln, from_col, stop_ln, stop_col, state=state):  # skip over preceding opening parens of fpost
+                ln, col, src  = code
+                col          += len(src)
+
+                for c in src[::-1]:
+                    col -= 1
+
+                    if c != '(':
+                        break
+
+                    fpost = fstloc(stop_ln := ln, stop_col := col, fpost.end_ln, fpost.end_col)
+
+                else:
+                    continue
+
+                break
+
+        return fstloc(start_ln, start_col, stop_ln, stop_col), fpre, fpost
+
+    @staticmethod
+    def _expr_src_edit_locs(lines: list[bistr], loc: fstloc, bound: fstloc, at_end: bool = False) -> tuple[fstloc, fstloc, list[str]]:
+        """Get expression copy and delete locations. There can be commas in the bound in which case the expression is
+        treated as part of a comma delimited sequence. In this case, if there is a trailing comma within bounding span then
+        it is included in the delete location. Any enclosing grouping parentheses within the bounding span are included. Any
+        closing parentheses after the start of or opening parentheses before the end of `bound` are also handled correctly.
+
+        **Parameters:**
+        - `lines`: The lines corresponding to the expression and its `bound` location.
+        - `loc`: The location of the expression, can be multiple or no expressions, just the location matters.
+        - `bound`: The bounding location not to go outside of. Must entirely contain `loc` (can be same as). Must not
+            contain any part of other `AST` nodes like other members of a sequence. Can contain any number of open and close
+            parentheses for the expression itself and closing and opening parentheses belonging to expressions from outside
+            the bound.
+        - `at_end`: Whether `loc` is at the end of a sequence, used to remove trailing whitespace from preceding comma.
+
+        **Returns:**
+        - `(copy_loc, del_loc)`: `copy_loc` is the location of source that should be used if copying the expression.
+            `del_loc` is the location which should be deleted used if removing the expression. Both are used
+            for a cut operation.
+        """
+
+        copy_ln,  copy_col,  copy_end_ln,  copy_end_col  = loc
+        bound_ln, bound_col, bound_end_ln, bound_end_col = bound
+
+        precomma_end_ln = None
+        state           = []
+
+        while True:
+            if not (code := _prev_src(lines, bound_ln, bound_col, copy_ln, copy_col, state=state)):
+                if bound_ln != copy_ln:
+                    copy_col = 0
+
+                break
+
+            ln, col, src  = code
+            col          += len(src)
+
+            for c in src[::-1]:
+                if c == ',':
+                    precomma_end_ln  = ln
+                    precomma_end_col = col
+
+                    if ln != copy_ln:
+                        copy_col = 0
+
+                    break
+
+                elif c != '(':  # we don't actually count and check these because there may be other parens inside the `loc` which we can not see here
+                    raise ValueError(f"expecting leading comma or open parenthesis, got '{c}'")
+
+                col      -= 1
+                copy_ln   = ln
+                copy_col  = col
+
+            if precomma_end_ln is not None:
+                break
+
+        loc_end_ln     = copy_end_ln
+        loc_end_col    = copy_end_col
+        postcomma_have = None
+
+        while True:
+            if not (code := _next_src(lines, copy_end_ln, copy_end_col, bound_end_ln, bound_end_col)):
+                if bound_end_ln != copy_end_ln:
+                    copy_end_ln  = bound_end_ln
+                    copy_end_col = 0
+
+                break
+
+            ln, col, src = code
+
+            for c in src:
+                if c == '(':  # may not have been excluded from bounds as is not part of expressions, if so then adjust end bound and done
+                    bound_end_ln  = ln
+                    bound_end_col = col
+
+                    break
+
+                col += 1
+
+                if c == ',':
+                    if postcomma_have:
+                        raise ValueError('multiple trailing commas found')
+
+                    postcomma_have = True
+
+                elif c != ')':
+                    raise ValueError(f"not expecting code, got '{src}'"
+                                    if postcomma_have else
+                                    f"expecting close parenthesis or trailing comma, got '{src}'")
+
+                else:  # c == ')'
+                    if postcomma_have:
+                        raise ValueError('found close parenthesis after trailing comma')
+
+                    loc_end_ln  = ln  # we update loc because end parens are definitive end of loc, and may not have been checked before calling this function
+                    loc_end_col = col
+
+                copy_end_ln  = ln
+                copy_end_col = col
+
+            else:
+                continue
+
+            break  # this happens if we found an open parenthesis
+
+        # special sauce, can probably be simplified
+
+        del_end_ln = copy_end_ln
+
+        if not copy_end_col and precomma_end_ln is not None:  # ends on newline and there is something before
+            del_end_col = 0
+
+        else:
+            del_end_col = bound_end_col
+
+            if postcomma_have and copy_end_ln == loc_end_ln:  # end comma on same line as end of expr, don't copy it
+                copy_end_col = loc_end_col
+
+        del_ln  = copy_ln
+        del_col = copy_col
+
+        if not copy_col and copy_ln != bound_ln:  # starts on newline
+            copy_ln  = copy_ln - 1
+            copy_col = len(lines[copy_ln])
+
+        elif copy_ln == precomma_end_ln:  # copy start on same line as preceding comma
+            if postcomma_have:  # other items follow or explicit trailing comma at end of sequence, delete up to end (including postcomma)
+                del_end_col = bound_end_col
+
+                if at_end:  # definitively at end, delete whitespace at end of precomma
+                    del_col = precomma_end_col
+
+            elif precomma_end_ln == bound_ln:  # no items following, previous item, delete up to end of item past precomma
+                del_col = bound_col
+            else:  # previous comma not on same line as previous item, preserve its unique and special formatting as a trailing comma at end of sequence
+                del_col = precomma_end_col
+
+        if not del_col and del_end_col and (col := re_empty_line_start.match(lines[del_ln]).end()):  # delete from start of line to middle of line, maybe there is indentation to leave in place
+            del_col = col
+
+        # end of special sauce
+
+        return fstloc(copy_ln, copy_col, copy_end_ln, copy_end_col), fstloc(del_ln, del_col, del_end_ln, del_end_col)
+
     def get_seq(self, fst: 'FST', cut: bool, seq_loc: fstloc,
                 ffirst: Union['FST', fstloc], flast: Union['FST', fstloc],
                 fpre: Union['FST', fstloc, None], fpost: Union['FST', fstloc, None],
@@ -779,13 +779,13 @@ class FSTSrcEdit:
 
         lines = fst.root._lines
 
-        if not (bound_pre_post := _fixup_expr_seq_bound(lines, seq_loc, fpre, fpost, flast)):
+        if not (bound_pre_post := self._fixup_expr_seq_bound(lines, seq_loc, fpre, fpost, flast)):
             return seq_loc, seq_loc, None
 
         bound, _, _       = bound_pre_post
-        copy_loc, del_loc = _expr_src_edit_locs(lines,
-                                                fstloc(ffirst.ln, ffirst.col, flast.end_ln, flast.end_col),
-                                                bound)
+        copy_loc, del_loc = self._expr_src_edit_locs(lines,
+                                                     fstloc(ffirst.ln, ffirst.col, flast.end_ln, flast.end_col),
+                                                     bound)
 
         if not fpost:
             del_ln, del_col, del_end_ln, del_end_col = del_loc
@@ -840,14 +840,15 @@ class FSTSrcEdit:
 
         lines = fst.root._lines
 
-        if not (bound_pre_post := _fixup_expr_seq_bound(lines, seq_loc, fpre, fpost, flast)):  # if operating on whole sequence then just use the whole sequence location, if this doesn't return then one of `fpre` or `fpost` exists
+        if not (bound_pre_post := self._fixup_expr_seq_bound(lines, seq_loc, fpre, fpost, flast)):  # if operating on whole sequence then just use the whole sequence location, if this doesn't return then one of `fpre` or `fpost` exists
             return seq_loc
 
         bound, fpre, fpost = bound_pre_post
 
         if not put_fst or not pfirst:  # `pfirst` may be None and `put_fst` not if assigning empty sequence, regardless, pure delete (or assign empty sequence, same), fflrst/last guaranteed to exist
-            return _expr_src_edit_locs(fst.root._lines,
-                                       fstloc(ffirst.ln, ffirst.col, flast.end_ln, flast.end_col), bound, not fpost)[1]
+            return self._expr_src_edit_locs(fst.root._lines,
+                                            fstloc(ffirst.ln, ffirst.col, flast.end_ln, flast.end_col),
+                                            bound, not fpost)[1]
 
         if ffirst:  # flast also exists, replacement
             put_ln      = ffirst.ln
@@ -864,8 +865,8 @@ class FSTSrcEdit:
             put_end_col = put_col = fpre.end_col
 
         put_lines = put_fst._lines
-        del_loc   = _expr_src_edit_locs(fst.root._lines,
-                                        fstloc(put_ln, put_col, put_end_ln, put_end_col), bound)[1]
+        del_loc   = self._expr_src_edit_locs(fst.root._lines,
+                                             fstloc(put_ln, put_col, put_end_ln, put_end_col), bound)[1]
 
         if not put_lines[0]:
             if re_empty_line.match(l := lines[put_ln], 0, put_col):  # strip leading newline from `put_fst` if location being put already has one - NOTE: could also check re_empty_line.match(put_lines[0]) instead of just put_lines[0]
