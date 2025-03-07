@@ -14,6 +14,23 @@ PYFNMS = sum((
     start=[]
 )
 
+COPY_DATA = [
+(r"""
+opts.ignore_module = [mod.strip()
+                      for i in opts.ignore_module for mod in i.split(',')]
+""", 'body[0].value.generators[0].iter', r"""
+opts.ignore_module
+""", r"""
+Attribute .. ROOT 0,0 -> 0,18
+  .value
+    Name 'opts' Load .. 0,0 -> 0,4
+  .attr
+    'ignore_module'
+  .ctx Load
+"""),
+
+]  # END OF COPY_DATA
+
 GET_SLICE_CUT_DATA = [
 (r"""
 {1, 2}
@@ -6237,7 +6254,7 @@ def func():
             fc._maybe_fix_copy(inplace=True)
             self.assertEqual('(*tuple[int, ...],)', fc.src)
 
-    def test_copy(self):
+    def test_copy_special(self):
         f = FST.fromsrc('@decorator\nclass cls:\n  pass')
         self.assertEqual(f.a.body[0].f.copy(fix=False).src, '@decorator\nclass cls:\n  pass')
         self.assertEqual(f.a.body[0].f.copy(decos=False, fix=False).src, 'class cls:\n  pass')
@@ -6518,6 +6535,28 @@ Module .. ROOT 0,0 -> 0,10
     0] Pass .. 0,6 -> 0,10
             """.strip(), 'if 2: pass')
 
+    def test_copy(self):
+        for src, elt, slice_copy, slice_dump in COPY_DATA:
+            src   = src.strip()
+            t     = parse(src)
+            f     = eval(f't.{elt}', {'t': t}).f
+            s     = f.copy(fix=True)
+            ssrc  = s.src
+            sdump = s.dump(linefunc=list, compact=True)
+
+            try:
+                self.assertEqual(ssrc, slice_copy.strip())
+                self.assertEqual(sdump, slice_dump.strip().split('\n'))
+
+            except Exception:
+                print(elt)
+                print('---')
+                print(src)
+                print('...')
+                print(slice_copy)
+
+                raise
+
     def test_get_slice_cut(self):
         for src, elt, start, stop, src_cut, slice_cut, src_dump, slice_dump in GET_SLICE_CUT_DATA:
             src   = src.strip()
@@ -6669,6 +6708,38 @@ Module .. ROOT 0,0 -> 0,10
         self.assertEqual(a.f.src, '(a, \\\n)')
 
 
+def regen_copy_data():
+    newlines = []
+
+    for src, elt, *_ in COPY_DATA:
+        src   = src.strip()
+        t     = parse(src)
+        f     = eval(f't.{elt}', {'t': t}).f
+        s     = f.copy(fix=True)
+        ssrc  = s.src
+        sdump = s.dump(linefunc=list, compact=True)
+
+        assert not ssrc.startswith('\n') or ssrc.endswith('\n')
+
+        s.verify()
+
+        newlines.append('(r"""')
+        newlines.extend(f'''{src}\n""", {elt!r}, r"""\n{ssrc}\n""", r"""'''.split('\n'))
+        newlines.extend(sdump)
+        newlines.append('"""),\n')
+
+    with open(sys.argv[0]) as f:
+        lines = f.read().split('\n')
+
+    start = lines.index('COPY_DATA = [')
+    stop  = lines.index(']  # END OF COPY_DATA')
+
+    lines[start + 1 : stop] = newlines
+
+    with open(sys.argv[0], 'w') as f:
+        lines = f.write('\n'.join(lines))
+
+
 def regen_get_slice_cut_data():
     newlines = []
 
@@ -6779,13 +6850,18 @@ def regen_put_slice_del_data():
 if __name__ == '__main__':
     import argparse
 
-    parser = argparse.ArgumentParser(prog='python -m fst')
+    parser = argparse.ArgumentParser(prog='test_fst.py')
 
+    parser.add_argument('--regen-copy', default=False, action='store_true', help="regenerate copy test data")
     parser.add_argument('--regen-get-slice-cut', default=False, action='store_true', help="regenerate get slice cut test data")
     parser.add_argument('--regen-put-slice', default=False, action='store_true', help="regenerate put slice test data")
     parser.add_argument('--regen-put-slice-del', default=False, action='store_true', help="regenerate put slice del test data")
 
     args = parser.parse_args()
+
+    if args.regen_copy:
+        print('Regenerating copy test data...')
+        regen_copy_data()
 
     if args.regen_get_slice_cut:
         print('Regenerating get slice cut test data...')
@@ -6799,5 +6875,5 @@ if __name__ == '__main__':
         print('Regenerating put slice del test data...')
         regen_put_slice_del_data()
 
-    if not args.regen_get_slice_cut and not args.regen_put_slice and not args.regen_put_slice_del:
+    if not args.regen_copy and not args.regen_get_slice_cut and not args.regen_put_slice and not args.regen_put_slice_del:
         unittest.main()

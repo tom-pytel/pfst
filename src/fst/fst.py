@@ -1295,34 +1295,6 @@ class FST:
             parentheses encountered.
         """
 
-        # self_ln, self_col, _, _ = self.loc
-        # lines                   = self.root._lines
-
-        # while True:
-        #     if prev := self.prev(True):
-        #         if not prev.own_loc:  # for comprehension prev to comprehension
-        #             prev = prev.last_child(True)
-
-        #         bound_ln  = prev.end_ln
-        #         bound_col = prev.end_col
-
-        #     elif parent := self.parent:
-        #         if not parent.own_loc:  # because of arguments, withitem, match_case and comprehension
-        #             self = parent
-
-        #             continue
-
-        #         par_loc   = parent.loc
-        #         bound_ln  = par_loc.ln
-        #         bound_col = par_loc.col
-
-        #     else:
-        #         bound_col = bound_ln = 0
-
-        #     break
-
-        # return _prev_pars(lines, bound_ln, bound_col, self_ln, self_col)
-
         self_ln, self_col, _, _ = self.loc
         bound_ln, bound_col     = self._lbound()
 
@@ -1338,35 +1310,6 @@ class FST:
         - `(end_ln, end_col, ante_end_ln, ante_end_col, npars)`: The rightmost and ante-rightmost positions and total
             count of closing parentheses encountered.
         """
-
-        # _, _, self_end_ln, self_end_col = self.loc
-        # lines                           = self.root._lines
-
-        # while True:
-        #     if next := self.next(True):
-        #         if not next.own_loc:  # for comprehension next to comprehension
-        #             next = next.first_child(True)
-
-        #         bound_end_ln  = next.ln
-        #         bound_end_col = next.col
-
-        #     elif parent := self.parent:
-        #         if not parent.own_loc:  # because of arguments, withitem, match_case and comprehension
-        #             self = parent
-
-        #             continue
-
-        #         par_loc       = parent.loc
-        #         bound_end_ln  = par_loc.end_ln
-        #         bound_end_col = par_loc.end_col
-
-        #     else:
-        #         bound_end_ln  = len(lines) - 1
-        #         bound_end_col = len(lines[-1])
-
-        #     break
-
-        # return _next_pars(lines, self_end_ln, self_end_col, bound_end_ln, bound_end_col)
 
         _, _, self_end_ln, self_end_col = self.loc
         bound_end_ln, bound_end_col     = self._rbound()
@@ -1450,7 +1393,6 @@ class FST:
                         raise RuntimeError('should not get here')
 
         return fstloc(start_ln, start_col, end_ln, end_col)
-
 
     def _maybe_add_comma(self, ln: int, col: int, offset: bool, space: bool,
                          end_ln: int | None = None, end_col: int | None = None) -> bool:
