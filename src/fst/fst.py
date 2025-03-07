@@ -546,24 +546,11 @@ class FSTSrcEdit:
             start_col = seq_loc.col
 
         else:
-            start_ln  = fpre.end_ln
-            start_col = fpre.end_col
+            start_ln, start_col, _, _, npars = (
+                _next_pars(lines, fpre.end_ln, fpre.end_col, seq_loc.end_ln, seq_loc.end_col))
 
-            while code := _next_src(lines, start_ln, start_col, seq_loc.end_ln, seq_loc.end_col):  # skip over trailing closing parens of fpre
-                ln, col, src = code
-
-                for c in src:
-                    col += 1
-
-                    if c != ')':
-                        break
-
-                    fpre = fstloc(fpre.ln, fpre.col, start_ln := ln, start_col := col)
-
-                else:
-                    continue
-
-                break
+            if npars:
+                fpre = fstloc(fpre.ln, fpre.col, start_ln, start_col)
 
         if not fpost:
             stop_ln  = seq_loc.end_ln
@@ -582,26 +569,10 @@ class FSTSrcEdit:
                 from_ln  = seq_loc.ln
                 from_col = seq_loc.col
 
-            stop_ln  = fpost.ln
-            stop_col = fpost.col
-            state    = []
+            stop_ln, stop_col, _, _, npars = _prev_pars(lines, from_ln, from_col, fpost.ln, fpost.col)
 
-            while code := _prev_src(lines, from_ln, from_col, stop_ln, stop_col, state=state):  # skip over preceding opening parens of fpost
-                ln, col, src  = code
-                col          += len(src)
-
-                for c in src[::-1]:
-                    col -= 1
-
-                    if c != '(':
-                        break
-
-                    fpost = fstloc(stop_ln := ln, stop_col := col, fpost.end_ln, fpost.end_col)
-
-                else:
-                    continue
-
-                break
+            if npars:
+                fpost = fstloc(stop_ln, stop_col, fpost.end_ln, fpost.end_col)
 
         return fstloc(start_ln, start_col, stop_ln, stop_col), fpre, fpost
 
@@ -1362,7 +1333,7 @@ class FST:
                     leading_stars = '**'  # leading double star just before varname
 
                 if ((code := _next_src(lines, end_ln, end_col, len(lines) - 1, len(lines[-1])))  # trailing comma
-                    and code[-1].startswith(',')
+                    and code.src.startswith(',')
                 ):
                     end_ln, end_col, _  = code
                     end_col            += 1
@@ -1380,7 +1351,7 @@ class FST:
                     ln                  = start_ln
                     col                 = start_col
 
-                    while code := _prev_src(lines, bound_ln, bound_col, ln, col):
+                    while code := _prev_src(lines, bound_ln, bound_col, ln, col):  # maybe we need to skip over a comma
                         ln, col, src = code
 
                         if (idx := src.rfind(leading_stars)) != -1:
