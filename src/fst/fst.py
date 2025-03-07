@@ -264,6 +264,80 @@ def _prev_src(lines: list[str], ln: int, col: int, end_ln: int, end_col: int,
     return None
 
 
+def _next_pars(lines: list[str], pars_end_ln: int, pars_end_col: int, bound_end_ln: int, bound_end_col: int,
+               par: str = ')') -> tuple[int, int, int, int, int]:
+        """Count number of closing parenthesis (or any specified character) starting a `pars_end_ln`, `pars_end_col`
+        until the end of the bound. The count ends if a non `par` character is encountered and the last and also
+        ante-last ending position of a `par` is returned along with the count.
+
+        **Returns:**
+        - `(pars_end_ln, pars_end_col, ante_end_ln, ante_end_col, npars)`: The rightmost and ante-rightmost ending
+            positions and total count of closing parentheses encountered. `pars_end_*` and `ante_end_*` will be same if
+            no parentheses found.
+        """
+
+        ante_end_ln  = pars_end_ln
+        ante_end_col = pars_end_col
+        npars        = 0
+
+        while code := _next_src(lines, pars_end_ln, pars_end_col, bound_end_ln, bound_end_col):
+            ln, col, src = code
+
+            for c in src:
+                if c != par:
+                    break
+
+                ante_end_ln   = pars_end_ln
+                ante_end_col  = pars_end_col
+                pars_end_ln   = ln
+                pars_end_col  = (col := col + 1)
+                npars        += 1
+
+            else:
+                continue
+
+            break
+
+        return pars_end_ln, pars_end_col, ante_end_ln, ante_end_col, npars
+
+
+def _prev_pars(lines: list[str], bound_ln: int, bound_col: int, pars_ln: int, pars_col: int, par: str = '(',
+               ) -> tuple[int, int, int, int, int]:
+        """Count number of opening parenthesis (or any specified character) starting a `pars_ln`, `pars_col` until the
+        start of the bound. The count ends if a non `par` character is encountered and the last and also ante-last
+        starting position of a `par` is returned along with the count.
+
+        **Returns:**
+        - `(pars_ln, pars_col, ante_ln, ante_col, npars)`: The leftmost and ante-leftmost starting positions and total
+            count of opening parentheses encountered. `pars_*` and `ante_*` will be same if no parentheses found.
+        """
+
+        ante_ln  = pars_ln
+        ante_col = pars_col
+        npars    = 0
+
+        while code := _prev_src(lines, bound_ln, bound_col, pars_ln, pars_col):
+            ln, col, src  = code
+            col          += len(src)
+
+            for c in src[::-1]:
+                if c != par:
+                    break
+
+                ante_ln   = pars_ln
+                ante_col  = pars_col
+                pars_ln   = ln
+                pars_col  = (col := col - 1)
+                npars    += 1
+
+            else:
+                continue
+
+            break
+
+        return pars_ln, pars_col, ante_ln, ante_col, npars
+
+
 def _expr_src_edit_locs(lines: list[bistr], loc: fstloc, bound: fstloc, at_end: bool = False) -> tuple[fstloc, fstloc, list[str]]:
     """Get expression copy and delete locations. There can be commas in the bound in which case the expression is
     treated as part of a comma delimited sequence. In this case, if there is a trailing comma within bounding span then
@@ -910,7 +984,7 @@ class FST:
     def loc(self) -> fstloc | None:
         """Zero based character indexed location of node (may not be entire location if node has decorators). Not all
         nodes have locations, specifically leaf nodes like operations and `expr_context`. Other nodes which normally
-        don't have locations like `arguments` have this location calculated from their children."""
+        don't have locations like `arguments` have this location calculated from their children or source."""
 
         try:
             return self._loc
@@ -1149,6 +1223,63 @@ class FST:
         assert s.endswith('**')
 
         return fstloc(ln, end_col - 2, ln, end_col)
+
+    def _lpars(self) -> tuple[int, int, int, int, int]:
+        """Return the `ln` and `col` of the leftmost and ante-leftmost opening parentheses and the total number of
+        opening parentheses. Doesn't take anything into account anything like enclosing argument parentheses, just
+        counts. The leftmost bound used is the end of the previous sibling, or the start of that parent if there isn't
+        one, or (0,0) if no parent.
+
+        **Returns:**
+        - `(ln, col, ante_ln, ante_col, npars)`: The leftmost and ante-leftmost positions and total count of opening
+            parentheses encountered.
+        """
+
+        if prev := self.prev(True):
+            bound_ln  = prev.end_ln
+            bound_col = prev.end_col
+
+        elif parent := self.parent:
+            par_loc   = parent.loc
+            bound_ln  = par_loc.ln
+            bound_col = par_loc.col
+
+        else:
+            bound_col = bound_ln = 0
+
+        self_ln, self_col, _, _ = self.loc
+
+        return _prev_pars(self.root._lines, bound_ln, bound_col, self_ln, self_col)
+
+    def _rpars(self) -> tuple[int, int, int, int, int]:
+        """Return the `end_ln` and `end_col` of the rightmost and ante-rightmost closing parentheses and the total
+        number of closing parentheses. Doesn't take anything into account anything like enclosing argument parentheses,
+        just counts. The rightmost bound used is the start of the next sibling, or the end of that parent if there isn't
+        one, or the end of `self.root._lines`.
+
+        **Returns:**
+        - `(end_ln, end_col, ante_end_ln, ante_end_col, npars)`: The rightmost and ante-rightmost positions and total
+            count of closing parentheses encountered.
+        """
+
+        lines = self.root._lines
+
+        if next := self.next(True):
+            bound_end_ln  = next.ln
+            bound_end_col = next.col
+
+        elif parent := self.parent:
+            par_loc       = parent.loc
+            bound_end_ln  = par_loc.end_ln
+            bound_end_col = par_loc.end_col
+
+        else:
+            bound_end_ln  = len(lines) - 1
+            bound_end_col = len(lines[-1])
+
+        _, _, self_end_ln, self_end_col = self.loc
+
+        return _next_pars(lines, self_end_ln, self_end_col, bound_end_ln, bound_end_col)
 
     def _maybe_add_comma(self, ln: int, col: int, offset: bool, space: bool,
                          end_ln: int | None = None, end_col: int | None = None) -> bool:
@@ -3250,7 +3381,7 @@ class FST:
 
         # dagnabit! have to count parens
 
-        self_end_col -= 1  # because for sure there is a comma between end of first element and end of tuple
+        self_end_col -= 1  # because for sure there is a comma between end of first element and end of tuple, so at worst we exclude either the tuple closing paren or a comma
         nparens       = 0
 
         while code := _next_src(lines, self_ln, self_col, self_end_ln, self_end_col):
@@ -3268,6 +3399,9 @@ class FST:
                 continue
 
             break
+
+        if not nparens:
+            return False
 
         while code := _next_src(lines, f0_end_ln, f0_end_col, self_end_ln, self_end_col):
             f0_end_ln, f0_end_col, src = code
@@ -3459,101 +3593,63 @@ class FST:
 
         return lns
 
-    def pars(self, max_nparens: int = -1) -> 'FST':
-        if not max_nparens or self.is_root or not isinstance(self.a, expr):
-            return self
+    def pars(self, ret_fst: bool | None = True) -> Union['FST', fstloc, None]:
+        """Return a the location of enclosing parentheses either as an `fstloc` or an `FST`. If requesting an `FST` then
+        the return value can be `self` or a clone `FST` of `self` with modified `loc` which should only be used for a
+        limited number of things. Will balance parentheses if `self` is an element of a tuple and not return the
+        parentheses of the tuple. Likwise will not return the parentheses of an enclosing `arguments` parent.
 
-        parent  = self.parent
-        par_loc = parent.loc
+        **Parameters:**
+        - `ret_fst`: If `True` then always return an `FST` (`self` or clone), `False` will always return an `fstloc`
+            (which could be `self.loc`) and `None` can return an `fstloc` or `self` if no parentheses found.
 
-        if prev := self.prev(True):
-            bound_ln  = prev.end_ln
-            bound_col = prev.end_col
+        **Returns:**
+        - `fstloc | FST | None`: If `ret_fst` is `None` and no parentheses found then just returns `self`. A `None` can
+            be returned if `ret_fst` is `False` and there are no enclosing parentheses and `self` does not have a `loc`.
+        """
 
-        else:
-            bound_ln  = par_loc.ln
-            bound_col = par_loc.col
+        pars_end_ln, pars_end_col, ante_end_ln, ante_end_col, nrpars = self._rpars()
 
-        if next := self.next(True):
-            bound_end_ln  = next.ln
-            bound_end_col = next.col
+        if not nrpars:
+            return self.loc if ret_fst is False else self
 
-        else:
-            bound_end_ln  = par_loc.end_ln
-            bound_end_col = par_loc.end_col
+        pars_ln, pars_col, ante_ln, ante_col, nlpars = self._lpars()
 
-        self_ln, self_col, self_end_ln, self_end_col = self.loc
-        ante_ln, ante_col, ante_end_ln, ante_end_col = self.loc
+        if not nlpars:
+            return self.loc if ret_fst is False else self
 
-        lines   = self.root._lines
-        lparens = 0
-        rparens = 0
+        dpars = nlpars - nrpars
 
-        while code := _prev_src(lines, bound_ln, bound_col, self_ln, self_col):
-            ln, col, src  = code
-            col          += len(src)
+        if dpars == 1:  # unbalanced due to enclosing tuple, will always be unbalanced if at ends of parenthesized tuple (even if solo element) due to commas
+            pars_ln  = ante_ln
+            pars_col = ante_col
 
-            for c in src[::-1]:
-                col -= 1
+        elif dpars == -1:
+            pars_end_ln  = ante_end_ln
+            pars_end_col = ante_end_col
 
-                if c != '(':
-                    break
-
-                else:
-                    ante_ln  = self_ln
-                    ante_col = self_col
-                    self_ln  = ln
-                    self_col = col
-
-                    if (lparens := lparens + 1) == max_nparens:
-                        break
-
-            else:
-                continue
-
-            break
-
-        while code := _next_src(lines, self_end_ln, self_end_col, bound_end_ln, bound_end_col):
-            ln, col, src = code
-
-            for c in src:
-                col += 1
-
-                if c != ')':
-                    break
-
-                else:
-                    ante_end_ln  = self_end_ln
-                    ante_end_col = self_end_col
-                    self_end_ln  = ln
-                    self_end_col = col
-
-                    if (rparens := rparens + 1) == max_nparens:
-                        break
-
-            else:
-                continue
-
-            break
-
-        if not lparens or not rparens:
-            return self
-
-        if lparens == rparens - 1:  # unbalanced due to enclosing tuple, will always be unbalanced if at ends of parenthesized tuple (even if solo element) due to commas
-            self_end_ln  = ante_end_ln
-            self_end_col = ante_end_col
-
-        elif rparens == lparens - 1:
-            self_ln  = ante_ln
-            self_col = ante_col
-
-        elif lparens != rparens:
+        elif dpars:
             raise RuntimeError('should not get here')
 
+        # if (not dpars and (parent := self.parent) and isinstance(parent, arguments) and
+        #     parent.pfield == ('args', None) and isinstance(parent.parent, (FunctionDef, AsyncFunctionDef)) and
+        #     not parent.posonlyargs and not parent.defaults and not parent.kw_defaults and
+        #     len(parent.args) + len(parent.kwonlyargs) + bool(parent.vararg) + bool(parent.kwarg) == 1
+        # ):  # balanced pars can still include the pars of `arguments` of a `FunctionDef` or `AsyncFunctionDef` if `self` is only element in `arguments`
+        #     pars_ln      = ante_ln
+        #     pars_col     = ante_col
+        #     pars_end_ln  = ante_end_ln
+        #     pars_end_col = ante_end_col
+
+        loc = fstloc(pars_ln, pars_col, pars_end_ln, pars_end_col)
+
+        if not ret_fst:
+            return loc
+
         ast      = self.a
-        fst      = FST(ast, parent, self.pfield)
+        fst      = FST(ast, self.parent, self.pfield)
         ast.f    = self
-        fst._loc = fstloc(self_ln, self_col, self_end_ln, self_end_col)
+        fst._loc = loc
 
         return fst
 
