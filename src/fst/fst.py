@@ -231,8 +231,12 @@ def _next_src_lline(lines: list[str], ln: int, col: int, end_ln: int, end_col: i
 
 
 def _prev_src(lines: list[str], ln: int, col: int, end_ln: int, end_col: int,
-              comment: bool = False, lcont: bool = False) -> srcwpos | None:
-    """Same rules as `_next_src()` but return the LAST occurance of code or maybe comment in the span."""
+              comment: bool = False, lcont: bool = False, state: list | None = None) -> srcwpos | None:
+    """Same rules as `_next_src()` but return the LAST occurance of code or maybe comment in the span.
+
+    **Parameters:**
+    - `state`: Can be used to cache walk but must only be used if the walk is sequentially backwards starting each time
+        at the start position of the previously returned match."""
 
     re_pat = (
         (re_next_src_or_comment_or_lcont if comment else re_next_src_or_lcont)
@@ -240,14 +244,17 @@ def _prev_src(lines: list[str], ln: int, col: int, end_ln: int, end_col: int,
         (re_next_src_or_comment if comment else re_next_src)
     )
 
+    if state is None:
+        state = []
+
     def last_match(l, c, ec):
-        ret = None
+        if state:
+            return state.pop()
 
-        while m := re_pat.match(l, c, ec):
-            if l.startswith('#\\', c := (ret := m).end(1)):
-                break
+        while (m := re_pat.match(l, c, ec)) and not l.startswith('#\\', c := m.end(1)):
+            state.append(m)
 
-        return ret
+        return state.pop() if state else None
 
     if end_ln == ln:
         return srcwpos(ln, m.start(1), m.group(1)) if (m := last_match(lines[ln], col, end_col)) else None
@@ -315,8 +322,9 @@ def _prev_pars(lines: list[str], bound_ln: int, bound_col: int, pars_ln: int, pa
         ante_ln  = pars_ln
         ante_col = pars_col
         npars    = 0
+        state    = []
 
-        while code := _prev_src(lines, bound_ln, bound_col, pars_ln, pars_col):
+        while code := _prev_src(lines, bound_ln, bound_col, pars_ln, pars_col, state=state):
             ln, col, src  = code
             col          += len(src)
 
@@ -363,9 +371,10 @@ def _expr_src_edit_locs(lines: list[bistr], loc: fstloc, bound: fstloc, at_end: 
     bound_ln, bound_col, bound_end_ln, bound_end_col = bound
 
     precomma_end_ln = None
+    state           = []
 
     while True:
-        if not (code := _prev_src(lines, bound_ln, bound_col, copy_ln, copy_col)):
+        if not (code := _prev_src(lines, bound_ln, bound_col, copy_ln, copy_col, state=state)):
             if bound_ln != copy_ln:
                 copy_col = 0
 
@@ -542,8 +551,8 @@ def _fixup_expr_seq_bound(lines: list[str], seq_loc: fstloc,
 
                 if c != ')':
                     break
-                else:
-                    fpre = fstloc(fpre.ln, fpre.col, start_ln := ln, start_col := col)
+
+                fpre = fstloc(fpre.ln, fpre.col, start_ln := ln, start_col := col)
 
             else:
                 continue
@@ -569,8 +578,9 @@ def _fixup_expr_seq_bound(lines: list[str], seq_loc: fstloc,
 
         stop_ln  = fpost.ln
         stop_col = fpost.col
+        state    = []
 
-        while code := _prev_src(lines, from_ln, from_col, stop_ln, stop_col):  # skip over preceding opening parens of fpost
+        while code := _prev_src(lines, from_ln, from_col, stop_ln, stop_col, state=state):  # skip over preceding opening parens of fpost
             ln, col, src  = code
             col          += len(src)
 
@@ -579,8 +589,8 @@ def _fixup_expr_seq_bound(lines: list[str], seq_loc: fstloc,
 
                 if c != '(':
                     break
-                else:
-                    fpost = fstloc(stop_ln := ln, stop_col := col, fpost.end_ln, fpost.end_col)
+
+                fpost = fstloc(stop_ln := ln, stop_col := col, fpost.end_ln, fpost.end_col)
 
             else:
                 continue
@@ -1226,9 +1236,9 @@ class FST:
 
     def _lpars(self) -> tuple[int, int, int, int, int]:
         """Return the `ln` and `col` of the leftmost and ante-leftmost opening parentheses and the total number of
-        opening parentheses. Doesn't take anything into account anything like enclosing argument parentheses, just
-        counts. The leftmost bound used is the end of the previous sibling, or the start of that parent if there isn't
-        one, or (0,0) if no parent.
+        opening parentheses. Doesn't take into account anything like enclosing argument parentheses, just counts. The
+        leftmost bound used is the end of the previous sibling, or the start of that parent if there isn't one, or (0,0)
+        if no parent.
 
         **Returns:**
         - `(ln, col, ante_ln, ante_col, npars)`: The leftmost and ante-leftmost positions and total count of opening
@@ -1253,9 +1263,9 @@ class FST:
 
     def _rpars(self) -> tuple[int, int, int, int, int]:
         """Return the `end_ln` and `end_col` of the rightmost and ante-rightmost closing parentheses and the total
-        number of closing parentheses. Doesn't take anything into account anything like enclosing argument parentheses,
-        just counts. The rightmost bound used is the start of the next sibling, or the end of that parent if there isn't
-        one, or the end of `self.root._lines`.
+        number of closing parentheses. Doesn't take into account anything like enclosing argument parentheses, just
+        counts. The rightmost bound used is the start of the next sibling, or the end of that parent if there isn't one,
+        or the end of `self.root._lines`.
 
         **Returns:**
         - `(end_ln, end_col, ante_end_ln, ante_end_col, npars)`: The rightmost and ante-rightmost positions and total
@@ -3382,42 +3392,13 @@ class FST:
         # dagnabit! have to count parens
 
         self_end_col -= 1  # because for sure there is a comma between end of first element and end of tuple, so at worst we exclude either the tuple closing paren or a comma
-        nparens       = 0
 
-        while code := _next_src(lines, self_ln, self_col, self_end_ln, self_end_col):
-            self_ln, self_col, src = code
-
-            for c in src:
-                if c == '(':
-                    nparens += 1
-                else:
-                    break
-
-            else:
-                self_col += len(src)
-
-                continue
-
-            break
+        nparens = _next_pars(lines, self_ln, self_col, self_end_ln, self_end_col, '(')[-1]  # yes, we use _next_pars() to count opening parens because we know conditions allow it
 
         if not nparens:
             return False
 
-        while code := _next_src(lines, f0_end_ln, f0_end_col, self_end_ln, self_end_col):
-            f0_end_ln, f0_end_col, src = code
-
-            for c in src:
-                if c == ')':
-                    nparens -= 1
-                else:
-                    break
-
-            else:
-                f0_end_col += len(src)
-
-                continue
-
-            break
+        nparens -= _next_pars(lines, f0_end_ln, f0_end_col, self_end_ln, self_end_col)[-1]
 
         return nparens > 0  # don't want to fiddle with checking if f0 is a parenthesized tuple
 
