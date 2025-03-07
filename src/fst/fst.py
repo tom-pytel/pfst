@@ -3663,6 +3663,9 @@ class FST:
             be returned if `ret_fst` is `False` and there are no enclosing parentheses and `self` does not have a `loc`.
         """
 
+        if not isinstance(self.a, (expr, pattern)):
+            return self.loc if ret_fst is False else self
+
         pars_end_ln, pars_end_col, ante_end_ln, ante_end_col, nrpars = self._rpars()
 
         if not nrpars:

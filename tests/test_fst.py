@@ -14,6 +14,170 @@ PYFNMS = sum((
     start=[]
 )
 
+PARS_DATA = [
+(r"""
+with ( f() ) as ( f ): pass
+""", 'body[0].items[0].context_expr', r"""
+( f() )
+""", r"""
+Call .. 0,5 -> 0,12
+  .func
+    Name 'f' Load .. 0,7 -> 0,8
+"""),
+
+(r"""
+with ( f() ) as ( f ): pass
+""", 'body[0].items[0].optional_vars', r"""
+( f )
+""", r"""
+Name 'f' Store .. 0,16 -> 0,21
+"""),
+
+(r"""
+with ( f() ) as ( f ), ( g() ) as ( g ): pass
+""", 'body[0].items[0].context_expr', r"""
+( f() )
+""", r"""
+Call .. 0,5 -> 0,12
+  .func
+    Name 'f' Load .. 0,7 -> 0,8
+"""),
+
+(r"""
+with ( f() ) as ( f ), ( g() ) as ( g ): pass
+""", 'body[0].items[0].optional_vars', r"""
+( f )
+""", r"""
+Name 'f' Store .. 0,16 -> 0,21
+"""),
+
+(r"""
+with ( f() ) as ( f ), ( g() ) as ( g ): pass
+""", 'body[0].items[1].context_expr', r"""
+( g() )
+""", r"""
+Call .. 0,23 -> 0,30
+  .func
+    Name 'g' Load .. 0,25 -> 0,26
+"""),
+
+(r"""
+with ( f() ) as ( f ), ( g() ) as ( g ): pass
+""", 'body[0].items[1].optional_vars', r"""
+( g )
+""", r"""
+Name 'g' Store .. 0,34 -> 0,39
+"""),
+
+(r"""
+match a:
+  case ( 2 ) if a == 1: pass
+""", 'body[0].cases[0].pattern', r"""
+( 2 )
+""", r"""
+MatchValue .. 1,7 -> 1,12
+  .value
+    Constant 2 .. 1,9 -> 1,10
+"""),
+
+(r"""
+[ ( i ) for ( j ) in ( range(5) ) if ( k ) ]
+""", 'body[0].value.elt', r"""
+( i )
+""", r"""
+Name 'i' Load .. 0,2 -> 0,7
+"""),
+
+(r"""
+[ ( i ) for ( j ) in ( range(5) ) if ( k ) ]
+""", 'body[0].value.generators[0].target', r"""
+( j )
+""", r"""
+Name 'j' Store .. 0,12 -> 0,17
+"""),
+
+(r"""
+[ ( i ) for ( j ) in ( range(5) ) if ( k ) ]
+""", 'body[0].value.generators[0].iter', r"""
+( range(5) )
+""", r"""
+Call .. 0,21 -> 0,33
+  .func
+    Name 'range' Load .. 0,23 -> 0,28
+  .args[1]
+  0] Constant 5 .. 0,29 -> 0,30
+"""),
+
+(r"""
+[ ( i ) for ( j ) in ( range(5) ) if ( k ) ]
+""", 'body[0].value.generators[0].ifs[0]', r"""
+( k )
+""", r"""
+Name 'k' Load .. 0,37 -> 0,42
+"""),
+
+(r"""
+( ( i ) for ( j ) in ( range(5) ) if ( k ) )
+""", 'body[0].value.elt', r"""
+( i )
+""", r"""
+Name 'i' Load .. 0,2 -> 0,7
+"""),
+
+(r"""
+( ( i ) for ( j ) in ( range(5) ) if ( k ) )
+""", 'body[0].value.generators[0].target', r"""
+( j )
+""", r"""
+Name 'j' Store .. 0,12 -> 0,17
+"""),
+
+(r"""
+( ( i ) for ( j ) in ( range(5) ) if ( k ) )
+""", 'body[0].value.generators[0].iter', r"""
+( range(5) )
+""", r"""
+Call .. 0,21 -> 0,33
+  .func
+    Name 'range' Load .. 0,23 -> 0,28
+  .args[1]
+  0] Constant 5 .. 0,29 -> 0,30
+"""),
+
+(r"""
+( ( i ) for ( j ) in ( range(5) ) if ( k ) )
+""", 'body[0].value.generators[0].ifs[0]', r"""
+( k )
+""", r"""
+Name 'k' Load .. 0,37 -> 0,42
+"""),
+
+(r"""
+def f(a=(1)): pass
+""", 'body[0].args.defaults[0]', r"""
+(1)
+""", r"""
+Constant 1 .. 0,8 -> 0,11
+"""),
+
+(r"""
+def f( a = ( 1 )): pass
+""", 'body[0].args.defaults[0]', r"""
+( 1 )
+""", r"""
+Constant 1 .. 0,11 -> 0,16
+"""),
+
+(r"""
+lambda a = ( 1 ) : None
+""", 'body[0].value.args.defaults[0]', r"""
+( 1 )
+""", r"""
+Constant 1 .. 0,11 -> 0,16
+"""),
+
+]  # END OF PARS_DATA
+
 COPY_DATA = [
 (r"""
 opts.ignore_module = [mod.strip()
@@ -5126,6 +5290,8 @@ two  # fake comment start""", **b
         self.assertEqual((0, 7, 0, 33), parse('(i for ( i ) in range(5) if ( i ) )').body[0].value.generators[0].f.loc)  # comprehension w/ parens
 
         self.assertEqual('( f() ) as ( f )', parse('with ( f() ) as ( f ): pass').body[0].items[0].f.src)
+        self.assertEqual('( f() ) as ( f )', parse('with ( f() ) as ( f ), ( g() ) as ( g ): pass').body[0].items[0].f.src)
+        self.assertEqual('( g() ) as ( g )', parse('with ( f() ) as ( f ), ( g() ) as ( g ): pass').body[0].items[1].f.src)
         self.assertEqual('( 2 ) if a == 1: pass', parse('match a:\n  case ( 2 ) if a == 1: pass').body[0].cases[0].f.src)
         self.assertEqual('( i ) in range(5) if ( i )', parse('[ ( i ) for ( i ) in range(5) if ( i ) ]').body[0].value.generators[0].f.src)
         self.assertEqual('( i ) in range(5) if ( i )', parse('( ( i ) for ( i ) in range(5) if ( i ) )').body[0].value.generators[0].f.src)
@@ -5196,7 +5362,7 @@ two  # fake comment start""", **b
         self.assertRaises(WalkFail, ast.f.verify, raise_=True)
         self.assertEqual(None, ast.f.verify(raise_=False))
 
-    def test_pars(self):
+    def test_pars_special(self):
         f = parse('''
 ( (
  (
@@ -6254,6 +6420,28 @@ def func():
             fc._maybe_fix_copy(inplace=True)
             self.assertEqual('(*tuple[int, ...],)', fc.src)
 
+    def test_pars(self):
+        for src, elt, slice_copy, slice_dump in PARS_DATA:
+            src   = src.strip()
+            t     = parse(src)
+            f     = eval(f't.{elt}', {'t': t}).f
+            s     = f.pars()
+            ssrc  = s.src
+            sdump = s.dump(linefunc=list, compact=True)
+
+            try:
+                self.assertEqual(ssrc, slice_copy.strip())
+                self.assertEqual(sdump, slice_dump.strip().split('\n'))
+
+            except Exception:
+                print(elt)
+                print('---')
+                print(src)
+                print('...')
+                print(slice_copy)
+
+                raise
+
     def test_copy_special(self):
         f = FST.fromsrc('@decorator\nclass cls:\n  pass')
         self.assertEqual(f.a.body[0].f.copy(fix=False).src, '@decorator\nclass cls:\n  pass')
@@ -6708,6 +6896,36 @@ Module .. ROOT 0,0 -> 0,10
         self.assertEqual(a.f.src, '(a, \\\n)')
 
 
+def regen_pars_data():
+    newlines = []
+
+    for src, elt, *_ in PARS_DATA:
+        src   = src.strip()
+        t     = parse(src)
+        f     = eval(f't.{elt}', {'t': t}).f
+        s     = f.pars()
+        ssrc  = s.src
+        sdump = s.dump(linefunc=list, compact=True)
+
+        assert not ssrc.startswith('\n') or ssrc.endswith('\n')
+
+        newlines.append('(r"""')
+        newlines.extend(f'''{src}\n""", {elt!r}, r"""\n{ssrc}\n""", r"""'''.split('\n'))
+        newlines.extend(sdump)
+        newlines.append('"""),\n')
+
+    with open(sys.argv[0]) as f:
+        lines = f.read().split('\n')
+
+    start = lines.index('PARS_DATA = [')
+    stop  = lines.index(']  # END OF PARS_DATA')
+
+    lines[start + 1 : stop] = newlines
+
+    with open(sys.argv[0], 'w') as f:
+        lines = f.write('\n'.join(lines))
+
+
 def regen_copy_data():
     newlines = []
 
@@ -6852,12 +7070,17 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(prog='test_fst.py')
 
+    parser.add_argument('--regen-pars', default=False, action='store_true', help="regenerate parentheses test data")
     parser.add_argument('--regen-copy', default=False, action='store_true', help="regenerate copy test data")
     parser.add_argument('--regen-get-slice-cut', default=False, action='store_true', help="regenerate get slice cut test data")
     parser.add_argument('--regen-put-slice', default=False, action='store_true', help="regenerate put slice test data")
     parser.add_argument('--regen-put-slice-del', default=False, action='store_true', help="regenerate put slice del test data")
 
     args = parser.parse_args()
+
+    if args.regen_pars:
+        print('Regenerating parentheses test data...')
+        regen_pars_data()
 
     if args.regen_copy:
         print('Regenerating copy test data...')
@@ -6875,5 +7098,7 @@ if __name__ == '__main__':
         print('Regenerating put slice del test data...')
         regen_put_slice_del_data()
 
-    if not args.regen_copy and not args.regen_get_slice_cut and not args.regen_put_slice and not args.regen_put_slice_del:
+    if (not args.regen_pars and not args.regen_copy and not args.regen_get_slice_cut and not args.regen_put_slice and
+        not args.regen_put_slice_del
+    ):
         unittest.main()
