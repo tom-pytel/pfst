@@ -3641,6 +3641,29 @@ class FST:
 
         return lns
 
+    def locmock(self, loc: fstloc) -> 'FST':
+        """Create a "location mockup" to this object with an explicit location. This can be used to override the
+        location of an object for certain operations, but is not very robust. The `FST` returned is its own object and
+        points up the tree and to the `AST` like the original, but the `AST` does not point back to it and so in not a
+        fully valid node. The following operations are verified to work with a (valid location) `locmock` (others may as
+        well but not guaranteed):
+
+        ```
+        locmock.is_root
+        locmock.src
+        locmock.lines
+        locmock.copy()
+        locmock.cut()
+        ```
+        """
+
+        ast      = self.a
+        fst      = FST(ast, self.parent, self.pfield)
+        ast.f    = self
+        fst._loc = loc
+
+        return fst
+
     def pars(self, ret_fst: bool | None = True) -> Union['FST', fstloc, None]:
         """Return a the location of enclosing parentheses either as an `fstloc` or an `FST`. If requesting an `FST` then
         the return value can be `self` or a clone `FST` of `self` with modified `loc` which should only be used for a
@@ -3684,15 +3707,7 @@ class FST:
 
         loc = fstloc(pars_ln, pars_col, pars_end_ln, pars_end_col)
 
-        if not ret_fst:
-            return loc
-
-        ast      = self.a
-        fst      = FST(ast, self.parent, self.pfield)
-        ast.f    = self
-        fst._loc = loc
-
-        return fst
+        return self.locmock(loc) if ret_fst else loc
 
     # ------------------------------------------------------------------------------------------------------------------
 
