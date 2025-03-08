@@ -532,13 +532,13 @@ class fstlistproxy:
     def extend(self, code: Code):
         self.owner.put_slice(code, (end := self.start + len(self.asts)), end, self.field)
 
-    def copy(self, *, fix: bool = True, decos: bool = True) -> 'FST':
+    def copy(self, *, fix: bool = True) -> 'FST':
         return self.owner.get_slice(start := self.start, start + len(self.asts), self.field,
-                                    fix=fix, cut=False, decos=decos)
+                                    fix=fix, cut=False)
 
-    def cut(self, *, fix: bool = True, decos: bool = True) -> 'FST':
+    def cut(self, *, fix: bool = True) -> 'FST':
         return self.owner.get_slice(start := self.start, start + len(self.asts), self.field,
-                                    fix=fix, cut=True, decos=decos)
+                                    fix=fix, cut=True)
 
 
 class FSTSrcEdit:
@@ -1203,28 +1203,6 @@ class FST:
             else:
                 linefunc(f'{sind}{sind}{cind}{child!r}')
 
-    def _dict_key_or_mock_loc(self, key: AST | None, value: 'FST') -> Union['FST', fstloc]:
-        """Return same dictionary key FST if exists else create and return a location for the preceding '**' code."""
-
-        if key:
-            return key.f
-
-        if idx := value.pfield.idx:
-            f   = value.parent.values[idx - 1]  # because of multiline strings, could be a fake comment start inside one which hides a valid '**'
-            ln  = f.end_ln
-            col = f.end_col
-
-        else:
-            ln  = self.ln
-            col = self.col
-
-        ln, col, s = _prev_src(self.root._lines, ln, col, value.ln, value.col)  # '**' must be there
-        end_col    = col + len(s)
-
-        assert s.endswith('**')
-
-        return fstloc(ln, end_col - 2, ln, end_col)
-
     def _lbound(self) -> tuple[int, int]:
         """Get a safe left bound to search after any ASTs for this object. This is safe to call for nodes that live
         inside nodes without their own locations. WARNING! Not entirely safe for non-syntactically correct trees."""
@@ -1355,6 +1333,28 @@ class FST:
                 start_ln, start_col = _prev_find(lines, *first._lbound(), start_ln, start_col, leading_stars)
 
         return fstloc(start_ln, start_col, end_ln, end_col)
+
+    def _dict_key_or_mock_loc(self, key: AST | None, value: 'FST') -> Union['FST', fstloc]:
+        """Return same dictionary key FST if exists else create and return a location for the preceding '**' code."""
+
+        if key:
+            return key.f
+
+        if idx := value.pfield.idx:
+            f   = value.parent.values[idx - 1]  # because of multiline strings, could be a fake comment start inside one which hides a valid '**'
+            ln  = f.end_ln
+            col = f.end_col
+
+        else:
+            ln  = self.ln
+            col = self.col
+
+        ln, col, s = _prev_src(self.root._lines, ln, col, value.ln, value.col)  # '**' must be there
+        end_col    = col + len(s)
+
+        assert s.endswith('**')
+
+        return fstloc(ln, end_col - 2, ln, end_col)
 
     def _maybe_add_comma(self, ln: int, col: int, offset: bool, space: bool,
                          end_ln: int | None = None, end_col: int | None = None) -> bool:
@@ -2314,23 +2314,20 @@ class FST:
 
         return self
 
-    def copy(self, *, fix: bool = True, decos: bool = True) -> 'FST':
+    def copy(self, *, fix: bool = True) -> 'FST':
         newast = copy_ast(self.a)
 
         if self.is_root:
             return FST(newast, lines=self._lines[:], from_=self)
 
-        if not (loc := self.bloc if decos else self.loc):
+        if not (loc := self.bloc):
             raise ValueError('cannot copy node which does not have location')
-
-        if not decos and hasattr(newast, 'decorator_list'):
-            newast.decorator_list.clear()
 
         fst = self._make_fst_and_dedent(self, newast, loc)
 
         return fst.fix(inplace=True) if fix else fst
 
-    def cut(self, *, fix: bool = True, decos: bool = True) -> 'FST':
+    def cut(self, *, fix: bool = True) -> 'FST':
         if self.is_root:
             raise ValueError('cannot cut root node')
 
@@ -2357,7 +2354,7 @@ class FST:
 
 
     def get(self, start: int | str | None = None, stop: int | str | None | Literal[False] = False,
-            field: str | None = None, *, fix: bool = True, cut: bool = False, decos: bool = True) -> Optional['FST']:
+            field: str | None = None, *, fix: bool = True, cut: bool = False) -> Optional['FST']:
 
         if isinstance(start, str):
             raise NotImplementedError
@@ -2374,9 +2371,9 @@ class FST:
         field, body = _fixup_field_body(self.a, field)
 
         if cut:
-            return body[start].f.cut(fix=fix, decos=decos)
+            return body[start].f.cut(fix=fix)
         else:
-            return body[start].f.copy(fix=fix, decos=decos)
+            return body[start].f.copy(fix=fix)
 
 
 
