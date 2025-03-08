@@ -271,6 +271,21 @@ def _prev_src(lines: list[str], ln: int, col: int, end_ln: int, end_col: int,
     return None
 
 
+def _prev_find(lines: list[str], ln: int, col: int, end_ln: int, end_col: int, src: str) -> tuple[int, int] | None:
+    """Find location of a string in the bound walking backwards, will skip over anything else which is not the string.
+    Returns `None` if string not found."""
+
+    state = []
+
+    while code := _prev_src(lines, ln, col, end_ln, end_col, state=state):
+        end_ln, end_col, src_ = code
+
+        if (idx := src_.rfind(src)) != -1:
+            return end_ln, end_col + idx
+
+    return None
+
+
 def _next_pars(lines: list[str], pars_end_ln: int, pars_end_col: int, bound_end_ln: int, bound_end_col: int,
                par: str = ')') -> tuple[int, int, int, int, int]:
         """Count number of closing parenthesis (or any specified character) starting a `pars_end_ln`, `pars_end_col`
@@ -990,11 +1005,6 @@ class FST:
         except AttributeError:
             if not self.parent:
                 loc = fstloc(0, 0, len(ls := self._lines) - 1, len(ls[-1]))
-            # elif first := self.first_child():
-            #     loc = fstloc(first.bln, first.bcol, (last := self.last_child()).bend_ln, last.bend_col)
-            # else:
-            #     loc = None
-
             else:
                 loc = self._loc_from_children()
 
@@ -1294,7 +1304,11 @@ class FST:
         if not (first := self.first_child(True)):
             return None
 
-        ast = self.a
+        ast  = self.a
+        last = self.last_child(True)
+
+        if isinstance(ast, match_case):
+            return fstloc(*_prev_find(self.root._lines, 0, 0, first.ln, first.col, 'case'), last.bend_ln, last.bend_col)  # we can use 0,0 because we know "case" starts on a newline
 
         start_ln, start_col, ante_start_ln, ante_start_col, nlpars = first._lpars()
 
@@ -1302,66 +1316,45 @@ class FST:
             start_ln  = first.bln
             start_col = first.bcol
 
-        last = self.last_child(True)
+        end_ln, end_col, ante_end_ln, ante_end_col, nrpars = last._rpars()
 
-        if isinstance(ast, match_case):
+        if not nrpars:
             end_ln  = last.bend_ln
             end_col = last.bend_col
 
-        else:
-            end_ln, end_col, ante_end_ln, ante_end_col, nrpars = last._rpars()
+        elif isinstance(ast, comprehension):
+            if ((parent := self.parent) and isinstance(parent.a, GeneratorExp) and  # correct for parenthesized GeneratorExp
+                self.pfield.idx == len(parent.a.generators) - 1
+            ):
+                end_ln  = ante_end_ln
+                end_col = ante_end_col
 
-            if not nrpars:
-                end_ln  = last.bend_ln
-                end_col = last.bend_col
+        if isinstance(ast, arguments):
+            lines = self.root._lines
 
-            elif isinstance(ast, comprehension):
-                if ((parent := self.parent) and isinstance(parent.a, GeneratorExp) and  # correct for parenthesized GeneratorExp
-                    self.pfield.idx == len(parent.a.generators) - 1
-                ):
-                    end_ln  = ante_end_ln
-                    end_col = ante_end_col
+            if ast.posonlyargs or ast.args:
+                leading_stars = None  # no leading stars
+            elif ast.vararg or ast.kwonlyargs:
+                leading_stars = '*'  # leading star just before varname or bare leading star with comma following
+            elif ast.kwarg:
+                leading_stars = '**'  # leading double star just before varname
 
-            if isinstance(ast, arguments):
-                lines = self.root._lines
+            if ((code := _next_src(lines, end_ln, end_col, len(lines) - 1, len(lines[-1])))  # trailing comma
+                and code.src.startswith(',')
+            ):
+                end_ln, end_col, _  = code
+                end_col            += 1
 
-                if ast.posonlyargs or ast.args:
-                    leading_stars = None  # no leading stars
-                elif ast.vararg or ast.kwonlyargs:
-                    leading_stars = '*'  # leading star just before varname or bare leading star with comma following
-                elif ast.kwarg:
-                    leading_stars = '**'  # leading double star just before varname
+            elif (parent := self.parent) and isinstance(parent.a, (FunctionDef, AsyncFunctionDef)):
+                end_ln  = ante_end_ln
+                end_col = ante_end_col
 
-                if ((code := _next_src(lines, end_ln, end_col, len(lines) - 1, len(lines[-1])))  # trailing comma
-                    and code.src.startswith(',')
-                ):
-                    end_ln, end_col, _  = code
-                    end_col            += 1
+                if not leading_stars:
+                    start_ln  = ante_start_ln
+                    start_col = ante_start_col
 
-                elif (parent := self.parent) and isinstance(parent.a, (FunctionDef, AsyncFunctionDef)):
-                    end_ln  = ante_end_ln
-                    end_col = ante_end_col
-
-                    if not leading_stars:
-                        start_ln  = ante_start_ln
-                        start_col = ante_start_col
-
-                if leading_stars:  # find star to the left
-                    bound_ln, bound_col = first._lbound()
-                    ln                  = start_ln
-                    col                 = start_col
-
-                    while code := _prev_src(lines, bound_ln, bound_col, ln, col):  # maybe we need to skip over a comma
-                        ln, col, src = code
-
-                        if (idx := src.rfind(leading_stars)) != -1:
-                            start_ln  = ln
-                            start_col = col + idx
-
-                            break
-
-                    else:
-                        raise RuntimeError('should not get here')
+            if leading_stars:  # find star to the left, we know it exists so we don't check for None return
+                start_ln, start_col = _prev_find(lines, *first._lbound(), start_ln, start_col, leading_stars)
 
         return fstloc(start_ln, start_col, end_ln, end_col)
 
@@ -2348,7 +2341,7 @@ class FST:
             raise NotImplementedError
 
         if isinstance(parenta, (Tuple, List, Set)):
-            fst = self.copy(fix=fix, decos=decos)
+            fst = self.copy(fix=fix)
 
             parent._put_slice_tuple_list_or_set(None, idx, idx + 1, field)
 

@@ -5279,20 +5279,20 @@ two  # fake comment start""", **b
         self.assertEqual((0, 6, 0, 9), parse('def f(i=1): pass').body[0].args.f.loc)  # arguments
         self.assertEqual((0, 5, 0, 8), parse('with f(): pass').body[0].items[0].f.loc)  # withitem
         self.assertEqual((0, 5, 0, 13), parse('with f() as f: pass').body[0].items[0].f.loc)  # withitem
-        self.assertEqual((1, 7, 1, 24), parse('match a:\n  case 2 if a == 1: pass').body[0].cases[0].f.loc)  # match_case
+        self.assertEqual((1, 2, 1, 24), parse('match a:\n  case 2 if a == 1: pass').body[0].cases[0].f.loc)  # match_case
         self.assertEqual((0, 7, 0, 25), parse('[i for i in range(5) if i]').body[0].value.generators[0].f.loc)  # comprehension
         self.assertEqual((0, 7, 0, 25), parse('(i for i in range(5) if i)').body[0].value.generators[0].f.loc)  # comprehension
 
         self.assertEqual((0, 5, 0, 12), parse('with ( f() ): pass').body[0].items[0].f.loc)  # withitem w/ parens
         self.assertEqual((0, 5, 0, 21), parse('with ( f() ) as ( f ): pass').body[0].items[0].f.loc)  # withitem w/ parens
-        self.assertEqual((1, 7, 1, 28), parse('match a:\n  case ( 2 ) if a == 1: pass').body[0].cases[0].f.loc)  # match_case w/ parens
+        self.assertEqual((1, 2, 1, 28), parse('match a:\n  case ( 2 ) if a == 1: pass').body[0].cases[0].f.loc)  # match_case w/ parens
         self.assertEqual((0, 7, 0, 33), parse('[i for ( i ) in range(5) if ( i ) ]').body[0].value.generators[0].f.loc)  # comprehension w/ parens
         self.assertEqual((0, 7, 0, 33), parse('(i for ( i ) in range(5) if ( i ) )').body[0].value.generators[0].f.loc)  # comprehension w/ parens
 
         self.assertEqual('( f() ) as ( f )', parse('with ( f() ) as ( f ): pass').body[0].items[0].f.src)
         self.assertEqual('( f() ) as ( f )', parse('with ( f() ) as ( f ), ( g() ) as ( g ): pass').body[0].items[0].f.src)
         self.assertEqual('( g() ) as ( g )', parse('with ( f() ) as ( f ), ( g() ) as ( g ): pass').body[0].items[1].f.src)
-        self.assertEqual('( 2 ) if a == 1: pass', parse('match a:\n  case ( 2 ) if a == 1: pass').body[0].cases[0].f.src)
+        self.assertEqual('case ( 2 ) if a == 1: pass', parse('match a:\n  case ( 2 ) if a == 1: pass').body[0].cases[0].f.src)
         self.assertEqual('( i ) in range(5) if ( i )', parse('[ ( i ) for ( i ) in range(5) if ( i ) ]').body[0].value.generators[0].f.src)
         self.assertEqual('( i ) in range(5) if ( i )', parse('( ( i ) for ( i ) in range(5) if ( i ) )').body[0].value.generators[0].f.src)
         self.assertEqual(None, parse('def f(): pass').body[0].args.f.src)
@@ -6665,9 +6665,9 @@ match a:
             """.strip()).body[0].f.get_slice(1, 3).dump(linefunc=list)), """
 Module .. ROOT 0,0 -> 1,15
   .body[2]
-  0] match_case .. 0,0 -> 0,7
+  0] match_case .. 0,0 -> 0,12
     .pattern
-      MatchAs .. 0,0 -> 0,1
+      MatchAs .. 0,5 -> 0,6
         .pattern
           None
         .name
@@ -6675,8 +6675,8 @@ Module .. ROOT 0,0 -> 1,15
     .guard
       None
     .body[1]
-    0] Pass .. 0,3 -> 0,7
-  1] match_case .. 1,5 -> 1,15
+    0] Pass .. 0,8 -> 0,12
+  1] match_case .. 1,0 -> 1,15
     .pattern
       MatchSingleton .. 1,5 -> 1,9
         .value
