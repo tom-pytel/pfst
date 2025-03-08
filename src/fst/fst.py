@@ -3842,7 +3842,7 @@ class FST:
         return self
 
     def offset(self, ln: int, col: int, dln: int, dcol_offset: int, inc: bool = False, stop_at: Optional['FST'] = None
-                ) -> 'FST':  # -> Self
+               ) -> 'FST':  # -> Self
         """Offset ast node positions in the tree on or after ln / col by delta line / col_offset (column byte offset).
 
         This only offsets the positions in the `AST` nodes, doesn't change any text, so make sure that is correct before
@@ -3902,7 +3902,7 @@ class FST:
         """
 
         lno  = ln + 1
-        colo = self.root._lines[ln].c2b(col)
+        colo = (l := ls[ln]).c2b(min(col, len(l))) if ln < len(ls := self.root._lines) else 0x7fffffffffffffff
 
         for f in (gen := self.walk(False)):
             a = f.a
