@@ -173,18 +173,6 @@ def _with_loc(ast: AST) -> bool:
                  not ast.kwonlyargs and not ast.kwarg))
 
 
-def _reset_parents_start_pos(fst: 'FST', lineno: int, col_offset: int):  # because of stupid evil unparenthesized tuples
-    """Walk up parent chain (starting at `fst` itself) setting `.lineno` and `.col_offset` to `lineno` and `col_offset`
-    if they are past it. Used for correcting parents after an `offset()` which could not avoid modifying them."""
-
-    while fst:
-        if (lno := getattr(a := fst.a, 'lineno', -1)) > lineno or lno == lineno and a.col_offset > col_offset:
-            a.lineno     = lineno
-            a.col_offset = col_offset
-
-        fst = fst.parent
-
-
 def _next_src(lines: list[str], ln: int, col: int, end_ln: int, end_col: int,
               comment: bool = False, lcont: bool = False) -> srcwpos | None:
     """Get next source code which may or may not include comments or line continuation backslashes. Assuming start pos
@@ -1446,6 +1434,21 @@ class FST:
 
         return fstloc(ln, end_col - 2, ln, end_col)
 
+    def _floor_start_pos(self, lineno: int, col_offset: int, self_: bool = True):  # because of stupid evil unparenthesized tuples
+        """Walk up parent chain (starting at `self`) setting `.lineno` and `.col_offset` to `lineno` and `col_offset` if
+        they are past it. Used for correcting parents after an `offset()` which could not avoid modifying the start
+        position."""
+
+        if not self_:
+            self = self.parent
+
+        while self:
+            if (lno := getattr(a := self.a, 'lineno', -1)) > lineno or lno == lineno and a.col_offset > col_offset:
+                a.lineno     = lineno
+                a.col_offset = col_offset
+
+            self = self.parent
+
     def _maybe_add_comma(self, ln: int, col: int, offset: bool, space: bool,
                          end_ln: int | None = None, end_col: int | None = None) -> bool:
         """Maybe add comma at start of span if not already present as first code in span. Will skip any closing
@@ -1534,7 +1537,7 @@ class FST:
                 self.put_lines([bistr(')')], end_ln, end_col, end_ln, end_col, True, self)
                 self.put_lines([bistr('(')], ln, col, ln, col, False)
 
-                _reset_parents_start_pos(self, ast.lineno, ast.col_offset - 1)
+                self._floor_start_pos(ast.lineno, ast.col_offset - 1)
 
         elif not is_parenthesized:  # if is unparenthesized tuple and empty left then need to add parentheses
             ln, col, end_ln, end_col = self.loc
@@ -1542,7 +1545,7 @@ class FST:
             self.put_lines([bistr('()')], ln, col, end_ln, end_col, True)  # WARNING! `True` may not be safe if another preceding non-containing node ends EXACTLY where the unparenthesized tuple starts, but haven't found a case where this can happen
 
             if end_col == col and end_ln == ln:  # this is tricky because zero length tuple can be at the start of a parent so now we have to correct offset that was applied to all parents start positions
-                _reset_parents_start_pos(self.parent, ast.lineno, ast.col_offset)  # self will not have the start point moved because of `put_lines(..., True)`
+                self._floor_start_pos(ast.lineno, ast.col_offset, False)  # self will not have the start point moved because of `put_lines(..., True)`
 
     def _maybe_fix_set(self):
         # assert isinstance(self.a, Set)
@@ -1814,7 +1817,7 @@ class FST:
             root.put_lines(put_lines, put_ln, put_col, put_end_ln, put_end_col, True, self)  # because of insertion at end and unparenthesized tuple
 
         if is_unparen_tuple:
-            _reset_parents_start_pos(self, lineno, col_offset)  # because of insertion at beginning of unparenthesized tuple, pattern beginning to emerge
+            self._floor_start_pos(lineno, col_offset)  # because of insertion at beginning of unparenthesized tuple, pattern beginning to emerge
 
     def _put_slice_tuple_list_or_set(self, code: Code | None, start: int, stop: int, field: str | None = None,
                                      fix: bool = True):
