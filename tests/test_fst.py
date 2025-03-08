@@ -6499,6 +6499,52 @@ def func():
 
                 raise
 
+    def test_comms(self):
+        f = parse('''
+# hello
+
+# world
+pass  # postcomment
+# next line comment
+pass
+        '''.strip()).body[0].f
+
+        g = f.comms()
+        self.assertIsInstance(g, FST)
+        self.assertEqual('# world\npass  # postcomment\n', g.src)
+        g = f.comms(True, 'pre')
+        self.assertIsInstance(g, FST)
+        self.assertEqual('# world\npass', g.src)
+        g = f.comms(True, 'post')
+        self.assertIsInstance(g, FST)
+        self.assertEqual('pass  # postcomment\n', g.src)
+        g = f.comms(True, False)
+        self.assertIs(g, f)
+
+        g = f.comms(None)
+        self.assertIsInstance(g, fstloc)
+        self.assertEqual((2, 0, 4, 0), g)
+        g = f.comms(None, 'pre')
+        self.assertIsInstance(g, fstloc)
+        self.assertEqual((2, 0, 3, 4), g)
+        g = f.comms(None, 'post')
+        self.assertIsInstance(g, fstloc)
+        self.assertEqual((3, 0, 4, 0), g)
+        g = f.comms(None, False)
+        self.assertIs(g, f)
+
+        g = f.comms(False)
+        self.assertIsInstance(g, fstloc)
+        self.assertEqual((2, 0, 4, 0), g)
+        g = f.comms(False, 'pre')
+        self.assertIsInstance(g, fstloc)
+        self.assertEqual((2, 0, 3, 4), g)
+        g = f.comms(False, 'post')
+        self.assertIsInstance(g, fstloc)
+        self.assertEqual((3, 0, 4, 0), g)
+        g = f.comms(False, False)
+        self.assertIs(g, f.loc)
+
     def test_copy_special(self):
         f = FST.fromsrc('@decorator\nclass cls:\n  pass')
         self.assertEqual(f.a.body[0].f.copy(fix=False).src, '@decorator\nclass cls:\n  pass')

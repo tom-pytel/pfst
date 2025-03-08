@@ -85,6 +85,7 @@ HAS_DOCSTRING           = (FunctionDef, AsyncFunctionDef, ClassDef)
 
 re_empty_line_start     = re.compile(r'[ \t]*')     # start of completely empty or space-filled line (from start pos, start of line indentation)
 re_empty_line           = re.compile(r'[ \t]*$')    # completely empty or space-filled line (from start pos, start of line indentation)
+re_comment_line_start   = re.compile(r'[ \t]*#')    # emmpty line preceding a comment
 re_line_continuation    = re.compile(r'[^#]*\\$')   # line continuation with backslash not following a comment start '#' (from start pos, assumed no asts contained in line)
 re_line_trailing_space  = re.compile(r'.*?(\s*)$')  # location of trailing whitespace at the end of a line
 
@@ -542,10 +543,9 @@ class fstlistproxy:
 
 
 class FSTSrcEdit:
-    """Source editing formatter."""
+    """This class controls source editing behavior."""
 
-    @staticmethod
-    def _fixup_expr_seq_bound(lines: list[str], seq_loc: fstloc,
+    def _fixup_expr_seq_bound(self, lines: list[str], seq_loc: fstloc,
                             fpre: Union['FST', fstloc, None], fpost: Union['FST', fstloc, None],
                             flast: Union['FST', fstloc, None],
                             ) -> tuple[fstloc, Union['FST', fstloc, None], Union['FST', fstloc, None]] | None:
@@ -591,8 +591,8 @@ class FSTSrcEdit:
 
         return fstloc(start_ln, start_col, stop_ln, stop_col), fpre, fpost
 
-    @staticmethod
-    def _expr_src_edit_locs(lines: list[bistr], loc: fstloc, bound: fstloc, at_end: bool = False) -> tuple[fstloc, fstloc, list[str]]:
+    def _expr_src_edit_locs(self, lines: list[bistr], loc: fstloc, bound: fstloc, at_end: bool = False,
+                            ) -> tuple[fstloc, fstloc, list[str]]:
         """Get expression copy and delete locations. There can be commas in the bound in which case the expression is
         treated as part of a comma delimited sequence. In this case, if there is a trailing comma within bounding span then
         it is included in the delete location. Any enclosing grouping parentheses within the bounding span are included. Any
@@ -736,6 +736,46 @@ class FSTSrcEdit:
         # end of special sauce
 
         return fstloc(copy_ln, copy_col, copy_end_ln, copy_end_col), fstloc(del_ln, del_col, del_end_ln, del_end_col)
+
+    def pre_comments(self, lines: list[bistr], f: Union['FST', fstloc], bound_ln: int, bound_col: int,
+                     ) -> tuple[int, int]:
+        """Return the position of the start of any preceding comments to the element which is assumed to live just past
+        (`f.ln`, `f.col`). Can return (`f.ln`, `f.col`) if no preceding comment. If preceding entire line comments exist
+        then the returned position column should be 0 (the start of the line) to indicate that it is a full line
+        comment. This particular implementation will return any full line comments directly preceding the element if it
+        starts its own line."""
+
+        bound_end_ln  = f.ln
+        bound_end_col = f.col
+
+        if not (bound_ln == bound_end_ln or not re_empty_line.match(lines[bound_end_ln], 0, bound_end_col)):
+            for ln in range(bound_end_ln - 1, bound_ln + bool(bound_col), -1):  # only consider whole lines
+                if not re_comment_line_start.match(lines[ln]):
+                    break
+
+                bound_end_ln  = ln
+                bound_end_col = 0
+
+        return bound_end_ln, bound_end_col
+
+    def post_comments(self, lines: list[bistr], f: Union['FST', fstloc], bound_end_ln: int, bound_end_col: int,
+                      ) -> tuple[int, int]:
+        """Return the position of the end of any preceding trailing comments to the element which is assumed to live
+        just before (`f.end_ln`, `f.end_col`). Can return (`f.end_ln`, `f.end_col`) if no trailing comment. Should
+        return the location at the start of the next line if comment present because a comment should never be on the
+        last line, but if a comment ends the bound should return the end of the bound. This particular implementation
+        will return any comment which lives on the same line as `bound_ln`, no other comments past it on following
+        lines."""
+
+        bound_ln  = f.end_ln
+        bound_col = f.end_col
+
+        if (not (code := _next_src(lines, bound_ln, bound_col, bound_end_ln, bound_end_col, True)) or
+            code.ln != bound_ln or not code.src.startswith('#')
+        ):
+            return bound_ln, bound_col
+
+        return (bound_ln + 1, 0) if bound_end_ln > bound_ln else (bound_end_ln, bound_end_col)
 
     def get_seq(self, fst: 'FST', cut: bool, seq_loc: fstloc,
                 ffirst: Union['FST', fstloc], flast: Union['FST', fstloc],
@@ -899,6 +939,8 @@ class FST:
     indent:       str                       ; """The default single level of block indentation string for this tree when not available from context, root node only."""
     docstring:    bool | Literal['strict']  ; """The default docstring indent / dedent behavior. `True` means allow indent of all `Expr` multiline strings, `False` means don't indent any of them and `'strict'` allows for indenting multiline strings at standard docstring locations only."""
     _lines:       list[bistr]
+
+    src_edit:     FSTSrcEdit = FSTSrcEdit() ; """@private"""
 
     @property
     def is_root(self) -> bool:
@@ -1102,8 +1144,6 @@ class FST:
 
         raise RuntimeError("you probably think you're accessing an AST node, but you're not, you're accessing an FST node")
 
-    src_edit: FSTSrcEdit = FSTSrcEdit()  ; """@private"""
-
     # ------------------------------------------------------------------------------------------------------------------
 
     def _make_fst_tree(self, stack: list['FST'] | None = None):
@@ -1284,7 +1324,7 @@ class FST:
         last = self.last_child(True)
 
         if isinstance(ast, match_case):
-            return fstloc(*_prev_find(self.root._lines, 0, 0, first.ln, first.col, 'case'), last.bend_ln, last.bend_col)  # we can use 0,0 because we know "case" starts on a newline
+            return fstloc(*_prev_find(self.root._lines, 0, 0, first.ln, first.col, 'case'), last.bend_ln, last.bend_col)  # we can use (0,0) because we know "case" starts on a newline
 
         start_ln, start_col, ante_start_ln, ante_start_col, nlpars = first._lpars()
 
@@ -3668,7 +3708,7 @@ class FST:
         return fst
 
     def pars(self, ret_fst: bool | None = True) -> Union['FST', fstloc, None]:
-        """Return a the location of enclosing parentheses either as an `fstloc` or an `FST`. If requesting an `FST` then
+        """Return the location of enclosing parentheses either as an `fstloc` or an `FST`. If requesting an `FST` then
         the return value can be `self` or a clone `FST` of `self` with modified `loc` which should only be used for a
         limited number of things. Will balance parentheses if `self` is an element of a tuple and not return the
         parentheses of the tuple. Likwise will not return the parentheses of an enclosing `arguments` parent. Only
@@ -3712,6 +3752,58 @@ class FST:
         loc = fstloc(pars_ln, pars_col, pars_end_ln, pars_end_col)
 
         return self.locmock(loc) if ret_fst else loc
+
+    def comms(self, ret_fst: bool | None = True, comms: bool | Literal['pre'] | Literal['post'] = True,
+              ) -> Union['FST', fstloc, None]:
+        """Return the location of preceding and trailing comments (if present and requested). If requesting an `FST`
+        then the return value can be `self` or a clone `FST` of `self` with modified `loc` which should only be used for
+        a limited number of things. Only works on (and makes sense for) `stmt`, 'ExceptHandler' or `match_case` nodes,
+        otherwise returns `self` or `self.loc`.
+
+        **Parameters:**
+        - `ret_fst`: If `True` then always return an `FST` (`self` or clone), `False` will always return an `fstloc`
+            (which could be `self.loc`) and `None` can return an `fstloc` or `self` if no comments found.
+        - `comms': Which comments to include, `True` means all, `False` means none, `"pre"` means only preceding
+            comments and `"post"` means only trailing comments.
+
+        **Returns:**
+        - `fstloc | FST | None`: If `ret_fst` is `None` and no comments found then just returns `self`. A `None` can
+            be returned if `ret_fst` is `False` and there are no comments and `self` does not have a `loc`.
+        """
+
+        if not comms or not isinstance(self.a, STATEMENTISH):
+            return self.loc if ret_fst is False else self
+
+        src_edit = self.src_edit
+        lines    = self.root._lines
+        loc      = self.loc
+
+        if comms is True or comms == 'pre':
+            comms_ln, comms_col = src_edit.pre_comments(lines, self, *self._lbound())
+
+        else:
+            comms_ln  = loc.ln
+            comms_col = loc.col
+
+        if comms is True or comms == 'post':
+            comms_end_ln, comms_end_col = src_edit.post_comments(lines, self, *self._rbound())
+
+        else:
+            comms_end_ln  = loc.end_ln
+            comms_end_col = loc.end_col
+
+        comms_loc = fstloc(comms_ln, comms_col, comms_end_ln, comms_end_col)
+
+        if ret_fst is False:
+            return comms_loc
+
+        if comms_loc == loc:
+            return self
+
+        if not ret_fst:
+            return comms_loc
+
+        return self.locmock(comms_loc)
 
     # ------------------------------------------------------------------------------------------------------------------
 
