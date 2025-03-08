@@ -128,6 +128,13 @@ class fstloc(NamedTuple):
     end_ln:  int
     end_col: int
 
+    bln      = property(lambda self: self.ln)       ; """Alias for `ln`."""
+    bcol     = property(lambda self: self.col)      ; """Alias for `col`."""
+    bend_ln  = property(lambda self: self.end_ln)   ; """Alias for `end_ln`."""
+    bend_col = property(lambda self: self.end_col)  ; """Alias for `end_col`."""
+
+    is_FST   = False                                ; """For quick checks vs. `FST`."""
+
 
 class srcwpos(NamedTuple):
     ln:  int
@@ -746,8 +753,8 @@ class FSTSrcEdit:
         comment. This particular implementation will return any full line comments directly preceding the element if it
         starts its own line."""
 
-        bound_end_ln  = f.ln
-        bound_end_col = f.col
+        bound_end_ln  = f.bln
+        bound_end_col = f.bcol
 
         if not (bound_ln == bound_end_ln or not re_empty_line.match(lines[bound_end_ln], 0, bound_end_col)):
             for ln in range(bound_end_ln - 1, bound_ln + bool(bound_col), -1):  # only consider whole lines
@@ -768,8 +775,8 @@ class FSTSrcEdit:
         will return any comment which lives on the same line as `bound_ln`, no other comments past it on following
         lines."""
 
-        bound_ln  = f.end_ln
-        bound_col = f.end_col
+        bound_ln  = f.bend_ln
+        bound_col = f.bend_col
 
         if (not (code := _next_src(lines, bound_ln, bound_col, bound_end_ln, bound_end_col, True)) or
             code.ln != bound_ln or not code.src.startswith('#')
@@ -778,9 +785,9 @@ class FSTSrcEdit:
 
         return (bound_ln + 1, 0) if bound_end_ln > bound_ln else (bound_end_ln, bound_end_col)
 
-    def get_seq(self, fst: 'FST', cut: bool, seq_loc: fstloc,
-                ffirst: Union['FST', fstloc], flast: Union['FST', fstloc],
-                fpre: Union['FST', fstloc, None], fpost: Union['FST', fstloc, None],
+    def get_slice_seq(self, fst: 'FST', cut: bool, seq_loc: fstloc,
+                      ffirst: Union['FST', fstloc], flast: Union['FST', fstloc],
+                      fpre: Union['FST', fstloc, None], fpost: Union['FST', fstloc, None],
     ) -> tuple[fstloc, fstloc | None, list[str] | None]:  # (copy_loc, del/put_loc, put_lines)
         """Copy or cut from comma delimited sequence.
 
@@ -824,10 +831,10 @@ class FSTSrcEdit:
 
         return (copy_loc, del_loc, None) if cut else (copy_loc, None, None)
 
-    def put_seq(self, fst: 'FST', put_fst: Optional['FST'], indent: str, seq_loc: fstloc,
-                ffirst: Union['FST', fstloc, None], flast: Union['FST', fstloc, None],
-                fpre: Union['FST', fstloc, None], fpost: Union['FST', fstloc, None],
-                pfirst: Union['FST', fstloc, None], plast: Union['FST', fstloc, None],
+    def put_slice_seq(self, fst: 'FST', put_fst: Optional['FST'], indent: str, seq_loc: fstloc,
+                      ffirst: Union['FST', fstloc, None], flast: Union['FST', fstloc, None],
+                      fpre: Union['FST', fstloc, None], fpost: Union['FST', fstloc, None],
+                      pfirst: Union['FST', fstloc, None], plast: Union['FST', fstloc, None],
     ) -> fstloc:  # del_loc
         """Put to comma delimited sequence.
 
@@ -940,6 +947,9 @@ class FST:
     indent:       str                       ; """The default single level of block indentation string for this tree when not available from context, root node only."""
     docstring:    bool | Literal['strict']  ; """The default docstring indent / dedent behavior. `True` means allow indent of all `Expr` multiline strings, `False` means don't indent any of them and `'strict'` allows for indenting multiline strings at standard docstring locations only."""
     _lines:       list[bistr]
+
+    # class attributes
+    is_FST:       bool       = True         ; """For quick checks vs. `fstloc`."""
 
     src_edit:     FSTSrcEdit = FSTSrcEdit() ; """@private"""
 
@@ -1149,9 +1159,9 @@ class FST:
 
         return (l := self.bloc) and l[0]
 
-    bcol     = col
+    bcol     = col  # for symmetry, also may eventually be distinct
     bend_ln  = end_ln
-    bend_col = end_col  # maybe will eventually include trailing comments
+    bend_col = end_col
 
     @property
     def lineno(self) -> int:  # 1 based
@@ -1579,7 +1589,7 @@ class FST:
                             fpre: Union['FST', fstloc, None], fpost: Union['FST', fstloc, None],
                             prefix: str, suffix: str) -> 'FST':
 
-        copy_loc, put_loc, put_lines = self.src_edit.get_seq(self, cut, seq_loc, ffirst, flast, fpre, fpost)
+        copy_loc, put_loc, put_lines = self.src_edit.get_slice_seq(self, cut, seq_loc, ffirst, flast, fpre, fpost)
 
         copy_ln, copy_col, copy_end_ln, copy_end_col = copy_loc
 
@@ -1771,7 +1781,7 @@ class FST:
 
         if not put_fst:  # delete
             put_ln, put_col, put_end_ln, put_end_col = (
-                self.src_edit.put_seq(self, None, '', seq_loc, ffirst, flast, fpre, fpost, None, None))
+                self.src_edit.put_slice_seq(self, None, '', seq_loc, ffirst, flast, fpre, fpost, None, None))
 
             put_lines = None
 
@@ -1783,7 +1793,7 @@ class FST:
             put_fst.indent_lns(indent)
 
             put_ln, put_col, put_end_ln, put_end_col = (
-                self.src_edit.put_seq(self, put_fst, indent, seq_loc, ffirst, flast, fpre, fpost, pfirst, plast))
+                self.src_edit.put_slice_seq(self, put_fst, indent, seq_loc, ffirst, flast, fpre, fpost, pfirst, plast))
 
             lines           = root._lines
             put_lines       = put_fst._lines
