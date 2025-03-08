@@ -20,7 +20,7 @@ with ( f() ) as ( f ): pass
 """, 'body[0].items[0].context_expr', r"""
 ( f() )
 """, r"""
-Call .. 0,5 -> 0,12
+Call .. MOCK 0,5 -> 0,12
   .func
     Name 'f' Load .. 0,7 -> 0,8
 """),
@@ -30,7 +30,7 @@ with ( f() ) as ( f ): pass
 """, 'body[0].items[0].optional_vars', r"""
 ( f )
 """, r"""
-Name 'f' Store .. 0,16 -> 0,21
+Name 'f' Store .. MOCK 0,16 -> 0,21
 """),
 
 (r"""
@@ -38,7 +38,7 @@ with ( f() ) as ( f ), ( g() ) as ( g ): pass
 """, 'body[0].items[0].context_expr', r"""
 ( f() )
 """, r"""
-Call .. 0,5 -> 0,12
+Call .. MOCK 0,5 -> 0,12
   .func
     Name 'f' Load .. 0,7 -> 0,8
 """),
@@ -48,7 +48,7 @@ with ( f() ) as ( f ), ( g() ) as ( g ): pass
 """, 'body[0].items[0].optional_vars', r"""
 ( f )
 """, r"""
-Name 'f' Store .. 0,16 -> 0,21
+Name 'f' Store .. MOCK 0,16 -> 0,21
 """),
 
 (r"""
@@ -56,7 +56,7 @@ with ( f() ) as ( f ), ( g() ) as ( g ): pass
 """, 'body[0].items[1].context_expr', r"""
 ( g() )
 """, r"""
-Call .. 0,23 -> 0,30
+Call .. MOCK 0,23 -> 0,30
   .func
     Name 'g' Load .. 0,25 -> 0,26
 """),
@@ -66,7 +66,7 @@ with ( f() ) as ( f ), ( g() ) as ( g ): pass
 """, 'body[0].items[1].optional_vars', r"""
 ( g )
 """, r"""
-Name 'g' Store .. 0,34 -> 0,39
+Name 'g' Store .. MOCK 0,34 -> 0,39
 """),
 
 (r"""
@@ -75,7 +75,7 @@ match a:
 """, 'body[0].cases[0].pattern', r"""
 ( 2 )
 """, r"""
-MatchValue .. 1,7 -> 1,12
+MatchValue .. MOCK 1,7 -> 1,12
   .value
     Constant 2 .. 1,9 -> 1,10
 """),
@@ -85,7 +85,7 @@ MatchValue .. 1,7 -> 1,12
 """, 'body[0].value.elt', r"""
 ( i )
 """, r"""
-Name 'i' Load .. 0,2 -> 0,7
+Name 'i' Load .. MOCK 0,2 -> 0,7
 """),
 
 (r"""
@@ -93,7 +93,7 @@ Name 'i' Load .. 0,2 -> 0,7
 """, 'body[0].value.generators[0].target', r"""
 ( j )
 """, r"""
-Name 'j' Store .. 0,12 -> 0,17
+Name 'j' Store .. MOCK 0,12 -> 0,17
 """),
 
 (r"""
@@ -101,7 +101,7 @@ Name 'j' Store .. 0,12 -> 0,17
 """, 'body[0].value.generators[0].iter', r"""
 ( range(5) )
 """, r"""
-Call .. 0,21 -> 0,33
+Call .. MOCK 0,21 -> 0,33
   .func
     Name 'range' Load .. 0,23 -> 0,28
   .args[1]
@@ -113,7 +113,7 @@ Call .. 0,21 -> 0,33
 """, 'body[0].value.generators[0].ifs[0]', r"""
 ( k )
 """, r"""
-Name 'k' Load .. 0,37 -> 0,42
+Name 'k' Load .. MOCK 0,37 -> 0,42
 """),
 
 (r"""
@@ -121,7 +121,7 @@ Name 'k' Load .. 0,37 -> 0,42
 """, 'body[0].value.elt', r"""
 ( i )
 """, r"""
-Name 'i' Load .. 0,2 -> 0,7
+Name 'i' Load .. MOCK 0,2 -> 0,7
 """),
 
 (r"""
@@ -129,7 +129,7 @@ Name 'i' Load .. 0,2 -> 0,7
 """, 'body[0].value.generators[0].target', r"""
 ( j )
 """, r"""
-Name 'j' Store .. 0,12 -> 0,17
+Name 'j' Store .. MOCK 0,12 -> 0,17
 """),
 
 (r"""
@@ -137,7 +137,7 @@ Name 'j' Store .. 0,12 -> 0,17
 """, 'body[0].value.generators[0].iter', r"""
 ( range(5) )
 """, r"""
-Call .. 0,21 -> 0,33
+Call .. MOCK 0,21 -> 0,33
   .func
     Name 'range' Load .. 0,23 -> 0,28
   .args[1]
@@ -149,7 +149,7 @@ Call .. 0,21 -> 0,33
 """, 'body[0].value.generators[0].ifs[0]', r"""
 ( k )
 """, r"""
-Name 'k' Load .. 0,37 -> 0,42
+Name 'k' Load .. MOCK 0,37 -> 0,42
 """),
 
 (r"""
@@ -157,7 +157,7 @@ def f(a=(1)): pass
 """, 'body[0].args.defaults[0]', r"""
 (1)
 """, r"""
-Constant 1 .. 0,8 -> 0,11
+Constant 1 .. MOCK 0,8 -> 0,11
 """),
 
 (r"""
@@ -165,7 +165,7 @@ def f( a = ( 1 )): pass
 """, 'body[0].args.defaults[0]', r"""
 ( 1 )
 """, r"""
-Constant 1 .. 0,11 -> 0,16
+Constant 1 .. MOCK 0,11 -> 0,16
 """),
 
 (r"""
@@ -173,7 +173,7 @@ lambda a = ( 1 ) : None
 """, 'body[0].value.args.defaults[0]', r"""
 ( 1 )
 """, r"""
-Constant 1 .. 0,11 -> 0,16
+Constant 1 .. MOCK 0,11 -> 0,16
 """),
 
 (r"""
@@ -181,7 +181,7 @@ Constant 1 .. 0,11 -> 0,16
 """, 'body[0].value.elts[1]', r"""
 ( 2 )
 """, r"""
-Constant 2 .. 0,4 -> 0,9
+Constant 2 .. MOCK 0,4 -> 0,9
 """),
 
 (r"""
@@ -189,7 +189,7 @@ Constant 2 .. 0,4 -> 0,9
 """, 'body[0].value.elts[0]', r"""
 (1)
 """, r"""
-Constant 1 .. 0,0 -> 0,3
+Constant 1 .. MOCK 0,0 -> 0,3
 """),
 
 (r"""
@@ -197,7 +197,7 @@ Constant 1 .. 0,0 -> 0,3
 """, 'body[0].value.elts[0]', r"""
 (1)
 """, r"""
-Constant 1 .. 0,1 -> 0,4
+Constant 1 .. MOCK 0,1 -> 0,4
 """),
 
 (r"""
@@ -205,7 +205,7 @@ Constant 1 .. 0,1 -> 0,4
 """, 'body[0].value.elts[0]', r"""
 (1)
 """, r"""
-Constant 1 .. 0,0 -> 0,3
+Constant 1 .. MOCK 0,0 -> 0,3
 """),
 
 (r"""
@@ -213,7 +213,7 @@ Constant 1 .. 0,0 -> 0,3
 """, 'body[0].value.elts[1]', r"""
 ( 2 )
 """, r"""
-Constant 2 .. 0,5 -> 0,10
+Constant 2 .. MOCK 0,5 -> 0,10
 """),
 
 (r"""
@@ -221,7 +221,7 @@ Constant 2 .. 0,5 -> 0,10
 """, 'body[0].value.elts[0]', r"""
 (1)
 """, r"""
-Constant 1 .. 0,1 -> 0,4
+Constant 1 .. MOCK 0,1 -> 0,4
 """),
 
 (r"""
@@ -229,7 +229,7 @@ Constant 1 .. 0,1 -> 0,4
 """, 'body[0].value.elts[1]', r"""
 ( 2 )
 """, r"""
-Constant 2 .. 0,6 -> 0,11
+Constant 2 .. MOCK 0,6 -> 0,11
 """),
 
 ]  # END OF PARS_DATA

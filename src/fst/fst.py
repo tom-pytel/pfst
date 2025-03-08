@@ -1194,7 +1194,7 @@ class FST:
 
         self.touchall(False)  # for debugging because we may have cached locs which would not have otherwise been cached during execution
 
-        tail = ' ROOT' if self.is_root else ''
+        tail = (' ROOT' if self.is_root else '') if self.a.f is self else (' MOCK ROOT' if self.is_root else ' MOCK')
 
         return f'{tail} {loc[0]},{loc[1]} -> {loc[2]},{loc[3]}' if loc else tail
 
