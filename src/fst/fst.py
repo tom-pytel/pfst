@@ -76,11 +76,12 @@ DEFAULT_DOCSTRING       = True
 STATEMENTISH            = (stmt, ExceptHandler, match_case)  # always in lists, cannot be inside multilines
 STATEMENTISH_OR_MOD     = (stmt, ExceptHandler, match_case, mod)
 STATEMENTISH_OR_STMTMOD = (stmt, ExceptHandler, match_case, Module, Interactive)
-NAMED_SCOPE_OR_MOD      = (FunctionDef, AsyncFunctionDef, ClassDef, mod)
-SCOPE_OR_MOD            = (FunctionDef, AsyncFunctionDef, ClassDef, Lambda, ListComp, SetComp, DictComp, GeneratorExp,
-                           mod)
 BLOCK_OR_MOD            = (FunctionDef, AsyncFunctionDef, ClassDef, For, AsyncFor, While, If, With, AsyncWith, Match,
                            Try, TryStar, ExceptHandler, match_case, mod)
+SCOPE_OR_MOD            = (FunctionDef, AsyncFunctionDef, ClassDef, Lambda, ListComp, SetComp, DictComp, GeneratorExp,
+                           mod)
+NAMED_SCOPE_OR_MOD      = (FunctionDef, AsyncFunctionDef, ClassDef, mod)
+ANONYMOUS_SCOPE         = (Lambda, ListComp, SetComp, DictComp, GeneratorExp)
 HAS_DOCSTRING           = (FunctionDef, AsyncFunctionDef, ClassDef)
 
 re_empty_line_start     = re.compile(r'[ \t]*')     # start of completely empty or space-filled line (from start pos, start of line indentation)
@@ -949,6 +950,44 @@ class FST:
         return self.parent is None
 
     @property
+    def is_stmt(self) -> bool:
+        """Is a `stmt` or `mod` node (if any)."""
+
+        return isinstance(self.a, (stmt, mod))
+
+    @property
+    def is_stmtish(self) -> bool:
+        """Is a `stmt`, `ExceptHandler`, `match_case` or `mod` node (if any)."""
+
+        return isinstance(self.a, STATEMENTISH_OR_MOD)
+
+    @property
+    def is_block(self) -> bool:
+        """Opens a block. Types include `FunctionDef`, `AsyncFunctionDef`, `ClassDef`, `For`, `AsyncFor`, `While`, `If`,
+        `With`, `AsyncWith`, `Match`, `Try`, `TryStar`, `ExceptHandler`, `match_case`, and `mod`."""
+
+        return isinstance(self.a, BLOCK_OR_MOD)
+
+    @property
+    def is_scope(self) -> bool:
+        """Opens a scope. Types include `FunctionDef`, `AsyncFunctionDef`, `ClassDef`, `Lambda`, `ListComp`, `SetComp`,
+        `DictComp`, `GeneratorExp`, and `mod`."""
+
+        return isinstance(self, SCOPE_OR_MOD)
+
+    @property
+    def is_named_scope(self) -> bool:
+        """Opens a named scope. Types include `FunctionDef`, `AsyncFunctionDef`,  `ClassDef` and `mod`."""
+
+        return isinstance(self, NAMED_SCOPE_OR_MOD)
+
+    @property
+    def is_anon_scope(self) -> bool:
+        """Opens an anonymous scope. Types include `Lambda`, `ListComp`, `SetComp`, `DictComp` and `GeneratorExp`."""
+
+        return isinstance(self, ANONYMOUS_SCOPE)
+
+    @property
     def parent_stmt(self) -> Optional['FST']:
         """The first parent which is a `stmt` or `mod` node (if any)."""
 
@@ -1142,7 +1181,8 @@ class FST:
     def f(self):
         """@private"""
 
-        raise RuntimeError("you probably think you're accessing an AST node, but you're not, you're accessing an FST node")
+        raise RuntimeError("you probably think you're accessing an AST node, but you're not, "
+                           "you're accessing an FST node")
 
     # ------------------------------------------------------------------------------------------------------------------
 
