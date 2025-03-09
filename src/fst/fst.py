@@ -90,7 +90,8 @@ re_comment_line_start   = re.compile(r'[ \t]*#')    # emmpty line preceding a co
 re_line_continuation    = re.compile(r'[^#]*\\$')   # line continuation with backslash not following a comment start '#' (from start pos, assumed no asts contained in line)
 re_line_trailing_space  = re.compile(r'.*?(\s*)$')  # location of trailing whitespace at the end of a line
 
-re_oneline_str          = re.compile(r'(?:b|r|rb|br|u|)  (?:  \'(?:\\.|[^\\\'])*?\'  |  "(?:\\.|[^\\"])*?"  )', re.VERBOSE | re.IGNORECASE)  # I f^\\\'])*\'ng hate these!
+re_oneline_str          = re.compile(r'(?:b|r|rb|br|u|)  (?:  \'(?:\\.|[^\\\'])*?\'  |  "(?:\\.|[^\\"])*?"  )',   # I f'])*?\'ng hate these!
+                                     re.VERBOSE | re.IGNORECASE)
 re_contline_str_start   = re.compile(r'(?:b|r|rb|br|u|)  (\'|")', re.VERBOSE | re.IGNORECASE)
 re_contline_str_end_sq  = re.compile(r'(?:\\.|[^\\\'])*?  \'', re.VERBOSE)
 re_contline_str_end_dq  = re.compile(r'(?:\\.|[^\\"])*?  "', re.VERBOSE)
@@ -180,10 +181,17 @@ def _with_loc(fst: 'FST', with_loc: bool | Literal['own'] = True) -> bool:
 
 
 def _next_src(lines: list[str], ln: int, col: int, end_ln: int, end_col: int,
-              comment: bool = False, lcont: bool = False) -> srcwpos | None:
-    """Get next source code which may or may not include comments or line continuation backslashes. Assuming start pos
-    not inside str or comment. Code is not necessarily AST stuff, it can be commas, colons, the 'try' keyword, etc...
-    Code can include multiple AST nodes in return str if there are no spaces between them like 'a+b'."""
+              comment: bool = False, lcont: bool | None = False) -> srcwpos | None:
+    """Get next source code which may or may not include comments or line continuation backslashes. May be restricted
+    to bound or further restricted to not exceed logical line. Assuming start pos not inside str or comment. Code is not
+    necessarily AST stuff, it can be commas, colons, the 'try' keyword, etc... Code can include multiple AST nodes in
+    return str if there are no spaces between them like 'a+b'.
+
+    **Parameters:**
+    - `comment`: Whether to return comments found, which will be the whole comment.
+    - `lcont`: Whether to return line continuations found (backslash at end of line) if `True`, skip over them if
+        `False`, or skip over them and restrict search to logical line `None`.
+    """
 
     re_pat = (
         (re_next_src_or_comment_or_lcont if comment else re_next_src_or_lcont)
@@ -194,38 +202,25 @@ def _next_src(lines: list[str], ln: int, col: int, end_ln: int, end_col: int,
     if end_ln == ln:
         return srcwpos(ln, m.start(1), m.group(1)) if (m := re_pat.match(lines[ln], col, end_col)) else None
 
-    for i in range(ln, end_ln):
-        if m := re_pat.match(lines[i], col):
-            return srcwpos(i, m.start(1), m.group(1))
+    if lcont is not None:
+        for i in range(ln, end_ln):
+            if m := re_pat.match(lines[i], col):
+                return srcwpos(i, m.start(1), m.group(1))
 
-        col = 0
+            col = 0
 
-    if m := re_pat.match(lines[end_ln], 0, end_col):
-        return srcwpos(end_ln, m.start(1), m.group(1))
+    else:  # only match to end of logical line, regardless of (end_ln, end_col) bound
+        for i in range(ln, end_ln):
+            if not (m := re_next_src_or_comment_or_lcont.match(lines[i], col)):
+                return None
 
-    return None
+            if (s := m.group(1)).startswith('#'):
+                return srcwpos(i, m.start(1), s) if comment else None
 
+            if s != '\\':  # line continuations are always matched alone
+                return srcwpos(i, m.start(1), s)
 
-def _next_src_lline(lines: list[str], ln: int, col: int, end_ln: int, end_col: int, comment: bool = False
-                    ) -> srcwpos | None:
-    """Same rules as `_next_src()` but do not exceed logical line during search (even if bounds exceed lline)."""
-
-    re_pat = re_next_src_or_comment if comment else re_next_src
-
-    if end_ln == ln:
-        return srcwpos(ln, m.start(1), m.group(1)) if (m := re_pat.match(lines[ln], col, end_col)) else None
-
-    for i in range(ln, end_ln):
-        if not (m := re_next_src_or_comment_or_lcont.match(lines[i], col)):
-            return None
-
-        if (s := m.group(1)).startswith('#'):
-            return srcwpos(i, m.start(1), s) if comment else None
-
-        if not s.startswith('\\'):
-            return srcwpos(i, m.start(1), s)
-
-        col = 0
+            col = 0
 
     if m := re_pat.match(lines[end_ln], 0, end_col):
         return srcwpos(end_ln, m.start(1), m.group(1))
@@ -234,12 +229,23 @@ def _next_src_lline(lines: list[str], ln: int, col: int, end_ln: int, end_col: i
 
 
 def _prev_src(lines: list[str], ln: int, col: int, end_ln: int, end_col: int,
-              comment: bool = False, lcont: bool = False, *, state: list | None = None) -> srcwpos | None:
-    """Same rules as `_next_src()` but return the LAST occurance of code or maybe comment in the span.
+              comment: bool = False, lcont: bool | None = False, *,
+              state: list | None = None) -> srcwpos | None:
+    """Get prev source code which may or may not include comments or line continuation backslashes. May be restricted
+    to bound or further restricted to not exceed logical line. Assuming start pos not inside str or comment. Code is not
+    necessarily AST stuff, it can be commas, colons, the 'try' keyword, etc... Code can include multiple AST nodes in
+    return str if there are no spaces between them like 'a+b'.
+
+    **CAVEAT:** It is a good idea to make sure the starting position (`ln`, `col`) is not inside a string because that
+    could give false positives for comments or line continuations.
 
     **Parameters:**
+    - `comment`: Whether to return comments found, which will be the whole comment.
+    - `lcont`: Whether to return line continuations found (backslash at end of line) if `True`, skip over them if
+        `False`, or skip over them and restrict search to logical line `None`.
     - `state`: Can be used to cache walk but must only be used if the walk is sequentially backwards starting each time
-        at the start position of the previously returned match."""
+        at the start position of the previously returned match.
+    """
 
     re_pat = (
         (re_next_src_or_comment_or_lcont if comment else re_next_src_or_lcont)
@@ -250,25 +256,65 @@ def _prev_src(lines: list[str], ln: int, col: int, end_ln: int, end_col: int,
     if state is None:
         state = []
 
-    def last_match(l, c, ec):
+    def last_match(l, c, ec, p):
         if state:
             return state.pop()
 
-        while (m := re_pat.match(l, c, ec)) and not l.startswith('#\\', c := m.end(1)):
+        while m := p.match(l, c, ec):
+            c = m.end(1)
+
+            if (not comment and l.startswith('#', c)) or (not lcont and l.startswith('\\', c)):
+                break
+
             state.append(m)
 
         return state.pop() if state else None
 
     if end_ln == ln:
-        return srcwpos(ln, m.start(1), m.group(1)) if (m := last_match(lines[ln], col, end_col)) else None
+        return srcwpos(ln, m.start(1), m.group(1)) if (m := last_match(lines[ln], col, end_col, re_pat)) else None
 
-    for i in range(end_ln, ln, -1):
-        if m := last_match(lines[i], 0, end_col):
-            return srcwpos(i, m.start(1), m.group(1))
+    if lcont is not None:
+        for i in range(end_ln, ln, -1):
+            if m := last_match(lines[i], 0, end_col, re_pat):
+                return srcwpos(i, m.start(1), m.group(1))
 
-        end_col = 0x7fffffffffffffff
+            end_col = 0x7fffffffffffffff
 
-    if m := last_match(lines[ln], col, end_col):
+    else:  # only match to start of logical line, regardless of (ln, col) bound
+        cont_ln = end_ln
+
+        if not (m := last_match(lines[end_ln], 0, end_col, re_next_src_or_comment_or_lcont)):
+            end_ln  -= 1
+            end_col  = 0x7fffffffffffffff
+
+        else:
+            if not (s := m.group(1)).startswith('#') or comment:
+                return srcwpos(end_ln, m.start(1), m.group(1))
+
+            end_col = m.start(1)
+
+        i = end_ln + 1
+
+        while (i := i - 1) > ln:
+            if not (m := last_match(lines[i], 0, end_col, re_next_src_or_comment_or_lcont)):
+                if i < cont_ln:  # early out
+                    return None
+
+            elif (s := m.group(1)) == '\\':
+                cont_ln  = ln
+                end_col  = m.start(1)  # in case state was exhausted
+                i       += 1  # to search same line again, possibly from new end_col
+
+                continue
+
+            elif s.startswith('#'):  # a comment here started a previous line and thus not a line continuation
+                return None
+            else:
+                return srcwpos(i, m.start(1), m.group(1))
+
+            end_col = 0x7fffffffffffffff  # will take effect for previous line when state empties
+
+    if m := last_match(lines[ln], col, end_col, re_pat):
         return srcwpos(ln, m.start(1), m.group(1))
 
     return None
@@ -2390,7 +2436,8 @@ class FST:
                     need_paren = False
 
                 elif (not (elts := ast.elts) or any(isinstance(e, NamedExpr) for e in elts) or (len(elts) == 1 and (
-                      not (code := _next_src_lline(lines, (f0 := elts[0].f).end_ln, f0.end_col, end_ln, end_col)) or  # if comma not on logical line then definitely need to add parens, if no comma then the parens are incidental but we want that code path for adding the singleton comma
+                      not (code := _next_src(lines, (f0 := elts[0].f).end_ln, f0.end_col, end_ln, end_col, False, None))
+                      or  # if comma not on logical line then definitely need to add parens, if no comma then the parens are incidental but we want that code path for adding the singleton comma
                       not code.src.startswith(',')))):
                     need_paren = True
 

@@ -5681,6 +5681,104 @@ two  # fake comment start""", **b
         f = fst._normalize_code(FST.fromsrc('i', mode='eval'), expr_=True)
         self.assertIsInstance(f.a, Name)
 
+    def test__next_prev_src(self):
+        lines = '''
+  # pre
+i \\
+here \\
+j \\
+  # post
+k \\
+            '''.split('\n')
+
+        self.assertEqual((4, 0, 'j'), fst._next_src(lines, 3, 4, 7, 0, False, False))
+        self.assertEqual((4, 0, 'j'), fst._next_src(lines, 3, 4, 7, 0, True, False))
+        self.assertEqual((6, 0, 'k'), fst._next_src(lines, 4, 1, 7, 0, False, False))
+        self.assertEqual((5, 2, '# post'), fst._next_src(lines, 4, 1, 7, 0, True, False))
+        self.assertEqual((6, 0, 'k'), fst._next_src(lines, 5, 8, 7, 0, False, False))
+        self.assertEqual((6, 0, 'k'), fst._next_src(lines, 5, 8, 7, 0, True, False))
+
+        self.assertEqual((3, 5, '\\'), fst._next_src(lines, 3, 4, 7, 0, False, True))
+        self.assertEqual((3, 5, '\\'), fst._next_src(lines, 3, 4, 7, 0, True, True))
+        self.assertEqual((4, 2, '\\'), fst._next_src(lines, 4, 1, 7, 0, False, True))
+        self.assertEqual((4, 2, '\\'), fst._next_src(lines, 4, 1, 7, 0, True, True))
+        self.assertEqual((6, 0, 'k'), fst._next_src(lines, 5, 8, 7, 0, False, True))
+        self.assertEqual((6, 0, 'k'), fst._next_src(lines, 5, 8, 7, 0, True, True))
+
+        self.assertEqual((4, 0, 'j'), fst._next_src(lines, 3, 4, 7, 0, False, None))
+        self.assertEqual((4, 0, 'j'), fst._next_src(lines, 3, 4, 7, 0, True, None))
+        self.assertEqual(None, fst._next_src(lines, 4, 1, 7, 0, False, None))
+        self.assertEqual((5, 2, '# post'), fst._next_src(lines, 4, 1, 7, 0, True, None))
+        self.assertEqual(None, fst._next_src(lines, 5, 8, 7, 0, False, None))
+        self.assertEqual(None, fst._next_src(lines, 5, 8, 7, 0, True, None))
+
+        self.assertEqual(None, fst._prev_src(lines, 0, 0, 2, 0, False, False))
+        self.assertEqual((1, 2, '# pre'), fst._prev_src(lines, 0, 0, 2, 0, True, False))
+        self.assertEqual((2, 0, 'i'), fst._prev_src(lines, 0, 0, 3, 0, False, False))
+        self.assertEqual((2, 0, 'i'), fst._prev_src(lines, 0, 0, 3, 0, True, False))
+        self.assertEqual((4, 0, 'j'), fst._prev_src(lines, 0, 0, 6, 0, False, False))
+        self.assertEqual((5, 2, '# post'), fst._prev_src(lines, 0, 0, 6, 0, True, False))
+
+        self.assertEqual(None, fst._prev_src(lines, 0, 0, 2, 0, False, True))
+        self.assertEqual((1, 2, '# pre'), fst._prev_src(lines, 0, 0, 2, 0, True, True))
+        self.assertEqual((2, 2, '\\'), fst._prev_src(lines, 0, 0, 3, 0, False, True))
+        self.assertEqual((2, 2, '\\'), fst._prev_src(lines, 0, 0, 3, 0, True, True))
+        self.assertEqual((4, 2, '\\'), fst._prev_src(lines, 0, 0, 6, 0, False, True))
+        self.assertEqual((5, 2, '# post'), fst._prev_src(lines, 0, 0, 6, 0, True, True))
+
+        self.assertEqual(None, fst._prev_src(lines, 0, 0, 1, 7, False, None))
+        self.assertEqual((1, 2, '# pre'), fst._prev_src(lines, 0, 0, 1, 7, True, None))
+        self.assertEqual((2, 0, 'i'), fst._prev_src(lines, 0, 0, 3, 0, False, None))
+        self.assertEqual((2, 0, 'i'), fst._prev_src(lines, 0, 0, 3, 0, True, None))
+        self.assertEqual((4, 0, 'j'), fst._prev_src(lines, 0, 0, 5, 3, False, None))
+        self.assertEqual((5, 2, '#'), fst._prev_src(lines, 0, 0, 5, 3, True, None))
+
+        self.assertEqual((1, 1, 'a'), fst._next_src(['\\', ' a'], 0, 0, 100, 0, True, None))
+        self.assertEqual((2, 1, 'a'), fst._next_src(['\\', '\\', ' a'], 0, 0, 100, 0, True, None))
+        self.assertEqual(None, fst._next_src(['\\', '', ' a'], 0, 0, 100, 0, True, None))
+        self.assertEqual((1, 1, '# c'), fst._next_src(['\\', ' # c'], 0, 0, 100, 0, True, None))
+        self.assertEqual(None, fst._next_src(['\\', ' # c', 'a'], 0, 0, 100, 0, False, None))
+
+        self.assertEqual((0, 0, 'a'), fst._prev_src(['a \\', ''], 0, 0, 1, 0, True, None))
+        self.assertEqual((0, 0, 'a'), fst._prev_src(['a \\', '\\', ''], 0, 0, 2, 0, True, None))
+        self.assertEqual((0, 0, 'a'), fst._prev_src(['a \\', '\\', '\\', ''], 0, 0, 3, 0, True, None))
+        self.assertEqual((1, 1, '# c'), fst._prev_src(['a \\', ' # c'], 0, 0, 1, 4, True, None))
+        self.assertEqual((1, 1, '# '), fst._prev_src(['a \\', ' # c'], 0, 0, 1, 3, True, None))
+        self.assertEqual((1, 1, '#'), fst._prev_src(['a \\', ' # c'], 0, 0, 1, 2, True, None))
+        self.assertEqual((0, 0, 'a'), fst._prev_src(['a \\', ' # c'], 0, 0, 1, 1, True, None))
+        self.assertEqual((1, 1, '# c'), fst._prev_src(['a', ' # c'], 0, 0, 1, 4, True, None))
+        self.assertEqual((1, 1, '# '), fst._prev_src(['a', ' # c'], 0, 0, 1, 3, True, None))
+        self.assertEqual((1, 1, '#'), fst._prev_src(['a', ' # c'], 0, 0, 1, 2, True, None))
+        self.assertEqual((0, 0, 'a'), fst._prev_src(['a', ' # c'], 0, 0, 1, 1, True, None))
+
+        state = []
+        self.assertEqual((0, 4, '# c \\'), fst._prev_src(['a b # c \\'], 0, 0, 0, 9, True, True, state=state))
+        self.assertEqual((0, 2, 'b'), fst._prev_src(['a b # c \\'], 0, 0, 0, 4, True, True, state=state))
+        self.assertEqual((0, 0, 'a'), fst._prev_src(['a b # c \\'], 0, 0, 0, 2, True, True, state=state))
+        self.assertEqual(None, fst._prev_src(['a b # c \\'], 0, 0, 0, 0, True, True, state=state))
+
+        state = []
+        self.assertEqual((0, 2, 'b'), fst._prev_src(['a b # c \\'], 0, 0, 0, 9, False, True, state=state))
+        self.assertEqual((0, 0, 'a'), fst._prev_src(['a b # c \\'], 0, 0, 0, 2, False, True, state=state))
+        self.assertEqual(None, fst._prev_src(['a b # c \\'], 0, 0, 0, 0, False, True, state=state))
+
+        state = []
+        self.assertEqual((0, 2, 'b'), fst._prev_src(['a b # c \\'], 0, 0, 0, 9, False, None, state=state))
+        self.assertEqual((0, 0, 'a'), fst._prev_src(['a b # c \\'], 0, 0, 0, 2, False, None, state=state))
+        self.assertEqual(None, fst._prev_src(['a b # c \\'], 0, 0, 0, 0, False, None, state=state))
+
+        state = []
+        self.assertEqual((0, 4, '# c \\'), fst._prev_src(['a b # c \\'], 0, 0, 0, 9, True, None, state=state))
+        self.assertEqual((0, 2, 'b'), fst._prev_src(['a b # c \\'], 0, 0, 0, 4, True, None, state=state))
+        self.assertEqual((0, 0, 'a'), fst._prev_src(['a b # c \\'], 0, 0, 0, 2, True, None, state=state))
+        self.assertEqual(None, fst._prev_src(['a b # c \\'], 0, 0, 0, 0, True, None, state=state))
+
+        state = []
+        self.assertEqual((0, 4, 'c'), fst._prev_src(['a b c \\'], 0, 0, 0, 9, True, None, state=state))
+        self.assertEqual((0, 2, 'b'), fst._prev_src(['a b c \\'], 0, 0, 0, 4, True, None, state=state))
+        self.assertEqual((0, 0, 'a'), fst._prev_src(['a b c \\'], 0, 0, 0, 2, True, None, state=state))
+        self.assertEqual(None, fst._prev_src(['a b c \\'], 0, 0, 0, 0, True, None, state=state))
+
     def test_loc(self):
         self.assertEqual((0, 6, 0, 9), parse('def f(i=1): pass').body[0].args.f.loc)  # arguments
         self.assertEqual((0, 5, 0, 8), parse('with f(): pass').body[0].items[0].f.loc)  # withitem
