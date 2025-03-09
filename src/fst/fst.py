@@ -551,7 +551,7 @@ class fstlistproxy:
 
 
 class FSTSrcEdit:
-    """This class controls source editing behavior."""
+    """This class controls most source editing behavior."""
 
     def _fixup_expr_seq_bound(self, lines: list[str], seq_loc: fstloc,
                             fpre: Union['FST', fstloc, None], fpost: Union['FST', fstloc, None],
@@ -814,7 +814,7 @@ class FSTSrcEdit:
         lines = fst.root._lines
 
         if not (bound_pre_post := self._fixup_expr_seq_bound(lines, seq_loc, fpre, fpost, flast)):
-            return seq_loc, seq_loc, None
+            return (seq_loc, seq_loc, None) if cut else (seq_loc, None, None)
 
         bound, _, _       = bound_pre_post
         copy_loc, del_loc = self._expr_src_edit_locs(lines,
@@ -944,7 +944,7 @@ class FSTSrcEdit:
         - `comms`: The comments requested to be copied with the slice, normally `True`, `False`, `'pre'` or `'post'`,
             but can be something custom.
         - `cut`: If `False` the operation is a copy, `True` means cut.
-        - `block_loc`: A full location suitable for checking comments and things if `fpre` and `fpost` not available.
+        - `block_loc`: A full location suitable for checking comments outside of ASTS if `fpre` / `fpost` not available.
         - `ffirst`: The first `FST` being gotten.
         - `flast`: The last `FST` being gotten.
         - `fpre`: The preceding-first `FST`, not being gotten, may not exist if `ffirst` is first of seq.

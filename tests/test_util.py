@@ -78,7 +78,7 @@ class TestUtil(unittest.TestCase):
     # TODO: other tests
 
 
-    def test_compare(self):
+    def test_compare_asts(self):
         ast1 = ast_.parse('def f():\n  i = 1\n  j = 2').body[0]
         ast2 = ast_.parse('def f():\n  i = 1\n  j = 2').body[0]
         ast3 = ast_.parse('def f():\n  i = 1\n  j =  2').body[0]
@@ -93,7 +93,7 @@ class TestUtil(unittest.TestCase):
         self.assertTrue(compare_asts(ast1, ast4, recurse=False, raise_=False))
         self.assertFalse(compare_asts(ast1, ast5, recurse=False, raise_=False))
 
-    def test_copy(self):
+    def test_copy_ast(self):
         for fnm in PYFNMS:
             with open(fnm) as f:
                 src = f.read()

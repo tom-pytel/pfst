@@ -7119,6 +7119,30 @@ i = 1
 
                 raise
 
+    def test_get_slice_seq_copy(self):
+        for src, elt, start, stop, _, slice_copy, _, slice_dump in GET_SLICE_SEQ_CUT_DATA:
+            src   = src.strip()
+            t     = parse(src)
+            f     = eval(f't.{elt}', {'t': t}).f
+            s     = f.get_slice(start, stop, cut=False)
+            tsrc  = t.f.src
+            ssrc  = s.src
+            sdump = s.dump(linefunc=list, compact=True)
+
+            try:
+                self.assertEqual(tsrc, src.strip())
+                self.assertEqual(ssrc, slice_copy.strip())
+                self.assertEqual(sdump, slice_dump.strip().split('\n'))
+
+            except Exception:
+                print(elt, start, stop)
+                print('---')
+                print(src)
+                print('...')
+                print(slice_copy)
+
+                raise
+
     def test_get_slice_seq_cut(self):
         for src, elt, start, stop, src_cut, slice_cut, src_dump, slice_dump in GET_SLICE_SEQ_CUT_DATA:
             src   = src.strip()
