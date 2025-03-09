@@ -251,7 +251,7 @@ Attribute .. ROOT 0,0 -> 0,18
 
 ]  # END OF COPY_DATA
 
-GET_SLICE_CUT_DATA = [
+GET_SLICE_SEQ_CUT_DATA = [
 (r"""
 {1, 2}
 """, 'body[0].value', 0, 0, r"""
@@ -2070,7 +2070,357 @@ Tuple .. ROOT 0,0 -> 0,10
   .ctx Load
 """),
 
-]  # END OF GET_SLICE_CUT_DATA
+]  # END OF GET_SLICE_SEQ_CUT_DATA
+
+GET_SLICE_STMT_CUT_DATA = [
+(r"""
+def f():
+    i = 1
+    j = 1
+    k = 1
+    l = 1
+""", 'body[0]', -2, None, None, r"""
+def f():
+    i = 1
+    j = 1
+    k = 1
+    l = 1
+""", r"""
+k = 1
+l = 1
+""", r"""
+Module .. ROOT 0,0 -> 4,9
+  .body[1]
+  0] FunctionDef .. 0,0 -> 4,9
+    .name
+      'f'
+    .args
+      arguments
+        .vararg
+          None
+        .kwarg
+          None
+    .body[4]
+    0] Assign .. 1,4 -> 1,9
+      .targets[1]
+      0] Name 'i' Store .. 1,4 -> 1,5
+      .value
+        Constant 1 .. 1,8 -> 1,9
+      .type_comment
+        None
+    1] Assign .. 2,4 -> 2,9
+      .targets[1]
+      0] Name 'j' Store .. 2,4 -> 2,5
+      .value
+        Constant 1 .. 2,8 -> 2,9
+      .type_comment
+        None
+    2] Assign .. 3,4 -> 3,9
+      .targets[1]
+      0] Name 'k' Store .. 3,4 -> 3,5
+      .value
+        Constant 1 .. 3,8 -> 3,9
+      .type_comment
+        None
+    3] Assign .. 4,4 -> 4,9
+      .targets[1]
+      0] Name 'l' Store .. 4,4 -> 4,5
+      .value
+        Constant 1 .. 4,8 -> 4,9
+      .type_comment
+        None
+    .returns
+      None
+    .type_comment
+      None
+""", r"""
+Module .. ROOT 0,0 -> 1,5
+  .body[2]
+  0] Assign .. 0,0 -> 0,5
+    .targets[1]
+    0] Name 'k' Store .. 0,0 -> 0,1
+    .value
+      Constant 1 .. 0,4 -> 0,5
+    .type_comment
+      None
+  1] Assign .. 1,0 -> 1,5
+    .targets[1]
+    0] Name 'l' Store .. 1,0 -> 1,1
+    .value
+      Constant 1 .. 1,4 -> 1,5
+    .type_comment
+      None
+"""),
+
+(r"""
+try: pass
+except ValueError: pass
+except RuntimeError: pass
+except IndexError: pass
+except TypeError: pass
+""", 'body[0]', -2, None, 'handlers', r"""
+try: pass
+except ValueError: pass
+except RuntimeError: pass
+except IndexError: pass
+except TypeError: pass
+""", r"""
+except IndexError: pass
+except TypeError: pass
+""", r"""
+Module .. ROOT 0,0 -> 4,22
+  .body[1]
+  0] Try .. 0,0 -> 4,22
+    .body[1]
+    0] Pass .. 0,5 -> 0,9
+    .handlers[4]
+    0] ExceptHandler .. 1,0 -> 1,23
+      .type
+        Name 'ValueError' Load .. 1,7 -> 1,17
+      .name
+        None
+      .body[1]
+      0] Pass .. 1,19 -> 1,23
+    1] ExceptHandler .. 2,0 -> 2,25
+      .type
+        Name 'RuntimeError' Load .. 2,7 -> 2,19
+      .name
+        None
+      .body[1]
+      0] Pass .. 2,21 -> 2,25
+    2] ExceptHandler .. 3,0 -> 3,23
+      .type
+        Name 'IndexError' Load .. 3,7 -> 3,17
+      .name
+        None
+      .body[1]
+      0] Pass .. 3,19 -> 3,23
+    3] ExceptHandler .. 4,0 -> 4,22
+      .type
+        Name 'TypeError' Load .. 4,7 -> 4,16
+      .name
+        None
+      .body[1]
+      0] Pass .. 4,18 -> 4,22
+""", r"""
+Module .. ROOT 0,0 -> 1,22
+  .body[2]
+  0] ExceptHandler .. 0,0 -> 0,23
+    .type
+      Name 'IndexError' Load .. 0,7 -> 0,17
+    .name
+      None
+    .body[1]
+    0] Pass .. 0,19 -> 0,23
+  1] ExceptHandler .. 1,0 -> 1,22
+    .type
+      Name 'TypeError' Load .. 1,7 -> 1,16
+    .name
+      None
+    .body[1]
+    0] Pass .. 1,18 -> 1,22
+"""),
+
+(r"""
+match a:
+    case 1: pass
+    case f: pass
+    case None: pass
+    case 3 | 4: pass
+""", 'body[0]', 1, 3, None, r"""
+match a:
+    case 1: pass
+    case f: pass
+    case None: pass
+    case 3 | 4: pass
+""", r"""
+case f: pass
+case None: pass
+""", r"""
+Module .. ROOT 0,0 -> 4,20
+  .body[1]
+  0] Match .. 0,0 -> 4,20
+    .subject
+      Name 'a' Load .. 0,6 -> 0,7
+    .cases[4]
+    0] match_case .. 1,4 -> 1,16
+      .pattern
+        MatchValue .. 1,9 -> 1,10
+          .value
+            Constant 1 .. 1,9 -> 1,10
+      .guard
+        None
+      .body[1]
+      0] Pass .. 1,12 -> 1,16
+    1] match_case .. 2,4 -> 2,16
+      .pattern
+        MatchAs .. 2,9 -> 2,10
+          .pattern
+            None
+          .name
+            'f'
+      .guard
+        None
+      .body[1]
+      0] Pass .. 2,12 -> 2,16
+    2] match_case .. 3,4 -> 3,19
+      .pattern
+        MatchSingleton .. 3,9 -> 3,13
+          .value
+            None
+      .guard
+        None
+      .body[1]
+      0] Pass .. 3,15 -> 3,19
+    3] match_case .. 4,4 -> 4,20
+      .pattern
+        MatchOr .. 4,9 -> 4,14
+          .patterns[2]
+          0] MatchValue .. 4,9 -> 4,10
+            .value
+              Constant 3 .. 4,9 -> 4,10
+          1] MatchValue .. 4,13 -> 4,14
+            .value
+              Constant 4 .. 4,13 -> 4,14
+      .guard
+        None
+      .body[1]
+      0] Pass .. 4,16 -> 4,20
+""", r"""
+Module .. ROOT 0,0 -> 1,15
+  .body[2]
+  0] match_case .. 0,0 -> 0,12
+    .pattern
+      MatchAs .. 0,5 -> 0,6
+        .pattern
+          None
+        .name
+          'f'
+    .guard
+      None
+    .body[1]
+    0] Pass .. 0,8 -> 0,12
+  1] match_case .. 1,0 -> 1,15
+    .pattern
+      MatchSingleton .. 1,5 -> 1,9
+        .value
+          None
+    .guard
+      None
+    .body[1]
+    0] Pass .. 1,11 -> 1,15
+"""),
+
+(r"""
+if 1: pass
+elif 2: pass
+""", 'body[0]', None, None, 'orelse', r"""
+if 1: pass
+elif 2: pass
+""", r"""
+if 2: pass
+""", r"""
+Module .. ROOT 0,0 -> 1,12
+  .body[1]
+  0] If .. 0,0 -> 1,12
+    .test
+      Constant 1 .. 0,3 -> 0,4
+    .body[1]
+    0] Pass .. 0,6 -> 0,10
+    .orelse[1]
+    0] If .. 1,0 -> 1,12
+      .test
+        Constant 2 .. 1,5 -> 1,6
+      .body[1]
+      0] Pass .. 1,8 -> 1,12
+""", r"""
+Module .. ROOT 0,0 -> 0,10
+  .body[1]
+  0] If .. 0,0 -> 0,10
+    .test
+      Constant 2 .. 0,3 -> 0,4
+    .body[1]
+    0] Pass .. 0,6 -> 0,10
+"""),
+
+(r"""
+if 1: pass
+else:
+  if 2: pass
+""", 'body[0]', None, None, 'orelse', r"""
+if 1: pass
+else:
+  if 2: pass
+""", r"""
+if 2: pass
+""", r"""
+Module .. ROOT 0,0 -> 2,12
+  .body[1]
+  0] If .. 0,0 -> 2,12
+    .test
+      Constant 1 .. 0,3 -> 0,4
+    .body[1]
+    0] Pass .. 0,6 -> 0,10
+    .orelse[1]
+    0] If .. 2,2 -> 2,12
+      .test
+        Constant 2 .. 2,5 -> 2,6
+      .body[1]
+      0] Pass .. 2,8 -> 2,12
+""", r"""
+Module .. ROOT 0,0 -> 0,10
+  .body[1]
+  0] If .. 0,0 -> 0,10
+    .test
+      Constant 2 .. 0,3 -> 0,4
+    .body[1]
+    0] Pass .. 0,6 -> 0,10
+"""),
+
+(r"""
+if 1: pass
+elif 3:
+  if 2: pass
+""", 'body[0]', None, None, 'orelse', r"""
+if 1: pass
+elif 3:
+  if 2: pass
+""", r"""
+if 3:
+  if 2: pass
+""", r"""
+Module .. ROOT 0,0 -> 2,12
+  .body[1]
+  0] If .. 0,0 -> 2,12
+    .test
+      Constant 1 .. 0,3 -> 0,4
+    .body[1]
+    0] Pass .. 0,6 -> 0,10
+    .orelse[1]
+    0] If .. 1,0 -> 2,12
+      .test
+        Constant 3 .. 1,5 -> 1,6
+      .body[1]
+      0] If .. 2,2 -> 2,12
+        .test
+          Constant 2 .. 2,5 -> 2,6
+        .body[1]
+        0] Pass .. 2,8 -> 2,12
+""", r"""
+Module .. ROOT 0,0 -> 1,12
+  .body[1]
+  0] If .. 0,0 -> 1,12
+    .test
+      Constant 3 .. 0,3 -> 0,4
+    .body[1]
+    0] If .. 1,2 -> 1,12
+      .test
+        Constant 2 .. 1,5 -> 1,6
+      .body[1]
+      0] Pass .. 1,8 -> 1,12
+"""),
+
+]  # END OF GET_SLICE_STMT_CUT_DATA
 
 PUT_SLICE_DATA = [
 (r"""
@@ -6695,137 +7045,6 @@ i = 1
                     f = a.f.copy(fix=True)
                     f.verify(raise_=True)
 
-    def test_slice_stmt(self):
-        self.assertEqual('\n'.join(parse("""
-def f():
-    i = 1
-    j = 1
-    k = 1
-    l = 1
-            """.strip()).body[0].f.get_slice(-2).dump(linefunc=list)), """
-Module .. ROOT 0,0 -> 1,5
-  .body[2]
-  0] Assign .. 0,0 -> 0,5
-    .targets[1]
-    0] Name .. 0,0 -> 0,1
-      .id
-        'k'
-      .ctx
-        Store
-    .value
-      Constant .. 0,4 -> 0,5
-        .value
-          1
-        .kind
-          None
-    .type_comment
-      None
-  1] Assign .. 1,0 -> 1,5
-    .targets[1]
-    0] Name .. 1,0 -> 1,1
-      .id
-        'l'
-      .ctx
-        Store
-    .value
-      Constant .. 1,4 -> 1,5
-        .value
-          1
-        .kind
-          None
-    .type_comment
-      None
-            """.strip())
-
-        self.assertEqual('\n'.join(parse("""
-try: pass
-except ValueError: pass
-except RuntimeError: pass
-except IndexError: pass
-except TypeError: pass
-            """.strip()).body[0].f.get_slice(-1, field='handlers').dump(linefunc=list)), """
-Module .. ROOT 0,0 -> 0,22
-  .body[1]
-  0] ExceptHandler .. 0,0 -> 0,22
-    .type
-      Name .. 0,7 -> 0,16
-        .id
-          'TypeError'
-        .ctx
-          Load
-    .name
-      None
-    .body[1]
-    0] Pass .. 0,18 -> 0,22
-            """.strip())
-
-        self.assertEqual('\n'.join(parse("""
-match a:
-    case 1: pass
-    case f: pass
-    case None: pass
-    case 3 | 4: pass
-            """.strip()).body[0].f.get_slice(1, 3).dump(linefunc=list)), """
-Module .. ROOT 0,0 -> 1,15
-  .body[2]
-  0] match_case .. 0,0 -> 0,12
-    .pattern
-      MatchAs .. 0,5 -> 0,6
-        .pattern
-          None
-        .name
-          'f'
-    .guard
-      None
-    .body[1]
-    0] Pass .. 0,8 -> 0,12
-  1] match_case .. 1,0 -> 1,15
-    .pattern
-      MatchSingleton .. 1,5 -> 1,9
-        .value
-          None
-    .guard
-      None
-    .body[1]
-    0] Pass .. 1,11 -> 1,15
-            """.strip())
-
-
-        dumptest(self, parse("""
-if 1: pass
-elif 2: pass
-            """.strip()).body[0].f.get_slice(field='orelse'), """
-Module .. ROOT 0,0 -> 0,10
-  .body[1]
-  0] If .. 0,0 -> 0,10
-    .test
-      Constant .. 0,3 -> 0,4
-        .value
-          2
-        .kind
-          None
-    .body[1]
-    0] Pass .. 0,6 -> 0,10
-            """.strip(), 'if 2: pass')
-
-        dumptest(self, parse("""
-if 1: pass
-else:
-  if 2: pass
-            """.strip()).body[0].f.get_slice(field='orelse'), """
-Module .. ROOT 0,0 -> 0,10
-  .body[1]
-  0] If .. 0,0 -> 0,10
-    .test
-      Constant .. 0,3 -> 0,4
-        .value
-          2
-        .kind
-          None
-    .body[1]
-    0] Pass .. 0,6 -> 0,10
-            """.strip(), 'if 2: pass')
-
     def test_copy(self):
         for src, elt, slice_copy, slice_dump in COPY_DATA:
             src   = src.strip()
@@ -6848,12 +7067,40 @@ Module .. ROOT 0,0 -> 0,10
 
                 raise
 
-    def test_get_slice_cut(self):
-        for src, elt, start, stop, src_cut, slice_cut, src_dump, slice_dump in GET_SLICE_CUT_DATA:
+    def test_get_slice_seq_cut(self):
+        for src, elt, start, stop, src_cut, slice_cut, src_dump, slice_dump in GET_SLICE_SEQ_CUT_DATA:
             src   = src.strip()
             t     = parse(src)
             f     = eval(f't.{elt}', {'t': t}).f
             s     = f.get_slice(start, stop, cut=True)
+            tsrc  = t.f.src
+            ssrc  = s.src
+            tdump = t.f.dump(linefunc=list, compact=True)
+            sdump = s.dump(linefunc=list, compact=True)
+
+            try:
+                self.assertEqual(tsrc, src_cut.strip())
+                self.assertEqual(ssrc, slice_cut.strip())
+                self.assertEqual(tdump, src_dump.strip().split('\n'))
+                self.assertEqual(sdump, slice_dump.strip().split('\n'))
+
+            except Exception:
+                print(elt, start, stop)
+                print('---')
+                print(src)
+                print('...')
+                print(src_cut)
+                print('...')
+                print(slice_cut)
+
+                raise
+
+    def test_get_slice_stmt_cut(self):  #  TODO: CUT!!! CUT!!! CUT!!! CUT!!! CUT!!! CUT!!! CUT!!! CUT!!! CUT!!! CUT!!! CUT!!! CUT!!! CUT!!! CUT!!! CUT!!! CUT!!! CUT!!! CUT!!!
+        for src, elt, start, stop, field, src_cut, slice_cut, src_dump, slice_dump in GET_SLICE_STMT_CUT_DATA:
+            src   = src.strip()
+            t     = parse(src)
+            f     = eval(f't.{elt}', {'t': t}).f
+            s     = f.get_slice(start, stop, field, cut=False)
             tsrc  = t.f.src
             ssrc  = s.src
             tdump = t.f.dump(linefunc=list, compact=True)
@@ -7061,39 +7308,79 @@ def regen_copy_data():
         lines = f.write('\n'.join(lines))
 
 
-def regen_get_slice_cut_data():
+def regen_get_slice_seq_cut_data():
     newlines = []
-
-    for src, elt, start, stop, *_ in GET_SLICE_CUT_DATA:
-        src   = src.strip()
-        t     = parse(src)
-        f     = eval(f't.{elt}', {'t': t}).f
-        s     = f.get_slice(start, stop, cut=True)
-        tsrc  = t.f.src
-        ssrc  = s.src
-        tdump = t.f.dump(linefunc=list, compact=True)
-        sdump = s.dump(linefunc=list, compact=True)
-
-        assert not tsrc.startswith('\n') or tsrc.endswith('\n')
-        assert not ssrc.startswith('\n') or ssrc.endswith('\n')
-
-        t.f.verify()
-        s.verify()
-
-        newlines.append('(r"""')
-        newlines.extend(f'''{src}\n""", {elt!r}, {start}, {stop}, r"""\n{tsrc}\n""", r"""\n{ssrc}\n""", r"""'''.split('\n'))
-        newlines.extend(tdump)
-        newlines.append('""", r"""')
-        newlines.extend(sdump)
-        newlines.append('"""),\n')
 
     with open(sys.argv[0]) as f:
         lines = f.read().split('\n')
 
-    start = lines.index('GET_SLICE_CUT_DATA = [')
-    stop  = lines.index(']  # END OF GET_SLICE_CUT_DATA')
+    for name in ('GET_SLICE_SEQ_CUT_DATA',):
+        for src, elt, start, stop, *_ in globals()[name]:
+            src   = src.strip()
+            t     = parse(src)
+            f     = eval(f't.{elt}', {'t': t}).f
+            s     = f.get_slice(start, stop, cut=True)
+            tsrc  = t.f.src
+            ssrc  = s.src
+            tdump = t.f.dump(linefunc=list, compact=True)
+            sdump = s.dump(linefunc=list, compact=True)
 
-    lines[start + 1 : stop] = newlines
+            assert not tsrc.startswith('\n') or tsrc.endswith('\n')
+            assert not ssrc.startswith('\n') or ssrc.endswith('\n')
+
+            t.f.verify()
+            s.verify()
+
+            newlines.append('(r"""')
+            newlines.extend(f'''{src}\n""", {elt!r}, {start}, {stop}, r"""\n{tsrc}\n""", r"""\n{ssrc}\n""", r"""'''.split('\n'))
+            newlines.extend(tdump)
+            newlines.append('""", r"""')
+            newlines.extend(sdump)
+            newlines.append('"""),\n')
+
+        start = lines.index(f'{name} = [')
+        stop  = lines.index(f']  # END OF {name}')
+
+        lines[start + 1 : stop] = newlines
+
+    with open(sys.argv[0], 'w') as f:
+        lines = f.write('\n'.join(lines))
+
+
+def regen_get_slice_stmt_cut_data():  #  TODO: CUT!!! CUT!!! CUT!!! CUT!!! CUT!!! CUT!!! CUT!!! CUT!!! CUT!!! CUT!!! CUT!!! CUT!!! CUT!!! CUT!!! CUT!!! CUT!!! CUT!!! CUT!!!
+    newlines = []
+
+    with open(sys.argv[0]) as f:
+        lines = f.read().split('\n')
+
+    for name in ('GET_SLICE_STMT_CUT_DATA',):
+        for src, elt, start, stop, field, *_ in globals()[name]:
+            src   = src.strip()
+            t     = parse(src)
+            f     = eval(f't.{elt}', {'t': t}).f
+            s     = f.get_slice(start, stop, field, cut=False)
+            tsrc  = t.f.src
+            ssrc  = s.src
+            tdump = t.f.dump(linefunc=list, compact=True)
+            sdump = s.dump(linefunc=list, compact=True)
+
+            assert not tsrc.startswith('\n') or tsrc.endswith('\n')
+            assert not ssrc.startswith('\n') or ssrc.endswith('\n')
+
+            t.f.verify()
+            # s.verify()
+
+            newlines.append('(r"""')
+            newlines.extend(f'''{src}\n""", {elt!r}, {start}, {stop}, {field!r}, r"""\n{tsrc}\n""", r"""\n{ssrc}\n""", r"""'''.split('\n'))
+            newlines.extend(tdump)
+            newlines.append('""", r"""')
+            newlines.extend(sdump)
+            newlines.append('"""),\n')
+
+        start = lines.index(f'{name} = [')
+        stop  = lines.index(f']  # END OF {name}')
+
+        lines[start + 1 : stop] = newlines
 
     with open(sys.argv[0], 'w') as f:
         lines = f.write('\n'.join(lines))
@@ -7175,7 +7462,8 @@ if __name__ == '__main__':
 
     parser.add_argument('--regen-pars', default=False, action='store_true', help="regenerate parentheses test data")
     parser.add_argument('--regen-copy', default=False, action='store_true', help="regenerate copy test data")
-    parser.add_argument('--regen-get-slice-cut', default=False, action='store_true', help="regenerate get slice cut test data")
+    parser.add_argument('--regen-get-slice-seq-cut', default=False, action='store_true', help="regenerate get slice sequence test data")
+    parser.add_argument('--regen-get-slice-stmt-cut', default=False, action='store_true', help="regenerate get slice statement test data")
     parser.add_argument('--regen-put-slice', default=False, action='store_true', help="regenerate put slice test data")
     parser.add_argument('--regen-put-slice-del', default=False, action='store_true', help="regenerate put slice del test data")
 
@@ -7189,9 +7477,13 @@ if __name__ == '__main__':
         print('Regenerating copy test data...')
         regen_copy_data()
 
-    if args.regen_get_slice_cut:
-        print('Regenerating get slice cut test data...')
-        regen_get_slice_cut_data()
+    if args.regen_get_slice_seq_cut:
+        print('Regenerating get slice sequence cut test data...')
+        regen_get_slice_seq_cut_data()
+
+    if args.regen_get_slice_stmt_cut:
+        print('Regenerating get slice statement cut test data...')
+        regen_get_slice_stmt_cut_data()
 
     if args.regen_put_slice:
         print('Regenerating put slice test data...')
@@ -7201,7 +7493,9 @@ if __name__ == '__main__':
         print('Regenerating put slice del test data...')
         regen_put_slice_del_data()
 
-    if (not args.regen_pars and not args.regen_copy and not args.regen_get_slice_cut and not args.regen_put_slice and
+    if (not args.regen_pars and not args.regen_copy and
+        not args.regen_get_slice_seq_cut and not args.regen_get_slice_stmt_cut and
+        not args.regen_put_slice and
         not args.regen_put_slice_del
     ):
         unittest.main()

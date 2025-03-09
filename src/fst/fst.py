@@ -937,9 +937,9 @@ class FST:
     _lines:       list[bistr]
 
     # class attributes
-    is_FST:       bool       = True         ; """For quick checks vs. `fstloc`."""
-
     src_edit:     FSTSrcEdit = FSTSrcEdit() ; """@private"""
+
+    is_FST:       bool       = True         ; """For quick checks vs. `fstloc`."""
 
     @property
     def is_root(self) -> bool:
