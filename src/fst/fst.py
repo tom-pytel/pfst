@@ -3280,19 +3280,27 @@ class FST:
         node, returning `None` only when we are at the end of the whole thing.
 
         **Parameters:**
-        - `with_loc`: If `True` then only nodes with locations returned, `'own'` means only nodes with own location,
-            otherwise all nodes.
+        - `with_loc`: If `True` then only nodes with locations returned, `'own'` means only nodes with own location
+            (does not recurse into non-own nodes), `'allown'` means return `'own'` nodes but recurse into nodes with
+            non-own locations, otherwise all nodes.
 
         **Returns:**
         - `None` if last valid node in tree, otherwise next node in order.
         """
 
-        if fst := self.first_child(with_loc):
-            return fst
+        if allown := with_loc == 'allown':
+            with_loc = True
 
-        while not (fst := self.next(with_loc)):
-            if not (self := self.parent):
-                return None
+        while True:
+            if not (fst := self.first_child(with_loc)):
+                while not (fst := self.next(with_loc)):
+                    if not (self := self.parent):
+                        return None
+
+            if not allown or fst.has_own_loc:
+                break
+
+            self = fst
 
         return fst
 
@@ -3301,32 +3309,40 @@ class FST:
         node, returning `None` only when we are at the beginning of the whole thing.
 
         **Parameters:**
-        - `with_loc`: If `True` then only nodes with locations returned, `'own'` means only nodes with own location,
-            otherwise all nodes.
+        - `with_loc`: If `True` then only nodes with locations returned, `'own'` means only nodes with own location
+            (does not recurse into non-own nodes), `'allown'` means return `'own'` nodes but recurse into nodes with
+            non-own locations, otherwise all nodes.
 
         **Returns:**
         - `None` if first valid node in tree, otherwise prev node in order.
         """
 
-        if fst := self.last_child(with_loc):
-            return fst
+        if allown := with_loc == 'allown':
+            with_loc = True
 
-        while not (fst := self.prev(with_loc)):
-            if not (self := self.parent):
-                return None
+        while True:
+            if not (fst := self.last_child(with_loc)):
+                while not (fst := self.prev(with_loc)):
+                    if not (self := self.parent):
+                        return None
+
+            if not allown or fst.has_own_loc:
+                break
+
+            self = fst
 
         return fst
 
-    def walk(self, with_loc: bool = False, *, walk_self: bool = True, recurse: bool = True, scope: bool = False,
+    def walk(self, with_loc: bool = False, *, self_: bool = True, recurse: bool = True, scope: bool = False,
              back: bool = False) -> Generator['FST', bool, None]:
         """Walk self and descendants in syntactic order, `send(False)` to skip recursion into child. `send(True)` to
         allow recursion into child if called with `recurse=False` or `scope=True` would otherwise disallow it. Can send
         multiple times, last value sent takes effect.
 
         **Parameters:**
-        - `with_loc`: If `True` then only nodes with locations returned, `'own'` means only nodes with own location,
-            otherwise all nodes.
-        - `walk_self`: If `True` then self will be returned first with the possibility to skip children with `send()`.
+        - `with_loc`: If `True` then only nodes with locations returned, `'own'` means only nodes with own location
+            (does not recurse into non-own nodes), otherwise all nodes.
+        - `self_`: If `True` then self will be returned first with the possibility to skip children with `send()`.
         - `recurse`: Whether to recurse into children by default, `send()` for a given node will always override this.
             Will always attempt first level of children unless walking self and `False` is sent first.
         - `scope`: If `True` then will walk only within the scope of `self`. Meaning if called on a `FunctionDef` then
@@ -3345,7 +3361,7 @@ class FST:
         ```
         """
 
-        if walk_self:
+        if self_:
             if not _with_loc(self.a, with_loc):
                 return
 
@@ -3438,7 +3454,7 @@ class FST:
 
             if recurse_ is not True:
                 if recurse_:  # user did send(True), walk this child unconditionally
-                    yield from fst.walk(with_loc, walk_self=False, back=back)
+                    yield from fst.walk(with_loc, self_=False, back=back)
 
             else:
                 if scope:
@@ -3476,7 +3492,7 @@ class FST:
 
                     elif isinstance(ast, (ListComp, SetComp, DictComp, GeneratorExp)):
                         comp_first_iter = ast.generators[0].iter
-                        gen             = fst.walk(with_loc, walk_self=False, back=back)
+                        gen             = fst.walk(with_loc, self_=False, back=back)
 
                         for f in gen:  # all NamedExpr assignments below are visible here, yeah, its ugly
                             if (a := f.a) is comp_first_iter or (f.pfield.name == 'target' and isinstance(a, Name) and

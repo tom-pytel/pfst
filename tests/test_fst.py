@@ -5955,8 +5955,8 @@ def f(a, /, b, *c, d, **e):
 
                 self.assertTrue(f.bln > bln or (f.bln == bln and f.bcol >= bcol))
 
-                lof = list(f.walk(True, walk_self=False, recurse=False))
-                lob = list(f.walk(True, walk_self=False, recurse=False, back=True))
+                lof = list(f.walk(True, self_=False, recurse=False))
+                lob = list(f.walk(True, self_=False, recurse=False, back=True))
 
                 self.assertEqual(lof, lob[::-1])
 
@@ -6157,7 +6157,7 @@ def f(a, /, b, *c, d, **e):
     def test_next_prev_vs_walk(self):
         def test1(src):
             f = FST.fromsrc(src).a.body[0].args.f
-            m = list(f.walk(True, walk_self=False, recurse=False))
+            m = list(f.walk(True, self_=False, recurse=False))
 
             l, c = [], None
             while c := f.next_child(c): l.append(c)
@@ -6204,7 +6204,7 @@ def f(a, /, b, *c, d, **e):
 
         def test2(src):
             f = FST.fromsrc(src).a.body[0].value.f
-            m = list(f.walk(True, walk_self=False, recurse=False))
+            m = list(f.walk(True, self_=False, recurse=False))
 
             l, c = [], None
             while c := f.next_child(c): l.append(c)
@@ -6224,6 +6224,58 @@ def f(a, /, b, *c, d, **e):
         test2('call(a, b=1, *c, d=2)')
         test2('call(a, b=1, *c, d=2, **e)')
         test2('system_message(message, level=level, type=type,*children, **kwargs)')
+
+    def test_next_prev_step_vs_walk(self):
+        def test(src):
+            fst = FST.fromsrc(src.strip())
+
+            f, l = fst, []
+            while f := f.next_step(True): l.append(f)
+            self.assertEqual(l, list(fst.walk(True, self_=False)))
+
+            f, l = fst, []
+            while f := f.next_step(False): l.append(f)
+            self.assertEqual(l, list(fst.walk(False, self_=False)))
+
+            f, l = fst, []
+            while f := f.next_step('own'): l.append(f)
+            self.assertEqual(l, list(fst.walk('own', self_=False)))
+
+            f, l = fst, []
+            while f := f.next_step('allown'): l.append(f)
+            self.assertEqual(l, [g for g in fst.walk(True, self_=False) if g.has_own_loc])
+
+            f, l = fst, []
+            while f := f.prev_step(True): l.append(f)
+            self.assertEqual(l, list(fst.walk(True, self_=False, back=True)))
+
+            f, l = fst, []
+            while f := f.prev_step(False): l.append(f)
+            self.assertEqual(l, list(fst.walk(False, self_=False, back=True)))
+
+            f, l = fst, []
+            while f := f.prev_step('own'): l.append(f)
+            self.assertEqual(l, list(fst.walk('own', self_=False, back=True)))
+
+            f, l = fst, []
+            while f := f.prev_step('allown'): l.append(f)
+            self.assertEqual(l, [g for g in fst.walk(True, self_=False, back=True) if g.has_own_loc])
+
+        test('''
+def f(a=1, b=2) -> int:
+    i = [[k for k in range(j)] for i in range(5) if i for j in range(i) if j]
+            ''')
+
+        test('''
+match a:
+    case 1 | 2:
+          pass
+            ''')
+
+        test('''
+with a as b, c as d:
+    pass
+            ''')
 
     def test_is_tuple_parenthesized(self):
         self.assertTrue(parse('(1, 2)').body[0].value.f.is_tuple_parenthesized())
