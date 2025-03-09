@@ -1287,75 +1287,59 @@ class FST:
             else:
                 linefunc(f'{sind}{sind}{cind}{child!r}')
 
-    def _lbound(self) -> tuple[int, int]:
-        """Get a safe left bound to search after any ASTs for this object. This is safe to call for nodes that live
-        inside nodes without their own locations. WARNING! Not entirely safe for non-syntactically correct trees."""
+    def _prev_ast_bound(self, with_loc: bool | Literal['own'] | Literal['allown'] = True) -> tuple[int, int]:
+        """Get a prev bound to search after any ASTs for this object. This is safe to call for nodes that live inside
+        nodes without their own locations if `with_loc='allown'`. WARNING! May not be safe for non-syntactically correct
+        trees."""
 
-        while True:
-            if prev := self.prev(True):
-                if not prev.has_own_loc:  # for comprehension prev to comprehension
-                    prev = prev.last_child(True)
+        if prev := self.prev_step(with_loc, recurse_self=False):
+            return prev.loc[2:]
 
-                return prev.end_ln, prev.end_col
+        return 0, 0
 
-            if parent := self.parent:
-                if parent.has_own_loc:  # because of arguments, withitem, match_case and comprehension
-                    return (loc := parent.loc).ln, loc.col
+    def _next_ast_bound(self, with_loc: bool | Literal['own'] | Literal['allown'] = True) -> tuple[int, int]:
+        """Get a next bound to search before any ASTs for this object. This is safe to call for nodes that live inside
+        nodes without their own locations if `with_loc='allown'`. WARNING! May not be safe for non-syntactically correct
+        trees."""
 
-                return 0, 0
+        if next := self.next_step(with_loc, recurse_self=False):
+            return next.loc[2:]
 
-            self = parent
+        return len(lines := self.root._lines) - 1, len(lines[-1])
 
-    def _rbound(self) -> tuple[int, int]:
-        """Get a safe right bound to search before any ASTs for this object. This is safe to call for nodes that live
-        inside nodes without their own locations. WARNING! Not entirely safe for non-syntactically correct trees."""
-
-        while True:
-            if next := self.next(True):
-                if not next.has_own_loc:  # for comprehension next to comprehension
-                    next = next.first_child(True)
-
-                return next.ln, next.col
-
-            elif parent := self.parent:
-                if parent.has_own_loc:  # because of arguments, withitem, match_case and comprehension
-                    return (loc := parent.loc).end_ln, loc.end_col
-
-                return len(lines := self.root._lines) - 1, len(lines[-1])
-
-            self = parent
-
-    def _lpars(self) -> tuple[int, int, int, int, int]:
+    def _lpars(self, with_loc: bool | Literal['own'] | Literal['allown'] = True) -> tuple[int, int, int, int, int]:
         """Return the `ln` and `col` of the leftmost and ante-leftmost opening parentheses and the total number of
         opening parentheses. Doesn't take into account anything like enclosing argument parentheses, just counts. The
         leftmost bound used is the end of the previous sibling, or the start of that parent if there isn't one, or (0,0)
         if no parent.
+
+        **Parameters:**
+        - `with_loc`: Parameter to use for AST bound search. `True` normally or `'allown'` in special cases like
+            searching for parentheses to figure out node location from children.
 
         **Returns:**
         - `(ln, col, ante_ln, ante_col, npars)`: The leftmost and ante-leftmost positions and total count of opening
             parentheses encountered.
         """
 
-        self_ln, self_col, _, _ = self.loc
-        bound_ln, bound_col     = self._lbound()
+        return _prev_pars(self.root._lines, *self._prev_ast_bound(with_loc), *self.loc[:2])
 
-        return _prev_pars(self.root._lines, bound_ln, bound_col, self_ln, self_col)
-
-    def _rpars(self) -> tuple[int, int, int, int, int]:
+    def _rpars(self, with_loc: bool | Literal['own'] | Literal['allown'] = True) -> tuple[int, int, int, int, int]:
         """Return the `end_ln` and `end_col` of the rightmost and ante-rightmost closing parentheses and the total
         number of closing parentheses. Doesn't take into account anything like enclosing argument parentheses, just
         counts. The rightmost bound used is the start of the next sibling, or the end of that parent if there isn't one,
         or the end of `self.root._lines`.
+
+        **Parameters:**
+        - `with_loc`: Parameter to use for AST bound search. `True` normally or `'allown'` in special cases like
+            searching for parentheses to figure out node location from children.
 
         **Returns:**
         - `(end_ln, end_col, ante_end_ln, ante_end_col, npars)`: The rightmost and ante-rightmost positions and total
             count of closing parentheses encountered.
         """
 
-        _, _, self_end_ln, self_end_col = self.loc
-        bound_end_ln, bound_end_col     = self._rbound()
-
-        return _next_pars(self.root._lines, self_end_ln, self_end_col, bound_end_ln, bound_end_col)
+        return _next_pars(self.root._lines, *self.loc[2:], *self._next_ast_bound(with_loc))
 
     def _loc_from_children(self) -> fstloc | None:
         """Meant to handle figuring out `loc` for `arguments`, `withitem`, `match_case` and `comprehension`. Use on
@@ -1370,13 +1354,13 @@ class FST:
         if isinstance(ast, match_case):
             return fstloc(*_prev_find(self.root._lines, 0, 0, first.ln, first.col, 'case'), last.bend_ln, last.bend_col)  # we can use (0,0) because we know "case" starts on a newline
 
-        start_ln, start_col, ante_start_ln, ante_start_col, nlpars = first._lpars()
+        start_ln, start_col, ante_start_ln, ante_start_col, nlpars = first._lpars('allown')
 
         if not nlpars:  # not really needed, but juuust in case
             start_ln  = first.bln
             start_col = first.bcol
 
-        end_ln, end_col, ante_end_ln, ante_end_col, nrpars = last._rpars()
+        end_ln, end_col, ante_end_ln, ante_end_col, nrpars = last._rpars('allown')
 
         if not nrpars:
             end_ln  = last.bend_ln
@@ -1414,7 +1398,8 @@ class FST:
                     start_col = ante_start_col
 
             if leading_stars:  # find star to the left, we know it exists so we don't check for None return
-                start_ln, start_col = _prev_find(lines, *first._lbound(), start_ln, start_col, leading_stars)
+                start_ln, start_col = _prev_find(lines, *first._prev_ast_bound('allown'), start_ln, start_col,
+                                                 leading_stars)
 
         return fstloc(start_ln, start_col, end_ln, end_col)
 
@@ -3275,7 +3260,8 @@ class FST:
 
         return self.last_child(with_loc) if from_child is None else from_child.prev(with_loc)
 
-    def next_step(self, with_loc: bool | Literal['own'] | Literal['allown'] = True) -> Optional['FST']:
+    def next_step(self, with_loc: bool | Literal['own'] | Literal['allown'] = True, *,
+                  recurse_self: bool = True) -> Optional['FST']:
         """Get next node in syntactic order over entire tree. Will walk up parents and down children to get the next
         node, returning `None` only when we are at the end of the whole thing.
 
@@ -3283,6 +3269,7 @@ class FST:
         - `with_loc`: If `True` then only nodes with locations returned, `'own'` means only nodes with own location
             (does not recurse into non-own nodes), `'allown'` means return `'own'` nodes but recurse into nodes with
             non-own locations, otherwise all nodes.
+        - `recurse_self`: Whether to allow recursion of `self` to return children or move directly to next nodes.
 
         **Returns:**
         - `None` if last valid node in tree, otherwise next node in order.
@@ -3292,7 +3279,9 @@ class FST:
             with_loc = True
 
         while True:
-            if not (fst := self.first_child(with_loc)):
+            if not recurse_self or not (fst := self.first_child(with_loc)):
+                recurse_self = True
+
                 while not (fst := self.next(with_loc)):
                     if not (self := self.parent):
                         return None
@@ -3304,7 +3293,8 @@ class FST:
 
         return fst
 
-    def prev_step(self, with_loc: bool | Literal['own'] | Literal['allown'] = True) -> Optional['FST']:
+    def prev_step(self, with_loc: bool | Literal['own'] | Literal['allown'] = True, *,
+                  recurse_self: bool = True) -> Optional['FST']:
         """Get prev node in syntactic order over entire tree. Will walk up parents and down children to get the next
         node, returning `None` only when we are at the beginning of the whole thing.
 
@@ -3312,6 +3302,7 @@ class FST:
         - `with_loc`: If `True` then only nodes with locations returned, `'own'` means only nodes with own location
             (does not recurse into non-own nodes), `'allown'` means return `'own'` nodes but recurse into nodes with
             non-own locations, otherwise all nodes.
+        - `recurse_self`: Whether to allow recursion of `self` to return children or move directly to prev nodes.
 
         **Returns:**
         - `None` if first valid node in tree, otherwise prev node in order.
@@ -3321,7 +3312,9 @@ class FST:
             with_loc = True
 
         while True:
-            if not (fst := self.last_child(with_loc)):
+            if not recurse_self or not (fst := self.last_child(with_loc)):
+                recurse_self = True
+
                 while not (fst := self.prev(with_loc)):
                     if not (self := self.parent):
                         return None
@@ -3866,14 +3859,14 @@ class FST:
         loc      = self.loc
 
         if comms is True or comms == 'pre':
-            comms_ln, comms_col = src_edit.pre_comments(lines, self, *self._lbound())
+            comms_ln, comms_col = src_edit.pre_comments(lines, self, *self._prev_ast_bound())
 
         else:
             comms_ln  = loc.ln
             comms_col = loc.col
 
         if comms is True or comms == 'post':
-            comms_end_ln, comms_end_col = src_edit.post_comments(lines, self, *self._rbound())
+            comms_end_ln, comms_end_col = src_edit.post_comments(lines, self, *self._next_ast_bound())
 
         else:
             comms_end_ln  = loc.end_ln
