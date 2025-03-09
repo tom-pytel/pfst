@@ -165,12 +165,18 @@ def unparse(ast_obj) -> str:
     return ast_unparse(ast_obj)
 
 
-def _with_loc(ast: AST) -> bool:
-    """Faster overall than checking `ast.f.loc`."""
+def _with_loc(ast: AST, with_loc: bool | Literal['own'] = True) -> bool:
+    """Check location condition on node. Faster overall than checking `ast.f.loc`."""
 
-    return not (isinstance(ast, (expr_context, boolop, operator, unaryop, cmpop)) or
-                (isinstance(ast, arguments) and not ast.posonlyargs and not ast.args and not ast.vararg and
-                 not ast.kwonlyargs and not ast.kwarg))
+    if not with_loc:
+        return True
+
+    if with_loc is True:
+        return not (isinstance(ast, (expr_context, boolop, operator, unaryop, cmpop)) or
+                    (isinstance(ast, arguments) and not ast.posonlyargs and not ast.args and not ast.vararg and
+                    not ast.kwonlyargs and not ast.kwarg))
+
+    return ast.f.has_own_loc  # with_loc == 'own'
 
 
 def _next_src(lines: list[str], ln: int, col: int, end_ln: int, end_col: int,
@@ -1057,7 +1063,7 @@ class FST:
             return None
 
     @property
-    def own_loc(self) -> bool:
+    def has_own_loc(self) -> bool:
         """`True` when the node has its own `loc` otherwise `False` if no `loc` or `loc` is calculated from children."""
 
         return hasattr(self.a, 'end_col_offset')
@@ -1287,13 +1293,13 @@ class FST:
 
         while True:
             if prev := self.prev(True):
-                if not prev.own_loc:  # for comprehension prev to comprehension
+                if not prev.has_own_loc:  # for comprehension prev to comprehension
                     prev = prev.last_child(True)
 
                 return prev.end_ln, prev.end_col
 
             if parent := self.parent:
-                if parent.own_loc:  # because of arguments, withitem, match_case and comprehension
+                if parent.has_own_loc:  # because of arguments, withitem, match_case and comprehension
                     return (loc := parent.loc).ln, loc.col
 
                 return 0, 0
@@ -1306,13 +1312,13 @@ class FST:
 
         while True:
             if next := self.next(True):
-                if not next.own_loc:  # for comprehension next to comprehension
+                if not next.has_own_loc:  # for comprehension next to comprehension
                     next = next.first_child(True)
 
                 return next.ln, next.col
 
             elif parent := self.parent:
-                if parent.own_loc:  # because of arguments, withitem, match_case and comprehension
+                if parent.has_own_loc:  # because of arguments, withitem, match_case and comprehension
                     return (loc := parent.loc).end_ln, loc.end_col
 
                 return len(lines := self.root._lines) - 1, len(lines[-1])
@@ -2605,11 +2611,12 @@ class FST:
 
 # ------------------------------------------------------------------------------------------------------------------
 
-    def next(self, with_loc: bool = True) -> Optional['FST']:  # TODO: refactor maybe
+    def next(self, with_loc: bool | Literal['own'] = True) -> Optional['FST']:  # TODO: refactor maybe
         """Get next sibling in syntactic order, only within parent.
 
         **Parameters:**
-        - `with_loc`: If `True` then only nodes with locations returned, otherwise all nodes.
+        - `with_loc`: If `True` then only nodes with locations returned, `'own'` means only nodes with own location,
+            otherwise all nodes.
 
         **Returns:**
         - `None` if last valid sibling in parent, otherwise next node.
@@ -2839,7 +2846,7 @@ class FST:
                             except IndexError:
                                 return None
 
-                    if not with_loc or _with_loc(a):
+                    if _with_loc(a, with_loc):
                         return a.f
 
             elif idx is not None:
@@ -2853,7 +2860,7 @@ class FST:
                     except IndexError:
                         break
 
-                    if not with_loc or _with_loc(a):
+                    if _with_loc(a, with_loc):
                         return a.f
 
             while next is not None:
@@ -2861,7 +2868,7 @@ class FST:
                     name = next
 
                     if isinstance(sibling := getattr(aparent, next, None), AST):  # None because we know about fields from future python versions
-                        if not with_loc or _with_loc(sibling):
+                        if _with_loc(sibling, with_loc):
                             return sibling.f
 
                     elif isinstance(sibling, list) and sibling:
@@ -2892,11 +2899,12 @@ class FST:
 
         return None
 
-    def prev(self, with_loc: bool = True) -> Optional['FST']:  # TODO: refactor maybe
+    def prev(self, with_loc: bool | Literal['own'] = True) -> Optional['FST']:  # TODO: refactor maybe
         """Get previous sibling in syntactic order, only within parent.
 
         **Parameters:**
-        - `with_loc`: If `True` then only nodes with locations returned, otherwise all nodes.
+        - `with_loc`: If `True` then only nodes with locations returned, `'own'` means only nodes with own location,
+            otherwise all nodes.
 
         **Returns:**
         - `None` if first valid sibling in parent, otherwise previous node.
@@ -3141,7 +3149,7 @@ class FST:
                             prev = 4
                             a    = aparent.keys[idx]
 
-                    if not with_loc or _with_loc(a):
+                    if _with_loc(a, with_loc):
                         return a.f
 
             else:
@@ -3151,7 +3159,7 @@ class FST:
                     if not (a := sibling[(idx := idx - 1)]):
                         continue
 
-                    if not with_loc or _with_loc(a):
+                    if _with_loc(a, with_loc):
                         return a.f
 
             while prev is not None:
@@ -3159,7 +3167,7 @@ class FST:
                     name = prev
 
                     if isinstance(sibling := getattr(aparent, prev, None), AST):  # None because could have fields from future python versions
-                        if not with_loc or _with_loc(sibling):
+                        if _with_loc(sibling, with_loc):
                             return sibling.f
 
                     elif isinstance(sibling, list) and (idx := len(sibling)):
@@ -3180,11 +3188,12 @@ class FST:
 
         return None
 
-    def first_child(self, with_loc: bool = True) -> Optional['FST']:
+    def first_child(self, with_loc: bool | Literal['own'] = True) -> Optional['FST']:
         """Get first valid child in syntactic order.
 
         **Parameters:**
-        - `with_loc`: If `True` then only nodes with locations returned, otherwise all nodes.
+        - `with_loc`: If `True` then only nodes with locations returned, `'own'` means only nodes with own location,
+            otherwise all nodes.
 
         **Returns:**
         - `None` if no valid children, otherwise first valid child.
@@ -3193,22 +3202,23 @@ class FST:
         for name in AST_FIELDS[(a := self.a).__class__]:
             if (child := getattr(a, name, None)):
                 if isinstance(child, AST):
-                    if not with_loc or _with_loc(child):
+                    if _with_loc(child, with_loc):
                         return child.f
 
                 elif isinstance(child, list):
-                    if (c := child[0]) and (not with_loc or _with_loc(c)):
+                    if (c := child[0]) and _with_loc(c, with_loc):
                         return c.f
 
                     return FST(Pass(), self, astfield(name, 0)).next(with_loc)  # Pass() is a hack just to have a simple AST node
 
         return None
 
-    def last_child(self, with_loc: bool = True) -> Optional['FST']:
+    def last_child(self, with_loc: bool | Literal['own'] = True) -> Optional['FST']:
         """Get last valid child in syntactic order.
 
         **Parameters:**
-        - `with_loc`: If `True` then only nodes with locations returned, otherwise all nodes.
+        - `with_loc`: If `True` then only nodes with locations returned, `'own'` means only nodes with own location,
+            otherwise all nodes.
 
         **Returns:**
         - `None` if no valid children, otherwise last valid child.
@@ -3224,24 +3234,25 @@ class FST:
         for name in reversed(AST_FIELDS[(a := self.a).__class__]):
             if (child := getattr(a, name, None)):
                 if isinstance(child, AST):
-                    if not with_loc or _with_loc(child):
+                    if _with_loc(child, with_loc):
                         return child.f
 
                 elif isinstance(child, list):
-                    if (c := child[-1]) and (not with_loc or _with_loc(c)):
+                    if (c := child[-1]) and _with_loc(c, with_loc):
                         return c.f
 
                     return FST(Pass(), self, astfield(name, len(child) - 1)).prev(with_loc)  # Pass() is a hack just to have a simple AST node
 
         return None
 
-    def next_child(self, from_child: Optional['FST'], with_loc: bool = True) -> Optional['FST']:
+    def next_child(self, from_child: Optional['FST'], with_loc: bool | Literal['own'] = True) -> Optional['FST']:
         """Get next child in syntactic order. Meant for simple iteration. This is a slower way to iterate, `walk()` is
         faster.
 
         **Parameters:**
         - `from_child`: Child node we are coming from which may or may not have location.
-        - `with_loc`: If `True` then only nodes with locations returned, otherwise all nodes.
+        - `with_loc`: If `True` then only nodes with locations returned, `'own'` means only nodes with own location,
+            otherwise all nodes.
 
         **Returns:**
         - `None` if last valid child in `self`, otherwise next child node.
@@ -3249,13 +3260,14 @@ class FST:
 
         return self.first_child(with_loc) if from_child is None else from_child.next(with_loc)
 
-    def prev_child(self, from_child: Optional['FST'], with_loc: bool = True) -> Optional['FST']:
+    def prev_child(self, from_child: Optional['FST'], with_loc: bool | Literal['own'] = True) -> Optional['FST']:
         """Get previous child in syntactic order. Meant for simple iteration. This is a slower way to iterate, `walk()`
         is faster.
 
         **Parameters:**
         - `from_child`: Child node we are coming from which may or may not have location.
-        - `with_loc`: If `True` then only nodes with locations returned, otherwise all nodes.
+        - `with_loc`: If `True` then only nodes with locations returned, `'own'` means only nodes with own location,
+            otherwise all nodes.
 
         **Returns:**
         - `None` if first valid child in `self`, otherwise previous child node.
@@ -3263,12 +3275,13 @@ class FST:
 
         return self.last_child(with_loc) if from_child is None else from_child.prev(with_loc)
 
-    def next_step(self, with_loc: bool = True) -> Optional['FST']:
+    def next_step(self, with_loc: bool | Literal['own'] = True) -> Optional['FST']:
         """Get next node in syntactic order over entire tree. Will walk up parents and down children to get the next
         node, returning `None` only when we are at the end of the whole thing.
 
         **Parameters:**
-        - `with_loc`: If `True` then only nodes with locations returned, otherwise all nodes.
+        - `with_loc`: If `True` then only nodes with locations returned, `'own'` means only nodes with own location,
+            otherwise all nodes.
 
         **Returns:**
         - `None` if last valid node in tree, otherwise next node in order.
@@ -3283,12 +3296,13 @@ class FST:
 
         return fst
 
-    def prev_step(self, with_loc: bool = True) -> Optional['FST']:
+    def prev_step(self, with_loc: bool | Literal['own'] = True) -> Optional['FST']:
         """Get prev node in syntactic order over entire tree. Will walk up parents and down children to get the next
         node, returning `None` only when we are at the beginning of the whole thing.
 
         **Parameters:**
-        - `with_loc`: If `True` then only nodes with locations returned, otherwise all nodes.
+        - `with_loc`: If `True` then only nodes with locations returned, `'own'` means only nodes with own location,
+            otherwise all nodes.
 
         **Returns:**
         - `None` if first valid node in tree, otherwise prev node in order.
@@ -3310,7 +3324,8 @@ class FST:
         multiple times, last value sent takes effect.
 
         **Parameters:**
-        - `with_loc`: If `True` then only nodes with locations returned, otherwise all nodes.
+        - `with_loc`: If `True` then only nodes with locations returned, `'own'` means only nodes with own location,
+            otherwise all nodes.
         - `walk_self`: If `True` then self will be returned first with the possibility to skip children with `send()`.
         - `recurse`: Whether to recurse into children by default, `send()` for a given node will always override this.
             Will always attempt first level of children unless walking self and `False` is sent first.
@@ -3331,6 +3346,9 @@ class FST:
         """
 
         if walk_self:
+            if not _with_loc(self.a, with_loc):
+                return
+
             recurse_ = 1
 
             while (sent := (yield self)) is not None:
@@ -3410,7 +3428,7 @@ class FST:
 
             fst = ast.f
 
-            if with_loc and not _with_loc(fst.a):
+            if not _with_loc(fst.a, with_loc):
                 continue
 
             recurse_ = recurse
@@ -3816,8 +3834,8 @@ class FST:
         **Parameters:**
         - `ret_fst`: If `True` then always return an `FST` (`self` or clone), `False` will always return an `fstloc`
             (which could be `self.loc`) and `None` can return an `fstloc` or `self` if no comments found.
-        - `comms': Which comments to include, `True` means all, `False` means none, `"pre"` means only preceding
-            comments and `"post"` means only trailing comments.
+        - `comms': Which comments to include, `True` means all, `False` means none, `'pre'` means only preceding
+            comments and `'post'` means only trailing comments.
 
         **Returns:**
         - `fstloc | FST | None`: If `ret_fst` is `None` and no comments found then just returns `self`. A `None` can
