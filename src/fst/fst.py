@@ -165,18 +165,18 @@ def unparse(ast_obj) -> str:
     return ast_unparse(ast_obj)
 
 
-def _with_loc(ast: AST, with_loc: bool | Literal['own'] = True) -> bool:
+def _with_loc(fst: 'FST', with_loc: bool | Literal['own'] = True) -> bool:
     """Check location condition on node. Faster overall than checking `ast.f.loc`."""
 
     if not with_loc:
         return True
 
     if with_loc is True:
-        return not (isinstance(ast, (expr_context, boolop, operator, unaryop, cmpop)) or
-                    (isinstance(ast, arguments) and not ast.posonlyargs and not ast.args and not ast.vararg and
-                    not ast.kwonlyargs and not ast.kwarg))
+        return not (isinstance(a := fst.a, (expr_context, boolop, operator, unaryop, cmpop)) or
+                    (isinstance(a, arguments) and not a.posonlyargs and not a.args and not a.vararg and
+                    not a.kwonlyargs and not a.kwarg))
 
-    return ast.f.has_own_loc  # with_loc == 'own'
+    return fst.has_own_loc  # with_loc == 'own'
 
 
 def _next_src(lines: list[str], ln: int, col: int, end_ln: int, end_col: int,
@@ -2846,8 +2846,8 @@ class FST:
                             except IndexError:
                                 return None
 
-                    if _with_loc(a, with_loc):
-                        return a.f
+                    if _with_loc(f := a.f, with_loc):
+                        return f
 
             elif idx is not None:
                 sibling = getattr(aparent, name)
@@ -2860,16 +2860,16 @@ class FST:
                     except IndexError:
                         break
 
-                    if _with_loc(a, with_loc):
-                        return a.f
+                    if _with_loc(f := a.f, with_loc):
+                        return f
 
             while next is not None:
                 if isinstance(next, str):
                     name = next
 
                     if isinstance(sibling := getattr(aparent, next, None), AST):  # None because we know about fields from future python versions
-                        if _with_loc(sibling, with_loc):
-                            return sibling.f
+                        if _with_loc(f := sibling.f, with_loc):
+                            return f
 
                     elif isinstance(sibling, list) and sibling:
                         idx = -1
@@ -3149,8 +3149,8 @@ class FST:
                             prev = 4
                             a    = aparent.keys[idx]
 
-                    if _with_loc(a, with_loc):
-                        return a.f
+                    if _with_loc(f := a.f, with_loc):
+                        return f
 
             else:
                 sibling = getattr(aparent, name)
@@ -3159,16 +3159,16 @@ class FST:
                     if not (a := sibling[(idx := idx - 1)]):
                         continue
 
-                    if _with_loc(a, with_loc):
-                        return a.f
+                    if _with_loc(f := a.f, with_loc):
+                        return f
 
             while prev is not None:
                 if isinstance(prev, str):
                     name = prev
 
                     if isinstance(sibling := getattr(aparent, prev, None), AST):  # None because could have fields from future python versions
-                        if _with_loc(sibling, with_loc):
-                            return sibling.f
+                        if _with_loc(f := sibling.f, with_loc):
+                            return f
 
                     elif isinstance(sibling, list) and (idx := len(sibling)):
                         break
@@ -3202,12 +3202,12 @@ class FST:
         for name in AST_FIELDS[(a := self.a).__class__]:
             if (child := getattr(a, name, None)):
                 if isinstance(child, AST):
-                    if _with_loc(child, with_loc):
-                        return child.f
+                    if _with_loc(f := child.f, with_loc):
+                        return f
 
                 elif isinstance(child, list):
-                    if (c := child[0]) and _with_loc(c, with_loc):
-                        return c.f
+                    if (c := child[0]) and _with_loc(f := c.f, with_loc):
+                        return f
 
                     return FST(Pass(), self, astfield(name, 0)).next(with_loc)  # Pass() is a hack just to have a simple AST node
 
@@ -3234,12 +3234,12 @@ class FST:
         for name in reversed(AST_FIELDS[(a := self.a).__class__]):
             if (child := getattr(a, name, None)):
                 if isinstance(child, AST):
-                    if _with_loc(child, with_loc):
-                        return child.f
+                    if _with_loc(f := child.f, with_loc):
+                        return f
 
                 elif isinstance(child, list):
-                    if (c := child[-1]) and _with_loc(c, with_loc):
-                        return c.f
+                    if (c := child[-1]) and _with_loc(f := c.f, with_loc):
+                        return f
 
                     return FST(Pass(), self, astfield(name, len(child) - 1)).prev(with_loc)  # Pass() is a hack just to have a simple AST node
 
@@ -3275,7 +3275,7 @@ class FST:
 
         return self.last_child(with_loc) if from_child is None else from_child.prev(with_loc)
 
-    def next_step(self, with_loc: bool | Literal['own'] = True) -> Optional['FST']:
+    def next_step(self, with_loc: bool | Literal['own'] | Literal['allown'] = True) -> Optional['FST']:
         """Get next node in syntactic order over entire tree. Will walk up parents and down children to get the next
         node, returning `None` only when we are at the end of the whole thing.
 
@@ -3304,7 +3304,7 @@ class FST:
 
         return fst
 
-    def prev_step(self, with_loc: bool | Literal['own'] = True) -> Optional['FST']:
+    def prev_step(self, with_loc: bool | Literal['own'] | Literal['allown'] = True) -> Optional['FST']:
         """Get prev node in syntactic order over entire tree. Will walk up parents and down children to get the next
         node, returning `None` only when we are at the beginning of the whole thing.
 
@@ -3362,7 +3362,7 @@ class FST:
         """
 
         if self_:
-            if not _with_loc(self.a, with_loc):
+            if not _with_loc(self, with_loc):
                 return
 
             recurse_ = 1
@@ -3444,7 +3444,7 @@ class FST:
 
             fst = ast.f
 
-            if not _with_loc(fst.a, with_loc):
+            if not _with_loc(fst, with_loc):
                 continue
 
             recurse_ = recurse
