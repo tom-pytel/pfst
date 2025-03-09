@@ -802,13 +802,13 @@ class FSTSrcEdit:
         - `ffirst`: The first `FST` or `fstloc` being gotten.
         - `flast`: The last `FST` or `fstloc` being gotten.
         - `fpre`: The preceding-first `FST` or `fstloc`, not being gotten, may not exist if `ffirst` is first of seq.
-        - `fpost`: The after-last `FST` or `fstloc` being gotten, may not exist if `flast` is last of seq.
+        - `fpost`: The after-last `FST` or `fstloc` not being gotten, may not exist if `flast` is last of seq.
 
         **Returns:**
         - If `cut=False` then should return tuple with only the first value set, which is a location where to copy
-        source from for the new slice, with the second two being `None`. If `cut=True` then should return the copy
-        location, a delete location and optionally lines to replace the deleted portion (which can only be non-coding
-        source).
+            source from for the new slice, with the second two being `None`. If `cut=True` then should return the copy
+            location, a delete location and optionally lines to replace the deleted portion (which can only be
+            non-coding source).
         """
 
         lines = fst.root._lines
@@ -863,7 +863,8 @@ class FSTSrcEdit:
         - `flast`: The last destination `FST` or `fstloc` being replaced (if `None` then nothing being replaced).
         - `fpre`: The preceding-first destination `FST` or `fstloc`, not being replaced, may not exist if `ffirst` is
             first of seq.
-        - `fpost`: The after-last destination `FST` or `fstloc` being replaced, may not exist if `flast` is last of seq.
+        - `fpost`: The after-last destination `FST` or `fstloc` not being replaced, may not exist if `flast` is last of
+            seq.
         - `pfirst`: The first source `FST`, else `None` if is assignment from empty sequence or deletion.
         - `plast`: The last source `FST`, else `None` if is assignment from empty sequence or deletion.
 
@@ -930,6 +931,33 @@ class FSTSrcEdit:
                                       put_fst)
 
         return del_loc
+
+    def get_slice_stmt(self, fst: 'FST', field: str, cut: bool, comms: bool | str, block_loc: fstloc,
+                       ffirst: 'FST', flast: 'FST', fpre: Optional['FST'], fpost: Optional['FST'],
+    ) -> tuple[fstloc, fstloc | None, list[str] | None]:  # (copy_loc, del/put_loc, put_lines)
+        """Copy or cut from block of statements.
+
+        **Parameters:**
+        - `fst`: The source `FST` container that is being gotten from. No text has been changed at this point but the
+            respective `AST` nodes may have been removed in case of `cut`.
+        - `field`: The name of the field being gotten from, e.g. `'body'`, `'orelse'`, etc...
+        - `comms`: The comments requested to be copied with the slice, normally `True`, `False`, `'pre'` or `'post'`,
+            but can be something custom.
+        - `cut`: If `False` the operation is a copy, `True` means cut.
+        - `block_loc`: The full location of the sequence of statements in `fst`, excluding comments.
+        - `ffirst`: The first `FST` being gotten.
+        - `flast`: The last `FST` being gotten.
+        - `fpre`: The preceding-first `FST`, not being gotten, may not exist if `ffirst` is first of seq.
+        - `fpost`: The after-last `FST` not being gotten, may not exist if `flast` is last of seq.
+
+        **Returns:**
+        - If `cut=False` then should return tuple with only the first value set, which is a location where to copy
+            source from for the new slice, with the second two being `None`. If `cut=True` then should return the copy
+            location, a delete location and optionally lines to replace the deleted portion (which can only be
+            non-codingblock_loc source).
+        """
+
+        return fstloc(ffirst.ln, ffirst.col, flast.end_ln, flast.end_col), None, None
 
 
 class FST:
@@ -1567,6 +1595,18 @@ class FST:
 
             self._make_fst_tree([FST(ast.func, self, astfield('func'))])
 
+    def _maybe_fix_if(self):
+        # assert isinstance(self.a, If)
+
+        ln, col, _, _ = self.loc
+        lines         = self.root._lines
+
+        if lines[ln].startswith('elif', col) and (not (parent := self.parent) or not
+            (isinstance(parenta := parent.a, If) and self.pfield == ('orelse', 0) and len(parenta.orelse) == 1 and
+             self.a.col_offset == parenta.col_offset)
+        ):
+            self.put_lines(None, ln, col, ln, col + 2, False)
+
     def _make_fst_and_dedent(self, findent: 'FST', ast: AST, copy_loc: fstloc, prefix: str = '', suffix: str = '',
                              put_loc: fstloc | None = None, put_lines: list[str] | None = None) -> 'FST':
         indent = findent.get_indent()
@@ -1587,35 +1627,6 @@ class FST:
             self.put_lines(put_lines, *put_loc, True)  # True because we may have an unparenthesized tuple that shrinks to a span length of 0
 
         fst.dedent_lns(indent)
-
-        return fst
-
-    def _get_slice_stmt(self, start: int, stop: int, field: str | None, fix: bool, cut: bool) -> 'FST':
-
-
-
-        if cut: raise NotImplementedError  # TODO: THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS!
-
-
-
-        get_ast     = self.a
-        field, body = _fixup_field_body(get_ast, field)
-        start, stop = _fixup_slice_index(get_ast, body, field, start, stop)
-
-        if start == stop:
-            return _new_empty_module(from_=self)
-
-        afirst = body[start]
-        loc    = fstloc((f := afirst.f).ln, f.col, (l := body[stop - 1].f.loc).end_ln, l.end_col)
-        newast = Module(body=[copy_ast(body[i]) for i in range(start, stop)])
-
-        if (fix and field == 'orelse' and not start and (stop - start) == 1 and
-            afirst.col_offset == get_ast.col_offset and isinstance(get_ast, If) and isinstance(afirst, If)
-        ):  # 'elif' -> 'if'
-            newast.body[0].col_offset += 2
-            loc                        = fstloc(loc.ln, loc.col + 2, loc.end_ln, loc.end_col)
-
-        fst = self._make_fst_and_dedent(afirst.f, newast, loc)
 
         return fst
 
@@ -1665,7 +1676,7 @@ class FST:
         ffirst   = elts[start].f
         flast    = elts[stop - 1].f
         fpre     = elts[start - 1].f if start else None
-        fpost    = None if stop == len(elts) else elts[stop].f
+        fpost    = elts[stop].f if stop < len(elts) else None
 
         if not cut:
             asts = [copy_ast(elts[i]) for i in range(start, stop)]
@@ -1752,7 +1763,7 @@ class FST:
         ffirst = self._dict_key_or_mock_loc(keys[start], values[start].f)
         flast  = values[stop - 1].f
         fpre   = values[start - 1].f if start else None
-        fpost  = None if stop == len(keys) else self._dict_key_or_mock_loc(keys[stop], values[stop].f)
+        fpost  = self._dict_key_or_mock_loc(keys[stop], values[stop].f) if stop < len(keys) else None
 
         if not cut:
             akeys   = [copy_ast(keys[i]) for i in range(start, stop)]
@@ -1778,6 +1789,38 @@ class FST:
         assert self.root._lines[seq_loc.end_ln].startswith('}', seq_loc.end_col)
 
         return self._get_seq_and_dedent(get_ast, cut, seq_loc, ffirst, flast, fpre, fpost, '{', '}')
+
+    def _get_slice_stmt(self, start: int, stop: int, field: str | None, fix: bool, cut: bool) -> 'FST':
+        ast         = self.a
+        field, body = _fixup_field_body(ast, field)
+        start, stop = _fixup_slice_index(ast, body, field, start, stop)
+
+        if start == stop:
+            return _new_empty_module(from_=self)
+
+        ffirst = body[start].f
+        flast  = body[stop - 1].f
+        fpre   = body[start - 1].f if start else None
+        fpost  = body[stop].f if stop < len(body) else None
+
+        if not cut:
+            asts = [copy_ast(body[i]) for i in range(start, stop)]
+
+        else:
+            raise NotImplementedError  # TODO: THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS!
+
+        get_ast   = Module(body=asts)
+        block_loc = fstloc(*(fpre or ffirst).loc[:2], *(fpost or flast).loc[2:])
+
+        copy_loc, _, _ = self.src_edit.get_slice_stmt(self, field, cut, False, block_loc, ffirst, flast, fpre, fpost)
+
+        fst = self._make_fst_and_dedent(ffirst, get_ast, copy_loc)
+
+        if fix:
+            if len(asts) == 1 and isinstance(a := asts[0], If):
+                a.f._maybe_fix_if()
+
+        return fst
 
     def _put_seq_and_indent(self, put_fst: Optional['FST'], seq_loc: fstloc,
                             ffirst: Union['FST', fstloc, None], flast: Union['FST', fstloc, None],
@@ -2541,6 +2584,8 @@ class FST:
 
     def put_lines(self, lines: list[str] | None, ln: int, col: int, end_ln: int, end_col: int,
                   inc: bool | None = None, stop_at: Optional['FST'] = None):
+        """Put or delete lines, optionally offsetting all nodes for the change."""
+
         ls = self.root._lines
 
         if is_del := not lines:
