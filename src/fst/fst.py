@@ -446,9 +446,13 @@ def _normalize_code(code: Code, expr_: bool = False, *, parse_params: dict = {})
     return FST(ast, lines=lines)
 
 
-def _new_empty_tuple() -> 'FST':
+def _new_empty_module(*, from_: Optional['FST'] = None) -> 'FST':
+    return FST(Module(body=[]), lines=[bistr('')], from_=from_)
+
+
+def _new_empty_tuple(*, from_: Optional['FST'] = None) -> 'FST':
     ast                = Tuple(elts=[], ctx=Load())
-    fst                = FST(ast, lines=[bistr('()')])
+    fst                = FST(ast, lines=[bistr('()')], from_=from_)
     ast.lineno         = ast.end_lineno = 1
     ast.col_offset     = 0
     ast.end_col_offset = 2
@@ -456,9 +460,9 @@ def _new_empty_tuple() -> 'FST':
     return fst
 
 
-def _new_empty_list() -> 'FST':
+def _new_empty_list(*, from_: Optional['FST'] = None) -> 'FST':
     ast                = List(elts=[], ctx=Load())
-    fst                = FST(ast, lines=[bistr('[]')])
+    fst                = FST(ast, lines=[bistr('[]')], from_=from_)
     ast.lineno         = ast.end_lineno = 1
     ast.col_offset     = 0
     ast.end_col_offset = 2
@@ -466,9 +470,9 @@ def _new_empty_list() -> 'FST':
     return fst
 
 
-def _new_empty_dict() -> 'FST':
+def _new_empty_dict(*, from_: Optional['FST'] = None) -> 'FST':
     ast                = Dict(keys=[], values=[])
-    fst                = FST(ast, lines=[bistr('{}')])
+    fst                = FST(ast, lines=[bistr('{}')], from_=from_)
     ast.lineno         = ast.end_lineno = 1
     ast.col_offset     = 0
     ast.end_col_offset = 2
@@ -476,16 +480,18 @@ def _new_empty_dict() -> 'FST':
     return fst
 
 
-def _new_empty_set_curlies(ast_only: bool = False, lineno: int = 1, col_offset: int = 0) -> 'FST':
+def _new_empty_set_curlies(ast_only: bool = False, lineno: int = 1, col_offset: int = 0, *,
+                           from_: Optional['FST'] = None) -> 'FST':
     ast                = Set(elts=[])
     ast.lineno         = ast.end_lineno = lineno
     ast.col_offset     = col_offset
     ast.end_col_offset = col_offset + 2
 
-    return ast if ast_only else FST(ast, lines=[bistr('{}')])
+    return ast if ast_only else FST(ast, lines=[bistr('{}')], from_=from_)
 
 
-def _new_empty_set_call(ast_only: bool = False, lineno: int = 1, col_offset: int = 0) -> 'FST':
+def _new_empty_set_call(ast_only: bool = False, lineno: int = 1, col_offset: int = 0, *,
+                        from_: Optional['FST'] = None) -> 'FST':
     ast                     = Call(func=Name(id='set', ctx=Load()), args=[], keywords=[])
     ast.lineno              = ast.end_lineno = lineno
     ast.col_offset          = col_offset
@@ -494,7 +500,7 @@ def _new_empty_set_call(ast_only: bool = False, lineno: int = 1, col_offset: int
     ast.func.col_offset     = col_offset
     ast.func.end_col_offset = col_offset + 3
 
-    return ast if ast_only else FST(ast, lines=[bistr('set()')])
+    return ast if ast_only else FST(ast, lines=[bistr('set()')], from_=from_)
 
 
 class fstlistproxy:
@@ -1553,7 +1559,7 @@ class FST:
             self.put_lines([bistr('set()')], ln, col, end_ln, end_col, True)
 
             ast    = self.a
-            self.a = ast = _new_empty_set_call(True, ast.lineno, ast.col_offset)
+            self.a = ast = _new_empty_set_call(True, ast.lineno, ast.col_offset, from_=self)
             ast.f  = self
 
             if parent := self.parent:
@@ -1584,6 +1590,35 @@ class FST:
 
         return fst
 
+    def _get_slice_stmt(self, start: int, stop: int, field: str | None, fix: bool, cut: bool) -> 'FST':
+
+
+
+        if cut: raise NotImplementedError  # TODO: THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS!
+
+
+
+        get_ast     = self.a
+        field, body = _fixup_field_body(get_ast, field)
+        start, stop = _fixup_slice_index(get_ast, body, field, start, stop)
+
+        if start == stop:
+            return _new_empty_module(from_=self)
+
+        afirst = body[start]
+        loc    = fstloc((f := afirst.f).ln, f.col, (l := body[stop - 1].f.loc).end_ln, l.end_col)
+        newast = Module(body=[copy_ast(body[i]) for i in range(start, stop)])
+
+        if (fix and field == 'orelse' and not start and (stop - start) == 1 and
+            afirst.col_offset == get_ast.col_offset and isinstance(get_ast, If) and isinstance(afirst, If)
+        ):  # 'elif' -> 'if'
+            newast.body[0].col_offset += 2
+            loc                        = fstloc(loc.ln, loc.col + 2, loc.end_ln, loc.end_col)
+
+        fst = self._make_fst_and_dedent(afirst.f, newast, loc)
+
+        return fst
+
     def _get_seq_and_dedent(self, get_ast: AST, cut: bool, seq_loc: fstloc,
                             ffirst: Union['FST', fstloc], flast: Union['FST', fstloc],
                             fpre: Union['FST', fstloc, None], fpost: Union['FST', fstloc, None],
@@ -1608,35 +1643,6 @@ class FST:
 
         return get_fst
 
-    def _get_slice_stmt(self, start: int, stop: int, field: str | None, fix: bool, cut: bool) -> 'FST':
-
-
-
-        if cut: raise NotImplementedError  # TODO: THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS!
-
-
-
-        get_ast     = self.a
-        field, body = _fixup_field_body(get_ast, field)
-        start, stop = _fixup_slice_index(get_ast, body, field, start, stop)
-
-        if start == stop:
-            return FST(Module(body=[]), lines=[bistr('')], from_=self)
-
-        afirst = body[start]
-        loc    = fstloc((f := afirst.f).ln, f.col, (l := body[stop - 1].f.loc).end_ln, l.end_col)
-        newast = Module(body=[copy_ast(body[i]) for i in range(start, stop)])
-
-        if (fix and field == 'orelse' and not start and (stop - start) == 1 and
-            afirst.col_offset == get_ast.col_offset and isinstance(get_ast, If) and isinstance(afirst, If)
-        ):  # 'elif' -> 'if'
-            newast.body[0].col_offset += 2
-            loc                        = fstloc(loc.ln, loc.col + 2, loc.end_ln, loc.end_col)
-
-        fst = self._make_fst_and_dedent(afirst.f, newast, loc)
-
-        return fst
-
     def _get_slice_tuple_list_or_set(self, start: int, stop: int, field: str | None, fix: bool, cut: bool) -> 'FST':
         if field is not None and field != 'elts':
             raise ValueError(f"invalid field '{field}' to slice from a {self.a.__class__.__name__}")
@@ -1649,11 +1655,11 @@ class FST:
 
         if start == stop:
             if is_set:
-                return _new_empty_set_call() if fix else _new_empty_set_curlies()
+                return _new_empty_set_call(from_=self) if fix else _new_empty_set_curlies(from_=self)
             elif is_tuple:
-                return _new_empty_tuple()
+                return _new_empty_tuple(from_=self)
             else:
-                return _new_empty_list()
+                return _new_empty_list(from_=self)
 
         is_paren = is_tuple and self.is_tuple_parenthesized()
         ffirst   = elts[start].f
@@ -1729,7 +1735,7 @@ class FST:
         if start or stop:
             raise IndexError(f"Set.{field} index out of range")
 
-        return _new_empty_set_call() if fix else _new_empty_set_curlies()
+        return _new_empty_set_call(from_=self) if fix else _new_empty_set_curlies(from_=self)
 
     def _get_slice_dict(self, start: int, stop: int, field: str | None, fix: bool, cut: bool) -> 'FST':
         if field is not None:
@@ -1740,7 +1746,7 @@ class FST:
         start, stop = _fixup_slice_index(ast, values, 'values', start, stop)
 
         if start == stop:
-            return _new_empty_dict()
+            return _new_empty_dict(from_=self)
 
         keys   = ast.keys
         ffirst = self._dict_key_or_mock_loc(keys[start], values[start].f)
@@ -1829,7 +1835,7 @@ class FST:
 
             if put_fst.is_empty_set_call():
                 if fix:
-                    put_fst = _new_empty_set_curlies()
+                    put_fst = _new_empty_set_curlies(from_=self)
                 else:
                     raise ValueError(f"cannot put 'set()' as a slice without specifying 'fix=True'")
 
@@ -1930,7 +1936,7 @@ class FST:
         self.put_lines([bistr('{}')], ln, col, end_ln, end_col, True)
 
         ast    = self.a
-        self.a = ast = _new_empty_set_curlies(True, ast.lineno, ast.col_offset)
+        self.a = ast = _new_empty_set_curlies(True, ast.lineno, ast.col_offset, from_=self)
         ast.f  = self
 
         if parent := self.parent:

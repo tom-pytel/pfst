@@ -6763,7 +6763,7 @@ def func():
         f.put_src('***', 1, 2, 2, 1)
         self.assertEqual(f.lines, ['a', 'ef***ij', 'd'])
 
-    def test__maybe_fix_copy(self):
+    def test_fix(self):
         f = FST.fromsrc('if 1:\n a\nelif 2:\n b')
         fc = f.a.body[0].orelse[0].f.copy(fix=False)
         self.assertEqual(fc.lines[0], 'elif 2:')
