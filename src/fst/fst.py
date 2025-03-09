@@ -557,9 +557,9 @@ class FSTSrcEdit:
                             fpre: Union['FST', fstloc, None], fpost: Union['FST', fstloc, None],
                             flast: Union['FST', fstloc, None],
                             ) -> tuple[fstloc, Union['FST', fstloc, None], Union['FST', fstloc, None]] | None:
-        """Depending on existence preceding or following expressions and a full sequence location, return a bound `fstloc`
-        that represents a search space in the source for commas and parenteses and the like. Will exclude any closing
-        parentheses belonging to `fpre` and any opening parenthese belonging to `fpost` from the bound."""
+        """Depending on existence preceding or following expressions and a full sequence location, return a bound
+        `fstloc` that represents a search space in the source for commas and parenteses and the like. Will exclude any
+        closing parentheses belonging to `fpre` and any opening parenthese belonging to `fpost` from the bound."""
 
         if not fpre:
             if not fpost:
@@ -944,7 +944,7 @@ class FSTSrcEdit:
         - `comms`: The comments requested to be copied with the slice, normally `True`, `False`, `'pre'` or `'post'`,
             but can be something custom.
         - `cut`: If `False` the operation is a copy, `True` means cut.
-        - `block_loc`: The full location of the sequence of statements in `fst`, excluding comments.
+        - `block_loc`: A full location suitable for checking comments and things if `fpre` and `fpost` not available.
         - `ffirst`: The first `FST` being gotten.
         - `flast`: The last `FST` being gotten.
         - `fpre`: The preceding-first `FST`, not being gotten, may not exist if `ffirst` is first of seq.
@@ -957,7 +957,20 @@ class FSTSrcEdit:
             non-codingblock_loc source).
         """
 
-        return fstloc(ffirst.ln, ffirst.col, flast.end_ln, flast.end_col), None, None
+
+        ln    , col     = ffirst.loc[:2]
+        end_ln, end_col = flast.loc[2:]
+        lines           = fst.root._lines
+
+        if comms is True or comms == 'pre':
+            ln, col = self.pre_comments(lines, ffirst, *(fpre.loc[2:] if fpre else block_loc[:2]))
+
+        if comms is True or comms == 'post':
+            end_ln, end_col = self.post_comments(lines, flast, *(fpost.loc[:2] if fpre else block_loc[2:]))
+
+
+
+        return fstloc(ln, col, end_ln, end_col), None, None
 
 
 class FST:
@@ -1626,7 +1639,7 @@ class FST:
         if put_loc:
             self.put_lines(put_lines, *put_loc, True)  # True because we may have an unparenthesized tuple that shrinks to a span length of 0
 
-        fst.dedent_lns(indent)
+        fst.dedent_lns(indent, skip=bool(copy_loc.col))  # if copy location starts at column 0 then we apply dedent to it as well (preceding comment or something)
 
         return fst
 
@@ -1790,7 +1803,8 @@ class FST:
 
         return self._get_seq_and_dedent(get_ast, cut, seq_loc, ffirst, flast, fpre, fpost, '{', '}')
 
-    def _get_slice_stmt(self, start: int, stop: int, field: str | None, fix: bool, cut: bool) -> 'FST':
+    def _get_slice_stmt(self, start: int, stop: int, field: str | None, fix: bool, cut: bool, comms: bool | str,
+                        ) -> 'FST':
         ast         = self.a
         field, body = _fixup_field_body(ast, field)
         start, stop = _fixup_slice_index(ast, body, field, start, stop)
@@ -1810,11 +1824,13 @@ class FST:
             raise NotImplementedError  # TODO: THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS!
 
         get_ast   = Module(body=asts)
-        block_loc = fstloc(*(fpre or ffirst).loc[:2], *(fpost or flast).loc[2:])
+        block_loc = fstloc(*(fpre.loc[2:] if fpre else ffirst._prev_ast_bound()),
+                           *(fpost.loc[:2] if fpost else flast._next_ast_bound()))
 
-        copy_loc, _, _ = self.src_edit.get_slice_stmt(self, field, cut, False, block_loc, ffirst, flast, fpre, fpost)
+        copy_loc, put_loc, put_lines = (
+            self.src_edit.get_slice_stmt(self, field, cut, comms, block_loc, ffirst, flast, fpre, fpost))
 
-        fst = self._make_fst_and_dedent(ffirst, get_ast, copy_loc)
+        fst = self._make_fst_and_dedent(ffirst, get_ast, copy_loc, '', '', put_loc, put_lines)
 
         if fix:
             if len(asts) == 1 and isinstance(a := asts[0], If):
@@ -2493,14 +2509,15 @@ class FST:
 
 
     def get(self, start: int | str | None = None, stop: int | str | None | Literal[False] = False,
-            field: str | None = None, *, fix: bool = True, cut: bool = False) -> Optional['FST']:
+            field: str | None = None, *, fix: bool = True, cut: bool = False, comms: bool | str = False,
+            ) -> Optional['FST']:
 
         if isinstance(start, str):
             raise NotImplementedError
 
         if stop is not False:
             if not isinstance(stop, str):
-                return self.get_slice(start, stop, field, fix=fix, cut=cut)
+                return self.get_slice(start, stop, field, fix=fix, cut=cut, comms=comms)
 
             if field is not None:
                 raise ValueError('cannot specify two field values')
@@ -2531,11 +2548,11 @@ class FST:
 
 
     def get_slice(self, start: int | None = None, stop: int | None = None, field: str | None = None, *,
-                  fix: bool = True, cut: bool = False) -> 'FST':
+                  fix: bool = True, cut: bool = False, comms: bool | str = False) -> 'FST':
         a = self.a
 
         if isinstance(a, STATEMENTISH_OR_STMTMOD):
-            return self._get_slice_stmt(start, stop, field, fix, cut)
+            return self._get_slice_stmt(start, stop, field, fix, cut, comms)
 
         if isinstance(a, (Tuple, List, Set)):
             return self._get_slice_tuple_list_or_set(start, stop, field, fix, cut)
@@ -4165,7 +4182,7 @@ class FST:
         return lns
 
     def dedent_lns(self, indent: str | None = None, lns: set[int] | None = None, *,
-                   docstring: bool | Literal['strict'] | None = None) -> set[int]:
+                   docstring: bool | Literal['strict'] | None = None, skip: int = 1) -> set[int]:
         """Dedent all indentable lines past the first one by removing `indent` prefix and adjust node locations
         accordingly. Does not modify columns on first line. If cannot dedent entire amount will dedent as much as
         possible.
@@ -4188,7 +4205,7 @@ class FST:
         if docstring is None:
             docstring = root.docstring
 
-        if not ((lns := self.get_indentable_lns(1, docstring=docstring)) if lns is None else lns) or not indent:
+        if not ((lns := self.get_indentable_lns(skip, docstring=docstring)) if lns is None else lns) or not indent:
             return lns
 
         lines        = root._lines
