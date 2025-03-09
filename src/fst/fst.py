@@ -1182,6 +1182,12 @@ class FST:
         return (loc := self.loc) and self.root._lines[loc[2]].c2b(loc[3])
 
     @property
+    def is_mock(self) -> bool:
+        """`True` if is a `locmock` for another node."""
+
+        return self.a.f is not self
+
+    @property
     def f(self):
         """@private"""
 
@@ -1238,7 +1244,7 @@ class FST:
 
         self.touchall(False)  # for debugging because we may have cached locs which would not have otherwise been cached during execution
 
-        tail = (' ROOT' if self.is_root else '') if self.a.f is self else (' MOCK ROOT' if self.is_root else ' MOCK')
+        tail = (' MOCK ROOT' if self.is_root else ' MOCK') if self.is_mock else (' ROOT' if self.is_root else '')
 
         return f'{tail} {loc[0]},{loc[1]} -> {loc[2]},{loc[3]}' if loc else tail
 
