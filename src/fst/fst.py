@@ -320,17 +320,81 @@ def _prev_src(lines: list[str], ln: int, col: int, end_ln: int, end_col: int,
     return None
 
 
-def _prev_find(lines: list[str], ln: int, col: int, end_ln: int, end_col: int, src: str) -> tuple[int, int] | None:
-    """Find location of a string in the bound walking backwards, will skip over anything else which is not the string.
-    Returns `None` if string not found."""
+def _next_find(lines: list[str], ln: int, col: int, end_ln: int, end_col: int, src: str, first: bool = False, *,
+               comment: bool = False, lcont: bool | None = False) -> tuple[int, int] | None:
+    """Find location of a string in the bound walking forward from the start. Returns `None` if string not found.
 
-    state = []
+    **Parameters:**
+    - `first`: If `False` then will skip over anything else which is not the string and keep looking until it hits the
+        end of the bound. If `True` then will only succeed if `src` is the first thing found.
+    - `comment`: The `comment` parameter to `_next_src()`, can stop search on comments if `first` is `True`.
+    - `lcont`: The `lcont` parameter to `_next_src()`. Can stop search on line continuation if `first` is `True`.
 
-    while code := _prev_src(lines, ln, col, end_ln, end_col, state=state):
-        end_ln, end_col, src_ = code
+    **Returns:**
+    - `(ln, col) | None`: Location of start of found `src` or `None` if not found with the given parameters.
+    """
 
-        if (idx := src_.rfind(src)) != -1:
-            return end_ln, end_col + idx
+    if first:
+        if code := _next_src(lines, ln, col, end_ln, end_col, comment, lcont):
+            cln, ccol, csrc = code
+
+            if csrc.startswith(src):
+                return cln, ccol
+
+    else:
+        while code := _next_src(lines, ln, col, end_ln, end_col, comment, lcont):
+            ln, col, csrc = code
+
+            if (idx := csrc.find(src)) != -1:
+                return ln, col + idx
+
+            col += len(csrc)
+
+    return None
+
+
+def _prev_find(lines: list[str], ln: int, col: int, end_ln: int, end_col: int, src: str, first: bool = False, *,
+               comment: bool = False, lcont: bool | None = False, state: list | None = None) -> tuple[int, int] | None:
+    """Find location of a string in the bound walking backwards from the end. Returns `None` if string not found. If
+    `comment` is `True` then `src` must match the START of the src comment found, not the tail like for non-comment
+     strings found in order to be considered successful.
+
+    **Parameters:**
+    - `first`: If `False` then will skip over anything else which is not the string and keep looking until it hits the
+        start of the bound. If `True` then will only succeed if `src` is the first thing found.
+    - `comment`: The `comment` parameter to `_prev_src()`, can stop search on comments if `first` is `True`.
+    - `lcont`: The `lcont` parameter to `_prev_src()`. Can stop search on line continuation if `first` is `True`.
+    - `state`: The `state` parameter to `_prev_src()`. Be careful using this here and keep in mind its line caching
+        functionality if changing search parameters.
+
+    **Returns:**
+    - `(ln, col) | None`: Location of start of found `src` or `None` if not found with the given parameters.
+    """
+
+    if first:
+        if code := _prev_src(lines, ln, col, end_ln, end_col, comment, lcont, state=state):
+            cln, ccol, csrc = code
+
+            if comment and csrc.startswith('#'):
+                if csrc.startswith(src):
+                    return cln, ccol
+
+            elif csrc.endswith(src):
+                return cln, ccol + len(csrc) - len(src)
+
+    else:
+        if state is None:
+            state = []
+
+        while code := _prev_src(lines, ln, col, end_ln, end_col, comment, lcont, state=state):
+            end_ln, end_col, csrc = code
+
+            if comment and csrc.startswith('#'):
+                if csrc.startswith(src):
+                    return end_ln, end_col
+
+            elif (idx := csrc.rfind(src)) != -1:
+                return end_ln, end_col + idx
 
     return None
 
@@ -852,16 +916,15 @@ class FSTSrcEdit:
         - `fpost`: The after-last `FST` or `fstloc` not being gotten, may not exist if `flast` is last of seq.
 
         **Returns:**
-        - If `cut=False` then should return tuple with only the first value set, which is a location where to copy
-            source from for the new slice, with the second two being `None`. If `cut=True` then should return the copy
-            location, a delete location and optionally lines to replace the deleted portion (which can only be
-            non-coding source).
+        - If `cut=False` then only the first element of the return tuple is used for the copy and the other two are
+            ignored so they don't need to be calculated. If `cut=True` then should return the copy location, a delete
+            location and optionally lines to replace the deleted portion (which can only be non-coding source).
         """
 
         lines = fst.root._lines
 
         if not (bound_pre_post := self._fixup_expr_seq_bound(lines, seq_loc, fpre, fpost, flast)):
-            return (seq_loc, seq_loc, None) if cut else (seq_loc, None, None)
+            return seq_loc, seq_loc, None
 
         bound, _, _       = bound_pre_post
         copy_loc, del_loc = self._expr_src_edit_locs(
@@ -875,7 +938,7 @@ class FSTSrcEdit:
                                                             del_col := del_col).start(1)) < del_col:  # move del start to beginning of any trailing whitespace from del location before end of sequence
                 del_loc = fstloc(del_ln, new_del_col, del_end_ln, del_end_col)
 
-        return (copy_loc, del_loc, None) if cut else (copy_loc, None, None)
+        return copy_loc, del_loc, None
 
     def put_slice_seq(self, fst: 'FST', put_fst: Optional['FST'], indent: str, seq_loc: fstloc,
                       ffirst: Union['FST', fstloc, None], flast: Union['FST', fstloc, None],
@@ -1003,10 +1066,14 @@ class FSTSrcEdit:
             non-codingblock_loc source).
         """
 
+        start_ln, start_col = ffirst.loc[:2]
+        end_ln, end_col     = flast.loc[2:]
 
-        ln    , col     = ffirst.loc[:2]
-        end_ln, end_col = flast.loc[2:]
-        lines           = fst.root._lines
+        lines = fst.root._lines
+
+
+
+
 
         if (comms is True or comms == 'pre') and (
             pre_loc := self.pre_comments(lines, ffirst, *(fpre.loc[2:] if fpre else block_loc[:2]))
@@ -1022,7 +1089,10 @@ class FSTSrcEdit:
         else:
             end_ln, end_col = flast.bloc[2:]
 
-        return fstloc(ln, col, end_ln, end_col), None, None
+
+        loc = fstloc(ln, col, end_ln, end_col)
+
+        return (loc, loc, None) if cut else (loc, None, None)
 
 
 class FST:
@@ -1704,6 +1774,9 @@ class FST:
 
         copy_ln, copy_col, copy_end_ln, copy_end_col = copy_loc
 
+        if not cut:
+            put_loc = None
+
         lines                  = self.root._lines
         get_ast.lineno         = copy_ln + 1
         get_ast.col_offset     = lines[copy_ln].c2b(copy_col)
@@ -1873,7 +1946,18 @@ class FST:
             asts = [copy_ast(body[i]) for i in range(start, stop)]
 
         else:
-            raise NotImplementedError  # TODO: THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS!
+            asts = body[start : stop]
+
+            del body[start : stop]
+
+            for i in range(start, len(body)):
+                body[i].f.pfield = astfield(field, i)
+
+            # raise NotImplementedError  # TODO: THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS!
+
+
+        # TODO: allow delete all body?
+
 
         get_ast   = Module(body=asts)
         block_loc = fstloc(*(fpre.loc[2:] if fpre else ffirst._prev_ast_bound()),
@@ -1882,7 +1966,14 @@ class FST:
         copy_loc, put_loc, put_lines = (
             self.src_edit.get_slice_stmt(self, field, cut, comms, block_loc, ffirst, flast, fpre, fpost))
 
+        if not cut:
+            put_loc = None
+
         fst = self._make_fst_and_dedent(ffirst, get_ast, copy_loc, '', '', put_loc, put_lines)
+
+
+        # TODO: correct for delete all 'orelse' or such
+
 
         if fix:
             if len(asts) == 1 and isinstance(a := asts[0], If):

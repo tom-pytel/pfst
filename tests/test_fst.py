@@ -5779,6 +5779,52 @@ k \\
         self.assertEqual((0, 0, 'a'), fst._prev_src(['a b c \\'], 0, 0, 0, 2, True, None, state=state))
         self.assertEqual(None, fst._prev_src(['a b c \\'], 0, 0, 0, 0, True, None, state=state))
 
+    def test__next_pref_find(self):
+        lines = '''
+  ;
+  # hello
+  \\
+  # world
+  # word
+            '''.split('\n')
+
+        self.assertEqual((1, 2), fst._prev_find(lines, 0, 0, 5, 0, ';'))
+        self.assertEqual((1, 2), fst._prev_find(lines, 0, 0, 5, 0, ';', True))
+        self.assertEqual(None, fst._prev_find(lines, 0, 0, 5, 0, ';', True, comment=True))
+        self.assertEqual(None, fst._prev_find(lines, 0, 0, 5, 0, ';', True, lcont=True))
+        self.assertEqual((1, 2), fst._prev_find(lines, 0, 0, 2, 0, ';', True, lcont=None))
+        self.assertEqual(None, fst._prev_find(lines, 0, 0, 3, 0, ';', True, lcont=None))
+        self.assertEqual((1, 2), fst._prev_find(lines, 0, 0, 5, 0, ';', False, comment=True, lcont=True))
+        self.assertEqual(None, fst._prev_find(lines, 0, 0, 5, 0, ';', True, comment=True, lcont=True))
+        self.assertEqual((5, 2), fst._prev_find(lines, 0, 0, 6, 0, '# word', False, comment=True, lcont=True))
+        self.assertEqual((4, 2), fst._prev_find(lines, 0, 0, 6, 0, '# world', False, comment=True, lcont=True))
+        self.assertEqual(None, fst._prev_find(lines, 0, 0, 5, 0, '# world', False, comment=False, lcont=True))
+        self.assertEqual((2, 2), fst._prev_find(lines, 0, 0, 5, 0, '# hello', False, comment=True, lcont=True))
+        self.assertEqual(None, fst._prev_find(lines, 0, 0, 5, 0, '# hello', True, comment=True, lcont=True))
+
+        lines = '''
+  \\
+  # hello
+  ; \\
+  # world
+  # word
+            '''.split('\n')
+
+        self.assertEqual((3, 2), fst._next_find(lines, 2, 0, 6, 0, ';'))
+        self.assertEqual((3, 2), fst._next_find(lines, 2, 0, 6, 0, ';', True))
+        self.assertEqual(None, fst._next_find(lines, 2, 0, 6, 0, ';', True, comment=True))
+        self.assertEqual((3, 2), fst._next_find(lines, 2, 0, 6, 0, ';', True, lcont=True))
+        self.assertEqual(None, fst._next_find(lines, 2, 0, 6, 0, ';', True, lcont=None))
+        self.assertEqual(None, fst._next_find(lines, 3, 3, 6, 0, '# word', False))
+        self.assertEqual(None, fst._next_find(lines, 3, 3, 6, 0, '# word', True))
+        self.assertEqual(None, fst._next_find(lines, 3, 3, 6, 0, '# word', True, comment=True))
+        self.assertEqual((5, 2), fst._next_find(lines, 3, 3, 6, 0, '# word', False, comment=True))
+        self.assertEqual(None, fst._next_find(lines, 3, 3, 6, 0, '# word', False, comment=True, lcont=None))
+        self.assertEqual((4, 2), fst._next_find(lines, 3, 0, 6, 0, '# world', False, comment=True, lcont=None))
+        self.assertEqual(None, fst._next_find(lines, 3, 0, 6, 0, '# word', False, comment=True, lcont=None))
+        self.assertEqual((5, 2), fst._next_find(lines, 3, 0, 6, 0, '# word', False, comment=True, lcont=True))
+        self.assertEqual(None, fst._next_find(lines, 3, 0, 6, 0, '# word', True, comment=True, lcont=True))
+
     def test_loc(self):
         self.assertEqual((0, 6, 0, 9), parse('def f(i=1): pass').body[0].args.f.loc)  # arguments
         self.assertEqual((0, 5, 0, 8), parse('with f(): pass').body[0].items[0].f.loc)  # withitem
