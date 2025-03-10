@@ -129,7 +129,7 @@ class fstloc(NamedTuple):
     end_ln:  int
     end_col: int
 
-    bln      = property(lambda self: self.ln)       ; """Alias for `ln`."""
+    bln      = property(lambda self: self.ln)       ; """Alias for `ln`."""  # for convenience
     bcol     = property(lambda self: self.col)      ; """Alias for `col`."""
     bend_ln  = property(lambda self: self.end_ln)   ; """Alias for `end_ln`."""
     bend_col = property(lambda self: self.end_col)  ; """Alias for `end_col`."""
@@ -792,44 +792,45 @@ class FSTSrcEdit:
         return fstloc(copy_ln, copy_col, copy_end_ln, copy_end_col), fstloc(del_ln, del_col, del_end_ln, del_end_col)
 
     def pre_comments(self, lines: list[bistr], f: Union['FST', fstloc], bound_ln: int, bound_col: int,
-                     ) -> tuple[int, int]:
+                     ) -> tuple[int, int] | None:
         """Return the position of the start of any preceding comments to the element which is assumed to live just past
-        (`f.ln`, `f.col`). Can return (`f.ln`, `f.col`) if no preceding comment. If preceding entire line comments exist
-        then the returned position column should be 0 (the start of the line) to indicate that it is a full line
-        comment. This particular implementation will return any full line comments directly preceding the element if it
-        starts its own line."""
+        (`f.bln`, `f.bcol`). Returns `None` if no preceding comment. If preceding entire line comments exist then the
+        returned position column should be 0 (the start of the line) to indicate that it is a full line comment. This
+        particular implementation will return any full line comments directly preceding the element if it starts its own
+        line. An empty line ends the preceding comments even if there are more comments before it."""
 
-        bound_end_ln  = f.bln
-        bound_end_col = f.bcol
+        bound_end_ln = None
+        f_bln        = f.bln
 
-        if not (bound_ln == bound_end_ln or not re_empty_line.match(lines[bound_end_ln], 0, bound_end_col)):
-            for ln in range(bound_end_ln - 1, bound_ln + bool(bound_col), -1):  # only consider whole lines
+        if not (bound_ln == f_bln or not re_empty_line.match(lines[f_bln], 0, f.bcol)):
+            for ln in range(f_bln - 1, bound_ln + bool(bound_col), -1):  # only consider whole lines
                 if not re_comment_line_start.match(lines[ln]):
                     break
 
                 bound_end_ln  = ln
                 bound_end_col = 0
 
-        return bound_end_ln, bound_end_col
+        return None if bound_end_ln is None else (bound_end_ln, bound_end_col)
 
     def post_comments(self, lines: list[bistr], f: Union['FST', fstloc], bound_end_ln: int, bound_end_col: int,
-                      ) -> tuple[int, int]:
+                      ) -> tuple[int, int] | None:
         """Return the position of the end of any preceding trailing comments to the element which is assumed to live
-        just before (`f.end_ln`, `f.end_col`). Can return (`f.end_ln`, `f.end_col`) if no trailing comment. Should
-        return the location at the start of the next line if comment present because a comment should never be on the
-        last line, but if a comment ends the bound should return the end of the bound. This particular implementation
-        will return any comment which lives on the same line as `bound_ln`, no other comments past it on following
-        lines."""
+        just before (`f.bend_ln`, `f.bend_col`). Returns `None` if no trailing comment. Should return the location at
+        the start of the next line if comment present because a comment should never be on the last line, but if a
+        comment ends the bound should return the end of the bound. This particular implementation will return any
+        comment which lives on the same line as `bound_ln`, no other comments past it on following lines."""
 
-        bound_ln  = f.bend_ln
-        bound_col = f.bend_col
+        bound_ln = f.bend_ln
 
-        if (not (code := _next_src(lines, bound_ln, bound_col, bound_end_ln, bound_end_col, True)) or
-            code.ln != bound_ln or not code.src.startswith('#')
-        ):
-            return bound_ln, bound_col
+        if same_line := bound_end_ln == bound_ln:
+            code = _next_src(lines, bound_ln, f.bend_col, bound_end_ln, bound_end_col, True)
+        else:
+            code = _next_src(lines, bound_ln, f.bend_col, bound_ln, 0x7fffffffffffffff, True)
 
-        return (bound_ln + 1, 0) if bound_end_ln > bound_ln else (bound_end_ln, bound_end_col)
+        if not code or not code.src.startswith('#'):
+            return None
+
+        return (bound_end_ln, bound_end_col) if same_line else (bound_ln + 1, 0)
 
     def get_slice_seq(self, fst: 'FST', cut: bool, seq_loc: fstloc,
                       ffirst: Union['FST', fstloc], flast: Union['FST', fstloc],
@@ -863,9 +864,8 @@ class FSTSrcEdit:
             return (seq_loc, seq_loc, None) if cut else (seq_loc, None, None)
 
         bound, _, _       = bound_pre_post
-        copy_loc, del_loc = self._expr_src_edit_locs(lines,
-                                                     fstloc(ffirst.ln, ffirst.col, flast.end_ln, flast.end_col),
-                                                     bound)
+        copy_loc, del_loc = self._expr_src_edit_locs(
+            lines, fstloc(ffirst.ln, ffirst.col, flast.end_ln, flast.end_col), bound)
 
         if not fpost:
             del_ln, del_col, del_end_ln, del_end_col = del_loc
@@ -1008,13 +1008,19 @@ class FSTSrcEdit:
         end_ln, end_col = flast.loc[2:]
         lines           = fst.root._lines
 
-        if comms is True or comms == 'pre':
-            ln, col = self.pre_comments(lines, ffirst, *(fpre.loc[2:] if fpre else block_loc[:2]))
+        if (comms is True or comms == 'pre') and (
+            pre_loc := self.pre_comments(lines, ffirst, *(fpre.loc[2:] if fpre else block_loc[:2]))
+        ):
+            ln, col = pre_loc
+        else:
+            ln, col = ffirst.bloc[:2]
 
-        if comms is True or comms == 'post':
-            end_ln, end_col = self.post_comments(lines, flast, *(fpost.loc[:2] if fpre else block_loc[2:]))
-
-
+        if (comms is True or comms == 'post') and (
+            post_loc := self.post_comments(lines, flast, *(fpost.loc[:2] if fpre else block_loc[2:]))
+        ):
+            end_ln, end_col = post_loc
+        else:
+            end_ln, end_col = flast.bloc[2:]
 
         return fstloc(ln, col, end_ln, end_col), None, None
 
@@ -1197,7 +1203,7 @@ class FST:
 
     @property
     def bloc(self) -> fstloc:
-        """Entire location of node, including any preceding decorators. Not all nodes have locations, but any node which
+        """Entire location of node, including any preceding decorators. Not all nodes have locations but any node which
         has a `.loc` will have a `.bloc`."""
 
         try:
@@ -1210,7 +1216,7 @@ class FST:
         elif not (decos := getattr(self.a, 'decorator_list', None)):
             bloc = loc
         else:
-            bloc = fstloc(decos[0].f.ln, loc[1], loc[2], loc[3])  # column of deco '@' will be same as our column
+            bloc = fstloc(min(decos[0].f.ln, loc[0]), loc[1], loc[2], loc[3])  # column of deco '@' will be same as our column, min() because of possible locmock()
 
         self._bloc = bloc
 
@@ -1524,7 +1530,7 @@ class FST:
 
         return fstloc(ln, end_col - 2, ln, end_col)
 
-    def _floor_start_pos(self, lineno: int, col_offset: int, self_: bool = True):  # because of stupid evil unparenthesized tuples
+    def _floor_start_pos(self, lineno: int, col_offset: int, self_: bool = True):  # because of zero-length spans like evil unparenthesized zero-length tuples
         """Walk up parent chain (starting at `self`) setting `.lineno` and `.col_offset` to `lineno` and `col_offset` if
         they are past it. Used for correcting parents after an `offset()` which could not avoid modifying the start
         position."""
@@ -2641,6 +2647,8 @@ class FST:
 
 
     def get_lines(self, ln: int, col: int, end_ln: int, end_col: int) -> list[str]:
+        """TODO: document fully!"""
+
         if end_ln == ln:
             return [bistr(self.root._lines[ln][col : end_col])]
         else:
@@ -2648,7 +2656,8 @@ class FST:
 
     def put_lines(self, lines: list[str] | None, ln: int, col: int, end_ln: int, end_col: int,
                   inc: bool | None = None, stop_at: Optional['FST'] = None):
-        """Put or delete lines, optionally offsetting all nodes for the change."""
+        """Put or delete lines, optionally offsetting all nodes for the change. Must specify `inc` as not `None` to
+        enable offset of nodes according to text. TODO: document fully!"""
 
         ls = self.root._lines
 
@@ -2706,10 +2715,14 @@ class FST:
                 ls[ln + 1 : end_ln] = lines[1:-1]
 
     def get_src(self, ln: int, col: int, end_ln: int, end_col: int) -> list[str]:
+        """TODO: document fully!"""
+
         return '\n'.join(self.get_lines(ln, col, end_ln, end_col))
 
     def put_src(self, src: str | None, ln: int, col: int, end_ln: int, end_col: int,
                 inc: bool = False, stop_at: Optional['FST'] = None):
+        """Must specify `inc` as not `None` to  enable offset of nodes according to text. TODO: document fully!"""
+
         self.put_lines(None if src is None else src.split('\n'), ln, col, end_ln, end_col, inc, stop_at)
 
 
@@ -3979,15 +3992,19 @@ class FST:
         lines    = self.root._lines
         loc      = self.loc
 
-        if comms is True or comms == 'pre':
-            comms_ln, comms_col = src_edit.pre_comments(lines, self, *self._prev_ast_bound())
+        if (comms is True or comms == 'pre') and (
+            pre_loc := src_edit.pre_comments(lines, self, *self._prev_ast_bound())
+        ):
+            comms_ln, comms_col = pre_loc
 
         else:
             comms_ln  = loc.ln
             comms_col = loc.col
 
-        if comms is True or comms == 'post':
-            comms_end_ln, comms_end_col = src_edit.post_comments(lines, self, *self._next_ast_bound())
+        if (comms is True or comms == 'post') and (
+            post_loc := src_edit.post_comments(lines, self, *self._next_ast_bound())
+        ):
+            comms_end_ln, comms_end_col = post_loc
 
         else:
             comms_end_ln  = loc.end_ln
