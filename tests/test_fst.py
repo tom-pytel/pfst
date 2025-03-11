@@ -5749,7 +5749,7 @@ k \\
         self.assertEqual((1, 1, '# c'), fst._prev_src(['a', ' # c'], 0, 0, 1, 4, True, None))
         self.assertEqual((1, 1, '# '), fst._prev_src(['a', ' # c'], 0, 0, 1, 3, True, None))
         self.assertEqual((1, 1, '#'), fst._prev_src(['a', ' # c'], 0, 0, 1, 2, True, None))
-        self.assertEqual((0, 0, 'a'), fst._prev_src(['a', ' # c'], 0, 0, 1, 1, True, None))
+        self.assertEqual(None, fst._prev_src(['a', ' # c'], 0, 0, 1, 1, True, None))
 
         state = []
         self.assertEqual((0, 4, '# c \\'), fst._prev_src(['a b # c \\'], 0, 0, 0, 9, True, True, state=state))
@@ -5781,7 +5781,7 @@ k \\
 
     def test__next_pref_find(self):
         lines = '''
-  ;
+  ; \\
   # hello
   \\
   # world
@@ -7102,6 +7102,15 @@ pass
         self.assertEqual((4, 0), FST.src_edit.post_comments(lines, fstloc(0, 0, 3, 6), 5, 0))
         self.assertEqual(None, FST.src_edit.pre_comments(lines, 0, 0, fstloc(2, 2, 0, 0)))
         self.assertEqual(None, FST.src_edit.post_comments(lines, fstloc(0, 0, 2, 9), 5, 0))
+
+        lines = '''
+i ; \\
+# pre
+j # post
+k
+'''.strip().split('\n')
+
+        self.assertEqual((1, 0), FST.src_edit.pre_comments(lines, 0, 1, fstloc(2, 0, 0, 0)))
 
     def test_copy_special(self):
         f = FST.fromsrc('@decorator\nclass cls:\n  pass')

@@ -123,6 +123,11 @@ class astfield(NamedTuple):
             getattr(node, self.name)[self.idx] = child
 
 
+class fstpos(NamedTuple):
+    ln:  int
+    col: int
+
+
 class fstloc(NamedTuple):
     ln:      int
     col:     int
@@ -280,6 +285,9 @@ def _prev_src(lines: list[str], ln: int, col: int, end_ln: int, end_col: int,
 
             end_col = 0x7fffffffffffffff
 
+        if m := last_match(lines[ln], col, end_col, re_pat):
+            return srcwpos(ln, m.start(1), m.group(1))
+
     else:  # only match to start of logical line, regardless of (ln, col) bound
         cont_ln = end_ln
 
@@ -295,8 +303,8 @@ def _prev_src(lines: list[str], ln: int, col: int, end_ln: int, end_col: int,
 
         i = end_ln + 1
 
-        while (i := i - 1) > ln:
-            if not (m := last_match(lines[i], 0, end_col, re_next_src_or_comment_or_lcont)):
+        while (i := i - 1) >= ln:
+            if not (m := last_match(lines[i], 0 if i > ln else col, end_col, re_next_src_or_comment_or_lcont)):
                 if i < cont_ln:  # early out
                     return None
 
@@ -307,21 +315,18 @@ def _prev_src(lines: list[str], ln: int, col: int, end_ln: int, end_col: int,
 
                 continue
 
-            elif s.startswith('#'):  # a comment here started a previous line and thus not a line continuation
+            elif s.startswith('#') or i < cont_ln:  # a comment here started a previous line and thus not a line continuation, or just no line continuation on new previous line
                 return None
             else:
                 return srcwpos(i, m.start(1), m.group(1))
 
             end_col = 0x7fffffffffffffff  # will take effect for previous line when state empties
 
-    if m := last_match(lines[ln], col, end_col, re_pat):
-        return srcwpos(ln, m.start(1), m.group(1))
-
     return None
 
 
 def _next_find(lines: list[str], ln: int, col: int, end_ln: int, end_col: int, src: str, first: bool = False, *,
-               comment: bool = False, lcont: bool | None = False) -> tuple[int, int] | None:
+               comment: bool = False, lcont: bool | None = False) -> fstpos | None:
     """Find location of a string in the bound walking forward from the start. Returns `None` if string not found.
 
     **Parameters:**
@@ -331,7 +336,7 @@ def _next_find(lines: list[str], ln: int, col: int, end_ln: int, end_col: int, s
     - `lcont`: The `lcont` parameter to `_next_src()`. Can stop search on line continuation if `first` is `True`.
 
     **Returns:**
-    - `(ln, col) | None`: Location of start of found `src` or `None` if not found with the given parameters.
+    - `fstpos | None`: Location of start of found `src` or `None` if not found with the given parameters.
     """
 
     if first:
@@ -339,14 +344,14 @@ def _next_find(lines: list[str], ln: int, col: int, end_ln: int, end_col: int, s
             cln, ccol, csrc = code
 
             if csrc.startswith(src):
-                return cln, ccol
+                return fstpos(cln, ccol)
 
     else:
         while code := _next_src(lines, ln, col, end_ln, end_col, comment, lcont):
             ln, col, csrc = code
 
             if (idx := csrc.find(src)) != -1:
-                return ln, col + idx
+                return fstpos(ln, col + idx)
 
             col += len(csrc)
 
@@ -354,7 +359,7 @@ def _next_find(lines: list[str], ln: int, col: int, end_ln: int, end_col: int, s
 
 
 def _prev_find(lines: list[str], ln: int, col: int, end_ln: int, end_col: int, src: str, first: bool = False, *,
-               comment: bool = False, lcont: bool | None = False, state: list | None = None) -> tuple[int, int] | None:
+               comment: bool = False, lcont: bool | None = False, state: list | None = None) -> fstpos | None:
     """Find location of a string in the bound walking backwards from the end. Returns `None` if string not found. If
     `comment` is `True` then `src` must match the START of the src comment found, not the tail like for non-comment
      strings found in order to be considered successful.
@@ -368,7 +373,7 @@ def _prev_find(lines: list[str], ln: int, col: int, end_ln: int, end_col: int, s
         functionality if changing search parameters.
 
     **Returns:**
-    - `(ln, col) | None`: Location of start of found `src` or `None` if not found with the given parameters.
+    - `fstpos | None`: Location of start of found `src` or `None` if not found with the given parameters.
     """
 
     if first:
@@ -377,10 +382,10 @@ def _prev_find(lines: list[str], ln: int, col: int, end_ln: int, end_col: int, s
 
             if comment and csrc.startswith('#'):
                 if csrc.startswith(src):
-                    return cln, ccol
+                    return fstpos(cln, ccol)
 
             elif csrc.endswith(src):
-                return cln, ccol + len(csrc) - len(src)
+                return fstpos(cln, ccol + len(csrc) - len(src))
 
     else:
         if state is None:
@@ -391,10 +396,10 @@ def _prev_find(lines: list[str], ln: int, col: int, end_ln: int, end_col: int, s
 
             if comment and csrc.startswith('#'):
                 if csrc.startswith(src):
-                    return end_ln, end_col
+                    return fstpos(end_ln, end_col)
 
             elif (idx := csrc.rfind(src)) != -1:
-                return end_ln, end_col + idx
+                return fstpos(end_ln, end_col + idx)
 
     return None
 
@@ -867,7 +872,7 @@ class FSTSrcEdit:
         f_bln        = f.bln
 
         if not (bound_ln == f_bln or not re_empty_line.match(lines[f_bln], 0, f.bcol)):
-            for ln in range(f_bln - 1, bound_ln + bool(bound_col), -1):  # only consider whole lines
+            for ln in range(f_bln - 1, bound_ln - (not bound_col), -1):  # only consider whole lines
                 if not re_comment_line_start.match(lines[ln]):
                     break
 
@@ -1060,35 +1065,70 @@ class FSTSrcEdit:
         - `fpost`: The after-last `FST` not being gotten, may not exist if `flast` is last of seq.
 
         **Returns:**
-        - If `cut=False` then should return tuple with only the first value set, which is a location where to copy
-            source from for the new slice, with the second two being `None`. If `cut=True` then should return the copy
-            location, a delete location and optionally lines to replace the deleted portion (which can only be
-            non-codingblock_loc source).
+        - If `cut=False` then only the first element of the return tuple is used for the copy and the other two are
+            ignored so they don't need to be calculated. If `cut=True` then should return the copy location, a delete
+            location and optionally lines to replace the deleted portion (which can only be non-coding source).
         """
-
 
         lines = fst.root._lines
 
+        bound_ln, bound_col         = fpre.loc[2:] if fpre else block_loc[:2]
+        bound_end_ln, bound_end_col = fpost.loc[:2] if fpost else block_loc[2:]
 
+        put_lines  = None
+        pre_comms  = ((comms is True or comms == 'pre') and self.pre_comments(lines, bound_ln, bound_col, ffirst))
+        post_comms = ((comms is True or comms == 'post') and self.post_comments(lines, flast,
+                                                                                bound_end_ln, bound_end_col))
+        pre_semi   = not pre_comms and _prev_find(lines, bound_ln, bound_col, ffirst.ln, ffirst.col, ';',
+                                                  True, comment=True, lcont=None)
+        post_semi  = not post_comms and _next_find(lines, flast.end_ln, flast.end_col, bound_end_ln, bound_end_col, ';',
+                                                   True, comment=True, lcont=None)
 
+        copy_loc = del_loc = fstloc(*(pre_comms or ffirst.bloc[:2]), *(post_comms or flast.bloc[2:]))  # DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG!
 
+        if pre_comms:
+            if post_comms:
+                copy_loc = del_loc = fstloc(*pre_comms, *post_comms)
 
+            elif post_semi:
+                copy_loc        = fstloc(*pre_comms, *flast.bloc[2:])
+                end_ln_is_bound = (end_ln := copy_loc.end_ln) == bound_end_ln
 
-        pre_comms = ((comms is True or comms == 'pre') and
-            self.pre_comments(lines, *(fpre.loc[2:] if fpre else block_loc[:2]), ffirst))
+                if code := _next_src(lines,
+                                     end_ln, post_semi.col + 1 if post_semi.ln == end_ln else copy_loc.end_col,
+                                     end_ln, bound_end_col if end_ln_is_bound else 0x7ffffffffffffff, True, True):
+                    put_lines = [re_empty_line_start.match(lines[copy_loc.ln]).group(0)]  # we know it starts a line because pre_comms exists
+                    del_loc   = fstloc(*pre_comms, end_ln, code.col)
 
-        ln, col = pre_comms or ffirst.bloc[:2]
+                else:  # empty line after a useless trailing ';'
+                    del_loc = (fstloc(*pre_comms, bound_end_ln, bound_end_col) if end_ln_is_bound else
+                               fstloc(*pre_comms, end_ln + 1, 0))
 
-        post_comms = ((comms is True or comms == 'post') and
-            self.post_comments(lines, flast, *(fpost.loc[:2] if fpost else block_loc[2:])))
+            else:
+                pass  # TODO
 
-        end_ln, end_col = post_comms or flast.bloc[2:]
+        elif post_comms:
+            if pre_semi:
+                pass  # TODO
 
+            else:
+                pass  # TODO
 
+        elif pre_semi:
+            if post_semi:
+                copy_loc = fstloc(*ffirst.bloc[:2], *flast.bloc[2:])
+                del_loc  = fstloc(*pre_semi, *post_semi)
 
-        loc = fstloc(*ffirst.loc[:2], *flast.loc[2:])
+            else:
+                pass  # TODO
 
-        return (loc, loc, None) if cut else (loc, None, None)
+        elif post_semi:
+            pass  # TODO
+
+        else:
+            pass  # TODO
+
+        return copy_loc, del_loc, put_lines
 
 
 class FST:
