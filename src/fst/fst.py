@@ -855,7 +855,7 @@ class FSTSrcEdit:
 
         return fstloc(copy_ln, copy_col, copy_end_ln, copy_end_col), fstloc(del_ln, del_col, del_end_ln, del_end_col)
 
-    def pre_comments(self, lines: list[bistr], f: Union['FST', fstloc], bound_ln: int, bound_col: int,
+    def pre_comments(self, lines: list[bistr], bound_ln: int, bound_col: int, f: Union['FST', fstloc],
                      ) -> tuple[int, int] | None:
         """Return the position of the start of any preceding comments to the element which is assumed to live just past
         (`f.bln`, `f.bcol`). Returns `None` if no preceding comment. If preceding entire line comments exist then the
@@ -878,11 +878,11 @@ class FSTSrcEdit:
 
     def post_comments(self, lines: list[bistr], f: Union['FST', fstloc], bound_end_ln: int, bound_end_col: int,
                       ) -> tuple[int, int] | None:
-        """Return the position of the end of any preceding trailing comments to the element which is assumed to live
-        just before (`f.bend_ln`, `f.bend_col`). Returns `None` if no trailing comment. Should return the location at
-        the start of the next line if comment present because a comment should never be on the last line, but if a
-        comment ends the bound should return the end of the bound. This particular implementation will return any
-        comment which lives on the same line as `bound_ln`, no other comments past it on following lines."""
+        """Return the position of the end of any trailing comments to the element which is assumed to live just before
+        (`f.bend_ln`, `f.bend_col`). Returns `None` if no trailing comment. Should return the location at the start of
+        the next line if comment present because a comment should never be on the last line, but if a comment ends the
+        bound should return the end of the bound. This particular implementation will return any comment which lives on
+        the same line as `bound_ln`, no other comments past it on following lines."""
 
         bound_ln = f.bend_ln
 
@@ -1066,8 +1066,6 @@ class FSTSrcEdit:
             non-codingblock_loc source).
         """
 
-        start_ln, start_col = ffirst.loc[:2]
-        end_ln, end_col     = flast.loc[2:]
 
         lines = fst.root._lines
 
@@ -1075,22 +1073,20 @@ class FSTSrcEdit:
 
 
 
-        if (comms is True or comms == 'pre') and (
-            pre_loc := self.pre_comments(lines, ffirst, *(fpre.loc[2:] if fpre else block_loc[:2]))
-        ):
-            ln, col = pre_loc
-        else:
-            ln, col = ffirst.bloc[:2]
 
-        if (comms is True or comms == 'post') and (
-            post_loc := self.post_comments(lines, flast, *(fpost.loc[:2] if fpre else block_loc[2:]))
-        ):
-            end_ln, end_col = post_loc
-        else:
-            end_ln, end_col = flast.bloc[2:]
+        pre_comms = ((comms is True or comms == 'pre') and
+            self.pre_comments(lines, *(fpre.loc[2:] if fpre else block_loc[:2]), ffirst))
+
+        ln, col = pre_comms or ffirst.bloc[:2]
+
+        post_comms = ((comms is True or comms == 'post') and
+            self.post_comments(lines, flast, *(fpost.loc[:2] if fpost else block_loc[2:])))
+
+        end_ln, end_col = post_comms or flast.bloc[2:]
 
 
-        loc = fstloc(ln, col, end_ln, end_col)
+
+        loc = fstloc(*ffirst.loc[:2], *flast.loc[2:])
 
         return (loc, loc, None) if cut else (loc, None, None)
 
@@ -1464,8 +1460,7 @@ class FST:
 
     def _prev_ast_bound(self, with_loc: bool | Literal['own'] | Literal['allown'] = True) -> tuple[int, int]:
         """Get a prev bound to search after any ASTs for this object. This is safe to call for nodes that live inside
-        nodes without their own locations if `with_loc='allown'`. WARNING! May not be safe for non-syntactically correct
-        trees."""
+        nodes without their own locations if `with_loc='allown'`."""
 
         if prev := self.prev_step(with_loc, recurse_self=False):
             return prev.loc[2:]
@@ -1474,8 +1469,7 @@ class FST:
 
     def _next_ast_bound(self, with_loc: bool | Literal['own'] | Literal['allown'] = True) -> tuple[int, int]:
         """Get a next bound to search before any ASTs for this object. This is safe to call for nodes that live inside
-        nodes without their own locations if `with_loc='allown'`. WARNING! May not be safe for non-syntactically correct
-        trees."""
+        nodes without their own locations if `with_loc='allown'`."""
 
         if next := self.next_step(with_loc, recurse_self=False):
             return next.loc[2:]
@@ -4083,23 +4077,11 @@ class FST:
         lines    = self.root._lines
         loc      = self.loc
 
-        if (comms is True or comms == 'pre') and (
-            pre_loc := src_edit.pre_comments(lines, self, *self._prev_ast_bound())
-        ):
-            comms_ln, comms_col = pre_loc
+        comms_ln, comms_col = ((comms is True or comms == 'pre') and (
+           src_edit.pre_comments(lines, *self._prev_ast_bound(), self))) or loc[:2]
 
-        else:
-            comms_ln  = loc.ln
-            comms_col = loc.col
-
-        if (comms is True or comms == 'post') and (
-            post_loc := src_edit.post_comments(lines, self, *self._next_ast_bound())
-        ):
-            comms_end_ln, comms_end_col = post_loc
-
-        else:
-            comms_end_ln  = loc.end_ln
-            comms_end_col = loc.end_col
+        comms_end_ln, comms_end_col = ((comms is True or comms == 'post') and (
+            src_edit.post_comments(lines, self, *self._next_ast_bound()))) or loc[2:]
 
         comms_loc = fstloc(comms_ln, comms_col, comms_end_ln, comms_end_col)
 
