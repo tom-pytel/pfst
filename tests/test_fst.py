@@ -3579,6 +3579,211 @@ Module .. ROOT 0,0 -> 1,1
 
 ]  # END OF GET_SLICE_STMT_CUT_DATA
 
+GET_SLICE_STMT_CUT_NOVERIFY_DATA = [
+(r"""
+if 1: i
+""", 'body[0]', 0, 1, None, True, r"""
+if 1:""", r"""i""", r"""
+Module .. ROOT 0,0 -> 1,5
+  .body[1]
+  0] If .. 1,0 -> 1,4
+    .test
+      Constant 1 .. 1,3 -> 1,4
+""", r"""
+Module .. ROOT 0,0 -> 0,1
+  .body[1]
+  0] Expr .. 0,0 -> 0,1
+    .value
+      Name 'i' Load .. 0,0 -> 0,1
+"""),
+
+(r"""
+if 1: i""", 'body[0]', 0, 1, None, True, r"""
+if 1:""", r"""i""", r"""
+Module .. ROOT 0,0 -> 1,5
+  .body[1]
+  0] If .. 1,0 -> 1,4
+    .test
+      Constant 1 .. 1,3 -> 1,4
+""", r"""
+Module .. ROOT 0,0 -> 0,1
+  .body[1]
+  0] Expr .. 0,0 -> 0,1
+    .value
+      Name 'i' Load .. 0,0 -> 0,1
+"""),
+
+(r"""
+if 1: i  # post
+""", 'body[0]', 0, 1, None, True, r"""
+if 1:""", r"""i  # post
+""", r"""
+Module .. ROOT 0,0 -> 1,5
+  .body[1]
+  0] If .. 1,0 -> 1,4
+    .test
+      Constant 1 .. 1,3 -> 1,4
+""", r"""
+Module .. ROOT 0,0 -> 1,0
+  .body[1]
+  0] Expr .. 0,0 -> 0,1
+    .value
+      Name 'i' Load .. 0,0 -> 0,1
+"""),
+
+(r"""
+if 1: i  # post""", 'body[0]', 0, 1, None, True, r"""
+if 1:""", r"""i  # post""", r"""
+Module .. ROOT 0,0 -> 1,5
+  .body[1]
+  0] If .. 1,0 -> 1,4
+    .test
+      Constant 1 .. 1,3 -> 1,4
+""", r"""
+Module .. ROOT 0,0 -> 0,9
+  .body[1]
+  0] Expr .. 0,0 -> 0,1
+    .value
+      Name 'i' Load .. 0,0 -> 0,1
+"""),
+
+(r"""
+if 1: i  # post
+""", 'body[0]', 0, 1, None, False, r"""
+if 1: # post
+""", r"""i""", r"""
+Module .. ROOT 0,0 -> 2,0
+  .body[1]
+  0] If .. 1,0 -> 1,4
+    .test
+      Constant 1 .. 1,3 -> 1,4
+""", r"""
+Module .. ROOT 0,0 -> 0,1
+  .body[1]
+  0] Expr .. 0,0 -> 0,1
+    .value
+      Name 'i' Load .. 0,0 -> 0,1
+"""),
+
+(r"""
+if 1: i  # post""", 'body[0]', 0, 1, None, False, r"""
+if 1: # post""", r"""i""", r"""
+Module .. ROOT 0,0 -> 1,12
+  .body[1]
+  0] If .. 1,0 -> 1,4
+    .test
+      Constant 1 .. 1,3 -> 1,4
+""", r"""
+Module .. ROOT 0,0 -> 0,1
+  .body[1]
+  0] Expr .. 0,0 -> 0,1
+    .value
+      Name 'i' Load .. 0,0 -> 0,1
+"""),
+
+(r"""
+if 1: i ;
+""", 'body[0]', 0, 1, None, True, r"""
+if 1:""", r"""i""", r"""
+Module .. ROOT 0,0 -> 1,5
+  .body[1]
+  0] If .. 1,0 -> 1,4
+    .test
+      Constant 1 .. 1,3 -> 1,4
+""", r"""
+Module .. ROOT 0,0 -> 0,1
+  .body[1]
+  0] Expr .. 0,0 -> 0,1
+    .value
+      Name 'i' Load .. 0,0 -> 0,1
+"""),
+
+(r"""
+if 1: i ;""", 'body[0]', 0, 1, None, True, r"""
+if 1:""", r"""i""", r"""
+Module .. ROOT 0,0 -> 1,5
+  .body[1]
+  0] If .. 1,0 -> 1,4
+    .test
+      Constant 1 .. 1,3 -> 1,4
+""", r"""
+Module .. ROOT 0,0 -> 0,1
+  .body[1]
+  0] Expr .. 0,0 -> 0,1
+    .value
+      Name 'i' Load .. 0,0 -> 0,1
+"""),
+
+(r"""
+if 1: i ;  # post
+""", 'body[0]', 0, 1, None, True, r"""
+if 1: # post
+""", r"""i""", r"""
+Module .. ROOT 0,0 -> 2,0
+  .body[1]
+  0] If .. 1,0 -> 1,4
+    .test
+      Constant 1 .. 1,3 -> 1,4
+""", r"""
+Module .. ROOT 0,0 -> 0,1
+  .body[1]
+  0] Expr .. 0,0 -> 0,1
+    .value
+      Name 'i' Load .. 0,0 -> 0,1
+"""),
+
+(r"""
+if 1: i ;  # post""", 'body[0]', 0, 1, None, True, r"""
+if 1: # post""", r"""i""", r"""
+Module .. ROOT 0,0 -> 1,12
+  .body[1]
+  0] If .. 1,0 -> 1,4
+    .test
+      Constant 1 .. 1,3 -> 1,4
+""", r"""
+Module .. ROOT 0,0 -> 0,1
+  .body[1]
+  0] Expr .. 0,0 -> 0,1
+    .value
+      Name 'i' Load .. 0,0 -> 0,1
+"""),
+
+(r"""
+if 1: i ;  # post
+""", 'body[0]', 0, 1, None, False, r"""
+if 1: # post
+""", r"""i""", r"""
+Module .. ROOT 0,0 -> 2,0
+  .body[1]
+  0] If .. 1,0 -> 1,4
+    .test
+      Constant 1 .. 1,3 -> 1,4
+""", r"""
+Module .. ROOT 0,0 -> 0,1
+  .body[1]
+  0] Expr .. 0,0 -> 0,1
+    .value
+      Name 'i' Load .. 0,0 -> 0,1
+"""),
+
+(r"""
+if 1: i ;  # post""", 'body[0]', 0, 1, None, False, r"""
+if 1: # post""", r"""i""", r"""
+Module .. ROOT 0,0 -> 1,12
+  .body[1]
+  0] If .. 1,0 -> 1,4
+    .test
+      Constant 1 .. 1,3 -> 1,4
+""", r"""
+Module .. ROOT 0,0 -> 0,1
+  .body[1]
+  0] Expr .. 0,0 -> 0,1
+    .value
+      Name 'i' Load .. 0,0 -> 0,1
+"""),
+
+]  # END OF GET_SLICE_STMT_CUT_NOVERIFY_DATA
+
 PUT_SLICE_DATA = [
 (r"""
 {
@@ -8494,55 +8699,70 @@ i = 1
                 raise
 
     def test_get_slice_stmt_copy(self):
-        for src, elt, start, stop, field, comms, _, slice_cut, _, slice_dump in GET_SLICE_STMT_CUT_DATA:
-            t     = parse(src)
-            f     = eval(f't.{elt}', {'t': t}).f
-            s     = f.get_slice(start, stop, field, cut=False, comms=comms)
-            tsrc  = t.f.src
-            ssrc  = s.src
-            tdump = t.f.dump(linefunc=list, compact=True)
-            sdump = s.dump(linefunc=list, compact=True)
+        for name in ('GET_SLICE_STMT_CUT_DATA', 'GET_SLICE_STMT_CUT_NOVERIFY_DATA'):
+            verify = 'NOVERIFY' not in name
 
-            try:
-                self.assertEqual(tsrc, src)
-                self.assertEqual(ssrc, slice_cut)
-                self.assertEqual(sdump, slice_dump.strip().split('\n'))
+            for src, elt, start, stop, field, comms, _, slice_cut, _, slice_dump in globals()[name]:
+                t     = parse(src)
+                f     = eval(f't.{elt}', {'t': t}).f
+                s     = f.get_slice(start, stop, field, cut=False, comms=comms)
+                tsrc  = t.f.src
+                ssrc  = s.src
+                sdump = s.dump(linefunc=list, compact=True)
 
-            except Exception:
-                print(elt, start, stop)
-                print('---')
-                print(src)
-                print('...')
-                print(slice_cut)
+                if verify:
+                    t.f.verify()
 
-                raise
+                s.verify()
+
+                try:
+                    self.assertEqual(tsrc, src)
+                    self.assertEqual(ssrc, slice_cut)
+                    self.assertEqual(sdump, slice_dump.strip().split('\n'))
+
+                except Exception:
+                    print(elt, start, stop)
+                    print('---')
+                    print(src)
+                    print('...')
+                    print(slice_cut)
+
+                    raise
 
     def test_get_slice_stmt_cut(self):
-        for src, elt, start, stop, field, comms, src_cut, slice_cut, src_dump, slice_dump in GET_SLICE_STMT_CUT_DATA:
-            t     = parse(src)
-            f     = eval(f't.{elt}', {'t': t}).f
-            s     = f.get_slice(start, stop, field, cut=True, comms=comms)
-            tsrc  = t.f.src
-            ssrc  = s.src
-            tdump = t.f.dump(linefunc=list, compact=True)
-            sdump = s.dump(linefunc=list, compact=True)
+        for name in ('GET_SLICE_STMT_CUT_DATA', 'GET_SLICE_STMT_CUT_NOVERIFY_DATA'):
+            verify = 'NOVERIFY' not in name
 
-            try:
-                self.assertEqual(tsrc, src_cut)
-                self.assertEqual(ssrc, slice_cut)
-                self.assertEqual(tdump, src_dump.strip().split('\n'))
-                self.assertEqual(sdump, slice_dump.strip().split('\n'))
+            for src, elt, start, stop, field, comms, src_cut, slice_cut, src_dump, slice_dump in globals()[name]:
+                t     = parse(src)
+                f     = eval(f't.{elt}', {'t': t}).f
+                s     = f.get_slice(start, stop, field, cut=True, comms=comms)
+                tsrc  = t.f.src
+                ssrc  = s.src
+                tdump = t.f.dump(linefunc=list, compact=True)
+                sdump = s.dump(linefunc=list, compact=True)
 
-            except Exception:
-                print(elt, start, stop)
-                print('---')
-                print(src)
-                print('...')
-                print(src_cut)
-                print('...')
-                print(slice_cut)
+                if verify:
+                    t.f.verify()
 
-                raise
+                s.verify()
+
+                try:
+                    self.assertEqual(tsrc, src_cut)
+                    self.assertEqual(ssrc, slice_cut)
+                    self.assertEqual(tdump, src_dump.strip().split('\n'))
+                    self.assertEqual(sdump, slice_dump.strip().split('\n'))
+
+                except Exception:
+                    print(elt, start, stop)
+                    print('---')
+                    print(src)
+                    print('...')
+                    print(src_cut)
+                    print('...')
+                    print(slice_cut)
+
+                    raise
 
     def test_put_slice(self):
         for dst, elt, start, stop, src, put_src, put_dump in PUT_SLICE_DATA:
@@ -8768,13 +8988,14 @@ def regen_get_slice_seq_cut_data():
         lines = f.write('\n'.join(lines))
 
 
-def regen_get_slice_stmt_cut_data():  #  TODO: CUT!!! CUT!!! CUT!!! CUT!!! CUT!!! CUT!!! CUT!!! CUT!!! CUT!!! CUT!!! CUT!!! CUT!!! CUT!!! CUT!!! CUT!!! CUT!!! CUT!!! CUT!!!
-    newlines = []
-
+def regen_get_slice_stmt_cut_data():
     with open(sys.argv[0]) as f:
         lines = f.read().split('\n')
 
-    for name in ('GET_SLICE_STMT_CUT_DATA',):
+    for name in ('GET_SLICE_STMT_CUT_DATA', 'GET_SLICE_STMT_CUT_NOVERIFY_DATA'):
+        verify   = 'NOVERIFY' not in name
+        newlines = []
+
         for src, elt, start, stop, field, comms, *_ in globals()[name]:
             t     = parse(src)
             f     = eval(f't.{elt}', {'t': t}).f
@@ -8784,12 +9005,14 @@ def regen_get_slice_stmt_cut_data():  #  TODO: CUT!!! CUT!!! CUT!!! CUT!!! CUT!!
             tdump = t.f.dump(linefunc=list, compact=True)
             sdump = s.dump(linefunc=list, compact=True)
 
-            assert not tsrc.startswith('\n') or tsrc.endswith('\n')
-            assert not ssrc.startswith('\n') or ssrc.endswith('\n')
+            # assert not tsrc.startswith('\n') or tsrc.endswith('\n')
+            # assert not ssrc.startswith('\n') or ssrc.endswith('\n')
 
             # print(repr(t.f.src))  # DEBUG!
 
-            t.f.verify()
+            if verify:
+                t.f.verify()
+
             s.verify()
 
             # newlines.append('(r"""')
