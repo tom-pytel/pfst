@@ -1086,6 +1086,8 @@ class FSTSrcEdit:
                                                    True, comment=True, lcont=None)
         copy_loc   = fstloc(*(pre_comms or ffirst.bloc[:2]), *(post_comms or flast.bloc[2:]))
 
+        # handle all possible combinations of preceding and trailing comments, semicolons and line continuation backslashes
+
         if not pre_semi:  # if this doesn't exist then adjust bound start to just past prev statement or block open (colon)
             if fpre:
                 bound_ln, bound_col = fpre.bloc[2:]
@@ -1180,9 +1182,31 @@ class FSTSrcEdit:
                 else:
                     del_loc = fstloc(ln, del_col, bound_end_ln, bound_end_col)
 
+        # remove possible line continuation preceding delete start position because could link to invalid post statement after line cont (block statement)
 
-        # TODO: remove handle preceding line continuation and eat appropriate number of preceding newlines
+        ln, col = del_loc[:2]
 
+        if ln > bound_ln and (not col or re_empty_line.match(lines[ln], 0, col)) and lines[ln - 1].endswith('\\'):  # the endswith() is not definitive because of comments
+            prev_ln  = ln - 1
+            prev_col = 0 if prev_ln != bound_ln else bound_col
+
+            if code := _prev_src(lines, prev_ln, prev_col, prev_ln, 0x7fffffffffffffff, True, False):  # skip over lcont but not comment if is there
+                del_col = None if (src := code.src).startswith('#') else code.col + len(src)
+            else:
+                del_col = prev_col
+
+            if del_col is not None:
+                del_loc = fstloc(prev_ln, del_col, *del_loc[2:])
+                indent  = lines[ln][:col]
+
+                if not put_lines:
+                    put_lines = ['', indent] if del_col else [indent]
+
+                else:
+                    if indent:
+                        put_lines[0] = indent + put_lines[0]
+
+                    put_lines.insert(0, '')
 
         return copy_loc, del_loc, put_lines
 

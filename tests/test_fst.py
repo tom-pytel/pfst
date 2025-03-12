@@ -2970,21 +2970,20 @@ if 1:
 """, 'body[0]', 1, 2, None, True, r"""
 if 1:
     i
-    \
     k
 """, r"""j""", r"""
-Module .. ROOT 0,0 -> 5,0
+Module .. ROOT 0,0 -> 4,0
   .body[1]
-  0] If .. 1,0 -> 4,5
+  0] If .. 1,0 -> 3,5
     .test
       Constant 1 .. 1,3 -> 1,4
     .body[2]
     0] Expr .. 2,4 -> 2,5
       .value
         Name 'i' Load .. 2,4 -> 2,5
-    1] Expr .. 4,4 -> 4,5
+    1] Expr .. 3,4 -> 3,5
       .value
-        Name 'k' Load .. 4,4 -> 4,5
+        Name 'k' Load .. 3,4 -> 3,5
 """, r"""
 Module .. ROOT 0,0 -> 0,1
   .body[1]
@@ -3187,7 +3186,7 @@ else: \
   i ; j
 """, 'body[0]', 0, 1, 'orelse', True, r"""
 if 1: pass
-else: \
+else:
   j
 """, r"""i""", r"""
 Module .. ROOT 0,0 -> 4,0
@@ -3216,7 +3215,7 @@ else: \
     j
 """, 'body[0]', 0, 1, 'orelse', True, r"""
 if 1: pass
-else: \
+else:
   \
     j
 """, r"""i""", r"""
@@ -3247,7 +3246,7 @@ else: \
     j
 """, 'body[0]', 0, 1, 'orelse', True, r"""
 if 1: pass
-else: \
+else:
   \
     j
 """, r"""i""", r"""
@@ -3299,7 +3298,7 @@ Module .. ROOT 0,0 -> 0,1
 (r"""if 1: pass
 else: \
   i ; j""", 'body[0]', 0, 1, 'orelse', True, r"""if 1: pass
-else: \
+else:
   j""", r"""i""", r"""
 Module .. ROOT 0,0 -> 2,3
   .body[1]
@@ -3324,7 +3323,7 @@ Module .. ROOT 0,0 -> 0,1
 else: \
   i ; \
     j""", 'body[0]', 0, 1, 'orelse', True, r"""if 1: pass
-else: \
+else:
   \
     j""", r"""i""", r"""
 Module .. ROOT 0,0 -> 3,5
@@ -3347,11 +3346,11 @@ Module .. ROOT 0,0 -> 0,1
 """),
 
 (r"""if 1: pass
-else: \
+else:
   i \
  ; \
     j""", 'body[0]', 0, 1, 'orelse', True, r"""if 1: pass
-else: \
+else:
   \
     j""", r"""i""", r"""
 Module .. ROOT 0,0 -> 3,5
@@ -3393,6 +3392,189 @@ Module .. ROOT 0,0 -> 0,1
   0] Expr .. 0,0 -> 0,1
     .value
       Name 'i' Load .. 0,0 -> 0,1
+"""),
+
+(r"""
+if 1:
+    i \
+    # pre
+    j
+    if 2: pass
+""", 'body[0]', 1, 2, None, True, r"""
+if 1:
+    i
+    if 2: pass
+""", r"""# pre
+j""", r"""
+Module .. ROOT 0,0 -> 4,0
+  .body[1]
+  0] If .. 1,0 -> 3,14
+    .test
+      Constant 1 .. 1,3 -> 1,4
+    .body[2]
+    0] Expr .. 2,4 -> 2,5
+      .value
+        Name 'i' Load .. 2,4 -> 2,5
+    1] If .. 3,4 -> 3,14
+      .test
+        Constant 2 .. 3,7 -> 3,8
+      .body[1]
+      0] Pass .. 3,10 -> 3,14
+""", r"""
+Module .. ROOT 0,0 -> 1,1
+  .body[1]
+  0] Expr .. 1,0 -> 1,1
+    .value
+      Name 'j' Load .. 1,0 -> 1,1
+"""),
+
+(r"""
+if 1:
+    i \
+    # pre
+    j  # post
+    if 2: pass
+""", 'body[0]', 1, 2, None, True, r"""
+if 1:
+    i
+    if 2: pass
+""", r"""# pre
+j  # post
+""", r"""
+Module .. ROOT 0,0 -> 4,0
+  .body[1]
+  0] If .. 1,0 -> 3,14
+    .test
+      Constant 1 .. 1,3 -> 1,4
+    .body[2]
+    0] Expr .. 2,4 -> 2,5
+      .value
+        Name 'i' Load .. 2,4 -> 2,5
+    1] If .. 3,4 -> 3,14
+      .test
+        Constant 2 .. 3,7 -> 3,8
+      .body[1]
+      0] Pass .. 3,10 -> 3,14
+""", r"""
+Module .. ROOT 0,0 -> 2,0
+  .body[1]
+  0] Expr .. 1,0 -> 1,1
+    .value
+      Name 'j' Load .. 1,0 -> 1,1
+"""),
+
+(r"""
+if 1:
+  \
+  i
+  if 2: pass
+""", 'body[0]', 0, 1, None, True, r"""
+if 1:
+  if 2: pass
+""", r"""i""", r"""
+Module .. ROOT 0,0 -> 3,0
+  .body[1]
+  0] If .. 1,0 -> 2,12
+    .test
+      Constant 1 .. 1,3 -> 1,4
+    .body[1]
+    0] If .. 2,2 -> 2,12
+      .test
+        Constant 2 .. 2,5 -> 2,6
+      .body[1]
+      0] Pass .. 2,8 -> 2,12
+""", r"""
+Module .. ROOT 0,0 -> 0,1
+  .body[1]
+  0] Expr .. 0,0 -> 0,1
+    .value
+      Name 'i' Load .. 0,0 -> 0,1
+"""),
+
+(r"""
+if 1:
+    i
+    \
+    j
+    k
+""", 'body[0]', 1, 2, None, True, r"""
+if 1:
+    i
+    k
+""", r"""j""", r"""
+Module .. ROOT 0,0 -> 4,0
+  .body[1]
+  0] If .. 1,0 -> 3,5
+    .test
+      Constant 1 .. 1,3 -> 1,4
+    .body[2]
+    0] Expr .. 2,4 -> 2,5
+      .value
+        Name 'i' Load .. 2,4 -> 2,5
+    1] Expr .. 3,4 -> 3,5
+      .value
+        Name 'k' Load .. 3,4 -> 3,5
+""", r"""
+Module .. ROOT 0,0 -> 0,1
+  .body[1]
+  0] Expr .. 0,0 -> 0,1
+    .value
+      Name 'j' Load .. 0,0 -> 0,1
+"""),
+
+(r"""
+if 1: \
+    i; j
+""", 'body[0]', 0, 1, None, True, r"""
+if 1:
+    j
+""", r"""i""", r"""
+Module .. ROOT 0,0 -> 3,0
+  .body[1]
+  0] If .. 1,0 -> 2,5
+    .test
+      Constant 1 .. 1,3 -> 1,4
+    .body[1]
+    0] Expr .. 2,4 -> 2,5
+      .value
+        Name 'j' Load .. 2,4 -> 2,5
+""", r"""
+Module .. ROOT 0,0 -> 0,1
+  .body[1]
+  0] Expr .. 0,0 -> 0,1
+    .value
+      Name 'i' Load .. 0,0 -> 0,1
+"""),
+
+(r"""
+if 1:
+    i \
+    # pre
+    j ; k
+""", 'body[0]', 1, 2, None, True, r"""
+if 1:
+    i
+    k
+""", r"""# pre
+j""", r"""
+Module .. ROOT 0,0 -> 4,0
+  .body[1]
+  0] If .. 1,0 -> 3,5
+    .test
+      Constant 1 .. 1,3 -> 1,4
+    .body[2]
+    0] Expr .. 2,4 -> 2,5
+      .value
+        Name 'i' Load .. 2,4 -> 2,5
+    1] Expr .. 3,4 -> 3,5
+      .value
+        Name 'k' Load .. 3,4 -> 3,5
+""", r"""
+Module .. ROOT 0,0 -> 1,1
+  .body[1]
+  0] Expr .. 1,0 -> 1,1
+    .value
+      Name 'j' Load .. 1,0 -> 1,1
 """),
 
 ]  # END OF GET_SLICE_STMT_CUT_DATA
