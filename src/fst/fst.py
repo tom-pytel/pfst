@@ -8,7 +8,7 @@ from .util import TryStar
 
 __all__ = [
     'parse', 'unparse', 'FST', 'FSTSrcEdit',
-    'fstlistproxy', 'fstloc', 'srcwpos', 'astfield',
+    'fstlistproxy', 'fstpos', 'fstloc', 'srcwpos', 'astfield',
 ]
 
 
@@ -1094,10 +1094,6 @@ class FSTSrcEdit:
                 bound_ln, bound_col, src  = code
                 bound_col                += len(src)
 
-
-        del_loc = copy_loc  # DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG!
-
-
         if pre_comms:
             if post_comms:
                 del_loc = copy_loc
@@ -1132,7 +1128,7 @@ class FSTSrcEdit:
 
             else:
                 ln, col = copy_loc[:2]
-                del_col = 0 if ln != bound_ln or not bound_col else col
+                del_col = 0 if ln != bound_ln else bound_col
                 del_loc = fstloc(ln, del_col, *post_comms)
 
         elif pre_semi:
@@ -1155,17 +1151,18 @@ class FSTSrcEdit:
             at_bound_end_ln = end_ln == bound_end_ln
 
             if code := _next_src(lines, end_ln, end_col, end_ln,
-                                    bound_end_col if at_bound_end_ln else 0x7ffffffffffffff, True, True):
+                                 bound_end_col if at_bound_end_ln else 0x7ffffffffffffff, True, True):
                 del_loc = fstloc(*copy_loc[:2], end_ln, code.col)  # comment or backslash or statement
 
             else:
                 ln, col = copy_loc[:2]
-                del_col = 0 if ln != bound_ln or not bound_col else col
+                del_col = 0 if ln != bound_ln else bound_col
 
                 if not at_bound_end_ln:
                     del_loc = fstloc(ln, del_col, end_ln + 1, 0)
+
                 else:
-                    del_loc = fstloc(ln, del_col, bound_end_ln, bound_end_col)
+                    del_loc = fstloc(ln, col if fpost else del_col, bound_end_ln, bound_end_col)
 
         else:
             ln, col, end_ln, end_col = copy_loc
@@ -1176,7 +1173,7 @@ class FSTSrcEdit:
                 del_loc = fstloc(ln, col, end_ln, code.col)  # comment or backslash
 
             else:
-                del_col = 0 if ln != bound_ln or not bound_col else col
+                del_col = 0 if ln != bound_ln else bound_col
 
                 if not at_bound_end_ln:
                     del_loc = fstloc(ln, del_col, end_ln + 1, 0)
@@ -1447,7 +1444,7 @@ class FST:
 
     @property
     def is_mock(self) -> bool:
-        """`True` if is a `locmock` for another node."""
+        """`True` if is a `locmock()` for another node."""
 
         return self.a.f is not self
 
@@ -1851,11 +1848,15 @@ class FST:
         ):
             self.put_lines(None, ln, col, ln, col + 2, False)
 
-    def _make_fst_and_dedent(self, findent: 'FST', ast: AST, copy_loc: fstloc, prefix: str = '', suffix: str = '',
+    def _make_fst_and_dedent(self, indent: Union['FST', str], ast: AST, copy_loc: fstloc,
+                             prefix: str = '', suffix: str = '',
                              put_loc: fstloc | None = None, put_lines: list[str] | None = None) -> 'FST':
-        indent = findent.get_indent()
-        lines  = self.root._lines
-        fst    = FST(ast, lines=lines, from_=self)  # we use original lines for nodes offset calc before putting new lines
+
+        if not isinstance(indent, str):
+            indent = indent.get_indent()
+
+        lines = self.root._lines
+        fst   = FST(ast, lines=lines, from_=self)  # we use original lines for nodes offset calc before putting new lines
 
         fst.offset(copy_loc.ln, copy_loc.col, -copy_loc.ln, len(prefix) - lines[copy_loc.ln].c2b(copy_loc.col))  # WARNING! `prefix` is expected to have only 1 byte characters
 
@@ -2050,6 +2051,7 @@ class FST:
         flast  = body[stop - 1].f
         fpre   = body[start - 1].f if start else None
         fpost  = body[stop].f if stop < len(body) else None
+        indent = ffirst.get_indent()
 
         if not cut:
             asts = [copy_ast(body[i]) for i in range(start, stop)]
@@ -2077,7 +2079,7 @@ class FST:
         if not cut:
             put_loc = None
 
-        fst = self._make_fst_and_dedent(ffirst, get_ast, copy_loc, '', '', put_loc, put_lines)
+        fst = self._make_fst_and_dedent(indent, get_ast, copy_loc, '', '', put_loc, put_lines)
 
 
         # TODO: correct for delete all 'orelse' or 'finally' or such
