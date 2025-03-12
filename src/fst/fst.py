@@ -1055,9 +1055,9 @@ class FSTSrcEdit:
         - `fst`: The source `FST` container that is being gotten from. No text has been changed at this point but the
             respective `AST` nodes may have been removed in case of `cut`.
         - `field`: The name of the field being gotten from, e.g. `'body'`, `'orelse'`, etc...
+        - `cut`: If `False` the operation is a copy, `True` means cut.
         - `comms`: The comments requested to be copied with the slice, normally `True`, `False`, `'pre'` or `'post'`,
             but can be something custom.
-        - `cut`: If `False` the operation is a copy, `True` means cut.
         - `block_loc`: A full location suitable for checking comments outside of ASTS if `fpre` / `fpost` not available.
             Should include trailing newline after `flast` if one is present.
         - `ffirst`: The first `FST` being gotten.
@@ -1131,7 +1131,9 @@ class FSTSrcEdit:
                 del_loc = fstloc(*fpre.bloc[2:], (ln := post_comms.ln - (not post_comms.col)), len(lines[ln]))  # we know fpre exists because of pre_semi, leave trailing newline
 
             else:
-                pass  # TODO
+                ln, col = copy_loc[:2]
+                del_col = 0 if ln != bound_ln or not bound_col else col
+                del_loc = fstloc(ln, del_col, *post_comms)
 
         elif pre_semi:
             if post_semi:
@@ -1148,7 +1150,22 @@ class FSTSrcEdit:
                     del_loc = fstloc(*fpre.bloc[2:], end_ln, len(lines[end_ln]))
 
         elif post_semi:
-            pass  # TODO
+            end_ln          = post_semi.ln
+            end_col         = post_semi.col + 1
+            at_bound_end_ln = end_ln == bound_end_ln
+
+            if code := _next_src(lines, end_ln, end_col, end_ln,
+                                    bound_end_col if at_bound_end_ln else 0x7ffffffffffffff, True, True):
+                del_loc = fstloc(*copy_loc[:2], end_ln, code.col)  # comment or backslash or statement
+
+            else:
+                ln, col = copy_loc[:2]
+                del_col = 0 if ln != bound_ln or not bound_col else col
+
+                if not at_bound_end_ln:
+                    del_loc = fstloc(ln, del_col, end_ln + 1, 0)
+                else:
+                    del_loc = fstloc(ln, del_col, bound_end_ln, bound_end_col)
 
         else:
             ln, col, end_ln, end_col = copy_loc
