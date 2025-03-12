@@ -861,7 +861,7 @@ class FSTSrcEdit:
         return fstloc(copy_ln, copy_col, copy_end_ln, copy_end_col), fstloc(del_ln, del_col, del_end_ln, del_end_col)
 
     def pre_comments(self, lines: list[bistr], bound_ln: int, bound_col: int, f: Union['FST', fstloc],
-                     ) -> tuple[int, int] | None:
+                     ) -> fstpos | None:
         """Return the position of the start of any preceding comments to the element which is assumed to live just past
         (`f.bln`, `f.bcol`). Returns `None` if no preceding comment. If preceding entire line comments exist then the
         returned position column should be 0 (the start of the line) to indicate that it is a full line comment. This
@@ -879,10 +879,10 @@ class FSTSrcEdit:
                 bound_end_ln  = ln
                 bound_end_col = 0
 
-        return None if bound_end_ln is None else (bound_end_ln, bound_end_col)
+        return None if bound_end_ln is None else fstpos(bound_end_ln, bound_end_col)
 
     def post_comments(self, lines: list[bistr], f: Union['FST', fstloc], bound_end_ln: int, bound_end_col: int,
-                      ) -> tuple[int, int] | None:
+                      ) -> fstpos | None:
         """Return the position of the end of any trailing comments to the element which is assumed to live just before
         (`f.bend_ln`, `f.bend_col`). Returns `None` if no trailing comment. Should return the location at the start of
         the next line if comment present because a comment should never be on the last line, but if a comment ends the
@@ -899,7 +899,7 @@ class FSTSrcEdit:
         if not code or not code.src.startswith('#'):
             return None
 
-        return (bound_end_ln, bound_end_col) if same_line else (bound_ln + 1, 0)
+        return fstpos(bound_end_ln, bound_end_col) if same_line else fstpos(bound_ln + 1, 0)
 
     def get_slice_seq(self, fst: 'FST', cut: bool, seq_loc: fstloc,
                       ffirst: Union['FST', fstloc], flast: Union['FST', fstloc],
@@ -1059,6 +1059,7 @@ class FSTSrcEdit:
             but can be something custom.
         - `cut`: If `False` the operation is a copy, `True` means cut.
         - `block_loc`: A full location suitable for checking comments outside of ASTS if `fpre` / `fpost` not available.
+            Should include trailing newline after `flast` if one is present.
         - `ffirst`: The first `FST` being gotten.
         - `flast`: The last `FST` being gotten.
         - `fpre`: The preceding-first `FST`, not being gotten, may not exist if `ffirst` is first of seq.
@@ -1070,63 +1071,104 @@ class FSTSrcEdit:
             location and optionally lines to replace the deleted portion (which can only be non-coding source).
         """
 
-        lines = fst.root._lines
-
         bound_ln, bound_col         = fpre.loc[2:] if fpre else block_loc[:2]
         bound_end_ln, bound_end_col = fpost.loc[:2] if fpost else block_loc[2:]
 
+        lines      = fst.root._lines
         put_lines  = None
-        pre_comms  = ((comms is True or comms == 'pre') and self.pre_comments(lines, bound_ln, bound_col, ffirst))
-        post_comms = ((comms is True or comms == 'post') and self.post_comments(lines, flast,
-                                                                                bound_end_ln, bound_end_col))
+        pre_comms  = ((comms is True or comms == 'pre') and
+                      self.pre_comments(lines, bound_ln, bound_col, ffirst))
+        post_comms = ((comms is True or comms == 'post') and
+                      self.post_comments(lines, flast, bound_end_ln, bound_end_col))
         pre_semi   = not pre_comms and _prev_find(lines, bound_ln, bound_col, ffirst.ln, ffirst.col, ';',
                                                   True, comment=True, lcont=None)
         post_semi  = not post_comms and _next_find(lines, flast.end_ln, flast.end_col, bound_end_ln, bound_end_col, ';',
                                                    True, comment=True, lcont=None)
+        copy_loc   = fstloc(*(pre_comms or ffirst.bloc[:2]), *(post_comms or flast.bloc[2:]))
 
-        copy_loc = del_loc = fstloc(*(pre_comms or ffirst.bloc[:2]), *(post_comms or flast.bloc[2:]))  # DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG!
+        if not pre_semi:  # if this doesn't exist then adjust bound start to just past prev statement or block open (colon)
+            if fpre:
+                bound_ln, bound_col = fpre.bloc[2:]
+
+            elif code := _prev_src(lines, bound_ln, bound_col, copy_loc.ln, copy_loc.col, False, False):
+                bound_ln, bound_col, src  = code
+                bound_col                += len(src)
+
+
+        del_loc = copy_loc  # DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG!
+
 
         if pre_comms:
             if post_comms:
-                copy_loc = del_loc = fstloc(*pre_comms, *post_comms)
+                del_loc = copy_loc
 
-            elif post_semi:
-                copy_loc        = fstloc(*pre_comms, *flast.bloc[2:])
-                end_ln_is_bound = (end_ln := copy_loc.end_ln) == bound_end_ln
+            else:
+                if not post_semi:
+                    end_ln, end_col = copy_loc[2:]
 
-                if code := _next_src(lines,
-                                     end_ln, post_semi.col + 1 if post_semi.ln == end_ln else copy_loc.end_col,
-                                     end_ln, bound_end_col if end_ln_is_bound else 0x7ffffffffffffff, True, True):
+                else:
+                    end_ln  = post_semi.ln
+                    end_col = post_semi.col + 1
+
+                at_bound_end_ln = end_ln == bound_end_ln
+
+                if code := _next_src(lines, end_ln, end_col, end_ln,
+                                     bound_end_col if at_bound_end_ln else 0x7ffffffffffffff, True, True):
                     put_lines = [re_empty_line_start.match(lines[copy_loc.ln]).group(0)]  # we know it starts a line because pre_comms exists
                     del_loc   = fstloc(*pre_comms, end_ln, code.col)
 
-                else:  # empty line after a useless trailing ';'
-                    del_loc = (fstloc(*pre_comms, bound_end_ln, bound_end_col) if end_ln_is_bound else
-                               fstloc(*pre_comms, end_ln + 1, 0))
+                elif not at_bound_end_ln:
+                    del_loc = fstloc(*pre_comms, end_ln + 1, 0)
 
-            else:
-                pass  # TODO
+                else:
+                    del_loc = fstloc(*pre_comms, bound_end_ln, bound_end_col)
+
+                    if fpost:  # ends at next statement, otherwise if not fpost then empty line after a useless trailing ';'
+                        put_lines = [re_empty_line_start.match(lines[copy_loc.ln]).group(0)]  # we know it starts a line because pre_comms exists
 
         elif post_comms:
             if pre_semi:
-                pass  # TODO
+                del_loc = fstloc(*fpre.bloc[2:], (ln := post_comms.ln - (not post_comms.col)), len(lines[ln]))  # we know fpre exists because of pre_semi, leave trailing newline
 
             else:
                 pass  # TODO
 
         elif pre_semi:
             if post_semi:
-                copy_loc = fstloc(*ffirst.bloc[:2], *flast.bloc[2:])
-                del_loc  = fstloc(*pre_semi, *post_semi)
+                del_loc = fstloc(*pre_semi, *post_semi)
 
             else:
-                pass  # TODO
+                end_ln, end_col = copy_loc[2:]
+                at_bound_end_ln = end_ln == bound_end_ln
+
+                if _next_src(lines, end_ln, end_col, end_ln,
+                             bound_end_col if at_bound_end_ln else 0x7ffffffffffffff, True, True):
+                    del_loc = fstloc(*fpre.bloc[2:], end_ln, end_col)  # comment or backslash
+                else:
+                    del_loc = fstloc(*fpre.bloc[2:], end_ln, len(lines[end_ln]))
 
         elif post_semi:
             pass  # TODO
 
         else:
-            pass  # TODO
+            ln, col, end_ln, end_col = copy_loc
+            at_bound_end_ln          = end_ln == bound_end_ln
+
+            if code := _next_src(lines, end_ln, end_col, end_ln,
+                                 bound_end_col if at_bound_end_ln else 0x7ffffffffffffff, True, True):
+                del_loc = fstloc(ln, col, end_ln, code.col)  # comment or backslash
+
+            else:
+                del_col = 0 if ln != bound_ln or not bound_col else col
+
+                if not at_bound_end_ln:
+                    del_loc = fstloc(ln, del_col, end_ln + 1, 0)
+                else:
+                    del_loc = fstloc(ln, del_col, bound_end_ln, bound_end_col)
+
+
+        # TODO: remove handle preceding line continuation and eat appropriate number of preceding newlines
+
 
         return copy_loc, del_loc, put_lines
 
@@ -1643,9 +1685,25 @@ class FST:
             self = self.parent
 
         while self:
-            if (lno := getattr(a := self.a, 'lineno', -1)) > lineno or lno == lineno and a.col_offset > col_offset:
+            if (lno := getattr(a := self.a, 'lineno', -1)) > lineno or (lno == lineno and a.col_offset > col_offset):
                 a.lineno     = lineno
                 a.col_offset = col_offset
+
+            self = self.parent
+
+    def _floor_end_pos(self, end_lineno: int, end_col_offset: int, self_: bool = True):  # because of trailing non-AST junk in last statements
+        """Walk up parent chain (starting at `self`) setting `.end_lineno` and `.end_col_offset` to `end_lineno` and
+        `end_col_offset` if they are past it. Used for correcting parents after an `offset()` which removed or modified
+        last child statements of block parents."""
+
+        if not self_:
+            self = self.parent
+
+        while self:
+            if (lno := getattr(a := self.a, 'end_lineno', -1)) > end_lineno or (lno == end_lineno and
+                                                                                a.end_col_offset > end_col_offset):
+                a.end_lineno     = end_lineno
+                a.end_col_offset = end_col_offset
 
             self = self.parent
 
@@ -1980,14 +2038,13 @@ class FST:
             asts = [copy_ast(body[i]) for i in range(start, stop)]
 
         else:
-            asts = body[start : stop]
+            is_last_child = not fpost and flast is self.last_child(True)
+            asts          = body[start : stop]
 
             del body[start : stop]
 
             for i in range(start, len(body)):
                 body[i].f.pfield = astfield(field, i)
-
-            # raise NotImplementedError  # TODO: THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS!
 
 
         # TODO: allow delete all body?
@@ -2006,8 +2063,11 @@ class FST:
         fst = self._make_fst_and_dedent(ffirst, get_ast, copy_loc, '', '', put_loc, put_lines)
 
 
-        # TODO: correct for delete all 'orelse' or such
+        # TODO: correct for delete all 'orelse' or 'finally' or such
 
+
+        if cut and is_last_child:  # correct parent for removed last child nodes with trailing non-AST junk
+            self._floor_end_pos((fnewlast := self.last_child(True)).end_lineno, fnewlast.end_col_offset)
 
         if fix:
             if len(asts) == 1 and isinstance(a := asts[0], If):
