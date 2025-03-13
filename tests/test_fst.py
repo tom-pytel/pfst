@@ -4143,6 +4143,320 @@ Module .. ROOT 0,0 -> 0,1
       Name 'i' Load .. 0,0 -> 0,1
 """),
 
+(r"""
+if 1: pass
+
+# pre
+else: pass
+j
+""", 'body[0]', 0, 1, 'orelse', '', r"""
+if 1: pass
+
+# pre
+j
+""", r"""pass""", r"""
+Module .. ROOT 0,0 -> 5,0
+  .body[2]
+  0] If .. 1,0 -> 1,10
+    .test
+      Constant 1 .. 1,3 -> 1,4
+    .body[1]
+    0] Pass .. 1,6 -> 1,10
+  1] Expr .. 4,0 -> 4,1
+    .value
+      Name 'j' Load .. 4,0 -> 4,1
+""", r"""
+Module .. ROOT 0,0 -> 0,4
+  .body[1]
+  0] Pass .. 0,0 -> 0,4
+"""),
+
+(r"""
+if 1: pass
+
+# pre
+else: pass
+j
+""", 'body[0]', 0, 1, 'orelse', 'pre', r"""
+if 1: pass
+
+j
+""", r"""pass""", r"""
+Module .. ROOT 0,0 -> 4,0
+  .body[2]
+  0] If .. 1,0 -> 1,10
+    .test
+      Constant 1 .. 1,3 -> 1,4
+    .body[1]
+    0] Pass .. 1,6 -> 1,10
+  1] Expr .. 3,0 -> 3,1
+    .value
+      Name 'j' Load .. 3,0 -> 3,1
+""", r"""
+Module .. ROOT 0,0 -> 0,4
+  .body[1]
+  0] Pass .. 0,0 -> 0,4
+"""),
+
+(r"""
+if 1: pass
+
+# pre
+else: pass
+j
+""", 'body[0]', 0, 1, 'orelse', 'pre,space', r"""
+if 1: pass
+j
+""", r"""pass""", r"""
+Module .. ROOT 0,0 -> 3,0
+  .body[2]
+  0] If .. 1,0 -> 1,10
+    .test
+      Constant 1 .. 1,3 -> 1,4
+    .body[1]
+    0] Pass .. 1,6 -> 1,10
+  1] Expr .. 2,0 -> 2,1
+    .value
+      Name 'j' Load .. 2,0 -> 2,1
+""", r"""
+Module .. ROOT 0,0 -> 0,4
+  .body[1]
+  0] Pass .. 0,0 -> 0,4
+"""),
+
+(r"""
+if 1: pass
+
+# pre
+else: pass
+j
+""", 'body[0]', 0, 1, 'orelse', 'space', r"""
+if 1: pass
+
+# pre
+j
+""", r"""pass""", r"""
+Module .. ROOT 0,0 -> 5,0
+  .body[2]
+  0] If .. 1,0 -> 1,10
+    .test
+      Constant 1 .. 1,3 -> 1,4
+    .body[1]
+    0] Pass .. 1,6 -> 1,10
+  1] Expr .. 4,0 -> 4,1
+    .value
+      Name 'j' Load .. 4,0 -> 4,1
+""", r"""
+Module .. ROOT 0,0 -> 0,4
+  .body[1]
+  0] Pass .. 0,0 -> 0,4
+"""),
+
+(r"""
+if 1: pass
+
+# pre
+else: pass  # post
+j
+""", 'body[0]', 0, 1, 'orelse', 'pre,space', r"""
+if 1: pass
+# post
+j
+""", r"""pass""", r"""
+Module .. ROOT 0,0 -> 4,0
+  .body[2]
+  0] If .. 1,0 -> 1,10
+    .test
+      Constant 1 .. 1,3 -> 1,4
+    .body[1]
+    0] Pass .. 1,6 -> 1,10
+  1] Expr .. 3,0 -> 3,1
+    .value
+      Name 'j' Load .. 3,0 -> 3,1
+""", r"""
+Module .. ROOT 0,0 -> 0,4
+  .body[1]
+  0] Pass .. 0,0 -> 0,4
+"""),
+
+(r"""
+if 1: pass
+
+# pre
+else: pass  # post
+j
+""", 'body[0]', 0, 1, 'orelse', 'pre,post,space', r"""
+if 1: pass
+j
+""", r"""pass  # post
+""", r"""
+Module .. ROOT 0,0 -> 3,0
+  .body[2]
+  0] If .. 1,0 -> 1,10
+    .test
+      Constant 1 .. 1,3 -> 1,4
+    .body[1]
+    0] Pass .. 1,6 -> 1,10
+  1] Expr .. 2,0 -> 2,1
+    .value
+      Name 'j' Load .. 2,0 -> 2,1
+""", r"""
+Module .. ROOT 0,0 -> 1,0
+  .body[1]
+  0] Pass .. 0,0 -> 0,4
+"""),
+
+(r"""
+try: pass
+
+# pre
+finally: pass
+j
+""", 'body[0]', 0, 1, 'finalbody', '', r"""
+try: pass
+
+# pre
+j
+""", r"""pass""", r"""
+Module .. ROOT 0,0 -> 5,0
+  .body[2]
+  0] Try .. 1,0 -> 1,9
+    .body[1]
+    0] Pass .. 1,5 -> 1,9
+  1] Expr .. 4,0 -> 4,1
+    .value
+      Name 'j' Load .. 4,0 -> 4,1
+""", r"""
+Module .. ROOT 0,0 -> 0,4
+  .body[1]
+  0] Pass .. 0,0 -> 0,4
+"""),
+
+(r"""
+try: pass
+
+# pre
+finally: pass
+j
+""", 'body[0]', 0, 1, 'finalbody', 'pre', r"""
+try: pass
+
+j
+""", r"""pass""", r"""
+Module .. ROOT 0,0 -> 4,0
+  .body[2]
+  0] Try .. 1,0 -> 1,9
+    .body[1]
+    0] Pass .. 1,5 -> 1,9
+  1] Expr .. 3,0 -> 3,1
+    .value
+      Name 'j' Load .. 3,0 -> 3,1
+""", r"""
+Module .. ROOT 0,0 -> 0,4
+  .body[1]
+  0] Pass .. 0,0 -> 0,4
+"""),
+
+(r"""
+try: pass
+
+# pre
+finally: pass
+j
+""", 'body[0]', 0, 1, 'finalbody', 'pre,space', r"""
+try: pass
+j
+""", r"""pass""", r"""
+Module .. ROOT 0,0 -> 3,0
+  .body[2]
+  0] Try .. 1,0 -> 1,9
+    .body[1]
+    0] Pass .. 1,5 -> 1,9
+  1] Expr .. 2,0 -> 2,1
+    .value
+      Name 'j' Load .. 2,0 -> 2,1
+""", r"""
+Module .. ROOT 0,0 -> 0,4
+  .body[1]
+  0] Pass .. 0,0 -> 0,4
+"""),
+
+(r"""
+try: pass
+
+# pre
+finally: pass
+j
+""", 'body[0]', 0, 1, 'finalbody', 'space', r"""
+try: pass
+
+# pre
+j
+""", r"""pass""", r"""
+Module .. ROOT 0,0 -> 5,0
+  .body[2]
+  0] Try .. 1,0 -> 1,9
+    .body[1]
+    0] Pass .. 1,5 -> 1,9
+  1] Expr .. 4,0 -> 4,1
+    .value
+      Name 'j' Load .. 4,0 -> 4,1
+""", r"""
+Module .. ROOT 0,0 -> 0,4
+  .body[1]
+  0] Pass .. 0,0 -> 0,4
+"""),
+
+(r"""
+try: pass
+
+# pre
+finally: pass  # post
+j
+""", 'body[0]', 0, 1, 'finalbody', 'pre,space', r"""
+try: pass
+# post
+j
+""", r"""pass""", r"""
+Module .. ROOT 0,0 -> 4,0
+  .body[2]
+  0] Try .. 1,0 -> 1,9
+    .body[1]
+    0] Pass .. 1,5 -> 1,9
+  1] Expr .. 3,0 -> 3,1
+    .value
+      Name 'j' Load .. 3,0 -> 3,1
+""", r"""
+Module .. ROOT 0,0 -> 0,4
+  .body[1]
+  0] Pass .. 0,0 -> 0,4
+"""),
+
+(r"""
+try: pass
+
+# pre
+finally: pass  # post
+j
+""", 'body[0]', 0, 1, 'finalbody', 'pre,post,space', r"""
+try: pass
+j
+""", r"""pass  # post
+""", r"""
+Module .. ROOT 0,0 -> 3,0
+  .body[2]
+  0] Try .. 1,0 -> 1,9
+    .body[1]
+    0] Pass .. 1,5 -> 1,9
+  1] Expr .. 2,0 -> 2,1
+    .value
+      Name 'j' Load .. 2,0 -> 2,1
+""", r"""
+Module .. ROOT 0,0 -> 1,0
+  .body[1]
+  0] Pass .. 0,0 -> 0,4
+"""),
+
 ]  # END OF GET_SLICE_STMT_CUT_NOVERIFY_DATA
 
 PUT_SLICE_DATA = [
@@ -9493,9 +9807,10 @@ if __name__ == '__main__':
         print('Regenerating put slice del test data...')
         regen_put_slice_del_data()
 
-    if (not args.regen_pars and not args.regen_copy and
-        not args.regen_get_slice_seq_cut and not args.regen_get_slice_stmt_cut and
-        not args.regen_put_slice and
-        not args.regen_put_slice_del
-    ):
+    # if (not args.regen_pars and not args.regen_copy and
+    #     not args.regen_get_slice_seq_cut and not args.regen_get_slice_stmt_cut and
+    #     not args.regen_put_slice and
+    #     not args.regen_put_slice_del
+    # ):
+    if (all(not getattr(args, n) for n in dir(args) if n.startswith('regen_'))):
         unittest.main()

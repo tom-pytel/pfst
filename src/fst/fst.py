@@ -129,6 +129,15 @@ class fstpos(NamedTuple):
     ln:  int
     col: int
 
+    bend_ln  = property(lambda self: self.ln)   ; """Alias for `ln`."""  # for convenience
+    bend_col = property(lambda self: self.col)  ; """Alias for `col`."""
+    bln      = property(lambda self: self.ln)   ; """Alias for `ln`."""
+    bcol     = property(lambda self: self.col)  ; """Alias for `col`."""
+    bend_ln  = property(lambda self: self.ln)   ; """Alias for `ln`."""
+    bend_col = property(lambda self: self.col)  ; """Alias for `col`."""
+
+    is_FST   = False                            ; """For quick checks vs. `FST`."""
+
 
 class fstloc(NamedTuple):
     ln:      int
@@ -862,7 +871,7 @@ class FSTSrcEdit:
 
         return fstloc(copy_ln, copy_col, copy_end_ln, copy_end_col), fstloc(del_ln, del_col, del_end_ln, del_end_col)
 
-    def pre_comments(self, lines: list[bistr], bound_ln: int, bound_col: int, f: Union['FST', fstloc],
+    def pre_comments(self, lines: list[bistr], bound_ln: int, bound_col: int, f: Union['FST', fstloc, fstpos],
                      ) -> fstpos | None:
         """Return the position of the start of any preceding comments to the element which is assumed to live just past
         (`f.bln`, `f.bcol`). Returns `None` if no preceding comment. If preceding entire line comments exist then the
@@ -883,7 +892,7 @@ class FSTSrcEdit:
 
         return None if bound_end_ln is None else fstpos(bound_end_ln, bound_end_col)
 
-    def post_comments(self, lines: list[bistr], f: Union['FST', fstloc], bound_end_ln: int, bound_end_col: int,
+    def post_comments(self, lines: list[bistr], f: Union['FST', fstloc, fstpos], bound_end_ln: int, bound_end_col: int,
                       ) -> fstpos | None:
         """Return the position of the end of any trailing comments to the element which is assumed to live just before
         (`f.bend_ln`, `f.bend_col`). Returns `None` if no trailing comment. Should return the location at the start of
@@ -1092,7 +1101,8 @@ class FSTSrcEdit:
         fmt        = DEFAULT_EDIT_SRC_FMT if fmt is None else frozenset(s.strip() for s in fmt.split(','))
         lines      = fst.root._lines
         put_lines  = None
-        pre_comms  = 'pre' in fmt and self.pre_comments(lines, bound_ln, bound_col, ffirst)
+        has_pre    = 'pre' in fmt
+        pre_comms  = has_pre and self.pre_comments(lines, bound_ln, bound_col, ffirst)
         post_comms = 'post' in fmt and self.post_comments(lines, flast, bound_end_ln, bound_end_col)
         pre_semi   = not pre_comms and _prev_find(lines, bound_ln, bound_col, ffirst.ln, ffirst.col, ';',
                                                   True, comment=True, lcont=None)
@@ -1196,19 +1206,28 @@ class FSTSrcEdit:
                 else:
                     del_loc = fstloc(ln, del_col, bound_end_ln, bound_end_col)
 
-        # remove 'else:' or 'finally:' if whole body cut
+        # remove 'else:' or 'finally:' if whole body cut (but not 'elif ...:' as that lives in first cut statement)
 
-        if not fpre and not fpost and field in ('orelse', 'finalbody'):
+        if not fpre and not fpost and ((is_finally := field == 'finalbody') or
+                                       (field == 'orelse' and not lines[ffirst.bln].startswith('elif', ffirst.bcol))):
+            del_ln, del_col, del_end_ln, del_end_col = del_loc
 
+            del_ln, del_col = _prev_find(lines, bound_ln, bound_col, del_ln, del_col,
+                                         'finally' if is_finally else 'else', False, comment=False, lcont=False)  # `first=False` because have to skip over ':'
 
-            pass  # TODO: this
+            if put_lines:
+                put_lines[0] = lines[del_ln][:del_col] + put_lines[0]  # prepend block start indentation to existing indentation, silly but whatever
 
+            if has_pre and (pre_pre_comms := self.pre_comments(lines, bound_ln, bound_col, fstpos(del_ln, 0))):
+                del_ln = pre_pre_comms.ln
+
+            del_loc = fstloc(del_ln, 0, del_end_ln, del_end_col)
 
         # delete preceding empty lines according to format flags
 
         space = any((s := f).startswith('space') for f in fmt) and (float('inf') if s == 'space' else int(s[5:]))
 
-        if space < 2 and 'pep8' in fmt and isinstance(ffirst.a, NAMED_SCOPE):
+        if space < 2 and (fpre and 'pep8' in fmt) and isinstance(ffirst.a, NAMED_SCOPE):
             space = 2 if (pns := ffirst.parent_named_scope) and isinstance(pns.a, Module) else 1
 
         if space:
@@ -2125,10 +2144,6 @@ class FST:
             for i in range(start, len(body)):
                 body[i].f.pfield = astfield(field, i)
 
-
-        # TODO: allow delete all body?
-
-
         get_ast   = Module(body=asts, type_ignores=[])
         block_loc = fstloc(*(fpre.loc[2:] if fpre else ffirst._prev_ast_bound()),
                            *(fpost.loc[:2] if fpost else flast._next_ast_bound()))
@@ -2140,10 +2155,6 @@ class FST:
             put_loc = None
 
         fst = self._make_fst_and_dedent(indent, get_ast, copy_loc, '', '', put_loc, put_lines)
-
-
-        # TODO: correct for delete all 'orelse' or 'finally' or such
-
 
         if cut and is_last_child:  # correct parent for removed last child nodes with trailing non-AST junk
             self._floor_end_pos((fnewlast := self.last_child(True)).end_lineno, fnewlast.end_col_offset)
