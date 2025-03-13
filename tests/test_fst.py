@@ -2970,20 +2970,21 @@ if 1:
 """, 'body[0]', 1, 2, None, 'pre,post', r"""
 if 1:
     i
+
     k
 """, r"""j""", r"""
-Module .. ROOT 0,0 -> 4,0
+Module .. ROOT 0,0 -> 5,0
   .body[1]
-  0] If .. 1,0 -> 3,5
+  0] If .. 1,0 -> 4,5
     .test
       Constant 1 .. 1,3 -> 1,4
     .body[2]
     0] Expr .. 2,4 -> 2,5
       .value
         Name 'i' Load .. 2,4 -> 2,5
-    1] Expr .. 3,4 -> 3,5
+    1] Expr .. 4,4 -> 4,5
       .value
-        Name 'k' Load .. 3,4 -> 3,5
+        Name 'k' Load .. 4,4 -> 4,5
 """, r"""
 Module .. ROOT 0,0 -> 0,1
   .body[1]
@@ -3470,19 +3471,20 @@ if 1:
   if 2: pass
 """, 'body[0]', 0, 1, None, 'pre,post', r"""
 if 1:
+
   if 2: pass
 """, r"""i""", r"""
-Module .. ROOT 0,0 -> 3,0
+Module .. ROOT 0,0 -> 4,0
   .body[1]
-  0] If .. 1,0 -> 2,12
+  0] If .. 1,0 -> 3,12
     .test
       Constant 1 .. 1,3 -> 1,4
     .body[1]
-    0] If .. 2,2 -> 2,12
+    0] If .. 3,2 -> 3,12
       .test
-        Constant 2 .. 2,5 -> 2,6
+        Constant 2 .. 3,5 -> 3,6
       .body[1]
-      0] Pass .. 2,8 -> 2,12
+      0] Pass .. 3,8 -> 3,12
 """, r"""
 Module .. ROOT 0,0 -> 0,1
   .body[1]
@@ -3500,20 +3502,21 @@ if 1:
 """, 'body[0]', 1, 2, None, 'pre,post', r"""
 if 1:
     i
+
     k
 """, r"""j""", r"""
-Module .. ROOT 0,0 -> 4,0
+Module .. ROOT 0,0 -> 5,0
   .body[1]
-  0] If .. 1,0 -> 3,5
+  0] If .. 1,0 -> 4,5
     .test
       Constant 1 .. 1,3 -> 1,4
     .body[2]
     0] Expr .. 2,4 -> 2,5
       .value
         Name 'i' Load .. 2,4 -> 2,5
-    1] Expr .. 3,4 -> 3,5
+    1] Expr .. 4,4 -> 4,5
       .value
-        Name 'k' Load .. 3,4 -> 3,5
+        Name 'k' Load .. 4,4 -> 4,5
 """, r"""
 Module .. ROOT 0,0 -> 0,1
   .body[1]
@@ -3575,6 +3578,364 @@ Module .. ROOT 0,0 -> 1,1
   0] Expr .. 1,0 -> 1,1
     .value
       Name 'j' Load .. 1,0 -> 1,1
+"""),
+
+(r"""
+class cls:
+    i
+    \
+
+
+
+
+    def f(): pass
+    j
+""", 'body[0]', 1, 2, None, 'space1', r"""
+class cls:
+    i
+    \
+
+
+
+    j
+""", r"""def f(): pass""", r"""
+Module .. ROOT 0,0 -> 8,0
+  .body[1]
+  0] ClassDef .. 1,0 -> 7,5
+    .name
+      'cls'
+    .body[2]
+    0] Expr .. 2,4 -> 2,5
+      .value
+        Name 'i' Load .. 2,4 -> 2,5
+    1] Expr .. 7,4 -> 7,5
+      .value
+        Name 'j' Load .. 7,4 -> 7,5
+""", r"""
+Module .. ROOT 0,0 -> 0,13
+  .body[1]
+  0] FunctionDef .. 0,0 -> 0,13
+    .name
+      'f'
+    .args
+      arguments
+        .vararg
+          None
+        .kwarg
+          None
+    .body[1]
+    0] Pass .. 0,9 -> 0,13
+    .returns
+      None
+    .type_comment
+      None
+"""),
+
+(r"""
+class cls:
+    i
+    \
+
+
+
+
+    def f(): pass
+    j
+""", 'body[0]', 1, 2, None, 'pep8', r"""
+class cls:
+    i
+    \
+
+
+
+    j
+""", r"""def f(): pass""", r"""
+Module .. ROOT 0,0 -> 8,0
+  .body[1]
+  0] ClassDef .. 1,0 -> 7,5
+    .name
+      'cls'
+    .body[2]
+    0] Expr .. 2,4 -> 2,5
+      .value
+        Name 'i' Load .. 2,4 -> 2,5
+    1] Expr .. 7,4 -> 7,5
+      .value
+        Name 'j' Load .. 7,4 -> 7,5
+""", r"""
+Module .. ROOT 0,0 -> 0,13
+  .body[1]
+  0] FunctionDef .. 0,0 -> 0,13
+    .name
+      'f'
+    .args
+      arguments
+        .vararg
+          None
+        .kwarg
+          None
+    .body[1]
+    0] Pass .. 0,9 -> 0,13
+    .returns
+      None
+    .type_comment
+      None
+"""),
+
+(r"""
+i
+\
+
+
+
+
+def f(): pass
+j
+""", '', 1, 2, None, 'pep8', r"""
+i
+\
+
+
+j
+""", r"""def f(): pass""", r"""
+Module .. ROOT 0,0 -> 6,0
+  .body[2]
+  0] Expr .. 1,0 -> 1,1
+    .value
+      Name 'i' Load .. 1,0 -> 1,1
+  1] Expr .. 5,0 -> 5,1
+    .value
+      Name 'j' Load .. 5,0 -> 5,1
+""", r"""
+Module .. ROOT 0,0 -> 0,13
+  .body[1]
+  0] FunctionDef .. 0,0 -> 0,13
+    .name
+      'f'
+    .args
+      arguments
+        .vararg
+          None
+        .kwarg
+          None
+    .body[1]
+    0] Pass .. 0,9 -> 0,13
+    .returns
+      None
+    .type_comment
+      None
+"""),
+
+(r"""
+i
+\
+
+
+
+
+def f(): pass
+j
+""", '', 1, 2, None, 'pep8,space3', r"""
+i
+\
+
+j
+""", r"""def f(): pass""", r"""
+Module .. ROOT 0,0 -> 5,0
+  .body[2]
+  0] Expr .. 1,0 -> 1,1
+    .value
+      Name 'i' Load .. 1,0 -> 1,1
+  1] Expr .. 4,0 -> 4,1
+    .value
+      Name 'j' Load .. 4,0 -> 4,1
+""", r"""
+Module .. ROOT 0,0 -> 0,13
+  .body[1]
+  0] FunctionDef .. 0,0 -> 0,13
+    .name
+      'f'
+    .args
+      arguments
+        .vararg
+          None
+        .kwarg
+          None
+    .body[1]
+    0] Pass .. 0,9 -> 0,13
+    .returns
+      None
+    .type_comment
+      None
+"""),
+
+(r"""
+i
+\
+
+
+
+
+def f(): pass
+j
+""", '', 1, 2, None, 'pep8,space4', r"""
+i
+
+j
+""", r"""def f(): pass""", r"""
+Module .. ROOT 0,0 -> 4,0
+  .body[2]
+  0] Expr .. 1,0 -> 1,1
+    .value
+      Name 'i' Load .. 1,0 -> 1,1
+  1] Expr .. 3,0 -> 3,1
+    .value
+      Name 'j' Load .. 3,0 -> 3,1
+""", r"""
+Module .. ROOT 0,0 -> 0,13
+  .body[1]
+  0] FunctionDef .. 0,0 -> 0,13
+    .name
+      'f'
+    .args
+      arguments
+        .vararg
+          None
+        .kwarg
+          None
+    .body[1]
+    0] Pass .. 0,9 -> 0,13
+    .returns
+      None
+    .type_comment
+      None
+"""),
+
+(r"""
+i
+\
+
+
+
+
+def f(): pass
+j
+""", '', 1, 2, None, 'pep8,space5', r"""
+i
+j
+""", r"""def f(): pass""", r"""
+Module .. ROOT 0,0 -> 3,0
+  .body[2]
+  0] Expr .. 1,0 -> 1,1
+    .value
+      Name 'i' Load .. 1,0 -> 1,1
+  1] Expr .. 2,0 -> 2,1
+    .value
+      Name 'j' Load .. 2,0 -> 2,1
+""", r"""
+Module .. ROOT 0,0 -> 0,13
+  .body[1]
+  0] FunctionDef .. 0,0 -> 0,13
+    .name
+      'f'
+    .args
+      arguments
+        .vararg
+          None
+        .kwarg
+          None
+    .body[1]
+    0] Pass .. 0,9 -> 0,13
+    .returns
+      None
+    .type_comment
+      None
+"""),
+
+(r"""
+i
+\
+
+
+
+
+def f(): pass
+j
+""", '', 1, 2, None, 'pep8,space6', r"""
+i
+j
+""", r"""def f(): pass""", r"""
+Module .. ROOT 0,0 -> 3,0
+  .body[2]
+  0] Expr .. 1,0 -> 1,1
+    .value
+      Name 'i' Load .. 1,0 -> 1,1
+  1] Expr .. 2,0 -> 2,1
+    .value
+      Name 'j' Load .. 2,0 -> 2,1
+""", r"""
+Module .. ROOT 0,0 -> 0,13
+  .body[1]
+  0] FunctionDef .. 0,0 -> 0,13
+    .name
+      'f'
+    .args
+      arguments
+        .vararg
+          None
+        .kwarg
+          None
+    .body[1]
+    0] Pass .. 0,9 -> 0,13
+    .returns
+      None
+    .type_comment
+      None
+"""),
+
+(r"""
+i
+\
+
+
+
+# pre
+def f(): pass
+j
+""", '', 1, 2, None, 'pre,space1', r"""
+i
+\
+
+
+j
+""", r"""# pre
+def f(): pass""", r"""
+Module .. ROOT 0,0 -> 6,0
+  .body[2]
+  0] Expr .. 1,0 -> 1,1
+    .value
+      Name 'i' Load .. 1,0 -> 1,1
+  1] Expr .. 5,0 -> 5,1
+    .value
+      Name 'j' Load .. 5,0 -> 5,1
+""", r"""
+Module .. ROOT 0,0 -> 1,13
+  .body[1]
+  0] FunctionDef .. 1,0 -> 1,13
+    .name
+      'f'
+    .args
+      arguments
+        .vararg
+          None
+        .kwarg
+          None
+    .body[1]
+    0] Pass .. 1,9 -> 1,13
+    .returns
+      None
+    .type_comment
+      None
 """),
 
 ]  # END OF GET_SLICE_STMT_CUT_DATA
@@ -8704,7 +9065,7 @@ i = 1
 
             for src, elt, start, stop, field, fmt, _, slice_cut, _, slice_dump in globals()[name]:
                 t     = parse(src)
-                f     = eval(f't.{elt}', {'t': t}).f
+                f     = (eval(f't.{elt}', {'t': t}) if elt else t).f
                 s     = f.get_slice(start, stop, field, cut=False, fmt=fmt)
                 tsrc  = t.f.src
                 ssrc  = s.src
@@ -8735,7 +9096,7 @@ i = 1
 
             for src, elt, start, stop, field, fmt, src_cut, slice_cut, src_dump, slice_dump in globals()[name]:
                 t     = parse(src)
-                f     = eval(f't.{elt}', {'t': t}).f
+                f     = (eval(f't.{elt}', {'t': t}) if elt else t).f
                 s     = f.get_slice(start, stop, field, cut=True, fmt=fmt)
                 tsrc  = t.f.src
                 ssrc  = s.src
@@ -8998,7 +9359,7 @@ def regen_get_slice_stmt_cut_data():
 
         for src, elt, start, stop, field, fmt, *_ in globals()[name]:
             t     = parse(src)
-            f     = eval(f't.{elt}', {'t': t}).f
+            f     = (eval(f't.{elt}', {'t': t}) if elt else t).f
             s     = f.get_slice(start, stop, field, cut=True, fmt=fmt)
             tsrc  = t.f.src
             ssrc  = s.src

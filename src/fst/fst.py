@@ -72,6 +72,7 @@ AST_DEFAULT_BODY_FIELD  = {cls: field for field, classes in [
 DEFAULT_PARSE_PARAMS    = dict(filename='<unknown>', type_comments=False, feature_version=None)
 DEFAULT_INDENT          = '    '
 DEFAULT_DOCSTRING       = True
+DEFAULT_EDIT_SRC_FMT    = frozenset(('pep8', 'pre', 'post'))
 
 STATEMENTISH            = (stmt, ExceptHandler, match_case)  # always in lists, cannot be inside multilines
 STATEMENTISH_OR_MOD     = (stmt, ExceptHandler, match_case, mod)
@@ -81,8 +82,9 @@ BLOCK_OR_MOD            = (FunctionDef, AsyncFunctionDef, ClassDef, For, AsyncFo
 SCOPE_OR_MOD            = (FunctionDef, AsyncFunctionDef, ClassDef, Lambda, ListComp, SetComp, DictComp, GeneratorExp,
                            mod)
 NAMED_SCOPE_OR_MOD      = (FunctionDef, AsyncFunctionDef, ClassDef, mod)
+NAMED_SCOPE             = (FunctionDef, AsyncFunctionDef, ClassDef)
 ANONYMOUS_SCOPE         = (Lambda, ListComp, SetComp, DictComp, GeneratorExp)
-HAS_DOCSTRING           = (FunctionDef, AsyncFunctionDef, ClassDef)
+HAS_DOCSTRING           = NAMED_SCOPE_OR_MOD
 
 re_empty_line_start     = re.compile(r'[ \t]*')     # start of completely empty or space-filled line (from start pos, start of line indentation)
 re_empty_line           = re.compile(r'[ \t]*$')    # completely empty or space-filled line (from start pos, start of line indentation)
@@ -562,7 +564,7 @@ def _normalize_code(code: Code, expr_: bool = False, *, parse_params: dict = {})
 
 
 def _new_empty_module(*, from_: Optional['FST'] = None) -> 'FST':
-    return FST(Module(body=[]), lines=[bistr('')], from_=from_)
+    return FST(Module(body=[], type_ignores=[]), lines=[bistr('')], from_=from_)
 
 
 def _new_empty_tuple(*, from_: Optional['FST'] = None) -> 'FST':
@@ -667,8 +669,6 @@ class fstlistproxy:
 
 class FSTSrcEdit:
     """This class controls most source editing behavior."""
-
-    default_fmt: set = frozenset(('pre', 'post'))  ; """Default format flags for operations."""
 
     def _fixup_expr_seq_bound(self, lines: list[str], seq_loc: fstloc,
                             fpre: Union['FST', fstloc, None], fpost: Union['FST', fstloc, None],
@@ -1051,16 +1051,28 @@ class FSTSrcEdit:
     def get_slice_stmt(self, fst: 'FST', field: str, cut: bool, fmt: str | None, block_loc: fstloc,
                        ffirst: 'FST', flast: 'FST', fpre: Optional['FST'], fpost: Optional['FST'],
     ) -> tuple[fstloc, fstloc | None, list[str] | None]:  # (copy_loc, del/put_loc, put_lines)
-        """Copy or cut from block of statements.
+        """Copy or cut from block of statements. If cutting all elements from a deletable field like 'orelse' or
+        'finalbody' then the corresponding 'else:' or 'finally:' will also be removed from the source (though not
+        copied), and the formatting flags will apply to deleting any preceding comments and/or space. If you wish to
+        apply different format flags to the copy and delete then copy what you want first then cut with different flags.
 
         **Parameters:**
         - `fst`: The source `FST` container that is being gotten from. No text has been changed at this point but the
             respective `AST` nodes may have been removed in case of `cut`.
         - `field`: The name of the field being gotten from, e.g. `'body'`, `'orelse'`, etc...
         - `cut`: If `False` the operation is a copy, `True` means cut.
-        - `fmt`: Comma separated list of formatting flags (or `None` to use default, currenly `'pre,post'`), flags:
+        - `fmt`: Comma separated list of formatting flags (or `None` to use default `'pre,post,pep8'`). Unrecognized and
+            inapplicable flags are ignored, recognized flags are:
             - `'pre'`: Copy and delete comment block immediately preceding statement(s).
-            - `'post'`: Copy and delete comment trailing on last line.
+            - `'post'`: Copy and delete comment trailing on last line. Keep in mind this is the comment on the last
+                statement of a body if last element of copy is a block element.
+            - `'pep8'`: Does not actually reformat code according to PEP 8, just deletes up one or two empty lines
+                before functions and classes according to if they are at top level scope or not, but does not copy them.
+                In the future may specify additional PEP 8 behavior.
+            - `'space*'`: Can be only `'space'` or with a number `'space3'`. Indicates that up to this many preceding
+                empty lines should be deleted on a cut operation. If no count specified then it means all empty lines.
+                Empty line continuations are considered empty lines. `'pep8'` can override `'space1'` for two lines at
+                top level functions and classes.
         - `block_loc`: A full location suitable for checking comments outside of ASTS if `fpre` / `fpost` not available.
             Should include trailing newline after `flast` if one is present.
         - `ffirst`: The first `FST` being gotten.
@@ -1077,7 +1089,7 @@ class FSTSrcEdit:
         bound_ln, bound_col         = fpre.loc[2:] if fpre else block_loc[:2]
         bound_end_ln, bound_end_col = fpost.loc[:2] if fpost else block_loc[2:]
 
-        fmt        = self.default_fmt if fmt is None else frozenset(s.strip() for s in fmt.split(','))
+        fmt        = DEFAULT_EDIT_SRC_FMT if fmt is None else frozenset(s.strip() for s in fmt.split(','))
         lines      = fst.root._lines
         put_lines  = None
         pre_comms  = 'pre' in fmt and self.pre_comments(lines, bound_ln, bound_col, ffirst)
@@ -1088,15 +1100,15 @@ class FSTSrcEdit:
                                                    True, comment=True, lcont=None)
         copy_loc   = fstloc(*(pre_comms or ffirst.bloc[:2]), *(post_comms or flast.bloc[2:]))
 
-        # handle all possible combinations of preceding and trailing comments, semicolons and line continuation backslashes
-
-        if not pre_semi:  # if this doesn't exist then adjust bound start to just past prev statement or block open (colon)
+        if not pre_semi:  # if this doesn't exist then set block start to just past prev statement or block open (colon)
             if fpre:
-                bound_ln, bound_col = fpre.bloc[2:]
+                block_ln, block_col = fpre.bloc[2:]
 
             elif code := _prev_src(lines, bound_ln, bound_col, copy_loc.ln, copy_loc.col, False, False):
-                bound_ln, bound_col, src  = code
-                bound_col                += len(src)
+                block_ln, block_col, src  = code
+                block_col                += len(src)
+
+        # get copy and delete locations according to possible combinations of preceding and trailing comments, semicolons and line continuation backslashes
 
         if pre_comms:
             if post_comms:
@@ -1132,7 +1144,7 @@ class FSTSrcEdit:
 
             else:
                 ln, col = copy_loc[:2]
-                del_col = 0 if ln != bound_ln else bound_col
+                del_col = 0 if ln != block_ln else block_col
                 del_loc = fstloc(ln, del_col, *post_comms)
 
         elif pre_semi:
@@ -1160,7 +1172,7 @@ class FSTSrcEdit:
 
             else:
                 ln, col = copy_loc[:2]
-                del_col = 0 if ln != bound_ln else bound_col
+                del_col = 0 if ln != block_ln else block_col
 
                 if not at_bound_end_ln:
                     del_loc = fstloc(ln, del_col, end_ln + 1, 0)
@@ -1177,38 +1189,61 @@ class FSTSrcEdit:
                 del_loc = fstloc(ln, col, end_ln, code.col)  # comment or backslash
 
             else:
-                del_col = 0 if ln != bound_ln else bound_col
+                del_col = 0 if ln != block_ln else block_col
 
                 if not at_bound_end_ln:
                     del_loc = fstloc(ln, del_col, end_ln + 1, 0)
                 else:
                     del_loc = fstloc(ln, del_col, bound_end_ln, bound_end_col)
 
-        # remove possible line continuation preceding delete start position because could link to invalid post statement after line cont (block statement)
+        # remove 'else:' or 'finally:' if whole body cut
 
-        ln, col = del_loc[:2]
+        if not fpre and not fpost and field in ('orelse', 'finalbody'):
 
-        if ln > bound_ln and (not col or re_empty_line.match(lines[ln], 0, col)) and lines[ln - 1].endswith('\\'):  # the endswith() is not definitive because of comments
-            prev_ln  = ln - 1
-            prev_col = 0 if prev_ln != bound_ln else bound_col
 
-            if code := _prev_src(lines, prev_ln, prev_col, prev_ln, 0x7fffffffffffffff, True, False):  # skip over lcont but not comment if is there
-                del_col = None if (src := code.src).startswith('#') else code.col + len(src)
-            else:
-                del_col = prev_col
+            pass  # TODO: this
 
-            if del_col is not None:
-                del_loc = fstloc(prev_ln, del_col, *del_loc[2:])
-                indent  = lines[ln][:col]
 
-                if not put_lines:
-                    put_lines = ['', indent] if del_col else [indent]
+        # delete preceding empty lines according to format flags
 
-                else:
-                    if indent:
-                        put_lines[0] = indent + put_lines[0]
+        space = any((s := f).startswith('space') for f in fmt) and (float('inf') if s == 'space' else int(s[5:]))
 
-                    put_lines.insert(0, '')
+        if space < 2 and 'pep8' in fmt and isinstance(ffirst.a, NAMED_SCOPE):
+            space = 2 if (pns := ffirst.parent_named_scope) and isinstance(pns.a, Module) else 1
+
+        if space:
+            del_ln, del_col, del_end_ln, del_end_col = del_loc
+
+            new_del_ln = max(bound_ln + bool(bound_col), del_ln - space)  # first possible full empty line to delete to
+
+            if del_ln > new_del_ln and (not del_col or re_empty_line.match(lines[del_ln], 0, del_col)):
+                if code := _prev_src(lines, new_del_ln, 0, del_ln, 0, True, False):
+                    new_del_ln = code.ln + 1
+
+                if new_del_ln < del_ln:
+                    del_loc   = fstloc(new_del_ln, 0, del_end_ln, del_end_col)
+                    indent    = lines[del_ln][:del_col]
+                    put_lines = [indent + put_lines[0], *put_lines[1:]] if put_lines else [indent]
+
+        # remove possible line continuation preceding delete start position because could link to invalid following statement after line continuation (block statement)
+
+        del_ln, del_col, del_end_ln, del_end_col = del_loc
+
+        if (del_ln > bound_ln and (not del_col or re_empty_line.match(lines[del_ln], 0, del_col)) and
+            lines[del_ln - 1].endswith('\\')  # the endswith() is not definitive because of comments
+        ):
+            new_del_ln  = del_ln - 1
+            new_del_col = 0 if new_del_ln != bound_ln else bound_col
+
+            if code := _prev_src(lines, new_del_ln, new_del_col, new_del_ln, 0x7fffffffffffffff, True, False):  # skip over lcont but not comment if is there because that invalidates quick '\\' check above
+                new_del_col = None if (src := code.src).startswith('#') else code.col + len(src)
+
+            if new_del_col is not None:
+                del_loc   = fstloc(new_del_ln, new_del_col, del_end_ln, del_end_col)
+                indent    = lines[del_ln][:del_col]
+                put_lines = ['', indent + put_lines[0], *put_lines[1:]] if put_lines else ['', indent]
+
+        # finally done
 
         return copy_loc, del_loc, put_lines
 
@@ -1264,25 +1299,25 @@ class FST:
         """Opens a scope. Types include `FunctionDef`, `AsyncFunctionDef`, `ClassDef`, `Lambda`, `ListComp`, `SetComp`,
         `DictComp`, `GeneratorExp`, and `mod`."""
 
-        return isinstance(self, SCOPE_OR_MOD)
+        return isinstance(self.a, SCOPE_OR_MOD)
 
     @property
     def is_named_scope(self) -> bool:
         """Opens a named scope. Types include `FunctionDef`, `AsyncFunctionDef`,  `ClassDef` and `mod`."""
 
-        return isinstance(self, NAMED_SCOPE_OR_MOD)
+        return isinstance(self.a, NAMED_SCOPE_OR_MOD)
 
     @property
     def is_anon_scope(self) -> bool:
         """Opens an anonymous scope. Types include `Lambda`, `ListComp`, `SetComp`, `DictComp` and `GeneratorExp`."""
 
-        return isinstance(self, ANONYMOUS_SCOPE)
+        return isinstance(self.a, ANONYMOUS_SCOPE)
 
     @property
     def parent_stmt(self) -> Optional['FST']:
         """The first parent which is a `stmt` or `mod` node (if any)."""
 
-        while (self := self.parent) and not isinstance(self, (stmt, mod)):
+        while (self := self.parent) and not isinstance(self.a, (stmt, mod)):
             pass
 
         return self
@@ -1291,7 +1326,7 @@ class FST:
     def parent_stmtish(self) -> Optional['FST']:
         """The first parent which is a `stmt`, `ExceptHandler`, `match_case` or `mod` node (if any)."""
 
-        while (self := self.parent) and not isinstance(self, STATEMENTISH_OR_MOD):
+        while (self := self.parent) and not isinstance(self.a, STATEMENTISH_OR_MOD):
             pass
 
         return self
@@ -1302,7 +1337,7 @@ class FST:
         `AsyncFunctionDef`, `ClassDef`, `For`, `AsyncFor`, `While`, `If`, `With`, `AsyncWith`, `Match`, `Try`,
         `TryStar`, `ExceptHandler`, `match_case`, and `mod`."""
 
-        while (self := self.parent) and not isinstance(self, BLOCK_OR_MOD):
+        while (self := self.parent) and not isinstance(self.a, BLOCK_OR_MOD):
             pass
         return self
 
@@ -1311,7 +1346,7 @@ class FST:
         """The first parent which opens a scope that `self` lives in (if any). Types include `FunctionDef`,
         `AsyncFunctionDef`, `ClassDef`, `Lambda`, `ListComp`, `SetComp`, `DictComp`, `GeneratorExp`, and `mod`."""
 
-        while (self := self.parent) and not isinstance(self, SCOPE_OR_MOD):
+        while (self := self.parent) and not isinstance(self.a, SCOPE_OR_MOD):
             pass
 
         return self
@@ -1321,7 +1356,7 @@ class FST:
         """The first parent which opens a named scope that `self` lives in (if any). Types include `FunctionDef`,
         `AsyncFunctionDef`, `ClassDef` and `mod`."""
 
-        while (self := self.parent) and not isinstance(self, NAMED_SCOPE_OR_MOD):
+        while (self := self.parent) and not isinstance(self.a, NAMED_SCOPE_OR_MOD):
             pass
 
         return self
@@ -2094,7 +2129,7 @@ class FST:
         # TODO: allow delete all body?
 
 
-        get_ast   = Module(body=asts)
+        get_ast   = Module(body=asts, type_ignores=[])
         block_loc = fstloc(*(fpre.loc[2:] if fpre else ffirst._prev_ast_bound()),
                            *(fpost.loc[:2] if fpost else flast._next_ast_bound()))
 
@@ -2514,7 +2549,7 @@ class FST:
         for new `FST`.
 
         Do not set `calc_loc` to `False` unless you parsed the `AST` from a previous output of `ast.unparse()`,
-        otherwise there will almost certaionly be problems!
+        otherwise there will almost certainly be problems!
 
         **Parameters:**
         - `ast`: The root `AST` node.
@@ -2525,7 +2560,8 @@ class FST:
         - `feature_version`: `ast.parse()` parameter.
         - `calc_loc`: Get actual node positions by unparsing then parsing again. Use when you are not certain node
             positions are correct or even present. Updates original ast unless set to "copy", in which case a copied
-            `AST` is used. Set to `False` when you know positions are correct and want to use given `AST`. Default True.
+            `AST` is used. Set to `False` when you know positions are correct and want to use given `AST`. Default
+            `True`.
 
         **Returns:**
         - `AST`: The parsed tree with `.f` attributes added to each `AST` node for `FST` access.
@@ -2566,7 +2602,7 @@ class FST:
         - `raise_`: Whether to raise an exception on verify failed or return `None`.
 
         **Returns:**
-        - `None` on failure to verify, otherwise `self`.
+        - `None` on failure to verify (if not `raise_`), otherwise `self`.
         """
 
         if not self.is_root:
@@ -2601,7 +2637,16 @@ class FST:
 
     def dump(self, full: bool = False, indent: int = 2, linefunc: Callable = print, compact: bool = False
              ) -> list[str] | None:
-        """Dump a representation of the tree to stdout or return as a list of lines."""
+        """Dump a representation of the tree to stdout or return as a list of lines.
+
+        **Parameters:**
+        - `full`: If `True` then will list all fields in nodes including empty ones, otherwise will exclude most empty
+            fields.
+        - `indent`: The average airspeed of an unladen swallow.
+        - `linefunc`: `print` means print to stdout, `list` returns a list of lines and `str` returns a whole string.
+        - `compact`: If `True` then the dump is compacted a bit by listing `Name` and `Constant` nodes on a single
+            line.
+        """
 
         if linefunc is print:
             return self._dump(full, indent, linefunc=print, compact=compact)
