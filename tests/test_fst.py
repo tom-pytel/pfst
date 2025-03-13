@@ -2079,7 +2079,7 @@ if 1:
     # pre
     j  # post
     k
-""", 'body[0]', 1, 2, None, True, r"""
+""", 'body[0]', 1, 2, None, 'pre,post', r"""
 if 1:
     i
     k
@@ -2112,7 +2112,7 @@ if 1:
     # pre
     j ;
     k
-""", 'body[0]', 1, 2, None, True, r"""
+""", 'body[0]', 1, 2, None, 'pre,post', r"""
 if 1:
     i
     k
@@ -2144,7 +2144,7 @@ if 1:
     # pre
     j ; # post
     k
-""", 'body[0]', 1, 2, None, True, r"""
+""", 'body[0]', 1, 2, None, 'pre,post', r"""
 if 1:
     i
     # post
@@ -2177,7 +2177,7 @@ if 1:
     # pre
     j ; \
   k
-""", 'body[0]', 1, 2, None, True, r"""
+""", 'body[0]', 1, 2, None, 'pre,post', r"""
 if 1:
     i
     \
@@ -2211,7 +2211,7 @@ if 1:
     j ; \
 \
   k
-""", 'body[0]', 1, 2, None, True, r"""
+""", 'body[0]', 1, 2, None, 'pre,post', r"""
 if 1:
     i
     \
@@ -2247,7 +2247,7 @@ if 1:
     ; \
 \
   k
-""", 'body[0]', 1, 2, None, True, r"""
+""", 'body[0]', 1, 2, None, 'pre,post', r"""
 if 1:
     i
     \
@@ -2282,7 +2282,7 @@ if 1:
     j \
     ; \
   k
-""", 'body[0]', 1, 2, None, True, r"""
+""", 'body[0]', 1, 2, None, 'pre,post', r"""
 if 1:
     i
     \
@@ -2315,7 +2315,7 @@ if 1:
     # pre
     j \
     ; k
-""", 'body[0]', 1, 2, None, True, r"""
+""", 'body[0]', 1, 2, None, 'pre,post', r"""
 if 1:
     i
     k
@@ -2347,7 +2347,7 @@ if 1:
     # pre
     j
     k
-""", 'body[0]', 1, 2, None, True, r"""
+""", 'body[0]', 1, 2, None, 'pre,post', r"""
 if 1:
     i
     k
@@ -2377,7 +2377,7 @@ Module .. ROOT 0,0 -> 1,1
 if 1:
     i ; j  # post
     k
-""", 'body[0]', 1, 2, None, True, r"""
+""", 'body[0]', 1, 2, None, 'pre,post', r"""
 if 1:
     i
     k
@@ -2406,7 +2406,7 @@ Module .. ROOT 0,0 -> 1,0
 (r"""
 if 1:
     i ; j  # post
-""", 'body[0]', 1, 2, None, True, r"""
+""", 'body[0]', 1, 2, None, 'pre,post', r"""
 if 1:
     i
 """, r"""j  # post
@@ -2433,7 +2433,7 @@ if 1:
     i \
   ; j  # post
     k
-""", 'body[0]', 1, 2, None, True, r"""
+""", 'body[0]', 1, 2, None, 'pre,post', r"""
 if 1:
     i
     k
@@ -2464,7 +2464,7 @@ if 1:
     i ; \
   j  # post
     k
-""", 'body[0]', 1, 2, None, True, r"""
+""", 'body[0]', 1, 2, None, 'pre,post', r"""
 if 1:
     i
     k
@@ -2496,7 +2496,7 @@ if 1:
   ; \
   j  # post
     k
-""", 'body[0]', 1, 2, None, True, r"""
+""", 'body[0]', 1, 2, None, 'pre,post', r"""
 if 1:
     i
     k
@@ -2525,7 +2525,7 @@ Module .. ROOT 0,0 -> 1,0
 (r"""
 if 1:
     i ; j ; k
-""", 'body[0]', 1, 2, None, True, r"""
+""", 'body[0]', 1, 2, None, 'pre,post', r"""
 if 1:
     i ; k
 """, r"""j""", r"""
@@ -2553,7 +2553,7 @@ Module .. ROOT 0,0 -> 0,1
 if 1:
     i ; j
     k
-""", 'body[0]', 1, 2, None, True, r"""
+""", 'body[0]', 1, 2, None, 'pre,post', r"""
 if 1:
     i
     k
@@ -2582,7 +2582,7 @@ Module .. ROOT 0,0 -> 0,1
 if 1:
     i ; j  # post
     k
-""", 'body[0]', 1, 2, None, False, r"""
+""", 'body[0]', 1, 2, None, '', r"""
 if 1:
     i  # post
     k
@@ -2612,7 +2612,7 @@ if 1:
     i ; j \
     # post
     k
-""", 'body[0]', 1, 2, None, True, r"""
+""", 'body[0]', 1, 2, None, 'pre,post', r"""
 if 1:
     i \
     # post
@@ -2644,7 +2644,7 @@ if 1:
   j \
     # post
     k
-""", 'body[0]', 1, 2, None, True, r"""
+""", 'body[0]', 1, 2, None, 'pre,post', r"""
 if 1:
     i \
     # post
@@ -2677,7 +2677,7 @@ if 1:
   j \
     # post
     k
-""", 'body[0]', 1, 2, None, True, r"""
+""", 'body[0]', 1, 2, None, 'pre,post', r"""
 if 1:
     i \
     # post
@@ -2708,7 +2708,7 @@ if 1:
     i ; \
     j  # post
     if 2: pass
-""", 'body[0]', 1, 2, None, True, r"""
+""", 'body[0]', 1, 2, None, 'pre,post', r"""
 if 1:
     i
     if 2: pass
@@ -2741,7 +2741,7 @@ if 1:
     i \
     ; j  # post
     if 2: pass
-""", 'body[0]', 1, 2, None, True, r"""
+""", 'body[0]', 1, 2, None, 'pre,post', r"""
 if 1:
     i
     if 2: pass
@@ -2775,7 +2775,7 @@ if 1:
     ; \
     j  # post
     if 2: pass
-""", 'body[0]', 1, 2, None, True, r"""
+""", 'body[0]', 1, 2, None, 'pre,post', r"""
 if 1:
     i
     if 2: pass
@@ -2808,7 +2808,7 @@ if 1:
     i ; \
     j
     if 2: pass
-""", 'body[0]', 1, 2, None, True, r"""
+""", 'body[0]', 1, 2, None, 'pre,post', r"""
 if 1:
     i
     if 2: pass
@@ -2840,7 +2840,7 @@ if 1:
     i \
     ; j
     if 1: pass
-""", 'body[0]', 1, 2, None, True, r"""
+""", 'body[0]', 1, 2, None, 'pre,post', r"""
 if 1:
     i
     if 1: pass
@@ -2873,7 +2873,7 @@ if 1:
     ; \
     j
     if 2: pass
-""", 'body[0]', 1, 2, None, True, r"""
+""", 'body[0]', 1, 2, None, 'pre,post', r"""
 if 1:
     i
     if 2: pass
@@ -2905,7 +2905,7 @@ if 1:
     i
     j
     k
-""", 'body[0]', 1, 2, None, True, r"""
+""", 'body[0]', 1, 2, None, 'pre,post', r"""
 if 1:
     i
     k
@@ -2935,7 +2935,7 @@ if 1:
     i
     j  # post
     k
-""", 'body[0]', 1, 2, None, False, r"""
+""", 'body[0]', 1, 2, None, '', r"""
 if 1:
     i
     # post
@@ -2967,7 +2967,7 @@ if 1:
     \
     j
     k
-""", 'body[0]', 1, 2, None, True, r"""
+""", 'body[0]', 1, 2, None, 'pre,post', r"""
 if 1:
     i
     k
@@ -2998,7 +2998,7 @@ if 1:
     j \
 
     k
-""", 'body[0]', 1, 2, None, True, r"""
+""", 'body[0]', 1, 2, None, 'pre,post', r"""
 if 1:
     i
     \
@@ -3030,7 +3030,7 @@ if 1:
     i
     j ;
     k
-""", 'body[0]', 1, 2, None, True, r"""
+""", 'body[0]', 1, 2, None, 'pre,post', r"""
 if 1:
     i
     k
@@ -3060,7 +3060,7 @@ if 1:
     i
     j ; \
   k
-""", 'body[0]', 1, 2, None, True, r"""
+""", 'body[0]', 1, 2, None, 'pre,post', r"""
 if 1:
     i
     \
@@ -3092,7 +3092,7 @@ if 1:
     j \
   ;
     k
-""", 'body[0]', 1, 2, None, True, r"""
+""", 'body[0]', 1, 2, None, 'pre,post', r"""
 if 1:
     i
     k
@@ -3123,7 +3123,7 @@ if 1:
     j \
   ; \
   k
-""", 'body[0]', 1, 2, None, True, r"""
+""", 'body[0]', 1, 2, None, 'pre,post', r"""
 if 1:
     i
     \
@@ -3154,7 +3154,7 @@ if 1:
     i
     j  # post
     k
-""", 'body[0]', 1, 2, None, True, r"""
+""", 'body[0]', 1, 2, None, 'pre,post', r"""
 if 1:
     i
     k
@@ -3184,7 +3184,7 @@ Module .. ROOT 0,0 -> 1,0
 if 1: pass
 else: \
   i ; j
-""", 'body[0]', 0, 1, 'orelse', True, r"""
+""", 'body[0]', 0, 1, 'orelse', 'pre,post', r"""
 if 1: pass
 else:
   j
@@ -3213,7 +3213,7 @@ if 1: pass
 else: \
   i ; \
     j
-""", 'body[0]', 0, 1, 'orelse', True, r"""
+""", 'body[0]', 0, 1, 'orelse', 'pre,post', r"""
 if 1: pass
 else:
   \
@@ -3244,7 +3244,7 @@ else: \
   i \
  ; \
     j
-""", 'body[0]', 0, 1, 'orelse', True, r"""
+""", 'body[0]', 0, 1, 'orelse', 'pre,post', r"""
 if 1: pass
 else:
   \
@@ -3272,7 +3272,7 @@ Module .. ROOT 0,0 -> 0,1
 (r"""
 if 1: pass
 else: i ; j
-""", 'body[0]', 0, 1, 'orelse', True, r"""
+""", 'body[0]', 0, 1, 'orelse', 'pre,post', r"""
 if 1: pass
 else: j
 """, r"""i""", r"""
@@ -3297,7 +3297,7 @@ Module .. ROOT 0,0 -> 0,1
 
 (r"""if 1: pass
 else: \
-  i ; j""", 'body[0]', 0, 1, 'orelse', True, r"""if 1: pass
+  i ; j""", 'body[0]', 0, 1, 'orelse', 'pre,post', r"""if 1: pass
 else:
   j""", r"""i""", r"""
 Module .. ROOT 0,0 -> 2,3
@@ -3322,7 +3322,7 @@ Module .. ROOT 0,0 -> 0,1
 (r"""if 1: pass
 else: \
   i ; \
-    j""", 'body[0]', 0, 1, 'orelse', True, r"""if 1: pass
+    j""", 'body[0]', 0, 1, 'orelse', 'pre,post', r"""if 1: pass
 else:
   \
     j""", r"""i""", r"""
@@ -3349,7 +3349,7 @@ Module .. ROOT 0,0 -> 0,1
 else:
   i \
  ; \
-    j""", 'body[0]', 0, 1, 'orelse', True, r"""if 1: pass
+    j""", 'body[0]', 0, 1, 'orelse', 'pre,post', r"""if 1: pass
 else:
   \
     j""", r"""i""", r"""
@@ -3373,7 +3373,7 @@ Module .. ROOT 0,0 -> 0,1
 """),
 
 (r"""if 1: pass
-else: i ; j""", 'body[0]', 0, 1, 'orelse', True, r"""if 1: pass
+else: i ; j""", 'body[0]', 0, 1, 'orelse', 'pre,post', r"""if 1: pass
 else: j""", r"""i""", r"""
 Module .. ROOT 0,0 -> 1,7
   .body[1]
@@ -3400,7 +3400,7 @@ if 1:
     # pre
     j
     if 2: pass
-""", 'body[0]', 1, 2, None, True, r"""
+""", 'body[0]', 1, 2, None, 'pre,post', r"""
 if 1:
     i
     if 2: pass
@@ -3434,7 +3434,7 @@ if 1:
     # pre
     j  # post
     if 2: pass
-""", 'body[0]', 1, 2, None, True, r"""
+""", 'body[0]', 1, 2, None, 'pre,post', r"""
 if 1:
     i
     if 2: pass
@@ -3468,7 +3468,7 @@ if 1:
   \
   i
   if 2: pass
-""", 'body[0]', 0, 1, None, True, r"""
+""", 'body[0]', 0, 1, None, 'pre,post', r"""
 if 1:
   if 2: pass
 """, r"""i""", r"""
@@ -3497,7 +3497,7 @@ if 1:
     \
     j
     k
-""", 'body[0]', 1, 2, None, True, r"""
+""", 'body[0]', 1, 2, None, 'pre,post', r"""
 if 1:
     i
     k
@@ -3525,7 +3525,7 @@ Module .. ROOT 0,0 -> 0,1
 (r"""
 if 1: \
     i; j
-""", 'body[0]', 0, 1, None, True, r"""
+""", 'body[0]', 0, 1, None, 'pre,post', r"""
 if 1:
     j
 """, r"""i""", r"""
@@ -3551,7 +3551,7 @@ if 1:
     i \
     # pre
     j ; k
-""", 'body[0]', 1, 2, None, True, r"""
+""", 'body[0]', 1, 2, None, 'pre,post', r"""
 if 1:
     i
     k
@@ -3582,7 +3582,7 @@ Module .. ROOT 0,0 -> 1,1
 GET_SLICE_STMT_CUT_NOVERIFY_DATA = [
 (r"""
 if 1: i
-""", 'body[0]', 0, 1, None, True, r"""
+""", 'body[0]', 0, 1, None, 'pre,post', r"""
 if 1:""", r"""i""", r"""
 Module .. ROOT 0,0 -> 1,5
   .body[1]
@@ -3598,7 +3598,7 @@ Module .. ROOT 0,0 -> 0,1
 """),
 
 (r"""
-if 1: i""", 'body[0]', 0, 1, None, True, r"""
+if 1: i""", 'body[0]', 0, 1, None, 'pre,post', r"""
 if 1:""", r"""i""", r"""
 Module .. ROOT 0,0 -> 1,5
   .body[1]
@@ -3615,7 +3615,7 @@ Module .. ROOT 0,0 -> 0,1
 
 (r"""
 if 1: i  # post
-""", 'body[0]', 0, 1, None, True, r"""
+""", 'body[0]', 0, 1, None, 'pre,post', r"""
 if 1:""", r"""i  # post
 """, r"""
 Module .. ROOT 0,0 -> 1,5
@@ -3632,7 +3632,7 @@ Module .. ROOT 0,0 -> 1,0
 """),
 
 (r"""
-if 1: i  # post""", 'body[0]', 0, 1, None, True, r"""
+if 1: i  # post""", 'body[0]', 0, 1, None, 'pre,post', r"""
 if 1:""", r"""i  # post""", r"""
 Module .. ROOT 0,0 -> 1,5
   .body[1]
@@ -3649,7 +3649,7 @@ Module .. ROOT 0,0 -> 0,9
 
 (r"""
 if 1: i  # post
-""", 'body[0]', 0, 1, None, False, r"""
+""", 'body[0]', 0, 1, None, '', r"""
 if 1: # post
 """, r"""i""", r"""
 Module .. ROOT 0,0 -> 2,0
@@ -3666,7 +3666,7 @@ Module .. ROOT 0,0 -> 0,1
 """),
 
 (r"""
-if 1: i  # post""", 'body[0]', 0, 1, None, False, r"""
+if 1: i  # post""", 'body[0]', 0, 1, None, '', r"""
 if 1: # post""", r"""i""", r"""
 Module .. ROOT 0,0 -> 1,12
   .body[1]
@@ -3683,7 +3683,7 @@ Module .. ROOT 0,0 -> 0,1
 
 (r"""
 if 1: i ;
-""", 'body[0]', 0, 1, None, True, r"""
+""", 'body[0]', 0, 1, None, 'pre,post', r"""
 if 1:""", r"""i""", r"""
 Module .. ROOT 0,0 -> 1,5
   .body[1]
@@ -3699,7 +3699,7 @@ Module .. ROOT 0,0 -> 0,1
 """),
 
 (r"""
-if 1: i ;""", 'body[0]', 0, 1, None, True, r"""
+if 1: i ;""", 'body[0]', 0, 1, None, 'pre,post', r"""
 if 1:""", r"""i""", r"""
 Module .. ROOT 0,0 -> 1,5
   .body[1]
@@ -3716,7 +3716,7 @@ Module .. ROOT 0,0 -> 0,1
 
 (r"""
 if 1: i ;  # post
-""", 'body[0]', 0, 1, None, True, r"""
+""", 'body[0]', 0, 1, None, 'pre,post', r"""
 if 1: # post
 """, r"""i""", r"""
 Module .. ROOT 0,0 -> 2,0
@@ -3733,7 +3733,7 @@ Module .. ROOT 0,0 -> 0,1
 """),
 
 (r"""
-if 1: i ;  # post""", 'body[0]', 0, 1, None, True, r"""
+if 1: i ;  # post""", 'body[0]', 0, 1, None, 'pre,post', r"""
 if 1: # post""", r"""i""", r"""
 Module .. ROOT 0,0 -> 1,12
   .body[1]
@@ -3750,7 +3750,7 @@ Module .. ROOT 0,0 -> 0,1
 
 (r"""
 if 1: i ;  # post
-""", 'body[0]', 0, 1, None, False, r"""
+""", 'body[0]', 0, 1, None, '', r"""
 if 1: # post
 """, r"""i""", r"""
 Module .. ROOT 0,0 -> 2,0
@@ -3767,7 +3767,7 @@ Module .. ROOT 0,0 -> 0,1
 """),
 
 (r"""
-if 1: i ;  # post""", 'body[0]', 0, 1, None, False, r"""
+if 1: i ;  # post""", 'body[0]', 0, 1, None, '', r"""
 if 1: # post""", r"""i""", r"""
 Module .. ROOT 0,0 -> 1,12
   .body[1]
@@ -8702,10 +8702,10 @@ i = 1
         for name in ('GET_SLICE_STMT_CUT_DATA', 'GET_SLICE_STMT_CUT_NOVERIFY_DATA'):
             verify = 'NOVERIFY' not in name
 
-            for src, elt, start, stop, field, comms, _, slice_cut, _, slice_dump in globals()[name]:
+            for src, elt, start, stop, field, fmt, _, slice_cut, _, slice_dump in globals()[name]:
                 t     = parse(src)
                 f     = eval(f't.{elt}', {'t': t}).f
-                s     = f.get_slice(start, stop, field, cut=False, comms=comms)
+                s     = f.get_slice(start, stop, field, cut=False, fmt=fmt)
                 tsrc  = t.f.src
                 ssrc  = s.src
                 sdump = s.dump(linefunc=list, compact=True)
@@ -8733,10 +8733,10 @@ i = 1
         for name in ('GET_SLICE_STMT_CUT_DATA', 'GET_SLICE_STMT_CUT_NOVERIFY_DATA'):
             verify = 'NOVERIFY' not in name
 
-            for src, elt, start, stop, field, comms, src_cut, slice_cut, src_dump, slice_dump in globals()[name]:
+            for src, elt, start, stop, field, fmt, src_cut, slice_cut, src_dump, slice_dump in globals()[name]:
                 t     = parse(src)
                 f     = eval(f't.{elt}', {'t': t}).f
-                s     = f.get_slice(start, stop, field, cut=True, comms=comms)
+                s     = f.get_slice(start, stop, field, cut=True, fmt=fmt)
                 tsrc  = t.f.src
                 ssrc  = s.src
                 tdump = t.f.dump(linefunc=list, compact=True)
@@ -8996,28 +8996,21 @@ def regen_get_slice_stmt_cut_data():
         verify   = 'NOVERIFY' not in name
         newlines = []
 
-        for src, elt, start, stop, field, comms, *_ in globals()[name]:
+        for src, elt, start, stop, field, fmt, *_ in globals()[name]:
             t     = parse(src)
             f     = eval(f't.{elt}', {'t': t}).f
-            s     = f.get_slice(start, stop, field, cut=True, comms=comms)
+            s     = f.get_slice(start, stop, field, cut=True, fmt=fmt)
             tsrc  = t.f.src
             ssrc  = s.src
             tdump = t.f.dump(linefunc=list, compact=True)
             sdump = s.dump(linefunc=list, compact=True)
-
-            # assert not tsrc.startswith('\n') or tsrc.endswith('\n')
-            # assert not ssrc.startswith('\n') or ssrc.endswith('\n')
-
-            # print(repr(t.f.src))  # DEBUG!
 
             if verify:
                 t.f.verify()
 
             s.verify()
 
-            # newlines.append('(r"""')
-            # newlines.extend(f'''{src}\n""", {elt!r}, {start}, {stop}, {field!r}, r"""\n{tsrc}\n""", r"""\n{ssrc}\n""", r"""'''.split('\n'))
-            newlines.extend(f'''(r"""{src}""", {elt!r}, {start}, {stop}, {field!r}, {comms!r}, r"""{tsrc}""", r"""{ssrc}""", r"""'''.split('\n'))
+            newlines.extend(f'''(r"""{src}""", {elt!r}, {start}, {stop}, {field!r}, {fmt!r}, r"""{tsrc}""", r"""{ssrc}""", r"""'''.split('\n'))
             newlines.extend(tdump)
             newlines.append('""", r"""')
             newlines.extend(sdump)

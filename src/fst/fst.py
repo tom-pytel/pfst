@@ -668,6 +668,8 @@ class fstlistproxy:
 class FSTSrcEdit:
     """This class controls most source editing behavior."""
 
+    default_fmt: set = frozenset(('pre', 'post'))  ; """Default format flags for operations."""
+
     def _fixup_expr_seq_bound(self, lines: list[str], seq_loc: fstloc,
                             fpre: Union['FST', fstloc, None], fpost: Union['FST', fstloc, None],
                             flast: Union['FST', fstloc, None],
@@ -1046,7 +1048,7 @@ class FSTSrcEdit:
 
         return del_loc
 
-    def get_slice_stmt(self, fst: 'FST', field: str, cut: bool, comms: bool | str, block_loc: fstloc,
+    def get_slice_stmt(self, fst: 'FST', field: str, cut: bool, fmt: str | None, block_loc: fstloc,
                        ffirst: 'FST', flast: 'FST', fpre: Optional['FST'], fpost: Optional['FST'],
     ) -> tuple[fstloc, fstloc | None, list[str] | None]:  # (copy_loc, del/put_loc, put_lines)
         """Copy or cut from block of statements.
@@ -1056,8 +1058,9 @@ class FSTSrcEdit:
             respective `AST` nodes may have been removed in case of `cut`.
         - `field`: The name of the field being gotten from, e.g. `'body'`, `'orelse'`, etc...
         - `cut`: If `False` the operation is a copy, `True` means cut.
-        - `comms`: The comments requested to be copied with the slice, normally `True`, `False`, `'pre'` or `'post'`,
-            but can be something custom.
+        - `fmt`: Comma separated list of formatting flags (or `None` to use default, currenly `'pre,post'`), flags:
+            - `'pre'`: Copy and delete comment block immediately preceding statement(s).
+            - `'post'`: Copy and delete comment trailing on last line.
         - `block_loc`: A full location suitable for checking comments outside of ASTS if `fpre` / `fpost` not available.
             Should include trailing newline after `flast` if one is present.
         - `ffirst`: The first `FST` being gotten.
@@ -1074,12 +1077,11 @@ class FSTSrcEdit:
         bound_ln, bound_col         = fpre.loc[2:] if fpre else block_loc[:2]
         bound_end_ln, bound_end_col = fpost.loc[:2] if fpost else block_loc[2:]
 
+        fmt        = self.default_fmt if fmt is None else frozenset(s.strip() for s in fmt.split(','))
         lines      = fst.root._lines
         put_lines  = None
-        pre_comms  = ((comms is True or comms == 'pre') and
-                      self.pre_comments(lines, bound_ln, bound_col, ffirst))
-        post_comms = ((comms is True or comms == 'post') and
-                      self.post_comments(lines, flast, bound_end_ln, bound_end_col))
+        pre_comms  = 'pre' in fmt and self.pre_comments(lines, bound_ln, bound_col, ffirst)
+        post_comms = 'post' in fmt and self.post_comments(lines, flast, bound_end_ln, bound_end_col)
         pre_semi   = not pre_comms and _prev_find(lines, bound_ln, bound_col, ffirst.ln, ffirst.col, ';',
                                                   True, comment=True, lcont=None)
         post_semi  = not post_comms and _next_find(lines, flast.end_ln, flast.end_col, bound_end_ln, bound_end_col, ';',
@@ -1214,23 +1216,23 @@ class FSTSrcEdit:
 class FST:
     """Preserve AST formatting information and easy manipulation."""
 
-    a:            AST                       ; """The actual `AST` node."""
-    parent:       Optional['FST']           ; """Parent `FST` node, `None` in root node."""
-    pfield:       astfield | None           ; """The `astfield` location of this node in the parent, `None` in root node."""
-    root:         'FST'                     ; """The root node of this tree, `self` in root node."""
-    _loc:         fstloc | None             # cache, MAY NOT EXIST!
-    _bloc:        fstloc | None             # cache, MAY NOT EXIST! bounding location, including preceding decorators
+    a:            AST                        ; """The actual `AST` node."""
+    parent:       Optional['FST']            ; """Parent `FST` node, `None` in root node."""
+    pfield:       astfield | None            ; """The `astfield` location of this node in the parent, `None` in root node."""
+    root:         'FST'                      ; """The root node of this tree, `self` in root node."""
+    _loc:         fstloc | None              # cache, MAY NOT EXIST!
+    _bloc:        fstloc | None              # cache, MAY NOT EXIST! bounding location, including preceding decorators
 
     # ROOT ONLY
-    parse_params: dict[str, Any]            ; """The parameters to use for any `ast.parse()` that needs to be done (filename, type_comments, feature_version), root node only."""
-    indent:       str                       ; """The default single level of block indentation string for this tree when not available from context, root node only."""
-    docstring:    bool | Literal['strict']  ; """The default docstring indent / dedent behavior. `True` means allow indent of all `Expr` multiline strings, `False` means don't indent any of them and `'strict'` allows for indenting multiline strings at standard docstring locations only."""
+    parse_params: dict[str, Any]             ; """The parameters to use for any `ast.parse()` that needs to be done (filename, type_comments, feature_version), root node only."""
+    indent:       str                        ; """The default single level of block indentation string for this tree when not available from context, root node only."""
+    docstring:    bool | Literal['strict']   ; """The default docstring indent / dedent behavior. `True` means allow indent of all `Expr` multiline strings, `False` means don't indent any of them and `'strict'` allows for indenting multiline strings at standard docstring locations only."""
     _lines:       list[bistr]
 
     # class attributes
-    src_edit:     FSTSrcEdit = FSTSrcEdit() ; """@private"""
+    src_edit:     FSTSrcEdit = FSTSrcEdit()  ; """@private"""
 
-    is_FST:       bool       = True         ; """For quick checks vs. `fstloc`."""
+    is_FST:       bool       = True          ; """For quick checks vs. `fstloc`."""
 
     @property
     def is_root(self) -> bool:
@@ -2062,8 +2064,7 @@ class FST:
 
         return self._get_seq_and_dedent(get_ast, cut, seq_loc, ffirst, flast, fpre, fpost, '{', '}')
 
-    def _get_slice_stmt(self, start: int, stop: int, field: str | None, fix: bool, cut: bool, comms: bool | str,
-                        ) -> 'FST':
+    def _get_slice_stmt(self, start: int, stop: int, field: str | None, fix: bool, cut: bool, fmt: str) -> 'FST':
         ast         = self.a
         field, body = _fixup_field_body(ast, field)
         start, stop = _fixup_slice_index(ast, body, field, start, stop)
@@ -2098,7 +2099,7 @@ class FST:
                            *(fpost.loc[:2] if fpost else flast._next_ast_bound()))
 
         copy_loc, put_loc, put_lines = (
-            self.src_edit.get_slice_stmt(self, field, cut, comms, block_loc, ffirst, flast, fpre, fpost))
+            self.src_edit.get_slice_stmt(self, field, cut, fmt, block_loc, ffirst, flast, fpre, fpost))
 
         if not cut:
             put_loc = None
@@ -2790,7 +2791,7 @@ class FST:
 
 
     def get(self, start: int | str | None = None, stop: int | str | None | Literal[False] = False,
-            field: str | None = None, *, fix: bool = True, cut: bool = False, comms: bool | str = False,
+            field: str | None = None, *, fix: bool = True, cut: bool = False, fmt: str | None = None,
             ) -> Optional['FST']:
 
         if isinstance(start, str):
@@ -2798,7 +2799,7 @@ class FST:
 
         if stop is not False:
             if not isinstance(stop, str):
-                return self.get_slice(start, stop, field, fix=fix, cut=cut, comms=comms)
+                return self.get_slice(start, stop, field, fix=fix, cut=cut, fmt=fmt)
 
             if field is not None:
                 raise ValueError('cannot specify two field values')
@@ -2829,11 +2830,11 @@ class FST:
 
 
     def get_slice(self, start: int | None = None, stop: int | None = None, field: str | None = None, *,
-                  fix: bool = True, cut: bool = False, comms: bool | str = False) -> 'FST':
+                  fix: bool = True, cut: bool = False, fmt: str | None = None) -> 'FST':
         a = self.a
 
         if isinstance(a, STATEMENTISH_OR_STMTMOD):
-            return self._get_slice_stmt(start, stop, field, fix, cut, comms)
+            return self._get_slice_stmt(start, stop, field, fix, cut, fmt)
 
         if isinstance(a, (Tuple, List, Set)):
             return self._get_slice_tuple_list_or_set(start, stop, field, fix, cut)
