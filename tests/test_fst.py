@@ -9391,47 +9391,47 @@ class cls:
     """
             '''.strip(), f.a.body[0].body[0].f.copy().src)
 
-#         f = FST.fromsrc('''
-# if 1:
-#     class cls:
-#         """
-#         strict docstring
-#         """
-#         """
-#         loose docstring
-#         """
-#           '''.strip())
-#         f.docstring = False
-#         self.assertEqual('''
-# class cls:
-#     """
-#         strict docstring
-#         """
-#     """
-#         loose docstring
-#         """
-#             '''.strip(), f.a.body[0].body[0].f.copy().src)
+        f = FST.fromsrc('''
+if 1:
+    class cls:
+        """
+        strict docstring
+        """
+        """
+        loose docstring
+        """
+          '''.strip())
 
-#         f = FST.fromsrc('''
-# if 1:
-#     class cls:
-#         """
-#         strict docstring
-#         """
-#         """
-#         loose docstring
-#         """
-#           '''.strip())
-#         f.docstring = 'strict'
-#         self.assertEqual('''
-# class cls:
-#     """
-#     strict docstring
-#     """
-#     """
-#         loose docstring
-#         """
-#             '''.strip(), f.a.body[0].body[0].f.copy().src)
+        self.assertEqual('''
+class cls:
+    """
+        strict docstring
+        """
+    """
+        loose docstring
+        """
+            '''.strip(), f.a.body[0].body[0].f.copy(docstr=False).src)
+
+        f = FST.fromsrc('''
+if 1:
+    class cls:
+        """
+        strict docstring
+        """
+        """
+        loose docstring
+        """
+          '''.strip())
+
+        self.assertEqual('''
+class cls:
+    """
+    strict docstring
+    """
+    """
+        loose docstring
+        """
+            '''.strip(), f.a.body[0].body[0].f.copy(docstr='strict').src)
 
 
         f = FST.fromsrc('''
@@ -9445,9 +9445,48 @@ i = 1
             '''.strip())
         self.assertEqual((g := f.copy()).get_src(*g.loc), f.src)
 
+        a = parse('''
+# prepre
+
+# pre
+i # post
+# postpost
+            ''')
+        self.assertEqual('i', a.body[0].f.copy(fmt='').src)
+        self.assertEqual('# pre\ni', a.body[0].f.copy(fmt='pre').src)
+        self.assertEqual('# pre\ni # post\n', a.body[0].f.copy(fmt='pre,post').src)
+        self.assertEqual('# prepre\n\n# pre\ni', a.body[0].f.copy(fmt='allpre').src)
+
+        a = parse('( i )')
+        self.assertEqual('i', a.body[0].value.f.copy(fmt='').src)
+        self.assertEqual('( i )', a.body[0].value.f.copy(fmt='pars').src)
+
         if sys.version_info[:2] >= (3, 12):
             f = FST.fromsrc('tuple[*tuple[int, ...]]').a.body[0].value.slice.f.copy(fix=True)
             self.assertEqual('(*tuple[int, ...],)', f.src)
+
+    def test_cut_special(self):
+#         a = parse('''
+# # prepre
+
+# # pre
+# i # post
+# # postpost
+#             ''')
+#         self.assertEqual('i', a.body[0].f.cut(fmt='').src)
+#         self.assertEqual('# pre\ni', a.body[0].f.cut(fmt='pre').src)
+#         self.assertEqual('# pre\ni # post\n', a.body[0].f.cut(fmt='pre,post').src)
+#         self.assertEqual('# prepre\n\n# pre\ni', a.body[0].f.cut(fmt='allpre').src)
+
+        a = parse('( ( i ), )')
+        f = a.body[0].value.elts[0].f.cut(fmt='')
+        self.assertEqual('()', a.f.src)
+        self.assertEqual('i', f.src)
+
+        a = parse('( ( i ), )')
+        f = a.body[0].value.elts[0].f.cut(fmt='pars')
+        self.assertEqual('()', a.f.src)
+        self.assertEqual('( i )', f.src)
 
     def test_copy_bulk(self):
         for fnm in PYFNMS:

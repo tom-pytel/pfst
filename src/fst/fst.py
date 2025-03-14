@@ -2844,18 +2844,22 @@ class FST:
         return self
 
     def copy(self, *, fix: bool = True, fmt: Fmt = DEFAULT_SRC_EDIT_FMT, docstr: bool | str = DEFAULT_DOCSTR) -> 'FST':
-        newast = copy_ast(ast := self.a)
+        ast    = self.a
+        newast = copy_ast(ast)
 
         if self.is_root:
             return FST(newast, lines=self._lines[:], from_=self)
 
-        # if isinstance(ast, STATEMENTISH_OR_STMTMOD):
-        #     pass
-        # elif isinstance(ast, PARENTHESIZABLE):
-        #     pass
-        # elif not (loc := self.bloc):
-        #     raise ValueError('cannot copy node which does not have location')
-        if not (loc := self.bloc):
+        if isinstance(ast, STATEMENTISH):
+            loc = self.comms(False, fmt)
+        elif isinstance(ast, PARENTHESIZABLE):
+            loc = (self.pars(False) if 'pars' in
+                   ((t for s in fmt.split(',') if (t := s.strip())) if isinstance(fmt, str) else fmt)
+                   else self.bloc)
+        else:
+            loc = self.bloc
+
+        if not loc:
             raise ValueError('cannot copy node which does not have location')
 
         fst = self._make_fst_and_dedent(self, newast, loc, docstr=docstr)
@@ -2866,12 +2870,19 @@ class FST:
         if self.is_root:
             raise ValueError('cannot cut root node')
 
+        ast = self.a
+
+        if isinstance(ast, STATEMENTISH_OR_STMTMOD):
+
+
+            # TODO: get only a single element
+
+
+            raise NotImplementedError  # TODO: statements
+
         parent     = self.parent
         field, idx = self.pfield
         parenta    = parent.a
-
-        if isinstance(parenta, STATEMENTISH_OR_STMTMOD):
-            raise NotImplementedError  # TODO: statements
 
         if isinstance(parenta, (Tuple, List, Set)):
             fst = self.copy(fix=fix, fmt=fmt, docstr=docstr)
@@ -4306,8 +4317,8 @@ class FST:
             `False` means no comments, recognized flags are:
             - `'pre'`: Contiguous comment block immediately preceding statement(s).
             - `'allpre'`: Comment blocks (possibly separated by empty lines) immediately preceding statement(s).
-            - `'post'`: Comment trailing on last line. Keep in mind this is the comment on the last
-                statement of a body if last element of copy is a block element.
+            - `'post'`: Comment trailing on last line. Keep in mind this is the comment on the last statement of a body
+                if last element of copy is a block element.
 
         **Returns:**
         - `fstloc | FST | None`: If `ret_fst` is `None` and no comments found then just returns `self`. A `None` can
