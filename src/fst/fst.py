@@ -73,6 +73,7 @@ DEFAULT_PARSE_PARAMS    = dict(filename='<unknown>', type_comments=False, featur
 DEFAULT_INDENT          = '    '
 DEFAULT_DOCSTR          = True
 DEFAULT_SRC_EDIT_FMT    = frozenset(('pep8', 'pre', 'post'))
+DEFAULT_COMMS_FMT       = frozenset(('pre', 'post'))
 
 STATEMENTISH            = (stmt, ExceptHandler, match_case)  # always in lists, cannot be inside multilines
 STATEMENTISH_OR_MOD     = (stmt, ExceptHandler, match_case, mod)
@@ -101,12 +102,15 @@ re_multiline_str_start  = re.compile(r'(?:b|r|rb|br|u|)  (\'\'\'|""")', re.VERBO
 re_multiline_str_end_sq = re.compile(r'(?:\\.|[^\\])*?  \'\'\'', re.VERBOSE)
 re_multiline_str_end_dq = re.compile(r'(?:\\.|[^\\])*?  """', re.VERBOSE)
 
+re_empty_line_cont_or_comment   = re.compile(r'[ \t]*(\\|#.*)?$')         # emmpty line or line continuation or a pure comment line
+
 re_next_src                     = re.compile(r'\s*([^\s#\\]+)')          # next non-space non-continuation non-comment code text, don't look into strings with this!
 re_next_src_or_comment          = re.compile(r'\s*([^\s#\\]+|#.*)')      # next non-space non-continuation code or comment text, don't look into strings with this!
 re_next_src_or_lcont            = re.compile(r'\s*([^\s#\\]+|\\$)')      # next non-space non-comment code including logical line end, don't look into strings with this!
 re_next_src_or_comment_or_lcont = re.compile(r'\s*([^\s#\\]+|#.*|\\$)')  # next non-space non-continuation code or comment text including logical line end, don't look into strings with this!
 
 Code: TypeAlias = Union['FST', AST, list[str], str]
+Fmt:  TypeAlias = Union[str, set, frozenset]
 
 sentinel = object()
 
@@ -872,33 +876,73 @@ class FSTSrcEdit:
         return fstloc(copy_ln, copy_col, copy_end_ln, copy_end_col), fstloc(del_ln, del_col, del_end_ln, del_end_col)
 
     def pre_comments(self, lines: list[bistr], bound_ln: int, bound_col: int, f: Union['FST', fstloc, fstpos],
-                     ) -> fstpos | None:
+                     fmt: set | frozenset = {'pre'}) -> fstpos | None:
         """Return the position of the start of any preceding comments to the element which is assumed to live just past
         (`f.bln`, `f.bcol`). Returns `None` if no preceding comment. If preceding entire line comments exist then the
-        returned position column should be 0 (the start of the line) to indicate that it is a full line comment. This
-        particular implementation will return any full line comments directly preceding the element if it starts its own
-        line. An empty line ends the preceding comments even if there are more comments before it."""
+        returned position column should be 0 (the start of the line) to indicate that it is a full line comment. Only
+        preceding entire line comments start comment should be returned. This particular implementation will return any
+        full line comments directly preceding the element if it starts its own line. An empty line ends the preceding
+        comments even if there are more comments before it, unless the format includes `'allpre'`.
+
+        **Parameters:**
+        - `fmt`: Set of string formatting flags. Unrecognized and inapplicable flags are ignored, recognized flags are:
+            - `'pre'`: Contiguous comment block immediately preceding position.
+            - `'allpre'`: Comment blocks (possibly separated by empty lines) immediately preceding position.
+        """
+
+        if not (allpre := 'allpre' in fmt) and 'pre' not in fmt:
+            return None
+
+        f_bln = f.bln
+
+        if bound_ln == f_bln or ((f_bcol := f.bcol) and not re_empty_line.match(lines[f_bln], 0, f_bcol)):
+            return None
 
         bound_end_ln = None
-        f_bln        = f.bln
+        re_pat       = re_empty_line_cont_or_comment if allpre else re_comment_line_start
 
-        if not (bound_ln == f_bln or not re_empty_line.match(lines[f_bln], 0, f.bcol)):
-            for ln in range(f_bln - 1, bound_ln - (not bound_col), -1):  # only consider whole lines
-                if not re_comment_line_start.match(lines[ln]):
-                    break
+        for ln in range(f_bln - 1, bound_ln - (not bound_col), -1):  # only consider whole lines
+            if not (m := re_pat.match(lines[ln])):
+                break
 
+            if not allpre or (g := m.group(1)) and g.startswith('#'):
                 bound_end_ln  = ln
                 bound_end_col = 0
+
+        # if allpre:
+        #     for ln in range(f_bln - 1, bound_ln - (not bound_col), -1):  # only consider whole lines
+        #         if not (m := re_empty_line_cont_or_comment.match(lines[ln])):
+        #             break
+
+        #         if (g := m.group(1)) and g.startswith('#'):
+        #             bound_end_ln  = ln
+        #             bound_end_col = 0
+
+        # else:
+        #     for ln in range(f_bln - 1, bound_ln - (not bound_col), -1):  # only consider whole lines
+        #         if not re_comment_line_start.match(lines[ln]):
+        #             break
+
+        #         bound_end_ln  = ln
+        #         bound_end_col = 0
 
         return None if bound_end_ln is None else fstpos(bound_end_ln, bound_end_col)
 
     def post_comments(self, lines: list[bistr], f: Union['FST', fstloc, fstpos], bound_end_ln: int, bound_end_col: int,
-                      ) -> fstpos | None:
+                      fmt: set | frozenset = {'post'}) -> fstpos | None:
         """Return the position of the end of any trailing comments to the element which is assumed to live just before
         (`f.bend_ln`, `f.bend_col`). Returns `None` if no trailing comment. Should return the location at the start of
         the next line if comment present because a comment should never be on the last line, but if a comment ends the
         bound should return the end of the bound. This particular implementation will return any comment which lives on
-        the same line as `bound_ln`, no other comments past it on following lines."""
+        the same line as `bound_ln`, no other comments past it on following lines.
+
+        **Parameters:**
+        - `fmt`: Set of string formatting flags. Unrecognized and inapplicable flags are ignored, recognized flags are:
+            - `'post'`: Only possible comment trailing on line of position, nothing on its own lines.
+        """
+
+        if 'post' not in fmt:
+            return None
 
         bound_ln = f.bend_ln
 
@@ -1057,7 +1101,7 @@ class FSTSrcEdit:
 
         return del_loc
 
-    def get_slice_stmt(self, fst: 'FST', field: str, cut: bool, fmt: str, block_loc: fstloc,
+    def get_slice_stmt(self, fst: 'FST', field: str, cut: bool, fmt: set | frozenset, block_loc: fstloc,
                        ffirst: 'FST', flast: 'FST', fpre: Optional['FST'], fpost: Optional['FST'],
     ) -> tuple[fstloc, fstloc | None, list[str] | None]:  # (copy_loc, del/put_loc, put_lines)
         """Copy or cut from block of statements. If cutting all elements from a deletable field like 'orelse' or
@@ -1070,9 +1114,10 @@ class FSTSrcEdit:
             respective `AST` nodes may have been removed in case of `cut`.
         - `field`: The name of the field being gotten from, e.g. `'body'`, `'orelse'`, etc...
         - `cut`: If `False` the operation is a copy, `True` means cut.
-        - `fmt`: Comma separated list of formatting flags. Unrecognized and inapplicable flags are ignored, recognized
-            flags are:
-            - `'pre'`: Copy and delete comment block immediately preceding statement(s).
+        - `fmt`: Set of string formatting flags. Unrecognized and inapplicable flags are ignored, recognized flags are:
+            - `'pre'`: Copy and delete contiguous comment block immediately preceding statement(s).
+            - `'allpre'`: Copy and delete all comment blocks (possibly separated by empty lines) immediately preceding
+                statement(s).
             - `'post'`: Copy and delete comment trailing on last line. Keep in mind this is the comment on the last
                 statement of a body if last element of copy is a block element.
             - `'pep8'`: Does not actually reformat code according to PEP 8, just deletes up one or two empty lines
@@ -1098,12 +1143,10 @@ class FSTSrcEdit:
         bound_ln, bound_col         = fpre.loc[2:] if fpre else block_loc[:2]
         bound_end_ln, bound_end_col = fpost.loc[:2] if fpost else block_loc[2:]
 
-        fmt        = frozenset(s.strip() for s in fmt.split(','))
         lines      = fst.root._lines
         put_lines  = None
-        has_pre    = 'pre' in fmt
-        pre_comms  = has_pre and self.pre_comments(lines, bound_ln, bound_col, ffirst)
-        post_comms = 'post' in fmt and self.post_comments(lines, flast, bound_end_ln, bound_end_col)
+        pre_comms  = self.pre_comments(lines, bound_ln, bound_col, ffirst, fmt)
+        post_comms = self.post_comments(lines, flast, bound_end_ln, bound_end_col, fmt)
         pre_semi   = not pre_comms and _prev_find(lines, bound_ln, bound_col, ffirst.ln, ffirst.col, ';',
                                                   True, comment=True, lcont=None)
         post_semi  = not post_comms and _next_find(lines, flast.end_ln, flast.end_col, bound_end_ln, bound_end_col, ';',
@@ -1218,7 +1261,7 @@ class FSTSrcEdit:
             if put_lines:
                 put_lines[0] = lines[del_ln][:del_col] + put_lines[0]  # prepend block start indentation to existing indentation, silly but whatever
 
-            if has_pre and (pre_pre_comms := self.pre_comments(lines, bound_ln, bound_col, fstpos(del_ln, 0))):
+            if pre_pre_comms := self.pre_comments(lines, bound_ln, bound_col, fstpos(del_ln, 0), fmt):
                 del_ln = pre_pre_comms.ln
 
             del_loc = fstloc(del_ln, 0, del_end_ln, del_end_col)
@@ -1983,7 +2026,7 @@ class FST:
         return get_fst
 
     def _get_slice_tuple_list_or_set(self, start: int, stop: int, field: str | None, fix: bool, cut: bool,
-                                     fmt: str, docstr: bool | str) -> 'FST':
+                                     fmt: Fmt, docstr: bool | str) -> 'FST':
         if field is not None and field != 'elts':
             raise ValueError(f"invalid field '{field}' to slice from a {self.a.__class__.__name__}")
 
@@ -2066,7 +2109,7 @@ class FST:
         return fst
 
     def _get_slice_empty_set_call(self, start: int, stop: int, field: str | None, fix: bool, cut: bool,
-                                  fmt: str, docstr: bool | str) -> 'FST':
+                                  fmt: Fmt, docstr: bool | str) -> 'FST':
         if not fix:
             raise ValueError(f"cannot get slice from a 'set()' without specifying 'fix=True'")
 
@@ -2079,7 +2122,7 @@ class FST:
         return _new_empty_set_call(from_=self) if fix else _new_empty_set_curlies(from_=self)
 
     def _get_slice_dict(self, start: int, stop: int, field: str | None, fix: bool, cut: bool,
-                        fmt: str, docstr: bool | str) -> 'FST':
+                        fmt: Fmt, docstr: bool | str) -> 'FST':
         if field is not None:
             raise ValueError(f"cannot specify a field '{field}' to slice from a Dict")
 
@@ -2122,7 +2165,7 @@ class FST:
         return self._get_seq_and_dedent(get_ast, cut, seq_loc, ffirst, flast, fpre, fpost, '{', '}')
 
     def _get_slice_stmt(self, start: int, stop: int, field: str | None, fix: bool, cut: bool,
-                        fmt: str, docstr: bool | str) -> 'FST':
+                        fmt: Fmt, docstr: bool | str) -> 'FST':
         ast         = self.a
         field, body = _fixup_field_body(ast, field)
         start, stop = _fixup_slice_index(ast, body, field, start, stop)
@@ -2151,6 +2194,9 @@ class FST:
         get_ast   = Module(body=asts, type_ignores=[])
         block_loc = fstloc(*(fpre.loc[2:] if fpre else ffirst._prev_ast_bound()),
                            *(fpost.loc[:2] if fpost else flast._next_ast_bound()))
+
+        if isinstance(fmt, str):
+            fmt = frozenset(t for s in fmt.split(',') if (t := s.strip()))
 
         copy_loc, put_loc, put_lines = (
             self.src_edit.get_slice_stmt(self, field, cut, fmt, block_loc, ffirst, flast, fpre, fpost))
@@ -2215,7 +2261,7 @@ class FST:
 
     def _put_slice_tuple_list_or_set(self, code: Code | None, start: int, stop: int, field: str | None = None,
                                      fix: bool = True,
-                                     fmt: str = DEFAULT_SRC_EDIT_FMT, docstr: bool | str = DEFAULT_DOCSTR):
+                                     fmt: Fmt = DEFAULT_SRC_EDIT_FMT, docstr: bool | str = DEFAULT_DOCSTR):
         if field is not None and field != 'elts':
             raise ValueError(f"invalid field '{field}' to assign slice to a {self.a.__class__.__name__}")
 
@@ -2320,7 +2366,7 @@ class FST:
 
     def _put_slice_empty_set_call(self, code: Code | None, start: int, stop: int, field: str | None = None,
                                   fix: bool = True,
-                                  fmt: str = DEFAULT_SRC_EDIT_FMT, docstr: bool | str = DEFAULT_DOCSTR):
+                                  fmt: Fmt = DEFAULT_SRC_EDIT_FMT, docstr: bool | str = DEFAULT_DOCSTR):
         if not fix:
             raise ValueError(f"cannot put slice to a 'set()' without specifying 'fix=True'")
 
@@ -2343,7 +2389,7 @@ class FST:
                 self._maybe_fix_set()  # restore 'set()'
 
     def _put_slice_dict(self, code: Code | None, start: int, stop: int, field: str | None = None, fix: bool = True,
-                        fmt: str = DEFAULT_SRC_EDIT_FMT, docstr: bool | str = DEFAULT_DOCSTR):
+                        fmt: Fmt = DEFAULT_SRC_EDIT_FMT, docstr: bool | str = DEFAULT_DOCSTR):
         if field is not None:
             raise ValueError(f"cannot specify a field '{field}' to assign slice to a Dict")
 
@@ -2679,7 +2725,7 @@ class FST:
 
     # ------------------------------------------------------------------------------------------------------------------
 
-    def fix(self, inplace: bool = True) -> Optional['FST']:  # -> Self | None
+    def fix(self, inplace: bool = True) -> 'FST':
         """This is really a maybe fix source and `ctx` values for cut or copied nodes (to make subtrees parsable if the
         source is not after the operation). Possibly reparses in order to verify expression. If can not fix or ast is
         not parsable by itself then ast will be unchanged. Is meant to be a quick fix after a cut or copy operation, not
@@ -2813,7 +2859,7 @@ class FST:
 
         return self
 
-    def copy(self, *, fix: bool = True, fmt: str = DEFAULT_SRC_EDIT_FMT, docstr: bool | str = DEFAULT_DOCSTR) -> 'FST':
+    def copy(self, *, fix: bool = True, fmt: Fmt = DEFAULT_SRC_EDIT_FMT, docstr: bool | str = DEFAULT_DOCSTR) -> 'FST':
         newast = copy_ast(self.a)
 
         if self.is_root:
@@ -2822,11 +2868,11 @@ class FST:
         if not (loc := self.bloc):
             raise ValueError('cannot copy node which does not have location')
 
-        fst = self._make_fst_and_dedent(self, newast, loc)
+        fst = self._make_fst_and_dedent(self, newast, loc, docstr=docstr)
 
         return fst.fix(inplace=True) if fix else fst
 
-    def cut(self, *, fix: bool = True, fmt: str = DEFAULT_SRC_EDIT_FMT, docstr: bool | str = DEFAULT_DOCSTR) -> 'FST':
+    def cut(self, *, fix: bool = True, fmt: Fmt = DEFAULT_SRC_EDIT_FMT, docstr: bool | str = DEFAULT_DOCSTR) -> 'FST':
         if self.is_root:
             raise ValueError('cannot cut root node')
 
@@ -2835,16 +2881,15 @@ class FST:
         parenta    = parent.a
 
         if isinstance(parenta, STATEMENTISH_OR_STMTMOD):
-            raise NotImplementedError
+            raise NotImplementedError  # TODO: statements
 
         if isinstance(parenta, (Tuple, List, Set)):
-            fst = self.copy(fix=fix)
+            fst = self.copy(fix=fix, fmt=fmt, docstr=docstr)
 
             parent._put_slice_tuple_list_or_set(None, idx, idx + 1, field)
 
             return fst
 
-        # TODO: statements
         # TODO: individual nodes
 
         raise ValueError(f"cannot cut a '{parenta.__class__.__name__}'")
@@ -2854,7 +2899,7 @@ class FST:
 
     def get(self, start: int | str | None = None, stop: int | str | None | Literal[False] = False,
             field: str | None = None, *, fix: bool = True, cut: bool = False,
-            fmt: str = DEFAULT_SRC_EDIT_FMT, docstr: bool | str = DEFAULT_DOCSTR) -> Optional['FST']:
+            fmt: Fmt = DEFAULT_SRC_EDIT_FMT, docstr: bool | str = DEFAULT_DOCSTR) -> Optional['FST']:
 
         if isinstance(start, str):
             raise NotImplementedError
@@ -2880,7 +2925,7 @@ class FST:
 
     def put(self, code: Code | None, start: int | None = None, stop: int | None | Literal['False'] = False,
             field: str | None = None, *, fix: bool = True,
-            fmt: str = DEFAULT_SRC_EDIT_FMT, docstr: bool | str = DEFAULT_DOCSTR) -> Optional['FST']:  # -> Self:
+            fmt: Fmt = DEFAULT_SRC_EDIT_FMT, docstr: bool | str = DEFAULT_DOCSTR) -> Optional['FST']:  # -> Self:
 
         if stop is not False:
             return self.put_slice(code, start, stop, field, fix=fix, fmt=fmt, docstr=docstr)
@@ -2894,7 +2939,7 @@ class FST:
 
     def get_slice(self, start: int | None = None, stop: int | None = None, field: str | None = None, *,
                   fix: bool = True, cut: bool = False,
-                  fmt: str = DEFAULT_SRC_EDIT_FMT, docstr: bool | str = DEFAULT_DOCSTR) -> 'FST':
+                  fmt: Fmt = DEFAULT_SRC_EDIT_FMT, docstr: bool | str = DEFAULT_DOCSTR) -> 'FST':
         a = self.a
 
         if isinstance(a, STATEMENTISH_OR_STMTMOD):
@@ -2918,7 +2963,7 @@ class FST:
 
     def put_slice(self, code: Code | None, start: int | None = None, stop: int | None = None, field: str | None = None,
                   *, fix: bool = True,
-                  fmt: str = DEFAULT_SRC_EDIT_FMT, docstr: bool | str = DEFAULT_DOCSTR) -> Optional['FST']:  # -> Self:
+                  fmt: Fmt = DEFAULT_SRC_EDIT_FMT, docstr: bool | str = DEFAULT_DOCSTR) -> Optional['FST']:  # -> Self:
         a = self.a
 
         if isinstance(a, STATEMENTISH_OR_STMTMOD):
@@ -3762,8 +3807,8 @@ class FST:
 
         return fst
 
-    def walk(self, with_loc: bool = False, *, self_: bool = True, recurse: bool = True, scope: bool = False,
-             back: bool = False) -> Generator['FST', bool, None]:
+    def walk(self, with_loc: bool | Literal['own'] = False, *, self_: bool = True, recurse: bool = True,
+             scope: bool = False, back: bool = False) -> Generator['FST', bool, None]:
         """Walk self and descendants in syntactic order, `send(False)` to skip recursion into child. `send(True)` to
         allow recursion into child if called with `recurse=False` or `scope=True` would otherwise disallow it. Can send
         multiple times, last value sent takes effect.
@@ -4269,8 +4314,7 @@ class FST:
 
         return self.locmock(loc) if ret_fst else loc
 
-    def comms(self, ret_fst: bool | None = True, comms: bool | Literal['pre'] | Literal['post'] = True,
-              ) -> Union['FST', fstloc, None]:
+    def comms(self, ret_fst: bool | None = True, fmt: bool | Fmt = True) -> Union['FST', fstloc, None]:
         """Return the location of preceding and trailing comments (if present and requested). If requesting an `FST`
         then the return value can be `self` or a clone `FST` of `self` with modified `loc` which should only be used for
         a limited number of things. Only works on (and makes sense for) `stmt`, 'ExceptHandler' or `match_case` nodes,
@@ -4279,28 +4323,34 @@ class FST:
         **Parameters:**
         - `ret_fst`: If `True` then always return an `FST` (`self` or clone), `False` will always return an `fstloc`
             (which could be `self.loc`) and `None` can return an `fstloc` or `self` if no comments found.
-        - `comms': Which comments to include, `True` means all, `False` means none, `'pre'` means only preceding
-            comments and `'post'` means only trailing comments.
+        - `fmt': Which comments to include, can be comma delimited string or a set of flags. `True` means `'pre,post'`,
+            `False` means no comments, recognized flags are:
+            - `'pre'`: Contiguous comment block immediately preceding statement(s).
+            - `'allpre'`: Comment blocks (possibly separated by empty lines) immediately preceding statement(s).
+            - `'post'`: Comment trailing on last line. Keep in mind this is the comment on the last
+                statement of a body if last element of copy is a block element.
 
         **Returns:**
         - `fstloc | FST | None`: If `ret_fst` is `None` and no comments found then just returns `self`. A `None` can
             be returned if `ret_fst` is `False` and there are no comments and `self` does not have a `loc`.
         """
 
-        if not comms or not isinstance(self.a, STATEMENTISH):
+        if fmt is True:
+            fmt = DEFAULT_COMMS_FMT
+        elif isinstance(fmt, str):
+            fmt = frozenset(t for s in fmt.split(',') if (t := s.strip()))
+
+        if not fmt or not isinstance(self.a, STATEMENTISH):
             return self.loc if ret_fst is False else self
 
         src_edit = self.src_edit
         lines    = self.root._lines
         loc      = self.loc
 
-        comms_ln, comms_col = ((comms is True or comms == 'pre') and (
-           src_edit.pre_comments(lines, *self._prev_ast_bound(), self))) or loc[:2]
-
-        comms_end_ln, comms_end_col = ((comms is True or comms == 'post') and (
-            src_edit.post_comments(lines, self, *self._next_ast_bound()))) or loc[2:]
-
-        comms_loc = fstloc(comms_ln, comms_col, comms_end_ln, comms_end_col)
+        comms_loc = fstloc(
+            *(src_edit.pre_comments(lines, *self._prev_ast_bound(), self, fmt) or loc[:2]),
+            *(src_edit.post_comments(lines, self, *self._next_ast_bound(), fmt) or loc[2:]),
+        )
 
         if ret_fst is False:
             return comms_loc

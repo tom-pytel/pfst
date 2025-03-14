@@ -4457,6 +4457,77 @@ Module .. ROOT 0,0 -> 1,0
   0] Pass .. 0,0 -> 0,4
 """),
 
+(r"""
+if 1: i
+
+# pre-else 1
+
+# pre-else 2
+else:
+
+  # pre 1
+
+  # pre 2
+  j
+""", 'body[0]', 0, 1, 'orelse', 'allpre', r"""
+if 1: i
+
+""", r"""# pre 1
+
+# pre 2
+j""", r"""
+Module .. ROOT 0,0 -> 3,0
+  .body[1]
+  0] If .. 1,0 -> 1,7
+    .test
+      Constant 1 .. 1,3 -> 1,4
+    .body[1]
+    0] Expr .. 1,6 -> 1,7
+      .value
+        Name 'i' Load .. 1,6 -> 1,7
+""", r"""
+Module .. ROOT 0,0 -> 3,1
+  .body[1]
+  0] Expr .. 3,0 -> 3,1
+    .value
+      Name 'j' Load .. 3,0 -> 3,1
+"""),
+
+(r"""
+if 1: i
+
+# pre-else 1
+
+# pre-else 2
+else:
+
+  # pre 1
+
+  # pre 2
+  j
+""", 'body[0]', 0, 1, 'orelse', 'allpre,space', r"""
+if 1: i
+""", r"""# pre 1
+
+# pre 2
+j""", r"""
+Module .. ROOT 0,0 -> 2,0
+  .body[1]
+  0] If .. 1,0 -> 1,7
+    .test
+      Constant 1 .. 1,3 -> 1,4
+    .body[1]
+    0] Expr .. 1,6 -> 1,7
+      .value
+        Name 'i' Load .. 1,6 -> 1,7
+""", r"""
+Module .. ROOT 0,0 -> 3,1
+  .body[1]
+  0] Expr .. 3,0 -> 3,1
+    .value
+      Name 'j' Load .. 3,0 -> 3,1
+"""),
+
 ]  # END OF GET_SLICE_STMT_CUT_NOVERIFY_DATA
 
 PUT_SLICE_DATA = [
@@ -9098,6 +9169,9 @@ pass
         g = f.comms(True, 'pre')
         self.assertIsInstance(g, FST)
         self.assertEqual('# world\npass', g.src)
+        g = f.comms(True, 'allpre')
+        self.assertIsInstance(g, FST)
+        self.assertEqual('# hello\n\n# world\npass', g.src)
         g = f.comms(True, 'post')
         self.assertIsInstance(g, FST)
         self.assertEqual('pass  # postcomment\n', g.src)
@@ -9110,6 +9184,9 @@ pass
         g = f.comms(None, 'pre')
         self.assertIsInstance(g, fstloc)
         self.assertEqual((2, 0, 3, 4), g)
+        g = f.comms(None, 'allpre')
+        self.assertIsInstance(g, fstloc)
+        self.assertEqual((0, 0, 3, 4), g)
         g = f.comms(None, 'post')
         self.assertIsInstance(g, fstloc)
         self.assertEqual((3, 0, 4, 0), g)
@@ -9139,6 +9216,7 @@ pass
         self.assertEqual((4, 0), FST.src_edit.post_comments(lines, fstloc(0, 0, 3, 6), 5, 0))
         self.assertEqual(None, FST.src_edit.pre_comments(lines, 0, 0, fstloc(2, 2, 0, 0)))
         self.assertEqual(None, FST.src_edit.post_comments(lines, fstloc(0, 0, 2, 9), 5, 0))
+        self.assertEqual((0, 0), FST.src_edit.pre_comments(lines, 0, 0, fstpos(2, 2), {'allpre'}))
 
         lines = '''
 i ; \\
@@ -9147,7 +9225,7 @@ j # post
 k
 '''.strip().split('\n')
 
-        self.assertEqual((1, 0), FST.src_edit.pre_comments(lines, 0, 1, fstloc(2, 0, 0, 0)))
+        self.assertEqual((1, 0), FST.src_edit.pre_comments(lines, 0, 1, fstpos(2, 0)))
 
     def test_copy_special(self):
         f = FST.fromsrc('@decorator\nclass cls:\n  pass')
