@@ -75,6 +75,7 @@ DEFAULT_DOCSTR          = True
 DEFAULT_SRC_EDIT_FMT    = frozenset(('pep8', 'pre', 'post'))
 DEFAULT_COMMS_FMT       = frozenset(('pre', 'post'))
 
+PARENTHESIZABLE         = (expr, pattern)
 STATEMENTISH            = (stmt, ExceptHandler, match_case)  # always in lists, cannot be inside multilines
 STATEMENTISH_OR_MOD     = (stmt, ExceptHandler, match_case, mod)
 STATEMENTISH_OR_STMTMOD = (stmt, ExceptHandler, match_case, Module, Interactive)
@@ -909,23 +910,6 @@ class FSTSrcEdit:
                 bound_end_ln  = ln
                 bound_end_col = 0
 
-        # if allpre:
-        #     for ln in range(f_bln - 1, bound_ln - (not bound_col), -1):  # only consider whole lines
-        #         if not (m := re_empty_line_cont_or_comment.match(lines[ln])):
-        #             break
-
-        #         if (g := m.group(1)) and g.startswith('#'):
-        #             bound_end_ln  = ln
-        #             bound_end_col = 0
-
-        # else:
-        #     for ln in range(f_bln - 1, bound_ln - (not bound_col), -1):  # only consider whole lines
-        #         if not re_comment_line_start.match(lines[ln]):
-        #             break
-
-        #         bound_end_ln  = ln
-        #         bound_end_col = 0
-
         return None if bound_end_ln is None else fstpos(bound_end_ln, bound_end_col)
 
     def post_comments(self, lines: list[bistr], f: Union['FST', fstloc, fstpos], bound_end_ln: int, bound_end_col: int,
@@ -1328,7 +1312,7 @@ class FST:
     # class attributes
     src_edit:     FSTSrcEdit = FSTSrcEdit()  ; """@private"""
 
-    is_FST:       bool       = True          ; """For quick checks vs. `fstloc`."""
+    is_FST:       bool       = True          ; """For quick checks vs. `fstloc` and `fstpos`."""
 
     @property
     def is_root(self) -> bool:
@@ -1500,7 +1484,7 @@ class FST:
         elif not (decos := getattr(self.a, 'decorator_list', None)):
             bloc = loc
         else:
-            bloc = fstloc(min(decos[0].f.ln, loc[0]), loc[1], loc[2], loc[3])  # column of deco '@' will be same as our column, min() because of possible locmock()
+            bloc = fstloc(decos[0].f.ln, loc[1], loc[2], loc[3])  # column of deco '@' will be same as our column
 
         self._bloc = bloc
 
@@ -2860,11 +2844,17 @@ class FST:
         return self
 
     def copy(self, *, fix: bool = True, fmt: Fmt = DEFAULT_SRC_EDIT_FMT, docstr: bool | str = DEFAULT_DOCSTR) -> 'FST':
-        newast = copy_ast(self.a)
+        newast = copy_ast(ast := self.a)
 
         if self.is_root:
             return FST(newast, lines=self._lines[:], from_=self)
 
+        # if isinstance(ast, STATEMENTISH_OR_STMTMOD):
+        #     pass
+        # elif isinstance(ast, PARENTHESIZABLE):
+        #     pass
+        # elif not (loc := self.bloc):
+        #     raise ValueError('cannot copy node which does not have location')
         if not (loc := self.bloc):
             raise ValueError('cannot copy node which does not have location')
 
@@ -4247,24 +4237,13 @@ class FST:
         """Create a "location mockup" to this object with an explicit location. This can be used to override the
         location of an object for certain operations, but is not very robust. The `FST` returned is its own object and
         points up the tree and to the `AST` like the original, but the `AST` does not point back to it and so in not a
-        fully valid node. You can make a `locmock` of a `locmock`.
-
-        The following operations work with (valid location) `locmock` (other operations may as well but not guaranteed):
-
-        ```
-        locmock.src
-        locmock.lines
-        locmock.locmock()
-        locmock.pars()
-        locmock.copy()
-        locmock.cut()
-        ```
-        """
+        fully valid node. Both `loc` and `bloc` are set to the input parameter `loc` value. You can make a `locmock` of
+        a `locmock`."""
 
         ast      = self.a
         fst      = FST(ast, self.parent, self.pfield)
         ast.f    = self
-        fst._loc = loc
+        fst._loc = fst._bloc = loc
 
         return fst
 
@@ -4273,29 +4252,29 @@ class FST:
         the return value can be `self` or a clone `FST` of `self` with modified `loc` which should only be used for a
         limited number of things. Will balance parentheses if `self` is an element of a tuple and not return the
         parentheses of the tuple. Likwise will not return the parentheses of an enclosing `arguments` parent. Only
-        works on (and makes sense for) `expr` or `pattern` nodes, otherwise returns `self` or `self.loc`.
+        works on (and makes sense for) `expr` or `pattern` nodes, otherwise returns `self` or `self.bloc`.
 
         **Parameters:**
         - `ret_fst`: If `True` then always return an `FST` (`self` or clone), `False` will always return an `fstloc`
-            (which could be `self.loc`) and `None` can return an `fstloc` or `self` if no parentheses found.
+            (which could be `self.bloc`) and `None` can return an `fstloc` or `self` if no parentheses found.
 
         **Returns:**
         - `fstloc | FST | None`: If `ret_fst` is `None` and no parentheses found then just returns `self`. A `None` can
             be returned if `ret_fst` is `False` and there are no enclosing parentheses and `self` does not have a `loc`.
         """
 
-        if not isinstance(self.a, (expr, pattern)):
-            return self.loc if ret_fst is False else self
+        if not isinstance(self.a, PARENTHESIZABLE):
+            return self.bloc if ret_fst is False else self
 
         pars_end_ln, pars_end_col, ante_end_ln, ante_end_col, nrpars = self._rpars()
 
         if not nrpars:
-            return self.loc if ret_fst is False else self
+            return self.bloc if ret_fst is False else self
 
         pars_ln, pars_col, ante_ln, ante_col, nlpars = self._lpars()
 
         if not nlpars:
-            return self.loc if ret_fst is False else self
+            return self.bloc if ret_fst is False else self
 
         dpars = nlpars - nrpars
 
@@ -4316,13 +4295,13 @@ class FST:
 
     def comms(self, ret_fst: bool | None = True, fmt: bool | Fmt = True) -> Union['FST', fstloc, None]:
         """Return the location of preceding and trailing comments (if present and requested). If requesting an `FST`
-        then the return value can be `self` or a clone `FST` of `self` with modified `loc` which should only be used for
-        a limited number of things. Only works on (and makes sense for) `stmt`, 'ExceptHandler' or `match_case` nodes,
-        otherwise returns `self` or `self.loc`.
+        then the return value can be `self` or a clone `FST` of `self` with modified `loc` (and `bloc`)  which should
+        only be used for a limited number of things. Only works on (and makes sense for) `stmt`, 'ExceptHandler' or
+        `match_case` nodes, otherwise returns `self` or `self.bloc`.
 
         **Parameters:**
         - `ret_fst`: If `True` then always return an `FST` (`self` or clone), `False` will always return an `fstloc`
-            (which could be `self.loc`) and `None` can return an `fstloc` or `self` if no comments found.
+            (which could be `self.bloc`) and `None` can return an `fstloc` or `self` if no comments found.
         - `fmt': Which comments to include, can be comma delimited string or a set of flags. `True` means `'pre,post'`,
             `False` means no comments, recognized flags are:
             - `'pre'`: Contiguous comment block immediately preceding statement(s).
@@ -4341,11 +4320,11 @@ class FST:
             fmt = frozenset(t for s in fmt.split(',') if (t := s.strip()))
 
         if not fmt or not isinstance(self.a, STATEMENTISH):
-            return self.loc if ret_fst is False else self
+            return self.bloc if ret_fst is False else self
 
         src_edit = self.src_edit
         lines    = self.root._lines
-        loc      = self.loc
+        loc      = self.bloc
 
         comms_loc = fstloc(
             *(src_edit.pre_comments(lines, *self._prev_ast_bound(), self, fmt) or loc[:2]),
@@ -4355,7 +4334,7 @@ class FST:
         if ret_fst is False:
             return comms_loc
 
-        if comms_loc == loc:
+        if comms_loc == self.loc:  # only if self.bloc == self.loc, because otherwise returned .loc should be bloc
             return self
 
         if not ret_fst:

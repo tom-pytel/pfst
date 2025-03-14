@@ -3938,6 +3938,87 @@ Module .. ROOT 0,0 -> 1,13
       None
 """),
 
+(r"""
+i
+# pre
+@deco1
+@deco2
+class cls:
+  pass  # post
+j
+""", '', 1, 2, None, '', r"""
+i
+# pre
+# post
+j
+""", r"""@deco1
+@deco2
+class cls:
+  pass""", r"""
+Module .. ROOT 0,0 -> 5,0
+  .body[2]
+  0] Expr .. 1,0 -> 1,1
+    .value
+      Name 'i' Load .. 1,0 -> 1,1
+  1] Expr .. 4,0 -> 4,1
+    .value
+      Name 'j' Load .. 4,0 -> 4,1
+""", r"""
+Module .. ROOT 0,0 -> 3,6
+  .body[1]
+  0] ClassDef .. 2,0 -> 3,6
+    .name
+      'cls'
+    .body[1]
+    0] Pass .. 3,2 -> 3,6
+    .decorator_list[2]
+    0] Name 'deco1' Load .. 0,1 -> 0,6
+    1] Name 'deco2' Load .. 1,1 -> 1,6
+"""),
+
+(r"""
+i
+# pre
+@deco1
+@deco2(a, b)
+class cls:
+  pass  # post
+j
+""", '', 1, 2, None, 'pre,post', r"""
+i
+j
+""", r"""# pre
+@deco1
+@deco2(a, b)
+class cls:
+  pass  # post
+""", r"""
+Module .. ROOT 0,0 -> 3,0
+  .body[2]
+  0] Expr .. 1,0 -> 1,1
+    .value
+      Name 'i' Load .. 1,0 -> 1,1
+  1] Expr .. 2,0 -> 2,1
+    .value
+      Name 'j' Load .. 2,0 -> 2,1
+""", r"""
+Module .. ROOT 0,0 -> 5,0
+  .body[1]
+  0] ClassDef .. 3,0 -> 4,6
+    .name
+      'cls'
+    .body[1]
+    0] Pass .. 4,2 -> 4,6
+    .decorator_list[2]
+    0] Name 'deco1' Load .. 1,1 -> 1,6
+    1] Call .. 2,1 -> 2,12
+      .func
+        Name 'deco2' Load .. 2,1 -> 2,6
+      .args[2]
+      0] Name 'a' Load .. 2,7 -> 2,8
+      1] Name 'b' Load .. 2,10 -> 2,11
+"""),
+
 ]  # END OF GET_SLICE_STMT_CUT_DATA
 
 GET_SLICE_STMT_CUT_NOVERIFY_DATA = [
