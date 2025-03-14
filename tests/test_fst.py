@@ -8594,8 +8594,8 @@ def _splitext(p, sep, altsep, extsep):
 
     sepIndex = p.rfind(sep)
             '''.strip())
-        self.assertEqual({0, 1, 2, 3, 4, 5, 6, 7}, f.get_indentable_lns(docstring=True))
-        self.assertEqual({0, 1, 5, 6, 7}, f.get_indentable_lns(docstring=False))
+        self.assertEqual({0, 1, 2, 3, 4, 5, 6, 7}, f.get_indentable_lns(docstr=True))
+        self.assertEqual({0, 1, 5, 6, 7}, f.get_indentable_lns(docstr=False))
 
         f = FST.fromsrc(r'''
 _CookiePattern = re.compile(r"""
@@ -8617,15 +8617,15 @@ _CookiePattern = re.compile(r"""
     (\s+|;|$)                      # Ending either at space, semicolon, or EOS.
     """, re.ASCII | re.VERBOSE)    # re.ASCII may be removed if safe.
             '''.strip())
-        self.assertEqual({0}, f.get_indentable_lns(docstring=True))
-        self.assertEqual({0}, f.get_indentable_lns(docstring=False))
+        self.assertEqual({0}, f.get_indentable_lns(docstr=True))
+        self.assertEqual({0}, f.get_indentable_lns(docstr=False))
 
         f = FST.fromsrc('''
 "distutils.command.sdist.check_metadata is deprecated, \\
         use the check command instead"
             '''.strip())
-        self.assertEqual({0, 1}, f.get_indentable_lns(docstring=True))
-        self.assertEqual({0}, f.get_indentable_lns(docstring=False))
+        self.assertEqual({0, 1}, f.get_indentable_lns(docstr=True))
+        self.assertEqual({0}, f.get_indentable_lns(docstr=False))
 
     def test_offset(self):
         src = 'i = 1\nj = 2\nk = 3'
@@ -9232,47 +9232,47 @@ class cls:
     """
             '''.strip(), f.a.body[0].body[0].f.copy().src)
 
-        f = FST.fromsrc('''
-if 1:
-    class cls:
-        """
-        strict docstring
-        """
-        """
-        loose docstring
-        """
-          '''.strip())
-        f.docstring = False
-        self.assertEqual('''
-class cls:
-    """
-        strict docstring
-        """
-    """
-        loose docstring
-        """
-            '''.strip(), f.a.body[0].body[0].f.copy().src)
+#         f = FST.fromsrc('''
+# if 1:
+#     class cls:
+#         """
+#         strict docstring
+#         """
+#         """
+#         loose docstring
+#         """
+#           '''.strip())
+#         f.docstring = False
+#         self.assertEqual('''
+# class cls:
+#     """
+#         strict docstring
+#         """
+#     """
+#         loose docstring
+#         """
+#             '''.strip(), f.a.body[0].body[0].f.copy().src)
 
-        f = FST.fromsrc('''
-if 1:
-    class cls:
-        """
-        strict docstring
-        """
-        """
-        loose docstring
-        """
-          '''.strip())
-        f.docstring = 'strict'
-        self.assertEqual('''
-class cls:
-    """
-    strict docstring
-    """
-    """
-        loose docstring
-        """
-            '''.strip(), f.a.body[0].body[0].f.copy().src)
+#         f = FST.fromsrc('''
+# if 1:
+#     class cls:
+#         """
+#         strict docstring
+#         """
+#         """
+#         loose docstring
+#         """
+#           '''.strip())
+#         f.docstring = 'strict'
+#         self.assertEqual('''
+# class cls:
+#     """
+#     strict docstring
+#     """
+#     """
+#         loose docstring
+#         """
+#             '''.strip(), f.a.body[0].body[0].f.copy().src)
 
 
         f = FST.fromsrc('''
