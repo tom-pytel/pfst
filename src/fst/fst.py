@@ -72,7 +72,7 @@ AST_DEFAULT_BODY_FIELD  = {cls: field for field, classes in [
 DEFAULT_PARSE_PARAMS    = dict(filename='<unknown>', type_comments=False, feature_version=None)
 DEFAULT_INDENT          = '    '
 DEFAULT_DOCSTR          = True
-DEFAULT_EDIT_SRC_FMT    = frozenset(('pep8', 'pre', 'post'))
+DEFAULT_SRC_EDIT_FMT    = frozenset(('pep8', 'pre', 'post'))
 
 STATEMENTISH            = (stmt, ExceptHandler, match_case)  # always in lists, cannot be inside multilines
 STATEMENTISH_OR_MOD     = (stmt, ExceptHandler, match_case, mod)
@@ -1929,7 +1929,8 @@ class FST:
 
     def _make_fst_and_dedent(self, indent: Union['FST', str], ast: AST, copy_loc: fstloc,
                              prefix: str = '', suffix: str = '',
-                             put_loc: fstloc | None = None, put_lines: list[str] | None = None) -> 'FST':
+                             put_loc: fstloc | None = None, put_lines: list[str] | None = None, *,
+                             docstr: bool | str = DEFAULT_DOCSTR) -> 'FST':
 
         if not isinstance(indent, str):
             indent = indent.get_indent()
@@ -1950,7 +1951,7 @@ class FST:
         if put_loc:
             self.put_lines(put_lines, *put_loc, True)  # True because we may have an unparenthesized tuple that shrinks to a span length of 0
 
-        fst.dedent_lns(indent, skip=bool(copy_loc.col))  # if copy location starts at column 0 then we apply dedent to it as well (preceding comment or something)
+        fst.dedent_lns(indent, skip=bool(copy_loc.col), docstr=docstr)  # if copy location starts at column 0 then we apply dedent to it as well (preceding comment or something)
 
         return fst
 
@@ -1981,7 +1982,8 @@ class FST:
 
         return get_fst
 
-    def _get_slice_tuple_list_or_set(self, start: int, stop: int, field: str | None, fix: bool, cut: bool) -> 'FST':
+    def _get_slice_tuple_list_or_set(self, start: int, stop: int, field: str | None, fix: bool, cut: bool,
+                                     fmt: str, docstr: bool | str) -> 'FST':
         if field is not None and field != 'elts':
             raise ValueError(f"invalid field '{field}' to slice from a {self.a.__class__.__name__}")
 
@@ -2063,7 +2065,8 @@ class FST:
 
         return fst
 
-    def _get_slice_empty_set_call(self, start: int, stop: int, field: str | None, fix: bool, cut: bool) -> 'FST':
+    def _get_slice_empty_set_call(self, start: int, stop: int, field: str | None, fix: bool, cut: bool,
+                                  fmt: str, docstr: bool | str) -> 'FST':
         if not fix:
             raise ValueError(f"cannot get slice from a 'set()' without specifying 'fix=True'")
 
@@ -2075,7 +2078,8 @@ class FST:
 
         return _new_empty_set_call(from_=self) if fix else _new_empty_set_curlies(from_=self)
 
-    def _get_slice_dict(self, start: int, stop: int, field: str | None, fix: bool, cut: bool) -> 'FST':
+    def _get_slice_dict(self, start: int, stop: int, field: str | None, fix: bool, cut: bool,
+                        fmt: str, docstr: bool | str) -> 'FST':
         if field is not None:
             raise ValueError(f"cannot specify a field '{field}' to slice from a Dict")
 
@@ -2118,7 +2122,7 @@ class FST:
         return self._get_seq_and_dedent(get_ast, cut, seq_loc, ffirst, flast, fpre, fpost, '{', '}')
 
     def _get_slice_stmt(self, start: int, stop: int, field: str | None, fix: bool, cut: bool,
-                        fmt: str = DEFAULT_EDIT_SRC_FMT) -> 'FST':
+                        fmt: str, docstr: bool | str) -> 'FST':
         ast         = self.a
         field, body = _fixup_field_body(ast, field)
         start, stop = _fixup_slice_index(ast, body, field, start, stop)
@@ -2154,7 +2158,7 @@ class FST:
         if not cut:
             put_loc = None
 
-        fst = self._make_fst_and_dedent(indent, get_ast, copy_loc, '', '', put_loc, put_lines)
+        fst = self._make_fst_and_dedent(indent, get_ast, copy_loc, '', '', put_loc, put_lines, docstr=docstr)
 
         if cut and is_last_child:  # correct parent for removed last child nodes with trailing non-AST junk
             self._floor_end_pos((fnewlast := self.last_child(True)).end_lineno, fnewlast.end_col_offset)
@@ -2168,7 +2172,8 @@ class FST:
     def _put_seq_and_indent(self, put_fst: Optional['FST'], seq_loc: fstloc,
                             ffirst: Union['FST', fstloc, None], flast: Union['FST', fstloc, None],
                             fpre: Union['FST', fstloc, None], fpost: Union['FST', fstloc, None],
-                            pfirst: Union['FST', fstloc, None], plast: Union['FST', fstloc, None]) -> 'FST':
+                            pfirst: Union['FST', fstloc, None], plast: Union['FST', fstloc, None],
+                            docstr: bool | str) -> 'FST':
         root = self.root
 
         if not put_fst:  # delete
@@ -2182,7 +2187,7 @@ class FST:
 
             indent = self.get_indent()
 
-            put_fst.indent_lns(indent)
+            put_fst.indent_lns(indent, docstr=docstr)
 
             put_ln, put_col, put_end_ln, put_end_col = (
                 self.src_edit.put_slice_seq(self, put_fst, indent, seq_loc, ffirst, flast, fpre, fpost, pfirst, plast))
@@ -2209,7 +2214,8 @@ class FST:
             self._floor_start_pos(lineno, col_offset)  # because of insertion at beginning of unparenthesized tuple, pattern beginning to emerge
 
     def _put_slice_tuple_list_or_set(self, code: Code | None, start: int, stop: int, field: str | None = None,
-                                     fix: bool = True):
+                                     fix: bool = True,
+                                     fmt: str = DEFAULT_SRC_EDIT_FMT, docstr: bool | str = DEFAULT_DOCSTR):
         if field is not None and field != 'elts':
             raise ValueError(f"invalid field '{field}' to assign slice to a {self.a.__class__.__name__}")
 
@@ -2255,7 +2261,7 @@ class FST:
             flast  = elts[stop - 1].f
 
         if not put_fst:
-            self._put_seq_and_indent(None, seq_loc, ffirst, flast, fpre, fpost, None, None)
+            self._put_seq_and_indent(None, seq_loc, ffirst, flast, fpre, fpost, None, None, docstr)
             self._unmake_fst_tree(elts[start : stop])
 
             del elts[start : stop]
@@ -2291,7 +2297,7 @@ class FST:
                 pfirst = selts[0].f
                 plast  = selts[-1].f
 
-            self._put_seq_and_indent(put_fst, seq_loc, ffirst, flast, fpre, fpost, pfirst, plast)
+            self._put_seq_and_indent(put_fst, seq_loc, ffirst, flast, fpre, fpost, pfirst, plast, docstr)
             self._unmake_fst_tree(elts[start : stop], put_fst)
 
             elts[start : stop] = put_ast.elts
@@ -2313,7 +2319,8 @@ class FST:
                 self._maybe_fix_set()
 
     def _put_slice_empty_set_call(self, code: Code | None, start: int, stop: int, field: str | None = None,
-                                  fix: bool = True):
+                                  fix: bool = True,
+                                  fmt: str = DEFAULT_SRC_EDIT_FMT, docstr: bool | str = DEFAULT_DOCSTR):
         if not fix:
             raise ValueError(f"cannot put slice to a 'set()' without specifying 'fix=True'")
 
@@ -2329,13 +2336,14 @@ class FST:
             self.pfield.set(parent.a, ast)
 
         try:
-            self._put_slice_tuple_list_or_set(code, start, stop, field, fix)
+            self._put_slice_tuple_list_or_set(code, start, stop, field, fix, fmt, docstr)
 
         finally:
             if not self.a.elts:
                 self._maybe_fix_set()  # restore 'set()'
 
-    def _put_slice_dict(self, code: Code | None, start: int, stop: int, field: str | None = None, fix: bool = True):
+    def _put_slice_dict(self, code: Code | None, start: int, stop: int, field: str | None = None, fix: bool = True,
+                        fmt: str = DEFAULT_SRC_EDIT_FMT, docstr: bool | str = DEFAULT_DOCSTR):
         if field is not None:
             raise ValueError(f"cannot specify a field '{field}' to assign slice to a Dict")
 
@@ -2370,7 +2378,7 @@ class FST:
             flast  = values[stop - 1].f
 
         if not put_fst:
-            self._put_seq_and_indent(None, seq_loc, ffirst, flast, fpre, fpost, None, None)
+            self._put_seq_and_indent(None, seq_loc, ffirst, flast, fpre, fpost, None, None, docstr)
             self._unmake_fst_tree(keys[start : stop] + values[start : stop])
 
             del keys[start : stop]
@@ -2397,7 +2405,7 @@ class FST:
                 pfirst = put_fst._dict_key_or_mock_loc(skeys[0], put_ast.values[0].f)
                 plast  = put_ast.values[-1].f
 
-            self._put_seq_and_indent(put_fst, seq_loc, ffirst, flast, fpre, fpost, pfirst, plast)
+            self._put_seq_and_indent(put_fst, seq_loc, ffirst, flast, fpre, fpost, pfirst, plast, docstr)
             self._unmake_fst_tree(keys[start : stop] + values[start : stop], put_fst)
 
             keys[start : stop]   = put_ast.keys
@@ -2805,7 +2813,7 @@ class FST:
 
         return self
 
-    def copy(self, *, fix: bool = True) -> 'FST':
+    def copy(self, *, fix: bool = True, fmt: str = DEFAULT_SRC_EDIT_FMT, docstr: bool | str = DEFAULT_DOCSTR) -> 'FST':
         newast = copy_ast(self.a)
 
         if self.is_root:
@@ -2818,7 +2826,7 @@ class FST:
 
         return fst.fix(inplace=True) if fix else fst
 
-    def cut(self, *, fix: bool = True) -> 'FST':
+    def cut(self, *, fix: bool = True, fmt: str = DEFAULT_SRC_EDIT_FMT, docstr: bool | str = DEFAULT_DOCSTR) -> 'FST':
         if self.is_root:
             raise ValueError('cannot cut root node')
 
@@ -2845,15 +2853,15 @@ class FST:
 
 
     def get(self, start: int | str | None = None, stop: int | str | None | Literal[False] = False,
-            field: str | None = None, *, fix: bool = True, cut: bool = False, fmt: str = DEFAULT_EDIT_SRC_FMT,
-            ) -> Optional['FST']:
+            field: str | None = None, *, fix: bool = True, cut: bool = False,
+            fmt: str = DEFAULT_SRC_EDIT_FMT, docstr: bool | str = DEFAULT_DOCSTR) -> Optional['FST']:
 
         if isinstance(start, str):
             raise NotImplementedError
 
         if stop is not False:
             if not isinstance(stop, str):
-                return self.get_slice(start, stop, field, fix=fix, cut=cut, fmt=fmt)
+                return self.get_slice(start, stop, field, fix=fix, cut=cut, fmt=fmt, docstr=docstr)
 
             if field is not None:
                 raise ValueError('cannot specify two field values')
@@ -2863,18 +2871,19 @@ class FST:
         field, body = _fixup_field_body(self.a, field)
 
         if cut:
-            return body[start].f.cut(fix=fix)
+            return body[start].f.cut(fix=fix, fmt=fmt, docstr=docstr)
         else:
-            return body[start].f.copy(fix=fix)
+            return body[start].f.copy(fix=fix, fmt=fmt, docstr=docstr)
 
 
 
 
     def put(self, code: Code | None, start: int | None = None, stop: int | None | Literal['False'] = False,
-            field: str | None = None) -> Optional['FST']:  # -> Self:
+            field: str | None = None, *, fix: bool = True,
+            fmt: str = DEFAULT_SRC_EDIT_FMT, docstr: bool | str = DEFAULT_DOCSTR) -> Optional['FST']:  # -> Self:
 
         if stop is not False:
-            return self.put_slice(code, start, stop, field)
+            return self.put_slice(code, start, stop, field, fix=fix, fmt=fmt, docstr=docstr)
 
         field, body = _fixup_field_body(self.a, field)
 
@@ -2884,20 +2893,21 @@ class FST:
 
 
     def get_slice(self, start: int | None = None, stop: int | None = None, field: str | None = None, *,
-                  fix: bool = True, cut: bool = False, fmt: str = DEFAULT_EDIT_SRC_FMT) -> 'FST':
+                  fix: bool = True, cut: bool = False,
+                  fmt: str = DEFAULT_SRC_EDIT_FMT, docstr: bool | str = DEFAULT_DOCSTR) -> 'FST':
         a = self.a
 
         if isinstance(a, STATEMENTISH_OR_STMTMOD):
-            return self._get_slice_stmt(start, stop, field, fix, cut, fmt)
+            return self._get_slice_stmt(start, stop, field, fix, cut, fmt, docstr)
 
         if isinstance(a, (Tuple, List, Set)):
-            return self._get_slice_tuple_list_or_set(start, stop, field, fix, cut)
+            return self._get_slice_tuple_list_or_set(start, stop, field, fix, cut, fmt, docstr)
 
         if isinstance(a, Dict):
-            return self._get_slice_dict(start, stop, field, fix, cut)
+            return self._get_slice_dict(start, stop, field, fix, cut, fmt, docstr)
 
         if self.is_empty_set_call():
-            return self._get_slice_empty_set_call(start, stop, field, fix, cut)
+            return self._get_slice_empty_set_call(start, stop, field, fix, cut, fmt, docstr)
 
         raise ValueError(f"cannot get slice from a '{a.__class__.__name__}'")
 
@@ -2907,22 +2917,31 @@ class FST:
 
 
     def put_slice(self, code: Code | None, start: int | None = None, stop: int | None = None, field: str | None = None,
-                  *, fix: bool = True):
+                  *, fix: bool = True,
+                  fmt: str = DEFAULT_SRC_EDIT_FMT, docstr: bool | str = DEFAULT_DOCSTR) -> Optional['FST']:  # -> Self:
         a = self.a
 
         if isinstance(a, STATEMENTISH_OR_STMTMOD):
             raise NotImplementedError  # TODO: THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS!
 
         if isinstance(a, (Tuple, List, Set)):
-            return self._put_slice_tuple_list_or_set(code, start, stop, field, fix)
+            self._put_slice_tuple_list_or_set(code, start, stop, field, fix, fmt, docstr)
+
+            return self
 
         if isinstance(a, Dict):
-            return self._put_slice_dict(code, start, stop, field, fix)
+            self._put_slice_dict(code, start, stop, field, fix, fmt, docstr)
+
+            return self
 
         if self.is_empty_set_call():
-            return self._put_slice_empty_set_call(code, start, stop, field, fix)
+            self._put_slice_empty_set_call(code, start, stop, field, fix, fmt, docstr)
+
+            return self
 
         raise ValueError(f"cannot put slice to a '{a.__class__.__name__}'")
+
+
 
 
 
