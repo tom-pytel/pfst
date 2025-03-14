@@ -9466,17 +9466,45 @@ i # post
             self.assertEqual('(*tuple[int, ...],)', f.src)
 
     def test_cut_special(self):
-#         a = parse('''
-# # prepre
+        a = parse('''
+# prepre
 
-# # pre
-# i # post
-# # postpost
-#             ''')
-#         self.assertEqual('i', a.body[0].f.cut(fmt='').src)
-#         self.assertEqual('# pre\ni', a.body[0].f.cut(fmt='pre').src)
-#         self.assertEqual('# pre\ni # post\n', a.body[0].f.cut(fmt='pre,post').src)
-#         self.assertEqual('# prepre\n\n# pre\ni', a.body[0].f.cut(fmt='allpre').src)
+# pre
+i # post
+# postpost
+            '''.strip())
+        self.assertEqual('i', a.body[0].f.cut(fmt='').src)
+        self.assertEqual('# prepre\n\n# pre\n# post\n# postpost', a.f.src)
+
+        a = parse('''
+# prepre
+
+# pre
+i # post
+# postpost
+            '''.strip())
+        self.assertEqual('# pre\ni', a.body[0].f.cut(fmt='pre').src)
+        self.assertEqual('# prepre\n\n# post\n# postpost', a.f.src)
+
+        a = parse('''
+# prepre
+
+# pre
+i # post
+# postpost
+            '''.strip())
+        self.assertEqual('# pre\ni # post\n', a.body[0].f.cut(fmt='pre,post').src)
+        self.assertEqual('# prepre\n\n# postpost', a.f.src)
+
+        a = parse('''
+# prepre
+
+# pre
+i # post
+# postpost
+            '''.strip())
+        self.assertEqual('# prepre\n\n# pre\ni', a.body[0].f.cut(fmt='allpre').src)
+        self.assertEqual('# post\n# postpost', a.f.src)
 
         a = parse('( ( i ), )')
         f = a.body[0].value.elts[0].f.cut(fmt='')

@@ -141,7 +141,7 @@ class fstpos(NamedTuple):
     bend_ln  = property(lambda self: self.ln)   ; """Alias for `ln`."""
     bend_col = property(lambda self: self.col)  ; """Alias for `col`."""
 
-    is_FST   = False                            ; """For quick checks vs. `FST`."""
+    is_FST   = False                            ; """@private"""  # for quick checks vs. `FST`
 
 
 class fstloc(NamedTuple):
@@ -155,7 +155,7 @@ class fstloc(NamedTuple):
     bend_ln  = property(lambda self: self.end_ln)   ; """Alias for `end_ln`."""
     bend_col = property(lambda self: self.end_col)  ; """Alias for `end_col`."""
 
-    is_FST   = False                                ; """For quick checks vs. `FST`."""
+    is_FST   = False                                ; """@private"""  # for quick checks vs. `FST`
 
 
 class srcwpos(NamedTuple):
@@ -1295,7 +1295,27 @@ class FSTSrcEdit:
 
 
 class FST:
-    """Preserve AST formatting information and easy manipulation."""
+    """Preserve AST formatting information and easy manipulation.
+
+    **Common parameters in fucntions:**
+    - `fmt`: Set of string formatting flags, as a single comma delimited string or a `set` or `frozenset` of individual
+        flags. Unrecognized and inapplicable flags are ignored, possible flags are:
+        - `'pars'`: Include enclosing parentheses in a copied element. When cut or deleted, enclosing parentheses are
+            always removed.
+        - `'pre'`: Include and delete contiguous comment block immediately preceding statement(s) or location.
+        - `'allpre'`: Include and delete comment blocks (possibly separated by empty lines) immediately preceding
+            statement(s) or location.
+        - `'post'`: Include and delete trailing comment on last line. Keep in mind this is the comment on the last
+            statement of a body if last element of copy is a block element.
+        - `'pep8'`: Does not actually reformat code according to PEP 8 but just follows spacing guideline for leading
+            empty lines for functions and classes. One empty line normally and two at module scope. Will delete or
+            insert this spacing before functions and classes according to if they are at top level scope or not, but
+            does not copy them. In the future may specify additional PEP 8 behavior.
+        - `'space*'`: Can be only `'space'` or with a number `'space3'`. Indicates that up to this many preceding
+            empty lines should be deleted on a cut operation. If no count specified then it means all empty lines.
+            Empty line continuations are considered empty lines. `'pep8'` can override `'space1'` for two lines at
+            top level functions and classes.
+    """
 
     a:            AST                        ; """The actual `AST` node."""
     parent:       Optional['FST']            ; """Parent `FST` node, `None` in root node."""
@@ -1312,7 +1332,7 @@ class FST:
     # class attributes
     src_edit:     FSTSrcEdit = FSTSrcEdit()  ; """@private"""
 
-    is_FST:       bool       = True          ; """For quick checks vs. `fstloc` and `fstpos`."""
+    is_FST:       bool       = True          ; """@private"""  # for quick checks vs. `fstloc` and `fstpos`
 
     @property
     def is_root(self) -> bool:
@@ -2149,7 +2169,7 @@ class FST:
         return self._get_seq_and_dedent(get_ast, cut, seq_loc, ffirst, flast, fpre, fpost, '{', '}')
 
     def _get_slice_stmt(self, start: int, stop: int, field: str | None, fix: bool, cut: bool,
-                        fmt: Fmt, docstr: bool | str) -> 'FST':
+                        fmt: Fmt, docstr: bool | str, *, single: bool = False) -> 'FST':
         ast         = self.a
         field, body = _fixup_field_body(ast, field)
         start, stop = _fixup_slice_index(ast, body, field, start, stop)
@@ -2175,7 +2195,13 @@ class FST:
             for i in range(start, len(body)):
                 body[i].f.pfield = astfield(field, i)
 
-        get_ast   = Module(body=asts, type_ignores=[])
+        if not single:
+            get_ast = Module(body=asts, type_ignores=[])
+        elif len(asts) == 1:
+            get_ast = asts[0]
+        else:
+            raise ValueError(f'cannot specify `single` for multiple statements')
+
         block_loc = fstloc(*(fpre.loc[2:] if fpre else ffirst._prev_ast_bound()),
                            *(fpost.loc[:2] if fpost else flast._next_ast_bound()))
 
@@ -2190,8 +2216,16 @@ class FST:
 
         fst = self._make_fst_and_dedent(indent, get_ast, copy_loc, '', '', put_loc, put_lines, docstr=docstr)
 
-        if cut and is_last_child:  # correct parent for removed last child nodes with trailing non-AST junk
-            self._floor_end_pos((fnewlast := self.last_child(True)).end_lineno, fnewlast.end_col_offset)
+        if cut and is_last_child:  # correct parent for removed last child nodes
+            if fnewlast := self.last_child(True):
+                self._floor_end_pos(fnewlast.end_lineno, fnewlast.end_col_offset)
+
+            # else:
+            #     raise NotImplementedError
+
+
+            # TODO: correct for last child of 'body' and any other lists of statements
+
 
         if fix:
             if len(asts) == 1 and isinstance(a := asts[0], If):
@@ -2870,19 +2904,13 @@ class FST:
         if self.is_root:
             raise ValueError('cannot cut root node')
 
-        ast = self.a
-
-        if isinstance(ast, STATEMENTISH_OR_STMTMOD):
-
-
-            # TODO: get only a single element
-
-
-            raise NotImplementedError  # TODO: statements
-
+        ast        = self.a
         parent     = self.parent
         field, idx = self.pfield
         parenta    = parent.a
+
+        if isinstance(ast, STATEMENTISH_OR_STMTMOD):
+            return parent._get_slice_stmt(idx, idx + 1, field, fix=fix, cut=True, fmt=fmt, docstr=docstr, single=True)
 
         if isinstance(parenta, (Tuple, List, Set)):
             fst = self.copy(fix=fix, fmt=fmt, docstr=docstr)
@@ -2891,7 +2919,9 @@ class FST:
 
             return fst
 
+
         # TODO: individual nodes
+
 
         raise ValueError(f"cannot cut a '{parenta.__class__.__name__}'")
 
@@ -4249,7 +4279,7 @@ class FST:
         location of an object for certain operations, but is not very robust. The `FST` returned is its own object and
         points up the tree and to the `AST` like the original, but the `AST` does not point back to it and so in not a
         fully valid node. Both `loc` and `bloc` are set to the input parameter `loc` value. You can make a `locmock` of
-        a `locmock`."""
+        a `locmock`. EXPERIMENTAL!"""
 
         ast      = self.a
         fst      = FST(ast, self.parent, self.pfield)
