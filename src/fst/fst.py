@@ -1310,27 +1310,7 @@ class FSTSrcEdit:
 
 
 class FST:
-    """Preserve AST formatting information and easy manipulation.
-
-    **Common parameters in fucntions:**
-    - `fmt`: Set of string formatting flags, as a single comma delimited string or a `set` or `frozenset` of individual
-        flags. Unrecognized and inapplicable flags are ignored, possible flags are:
-        - `'pars'`: Include enclosing parentheses in a copied element. When cut or deleted, enclosing parentheses are
-            always removed.
-        - `'pre'`: Include and delete contiguous comment block immediately preceding statement(s) or location.
-        - `'allpre'`: Include and delete comment blocks (possibly separated by empty lines) immediately preceding
-            statement(s) or location.
-        - `'post'`: Include and delete trailing comment on last line. Keep in mind this is the comment on the last
-            statement of a body if last element of copy is a block element.
-        - `'pep8'`: Does not actually reformat code according to PEP 8 but just follows spacing guideline for leading
-            empty lines for functions and classes. One empty line normally and two at module scope. Will delete or
-            insert this spacing before functions and classes according to if they are at top level scope or not, but
-            does not copy them. In the future may specify additional PEP 8 behavior.
-        - `'space*'`: Can be only `'space'` or with a number `'space3'`. Indicates that up to this many preceding
-            empty lines should be deleted on a cut operation. If no count specified then it means all empty lines.
-            Empty line continuations are considered empty lines. `'pep8'` can override `'space1'` for two lines at
-            top level functions and classes.
-    """
+    """Preserve AST formatting information and easy manipulation."""
 
     a:            AST                        ; """The actual `AST` node."""
     parent:       Optional['FST']            ; """Parent `FST` node, `None` in root node."""
@@ -2322,7 +2302,7 @@ class FST:
         start, stop = _fixup_slice_index(ast, elts, 'elts', start, stop)
         slice_len   = stop - start
 
-        if not slice_len and (not put_fst or not put_fst.elts):  # deleting or assigning empty seq to empty slice of seq, noop
+        if not slice_len and (not put_fst or not put_ast.elts):  # deleting or assigning empty seq to empty slice of seq, noop
             return
 
         is_self_tuple    = isinstance(ast, Tuple)
@@ -2440,7 +2420,7 @@ class FST:
         start, stop = _fixup_slice_index(ast, values, 'values', start, stop)
         slice_len   = stop - start
 
-        if not slice_len and (not put_fst or not put_fst.keys):  # deleting or assigning empty dict to empty slice of dict, noop
+        if not slice_len and (not put_fst or not put_ast.keys):  # deleting or assigning empty dict to empty slice of dict, noop
             return
 
         keys    = ast.keys
@@ -2506,6 +2486,128 @@ class FST:
 
             if key := keys[i]:  # could be None from **
                 key.f.pfield = astfield('keys', i)
+
+    def _put_slice_stmt(self, code: Code | None, start: int, stop: int, field: str | None = None, fix: bool = True,
+                        fmt: Fmt = DEFAULT_SRC_EDIT_FMT, docstr: bool | str = DEFAULT_DOCSTR):
+        ast         = self.a
+        field, body = _fixup_field_body(ast, field)
+
+        if code is None:
+            put_fst = None
+
+        else:
+            put_fst = _normalize_code(code, expr_=False, parse_params=self.root.parse_params)
+            put_ast = put_fst.a
+
+            raise NotImplementedError
+
+        #     if not isinstance(put_ast, STATEMENTISH_OR_STMTMOD):
+        #         raise ValueError(f"slice being assigned cannot be a '{put_ast.__class__.__name__}'")
+        #         raise ValueError(f"slice being assigned to a cases must be a match_case, not a '{put_ast.__class__.__name__}'")
+
+
+
+        start, stop = _fixup_slice_index(ast, body, field, start, stop)
+        slice_len   = stop - start
+
+        if not slice_len and (not put_fst or not put_ast.body):  # deleting or assigning empty slice to empty slice, noop
+            return
+
+        if not slice_len:
+            ffirst = flast = None
+
+        else:
+            ffirst = body[start].f
+            flast  = body[stop - 1].f
+
+        fpre  = body[start - 1].f if start else None
+        fpost = body[stop].f if stop < len(body) else None
+
+        block_loc = fstloc(*(fpre.loc[2:] if fpre else ffirst._prev_ast_bound()),
+                           *(fpost.loc[:2] if fpost else flast._next_ast_bound()))
+
+        is_last_child = not fpost and flast is self.last_child(True)
+
+        if isinstance(fmt, str):
+            fmt = frozenset(t for s in fmt.split(',') if (t := s.strip()))
+
+        if not put_fst:
+            _, put_loc, put_lines = (
+                self.src_edit.get_slice_stmt(self, field, True, fmt, block_loc, ffirst, flast, fpre, fpost))
+
+            if put_loc:
+                self.put_lines(put_lines, *put_loc, True)
+
+            self._unmake_fst_tree(body[start : stop])
+
+            del body[start : stop]
+
+            put_len = 0
+
+        else:
+            # put_lines               = put_fst._lines
+            # put_ast.end_col_offset -= 1  # strip enclosing curlies from source dict
+
+            # put_fst.offset(0, 1, 0, -1)
+
+            # assert put_lines[0].startswith('{')
+            # assert put_lines[-1].endswith('}')
+
+            # put_lines[-1] = bistr(put_lines[-1][:-1])
+            # put_lines[0]  = bistr(put_lines[0][1:])
+
+            # if not (skeys := put_ast.keys):
+            #     pfirst = plast = None
+
+            # else:
+            #     pfirst = put_fst._dict_key_or_mock_loc(skeys[0], put_ast.values[0].f)
+            #     plast  = put_ast.values[-1].f
+
+            # self._put_seq_and_indent(put_fst, seq_loc, ffirst, flast, fpre, fpost, pfirst, plast, docstr)
+            # self._unmake_fst_tree(keys[start : stop] + values[start : stop], put_fst)
+
+            # keys[start : stop]   = put_ast.keys
+            # values[start : stop] = put_ast.values
+            # put_len              = len(put_ast.keys)
+            # stack                = []
+
+            # for i in range(put_len):
+            #     startplusi = start + i
+
+            #     stack.append(FST(values[startplusi], self, astfield('values', startplusi)))
+
+            #     if key := keys[startplusi]:
+            #         stack.append(FST(key, self, astfield('keys', startplusi)))
+
+            # self._make_fst_tree(stack)
+
+
+            raise NotImplementedError
+
+
+
+
+        for i in range(start + put_len, len(body)):
+            body[i].f.pfield = astfield('elts', i)
+
+        if is_last_child:  # correct parent for modified / removed last child nodes
+            if fnewlast := self.last_child(True):
+                self._floor_end_pos(fnewlast.end_lineno, fnewlast.end_col_offset)
+
+            # else:
+            #     raise NotImplementedError
+
+
+            # TODO: correct for last child of 'body' and any other lists of statements
+
+
+
+
+
+
+
+
+
 
     # ------------------------------------------------------------------------------------------------------------------
 
@@ -2587,11 +2689,10 @@ class FST:
         - `feature_version`: `ast.parse()` parameter.
 
         **Returns:**
-        - `AST`: The parsed tree with `.f` attributes added to each `AST` node for `FST` access.
+        - `FST`: The new empty top level `FST` node.
         """
 
-        parse_params = dict(parse_params, filename=filename, type_comments=type_comments,
-                            feature_version=feature_version)
+        parse_params = dict(filename=filename, type_comments=type_comments, feature_version=feature_version)
 
         if mode == 'exec':
             ast = Module(body=[], type_ignores=[])
@@ -2986,21 +3087,21 @@ class FST:
     def get_slice(self, start: int | None = None, stop: int | None = None, field: str | None = None, *,
                   fix: bool = True, cut: bool = False,
                   fmt: Fmt = DEFAULT_SRC_EDIT_FMT, docstr: bool | str = DEFAULT_DOCSTR) -> 'FST':
-        a = self.a
+        ast = self.a
 
-        if isinstance(a, STATEMENTISH_OR_STMTMOD):
+        if isinstance(ast, STATEMENTISH_OR_STMTMOD):
             return self._get_slice_stmt(start, stop, field, fix, cut, fmt, docstr)
 
-        if isinstance(a, (Tuple, List, Set)):
+        if isinstance(ast, (Tuple, List, Set)):
             return self._get_slice_tuple_list_or_set(start, stop, field, fix, cut, fmt, docstr)
 
-        if isinstance(a, Dict):
+        if isinstance(ast, Dict):
             return self._get_slice_dict(start, stop, field, fix, cut, fmt, docstr)
 
         if self.is_empty_set_call():
             return self._get_slice_empty_set_call(start, stop, field, fix, cut, fmt, docstr)
 
-        raise ValueError(f"cannot get slice from a '{a.__class__.__name__}'")
+        raise ValueError(f"cannot get slice from a '{ast.__class__.__name__}'")
 
 
 
@@ -3010,27 +3111,24 @@ class FST:
     def put_slice(self, code: Code | None, start: int | None = None, stop: int | None = None, field: str | None = None,
                   *, fix: bool = True,
                   fmt: Fmt = DEFAULT_SRC_EDIT_FMT, docstr: bool | str = DEFAULT_DOCSTR) -> Optional['FST']:  # -> Self:
-        a = self.a
+        ast = self.a
 
-        if isinstance(a, STATEMENTISH_OR_STMTMOD):
-            raise NotImplementedError  # TODO: THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS!
+        if isinstance(ast, STATEMENTISH_OR_STMTMOD):
+            self._put_slice_stmt(code, start, stop, field, fix, fmt, docstr)
 
-        if isinstance(a, (Tuple, List, Set)):
+        elif isinstance(ast, (Tuple, List, Set)):
             self._put_slice_tuple_list_or_set(code, start, stop, field, fix, fmt, docstr)
 
-            return self
-
-        if isinstance(a, Dict):
+        elif isinstance(ast, Dict):
             self._put_slice_dict(code, start, stop, field, fix, fmt, docstr)
 
-            return self
-
-        if self.is_empty_set_call():
+        elif self.is_empty_set_call():
             self._put_slice_empty_set_call(code, start, stop, field, fix, fmt, docstr)
 
-            return self
+        else:
+            raise ValueError(f"cannot put slice to a '{ast.__class__.__name__}'")
 
-        raise ValueError(f"cannot put slice to a '{a.__class__.__name__}'")
+        return self
 
 
 

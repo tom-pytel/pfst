@@ -5038,7 +5038,7 @@ Module .. ROOT 0,0 -> 0,4
 
 ]  # END OF GET_SLICE_STMT_CUT_NOVERIFY_DATA
 
-PUT_SLICE_DATA = [
+PUT_SLICE_SEQ_DATA = [
 (r"""
 {
     a: 1
@@ -8029,9 +8029,9 @@ Module .. ROOT 0,0 -> 0,2
         .ctx Load
 """),
 
-]  # END OF PUT_SLICE_DATA
+]  # END OF PUT_SLICE_SEQ_DATA
 
-PUT_SLICE_DEL_DATA = [
+PUT_SLICE_SEQ_DEL_DATA = [
 ("""
 [            # hello
     1, 2, 3
@@ -8210,7 +8210,7 @@ Module .. ROOT 0,0 -> 0,2
         .ctx Load
 """),
 
-]  # END OF PUT_SLICE_DEL_DATA
+]  # END OF PUT_SLICE_SEQ_DEL_DATA
 
 
 def read(fnm):
@@ -10091,7 +10091,7 @@ i # post
                     raise
 
     def test_put_slice(self):
-        for dst, elt, start, stop, src, put_src, put_dump in PUT_SLICE_DATA:
+        for dst, elt, start, stop, src, put_src, put_dump in PUT_SLICE_SEQ_DATA:
             dst = dst.strip()
             src = src.strip()
             t   = parse(dst)
@@ -10118,7 +10118,7 @@ i # post
                 raise
 
     def test_put_slice_del(self):
-        for dst, elt, start, stop, put_src, put_dump in PUT_SLICE_DEL_DATA:
+        for dst, elt, start, stop, put_src, put_dump in PUT_SLICE_SEQ_DEL_DATA:
             dst = dst.strip()
             t   = parse(dst)
             f   = eval(f't.{elt}', {'t': t}).f
@@ -10350,10 +10350,10 @@ def regen_get_slice_stmt_cut_data():
         lines = f.write('\n'.join(lines))
 
 
-def regen_put_slice_data():
+def regen_put_slice_seq_data():
     newlines = []
 
-    for dst, elt, start, stop, src, put_src, put_dump in PUT_SLICE_DATA:
+    for dst, elt, start, stop, src, put_src, put_dump in PUT_SLICE_SEQ_DATA:
         dst = dst.strip()
         src = src.strip()
         t   = parse(dst)
@@ -10376,8 +10376,8 @@ def regen_put_slice_data():
     with open(sys.argv[0]) as f:
         lines = f.read().split('\n')
 
-    start = lines.index('PUT_SLICE_DATA = [')
-    stop  = lines.index(']  # END OF PUT_SLICE_DATA')
+    start = lines.index('PUT_SLICE_SEQ_DATA = [')
+    stop  = lines.index(']  # END OF PUT_SLICE_SEQ_DATA')
 
     lines[start + 1 : stop] = newlines
 
@@ -10385,10 +10385,10 @@ def regen_put_slice_data():
         lines = f.write('\n'.join(lines))
 
 
-def regen_put_slice_del_data():
+def regen_put_slice_seq_del_data():
     newlines = []
 
-    for dst, elt, start, stop, put_src, put_dump in PUT_SLICE_DEL_DATA:
+    for dst, elt, start, stop, put_src, put_dump in PUT_SLICE_SEQ_DEL_DATA:
         dst = dst.strip()
         t   = parse(dst)
         f   = eval(f't.{elt}', {'t': t}).f
@@ -10410,8 +10410,8 @@ def regen_put_slice_del_data():
     with open(sys.argv[0]) as f:
         lines = f.read().split('\n')
 
-    start = lines.index('PUT_SLICE_DEL_DATA = [')
-    stop  = lines.index(']  # END OF PUT_SLICE_DEL_DATA')
+    start = lines.index('PUT_SLICE_SEQ_DEL_DATA = [')
+    stop  = lines.index(']  # END OF PUT_SLICE_SEQ_DEL_DATA')
 
     lines[start + 1 : stop] = newlines
 
@@ -10428,8 +10428,8 @@ if __name__ == '__main__':
     parser.add_argument('--regen-copy', default=False, action='store_true', help="regenerate copy test data")
     parser.add_argument('--regen-get-slice-seq-cut', default=False, action='store_true', help="regenerate get slice sequence test data")
     parser.add_argument('--regen-get-slice-stmt-cut', default=False, action='store_true', help="regenerate get slice statement test data")
-    parser.add_argument('--regen-put-slice', default=False, action='store_true', help="regenerate put slice test data")
-    parser.add_argument('--regen-put-slice-del', default=False, action='store_true', help="regenerate put slice del test data")
+    parser.add_argument('--regen-put-slice-seq', default=False, action='store_true', help="regenerate put slice sequence test data")
+    parser.add_argument('--regen-put-slice-seq-del', default=False, action='store_true', help="regenerate put slice del sequence test data")
 
     args = parser.parse_args()
 
@@ -10449,13 +10449,13 @@ if __name__ == '__main__':
         print('Regenerating get slice statement cut test data...')
         regen_get_slice_stmt_cut_data()
 
-    if args.regen_put_slice:
-        print('Regenerating put slice test data...')
-        regen_put_slice_data()
+    if args.regen_put_slice_seq:
+        print('Regenerating put slice sequence test data...')
+        regen_put_slice_seq_data()
 
-    if args.regen_put_slice_del:
-        print('Regenerating put slice del test data...')
-        regen_put_slice_del_data()
+    if args.regen_put_slice_seq_del:
+        print('Regenerating put slice del sequence test data...')
+        regen_put_slice_seq_del_data()
 
     # if (not args.regen_pars and not args.regen_copy and
     #     not args.regen_get_slice_seq_cut and not args.regen_get_slice_stmt_cut and
