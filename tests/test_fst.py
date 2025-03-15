@@ -4025,8 +4025,9 @@ GET_SLICE_STMT_CUT_NOVERIFY_DATA = [
 (r"""
 if 1: i
 """, 'body[0]', 0, 1, None, 'pre,post', r"""
-if 1:""", r"""i""", r"""
-Module .. ROOT 0,0 -> 1,5
+if 1:
+""", r"""i""", r"""
+Module .. ROOT 0,0 -> 2,0
   .body[1]
   0] If .. 1,0 -> 1,4
     .test
@@ -4058,9 +4059,10 @@ Module .. ROOT 0,0 -> 0,1
 (r"""
 if 1: i  # post
 """, 'body[0]', 0, 1, None, 'pre,post', r"""
-if 1:""", r"""i  # post
+if 1:
+""", r"""i  # post
 """, r"""
-Module .. ROOT 0,0 -> 1,5
+Module .. ROOT 0,0 -> 2,0
   .body[1]
   0] If .. 1,0 -> 1,4
     .test
@@ -4126,8 +4128,9 @@ Module .. ROOT 0,0 -> 0,1
 (r"""
 if 1: i ;
 """, 'body[0]', 0, 1, None, 'pre,post', r"""
-if 1:""", r"""i""", r"""
-Module .. ROOT 0,0 -> 1,5
+if 1:
+""", r"""i""", r"""
+Module .. ROOT 0,0 -> 2,0
   .body[1]
   0] If .. 1,0 -> 1,4
     .test
@@ -4607,6 +4610,430 @@ Module .. ROOT 0,0 -> 3,1
   0] Expr .. 3,0 -> 3,1
     .value
       Name 'j' Load .. 3,0 -> 3,1
+"""),
+
+(r"""
+try:
+    pass
+finally: pass
+""", 'body[0]', 0, 1, None, 'pre,post', r"""
+try:
+finally: pass
+""", r"""pass""", r"""
+Module .. ROOT 0,0 -> 3,0
+  .body[1]
+  0] Try .. 1,0 -> 2,13
+    .finalbody[1]
+    0] Pass .. 2,9 -> 2,13
+""", r"""
+Module .. ROOT 0,0 -> 0,4
+  .body[1]
+  0] Pass .. 0,0 -> 0,4
+"""),
+
+(r"""
+try: pass
+finally: pass
+""", 'body[0]', 0, 1, None, 'pre,post', r"""
+try:
+finally: pass
+""", r"""pass""", r"""
+Module .. ROOT 0,0 -> 3,0
+  .body[1]
+  0] Try .. 1,0 -> 2,13
+    .finalbody[1]
+    0] Pass .. 2,9 -> 2,13
+""", r"""
+Module .. ROOT 0,0 -> 0,4
+  .body[1]
+  0] Pass .. 0,0 -> 0,4
+"""),
+
+(r"""
+try: i = \
+  2
+finally: pass
+""", 'body[0]', 0, 1, None, 'pre,post', r"""
+try:
+finally: pass
+""", r"""i = \
+2""", r"""
+Module .. ROOT 0,0 -> 3,0
+  .body[1]
+  0] Try .. 1,0 -> 2,13
+    .finalbody[1]
+    0] Pass .. 2,9 -> 2,13
+""", r"""
+Module .. ROOT 0,0 -> 1,1
+  .body[1]
+  0] Assign .. 0,0 -> 1,1
+    .targets[1]
+    0] Name 'i' Store .. 0,0 -> 0,1
+    .value
+      Constant 2 .. 1,0 -> 1,1
+    .type_comment
+      None
+"""),
+
+(r"""
+try: pass  # post
+finally: pass
+""", 'body[0]', 0, 1, None, 'pre,post', r"""
+try:
+finally: pass
+""", r"""pass  # post
+""", r"""
+Module .. ROOT 0,0 -> 3,0
+  .body[1]
+  0] Try .. 1,0 -> 2,13
+    .finalbody[1]
+    0] Pass .. 2,9 -> 2,13
+""", r"""
+Module .. ROOT 0,0 -> 1,0
+  .body[1]
+  0] Pass .. 0,0 -> 0,4
+"""),
+
+(r"""
+try: pass  # post
+finally: pass
+""", 'body[0]', 0, 1, None, '', r"""
+try: # post
+finally: pass
+""", r"""pass""", r"""
+Module .. ROOT 0,0 -> 3,0
+  .body[1]
+  0] Try .. 1,0 -> 2,13
+    .finalbody[1]
+    0] Pass .. 2,9 -> 2,13
+""", r"""
+Module .. ROOT 0,0 -> 0,4
+  .body[1]
+  0] Pass .. 0,0 -> 0,4
+"""),
+
+(r"""
+try: pass
+except: pass
+else:
+    pass
+finally: pass
+""", 'body[0]', 0, 1, 'orelse', 'pre,post', r"""
+try: pass
+except: pass
+finally: pass
+""", r"""pass""", r"""
+Module .. ROOT 0,0 -> 4,0
+  .body[1]
+  0] Try .. 1,0 -> 3,13
+    .body[1]
+    0] Pass .. 1,5 -> 1,9
+    .handlers[1]
+    0] ExceptHandler .. 2,0 -> 2,12
+      .type
+        None
+      .name
+        None
+      .body[1]
+      0] Pass .. 2,8 -> 2,12
+    .finalbody[1]
+    0] Pass .. 3,9 -> 3,13
+""", r"""
+Module .. ROOT 0,0 -> 0,4
+  .body[1]
+  0] Pass .. 0,0 -> 0,4
+"""),
+
+(r"""
+try: pass
+except: pass
+else: pass
+finally: pass
+""", 'body[0]', 0, 1, 'orelse', 'pre,post', r"""
+try: pass
+except: pass
+finally: pass
+""", r"""pass""", r"""
+Module .. ROOT 0,0 -> 4,0
+  .body[1]
+  0] Try .. 1,0 -> 3,13
+    .body[1]
+    0] Pass .. 1,5 -> 1,9
+    .handlers[1]
+    0] ExceptHandler .. 2,0 -> 2,12
+      .type
+        None
+      .name
+        None
+      .body[1]
+      0] Pass .. 2,8 -> 2,12
+    .finalbody[1]
+    0] Pass .. 3,9 -> 3,13
+""", r"""
+Module .. ROOT 0,0 -> 0,4
+  .body[1]
+  0] Pass .. 0,0 -> 0,4
+"""),
+
+(r"""
+try: pass
+except:
+    pass
+else: pass
+finally: pass
+""", 'body[0]', 0, 1, 'handlers', 'pre,post', r"""
+try: pass
+else: pass
+finally: pass
+""", r"""except:
+    pass""", r"""
+Module .. ROOT 0,0 -> 4,0
+  .body[1]
+  0] Try .. 1,0 -> 3,13
+    .body[1]
+    0] Pass .. 1,5 -> 1,9
+    .orelse[1]
+    0] Pass .. 2,6 -> 2,10
+    .finalbody[1]
+    0] Pass .. 3,9 -> 3,13
+""", r"""
+Module .. ROOT 0,0 -> 1,8
+  .body[1]
+  0] ExceptHandler .. 0,0 -> 1,8
+    .type
+      None
+    .name
+      None
+    .body[1]
+    0] Pass .. 1,4 -> 1,8
+"""),
+
+(r"""
+try: pass
+except: pass
+else: pass
+finally: pass
+""", 'body[0]', 0, 1, 'handlers', 'pre,post', r"""
+try: pass
+else: pass
+finally: pass
+""", r"""except: pass""", r"""
+Module .. ROOT 0,0 -> 4,0
+  .body[1]
+  0] Try .. 1,0 -> 3,13
+    .body[1]
+    0] Pass .. 1,5 -> 1,9
+    .orelse[1]
+    0] Pass .. 2,6 -> 2,10
+    .finalbody[1]
+    0] Pass .. 3,9 -> 3,13
+""", r"""
+Module .. ROOT 0,0 -> 0,12
+  .body[1]
+  0] ExceptHandler .. 0,0 -> 0,12
+    .type
+      None
+    .name
+      None
+    .body[1]
+    0] Pass .. 0,8 -> 0,12
+"""),
+
+(r"""
+try: pass
+except: pass  # post
+else: pass
+finally: pass
+""", 'body[0]', 0, 1, 'handlers', '', r"""
+try: pass
+# post
+else: pass
+finally: pass
+""", r"""except: pass""", r"""
+Module .. ROOT 0,0 -> 5,0
+  .body[1]
+  0] Try .. 1,0 -> 4,13
+    .body[1]
+    0] Pass .. 1,5 -> 1,9
+    .orelse[1]
+    0] Pass .. 3,6 -> 3,10
+    .finalbody[1]
+    0] Pass .. 4,9 -> 4,13
+""", r"""
+Module .. ROOT 0,0 -> 0,12
+  .body[1]
+  0] ExceptHandler .. 0,0 -> 0,12
+    .type
+      None
+    .name
+      None
+    .body[1]
+    0] Pass .. 0,8 -> 0,12
+"""),
+
+(r"""
+try: pass
+except: pass  \
+
+else: pass
+finally: pass
+""", 'body[0]', 0, 1, 'handlers', '', r"""
+try: pass
+\
+
+else: pass
+finally: pass
+""", r"""except: pass""", r"""
+Module .. ROOT 0,0 -> 6,0
+  .body[1]
+  0] Try .. 1,0 -> 5,13
+    .body[1]
+    0] Pass .. 1,5 -> 1,9
+    .orelse[1]
+    0] Pass .. 4,6 -> 4,10
+    .finalbody[1]
+    0] Pass .. 5,9 -> 5,13
+""", r"""
+Module .. ROOT 0,0 -> 0,12
+  .body[1]
+  0] ExceptHandler .. 0,0 -> 0,12
+    .type
+      None
+    .name
+      None
+    .body[1]
+    0] Pass .. 0,8 -> 0,12
+"""),
+
+(r"""
+try: pass
+except:
+    pass
+else: pass
+finally: pass
+""", 'body[0].handlers[0]', 0, 1, None, 'pre,post', r"""
+try: pass
+except:
+else: pass
+finally: pass
+""", r"""pass""", r"""
+Module .. ROOT 0,0 -> 5,0
+  .body[1]
+  0] Try .. 1,0 -> 4,13
+    .body[1]
+    0] Pass .. 1,5 -> 1,9
+    .handlers[1]
+    0] ExceptHandler .. 2,0 -> 3,8
+      .type
+        None
+      .name
+        None
+    .orelse[1]
+    0] Pass .. 3,6 -> 3,10
+    .finalbody[1]
+    0] Pass .. 4,9 -> 4,13
+""", r"""
+Module .. ROOT 0,0 -> 0,4
+  .body[1]
+  0] Pass .. 0,0 -> 0,4
+"""),
+
+(r"""
+try: pass
+except: pass
+else: pass
+finally: pass
+""", 'body[0].handlers[0]', 0, 1, None, 'pre,post', r"""
+try: pass
+except:
+else: pass
+finally: pass
+""", r"""pass""", r"""
+Module .. ROOT 0,0 -> 5,0
+  .body[1]
+  0] Try .. 1,0 -> 4,13
+    .body[1]
+    0] Pass .. 1,5 -> 1,9
+    .handlers[1]
+    0] ExceptHandler .. 2,0 -> 2,7
+      .type
+        None
+      .name
+        None
+    .orelse[1]
+    0] Pass .. 3,6 -> 3,10
+    .finalbody[1]
+    0] Pass .. 4,9 -> 4,13
+""", r"""
+Module .. ROOT 0,0 -> 0,4
+  .body[1]
+  0] Pass .. 0,0 -> 0,4
+"""),
+
+(r"""
+try: pass
+except: pass  # post
+else: pass
+finally: pass
+""", 'body[0].handlers[0]', 0, 1, None, '', r"""
+try: pass
+except: # post
+else: pass
+finally: pass
+""", r"""pass""", r"""
+Module .. ROOT 0,0 -> 5,0
+  .body[1]
+  0] Try .. 1,0 -> 4,13
+    .body[1]
+    0] Pass .. 1,5 -> 1,9
+    .handlers[1]
+    0] ExceptHandler .. 2,0 -> 2,12
+      .type
+        None
+      .name
+        None
+    .orelse[1]
+    0] Pass .. 3,6 -> 3,10
+    .finalbody[1]
+    0] Pass .. 4,9 -> 4,13
+""", r"""
+Module .. ROOT 0,0 -> 0,4
+  .body[1]
+  0] Pass .. 0,0 -> 0,4
+"""),
+
+(r"""
+try: pass
+except: pass \
+
+else: pass
+finally: pass
+""", 'body[0].handlers[0]', 0, 1, None, '', r"""
+try: pass
+except: \
+
+else: pass
+finally: pass
+""", r"""pass""", r"""
+Module .. ROOT 0,0 -> 6,0
+  .body[1]
+  0] Try .. 1,0 -> 5,13
+    .body[1]
+    0] Pass .. 1,5 -> 1,9
+    .handlers[1]
+    0] ExceptHandler .. 2,0 -> 2,12
+      .type
+        None
+      .name
+        None
+    .orelse[1]
+    0] Pass .. 4,6 -> 4,10
+    .finalbody[1]
+    0] Pass .. 5,9 -> 5,13
+""", r"""
+Module .. ROOT 0,0 -> 0,4
+  .body[1]
+  0] Pass .. 0,0 -> 0,4
 """),
 
 ]  # END OF GET_SLICE_STMT_CUT_NOVERIFY_DATA
@@ -9613,8 +10040,7 @@ i # post
 
                 if verify:
                     t.f.verify()
-
-                s.verify()
+                    s.verify()
 
                 try:
                     self.assertEqual(tsrc, src)
@@ -9645,8 +10071,7 @@ i # post
 
                 if verify:
                     t.f.verify()
-
-                s.verify()
+                    s.verify()
 
                 try:
                     self.assertEqual(tsrc, src_cut)
@@ -9908,8 +10333,7 @@ def regen_get_slice_stmt_cut_data():
 
             if verify:
                 t.f.verify()
-
-            s.verify()
+                s.verify()
 
             newlines.extend(f'''(r"""{src}""", {elt!r}, {start}, {stop}, {field!r}, {fmt!r}, r"""{tsrc}""", r"""{ssrc}""", r"""'''.split('\n'))
             newlines.extend(tdump)

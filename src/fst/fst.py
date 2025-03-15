@@ -120,14 +120,18 @@ class astfield(NamedTuple):
     name: str
     idx:  int | None = None
 
-    def get(self, node: AST) -> Any:
-        return getattr(node, self.name) if self.idx is None else getattr(node, self.name)[self.idx]
+    def get(self, parent: AST) -> Any:
+        """Get this field from the given `parent`."""
 
-    def set(self, node: AST, child: AST):
+        return getattr(parent, self.name) if self.idx is None else getattr(parent, self.name)[self.idx]
+
+    def set(self, parent: AST, child: AST):
+        """Set `node` in the field in the given `parent`."""
+
         if self.idx is None:
-            setattr(node, self.name, child)
+            setattr(parent, self.name, child)
         else:
-            getattr(node, self.name)[self.idx] = child
+            getattr(parent, self.name)[self.idx] = child
 
 
 class fstpos(NamedTuple):
@@ -1137,13 +1141,16 @@ class FSTSrcEdit:
                                                    True, comment=True, lcont=None)
         copy_loc   = fstloc(*(pre_comms or ffirst.bloc[:2]), *(post_comms or flast.bloc[2:]))
 
-        if not pre_semi:  # if this doesn't exist then set block start to just past prev statement or block open (colon)
-            if fpre:
-                block_ln, block_col = fpre.bloc[2:]
+        if fpre:  # set block start to just past prev statement or block open (colon)
+            block_ln, block_col = fpre.bloc[2:]
 
-            elif code := _prev_src(lines, bound_ln, bound_col, copy_loc.ln, copy_loc.col, False, False):
-                block_ln, block_col, src  = code
-                block_col                += len(src)
+        elif code := _prev_src(lines, bound_ln, bound_col, copy_loc.ln, copy_loc.col, False, False):
+            block_ln, block_col, src  = code
+            block_col                += len(src)
+
+        else:
+            block_ln  = bound_ln
+            block_col = bound_col
 
         # get copy and delete locations according to possible combinations of preceding and trailing comments, semicolons and line continuation backslashes
 
@@ -1233,22 +1240,30 @@ class FSTSrcEdit:
                 else:
                     del_loc = fstloc(ln, del_col, bound_end_ln, bound_end_col)
 
-        # remove 'else:' or 'finally:' if whole body cut (but not 'elif ...:' as that lives in first cut statement)
+        # special case of deleting everything from a block
 
-        if not fpre and not fpost and ((is_finally := field == 'finalbody') or
-                                       (field == 'orelse' and not lines[ffirst.bln].startswith('elif', ffirst.bcol))):
-            del_ln, del_col, del_end_ln, del_end_col = del_loc
+        if not fpre and not fpost:
+            if ((is_finally := field == 'finalbody') or  # remove 'else:' or 'finally:' (but not 'elif ...:' as that lives in first cut statement)
+                (field == 'orelse' and not lines[ffirst.bln].startswith('elif', ffirst.bcol))
+            ):
+                del_ln, del_col, del_end_ln, del_end_col = del_loc
 
-            del_ln, del_col = _prev_find(lines, bound_ln, bound_col, del_ln, del_col,
-                                         'finally' if is_finally else 'else', False, comment=False, lcont=False)  # `first=False` because have to skip over ':'
+                del_ln, del_col = _prev_find(lines, bound_ln, bound_col, del_ln, del_col,
+                                             'finally' if is_finally else 'else', False, comment=False, lcont=False)  # `first=False` because have to skip over ':'
 
-            if put_lines:
-                put_lines[0] = lines[del_ln][:del_col] + put_lines[0]  # prepend block start indentation to existing indentation, silly but whatever
+                if put_lines:
+                    put_lines[0] = lines[del_ln][:del_col] + put_lines[0]  # prepend block start indentation to existing indentation, silly but whatever
 
-            if pre_pre_comms := self.pre_comments(lines, bound_ln, bound_col, fstpos(del_ln, 0), fmt):
-                del_ln = pre_pre_comms.ln
+                if pre_pre_comms := self.pre_comments(lines, bound_ln, bound_col, fstpos(del_ln, 0), fmt):
+                    del_ln = pre_pre_comms.ln
 
-            del_loc = fstloc(del_ln, 0, del_end_ln, del_end_col)
+                del_loc = fstloc(del_ln, 0, del_end_ln, del_end_col)
+
+            elif flast is ffirst:  # avoid deleting trailing newline of only statement just past block open
+                del_ln, del_col, del_end_ln, del_end_col = del_loc
+
+                if not del_end_col and del_ln == block_ln:
+                    del_loc = fstloc(del_ln, del_col, (ln := del_end_ln - 1), len(lines[ln]))
 
         # delete preceding empty lines according to format flags
 
@@ -1271,7 +1286,7 @@ class FSTSrcEdit:
                     indent    = lines[del_ln][:del_col]
                     put_lines = [indent + put_lines[0], *put_lines[1:]] if put_lines else [indent]
 
-        # remove possible line continuation preceding delete start position because could link to invalid following statement after line continuation (block statement)
+        # remove possible line continuation preceding delete start position because could link to invalid following block statement
 
         del_ln, del_col, del_end_ln, del_end_col = del_loc
 
@@ -1331,7 +1346,6 @@ class FST:
 
     # class attributes
     src_edit:     FSTSrcEdit = FSTSrcEdit()  ; """@private"""
-
     is_FST:       bool       = True          ; """@private"""  # for quick checks vs. `fstloc` and `fstpos`
 
     @property
@@ -2716,7 +2730,7 @@ class FST:
 
         return self
 
-    def dump(self, full: bool = False, indent: int = 2, linefunc: Callable = print, compact: bool = False
+    def dump(self, linefunc: Callable = print, *, full: bool = False, indent: int = 2, compact: bool = False,
              ) -> list[str] | None:
         """Dump a representation of the tree to stdout or return as a list of lines.
 
@@ -2919,9 +2933,8 @@ class FST:
 
             return fst
 
-
         # TODO: individual nodes
-
+        # TODO: other sequences?
 
         raise ValueError(f"cannot cut a '{parenta.__class__.__name__}'")
 
@@ -2962,6 +2975,8 @@ class FST:
             return self.put_slice(code, start, stop, field, fix=fix, fmt=fmt, docstr=docstr)
 
         field, body = _fixup_field_body(self.a, field)
+
+        # TODO: individual nodes
 
         raise NotImplementedError  # TODO: THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS!
 
@@ -3102,9 +3117,6 @@ class FST:
         """Must specify `inc` as not `None` to  enable offset of nodes according to text. TODO: document fully!"""
 
         self.put_lines(None if src is None else src.split('\n'), ln, col, end_ln, end_col, inc, stop_at)
-
-
-
 
 # ------------------------------------------------------------------------------------------------------------------
 
