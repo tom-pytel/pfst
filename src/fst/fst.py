@@ -121,12 +121,12 @@ class astfield(NamedTuple):
     idx:  int | None = None
 
     def get(self, parent: AST) -> Any:
-        """Get this field from the given `parent`."""
+        """Get child node at this field in the given `parent`."""
 
         return getattr(parent, self.name) if self.idx is None else getattr(parent, self.name)[self.idx]
 
     def set(self, parent: AST, child: AST):
-        """Set `node` in the field in the given `parent`."""
+        """Set `child` node at this field in the given `parent`."""
 
         if self.idx is None:
             setattr(parent, self.name, child)
@@ -670,19 +670,19 @@ class fstlistproxy:
 
         self.owner.put_slice(code, idx.start, idx.stop, self.field)
 
-    def append(self, code: Code):
-        self.owner.put(code, self.start + len(self.asts), field=self.field)
+    def append(self, code: Code, *, fmt: Fmt = DEFAULT_SRC_EDIT_FMT, docstr: bool | str = DEFAULT_DOCSTR):
+        self.owner.put(code, self.start + len(self.asts), field=self.field, fmt=fmt, docstr=docstr)
 
-    def extend(self, code: Code):
-        self.owner.put_slice(code, (end := self.start + len(self.asts)), end, self.field)
+    def extend(self, code: Code, *, fmt: Fmt = DEFAULT_SRC_EDIT_FMT, docstr: bool | str = DEFAULT_DOCSTR):
+        self.owner.put_slice(code, (end := self.start + len(self.asts)), end, self.field, fmt=fmt, docstr=docstr)
 
-    def copy(self, *, fix: bool = True) -> 'FST':
-        return self.owner.get_slice(start := self.start, start + len(self.asts), self.field,
-                                    fix=fix, cut=False)
+    def copy(self, *, fix: bool = True, fmt: Fmt = DEFAULT_SRC_EDIT_FMT, docstr: bool | str = DEFAULT_DOCSTR) -> 'FST':
+        return self.owner.get_slice(start := self.start, start + len(self.asts), self.field, fix=fix, cut=False,
+                                    fmt=fmt, docstr=docstr)
 
-    def cut(self, *, fix: bool = True) -> 'FST':
-        return self.owner.get_slice(start := self.start, start + len(self.asts), self.field,
-                                    fix=fix, cut=True)
+    def cut(self, *, fix: bool = True, fmt: Fmt = DEFAULT_SRC_EDIT_FMT, docstr: bool | str = DEFAULT_DOCSTR) -> 'FST':
+        return self.owner.get_slice(start := self.start, start + len(self.asts), self.field, fix=fix, cut=True,
+                                    fmt=fmt, docstr=docstr)
 
 
 class FSTSrcEdit:
@@ -1336,39 +1336,42 @@ class FST:
 
     @property
     def is_stmt(self) -> bool:
-        """Is a `stmt` or `mod` node (if any)."""
+        """Is a `stmt` or `mod` node."""
 
         return isinstance(self.a, (stmt, mod))
 
     @property
     def is_stmtish(self) -> bool:
-        """Is a `stmt`, `ExceptHandler`, `match_case` or `mod` node (if any)."""
+        """Is a `stmt`, `ExceptHandler`, `match_case` or `mod` node."""
 
         return isinstance(self.a, STATEMENTISH_OR_MOD)
 
     @property
     def is_block(self) -> bool:
-        """Opens a block. Types include `FunctionDef`, `AsyncFunctionDef`, `ClassDef`, `For`, `AsyncFor`, `While`, `If`,
-        `With`, `AsyncWith`, `Match`, `Try`, `TryStar`, `ExceptHandler`, `match_case`, and `mod`."""
+        """Is a node which opens a block. Types include `FunctionDef`, `AsyncFunctionDef`, `ClassDef`, `For`,
+        `AsyncFor`, `While`, `If`, `With`, `AsyncWith`, `Match`, `Try`, `TryStar`, `ExceptHandler`, `match_case`, and
+        `mod`."""
 
         return isinstance(self.a, BLOCK_OR_MOD)
 
     @property
     def is_scope(self) -> bool:
-        """Opens a scope. Types include `FunctionDef`, `AsyncFunctionDef`, `ClassDef`, `Lambda`, `ListComp`, `SetComp`,
-        `DictComp`, `GeneratorExp`, and `mod`."""
+        """Is a node which opens a scope. Types include `FunctionDef`, `AsyncFunctionDef`, `ClassDef`, `Lambda`,
+        `ListComp`, `SetComp`, `DictComp`, `GeneratorExp`, and `mod`."""
 
         return isinstance(self.a, SCOPE_OR_MOD)
 
     @property
     def is_named_scope(self) -> bool:
-        """Opens a named scope. Types include `FunctionDef`, `AsyncFunctionDef`,  `ClassDef` and `mod`."""
+        """Is a node which opens a named scope. Types include `FunctionDef`, `AsyncFunctionDef`,  `ClassDef` and
+        `mod`."""
 
         return isinstance(self.a, NAMED_SCOPE_OR_MOD)
 
     @property
     def is_anon_scope(self) -> bool:
-        """Opens an anonymous scope. Types include `Lambda`, `ListComp`, `SetComp`, `DictComp` and `GeneratorExp`."""
+        """Is a node which opens an anonymous scope. Types include `Lambda`, `ListComp`, `SetComp`, `DictComp` and
+        `GeneratorExp`."""
 
         return isinstance(self.a, ANONYMOUS_SCOPE)
 
@@ -1540,25 +1543,25 @@ class FST:
 
     @property
     def lineno(self) -> int:  # 1 based
-        """Line number of the first line of this node (1 based)."""
+        """Line number of the first line of this node (1 based), available for all nodes which have `loc`."""
 
         return (loc := self.loc) and loc[0] + 1
 
     @property
     def col_offset(self) -> int:  # byte index
-        """BYTE index of the start of this node (0 based)."""
+        """BYTE index of the start of this node (0 based), available for all nodes which have `loc`."""
 
         return (loc := self.loc) and self.root._lines[loc[0]].c2b(loc[1])
 
     @property
     def end_lineno(self) -> int:  # 1 based
-        """Line number of the LAST LINE of this node (1 based)."""
+        """Line number of the LAST LINE of this node (1 based), available for all nodes which have `loc`."""
 
         return (loc := self.loc) and loc[2] + 1
 
     @property
     def end_col_offset(self) -> int:  # byte index
-        """CHARACTER index one past the end of this node (0 based)."""
+        """CHARACTER index one past the end of this node (0 based), available for all nodes which have `loc`."""
 
         return (loc := self.loc) and self.root._lines[loc[2]].c2b(loc[3])
 
@@ -2719,7 +2722,7 @@ class FST:
         - `feature_version`: `ast.parse()` parameter.
 
         **Returns:**
-        - `AST`: The parsed tree with `.f` attributes added to each `AST` node for `FST` access.
+        - `FST`: The parsed tree with `.f` attributes added to each `AST` node for `FST` access.
         """
 
         if isinstance(source, bytes):
@@ -2760,7 +2763,7 @@ class FST:
             `True`.
 
         **Returns:**
-        - `AST`: The parsed tree with `.f` attributes added to each `AST` node for `FST` access.
+        - `FST`: The augmented tree with `.f` attributes added to each `AST` node for `FST` access.
         """
 
         src   = ast_unparse(ast)
@@ -2792,7 +2795,8 @@ class FST:
         return FST(ast, lines=[bistr(s) for s in lines], parse_params=parse_params)
 
     def verify(self, *, raise_: bool = True) -> Optional['FST']:  # -> Self | None:
-        """Sanity check, make sure source text matches ast (locations and everything).
+        """Sanity check, reparse source and make sure parsed tree matches currently stored tree (locations and
+        everything).
 
         **Parameters:**
         - `raise_`: Whether to raise an exception on verify failed or return `None`.
@@ -2836,10 +2840,11 @@ class FST:
         """Dump a representation of the tree to stdout or return as a list of lines.
 
         **Parameters:**
+        - `linefunc`: `print` means print to stdout, `list` returns a list of lines and `str` returns a whole string.
+            Otherwise a `Callable[[str], None]` which is called for each line of output individually.
         - `full`: If `True` then will list all fields in nodes including empty ones, otherwise will exclude most empty
             fields.
         - `indent`: The average airspeed of an unladen swallow.
-        - `linefunc`: `print` means print to stdout, `list` returns a list of lines and `str` returns a whole string.
         - `compact`: If `True` then the dump is compacted a bit by listing `Name` and `Constant` nodes on a single
             line.
         """
@@ -2860,10 +2865,11 @@ class FST:
 
     def fix(self, inplace: bool = True) -> 'FST':
         """This is really a maybe fix source and `ctx` values for cut or copied nodes (to make subtrees parsable if the
-        source is not after the operation). Possibly reparses in order to verify expression. If can not fix or ast is
-        not parsable by itself then ast will be unchanged. Is meant to be a quick fix after a cut or copy operation, not
-        full check, for that use `is_parsable()` or `verify()` depending on need. Possible source changes are `elif` to
-        `if` and parentheses where needed and commas for singleton tuples.
+        source is not after the operation). Normally this is called by default on newly cut / copied individual nodes.
+        Possibly reparses in order to verify expressions. If can not fix or ast is not parsable by itself then ast will
+        be unchanged. Is meant to be a quick fix after a cut or copy operation, not full check, for that use
+        `is_parsable()` or `verify()` depending on need. Possible source changes are `elif` to `if` and parentheses
+        where needed and commas for singleton tuples.
 
         **Parameters:**
         - `inplace`: If `True` then changes will be made to `self`. If `False` then `self` may be returned if no changes
@@ -2993,6 +2999,8 @@ class FST:
         return self
 
     def copy(self, *, fix: bool = True, fmt: Fmt = DEFAULT_SRC_EDIT_FMT, docstr: bool | str = DEFAULT_DOCSTR) -> 'FST':
+        """Copy an individual node to a top level tree, dedenting and fixing as necessary."""
+
         ast    = self.a
         newast = copy_ast(ast)
 
@@ -3016,6 +3024,8 @@ class FST:
         return fst.fix(inplace=True) if fix else fst
 
     def cut(self, *, fix: bool = True, fmt: Fmt = DEFAULT_SRC_EDIT_FMT, docstr: bool | str = DEFAULT_DOCSTR) -> 'FST':
+        """Cut out an individual node to a top level tree (if possible), dedenting and fixing as necessary."""
+
         if self.is_root:
             raise ValueError('cannot cut root node')
 
@@ -3045,6 +3055,7 @@ class FST:
     def get(self, start: int | str | None = None, stop: int | str | None | Literal[False] = False,
             field: str | None = None, *, fix: bool = True, cut: bool = False,
             fmt: Fmt = DEFAULT_SRC_EDIT_FMT, docstr: bool | str = DEFAULT_DOCSTR) -> Optional['FST']:
+        """Get an individual child node or a slice of child nodes from `self`."""
 
         if isinstance(start, str):
             raise NotImplementedError
@@ -3071,6 +3082,7 @@ class FST:
     def put(self, code: Code | None, start: int | None = None, stop: int | None | Literal['False'] = False,
             field: str | None = None, *, fix: bool = True,
             fmt: Fmt = DEFAULT_SRC_EDIT_FMT, docstr: bool | str = DEFAULT_DOCSTR) -> Optional['FST']:  # -> Self:
+        """Put an individual child node or a slice of child nodes to `self`."""
 
         if stop is not False:
             return self.put_slice(code, start, stop, field, fix=fix, fmt=fmt, docstr=docstr)
@@ -3087,6 +3099,8 @@ class FST:
     def get_slice(self, start: int | None = None, stop: int | None = None, field: str | None = None, *,
                   fix: bool = True, cut: bool = False,
                   fmt: Fmt = DEFAULT_SRC_EDIT_FMT, docstr: bool | str = DEFAULT_DOCSTR) -> 'FST':
+        """Get a slice of child nodes from `self`."""
+
         ast = self.a
 
         if isinstance(ast, STATEMENTISH_OR_STMTMOD):
@@ -3111,6 +3125,8 @@ class FST:
     def put_slice(self, code: Code | None, start: int | None = None, stop: int | None = None, field: str | None = None,
                   *, fix: bool = True,
                   fmt: Fmt = DEFAULT_SRC_EDIT_FMT, docstr: bool | str = DEFAULT_DOCSTR) -> Optional['FST']:  # -> Self:
+        """Put an a slice of child nodes to `self`."""
+
         ast = self.a
 
         if isinstance(ast, STATEMENTISH_OR_STMTMOD):
@@ -3138,7 +3154,7 @@ class FST:
 
 
     def get_lines(self, ln: int, col: int, end_ln: int, end_col: int) -> list[str]:
-        """TODO: document fully!"""
+        """Get lines from currently stored source. The first and last lines are cropped to start `col` and `end_col`."""
 
         if end_ln == ln:
             return [bistr(self.root._lines[ln][col : end_col])]
@@ -3147,8 +3163,8 @@ class FST:
 
     def put_lines(self, lines: list[str] | None, ln: int, col: int, end_ln: int, end_col: int,
                   inc: bool | None = None, stop_at: Optional['FST'] = None):
-        """Put or delete lines, optionally offsetting all nodes for the change. Must specify `inc` as not `None` to
-        enable offset of nodes according to text. TODO: document fully!"""
+        """Put or delete lines to currently stored source, optionally offsetting all nodes for the change. Must specify
+        `inc` as not `None` to enable offset of nodes according to text."""
 
         ls = self.root._lines
 
@@ -3206,13 +3222,13 @@ class FST:
                 ls[ln + 1 : end_ln] = lines[1:-1]
 
     def get_src(self, ln: int, col: int, end_ln: int, end_col: int) -> list[str]:
-        """TODO: document fully!"""
+        """'\\n'.join(self.get_lines(...))'"""
 
         return '\n'.join(self.get_lines(ln, col, end_ln, end_col))
 
     def put_src(self, src: str | None, ln: int, col: int, end_ln: int, end_col: int,
                 inc: bool = False, stop_at: Optional['FST'] = None):
-        """Must specify `inc` as not `None` to  enable offset of nodes according to text. TODO: document fully!"""
+        """self.put_lines(src.split('\\n'), ...)'."""
 
         self.put_lines(None if src is None else src.split('\n'), ln, col, end_ln, end_col, inc, stop_at)
 
@@ -4174,6 +4190,8 @@ class FST:
         return True
 
     def is_tuple_parenthesized(self) -> bool:
+        """Whether `self` is parenthesized or not. Call only on a `Tuple` node."""
+
         # assert isinstance(self.a, Tuple)
 
         self_ln, self_col, self_end_ln, self_end_col = self.loc
@@ -4213,15 +4231,19 @@ class FST:
         return nparens > 0  # don't want to fiddle with checking if f0 is a parenthesized tuple
 
     def is_empty_set_call(self) -> bool:
+        """Whether `self` is an empty `set()` call."""
+
         return (isinstance(ast := self.a, Call) and not ast.args and not ast.keywords and
                 isinstance(func := ast.func, Name) and func.id == 'set' and isinstance(func.ctx, Load))
 
     def get_indent(self) -> str:
-        """Determine proper indentation of node at `stmt` (or other similar) level at or above self. Even if it is a
-        continuation or on same line as block statement.
+        """Determine proper indentation of node at `stmt` (or other similar) level at or above `self`. Even if it is a
+        continuation or on same line as block statement. If indentation is impossible to determine because is solo
+        statement on same line as parent block, then the current tree default indentation is added to the  parent block
+        indentation and returned.
 
         **Returns:**
-        - `str`: Entire indentation string for the block this node lives in (not just one level).
+        - `str`: Entire indentation string for the block this node lives in (not just a single level).
         """
 
         while (parent := self.parent) and not isinstance(self.a, STATEMENTISH):
@@ -4641,10 +4663,7 @@ class FST:
         return self
 
     def offset_cols(self, dcol_offset: int, lns: set[int]):
-        """Offset ast col byte offsets in `lns` by a delta and return same set of indentable lines.
-
-        Only modifies ast, not lines.
-        """
+        """Offset ast col byte offsets in `lns` by `dcol_offset`. Only modifies ast, not lines."""
 
         if dcol_offset:
             for a in walk(self.a):
@@ -4660,10 +4679,7 @@ class FST:
             self.touchall(True, False, False)
 
     def offset_cols_mapped(self, dcol_offsets: dict[int, int]):
-        """Offset ast col byte offsets by a specific delta per line and return same dict of indentable lines.
-
-        Only modifies ast, not lines.
-        """
+        """Offset ast col byte offsets by a specific `dcol_offset` per line. Only modifies ast, not lines."""
 
         for a in walk(self.a):
             if (end_col_offset := getattr(a, 'end_col_offset', None)) is not None:
@@ -4679,12 +4695,12 @@ class FST:
 
     def indent_lns(self, indent: str | None = None, lns: set[int] | None = None, *,
                    docstr: bool | str = DEFAULT_DOCSTR) -> set[int]:
-        """Indent all indentable lines past the first one according with `indent` and adjust node locations accordingly.
-        Does not modify node columns on first line.
+        """Indent all indentable lines specified in `lns` with `indent` and adjust node locations accordingly.
 
         **Parameters:**
         - `indent`: The indentation string to prefix to each indentable line.
-        - `lns`: A `set` of lines to apply identation to. If `None` then will be gotten from `get_indentable_lns()`.
+        - `lns`: A `set` of lines to apply identation to. If `None` then will be gotten from
+            `get_indentable_lns(skip=1)`.
         - `docstr`: How to treat multiline string docstring lines. `False` means not indentable, `True` means all `Expr`
             multiline strings are indentable (as they serve no coding purpose). `'strict'` means only multiline strings
             in expected docstring positions are indentable.
@@ -4717,13 +4733,13 @@ class FST:
 
     def dedent_lns(self, indent: str | None = None, lns: set[int] | None = None, *,
                    docstr: bool | str = DEFAULT_DOCSTR, skip: int = 1) -> set[int]:
-        """Dedent all indentable lines past the first one by removing `indent` prefix and adjust node locations
-        accordingly. Does not modify columns on first line. If cannot dedent entire amount will dedent as much as
-        possible.
+        """Dedent all indentable lines specified in `lns` by removing `indent` prefix and adjust node locations
+        accordingly. If cannot dedent entire amount will dedent as much as possible.
 
         **Parameters:**
         - `indent`: The indentation string to remove from the beginning of each indentable line (if possible).
-        - `lns`: A `set` of lines to apply dedentation to. If `None` then will be gotten from `get_indentable_lns()`.
+        - `lns`: A `set` of lines to apply dedentation to. If `None` then will be gotten from
+            `get_indentable_lns(skip=1)`.
         - `docstr`: How to treat multiline string docstring lines. `False` means not indentable, `True` means all `Expr`
             multiline strings are indentable (as they serve no coding purpose). `'strict'` means only multiline strings
             in expected docstring positions are indentable.
@@ -4787,7 +4803,12 @@ class FST:
         return lns
 
     def reparse_docstrings(self, docstr: bool | str = DEFAULT_DOCSTR):
-        """Reparse docstrings in self and all descendants."""
+        """Reparse docstrings in self and all descendants.
+
+        **Parameters:**
+        - `docstr`: Which strings to reparse. `True` means all `Expr` multiline strings. `'strict'` means only multiline
+            strings in expected docstring. `False` doesn't reparse anything and just returns.
+        """
 
         # if docstr is None:
         #     docstr = self.root.default_docstr
