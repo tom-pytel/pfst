@@ -8,7 +8,7 @@ from .util import TryStar
 
 __all__ = [
     'parse', 'unparse', 'FST', 'FSTSrcEdit',
-    'fstlistproxy', 'fstpos', 'fstloc', 'srcwpos', 'astfield',
+    'fstlistproxy', 'fstloc', 'srcwpos', 'astfield',
 ]
 
 
@@ -132,20 +132,6 @@ class astfield(NamedTuple):
             setattr(parent, self.name, child)
         else:
             getattr(parent, self.name)[self.idx] = child
-
-
-class fstpos(NamedTuple):
-    ln:  int
-    col: int
-
-    bend_ln  = property(lambda self: self.ln)   ; """Alias for `ln`."""  # for convenience
-    bend_col = property(lambda self: self.col)  ; """Alias for `col`."""
-    bln      = property(lambda self: self.ln)   ; """Alias for `ln`."""
-    bcol     = property(lambda self: self.col)  ; """Alias for `col`."""
-    bend_ln  = property(lambda self: self.ln)   ; """Alias for `ln`."""
-    bend_col = property(lambda self: self.col)  ; """Alias for `col`."""
-
-    is_FST   = False                            ; """@private"""  # for quick checks vs. `FST`
 
 
 class fstloc(NamedTuple):
@@ -346,7 +332,7 @@ def _prev_src(lines: list[str], ln: int, col: int, end_ln: int, end_col: int,
 
 
 def _next_find(lines: list[str], ln: int, col: int, end_ln: int, end_col: int, src: str, first: bool = False, *,
-               comment: bool = False, lcont: bool | None = False) -> fstpos | None:
+               comment: bool = False, lcont: bool | None = False) -> tuple[int, int] | None:
     """Find location of a string in the bound walking forward from the start. Returns `None` if string not found.
 
     **Parameters:**
@@ -364,14 +350,14 @@ def _next_find(lines: list[str], ln: int, col: int, end_ln: int, end_col: int, s
             cln, ccol, csrc = code
 
             if csrc.startswith(src):
-                return fstpos(cln, ccol)
+                return cln, ccol
 
     else:
         while code := _next_src(lines, ln, col, end_ln, end_col, comment, lcont):
             ln, col, csrc = code
 
             if (idx := csrc.find(src)) != -1:
-                return fstpos(ln, col + idx)
+                return ln, col + idx
 
             col += len(csrc)
 
@@ -379,7 +365,7 @@ def _next_find(lines: list[str], ln: int, col: int, end_ln: int, end_col: int, s
 
 
 def _prev_find(lines: list[str], ln: int, col: int, end_ln: int, end_col: int, src: str, first: bool = False, *,
-               comment: bool = False, lcont: bool | None = False, state: list | None = None) -> fstpos | None:
+               comment: bool = False, lcont: bool | None = False, state: list | None = None) -> tuple[int, int] | None:
     """Find location of a string in the bound walking backwards from the end. Returns `None` if string not found. If
     `comment` is `True` then `src` must match the START of the src comment found, not the tail like for non-comment
      strings found in order to be considered successful.
@@ -402,10 +388,10 @@ def _prev_find(lines: list[str], ln: int, col: int, end_ln: int, end_col: int, s
 
             if comment and csrc.startswith('#'):
                 if csrc.startswith(src):
-                    return fstpos(cln, ccol)
+                    return cln, ccol
 
             elif csrc.endswith(src):
-                return fstpos(cln, ccol + len(csrc) - len(src))
+                return cln, ccol + len(csrc) - len(src)
 
     else:
         if state is None:
@@ -416,10 +402,10 @@ def _prev_find(lines: list[str], ln: int, col: int, end_ln: int, end_col: int, s
 
             if comment and csrc.startswith('#'):
                 if csrc.startswith(src):
-                    return fstpos(end_ln, end_col)
+                    return end_ln, end_col
 
             elif (idx := csrc.rfind(src)) != -1:
-                return fstpos(end_ln, end_col + idx)
+                return end_ln, end_col + idx
 
     return None
 
@@ -880,8 +866,8 @@ class FSTSrcEdit:
 
         return fstloc(copy_ln, copy_col, copy_end_ln, copy_end_col), fstloc(del_ln, del_col, del_end_ln, del_end_col)
 
-    def pre_comments(self, lines: list[bistr], bound_ln: int, bound_col: int, f: Union['FST', fstloc, fstpos],
-                     fmt: set | frozenset = {'pre'}) -> fstpos | None:
+    def pre_comments(self, lines: list[bistr], bound_ln: int, bound_col: int, bound_end_ln: int, bound_end_col: int,
+                     fmt: set | frozenset = {'pre'}) -> tuple[int, int] | None:
         """Return the position of the start of any preceding comments to the element which is assumed to live just past
         (`f.bln`, `f.bcol`). Returns `None` if no preceding comment. If preceding entire line comments exist then the
         returned position column should be 0 (the start of the line) to indicate that it is a full line comment. Only
@@ -898,26 +884,25 @@ class FSTSrcEdit:
         if not (allpre := 'allpre' in fmt) and 'pre' not in fmt:
             return None
 
-        f_bln = f.bln
-
-        if bound_ln == f_bln or ((f_bcol := f.bcol) and not re_empty_line.match(lines[f_bln], 0, f_bcol)):
+        if bound_ln == bound_end_ln or (bound_end_col and
+                                        not re_empty_line.match(lines[bound_end_ln], 0, bound_end_col)):
             return None
 
-        bound_end_ln = None
-        re_pat       = re_empty_line_cont_or_comment if allpre else re_comment_line_start
+        pre_ln = None
+        re_pat = re_empty_line_cont_or_comment if allpre else re_comment_line_start
 
-        for ln in range(f_bln - 1, bound_ln - (not bound_col), -1):  # only consider whole lines
+        for ln in range(bound_end_ln - 1, bound_ln - (not bound_col), -1):  # only consider whole lines
             if not (m := re_pat.match(lines[ln])):
                 break
 
             if not allpre or (g := m.group(1)) and g.startswith('#'):
-                bound_end_ln  = ln
-                bound_end_col = 0
+                pre_ln  = ln
+                pre_col = 0
 
-        return None if bound_end_ln is None else fstpos(bound_end_ln, bound_end_col)
+        return None if pre_ln is None else (pre_ln, pre_col)
 
-    def post_comments(self, lines: list[bistr], f: Union['FST', fstloc, fstpos], bound_end_ln: int, bound_end_col: int,
-                      fmt: set | frozenset = {'post'}) -> fstpos | None:
+    def post_comments(self, lines: list[bistr], bound_ln: int, bound_col: int, bound_end_ln: int, bound_end_col: int,
+                      fmt: set | frozenset = {'post'}) -> tuple[int, int] | None:
         """Return the position of the end of any trailing comments to the element which is assumed to live just before
         (`f.bend_ln`, `f.bend_col`). Returns `None` if no trailing comment. Should return the location at the start of
         the next line if comment present because a comment should never be on the last line, but if a comment ends the
@@ -932,17 +917,15 @@ class FSTSrcEdit:
         if 'post' not in fmt:
             return None
 
-        bound_ln = f.bend_ln
-
         if same_line := bound_end_ln == bound_ln:
-            code = _next_src(lines, bound_ln, f.bend_col, bound_end_ln, bound_end_col, True)
+            code = _next_src(lines, bound_ln, bound_col, bound_end_ln, bound_end_col, True)
         else:
-            code = _next_src(lines, bound_ln, f.bend_col, bound_ln, 0x7fffffffffffffff, True)
+            code = _next_src(lines, bound_ln, bound_col, bound_ln, 0x7fffffffffffffff, True)
 
         if not code or not code.src.startswith('#'):
             return None
 
-        return fstpos(bound_end_ln, bound_end_col) if same_line else fstpos(bound_ln + 1, 0)
+        return (bound_end_ln, bound_end_col) if same_line else (bound_ln + 1, 0)
 
     def get_slice_seq(self, fst: 'FST', cut: bool, seq_loc: fstloc,
                       ffirst: Union['FST', fstloc], flast: Union['FST', fstloc],
@@ -1133,8 +1116,8 @@ class FSTSrcEdit:
 
         lines      = fst.root._lines
         put_lines  = None
-        pre_comms  = self.pre_comments(lines, bound_ln, bound_col, ffirst, fmt)
-        post_comms = self.post_comments(lines, flast, bound_end_ln, bound_end_col, fmt)
+        pre_comms  = self.pre_comments(lines, bound_ln, bound_col, ffirst.bln, ffirst.bcol, fmt)
+        post_comms = self.post_comments(lines, flast.bend_ln, flast.bend_col, bound_end_ln, bound_end_col, fmt)
         pre_semi   = not pre_comms and _prev_find(lines, bound_ln, bound_col, ffirst.ln, ffirst.col, ';',
                                                   True, comment=True, lcont=None)
         post_semi  = not post_comms and _next_find(lines, flast.end_ln, flast.end_col, bound_end_ln, bound_end_col, ';',
@@ -1163,8 +1146,8 @@ class FSTSrcEdit:
                     end_ln, end_col = copy_loc[2:]
 
                 else:
-                    end_ln  = post_semi.ln
-                    end_col = post_semi.col + 1
+                    end_ln, end_col  = post_semi
+                    end_col         += 1
 
                 at_bound_end_ln = end_ln == bound_end_ln
 
@@ -1184,7 +1167,8 @@ class FSTSrcEdit:
 
         elif post_comms:
             if pre_semi:
-                del_loc = fstloc(*fpre.bloc[2:], (ln := post_comms.ln - (not post_comms.col)), len(lines[ln]))  # we know fpre exists because of pre_semi, leave trailing newline
+                ln, col = post_comms
+                del_loc = fstloc(*fpre.bloc[2:], ln := ln - (not col), len(lines[ln]))  # we know fpre exists because of pre_semi, leave trailing newline
 
             else:
                 ln, col = copy_loc[:2]
@@ -1206,9 +1190,9 @@ class FSTSrcEdit:
                     del_loc = fstloc(*fpre.bloc[2:], end_ln, len(lines[end_ln]))
 
         elif post_semi:
-            end_ln          = post_semi.ln
-            end_col         = post_semi.col + 1
-            at_bound_end_ln = end_ln == bound_end_ln
+            end_ln, end_col  = post_semi
+            end_col         += 1
+            at_bound_end_ln  = end_ln == bound_end_ln
 
             if code := _next_src(lines, end_ln, end_col, end_ln,
                                  bound_end_col if at_bound_end_ln else 0x7ffffffffffffff, True, True):
@@ -1254,8 +1238,8 @@ class FSTSrcEdit:
                 if put_lines:
                     put_lines[0] = lines[del_ln][:del_col] + put_lines[0]  # prepend block start indentation to existing indentation, silly but whatever
 
-                if pre_pre_comms := self.pre_comments(lines, bound_ln, bound_col, fstpos(del_ln, 0), fmt):
-                    del_ln = pre_pre_comms.ln
+                if pre_pre_comms := self.pre_comments(lines, bound_ln, bound_col, del_ln, 0, fmt):
+                    del_ln, _ = pre_pre_comms
 
                 del_loc = fstloc(del_ln, 0, del_end_ln, del_end_col)
 
@@ -4500,8 +4484,8 @@ class FST:
         loc      = self.bloc
 
         comms_loc = fstloc(
-            *(src_edit.pre_comments(lines, *self._prev_ast_bound(), self, fmt) or loc[:2]),
-            *(src_edit.post_comments(lines, self, *self._next_ast_bound(), fmt) or loc[2:]),
+            *(src_edit.pre_comments(lines, *self._prev_ast_bound(), loc.ln, loc.col, fmt) or loc[:2]),
+            *(src_edit.post_comments(lines, loc.end_ln, loc.end_col, *self._next_ast_bound(), fmt) or loc[2:]),
         )
 
         if ret_fst is False:

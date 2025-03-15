@@ -9720,11 +9720,11 @@ pass
 # whenever
             '''.split('\n')
 
-        self.assertEqual((2, 0), FST.src_edit.pre_comments(lines, 0, 0, fstloc(3, 2, 0, 0)))
-        self.assertEqual((4, 0), FST.src_edit.post_comments(lines, fstloc(0, 0, 3, 6), 5, 0))
-        self.assertEqual(None, FST.src_edit.pre_comments(lines, 0, 0, fstloc(2, 2, 0, 0)))
-        self.assertEqual(None, FST.src_edit.post_comments(lines, fstloc(0, 0, 2, 9), 5, 0))
-        self.assertEqual((0, 0), FST.src_edit.pre_comments(lines, 0, 0, fstpos(2, 2), {'allpre'}))
+        self.assertEqual((2, 0), FST.src_edit.pre_comments(lines, 0, 0, 3, 2))
+        self.assertEqual((4, 0), FST.src_edit.post_comments(lines, 3, 6, 5, 0))
+        self.assertEqual(None, FST.src_edit.pre_comments(lines, 0, 0, 2, 2))
+        self.assertEqual(None, FST.src_edit.post_comments(lines, 2, 9, 5, 0))
+        self.assertEqual((0, 0), FST.src_edit.pre_comments(lines, 0, 0, 2, 2, {'allpre'}))
 
         lines = '''
 i ; \\
@@ -9733,7 +9733,7 @@ j # post
 k
 '''.strip().split('\n')
 
-        self.assertEqual((1, 0), FST.src_edit.pre_comments(lines, 0, 1, fstpos(2, 0)))
+        self.assertEqual((1, 0), FST.src_edit.pre_comments(lines, 0, 1, 2, 0))
 
     def test_copy_special(self):
         f = FST.fromsrc('@decorator\nclass cls:\n  pass')
