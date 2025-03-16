@@ -1320,7 +1320,7 @@ class FSTSrcEdit:
     def put_slice_stmt(self, fst: 'FST', put_fst: 'FST', field: str, fmt: set | frozenset,
                        block_loc: fstloc, block_indent: str, stmt_indent: str,
                        ffirst: 'FST', flast: 'FST', fpre: Optional['FST'], fpost: Optional['FST'],
-                       pfirst: Union['FST', fstloc, None], plast: Union['FST', fstloc, None],
+                       pfirst: 'FST', plast: 'FST',
     ) -> fstloc:  # put_loc
         """Put to block of statements(ish). Calculates put location and modifies `put_fst` as necessary to create proper
         code. The "ish" in statemnents means this can be used to put `ExceptHandler`s to a 'handlers' field or
@@ -1343,8 +1343,7 @@ class FSTSrcEdit:
         **Parameters:**
         - `fst`: The destination `FST` container that is being put to.
         - `put_fst`: The block which is being put. Must be a `Module` with a `body` of one or multiple statmentish
-            nodes. Already indented, mutate this object to change what will be put (both source and `AST` nodes, node
-            locations must be offset if source is changed).
+            nodes. Not indented, indent and mutate this object to set what will be put at `put_loc`.
         - `field`: The name of the field being gotten from, e.g. `'body'`, `'orelse'`, etc...
         - `cut`: If `False` the operation is a copy, `True` means cut.
         - `fmt`: Set of string formatting flags. Unrecognized and inapplicable flags are ignored, recognized flags are:
@@ -1360,6 +1359,8 @@ class FSTSrcEdit:
             - `'space*'`: Can be only `'space'` or with a number `'space3'`. Indicates that up to this many preceding
                 empty lines should be replaced. If no count specified then it means all empty lines. Empty line
                 continuations are considered empty lines. `'pep8'` applies after `space` to add preceding lines.
+            - `'elif'`: If putting a single `If` statement to an `orelse` field of a parent `If` statement then put it
+                as an `elif`.
         - `block_indent`: The indent string of the block being put to - the block opener, not the statements in it.
         - `stmt_indent`: The indent string which was applied to `put_fst` statements, which is the total indentation
             (including `block_indent`) of the statements in the block.

@@ -9930,6 +9930,48 @@ i # post
             f = FST.fromsrc('tuple[*tuple[int, ...]]').a.body[0].value.slice.f.copy(fix=True)
             self.assertEqual('(*tuple[int, ...],)', f.src)
 
+    def test_copy_bulk(self):
+        for fnm in PYFNMS:
+            ast = FST.fromsrc(read(fnm)).a
+
+            for a in walk(ast):
+                if a.f.is_parsable():
+                    f = a.f.copy(fix=True)
+                    f.verify(raise_=True)
+
+    # def test_cut_bulk(self):
+    #     for fnm in PYFNMS:
+    #         ast  = FST.fromsrc(read(fnm)).a
+    #         asts = [a for a in walk(ast)
+    #                 if isinstance(a, fst.STATEMENTISH) or
+    #                    isinstance(a.f.parent, (Tuple, List, Set))
+    #         ]
+
+    #         for a in asts[::-1]:
+    #             a.f.cut()
+
+    def test_copy(self):
+        for src, elt, slice_copy, slice_dump in COPY_DATA:
+            src   = src.strip()
+            t     = parse(src)
+            f     = eval(f't.{elt}', {'t': t}).f
+            s     = f.copy(fix=True)
+            ssrc  = s.src
+            sdump = s.dump(linefunc=list, compact=True)
+
+            try:
+                self.assertEqual(ssrc, slice_copy.strip())
+                self.assertEqual(sdump, slice_dump.strip().split('\n'))
+
+            except Exception:
+                print(elt)
+                print('---')
+                print(src)
+                print('...')
+                print(slice_copy)
+
+                raise
+
     def test_cut_special(self):
         a = parse('''
 # prepre
@@ -10023,37 +10065,6 @@ def func():
                 field, idx = a.f.pfield
 
                 a.f.parent.put_slice(None, idx, idx + 1, field)
-
-    def test_copy_bulk(self):
-        for fnm in PYFNMS:
-            ast = FST.fromsrc(read(fnm)).a
-
-            for a in walk(ast):
-                if a.f.is_parsable():
-                    f = a.f.copy(fix=True)
-                    f.verify(raise_=True)
-
-    def test_copy(self):
-        for src, elt, slice_copy, slice_dump in COPY_DATA:
-            src   = src.strip()
-            t     = parse(src)
-            f     = eval(f't.{elt}', {'t': t}).f
-            s     = f.copy(fix=True)
-            ssrc  = s.src
-            sdump = s.dump(linefunc=list, compact=True)
-
-            try:
-                self.assertEqual(ssrc, slice_copy.strip())
-                self.assertEqual(sdump, slice_dump.strip().split('\n'))
-
-            except Exception:
-                print(elt)
-                print('---')
-                print(src)
-                print('...')
-                print(slice_copy)
-
-                raise
 
     def test_get_slice_seq_copy(self):
         for src, elt, start, stop, _, slice_copy, _, slice_dump in GET_SLICE_SEQ_CUT_DATA:
