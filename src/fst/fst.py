@@ -1292,6 +1292,84 @@ class FSTSrcEdit:
 
         return copy_loc, del_loc, put_lines
 
+    def put_slice_stmt(self, fst: 'FST', put_fst: 'FST', field: str, fmt: set | frozenset,
+                       block_loc: fstloc, block_indent: str, stmt_indent: str,
+                       ffirst: 'FST', flast: 'FST', fpre: Optional['FST'], fpost: Optional['FST'],
+                       pfirst: Union['FST', fstloc, None], plast: Union['FST', fstloc, None],
+    ) -> fstloc:  # put_loc
+        """Put to block of statements(ish). Calculates put location and modifies `put_fst` as necessary to create proper
+        code. The "ish" in statemnents means this can be used to put `ExceptHandler`s to a 'handlers' field or
+        `match_case`s to a 'cases' field.
+
+        If `ffirst` and `flast` are `None` it means that it is a pure insertion and no elements are being removed. In
+        this case use `fpre` and `fpost` to determine locations, one of which could be missing if the insertion is at
+        the beginning or end of the sequence. If all of these are `None` then this indicates a put to empty block, in
+        which case use `fst`, `field` and/or `block_loc` for location.
+
+        The first line of `put_fst` is unindented and should remain so as it is concatenated with the target line at the
+        point of insertion. The last line of `put_fst` is likewise prefixed to the line following the deleted location.
+
+        There is always an insertion or replacement operation if this is called, it is never just a delete or an empty
+        assignment to an empty slice.
+
+        If assigning to non-existent `orelse` or `finalbody` fields then the appropriate `else:` or `finally:` is
+        prepended to `put_fst` for the final put.
+
+        **Parameters:**
+        - `fst`: The destination `FST` container that is being put to.
+        - `put_fst`: The block which is being put. Either a lone statementish node or a `Module` of multiple statmentish
+            nodes. Already indented, mutate this object to change what will be put (both source and `AST` nodes, node
+            locations must be offset if source is changed).
+        - `field`: The name of the field being gotten from, e.g. `'body'`, `'orelse'`, etc...
+        - `cut`: If `False` the operation is a copy, `True` means cut.
+        - `fmt`: Set of string formatting flags. Unrecognized and inapplicable flags are ignored, recognized flags are:
+            - `'pre'`: Replace contiguous comment block immediately preceding statement(s).
+            - `'allpre'`: Replace all comment blocks (possibly separated by empty lines) immediately preceding
+                statement(s).
+            - `'post'`: replace comment trailing on last line. Keep in mind this is the comment on the last
+                statement of a body if last element of copy is a block element.
+            - `'pep8'`: Does not actually reformat code according to PEP 8, just inserts up one or two empty lines
+                before first function or classe being put according to if destination is top level scope or not. Also
+                removes this number of spaces if replacing a function or class so balances out in that case. In the
+                future may specify additional PEP 8 behavior.
+            - `'space*'`: Can be only `'space'` or with a number `'space3'`. Indicates that up to this many preceding
+                empty lines should be replaced. If no count specified then it means all empty lines. Empty line
+                continuations are considered empty lines. `'pep8'` applies after `space` to add preceding lines.
+        - `block_indent`: The indent string of the block being put to - the block opener, not the statements in it.
+        - `stmt_indent`: The indent string which was applied to `put_fst` statements, which is the total indentation
+            (including `block_indent`) of the statements in the block.
+        - `block_loc`: A full location ancompassing the block outside of ASTS, used mostly if `fpre` / `fpost` not
+            available.
+        - `ffirst`: The first destination `FST` or `fstloc` being replaced (if `None` then nothing being replaced).
+        - `flast`: The last destination `FST` or `fstloc` being replaced (if `None` then nothing being replaced).
+        - `fpre`: The preceding-first destination `FST` or `fstloc`, not being replaced, may not exist if `ffirst` is
+            first of seq.
+        - `fpost`: The after-last destination `FST` or `fstloc` not being replaced, may not exist if `flast` is last of
+            seq.
+        - `pfirst`: The first source `FST`.
+        - `plast`: The last source `FST`.
+
+        **Returns:**
+        - `fstloc`: location where the potentially modified `fst` source should be put, replacing whatever is at the
+            location currently.
+        """
+
+        pass
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 class FST:
     """Preserve AST formatting information and easy manipulation."""
@@ -2778,7 +2856,7 @@ class FST:
 
         return FST(ast, lines=[bistr(s) for s in lines], parse_params=parse_params)
 
-    def verify(self, *, raise_: bool = True) -> Optional['FST']:  # -> Self | None:
+    def verify(self, raise_: bool = True) -> Optional['FST']:  # -> Self | None:
         """Sanity check, reparse source and make sure parsed tree matches currently stored tree (locations and
         everything).
 

@@ -10039,8 +10039,8 @@ i # post
                 sdump = s.dump(linefunc=list, compact=True)
 
                 if verify:
-                    t.f.verify()
-                    s.verify()
+                    t.f.verify(raise_=True)
+                    s.verify(raise_=True)
 
                 try:
                     self.assertEqual(tsrc, src)
@@ -10070,8 +10070,8 @@ i # post
                 sdump = s.dump(linefunc=list, compact=True)
 
                 if verify:
-                    t.f.verify()
-                    s.verify()
+                    t.f.verify(raise_=True)
+                    s.verify(raise_=True)
 
                 try:
                     self.assertEqual(tsrc, src_cut)
@@ -10256,7 +10256,7 @@ def regen_copy_data():
 
         assert not ssrc.startswith('\n') or ssrc.endswith('\n')
 
-        s.verify()
+        s.verify(raise_=True)
 
         newlines.append('(r"""')
         newlines.extend(f'''{src}\n""", {elt!r}, r"""\n{ssrc}\n""", r"""'''.split('\n'))
@@ -10295,8 +10295,8 @@ def regen_get_slice_seq_cut_data():
             assert not tsrc.startswith('\n') or tsrc.endswith('\n')
             assert not ssrc.startswith('\n') or ssrc.endswith('\n')
 
-            t.f.verify()
-            s.verify()
+            t.f.verify(raise_=True)
+            s.verify(raise_=True)
 
             newlines.append('(r"""')
             newlines.extend(f'''{src}\n""", {elt!r}, {start}, {stop}, r"""\n{tsrc}\n""", r"""\n{ssrc}\n""", r"""'''.split('\n'))
@@ -10332,8 +10332,8 @@ def regen_get_slice_stmt_cut_data():
             sdump = s.dump(linefunc=list, compact=True)
 
             if verify:
-                t.f.verify()
-                s.verify()
+                t.f.verify(raise_=True)
+                s.verify(raise_=True)
 
             newlines.extend(f'''(r"""{src}""", {elt!r}, {start}, {stop}, {field!r}, {fmt!r}, r"""{tsrc}""", r"""{ssrc}""", r"""'''.split('\n'))
             newlines.extend(tdump)
@@ -10366,7 +10366,7 @@ def regen_put_slice_seq_data():
 
         assert not tdst.startswith('\n') or tdst.endswith('\n')
 
-        t.f.verify()
+        t.f.verify(raise_=True)
 
         newlines.append('(r"""')
         newlines.extend(f'''{dst}\n""", {elt!r}, {start}, {stop}, r"""\n{src}\n""", r"""\n{tdst}\n""", r"""'''.split('\n'))
@@ -10400,7 +10400,7 @@ def regen_put_slice_seq_del_data():
 
         assert not tdst.startswith('\n') or tdst.endswith('\n')
 
-        t.f.verify()
+        t.f.verify(raise_=True)
 
         newlines.append('("""')
         newlines.extend(f'''{dst}\n""", {elt!r}, {start}, {stop}, """\n{tdst}\n""", """'''.split('\n'))
