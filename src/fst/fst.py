@@ -517,17 +517,31 @@ def _fixup_slice_index(ast, body, field, start, stop) -> tuple[int, int]:
     return start, stop
 
 
-def _normalize_code(code: Code, expr_: bool = False, *, parse_params: dict = {}) -> 'FST':
-    """Normalize code to an `FST`. If an expression is required then will return an `FST` with a top level `ast.expr`
-    `AST` node if possible, raise otherwise. If expression is not required then will convert to `ast.Module` if is
-    `ast.Interactive` or return single expression node of `ast.Expression` or just return whatever the node currently
-    is."""
+def _normalize_code(code: Code, coerce: Literal['expr'] | Literal['mod'] | None = None, *, parse_params: dict = {},
+                    ) -> 'FST':
+    """Normalize code to an `FST` and coerce to a desired format if possible.
+
+    If neither of these is requested then will convert to `ast.Module` if is `ast.Interactive` or return single
+    expression node of `ast.Expression` or just return whatever the node currently is.
+
+
+    **Parameters:**
+    - `coerce`: What kind of coercion to apply (if any):
+        - `'expr'`: Will return an `FST` with a top level `ast.expr` `AST` node if possible, raise otherwise.
+        - `'mod'`: Will return an `FST` with a top level `ast.Module` `AST` node of the single statement or a wrapped
+            expression in an `ast.Expr` node. `ExceptHandler` and `match_case` nodes are considered statements here.
+        - `None`: Will pull expression out of `ast.Expression` and convert `ast.Interactive` to `ast.Module`, otherwise
+            will return node as is, or as is parsed to `Module`.
+
+    **Returns:**
+    - `FST`: Compiled or coerced or just fixed up.
+    """
 
     def reduce(ast):
         if isinstance(ast, Expression):
             ast = ast.body
 
-        elif expr_:
+        elif coerce == 'expr':
             if isinstance(ast, (Module, Interactive)):
                 if len(body := ast.body) != 1 or not isinstance(ast := body[0], Expr):
                     raise ValueError(f'expecting single expression')
@@ -537,8 +551,17 @@ def _normalize_code(code: Code, expr_: bool = False, *, parse_params: dict = {})
             if not isinstance(ast, expr):
                 raise ValueError(f'expecting expression')
 
+            return ast
+
         elif isinstance(ast, Interactive):
-            ast = Module(body=ast.body, type_ignores=[])
+            return Module(body=ast.body, type_ignores=[])
+
+        if coerce == 'mod' and not isinstance(ast, Module):
+            if isinstance(ast, expr):
+                ast = Expr(value=ast, lineno=ast.lineno, col_offset=ast.col_offset,
+                           end_lineno=ast.end_lineno, end_col_offset=ast.end_col_offset)
+
+            ast = Module(body=[ast], type_ignores=[])
 
         return ast
 
@@ -552,7 +575,7 @@ def _normalize_code(code: Code, expr_: bool = False, *, parse_params: dict = {})
         return code if rast is ast else FST(rast, lines=code._lines, from_=code)
 
     if isinstance(code, AST):
-        return FST.fromast(reduce(code))
+        return FST.fromast(reduce(code))  # WARNING! will not handle pure AST ExceptHandler or match_case
 
     if isinstance(code, str):
         src   = code
@@ -562,7 +585,9 @@ def _normalize_code(code: Code, expr_: bool = False, *, parse_params: dict = {})
         src   = '\n'.join(code)
         lines = code
 
-    ast = ast_parse(src, mode='eval', **parse_params).body if expr_ else ast_parse(src, **parse_params)
+    ast = (ast_parse(src, mode='eval', **parse_params).body
+           if coerce == 'expr' else
+           ast_parse(src, mode='exec', **parse_params))
 
     return FST(ast, lines=lines)
 
@@ -1317,7 +1342,7 @@ class FSTSrcEdit:
 
         **Parameters:**
         - `fst`: The destination `FST` container that is being put to.
-        - `put_fst`: The block which is being put. Either a lone statementish node or a `Module` of multiple statmentish
+        - `put_fst`: The block which is being put. Must be a `Module` with a `body` of one or multiple statmentish
             nodes. Already indented, mutate this object to change what will be put (both source and `AST` nodes, node
             locations must be offset if source is changed).
         - `field`: The name of the field being gotten from, e.g. `'body'`, `'orelse'`, etc...
@@ -2346,7 +2371,7 @@ class FST:
             put_fst = None
 
         else:
-            put_fst = _normalize_code(code, expr_=True, parse_params=self.root.parse_params)
+            put_fst = _normalize_code(code, 'expr', parse_params=self.root.parse_params)
 
             if put_fst.is_empty_set_call():
                 if fix:
@@ -2474,7 +2499,7 @@ class FST:
             put_fst = None
 
         else:
-            put_fst = _normalize_code(code, expr_=True, parse_params=self.root.parse_params)
+            put_fst = _normalize_code(code, 'expr', parse_params=self.root.parse_params)
             put_ast = put_fst.a
 
             if not isinstance(put_ast, Dict):
@@ -2561,7 +2586,7 @@ class FST:
             put_fst = None
 
         else:
-            put_fst = _normalize_code(code, expr_=False, parse_params=self.root.parse_params)
+            put_fst = _normalize_code(code, 'mod', parse_params=self.root.parse_params)
             put_ast = put_fst.a
 
             raise NotImplementedError
@@ -3144,7 +3169,11 @@ class FST:
     def put(self, code: Code | None, start: int | None = None, stop: int | None | Literal['False'] = False,
             field: str | None = None, *, fix: bool = True,
             fmt: Fmt = DEFAULT_SRC_EDIT_FMT, docstr: bool | str = DEFAULT_DOCSTR) -> Optional['FST']:  # -> Self:
-        """Put an individual child node or a slice of child nodes to `self`."""
+        """Put an individual child node or a slice of child nodes to `self`.
+
+        If the `code` being put is an `AST` or `FST` then it is consumed and should not be considered valid after this
+        call whether it succeeds or fails.
+        """
 
         if stop is not False:
             return self.put_slice(code, start, stop, field, fix=fix, fmt=fmt, docstr=docstr)
@@ -3187,7 +3216,11 @@ class FST:
     def put_slice(self, code: Code | None, start: int | None = None, stop: int | None = None, field: str | None = None,
                   *, fix: bool = True,
                   fmt: Fmt = DEFAULT_SRC_EDIT_FMT, docstr: bool | str = DEFAULT_DOCSTR) -> Optional['FST']:  # -> Self:
-        """Put an a slice of child nodes to `self`."""
+        """Put an a slice of child nodes to `self`.
+
+        If the `code` being put is an `AST` or `FST` then it is consumed and should not be considered valid after this
+        call whether it succeeds or fails.
+        """
 
         ast = self.a
 
