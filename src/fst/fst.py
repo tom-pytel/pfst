@@ -1925,6 +1925,7 @@ class FST:
         while True:
             if not self_:
                 self_ = True
+
             elif (lno := getattr(a := self.a, 'end_lineno', -1)) > end_lineno or (lno == end_lineno and
                                                                                   a.end_col_offset > end_col_offset):
                 a.end_lineno     = end_lineno
@@ -2063,6 +2064,39 @@ class FST:
              self.a.col_offset == parenta.col_offset)
         ):
             self.put_lines(None, ln, col, ln, col + 2, False)
+
+    def _fix_block_del_last_child(self, bound_ln: int, bound_col: int, bound_end_ln: int, bound_end_col: int):
+        """Fix end location of a block statement after its last child (position-wise, not last existing child) has been
+        cut or deleted. Will set end position of `self` and any parents who `self` is the last child of to the new last
+        child if it is past the block-open colon or just past the block-open colon.
+
+        **Parameters:**
+        - `bound_ln`, `bound_col`: Position before block colon but after and pre-colon `AST` node.
+        - `bound_end_ln`, `bound_end_col`: Position after block colon, probably start of deleted region, only used if
+            new last child is before colon.
+        """
+        end_lineno = None
+
+        if fnewlast := self.last_child(True):  # easy enough when we have a new last child
+            if fnewlast.pfield.name in ('body', 'orelse', 'handlers', 'finalbody', 'cases'):  # but make sure its past the block open colon
+                end_lineno     = fnewlast.end_lineno
+                end_col_offset = fnewlast.end_col_offset
+
+        if end_lineno is None:
+            lines = self.root._lines
+
+            if end := _prev_find(lines, bound_ln, bound_col, bound_end_ln, bound_end_col, ':'):  # find first preceding block colon, its there unless first opened block in module
+                end_ln, end_col  = end
+                end_col         += 1
+
+            else:
+                end_ln  = bound_ln
+                end_col = bound_col
+
+            end_lineno     = end_ln + 1
+            end_col_offset = lines[end_ln].c2b(end_col)  # just past the colon
+
+        self._floor_end_pos(end_lineno, end_col_offset)
 
     def _make_fst_and_dedent(self, indent: Union['FST', str], ast: AST, copy_loc: fstloc,
                              prefix: str = '', suffix: str = '',
@@ -2306,42 +2340,8 @@ class FST:
 
         fst = self._make_fst_and_dedent(indent, get_ast, copy_loc, '', '', put_loc, put_lines, docstr=docstr)
 
-        if cut and is_last_child:  # correct parent for removed last child nodes
-            if fnewlast := self.last_child(True):  # easy enough when we have a new last child
-                self._floor_end_pos(fnewlast.end_lineno, fnewlast.end_col_offset)
-                # end_lineno     = fnewlast.end_lineno
-                # end_col_offset = fnewlast.end_col_offset
-
-            else:
-                # lines          = self.root._lines
-                # ln, col        = _next_find(lines, *block_loc, ':')  # go up to just before block colon, it must be there
-                # end_lineno     = ln + 1
-                # end_col_offset = lines[ln].c2b(col)
-
-
-                lines   = self.root._lines
-                # ln, col = _next_find(lines, *block_loc, ':')  # go up to just before block colon, it must be there
-
-
-                if start := _prev_find(lines, block_loc.ln, block_loc.col, put_loc.ln, put_loc.col, ':'):  # find first preceding block colon, its there unless first opened block in module
-                    end_ln, end_col  = start
-                    end_col         += 1
-                else:
-                    end_ln = end_col = 0
-
-                self._floor_end_pos(end_ln + 1, lines[end_ln].c2b(end_col))  # just past the colon
-
-                pass
-
-            # self._floor_end_pos(end_lineno, end_col_offset)
-
-
-            # else:
-            #     raise NotImplementedError
-
-
-            # TODO: correct for last child of 'body' and any other lists of statements
-
+        if cut and is_last_child:  # correct for removed last child nodes or last nodes past the block open colon
+            self._fix_block_del_last_child(block_loc.ln, block_loc.col, put_loc.ln, put_loc.col)
 
         if fix:
             if len(asts) == 1 and isinstance(a := asts[0], If):
@@ -2713,14 +2713,11 @@ class FST:
             body[i].f.pfield = astfield('elts', i)
 
         if is_last_child:  # correct parent for modified / removed last child nodes
-            if fnewlast := self.last_child(True):
-                self._floor_end_pos(fnewlast.end_lineno, fnewlast.end_col_offset)
-
-            # else:
-            #     raise NotImplementedError
+            if not put_fst:
+                self._fix_block_del_last_child(block_loc.ln, block_loc.col, put_loc.ln, put_loc.col)
 
 
-            # TODO: correct for last child of 'body' and any other lists of statements
+            # TODO: correct for replacing last child of 'body' and any other lists of statements
 
 
 

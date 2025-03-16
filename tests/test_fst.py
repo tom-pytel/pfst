@@ -4029,7 +4029,7 @@ if 1:
 """, r"""i""", r"""
 Module .. ROOT 0,0 -> 2,0
   .body[1]
-  0] If .. 1,0 -> 1,4
+  0] If .. 1,0 -> 1,5
     .test
       Constant 1 .. 1,3 -> 1,4
 """, r"""
@@ -4045,7 +4045,7 @@ if 1: i""", 'body[0]', 0, 1, None, 'pre,post', r"""
 if 1:""", r"""i""", r"""
 Module .. ROOT 0,0 -> 1,5
   .body[1]
-  0] If .. 1,0 -> 1,4
+  0] If .. 1,0 -> 1,5
     .test
       Constant 1 .. 1,3 -> 1,4
 """, r"""
@@ -4064,7 +4064,7 @@ if 1:
 """, r"""
 Module .. ROOT 0,0 -> 2,0
   .body[1]
-  0] If .. 1,0 -> 1,4
+  0] If .. 1,0 -> 1,5
     .test
       Constant 1 .. 1,3 -> 1,4
 """, r"""
@@ -4080,7 +4080,7 @@ if 1: i  # post""", 'body[0]', 0, 1, None, 'pre,post', r"""
 if 1:""", r"""i  # post""", r"""
 Module .. ROOT 0,0 -> 1,5
   .body[1]
-  0] If .. 1,0 -> 1,4
+  0] If .. 1,0 -> 1,5
     .test
       Constant 1 .. 1,3 -> 1,4
 """, r"""
@@ -4098,7 +4098,7 @@ if 1: # post
 """, r"""i""", r"""
 Module .. ROOT 0,0 -> 2,0
   .body[1]
-  0] If .. 1,0 -> 1,4
+  0] If .. 1,0 -> 1,5
     .test
       Constant 1 .. 1,3 -> 1,4
 """, r"""
@@ -4114,7 +4114,7 @@ if 1: i  # post""", 'body[0]', 0, 1, None, '', r"""
 if 1: # post""", r"""i""", r"""
 Module .. ROOT 0,0 -> 1,12
   .body[1]
-  0] If .. 1,0 -> 1,4
+  0] If .. 1,0 -> 1,5
     .test
       Constant 1 .. 1,3 -> 1,4
 """, r"""
@@ -4132,7 +4132,7 @@ if 1:
 """, r"""i""", r"""
 Module .. ROOT 0,0 -> 2,0
   .body[1]
-  0] If .. 1,0 -> 1,4
+  0] If .. 1,0 -> 1,5
     .test
       Constant 1 .. 1,3 -> 1,4
 """, r"""
@@ -4148,7 +4148,7 @@ if 1: i ;""", 'body[0]', 0, 1, None, 'pre,post', r"""
 if 1:""", r"""i""", r"""
 Module .. ROOT 0,0 -> 1,5
   .body[1]
-  0] If .. 1,0 -> 1,4
+  0] If .. 1,0 -> 1,5
     .test
       Constant 1 .. 1,3 -> 1,4
 """, r"""
@@ -4166,7 +4166,7 @@ if 1: # post
 """, r"""i""", r"""
 Module .. ROOT 0,0 -> 2,0
   .body[1]
-  0] If .. 1,0 -> 1,4
+  0] If .. 1,0 -> 1,5
     .test
       Constant 1 .. 1,3 -> 1,4
 """, r"""
@@ -4182,7 +4182,7 @@ if 1: i ;  # post""", 'body[0]', 0, 1, None, 'pre,post', r"""
 if 1: # post""", r"""i""", r"""
 Module .. ROOT 0,0 -> 1,12
   .body[1]
-  0] If .. 1,0 -> 1,4
+  0] If .. 1,0 -> 1,5
     .test
       Constant 1 .. 1,3 -> 1,4
 """, r"""
@@ -4200,7 +4200,7 @@ if 1: # post
 """, r"""i""", r"""
 Module .. ROOT 0,0 -> 2,0
   .body[1]
-  0] If .. 1,0 -> 1,4
+  0] If .. 1,0 -> 1,5
     .test
       Constant 1 .. 1,3 -> 1,4
 """, r"""
@@ -4216,7 +4216,7 @@ if 1: i ;  # post""", 'body[0]', 0, 1, None, '', r"""
 if 1: # post""", r"""i""", r"""
 Module .. ROOT 0,0 -> 1,12
   .body[1]
-  0] If .. 1,0 -> 1,4
+  0] If .. 1,0 -> 1,5
     .test
       Constant 1 .. 1,3 -> 1,4
 """, r"""
@@ -4923,7 +4923,7 @@ Module .. ROOT 0,0 -> 5,0
     .body[1]
     0] Pass .. 1,5 -> 1,9
     .handlers[1]
-    0] ExceptHandler .. 2,0 -> 3,8
+    0] ExceptHandler .. 2,0 -> 2,7
       .type
         None
       .name
@@ -4987,7 +4987,7 @@ Module .. ROOT 0,0 -> 5,0
     .body[1]
     0] Pass .. 1,5 -> 1,9
     .handlers[1]
-    0] ExceptHandler .. 2,0 -> 2,12
+    0] ExceptHandler .. 2,0 -> 2,7
       .type
         None
       .name
@@ -5021,7 +5021,7 @@ Module .. ROOT 0,0 -> 6,0
     .body[1]
     0] Pass .. 1,5 -> 1,9
     .handlers[1]
-    0] ExceptHandler .. 2,0 -> 2,12
+    0] ExceptHandler .. 2,0 -> 2,7
       .type
         None
       .name
@@ -8297,6 +8297,7 @@ two  # fake comment start""", **b
         f = fst._normalize_code(FST.fromsrc('i', mode='eval'), coerce='expr')
         self.assertIsInstance(f.a, Name)
 
+        # mod
 
         f = fst._normalize_code('i', coerce='mod')
         self.assertIsInstance(f.a, Module)
@@ -9979,6 +9980,49 @@ i # post
         f = a.body[0].value.elts[0].f.cut(fmt='pars')
         self.assertEqual('()', a.f.src)
         self.assertEqual('( i )', f.src)
+
+    def test_cut_block_everything(self):
+        for src in ('''
+if mo:
+    if 1:
+        a = 1
+        b = 2
+    else:
+        c = 3
+else:
+    d = 4
+''', '''
+try:
+    pass
+except:
+    try:
+        pass
+    except:
+        pass
+else:
+    pass
+''', '''
+def func(args):
+    pass
+''', '''
+@decorator(arg)
+def func():
+    pass
+'''     ):
+
+            ast  = parse(src.strip())
+            asts = [a for a in walk(ast) if isinstance(a, fst.STATEMENTISH)]
+
+            for a in asts[::-1]:
+                a.f.cut()
+
+            ast  = parse(src.strip())
+            asts = [a for a in walk(ast) if isinstance(a, fst.STATEMENTISH)]
+
+            for a in asts[::-1]:
+                field, idx = a.f.pfield
+
+                a.f.parent.put_slice(None, idx, idx + 1, field)
 
     def test_copy_bulk(self):
         for fnm in PYFNMS:
