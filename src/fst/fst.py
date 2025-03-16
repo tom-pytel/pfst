@@ -1778,7 +1778,7 @@ class FST:
         nodes without their own locations if `with_loc='allown'`."""
 
         if next := self.next_step(with_loc, recurse_self=False):
-            return next.loc[2:]
+            return next.loc[:2]
 
         return len(lines := self.root._lines) - 1, len(lines[-1])
 
@@ -1913,23 +1913,29 @@ class FST:
                 a.lineno     = lineno
                 a.col_offset = col_offset
 
+                self.touch()
+
             self = self.parent
 
     def _floor_end_pos(self, end_lineno: int, end_col_offset: int, self_: bool = True):  # because of trailing non-AST junk in last statements
         """Walk up parent chain (starting at `self`) setting `.end_lineno` and `.end_col_offset` to `end_lineno` and
-        `end_col_offset` if they are past it. Used for correcting parents after an `offset()` which removed or modified
-        last child statements of block parents."""
+        `end_col_offset` if they are past it and self is last child of parent. Initial `self` is corrected always. Used
+        for correcting parents after an `offset()` which removed or modified last child statements of block parents."""
 
-        if not self_:
-            self = self.parent
-
-        while self:
-            if (lno := getattr(a := self.a, 'end_lineno', -1)) > end_lineno or (lno == end_lineno and
-                                                                                a.end_col_offset > end_col_offset):
+        while True:
+            if not self_:
+                self_ = True
+            elif (lno := getattr(a := self.a, 'end_lineno', -1)) > end_lineno or (lno == end_lineno and
+                                                                                  a.end_col_offset > end_col_offset):
                 a.end_lineno     = end_lineno
                 a.end_col_offset = end_col_offset
 
-            self = self.parent
+                self.touch()
+
+            if not (parent := self.parent) or self is not parent.last_child(True):
+                break
+
+            self = parent
 
     def _maybe_add_comma(self, ln: int, col: int, offset: bool, space: bool,
                          end_ln: int | None = None, end_col: int | None = None) -> bool:
@@ -2267,6 +2273,9 @@ class FST:
         fpost  = body[stop].f if stop < len(body) else None
         indent = ffirst.get_indent()
 
+        block_loc = fstloc(*(fpre.loc[2:] if fpre else ffirst._prev_ast_bound()),
+                           *(fpost.loc[:2] if fpost else flast._next_ast_bound()))
+
         if not cut:
             asts = [copy_ast(body[i]) for i in range(start, stop)]
 
@@ -2286,9 +2295,6 @@ class FST:
         else:
             raise ValueError(f'cannot specify `single` for multiple statements')
 
-        block_loc = fstloc(*(fpre.loc[2:] if fpre else ffirst._prev_ast_bound()),
-                           *(fpost.loc[:2] if fpost else flast._next_ast_bound()))
-
         if isinstance(fmt, str):
             fmt = frozenset(t for s in fmt.split(',') if (t := s.strip()))
 
@@ -2301,8 +2307,34 @@ class FST:
         fst = self._make_fst_and_dedent(indent, get_ast, copy_loc, '', '', put_loc, put_lines, docstr=docstr)
 
         if cut and is_last_child:  # correct parent for removed last child nodes
-            if fnewlast := self.last_child(True):
+            if fnewlast := self.last_child(True):  # easy enough when we have a new last child
                 self._floor_end_pos(fnewlast.end_lineno, fnewlast.end_col_offset)
+                # end_lineno     = fnewlast.end_lineno
+                # end_col_offset = fnewlast.end_col_offset
+
+            else:
+                # lines          = self.root._lines
+                # ln, col        = _next_find(lines, *block_loc, ':')  # go up to just before block colon, it must be there
+                # end_lineno     = ln + 1
+                # end_col_offset = lines[ln].c2b(col)
+
+
+                lines   = self.root._lines
+                # ln, col = _next_find(lines, *block_loc, ':')  # go up to just before block colon, it must be there
+
+
+                if start := _prev_find(lines, block_loc.ln, block_loc.col, put_loc.ln, put_loc.col, ':'):  # find first preceding block colon, its there unless first opened block in module
+                    end_ln, end_col  = start
+                    end_col         += 1
+                else:
+                    end_ln = end_col = 0
+
+                self._floor_end_pos(end_ln + 1, lines[end_ln].c2b(end_col))  # just past the colon
+
+                pass
+
+            # self._floor_end_pos(end_lineno, end_col_offset)
+
 
             # else:
             #     raise NotImplementedError
