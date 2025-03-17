@@ -1098,7 +1098,8 @@ class FSTSrcEdit:
         return del_loc
 
     def get_slice_stmt(self, fst: 'FST', field: str, cut: bool, fmt: set | frozenset, block_loc: fstloc,
-                       ffirst: 'FST', flast: 'FST', fpre: Optional['FST'], fpost: Optional['FST'],
+                       ffirst: 'FST', flast: 'FST', fpre: Optional['FST'], fpost: Optional['FST'], *,
+                       del_else_and_fin: bool = True, ret_all: bool = False,
     ) -> tuple[fstloc, fstloc | None, list[str] | None]:  # (copy_loc, del/put_loc, put_lines)
         """Copy or cut from block of statements. If cutting all elements from a deletable field like 'orelse' or
         'finalbody' then the corresponding 'else:' or 'finally:' will also be removed from the source (though not
@@ -1252,7 +1253,7 @@ class FSTSrcEdit:
         # special case of deleting everything from a block
 
         if not fpre and not fpost:
-            if ((is_finally := field == 'finalbody') or  # remove 'else:' or 'finally:' (but not 'elif ...:' as that lives in first cut statement)
+            if del_else_and_fin and ((is_finally := field == 'finalbody') or  # remove 'else:' or 'finally:' (but not 'elif ...:' as that lives in first cut statement)
                 (field == 'orelse' and not lines[ffirst.bln].startswith('elif', ffirst.bcol))
             ):
                 del_ln, del_col, del_end_ln, del_end_col = del_loc
@@ -1315,12 +1316,15 @@ class FSTSrcEdit:
 
         # finally done
 
+        if ret_all:
+            return (copy_loc, del_loc, put_lines, fstloc(bound_ln, bound_col, bound_end_ln, bound_end_col),
+                    pre_comms, post_comms, pre_semi, post_semi, (block_ln, block_col))
+
         return copy_loc, del_loc, put_lines
 
     def put_slice_stmt(self, fst: 'FST', put_fst: 'FST', field: str, fmt: set | frozenset,
                        block_loc: fstloc, block_indent: str, stmt_indent: str,
                        ffirst: 'FST', flast: 'FST', fpre: Optional['FST'], fpost: Optional['FST'],
-                       pfirst: 'FST', plast: 'FST',
     ) -> fstloc:  # put_loc
         """Put to block of statements(ish). Calculates put location and modifies `put_fst` as necessary to create proper
         code. The "ish" in statemnents means this can be used to put `ExceptHandler`s to a 'handlers' field or
@@ -1372,20 +1376,23 @@ class FSTSrcEdit:
             first of seq.
         - `fpost`: The after-last destination `FST` or `fstloc` not being replaced, may not exist if `flast` is last of
             seq.
-        - `pfirst`: The first source `FST`.
-        - `plast`: The last source `FST`.
 
         **Returns:**
         - `fstloc`: location where the potentially modified `fst` source should be put, replacing whatever is at the
             location currently.
         """
 
-        pass
+
+
+
+        copy_loc, del_loc, put_lines, bound, pre_comms, post_comms, pre_semi, post_semi, block_start = (
+            self.get_slice_stmt(fst, field, True, fmt, block_loc, ffirst, flast, fpre, fpost,
+                                del_else_and_fin=False, ret_all=True))
 
 
 
 
-
+        return copy_loc
 
 
 
@@ -1693,7 +1700,7 @@ class FST:
                                      for idx, a in enumerate(child) if isinstance(a, AST))
 
     def _unmake_fst_tree(self, stack: list[AST] | None = None, root: Optional['FST'] = None):
-        """Destroy a tree of FST nodes by breaking links. Call only on root."""
+        """Destroy a tree of FST nodes by breaking links."""
 
         if stack is None:
             stack = [self.a]
@@ -2482,8 +2489,9 @@ class FST:
             self._unmake_fst_tree(elts[start : stop], put_fst)
 
             elts[start : stop] = put_ast.elts
-            put_len            = len(put_ast.elts)
-            stack              = [FST(elts[i], self, astfield('elts', i)) for i in range(start, start + put_len)]
+
+            put_len = len(put_ast.elts)
+            stack   = [FST(elts[i], self, astfield('elts', i)) for i in range(start, start + put_len)]
 
             if fix and stack and not is_set:
                 set_ctx([f.a for f in stack], Load if isinstance(ast, Set) else ast.ctx.__class__)
@@ -2622,12 +2630,14 @@ class FST:
             put_fst = _normalize_code(code, 'mod', parse_params=self.root.parse_params)
             put_ast = put_fst.a
 
-            raise NotImplementedError
+            # raise NotImplementedError
 
-        #     if not isinstance(put_ast, STATEMENTISH_OR_STMTMOD):
-        #         raise ValueError(f"slice being assigned cannot be a '{put_ast.__class__.__name__}'")
-        #         raise ValueError(f"slice being assigned to a cases must be a match_case, not a '{put_ast.__class__.__name__}'")
+            # if not isinstance(put_ast, STATEMENTISH_OR_STMTMOD):
+            #     raise ValueError(f"slice being assigned cannot be a '{put_ast.__class__.__name__}'")
+            #     raise ValueError(f"slice being assigned to a cases must be a match_case, not a '{put_ast.__class__.__name__}'")
 
+
+            # TODO: this!
 
 
         start, stop = _fixup_slice_index(ast, body, field, start, stop)
@@ -2668,45 +2678,30 @@ class FST:
             put_len = 0
 
         else:
-            # put_lines               = put_fst._lines
-            # put_ast.end_col_offset -= 1  # strip enclosing curlies from source dict
+            block_indent = self.get_indent()
+            stmt_indent  = body[0].f.get_indent() if body else block_indent + self.root.indent
 
-            # put_fst.offset(0, 1, 0, -1)
-
-            # assert put_lines[0].startswith('{')
-            # assert put_lines[-1].endswith('}')
-
-            # put_lines[-1] = bistr(put_lines[-1][:-1])
-            # put_lines[0]  = bistr(put_lines[0][1:])
-
-            # if not (skeys := put_ast.keys):
-            #     pfirst = plast = None
-
-            # else:
-            #     pfirst = put_fst._dict_key_or_mock_loc(skeys[0], put_ast.values[0].f)
-            #     plast  = put_ast.values[-1].f
-
-            # self._put_seq_and_indent(put_fst, seq_loc, ffirst, flast, fpre, fpost, pfirst, plast, docstr)
-            # self._unmake_fst_tree(keys[start : stop] + values[start : stop], put_fst)
-
-            # keys[start : stop]   = put_ast.keys
-            # values[start : stop] = put_ast.values
-            # put_len              = len(put_ast.keys)
-            # stack                = []
-
-            # for i in range(put_len):
-            #     startplusi = start + i
-
-            #     stack.append(FST(values[startplusi], self, astfield('values', startplusi)))
-
-            #     if key := keys[startplusi]:
-            #         stack.append(FST(key, self, astfield('keys', startplusi)))
-
-            # self._make_fst_tree(stack)
+            put_loc = self.src_edit.put_slice_stmt(self, put_fst, field, fmt, block_loc, block_indent, stmt_indent,
+                                                   ffirst, flast, fpre, fpost)
 
 
-            raise NotImplementedError
 
+            self.put_lines(put_fst.lines, *put_loc, True, self)  # TODO: put put_fst lines CORRECTLY!
+
+
+
+            self._unmake_fst_tree(body[start : stop], put_fst)
+
+            body[start : stop] = put_ast.body
+
+            put_len = len(put_ast.body)
+            stack   = [FST(body[i], self, astfield(field, i)) for i in range(start, start + put_len)]
+
+            self._make_fst_tree(stack)
+
+
+
+            # TODO: this!  # raise NotImplementedError
 
 
 
