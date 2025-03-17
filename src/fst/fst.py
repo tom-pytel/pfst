@@ -1831,11 +1831,19 @@ class FST:
         if not (first := self.first_child(True)):
             return None
 
-        ast  = self.a
-        last = self.last_child(True)
+        ast   = self.a
+        last  = self.last_child(True)
+        lines = self.root._lines
 
         if isinstance(ast, match_case):
-            return fstloc(*_prev_find(self.root._lines, 0, 0, first.ln, first.col, 'case'), last.bend_ln, last.bend_col)  # we can use (0,0) because we know "case" starts on a newline
+            start = _prev_find(lines, 0, 0, first.ln, first.col, 'case')  # we can use (0,0) because we know "case" starts on a newline
+
+            if ast.body:
+                return fstloc(*start, last.bend_ln, last.bend_col)
+
+            end_ln, end_col = _next_find(lines, last.bend_ln, last.bend_col, len(lines) - 1, len(lines[-1]), ':')  # special case, deleted whole body, end must be set to just past the colon (which MUST follow somewhere there)
+
+            return fstloc(*start, end_ln, end_col + 1)
 
         start_ln, start_col, ante_start_ln, ante_start_col, nlpars = first._lpars('allown')
 
@@ -1857,8 +1865,6 @@ class FST:
                 end_col = ante_end_col
 
         if isinstance(ast, arguments):
-            lines = self.root._lines
-
             if ast.posonlyargs or ast.args:
                 leading_stars = None  # no leading stars
             elif ast.vararg or ast.kwonlyargs:
@@ -2096,17 +2102,16 @@ class FST:
 
             if end := _prev_find(lines, bound_ln, bound_col, bound_end_ln, bound_end_col, ':'):  # find first preceding block colon, its there unless first opened block in module
                 end_ln, end_col  = end
-                end_col         += 1
+                end_col         += 1  # just past the colon
 
             else:
                 end_ln  = bound_ln
                 end_col = bound_col
 
             end_lineno     = end_ln + 1
-            end_col_offset = lines[end_ln].c2b(end_col)  # just past the colon
+            end_col_offset = lines[end_ln].c2b(end_col)
 
         self._floor_end_pos(end_lineno, end_col_offset)
-        self.touch()
 
     def _make_fst_and_dedent(self, indent: Union['FST', str], ast: AST, copy_loc: fstloc,
                              prefix: str = '', suffix: str = '',
@@ -2119,7 +2124,7 @@ class FST:
         lines = self.root._lines
         fst   = FST(ast, lines=lines, from_=self)  # we use original lines for nodes offset calc before putting new lines
 
-        fst.offset(copy_loc.ln, copy_loc.col, -copy_loc.ln, len(prefix) - lines[copy_loc.ln].c2b(copy_loc.col))  # WARNING! `prefix` is expected to have only 1 byte characters
+        fst.offset(copy_loc.ln, copy_loc.col, -copy_loc.ln, len(prefix.encode()) - lines[copy_loc.ln].c2b(copy_loc.col))
 
         fst._lines = fst_lines = self.get_lines(*copy_loc)
 
@@ -2129,10 +2134,10 @@ class FST:
         if prefix:
             fst_lines[0] = bistr(prefix + fst_lines[0])
 
+        fst.dedent_lns(indent, skip=bool(copy_loc.col), docstr=docstr)  # if copy location starts at column 0 then we apply dedent to it as well (preceding comment or something)
+
         if put_loc:
             self.put_lines(put_lines, *put_loc, True)  # True because we may have an unparenthesized tuple that shrinks to a span length of 0
-
-        fst.dedent_lns(indent, skip=bool(copy_loc.col), docstr=docstr)  # if copy location starts at column 0 then we apply dedent to it as well (preceding comment or something)
 
         return fst
 
