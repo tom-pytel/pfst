@@ -2083,6 +2083,7 @@ class FST:
         - `bound_end_ln`, `bound_end_col`: Position after block colon, probably start of deleted region, only used if
             new last child is before colon.
         """
+
         end_lineno = None
 
         if fnewlast := self.last_child(True):  # easy enough when we have a new last child
@@ -2105,6 +2106,7 @@ class FST:
             end_col_offset = lines[end_ln].c2b(end_col)  # just past the colon
 
         self._floor_end_pos(end_lineno, end_col_offset)
+        self.touch()
 
     def _make_fst_and_dedent(self, indent: Union['FST', str], ast: AST, copy_loc: fstloc,
                              prefix: str = '', suffix: str = '',
@@ -2706,7 +2708,7 @@ class FST:
 
 
         for i in range(start + put_len, len(body)):
-            body[i].f.pfield = astfield('elts', i)
+            body[i].f.pfield = astfield(field, i)
 
         if is_last_child:  # correct parent for modified / removed last child nodes
             if not put_fst:
@@ -4088,7 +4090,9 @@ class FST:
              scope: bool = False, back: bool = False) -> Generator['FST', bool, None]:
         """Walk self and descendants in syntactic order, `send(False)` to skip recursion into child. `send(True)` to
         allow recursion into child if called with `recurse=False` or `scope=True` would otherwise disallow it. Can send
-        multiple times, last value sent takes effect.
+        multiple times, last value sent takes effect. The walk is defined forwards or backwards in that it returns a
+        parent then recurses into the children and walks those in the given direction, recursing into each child's
+        children before continuing with siblings.
 
         **Parameters:**
         - `with_loc`: If `True` then only nodes with locations returned, `'own'` means only nodes with own location
