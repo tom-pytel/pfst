@@ -178,7 +178,8 @@ def unparse(ast_obj) -> str:
 
 
 def _with_loc(fst: 'FST', with_loc: bool | Literal['own'] = True) -> bool:
-    """Check location condition on node. Faster overall than checking `ast.f.loc`."""
+    """Check location condition on node. Safe for low level because doesn't use `.loc` calculation machinery and faster
+    overall than checking `ast.f.loc`."""
 
     if not with_loc:
         return True
@@ -892,7 +893,7 @@ class FSTSrcEdit:
         return fstloc(copy_ln, copy_col, copy_end_ln, copy_end_col), fstloc(del_ln, del_col, del_end_ln, del_end_col)
 
     def pre_comments(self, lines: list[bistr], bound_ln: int, bound_col: int, bound_end_ln: int, bound_end_col: int,
-                     fmt: set | frozenset = {'pre'}) -> tuple[int, int] | None:
+                     fmt: set[str] | frozenset[str] = {'pre'}) -> tuple[int, int] | None:
         """Return the position of the start of any preceding comments to the element which is assumed to live just past
         (`f.bln`, `f.bcol`). Returns `None` if no preceding comment. If preceding entire line comments exist then the
         returned position column should be 0 (the start of the line) to indicate that it is a full line comment. Only
@@ -927,7 +928,7 @@ class FSTSrcEdit:
         return None if pre_ln is None else (pre_ln, pre_col)
 
     def post_comments(self, lines: list[bistr], bound_ln: int, bound_col: int, bound_end_ln: int, bound_end_col: int,
-                      fmt: set | frozenset = {'post'}) -> tuple[int, int] | None:
+                      fmt: set[str] | frozenset[str] = {'post'}) -> tuple[int, int] | None:
         """Return the position of the end of any trailing comments to the element which is assumed to live just before
         (`f.bend_ln`, `f.bend_col`). Returns `None` if no trailing comment. Should return the location at the start of
         the next line if comment present because a comment should never be on the last line, but if a comment ends the
@@ -1097,7 +1098,7 @@ class FSTSrcEdit:
 
         return del_loc
 
-    def get_slice_stmt(self, fst: 'FST', field: str, cut: bool, fmt: set | frozenset, block_loc: fstloc,
+    def get_slice_stmt(self, fst: 'FST', field: str, cut: bool, fmt: set[str] | frozenset[str], block_loc: fstloc,
                        ffirst: 'FST', flast: 'FST', fpre: Optional['FST'], fpost: Optional['FST'], *,
                        del_else_and_fin: bool = True, ret_all: bool = False,
     ) -> tuple[fstloc, fstloc | None, list[str] | None]:  # (copy_loc, del/put_loc, put_lines)
@@ -1322,7 +1323,7 @@ class FSTSrcEdit:
 
         return copy_loc, del_loc, put_lines
 
-    def put_slice_stmt(self, fst: 'FST', put_fst: 'FST', field: str, fmt: set | frozenset,
+    def put_slice_stmt(self, fst: 'FST', put_fst: 'FST', field: str, fmt: set[str] | frozenset[str], docstr: bool | str,
                        block_loc: fstloc, block_indent: str, stmt_indent: str,
                        ffirst: 'FST', flast: 'FST', fpre: Optional['FST'], fpost: Optional['FST'],
     ) -> fstloc:  # put_loc
@@ -1342,7 +1343,8 @@ class FSTSrcEdit:
         assignment to an empty slice.
 
         If assigning to non-existent `orelse` or `finalbody` fields then the appropriate `else:` or `finally:` is
-        prepended to `put_fst` for the final put.
+        prepended to `put_fst` for the final put. If replacing whole body of 'orelse' or 'finalbody' then the original
+        'else:' or 'finally:' is not deleted (along with any preceding comments or spaces).
 
         **Parameters:**
         - `fst`: The destination `FST` container that is being put to.
@@ -1357,7 +1359,7 @@ class FSTSrcEdit:
             - `'post'`: replace comment trailing on last line. Keep in mind this is the comment on the last
                 statement of a body if last element of copy is a block element.
             - `'pep8'`: Does not actually reformat code according to PEP 8, just inserts up one or two empty lines
-                before first function or classe being put according to if destination is top level scope or not. Also
+                before non-first function or class being put according to destination if is top level scope or not. Also
                 removes this number of spaces if replacing a function or class so balances out in that case. In the
                 future may specify additional PEP 8 behavior.
             - `'space*'`: Can be only `'space'` or with a number `'space3'`. Indicates that up to this many preceding
@@ -1382,8 +1384,22 @@ class FSTSrcEdit:
             location currently.
         """
 
+        if not ffirst:  # pure insertion
+            if not fpre and not fpost:  # insertion to empty block
+                put_loc = (block_loc if block_loc.end_ln == block_loc.ln else
+                           fstloc(*block_loc[:2], block_loc.ln + 1, 0))
+
+                put_fst.indent_lns(stmt_indent, docstr=docstr, skip=0)
+
+                if block_loc.col:
+                    put_fst.put_lines(['', ''], 0, 0, 0, 0, False)
+
+                return put_loc
 
 
+
+
+        # replacement
 
         copy_loc, del_loc, put_lines, bound, pre_comms, post_comms, pre_semi, post_semi, block_start = (
             self.get_slice_stmt(fst, field, True, fmt, block_loc, ffirst, flast, fpre, fpost,
@@ -1777,7 +1793,7 @@ class FST:
         nodes without their own locations if `with_loc='allown'`."""
 
         if prev := self.prev_step(with_loc, recurse_self=False):
-            return prev.loc[2:]
+            return prev.bloc[2:]
 
         return 0, 0
 
@@ -1786,7 +1802,7 @@ class FST:
         nodes without their own locations if `with_loc='allown'`."""
 
         if next := self.next_step(with_loc, recurse_self=False):
-            return next.loc[:2]
+            return next.bloc[:2]
 
         return len(lines := self.root._lines) - 1, len(lines[-1])
 
@@ -1805,7 +1821,7 @@ class FST:
             parentheses encountered.
         """
 
-        return _prev_pars(self.root._lines, *self._prev_ast_bound(with_loc), *self.loc[:2])
+        return _prev_pars(self.root._lines, *self._prev_ast_bound(with_loc), *self.bloc[:2])
 
     def _rpars(self, with_loc: bool | Literal['own'] | Literal['allown'] = True) -> tuple[int, int, int, int, int]:
         """Return the `end_ln` and `end_col` of the rightmost and ante-rightmost closing parentheses and the total
@@ -1822,7 +1838,7 @@ class FST:
             count of closing parentheses encountered.
         """
 
-        return _next_pars(self.root._lines, *self.loc[2:], *self._next_ast_bound(with_loc))
+        return _next_pars(self.root._lines, *self.bloc[2:], *self._next_ast_bound(with_loc))
 
     def _loc_from_children(self) -> fstloc | None:
         """Meant to handle figuring out `loc` for `arguments`, `withitem`, `match_case` and `comprehension`. Use on
@@ -1931,19 +1947,41 @@ class FST:
 
             self = self.parent
 
-    def _floor_end_pos(self, end_lineno: int, end_col_offset: int, self_: bool = True):  # because of trailing non-AST junk in last statements
+    # def _floor_end_pos(self, end_lineno: int, end_col_offset: int, self_: bool = True):  # because of trailing non-AST junk in last statements
+    #     """Walk up parent chain (starting at `self`) setting `.end_lineno` and `.end_col_offset` to `end_lineno` and
+    #     `end_col_offset` if they are past it and self is last child of parent. Initial `self` is corrected always. Used
+    #     for correcting parents after an `offset()` which removed or modified last child statements of block parents."""
+
+    #     while True:
+    #         if not self_:
+    #             self_ = True
+
+    #         else:
+    #             if (lno := getattr(a := self.a, 'end_lineno', -1)) > end_lineno or (lno == end_lineno and
+    #                                                                                 a.end_col_offset > end_col_offset):
+    #                 a.end_lineno     = end_lineno
+    #                 a.end_col_offset = end_col_offset
+
+    #             self.touch()  # because of `match_case` which doesn't have a location in AST
+
+    #         if not (parent := self.parent) or self is not parent.last_child(True):
+    #             break
+
+    #         self = parent
+
+    def _set_end_pos(self, end_lineno: int, end_col_offset: int, self_: bool = True):  # because of trailing non-AST junk in last statements
         """Walk up parent chain (starting at `self`) setting `.end_lineno` and `.end_col_offset` to `end_lineno` and
-        `end_col_offset` if they are past it and self is last child of parent. Initial `self` is corrected always. Used
-        for correcting parents after an `offset()` which removed or modified last child statements of block parents."""
+        `end_col_offset` if self is last child of parent. Initial `self` is corrected always. Used for correcting
+        parents after an `offset()` which removed or modified last child statements of block parents."""
 
         while True:
             if not self_:
                 self_ = True
 
-            elif (lno := getattr(a := self.a, 'end_lineno', -1)) > end_lineno or (lno == end_lineno and
-                                                                                  a.end_col_offset > end_col_offset):
-                a.end_lineno     = end_lineno
-                a.end_col_offset = end_col_offset
+            else:
+                if hasattr(a := self.a, 'end_lineno'):  # because of `match_case` which doesn't have a location in AST
+                    a.end_lineno     = end_lineno
+                    a.end_col_offset = end_col_offset
 
                 self.touch()
 
@@ -2082,7 +2120,7 @@ class FST:
     def _fix_block_del_last_child(self, bound_ln: int, bound_col: int, bound_end_ln: int, bound_end_col: int):
         """Fix end location of a block statement after its last child (position-wise, not last existing child) has been
         cut or deleted. Will set end position of `self` and any parents who `self` is the last child of to the new last
-        child if it is past the block-open colon or just past the block-open colon.
+        child if it is past the block-open colon, otherwise set end at just past the block-open colon.
 
         **Parameters:**
         - `bound_ln`, `bound_col`: Position before block colon but after and pre-colon `AST` node.
@@ -2092,10 +2130,10 @@ class FST:
 
         end_lineno = None
 
-        if fnewlast := self.last_child(True):  # easy enough when we have a new last child
-            if fnewlast.pfield.name in ('body', 'orelse', 'handlers', 'finalbody', 'cases'):  # but make sure its past the block open colon
-                end_lineno     = fnewlast.end_lineno
-                end_col_offset = fnewlast.end_col_offset
+        if last_child := self.last_child(True):  # easy enough when we have a new last child
+            if last_child.pfield.name in ('body', 'orelse', 'handlers', 'finalbody', 'cases'):  # but make sure its past the block open colon
+                end_lineno     = last_child.end_lineno
+                end_col_offset = last_child.end_col_offset
 
         if end_lineno is None:
             lines = self.root._lines
@@ -2111,7 +2149,7 @@ class FST:
             end_lineno     = end_ln + 1
             end_col_offset = lines[end_ln].c2b(end_col)
 
-        self._floor_end_pos(end_lineno, end_col_offset)
+        self._set_end_pos(end_lineno, end_col_offset)
 
     def _make_fst_and_dedent(self, indent: Union['FST', str], ast: AST, copy_loc: fstloc,
                              prefix: str = '', suffix: str = '',
@@ -2322,8 +2360,8 @@ class FST:
         fpost  = body[stop].f if stop < len(body) else None
         indent = ffirst.get_indent()
 
-        block_loc = fstloc(*(fpre.loc[2:] if fpre else ffirst._prev_ast_bound()),
-                           *(fpost.loc[:2] if fpost else flast._next_ast_bound()))
+        block_loc = fstloc(*(fpre.bloc[2:] if fpre else ffirst._prev_ast_bound()),
+                           *(fpost.bloc[:2] if fpost else flast._next_ast_bound()))
 
         if not cut:
             asts = [copy_ast(body[i]) for i in range(start, stop)]
@@ -2653,20 +2691,39 @@ class FST:
         if not slice_len and (not put_fst or not put_ast.body):  # deleting or assigning empty slice to empty slice, noop
             return
 
-        if not slice_len:
-            ffirst = flast = None
-
-        else:
-            ffirst = body[start].f
-            flast  = body[stop - 1].f
-
         fpre  = body[start - 1].f if start else None
         fpost = body[stop].f if stop < len(body) else None
 
-        block_loc = fstloc(*(fpre.loc[2:] if fpre else ffirst._prev_ast_bound()),
-                           *(fpost.loc[:2] if fpost else flast._next_ast_bound()))
+        if slice_len:  # replacement
+            ffirst = body[start].f
+            flast  = body[stop - 1].f
 
-        is_last_child = not fpost and flast is self.last_child(True)
+            block_loc  = fstloc(*(fpre.bloc[2:] if fpre else ffirst._prev_ast_bound()),
+                                *(fpost.bloc[:2] if fpost else flast._next_ast_bound()))
+
+            is_last_child = not fpost and flast and flast is self.last_child(True)
+
+        else:  # insertion
+            ffirst = flast = None
+
+            if fpre:
+                block_loc     = fstloc(*fpre.bloc[2:], *(fpost.bloc[:2] if fpost else fpre._next_ast_bound()))
+                is_last_child = not fpost and not fpre.next()
+
+            elif fpost:
+                block_loc     = fstloc(*fpost._prev_ast_bound(), *fpost.bloc[:2])
+                is_last_child = False
+
+            else:  # insertion into empty block
+                if isinstance(ast, (FunctionDef, AsyncFunctionDef, ClassDef, With, AsyncWith)):  # only 'body' possible
+                    block_loc = fstloc(*self.bloc[2:], *self._next_ast_bound())
+
+                else:
+                    raise NotImplementedError  # TODO: this!
+
+
+                is_last_child = not fpost  # TODO: ... aaand what?
+
 
         if isinstance(fmt, str):
             fmt = frozenset(t for s in fmt.split(',') if (t := s.strip()))
@@ -2688,7 +2745,8 @@ class FST:
             block_indent = self.get_indent()
             stmt_indent  = body[0].f.get_indent() if body else block_indent + self.root.indent
 
-            put_loc = self.src_edit.put_slice_stmt(self, put_fst, field, fmt, block_loc, block_indent, stmt_indent,
+            put_loc = self.src_edit.put_slice_stmt(self, put_fst, field, fmt, docstr,
+                                                   block_loc, block_indent, stmt_indent,
                                                    ffirst, flast, fpre, fpost)
 
 
@@ -2718,7 +2776,8 @@ class FST:
         if is_last_child:  # correct parent for modified / removed last child nodes
             if not put_fst:
                 self._fix_block_del_last_child(block_loc.ln, block_loc.col, put_loc.ln, put_loc.col)
-
+            else:
+                self._set_end_pos((last_child := self.last_child()).end_lineno, last_child.end_col_offset)
 
             # TODO: correct for replacing last child of 'body' and any other lists of statements
 
@@ -4823,7 +4882,7 @@ class FST:
         self.touchall(True, False, False)
 
     def indent_lns(self, indent: str | None = None, lns: set[int] | None = None, *,
-                   docstr: bool | str = DEFAULT_DOCSTR) -> set[int]:
+                   docstr: bool | str = DEFAULT_DOCSTR, skip: int = 1) -> set[int]:
         """Indent all indentable lines specified in `lns` with `indent` and adjust node locations accordingly.
 
         **Parameters:**
@@ -4833,6 +4892,7 @@ class FST:
         - `docstr`: How to treat multiline string docstring lines. `False` means not indentable, `True` means all `Expr`
             multiline strings are indentable (as they serve no coding purpose). `'strict'` means only multiline strings
             in expected docstring positions are indentable.
+        - `skip`: If not providing `lns` then this value is passed to `get_indentable_lns()`.
 
         **Returns:**
         - `set[int]`: `lns` passed in or otherwise set of line numbers (zero based) which are sytactically indentable.
@@ -4845,7 +4905,7 @@ class FST:
         # if docstr is None:
         #     docstr = root.default_docstr
 
-        if not ((lns := self.get_indentable_lns(1, docstr=docstr)) if lns is None else lns) or not indent:
+        if not ((lns := self.get_indentable_lns(skip, docstr=docstr)) if lns is None else lns) or not indent:
             return lns
 
         self.offset_cols(len(indent.encode()), lns)
@@ -4872,6 +4932,7 @@ class FST:
         - `docstr`: How to treat multiline string docstring lines. `False` means not indentable, `True` means all `Expr`
             multiline strings are indentable (as they serve no coding purpose). `'strict'` means only multiline strings
             in expected docstring positions are indentable.
+        - `skip`: If not providing `lns` then this value is passed to `get_indentable_lns()`.
 
         **Returns:**
         - `set[int]`: `lns` passed in or otherwise set of line numbers (zero based) which are sytactically indentable.
