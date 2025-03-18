@@ -1947,28 +1947,6 @@ class FST:
 
             self = self.parent
 
-    # def _floor_end_pos(self, end_lineno: int, end_col_offset: int, self_: bool = True):  # because of trailing non-AST junk in last statements
-    #     """Walk up parent chain (starting at `self`) setting `.end_lineno` and `.end_col_offset` to `end_lineno` and
-    #     `end_col_offset` if they are past it and self is last child of parent. Initial `self` is corrected always. Used
-    #     for correcting parents after an `offset()` which removed or modified last child statements of block parents."""
-
-    #     while True:
-    #         if not self_:
-    #             self_ = True
-
-    #         else:
-    #             if (lno := getattr(a := self.a, 'end_lineno', -1)) > end_lineno or (lno == end_lineno and
-    #                                                                                 a.end_col_offset > end_col_offset):
-    #                 a.end_lineno     = end_lineno
-    #                 a.end_col_offset = end_col_offset
-
-    #             self.touch()  # because of `match_case` which doesn't have a location in AST
-
-    #         if not (parent := self.parent) or self is not parent.last_child(True):
-    #             break
-
-    #         self = parent
-
     def _set_end_pos(self, end_lineno: int, end_col_offset: int, self_: bool = True):  # because of trailing non-AST junk in last statements
         """Walk up parent chain (starting at `self`) setting `.end_lineno` and `.end_col_offset` to `end_lineno` and
         `end_col_offset` if self is last child of parent. Initial `self` is corrected always. Used for correcting
@@ -1985,7 +1963,7 @@ class FST:
 
                 self.touch()
 
-            if not (parent := self.parent) or self is not parent.last_child(True):
+            if not (parent := self.parent) or self.next():  # self is not parent.last_child(True):
                 break
 
             self = parent
@@ -2367,7 +2345,7 @@ class FST:
             asts = [copy_ast(body[i]) for i in range(start, stop)]
 
         else:
-            is_last_child = not fpost and flast is self.last_child(True)
+            is_last_child = not fpost and not flast.next()
             asts          = body[start : stop]
 
             del body[start : stop]
@@ -2701,7 +2679,7 @@ class FST:
             block_loc  = fstloc(*(fpre.bloc[2:] if fpre else ffirst._prev_ast_bound()),
                                 *(fpost.bloc[:2] if fpost else flast._next_ast_bound()))
 
-            is_last_child = not fpost and flast and flast is self.last_child(True)
+            is_last_child = not fpost and not flast.next()
 
         else:  # insertion
             ffirst = flast = None
@@ -2714,15 +2692,17 @@ class FST:
                 block_loc     = fstloc(*fpost._prev_ast_bound(), *fpost.bloc[:2])
                 is_last_child = False
 
-            else:  # insertion into empty block
-                if isinstance(ast, (FunctionDef, AsyncFunctionDef, ClassDef, With, AsyncWith)):  # only 'body' possible
-                    block_loc = fstloc(*self.bloc[2:], *self._next_ast_bound())
+            # insertion into empty block
 
-                else:
-                    raise NotImplementedError  # TODO: this!
+            elif isinstance(ast, (FunctionDef, AsyncFunctionDef, ClassDef, With, AsyncWith, Match, match_case)):  # only one block possible, 'body' or 'cases'
+                block_loc     = fstloc(*self.bloc[2:], *self._next_ast_bound())
+                is_last_child = True
 
 
-                is_last_child = not fpost  # TODO: ... aaand what?
+            else:
+                raise NotImplementedError  # TODO: this!
+
+
 
 
         if isinstance(fmt, str):
@@ -2749,12 +2729,9 @@ class FST:
                                                    block_loc, block_indent, stmt_indent,
                                                    ffirst, flast, fpre, fpost)
 
-
-
-            self.put_lines(put_fst.lines, *put_loc, True, self)  # TODO: put put_fst lines CORRECTLY!
-
-
-
+            put_fst.offset(0, 0, put_loc.ln, 0 if put_fst.bln or put_fst.bcol else
+                           self.root._lines[put_loc.ln].c2b(put_loc.col))
+            self.put_lines(put_fst.lines, *put_loc, True, self)
             self._unmake_fst_tree(body[start : stop], put_fst)
 
             body[start : stop] = put_ast.body
