@@ -1386,13 +1386,26 @@ class FSTSrcEdit:
 
         if not ffirst:  # pure insertion
             if not fpre and not fpost:  # insertion to empty block
-                put_loc = (block_loc if block_loc.end_ln == block_loc.ln else
-                           fstloc(*block_loc[:2], block_loc.ln + 1, 0))
-
                 put_fst.indent_lns(stmt_indent, docstr=docstr, skip=0)
 
-                if block_loc.col:
+                if field == 'orelse':  # need to create these because they not there if body empty
+                    put_fst.put_lines(['else:', ''], 0, 0, 0, 0, False)
+                elif field == 'finalbody':
+                    put_fst.put_lines(['finally:', ''], 0, 0, 0, 0, False)
+
+                block_ln, _, block_end_ln, block_end_col = block_loc
+
+                if block_end_ln > block_ln:
+                    put_loc = fstloc(ln := block_ln + 1, 0, ln, 0)  # we want to put after any post-comments
+
+                else:
+                    put_loc = fstloc(block_end_ln, block_end_col, block_end_ln, block_end_col)
+
                     put_fst.put_lines(['', ''], 0, 0, 0, 0, False)
+
+                if put_fst._lines[-1]:
+                    put_fst._lines.append(bistr(''))
+                    put_fst.touch()
 
                 return put_loc
 
@@ -1957,13 +1970,13 @@ class FST:
                 self_ = True
 
             else:
-                if hasattr(a := self.a, 'end_lineno'):  # because of `match_case` which doesn't have a location in AST
+                if hasattr(a := self.a, 'end_lineno'):  # because of ASTs which locations
                     a.end_lineno     = end_lineno
                     a.end_col_offset = end_col_offset
 
                 self.touch()
 
-            if not (parent := self.parent) or self.next():  # self is not parent.last_child(True):
+            if not (parent := self.parent) or self.next():  # self is not parent.last_child():
                 break
 
             self = parent
@@ -2669,6 +2682,7 @@ class FST:
         if not slice_len and (not put_fst or not put_ast.body):  # deleting or assigning empty slice to empty slice, noop
             return
 
+        lines = self.root._lines
         fpre  = body[start - 1].f if start else None
         fpost = body[stop].f if stop < len(body) else None
 
@@ -2692,14 +2706,37 @@ class FST:
                 block_loc     = fstloc(*fpost._prev_ast_bound(), *fpost.bloc[:2])
                 is_last_child = False
 
-            # insertion into empty block
+            # insertion into empty block (or nonexistent 'else' or 'finally' block)
 
             elif isinstance(ast, (FunctionDef, AsyncFunctionDef, ClassDef, With, AsyncWith, Match, match_case)):  # only one block possible, 'body' or 'cases'
                 block_loc     = fstloc(*self.bloc[2:], *self._next_ast_bound())
                 is_last_child = True
 
+            elif isinstance(ast, (For, AsyncFor, While, If)):  # 'body' or 'orelse'
+                if field == 'body':
+                    if not (orelse := ast.orelse):
+                        block_loc     = fstloc(*self.bloc[2:], *self._next_ast_bound())
+                        is_last_child = True
 
-            else:
+                    else:
+                        ln, col       = _next_find(lines, *(f := orelse[0].f).prev().bloc[2:], *f.bloc[:2], ':')  # we know its there
+                        block_loc     = fstloc(ln, col + 1, *orelse[0].f.bloc[:2])
+                        is_last_child = False
+
+                else:  # field == 'orelse'
+                    is_last_child = True
+
+                    if not (body_ := ast.body):
+                        block_loc = fstloc(*self.bloc[2:], *self._next_ast_bound())
+                    else:
+                        block_loc = fstloc(*body_[-1].f.bloc[2:], *self._next_ast_bound())
+
+            else:  # isinstance(ast, (Try, TryStar))
+                pass
+
+
+
+
                 raise NotImplementedError  # TODO: this!
 
 
@@ -2729,9 +2766,8 @@ class FST:
                                                    block_loc, block_indent, stmt_indent,
                                                    ffirst, flast, fpre, fpost)
 
-            put_fst.offset(0, 0, put_loc.ln, 0 if put_fst.bln or put_fst.bcol else
-                           self.root._lines[put_loc.ln].c2b(put_loc.col))
-            self.put_lines(put_fst.lines, *put_loc, True, self)
+            put_fst.offset(0, 0, put_loc.ln, 0 if put_fst.bln or put_fst.bcol else lines[put_loc.ln].c2b(put_loc.col))
+            self.put_lines(put_fst.lines, *put_loc, True)
             self._unmake_fst_tree(body[start : stop], put_fst)
 
             body[start : stop] = put_ast.body
@@ -2741,12 +2777,6 @@ class FST:
 
             self._make_fst_tree(stack)
 
-
-
-            # TODO: this!  # raise NotImplementedError
-
-
-
         for i in range(start + put_len, len(body)):
             body[i].f.pfield = astfield(field, i)
 
@@ -2755,17 +2785,6 @@ class FST:
                 self._fix_block_del_last_child(block_loc.ln, block_loc.col, put_loc.ln, put_loc.col)
             else:
                 self._set_end_pos((last_child := self.last_child()).end_lineno, last_child.end_col_offset)
-
-            # TODO: correct for replacing last child of 'body' and any other lists of statements
-
-
-
-
-
-
-
-
-
 
     # ------------------------------------------------------------------------------------------------------------------
 
@@ -3327,7 +3346,7 @@ class FST:
     def put_lines(self, lines: list[str] | None, ln: int, col: int, end_ln: int, end_col: int,
                   inc: bool | None = None, stop_at: Optional['FST'] = None):
         """Put or delete lines to currently stored source, optionally offsetting all nodes for the change. Must specify
-        `inc` as not `None` to enable offset of nodes according to text."""
+        `inc` as not `None` to enable offset of nodes according to lines put."""
 
         ls = self.root._lines
 
