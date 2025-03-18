@@ -10023,6 +10023,260 @@ i # post
         self.assertEqual('()', a.f.src)
         self.assertEqual('( i )', f.src)
 
+        a = parse('''
+match a:
+  case 1:
+    if 1:
+      pass
+    else:
+      pass
+  case 2:
+    try:
+      pass
+    except:
+      pass
+    else:
+      pass
+    finally:
+      pass
+  case 2:
+    for a in b:
+      pass
+    else:
+      pass
+  case 3:
+    async for a in b:
+      pass
+    else:
+      pass
+  case 4:
+    while a in b:
+      pass
+    else:
+      pass
+  case 5:
+    with a as b:
+      pass
+  case 6:
+    async with a as b:
+      pass
+  case 7:
+    def func():
+      pass
+  case 8:
+    async def func():
+      pass
+  case 9:
+    class cls:
+      pass
+            '''.strip())
+        a.body[0].cases[0].body[0].body[0].f.cut()
+        a.body[0].cases[0].body[0].orelse[0].f.cut()
+        a.body[0].cases[1].body[0].body[0].f.cut()
+        a.body[0].cases[1].body[0].handlers[0].f.cut()
+        a.body[0].cases[1].body[0].orelse[0].f.cut()
+        a.body[0].cases[1].body[0].finalbody[0].f.cut()
+        a.body[0].cases[2].body[0].body[0].f.cut()
+        a.body[0].cases[2].body[0].orelse[0].f.cut()
+        a.body[0].cases[3].body[0].body[0].f.cut()
+        a.body[0].cases[3].body[0].orelse[0].f.cut()
+        a.body[0].cases[4].body[0].body[0].f.cut()
+        a.body[0].cases[4].body[0].orelse[0].f.cut()
+        a.body[0].cases[5].body[0].body[0].f.cut()
+        a.body[0].cases[6].body[0].body[0].f.cut()
+        a.body[0].cases[7].body[0].body[0].f.cut()
+        a.body[0].cases[8].body[0].body[0].f.cut()
+        a.body[0].cases[9].body[0].body[0].f.cut()
+
+        self.assertEqual(a.f.src, '''
+match a:
+  case 1:
+    if 1:
+  case 2:
+    try:
+  case 2:
+    for a in b:
+  case 3:
+    async for a in b:
+  case 4:
+    while a in b:
+  case 5:
+    with a as b:
+  case 6:
+    async with a as b:
+  case 7:
+    def func():
+  case 8:
+    async def func():
+  case 9:
+    class cls:
+'''.lstrip())
+
+        a.body[0].cases[0].body[0].f.cut()
+        a.body[0].cases[1].body[0].f.cut()
+        a.body[0].cases[2].body[0].f.cut()
+        a.body[0].cases[3].body[0].f.cut()
+        a.body[0].cases[4].body[0].f.cut()
+        a.body[0].cases[5].body[0].f.cut()
+        a.body[0].cases[6].body[0].f.cut()
+        a.body[0].cases[7].body[0].f.cut()
+        a.body[0].cases[8].body[0].f.cut()
+        a.body[0].cases[9].body[0].f.cut()
+
+        self.assertEqual(a.f.src, '''
+match a:
+  case 1:
+  case 2:
+  case 2:
+  case 3:
+  case 4:
+  case 5:
+  case 6:
+  case 7:
+  case 8:
+  case 9:
+'''.lstrip())
+
+        a.body[0].cases[0].f.cut()
+        a.body[0].cases[0].f.cut()
+        a.body[0].cases[0].f.cut()
+        a.body[0].cases[0].f.cut()
+        a.body[0].cases[0].f.cut()
+        a.body[0].cases[0].f.cut()
+        a.body[0].cases[0].f.cut()
+        a.body[0].cases[0].f.cut()
+        a.body[0].cases[0].f.cut()
+        a.body[0].cases[0].f.cut()
+
+        self.assertEqual(a.f.src, '''match a:\n''')
+
+        a = parse('''
+match a:
+  case 1:
+    if 1:
+      pass
+    else:
+      pass
+  case 2:
+    try:
+      pass
+    except:
+      pass
+    else:
+      pass
+    finally:
+      pass
+  case 2:
+    for a in b:
+      pass
+    else:
+      pass
+  case 3:
+    async for a in b:
+      pass
+    else:
+      pass
+  case 4:
+    while a in b:
+      pass
+    else:
+      pass
+  case 5:
+    with a as b:
+      pass
+  case 6:
+    async with a as b:
+      pass
+  case 7:
+    def func():
+      pass
+  case 8:
+    async def func():
+      pass
+  case 9:
+    class cls:
+      pass
+            '''.strip())
+        a.body[0].cases[9].body[0].body[0].f.cut()
+        a.body[0].cases[8].body[0].body[0].f.cut()
+        a.body[0].cases[7].body[0].body[0].f.cut()
+        a.body[0].cases[6].body[0].body[0].f.cut()
+        a.body[0].cases[5].body[0].body[0].f.cut()
+        a.body[0].cases[4].body[0].orelse[0].f.cut()
+        a.body[0].cases[4].body[0].body[0].f.cut()
+        a.body[0].cases[3].body[0].orelse[0].f.cut()
+        a.body[0].cases[3].body[0].body[0].f.cut()
+        a.body[0].cases[2].body[0].orelse[0].f.cut()
+        a.body[0].cases[2].body[0].body[0].f.cut()
+        a.body[0].cases[1].body[0].finalbody[0].f.cut()
+        a.body[0].cases[1].body[0].orelse[0].f.cut()
+        a.body[0].cases[1].body[0].handlers[0].f.cut()
+        a.body[0].cases[1].body[0].body[0].f.cut()
+        a.body[0].cases[0].body[0].orelse[0].f.cut()
+        a.body[0].cases[0].body[0].body[0].f.cut()
+
+        self.assertEqual(a.f.src, '''
+match a:
+  case 1:
+    if 1:
+  case 2:
+    try:
+  case 2:
+    for a in b:
+  case 3:
+    async for a in b:
+  case 4:
+    while a in b:
+  case 5:
+    with a as b:
+  case 6:
+    async with a as b:
+  case 7:
+    def func():
+  case 8:
+    async def func():
+  case 9:
+    class cls:
+'''.lstrip())
+
+        a.body[0].cases[9].body[0].f.cut()
+        a.body[0].cases[8].body[0].f.cut()
+        a.body[0].cases[7].body[0].f.cut()
+        a.body[0].cases[6].body[0].f.cut()
+        a.body[0].cases[5].body[0].f.cut()
+        a.body[0].cases[4].body[0].f.cut()
+        a.body[0].cases[3].body[0].f.cut()
+        a.body[0].cases[2].body[0].f.cut()
+        a.body[0].cases[1].body[0].f.cut()
+        a.body[0].cases[0].body[0].f.cut()
+
+        self.assertEqual(a.f.src, '''
+match a:
+  case 1:
+  case 2:
+  case 2:
+  case 3:
+  case 4:
+  case 5:
+  case 6:
+  case 7:
+  case 8:
+  case 9:
+'''.lstrip())
+
+        a.body[0].cases[9].f.cut()
+        a.body[0].cases[8].f.cut()
+        a.body[0].cases[7].f.cut()
+        a.body[0].cases[6].f.cut()
+        a.body[0].cases[5].f.cut()
+        a.body[0].cases[4].f.cut()
+        a.body[0].cases[3].f.cut()
+        a.body[0].cases[2].f.cut()
+        a.body[0].cases[1].f.cut()
+        a.body[0].cases[0].f.cut()
+
+        self.assertEqual(a.f.src, '''match a:\n''')
+
     def test_cut_block_everything(self):
         for src in ('''
 if mo:
