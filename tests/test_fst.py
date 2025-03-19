@@ -4,6 +4,7 @@ import os
 import sys
 import unittest
 import ast as ast_
+from random import seed, shuffle
 
 from fst import *
 from fst import fst
@@ -10873,6 +10874,262 @@ finally: pass
         a.body[0].body[0].finalbody[0].f.cut()
         a.body[0].body[0].f.put_slice('i', field='body')
         self.assertEqual(a.f.src, 'if 2:\n    try:\n        i\n    except: pass\n')
+
+    def test_insert_into_empty_block_2(self):
+        fst = parse('''
+match a:
+    case 1:
+        i = 1
+
+match b:
+    case 2:
+        pass  # this is removed
+
+if 1:
+    j; k
+else:
+    l
+    m
+
+try:
+    # pre
+    n  # post
+except:
+    if 1: break
+else:
+    if 2: continue
+    elif 3: o
+    else: p
+finally:
+    @deco
+    def inner() -> list[int]:
+        q = 4  # post-inner-q
+
+for a in b:
+    # pre-classdeco
+    @classdeco
+    class cls:
+        @methdeco
+        def meth(self):
+            mvar = 5  # post-meth
+else:
+    """Multi
+    line
+    string."""
+
+async for a in b:
+    ("Multi"
+    "line"
+    "string")
+else:
+    r = [i for i in range(100)]  # post-list-comprehension
+
+while a in b:
+    global c
+else:
+    lambda x: x**2
+
+with a as b:
+    try: a ; #  post-try
+    except: b ; c  # post-except
+    else: return 5
+    finally: yield 6
+
+async with a as b:
+    del x, y, z
+
+def func():
+    assert s, t
+
+@asyncdeco
+async def func():
+    match z:
+        case 1: zz
+        case 2:
+            zzz
+
+class cls:
+    def docfunc(a, /, b=2, *c, d=3, **e):
+        """Doc
+        string."""
+
+        return -1
+
+if indented:
+    try:
+        try: raise
+        except Exception as exc:
+            raise exc from exc
+    except:
+        aa or bb or cc
+    else:
+        f'{i:2} plus 1'
+    finally:
+        j = (i := k)
+'''.lstrip()).f
+
+        fst.body[1].cases[0].cut()
+        fst.body[1].put_slice('pass')
+
+        points = [
+            (fst.body[0].cases[0], 'body'),
+            (fst.body[1], 'cases'),
+            (fst.body[2], 'body'),
+            (fst.body[2], 'orelse'),
+            (fst.body[3], 'body'),
+            (fst.body[3], 'handlers'),
+            (fst.body[3], 'orelse'),
+            (fst.body[3], 'finalbody'),
+            (fst.body[4], 'body'),
+            (fst.body[4], 'orelse'),
+            (fst.body[5], 'body'),
+            (fst.body[5], 'orelse'),
+            (fst.body[6], 'body'),
+            (fst.body[6], 'orelse'),
+            (fst.body[7], 'body'),
+            (fst.body[8], 'body'),
+            (fst.body[9], 'body'),
+            (fst.body[10], 'body'),
+            (fst.body[11], 'body'),
+            (fst.body[12].body[0], 'body'),
+            (fst.body[12].body[0], 'handlers'),
+            (fst.body[12].body[0], 'orelse'),
+            (fst.body[12].body[0], 'finalbody'),
+        ]
+
+        seed(0)
+
+        bs = []
+        ps = points[:]
+
+        shuffle(ps)
+
+        while ps:
+            f, field = ps.pop()
+
+            bs.append(f.get_slice(field=field, cut=True))
+
+        ps = points[:]
+
+        shuffle(ps)
+        shuffle(bs)
+
+        while ps:
+            f, field = ps.pop()
+
+            f.put_slice(bs.pop(), 0, 0, field=field)
+
+        self.assertEqual(fst.src, '''
+match a:
+    case 1:
+        try: a ; #  post-try
+        except: b ; c  # post-except
+        else: return 5
+        finally: yield 6
+
+match b:
+    if 2: continue
+    elif 3: o
+    else: p
+
+if 1:
+    r = [i for i in range(100)]  # post-list-comprehension
+else:
+    try: raise
+    except Exception as exc:
+        raise exc from exc
+
+try:
+    assert s, t
+j; k
+else:
+    l
+    m
+finally:
+    ("Multi"
+    "line"
+    "string")
+
+for a in b:
+    # pre
+    n  # post
+else:
+    pass
+
+async for a in b:
+    global c
+else:
+    i = 1
+
+while a in b:
+    except:
+        aa or bb or cc
+else:
+    del x, y, z
+
+with a as b:
+    j = (i := k)
+
+async with a as b:
+    def docfunc(a, /, b=2, *c, d=3, **e):
+        """Doc
+        string."""
+
+        return -1
+
+def func():
+    except:
+        if 1: break
+
+@asyncdeco
+async def func():
+    match z:
+        case 1: zz
+        case 2:
+            zzz
+
+class cls:
+    f'{i:2} plus 1'
+
+if indented:
+    try:
+        # pre-classdeco
+        @classdeco
+        class cls:
+            @methdeco
+            def meth(self):
+                mvar = 5  # post-meth
+    @deco
+    def inner() -> list[int]:
+        q = 4  # post-inner-q
+    else:
+        """Multi
+        line
+        string."""
+    finally:
+        lambda x: x**2
+'''.lstrip())
+
+        for _ in range(25):  # now just fuzz it a bit, just in case
+            bs = []
+            ps = points[:]
+
+            shuffle(ps)
+
+            while ps:
+                f, field = ps.pop()
+
+                bs.append(f.get_slice(field=field, cut=True))
+
+            ps = points[:]
+
+            shuffle(ps)
+            shuffle(bs)
+
+            while ps:
+                f, field = ps.pop()
+
+                f.put_slice(bs.pop(), 0, 0, field=field)
 
     def test_get_slice_seq_copy(self):
         for src, elt, start, stop, _, slice_copy, _, slice_dump in GET_SLICE_SEQ_CUT_DATA:

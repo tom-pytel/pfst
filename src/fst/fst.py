@@ -1384,6 +1384,8 @@ class FSTSrcEdit:
             location currently.
         """
 
+        lines = fst.root._lines
+
         if not ffirst:  # pure insertion
             if not fpre and not fpost:  # insertion to empty block
                 put_fst.indent_lns(stmt_indent if field != 'handlers' else block_indent, docstr=docstr, skip=0)
@@ -1393,15 +1395,22 @@ class FSTSrcEdit:
                 elif field == 'finalbody':
                     put_fst.put_lines([block_indent + 'finally:', ''], 0, 0, 0, 0, False)
 
-                block_ln, _, block_end_ln, block_end_col = block_loc
+                block_ln, block_col, block_end_ln, block_end_col = block_loc
 
-                if block_end_ln > block_ln:
-                    put_loc = fstloc(ln := block_ln + 1, 0, ln, 0)  # we want to put after any post-comments
+                single_block_ln = block_ln == block_end_ln
 
+                if code := _next_src(lines, block_ln, block_col, block_ln,
+                                     block_end_ln if single_block_ln else 0x7fffffffffffffff, True, False):
+                    assert code.src.startswith('#')  # not expecting anything else after colon in empty block, '\\' is ignored in search
+
+                    block_col = code.col + len(code.src)  # we want to put after any post-comments
+
+                if single_block_ln:
+                    put_loc = fstloc(block_ln, block_col, block_ln, block_end_col)
                 else:
-                    put_loc = fstloc(block_end_ln, block_end_col, block_end_ln, block_end_col)
+                    put_loc = fstloc(block_ln, block_col, block_ln + 1, 0)
 
-                    put_fst.put_lines(['', ''], 0, 0, 0, 0, False)
+                put_fst.put_lines(['', ''], 0, 0, 0, 0, False)
 
                 if put_fst._lines[-1]:
                     put_fst._lines.append(bistr(''))
