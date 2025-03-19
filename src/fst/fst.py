@@ -90,7 +90,7 @@ HAS_DOCSTRING           = NAMED_SCOPE_OR_MOD
 
 re_empty_line_start     = re.compile(r'[ \t]*')     # start of completely empty or space-filled line (from start pos, start of line indentation)
 re_empty_line           = re.compile(r'[ \t]*$')    # completely empty or space-filled line (from start pos, start of line indentation)
-re_comment_line_start   = re.compile(r'[ \t]*#')    # emmpty line preceding a comment
+re_comment_line_start   = re.compile(r'[ \t]*#')    # empty line preceding a comment
 re_line_continuation    = re.compile(r'[^#]*\\$')   # line continuation with backslash not following a comment start '#' (from start pos, assumed no asts contained in line)
 re_line_trailing_space  = re.compile(r'.*?(\s*)$')  # location of trailing whitespace at the end of a line
 
@@ -103,7 +103,7 @@ re_multiline_str_start  = re.compile(r'(?:b|r|rb|br|u|)  (\'\'\'|""")', re.VERBO
 re_multiline_str_end_sq = re.compile(r'(?:\\.|[^\\])*?  \'\'\'', re.VERBOSE)
 re_multiline_str_end_dq = re.compile(r'(?:\\.|[^\\])*?  """', re.VERBOSE)
 
-re_empty_line_cont_or_comment   = re.compile(r'[ \t]*(\\|#.*)?$')         # emmpty line or line continuation or a pure comment line
+re_empty_line_cont_or_comment   = re.compile(r'[ \t]*(\\|#.*)?$')        # emmpty line or line continuation or a pure comment line
 
 re_next_src                     = re.compile(r'\s*([^\s#\\]+)')          # next non-space non-continuation non-comment code text, don't look into strings with this!
 re_next_src_or_comment          = re.compile(r'\s*([^\s#\\]+|#.*)')      # next non-space non-continuation code or comment text, don't look into strings with this!
@@ -112,8 +112,6 @@ re_next_src_or_comment_or_lcont = re.compile(r'\s*([^\s#\\]+|#.*|\\$)')  # next 
 
 Code: TypeAlias = Union['FST', AST, list[str], str]
 Fmt:  TypeAlias = Union[str, set, frozenset]
-
-sentinel = object()
 
 
 class astfield(NamedTuple):
@@ -190,6 +188,12 @@ def _with_loc(fst: 'FST', with_loc: bool | Literal['own'] = True) -> bool:
                     not a.kwonlyargs and not a.kwarg))
 
     return fst.has_own_loc  # with_loc == 'own'
+
+
+def _at_end(lines: list[str], ln: int, col: int) -> bool:
+    """`True` if (`ln`, `col`) at or past end of `lines`."""
+
+    return ln > (ll := len(lines) - 1) or (ln == ll and col >= len(lines[-1]))
 
 
 def _next_src(lines: list[str], ln: int, col: int, end_ln: int, end_col: int,
@@ -490,7 +494,7 @@ def _fixup_field_body(ast: AST, field: str | None = None) -> tuple[str, 'AST']:
     if field is None:
         field = AST_DEFAULT_BODY_FIELD.get(ast.__class__, 'body')
 
-    if (body := getattr(ast, field, sentinel)) is sentinel:
+    if (body := getattr(ast, field, _fixup_field_body)) is _fixup_field_body:  # _fixup_field_body is sentinel
         raise ValueError(f"{ast.__class__.__name__} has no field '{field}'")
 
     if not isinstance(body, list):
@@ -1125,8 +1129,8 @@ class FSTSrcEdit:
                 empty lines should be deleted on a cut operation. If no count specified then it means all empty lines.
                 Empty line continuations are considered empty lines. `'pep8'` can override `'space1'` for two lines at
                 top level functions and classes.
-        - `block_loc`: A full location suitable for checking comments outside of ASTS if `fpre` / `fpost` not available.
-            Should include trailing newline after `flast` if one is present.
+        - `block_loc`: A rough location suitable for checking comments outside of ASTS if `fpre` / `fpost` not
+            available. Should include trailing newline after `flast` if one is present, but NO PARTS OF ASTS.
         - `ffirst`: The first `FST` being gotten.
         - `flast`: The last `FST` being gotten.
         - `fpre`: The preceding-first `FST`, not being gotten, may not exist if `ffirst` is first of seq.
@@ -1324,7 +1328,7 @@ class FSTSrcEdit:
         return copy_loc, del_loc, put_lines
 
     def put_slice_stmt(self, fst: 'FST', put_fst: 'FST', field: str, fmt: set[str] | frozenset[str], docstr: bool | str,
-                       block_loc: fstloc, block_indent: str, stmt_indent: str,
+                       block_loc: fstloc, opener_indent: str, block_indent: str,
                        ffirst: 'FST', flast: 'FST', fpre: Optional['FST'], fpost: Optional['FST'],
     ) -> fstloc:  # put_loc
         """Put to block of statements(ish). Calculates put location and modifies `put_fst` as necessary to create proper
@@ -1345,6 +1349,9 @@ class FSTSrcEdit:
         If assigning to non-existent `orelse` or `finalbody` fields then the appropriate `else:` or `finally:` is
         prepended to `put_fst` for the final put. If replacing whole body of 'orelse' or 'finalbody' then the original
         'else:' or 'finally:' is not deleted (along with any preceding comments or spaces).
+
+        Block being inserted into assumed to be normalized (no statement or multiple statements on block opener logical
+        line).
 
         **Parameters:**
         - `fst`: The destination `FST` container that is being put to.
@@ -1367,11 +1374,13 @@ class FSTSrcEdit:
                 continuations are considered empty lines. `'pep8'` applies after `space` to add preceding lines.
             - `'elif'`: If putting a single `If` statement to an `orelse` field of a parent `If` statement then put it
                 as an `elif`.
-        - `block_indent`: The indent string of the block being put to - the block opener, not the statements in it.
-        - `stmt_indent`: The indent string which was applied to `put_fst` statements, which is the total indentation
-            (including `block_indent`) of the statements in the block.
-        - `block_loc`: A full location ancompassing the block outside of ASTS, used mostly if `fpre` / `fpost` not
-            available.
+        - `opener_indent`: The indent string of the block opener being put to (`if`, `with`, `class`, etc...), not the
+            statements in the block.
+        - `block_indent`: The indent string to be applied to `put_fst` statements in the block, which is the total
+            indentation (including `opener_indent`) of the statements in the block.
+        - `block_loc`: A rough location ancompassing the block part being edited outside of ASTS, used mostly if `fpre`
+            / `fpost` not available. Always after `fpre` if present and before `fpost` if present. May include comments,
+            line continuation backslashes and non-AST coding source like 'else:', but NO PARTS OF ASTS.
         - `ffirst`: The first destination `FST` or `fstloc` being replaced (if `None` then nothing being replaced).
         - `flast`: The last destination `FST` or `fstloc` being replaced (if `None` then nothing being replaced).
         - `fpre`: The preceding-first destination `FST` or `fstloc`, not being replaced, may not exist if `ffirst` is
@@ -1387,39 +1396,101 @@ class FSTSrcEdit:
         lines = fst.root._lines
 
         if not ffirst:  # pure insertion
-            if not fpre and not fpost:  # insertion to empty block
-                put_fst.indent_lns(stmt_indent if field != 'handlers' else block_indent, docstr=docstr, skip=0)
+            put_fst.indent_lns(block_indent if field != 'handlers' else opener_indent, docstr=docstr, skip=0)
 
-                if field == 'orelse':  # need to create these because they not there if body empty
-                    put_fst.put_lines([block_indent + 'else:', ''], 0, 0, 0, 0, False)
-                elif field == 'finalbody':
-                    put_fst.put_lines([block_indent + 'finally:', ''], 0, 0, 0, 0, False)
+            if fpre:  # with preceding statement, maybe trailing statement
+                ln, col, end_ln, end_col = block_loc
 
-                block_ln, block_col, block_end_ln, block_end_col = block_loc
+                while ln < end_ln:
+                    if not (code := _next_src(lines, ln, col, ln, 0x7fffffffffffffff, True, True)):
+                        put_loc = fstloc(ln, col, ln + 1, 0)
 
-                single_block_ln = block_ln == block_end_ln
+                        break
 
-                if code := _next_src(lines, block_ln, block_col, block_ln,
-                                     block_end_ln if single_block_ln else 0x7fffffffffffffff, True, False):
-                    assert code.src.startswith('#')  # not expecting anything else after colon in empty block, '\\' is ignored in search
+                    cln, ccol, csrc = code
 
-                    block_col = code.col + len(code.src)  # we want to put after any post-comments
+                    if csrc.startswith('#'):
+                        if cln < end_ln:
+                            put_loc = fstloc(cln, ccol + len(csrc), cln + 1, 0)
+                        else:
+                            put_loc = fstloc(cln, ccol + len(csrc), cln, end_col)
 
-                if single_block_ln:
-                    put_loc = fstloc(block_ln, block_col, block_ln, block_end_col)
+                        break
+
+                    if csrc == '\\':
+                        ln  += 1
+                        col  = 0
+
+                        continue
+
+                    if csrc != ';':
+                        raise RuntimeError('should not get here')
+
+                    col = ccol + 1
+
                 else:
-                    put_loc = fstloc(block_ln, block_col, block_ln + 1, 0)
+                    if fpost:  # next statement on semicolon separated line continuation
+                        put_loc = block_loc
+                    else:
+                        put_loc = fstloc(end_ln, re_line_trailing_space.match(lines[end_ln], col).start(1),
+                                         end_ln, end_col)
 
-                put_fst.put_lines(['', ''], 0, 0, 0, 0, False)
+                    # if not _at_end(lines, put_loc.end_ln, put_loc.end_col):
+                    if (l := put_fst._lines[-1]) and not re_empty_line.match(l):
+                        put_fst._lines.append(bistr(block_indent if fpost else ''))
+                    else:
+                        put_fst._lines[-1] = bistr(block_indent if fpost else '')
 
-                if put_fst._lines[-1]:
-                    put_fst._lines.append(bistr(''))
                     put_fst.touch()
 
-                return put_loc
+            elif fpost:  # no preceding statement, only trailing
+
+
+                raise NotImplementedError  # TODO: this
 
 
 
+
+
+
+
+
+
+
+
+
+            else:  # insertion to empty block
+                # put_fst.indent_lns(block_indent if field != 'handlers' else opener_indent, docstr=docstr, skip=0)
+
+                if field == 'orelse':  # need to create these because they not there if body empty
+                    put_fst.put_lines([opener_indent + 'else:', ''], 0, 0, 0, 0, False)
+                elif field == 'finalbody':
+                    put_fst.put_lines([opener_indent + 'finally:', ''], 0, 0, 0, 0, False)
+
+                ln, col, end_ln, end_col = block_loc
+
+                single_ln = ln == end_ln
+
+                if code := _next_src(lines, ln, col, ln, end_ln if single_ln else 0x7fffffffffffffff, True, False):
+                    assert code.src.startswith('#')  # not expecting anything else after colon in empty block, '\\' is ignored in search
+
+                    col = code.col + len(code.src)  # we want to put after any post-comments
+
+                if single_ln:
+                    put_loc = fstloc(ln, col, ln, end_col)
+                else:
+                    put_loc = fstloc(ln, col, ln + 1, 0)
+
+            # we always insert statements (or blocks of them) as their own lines
+
+            put_fst.put_lines(['', ''], 0, 0, 0, 0, False)
+
+            # if not _at_end(lines, put_loc.end_ln, put_loc.end_col):
+            if (l := put_fst._lines[-1]) and not re_empty_line.match(l):
+                put_fst._lines.append(bistr(''))
+                put_fst.touch()
+
+            return put_loc
 
         # replacement
 
@@ -1811,7 +1882,7 @@ class FST:
                 linefunc(f'{sind}{sind}{cind}{child!r}')
 
     def _prev_ast_bound(self, with_loc: bool | Literal['own'] | Literal['allown'] = True) -> tuple[int, int]:
-        """Get a prev bound to search after any ASTs for this object. This is safe to call for nodes that live inside
+        """Get a prev bound for search after any ASTs for this object. This is safe to call for nodes that live inside
         nodes without their own locations if `with_loc='allown'`."""
 
         if prev := self.prev_step(with_loc, recurse_self=False):
@@ -1820,7 +1891,7 @@ class FST:
         return 0, 0
 
     def _next_ast_bound(self, with_loc: bool | Literal['own'] | Literal['allown'] = True) -> tuple[int, int]:
-        """Get a next bound to search before any ASTs for this object. This is safe to call for nodes that live inside
+        """Get a next bound for search before any ASTs for this object. This is safe to call for nodes that live inside
         nodes without their own locations if `with_loc='allown'`."""
 
         if next := self.next_step(with_loc, recurse_self=False):
@@ -2150,6 +2221,39 @@ class FST:
             end_col_offset = lines[end_ln].c2b(end_col)
 
         self._set_end_pos(end_lineno, end_col_offset)
+
+    def _normalize_block(self, field: str = 'body', *, indent: str | None = None):
+        """Move statements on the same logical line as a block open to their own line, e.g:
+        ```
+        if a: call()
+        ```
+        Becomes:
+        ```
+        if a:
+            call()
+        ```
+
+        **Parameters:**
+        - `field`: Which block to normalize (`'body'`, `'orelse'`, `'handlers'`, `'finalbody'`).
+        - `indent`: The indentation to use for the relocated line if already known, saves a call to `get_indent()`.
+        """
+
+        if not (block := getattr(self.a, field)) or not isinstance(block, list):
+            return
+
+        b0                  = block[0].f
+        b0_ln, b0_col, _, _ = b0.bloc
+        root                = self.root
+
+        if not (colon := _prev_find(root._lines, *self.loc[:2], b0_ln, b0_col, ':', True, comment=True, lcont=None)):
+            return
+
+        if indent is None:
+            indent = b0.get_indent()
+
+        ln, col = colon
+
+        self.put_lines(['', indent], ln, col + 1, b0_ln, b0_col, False)
 
     def _make_fst_and_dedent(self, indent: Union['FST', str], ast: AST, copy_loc: fstloc,
                              prefix: str = '', suffix: str = '',
@@ -2691,9 +2795,17 @@ class FST:
         if not slice_len and (not put_fst or not put_ast.body):  # deleting or assigning empty slice to empty slice, noop
             return
 
-        lines = self.root._lines
+        root  = self.root
+        lines = root._lines
         fpre  = body[start - 1].f if start else None
         fpost = body[stop].f if stop < len(body) else None
+
+        if put_fst:
+            opener_indent = self.get_indent()
+            block_indent  = opener_indent + root.indent
+
+            if fpre or fpost:
+                self._normalize_block(field, indent=block_indent)  # don't want to bother figuring out if valid to insert to statements on single block logical line
 
         if slice_len:  # replacement
             ffirst = body[start].f
@@ -2824,15 +2936,15 @@ class FST:
             put_len = 0
 
         else:
-            block_indent = self.get_indent()
-            stmt_indent  = body[0].f.get_indent() if body else block_indent + self.root.indent
+            if body:
+                block_indent = body[0].f.get_indent()  # override default unknown indent
 
             put_loc = self.src_edit.put_slice_stmt(self, put_fst, field, fmt, docstr,
-                                                   block_loc, block_indent, stmt_indent,
+                                                   block_loc, opener_indent, block_indent,
                                                    ffirst, flast, fpre, fpost)
 
             put_fst.offset(0, 0, put_loc.ln, 0 if put_fst.bln or put_fst.bcol else lines[put_loc.ln].c2b(put_loc.col))
-            self.put_lines(put_fst.lines, *put_loc, True)
+            self.put_lines(put_fst.lines, *put_loc, False)
             self._unmake_fst_tree(body[start : stop], put_fst)
 
             body[start : stop] = put_ast.body

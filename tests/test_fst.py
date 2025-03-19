@@ -8213,6 +8213,612 @@ Module .. ROOT 0,0 -> 0,2
 
 ]  # END OF PUT_SLICE_SEQ_DEL_DATA
 
+PUT_SLICE_STMT_DATA = [
+
+(r"""
+if 1:
+    i
+    j
+""", 'body[0]', 1, 1, 'body', None, r"""k""", r"""
+if 1:
+    i
+    k
+    j
+""", r"""
+Module .. ROOT 0,0 -> 5,0
+  .body[1]
+  0] If .. 1,0 -> 4,5
+    .test
+      Constant 1 .. 1,3 -> 1,4
+    .body[3]
+    0] Expr .. 2,4 -> 2,5
+      .value
+        Name 'i' Load .. 2,4 -> 2,5
+    1] Expr .. 3,4 -> 3,5
+      .value
+        Name 'k' Load .. 3,4 -> 3,5
+    2] Expr .. 4,4 -> 4,5
+      .value
+        Name 'j' Load .. 4,4 -> 4,5
+"""),
+
+
+(r"""
+if 1:
+    i  # post
+    j
+""", 'body[0]', 1, 1, 'body', None, r"""k""", r"""
+if 1:
+    i  # post
+    k
+    j
+""", r"""
+Module .. ROOT 0,0 -> 5,0
+  .body[1]
+  0] If .. 1,0 -> 4,5
+    .test
+      Constant 1 .. 1,3 -> 1,4
+    .body[3]
+    0] Expr .. 2,4 -> 2,5
+      .value
+        Name 'i' Load .. 2,4 -> 2,5
+    1] Expr .. 3,4 -> 3,5
+      .value
+        Name 'k' Load .. 3,4 -> 3,5
+    2] Expr .. 4,4 -> 4,5
+      .value
+        Name 'j' Load .. 4,4 -> 4,5
+"""),
+
+
+(r"""
+if 1:
+    i \
+  # post
+    j
+""", 'body[0]', 1, 1, 'body', None, r"""k""", r"""
+if 1:
+    i \
+  # post
+    k
+    j
+""", r"""
+Module .. ROOT 0,0 -> 6,0
+  .body[1]
+  0] If .. 1,0 -> 5,5
+    .test
+      Constant 1 .. 1,3 -> 1,4
+    .body[3]
+    0] Expr .. 2,4 -> 2,5
+      .value
+        Name 'i' Load .. 2,4 -> 2,5
+    1] Expr .. 4,4 -> 4,5
+      .value
+        Name 'k' Load .. 4,4 -> 4,5
+    2] Expr .. 5,4 -> 5,5
+      .value
+        Name 'j' Load .. 5,4 -> 5,5
+"""),
+
+
+(r"""
+if 1:
+    i  # post
+    # pre
+    j
+""", 'body[0]', 1, 1, 'body', None, r"""k""", r"""
+if 1:
+    i  # post
+    k
+    # pre
+    j
+""", r"""
+Module .. ROOT 0,0 -> 6,0
+  .body[1]
+  0] If .. 1,0 -> 5,5
+    .test
+      Constant 1 .. 1,3 -> 1,4
+    .body[3]
+    0] Expr .. 2,4 -> 2,5
+      .value
+        Name 'i' Load .. 2,4 -> 2,5
+    1] Expr .. 3,4 -> 3,5
+      .value
+        Name 'k' Load .. 3,4 -> 3,5
+    2] Expr .. 5,4 -> 5,5
+      .value
+        Name 'j' Load .. 5,4 -> 5,5
+"""),
+
+
+(r"""
+if 1:
+    i
+    # pre
+    j
+""", 'body[0]', 1, 1, 'body', None, r"""k""", r"""
+if 1:
+    i
+    k
+    # pre
+    j
+""", r"""
+Module .. ROOT 0,0 -> 6,0
+  .body[1]
+  0] If .. 1,0 -> 5,5
+    .test
+      Constant 1 .. 1,3 -> 1,4
+    .body[3]
+    0] Expr .. 2,4 -> 2,5
+      .value
+        Name 'i' Load .. 2,4 -> 2,5
+    1] Expr .. 3,4 -> 3,5
+      .value
+        Name 'k' Load .. 3,4 -> 3,5
+    2] Expr .. 5,4 -> 5,5
+      .value
+        Name 'j' Load .. 5,4 -> 5,5
+"""),
+
+
+(r"""
+if 1:
+    i
+
+    # pre pre
+
+    # pre
+
+    j
+""", 'body[0]', 1, 1, 'body', None, r"""k""", r"""
+if 1:
+    i
+    k
+
+    # pre pre
+
+    # pre
+
+    j
+""", r"""
+Module .. ROOT 0,0 -> 10,0
+  .body[1]
+  0] If .. 1,0 -> 9,5
+    .test
+      Constant 1 .. 1,3 -> 1,4
+    .body[3]
+    0] Expr .. 2,4 -> 2,5
+      .value
+        Name 'i' Load .. 2,4 -> 2,5
+    1] Expr .. 3,4 -> 3,5
+      .value
+        Name 'k' Load .. 3,4 -> 3,5
+    2] Expr .. 9,4 -> 9,5
+      .value
+        Name 'j' Load .. 9,4 -> 9,5
+"""),
+
+
+(r"""
+if 1:
+    i ; j
+""", 'body[0]', 1, 1, 'body', None, r"""k""", r"""
+if 1:
+    i
+    k
+    j
+""", r"""
+Module .. ROOT 0,0 -> 5,0
+  .body[1]
+  0] If .. 1,0 -> 4,5
+    .test
+      Constant 1 .. 1,3 -> 1,4
+    .body[3]
+    0] Expr .. 2,4 -> 2,5
+      .value
+        Name 'i' Load .. 2,4 -> 2,5
+    1] Expr .. 3,4 -> 3,5
+      .value
+        Name 'k' Load .. 3,4 -> 3,5
+    2] Expr .. 4,4 -> 4,5
+      .value
+        Name 'j' Load .. 4,4 -> 4,5
+"""),
+
+
+(r"""
+if 1:
+    i ; \
+  j
+""", 'body[0]', 1, 1, 'body', None, r"""k""", r"""
+if 1:
+    i
+    k
+    j
+""", r"""
+Module .. ROOT 0,0 -> 5,0
+  .body[1]
+  0] If .. 1,0 -> 4,5
+    .test
+      Constant 1 .. 1,3 -> 1,4
+    .body[3]
+    0] Expr .. 2,4 -> 2,5
+      .value
+        Name 'i' Load .. 2,4 -> 2,5
+    1] Expr .. 3,4 -> 3,5
+      .value
+        Name 'k' Load .. 3,4 -> 3,5
+    2] Expr .. 4,4 -> 4,5
+      .value
+        Name 'j' Load .. 4,4 -> 4,5
+"""),
+
+
+(r"""
+if 1:
+    i \
+  ; j
+""", 'body[0]', 1, 1, 'body', None, r"""k""", r"""
+if 1:
+    i
+    k
+    j
+""", r"""
+Module .. ROOT 0,0 -> 5,0
+  .body[1]
+  0] If .. 1,0 -> 4,5
+    .test
+      Constant 1 .. 1,3 -> 1,4
+    .body[3]
+    0] Expr .. 2,4 -> 2,5
+      .value
+        Name 'i' Load .. 2,4 -> 2,5
+    1] Expr .. 3,4 -> 3,5
+      .value
+        Name 'k' Load .. 3,4 -> 3,5
+    2] Expr .. 4,4 -> 4,5
+      .value
+        Name 'j' Load .. 4,4 -> 4,5
+"""),
+
+
+(r"""
+if 1:
+    i \
+  ; \
+  j
+""", 'body[0]', 1, 1, 'body', None, r"""k""", r"""
+if 1:
+    i
+    k
+    j
+""", r"""
+Module .. ROOT 0,0 -> 5,0
+  .body[1]
+  0] If .. 1,0 -> 4,5
+    .test
+      Constant 1 .. 1,3 -> 1,4
+    .body[3]
+    0] Expr .. 2,4 -> 2,5
+      .value
+        Name 'i' Load .. 2,4 -> 2,5
+    1] Expr .. 3,4 -> 3,5
+      .value
+        Name 'k' Load .. 3,4 -> 3,5
+    2] Expr .. 4,4 -> 4,5
+      .value
+        Name 'j' Load .. 4,4 -> 4,5
+"""),
+
+
+(r"""
+if 1: i ; j
+""", 'body[0]', 1, 1, 'body', None, r"""k""", r"""
+if 1:
+    i
+    k
+    j
+""", r"""
+Module .. ROOT 0,0 -> 5,0
+  .body[1]
+  0] If .. 1,0 -> 4,5
+    .test
+      Constant 1 .. 1,3 -> 1,4
+    .body[3]
+    0] Expr .. 2,4 -> 2,5
+      .value
+        Name 'i' Load .. 2,4 -> 2,5
+    1] Expr .. 3,4 -> 3,5
+      .value
+        Name 'k' Load .. 3,4 -> 3,5
+    2] Expr .. 4,4 -> 4,5
+      .value
+        Name 'j' Load .. 4,4 -> 4,5
+"""),
+
+
+(r"""
+if 1: \
+  i \
+  ; \
+  j
+""", 'body[0]', 1, 1, 'body', None, r"""k""", r"""
+if 1:
+    i
+    k
+    j
+""", r"""
+Module .. ROOT 0,0 -> 5,0
+  .body[1]
+  0] If .. 1,0 -> 4,5
+    .test
+      Constant 1 .. 1,3 -> 1,4
+    .body[3]
+    0] Expr .. 2,4 -> 2,5
+      .value
+        Name 'i' Load .. 2,4 -> 2,5
+    1] Expr .. 3,4 -> 3,5
+      .value
+        Name 'k' Load .. 3,4 -> 3,5
+    2] Expr .. 4,4 -> 4,5
+      .value
+        Name 'j' Load .. 4,4 -> 4,5
+"""),
+
+
+(r"""
+if 1:
+    i ; j ; l ; m
+""", 'body[0]', 2, 2, 'body', None, r"""k""", r"""
+if 1:
+    i ; j
+    k
+    l ; m
+""", r"""
+Module .. ROOT 0,0 -> 5,0
+  .body[1]
+  0] If .. 1,0 -> 4,9
+    .test
+      Constant 1 .. 1,3 -> 1,4
+    .body[5]
+    0] Expr .. 2,4 -> 2,5
+      .value
+        Name 'i' Load .. 2,4 -> 2,5
+    1] Expr .. 2,8 -> 2,9
+      .value
+        Name 'j' Load .. 2,8 -> 2,9
+    2] Expr .. 3,4 -> 3,5
+      .value
+        Name 'k' Load .. 3,4 -> 3,5
+    3] Expr .. 4,4 -> 4,5
+      .value
+        Name 'l' Load .. 4,4 -> 4,5
+    4] Expr .. 4,8 -> 4,9
+      .value
+        Name 'm' Load .. 4,8 -> 4,9
+"""),
+
+
+(r"""
+if 1: i ; j ; l ; m
+""", 'body[0]', 2, 2, 'body', None, r"""k""", r"""
+if 1:
+    i ; j
+    k
+    l ; m
+""", r"""
+Module .. ROOT 0,0 -> 5,0
+  .body[1]
+  0] If .. 1,0 -> 4,9
+    .test
+      Constant 1 .. 1,3 -> 1,4
+    .body[5]
+    0] Expr .. 2,4 -> 2,5
+      .value
+        Name 'i' Load .. 2,4 -> 2,5
+    1] Expr .. 2,8 -> 2,9
+      .value
+        Name 'j' Load .. 2,8 -> 2,9
+    2] Expr .. 3,4 -> 3,5
+      .value
+        Name 'k' Load .. 3,4 -> 3,5
+    3] Expr .. 4,4 -> 4,5
+      .value
+        Name 'l' Load .. 4,4 -> 4,5
+    4] Expr .. 4,8 -> 4,9
+      .value
+        Name 'm' Load .. 4,8 -> 4,9
+"""),
+
+
+(r"""
+if 1:
+    i
+""", 'body[0]', 1, 1, 'body', None, r"""k""", r"""
+if 1:
+    i
+    k
+""", r"""
+Module .. ROOT 0,0 -> 4,0
+  .body[1]
+  0] If .. 1,0 -> 3,5
+    .test
+      Constant 1 .. 1,3 -> 1,4
+    .body[2]
+    0] Expr .. 2,4 -> 2,5
+      .value
+        Name 'i' Load .. 2,4 -> 2,5
+    1] Expr .. 3,4 -> 3,5
+      .value
+        Name 'k' Load .. 3,4 -> 3,5
+"""),
+
+
+(r"""
+if 1:
+    i  # post
+""", 'body[0]', 1, 1, 'body', None, r"""k""", r"""
+if 1:
+    i  # post
+    k
+""", r"""
+Module .. ROOT 0,0 -> 4,0
+  .body[1]
+  0] If .. 1,0 -> 3,5
+    .test
+      Constant 1 .. 1,3 -> 1,4
+    .body[2]
+    0] Expr .. 2,4 -> 2,5
+      .value
+        Name 'i' Load .. 2,4 -> 2,5
+    1] Expr .. 3,4 -> 3,5
+      .value
+        Name 'k' Load .. 3,4 -> 3,5
+"""),
+
+
+(r"""
+if 1:
+    i  # post
+    # pre
+""", 'body[0]', 1, 1, 'body', None, r"""k""", r"""
+if 1:
+    i  # post
+    k
+    # pre
+""", r"""
+Module .. ROOT 0,0 -> 5,0
+  .body[1]
+  0] If .. 1,0 -> 3,5
+    .test
+      Constant 1 .. 1,3 -> 1,4
+    .body[2]
+    0] Expr .. 2,4 -> 2,5
+      .value
+        Name 'i' Load .. 2,4 -> 2,5
+    1] Expr .. 3,4 -> 3,5
+      .value
+        Name 'k' Load .. 3,4 -> 3,5
+"""),
+
+
+(r"""
+if 1: i
+""", 'body[0]', 1, 1, 'body', None, r"""k""", r"""
+if 1:
+    i
+    k
+""", r"""
+Module .. ROOT 0,0 -> 4,0
+  .body[1]
+  0] If .. 1,0 -> 3,5
+    .test
+      Constant 1 .. 1,3 -> 1,4
+    .body[2]
+    0] Expr .. 2,4 -> 2,5
+      .value
+        Name 'i' Load .. 2,4 -> 2,5
+    1] Expr .. 3,4 -> 3,5
+      .value
+        Name 'k' Load .. 3,4 -> 3,5
+"""),
+
+
+(r"""
+if 1: i  # post
+""", 'body[0]', 1, 1, 'body', None, r"""k""", r"""
+if 1:
+    i  # post
+    k
+""", r"""
+Module .. ROOT 0,0 -> 4,0
+  .body[1]
+  0] If .. 1,0 -> 3,5
+    .test
+      Constant 1 .. 1,3 -> 1,4
+    .body[2]
+    0] Expr .. 2,4 -> 2,5
+      .value
+        Name 'i' Load .. 2,4 -> 2,5
+    1] Expr .. 3,4 -> 3,5
+      .value
+        Name 'k' Load .. 3,4 -> 3,5
+"""),
+
+
+(r"""
+if 1: i  # post
+    # pre
+""", 'body[0]', 1, 1, 'body', None, r"""k""", r"""
+if 1:
+    i  # post
+    k
+    # pre
+""", r"""
+Module .. ROOT 0,0 -> 5,0
+  .body[1]
+  0] If .. 1,0 -> 3,5
+    .test
+      Constant 1 .. 1,3 -> 1,4
+    .body[2]
+    0] Expr .. 2,4 -> 2,5
+      .value
+        Name 'i' Load .. 2,4 -> 2,5
+    1] Expr .. 3,4 -> 3,5
+      .value
+        Name 'k' Load .. 3,4 -> 3,5
+"""),
+
+
+(r"""
+if 1: i ;
+    # pre
+""", 'body[0]', 1, 1, 'body', None, r"""k""", r"""
+if 1:
+    i ;
+    k
+    # pre
+""", r"""
+Module .. ROOT 0,0 -> 5,0
+  .body[1]
+  0] If .. 1,0 -> 3,5
+    .test
+      Constant 1 .. 1,3 -> 1,4
+    .body[2]
+    0] Expr .. 2,4 -> 2,5
+      .value
+        Name 'i' Load .. 2,4 -> 2,5
+    1] Expr .. 3,4 -> 3,5
+      .value
+        Name 'k' Load .. 3,4 -> 3,5
+"""),
+
+
+(r"""
+if 1: i ;  # post
+    # pre
+""", 'body[0]', 1, 1, 'body', None, r"""k""", r"""
+if 1:
+    i ;  # post
+    k
+    # pre
+""", r"""
+Module .. ROOT 0,0 -> 5,0
+  .body[1]
+  0] If .. 1,0 -> 3,5
+    .test
+      Constant 1 .. 1,3 -> 1,4
+    .body[2]
+    0] Expr .. 2,4 -> 2,5
+      .value
+        Name 'i' Load .. 2,4 -> 2,5
+    1] Expr .. 3,4 -> 3,5
+      .value
+        Name 'k' Load .. 3,4 -> 3,5
+"""),
+
+]  # END OF PUT_SLICE_STMT_DATA
+
 
 def read(fnm):
     with open(fnm) as f:
@@ -8479,6 +9085,24 @@ k \\
         self.assertEqual(None, fst._next_find(lines, 3, 0, 6, 0, '# word', False, comment=True, lcont=None))
         self.assertEqual((5, 2), fst._next_find(lines, 3, 0, 6, 0, '# word', False, comment=True, lcont=True))
         self.assertEqual(None, fst._next_find(lines, 3, 0, 6, 0, '# word', True, comment=True, lcont=True))
+
+    def test__normalize_block(self):
+        a = parse('''
+if 1: i ; j ; l ; m
+            '''.strip())
+        a.f.body[0]._normalize_block()
+        a.f.verify()
+        self.assertEqual(a.f.src, 'if 1:\n    i ; j ; l ; m')
+
+        a = parse('''
+def f() -> int: \\
+  i \\
+  ; \\
+  j
+            '''.strip())
+        a.f.body[0]._normalize_block()
+        a.f.verify()
+        self.assertEqual(a.f.src, 'def f() -> int:\n    i \\\n  ; \\\n  j')
 
     def test_loc(self):
         self.assertEqual((0, 6, 0, 9), parse('def f(i=1): pass').body[0].args.f.loc)  # arguments
@@ -9940,17 +10564,6 @@ i # post
                     f = a.f.copy(fix=True)
                     f.verify(raise_=True)
 
-    # def test_cut_bulk(self):
-    #     for fnm in PYFNMS:
-    #         ast  = FST.fromsrc(read(fnm)).a
-    #         asts = [a for a in walk(ast)
-    #                 if isinstance(a, fst.STATEMENTISH) or
-    #                    isinstance(a.f.parent, (Tuple, List, Set))
-    #         ]
-
-    #         for a in asts[::-1]:
-    #             a.f.cut()
-
     def test_copy(self):
         for src, elt, slice_copy, slice_dump in COPY_DATA:
             src   = src.strip()
@@ -10322,6 +10935,15 @@ def func():
                 a.f.parent.put_slice(None, idx, idx + 1, field)
 
     def test_insert_into_empty_block(self):
+        a = parse('''
+if 1:
+    i \\
+
+'''.lstrip())
+        a.f.body[0].put_slice('j', field='orelse')
+        a.f.verify()
+        self.assertEqual(a.f.src, 'if 1:\n    i\nelse:\n    j\n\n')
+
         a = parse('''
 def f():
     pass
@@ -10875,7 +11497,7 @@ finally: pass
         a.body[0].body[0].f.put_slice('i', field='body')
         self.assertEqual(a.f.src, 'if 2:\n    try:\n        i\n    except: pass\n')
 
-    def test_insert_into_empty_block_2(self):
+    def test_insert_into_empty_block_shuffle(self):
         fst = parse('''
 match a:
     case 1:
@@ -11296,6 +11918,35 @@ if indented:
 
                 raise
 
+    def test_put_slice_stmt(self):
+        for dst, stmt, start, stop, field, fmt, src, put_src, put_dump in PUT_SLICE_STMT_DATA:
+            # dst = dst.strip()
+            # src = src.strip()
+            t   = parse(dst)
+            f   = eval(f't.{stmt}', {'t': t}).f
+
+            f.put_slice(src, start, stop, field, fmt=fst.DEFAULT_SRC_EDIT_FMT if fmt is None else fmt)
+
+            tdst  = t.f.src
+            tdump = t.f.dump(linefunc=list, compact=True)
+
+            t.f.verify(raise_=True)
+
+            try:
+                self.assertEqual(tdst, put_src)
+                self.assertEqual(tdump, put_dump.strip().split('\n'))
+
+            except Exception:
+                print(stmt, start, stop)
+                print('---')
+                print(dst)
+                print('...')
+                print(src)
+                print('...')
+                print(put_src)
+
+                raise
+
     def test_unparenthesized_tuple_with_line_continuations(self):
         # backslashes are annoying to include in the regenerable test cases
 
@@ -11576,6 +12227,39 @@ def regen_put_slice_seq_del_data():
         lines = f.write('\n'.join(lines))
 
 
+def regen_put_slice_stmt_data():
+    newlines = []
+
+    for dst, stmt, start, stop, field, fmt, src, put_src, put_dump in PUT_SLICE_STMT_DATA:
+        # dst = dst.strip()
+        # src = src.strip()
+        t   = parse(dst)
+        f   = eval(f't.{stmt}', {'t': t}).f
+
+        f.put_slice(src, start, stop, field, fmt=fst.DEFAULT_SRC_EDIT_FMT if fmt is None else fmt)
+
+        tdst  = t.f.src
+        tdump = t.f.dump(linefunc=list, compact=True)
+
+        t.f.verify(raise_=True)
+
+        newlines.append('')
+        newlines.extend(f'''(r"""{dst}""", {stmt!r}, {start}, {stop}, {field!r}, {fmt!r}, r"""{src}""", r"""{tdst}""", r"""'''.split('\n'))
+        newlines.extend(tdump)
+        newlines.append('"""),\n')
+
+    with open(sys.argv[0]) as f:
+        lines = f.read().split('\n')
+
+    start = lines.index('PUT_SLICE_STMT_DATA = [')
+    stop  = lines.index(']  # END OF PUT_SLICE_STMT_DATA')
+
+    lines[start + 1 : stop] = newlines
+
+    with open(sys.argv[0], 'w') as f:
+        lines = f.write('\n'.join(lines))
+
+
 if __name__ == '__main__':
     import argparse
 
@@ -11587,6 +12271,7 @@ if __name__ == '__main__':
     parser.add_argument('--regen-get-slice-stmt-cut', default=False, action='store_true', help="regenerate get slice statement test data")
     parser.add_argument('--regen-put-slice-seq', default=False, action='store_true', help="regenerate put slice sequence test data")
     parser.add_argument('--regen-put-slice-seq-del', default=False, action='store_true', help="regenerate put slice del sequence test data")
+    parser.add_argument('--regen-put-slice-stmt', default=False, action='store_true', help="regenerate put slice statement test data")
 
     args = parser.parse_args()
 
@@ -11613,6 +12298,10 @@ if __name__ == '__main__':
     if args.regen_put_slice_seq_del:
         print('Regenerating put slice del sequence test data...')
         regen_put_slice_seq_del_data()
+
+    if args.regen_put_slice_stmt:
+        print('Regenerating put slice statement test data...')
+        regen_put_slice_stmt_data()
 
     # if (not args.regen_pars and not args.regen_copy and
     #     not args.regen_get_slice_seq_cut and not args.regen_get_slice_stmt_cut and
