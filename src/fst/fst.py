@@ -4346,10 +4346,10 @@ class FST:
 
         **Example:**
         ```py
-        for node in (gen := target.walk()):
+        for node in (walking := target.walk()):
             ...
             if i_dont_like_the_node:
-                gen.send(False)  # skip walking this node's children, don't use return value here, keep using for loop as normal
+                walking.send(False)  # skip walking this node's children, don't use return value here, keep using for loop as normal
         ```
         """
 
@@ -4747,9 +4747,9 @@ class FST:
         while (parent := self.parent) and not isinstance(self.a, STATEMENTISH):
             self = parent
 
-        for f in (gen := self.walk(False)):  # find multiline strings and exclude their unindentable lines
+        for f in (walking := self.walk(False)):  # find multiline strings and exclude their unindentable lines
             if f.bend_ln == f.bln:  # everything on one line, don't need to recurse
-                gen.send(False)
+                walking.send(False)
 
             elif isinstance(a := f.a, Constant):
                 if (  # isinstance(f.a.value, (str, bytes)) is a given if bend_ln != bln
@@ -4763,7 +4763,7 @@ class FST:
             elif isinstance(a, JoinedStr):
                 multiline_fstr(f)
 
-                gen.send(False)  # skip everything inside regardless, because it is evil
+                walking.send(False)  # skip everything inside regardless, because it is evil
 
         return lns
 
@@ -4975,7 +4975,7 @@ class FST:
         lno  = ln + 1
         colo = (l := ls[ln]).c2b(min(col, len(l))) if ln < len(ls := self.root._lines) else 0x7fffffffffffffff
 
-        for f in (gen := self.walk(False)):
+        for f in (walking := self.walk(False)):
             a = f.a
 
             if (fend_colo := getattr(a, 'end_col_offset', None)) is not None:
@@ -4994,13 +4994,13 @@ class FST:
                         a.end_col_offset  = fend_colo + dcol_offset
 
                 else:
-                    gen.send(False)  # no need to walk into something whose bounding block ends before offset point
+                    walking.send(False)  # no need to walk into something whose bounding block ends before offset point
 
                     continue
 
                 if flno > lno:
                     if not dln and (not (decos := getattr(a, 'decorator_list', None)) or decos[0].lineno > lno):
-                        gen.send(False)  # no need to walk into something past offet point if line change is 0
+                        walking.send(False)  # no need to walk into something past offet point if line change is 0
 
                         continue
 
@@ -5015,7 +5015,7 @@ class FST:
                     a.col_offset += dcol_offset
 
             if f is stop_at:
-                gen.send(False)
+                walking.send(False)
 
             f.touch()
 
