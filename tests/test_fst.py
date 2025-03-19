@@ -8214,7 +8214,6 @@ Module .. ROOT 0,0 -> 0,2
 ]  # END OF PUT_SLICE_SEQ_DEL_DATA
 
 PUT_SLICE_STMT_DATA = [
-
 (r"""
 if 1:
     i
@@ -8242,7 +8241,6 @@ Module .. ROOT 0,0 -> 5,0
         Name 'j' Load .. 4,4 -> 4,5
 """),
 
-
 (r"""
 if 1:
     i  # post
@@ -8269,7 +8267,6 @@ Module .. ROOT 0,0 -> 5,0
       .value
         Name 'j' Load .. 4,4 -> 4,5
 """),
-
 
 (r"""
 if 1:
@@ -8300,7 +8297,6 @@ Module .. ROOT 0,0 -> 6,0
         Name 'j' Load .. 5,4 -> 5,5
 """),
 
-
 (r"""
 if 1:
     i  # post
@@ -8330,7 +8326,6 @@ Module .. ROOT 0,0 -> 6,0
         Name 'j' Load .. 5,4 -> 5,5
 """),
 
-
 (r"""
 if 1:
     i
@@ -8359,7 +8354,6 @@ Module .. ROOT 0,0 -> 6,0
       .value
         Name 'j' Load .. 5,4 -> 5,5
 """),
-
 
 (r"""
 if 1:
@@ -8398,7 +8392,6 @@ Module .. ROOT 0,0 -> 10,0
         Name 'j' Load .. 9,4 -> 9,5
 """),
 
-
 (r"""
 if 1:
     i ; j
@@ -8424,7 +8417,6 @@ Module .. ROOT 0,0 -> 5,0
       .value
         Name 'j' Load .. 4,4 -> 4,5
 """),
-
 
 (r"""
 if 1:
@@ -8453,7 +8445,6 @@ Module .. ROOT 0,0 -> 5,0
         Name 'j' Load .. 4,4 -> 4,5
 """),
 
-
 (r"""
 if 1:
     i \
@@ -8480,7 +8471,6 @@ Module .. ROOT 0,0 -> 5,0
       .value
         Name 'j' Load .. 4,4 -> 4,5
 """),
-
 
 (r"""
 if 1:
@@ -8510,7 +8500,6 @@ Module .. ROOT 0,0 -> 5,0
         Name 'j' Load .. 4,4 -> 4,5
 """),
 
-
 (r"""
 if 1: i ; j
 """, 'body[0]', 1, 1, 'body', None, r"""k""", r"""
@@ -8535,7 +8524,6 @@ Module .. ROOT 0,0 -> 5,0
       .value
         Name 'j' Load .. 4,4 -> 4,5
 """),
-
 
 (r"""
 if 1: \
@@ -8564,7 +8552,6 @@ Module .. ROOT 0,0 -> 5,0
       .value
         Name 'j' Load .. 4,4 -> 4,5
 """),
-
 
 (r"""
 if 1:
@@ -8598,7 +8585,6 @@ Module .. ROOT 0,0 -> 5,0
         Name 'm' Load .. 4,8 -> 4,9
 """),
 
-
 (r"""
 if 1: i ; j ; l ; m
 """, 'body[0]', 2, 2, 'body', None, r"""k""", r"""
@@ -8630,7 +8616,6 @@ Module .. ROOT 0,0 -> 5,0
         Name 'm' Load .. 4,8 -> 4,9
 """),
 
-
 (r"""
 if 1:
     i
@@ -8653,7 +8638,6 @@ Module .. ROOT 0,0 -> 4,0
         Name 'k' Load .. 3,4 -> 3,5
 """),
 
-
 (r"""
 if 1:
     i  # post
@@ -8675,7 +8659,6 @@ Module .. ROOT 0,0 -> 4,0
       .value
         Name 'k' Load .. 3,4 -> 3,5
 """),
-
 
 (r"""
 if 1:
@@ -8700,7 +8683,6 @@ Module .. ROOT 0,0 -> 5,0
       .value
         Name 'k' Load .. 3,4 -> 3,5
 """),
-
 
 (r"""
 if 1: i
@@ -8723,7 +8705,6 @@ Module .. ROOT 0,0 -> 4,0
         Name 'k' Load .. 3,4 -> 3,5
 """),
 
-
 (r"""
 if 1: i  # post
 """, 'body[0]', 1, 1, 'body', None, r"""k""", r"""
@@ -8744,7 +8725,6 @@ Module .. ROOT 0,0 -> 4,0
       .value
         Name 'k' Load .. 3,4 -> 3,5
 """),
-
 
 (r"""
 if 1: i  # post
@@ -8768,7 +8748,6 @@ Module .. ROOT 0,0 -> 5,0
       .value
         Name 'k' Load .. 3,4 -> 3,5
 """),
-
 
 (r"""
 if 1: i ;
@@ -8793,7 +8772,6 @@ Module .. ROOT 0,0 -> 5,0
         Name 'k' Load .. 3,4 -> 3,5
 """),
 
-
 (r"""
 if 1: i ;  # post
     # pre
@@ -8817,6 +8795,173 @@ Module .. ROOT 0,0 -> 5,0
         Name 'k' Load .. 3,4 -> 3,5
 """),
 
+(r"""
+if 1:
+    i
+""", 'body[0]', 0, 0, 'body', None, r"""k""", r"""
+if 1:
+    k
+    i
+""", r"""
+Module .. ROOT 0,0 -> 4,0
+  .body[1]
+  0] If .. 1,0 -> 3,5
+    .test
+      Constant 1 .. 1,3 -> 1,4
+    .body[2]
+    0] Expr .. 2,4 -> 2,5
+      .value
+        Name 'k' Load .. 2,4 -> 2,5
+    1] Expr .. 3,4 -> 3,5
+      .value
+        Name 'i' Load .. 3,4 -> 3,5
+"""),
+
+(r"""
+if 1:  # post-block
+    i
+""", 'body[0]', 0, 0, 'body', None, r"""k""", r"""
+if 1:  # post-block
+    k
+    i
+""", r"""
+Module .. ROOT 0,0 -> 4,0
+  .body[1]
+  0] If .. 1,0 -> 3,5
+    .test
+      Constant 1 .. 1,3 -> 1,4
+    .body[2]
+    0] Expr .. 2,4 -> 2,5
+      .value
+        Name 'k' Load .. 2,4 -> 2,5
+    1] Expr .. 3,4 -> 3,5
+      .value
+        Name 'i' Load .. 3,4 -> 3,5
+"""),
+
+(r"""
+if 1:
+    # pre
+    i
+""", 'body[0]', 0, 0, 'body', None, r"""k""", r"""
+if 1:
+    k
+    # pre
+    i
+""", r"""
+Module .. ROOT 0,0 -> 5,0
+  .body[1]
+  0] If .. 1,0 -> 4,5
+    .test
+      Constant 1 .. 1,3 -> 1,4
+    .body[2]
+    0] Expr .. 2,4 -> 2,5
+      .value
+        Name 'k' Load .. 2,4 -> 2,5
+    1] Expr .. 4,4 -> 4,5
+      .value
+        Name 'i' Load .. 4,4 -> 4,5
+"""),
+
+(r"""
+if 1:  # post-block
+    # pre
+    i
+""", 'body[0]', 0, 0, 'body', None, r"""k""", r"""
+if 1:  # post-block
+    k
+    # pre
+    i
+""", r"""
+Module .. ROOT 0,0 -> 5,0
+  .body[1]
+  0] If .. 1,0 -> 4,5
+    .test
+      Constant 1 .. 1,3 -> 1,4
+    .body[2]
+    0] Expr .. 2,4 -> 2,5
+      .value
+        Name 'k' Load .. 2,4 -> 2,5
+    1] Expr .. 4,4 -> 4,5
+      .value
+        Name 'i' Load .. 4,4 -> 4,5
+"""),
+
+(r"""
+if 1: \
+  # post-lline-block
+    # pre
+    i
+""", 'body[0]', 0, 0, 'body', None, r"""k""", r"""
+if 1: \
+  # post-lline-block
+    k
+    # pre
+    i
+""", r"""
+Module .. ROOT 0,0 -> 6,0
+  .body[1]
+  0] If .. 1,0 -> 5,5
+    .test
+      Constant 1 .. 1,3 -> 1,4
+    .body[2]
+    0] Expr .. 3,4 -> 3,5
+      .value
+        Name 'k' Load .. 3,4 -> 3,5
+    1] Expr .. 5,4 -> 5,5
+      .value
+        Name 'i' Load .. 5,4 -> 5,5
+"""),
+
+(r"""
+if 1: i ; j  # post-multi
+""", 'body[0]', 0, 0, 'body', None, r"""k""", r"""
+if 1:
+    k
+    i ; j  # post-multi
+""", r"""
+Module .. ROOT 0,0 -> 4,0
+  .body[1]
+  0] If .. 1,0 -> 3,9
+    .test
+      Constant 1 .. 1,3 -> 1,4
+    .body[3]
+    0] Expr .. 2,4 -> 2,5
+      .value
+        Name 'k' Load .. 2,4 -> 2,5
+    1] Expr .. 3,4 -> 3,5
+      .value
+        Name 'i' Load .. 3,4 -> 3,5
+    2] Expr .. 3,8 -> 3,9
+      .value
+        Name 'j' Load .. 3,8 -> 3,9
+"""),
+
+(r"""
+if 1: \
+  i ; j  # post-multi
+""", 'body[0]', 0, 0, 'body', None, r"""k""", r"""
+if 1:
+    k
+    i ; j  # post-multi
+""", r"""
+Module .. ROOT 0,0 -> 4,0
+  .body[1]
+  0] If .. 1,0 -> 3,9
+    .test
+      Constant 1 .. 1,3 -> 1,4
+    .body[3]
+    0] Expr .. 2,4 -> 2,5
+      .value
+        Name 'k' Load .. 2,4 -> 2,5
+    1] Expr .. 3,4 -> 3,5
+      .value
+        Name 'i' Load .. 3,4 -> 3,5
+    2] Expr .. 3,8 -> 3,9
+      .value
+        Name 'j' Load .. 3,8 -> 3,9
+"""),
+
 ]  # END OF PUT_SLICE_STMT_DATA
 
 
@@ -8828,11 +8973,6 @@ def read(fnm):
 def walktest(ast):
     for ast in walk(ast):
         ast.f.loc
-
-
-def dumptest(self, fst, dump, src):
-    self.assertEqual(dump.strip(), '\n'.join(fst.dump(linefunc=list)))
-    self.assertEqual(src, fst.src)
 
 
 class TestFST(unittest.TestCase):
@@ -12243,7 +12383,6 @@ def regen_put_slice_stmt_data():
 
         t.f.verify(raise_=True)
 
-        newlines.append('')
         newlines.extend(f'''(r"""{dst}""", {stmt!r}, {start}, {stop}, {field!r}, {fmt!r}, r"""{src}""", r"""{tdst}""", r"""'''.split('\n'))
         newlines.extend(tdump)
         newlines.append('"""),\n')

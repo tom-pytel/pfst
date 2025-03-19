@@ -190,12 +190,6 @@ def _with_loc(fst: 'FST', with_loc: bool | Literal['own'] = True) -> bool:
     return fst.has_own_loc  # with_loc == 'own'
 
 
-def _at_end(lines: list[str], ln: int, col: int) -> bool:
-    """`True` if (`ln`, `col`) at or past end of `lines`."""
-
-    return ln > (ll := len(lines) - 1) or (ln == ll and col >= len(lines[-1]))
-
-
 def _next_src(lines: list[str], ln: int, col: int, end_ln: int, end_col: int,
               comment: bool = False, lcont: bool | None = False) -> srcwpos | None:
     """Get next source code which may or may not include comments or line continuation backslashes. May be restricted
@@ -1417,47 +1411,50 @@ class FSTSrcEdit:
 
                         break
 
-                    if csrc == '\\':
+                    if csrc == ';':
+                        col = ccol + 1
+
+                    else:
+                        assert csrc == '\\'
+
                         ln  += 1
                         col  = 0
 
-                        continue
-
-                    if csrc != ';':
-                        raise RuntimeError('should not get here')
-
-                    col = ccol + 1
-
                 else:
                     if fpost:  # next statement on semicolon separated line continuation
+                        indent  = bistr(block_indent)
                         put_loc = block_loc
+
                     else:
+                        indent  = bistr('')
                         put_loc = fstloc(end_ln, re_line_trailing_space.match(lines[end_ln], col).start(1),
                                          end_ln, end_col)
 
-                    # if not _at_end(lines, put_loc.end_ln, put_loc.end_col):
                     if (l := put_fst._lines[-1]) and not re_empty_line.match(l):
-                        put_fst._lines.append(bistr(block_indent if fpost else ''))
+                        put_fst._lines.append(indent)
                     else:
-                        put_fst._lines[-1] = bistr(block_indent if fpost else '')
+                        put_fst._lines[-1] = indent
 
                     put_fst.touch()
 
             elif fpost:  # no preceding statement, only trailing
+                ln, col  = _prev_find(lines, *block_loc, ':', True)
+                col     += 1
 
+                if code := _next_src(lines, ln, col, *block_loc[2:], True, None):
+                    ln, col, src  = code
+                    col          += len(src)
 
-                raise NotImplementedError  # TODO: this
+                assert ln < block_loc.end_ln
 
+                put_loc = fstloc(ln, col, ln + 1, 0)
 
+                if (l := put_fst._lines[-1]) and not re_empty_line.match(l):
+                    put_fst._lines.append(bistr(''))
+                else:
+                    put_fst._lines[-1] = bistr('')
 
-
-
-
-
-
-
-
-
+                put_fst.touch()
 
             else:  # insertion to empty block
                 # put_fst.indent_lns(block_indent if field != 'handlers' else opener_indent, docstr=docstr, skip=0)
@@ -1485,7 +1482,6 @@ class FSTSrcEdit:
 
             put_fst.put_lines(['', ''], 0, 0, 0, 0, False)
 
-            # if not _at_end(lines, put_loc.end_ln, put_loc.end_col):
             if (l := put_fst._lines[-1]) and not re_empty_line.match(l):
                 put_fst._lines.append(bistr(''))
                 put_fst.touch()
@@ -2811,8 +2807,8 @@ class FST:
             ffirst = body[start].f
             flast  = body[stop - 1].f
 
-            block_loc  = fstloc(*(fpre.bloc[2:] if fpre else ffirst._prev_ast_bound()),
-                                *(fpost.bloc[:2] if fpost else flast._next_ast_bound()))
+            block_loc = fstloc(*(fpre.bloc[2:] if fpre else ffirst._prev_ast_bound()),
+                               *(fpost.bloc[:2] if fpost else flast._next_ast_bound()))
 
             is_last_child = not fpost and not flast.next()
 
