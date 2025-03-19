@@ -1438,14 +1438,18 @@ class FSTSrcEdit:
                     put_fst.touch()
 
             elif fpost:  # no preceding statement, only trailing
-                ln, col  = _prev_find(lines, *block_loc, ':', True)
-                col     += 1
+                if field == 'handlers':
+                    ln, col  = block_loc[:2]
+
+                else:
+                    ln, col  = _prev_find(lines, *block_loc, ':', True)
+                    col     += 1
 
                 if code := _next_src(lines, ln, col, *block_loc[2:], True, None):
                     ln, col, src  = code
                     col          += len(src)
 
-                assert ln < block_loc.end_ln
+                    assert ln < block_loc.end_ln
 
                 put_loc = fstloc(ln, col, ln + 1, 0)
 
@@ -4738,7 +4742,7 @@ class FST:
 
         strict = docstr == 'strict'
         lines  = self.root.lines
-        lns    = set(range(self.bln + skip, self.bend_ln + 1))
+        lns    = set(range(skip, len(self._lines))) if self.is_root else set(range(self.bln + skip, self.bend_ln + 1))
 
         while (parent := self.parent) and not isinstance(self.a, STATEMENTISH):
             self = parent
