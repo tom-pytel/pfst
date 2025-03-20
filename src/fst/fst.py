@@ -1649,7 +1649,7 @@ class FST:
 
         if self.is_root:
             return self._lines
-        elif loc := self.loc:
+        elif loc := self.bloc:
             return self.root._lines[loc.ln : loc.end_ln + 1]
         else:
             return None
@@ -1661,7 +1661,7 @@ class FST:
 
         if self.is_root:
             return '\n'.join(self._lines)
-        elif loc := self.loc:
+        elif loc := self.bloc:
             return '\n'.join(self.get_lines(*loc))
         else:
             return None
@@ -1718,10 +1718,12 @@ class FST:
 
         if not (loc := self.loc):
             bloc = None
-        elif not (decos := getattr(self.a, 'decorator_list', None)):
-            bloc = loc
-        else:
+        elif decos := getattr(self.a, 'decorator_list', None):
             bloc = fstloc(decos[0].f.ln, loc[1], loc[2], loc[3])  # column of deco '@' will be same as our column
+        # elif (pfield := self.pfield) and pfield.name == 'decorator_list':
+        #     bloc = fstloc(loc[0], self.parent.col, loc[2], loc[3])  # column of parent will be column of deco '@'
+        else:
+            bloc = loc
 
         self._bloc = bloc
 
