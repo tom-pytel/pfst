@@ -9244,6 +9244,11 @@ def f() -> int: \\
         a.f.verify()
         self.assertEqual(a.f.src, 'def f() -> int:\n    i \\\n  ; \\\n  j')
 
+        a = parse('''def f(a = """ a
+...   # something """): i = 2''')
+        a.f.body[0]._normalize_block()
+        self.assertEqual(a.f.src, 'def f(a = """ a\n...   # something """):\n    i = 2')
+
     def test_loc(self):
         self.assertEqual((0, 6, 0, 9), parse('def f(i=1): pass').body[0].args.f.loc)  # arguments
         self.assertEqual((0, 5, 0, 8), parse('with f(): pass').body[0].items[0].f.loc)  # withitem
@@ -11031,6 +11036,754 @@ match a:
 
         self.assertEqual(a.f.src, '''match a:\n''')
 
+    def test_cut_and_del_special(self):
+        fst = parse('''
+match a:
+    case 1:  # CASE
+        i = 1
+
+match b:  # MATCH
+    case 2:
+        pass  # this is removed
+
+if 1:  # IF
+    j; k
+else:  # ELSE
+    l ; \\
+  m
+
+try:  # TRY
+    # pre
+    n  # post
+except:  # EXCEPT
+    if 1: break
+else:  # delelse
+    if 2: continue
+    elif 3: o
+    else: p
+finally:  # delfinally
+    @deco
+    def inner() -> list[int]:
+        q = 4  # post-inner-q
+
+for a in b:  # FOR
+    # pre-classdeco
+    @classdeco
+    class cls:
+        @methdeco
+        def meth(self):
+            mvar = 5  # post-meth
+else:  # delelse
+    """Multi
+    line # notcomment
+    string."""
+
+async for a in b:  # ASYNC FOR
+    ("Multi"
+     "line  # notcomment"
+     "string \\\\ not linecont")
+else:  # delelse
+    r = [i for i in range(100)]  # post-list-comprehension
+
+while a in b:  # WHILE
+    # pre-global
+    global c
+else:  # delelse
+    lambda x: x**2
+
+with a as b:  # WITH
+    try: a ; #  post-try
+    except: b ; c  # post-except
+    else: return 5
+    finally: yield 6
+
+async with a as b:  # ASYNC WITH
+    del x, y, z
+
+def func(a = """ \\\\ not linecont
+            # notcomment"""):  # FUNC
+    assert s, t
+
+@asyncdeco
+async def func():  # ASYNC FUNC
+    match z:
+        case 1: zz
+        case 2:
+            zzz
+
+class cls:  # CLASS
+    def docfunc(a, /, b=2, *c, d=""" # not \\\\ linecont
+            # comment
+            """, **e):
+        """Doc
+        string # ."""
+
+        return -1
+
+if clause:
+    while something:  # WHILE
+        yield from blah
+    else:  # delelse
+        @funcdeco
+        def func(args) -> list[int]:
+            return [2]
+
+if indented:
+    try:  # TRY
+        try: raise
+        except Exception as exc:
+            raise exc from exc
+    except:  # EXCEPT
+        aa or bb or cc
+    else:  # delelse
+        f'{i:2} plus 1'
+    finally:  # delelse
+        j = (i := k)
+'''.lstrip()).f
+
+        fst2 = fst.copy()
+
+        fst.body[1].cases[0].cut()
+        fst.body[1].put_slice('pass')
+
+        points = [
+            (fst.body[0].cases[0], 'body'),
+            (fst.body[1], 'cases'),
+            (fst.body[2], 'body'),
+            (fst.body[2], 'orelse'),
+
+            (fst.body[3], 'body'),
+            (fst.body[3], 'handlers'),
+            (fst.body[3], 'orelse'),
+            (fst.body[3], 'finalbody'),
+
+            (fst.body[4], 'body'),
+            (fst.body[4], 'orelse'),
+            (fst.body[5], 'body'),
+            (fst.body[5], 'orelse'),
+            (fst.body[6], 'body'),
+            (fst.body[6], 'orelse'),
+            (fst.body[7], 'body'),
+            (fst.body[8], 'body'),
+            (fst.body[9], 'body'),
+            (fst.body[10], 'body'),
+            (fst.body[11], 'body'),
+            (fst.body[12].body[0], 'body'),
+            (fst.body[12].body[0], 'orelse'),
+
+            (fst.body[13].body[0], 'body'),
+            (fst.body[13].body[0], 'handlers'),
+            (fst.body[13].body[0], 'orelse'),
+            (fst.body[13].body[0], 'finalbody'),
+        ]
+
+        lines = []
+
+        for point, field in points:
+            f = point.get_slice(field=field, cut=True)
+
+            lines.extend(f.lines)
+            lines.append('...')
+
+        lines.extend(fst.lines)
+
+        self.assertEqual(lines, [
+            'i = 1',
+            '...',
+            'pass',
+            '...',
+            'j; k',
+            '...',
+            'l ; \\',
+            'm',
+            '...',
+            '# pre',
+            'n  # post',
+            '',
+            '...',
+            'except:  # EXCEPT',
+            '    if 1: break',
+            '...',
+            'if 2: continue',
+            'elif 3: o',
+            'else: p',
+            '...',
+            '@deco',
+            'def inner() -> list[int]:',
+            '    q = 4  # post-inner-q',
+            '',
+            '...',
+            '# pre-classdeco',
+            '@classdeco',
+            'class cls:',
+            '    @methdeco',
+            '    def meth(self):',
+            '        mvar = 5  # post-meth',
+            '',
+            '...',
+            '"""Multi',
+            'line # notcomment',
+            'string."""',
+            '...',
+            '("Multi"',
+            ' "line  # notcomment"',
+            ' "string \\\\ not linecont")',
+            '...',
+            'r = [i for i in range(100)]  # post-list-comprehension',
+            '',
+            '...',
+            '# pre-global',
+            'global c',
+            '...',
+            'lambda x: x**2',
+            '...',
+            'try: a ; #  post-try',
+            'except: b ; c  # post-except',
+            'else: return 5',
+            'finally: yield 6',
+            '...',
+            'del x, y, z',
+            '...',
+            'assert s, t',
+            '...',
+            'match z:',
+            '    case 1: zz',
+            '    case 2:',
+            '        zzz',
+            '...',
+            'def docfunc(a, /, b=2, *c, d=""" # not \\\\ linecont',
+            '            # comment',
+            '            """, **e):',
+            '    """Doc',
+            '    string # ."""',
+            '',
+            '    return -1',
+            '...',
+            'yield from blah',
+            '...',
+            '@funcdeco',
+            'def func(args) -> list[int]:',
+            '    return [2]',
+            '...',
+            'try: raise',
+            'except Exception as exc:',
+            '    raise exc from exc',
+            '...',
+            'except:  # EXCEPT',
+            '    aa or bb or cc',
+            '...',
+            "f'{i:2} plus 1'",
+            '...',
+            'j = (i := k)',
+            '...',
+            'match a:',
+            '    case 1:  # CASE',
+            '',
+            'match b:  # MATCH',
+            '',
+            'if 1:  # IF',
+            '',
+            'try:  # TRY',
+            '',
+            'for a in b:  # FOR',
+            '',
+            'async for a in b:  # ASYNC FOR',
+            '',
+            'while a in b:  # WHILE',
+            '',
+            'with a as b:  # WITH',
+            '',
+            'async with a as b:  # ASYNC WITH',
+            '',
+            'def func(a = """ \\\\ not linecont',
+            '            # notcomment"""):  # FUNC',
+            '',
+            '@asyncdeco',
+            'async def func():  # ASYNC FUNC',
+            '',
+            'class cls:  # CLASS',
+            '',
+            'if clause:',
+            '    while something:  # WHILE',
+            '',
+            'if indented:',
+            '    try:  # TRY',
+            ''
+        ])
+
+        fst = fst2
+
+        fst.body[1].cases[0].cut()
+        fst.body[1].put_slice('pass')
+
+        points = [
+            (fst.body[0].cases[0], 'body'),
+            (fst.body[1], 'cases'),
+            (fst.body[2], 'body'),
+            (fst.body[2], 'orelse'),
+
+            (fst.body[3], 'body'),
+            (fst.body[3], 'handlers'),
+            (fst.body[3], 'orelse'),
+            (fst.body[3], 'finalbody'),
+
+            (fst.body[4], 'body'),
+            (fst.body[4], 'orelse'),
+            (fst.body[5], 'body'),
+            (fst.body[5], 'orelse'),
+            (fst.body[6], 'body'),
+            (fst.body[6], 'orelse'),
+            (fst.body[7], 'body'),
+            (fst.body[8], 'body'),
+            (fst.body[9], 'body'),
+            (fst.body[10], 'body'),
+            (fst.body[11], 'body'),
+            (fst.body[12].body[0], 'body'),
+            (fst.body[12].body[0], 'orelse'),
+
+            (fst.body[13].body[0], 'body'),
+            (fst.body[13].body[0], 'handlers'),
+            (fst.body[13].body[0], 'orelse'),
+            (fst.body[13].body[0], 'finalbody'),
+        ]
+
+        for point, field in points:
+            point.put_slice(None, field=field)
+
+        self.assertEqual(fst.lines, [
+            'match a:',
+            '    case 1:  # CASE',
+            '',
+            'match b:  # MATCH',
+            '',
+            'if 1:  # IF',
+            '',
+            'try:  # TRY',
+            '',
+            'for a in b:  # FOR',
+            '',
+            'async for a in b:  # ASYNC FOR',
+            '',
+            'while a in b:  # WHILE',
+            '',
+            'with a as b:  # WITH',
+            '',
+            'async with a as b:  # ASYNC WITH',
+            '',
+            'def func(a = """ \\\\ not linecont',
+            '            # notcomment"""):  # FUNC',
+            '',
+            '@asyncdeco',
+            'async def func():  # ASYNC FUNC',
+            '',
+            'class cls:  # CLASS',
+            '',
+            'if clause:',
+            '    while something:  # WHILE',
+            '',
+            'if indented:',
+            '    try:  # TRY',
+            ''
+        ])
+
+        fst = parse('''
+match a:
+    case 1:  \\
+  # CASE
+        i = 1
+
+match b:  \\
+  # MATCH
+    case 2:
+        pass  # this is removed
+
+if 1:  \\
+  # IF
+    j; k
+else:  \\
+  # ELSE
+    l ; \\
+      m
+
+try:  \\
+  # TRY
+    # pre
+    n  # post
+except:  \\
+  # EXCEPT
+    if 1: break
+else:  \\
+  # delelse
+    if 2: continue
+    elif 3: o
+    else: p
+finally:  \\
+  # delfinally
+    @deco
+    def inner() -> list[int]:
+        q = 4  # post-inner-q
+
+for a in b:  \\
+  # FOR
+    # pre-classdeco
+    @classdeco
+    class cls:
+        @methdeco
+        def meth(self):
+            mvar = 5  # post-meth
+else:  \\
+  # delelse
+    """Multi
+    line # notcomment
+    string."""
+
+async for a in b:  \\
+  # ASYNC FOR
+    ("Multi"
+     "line  # notcomment"
+     "string \\\\ not linecont")
+else:  \\
+  # delelse
+    r = [i for i in range(100)]  # post-list-comprehension
+
+while a in b:  \\
+  # WHILE
+    # pre-global
+    global c
+else:  \\
+  # delelse
+    lambda x: x**2
+
+with a as b:  \\
+  # WITH
+    try: a ; #  post-try
+    except: b ; c  # post-except
+    else: return 5
+    finally: yield 6
+
+async with a as b:  \\
+  # ASYNC WITH
+    del x, y, z
+
+def func(a = """ \\\\ not linecont
+            # notcomment"""):  \\
+  # FUNC
+    assert s, t
+
+@asyncdeco
+async def func():  \\
+  # ASYNC FUNC
+    match z:
+        case 1: zz
+        case 2:
+            zzz
+
+class cls:  \\
+  # CLASS
+    def docfunc(a, /, b=2, *c, d=""" # not \\\\ linecont
+            # comment
+            """, **e):
+        """Doc
+        string # ."""
+
+        return -1
+
+if clause:
+    while something:  \\
+  # WHILE
+        yield from blah
+    else:  \\
+  # delelse
+        @funcdeco
+        def func(args) -> list[int]:
+            return [2]
+
+if indented:
+    try:  \\
+  # TRY
+        try: raise
+        except Exception as exc:
+            raise exc from exc
+    except:  \\
+  # EXCEPT
+        aa or bb or cc
+    else:  \\
+  # delelse
+        f'{i:2} plus 1'
+    finally:  \\
+  # delelse
+        j = (i := k)
+'''.lstrip()).f
+
+        fst2 = fst.copy()
+
+        fst.body[1].cases[0].cut()
+        fst.body[1].put_slice('pass')
+
+        points = [
+            (fst.body[0].cases[0], 'body'),
+            (fst.body[1], 'cases'),
+            (fst.body[2], 'body'),
+            (fst.body[2], 'orelse'),
+
+            (fst.body[3], 'body'),
+            (fst.body[3], 'handlers'),
+            (fst.body[3], 'orelse'),
+            (fst.body[3], 'finalbody'),
+
+            (fst.body[4], 'body'),
+            (fst.body[4], 'orelse'),
+            (fst.body[5], 'body'),
+            (fst.body[5], 'orelse'),
+            (fst.body[6], 'body'),
+            (fst.body[6], 'orelse'),
+            (fst.body[7], 'body'),
+            (fst.body[8], 'body'),
+            (fst.body[9], 'body'),
+            (fst.body[10], 'body'),
+            (fst.body[11], 'body'),
+            (fst.body[12].body[0], 'body'),
+            (fst.body[12].body[0], 'orelse'),
+
+            (fst.body[13].body[0], 'body'),
+            (fst.body[13].body[0], 'handlers'),
+            (fst.body[13].body[0], 'orelse'),
+            (fst.body[13].body[0], 'finalbody'),
+        ]
+
+        lines = []
+
+        for point, field in points:
+            f = point.get_slice(field=field, cut=True)
+
+            lines.extend(f.lines)
+            lines.append('...')
+
+        lines.extend(fst.lines)
+
+        self.assertEqual(lines, [
+            '# CASE',
+            'i = 1',
+            '...',
+            'pass',
+            '...',
+            '# IF',
+            'j; k',
+            '...',
+            '# ELSE',
+            'l ; \\',
+            '  m',
+            '...',
+            '# TRY',
+            '# pre',
+            'n  # post',
+            '',
+            '...',
+            'except:  \\',
+            '  # EXCEPT',
+            '    if 1: break',
+            '...',
+            '# delelse',
+            'if 2: continue',
+            'elif 3: o',
+            'else: p',
+            '...',
+            '# delfinally',
+            '@deco',
+            'def inner() -> list[int]:',
+            '    q = 4  # post-inner-q',
+            '',
+            '...',
+            '# FOR',
+            '# pre-classdeco',
+            '@classdeco',
+            'class cls:',
+            '    @methdeco',
+            '    def meth(self):',
+            '        mvar = 5  # post-meth',
+            '',
+            '...',
+            '# delelse',
+            '"""Multi',
+            'line # notcomment',
+            'string."""',
+            '...',
+            '# ASYNC FOR',
+            '("Multi"',
+            ' "line  # notcomment"',
+            ' "string \\\\ not linecont")',
+            '...',
+            '# delelse',
+            'r = [i for i in range(100)]  # post-list-comprehension',
+            '',
+            '...',
+            '# WHILE',
+            '# pre-global',
+            'global c',
+            '...',
+            '# delelse',
+            'lambda x: x**2',
+            '...',
+            '# WITH',
+            'try: a ; #  post-try',
+            'except: b ; c  # post-except',
+            'else: return 5',
+            'finally: yield 6',
+            '...',
+            '# ASYNC WITH',
+            'del x, y, z',
+            '...',
+            '# FUNC',
+            'assert s, t',
+            '...',
+            '# ASYNC FUNC',
+            'match z:',
+            '    case 1: zz',
+            '    case 2:',
+            '        zzz',
+            '...',
+            '# CLASS',
+            'def docfunc(a, /, b=2, *c, d=""" # not \\\\ linecont',
+            '            # comment',
+            '            """, **e):',
+            '    """Doc',
+            '    string # ."""',
+            '',
+            '    return -1',
+            '...',
+            '# WHILE',
+            'yield from blah',
+            '...',
+            '# delelse',
+            '@funcdeco',
+            'def func(args) -> list[int]:',
+            '    return [2]',
+            '...',
+            '# TRY',
+            'try: raise',
+            'except Exception as exc:',
+            '    raise exc from exc',
+            '...',
+            'except:  \\',
+            '# EXCEPT',
+            '    aa or bb or cc',
+            '...',
+            '# delelse',
+            "f'{i:2} plus 1'",
+            '...',
+            '# delelse',
+            'j = (i := k)',
+            '...',
+            'match a:',
+            '    case 1:',
+            '',
+            'match b:',
+            '',
+            'if 1:',
+            '',
+            'try:',
+            '',
+            'for a in b:',
+            '',
+            'async for a in b:',
+            '',
+            'while a in b:',
+            '',
+            'with a as b:',
+            '',
+            'async with a as b:',
+            '',
+            'def func(a = """ \\\\ not linecont',
+            '            # notcomment"""):',
+            '',
+            '@asyncdeco',
+            'async def func():',
+            '',
+            'class cls:',
+            '',
+            'if clause:',
+            '    while something:',
+            '',
+            'if indented:',
+            '    try:',
+            ''
+        ])
+
+        fst = fst2
+
+        fst.body[1].cases[0].cut()
+        fst.body[1].put_slice('pass')
+
+        points = [
+            (fst.body[0].cases[0], 'body'),
+            (fst.body[1], 'cases'),
+            (fst.body[2], 'body'),
+            (fst.body[2], 'orelse'),
+
+            (fst.body[3], 'body'),
+            (fst.body[3], 'handlers'),
+            (fst.body[3], 'orelse'),
+            (fst.body[3], 'finalbody'),
+
+            (fst.body[4], 'body'),
+            (fst.body[4], 'orelse'),
+            (fst.body[5], 'body'),
+            (fst.body[5], 'orelse'),
+            (fst.body[6], 'body'),
+            (fst.body[6], 'orelse'),
+            (fst.body[7], 'body'),
+            (fst.body[8], 'body'),
+            (fst.body[9], 'body'),
+            (fst.body[10], 'body'),
+            (fst.body[11], 'body'),
+            (fst.body[12].body[0], 'body'),
+            (fst.body[12].body[0], 'orelse'),
+
+            (fst.body[13].body[0], 'body'),
+            (fst.body[13].body[0], 'handlers'),
+            (fst.body[13].body[0], 'orelse'),
+            (fst.body[13].body[0], 'finalbody'),
+        ]
+
+        for point, field in points:
+            point.put_slice(None, field=field)
+
+        self.assertEqual(fst.lines, [
+            'match a:',
+            '    case 1:',
+            '',
+            'match b:',
+            '',
+            'if 1:',
+            '',
+            'try:',
+            '',
+            'for a in b:',
+            '',
+            'async for a in b:',
+            '',
+            'while a in b:',
+            '',
+            'with a as b:',
+            '',
+            'async with a as b:',
+            '',
+            'def func(a = """ \\\\ not linecont',
+            '            # notcomment"""):',
+            '',
+            '@asyncdeco',
+            'async def func():',
+            '',
+            'class cls:',
+            '',
+            'if clause:',
+            '    while something:',
+            '',
+            'if indented:',
+            '    try:',
+            ''
+        ])
+
     def test_cut_block_everything(self):
         for src in ('''
 if mo:
@@ -11892,6 +12645,40 @@ if indented:
                 f, field = ps.pop()
 
                 f.put_slice(bs.pop(), 0, 0, field=field)
+
+    def test_insert_special(self):
+        a = parse('''
+pass
+
+try:
+    break
+except:
+    continue
+else:
+    @deco
+    def inner() -> list[int]:
+        q = 4  # post-inner-q
+finally:
+    pass
+        '''.strip())
+        a.body[1].body[0].f.cut()
+        a.body[1].handlers[0].f.cut()
+        a.body[1].f.put_slice('# pre\nn  # post', 0, 0, 'handlers')
+        a.body[1].f.put_slice('i', 0, 0, 'handlers')
+        self.assertEqual(a.f.src, '''
+pass
+
+try:
+i
+# pre
+n  # post
+else:
+    @deco
+    def inner() -> list[int]:
+        q = 4  # post-inner-q
+finally:
+    pass
+            '''.strip())
 
     def test_get_slice_seq_copy(self):
         for src, elt, start, stop, _, slice_copy, _, slice_dump in GET_SLICE_SEQ_CUT_DATA:

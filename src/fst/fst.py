@@ -246,8 +246,9 @@ def _prev_src(lines: list[str], ln: int, col: int, end_ln: int, end_col: int,
     necessarily AST stuff, it can be commas, colons, the 'try' keyword, etc... Code can include multiple AST nodes in
     return str if there are no spaces between them like 'a+b'.
 
-    **CAVEAT:** It is a good idea to make sure the starting position (`ln`, `col`) is not inside a string because that
-    could give false positives for comments or line continuations.
+    **CAVEAT:** Make sure the starting position (`ln`, `col`) is not inside a string because that could give false
+    positives for comments or line continuations. To this end, when searching for non-AST stuff, make sure the start
+    position does not start INSODE OF or BEFORE any valid ASTs.
 
     **Parameters:**
     - `comment`: Whether to return comments found, which will be the whole comment.
@@ -1344,6 +1345,9 @@ class FSTSrcEdit:
         prepended to `put_fst` for the final put. If replacing whole body of 'orelse' or 'finalbody' then the original
         'else:' or 'finally:' is not deleted (along with any preceding comments or spaces).
 
+        If there is no `fpre`, then `block_loc` start must be BEFORE the block open colon. This because if the block
+        open statement doesn't exist yet (else, finally), then it would be inconsistent to put it after the colon.
+
         Block being inserted into assumed to be normalized (no statement or multiple statements on block opener logical
         line).
 
@@ -1438,8 +1442,8 @@ class FSTSrcEdit:
                     put_fst.touch()
 
             elif fpost:  # no preceding statement, only trailing
-                if field == 'handlers':
-                    ln, col  = block_loc[:2]
+                if field == 'handlers':  # special case, start will be after last statement or just after 'try:' colon
+                    ln, col = block_loc[:2]
 
                 else:
                     ln, col  = _prev_find(lines, *block_loc, ':', True)
@@ -2245,7 +2249,8 @@ class FST:
         b0_ln, b0_col, _, _ = b0.bloc
         root                = self.root
 
-        if not (colon := _prev_find(root._lines, *self.loc[:2], b0_ln, b0_col, ':', True, comment=True, lcont=None)):
+        if not (colon := _prev_find(root._lines, *b0._prev_ast_bound(), b0_ln, b0_col, ':', True,
+                                    comment=True, lcont=None)):
             return
 
         if indent is None:
@@ -2824,7 +2829,14 @@ class FST:
                 is_last_child = not fpost and not fpre.next()
 
             elif fpost:
-                block_loc     = fstloc(*fpost._prev_ast_bound(), *fpost.bloc[:2])
+                if field != 'handlers' or ast.body:
+                    block_loc = fstloc(*fpost._prev_ast_bound(), *fpost.bloc[:2])
+
+                else:  # special case because 'try:' doesn't have ASTs inside it and each 'except:' lives at the 'try:' indentation level
+                    end_ln, end_col = fpost.bloc[:2]
+                    ln, col         = _prev_find(lines, *fpost._prev_ast_bound(), end_ln, end_col, ':')
+                    block_loc       = fstloc(ln, col + 1, end_ln, end_col)
+
                 is_last_child = False
 
             # insertion into empty block (or nonexistent 'else' or 'finally' block)
@@ -2865,7 +2877,7 @@ class FST:
 
                 elif field == 'orelse':
                     if finalbody := ast.finalbody:
-                        end_ln, end_col = _prev_find(lines, *self.bloc[:2], *finalbody[0].f.bloc[:2], 'finally')
+                        end_ln, end_col = _prev_find(lines, *self.bloc[:2], *finalbody[0].f.bloc[:2], 'finally')  # we can use bloc[:2] even if there are ASTs between that and here because 'finally' must be on its own line
                         is_last_child   = False
 
                     else:
