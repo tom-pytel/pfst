@@ -9598,6 +9598,93 @@ def f() -> int: \\
         a.f.body[0]._normalize_block()
         self.assertEqual(a.f.src, 'def f(a = """ a\n...   # something """):\n    i = 2')
 
+    def test__elif_to_else_if(self):
+        a = parse('''
+if 1: pass
+elif 2: pass
+        '''.strip())
+        a.body[0].orelse[0].f._elif_to_else_if()
+        a.f.verify()
+        self.assertEqual(a.f.src, '''
+if 1: pass
+else:
+    if 2: pass
+            '''.strip())
+
+        a = parse('''
+def f():
+    if 1: pass
+    elif 2: pass
+        '''.strip())
+        a.body[0].body[0].orelse[0].f._elif_to_else_if()
+        a.f.verify()
+        self.assertEqual(a.f.src, '''
+def f():
+    if 1: pass
+    else:
+        if 2: pass
+            '''.strip())
+
+        a = parse('''
+if 1: pass
+elif 2: pass
+return
+        '''.strip())
+        a.body[0].orelse[0].f._elif_to_else_if()
+        a.f.verify()
+        self.assertEqual(a.f.src, '''
+if 1: pass
+else:
+    if 2: pass
+return
+            '''.strip())
+
+        a = parse('''
+def f():
+    if 1: pass
+    elif 2: pass
+    return
+        '''.strip())
+        a.body[0].body[0].orelse[0].f._elif_to_else_if()
+        a.f.verify()
+        self.assertEqual(a.f.src, '''
+def f():
+    if 1: pass
+    else:
+        if 2: pass
+    return
+            '''.strip())
+
+        a = parse('''
+if 1: pass
+elif 2: pass
+elif 3: pass
+        '''.strip())
+        a.body[0].orelse[0].f._elif_to_else_if()
+        a.f.verify()
+        self.assertEqual(a.f.src, '''
+if 1: pass
+else:
+    if 2: pass
+    elif 3: pass
+            '''.strip())
+
+        a = parse('''
+def f():
+    if 1: pass
+    elif 2: pass
+    elif 3: pass
+        '''.strip())
+        a.body[0].body[0].orelse[0].f._elif_to_else_if()
+        a.f.verify()
+        self.assertEqual(a.f.src, '''
+def f():
+    if 1: pass
+    else:
+        if 2: pass
+        elif 3: pass
+            '''.strip())
+
     def test_loc(self):
         self.assertEqual((0, 6, 0, 9), parse('def f(i=1): pass').body[0].args.f.loc)  # arguments
         self.assertEqual((0, 5, 0, 8), parse('with f(): pass').body[0].items[0].f.loc)  # withitem

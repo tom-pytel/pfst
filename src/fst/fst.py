@@ -2268,6 +2268,21 @@ class FST:
 
         self.put_lines(['', indent], ln, col + 1, b0_ln, b0_col, False)
 
+    def _elif_to_else_if(self):
+        """Make sure to only call on an actual `elif`."""
+
+        indent = self.get_indent()
+
+        self.indent_lns(skip=0)
+
+        if not self.next():  # last child?
+            self._set_end_pos((a := self.a).end_lineno, a.end_col_offset, False)
+
+        ln, col, _, _ = self.loc
+
+        self.put_lines(['if'], ln, col, ln, col + 4, False)
+        self.put_lines([indent + 'else:', indent + self.root.indent], ln, 0, ln, col, False)
+
     def _make_fst_and_dedent(self, indent: Union['FST', str], ast: AST, copy_loc: fstloc,
                              prefix: str = '', suffix: str = '',
                              put_loc: fstloc | None = None, put_lines: list[str] | None = None, *,
@@ -5053,7 +5068,8 @@ class FST:
         return self
 
     def offset_cols(self, dcol_offset: int, lns: set[int]):
-        """Offset ast col byte offsets in `lns` by `dcol_offset`. Only modifies ast, not lines."""
+        """Offset ast col byte offsets in `lns` by `dcol_offset`. Only modifies ast, not lines. Does not modify parent
+        locations."""
 
         if dcol_offset:
             for a in walk(self.a):
@@ -5069,7 +5085,8 @@ class FST:
             self.touchall(True, False, False)
 
     def offset_cols_mapped(self, dcol_offsets: dict[int, int]):
-        """Offset ast col byte offsets by a specific `dcol_offset` per line. Only modifies ast, not lines."""
+        """Offset ast col byte offsets by a specific `dcol_offset` per line. Only modifies ast, not lines. Does not
+        modify parent locations."""
 
         for a in walk(self.a):
             if (end_col_offset := getattr(a, 'end_col_offset', None)) is not None:
@@ -5087,10 +5104,12 @@ class FST:
                    docstr: bool | str = DEFAULT_DOCSTR, skip: int = 1) -> set[int]:
         """Indent all indentable lines specified in `lns` with `indent` and adjust node locations accordingly.
 
+        WARNING! This does not offset parent nodes.
+
         **Parameters:**
         - `indent`: The indentation string to prefix to each indentable line.
         - `lns`: A `set` of lines to apply identation to. If `None` then will be gotten from
-            `get_indentable_lns(skip=1)`.
+            `get_indentable_lns(skip=skip)`.
         - `docstr`: How to treat multiline string docstring lines. `False` means not indentable, `True` means all `Expr`
             multiline strings are indentable (as they serve no coding purpose). `'strict'` means only multiline strings
             in expected docstring positions are indentable.
@@ -5127,10 +5146,12 @@ class FST:
         """Dedent all indentable lines specified in `lns` by removing `indent` prefix and adjust node locations
         accordingly. If cannot dedent entire amount will dedent as much as possible.
 
+        WARNING! This does not offset parent nodes.
+
         **Parameters:**
         - `indent`: The indentation string to remove from the beginning of each indentable line (if possible).
         - `lns`: A `set` of lines to apply dedentation to. If `None` then will be gotten from
-            `get_indentable_lns(skip=1)`.
+            `get_indentable_lns(skip=skip)`.
         - `docstr`: How to treat multiline string docstring lines. `False` means not indentable, `True` means all `Expr`
             multiline strings are indentable (as they serve no coding purpose). `'strict'` means only multiline strings
             in expected docstring positions are indentable.
