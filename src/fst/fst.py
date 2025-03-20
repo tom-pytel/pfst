@@ -2142,7 +2142,7 @@ class FST:
 
         if (elts := self.a.elts) and len(elts) == 1:
             return self._maybe_add_comma((f := elts[0].f).end_ln, f.end_col, offset, False, self.end_ln,
-                                         self.end_col - self.is_tuple_parenthesized())
+                                         self.end_col - self.is_parenthesized_tuple())
 
     def _maybe_fix_tuple(self, is_parenthesized: bool | None = None):
         # assert isinstance(self.a, Tuple)
@@ -2150,7 +2150,7 @@ class FST:
         ast = self.a
 
         if is_parenthesized is None:
-            is_parenthesized = self.is_tuple_parenthesized()
+            is_parenthesized = self.is_parenthesized_tuple()
 
         if ast.elts:
             self._maybe_add_singleton_tuple_comma(True)
@@ -2342,7 +2342,7 @@ class FST:
             else:
                 return _new_empty_list(from_=self)
 
-        is_paren = is_tuple and self.is_tuple_parenthesized()
+        is_paren = is_tuple and self.is_parenthesized_tuple()
         ffirst   = elts[start].f
         flast    = elts[stop - 1].f
         fpre     = elts[start - 1].f if start else None
@@ -2598,7 +2598,7 @@ class FST:
             return
 
         is_self_tuple    = isinstance(ast, Tuple)
-        is_self_enclosed = not is_self_tuple or self.is_tuple_parenthesized()
+        is_self_enclosed = not is_self_tuple or self.is_parenthesized_tuple()
         fpre             = elts[start - 1].f if start else None
         fpost            = None if stop == len(elts) else elts[stop].f
         seq_loc          = fstloc(self.ln, self.col + is_self_enclosed, self.end_ln, self.end_col - is_self_enclosed)
@@ -2632,7 +2632,7 @@ class FST:
                 put_lines[-1] = bistr(put_lines[-1][:-1])
                 put_lines[0]  = bistr(put_lines[0][1:])
 
-            elif put_fst.is_tuple_parenthesized():
+            elif put_fst.is_parenthesized_tuple():
                 put_ast.end_col_offset -= 1  # strip enclosing parentheses from source tuple
 
                 put_fst.offset(0, 1, 0, -1)
@@ -3285,7 +3285,7 @@ class FST:
             need_paren = None
 
             if is_tuple := isinstance(ast, Tuple):
-                if self.is_tuple_parenthesized():
+                if self.is_parenthesized_tuple():
                     need_paren = False
 
                 elif (not (elts := ast.elts) or any(isinstance(e, NamedExpr) for e in elts) or (len(elts) == 1 and (
@@ -4570,10 +4570,14 @@ class FST:
 
         return True
 
-    def is_tuple_parenthesized(self) -> bool:
-        """Whether `self` is parenthesized or not. Call only on a `Tuple` node."""
+    def is_parenthesized_tuple(self) -> bool | None:
+        """Whether `self` is a parenthesized `Tuple` or not, or not a `Tuple` at all.
 
-        # assert isinstance(self.a, Tuple)
+        **Returns:**
+        - `True` if is parenthesized `Tuple`, `False` if is unparenthesized `Tuple`, `None` if is not `Tuple`."""
+
+        if not isinstance(self.a, Tuple):
+            return None
 
         self_ln, self_col, self_end_ln, self_end_col = self.loc
 
@@ -4616,6 +4620,11 @@ class FST:
 
         return (isinstance(ast := self.a, Call) and not ast.args and not ast.keywords and
                 isinstance(func := ast.func, Name) and func.id == 'set' and isinstance(func.ctx, Load))
+
+    def is_elif(self) -> bool:
+        """Whether `self` is an `elif`."""
+
+        return isinstance(self.a, If) and self.root._lines[(loc := self.loc).ln].startswith('elif', loc.col)
 
     def get_indent(self) -> str:
         """Determine proper indentation of node at `stmt` (or other similar) level at or above `self`. Even if it is a

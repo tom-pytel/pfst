@@ -8962,6 +8962,355 @@ Module .. ROOT 0,0 -> 4,0
         Name 'j' Load .. 3,8 -> 3,9
 """),
 
+(r"""
+def f():
+    if 1:
+        pass
+""", 'body[0].body[0]', 0, 0, 'orelse', 'elif', r"""if 2: break""", r"""
+def f():
+    if 1:
+        pass
+    elif 2: break
+""", r"""
+Module .. ROOT 0,0 -> 5,0
+  .body[1]
+  0] FunctionDef .. 1,0 -> 4,17
+    .name
+      'f'
+    .args
+      arguments
+        .vararg
+          None
+        .kwarg
+          None
+    .body[1]
+    0] If .. 2,4 -> 4,17
+      .test
+        Constant 1 .. 2,7 -> 2,8
+      .body[1]
+      0] Pass .. 3,8 -> 3,12
+      .orelse[1]
+      0] If .. 4,4 -> 4,17
+        .test
+          Constant 2 .. 4,9 -> 4,10
+        .body[1]
+        0] Break .. 4,12 -> 4,17
+    .returns
+      None
+    .type_comment
+      None
+"""),
+
+(r"""
+def f():
+    if 1:
+        pass  # post-if
+    # post-line
+""", 'body[0].body[0]', 0, 0, 'orelse', 'elif', r"""# pre
+if 2: break  # post-elif""", r"""
+def f():
+    if 1:
+        pass  # post-if
+    # pre
+    elif 2: break  # post-elif
+    # post-line
+""", r"""
+Module .. ROOT 0,0 -> 7,0
+  .body[1]
+  0] FunctionDef .. 1,0 -> 5,17
+    .name
+      'f'
+    .args
+      arguments
+        .vararg
+          None
+        .kwarg
+          None
+    .body[1]
+    0] If .. 2,4 -> 5,17
+      .test
+        Constant 1 .. 2,7 -> 2,8
+      .body[1]
+      0] Pass .. 3,8 -> 3,12
+      .orelse[1]
+      0] If .. 5,4 -> 5,17
+        .test
+          Constant 2 .. 5,9 -> 5,10
+        .body[1]
+        0] Break .. 5,12 -> 5,17
+    .returns
+      None
+    .type_comment
+      None
+"""),
+
+(r"""
+def f():
+    if 1:
+        pass  # post-if
+    # pre
+    elif 2: break  # post-elif
+    # post-line
+""", 'body[0].body[0].orelse[0]', 0, 0, 'orelse', 'elif', r"""# pre-3
+if 3:  # post-elif-3
+    continue  # post-elif-continue-3""", r"""
+def f():
+    if 1:
+        pass  # post-if
+    # pre
+    elif 2: break  # post-elif
+    # pre-3
+    elif 3:  # post-elif-3
+        continue  # post-elif-continue-3
+    # post-line
+""", r"""
+Module .. ROOT 0,0 -> 10,0
+  .body[1]
+  0] FunctionDef .. 1,0 -> 8,16
+    .name
+      'f'
+    .args
+      arguments
+        .vararg
+          None
+        .kwarg
+          None
+    .body[1]
+    0] If .. 2,4 -> 8,16
+      .test
+        Constant 1 .. 2,7 -> 2,8
+      .body[1]
+      0] Pass .. 3,8 -> 3,12
+      .orelse[1]
+      0] If .. 5,4 -> 8,16
+        .test
+          Constant 2 .. 5,9 -> 5,10
+        .body[1]
+        0] Break .. 5,12 -> 5,17
+        .orelse[1]
+        0] If .. 7,4 -> 8,16
+          .test
+            Constant 3 .. 7,9 -> 7,10
+          .body[1]
+          0] Continue .. 8,8 -> 8,16
+    .returns
+      None
+    .type_comment
+      None
+"""),
+
+(r"""
+def f():
+    if 1:
+        pass  # post-if
+    # pre
+    elif 2: break  # post-elif
+    # pre-3
+    elif 3:  # post-elif-3
+        continue  # post-elif-continue-3
+    # post-line
+""", 'body[0].body[0]', 0, 1, 'orelse', '', r"""**DEL**""", r"""
+def f():
+    if 1:
+        pass  # post-if
+    # pre
+    # post-elif-continue-3
+    # post-line
+""", r"""
+Module .. ROOT 0,0 -> 7,0
+  .body[1]
+  0] FunctionDef .. 1,0 -> 3,12
+    .name
+      'f'
+    .args
+      arguments
+        .vararg
+          None
+        .kwarg
+          None
+    .body[1]
+    0] If .. 2,4 -> 3,12
+      .test
+        Constant 1 .. 2,7 -> 2,8
+      .body[1]
+      0] Pass .. 3,8 -> 3,12
+    .returns
+      None
+    .type_comment
+      None
+"""),
+
+(r"""
+def f():
+    if 1:
+        pass  # post-if
+    # pre
+    elif 2: break  # post-elif
+    # pre-3
+    elif 3:  # post-elif-3
+        continue  # post-elif-continue-3
+    # post-line
+""", 'body[0].body[0]', 0, 1, 'orelse', 'pre', r"""**DEL**""", r"""
+def f():
+    if 1:
+        pass  # post-if
+    # post-elif-continue-3
+    # post-line
+""", r"""
+Module .. ROOT 0,0 -> 6,0
+  .body[1]
+  0] FunctionDef .. 1,0 -> 3,12
+    .name
+      'f'
+    .args
+      arguments
+        .vararg
+          None
+        .kwarg
+          None
+    .body[1]
+    0] If .. 2,4 -> 3,12
+      .test
+        Constant 1 .. 2,7 -> 2,8
+      .body[1]
+      0] Pass .. 3,8 -> 3,12
+    .returns
+      None
+    .type_comment
+      None
+"""),
+
+(r"""
+def f():
+    if 1:
+        pass  # post-if
+    # pre
+    elif 2: break  # post-elif
+    # pre-3
+    elif 3:  # post-elif-3
+        continue  # post-elif-continue-3
+    # post-line
+""", 'body[0].body[0]', 0, 1, 'orelse', 'post', r"""**DEL**""", r"""
+def f():
+    if 1:
+        pass  # post-if
+    # pre
+    # post-line
+""", r"""
+Module .. ROOT 0,0 -> 6,0
+  .body[1]
+  0] FunctionDef .. 1,0 -> 3,12
+    .name
+      'f'
+    .args
+      arguments
+        .vararg
+          None
+        .kwarg
+          None
+    .body[1]
+    0] If .. 2,4 -> 3,12
+      .test
+        Constant 1 .. 2,7 -> 2,8
+      .body[1]
+      0] Pass .. 3,8 -> 3,12
+    .returns
+      None
+    .type_comment
+      None
+"""),
+
+(r"""
+def f():
+    if 1:
+        pass  # post-if
+    # pre
+    elif 2: break  # post-elif
+    # pre-3
+    elif 3:  # post-elif-3
+        continue  # post-elif-continue-3
+    # post-line
+""", 'body[0].body[0]', 0, 1, 'orelse', 'pre,post', r"""**DEL**""", r"""
+def f():
+    if 1:
+        pass  # post-if
+    # post-line
+""", r"""
+Module .. ROOT 0,0 -> 5,0
+  .body[1]
+  0] FunctionDef .. 1,0 -> 3,12
+    .name
+      'f'
+    .args
+      arguments
+        .vararg
+          None
+        .kwarg
+          None
+    .body[1]
+    0] If .. 2,4 -> 3,12
+      .test
+        Constant 1 .. 2,7 -> 2,8
+      .body[1]
+      0] Pass .. 3,8 -> 3,12
+    .returns
+      None
+    .type_comment
+      None
+"""),
+
+(r"""
+def f():
+    if 1:
+        pass  # post-if
+    # pre
+    elif 2: break  # post-elif
+
+    # pre-pre-3
+
+    # pre-3
+    elif 3:  # post-elif-3
+        continue  # post-elif-continue-3
+
+    # post-line
+""", 'body[0].body[0].orelse[0]', 0, 1, 'orelse', 'allpre,post,space', r"""**DEL**""", r"""
+def f():
+    if 1:
+        pass  # post-if
+    # pre
+    elif 2: break  # post-elif
+
+    # post-line
+""", r"""
+Module .. ROOT 0,0 -> 8,0
+  .body[1]
+  0] FunctionDef .. 1,0 -> 5,17
+    .name
+      'f'
+    .args
+      arguments
+        .vararg
+          None
+        .kwarg
+          None
+    .body[1]
+    0] If .. 2,4 -> 5,17
+      .test
+        Constant 1 .. 2,7 -> 2,8
+      .body[1]
+      0] Pass .. 3,8 -> 3,12
+      .orelse[1]
+      0] If .. 5,4 -> 5,17
+        .test
+          Constant 2 .. 5,9 -> 5,10
+        .body[1]
+        0] Break .. 5,12 -> 5,17
+    .returns
+      None
+    .type_comment
+      None
+"""),
+
 ]  # END OF PUT_SLICE_STMT_DATA
 
 
@@ -9845,55 +10194,57 @@ with a as b, c as d:
     pass
             ''')
 
-    def test_is_tuple_parenthesized(self):
-        self.assertTrue(parse('(1, 2)').body[0].value.f.is_tuple_parenthesized())
-        self.assertTrue(parse('(1,)').body[0].value.f.is_tuple_parenthesized())
-        self.assertTrue(parse('((1),)').body[0].value.f.is_tuple_parenthesized())
-        self.assertTrue(parse('((1,))').body[0].value.f.is_tuple_parenthesized())
-        self.assertTrue(parse('((1,),)').body[0].value.f.is_tuple_parenthesized())
+    def test_is_parenthesized_tuple(self):
+        self.assertTrue(parse('(1, 2)').body[0].value.f.is_parenthesized_tuple())
+        self.assertTrue(parse('(1,)').body[0].value.f.is_parenthesized_tuple())
+        self.assertTrue(parse('((1),)').body[0].value.f.is_parenthesized_tuple())
+        self.assertTrue(parse('((1,))').body[0].value.f.is_parenthesized_tuple())
+        self.assertTrue(parse('((1,),)').body[0].value.f.is_parenthesized_tuple())
 
-        self.assertTrue(parse('((a), b)').body[0].value.f.is_tuple_parenthesized())
-        self.assertTrue(parse('(a, (b))').body[0].value.f.is_tuple_parenthesized())
-        self.assertTrue(parse('((a), (b))').body[0].value.f.is_tuple_parenthesized())
+        self.assertTrue(parse('((a), b)').body[0].value.f.is_parenthesized_tuple())
+        self.assertTrue(parse('(a, (b))').body[0].value.f.is_parenthesized_tuple())
+        self.assertTrue(parse('((a), (b))').body[0].value.f.is_parenthesized_tuple())
 
-        self.assertTrue(parse('(\n1,2)').body[0].value.f.is_tuple_parenthesized())
-        self.assertTrue(parse('(1\n,2)').body[0].value.f.is_tuple_parenthesized())
-        self.assertTrue(parse('(1,\n2)').body[0].value.f.is_tuple_parenthesized())
-        self.assertTrue(parse('(1,2\n)').body[0].value.f.is_tuple_parenthesized())
-        self.assertTrue(parse('(1\n,)').body[0].value.f.is_tuple_parenthesized())
-        self.assertTrue(parse('(1,\n)').body[0].value.f.is_tuple_parenthesized())
-        self.assertTrue(parse('(\n(1),)').body[0].value.f.is_tuple_parenthesized())
-        self.assertTrue(parse('((\n1),)').body[0].value.f.is_tuple_parenthesized())
-        self.assertTrue(parse('((1\n),)').body[0].value.f.is_tuple_parenthesized())
-        self.assertTrue(parse('((1)\n,)').body[0].value.f.is_tuple_parenthesized())
-        self.assertTrue(parse('((1),\n)').body[0].value.f.is_tuple_parenthesized())
-        self.assertTrue(parse('(\n(1,))').body[0].value.f.is_tuple_parenthesized())
-        self.assertTrue(parse('((\n1,))').body[0].value.f.is_tuple_parenthesized())
-        self.assertTrue(parse('((1\n,))').body[0].value.f.is_tuple_parenthesized())
-        self.assertTrue(parse('((1,\n))').body[0].value.f.is_tuple_parenthesized())
-        self.assertTrue(parse('((1,)\n)').body[0].value.f.is_tuple_parenthesized())
-        self.assertTrue(parse('(\n(1,),)').body[0].value.f.is_tuple_parenthesized())
-        self.assertTrue(parse('((\n1,),)').body[0].value.f.is_tuple_parenthesized())
-        self.assertTrue(parse('((1\n,),)').body[0].value.f.is_tuple_parenthesized())
-        self.assertTrue(parse('((1,\n),)').body[0].value.f.is_tuple_parenthesized())
-        self.assertTrue(parse('((1,)\n,)').body[0].value.f.is_tuple_parenthesized())
-        self.assertTrue(parse('((1,),\n)').body[0].value.f.is_tuple_parenthesized())
+        self.assertTrue(parse('(\n1,2)').body[0].value.f.is_parenthesized_tuple())
+        self.assertTrue(parse('(1\n,2)').body[0].value.f.is_parenthesized_tuple())
+        self.assertTrue(parse('(1,\n2)').body[0].value.f.is_parenthesized_tuple())
+        self.assertTrue(parse('(1,2\n)').body[0].value.f.is_parenthesized_tuple())
+        self.assertTrue(parse('(1\n,)').body[0].value.f.is_parenthesized_tuple())
+        self.assertTrue(parse('(1,\n)').body[0].value.f.is_parenthesized_tuple())
+        self.assertTrue(parse('(\n(1),)').body[0].value.f.is_parenthesized_tuple())
+        self.assertTrue(parse('((\n1),)').body[0].value.f.is_parenthesized_tuple())
+        self.assertTrue(parse('((1\n),)').body[0].value.f.is_parenthesized_tuple())
+        self.assertTrue(parse('((1)\n,)').body[0].value.f.is_parenthesized_tuple())
+        self.assertTrue(parse('((1),\n)').body[0].value.f.is_parenthesized_tuple())
+        self.assertTrue(parse('(\n(1,))').body[0].value.f.is_parenthesized_tuple())
+        self.assertTrue(parse('((\n1,))').body[0].value.f.is_parenthesized_tuple())
+        self.assertTrue(parse('((1\n,))').body[0].value.f.is_parenthesized_tuple())
+        self.assertTrue(parse('((1,\n))').body[0].value.f.is_parenthesized_tuple())
+        self.assertTrue(parse('((1,)\n)').body[0].value.f.is_parenthesized_tuple())
+        self.assertTrue(parse('(\n(1,),)').body[0].value.f.is_parenthesized_tuple())
+        self.assertTrue(parse('((\n1,),)').body[0].value.f.is_parenthesized_tuple())
+        self.assertTrue(parse('((1\n,),)').body[0].value.f.is_parenthesized_tuple())
+        self.assertTrue(parse('((1,\n),)').body[0].value.f.is_parenthesized_tuple())
+        self.assertTrue(parse('((1,)\n,)').body[0].value.f.is_parenthesized_tuple())
+        self.assertTrue(parse('((1,),\n)').body[0].value.f.is_parenthesized_tuple())
 
-        self.assertTrue(parse('((a), b)').body[0].value.f.is_tuple_parenthesized())
-        self.assertTrue(parse('(a, (b))').body[0].value.f.is_tuple_parenthesized())
-        self.assertTrue(parse('((a), (b))').body[0].value.f.is_tuple_parenthesized())
+        self.assertTrue(parse('((a), b)').body[0].value.f.is_parenthesized_tuple())
+        self.assertTrue(parse('(a, (b))').body[0].value.f.is_parenthesized_tuple())
+        self.assertTrue(parse('((a), (b))').body[0].value.f.is_parenthesized_tuple())
 
-        self.assertFalse(parse('(1,),').body[0].value.f.is_tuple_parenthesized())
-        self.assertFalse(parse('(1),').body[0].value.f.is_tuple_parenthesized())
-        self.assertFalse(parse('((1)),').body[0].value.f.is_tuple_parenthesized())
-        self.assertFalse(parse('((1,),),').body[0].value.f.is_tuple_parenthesized())
+        self.assertFalse(parse('(1,),').body[0].value.f.is_parenthesized_tuple())
+        self.assertFalse(parse('(1),').body[0].value.f.is_parenthesized_tuple())
+        self.assertFalse(parse('((1)),').body[0].value.f.is_parenthesized_tuple())
+        self.assertFalse(parse('((1,),),').body[0].value.f.is_parenthesized_tuple())
 
-        self.assertFalse(parse('(a), b').body[0].value.f.is_tuple_parenthesized())
-        self.assertFalse(parse('((a)), b').body[0].value.f.is_tuple_parenthesized())
-        self.assertFalse(parse('a, (b)').body[0].value.f.is_tuple_parenthesized())
-        self.assertFalse(parse('a, ((b))').body[0].value.f.is_tuple_parenthesized())
-        self.assertFalse(parse('(a), (b)').body[0].value.f.is_tuple_parenthesized())
-        self.assertFalse(parse('((a)), ((b))').body[0].value.f.is_tuple_parenthesized())
+        self.assertFalse(parse('(a), b').body[0].value.f.is_parenthesized_tuple())
+        self.assertFalse(parse('((a)), b').body[0].value.f.is_parenthesized_tuple())
+        self.assertFalse(parse('a, (b)').body[0].value.f.is_parenthesized_tuple())
+        self.assertFalse(parse('a, ((b))').body[0].value.f.is_parenthesized_tuple())
+        self.assertFalse(parse('(a), (b)').body[0].value.f.is_parenthesized_tuple())
+        self.assertFalse(parse('((a)), ((b))').body[0].value.f.is_parenthesized_tuple())
+
+        self.assertIsNone(parse('[(a), (b)]').body[0].value.f.is_parenthesized_tuple())
 
     def test_get_indent(self):
         ast = parse('i = 1; j = 2')
@@ -12847,12 +13198,11 @@ finally:
 
     def test_put_slice_stmt(self):
         for dst, stmt, start, stop, field, fmt, src, put_src, put_dump in PUT_SLICE_STMT_DATA:
-            # dst = dst.strip()
-            # src = src.strip()
-            t   = parse(dst)
-            f   = eval(f't.{stmt}', {'t': t}).f
+            t = parse(dst)
+            f = eval(f't.{stmt}', {'t': t}).f
 
-            f.put_slice(src, start, stop, field, fmt=fst.DEFAULT_SRC_EDIT_FMT if fmt is None else fmt)
+            f.put_slice(None if src == '**DEL**' else src, start, stop, field,
+                        fmt=fst.DEFAULT_SRC_EDIT_FMT if fmt is None else fmt)
 
             tdst  = t.f.src
             tdump = t.f.dump(linefunc=list, compact=True)
@@ -13158,12 +13508,11 @@ def regen_put_slice_stmt_data():
     newlines = []
 
     for dst, stmt, start, stop, field, fmt, src, put_src, put_dump in PUT_SLICE_STMT_DATA:
-        # dst = dst.strip()
-        # src = src.strip()
-        t   = parse(dst)
-        f   = eval(f't.{stmt}', {'t': t}).f
+        t = parse(dst)
+        f = eval(f't.{stmt}', {'t': t}).f
 
-        f.put_slice(src, start, stop, field, fmt=fst.DEFAULT_SRC_EDIT_FMT if fmt is None else fmt)
+        f.put_slice(None if src == '**DEL**' else src, start, stop, field,
+                    fmt=fst.DEFAULT_SRC_EDIT_FMT if fmt is None else fmt)
 
         tdst  = t.f.src
         tdump = t.f.dump(linefunc=list, compact=True)
