@@ -1394,7 +1394,12 @@ class FSTSrcEdit:
         lines = fst.root._lines
 
         if not ffirst:  # pure insertion
-            put_fst.indent_lns(block_indent if field != 'handlers' else opener_indent, docstr=docstr, skip=0)
+            is_handler = field == 'handlers'
+            is_orelse  = field == 'orelse'
+            is_elif    = (not fpre and not fpost and is_orelse and 'elif' in fmt and len(b := put_fst.a.body) == 1 and
+                          isinstance(b[0], If) and isinstance(fst.a, If))
+
+            put_fst.indent_lns(opener_indent if is_handler or is_elif else block_indent, docstr=docstr, skip=0)
 
             if fpre:  # with preceding statement, maybe trailing statement
                 ln, col, end_ln, end_col = block_loc
@@ -1442,7 +1447,7 @@ class FSTSrcEdit:
                     put_fst.touch()
 
             elif fpost:  # no preceding statement, only trailing
-                if field == 'handlers':  # special case, start will be after last statement or just after 'try:' colon
+                if is_handler:  # special case, start will be after last statement or just after 'try:' colon
                     ln, col = block_loc[:2]
 
                 else:
@@ -1464,10 +1469,13 @@ class FSTSrcEdit:
 
                 put_fst.touch()
 
-            else:  # insertion to empty block
-                # put_fst.indent_lns(block_indent if field != 'handlers' else opener_indent, docstr=docstr, skip=0)
+            else:  # insertion into empty block
+                if is_elif:
+                    ln, col, end_ln, end_col = put_fst.a.body[0].f.bloc
 
-                if field == 'orelse':  # need to create these because they not there if body empty
+                    put_fst.put_lines(['elif'], ln, col, ln, col + 2, False)  # replace 'if' with 'elif'
+
+                elif is_orelse:  # need to create these because they not there if body empty
                     put_fst.put_lines([opener_indent + 'else:', ''], 0, 0, 0, 0, False)
                 elif field == 'finalbody':
                     put_fst.put_lines([opener_indent + 'finally:', ''], 0, 0, 0, 0, False)
