@@ -9311,6 +9311,119 @@ Module .. ROOT 0,0 -> 8,0
       None
 """),
 
+(r"""""", None, 0, 0, None, None, r"""i""", r"""i
+""", r"""
+Module .. ROOT 0,0 -> 1,0
+  .body[1]
+  0] Expr .. 0,0 -> 0,1
+    .value
+      Name 'i' Load .. 0,0 -> 0,1
+"""),
+
+(r"""
+""", None, 0, 0, None, None, r"""i""", r"""
+i
+""", r"""
+Module .. ROOT 0,0 -> 2,0
+  .body[1]
+  0] Expr .. 1,0 -> 1,1
+    .value
+      Name 'i' Load .. 1,0 -> 1,1
+"""),
+
+(r"""
+
+""", None, 0, 0, None, None, r"""i""", r"""
+
+i
+""", r"""
+Module .. ROOT 0,0 -> 3,0
+  .body[1]
+  0] Expr .. 2,0 -> 2,1
+    .value
+      Name 'i' Load .. 2,0 -> 2,1
+"""),
+
+(r"""
+# comment
+""", None, 0, 0, None, None, r"""i""", r"""
+# comment
+i
+""", r"""
+Module .. ROOT 0,0 -> 3,0
+  .body[1]
+  0] Expr .. 2,0 -> 2,1
+    .value
+      Name 'i' Load .. 2,0 -> 2,1
+"""),
+
+(r"""
+
+# comment
+
+# another comment
+""", None, 0, 0, None, None, r"""i""", r"""
+
+# comment
+
+# another comment
+i
+""", r"""
+Module .. ROOT 0,0 -> 6,0
+  .body[1]
+  0] Expr .. 5,0 -> 5,1
+    .value
+      Name 'i' Load .. 5,0 -> 5,1
+"""),
+
+(r"""
+
+# comment
+
+# another comment
+i
+""", None, 0, 0, None, None, r"""h""", r"""
+
+# comment
+
+# another comment
+h
+i
+""", r"""
+Module .. ROOT 0,0 -> 7,0
+  .body[2]
+  0] Expr .. 5,0 -> 5,1
+    .value
+      Name 'h' Load .. 5,0 -> 5,1
+  1] Expr .. 6,0 -> 6,1
+    .value
+      Name 'i' Load .. 6,0 -> 6,1
+"""),
+
+(r"""
+
+# comment
+
+# another comment
+i
+""", None, 1, 1, None, None, r"""j""", r"""
+
+# comment
+
+# another comment
+i
+j
+""", r"""
+Module .. ROOT 0,0 -> 7,0
+  .body[2]
+  0] Expr .. 5,0 -> 5,1
+    .value
+      Name 'i' Load .. 5,0 -> 5,1
+  1] Expr .. 6,0 -> 6,1
+    .value
+      Name 'j' Load .. 6,0 -> 6,1
+"""),
+
 ]  # END OF PUT_SLICE_STMT_DATA
 
 
@@ -13286,7 +13399,7 @@ finally:
     def test_put_slice_stmt(self):
         for dst, stmt, start, stop, field, fmt, src, put_src, put_dump in PUT_SLICE_STMT_DATA:
             t = parse(dst)
-            f = eval(f't.{stmt}', {'t': t}).f
+            f = (eval(f't.{stmt}', {'t': t}) if stmt else t).f
 
             f.put_slice(None if src == '**DEL**' else src, start, stop, field,
                         fmt=fst.DEFAULT_SRC_EDIT_FMT if fmt is None else fmt)
@@ -13596,7 +13709,7 @@ def regen_put_slice_stmt_data():
 
     for dst, stmt, start, stop, field, fmt, src, put_src, put_dump in PUT_SLICE_STMT_DATA:
         t = parse(dst)
-        f = eval(f't.{stmt}', {'t': t}).f
+        f = (eval(f't.{stmt}', {'t': t}) if stmt else t).f
 
         f.put_slice(None if src == '**DEL**' else src, start, stop, field,
                     fmt=fst.DEFAULT_SRC_EDIT_FMT if fmt is None else fmt)

@@ -1447,7 +1447,7 @@ class FSTSrcEdit:
                     put_fst.touch()
 
             elif fpost:  # no preceding statement, only trailing
-                if is_handler:  # special case, start will be after last statement or just after 'try:' colon
+                if is_handler or fst.is_root:  # special case, start will be after last statement or just after 'try:' colon or if is mod then there is no colon
                     ln, col = block_loc[:2]
 
                 else:
@@ -1460,7 +1460,10 @@ class FSTSrcEdit:
 
                     assert ln < block_loc.end_ln
 
-                put_loc = fstloc(ln, col, ln + 1, 0)
+                if block_loc.end_ln > ln:
+                    put_loc = fstloc(ln, col, ln + 1, 0)
+                else:
+                    put_loc = fstloc(ln, col, ln, block_loc.end_col)
 
                 if (l := put_fst._lines[-1]) and not re_empty_line.match(l):
                     put_fst._lines.append(bistr(''))
@@ -1496,7 +1499,8 @@ class FSTSrcEdit:
 
             # we always insert statements (or blocks of them) as their own lines
 
-            put_fst.put_lines(['', ''], 0, 0, 0, 0, False)
+            if fpre or not fst.is_root or put_loc.col:  # don't put initial empty line if putting on a first line in a mod
+                put_fst.put_lines(['', ''], 0, 0, 0, 0, False)
 
             if (l := put_fst._lines[-1]) and not re_empty_line.match(l):
                 put_fst._lines.append(bistr(''))
@@ -2250,7 +2254,7 @@ class FST:
         - `indent`: The indentation to use for the relocated line if already known, saves a call to `get_indent()`.
         """
 
-        if not (block := getattr(self.a, field)) or not isinstance(block, list):
+        if isinstance(self.a, mod) or not (block := getattr(self.a, field)) or not isinstance(block, list):
             return
 
         b0                  = block[0].f
@@ -2807,6 +2811,8 @@ class FST:
             put_fst = _normalize_code(code, 'mod', parse_params=self.root.parse_params)
             put_ast = put_fst.a
 
+
+
             # raise NotImplementedError
 
             # if not isinstance(put_ast, STATEMENTISH_OR_STMTMOD):
@@ -2830,7 +2836,7 @@ class FST:
 
         if put_fst:
             opener_indent = self.get_indent()
-            block_indent  = opener_indent + root.indent
+            block_indent  = opener_indent if self.is_root else opener_indent + root.indent
 
             if fpre or fpost:
                 self._normalize_block(field, indent=block_indent)  # don't want to bother figuring out if valid to insert to statements on single block logical line
@@ -2852,7 +2858,11 @@ class FST:
                 is_last_child = not fpost and not fpre.next()
 
             elif fpost:
-                if field != 'handlers' or ast.body:
+                if isinstance(ast, mod):  # put after all header stuff in module
+                    ln, col, _, _ = fpost.bloc
+                    block_loc     = fstloc(ln, col, ln, col)
+
+                elif field != 'handlers' or ast.body:
                     block_loc = fstloc(*fpost._prev_ast_bound(), *fpost.bloc[:2])
 
                 else:  # special case because 'try:' doesn't have ASTs inside it and each 'except:' lives at the 'try:' indentation level
@@ -2866,6 +2876,12 @@ class FST:
 
             elif isinstance(ast, (FunctionDef, AsyncFunctionDef, ClassDef, With, AsyncWith, Match, match_case)):  # only one block possible, 'body' or 'cases'
                 block_loc     = fstloc(*self.bloc[2:], *self._next_ast_bound())
+                is_last_child = True
+
+            elif isinstance(ast, mod):  # put after all header stuff in module
+                _, _, end_ln, end_col = self.bloc
+
+                block_loc     = fstloc(end_ln, end_col, end_ln, end_col)
                 is_last_child = True
 
             elif isinstance(ast, (For, AsyncFor, While, If)):  # 'body' or 'orelse'
