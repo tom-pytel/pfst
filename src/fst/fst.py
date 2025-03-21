@@ -2862,7 +2862,7 @@ class FST:
         else:  # insertion
             ffirst = flast = None
 
-            if field == 'orelse' and len(body) == 1 and (f := body[0].f).is_elif:
+            if field == 'orelse' and len(body) == 1 and (f := body[0].f).is_elif():
                 f._elif_to_else_if()
 
             if fpre:
