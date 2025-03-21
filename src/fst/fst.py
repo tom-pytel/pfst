@@ -2920,104 +2920,106 @@ class FST:
 
                 is_last_child = False
 
-            # insertion into empty block (or nonexistent 'else' or 'finally' block)
+            else:  # insertion into empty block (or nonexistent 'else' or 'finally' block)
+                if not put_body and field in ('orelse', 'finalbody'):
+                    raise ValueError(f"cannot insert empty statement into empty '{field}' field")
 
-            elif isinstance(ast, (FunctionDef, AsyncFunctionDef, ClassDef, With, AsyncWith, Match, ExceptHandler,
-                                  match_case)):  # only one block possible, 'body' or 'cases'
-                block_loc     = fstloc(*self.bloc[2:], *self._next_ast_bound())  # end of bloc will be just past ':'
-                is_last_child = True
-
-            elif isinstance(ast, mod):  # put after all header stuff in module
-                _, _, end_ln, end_col = self.bloc
-
-                block_loc     = fstloc(end_ln, end_col, end_ln, end_col)
-                is_last_child = True
-
-            elif isinstance(ast, (For, AsyncFor, While, If)):  # 'body' or 'orelse'
-                if field == 'orelse':
+                if isinstance(ast, (FunctionDef, AsyncFunctionDef, ClassDef, With, AsyncWith, Match, ExceptHandler,
+                                    match_case)):  # only one block possible, 'body' or 'cases'
+                    block_loc     = fstloc(*self.bloc[2:], *self._next_ast_bound())  # end of bloc will be just past ':'
                     is_last_child = True
 
-                    if not (body_ := ast.body):
-                        block_loc = fstloc(*self.bloc[2:], *self._next_ast_bound())
-                    else:
-                        block_loc = fstloc(*body_[-1].f.bloc[2:], *self._next_ast_bound())
+                elif isinstance(ast, mod):  # put after all header stuff in module
+                    _, _, end_ln, end_col = self.bloc
 
-                else:  # field == 'body':
-                    if orelse := ast.orelse:
-                        ln, col       = _next_find(lines, *(f := orelse[0].f).prev().bloc[2:], *f.bloc[:2], ':')  # we know its there
-                        block_loc     = fstloc(ln, col + 1, *orelse[0].f.bloc[:2])
-                        is_last_child = False
+                    block_loc     = fstloc(end_ln, end_col, end_ln, end_col)
+                    is_last_child = True
 
-                    else:
-                        block_loc     = fstloc(*self.bloc[2:], *self._next_ast_bound())
+                elif isinstance(ast, (For, AsyncFor, While, If)):  # 'body' or 'orelse'
+                    if field == 'orelse':
                         is_last_child = True
 
-            else:  # isinstance(ast, (Try, TryStar))
-                assert isinstance(ast, (Try, TryStar))
+                        if not (body_ := ast.body):
+                            block_loc = fstloc(*self.bloc[2:], *self._next_ast_bound())
+                        else:
+                            block_loc = fstloc(*body_[-1].f.bloc[2:], *self._next_ast_bound())
 
-                if field == 'finalbody':
-                    is_last_child = True
+                    else:  # field == 'body':
+                        if orelse := ast.orelse:
+                            ln, col       = _next_find(lines, *(f := orelse[0].f).prev().bloc[2:], *f.bloc[:2], ':')  # we know its there
+                            block_loc     = fstloc(ln, col + 1, *orelse[0].f.bloc[:2])
+                            is_last_child = False
 
-                    if not (block := ast.orelse) and not (block := ast.handlers) and not (block := ast.body):
-                        block_loc = fstloc(*self.bloc[2:], *self._next_ast_bound())
-                    else:
-                        block_loc = fstloc(*block[-1].f.bloc[2:], *self._next_ast_bound())
+                        else:
+                            block_loc     = fstloc(*self.bloc[2:], *self._next_ast_bound())
+                            is_last_child = True
 
-                elif field == 'orelse':
-                    if finalbody := ast.finalbody:
-                        end_ln, end_col = _prev_find(lines, *self.bloc[:2], *finalbody[0].f.bloc[:2], 'finally')  # we can use bloc[:2] even if there are ASTs between that and here because 'finally' must be on its own line
-                        is_last_child   = False
+                else:  # isinstance(ast, (Try, TryStar))
+                    assert isinstance(ast, (Try, TryStar))
 
-                    else:
-                        end_ln, end_col = self._next_ast_bound()
-                        is_last_child   = True
+                    if field == 'finalbody':
+                        is_last_child = True
 
-                    if not (block := ast.handlers) and not (block := ast.body):
+                        if not (block := ast.orelse) and not (block := ast.handlers) and not (block := ast.body):
+                            block_loc = fstloc(*self.bloc[2:], *self._next_ast_bound())
+                        else:
+                            block_loc = fstloc(*block[-1].f.bloc[2:], *self._next_ast_bound())
+
+                    elif field == 'orelse':
+                        if finalbody := ast.finalbody:
+                            end_ln, end_col = _prev_find(lines, *self.bloc[:2], *finalbody[0].f.bloc[:2], 'finally')  # we can use bloc[:2] even if there are ASTs between that and here because 'finally' must be on its own line
+                            is_last_child   = False
+
+                        else:
+                            end_ln, end_col = self._next_ast_bound()
+                            is_last_child   = True
+
+                        if not (block := ast.handlers) and not (block := ast.body):
+                            ln, col   = _prev_find(lines, *self.bloc[:2], end_ln, end_col, ':')
+                            block_loc = fstloc(ln, col + 1, end_ln, end_col)
+
+                        else:
+                            block_loc = fstloc(*block[-1].f.bloc[2:], end_ln, end_col)
+
+                    elif field == 'handlers':
+                        if orelse := ast.orelse:
+                            end_ln, end_col = _prev_find(lines, *self.bloc[:2], *orelse[0].f.bloc[:2], 'else')
+                            is_last_child   = False
+
+                        elif finalbody := ast.finalbody:
+                            end_ln, end_col = _prev_find(lines, *self.bloc[:2], *finalbody[0].f.bloc[:2], 'finally')
+                            is_last_child   = False
+
+                        else:
+                            end_ln, end_col = self._next_ast_bound()
+                            is_last_child   = True
+
+                        if not (body_ := ast.body):
+                            ln, col   = _prev_find(lines, *self.bloc[:2], end_ln, end_col, ':')
+                            block_loc = fstloc(ln, col + 1, end_ln, end_col)
+
+                        else:
+                            block_loc = fstloc(*body_[-1].f.bloc[2:], end_ln, end_col)
+
+                    else:  # field == 'body'
+                        if handlers := ast.handlers:
+                            end_ln, end_col = handlers[0].f.bloc[:2]
+                            is_last_child   = False
+
+                        elif orelse := ast.orelse:
+                            end_ln, end_col = _prev_find(lines, *self.bloc[:2], *orelse[0].f.bloc[:2], 'else')
+                            is_last_child   = False
+
+                        elif finalbody := ast.finalbody:
+                            end_ln, end_col = _prev_find(lines, *self.bloc[:2], *finalbody[0].f.bloc[:2], 'finally')
+                            is_last_child   = False
+
+                        else:
+                            end_ln, end_col = self._next_ast_bound()
+                            is_last_child   = True
+
                         ln, col   = _prev_find(lines, *self.bloc[:2], end_ln, end_col, ':')
                         block_loc = fstloc(ln, col + 1, end_ln, end_col)
-
-                    else:
-                        block_loc = fstloc(*block[-1].f.bloc[2:], end_ln, end_col)
-
-                elif field == 'handlers':
-                    if orelse := ast.orelse:
-                        end_ln, end_col = _prev_find(lines, *self.bloc[:2], *orelse[0].f.bloc[:2], 'else')
-                        is_last_child   = False
-
-                    elif finalbody := ast.finalbody:
-                        end_ln, end_col = _prev_find(lines, *self.bloc[:2], *finalbody[0].f.bloc[:2], 'finally')
-                        is_last_child   = False
-
-                    else:
-                        end_ln, end_col = self._next_ast_bound()
-                        is_last_child   = True
-
-                    if not (body_ := ast.body):
-                        ln, col   = _prev_find(lines, *self.bloc[:2], end_ln, end_col, ':')
-                        block_loc = fstloc(ln, col + 1, end_ln, end_col)
-
-                    else:
-                        block_loc = fstloc(*body_[-1].f.bloc[2:], end_ln, end_col)
-
-                else:  # field == 'body'
-                    if handlers := ast.handlers:
-                        end_ln, end_col = handlers[0].f.bloc[:2]
-                        is_last_child   = False
-
-                    elif orelse := ast.orelse:
-                        end_ln, end_col = _prev_find(lines, *self.bloc[:2], *orelse[0].f.bloc[:2], 'else')
-                        is_last_child   = False
-
-                    elif finalbody := ast.finalbody:
-                        end_ln, end_col = _prev_find(lines, *self.bloc[:2], *finalbody[0].f.bloc[:2], 'finally')
-                        is_last_child   = False
-
-                    else:
-                        end_ln, end_col = self._next_ast_bound()
-                        is_last_child   = True
-
-                    ln, col   = _prev_find(lines, *self.bloc[:2], end_ln, end_col, ':')
-                    block_loc = fstloc(ln, col + 1, end_ln, end_col)
 
         if isinstance(fmt, str):
             fmt = frozenset(t for s in fmt.split(',') if (t := s.strip()))

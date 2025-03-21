@@ -10578,6 +10578,273 @@ Module .. ROOT 0,0 -> 7,0
       None
 """),
 
+(r"""
+def f():
+    i
+""", 'body[0]', 0, 0, None, None, r"""# comment""", r"""
+def f():
+    # comment
+    i
+""", r"""
+Module .. ROOT 0,0 -> 4,0
+  .body[1]
+  0] FunctionDef .. 1,0 -> 3,5
+    .name
+      'f'
+    .args
+      arguments
+        .vararg
+          None
+        .kwarg
+          None
+    .body[1]
+    0] Expr .. 3,4 -> 3,5
+      .value
+        Name 'i' Load .. 3,4 -> 3,5
+    .returns
+      None
+    .type_comment
+      None
+"""),
+
+(r"""
+def f():
+    i
+""", 'body[0]', 1, 1, None, None, r"""# comment""", r"""
+def f():
+    i
+    # comment
+""", r"""
+Module .. ROOT 0,0 -> 4,0
+  .body[1]
+  0] FunctionDef .. 1,0 -> 2,5
+    .name
+      'f'
+    .args
+      arguments
+        .vararg
+          None
+        .kwarg
+          None
+    .body[1]
+    0] Expr .. 2,4 -> 2,5
+      .value
+        Name 'i' Load .. 2,4 -> 2,5
+    .returns
+      None
+    .type_comment
+      None
+"""),
+
+(r"""
+def f():
+    i ; j
+""", 'body[0]', 0, 0, None, None, r"""# comment""", r"""
+def f():
+    # comment
+    i ; j
+""", r"""
+Module .. ROOT 0,0 -> 4,0
+  .body[1]
+  0] FunctionDef .. 1,0 -> 3,9
+    .name
+      'f'
+    .args
+      arguments
+        .vararg
+          None
+        .kwarg
+          None
+    .body[2]
+    0] Expr .. 3,4 -> 3,5
+      .value
+        Name 'i' Load .. 3,4 -> 3,5
+    1] Expr .. 3,8 -> 3,9
+      .value
+        Name 'j' Load .. 3,8 -> 3,9
+    .returns
+      None
+    .type_comment
+      None
+"""),
+
+(r"""
+def f():
+    i ; j
+""", 'body[0]', 1, 1, None, None, r"""# comment""", r"""
+def f():
+    i
+    # comment
+    j
+""", r"""
+Module .. ROOT 0,0 -> 5,0
+  .body[1]
+  0] FunctionDef .. 1,0 -> 4,5
+    .name
+      'f'
+    .args
+      arguments
+        .vararg
+          None
+        .kwarg
+          None
+    .body[2]
+    0] Expr .. 2,4 -> 2,5
+      .value
+        Name 'i' Load .. 2,4 -> 2,5
+    1] Expr .. 4,4 -> 4,5
+      .value
+        Name 'j' Load .. 4,4 -> 4,5
+    .returns
+      None
+    .type_comment
+      None
+"""),
+
+(r"""
+def f():
+    i ; j
+""", 'body[0]', 2, 2, None, None, r"""# comment""", r"""
+def f():
+    i ; j
+    # comment
+""", r"""
+Module .. ROOT 0,0 -> 4,0
+  .body[1]
+  0] FunctionDef .. 1,0 -> 2,9
+    .name
+      'f'
+    .args
+      arguments
+        .vararg
+          None
+        .kwarg
+          None
+    .body[2]
+    0] Expr .. 2,4 -> 2,5
+      .value
+        Name 'i' Load .. 2,4 -> 2,5
+    1] Expr .. 2,8 -> 2,9
+      .value
+        Name 'j' Load .. 2,8 -> 2,9
+    .returns
+      None
+    .type_comment
+      None
+"""),
+
+(r"""
+def f():
+    i \
+  \
+  ; \
+  j
+""", 'body[0]', 0, 0, None, None, r"""# comment""", r"""
+def f():
+    # comment
+    i \
+  \
+  ; \
+  j
+""", r"""
+Module .. ROOT 0,0 -> 7,0
+  .body[1]
+  0] FunctionDef .. 1,0 -> 6,3
+    .name
+      'f'
+    .args
+      arguments
+        .vararg
+          None
+        .kwarg
+          None
+    .body[2]
+    0] Expr .. 3,4 -> 3,5
+      .value
+        Name 'i' Load .. 3,4 -> 3,5
+    1] Expr .. 6,2 -> 6,3
+      .value
+        Name 'j' Load .. 6,2 -> 6,3
+    .returns
+      None
+    .type_comment
+      None
+"""),
+
+(r"""
+def f():
+    i \
+  \
+  ; \
+  j
+""", 'body[0]', 1, 1, None, None, r"""# comment""", r"""
+def f():
+    i
+    # comment
+    j
+""", r"""
+Module .. ROOT 0,0 -> 5,0
+  .body[1]
+  0] FunctionDef .. 1,0 -> 4,5
+    .name
+      'f'
+    .args
+      arguments
+        .vararg
+          None
+        .kwarg
+          None
+    .body[2]
+    0] Expr .. 2,4 -> 2,5
+      .value
+        Name 'i' Load .. 2,4 -> 2,5
+    1] Expr .. 4,4 -> 4,5
+      .value
+        Name 'j' Load .. 4,4 -> 4,5
+    .returns
+      None
+    .type_comment
+      None
+"""),
+
+(r"""
+def f():
+    i \
+  \
+  ; \
+  j
+""", 'body[0]', 2, 2, None, None, r"""# comment""", r"""
+def f():
+    i \
+  \
+  ; \
+  j
+    # comment
+""", r"""
+Module .. ROOT 0,0 -> 7,0
+  .body[1]
+  0] FunctionDef .. 1,0 -> 5,3
+    .name
+      'f'
+    .args
+      arguments
+        .vararg
+          None
+        .kwarg
+          None
+    .body[2]
+    0] Expr .. 2,4 -> 2,5
+      .value
+        Name 'i' Load .. 2,4 -> 2,5
+    1] Expr .. 5,2 -> 5,3
+      .value
+        Name 'j' Load .. 5,2 -> 5,3
+    .returns
+      None
+    .type_comment
+      None
+"""),
+
 ]  # END OF PUT_SLICE_STMT_DATA
 
 
@@ -14387,6 +14654,147 @@ if indented:
                 # f.put_slice(bs.pop(), 0, 0, field=field)
                 f._put_slice_stmt(bs.pop(), 0, 0, field, True, fst_.DEFAULT_SRC_EDIT_FMT, fst_.DEFAULT_DOCSTR, force=True)
 
+    def test_insert_comment_into_empty_field(self):
+        fst = parse('''
+match a:
+    case 1:  # CASE
+        pass
+
+match b:  # MATCH
+    case 2:
+        pass
+
+if 1:  # IF
+    pass
+
+try:  # TRY
+    pass
+except:  # EXCEPT
+    pass
+
+for a in b:  # FOR
+    pass
+
+async for a in b:  # ASYNC FOR
+    pass
+
+while a in b:  # WHILE
+    pass
+
+with a as b:  # WITH
+    pass
+
+async with a as b:  # ASYNC WITH
+    pass
+
+def func(a = """ \\\\ not linecont
+         # comment
+         """, **e):
+    pass
+
+@asyncdeco
+async def func():  # ASYNC FUNC
+    pass
+
+class cls:  # CLASS
+    pass
+
+if clause:
+    while something:  # WHILE
+        pass
+
+if indented:
+    try:  # TRY
+        pass
+    except:  # EXCEPT
+        pass
+'''.lstrip()).f
+
+        fst.body[1].cases[0].cut()
+        # fst.body[1].put_slice('pass')
+        fst.body[1]._put_slice_stmt('pass', None, None, None, True, fst_.DEFAULT_SRC_EDIT_FMT, fst_.DEFAULT_DOCSTR, force=True)
+
+        points = [
+            (fst.body[0].cases[0], 'body'),
+            (fst.body[1], 'cases'),
+            (fst.body[2], 'body'),
+
+            (fst.body[3], 'body'),
+            (fst.body[3], 'handlers'),
+
+            (fst.body[4], 'body'),
+            (fst.body[5], 'body'),
+            (fst.body[6], 'body'),
+            (fst.body[7], 'body'),
+            (fst.body[8], 'body'),
+            (fst.body[9], 'body'),
+            (fst.body[10], 'body'),
+            (fst.body[11], 'body'),
+            (fst.body[12].body[0], 'body'),
+
+            (fst.body[13].body[0], 'body'),
+            (fst.body[13].body[0], 'handlers'),
+        ]
+
+        for point, field in points:
+            point.get_slice(field=field, cut=True)
+
+        for i, (point, field) in enumerate(reversed(points)):
+            point._put_slice_stmt(f'# {i}', 0, 0, field, True, fst_.DEFAULT_SRC_EDIT_FMT, fst_.DEFAULT_DOCSTR, force=True)
+
+        self.assertEqual(fst.lines, [
+            'match a:',
+            '    case 1:  # CASE',
+            '        # 15',
+            '',
+            'match b:  # MATCH',
+            '    # 14',
+            '',
+            'if 1:  # IF',
+            '    # 13',
+            '',
+            'try:  # TRY',
+            '    # 12',
+            '# 11',
+            '',
+            'for a in b:  # FOR',
+            '    # 10',
+            '',
+            'async for a in b:  # ASYNC FOR',
+            '    # 9',
+            '',
+            'while a in b:  # WHILE',
+            '    # 8',
+            '',
+            'with a as b:  # WITH',
+            '    # 7',
+            '',
+            'async with a as b:  # ASYNC WITH',
+            '    # 6',
+            '',
+            'def func(a = """ \\\\ not linecont',
+            '         # comment',
+            '         """, **e):',
+            '    # 5',
+            '',
+            '@asyncdeco',
+            'async def func():  # ASYNC FUNC',
+            '    # 4',
+            '',
+            'class cls:  # CLASS',
+            '    # 3',
+            '',
+            'if clause:',
+            '    while something:  # WHILE',
+            '        # 2',
+            '',
+            'if indented:',
+            '    try:  # TRY',
+            '        # 1',
+            '    # 0',
+            ''
+        ])
+
     def test_insert_special(self):
         a = parse('''
 pass
@@ -14422,192 +14830,6 @@ else:
 finally:
     pass
             '''.strip())
-
-    def test_insert_comment(self):
-        fst = parse('''
-match a:
-    case 1:  # CASE
-        pass
-
-match b:  # MATCH
-    case 2:
-        pass
-
-if 1:  # IF
-    pass
-else:  # ELSE
-    pass
-
-try:  # TRY
-    pass
-except:  # EXCEPT
-    pass
-else:  # delelse
-    pass
-finally:  # delfinally
-    pass
-
-for a in b:  # FOR
-    pass
-else:  # delelse
-    pass
-
-async for a in b:  # ASYNC FOR
-    pass
-else:  # delelse
-    pass
-
-while a in b:  # WHILE
-    pass
-else:  # delelse
-    pass
-
-with a as b:  # WITH
-    pass
-
-async with a as b:  # ASYNC WITH
-    pass
-
-def func(a = """ \\\\ not linecont
-         # comment
-         """, **e):
-    pass
-
-@asyncdeco
-async def func():  # ASYNC FUNC
-    pass
-
-class cls:  # CLASS
-    pass
-
-if clause:
-    while something:  # WHILE
-        pass
-    else:  # delelse
-        pass
-
-if indented:
-    try:  # TRY
-        pass
-    except:  # EXCEPT
-        pass
-    else:  # delelse
-        pass
-    finally:  # delelse
-        pass
-'''.lstrip()).f
-
-        fst.body[1].cases[0].cut()
-        # fst.body[1].put_slice('pass')
-        fst.body[1]._put_slice_stmt('pass', None, None, None, True, fst_.DEFAULT_SRC_EDIT_FMT, fst_.DEFAULT_DOCSTR, force=True)
-
-        points = [
-            (fst.body[0].cases[0], 'body'),
-            (fst.body[1], 'cases'),
-            (fst.body[2], 'body'),
-            (fst.body[2], 'orelse'),
-
-            (fst.body[3], 'body'),
-            (fst.body[3], 'handlers'),
-            (fst.body[3], 'orelse'),
-            (fst.body[3], 'finalbody'),
-
-            (fst.body[4], 'body'),
-            (fst.body[4], 'orelse'),
-            (fst.body[5], 'body'),
-            (fst.body[5], 'orelse'),
-            (fst.body[6], 'body'),
-            (fst.body[6], 'orelse'),
-            (fst.body[7], 'body'),
-            (fst.body[8], 'body'),
-            (fst.body[9], 'body'),
-            (fst.body[10], 'body'),
-            (fst.body[11], 'body'),
-            (fst.body[12].body[0], 'body'),
-            (fst.body[12].body[0], 'orelse'),
-
-            (fst.body[13].body[0], 'body'),
-            (fst.body[13].body[0], 'handlers'),
-            (fst.body[13].body[0], 'orelse'),
-            (fst.body[13].body[0], 'finalbody'),
-        ]
-
-        for point, field in points:
-            point.get_slice(field=field, cut=True)
-
-        for i, (point, field) in enumerate(reversed(points)):
-            point._put_slice_stmt(f'# {i}', 0, 0, field, True, fst_.DEFAULT_SRC_EDIT_FMT, fst_.DEFAULT_DOCSTR, force=True)
-
-        self.assertEqual(fst.lines, [
-            'match a:',
-            '    case 1:  # CASE',
-            '        # 24',
-            '',
-            'match b:  # MATCH',
-            '    # 23',
-            '',
-            'if 1:  # IF',
-            '    # 22',
-            'else:',
-            '    # 21',
-            '',
-            'try:  # TRY',
-            'finally:',
-            'else:',
-            '    # 20',
-            '# 19',
-            '    # 18',
-            '    # 17',
-            '',
-            'for a in b:  # FOR',
-            '    # 16',
-            'else:',
-            '    # 15',
-            '',
-            'async for a in b:  # ASYNC FOR',
-            '    # 14',
-            'else:',
-            '    # 13',
-            '',
-            'while a in b:  # WHILE',
-            '    # 12',
-            'else:',
-            '    # 11',
-            '',
-            'with a as b:  # WITH',
-            '    # 10',
-            '',
-            'async with a as b:  # ASYNC WITH',
-            '    # 9',
-            '',
-            'def func(a = """ \\\\ not linecont',
-            '         # comment',
-            '         """, **e):',
-            '    # 8',
-            '',
-            '@asyncdeco',
-            'async def func():  # ASYNC FUNC',
-            '    # 7',
-            '',
-            'class cls:  # CLASS',
-            '    # 6',
-            '',
-            'if clause:',
-            '    while something:  # WHILE',
-            '        # 5',
-            '    else:',
-            '        # 4',
-            '',
-            'if indented:',
-            '    try:  # TRY',
-            '    finally:',
-            '    else:',
-            '        # 3',
-            '    # 2',
-            '        # 1',
-            '        # 0',
-            ''
-        ])
 
     def test_get_slice_seq_copy(self):
         for src, elt, start, stop, _, slice_copy, _, slice_dump in GET_SLICE_SEQ_CUT_DATA:
