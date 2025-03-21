@@ -937,10 +937,11 @@ class FSTSrcEdit:
         **Parameters:**
         - `fmt`: Set of string formatting flags. Unrecognized and inapplicable flags are ignored, recognized flags are:
             - `'post'`: Only comment trailing on line of position, nothing past that on its own lines.
+            - `'blkpost'`: Single contiguous comment block following position.
             - `'allpost'`: Comment blocks (possibly separated by empty lines) following position.
         """
 
-        if not (allpost := 'allpost' in fmt) and 'post' not in fmt:
+        if not (blkpost := (allpost := 'allpost' in fmt)) and not (blkpost := 'blkpost' in fmt) and 'post' not in fmt:
             return None
 
         if single_ln := bound_end_ln == bound_ln:
@@ -952,18 +953,22 @@ class FSTSrcEdit:
             if not code.src.startswith('#'):
                 return None
 
-            if not allpost:
+            if not blkpost:
                 return (bound_ln, bound_end_col) if single_ln else (bound_ln + 1, 0)
 
-        elif not allpost or single_ln:
+        elif not blkpost or single_ln:
             return None
 
         for ln in range(bound_ln + 1, bound_end_ln + 1):
             if not (m := re_empty_line_cont_or_comment.match(lines[ln])):
                 break
 
-            if (g := m.group(1)) and g.startswith('#'):
-                bound_ln = ln
+            if g := m.group(1):
+                if g.startswith('#'):
+                    bound_ln = ln
+
+            elif not allpost:
+                break
 
         return (bound_ln, bound_end_col) if bound_ln == bound_end_ln else (bound_ln + 1, 0)
 
@@ -1132,6 +1137,7 @@ class FSTSrcEdit:
                 statement(s).
             - `'post'`: Copy and delete comment trailing on last line. Keep in mind this is the comment on the last
                 statement of a body if last element of copy is a block element.
+            - `'blkpost'`: Copy and delete single contiguous comment block following statement(s).
             - `'allpost'`: Copy and delete all comment blocks (possibly separated by empty lines) following
                 statement(s).
             - `'pep8'`: Does not actually reformat code according to PEP 8, just deletes up one or two empty lines
@@ -1377,6 +1383,7 @@ class FSTSrcEdit:
                 statement(s).
             - `'post'`: replace comment trailing on last line. Keep in mind this is the comment on the last
                 statement of a body if last element of copy is a block element.
+            - `'blkpost'`: Replace single contiguous comment block following statement(s).
             - `'allpost'`: Replace all comment blocks (possibly separated by empty lines) following statement(s).
             - `'pep8'`: Does not actually reformat code according to PEP 8, just inserts up one or two empty lines
                 before non-first function or class being put according to destination if is top level scope or not. Also
@@ -4914,6 +4921,7 @@ class FST:
             - `'allpre'`: Comment blocks (possibly separated by empty lines) preceding statement(s).
             - `'post'`: Comment trailing on last line. Keep in mind this is the comment on the last statement of a body
                 if last element of copy is a block element.
+            - `'blkpost'`: Contiguous comment block following statement(s).
             - `'allpost'`: Comment blocks (possibly separated by empty lines) following statement(s).
 
         **Returns:**
