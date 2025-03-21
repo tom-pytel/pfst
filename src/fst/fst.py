@@ -903,7 +903,7 @@ class FSTSrcEdit:
         **Parameters:**
         - `fmt`: Set of string formatting flags. Unrecognized and inapplicable flags are ignored, recognized flags are:
             - `'pre'`: Contiguous comment block immediately preceding position.
-            - `'allpre'`: Comment blocks (possibly separated by empty lines) immediately preceding position.
+            - `'allpre'`: Comment blocks (possibly separated by empty lines) preceding position.
         """
 
         if not (allpre := 'allpre' in fmt) and 'pre' not in fmt:
@@ -936,7 +936,7 @@ class FSTSrcEdit:
 
         **Parameters:**
         - `fmt`: Set of string formatting flags. Unrecognized and inapplicable flags are ignored, recognized flags are:
-            - `'post'`: Only possible comment trailing on line of position, nothing on its own lines.
+            - `'post'`: Only comment trailing on line of position, nothing past that on its own lines.
         """
 
         if 'post' not in fmt:
@@ -1345,8 +1345,6 @@ class FSTSrcEdit:
         prepended to `put_fst` for the final put. If replacing whole body of 'orelse' or 'finalbody' then the original
         'else:' or 'finally:' is not deleted (along with any preceding comments or spaces).
 
-        `block_loc` m
-
         Block being inserted into assumed to be normalized (no statement or multiple statements on block opener logical
         line).
 
@@ -1368,7 +1366,7 @@ class FSTSrcEdit:
                 future may specify additional PEP 8 behavior.
             - `'space*'`: Can be only `'space'` or with a number `'space3'`. Indicates that up to this many preceding
                 empty lines should be replaced. If no count specified then it means all empty lines. Empty line
-                continuations are considered empty lines. `'pep8'` applies after `space` to add preceding lines.
+                continuations are considered empty lines. `'pep8'` applies after `'space'` to add preceding lines.
             - `'elif'`: If putting a single `If` statement to an `orelse` field of a parent `If` statement then put it
                 as an `elif`.
         - `opener_indent`: The indent string of the block opener being put to (`if`, `with`, `class`, etc...), not the
@@ -2273,7 +2271,9 @@ class FST:
         self.put_lines(['', indent], ln, col + 1, b0_ln, b0_col, False)
 
     def _elif_to_else_if(self):
-        """Make sure to only call on an actual `elif`."""
+        """Covnert an 'elif something:\\n  ...' to 'else:\\n  if something:\\n    ...'. Make sure to only call on an
+        actual `elif`, meaning the lone `If` statement in the parent's `orelse` block which is an actual `elif` and not
+        an `if`."""
 
         indent = self.get_indent()
 
@@ -2798,7 +2798,7 @@ class FST:
                 key.f.pfield = astfield('keys', i)
 
     def _put_slice_stmt(self, code: Code | None, start: int | None, stop: int | None, field: str | None,
-                        fix: bool, fmt: Fmt, docstr: bool | str, *, force: bool = False):  # TODO: `force` is for some previously written tests but really should fix those tests instead
+                        fix: bool, fmt: Fmt, docstr: bool | str, *, force: bool = False):  # TODO: `force` is for some previously written tests, but really should fix those tests instead
         ast         = self.a
         field, body = _fixup_field_body(ast, field)
 
@@ -2843,6 +2843,9 @@ class FST:
 
         else:  # insertion
             ffirst = flast = None
+
+            if field == 'orelse' and len(body) == 1 and (f := body[0].f).is_elif:
+                f._elif_to_else_if()
 
             if fpre:
                 block_loc     = fstloc(*fpre.bloc[2:], *(fpost.bloc[:2] if fpost else fpre._next_ast_bound()))
@@ -4890,7 +4893,7 @@ class FST:
         - `fmt': Which comments to include, can be comma delimited string or a set of flags. `True` means `'pre,post'`,
             `False` means no comments, recognized flags are:
             - `'pre'`: Contiguous comment block immediately preceding statement(s).
-            - `'allpre'`: Comment blocks (possibly separated by empty lines) immediately preceding statement(s).
+            - `'allpre'`: Comment blocks (possibly separated by empty lines) preceding statement(s).
             - `'post'`: Comment trailing on last line. Keep in mind this is the comment on the last statement of a body
                 if last element of copy is a block element.
 

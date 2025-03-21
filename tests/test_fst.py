@@ -9425,6 +9425,386 @@ Module .. ROOT 0,0 -> 7,0
       Name 'j' Load .. 6,0 -> 6,1
 """),
 
+(r"""
+def f():
+    if 1: pass
+    elif 2: pass
+""", 'body[0].body[0]', 0, 0, 'orelse', None, r"""break""", r"""
+def f():
+    if 1: pass
+    else:
+        break
+        if 2: pass
+""", r"""
+Module .. ROOT 0,0 -> 6,0
+  .body[1]
+  0] FunctionDef .. 1,0 -> 5,18
+    .name
+      'f'
+    .args
+      arguments
+        .vararg
+          None
+        .kwarg
+          None
+    .body[1]
+    0] If .. 2,4 -> 5,18
+      .test
+        Constant 1 .. 2,7 -> 2,8
+      .body[1]
+      0] Pass .. 2,10 -> 2,14
+      .orelse[2]
+      0] Break .. 4,8 -> 4,13
+      1] If .. 5,8 -> 5,18
+        .test
+          Constant 2 .. 5,11 -> 5,12
+        .body[1]
+        0] Pass .. 5,14 -> 5,18
+    .returns
+      None
+    .type_comment
+      None
+"""),
+
+(r"""
+def f():
+    if 1: pass
+    elif 2: pass
+""", 'body[0].body[0]', 1, 1, 'orelse', None, r"""break""", r"""
+def f():
+    if 1: pass
+    else:
+        if 2: pass
+        break
+""", r"""
+Module .. ROOT 0,0 -> 6,0
+  .body[1]
+  0] FunctionDef .. 1,0 -> 5,13
+    .name
+      'f'
+    .args
+      arguments
+        .vararg
+          None
+        .kwarg
+          None
+    .body[1]
+    0] If .. 2,4 -> 5,13
+      .test
+        Constant 1 .. 2,7 -> 2,8
+      .body[1]
+      0] Pass .. 2,10 -> 2,14
+      .orelse[2]
+      0] If .. 4,8 -> 4,18
+        .test
+          Constant 2 .. 4,11 -> 4,12
+        .body[1]
+        0] Pass .. 4,14 -> 4,18
+      1] Break .. 5,8 -> 5,13
+    .returns
+      None
+    .type_comment
+      None
+"""),
+
+(r"""
+def f():
+    if 1: pass
+    elif 2:
+        pass
+""", 'body[0].body[0]', 0, 0, 'orelse', None, r"""break""", r"""
+def f():
+    if 1: pass
+    else:
+        break
+        if 2:
+            pass
+""", r"""
+Module .. ROOT 0,0 -> 7,0
+  .body[1]
+  0] FunctionDef .. 1,0 -> 6,16
+    .name
+      'f'
+    .args
+      arguments
+        .vararg
+          None
+        .kwarg
+          None
+    .body[1]
+    0] If .. 2,4 -> 6,16
+      .test
+        Constant 1 .. 2,7 -> 2,8
+      .body[1]
+      0] Pass .. 2,10 -> 2,14
+      .orelse[2]
+      0] Break .. 4,8 -> 4,13
+      1] If .. 5,8 -> 6,16
+        .test
+          Constant 2 .. 5,11 -> 5,12
+        .body[1]
+        0] Pass .. 6,12 -> 6,16
+    .returns
+      None
+    .type_comment
+      None
+"""),
+
+(r"""
+def f():
+    if 1: pass
+    elif 2:
+        pass
+""", 'body[0].body[0]', 1, 1, 'orelse', None, r"""break""", r"""
+def f():
+    if 1: pass
+    else:
+        if 2:
+            pass
+        break
+""", r"""
+Module .. ROOT 0,0 -> 7,0
+  .body[1]
+  0] FunctionDef .. 1,0 -> 6,13
+    .name
+      'f'
+    .args
+      arguments
+        .vararg
+          None
+        .kwarg
+          None
+    .body[1]
+    0] If .. 2,4 -> 6,13
+      .test
+        Constant 1 .. 2,7 -> 2,8
+      .body[1]
+      0] Pass .. 2,10 -> 2,14
+      .orelse[2]
+      0] If .. 4,8 -> 5,16
+        .test
+          Constant 2 .. 4,11 -> 4,12
+        .body[1]
+        0] Pass .. 5,12 -> 5,16
+      1] Break .. 6,8 -> 6,13
+    .returns
+      None
+    .type_comment
+      None
+"""),
+
+(r"""
+def f():
+    if 1: pass
+    elif 2: continue
+    elif 3: raise
+""", 'body[0].body[0]', 0, 0, 'orelse', None, r"""break""", r"""
+def f():
+    if 1: pass
+    else:
+        break
+        if 2: continue
+        elif 3: raise
+""", r"""
+Module .. ROOT 0,0 -> 7,0
+  .body[1]
+  0] FunctionDef .. 1,0 -> 6,21
+    .name
+      'f'
+    .args
+      arguments
+        .vararg
+          None
+        .kwarg
+          None
+    .body[1]
+    0] If .. 2,4 -> 6,21
+      .test
+        Constant 1 .. 2,7 -> 2,8
+      .body[1]
+      0] Pass .. 2,10 -> 2,14
+      .orelse[2]
+      0] Break .. 4,8 -> 4,13
+      1] If .. 5,8 -> 6,21
+        .test
+          Constant 2 .. 5,11 -> 5,12
+        .body[1]
+        0] Continue .. 5,14 -> 5,22
+        .orelse[1]
+        0] If .. 6,8 -> 6,21
+          .test
+            Constant 3 .. 6,13 -> 6,14
+          .body[1]
+          0] Raise .. 6,16 -> 6,21
+            .exc
+              None
+            .cause
+              None
+    .returns
+      None
+    .type_comment
+      None
+"""),
+
+(r"""
+def f():
+    if 1: pass
+    elif 2: continue
+    elif 3: raise
+""", 'body[0].body[0]', 1, 1, 'orelse', None, r"""break""", r"""
+def f():
+    if 1: pass
+    else:
+        if 2: continue
+        elif 3: raise
+        break
+""", r"""
+Module .. ROOT 0,0 -> 7,0
+  .body[1]
+  0] FunctionDef .. 1,0 -> 6,13
+    .name
+      'f'
+    .args
+      arguments
+        .vararg
+          None
+        .kwarg
+          None
+    .body[1]
+    0] If .. 2,4 -> 6,13
+      .test
+        Constant 1 .. 2,7 -> 2,8
+      .body[1]
+      0] Pass .. 2,10 -> 2,14
+      .orelse[2]
+      0] If .. 4,8 -> 5,21
+        .test
+          Constant 2 .. 4,11 -> 4,12
+        .body[1]
+        0] Continue .. 4,14 -> 4,22
+        .orelse[1]
+        0] If .. 5,8 -> 5,21
+          .test
+            Constant 3 .. 5,13 -> 5,14
+          .body[1]
+          0] Raise .. 5,16 -> 5,21
+            .exc
+              None
+            .cause
+              None
+      1] Break .. 6,8 -> 6,13
+    .returns
+      None
+    .type_comment
+      None
+"""),
+
+(r"""
+def f():
+    if 1: pass
+    elif 2: continue
+    elif 3: raise
+""", 'body[0].body[0].orelse[0]', 0, 0, 'orelse', None, r"""break""", r"""
+def f():
+    if 1: pass
+    elif 2: continue
+    else:
+        break
+        if 3: raise
+""", r"""
+Module .. ROOT 0,0 -> 7,0
+  .body[1]
+  0] FunctionDef .. 1,0 -> 6,19
+    .name
+      'f'
+    .args
+      arguments
+        .vararg
+          None
+        .kwarg
+          None
+    .body[1]
+    0] If .. 2,4 -> 6,19
+      .test
+        Constant 1 .. 2,7 -> 2,8
+      .body[1]
+      0] Pass .. 2,10 -> 2,14
+      .orelse[1]
+      0] If .. 3,4 -> 6,19
+        .test
+          Constant 2 .. 3,9 -> 3,10
+        .body[1]
+        0] Continue .. 3,12 -> 3,20
+        .orelse[2]
+        0] Break .. 5,8 -> 5,13
+        1] If .. 6,8 -> 6,19
+          .test
+            Constant 3 .. 6,11 -> 6,12
+          .body[1]
+          0] Raise .. 6,14 -> 6,19
+            .exc
+              None
+            .cause
+              None
+    .returns
+      None
+    .type_comment
+      None
+"""),
+
+(r"""
+def f():
+    if 1: pass
+    elif 2: continue
+    elif 3: raise
+""", 'body[0].body[0].orelse[0]', 1, 1, 'orelse', None, r"""break""", r"""
+def f():
+    if 1: pass
+    elif 2: continue
+    else:
+        if 3: raise
+        break
+""", r"""
+Module .. ROOT 0,0 -> 7,0
+  .body[1]
+  0] FunctionDef .. 1,0 -> 6,13
+    .name
+      'f'
+    .args
+      arguments
+        .vararg
+          None
+        .kwarg
+          None
+    .body[1]
+    0] If .. 2,4 -> 6,13
+      .test
+        Constant 1 .. 2,7 -> 2,8
+      .body[1]
+      0] Pass .. 2,10 -> 2,14
+      .orelse[1]
+      0] If .. 3,4 -> 6,13
+        .test
+          Constant 2 .. 3,9 -> 3,10
+        .body[1]
+        0] Continue .. 3,12 -> 3,20
+        .orelse[2]
+        0] If .. 5,8 -> 5,19
+          .test
+            Constant 3 .. 5,11 -> 5,12
+          .body[1]
+          0] Raise .. 5,14 -> 5,19
+            .exc
+              None
+            .cause
+              None
+        1] Break .. 6,8 -> 6,13
+    .returns
+      None
+    .type_comment
+      None
+"""),
+
 ]  # END OF PUT_SLICE_STMT_DATA
 
 
