@@ -4554,6 +4554,246 @@ Module .. ROOT 0,0 -> 1,9
       None
 """),
 
+(r"""
+def f():
+    i
+    \
+  k
+""", 'body[0]', 0, 1, None, 'postspace', r"""
+def f():
+    \
+  k
+""", r"""i""", r"""
+Module .. ROOT 0,0 -> 4,0
+  .body[1]
+  0] FunctionDef .. 1,0 -> 3,3
+    .name
+      'f'
+    .args
+      arguments
+        .vararg
+          None
+        .kwarg
+          None
+    .body[1]
+    0] Expr .. 3,2 -> 3,3
+      .value
+        Name 'k' Load .. 3,2 -> 3,3
+    .returns
+      None
+    .type_comment
+      None
+""", r"""
+Module .. ROOT 0,0 -> 0,1
+  .body[1]
+  0] Expr .. 0,0 -> 0,1
+    .value
+      Name 'i' Load .. 0,0 -> 0,1
+"""),
+
+(r"""
+def f():
+    i; j
+    \
+  k
+""", 'body[0]', 1, 2, None, 'postspace', r"""
+def f():
+    i
+    \
+  k
+""", r"""j""", r"""
+Module .. ROOT 0,0 -> 5,0
+  .body[1]
+  0] FunctionDef .. 1,0 -> 4,3
+    .name
+      'f'
+    .args
+      arguments
+        .vararg
+          None
+        .kwarg
+          None
+    .body[2]
+    0] Expr .. 2,4 -> 2,5
+      .value
+        Name 'i' Load .. 2,4 -> 2,5
+    1] Expr .. 4,2 -> 4,3
+      .value
+        Name 'k' Load .. 4,2 -> 4,3
+    .returns
+      None
+    .type_comment
+      None
+""", r"""
+Module .. ROOT 0,0 -> 0,1
+  .body[1]
+  0] Expr .. 0,0 -> 0,1
+    .value
+      Name 'j' Load .. 0,0 -> 0,1
+"""),
+
+(r"""
+def f():
+    i
+
+    \
+  k
+""", 'body[0]', 0, 1, None, 'postspace', r"""
+def f():
+    \
+  k
+""", r"""i""", r"""
+Module .. ROOT 0,0 -> 4,0
+  .body[1]
+  0] FunctionDef .. 1,0 -> 3,3
+    .name
+      'f'
+    .args
+      arguments
+        .vararg
+          None
+        .kwarg
+          None
+    .body[1]
+    0] Expr .. 3,2 -> 3,3
+      .value
+        Name 'k' Load .. 3,2 -> 3,3
+    .returns
+      None
+    .type_comment
+      None
+""", r"""
+Module .. ROOT 0,0 -> 0,1
+  .body[1]
+  0] Expr .. 0,0 -> 0,1
+    .value
+      Name 'i' Load .. 0,0 -> 0,1
+"""),
+
+(r"""
+def f():
+    i; j
+
+    \
+  k
+""", 'body[0]', 1, 2, None, 'postspace', r"""
+def f():
+    i
+    \
+  k
+""", r"""j""", r"""
+Module .. ROOT 0,0 -> 5,0
+  .body[1]
+  0] FunctionDef .. 1,0 -> 4,3
+    .name
+      'f'
+    .args
+      arguments
+        .vararg
+          None
+        .kwarg
+          None
+    .body[2]
+    0] Expr .. 2,4 -> 2,5
+      .value
+        Name 'i' Load .. 2,4 -> 2,5
+    1] Expr .. 4,2 -> 4,3
+      .value
+        Name 'k' Load .. 4,2 -> 4,3
+    .returns
+      None
+    .type_comment
+      None
+""", r"""
+Module .. ROOT 0,0 -> 0,1
+  .body[1]
+  0] Expr .. 0,0 -> 0,1
+    .value
+      Name 'j' Load .. 0,0 -> 0,1
+"""),
+
+(r"""
+def f():
+    i
+    \
+
+    k
+""", 'body[0]', 0, 1, None, 'postspace', r"""
+def f():
+    \
+
+    k
+""", r"""i""", r"""
+Module .. ROOT 0,0 -> 5,0
+  .body[1]
+  0] FunctionDef .. 1,0 -> 4,5
+    .name
+      'f'
+    .args
+      arguments
+        .vararg
+          None
+        .kwarg
+          None
+    .body[1]
+    0] Expr .. 4,4 -> 4,5
+      .value
+        Name 'k' Load .. 4,4 -> 4,5
+    .returns
+      None
+    .type_comment
+      None
+""", r"""
+Module .. ROOT 0,0 -> 0,1
+  .body[1]
+  0] Expr .. 0,0 -> 0,1
+    .value
+      Name 'i' Load .. 0,0 -> 0,1
+"""),
+
+(r"""
+def f():
+    i; j
+    \
+
+    k
+""", 'body[0]', 1, 2, None, 'postspace', r"""
+def f():
+    i
+    \
+
+    k
+""", r"""j""", r"""
+Module .. ROOT 0,0 -> 6,0
+  .body[1]
+  0] FunctionDef .. 1,0 -> 5,5
+    .name
+      'f'
+    .args
+      arguments
+        .vararg
+          None
+        .kwarg
+          None
+    .body[2]
+    0] Expr .. 2,4 -> 2,5
+      .value
+        Name 'i' Load .. 2,4 -> 2,5
+    1] Expr .. 5,4 -> 5,5
+      .value
+        Name 'k' Load .. 5,4 -> 5,5
+    .returns
+      None
+    .type_comment
+      None
+""", r"""
+Module .. ROOT 0,0 -> 0,1
+  .body[1]
+  0] Expr .. 0,0 -> 0,1
+    .value
+      Name 'j' Load .. 0,0 -> 0,1
+"""),
+
 ]  # END OF GET_SLICE_STMT_CUT_DATA
 
 GET_SLICE_STMT_CUT_NOVERIFY_DATA = [
@@ -14299,7 +14539,34 @@ finally:
 
                     raise
 
-    def test_put_slice(self):
+            # same but pure delete
+
+            for src, elt, start, stop, field, fmt, src_cut, _, src_dump, _ in globals()[name]:
+                t     = parse(src)
+                f     = (eval(f't.{elt}', {'t': t}) if elt else t).f
+
+                f.put_slice(None, start, stop, field, fmt=fmt)
+
+                tsrc  = t.f.src
+                tdump = t.f.dump(linefunc=list, compact=True)
+
+                if verify:
+                    t.f.verify(raise_=True)
+
+                try:
+                    self.assertEqual(tsrc, src_cut)
+                    self.assertEqual(tdump, src_dump.strip().split('\n'))
+
+                except Exception:
+                    print(elt, start, stop)
+                    print('---')
+                    print(src)
+                    print('...')
+                    print(src_cut)
+
+                    raise
+
+    def test_put_slice_seq(self):
         for dst, elt, start, stop, src, put_src, put_dump in PUT_SLICE_SEQ_DATA:
             dst = dst.strip()
             src = src.strip()
@@ -14326,7 +14593,7 @@ finally:
 
                 raise
 
-    def test_put_slice_del(self):
+    def test_put_slice_seq_del(self):
         for dst, elt, start, stop, put_src, put_dump in PUT_SLICE_SEQ_DEL_DATA:
             dst = dst.strip()
             t   = parse(dst)
