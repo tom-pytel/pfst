@@ -8,6 +8,7 @@ from random import seed, shuffle
 
 from fst import *
 from fst import fst
+fst_ = fst
 
 PYFNMS = sum((
     [os.path.join(path, fnm) for path, _, fnms in os.walk(top) for fnm in fnms if fnm.endswith('.py')]
@@ -11695,7 +11696,8 @@ if indented:
         fst2 = fst.copy()
 
         fst.body[1].cases[0].cut()
-        fst.body[1].put_slice('pass')
+        # fst.body[1].put_slice('pass')
+        fst.body[1]._put_slice_stmt('pass', None, None, None, True, fst_.DEFAULT_SRC_EDIT_FMT, fst_.DEFAULT_DOCSTR, force=True)
 
         points = [
             (fst.body[0].cases[0], 'body'),
@@ -11865,7 +11867,7 @@ if indented:
         fst = fst2
 
         fst.body[1].cases[0].cut()
-        fst.body[1].put_slice('pass')
+        fst.body[1]._put_slice_stmt('pass', None, None, None, True, fst_.DEFAULT_SRC_EDIT_FMT, fst_.DEFAULT_DOCSTR, force=True)
 
         points = [
             (fst.body[0].cases[0], 'body'),
@@ -11899,7 +11901,8 @@ if indented:
         ]
 
         for point, field in points:
-            point.put_slice(None, field=field)
+            # point.put_slice(None, field=field)
+            point._put_slice_stmt(None, None, None, field, True, fst_.DEFAULT_SRC_EDIT_FMT, fst_.DEFAULT_DOCSTR, force=True)
 
         self.assertEqual(fst.lines, [
             'match a:',
@@ -12069,7 +12072,8 @@ if indented:
         fst2 = fst.copy()
 
         fst.body[1].cases[0].cut()
-        fst.body[1].put_slice('pass')
+        # fst.body[1].put_slice('pass')
+        fst.body[1]._put_slice_stmt('pass', None, None, None, True, fst_.DEFAULT_SRC_EDIT_FMT, fst_.DEFAULT_DOCSTR, force=True)
 
         points = [
             (fst.body[0].cases[0], 'body'),
@@ -12263,7 +12267,8 @@ if indented:
         fst = fst2
 
         fst.body[1].cases[0].cut()
-        fst.body[1].put_slice('pass')
+        # fst.body[1].put_slice('pass')
+        fst.body[1]._put_slice_stmt('pass', None, None, None, True, fst_.DEFAULT_SRC_EDIT_FMT, fst_.DEFAULT_DOCSTR, force=True)
 
         points = [
             (fst.body[0].cases[0], 'body'),
@@ -12431,7 +12436,8 @@ match a:
     case 1: pass
         '''.strip())
         a.body[0].cases[0].f.cut()
-        a.body[0].f.put_slice('i')
+        # a.body[0].f.put_slice('i')
+        a.body[0].f._put_slice_stmt('i', None, None, None, True, fst_.DEFAULT_SRC_EDIT_FMT, fst_.DEFAULT_DOCSTR, force=True)
         self.assertEqual(a.f.src, 'match a:\n    i\n')
 
 
@@ -12511,7 +12517,8 @@ if 1:
         case 1: pass
         '''.strip())
         a.body[0].body[0].cases[0].f.cut()
-        a.body[0].body[0].f.put_slice('i')
+        # a.body[0].body[0].f.put_slice('i')
+        a.body[0].body[0].f._put_slice_stmt('i', None, None, None, True, fst_.DEFAULT_SRC_EDIT_FMT, fst_.DEFAULT_DOCSTR, force=True)
         self.assertEqual(a.f.src, 'if 2:\n    match a:\n        i\n')
 
 
@@ -13035,7 +13042,8 @@ if indented:
 '''.lstrip()).f
 
         fst.body[1].cases[0].cut()
-        fst.body[1].put_slice('pass')
+        # fst.body[1].put_slice('pass')
+        fst.body[1]._put_slice_stmt('pass', None, None, None, True, fst_.DEFAULT_SRC_EDIT_FMT, fst_.DEFAULT_DOCSTR, force=True)
 
         points = [
             (fst.body[0].cases[0], 'body'),
@@ -13083,7 +13091,8 @@ if indented:
         while ps:
             f, field = ps.pop()
 
-            f.put_slice(bs.pop(), 0, 0, field=field)
+            # f.put_slice(bs.pop(), 0, 0, field=field)
+            f._put_slice_stmt(bs.pop(), 0, 0, field, True, fst_.DEFAULT_SRC_EDIT_FMT, fst_.DEFAULT_DOCSTR, force=True)
 
         self.assertEqual(fst.src, '''
 match a:
@@ -13195,7 +13204,8 @@ if indented:
             while ps:
                 f, field = ps.pop()
 
-                f.put_slice(bs.pop(), 0, 0, field=field)
+                # f.put_slice(bs.pop(), 0, 0, field=field)
+                f._put_slice_stmt(bs.pop(), 0, 0, field, True, fst_.DEFAULT_SRC_EDIT_FMT, fst_.DEFAULT_DOCSTR, force=True)
 
     def test_insert_special(self):
         a = parse('''
@@ -13214,8 +13224,10 @@ finally:
         '''.strip())
         a.body[1].body[0].f.cut()
         a.body[1].handlers[0].f.cut()
-        a.body[1].f.put_slice('# pre\nn  # post', 0, 0, 'handlers')
-        a.body[1].f.put_slice('i', 0, 0, 'handlers')
+        # a.body[1].f.put_slice('# pre\nn  # post', 0, 0, 'handlers')
+        a.body[1].f._put_slice_stmt('# pre\nn  # post', 0, 0, 'handlers', True, fst_.DEFAULT_SRC_EDIT_FMT, fst_.DEFAULT_DOCSTR, force=True)
+        # a.body[1].f.put_slice('i', 0, 0, 'handlers')
+        a.body[1].f._put_slice_stmt('i', 0, 0, 'handlers', True, fst_.DEFAULT_SRC_EDIT_FMT, fst_.DEFAULT_DOCSTR, force=True)
         self.assertEqual(a.f.src, '''
 pass
 
@@ -13402,7 +13414,7 @@ finally:
             f = (eval(f't.{stmt}', {'t': t}) if stmt else t).f
 
             f.put_slice(None if src == '**DEL**' else src, start, stop, field,
-                        fmt=fst.DEFAULT_SRC_EDIT_FMT if fmt is None else fmt)
+                        fmt=fst_.DEFAULT_SRC_EDIT_FMT if fmt is None else fmt)
 
             tdst  = t.f.src
             tdump = t.f.dump(linefunc=list, compact=True)
@@ -13712,7 +13724,7 @@ def regen_put_slice_stmt_data():
         f = (eval(f't.{stmt}', {'t': t}) if stmt else t).f
 
         f.put_slice(None if src == '**DEL**' else src, start, stop, field,
-                    fmt=fst.DEFAULT_SRC_EDIT_FMT if fmt is None else fmt)
+                    fmt=fst_.DEFAULT_SRC_EDIT_FMT if fmt is None else fmt)
 
         tdst  = t.f.src
         tdump = t.f.dump(linefunc=list, compact=True)
