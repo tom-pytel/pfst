@@ -2871,7 +2871,7 @@ class FST:
         start, stop = _fixup_slice_index(ast, body, field, start, stop)
         slice_len   = stop - start
 
-        if not slice_len and (not put_fst or not put_body):  # deleting or assigning empty slice to empty slice, noop
+        if not slice_len and (not put_fst or (not put_body and len(ls := put_fst._lines) == 1 and not ls[0])):  # deleting empty slice or assigning empty fst to empty slice, noop
             return
 
         root  = self.root
@@ -2922,7 +2922,8 @@ class FST:
 
             # insertion into empty block (or nonexistent 'else' or 'finally' block)
 
-            elif isinstance(ast, (FunctionDef, AsyncFunctionDef, ClassDef, With, AsyncWith, Match, match_case)):  # only one block possible, 'body' or 'cases'
+            elif isinstance(ast, (FunctionDef, AsyncFunctionDef, ClassDef, With, AsyncWith, Match, ExceptHandler,
+                                  match_case)):  # only one block possible, 'body' or 'cases'
                 block_loc     = fstloc(*self.bloc[2:], *self._next_ast_bound())  # end of bloc will be just past ':'
                 is_last_child = True
 
@@ -3059,7 +3060,7 @@ class FST:
         if is_last_child:  # correct parent for modified / removed last child nodes
             if not put_fst:
                 self._fix_block_del_last_child(block_loc.ln, block_loc.col, put_loc.ln, put_loc.col)
-            else:
+            elif put_body:
                 self._set_end_pos((last_child := self.last_child()).end_lineno, last_child.end_col_offset)
 
     # ------------------------------------------------------------------------------------------------------------------
