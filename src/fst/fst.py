@@ -1142,11 +1142,12 @@ class FSTSrcEdit:
                 statement(s).
             - `'pep8'`: Does not actually reformat code according to PEP 8, just deletes up one or two empty lines
                 before functions and classes according to if they are at top level scope or not, but does not copy them.
-                In the future may specify additional PEP 8 behavior.
+            - `'pep81'`: Same as `'pep8'` except deletes only 1 empty line even at top level.
             - `'space*'`: Can be only `'space'` or with a number `'space3'`. Indicates that up to this many preceding
                 empty lines should be deleted on a cut operation. If no count specified then it means all empty lines.
                 Empty line continuations are considered empty lines. `'pep8'` can override `'space1'` for two lines at
                 top level functions and classes.
+            - `'postspace*'`: Same as `'space*'` except for trailing empty lines.
         - `block_loc`: A rough location suitable for checking comments outside of ASTS if `fpre` / `fpost` not
             available. Should include trailing newline after `flast` if one is present, but NO PARTS OF ASTS.
         - `ffirst`: The first `FST` being gotten.
@@ -1298,16 +1299,27 @@ class FSTSrcEdit:
                 if not del_end_col and del_ln == block_ln:
                     del_loc = fstloc(del_ln, del_col, (ln := del_end_ln - 1), len(lines[ln]))
 
-        # delete preceding empty lines according to format flags
+        # delete preceding and trailing empty lines according to 'pep8' and 'space' format flags
 
-        space = any((s := f).startswith('space') for f in fmt) and (float('inf') if s == 'space' else int(s[5:]))
+        space     = any((s := f).startswith('space') for f in fmt) and (float('inf') if s == 'space' else int(s[5:]))
+        postspace = any((s := f).startswith('postspace') for f in fmt) and (
+                        float('inf') if s == 'postspace' else int(s[9:]))
 
-        if space < 2 and (fpre and 'pep8' in fmt) and isinstance(ffirst.a, NAMED_SCOPE):
-            space = 2 if (pns := ffirst.parent_named_scope) and isinstance(pns.a, Module) else 1
+        if (is_pep8 := 'pep8' in fmt) or 'pep81' in fmt:
+            pep8space = 2 if is_pep8 and isinstance(ffirst.parent.a, mod) else 1
+
+            if fpre and isinstance(ffirst.a, NAMED_SCOPE) and (fpre.pfield.idx or
+                                                               not isinstance(a := fpre.a, Expr) or
+                                                               not isinstance(v := a.value, Constant) or
+                                                               not isinstance(v.value, str)):
+                space = max(space, pep8space)
+
+            elif fpost and isinstance(flast.a, NAMED_SCOPE):
+                postspace = max(postspace, pep8space)
+
+        del_ln, del_col, del_end_ln, del_end_col = del_loc
 
         if space:
-            del_ln, del_col, del_end_ln, del_end_col = del_loc
-
             new_del_ln = max(bound_ln + bool(bound_col), del_ln - space)  # first possible full empty line to delete to
 
             if del_ln > new_del_ln and (not del_col or re_empty_line.match(lines[del_ln], 0, del_col)):
@@ -1315,9 +1327,26 @@ class FSTSrcEdit:
                     new_del_ln = code.ln + 1
 
                 if new_del_ln < del_ln:
-                    del_loc   = fstloc(new_del_ln, 0, del_end_ln, del_end_col)
                     indent    = lines[del_ln][:del_col]
                     put_lines = [indent + put_lines[0], *put_lines[1:]] if put_lines else [indent]
+                    del_ln    = new_del_ln
+                    del_col   = 0
+
+        if postspace:
+            if not del_end_col:
+                new_del_end_ln = min(bound_end_ln, del_end_ln + postspace)  # last possible end line to delete to
+                del_end_ln     = (code.ln
+                                  if (code := _next_src(lines, del_end_ln, 0, new_del_end_ln, 0, True, True)) else
+                                  new_del_end_ln)
+
+            elif del_end_col == len(lines[del_end_ln]):
+                new_del_end_ln = min(bound_end_ln, del_end_ln + postspace + 1)  # account for not ending on newline
+                del_end_ln     = (code.ln - 1
+                                  if (code := _next_src(lines, del_end_ln, del_end_col, new_del_end_ln, 0, True, True)) else
+                                  new_del_end_ln - 1)
+                del_end_col    = len(lines[del_end_ln])
+
+        del_loc = fstloc(del_ln, del_col, del_end_ln, del_end_col)
 
         # remove possible line continuation preceding delete start position because could link to invalid following block statement
 
@@ -1569,7 +1598,7 @@ class FST:
 
     # class attributes
     src_edit:     FSTSrcEdit = FSTSrcEdit()  ; """@private"""
-    is_FST:       bool       = True          ; """@private"""  # for quick checks vs. `fstloc` and `fstpos`
+    is_FST:       bool       = True          ; """@private"""  # for quick checks vs. `fstloc`
 
     @property
     def is_root(self) -> bool:

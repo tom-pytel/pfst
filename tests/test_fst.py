@@ -4021,6 +4021,539 @@ Module .. ROOT 0,0 -> 5,0
       1] Name 'b' Load .. 2,10 -> 2,11
 """),
 
+(r"""
+def func0():
+    pass
+
+
+def func1():
+    break
+
+
+continue
+""", '', 0, 1, None, 'pep8', r"""
+def func1():
+    break
+
+
+continue
+""", r"""def func0():
+    pass""", r"""
+Module .. ROOT 0,0 -> 6,0
+  .body[2]
+  0] FunctionDef .. 1,0 -> 2,9
+    .name
+      'func1'
+    .args
+      arguments
+        .vararg
+          None
+        .kwarg
+          None
+    .body[1]
+    0] Break .. 2,4 -> 2,9
+    .returns
+      None
+    .type_comment
+      None
+  1] Continue .. 5,0 -> 5,8
+""", r"""
+Module .. ROOT 0,0 -> 1,8
+  .body[1]
+  0] FunctionDef .. 0,0 -> 1,8
+    .name
+      'func0'
+    .args
+      arguments
+        .vararg
+          None
+        .kwarg
+          None
+    .body[1]
+    0] Pass .. 1,4 -> 1,8
+    .returns
+      None
+    .type_comment
+      None
+"""),
+
+(r"""
+def func0():
+    pass
+
+
+def func1():
+    break
+
+
+continue
+""", '', 1, 2, None, 'pep8', r"""
+def func0():
+    pass
+
+
+continue
+""", r"""def func1():
+    break""", r"""
+Module .. ROOT 0,0 -> 6,0
+  .body[2]
+  0] FunctionDef .. 1,0 -> 2,8
+    .name
+      'func0'
+    .args
+      arguments
+        .vararg
+          None
+        .kwarg
+          None
+    .body[1]
+    0] Pass .. 2,4 -> 2,8
+    .returns
+      None
+    .type_comment
+      None
+  1] Continue .. 5,0 -> 5,8
+""", r"""
+Module .. ROOT 0,0 -> 1,9
+  .body[1]
+  0] FunctionDef .. 0,0 -> 1,9
+    .name
+      'func1'
+    .args
+      arguments
+        .vararg
+          None
+        .kwarg
+          None
+    .body[1]
+    0] Break .. 1,4 -> 1,9
+    .returns
+      None
+    .type_comment
+      None
+"""),
+
+(r"""
+def func0():
+    pass
+
+
+def func1():
+    break
+
+
+continue
+""", '', 0, 1, None, 'pep81', r"""
+
+def func1():
+    break
+
+
+continue
+""", r"""def func0():
+    pass""", r"""
+Module .. ROOT 0,0 -> 7,0
+  .body[2]
+  0] FunctionDef .. 2,0 -> 3,9
+    .name
+      'func1'
+    .args
+      arguments
+        .vararg
+          None
+        .kwarg
+          None
+    .body[1]
+    0] Break .. 3,4 -> 3,9
+    .returns
+      None
+    .type_comment
+      None
+  1] Continue .. 6,0 -> 6,8
+""", r"""
+Module .. ROOT 0,0 -> 1,8
+  .body[1]
+  0] FunctionDef .. 0,0 -> 1,8
+    .name
+      'func0'
+    .args
+      arguments
+        .vararg
+          None
+        .kwarg
+          None
+    .body[1]
+    0] Pass .. 1,4 -> 1,8
+    .returns
+      None
+    .type_comment
+      None
+"""),
+
+(r"""
+def func0():
+    pass
+
+
+def func1():
+    break
+
+
+continue
+""", '', 1, 2, None, 'pep81', r"""
+def func0():
+    pass
+
+
+
+continue
+""", r"""def func1():
+    break""", r"""
+Module .. ROOT 0,0 -> 7,0
+  .body[2]
+  0] FunctionDef .. 1,0 -> 2,8
+    .name
+      'func0'
+    .args
+      arguments
+        .vararg
+          None
+        .kwarg
+          None
+    .body[1]
+    0] Pass .. 2,4 -> 2,8
+    .returns
+      None
+    .type_comment
+      None
+  1] Continue .. 6,0 -> 6,8
+""", r"""
+Module .. ROOT 0,0 -> 1,9
+  .body[1]
+  0] FunctionDef .. 0,0 -> 1,9
+    .name
+      'func1'
+    .args
+      arguments
+        .vararg
+          None
+        .kwarg
+          None
+    .body[1]
+    0] Break .. 1,4 -> 1,9
+    .returns
+      None
+    .type_comment
+      None
+"""),
+
+(r"""
+class cls:
+    def meth0():
+        pass
+
+    def meth1():
+        break
+
+continue
+""", 'body[0]', 0, 1, None, 'pep8', r"""
+class cls:
+    def meth1():
+        break
+
+continue
+""", r"""def meth0():
+    pass""", r"""
+Module .. ROOT 0,0 -> 6,0
+  .body[2]
+  0] ClassDef .. 1,0 -> 3,13
+    .name
+      'cls'
+    .body[1]
+    0] FunctionDef .. 2,4 -> 3,13
+      .name
+        'meth1'
+      .args
+        arguments
+          .vararg
+            None
+          .kwarg
+            None
+      .body[1]
+      0] Break .. 3,8 -> 3,13
+      .returns
+        None
+      .type_comment
+        None
+  1] Continue .. 5,0 -> 5,8
+""", r"""
+Module .. ROOT 0,0 -> 1,8
+  .body[1]
+  0] FunctionDef .. 0,0 -> 1,8
+    .name
+      'meth0'
+    .args
+      arguments
+        .vararg
+          None
+        .kwarg
+          None
+    .body[1]
+    0] Pass .. 1,4 -> 1,8
+    .returns
+      None
+    .type_comment
+      None
+"""),
+
+(r"""
+class cls:
+    def meth0():
+        pass
+
+    def meth1():
+        break
+
+continue
+""", 'body[0]', 1, 2, None, 'pep8', r"""
+class cls:
+    def meth0():
+        pass
+
+continue
+""", r"""def meth1():
+    break""", r"""
+Module .. ROOT 0,0 -> 6,0
+  .body[2]
+  0] ClassDef .. 1,0 -> 3,12
+    .name
+      'cls'
+    .body[1]
+    0] FunctionDef .. 2,4 -> 3,12
+      .name
+        'meth0'
+      .args
+        arguments
+          .vararg
+            None
+          .kwarg
+            None
+      .body[1]
+      0] Pass .. 3,8 -> 3,12
+      .returns
+        None
+      .type_comment
+        None
+  1] Continue .. 5,0 -> 5,8
+""", r"""
+Module .. ROOT 0,0 -> 1,9
+  .body[1]
+  0] FunctionDef .. 0,0 -> 1,9
+    .name
+      'meth1'
+    .args
+      arguments
+        .vararg
+          None
+        .kwarg
+          None
+    .body[1]
+    0] Break .. 1,4 -> 1,9
+    .returns
+      None
+    .type_comment
+      None
+"""),
+
+(r"""
+if 1:
+    i ; j
+
+
+
+""", 'body[0]', 1, 2, None, '', r"""
+if 1:
+    i
+
+
+
+""", r"""j""", r"""
+Module .. ROOT 0,0 -> 6,0
+  .body[1]
+  0] If .. 1,0 -> 2,5
+    .test
+      Constant 1 .. 1,3 -> 1,4
+    .body[1]
+    0] Expr .. 2,4 -> 2,5
+      .value
+        Name 'i' Load .. 2,4 -> 2,5
+""", r"""
+Module .. ROOT 0,0 -> 0,1
+  .body[1]
+  0] Expr .. 0,0 -> 0,1
+    .value
+      Name 'j' Load .. 0,0 -> 0,1
+"""),
+
+(r"""
+if 1:
+    i ; j
+
+
+
+""", 'body[0]', 1, 2, None, 'postspace1', r"""
+if 1:
+    i
+
+
+""", r"""j""", r"""
+Module .. ROOT 0,0 -> 5,0
+  .body[1]
+  0] If .. 1,0 -> 2,5
+    .test
+      Constant 1 .. 1,3 -> 1,4
+    .body[1]
+    0] Expr .. 2,4 -> 2,5
+      .value
+        Name 'i' Load .. 2,4 -> 2,5
+""", r"""
+Module .. ROOT 0,0 -> 0,1
+  .body[1]
+  0] Expr .. 0,0 -> 0,1
+    .value
+      Name 'j' Load .. 0,0 -> 0,1
+"""),
+
+(r"""
+if 1:
+    i ; j
+
+
+
+""", 'body[0]', 1, 2, None, 'postspace', r"""
+if 1:
+    i
+""", r"""j""", r"""
+Module .. ROOT 0,0 -> 3,0
+  .body[1]
+  0] If .. 1,0 -> 2,5
+    .test
+      Constant 1 .. 1,3 -> 1,4
+    .body[1]
+    0] Expr .. 2,4 -> 2,5
+      .value
+        Name 'i' Load .. 2,4 -> 2,5
+""", r"""
+Module .. ROOT 0,0 -> 0,1
+  .body[1]
+  0] Expr .. 0,0 -> 0,1
+    .value
+      Name 'j' Load .. 0,0 -> 0,1
+"""),
+
+(r"""
+if 1:
+    i ; j
+
+
+
+""", 'body[0]', 0, 1, None, 'postspace', r"""
+if 1:
+    j
+
+
+
+""", r"""i""", r"""
+Module .. ROOT 0,0 -> 6,0
+  .body[1]
+  0] If .. 1,0 -> 2,5
+    .test
+      Constant 1 .. 1,3 -> 1,4
+    .body[1]
+    0] Expr .. 2,4 -> 2,5
+      .value
+        Name 'j' Load .. 2,4 -> 2,5
+""", r"""
+Module .. ROOT 0,0 -> 0,1
+  .body[1]
+  0] Expr .. 0,0 -> 0,1
+    .value
+      Name 'i' Load .. 0,0 -> 0,1
+"""),
+
+(r"""
+def f():
+    i ; j
+
+
+
+""", '', 0, 1, None, '', r"""
+
+
+
+""", r"""def f():
+    i ; j""", r"""
+Module .. ROOT 0,0 -> 4,0
+""", r"""
+Module .. ROOT 0,0 -> 1,9
+  .body[1]
+  0] FunctionDef .. 0,0 -> 1,9
+    .name
+      'f'
+    .args
+      arguments
+        .vararg
+          None
+        .kwarg
+          None
+    .body[2]
+    0] Expr .. 1,4 -> 1,5
+      .value
+        Name 'i' Load .. 1,4 -> 1,5
+    1] Expr .. 1,8 -> 1,9
+      .value
+        Name 'j' Load .. 1,8 -> 1,9
+    .returns
+      None
+    .type_comment
+      None
+"""),
+
+(r"""
+def f():
+    i ; j
+
+
+
+""", '', 0, 1, None, 'postspace', r"""
+""", r"""def f():
+    i ; j""", r"""
+Module .. ROOT 0,0 -> 1,0
+""", r"""
+Module .. ROOT 0,0 -> 1,9
+  .body[1]
+  0] FunctionDef .. 0,0 -> 1,9
+    .name
+      'f'
+    .args
+      arguments
+        .vararg
+          None
+        .kwarg
+          None
+    .body[2]
+    0] Expr .. 1,4 -> 1,5
+      .value
+        Name 'i' Load .. 1,4 -> 1,5
+    1] Expr .. 1,8 -> 1,9
+      .value
+        Name 'j' Load .. 1,8 -> 1,9
+    .returns
+      None
+    .type_comment
+      None
+"""),
+
 ]  # END OF GET_SLICE_STMT_CUT_DATA
 
 GET_SLICE_STMT_CUT_NOVERIFY_DATA = [
