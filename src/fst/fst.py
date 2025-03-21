@@ -937,20 +937,35 @@ class FSTSrcEdit:
         **Parameters:**
         - `fmt`: Set of string formatting flags. Unrecognized and inapplicable flags are ignored, recognized flags are:
             - `'post'`: Only comment trailing on line of position, nothing past that on its own lines.
+            - `'allpost'`: Comment blocks (possibly separated by empty lines) following position.
         """
 
-        if 'post' not in fmt:
+        if not (allpost := 'allpost' in fmt) and 'post' not in fmt:
             return None
 
-        if same_line := bound_end_ln == bound_ln:
-            code = _next_src(lines, bound_ln, bound_col, bound_end_ln, bound_end_col, True)
+        if single_ln := bound_end_ln == bound_ln:
+            code = _next_src(lines, bound_ln, bound_col, bound_ln, bound_end_col, True)
         else:
             code = _next_src(lines, bound_ln, bound_col, bound_ln, 0x7fffffffffffffff, True)
 
-        if not code or not code.src.startswith('#'):
+        if code:
+            if not code.src.startswith('#'):
+                return None
+
+            if not allpost:
+                return (bound_ln, bound_end_col) if single_ln else (bound_ln + 1, 0)
+
+        elif not allpost or single_ln:
             return None
 
-        return (bound_end_ln, bound_end_col) if same_line else (bound_ln + 1, 0)
+        for ln in range(bound_ln + 1, bound_end_ln + 1):
+            if not (m := re_empty_line_cont_or_comment.match(lines[ln])):
+                break
+
+            if (g := m.group(1)) and g.startswith('#'):
+                bound_ln = ln
+
+        return (bound_ln, bound_end_col) if bound_ln == bound_end_ln else (bound_ln + 1, 0)
 
     def get_slice_seq(self, fst: 'FST', cut: bool, seq_loc: fstloc,
                       ffirst: Union['FST', fstloc], flast: Union['FST', fstloc],
@@ -1117,6 +1132,8 @@ class FSTSrcEdit:
                 statement(s).
             - `'post'`: Copy and delete comment trailing on last line. Keep in mind this is the comment on the last
                 statement of a body if last element of copy is a block element.
+            - `'allpost'`: Copy and delete all comment blocks (possibly separated by empty lines) following
+                statement(s).
             - `'pep8'`: Does not actually reformat code according to PEP 8, just deletes up one or two empty lines
                 before functions and classes according to if they are at top level scope or not, but does not copy them.
                 In the future may specify additional PEP 8 behavior.
@@ -1360,6 +1377,7 @@ class FSTSrcEdit:
                 statement(s).
             - `'post'`: replace comment trailing on last line. Keep in mind this is the comment on the last
                 statement of a body if last element of copy is a block element.
+            - `'allpost'`: Replace all comment blocks (possibly separated by empty lines) following statement(s).
             - `'pep8'`: Does not actually reformat code according to PEP 8, just inserts up one or two empty lines
                 before non-first function or class being put according to destination if is top level scope or not. Also
                 removes this number of spaces if replacing a function or class so balances out in that case. In the
@@ -4896,6 +4914,7 @@ class FST:
             - `'allpre'`: Comment blocks (possibly separated by empty lines) preceding statement(s).
             - `'post'`: Comment trailing on last line. Keep in mind this is the comment on the last statement of a body
                 if last element of copy is a block element.
+            - `'allpost'`: Comment blocks (possibly separated by empty lines) following statement(s).
 
         **Returns:**
         - `fstloc | FST | None`: If `ret_fst` is `None` and no comments found then just returns `self`. A `None` can

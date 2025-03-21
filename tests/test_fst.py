@@ -11407,7 +11407,9 @@ def func():
 
 # world
 pass  # postcomment
-# next line comment
+# next line
+
+# last line
 pass
         '''.strip()).body[0].f
 
@@ -11423,6 +11425,9 @@ pass
         g = f.comms(True, 'post')
         self.assertIsInstance(g, FST)
         self.assertEqual('pass  # postcomment\n', g.src)
+        g = f.comms(True, 'allpost')
+        self.assertIsInstance(g, FST)
+        self.assertEqual('pass  # postcomment\n# next line\n\n# last line\n', g.src)
         g = f.comms(True, False)
         self.assertIs(g, f)
 
@@ -11438,6 +11443,9 @@ pass
         g = f.comms(None, 'post')
         self.assertIsInstance(g, fstloc)
         self.assertEqual((3, 0, 4, 0), g)
+        g = f.comms(None, 'allpost')
+        self.assertIsInstance(g, fstloc)
+        self.assertEqual((3, 0, 7, 0), g)
         g = f.comms(None, False)
         self.assertIs(g, f)
 
@@ -11453,6 +11461,18 @@ pass
         g = f.comms(False, False)
         self.assertIs(g, f.loc)
 
+        f = parse('''
+pass
+# next line
+
+# last line
+pass
+        '''.strip()).body[0].f
+
+        g = f.comms(True, 'allpost')
+        self.assertIsInstance(g, FST)
+        self.assertEqual('pass\n# next line\n\n# last line\n', g.src)
+
         lines = '''  # hello
 
   # world
@@ -11465,6 +11485,7 @@ pass
         self.assertEqual(None, FST.src_edit.pre_comments(lines, 0, 0, 2, 2))
         self.assertEqual(None, FST.src_edit.post_comments(lines, 2, 9, 5, 0))
         self.assertEqual((0, 0), FST.src_edit.pre_comments(lines, 0, 0, 2, 2, {'allpre'}))
+        self.assertEqual((5, 0), FST.src_edit.post_comments(lines, 3, 6, 5, 0, {'allpost'}))
 
         lines = '''
 i ; \\
