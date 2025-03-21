@@ -1161,8 +1161,8 @@ class FSTSrcEdit:
             location and optionally lines to replace the deleted portion (which can only be non-coding source).
         """
 
-        bound_ln, bound_col         = fpre.loc[2:] if fpre else block_loc[:2]
-        bound_end_ln, bound_end_col = fpost.loc[:2] if fpost else block_loc[2:]
+        bound_ln, bound_col         = fpre.bloc[2:] if fpre else block_loc[:2]
+        bound_end_ln, bound_end_col = fpost.bloc[:2] if fpost else block_loc[2:]
 
         lines      = fst.root._lines
         put_lines  = None
@@ -5285,7 +5285,7 @@ class FST:
         return lns
 
     def reparse_docstrings(self, docstr: bool | str = DEFAULT_DOCSTR):
-        """Reparse docstrings in self and all descendants.
+        """Reparse docstrings in `self` and all descendants.
 
         **Parameters:**
         - `docstr`: Which strings to reparse. `True` means all `Expr` multiline strings. `'strict'` means only multiline
