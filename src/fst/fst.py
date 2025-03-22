@@ -1987,12 +1987,33 @@ class FST:
         linefunc(f'{cind}{prefix}{ast.__class__.__qualname__}{" .." * bool(tail)}{tail}')
 
         for name, child in iter_fields(ast):
-            if compact and name == 'ctx':
-                linefunc(f'{sind}{cind}.{name} {child.__class__.__qualname__ if isinstance(child, AST) else child}')
-
-                continue
-
             is_list = isinstance(child, list)
+
+            if compact:
+                if name in ('ctx', 'op'):
+                    linefunc(f'{sind}{cind}.{name} {child.__class__.__qualname__ if isinstance(child, AST) else child}')
+
+                    continue
+
+                if (name in ('type', 'id', 'attr', 'module', 'arg', 'vararg', 'kwarg', 'rest', 'format_spec',
+                             'name', 'value', 'left', 'right', 'operand', 'returns', 'target',
+                             'annotation', 'iter', 'test','exc', 'cause', 'msg', 'elt', 'key', 'func',
+                             'slice', 'lower', 'upper', 'step', 'guard', 'optional_vars',
+                             'cls', 'bound', 'default_value',
+                             'type_comment', 'lineno', 'tag',)
+                            or (not is_list and name in
+                             ('body', 'orelse'))
+                ):
+                    if isinstance(child, AST):
+                        child.f._dump(full, indent, cind + sind, f'.{name} ', linefunc, compact)
+                    else:
+                        linefunc(f'{sind}{cind}.{name} {child!r}')
+
+                    continue
+
+                if not full and (isinstance(child, arguments) and not child.posonlyargs and not child.args and not child.vararg
+                        and not child.kwonlyargs and not child.kwarg):
+                    continue
 
             if full or (child != []):
                 linefunc(f'{sind}{cind}.{name}{f"[{len(child)}]" if is_list else ""}')
@@ -2000,7 +2021,7 @@ class FST:
             if is_list:
                 for i, ast in enumerate(child):
                     if isinstance(ast, AST):
-                        ast.f._dump(full, indent, cind + ' ' * indent, f'{i}] ', linefunc, compact)
+                        ast.f._dump(full, indent, cind + sind, f'{i}] ', linefunc, compact)
                     else:
                         linefunc(f'{sind}{cind}{i}] {ast!r}')
 

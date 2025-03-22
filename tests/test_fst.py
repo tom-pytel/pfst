@@ -23,8 +23,7 @@ with ( f() ) as ( f ): pass
 ( f() )
 """, r"""
 Call .. MOCK 0,5 -> 0,12
-  .func
-    Name 'f' Load .. 0,7 -> 0,8
+  .func Name 'f' Load .. 0,7 -> 0,8
 """),
 
 (r"""
@@ -41,8 +40,7 @@ with ( f() ) as ( f ), ( g() ) as ( g ): pass
 ( f() )
 """, r"""
 Call .. MOCK 0,5 -> 0,12
-  .func
-    Name 'f' Load .. 0,7 -> 0,8
+  .func Name 'f' Load .. 0,7 -> 0,8
 """),
 
 (r"""
@@ -59,8 +57,7 @@ with ( f() ) as ( f ), ( g() ) as ( g ): pass
 ( g() )
 """, r"""
 Call .. MOCK 0,23 -> 0,30
-  .func
-    Name 'g' Load .. 0,25 -> 0,26
+  .func Name 'g' Load .. 0,25 -> 0,26
 """),
 
 (r"""
@@ -78,8 +75,7 @@ match a:
 ( 2 )
 """, r"""
 MatchValue .. MOCK 1,7 -> 1,12
-  .value
-    Constant 2 .. 1,9 -> 1,10
+  .value Constant 2 .. 1,9 -> 1,10
 """),
 
 (r"""
@@ -104,8 +100,7 @@ Name 'j' Store .. MOCK 0,12 -> 0,17
 ( range(5) )
 """, r"""
 Call .. MOCK 0,21 -> 0,33
-  .func
-    Name 'range' Load .. 0,23 -> 0,28
+  .func Name 'range' Load .. 0,23 -> 0,28
   .args[1]
   0] Constant 5 .. 0,29 -> 0,30
 """),
@@ -140,8 +135,7 @@ Name 'j' Store .. MOCK 0,12 -> 0,17
 ( range(5) )
 """, r"""
 Call .. MOCK 0,21 -> 0,33
-  .func
-    Name 'range' Load .. 0,23 -> 0,28
+  .func Name 'range' Load .. 0,23 -> 0,28
   .args[1]
   0] Constant 5 .. 0,29 -> 0,30
 """),
@@ -244,10 +238,8 @@ opts.ignore_module = [mod.strip()
 opts.ignore_module
 """, r"""
 Attribute .. ROOT 0,0 -> 0,18
-  .value
-    Name 'opts' Load .. 0,0 -> 0,4
-  .attr
-    'ignore_module'
+  .value Name 'opts' Load .. 0,0 -> 0,4
+  .attr 'ignore_module'
   .ctx Load
 """),
 
@@ -264,15 +256,13 @@ set()
 Module .. ROOT 0,0 -> 0,6
   .body[1]
   0] Expr .. 0,0 -> 0,6
-    .value
-      Set .. 0,0 -> 0,6
-        .elts[2]
-        0] Constant 1 .. 0,1 -> 0,2
-        1] Constant 2 .. 0,4 -> 0,5
+    .value Set .. 0,0 -> 0,6
+      .elts[2]
+      0] Constant 1 .. 0,1 -> 0,2
+      1] Constant 2 .. 0,4 -> 0,5
 """, r"""
 Call .. ROOT 0,0 -> 0,5
-  .func
-    Name 'set' Load .. 0,0 -> 0,3
+  .func Name 'set' Load .. 0,0 -> 0,3
 """),
 
 (r"""
@@ -293,9 +283,8 @@ Call .. ROOT 0,0 -> 0,5
 Module .. ROOT 0,0 -> 0,2
   .body[1]
   0] Expr .. 0,0 -> 0,2
-    .value
-      Tuple .. 0,0 -> 0,2
-        .ctx Load
+    .value Tuple .. 0,0 -> 0,2
+      .ctx Load
 """, r"""
 Tuple .. ROOT 0,0 -> 4,1
   .elts[3]
@@ -324,11 +313,10 @@ Tuple .. ROOT 0,0 -> 4,1
 Module .. ROOT 0,0 -> 2,1
   .body[1]
   0] Expr .. 0,0 -> 2,1
-    .value
-      Tuple .. 0,0 -> 2,1
-        .elts[1]
-        0] Constant 3 .. 1,4 -> 1,5
-        .ctx Load
+    .value Tuple .. 0,0 -> 2,1
+      .elts[1]
+      0] Constant 3 .. 1,4 -> 1,5
+      .ctx Load
 """, r"""
 Tuple .. ROOT 0,0 -> 3,1
   .elts[2]
@@ -356,12 +344,11 @@ Tuple .. ROOT 0,0 -> 3,1
 Module .. ROOT 0,0 -> 3,1
   .body[1]
   0] Expr .. 0,0 -> 3,1
-    .value
-      Tuple .. 0,0 -> 3,1
-        .elts[2]
-        0] Constant 1 .. 1,4 -> 1,5
-        1] Constant 3 .. 2,4 -> 2,5
-        .ctx Load
+    .value Tuple .. 0,0 -> 3,1
+      .elts[2]
+      0] Constant 1 .. 1,4 -> 1,5
+      1] Constant 3 .. 2,4 -> 2,5
+      .ctx Load
 """, r"""
 Tuple .. ROOT 0,0 -> 2,1
   .elts[1]
@@ -388,12 +375,11 @@ Tuple .. ROOT 0,0 -> 2,1
 Module .. ROOT 0,0 -> 3,1
   .body[1]
   0] Expr .. 0,0 -> 3,1
-    .value
-      Tuple .. 0,0 -> 3,1
-        .elts[2]
-        0] Constant 1 .. 1,4 -> 1,5
-        1] Constant 2 .. 2,4 -> 2,5
-        .ctx Load
+    .value Tuple .. 0,0 -> 3,1
+      .elts[2]
+      0] Constant 1 .. 1,4 -> 1,5
+      1] Constant 2 .. 2,4 -> 2,5
+      .ctx Load
 """, r"""
 Tuple .. ROOT 0,0 -> 2,1
   .elts[1]
@@ -415,9 +401,8 @@ Tuple .. ROOT 0,0 -> 2,1
 Module .. ROOT 0,0 -> 0,2
   .body[1]
   0] Expr .. 0,0 -> 0,2
-    .value
-      Tuple .. 0,0 -> 0,2
-        .ctx Load
+    .value Tuple .. 0,0 -> 0,2
+      .ctx Load
 """, r"""
 Tuple .. ROOT 0,0 -> 2,1
   .elts[3]
@@ -442,11 +427,10 @@ Tuple .. ROOT 0,0 -> 2,1
 Module .. ROOT 0,0 -> 2,1
   .body[1]
   0] Expr .. 0,0 -> 2,1
-    .value
-      Tuple .. 0,0 -> 2,1
-        .elts[1]
-        0] Constant 3 .. 1,4 -> 1,5
-        .ctx Load
+    .value Tuple .. 0,0 -> 2,1
+      .elts[1]
+      0] Constant 3 .. 1,4 -> 1,5
+      .ctx Load
 """, r"""
 Tuple .. ROOT 0,0 -> 1,9
   .elts[2]
@@ -469,12 +453,11 @@ Tuple .. ROOT 0,0 -> 1,9
 Module .. ROOT 0,0 -> 2,1
   .body[1]
   0] Expr .. 0,0 -> 2,1
-    .value
-      Tuple .. 0,0 -> 2,1
-        .elts[2]
-        0] Constant 1 .. 1,4 -> 1,5
-        1] Constant 3 .. 1,7 -> 1,8
-        .ctx Load
+    .value Tuple .. 0,0 -> 2,1
+      .elts[2]
+      0] Constant 1 .. 1,4 -> 1,5
+      1] Constant 3 .. 1,7 -> 1,8
+      .ctx Load
 """, r"""
 Tuple .. ROOT 0,0 -> 0,4
   .elts[1]
@@ -496,12 +479,11 @@ Tuple .. ROOT 0,0 -> 0,4
 Module .. ROOT 0,0 -> 1,9
   .body[1]
   0] Expr .. 0,0 -> 1,9
-    .value
-      Tuple .. 0,0 -> 1,9
-        .elts[2]
-        0] Constant 1 .. 1,4 -> 1,5
-        1] Constant 2 .. 1,7 -> 1,8
-        .ctx Load
+    .value Tuple .. 0,0 -> 1,9
+      .elts[2]
+      0] Constant 1 .. 1,4 -> 1,5
+      1] Constant 2 .. 1,7 -> 1,8
+      .ctx Load
 """, r"""
 Tuple .. ROOT 0,0 -> 1,1
   .elts[1]
@@ -519,12 +501,11 @@ Tuple .. ROOT 0,0 -> 1,1
 Module .. ROOT 0,0 -> 0,4
   .body[1]
   0] Expr .. 0,0 -> 0,4
-    .value
-      Tuple .. 0,0 -> 0,4
-        .elts[2]
-        0] Constant 1 .. 0,0 -> 0,1
-        1] Constant 4 .. 0,3 -> 0,4
-        .ctx Load
+    .value Tuple .. 0,0 -> 0,4
+      .elts[2]
+      0] Constant 1 .. 0,0 -> 0,1
+      1] Constant 4 .. 0,3 -> 0,4
+      .ctx Load
 """, r"""
 Tuple .. ROOT 0,0 -> 0,6
   .elts[2]
@@ -543,13 +524,12 @@ Tuple .. ROOT 0,0 -> 0,6
 Module .. ROOT 0,0 -> 0,7
   .body[1]
   0] Expr .. 0,0 -> 0,7
-    .value
-      Tuple .. 0,0 -> 0,7
-        .elts[3]
-        0] Constant 1 .. 0,0 -> 0,1
-        1] Constant 2 .. 0,3 -> 0,4
-        2] Constant 3 .. 0,6 -> 0,7
-        .ctx Load
+    .value Tuple .. 0,0 -> 0,7
+      .elts[3]
+      0] Constant 1 .. 0,0 -> 0,1
+      1] Constant 2 .. 0,3 -> 0,4
+      2] Constant 3 .. 0,6 -> 0,7
+      .ctx Load
 """, r"""
 Tuple .. ROOT 0,0 -> 0,4
   .elts[1]
@@ -567,9 +547,8 @@ Tuple .. ROOT 0,0 -> 0,4
 Module .. ROOT 0,0 -> 0,2
   .body[1]
   0] Expr .. 0,0 -> 0,2
-    .value
-      Tuple .. 0,0 -> 0,2
-        .ctx Load
+    .value Tuple .. 0,0 -> 0,2
+      .ctx Load
 """, r"""
 Tuple .. ROOT 0,0 -> 0,12
   .elts[4]
@@ -590,14 +569,13 @@ Tuple .. ROOT 0,0 -> 0,12
 Module .. ROOT 0,0 -> 0,10
   .body[1]
   0] Expr .. 0,0 -> 0,10
-    .value
-      Tuple .. 0,0 -> 0,10
-        .elts[4]
-        0] Constant 1 .. 0,0 -> 0,1
-        1] Constant 2 .. 0,3 -> 0,4
-        2] Constant 3 .. 0,6 -> 0,7
-        3] Constant 4 .. 0,9 -> 0,10
-        .ctx Load
+    .value Tuple .. 0,0 -> 0,10
+      .elts[4]
+      0] Constant 1 .. 0,0 -> 0,1
+      1] Constant 2 .. 0,3 -> 0,4
+      2] Constant 3 .. 0,6 -> 0,7
+      3] Constant 4 .. 0,9 -> 0,10
+      .ctx Load
 """, r"""
 Tuple .. ROOT 0,0 -> 0,2
   .ctx Load
@@ -613,11 +591,10 @@ Tuple .. ROOT 0,0 -> 0,2
 Module .. ROOT 0,0 -> 0,2
   .body[1]
   0] Expr .. 0,0 -> 0,2
-    .value
-      Tuple .. 0,0 -> 0,2
-        .elts[1]
-        0] Constant 1 .. 0,0 -> 0,1
-        .ctx Load
+    .value Tuple .. 0,0 -> 0,2
+      .elts[1]
+      0] Constant 1 .. 0,0 -> 0,1
+      .ctx Load
 """, r"""
 Tuple .. ROOT 0,0 -> 0,9
   .elts[3]
@@ -637,11 +614,10 @@ Tuple .. ROOT 0,0 -> 0,9
 Module .. ROOT 0,0 -> 0,2
   .body[1]
   0] Expr .. 0,0 -> 0,2
-    .value
-      Tuple .. 0,0 -> 0,2
-        .elts[1]
-        0] Constant 4 .. 0,0 -> 0,1
-        .ctx Load
+    .value Tuple .. 0,0 -> 0,2
+      .elts[1]
+      0] Constant 4 .. 0,0 -> 0,1
+      .ctx Load
 """, r"""
 Tuple .. ROOT 0,0 -> 0,9
   .elts[3]
@@ -665,13 +641,12 @@ Tuple .. ROOT 0,0 -> 0,9
 Module .. ROOT 0,0 -> 0,9
   .body[1]
   0] Expr .. 0,0 -> 0,9
-    .value
-      Tuple .. 0,0 -> 0,9
-        .elts[3]
-        0] Constant 1 .. 0,1 -> 0,2
-        1] Constant 3 .. 0,4 -> 0,5
-        2] Constant 4 .. 0,7 -> 0,8
-        .ctx Load
+    .value Tuple .. 0,0 -> 0,9
+      .elts[3]
+      0] Constant 1 .. 0,1 -> 0,2
+      1] Constant 3 .. 0,4 -> 0,5
+      2] Constant 4 .. 0,7 -> 0,8
+      .ctx Load
 """, r"""
 Tuple .. ROOT 0,0 -> 2,1
   .elts[1]
@@ -693,13 +668,12 @@ Tuple .. ROOT 0,0 -> 2,1
 Module .. ROOT 0,0 -> 0,9
   .body[1]
   0] Expr .. 0,0 -> 0,9
-    .value
-      Tuple .. 0,0 -> 0,9
-        .elts[3]
-        0] Constant 1 .. 0,1 -> 0,2
-        1] Constant 3 .. 0,4 -> 0,5
-        2] Constant 4 .. 0,7 -> 0,8
-        .ctx Load
+    .value Tuple .. 0,0 -> 0,9
+      .elts[3]
+      0] Constant 1 .. 0,1 -> 0,2
+      1] Constant 3 .. 0,4 -> 0,5
+      2] Constant 4 .. 0,7 -> 0,8
+      .ctx Load
 """, r"""
 Tuple .. ROOT 0,0 -> 2,1
   .elts[1]
@@ -721,13 +695,12 @@ Tuple .. ROOT 0,0 -> 2,1
 Module .. ROOT 0,0 -> 0,9
   .body[1]
   0] Expr .. 0,0 -> 0,9
-    .value
-      Tuple .. 0,0 -> 0,9
-        .elts[3]
-        0] Constant 1 .. 0,1 -> 0,2
-        1] Constant 3 .. 0,4 -> 0,5
-        2] Constant 4 .. 0,7 -> 0,8
-        .ctx Load
+    .value Tuple .. 0,0 -> 0,9
+      .elts[3]
+      0] Constant 1 .. 0,1 -> 0,2
+      1] Constant 3 .. 0,4 -> 0,5
+      2] Constant 4 .. 0,7 -> 0,8
+      .ctx Load
 """, r"""
 Tuple .. ROOT 0,0 -> 2,1
   .elts[1]
@@ -749,13 +722,12 @@ Tuple .. ROOT 0,0 -> 2,1
 Module .. ROOT 0,0 -> 0,9
   .body[1]
   0] Expr .. 0,0 -> 0,9
-    .value
-      Tuple .. 0,0 -> 0,9
-        .elts[3]
-        0] Constant 1 .. 0,1 -> 0,2
-        1] Constant 3 .. 0,4 -> 0,5
-        2] Constant 4 .. 0,7 -> 0,8
-        .ctx Load
+    .value Tuple .. 0,0 -> 0,9
+      .elts[3]
+      0] Constant 1 .. 0,1 -> 0,2
+      1] Constant 3 .. 0,4 -> 0,5
+      2] Constant 4 .. 0,7 -> 0,8
+      .ctx Load
 """, r"""
 Tuple .. ROOT 0,0 -> 2,1
   .elts[1]
@@ -777,13 +749,12 @@ Tuple .. ROOT 0,0 -> 2,1
 Module .. ROOT 0,0 -> 0,9
   .body[1]
   0] Expr .. 0,0 -> 0,9
-    .value
-      Tuple .. 0,0 -> 0,9
-        .elts[3]
-        0] Constant 1 .. 0,1 -> 0,2
-        1] Constant 3 .. 0,4 -> 0,5
-        2] Constant 4 .. 0,7 -> 0,8
-        .ctx Load
+    .value Tuple .. 0,0 -> 0,9
+      .elts[3]
+      0] Constant 1 .. 0,1 -> 0,2
+      1] Constant 3 .. 0,4 -> 0,5
+      2] Constant 4 .. 0,7 -> 0,8
+      .ctx Load
 """, r"""
 Tuple .. ROOT 0,0 -> 2,1
   .elts[1]
@@ -803,13 +774,12 @@ Tuple .. ROOT 0,0 -> 2,1
 Module .. ROOT 0,0 -> 0,9
   .body[1]
   0] Expr .. 0,0 -> 0,9
-    .value
-      Tuple .. 0,0 -> 0,9
-        .elts[3]
-        0] Constant 1 .. 0,1 -> 0,2
-        1] Constant 3 .. 0,4 -> 0,5
-        2] Constant 4 .. 0,7 -> 0,8
-        .ctx Load
+    .value Tuple .. 0,0 -> 0,9
+      .elts[3]
+      0] Constant 1 .. 0,1 -> 0,2
+      1] Constant 3 .. 0,4 -> 0,5
+      2] Constant 4 .. 0,7 -> 0,8
+      .ctx Load
 """, r"""
 Tuple .. ROOT 0,0 -> 1,4
   .elts[1]
@@ -829,13 +799,12 @@ Tuple .. ROOT 0,0 -> 1,4
 Module .. ROOT 0,0 -> 0,9
   .body[1]
   0] Expr .. 0,0 -> 0,9
-    .value
-      Tuple .. 0,0 -> 0,9
-        .elts[3]
-        0] Constant 1 .. 0,1 -> 0,2
-        1] Constant 3 .. 0,4 -> 0,5
-        2] Constant 4 .. 0,7 -> 0,8
-        .ctx Load
+    .value Tuple .. 0,0 -> 0,9
+      .elts[3]
+      0] Constant 1 .. 0,1 -> 0,2
+      1] Constant 3 .. 0,4 -> 0,5
+      2] Constant 4 .. 0,7 -> 0,8
+      .ctx Load
 """, r"""
 Tuple .. ROOT 0,0 -> 1,4
   .elts[1]
@@ -863,13 +832,11 @@ if 1:
 Module .. ROOT 0,0 -> 1,6
   .body[1]
   0] If .. 0,0 -> 1,6
-    .test
-      Constant 1 .. 0,3 -> 0,4
+    .test Constant 1 .. 0,3 -> 0,4
     .body[1]
     0] Expr .. 1,4 -> 1,6
-      .value
-        Tuple .. 1,4 -> 1,6
-          .ctx Load
+      .value Tuple .. 1,4 -> 1,6
+        .ctx Load
 """, r"""
 Tuple .. ROOT 0,0 -> 4,1
   .elts[3]
@@ -900,15 +867,13 @@ if 1:
 Module .. ROOT 0,0 -> 3,5
   .body[1]
   0] If .. 0,0 -> 3,5
-    .test
-      Constant 1 .. 0,3 -> 0,4
+    .test Constant 1 .. 0,3 -> 0,4
     .body[1]
     0] Expr .. 1,4 -> 3,5
-      .value
-        Tuple .. 1,4 -> 3,5
-          .elts[1]
-          0] Constant 3 .. 2,8 -> 2,9
-          .ctx Load
+      .value Tuple .. 1,4 -> 3,5
+        .elts[1]
+        0] Constant 3 .. 2,8 -> 2,9
+        .ctx Load
 """, r"""
 Tuple .. ROOT 0,0 -> 3,1
   .elts[2]
@@ -938,16 +903,14 @@ if 1:
 Module .. ROOT 0,0 -> 4,5
   .body[1]
   0] If .. 0,0 -> 4,5
-    .test
-      Constant 1 .. 0,3 -> 0,4
+    .test Constant 1 .. 0,3 -> 0,4
     .body[1]
     0] Expr .. 1,4 -> 4,5
-      .value
-        Tuple .. 1,4 -> 4,5
-          .elts[2]
-          0] Constant 1 .. 2,8 -> 2,9
-          1] Constant 3 .. 3,8 -> 3,9
-          .ctx Load
+      .value Tuple .. 1,4 -> 4,5
+        .elts[2]
+        0] Constant 1 .. 2,8 -> 2,9
+        1] Constant 3 .. 3,8 -> 3,9
+        .ctx Load
 """, r"""
 Tuple .. ROOT 0,0 -> 2,1
   .elts[1]
@@ -976,16 +939,14 @@ if 1:
 Module .. ROOT 0,0 -> 4,5
   .body[1]
   0] If .. 0,0 -> 4,5
-    .test
-      Constant 1 .. 0,3 -> 0,4
+    .test Constant 1 .. 0,3 -> 0,4
     .body[1]
     0] Expr .. 1,4 -> 4,5
-      .value
-        Tuple .. 1,4 -> 4,5
-          .elts[2]
-          0] Constant 1 .. 2,8 -> 2,9
-          1] Constant 2 .. 3,8 -> 3,9
-          .ctx Load
+      .value Tuple .. 1,4 -> 4,5
+        .elts[2]
+        0] Constant 1 .. 2,8 -> 2,9
+        1] Constant 2 .. 3,8 -> 3,9
+        .ctx Load
 """, r"""
 Tuple .. ROOT 0,0 -> 2,1
   .elts[1]
@@ -1003,14 +964,13 @@ Tuple .. ROOT 0,0 -> 2,1
 Module .. ROOT 0,0 -> 0,11
   .body[1]
   0] Expr .. 0,0 -> 0,11
-    .value
-      Dict .. 0,0 -> 0,11
-        .keys[2]
-        0] Constant 1 .. 0,1 -> 0,2
-        1] None
-        .values[2]
-        0] Constant 2 .. 0,4 -> 0,5
-        1] Name 'c' Load .. 0,9 -> 0,10
+    .value Dict .. 0,0 -> 0,11
+      .keys[2]
+      0] Constant 1 .. 0,1 -> 0,2
+      1] None
+      .values[2]
+      0] Constant 2 .. 0,4 -> 0,5
+      1] Name 'c' Load .. 0,9 -> 0,10
 """, r"""
 Dict .. ROOT 0,0 -> 0,5
   .keys[1]
@@ -1029,8 +989,7 @@ Dict .. ROOT 0,0 -> 0,5
 Module .. ROOT 0,0 -> 0,2
   .body[1]
   0] Expr .. 0,0 -> 0,2
-    .value
-      Dict .. 0,0 -> 0,2
+    .value Dict .. 0,0 -> 0,2
 """, r"""
 Dict .. ROOT 0,0 -> 0,16
   .keys[3]
@@ -1053,14 +1012,13 @@ Dict .. ROOT 0,0 -> 0,16
 Module .. ROOT 0,0 -> 0,11
   .body[1]
   0] Expr .. 0,0 -> 0,11
-    .value
-      Dict .. 0,0 -> 0,11
-        .keys[2]
-        0] Constant 1 .. 0,1 -> 0,2
-        1] None
-        .values[2]
-        0] Constant 2 .. 0,4 -> 0,5
-        1] Name 'b' Load .. 0,9 -> 0,10
+    .value Dict .. 0,0 -> 0,11
+      .keys[2]
+      0] Constant 1 .. 0,1 -> 0,2
+      1] None
+      .values[2]
+      0] Constant 2 .. 0,4 -> 0,5
+      1] Name 'b' Load .. 0,9 -> 0,10
 """, r"""
 Dict .. ROOT 0,0 -> 0,5
   .keys[1]
@@ -1087,9 +1045,8 @@ Dict .. ROOT 0,0 -> 0,5
 Module .. ROOT 0,0 -> 0,2
   .body[1]
   0] Expr .. 0,0 -> 0,2
-    .value
-      List .. 0,0 -> 0,2
-        .ctx Load
+    .value List .. 0,0 -> 0,2
+      .ctx Load
 """, r"""
 List .. ROOT 0,0 -> 4,1
   .elts[3]
@@ -1118,11 +1075,10 @@ List .. ROOT 0,0 -> 4,1
 Module .. ROOT 0,0 -> 2,1
   .body[1]
   0] Expr .. 0,0 -> 2,1
-    .value
-      List .. 0,0 -> 2,1
-        .elts[1]
-        0] Constant 3 .. 1,4 -> 1,5
-        .ctx Load
+    .value List .. 0,0 -> 2,1
+      .elts[1]
+      0] Constant 3 .. 1,4 -> 1,5
+      .ctx Load
 """, r"""
 List .. ROOT 0,0 -> 3,1
   .elts[2]
@@ -1150,12 +1106,11 @@ List .. ROOT 0,0 -> 3,1
 Module .. ROOT 0,0 -> 3,1
   .body[1]
   0] Expr .. 0,0 -> 3,1
-    .value
-      List .. 0,0 -> 3,1
-        .elts[2]
-        0] Constant 1 .. 1,4 -> 1,5
-        1] Constant 3 .. 2,4 -> 2,5
-        .ctx Load
+    .value List .. 0,0 -> 3,1
+      .elts[2]
+      0] Constant 1 .. 1,4 -> 1,5
+      1] Constant 3 .. 2,4 -> 2,5
+      .ctx Load
 """, r"""
 List .. ROOT 0,0 -> 2,1
   .elts[1]
@@ -1182,12 +1137,11 @@ List .. ROOT 0,0 -> 2,1
 Module .. ROOT 0,0 -> 3,1
   .body[1]
   0] Expr .. 0,0 -> 3,1
-    .value
-      List .. 0,0 -> 3,1
-        .elts[2]
-        0] Constant 1 .. 1,4 -> 1,5
-        1] Constant 2 .. 2,4 -> 2,5
-        .ctx Load
+    .value List .. 0,0 -> 3,1
+      .elts[2]
+      0] Constant 1 .. 1,4 -> 1,5
+      1] Constant 2 .. 2,4 -> 2,5
+      .ctx Load
 """, r"""
 List .. ROOT 0,0 -> 2,1
   .elts[1]
@@ -1211,13 +1165,12 @@ List .. ROOT 0,0 -> 2,1
 Module .. ROOT 0,0 -> 2,1
   .body[1]
   0] Expr .. 0,0 -> 2,1
-    .value
-      List .. 0,0 -> 2,1
-        .elts[3]
-        0] Constant 1 .. 1,4 -> 1,5
-        1] Constant 2 .. 1,7 -> 1,8
-        2] Constant 4 .. 1,10 -> 1,11
-        .ctx Load
+    .value List .. 0,0 -> 2,1
+      .elts[3]
+      0] Constant 1 .. 1,4 -> 1,5
+      1] Constant 2 .. 1,7 -> 1,8
+      2] Constant 4 .. 1,10 -> 1,11
+      .ctx Load
 """, r"""
 List .. ROOT 0,0 -> 1,1
   .elts[1]
@@ -1241,13 +1194,12 @@ List .. ROOT 0,0 -> 1,1
 Module .. ROOT 0,0 -> 2,1
   .body[1]
   0] Expr .. 0,0 -> 2,1
-    .value
-      List .. 0,0 -> 2,1
-        .elts[3]
-        0] Constant 1 .. 1,4 -> 1,5
-        1] Constant 2 .. 1,7 -> 1,8
-        2] Constant 4 .. 1,10 -> 1,11
-        .ctx Load
+    .value List .. 0,0 -> 2,1
+      .elts[3]
+      0] Constant 1 .. 1,4 -> 1,5
+      1] Constant 2 .. 1,7 -> 1,8
+      2] Constant 4 .. 1,10 -> 1,11
+      .ctx Load
 """, r"""
 List .. ROOT 0,0 -> 1,7
   .elts[1]
@@ -1271,12 +1223,11 @@ List .. ROOT 0,0 -> 1,7
 Module .. ROOT 0,0 -> 2,1
   .body[1]
   0] Expr .. 0,0 -> 2,1
-    .value
-      List .. 0,0 -> 2,1
-        .elts[2]
-        0] Constant 1 .. 1,4 -> 1,5
-        1] Constant 4 .. 1,7 -> 1,8
-        .ctx Load
+    .value List .. 0,0 -> 2,1
+      .elts[2]
+      0] Constant 1 .. 1,4 -> 1,5
+      1] Constant 4 .. 1,7 -> 1,8
+      .ctx Load
 """, r"""
 List .. ROOT 0,0 -> 1,7
   .elts[2]
@@ -1301,11 +1252,10 @@ List .. ROOT 0,0 -> 1,7
 Module .. ROOT 0,0 -> 1,6
   .body[1]
   0] Expr .. 0,0 -> 1,6
-    .value
-      List .. 0,0 -> 1,6
-        .elts[1]
-        0] Constant 1 .. 1,4 -> 1,5
-        .ctx Load
+    .value List .. 0,0 -> 1,6
+      .elts[1]
+      0] Constant 1 .. 1,4 -> 1,5
+      .ctx Load
 """, r"""
 List .. ROOT 0,0 -> 2,1
   .elts[3]
@@ -1331,89 +1281,56 @@ Module .. ROOT 0,0 -> 0,53
   0] Assign .. 0,0 -> 0,53
     .targets[1]
     0] Name 'i' Store .. 0,0 -> 0,1
-    .value
-      Tuple .. 0,19 -> 0,53
-        .elts[1]
-        0] BinOp .. 0,20 -> 0,51
-          .left
-            Call .. 0,20 -> 0,28
-              .func
-                Name 'id' Load .. 0,20 -> 0,22
-              .args[1]
-              0] Name 'self' Load .. 0,23 -> 0,27
-          .op
-            BitAnd
-          .right
-            BinOp .. 0,32 -> 0,50
-              .left
-                BinOp .. 0,32 -> 0,46
-                  .left
-                    Attribute .. 0,32 -> 0,44
-                      .value
-                        Name '_sys' Load .. 0,32 -> 0,36
-                      .attr
-                        'maxsize'
-                      .ctx Load
-                  .op
-                    Mult
-                  .right
-                    Constant 2 .. 0,45 -> 0,46
-              .op
-                Add
-              .right
-                Constant 1 .. 0,49 -> 0,50
-        .ctx Load
-    .type_comment
-      None
+    .value Tuple .. 0,19 -> 0,53
+      .elts[1]
+      0] BinOp .. 0,20 -> 0,51
+        .left Call .. 0,20 -> 0,28
+          .func Name 'id' Load .. 0,20 -> 0,22
+          .args[1]
+          0] Name 'self' Load .. 0,23 -> 0,27
+        .op BitAnd
+        .right BinOp .. 0,32 -> 0,50
+          .left BinOp .. 0,32 -> 0,46
+            .left Attribute .. 0,32 -> 0,44
+              .value Name '_sys' Load .. 0,32 -> 0,36
+              .attr 'maxsize'
+              .ctx Load
+            .op Mult
+            .right Constant 2 .. 0,45 -> 0,46
+          .op Add
+          .right Constant 1 .. 0,49 -> 0,50
+      .ctx Load
+    .type_comment None
 """, r"""
 Tuple .. ROOT 0,0 -> 2,1
   .elts[3]
   0] Attribute .. 0,1 -> 0,24
-    .value
-      Attribute .. 0,1 -> 0,15
-        .value
-          Name 'self' Load .. 0,1 -> 0,5
-        .attr
-          '__class__'
-        .ctx Load
-    .attr
-      '__name__'
+    .value Attribute .. 0,1 -> 0,15
+      .value Name 'self' Load .. 0,1 -> 0,5
+      .attr '__class__'
+      .ctx Load
+    .attr '__name__'
     .ctx Load
   1] Attribute .. 0,26 -> 0,36
-    .value
-      Name 'self' Load .. 0,26 -> 0,30
-    .attr
-      '_name'
+    .value Name 'self' Load .. 0,26 -> 0,30
+    .attr '_name'
     .ctx Load
   2] BinOp .. 1,17 -> 1,52
-    .left
-      Attribute .. 1,17 -> 1,29
-        .value
-          Name 'self' Load .. 1,17 -> 1,21
-        .attr
-          '_handle'
-        .ctx Load
-    .op
-      BitAnd
-    .right
-      BinOp .. 1,33 -> 1,51
-        .left
-          BinOp .. 1,33 -> 1,47
-            .left
-              Attribute .. 1,33 -> 1,45
-                .value
-                  Name '_sys' Load .. 1,33 -> 1,37
-                .attr
-                  'maxsize'
-                .ctx Load
-            .op
-              Mult
-            .right
-              Constant 2 .. 1,46 -> 1,47
-        .op
-          Add
-        .right
-          Constant 1 .. 1,50 -> 1,51
+    .left Attribute .. 1,17 -> 1,29
+      .value Name 'self' Load .. 1,17 -> 1,21
+      .attr '_handle'
+      .ctx Load
+    .op BitAnd
+    .right BinOp .. 1,33 -> 1,51
+      .left BinOp .. 1,33 -> 1,47
+        .left Attribute .. 1,33 -> 1,45
+          .value Name '_sys' Load .. 1,33 -> 1,37
+          .attr 'maxsize'
+          .ctx Load
+        .op Mult
+        .right Constant 2 .. 1,46 -> 1,47
+      .op Add
+      .right Constant 1 .. 1,50 -> 1,51
   .ctx Load
 """),
 
@@ -1432,34 +1349,26 @@ Module .. ROOT 0,0 -> 0,37
     .targets[2]
     0] Name 'i' Store .. 0,0 -> 0,1
     1] Name 'namespace' Store .. 0,4 -> 0,13
-    .value
-      Dict .. 0,16 -> 0,37
-        .keys[1]
-        0] None
-        .values[1]
-        0] Attribute .. 0,19 -> 0,36
-          .value
-            Name '__main__' Load .. 0,19 -> 0,27
-          .attr
-            '__dict__'
-          .ctx Load
-    .type_comment
-      None
+    .value Dict .. 0,16 -> 0,37
+      .keys[1]
+      0] None
+      .values[1]
+      0] Attribute .. 0,19 -> 0,36
+        .value Name '__main__' Load .. 0,19 -> 0,27
+        .attr '__dict__'
+        .ctx Load
+    .type_comment None
 """, r"""
 Dict .. ROOT 0,0 -> 1,1
   .keys[1]
   0] None
   .values[1]
   0] Attribute .. 0,3 -> 0,33
-    .value
-      Attribute .. 0,3 -> 0,24
-        .value
-          Name '__main__' Load .. 0,3 -> 0,11
-        .attr
-          '__builtins__'
-        .ctx Load
-    .attr
-      '__dict__'
+    .value Attribute .. 0,3 -> 0,24
+      .value Name '__main__' Load .. 0,3 -> 0,11
+      .attr '__builtins__'
+      .ctx Load
+    .attr '__dict__'
     .ctx Load
 """),
 
@@ -1488,53 +1397,40 @@ Module .. ROOT 0,0 -> 4,1
   0] Assign .. 0,0 -> 4,1
     .targets[1]
     0] Name 'env' Store .. 0,0 -> 0,3
-    .value
-      Dict .. 0,6 -> 4,1
-        .keys[3]
-        0] Constant 'PYLAUNCHER_DRYRUN' .. 1,4 -> 1,23
-        1] Constant 'PYLAUNCHER_LIMIT_TO_COMPANY' .. 2,4 -> 2,33
-        2] None
-        .values[3]
-        0] Constant '1' .. 1,25 -> 1,28
-        1] Constant '' .. 2,35 -> 2,37
-        2] DictComp .. 3,6 -> 3,52
-          .key
-            Call .. 3,7 -> 3,16
-              .func
-                Attribute .. 3,7 -> 3,14
-                  .value
-                    Name 'k' Load .. 3,7 -> 3,8
-                  .attr
-                    'upper'
-                  .ctx Load
-          .value
-            Name 'v' Load .. 3,18 -> 3,19
-          .generators[1]
-          0] comprehension .. 3,24 -> 3,51
-            .target
-              Tuple .. 3,24 -> 3,28
-                .elts[2]
-                0] Name 'k' Store .. 3,24 -> 3,25
-                1] Name 'v' Store .. 3,27 -> 3,28
-                .ctx Store
-            .iter
-              Call .. 3,32 -> 3,51
-                .func
-                  Attribute .. 3,32 -> 3,49
-                    .value
-                      BoolOp .. 3,33 -> 3,42
-                        .op
-                          Or
-                        .values[2]
-                        0] Name 'env' Load .. 3,33 -> 3,36
-                        1] Dict .. 3,40 -> 3,42
-                    .attr
-                      'items'
-                    .ctx Load
-            .is_async
-              0
-    .type_comment
-      None
+    .value Dict .. 0,6 -> 4,1
+      .keys[3]
+      0] Constant 'PYLAUNCHER_DRYRUN' .. 1,4 -> 1,23
+      1] Constant 'PYLAUNCHER_LIMIT_TO_COMPANY' .. 2,4 -> 2,33
+      2] None
+      .values[3]
+      0] Constant '1' .. 1,25 -> 1,28
+      1] Constant '' .. 2,35 -> 2,37
+      2] DictComp .. 3,6 -> 3,52
+        .key Call .. 3,7 -> 3,16
+          .func Attribute .. 3,7 -> 3,14
+            .value Name 'k' Load .. 3,7 -> 3,8
+            .attr 'upper'
+            .ctx Load
+        .value Name 'v' Load .. 3,18 -> 3,19
+        .generators[1]
+        0] comprehension .. 3,24 -> 3,51
+          .target Tuple .. 3,24 -> 3,28
+            .elts[2]
+            0] Name 'k' Store .. 3,24 -> 3,25
+            1] Name 'v' Store .. 3,27 -> 3,28
+            .ctx Store
+          .iter Call .. 3,32 -> 3,51
+            .func Attribute .. 3,32 -> 3,49
+              .value BoolOp .. 3,33 -> 3,42
+                .op Or
+                .values[2]
+                0] Name 'env' Load .. 3,33 -> 3,36
+                1] Dict .. 3,40 -> 3,42
+              .attr 'items'
+              .ctx Load
+          .is_async
+            0
+    .type_comment None
 """, r"""
 Dict .. ROOT 0,0 -> 3,1
   .keys[2]
@@ -1542,50 +1438,34 @@ Dict .. ROOT 0,0 -> 3,1
   1] Constant 'PYLAUNCHER_DEBUG' .. 2,4 -> 2,22
   .values[2]
   0] DictComp .. 1,6 -> 1,78
-    .key
-      Call .. 1,7 -> 1,16
-        .func
-          Attribute .. 1,7 -> 1,14
-            .value
-              Name 'k' Load .. 1,7 -> 1,8
-            .attr
-              'upper'
-            .ctx Load
-    .value
-      Name 'v' Load .. 1,18 -> 1,19
+    .key Call .. 1,7 -> 1,16
+      .func Attribute .. 1,7 -> 1,14
+        .value Name 'k' Load .. 1,7 -> 1,8
+        .attr 'upper'
+        .ctx Load
+    .value Name 'v' Load .. 1,18 -> 1,19
     .generators[1]
     0] comprehension .. 1,24 -> 1,77
-      .target
-        Tuple .. 1,24 -> 1,28
-          .elts[2]
-          0] Name 'k' Store .. 1,24 -> 1,25
-          1] Name 'v' Store .. 1,27 -> 1,28
-          .ctx Store
-      .iter
-        Call .. 1,32 -> 1,50
-          .func
-            Attribute .. 1,32 -> 1,48
-              .value
-                Attribute .. 1,32 -> 1,42
-                  .value
-                    Name 'os' Load .. 1,32 -> 1,34
-                  .attr
-                    'environ'
-                  .ctx Load
-              .attr
-                'items'
-              .ctx Load
+      .target Tuple .. 1,24 -> 1,28
+        .elts[2]
+        0] Name 'k' Store .. 1,24 -> 1,25
+        1] Name 'v' Store .. 1,27 -> 1,28
+        .ctx Store
+      .iter Call .. 1,32 -> 1,50
+        .func Attribute .. 1,32 -> 1,48
+          .value Attribute .. 1,32 -> 1,42
+            .value Name 'os' Load .. 1,32 -> 1,34
+            .attr 'environ'
+            .ctx Load
+          .attr 'items'
+          .ctx Load
       .ifs[1]
       0] Compare .. 1,54 -> 1,77
-        .left
-          Call .. 1,54 -> 1,63
-            .func
-              Attribute .. 1,54 -> 1,61
-                .value
-                  Name 'k' Load .. 1,54 -> 1,55
-                .attr
-                  'upper'
-                .ctx Load
+        .left Call .. 1,54 -> 1,63
+          .func Attribute .. 1,54 -> 1,61
+            .value Name 'k' Load .. 1,54 -> 1,55
+            .attr 'upper'
+            .ctx Load
         .ops[1]
         0] NotIn
         .comparators[1]
@@ -1609,51 +1489,46 @@ Dict .. ROOT 0,0 -> 3,1
 Module .. ROOT 0,0 -> 2,67
   .body[1]
   0] Expr .. 0,0 -> 2,67
-    .value
-      Tuple .. 0,0 -> 2,67
-        .elts[11]
-        0] Constant None .. 0,1 -> 0,5
-        1] Constant False .. 0,7 -> 0,12
-        2] Constant True .. 0,14 -> 0,18
-        3] Constant 12345 .. 0,20 -> 0,25
-        4] Constant 123.45 .. 0,27 -> 0,33
-        5] Constant b'abcde' .. 0,35 -> 0,43
-        6] Call .. 1,12 -> 1,55
-          .func
-            Attribute .. 1,12 -> 1,29
-              .value
-                Name 'datetime' Load .. 1,12 -> 1,20
-              .attr
-                'datetime'
-              .ctx Load
-          .args[6]
-          0] Constant 2004 .. 1,30 -> 1,34
-          1] Constant 10 .. 1,36 -> 1,38
-          2] Constant 26 .. 1,40 -> 1,42
-          3] Constant 10 .. 1,44 -> 1,46
-          4] Constant 33 .. 1,48 -> 1,50
-          5] Constant 33 .. 1,52 -> 1,54
-        7] Call .. 2,12 -> 2,31
-          .func
-            Name 'bytearray' Load .. 2,12 -> 2,21
-          .args[1]
-          0] Constant b'abcde' .. 2,22 -> 2,30
-        8] List .. 2,33 -> 2,42
-          .elts[2]
-          0] Constant 12 .. 2,34 -> 2,36
-          1] Constant 345 .. 2,38 -> 2,41
+    .value Tuple .. 0,0 -> 2,67
+      .elts[11]
+      0] Constant None .. 0,1 -> 0,5
+      1] Constant False .. 0,7 -> 0,12
+      2] Constant True .. 0,14 -> 0,18
+      3] Constant 12345 .. 0,20 -> 0,25
+      4] Constant 123.45 .. 0,27 -> 0,33
+      5] Constant b'abcde' .. 0,35 -> 0,43
+      6] Call .. 1,12 -> 1,55
+        .func Attribute .. 1,12 -> 1,29
+          .value Name 'datetime' Load .. 1,12 -> 1,20
+          .attr 'datetime'
           .ctx Load
-        9] Tuple .. 2,44 -> 2,53
-          .elts[2]
-          0] Constant 12 .. 2,45 -> 2,47
-          1] Constant 345 .. 2,49 -> 2,52
-          .ctx Load
-        10] Dict .. 2,55 -> 2,66
-          .keys[1]
-          0] Constant '12' .. 2,56 -> 2,60
-          .values[1]
-          0] Constant 345 .. 2,62 -> 2,65
+        .args[6]
+        0] Constant 2004 .. 1,30 -> 1,34
+        1] Constant 10 .. 1,36 -> 1,38
+        2] Constant 26 .. 1,40 -> 1,42
+        3] Constant 10 .. 1,44 -> 1,46
+        4] Constant 33 .. 1,48 -> 1,50
+        5] Constant 33 .. 1,52 -> 1,54
+      7] Call .. 2,12 -> 2,31
+        .func Name 'bytearray' Load .. 2,12 -> 2,21
+        .args[1]
+        0] Constant b'abcde' .. 2,22 -> 2,30
+      8] List .. 2,33 -> 2,42
+        .elts[2]
+        0] Constant 12 .. 2,34 -> 2,36
+        1] Constant 345 .. 2,38 -> 2,41
         .ctx Load
+      9] Tuple .. 2,44 -> 2,53
+        .elts[2]
+        0] Constant 12 .. 2,45 -> 2,47
+        1] Constant 345 .. 2,49 -> 2,52
+        .ctx Load
+      10] Dict .. 2,55 -> 2,66
+        .keys[1]
+        0] Constant '12' .. 2,56 -> 2,60
+        .values[1]
+        0] Constant 345 .. 2,62 -> 2,65
+      .ctx Load
 """, r"""
 Tuple .. ROOT 0,0 -> 0,18
   .elts[2]
@@ -1677,10 +1552,8 @@ Module .. ROOT 0,0 -> 0,7
       .elts[1]
       0] Name 'a' Store .. 0,1 -> 0,2
       .ctx Store
-    .value
-      Name 'c' Load .. 0,6 -> 0,7
-    .type_comment
-      None
+    .value Name 'c' Load .. 0,6 -> 0,7
+    .type_comment None
 """, r"""
 List .. ROOT 0,0 -> 0,3
   .elts[1]
@@ -1713,14 +1586,13 @@ List .. ROOT 0,0 -> 0,3
 Module .. ROOT 0,0 -> 2,65
   .body[1]
   0] Expr .. 0,0 -> 2,65
-    .value
-      Dict .. 0,0 -> 2,65
-        .keys[2]
-        0] Constant 'exception' .. 1,12 -> 1,23
-        1] Constant 'addr' .. 2,49 -> 2,55
-        .values[2]
-        0] Name 'exc' Load .. 1,25 -> 1,28
-        1] Name 'address' Load .. 2,57 -> 2,64
+    .value Dict .. 0,0 -> 2,65
+      .keys[2]
+      0] Constant 'exception' .. 1,12 -> 1,23
+      1] Constant 'addr' .. 2,49 -> 2,55
+      .values[2]
+      0] Name 'exc' Load .. 1,25 -> 1,28
+      1] Name 'address' Load .. 2,57 -> 2,64
 """, r"""
 Dict .. ROOT 0,0 -> 6,1
   .keys[3]
@@ -1733,18 +1605,15 @@ Dict .. ROOT 0,0 -> 6,1
   2] Tuple .. 4,22 -> 5,59
     .elts[1]
     0] BinOp .. 4,23 -> 5,57
-      .left
-        Constant 'err=%s transferred=%s key=%#x address=%#x' .. 4,23 -> 4,66
-      .op
-        Mod
-      .right
-        Tuple .. 5,25 -> 5,57
-          .elts[4]
-          0] Name 'err' Load .. 5,26 -> 5,29
-          1] Name 'transferred' Load .. 5,31 -> 5,42
-          2] Name 'key' Load .. 5,44 -> 5,47
-          3] Name 'address' Load .. 5,49 -> 5,56
-          .ctx Load
+      .left Constant 'err=%s transferred=%s key=%#x address=%#x' .. 4,23 -> 4,66
+      .op Mod
+      .right Tuple .. 5,25 -> 5,57
+        .elts[4]
+        0] Name 'err' Load .. 5,26 -> 5,29
+        1] Name 'transferred' Load .. 5,31 -> 5,42
+        2] Name 'key' Load .. 5,44 -> 5,47
+        3] Name 'address' Load .. 5,49 -> 5,56
+        .ctx Load
     .ctx Load
 """),
 
@@ -1758,12 +1627,11 @@ Dict .. ROOT 0,0 -> 6,1
 Module .. ROOT 0,0 -> 0,6
   .body[1]
   0] Expr .. 0,0 -> 0,6
-    .value
-      Tuple .. 0,0 -> 0,6
-        .elts[2]
-        0] Constant 1 .. 0,1 -> 0,2
-        1] Constant 3 .. 0,4 -> 0,5
-        .ctx Load
+    .value Tuple .. 0,0 -> 0,6
+      .elts[2]
+      0] Constant 1 .. 0,1 -> 0,2
+      1] Constant 3 .. 0,4 -> 0,5
+      .ctx Load
 """, r"""
 Tuple .. ROOT 0,0 -> 0,6
   .elts[1]
@@ -1783,19 +1651,15 @@ class cls: pass
 Module .. ROOT 0,0 -> 1,15
   .body[1]
   0] ClassDef .. 1,0 -> 1,15
-    .name
-      'cls'
+    .name 'cls'
     .body[1]
     0] Pass .. 1,11 -> 1,15
     .decorator_list[1]
     0] Call .. 0,1 -> 0,15
-      .func
-        Attribute .. 0,1 -> 0,11
-          .value
-            Name 'patch' Load .. 0,1 -> 0,6
-          .attr
-            'dict'
-          .ctx Load
+      .func Attribute .. 0,1 -> 0,11
+        .value Name 'patch' Load .. 0,1 -> 0,6
+        .attr 'dict'
+        .ctx Load
       .args[1]
       0] Dict .. 0,12 -> 0,14
 """, r"""
@@ -1818,17 +1682,14 @@ class cls:
 Module .. ROOT 0,0 -> 1,10
   .body[1]
   0] ClassDef .. 0,0 -> 1,10
-    .name
-      'cls'
+    .name 'cls'
     .body[1]
     0] Assign .. 1,4 -> 1,10
       .targets[1]
       0] Tuple .. 1,4 -> 1,6
         .ctx Store
-      .value
-        Name 'c' Load .. 1,9 -> 1,10
-      .type_comment
-        None
+      .value Name 'c' Load .. 1,9 -> 1,10
+      .type_comment None
 """, r"""
 Tuple .. ROOT 0,0 -> 0,6
   .elts[2]
@@ -1849,8 +1710,7 @@ if 1:
 Module .. ROOT 0,0 -> 1,16
   .body[1]
   0] If .. 0,0 -> 1,16
-    .test
-      Constant 1 .. 0,3 -> 0,4
+    .test Constant 1 .. 0,3 -> 0,4
     .body[1]
     0] Assign .. 1,4 -> 1,16
       .targets[1]
@@ -1858,14 +1718,12 @@ Module .. ROOT 0,0 -> 1,16
         .elts[1]
         0] Name 'yy' Store .. 1,4 -> 1,6
         .ctx Store
-      .value
-        Tuple .. 1,10 -> 1,16
-          .elts[2]
-          0] Name 'tm' Load .. 1,10 -> 1,12
-          1] Name 'yy' Load .. 1,14 -> 1,16
-          .ctx Load
-      .type_comment
-        None
+      .value Tuple .. 1,10 -> 1,16
+        .elts[2]
+        0] Name 'tm' Load .. 1,10 -> 1,12
+        1] Name 'yy' Load .. 1,14 -> 1,16
+        .ctx Load
+      .type_comment None
 """, r"""
 Tuple .. ROOT 0,0 -> 0,5
   .elts[1]
@@ -1883,10 +1741,8 @@ set()
 Module .. ROOT 0,0 -> 0,5
   .body[1]
   0] Expr .. 0,0 -> 0,5
-    .value
-      Call .. 0,0 -> 0,5
-        .func
-          Name 'set' Load .. 0,0 -> 0,3
+    .value Call .. 0,0 -> 0,5
+      .func Name 'set' Load .. 0,0 -> 0,3
 """, r"""
 Set .. ROOT 0,0 -> 0,6
   .elts[2]
@@ -1904,15 +1760,13 @@ set()
 Module .. ROOT 0,0 -> 0,6
   .body[1]
   0] Expr .. 0,0 -> 0,6
-    .value
-      Set .. 0,0 -> 0,6
-        .elts[2]
-        0] Constant 1 .. 0,1 -> 0,2
-        1] Constant 2 .. 0,4 -> 0,5
+    .value Set .. 0,0 -> 0,6
+      .elts[2]
+      0] Constant 1 .. 0,1 -> 0,2
+      1] Constant 2 .. 0,4 -> 0,5
 """, r"""
 Call .. ROOT 0,0 -> 0,5
-  .func
-    Name 'set' Load .. 0,0 -> 0,3
+  .func Name 'set' Load .. 0,0 -> 0,3
 """),
 
 (r"""
@@ -1925,14 +1779,11 @@ set()
 Module .. ROOT 0,0 -> 0,5
   .body[1]
   0] Expr .. 0,0 -> 0,5
-    .value
-      Call .. 0,0 -> 0,5
-        .func
-          Name 'set' Load .. 0,0 -> 0,3
+    .value Call .. 0,0 -> 0,5
+      .func Name 'set' Load .. 0,0 -> 0,3
 """, r"""
 Call .. ROOT 0,0 -> 0,5
-  .func
-    Name 'set' Load .. 0,0 -> 0,3
+  .func Name 'set' Load .. 0,0 -> 0,3
 """),
 
 (r"""
@@ -1945,12 +1796,11 @@ Call .. ROOT 0,0 -> 0,5
 Module .. ROOT 0,0 -> 0,5
   .body[1]
   0] Expr .. 0,0 -> 0,5
-    .value
-      Tuple .. 0,0 -> 0,5
-        .elts[2]
-        0] Constant 2 .. 0,0 -> 0,1
-        1] Constant 3 .. 0,3 -> 0,4
-        .ctx Load
+    .value Tuple .. 0,0 -> 0,5
+      .elts[2]
+      0] Constant 2 .. 0,0 -> 0,1
+      1] Constant 3 .. 0,3 -> 0,4
+      .ctx Load
 """, r"""
 Tuple .. ROOT 0,0 -> 0,4
   .elts[1]
@@ -1968,12 +1818,11 @@ Tuple .. ROOT 0,0 -> 0,4
 Module .. ROOT 0,0 -> 0,5
   .body[1]
   0] Expr .. 0,0 -> 0,5
-    .value
-      Tuple .. 0,0 -> 0,5
-        .elts[2]
-        0] Constant 1 .. 0,0 -> 0,1
-        1] Constant 3 .. 0,3 -> 0,4
-        .ctx Load
+    .value Tuple .. 0,0 -> 0,5
+      .elts[2]
+      0] Constant 1 .. 0,0 -> 0,1
+      1] Constant 3 .. 0,3 -> 0,4
+      .ctx Load
 """, r"""
 Tuple .. ROOT 0,0 -> 0,4
   .elts[1]
@@ -1991,12 +1840,11 @@ Tuple .. ROOT 0,0 -> 0,4
 Module .. ROOT 0,0 -> 0,5
   .body[1]
   0] Expr .. 0,0 -> 0,5
-    .value
-      Tuple .. 0,0 -> 0,5
-        .elts[2]
-        0] Constant 1 .. 0,0 -> 0,1
-        1] Constant 2 .. 0,3 -> 0,4
-        .ctx Load
+    .value Tuple .. 0,0 -> 0,5
+      .elts[2]
+      0] Constant 1 .. 0,0 -> 0,1
+      1] Constant 2 .. 0,3 -> 0,4
+      .ctx Load
 """, r"""
 Tuple .. ROOT 0,0 -> 0,4
   .elts[1]
@@ -2014,11 +1862,10 @@ Tuple .. ROOT 0,0 -> 0,4
 Module .. ROOT 0,0 -> 0,2
   .body[1]
   0] Expr .. 0,0 -> 0,2
-    .value
-      Tuple .. 0,0 -> 0,2
-        .elts[1]
-        0] Constant 3 .. 0,0 -> 0,1
-        .ctx Load
+    .value Tuple .. 0,0 -> 0,2
+      .elts[1]
+      0] Constant 3 .. 0,0 -> 0,1
+      .ctx Load
 """, r"""
 Tuple .. ROOT 0,0 -> 0,6
   .elts[2]
@@ -2037,11 +1884,10 @@ Tuple .. ROOT 0,0 -> 0,6
 Module .. ROOT 0,0 -> 0,2
   .body[1]
   0] Expr .. 0,0 -> 0,2
-    .value
-      Tuple .. 0,0 -> 0,2
-        .elts[1]
-        0] Constant 1 .. 0,0 -> 0,1
-        .ctx Load
+    .value Tuple .. 0,0 -> 0,2
+      .elts[1]
+      0] Constant 1 .. 0,0 -> 0,1
+      .ctx Load
 """, r"""
 Tuple .. ROOT 0,0 -> 0,6
   .elts[2]
@@ -2060,9 +1906,8 @@ Tuple .. ROOT 0,0 -> 0,6
 Module .. ROOT 0,0 -> 0,2
   .body[1]
   0] Expr .. 0,0 -> 0,2
-    .value
-      Tuple .. 0,0 -> 0,2
-        .ctx Load
+    .value Tuple .. 0,0 -> 0,2
+      .ctx Load
 """, r"""
 Tuple .. ROOT 0,0 -> 0,10
   .elts[3]
@@ -2091,21 +1936,17 @@ j  # post
 Module .. ROOT 0,0 -> 4,0
   .body[1]
   0] If .. 1,0 -> 3,5
-    .test
-      Constant 1 .. 1,3 -> 1,4
+    .test Constant 1 .. 1,3 -> 1,4
     .body[2]
     0] Expr .. 2,4 -> 2,5
-      .value
-        Name 'i' Load .. 2,4 -> 2,5
+      .value Name 'i' Load .. 2,4 -> 2,5
     1] Expr .. 3,4 -> 3,5
-      .value
-        Name 'k' Load .. 3,4 -> 3,5
+      .value Name 'k' Load .. 3,4 -> 3,5
 """, r"""
 Module .. ROOT 0,0 -> 2,0
   .body[1]
   0] Expr .. 1,0 -> 1,1
-    .value
-      Name 'j' Load .. 1,0 -> 1,1
+    .value Name 'j' Load .. 1,0 -> 1,1
 """),
 
 (r"""
@@ -2123,21 +1964,17 @@ j""", r"""
 Module .. ROOT 0,0 -> 4,0
   .body[1]
   0] If .. 1,0 -> 3,5
-    .test
-      Constant 1 .. 1,3 -> 1,4
+    .test Constant 1 .. 1,3 -> 1,4
     .body[2]
     0] Expr .. 2,4 -> 2,5
-      .value
-        Name 'i' Load .. 2,4 -> 2,5
+      .value Name 'i' Load .. 2,4 -> 2,5
     1] Expr .. 3,4 -> 3,5
-      .value
-        Name 'k' Load .. 3,4 -> 3,5
+      .value Name 'k' Load .. 3,4 -> 3,5
 """, r"""
 Module .. ROOT 0,0 -> 1,1
   .body[1]
   0] Expr .. 1,0 -> 1,1
-    .value
-      Name 'j' Load .. 1,0 -> 1,1
+    .value Name 'j' Load .. 1,0 -> 1,1
 """),
 
 (r"""
@@ -2156,21 +1993,17 @@ j""", r"""
 Module .. ROOT 0,0 -> 5,0
   .body[1]
   0] If .. 1,0 -> 4,5
-    .test
-      Constant 1 .. 1,3 -> 1,4
+    .test Constant 1 .. 1,3 -> 1,4
     .body[2]
     0] Expr .. 2,4 -> 2,5
-      .value
-        Name 'i' Load .. 2,4 -> 2,5
+      .value Name 'i' Load .. 2,4 -> 2,5
     1] Expr .. 4,4 -> 4,5
-      .value
-        Name 'k' Load .. 4,4 -> 4,5
+      .value Name 'k' Load .. 4,4 -> 4,5
 """, r"""
 Module .. ROOT 0,0 -> 1,1
   .body[1]
   0] Expr .. 1,0 -> 1,1
-    .value
-      Name 'j' Load .. 1,0 -> 1,1
+    .value Name 'j' Load .. 1,0 -> 1,1
 """),
 
 (r"""
@@ -2189,21 +2022,17 @@ j""", r"""
 Module .. ROOT 0,0 -> 5,0
   .body[1]
   0] If .. 1,0 -> 4,3
-    .test
-      Constant 1 .. 1,3 -> 1,4
+    .test Constant 1 .. 1,3 -> 1,4
     .body[2]
     0] Expr .. 2,4 -> 2,5
-      .value
-        Name 'i' Load .. 2,4 -> 2,5
+      .value Name 'i' Load .. 2,4 -> 2,5
     1] Expr .. 4,2 -> 4,3
-      .value
-        Name 'k' Load .. 4,2 -> 4,3
+      .value Name 'k' Load .. 4,2 -> 4,3
 """, r"""
 Module .. ROOT 0,0 -> 1,1
   .body[1]
   0] Expr .. 1,0 -> 1,1
-    .value
-      Name 'j' Load .. 1,0 -> 1,1
+    .value Name 'j' Load .. 1,0 -> 1,1
 """),
 
 (r"""
@@ -2224,21 +2053,17 @@ j""", r"""
 Module .. ROOT 0,0 -> 6,0
   .body[1]
   0] If .. 1,0 -> 5,3
-    .test
-      Constant 1 .. 1,3 -> 1,4
+    .test Constant 1 .. 1,3 -> 1,4
     .body[2]
     0] Expr .. 2,4 -> 2,5
-      .value
-        Name 'i' Load .. 2,4 -> 2,5
+      .value Name 'i' Load .. 2,4 -> 2,5
     1] Expr .. 5,2 -> 5,3
-      .value
-        Name 'k' Load .. 5,2 -> 5,3
+      .value Name 'k' Load .. 5,2 -> 5,3
 """, r"""
 Module .. ROOT 0,0 -> 1,1
   .body[1]
   0] Expr .. 1,0 -> 1,1
-    .value
-      Name 'j' Load .. 1,0 -> 1,1
+    .value Name 'j' Load .. 1,0 -> 1,1
 """),
 
 (r"""
@@ -2260,21 +2085,17 @@ j""", r"""
 Module .. ROOT 0,0 -> 6,0
   .body[1]
   0] If .. 1,0 -> 5,3
-    .test
-      Constant 1 .. 1,3 -> 1,4
+    .test Constant 1 .. 1,3 -> 1,4
     .body[2]
     0] Expr .. 2,4 -> 2,5
-      .value
-        Name 'i' Load .. 2,4 -> 2,5
+      .value Name 'i' Load .. 2,4 -> 2,5
     1] Expr .. 5,2 -> 5,3
-      .value
-        Name 'k' Load .. 5,2 -> 5,3
+      .value Name 'k' Load .. 5,2 -> 5,3
 """, r"""
 Module .. ROOT 0,0 -> 1,1
   .body[1]
   0] Expr .. 1,0 -> 1,1
-    .value
-      Name 'j' Load .. 1,0 -> 1,1
+    .value Name 'j' Load .. 1,0 -> 1,1
 """),
 
 (r"""
@@ -2294,21 +2115,17 @@ j""", r"""
 Module .. ROOT 0,0 -> 5,0
   .body[1]
   0] If .. 1,0 -> 4,3
-    .test
-      Constant 1 .. 1,3 -> 1,4
+    .test Constant 1 .. 1,3 -> 1,4
     .body[2]
     0] Expr .. 2,4 -> 2,5
-      .value
-        Name 'i' Load .. 2,4 -> 2,5
+      .value Name 'i' Load .. 2,4 -> 2,5
     1] Expr .. 4,2 -> 4,3
-      .value
-        Name 'k' Load .. 4,2 -> 4,3
+      .value Name 'k' Load .. 4,2 -> 4,3
 """, r"""
 Module .. ROOT 0,0 -> 1,1
   .body[1]
   0] Expr .. 1,0 -> 1,1
-    .value
-      Name 'j' Load .. 1,0 -> 1,1
+    .value Name 'j' Load .. 1,0 -> 1,1
 """),
 
 (r"""
@@ -2326,21 +2143,17 @@ j""", r"""
 Module .. ROOT 0,0 -> 4,0
   .body[1]
   0] If .. 1,0 -> 3,5
-    .test
-      Constant 1 .. 1,3 -> 1,4
+    .test Constant 1 .. 1,3 -> 1,4
     .body[2]
     0] Expr .. 2,4 -> 2,5
-      .value
-        Name 'i' Load .. 2,4 -> 2,5
+      .value Name 'i' Load .. 2,4 -> 2,5
     1] Expr .. 3,4 -> 3,5
-      .value
-        Name 'k' Load .. 3,4 -> 3,5
+      .value Name 'k' Load .. 3,4 -> 3,5
 """, r"""
 Module .. ROOT 0,0 -> 1,1
   .body[1]
   0] Expr .. 1,0 -> 1,1
-    .value
-      Name 'j' Load .. 1,0 -> 1,1
+    .value Name 'j' Load .. 1,0 -> 1,1
 """),
 
 (r"""
@@ -2358,21 +2171,17 @@ j""", r"""
 Module .. ROOT 0,0 -> 4,0
   .body[1]
   0] If .. 1,0 -> 3,5
-    .test
-      Constant 1 .. 1,3 -> 1,4
+    .test Constant 1 .. 1,3 -> 1,4
     .body[2]
     0] Expr .. 2,4 -> 2,5
-      .value
-        Name 'i' Load .. 2,4 -> 2,5
+      .value Name 'i' Load .. 2,4 -> 2,5
     1] Expr .. 3,4 -> 3,5
-      .value
-        Name 'k' Load .. 3,4 -> 3,5
+      .value Name 'k' Load .. 3,4 -> 3,5
 """, r"""
 Module .. ROOT 0,0 -> 1,1
   .body[1]
   0] Expr .. 1,0 -> 1,1
-    .value
-      Name 'j' Load .. 1,0 -> 1,1
+    .value Name 'j' Load .. 1,0 -> 1,1
 """),
 
 (r"""
@@ -2388,21 +2197,17 @@ if 1:
 Module .. ROOT 0,0 -> 4,0
   .body[1]
   0] If .. 1,0 -> 3,5
-    .test
-      Constant 1 .. 1,3 -> 1,4
+    .test Constant 1 .. 1,3 -> 1,4
     .body[2]
     0] Expr .. 2,4 -> 2,5
-      .value
-        Name 'i' Load .. 2,4 -> 2,5
+      .value Name 'i' Load .. 2,4 -> 2,5
     1] Expr .. 3,4 -> 3,5
-      .value
-        Name 'k' Load .. 3,4 -> 3,5
+      .value Name 'k' Load .. 3,4 -> 3,5
 """, r"""
 Module .. ROOT 0,0 -> 1,0
   .body[1]
   0] Expr .. 0,0 -> 0,1
-    .value
-      Name 'j' Load .. 0,0 -> 0,1
+    .value Name 'j' Load .. 0,0 -> 0,1
 """),
 
 (r"""
@@ -2416,18 +2221,15 @@ if 1:
 Module .. ROOT 0,0 -> 3,0
   .body[1]
   0] If .. 1,0 -> 2,5
-    .test
-      Constant 1 .. 1,3 -> 1,4
+    .test Constant 1 .. 1,3 -> 1,4
     .body[1]
     0] Expr .. 2,4 -> 2,5
-      .value
-        Name 'i' Load .. 2,4 -> 2,5
+      .value Name 'i' Load .. 2,4 -> 2,5
 """, r"""
 Module .. ROOT 0,0 -> 1,0
   .body[1]
   0] Expr .. 0,0 -> 0,1
-    .value
-      Name 'j' Load .. 0,0 -> 0,1
+    .value Name 'j' Load .. 0,0 -> 0,1
 """),
 
 (r"""
@@ -2444,21 +2246,17 @@ if 1:
 Module .. ROOT 0,0 -> 4,0
   .body[1]
   0] If .. 1,0 -> 3,5
-    .test
-      Constant 1 .. 1,3 -> 1,4
+    .test Constant 1 .. 1,3 -> 1,4
     .body[2]
     0] Expr .. 2,4 -> 2,5
-      .value
-        Name 'i' Load .. 2,4 -> 2,5
+      .value Name 'i' Load .. 2,4 -> 2,5
     1] Expr .. 3,4 -> 3,5
-      .value
-        Name 'k' Load .. 3,4 -> 3,5
+      .value Name 'k' Load .. 3,4 -> 3,5
 """, r"""
 Module .. ROOT 0,0 -> 1,0
   .body[1]
   0] Expr .. 0,0 -> 0,1
-    .value
-      Name 'j' Load .. 0,0 -> 0,1
+    .value Name 'j' Load .. 0,0 -> 0,1
 """),
 
 (r"""
@@ -2475,21 +2273,17 @@ if 1:
 Module .. ROOT 0,0 -> 4,0
   .body[1]
   0] If .. 1,0 -> 3,5
-    .test
-      Constant 1 .. 1,3 -> 1,4
+    .test Constant 1 .. 1,3 -> 1,4
     .body[2]
     0] Expr .. 2,4 -> 2,5
-      .value
-        Name 'i' Load .. 2,4 -> 2,5
+      .value Name 'i' Load .. 2,4 -> 2,5
     1] Expr .. 3,4 -> 3,5
-      .value
-        Name 'k' Load .. 3,4 -> 3,5
+      .value Name 'k' Load .. 3,4 -> 3,5
 """, r"""
 Module .. ROOT 0,0 -> 1,0
   .body[1]
   0] Expr .. 0,0 -> 0,1
-    .value
-      Name 'j' Load .. 0,0 -> 0,1
+    .value Name 'j' Load .. 0,0 -> 0,1
 """),
 
 (r"""
@@ -2507,21 +2301,17 @@ if 1:
 Module .. ROOT 0,0 -> 4,0
   .body[1]
   0] If .. 1,0 -> 3,5
-    .test
-      Constant 1 .. 1,3 -> 1,4
+    .test Constant 1 .. 1,3 -> 1,4
     .body[2]
     0] Expr .. 2,4 -> 2,5
-      .value
-        Name 'i' Load .. 2,4 -> 2,5
+      .value Name 'i' Load .. 2,4 -> 2,5
     1] Expr .. 3,4 -> 3,5
-      .value
-        Name 'k' Load .. 3,4 -> 3,5
+      .value Name 'k' Load .. 3,4 -> 3,5
 """, r"""
 Module .. ROOT 0,0 -> 1,0
   .body[1]
   0] Expr .. 0,0 -> 0,1
-    .value
-      Name 'j' Load .. 0,0 -> 0,1
+    .value Name 'j' Load .. 0,0 -> 0,1
 """),
 
 (r"""
@@ -2534,21 +2324,17 @@ if 1:
 Module .. ROOT 0,0 -> 3,0
   .body[1]
   0] If .. 1,0 -> 2,9
-    .test
-      Constant 1 .. 1,3 -> 1,4
+    .test Constant 1 .. 1,3 -> 1,4
     .body[2]
     0] Expr .. 2,4 -> 2,5
-      .value
-        Name 'i' Load .. 2,4 -> 2,5
+      .value Name 'i' Load .. 2,4 -> 2,5
     1] Expr .. 2,8 -> 2,9
-      .value
-        Name 'k' Load .. 2,8 -> 2,9
+      .value Name 'k' Load .. 2,8 -> 2,9
 """, r"""
 Module .. ROOT 0,0 -> 0,1
   .body[1]
   0] Expr .. 0,0 -> 0,1
-    .value
-      Name 'j' Load .. 0,0 -> 0,1
+    .value Name 'j' Load .. 0,0 -> 0,1
 """),
 
 (r"""
@@ -2563,21 +2349,17 @@ if 1:
 Module .. ROOT 0,0 -> 4,0
   .body[1]
   0] If .. 1,0 -> 3,5
-    .test
-      Constant 1 .. 1,3 -> 1,4
+    .test Constant 1 .. 1,3 -> 1,4
     .body[2]
     0] Expr .. 2,4 -> 2,5
-      .value
-        Name 'i' Load .. 2,4 -> 2,5
+      .value Name 'i' Load .. 2,4 -> 2,5
     1] Expr .. 3,4 -> 3,5
-      .value
-        Name 'k' Load .. 3,4 -> 3,5
+      .value Name 'k' Load .. 3,4 -> 3,5
 """, r"""
 Module .. ROOT 0,0 -> 0,1
   .body[1]
   0] Expr .. 0,0 -> 0,1
-    .value
-      Name 'j' Load .. 0,0 -> 0,1
+    .value Name 'j' Load .. 0,0 -> 0,1
 """),
 
 (r"""
@@ -2592,21 +2374,17 @@ if 1:
 Module .. ROOT 0,0 -> 4,0
   .body[1]
   0] If .. 1,0 -> 3,5
-    .test
-      Constant 1 .. 1,3 -> 1,4
+    .test Constant 1 .. 1,3 -> 1,4
     .body[2]
     0] Expr .. 2,4 -> 2,5
-      .value
-        Name 'i' Load .. 2,4 -> 2,5
+      .value Name 'i' Load .. 2,4 -> 2,5
     1] Expr .. 3,4 -> 3,5
-      .value
-        Name 'k' Load .. 3,4 -> 3,5
+      .value Name 'k' Load .. 3,4 -> 3,5
 """, r"""
 Module .. ROOT 0,0 -> 0,1
   .body[1]
   0] Expr .. 0,0 -> 0,1
-    .value
-      Name 'j' Load .. 0,0 -> 0,1
+    .value Name 'j' Load .. 0,0 -> 0,1
 """),
 
 (r"""
@@ -2623,21 +2401,17 @@ if 1:
 Module .. ROOT 0,0 -> 5,0
   .body[1]
   0] If .. 1,0 -> 4,5
-    .test
-      Constant 1 .. 1,3 -> 1,4
+    .test Constant 1 .. 1,3 -> 1,4
     .body[2]
     0] Expr .. 2,4 -> 2,5
-      .value
-        Name 'i' Load .. 2,4 -> 2,5
+      .value Name 'i' Load .. 2,4 -> 2,5
     1] Expr .. 4,4 -> 4,5
-      .value
-        Name 'k' Load .. 4,4 -> 4,5
+      .value Name 'k' Load .. 4,4 -> 4,5
 """, r"""
 Module .. ROOT 0,0 -> 0,1
   .body[1]
   0] Expr .. 0,0 -> 0,1
-    .value
-      Name 'j' Load .. 0,0 -> 0,1
+    .value Name 'j' Load .. 0,0 -> 0,1
 """),
 
 (r"""
@@ -2655,21 +2429,17 @@ if 1:
 Module .. ROOT 0,0 -> 5,0
   .body[1]
   0] If .. 1,0 -> 4,5
-    .test
-      Constant 1 .. 1,3 -> 1,4
+    .test Constant 1 .. 1,3 -> 1,4
     .body[2]
     0] Expr .. 2,4 -> 2,5
-      .value
-        Name 'i' Load .. 2,4 -> 2,5
+      .value Name 'i' Load .. 2,4 -> 2,5
     1] Expr .. 4,4 -> 4,5
-      .value
-        Name 'k' Load .. 4,4 -> 4,5
+      .value Name 'k' Load .. 4,4 -> 4,5
 """, r"""
 Module .. ROOT 0,0 -> 0,1
   .body[1]
   0] Expr .. 0,0 -> 0,1
-    .value
-      Name 'j' Load .. 0,0 -> 0,1
+    .value Name 'j' Load .. 0,0 -> 0,1
 """),
 
 (r"""
@@ -2688,21 +2458,17 @@ if 1:
 Module .. ROOT 0,0 -> 5,0
   .body[1]
   0] If .. 1,0 -> 4,5
-    .test
-      Constant 1 .. 1,3 -> 1,4
+    .test Constant 1 .. 1,3 -> 1,4
     .body[2]
     0] Expr .. 2,4 -> 2,5
-      .value
-        Name 'i' Load .. 2,4 -> 2,5
+      .value Name 'i' Load .. 2,4 -> 2,5
     1] Expr .. 4,4 -> 4,5
-      .value
-        Name 'k' Load .. 4,4 -> 4,5
+      .value Name 'k' Load .. 4,4 -> 4,5
 """, r"""
 Module .. ROOT 0,0 -> 0,1
   .body[1]
   0] Expr .. 0,0 -> 0,1
-    .value
-      Name 'j' Load .. 0,0 -> 0,1
+    .value Name 'j' Load .. 0,0 -> 0,1
 """),
 
 (r"""
@@ -2719,23 +2485,19 @@ if 1:
 Module .. ROOT 0,0 -> 4,0
   .body[1]
   0] If .. 1,0 -> 3,14
-    .test
-      Constant 1 .. 1,3 -> 1,4
+    .test Constant 1 .. 1,3 -> 1,4
     .body[2]
     0] Expr .. 2,4 -> 2,5
-      .value
-        Name 'i' Load .. 2,4 -> 2,5
+      .value Name 'i' Load .. 2,4 -> 2,5
     1] If .. 3,4 -> 3,14
-      .test
-        Constant 2 .. 3,7 -> 3,8
+      .test Constant 2 .. 3,7 -> 3,8
       .body[1]
       0] Pass .. 3,10 -> 3,14
 """, r"""
 Module .. ROOT 0,0 -> 1,0
   .body[1]
   0] Expr .. 0,0 -> 0,1
-    .value
-      Name 'j' Load .. 0,0 -> 0,1
+    .value Name 'j' Load .. 0,0 -> 0,1
 """),
 
 (r"""
@@ -2752,23 +2514,19 @@ if 1:
 Module .. ROOT 0,0 -> 4,0
   .body[1]
   0] If .. 1,0 -> 3,14
-    .test
-      Constant 1 .. 1,3 -> 1,4
+    .test Constant 1 .. 1,3 -> 1,4
     .body[2]
     0] Expr .. 2,4 -> 2,5
-      .value
-        Name 'i' Load .. 2,4 -> 2,5
+      .value Name 'i' Load .. 2,4 -> 2,5
     1] If .. 3,4 -> 3,14
-      .test
-        Constant 2 .. 3,7 -> 3,8
+      .test Constant 2 .. 3,7 -> 3,8
       .body[1]
       0] Pass .. 3,10 -> 3,14
 """, r"""
 Module .. ROOT 0,0 -> 1,0
   .body[1]
   0] Expr .. 0,0 -> 0,1
-    .value
-      Name 'j' Load .. 0,0 -> 0,1
+    .value Name 'j' Load .. 0,0 -> 0,1
 """),
 
 (r"""
@@ -2786,23 +2544,19 @@ if 1:
 Module .. ROOT 0,0 -> 4,0
   .body[1]
   0] If .. 1,0 -> 3,14
-    .test
-      Constant 1 .. 1,3 -> 1,4
+    .test Constant 1 .. 1,3 -> 1,4
     .body[2]
     0] Expr .. 2,4 -> 2,5
-      .value
-        Name 'i' Load .. 2,4 -> 2,5
+      .value Name 'i' Load .. 2,4 -> 2,5
     1] If .. 3,4 -> 3,14
-      .test
-        Constant 2 .. 3,7 -> 3,8
+      .test Constant 2 .. 3,7 -> 3,8
       .body[1]
       0] Pass .. 3,10 -> 3,14
 """, r"""
 Module .. ROOT 0,0 -> 1,0
   .body[1]
   0] Expr .. 0,0 -> 0,1
-    .value
-      Name 'j' Load .. 0,0 -> 0,1
+    .value Name 'j' Load .. 0,0 -> 0,1
 """),
 
 (r"""
@@ -2818,23 +2572,19 @@ if 1:
 Module .. ROOT 0,0 -> 4,0
   .body[1]
   0] If .. 1,0 -> 3,14
-    .test
-      Constant 1 .. 1,3 -> 1,4
+    .test Constant 1 .. 1,3 -> 1,4
     .body[2]
     0] Expr .. 2,4 -> 2,5
-      .value
-        Name 'i' Load .. 2,4 -> 2,5
+      .value Name 'i' Load .. 2,4 -> 2,5
     1] If .. 3,4 -> 3,14
-      .test
-        Constant 2 .. 3,7 -> 3,8
+      .test Constant 2 .. 3,7 -> 3,8
       .body[1]
       0] Pass .. 3,10 -> 3,14
 """, r"""
 Module .. ROOT 0,0 -> 0,1
   .body[1]
   0] Expr .. 0,0 -> 0,1
-    .value
-      Name 'j' Load .. 0,0 -> 0,1
+    .value Name 'j' Load .. 0,0 -> 0,1
 """),
 
 (r"""
@@ -2850,23 +2600,19 @@ if 1:
 Module .. ROOT 0,0 -> 4,0
   .body[1]
   0] If .. 1,0 -> 3,14
-    .test
-      Constant 1 .. 1,3 -> 1,4
+    .test Constant 1 .. 1,3 -> 1,4
     .body[2]
     0] Expr .. 2,4 -> 2,5
-      .value
-        Name 'i' Load .. 2,4 -> 2,5
+      .value Name 'i' Load .. 2,4 -> 2,5
     1] If .. 3,4 -> 3,14
-      .test
-        Constant 1 .. 3,7 -> 3,8
+      .test Constant 1 .. 3,7 -> 3,8
       .body[1]
       0] Pass .. 3,10 -> 3,14
 """, r"""
 Module .. ROOT 0,0 -> 0,1
   .body[1]
   0] Expr .. 0,0 -> 0,1
-    .value
-      Name 'j' Load .. 0,0 -> 0,1
+    .value Name 'j' Load .. 0,0 -> 0,1
 """),
 
 (r"""
@@ -2883,23 +2629,19 @@ if 1:
 Module .. ROOT 0,0 -> 4,0
   .body[1]
   0] If .. 1,0 -> 3,14
-    .test
-      Constant 1 .. 1,3 -> 1,4
+    .test Constant 1 .. 1,3 -> 1,4
     .body[2]
     0] Expr .. 2,4 -> 2,5
-      .value
-        Name 'i' Load .. 2,4 -> 2,5
+      .value Name 'i' Load .. 2,4 -> 2,5
     1] If .. 3,4 -> 3,14
-      .test
-        Constant 2 .. 3,7 -> 3,8
+      .test Constant 2 .. 3,7 -> 3,8
       .body[1]
       0] Pass .. 3,10 -> 3,14
 """, r"""
 Module .. ROOT 0,0 -> 0,1
   .body[1]
   0] Expr .. 0,0 -> 0,1
-    .value
-      Name 'j' Load .. 0,0 -> 0,1
+    .value Name 'j' Load .. 0,0 -> 0,1
 """),
 
 (r"""
@@ -2915,21 +2657,17 @@ if 1:
 Module .. ROOT 0,0 -> 4,0
   .body[1]
   0] If .. 1,0 -> 3,5
-    .test
-      Constant 1 .. 1,3 -> 1,4
+    .test Constant 1 .. 1,3 -> 1,4
     .body[2]
     0] Expr .. 2,4 -> 2,5
-      .value
-        Name 'i' Load .. 2,4 -> 2,5
+      .value Name 'i' Load .. 2,4 -> 2,5
     1] Expr .. 3,4 -> 3,5
-      .value
-        Name 'k' Load .. 3,4 -> 3,5
+      .value Name 'k' Load .. 3,4 -> 3,5
 """, r"""
 Module .. ROOT 0,0 -> 0,1
   .body[1]
   0] Expr .. 0,0 -> 0,1
-    .value
-      Name 'j' Load .. 0,0 -> 0,1
+    .value Name 'j' Load .. 0,0 -> 0,1
 """),
 
 (r"""
@@ -2946,21 +2684,17 @@ if 1:
 Module .. ROOT 0,0 -> 5,0
   .body[1]
   0] If .. 1,0 -> 4,5
-    .test
-      Constant 1 .. 1,3 -> 1,4
+    .test Constant 1 .. 1,3 -> 1,4
     .body[2]
     0] Expr .. 2,4 -> 2,5
-      .value
-        Name 'i' Load .. 2,4 -> 2,5
+      .value Name 'i' Load .. 2,4 -> 2,5
     1] Expr .. 4,4 -> 4,5
-      .value
-        Name 'k' Load .. 4,4 -> 4,5
+      .value Name 'k' Load .. 4,4 -> 4,5
 """, r"""
 Module .. ROOT 0,0 -> 0,1
   .body[1]
   0] Expr .. 0,0 -> 0,1
-    .value
-      Name 'j' Load .. 0,0 -> 0,1
+    .value Name 'j' Load .. 0,0 -> 0,1
 """),
 
 (r"""
@@ -2978,21 +2712,17 @@ if 1:
 Module .. ROOT 0,0 -> 5,0
   .body[1]
   0] If .. 1,0 -> 4,5
-    .test
-      Constant 1 .. 1,3 -> 1,4
+    .test Constant 1 .. 1,3 -> 1,4
     .body[2]
     0] Expr .. 2,4 -> 2,5
-      .value
-        Name 'i' Load .. 2,4 -> 2,5
+      .value Name 'i' Load .. 2,4 -> 2,5
     1] Expr .. 4,4 -> 4,5
-      .value
-        Name 'k' Load .. 4,4 -> 4,5
+      .value Name 'k' Load .. 4,4 -> 4,5
 """, r"""
 Module .. ROOT 0,0 -> 0,1
   .body[1]
   0] Expr .. 0,0 -> 0,1
-    .value
-      Name 'j' Load .. 0,0 -> 0,1
+    .value Name 'j' Load .. 0,0 -> 0,1
 """),
 
 (r"""
@@ -3011,21 +2741,17 @@ if 1:
 Module .. ROOT 0,0 -> 6,0
   .body[1]
   0] If .. 1,0 -> 5,5
-    .test
-      Constant 1 .. 1,3 -> 1,4
+    .test Constant 1 .. 1,3 -> 1,4
     .body[2]
     0] Expr .. 2,4 -> 2,5
-      .value
-        Name 'i' Load .. 2,4 -> 2,5
+      .value Name 'i' Load .. 2,4 -> 2,5
     1] Expr .. 5,4 -> 5,5
-      .value
-        Name 'k' Load .. 5,4 -> 5,5
+      .value Name 'k' Load .. 5,4 -> 5,5
 """, r"""
 Module .. ROOT 0,0 -> 0,1
   .body[1]
   0] Expr .. 0,0 -> 0,1
-    .value
-      Name 'j' Load .. 0,0 -> 0,1
+    .value Name 'j' Load .. 0,0 -> 0,1
 """),
 
 (r"""
@@ -3041,21 +2767,17 @@ if 1:
 Module .. ROOT 0,0 -> 4,0
   .body[1]
   0] If .. 1,0 -> 3,5
-    .test
-      Constant 1 .. 1,3 -> 1,4
+    .test Constant 1 .. 1,3 -> 1,4
     .body[2]
     0] Expr .. 2,4 -> 2,5
-      .value
-        Name 'i' Load .. 2,4 -> 2,5
+      .value Name 'i' Load .. 2,4 -> 2,5
     1] Expr .. 3,4 -> 3,5
-      .value
-        Name 'k' Load .. 3,4 -> 3,5
+      .value Name 'k' Load .. 3,4 -> 3,5
 """, r"""
 Module .. ROOT 0,0 -> 0,1
   .body[1]
   0] Expr .. 0,0 -> 0,1
-    .value
-      Name 'j' Load .. 0,0 -> 0,1
+    .value Name 'j' Load .. 0,0 -> 0,1
 """),
 
 (r"""
@@ -3072,21 +2794,17 @@ if 1:
 Module .. ROOT 0,0 -> 5,0
   .body[1]
   0] If .. 1,0 -> 4,3
-    .test
-      Constant 1 .. 1,3 -> 1,4
+    .test Constant 1 .. 1,3 -> 1,4
     .body[2]
     0] Expr .. 2,4 -> 2,5
-      .value
-        Name 'i' Load .. 2,4 -> 2,5
+      .value Name 'i' Load .. 2,4 -> 2,5
     1] Expr .. 4,2 -> 4,3
-      .value
-        Name 'k' Load .. 4,2 -> 4,3
+      .value Name 'k' Load .. 4,2 -> 4,3
 """, r"""
 Module .. ROOT 0,0 -> 0,1
   .body[1]
   0] Expr .. 0,0 -> 0,1
-    .value
-      Name 'j' Load .. 0,0 -> 0,1
+    .value Name 'j' Load .. 0,0 -> 0,1
 """),
 
 (r"""
@@ -3103,21 +2821,17 @@ if 1:
 Module .. ROOT 0,0 -> 4,0
   .body[1]
   0] If .. 1,0 -> 3,5
-    .test
-      Constant 1 .. 1,3 -> 1,4
+    .test Constant 1 .. 1,3 -> 1,4
     .body[2]
     0] Expr .. 2,4 -> 2,5
-      .value
-        Name 'i' Load .. 2,4 -> 2,5
+      .value Name 'i' Load .. 2,4 -> 2,5
     1] Expr .. 3,4 -> 3,5
-      .value
-        Name 'k' Load .. 3,4 -> 3,5
+      .value Name 'k' Load .. 3,4 -> 3,5
 """, r"""
 Module .. ROOT 0,0 -> 0,1
   .body[1]
   0] Expr .. 0,0 -> 0,1
-    .value
-      Name 'j' Load .. 0,0 -> 0,1
+    .value Name 'j' Load .. 0,0 -> 0,1
 """),
 
 (r"""
@@ -3135,21 +2849,17 @@ if 1:
 Module .. ROOT 0,0 -> 5,0
   .body[1]
   0] If .. 1,0 -> 4,3
-    .test
-      Constant 1 .. 1,3 -> 1,4
+    .test Constant 1 .. 1,3 -> 1,4
     .body[2]
     0] Expr .. 2,4 -> 2,5
-      .value
-        Name 'i' Load .. 2,4 -> 2,5
+      .value Name 'i' Load .. 2,4 -> 2,5
     1] Expr .. 4,2 -> 4,3
-      .value
-        Name 'k' Load .. 4,2 -> 4,3
+      .value Name 'k' Load .. 4,2 -> 4,3
 """, r"""
 Module .. ROOT 0,0 -> 0,1
   .body[1]
   0] Expr .. 0,0 -> 0,1
-    .value
-      Name 'j' Load .. 0,0 -> 0,1
+    .value Name 'j' Load .. 0,0 -> 0,1
 """),
 
 (r"""
@@ -3166,21 +2876,17 @@ if 1:
 Module .. ROOT 0,0 -> 4,0
   .body[1]
   0] If .. 1,0 -> 3,5
-    .test
-      Constant 1 .. 1,3 -> 1,4
+    .test Constant 1 .. 1,3 -> 1,4
     .body[2]
     0] Expr .. 2,4 -> 2,5
-      .value
-        Name 'i' Load .. 2,4 -> 2,5
+      .value Name 'i' Load .. 2,4 -> 2,5
     1] Expr .. 3,4 -> 3,5
-      .value
-        Name 'k' Load .. 3,4 -> 3,5
+      .value Name 'k' Load .. 3,4 -> 3,5
 """, r"""
 Module .. ROOT 0,0 -> 1,0
   .body[1]
   0] Expr .. 0,0 -> 0,1
-    .value
-      Name 'j' Load .. 0,0 -> 0,1
+    .value Name 'j' Load .. 0,0 -> 0,1
 """),
 
 (r"""
@@ -3195,20 +2901,17 @@ else:
 Module .. ROOT 0,0 -> 4,0
   .body[1]
   0] If .. 1,0 -> 3,3
-    .test
-      Constant 1 .. 1,3 -> 1,4
+    .test Constant 1 .. 1,3 -> 1,4
     .body[1]
     0] Pass .. 1,6 -> 1,10
     .orelse[1]
     0] Expr .. 3,2 -> 3,3
-      .value
-        Name 'j' Load .. 3,2 -> 3,3
+      .value Name 'j' Load .. 3,2 -> 3,3
 """, r"""
 Module .. ROOT 0,0 -> 0,1
   .body[1]
   0] Expr .. 0,0 -> 0,1
-    .value
-      Name 'i' Load .. 0,0 -> 0,1
+    .value Name 'i' Load .. 0,0 -> 0,1
 """),
 
 (r"""
@@ -3225,20 +2928,17 @@ else:
 Module .. ROOT 0,0 -> 5,0
   .body[1]
   0] If .. 1,0 -> 4,5
-    .test
-      Constant 1 .. 1,3 -> 1,4
+    .test Constant 1 .. 1,3 -> 1,4
     .body[1]
     0] Pass .. 1,6 -> 1,10
     .orelse[1]
     0] Expr .. 4,4 -> 4,5
-      .value
-        Name 'j' Load .. 4,4 -> 4,5
+      .value Name 'j' Load .. 4,4 -> 4,5
 """, r"""
 Module .. ROOT 0,0 -> 0,1
   .body[1]
   0] Expr .. 0,0 -> 0,1
-    .value
-      Name 'i' Load .. 0,0 -> 0,1
+    .value Name 'i' Load .. 0,0 -> 0,1
 """),
 
 (r"""
@@ -3256,20 +2956,17 @@ else:
 Module .. ROOT 0,0 -> 5,0
   .body[1]
   0] If .. 1,0 -> 4,5
-    .test
-      Constant 1 .. 1,3 -> 1,4
+    .test Constant 1 .. 1,3 -> 1,4
     .body[1]
     0] Pass .. 1,6 -> 1,10
     .orelse[1]
     0] Expr .. 4,4 -> 4,5
-      .value
-        Name 'j' Load .. 4,4 -> 4,5
+      .value Name 'j' Load .. 4,4 -> 4,5
 """, r"""
 Module .. ROOT 0,0 -> 0,1
   .body[1]
   0] Expr .. 0,0 -> 0,1
-    .value
-      Name 'i' Load .. 0,0 -> 0,1
+    .value Name 'i' Load .. 0,0 -> 0,1
 """),
 
 (r"""
@@ -3282,20 +2979,17 @@ else: j
 Module .. ROOT 0,0 -> 3,0
   .body[1]
   0] If .. 1,0 -> 2,7
-    .test
-      Constant 1 .. 1,3 -> 1,4
+    .test Constant 1 .. 1,3 -> 1,4
     .body[1]
     0] Pass .. 1,6 -> 1,10
     .orelse[1]
     0] Expr .. 2,6 -> 2,7
-      .value
-        Name 'j' Load .. 2,6 -> 2,7
+      .value Name 'j' Load .. 2,6 -> 2,7
 """, r"""
 Module .. ROOT 0,0 -> 0,1
   .body[1]
   0] Expr .. 0,0 -> 0,1
-    .value
-      Name 'i' Load .. 0,0 -> 0,1
+    .value Name 'i' Load .. 0,0 -> 0,1
 """),
 
 (r"""if 1: pass
@@ -3306,20 +3000,17 @@ else:
 Module .. ROOT 0,0 -> 2,3
   .body[1]
   0] If .. 0,0 -> 2,3
-    .test
-      Constant 1 .. 0,3 -> 0,4
+    .test Constant 1 .. 0,3 -> 0,4
     .body[1]
     0] Pass .. 0,6 -> 0,10
     .orelse[1]
     0] Expr .. 2,2 -> 2,3
-      .value
-        Name 'j' Load .. 2,2 -> 2,3
+      .value Name 'j' Load .. 2,2 -> 2,3
 """, r"""
 Module .. ROOT 0,0 -> 0,1
   .body[1]
   0] Expr .. 0,0 -> 0,1
-    .value
-      Name 'i' Load .. 0,0 -> 0,1
+    .value Name 'i' Load .. 0,0 -> 0,1
 """),
 
 (r"""if 1: pass
@@ -3332,20 +3023,17 @@ else:
 Module .. ROOT 0,0 -> 3,5
   .body[1]
   0] If .. 0,0 -> 3,5
-    .test
-      Constant 1 .. 0,3 -> 0,4
+    .test Constant 1 .. 0,3 -> 0,4
     .body[1]
     0] Pass .. 0,6 -> 0,10
     .orelse[1]
     0] Expr .. 3,4 -> 3,5
-      .value
-        Name 'j' Load .. 3,4 -> 3,5
+      .value Name 'j' Load .. 3,4 -> 3,5
 """, r"""
 Module .. ROOT 0,0 -> 0,1
   .body[1]
   0] Expr .. 0,0 -> 0,1
-    .value
-      Name 'i' Load .. 0,0 -> 0,1
+    .value Name 'i' Load .. 0,0 -> 0,1
 """),
 
 (r"""if 1: pass
@@ -3359,20 +3047,17 @@ else:
 Module .. ROOT 0,0 -> 3,5
   .body[1]
   0] If .. 0,0 -> 3,5
-    .test
-      Constant 1 .. 0,3 -> 0,4
+    .test Constant 1 .. 0,3 -> 0,4
     .body[1]
     0] Pass .. 0,6 -> 0,10
     .orelse[1]
     0] Expr .. 3,4 -> 3,5
-      .value
-        Name 'j' Load .. 3,4 -> 3,5
+      .value Name 'j' Load .. 3,4 -> 3,5
 """, r"""
 Module .. ROOT 0,0 -> 0,1
   .body[1]
   0] Expr .. 0,0 -> 0,1
-    .value
-      Name 'i' Load .. 0,0 -> 0,1
+    .value Name 'i' Load .. 0,0 -> 0,1
 """),
 
 (r"""if 1: pass
@@ -3381,20 +3066,17 @@ else: j""", r"""i""", r"""
 Module .. ROOT 0,0 -> 1,7
   .body[1]
   0] If .. 0,0 -> 1,7
-    .test
-      Constant 1 .. 0,3 -> 0,4
+    .test Constant 1 .. 0,3 -> 0,4
     .body[1]
     0] Pass .. 0,6 -> 0,10
     .orelse[1]
     0] Expr .. 1,6 -> 1,7
-      .value
-        Name 'j' Load .. 1,6 -> 1,7
+      .value Name 'j' Load .. 1,6 -> 1,7
 """, r"""
 Module .. ROOT 0,0 -> 0,1
   .body[1]
   0] Expr .. 0,0 -> 0,1
-    .value
-      Name 'i' Load .. 0,0 -> 0,1
+    .value Name 'i' Load .. 0,0 -> 0,1
 """),
 
 (r"""
@@ -3412,23 +3094,19 @@ j""", r"""
 Module .. ROOT 0,0 -> 4,0
   .body[1]
   0] If .. 1,0 -> 3,14
-    .test
-      Constant 1 .. 1,3 -> 1,4
+    .test Constant 1 .. 1,3 -> 1,4
     .body[2]
     0] Expr .. 2,4 -> 2,5
-      .value
-        Name 'i' Load .. 2,4 -> 2,5
+      .value Name 'i' Load .. 2,4 -> 2,5
     1] If .. 3,4 -> 3,14
-      .test
-        Constant 2 .. 3,7 -> 3,8
+      .test Constant 2 .. 3,7 -> 3,8
       .body[1]
       0] Pass .. 3,10 -> 3,14
 """, r"""
 Module .. ROOT 0,0 -> 1,1
   .body[1]
   0] Expr .. 1,0 -> 1,1
-    .value
-      Name 'j' Load .. 1,0 -> 1,1
+    .value Name 'j' Load .. 1,0 -> 1,1
 """),
 
 (r"""
@@ -3447,23 +3125,19 @@ j  # post
 Module .. ROOT 0,0 -> 4,0
   .body[1]
   0] If .. 1,0 -> 3,14
-    .test
-      Constant 1 .. 1,3 -> 1,4
+    .test Constant 1 .. 1,3 -> 1,4
     .body[2]
     0] Expr .. 2,4 -> 2,5
-      .value
-        Name 'i' Load .. 2,4 -> 2,5
+      .value Name 'i' Load .. 2,4 -> 2,5
     1] If .. 3,4 -> 3,14
-      .test
-        Constant 2 .. 3,7 -> 3,8
+      .test Constant 2 .. 3,7 -> 3,8
       .body[1]
       0] Pass .. 3,10 -> 3,14
 """, r"""
 Module .. ROOT 0,0 -> 2,0
   .body[1]
   0] Expr .. 1,0 -> 1,1
-    .value
-      Name 'j' Load .. 1,0 -> 1,1
+    .value Name 'j' Load .. 1,0 -> 1,1
 """),
 
 (r"""
@@ -3479,20 +3153,17 @@ if 1:
 Module .. ROOT 0,0 -> 4,0
   .body[1]
   0] If .. 1,0 -> 3,12
-    .test
-      Constant 1 .. 1,3 -> 1,4
+    .test Constant 1 .. 1,3 -> 1,4
     .body[1]
     0] If .. 3,2 -> 3,12
-      .test
-        Constant 2 .. 3,5 -> 3,6
+      .test Constant 2 .. 3,5 -> 3,6
       .body[1]
       0] Pass .. 3,8 -> 3,12
 """, r"""
 Module .. ROOT 0,0 -> 0,1
   .body[1]
   0] Expr .. 0,0 -> 0,1
-    .value
-      Name 'i' Load .. 0,0 -> 0,1
+    .value Name 'i' Load .. 0,0 -> 0,1
 """),
 
 (r"""
@@ -3510,21 +3181,17 @@ if 1:
 Module .. ROOT 0,0 -> 5,0
   .body[1]
   0] If .. 1,0 -> 4,5
-    .test
-      Constant 1 .. 1,3 -> 1,4
+    .test Constant 1 .. 1,3 -> 1,4
     .body[2]
     0] Expr .. 2,4 -> 2,5
-      .value
-        Name 'i' Load .. 2,4 -> 2,5
+      .value Name 'i' Load .. 2,4 -> 2,5
     1] Expr .. 4,4 -> 4,5
-      .value
-        Name 'k' Load .. 4,4 -> 4,5
+      .value Name 'k' Load .. 4,4 -> 4,5
 """, r"""
 Module .. ROOT 0,0 -> 0,1
   .body[1]
   0] Expr .. 0,0 -> 0,1
-    .value
-      Name 'j' Load .. 0,0 -> 0,1
+    .value Name 'j' Load .. 0,0 -> 0,1
 """),
 
 (r"""
@@ -3537,18 +3204,15 @@ if 1:
 Module .. ROOT 0,0 -> 3,0
   .body[1]
   0] If .. 1,0 -> 2,5
-    .test
-      Constant 1 .. 1,3 -> 1,4
+    .test Constant 1 .. 1,3 -> 1,4
     .body[1]
     0] Expr .. 2,4 -> 2,5
-      .value
-        Name 'j' Load .. 2,4 -> 2,5
+      .value Name 'j' Load .. 2,4 -> 2,5
 """, r"""
 Module .. ROOT 0,0 -> 0,1
   .body[1]
   0] Expr .. 0,0 -> 0,1
-    .value
-      Name 'i' Load .. 0,0 -> 0,1
+    .value Name 'i' Load .. 0,0 -> 0,1
 """),
 
 (r"""
@@ -3565,21 +3229,17 @@ j""", r"""
 Module .. ROOT 0,0 -> 4,0
   .body[1]
   0] If .. 1,0 -> 3,5
-    .test
-      Constant 1 .. 1,3 -> 1,4
+    .test Constant 1 .. 1,3 -> 1,4
     .body[2]
     0] Expr .. 2,4 -> 2,5
-      .value
-        Name 'i' Load .. 2,4 -> 2,5
+      .value Name 'i' Load .. 2,4 -> 2,5
     1] Expr .. 3,4 -> 3,5
-      .value
-        Name 'k' Load .. 3,4 -> 3,5
+      .value Name 'k' Load .. 3,4 -> 3,5
 """, r"""
 Module .. ROOT 0,0 -> 1,1
   .body[1]
   0] Expr .. 1,0 -> 1,1
-    .value
-      Name 'j' Load .. 1,0 -> 1,1
+    .value Name 'j' Load .. 1,0 -> 1,1
 """),
 
 (r"""
@@ -3604,33 +3264,21 @@ class cls:
 Module .. ROOT 0,0 -> 8,0
   .body[1]
   0] ClassDef .. 1,0 -> 7,5
-    .name
-      'cls'
+    .name 'cls'
     .body[2]
     0] Expr .. 2,4 -> 2,5
-      .value
-        Name 'i' Load .. 2,4 -> 2,5
+      .value Name 'i' Load .. 2,4 -> 2,5
     1] Expr .. 7,4 -> 7,5
-      .value
-        Name 'j' Load .. 7,4 -> 7,5
+      .value Name 'j' Load .. 7,4 -> 7,5
 """, r"""
 Module .. ROOT 0,0 -> 0,13
   .body[1]
   0] FunctionDef .. 0,0 -> 0,13
-    .name
-      'f'
-    .args
-      arguments
-        .vararg
-          None
-        .kwarg
-          None
+    .name 'f'
     .body[1]
     0] Pass .. 0,9 -> 0,13
-    .returns
-      None
-    .type_comment
-      None
+    .returns None
+    .type_comment None
 """),
 
 (r"""
@@ -3655,33 +3303,21 @@ class cls:
 Module .. ROOT 0,0 -> 8,0
   .body[1]
   0] ClassDef .. 1,0 -> 7,5
-    .name
-      'cls'
+    .name 'cls'
     .body[2]
     0] Expr .. 2,4 -> 2,5
-      .value
-        Name 'i' Load .. 2,4 -> 2,5
+      .value Name 'i' Load .. 2,4 -> 2,5
     1] Expr .. 7,4 -> 7,5
-      .value
-        Name 'j' Load .. 7,4 -> 7,5
+      .value Name 'j' Load .. 7,4 -> 7,5
 """, r"""
 Module .. ROOT 0,0 -> 0,13
   .body[1]
   0] FunctionDef .. 0,0 -> 0,13
-    .name
-      'f'
-    .args
-      arguments
-        .vararg
-          None
-        .kwarg
-          None
+    .name 'f'
     .body[1]
     0] Pass .. 0,9 -> 0,13
-    .returns
-      None
-    .type_comment
-      None
+    .returns None
+    .type_comment None
 """),
 
 (r"""
@@ -3703,29 +3339,18 @@ j
 Module .. ROOT 0,0 -> 6,0
   .body[2]
   0] Expr .. 1,0 -> 1,1
-    .value
-      Name 'i' Load .. 1,0 -> 1,1
+    .value Name 'i' Load .. 1,0 -> 1,1
   1] Expr .. 5,0 -> 5,1
-    .value
-      Name 'j' Load .. 5,0 -> 5,1
+    .value Name 'j' Load .. 5,0 -> 5,1
 """, r"""
 Module .. ROOT 0,0 -> 0,13
   .body[1]
   0] FunctionDef .. 0,0 -> 0,13
-    .name
-      'f'
-    .args
-      arguments
-        .vararg
-          None
-        .kwarg
-          None
+    .name 'f'
     .body[1]
     0] Pass .. 0,9 -> 0,13
-    .returns
-      None
-    .type_comment
-      None
+    .returns None
+    .type_comment None
 """),
 
 (r"""
@@ -3746,29 +3371,18 @@ j
 Module .. ROOT 0,0 -> 5,0
   .body[2]
   0] Expr .. 1,0 -> 1,1
-    .value
-      Name 'i' Load .. 1,0 -> 1,1
+    .value Name 'i' Load .. 1,0 -> 1,1
   1] Expr .. 4,0 -> 4,1
-    .value
-      Name 'j' Load .. 4,0 -> 4,1
+    .value Name 'j' Load .. 4,0 -> 4,1
 """, r"""
 Module .. ROOT 0,0 -> 0,13
   .body[1]
   0] FunctionDef .. 0,0 -> 0,13
-    .name
-      'f'
-    .args
-      arguments
-        .vararg
-          None
-        .kwarg
-          None
+    .name 'f'
     .body[1]
     0] Pass .. 0,9 -> 0,13
-    .returns
-      None
-    .type_comment
-      None
+    .returns None
+    .type_comment None
 """),
 
 (r"""
@@ -3788,29 +3402,18 @@ j
 Module .. ROOT 0,0 -> 4,0
   .body[2]
   0] Expr .. 1,0 -> 1,1
-    .value
-      Name 'i' Load .. 1,0 -> 1,1
+    .value Name 'i' Load .. 1,0 -> 1,1
   1] Expr .. 3,0 -> 3,1
-    .value
-      Name 'j' Load .. 3,0 -> 3,1
+    .value Name 'j' Load .. 3,0 -> 3,1
 """, r"""
 Module .. ROOT 0,0 -> 0,13
   .body[1]
   0] FunctionDef .. 0,0 -> 0,13
-    .name
-      'f'
-    .args
-      arguments
-        .vararg
-          None
-        .kwarg
-          None
+    .name 'f'
     .body[1]
     0] Pass .. 0,9 -> 0,13
-    .returns
-      None
-    .type_comment
-      None
+    .returns None
+    .type_comment None
 """),
 
 (r"""
@@ -3829,29 +3432,18 @@ j
 Module .. ROOT 0,0 -> 3,0
   .body[2]
   0] Expr .. 1,0 -> 1,1
-    .value
-      Name 'i' Load .. 1,0 -> 1,1
+    .value Name 'i' Load .. 1,0 -> 1,1
   1] Expr .. 2,0 -> 2,1
-    .value
-      Name 'j' Load .. 2,0 -> 2,1
+    .value Name 'j' Load .. 2,0 -> 2,1
 """, r"""
 Module .. ROOT 0,0 -> 0,13
   .body[1]
   0] FunctionDef .. 0,0 -> 0,13
-    .name
-      'f'
-    .args
-      arguments
-        .vararg
-          None
-        .kwarg
-          None
+    .name 'f'
     .body[1]
     0] Pass .. 0,9 -> 0,13
-    .returns
-      None
-    .type_comment
-      None
+    .returns None
+    .type_comment None
 """),
 
 (r"""
@@ -3870,29 +3462,18 @@ j
 Module .. ROOT 0,0 -> 3,0
   .body[2]
   0] Expr .. 1,0 -> 1,1
-    .value
-      Name 'i' Load .. 1,0 -> 1,1
+    .value Name 'i' Load .. 1,0 -> 1,1
   1] Expr .. 2,0 -> 2,1
-    .value
-      Name 'j' Load .. 2,0 -> 2,1
+    .value Name 'j' Load .. 2,0 -> 2,1
 """, r"""
 Module .. ROOT 0,0 -> 0,13
   .body[1]
   0] FunctionDef .. 0,0 -> 0,13
-    .name
-      'f'
-    .args
-      arguments
-        .vararg
-          None
-        .kwarg
-          None
+    .name 'f'
     .body[1]
     0] Pass .. 0,9 -> 0,13
-    .returns
-      None
-    .type_comment
-      None
+    .returns None
+    .type_comment None
 """),
 
 (r"""
@@ -3915,29 +3496,18 @@ def f(): pass""", r"""
 Module .. ROOT 0,0 -> 6,0
   .body[2]
   0] Expr .. 1,0 -> 1,1
-    .value
-      Name 'i' Load .. 1,0 -> 1,1
+    .value Name 'i' Load .. 1,0 -> 1,1
   1] Expr .. 5,0 -> 5,1
-    .value
-      Name 'j' Load .. 5,0 -> 5,1
+    .value Name 'j' Load .. 5,0 -> 5,1
 """, r"""
 Module .. ROOT 0,0 -> 1,13
   .body[1]
   0] FunctionDef .. 1,0 -> 1,13
-    .name
-      'f'
-    .args
-      arguments
-        .vararg
-          None
-        .kwarg
-          None
+    .name 'f'
     .body[1]
     0] Pass .. 1,9 -> 1,13
-    .returns
-      None
-    .type_comment
-      None
+    .returns None
+    .type_comment None
 """),
 
 (r"""
@@ -3960,17 +3530,14 @@ class cls:
 Module .. ROOT 0,0 -> 5,0
   .body[2]
   0] Expr .. 1,0 -> 1,1
-    .value
-      Name 'i' Load .. 1,0 -> 1,1
+    .value Name 'i' Load .. 1,0 -> 1,1
   1] Expr .. 4,0 -> 4,1
-    .value
-      Name 'j' Load .. 4,0 -> 4,1
+    .value Name 'j' Load .. 4,0 -> 4,1
 """, r"""
 Module .. ROOT 0,0 -> 3,6
   .body[1]
   0] ClassDef .. 2,0 -> 3,6
-    .name
-      'cls'
+    .name 'cls'
     .body[1]
     0] Pass .. 3,2 -> 3,6
     .decorator_list[2]
@@ -3998,24 +3565,20 @@ class cls:
 Module .. ROOT 0,0 -> 3,0
   .body[2]
   0] Expr .. 1,0 -> 1,1
-    .value
-      Name 'i' Load .. 1,0 -> 1,1
+    .value Name 'i' Load .. 1,0 -> 1,1
   1] Expr .. 2,0 -> 2,1
-    .value
-      Name 'j' Load .. 2,0 -> 2,1
+    .value Name 'j' Load .. 2,0 -> 2,1
 """, r"""
 Module .. ROOT 0,0 -> 5,0
   .body[1]
   0] ClassDef .. 3,0 -> 4,6
-    .name
-      'cls'
+    .name 'cls'
     .body[1]
     0] Pass .. 4,2 -> 4,6
     .decorator_list[2]
     0] Name 'deco1' Load .. 1,1 -> 1,6
     1] Call .. 2,1 -> 2,12
-      .func
-        Name 'deco2' Load .. 2,1 -> 2,6
+      .func Name 'deco2' Load .. 2,1 -> 2,6
       .args[2]
       0] Name 'a' Load .. 2,7 -> 2,8
       1] Name 'b' Load .. 2,10 -> 2,11
@@ -4042,39 +3605,21 @@ continue
 Module .. ROOT 0,0 -> 6,0
   .body[2]
   0] FunctionDef .. 1,0 -> 2,9
-    .name
-      'func1'
-    .args
-      arguments
-        .vararg
-          None
-        .kwarg
-          None
+    .name 'func1'
     .body[1]
     0] Break .. 2,4 -> 2,9
-    .returns
-      None
-    .type_comment
-      None
+    .returns None
+    .type_comment None
   1] Continue .. 5,0 -> 5,8
 """, r"""
 Module .. ROOT 0,0 -> 1,8
   .body[1]
   0] FunctionDef .. 0,0 -> 1,8
-    .name
-      'func0'
-    .args
-      arguments
-        .vararg
-          None
-        .kwarg
-          None
+    .name 'func0'
     .body[1]
     0] Pass .. 1,4 -> 1,8
-    .returns
-      None
-    .type_comment
-      None
+    .returns None
+    .type_comment None
 """),
 
 (r"""
@@ -4098,39 +3643,21 @@ continue
 Module .. ROOT 0,0 -> 6,0
   .body[2]
   0] FunctionDef .. 1,0 -> 2,8
-    .name
-      'func0'
-    .args
-      arguments
-        .vararg
-          None
-        .kwarg
-          None
+    .name 'func0'
     .body[1]
     0] Pass .. 2,4 -> 2,8
-    .returns
-      None
-    .type_comment
-      None
+    .returns None
+    .type_comment None
   1] Continue .. 5,0 -> 5,8
 """, r"""
 Module .. ROOT 0,0 -> 1,9
   .body[1]
   0] FunctionDef .. 0,0 -> 1,9
-    .name
-      'func1'
-    .args
-      arguments
-        .vararg
-          None
-        .kwarg
-          None
+    .name 'func1'
     .body[1]
     0] Break .. 1,4 -> 1,9
-    .returns
-      None
-    .type_comment
-      None
+    .returns None
+    .type_comment None
 """),
 
 (r"""
@@ -4155,39 +3682,21 @@ continue
 Module .. ROOT 0,0 -> 7,0
   .body[2]
   0] FunctionDef .. 2,0 -> 3,9
-    .name
-      'func1'
-    .args
-      arguments
-        .vararg
-          None
-        .kwarg
-          None
+    .name 'func1'
     .body[1]
     0] Break .. 3,4 -> 3,9
-    .returns
-      None
-    .type_comment
-      None
+    .returns None
+    .type_comment None
   1] Continue .. 6,0 -> 6,8
 """, r"""
 Module .. ROOT 0,0 -> 1,8
   .body[1]
   0] FunctionDef .. 0,0 -> 1,8
-    .name
-      'func0'
-    .args
-      arguments
-        .vararg
-          None
-        .kwarg
-          None
+    .name 'func0'
     .body[1]
     0] Pass .. 1,4 -> 1,8
-    .returns
-      None
-    .type_comment
-      None
+    .returns None
+    .type_comment None
 """),
 
 (r"""
@@ -4212,39 +3721,21 @@ continue
 Module .. ROOT 0,0 -> 7,0
   .body[2]
   0] FunctionDef .. 1,0 -> 2,8
-    .name
-      'func0'
-    .args
-      arguments
-        .vararg
-          None
-        .kwarg
-          None
+    .name 'func0'
     .body[1]
     0] Pass .. 2,4 -> 2,8
-    .returns
-      None
-    .type_comment
-      None
+    .returns None
+    .type_comment None
   1] Continue .. 6,0 -> 6,8
 """, r"""
 Module .. ROOT 0,0 -> 1,9
   .body[1]
   0] FunctionDef .. 0,0 -> 1,9
-    .name
-      'func1'
-    .args
-      arguments
-        .vararg
-          None
-        .kwarg
-          None
+    .name 'func1'
     .body[1]
     0] Break .. 1,4 -> 1,9
-    .returns
-      None
-    .type_comment
-      None
+    .returns None
+    .type_comment None
 """),
 
 (r"""
@@ -4267,43 +3758,24 @@ continue
 Module .. ROOT 0,0 -> 6,0
   .body[2]
   0] ClassDef .. 1,0 -> 3,13
-    .name
-      'cls'
+    .name 'cls'
     .body[1]
     0] FunctionDef .. 2,4 -> 3,13
-      .name
-        'meth1'
-      .args
-        arguments
-          .vararg
-            None
-          .kwarg
-            None
+      .name 'meth1'
       .body[1]
       0] Break .. 3,8 -> 3,13
-      .returns
-        None
-      .type_comment
-        None
+      .returns None
+      .type_comment None
   1] Continue .. 5,0 -> 5,8
 """, r"""
 Module .. ROOT 0,0 -> 1,8
   .body[1]
   0] FunctionDef .. 0,0 -> 1,8
-    .name
-      'meth0'
-    .args
-      arguments
-        .vararg
-          None
-        .kwarg
-          None
+    .name 'meth0'
     .body[1]
     0] Pass .. 1,4 -> 1,8
-    .returns
-      None
-    .type_comment
-      None
+    .returns None
+    .type_comment None
 """),
 
 (r"""
@@ -4326,43 +3798,24 @@ continue
 Module .. ROOT 0,0 -> 6,0
   .body[2]
   0] ClassDef .. 1,0 -> 3,12
-    .name
-      'cls'
+    .name 'cls'
     .body[1]
     0] FunctionDef .. 2,4 -> 3,12
-      .name
-        'meth0'
-      .args
-        arguments
-          .vararg
-            None
-          .kwarg
-            None
+      .name 'meth0'
       .body[1]
       0] Pass .. 3,8 -> 3,12
-      .returns
-        None
-      .type_comment
-        None
+      .returns None
+      .type_comment None
   1] Continue .. 5,0 -> 5,8
 """, r"""
 Module .. ROOT 0,0 -> 1,9
   .body[1]
   0] FunctionDef .. 0,0 -> 1,9
-    .name
-      'meth1'
-    .args
-      arguments
-        .vararg
-          None
-        .kwarg
-          None
+    .name 'meth1'
     .body[1]
     0] Break .. 1,4 -> 1,9
-    .returns
-      None
-    .type_comment
-      None
+    .returns None
+    .type_comment None
 """),
 
 (r"""
@@ -4381,18 +3834,15 @@ if 1:
 Module .. ROOT 0,0 -> 6,0
   .body[1]
   0] If .. 1,0 -> 2,5
-    .test
-      Constant 1 .. 1,3 -> 1,4
+    .test Constant 1 .. 1,3 -> 1,4
     .body[1]
     0] Expr .. 2,4 -> 2,5
-      .value
-        Name 'i' Load .. 2,4 -> 2,5
+      .value Name 'i' Load .. 2,4 -> 2,5
 """, r"""
 Module .. ROOT 0,0 -> 0,1
   .body[1]
   0] Expr .. 0,0 -> 0,1
-    .value
-      Name 'j' Load .. 0,0 -> 0,1
+    .value Name 'j' Load .. 0,0 -> 0,1
 """),
 
 (r"""
@@ -4410,18 +3860,15 @@ if 1:
 Module .. ROOT 0,0 -> 5,0
   .body[1]
   0] If .. 1,0 -> 2,5
-    .test
-      Constant 1 .. 1,3 -> 1,4
+    .test Constant 1 .. 1,3 -> 1,4
     .body[1]
     0] Expr .. 2,4 -> 2,5
-      .value
-        Name 'i' Load .. 2,4 -> 2,5
+      .value Name 'i' Load .. 2,4 -> 2,5
 """, r"""
 Module .. ROOT 0,0 -> 0,1
   .body[1]
   0] Expr .. 0,0 -> 0,1
-    .value
-      Name 'j' Load .. 0,0 -> 0,1
+    .value Name 'j' Load .. 0,0 -> 0,1
 """),
 
 (r"""
@@ -4437,18 +3884,15 @@ if 1:
 Module .. ROOT 0,0 -> 3,0
   .body[1]
   0] If .. 1,0 -> 2,5
-    .test
-      Constant 1 .. 1,3 -> 1,4
+    .test Constant 1 .. 1,3 -> 1,4
     .body[1]
     0] Expr .. 2,4 -> 2,5
-      .value
-        Name 'i' Load .. 2,4 -> 2,5
+      .value Name 'i' Load .. 2,4 -> 2,5
 """, r"""
 Module .. ROOT 0,0 -> 0,1
   .body[1]
   0] Expr .. 0,0 -> 0,1
-    .value
-      Name 'j' Load .. 0,0 -> 0,1
+    .value Name 'j' Load .. 0,0 -> 0,1
 """),
 
 (r"""
@@ -4467,18 +3911,15 @@ if 1:
 Module .. ROOT 0,0 -> 6,0
   .body[1]
   0] If .. 1,0 -> 2,5
-    .test
-      Constant 1 .. 1,3 -> 1,4
+    .test Constant 1 .. 1,3 -> 1,4
     .body[1]
     0] Expr .. 2,4 -> 2,5
-      .value
-        Name 'j' Load .. 2,4 -> 2,5
+      .value Name 'j' Load .. 2,4 -> 2,5
 """, r"""
 Module .. ROOT 0,0 -> 0,1
   .body[1]
   0] Expr .. 0,0 -> 0,1
-    .value
-      Name 'i' Load .. 0,0 -> 0,1
+    .value Name 'i' Load .. 0,0 -> 0,1
 """),
 
 (r"""
@@ -4498,25 +3939,14 @@ Module .. ROOT 0,0 -> 4,0
 Module .. ROOT 0,0 -> 1,9
   .body[1]
   0] FunctionDef .. 0,0 -> 1,9
-    .name
-      'f'
-    .args
-      arguments
-        .vararg
-          None
-        .kwarg
-          None
+    .name 'f'
     .body[2]
     0] Expr .. 1,4 -> 1,5
-      .value
-        Name 'i' Load .. 1,4 -> 1,5
+      .value Name 'i' Load .. 1,4 -> 1,5
     1] Expr .. 1,8 -> 1,9
-      .value
-        Name 'j' Load .. 1,8 -> 1,9
-    .returns
-      None
-    .type_comment
-      None
+      .value Name 'j' Load .. 1,8 -> 1,9
+    .returns None
+    .type_comment None
 """),
 
 (r"""
@@ -4533,25 +3963,14 @@ Module .. ROOT 0,0 -> 1,0
 Module .. ROOT 0,0 -> 1,9
   .body[1]
   0] FunctionDef .. 0,0 -> 1,9
-    .name
-      'f'
-    .args
-      arguments
-        .vararg
-          None
-        .kwarg
-          None
+    .name 'f'
     .body[2]
     0] Expr .. 1,4 -> 1,5
-      .value
-        Name 'i' Load .. 1,4 -> 1,5
+      .value Name 'i' Load .. 1,4 -> 1,5
     1] Expr .. 1,8 -> 1,9
-      .value
-        Name 'j' Load .. 1,8 -> 1,9
-    .returns
-      None
-    .type_comment
-      None
+      .value Name 'j' Load .. 1,8 -> 1,9
+    .returns None
+    .type_comment None
 """),
 
 (r"""
@@ -4567,28 +3986,17 @@ def f():
 Module .. ROOT 0,0 -> 4,0
   .body[1]
   0] FunctionDef .. 1,0 -> 3,3
-    .name
-      'f'
-    .args
-      arguments
-        .vararg
-          None
-        .kwarg
-          None
+    .name 'f'
     .body[1]
     0] Expr .. 3,2 -> 3,3
-      .value
-        Name 'k' Load .. 3,2 -> 3,3
-    .returns
-      None
-    .type_comment
-      None
+      .value Name 'k' Load .. 3,2 -> 3,3
+    .returns None
+    .type_comment None
 """, r"""
 Module .. ROOT 0,0 -> 0,1
   .body[1]
   0] Expr .. 0,0 -> 0,1
-    .value
-      Name 'i' Load .. 0,0 -> 0,1
+    .value Name 'i' Load .. 0,0 -> 0,1
 """),
 
 (r"""
@@ -4605,31 +4013,19 @@ def f():
 Module .. ROOT 0,0 -> 5,0
   .body[1]
   0] FunctionDef .. 1,0 -> 4,3
-    .name
-      'f'
-    .args
-      arguments
-        .vararg
-          None
-        .kwarg
-          None
+    .name 'f'
     .body[2]
     0] Expr .. 2,4 -> 2,5
-      .value
-        Name 'i' Load .. 2,4 -> 2,5
+      .value Name 'i' Load .. 2,4 -> 2,5
     1] Expr .. 4,2 -> 4,3
-      .value
-        Name 'k' Load .. 4,2 -> 4,3
-    .returns
-      None
-    .type_comment
-      None
+      .value Name 'k' Load .. 4,2 -> 4,3
+    .returns None
+    .type_comment None
 """, r"""
 Module .. ROOT 0,0 -> 0,1
   .body[1]
   0] Expr .. 0,0 -> 0,1
-    .value
-      Name 'j' Load .. 0,0 -> 0,1
+    .value Name 'j' Load .. 0,0 -> 0,1
 """),
 
 (r"""
@@ -4646,28 +4042,17 @@ def f():
 Module .. ROOT 0,0 -> 4,0
   .body[1]
   0] FunctionDef .. 1,0 -> 3,3
-    .name
-      'f'
-    .args
-      arguments
-        .vararg
-          None
-        .kwarg
-          None
+    .name 'f'
     .body[1]
     0] Expr .. 3,2 -> 3,3
-      .value
-        Name 'k' Load .. 3,2 -> 3,3
-    .returns
-      None
-    .type_comment
-      None
+      .value Name 'k' Load .. 3,2 -> 3,3
+    .returns None
+    .type_comment None
 """, r"""
 Module .. ROOT 0,0 -> 0,1
   .body[1]
   0] Expr .. 0,0 -> 0,1
-    .value
-      Name 'i' Load .. 0,0 -> 0,1
+    .value Name 'i' Load .. 0,0 -> 0,1
 """),
 
 (r"""
@@ -4685,31 +4070,19 @@ def f():
 Module .. ROOT 0,0 -> 5,0
   .body[1]
   0] FunctionDef .. 1,0 -> 4,3
-    .name
-      'f'
-    .args
-      arguments
-        .vararg
-          None
-        .kwarg
-          None
+    .name 'f'
     .body[2]
     0] Expr .. 2,4 -> 2,5
-      .value
-        Name 'i' Load .. 2,4 -> 2,5
+      .value Name 'i' Load .. 2,4 -> 2,5
     1] Expr .. 4,2 -> 4,3
-      .value
-        Name 'k' Load .. 4,2 -> 4,3
-    .returns
-      None
-    .type_comment
-      None
+      .value Name 'k' Load .. 4,2 -> 4,3
+    .returns None
+    .type_comment None
 """, r"""
 Module .. ROOT 0,0 -> 0,1
   .body[1]
   0] Expr .. 0,0 -> 0,1
-    .value
-      Name 'j' Load .. 0,0 -> 0,1
+    .value Name 'j' Load .. 0,0 -> 0,1
 """),
 
 (r"""
@@ -4727,28 +4100,17 @@ def f():
 Module .. ROOT 0,0 -> 5,0
   .body[1]
   0] FunctionDef .. 1,0 -> 4,5
-    .name
-      'f'
-    .args
-      arguments
-        .vararg
-          None
-        .kwarg
-          None
+    .name 'f'
     .body[1]
     0] Expr .. 4,4 -> 4,5
-      .value
-        Name 'k' Load .. 4,4 -> 4,5
-    .returns
-      None
-    .type_comment
-      None
+      .value Name 'k' Load .. 4,4 -> 4,5
+    .returns None
+    .type_comment None
 """, r"""
 Module .. ROOT 0,0 -> 0,1
   .body[1]
   0] Expr .. 0,0 -> 0,1
-    .value
-      Name 'i' Load .. 0,0 -> 0,1
+    .value Name 'i' Load .. 0,0 -> 0,1
 """),
 
 (r"""
@@ -4767,31 +4129,19 @@ def f():
 Module .. ROOT 0,0 -> 6,0
   .body[1]
   0] FunctionDef .. 1,0 -> 5,5
-    .name
-      'f'
-    .args
-      arguments
-        .vararg
-          None
-        .kwarg
-          None
+    .name 'f'
     .body[2]
     0] Expr .. 2,4 -> 2,5
-      .value
-        Name 'i' Load .. 2,4 -> 2,5
+      .value Name 'i' Load .. 2,4 -> 2,5
     1] Expr .. 5,4 -> 5,5
-      .value
-        Name 'k' Load .. 5,4 -> 5,5
-    .returns
-      None
-    .type_comment
-      None
+      .value Name 'k' Load .. 5,4 -> 5,5
+    .returns None
+    .type_comment None
 """, r"""
 Module .. ROOT 0,0 -> 0,1
   .body[1]
   0] Expr .. 0,0 -> 0,1
-    .value
-      Name 'j' Load .. 0,0 -> 0,1
+    .value Name 'j' Load .. 0,0 -> 0,1
 """),
 
 ]  # END OF GET_SLICE_STMT_CUT_DATA
@@ -4805,14 +4155,12 @@ if 1:
 Module .. ROOT 0,0 -> 2,0
   .body[1]
   0] If .. 1,0 -> 1,5
-    .test
-      Constant 1 .. 1,3 -> 1,4
+    .test Constant 1 .. 1,3 -> 1,4
 """, r"""
 Module .. ROOT 0,0 -> 0,1
   .body[1]
   0] Expr .. 0,0 -> 0,1
-    .value
-      Name 'i' Load .. 0,0 -> 0,1
+    .value Name 'i' Load .. 0,0 -> 0,1
 """),
 
 (r"""
@@ -4821,14 +4169,12 @@ if 1:""", r"""i""", r"""
 Module .. ROOT 0,0 -> 1,5
   .body[1]
   0] If .. 1,0 -> 1,5
-    .test
-      Constant 1 .. 1,3 -> 1,4
+    .test Constant 1 .. 1,3 -> 1,4
 """, r"""
 Module .. ROOT 0,0 -> 0,1
   .body[1]
   0] Expr .. 0,0 -> 0,1
-    .value
-      Name 'i' Load .. 0,0 -> 0,1
+    .value Name 'i' Load .. 0,0 -> 0,1
 """),
 
 (r"""
@@ -4840,14 +4186,12 @@ if 1:
 Module .. ROOT 0,0 -> 2,0
   .body[1]
   0] If .. 1,0 -> 1,5
-    .test
-      Constant 1 .. 1,3 -> 1,4
+    .test Constant 1 .. 1,3 -> 1,4
 """, r"""
 Module .. ROOT 0,0 -> 1,0
   .body[1]
   0] Expr .. 0,0 -> 0,1
-    .value
-      Name 'i' Load .. 0,0 -> 0,1
+    .value Name 'i' Load .. 0,0 -> 0,1
 """),
 
 (r"""
@@ -4856,14 +4200,12 @@ if 1:""", r"""i  # post""", r"""
 Module .. ROOT 0,0 -> 1,5
   .body[1]
   0] If .. 1,0 -> 1,5
-    .test
-      Constant 1 .. 1,3 -> 1,4
+    .test Constant 1 .. 1,3 -> 1,4
 """, r"""
 Module .. ROOT 0,0 -> 0,9
   .body[1]
   0] Expr .. 0,0 -> 0,1
-    .value
-      Name 'i' Load .. 0,0 -> 0,1
+    .value Name 'i' Load .. 0,0 -> 0,1
 """),
 
 (r"""
@@ -4874,14 +4216,12 @@ if 1: # post
 Module .. ROOT 0,0 -> 2,0
   .body[1]
   0] If .. 1,0 -> 1,5
-    .test
-      Constant 1 .. 1,3 -> 1,4
+    .test Constant 1 .. 1,3 -> 1,4
 """, r"""
 Module .. ROOT 0,0 -> 0,1
   .body[1]
   0] Expr .. 0,0 -> 0,1
-    .value
-      Name 'i' Load .. 0,0 -> 0,1
+    .value Name 'i' Load .. 0,0 -> 0,1
 """),
 
 (r"""
@@ -4890,14 +4230,12 @@ if 1: # post""", r"""i""", r"""
 Module .. ROOT 0,0 -> 1,12
   .body[1]
   0] If .. 1,0 -> 1,5
-    .test
-      Constant 1 .. 1,3 -> 1,4
+    .test Constant 1 .. 1,3 -> 1,4
 """, r"""
 Module .. ROOT 0,0 -> 0,1
   .body[1]
   0] Expr .. 0,0 -> 0,1
-    .value
-      Name 'i' Load .. 0,0 -> 0,1
+    .value Name 'i' Load .. 0,0 -> 0,1
 """),
 
 (r"""
@@ -4908,14 +4246,12 @@ if 1:
 Module .. ROOT 0,0 -> 2,0
   .body[1]
   0] If .. 1,0 -> 1,5
-    .test
-      Constant 1 .. 1,3 -> 1,4
+    .test Constant 1 .. 1,3 -> 1,4
 """, r"""
 Module .. ROOT 0,0 -> 0,1
   .body[1]
   0] Expr .. 0,0 -> 0,1
-    .value
-      Name 'i' Load .. 0,0 -> 0,1
+    .value Name 'i' Load .. 0,0 -> 0,1
 """),
 
 (r"""
@@ -4924,14 +4260,12 @@ if 1:""", r"""i""", r"""
 Module .. ROOT 0,0 -> 1,5
   .body[1]
   0] If .. 1,0 -> 1,5
-    .test
-      Constant 1 .. 1,3 -> 1,4
+    .test Constant 1 .. 1,3 -> 1,4
 """, r"""
 Module .. ROOT 0,0 -> 0,1
   .body[1]
   0] Expr .. 0,0 -> 0,1
-    .value
-      Name 'i' Load .. 0,0 -> 0,1
+    .value Name 'i' Load .. 0,0 -> 0,1
 """),
 
 (r"""
@@ -4942,14 +4276,12 @@ if 1: # post
 Module .. ROOT 0,0 -> 2,0
   .body[1]
   0] If .. 1,0 -> 1,5
-    .test
-      Constant 1 .. 1,3 -> 1,4
+    .test Constant 1 .. 1,3 -> 1,4
 """, r"""
 Module .. ROOT 0,0 -> 0,1
   .body[1]
   0] Expr .. 0,0 -> 0,1
-    .value
-      Name 'i' Load .. 0,0 -> 0,1
+    .value Name 'i' Load .. 0,0 -> 0,1
 """),
 
 (r"""
@@ -4958,14 +4290,12 @@ if 1: # post""", r"""i""", r"""
 Module .. ROOT 0,0 -> 1,12
   .body[1]
   0] If .. 1,0 -> 1,5
-    .test
-      Constant 1 .. 1,3 -> 1,4
+    .test Constant 1 .. 1,3 -> 1,4
 """, r"""
 Module .. ROOT 0,0 -> 0,1
   .body[1]
   0] Expr .. 0,0 -> 0,1
-    .value
-      Name 'i' Load .. 0,0 -> 0,1
+    .value Name 'i' Load .. 0,0 -> 0,1
 """),
 
 (r"""
@@ -4976,14 +4306,12 @@ if 1: # post
 Module .. ROOT 0,0 -> 2,0
   .body[1]
   0] If .. 1,0 -> 1,5
-    .test
-      Constant 1 .. 1,3 -> 1,4
+    .test Constant 1 .. 1,3 -> 1,4
 """, r"""
 Module .. ROOT 0,0 -> 0,1
   .body[1]
   0] Expr .. 0,0 -> 0,1
-    .value
-      Name 'i' Load .. 0,0 -> 0,1
+    .value Name 'i' Load .. 0,0 -> 0,1
 """),
 
 (r"""
@@ -4992,14 +4320,12 @@ if 1: # post""", r"""i""", r"""
 Module .. ROOT 0,0 -> 1,12
   .body[1]
   0] If .. 1,0 -> 1,5
-    .test
-      Constant 1 .. 1,3 -> 1,4
+    .test Constant 1 .. 1,3 -> 1,4
 """, r"""
 Module .. ROOT 0,0 -> 0,1
   .body[1]
   0] Expr .. 0,0 -> 0,1
-    .value
-      Name 'i' Load .. 0,0 -> 0,1
+    .value Name 'i' Load .. 0,0 -> 0,1
 """),
 
 (r"""
@@ -5017,13 +4343,11 @@ j
 Module .. ROOT 0,0 -> 5,0
   .body[2]
   0] If .. 1,0 -> 1,10
-    .test
-      Constant 1 .. 1,3 -> 1,4
+    .test Constant 1 .. 1,3 -> 1,4
     .body[1]
     0] Pass .. 1,6 -> 1,10
   1] Expr .. 4,0 -> 4,1
-    .value
-      Name 'j' Load .. 4,0 -> 4,1
+    .value Name 'j' Load .. 4,0 -> 4,1
 """, r"""
 Module .. ROOT 0,0 -> 0,4
   .body[1]
@@ -5044,13 +4368,11 @@ j
 Module .. ROOT 0,0 -> 4,0
   .body[2]
   0] If .. 1,0 -> 1,10
-    .test
-      Constant 1 .. 1,3 -> 1,4
+    .test Constant 1 .. 1,3 -> 1,4
     .body[1]
     0] Pass .. 1,6 -> 1,10
   1] Expr .. 3,0 -> 3,1
-    .value
-      Name 'j' Load .. 3,0 -> 3,1
+    .value Name 'j' Load .. 3,0 -> 3,1
 """, r"""
 Module .. ROOT 0,0 -> 0,4
   .body[1]
@@ -5070,13 +4392,11 @@ j
 Module .. ROOT 0,0 -> 3,0
   .body[2]
   0] If .. 1,0 -> 1,10
-    .test
-      Constant 1 .. 1,3 -> 1,4
+    .test Constant 1 .. 1,3 -> 1,4
     .body[1]
     0] Pass .. 1,6 -> 1,10
   1] Expr .. 2,0 -> 2,1
-    .value
-      Name 'j' Load .. 2,0 -> 2,1
+    .value Name 'j' Load .. 2,0 -> 2,1
 """, r"""
 Module .. ROOT 0,0 -> 0,4
   .body[1]
@@ -5098,13 +4418,11 @@ j
 Module .. ROOT 0,0 -> 5,0
   .body[2]
   0] If .. 1,0 -> 1,10
-    .test
-      Constant 1 .. 1,3 -> 1,4
+    .test Constant 1 .. 1,3 -> 1,4
     .body[1]
     0] Pass .. 1,6 -> 1,10
   1] Expr .. 4,0 -> 4,1
-    .value
-      Name 'j' Load .. 4,0 -> 4,1
+    .value Name 'j' Load .. 4,0 -> 4,1
 """, r"""
 Module .. ROOT 0,0 -> 0,4
   .body[1]
@@ -5125,13 +4443,11 @@ j
 Module .. ROOT 0,0 -> 4,0
   .body[2]
   0] If .. 1,0 -> 1,10
-    .test
-      Constant 1 .. 1,3 -> 1,4
+    .test Constant 1 .. 1,3 -> 1,4
     .body[1]
     0] Pass .. 1,6 -> 1,10
   1] Expr .. 3,0 -> 3,1
-    .value
-      Name 'j' Load .. 3,0 -> 3,1
+    .value Name 'j' Load .. 3,0 -> 3,1
 """, r"""
 Module .. ROOT 0,0 -> 0,4
   .body[1]
@@ -5152,13 +4468,11 @@ j
 Module .. ROOT 0,0 -> 3,0
   .body[2]
   0] If .. 1,0 -> 1,10
-    .test
-      Constant 1 .. 1,3 -> 1,4
+    .test Constant 1 .. 1,3 -> 1,4
     .body[1]
     0] Pass .. 1,6 -> 1,10
   1] Expr .. 2,0 -> 2,1
-    .value
-      Name 'j' Load .. 2,0 -> 2,1
+    .value Name 'j' Load .. 2,0 -> 2,1
 """, r"""
 Module .. ROOT 0,0 -> 1,0
   .body[1]
@@ -5183,8 +4497,7 @@ Module .. ROOT 0,0 -> 5,0
     .body[1]
     0] Pass .. 1,5 -> 1,9
   1] Expr .. 4,0 -> 4,1
-    .value
-      Name 'j' Load .. 4,0 -> 4,1
+    .value Name 'j' Load .. 4,0 -> 4,1
 """, r"""
 Module .. ROOT 0,0 -> 0,4
   .body[1]
@@ -5208,8 +4521,7 @@ Module .. ROOT 0,0 -> 4,0
     .body[1]
     0] Pass .. 1,5 -> 1,9
   1] Expr .. 3,0 -> 3,1
-    .value
-      Name 'j' Load .. 3,0 -> 3,1
+    .value Name 'j' Load .. 3,0 -> 3,1
 """, r"""
 Module .. ROOT 0,0 -> 0,4
   .body[1]
@@ -5232,8 +4544,7 @@ Module .. ROOT 0,0 -> 3,0
     .body[1]
     0] Pass .. 1,5 -> 1,9
   1] Expr .. 2,0 -> 2,1
-    .value
-      Name 'j' Load .. 2,0 -> 2,1
+    .value Name 'j' Load .. 2,0 -> 2,1
 """, r"""
 Module .. ROOT 0,0 -> 0,4
   .body[1]
@@ -5258,8 +4569,7 @@ Module .. ROOT 0,0 -> 5,0
     .body[1]
     0] Pass .. 1,5 -> 1,9
   1] Expr .. 4,0 -> 4,1
-    .value
-      Name 'j' Load .. 4,0 -> 4,1
+    .value Name 'j' Load .. 4,0 -> 4,1
 """, r"""
 Module .. ROOT 0,0 -> 0,4
   .body[1]
@@ -5283,8 +4593,7 @@ Module .. ROOT 0,0 -> 4,0
     .body[1]
     0] Pass .. 1,5 -> 1,9
   1] Expr .. 3,0 -> 3,1
-    .value
-      Name 'j' Load .. 3,0 -> 3,1
+    .value Name 'j' Load .. 3,0 -> 3,1
 """, r"""
 Module .. ROOT 0,0 -> 0,4
   .body[1]
@@ -5308,8 +4617,7 @@ Module .. ROOT 0,0 -> 3,0
     .body[1]
     0] Pass .. 1,5 -> 1,9
   1] Expr .. 2,0 -> 2,1
-    .value
-      Name 'j' Load .. 2,0 -> 2,1
+    .value Name 'j' Load .. 2,0 -> 2,1
 """, r"""
 Module .. ROOT 0,0 -> 1,0
   .body[1]
@@ -5338,18 +4646,15 @@ j""", r"""
 Module .. ROOT 0,0 -> 3,0
   .body[1]
   0] If .. 1,0 -> 1,7
-    .test
-      Constant 1 .. 1,3 -> 1,4
+    .test Constant 1 .. 1,3 -> 1,4
     .body[1]
     0] Expr .. 1,6 -> 1,7
-      .value
-        Name 'i' Load .. 1,6 -> 1,7
+      .value Name 'i' Load .. 1,6 -> 1,7
 """, r"""
 Module .. ROOT 0,0 -> 3,1
   .body[1]
   0] Expr .. 3,0 -> 3,1
-    .value
-      Name 'j' Load .. 3,0 -> 3,1
+    .value Name 'j' Load .. 3,0 -> 3,1
 """),
 
 (r"""
@@ -5373,18 +4678,15 @@ j""", r"""
 Module .. ROOT 0,0 -> 2,0
   .body[1]
   0] If .. 1,0 -> 1,7
-    .test
-      Constant 1 .. 1,3 -> 1,4
+    .test Constant 1 .. 1,3 -> 1,4
     .body[1]
     0] Expr .. 1,6 -> 1,7
-      .value
-        Name 'i' Load .. 1,6 -> 1,7
+      .value Name 'i' Load .. 1,6 -> 1,7
 """, r"""
 Module .. ROOT 0,0 -> 3,1
   .body[1]
   0] Expr .. 3,0 -> 3,1
-    .value
-      Name 'j' Load .. 3,0 -> 3,1
+    .value Name 'j' Load .. 3,0 -> 3,1
 """),
 
 (r"""
@@ -5444,10 +4746,8 @@ Module .. ROOT 0,0 -> 1,1
   0] Assign .. 0,0 -> 1,1
     .targets[1]
     0] Name 'i' Store .. 0,0 -> 0,1
-    .value
-      Constant 2 .. 1,0 -> 1,1
-    .type_comment
-      None
+    .value Constant 2 .. 1,0 -> 1,1
+    .type_comment None
 """),
 
 (r"""
@@ -5505,10 +4805,8 @@ Module .. ROOT 0,0 -> 4,0
     0] Pass .. 1,5 -> 1,9
     .handlers[1]
     0] ExceptHandler .. 2,0 -> 2,12
-      .type
-        None
-      .name
-        None
+      .type None
+      .name None
       .body[1]
       0] Pass .. 2,8 -> 2,12
     .finalbody[1]
@@ -5536,10 +4834,8 @@ Module .. ROOT 0,0 -> 4,0
     0] Pass .. 1,5 -> 1,9
     .handlers[1]
     0] ExceptHandler .. 2,0 -> 2,12
-      .type
-        None
-      .name
-        None
+      .type None
+      .name None
       .body[1]
       0] Pass .. 2,8 -> 2,12
     .finalbody[1]
@@ -5575,10 +4871,8 @@ Module .. ROOT 0,0 -> 4,0
 Module .. ROOT 0,0 -> 1,8
   .body[1]
   0] ExceptHandler .. 0,0 -> 1,8
-    .type
-      None
-    .name
-      None
+    .type None
+    .name None
     .body[1]
     0] Pass .. 1,4 -> 1,8
 """),
@@ -5606,10 +4900,8 @@ Module .. ROOT 0,0 -> 4,0
 Module .. ROOT 0,0 -> 0,12
   .body[1]
   0] ExceptHandler .. 0,0 -> 0,12
-    .type
-      None
-    .name
-      None
+    .type None
+    .name None
     .body[1]
     0] Pass .. 0,8 -> 0,12
 """),
@@ -5638,10 +4930,8 @@ Module .. ROOT 0,0 -> 5,0
 Module .. ROOT 0,0 -> 0,12
   .body[1]
   0] ExceptHandler .. 0,0 -> 0,12
-    .type
-      None
-    .name
-      None
+    .type None
+    .name None
     .body[1]
     0] Pass .. 0,8 -> 0,12
 """),
@@ -5672,10 +4962,8 @@ Module .. ROOT 0,0 -> 6,0
 Module .. ROOT 0,0 -> 0,12
   .body[1]
   0] ExceptHandler .. 0,0 -> 0,12
-    .type
-      None
-    .name
-      None
+    .type None
+    .name None
     .body[1]
     0] Pass .. 0,8 -> 0,12
 """),
@@ -5699,10 +4987,8 @@ Module .. ROOT 0,0 -> 5,0
     0] Pass .. 1,5 -> 1,9
     .handlers[1]
     0] ExceptHandler .. 2,0 -> 2,7
-      .type
-        None
-      .name
-        None
+      .type None
+      .name None
     .orelse[1]
     0] Pass .. 3,6 -> 3,10
     .finalbody[1]
@@ -5731,10 +5017,8 @@ Module .. ROOT 0,0 -> 5,0
     0] Pass .. 1,5 -> 1,9
     .handlers[1]
     0] ExceptHandler .. 2,0 -> 2,7
-      .type
-        None
-      .name
-        None
+      .type None
+      .name None
     .orelse[1]
     0] Pass .. 3,6 -> 3,10
     .finalbody[1]
@@ -5763,10 +5047,8 @@ Module .. ROOT 0,0 -> 5,0
     0] Pass .. 1,5 -> 1,9
     .handlers[1]
     0] ExceptHandler .. 2,0 -> 2,7
-      .type
-        None
-      .name
-        None
+      .type None
+      .name None
     .orelse[1]
     0] Pass .. 3,6 -> 3,10
     .finalbody[1]
@@ -5797,10 +5079,8 @@ Module .. ROOT 0,0 -> 6,0
     0] Pass .. 1,5 -> 1,9
     .handlers[1]
     0] ExceptHandler .. 2,0 -> 2,7
-      .type
-        None
-      .name
-        None
+      .type None
+      .name None
     .orelse[1]
     0] Pass .. 4,6 -> 4,10
     .finalbody[1]
@@ -5826,8 +5106,7 @@ PUT_SLICE_SEQ_DATA = [
 Module .. ROOT 0,0 -> 0,2
   .body[1]
   0] Expr .. 0,0 -> 0,2
-    .value
-      Dict .. 0,0 -> 0,2
+    .value Dict .. 0,0 -> 0,2
 """),
 
 (r"""
@@ -5842,9 +5121,8 @@ Module .. ROOT 0,0 -> 0,2
 Module .. ROOT 0,0 -> 0,2
   .body[1]
   0] Expr .. 0,0 -> 0,2
-    .value
-      Tuple .. 0,0 -> 0,2
-        .ctx Load
+    .value Tuple .. 0,0 -> 0,2
+      .ctx Load
 """),
 
 (r"""
@@ -5861,14 +5139,11 @@ if 1:
 Module .. ROOT 0,0 -> 1,7
   .body[1]
   0] If .. 0,0 -> 1,7
-    .test
-      Constant 1 .. 0,3 -> 0,4
+    .test Constant 1 .. 0,3 -> 0,4
     .body[1]
     0] Expr .. 1,2 -> 1,7
-      .value
-        Call .. 1,2 -> 1,7
-          .func
-            Name 'set' Load .. 1,2 -> 1,5
+      .value Call .. 1,2 -> 1,7
+        .func Name 'set' Load .. 1,2 -> 1,5
 """),
 
 (r"""
@@ -5885,8 +5160,7 @@ Module .. ROOT 0,0 -> 1,7
 Module .. ROOT 0,0 -> 1,1
   .body[1]
   0] Expr .. 0,0 -> 1,1
-    .value
-      Dict .. 0,0 -> 1,1
+    .value Dict .. 0,0 -> 1,1
 """),
 
 (r"""
@@ -5899,8 +5173,7 @@ Module .. ROOT 0,0 -> 1,1
 Module .. ROOT 0,0 -> 0,2
   .body[1]
   0] Expr .. 0,0 -> 0,2
-    .value
-      Dict .. 0,0 -> 0,2
+    .value Dict .. 0,0 -> 0,2
 """),
 
 (r"""
@@ -5915,8 +5188,7 @@ Module .. ROOT 0,0 -> 0,2
 Module .. ROOT 0,0 -> 1,1
   .body[1]
   0] Expr .. 0,0 -> 1,1
-    .value
-      Dict .. 0,0 -> 1,1
+    .value Dict .. 0,0 -> 1,1
 """),
 
 (r"""
@@ -5929,11 +5201,10 @@ Module .. ROOT 0,0 -> 1,1
 Module .. ROOT 0,0 -> 0,4
   .body[1]
   0] Expr .. 0,0 -> 0,4
-    .value
-      Tuple .. 0,0 -> 0,4
-        .elts[1]
-        0] Constant 1 .. 0,1 -> 0,2
-        .ctx Load
+    .value Tuple .. 0,0 -> 0,4
+      .elts[1]
+      0] Constant 1 .. 0,1 -> 0,2
+      .ctx Load
 """),
 
 (r"""
@@ -5946,11 +5217,10 @@ Module .. ROOT 0,0 -> 0,4
 Module .. ROOT 0,0 -> 0,2
   .body[1]
   0] Expr .. 0,0 -> 0,2
-    .value
-      Tuple .. 0,0 -> 0,2
-        .elts[1]
-        0] Constant 1 .. 0,0 -> 0,1
-        .ctx Load
+    .value Tuple .. 0,0 -> 0,2
+      .elts[1]
+      0] Constant 1 .. 0,0 -> 0,1
+      .ctx Load
 """),
 
 (r"""
@@ -5963,9 +5233,8 @@ Module .. ROOT 0,0 -> 0,2
 Module .. ROOT 0,0 -> 0,2
   .body[1]
   0] Expr .. 0,0 -> 0,2
-    .value
-      Tuple .. 0,0 -> 0,2
-        .ctx Load
+    .value Tuple .. 0,0 -> 0,2
+      .ctx Load
 """),
 
 (r"""
@@ -5978,11 +5247,10 @@ set()
 Module .. ROOT 0,0 -> 0,4
   .body[1]
   0] Expr .. 0,0 -> 0,4
-    .value
-      Tuple .. 0,0 -> 0,4
-        .elts[1]
-        0] Constant 1 .. 0,1 -> 0,2
-        .ctx Load
+    .value Tuple .. 0,0 -> 0,4
+      .elts[1]
+      0] Constant 1 .. 0,1 -> 0,2
+      .ctx Load
 """),
 
 (r"""
@@ -5995,11 +5263,10 @@ set()
 Module .. ROOT 0,0 -> 0,2
   .body[1]
   0] Expr .. 0,0 -> 0,2
-    .value
-      Tuple .. 0,0 -> 0,2
-        .elts[1]
-        0] Constant 1 .. 0,0 -> 0,1
-        .ctx Load
+    .value Tuple .. 0,0 -> 0,2
+      .elts[1]
+      0] Constant 1 .. 0,0 -> 0,1
+      .ctx Load
 """),
 
 (r"""
@@ -6012,9 +5279,8 @@ set()
 Module .. ROOT 0,0 -> 0,2
   .body[1]
   0] Expr .. 0,0 -> 0,2
-    .value
-      Tuple .. 0,0 -> 0,2
-        .ctx Load
+    .value Tuple .. 0,0 -> 0,2
+      .ctx Load
 """),
 
 (r"""
@@ -6031,11 +5297,10 @@ Module .. ROOT 0,0 -> 0,2
 Module .. ROOT 0,0 -> 2,1
   .body[1]
   0] Expr .. 0,0 -> 2,1
-    .value
-      List .. 0,0 -> 2,1
-        .elts[1]
-        0] Constant 3 .. 1,4 -> 1,5
-        .ctx Load
+    .value List .. 0,0 -> 2,1
+      .elts[1]
+      0] Constant 3 .. 1,4 -> 1,5
+      .ctx Load
 """),
 
 (r"""
@@ -6053,13 +5318,12 @@ Module .. ROOT 0,0 -> 2,1
 Module .. ROOT 0,0 -> 2,1
   .body[1]
   0] Expr .. 0,0 -> 2,1
-    .value
-      List .. 0,0 -> 2,1
-        .elts[3]
-        0] Constant 1 .. 1,4 -> 1,5
-        1] Name 'b' Load .. 1,7 -> 1,8
-        2] Name 'c' Load .. 1,10 -> 1,11
-        .ctx Load
+    .value List .. 0,0 -> 2,1
+      .elts[3]
+      0] Constant 1 .. 1,4 -> 1,5
+      1] Name 'b' Load .. 1,7 -> 1,8
+      2] Name 'c' Load .. 1,10 -> 1,11
+      .ctx Load
 """),
 
 (r"""
@@ -6078,13 +5342,12 @@ Module .. ROOT 0,0 -> 2,1
 Module .. ROOT 0,0 -> 3,1
   .body[1]
   0] Expr .. 0,0 -> 3,1
-    .value
-      List .. 0,0 -> 3,1
-        .elts[3]
-        0] Name 'a' Load .. 1,4 -> 1,5
-        1] Constant 1 .. 2,4 -> 2,5
-        2] Name 'c' Load .. 2,7 -> 2,8
-        .ctx Load
+    .value List .. 0,0 -> 3,1
+      .elts[3]
+      0] Name 'a' Load .. 1,4 -> 1,5
+      1] Constant 1 .. 2,4 -> 2,5
+      2] Name 'c' Load .. 2,7 -> 2,8
+      .ctx Load
 """),
 
 (r"""
@@ -6102,13 +5365,12 @@ Module .. ROOT 0,0 -> 3,1
 Module .. ROOT 0,0 -> 2,6
   .body[1]
   0] Expr .. 0,0 -> 2,6
-    .value
-      List .. 0,0 -> 2,6
-        .elts[3]
-        0] Name 'a' Load .. 1,4 -> 1,5
-        1] Name 'b' Load .. 1,7 -> 1,8
-        2] Constant 1 .. 2,4 -> 2,5
-        .ctx Load
+    .value List .. 0,0 -> 2,6
+      .elts[3]
+      0] Name 'a' Load .. 1,4 -> 1,5
+      1] Name 'b' Load .. 1,7 -> 1,8
+      2] Constant 1 .. 2,4 -> 2,5
+      .ctx Load
 """),
 
 (r"""
@@ -6125,13 +5387,12 @@ Module .. ROOT 0,0 -> 2,6
 Module .. ROOT 0,0 -> 2,1
   .body[1]
   0] Expr .. 0,0 -> 2,1
-    .value
-      List .. 0,0 -> 2,1
-        .elts[3]
-        0] Constant 2 .. 1,4 -> 1,5
-        1] Name 'b' Load .. 1,7 -> 1,8
-        2] Name 'c' Load .. 1,10 -> 1,11
-        .ctx Load
+    .value List .. 0,0 -> 2,1
+      .elts[3]
+      0] Constant 2 .. 1,4 -> 1,5
+      1] Name 'b' Load .. 1,7 -> 1,8
+      2] Name 'c' Load .. 1,10 -> 1,11
+      .ctx Load
 """),
 
 (r"""
@@ -6148,13 +5409,12 @@ Module .. ROOT 0,0 -> 2,1
 Module .. ROOT 0,0 -> 2,1
   .body[1]
   0] Expr .. 0,0 -> 2,1
-    .value
-      List .. 0,0 -> 2,1
-        .elts[3]
-        0] Name 'a' Load .. 1,4 -> 1,5
-        1] Constant 2 .. 1,7 -> 1,8
-        2] Name 'c' Load .. 1,10 -> 1,11
-        .ctx Load
+    .value List .. 0,0 -> 2,1
+      .elts[3]
+      0] Name 'a' Load .. 1,4 -> 1,5
+      1] Constant 2 .. 1,7 -> 1,8
+      2] Name 'c' Load .. 1,10 -> 1,11
+      .ctx Load
 """),
 
 (r"""
@@ -6170,13 +5430,12 @@ Module .. ROOT 0,0 -> 2,1
 Module .. ROOT 0,0 -> 1,12
   .body[1]
   0] Expr .. 0,0 -> 1,12
-    .value
-      List .. 0,0 -> 1,12
-        .elts[3]
-        0] Name 'a' Load .. 1,4 -> 1,5
-        1] Name 'b' Load .. 1,7 -> 1,8
-        2] Constant 2 .. 1,10 -> 1,11
-        .ctx Load
+    .value List .. 0,0 -> 1,12
+      .elts[3]
+      0] Name 'a' Load .. 1,4 -> 1,5
+      1] Name 'b' Load .. 1,7 -> 1,8
+      2] Constant 2 .. 1,10 -> 1,11
+      .ctx Load
 """),
 
 (r"""
@@ -6195,13 +5454,12 @@ Module .. ROOT 0,0 -> 1,12
 Module .. ROOT 0,0 -> 3,1
   .body[1]
   0] Expr .. 0,0 -> 3,1
-    .value
-      List .. 0,0 -> 3,1
-        .elts[3]
-        0] Constant 3 .. 1,4 -> 1,5
-        1] Name 'b' Load .. 2,4 -> 2,5
-        2] Name 'c' Load .. 2,7 -> 2,8
-        .ctx Load
+    .value List .. 0,0 -> 3,1
+      .elts[3]
+      0] Constant 3 .. 1,4 -> 1,5
+      1] Name 'b' Load .. 2,4 -> 2,5
+      2] Name 'c' Load .. 2,7 -> 2,8
+      .ctx Load
 """),
 
 (r"""
@@ -6220,13 +5478,12 @@ Module .. ROOT 0,0 -> 3,1
 Module .. ROOT 0,0 -> 3,1
   .body[1]
   0] Expr .. 0,0 -> 3,1
-    .value
-      List .. 0,0 -> 3,1
-        .elts[3]
-        0] Name 'a' Load .. 1,4 -> 1,5
-        1] Constant 3 .. 1,7 -> 1,8
-        2] Name 'c' Load .. 2,4 -> 2,5
-        .ctx Load
+    .value List .. 0,0 -> 3,1
+      .elts[3]
+      0] Name 'a' Load .. 1,4 -> 1,5
+      1] Constant 3 .. 1,7 -> 1,8
+      2] Name 'c' Load .. 2,4 -> 2,5
+      .ctx Load
 """),
 
 (r"""
@@ -6244,13 +5501,12 @@ Module .. ROOT 0,0 -> 3,1
 Module .. ROOT 0,0 -> 2,1
   .body[1]
   0] Expr .. 0,0 -> 2,1
-    .value
-      List .. 0,0 -> 2,1
-        .elts[3]
-        0] Name 'a' Load .. 1,4 -> 1,5
-        1] Name 'b' Load .. 1,7 -> 1,8
-        2] Constant 3 .. 1,10 -> 1,11
-        .ctx Load
+    .value List .. 0,0 -> 2,1
+      .elts[3]
+      0] Name 'a' Load .. 1,4 -> 1,5
+      1] Name 'b' Load .. 1,7 -> 1,8
+      2] Constant 3 .. 1,10 -> 1,11
+      .ctx Load
 """),
 
 (r"""
@@ -6268,13 +5524,12 @@ Module .. ROOT 0,0 -> 2,1
 Module .. ROOT 0,0 -> 2,1
   .body[1]
   0] Expr .. 0,0 -> 2,1
-    .value
-      List .. 0,0 -> 2,1
-        .elts[3]
-        0] Constant 1 .. 1,4 -> 1,5
-        1] Name 'b' Load .. 1,7 -> 1,8
-        2] Name 'c' Load .. 1,10 -> 1,11
-        .ctx Load
+    .value List .. 0,0 -> 2,1
+      .elts[3]
+      0] Constant 1 .. 1,4 -> 1,5
+      1] Name 'b' Load .. 1,7 -> 1,8
+      2] Name 'c' Load .. 1,10 -> 1,11
+      .ctx Load
 """),
 
 (r"""
@@ -6293,13 +5548,12 @@ Module .. ROOT 0,0 -> 2,1
 Module .. ROOT 0,0 -> 3,1
   .body[1]
   0] Expr .. 0,0 -> 3,1
-    .value
-      List .. 0,0 -> 3,1
-        .elts[3]
-        0] Name 'a' Load .. 1,4 -> 1,5
-        1] Constant 1 .. 2,4 -> 2,5
-        2] Name 'c' Load .. 2,7 -> 2,8
-        .ctx Load
+    .value List .. 0,0 -> 3,1
+      .elts[3]
+      0] Name 'a' Load .. 1,4 -> 1,5
+      1] Constant 1 .. 2,4 -> 2,5
+      2] Name 'c' Load .. 2,7 -> 2,8
+      .ctx Load
 """),
 
 (r"""
@@ -6317,13 +5571,12 @@ Module .. ROOT 0,0 -> 3,1
 Module .. ROOT 0,0 -> 2,6
   .body[1]
   0] Expr .. 0,0 -> 2,6
-    .value
-      List .. 0,0 -> 2,6
-        .elts[3]
-        0] Name 'a' Load .. 1,4 -> 1,5
-        1] Name 'b' Load .. 1,7 -> 1,8
-        2] Constant 1 .. 2,4 -> 2,5
-        .ctx Load
+    .value List .. 0,0 -> 2,6
+      .elts[3]
+      0] Name 'a' Load .. 1,4 -> 1,5
+      1] Name 'b' Load .. 1,7 -> 1,8
+      2] Constant 1 .. 2,4 -> 2,5
+      .ctx Load
 """),
 
 (r"""
@@ -6340,13 +5593,12 @@ Module .. ROOT 0,0 -> 2,6
 Module .. ROOT 0,0 -> 2,1
   .body[1]
   0] Expr .. 0,0 -> 2,1
-    .value
-      List .. 0,0 -> 2,1
-        .elts[3]
-        0] Constant 2 .. 1,4 -> 1,5
-        1] Name 'b' Load .. 1,7 -> 1,8
-        2] Name 'c' Load .. 1,10 -> 1,11
-        .ctx Load
+    .value List .. 0,0 -> 2,1
+      .elts[3]
+      0] Constant 2 .. 1,4 -> 1,5
+      1] Name 'b' Load .. 1,7 -> 1,8
+      2] Name 'c' Load .. 1,10 -> 1,11
+      .ctx Load
 """),
 
 (r"""
@@ -6363,13 +5615,12 @@ Module .. ROOT 0,0 -> 2,1
 Module .. ROOT 0,0 -> 2,1
   .body[1]
   0] Expr .. 0,0 -> 2,1
-    .value
-      List .. 0,0 -> 2,1
-        .elts[3]
-        0] Name 'a' Load .. 1,4 -> 1,5
-        1] Constant 2 .. 1,7 -> 1,8
-        2] Name 'c' Load .. 1,10 -> 1,11
-        .ctx Load
+    .value List .. 0,0 -> 2,1
+      .elts[3]
+      0] Name 'a' Load .. 1,4 -> 1,5
+      1] Constant 2 .. 1,7 -> 1,8
+      2] Name 'c' Load .. 1,10 -> 1,11
+      .ctx Load
 """),
 
 (r"""
@@ -6385,13 +5636,12 @@ Module .. ROOT 0,0 -> 2,1
 Module .. ROOT 0,0 -> 1,12
   .body[1]
   0] Expr .. 0,0 -> 1,12
-    .value
-      List .. 0,0 -> 1,12
-        .elts[3]
-        0] Name 'a' Load .. 1,4 -> 1,5
-        1] Name 'b' Load .. 1,7 -> 1,8
-        2] Constant 2 .. 1,10 -> 1,11
-        .ctx Load
+    .value List .. 0,0 -> 1,12
+      .elts[3]
+      0] Name 'a' Load .. 1,4 -> 1,5
+      1] Name 'b' Load .. 1,7 -> 1,8
+      2] Constant 2 .. 1,10 -> 1,11
+      .ctx Load
 """),
 
 (r"""
@@ -6410,13 +5660,12 @@ Module .. ROOT 0,0 -> 1,12
 Module .. ROOT 0,0 -> 3,1
   .body[1]
   0] Expr .. 0,0 -> 3,1
-    .value
-      List .. 0,0 -> 3,1
-        .elts[3]
-        0] Constant 3 .. 1,4 -> 1,5
-        1] Name 'b' Load .. 2,4 -> 2,5
-        2] Name 'c' Load .. 2,7 -> 2,8
-        .ctx Load
+    .value List .. 0,0 -> 3,1
+      .elts[3]
+      0] Constant 3 .. 1,4 -> 1,5
+      1] Name 'b' Load .. 2,4 -> 2,5
+      2] Name 'c' Load .. 2,7 -> 2,8
+      .ctx Load
 """),
 
 (r"""
@@ -6435,13 +5684,12 @@ Module .. ROOT 0,0 -> 3,1
 Module .. ROOT 0,0 -> 3,1
   .body[1]
   0] Expr .. 0,0 -> 3,1
-    .value
-      List .. 0,0 -> 3,1
-        .elts[3]
-        0] Name 'a' Load .. 1,4 -> 1,5
-        1] Constant 3 .. 1,7 -> 1,8
-        2] Name 'c' Load .. 2,4 -> 2,5
-        .ctx Load
+    .value List .. 0,0 -> 3,1
+      .elts[3]
+      0] Name 'a' Load .. 1,4 -> 1,5
+      1] Constant 3 .. 1,7 -> 1,8
+      2] Name 'c' Load .. 2,4 -> 2,5
+      .ctx Load
 """),
 
 (r"""
@@ -6459,13 +5707,12 @@ Module .. ROOT 0,0 -> 3,1
 Module .. ROOT 0,0 -> 2,1
   .body[1]
   0] Expr .. 0,0 -> 2,1
-    .value
-      List .. 0,0 -> 2,1
-        .elts[3]
-        0] Name 'a' Load .. 1,4 -> 1,5
-        1] Name 'b' Load .. 1,7 -> 1,8
-        2] Constant 3 .. 1,10 -> 1,11
-        .ctx Load
+    .value List .. 0,0 -> 2,1
+      .elts[3]
+      0] Name 'a' Load .. 1,4 -> 1,5
+      1] Name 'b' Load .. 1,7 -> 1,8
+      2] Constant 3 .. 1,10 -> 1,11
+      .ctx Load
 """),
 
 (r"""
@@ -6483,13 +5730,12 @@ Module .. ROOT 0,0 -> 2,1
 Module .. ROOT 0,0 -> 2,1
   .body[1]
   0] Expr .. 0,0 -> 2,1
-    .value
-      List .. 0,0 -> 2,1
-        .elts[3]
-        0] Constant 1 .. 1,4 -> 1,5
-        1] Name 'b' Load .. 1,7 -> 1,8
-        2] Name 'c' Load .. 1,10 -> 1,11
-        .ctx Load
+    .value List .. 0,0 -> 2,1
+      .elts[3]
+      0] Constant 1 .. 1,4 -> 1,5
+      1] Name 'b' Load .. 1,7 -> 1,8
+      2] Name 'c' Load .. 1,10 -> 1,11
+      .ctx Load
 """),
 
 (r"""
@@ -6508,13 +5754,12 @@ Module .. ROOT 0,0 -> 2,1
 Module .. ROOT 0,0 -> 3,1
   .body[1]
   0] Expr .. 0,0 -> 3,1
-    .value
-      List .. 0,0 -> 3,1
-        .elts[3]
-        0] Name 'a' Load .. 1,4 -> 1,5
-        1] Constant 1 .. 2,4 -> 2,5
-        2] Name 'c' Load .. 2,7 -> 2,8
-        .ctx Load
+    .value List .. 0,0 -> 3,1
+      .elts[3]
+      0] Name 'a' Load .. 1,4 -> 1,5
+      1] Constant 1 .. 2,4 -> 2,5
+      2] Name 'c' Load .. 2,7 -> 2,8
+      .ctx Load
 """),
 
 (r"""
@@ -6532,13 +5777,12 @@ Module .. ROOT 0,0 -> 3,1
 Module .. ROOT 0,0 -> 2,7
   .body[1]
   0] Expr .. 0,0 -> 2,7
-    .value
-      List .. 0,0 -> 2,7
-        .elts[3]
-        0] Name 'a' Load .. 1,4 -> 1,5
-        1] Name 'b' Load .. 1,7 -> 1,8
-        2] Constant 1 .. 2,4 -> 2,5
-        .ctx Load
+    .value List .. 0,0 -> 2,7
+      .elts[3]
+      0] Name 'a' Load .. 1,4 -> 1,5
+      1] Name 'b' Load .. 1,7 -> 1,8
+      2] Constant 1 .. 2,4 -> 2,5
+      .ctx Load
 """),
 
 (r"""
@@ -6555,13 +5799,12 @@ Module .. ROOT 0,0 -> 2,7
 Module .. ROOT 0,0 -> 2,1
   .body[1]
   0] Expr .. 0,0 -> 2,1
-    .value
-      List .. 0,0 -> 2,1
-        .elts[3]
-        0] Constant 2 .. 1,4 -> 1,5
-        1] Name 'b' Load .. 1,7 -> 1,8
-        2] Name 'c' Load .. 1,10 -> 1,11
-        .ctx Load
+    .value List .. 0,0 -> 2,1
+      .elts[3]
+      0] Constant 2 .. 1,4 -> 1,5
+      1] Name 'b' Load .. 1,7 -> 1,8
+      2] Name 'c' Load .. 1,10 -> 1,11
+      .ctx Load
 """),
 
 (r"""
@@ -6578,13 +5821,12 @@ Module .. ROOT 0,0 -> 2,1
 Module .. ROOT 0,0 -> 2,1
   .body[1]
   0] Expr .. 0,0 -> 2,1
-    .value
-      List .. 0,0 -> 2,1
-        .elts[3]
-        0] Name 'a' Load .. 1,4 -> 1,5
-        1] Constant 2 .. 1,7 -> 1,8
-        2] Name 'c' Load .. 1,10 -> 1,11
-        .ctx Load
+    .value List .. 0,0 -> 2,1
+      .elts[3]
+      0] Name 'a' Load .. 1,4 -> 1,5
+      1] Constant 2 .. 1,7 -> 1,8
+      2] Name 'c' Load .. 1,10 -> 1,11
+      .ctx Load
 """),
 
 (r"""
@@ -6600,13 +5842,12 @@ Module .. ROOT 0,0 -> 2,1
 Module .. ROOT 0,0 -> 1,13
   .body[1]
   0] Expr .. 0,0 -> 1,13
-    .value
-      List .. 0,0 -> 1,13
-        .elts[3]
-        0] Name 'a' Load .. 1,4 -> 1,5
-        1] Name 'b' Load .. 1,7 -> 1,8
-        2] Constant 2 .. 1,10 -> 1,11
-        .ctx Load
+    .value List .. 0,0 -> 1,13
+      .elts[3]
+      0] Name 'a' Load .. 1,4 -> 1,5
+      1] Name 'b' Load .. 1,7 -> 1,8
+      2] Constant 2 .. 1,10 -> 1,11
+      .ctx Load
 """),
 
 (r"""
@@ -6625,13 +5866,12 @@ Module .. ROOT 0,0 -> 1,13
 Module .. ROOT 0,0 -> 3,1
   .body[1]
   0] Expr .. 0,0 -> 3,1
-    .value
-      List .. 0,0 -> 3,1
-        .elts[3]
-        0] Constant 3 .. 1,4 -> 1,5
-        1] Name 'b' Load .. 2,4 -> 2,5
-        2] Name 'c' Load .. 2,7 -> 2,8
-        .ctx Load
+    .value List .. 0,0 -> 3,1
+      .elts[3]
+      0] Constant 3 .. 1,4 -> 1,5
+      1] Name 'b' Load .. 2,4 -> 2,5
+      2] Name 'c' Load .. 2,7 -> 2,8
+      .ctx Load
 """),
 
 (r"""
@@ -6650,13 +5890,12 @@ Module .. ROOT 0,0 -> 3,1
 Module .. ROOT 0,0 -> 3,1
   .body[1]
   0] Expr .. 0,0 -> 3,1
-    .value
-      List .. 0,0 -> 3,1
-        .elts[3]
-        0] Name 'a' Load .. 1,4 -> 1,5
-        1] Constant 3 .. 1,7 -> 1,8
-        2] Name 'c' Load .. 2,4 -> 2,5
-        .ctx Load
+    .value List .. 0,0 -> 3,1
+      .elts[3]
+      0] Name 'a' Load .. 1,4 -> 1,5
+      1] Constant 3 .. 1,7 -> 1,8
+      2] Name 'c' Load .. 2,4 -> 2,5
+      .ctx Load
 """),
 
 (r"""
@@ -6674,13 +5913,12 @@ Module .. ROOT 0,0 -> 3,1
 Module .. ROOT 0,0 -> 2,1
   .body[1]
   0] Expr .. 0,0 -> 2,1
-    .value
-      List .. 0,0 -> 2,1
-        .elts[3]
-        0] Name 'a' Load .. 1,4 -> 1,5
-        1] Name 'b' Load .. 1,7 -> 1,8
-        2] Constant 3 .. 1,10 -> 1,11
-        .ctx Load
+    .value List .. 0,0 -> 2,1
+      .elts[3]
+      0] Name 'a' Load .. 1,4 -> 1,5
+      1] Name 'b' Load .. 1,7 -> 1,8
+      2] Constant 3 .. 1,10 -> 1,11
+      .ctx Load
 """),
 
 (r"""
@@ -6698,13 +5936,12 @@ Module .. ROOT 0,0 -> 2,1
 Module .. ROOT 0,0 -> 2,1
   .body[1]
   0] Expr .. 0,0 -> 2,1
-    .value
-      List .. 0,0 -> 2,1
-        .elts[3]
-        0] Constant 1 .. 1,4 -> 1,5
-        1] Name 'b' Load .. 1,7 -> 1,8
-        2] Name 'c' Load .. 1,10 -> 1,11
-        .ctx Load
+    .value List .. 0,0 -> 2,1
+      .elts[3]
+      0] Constant 1 .. 1,4 -> 1,5
+      1] Name 'b' Load .. 1,7 -> 1,8
+      2] Name 'c' Load .. 1,10 -> 1,11
+      .ctx Load
 """),
 
 (r"""
@@ -6723,13 +5960,12 @@ Module .. ROOT 0,0 -> 2,1
 Module .. ROOT 0,0 -> 3,1
   .body[1]
   0] Expr .. 0,0 -> 3,1
-    .value
-      List .. 0,0 -> 3,1
-        .elts[3]
-        0] Name 'a' Load .. 1,4 -> 1,5
-        1] Constant 1 .. 2,4 -> 2,5
-        2] Name 'c' Load .. 2,7 -> 2,8
-        .ctx Load
+    .value List .. 0,0 -> 3,1
+      .elts[3]
+      0] Name 'a' Load .. 1,4 -> 1,5
+      1] Constant 1 .. 2,4 -> 2,5
+      2] Name 'c' Load .. 2,7 -> 2,8
+      .ctx Load
 """),
 
 (r"""
@@ -6747,13 +5983,12 @@ Module .. ROOT 0,0 -> 3,1
 Module .. ROOT 0,0 -> 2,7
   .body[1]
   0] Expr .. 0,0 -> 2,7
-    .value
-      List .. 0,0 -> 2,7
-        .elts[3]
-        0] Name 'a' Load .. 1,4 -> 1,5
-        1] Name 'b' Load .. 1,7 -> 1,8
-        2] Constant 1 .. 2,4 -> 2,5
-        .ctx Load
+    .value List .. 0,0 -> 2,7
+      .elts[3]
+      0] Name 'a' Load .. 1,4 -> 1,5
+      1] Name 'b' Load .. 1,7 -> 1,8
+      2] Constant 1 .. 2,4 -> 2,5
+      .ctx Load
 """),
 
 (r"""
@@ -6770,13 +6005,12 @@ Module .. ROOT 0,0 -> 2,7
 Module .. ROOT 0,0 -> 2,1
   .body[1]
   0] Expr .. 0,0 -> 2,1
-    .value
-      List .. 0,0 -> 2,1
-        .elts[3]
-        0] Constant 2 .. 1,4 -> 1,5
-        1] Name 'b' Load .. 1,7 -> 1,8
-        2] Name 'c' Load .. 1,10 -> 1,11
-        .ctx Load
+    .value List .. 0,0 -> 2,1
+      .elts[3]
+      0] Constant 2 .. 1,4 -> 1,5
+      1] Name 'b' Load .. 1,7 -> 1,8
+      2] Name 'c' Load .. 1,10 -> 1,11
+      .ctx Load
 """),
 
 (r"""
@@ -6793,13 +6027,12 @@ Module .. ROOT 0,0 -> 2,1
 Module .. ROOT 0,0 -> 2,1
   .body[1]
   0] Expr .. 0,0 -> 2,1
-    .value
-      List .. 0,0 -> 2,1
-        .elts[3]
-        0] Name 'a' Load .. 1,4 -> 1,5
-        1] Constant 2 .. 1,7 -> 1,8
-        2] Name 'c' Load .. 1,10 -> 1,11
-        .ctx Load
+    .value List .. 0,0 -> 2,1
+      .elts[3]
+      0] Name 'a' Load .. 1,4 -> 1,5
+      1] Constant 2 .. 1,7 -> 1,8
+      2] Name 'c' Load .. 1,10 -> 1,11
+      .ctx Load
 """),
 
 (r"""
@@ -6815,13 +6048,12 @@ Module .. ROOT 0,0 -> 2,1
 Module .. ROOT 0,0 -> 1,13
   .body[1]
   0] Expr .. 0,0 -> 1,13
-    .value
-      List .. 0,0 -> 1,13
-        .elts[3]
-        0] Name 'a' Load .. 1,4 -> 1,5
-        1] Name 'b' Load .. 1,7 -> 1,8
-        2] Constant 2 .. 1,10 -> 1,11
-        .ctx Load
+    .value List .. 0,0 -> 1,13
+      .elts[3]
+      0] Name 'a' Load .. 1,4 -> 1,5
+      1] Name 'b' Load .. 1,7 -> 1,8
+      2] Constant 2 .. 1,10 -> 1,11
+      .ctx Load
 """),
 
 (r"""
@@ -6840,13 +6072,12 @@ Module .. ROOT 0,0 -> 1,13
 Module .. ROOT 0,0 -> 3,1
   .body[1]
   0] Expr .. 0,0 -> 3,1
-    .value
-      List .. 0,0 -> 3,1
-        .elts[3]
-        0] Constant 3 .. 1,4 -> 1,5
-        1] Name 'b' Load .. 2,4 -> 2,5
-        2] Name 'c' Load .. 2,7 -> 2,8
-        .ctx Load
+    .value List .. 0,0 -> 3,1
+      .elts[3]
+      0] Constant 3 .. 1,4 -> 1,5
+      1] Name 'b' Load .. 2,4 -> 2,5
+      2] Name 'c' Load .. 2,7 -> 2,8
+      .ctx Load
 """),
 
 (r"""
@@ -6865,13 +6096,12 @@ Module .. ROOT 0,0 -> 3,1
 Module .. ROOT 0,0 -> 3,1
   .body[1]
   0] Expr .. 0,0 -> 3,1
-    .value
-      List .. 0,0 -> 3,1
-        .elts[3]
-        0] Name 'a' Load .. 1,4 -> 1,5
-        1] Constant 3 .. 1,7 -> 1,8
-        2] Name 'c' Load .. 2,4 -> 2,5
-        .ctx Load
+    .value List .. 0,0 -> 3,1
+      .elts[3]
+      0] Name 'a' Load .. 1,4 -> 1,5
+      1] Constant 3 .. 1,7 -> 1,8
+      2] Name 'c' Load .. 2,4 -> 2,5
+      .ctx Load
 """),
 
 (r"""
@@ -6889,13 +6119,12 @@ Module .. ROOT 0,0 -> 3,1
 Module .. ROOT 0,0 -> 2,1
   .body[1]
   0] Expr .. 0,0 -> 2,1
-    .value
-      List .. 0,0 -> 2,1
-        .elts[3]
-        0] Name 'a' Load .. 1,4 -> 1,5
-        1] Name 'b' Load .. 1,7 -> 1,8
-        2] Constant 3 .. 1,10 -> 1,11
-        .ctx Load
+    .value List .. 0,0 -> 2,1
+      .elts[3]
+      0] Name 'a' Load .. 1,4 -> 1,5
+      1] Name 'b' Load .. 1,7 -> 1,8
+      2] Constant 3 .. 1,10 -> 1,11
+      .ctx Load
 """),
 
 (r"""
@@ -6913,13 +6142,12 @@ Module .. ROOT 0,0 -> 2,1
 Module .. ROOT 0,0 -> 2,6
   .body[1]
   0] Expr .. 0,0 -> 2,6
-    .value
-      List .. 0,0 -> 2,6
-        .elts[3]
-        0] Name 'a' Load .. 1,4 -> 1,5
-        1] Name 'b' Load .. 1,7 -> 1,8
-        2] Constant 1 .. 2,4 -> 2,5
-        .ctx Load
+    .value List .. 0,0 -> 2,6
+      .elts[3]
+      0] Name 'a' Load .. 1,4 -> 1,5
+      1] Name 'b' Load .. 1,7 -> 1,8
+      2] Constant 1 .. 2,4 -> 2,5
+      .ctx Load
 """),
 
 (r"""
@@ -6935,13 +6163,12 @@ Module .. ROOT 0,0 -> 2,6
 Module .. ROOT 0,0 -> 1,12
   .body[1]
   0] Expr .. 0,0 -> 1,12
-    .value
-      List .. 0,0 -> 1,12
-        .elts[3]
-        0] Name 'a' Load .. 1,4 -> 1,5
-        1] Name 'b' Load .. 1,7 -> 1,8
-        2] Constant 2 .. 1,10 -> 1,11
-        .ctx Load
+    .value List .. 0,0 -> 1,12
+      .elts[3]
+      0] Name 'a' Load .. 1,4 -> 1,5
+      1] Name 'b' Load .. 1,7 -> 1,8
+      2] Constant 2 .. 1,10 -> 1,11
+      .ctx Load
 """),
 
 (r"""
@@ -6959,13 +6186,12 @@ Module .. ROOT 0,0 -> 1,12
 Module .. ROOT 0,0 -> 2,1
   .body[1]
   0] Expr .. 0,0 -> 2,1
-    .value
-      List .. 0,0 -> 2,1
-        .elts[3]
-        0] Name 'a' Load .. 1,4 -> 1,5
-        1] Name 'b' Load .. 1,7 -> 1,8
-        2] Constant 3 .. 1,10 -> 1,11
-        .ctx Load
+    .value List .. 0,0 -> 2,1
+      .elts[3]
+      0] Name 'a' Load .. 1,4 -> 1,5
+      1] Name 'b' Load .. 1,7 -> 1,8
+      2] Constant 3 .. 1,10 -> 1,11
+      .ctx Load
 """),
 
 (r"""
@@ -6983,13 +6209,12 @@ Module .. ROOT 0,0 -> 2,1
 Module .. ROOT 0,0 -> 2,7
   .body[1]
   0] Expr .. 0,0 -> 2,7
-    .value
-      List .. 0,0 -> 2,7
-        .elts[3]
-        0] Name 'a' Load .. 1,4 -> 1,5
-        1] Name 'b' Load .. 1,7 -> 1,8
-        2] Constant 1 .. 2,4 -> 2,5
-        .ctx Load
+    .value List .. 0,0 -> 2,7
+      .elts[3]
+      0] Name 'a' Load .. 1,4 -> 1,5
+      1] Name 'b' Load .. 1,7 -> 1,8
+      2] Constant 1 .. 2,4 -> 2,5
+      .ctx Load
 """),
 
 (r"""
@@ -7005,13 +6230,12 @@ Module .. ROOT 0,0 -> 2,7
 Module .. ROOT 0,0 -> 1,13
   .body[1]
   0] Expr .. 0,0 -> 1,13
-    .value
-      List .. 0,0 -> 1,13
-        .elts[3]
-        0] Name 'a' Load .. 1,4 -> 1,5
-        1] Name 'b' Load .. 1,7 -> 1,8
-        2] Constant 2 .. 1,10 -> 1,11
-        .ctx Load
+    .value List .. 0,0 -> 1,13
+      .elts[3]
+      0] Name 'a' Load .. 1,4 -> 1,5
+      1] Name 'b' Load .. 1,7 -> 1,8
+      2] Constant 2 .. 1,10 -> 1,11
+      .ctx Load
 """),
 
 (r"""
@@ -7029,13 +6253,12 @@ Module .. ROOT 0,0 -> 1,13
 Module .. ROOT 0,0 -> 2,1
   .body[1]
   0] Expr .. 0,0 -> 2,1
-    .value
-      List .. 0,0 -> 2,1
-        .elts[3]
-        0] Name 'a' Load .. 1,4 -> 1,5
-        1] Name 'b' Load .. 1,7 -> 1,8
-        2] Constant 3 .. 1,10 -> 1,11
-        .ctx Load
+    .value List .. 0,0 -> 2,1
+      .elts[3]
+      0] Name 'a' Load .. 1,4 -> 1,5
+      1] Name 'b' Load .. 1,7 -> 1,8
+      2] Constant 3 .. 1,10 -> 1,11
+      .ctx Load
 """),
 
 (r"""
@@ -7055,13 +6278,12 @@ Module .. ROOT 0,0 -> 2,1
 Module .. ROOT 0,0 -> 3,1
   .body[1]
   0] Expr .. 0,0 -> 3,1
-    .value
-      List .. 0,0 -> 3,1
-        .elts[3]
-        0] Name 'a' Load .. 1,4 -> 1,5
-        1] Name 'b' Load .. 1,7 -> 1,8
-        2] Constant 1 .. 2,4 -> 2,5
-        .ctx Load
+    .value List .. 0,0 -> 3,1
+      .elts[3]
+      0] Name 'a' Load .. 1,4 -> 1,5
+      1] Name 'b' Load .. 1,7 -> 1,8
+      2] Constant 1 .. 2,4 -> 2,5
+      .ctx Load
 """),
 
 (r"""
@@ -7079,13 +6301,12 @@ Module .. ROOT 0,0 -> 3,1
 Module .. ROOT 0,0 -> 2,1
   .body[1]
   0] Expr .. 0,0 -> 2,1
-    .value
-      List .. 0,0 -> 2,1
-        .elts[3]
-        0] Name 'a' Load .. 1,4 -> 1,5
-        1] Name 'b' Load .. 1,7 -> 1,8
-        2] Constant 2 .. 1,10 -> 1,11
-        .ctx Load
+    .value List .. 0,0 -> 2,1
+      .elts[3]
+      0] Name 'a' Load .. 1,4 -> 1,5
+      1] Name 'b' Load .. 1,7 -> 1,8
+      2] Constant 2 .. 1,10 -> 1,11
+      .ctx Load
 """),
 
 (r"""
@@ -7103,13 +6324,12 @@ Module .. ROOT 0,0 -> 2,1
 Module .. ROOT 0,0 -> 2,1
   .body[1]
   0] Expr .. 0,0 -> 2,1
-    .value
-      List .. 0,0 -> 2,1
-        .elts[3]
-        0] Name 'a' Load .. 1,4 -> 1,5
-        1] Name 'b' Load .. 1,7 -> 1,8
-        2] Constant 3 .. 1,10 -> 1,11
-        .ctx Load
+    .value List .. 0,0 -> 2,1
+      .elts[3]
+      0] Name 'a' Load .. 1,4 -> 1,5
+      1] Name 'b' Load .. 1,7 -> 1,8
+      2] Constant 3 .. 1,10 -> 1,11
+      .ctx Load
 """),
 
 (r"""
@@ -7129,13 +6349,12 @@ Module .. ROOT 0,0 -> 2,1
 Module .. ROOT 0,0 -> 3,1
   .body[1]
   0] Expr .. 0,0 -> 3,1
-    .value
-      List .. 0,0 -> 3,1
-        .elts[3]
-        0] Name 'a' Load .. 1,4 -> 1,5
-        1] Name 'b' Load .. 1,7 -> 1,8
-        2] Constant 1 .. 2,4 -> 2,5
-        .ctx Load
+    .value List .. 0,0 -> 3,1
+      .elts[3]
+      0] Name 'a' Load .. 1,4 -> 1,5
+      1] Name 'b' Load .. 1,7 -> 1,8
+      2] Constant 1 .. 2,4 -> 2,5
+      .ctx Load
 """),
 
 (r"""
@@ -7153,13 +6372,12 @@ Module .. ROOT 0,0 -> 3,1
 Module .. ROOT 0,0 -> 2,1
   .body[1]
   0] Expr .. 0,0 -> 2,1
-    .value
-      List .. 0,0 -> 2,1
-        .elts[3]
-        0] Name 'a' Load .. 1,4 -> 1,5
-        1] Name 'b' Load .. 1,7 -> 1,8
-        2] Constant 2 .. 1,10 -> 1,11
-        .ctx Load
+    .value List .. 0,0 -> 2,1
+      .elts[3]
+      0] Name 'a' Load .. 1,4 -> 1,5
+      1] Name 'b' Load .. 1,7 -> 1,8
+      2] Constant 2 .. 1,10 -> 1,11
+      .ctx Load
 """),
 
 (r"""
@@ -7177,13 +6395,12 @@ Module .. ROOT 0,0 -> 2,1
 Module .. ROOT 0,0 -> 2,1
   .body[1]
   0] Expr .. 0,0 -> 2,1
-    .value
-      List .. 0,0 -> 2,1
-        .elts[3]
-        0] Name 'a' Load .. 1,4 -> 1,5
-        1] Name 'b' Load .. 1,7 -> 1,8
-        2] Constant 3 .. 1,10 -> 1,11
-        .ctx Load
+    .value List .. 0,0 -> 2,1
+      .elts[3]
+      0] Name 'a' Load .. 1,4 -> 1,5
+      1] Name 'b' Load .. 1,7 -> 1,8
+      2] Constant 3 .. 1,10 -> 1,11
+      .ctx Load
 """),
 
 (r"""
@@ -7201,13 +6418,12 @@ Module .. ROOT 0,0 -> 2,1
 Module .. ROOT 0,0 -> 2,1
   .body[1]
   0] Expr .. 0,0 -> 2,1
-    .value
-      List .. 0,0 -> 2,1
-        .elts[3]
-        0] Constant 1 .. 1,4 -> 1,5
-        1] Name 'a' Load .. 1,7 -> 1,8
-        2] Name 'b' Load .. 1,10 -> 1,11
-        .ctx Load
+    .value List .. 0,0 -> 2,1
+      .elts[3]
+      0] Constant 1 .. 1,4 -> 1,5
+      1] Name 'a' Load .. 1,7 -> 1,8
+      2] Name 'b' Load .. 1,10 -> 1,11
+      .ctx Load
 """),
 
 (r"""
@@ -7226,13 +6442,12 @@ Module .. ROOT 0,0 -> 2,1
 Module .. ROOT 0,0 -> 3,1
   .body[1]
   0] Expr .. 0,0 -> 3,1
-    .value
-      List .. 0,0 -> 3,1
-        .elts[3]
-        0] Name 'a' Load .. 1,4 -> 1,5
-        1] Constant 1 .. 2,4 -> 2,5
-        2] Name 'b' Load .. 2,7 -> 2,8
-        .ctx Load
+    .value List .. 0,0 -> 3,1
+      .elts[3]
+      0] Name 'a' Load .. 1,4 -> 1,5
+      1] Constant 1 .. 2,4 -> 2,5
+      2] Name 'b' Load .. 2,7 -> 2,8
+      .ctx Load
 """),
 
 (r"""
@@ -7250,13 +6465,12 @@ Module .. ROOT 0,0 -> 3,1
 Module .. ROOT 0,0 -> 2,6
   .body[1]
   0] Expr .. 0,0 -> 2,6
-    .value
-      List .. 0,0 -> 2,6
-        .elts[3]
-        0] Name 'a' Load .. 1,4 -> 1,5
-        1] Name 'b' Load .. 1,7 -> 1,8
-        2] Constant 1 .. 2,4 -> 2,5
-        .ctx Load
+    .value List .. 0,0 -> 2,6
+      .elts[3]
+      0] Name 'a' Load .. 1,4 -> 1,5
+      1] Name 'b' Load .. 1,7 -> 1,8
+      2] Constant 1 .. 2,4 -> 2,5
+      .ctx Load
 """),
 
 (r"""
@@ -7273,13 +6487,12 @@ Module .. ROOT 0,0 -> 2,6
 Module .. ROOT 0,0 -> 2,1
   .body[1]
   0] Expr .. 0,0 -> 2,1
-    .value
-      List .. 0,0 -> 2,1
-        .elts[3]
-        0] Constant 2 .. 1,4 -> 1,5
-        1] Name 'a' Load .. 1,7 -> 1,8
-        2] Name 'b' Load .. 1,10 -> 1,11
-        .ctx Load
+    .value List .. 0,0 -> 2,1
+      .elts[3]
+      0] Constant 2 .. 1,4 -> 1,5
+      1] Name 'a' Load .. 1,7 -> 1,8
+      2] Name 'b' Load .. 1,10 -> 1,11
+      .ctx Load
 """),
 
 (r"""
@@ -7296,13 +6509,12 @@ Module .. ROOT 0,0 -> 2,1
 Module .. ROOT 0,0 -> 2,1
   .body[1]
   0] Expr .. 0,0 -> 2,1
-    .value
-      List .. 0,0 -> 2,1
-        .elts[3]
-        0] Name 'a' Load .. 1,4 -> 1,5
-        1] Constant 2 .. 1,7 -> 1,8
-        2] Name 'b' Load .. 1,10 -> 1,11
-        .ctx Load
+    .value List .. 0,0 -> 2,1
+      .elts[3]
+      0] Name 'a' Load .. 1,4 -> 1,5
+      1] Constant 2 .. 1,7 -> 1,8
+      2] Name 'b' Load .. 1,10 -> 1,11
+      .ctx Load
 """),
 
 (r"""
@@ -7318,13 +6530,12 @@ Module .. ROOT 0,0 -> 2,1
 Module .. ROOT 0,0 -> 1,12
   .body[1]
   0] Expr .. 0,0 -> 1,12
-    .value
-      List .. 0,0 -> 1,12
-        .elts[3]
-        0] Name 'a' Load .. 1,4 -> 1,5
-        1] Name 'b' Load .. 1,7 -> 1,8
-        2] Constant 2 .. 1,10 -> 1,11
-        .ctx Load
+    .value List .. 0,0 -> 1,12
+      .elts[3]
+      0] Name 'a' Load .. 1,4 -> 1,5
+      1] Name 'b' Load .. 1,7 -> 1,8
+      2] Constant 2 .. 1,10 -> 1,11
+      .ctx Load
 """),
 
 (r"""
@@ -7343,13 +6554,12 @@ Module .. ROOT 0,0 -> 1,12
 Module .. ROOT 0,0 -> 3,1
   .body[1]
   0] Expr .. 0,0 -> 3,1
-    .value
-      List .. 0,0 -> 3,1
-        .elts[3]
-        0] Constant 3 .. 1,4 -> 1,5
-        1] Name 'a' Load .. 2,4 -> 2,5
-        2] Name 'b' Load .. 2,7 -> 2,8
-        .ctx Load
+    .value List .. 0,0 -> 3,1
+      .elts[3]
+      0] Constant 3 .. 1,4 -> 1,5
+      1] Name 'a' Load .. 2,4 -> 2,5
+      2] Name 'b' Load .. 2,7 -> 2,8
+      .ctx Load
 """),
 
 (r"""
@@ -7368,13 +6578,12 @@ Module .. ROOT 0,0 -> 3,1
 Module .. ROOT 0,0 -> 3,1
   .body[1]
   0] Expr .. 0,0 -> 3,1
-    .value
-      List .. 0,0 -> 3,1
-        .elts[3]
-        0] Name 'a' Load .. 1,4 -> 1,5
-        1] Constant 3 .. 1,7 -> 1,8
-        2] Name 'b' Load .. 2,4 -> 2,5
-        .ctx Load
+    .value List .. 0,0 -> 3,1
+      .elts[3]
+      0] Name 'a' Load .. 1,4 -> 1,5
+      1] Constant 3 .. 1,7 -> 1,8
+      2] Name 'b' Load .. 2,4 -> 2,5
+      .ctx Load
 """),
 
 (r"""
@@ -7392,13 +6601,12 @@ Module .. ROOT 0,0 -> 3,1
 Module .. ROOT 0,0 -> 2,1
   .body[1]
   0] Expr .. 0,0 -> 2,1
-    .value
-      List .. 0,0 -> 2,1
-        .elts[3]
-        0] Name 'a' Load .. 1,4 -> 1,5
-        1] Name 'b' Load .. 1,7 -> 1,8
-        2] Constant 3 .. 1,10 -> 1,11
-        .ctx Load
+    .value List .. 0,0 -> 2,1
+      .elts[3]
+      0] Name 'a' Load .. 1,4 -> 1,5
+      1] Name 'b' Load .. 1,7 -> 1,8
+      2] Constant 3 .. 1,10 -> 1,11
+      .ctx Load
 """),
 
 (r"""
@@ -7416,13 +6624,12 @@ Module .. ROOT 0,0 -> 2,1
 Module .. ROOT 0,0 -> 2,1
   .body[1]
   0] Expr .. 0,0 -> 2,1
-    .value
-      List .. 0,0 -> 2,1
-        .elts[3]
-        0] Constant 1 .. 1,4 -> 1,5
-        1] Name 'a' Load .. 1,7 -> 1,8
-        2] Name 'b' Load .. 1,10 -> 1,11
-        .ctx Load
+    .value List .. 0,0 -> 2,1
+      .elts[3]
+      0] Constant 1 .. 1,4 -> 1,5
+      1] Name 'a' Load .. 1,7 -> 1,8
+      2] Name 'b' Load .. 1,10 -> 1,11
+      .ctx Load
 """),
 
 (r"""
@@ -7441,13 +6648,12 @@ Module .. ROOT 0,0 -> 2,1
 Module .. ROOT 0,0 -> 3,1
   .body[1]
   0] Expr .. 0,0 -> 3,1
-    .value
-      List .. 0,0 -> 3,1
-        .elts[3]
-        0] Name 'a' Load .. 1,4 -> 1,5
-        1] Constant 1 .. 2,4 -> 2,5
-        2] Name 'b' Load .. 2,7 -> 2,8
-        .ctx Load
+    .value List .. 0,0 -> 3,1
+      .elts[3]
+      0] Name 'a' Load .. 1,4 -> 1,5
+      1] Constant 1 .. 2,4 -> 2,5
+      2] Name 'b' Load .. 2,7 -> 2,8
+      .ctx Load
 """),
 
 (r"""
@@ -7465,13 +6671,12 @@ Module .. ROOT 0,0 -> 3,1
 Module .. ROOT 0,0 -> 2,6
   .body[1]
   0] Expr .. 0,0 -> 2,6
-    .value
-      List .. 0,0 -> 2,6
-        .elts[3]
-        0] Name 'a' Load .. 1,4 -> 1,5
-        1] Name 'b' Load .. 1,7 -> 1,8
-        2] Constant 1 .. 2,4 -> 2,5
-        .ctx Load
+    .value List .. 0,0 -> 2,6
+      .elts[3]
+      0] Name 'a' Load .. 1,4 -> 1,5
+      1] Name 'b' Load .. 1,7 -> 1,8
+      2] Constant 1 .. 2,4 -> 2,5
+      .ctx Load
 """),
 
 (r"""
@@ -7488,13 +6693,12 @@ Module .. ROOT 0,0 -> 2,6
 Module .. ROOT 0,0 -> 2,1
   .body[1]
   0] Expr .. 0,0 -> 2,1
-    .value
-      List .. 0,0 -> 2,1
-        .elts[3]
-        0] Constant 2 .. 1,4 -> 1,5
-        1] Name 'a' Load .. 1,7 -> 1,8
-        2] Name 'b' Load .. 1,10 -> 1,11
-        .ctx Load
+    .value List .. 0,0 -> 2,1
+      .elts[3]
+      0] Constant 2 .. 1,4 -> 1,5
+      1] Name 'a' Load .. 1,7 -> 1,8
+      2] Name 'b' Load .. 1,10 -> 1,11
+      .ctx Load
 """),
 
 (r"""
@@ -7511,13 +6715,12 @@ Module .. ROOT 0,0 -> 2,1
 Module .. ROOT 0,0 -> 2,1
   .body[1]
   0] Expr .. 0,0 -> 2,1
-    .value
-      List .. 0,0 -> 2,1
-        .elts[3]
-        0] Name 'a' Load .. 1,4 -> 1,5
-        1] Constant 2 .. 1,7 -> 1,8
-        2] Name 'b' Load .. 1,10 -> 1,11
-        .ctx Load
+    .value List .. 0,0 -> 2,1
+      .elts[3]
+      0] Name 'a' Load .. 1,4 -> 1,5
+      1] Constant 2 .. 1,7 -> 1,8
+      2] Name 'b' Load .. 1,10 -> 1,11
+      .ctx Load
 """),
 
 (r"""
@@ -7533,13 +6736,12 @@ Module .. ROOT 0,0 -> 2,1
 Module .. ROOT 0,0 -> 1,12
   .body[1]
   0] Expr .. 0,0 -> 1,12
-    .value
-      List .. 0,0 -> 1,12
-        .elts[3]
-        0] Name 'a' Load .. 1,4 -> 1,5
-        1] Name 'b' Load .. 1,7 -> 1,8
-        2] Constant 2 .. 1,10 -> 1,11
-        .ctx Load
+    .value List .. 0,0 -> 1,12
+      .elts[3]
+      0] Name 'a' Load .. 1,4 -> 1,5
+      1] Name 'b' Load .. 1,7 -> 1,8
+      2] Constant 2 .. 1,10 -> 1,11
+      .ctx Load
 """),
 
 (r"""
@@ -7558,13 +6760,12 @@ Module .. ROOT 0,0 -> 1,12
 Module .. ROOT 0,0 -> 3,1
   .body[1]
   0] Expr .. 0,0 -> 3,1
-    .value
-      List .. 0,0 -> 3,1
-        .elts[3]
-        0] Constant 3 .. 1,4 -> 1,5
-        1] Name 'a' Load .. 2,4 -> 2,5
-        2] Name 'b' Load .. 2,7 -> 2,8
-        .ctx Load
+    .value List .. 0,0 -> 3,1
+      .elts[3]
+      0] Constant 3 .. 1,4 -> 1,5
+      1] Name 'a' Load .. 2,4 -> 2,5
+      2] Name 'b' Load .. 2,7 -> 2,8
+      .ctx Load
 """),
 
 (r"""
@@ -7583,13 +6784,12 @@ Module .. ROOT 0,0 -> 3,1
 Module .. ROOT 0,0 -> 3,1
   .body[1]
   0] Expr .. 0,0 -> 3,1
-    .value
-      List .. 0,0 -> 3,1
-        .elts[3]
-        0] Name 'a' Load .. 1,4 -> 1,5
-        1] Constant 3 .. 1,7 -> 1,8
-        2] Name 'b' Load .. 2,4 -> 2,5
-        .ctx Load
+    .value List .. 0,0 -> 3,1
+      .elts[3]
+      0] Name 'a' Load .. 1,4 -> 1,5
+      1] Constant 3 .. 1,7 -> 1,8
+      2] Name 'b' Load .. 2,4 -> 2,5
+      .ctx Load
 """),
 
 (r"""
@@ -7607,13 +6807,12 @@ Module .. ROOT 0,0 -> 3,1
 Module .. ROOT 0,0 -> 2,1
   .body[1]
   0] Expr .. 0,0 -> 2,1
-    .value
-      List .. 0,0 -> 2,1
-        .elts[3]
-        0] Name 'a' Load .. 1,4 -> 1,5
-        1] Name 'b' Load .. 1,7 -> 1,8
-        2] Constant 3 .. 1,10 -> 1,11
-        .ctx Load
+    .value List .. 0,0 -> 2,1
+      .elts[3]
+      0] Name 'a' Load .. 1,4 -> 1,5
+      1] Name 'b' Load .. 1,7 -> 1,8
+      2] Constant 3 .. 1,10 -> 1,11
+      .ctx Load
 """),
 
 (r"""
@@ -7631,13 +6830,12 @@ Module .. ROOT 0,0 -> 2,1
 Module .. ROOT 0,0 -> 2,1
   .body[1]
   0] Expr .. 0,0 -> 2,1
-    .value
-      List .. 0,0 -> 2,1
-        .elts[3]
-        0] Constant 1 .. 1,4 -> 1,5
-        1] Name 'a' Load .. 1,7 -> 1,8
-        2] Name 'b' Load .. 1,10 -> 1,11
-        .ctx Load
+    .value List .. 0,0 -> 2,1
+      .elts[3]
+      0] Constant 1 .. 1,4 -> 1,5
+      1] Name 'a' Load .. 1,7 -> 1,8
+      2] Name 'b' Load .. 1,10 -> 1,11
+      .ctx Load
 """),
 
 (r"""
@@ -7656,13 +6854,12 @@ Module .. ROOT 0,0 -> 2,1
 Module .. ROOT 0,0 -> 3,1
   .body[1]
   0] Expr .. 0,0 -> 3,1
-    .value
-      List .. 0,0 -> 3,1
-        .elts[3]
-        0] Name 'a' Load .. 1,4 -> 1,5
-        1] Constant 1 .. 2,4 -> 2,5
-        2] Name 'b' Load .. 2,7 -> 2,8
-        .ctx Load
+    .value List .. 0,0 -> 3,1
+      .elts[3]
+      0] Name 'a' Load .. 1,4 -> 1,5
+      1] Constant 1 .. 2,4 -> 2,5
+      2] Name 'b' Load .. 2,7 -> 2,8
+      .ctx Load
 """),
 
 (r"""
@@ -7680,13 +6877,12 @@ Module .. ROOT 0,0 -> 3,1
 Module .. ROOT 0,0 -> 2,7
   .body[1]
   0] Expr .. 0,0 -> 2,7
-    .value
-      List .. 0,0 -> 2,7
-        .elts[3]
-        0] Name 'a' Load .. 1,4 -> 1,5
-        1] Name 'b' Load .. 1,7 -> 1,8
-        2] Constant 1 .. 2,4 -> 2,5
-        .ctx Load
+    .value List .. 0,0 -> 2,7
+      .elts[3]
+      0] Name 'a' Load .. 1,4 -> 1,5
+      1] Name 'b' Load .. 1,7 -> 1,8
+      2] Constant 1 .. 2,4 -> 2,5
+      .ctx Load
 """),
 
 (r"""
@@ -7703,13 +6899,12 @@ Module .. ROOT 0,0 -> 2,7
 Module .. ROOT 0,0 -> 2,1
   .body[1]
   0] Expr .. 0,0 -> 2,1
-    .value
-      List .. 0,0 -> 2,1
-        .elts[3]
-        0] Constant 2 .. 1,4 -> 1,5
-        1] Name 'a' Load .. 1,7 -> 1,8
-        2] Name 'b' Load .. 1,10 -> 1,11
-        .ctx Load
+    .value List .. 0,0 -> 2,1
+      .elts[3]
+      0] Constant 2 .. 1,4 -> 1,5
+      1] Name 'a' Load .. 1,7 -> 1,8
+      2] Name 'b' Load .. 1,10 -> 1,11
+      .ctx Load
 """),
 
 (r"""
@@ -7726,13 +6921,12 @@ Module .. ROOT 0,0 -> 2,1
 Module .. ROOT 0,0 -> 2,1
   .body[1]
   0] Expr .. 0,0 -> 2,1
-    .value
-      List .. 0,0 -> 2,1
-        .elts[3]
-        0] Name 'a' Load .. 1,4 -> 1,5
-        1] Constant 2 .. 1,7 -> 1,8
-        2] Name 'b' Load .. 1,10 -> 1,11
-        .ctx Load
+    .value List .. 0,0 -> 2,1
+      .elts[3]
+      0] Name 'a' Load .. 1,4 -> 1,5
+      1] Constant 2 .. 1,7 -> 1,8
+      2] Name 'b' Load .. 1,10 -> 1,11
+      .ctx Load
 """),
 
 (r"""
@@ -7748,13 +6942,12 @@ Module .. ROOT 0,0 -> 2,1
 Module .. ROOT 0,0 -> 1,13
   .body[1]
   0] Expr .. 0,0 -> 1,13
-    .value
-      List .. 0,0 -> 1,13
-        .elts[3]
-        0] Name 'a' Load .. 1,4 -> 1,5
-        1] Name 'b' Load .. 1,7 -> 1,8
-        2] Constant 2 .. 1,10 -> 1,11
-        .ctx Load
+    .value List .. 0,0 -> 1,13
+      .elts[3]
+      0] Name 'a' Load .. 1,4 -> 1,5
+      1] Name 'b' Load .. 1,7 -> 1,8
+      2] Constant 2 .. 1,10 -> 1,11
+      .ctx Load
 """),
 
 (r"""
@@ -7773,13 +6966,12 @@ Module .. ROOT 0,0 -> 1,13
 Module .. ROOT 0,0 -> 3,1
   .body[1]
   0] Expr .. 0,0 -> 3,1
-    .value
-      List .. 0,0 -> 3,1
-        .elts[3]
-        0] Constant 3 .. 1,4 -> 1,5
-        1] Name 'a' Load .. 2,4 -> 2,5
-        2] Name 'b' Load .. 2,7 -> 2,8
-        .ctx Load
+    .value List .. 0,0 -> 3,1
+      .elts[3]
+      0] Constant 3 .. 1,4 -> 1,5
+      1] Name 'a' Load .. 2,4 -> 2,5
+      2] Name 'b' Load .. 2,7 -> 2,8
+      .ctx Load
 """),
 
 (r"""
@@ -7798,13 +6990,12 @@ Module .. ROOT 0,0 -> 3,1
 Module .. ROOT 0,0 -> 3,1
   .body[1]
   0] Expr .. 0,0 -> 3,1
-    .value
-      List .. 0,0 -> 3,1
-        .elts[3]
-        0] Name 'a' Load .. 1,4 -> 1,5
-        1] Constant 3 .. 1,7 -> 1,8
-        2] Name 'b' Load .. 2,4 -> 2,5
-        .ctx Load
+    .value List .. 0,0 -> 3,1
+      .elts[3]
+      0] Name 'a' Load .. 1,4 -> 1,5
+      1] Constant 3 .. 1,7 -> 1,8
+      2] Name 'b' Load .. 2,4 -> 2,5
+      .ctx Load
 """),
 
 (r"""
@@ -7822,13 +7013,12 @@ Module .. ROOT 0,0 -> 3,1
 Module .. ROOT 0,0 -> 2,1
   .body[1]
   0] Expr .. 0,0 -> 2,1
-    .value
-      List .. 0,0 -> 2,1
-        .elts[3]
-        0] Name 'a' Load .. 1,4 -> 1,5
-        1] Name 'b' Load .. 1,7 -> 1,8
-        2] Constant 3 .. 1,10 -> 1,11
-        .ctx Load
+    .value List .. 0,0 -> 2,1
+      .elts[3]
+      0] Name 'a' Load .. 1,4 -> 1,5
+      1] Name 'b' Load .. 1,7 -> 1,8
+      2] Constant 3 .. 1,10 -> 1,11
+      .ctx Load
 """),
 
 (r"""
@@ -7846,13 +7036,12 @@ Module .. ROOT 0,0 -> 2,1
 Module .. ROOT 0,0 -> 2,1
   .body[1]
   0] Expr .. 0,0 -> 2,1
-    .value
-      List .. 0,0 -> 2,1
-        .elts[3]
-        0] Constant 1 .. 1,4 -> 1,5
-        1] Name 'a' Load .. 1,7 -> 1,8
-        2] Name 'b' Load .. 1,10 -> 1,11
-        .ctx Load
+    .value List .. 0,0 -> 2,1
+      .elts[3]
+      0] Constant 1 .. 1,4 -> 1,5
+      1] Name 'a' Load .. 1,7 -> 1,8
+      2] Name 'b' Load .. 1,10 -> 1,11
+      .ctx Load
 """),
 
 (r"""
@@ -7871,13 +7060,12 @@ Module .. ROOT 0,0 -> 2,1
 Module .. ROOT 0,0 -> 3,1
   .body[1]
   0] Expr .. 0,0 -> 3,1
-    .value
-      List .. 0,0 -> 3,1
-        .elts[3]
-        0] Name 'a' Load .. 1,4 -> 1,5
-        1] Constant 1 .. 2,4 -> 2,5
-        2] Name 'b' Load .. 2,7 -> 2,8
-        .ctx Load
+    .value List .. 0,0 -> 3,1
+      .elts[3]
+      0] Name 'a' Load .. 1,4 -> 1,5
+      1] Constant 1 .. 2,4 -> 2,5
+      2] Name 'b' Load .. 2,7 -> 2,8
+      .ctx Load
 """),
 
 (r"""
@@ -7895,13 +7083,12 @@ Module .. ROOT 0,0 -> 3,1
 Module .. ROOT 0,0 -> 2,7
   .body[1]
   0] Expr .. 0,0 -> 2,7
-    .value
-      List .. 0,0 -> 2,7
-        .elts[3]
-        0] Name 'a' Load .. 1,4 -> 1,5
-        1] Name 'b' Load .. 1,7 -> 1,8
-        2] Constant 1 .. 2,4 -> 2,5
-        .ctx Load
+    .value List .. 0,0 -> 2,7
+      .elts[3]
+      0] Name 'a' Load .. 1,4 -> 1,5
+      1] Name 'b' Load .. 1,7 -> 1,8
+      2] Constant 1 .. 2,4 -> 2,5
+      .ctx Load
 """),
 
 (r"""
@@ -7918,13 +7105,12 @@ Module .. ROOT 0,0 -> 2,7
 Module .. ROOT 0,0 -> 2,1
   .body[1]
   0] Expr .. 0,0 -> 2,1
-    .value
-      List .. 0,0 -> 2,1
-        .elts[3]
-        0] Constant 2 .. 1,4 -> 1,5
-        1] Name 'a' Load .. 1,7 -> 1,8
-        2] Name 'b' Load .. 1,10 -> 1,11
-        .ctx Load
+    .value List .. 0,0 -> 2,1
+      .elts[3]
+      0] Constant 2 .. 1,4 -> 1,5
+      1] Name 'a' Load .. 1,7 -> 1,8
+      2] Name 'b' Load .. 1,10 -> 1,11
+      .ctx Load
 """),
 
 (r"""
@@ -7941,13 +7127,12 @@ Module .. ROOT 0,0 -> 2,1
 Module .. ROOT 0,0 -> 2,1
   .body[1]
   0] Expr .. 0,0 -> 2,1
-    .value
-      List .. 0,0 -> 2,1
-        .elts[3]
-        0] Name 'a' Load .. 1,4 -> 1,5
-        1] Constant 2 .. 1,7 -> 1,8
-        2] Name 'b' Load .. 1,10 -> 1,11
-        .ctx Load
+    .value List .. 0,0 -> 2,1
+      .elts[3]
+      0] Name 'a' Load .. 1,4 -> 1,5
+      1] Constant 2 .. 1,7 -> 1,8
+      2] Name 'b' Load .. 1,10 -> 1,11
+      .ctx Load
 """),
 
 (r"""
@@ -7963,13 +7148,12 @@ Module .. ROOT 0,0 -> 2,1
 Module .. ROOT 0,0 -> 1,13
   .body[1]
   0] Expr .. 0,0 -> 1,13
-    .value
-      List .. 0,0 -> 1,13
-        .elts[3]
-        0] Name 'a' Load .. 1,4 -> 1,5
-        1] Name 'b' Load .. 1,7 -> 1,8
-        2] Constant 2 .. 1,10 -> 1,11
-        .ctx Load
+    .value List .. 0,0 -> 1,13
+      .elts[3]
+      0] Name 'a' Load .. 1,4 -> 1,5
+      1] Name 'b' Load .. 1,7 -> 1,8
+      2] Constant 2 .. 1,10 -> 1,11
+      .ctx Load
 """),
 
 (r"""
@@ -7988,13 +7172,12 @@ Module .. ROOT 0,0 -> 1,13
 Module .. ROOT 0,0 -> 3,1
   .body[1]
   0] Expr .. 0,0 -> 3,1
-    .value
-      List .. 0,0 -> 3,1
-        .elts[3]
-        0] Constant 3 .. 1,4 -> 1,5
-        1] Name 'a' Load .. 2,4 -> 2,5
-        2] Name 'b' Load .. 2,7 -> 2,8
-        .ctx Load
+    .value List .. 0,0 -> 3,1
+      .elts[3]
+      0] Constant 3 .. 1,4 -> 1,5
+      1] Name 'a' Load .. 2,4 -> 2,5
+      2] Name 'b' Load .. 2,7 -> 2,8
+      .ctx Load
 """),
 
 (r"""
@@ -8013,13 +7196,12 @@ Module .. ROOT 0,0 -> 3,1
 Module .. ROOT 0,0 -> 3,1
   .body[1]
   0] Expr .. 0,0 -> 3,1
-    .value
-      List .. 0,0 -> 3,1
-        .elts[3]
-        0] Name 'a' Load .. 1,4 -> 1,5
-        1] Constant 3 .. 1,7 -> 1,8
-        2] Name 'b' Load .. 2,4 -> 2,5
-        .ctx Load
+    .value List .. 0,0 -> 3,1
+      .elts[3]
+      0] Name 'a' Load .. 1,4 -> 1,5
+      1] Constant 3 .. 1,7 -> 1,8
+      2] Name 'b' Load .. 2,4 -> 2,5
+      .ctx Load
 """),
 
 (r"""
@@ -8037,13 +7219,12 @@ Module .. ROOT 0,0 -> 3,1
 Module .. ROOT 0,0 -> 2,1
   .body[1]
   0] Expr .. 0,0 -> 2,1
-    .value
-      List .. 0,0 -> 2,1
-        .elts[3]
-        0] Name 'a' Load .. 1,4 -> 1,5
-        1] Name 'b' Load .. 1,7 -> 1,8
-        2] Constant 3 .. 1,10 -> 1,11
-        .ctx Load
+    .value List .. 0,0 -> 2,1
+      .elts[3]
+      0] Name 'a' Load .. 1,4 -> 1,5
+      1] Name 'b' Load .. 1,7 -> 1,8
+      2] Constant 3 .. 1,10 -> 1,11
+      .ctx Load
 """),
 
 (r"""
@@ -8061,13 +7242,12 @@ Module .. ROOT 0,0 -> 2,1
 Module .. ROOT 0,0 -> 2,6
   .body[1]
   0] Expr .. 0,0 -> 2,6
-    .value
-      List .. 0,0 -> 2,6
-        .elts[3]
-        0] Name 'a' Load .. 1,4 -> 1,5
-        1] Name 'b' Load .. 1,7 -> 1,8
-        2] Constant 1 .. 2,4 -> 2,5
-        .ctx Load
+    .value List .. 0,0 -> 2,6
+      .elts[3]
+      0] Name 'a' Load .. 1,4 -> 1,5
+      1] Name 'b' Load .. 1,7 -> 1,8
+      2] Constant 1 .. 2,4 -> 2,5
+      .ctx Load
 """),
 
 (r"""
@@ -8083,13 +7263,12 @@ Module .. ROOT 0,0 -> 2,6
 Module .. ROOT 0,0 -> 1,12
   .body[1]
   0] Expr .. 0,0 -> 1,12
-    .value
-      List .. 0,0 -> 1,12
-        .elts[3]
-        0] Name 'a' Load .. 1,4 -> 1,5
-        1] Name 'b' Load .. 1,7 -> 1,8
-        2] Constant 2 .. 1,10 -> 1,11
-        .ctx Load
+    .value List .. 0,0 -> 1,12
+      .elts[3]
+      0] Name 'a' Load .. 1,4 -> 1,5
+      1] Name 'b' Load .. 1,7 -> 1,8
+      2] Constant 2 .. 1,10 -> 1,11
+      .ctx Load
 """),
 
 (r"""
@@ -8107,13 +7286,12 @@ Module .. ROOT 0,0 -> 1,12
 Module .. ROOT 0,0 -> 2,1
   .body[1]
   0] Expr .. 0,0 -> 2,1
-    .value
-      List .. 0,0 -> 2,1
-        .elts[3]
-        0] Name 'a' Load .. 1,4 -> 1,5
-        1] Name 'b' Load .. 1,7 -> 1,8
-        2] Constant 3 .. 1,10 -> 1,11
-        .ctx Load
+    .value List .. 0,0 -> 2,1
+      .elts[3]
+      0] Name 'a' Load .. 1,4 -> 1,5
+      1] Name 'b' Load .. 1,7 -> 1,8
+      2] Constant 3 .. 1,10 -> 1,11
+      .ctx Load
 """),
 
 (r"""
@@ -8131,13 +7309,12 @@ Module .. ROOT 0,0 -> 2,1
 Module .. ROOT 0,0 -> 2,7
   .body[1]
   0] Expr .. 0,0 -> 2,7
-    .value
-      List .. 0,0 -> 2,7
-        .elts[3]
-        0] Name 'a' Load .. 1,4 -> 1,5
-        1] Name 'b' Load .. 1,7 -> 1,8
-        2] Constant 1 .. 2,4 -> 2,5
-        .ctx Load
+    .value List .. 0,0 -> 2,7
+      .elts[3]
+      0] Name 'a' Load .. 1,4 -> 1,5
+      1] Name 'b' Load .. 1,7 -> 1,8
+      2] Constant 1 .. 2,4 -> 2,5
+      .ctx Load
 """),
 
 (r"""
@@ -8153,13 +7330,12 @@ Module .. ROOT 0,0 -> 2,7
 Module .. ROOT 0,0 -> 1,13
   .body[1]
   0] Expr .. 0,0 -> 1,13
-    .value
-      List .. 0,0 -> 1,13
-        .elts[3]
-        0] Name 'a' Load .. 1,4 -> 1,5
-        1] Name 'b' Load .. 1,7 -> 1,8
-        2] Constant 2 .. 1,10 -> 1,11
-        .ctx Load
+    .value List .. 0,0 -> 1,13
+      .elts[3]
+      0] Name 'a' Load .. 1,4 -> 1,5
+      1] Name 'b' Load .. 1,7 -> 1,8
+      2] Constant 2 .. 1,10 -> 1,11
+      .ctx Load
 """),
 
 (r"""
@@ -8177,13 +7353,12 @@ Module .. ROOT 0,0 -> 1,13
 Module .. ROOT 0,0 -> 2,1
   .body[1]
   0] Expr .. 0,0 -> 2,1
-    .value
-      List .. 0,0 -> 2,1
-        .elts[3]
-        0] Name 'a' Load .. 1,4 -> 1,5
-        1] Name 'b' Load .. 1,7 -> 1,8
-        2] Constant 3 .. 1,10 -> 1,11
-        .ctx Load
+    .value List .. 0,0 -> 2,1
+      .elts[3]
+      0] Name 'a' Load .. 1,4 -> 1,5
+      1] Name 'b' Load .. 1,7 -> 1,8
+      2] Constant 3 .. 1,10 -> 1,11
+      .ctx Load
 """),
 
 (r"""
@@ -8203,13 +7378,12 @@ Module .. ROOT 0,0 -> 2,1
 Module .. ROOT 0,0 -> 3,1
   .body[1]
   0] Expr .. 0,0 -> 3,1
-    .value
-      List .. 0,0 -> 3,1
-        .elts[3]
-        0] Name 'a' Load .. 1,4 -> 1,5
-        1] Name 'b' Load .. 1,7 -> 1,8
-        2] Constant 1 .. 2,4 -> 2,5
-        .ctx Load
+    .value List .. 0,0 -> 3,1
+      .elts[3]
+      0] Name 'a' Load .. 1,4 -> 1,5
+      1] Name 'b' Load .. 1,7 -> 1,8
+      2] Constant 1 .. 2,4 -> 2,5
+      .ctx Load
 """),
 
 (r"""
@@ -8227,13 +7401,12 @@ Module .. ROOT 0,0 -> 3,1
 Module .. ROOT 0,0 -> 2,1
   .body[1]
   0] Expr .. 0,0 -> 2,1
-    .value
-      List .. 0,0 -> 2,1
-        .elts[3]
-        0] Name 'a' Load .. 1,4 -> 1,5
-        1] Name 'b' Load .. 1,7 -> 1,8
-        2] Constant 2 .. 1,10 -> 1,11
-        .ctx Load
+    .value List .. 0,0 -> 2,1
+      .elts[3]
+      0] Name 'a' Load .. 1,4 -> 1,5
+      1] Name 'b' Load .. 1,7 -> 1,8
+      2] Constant 2 .. 1,10 -> 1,11
+      .ctx Load
 """),
 
 (r"""
@@ -8251,13 +7424,12 @@ Module .. ROOT 0,0 -> 2,1
 Module .. ROOT 0,0 -> 2,1
   .body[1]
   0] Expr .. 0,0 -> 2,1
-    .value
-      List .. 0,0 -> 2,1
-        .elts[3]
-        0] Name 'a' Load .. 1,4 -> 1,5
-        1] Name 'b' Load .. 1,7 -> 1,8
-        2] Constant 3 .. 1,10 -> 1,11
-        .ctx Load
+    .value List .. 0,0 -> 2,1
+      .elts[3]
+      0] Name 'a' Load .. 1,4 -> 1,5
+      1] Name 'b' Load .. 1,7 -> 1,8
+      2] Constant 3 .. 1,10 -> 1,11
+      .ctx Load
 """),
 
 (r"""
@@ -8277,13 +7449,12 @@ Module .. ROOT 0,0 -> 2,1
 Module .. ROOT 0,0 -> 3,1
   .body[1]
   0] Expr .. 0,0 -> 3,1
-    .value
-      List .. 0,0 -> 3,1
-        .elts[3]
-        0] Name 'a' Load .. 1,4 -> 1,5
-        1] Name 'b' Load .. 1,7 -> 1,8
-        2] Constant 1 .. 2,4 -> 2,5
-        .ctx Load
+    .value List .. 0,0 -> 3,1
+      .elts[3]
+      0] Name 'a' Load .. 1,4 -> 1,5
+      1] Name 'b' Load .. 1,7 -> 1,8
+      2] Constant 1 .. 2,4 -> 2,5
+      .ctx Load
 """),
 
 (r"""
@@ -8301,13 +7472,12 @@ Module .. ROOT 0,0 -> 3,1
 Module .. ROOT 0,0 -> 2,1
   .body[1]
   0] Expr .. 0,0 -> 2,1
-    .value
-      List .. 0,0 -> 2,1
-        .elts[3]
-        0] Name 'a' Load .. 1,4 -> 1,5
-        1] Name 'b' Load .. 1,7 -> 1,8
-        2] Constant 2 .. 1,10 -> 1,11
-        .ctx Load
+    .value List .. 0,0 -> 2,1
+      .elts[3]
+      0] Name 'a' Load .. 1,4 -> 1,5
+      1] Name 'b' Load .. 1,7 -> 1,8
+      2] Constant 2 .. 1,10 -> 1,11
+      .ctx Load
 """),
 
 (r"""
@@ -8325,13 +7495,12 @@ Module .. ROOT 0,0 -> 2,1
 Module .. ROOT 0,0 -> 2,1
   .body[1]
   0] Expr .. 0,0 -> 2,1
-    .value
-      List .. 0,0 -> 2,1
-        .elts[3]
-        0] Name 'a' Load .. 1,4 -> 1,5
-        1] Name 'b' Load .. 1,7 -> 1,8
-        2] Constant 3 .. 1,10 -> 1,11
-        .ctx Load
+    .value List .. 0,0 -> 2,1
+      .elts[3]
+      0] Name 'a' Load .. 1,4 -> 1,5
+      1] Name 'b' Load .. 1,7 -> 1,8
+      2] Constant 3 .. 1,10 -> 1,11
+      .ctx Load
 """),
 
 (r"""
@@ -8351,14 +7520,13 @@ Module .. ROOT 0,0 -> 2,1
 Module .. ROOT 0,0 -> 3,59
   .body[1]
   0] Expr .. 0,0 -> 3,59
-    .value
-      Dict .. 0,0 -> 3,59
-        .keys[2]
-        0] Constant 'message' .. 1,4 -> 1,13
-        1] Name 'i' Load .. 3,54 -> 3,55
-        .values[2]
-        0] Constant 'An open stream was garbage collected prior to establishing network connection; call "stream.close()" explicitly.' .. 1,16 -> 3,51
-        1] Name 'j' Load .. 3,57 -> 3,58
+    .value Dict .. 0,0 -> 3,59
+      .keys[2]
+      0] Constant 'message' .. 1,4 -> 1,13
+      1] Name 'i' Load .. 3,54 -> 3,55
+      .values[2]
+      0] Constant 'An open stream was garbage collected prior to establishing network connection; call "stream.close()" explicitly.' .. 1,16 -> 3,51
+      1] Name 'j' Load .. 3,57 -> 3,58
 """),
 
 (r"""
@@ -8377,16 +7545,15 @@ Module .. ROOT 0,0 -> 3,59
 Module .. ROOT 0,0 -> 3,1
   .body[1]
   0] Expr .. 0,0 -> 3,1
-    .value
-      Dict .. 0,0 -> 3,1
-        .keys[3]
-        0] Constant 1 .. 1,4 -> 1,5
-        1] Constant 3 .. 2,4 -> 2,5
-        2] Constant 5 .. 2,14 -> 2,15
-        .values[3]
-        0] Constant 2 .. 1,7 -> 1,8
-        1] Constant '4' .. 2,8 -> 2,11
-        2] Constant 6 .. 2,17 -> 2,18
+    .value Dict .. 0,0 -> 3,1
+      .keys[3]
+      0] Constant 1 .. 1,4 -> 1,5
+      1] Constant 3 .. 2,4 -> 2,5
+      2] Constant 5 .. 2,14 -> 2,15
+      .values[3]
+      0] Constant 2 .. 1,7 -> 1,8
+      1] Constant '4' .. 2,8 -> 2,11
+      2] Constant 6 .. 2,17 -> 2,18
 """),
 
 (r"""
@@ -8407,14 +7574,13 @@ Module .. ROOT 0,0 -> 3,1
 Module .. ROOT 0,0 -> 4,1
   .body[1]
   0] Expr .. 0,0 -> 4,1
-    .value
-      List .. 0,0 -> 4,1
-        .elts[4]
-        0] Constant 'file, line (\\\\d+)' .. 2,4 -> 2,24
-        1] Constant 1 .. 3,4 -> 3,5
-        2] Constant 2 .. 3,7 -> 3,8
-        3] Constant 3 .. 3,10 -> 3,11
-        .ctx Load
+    .value List .. 0,0 -> 4,1
+      .elts[4]
+      0] Constant 'file, line (\\\\d+)' .. 2,4 -> 2,24
+      1] Constant 1 .. 3,4 -> 3,5
+      2] Constant 2 .. 3,7 -> 3,8
+      3] Constant 3 .. 3,10 -> 3,11
+      .ctx Load
 """),
 
 (r"""
@@ -8427,12 +7593,11 @@ Module .. ROOT 0,0 -> 4,1
 Module .. ROOT 0,0 -> 0,23
   .body[1]
   0] Expr .. 0,0 -> 0,23
-    .value
-      Tuple .. 0,0 -> 0,23
-        .elts[2]
-        0] Name 'IndexError' Load .. 0,1 -> 0,11
-        1] Name 'KeyError' Load .. 0,13 -> 0,21
-        .ctx Load
+    .value Tuple .. 0,0 -> 0,23
+      .elts[2]
+      0] Name 'IndexError' Load .. 0,1 -> 0,11
+      1] Name 'KeyError' Load .. 0,13 -> 0,21
+      .ctx Load
 """),
 
 (r"""
@@ -8452,10 +7617,8 @@ Module .. ROOT 0,0 -> 0,14
       1] Name 'b' Store .. 0,4 -> 0,5
       2] Name 'd' Store .. 0,7 -> 0,8
       .ctx Store
-    .value
-      Name 'c' Load .. 0,13 -> 0,14
-    .type_comment
-      None
+    .value Name 'c' Load .. 0,13 -> 0,14
+    .type_comment None
 """),
 
 (r"""
@@ -8470,31 +7633,24 @@ stat_list,
 Module .. ROOT 0,0 -> 1,48
   .body[1]
   0] Expr .. 0,0 -> 1,48
-    .value
-      Tuple .. 0,0 -> 1,48
-        .elts[1]
-        0] Subscript .. 0,2 -> 1,45
-          .value
-            Dict .. 0,2 -> 1,35
-              .keys[2]
-              0] UnaryOp .. 0,3 -> 0,5
-                .op
-                  USub
-                .operand
-                  Constant 1 .. 0,4 -> 0,5
-              1] Constant 2 .. 1,19 -> 1,20
-              .values[2]
-              0] Constant 'stdname' .. 0,7 -> 0,16
-              1] Constant 'cumulative' .. 1,22 -> 1,34
-          .slice
-            Subscript .. 1,36 -> 1,44
-              .value
-                Name 'field' Load .. 1,36 -> 1,41
-              .slice
-                Constant 0 .. 1,42 -> 1,43
-              .ctx Load
+    .value Tuple .. 0,0 -> 1,48
+      .elts[1]
+      0] Subscript .. 0,2 -> 1,45
+        .value Dict .. 0,2 -> 1,35
+          .keys[2]
+          0] UnaryOp .. 0,3 -> 0,5
+            .op USub
+            .operand Constant 1 .. 0,4 -> 0,5
+          1] Constant 2 .. 1,19 -> 1,20
+          .values[2]
+          0] Constant 'stdname' .. 0,7 -> 0,16
+          1] Constant 'cumulative' .. 1,22 -> 1,34
+        .slice Subscript .. 1,36 -> 1,44
+          .value Name 'field' Load .. 1,36 -> 1,41
+          .slice Constant 0 .. 1,42 -> 1,43
           .ctx Load
         .ctx Load
+      .ctx Load
 """),
 
 (r"""
@@ -8511,18 +7667,15 @@ c,):
 Module .. ROOT 0,0 -> 2,8
   .body[1]
   0] For .. 0,0 -> 2,8
-    .target
-      Name 'a' Store .. 0,4 -> 0,5
-    .iter
-      Tuple .. 0,9 -> 1,3
-        .elts[2]
-        0] Name 'a' Load .. 0,10 -> 0,11
-        1] Name 'c' Load .. 1,0 -> 1,1
-        .ctx Load
+    .target Name 'a' Store .. 0,4 -> 0,5
+    .iter Tuple .. 0,9 -> 1,3
+      .elts[2]
+      0] Name 'a' Load .. 0,10 -> 0,11
+      1] Name 'c' Load .. 1,0 -> 1,1
+      .ctx Load
     .body[1]
     0] Pass .. 2,4 -> 2,8
-    .type_comment
-      None
+    .type_comment None
 """),
 
 (r"""
@@ -8539,15 +7692,13 @@ Module .. ROOT 0,0 -> 1,21
   0] Assign .. 0,0 -> 1,21
     .targets[1]
     0] Name 'result' Store .. 0,0 -> 0,6
-    .value
-      Tuple .. 0,9 -> 1,21
-        .elts[3]
-        0] Name 'c' Load .. 1,0 -> 1,1
-        1] Name 'filename' Load .. 1,3 -> 1,11
-        2] Name 'headers' Load .. 1,13 -> 1,20
-        .ctx Load
-    .type_comment
-      None
+    .value Tuple .. 0,9 -> 1,21
+      .elts[3]
+      0] Name 'c' Load .. 1,0 -> 1,1
+      1] Name 'filename' Load .. 1,3 -> 1,11
+      2] Name 'headers' Load .. 1,13 -> 1,20
+      .ctx Load
+    .type_comment None
 """),
 
 (r"""
@@ -8560,9 +7711,8 @@ return ()
 Module .. ROOT 0,0 -> 0,9
   .body[1]
   0] Return .. 0,0 -> 0,9
-    .value
-      Tuple .. 0,7 -> 0,9
-        .ctx Load
+    .value Tuple .. 0,7 -> 0,9
+      .ctx Load
 """),
 
 (r"""
@@ -8575,10 +7725,8 @@ set()
 Module .. ROOT 0,0 -> 0,5
   .body[1]
   0] Expr .. 0,0 -> 0,5
-    .value
-      Call .. 0,0 -> 0,5
-        .func
-          Name 'set' Load .. 0,0 -> 0,3
+    .value Call .. 0,0 -> 0,5
+      .func Name 'set' Load .. 0,0 -> 0,3
 """),
 
 (r"""
@@ -8591,10 +7739,8 @@ set()
 Module .. ROOT 0,0 -> 0,5
   .body[1]
   0] Expr .. 0,0 -> 0,5
-    .value
-      Call .. 0,0 -> 0,5
-        .func
-          Name 'set' Load .. 0,0 -> 0,3
+    .value Call .. 0,0 -> 0,5
+      .func Name 'set' Load .. 0,0 -> 0,3
 """),
 
 (r"""
@@ -8607,11 +7753,10 @@ set()
 Module .. ROOT 0,0 -> 0,6
   .body[1]
   0] Expr .. 0,0 -> 0,6
-    .value
-      Set .. 0,0 -> 0,6
-        .elts[2]
-        0] Constant 1 .. 0,1 -> 0,2
-        1] Constant 2 .. 0,4 -> 0,5
+    .value Set .. 0,0 -> 0,6
+      .elts[2]
+      0] Constant 1 .. 0,1 -> 0,2
+      1] Constant 2 .. 0,4 -> 0,5
 """),
 
 (r"""
@@ -8624,14 +7769,13 @@ a, 1, 2, 3,
 Module .. ROOT 0,0 -> 0,11
   .body[1]
   0] Expr .. 0,0 -> 0,11
-    .value
-      Tuple .. 0,0 -> 0,11
-        .elts[4]
-        0] Name 'a' Load .. 0,0 -> 0,1
-        1] Constant 1 .. 0,3 -> 0,4
-        2] Constant 2 .. 0,6 -> 0,7
-        3] Constant 3 .. 0,9 -> 0,10
-        .ctx Load
+    .value Tuple .. 0,0 -> 0,11
+      .elts[4]
+      0] Name 'a' Load .. 0,0 -> 0,1
+      1] Constant 1 .. 0,3 -> 0,4
+      2] Constant 2 .. 0,6 -> 0,7
+      3] Constant 3 .. 0,9 -> 0,10
+      .ctx Load
 """),
 
 (r"""
@@ -8644,14 +7788,13 @@ a,
 Module .. ROOT 0,0 -> 0,11
   .body[1]
   0] Expr .. 0,0 -> 0,11
-    .value
-      Tuple .. 0,0 -> 0,11
-        .elts[4]
-        0] Constant 1 .. 0,0 -> 0,1
-        1] Name 'a' Load .. 0,3 -> 0,4
-        2] Constant 2 .. 0,6 -> 0,7
-        3] Constant 3 .. 0,9 -> 0,10
-        .ctx Load
+    .value Tuple .. 0,0 -> 0,11
+      .elts[4]
+      0] Constant 1 .. 0,0 -> 0,1
+      1] Name 'a' Load .. 0,3 -> 0,4
+      2] Constant 2 .. 0,6 -> 0,7
+      3] Constant 3 .. 0,9 -> 0,10
+      .ctx Load
 """),
 
 (r"""
@@ -8664,14 +7807,13 @@ a,
 Module .. ROOT 0,0 -> 0,11
   .body[1]
   0] Expr .. 0,0 -> 0,11
-    .value
-      Tuple .. 0,0 -> 0,11
-        .elts[4]
-        0] Constant 1 .. 0,0 -> 0,1
-        1] Constant 2 .. 0,3 -> 0,4
-        2] Name 'a' Load .. 0,6 -> 0,7
-        3] Constant 3 .. 0,9 -> 0,10
-        .ctx Load
+    .value Tuple .. 0,0 -> 0,11
+      .elts[4]
+      0] Constant 1 .. 0,0 -> 0,1
+      1] Constant 2 .. 0,3 -> 0,4
+      2] Name 'a' Load .. 0,6 -> 0,7
+      3] Constant 3 .. 0,9 -> 0,10
+      .ctx Load
 """),
 
 (r"""
@@ -8684,14 +7826,13 @@ a,
 Module .. ROOT 0,0 -> 0,11
   .body[1]
   0] Expr .. 0,0 -> 0,11
-    .value
-      Tuple .. 0,0 -> 0,11
-        .elts[4]
-        0] Constant 1 .. 0,0 -> 0,1
-        1] Constant 2 .. 0,3 -> 0,4
-        2] Constant 3 .. 0,6 -> 0,7
-        3] Name 'a' Load .. 0,9 -> 0,10
-        .ctx Load
+    .value Tuple .. 0,0 -> 0,11
+      .elts[4]
+      0] Constant 1 .. 0,0 -> 0,1
+      1] Constant 2 .. 0,3 -> 0,4
+      2] Constant 3 .. 0,6 -> 0,7
+      3] Name 'a' Load .. 0,9 -> 0,10
+      .ctx Load
 """),
 
 (r"""
@@ -8704,13 +7845,12 @@ a, 2, 3,
 Module .. ROOT 0,0 -> 0,8
   .body[1]
   0] Expr .. 0,0 -> 0,8
-    .value
-      Tuple .. 0,0 -> 0,8
-        .elts[3]
-        0] Name 'a' Load .. 0,0 -> 0,1
-        1] Constant 2 .. 0,3 -> 0,4
-        2] Constant 3 .. 0,6 -> 0,7
-        .ctx Load
+    .value Tuple .. 0,0 -> 0,8
+      .elts[3]
+      0] Name 'a' Load .. 0,0 -> 0,1
+      1] Constant 2 .. 0,3 -> 0,4
+      2] Constant 3 .. 0,6 -> 0,7
+      .ctx Load
 """),
 
 (r"""
@@ -8723,13 +7863,12 @@ a,
 Module .. ROOT 0,0 -> 0,8
   .body[1]
   0] Expr .. 0,0 -> 0,8
-    .value
-      Tuple .. 0,0 -> 0,8
-        .elts[3]
-        0] Constant 1 .. 0,0 -> 0,1
-        1] Name 'a' Load .. 0,3 -> 0,4
-        2] Constant 3 .. 0,6 -> 0,7
-        .ctx Load
+    .value Tuple .. 0,0 -> 0,8
+      .elts[3]
+      0] Constant 1 .. 0,0 -> 0,1
+      1] Name 'a' Load .. 0,3 -> 0,4
+      2] Constant 3 .. 0,6 -> 0,7
+      .ctx Load
 """),
 
 (r"""
@@ -8742,13 +7881,12 @@ a,
 Module .. ROOT 0,0 -> 0,8
   .body[1]
   0] Expr .. 0,0 -> 0,8
-    .value
-      Tuple .. 0,0 -> 0,8
-        .elts[3]
-        0] Constant 1 .. 0,0 -> 0,1
-        1] Constant 2 .. 0,3 -> 0,4
-        2] Name 'a' Load .. 0,6 -> 0,7
-        .ctx Load
+    .value Tuple .. 0,0 -> 0,8
+      .elts[3]
+      0] Constant 1 .. 0,0 -> 0,1
+      1] Constant 2 .. 0,3 -> 0,4
+      2] Name 'a' Load .. 0,6 -> 0,7
+      .ctx Load
 """),
 
 (r"""
@@ -8761,12 +7899,11 @@ a, 3,
 Module .. ROOT 0,0 -> 0,5
   .body[1]
   0] Expr .. 0,0 -> 0,5
-    .value
-      Tuple .. 0,0 -> 0,5
-        .elts[2]
-        0] Name 'a' Load .. 0,0 -> 0,1
-        1] Constant 3 .. 0,3 -> 0,4
-        .ctx Load
+    .value Tuple .. 0,0 -> 0,5
+      .elts[2]
+      0] Name 'a' Load .. 0,0 -> 0,1
+      1] Constant 3 .. 0,3 -> 0,4
+      .ctx Load
 """),
 
 (r"""
@@ -8779,12 +7916,11 @@ a,
 Module .. ROOT 0,0 -> 0,5
   .body[1]
   0] Expr .. 0,0 -> 0,5
-    .value
-      Tuple .. 0,0 -> 0,5
-        .elts[2]
-        0] Constant 1 .. 0,0 -> 0,1
-        1] Name 'a' Load .. 0,3 -> 0,4
-        .ctx Load
+    .value Tuple .. 0,0 -> 0,5
+      .elts[2]
+      0] Constant 1 .. 0,0 -> 0,1
+      1] Name 'a' Load .. 0,3 -> 0,4
+      .ctx Load
 """),
 
 (r"""
@@ -8797,11 +7933,10 @@ a,
 Module .. ROOT 0,0 -> 0,2
   .body[1]
   0] Expr .. 0,0 -> 0,2
-    .value
-      Tuple .. 0,0 -> 0,2
-        .elts[1]
-        0] Name 'a' Load .. 0,0 -> 0,1
-        .ctx Load
+    .value Tuple .. 0,0 -> 0,2
+      .elts[1]
+      0] Name 'a' Load .. 0,0 -> 0,1
+      .ctx Load
 """),
 
 ]  # END OF PUT_SLICE_SEQ_DATA
@@ -8819,11 +7954,10 @@ PUT_SLICE_SEQ_DEL_DATA = [
 Module .. ROOT 0,0 -> 2,1
   .body[1]
   0] Expr .. 0,0 -> 2,1
-    .value
-      List .. 0,0 -> 2,1
-        .elts[1]
-        0] Constant 3 .. 1,4 -> 1,5
-        .ctx Load
+    .value List .. 0,0 -> 2,1
+      .elts[1]
+      0] Constant 3 .. 1,4 -> 1,5
+      .ctx Load
 """),
 
 ("""
@@ -8834,13 +7968,12 @@ Module .. ROOT 0,0 -> 2,1
 Module .. ROOT 0,0 -> 0,8
   .body[1]
   0] Expr .. 0,0 -> 0,8
-    .value
-      Tuple .. 0,0 -> 0,8
-        .elts[3]
-        0] Constant 1 .. 0,0 -> 0,1
-        1] Constant 2 .. 0,3 -> 0,4
-        2] Constant 3 .. 0,6 -> 0,7
-        .ctx Load
+    .value Tuple .. 0,0 -> 0,8
+      .elts[3]
+      0] Constant 1 .. 0,0 -> 0,1
+      1] Constant 2 .. 0,3 -> 0,4
+      2] Constant 3 .. 0,6 -> 0,7
+      .ctx Load
 """),
 
 ("""
@@ -8851,13 +7984,12 @@ Module .. ROOT 0,0 -> 0,8
 Module .. ROOT 0,0 -> 0,8
   .body[1]
   0] Expr .. 0,0 -> 0,8
-    .value
-      Tuple .. 0,0 -> 0,8
-        .elts[3]
-        0] Constant 1 .. 0,0 -> 0,1
-        1] Constant 2 .. 0,3 -> 0,4
-        2] Constant 3 .. 0,6 -> 0,7
-        .ctx Load
+    .value Tuple .. 0,0 -> 0,8
+      .elts[3]
+      0] Constant 1 .. 0,0 -> 0,1
+      1] Constant 2 .. 0,3 -> 0,4
+      2] Constant 3 .. 0,6 -> 0,7
+      .ctx Load
 """),
 
 ("""
@@ -8868,13 +8000,12 @@ Module .. ROOT 0,0 -> 0,8
 Module .. ROOT 0,0 -> 0,8
   .body[1]
   0] Expr .. 0,0 -> 0,8
-    .value
-      Tuple .. 0,0 -> 0,8
-        .elts[3]
-        0] Constant 1 .. 0,0 -> 0,1
-        1] Constant 2 .. 0,3 -> 0,4
-        2] Constant 3 .. 0,6 -> 0,7
-        .ctx Load
+    .value Tuple .. 0,0 -> 0,8
+      .elts[3]
+      0] Constant 1 .. 0,0 -> 0,1
+      1] Constant 2 .. 0,3 -> 0,4
+      2] Constant 3 .. 0,6 -> 0,7
+      .ctx Load
 """),
 
 ("""
@@ -8885,13 +8016,12 @@ Module .. ROOT 0,0 -> 0,8
 Module .. ROOT 0,0 -> 0,8
   .body[1]
   0] Expr .. 0,0 -> 0,8
-    .value
-      Tuple .. 0,0 -> 0,8
-        .elts[3]
-        0] Constant 1 .. 0,0 -> 0,1
-        1] Constant 2 .. 0,3 -> 0,4
-        2] Constant 3 .. 0,6 -> 0,7
-        .ctx Load
+    .value Tuple .. 0,0 -> 0,8
+      .elts[3]
+      0] Constant 1 .. 0,0 -> 0,1
+      1] Constant 2 .. 0,3 -> 0,4
+      2] Constant 3 .. 0,6 -> 0,7
+      .ctx Load
 """),
 
 ("""
@@ -8902,12 +8032,11 @@ Module .. ROOT 0,0 -> 0,8
 Module .. ROOT 0,0 -> 0,5
   .body[1]
   0] Expr .. 0,0 -> 0,5
-    .value
-      Tuple .. 0,0 -> 0,5
-        .elts[2]
-        0] Constant 2 .. 0,0 -> 0,1
-        1] Constant 3 .. 0,3 -> 0,4
-        .ctx Load
+    .value Tuple .. 0,0 -> 0,5
+      .elts[2]
+      0] Constant 2 .. 0,0 -> 0,1
+      1] Constant 3 .. 0,3 -> 0,4
+      .ctx Load
 """),
 
 ("""
@@ -8918,12 +8047,11 @@ Module .. ROOT 0,0 -> 0,5
 Module .. ROOT 0,0 -> 0,5
   .body[1]
   0] Expr .. 0,0 -> 0,5
-    .value
-      Tuple .. 0,0 -> 0,5
-        .elts[2]
-        0] Constant 1 .. 0,0 -> 0,1
-        1] Constant 3 .. 0,3 -> 0,4
-        .ctx Load
+    .value Tuple .. 0,0 -> 0,5
+      .elts[2]
+      0] Constant 1 .. 0,0 -> 0,1
+      1] Constant 3 .. 0,3 -> 0,4
+      .ctx Load
 """),
 
 ("""
@@ -8934,12 +8062,11 @@ Module .. ROOT 0,0 -> 0,5
 Module .. ROOT 0,0 -> 0,5
   .body[1]
   0] Expr .. 0,0 -> 0,5
-    .value
-      Tuple .. 0,0 -> 0,5
-        .elts[2]
-        0] Constant 1 .. 0,0 -> 0,1
-        1] Constant 2 .. 0,3 -> 0,4
-        .ctx Load
+    .value Tuple .. 0,0 -> 0,5
+      .elts[2]
+      0] Constant 1 .. 0,0 -> 0,1
+      1] Constant 2 .. 0,3 -> 0,4
+      .ctx Load
 """),
 
 ("""
@@ -8950,11 +8077,10 @@ Module .. ROOT 0,0 -> 0,5
 Module .. ROOT 0,0 -> 0,2
   .body[1]
   0] Expr .. 0,0 -> 0,2
-    .value
-      Tuple .. 0,0 -> 0,2
-        .elts[1]
-        0] Constant 3 .. 0,0 -> 0,1
-        .ctx Load
+    .value Tuple .. 0,0 -> 0,2
+      .elts[1]
+      0] Constant 3 .. 0,0 -> 0,1
+      .ctx Load
 """),
 
 ("""
@@ -8965,11 +8091,10 @@ Module .. ROOT 0,0 -> 0,2
 Module .. ROOT 0,0 -> 0,2
   .body[1]
   0] Expr .. 0,0 -> 0,2
-    .value
-      Tuple .. 0,0 -> 0,2
-        .elts[1]
-        0] Constant 1 .. 0,0 -> 0,1
-        .ctx Load
+    .value Tuple .. 0,0 -> 0,2
+      .elts[1]
+      0] Constant 1 .. 0,0 -> 0,1
+      .ctx Load
 """),
 
 ("""
@@ -8980,9 +8105,8 @@ Module .. ROOT 0,0 -> 0,2
 Module .. ROOT 0,0 -> 0,2
   .body[1]
   0] Expr .. 0,0 -> 0,2
-    .value
-      Tuple .. 0,0 -> 0,2
-        .ctx Load
+    .value Tuple .. 0,0 -> 0,2
+      .ctx Load
 """),
 
 ]  # END OF PUT_SLICE_SEQ_DEL_DATA
@@ -9001,18 +8125,14 @@ if 1:
 Module .. ROOT 0,0 -> 5,0
   .body[1]
   0] If .. 1,0 -> 4,5
-    .test
-      Constant 1 .. 1,3 -> 1,4
+    .test Constant 1 .. 1,3 -> 1,4
     .body[3]
     0] Expr .. 2,4 -> 2,5
-      .value
-        Name 'i' Load .. 2,4 -> 2,5
+      .value Name 'i' Load .. 2,4 -> 2,5
     1] Expr .. 3,4 -> 3,5
-      .value
-        Name 'k' Load .. 3,4 -> 3,5
+      .value Name 'k' Load .. 3,4 -> 3,5
     2] Expr .. 4,4 -> 4,5
-      .value
-        Name 'j' Load .. 4,4 -> 4,5
+      .value Name 'j' Load .. 4,4 -> 4,5
 """),
 
 (r"""
@@ -9028,18 +8148,14 @@ if 1:
 Module .. ROOT 0,0 -> 5,0
   .body[1]
   0] If .. 1,0 -> 4,5
-    .test
-      Constant 1 .. 1,3 -> 1,4
+    .test Constant 1 .. 1,3 -> 1,4
     .body[3]
     0] Expr .. 2,4 -> 2,5
-      .value
-        Name 'i' Load .. 2,4 -> 2,5
+      .value Name 'i' Load .. 2,4 -> 2,5
     1] Expr .. 3,4 -> 3,5
-      .value
-        Name 'k' Load .. 3,4 -> 3,5
+      .value Name 'k' Load .. 3,4 -> 3,5
     2] Expr .. 4,4 -> 4,5
-      .value
-        Name 'j' Load .. 4,4 -> 4,5
+      .value Name 'j' Load .. 4,4 -> 4,5
 """),
 
 (r"""
@@ -9057,18 +8173,14 @@ if 1:
 Module .. ROOT 0,0 -> 6,0
   .body[1]
   0] If .. 1,0 -> 5,5
-    .test
-      Constant 1 .. 1,3 -> 1,4
+    .test Constant 1 .. 1,3 -> 1,4
     .body[3]
     0] Expr .. 2,4 -> 2,5
-      .value
-        Name 'i' Load .. 2,4 -> 2,5
+      .value Name 'i' Load .. 2,4 -> 2,5
     1] Expr .. 4,4 -> 4,5
-      .value
-        Name 'k' Load .. 4,4 -> 4,5
+      .value Name 'k' Load .. 4,4 -> 4,5
     2] Expr .. 5,4 -> 5,5
-      .value
-        Name 'j' Load .. 5,4 -> 5,5
+      .value Name 'j' Load .. 5,4 -> 5,5
 """),
 
 (r"""
@@ -9086,18 +8198,14 @@ if 1:
 Module .. ROOT 0,0 -> 6,0
   .body[1]
   0] If .. 1,0 -> 5,5
-    .test
-      Constant 1 .. 1,3 -> 1,4
+    .test Constant 1 .. 1,3 -> 1,4
     .body[3]
     0] Expr .. 2,4 -> 2,5
-      .value
-        Name 'i' Load .. 2,4 -> 2,5
+      .value Name 'i' Load .. 2,4 -> 2,5
     1] Expr .. 3,4 -> 3,5
-      .value
-        Name 'k' Load .. 3,4 -> 3,5
+      .value Name 'k' Load .. 3,4 -> 3,5
     2] Expr .. 5,4 -> 5,5
-      .value
-        Name 'j' Load .. 5,4 -> 5,5
+      .value Name 'j' Load .. 5,4 -> 5,5
 """),
 
 (r"""
@@ -9115,18 +8223,14 @@ if 1:
 Module .. ROOT 0,0 -> 6,0
   .body[1]
   0] If .. 1,0 -> 5,5
-    .test
-      Constant 1 .. 1,3 -> 1,4
+    .test Constant 1 .. 1,3 -> 1,4
     .body[3]
     0] Expr .. 2,4 -> 2,5
-      .value
-        Name 'i' Load .. 2,4 -> 2,5
+      .value Name 'i' Load .. 2,4 -> 2,5
     1] Expr .. 3,4 -> 3,5
-      .value
-        Name 'k' Load .. 3,4 -> 3,5
+      .value Name 'k' Load .. 3,4 -> 3,5
     2] Expr .. 5,4 -> 5,5
-      .value
-        Name 'j' Load .. 5,4 -> 5,5
+      .value Name 'j' Load .. 5,4 -> 5,5
 """),
 
 (r"""
@@ -9152,18 +8256,14 @@ if 1:
 Module .. ROOT 0,0 -> 10,0
   .body[1]
   0] If .. 1,0 -> 9,5
-    .test
-      Constant 1 .. 1,3 -> 1,4
+    .test Constant 1 .. 1,3 -> 1,4
     .body[3]
     0] Expr .. 2,4 -> 2,5
-      .value
-        Name 'i' Load .. 2,4 -> 2,5
+      .value Name 'i' Load .. 2,4 -> 2,5
     1] Expr .. 3,4 -> 3,5
-      .value
-        Name 'k' Load .. 3,4 -> 3,5
+      .value Name 'k' Load .. 3,4 -> 3,5
     2] Expr .. 9,4 -> 9,5
-      .value
-        Name 'j' Load .. 9,4 -> 9,5
+      .value Name 'j' Load .. 9,4 -> 9,5
 """),
 
 (r"""
@@ -9178,18 +8278,14 @@ if 1:
 Module .. ROOT 0,0 -> 5,0
   .body[1]
   0] If .. 1,0 -> 4,5
-    .test
-      Constant 1 .. 1,3 -> 1,4
+    .test Constant 1 .. 1,3 -> 1,4
     .body[3]
     0] Expr .. 2,4 -> 2,5
-      .value
-        Name 'i' Load .. 2,4 -> 2,5
+      .value Name 'i' Load .. 2,4 -> 2,5
     1] Expr .. 3,4 -> 3,5
-      .value
-        Name 'k' Load .. 3,4 -> 3,5
+      .value Name 'k' Load .. 3,4 -> 3,5
     2] Expr .. 4,4 -> 4,5
-      .value
-        Name 'j' Load .. 4,4 -> 4,5
+      .value Name 'j' Load .. 4,4 -> 4,5
 """),
 
 (r"""
@@ -9205,18 +8301,14 @@ if 1:
 Module .. ROOT 0,0 -> 5,0
   .body[1]
   0] If .. 1,0 -> 4,5
-    .test
-      Constant 1 .. 1,3 -> 1,4
+    .test Constant 1 .. 1,3 -> 1,4
     .body[3]
     0] Expr .. 2,4 -> 2,5
-      .value
-        Name 'i' Load .. 2,4 -> 2,5
+      .value Name 'i' Load .. 2,4 -> 2,5
     1] Expr .. 3,4 -> 3,5
-      .value
-        Name 'k' Load .. 3,4 -> 3,5
+      .value Name 'k' Load .. 3,4 -> 3,5
     2] Expr .. 4,4 -> 4,5
-      .value
-        Name 'j' Load .. 4,4 -> 4,5
+      .value Name 'j' Load .. 4,4 -> 4,5
 """),
 
 (r"""
@@ -9232,18 +8324,14 @@ if 1:
 Module .. ROOT 0,0 -> 5,0
   .body[1]
   0] If .. 1,0 -> 4,5
-    .test
-      Constant 1 .. 1,3 -> 1,4
+    .test Constant 1 .. 1,3 -> 1,4
     .body[3]
     0] Expr .. 2,4 -> 2,5
-      .value
-        Name 'i' Load .. 2,4 -> 2,5
+      .value Name 'i' Load .. 2,4 -> 2,5
     1] Expr .. 3,4 -> 3,5
-      .value
-        Name 'k' Load .. 3,4 -> 3,5
+      .value Name 'k' Load .. 3,4 -> 3,5
     2] Expr .. 4,4 -> 4,5
-      .value
-        Name 'j' Load .. 4,4 -> 4,5
+      .value Name 'j' Load .. 4,4 -> 4,5
 """),
 
 (r"""
@@ -9260,18 +8348,14 @@ if 1:
 Module .. ROOT 0,0 -> 5,0
   .body[1]
   0] If .. 1,0 -> 4,5
-    .test
-      Constant 1 .. 1,3 -> 1,4
+    .test Constant 1 .. 1,3 -> 1,4
     .body[3]
     0] Expr .. 2,4 -> 2,5
-      .value
-        Name 'i' Load .. 2,4 -> 2,5
+      .value Name 'i' Load .. 2,4 -> 2,5
     1] Expr .. 3,4 -> 3,5
-      .value
-        Name 'k' Load .. 3,4 -> 3,5
+      .value Name 'k' Load .. 3,4 -> 3,5
     2] Expr .. 4,4 -> 4,5
-      .value
-        Name 'j' Load .. 4,4 -> 4,5
+      .value Name 'j' Load .. 4,4 -> 4,5
 """),
 
 (r"""
@@ -9285,18 +8369,14 @@ if 1:
 Module .. ROOT 0,0 -> 5,0
   .body[1]
   0] If .. 1,0 -> 4,5
-    .test
-      Constant 1 .. 1,3 -> 1,4
+    .test Constant 1 .. 1,3 -> 1,4
     .body[3]
     0] Expr .. 2,4 -> 2,5
-      .value
-        Name 'i' Load .. 2,4 -> 2,5
+      .value Name 'i' Load .. 2,4 -> 2,5
     1] Expr .. 3,4 -> 3,5
-      .value
-        Name 'k' Load .. 3,4 -> 3,5
+      .value Name 'k' Load .. 3,4 -> 3,5
     2] Expr .. 4,4 -> 4,5
-      .value
-        Name 'j' Load .. 4,4 -> 4,5
+      .value Name 'j' Load .. 4,4 -> 4,5
 """),
 
 (r"""
@@ -9313,18 +8393,14 @@ if 1:
 Module .. ROOT 0,0 -> 5,0
   .body[1]
   0] If .. 1,0 -> 4,5
-    .test
-      Constant 1 .. 1,3 -> 1,4
+    .test Constant 1 .. 1,3 -> 1,4
     .body[3]
     0] Expr .. 2,4 -> 2,5
-      .value
-        Name 'i' Load .. 2,4 -> 2,5
+      .value Name 'i' Load .. 2,4 -> 2,5
     1] Expr .. 3,4 -> 3,5
-      .value
-        Name 'k' Load .. 3,4 -> 3,5
+      .value Name 'k' Load .. 3,4 -> 3,5
     2] Expr .. 4,4 -> 4,5
-      .value
-        Name 'j' Load .. 4,4 -> 4,5
+      .value Name 'j' Load .. 4,4 -> 4,5
 """),
 
 (r"""
@@ -9339,24 +8415,18 @@ if 1:
 Module .. ROOT 0,0 -> 5,0
   .body[1]
   0] If .. 1,0 -> 4,9
-    .test
-      Constant 1 .. 1,3 -> 1,4
+    .test Constant 1 .. 1,3 -> 1,4
     .body[5]
     0] Expr .. 2,4 -> 2,5
-      .value
-        Name 'i' Load .. 2,4 -> 2,5
+      .value Name 'i' Load .. 2,4 -> 2,5
     1] Expr .. 2,8 -> 2,9
-      .value
-        Name 'j' Load .. 2,8 -> 2,9
+      .value Name 'j' Load .. 2,8 -> 2,9
     2] Expr .. 3,4 -> 3,5
-      .value
-        Name 'k' Load .. 3,4 -> 3,5
+      .value Name 'k' Load .. 3,4 -> 3,5
     3] Expr .. 4,4 -> 4,5
-      .value
-        Name 'l' Load .. 4,4 -> 4,5
+      .value Name 'l' Load .. 4,4 -> 4,5
     4] Expr .. 4,8 -> 4,9
-      .value
-        Name 'm' Load .. 4,8 -> 4,9
+      .value Name 'm' Load .. 4,8 -> 4,9
 """),
 
 (r"""
@@ -9370,24 +8440,18 @@ if 1:
 Module .. ROOT 0,0 -> 5,0
   .body[1]
   0] If .. 1,0 -> 4,9
-    .test
-      Constant 1 .. 1,3 -> 1,4
+    .test Constant 1 .. 1,3 -> 1,4
     .body[5]
     0] Expr .. 2,4 -> 2,5
-      .value
-        Name 'i' Load .. 2,4 -> 2,5
+      .value Name 'i' Load .. 2,4 -> 2,5
     1] Expr .. 2,8 -> 2,9
-      .value
-        Name 'j' Load .. 2,8 -> 2,9
+      .value Name 'j' Load .. 2,8 -> 2,9
     2] Expr .. 3,4 -> 3,5
-      .value
-        Name 'k' Load .. 3,4 -> 3,5
+      .value Name 'k' Load .. 3,4 -> 3,5
     3] Expr .. 4,4 -> 4,5
-      .value
-        Name 'l' Load .. 4,4 -> 4,5
+      .value Name 'l' Load .. 4,4 -> 4,5
     4] Expr .. 4,8 -> 4,9
-      .value
-        Name 'm' Load .. 4,8 -> 4,9
+      .value Name 'm' Load .. 4,8 -> 4,9
 """),
 
 (r"""
@@ -9401,15 +8465,12 @@ if 1:
 Module .. ROOT 0,0 -> 4,0
   .body[1]
   0] If .. 1,0 -> 3,5
-    .test
-      Constant 1 .. 1,3 -> 1,4
+    .test Constant 1 .. 1,3 -> 1,4
     .body[2]
     0] Expr .. 2,4 -> 2,5
-      .value
-        Name 'i' Load .. 2,4 -> 2,5
+      .value Name 'i' Load .. 2,4 -> 2,5
     1] Expr .. 3,4 -> 3,5
-      .value
-        Name 'k' Load .. 3,4 -> 3,5
+      .value Name 'k' Load .. 3,4 -> 3,5
 """),
 
 (r"""
@@ -9423,15 +8484,12 @@ if 1:
 Module .. ROOT 0,0 -> 4,0
   .body[1]
   0] If .. 1,0 -> 3,5
-    .test
-      Constant 1 .. 1,3 -> 1,4
+    .test Constant 1 .. 1,3 -> 1,4
     .body[2]
     0] Expr .. 2,4 -> 2,5
-      .value
-        Name 'i' Load .. 2,4 -> 2,5
+      .value Name 'i' Load .. 2,4 -> 2,5
     1] Expr .. 3,4 -> 3,5
-      .value
-        Name 'k' Load .. 3,4 -> 3,5
+      .value Name 'k' Load .. 3,4 -> 3,5
 """),
 
 (r"""
@@ -9447,15 +8505,12 @@ if 1:
 Module .. ROOT 0,0 -> 5,0
   .body[1]
   0] If .. 1,0 -> 3,5
-    .test
-      Constant 1 .. 1,3 -> 1,4
+    .test Constant 1 .. 1,3 -> 1,4
     .body[2]
     0] Expr .. 2,4 -> 2,5
-      .value
-        Name 'i' Load .. 2,4 -> 2,5
+      .value Name 'i' Load .. 2,4 -> 2,5
     1] Expr .. 3,4 -> 3,5
-      .value
-        Name 'k' Load .. 3,4 -> 3,5
+      .value Name 'k' Load .. 3,4 -> 3,5
 """),
 
 (r"""
@@ -9468,15 +8523,12 @@ if 1:
 Module .. ROOT 0,0 -> 4,0
   .body[1]
   0] If .. 1,0 -> 3,5
-    .test
-      Constant 1 .. 1,3 -> 1,4
+    .test Constant 1 .. 1,3 -> 1,4
     .body[2]
     0] Expr .. 2,4 -> 2,5
-      .value
-        Name 'i' Load .. 2,4 -> 2,5
+      .value Name 'i' Load .. 2,4 -> 2,5
     1] Expr .. 3,4 -> 3,5
-      .value
-        Name 'k' Load .. 3,4 -> 3,5
+      .value Name 'k' Load .. 3,4 -> 3,5
 """),
 
 (r"""
@@ -9489,15 +8541,12 @@ if 1:
 Module .. ROOT 0,0 -> 4,0
   .body[1]
   0] If .. 1,0 -> 3,5
-    .test
-      Constant 1 .. 1,3 -> 1,4
+    .test Constant 1 .. 1,3 -> 1,4
     .body[2]
     0] Expr .. 2,4 -> 2,5
-      .value
-        Name 'i' Load .. 2,4 -> 2,5
+      .value Name 'i' Load .. 2,4 -> 2,5
     1] Expr .. 3,4 -> 3,5
-      .value
-        Name 'k' Load .. 3,4 -> 3,5
+      .value Name 'k' Load .. 3,4 -> 3,5
 """),
 
 (r"""
@@ -9512,15 +8561,12 @@ if 1:
 Module .. ROOT 0,0 -> 5,0
   .body[1]
   0] If .. 1,0 -> 3,5
-    .test
-      Constant 1 .. 1,3 -> 1,4
+    .test Constant 1 .. 1,3 -> 1,4
     .body[2]
     0] Expr .. 2,4 -> 2,5
-      .value
-        Name 'i' Load .. 2,4 -> 2,5
+      .value Name 'i' Load .. 2,4 -> 2,5
     1] Expr .. 3,4 -> 3,5
-      .value
-        Name 'k' Load .. 3,4 -> 3,5
+      .value Name 'k' Load .. 3,4 -> 3,5
 """),
 
 (r"""
@@ -9535,15 +8581,12 @@ if 1:
 Module .. ROOT 0,0 -> 5,0
   .body[1]
   0] If .. 1,0 -> 3,5
-    .test
-      Constant 1 .. 1,3 -> 1,4
+    .test Constant 1 .. 1,3 -> 1,4
     .body[2]
     0] Expr .. 2,4 -> 2,5
-      .value
-        Name 'i' Load .. 2,4 -> 2,5
+      .value Name 'i' Load .. 2,4 -> 2,5
     1] Expr .. 3,4 -> 3,5
-      .value
-        Name 'k' Load .. 3,4 -> 3,5
+      .value Name 'k' Load .. 3,4 -> 3,5
 """),
 
 (r"""
@@ -9558,15 +8601,12 @@ if 1:
 Module .. ROOT 0,0 -> 5,0
   .body[1]
   0] If .. 1,0 -> 3,5
-    .test
-      Constant 1 .. 1,3 -> 1,4
+    .test Constant 1 .. 1,3 -> 1,4
     .body[2]
     0] Expr .. 2,4 -> 2,5
-      .value
-        Name 'i' Load .. 2,4 -> 2,5
+      .value Name 'i' Load .. 2,4 -> 2,5
     1] Expr .. 3,4 -> 3,5
-      .value
-        Name 'k' Load .. 3,4 -> 3,5
+      .value Name 'k' Load .. 3,4 -> 3,5
 """),
 
 (r"""
@@ -9580,15 +8620,12 @@ if 1:
 Module .. ROOT 0,0 -> 4,0
   .body[1]
   0] If .. 1,0 -> 3,5
-    .test
-      Constant 1 .. 1,3 -> 1,4
+    .test Constant 1 .. 1,3 -> 1,4
     .body[2]
     0] Expr .. 2,4 -> 2,5
-      .value
-        Name 'k' Load .. 2,4 -> 2,5
+      .value Name 'k' Load .. 2,4 -> 2,5
     1] Expr .. 3,4 -> 3,5
-      .value
-        Name 'i' Load .. 3,4 -> 3,5
+      .value Name 'i' Load .. 3,4 -> 3,5
 """),
 
 (r"""
@@ -9602,15 +8639,12 @@ if 1:  # post-block
 Module .. ROOT 0,0 -> 4,0
   .body[1]
   0] If .. 1,0 -> 3,5
-    .test
-      Constant 1 .. 1,3 -> 1,4
+    .test Constant 1 .. 1,3 -> 1,4
     .body[2]
     0] Expr .. 2,4 -> 2,5
-      .value
-        Name 'k' Load .. 2,4 -> 2,5
+      .value Name 'k' Load .. 2,4 -> 2,5
     1] Expr .. 3,4 -> 3,5
-      .value
-        Name 'i' Load .. 3,4 -> 3,5
+      .value Name 'i' Load .. 3,4 -> 3,5
 """),
 
 (r"""
@@ -9626,15 +8660,12 @@ if 1:
 Module .. ROOT 0,0 -> 5,0
   .body[1]
   0] If .. 1,0 -> 4,5
-    .test
-      Constant 1 .. 1,3 -> 1,4
+    .test Constant 1 .. 1,3 -> 1,4
     .body[2]
     0] Expr .. 2,4 -> 2,5
-      .value
-        Name 'k' Load .. 2,4 -> 2,5
+      .value Name 'k' Load .. 2,4 -> 2,5
     1] Expr .. 4,4 -> 4,5
-      .value
-        Name 'i' Load .. 4,4 -> 4,5
+      .value Name 'i' Load .. 4,4 -> 4,5
 """),
 
 (r"""
@@ -9650,15 +8681,12 @@ if 1:  # post-block
 Module .. ROOT 0,0 -> 5,0
   .body[1]
   0] If .. 1,0 -> 4,5
-    .test
-      Constant 1 .. 1,3 -> 1,4
+    .test Constant 1 .. 1,3 -> 1,4
     .body[2]
     0] Expr .. 2,4 -> 2,5
-      .value
-        Name 'k' Load .. 2,4 -> 2,5
+      .value Name 'k' Load .. 2,4 -> 2,5
     1] Expr .. 4,4 -> 4,5
-      .value
-        Name 'i' Load .. 4,4 -> 4,5
+      .value Name 'i' Load .. 4,4 -> 4,5
 """),
 
 (r"""
@@ -9676,15 +8704,12 @@ if 1: \
 Module .. ROOT 0,0 -> 6,0
   .body[1]
   0] If .. 1,0 -> 5,5
-    .test
-      Constant 1 .. 1,3 -> 1,4
+    .test Constant 1 .. 1,3 -> 1,4
     .body[2]
     0] Expr .. 3,4 -> 3,5
-      .value
-        Name 'k' Load .. 3,4 -> 3,5
+      .value Name 'k' Load .. 3,4 -> 3,5
     1] Expr .. 5,4 -> 5,5
-      .value
-        Name 'i' Load .. 5,4 -> 5,5
+      .value Name 'i' Load .. 5,4 -> 5,5
 """),
 
 (r"""
@@ -9697,18 +8722,14 @@ if 1:
 Module .. ROOT 0,0 -> 4,0
   .body[1]
   0] If .. 1,0 -> 3,9
-    .test
-      Constant 1 .. 1,3 -> 1,4
+    .test Constant 1 .. 1,3 -> 1,4
     .body[3]
     0] Expr .. 2,4 -> 2,5
-      .value
-        Name 'k' Load .. 2,4 -> 2,5
+      .value Name 'k' Load .. 2,4 -> 2,5
     1] Expr .. 3,4 -> 3,5
-      .value
-        Name 'i' Load .. 3,4 -> 3,5
+      .value Name 'i' Load .. 3,4 -> 3,5
     2] Expr .. 3,8 -> 3,9
-      .value
-        Name 'j' Load .. 3,8 -> 3,9
+      .value Name 'j' Load .. 3,8 -> 3,9
 """),
 
 (r"""
@@ -9722,18 +8743,14 @@ if 1:
 Module .. ROOT 0,0 -> 4,0
   .body[1]
   0] If .. 1,0 -> 3,9
-    .test
-      Constant 1 .. 1,3 -> 1,4
+    .test Constant 1 .. 1,3 -> 1,4
     .body[3]
     0] Expr .. 2,4 -> 2,5
-      .value
-        Name 'k' Load .. 2,4 -> 2,5
+      .value Name 'k' Load .. 2,4 -> 2,5
     1] Expr .. 3,4 -> 3,5
-      .value
-        Name 'i' Load .. 3,4 -> 3,5
+      .value Name 'i' Load .. 3,4 -> 3,5
     2] Expr .. 3,8 -> 3,9
-      .value
-        Name 'j' Load .. 3,8 -> 3,9
+      .value Name 'j' Load .. 3,8 -> 3,9
 """),
 
 (r"""
@@ -9749,30 +8766,19 @@ def f():
 Module .. ROOT 0,0 -> 5,0
   .body[1]
   0] FunctionDef .. 1,0 -> 4,17
-    .name
-      'f'
-    .args
-      arguments
-        .vararg
-          None
-        .kwarg
-          None
+    .name 'f'
     .body[1]
     0] If .. 2,4 -> 4,17
-      .test
-        Constant 1 .. 2,7 -> 2,8
+      .test Constant 1 .. 2,7 -> 2,8
       .body[1]
       0] Pass .. 3,8 -> 3,12
       .orelse[1]
       0] If .. 4,4 -> 4,17
-        .test
-          Constant 2 .. 4,9 -> 4,10
+        .test Constant 2 .. 4,9 -> 4,10
         .body[1]
         0] Break .. 4,12 -> 4,17
-    .returns
-      None
-    .type_comment
-      None
+    .returns None
+    .type_comment None
 """),
 
 (r"""
@@ -9792,30 +8798,19 @@ def f():
 Module .. ROOT 0,0 -> 7,0
   .body[1]
   0] FunctionDef .. 1,0 -> 5,17
-    .name
-      'f'
-    .args
-      arguments
-        .vararg
-          None
-        .kwarg
-          None
+    .name 'f'
     .body[1]
     0] If .. 2,4 -> 5,17
-      .test
-        Constant 1 .. 2,7 -> 2,8
+      .test Constant 1 .. 2,7 -> 2,8
       .body[1]
       0] Pass .. 3,8 -> 3,12
       .orelse[1]
       0] If .. 5,4 -> 5,17
-        .test
-          Constant 2 .. 5,9 -> 5,10
+        .test Constant 2 .. 5,9 -> 5,10
         .body[1]
         0] Break .. 5,12 -> 5,17
-    .returns
-      None
-    .type_comment
-      None
+    .returns None
+    .type_comment None
 """),
 
 (r"""
@@ -9841,36 +8836,24 @@ def f():
 Module .. ROOT 0,0 -> 10,0
   .body[1]
   0] FunctionDef .. 1,0 -> 8,16
-    .name
-      'f'
-    .args
-      arguments
-        .vararg
-          None
-        .kwarg
-          None
+    .name 'f'
     .body[1]
     0] If .. 2,4 -> 8,16
-      .test
-        Constant 1 .. 2,7 -> 2,8
+      .test Constant 1 .. 2,7 -> 2,8
       .body[1]
       0] Pass .. 3,8 -> 3,12
       .orelse[1]
       0] If .. 5,4 -> 8,16
-        .test
-          Constant 2 .. 5,9 -> 5,10
+        .test Constant 2 .. 5,9 -> 5,10
         .body[1]
         0] Break .. 5,12 -> 5,17
         .orelse[1]
         0] If .. 7,4 -> 8,16
-          .test
-            Constant 3 .. 7,9 -> 7,10
+          .test Constant 3 .. 7,9 -> 7,10
           .body[1]
           0] Continue .. 8,8 -> 8,16
-    .returns
-      None
-    .type_comment
-      None
+    .returns None
+    .type_comment None
 """),
 
 (r"""
@@ -9894,24 +8877,14 @@ def f():
 Module .. ROOT 0,0 -> 7,0
   .body[1]
   0] FunctionDef .. 1,0 -> 3,12
-    .name
-      'f'
-    .args
-      arguments
-        .vararg
-          None
-        .kwarg
-          None
+    .name 'f'
     .body[1]
     0] If .. 2,4 -> 3,12
-      .test
-        Constant 1 .. 2,7 -> 2,8
+      .test Constant 1 .. 2,7 -> 2,8
       .body[1]
       0] Pass .. 3,8 -> 3,12
-    .returns
-      None
-    .type_comment
-      None
+    .returns None
+    .type_comment None
 """),
 
 (r"""
@@ -9934,24 +8907,14 @@ def f():
 Module .. ROOT 0,0 -> 6,0
   .body[1]
   0] FunctionDef .. 1,0 -> 3,12
-    .name
-      'f'
-    .args
-      arguments
-        .vararg
-          None
-        .kwarg
-          None
+    .name 'f'
     .body[1]
     0] If .. 2,4 -> 3,12
-      .test
-        Constant 1 .. 2,7 -> 2,8
+      .test Constant 1 .. 2,7 -> 2,8
       .body[1]
       0] Pass .. 3,8 -> 3,12
-    .returns
-      None
-    .type_comment
-      None
+    .returns None
+    .type_comment None
 """),
 
 (r"""
@@ -9974,24 +8937,14 @@ def f():
 Module .. ROOT 0,0 -> 6,0
   .body[1]
   0] FunctionDef .. 1,0 -> 3,12
-    .name
-      'f'
-    .args
-      arguments
-        .vararg
-          None
-        .kwarg
-          None
+    .name 'f'
     .body[1]
     0] If .. 2,4 -> 3,12
-      .test
-        Constant 1 .. 2,7 -> 2,8
+      .test Constant 1 .. 2,7 -> 2,8
       .body[1]
       0] Pass .. 3,8 -> 3,12
-    .returns
-      None
-    .type_comment
-      None
+    .returns None
+    .type_comment None
 """),
 
 (r"""
@@ -10013,24 +8966,14 @@ def f():
 Module .. ROOT 0,0 -> 5,0
   .body[1]
   0] FunctionDef .. 1,0 -> 3,12
-    .name
-      'f'
-    .args
-      arguments
-        .vararg
-          None
-        .kwarg
-          None
+    .name 'f'
     .body[1]
     0] If .. 2,4 -> 3,12
-      .test
-        Constant 1 .. 2,7 -> 2,8
+      .test Constant 1 .. 2,7 -> 2,8
       .body[1]
       0] Pass .. 3,8 -> 3,12
-    .returns
-      None
-    .type_comment
-      None
+    .returns None
+    .type_comment None
 """),
 
 (r"""
@@ -10059,30 +9002,19 @@ def f():
 Module .. ROOT 0,0 -> 8,0
   .body[1]
   0] FunctionDef .. 1,0 -> 5,17
-    .name
-      'f'
-    .args
-      arguments
-        .vararg
-          None
-        .kwarg
-          None
+    .name 'f'
     .body[1]
     0] If .. 2,4 -> 5,17
-      .test
-        Constant 1 .. 2,7 -> 2,8
+      .test Constant 1 .. 2,7 -> 2,8
       .body[1]
       0] Pass .. 3,8 -> 3,12
       .orelse[1]
       0] If .. 5,4 -> 5,17
-        .test
-          Constant 2 .. 5,9 -> 5,10
+        .test Constant 2 .. 5,9 -> 5,10
         .body[1]
         0] Break .. 5,12 -> 5,17
-    .returns
-      None
-    .type_comment
-      None
+    .returns None
+    .type_comment None
 """),
 
 (r"""""", None, 0, 0, None, None, r"""i""", r"""i
@@ -10090,8 +9022,7 @@ Module .. ROOT 0,0 -> 8,0
 Module .. ROOT 0,0 -> 1,0
   .body[1]
   0] Expr .. 0,0 -> 0,1
-    .value
-      Name 'i' Load .. 0,0 -> 0,1
+    .value Name 'i' Load .. 0,0 -> 0,1
 """),
 
 (r"""
@@ -10101,8 +9032,7 @@ i
 Module .. ROOT 0,0 -> 2,0
   .body[1]
   0] Expr .. 1,0 -> 1,1
-    .value
-      Name 'i' Load .. 1,0 -> 1,1
+    .value Name 'i' Load .. 1,0 -> 1,1
 """),
 
 (r"""
@@ -10114,8 +9044,7 @@ i
 Module .. ROOT 0,0 -> 3,0
   .body[1]
   0] Expr .. 2,0 -> 2,1
-    .value
-      Name 'i' Load .. 2,0 -> 2,1
+    .value Name 'i' Load .. 2,0 -> 2,1
 """),
 
 (r"""
@@ -10127,8 +9056,7 @@ i
 Module .. ROOT 0,0 -> 3,0
   .body[1]
   0] Expr .. 2,0 -> 2,1
-    .value
-      Name 'i' Load .. 2,0 -> 2,1
+    .value Name 'i' Load .. 2,0 -> 2,1
 """),
 
 (r"""
@@ -10146,8 +9074,7 @@ i
 Module .. ROOT 0,0 -> 6,0
   .body[1]
   0] Expr .. 5,0 -> 5,1
-    .value
-      Name 'i' Load .. 5,0 -> 5,1
+    .value Name 'i' Load .. 5,0 -> 5,1
 """),
 
 (r"""
@@ -10167,11 +9094,9 @@ i
 Module .. ROOT 0,0 -> 7,0
   .body[2]
   0] Expr .. 5,0 -> 5,1
-    .value
-      Name 'h' Load .. 5,0 -> 5,1
+    .value Name 'h' Load .. 5,0 -> 5,1
   1] Expr .. 6,0 -> 6,1
-    .value
-      Name 'i' Load .. 6,0 -> 6,1
+    .value Name 'i' Load .. 6,0 -> 6,1
 """),
 
 (r"""
@@ -10191,11 +9116,9 @@ j
 Module .. ROOT 0,0 -> 7,0
   .body[2]
   0] Expr .. 5,0 -> 5,1
-    .value
-      Name 'i' Load .. 5,0 -> 5,1
+    .value Name 'i' Load .. 5,0 -> 5,1
   1] Expr .. 6,0 -> 6,1
-    .value
-      Name 'j' Load .. 6,0 -> 6,1
+    .value Name 'j' Load .. 6,0 -> 6,1
 """),
 
 (r"""
@@ -10212,31 +9135,20 @@ def f():
 Module .. ROOT 0,0 -> 6,0
   .body[1]
   0] FunctionDef .. 1,0 -> 5,18
-    .name
-      'f'
-    .args
-      arguments
-        .vararg
-          None
-        .kwarg
-          None
+    .name 'f'
     .body[1]
     0] If .. 2,4 -> 5,18
-      .test
-        Constant 1 .. 2,7 -> 2,8
+      .test Constant 1 .. 2,7 -> 2,8
       .body[1]
       0] Pass .. 2,10 -> 2,14
       .orelse[2]
       0] Break .. 4,8 -> 4,13
       1] If .. 5,8 -> 5,18
-        .test
-          Constant 2 .. 5,11 -> 5,12
+        .test Constant 2 .. 5,11 -> 5,12
         .body[1]
         0] Pass .. 5,14 -> 5,18
-    .returns
-      None
-    .type_comment
-      None
+    .returns None
+    .type_comment None
 """),
 
 (r"""
@@ -10253,31 +9165,20 @@ def f():
 Module .. ROOT 0,0 -> 6,0
   .body[1]
   0] FunctionDef .. 1,0 -> 5,13
-    .name
-      'f'
-    .args
-      arguments
-        .vararg
-          None
-        .kwarg
-          None
+    .name 'f'
     .body[1]
     0] If .. 2,4 -> 5,13
-      .test
-        Constant 1 .. 2,7 -> 2,8
+      .test Constant 1 .. 2,7 -> 2,8
       .body[1]
       0] Pass .. 2,10 -> 2,14
       .orelse[2]
       0] If .. 4,8 -> 4,18
-        .test
-          Constant 2 .. 4,11 -> 4,12
+        .test Constant 2 .. 4,11 -> 4,12
         .body[1]
         0] Pass .. 4,14 -> 4,18
       1] Break .. 5,8 -> 5,13
-    .returns
-      None
-    .type_comment
-      None
+    .returns None
+    .type_comment None
 """),
 
 (r"""
@@ -10296,31 +9197,20 @@ def f():
 Module .. ROOT 0,0 -> 7,0
   .body[1]
   0] FunctionDef .. 1,0 -> 6,16
-    .name
-      'f'
-    .args
-      arguments
-        .vararg
-          None
-        .kwarg
-          None
+    .name 'f'
     .body[1]
     0] If .. 2,4 -> 6,16
-      .test
-        Constant 1 .. 2,7 -> 2,8
+      .test Constant 1 .. 2,7 -> 2,8
       .body[1]
       0] Pass .. 2,10 -> 2,14
       .orelse[2]
       0] Break .. 4,8 -> 4,13
       1] If .. 5,8 -> 6,16
-        .test
-          Constant 2 .. 5,11 -> 5,12
+        .test Constant 2 .. 5,11 -> 5,12
         .body[1]
         0] Pass .. 6,12 -> 6,16
-    .returns
-      None
-    .type_comment
-      None
+    .returns None
+    .type_comment None
 """),
 
 (r"""
@@ -10339,31 +9229,20 @@ def f():
 Module .. ROOT 0,0 -> 7,0
   .body[1]
   0] FunctionDef .. 1,0 -> 6,13
-    .name
-      'f'
-    .args
-      arguments
-        .vararg
-          None
-        .kwarg
-          None
+    .name 'f'
     .body[1]
     0] If .. 2,4 -> 6,13
-      .test
-        Constant 1 .. 2,7 -> 2,8
+      .test Constant 1 .. 2,7 -> 2,8
       .body[1]
       0] Pass .. 2,10 -> 2,14
       .orelse[2]
       0] If .. 4,8 -> 5,16
-        .test
-          Constant 2 .. 4,11 -> 4,12
+        .test Constant 2 .. 4,11 -> 4,12
         .body[1]
         0] Pass .. 5,12 -> 5,16
       1] Break .. 6,8 -> 6,13
-    .returns
-      None
-    .type_comment
-      None
+    .returns None
+    .type_comment None
 """),
 
 (r"""
@@ -10382,41 +9261,27 @@ def f():
 Module .. ROOT 0,0 -> 7,0
   .body[1]
   0] FunctionDef .. 1,0 -> 6,21
-    .name
-      'f'
-    .args
-      arguments
-        .vararg
-          None
-        .kwarg
-          None
+    .name 'f'
     .body[1]
     0] If .. 2,4 -> 6,21
-      .test
-        Constant 1 .. 2,7 -> 2,8
+      .test Constant 1 .. 2,7 -> 2,8
       .body[1]
       0] Pass .. 2,10 -> 2,14
       .orelse[2]
       0] Break .. 4,8 -> 4,13
       1] If .. 5,8 -> 6,21
-        .test
-          Constant 2 .. 5,11 -> 5,12
+        .test Constant 2 .. 5,11 -> 5,12
         .body[1]
         0] Continue .. 5,14 -> 5,22
         .orelse[1]
         0] If .. 6,8 -> 6,21
-          .test
-            Constant 3 .. 6,13 -> 6,14
+          .test Constant 3 .. 6,13 -> 6,14
           .body[1]
           0] Raise .. 6,16 -> 6,21
-            .exc
-              None
-            .cause
-              None
-    .returns
-      None
-    .type_comment
-      None
+            .exc None
+            .cause None
+    .returns None
+    .type_comment None
 """),
 
 (r"""
@@ -10435,41 +9300,27 @@ def f():
 Module .. ROOT 0,0 -> 7,0
   .body[1]
   0] FunctionDef .. 1,0 -> 6,13
-    .name
-      'f'
-    .args
-      arguments
-        .vararg
-          None
-        .kwarg
-          None
+    .name 'f'
     .body[1]
     0] If .. 2,4 -> 6,13
-      .test
-        Constant 1 .. 2,7 -> 2,8
+      .test Constant 1 .. 2,7 -> 2,8
       .body[1]
       0] Pass .. 2,10 -> 2,14
       .orelse[2]
       0] If .. 4,8 -> 5,21
-        .test
-          Constant 2 .. 4,11 -> 4,12
+        .test Constant 2 .. 4,11 -> 4,12
         .body[1]
         0] Continue .. 4,14 -> 4,22
         .orelse[1]
         0] If .. 5,8 -> 5,21
-          .test
-            Constant 3 .. 5,13 -> 5,14
+          .test Constant 3 .. 5,13 -> 5,14
           .body[1]
           0] Raise .. 5,16 -> 5,21
-            .exc
-              None
-            .cause
-              None
+            .exc None
+            .cause None
       1] Break .. 6,8 -> 6,13
-    .returns
-      None
-    .type_comment
-      None
+    .returns None
+    .type_comment None
 """),
 
 (r"""
@@ -10488,41 +9339,27 @@ def f():
 Module .. ROOT 0,0 -> 7,0
   .body[1]
   0] FunctionDef .. 1,0 -> 6,19
-    .name
-      'f'
-    .args
-      arguments
-        .vararg
-          None
-        .kwarg
-          None
+    .name 'f'
     .body[1]
     0] If .. 2,4 -> 6,19
-      .test
-        Constant 1 .. 2,7 -> 2,8
+      .test Constant 1 .. 2,7 -> 2,8
       .body[1]
       0] Pass .. 2,10 -> 2,14
       .orelse[1]
       0] If .. 3,4 -> 6,19
-        .test
-          Constant 2 .. 3,9 -> 3,10
+        .test Constant 2 .. 3,9 -> 3,10
         .body[1]
         0] Continue .. 3,12 -> 3,20
         .orelse[2]
         0] Break .. 5,8 -> 5,13
         1] If .. 6,8 -> 6,19
-          .test
-            Constant 3 .. 6,11 -> 6,12
+          .test Constant 3 .. 6,11 -> 6,12
           .body[1]
           0] Raise .. 6,14 -> 6,19
-            .exc
-              None
-            .cause
-              None
-    .returns
-      None
-    .type_comment
-      None
+            .exc None
+            .cause None
+    .returns None
+    .type_comment None
 """),
 
 (r"""
@@ -10541,41 +9378,27 @@ def f():
 Module .. ROOT 0,0 -> 7,0
   .body[1]
   0] FunctionDef .. 1,0 -> 6,13
-    .name
-      'f'
-    .args
-      arguments
-        .vararg
-          None
-        .kwarg
-          None
+    .name 'f'
     .body[1]
     0] If .. 2,4 -> 6,13
-      .test
-        Constant 1 .. 2,7 -> 2,8
+      .test Constant 1 .. 2,7 -> 2,8
       .body[1]
       0] Pass .. 2,10 -> 2,14
       .orelse[1]
       0] If .. 3,4 -> 6,13
-        .test
-          Constant 2 .. 3,9 -> 3,10
+        .test Constant 2 .. 3,9 -> 3,10
         .body[1]
         0] Continue .. 3,12 -> 3,20
         .orelse[2]
         0] If .. 5,8 -> 5,19
-          .test
-            Constant 3 .. 5,11 -> 5,12
+          .test Constant 3 .. 5,11 -> 5,12
           .body[1]
           0] Raise .. 5,14 -> 5,19
-            .exc
-              None
-            .cause
-              None
+            .exc None
+            .cause None
         1] Break .. 6,8 -> 6,13
-    .returns
-      None
-    .type_comment
-      None
+    .returns None
+    .type_comment None
 """),
 
 (r"""
@@ -10589,22 +9412,12 @@ def f():
 Module .. ROOT 0,0 -> 4,0
   .body[1]
   0] FunctionDef .. 1,0 -> 3,5
-    .name
-      'f'
-    .args
-      arguments
-        .vararg
-          None
-        .kwarg
-          None
+    .name 'f'
     .body[1]
     0] Expr .. 3,4 -> 3,5
-      .value
-        Name 'i' Load .. 3,4 -> 3,5
-    .returns
-      None
-    .type_comment
-      None
+      .value Name 'i' Load .. 3,4 -> 3,5
+    .returns None
+    .type_comment None
 """),
 
 (r"""
@@ -10618,22 +9431,12 @@ def f():
 Module .. ROOT 0,0 -> 4,0
   .body[1]
   0] FunctionDef .. 1,0 -> 2,5
-    .name
-      'f'
-    .args
-      arguments
-        .vararg
-          None
-        .kwarg
-          None
+    .name 'f'
     .body[1]
     0] Expr .. 2,4 -> 2,5
-      .value
-        Name 'i' Load .. 2,4 -> 2,5
-    .returns
-      None
-    .type_comment
-      None
+      .value Name 'i' Load .. 2,4 -> 2,5
+    .returns None
+    .type_comment None
 """),
 
 (r"""
@@ -10647,25 +9450,14 @@ def f():
 Module .. ROOT 0,0 -> 4,0
   .body[1]
   0] FunctionDef .. 1,0 -> 3,9
-    .name
-      'f'
-    .args
-      arguments
-        .vararg
-          None
-        .kwarg
-          None
+    .name 'f'
     .body[2]
     0] Expr .. 3,4 -> 3,5
-      .value
-        Name 'i' Load .. 3,4 -> 3,5
+      .value Name 'i' Load .. 3,4 -> 3,5
     1] Expr .. 3,8 -> 3,9
-      .value
-        Name 'j' Load .. 3,8 -> 3,9
-    .returns
-      None
-    .type_comment
-      None
+      .value Name 'j' Load .. 3,8 -> 3,9
+    .returns None
+    .type_comment None
 """),
 
 (r"""
@@ -10680,25 +9472,14 @@ def f():
 Module .. ROOT 0,0 -> 5,0
   .body[1]
   0] FunctionDef .. 1,0 -> 4,5
-    .name
-      'f'
-    .args
-      arguments
-        .vararg
-          None
-        .kwarg
-          None
+    .name 'f'
     .body[2]
     0] Expr .. 2,4 -> 2,5
-      .value
-        Name 'i' Load .. 2,4 -> 2,5
+      .value Name 'i' Load .. 2,4 -> 2,5
     1] Expr .. 4,4 -> 4,5
-      .value
-        Name 'j' Load .. 4,4 -> 4,5
-    .returns
-      None
-    .type_comment
-      None
+      .value Name 'j' Load .. 4,4 -> 4,5
+    .returns None
+    .type_comment None
 """),
 
 (r"""
@@ -10712,25 +9493,14 @@ def f():
 Module .. ROOT 0,0 -> 4,0
   .body[1]
   0] FunctionDef .. 1,0 -> 2,9
-    .name
-      'f'
-    .args
-      arguments
-        .vararg
-          None
-        .kwarg
-          None
+    .name 'f'
     .body[2]
     0] Expr .. 2,4 -> 2,5
-      .value
-        Name 'i' Load .. 2,4 -> 2,5
+      .value Name 'i' Load .. 2,4 -> 2,5
     1] Expr .. 2,8 -> 2,9
-      .value
-        Name 'j' Load .. 2,8 -> 2,9
-    .returns
-      None
-    .type_comment
-      None
+      .value Name 'j' Load .. 2,8 -> 2,9
+    .returns None
+    .type_comment None
 """),
 
 (r"""
@@ -10750,25 +9520,14 @@ def f():
 Module .. ROOT 0,0 -> 7,0
   .body[1]
   0] FunctionDef .. 1,0 -> 6,3
-    .name
-      'f'
-    .args
-      arguments
-        .vararg
-          None
-        .kwarg
-          None
+    .name 'f'
     .body[2]
     0] Expr .. 3,4 -> 3,5
-      .value
-        Name 'i' Load .. 3,4 -> 3,5
+      .value Name 'i' Load .. 3,4 -> 3,5
     1] Expr .. 6,2 -> 6,3
-      .value
-        Name 'j' Load .. 6,2 -> 6,3
-    .returns
-      None
-    .type_comment
-      None
+      .value Name 'j' Load .. 6,2 -> 6,3
+    .returns None
+    .type_comment None
 """),
 
 (r"""
@@ -10786,25 +9545,14 @@ def f():
 Module .. ROOT 0,0 -> 5,0
   .body[1]
   0] FunctionDef .. 1,0 -> 4,5
-    .name
-      'f'
-    .args
-      arguments
-        .vararg
-          None
-        .kwarg
-          None
+    .name 'f'
     .body[2]
     0] Expr .. 2,4 -> 2,5
-      .value
-        Name 'i' Load .. 2,4 -> 2,5
+      .value Name 'i' Load .. 2,4 -> 2,5
     1] Expr .. 4,4 -> 4,5
-      .value
-        Name 'j' Load .. 4,4 -> 4,5
-    .returns
-      None
-    .type_comment
-      None
+      .value Name 'j' Load .. 4,4 -> 4,5
+    .returns None
+    .type_comment None
 """),
 
 (r"""
@@ -10824,25 +9572,14 @@ def f():
 Module .. ROOT 0,0 -> 7,0
   .body[1]
   0] FunctionDef .. 1,0 -> 5,3
-    .name
-      'f'
-    .args
-      arguments
-        .vararg
-          None
-        .kwarg
-          None
+    .name 'f'
     .body[2]
     0] Expr .. 2,4 -> 2,5
-      .value
-        Name 'i' Load .. 2,4 -> 2,5
+      .value Name 'i' Load .. 2,4 -> 2,5
     1] Expr .. 5,2 -> 5,3
-      .value
-        Name 'j' Load .. 5,2 -> 5,3
-    .returns
-      None
-    .type_comment
-      None
+      .value Name 'j' Load .. 5,2 -> 5,3
+    .returns None
+    .type_comment None
 """),
 
 (r"""""", '', 0, 0, None, 'pep8', r"""def func(): pass""", r"""def func(): pass
@@ -10850,20 +9587,11 @@ Module .. ROOT 0,0 -> 7,0
 Module .. ROOT 0,0 -> 1,0
   .body[1]
   0] FunctionDef .. 0,0 -> 0,16
-    .name
-      'func'
-    .args
-      arguments
-        .vararg
-          None
-        .kwarg
-          None
+    .name 'func'
     .body[1]
     0] Pass .. 0,12 -> 0,16
-    .returns
-      None
-    .type_comment
-      None
+    .returns None
+    .type_comment None
 """),
 
 (r"""""", '', 0, 0, None, 'pep8', r"""
@@ -10873,20 +9601,11 @@ def func(): pass
 Module .. ROOT 0,0 -> 2,0
   .body[1]
   0] FunctionDef .. 1,0 -> 1,16
-    .name
-      'func'
-    .args
-      arguments
-        .vararg
-          None
-        .kwarg
-          None
+    .name 'func'
     .body[1]
     0] Pass .. 1,12 -> 1,16
-    .returns
-      None
-    .type_comment
-      None
+    .returns None
+    .type_comment None
 """),
 
 (r"""'''Module
@@ -10898,23 +9617,13 @@ def func(): pass
 Module .. ROOT 0,0 -> 4,0
   .body[2]
   0] Expr .. 0,0 -> 1,15
-    .value
-      Constant 'Module\n   docstring' .. 0,0 -> 1,15
+    .value Constant 'Module\n   docstring' .. 0,0 -> 1,15
   1] FunctionDef .. 3,0 -> 3,16
-    .name
-      'func'
-    .args
-      arguments
-        .vararg
-          None
-        .kwarg
-          None
+    .name 'func'
     .body[1]
     0] Pass .. 3,12 -> 3,16
-    .returns
-      None
-    .type_comment
-      None
+    .returns None
+    .type_comment None
 """),
 
 (r"""'''Module
@@ -10926,23 +9635,13 @@ def func(): pass
 Module .. ROOT 0,0 -> 4,0
   .body[2]
   0] Expr .. 0,0 -> 1,15
-    .value
-      Constant 'Module\n   docstring' .. 0,0 -> 1,15
+    .value Constant 'Module\n   docstring' .. 0,0 -> 1,15
   1] FunctionDef .. 3,0 -> 3,16
-    .name
-      'func'
-    .args
-      arguments
-        .vararg
-          None
-        .kwarg
-          None
+    .name 'func'
     .body[1]
     0] Pass .. 3,12 -> 3,16
-    .returns
-      None
-    .type_comment
-      None
+    .returns None
+    .type_comment None
 """),
 
 (r"""'''Module
@@ -10955,23 +9654,13 @@ def func(): pass
 Module .. ROOT 0,0 -> 4,0
   .body[2]
   0] Expr .. 0,0 -> 1,15
-    .value
-      Constant 'Module\n   docstring' .. 0,0 -> 1,15
+    .value Constant 'Module\n   docstring' .. 0,0 -> 1,15
   1] FunctionDef .. 3,0 -> 3,16
-    .name
-      'func'
-    .args
-      arguments
-        .vararg
-          None
-        .kwarg
-          None
+    .name 'func'
     .body[1]
     0] Pass .. 3,12 -> 3,16
-    .returns
-      None
-    .type_comment
-      None
+    .returns None
+    .type_comment None
 """),
 
 (r"""'''Module
@@ -10986,23 +9675,13 @@ def func(): pass
 Module .. ROOT 0,0 -> 5,0
   .body[2]
   0] Expr .. 0,0 -> 1,15
-    .value
-      Constant 'Module\n   docstring' .. 0,0 -> 1,15
+    .value Constant 'Module\n   docstring' .. 0,0 -> 1,15
   1] FunctionDef .. 4,0 -> 4,16
-    .name
-      'func'
-    .args
-      arguments
-        .vararg
-          None
-        .kwarg
-          None
+    .name 'func'
     .body[1]
     0] Pass .. 4,12 -> 4,16
-    .returns
-      None
-    .type_comment
-      None
+    .returns None
+    .type_comment None
 """),
 
 (r"""
@@ -11016,35 +9695,17 @@ def func(): pass
 Module .. ROOT 0,0 -> 5,0
   .body[2]
   0] FunctionDef .. 1,0 -> 1,19
-    .name
-      'prefunc'
-    .args
-      arguments
-        .vararg
-          None
-        .kwarg
-          None
+    .name 'prefunc'
     .body[1]
     0] Pass .. 1,15 -> 1,19
-    .returns
-      None
-    .type_comment
-      None
+    .returns None
+    .type_comment None
   1] FunctionDef .. 4,0 -> 4,16
-    .name
-      'func'
-    .args
-      arguments
-        .vararg
-          None
-        .kwarg
-          None
+    .name 'func'
     .body[1]
     0] Pass .. 4,12 -> 4,16
-    .returns
-      None
-    .type_comment
-      None
+    .returns None
+    .type_comment None
 """),
 
 (r"""
@@ -11057,35 +9718,17 @@ def func(): pass
 Module .. ROOT 0,0 -> 4,0
   .body[2]
   0] FunctionDef .. 1,0 -> 1,19
-    .name
-      'prefunc'
-    .args
-      arguments
-        .vararg
-          None
-        .kwarg
-          None
+    .name 'prefunc'
     .body[1]
     0] Pass .. 1,15 -> 1,19
-    .returns
-      None
-    .type_comment
-      None
+    .returns None
+    .type_comment None
   1] FunctionDef .. 3,0 -> 3,16
-    .name
-      'func'
-    .args
-      arguments
-        .vararg
-          None
-        .kwarg
-          None
+    .name 'func'
     .body[1]
     0] Pass .. 3,12 -> 3,16
-    .returns
-      None
-    .type_comment
-      None
+    .returns None
+    .type_comment None
 """),
 
 (r"""
@@ -11097,35 +9740,17 @@ def func(): pass
 Module .. ROOT 0,0 -> 3,0
   .body[2]
   0] FunctionDef .. 1,0 -> 1,19
-    .name
-      'prefunc'
-    .args
-      arguments
-        .vararg
-          None
-        .kwarg
-          None
+    .name 'prefunc'
     .body[1]
     0] Pass .. 1,15 -> 1,19
-    .returns
-      None
-    .type_comment
-      None
+    .returns None
+    .type_comment None
   1] FunctionDef .. 2,0 -> 2,16
-    .name
-      'func'
-    .args
-      arguments
-        .vararg
-          None
-        .kwarg
-          None
+    .name 'func'
     .body[1]
     0] Pass .. 2,12 -> 2,16
-    .returns
-      None
-    .type_comment
-      None
+    .returns None
+    .type_comment None
 """),
 
 (r"""
@@ -11140,35 +9765,17 @@ def func(): pass
 Module .. ROOT 0,0 -> 5,0
   .body[2]
   0] FunctionDef .. 1,0 -> 1,19
-    .name
-      'prefunc'
-    .args
-      arguments
-        .vararg
-          None
-        .kwarg
-          None
+    .name 'prefunc'
     .body[1]
     0] Pass .. 1,15 -> 1,19
-    .returns
-      None
-    .type_comment
-      None
+    .returns None
+    .type_comment None
   1] FunctionDef .. 4,0 -> 4,16
-    .name
-      'func'
-    .args
-      arguments
-        .vararg
-          None
-        .kwarg
-          None
+    .name 'func'
     .body[1]
     0] Pass .. 4,12 -> 4,16
-    .returns
-      None
-    .type_comment
-      None
+    .returns None
+    .type_comment None
 """),
 
 (r"""
@@ -11182,35 +9789,17 @@ def func(): pass
 Module .. ROOT 0,0 -> 4,0
   .body[2]
   0] FunctionDef .. 1,0 -> 1,19
-    .name
-      'prefunc'
-    .args
-      arguments
-        .vararg
-          None
-        .kwarg
-          None
+    .name 'prefunc'
     .body[1]
     0] Pass .. 1,15 -> 1,19
-    .returns
-      None
-    .type_comment
-      None
+    .returns None
+    .type_comment None
   1] FunctionDef .. 3,0 -> 3,16
-    .name
-      'func'
-    .args
-      arguments
-        .vararg
-          None
-        .kwarg
-          None
+    .name 'func'
     .body[1]
     0] Pass .. 3,12 -> 3,16
-    .returns
-      None
-    .type_comment
-      None
+    .returns None
+    .type_comment None
 """),
 
 (r"""
@@ -11222,35 +9811,17 @@ def func(): pass
 Module .. ROOT 0,0 -> 3,0
   .body[2]
   0] FunctionDef .. 1,0 -> 1,19
-    .name
-      'prefunc'
-    .args
-      arguments
-        .vararg
-          None
-        .kwarg
-          None
+    .name 'prefunc'
     .body[1]
     0] Pass .. 1,15 -> 1,19
-    .returns
-      None
-    .type_comment
-      None
+    .returns None
+    .type_comment None
   1] FunctionDef .. 2,0 -> 2,16
-    .name
-      'func'
-    .args
-      arguments
-        .vararg
-          None
-        .kwarg
-          None
+    .name 'func'
     .body[1]
     0] Pass .. 2,12 -> 2,16
-    .returns
-      None
-    .type_comment
-      None
+    .returns None
+    .type_comment None
 """),
 
 (r"""
@@ -11266,35 +9837,17 @@ def func(): pass
 Module .. ROOT 0,0 -> 5,0
   .body[2]
   0] FunctionDef .. 1,0 -> 1,19
-    .name
-      'prefunc'
-    .args
-      arguments
-        .vararg
-          None
-        .kwarg
-          None
+    .name 'prefunc'
     .body[1]
     0] Pass .. 1,15 -> 1,19
-    .returns
-      None
-    .type_comment
-      None
+    .returns None
+    .type_comment None
   1] FunctionDef .. 4,0 -> 4,16
-    .name
-      'func'
-    .args
-      arguments
-        .vararg
-          None
-        .kwarg
-          None
+    .name 'func'
     .body[1]
     0] Pass .. 4,12 -> 4,16
-    .returns
-      None
-    .type_comment
-      None
+    .returns None
+    .type_comment None
 """),
 
 (r"""
@@ -11310,35 +9863,17 @@ def func(): pass
 Module .. ROOT 0,0 -> 5,0
   .body[2]
   0] FunctionDef .. 1,0 -> 1,19
-    .name
-      'prefunc'
-    .args
-      arguments
-        .vararg
-          None
-        .kwarg
-          None
+    .name 'prefunc'
     .body[1]
     0] Pass .. 1,15 -> 1,19
-    .returns
-      None
-    .type_comment
-      None
+    .returns None
+    .type_comment None
   1] FunctionDef .. 4,0 -> 4,16
-    .name
-      'func'
-    .args
-      arguments
-        .vararg
-          None
-        .kwarg
-          None
+    .name 'func'
     .body[1]
     0] Pass .. 4,12 -> 4,16
-    .returns
-      None
-    .type_comment
-      None
+    .returns None
+    .type_comment None
 """),
 
 (r"""
@@ -11356,35 +9891,17 @@ def func(): pass
 Module .. ROOT 0,0 -> 6,0
   .body[2]
   0] FunctionDef .. 1,0 -> 1,19
-    .name
-      'prefunc'
-    .args
-      arguments
-        .vararg
-          None
-        .kwarg
-          None
+    .name 'prefunc'
     .body[1]
     0] Pass .. 1,15 -> 1,19
-    .returns
-      None
-    .type_comment
-      None
+    .returns None
+    .type_comment None
   1] FunctionDef .. 5,0 -> 5,16
-    .name
-      'func'
-    .args
-      arguments
-        .vararg
-          None
-        .kwarg
-          None
+    .name 'func'
     .body[1]
     0] Pass .. 5,12 -> 5,16
-    .returns
-      None
-    .type_comment
-      None
+    .returns None
+    .type_comment None
 """),
 
 (r"""
@@ -11400,25 +9917,15 @@ Module .. ROOT 0,0 -> 5,0
   0] Import .. 1,0 -> 1,12
     .names[1]
     0] alias .. 1,7 -> 1,12
-      .name
-        'stuff'
+      .name 'stuff'
       .asname
         None
   1] FunctionDef .. 4,0 -> 4,16
-    .name
-      'func'
-    .args
-      arguments
-        .vararg
-          None
-        .kwarg
-          None
+    .name 'func'
     .body[1]
     0] Pass .. 4,12 -> 4,16
-    .returns
-      None
-    .type_comment
-      None
+    .returns None
+    .type_comment None
 """),
 
 (r"""
@@ -11435,25 +9942,15 @@ Module .. ROOT 0,0 -> 5,0
   0] Import .. 1,0 -> 1,12
     .names[1]
     0] alias .. 1,7 -> 1,12
-      .name
-        'stuff'
+      .name 'stuff'
       .asname
         None
   1] FunctionDef .. 4,0 -> 4,16
-    .name
-      'func'
-    .args
-      arguments
-        .vararg
-          None
-        .kwarg
-          None
+    .name 'func'
     .body[1]
     0] Pass .. 4,12 -> 4,16
-    .returns
-      None
-    .type_comment
-      None
+    .returns None
+    .type_comment None
 """),
 
 (r"""
@@ -11471,25 +9968,15 @@ Module .. ROOT 0,0 -> 5,0
   0] Import .. 1,0 -> 1,12
     .names[1]
     0] alias .. 1,7 -> 1,12
-      .name
-        'stuff'
+      .name 'stuff'
       .asname
         None
   1] FunctionDef .. 4,0 -> 4,16
-    .name
-      'func'
-    .args
-      arguments
-        .vararg
-          None
-        .kwarg
-          None
+    .name 'func'
     .body[1]
     0] Pass .. 4,12 -> 4,16
-    .returns
-      None
-    .type_comment
-      None
+    .returns None
+    .type_comment None
 """),
 
 (r"""
@@ -11507,25 +9994,15 @@ Module .. ROOT 0,0 -> 5,0
   0] Import .. 1,0 -> 1,12
     .names[1]
     0] alias .. 1,7 -> 1,12
-      .name
-        'stuff'
+      .name 'stuff'
       .asname
         None
   1] FunctionDef .. 4,0 -> 4,16
-    .name
-      'func'
-    .args
-      arguments
-        .vararg
-          None
-        .kwarg
-          None
+    .name 'func'
     .body[1]
     0] Pass .. 4,12 -> 4,16
-    .returns
-      None
-    .type_comment
-      None
+    .returns None
+    .type_comment None
 """),
 
 (r"""
@@ -11539,35 +10016,17 @@ def prefunc(): pass
 Module .. ROOT 0,0 -> 5,0
   .body[2]
   0] FunctionDef .. 1,0 -> 1,16
-    .name
-      'func'
-    .args
-      arguments
-        .vararg
-          None
-        .kwarg
-          None
+    .name 'func'
     .body[1]
     0] Pass .. 1,12 -> 1,16
-    .returns
-      None
-    .type_comment
-      None
+    .returns None
+    .type_comment None
   1] FunctionDef .. 4,0 -> 4,19
-    .name
-      'prefunc'
-    .args
-      arguments
-        .vararg
-          None
-        .kwarg
-          None
+    .name 'prefunc'
     .body[1]
     0] Pass .. 4,15 -> 4,19
-    .returns
-      None
-    .type_comment
-      None
+    .returns None
+    .type_comment None
 """),
 
 (r"""
@@ -11580,35 +10039,17 @@ def prefunc(): pass
 Module .. ROOT 0,0 -> 4,0
   .body[2]
   0] FunctionDef .. 1,0 -> 1,16
-    .name
-      'func'
-    .args
-      arguments
-        .vararg
-          None
-        .kwarg
-          None
+    .name 'func'
     .body[1]
     0] Pass .. 1,12 -> 1,16
-    .returns
-      None
-    .type_comment
-      None
+    .returns None
+    .type_comment None
   1] FunctionDef .. 3,0 -> 3,19
-    .name
-      'prefunc'
-    .args
-      arguments
-        .vararg
-          None
-        .kwarg
-          None
+    .name 'prefunc'
     .body[1]
     0] Pass .. 3,15 -> 3,19
-    .returns
-      None
-    .type_comment
-      None
+    .returns None
+    .type_comment None
 """),
 
 (r"""
@@ -11620,35 +10061,17 @@ def prefunc(): pass
 Module .. ROOT 0,0 -> 3,0
   .body[2]
   0] FunctionDef .. 1,0 -> 1,16
-    .name
-      'func'
-    .args
-      arguments
-        .vararg
-          None
-        .kwarg
-          None
+    .name 'func'
     .body[1]
     0] Pass .. 1,12 -> 1,16
-    .returns
-      None
-    .type_comment
-      None
+    .returns None
+    .type_comment None
   1] FunctionDef .. 2,0 -> 2,19
-    .name
-      'prefunc'
-    .args
-      arguments
-        .vararg
-          None
-        .kwarg
-          None
+    .name 'prefunc'
     .body[1]
     0] Pass .. 2,15 -> 2,19
-    .returns
-      None
-    .type_comment
-      None
+    .returns None
+    .type_comment None
 """),
 
 (r"""
@@ -11663,35 +10086,17 @@ def prefunc(): pass
 Module .. ROOT 0,0 -> 5,0
   .body[2]
   0] FunctionDef .. 1,0 -> 1,16
-    .name
-      'func'
-    .args
-      arguments
-        .vararg
-          None
-        .kwarg
-          None
+    .name 'func'
     .body[1]
     0] Pass .. 1,12 -> 1,16
-    .returns
-      None
-    .type_comment
-      None
+    .returns None
+    .type_comment None
   1] FunctionDef .. 4,0 -> 4,19
-    .name
-      'prefunc'
-    .args
-      arguments
-        .vararg
-          None
-        .kwarg
-          None
+    .name 'prefunc'
     .body[1]
     0] Pass .. 4,15 -> 4,19
-    .returns
-      None
-    .type_comment
-      None
+    .returns None
+    .type_comment None
 """),
 
 (r"""
@@ -11707,35 +10112,17 @@ def prefunc(): pass
 Module .. ROOT 0,0 -> 5,0
   .body[2]
   0] FunctionDef .. 1,0 -> 1,16
-    .name
-      'func'
-    .args
-      arguments
-        .vararg
-          None
-        .kwarg
-          None
+    .name 'func'
     .body[1]
     0] Pass .. 1,12 -> 1,16
-    .returns
-      None
-    .type_comment
-      None
+    .returns None
+    .type_comment None
   1] FunctionDef .. 4,0 -> 4,19
-    .name
-      'prefunc'
-    .args
-      arguments
-        .vararg
-          None
-        .kwarg
-          None
+    .name 'prefunc'
     .body[1]
     0] Pass .. 4,15 -> 4,19
-    .returns
-      None
-    .type_comment
-      None
+    .returns None
+    .type_comment None
 """),
 
 (r"""
@@ -11752,35 +10139,17 @@ def prefunc(): pass
 Module .. ROOT 0,0 -> 5,0
   .body[2]
   0] FunctionDef .. 1,0 -> 1,16
-    .name
-      'func'
-    .args
-      arguments
-        .vararg
-          None
-        .kwarg
-          None
+    .name 'func'
     .body[1]
     0] Pass .. 1,12 -> 1,16
-    .returns
-      None
-    .type_comment
-      None
+    .returns None
+    .type_comment None
   1] FunctionDef .. 4,0 -> 4,19
-    .name
-      'prefunc'
-    .args
-      arguments
-        .vararg
-          None
-        .kwarg
-          None
+    .name 'prefunc'
     .body[1]
     0] Pass .. 4,15 -> 4,19
-    .returns
-      None
-    .type_comment
-      None
+    .returns None
+    .type_comment None
 """),
 
 (r"""
@@ -11799,35 +10168,17 @@ def prefunc(): pass
 Module .. ROOT 0,0 -> 6,0
   .body[2]
   0] FunctionDef .. 1,0 -> 1,16
-    .name
-      'func'
-    .args
-      arguments
-        .vararg
-          None
-        .kwarg
-          None
+    .name 'func'
     .body[1]
     0] Pass .. 1,12 -> 1,16
-    .returns
-      None
-    .type_comment
-      None
+    .returns None
+    .type_comment None
   1] FunctionDef .. 5,0 -> 5,19
-    .name
-      'prefunc'
-    .args
-      arguments
-        .vararg
-          None
-        .kwarg
-          None
+    .name 'prefunc'
     .body[1]
     0] Pass .. 5,15 -> 5,19
-    .returns
-      None
-    .type_comment
-      None
+    .returns None
+    .type_comment None
 """),
 
 (r"""
@@ -11845,50 +10196,23 @@ def postfunc(): pass
 Module .. ROOT 0,0 -> 8,0
   .body[3]
   0] FunctionDef .. 1,0 -> 1,19
-    .name
-      'prefunc'
-    .args
-      arguments
-        .vararg
-          None
-        .kwarg
-          None
+    .name 'prefunc'
     .body[1]
     0] Pass .. 1,15 -> 1,19
-    .returns
-      None
-    .type_comment
-      None
+    .returns None
+    .type_comment None
   1] FunctionDef .. 4,0 -> 4,16
-    .name
-      'func'
-    .args
-      arguments
-        .vararg
-          None
-        .kwarg
-          None
+    .name 'func'
     .body[1]
     0] Pass .. 4,12 -> 4,16
-    .returns
-      None
-    .type_comment
-      None
+    .returns None
+    .type_comment None
   2] FunctionDef .. 7,0 -> 7,20
-    .name
-      'postfunc'
-    .args
-      arguments
-        .vararg
-          None
-        .kwarg
-          None
+    .name 'postfunc'
     .body[1]
     0] Pass .. 7,16 -> 7,20
-    .returns
-      None
-    .type_comment
-      None
+    .returns None
+    .type_comment None
 """),
 
 (r"""
@@ -11907,50 +10231,23 @@ def postfunc(): pass
 Module .. ROOT 0,0 -> 8,0
   .body[3]
   0] FunctionDef .. 1,0 -> 1,19
-    .name
-      'prefunc'
-    .args
-      arguments
-        .vararg
-          None
-        .kwarg
-          None
+    .name 'prefunc'
     .body[1]
     0] Pass .. 1,15 -> 1,19
-    .returns
-      None
-    .type_comment
-      None
+    .returns None
+    .type_comment None
   1] FunctionDef .. 4,0 -> 4,16
-    .name
-      'func'
-    .args
-      arguments
-        .vararg
-          None
-        .kwarg
-          None
+    .name 'func'
     .body[1]
     0] Pass .. 4,12 -> 4,16
-    .returns
-      None
-    .type_comment
-      None
+    .returns None
+    .type_comment None
   2] FunctionDef .. 7,0 -> 7,20
-    .name
-      'postfunc'
-    .args
-      arguments
-        .vararg
-          None
-        .kwarg
-          None
+    .name 'postfunc'
     .body[1]
     0] Pass .. 7,16 -> 7,20
-    .returns
-      None
-    .type_comment
-      None
+    .returns None
+    .type_comment None
 """),
 
 (r"""
@@ -11970,50 +10267,23 @@ def postfunc(): pass
 Module .. ROOT 0,0 -> 8,0
   .body[3]
   0] FunctionDef .. 1,0 -> 1,19
-    .name
-      'prefunc'
-    .args
-      arguments
-        .vararg
-          None
-        .kwarg
-          None
+    .name 'prefunc'
     .body[1]
     0] Pass .. 1,15 -> 1,19
-    .returns
-      None
-    .type_comment
-      None
+    .returns None
+    .type_comment None
   1] FunctionDef .. 4,0 -> 4,16
-    .name
-      'func'
-    .args
-      arguments
-        .vararg
-          None
-        .kwarg
-          None
+    .name 'func'
     .body[1]
     0] Pass .. 4,12 -> 4,16
-    .returns
-      None
-    .type_comment
-      None
+    .returns None
+    .type_comment None
   2] FunctionDef .. 7,0 -> 7,20
-    .name
-      'postfunc'
-    .args
-      arguments
-        .vararg
-          None
-        .kwarg
-          None
+    .name 'postfunc'
     .body[1]
     0] Pass .. 7,16 -> 7,20
-    .returns
-      None
-    .type_comment
-      None
+    .returns None
+    .type_comment None
 """),
 
 (r"""
@@ -12035,50 +10305,23 @@ def postfunc(): pass
 Module .. ROOT 0,0 -> 9,0
   .body[3]
   0] FunctionDef .. 1,0 -> 1,19
-    .name
-      'prefunc'
-    .args
-      arguments
-        .vararg
-          None
-        .kwarg
-          None
+    .name 'prefunc'
     .body[1]
     0] Pass .. 1,15 -> 1,19
-    .returns
-      None
-    .type_comment
-      None
+    .returns None
+    .type_comment None
   1] FunctionDef .. 4,0 -> 4,16
-    .name
-      'func'
-    .args
-      arguments
-        .vararg
-          None
-        .kwarg
-          None
+    .name 'func'
     .body[1]
     0] Pass .. 4,12 -> 4,16
-    .returns
-      None
-    .type_comment
-      None
+    .returns None
+    .type_comment None
   2] FunctionDef .. 8,0 -> 8,20
-    .name
-      'postfunc'
-    .args
-      arguments
-        .vararg
-          None
-        .kwarg
-          None
+    .name 'postfunc'
     .body[1]
     0] Pass .. 8,16 -> 8,20
-    .returns
-      None
-    .type_comment
-      None
+    .returns None
+    .type_comment None
 """),
 
 (r"""
@@ -12102,50 +10345,23 @@ def postfunc(): pass
 Module .. ROOT 0,0 -> 10,0
   .body[3]
   0] FunctionDef .. 1,0 -> 1,19
-    .name
-      'prefunc'
-    .args
-      arguments
-        .vararg
-          None
-        .kwarg
-          None
+    .name 'prefunc'
     .body[1]
     0] Pass .. 1,15 -> 1,19
-    .returns
-      None
-    .type_comment
-      None
+    .returns None
+    .type_comment None
   1] FunctionDef .. 4,0 -> 4,16
-    .name
-      'func'
-    .args
-      arguments
-        .vararg
-          None
-        .kwarg
-          None
+    .name 'func'
     .body[1]
     0] Pass .. 4,12 -> 4,16
-    .returns
-      None
-    .type_comment
-      None
+    .returns None
+    .type_comment None
   2] FunctionDef .. 9,0 -> 9,20
-    .name
-      'postfunc'
-    .args
-      arguments
-        .vararg
-          None
-        .kwarg
-          None
+    .name 'postfunc'
     .body[1]
     0] Pass .. 9,16 -> 9,20
-    .returns
-      None
-    .type_comment
-      None
+    .returns None
+    .type_comment None
 """),
 
 (r"""
@@ -12161,50 +10377,23 @@ def postfunc(): pass
 Module .. ROOT 0,0 -> 6,0
   .body[3]
   0] FunctionDef .. 1,0 -> 1,19
-    .name
-      'prefunc'
-    .args
-      arguments
-        .vararg
-          None
-        .kwarg
-          None
+    .name 'prefunc'
     .body[1]
     0] Pass .. 1,15 -> 1,19
-    .returns
-      None
-    .type_comment
-      None
+    .returns None
+    .type_comment None
   1] FunctionDef .. 3,0 -> 3,16
-    .name
-      'func'
-    .args
-      arguments
-        .vararg
-          None
-        .kwarg
-          None
+    .name 'func'
     .body[1]
     0] Pass .. 3,12 -> 3,16
-    .returns
-      None
-    .type_comment
-      None
+    .returns None
+    .type_comment None
   2] FunctionDef .. 5,0 -> 5,20
-    .name
-      'postfunc'
-    .args
-      arguments
-        .vararg
-          None
-        .kwarg
-          None
+    .name 'postfunc'
     .body[1]
     0] Pass .. 5,16 -> 5,20
-    .returns
-      None
-    .type_comment
-      None
+    .returns None
+    .type_comment None
 """),
 
 (r"""
@@ -12218,50 +10407,23 @@ def postfunc(): pass
 Module .. ROOT 0,0 -> 4,0
   .body[3]
   0] FunctionDef .. 1,0 -> 1,19
-    .name
-      'prefunc'
-    .args
-      arguments
-        .vararg
-          None
-        .kwarg
-          None
+    .name 'prefunc'
     .body[1]
     0] Pass .. 1,15 -> 1,19
-    .returns
-      None
-    .type_comment
-      None
+    .returns None
+    .type_comment None
   1] FunctionDef .. 2,0 -> 2,16
-    .name
-      'func'
-    .args
-      arguments
-        .vararg
-          None
-        .kwarg
-          None
+    .name 'func'
     .body[1]
     0] Pass .. 2,12 -> 2,16
-    .returns
-      None
-    .type_comment
-      None
+    .returns None
+    .type_comment None
   2] FunctionDef .. 3,0 -> 3,20
-    .name
-      'postfunc'
-    .args
-      arguments
-        .vararg
-          None
-        .kwarg
-          None
+    .name 'postfunc'
     .body[1]
     0] Pass .. 3,16 -> 3,20
-    .returns
-      None
-    .type_comment
-      None
+    .returns None
+    .type_comment None
 """),
 
 (r"""
@@ -12281,50 +10443,23 @@ def postfunc(): pass
 Module .. ROOT 0,0 -> 8,0
   .body[3]
   0] FunctionDef .. 1,0 -> 1,19
-    .name
-      'prefunc'
-    .args
-      arguments
-        .vararg
-          None
-        .kwarg
-          None
+    .name 'prefunc'
     .body[1]
     0] Pass .. 1,15 -> 1,19
-    .returns
-      None
-    .type_comment
-      None
+    .returns None
+    .type_comment None
   1] FunctionDef .. 4,0 -> 4,16
-    .name
-      'func'
-    .args
-      arguments
-        .vararg
-          None
-        .kwarg
-          None
+    .name 'func'
     .body[1]
     0] Pass .. 4,12 -> 4,16
-    .returns
-      None
-    .type_comment
-      None
+    .returns None
+    .type_comment None
   2] FunctionDef .. 7,0 -> 7,20
-    .name
-      'postfunc'
-    .args
-      arguments
-        .vararg
-          None
-        .kwarg
-          None
+    .name 'postfunc'
     .body[1]
     0] Pass .. 7,16 -> 7,20
-    .returns
-      None
-    .type_comment
-      None
+    .returns None
+    .type_comment None
 """),
 
 (r"""
@@ -12346,50 +10481,23 @@ def postfunc(): pass
 Module .. ROOT 0,0 -> 9,0
   .body[3]
   0] FunctionDef .. 1,0 -> 1,19
-    .name
-      'prefunc'
-    .args
-      arguments
-        .vararg
-          None
-        .kwarg
-          None
+    .name 'prefunc'
     .body[1]
     0] Pass .. 1,15 -> 1,19
-    .returns
-      None
-    .type_comment
-      None
+    .returns None
+    .type_comment None
   1] FunctionDef .. 4,0 -> 4,16
-    .name
-      'func'
-    .args
-      arguments
-        .vararg
-          None
-        .kwarg
-          None
+    .name 'func'
     .body[1]
     0] Pass .. 4,12 -> 4,16
-    .returns
-      None
-    .type_comment
-      None
+    .returns None
+    .type_comment None
   2] FunctionDef .. 8,0 -> 8,20
-    .name
-      'postfunc'
-    .args
-      arguments
-        .vararg
-          None
-        .kwarg
-          None
+    .name 'postfunc'
     .body[1]
     0] Pass .. 8,16 -> 8,20
-    .returns
-      None
-    .type_comment
-      None
+    .returns None
+    .type_comment None
 """),
 
 (r"""
@@ -12406,27 +10514,16 @@ class cls:
 Module .. ROOT 0,0 -> 6,0
   .body[1]
   0] ClassDef .. 1,0 -> 5,20
-    .name
-      'cls'
+    .name 'cls'
     .body[2]
     0] Expr .. 2,4 -> 3,19
-      .value
-        Constant 'Class\n       docstring' .. 2,4 -> 3,19
+      .value Constant 'Class\n       docstring' .. 2,4 -> 3,19
     1] FunctionDef .. 5,4 -> 5,20
-      .name
-        'meth'
-      .args
-        arguments
-          .vararg
-            None
-          .kwarg
-            None
+      .name 'meth'
       .body[1]
       0] Pass .. 5,16 -> 5,20
-      .returns
-        None
-      .type_comment
-        None
+      .returns None
+      .type_comment None
 """),
 
 (r"""
@@ -12444,27 +10541,16 @@ class cls:
 Module .. ROOT 0,0 -> 6,0
   .body[1]
   0] ClassDef .. 1,0 -> 5,20
-    .name
-      'cls'
+    .name 'cls'
     .body[2]
     0] Expr .. 2,4 -> 3,19
-      .value
-        Constant 'Class\n       docstring' .. 2,4 -> 3,19
+      .value Constant 'Class\n       docstring' .. 2,4 -> 3,19
     1] FunctionDef .. 5,4 -> 5,20
-      .name
-        'meth'
-      .args
-        arguments
-          .vararg
-            None
-          .kwarg
-            None
+      .name 'meth'
       .body[1]
       0] Pass .. 5,16 -> 5,20
-      .returns
-        None
-      .type_comment
-        None
+      .returns None
+      .type_comment None
 """),
 
 (r"""
@@ -12484,27 +10570,16 @@ class cls:
 Module .. ROOT 0,0 -> 7,0
   .body[1]
   0] ClassDef .. 1,0 -> 6,20
-    .name
-      'cls'
+    .name 'cls'
     .body[2]
     0] Expr .. 2,4 -> 3,19
-      .value
-        Constant 'Class\n       docstring' .. 2,4 -> 3,19
+      .value Constant 'Class\n       docstring' .. 2,4 -> 3,19
     1] FunctionDef .. 6,4 -> 6,20
-      .name
-        'meth'
-      .args
-        arguments
-          .vararg
-            None
-          .kwarg
-            None
+      .name 'meth'
       .body[1]
       0] Pass .. 6,16 -> 6,20
-      .returns
-        None
-      .type_comment
-        None
+      .returns None
+      .type_comment None
 """),
 
 (r"""
@@ -12519,39 +10594,20 @@ class cls:
 Module .. ROOT 0,0 -> 5,0
   .body[1]
   0] ClassDef .. 1,0 -> 4,20
-    .name
-      'cls'
+    .name 'cls'
     .body[2]
     0] FunctionDef .. 2,4 -> 2,23
-      .name
-        'premeth'
-      .args
-        arguments
-          .vararg
-            None
-          .kwarg
-            None
+      .name 'premeth'
       .body[1]
       0] Pass .. 2,19 -> 2,23
-      .returns
-        None
-      .type_comment
-        None
+      .returns None
+      .type_comment None
     1] FunctionDef .. 4,4 -> 4,20
-      .name
-        'meth'
-      .args
-        arguments
-          .vararg
-            None
-          .kwarg
-            None
+      .name 'meth'
       .body[1]
       0] Pass .. 4,16 -> 4,20
-      .returns
-        None
-      .type_comment
-        None
+      .returns None
+      .type_comment None
 """),
 
 (r"""
@@ -12567,39 +10623,20 @@ class cls:
 Module .. ROOT 0,0 -> 5,0
   .body[1]
   0] ClassDef .. 1,0 -> 4,20
-    .name
-      'cls'
+    .name 'cls'
     .body[2]
     0] FunctionDef .. 2,4 -> 2,23
-      .name
-        'premeth'
-      .args
-        arguments
-          .vararg
-            None
-          .kwarg
-            None
+      .name 'premeth'
       .body[1]
       0] Pass .. 2,19 -> 2,23
-      .returns
-        None
-      .type_comment
-        None
+      .returns None
+      .type_comment None
     1] FunctionDef .. 4,4 -> 4,20
-      .name
-        'meth'
-      .args
-        arguments
-          .vararg
-            None
-          .kwarg
-            None
+      .name 'meth'
       .body[1]
       0] Pass .. 4,16 -> 4,20
-      .returns
-        None
-      .type_comment
-        None
+      .returns None
+      .type_comment None
 """),
 
 (r"""
@@ -12617,39 +10654,20 @@ class cls:
 Module .. ROOT 0,0 -> 6,0
   .body[1]
   0] ClassDef .. 1,0 -> 5,20
-    .name
-      'cls'
+    .name 'cls'
     .body[2]
     0] FunctionDef .. 2,4 -> 2,23
-      .name
-        'premeth'
-      .args
-        arguments
-          .vararg
-            None
-          .kwarg
-            None
+      .name 'premeth'
       .body[1]
       0] Pass .. 2,19 -> 2,23
-      .returns
-        None
-      .type_comment
-        None
+      .returns None
+      .type_comment None
     1] FunctionDef .. 5,4 -> 5,20
-      .name
-        'meth'
-      .args
-        arguments
-          .vararg
-            None
-          .kwarg
-            None
+      .name 'meth'
       .body[1]
       0] Pass .. 5,16 -> 5,20
-      .returns
-        None
-      .type_comment
-        None
+      .returns None
+      .type_comment None
 """),
 
 (r"""
@@ -12664,39 +10682,20 @@ class cls:
 Module .. ROOT 0,0 -> 5,0
   .body[1]
   0] ClassDef .. 1,0 -> 4,24
-    .name
-      'cls'
+    .name 'cls'
     .body[2]
     0] FunctionDef .. 2,4 -> 2,20
-      .name
-        'meth'
-      .args
-        arguments
-          .vararg
-            None
-          .kwarg
-            None
+      .name 'meth'
       .body[1]
       0] Pass .. 2,16 -> 2,20
-      .returns
-        None
-      .type_comment
-        None
+      .returns None
+      .type_comment None
     1] FunctionDef .. 4,4 -> 4,24
-      .name
-        'postmeth'
-      .args
-        arguments
-          .vararg
-            None
-          .kwarg
-            None
+      .name 'postmeth'
       .body[1]
       0] Pass .. 4,20 -> 4,24
-      .returns
-        None
-      .type_comment
-        None
+      .returns None
+      .type_comment None
 """),
 
 (r"""
@@ -12712,39 +10711,20 @@ class cls:
 Module .. ROOT 0,0 -> 5,0
   .body[1]
   0] ClassDef .. 1,0 -> 4,24
-    .name
-      'cls'
+    .name 'cls'
     .body[2]
     0] FunctionDef .. 2,4 -> 2,20
-      .name
-        'meth'
-      .args
-        arguments
-          .vararg
-            None
-          .kwarg
-            None
+      .name 'meth'
       .body[1]
       0] Pass .. 2,16 -> 2,20
-      .returns
-        None
-      .type_comment
-        None
+      .returns None
+      .type_comment None
     1] FunctionDef .. 4,4 -> 4,24
-      .name
-        'postmeth'
-      .args
-        arguments
-          .vararg
-            None
-          .kwarg
-            None
+      .name 'postmeth'
       .body[1]
       0] Pass .. 4,20 -> 4,24
-      .returns
-        None
-      .type_comment
-        None
+      .returns None
+      .type_comment None
 """),
 
 (r"""
@@ -12761,39 +10741,20 @@ class cls:
 Module .. ROOT 0,0 -> 5,0
   .body[1]
   0] ClassDef .. 1,0 -> 4,24
-    .name
-      'cls'
+    .name 'cls'
     .body[2]
     0] FunctionDef .. 2,4 -> 2,20
-      .name
-        'meth'
-      .args
-        arguments
-          .vararg
-            None
-          .kwarg
-            None
+      .name 'meth'
       .body[1]
       0] Pass .. 2,16 -> 2,20
-      .returns
-        None
-      .type_comment
-        None
+      .returns None
+      .type_comment None
     1] FunctionDef .. 4,4 -> 4,24
-      .name
-        'postmeth'
-      .args
-        arguments
-          .vararg
-            None
-          .kwarg
-            None
+      .name 'postmeth'
       .body[1]
       0] Pass .. 4,20 -> 4,24
-      .returns
-        None
-      .type_comment
-        None
+      .returns None
+      .type_comment None
 """),
 
 (r"""
@@ -12812,39 +10773,20 @@ class cls:
 Module .. ROOT 0,0 -> 6,0
   .body[1]
   0] ClassDef .. 1,0 -> 5,24
-    .name
-      'cls'
+    .name 'cls'
     .body[2]
     0] FunctionDef .. 2,4 -> 2,20
-      .name
-        'meth'
-      .args
-        arguments
-          .vararg
-            None
-          .kwarg
-            None
+      .name 'meth'
       .body[1]
       0] Pass .. 2,16 -> 2,20
-      .returns
-        None
-      .type_comment
-        None
+      .returns None
+      .type_comment None
     1] FunctionDef .. 5,4 -> 5,24
-      .name
-        'postmeth'
-      .args
-        arguments
-          .vararg
-            None
-          .kwarg
-            None
+      .name 'postmeth'
       .body[1]
       0] Pass .. 5,20 -> 5,24
-      .returns
-        None
-      .type_comment
-        None
+      .returns None
+      .type_comment None
 """),
 
 (r"""
@@ -12862,54 +10804,26 @@ class cls:
 Module .. ROOT 0,0 -> 7,0
   .body[1]
   0] ClassDef .. 1,0 -> 6,24
-    .name
-      'cls'
+    .name 'cls'
     .body[3]
     0] FunctionDef .. 2,4 -> 2,23
-      .name
-        'premeth'
-      .args
-        arguments
-          .vararg
-            None
-          .kwarg
-            None
+      .name 'premeth'
       .body[1]
       0] Pass .. 2,19 -> 2,23
-      .returns
-        None
-      .type_comment
-        None
+      .returns None
+      .type_comment None
     1] FunctionDef .. 4,4 -> 4,20
-      .name
-        'meth'
-      .args
-        arguments
-          .vararg
-            None
-          .kwarg
-            None
+      .name 'meth'
       .body[1]
       0] Pass .. 4,16 -> 4,20
-      .returns
-        None
-      .type_comment
-        None
+      .returns None
+      .type_comment None
     2] FunctionDef .. 6,4 -> 6,24
-      .name
-        'postmeth'
-      .args
-        arguments
-          .vararg
-            None
-          .kwarg
-            None
+      .name 'postmeth'
       .body[1]
       0] Pass .. 6,20 -> 6,24
-      .returns
-        None
-      .type_comment
-        None
+      .returns None
+      .type_comment None
 """),
 
 (r"""
@@ -12928,54 +10842,26 @@ class cls:
 Module .. ROOT 0,0 -> 7,0
   .body[1]
   0] ClassDef .. 1,0 -> 6,24
-    .name
-      'cls'
+    .name 'cls'
     .body[3]
     0] FunctionDef .. 2,4 -> 2,23
-      .name
-        'premeth'
-      .args
-        arguments
-          .vararg
-            None
-          .kwarg
-            None
+      .name 'premeth'
       .body[1]
       0] Pass .. 2,19 -> 2,23
-      .returns
-        None
-      .type_comment
-        None
+      .returns None
+      .type_comment None
     1] FunctionDef .. 4,4 -> 4,20
-      .name
-        'meth'
-      .args
-        arguments
-          .vararg
-            None
-          .kwarg
-            None
+      .name 'meth'
       .body[1]
       0] Pass .. 4,16 -> 4,20
-      .returns
-        None
-      .type_comment
-        None
+      .returns None
+      .type_comment None
     2] FunctionDef .. 6,4 -> 6,24
-      .name
-        'postmeth'
-      .args
-        arguments
-          .vararg
-            None
-          .kwarg
-            None
+      .name 'postmeth'
       .body[1]
       0] Pass .. 6,20 -> 6,24
-      .returns
-        None
-      .type_comment
-        None
+      .returns None
+      .type_comment None
 """),
 
 (r"""
@@ -12996,54 +10882,26 @@ class cls:
 Module .. ROOT 0,0 -> 8,0
   .body[1]
   0] ClassDef .. 1,0 -> 7,24
-    .name
-      'cls'
+    .name 'cls'
     .body[3]
     0] FunctionDef .. 2,4 -> 2,23
-      .name
-        'premeth'
-      .args
-        arguments
-          .vararg
-            None
-          .kwarg
-            None
+      .name 'premeth'
       .body[1]
       0] Pass .. 2,19 -> 2,23
-      .returns
-        None
-      .type_comment
-        None
+      .returns None
+      .type_comment None
     1] FunctionDef .. 4,4 -> 4,20
-      .name
-        'meth'
-      .args
-        arguments
-          .vararg
-            None
-          .kwarg
-            None
+      .name 'meth'
       .body[1]
       0] Pass .. 4,16 -> 4,20
-      .returns
-        None
-      .type_comment
-        None
+      .returns None
+      .type_comment None
     2] FunctionDef .. 7,4 -> 7,24
-      .name
-        'postmeth'
-      .args
-        arguments
-          .vararg
-            None
-          .kwarg
-            None
+      .name 'postmeth'
       .body[1]
       0] Pass .. 7,20 -> 7,24
-      .returns
-        None
-      .type_comment
-        None
+      .returns None
+      .type_comment None
 """),
 
 (r"""
@@ -13066,54 +10924,26 @@ class cls:
 Module .. ROOT 0,0 -> 9,0
   .body[1]
   0] ClassDef .. 1,0 -> 8,24
-    .name
-      'cls'
+    .name 'cls'
     .body[3]
     0] FunctionDef .. 2,4 -> 2,23
-      .name
-        'premeth'
-      .args
-        arguments
-          .vararg
-            None
-          .kwarg
-            None
+      .name 'premeth'
       .body[1]
       0] Pass .. 2,19 -> 2,23
-      .returns
-        None
-      .type_comment
-        None
+      .returns None
+      .type_comment None
     1] FunctionDef .. 4,4 -> 4,20
-      .name
-        'meth'
-      .args
-        arguments
-          .vararg
-            None
-          .kwarg
-            None
+      .name 'meth'
       .body[1]
       0] Pass .. 4,16 -> 4,20
-      .returns
-        None
-      .type_comment
-        None
+      .returns None
+      .type_comment None
     2] FunctionDef .. 8,4 -> 8,24
-      .name
-        'postmeth'
-      .args
-        arguments
-          .vararg
-            None
-          .kwarg
-            None
+      .name 'postmeth'
       .body[1]
       0] Pass .. 8,20 -> 8,24
-      .returns
-        None
-      .type_comment
-        None
+      .returns None
+      .type_comment None
 """),
 
 (r"""
@@ -13129,54 +10959,149 @@ class cls:
 Module .. ROOT 0,0 -> 5,0
   .body[1]
   0] ClassDef .. 1,0 -> 4,24
-    .name
-      'cls'
+    .name 'cls'
     .body[3]
     0] FunctionDef .. 2,4 -> 2,23
-      .name
-        'premeth'
-      .args
-        arguments
-          .vararg
-            None
-          .kwarg
-            None
+      .name 'premeth'
       .body[1]
       0] Pass .. 2,19 -> 2,23
-      .returns
-        None
-      .type_comment
-        None
+      .returns None
+      .type_comment None
     1] FunctionDef .. 3,4 -> 3,20
-      .name
-        'meth'
-      .args
-        arguments
-          .vararg
-            None
-          .kwarg
-            None
+      .name 'meth'
       .body[1]
       0] Pass .. 3,16 -> 3,20
-      .returns
-        None
-      .type_comment
-        None
+      .returns None
+      .type_comment None
     2] FunctionDef .. 4,4 -> 4,24
-      .name
-        'postmeth'
-      .args
-        arguments
-          .vararg
-            None
-          .kwarg
-            None
+      .name 'postmeth'
       .body[1]
       0] Pass .. 4,20 -> 4,24
-      .returns
-        None
-      .type_comment
-        None
+      .returns None
+      .type_comment None
+"""),
+
+(r"""
+class cls:
+    def premeth(): pass  # post
+    # pre
+    def postmeth(): pass
+""", 'body[0]', 1, 1, None, None, r"""def meth(): pass""", r"""
+class cls:
+    def premeth(): pass  # post
+
+    def meth(): pass
+
+    # pre
+    def postmeth(): pass
+""", r"""
+Module .. ROOT 0,0 -> 8,0
+  .body[1]
+  0] ClassDef .. 1,0 -> 7,24
+    .name 'cls'
+    .body[3]
+    0] FunctionDef .. 2,4 -> 2,23
+      .name 'premeth'
+      .body[1]
+      0] Pass .. 2,19 -> 2,23
+      .returns None
+      .type_comment None
+    1] FunctionDef .. 4,4 -> 4,20
+      .name 'meth'
+      .body[1]
+      0] Pass .. 4,16 -> 4,20
+      .returns None
+      .type_comment None
+    2] FunctionDef .. 7,4 -> 7,24
+      .name 'postmeth'
+      .body[1]
+      0] Pass .. 7,20 -> 7,24
+      .returns None
+      .type_comment None
+"""),
+
+(r"""
+class cls:
+    def premeth(): pass  \
+    # post
+    \
+    def postmeth(): pass
+""", 'body[0]', 1, 1, None, None, r"""def meth(): pass""", r"""
+class cls:
+    def premeth(): pass  \
+    # post
+
+    def meth(): pass
+
+    \
+    def postmeth(): pass
+""", r"""
+Module .. ROOT 0,0 -> 9,0
+  .body[1]
+  0] ClassDef .. 1,0 -> 8,24
+    .name 'cls'
+    .body[3]
+    0] FunctionDef .. 2,4 -> 2,23
+      .name 'premeth'
+      .body[1]
+      0] Pass .. 2,19 -> 2,23
+      .returns None
+      .type_comment None
+    1] FunctionDef .. 5,4 -> 5,20
+      .name 'meth'
+      .body[1]
+      0] Pass .. 5,16 -> 5,20
+      .returns None
+      .type_comment None
+    2] FunctionDef .. 8,4 -> 8,24
+      .name 'postmeth'
+      .body[1]
+      0] Pass .. 8,20 -> 8,24
+      .returns None
+      .type_comment None
+"""),
+
+(r"""
+class cls:
+    def premeth(): pass
+    \
+
+    \
+    def postmeth(): pass
+""", 'body[0]', 1, 1, None, None, r"""def meth(): pass""", r"""
+class cls:
+    def premeth(): pass
+
+    def meth(): pass
+
+    \
+
+    \
+    def postmeth(): pass
+""", r"""
+Module .. ROOT 0,0 -> 10,0
+  .body[1]
+  0] ClassDef .. 1,0 -> 9,24
+    .name 'cls'
+    .body[3]
+    0] FunctionDef .. 2,4 -> 2,23
+      .name 'premeth'
+      .body[1]
+      0] Pass .. 2,19 -> 2,23
+      .returns None
+      .type_comment None
+    1] FunctionDef .. 4,4 -> 4,20
+      .name 'meth'
+      .body[1]
+      0] Pass .. 4,16 -> 4,20
+      .returns None
+      .type_comment None
+    2] FunctionDef .. 9,4 -> 9,24
+      .name 'postmeth'
+      .body[1]
+      0] Pass .. 9,20 -> 9,24
+      .returns None
+      .type_comment None
 """),
 
 ]  # END OF PUT_SLICE_STMT_DATA
