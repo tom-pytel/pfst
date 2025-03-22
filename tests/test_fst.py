@@ -13033,7 +13033,7 @@ if indented:
 
         fst.body[1].cases[0].cut()
         # fst.body[1].put_slice('pass')
-        fst.body[1]._put_slice_stmt('pass', None, None, None, True, fst_.DEFAULT_SRC_EDIT_FMT, fst_.DEFAULT_DOCSTR, force=True)
+        fst.body[1]._put_slice_stmt('pass', None, None, None, False, True, fst_.DEFAULT_SRC_EDIT_FMT, fst_.DEFAULT_DOCSTR, force=True)
 
         points = [
             (fst.body[0].cases[0], 'body'),
@@ -13203,7 +13203,7 @@ if indented:
         fst = fst2
 
         fst.body[1].cases[0].cut()
-        fst.body[1]._put_slice_stmt('pass', None, None, None, True, fst_.DEFAULT_SRC_EDIT_FMT, fst_.DEFAULT_DOCSTR, force=True)
+        fst.body[1]._put_slice_stmt('pass', None, None, None, False, True, fst_.DEFAULT_SRC_EDIT_FMT, fst_.DEFAULT_DOCSTR, force=True)
 
         points = [
             (fst.body[0].cases[0], 'body'),
@@ -13238,7 +13238,7 @@ if indented:
 
         for point, field in points:
             # point.put_slice(None, field=field)
-            point._put_slice_stmt(None, None, None, field, True, fst_.DEFAULT_SRC_EDIT_FMT, fst_.DEFAULT_DOCSTR, force=True)
+            point._put_slice_stmt(None, None, None, field, False, True, fst_.DEFAULT_SRC_EDIT_FMT, fst_.DEFAULT_DOCSTR, force=True)
 
         self.assertEqual(fst.lines, [
             'match a:',
@@ -13409,7 +13409,7 @@ if indented:
 
         fst.body[1].cases[0].cut()
         # fst.body[1].put_slice('pass')
-        fst.body[1]._put_slice_stmt('pass', None, None, None, True, fst_.DEFAULT_SRC_EDIT_FMT, fst_.DEFAULT_DOCSTR, force=True)
+        fst.body[1]._put_slice_stmt('pass', None, None, None, False, True, fst_.DEFAULT_SRC_EDIT_FMT, fst_.DEFAULT_DOCSTR, force=True)
 
         points = [
             (fst.body[0].cases[0], 'body'),
@@ -13604,7 +13604,7 @@ if indented:
 
         fst.body[1].cases[0].cut()
         # fst.body[1].put_slice('pass')
-        fst.body[1]._put_slice_stmt('pass', None, None, None, True, fst_.DEFAULT_SRC_EDIT_FMT, fst_.DEFAULT_DOCSTR, force=True)
+        fst.body[1]._put_slice_stmt('pass', None, None, None, False, True, fst_.DEFAULT_SRC_EDIT_FMT, fst_.DEFAULT_DOCSTR, force=True)
 
         points = [
             (fst.body[0].cases[0], 'body'),
@@ -13773,7 +13773,7 @@ match a:
         '''.strip())
         a.body[0].cases[0].f.cut()
         # a.body[0].f.put_slice('i')
-        a.body[0].f._put_slice_stmt('i', None, None, None, True, fst_.DEFAULT_SRC_EDIT_FMT, fst_.DEFAULT_DOCSTR, force=True)
+        a.body[0].f._put_slice_stmt('i', None, None, None, False, True, fst_.DEFAULT_SRC_EDIT_FMT, fst_.DEFAULT_DOCSTR, force=True)
         self.assertEqual(a.f.src, 'match a:\n    i\n')
 
 
@@ -13854,7 +13854,7 @@ if 1:
         '''.strip())
         a.body[0].body[0].cases[0].f.cut()
         # a.body[0].body[0].f.put_slice('i')
-        a.body[0].body[0].f._put_slice_stmt('i', None, None, None, True, fst_.DEFAULT_SRC_EDIT_FMT, fst_.DEFAULT_DOCSTR, force=True)
+        a.body[0].body[0].f._put_slice_stmt('i', None, None, None, False, True, fst_.DEFAULT_SRC_EDIT_FMT, fst_.DEFAULT_DOCSTR, force=True)
         self.assertEqual(a.f.src, 'if 2:\n    match a:\n        i\n')
 
 
@@ -14379,7 +14379,7 @@ if indented:
 
         fst.body[1].cases[0].cut()
         # fst.body[1].put_slice('pass')
-        fst.body[1]._put_slice_stmt('pass', None, None, None, True, fst_.DEFAULT_SRC_EDIT_FMT, fst_.DEFAULT_DOCSTR, force=True)
+        fst.body[1]._put_slice_stmt('pass', None, None, None, False, True, fst_.DEFAULT_SRC_EDIT_FMT, fst_.DEFAULT_DOCSTR, force=True)
 
         points = [
             (fst.body[0].cases[0], 'body'),
@@ -14428,7 +14428,7 @@ if indented:
             f, field = ps.pop()
 
             # f.put_slice(bs.pop(), 0, 0, field=field)
-            f._put_slice_stmt(bs.pop(), 0, 0, field, True, fst_.DEFAULT_SRC_EDIT_FMT, fst_.DEFAULT_DOCSTR, force=True)
+            f._put_slice_stmt(bs.pop(), 0, 0, field, False, True, fst_.DEFAULT_SRC_EDIT_FMT, fst_.DEFAULT_DOCSTR, force=True)
 
         self.assertEqual(fst.src, '''
 match a:
@@ -14541,7 +14541,7 @@ if indented:
                 f, field = ps.pop()
 
                 # f.put_slice(bs.pop(), 0, 0, field=field)
-                f._put_slice_stmt(bs.pop(), 0, 0, field, True, fst_.DEFAULT_SRC_EDIT_FMT, fst_.DEFAULT_DOCSTR, force=True)
+                f._put_slice_stmt(bs.pop(), 0, 0, field, False, True, fst_.DEFAULT_SRC_EDIT_FMT, fst_.DEFAULT_DOCSTR, force=True)
 
     def test_insert_comment_into_empty_field(self):
         fst = parse('''
@@ -14601,7 +14601,7 @@ if indented:
 
         fst.body[1].cases[0].cut()
         # fst.body[1].put_slice('pass')
-        fst.body[1]._put_slice_stmt('pass', None, None, None, True, fst_.DEFAULT_SRC_EDIT_FMT, fst_.DEFAULT_DOCSTR, force=True)
+        fst.body[1]._put_slice_stmt('pass', None, None, None, False, True, fst_.DEFAULT_SRC_EDIT_FMT, fst_.DEFAULT_DOCSTR, force=True)
 
         points = [
             (fst.body[0].cases[0], 'body'),
@@ -14629,7 +14629,7 @@ if indented:
             point.get_slice(field=field, cut=True)
 
         for i, (point, field) in enumerate(reversed(points)):
-            point._put_slice_stmt(f'# {i}', 0, 0, field, True, fst_.DEFAULT_SRC_EDIT_FMT, fst_.DEFAULT_DOCSTR, force=True)
+            point._put_slice_stmt(f'# {i}', 0, 0, field, False, True, fst_.DEFAULT_SRC_EDIT_FMT, fst_.DEFAULT_DOCSTR, force=True)
 
         self.assertEqual(fst.lines, [
             'match a:',
@@ -14702,9 +14702,9 @@ finally:
         a.body[1].body[0].f.cut()
         a.body[1].handlers[0].f.cut()
         # a.body[1].f.put_slice('# pre\nn  # post', 0, 0, 'handlers')
-        a.body[1].f._put_slice_stmt('# pre\nn  # post', 0, 0, 'handlers', True, fst_.DEFAULT_SRC_EDIT_FMT, fst_.DEFAULT_DOCSTR, force=True)
+        a.body[1].f._put_slice_stmt('# pre\nn  # post', 0, 0, 'handlers', False, True, fst_.DEFAULT_SRC_EDIT_FMT, fst_.DEFAULT_DOCSTR, force=True)
         # a.body[1].f.put_slice('i', 0, 0, 'handlers')
-        a.body[1].f._put_slice_stmt('i', 0, 0, 'handlers', True, fst_.DEFAULT_SRC_EDIT_FMT, fst_.DEFAULT_DOCSTR, force=True)
+        a.body[1].f._put_slice_stmt('i', 0, 0, 'handlers', False, True, fst_.DEFAULT_SRC_EDIT_FMT, fst_.DEFAULT_DOCSTR, force=True)
         self.assertEqual(a.f.src, '''
 pass
 

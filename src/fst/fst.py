@@ -697,10 +697,10 @@ class fstlistproxy:
                                     fmt=fmt, docstr=docstr)
 
     def append(self, code: Code, *, fmt: Fmt = DEFAULT_SRC_EDIT_FMT, docstr: bool | str = DEFAULT_DOCSTR):
-        self.owner.put(code, self.start + len(self.asts), field=self.field, fmt=fmt, docstr=docstr)
+        self.owner.put_slice(code, self.start + len(self.asts), None, self.field, True, fmt=fmt, docstr=docstr)
 
     def extend(self, code: Code, *, fmt: Fmt = DEFAULT_SRC_EDIT_FMT, docstr: bool | str = DEFAULT_DOCSTR):
-        self.owner.put_slice(code, (end := self.start + len(self.asts)), end, self.field, fmt=fmt, docstr=docstr)
+        self.owner.put_slice(code, self.start + len(self.asts), None, self.field, False, fmt=fmt, docstr=docstr)
 
 
 class FSTSrcEdit:
@@ -2730,7 +2730,7 @@ class FST:
             self._floor_start_pos(lineno, col_offset)  # because of insertion at beginning of unparenthesized tuple, pattern beginning to emerge
 
     def _put_slice_tuple_list_or_set(self, code: Code | None, start: int | None, stop: int | None, field: str | None,
-                                     fix: bool, fmt: Fmt, docstr: bool | str):
+                                     single: bool, fix: bool, fmt: Fmt, docstr: bool | str):
         if field is not None and field != 'elts':
             raise ValueError(f"invalid field '{field}' to assign slice to a {self.a.__class__.__name__}")
 
@@ -2740,19 +2740,28 @@ class FST:
         else:
             put_fst = _normalize_code(code, 'expr', parse_params=self.root.parse_params)
 
-            if put_fst.is_empty_set_call():
-                if fix:
-                    put_fst = _new_empty_set_curlies(from_=self)
-                else:
-                    raise ValueError(f"cannot put 'set()' as a slice without specifying 'fix=True'")
+            if single:
+                a        = put_fst.a
+                put_ast  = Set(elts=[a], lineno=a.lineno, col_offset=a.col_offset, end_lineno=a.end_lineno,
+                               end_col_offset=a.end_col_offset)
+                put_fst  = FST(put_ast, lines=put_fst._lines)
+                is_tuple = False
+                is_set   = True
 
-            put_ast  = put_fst.a
-            is_tuple = isinstance(put_ast, Tuple)
-            is_set   = isinstance(put_ast, Set)
+            else:
+                if put_fst.is_empty_set_call():
+                    if fix:
+                        put_fst = _new_empty_set_curlies(from_=self)
+                    else:
+                        raise ValueError(f"cannot put 'set()' as a slice without specifying 'fix=True'")
 
-            if not is_tuple and not is_set and not isinstance(put_ast, List):
-                raise ValueError(f"slice being assigned to a {self.a.__class__.__name__} must be a Tuple, List or Set, "
-                                 f"not a '{put_ast.__class__.__name__}'")
+                put_ast  = put_fst.a
+                is_tuple = isinstance(put_ast, Tuple)
+                is_set   = not is_tuple and isinstance(put_ast, Set)
+
+                if not is_tuple and not is_set and not isinstance(put_ast, List):
+                    raise ValueError(f"slice being assigned to a {self.a.__class__.__name__} "
+                                     f"must be a Tuple, List or Set, not a '{put_ast.__class__.__name__}'")
 
         ast         = self.a
         elts        = ast.elts
@@ -2763,6 +2772,7 @@ class FST:
             return
 
         is_self_tuple    = isinstance(ast, Tuple)
+        is_self_set      = not is_self_tuple and isinstance(ast, Set)
         is_self_enclosed = not is_self_tuple or self.is_parenthesized_tuple()
         fpre             = elts[start - 1].f if start else None
         fpost            = None if stop == len(elts) else elts[stop].f
@@ -2786,7 +2796,10 @@ class FST:
         else:
             put_lines = put_fst._lines
 
-            if not is_tuple:
+            if single:
+                pass  # noop
+
+            elif not is_tuple:
                 put_ast.end_col_offset -= 1  # strip enclosing curlies or brackets from source set or list
 
                 put_fst.offset(0, 1, 0, -1)
@@ -2821,7 +2834,7 @@ class FST:
             stack   = [FST(elts[i], self, astfield('elts', i)) for i in range(start, start + put_len)]
 
             if fix and stack and not is_set:
-                set_ctx([f.a for f in stack], Load if isinstance(ast, Set) else ast.ctx.__class__)
+                set_ctx([f.a for f in stack], Load if is_self_set else ast.ctx.__class__)
 
             self._make_fst_tree(stack)
 
@@ -2831,11 +2844,11 @@ class FST:
         if fix:
             if is_self_tuple:
                 self._maybe_fix_tuple(is_self_enclosed)
-            elif isinstance(ast, Set):
+            elif is_self_set:
                 self._maybe_fix_set()
 
     def _put_slice_empty_set_call(self, code: Code | None, start: int | None, stop: int | None, field: str | None,
-                                  fix: bool, fmt: Fmt, docstr: bool | str):
+                                  single: bool, fix: bool, fmt: Fmt, docstr: bool | str):
         if not fix:
             raise ValueError(f"cannot put slice to a 'set()' without specifying 'fix=True'")
 
@@ -2851,14 +2864,14 @@ class FST:
             self.pfield.set(parent.a, ast)
 
         try:
-            self._put_slice_tuple_list_or_set(code, start, stop, field, fix, fmt, docstr)
+            self._put_slice_tuple_list_or_set(code, start, stop, field, single, fix, fmt, docstr)
 
         finally:
             if not self.a.elts:
                 self._maybe_fix_set()  # restore 'set()'
 
     def _put_slice_dict(self, code: Code | None, start: int | None, stop: int | None, field: str | None,
-                        fix: bool, fmt: Fmt, docstr: bool | str):
+                        single: bool, fix: bool, fmt: Fmt, docstr: bool | str):
         if field is not None:
             raise ValueError(f"cannot specify a field '{field}' to assign slice to a Dict")
 
@@ -2945,7 +2958,7 @@ class FST:
                 key.f.pfield = astfield('keys', i)
 
     def _put_slice_stmt(self, code: Code | None, start: int | None, stop: int | None, field: str | None,
-                        fix: bool, fmt: Fmt, docstr: bool | str, *, force: bool = False):  # TODO: `force` is for some previously written tests, but really should fix those tests instead
+                        single: bool, fix: bool, fmt: Fmt, docstr: bool | str, *, force: bool = False):  # TODO: `force` is for some previously written tests, but really should fix those tests instead
         ast         = self.a
         field, body = _fixup_field_body(ast, field)
 
@@ -2953,9 +2966,13 @@ class FST:
             put_fst = None
 
         else:
-            put_fst   = _normalize_code(code, 'mod', parse_params=self.root.parse_params)
-            put_ast   = put_fst.a
-            put_body  = put_ast.body
+            put_fst  = _normalize_code(code, 'mod', parse_params=self.root.parse_params)
+            put_ast  = put_fst.a
+            put_body = put_ast.body
+
+            if single and len(put_body) != 1:
+                raise ValueError('expecting a single statement')
+
             node_type = ExceptHandler if field == 'handlers' else match_case if field == 'cases' else stmt
 
             if not force and any(not isinstance(bad_node := n, node_type) for n in put_body):
@@ -3585,7 +3602,7 @@ class FST:
         if isinstance(parenta, (Tuple, List, Set)):
             fst = self.copy(fix=fix, fmt=fmt, docstr=docstr)
 
-            parent._put_slice_tuple_list_or_set(None, idx, idx + 1, field, fix, fmt, docstr)
+            parent._put_slice_tuple_list_or_set(None, idx, idx + 1, field, False, fix, fmt, docstr)
 
             return fst
 
@@ -3625,7 +3642,7 @@ class FST:
         """
 
         if stop is not False:
-            return self.put_slice(code, start, stop, field, fix=fix, fmt=fmt, docstr=docstr)
+            return self.put_slice(code, start, stop, field, True, fix=fix, fmt=fmt, docstr=docstr)
 
         field, body = _fixup_field_body(self.a, field)
 
@@ -3663,7 +3680,7 @@ class FST:
 
 
     def put_slice(self, code: Code | None, start: int | None = None, stop: int | None = None,
-                  field: str | None = None, *, fix: bool = True,
+                  field: str | None = None, single: bool = False, *, fix: bool = True,
                   fmt: Fmt = DEFAULT_SRC_EDIT_FMT, docstr: bool | str = DEFAULT_DOCSTR) -> 'FST':  # -> Self:
         """Put an a slice of child nodes to `self`.
 
@@ -3674,16 +3691,16 @@ class FST:
         ast = self.a
 
         if isinstance(ast, STATEMENTISH_OR_STMTMOD):
-            self._put_slice_stmt(code, start, stop, field, fix, fmt, docstr)
+            self._put_slice_stmt(code, start, stop, field, single, fix, fmt, docstr)
 
         elif isinstance(ast, (Tuple, List, Set)):
-            self._put_slice_tuple_list_or_set(code, start, stop, field, fix, fmt, docstr)
+            self._put_slice_tuple_list_or_set(code, start, stop, field, single, fix, fmt, docstr)
 
         elif isinstance(ast, Dict):
-            self._put_slice_dict(code, start, stop, field, fix, fmt, docstr)
+            self._put_slice_dict(code, start, stop, field, single, fix, fmt, docstr)
 
         elif self.is_empty_set_call():
-            self._put_slice_empty_set_call(code, start, stop, field, fix, fmt, docstr)
+            self._put_slice_empty_set_call(code, start, stop, field, single, fix, fmt, docstr)
 
         else:
             raise ValueError(f"cannot put slice to a '{ast.__class__.__name__}'")
