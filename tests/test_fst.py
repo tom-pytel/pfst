@@ -10845,6 +10845,2338 @@ Module .. ROOT 0,0 -> 7,0
       None
 """),
 
+(r"""""", '', 0, 0, None, 'pep8', r"""def func(): pass""", r"""def func(): pass
+""", r"""
+Module .. ROOT 0,0 -> 1,0
+  .body[1]
+  0] FunctionDef .. 0,0 -> 0,16
+    .name
+      'func'
+    .args
+      arguments
+        .vararg
+          None
+        .kwarg
+          None
+    .body[1]
+    0] Pass .. 0,12 -> 0,16
+    .returns
+      None
+    .type_comment
+      None
+"""),
+
+(r"""""", '', 0, 0, None, 'pep8', r"""
+def func(): pass""", r"""
+def func(): pass
+""", r"""
+Module .. ROOT 0,0 -> 2,0
+  .body[1]
+  0] FunctionDef .. 1,0 -> 1,16
+    .name
+      'func'
+    .args
+      arguments
+        .vararg
+          None
+        .kwarg
+          None
+    .body[1]
+    0] Pass .. 1,12 -> 1,16
+    .returns
+      None
+    .type_comment
+      None
+"""),
+
+(r"""'''Module
+   docstring'''""", '', 1, 1, None, 'pep8', r"""def func(): pass""", r"""'''Module
+   docstring'''
+
+def func(): pass
+""", r"""
+Module .. ROOT 0,0 -> 4,0
+  .body[2]
+  0] Expr .. 0,0 -> 1,15
+    .value
+      Constant 'Module\n   docstring' .. 0,0 -> 1,15
+  1] FunctionDef .. 3,0 -> 3,16
+    .name
+      'func'
+    .args
+      arguments
+        .vararg
+          None
+        .kwarg
+          None
+    .body[1]
+    0] Pass .. 3,12 -> 3,16
+    .returns
+      None
+    .type_comment
+      None
+"""),
+
+(r"""'''Module
+   docstring'''""", '', 1, 1, None, 'pep8', r"""def func(): pass""", r"""'''Module
+   docstring'''
+
+def func(): pass
+""", r"""
+Module .. ROOT 0,0 -> 4,0
+  .body[2]
+  0] Expr .. 0,0 -> 1,15
+    .value
+      Constant 'Module\n   docstring' .. 0,0 -> 1,15
+  1] FunctionDef .. 3,0 -> 3,16
+    .name
+      'func'
+    .args
+      arguments
+        .vararg
+          None
+        .kwarg
+          None
+    .body[1]
+    0] Pass .. 3,12 -> 3,16
+    .returns
+      None
+    .type_comment
+      None
+"""),
+
+(r"""'''Module
+   docstring'''""", '', 1, 1, None, 'pep8', r"""
+def func(): pass""", r"""'''Module
+   docstring'''
+
+def func(): pass
+""", r"""
+Module .. ROOT 0,0 -> 4,0
+  .body[2]
+  0] Expr .. 0,0 -> 1,15
+    .value
+      Constant 'Module\n   docstring' .. 0,0 -> 1,15
+  1] FunctionDef .. 3,0 -> 3,16
+    .name
+      'func'
+    .args
+      arguments
+        .vararg
+          None
+        .kwarg
+          None
+    .body[1]
+    0] Pass .. 3,12 -> 3,16
+    .returns
+      None
+    .type_comment
+      None
+"""),
+
+(r"""'''Module
+   docstring'''""", '', 1, 1, None, 'pep8', r"""
+
+def func(): pass""", r"""'''Module
+   docstring'''
+
+
+def func(): pass
+""", r"""
+Module .. ROOT 0,0 -> 5,0
+  .body[2]
+  0] Expr .. 0,0 -> 1,15
+    .value
+      Constant 'Module\n   docstring' .. 0,0 -> 1,15
+  1] FunctionDef .. 4,0 -> 4,16
+    .name
+      'func'
+    .args
+      arguments
+        .vararg
+          None
+        .kwarg
+          None
+    .body[1]
+    0] Pass .. 4,12 -> 4,16
+    .returns
+      None
+    .type_comment
+      None
+"""),
+
+(r"""
+def prefunc(): pass
+""", '', 1, 1, None, 'pep8', r"""def func(): pass""", r"""
+def prefunc(): pass
+
+
+def func(): pass
+""", r"""
+Module .. ROOT 0,0 -> 5,0
+  .body[2]
+  0] FunctionDef .. 1,0 -> 1,19
+    .name
+      'prefunc'
+    .args
+      arguments
+        .vararg
+          None
+        .kwarg
+          None
+    .body[1]
+    0] Pass .. 1,15 -> 1,19
+    .returns
+      None
+    .type_comment
+      None
+  1] FunctionDef .. 4,0 -> 4,16
+    .name
+      'func'
+    .args
+      arguments
+        .vararg
+          None
+        .kwarg
+          None
+    .body[1]
+    0] Pass .. 4,12 -> 4,16
+    .returns
+      None
+    .type_comment
+      None
+"""),
+
+(r"""
+def prefunc(): pass
+""", '', 1, 1, None, 'pep81', r"""def func(): pass""", r"""
+def prefunc(): pass
+
+def func(): pass
+""", r"""
+Module .. ROOT 0,0 -> 4,0
+  .body[2]
+  0] FunctionDef .. 1,0 -> 1,19
+    .name
+      'prefunc'
+    .args
+      arguments
+        .vararg
+          None
+        .kwarg
+          None
+    .body[1]
+    0] Pass .. 1,15 -> 1,19
+    .returns
+      None
+    .type_comment
+      None
+  1] FunctionDef .. 3,0 -> 3,16
+    .name
+      'func'
+    .args
+      arguments
+        .vararg
+          None
+        .kwarg
+          None
+    .body[1]
+    0] Pass .. 3,12 -> 3,16
+    .returns
+      None
+    .type_comment
+      None
+"""),
+
+(r"""
+def prefunc(): pass
+""", '', 1, 1, None, '', r"""def func(): pass""", r"""
+def prefunc(): pass
+def func(): pass
+""", r"""
+Module .. ROOT 0,0 -> 3,0
+  .body[2]
+  0] FunctionDef .. 1,0 -> 1,19
+    .name
+      'prefunc'
+    .args
+      arguments
+        .vararg
+          None
+        .kwarg
+          None
+    .body[1]
+    0] Pass .. 1,15 -> 1,19
+    .returns
+      None
+    .type_comment
+      None
+  1] FunctionDef .. 2,0 -> 2,16
+    .name
+      'func'
+    .args
+      arguments
+        .vararg
+          None
+        .kwarg
+          None
+    .body[1]
+    0] Pass .. 2,12 -> 2,16
+    .returns
+      None
+    .type_comment
+      None
+"""),
+
+(r"""
+def prefunc(): pass
+""", '', 1, 1, None, 'pep8', r"""
+def func(): pass""", r"""
+def prefunc(): pass
+
+
+def func(): pass
+""", r"""
+Module .. ROOT 0,0 -> 5,0
+  .body[2]
+  0] FunctionDef .. 1,0 -> 1,19
+    .name
+      'prefunc'
+    .args
+      arguments
+        .vararg
+          None
+        .kwarg
+          None
+    .body[1]
+    0] Pass .. 1,15 -> 1,19
+    .returns
+      None
+    .type_comment
+      None
+  1] FunctionDef .. 4,0 -> 4,16
+    .name
+      'func'
+    .args
+      arguments
+        .vararg
+          None
+        .kwarg
+          None
+    .body[1]
+    0] Pass .. 4,12 -> 4,16
+    .returns
+      None
+    .type_comment
+      None
+"""),
+
+(r"""
+def prefunc(): pass
+""", '', 1, 1, None, 'pep81', r"""
+def func(): pass""", r"""
+def prefunc(): pass
+
+def func(): pass
+""", r"""
+Module .. ROOT 0,0 -> 4,0
+  .body[2]
+  0] FunctionDef .. 1,0 -> 1,19
+    .name
+      'prefunc'
+    .args
+      arguments
+        .vararg
+          None
+        .kwarg
+          None
+    .body[1]
+    0] Pass .. 1,15 -> 1,19
+    .returns
+      None
+    .type_comment
+      None
+  1] FunctionDef .. 3,0 -> 3,16
+    .name
+      'func'
+    .args
+      arguments
+        .vararg
+          None
+        .kwarg
+          None
+    .body[1]
+    0] Pass .. 3,12 -> 3,16
+    .returns
+      None
+    .type_comment
+      None
+"""),
+
+(r"""
+def prefunc(): pass
+""", '', 1, 1, None, '', r"""def func(): pass""", r"""
+def prefunc(): pass
+def func(): pass
+""", r"""
+Module .. ROOT 0,0 -> 3,0
+  .body[2]
+  0] FunctionDef .. 1,0 -> 1,19
+    .name
+      'prefunc'
+    .args
+      arguments
+        .vararg
+          None
+        .kwarg
+          None
+    .body[1]
+    0] Pass .. 1,15 -> 1,19
+    .returns
+      None
+    .type_comment
+      None
+  1] FunctionDef .. 2,0 -> 2,16
+    .name
+      'func'
+    .args
+      arguments
+        .vararg
+          None
+        .kwarg
+          None
+    .body[1]
+    0] Pass .. 2,12 -> 2,16
+    .returns
+      None
+    .type_comment
+      None
+"""),
+
+(r"""
+def prefunc(): pass
+""", '', 1, 1, None, 'pep8', r"""
+
+def func(): pass""", r"""
+def prefunc(): pass
+
+
+def func(): pass
+""", r"""
+Module .. ROOT 0,0 -> 5,0
+  .body[2]
+  0] FunctionDef .. 1,0 -> 1,19
+    .name
+      'prefunc'
+    .args
+      arguments
+        .vararg
+          None
+        .kwarg
+          None
+    .body[1]
+    0] Pass .. 1,15 -> 1,19
+    .returns
+      None
+    .type_comment
+      None
+  1] FunctionDef .. 4,0 -> 4,16
+    .name
+      'func'
+    .args
+      arguments
+        .vararg
+          None
+        .kwarg
+          None
+    .body[1]
+    0] Pass .. 4,12 -> 4,16
+    .returns
+      None
+    .type_comment
+      None
+"""),
+
+(r"""
+def prefunc(): pass
+""", '', 1, 1, None, 'pep81', r"""
+
+def func(): pass""", r"""
+def prefunc(): pass
+
+
+def func(): pass
+""", r"""
+Module .. ROOT 0,0 -> 5,0
+  .body[2]
+  0] FunctionDef .. 1,0 -> 1,19
+    .name
+      'prefunc'
+    .args
+      arguments
+        .vararg
+          None
+        .kwarg
+          None
+    .body[1]
+    0] Pass .. 1,15 -> 1,19
+    .returns
+      None
+    .type_comment
+      None
+  1] FunctionDef .. 4,0 -> 4,16
+    .name
+      'func'
+    .args
+      arguments
+        .vararg
+          None
+        .kwarg
+          None
+    .body[1]
+    0] Pass .. 4,12 -> 4,16
+    .returns
+      None
+    .type_comment
+      None
+"""),
+
+(r"""
+def prefunc(): pass
+""", '', 1, 1, None, 'pep8', r"""
+
+
+def func(): pass""", r"""
+def prefunc(): pass
+
+
+
+def func(): pass
+""", r"""
+Module .. ROOT 0,0 -> 6,0
+  .body[2]
+  0] FunctionDef .. 1,0 -> 1,19
+    .name
+      'prefunc'
+    .args
+      arguments
+        .vararg
+          None
+        .kwarg
+          None
+    .body[1]
+    0] Pass .. 1,15 -> 1,19
+    .returns
+      None
+    .type_comment
+      None
+  1] FunctionDef .. 5,0 -> 5,16
+    .name
+      'func'
+    .args
+      arguments
+        .vararg
+          None
+        .kwarg
+          None
+    .body[1]
+    0] Pass .. 5,12 -> 5,16
+    .returns
+      None
+    .type_comment
+      None
+"""),
+
+(r"""
+import stuff
+""", '', 1, 1, None, 'pep8', r"""def func(): pass""", r"""
+import stuff
+
+def func(): pass
+""", r"""
+Module .. ROOT 0,0 -> 4,0
+  .body[2]
+  0] Import .. 1,0 -> 1,12
+    .names[1]
+    0] alias .. 1,7 -> 1,12
+      .name
+        'stuff'
+      .asname
+        None
+  1] FunctionDef .. 3,0 -> 3,16
+    .name
+      'func'
+    .args
+      arguments
+        .vararg
+          None
+        .kwarg
+          None
+    .body[1]
+    0] Pass .. 3,12 -> 3,16
+    .returns
+      None
+    .type_comment
+      None
+"""),
+
+(r"""
+import stuff
+""", '', 1, 1, None, 'pep8', r"""
+def func(): pass""", r"""
+import stuff
+
+def func(): pass
+""", r"""
+Module .. ROOT 0,0 -> 4,0
+  .body[2]
+  0] Import .. 1,0 -> 1,12
+    .names[1]
+    0] alias .. 1,7 -> 1,12
+      .name
+        'stuff'
+      .asname
+        None
+  1] FunctionDef .. 3,0 -> 3,16
+    .name
+      'func'
+    .args
+      arguments
+        .vararg
+          None
+        .kwarg
+          None
+    .body[1]
+    0] Pass .. 3,12 -> 3,16
+    .returns
+      None
+    .type_comment
+      None
+"""),
+
+(r"""
+import stuff
+""", '', 1, 1, None, 'pep8', r"""
+
+def func(): pass""", r"""
+import stuff
+
+
+def func(): pass
+""", r"""
+Module .. ROOT 0,0 -> 5,0
+  .body[2]
+  0] Import .. 1,0 -> 1,12
+    .names[1]
+    0] alias .. 1,7 -> 1,12
+      .name
+        'stuff'
+      .asname
+        None
+  1] FunctionDef .. 4,0 -> 4,16
+    .name
+      'func'
+    .args
+      arguments
+        .vararg
+          None
+        .kwarg
+          None
+    .body[1]
+    0] Pass .. 4,12 -> 4,16
+    .returns
+      None
+    .type_comment
+      None
+"""),
+
+(r"""
+import stuff
+""", '', 1, 1, None, 'pep8', r"""
+
+def func(): pass""", r"""
+import stuff
+
+
+def func(): pass
+""", r"""
+Module .. ROOT 0,0 -> 5,0
+  .body[2]
+  0] Import .. 1,0 -> 1,12
+    .names[1]
+    0] alias .. 1,7 -> 1,12
+      .name
+        'stuff'
+      .asname
+        None
+  1] FunctionDef .. 4,0 -> 4,16
+    .name
+      'func'
+    .args
+      arguments
+        .vararg
+          None
+        .kwarg
+          None
+    .body[1]
+    0] Pass .. 4,12 -> 4,16
+    .returns
+      None
+    .type_comment
+      None
+"""),
+
+(r"""
+def prefunc(): pass
+""", '', 0, 0, None, None, r"""def func(): pass""", r"""
+def func(): pass
+
+
+def prefunc(): pass
+""", r"""
+Module .. ROOT 0,0 -> 5,0
+  .body[2]
+  0] FunctionDef .. 1,0 -> 1,16
+    .name
+      'func'
+    .args
+      arguments
+        .vararg
+          None
+        .kwarg
+          None
+    .body[1]
+    0] Pass .. 1,12 -> 1,16
+    .returns
+      None
+    .type_comment
+      None
+  1] FunctionDef .. 4,0 -> 4,19
+    .name
+      'prefunc'
+    .args
+      arguments
+        .vararg
+          None
+        .kwarg
+          None
+    .body[1]
+    0] Pass .. 4,15 -> 4,19
+    .returns
+      None
+    .type_comment
+      None
+"""),
+
+(r"""
+def prefunc(): pass
+""", '', 0, 0, None, 'pep81', r"""def func(): pass""", r"""
+def func(): pass
+
+def prefunc(): pass
+""", r"""
+Module .. ROOT 0,0 -> 4,0
+  .body[2]
+  0] FunctionDef .. 1,0 -> 1,16
+    .name
+      'func'
+    .args
+      arguments
+        .vararg
+          None
+        .kwarg
+          None
+    .body[1]
+    0] Pass .. 1,12 -> 1,16
+    .returns
+      None
+    .type_comment
+      None
+  1] FunctionDef .. 3,0 -> 3,19
+    .name
+      'prefunc'
+    .args
+      arguments
+        .vararg
+          None
+        .kwarg
+          None
+    .body[1]
+    0] Pass .. 3,15 -> 3,19
+    .returns
+      None
+    .type_comment
+      None
+"""),
+
+(r"""
+def prefunc(): pass
+""", '', 0, 0, None, '', r"""def func(): pass""", r"""
+def func(): pass
+def prefunc(): pass
+""", r"""
+Module .. ROOT 0,0 -> 3,0
+  .body[2]
+  0] FunctionDef .. 1,0 -> 1,16
+    .name
+      'func'
+    .args
+      arguments
+        .vararg
+          None
+        .kwarg
+          None
+    .body[1]
+    0] Pass .. 1,12 -> 1,16
+    .returns
+      None
+    .type_comment
+      None
+  1] FunctionDef .. 2,0 -> 2,19
+    .name
+      'prefunc'
+    .args
+      arguments
+        .vararg
+          None
+        .kwarg
+          None
+    .body[1]
+    0] Pass .. 2,15 -> 2,19
+    .returns
+      None
+    .type_comment
+      None
+"""),
+
+(r"""
+def prefunc(): pass
+""", '', 0, 0, None, None, r"""def func(): pass
+""", r"""
+def func(): pass
+
+
+def prefunc(): pass
+""", r"""
+Module .. ROOT 0,0 -> 5,0
+  .body[2]
+  0] FunctionDef .. 1,0 -> 1,16
+    .name
+      'func'
+    .args
+      arguments
+        .vararg
+          None
+        .kwarg
+          None
+    .body[1]
+    0] Pass .. 1,12 -> 1,16
+    .returns
+      None
+    .type_comment
+      None
+  1] FunctionDef .. 4,0 -> 4,19
+    .name
+      'prefunc'
+    .args
+      arguments
+        .vararg
+          None
+        .kwarg
+          None
+    .body[1]
+    0] Pass .. 4,15 -> 4,19
+    .returns
+      None
+    .type_comment
+      None
+"""),
+
+(r"""
+def prefunc(): pass
+""", '', 0, 0, None, None, r"""def func(): pass
+
+""", r"""
+def func(): pass
+
+
+def prefunc(): pass
+""", r"""
+Module .. ROOT 0,0 -> 5,0
+  .body[2]
+  0] FunctionDef .. 1,0 -> 1,16
+    .name
+      'func'
+    .args
+      arguments
+        .vararg
+          None
+        .kwarg
+          None
+    .body[1]
+    0] Pass .. 1,12 -> 1,16
+    .returns
+      None
+    .type_comment
+      None
+  1] FunctionDef .. 4,0 -> 4,19
+    .name
+      'prefunc'
+    .args
+      arguments
+        .vararg
+          None
+        .kwarg
+          None
+    .body[1]
+    0] Pass .. 4,15 -> 4,19
+    .returns
+      None
+    .type_comment
+      None
+"""),
+
+(r"""
+def prefunc(): pass
+""", '', 0, 0, None, None, r"""def func(): pass
+
+
+""", r"""
+def func(): pass
+
+
+def prefunc(): pass
+""", r"""
+Module .. ROOT 0,0 -> 5,0
+  .body[2]
+  0] FunctionDef .. 1,0 -> 1,16
+    .name
+      'func'
+    .args
+      arguments
+        .vararg
+          None
+        .kwarg
+          None
+    .body[1]
+    0] Pass .. 1,12 -> 1,16
+    .returns
+      None
+    .type_comment
+      None
+  1] FunctionDef .. 4,0 -> 4,19
+    .name
+      'prefunc'
+    .args
+      arguments
+        .vararg
+          None
+        .kwarg
+          None
+    .body[1]
+    0] Pass .. 4,15 -> 4,19
+    .returns
+      None
+    .type_comment
+      None
+"""),
+
+(r"""
+def prefunc(): pass
+""", '', 0, 0, None, None, r"""def func(): pass
+
+
+
+""", r"""
+def func(): pass
+
+
+
+def prefunc(): pass
+""", r"""
+Module .. ROOT 0,0 -> 6,0
+  .body[2]
+  0] FunctionDef .. 1,0 -> 1,16
+    .name
+      'func'
+    .args
+      arguments
+        .vararg
+          None
+        .kwarg
+          None
+    .body[1]
+    0] Pass .. 1,12 -> 1,16
+    .returns
+      None
+    .type_comment
+      None
+  1] FunctionDef .. 5,0 -> 5,19
+    .name
+      'prefunc'
+    .args
+      arguments
+        .vararg
+          None
+        .kwarg
+          None
+    .body[1]
+    0] Pass .. 5,15 -> 5,19
+    .returns
+      None
+    .type_comment
+      None
+"""),
+
+(r"""
+def prefunc(): pass
+def postfunc(): pass
+""", '', 1, 1, None, None, r"""def func(): pass""", r"""
+def prefunc(): pass
+
+
+def func(): pass
+
+
+def postfunc(): pass
+""", r"""
+Module .. ROOT 0,0 -> 8,0
+  .body[3]
+  0] FunctionDef .. 1,0 -> 1,19
+    .name
+      'prefunc'
+    .args
+      arguments
+        .vararg
+          None
+        .kwarg
+          None
+    .body[1]
+    0] Pass .. 1,15 -> 1,19
+    .returns
+      None
+    .type_comment
+      None
+  1] FunctionDef .. 4,0 -> 4,16
+    .name
+      'func'
+    .args
+      arguments
+        .vararg
+          None
+        .kwarg
+          None
+    .body[1]
+    0] Pass .. 4,12 -> 4,16
+    .returns
+      None
+    .type_comment
+      None
+  2] FunctionDef .. 7,0 -> 7,20
+    .name
+      'postfunc'
+    .args
+      arguments
+        .vararg
+          None
+        .kwarg
+          None
+    .body[1]
+    0] Pass .. 7,16 -> 7,20
+    .returns
+      None
+    .type_comment
+      None
+"""),
+
+(r"""
+def prefunc(): pass
+
+def postfunc(): pass
+""", '', 1, 1, None, None, r"""def func(): pass""", r"""
+def prefunc(): pass
+
+
+def func(): pass
+
+
+def postfunc(): pass
+""", r"""
+Module .. ROOT 0,0 -> 8,0
+  .body[3]
+  0] FunctionDef .. 1,0 -> 1,19
+    .name
+      'prefunc'
+    .args
+      arguments
+        .vararg
+          None
+        .kwarg
+          None
+    .body[1]
+    0] Pass .. 1,15 -> 1,19
+    .returns
+      None
+    .type_comment
+      None
+  1] FunctionDef .. 4,0 -> 4,16
+    .name
+      'func'
+    .args
+      arguments
+        .vararg
+          None
+        .kwarg
+          None
+    .body[1]
+    0] Pass .. 4,12 -> 4,16
+    .returns
+      None
+    .type_comment
+      None
+  2] FunctionDef .. 7,0 -> 7,20
+    .name
+      'postfunc'
+    .args
+      arguments
+        .vararg
+          None
+        .kwarg
+          None
+    .body[1]
+    0] Pass .. 7,16 -> 7,20
+    .returns
+      None
+    .type_comment
+      None
+"""),
+
+(r"""
+def prefunc(): pass
+
+
+def postfunc(): pass
+""", '', 1, 1, None, None, r"""def func(): pass""", r"""
+def prefunc(): pass
+
+
+def func(): pass
+
+
+def postfunc(): pass
+""", r"""
+Module .. ROOT 0,0 -> 8,0
+  .body[3]
+  0] FunctionDef .. 1,0 -> 1,19
+    .name
+      'prefunc'
+    .args
+      arguments
+        .vararg
+          None
+        .kwarg
+          None
+    .body[1]
+    0] Pass .. 1,15 -> 1,19
+    .returns
+      None
+    .type_comment
+      None
+  1] FunctionDef .. 4,0 -> 4,16
+    .name
+      'func'
+    .args
+      arguments
+        .vararg
+          None
+        .kwarg
+          None
+    .body[1]
+    0] Pass .. 4,12 -> 4,16
+    .returns
+      None
+    .type_comment
+      None
+  2] FunctionDef .. 7,0 -> 7,20
+    .name
+      'postfunc'
+    .args
+      arguments
+        .vararg
+          None
+        .kwarg
+          None
+    .body[1]
+    0] Pass .. 7,16 -> 7,20
+    .returns
+      None
+    .type_comment
+      None
+"""),
+
+(r"""
+def prefunc(): pass
+
+
+
+def postfunc(): pass
+""", '', 1, 1, None, None, r"""def func(): pass""", r"""
+def prefunc(): pass
+
+
+def func(): pass
+
+
+
+def postfunc(): pass
+""", r"""
+Module .. ROOT 0,0 -> 9,0
+  .body[3]
+  0] FunctionDef .. 1,0 -> 1,19
+    .name
+      'prefunc'
+    .args
+      arguments
+        .vararg
+          None
+        .kwarg
+          None
+    .body[1]
+    0] Pass .. 1,15 -> 1,19
+    .returns
+      None
+    .type_comment
+      None
+  1] FunctionDef .. 4,0 -> 4,16
+    .name
+      'func'
+    .args
+      arguments
+        .vararg
+          None
+        .kwarg
+          None
+    .body[1]
+    0] Pass .. 4,12 -> 4,16
+    .returns
+      None
+    .type_comment
+      None
+  2] FunctionDef .. 8,0 -> 8,20
+    .name
+      'postfunc'
+    .args
+      arguments
+        .vararg
+          None
+        .kwarg
+          None
+    .body[1]
+    0] Pass .. 8,16 -> 8,20
+    .returns
+      None
+    .type_comment
+      None
+"""),
+
+(r"""
+def prefunc(): pass
+
+
+
+
+def postfunc(): pass
+""", '', 1, 1, None, None, r"""def func(): pass""", r"""
+def prefunc(): pass
+
+
+def func(): pass
+
+
+
+
+def postfunc(): pass
+""", r"""
+Module .. ROOT 0,0 -> 10,0
+  .body[3]
+  0] FunctionDef .. 1,0 -> 1,19
+    .name
+      'prefunc'
+    .args
+      arguments
+        .vararg
+          None
+        .kwarg
+          None
+    .body[1]
+    0] Pass .. 1,15 -> 1,19
+    .returns
+      None
+    .type_comment
+      None
+  1] FunctionDef .. 4,0 -> 4,16
+    .name
+      'func'
+    .args
+      arguments
+        .vararg
+          None
+        .kwarg
+          None
+    .body[1]
+    0] Pass .. 4,12 -> 4,16
+    .returns
+      None
+    .type_comment
+      None
+  2] FunctionDef .. 9,0 -> 9,20
+    .name
+      'postfunc'
+    .args
+      arguments
+        .vararg
+          None
+        .kwarg
+          None
+    .body[1]
+    0] Pass .. 9,16 -> 9,20
+    .returns
+      None
+    .type_comment
+      None
+"""),
+
+(r"""
+def prefunc(): pass
+def postfunc(): pass
+""", '', 1, 1, None, 'pep81', r"""def func(): pass""", r"""
+def prefunc(): pass
+
+def func(): pass
+
+def postfunc(): pass
+""", r"""
+Module .. ROOT 0,0 -> 6,0
+  .body[3]
+  0] FunctionDef .. 1,0 -> 1,19
+    .name
+      'prefunc'
+    .args
+      arguments
+        .vararg
+          None
+        .kwarg
+          None
+    .body[1]
+    0] Pass .. 1,15 -> 1,19
+    .returns
+      None
+    .type_comment
+      None
+  1] FunctionDef .. 3,0 -> 3,16
+    .name
+      'func'
+    .args
+      arguments
+        .vararg
+          None
+        .kwarg
+          None
+    .body[1]
+    0] Pass .. 3,12 -> 3,16
+    .returns
+      None
+    .type_comment
+      None
+  2] FunctionDef .. 5,0 -> 5,20
+    .name
+      'postfunc'
+    .args
+      arguments
+        .vararg
+          None
+        .kwarg
+          None
+    .body[1]
+    0] Pass .. 5,16 -> 5,20
+    .returns
+      None
+    .type_comment
+      None
+"""),
+
+(r"""
+def prefunc(): pass
+def postfunc(): pass
+""", '', 1, 1, None, '', r"""def func(): pass""", r"""
+def prefunc(): pass
+def func(): pass
+def postfunc(): pass
+""", r"""
+Module .. ROOT 0,0 -> 4,0
+  .body[3]
+  0] FunctionDef .. 1,0 -> 1,19
+    .name
+      'prefunc'
+    .args
+      arguments
+        .vararg
+          None
+        .kwarg
+          None
+    .body[1]
+    0] Pass .. 1,15 -> 1,19
+    .returns
+      None
+    .type_comment
+      None
+  1] FunctionDef .. 2,0 -> 2,16
+    .name
+      'func'
+    .args
+      arguments
+        .vararg
+          None
+        .kwarg
+          None
+    .body[1]
+    0] Pass .. 2,12 -> 2,16
+    .returns
+      None
+    .type_comment
+      None
+  2] FunctionDef .. 3,0 -> 3,20
+    .name
+      'postfunc'
+    .args
+      arguments
+        .vararg
+          None
+        .kwarg
+          None
+    .body[1]
+    0] Pass .. 3,16 -> 3,20
+    .returns
+      None
+    .type_comment
+      None
+"""),
+
+(r"""
+def prefunc(): pass
+
+def postfunc(): pass
+""", '', 1, 1, None, None, r"""def func(): pass
+""", r"""
+def prefunc(): pass
+
+
+def func(): pass
+
+
+def postfunc(): pass
+""", r"""
+Module .. ROOT 0,0 -> 8,0
+  .body[3]
+  0] FunctionDef .. 1,0 -> 1,19
+    .name
+      'prefunc'
+    .args
+      arguments
+        .vararg
+          None
+        .kwarg
+          None
+    .body[1]
+    0] Pass .. 1,15 -> 1,19
+    .returns
+      None
+    .type_comment
+      None
+  1] FunctionDef .. 4,0 -> 4,16
+    .name
+      'func'
+    .args
+      arguments
+        .vararg
+          None
+        .kwarg
+          None
+    .body[1]
+    0] Pass .. 4,12 -> 4,16
+    .returns
+      None
+    .type_comment
+      None
+  2] FunctionDef .. 7,0 -> 7,20
+    .name
+      'postfunc'
+    .args
+      arguments
+        .vararg
+          None
+        .kwarg
+          None
+    .body[1]
+    0] Pass .. 7,16 -> 7,20
+    .returns
+      None
+    .type_comment
+      None
+"""),
+
+(r"""
+def prefunc(): pass
+
+def postfunc(): pass
+""", '', 1, 1, None, None, r"""def func(): pass
+
+""", r"""
+def prefunc(): pass
+
+
+def func(): pass
+
+
+
+def postfunc(): pass
+""", r"""
+Module .. ROOT 0,0 -> 9,0
+  .body[3]
+  0] FunctionDef .. 1,0 -> 1,19
+    .name
+      'prefunc'
+    .args
+      arguments
+        .vararg
+          None
+        .kwarg
+          None
+    .body[1]
+    0] Pass .. 1,15 -> 1,19
+    .returns
+      None
+    .type_comment
+      None
+  1] FunctionDef .. 4,0 -> 4,16
+    .name
+      'func'
+    .args
+      arguments
+        .vararg
+          None
+        .kwarg
+          None
+    .body[1]
+    0] Pass .. 4,12 -> 4,16
+    .returns
+      None
+    .type_comment
+      None
+  2] FunctionDef .. 8,0 -> 8,20
+    .name
+      'postfunc'
+    .args
+      arguments
+        .vararg
+          None
+        .kwarg
+          None
+    .body[1]
+    0] Pass .. 8,16 -> 8,20
+    .returns
+      None
+    .type_comment
+      None
+"""),
+
+(r"""
+class cls:
+    '''Class
+       docstring'''
+""", 'body[0]', 1, 1, None, None, r"""def meth(): pass""", r"""
+class cls:
+    '''Class
+       docstring'''
+
+    def meth(): pass
+""", r"""
+Module .. ROOT 0,0 -> 6,0
+  .body[1]
+  0] ClassDef .. 1,0 -> 5,20
+    .name
+      'cls'
+    .body[2]
+    0] Expr .. 2,4 -> 3,19
+      .value
+        Constant 'Class\n       docstring' .. 2,4 -> 3,19
+    1] FunctionDef .. 5,4 -> 5,20
+      .name
+        'meth'
+      .args
+        arguments
+          .vararg
+            None
+          .kwarg
+            None
+      .body[1]
+      0] Pass .. 5,16 -> 5,20
+      .returns
+        None
+      .type_comment
+        None
+"""),
+
+(r"""
+class cls:
+    '''Class
+       docstring'''
+""", 'body[0]', 1, 1, None, None, r"""
+def meth(): pass""", r"""
+class cls:
+    '''Class
+       docstring'''
+
+    def meth(): pass
+""", r"""
+Module .. ROOT 0,0 -> 6,0
+  .body[1]
+  0] ClassDef .. 1,0 -> 5,20
+    .name
+      'cls'
+    .body[2]
+    0] Expr .. 2,4 -> 3,19
+      .value
+        Constant 'Class\n       docstring' .. 2,4 -> 3,19
+    1] FunctionDef .. 5,4 -> 5,20
+      .name
+        'meth'
+      .args
+        arguments
+          .vararg
+            None
+          .kwarg
+            None
+      .body[1]
+      0] Pass .. 5,16 -> 5,20
+      .returns
+        None
+      .type_comment
+        None
+"""),
+
+(r"""
+class cls:
+    '''Class
+       docstring'''
+""", 'body[0]', 1, 1, None, None, r"""
+
+def meth(): pass""", r"""
+class cls:
+    '''Class
+       docstring'''
+
+
+    def meth(): pass
+""", r"""
+Module .. ROOT 0,0 -> 7,0
+  .body[1]
+  0] ClassDef .. 1,0 -> 6,20
+    .name
+      'cls'
+    .body[2]
+    0] Expr .. 2,4 -> 3,19
+      .value
+        Constant 'Class\n       docstring' .. 2,4 -> 3,19
+    1] FunctionDef .. 6,4 -> 6,20
+      .name
+        'meth'
+      .args
+        arguments
+          .vararg
+            None
+          .kwarg
+            None
+      .body[1]
+      0] Pass .. 6,16 -> 6,20
+      .returns
+        None
+      .type_comment
+        None
+"""),
+
+(r"""
+class cls:
+    def premeth(): pass
+""", 'body[0]', 1, 1, None, None, r"""def meth(): pass""", r"""
+class cls:
+    def premeth(): pass
+
+    def meth(): pass
+""", r"""
+Module .. ROOT 0,0 -> 5,0
+  .body[1]
+  0] ClassDef .. 1,0 -> 4,20
+    .name
+      'cls'
+    .body[2]
+    0] FunctionDef .. 2,4 -> 2,23
+      .name
+        'premeth'
+      .args
+        arguments
+          .vararg
+            None
+          .kwarg
+            None
+      .body[1]
+      0] Pass .. 2,19 -> 2,23
+      .returns
+        None
+      .type_comment
+        None
+    1] FunctionDef .. 4,4 -> 4,20
+      .name
+        'meth'
+      .args
+        arguments
+          .vararg
+            None
+          .kwarg
+            None
+      .body[1]
+      0] Pass .. 4,16 -> 4,20
+      .returns
+        None
+      .type_comment
+        None
+"""),
+
+(r"""
+class cls:
+    def premeth(): pass
+""", 'body[0]', 1, 1, None, None, r"""
+def meth(): pass""", r"""
+class cls:
+    def premeth(): pass
+
+    def meth(): pass
+""", r"""
+Module .. ROOT 0,0 -> 5,0
+  .body[1]
+  0] ClassDef .. 1,0 -> 4,20
+    .name
+      'cls'
+    .body[2]
+    0] FunctionDef .. 2,4 -> 2,23
+      .name
+        'premeth'
+      .args
+        arguments
+          .vararg
+            None
+          .kwarg
+            None
+      .body[1]
+      0] Pass .. 2,19 -> 2,23
+      .returns
+        None
+      .type_comment
+        None
+    1] FunctionDef .. 4,4 -> 4,20
+      .name
+        'meth'
+      .args
+        arguments
+          .vararg
+            None
+          .kwarg
+            None
+      .body[1]
+      0] Pass .. 4,16 -> 4,20
+      .returns
+        None
+      .type_comment
+        None
+"""),
+
+(r"""
+class cls:
+    def premeth(): pass
+""", 'body[0]', 1, 1, None, None, r"""
+
+def meth(): pass""", r"""
+class cls:
+    def premeth(): pass
+
+
+    def meth(): pass
+""", r"""
+Module .. ROOT 0,0 -> 6,0
+  .body[1]
+  0] ClassDef .. 1,0 -> 5,20
+    .name
+      'cls'
+    .body[2]
+    0] FunctionDef .. 2,4 -> 2,23
+      .name
+        'premeth'
+      .args
+        arguments
+          .vararg
+            None
+          .kwarg
+            None
+      .body[1]
+      0] Pass .. 2,19 -> 2,23
+      .returns
+        None
+      .type_comment
+        None
+    1] FunctionDef .. 5,4 -> 5,20
+      .name
+        'meth'
+      .args
+        arguments
+          .vararg
+            None
+          .kwarg
+            None
+      .body[1]
+      0] Pass .. 5,16 -> 5,20
+      .returns
+        None
+      .type_comment
+        None
+"""),
+
+(r"""
+class cls:
+    def postmeth(): pass
+""", 'body[0]', 0, 0, None, None, r"""def meth(): pass""", r"""
+class cls:
+    def meth(): pass
+
+    def postmeth(): pass
+""", r"""
+Module .. ROOT 0,0 -> 5,0
+  .body[1]
+  0] ClassDef .. 1,0 -> 4,24
+    .name
+      'cls'
+    .body[2]
+    0] FunctionDef .. 2,4 -> 2,20
+      .name
+        'meth'
+      .args
+        arguments
+          .vararg
+            None
+          .kwarg
+            None
+      .body[1]
+      0] Pass .. 2,16 -> 2,20
+      .returns
+        None
+      .type_comment
+        None
+    1] FunctionDef .. 4,4 -> 4,24
+      .name
+        'postmeth'
+      .args
+        arguments
+          .vararg
+            None
+          .kwarg
+            None
+      .body[1]
+      0] Pass .. 4,20 -> 4,24
+      .returns
+        None
+      .type_comment
+        None
+"""),
+
+(r"""
+class cls:
+    def postmeth(): pass
+""", 'body[0]', 0, 0, None, None, r"""def meth(): pass
+""", r"""
+class cls:
+    def meth(): pass
+
+    def postmeth(): pass
+""", r"""
+Module .. ROOT 0,0 -> 5,0
+  .body[1]
+  0] ClassDef .. 1,0 -> 4,24
+    .name
+      'cls'
+    .body[2]
+    0] FunctionDef .. 2,4 -> 2,20
+      .name
+        'meth'
+      .args
+        arguments
+          .vararg
+            None
+          .kwarg
+            None
+      .body[1]
+      0] Pass .. 2,16 -> 2,20
+      .returns
+        None
+      .type_comment
+        None
+    1] FunctionDef .. 4,4 -> 4,24
+      .name
+        'postmeth'
+      .args
+        arguments
+          .vararg
+            None
+          .kwarg
+            None
+      .body[1]
+      0] Pass .. 4,20 -> 4,24
+      .returns
+        None
+      .type_comment
+        None
+"""),
+
+(r"""
+class cls:
+    def postmeth(): pass
+""", 'body[0]', 0, 0, None, None, r"""def meth(): pass
+
+""", r"""
+class cls:
+    def meth(): pass
+
+    def postmeth(): pass
+""", r"""
+Module .. ROOT 0,0 -> 5,0
+  .body[1]
+  0] ClassDef .. 1,0 -> 4,24
+    .name
+      'cls'
+    .body[2]
+    0] FunctionDef .. 2,4 -> 2,20
+      .name
+        'meth'
+      .args
+        arguments
+          .vararg
+            None
+          .kwarg
+            None
+      .body[1]
+      0] Pass .. 2,16 -> 2,20
+      .returns
+        None
+      .type_comment
+        None
+    1] FunctionDef .. 4,4 -> 4,24
+      .name
+        'postmeth'
+      .args
+        arguments
+          .vararg
+            None
+          .kwarg
+            None
+      .body[1]
+      0] Pass .. 4,20 -> 4,24
+      .returns
+        None
+      .type_comment
+        None
+"""),
+
+(r"""
+class cls:
+    def postmeth(): pass
+""", 'body[0]', 0, 0, None, None, r"""def meth(): pass
+
+
+""", r"""
+class cls:
+    def meth(): pass
+
+
+    def postmeth(): pass
+""", r"""
+Module .. ROOT 0,0 -> 6,0
+  .body[1]
+  0] ClassDef .. 1,0 -> 5,24
+    .name
+      'cls'
+    .body[2]
+    0] FunctionDef .. 2,4 -> 2,20
+      .name
+        'meth'
+      .args
+        arguments
+          .vararg
+            None
+          .kwarg
+            None
+      .body[1]
+      0] Pass .. 2,16 -> 2,20
+      .returns
+        None
+      .type_comment
+        None
+    1] FunctionDef .. 5,4 -> 5,24
+      .name
+        'postmeth'
+      .args
+        arguments
+          .vararg
+            None
+          .kwarg
+            None
+      .body[1]
+      0] Pass .. 5,20 -> 5,24
+      .returns
+        None
+      .type_comment
+        None
+"""),
+
+(r"""
+class cls:
+    def premeth(): pass
+    def postmeth(): pass
+""", 'body[0]', 1, 1, None, None, r"""def meth(): pass""", r"""
+class cls:
+    def premeth(): pass
+
+    def meth(): pass
+
+    def postmeth(): pass
+""", r"""
+Module .. ROOT 0,0 -> 7,0
+  .body[1]
+  0] ClassDef .. 1,0 -> 6,24
+    .name
+      'cls'
+    .body[3]
+    0] FunctionDef .. 2,4 -> 2,23
+      .name
+        'premeth'
+      .args
+        arguments
+          .vararg
+            None
+          .kwarg
+            None
+      .body[1]
+      0] Pass .. 2,19 -> 2,23
+      .returns
+        None
+      .type_comment
+        None
+    1] FunctionDef .. 4,4 -> 4,20
+      .name
+        'meth'
+      .args
+        arguments
+          .vararg
+            None
+          .kwarg
+            None
+      .body[1]
+      0] Pass .. 4,16 -> 4,20
+      .returns
+        None
+      .type_comment
+        None
+    2] FunctionDef .. 6,4 -> 6,24
+      .name
+        'postmeth'
+      .args
+        arguments
+          .vararg
+            None
+          .kwarg
+            None
+      .body[1]
+      0] Pass .. 6,20 -> 6,24
+      .returns
+        None
+      .type_comment
+        None
+"""),
+
+(r"""
+class cls:
+    def premeth(): pass
+
+    def postmeth(): pass
+""", 'body[0]', 1, 1, None, None, r"""def meth(): pass""", r"""
+class cls:
+    def premeth(): pass
+
+    def meth(): pass
+
+    def postmeth(): pass
+""", r"""
+Module .. ROOT 0,0 -> 7,0
+  .body[1]
+  0] ClassDef .. 1,0 -> 6,24
+    .name
+      'cls'
+    .body[3]
+    0] FunctionDef .. 2,4 -> 2,23
+      .name
+        'premeth'
+      .args
+        arguments
+          .vararg
+            None
+          .kwarg
+            None
+      .body[1]
+      0] Pass .. 2,19 -> 2,23
+      .returns
+        None
+      .type_comment
+        None
+    1] FunctionDef .. 4,4 -> 4,20
+      .name
+        'meth'
+      .args
+        arguments
+          .vararg
+            None
+          .kwarg
+            None
+      .body[1]
+      0] Pass .. 4,16 -> 4,20
+      .returns
+        None
+      .type_comment
+        None
+    2] FunctionDef .. 6,4 -> 6,24
+      .name
+        'postmeth'
+      .args
+        arguments
+          .vararg
+            None
+          .kwarg
+            None
+      .body[1]
+      0] Pass .. 6,20 -> 6,24
+      .returns
+        None
+      .type_comment
+        None
+"""),
+
+(r"""
+class cls:
+    def premeth(): pass
+
+
+    def postmeth(): pass
+""", 'body[0]', 1, 1, None, None, r"""def meth(): pass""", r"""
+class cls:
+    def premeth(): pass
+
+    def meth(): pass
+
+
+    def postmeth(): pass
+""", r"""
+Module .. ROOT 0,0 -> 8,0
+  .body[1]
+  0] ClassDef .. 1,0 -> 7,24
+    .name
+      'cls'
+    .body[3]
+    0] FunctionDef .. 2,4 -> 2,23
+      .name
+        'premeth'
+      .args
+        arguments
+          .vararg
+            None
+          .kwarg
+            None
+      .body[1]
+      0] Pass .. 2,19 -> 2,23
+      .returns
+        None
+      .type_comment
+        None
+    1] FunctionDef .. 4,4 -> 4,20
+      .name
+        'meth'
+      .args
+        arguments
+          .vararg
+            None
+          .kwarg
+            None
+      .body[1]
+      0] Pass .. 4,16 -> 4,20
+      .returns
+        None
+      .type_comment
+        None
+    2] FunctionDef .. 7,4 -> 7,24
+      .name
+        'postmeth'
+      .args
+        arguments
+          .vararg
+            None
+          .kwarg
+            None
+      .body[1]
+      0] Pass .. 7,20 -> 7,24
+      .returns
+        None
+      .type_comment
+        None
+"""),
+
+(r"""
+class cls:
+    def premeth(): pass
+
+
+
+    def postmeth(): pass
+""", 'body[0]', 1, 1, None, None, r"""def meth(): pass""", r"""
+class cls:
+    def premeth(): pass
+
+    def meth(): pass
+
+
+
+    def postmeth(): pass
+""", r"""
+Module .. ROOT 0,0 -> 9,0
+  .body[1]
+  0] ClassDef .. 1,0 -> 8,24
+    .name
+      'cls'
+    .body[3]
+    0] FunctionDef .. 2,4 -> 2,23
+      .name
+        'premeth'
+      .args
+        arguments
+          .vararg
+            None
+          .kwarg
+            None
+      .body[1]
+      0] Pass .. 2,19 -> 2,23
+      .returns
+        None
+      .type_comment
+        None
+    1] FunctionDef .. 4,4 -> 4,20
+      .name
+        'meth'
+      .args
+        arguments
+          .vararg
+            None
+          .kwarg
+            None
+      .body[1]
+      0] Pass .. 4,16 -> 4,20
+      .returns
+        None
+      .type_comment
+        None
+    2] FunctionDef .. 8,4 -> 8,24
+      .name
+        'postmeth'
+      .args
+        arguments
+          .vararg
+            None
+          .kwarg
+            None
+      .body[1]
+      0] Pass .. 8,20 -> 8,24
+      .returns
+        None
+      .type_comment
+        None
+"""),
+
+(r"""
+class cls:
+    def premeth(): pass
+    def postmeth(): pass
+""", 'body[0]', 1, 1, None, '', r"""def meth(): pass""", r"""
+class cls:
+    def premeth(): pass
+    def meth(): pass
+    def postmeth(): pass
+""", r"""
+Module .. ROOT 0,0 -> 5,0
+  .body[1]
+  0] ClassDef .. 1,0 -> 4,24
+    .name
+      'cls'
+    .body[3]
+    0] FunctionDef .. 2,4 -> 2,23
+      .name
+        'premeth'
+      .args
+        arguments
+          .vararg
+            None
+          .kwarg
+            None
+      .body[1]
+      0] Pass .. 2,19 -> 2,23
+      .returns
+        None
+      .type_comment
+        None
+    1] FunctionDef .. 3,4 -> 3,20
+      .name
+        'meth'
+      .args
+        arguments
+          .vararg
+            None
+          .kwarg
+            None
+      .body[1]
+      0] Pass .. 3,16 -> 3,20
+      .returns
+        None
+      .type_comment
+        None
+    2] FunctionDef .. 4,4 -> 4,24
+      .name
+        'postmeth'
+      .args
+        arguments
+          .vararg
+            None
+          .kwarg
+            None
+      .body[1]
+      0] Pass .. 4,20 -> 4,24
+      .returns
+        None
+      .type_comment
+        None
+"""),
+
 ]  # END OF PUT_SLICE_STMT_DATA
 
 
@@ -15043,7 +17375,7 @@ finally:
             except Exception:
                 print(stmt, start, stop)
                 print('---')
-                print(dst)
+                print(repr(dst))
                 print('...')
                 print(src)
                 print('...')
