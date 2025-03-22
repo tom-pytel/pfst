@@ -675,17 +675,18 @@ class fstlistproxy:
     def __setitem__(self, idx: int | slice, code: Code):
         if isinstance(idx, int):
             self.owner.put(code, idx, field=self.field)
-
-        if idx.step is not None:
+        elif idx.step is not None:
             raise ValueError('step slicing not supported')
+        else:
+            self.owner.put_slice(code, idx.start, idx.stop, self.field)
 
-        self.owner.put_slice(code, idx.start, idx.stop, self.field)
-
-    def append(self, code: Code, *, fmt: Fmt = DEFAULT_SRC_EDIT_FMT, docstr: bool | str = DEFAULT_DOCSTR):
-        self.owner.put(code, self.start + len(self.asts), field=self.field, fmt=fmt, docstr=docstr)
-
-    def extend(self, code: Code, *, fmt: Fmt = DEFAULT_SRC_EDIT_FMT, docstr: bool | str = DEFAULT_DOCSTR):
-        self.owner.put_slice(code, (end := self.start + len(self.asts)), end, self.field, fmt=fmt, docstr=docstr)
+    def __delitem__(self, idx: int | slice):
+        if isinstance(idx, int):
+            self.owner.put_slice(None, idx, idx + 1, field=self.field)
+        elif idx.step is not None:
+            raise ValueError('step slicing not supported')
+        else:
+            self.owner.put_slice(None, idx.start, idx.stop, self.field)
 
     def copy(self, *, fix: bool = True, fmt: Fmt = DEFAULT_SRC_EDIT_FMT, docstr: bool | str = DEFAULT_DOCSTR) -> 'FST':
         return self.owner.get_slice(start := self.start, start + len(self.asts), self.field, fix=fix, cut=False,
@@ -694,6 +695,12 @@ class fstlistproxy:
     def cut(self, *, fix: bool = True, fmt: Fmt = DEFAULT_SRC_EDIT_FMT, docstr: bool | str = DEFAULT_DOCSTR) -> 'FST':
         return self.owner.get_slice(start := self.start, start + len(self.asts), self.field, fix=fix, cut=True,
                                     fmt=fmt, docstr=docstr)
+
+    def append(self, code: Code, *, fmt: Fmt = DEFAULT_SRC_EDIT_FMT, docstr: bool | str = DEFAULT_DOCSTR):
+        self.owner.put(code, self.start + len(self.asts), field=self.field, fmt=fmt, docstr=docstr)
+
+    def extend(self, code: Code, *, fmt: Fmt = DEFAULT_SRC_EDIT_FMT, docstr: bool | str = DEFAULT_DOCSTR):
+        self.owner.put_slice(code, (end := self.start + len(self.asts)), end, self.field, fmt=fmt, docstr=docstr)
 
 
 class FSTSrcEdit:
@@ -3590,22 +3597,13 @@ class FST:
 
 
 
-    def get(self, start: int | str | None = None, stop: int | str | None | Literal[False] = False,
-            field: str | None = None, *, fix: bool = True, cut: bool = False,
+    def get(self, start: int | None = None, stop: int | None | Literal[False] = False, field: str | None = None, *,
+            fix: bool = True, cut: bool = False,
             fmt: Fmt = DEFAULT_SRC_EDIT_FMT, docstr: bool | str = DEFAULT_DOCSTR) -> Optional['FST']:
         """Get an individual child node or a slice of child nodes from `self`."""
 
-        if isinstance(start, str):
-            raise NotImplementedError
-
         if stop is not False:
-            if not isinstance(stop, str):
-                return self.get_slice(start, stop, field, fix=fix, cut=cut, fmt=fmt, docstr=docstr)
-
-            if field is not None:
-                raise ValueError('cannot specify two field values')
-
-            field = stop
+            return self.get_slice(start, stop, field, fix=fix, cut=cut, fmt=fmt, docstr=docstr)
 
         field, body = _fixup_field_body(self.a, field)
 
@@ -3619,7 +3617,7 @@ class FST:
 
     def put(self, code: Code | None, start: int | None = None, stop: int | None | Literal['False'] = False,
             field: str | None = None, *, fix: bool = True,
-            fmt: Fmt = DEFAULT_SRC_EDIT_FMT, docstr: bool | str = DEFAULT_DOCSTR) -> Optional['FST']:  # -> Self:
+            fmt: Fmt = DEFAULT_SRC_EDIT_FMT, docstr: bool | str = DEFAULT_DOCSTR) -> 'FST':  # -> Self:
         """Put an individual child node or a slice of child nodes to `self`.
 
         If the `code` being put is an `AST` or `FST` then it is consumed and should not be considered valid after this
@@ -3664,9 +3662,9 @@ class FST:
 
 
 
-    def put_slice(self, code: Code | None, start: int | None = None, stop: int | None = None, field: str | None = None,
-                  *, fix: bool = True,
-                  fmt: Fmt = DEFAULT_SRC_EDIT_FMT, docstr: bool | str = DEFAULT_DOCSTR) -> Optional['FST']:  # -> Self:
+    def put_slice(self, code: Code | None, start: int | None = None, stop: int | None = None,
+                  field: str | None = None, *, fix: bool = True,
+                  fmt: Fmt = DEFAULT_SRC_EDIT_FMT, docstr: bool | str = DEFAULT_DOCSTR) -> 'FST':  # -> Self:
         """Put an a slice of child nodes to `self`.
 
         If the `code` being put is an `AST` or `FST` then it is consumed and should not be considered valid after this
