@@ -15383,6 +15383,17 @@ finally:
         a.body[0].value.f.put_slice('(a, \\\n)', 0, 3)
         self.assertEqual(a.f.src, '(a, \\\n)')
 
+    def test_fstlistproxy(self):
+        a = parse('''
+class cls:
+    def prefunc(): pass
+    def postfunc(): pass
+            '''.strip())
+        self.assertIsInstance(a.f.body, fstlistproxy)
+        self.assertIsInstance(a.f.body[0].body, fstlistproxy)
+        a.f.body[0].body.cut()
+        self.assertIsInstance(a.f.body[0].body, fstlistproxy)
+
 
 def regen_pars_data():
     newlines = []

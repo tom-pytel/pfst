@@ -3175,11 +3175,10 @@ class FST:
         return head + '\n???'
 
     def __getattr__(self, name) -> Any:
-        if child := getattr(self.a, name):
-            if isinstance(child, list):
-                return fstlistproxy(child, self, name)
-            elif isinstance(child, AST):
-                return child.f
+        if isinstance(child := getattr(self.a, name), list):
+            return fstlistproxy(child, self, name)
+        elif child and isinstance(child, AST):
+            return child.f
 
         return child
 
