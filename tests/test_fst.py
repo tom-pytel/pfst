@@ -11392,9 +11392,10 @@ import stuff
 """, '', 1, 1, None, 'pep8', r"""def func(): pass""", r"""
 import stuff
 
+
 def func(): pass
 """, r"""
-Module .. ROOT 0,0 -> 4,0
+Module .. ROOT 0,0 -> 5,0
   .body[2]
   0] Import .. 1,0 -> 1,12
     .names[1]
@@ -11403,7 +11404,7 @@ Module .. ROOT 0,0 -> 4,0
         'stuff'
       .asname
         None
-  1] FunctionDef .. 3,0 -> 3,16
+  1] FunctionDef .. 4,0 -> 4,16
     .name
       'func'
     .args
@@ -11413,7 +11414,7 @@ Module .. ROOT 0,0 -> 4,0
         .kwarg
           None
     .body[1]
-    0] Pass .. 3,12 -> 3,16
+    0] Pass .. 4,12 -> 4,16
     .returns
       None
     .type_comment
@@ -11426,9 +11427,10 @@ import stuff
 def func(): pass""", r"""
 import stuff
 
+
 def func(): pass
 """, r"""
-Module .. ROOT 0,0 -> 4,0
+Module .. ROOT 0,0 -> 5,0
   .body[2]
   0] Import .. 1,0 -> 1,12
     .names[1]
@@ -11437,7 +11439,7 @@ Module .. ROOT 0,0 -> 4,0
         'stuff'
       .asname
         None
-  1] FunctionDef .. 3,0 -> 3,16
+  1] FunctionDef .. 4,0 -> 4,16
     .name
       'func'
     .args
@@ -11447,7 +11449,7 @@ Module .. ROOT 0,0 -> 4,0
         .kwarg
           None
     .body[1]
-    0] Pass .. 3,12 -> 3,16
+    0] Pass .. 4,12 -> 4,16
     .returns
       None
     .type_comment

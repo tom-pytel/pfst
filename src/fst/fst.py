@@ -1565,9 +1565,8 @@ class FSTSrcEdit:
 
                 if is_pep8:
                     if isinstance(put_body[0], NAMED_SCOPE):
-                        if pep8space == 1 or isinstance(a := fpre.a, (Import, ImportFrom)) or (
-                                not fpre.pfield.idx and isinstance(a, Expr) and isinstance(v := a.value, Constant) and  # docstring
-                                isinstance(v.value, str)):
+                        if pep8space == 1 or (not fpre.pfield.idx and isinstance(a := fpre.a, Expr) and   # docstring
+                                              isinstance(v := a.value, Constant) and isinstance(v.value, str)):
                             want = 1
                         else:
                             want = pep8space
@@ -1584,9 +1583,7 @@ class FSTSrcEdit:
 
                             prepend += need
 
-            if (not is_pep8 or not fpost or not isinstance(put_body[-1], NAMED_SCOPE) or  # trailing space
-                not isinstance(fpost.a, NAMED_SCOPE)
-            ):
+            if not is_pep8 or not fpost or not isinstance(put_body[-1], NAMED_SCOPE):  # trailing space
                 postpend = bool((l := put_lines[-1]) and not re_empty_line.match(l))
 
             else:
