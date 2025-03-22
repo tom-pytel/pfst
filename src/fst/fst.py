@@ -1628,6 +1628,8 @@ class FSTSrcEdit:
                                 del_else_and_fin=False, ret_all=True))
 
 
+        raise NotImplementedError
+
 
         return copy_loc
 
@@ -1990,6 +1992,9 @@ class FST:
             is_list = isinstance(child, list)
 
             if compact:
+                if child is None:
+                    continue
+
                 if name in ('ctx', 'op'):
                     linefunc(f'{sind}{cind}.{name} {child.__class__.__qualname__ if isinstance(child, AST) else child}')
 

@@ -1300,7 +1300,6 @@ Module .. ROOT 0,0 -> 0,53
           .op Add
           .right Constant 1 .. 0,49 -> 0,50
       .ctx Load
-    .type_comment None
 """, r"""
 Tuple .. ROOT 0,0 -> 2,1
   .elts[3]
@@ -1357,7 +1356,6 @@ Module .. ROOT 0,0 -> 0,37
         .value Name '__main__' Load .. 0,19 -> 0,27
         .attr '__dict__'
         .ctx Load
-    .type_comment None
 """, r"""
 Dict .. ROOT 0,0 -> 1,1
   .keys[1]
@@ -1430,7 +1428,6 @@ Module .. ROOT 0,0 -> 4,1
               .ctx Load
           .is_async
             0
-    .type_comment None
 """, r"""
 Dict .. ROOT 0,0 -> 3,1
   .keys[2]
@@ -1553,7 +1550,6 @@ Module .. ROOT 0,0 -> 0,7
       0] Name 'a' Store .. 0,1 -> 0,2
       .ctx Store
     .value Name 'c' Load .. 0,6 -> 0,7
-    .type_comment None
 """, r"""
 List .. ROOT 0,0 -> 0,3
   .elts[1]
@@ -1689,7 +1685,6 @@ Module .. ROOT 0,0 -> 1,10
       0] Tuple .. 1,4 -> 1,6
         .ctx Store
       .value Name 'c' Load .. 1,9 -> 1,10
-      .type_comment None
 """, r"""
 Tuple .. ROOT 0,0 -> 0,6
   .elts[2]
@@ -1723,7 +1718,6 @@ Module .. ROOT 0,0 -> 1,16
         0] Name 'tm' Load .. 1,10 -> 1,12
         1] Name 'yy' Load .. 1,14 -> 1,16
         .ctx Load
-      .type_comment None
 """, r"""
 Tuple .. ROOT 0,0 -> 0,5
   .elts[1]
@@ -3277,8 +3271,6 @@ Module .. ROOT 0,0 -> 0,13
     .name 'f'
     .body[1]
     0] Pass .. 0,9 -> 0,13
-    .returns None
-    .type_comment None
 """),
 
 (r"""
@@ -3316,8 +3308,6 @@ Module .. ROOT 0,0 -> 0,13
     .name 'f'
     .body[1]
     0] Pass .. 0,9 -> 0,13
-    .returns None
-    .type_comment None
 """),
 
 (r"""
@@ -3349,8 +3339,6 @@ Module .. ROOT 0,0 -> 0,13
     .name 'f'
     .body[1]
     0] Pass .. 0,9 -> 0,13
-    .returns None
-    .type_comment None
 """),
 
 (r"""
@@ -3381,8 +3369,6 @@ Module .. ROOT 0,0 -> 0,13
     .name 'f'
     .body[1]
     0] Pass .. 0,9 -> 0,13
-    .returns None
-    .type_comment None
 """),
 
 (r"""
@@ -3412,8 +3398,6 @@ Module .. ROOT 0,0 -> 0,13
     .name 'f'
     .body[1]
     0] Pass .. 0,9 -> 0,13
-    .returns None
-    .type_comment None
 """),
 
 (r"""
@@ -3442,8 +3426,6 @@ Module .. ROOT 0,0 -> 0,13
     .name 'f'
     .body[1]
     0] Pass .. 0,9 -> 0,13
-    .returns None
-    .type_comment None
 """),
 
 (r"""
@@ -3472,8 +3454,6 @@ Module .. ROOT 0,0 -> 0,13
     .name 'f'
     .body[1]
     0] Pass .. 0,9 -> 0,13
-    .returns None
-    .type_comment None
 """),
 
 (r"""
@@ -3506,8 +3486,6 @@ Module .. ROOT 0,0 -> 1,13
     .name 'f'
     .body[1]
     0] Pass .. 1,9 -> 1,13
-    .returns None
-    .type_comment None
 """),
 
 (r"""
@@ -3608,8 +3586,6 @@ Module .. ROOT 0,0 -> 6,0
     .name 'func1'
     .body[1]
     0] Break .. 2,4 -> 2,9
-    .returns None
-    .type_comment None
   1] Continue .. 5,0 -> 5,8
 """, r"""
 Module .. ROOT 0,0 -> 1,8
@@ -3618,8 +3594,6 @@ Module .. ROOT 0,0 -> 1,8
     .name 'func0'
     .body[1]
     0] Pass .. 1,4 -> 1,8
-    .returns None
-    .type_comment None
 """),
 
 (r"""
@@ -3646,8 +3620,6 @@ Module .. ROOT 0,0 -> 6,0
     .name 'func0'
     .body[1]
     0] Pass .. 2,4 -> 2,8
-    .returns None
-    .type_comment None
   1] Continue .. 5,0 -> 5,8
 """, r"""
 Module .. ROOT 0,0 -> 1,9
@@ -3656,8 +3628,6 @@ Module .. ROOT 0,0 -> 1,9
     .name 'func1'
     .body[1]
     0] Break .. 1,4 -> 1,9
-    .returns None
-    .type_comment None
 """),
 
 (r"""
@@ -3685,8 +3655,6 @@ Module .. ROOT 0,0 -> 7,0
     .name 'func1'
     .body[1]
     0] Break .. 3,4 -> 3,9
-    .returns None
-    .type_comment None
   1] Continue .. 6,0 -> 6,8
 """, r"""
 Module .. ROOT 0,0 -> 1,8
@@ -3695,8 +3663,6 @@ Module .. ROOT 0,0 -> 1,8
     .name 'func0'
     .body[1]
     0] Pass .. 1,4 -> 1,8
-    .returns None
-    .type_comment None
 """),
 
 (r"""
@@ -3724,8 +3690,6 @@ Module .. ROOT 0,0 -> 7,0
     .name 'func0'
     .body[1]
     0] Pass .. 2,4 -> 2,8
-    .returns None
-    .type_comment None
   1] Continue .. 6,0 -> 6,8
 """, r"""
 Module .. ROOT 0,0 -> 1,9
@@ -3734,8 +3698,6 @@ Module .. ROOT 0,0 -> 1,9
     .name 'func1'
     .body[1]
     0] Break .. 1,4 -> 1,9
-    .returns None
-    .type_comment None
 """),
 
 (r"""
@@ -3764,8 +3726,6 @@ Module .. ROOT 0,0 -> 6,0
       .name 'meth1'
       .body[1]
       0] Break .. 3,8 -> 3,13
-      .returns None
-      .type_comment None
   1] Continue .. 5,0 -> 5,8
 """, r"""
 Module .. ROOT 0,0 -> 1,8
@@ -3774,8 +3734,6 @@ Module .. ROOT 0,0 -> 1,8
     .name 'meth0'
     .body[1]
     0] Pass .. 1,4 -> 1,8
-    .returns None
-    .type_comment None
 """),
 
 (r"""
@@ -3804,8 +3762,6 @@ Module .. ROOT 0,0 -> 6,0
       .name 'meth0'
       .body[1]
       0] Pass .. 3,8 -> 3,12
-      .returns None
-      .type_comment None
   1] Continue .. 5,0 -> 5,8
 """, r"""
 Module .. ROOT 0,0 -> 1,9
@@ -3814,8 +3770,6 @@ Module .. ROOT 0,0 -> 1,9
     .name 'meth1'
     .body[1]
     0] Break .. 1,4 -> 1,9
-    .returns None
-    .type_comment None
 """),
 
 (r"""
@@ -3945,8 +3899,6 @@ Module .. ROOT 0,0 -> 1,9
       .value Name 'i' Load .. 1,4 -> 1,5
     1] Expr .. 1,8 -> 1,9
       .value Name 'j' Load .. 1,8 -> 1,9
-    .returns None
-    .type_comment None
 """),
 
 (r"""
@@ -3969,8 +3921,6 @@ Module .. ROOT 0,0 -> 1,9
       .value Name 'i' Load .. 1,4 -> 1,5
     1] Expr .. 1,8 -> 1,9
       .value Name 'j' Load .. 1,8 -> 1,9
-    .returns None
-    .type_comment None
 """),
 
 (r"""
@@ -3990,8 +3940,6 @@ Module .. ROOT 0,0 -> 4,0
     .body[1]
     0] Expr .. 3,2 -> 3,3
       .value Name 'k' Load .. 3,2 -> 3,3
-    .returns None
-    .type_comment None
 """, r"""
 Module .. ROOT 0,0 -> 0,1
   .body[1]
@@ -4019,8 +3967,6 @@ Module .. ROOT 0,0 -> 5,0
       .value Name 'i' Load .. 2,4 -> 2,5
     1] Expr .. 4,2 -> 4,3
       .value Name 'k' Load .. 4,2 -> 4,3
-    .returns None
-    .type_comment None
 """, r"""
 Module .. ROOT 0,0 -> 0,1
   .body[1]
@@ -4046,8 +3992,6 @@ Module .. ROOT 0,0 -> 4,0
     .body[1]
     0] Expr .. 3,2 -> 3,3
       .value Name 'k' Load .. 3,2 -> 3,3
-    .returns None
-    .type_comment None
 """, r"""
 Module .. ROOT 0,0 -> 0,1
   .body[1]
@@ -4076,8 +4020,6 @@ Module .. ROOT 0,0 -> 5,0
       .value Name 'i' Load .. 2,4 -> 2,5
     1] Expr .. 4,2 -> 4,3
       .value Name 'k' Load .. 4,2 -> 4,3
-    .returns None
-    .type_comment None
 """, r"""
 Module .. ROOT 0,0 -> 0,1
   .body[1]
@@ -4104,8 +4046,6 @@ Module .. ROOT 0,0 -> 5,0
     .body[1]
     0] Expr .. 4,4 -> 4,5
       .value Name 'k' Load .. 4,4 -> 4,5
-    .returns None
-    .type_comment None
 """, r"""
 Module .. ROOT 0,0 -> 0,1
   .body[1]
@@ -4135,8 +4075,6 @@ Module .. ROOT 0,0 -> 6,0
       .value Name 'i' Load .. 2,4 -> 2,5
     1] Expr .. 5,4 -> 5,5
       .value Name 'k' Load .. 5,4 -> 5,5
-    .returns None
-    .type_comment None
 """, r"""
 Module .. ROOT 0,0 -> 0,1
   .body[1]
@@ -4747,7 +4685,6 @@ Module .. ROOT 0,0 -> 1,1
     .targets[1]
     0] Name 'i' Store .. 0,0 -> 0,1
     .value Constant 2 .. 1,0 -> 1,1
-    .type_comment None
 """),
 
 (r"""
@@ -4805,8 +4742,6 @@ Module .. ROOT 0,0 -> 4,0
     0] Pass .. 1,5 -> 1,9
     .handlers[1]
     0] ExceptHandler .. 2,0 -> 2,12
-      .type None
-      .name None
       .body[1]
       0] Pass .. 2,8 -> 2,12
     .finalbody[1]
@@ -4834,8 +4769,6 @@ Module .. ROOT 0,0 -> 4,0
     0] Pass .. 1,5 -> 1,9
     .handlers[1]
     0] ExceptHandler .. 2,0 -> 2,12
-      .type None
-      .name None
       .body[1]
       0] Pass .. 2,8 -> 2,12
     .finalbody[1]
@@ -4871,8 +4804,6 @@ Module .. ROOT 0,0 -> 4,0
 Module .. ROOT 0,0 -> 1,8
   .body[1]
   0] ExceptHandler .. 0,0 -> 1,8
-    .type None
-    .name None
     .body[1]
     0] Pass .. 1,4 -> 1,8
 """),
@@ -4900,8 +4831,6 @@ Module .. ROOT 0,0 -> 4,0
 Module .. ROOT 0,0 -> 0,12
   .body[1]
   0] ExceptHandler .. 0,0 -> 0,12
-    .type None
-    .name None
     .body[1]
     0] Pass .. 0,8 -> 0,12
 """),
@@ -4930,8 +4859,6 @@ Module .. ROOT 0,0 -> 5,0
 Module .. ROOT 0,0 -> 0,12
   .body[1]
   0] ExceptHandler .. 0,0 -> 0,12
-    .type None
-    .name None
     .body[1]
     0] Pass .. 0,8 -> 0,12
 """),
@@ -4962,8 +4889,6 @@ Module .. ROOT 0,0 -> 6,0
 Module .. ROOT 0,0 -> 0,12
   .body[1]
   0] ExceptHandler .. 0,0 -> 0,12
-    .type None
-    .name None
     .body[1]
     0] Pass .. 0,8 -> 0,12
 """),
@@ -4987,8 +4912,6 @@ Module .. ROOT 0,0 -> 5,0
     0] Pass .. 1,5 -> 1,9
     .handlers[1]
     0] ExceptHandler .. 2,0 -> 2,7
-      .type None
-      .name None
     .orelse[1]
     0] Pass .. 3,6 -> 3,10
     .finalbody[1]
@@ -5017,8 +4940,6 @@ Module .. ROOT 0,0 -> 5,0
     0] Pass .. 1,5 -> 1,9
     .handlers[1]
     0] ExceptHandler .. 2,0 -> 2,7
-      .type None
-      .name None
     .orelse[1]
     0] Pass .. 3,6 -> 3,10
     .finalbody[1]
@@ -5047,8 +4968,6 @@ Module .. ROOT 0,0 -> 5,0
     0] Pass .. 1,5 -> 1,9
     .handlers[1]
     0] ExceptHandler .. 2,0 -> 2,7
-      .type None
-      .name None
     .orelse[1]
     0] Pass .. 3,6 -> 3,10
     .finalbody[1]
@@ -5079,8 +4998,6 @@ Module .. ROOT 0,0 -> 6,0
     0] Pass .. 1,5 -> 1,9
     .handlers[1]
     0] ExceptHandler .. 2,0 -> 2,7
-      .type None
-      .name None
     .orelse[1]
     0] Pass .. 4,6 -> 4,10
     .finalbody[1]
@@ -7618,7 +7535,6 @@ Module .. ROOT 0,0 -> 0,14
       2] Name 'd' Store .. 0,7 -> 0,8
       .ctx Store
     .value Name 'c' Load .. 0,13 -> 0,14
-    .type_comment None
 """),
 
 (r"""
@@ -7675,7 +7591,6 @@ Module .. ROOT 0,0 -> 2,8
       .ctx Load
     .body[1]
     0] Pass .. 2,4 -> 2,8
-    .type_comment None
 """),
 
 (r"""
@@ -7698,7 +7613,6 @@ Module .. ROOT 0,0 -> 1,21
       1] Name 'filename' Load .. 1,3 -> 1,11
       2] Name 'headers' Load .. 1,13 -> 1,20
       .ctx Load
-    .type_comment None
 """),
 
 (r"""
@@ -8777,8 +8691,6 @@ Module .. ROOT 0,0 -> 5,0
         .test Constant 2 .. 4,9 -> 4,10
         .body[1]
         0] Break .. 4,12 -> 4,17
-    .returns None
-    .type_comment None
 """),
 
 (r"""
@@ -8809,8 +8721,6 @@ Module .. ROOT 0,0 -> 7,0
         .test Constant 2 .. 5,9 -> 5,10
         .body[1]
         0] Break .. 5,12 -> 5,17
-    .returns None
-    .type_comment None
 """),
 
 (r"""
@@ -8852,8 +8762,6 @@ Module .. ROOT 0,0 -> 10,0
           .test Constant 3 .. 7,9 -> 7,10
           .body[1]
           0] Continue .. 8,8 -> 8,16
-    .returns None
-    .type_comment None
 """),
 
 (r"""
@@ -8883,8 +8791,6 @@ Module .. ROOT 0,0 -> 7,0
       .test Constant 1 .. 2,7 -> 2,8
       .body[1]
       0] Pass .. 3,8 -> 3,12
-    .returns None
-    .type_comment None
 """),
 
 (r"""
@@ -8913,8 +8819,6 @@ Module .. ROOT 0,0 -> 6,0
       .test Constant 1 .. 2,7 -> 2,8
       .body[1]
       0] Pass .. 3,8 -> 3,12
-    .returns None
-    .type_comment None
 """),
 
 (r"""
@@ -8943,8 +8847,6 @@ Module .. ROOT 0,0 -> 6,0
       .test Constant 1 .. 2,7 -> 2,8
       .body[1]
       0] Pass .. 3,8 -> 3,12
-    .returns None
-    .type_comment None
 """),
 
 (r"""
@@ -8972,8 +8874,6 @@ Module .. ROOT 0,0 -> 5,0
       .test Constant 1 .. 2,7 -> 2,8
       .body[1]
       0] Pass .. 3,8 -> 3,12
-    .returns None
-    .type_comment None
 """),
 
 (r"""
@@ -9013,8 +8913,6 @@ Module .. ROOT 0,0 -> 8,0
         .test Constant 2 .. 5,9 -> 5,10
         .body[1]
         0] Break .. 5,12 -> 5,17
-    .returns None
-    .type_comment None
 """),
 
 (r"""""", None, 0, 0, None, None, r"""i""", r"""i
@@ -9147,8 +9045,6 @@ Module .. ROOT 0,0 -> 6,0
         .test Constant 2 .. 5,11 -> 5,12
         .body[1]
         0] Pass .. 5,14 -> 5,18
-    .returns None
-    .type_comment None
 """),
 
 (r"""
@@ -9177,8 +9073,6 @@ Module .. ROOT 0,0 -> 6,0
         .body[1]
         0] Pass .. 4,14 -> 4,18
       1] Break .. 5,8 -> 5,13
-    .returns None
-    .type_comment None
 """),
 
 (r"""
@@ -9209,8 +9103,6 @@ Module .. ROOT 0,0 -> 7,0
         .test Constant 2 .. 5,11 -> 5,12
         .body[1]
         0] Pass .. 6,12 -> 6,16
-    .returns None
-    .type_comment None
 """),
 
 (r"""
@@ -9241,8 +9133,6 @@ Module .. ROOT 0,0 -> 7,0
         .body[1]
         0] Pass .. 5,12 -> 5,16
       1] Break .. 6,8 -> 6,13
-    .returns None
-    .type_comment None
 """),
 
 (r"""
@@ -9278,10 +9168,6 @@ Module .. ROOT 0,0 -> 7,0
           .test Constant 3 .. 6,13 -> 6,14
           .body[1]
           0] Raise .. 6,16 -> 6,21
-            .exc None
-            .cause None
-    .returns None
-    .type_comment None
 """),
 
 (r"""
@@ -9316,11 +9202,7 @@ Module .. ROOT 0,0 -> 7,0
           .test Constant 3 .. 5,13 -> 5,14
           .body[1]
           0] Raise .. 5,16 -> 5,21
-            .exc None
-            .cause None
       1] Break .. 6,8 -> 6,13
-    .returns None
-    .type_comment None
 """),
 
 (r"""
@@ -9356,10 +9238,6 @@ Module .. ROOT 0,0 -> 7,0
           .test Constant 3 .. 6,11 -> 6,12
           .body[1]
           0] Raise .. 6,14 -> 6,19
-            .exc None
-            .cause None
-    .returns None
-    .type_comment None
 """),
 
 (r"""
@@ -9394,11 +9272,7 @@ Module .. ROOT 0,0 -> 7,0
           .test Constant 3 .. 5,11 -> 5,12
           .body[1]
           0] Raise .. 5,14 -> 5,19
-            .exc None
-            .cause None
         1] Break .. 6,8 -> 6,13
-    .returns None
-    .type_comment None
 """),
 
 (r"""
@@ -9416,8 +9290,6 @@ Module .. ROOT 0,0 -> 4,0
     .body[1]
     0] Expr .. 3,4 -> 3,5
       .value Name 'i' Load .. 3,4 -> 3,5
-    .returns None
-    .type_comment None
 """),
 
 (r"""
@@ -9435,8 +9307,6 @@ Module .. ROOT 0,0 -> 4,0
     .body[1]
     0] Expr .. 2,4 -> 2,5
       .value Name 'i' Load .. 2,4 -> 2,5
-    .returns None
-    .type_comment None
 """),
 
 (r"""
@@ -9456,8 +9326,6 @@ Module .. ROOT 0,0 -> 4,0
       .value Name 'i' Load .. 3,4 -> 3,5
     1] Expr .. 3,8 -> 3,9
       .value Name 'j' Load .. 3,8 -> 3,9
-    .returns None
-    .type_comment None
 """),
 
 (r"""
@@ -9478,8 +9346,6 @@ Module .. ROOT 0,0 -> 5,0
       .value Name 'i' Load .. 2,4 -> 2,5
     1] Expr .. 4,4 -> 4,5
       .value Name 'j' Load .. 4,4 -> 4,5
-    .returns None
-    .type_comment None
 """),
 
 (r"""
@@ -9499,8 +9365,6 @@ Module .. ROOT 0,0 -> 4,0
       .value Name 'i' Load .. 2,4 -> 2,5
     1] Expr .. 2,8 -> 2,9
       .value Name 'j' Load .. 2,8 -> 2,9
-    .returns None
-    .type_comment None
 """),
 
 (r"""
@@ -9526,8 +9390,6 @@ Module .. ROOT 0,0 -> 7,0
       .value Name 'i' Load .. 3,4 -> 3,5
     1] Expr .. 6,2 -> 6,3
       .value Name 'j' Load .. 6,2 -> 6,3
-    .returns None
-    .type_comment None
 """),
 
 (r"""
@@ -9551,8 +9413,6 @@ Module .. ROOT 0,0 -> 5,0
       .value Name 'i' Load .. 2,4 -> 2,5
     1] Expr .. 4,4 -> 4,5
       .value Name 'j' Load .. 4,4 -> 4,5
-    .returns None
-    .type_comment None
 """),
 
 (r"""
@@ -9578,8 +9438,6 @@ Module .. ROOT 0,0 -> 7,0
       .value Name 'i' Load .. 2,4 -> 2,5
     1] Expr .. 5,2 -> 5,3
       .value Name 'j' Load .. 5,2 -> 5,3
-    .returns None
-    .type_comment None
 """),
 
 (r"""""", '', 0, 0, None, 'pep8', r"""def func(): pass""", r"""def func(): pass
@@ -9590,8 +9448,6 @@ Module .. ROOT 0,0 -> 1,0
     .name 'func'
     .body[1]
     0] Pass .. 0,12 -> 0,16
-    .returns None
-    .type_comment None
 """),
 
 (r"""""", '', 0, 0, None, 'pep8', r"""
@@ -9604,8 +9460,6 @@ Module .. ROOT 0,0 -> 2,0
     .name 'func'
     .body[1]
     0] Pass .. 1,12 -> 1,16
-    .returns None
-    .type_comment None
 """),
 
 (r"""'''Module
@@ -9622,8 +9476,6 @@ Module .. ROOT 0,0 -> 4,0
     .name 'func'
     .body[1]
     0] Pass .. 3,12 -> 3,16
-    .returns None
-    .type_comment None
 """),
 
 (r"""'''Module
@@ -9640,8 +9492,6 @@ Module .. ROOT 0,0 -> 4,0
     .name 'func'
     .body[1]
     0] Pass .. 3,12 -> 3,16
-    .returns None
-    .type_comment None
 """),
 
 (r"""'''Module
@@ -9659,8 +9509,6 @@ Module .. ROOT 0,0 -> 4,0
     .name 'func'
     .body[1]
     0] Pass .. 3,12 -> 3,16
-    .returns None
-    .type_comment None
 """),
 
 (r"""'''Module
@@ -9680,8 +9528,6 @@ Module .. ROOT 0,0 -> 5,0
     .name 'func'
     .body[1]
     0] Pass .. 4,12 -> 4,16
-    .returns None
-    .type_comment None
 """),
 
 (r"""
@@ -9698,14 +9544,10 @@ Module .. ROOT 0,0 -> 5,0
     .name 'prefunc'
     .body[1]
     0] Pass .. 1,15 -> 1,19
-    .returns None
-    .type_comment None
   1] FunctionDef .. 4,0 -> 4,16
     .name 'func'
     .body[1]
     0] Pass .. 4,12 -> 4,16
-    .returns None
-    .type_comment None
 """),
 
 (r"""
@@ -9721,14 +9563,10 @@ Module .. ROOT 0,0 -> 4,0
     .name 'prefunc'
     .body[1]
     0] Pass .. 1,15 -> 1,19
-    .returns None
-    .type_comment None
   1] FunctionDef .. 3,0 -> 3,16
     .name 'func'
     .body[1]
     0] Pass .. 3,12 -> 3,16
-    .returns None
-    .type_comment None
 """),
 
 (r"""
@@ -9743,14 +9581,10 @@ Module .. ROOT 0,0 -> 3,0
     .name 'prefunc'
     .body[1]
     0] Pass .. 1,15 -> 1,19
-    .returns None
-    .type_comment None
   1] FunctionDef .. 2,0 -> 2,16
     .name 'func'
     .body[1]
     0] Pass .. 2,12 -> 2,16
-    .returns None
-    .type_comment None
 """),
 
 (r"""
@@ -9768,14 +9602,10 @@ Module .. ROOT 0,0 -> 5,0
     .name 'prefunc'
     .body[1]
     0] Pass .. 1,15 -> 1,19
-    .returns None
-    .type_comment None
   1] FunctionDef .. 4,0 -> 4,16
     .name 'func'
     .body[1]
     0] Pass .. 4,12 -> 4,16
-    .returns None
-    .type_comment None
 """),
 
 (r"""
@@ -9792,14 +9622,10 @@ Module .. ROOT 0,0 -> 4,0
     .name 'prefunc'
     .body[1]
     0] Pass .. 1,15 -> 1,19
-    .returns None
-    .type_comment None
   1] FunctionDef .. 3,0 -> 3,16
     .name 'func'
     .body[1]
     0] Pass .. 3,12 -> 3,16
-    .returns None
-    .type_comment None
 """),
 
 (r"""
@@ -9814,14 +9640,10 @@ Module .. ROOT 0,0 -> 3,0
     .name 'prefunc'
     .body[1]
     0] Pass .. 1,15 -> 1,19
-    .returns None
-    .type_comment None
   1] FunctionDef .. 2,0 -> 2,16
     .name 'func'
     .body[1]
     0] Pass .. 2,12 -> 2,16
-    .returns None
-    .type_comment None
 """),
 
 (r"""
@@ -9840,14 +9662,10 @@ Module .. ROOT 0,0 -> 5,0
     .name 'prefunc'
     .body[1]
     0] Pass .. 1,15 -> 1,19
-    .returns None
-    .type_comment None
   1] FunctionDef .. 4,0 -> 4,16
     .name 'func'
     .body[1]
     0] Pass .. 4,12 -> 4,16
-    .returns None
-    .type_comment None
 """),
 
 (r"""
@@ -9866,14 +9684,10 @@ Module .. ROOT 0,0 -> 5,0
     .name 'prefunc'
     .body[1]
     0] Pass .. 1,15 -> 1,19
-    .returns None
-    .type_comment None
   1] FunctionDef .. 4,0 -> 4,16
     .name 'func'
     .body[1]
     0] Pass .. 4,12 -> 4,16
-    .returns None
-    .type_comment None
 """),
 
 (r"""
@@ -9894,14 +9708,10 @@ Module .. ROOT 0,0 -> 6,0
     .name 'prefunc'
     .body[1]
     0] Pass .. 1,15 -> 1,19
-    .returns None
-    .type_comment None
   1] FunctionDef .. 5,0 -> 5,16
     .name 'func'
     .body[1]
     0] Pass .. 5,12 -> 5,16
-    .returns None
-    .type_comment None
 """),
 
 (r"""
@@ -9918,14 +9728,10 @@ Module .. ROOT 0,0 -> 5,0
     .names[1]
     0] alias .. 1,7 -> 1,12
       .name 'stuff'
-      .asname
-        None
   1] FunctionDef .. 4,0 -> 4,16
     .name 'func'
     .body[1]
     0] Pass .. 4,12 -> 4,16
-    .returns None
-    .type_comment None
 """),
 
 (r"""
@@ -9943,14 +9749,10 @@ Module .. ROOT 0,0 -> 5,0
     .names[1]
     0] alias .. 1,7 -> 1,12
       .name 'stuff'
-      .asname
-        None
   1] FunctionDef .. 4,0 -> 4,16
     .name 'func'
     .body[1]
     0] Pass .. 4,12 -> 4,16
-    .returns None
-    .type_comment None
 """),
 
 (r"""
@@ -9969,14 +9771,10 @@ Module .. ROOT 0,0 -> 5,0
     .names[1]
     0] alias .. 1,7 -> 1,12
       .name 'stuff'
-      .asname
-        None
   1] FunctionDef .. 4,0 -> 4,16
     .name 'func'
     .body[1]
     0] Pass .. 4,12 -> 4,16
-    .returns None
-    .type_comment None
 """),
 
 (r"""
@@ -9995,14 +9793,10 @@ Module .. ROOT 0,0 -> 5,0
     .names[1]
     0] alias .. 1,7 -> 1,12
       .name 'stuff'
-      .asname
-        None
   1] FunctionDef .. 4,0 -> 4,16
     .name 'func'
     .body[1]
     0] Pass .. 4,12 -> 4,16
-    .returns None
-    .type_comment None
 """),
 
 (r"""
@@ -10019,14 +9813,10 @@ Module .. ROOT 0,0 -> 5,0
     .name 'func'
     .body[1]
     0] Pass .. 1,12 -> 1,16
-    .returns None
-    .type_comment None
   1] FunctionDef .. 4,0 -> 4,19
     .name 'prefunc'
     .body[1]
     0] Pass .. 4,15 -> 4,19
-    .returns None
-    .type_comment None
 """),
 
 (r"""
@@ -10042,14 +9832,10 @@ Module .. ROOT 0,0 -> 4,0
     .name 'func'
     .body[1]
     0] Pass .. 1,12 -> 1,16
-    .returns None
-    .type_comment None
   1] FunctionDef .. 3,0 -> 3,19
     .name 'prefunc'
     .body[1]
     0] Pass .. 3,15 -> 3,19
-    .returns None
-    .type_comment None
 """),
 
 (r"""
@@ -10064,14 +9850,10 @@ Module .. ROOT 0,0 -> 3,0
     .name 'func'
     .body[1]
     0] Pass .. 1,12 -> 1,16
-    .returns None
-    .type_comment None
   1] FunctionDef .. 2,0 -> 2,19
     .name 'prefunc'
     .body[1]
     0] Pass .. 2,15 -> 2,19
-    .returns None
-    .type_comment None
 """),
 
 (r"""
@@ -10089,14 +9871,10 @@ Module .. ROOT 0,0 -> 5,0
     .name 'func'
     .body[1]
     0] Pass .. 1,12 -> 1,16
-    .returns None
-    .type_comment None
   1] FunctionDef .. 4,0 -> 4,19
     .name 'prefunc'
     .body[1]
     0] Pass .. 4,15 -> 4,19
-    .returns None
-    .type_comment None
 """),
 
 (r"""
@@ -10115,14 +9893,10 @@ Module .. ROOT 0,0 -> 5,0
     .name 'func'
     .body[1]
     0] Pass .. 1,12 -> 1,16
-    .returns None
-    .type_comment None
   1] FunctionDef .. 4,0 -> 4,19
     .name 'prefunc'
     .body[1]
     0] Pass .. 4,15 -> 4,19
-    .returns None
-    .type_comment None
 """),
 
 (r"""
@@ -10142,14 +9916,10 @@ Module .. ROOT 0,0 -> 5,0
     .name 'func'
     .body[1]
     0] Pass .. 1,12 -> 1,16
-    .returns None
-    .type_comment None
   1] FunctionDef .. 4,0 -> 4,19
     .name 'prefunc'
     .body[1]
     0] Pass .. 4,15 -> 4,19
-    .returns None
-    .type_comment None
 """),
 
 (r"""
@@ -10171,14 +9941,10 @@ Module .. ROOT 0,0 -> 6,0
     .name 'func'
     .body[1]
     0] Pass .. 1,12 -> 1,16
-    .returns None
-    .type_comment None
   1] FunctionDef .. 5,0 -> 5,19
     .name 'prefunc'
     .body[1]
     0] Pass .. 5,15 -> 5,19
-    .returns None
-    .type_comment None
 """),
 
 (r"""
@@ -10199,20 +9965,14 @@ Module .. ROOT 0,0 -> 8,0
     .name 'prefunc'
     .body[1]
     0] Pass .. 1,15 -> 1,19
-    .returns None
-    .type_comment None
   1] FunctionDef .. 4,0 -> 4,16
     .name 'func'
     .body[1]
     0] Pass .. 4,12 -> 4,16
-    .returns None
-    .type_comment None
   2] FunctionDef .. 7,0 -> 7,20
     .name 'postfunc'
     .body[1]
     0] Pass .. 7,16 -> 7,20
-    .returns None
-    .type_comment None
 """),
 
 (r"""
@@ -10234,20 +9994,14 @@ Module .. ROOT 0,0 -> 8,0
     .name 'prefunc'
     .body[1]
     0] Pass .. 1,15 -> 1,19
-    .returns None
-    .type_comment None
   1] FunctionDef .. 4,0 -> 4,16
     .name 'func'
     .body[1]
     0] Pass .. 4,12 -> 4,16
-    .returns None
-    .type_comment None
   2] FunctionDef .. 7,0 -> 7,20
     .name 'postfunc'
     .body[1]
     0] Pass .. 7,16 -> 7,20
-    .returns None
-    .type_comment None
 """),
 
 (r"""
@@ -10270,20 +10024,14 @@ Module .. ROOT 0,0 -> 8,0
     .name 'prefunc'
     .body[1]
     0] Pass .. 1,15 -> 1,19
-    .returns None
-    .type_comment None
   1] FunctionDef .. 4,0 -> 4,16
     .name 'func'
     .body[1]
     0] Pass .. 4,12 -> 4,16
-    .returns None
-    .type_comment None
   2] FunctionDef .. 7,0 -> 7,20
     .name 'postfunc'
     .body[1]
     0] Pass .. 7,16 -> 7,20
-    .returns None
-    .type_comment None
 """),
 
 (r"""
@@ -10308,20 +10056,14 @@ Module .. ROOT 0,0 -> 9,0
     .name 'prefunc'
     .body[1]
     0] Pass .. 1,15 -> 1,19
-    .returns None
-    .type_comment None
   1] FunctionDef .. 4,0 -> 4,16
     .name 'func'
     .body[1]
     0] Pass .. 4,12 -> 4,16
-    .returns None
-    .type_comment None
   2] FunctionDef .. 8,0 -> 8,20
     .name 'postfunc'
     .body[1]
     0] Pass .. 8,16 -> 8,20
-    .returns None
-    .type_comment None
 """),
 
 (r"""
@@ -10348,20 +10090,14 @@ Module .. ROOT 0,0 -> 10,0
     .name 'prefunc'
     .body[1]
     0] Pass .. 1,15 -> 1,19
-    .returns None
-    .type_comment None
   1] FunctionDef .. 4,0 -> 4,16
     .name 'func'
     .body[1]
     0] Pass .. 4,12 -> 4,16
-    .returns None
-    .type_comment None
   2] FunctionDef .. 9,0 -> 9,20
     .name 'postfunc'
     .body[1]
     0] Pass .. 9,16 -> 9,20
-    .returns None
-    .type_comment None
 """),
 
 (r"""
@@ -10380,20 +10116,14 @@ Module .. ROOT 0,0 -> 6,0
     .name 'prefunc'
     .body[1]
     0] Pass .. 1,15 -> 1,19
-    .returns None
-    .type_comment None
   1] FunctionDef .. 3,0 -> 3,16
     .name 'func'
     .body[1]
     0] Pass .. 3,12 -> 3,16
-    .returns None
-    .type_comment None
   2] FunctionDef .. 5,0 -> 5,20
     .name 'postfunc'
     .body[1]
     0] Pass .. 5,16 -> 5,20
-    .returns None
-    .type_comment None
 """),
 
 (r"""
@@ -10410,20 +10140,14 @@ Module .. ROOT 0,0 -> 4,0
     .name 'prefunc'
     .body[1]
     0] Pass .. 1,15 -> 1,19
-    .returns None
-    .type_comment None
   1] FunctionDef .. 2,0 -> 2,16
     .name 'func'
     .body[1]
     0] Pass .. 2,12 -> 2,16
-    .returns None
-    .type_comment None
   2] FunctionDef .. 3,0 -> 3,20
     .name 'postfunc'
     .body[1]
     0] Pass .. 3,16 -> 3,20
-    .returns None
-    .type_comment None
 """),
 
 (r"""
@@ -10446,20 +10170,14 @@ Module .. ROOT 0,0 -> 8,0
     .name 'prefunc'
     .body[1]
     0] Pass .. 1,15 -> 1,19
-    .returns None
-    .type_comment None
   1] FunctionDef .. 4,0 -> 4,16
     .name 'func'
     .body[1]
     0] Pass .. 4,12 -> 4,16
-    .returns None
-    .type_comment None
   2] FunctionDef .. 7,0 -> 7,20
     .name 'postfunc'
     .body[1]
     0] Pass .. 7,16 -> 7,20
-    .returns None
-    .type_comment None
 """),
 
 (r"""
@@ -10484,20 +10202,14 @@ Module .. ROOT 0,0 -> 9,0
     .name 'prefunc'
     .body[1]
     0] Pass .. 1,15 -> 1,19
-    .returns None
-    .type_comment None
   1] FunctionDef .. 4,0 -> 4,16
     .name 'func'
     .body[1]
     0] Pass .. 4,12 -> 4,16
-    .returns None
-    .type_comment None
   2] FunctionDef .. 8,0 -> 8,20
     .name 'postfunc'
     .body[1]
     0] Pass .. 8,16 -> 8,20
-    .returns None
-    .type_comment None
 """),
 
 (r"""
@@ -10522,8 +10234,6 @@ Module .. ROOT 0,0 -> 6,0
       .name 'meth'
       .body[1]
       0] Pass .. 5,16 -> 5,20
-      .returns None
-      .type_comment None
 """),
 
 (r"""
@@ -10549,8 +10259,6 @@ Module .. ROOT 0,0 -> 6,0
       .name 'meth'
       .body[1]
       0] Pass .. 5,16 -> 5,20
-      .returns None
-      .type_comment None
 """),
 
 (r"""
@@ -10578,8 +10286,6 @@ Module .. ROOT 0,0 -> 7,0
       .name 'meth'
       .body[1]
       0] Pass .. 6,16 -> 6,20
-      .returns None
-      .type_comment None
 """),
 
 (r"""
@@ -10600,14 +10306,10 @@ Module .. ROOT 0,0 -> 5,0
       .name 'premeth'
       .body[1]
       0] Pass .. 2,19 -> 2,23
-      .returns None
-      .type_comment None
     1] FunctionDef .. 4,4 -> 4,20
       .name 'meth'
       .body[1]
       0] Pass .. 4,16 -> 4,20
-      .returns None
-      .type_comment None
 """),
 
 (r"""
@@ -10629,14 +10331,10 @@ Module .. ROOT 0,0 -> 5,0
       .name 'premeth'
       .body[1]
       0] Pass .. 2,19 -> 2,23
-      .returns None
-      .type_comment None
     1] FunctionDef .. 4,4 -> 4,20
       .name 'meth'
       .body[1]
       0] Pass .. 4,16 -> 4,20
-      .returns None
-      .type_comment None
 """),
 
 (r"""
@@ -10660,14 +10358,10 @@ Module .. ROOT 0,0 -> 6,0
       .name 'premeth'
       .body[1]
       0] Pass .. 2,19 -> 2,23
-      .returns None
-      .type_comment None
     1] FunctionDef .. 5,4 -> 5,20
       .name 'meth'
       .body[1]
       0] Pass .. 5,16 -> 5,20
-      .returns None
-      .type_comment None
 """),
 
 (r"""
@@ -10688,14 +10382,10 @@ Module .. ROOT 0,0 -> 5,0
       .name 'meth'
       .body[1]
       0] Pass .. 2,16 -> 2,20
-      .returns None
-      .type_comment None
     1] FunctionDef .. 4,4 -> 4,24
       .name 'postmeth'
       .body[1]
       0] Pass .. 4,20 -> 4,24
-      .returns None
-      .type_comment None
 """),
 
 (r"""
@@ -10717,14 +10407,10 @@ Module .. ROOT 0,0 -> 5,0
       .name 'meth'
       .body[1]
       0] Pass .. 2,16 -> 2,20
-      .returns None
-      .type_comment None
     1] FunctionDef .. 4,4 -> 4,24
       .name 'postmeth'
       .body[1]
       0] Pass .. 4,20 -> 4,24
-      .returns None
-      .type_comment None
 """),
 
 (r"""
@@ -10747,14 +10433,10 @@ Module .. ROOT 0,0 -> 5,0
       .name 'meth'
       .body[1]
       0] Pass .. 2,16 -> 2,20
-      .returns None
-      .type_comment None
     1] FunctionDef .. 4,4 -> 4,24
       .name 'postmeth'
       .body[1]
       0] Pass .. 4,20 -> 4,24
-      .returns None
-      .type_comment None
 """),
 
 (r"""
@@ -10779,14 +10461,10 @@ Module .. ROOT 0,0 -> 6,0
       .name 'meth'
       .body[1]
       0] Pass .. 2,16 -> 2,20
-      .returns None
-      .type_comment None
     1] FunctionDef .. 5,4 -> 5,24
       .name 'postmeth'
       .body[1]
       0] Pass .. 5,20 -> 5,24
-      .returns None
-      .type_comment None
 """),
 
 (r"""
@@ -10810,20 +10488,14 @@ Module .. ROOT 0,0 -> 7,0
       .name 'premeth'
       .body[1]
       0] Pass .. 2,19 -> 2,23
-      .returns None
-      .type_comment None
     1] FunctionDef .. 4,4 -> 4,20
       .name 'meth'
       .body[1]
       0] Pass .. 4,16 -> 4,20
-      .returns None
-      .type_comment None
     2] FunctionDef .. 6,4 -> 6,24
       .name 'postmeth'
       .body[1]
       0] Pass .. 6,20 -> 6,24
-      .returns None
-      .type_comment None
 """),
 
 (r"""
@@ -10848,20 +10520,14 @@ Module .. ROOT 0,0 -> 7,0
       .name 'premeth'
       .body[1]
       0] Pass .. 2,19 -> 2,23
-      .returns None
-      .type_comment None
     1] FunctionDef .. 4,4 -> 4,20
       .name 'meth'
       .body[1]
       0] Pass .. 4,16 -> 4,20
-      .returns None
-      .type_comment None
     2] FunctionDef .. 6,4 -> 6,24
       .name 'postmeth'
       .body[1]
       0] Pass .. 6,20 -> 6,24
-      .returns None
-      .type_comment None
 """),
 
 (r"""
@@ -10888,20 +10554,14 @@ Module .. ROOT 0,0 -> 8,0
       .name 'premeth'
       .body[1]
       0] Pass .. 2,19 -> 2,23
-      .returns None
-      .type_comment None
     1] FunctionDef .. 4,4 -> 4,20
       .name 'meth'
       .body[1]
       0] Pass .. 4,16 -> 4,20
-      .returns None
-      .type_comment None
     2] FunctionDef .. 7,4 -> 7,24
       .name 'postmeth'
       .body[1]
       0] Pass .. 7,20 -> 7,24
-      .returns None
-      .type_comment None
 """),
 
 (r"""
@@ -10930,20 +10590,14 @@ Module .. ROOT 0,0 -> 9,0
       .name 'premeth'
       .body[1]
       0] Pass .. 2,19 -> 2,23
-      .returns None
-      .type_comment None
     1] FunctionDef .. 4,4 -> 4,20
       .name 'meth'
       .body[1]
       0] Pass .. 4,16 -> 4,20
-      .returns None
-      .type_comment None
     2] FunctionDef .. 8,4 -> 8,24
       .name 'postmeth'
       .body[1]
       0] Pass .. 8,20 -> 8,24
-      .returns None
-      .type_comment None
 """),
 
 (r"""
@@ -10965,20 +10619,14 @@ Module .. ROOT 0,0 -> 5,0
       .name 'premeth'
       .body[1]
       0] Pass .. 2,19 -> 2,23
-      .returns None
-      .type_comment None
     1] FunctionDef .. 3,4 -> 3,20
       .name 'meth'
       .body[1]
       0] Pass .. 3,16 -> 3,20
-      .returns None
-      .type_comment None
     2] FunctionDef .. 4,4 -> 4,24
       .name 'postmeth'
       .body[1]
       0] Pass .. 4,20 -> 4,24
-      .returns None
-      .type_comment None
 """),
 
 (r"""
@@ -11004,20 +10652,14 @@ Module .. ROOT 0,0 -> 8,0
       .name 'premeth'
       .body[1]
       0] Pass .. 2,19 -> 2,23
-      .returns None
-      .type_comment None
     1] FunctionDef .. 4,4 -> 4,20
       .name 'meth'
       .body[1]
       0] Pass .. 4,16 -> 4,20
-      .returns None
-      .type_comment None
     2] FunctionDef .. 7,4 -> 7,24
       .name 'postmeth'
       .body[1]
       0] Pass .. 7,20 -> 7,24
-      .returns None
-      .type_comment None
 """),
 
 (r"""
@@ -11045,20 +10687,14 @@ Module .. ROOT 0,0 -> 9,0
       .name 'premeth'
       .body[1]
       0] Pass .. 2,19 -> 2,23
-      .returns None
-      .type_comment None
     1] FunctionDef .. 5,4 -> 5,20
       .name 'meth'
       .body[1]
       0] Pass .. 5,16 -> 5,20
-      .returns None
-      .type_comment None
     2] FunctionDef .. 8,4 -> 8,24
       .name 'postmeth'
       .body[1]
       0] Pass .. 8,20 -> 8,24
-      .returns None
-      .type_comment None
 """),
 
 (r"""
@@ -11088,20 +10724,14 @@ Module .. ROOT 0,0 -> 10,0
       .name 'premeth'
       .body[1]
       0] Pass .. 2,19 -> 2,23
-      .returns None
-      .type_comment None
     1] FunctionDef .. 4,4 -> 4,20
       .name 'meth'
       .body[1]
       0] Pass .. 4,16 -> 4,20
-      .returns None
-      .type_comment None
     2] FunctionDef .. 9,4 -> 9,24
       .name 'postmeth'
       .body[1]
       0] Pass .. 9,20 -> 9,24
-      .returns None
-      .type_comment None
 """),
 
 ]  # END OF PUT_SLICE_STMT_DATA
