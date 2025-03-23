@@ -1400,6 +1400,83 @@ class FSTSrcEdit:
 
         return copy_loc, del_loc, put_lines
 
+    def _format_ends(self, fst: 'FST', put_fst: 'FST', fmt: set[str] | frozenset[str],
+                     block_loc: fstloc, put_loc: fstloc, fpre: Optional['FST'], fpost: Optional['FST'],
+                     del_lines: list[str] | None):
+        """Add preceding and trailing newlines as needed. We always insert statements (or blocks of them) as their own
+        lines but may also add newlines according to PEP8."""
+
+        lines     = fst.root._lines
+        put_lines = put_fst._lines
+        put_body  = put_fst.a.body
+
+        if is_pep8 := bool(put_body) and ((is_pep81 := 'pep81' in fmt) or 'pep8' in fmt):  # no pep8 checks if only text being put (no AST body)
+            pep8space = 2 if not is_pep81 and isinstance(fst.a, mod) else 1
+
+        # prepend = 2 if not fst.is_root or put_loc.col else 0  # don't put initial empty line if putting on a first AST line at root
+        prepend = 2 if put_loc.col else 0  # don't put initial empty line if putting on a first AST line at root
+
+        if is_pep8 and fpre and (isinstance(a := fpre.a, NAMED_SCOPE) or isinstance(put_body[0], NAMED_SCOPE)):  # preceding space
+            if pep8space == 1 or (not fpre.pfield.idx and isinstance(a, Expr) and   # docstring
+                                    isinstance(v := a.value, Constant) and isinstance(v.value, str)):
+                want = 1
+            else:
+                want = pep8space
+
+            if need := (want if not re_empty_line.match(put_lines[0]) else 1 if want == 2 and (  # how many empty lines at start of put_fst?
+                        len(put_lines) < 2 or not re_empty_line.match(put_lines[1])) else 0):
+                bound_ln = block_loc.ln
+                ln       = put_loc.ln
+
+                if ln > bound_ln and re_empty_line.match(lines[ln], 0, put_loc.col):  # reduce need by leading empty lines present in destination
+                    if need := need - 1:
+                        if (ln := ln - 1) > bound_ln and re_empty_line.match(lines[ln]):
+                            need = 0
+
+                prepend += need
+
+        if not (is_pep8 and fpost and (isinstance(put_body[-1], NAMED_SCOPE) or isinstance(fpost.a, NAMED_SCOPE))):  # trailing space
+            postpend = bool((l := put_lines[-1]) and not re_empty_line.match(l))
+
+        else:
+            postpend = pep8space + 1
+            ln       = len(put_lines) - 1
+
+            while postpend:  # how many empty lines at end of put_fst?
+                if (l := put_lines[ln]) and  not re_empty_line.match(l):
+                    break
+
+                postpend -= 1
+
+                if (ln := ln - 1) < 0:
+                    break
+
+            if postpend:  # reduce needed postpend by trailing empty lines present in destination
+                _, _, end_ln, end_col = put_loc
+                end_lines             = len(lines)
+
+                while postpend and re_empty_line.match(lines[end_ln], end_col):
+                    postpend -= 1
+                    end_col   = 0
+
+                    if (end_ln := end_ln + 1) >= end_lines:
+                        break
+
+                postpend += not postpend
+
+        if prepend:
+            put_fst.put_lines([''] * prepend, 0, 0, 0, 0, False)
+
+        if postpend:
+            put_lines.extend([bistr('')] * postpend)
+
+        if del_lines:
+            put_lines[-1] = bistr(put_lines[-1] + del_lines[0])
+
+            put_lines.extend(bistr(s) for s in del_lines[1:])
+
+        put_fst.touch()
+
     def put_slice_stmt(self, fst: 'FST', put_fst: 'FST', field: str, fmt: set[str] | frozenset[str], docstr: bool | str,
                        block_loc: fstloc, opener_indent: str, block_indent: str,
                        ffirst: 'FST', flast: 'FST', fpre: Optional['FST'], fpost: Optional['FST'],
@@ -1469,16 +1546,15 @@ class FSTSrcEdit:
             location currently.
         """
 
-        lines     = fst.root._lines
-        put_lines = put_fst._lines
-        put_ast   = put_fst.a
-        put_body  = put_ast.body
+        lines      = fst.root._lines
+        put_lines  = put_fst._lines
+        put_body   = put_fst.a.body
+        is_handler = field == 'handlers'
+        is_orelse  = field == 'orelse'
 
         if not ffirst:  # pure insertion
-            is_handler = field == 'handlers'
-            is_orelse  = field == 'orelse'
-            is_elif    = (not fpre and not fpost and is_orelse and 'elif' in fmt and len(b := put_body) == 1 and
-                          isinstance(b[0], If) and isinstance(fst.a, If))
+            is_elif = (not fpre and not fpost and is_orelse and 'elif' in fmt and len(b := put_body) == 1 and
+                       isinstance(b[0], If) and isinstance(fst.a, If))
 
             put_fst.indent_lns(opener_indent if is_handler or is_elif else block_indent, docstr=docstr, skip=0)
 
@@ -1578,97 +1654,44 @@ class FSTSrcEdit:
                 else:
                     put_loc = fstloc(ln, col, ln + 1, 0)
 
-            # add preceding and trailing newlines as needed, we always insert statements (or blocks of them) as their own lines but may also add newlines according to PEP8
-
-            if is_pep8 := bool(put_body) and ((is_pep81 := 'pep81' in fmt) or 'pep8' in fmt):  # no pep8 checks if only text being put (no AST body)
-                pep8space = 2 if not is_pep81 and isinstance(fst.a, mod) else 1
-
-            if not fpre:  # preceding space
-                prepend = 2 if not fst.is_root or put_loc.col else 0  # don't put initial empty line if putting on a first AST line at root
-
-            else:
-                prepend = 2
-
-                if is_pep8:
-                    if isinstance(a := fpre.a, NAMED_SCOPE) or isinstance(put_body[0], NAMED_SCOPE):
-                        if pep8space == 1 or (not fpre.pfield.idx and isinstance(a, Expr) and   # docstring
-                                              isinstance(v := a.value, Constant) and isinstance(v.value, str)):
-                            want = 1
-                        else:
-                            want = pep8space
-
-                        if need := (want if not re_empty_line.match(put_lines[0]) else 1 if want == 2 and (  # how many empty lines at start of put_fst?
-                                    len(put_lines) < 2 or not re_empty_line.match(put_lines[1])) else 0):
-                            bound_ln = block_loc.ln
-                            ln       = put_loc.ln
-
-                            if ln > bound_ln and re_empty_line.match(lines[ln], 0, put_loc.col):  # reduce need by leading empty lines present in destination
-                                if need := need - 1:
-                                    if (ln := ln - 1) > bound_ln and re_empty_line.match(lines[ln]):
-                                        need = 0
-
-                            prepend += need
-
-            if (not is_pep8 or not fpost or not isinstance(put_body[-1], NAMED_SCOPE) and  # trailing space
-                not isinstance(fpost.a, NAMED_SCOPE)
-            ):
-                postpend = bool((l := put_lines[-1]) and not re_empty_line.match(l))
-
-            else:
-                postpend = pep8space + 1
-                ln       = len(put_lines) - 1
-
-                while postpend:  # how many empty lines at end of put_fst?
-                    if (l := put_lines[ln]) and  not re_empty_line.match(l):
-                        break
-
-                    postpend -= 1
-
-                    if (ln := ln - 1) < 0:
-                        break
-
-                if postpend:  # reduce by trailing empty lines present in destination
-                    _, _, end_ln, end_col = put_loc
-                    end_lines             = len(lines)
-
-                    while postpend and re_empty_line.match(lines[end_ln], end_col):
-                        postpend -= 1
-                        end_col   = 0
-
-                        if (end_ln := end_ln + 1) >= end_lines:
-                            break
-
-                    postpend += not postpend
-
-            if prepend:
-                put_fst.put_lines([''] * prepend, 0, 0, 0, 0, False)
-
-            if postpend:
-                put_lines.extend([bistr('')] * postpend)
-                put_fst.touch()
+            self._format_ends(fst, put_fst, fmt, block_loc, put_loc, fpre, fpost, None)
 
             return put_loc
 
         # replacement
 
-        copy_loc, del_loc, put_lines, bound, pre_comms, post_comms, pre_semi, post_semi, block_start = (
+        put_fst.indent_lns(opener_indent if is_handler else block_indent, docstr=docstr, skip=0)
+
+        copy_loc, put_loc, del_lines, bound, pre_comms, post_comms, pre_semi, post_semi, block_start = (
             self.get_slice_stmt(fst, field, True, fmt, block_loc, ffirst, flast, fpre, fpost,
                                 del_else_and_fin=False, ret_all=True))
 
+        # print(f'{copy_loc=}\n{put_loc=}\n{del_lines=}')  # DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG!
 
-        raise NotImplementedError
+        if pre_semi:
+            raise NotImplementedError
 
+        elif post_semi:
+            raise NotImplementedError
 
-        return copy_loc
+        else:
+            if put_loc.col:
+                put_ln, put_col, put_end_ln, put_end_col = put_loc
 
+                if re_empty_line.match(l := lines[put_ln][:put_col]):
+                    put_loc = fstloc(put_ln, 0, put_end_ln, put_end_col)
 
+                    if del_lines:
+                        del_lines[-1] = del_lines[-1] + l
+                    else:
+                        del_lines = [l]
 
+                elif del_lines and not del_lines[0]:
+                    del del_lines[0]
 
+            self._format_ends(fst, put_fst, fmt, block_loc, put_loc, fpre, fpost, del_lines)
 
-
-
-
-
+        return put_loc
 
 
 class FST:
