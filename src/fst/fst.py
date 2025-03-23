@@ -689,18 +689,37 @@ class fstlistproxy:
             self.owner.put_slice(None, idx.start, idx.stop, self.field)
 
     def copy(self, *, fix: bool = True, fmt: Fmt = DEFAULT_SRC_EDIT_FMT, docstr: bool | str = DEFAULT_DOCSTR) -> 'FST':
-        return self.owner.get_slice(start := self.start, start + len(self.asts), self.field, fix=fix, cut=False,
+        return self.owner.get_slice(i := self.start, i + len(self.asts), self.field, fix=fix, cut=False,
                                     fmt=fmt, docstr=docstr)
 
     def cut(self, *, fix: bool = True, fmt: Fmt = DEFAULT_SRC_EDIT_FMT, docstr: bool | str = DEFAULT_DOCSTR) -> 'FST':
-        return self.owner.get_slice(start := self.start, start + len(self.asts), self.field, fix=fix, cut=True,
+        return self.owner.get_slice(i := self.start, i + len(self.asts), self.field, fix=fix, cut=True,
                                     fmt=fmt, docstr=docstr)
 
-    def append(self, code: Code, *, fmt: Fmt = DEFAULT_SRC_EDIT_FMT, docstr: bool | str = DEFAULT_DOCSTR):
-        self.owner.put_slice(code, self.start + len(self.asts), None, self.field, True, fmt=fmt, docstr=docstr)
+    def put(self, code: Code, *, fmt: Fmt = DEFAULT_SRC_EDIT_FMT, docstr: bool | str = DEFAULT_DOCSTR) -> 'FST':  # -> Self:
+        self.owner.put_slice(code, i := self.start, i + len(self.asts), self.field, True, fmt=fmt, docstr=docstr)
 
-    def extend(self, code: Code, *, fmt: Fmt = DEFAULT_SRC_EDIT_FMT, docstr: bool | str = DEFAULT_DOCSTR):
-        self.owner.put_slice(code, self.start + len(self.asts), None, self.field, False, fmt=fmt, docstr=docstr)
+        return self
+
+    def append(self, code: Code, *, fmt: Fmt = DEFAULT_SRC_EDIT_FMT, docstr: bool | str = DEFAULT_DOCSTR) -> 'FST':  # -> Self:
+        self.owner.put_slice(code, i := self.start + len(self.asts), i, self.field, True, fmt=fmt, docstr=docstr)
+
+        return self
+
+    def extend(self, code: Code, *, fmt: Fmt = DEFAULT_SRC_EDIT_FMT, docstr: bool | str = DEFAULT_DOCSTR) -> 'FST':  # -> Self:
+        self.owner.put_slice(code, i := self.start + len(self.asts), i, self.field, False, fmt=fmt, docstr=docstr)
+
+        return self
+
+    def prepend(self, code: Code, *, fmt: Fmt = DEFAULT_SRC_EDIT_FMT, docstr: bool | str = DEFAULT_DOCSTR) -> 'FST':  # -> Self:
+        self.owner.put_slice(code, i := self.start, i, self.field, True, fmt=fmt, docstr=docstr)
+
+        return self
+
+    def prextend(self, code: Code, *, fmt: Fmt = DEFAULT_SRC_EDIT_FMT, docstr: bool | str = DEFAULT_DOCSTR) -> 'FST':  # -> Self:
+        self.owner.put_slice(code, i := self.start, i, self.field, False, fmt=fmt, docstr=docstr)
+
+        return self
 
 
 class FSTSrcEdit:

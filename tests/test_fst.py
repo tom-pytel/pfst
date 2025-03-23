@@ -12173,7 +12173,7 @@ def func():
 
         self.assertEqual(['True:', '  i'], ast.f.root.get_lines(1, 4, 2, 3))
 
-    def test_put_lines(self):
+    def test_put_src(self):
         f = FST(Load(), lines=[bistr('')])
         f.put_src('test', 0, 0, 0, 0)
         self.assertEqual(f.lines, ['test'])
