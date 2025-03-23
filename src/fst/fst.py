@@ -1229,8 +1229,19 @@ class FSTSrcEdit:
 
                 if code := _next_src(lines, end_ln, end_col, end_ln,
                                      bound_end_col if at_bound_end_ln else 0x7ffffffffffffff, True, True):
-                    put_lines = [re_empty_line_start.match(lines[copy_loc.ln]).group(0)]  # we know it starts a line because pre_comms exists
-                    del_loc   = fstloc(*pre_comms, end_ln, code.col)
+                    ln, col = copy_loc[:2]
+
+                    if code.src.startswith('#'):
+                        del_loc = fstloc(ln, col, end_ln, code.col)
+
+                        if fpost:
+                            put_lines = [re_empty_line_start.match(lines[copy_loc.ln]).group(0)]  # we know it starts a line because pre_comms exists
+
+                    else:  # HACK FIX! TODO: do this properly, only here because '\\\n stmt' does not work at module level even though it works inside indented blocks, otherwise `del_loc` above would be sufficient unconditionally
+                        del_loc = fstloc(ln, 0, bound_end_ln, bound_end_col)
+
+                        if fpost:
+                            put_lines = [ffirst.get_indent()]
 
                 elif not at_bound_end_ln:
                     del_loc = fstloc(*pre_comms, end_ln + 1, 0)
@@ -1238,7 +1249,7 @@ class FSTSrcEdit:
                 else:
                     del_loc = fstloc(*pre_comms, bound_end_ln, bound_end_col)
 
-                    if fpost:  # ends at next statement, otherwise if not fpost then empty line after a useless trailing ';'
+                    if fpost:  # ends at next statement, otherwise if fpost doesn't exist then was empty line after a useless trailing ';'
                         put_lines = [re_empty_line_start.match(lines[copy_loc.ln]).group(0)]  # we know it starts a line because pre_comms exists
 
         elif post_comms:
@@ -1260,27 +1271,33 @@ class FSTSrcEdit:
                 at_bound_end_ln = end_ln == bound_end_ln
 
                 if _next_src(lines, end_ln, end_col, end_ln,
-                             bound_end_col if at_bound_end_ln else 0x7ffffffffffffff, True, True):
-                    del_loc = fstloc(*fpre.bloc[2:], end_ln, end_col)  # comment or backslash
+                             bound_end_col if at_bound_end_ln else 0x7ffffffffffffff, True, True):  # comment or backslash
+                    del_loc = fstloc(*fpre.bloc[2:], end_ln, end_col)
                 else:
                     del_loc = fstloc(*fpre.bloc[2:], end_ln, len(lines[end_ln]))
 
         elif post_semi:
+            ln, col          = copy_loc[:2]
             end_ln, end_col  = post_semi
             end_col         += 1
             at_bound_end_ln  = end_ln == bound_end_ln
 
             if code := _next_src(lines, end_ln, end_col, end_ln,
-                                 bound_end_col if at_bound_end_ln else 0x7ffffffffffffff, True, True):
-                del_loc = fstloc(*copy_loc[:2], end_ln, code.col)  # comment or backslash or statement
+                                 bound_end_col if at_bound_end_ln else 0x7ffffffffffffff, True, True):  # comment or backslash
+                if code.src.startswith('#'):
+                    del_loc = fstloc(ln, col, end_ln, code.col)
+
+                else:  # HACK FIX! TODO: do this properly, only here because '\\\n stmt' does not work at module level even though it works inside indented blocks, otherwise `del_loc` above would be sufficient unconditionally
+                    del_loc = fstloc(ln, 0, bound_end_ln, bound_end_col)
+
+                    if fpost:
+                        put_lines = [ffirst.get_indent()]  # SHOULDN'T DO THIS HERE!!!
 
             else:
-                ln, col = copy_loc[:2]
                 del_col = 0 if ln != block_ln else block_col
 
                 if not at_bound_end_ln:
                     del_loc = fstloc(ln, del_col, end_ln + 1, 0)
-
                 else:
                     del_loc = fstloc(ln, col if fpost else del_col, bound_end_ln, bound_end_col)
 
@@ -1289,8 +1306,8 @@ class FSTSrcEdit:
             at_bound_end_ln          = end_ln == bound_end_ln
 
             if code := _next_src(lines, end_ln, end_col, end_ln,
-                                 bound_end_col if at_bound_end_ln else 0x7ffffffffffffff, True, True):
-                del_loc = fstloc(ln, col, end_ln, code.col)  # comment or backslash
+                                 bound_end_col if at_bound_end_ln else 0x7ffffffffffffff, True, True):  # comment or backslash
+                del_loc = fstloc(ln, col, end_ln, code.col)
 
             else:
                 del_col = 0 if ln != block_ln else block_col
@@ -1669,27 +1686,33 @@ class FSTSrcEdit:
         # print(f'{copy_loc=}\n{put_loc=}\n{del_lines=}')  # DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG!
 
         if pre_semi:
-            raise NotImplementedError
+            if post_semi:
+                raise NotImplementedError
+
+            else:
+                pass
 
         elif post_semi:
-            raise NotImplementedError
+            pass
 
         else:
-            if put_loc.col:
-                put_ln, put_col, put_end_ln, put_end_col = put_loc
+            pass
 
-                if re_empty_line.match(l := lines[put_ln][:put_col]):
-                    put_loc = fstloc(put_ln, 0, put_end_ln, put_end_col)
+        if put_loc.col:
+            put_ln, put_col, put_end_ln, put_end_col = put_loc
 
-                    if del_lines:
-                        del_lines[-1] = del_lines[-1] + l
-                    else:
-                        del_lines = [l]
+            if re_empty_line.match(l := lines[put_ln][:put_col]):
+                put_loc = fstloc(put_ln, 0, put_end_ln, put_end_col)
 
-                elif del_lines and not del_lines[0]:
-                    del del_lines[0]
+                if del_lines:
+                    del_lines[-1] = del_lines[-1] + l
+                else:
+                    del_lines = [l]
 
-            self._format_ends(fst, put_fst, fmt, block_loc, put_loc, fpre, fpost, del_lines)
+            elif del_lines and not del_lines[0]:
+                del del_lines[0]
+
+        self._format_ends(fst, put_fst, fmt, block_loc, put_loc, fpre, fpost, del_lines)
 
         return put_loc
 
@@ -2690,8 +2713,15 @@ class FST:
         block_loc = fstloc(*(fpre.bloc[2:] if fpre else ffirst._prev_ast_bound()),
                            *(fpost.bloc[:2] if fpost else flast._next_ast_bound()))
 
+        if isinstance(fmt, str):
+            fmt = frozenset(t for s in fmt.split(',') if (t := s.strip()))
+
+        copy_loc, put_loc, put_lines = (
+            self.src_edit.get_slice_stmt(self, field, cut, fmt, block_loc, ffirst, flast, fpre, fpost))
+
         if not cut:
-            asts = [copy_ast(body[i]) for i in range(start, stop)]
+            asts    = [copy_ast(body[i]) for i in range(start, stop)]
+            put_loc = None
 
         else:
             is_last_child = not fpost and not flast.next()
@@ -2708,15 +2738,6 @@ class FST:
             get_ast = asts[0]
         else:
             raise ValueError(f'cannot specify `single` for multiple statements')
-
-        if isinstance(fmt, str):
-            fmt = frozenset(t for s in fmt.split(',') if (t := s.strip()))
-
-        copy_loc, put_loc, put_lines = (
-            self.src_edit.get_slice_stmt(self, field, cut, fmt, block_loc, ffirst, flast, fpre, fpost))
-
-        if not cut:
-            put_loc = None
 
         fst = self._make_fst_and_dedent(indent, get_ast, copy_loc, '', '', put_loc, put_lines, docstr=docstr)
 
