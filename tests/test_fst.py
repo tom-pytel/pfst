@@ -10734,6 +10734,65 @@ Module .. ROOT 0,0 -> 10,0
       0] Pass .. 9,20 -> 9,24
 """),
 
+(r"""
+class cls:
+    def premeth(): pass
+    def postmeth(): pass
+""", 'body[0]', 1, 1, None, None, r"""i = 1""", r"""
+class cls:
+    def premeth(): pass
+
+    i = 1
+
+    def postmeth(): pass
+""", r"""
+Module .. ROOT 0,0 -> 7,0
+  .body[1]
+  0] ClassDef .. 1,0 -> 6,24
+    .name 'cls'
+    .body[3]
+    0] FunctionDef .. 2,4 -> 2,23
+      .name 'premeth'
+      .body[1]
+      0] Pass .. 2,19 -> 2,23
+    1] Assign .. 4,4 -> 4,9
+      .targets[1]
+      0] Name 'i' Store .. 4,4 -> 4,5
+      .value Constant 1 .. 4,8 -> 4,9
+    2] FunctionDef .. 6,4 -> 6,24
+      .name 'postmeth'
+      .body[1]
+      0] Pass .. 6,20 -> 6,24
+"""),
+
+(r"""
+def prefunc(): pass
+def postfunc(): pass
+""", '', 1, 1, None, None, r"""i = 1""", r"""
+def prefunc(): pass
+
+
+i = 1
+
+
+def postfunc(): pass
+""", r"""
+Module .. ROOT 0,0 -> 8,0
+  .body[3]
+  0] FunctionDef .. 1,0 -> 1,19
+    .name 'prefunc'
+    .body[1]
+    0] Pass .. 1,15 -> 1,19
+  1] Assign .. 4,0 -> 4,5
+    .targets[1]
+    0] Name 'i' Store .. 4,0 -> 4,1
+    .value Constant 1 .. 4,4 -> 4,5
+  2] FunctionDef .. 7,0 -> 7,20
+    .name 'postfunc'
+    .body[1]
+    0] Pass .. 7,16 -> 7,20
+"""),
+
 ]  # END OF PUT_SLICE_STMT_DATA
 
 
