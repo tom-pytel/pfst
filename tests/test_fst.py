@@ -14505,6 +14505,362 @@ Module .. ROOT 0,0 -> 7,0
       .value Name 'k' Load .. 6,4 -> 6,5
 """),
 
+(r"""
+i ; j ;
+""", '', 1, 2, None, None, r"""def f(): pass""", r"""
+i
+
+
+def f(): pass
+""", r"""
+Module .. ROOT 0,0 -> 5,0
+  .body[2]
+  0] Expr .. 1,0 -> 1,1
+    .value Name 'i' Load .. 1,0 -> 1,1
+  1] FunctionDef .. 4,0 -> 4,13
+    .name 'f'
+    .body[1]
+    0] Pass .. 4,9 -> 4,13
+"""),
+
+(r"""
+i ; \
+ j \
+ ;
+""", '', 1, 2, None, None, r"""def f(): pass""", r"""
+i ;
+
+
+def f(): pass
+""", r"""
+Module .. ROOT 0,0 -> 5,0
+  .body[2]
+  0] Expr .. 1,0 -> 1,1
+    .value Name 'i' Load .. 1,0 -> 1,1
+  1] FunctionDef .. 4,0 -> 4,13
+    .name 'f'
+    .body[1]
+    0] Pass .. 4,9 -> 4,13
+"""),
+
+(r"""
+i \
+ ; j ;
+""", '', 1, 2, None, None, r"""def f(): pass""", r"""
+i
+
+
+def f(): pass
+""", r"""
+Module .. ROOT 0,0 -> 5,0
+  .body[2]
+  0] Expr .. 1,0 -> 1,1
+    .value Name 'i' Load .. 1,0 -> 1,1
+  1] FunctionDef .. 4,0 -> 4,13
+    .name 'f'
+    .body[1]
+    0] Pass .. 4,9 -> 4,13
+"""),
+
+(r"""
+i \
+ ; \
+ j \
+ ;
+""", '', 1, 2, None, None, r"""def f(): pass""", r"""
+i \
+ ;
+
+
+def f(): pass
+""", r"""
+Module .. ROOT 0,0 -> 6,0
+  .body[2]
+  0] Expr .. 1,0 -> 1,1
+    .value Name 'i' Load .. 1,0 -> 1,1
+  1] FunctionDef .. 5,0 -> 5,13
+    .name 'f'
+    .body[1]
+    0] Pass .. 5,9 -> 5,13
+"""),
+
+(r"""
+class cls:
+    i ; j ;
+""", 'body[0]', 1, 2, None, None, r"""def f(): pass""", r"""
+class cls:
+    i
+
+    def f(): pass
+""", r"""
+Module .. ROOT 0,0 -> 5,0
+  .body[1]
+  0] ClassDef .. 1,0 -> 4,17
+    .name 'cls'
+    .body[2]
+    0] Expr .. 2,4 -> 2,5
+      .value Name 'i' Load .. 2,4 -> 2,5
+    1] FunctionDef .. 4,4 -> 4,17
+      .name 'f'
+      .body[1]
+      0] Pass .. 4,13 -> 4,17
+"""),
+
+(r"""
+class cls:
+    i ; \
+ j ;
+""", 'body[0]', 1, 2, None, None, r"""def f(): pass""", r"""
+class cls:
+    i ;
+
+    def f(): pass
+""", r"""
+Module .. ROOT 0,0 -> 5,0
+  .body[1]
+  0] ClassDef .. 1,0 -> 4,17
+    .name 'cls'
+    .body[2]
+    0] Expr .. 2,4 -> 2,5
+      .value Name 'i' Load .. 2,4 -> 2,5
+    1] FunctionDef .. 4,4 -> 4,17
+      .name 'f'
+      .body[1]
+      0] Pass .. 4,13 -> 4,17
+"""),
+
+(r"""
+class cls:
+    i \
+ ; j ;
+""", 'body[0]', 1, 2, None, None, r"""def f(): pass""", r"""
+class cls:
+    i
+
+    def f(): pass
+""", r"""
+Module .. ROOT 0,0 -> 5,0
+  .body[1]
+  0] ClassDef .. 1,0 -> 4,17
+    .name 'cls'
+    .body[2]
+    0] Expr .. 2,4 -> 2,5
+      .value Name 'i' Load .. 2,4 -> 2,5
+    1] FunctionDef .. 4,4 -> 4,17
+      .name 'f'
+      .body[1]
+      0] Pass .. 4,13 -> 4,17
+"""),
+
+(r"""
+class cls:
+    i \
+ ; \
+ j \
+ ;
+""", 'body[0]', 1, 2, None, None, r"""def f(): pass""", r"""
+class cls:
+    i \
+ ;
+
+    def f(): pass
+""", r"""
+Module .. ROOT 0,0 -> 6,0
+  .body[1]
+  0] ClassDef .. 1,0 -> 5,17
+    .name 'cls'
+    .body[2]
+    0] Expr .. 2,4 -> 2,5
+      .value Name 'i' Load .. 2,4 -> 2,5
+    1] FunctionDef .. 5,4 -> 5,17
+      .name 'f'
+      .body[1]
+      0] Pass .. 5,13 -> 5,17
+"""),
+
+(r"""
+i ; j ;  # post
+""", '', 1, 2, None, None, r"""def f(): pass""", r"""
+i ; 
+
+
+def f(): pass
+# post
+""", r"""
+Module .. ROOT 0,0 -> 6,0
+  .body[2]
+  0] Expr .. 1,0 -> 1,1
+    .value Name 'i' Load .. 1,0 -> 1,1
+  1] FunctionDef .. 4,0 -> 4,13
+    .name 'f'
+    .body[1]
+    0] Pass .. 4,9 -> 4,13
+"""),
+
+(r"""
+i ; \
+ j \
+ ;  # post
+""", '', 1, 2, None, None, r"""def f(): pass""", r"""
+i ;
+
+
+def f(): pass
+ # post
+""", r"""
+Module .. ROOT 0,0 -> 6,0
+  .body[2]
+  0] Expr .. 1,0 -> 1,1
+    .value Name 'i' Load .. 1,0 -> 1,1
+  1] FunctionDef .. 4,0 -> 4,13
+    .name 'f'
+    .body[1]
+    0] Pass .. 4,9 -> 4,13
+"""),
+
+(r"""
+i \
+ ; j ;  # post
+""", '', 1, 2, None, None, r"""def f(): pass""", r"""
+i \
+ ; 
+
+
+def f(): pass
+# post
+""", r"""
+Module .. ROOT 0,0 -> 7,0
+  .body[2]
+  0] Expr .. 1,0 -> 1,1
+    .value Name 'i' Load .. 1,0 -> 1,1
+  1] FunctionDef .. 5,0 -> 5,13
+    .name 'f'
+    .body[1]
+    0] Pass .. 5,9 -> 5,13
+"""),
+
+(r"""
+i \
+ ; \
+ j \
+ ;  # post
+""", '', 1, 2, None, None, r"""def f(): pass""", r"""
+i \
+ ;
+
+
+def f(): pass
+ # post
+""", r"""
+Module .. ROOT 0,0 -> 7,0
+  .body[2]
+  0] Expr .. 1,0 -> 1,1
+    .value Name 'i' Load .. 1,0 -> 1,1
+  1] FunctionDef .. 5,0 -> 5,13
+    .name 'f'
+    .body[1]
+    0] Pass .. 5,9 -> 5,13
+"""),
+
+(r"""
+class cls:
+    i ; j ;  # post
+""", 'body[0]', 1, 2, None, None, r"""def f(): pass""", r"""
+class cls:
+    i ; 
+
+    def f(): pass
+# post
+""", r"""
+Module .. ROOT 0,0 -> 6,0
+  .body[1]
+  0] ClassDef .. 1,0 -> 4,17
+    .name 'cls'
+    .body[2]
+    0] Expr .. 2,4 -> 2,5
+      .value Name 'i' Load .. 2,4 -> 2,5
+    1] FunctionDef .. 4,4 -> 4,17
+      .name 'f'
+      .body[1]
+      0] Pass .. 4,13 -> 4,17
+"""),
+
+(r"""
+class cls:
+    i ; \
+ j ;  # post
+""", 'body[0]', 1, 2, None, None, r"""def f(): pass""", r"""
+class cls:
+    i ;
+
+    def f(): pass
+ # post
+""", r"""
+Module .. ROOT 0,0 -> 6,0
+  .body[1]
+  0] ClassDef .. 1,0 -> 4,17
+    .name 'cls'
+    .body[2]
+    0] Expr .. 2,4 -> 2,5
+      .value Name 'i' Load .. 2,4 -> 2,5
+    1] FunctionDef .. 4,4 -> 4,17
+      .name 'f'
+      .body[1]
+      0] Pass .. 4,13 -> 4,17
+"""),
+
+(r"""
+class cls:
+    i \
+ ; j ;  # post
+""", 'body[0]', 1, 2, None, None, r"""def f(): pass""", r"""
+class cls:
+    i \
+ ; 
+
+    def f(): pass
+# post
+""", r"""
+Module .. ROOT 0,0 -> 7,0
+  .body[1]
+  0] ClassDef .. 1,0 -> 5,17
+    .name 'cls'
+    .body[2]
+    0] Expr .. 2,4 -> 2,5
+      .value Name 'i' Load .. 2,4 -> 2,5
+    1] FunctionDef .. 5,4 -> 5,17
+      .name 'f'
+      .body[1]
+      0] Pass .. 5,13 -> 5,17
+"""),
+
+(r"""
+class cls:
+    i \
+ ; \
+ j \
+ ;  # post
+""", 'body[0]', 1, 2, None, None, r"""def f(): pass""", r"""
+class cls:
+    i \
+ ;
+
+    def f(): pass
+ # post
+""", r"""
+Module .. ROOT 0,0 -> 7,0
+  .body[1]
+  0] ClassDef .. 1,0 -> 5,17
+    .name 'cls'
+    .body[2]
+    0] Expr .. 2,4 -> 2,5
+      .value Name 'i' Load .. 2,4 -> 2,5
+    1] FunctionDef .. 5,4 -> 5,17
+      .name 'f'
+      .body[1]
+      0] Pass .. 5,13 -> 5,17
+"""),
+
 ]  # END OF PUT_SLICE_STMT_DATA
 
 
@@ -18711,7 +19067,7 @@ finally:
 
                 raise
 
-    def test_line_continuation_error_at_top_level_NEED_TO_FIX(self):
+    def test_line_continuation_error_at_top_level(self):
         # Works fine in a scope but error at top level
 
 #         a = parse('''
