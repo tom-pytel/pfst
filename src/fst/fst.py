@@ -1143,7 +1143,7 @@ class FSTSrcEdit:
 
         return del_loc
 
-    def get_slice_stmt(self, fst: 'FST', field: str, cut: bool, fmt: set[str] | frozenset[str], block_loc: fstloc,
+    def get_slice_stmt(self, fst: 'FST', field: str, cut: bool, fmt: set[str] | frozenset[str], block_loc: fstloc,  # TODO: clean this up
                        ffirst: 'FST', flast: 'FST', fpre: Optional['FST'], fpost: Optional['FST'], *,
                        del_else_and_fin: bool = True, ret_all: bool = False,
     ) -> tuple[fstloc, fstloc | None, list[str] | None]:  # (copy_loc, del/put_loc, put_lines)
@@ -1688,42 +1688,38 @@ class FSTSrcEdit:
 
         # replacement
 
+        del_else_and_fin = False
+        indent           = opener_indent if is_handler else block_indent
+
+        if not fpre and not fpost and is_orelse and isinstance(fst.a, If):  # possible else <-> elif changes
+            put_body    = put_fst.a.body
+            orelse      = fst.orelse
+            is_old_elif = orelse[0].is_elif()
+            is_new_elif = 'elif' in fmt and len(put_body) == 1 and isinstance(put_body[0], If)
+
+            if is_new_elif:
+                ln, col, end_ln, end_col = put_body[0].f.bloc
+                del_else_and_fin         = True
+                indent                   = opener_indent
+
+                put_fst.put_lines(['elif'], ln, col, ln, col + 2, False)  # replace 'if' with 'elif'
+
+            elif is_old_elif:
+                indent = None
+
+                put_fst.indent_lns(block_indent, docstr=docstr, skip=0)
+                put_fst.put_lines([opener_indent + 'else:', ''], 0, 0, 0, 0, False)
+
+        if indent is not None:
+            put_fst.indent_lns(indent, docstr=docstr, skip=0)
+
         copy_loc, put_loc, del_lines, bound, pre_comms, post_comms, pre_semi, post_semi, block_start = (
             self.get_slice_stmt(fst, field, True, fmt, block_loc, ffirst, flast, fpre, fpost,
-                                del_else_and_fin=False, ret_all=True))
-
-
-        # print(f'{copy_loc=}\n{put_loc=}\n{del_lines=}')  # DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG!
-
-
-        # if pre_semi and post_semi:  # sandwiched between two semicolons
-        #     if fpost:  # statements on both sides
-        #         put_loc   = fstloc(*fpre.bloc[2:], *fpost.bloc[:2])
-        #         del_lines = [block_indent]
-
-        #     else:
-        #         put_loc = fstloc(*fpre.bloc[2:], *block_loc[2:])
-
+                                del_else_and_fin=del_else_and_fin, ret_all=True))
 
         if pre_semi and post_semi and fpost:  # sandwiched between two semicoloned statements
             put_loc   = fstloc(*fpre.bloc[2:], *fpost.bloc[:2])
             del_lines = [block_indent]
-
-
-
-        put_fst.indent_lns(opener_indent if is_handler else block_indent, docstr=docstr, skip=0)
-
-
-
-
-        # if not fpre and not fpost and is_orelse:
-        #     is_elif = (not fpre and not fpost and is_orelse and 'elif' in fmt and len(b := put_body) == 1 and
-        #                isinstance(b[0], If) and isinstance(fst.a, If))
-
-        #     put_fst.indent_lns(opener_indent if is_handler or is_elif else block_indent, docstr=docstr, skip=0)
-
-
-
 
         if put_loc.col:
             put_ln, put_col, put_end_ln, put_end_col = put_loc
@@ -3047,7 +3043,15 @@ class FST:
 
         if put_fst:
             opener_indent = self.get_indent()
-            block_indent  = opener_indent if self.is_root else opener_indent + root.indent
+
+            if not body:
+                block_indent = opener_indent if self.is_root else opener_indent + root.indent
+            elif not (b0 := body[0]).f.is_elif():
+                block_indent = b0.f.get_indent()
+            elif (bb := b0.body) or (bb := b0.orelse):
+                block_indent = bb[0].f.get_indent()
+            else:
+                block_indent = opener_indent + root.indent
 
             if fpre or fpost:
                 self._normalize_block(field, indent=block_indent)  # don't want to bother figuring out if valid to insert to statements on single block logical line
@@ -3204,9 +3208,6 @@ class FST:
             put_len = 0
 
         else:
-            if body:
-                block_indent = body[0].f.get_indent()  # override default unknown indent
-
             put_loc = self.src_edit.put_slice_stmt(self, put_fst, field, fmt, docstr,
                                                    block_loc, opener_indent, block_indent,
                                                    ffirst, flast, fpre, fpost)

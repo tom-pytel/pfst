@@ -14861,6 +14861,460 @@ Module .. ROOT 0,0 -> 7,0
       0] Pass .. 5,13 -> 5,17
 """),
 
+(r"""
+if 1: pass
+elif 2:
+    pass
+""", 'body[0]', 0, 1, 'orelse', None, r"""break""", r"""
+if 1: pass
+else:
+    break
+""", r"""
+Module .. ROOT 0,0 -> 4,0
+  .body[1]
+  0] If .. 1,0 -> 3,9
+    .test Constant 1 .. 1,3 -> 1,4
+    .body[1]
+    0] Pass .. 1,6 -> 1,10
+    .orelse[1]
+    0] Break .. 3,4 -> 3,9
+"""),
+
+(r"""
+if 1: pass
+elif 2:
+    pass
+""", 'body[0]', 0, 1, 'orelse', None, r"""if 3: break""", r"""
+if 1: pass
+else:
+    if 3: break
+""", r"""
+Module .. ROOT 0,0 -> 4,0
+  .body[1]
+  0] If .. 1,0 -> 3,15
+    .test Constant 1 .. 1,3 -> 1,4
+    .body[1]
+    0] Pass .. 1,6 -> 1,10
+    .orelse[1]
+    0] If .. 3,4 -> 3,15
+      .test Constant 3 .. 3,7 -> 3,8
+      .body[1]
+      0] Break .. 3,10 -> 3,15
+"""),
+
+(r"""
+if 1: pass
+elif 2:
+    pass
+""", 'body[0]', 0, 1, 'orelse', 'elif', r"""if 3: break""", r"""
+if 1: pass
+elif 3: break
+""", r"""
+Module .. ROOT 0,0 -> 3,0
+  .body[1]
+  0] If .. 1,0 -> 2,13
+    .test Constant 1 .. 1,3 -> 1,4
+    .body[1]
+    0] Pass .. 1,6 -> 1,10
+    .orelse[1]
+    0] If .. 2,0 -> 2,13
+      .test Constant 3 .. 2,5 -> 2,6
+      .body[1]
+      0] Break .. 2,8 -> 2,13
+"""),
+
+(r"""
+if 1: pass
+else:
+    pass
+""", 'body[0]', 0, 1, 'orelse', 'elif', r"""if 3: break""", r"""
+if 1: pass
+elif 3: break
+""", r"""
+Module .. ROOT 0,0 -> 3,0
+  .body[1]
+  0] If .. 1,0 -> 2,13
+    .test Constant 1 .. 1,3 -> 1,4
+    .body[1]
+    0] Pass .. 1,6 -> 1,10
+    .orelse[1]
+    0] If .. 2,0 -> 2,13
+      .test Constant 3 .. 2,5 -> 2,6
+      .body[1]
+      0] Break .. 2,8 -> 2,13
+"""),
+
+(r"""
+class cls:
+    if 1: pass
+    elif 2:
+        pass
+""", 'body[0].body[0]', 0, 1, 'orelse', None, r"""break""", r"""
+class cls:
+    if 1: pass
+    else:
+        break
+""", r"""
+Module .. ROOT 0,0 -> 5,0
+  .body[1]
+  0] ClassDef .. 1,0 -> 4,13
+    .name 'cls'
+    .body[1]
+    0] If .. 2,4 -> 4,13
+      .test Constant 1 .. 2,7 -> 2,8
+      .body[1]
+      0] Pass .. 2,10 -> 2,14
+      .orelse[1]
+      0] Break .. 4,8 -> 4,13
+"""),
+
+(r"""
+class cls:
+    if 1: pass
+    elif 2:
+        pass
+""", 'body[0].body[0]', 0, 1, 'orelse', None, r"""if 3: break""", r"""
+class cls:
+    if 1: pass
+    else:
+        if 3: break
+""", r"""
+Module .. ROOT 0,0 -> 5,0
+  .body[1]
+  0] ClassDef .. 1,0 -> 4,19
+    .name 'cls'
+    .body[1]
+    0] If .. 2,4 -> 4,19
+      .test Constant 1 .. 2,7 -> 2,8
+      .body[1]
+      0] Pass .. 2,10 -> 2,14
+      .orelse[1]
+      0] If .. 4,8 -> 4,19
+        .test Constant 3 .. 4,11 -> 4,12
+        .body[1]
+        0] Break .. 4,14 -> 4,19
+"""),
+
+(r"""
+class cls:
+    if 1: pass
+    elif 2:
+        pass
+""", 'body[0].body[0]', 0, 1, 'orelse', 'elif', r"""if 3: break""", r"""
+class cls:
+    if 1: pass
+    elif 3: break
+""", r"""
+Module .. ROOT 0,0 -> 4,0
+  .body[1]
+  0] ClassDef .. 1,0 -> 3,17
+    .name 'cls'
+    .body[1]
+    0] If .. 2,4 -> 3,17
+      .test Constant 1 .. 2,7 -> 2,8
+      .body[1]
+      0] Pass .. 2,10 -> 2,14
+      .orelse[1]
+      0] If .. 3,4 -> 3,17
+        .test Constant 3 .. 3,9 -> 3,10
+        .body[1]
+        0] Break .. 3,12 -> 3,17
+"""),
+
+(r"""
+class cls:
+    if 1: pass
+    else:
+        pass
+""", 'body[0].body[0]', 0, 1, 'orelse', 'elif', r"""if 3: break""", r"""
+class cls:
+    if 1: pass
+    elif 3: break
+""", r"""
+Module .. ROOT 0,0 -> 4,0
+  .body[1]
+  0] ClassDef .. 1,0 -> 3,17
+    .name 'cls'
+    .body[1]
+    0] If .. 2,4 -> 3,17
+      .test Constant 1 .. 2,7 -> 2,8
+      .body[1]
+      0] Pass .. 2,10 -> 2,14
+      .orelse[1]
+      0] If .. 3,4 -> 3,17
+        .test Constant 3 .. 3,9 -> 3,10
+        .body[1]
+        0] Break .. 3,12 -> 3,17
+"""),
+
+(r"""
+if 1: pass
+elif 2:
+    pass
+""", 'body[0]', 0, 1, 'orelse', None, r"""if 3: break
+else:
+    continue""", r"""
+if 1: pass
+else:
+    if 3: break
+    else:
+        continue
+""", r"""
+Module .. ROOT 0,0 -> 6,0
+  .body[1]
+  0] If .. 1,0 -> 5,16
+    .test Constant 1 .. 1,3 -> 1,4
+    .body[1]
+    0] Pass .. 1,6 -> 1,10
+    .orelse[1]
+    0] If .. 3,4 -> 5,16
+      .test Constant 3 .. 3,7 -> 3,8
+      .body[1]
+      0] Break .. 3,10 -> 3,15
+      .orelse[1]
+      0] Continue .. 5,8 -> 5,16
+"""),
+
+(r"""
+if 1: pass
+elif 2:
+    pass
+""", 'body[0]', 0, 1, 'orelse', 'elif', r"""if 3: break
+else:
+    continue""", r"""
+if 1: pass
+elif 3: break
+else:
+    continue
+""", r"""
+Module .. ROOT 0,0 -> 5,0
+  .body[1]
+  0] If .. 1,0 -> 4,12
+    .test Constant 1 .. 1,3 -> 1,4
+    .body[1]
+    0] Pass .. 1,6 -> 1,10
+    .orelse[1]
+    0] If .. 2,0 -> 4,12
+      .test Constant 3 .. 2,5 -> 2,6
+      .body[1]
+      0] Break .. 2,8 -> 2,13
+      .orelse[1]
+      0] Continue .. 4,4 -> 4,12
+"""),
+
+(r"""
+if 1: pass
+elif 2:
+    pass
+""", 'body[0].orelse[0]', 0, 0, 'orelse', None, r"""if 3: break
+else:
+    continue""", r"""
+if 1: pass
+elif 2:
+    pass
+else:
+    if 3: break
+    else:
+        continue
+""", r"""
+Module .. ROOT 0,0 -> 8,0
+  .body[1]
+  0] If .. 1,0 -> 7,16
+    .test Constant 1 .. 1,3 -> 1,4
+    .body[1]
+    0] Pass .. 1,6 -> 1,10
+    .orelse[1]
+    0] If .. 2,0 -> 7,16
+      .test Constant 2 .. 2,5 -> 2,6
+      .body[1]
+      0] Pass .. 3,4 -> 3,8
+      .orelse[1]
+      0] If .. 5,4 -> 7,16
+        .test Constant 3 .. 5,7 -> 5,8
+        .body[1]
+        0] Break .. 5,10 -> 5,15
+        .orelse[1]
+        0] Continue .. 7,8 -> 7,16
+"""),
+
+(r"""
+if 1: pass
+elif 2:
+    pass
+""", 'body[0].orelse[0]', 0, 0, 'orelse', 'elif', r"""if 3: break
+else:
+    continue""", r"""
+if 1: pass
+elif 2:
+    pass
+elif 3: break
+else:
+    continue
+""", r"""
+Module .. ROOT 0,0 -> 7,0
+  .body[1]
+  0] If .. 1,0 -> 6,12
+    .test Constant 1 .. 1,3 -> 1,4
+    .body[1]
+    0] Pass .. 1,6 -> 1,10
+    .orelse[1]
+    0] If .. 2,0 -> 6,12
+      .test Constant 2 .. 2,5 -> 2,6
+      .body[1]
+      0] Pass .. 3,4 -> 3,8
+      .orelse[1]
+      0] If .. 4,0 -> 6,12
+        .test Constant 3 .. 4,5 -> 4,6
+        .body[1]
+        0] Break .. 4,8 -> 4,13
+        .orelse[1]
+        0] Continue .. 6,4 -> 6,12
+"""),
+
+(r"""
+class cls:
+    if 1: pass
+    elif 2:
+        pass
+""", 'body[0].body[0]', 0, 1, 'orelse', None, r"""if 3: break
+else:
+    continue""", r"""
+class cls:
+    if 1: pass
+    else:
+        if 3: break
+        else:
+            continue
+""", r"""
+Module .. ROOT 0,0 -> 7,0
+  .body[1]
+  0] ClassDef .. 1,0 -> 6,20
+    .name 'cls'
+    .body[1]
+    0] If .. 2,4 -> 6,20
+      .test Constant 1 .. 2,7 -> 2,8
+      .body[1]
+      0] Pass .. 2,10 -> 2,14
+      .orelse[1]
+      0] If .. 4,8 -> 6,20
+        .test Constant 3 .. 4,11 -> 4,12
+        .body[1]
+        0] Break .. 4,14 -> 4,19
+        .orelse[1]
+        0] Continue .. 6,12 -> 6,20
+"""),
+
+(r"""
+class cls:
+    if 1: pass
+    elif 2:
+        pass
+""", 'body[0].body[0]', 0, 1, 'orelse', 'elif', r"""if 3: break
+else:
+    continue""", r"""
+class cls:
+    if 1: pass
+    elif 3: break
+    else:
+        continue
+""", r"""
+Module .. ROOT 0,0 -> 6,0
+  .body[1]
+  0] ClassDef .. 1,0 -> 5,16
+    .name 'cls'
+    .body[1]
+    0] If .. 2,4 -> 5,16
+      .test Constant 1 .. 2,7 -> 2,8
+      .body[1]
+      0] Pass .. 2,10 -> 2,14
+      .orelse[1]
+      0] If .. 3,4 -> 5,16
+        .test Constant 3 .. 3,9 -> 3,10
+        .body[1]
+        0] Break .. 3,12 -> 3,17
+        .orelse[1]
+        0] Continue .. 5,8 -> 5,16
+"""),
+
+(r"""
+class cls:
+    if 1: pass
+    elif 2:
+        pass
+""", 'body[0].body[0].orelse[0]', 0, 0, 'orelse', None, r"""if 3: break
+else:
+    continue""", r"""
+class cls:
+    if 1: pass
+    elif 2:
+        pass
+    else:
+        if 3: break
+        else:
+            continue
+""", r"""
+Module .. ROOT 0,0 -> 9,0
+  .body[1]
+  0] ClassDef .. 1,0 -> 8,20
+    .name 'cls'
+    .body[1]
+    0] If .. 2,4 -> 8,20
+      .test Constant 1 .. 2,7 -> 2,8
+      .body[1]
+      0] Pass .. 2,10 -> 2,14
+      .orelse[1]
+      0] If .. 3,4 -> 8,20
+        .test Constant 2 .. 3,9 -> 3,10
+        .body[1]
+        0] Pass .. 4,8 -> 4,12
+        .orelse[1]
+        0] If .. 6,8 -> 8,20
+          .test Constant 3 .. 6,11 -> 6,12
+          .body[1]
+          0] Break .. 6,14 -> 6,19
+          .orelse[1]
+          0] Continue .. 8,12 -> 8,20
+"""),
+
+(r"""
+class cls:
+    if 1: pass
+    elif 2:
+        pass
+""", 'body[0].body[0].orelse[0]', 0, 0, 'orelse', 'elif', r"""if 3: break
+else:
+    continue""", r"""
+class cls:
+    if 1: pass
+    elif 2:
+        pass
+    elif 3: break
+    else:
+        continue
+""", r"""
+Module .. ROOT 0,0 -> 8,0
+  .body[1]
+  0] ClassDef .. 1,0 -> 7,16
+    .name 'cls'
+    .body[1]
+    0] If .. 2,4 -> 7,16
+      .test Constant 1 .. 2,7 -> 2,8
+      .body[1]
+      0] Pass .. 2,10 -> 2,14
+      .orelse[1]
+      0] If .. 3,4 -> 7,16
+        .test Constant 2 .. 3,9 -> 3,10
+        .body[1]
+        0] Pass .. 4,8 -> 4,12
+        .orelse[1]
+        0] If .. 5,4 -> 7,16
+          .test Constant 3 .. 5,9 -> 5,10
+          .body[1]
+          0] Break .. 5,12 -> 5,17
+          .orelse[1]
+          0] Continue .. 7,8 -> 7,16
+"""),
+
 ]  # END OF PUT_SLICE_STMT_DATA
 
 
@@ -18811,7 +19265,7 @@ if indented:
             ''
         ])
 
-    def test_insert_special(self):
+    def test_insert_stmt_special(self):
         a = parse('''
 pass
 
@@ -18846,6 +19300,26 @@ else:
 finally:
     pass
             '''.strip())
+
+    def test_replace_stmt_special(self):
+        a = parse('''
+if 1: pass
+elif 2:
+    pass
+        '''.strip())
+        a.body[0].orelse[0].f.put_slice(None, 0, 1)
+        a.body[0].f.put_slice('break', 0, 1, 'orelse')
+        self.assertEqual(a.f.src, 'if 1: pass\nelse:\n    break\n')
+
+        a = parse('''
+class cls:
+    if 1: pass
+    elif 2:
+        pass
+        '''.strip())
+        a.body[0].body[0].orelse[0].f.put_slice(None, 0, 1)
+        a.body[0].body[0].f.put_slice('break', 0, 1, 'orelse')
+        self.assertEqual(a.f.src, 'class cls:\n    if 1: pass\n    else:\n        break\n')
 
     def test_get_slice_seq_copy(self):
         for src, elt, start, stop, _, slice_copy, _, slice_dump in GET_SLICE_SEQ_CUT_DATA:
