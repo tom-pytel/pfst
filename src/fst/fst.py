@@ -1431,7 +1431,7 @@ class FSTSrcEdit:
         if is_pep8 := bool(put_body) and ((is_pep81 := 'pep81' in fmt) or 'pep8' in fmt):  # no pep8 checks if only text being put (no AST body)
             pep8space = 2 if not is_pep81 and (p := fst.parent_scope(True)) and isinstance(p.a, mod) else 1
 
-        # prepend = 2 if not fst.is_root or put_loc.col else 0  # don't put initial empty line if putting on a first AST line at root
+        # print(f'{copy_loc=}\n{put_loc=}\n{del_lines=}')  # DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG!
         prepend = 2 if put_col else 0  # don't put initial empty line if putting on a first AST line at root
 
         if is_pep8 and fpre and (isinstance(a := fpre.a, NAMED_SCOPE) or isinstance(put_body[0], NAMED_SCOPE)):  # preceding space
@@ -1687,18 +1687,9 @@ class FSTSrcEdit:
             self.get_slice_stmt(fst, field, True, fmt, block_loc, ffirst, flast, fpre, fpost,
                                 del_else_and_fin=False, ret_all=True))
 
-        if pre_semi:
-            if post_semi:
-                raise NotImplementedError
-
-            else:
-                pass
-
-        elif post_semi:
-            pass
-
-        else:
-            pass
+        if pre_semi and post_semi:
+            put_loc   = fstloc(*fpre.bloc[2:], *fpost.bloc[:2])
+            del_lines = [block_indent]
 
         if put_loc.col:
             put_ln, put_col, put_end_ln, put_end_col = put_loc

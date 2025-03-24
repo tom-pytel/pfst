@@ -14121,6 +14121,390 @@ Module .. ROOT 0,0 -> 7,0
       .value Name 'j' Load .. 6,4 -> 6,5
 """),
 
+(r"""
+i ; j ; k
+""", '', 1, 2, None, None, r"""l""", r"""
+i
+l
+k
+""", r"""
+Module .. ROOT 0,0 -> 4,0
+  .body[3]
+  0] Expr .. 1,0 -> 1,1
+    .value Name 'i' Load .. 1,0 -> 1,1
+  1] Expr .. 2,0 -> 2,1
+    .value Name 'l' Load .. 2,0 -> 2,1
+  2] Expr .. 3,0 -> 3,1
+    .value Name 'k' Load .. 3,0 -> 3,1
+"""),
+
+(r"""
+i ; \
+ j \
+ ; k
+""", '', 1, 2, None, None, r"""l""", r"""
+i
+l
+k
+""", r"""
+Module .. ROOT 0,0 -> 4,0
+  .body[3]
+  0] Expr .. 1,0 -> 1,1
+    .value Name 'i' Load .. 1,0 -> 1,1
+  1] Expr .. 2,0 -> 2,1
+    .value Name 'l' Load .. 2,0 -> 2,1
+  2] Expr .. 3,0 -> 3,1
+    .value Name 'k' Load .. 3,0 -> 3,1
+"""),
+
+(r"""
+i \
+ ; j ; \
+ k
+""", '', 1, 2, None, None, r"""l""", r"""
+i
+l
+k
+""", r"""
+Module .. ROOT 0,0 -> 4,0
+  .body[3]
+  0] Expr .. 1,0 -> 1,1
+    .value Name 'i' Load .. 1,0 -> 1,1
+  1] Expr .. 2,0 -> 2,1
+    .value Name 'l' Load .. 2,0 -> 2,1
+  2] Expr .. 3,0 -> 3,1
+    .value Name 'k' Load .. 3,0 -> 3,1
+"""),
+
+(r"""
+i \
+ ; \
+ j \
+ ; \
+ k
+""", '', 1, 2, None, None, r"""l""", r"""
+i
+l
+k
+""", r"""
+Module .. ROOT 0,0 -> 4,0
+  .body[3]
+  0] Expr .. 1,0 -> 1,1
+    .value Name 'i' Load .. 1,0 -> 1,1
+  1] Expr .. 2,0 -> 2,1
+    .value Name 'l' Load .. 2,0 -> 2,1
+  2] Expr .. 3,0 -> 3,1
+    .value Name 'k' Load .. 3,0 -> 3,1
+"""),
+
+(r"""
+if 1:
+    i ; j ; k
+""", 'body[0]', 1, 2, None, None, r"""l""", r"""
+if 1:
+    i
+    l
+    k
+""", r"""
+Module .. ROOT 0,0 -> 5,0
+  .body[1]
+  0] If .. 1,0 -> 4,5
+    .test Constant 1 .. 1,3 -> 1,4
+    .body[3]
+    0] Expr .. 2,4 -> 2,5
+      .value Name 'i' Load .. 2,4 -> 2,5
+    1] Expr .. 3,4 -> 3,5
+      .value Name 'l' Load .. 3,4 -> 3,5
+    2] Expr .. 4,4 -> 4,5
+      .value Name 'k' Load .. 4,4 -> 4,5
+"""),
+
+(r"""
+if 1:
+    i ; \
+ j ; \
+ k
+""", 'body[0]', 1, 2, None, None, r"""l""", r"""
+if 1:
+    i
+    l
+    k
+""", r"""
+Module .. ROOT 0,0 -> 5,0
+  .body[1]
+  0] If .. 1,0 -> 4,5
+    .test Constant 1 .. 1,3 -> 1,4
+    .body[3]
+    0] Expr .. 2,4 -> 2,5
+      .value Name 'i' Load .. 2,4 -> 2,5
+    1] Expr .. 3,4 -> 3,5
+      .value Name 'l' Load .. 3,4 -> 3,5
+    2] Expr .. 4,4 -> 4,5
+      .value Name 'k' Load .. 4,4 -> 4,5
+"""),
+
+(r"""
+if 1:
+    i \
+ ; j ; \
+ k
+""", 'body[0]', 1, 2, None, None, r"""l""", r"""
+if 1:
+    i
+    l
+    k
+""", r"""
+Module .. ROOT 0,0 -> 5,0
+  .body[1]
+  0] If .. 1,0 -> 4,5
+    .test Constant 1 .. 1,3 -> 1,4
+    .body[3]
+    0] Expr .. 2,4 -> 2,5
+      .value Name 'i' Load .. 2,4 -> 2,5
+    1] Expr .. 3,4 -> 3,5
+      .value Name 'l' Load .. 3,4 -> 3,5
+    2] Expr .. 4,4 -> 4,5
+      .value Name 'k' Load .. 4,4 -> 4,5
+"""),
+
+(r"""
+if 1:
+    i \
+ ; \
+ j \
+ ; \
+ k
+""", 'body[0]', 1, 2, None, None, r"""l""", r"""
+if 1:
+    i
+    l
+    k
+""", r"""
+Module .. ROOT 0,0 -> 5,0
+  .body[1]
+  0] If .. 1,0 -> 4,5
+    .test Constant 1 .. 1,3 -> 1,4
+    .body[3]
+    0] Expr .. 2,4 -> 2,5
+      .value Name 'i' Load .. 2,4 -> 2,5
+    1] Expr .. 3,4 -> 3,5
+      .value Name 'l' Load .. 3,4 -> 3,5
+    2] Expr .. 4,4 -> 4,5
+      .value Name 'k' Load .. 4,4 -> 4,5
+"""),
+
+(r"""
+i ; j ; k
+""", '', 1, 2, None, None, r"""def f(): pass""", r"""
+i
+
+
+def f(): pass
+
+
+k
+""", r"""
+Module .. ROOT 0,0 -> 8,0
+  .body[3]
+  0] Expr .. 1,0 -> 1,1
+    .value Name 'i' Load .. 1,0 -> 1,1
+  1] FunctionDef .. 4,0 -> 4,13
+    .name 'f'
+    .body[1]
+    0] Pass .. 4,9 -> 4,13
+  2] Expr .. 7,0 -> 7,1
+    .value Name 'k' Load .. 7,0 -> 7,1
+"""),
+
+(r"""
+i ; \
+ j \
+ ; k
+""", '', 1, 2, None, None, r"""def f(): pass""", r"""
+i
+
+
+def f(): pass
+
+
+k
+""", r"""
+Module .. ROOT 0,0 -> 8,0
+  .body[3]
+  0] Expr .. 1,0 -> 1,1
+    .value Name 'i' Load .. 1,0 -> 1,1
+  1] FunctionDef .. 4,0 -> 4,13
+    .name 'f'
+    .body[1]
+    0] Pass .. 4,9 -> 4,13
+  2] Expr .. 7,0 -> 7,1
+    .value Name 'k' Load .. 7,0 -> 7,1
+"""),
+
+(r"""
+i \
+ ; j ; \
+ k
+""", '', 1, 2, None, None, r"""def f(): pass""", r"""
+i
+
+
+def f(): pass
+
+
+k
+""", r"""
+Module .. ROOT 0,0 -> 8,0
+  .body[3]
+  0] Expr .. 1,0 -> 1,1
+    .value Name 'i' Load .. 1,0 -> 1,1
+  1] FunctionDef .. 4,0 -> 4,13
+    .name 'f'
+    .body[1]
+    0] Pass .. 4,9 -> 4,13
+  2] Expr .. 7,0 -> 7,1
+    .value Name 'k' Load .. 7,0 -> 7,1
+"""),
+
+(r"""
+i \
+ ; \
+ j \
+ ; \
+ k
+""", '', 1, 2, None, None, r"""def f(): pass""", r"""
+i
+
+
+def f(): pass
+
+
+k
+""", r"""
+Module .. ROOT 0,0 -> 8,0
+  .body[3]
+  0] Expr .. 1,0 -> 1,1
+    .value Name 'i' Load .. 1,0 -> 1,1
+  1] FunctionDef .. 4,0 -> 4,13
+    .name 'f'
+    .body[1]
+    0] Pass .. 4,9 -> 4,13
+  2] Expr .. 7,0 -> 7,1
+    .value Name 'k' Load .. 7,0 -> 7,1
+"""),
+
+(r"""
+class cls:
+    i ; j ; k
+""", 'body[0]', 1, 2, None, None, r"""def f(): pass""", r"""
+class cls:
+    i
+
+    def f(): pass
+
+    k
+""", r"""
+Module .. ROOT 0,0 -> 7,0
+  .body[1]
+  0] ClassDef .. 1,0 -> 6,5
+    .name 'cls'
+    .body[3]
+    0] Expr .. 2,4 -> 2,5
+      .value Name 'i' Load .. 2,4 -> 2,5
+    1] FunctionDef .. 4,4 -> 4,17
+      .name 'f'
+      .body[1]
+      0] Pass .. 4,13 -> 4,17
+    2] Expr .. 6,4 -> 6,5
+      .value Name 'k' Load .. 6,4 -> 6,5
+"""),
+
+(r"""
+class cls:
+    i ; \
+ j ; \
+ k
+""", 'body[0]', 1, 2, None, None, r"""def f(): pass""", r"""
+class cls:
+    i
+
+    def f(): pass
+
+    k
+""", r"""
+Module .. ROOT 0,0 -> 7,0
+  .body[1]
+  0] ClassDef .. 1,0 -> 6,5
+    .name 'cls'
+    .body[3]
+    0] Expr .. 2,4 -> 2,5
+      .value Name 'i' Load .. 2,4 -> 2,5
+    1] FunctionDef .. 4,4 -> 4,17
+      .name 'f'
+      .body[1]
+      0] Pass .. 4,13 -> 4,17
+    2] Expr .. 6,4 -> 6,5
+      .value Name 'k' Load .. 6,4 -> 6,5
+"""),
+
+(r"""
+class cls:
+    i \
+ ; j ; \
+ k
+""", 'body[0]', 1, 2, None, None, r"""def f(): pass""", r"""
+class cls:
+    i
+
+    def f(): pass
+
+    k
+""", r"""
+Module .. ROOT 0,0 -> 7,0
+  .body[1]
+  0] ClassDef .. 1,0 -> 6,5
+    .name 'cls'
+    .body[3]
+    0] Expr .. 2,4 -> 2,5
+      .value Name 'i' Load .. 2,4 -> 2,5
+    1] FunctionDef .. 4,4 -> 4,17
+      .name 'f'
+      .body[1]
+      0] Pass .. 4,13 -> 4,17
+    2] Expr .. 6,4 -> 6,5
+      .value Name 'k' Load .. 6,4 -> 6,5
+"""),
+
+(r"""
+class cls:
+    i \
+ ; \
+ j \
+ ; \
+ k
+""", 'body[0]', 1, 2, None, None, r"""def f(): pass""", r"""
+class cls:
+    i
+
+    def f(): pass
+
+    k
+""", r"""
+Module .. ROOT 0,0 -> 7,0
+  .body[1]
+  0] ClassDef .. 1,0 -> 6,5
+    .name 'cls'
+    .body[3]
+    0] Expr .. 2,4 -> 2,5
+      .value Name 'i' Load .. 2,4 -> 2,5
+    1] FunctionDef .. 4,4 -> 4,17
+      .name 'f'
+      .body[1]
+      0] Pass .. 4,13 -> 4,17
+    2] Expr .. 6,4 -> 6,5
+      .value Name 'k' Load .. 6,4 -> 6,5
+"""),
+
 ]  # END OF PUT_SLICE_STMT_DATA
 
 
