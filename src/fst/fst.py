@@ -1349,7 +1349,7 @@ class FSTSrcEdit:
                         float('inf') if s == 'postspace' else int(s[9:]))
 
         if (is_pep8 := 'pep8' in fmt) or 'pep81' in fmt:
-            pep8space = 2 if is_pep8 and isinstance(fst.a, mod) else 1
+            pep8space = 2 if is_pep8 and (p := fst.parent_scope(True)) and isinstance(p.a, mod) else 1
 
             if fpre and isinstance(ffirst.a, NAMED_SCOPE) and (fpre.pfield.idx or
                                                                not isinstance(a := fpre.a, Expr) or
@@ -1426,12 +1426,13 @@ class FSTSrcEdit:
         lines     = fst.root._lines
         put_lines = put_fst._lines
         put_body  = put_fst.a.body
+        put_col   = put_loc.col
 
         if is_pep8 := bool(put_body) and ((is_pep81 := 'pep81' in fmt) or 'pep8' in fmt):  # no pep8 checks if only text being put (no AST body)
-            pep8space = 2 if not is_pep81 and isinstance(fst.a, mod) else 1
+            pep8space = 2 if not is_pep81 and (p := fst.parent_scope(True)) and isinstance(p.a, mod) else 1
 
         # prepend = 2 if not fst.is_root or put_loc.col else 0  # don't put initial empty line if putting on a first AST line at root
-        prepend = 2 if put_loc.col else 0  # don't put initial empty line if putting on a first AST line at root
+        prepend = 2 if put_col else 0  # don't put initial empty line if putting on a first AST line at root
 
         if is_pep8 and fpre and (isinstance(a := fpre.a, NAMED_SCOPE) or isinstance(put_body[0], NAMED_SCOPE)):  # preceding space
             if pep8space == 1 or (not fpre.pfield.idx and isinstance(a, Expr) and   # docstring
@@ -1445,7 +1446,7 @@ class FSTSrcEdit:
                 bound_ln = block_loc.ln
                 ln       = put_loc.ln
 
-                if not (put_col := put_loc.col):
+                if not put_col:
                     need += 2
 
                 if ln > bound_ln and re_empty_line.match(lines[ln], 0, put_col):  # reduce need by leading empty lines present in destination
@@ -1686,8 +1687,6 @@ class FSTSrcEdit:
             self.get_slice_stmt(fst, field, True, fmt, block_loc, ffirst, flast, fpre, fpost,
                                 del_else_and_fin=False, ret_all=True))
 
-        # print(f'{copy_loc=}\n{put_loc=}\n{del_lines=}')  # DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG!
-
         if pre_semi:
             if post_semi:
                 raise NotImplementedError
@@ -1746,7 +1745,19 @@ class FST:
         return self.parent is None
 
     @property
+    def is_mock(self) -> bool:
+        """`True` if is a `locmock()` for another node."""
+
+        return self.a.f is not self
+
+    @property
     def is_stmt(self) -> bool:
+        """Is a `stmt`."""
+
+        return isinstance(self.a, stmt)
+
+    @property
+    def is_stmt_or_mod(self) -> bool:
         """Is a `stmt` or `mod` node."""
 
         return isinstance(self.a, (stmt, mod))
@@ -1785,54 +1796,6 @@ class FST:
         `GeneratorExp`."""
 
         return isinstance(self.a, ANONYMOUS_SCOPE)
-
-    @property
-    def parent_stmt(self) -> Optional['FST']:
-        """The first parent which is a `stmt` or `mod` node (if any)."""
-
-        while (self := self.parent) and not isinstance(self.a, (stmt, mod)):
-            pass
-
-        return self
-
-    @property
-    def parent_stmtish(self) -> Optional['FST']:
-        """The first parent which is a `stmt`, `ExceptHandler`, `match_case` or `mod` node (if any)."""
-
-        while (self := self.parent) and not isinstance(self.a, STATEMENTISH_OR_MOD):
-            pass
-
-        return self
-
-    @property
-    def parent_block(self) -> Optional['FST']:
-        """The first parent which opens a block that `self` lives in (if any). Types include `FunctionDef`,
-        `AsyncFunctionDef`, `ClassDef`, `For`, `AsyncFor`, `While`, `If`, `With`, `AsyncWith`, `Match`, `Try`,
-        `TryStar`, `ExceptHandler`, `match_case`, and `mod`."""
-
-        while (self := self.parent) and not isinstance(self.a, BLOCK_OR_MOD):
-            pass
-        return self
-
-    @property
-    def parent_scope(self) -> Optional['FST']:
-        """The first parent which opens a scope that `self` lives in (if any). Types include `FunctionDef`,
-        `AsyncFunctionDef`, `ClassDef`, `Lambda`, `ListComp`, `SetComp`, `DictComp`, `GeneratorExp`, and `mod`."""
-
-        while (self := self.parent) and not isinstance(self.a, SCOPE_OR_MOD):
-            pass
-
-        return self
-
-    @property
-    def parent_named_scope(self) -> Optional['FST']:
-        """The first parent which opens a named scope that `self` lives in (if any). Types include `FunctionDef`,
-        `AsyncFunctionDef`, `ClassDef` and `mod`."""
-
-        while (self := self.parent) and not isinstance(self.a, NAMED_SCOPE_OR_MOD):
-            pass
-
-        return self
 
     @property
     def lines(self) -> list[str] | None:
@@ -1975,12 +1938,6 @@ class FST:
         """CHARACTER index one past the end of this node (0 based), available for all nodes which have `loc`."""
 
         return (loc := self.loc) and self.root._lines[loc[2]].c2b(loc[3])
-
-    @property
-    def is_mock(self) -> bool:
-        """`True` if is a `locmock()` for another node."""
-
-        return self.a.f is not self
 
     @property
     def f(self):
@@ -3869,6 +3826,82 @@ class FST:
 
 # ------------------------------------------------------------------------------------------------------------------
 
+    def parent_stmt(self, self_: bool = False) -> Optional['FST']:
+        """The first parent which is a `stmt`. If `self_` is `True` then will check `self` first, otherwise only checks
+        parents."""
+
+        if self_ and isinstance(self.a, stmt):
+            return self
+
+        while (self := self.parent) and not isinstance(self.a, stmt):
+            pass
+
+        return self
+
+    def parent_stmt_or_mod(self, self_: bool = False) -> Optional['FST']:
+        """The first parent which is a `stmt` or `mod` node (if any). If `self_` is `True` then will check `self` first,
+        otherwise only checks parents."""
+
+        if self_ and isinstance(self.a, (stmt, mod)):
+            return self
+
+        while (self := self.parent) and not isinstance(self.a, (stmt, mod)):
+            pass
+
+        return self
+
+    def parent_stmtish(self, self_: bool = False) -> Optional['FST']:
+        """The first parent which is a `stmt`, `ExceptHandler`, `match_case` or `mod` node (if any). If `self_` is
+        `True` then will check `self` first, otherwise only checks parents."""
+
+        if self_ and isinstance(self.a, STATEMENTISH_OR_MOD):
+            return self
+
+        while (self := self.parent) and not isinstance(self.a, STATEMENTISH_OR_MOD):
+            pass
+
+        return self
+
+    def parent_block(self, self_: bool = False) -> Optional['FST']:
+        """The first parent which opens a block that `self` lives in (if any). Types include `FunctionDef`,
+        `AsyncFunctionDef`, `ClassDef`, `For`, `AsyncFor`, `While`, `If`, `With`, `AsyncWith`, `Match`, `Try`,
+        `TryStar`, `ExceptHandler`, `match_case`, and `mod`. If `self_` is `True` then will check `self` first,
+        otherwise only checks parents."""
+
+        if self_ and isinstance(self.a, BLOCK_OR_MOD):
+            return self
+
+        while (self := self.parent) and not isinstance(self.a, BLOCK_OR_MOD):
+            pass
+
+        return self
+
+    def parent_scope(self, self_: bool = False) -> Optional['FST']:
+        """The first parent which opens a scope that `self` lives in (if any). Types include `FunctionDef`,
+        `AsyncFunctionDef`, `ClassDef`, `Lambda`, `ListComp`, `SetComp`, `DictComp`, `GeneratorExp`, and `mod`. If
+        `self_` is `True` then will check `self` first, otherwise only checks parents."""
+
+        if self_ and isinstance(self.a, SCOPE_OR_MOD):
+            return self
+
+        while (self := self.parent) and not isinstance(self.a, SCOPE_OR_MOD):
+            pass
+
+        return self
+
+    def parent_named_scope(self, self_: bool = False) -> Optional['FST']:
+        """The first parent which opens a named scope that `self` lives in (if any). Types include `FunctionDef`,
+        `AsyncFunctionDef`, `ClassDef` and `mod`. If `self_` is `True` then will check `self` first, otherwise only
+        checks parents."""
+
+        if self_ and isinstance(self.a, NAMED_SCOPE_OR_MOD):
+            return self
+
+        while (self := self.parent) and not isinstance(self.a, NAMED_SCOPE_OR_MOD):
+            pass
+
+        return self
+
     def next(self, with_loc: bool | Literal['own'] = True) -> Optional['FST']:  # TODO: refactor maybe
         """Get next sibling in syntactic order, only within parent.
 
@@ -4799,6 +4832,8 @@ class FST:
                     children = syntax_ordered_children(ast)
 
                     stack.extend(children if back else children[::-1])
+
+# ------------------------------------------------------------------------------------------------------------------
 
     def is_parsable(self) -> bool:
         """Really means the AST is `unparse()`able and then re`parse()`able which will get it to this top level AST node
