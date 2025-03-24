@@ -1445,7 +1445,10 @@ class FSTSrcEdit:
                 bound_ln = block_loc.ln
                 ln       = put_loc.ln
 
-                if ln > bound_ln and re_empty_line.match(lines[ln], 0, put_loc.col):  # reduce need by leading empty lines present in destination
+                if not (put_col := put_loc.col):
+                    need += 2
+
+                if ln > bound_ln and re_empty_line.match(lines[ln], 0, put_col):  # reduce need by leading empty lines present in destination
                     if need := need - 1:
                         if (ln := ln - 1) > bound_ln and re_empty_line.match(lines[ln]):
                             need = 0
@@ -2738,6 +2741,12 @@ class FST:
             get_ast = asts[0]
         else:
             raise ValueError(f'cannot specify `single` for multiple statements')
+
+        # copy_loc, put_loc, put_lines = (
+        #     self.src_edit.get_slice_stmt(self, field, cut, fmt, block_loc, ffirst, flast, fpre, fpost))
+
+        # if not cut:
+        #     put_loc = None
 
         fst = self._make_fst_and_dedent(indent, get_ast, copy_loc, '', '', put_loc, put_lines, docstr=docstr)
 

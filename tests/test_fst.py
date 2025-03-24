@@ -12976,6 +12976,492 @@ Module .. ROOT 0,0 -> 3,0
       .value Name 'l' Load .. 2,4 -> 2,5
 """),
 
+(r"""
+def prefunc(): pass
+pass
+def postfunc(): pass
+""", '', 1, 2, None, None, r"""def func(): pass""", r"""
+def prefunc(): pass
+
+
+def func(): pass
+
+
+def postfunc(): pass
+""", r"""
+Module .. ROOT 0,0 -> 8,0
+  .body[3]
+  0] FunctionDef .. 1,0 -> 1,19
+    .name 'prefunc'
+    .body[1]
+    0] Pass .. 1,15 -> 1,19
+  1] FunctionDef .. 4,0 -> 4,16
+    .name 'func'
+    .body[1]
+    0] Pass .. 4,12 -> 4,16
+  2] FunctionDef .. 7,0 -> 7,20
+    .name 'postfunc'
+    .body[1]
+    0] Pass .. 7,16 -> 7,20
+"""),
+
+(r"""
+def prefunc(): pass
+# pre
+pass  # post
+def postfunc(): pass
+""", '', 1, 2, None, None, r"""def func(): pass""", r"""
+def prefunc(): pass
+
+
+def func(): pass
+
+
+def postfunc(): pass
+""", r"""
+Module .. ROOT 0,0 -> 8,0
+  .body[3]
+  0] FunctionDef .. 1,0 -> 1,19
+    .name 'prefunc'
+    .body[1]
+    0] Pass .. 1,15 -> 1,19
+  1] FunctionDef .. 4,0 -> 4,16
+    .name 'func'
+    .body[1]
+    0] Pass .. 4,12 -> 4,16
+  2] FunctionDef .. 7,0 -> 7,20
+    .name 'postfunc'
+    .body[1]
+    0] Pass .. 7,16 -> 7,20
+"""),
+
+(r"""
+def prefunc(): pass
+i ; j
+def postfunc(): pass
+""", '', 1, 2, None, None, r"""def func(): pass""", r"""
+def prefunc(): pass
+
+
+def func(): pass
+
+
+j
+def postfunc(): pass
+""", r"""
+Module .. ROOT 0,0 -> 9,0
+  .body[4]
+  0] FunctionDef .. 1,0 -> 1,19
+    .name 'prefunc'
+    .body[1]
+    0] Pass .. 1,15 -> 1,19
+  1] FunctionDef .. 4,0 -> 4,16
+    .name 'func'
+    .body[1]
+    0] Pass .. 4,12 -> 4,16
+  2] Expr .. 7,0 -> 7,1
+    .value Name 'j' Load .. 7,0 -> 7,1
+  3] FunctionDef .. 8,0 -> 8,20
+    .name 'postfunc'
+    .body[1]
+    0] Pass .. 8,16 -> 8,20
+"""),
+
+(r"""
+def prefunc(): pass
+i ; j
+def postfunc(): pass
+""", '', 2, 3, None, None, r"""def func(): pass""", r"""
+def prefunc(): pass
+i
+
+
+def func(): pass
+
+
+def postfunc(): pass
+""", r"""
+Module .. ROOT 0,0 -> 9,0
+  .body[4]
+  0] FunctionDef .. 1,0 -> 1,19
+    .name 'prefunc'
+    .body[1]
+    0] Pass .. 1,15 -> 1,19
+  1] Expr .. 2,0 -> 2,1
+    .value Name 'i' Load .. 2,0 -> 2,1
+  2] FunctionDef .. 5,0 -> 5,16
+    .name 'func'
+    .body[1]
+    0] Pass .. 5,12 -> 5,16
+  3] FunctionDef .. 8,0 -> 8,20
+    .name 'postfunc'
+    .body[1]
+    0] Pass .. 8,16 -> 8,20
+"""),
+
+(r"""
+def prefunc(): pass
+# pre
+i ; j # post
+def postfunc(): pass
+""", '', 1, 2, None, None, r"""def func(): pass""", r"""
+def prefunc(): pass
+
+
+def func(): pass
+
+
+j # post
+def postfunc(): pass
+""", r"""
+Module .. ROOT 0,0 -> 9,0
+  .body[4]
+  0] FunctionDef .. 1,0 -> 1,19
+    .name 'prefunc'
+    .body[1]
+    0] Pass .. 1,15 -> 1,19
+  1] FunctionDef .. 4,0 -> 4,16
+    .name 'func'
+    .body[1]
+    0] Pass .. 4,12 -> 4,16
+  2] Expr .. 7,0 -> 7,1
+    .value Name 'j' Load .. 7,0 -> 7,1
+  3] FunctionDef .. 8,0 -> 8,20
+    .name 'postfunc'
+    .body[1]
+    0] Pass .. 8,16 -> 8,20
+"""),
+
+(r"""
+def prefunc(): pass
+# pre
+i ; j # post
+def postfunc(): pass
+""", '', 2, 3, None, None, r"""def func(): pass""", r"""
+def prefunc(): pass
+# pre
+i
+
+
+def func(): pass
+
+
+def postfunc(): pass
+""", r"""
+Module .. ROOT 0,0 -> 10,0
+  .body[4]
+  0] FunctionDef .. 1,0 -> 1,19
+    .name 'prefunc'
+    .body[1]
+    0] Pass .. 1,15 -> 1,19
+  1] Expr .. 3,0 -> 3,1
+    .value Name 'i' Load .. 3,0 -> 3,1
+  2] FunctionDef .. 6,0 -> 6,16
+    .name 'func'
+    .body[1]
+    0] Pass .. 6,12 -> 6,16
+  3] FunctionDef .. 9,0 -> 9,20
+    .name 'postfunc'
+    .body[1]
+    0] Pass .. 9,16 -> 9,20
+"""),
+
+(r"""
+def prefunc(): pass
+""", '', 1, 1, None, None, r"""def func(): pass""", r"""
+def prefunc(): pass
+
+
+def func(): pass
+""", r"""
+Module .. ROOT 0,0 -> 5,0
+  .body[2]
+  0] FunctionDef .. 1,0 -> 1,19
+    .name 'prefunc'
+    .body[1]
+    0] Pass .. 1,15 -> 1,19
+  1] FunctionDef .. 4,0 -> 4,16
+    .name 'func'
+    .body[1]
+    0] Pass .. 4,12 -> 4,16
+"""),
+
+(r"""
+def postfunc(): pass
+""", '', 0, 0, None, None, r"""def func(): pass""", r"""
+def func(): pass
+
+
+def postfunc(): pass
+""", r"""
+Module .. ROOT 0,0 -> 5,0
+  .body[2]
+  0] FunctionDef .. 1,0 -> 1,16
+    .name 'func'
+    .body[1]
+    0] Pass .. 1,12 -> 1,16
+  1] FunctionDef .. 4,0 -> 4,20
+    .name 'postfunc'
+    .body[1]
+    0] Pass .. 4,16 -> 4,20
+"""),
+
+(r"""
+class cls:
+    def premeth(): pass
+    pass
+    def postmeth(): pass
+""", 'body[0]', 1, 2, None, None, r"""def meth(): pass""", r"""
+class cls:
+    def premeth(): pass
+
+    def meth(): pass
+
+    def postmeth(): pass
+""", r"""
+Module .. ROOT 0,0 -> 7,0
+  .body[1]
+  0] ClassDef .. 1,0 -> 6,24
+    .name 'cls'
+    .body[3]
+    0] FunctionDef .. 2,4 -> 2,23
+      .name 'premeth'
+      .body[1]
+      0] Pass .. 2,19 -> 2,23
+    1] FunctionDef .. 4,4 -> 4,20
+      .name 'meth'
+      .body[1]
+      0] Pass .. 4,16 -> 4,20
+    2] FunctionDef .. 6,4 -> 6,24
+      .name 'postmeth'
+      .body[1]
+      0] Pass .. 6,20 -> 6,24
+"""),
+
+(r"""
+class cls:
+    def premeth(): pass
+    # pre
+    pass  # post
+    def postmeth(): pass
+""", 'body[0]', 1, 2, None, None, r"""def meth(): pass""", r"""
+class cls:
+    def premeth(): pass
+
+    def meth(): pass
+
+    def postmeth(): pass
+""", r"""
+Module .. ROOT 0,0 -> 7,0
+  .body[1]
+  0] ClassDef .. 1,0 -> 6,24
+    .name 'cls'
+    .body[3]
+    0] FunctionDef .. 2,4 -> 2,23
+      .name 'premeth'
+      .body[1]
+      0] Pass .. 2,19 -> 2,23
+    1] FunctionDef .. 4,4 -> 4,20
+      .name 'meth'
+      .body[1]
+      0] Pass .. 4,16 -> 4,20
+    2] FunctionDef .. 6,4 -> 6,24
+      .name 'postmeth'
+      .body[1]
+      0] Pass .. 6,20 -> 6,24
+"""),
+
+(r"""
+class cls:
+    def premeth(): pass
+    i ; j
+    def postmeth(): pass
+""", 'body[0]', 1, 2, None, None, r"""def meth(): pass""", r"""
+class cls:
+    def premeth(): pass
+
+    def meth(): pass
+
+    j
+    def postmeth(): pass
+""", r"""
+Module .. ROOT 0,0 -> 8,0
+  .body[1]
+  0] ClassDef .. 1,0 -> 7,24
+    .name 'cls'
+    .body[4]
+    0] FunctionDef .. 2,4 -> 2,23
+      .name 'premeth'
+      .body[1]
+      0] Pass .. 2,19 -> 2,23
+    1] FunctionDef .. 4,4 -> 4,20
+      .name 'meth'
+      .body[1]
+      0] Pass .. 4,16 -> 4,20
+    2] Expr .. 6,4 -> 6,5
+      .value Name 'j' Load .. 6,4 -> 6,5
+    3] FunctionDef .. 7,4 -> 7,24
+      .name 'postmeth'
+      .body[1]
+      0] Pass .. 7,20 -> 7,24
+"""),
+
+(r"""
+class cls:
+    def premeth(): pass
+    i ; j
+    def postmeth(): pass
+""", 'body[0]', 2, 3, None, None, r"""def meth(): pass""", r"""
+class cls:
+    def premeth(): pass
+    i
+
+    def meth(): pass
+
+    def postmeth(): pass
+""", r"""
+Module .. ROOT 0,0 -> 8,0
+  .body[1]
+  0] ClassDef .. 1,0 -> 7,24
+    .name 'cls'
+    .body[4]
+    0] FunctionDef .. 2,4 -> 2,23
+      .name 'premeth'
+      .body[1]
+      0] Pass .. 2,19 -> 2,23
+    1] Expr .. 3,4 -> 3,5
+      .value Name 'i' Load .. 3,4 -> 3,5
+    2] FunctionDef .. 5,4 -> 5,20
+      .name 'meth'
+      .body[1]
+      0] Pass .. 5,16 -> 5,20
+    3] FunctionDef .. 7,4 -> 7,24
+      .name 'postmeth'
+      .body[1]
+      0] Pass .. 7,20 -> 7,24
+"""),
+
+(r"""
+class cls:
+    def premeth(): pass
+    # pre
+    i ; j # post
+    def postmeth(): pass
+""", 'body[0]', 1, 2, None, None, r"""def meth(): pass""", r"""
+class cls:
+    def premeth(): pass
+
+    def meth(): pass
+
+    j # post
+    def postmeth(): pass
+""", r"""
+Module .. ROOT 0,0 -> 8,0
+  .body[1]
+  0] ClassDef .. 1,0 -> 7,24
+    .name 'cls'
+    .body[4]
+    0] FunctionDef .. 2,4 -> 2,23
+      .name 'premeth'
+      .body[1]
+      0] Pass .. 2,19 -> 2,23
+    1] FunctionDef .. 4,4 -> 4,20
+      .name 'meth'
+      .body[1]
+      0] Pass .. 4,16 -> 4,20
+    2] Expr .. 6,4 -> 6,5
+      .value Name 'j' Load .. 6,4 -> 6,5
+    3] FunctionDef .. 7,4 -> 7,24
+      .name 'postmeth'
+      .body[1]
+      0] Pass .. 7,20 -> 7,24
+"""),
+
+(r"""
+class cls:
+    def premeth(): pass
+    # pre
+    i ; j # post
+    def postmeth(): pass
+""", 'body[0]', 2, 3, None, None, r"""def meth(): pass""", r"""
+class cls:
+    def premeth(): pass
+    # pre
+    i
+
+    def meth(): pass
+
+    def postmeth(): pass
+""", r"""
+Module .. ROOT 0,0 -> 9,0
+  .body[1]
+  0] ClassDef .. 1,0 -> 8,24
+    .name 'cls'
+    .body[4]
+    0] FunctionDef .. 2,4 -> 2,23
+      .name 'premeth'
+      .body[1]
+      0] Pass .. 2,19 -> 2,23
+    1] Expr .. 4,4 -> 4,5
+      .value Name 'i' Load .. 4,4 -> 4,5
+    2] FunctionDef .. 6,4 -> 6,20
+      .name 'meth'
+      .body[1]
+      0] Pass .. 6,16 -> 6,20
+    3] FunctionDef .. 8,4 -> 8,24
+      .name 'postmeth'
+      .body[1]
+      0] Pass .. 8,20 -> 8,24
+"""),
+
+(r"""
+if 1:
+    def premeth(): pass
+""", 'body[0]', 0, 0, None, None, r"""def meth(): pass""", r"""
+if 1:
+    def meth(): pass
+
+    def premeth(): pass
+""", r"""
+Module .. ROOT 0,0 -> 5,0
+  .body[1]
+  0] If .. 1,0 -> 4,23
+    .test Constant 1 .. 1,3 -> 1,4
+    .body[2]
+    0] FunctionDef .. 2,4 -> 2,20
+      .name 'meth'
+      .body[1]
+      0] Pass .. 2,16 -> 2,20
+    1] FunctionDef .. 4,4 -> 4,23
+      .name 'premeth'
+      .body[1]
+      0] Pass .. 4,19 -> 4,23
+"""),
+
+(r"""
+if 1:
+    def postmeth(): pass
+""", 'body[0]', 1, 1, None, None, r"""def meth(): pass""", r"""
+if 1:
+    def postmeth(): pass
+
+    def meth(): pass
+""", r"""
+Module .. ROOT 0,0 -> 5,0
+  .body[1]
+  0] If .. 1,0 -> 4,20
+    .test Constant 1 .. 1,3 -> 1,4
+    .body[2]
+    0] FunctionDef .. 2,4 -> 2,24
+      .name 'postmeth'
+      .body[1]
+      0] Pass .. 2,20 -> 2,24
+    1] FunctionDef .. 4,4 -> 4,20
+      .name 'meth'
+      .body[1]
+      0] Pass .. 4,16 -> 4,20
+"""),
+
 ]  # END OF PUT_SLICE_STMT_DATA
 
 
