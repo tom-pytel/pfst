@@ -15315,6 +15315,59 @@ Module .. ROOT 0,0 -> 8,0
           0] Continue .. 7,8 -> 7,16
 """),
 
+(r"""
+if 1:
+    pass;
+""", 'body[0]', 0, 0, 'orelse', None, r"""i""", r"""
+if 1:
+    pass;
+else:
+    i
+""", r"""
+Module .. ROOT 0,0 -> 5,0
+  .body[1]
+  0] If .. 1,0 -> 4,5
+    .test Constant 1 .. 1,3 -> 1,4
+    .body[1]
+    0] Pass .. 2,4 -> 2,8
+    .orelse[1]
+    0] Expr .. 4,4 -> 4,5
+      .value Name 'i' Load .. 4,4 -> 4,5
+"""),
+
+(r"""
+try:
+    continue
+except:
+    pass;
+finally:
+    break
+""", 'body[0]', 0, 0, 'orelse', None, r"""i""", r"""
+try:
+    continue
+except:
+    pass;
+else:
+    i
+finally:
+    break
+""", r"""
+Module .. ROOT 0,0 -> 9,0
+  .body[1]
+  0] Try .. 1,0 -> 8,9
+    .body[1]
+    0] Continue .. 2,4 -> 2,12
+    .handlers[1]
+    0] ExceptHandler .. 3,0 -> 4,9
+      .body[1]
+      0] Pass .. 4,4 -> 4,8
+    .orelse[1]
+    0] Expr .. 6,4 -> 6,5
+      .value Name 'i' Load .. 6,4 -> 6,5
+    .finalbody[1]
+    0] Break .. 8,4 -> 8,9
+"""),
+
 ]  # END OF PUT_SLICE_STMT_DATA
 
 

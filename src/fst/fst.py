@@ -659,6 +659,9 @@ class fstlistproxy:
     def __repr__(self) -> str:
         return f'f{list(self)}'
 
+    def __len__(self) -> int:
+        return len(self.asts)
+
     def __getitem__(self, idx: int | str | slice) -> Any:
         if isinstance(idx, int):
             return a.f if isinstance(a := self.asts[idx], AST) else a
@@ -1672,10 +1675,17 @@ class FSTSrcEdit:
 
                 single_ln = ln == end_ln
 
-                if code := _next_src(lines, ln, col, ln, end_ln if single_ln else 0x7fffffffffffffff, True, False):
-                    assert code.src.startswith('#')  # not expecting anything else after colon in empty block, '\\' is ignored in search
+                while code := _next_src(lines, ln, col, ln, end_col if single_ln else 0x7fffffffffffffff, True, False):
+                    _, ccol, csrc = code
 
-                    col = code.col + len(code.src)  # we want to put after any post-comments
+                    if code.src.startswith('#'):
+                        col = ccol + len(csrc)  # we want to put after any post-comments
+
+                        break
+
+                    assert csrc.startswith(';')  # not expecting anything else after colon in empty block, '\\' is ignored in search
+
+                    col = ccol + 1
 
                 if single_ln:
                     put_loc = fstloc(ln, col, ln, end_col)
