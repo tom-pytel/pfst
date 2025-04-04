@@ -5016,13 +5016,9 @@ Module .. ROOT 0,0 -> 0,4
 ]  # END OF GET_SLICE_STMT_CUT_NOVERIFY_DATA
 
 PUT_SLICE_SEQ_DATA = [
-(r"""
-{
+(r"""{
     a: 1
-}
-""", 'body[0].value', 0, 1, r"""
-{}
-""", r"""
+}""", 'body[0].value', 0, 1, r"""{}""", r"""
 {}
 """, r"""
 Module .. ROOT 0,0 -> 0,2
@@ -5031,13 +5027,9 @@ Module .. ROOT 0,0 -> 0,2
     .value Dict .. 0,0 -> 0,2
 """),
 
-(r"""
-1, 2
-""", 'body[0].value', 0, 2, r"""
-(
+(r"""1, 2""", 'body[0].value', 0, 2, r"""(
 
-   )
-""", r"""
+   )""", r"""
 ()
 """, r"""
 Module .. ROOT 0,0 -> 0,2
@@ -5047,14 +5039,10 @@ Module .. ROOT 0,0 -> 0,2
       .ctx Load
 """),
 
-(r"""
-if 1:
-  {1, 2}
-""", 'body[0].body[0].value', 0, 2, r"""
-(
+(r"""if 1:
+  {1, 2}""", 'body[0].body[0].value', 0, 2, r"""(
 
-   )
-""", r"""
+   )""", r"""
 if 1:
   set()
 """, r"""
@@ -5068,14 +5056,10 @@ Module .. ROOT 0,0 -> 1,7
         .func Name 'set' Load .. 1,2 -> 1,5
 """),
 
-(r"""
-{
+(r"""{
     a: 1
-}
-""", 'body[0].value', 0, 1, r"""
-{
-}
-""", r"""
+}""", 'body[0].value', 0, 1, r"""{
+}""", r"""
 {
 }
 """, r"""
@@ -5085,11 +5069,7 @@ Module .. ROOT 0,0 -> 1,1
     .value Dict .. 0,0 -> 1,1
 """),
 
-(r"""
-{a: 1}
-""", 'body[0].value', 0, 1, r"""
-{}
-""", r"""
+(r"""{a: 1}""", 'body[0].value', 0, 1, r"""{}""", r"""
 {}
 """, r"""
 Module .. ROOT 0,0 -> 0,2
@@ -5098,12 +5078,8 @@ Module .. ROOT 0,0 -> 0,2
     .value Dict .. 0,0 -> 0,2
 """),
 
-(r"""
-{a: 1}
-""", 'body[0].value', 0, 1, r"""
-{
-}
-""", r"""
+(r"""{a: 1}""", 'body[0].value', 0, 1, r"""{
+}""", r"""
 {
 }
 """, r"""
@@ -5113,11 +5089,7 @@ Module .. ROOT 0,0 -> 1,1
     .value Dict .. 0,0 -> 1,1
 """),
 
-(r"""
-(1, 2)
-""", 'body[0].value', 1, 2, r"""
-()
-""", r"""
+(r"""(1, 2)""", 'body[0].value', 1, 2, r"""()""", r"""
 (1,)
 """, r"""
 Module .. ROOT 0,0 -> 0,4
@@ -5129,11 +5101,7 @@ Module .. ROOT 0,0 -> 0,4
       .ctx Load
 """),
 
-(r"""
-1, 2
-""", 'body[0].value', 1, 2, r"""
-()
-""", r"""
+(r"""1, 2""", 'body[0].value', 1, 2, r"""()""", r"""
 1,
 """, r"""
 Module .. ROOT 0,0 -> 0,2
@@ -5145,11 +5113,7 @@ Module .. ROOT 0,0 -> 0,2
       .ctx Load
 """),
 
-(r"""
-1, 2
-""", 'body[0].value', 0, 2, r"""
-()
-""", r"""
+(r"""1, 2""", 'body[0].value', 0, 2, r"""()""", r"""
 ()
 """, r"""
 Module .. ROOT 0,0 -> 0,2
@@ -5159,11 +5123,7 @@ Module .. ROOT 0,0 -> 0,2
       .ctx Load
 """),
 
-(r"""
-(1, 2)
-""", 'body[0].value', 1, 2, r"""
-set()
-""", r"""
+(r"""(1, 2)""", 'body[0].value', 1, 2, r"""set()""", r"""
 (1,)
 """, r"""
 Module .. ROOT 0,0 -> 0,4
@@ -5175,11 +5135,7 @@ Module .. ROOT 0,0 -> 0,4
       .ctx Load
 """),
 
-(r"""
-1, 2
-""", 'body[0].value', 1, 2, r"""
-set()
-""", r"""
+(r"""1, 2""", 'body[0].value', 1, 2, r"""set()""", r"""
 1,
 """, r"""
 Module .. ROOT 0,0 -> 0,2
@@ -5191,11 +5147,7 @@ Module .. ROOT 0,0 -> 0,2
       .ctx Load
 """),
 
-(r"""
-1, 2
-""", 'body[0].value', 0, 2, r"""
-set()
-""", r"""
+(r"""1, 2""", 'body[0].value', 0, 2, r"""set()""", r"""
 ()
 """, r"""
 Module .. ROOT 0,0 -> 0,2
@@ -5205,13 +5157,9 @@ Module .. ROOT 0,0 -> 0,2
       .ctx Load
 """),
 
-(r"""
-[            # hello
+(r"""[            # hello
     1, 2, 3
-]
-""", 'body[0].value', 0, 2, r"""
-()
-""", r"""
+]""", 'body[0].value', 0, 2, r"""()""", r"""
 [            # hello
     3
 ]
@@ -5225,14 +5173,10 @@ Module .. ROOT 0,0 -> 2,1
       .ctx Load
 """),
 
-(r"""
-[            # hello
+(r"""[            # hello
     a, b, c
-]
-""", 'body[0].value', 0, 1, r"""
-[
-    1]
-""", r"""
+]""", 'body[0].value', 0, 1, r"""[
+    1]""", r"""
 [            # hello
     1, b, c
 ]
@@ -5248,14 +5192,10 @@ Module .. ROOT 0,0 -> 2,1
       .ctx Load
 """),
 
-(r"""
-[            # hello
+(r"""[            # hello
     a, b, c
-]
-""", 'body[0].value', 1, 2, r"""
-[
-    1]
-""", r"""
+]""", 'body[0].value', 1, 2, r"""[
+    1]""", r"""
 [            # hello
     a,
     1, c
@@ -5272,14 +5212,10 @@ Module .. ROOT 0,0 -> 3,1
       .ctx Load
 """),
 
-(r"""
-[            # hello
+(r"""[            # hello
     a, b, c
-]
-""", 'body[0].value', 2, 3, r"""
-[
-    1]
-""", r"""
+]""", 'body[0].value', 2, 3, r"""[
+    1]""", r"""
 [            # hello
     a, b,
     1]
@@ -5295,13 +5231,9 @@ Module .. ROOT 0,0 -> 2,6
       .ctx Load
 """),
 
-(r"""
-[            # hello
+(r"""[            # hello
     a, b, c
-]
-""", 'body[0].value', 0, 1, r"""
-[2]
-""", r"""
+]""", 'body[0].value', 0, 1, r"""[2]""", r"""
 [            # hello
     2, b, c
 ]
@@ -5317,13 +5249,9 @@ Module .. ROOT 0,0 -> 2,1
       .ctx Load
 """),
 
-(r"""
-[            # hello
+(r"""[            # hello
     a, b, c
-]
-""", 'body[0].value', 1, 2, r"""
-[2]
-""", r"""
+]""", 'body[0].value', 1, 2, r"""[2]""", r"""
 [            # hello
     a, 2, c
 ]
@@ -5339,13 +5267,9 @@ Module .. ROOT 0,0 -> 2,1
       .ctx Load
 """),
 
-(r"""
-[            # hello
+(r"""[            # hello
     a, b, c
-]
-""", 'body[0].value', 2, 3, r"""
-[2]
-""", r"""
+]""", 'body[0].value', 2, 3, r"""[2]""", r"""
 [            # hello
     a, b, 2]
 """, r"""
@@ -5360,14 +5284,10 @@ Module .. ROOT 0,0 -> 1,12
       .ctx Load
 """),
 
-(r"""
-[            # hello
+(r"""[            # hello
     a, b, c
-]
-""", 'body[0].value', 0, 1, r"""
-[3
-]
-""", r"""
+]""", 'body[0].value', 0, 1, r"""[3
+]""", r"""
 [            # hello
     3,
     b, c
@@ -5384,14 +5304,10 @@ Module .. ROOT 0,0 -> 3,1
       .ctx Load
 """),
 
-(r"""
-[            # hello
+(r"""[            # hello
     a, b, c
-]
-""", 'body[0].value', 1, 2, r"""
-[3
-]
-""", r"""
+]""", 'body[0].value', 1, 2, r"""[3
+]""", r"""
 [            # hello
     a, 3,
     c
@@ -5408,14 +5324,10 @@ Module .. ROOT 0,0 -> 3,1
       .ctx Load
 """),
 
-(r"""
-[            # hello
+(r"""[            # hello
     a, b, c
-]
-""", 'body[0].value', 2, 3, r"""
-[3
-]
-""", r"""
+]""", 'body[0].value', 2, 3, r"""[3
+]""", r"""
 [            # hello
     a, b, 3
 ]
@@ -5431,14 +5343,10 @@ Module .. ROOT 0,0 -> 2,1
       .ctx Load
 """),
 
-(r"""
-[            # hello
+(r"""[            # hello
     a, b, c,
-]
-""", 'body[0].value', 0, 1, r"""
-[
-    1]
-""", r"""
+]""", 'body[0].value', 0, 1, r"""[
+    1]""", r"""
 [            # hello
     1, b, c,
 ]
@@ -5454,14 +5362,10 @@ Module .. ROOT 0,0 -> 2,1
       .ctx Load
 """),
 
-(r"""
-[            # hello
+(r"""[            # hello
     a, b, c,
-]
-""", 'body[0].value', 1, 2, r"""
-[
-    1]
-""", r"""
+]""", 'body[0].value', 1, 2, r"""[
+    1]""", r"""
 [            # hello
     a,
     1, c,
@@ -5478,14 +5382,10 @@ Module .. ROOT 0,0 -> 3,1
       .ctx Load
 """),
 
-(r"""
-[            # hello
+(r"""[            # hello
     a, b, c,
-]
-""", 'body[0].value', 2, 3, r"""
-[
-    1]
-""", r"""
+]""", 'body[0].value', 2, 3, r"""[
+    1]""", r"""
 [            # hello
     a, b,
     1]
@@ -5501,13 +5401,9 @@ Module .. ROOT 0,0 -> 2,6
       .ctx Load
 """),
 
-(r"""
-[            # hello
+(r"""[            # hello
     a, b, c,
-]
-""", 'body[0].value', 0, 1, r"""
-[2]
-""", r"""
+]""", 'body[0].value', 0, 1, r"""[2]""", r"""
 [            # hello
     2, b, c,
 ]
@@ -5523,13 +5419,9 @@ Module .. ROOT 0,0 -> 2,1
       .ctx Load
 """),
 
-(r"""
-[            # hello
+(r"""[            # hello
     a, b, c,
-]
-""", 'body[0].value', 1, 2, r"""
-[2]
-""", r"""
+]""", 'body[0].value', 1, 2, r"""[2]""", r"""
 [            # hello
     a, 2, c,
 ]
@@ -5545,13 +5437,9 @@ Module .. ROOT 0,0 -> 2,1
       .ctx Load
 """),
 
-(r"""
-[            # hello
+(r"""[            # hello
     a, b, c,
-]
-""", 'body[0].value', 2, 3, r"""
-[2]
-""", r"""
+]""", 'body[0].value', 2, 3, r"""[2]""", r"""
 [            # hello
     a, b, 2]
 """, r"""
@@ -5566,14 +5454,10 @@ Module .. ROOT 0,0 -> 1,12
       .ctx Load
 """),
 
-(r"""
-[            # hello
+(r"""[            # hello
     a, b, c,
-]
-""", 'body[0].value', 0, 1, r"""
-[3
-]
-""", r"""
+]""", 'body[0].value', 0, 1, r"""[3
+]""", r"""
 [            # hello
     3,
     b, c,
@@ -5590,14 +5474,10 @@ Module .. ROOT 0,0 -> 3,1
       .ctx Load
 """),
 
-(r"""
-[            # hello
+(r"""[            # hello
     a, b, c,
-]
-""", 'body[0].value', 1, 2, r"""
-[3
-]
-""", r"""
+]""", 'body[0].value', 1, 2, r"""[3
+]""", r"""
 [            # hello
     a, 3,
     c,
@@ -5614,14 +5494,10 @@ Module .. ROOT 0,0 -> 3,1
       .ctx Load
 """),
 
-(r"""
-[            # hello
+(r"""[            # hello
     a, b, c,
-]
-""", 'body[0].value', 2, 3, r"""
-[3
-]
-""", r"""
+]""", 'body[0].value', 2, 3, r"""[3
+]""", r"""
 [            # hello
     a, b, 3
 ]
@@ -5637,14 +5513,10 @@ Module .. ROOT 0,0 -> 2,1
       .ctx Load
 """),
 
-(r"""
-[            # hello
+(r"""[            # hello
     a, b, c
-]
-""", 'body[0].value', 0, 1, r"""
-[
-    1,]
-""", r"""
+]""", 'body[0].value', 0, 1, r"""[
+    1,]""", r"""
 [            # hello
     1, b, c
 ]
@@ -5660,14 +5532,10 @@ Module .. ROOT 0,0 -> 2,1
       .ctx Load
 """),
 
-(r"""
-[            # hello
+(r"""[            # hello
     a, b, c
-]
-""", 'body[0].value', 1, 2, r"""
-[
-    1,]
-""", r"""
+]""", 'body[0].value', 1, 2, r"""[
+    1,]""", r"""
 [            # hello
     a,
     1, c
@@ -5684,14 +5552,10 @@ Module .. ROOT 0,0 -> 3,1
       .ctx Load
 """),
 
-(r"""
-[            # hello
+(r"""[            # hello
     a, b, c
-]
-""", 'body[0].value', 2, 3, r"""
-[
-    1,]
-""", r"""
+]""", 'body[0].value', 2, 3, r"""[
+    1,]""", r"""
 [            # hello
     a, b,
     1,]
@@ -5707,13 +5571,9 @@ Module .. ROOT 0,0 -> 2,7
       .ctx Load
 """),
 
-(r"""
-[            # hello
+(r"""[            # hello
     a, b, c
-]
-""", 'body[0].value', 0, 1, r"""
-[2,]
-""", r"""
+]""", 'body[0].value', 0, 1, r"""[2,]""", r"""
 [            # hello
     2, b, c
 ]
@@ -5729,13 +5589,9 @@ Module .. ROOT 0,0 -> 2,1
       .ctx Load
 """),
 
-(r"""
-[            # hello
+(r"""[            # hello
     a, b, c
-]
-""", 'body[0].value', 1, 2, r"""
-[2,]
-""", r"""
+]""", 'body[0].value', 1, 2, r"""[2,]""", r"""
 [            # hello
     a, 2, c
 ]
@@ -5751,13 +5607,9 @@ Module .. ROOT 0,0 -> 2,1
       .ctx Load
 """),
 
-(r"""
-[            # hello
+(r"""[            # hello
     a, b, c
-]
-""", 'body[0].value', 2, 3, r"""
-[2,]
-""", r"""
+]""", 'body[0].value', 2, 3, r"""[2,]""", r"""
 [            # hello
     a, b, 2,]
 """, r"""
@@ -5772,14 +5624,10 @@ Module .. ROOT 0,0 -> 1,13
       .ctx Load
 """),
 
-(r"""
-[            # hello
+(r"""[            # hello
     a, b, c
-]
-""", 'body[0].value', 0, 1, r"""
-[3,
-]
-""", r"""
+]""", 'body[0].value', 0, 1, r"""[3,
+]""", r"""
 [            # hello
     3,
     b, c
@@ -5796,14 +5644,10 @@ Module .. ROOT 0,0 -> 3,1
       .ctx Load
 """),
 
-(r"""
-[            # hello
+(r"""[            # hello
     a, b, c
-]
-""", 'body[0].value', 1, 2, r"""
-[3,
-]
-""", r"""
+]""", 'body[0].value', 1, 2, r"""[3,
+]""", r"""
 [            # hello
     a, 3,
     c
@@ -5820,14 +5664,10 @@ Module .. ROOT 0,0 -> 3,1
       .ctx Load
 """),
 
-(r"""
-[            # hello
+(r"""[            # hello
     a, b, c
-]
-""", 'body[0].value', 2, 3, r"""
-[3,
-]
-""", r"""
+]""", 'body[0].value', 2, 3, r"""[3,
+]""", r"""
 [            # hello
     a, b, 3,
 ]
@@ -5843,14 +5683,10 @@ Module .. ROOT 0,0 -> 2,1
       .ctx Load
 """),
 
-(r"""
-[            # hello
+(r"""[            # hello
     a, b, c,
-]
-""", 'body[0].value', 0, 1, r"""
-[
-    1,]
-""", r"""
+]""", 'body[0].value', 0, 1, r"""[
+    1,]""", r"""
 [            # hello
     1, b, c,
 ]
@@ -5866,14 +5702,10 @@ Module .. ROOT 0,0 -> 2,1
       .ctx Load
 """),
 
-(r"""
-[            # hello
+(r"""[            # hello
     a, b, c,
-]
-""", 'body[0].value', 1, 2, r"""
-[
-    1,]
-""", r"""
+]""", 'body[0].value', 1, 2, r"""[
+    1,]""", r"""
 [            # hello
     a,
     1, c,
@@ -5890,14 +5722,10 @@ Module .. ROOT 0,0 -> 3,1
       .ctx Load
 """),
 
-(r"""
-[            # hello
+(r"""[            # hello
     a, b, c,
-]
-""", 'body[0].value', 2, 3, r"""
-[
-    1,]
-""", r"""
+]""", 'body[0].value', 2, 3, r"""[
+    1,]""", r"""
 [            # hello
     a, b,
     1,]
@@ -5913,13 +5741,9 @@ Module .. ROOT 0,0 -> 2,7
       .ctx Load
 """),
 
-(r"""
-[            # hello
+(r"""[            # hello
     a, b, c,
-]
-""", 'body[0].value', 0, 1, r"""
-[2,]
-""", r"""
+]""", 'body[0].value', 0, 1, r"""[2,]""", r"""
 [            # hello
     2, b, c,
 ]
@@ -5935,13 +5759,9 @@ Module .. ROOT 0,0 -> 2,1
       .ctx Load
 """),
 
-(r"""
-[            # hello
+(r"""[            # hello
     a, b, c,
-]
-""", 'body[0].value', 1, 2, r"""
-[2,]
-""", r"""
+]""", 'body[0].value', 1, 2, r"""[2,]""", r"""
 [            # hello
     a, 2, c,
 ]
@@ -5957,13 +5777,9 @@ Module .. ROOT 0,0 -> 2,1
       .ctx Load
 """),
 
-(r"""
-[            # hello
+(r"""[            # hello
     a, b, c,
-]
-""", 'body[0].value', 2, 3, r"""
-[2,]
-""", r"""
+]""", 'body[0].value', 2, 3, r"""[2,]""", r"""
 [            # hello
     a, b, 2,]
 """, r"""
@@ -5978,14 +5794,10 @@ Module .. ROOT 0,0 -> 1,13
       .ctx Load
 """),
 
-(r"""
-[            # hello
+(r"""[            # hello
     a, b, c,
-]
-""", 'body[0].value', 0, 1, r"""
-[3,
-]
-""", r"""
+]""", 'body[0].value', 0, 1, r"""[3,
+]""", r"""
 [            # hello
     3,
     b, c,
@@ -6002,14 +5814,10 @@ Module .. ROOT 0,0 -> 3,1
       .ctx Load
 """),
 
-(r"""
-[            # hello
+(r"""[            # hello
     a, b, c,
-]
-""", 'body[0].value', 1, 2, r"""
-[3,
-]
-""", r"""
+]""", 'body[0].value', 1, 2, r"""[3,
+]""", r"""
 [            # hello
     a, 3,
     c,
@@ -6026,14 +5834,10 @@ Module .. ROOT 0,0 -> 3,1
       .ctx Load
 """),
 
-(r"""
-[            # hello
+(r"""[            # hello
     a, b, c,
-]
-""", 'body[0].value', 2, 3, r"""
-[3,
-]
-""", r"""
+]""", 'body[0].value', 2, 3, r"""[3,
+]""", r"""
 [            # hello
     a, b, 3,
 ]
@@ -6049,14 +5853,10 @@ Module .. ROOT 0,0 -> 2,1
       .ctx Load
 """),
 
-(r"""
-[            # hello
+(r"""[            # hello
     a, b, c  # blah
-]
-""", 'body[0].value', 2, 3, r"""
-[
-    1]
-""", r"""
+]""", 'body[0].value', 2, 3, r"""[
+    1]""", r"""
 [            # hello
     a, b,
     1]
@@ -6072,13 +5872,9 @@ Module .. ROOT 0,0 -> 2,6
       .ctx Load
 """),
 
-(r"""
-[            # hello
+(r"""[            # hello
     a, b, c  # blah
-]
-""", 'body[0].value', 2, 3, r"""
-[2]
-""", r"""
+]""", 'body[0].value', 2, 3, r"""[2]""", r"""
 [            # hello
     a, b, 2]
 """, r"""
@@ -6093,14 +5889,10 @@ Module .. ROOT 0,0 -> 1,12
       .ctx Load
 """),
 
-(r"""
-[            # hello
+(r"""[            # hello
     a, b, c  # blah
-]
-""", 'body[0].value', 2, 3, r"""
-[3
-]
-""", r"""
+]""", 'body[0].value', 2, 3, r"""[3
+]""", r"""
 [            # hello
     a, b, 3
 ]
@@ -6116,14 +5908,10 @@ Module .. ROOT 0,0 -> 2,1
       .ctx Load
 """),
 
-(r"""
-[            # hello
+(r"""[            # hello
     a, b, c  # blah
-]
-""", 'body[0].value', 2, 3, r"""
-[
-    1,]
-""", r"""
+]""", 'body[0].value', 2, 3, r"""[
+    1,]""", r"""
 [            # hello
     a, b,
     1,]
@@ -6139,13 +5927,9 @@ Module .. ROOT 0,0 -> 2,7
       .ctx Load
 """),
 
-(r"""
-[            # hello
+(r"""[            # hello
     a, b, c  # blah
-]
-""", 'body[0].value', 2, 3, r"""
-[2,]
-""", r"""
+]""", 'body[0].value', 2, 3, r"""[2,]""", r"""
 [            # hello
     a, b, 2,]
 """, r"""
@@ -6160,14 +5944,10 @@ Module .. ROOT 0,0 -> 1,13
       .ctx Load
 """),
 
-(r"""
-[            # hello
+(r"""[            # hello
     a, b, c  # blah
-]
-""", 'body[0].value', 2, 3, r"""
-[3,
-]
-""", r"""
+]""", 'body[0].value', 2, 3, r"""[3,
+]""", r"""
 [            # hello
     a, b, 3,
 ]
@@ -6183,15 +5963,11 @@ Module .. ROOT 0,0 -> 2,1
       .ctx Load
 """),
 
-(r"""
-[            # hello
+(r"""[            # hello
     a, b, c  # blah
-]
-""", 'body[0].value', 2, 3, r"""
-[
+]""", 'body[0].value', 2, 3, r"""[
     1  # comment
-]
-""", r"""
+]""", r"""
 [            # hello
     a, b,
     1  # comment
@@ -6208,14 +5984,10 @@ Module .. ROOT 0,0 -> 3,1
       .ctx Load
 """),
 
-(r"""
-[            # hello
+(r"""[            # hello
     a, b, c  # blah
-]
-""", 'body[0].value', 2, 3, r"""
-[2  # comment
-]
-""", r"""
+]""", 'body[0].value', 2, 3, r"""[2  # comment
+]""", r"""
 [            # hello
     a, b, 2  # comment
 ]
@@ -6231,14 +6003,10 @@ Module .. ROOT 0,0 -> 2,1
       .ctx Load
 """),
 
-(r"""
-[            # hello
+(r"""[            # hello
     a, b, c  # blah
-]
-""", 'body[0].value', 2, 3, r"""
-[3  # comment
-]
-""", r"""
+]""", 'body[0].value', 2, 3, r"""[3  # comment
+]""", r"""
 [            # hello
     a, b, 3  # comment
 ]
@@ -6254,15 +6022,11 @@ Module .. ROOT 0,0 -> 2,1
       .ctx Load
 """),
 
-(r"""
-[            # hello
+(r"""[            # hello
     a, b, c  # blah
-]
-""", 'body[0].value', 2, 3, r"""
-[
+]""", 'body[0].value', 2, 3, r"""[
     1,  # comment
-]
-""", r"""
+]""", r"""
 [            # hello
     a, b,
     1,  # comment
@@ -6279,14 +6043,10 @@ Module .. ROOT 0,0 -> 3,1
       .ctx Load
 """),
 
-(r"""
-[            # hello
+(r"""[            # hello
     a, b, c  # blah
-]
-""", 'body[0].value', 2, 3, r"""
-[2,  # comment
-]
-""", r"""
+]""", 'body[0].value', 2, 3, r"""[2,  # comment
+]""", r"""
 [            # hello
     a, b, 2,  # comment
 ]
@@ -6302,14 +6062,10 @@ Module .. ROOT 0,0 -> 2,1
       .ctx Load
 """),
 
-(r"""
-[            # hello
+(r"""[            # hello
     a, b, c  # blah
-]
-""", 'body[0].value', 2, 3, r"""
-[3,  # comment
-]
-""", r"""
+]""", 'body[0].value', 2, 3, r"""[3,  # comment
+]""", r"""
 [            # hello
     a, b, 3,  # comment
 ]
@@ -6325,14 +6081,10 @@ Module .. ROOT 0,0 -> 2,1
       .ctx Load
 """),
 
-(r"""
-[            # hello
+(r"""[            # hello
     a, b
-]
-""", 'body[0].value', 0, 0, r"""
-[
-    1]
-""", r"""
+]""", 'body[0].value', 0, 0, r"""[
+    1]""", r"""
 [            # hello
     1, a, b
 ]
@@ -6348,14 +6100,10 @@ Module .. ROOT 0,0 -> 2,1
       .ctx Load
 """),
 
-(r"""
-[            # hello
+(r"""[            # hello
     a, b
-]
-""", 'body[0].value', 1, 1, r"""
-[
-    1]
-""", r"""
+]""", 'body[0].value', 1, 1, r"""[
+    1]""", r"""
 [            # hello
     a,
     1, b
@@ -6372,14 +6120,10 @@ Module .. ROOT 0,0 -> 3,1
       .ctx Load
 """),
 
-(r"""
-[            # hello
+(r"""[            # hello
     a, b
-]
-""", 'body[0].value', 2, 2, r"""
-[
-    1]
-""", r"""
+]""", 'body[0].value', 2, 2, r"""[
+    1]""", r"""
 [            # hello
     a, b,
     1]
@@ -6395,13 +6139,9 @@ Module .. ROOT 0,0 -> 2,6
       .ctx Load
 """),
 
-(r"""
-[            # hello
+(r"""[            # hello
     a, b
-]
-""", 'body[0].value', 0, 0, r"""
-[2]
-""", r"""
+]""", 'body[0].value', 0, 0, r"""[2]""", r"""
 [            # hello
     2, a, b
 ]
@@ -6417,13 +6157,9 @@ Module .. ROOT 0,0 -> 2,1
       .ctx Load
 """),
 
-(r"""
-[            # hello
+(r"""[            # hello
     a, b
-]
-""", 'body[0].value', 1, 1, r"""
-[2]
-""", r"""
+]""", 'body[0].value', 1, 1, r"""[2]""", r"""
 [            # hello
     a, 2, b
 ]
@@ -6439,13 +6175,9 @@ Module .. ROOT 0,0 -> 2,1
       .ctx Load
 """),
 
-(r"""
-[            # hello
+(r"""[            # hello
     a, b
-]
-""", 'body[0].value', 2, 2, r"""
-[2]
-""", r"""
+]""", 'body[0].value', 2, 2, r"""[2]""", r"""
 [            # hello
     a, b, 2]
 """, r"""
@@ -6460,14 +6192,10 @@ Module .. ROOT 0,0 -> 1,12
       .ctx Load
 """),
 
-(r"""
-[            # hello
+(r"""[            # hello
     a, b
-]
-""", 'body[0].value', 0, 0, r"""
-[3
-]
-""", r"""
+]""", 'body[0].value', 0, 0, r"""[3
+]""", r"""
 [            # hello
     3,
     a, b
@@ -6484,14 +6212,10 @@ Module .. ROOT 0,0 -> 3,1
       .ctx Load
 """),
 
-(r"""
-[            # hello
+(r"""[            # hello
     a, b
-]
-""", 'body[0].value', 1, 1, r"""
-[3
-]
-""", r"""
+]""", 'body[0].value', 1, 1, r"""[3
+]""", r"""
 [            # hello
     a, 3,
     b
@@ -6508,14 +6232,10 @@ Module .. ROOT 0,0 -> 3,1
       .ctx Load
 """),
 
-(r"""
-[            # hello
+(r"""[            # hello
     a, b
-]
-""", 'body[0].value', 2, 2, r"""
-[3
-]
-""", r"""
+]""", 'body[0].value', 2, 2, r"""[3
+]""", r"""
 [            # hello
     a, b, 3
 ]
@@ -6531,14 +6251,10 @@ Module .. ROOT 0,0 -> 2,1
       .ctx Load
 """),
 
-(r"""
-[            # hello
+(r"""[            # hello
     a, b,
-]
-""", 'body[0].value', 0, 0, r"""
-[
-    1]
-""", r"""
+]""", 'body[0].value', 0, 0, r"""[
+    1]""", r"""
 [            # hello
     1, a, b,
 ]
@@ -6554,14 +6270,10 @@ Module .. ROOT 0,0 -> 2,1
       .ctx Load
 """),
 
-(r"""
-[            # hello
+(r"""[            # hello
     a, b,
-]
-""", 'body[0].value', 1, 1, r"""
-[
-    1]
-""", r"""
+]""", 'body[0].value', 1, 1, r"""[
+    1]""", r"""
 [            # hello
     a,
     1, b,
@@ -6578,14 +6290,10 @@ Module .. ROOT 0,0 -> 3,1
       .ctx Load
 """),
 
-(r"""
-[            # hello
+(r"""[            # hello
     a, b,
-]
-""", 'body[0].value', 2, 2, r"""
-[
-    1]
-""", r"""
+]""", 'body[0].value', 2, 2, r"""[
+    1]""", r"""
 [            # hello
     a, b,
     1]
@@ -6601,13 +6309,9 @@ Module .. ROOT 0,0 -> 2,6
       .ctx Load
 """),
 
-(r"""
-[            # hello
+(r"""[            # hello
     a, b,
-]
-""", 'body[0].value', 0, 0, r"""
-[2]
-""", r"""
+]""", 'body[0].value', 0, 0, r"""[2]""", r"""
 [            # hello
     2, a, b,
 ]
@@ -6623,13 +6327,9 @@ Module .. ROOT 0,0 -> 2,1
       .ctx Load
 """),
 
-(r"""
-[            # hello
+(r"""[            # hello
     a, b,
-]
-""", 'body[0].value', 1, 1, r"""
-[2]
-""", r"""
+]""", 'body[0].value', 1, 1, r"""[2]""", r"""
 [            # hello
     a, 2, b,
 ]
@@ -6645,13 +6345,9 @@ Module .. ROOT 0,0 -> 2,1
       .ctx Load
 """),
 
-(r"""
-[            # hello
+(r"""[            # hello
     a, b,
-]
-""", 'body[0].value', 2, 2, r"""
-[2]
-""", r"""
+]""", 'body[0].value', 2, 2, r"""[2]""", r"""
 [            # hello
     a, b, 2]
 """, r"""
@@ -6666,14 +6362,10 @@ Module .. ROOT 0,0 -> 1,12
       .ctx Load
 """),
 
-(r"""
-[            # hello
+(r"""[            # hello
     a, b,
-]
-""", 'body[0].value', 0, 0, r"""
-[3
-]
-""", r"""
+]""", 'body[0].value', 0, 0, r"""[3
+]""", r"""
 [            # hello
     3,
     a, b,
@@ -6690,14 +6382,10 @@ Module .. ROOT 0,0 -> 3,1
       .ctx Load
 """),
 
-(r"""
-[            # hello
+(r"""[            # hello
     a, b,
-]
-""", 'body[0].value', 1, 1, r"""
-[3
-]
-""", r"""
+]""", 'body[0].value', 1, 1, r"""[3
+]""", r"""
 [            # hello
     a, 3,
     b,
@@ -6714,14 +6402,10 @@ Module .. ROOT 0,0 -> 3,1
       .ctx Load
 """),
 
-(r"""
-[            # hello
+(r"""[            # hello
     a, b,
-]
-""", 'body[0].value', 2, 2, r"""
-[3
-]
-""", r"""
+]""", 'body[0].value', 2, 2, r"""[3
+]""", r"""
 [            # hello
     a, b, 3
 ]
@@ -6737,14 +6421,10 @@ Module .. ROOT 0,0 -> 2,1
       .ctx Load
 """),
 
-(r"""
-[            # hello
+(r"""[            # hello
     a, b
-]
-""", 'body[0].value', 0, 0, r"""
-[
-    1,]
-""", r"""
+]""", 'body[0].value', 0, 0, r"""[
+    1,]""", r"""
 [            # hello
     1, a, b
 ]
@@ -6760,14 +6440,10 @@ Module .. ROOT 0,0 -> 2,1
       .ctx Load
 """),
 
-(r"""
-[            # hello
+(r"""[            # hello
     a, b
-]
-""", 'body[0].value', 1, 1, r"""
-[
-    1,]
-""", r"""
+]""", 'body[0].value', 1, 1, r"""[
+    1,]""", r"""
 [            # hello
     a,
     1, b
@@ -6784,14 +6460,10 @@ Module .. ROOT 0,0 -> 3,1
       .ctx Load
 """),
 
-(r"""
-[            # hello
+(r"""[            # hello
     a, b
-]
-""", 'body[0].value', 2, 2, r"""
-[
-    1,]
-""", r"""
+]""", 'body[0].value', 2, 2, r"""[
+    1,]""", r"""
 [            # hello
     a, b,
     1,]
@@ -6807,13 +6479,9 @@ Module .. ROOT 0,0 -> 2,7
       .ctx Load
 """),
 
-(r"""
-[            # hello
+(r"""[            # hello
     a, b
-]
-""", 'body[0].value', 0, 0, r"""
-[2,]
-""", r"""
+]""", 'body[0].value', 0, 0, r"""[2,]""", r"""
 [            # hello
     2, a, b
 ]
@@ -6829,13 +6497,9 @@ Module .. ROOT 0,0 -> 2,1
       .ctx Load
 """),
 
-(r"""
-[            # hello
+(r"""[            # hello
     a, b
-]
-""", 'body[0].value', 1, 1, r"""
-[2,]
-""", r"""
+]""", 'body[0].value', 1, 1, r"""[2,]""", r"""
 [            # hello
     a, 2, b
 ]
@@ -6851,13 +6515,9 @@ Module .. ROOT 0,0 -> 2,1
       .ctx Load
 """),
 
-(r"""
-[            # hello
+(r"""[            # hello
     a, b
-]
-""", 'body[0].value', 2, 2, r"""
-[2,]
-""", r"""
+]""", 'body[0].value', 2, 2, r"""[2,]""", r"""
 [            # hello
     a, b, 2,]
 """, r"""
@@ -6872,14 +6532,10 @@ Module .. ROOT 0,0 -> 1,13
       .ctx Load
 """),
 
-(r"""
-[            # hello
+(r"""[            # hello
     a, b
-]
-""", 'body[0].value', 0, 0, r"""
-[3,
-]
-""", r"""
+]""", 'body[0].value', 0, 0, r"""[3,
+]""", r"""
 [            # hello
     3,
     a, b
@@ -6896,14 +6552,10 @@ Module .. ROOT 0,0 -> 3,1
       .ctx Load
 """),
 
-(r"""
-[            # hello
+(r"""[            # hello
     a, b
-]
-""", 'body[0].value', 1, 1, r"""
-[3,
-]
-""", r"""
+]""", 'body[0].value', 1, 1, r"""[3,
+]""", r"""
 [            # hello
     a, 3,
     b
@@ -6920,14 +6572,10 @@ Module .. ROOT 0,0 -> 3,1
       .ctx Load
 """),
 
-(r"""
-[            # hello
+(r"""[            # hello
     a, b
-]
-""", 'body[0].value', 2, 2, r"""
-[3,
-]
-""", r"""
+]""", 'body[0].value', 2, 2, r"""[3,
+]""", r"""
 [            # hello
     a, b, 3,
 ]
@@ -6943,14 +6591,10 @@ Module .. ROOT 0,0 -> 2,1
       .ctx Load
 """),
 
-(r"""
-[            # hello
+(r"""[            # hello
     a, b,
-]
-""", 'body[0].value', 0, 0, r"""
-[
-    1,]
-""", r"""
+]""", 'body[0].value', 0, 0, r"""[
+    1,]""", r"""
 [            # hello
     1, a, b,
 ]
@@ -6966,14 +6610,10 @@ Module .. ROOT 0,0 -> 2,1
       .ctx Load
 """),
 
-(r"""
-[            # hello
+(r"""[            # hello
     a, b,
-]
-""", 'body[0].value', 1, 1, r"""
-[
-    1,]
-""", r"""
+]""", 'body[0].value', 1, 1, r"""[
+    1,]""", r"""
 [            # hello
     a,
     1, b,
@@ -6990,14 +6630,10 @@ Module .. ROOT 0,0 -> 3,1
       .ctx Load
 """),
 
-(r"""
-[            # hello
+(r"""[            # hello
     a, b,
-]
-""", 'body[0].value', 2, 2, r"""
-[
-    1,]
-""", r"""
+]""", 'body[0].value', 2, 2, r"""[
+    1,]""", r"""
 [            # hello
     a, b,
     1,]
@@ -7013,13 +6649,9 @@ Module .. ROOT 0,0 -> 2,7
       .ctx Load
 """),
 
-(r"""
-[            # hello
+(r"""[            # hello
     a, b,
-]
-""", 'body[0].value', 0, 0, r"""
-[2,]
-""", r"""
+]""", 'body[0].value', 0, 0, r"""[2,]""", r"""
 [            # hello
     2, a, b,
 ]
@@ -7035,13 +6667,9 @@ Module .. ROOT 0,0 -> 2,1
       .ctx Load
 """),
 
-(r"""
-[            # hello
+(r"""[            # hello
     a, b,
-]
-""", 'body[0].value', 1, 1, r"""
-[2,]
-""", r"""
+]""", 'body[0].value', 1, 1, r"""[2,]""", r"""
 [            # hello
     a, 2, b,
 ]
@@ -7057,13 +6685,9 @@ Module .. ROOT 0,0 -> 2,1
       .ctx Load
 """),
 
-(r"""
-[            # hello
+(r"""[            # hello
     a, b,
-]
-""", 'body[0].value', 2, 2, r"""
-[2,]
-""", r"""
+]""", 'body[0].value', 2, 2, r"""[2,]""", r"""
 [            # hello
     a, b, 2,]
 """, r"""
@@ -7078,14 +6702,10 @@ Module .. ROOT 0,0 -> 1,13
       .ctx Load
 """),
 
-(r"""
-[            # hello
+(r"""[            # hello
     a, b,
-]
-""", 'body[0].value', 0, 0, r"""
-[3,
-]
-""", r"""
+]""", 'body[0].value', 0, 0, r"""[3,
+]""", r"""
 [            # hello
     3,
     a, b,
@@ -7102,14 +6722,10 @@ Module .. ROOT 0,0 -> 3,1
       .ctx Load
 """),
 
-(r"""
-[            # hello
+(r"""[            # hello
     a, b,
-]
-""", 'body[0].value', 1, 1, r"""
-[3,
-]
-""", r"""
+]""", 'body[0].value', 1, 1, r"""[3,
+]""", r"""
 [            # hello
     a, 3,
     b,
@@ -7126,14 +6742,10 @@ Module .. ROOT 0,0 -> 3,1
       .ctx Load
 """),
 
-(r"""
-[            # hello
+(r"""[            # hello
     a, b,
-]
-""", 'body[0].value', 2, 2, r"""
-[3,
-]
-""", r"""
+]""", 'body[0].value', 2, 2, r"""[3,
+]""", r"""
 [            # hello
     a, b, 3,
 ]
@@ -7149,14 +6761,10 @@ Module .. ROOT 0,0 -> 2,1
       .ctx Load
 """),
 
-(r"""
-[            # hello
+(r"""[            # hello
     a, b  # blah
-]
-""", 'body[0].value', 2, 2, r"""
-[
-    1]
-""", r"""
+]""", 'body[0].value', 2, 2, r"""[
+    1]""", r"""
 [            # hello
     a, b,
     1]
@@ -7172,13 +6780,9 @@ Module .. ROOT 0,0 -> 2,6
       .ctx Load
 """),
 
-(r"""
-[            # hello
+(r"""[            # hello
     a, b  # blah
-]
-""", 'body[0].value', 2, 2, r"""
-[2]
-""", r"""
+]""", 'body[0].value', 2, 2, r"""[2]""", r"""
 [            # hello
     a, b, 2]
 """, r"""
@@ -7193,14 +6797,10 @@ Module .. ROOT 0,0 -> 1,12
       .ctx Load
 """),
 
-(r"""
-[            # hello
+(r"""[            # hello
     a, b  # blah
-]
-""", 'body[0].value', 2, 2, r"""
-[3
-]
-""", r"""
+]""", 'body[0].value', 2, 2, r"""[3
+]""", r"""
 [            # hello
     a, b, 3
 ]
@@ -7216,14 +6816,10 @@ Module .. ROOT 0,0 -> 2,1
       .ctx Load
 """),
 
-(r"""
-[            # hello
+(r"""[            # hello
     a, b  # blah
-]
-""", 'body[0].value', 2, 2, r"""
-[
-    1,]
-""", r"""
+]""", 'body[0].value', 2, 2, r"""[
+    1,]""", r"""
 [            # hello
     a, b,
     1,]
@@ -7239,13 +6835,9 @@ Module .. ROOT 0,0 -> 2,7
       .ctx Load
 """),
 
-(r"""
-[            # hello
+(r"""[            # hello
     a, b  # blah
-]
-""", 'body[0].value', 2, 2, r"""
-[2,]
-""", r"""
+]""", 'body[0].value', 2, 2, r"""[2,]""", r"""
 [            # hello
     a, b, 2,]
 """, r"""
@@ -7260,14 +6852,10 @@ Module .. ROOT 0,0 -> 1,13
       .ctx Load
 """),
 
-(r"""
-[            # hello
+(r"""[            # hello
     a, b  # blah
-]
-""", 'body[0].value', 2, 2, r"""
-[3,
-]
-""", r"""
+]""", 'body[0].value', 2, 2, r"""[3,
+]""", r"""
 [            # hello
     a, b, 3,
 ]
@@ -7283,15 +6871,11 @@ Module .. ROOT 0,0 -> 2,1
       .ctx Load
 """),
 
-(r"""
-[            # hello
+(r"""[            # hello
     a, b  # blah
-]
-""", 'body[0].value', 2, 2, r"""
-[
+]""", 'body[0].value', 2, 2, r"""[
     1  # comment
-]
-""", r"""
+]""", r"""
 [            # hello
     a, b,
     1  # comment
@@ -7308,14 +6892,10 @@ Module .. ROOT 0,0 -> 3,1
       .ctx Load
 """),
 
-(r"""
-[            # hello
+(r"""[            # hello
     a, b  # blah
-]
-""", 'body[0].value', 2, 2, r"""
-[2  # comment
-]
-""", r"""
+]""", 'body[0].value', 2, 2, r"""[2  # comment
+]""", r"""
 [            # hello
     a, b, 2  # comment
 ]
@@ -7331,14 +6911,10 @@ Module .. ROOT 0,0 -> 2,1
       .ctx Load
 """),
 
-(r"""
-[            # hello
+(r"""[            # hello
     a, b  # blah
-]
-""", 'body[0].value', 2, 2, r"""
-[3  # comment
-]
-""", r"""
+]""", 'body[0].value', 2, 2, r"""[3  # comment
+]""", r"""
 [            # hello
     a, b, 3  # comment
 ]
@@ -7354,15 +6930,11 @@ Module .. ROOT 0,0 -> 2,1
       .ctx Load
 """),
 
-(r"""
-[            # hello
+(r"""[            # hello
     a, b  # blah
-]
-""", 'body[0].value', 2, 2, r"""
-[
+]""", 'body[0].value', 2, 2, r"""[
     1,  # comment
-]
-""", r"""
+]""", r"""
 [            # hello
     a, b,
     1,  # comment
@@ -7379,14 +6951,10 @@ Module .. ROOT 0,0 -> 3,1
       .ctx Load
 """),
 
-(r"""
-[            # hello
+(r"""[            # hello
     a, b  # blah
-]
-""", 'body[0].value', 2, 2, r"""
-[2,  # comment
-]
-""", r"""
+]""", 'body[0].value', 2, 2, r"""[2,  # comment
+]""", r"""
 [            # hello
     a, b, 2,  # comment
 ]
@@ -7402,14 +6970,10 @@ Module .. ROOT 0,0 -> 2,1
       .ctx Load
 """),
 
-(r"""
-[            # hello
+(r"""[            # hello
     a, b  # blah
-]
-""", 'body[0].value', 2, 2, r"""
-[3,  # comment
-]
-""", r"""
+]""", 'body[0].value', 2, 2, r"""[3,  # comment
+]""", r"""
 [            # hello
     a, b, 3,  # comment
 ]
@@ -7425,15 +6989,11 @@ Module .. ROOT 0,0 -> 2,1
       .ctx Load
 """),
 
-(r"""
-{
+(r"""{
     'message': ('An open stream was garbage collected prior to '
                 'establishing network connection; '
                 'call "stream.close()" explicitly.')
-}
-""", 'body[0].value', 1, 1, r"""
-{i: j}
-""", r"""
+}""", 'body[0].value', 1, 1, r"""{i: j}""", r"""
 {
     'message': ('An open stream was garbage collected prior to '
                 'establishing network connection; '
@@ -7451,14 +7011,10 @@ Module .. ROOT 0,0 -> 3,59
       1] Name 'j' Load .. 3,57 -> 3,58
 """),
 
-(r"""
-{
+(r"""{
     1: 2,
     5: 6
-}
-""", 'body[0].value', 1, 1, r"""
-{3: ("4")}
-""", r"""
+}""", 'body[0].value', 1, 1, r"""{3: ("4")}""", r"""
 {
     1: 2,
     3: ("4"), 5: 6
@@ -7478,15 +7034,11 @@ Module .. ROOT 0,0 -> 3,1
       2] Constant 6 .. 2,17 -> 2,18
 """),
 
-(r"""
-[
+(r"""[
     # order of patterns matters
     r'file, line (\\d+)',
     3,
-]
-""", 'body[0].value', 1, 1, r"""
-(1, 2)
-""", r"""
+]""", 'body[0].value', 1, 1, r"""(1, 2)""", r"""
 [
     # order of patterns matters
     r'file, line (\\d+)',
@@ -7505,11 +7057,7 @@ Module .. ROOT 0,0 -> 4,1
       .ctx Load
 """),
 
-(r"""
-(IndexError, KeyError, isinstance,)
-""", 'body[0].value', 2, 3, r"""
-()
-""", r"""
+(r"""(IndexError, KeyError, isinstance,)""", 'body[0].value', 2, 3, r"""()""", r"""
 (IndexError, KeyError,)
 """, r"""
 Module .. ROOT 0,0 -> 0,23
@@ -7522,11 +7070,7 @@ Module .. ROOT 0,0 -> 0,23
       .ctx Load
 """),
 
-(r"""
-[a, b] = c
-""", 'body[0].targets[0]', 2, 2, r"""
-(d,)
-""", r"""
+(r"""[a, b] = c""", 'body[0].targets[0]', 2, 2, r"""(d,)""", r"""
 [a, b, d,] = c
 """, r"""
 Module .. ROOT 0,0 -> 0,14
@@ -7542,12 +7086,8 @@ Module .. ROOT 0,0 -> 0,14
     .value Name 'c' Load .. 0,13 -> 0,14
 """),
 
-(r"""
-stat_list,
-""", 'body[0].value', 0, 1, r"""
-[ {-1: "stdname",
-                   2: "cumulative"}[field[0]] ]
-""", r"""
+(r"""stat_list,""", 'body[0].value', 0, 1, r"""[ {-1: "stdname",
+                   2: "cumulative"}[field[0]] ]""", r"""
 ( {-1: "stdname",
                    2: "cumulative"}[field[0]], )
 """, r"""
@@ -7574,13 +7114,9 @@ Module .. ROOT 0,0 -> 1,48
       .ctx Load
 """),
 
-(r"""
-for a in a, b:
-    pass
-""", 'body[0].iter', 1, 2, r"""
-(
-c,)
-""", r"""
+(r"""for a in a, b:
+    pass""", 'body[0].iter', 1, 2, r"""(
+c,)""", r"""
 for a in (a,
 c,):
     pass
@@ -7598,12 +7134,8 @@ Module .. ROOT 0,0 -> 2,8
     0] Pass .. 2,4 -> 2,8
 """),
 
-(r"""
-result = filename, headers
-""", 'body[0].value', 0, 0, r"""
-(
-c,)
-""", r"""
+(r"""result = filename, headers""", 'body[0].value', 0, 0, r"""(
+c,)""", r"""
 result = (
 c, filename, headers)
 """, r"""
@@ -7620,11 +7152,7 @@ Module .. ROOT 0,0 -> 1,21
       .ctx Load
 """),
 
-(r"""
-return (user if delim else None), host
-""", 'body[0].value', 0, 2, r"""
-()
-""", r"""
+(r"""return (user if delim else None), host""", 'body[0].value', 0, 2, r"""()""", r"""
 return ()
 """, r"""
 Module .. ROOT 0,0 -> 0,9
@@ -7634,11 +7162,7 @@ Module .. ROOT 0,0 -> 0,9
       .ctx Load
 """),
 
-(r"""
-{1, 2}
-""", 'body[0].value', 0, 2, r"""
-()
-""", r"""
+(r"""{1, 2}""", 'body[0].value', 0, 2, r"""()""", r"""
 set()
 """, r"""
 Module .. ROOT 0,0 -> 0,5
@@ -7648,11 +7172,7 @@ Module .. ROOT 0,0 -> 0,5
       .func Name 'set' Load .. 0,0 -> 0,3
 """),
 
-(r"""
-set()
-""", 'body[0].value', 0, 0, r"""
-()
-""", r"""
+(r"""set()""", 'body[0].value', 0, 0, r"""()""", r"""
 set()
 """, r"""
 Module .. ROOT 0,0 -> 0,5
@@ -7662,11 +7182,7 @@ Module .. ROOT 0,0 -> 0,5
       .func Name 'set' Load .. 0,0 -> 0,3
 """),
 
-(r"""
-set()
-""", 'body[0].value', 0, 0, r"""
-(1, 2)
-""", r"""
+(r"""set()""", 'body[0].value', 0, 0, r"""(1, 2)""", r"""
 {1, 2}
 """, r"""
 Module .. ROOT 0,0 -> 0,6
@@ -7678,11 +7194,7 @@ Module .. ROOT 0,0 -> 0,6
       1] Constant 2 .. 0,4 -> 0,5
 """),
 
-(r"""
-1, 2, 3,
-""", 'body[0].value', 0, 0, r"""
-a,
-""", r"""
+(r"""1, 2, 3,""", 'body[0].value', 0, 0, r"""a,""", r"""
 a, 1, 2, 3,
 """, r"""
 Module .. ROOT 0,0 -> 0,11
@@ -7697,11 +7209,7 @@ Module .. ROOT 0,0 -> 0,11
       .ctx Load
 """),
 
-(r"""
-1, 2, 3,
-""", 'body[0].value', 1, 1, r"""
-a,
-""", r"""
+(r"""1, 2, 3,""", 'body[0].value', 1, 1, r"""a,""", r"""
 1, a, 2, 3,
 """, r"""
 Module .. ROOT 0,0 -> 0,11
@@ -7716,11 +7224,7 @@ Module .. ROOT 0,0 -> 0,11
       .ctx Load
 """),
 
-(r"""
-1, 2, 3,
-""", 'body[0].value', 2, 2, r"""
-a,
-""", r"""
+(r"""1, 2, 3,""", 'body[0].value', 2, 2, r"""a,""", r"""
 1, 2, a, 3,
 """, r"""
 Module .. ROOT 0,0 -> 0,11
@@ -7735,11 +7239,7 @@ Module .. ROOT 0,0 -> 0,11
       .ctx Load
 """),
 
-(r"""
-1, 2, 3,
-""", 'body[0].value', 3, 3, r"""
-a,
-""", r"""
+(r"""1, 2, 3,""", 'body[0].value', 3, 3, r"""a,""", r"""
 1, 2, 3, a,
 """, r"""
 Module .. ROOT 0,0 -> 0,11
@@ -7754,11 +7254,7 @@ Module .. ROOT 0,0 -> 0,11
       .ctx Load
 """),
 
-(r"""
-1, 2, 3,
-""", 'body[0].value', 0, 1, r"""
-a,
-""", r"""
+(r"""1, 2, 3,""", 'body[0].value', 0, 1, r"""a,""", r"""
 a, 2, 3,
 """, r"""
 Module .. ROOT 0,0 -> 0,8
@@ -7772,11 +7268,7 @@ Module .. ROOT 0,0 -> 0,8
       .ctx Load
 """),
 
-(r"""
-1, 2, 3,
-""", 'body[0].value', 1, 2, r"""
-a,
-""", r"""
+(r"""1, 2, 3,""", 'body[0].value', 1, 2, r"""a,""", r"""
 1, a, 3,
 """, r"""
 Module .. ROOT 0,0 -> 0,8
@@ -7790,11 +7282,7 @@ Module .. ROOT 0,0 -> 0,8
       .ctx Load
 """),
 
-(r"""
-1, 2, 3,
-""", 'body[0].value', 2, 3, r"""
-a,
-""", r"""
+(r"""1, 2, 3,""", 'body[0].value', 2, 3, r"""a,""", r"""
 1, 2, a,
 """, r"""
 Module .. ROOT 0,0 -> 0,8
@@ -7808,11 +7296,7 @@ Module .. ROOT 0,0 -> 0,8
       .ctx Load
 """),
 
-(r"""
-1, 2, 3,
-""", 'body[0].value', 0, 2, r"""
-a,
-""", r"""
+(r"""1, 2, 3,""", 'body[0].value', 0, 2, r"""a,""", r"""
 a, 3,
 """, r"""
 Module .. ROOT 0,0 -> 0,5
@@ -7825,11 +7309,7 @@ Module .. ROOT 0,0 -> 0,5
       .ctx Load
 """),
 
-(r"""
-1, 2, 3,
-""", 'body[0].value', 1, 3, r"""
-a,
-""", r"""
+(r"""1, 2, 3,""", 'body[0].value', 1, 3, r"""a,""", r"""
 1, a,
 """, r"""
 Module .. ROOT 0,0 -> 0,5
@@ -7842,11 +7322,7 @@ Module .. ROOT 0,0 -> 0,5
       .ctx Load
 """),
 
-(r"""
-1, 2, 3,
-""", 'body[0].value', 0, 3, r"""
-a,
-""", r"""
+(r"""1, 2, 3,""", 'body[0].value', 0, 3, r"""a,""", r"""
 a,
 """, r"""
 Module .. ROOT 0,0 -> 0,2
@@ -7861,11 +7337,9 @@ Module .. ROOT 0,0 -> 0,2
 ]  # END OF PUT_SLICE_SEQ_DATA
 
 PUT_SLICE_SEQ_DEL_DATA = [
-("""
-[            # hello
+(r"""[            # hello
     1, 2, 3
-]
-""", 'body[0].value', 0, 2, """
+]""", 'body[0].value', 0, 2, r"""
 [            # hello
     3
 ]
@@ -7879,9 +7353,7 @@ Module .. ROOT 0,0 -> 2,1
       .ctx Load
 """),
 
-("""
-1, 2, 3,
-""", 'body[0].value', 0, 0, """
+(r"""1, 2, 3,""", 'body[0].value', 0, 0, r"""
 1, 2, 3,
 """, """
 Module .. ROOT 0,0 -> 0,8
@@ -7895,9 +7367,7 @@ Module .. ROOT 0,0 -> 0,8
       .ctx Load
 """),
 
-("""
-1, 2, 3,
-""", 'body[0].value', 1, 1, """
+(r"""1, 2, 3,""", 'body[0].value', 1, 1, r"""
 1, 2, 3,
 """, """
 Module .. ROOT 0,0 -> 0,8
@@ -7911,9 +7381,7 @@ Module .. ROOT 0,0 -> 0,8
       .ctx Load
 """),
 
-("""
-1, 2, 3,
-""", 'body[0].value', 2, 2, """
+(r"""1, 2, 3,""", 'body[0].value', 2, 2, r"""
 1, 2, 3,
 """, """
 Module .. ROOT 0,0 -> 0,8
@@ -7927,9 +7395,7 @@ Module .. ROOT 0,0 -> 0,8
       .ctx Load
 """),
 
-("""
-1, 2, 3,
-""", 'body[0].value', 3, 3, """
+(r"""1, 2, 3,""", 'body[0].value', 3, 3, r"""
 1, 2, 3,
 """, """
 Module .. ROOT 0,0 -> 0,8
@@ -7943,9 +7409,7 @@ Module .. ROOT 0,0 -> 0,8
       .ctx Load
 """),
 
-("""
-1, 2, 3,
-""", 'body[0].value', 0, 1, """
+(r"""1, 2, 3,""", 'body[0].value', 0, 1, r"""
 2, 3,
 """, """
 Module .. ROOT 0,0 -> 0,5
@@ -7958,9 +7422,7 @@ Module .. ROOT 0,0 -> 0,5
       .ctx Load
 """),
 
-("""
-1, 2, 3,
-""", 'body[0].value', 1, 2, """
+(r"""1, 2, 3,""", 'body[0].value', 1, 2, r"""
 1, 3,
 """, """
 Module .. ROOT 0,0 -> 0,5
@@ -7973,9 +7435,7 @@ Module .. ROOT 0,0 -> 0,5
       .ctx Load
 """),
 
-("""
-1, 2, 3,
-""", 'body[0].value', 2, 3, """
+(r"""1, 2, 3,""", 'body[0].value', 2, 3, r"""
 1, 2,
 """, """
 Module .. ROOT 0,0 -> 0,5
@@ -7988,9 +7448,7 @@ Module .. ROOT 0,0 -> 0,5
       .ctx Load
 """),
 
-("""
-1, 2, 3,
-""", 'body[0].value', 0, 2, """
+(r"""1, 2, 3,""", 'body[0].value', 0, 2, r"""
 3,
 """, """
 Module .. ROOT 0,0 -> 0,2
@@ -8002,9 +7460,7 @@ Module .. ROOT 0,0 -> 0,2
       .ctx Load
 """),
 
-("""
-1, 2, 3,
-""", 'body[0].value', 1, 3, """
+(r"""1, 2, 3,""", 'body[0].value', 1, 3, r"""
 1,
 """, """
 Module .. ROOT 0,0 -> 0,2
@@ -8016,9 +7472,7 @@ Module .. ROOT 0,0 -> 0,2
       .ctx Load
 """),
 
-("""
-1, 2, 3,
-""", 'body[0].value', 0, 3, """
+(r"""1, 2, 3,""", 'body[0].value', 0, 3, r"""
 ()
 """, """
 Module .. ROOT 0,0 -> 0,2
@@ -14681,7 +14135,7 @@ Module .. ROOT 0,0 -> 6,0
 (r"""
 i ; j ;  # post
 """, '', 1, 2, None, None, r"""def f(): pass""", r"""
-i ; 
+i ;
 
 
 def f(): pass
@@ -14723,7 +14177,7 @@ i \
  ; j ;  # post
 """, '', 1, 2, None, None, r"""def f(): pass""", r"""
 i \
- ; 
+ ;
 
 
 def f(): pass
@@ -14767,7 +14221,7 @@ class cls:
     i ; j ;  # post
 """, 'body[0]', 1, 2, None, None, r"""def f(): pass""", r"""
 class cls:
-    i ; 
+    i ;
 
     def f(): pass
 # post
@@ -14816,7 +14270,7 @@ class cls:
 """, 'body[0]', 1, 2, None, None, r"""def f(): pass""", r"""
 class cls:
     i \
- ; 
+ ;
 
     def f(): pass
 # post
@@ -15341,7 +14795,7 @@ try:
 except:
     pass;
 finally:
-    break
+    pass
 """, 'body[0]', 0, 0, 'orelse', None, r"""i""", r"""
 try:
     continue
@@ -15350,11 +14804,11 @@ except:
 else:
     i
 finally:
-    break
+    pass
 """, r"""
 Module .. ROOT 0,0 -> 9,0
   .body[1]
-  0] Try .. 1,0 -> 8,9
+  0] Try .. 1,0 -> 8,8
     .body[1]
     0] Continue .. 2,4 -> 2,12
     .handlers[1]
@@ -15365,7 +14819,7 @@ Module .. ROOT 0,0 -> 9,0
     0] Expr .. 6,4 -> 6,5
       .value Name 'i' Load .. 6,4 -> 6,5
     .finalbody[1]
-    0] Break .. 8,4 -> 8,9
+    0] Pass .. 8,4 -> 8,8
 """),
 
 ]  # END OF PUT_SLICE_STMT_DATA
@@ -19519,12 +18973,10 @@ class cls:
 
     def test_put_slice_seq(self):
         for dst, elt, start, stop, src, put_src, put_dump in PUT_SLICE_SEQ_DATA:
-            dst = dst.strip()
-            src = src.strip()
-            t   = parse(dst)
-            f   = eval(f't.{elt}', {'t': t}).f
+            t = parse(dst)
+            f = eval(f't.{elt}', {'t': t}).f
 
-            f.put_slice(src, start, stop)
+            f.put_slice(None if src == '**DEL**' else src, start, stop)
 
             tdst  = t.f.src
             tdump = t.f.dump(linefunc=list, compact=True)
@@ -19546,9 +18998,8 @@ class cls:
 
     def test_put_slice_seq_del(self):
         for dst, elt, start, stop, put_src, put_dump in PUT_SLICE_SEQ_DEL_DATA:
-            dst = dst.strip()
-            t   = parse(dst)
-            f   = eval(f't.{elt}', {'t': t}).f
+            t = parse(dst)
+            f = eval(f't.{elt}', {'t': t}).f
 
             f.put_slice(None, start, stop)
 
@@ -19839,12 +19290,10 @@ def regen_put_slice_seq_data():
     newlines = []
 
     for dst, elt, start, stop, src, put_src, put_dump in PUT_SLICE_SEQ_DATA:
-        dst = dst.strip()
-        src = src.strip()
-        t   = parse(dst)
-        f   = eval(f't.{elt}', {'t': t}).f
+        t = parse(dst)
+        f = eval(f't.{elt}', {'t': t}).f
 
-        f.put_slice(src, start, stop)
+        f.put_slice(None if src == '**DEL**' else src, start, stop)
 
         tdst  = t.f.src
         tdump = t.f.dump(linefunc=list, compact=True)
@@ -19853,8 +19302,7 @@ def regen_put_slice_seq_data():
 
         t.f.verify(raise_=True)
 
-        newlines.append('(r"""')
-        newlines.extend(f'''{dst}\n""", {elt!r}, {start}, {stop}, r"""\n{src}\n""", r"""\n{tdst}\n""", r"""'''.split('\n'))
+        newlines.extend(f'''(r"""{dst}""", {elt!r}, {start}, {stop}, r"""{src}""", r"""\n{tdst}\n""", r"""'''.split('\n'))
         newlines.extend(tdump)
         newlines.append('"""),\n')
 
@@ -19874,9 +19322,8 @@ def regen_put_slice_seq_del_data():
     newlines = []
 
     for dst, elt, start, stop, put_src, put_dump in PUT_SLICE_SEQ_DEL_DATA:
-        dst = dst.strip()
-        t   = parse(dst)
-        f   = eval(f't.{elt}', {'t': t}).f
+        t = parse(dst)
+        f = eval(f't.{elt}', {'t': t}).f
 
         f.put_slice(None, start, stop)
 
@@ -19887,8 +19334,7 @@ def regen_put_slice_seq_del_data():
 
         t.f.verify(raise_=True)
 
-        newlines.append('("""')
-        newlines.extend(f'''{dst}\n""", {elt!r}, {start}, {stop}, """\n{tdst}\n""", """'''.split('\n'))
+        newlines.extend(f'''(r"""{dst}""", {elt!r}, {start}, {stop}, r"""\n{tdst}\n""", """'''.split('\n'))
         newlines.extend(tdump)
         newlines.append('"""),\n')
 

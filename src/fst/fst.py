@@ -1441,7 +1441,6 @@ class FSTSrcEdit:
         if is_pep8 := bool(put_body) and ((is_pep81 := 'pep81' in fmt) or 'pep8' in fmt):  # no pep8 checks if only text being put (no AST body)
             pep8space = 2 if not is_pep81 and (p := fst.parent_scope(True)) and isinstance(p.a, mod) else 1
 
-        # print(f'{copy_loc=}\n{put_loc=}\n{del_lines=}')  # DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG!
         prepend = 2 if put_col else 0  # don't put initial empty line if putting on a first AST line at root
 
         if is_pep8 and fpre and (isinstance(a := fpre.a, NAMED_SCOPE) or isinstance(put_body[0], NAMED_SCOPE)):  # preceding space
@@ -1727,15 +1726,22 @@ class FSTSrcEdit:
             self.get_slice_stmt(fst, field, True, fmt, block_loc, ffirst, flast, fpre, fpost,
                                 del_else_and_fin=del_else_and_fin, ret_all=True))
 
-        if pre_semi and post_semi and fpost:  # sandwiched between two semicoloned statements
-            put_loc   = fstloc(*fpre.bloc[2:], *fpost.bloc[:2])
-            del_lines = [block_indent]
+        put_ln, put_col, put_end_ln, put_end_col = put_loc
+
+        if pre_semi and post_semi:
+            if fpost:  # sandwiched between two semicoloned statements
+                put_ln      = fpre.bend_ln
+                put_col     = fpre.bend_col
+                put_end_ln  = fpost.bln
+                put_end_col = fpost.bcol
+                del_lines   = [block_indent]
+
+            else:  # eat whitespace after trailing useless semicolon
+                put_col = re_line_trailing_space.match(lines[put_ln], 0, put_col).start(1)
 
         if put_loc.col:
-            put_ln, put_col, put_end_ln, put_end_col = put_loc
-
             if re_empty_line.match(l := lines[put_ln][:put_col]):
-                put_loc = fstloc(put_ln, 0, put_end_ln, put_end_col)
+                put_col = 0
 
                 if del_lines:
                     del_lines[-1] = del_lines[-1] + l
@@ -1744,6 +1750,8 @@ class FSTSrcEdit:
 
             elif del_lines and not del_lines[0]:
                 del del_lines[0]
+
+        put_loc = fstloc(put_ln, put_col, put_end_ln, put_end_col)
 
         self._format_space(fst, put_fst, fmt, block_loc, put_loc, fpre, fpost, del_lines)
 
