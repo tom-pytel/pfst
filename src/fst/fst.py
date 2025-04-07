@@ -1981,29 +1981,30 @@ class FST:
 
     # ------------------------------------------------------------------------------------------------------------------
 
+    @staticmethod
+    def _make_tree_fst(ast: AST, parent: 'FST', pfield: astfield):
+        """Recreate possibly non-unique AST nodes."""
+
+        if not getattr(ast, 'f', None):  # if `.f` doesn't already exist then this needs to be checked
+            if isinstance(ast, (expr_context, unaryop, operator, boolop, cmpop)):  # ast.parse() reuses simple objects, we need all objects to be unique
+                pfield.set(parent.a, ast := ast.__class__())
+
+        return FST(ast, parent, pfield)
+
     def _make_fst_tree(self, stack: list['FST'] | None = None):
-        """Create tree of FST nodes, one for each AST node from root. Call only on root."""
+        """Create tree of FST nodes, one for each AST node from root. Call only on root or with pre-made stack of nodes
+        to walk."""
 
         if stack is None:
             stack = [self]
 
         while stack:
-            f = stack.pop()
-            a = f.a
-
-            if isinstance(a, (expr_context, unaryop, operator, boolop, cmpop)) and (parent := f.parent):  # ast.parse() reuses simple objects, we need all objects to be unique
-                f.a = a = a.__class__()
-                a.f = f
-
-                f.pfield.set(parent.a, a)
-
-            else:
-                for name, child in iter_fields(a):
-                    if isinstance(child, AST):
-                        stack.append(FST(child, f, astfield(name)))
-                    elif isinstance(child, list):
-                        stack.extend(FST(a, f, astfield(name, idx))
-                                     for idx, a in enumerate(child) if isinstance(a, AST))
+            for name, child in iter_fields(a := (f := stack.pop()).a):
+                if isinstance(child, AST):
+                    stack.append(self._make_tree_fst(child, f, astfield(name)))
+                elif isinstance(child, list):
+                    stack.extend(self._make_tree_fst(a, f, astfield(name, idx))
+                                 for idx, a in enumerate(child) if isinstance(a, AST))
 
     def _unmake_fst_tree(self, stack: list[AST] | None = None, root: Optional['FST'] = None):
         """Destroy a tree of FST nodes by breaking links."""
@@ -3282,7 +3283,10 @@ class FST:
 
     # ------------------------------------------------------------------------------------------------------------------
 
-    def __init__(self, ast: AST, parent: Optional['FST'] = None, pfield: astfield | None = None, **root_params):
+    def __new__(cls, ast: AST, parent: Optional['FST'] = None, pfield: astfield | None = None, **kwargs):
+        if not (self := getattr(ast, 'f', None)):
+            self = object.__new__(cls)
+
         self.a      = ast
         self.parent = parent
         self.pfield = pfield
@@ -3291,25 +3295,27 @@ class FST:
         if parent is not None:
             self.root = parent.root
 
-            return
+            return self
 
         # ROOT
 
         self.root   = self
         self._lines = ((lines if lines[0].__class__ is bistr else [bistr(s) for s in lines])
-                       if (lines := root_params.get('lines')) else
+                       if (lines := kwargs.get('lines')) else
                        [bistr('')])
 
-        if from_ := root_params.get('from_'):  # copy params from source tree
+        if from_ := kwargs.get('from_'):  # copy params from source tree
             from_root         = from_.root
-            self.parse_params = root_params.get('parse_params', from_root.parse_params)
-            self.indent       = root_params.get('indent', from_root.indent)
+            self.parse_params = kwargs.get('parse_params', from_root.parse_params)
+            self.indent       = kwargs.get('indent', from_root.indent)
 
         else:
-            self.parse_params = root_params.get('parse_params', DEFAULT_PARSE_PARAMS)
-            self.indent       = root_params.get('indent', DEFAULT_INDENT)
+            self.parse_params = kwargs.get('parse_params', DEFAULT_PARSE_PARAMS)
+            self.indent       = kwargs.get('indent', DEFAULT_INDENT)
 
         self._make_fst_tree()
+
+        return self
 
     @staticmethod
     def new(filename: str = '<unknown>', mode: str = 'exec', *,
