@@ -1784,12 +1784,6 @@ class FST:
         return self.parent is None
 
     @property
-    def is_mock(self) -> bool:
-        """`True` if is a `locmock()` for another node."""
-
-        return self.a.f is not self
-
-    @property
     def is_stmt(self) -> bool:
         """Is a `stmt`."""
 
@@ -2035,7 +2029,7 @@ class FST:
 
         self.touchall(False)  # for debugging because we may have cached locs which would not have otherwise been cached during execution
 
-        tail = (' MOCK ROOT' if self.is_root else ' MOCK') if self.is_mock else (' ROOT' if self.is_root else '')
+        tail = ' ROOT' if self.is_root else ''
 
         return f'{tail} {loc[0]},{loc[1]} -> {loc[2]},{loc[3]}' if loc else tail
 
@@ -2395,7 +2389,7 @@ class FST:
             self.put_lines([bistr('set()')], ln, col, end_ln, end_col, True)
 
             ast    = self.a
-            self.a = ast = _new_empty_set_call(True, ast.lineno, ast.col_offset, from_=self)
+            self.a = ast = _new_empty_set_call(True, ast.lineno, ast.col_offset)
             ast.f  = self
 
             if parent := self.parent:
@@ -3645,9 +3639,9 @@ class FST:
             return FST(newast, lines=self._lines[:], from_=self)
 
         if isinstance(ast, STATEMENTISH):
-            loc = self.comms(False, fmt)
+            loc = self.comms(fmt)
         elif isinstance(ast, PARENTHESIZABLE):
-            loc = (self.pars(False) if 'pars' in
+            loc = (self.pars() if 'pars' in
                    ((t for s in fmt.split(',') if (t := s.strip())) if isinstance(fmt, str) else fmt)
                    else self.bloc)
         else:
@@ -5131,48 +5125,27 @@ class FST:
 
         return lns
 
-    def locmock(self, loc: fstloc) -> 'FST':
-        """Create a "location mockup" to this object with an explicit location. This can be used to override the
-        location of an object for certain operations, but is not very robust. The `FST` returned is its own object and
-        points up the tree and to the `AST` like the original, but the `AST` does not point back to it and so in not a
-        fully valid node. Both `loc` and `bloc` are set to the input parameter `loc` value. You can make a `locmock` of
-        a `locmock`. EXPERIMENTAL!"""
-
-        ast      = self.a
-        fst      = FST(ast, self.parent, self.pfield)
-        ast.f    = self
-        fst._loc = fst._bloc = loc
-
-        return fst
-
-    def pars(self, ret_fst: bool | None = True) -> Union['FST', fstloc, None]:
-        """Return the location of enclosing parentheses either as an `fstloc` or an `FST`. If requesting an `FST` then
-        the return value can be `self` or a clone `FST` of `self` with modified `loc` which should only be used for a
-        limited number of things. Will balance parentheses if `self` is an element of a tuple and not return the
-        parentheses of the tuple. Likwise will not return the parentheses of an enclosing `arguments` parent. Only
-        works on (and makes sense for) `expr` or `pattern` nodes, otherwise returns `self` or `self.bloc`.
-
-        **Parameters:**
-        - `ret_fst`: If `True` then always return an `FST` (`self` or clone), `False` will always return an `fstloc`
-            (which could be `self.bloc`) and `None` can return an `fstloc` or `self` if no parentheses found.
+    def pars(self) -> fstloc | None:
+        """Return the location of enclosing parentheses if present. Will balance parentheses if `self` is an element of
+        a tuple and not return the parentheses of the tuple. Likwise will not return the parentheses of an enclosing
+        `arguments`  parent. Only works on (and makes sense for) `expr` or `pattern` nodes, otherwise `self.bloc`.
 
         **Returns:**
-        - `fstloc | FST | None`: If `ret_fst` is `None` and no parentheses found then just returns `self`. A `None` can
-            be returned if `ret_fst` is `False` and there are no enclosing parentheses and `self` does not have a `loc`.
+        - `fstloc | None`: Location of enclosing parentheses if present else `self.bloc`.
         """
 
         if not isinstance(self.a, PARENTHESIZABLE):
-            return self.bloc if ret_fst is False else self
+            return self.bloc
 
         pars_end_ln, pars_end_col, ante_end_ln, ante_end_col, nrpars = self._rpars()
 
         if not nrpars:
-            return self.bloc if ret_fst is False else self
+            return self.bloc
 
         pars_ln, pars_col, ante_ln, ante_col, nlpars = self._lpars()
 
         if not nlpars:
-            return self.bloc if ret_fst is False else self
+            return self.bloc
 
         dpars = nlpars - nrpars
 
@@ -5187,19 +5160,13 @@ class FST:
         elif dpars:
             raise RuntimeError('should not get here')
 
-        loc = fstloc(pars_ln, pars_col, pars_end_ln, pars_end_col)
+        return fstloc(pars_ln, pars_col, pars_end_ln, pars_end_col)
 
-        return self.locmock(loc) if ret_fst else loc
-
-    def comms(self, ret_fst: bool | None = True, fmt: bool | Fmt = True) -> Union['FST', fstloc, None]:
-        """Return the location of preceding and trailing comments (if present and requested). If requesting an `FST`
-        then the return value can be `self` or a clone `FST` of `self` with modified `loc` (and `bloc`)  which should
-        only be used for a limited number of things. Only works on (and makes sense for) `stmt`, 'ExceptHandler' or
-        `match_case` nodes, otherwise returns `self` or `self.bloc`.
+    def comms(self, fmt: bool | Fmt = True) -> Union['FST', fstloc, None]:
+        """Return the location of preceding and trailing comments if present. Only works on (and makes sense for)
+        `stmt`, 'ExceptHandler' or `match_case` nodes, otherwise returns `self.bloc`.
 
         **Parameters:**
-        - `ret_fst`: If `True` then always return an `FST` (`self` or clone), `False` will always return an `fstloc`
-            (which could be `self.bloc`) and `None` can return an `fstloc` or `self` if no comments found.
         - `fmt': Which comments to include, can be comma delimited string or a set of flags. `True` means `'pre,post'`,
             `False` means no comments, recognized flags are:
             - `'pre'`: Contiguous comment block immediately preceding statement(s).
@@ -5210,8 +5177,8 @@ class FST:
             - `'allpost'`: Comment blocks (possibly separated by empty lines) following statement(s).
 
         **Returns:**
-        - `fstloc | FST | None`: If `ret_fst` is `None` and no comments found then just returns `self`. A `None` can
-            be returned if `ret_fst` is `False` and there are no comments and `self` does not have a `loc`.
+        - `fstloc | None`: Location from start of preceding comments to end of trailing comments, else `self.bloc` if
+            none present.
         """
 
         if fmt is True:
@@ -5220,27 +5187,16 @@ class FST:
             fmt = frozenset(t for s in fmt.split(',') if (t := s.strip()))
 
         if not fmt or not isinstance(self.a, STATEMENTISH):
-            return self.bloc if ret_fst is False else self
+            return self.bloc
 
         src_edit = self.src_edit
         lines    = self.root._lines
         loc      = self.bloc
 
-        comms_loc = fstloc(
+        return fstloc(
             *(src_edit.pre_comments(lines, *self._prev_ast_bound(), loc.ln, loc.col, fmt) or loc[:2]),
             *(src_edit.post_comments(lines, loc.end_ln, loc.end_col, *self._next_ast_bound(), fmt) or loc[2:]),
         )
-
-        if ret_fst is False:
-            return comms_loc
-
-        if comms_loc == self.loc:  # only if self.bloc == self.loc, because otherwise returned .loc should be bloc
-            return self
-
-        if not ret_fst:
-            return comms_loc
-
-        return self.locmock(comms_loc)
 
     # ------------------------------------------------------------------------------------------------------------------
 

@@ -21,51 +21,36 @@ PARS_DATA = [
 with ( f() ) as ( f ): pass
 """, 'body[0].items[0].context_expr', r"""
 ( f() )
-""", r"""
-Call .. MOCK 0,5 -> 0,12
-  .func Name 'f' Load .. 0,7 -> 0,8
 """),
 
 (r"""
 with ( f() ) as ( f ): pass
 """, 'body[0].items[0].optional_vars', r"""
 ( f )
-""", r"""
-Name 'f' Store .. MOCK 0,16 -> 0,21
 """),
 
 (r"""
 with ( f() ) as ( f ), ( g() ) as ( g ): pass
 """, 'body[0].items[0].context_expr', r"""
 ( f() )
-""", r"""
-Call .. MOCK 0,5 -> 0,12
-  .func Name 'f' Load .. 0,7 -> 0,8
 """),
 
 (r"""
 with ( f() ) as ( f ), ( g() ) as ( g ): pass
 """, 'body[0].items[0].optional_vars', r"""
 ( f )
-""", r"""
-Name 'f' Store .. MOCK 0,16 -> 0,21
 """),
 
 (r"""
 with ( f() ) as ( f ), ( g() ) as ( g ): pass
 """, 'body[0].items[1].context_expr', r"""
 ( g() )
-""", r"""
-Call .. MOCK 0,23 -> 0,30
-  .func Name 'g' Load .. 0,25 -> 0,26
 """),
 
 (r"""
 with ( f() ) as ( f ), ( g() ) as ( g ): pass
 """, 'body[0].items[1].optional_vars', r"""
 ( g )
-""", r"""
-Name 'g' Store .. MOCK 0,34 -> 0,39
 """),
 
 (r"""
@@ -73,159 +58,114 @@ match a:
   case ( 2 ) if a == 1: pass
 """, 'body[0].cases[0].pattern', r"""
 ( 2 )
-""", r"""
-MatchValue .. MOCK 1,7 -> 1,12
-  .value Constant 2 .. 1,9 -> 1,10
 """),
 
 (r"""
 [ ( i ) for ( j ) in ( range(5) ) if ( k ) ]
 """, 'body[0].value.elt', r"""
 ( i )
-""", r"""
-Name 'i' Load .. MOCK 0,2 -> 0,7
 """),
 
 (r"""
 [ ( i ) for ( j ) in ( range(5) ) if ( k ) ]
 """, 'body[0].value.generators[0].target', r"""
 ( j )
-""", r"""
-Name 'j' Store .. MOCK 0,12 -> 0,17
 """),
 
 (r"""
 [ ( i ) for ( j ) in ( range(5) ) if ( k ) ]
 """, 'body[0].value.generators[0].iter', r"""
 ( range(5) )
-""", r"""
-Call .. MOCK 0,21 -> 0,33
-  .func Name 'range' Load .. 0,23 -> 0,28
-  .args[1]
-  0] Constant 5 .. 0,29 -> 0,30
 """),
 
 (r"""
 [ ( i ) for ( j ) in ( range(5) ) if ( k ) ]
 """, 'body[0].value.generators[0].ifs[0]', r"""
 ( k )
-""", r"""
-Name 'k' Load .. MOCK 0,37 -> 0,42
 """),
 
 (r"""
 ( ( i ) for ( j ) in ( range(5) ) if ( k ) )
 """, 'body[0].value.elt', r"""
 ( i )
-""", r"""
-Name 'i' Load .. MOCK 0,2 -> 0,7
 """),
 
 (r"""
 ( ( i ) for ( j ) in ( range(5) ) if ( k ) )
 """, 'body[0].value.generators[0].target', r"""
 ( j )
-""", r"""
-Name 'j' Store .. MOCK 0,12 -> 0,17
 """),
 
 (r"""
 ( ( i ) for ( j ) in ( range(5) ) if ( k ) )
 """, 'body[0].value.generators[0].iter', r"""
 ( range(5) )
-""", r"""
-Call .. MOCK 0,21 -> 0,33
-  .func Name 'range' Load .. 0,23 -> 0,28
-  .args[1]
-  0] Constant 5 .. 0,29 -> 0,30
 """),
 
 (r"""
 ( ( i ) for ( j ) in ( range(5) ) if ( k ) )
 """, 'body[0].value.generators[0].ifs[0]', r"""
 ( k )
-""", r"""
-Name 'k' Load .. MOCK 0,37 -> 0,42
 """),
 
 (r"""
 def f(a=(1)): pass
 """, 'body[0].args.defaults[0]', r"""
 (1)
-""", r"""
-Constant 1 .. MOCK 0,8 -> 0,11
 """),
 
 (r"""
 def f( a = ( 1 )): pass
 """, 'body[0].args.defaults[0]', r"""
 ( 1 )
-""", r"""
-Constant 1 .. MOCK 0,11 -> 0,16
 """),
 
 (r"""
 lambda a = ( 1 ) : None
 """, 'body[0].value.args.defaults[0]', r"""
 ( 1 )
-""", r"""
-Constant 1 .. MOCK 0,11 -> 0,16
 """),
 
 (r"""
 (1, ( 2 ), 3)
 """, 'body[0].value.elts[1]', r"""
 ( 2 )
-""", r"""
-Constant 2 .. MOCK 0,4 -> 0,9
 """),
 
 (r"""
 (1),
 """, 'body[0].value.elts[0]', r"""
 (1)
-""", r"""
-Constant 1 .. MOCK 0,0 -> 0,3
 """),
 
 (r"""
 ((1),)
 """, 'body[0].value.elts[0]', r"""
 (1)
-""", r"""
-Constant 1 .. MOCK 0,1 -> 0,4
 """),
 
 (r"""
 (1), ( 2 )
 """, 'body[0].value.elts[0]', r"""
 (1)
-""", r"""
-Constant 1 .. MOCK 0,0 -> 0,3
 """),
 
 (r"""
 (1), ( 2 )
 """, 'body[0].value.elts[1]', r"""
 ( 2 )
-""", r"""
-Constant 2 .. MOCK 0,5 -> 0,10
 """),
 
 (r"""
 ((1), ( 2 ))
 """, 'body[0].value.elts[0]', r"""
 (1)
-""", r"""
-Constant 1 .. MOCK 0,1 -> 0,4
 """),
 
 (r"""
 ((1), ( 2 ))
 """, 'body[0].value.elts[1]', r"""
 ( 2 )
-""", r"""
-Constant 2 .. MOCK 0,6 -> 0,11
 """),
 
 ]  # END OF PARS_DATA
@@ -15176,15 +15116,9 @@ def f():
   ) )
 )
         '''.strip()).body[0].value.f
-        p = f.pars(False)
+        p = f.pars()
         self.assertIsInstance(p, fstloc)
         self.assertEqual(p, (0, 0, 4, 1))
-        p = f.pars(None)
-        self.assertIsInstance(p, fstloc)
-        self.assertEqual(p, (0, 0, 4, 1))
-        p = f.pars(True)
-        self.assertIsInstance(p, FST)
-        self.assertEqual(p.loc, (0, 0, 4, 1))
 
         f = parse('''
 ( (
@@ -15193,15 +15127,9 @@ def f():
   ) )
 ,)
         '''.strip()).body[0].value.elts[0].f
-        p = f.pars(False)
+        p = f.pars()
         self.assertIsInstance(p, fstloc)
         self.assertEqual(p, (0, 2, 3, 5))
-        p = f.pars(None)
-        self.assertIsInstance(p, fstloc)
-        self.assertEqual(p, (0, 2, 3, 5))
-        p = f.pars(True)
-        self.assertIsInstance(p, FST)
-        self.assertEqual(p.loc, (0, 2, 3, 5))
 
         f = parse('''
 (
@@ -15210,15 +15138,9 @@ def f():
 
 ,)
         '''.strip()).body[0].value.elts[0].f
-        p = f.pars(False)
+        p = f.pars()
         self.assertIsInstance(p, fstloc)
         self.assertEqual(p, (2, 3, 2, 4))
-        p = f.pars(None)
-        self.assertIsInstance(p, FST)
-        self.assertEqual(p.loc, (2, 3, 2, 4))
-        p = f.pars(True)
-        self.assertIsInstance(p, FST)
-        self.assertEqual(p.loc, (2, 3, 2, 4))
 
     def test_walk(self):
         a = parse("""
@@ -16281,18 +16203,15 @@ def func():
             self.assertEqual('(*tuple[int, ...],)', fc.src)
 
     def test_pars(self):
-        for src, elt, slice_copy, slice_dump in PARS_DATA:
-            src   = src.strip()
-            t     = parse(src)
-            f     = eval(f't.{elt}', {'t': t}).f
-            s     = f.pars()
-            ssrc  = s.src
-            sdump = s.dump(linefunc=list, compact=True)
+        for src, elt, slice_copy in PARS_DATA:
+            src  = src.strip()
+            t    = parse(src)
+            f    = eval(f't.{elt}', {'t': t}).f
+            l    = f.pars()
+            ssrc = f.get_src(*l)
 
             try:
                 self.assertEqual(ssrc, slice_copy.strip())
-                self.assertEqual(sdump, slice_dump.strip().split('\n'))
-                self.assertEqual(s.src, s.pars().src)
 
             except Exception:
                 print(elt)
@@ -16316,57 +16235,34 @@ pass
         '''.strip()).body[0].f
 
         g = f.comms()
-        self.assertIsInstance(g, FST)
-        self.assertEqual('# world\npass  # postcomment\n', g.src)
-        g = f.comms(True, 'pre')
-        self.assertIsInstance(g, FST)
-        self.assertEqual('# world\npass', g.src)
-        g = f.comms(True, 'allpre')
-        self.assertIsInstance(g, FST)
-        self.assertEqual('# hello\n\n# world\npass', g.src)
-        g = f.comms(True, 'post')
-        self.assertIsInstance(g, FST)
-        self.assertEqual('pass  # postcomment\n', g.src)
-        g = f.comms(True, 'blkpost')
-        self.assertIsInstance(g, FST)
-        self.assertEqual('pass  # postcomment\n# next line\n', g.src)
-        g = f.comms(True, 'allpost')
-        self.assertIsInstance(g, FST)
-        self.assertEqual('pass  # postcomment\n# next line\n\n# last line\n', g.src)
-        g = f.comms(True, False)
-        self.assertIs(g, f)
-
-        g = f.comms(None)
         self.assertIsInstance(g, fstloc)
         self.assertEqual((2, 0, 4, 0), g)
-        g = f.comms(None, 'pre')
+        g = f.comms('pre')
         self.assertIsInstance(g, fstloc)
         self.assertEqual((2, 0, 3, 4), g)
-        g = f.comms(None, 'allpre')
+        g = f.comms('allpre')
         self.assertIsInstance(g, fstloc)
         self.assertEqual((0, 0, 3, 4), g)
-        g = f.comms(None, 'post')
+        g = f.comms('post')
         self.assertIsInstance(g, fstloc)
         self.assertEqual((3, 0, 4, 0), g)
-        g = f.comms(None, 'blkpost')
+        g = f.comms('blkpost')
         self.assertIsInstance(g, fstloc)
         self.assertEqual((3, 0, 5, 0), g)
-        g = f.comms(None, 'allpost')
+        g = f.comms('allpost')
         self.assertIsInstance(g, fstloc)
         self.assertEqual((3, 0, 7, 0), g)
-        g = f.comms(None, False)
-        self.assertIs(g, f)
 
-        g = f.comms(False)
+        g = f.comms()
         self.assertIsInstance(g, fstloc)
         self.assertEqual((2, 0, 4, 0), g)
-        g = f.comms(False, 'pre')
+        g = f.comms('pre')
         self.assertIsInstance(g, fstloc)
         self.assertEqual((2, 0, 3, 4), g)
-        g = f.comms(False, 'post')
+        g = f.comms('post')
         self.assertIsInstance(g, fstloc)
         self.assertEqual((3, 0, 4, 0), g)
-        g = f.comms(False, False)
+        g = f.comms(False)
         self.assertIs(g, f.loc)
 
         f = parse('''
@@ -16377,9 +16273,9 @@ pass
 pass
         '''.strip()).body[0].f
 
-        g = f.comms(True, 'allpost')
-        self.assertIsInstance(g, FST)
-        self.assertEqual('pass\n# next line\n\n# last line\n', g.src)
+        g = f.comms('allpost')
+        self.assertIsInstance(g, fstloc)
+        self.assertEqual('pass\n# next line\n\n# last line\n', f.get_src(*g))
 
         lines = '''  # hello
 
@@ -19045,16 +18941,13 @@ def regen_pars_data():
         src   = src.strip()
         t     = parse(src)
         f     = eval(f't.{elt}', {'t': t}).f
-        s     = f.pars()
-        ssrc  = s.src
-        sdump = s.dump(linefunc=list, compact=True)
+        l     = f.pars()
+        ssrc  = f.get_src(*l)
 
         assert not ssrc.startswith('\n') or ssrc.endswith('\n')
 
         newlines.append('(r"""')
-        newlines.extend(f'''{src}\n""", {elt!r}, r"""\n{ssrc}\n""", r"""'''.split('\n'))
-        newlines.extend(sdump)
-        newlines.append('"""),\n')
+        newlines.extend(f'''{src}\n""", {elt!r}, r"""\n{ssrc}\n"""),\n'''.split('\n'))
 
     with open(sys.argv[0]) as f:
         lines = f.read().split('\n')
