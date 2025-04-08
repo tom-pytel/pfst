@@ -71,7 +71,16 @@ AST_DEFAULT_BODY_FIELD  = {cls: field for field, classes in [
 
 DEFAULT_PARSE_PARAMS    = dict(filename='<unknown>', type_comments=False, feature_version=None)
 DEFAULT_INDENT          = '    '
-DEFAULT_DOCSTR          = True
+
+DEFAULT_DOCSTR          = True   # True | False | 'strict'
+DEFAULT_PRECOMMS        = True   # True | False | 'all'
+DEFAULT_POSTCOMMS       = True   # True | False | 'all' | 'block'
+DEFAULT_PRESPACE        = False  # True | False | int
+DEFAULT_POSTSPACE       = False  # True | False | int
+DEFAULT_PEP8SPACE       = True   # True | False | 1
+DEFAULT_PARS            = False  # True | False
+DEFAULT_ELIF            = False  # True | False
+
 DEFAULT_SRC_EDIT_FMT    = frozenset(('pep8', 'pre', 'post'))
 DEFAULT_COMMS_FMT       = frozenset(('pre', 'post'))
 
@@ -921,27 +930,33 @@ class FSTSrcEdit:
         return fstloc(copy_ln, copy_col, copy_end_ln, copy_end_col), fstloc(del_ln, del_col, del_end_ln, del_end_col)
 
     def pre_comments(self, lines: list[bistr], bound_ln: int, bound_col: int, bound_end_ln: int, bound_end_col: int,
-                     fmt: set[str] | frozenset[str] = {'pre'}) -> tuple[int, int] | None:
+                     precomms: bool | str | None = None) -> tuple[int, int] | None:
         """Return the position of the start of any preceding comments to the element which is assumed to live just past
-        (`f.bln`, `f.bcol`). Returns `None` if no preceding comment. If preceding entire line comments exist then the
-        returned position column should be 0 (the start of the line) to indicate that it is a full line comment. Only
-        preceding entire line comments start comment should be returned. This particular implementation will return any
-        full line comments directly preceding the element if it starts its own line. An empty line ends the preceding
-        comments even if there are more comments before it, unless the format includes `'allpre'`.
+        (`bound_ln`, `bound_col`). Returns `None` if no preceding comment. If preceding entire line comments exist then
+        the returned position column should be 0 (the start of the line) to indicate that it is a full line comment.
+        Only preceding entire line comments start comment should be returned. This particular implementation will return
+        any full line comments directly preceding the element if it starts its own line. An empty line ends the
+        preceding comments even if there are more comments before it, unless precomms is `'all'`.
 
         **Parameters:**
-        - `fmt`: Set of string formatting flags. Unrecognized and inapplicable flags are ignored, recognized flags are:
-            - `'pre'`: Contiguous comment block immediately preceding position.
-            - `'allpre'`: Comment blocks (possibly separated by empty lines) preceding position.
+        - `precomms`: Preceding comments to get:
+            - `False`: None, so return `None`.
+            - `True`: Single contiguous comment block immediately preceding position.
+            - `'all'`: Comment blocks (possibly separated by empty lines) preceding position.
+            - `None`: Use default.
         """
 
-        if not (allpre := 'allpre' in fmt) and 'pre' not in fmt:
+        if precomms is None:
+            precomms = DEFAULT_PRECOMMS
+
+        if not precomms:
             return None
 
         if bound_ln == bound_end_ln or (bound_end_col and
                                         not re_empty_line.match(lines[bound_end_ln], 0, bound_end_col)):
             return None
 
+        allpre = precomms == 'all'
         pre_ln = None
         re_pat = re_empty_line_cont_or_comment if allpre else re_comment_line_start
 
@@ -956,22 +971,29 @@ class FSTSrcEdit:
         return None if pre_ln is None else (pre_ln, pre_col)
 
     def post_comments(self, lines: list[bistr], bound_ln: int, bound_col: int, bound_end_ln: int, bound_end_col: int,
-                      fmt: set[str] | frozenset[str] = {'post'}) -> tuple[int, int] | None:
+                      postcomms: bool | str | None = None) -> tuple[int, int] | None:
         """Return the position of the end of any trailing comments to the element which is assumed to live just before
-        (`f.bend_ln`, `f.bend_col`). Returns `None` if no trailing comment. Should return the location at the start of
-        the next line if comment present because a comment should never be on the last line, but if a comment ends the
-        bound should return the end of the bound. This particular implementation will return any comment which lives on
-        the same line as `bound_ln`, no other comments past it on following lines.
+        (`bound_end_ln`, `bound_end_col`). Returns `None` if no trailing comment. Should return the location at the
+        start of the next line if comment present because a comment should never be on the last line, but if a comment
+        ends the bound should return the end of the bound. This particular implementation will return any comment which
+        lives on the same line as `bound_ln`, no other comments past it on following lines.
 
         **Parameters:**
-        - `fmt`: Set of string formatting flags. Unrecognized and inapplicable flags are ignored, recognized flags are:
-            - `'post'`: Only comment trailing on line of position, nothing past that on its own lines.
-            - `'blkpost'`: Single contiguous comment block following position.
-            - `'allpost'`: Comment blocks (possibly separated by empty lines) following position.
+        - `postcomms`: Trailing comments to get.
+            - `False`: None, so return `None`.
+            - `True`: Only comment trailing on line of position, nothing past that on its own lines.
+            - `'block'`: Single contiguous comment block following position.
+            - `'all'`: Comment blocks (possibly separated by empty lines) following position.
+            - `None`: Use default.
         """
 
-        if not (blkpost := (allpost := 'allpost' in fmt)) and not (blkpost := 'blkpost' in fmt) and 'post' not in fmt:
+        if postcomms is None:
+            postcomms = DEFAULT_POSTCOMMS
+
+        if not postcomms:
             return None
+
+        blkpost = True if (allpost := postcomms == 'all') else postcomms == 'block'
 
         if single_ln := bound_end_ln == bound_ln:
             code = _next_src(lines, bound_ln, bound_col, bound_ln, bound_end_col, True)
@@ -1193,10 +1215,17 @@ class FSTSrcEdit:
         bound_ln, bound_col         = fpre.bloc[2:] if fpre else block_loc[:2]
         bound_end_ln, bound_end_col = fpost.bloc[:2] if fpost else block_loc[2:]
 
+
+        # TODO: TEMPORARY!
+        precomms  = 'all' if 'allpre' in fmt else True if 'pre' in fmt else False
+        postcomms = 'all' if 'allpost' in fmt else 'block' if 'blkpost' in fmt else True if 'post' in fmt else False
+        # TODO: TEMPORARY!
+
+
         lines      = fst.root._lines
         put_lines  = None
-        pre_comms  = self.pre_comments(lines, bound_ln, bound_col, ffirst.bln, ffirst.bcol, fmt)
-        post_comms = self.post_comments(lines, flast.bend_ln, flast.bend_col, bound_end_ln, bound_end_col, fmt)
+        pre_comms  = self.pre_comments(lines, bound_ln, bound_col, ffirst.bln, ffirst.bcol, precomms)
+        post_comms = self.post_comments(lines, flast.bend_ln, flast.bend_col, bound_end_ln, bound_end_col, postcomms)
         pre_semi   = not pre_comms and _prev_find(lines, bound_ln, bound_col, ffirst.ln, ffirst.col, ';',
                                                   True, comment=True, lcont=None)
         post_semi  = not post_comms and _next_find(lines, flast.end_ln, flast.end_col, bound_end_ln, bound_end_col, ';',
@@ -1341,7 +1370,13 @@ class FSTSrcEdit:
                 if put_lines:
                     put_lines[0] = lines[del_ln][:del_col] + put_lines[0]  # prepend block start indentation to existing indentation, silly but whatever
 
-                if pre_pre_comms := self.pre_comments(lines, bound_ln, bound_col, del_ln, 0, fmt):
+
+                # TODO: TEMPORARY!
+                precomms = 'all' if 'allpre' in fmt else True if 'pre' in fmt else False
+                # TODO: TEMPORARY!
+
+
+                if pre_pre_comms := self.pre_comments(lines, bound_ln, bound_col, del_ln, 0, precomms):
                     del_ln, _ = pre_pre_comms
 
                 del_loc = fstloc(del_ln, 0, del_end_ln, del_end_col)
@@ -5199,9 +5234,16 @@ class FST:
         lines    = self.root._lines
         loc      = self.bloc
 
+
+        # TODO: TEMPORARY!
+        precomms  = 'all' if 'allpre' in fmt else True if 'pre' in fmt else False
+        postcomms = 'all' if 'allpost' in fmt else 'block' if 'blkpost' in fmt else True if 'post' in fmt else False
+        # TODO: TEMPORARY!
+
+
         return fstloc(
-            *(src_edit.pre_comments(lines, *self._prev_ast_bound(), loc.ln, loc.col, fmt) or loc[:2]),
-            *(src_edit.post_comments(lines, loc.end_ln, loc.end_col, *self._next_ast_bound(), fmt) or loc[2:]),
+            *(src_edit.pre_comments(lines, *self._prev_ast_bound(), loc.ln, loc.col, precomms) or loc[:2]),
+            *(src_edit.post_comments(lines, loc.end_ln, loc.end_col, *self._next_ast_bound(), postcomms) or loc[2:]),
         )
 
     # ------------------------------------------------------------------------------------------------------------------

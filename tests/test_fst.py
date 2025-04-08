@@ -16288,8 +16288,8 @@ pass
         self.assertEqual((4, 0), FST.src_edit.post_comments(lines, 3, 6, 5, 0))
         self.assertEqual(None, FST.src_edit.pre_comments(lines, 0, 0, 2, 2))
         self.assertEqual(None, FST.src_edit.post_comments(lines, 2, 9, 5, 0))
-        self.assertEqual((0, 0), FST.src_edit.pre_comments(lines, 0, 0, 2, 2, {'allpre'}))
-        self.assertEqual((5, 0), FST.src_edit.post_comments(lines, 3, 6, 5, 0, {'allpost'}))
+        self.assertEqual((0, 0), FST.src_edit.pre_comments(lines, 0, 0, 2, 2, 'all'))
+        self.assertEqual((5, 0), FST.src_edit.post_comments(lines, 3, 6, 5, 0, 'all'))
 
         lines = '''
 i ; \\
