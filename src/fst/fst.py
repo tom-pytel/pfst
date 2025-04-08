@@ -930,7 +930,7 @@ class FSTSrcEdit:
         return fstloc(copy_ln, copy_col, copy_end_ln, copy_end_col), fstloc(del_ln, del_col, del_end_ln, del_end_col)
 
     def pre_comments(self, lines: list[bistr], bound_ln: int, bound_col: int, bound_end_ln: int, bound_end_col: int,
-                     precomms: bool | str | None = None) -> tuple[int, int] | None:
+                     precomms: bool | str | None = DEFAULT_PRECOMMS) -> tuple[int, int] | None:
         """Return the position of the start of any preceding comments to the element which is assumed to live just past
         (`bound_ln`, `bound_col`). Returns `None` if no preceding comment. If preceding entire line comments exist then
         the returned position column should be 0 (the start of the line) to indicate that it is a full line comment.
@@ -939,11 +939,11 @@ class FSTSrcEdit:
         preceding comments even if there are more comments before it, unless precomms is `'all'`.
 
         **Parameters:**
-        - `precomms`: Preceding comments to get:
-            - `False`: None, so return `None`.
-            - `True`: Single contiguous comment block immediately preceding position.
-            - `'all'`: Comment blocks (possibly separated by empty lines) preceding position.
-            - `None`: Use default.
+        - `precomms`: Preceding comments to get. See `FST` source editing `options`.
+
+        **Returns:**
+        - `(ln, col) | None`: If not getting comments or comments not found will return `None`, otherwise position of
+            start of preceding comments.
         """
 
         if precomms is None:
@@ -971,7 +971,7 @@ class FSTSrcEdit:
         return None if pre_ln is None else (pre_ln, pre_col)
 
     def post_comments(self, lines: list[bistr], bound_ln: int, bound_col: int, bound_end_ln: int, bound_end_col: int,
-                      postcomms: bool | str | None = None) -> tuple[int, int] | None:
+                      postcomms: bool | str | None = DEFAULT_POSTCOMMS) -> tuple[int, int] | None:
         """Return the position of the end of any trailing comments to the element which is assumed to live just before
         (`bound_end_ln`, `bound_end_col`). Returns `None` if no trailing comment. Should return the location at the
         start of the next line if comment present because a comment should never be on the last line, but if a comment
@@ -979,12 +979,11 @@ class FSTSrcEdit:
         lives on the same line as `bound_ln`, no other comments past it on following lines.
 
         **Parameters:**
-        - `postcomms`: Trailing comments to get.
-            - `False`: None, so return `None`.
-            - `True`: Only comment trailing on line of position, nothing past that on its own lines.
-            - `'block'`: Single contiguous comment block following position.
-            - `'all'`: Comment blocks (possibly separated by empty lines) following position.
-            - `None`: Use default.
+        - `postcomms`: Trailing comments to get. See `FST` source editing `options`.
+
+        **Returns:**
+        - `(end_ln, end_col) | None`: If not getting comments or comments not found will return `None`, otherwise
+            position of end of trailing comments (past trailing comment newline if possible).
         """
 
         if postcomms is None:
@@ -1794,7 +1793,26 @@ class FSTSrcEdit:
 
 
 class FST:
-    """Preserve AST formatting information and easy manipulation."""
+    """Preserve AST formatting information and easy manipulation.
+
+    **Source editing `options`**:
+    - `docstr`: Which docstrings are indentable / dedentable.
+        - `False`: None.
+        - `True`: All `Expr` multiline strings (as they serve no coding purpose).
+        - `'strict'`: Only multiline strings in expected docstring positions (functions and classes).
+        - `None`: Use default (`True`).
+    - `precomms`: Preceding comments.
+        - `False`: No preceding comments.
+        - `True`: Single contiguous comment block immediately preceding position.
+        - `'all'`: Comment blocks (possibly separated by empty lines) preceding position.
+        - `None`: Use default (`True`).
+    - `postcomms`: Trailing comments.
+        - `False`: No trailing comments.
+        - `True`: Only comment trailing on line of position, nothing past that on its own lines.
+        - `'block'`: Single contiguous comment block following position.
+        - `'all'`: Comment blocks (possibly separated by empty lines) following position.
+        - `None`: Use default (`True`).
+    """
 
     a:            AST                        ; """The actual `AST` node."""
     parent:       Optional['FST']            ; """Parent `FST` node, `None` in root node."""
@@ -3680,7 +3698,11 @@ class FST:
             return FST(newast, lines=self._lines[:], from_=self)
 
         if isinstance(ast, STATEMENTISH):
-            loc = self.comms(fmt)
+            # TODO: TEMPORARY!
+            precomms  = 'all' if 'allpre' in fmt else True if 'pre' in fmt else False
+            postcomms = 'all' if 'allpost' in fmt else 'block' if 'blkpost' in fmt else True if 'post' in fmt else False
+            # TODO: TEMPORARY!
+            loc = self.comms(precomms, postcomms)
         elif isinstance(ast, PARENTHESIZABLE):
             loc = (self.pars() if 'pars' in
                    ((t for s in fmt.split(',') if (t := s.strip())) if isinstance(fmt, str) else fmt)
@@ -5166,13 +5188,13 @@ class FST:
 
         return lns
 
-    def pars(self) -> fstloc | None:
+    def pars(self) -> fstloc:
         """Return the location of enclosing parentheses if present. Will balance parentheses if `self` is an element of
         a tuple and not return the parentheses of the tuple. Likwise will not return the parentheses of an enclosing
         `arguments`  parent. Only works on (and makes sense for) `expr` or `pattern` nodes, otherwise `self.bloc`.
 
         **Returns:**
-        - `fstloc | None`: Location of enclosing parentheses if present else `self.bloc`.
+        - `fstloc`: Location of enclosing parentheses if present else `self.bloc`.
         """
 
         if not isinstance(self.a, PARENTHESIZABLE):
@@ -5203,43 +5225,31 @@ class FST:
 
         return fstloc(pars_ln, pars_col, pars_end_ln, pars_end_col)
 
-    def comms(self, fmt: bool | Fmt = True) -> Union['FST', fstloc, None]:
+    def comms(self, precomms: bool | str | None = DEFAULT_PRECOMMS, postcomms: bool | str | None = DEFAULT_POSTCOMMS,
+              ) -> fstloc:
         """Return the location of preceding and trailing comments if present. Only works on (and makes sense for)
         `stmt`, 'ExceptHandler' or `match_case` nodes, otherwise returns `self.bloc`.
 
         **Parameters:**
-        - `fmt': Which comments to include, can be comma delimited string or a set of flags. `True` means `'pre,post'`,
-            `False` means no comments, recognized flags are:
-            - `'pre'`: Contiguous comment block immediately preceding statement(s).
-            - `'allpre'`: Comment blocks (possibly separated by empty lines) preceding statement(s).
-            - `'post'`: Comment trailing on last line. Keep in mind this is the comment on the last statement of a body
-                if last element of copy is a block element.
-            - `'blkpost'`: Contiguous comment block following statement(s).
-            - `'allpost'`: Comment blocks (possibly separated by empty lines) following statement(s).
+        - `precomms`: Preceding comments to get. See `FST` source editing `options`.
+        - `postcomms`: Trailing comments to get. See `FST` source editing `options`.
 
         **Returns:**
-        - `fstloc | None`: Location from start of preceding comments to end of trailing comments, else `self.bloc` if
-            none present.
+        - `fstloc`: Location from start of preceding comments to end of trailing comments, else `self.bloc` or start or
+            end from it if preceding or trailing comment(s) not found.
         """
 
-        if fmt is True:
-            fmt = DEFAULT_COMMS_FMT
-        elif isinstance(fmt, str):
-            fmt = frozenset(t for s in fmt.split(',') if (t := s.strip()))
+        if precomms is None:
+            precomms = DEFAULT_PRECOMMS
+        if postcomms is None:
+            postcomms = DEFAULT_POSTCOMMS
 
-        if not fmt or not isinstance(self.a, STATEMENTISH):
+        if not (precomms or postcomms) or not isinstance(self.a, STATEMENTISH):
             return self.bloc
 
         src_edit = self.src_edit
         lines    = self.root._lines
         loc      = self.bloc
-
-
-        # TODO: TEMPORARY!
-        precomms  = 'all' if 'allpre' in fmt else True if 'pre' in fmt else False
-        postcomms = 'all' if 'allpost' in fmt else 'block' if 'blkpost' in fmt else True if 'post' in fmt else False
-        # TODO: TEMPORARY!
-
 
         return fstloc(
             *(src_edit.pre_comments(lines, *self._prev_ast_bound(), loc.ln, loc.col, precomms) or loc[:2]),
@@ -5427,7 +5437,7 @@ class FST:
         self.touchall(True, False, False)
 
     def indent_lns(self, indent: str | None = None, lns: set[int] | None = None, *,
-                   docstr: bool | str | None = None, skip: int = 1) -> set[int]:
+                   skip: int = 1, docstr: bool | str | None = DEFAULT_DOCSTR) -> set[int]:
         """Indent all indentable lines specified in `lns` with `indent` and adjust node locations accordingly.
 
         WARNING! This does not offset parent nodes.
@@ -5436,10 +5446,10 @@ class FST:
         - `indent`: The indentation string to prefix to each indentable line.
         - `lns`: A `set` of lines to apply identation to. If `None` then will be gotten from
             `get_indentable_lns(skip=skip)`.
+        - `skip`: If not providing `lns` then this value is passed to `get_indentable_lns()`.
         - `docstr`: How to treat multiline string docstring lines. `False` means not indentable, `True` means all `Expr`
             multiline strings are indentable (as they serve no coding purpose). `'strict'` means only multiline strings
-            in expected docstring positions are indentable.
-        - `skip`: If not providing `lns` then this value is passed to `get_indentable_lns()`.
+            in expected docstring positions are indentable. `None` means use default (`True`).
 
         **Returns:**
         - `set[int]`: `lns` passed in or otherwise set of line numbers (zero based) which are sytactically indentable.
@@ -5468,7 +5478,7 @@ class FST:
         return lns
 
     def dedent_lns(self, indent: str | None = None, lns: set[int] | None = None, *,
-                   docstr: bool | str | None = None, skip: int = 1) -> set[int]:
+                   skip: int = 1, docstr: bool | str | None = DEFAULT_DOCSTR) -> set[int]:
         """Dedent all indentable lines specified in `lns` by removing `indent` prefix and adjust node locations
         accordingly. If cannot dedent entire amount will dedent as much as possible.
 
@@ -5480,7 +5490,7 @@ class FST:
             `get_indentable_lns(skip=skip)`.
         - `docstr`: How to treat multiline string docstring lines. `False` means not indentable, `True` means all `Expr`
             multiline strings are indentable (as they serve no coding purpose). `'strict'` means only multiline strings
-            in expected docstring positions are indentable.
+            in expected docstring positions are indentable. `None` means use default (`True`).
         - `skip`: If not providing `lns` then this value is passed to `get_indentable_lns()`.
 
         **Returns:**
@@ -5541,12 +5551,13 @@ class FST:
 
         return lns
 
-    def reparse_docstrings(self, docstr: bool | str | None = None):
+    def reparse_docstrings(self, docstr: bool | str | None = DEFAULT_DOCSTR):
         """Reparse docstrings in `self` and all descendants.
 
         **Parameters:**
         - `docstr`: Which strings to reparse. `True` means all `Expr` multiline strings. `'strict'` means only multiline
-            strings in expected docstring. `False` doesn't reparse anything and just returns.
+            strings in expected docstring. `False` doesn't reparse anything and just returns. `None` means use default
+            (`True`).
         """
 
         if docstr is None:

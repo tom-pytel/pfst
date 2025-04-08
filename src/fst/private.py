@@ -49,7 +49,7 @@ __all__ = [
     '_FST_loc_from_children',
     '_FST_dict_key_or_mock_loc',
     '_FST_floor_start_pos',
-    '_FST_floor_end_pos',
+    '_FST_set_end_pos',
     '_FST_maybe_add_comma',
     '_FST_maybe_add_singleton_tuple_comma',
     '_FST_maybe_fix_tuple',
@@ -78,7 +78,7 @@ _FST_rpars                           = FST._rpars
 _FST_loc_from_children               = FST._loc_from_children
 _FST_dict_key_or_mock_loc            = FST._dict_key_or_mock_loc
 _FST_floor_start_pos                 = FST._floor_start_pos
-_FST_floor_end_pos                   = FST._floor_end_pos
+_FST_set_end_pos                     = FST._set_end_pos
 _FST_maybe_add_comma                 = FST._maybe_add_comma
 _FST_maybe_add_singleton_tuple_comma = FST._maybe_add_singleton_tuple_comma
 _FST_maybe_fix_tuple                 = FST._maybe_fix_tuple
