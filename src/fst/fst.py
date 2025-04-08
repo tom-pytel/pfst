@@ -691,35 +691,35 @@ class fstlistproxy:
         else:
             self.owner.put_slice(None, idx.start, idx.stop, self.field)
 
-    def copy(self, *, fix: bool = True, fmt: Fmt = DEFAULT_SRC_EDIT_FMT, docstr: bool | str = DEFAULT_DOCSTR) -> 'FST':
+    def copy(self, *, fix: bool = True, fmt: Fmt = DEFAULT_SRC_EDIT_FMT, docstr: bool | str | None = None) -> 'FST':
         return self.owner.get_slice(i := self.start, i + len(self.asts), self.field, fix=fix, cut=False,
                                     fmt=fmt, docstr=docstr)
 
-    def cut(self, *, fix: bool = True, fmt: Fmt = DEFAULT_SRC_EDIT_FMT, docstr: bool | str = DEFAULT_DOCSTR) -> 'FST':
+    def cut(self, *, fix: bool = True, fmt: Fmt = DEFAULT_SRC_EDIT_FMT, docstr: bool | str | None = None) -> 'FST':
         return self.owner.get_slice(i := self.start, i + len(self.asts), self.field, fix=fix, cut=True,
                                     fmt=fmt, docstr=docstr)
 
-    def put(self, code: Code, *, fmt: Fmt = DEFAULT_SRC_EDIT_FMT, docstr: bool | str = DEFAULT_DOCSTR) -> 'FST':  # -> Self:
+    def put(self, code: Code, *, fmt: Fmt = DEFAULT_SRC_EDIT_FMT, docstr: bool | str | None = None) -> 'FST':  # -> Self
         self.owner.put_slice(code, i := self.start, i + len(self.asts), self.field, True, fmt=fmt, docstr=docstr)
 
         return self
 
-    def append(self, code: Code, *, fmt: Fmt = DEFAULT_SRC_EDIT_FMT, docstr: bool | str = DEFAULT_DOCSTR) -> 'FST':  # -> Self:
+    def append(self, code: Code, *, fmt: Fmt = DEFAULT_SRC_EDIT_FMT, docstr: bool | str | None = None) -> 'FST':  # -> Self
         self.owner.put_slice(code, i := self.start + len(self.asts), i, self.field, True, fmt=fmt, docstr=docstr)
 
         return self
 
-    def extend(self, code: Code, *, fmt: Fmt = DEFAULT_SRC_EDIT_FMT, docstr: bool | str = DEFAULT_DOCSTR) -> 'FST':  # -> Self:
+    def extend(self, code: Code, *, fmt: Fmt = DEFAULT_SRC_EDIT_FMT, docstr: bool | str | None = None) -> 'FST':  # -> Self
         self.owner.put_slice(code, i := self.start + len(self.asts), i, self.field, False, fmt=fmt, docstr=docstr)
 
         return self
 
-    def prepend(self, code: Code, *, fmt: Fmt = DEFAULT_SRC_EDIT_FMT, docstr: bool | str = DEFAULT_DOCSTR) -> 'FST':  # -> Self:
+    def prepend(self, code: Code, *, fmt: Fmt = DEFAULT_SRC_EDIT_FMT, docstr: bool | str | None = None) -> 'FST':  # -> Self
         self.owner.put_slice(code, i := self.start, i, self.field, True, fmt=fmt, docstr=docstr)
 
         return self
 
-    def prextend(self, code: Code, *, fmt: Fmt = DEFAULT_SRC_EDIT_FMT, docstr: bool | str = DEFAULT_DOCSTR) -> 'FST':  # -> Self:
+    def prextend(self, code: Code, *, fmt: Fmt = DEFAULT_SRC_EDIT_FMT, docstr: bool | str | None = None) -> 'FST':  # -> Self
         self.owner.put_slice(code, i := self.start, i, self.field, False, fmt=fmt, docstr=docstr)
 
         return self
@@ -2498,7 +2498,7 @@ class FST:
     def _make_fst_and_dedent(self, indent: Union['FST', str], ast: AST, copy_loc: fstloc,
                              prefix: str = '', suffix: str = '',
                              put_loc: fstloc | None = None, put_lines: list[str] | None = None, *,
-                             docstr: bool | str = DEFAULT_DOCSTR) -> 'FST':
+                             docstr: bool | str | None = None) -> 'FST':
 
         if not isinstance(indent, str):
             indent = indent.get_indent()
@@ -3635,7 +3635,7 @@ class FST:
 
         return self
 
-    def copy(self, *, fix: bool = True, fmt: Fmt = DEFAULT_SRC_EDIT_FMT, docstr: bool | str = DEFAULT_DOCSTR) -> 'FST':
+    def copy(self, *, fix: bool = True, fmt: Fmt = DEFAULT_SRC_EDIT_FMT, docstr: bool | str | None = None) -> 'FST':
         """Copy an individual node to a top level tree, dedenting and fixing as necessary."""
 
         ast    = self.a
@@ -3660,7 +3660,7 @@ class FST:
 
         return fst.fix(inplace=True) if fix else fst
 
-    def cut(self, *, fix: bool = True, fmt: Fmt = DEFAULT_SRC_EDIT_FMT, docstr: bool | str = DEFAULT_DOCSTR) -> 'FST':
+    def cut(self, *, fix: bool = True, fmt: Fmt = DEFAULT_SRC_EDIT_FMT, docstr: bool | str | None = None) -> 'FST':
         """Cut out an individual node to a top level tree (if possible), dedenting and fixing as necessary."""
 
         if self.is_root:
@@ -3691,7 +3691,7 @@ class FST:
 
     def get(self, start: int | None = None, stop: int | None | Literal[False] = False, field: str | None = None, *,
             fix: bool = True, cut: bool = False,
-            fmt: Fmt = DEFAULT_SRC_EDIT_FMT, docstr: bool | str = DEFAULT_DOCSTR) -> Optional['FST']:
+            fmt: Fmt = DEFAULT_SRC_EDIT_FMT, docstr: bool | str | None = None) -> Optional['FST']:
         """Get an individual child node or a slice of child nodes from `self`."""
 
         if stop is not False:
@@ -3709,7 +3709,7 @@ class FST:
 
     def put(self, code: Code | None, start: int | None = None, stop: int | None | Literal['False'] = False,
             field: str | None = None, *, fix: bool = True,
-            fmt: Fmt = DEFAULT_SRC_EDIT_FMT, docstr: bool | str = DEFAULT_DOCSTR) -> 'FST':  # -> Self:
+            fmt: Fmt = DEFAULT_SRC_EDIT_FMT, docstr: bool | str | None = None) -> 'FST':  # -> Self
         """Put an individual child node or a slice of child nodes to `self`.
 
         If the `code` being put is an `AST` or `FST` then it is consumed and should not be considered valid after this
@@ -3730,7 +3730,7 @@ class FST:
 
     def get_slice(self, start: int | None = None, stop: int | None = None, field: str | None = None, *,
                   fix: bool = True, cut: bool = False,
-                  fmt: Fmt = DEFAULT_SRC_EDIT_FMT, docstr: bool | str = DEFAULT_DOCSTR) -> 'FST':
+                  fmt: Fmt = DEFAULT_SRC_EDIT_FMT, docstr: bool | str | None = None) -> 'FST':
         """Get a slice of child nodes from `self`."""
 
         ast = self.a
@@ -3756,7 +3756,7 @@ class FST:
 
     def put_slice(self, code: Code | None, start: int | None = None, stop: int | None = None,
                   field: str | None = None, single: bool = False, *, fix: bool = True,
-                  fmt: Fmt = DEFAULT_SRC_EDIT_FMT, docstr: bool | str = DEFAULT_DOCSTR) -> 'FST':  # -> Self:
+                  fmt: Fmt = DEFAULT_SRC_EDIT_FMT, docstr: bool | str | None = None) -> 'FST':  # -> Self
         """Put an a slice of child nodes to `self`.
 
         If the `code` being put is an `AST` or `FST` then it is consumed and should not be considered valid after this
@@ -5016,7 +5016,7 @@ class FST:
 
         return extra_indent
 
-    def get_indentable_lns(self, skip: int = 0, *, docstr: bool | str = DEFAULT_DOCSTR) -> set[int]:
+    def get_indentable_lns(self, skip: int = 0, *, docstr: bool | str | None = None) -> set[int]:
         """Get set of indentable lines within this node.
 
         **Parameters:**
@@ -5101,8 +5101,8 @@ class FST:
 
                 cur_col = 0
 
-        # if docstr is None:
-        #     docstr = self.root.default_docstr
+        if docstr is None:
+            docstr = DEFAULT_DOCSTR
 
         strict = docstr == 'strict'
         lines  = self.root.lines
@@ -5206,7 +5206,7 @@ class FST:
 
     # ------------------------------------------------------------------------------------------------------------------
 
-    def touch(self) -> 'FST':  # -> Self:
+    def touch(self) -> 'FST':  # -> Self
         """AST node was modified, clear out any cached info for this node specifically, call this for each node in a
         walk with modified nodes."""
 
@@ -5217,7 +5217,7 @@ class FST:
 
         return self
 
-    def touchall(self, parents: bool = True, children: bool = True, self_: bool = True) -> 'FST':  # -> Self:
+    def touchall(self, parents: bool = True, children: bool = True, self_: bool = True) -> 'FST':  # -> Self
         """Touch self, parents and all children, optionally."""
 
         if children:
@@ -5385,7 +5385,7 @@ class FST:
         self.touchall(True, False, False)
 
     def indent_lns(self, indent: str | None = None, lns: set[int] | None = None, *,
-                   docstr: bool | str = DEFAULT_DOCSTR, skip: int = 1) -> set[int]:
+                   docstr: bool | str | None = None, skip: int = 1) -> set[int]:
         """Indent all indentable lines specified in `lns` with `indent` and adjust node locations accordingly.
 
         WARNING! This does not offset parent nodes.
@@ -5407,8 +5407,8 @@ class FST:
 
         if indent is None:
             indent = root.indent
-        # if docstr is None:
-        #     docstr = root.default_docstr
+        if docstr is None:
+            docstr = DEFAULT_DOCSTR
 
         if not ((lns := self.get_indentable_lns(skip, docstr=docstr)) if lns is None else lns) or not indent:
             return lns
@@ -5426,7 +5426,7 @@ class FST:
         return lns
 
     def dedent_lns(self, indent: str | None = None, lns: set[int] | None = None, *,
-                   docstr: bool | str = DEFAULT_DOCSTR, skip: int = 1) -> set[int]:
+                   docstr: bool | str | None = None, skip: int = 1) -> set[int]:
         """Dedent all indentable lines specified in `lns` by removing `indent` prefix and adjust node locations
         accordingly. If cannot dedent entire amount will dedent as much as possible.
 
@@ -5449,8 +5449,8 @@ class FST:
 
         if indent is None:
             indent = root.indent
-        # if docstr is None:
-        #     docstr = root.default_docstr
+        if docstr is None:
+            docstr = DEFAULT_DOCSTR
 
         if not ((lns := self.get_indentable_lns(skip, docstr=docstr)) if lns is None else lns) or not indent:
             return lns
@@ -5499,7 +5499,7 @@ class FST:
 
         return lns
 
-    def reparse_docstrings(self, docstr: bool | str = DEFAULT_DOCSTR):
+    def reparse_docstrings(self, docstr: bool | str | None = None):
         """Reparse docstrings in `self` and all descendants.
 
         **Parameters:**
@@ -5507,8 +5507,8 @@ class FST:
             strings in expected docstring. `False` doesn't reparse anything and just returns.
         """
 
-        # if docstr is None:
-        #     docstr = self.root.default_docstr
+        if docstr is None:
+            docstr = DEFAULT_DOCSTR
 
         if not docstr:
             return
