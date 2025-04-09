@@ -120,7 +120,6 @@ re_next_src_or_lcont            = re.compile(r'\s*([^\s#\\]+|\\$)')      # next 
 re_next_src_or_comment_or_lcont = re.compile(r'\s*([^\s#\\]+|#.*|\\$)')  # next non-space non-continuation code or comment text including logical line end, don't look into strings with this!
 
 Code: TypeAlias = Union['FST', AST, list[str], str]
-Fmt:  TypeAlias = Union[str, set, frozenset]
 
 
 class astfield(NamedTuple):
@@ -700,36 +699,34 @@ class fstlistproxy:
         else:
             self.owner.put_slice(None, idx.start, idx.stop, self.field)
 
-    def copy(self, *, fix: bool = True, fmt: Fmt = DEFAULT_SRC_EDIT_FMT, docstr: bool | str | None = None) -> 'FST':
-        return self.owner.get_slice(i := self.start, i + len(self.asts), self.field, fix=fix, cut=False,
-                                    fmt=fmt, docstr=docstr)
+    def copy(self, *, fix: bool = True, **options) -> 'FST':
+        return self.owner.get_slice(i := self.start, i + len(self.asts), self.field, fix=fix, cut=False, **options)
 
-    def cut(self, *, fix: bool = True, fmt: Fmt = DEFAULT_SRC_EDIT_FMT, docstr: bool | str | None = None) -> 'FST':
-        return self.owner.get_slice(i := self.start, i + len(self.asts), self.field, fix=fix, cut=True,
-                                    fmt=fmt, docstr=docstr)
+    def cut(self, *, fix: bool = True, **options) -> 'FST':
+        return self.owner.get_slice(i := self.start, i + len(self.asts), self.field, fix=fix, cut=True, **options)
 
-    def put(self, code: Code, *, fmt: Fmt = DEFAULT_SRC_EDIT_FMT, docstr: bool | str | None = None) -> 'FST':  # -> Self
-        self.owner.put_slice(code, i := self.start, i + len(self.asts), self.field, True, fmt=fmt, docstr=docstr)
+    def put(self, code: Code, **options) -> 'FST':  # -> Self
+        self.owner.put_slice(code, i := self.start, i + len(self.asts), self.field, True, **options)
 
         return self
 
-    def append(self, code: Code, *, fmt: Fmt = DEFAULT_SRC_EDIT_FMT, docstr: bool | str | None = None) -> 'FST':  # -> Self
-        self.owner.put_slice(code, i := self.start + len(self.asts), i, self.field, True, fmt=fmt, docstr=docstr)
+    def append(self, code: Code, **options) -> 'FST':  # -> Self
+        self.owner.put_slice(code, i := self.start + len(self.asts), i, self.field, True, **options)
 
         return self
 
-    def extend(self, code: Code, *, fmt: Fmt = DEFAULT_SRC_EDIT_FMT, docstr: bool | str | None = None) -> 'FST':  # -> Self
-        self.owner.put_slice(code, i := self.start + len(self.asts), i, self.field, False, fmt=fmt, docstr=docstr)
+    def extend(self, code: Code, **options) -> 'FST':  # -> Self
+        self.owner.put_slice(code, i := self.start + len(self.asts), i, self.field, False, **options)
 
         return self
 
-    def prepend(self, code: Code, *, fmt: Fmt = DEFAULT_SRC_EDIT_FMT, docstr: bool | str | None = None) -> 'FST':  # -> Self
-        self.owner.put_slice(code, i := self.start, i, self.field, True, fmt=fmt, docstr=docstr)
+    def prepend(self, code: Code, **options) -> 'FST':  # -> Self
+        self.owner.put_slice(code, i := self.start, i, self.field, True, **options)
 
         return self
 
-    def prextend(self, code: Code, *, fmt: Fmt = DEFAULT_SRC_EDIT_FMT, docstr: bool | str | None = None) -> 'FST':  # -> Self
-        self.owner.put_slice(code, i := self.start, i, self.field, False, fmt=fmt, docstr=docstr)
+    def prextend(self, code: Code, **options) -> 'FST':  # -> Self
+        self.owner.put_slice(code, i := self.start, i, self.field, False, **options)
 
         return self
 
@@ -1167,9 +1164,9 @@ class FSTSrcEdit:
 
         return del_loc
 
-    def get_slice_stmt(self, fst: 'FST', field: str, cut: bool, fmt: set[str] | frozenset[str], block_loc: fstloc,  # TODO: clean this up
+    def get_slice_stmt(self, fst: 'FST', field: str, cut: bool, block_loc: fstloc,  # TODO: clean this up
                        ffirst: 'FST', flast: 'FST', fpre: Optional['FST'], fpost: Optional['FST'], *,
-                       del_else_and_fin: bool = True, ret_all: bool = False,
+                       del_else_and_fin: bool = True, ret_all: bool = False, **options,
     ) -> tuple[fstloc, fstloc | None, list[str] | None]:  # (copy_loc, del/put_loc, put_lines)
         """Copy or cut from block of statements. If cutting all elements from a deletable field like 'orelse' or
         'finalbody' then the corresponding 'else:' or 'finally:' will also be removed from the source (though not
@@ -1214,17 +1211,12 @@ class FSTSrcEdit:
         bound_ln, bound_col         = fpre.bloc[2:] if fpre else block_loc[:2]
         bound_end_ln, bound_end_col = fpost.bloc[:2] if fpost else block_loc[2:]
 
-
-        # TODO: TEMPORARY!
-        precomms  = 'all' if 'allpre' in fmt else True if 'pre' in fmt else False
-        postcomms = 'all' if 'allpost' in fmt else 'block' if 'blkpost' in fmt else True if 'post' in fmt else False
-        # TODO: TEMPORARY!
-
-
         lines      = fst.root._lines
         put_lines  = None
-        pre_comms  = self.pre_comments(lines, bound_ln, bound_col, ffirst.bln, ffirst.bcol, precomms)
-        post_comms = self.post_comments(lines, flast.bend_ln, flast.bend_col, bound_end_ln, bound_end_col, postcomms)
+        pre_comms  = self.pre_comments(lines, bound_ln, bound_col, ffirst.bln, ffirst.bcol,
+                                       options.get('precomms'))
+        post_comms = self.post_comments(lines, flast.bend_ln, flast.bend_col, bound_end_ln, bound_end_col,
+                                        options.get('postcomms'))
         pre_semi   = not pre_comms and _prev_find(lines, bound_ln, bound_col, ffirst.ln, ffirst.col, ';',
                                                   True, comment=True, lcont=None)
         post_semi  = not post_comms and _next_find(lines, flast.end_ln, flast.end_col, bound_end_ln, bound_end_col, ';',
@@ -1369,13 +1361,7 @@ class FSTSrcEdit:
                 if put_lines:
                     put_lines[0] = lines[del_ln][:del_col] + put_lines[0]  # prepend block start indentation to existing indentation, silly but whatever
 
-
-                # TODO: TEMPORARY!
-                precomms = 'all' if 'allpre' in fmt else True if 'pre' in fmt else False
-                # TODO: TEMPORARY!
-
-
-                if pre_pre_comms := self.pre_comments(lines, bound_ln, bound_col, del_ln, 0, precomms):
+                if pre_pre_comms := self.pre_comments(lines, bound_ln, bound_col, del_ln, 0, options.get('precomms')):
                     del_ln, _ = pre_pre_comms
 
                 del_loc = fstloc(del_ln, 0, del_end_ln, del_end_col)
@@ -1388,26 +1374,32 @@ class FSTSrcEdit:
 
         # delete preceding and trailing empty lines according to 'pep8' and 'space' format flags
 
-        space     = any((s := f).startswith('space') for f in fmt) and (float('inf') if s == 'space' else int(s[5:]))
-        postspace = any((s := f).startswith('postspace') for f in fmt) and (
-                        float('inf') if s == 'postspace' else int(s[9:]))
+        # space     = any((s := f).startswith('space') for f in fmt) and (float('inf') if s == 'space' else int(s[5:]))
+        # postspace = any((s := f).startswith('postspace') for f in fmt) and (
+        #                 float('inf') if s == 'postspace' else int(s[9:]))
 
-        if (is_pep8 := 'pep8' in fmt) or 'pep81' in fmt:
-            pep8space = 2 if is_pep8 and (p := fst.parent_scope(True)) and isinstance(p.a, mod) else 1
+        prespace  = (float('inf') if (o := DEFAULT_PRESPACE if (o := options.get('prespace')) is None else o) is True
+                     else int(o))
+        postspace = (float('inf') if (o := DEFAULT_POSTSPACE if (o := options.get('postspace')) is None else o) is True
+                     else int(o))
+        pep8space = DEFAULT_PEP8SPACE if (o := options.get('pep8space')) is None else o
+
+        if pep8space:
+            pep8space = 2 if pep8space is True and (p := fst.parent_scope(True)) and isinstance(p.a, mod) else 1
 
             if fpre and isinstance(ffirst.a, NAMED_SCOPE) and (fpre.pfield.idx or
                                                                not isinstance(a := fpre.a, Expr) or
                                                                not isinstance(v := a.value, Constant) or
                                                                not isinstance(v.value, str)):
-                space = max(space, pep8space)
+                prespace = max(prespace, pep8space)
 
             elif fpost and isinstance(flast.a, NAMED_SCOPE):
                 postspace = max(postspace, pep8space)
 
         del_ln, del_col, del_end_ln, del_end_col = del_loc
 
-        if space:
-            new_del_ln = max(bound_ln + bool(bound_col), del_ln - space)  # first possible full empty line to delete to
+        if prespace:
+            new_del_ln = max(bound_ln + bool(bound_col), del_ln - prespace)  # first possible full empty line to delete to
 
             if del_ln > new_del_ln and (not del_col or re_empty_line.match(lines[del_ln], 0, del_col)):
                 if code := _prev_src(lines, new_del_ln, 0, del_ln, 0, True, False):
@@ -1461,9 +1453,9 @@ class FSTSrcEdit:
 
         return copy_loc, del_loc, put_lines
 
-    def _format_space(self, fst: 'FST', put_fst: 'FST', fmt: set[str] | frozenset[str],
+    def _format_space(self, fst: 'FST', put_fst: 'FST',
                       block_loc: fstloc, put_loc: fstloc, fpre: Optional['FST'], fpost: Optional['FST'],
-                      del_lines: list[str] | None):
+                      del_lines: list[str] | None, **options):
         """Add preceding and trailing newlines as needed. We always insert statements (or blocks of them) as their own
         lines but may also add newlines according to PEP8."""
 
@@ -1471,9 +1463,10 @@ class FSTSrcEdit:
         put_lines = put_fst._lines
         put_body  = put_fst.a.body
         put_col   = put_loc.col
+        pep8space = DEFAULT_PEP8SPACE if (o := options.get('pep8space')) is None else o
 
-        if is_pep8 := bool(put_body) and ((is_pep81 := 'pep81' in fmt) or 'pep8' in fmt):  # no pep8 checks if only text being put (no AST body)
-            pep8space = 2 if not is_pep81 and (p := fst.parent_scope(True)) and isinstance(p.a, mod) else 1
+        if is_pep8 := bool(put_body) and pep8space:  # no pep8 checks if only text being put (no AST body)
+            pep8space = 2 if pep8space is True and (p := fst.parent_scope(True)) and isinstance(p.a, mod) else 1
 
         prepend = 2 if put_col else 0  # don't put initial empty line if putting on a first AST line at root
 
@@ -1541,9 +1534,9 @@ class FSTSrcEdit:
 
         put_fst.touch()
 
-    def put_slice_stmt(self, fst: 'FST', put_fst: 'FST', field: str, fmt: set[str] | frozenset[str], docstr: bool | str,
+    def put_slice_stmt(self, fst: 'FST', put_fst: 'FST', field: str,
                        block_loc: fstloc, opener_indent: str, block_indent: str,
-                       ffirst: 'FST', flast: 'FST', fpre: Optional['FST'], fpost: Optional['FST'],
+                       ffirst: 'FST', flast: 'FST', fpre: Optional['FST'], fpost: Optional['FST'], **options,
     ) -> fstloc:  # put_loc
         """Put to block of statements(ish). Calculates put location and modifies `put_fst` as necessary to create proper
         code. The "ish" in statemnents means this can be used to put `ExceptHandler`s to a 'handlers' field or
@@ -1615,12 +1608,14 @@ class FSTSrcEdit:
         put_body   = put_fst.a.body
         is_handler = field == 'handlers'
         is_orelse  = field == 'orelse'
+        docstr     = options.get('docstr')
+        opt_elif   = DEFAULT_ELIF if (o := options.get('elif')) is None else o
 
         if not ffirst:  # pure insertion
-            is_elif = (not fpre and not fpost and is_orelse and 'elif' in fmt and len(b := put_body) == 1 and
+            is_elif = (not fpre and not fpost and is_orelse and opt_elif and len(b := put_body) == 1 and
                        isinstance(b[0], If) and isinstance(fst.a, If))
 
-            put_fst.indent_lns(opener_indent if is_handler or is_elif else block_indent, docstr=docstr, skip=0)
+            put_fst.indent_lns(opener_indent if is_handler or is_elif else block_indent, skip=0, docstr=docstr)
 
             if fpre:  # with preceding statement, maybe trailing statement
                 ln, col, end_ln, end_col = block_loc
@@ -1725,7 +1720,7 @@ class FSTSrcEdit:
                 else:
                     put_loc = fstloc(ln, col, ln + 1, 0)
 
-            self._format_space(fst, put_fst, fmt, block_loc, put_loc, fpre, fpost, None)
+            self._format_space(fst, put_fst, block_loc, put_loc, fpre, fpost, None, **options)
 
             return put_loc
 
@@ -1737,8 +1732,9 @@ class FSTSrcEdit:
         if not fpre and not fpost and is_orelse and isinstance(fst.a, If):  # possible else <-> elif changes
             put_body    = put_fst.a.body
             orelse      = fst.orelse
+            opt_elif    = DEFAULT_ELIF if (o := options.get('elif')) is None else o
             is_old_elif = orelse[0].is_elif()
-            is_new_elif = 'elif' in fmt and len(put_body) == 1 and isinstance(put_body[0], If)
+            is_new_elif = opt_elif and len(put_body) == 1 and isinstance(put_body[0], If)
 
             if is_new_elif:
                 ln, col, end_ln, end_col = put_body[0].f.bloc
@@ -1750,15 +1746,15 @@ class FSTSrcEdit:
             elif is_old_elif:
                 indent = None
 
-                put_fst.indent_lns(block_indent, docstr=docstr, skip=0)
+                put_fst.indent_lns(block_indent, skip=0, docstr=docstr)
                 put_fst.put_lines([opener_indent + 'else:', ''], 0, 0, 0, 0, False)
 
         if indent is not None:
-            put_fst.indent_lns(indent, docstr=docstr, skip=0)
+            put_fst.indent_lns(indent, skip=0, docstr=docstr)
 
         copy_loc, put_loc, del_lines, bound, pre_comms, post_comms, pre_semi, post_semi, block_start = (
-            self.get_slice_stmt(fst, field, True, fmt, block_loc, ffirst, flast, fpre, fpost,
-                                del_else_and_fin=del_else_and_fin, ret_all=True))
+            self.get_slice_stmt(fst, field, True, block_loc, ffirst, flast, fpre, fpost,
+                                del_else_and_fin=del_else_and_fin, ret_all=True, **options))
 
         put_ln, put_col, put_end_ln, put_end_col = put_loc
 
@@ -1787,7 +1783,7 @@ class FSTSrcEdit:
 
         put_loc = fstloc(put_ln, put_col, put_end_ln, put_end_col)
 
-        self._format_space(fst, put_fst, fmt, block_loc, put_loc, fpre, fpost, del_lines)
+        self._format_space(fst, put_fst, block_loc, put_loc, fpre, fpost, del_lines, **options)
 
         return put_loc
 
@@ -2603,8 +2599,8 @@ class FST:
 
         return get_fst
 
-    def _get_slice_tuple_list_or_set(self, start: int | None, stop: int | None, field: str | None, fix: bool, cut: bool,
-                                     fmt: Fmt, docstr: bool | str) -> 'FST':
+    def _get_slice_tuple_list_or_set(self, start: int | None, stop: int | None, field: str | None, fix: bool, cut: bool
+                                     ) -> 'FST':
         if field is not None and field != 'elts':
             raise ValueError(f"invalid field '{field}' to slice from a {self.a.__class__.__name__}")
 
@@ -2687,7 +2683,7 @@ class FST:
         return fst
 
     def _get_slice_empty_set_call(self, start: int | None, stop: int | None, field: str | None, fix: bool, cut: bool,
-                                  fmt: Fmt, docstr: bool | str) -> 'FST':
+                                  ) -> 'FST':
         if not fix:
             raise ValueError(f"cannot get slice from a 'set()' without specifying 'fix=True'")
 
@@ -2699,8 +2695,7 @@ class FST:
 
         return _new_empty_set_call(from_=self) if fix else _new_empty_set_curlies(from_=self)
 
-    def _get_slice_dict(self, start: int | None, stop: int | None, field: str | None, fix: bool, cut: bool,
-                        fmt: Fmt, docstr: bool | str) -> 'FST':
+    def _get_slice_dict(self, start: int | None, stop: int | None, field: str | None, fix: bool, cut: bool) -> 'FST':
         if field is not None:
             raise ValueError(f"cannot specify a field '{field}' to slice from a Dict")
 
@@ -2743,7 +2738,7 @@ class FST:
         return self._get_seq_and_dedent(get_ast, cut, seq_loc, ffirst, flast, fpre, fpost, '{', '}')
 
     def _get_slice_stmt(self, start: int | None, stop: int | None, field: str | None, fix: bool, cut: bool,
-                        fmt: Fmt, docstr: bool | str, *, single: bool = False) -> 'FST':
+                        *, single: bool = False, **options) -> 'FST':
         ast         = self.a
         field, body = _fixup_field_body(ast, field)
         start, stop = _fixup_slice_index(ast, body, field, start, stop)
@@ -2760,11 +2755,8 @@ class FST:
         block_loc = fstloc(*(fpre.bloc[2:] if fpre else ffirst._prev_ast_bound()),
                            *(fpost.bloc[:2] if fpost else flast._next_ast_bound()))
 
-        if isinstance(fmt, str):
-            fmt = frozenset(t for s in fmt.split(',') if (t := s.strip()))
-
         copy_loc, put_loc, put_lines = (
-            self.src_edit.get_slice_stmt(self, field, cut, fmt, block_loc, ffirst, flast, fpre, fpost))
+            self.src_edit.get_slice_stmt(self, field, cut, block_loc, ffirst, flast, fpre, fpost, **options))
 
         if not cut:
             asts    = [copy_ast(body[i]) for i in range(start, stop)]
@@ -2786,13 +2778,8 @@ class FST:
         else:
             raise ValueError(f'cannot specify `single` for multiple statements')
 
-        # copy_loc, put_loc, put_lines = (
-        #     self.src_edit.get_slice_stmt(self, field, cut, fmt, block_loc, ffirst, flast, fpre, fpost))
-
-        # if not cut:
-        #     put_loc = None
-
-        fst = self._make_fst_and_dedent(indent, get_ast, copy_loc, '', '', put_loc, put_lines, docstr=docstr)
+        fst = self._make_fst_and_dedent(indent, get_ast, copy_loc, '', '', put_loc, put_lines,
+                                        docstr=options.get('docstr'))
 
         if cut and is_last_child:  # correct for removed last child nodes or last nodes past the block open colon
             self._fix_block_del_last_child(block_loc.ln, block_loc.col, put_loc.ln, put_loc.col)
@@ -2848,7 +2835,7 @@ class FST:
             self._floor_start_pos(lineno, col_offset)  # because of insertion at beginning of unparenthesized tuple, pattern beginning to emerge
 
     def _put_slice_tuple_list_or_set(self, code: Code | None, start: int | None, stop: int | None, field: str | None,
-                                     single: bool, fix: bool, fmt: Fmt, docstr: bool | str):
+                                     single: bool, fix: bool, **options):
         if field is not None and field != 'elts':
             raise ValueError(f"invalid field '{field}' to assign slice to a {self.a.__class__.__name__}")
 
@@ -2904,7 +2891,7 @@ class FST:
             flast  = elts[stop - 1].f
 
         if not put_fst:
-            self._put_seq_and_indent(None, seq_loc, ffirst, flast, fpre, fpost, None, None, docstr)
+            self._put_seq_and_indent(None, seq_loc, ffirst, flast, fpre, fpost, None, None, options.get('docstr'))
             self._unmake_fst_tree(elts[start : stop])
 
             del elts[start : stop]
@@ -2943,7 +2930,7 @@ class FST:
                 pfirst = selts[0].f
                 plast  = selts[-1].f
 
-            self._put_seq_and_indent(put_fst, seq_loc, ffirst, flast, fpre, fpost, pfirst, plast, docstr)
+            self._put_seq_and_indent(put_fst, seq_loc, ffirst, flast, fpre, fpost, pfirst, plast, options.get('docstr'))
             self._unmake_fst_tree(elts[start : stop], put_fst)
 
             elts[start : stop] = put_ast.elts
@@ -2966,7 +2953,7 @@ class FST:
                 self._maybe_fix_set()
 
     def _put_slice_empty_set_call(self, code: Code | None, start: int | None, stop: int | None, field: str | None,
-                                  single: bool, fix: bool, fmt: Fmt, docstr: bool | str):
+                                  single: bool, fix: bool):
         if not fix:
             raise ValueError(f"cannot put slice to a 'set()' without specifying 'fix=True'")
 
@@ -2982,14 +2969,14 @@ class FST:
             self.pfield.set(parent.a, ast)
 
         try:
-            self._put_slice_tuple_list_or_set(code, start, stop, field, single, fix, fmt, docstr)
+            self._put_slice_tuple_list_or_set(code, start, stop, field, single, fix)
 
         finally:
             if not self.a.elts:
                 self._maybe_fix_set()  # restore 'set()'
 
     def _put_slice_dict(self, code: Code | None, start: int | None, stop: int | None, field: str | None,
-                        single: bool, fix: bool, fmt: Fmt, docstr: bool | str):
+                        single: bool, fix: bool, **options):
         if field is not None:
             raise ValueError(f"cannot specify a field '{field}' to assign slice to a Dict")
 
@@ -3024,7 +3011,7 @@ class FST:
             flast  = values[stop - 1].f
 
         if not put_fst:
-            self._put_seq_and_indent(None, seq_loc, ffirst, flast, fpre, fpost, None, None, docstr)
+            self._put_seq_and_indent(None, seq_loc, ffirst, flast, fpre, fpost, None, None, options.get('docstr'))
             self._unmake_fst_tree(keys[start : stop] + values[start : stop])
 
             del keys[start : stop]
@@ -3051,7 +3038,7 @@ class FST:
                 pfirst = put_fst._dict_key_or_mock_loc(skeys[0], put_ast.values[0].f)
                 plast  = put_ast.values[-1].f
 
-            self._put_seq_and_indent(put_fst, seq_loc, ffirst, flast, fpre, fpost, pfirst, plast, docstr)
+            self._put_seq_and_indent(put_fst, seq_loc, ffirst, flast, fpre, fpost, pfirst, plast, options.get('docstr'))
             self._unmake_fst_tree(keys[start : stop] + values[start : stop], put_fst)
 
             keys[start : stop]   = put_ast.keys
@@ -3076,7 +3063,7 @@ class FST:
                 key.f.pfield = astfield('keys', i)
 
     def _put_slice_stmt(self, code: Code | None, start: int | None, stop: int | None, field: str | None,
-                        single: bool, fix: bool, fmt: Fmt, docstr: bool | str, *, force: bool = False):  # TODO: `force` is for some previously written tests, but really should fix those tests instead
+                        single: bool, fix: bool, *, force: bool = False, **options):  # TODO: `force` is for some previously written tests, but really should fix those tests instead
         ast         = self.a
         field, body = _fixup_field_body(ast, field)
 
@@ -3257,12 +3244,9 @@ class FST:
                         ln, col   = _prev_find(lines, *self.bloc[:2], end_ln, end_col, ':')
                         block_loc = fstloc(ln, col + 1, end_ln, end_col)
 
-        if isinstance(fmt, str):
-            fmt = frozenset(t for s in fmt.split(',') if (t := s.strip()))
-
         if not put_fst:
             _, put_loc, put_lines = (
-                self.src_edit.get_slice_stmt(self, field, True, fmt, block_loc, ffirst, flast, fpre, fpost))
+                self.src_edit.get_slice_stmt(self, field, True, block_loc, ffirst, flast, fpre, fpost, **options))
 
             if put_loc:
                 self.put_lines(put_lines, *put_loc, True)
@@ -3274,9 +3258,9 @@ class FST:
             put_len = 0
 
         else:
-            put_loc = self.src_edit.put_slice_stmt(self, put_fst, field, fmt, docstr,
+            put_loc = self.src_edit.put_slice_stmt(self, put_fst, field,
                                                    block_loc, opener_indent, block_indent,
-                                                   ffirst, flast, fpre, fpost)
+                                                   ffirst, flast, fpre, fpost, **options)
 
             put_fst.offset(0, 0, put_loc.ln, 0 if put_fst.bln or put_fst.bcol else lines[put_loc.ln].c2b(put_loc.col))
             self.put_lines(put_fst.lines, *put_loc, False)
@@ -3688,7 +3672,7 @@ class FST:
 
         return self
 
-    def copy(self, *, fix: bool = True, fmt: Fmt = DEFAULT_SRC_EDIT_FMT, docstr: bool | str | None = None) -> 'FST':
+    def copy(self, *, fix: bool = True, **options) -> 'FST':
         """Copy an individual node to a top level tree, dedenting and fixing as necessary."""
 
         ast    = self.a
@@ -3698,26 +3682,20 @@ class FST:
             return FST(newast, lines=self._lines[:], from_=self)
 
         if isinstance(ast, STATEMENTISH):
-            # TODO: TEMPORARY!
-            precomms  = 'all' if 'allpre' in fmt else True if 'pre' in fmt else False
-            postcomms = 'all' if 'allpost' in fmt else 'block' if 'blkpost' in fmt else True if 'post' in fmt else False
-            # TODO: TEMPORARY!
-            loc = self.comms(precomms, postcomms)
+            loc = self.comms(options.get('precomms'), options.get('postcomms'))
         elif isinstance(ast, PARENTHESIZABLE):
-            loc = (self.pars() if 'pars' in
-                   ((t for s in fmt.split(',') if (t := s.strip())) if isinstance(fmt, str) else fmt)
-                   else self.bloc)
+            loc = self.pars(options.get('pars'))
         else:
             loc = self.bloc
 
         if not loc:
             raise ValueError('cannot copy node which does not have location')
 
-        fst = self._make_fst_and_dedent(self, newast, loc, docstr=docstr)
+        fst = self._make_fst_and_dedent(self, newast, loc, docstr=options.get('docstr'))
 
         return fst.fix(inplace=True) if fix else fst
 
-    def cut(self, *, fix: bool = True, fmt: Fmt = DEFAULT_SRC_EDIT_FMT, docstr: bool | str | None = None) -> 'FST':
+    def cut(self, *, fix: bool = True, **options) -> 'FST':
         """Cut out an individual node to a top level tree (if possible), dedenting and fixing as necessary."""
 
         if self.is_root:
@@ -3729,12 +3707,12 @@ class FST:
         parenta    = parent.a
 
         if isinstance(ast, STATEMENTISH_OR_STMTMOD):
-            return parent._get_slice_stmt(idx, idx + 1, field, fix=fix, cut=True, fmt=fmt, docstr=docstr, single=True)
+            return parent._get_slice_stmt(idx, idx + 1, field, fix=fix, cut=True, single=True, **options)
 
         if isinstance(parenta, (Tuple, List, Set)):
-            fst = self.copy(fix=fix, fmt=fmt, docstr=docstr)
+            fst = self.copy(fix=fix, **options)
 
-            parent._put_slice_tuple_list_or_set(None, idx, idx + 1, field, False, fix, fmt, docstr)
+            parent._put_slice_tuple_list_or_set(None, idx, idx + 1, field, False, fix, **options)
 
             return fst
 
@@ -3747,26 +3725,24 @@ class FST:
 
 
     def get(self, start: int | None = None, stop: int | None | Literal[False] = False, field: str | None = None, *,
-            fix: bool = True, cut: bool = False,
-            fmt: Fmt = DEFAULT_SRC_EDIT_FMT, docstr: bool | str | None = None) -> Optional['FST']:
+            fix: bool = True, cut: bool = False, **options) -> Optional['FST']:
         """Get an individual child node or a slice of child nodes from `self`."""
 
         if stop is not False:
-            return self.get_slice(start, stop, field, fix=fix, cut=cut, fmt=fmt, docstr=docstr)
+            return self.get_slice(start, stop, field, fix=fix, cut=cut, **options)
 
         field, body = _fixup_field_body(self.a, field)
 
         if cut:
-            return body[start].f.cut(fix=fix, fmt=fmt, docstr=docstr)
+            return body[start].f.cut(fix=fix, **options)
         else:
-            return body[start].f.copy(fix=fix, fmt=fmt, docstr=docstr)
+            return body[start].f.copy(fix=fix, **options)
 
 
 
 
     def put(self, code: Code | None, start: int | None = None, stop: int | None | Literal['False'] = False,
-            field: str | None = None, *, fix: bool = True,
-            fmt: Fmt = DEFAULT_SRC_EDIT_FMT, docstr: bool | str | None = None) -> 'FST':  # -> Self
+            field: str | None = None, *, fix: bool = True, **options) -> 'FST':  # -> Self
         """Put an individual child node or a slice of child nodes to `self`.
 
         If the `code` being put is an `AST` or `FST` then it is consumed and should not be considered valid after this
@@ -3774,7 +3750,7 @@ class FST:
         """
 
         if stop is not False:
-            return self.put_slice(code, start, stop, field, True, fix=fix, fmt=fmt, docstr=docstr)
+            return self.put_slice(code, start, stop, field, True, fix=fix, **options)
 
         field, body = _fixup_field_body(self.a, field)
 
@@ -3786,23 +3762,22 @@ class FST:
 
 
     def get_slice(self, start: int | None = None, stop: int | None = None, field: str | None = None, *,
-                  fix: bool = True, cut: bool = False,
-                  fmt: Fmt = DEFAULT_SRC_EDIT_FMT, docstr: bool | str | None = None) -> 'FST':
+                  fix: bool = True, cut: bool = False, **options) -> 'FST':
         """Get a slice of child nodes from `self`."""
 
         ast = self.a
 
         if isinstance(ast, STATEMENTISH_OR_STMTMOD):
-            return self._get_slice_stmt(start, stop, field, fix, cut, fmt, docstr)
+            return self._get_slice_stmt(start, stop, field, fix, cut, **options)
 
         if isinstance(ast, (Tuple, List, Set)):
-            return self._get_slice_tuple_list_or_set(start, stop, field, fix, cut, fmt, docstr)
+            return self._get_slice_tuple_list_or_set(start, stop, field, fix, cut)
 
         if isinstance(ast, Dict):
-            return self._get_slice_dict(start, stop, field, fix, cut, fmt, docstr)
+            return self._get_slice_dict(start, stop, field, fix, cut)
 
         if self.is_empty_set_call():
-            return self._get_slice_empty_set_call(start, stop, field, fix, cut, fmt, docstr)
+            return self._get_slice_empty_set_call(start, stop, field, fix, cut)
 
         raise ValueError(f"cannot get slice from a '{ast.__class__.__name__}'")
 
@@ -3812,8 +3787,7 @@ class FST:
 
 
     def put_slice(self, code: Code | None, start: int | None = None, stop: int | None = None,
-                  field: str | None = None, single: bool = False, *, fix: bool = True,
-                  fmt: Fmt = DEFAULT_SRC_EDIT_FMT, docstr: bool | str | None = None) -> 'FST':  # -> Self
+                  field: str | None = None, single: bool = False, *, fix: bool = True, **options) -> 'FST':  # -> Self
         """Put an a slice of child nodes to `self`.
 
         If the `code` being put is an `AST` or `FST` then it is consumed and should not be considered valid after this
@@ -3823,16 +3797,16 @@ class FST:
         ast = self.a
 
         if isinstance(ast, STATEMENTISH_OR_STMTMOD):
-            self._put_slice_stmt(code, start, stop, field, single, fix, fmt, docstr)
+            self._put_slice_stmt(code, start, stop, field, single, fix, **options)
 
         elif isinstance(ast, (Tuple, List, Set)):
-            self._put_slice_tuple_list_or_set(code, start, stop, field, single, fix, fmt, docstr)
+            self._put_slice_tuple_list_or_set(code, start, stop, field, single, fix)
 
         elif isinstance(ast, Dict):
-            self._put_slice_dict(code, start, stop, field, single, fix, fmt, docstr)
+            self._put_slice_dict(code, start, stop, field, single, fix, **options)
 
         elif self.is_empty_set_call():
-            self._put_slice_empty_set_call(code, start, stop, field, single, fix, fmt, docstr)
+            self._put_slice_empty_set_call(code, start, stop, field, single, fix)
 
         else:
             raise ValueError(f"cannot put slice to a '{ast.__class__.__name__}'")
@@ -5188,7 +5162,7 @@ class FST:
 
         return lns
 
-    def pars(self) -> fstloc:
+    def pars(self, pars: bool = True) -> fstloc:
         """Return the location of enclosing parentheses if present. Will balance parentheses if `self` is an element of
         a tuple and not return the parentheses of the tuple. Likwise will not return the parentheses of an enclosing
         `arguments`  parent. Only works on (and makes sense for) `expr` or `pattern` nodes, otherwise `self.bloc`.
@@ -5197,7 +5171,7 @@ class FST:
         - `fstloc`: Location of enclosing parentheses if present else `self.bloc`.
         """
 
-        if not isinstance(self.a, PARENTHESIZABLE):
+        if not pars or not isinstance(self.a, PARENTHESIZABLE):
             return self.bloc
 
         pars_end_ln, pars_end_col, ante_end_ln, ante_end_col, nrpars = self._rpars()
@@ -5241,6 +5215,7 @@ class FST:
 
         if precomms is None:
             precomms = DEFAULT_PRECOMMS
+
         if postcomms is None:
             postcomms = DEFAULT_POSTCOMMS
 

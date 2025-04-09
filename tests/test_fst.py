@@ -1748,7 +1748,7 @@ if 1:
     # pre
     j  # post
     k
-""", 'body[0]', 1, 2, None, 'pre,post', r"""
+""", 'body[0]', 1, 2, None, {'precomms': True, 'postcomms': True}, r"""
 if 1:
     i
     k
@@ -1777,7 +1777,7 @@ if 1:
     # pre
     j ;
     k
-""", 'body[0]', 1, 2, None, 'pre,post', r"""
+""", 'body[0]', 1, 2, None, {'precomms': True, 'postcomms': True}, r"""
 if 1:
     i
     k
@@ -1805,7 +1805,7 @@ if 1:
     # pre
     j ; # post
     k
-""", 'body[0]', 1, 2, None, 'pre,post', r"""
+""", 'body[0]', 1, 2, None, {'precomms': True, 'postcomms': True}, r"""
 if 1:
     i
     # post
@@ -1834,7 +1834,7 @@ if 1:
     # pre
     j ; \
   k
-""", 'body[0]', 1, 2, None, 'pre,post', r"""
+""", 'body[0]', 1, 2, None, {'precomms': True, 'postcomms': True}, r"""
 if 1:
     i
     k
@@ -1863,7 +1863,7 @@ if 1:
     j ; \
 \
   k
-""", 'body[0]', 1, 2, None, 'pre,post', r"""
+""", 'body[0]', 1, 2, None, {'precomms': True, 'postcomms': True}, r"""
 if 1:
     i
     k
@@ -1893,7 +1893,7 @@ if 1:
     ; \
 \
   k
-""", 'body[0]', 1, 2, None, 'pre,post', r"""
+""", 'body[0]', 1, 2, None, {'precomms': True, 'postcomms': True}, r"""
 if 1:
     i
     k
@@ -1922,7 +1922,7 @@ if 1:
     j \
     ; \
   k
-""", 'body[0]', 1, 2, None, 'pre,post', r"""
+""", 'body[0]', 1, 2, None, {'precomms': True, 'postcomms': True}, r"""
 if 1:
     i
     k
@@ -1950,7 +1950,7 @@ if 1:
     # pre
     j \
     ; k
-""", 'body[0]', 1, 2, None, 'pre,post', r"""
+""", 'body[0]', 1, 2, None, {'precomms': True, 'postcomms': True}, r"""
 if 1:
     i
     k
@@ -1978,7 +1978,7 @@ if 1:
     # pre
     j
     k
-""", 'body[0]', 1, 2, None, 'pre,post', r"""
+""", 'body[0]', 1, 2, None, {'precomms': True, 'postcomms': True}, r"""
 if 1:
     i
     k
@@ -2004,7 +2004,7 @@ Module .. ROOT 0,0 -> 1,1
 if 1:
     i ; j  # post
     k
-""", 'body[0]', 1, 2, None, 'pre,post', r"""
+""", 'body[0]', 1, 2, None, {'precomms': True, 'postcomms': True}, r"""
 if 1:
     i
     k
@@ -2029,7 +2029,7 @@ Module .. ROOT 0,0 -> 1,0
 (r"""
 if 1:
     i ; j  # post
-""", 'body[0]', 1, 2, None, 'pre,post', r"""
+""", 'body[0]', 1, 2, None, {'precomms': True, 'postcomms': True}, r"""
 if 1:
     i
 """, r"""j  # post
@@ -2053,7 +2053,7 @@ if 1:
     i \
   ; j  # post
     k
-""", 'body[0]', 1, 2, None, 'pre,post', r"""
+""", 'body[0]', 1, 2, None, {'precomms': True, 'postcomms': True}, r"""
 if 1:
     i
     k
@@ -2080,7 +2080,7 @@ if 1:
     i ; \
   j  # post
     k
-""", 'body[0]', 1, 2, None, 'pre,post', r"""
+""", 'body[0]', 1, 2, None, {'precomms': True, 'postcomms': True}, r"""
 if 1:
     i
     k
@@ -2108,7 +2108,7 @@ if 1:
   ; \
   j  # post
     k
-""", 'body[0]', 1, 2, None, 'pre,post', r"""
+""", 'body[0]', 1, 2, None, {'precomms': True, 'postcomms': True}, r"""
 if 1:
     i
     k
@@ -2133,7 +2133,7 @@ Module .. ROOT 0,0 -> 1,0
 (r"""
 if 1:
     i ; j ; k
-""", 'body[0]', 1, 2, None, 'pre,post', r"""
+""", 'body[0]', 1, 2, None, {'precomms': True, 'postcomms': True}, r"""
 if 1:
     i ; k
 """, r"""j""", r"""
@@ -2157,7 +2157,7 @@ Module .. ROOT 0,0 -> 0,1
 if 1:
     i ; j
     k
-""", 'body[0]', 1, 2, None, 'pre,post', r"""
+""", 'body[0]', 1, 2, None, {'precomms': True, 'postcomms': True}, r"""
 if 1:
     i
     k
@@ -2182,7 +2182,7 @@ Module .. ROOT 0,0 -> 0,1
 if 1:
     i ; j  # post
     k
-""", 'body[0]', 1, 2, None, '', r"""
+""", 'body[0]', 1, 2, None, {'precomms': False, 'postcomms': False, 'pep8space': False}, r"""
 if 1:
     i  # post
     k
@@ -2208,7 +2208,7 @@ if 1:
     i ; j \
     # post
     k
-""", 'body[0]', 1, 2, None, 'pre,post', r"""
+""", 'body[0]', 1, 2, None, {'precomms': True, 'postcomms': True}, r"""
 if 1:
     i \
     # post
@@ -2236,7 +2236,7 @@ if 1:
   j \
     # post
     k
-""", 'body[0]', 1, 2, None, 'pre,post', r"""
+""", 'body[0]', 1, 2, None, {'precomms': True, 'postcomms': True}, r"""
 if 1:
     i \
     # post
@@ -2265,7 +2265,7 @@ if 1:
   j \
     # post
     k
-""", 'body[0]', 1, 2, None, 'pre,post', r"""
+""", 'body[0]', 1, 2, None, {'precomms': True, 'postcomms': True}, r"""
 if 1:
     i \
     # post
@@ -2292,7 +2292,7 @@ if 1:
     i ; \
     j  # post
     if 2: pass
-""", 'body[0]', 1, 2, None, 'pre,post', r"""
+""", 'body[0]', 1, 2, None, {'precomms': True, 'postcomms': True}, r"""
 if 1:
     i
     if 2: pass
@@ -2321,7 +2321,7 @@ if 1:
     i \
     ; j  # post
     if 2: pass
-""", 'body[0]', 1, 2, None, 'pre,post', r"""
+""", 'body[0]', 1, 2, None, {'precomms': True, 'postcomms': True}, r"""
 if 1:
     i
     if 2: pass
@@ -2351,7 +2351,7 @@ if 1:
     ; \
     j  # post
     if 2: pass
-""", 'body[0]', 1, 2, None, 'pre,post', r"""
+""", 'body[0]', 1, 2, None, {'precomms': True, 'postcomms': True}, r"""
 if 1:
     i
     if 2: pass
@@ -2380,7 +2380,7 @@ if 1:
     i ; \
     j
     if 2: pass
-""", 'body[0]', 1, 2, None, 'pre,post', r"""
+""", 'body[0]', 1, 2, None, {'precomms': True, 'postcomms': True}, r"""
 if 1:
     i
     if 2: pass
@@ -2408,7 +2408,7 @@ if 1:
     i \
     ; j
     if 1: pass
-""", 'body[0]', 1, 2, None, 'pre,post', r"""
+""", 'body[0]', 1, 2, None, {'precomms': True, 'postcomms': True}, r"""
 if 1:
     i
     if 1: pass
@@ -2437,7 +2437,7 @@ if 1:
     ; \
     j
     if 2: pass
-""", 'body[0]', 1, 2, None, 'pre,post', r"""
+""", 'body[0]', 1, 2, None, {'precomms': True, 'postcomms': True}, r"""
 if 1:
     i
     if 2: pass
@@ -2465,7 +2465,7 @@ if 1:
     i
     j
     k
-""", 'body[0]', 1, 2, None, 'pre,post', r"""
+""", 'body[0]', 1, 2, None, {'precomms': True, 'postcomms': True}, r"""
 if 1:
     i
     k
@@ -2491,7 +2491,7 @@ if 1:
     i
     j  # post
     k
-""", 'body[0]', 1, 2, None, '', r"""
+""", 'body[0]', 1, 2, None, {'precomms': False, 'postcomms': False, 'pep8space': False}, r"""
 if 1:
     i
     # post
@@ -2519,7 +2519,7 @@ if 1:
     \
     j
     k
-""", 'body[0]', 1, 2, None, 'pre,post', r"""
+""", 'body[0]', 1, 2, None, {'precomms': True, 'postcomms': True}, r"""
 if 1:
     i
 
@@ -2547,7 +2547,7 @@ if 1:
     j \
 
     k
-""", 'body[0]', 1, 2, None, 'pre,post', r"""
+""", 'body[0]', 1, 2, None, {'precomms': True, 'postcomms': True}, r"""
 if 1:
     i
     \
@@ -2575,7 +2575,7 @@ if 1:
     i
     j ;
     k
-""", 'body[0]', 1, 2, None, 'pre,post', r"""
+""", 'body[0]', 1, 2, None, {'precomms': True, 'postcomms': True}, r"""
 if 1:
     i
     k
@@ -2601,7 +2601,7 @@ if 1:
     i
     j ; \
   k
-""", 'body[0]', 1, 2, None, 'pre,post', r"""
+""", 'body[0]', 1, 2, None, {'precomms': True, 'postcomms': True}, r"""
 if 1:
     i
     k
@@ -2628,7 +2628,7 @@ if 1:
     j \
   ;
     k
-""", 'body[0]', 1, 2, None, 'pre,post', r"""
+""", 'body[0]', 1, 2, None, {'precomms': True, 'postcomms': True}, r"""
 if 1:
     i
     k
@@ -2655,7 +2655,7 @@ if 1:
     j \
   ; \
   k
-""", 'body[0]', 1, 2, None, 'pre,post', r"""
+""", 'body[0]', 1, 2, None, {'precomms': True, 'postcomms': True}, r"""
 if 1:
     i
     k
@@ -2681,7 +2681,7 @@ if 1:
     i
     j  # post
     k
-""", 'body[0]', 1, 2, None, 'pre,post', r"""
+""", 'body[0]', 1, 2, None, {'precomms': True, 'postcomms': True}, r"""
 if 1:
     i
     k
@@ -2707,7 +2707,7 @@ Module .. ROOT 0,0 -> 1,0
 if 1: pass
 else: \
   i ; j
-""", 'body[0]', 0, 1, 'orelse', 'pre,post', r"""
+""", 'body[0]', 0, 1, 'orelse', {'precomms': True, 'postcomms': True}, r"""
 if 1: pass
 else:
   j
@@ -2733,7 +2733,7 @@ if 1: pass
 else: \
   i ; \
     j
-""", 'body[0]', 0, 1, 'orelse', 'pre,post', r"""
+""", 'body[0]', 0, 1, 'orelse', {'precomms': True, 'postcomms': True}, r"""
 if 1: pass
 else:
     j
@@ -2760,7 +2760,7 @@ else: \
   i \
  ; \
     j
-""", 'body[0]', 0, 1, 'orelse', 'pre,post', r"""
+""", 'body[0]', 0, 1, 'orelse', {'precomms': True, 'postcomms': True}, r"""
 if 1: pass
 else:
     j
@@ -2784,7 +2784,7 @@ Module .. ROOT 0,0 -> 0,1
 (r"""
 if 1: pass
 else: i ; j
-""", 'body[0]', 0, 1, 'orelse', 'pre,post', r"""
+""", 'body[0]', 0, 1, 'orelse', {'precomms': True, 'postcomms': True}, r"""
 if 1: pass
 else: j
 """, r"""i""", r"""
@@ -2806,7 +2806,7 @@ Module .. ROOT 0,0 -> 0,1
 
 (r"""if 1: pass
 else: \
-  i ; j""", 'body[0]', 0, 1, 'orelse', 'pre,post', r"""if 1: pass
+  i ; j""", 'body[0]', 0, 1, 'orelse', {'precomms': True, 'postcomms': True}, r"""if 1: pass
 else:
   j""", r"""i""", r"""
 Module .. ROOT 0,0 -> 2,3
@@ -2828,7 +2828,7 @@ Module .. ROOT 0,0 -> 0,1
 (r"""if 1: pass
 else: \
   i ; \
-    j""", 'body[0]', 0, 1, 'orelse', 'pre,post', r"""if 1: pass
+    j""", 'body[0]', 0, 1, 'orelse', {'precomms': True, 'postcomms': True}, r"""if 1: pass
 else:
     j""", r"""i""", r"""
 Module .. ROOT 0,0 -> 2,5
@@ -2851,7 +2851,7 @@ Module .. ROOT 0,0 -> 0,1
 else:
   i \
  ; \
-    j""", 'body[0]', 0, 1, 'orelse', 'pre,post', r"""if 1: pass
+    j""", 'body[0]', 0, 1, 'orelse', {'precomms': True, 'postcomms': True}, r"""if 1: pass
 else:
   j""", r"""i""", r"""
 Module .. ROOT 0,0 -> 2,3
@@ -2871,7 +2871,7 @@ Module .. ROOT 0,0 -> 0,1
 """),
 
 (r"""if 1: pass
-else: i ; j""", 'body[0]', 0, 1, 'orelse', 'pre,post', r"""if 1: pass
+else: i ; j""", 'body[0]', 0, 1, 'orelse', {'precomms': True, 'postcomms': True}, r"""if 1: pass
 else: j""", r"""i""", r"""
 Module .. ROOT 0,0 -> 1,7
   .body[1]
@@ -2895,7 +2895,7 @@ if 1:
     # pre
     j
     if 2: pass
-""", 'body[0]', 1, 2, None, 'pre,post', r"""
+""", 'body[0]', 1, 2, None, {'precomms': True, 'postcomms': True}, r"""
 if 1:
     i
     if 2: pass
@@ -2925,7 +2925,7 @@ if 1:
     # pre
     j  # post
     if 2: pass
-""", 'body[0]', 1, 2, None, 'pre,post', r"""
+""", 'body[0]', 1, 2, None, {'precomms': True, 'postcomms': True}, r"""
 if 1:
     i
     if 2: pass
@@ -2955,7 +2955,7 @@ if 1:
   \
   i
   if 2: pass
-""", 'body[0]', 0, 1, None, 'pre,post', r"""
+""", 'body[0]', 0, 1, None, {'precomms': True, 'postcomms': True}, r"""
 if 1:
 
   if 2: pass
@@ -2982,7 +2982,7 @@ if 1:
     \
     j
     k
-""", 'body[0]', 1, 2, None, 'pre,post', r"""
+""", 'body[0]', 1, 2, None, {'precomms': True, 'postcomms': True}, r"""
 if 1:
     i
 
@@ -3007,7 +3007,7 @@ Module .. ROOT 0,0 -> 0,1
 (r"""
 if 1: \
     i; j
-""", 'body[0]', 0, 1, None, 'pre,post', r"""
+""", 'body[0]', 0, 1, None, {'precomms': True, 'postcomms': True}, r"""
 if 1:
     j
 """, r"""i""", r"""
@@ -3030,7 +3030,7 @@ if 1:
     i \
     # pre
     j ; k
-""", 'body[0]', 1, 2, None, 'pre,post', r"""
+""", 'body[0]', 1, 2, None, {'precomms': True, 'postcomms': True}, r"""
 if 1:
     i
     k
@@ -3062,7 +3062,7 @@ class cls:
 
     def f(): pass
     j
-""", 'body[0]', 1, 2, None, 'space1', r"""
+""", 'body[0]', 1, 2, None, {'prespace': 1}, r"""
 class cls:
     i
     \
@@ -3099,7 +3099,7 @@ class cls:
 
     def f(): pass
     j
-""", 'body[0]', 1, 2, None, 'pep8', r"""
+""", 'body[0]', 1, 2, None, {'pep8space': True}, r"""
 class cls:
     i
     \
@@ -3135,7 +3135,7 @@ i
 
 def f(): pass
 j
-""", '', 1, 2, None, 'pep8', r"""
+""", '', 1, 2, None, {'pep8space': True}, r"""
 i
 \
 
@@ -3166,7 +3166,7 @@ i
 
 def f(): pass
 j
-""", '', 1, 2, None, 'pep8,space3', r"""
+""", '', 1, 2, None, {'pep8space': True, 'prespace': 3}, r"""
 i
 \
 
@@ -3196,7 +3196,7 @@ i
 
 def f(): pass
 j
-""", '', 1, 2, None, 'pep8,space4', r"""
+""", '', 1, 2, None, {'pep8space': True, 'prespace': 4}, r"""
 i
 
 j
@@ -3225,7 +3225,7 @@ i
 
 def f(): pass
 j
-""", '', 1, 2, None, 'pep8,space5', r"""
+""", '', 1, 2, None, {'pep8space': True, 'prespace': 5}, r"""
 i
 j
 """, r"""def f(): pass""", r"""
@@ -3253,7 +3253,7 @@ i
 
 def f(): pass
 j
-""", '', 1, 2, None, 'pep8,space6', r"""
+""", '', 1, 2, None, {'pep8space': True, 'prespace': 6}, r"""
 i
 j
 """, r"""def f(): pass""", r"""
@@ -3281,7 +3281,7 @@ i
 # pre
 def f(): pass
 j
-""", '', 1, 2, None, 'pre,space1', r"""
+""", '', 1, 2, None, {'precomms': True, 'postcomms': False, 'pep8space': False, 'prespace': 1}, r"""
 i
 \
 
@@ -3312,7 +3312,7 @@ i
 class cls:
   pass  # post
 j
-""", '', 1, 2, None, '', r"""
+""", '', 1, 2, None, {'precomms': False, 'postcomms': False, 'pep8space': False}, r"""
 i
 # pre
 # post
@@ -3347,7 +3347,7 @@ i
 class cls:
   pass  # post
 j
-""", '', 1, 2, None, 'pre,post', r"""
+""", '', 1, 2, None, {'precomms': True, 'postcomms': True}, r"""
 i
 j
 """, r"""# pre
@@ -3388,7 +3388,7 @@ def func1():
 
 
 continue
-""", '', 0, 1, None, 'pep8', r"""
+""", '', 0, 1, None, {'pep8space': True}, r"""
 def func1():
     break
 
@@ -3422,7 +3422,7 @@ def func1():
 
 
 continue
-""", '', 1, 2, None, 'pep8', r"""
+""", '', 1, 2, None, {'pep8space': True}, r"""
 def func0():
     pass
 
@@ -3456,7 +3456,7 @@ def func1():
 
 
 continue
-""", '', 0, 1, None, 'pep81', r"""
+""", '', 0, 1, None, {'pep8space': 1}, r"""
 
 def func1():
     break
@@ -3491,7 +3491,7 @@ def func1():
 
 
 continue
-""", '', 1, 2, None, 'pep81', r"""
+""", '', 1, 2, None, {'pep8space': 1}, r"""
 def func0():
     pass
 
@@ -3525,7 +3525,7 @@ class cls:
         break
 
 continue
-""", 'body[0]', 0, 1, None, 'pep8', r"""
+""", 'body[0]', 0, 1, None, {'pep8space': True}, r"""
 class cls:
     def meth1():
         break
@@ -3561,7 +3561,7 @@ class cls:
         break
 
 continue
-""", 'body[0]', 1, 2, None, 'pep8', r"""
+""", 'body[0]', 1, 2, None, {'pep8space': True}, r"""
 class cls:
     def meth0():
         pass
@@ -3594,7 +3594,7 @@ if 1:
 
 
 
-""", 'body[0]', 1, 2, None, '', r"""
+""", 'body[0]', 1, 2, None, {'precomms': False, 'postcomms': False, 'pep8space': False}, r"""
 if 1:
     i
 
@@ -3621,7 +3621,7 @@ if 1:
 
 
 
-""", 'body[0]', 1, 2, None, 'postspace1', r"""
+""", 'body[0]', 1, 2, None, {'postspace': 1}, r"""
 if 1:
     i
 
@@ -3647,7 +3647,7 @@ if 1:
 
 
 
-""", 'body[0]', 1, 2, None, 'postspace', r"""
+""", 'body[0]', 1, 2, None, {'postspace': True}, r"""
 if 1:
     i
 """, r"""j""", r"""
@@ -3671,7 +3671,7 @@ if 1:
 
 
 
-""", 'body[0]', 0, 1, None, 'postspace', r"""
+""", 'body[0]', 0, 1, None, {'postspace': True}, r"""
 if 1:
     j
 
@@ -3698,7 +3698,7 @@ def f():
 
 
 
-""", '', 0, 1, None, '', r"""
+""", '', 0, 1, None, {'precomms': False, 'postcomms': False, 'pep8space': False}, r"""
 
 
 
@@ -3723,7 +3723,7 @@ def f():
 
 
 
-""", '', 0, 1, None, 'postspace', r"""
+""", '', 0, 1, None, {'postspace': True}, r"""
 """, r"""def f():
     i ; j""", r"""
 Module .. ROOT 0,0 -> 1,0
@@ -3744,7 +3744,7 @@ def f():
     i
     \
   k
-""", 'body[0]', 0, 1, None, 'postspace', r"""
+""", 'body[0]', 0, 1, None, {'postspace': True}, r"""
 def f():
     \
   k
@@ -3768,7 +3768,7 @@ def f():
     i; j
     \
   k
-""", 'body[0]', 1, 2, None, 'postspace', r"""
+""", 'body[0]', 1, 2, None, {'postspace': True}, r"""
 def f():
     i
     \
@@ -3796,7 +3796,7 @@ def f():
 
     \
   k
-""", 'body[0]', 0, 1, None, 'postspace', r"""
+""", 'body[0]', 0, 1, None, {'postspace': True}, r"""
 def f():
     \
   k
@@ -3821,7 +3821,7 @@ def f():
 
     \
   k
-""", 'body[0]', 1, 2, None, 'postspace', r"""
+""", 'body[0]', 1, 2, None, {'postspace': True}, r"""
 def f():
     i
     \
@@ -3849,7 +3849,7 @@ def f():
     \
 
     k
-""", 'body[0]', 0, 1, None, 'postspace', r"""
+""", 'body[0]', 0, 1, None, {'postspace': True}, r"""
 def f():
     \
 
@@ -3875,7 +3875,7 @@ def f():
     \
 
     k
-""", 'body[0]', 1, 2, None, 'postspace', r"""
+""", 'body[0]', 1, 2, None, {'postspace': True}, r"""
 def f():
     i
     \
@@ -3901,7 +3901,7 @@ Module .. ROOT 0,0 -> 0,1
 (r"""
 i ; \
  j
-""", '', 0, 1, None, 'pre,post', r"""
+""", '', 0, 1, None, {'precomms': True, 'postcomms': True}, r"""
 j
 """, r"""i""", r"""
 Module .. ROOT 0,0 -> 2,0
@@ -3920,7 +3920,7 @@ Module .. ROOT 0,0 -> 0,1
 GET_SLICE_STMT_NOVERIFY_DATA = [
 (r"""
 if 1: i
-""", 'body[0]', 0, 1, None, 'pre,post', r"""
+""", 'body[0]', 0, 1, None, {'precomms': True, 'postcomms': True}, r"""
 if 1:
 """, r"""i""", r"""
 Module .. ROOT 0,0 -> 2,0
@@ -3935,7 +3935,7 @@ Module .. ROOT 0,0 -> 0,1
 """),
 
 (r"""
-if 1: i""", 'body[0]', 0, 1, None, 'pre,post', r"""
+if 1: i""", 'body[0]', 0, 1, None, {'precomms': True, 'postcomms': True}, r"""
 if 1:""", r"""i""", r"""
 Module .. ROOT 0,0 -> 1,5
   .body[1]
@@ -3950,7 +3950,7 @@ Module .. ROOT 0,0 -> 0,1
 
 (r"""
 if 1: i  # post
-""", 'body[0]', 0, 1, None, 'pre,post', r"""
+""", 'body[0]', 0, 1, None, {'precomms': True, 'postcomms': True}, r"""
 if 1:
 """, r"""i  # post
 """, r"""
@@ -3966,7 +3966,7 @@ Module .. ROOT 0,0 -> 1,0
 """),
 
 (r"""
-if 1: i  # post""", 'body[0]', 0, 1, None, 'pre,post', r"""
+if 1: i  # post""", 'body[0]', 0, 1, None, {'precomms': True, 'postcomms': True}, r"""
 if 1:""", r"""i  # post""", r"""
 Module .. ROOT 0,0 -> 1,5
   .body[1]
@@ -3981,7 +3981,7 @@ Module .. ROOT 0,0 -> 0,9
 
 (r"""
 if 1: i  # post
-""", 'body[0]', 0, 1, None, '', r"""
+""", 'body[0]', 0, 1, None, {'precomms': False, 'postcomms': False, 'pep8space': False}, r"""
 if 1: # post
 """, r"""i""", r"""
 Module .. ROOT 0,0 -> 2,0
@@ -3996,7 +3996,7 @@ Module .. ROOT 0,0 -> 0,1
 """),
 
 (r"""
-if 1: i  # post""", 'body[0]', 0, 1, None, '', r"""
+if 1: i  # post""", 'body[0]', 0, 1, None, {'precomms': False, 'postcomms': False, 'pep8space': False}, r"""
 if 1: # post""", r"""i""", r"""
 Module .. ROOT 0,0 -> 1,12
   .body[1]
@@ -4011,7 +4011,7 @@ Module .. ROOT 0,0 -> 0,1
 
 (r"""
 if 1: i ;
-""", 'body[0]', 0, 1, None, 'pre,post', r"""
+""", 'body[0]', 0, 1, None, {'precomms': True, 'postcomms': True}, r"""
 if 1:
 """, r"""i""", r"""
 Module .. ROOT 0,0 -> 2,0
@@ -4026,7 +4026,7 @@ Module .. ROOT 0,0 -> 0,1
 """),
 
 (r"""
-if 1: i ;""", 'body[0]', 0, 1, None, 'pre,post', r"""
+if 1: i ;""", 'body[0]', 0, 1, None, {'precomms': True, 'postcomms': True}, r"""
 if 1:""", r"""i""", r"""
 Module .. ROOT 0,0 -> 1,5
   .body[1]
@@ -4041,7 +4041,7 @@ Module .. ROOT 0,0 -> 0,1
 
 (r"""
 if 1: i ;  # post
-""", 'body[0]', 0, 1, None, 'pre,post', r"""
+""", 'body[0]', 0, 1, None, {'precomms': True, 'postcomms': True}, r"""
 if 1: # post
 """, r"""i""", r"""
 Module .. ROOT 0,0 -> 2,0
@@ -4056,7 +4056,7 @@ Module .. ROOT 0,0 -> 0,1
 """),
 
 (r"""
-if 1: i ;  # post""", 'body[0]', 0, 1, None, 'pre,post', r"""
+if 1: i ;  # post""", 'body[0]', 0, 1, None, {'precomms': True, 'postcomms': True}, r"""
 if 1: # post""", r"""i""", r"""
 Module .. ROOT 0,0 -> 1,12
   .body[1]
@@ -4071,7 +4071,7 @@ Module .. ROOT 0,0 -> 0,1
 
 (r"""
 if 1: i ;  # post
-""", 'body[0]', 0, 1, None, '', r"""
+""", 'body[0]', 0, 1, None, {'precomms': False, 'postcomms': False, 'pep8space': False}, r"""
 if 1: # post
 """, r"""i""", r"""
 Module .. ROOT 0,0 -> 2,0
@@ -4086,7 +4086,7 @@ Module .. ROOT 0,0 -> 0,1
 """),
 
 (r"""
-if 1: i ;  # post""", 'body[0]', 0, 1, None, '', r"""
+if 1: i ;  # post""", 'body[0]', 0, 1, None, {'precomms': False, 'postcomms': False, 'pep8space': False}, r"""
 if 1: # post""", r"""i""", r"""
 Module .. ROOT 0,0 -> 1,12
   .body[1]
@@ -4105,7 +4105,7 @@ if 1: pass
 # pre
 else: pass
 j
-""", 'body[0]', 0, 1, 'orelse', '', r"""
+""", 'body[0]', 0, 1, 'orelse', {'precomms': False, 'postcomms': False, 'pep8space': False}, r"""
 if 1: pass
 
 # pre
@@ -4131,7 +4131,7 @@ if 1: pass
 # pre
 else: pass
 j
-""", 'body[0]', 0, 1, 'orelse', 'pre', r"""
+""", 'body[0]', 0, 1, 'orelse', {'precomms': True, 'postcomms': False, 'pep8space': False}, r"""
 if 1: pass
 
 j
@@ -4156,7 +4156,7 @@ if 1: pass
 # pre
 else: pass
 j
-""", 'body[0]', 0, 1, 'orelse', 'pre,space', r"""
+""", 'body[0]', 0, 1, 'orelse', {'precomms': True, 'postcomms': False, 'pep8space': False, 'prespace': True}, r"""
 if 1: pass
 j
 """, r"""pass""", r"""
@@ -4180,7 +4180,7 @@ if 1: pass
 # pre
 else: pass
 j
-""", 'body[0]', 0, 1, 'orelse', 'space', r"""
+""", 'body[0]', 0, 1, 'orelse', {'precomms': False, 'postcomms': False, 'pep8space': False, 'prespace': True}, r"""
 if 1: pass
 
 # pre
@@ -4206,7 +4206,7 @@ if 1: pass
 # pre
 else: pass  # post
 j
-""", 'body[0]', 0, 1, 'orelse', 'pre,space', r"""
+""", 'body[0]', 0, 1, 'orelse', {'precomms': True, 'postcomms': False, 'pep8space': False, 'prespace': True}, r"""
 if 1: pass
 # post
 j
@@ -4231,7 +4231,7 @@ if 1: pass
 # pre
 else: pass  # post
 j
-""", 'body[0]', 0, 1, 'orelse', 'pre,post,space', r"""
+""", 'body[0]', 0, 1, 'orelse', {'precomms': True, 'postcomms': True, 'pep8space': False, 'prespace': True}, r"""
 if 1: pass
 j
 """, r"""pass  # post
@@ -4256,7 +4256,7 @@ try: pass
 # pre
 finally: pass
 j
-""", 'body[0]', 0, 1, 'finalbody', '', r"""
+""", 'body[0]', 0, 1, 'finalbody', {'precomms': False, 'postcomms': False, 'pep8space': False}, r"""
 try: pass
 
 # pre
@@ -4281,7 +4281,7 @@ try: pass
 # pre
 finally: pass
 j
-""", 'body[0]', 0, 1, 'finalbody', 'pre', r"""
+""", 'body[0]', 0, 1, 'finalbody', {'precomms': True, 'postcomms': False, 'pep8space': False}, r"""
 try: pass
 
 j
@@ -4305,7 +4305,7 @@ try: pass
 # pre
 finally: pass
 j
-""", 'body[0]', 0, 1, 'finalbody', 'pre,space', r"""
+""", 'body[0]', 0, 1, 'finalbody', {'precomms': True, 'postcomms': False, 'pep8space': False, 'prespace': True}, r"""
 try: pass
 j
 """, r"""pass""", r"""
@@ -4328,7 +4328,7 @@ try: pass
 # pre
 finally: pass
 j
-""", 'body[0]', 0, 1, 'finalbody', 'space', r"""
+""", 'body[0]', 0, 1, 'finalbody', {'precomms': False, 'postcomms': False, 'pep8space': False, 'prespace': True}, r"""
 try: pass
 
 # pre
@@ -4353,7 +4353,7 @@ try: pass
 # pre
 finally: pass  # post
 j
-""", 'body[0]', 0, 1, 'finalbody', 'pre,space', r"""
+""", 'body[0]', 0, 1, 'finalbody', {'precomms': True, 'postcomms': False, 'pep8space': False, 'prespace': True}, r"""
 try: pass
 # post
 j
@@ -4377,7 +4377,7 @@ try: pass
 # pre
 finally: pass  # post
 j
-""", 'body[0]', 0, 1, 'finalbody', 'pre,post,space', r"""
+""", 'body[0]', 0, 1, 'finalbody', {'precomms': True, 'postcomms': True, 'pep8space': False, 'prespace': True}, r"""
 try: pass
 j
 """, r"""pass  # post
@@ -4407,7 +4407,7 @@ else:
 
   # pre 2
   j
-""", 'body[0]', 0, 1, 'orelse', 'allpre', r"""
+""", 'body[0]', 0, 1, 'orelse', {'precomms': 'all', 'postcomms': False, 'pep8space': False}, r"""
 if 1: i
 
 """, r"""# pre 1
@@ -4440,7 +4440,7 @@ else:
 
   # pre 2
   j
-""", 'body[0]', 0, 1, 'orelse', 'allpre,space', r"""
+""", 'body[0]', 0, 1, 'orelse', {'precomms': 'all', 'postcomms': False, 'pep8space': False, 'prespace': True}, r"""
 if 1: i
 """, r"""# pre 1
 
@@ -4464,7 +4464,7 @@ Module .. ROOT 0,0 -> 3,1
 try:
     pass
 finally: pass
-""", 'body[0]', 0, 1, None, 'pre,post', r"""
+""", 'body[0]', 0, 1, None, {'precomms': True, 'postcomms': True}, r"""
 try:
 finally: pass
 """, r"""pass""", r"""
@@ -4482,7 +4482,7 @@ Module .. ROOT 0,0 -> 0,4
 (r"""
 try: pass
 finally: pass
-""", 'body[0]', 0, 1, None, 'pre,post', r"""
+""", 'body[0]', 0, 1, None, {'precomms': True, 'postcomms': True}, r"""
 try:
 finally: pass
 """, r"""pass""", r"""
@@ -4501,7 +4501,7 @@ Module .. ROOT 0,0 -> 0,4
 try: i = \
   2
 finally: pass
-""", 'body[0]', 0, 1, None, 'pre,post', r"""
+""", 'body[0]', 0, 1, None, {'precomms': True, 'postcomms': True}, r"""
 try:
 finally: pass
 """, r"""i = \
@@ -4523,7 +4523,7 @@ Module .. ROOT 0,0 -> 1,1
 (r"""
 try: pass  # post
 finally: pass
-""", 'body[0]', 0, 1, None, 'pre,post', r"""
+""", 'body[0]', 0, 1, None, {'precomms': True, 'postcomms': True}, r"""
 try:
 finally: pass
 """, r"""pass  # post
@@ -4542,7 +4542,7 @@ Module .. ROOT 0,0 -> 1,0
 (r"""
 try: pass  # post
 finally: pass
-""", 'body[0]', 0, 1, None, '', r"""
+""", 'body[0]', 0, 1, None, {'precomms': False, 'postcomms': False, 'pep8space': False}, r"""
 try: # post
 finally: pass
 """, r"""pass""", r"""
@@ -4563,7 +4563,7 @@ except: pass
 else:
     pass
 finally: pass
-""", 'body[0]', 0, 1, 'orelse', 'pre,post', r"""
+""", 'body[0]', 0, 1, 'orelse', {'precomms': True, 'postcomms': True}, r"""
 try: pass
 except: pass
 finally: pass
@@ -4590,7 +4590,7 @@ try: pass
 except: pass
 else: pass
 finally: pass
-""", 'body[0]', 0, 1, 'orelse', 'pre,post', r"""
+""", 'body[0]', 0, 1, 'orelse', {'precomms': True, 'postcomms': True}, r"""
 try: pass
 except: pass
 finally: pass
@@ -4618,7 +4618,7 @@ except:
     pass
 else: pass
 finally: pass
-""", 'body[0]', 0, 1, 'handlers', 'pre,post', r"""
+""", 'body[0]', 0, 1, 'handlers', {'precomms': True, 'postcomms': True}, r"""
 try: pass
 else: pass
 finally: pass
@@ -4646,7 +4646,7 @@ try: pass
 except: pass
 else: pass
 finally: pass
-""", 'body[0]', 0, 1, 'handlers', 'pre,post', r"""
+""", 'body[0]', 0, 1, 'handlers', {'precomms': True, 'postcomms': True}, r"""
 try: pass
 else: pass
 finally: pass
@@ -4673,7 +4673,7 @@ try: pass
 except: pass  # post
 else: pass
 finally: pass
-""", 'body[0]', 0, 1, 'handlers', '', r"""
+""", 'body[0]', 0, 1, 'handlers', {'precomms': False, 'postcomms': False, 'pep8space': False}, r"""
 try: pass
 # post
 else: pass
@@ -4702,7 +4702,7 @@ except: pass  \
 
 else: pass
 finally: pass
-""", 'body[0]', 0, 1, 'handlers', '', r"""
+""", 'body[0]', 0, 1, 'handlers', {'precomms': False, 'postcomms': False, 'pep8space': False}, r"""
 try: pass
 \
 
@@ -4732,7 +4732,7 @@ except:
     pass
 else: pass
 finally: pass
-""", 'body[0].handlers[0]', 0, 1, None, 'pre,post', r"""
+""", 'body[0].handlers[0]', 0, 1, None, {'precomms': True, 'postcomms': True}, r"""
 try: pass
 except:
 else: pass
@@ -4760,7 +4760,7 @@ try: pass
 except: pass
 else: pass
 finally: pass
-""", 'body[0].handlers[0]', 0, 1, None, 'pre,post', r"""
+""", 'body[0].handlers[0]', 0, 1, None, {'precomms': True, 'postcomms': True}, r"""
 try: pass
 except:
 else: pass
@@ -4788,7 +4788,7 @@ try: pass
 except: pass  # post
 else: pass
 finally: pass
-""", 'body[0].handlers[0]', 0, 1, None, '', r"""
+""", 'body[0].handlers[0]', 0, 1, None, {'precomms': False, 'postcomms': False, 'pep8space': False}, r"""
 try: pass
 except: # post
 else: pass
@@ -4817,7 +4817,7 @@ except: pass \
 
 else: pass
 finally: pass
-""", 'body[0].handlers[0]', 0, 1, None, '', r"""
+""", 'body[0].handlers[0]', 0, 1, None, {'precomms': False, 'postcomms': False, 'pep8space': False}, r"""
 try: pass
 except: \
 
@@ -7314,7 +7314,7 @@ PUT_SLICE_STMT_DATA = [
 if 1:
     i
     j
-""", 'body[0]', 1, 1, 'body', None, r"""k""", r"""
+""", 'body[0]', 1, 1, 'body', {}, r"""k""", r"""
 if 1:
     i
     k
@@ -7337,7 +7337,7 @@ Module .. ROOT 0,0 -> 5,0
 if 1:
     i  # post
     j
-""", 'body[0]', 1, 1, 'body', None, r"""k""", r"""
+""", 'body[0]', 1, 1, 'body', {}, r"""k""", r"""
 if 1:
     i  # post
     k
@@ -7361,7 +7361,7 @@ if 1:
     i \
   # post
     j
-""", 'body[0]', 1, 1, 'body', None, r"""k""", r"""
+""", 'body[0]', 1, 1, 'body', {}, r"""k""", r"""
 if 1:
     i \
   # post
@@ -7386,7 +7386,7 @@ if 1:
     i  # post
     # pre
     j
-""", 'body[0]', 1, 1, 'body', None, r"""k""", r"""
+""", 'body[0]', 1, 1, 'body', {}, r"""k""", r"""
 if 1:
     i  # post
     k
@@ -7411,7 +7411,7 @@ if 1:
     i
     # pre
     j
-""", 'body[0]', 1, 1, 'body', None, r"""k""", r"""
+""", 'body[0]', 1, 1, 'body', {}, r"""k""", r"""
 if 1:
     i
     k
@@ -7440,7 +7440,7 @@ if 1:
     # pre
 
     j
-""", 'body[0]', 1, 1, 'body', None, r"""k""", r"""
+""", 'body[0]', 1, 1, 'body', {}, r"""k""", r"""
 if 1:
     i
     k
@@ -7467,7 +7467,7 @@ Module .. ROOT 0,0 -> 10,0
 (r"""
 if 1:
     i ; j
-""", 'body[0]', 1, 1, 'body', None, r"""k""", r"""
+""", 'body[0]', 1, 1, 'body', {}, r"""k""", r"""
 if 1:
     i
     k
@@ -7490,7 +7490,7 @@ Module .. ROOT 0,0 -> 5,0
 if 1:
     i ; \
   j
-""", 'body[0]', 1, 1, 'body', None, r"""k""", r"""
+""", 'body[0]', 1, 1, 'body', {}, r"""k""", r"""
 if 1:
     i
     k
@@ -7513,7 +7513,7 @@ Module .. ROOT 0,0 -> 5,0
 if 1:
     i \
   ; j
-""", 'body[0]', 1, 1, 'body', None, r"""k""", r"""
+""", 'body[0]', 1, 1, 'body', {}, r"""k""", r"""
 if 1:
     i
     k
@@ -7537,7 +7537,7 @@ if 1:
     i \
   ; \
   j
-""", 'body[0]', 1, 1, 'body', None, r"""k""", r"""
+""", 'body[0]', 1, 1, 'body', {}, r"""k""", r"""
 if 1:
     i
     k
@@ -7558,7 +7558,7 @@ Module .. ROOT 0,0 -> 5,0
 
 (r"""
 if 1: i ; j
-""", 'body[0]', 1, 1, 'body', None, r"""k""", r"""
+""", 'body[0]', 1, 1, 'body', {}, r"""k""", r"""
 if 1:
     i
     k
@@ -7582,7 +7582,7 @@ if 1: \
   i \
   ; \
   j
-""", 'body[0]', 1, 1, 'body', None, r"""k""", r"""
+""", 'body[0]', 1, 1, 'body', {}, r"""k""", r"""
 if 1:
     i
     k
@@ -7604,7 +7604,7 @@ Module .. ROOT 0,0 -> 5,0
 (r"""
 if 1:
     i ; j ; l ; m
-""", 'body[0]', 2, 2, 'body', None, r"""k""", r"""
+""", 'body[0]', 2, 2, 'body', {}, r"""k""", r"""
 if 1:
     i ; j
     k
@@ -7629,7 +7629,7 @@ Module .. ROOT 0,0 -> 5,0
 
 (r"""
 if 1: i ; j ; l ; m
-""", 'body[0]', 2, 2, 'body', None, r"""k""", r"""
+""", 'body[0]', 2, 2, 'body', {}, r"""k""", r"""
 if 1:
     i ; j
     k
@@ -7655,7 +7655,7 @@ Module .. ROOT 0,0 -> 5,0
 (r"""
 if 1:
     i
-""", 'body[0]', 1, 1, 'body', None, r"""k""", r"""
+""", 'body[0]', 1, 1, 'body', {}, r"""k""", r"""
 if 1:
     i
     k
@@ -7674,7 +7674,7 @@ Module .. ROOT 0,0 -> 4,0
 (r"""
 if 1:
     i  # post
-""", 'body[0]', 1, 1, 'body', None, r"""k""", r"""
+""", 'body[0]', 1, 1, 'body', {}, r"""k""", r"""
 if 1:
     i  # post
     k
@@ -7694,7 +7694,7 @@ Module .. ROOT 0,0 -> 4,0
 if 1:
     i  # post
     # pre
-""", 'body[0]', 1, 1, 'body', None, r"""k""", r"""
+""", 'body[0]', 1, 1, 'body', {}, r"""k""", r"""
 if 1:
     i  # post
     k
@@ -7713,7 +7713,7 @@ Module .. ROOT 0,0 -> 5,0
 
 (r"""
 if 1: i
-""", 'body[0]', 1, 1, 'body', None, r"""k""", r"""
+""", 'body[0]', 1, 1, 'body', {}, r"""k""", r"""
 if 1:
     i
     k
@@ -7731,7 +7731,7 @@ Module .. ROOT 0,0 -> 4,0
 
 (r"""
 if 1: i  # post
-""", 'body[0]', 1, 1, 'body', None, r"""k""", r"""
+""", 'body[0]', 1, 1, 'body', {}, r"""k""", r"""
 if 1:
     i  # post
     k
@@ -7750,7 +7750,7 @@ Module .. ROOT 0,0 -> 4,0
 (r"""
 if 1: i  # post
     # pre
-""", 'body[0]', 1, 1, 'body', None, r"""k""", r"""
+""", 'body[0]', 1, 1, 'body', {}, r"""k""", r"""
 if 1:
     i  # post
     k
@@ -7770,7 +7770,7 @@ Module .. ROOT 0,0 -> 5,0
 (r"""
 if 1: i ;
     # pre
-""", 'body[0]', 1, 1, 'body', None, r"""k""", r"""
+""", 'body[0]', 1, 1, 'body', {}, r"""k""", r"""
 if 1:
     i ;
     k
@@ -7790,7 +7790,7 @@ Module .. ROOT 0,0 -> 5,0
 (r"""
 if 1: i ;  # post
     # pre
-""", 'body[0]', 1, 1, 'body', None, r"""k""", r"""
+""", 'body[0]', 1, 1, 'body', {}, r"""k""", r"""
 if 1:
     i ;  # post
     k
@@ -7810,7 +7810,7 @@ Module .. ROOT 0,0 -> 5,0
 (r"""
 if 1:
     i
-""", 'body[0]', 0, 0, 'body', None, r"""k""", r"""
+""", 'body[0]', 0, 0, 'body', {}, r"""k""", r"""
 if 1:
     k
     i
@@ -7829,7 +7829,7 @@ Module .. ROOT 0,0 -> 4,0
 (r"""
 if 1:  # post-block
     i
-""", 'body[0]', 0, 0, 'body', None, r"""k""", r"""
+""", 'body[0]', 0, 0, 'body', {}, r"""k""", r"""
 if 1:  # post-block
     k
     i
@@ -7849,7 +7849,7 @@ Module .. ROOT 0,0 -> 4,0
 if 1:
     # pre
     i
-""", 'body[0]', 0, 0, 'body', None, r"""k""", r"""
+""", 'body[0]', 0, 0, 'body', {}, r"""k""", r"""
 if 1:
     k
     # pre
@@ -7870,7 +7870,7 @@ Module .. ROOT 0,0 -> 5,0
 if 1:  # post-block
     # pre
     i
-""", 'body[0]', 0, 0, 'body', None, r"""k""", r"""
+""", 'body[0]', 0, 0, 'body', {}, r"""k""", r"""
 if 1:  # post-block
     k
     # pre
@@ -7892,7 +7892,7 @@ if 1: \
   # post-lline-block
     # pre
     i
-""", 'body[0]', 0, 0, 'body', None, r"""k""", r"""
+""", 'body[0]', 0, 0, 'body', {}, r"""k""", r"""
 if 1: \
   # post-lline-block
     k
@@ -7912,7 +7912,7 @@ Module .. ROOT 0,0 -> 6,0
 
 (r"""
 if 1: i ; j  # post-multi
-""", 'body[0]', 0, 0, 'body', None, r"""k""", r"""
+""", 'body[0]', 0, 0, 'body', {}, r"""k""", r"""
 if 1:
     k
     i ; j  # post-multi
@@ -7933,7 +7933,7 @@ Module .. ROOT 0,0 -> 4,0
 (r"""
 if 1: \
   i ; j  # post-multi
-""", 'body[0]', 0, 0, 'body', None, r"""k""", r"""
+""", 'body[0]', 0, 0, 'body', {}, r"""k""", r"""
 if 1:
     k
     i ; j  # post-multi
@@ -7955,7 +7955,7 @@ Module .. ROOT 0,0 -> 4,0
 def f():
     if 1:
         pass
-""", 'body[0].body[0]', 0, 0, 'orelse', 'elif', r"""if 2: break""", r"""
+""", 'body[0].body[0]', 0, 0, 'orelse', {'precomms': False, 'postcomms': False, 'pep8space': False, 'elif': True}, r"""if 2: break""", r"""
 def f():
     if 1:
         pass
@@ -7982,7 +7982,7 @@ def f():
     if 1:
         pass  # post-if
     # post-line
-""", 'body[0].body[0]', 0, 0, 'orelse', 'elif', r"""# pre
+""", 'body[0].body[0]', 0, 0, 'orelse', {'precomms': False, 'postcomms': False, 'pep8space': False, 'elif': True}, r"""# pre
 if 2: break  # post-elif""", r"""
 def f():
     if 1:
@@ -8014,7 +8014,7 @@ def f():
     # pre
     elif 2: break  # post-elif
     # post-line
-""", 'body[0].body[0].orelse[0]', 0, 0, 'orelse', 'elif', r"""# pre-3
+""", 'body[0].body[0].orelse[0]', 0, 0, 'orelse', {'precomms': False, 'postcomms': False, 'pep8space': False, 'elif': True}, r"""# pre-3
 if 3:  # post-elif-3
     continue  # post-elif-continue-3""", r"""
 def f():
@@ -8058,7 +8058,7 @@ def f():
     elif 3:  # post-elif-3
         continue  # post-elif-continue-3
     # post-line
-""", 'body[0].body[0]', 0, 1, 'orelse', '', r"""**DEL**""", r"""
+""", 'body[0].body[0]', 0, 1, 'orelse', {'precomms': False, 'postcomms': False, 'pep8space': False}, r"""**DEL**""", r"""
 def f():
     if 1:
         pass  # post-if
@@ -8087,7 +8087,7 @@ def f():
     elif 3:  # post-elif-3
         continue  # post-elif-continue-3
     # post-line
-""", 'body[0].body[0]', 0, 1, 'orelse', 'pre', r"""**DEL**""", r"""
+""", 'body[0].body[0]', 0, 1, 'orelse', {'precomms': True, 'postcomms': False, 'pep8space': False}, r"""**DEL**""", r"""
 def f():
     if 1:
         pass  # post-if
@@ -8115,7 +8115,7 @@ def f():
     elif 3:  # post-elif-3
         continue  # post-elif-continue-3
     # post-line
-""", 'body[0].body[0]', 0, 1, 'orelse', 'post', r"""**DEL**""", r"""
+""", 'body[0].body[0]', 0, 1, 'orelse', {'precomms': False, 'postcomms': True, 'pep8space': False}, r"""**DEL**""", r"""
 def f():
     if 1:
         pass  # post-if
@@ -8143,7 +8143,7 @@ def f():
     elif 3:  # post-elif-3
         continue  # post-elif-continue-3
     # post-line
-""", 'body[0].body[0]', 0, 1, 'orelse', 'pre,post', r"""**DEL**""", r"""
+""", 'body[0].body[0]', 0, 1, 'orelse', {'precomms': True, 'postcomms': True}, r"""**DEL**""", r"""
 def f():
     if 1:
         pass  # post-if
@@ -8174,7 +8174,7 @@ def f():
         continue  # post-elif-continue-3
 
     # post-line
-""", 'body[0].body[0].orelse[0]', 0, 1, 'orelse', 'allpre,post,space', r"""**DEL**""", r"""
+""", 'body[0].body[0].orelse[0]', 0, 1, 'orelse', {'precomms': 'all', 'postcomms': True, 'pep8space': False, 'prespace': True}, r"""**DEL**""", r"""
 def f():
     if 1:
         pass  # post-if
@@ -8199,7 +8199,7 @@ Module .. ROOT 0,0 -> 8,0
         0] Break .. 5,12 -> 5,17
 """),
 
-(r"""""", None, 0, 0, None, None, r"""i""", r"""i
+(r"""""", None, 0, 0, None, {}, r"""i""", r"""i
 """, r"""
 Module .. ROOT 0,0 -> 1,0
   .body[1]
@@ -8208,7 +8208,7 @@ Module .. ROOT 0,0 -> 1,0
 """),
 
 (r"""
-""", None, 0, 0, None, None, r"""i""", r"""
+""", None, 0, 0, None, {}, r"""i""", r"""
 i
 """, r"""
 Module .. ROOT 0,0 -> 2,0
@@ -8219,7 +8219,7 @@ Module .. ROOT 0,0 -> 2,0
 
 (r"""
 
-""", None, 0, 0, None, None, r"""i""", r"""
+""", None, 0, 0, None, {}, r"""i""", r"""
 
 i
 """, r"""
@@ -8231,7 +8231,7 @@ Module .. ROOT 0,0 -> 3,0
 
 (r"""
 # comment
-""", None, 0, 0, None, None, r"""i""", r"""
+""", None, 0, 0, None, {}, r"""i""", r"""
 # comment
 i
 """, r"""
@@ -8246,7 +8246,7 @@ Module .. ROOT 0,0 -> 3,0
 # comment
 
 # another comment
-""", None, 0, 0, None, None, r"""i""", r"""
+""", None, 0, 0, None, {}, r"""i""", r"""
 
 # comment
 
@@ -8265,7 +8265,7 @@ Module .. ROOT 0,0 -> 6,0
 
 # another comment
 i
-""", None, 0, 0, None, None, r"""h""", r"""
+""", None, 0, 0, None, {}, r"""h""", r"""
 
 # comment
 
@@ -8287,7 +8287,7 @@ Module .. ROOT 0,0 -> 7,0
 
 # another comment
 i
-""", None, 1, 1, None, None, r"""j""", r"""
+""", None, 1, 1, None, {}, r"""j""", r"""
 
 # comment
 
@@ -8307,7 +8307,7 @@ Module .. ROOT 0,0 -> 7,0
 def f():
     if 1: pass
     elif 2: pass
-""", 'body[0].body[0]', 0, 0, 'orelse', None, r"""break""", r"""
+""", 'body[0].body[0]', 0, 0, 'orelse', {}, r"""break""", r"""
 def f():
     if 1: pass
     else:
@@ -8335,7 +8335,7 @@ Module .. ROOT 0,0 -> 6,0
 def f():
     if 1: pass
     elif 2: pass
-""", 'body[0].body[0]', 1, 1, 'orelse', None, r"""break""", r"""
+""", 'body[0].body[0]', 1, 1, 'orelse', {}, r"""break""", r"""
 def f():
     if 1: pass
     else:
@@ -8364,7 +8364,7 @@ def f():
     if 1: pass
     elif 2:
         pass
-""", 'body[0].body[0]', 0, 0, 'orelse', None, r"""break""", r"""
+""", 'body[0].body[0]', 0, 0, 'orelse', {}, r"""break""", r"""
 def f():
     if 1: pass
     else:
@@ -8394,7 +8394,7 @@ def f():
     if 1: pass
     elif 2:
         pass
-""", 'body[0].body[0]', 1, 1, 'orelse', None, r"""break""", r"""
+""", 'body[0].body[0]', 1, 1, 'orelse', {}, r"""break""", r"""
 def f():
     if 1: pass
     else:
@@ -8424,7 +8424,7 @@ def f():
     if 1: pass
     elif 2: continue
     elif 3: raise
-""", 'body[0].body[0]', 0, 0, 'orelse', None, r"""break""", r"""
+""", 'body[0].body[0]', 0, 0, 'orelse', {}, r"""break""", r"""
 def f():
     if 1: pass
     else:
@@ -8459,7 +8459,7 @@ def f():
     if 1: pass
     elif 2: continue
     elif 3: raise
-""", 'body[0].body[0]', 1, 1, 'orelse', None, r"""break""", r"""
+""", 'body[0].body[0]', 1, 1, 'orelse', {}, r"""break""", r"""
 def f():
     if 1: pass
     else:
@@ -8494,7 +8494,7 @@ def f():
     if 1: pass
     elif 2: continue
     elif 3: raise
-""", 'body[0].body[0].orelse[0]', 0, 0, 'orelse', None, r"""break""", r"""
+""", 'body[0].body[0].orelse[0]', 0, 0, 'orelse', {}, r"""break""", r"""
 def f():
     if 1: pass
     elif 2: continue
@@ -8529,7 +8529,7 @@ def f():
     if 1: pass
     elif 2: continue
     elif 3: raise
-""", 'body[0].body[0].orelse[0]', 1, 1, 'orelse', None, r"""break""", r"""
+""", 'body[0].body[0].orelse[0]', 1, 1, 'orelse', {}, r"""break""", r"""
 def f():
     if 1: pass
     elif 2: continue
@@ -8562,7 +8562,7 @@ Module .. ROOT 0,0 -> 7,0
 (r"""
 def f():
     i
-""", 'body[0]', 0, 0, None, None, r"""# comment""", r"""
+""", 'body[0]', 0, 0, None, {}, r"""# comment""", r"""
 def f():
     # comment
     i
@@ -8579,7 +8579,7 @@ Module .. ROOT 0,0 -> 4,0
 (r"""
 def f():
     i
-""", 'body[0]', 1, 1, None, None, r"""# comment""", r"""
+""", 'body[0]', 1, 1, None, {}, r"""# comment""", r"""
 def f():
     i
     # comment
@@ -8596,7 +8596,7 @@ Module .. ROOT 0,0 -> 4,0
 (r"""
 def f():
     i ; j
-""", 'body[0]', 0, 0, None, None, r"""# comment""", r"""
+""", 'body[0]', 0, 0, None, {}, r"""# comment""", r"""
 def f():
     # comment
     i ; j
@@ -8615,7 +8615,7 @@ Module .. ROOT 0,0 -> 4,0
 (r"""
 def f():
     i ; j
-""", 'body[0]', 1, 1, None, None, r"""# comment""", r"""
+""", 'body[0]', 1, 1, None, {}, r"""# comment""", r"""
 def f():
     i
     # comment
@@ -8635,7 +8635,7 @@ Module .. ROOT 0,0 -> 5,0
 (r"""
 def f():
     i ; j
-""", 'body[0]', 2, 2, None, None, r"""# comment""", r"""
+""", 'body[0]', 2, 2, None, {}, r"""# comment""", r"""
 def f():
     i ; j
     # comment
@@ -8657,7 +8657,7 @@ def f():
   \
   ; \
   j
-""", 'body[0]', 0, 0, None, None, r"""# comment""", r"""
+""", 'body[0]', 0, 0, None, {}, r"""# comment""", r"""
 def f():
     # comment
     i \
@@ -8682,7 +8682,7 @@ def f():
   \
   ; \
   j
-""", 'body[0]', 1, 1, None, None, r"""# comment""", r"""
+""", 'body[0]', 1, 1, None, {}, r"""# comment""", r"""
 def f():
     i
     # comment
@@ -8705,7 +8705,7 @@ def f():
   \
   ; \
   j
-""", 'body[0]', 2, 2, None, None, r"""# comment""", r"""
+""", 'body[0]', 2, 2, None, {}, r"""# comment""", r"""
 def f():
     i \
   \
@@ -8724,7 +8724,7 @@ Module .. ROOT 0,0 -> 7,0
       .value Name 'j' Load .. 5,2 -> 5,3
 """),
 
-(r"""""", '', 0, 0, None, 'pep8', r"""def func(): pass""", r"""def func(): pass
+(r"""""", '', 0, 0, None, {'pep8space': True}, r"""def func(): pass""", r"""def func(): pass
 """, r"""
 Module .. ROOT 0,0 -> 1,0
   .body[1]
@@ -8734,7 +8734,7 @@ Module .. ROOT 0,0 -> 1,0
     0] Pass .. 0,12 -> 0,16
 """),
 
-(r"""""", '', 0, 0, None, 'pep8', r"""
+(r"""""", '', 0, 0, None, {'pep8space': True}, r"""
 def func(): pass""", r"""
 def func(): pass
 """, r"""
@@ -8747,7 +8747,7 @@ Module .. ROOT 0,0 -> 2,0
 """),
 
 (r"""'''Module
-   docstring'''""", '', 1, 1, None, 'pep8', r"""def func(): pass""", r"""'''Module
+   docstring'''""", '', 1, 1, None, {'pep8space': True}, r"""def func(): pass""", r"""'''Module
    docstring'''
 
 def func(): pass
@@ -8763,7 +8763,7 @@ Module .. ROOT 0,0 -> 4,0
 """),
 
 (r"""'''Module
-   docstring'''""", '', 1, 1, None, 'pep8', r"""def func(): pass""", r"""'''Module
+   docstring'''""", '', 1, 1, None, {'pep8space': True}, r"""def func(): pass""", r"""'''Module
    docstring'''
 
 def func(): pass
@@ -8779,7 +8779,7 @@ Module .. ROOT 0,0 -> 4,0
 """),
 
 (r"""'''Module
-   docstring'''""", '', 1, 1, None, 'pep8', r"""
+   docstring'''""", '', 1, 1, None, {'pep8space': True}, r"""
 def func(): pass""", r"""'''Module
    docstring'''
 
@@ -8796,7 +8796,7 @@ Module .. ROOT 0,0 -> 4,0
 """),
 
 (r"""'''Module
-   docstring'''""", '', 1, 1, None, 'pep8', r"""
+   docstring'''""", '', 1, 1, None, {'pep8space': True}, r"""
 
 def func(): pass""", r"""'''Module
    docstring'''
@@ -8816,7 +8816,7 @@ Module .. ROOT 0,0 -> 5,0
 
 (r"""
 def prefunc(): pass
-""", '', 1, 1, None, 'pep8', r"""def func(): pass""", r"""
+""", '', 1, 1, None, {'pep8space': True}, r"""def func(): pass""", r"""
 def prefunc(): pass
 
 
@@ -8836,7 +8836,7 @@ Module .. ROOT 0,0 -> 5,0
 
 (r"""
 def prefunc(): pass
-""", '', 1, 1, None, 'pep81', r"""def func(): pass""", r"""
+""", '', 1, 1, None, {'pep8space': 1}, r"""def func(): pass""", r"""
 def prefunc(): pass
 
 def func(): pass
@@ -8855,7 +8855,7 @@ Module .. ROOT 0,0 -> 4,0
 
 (r"""
 def prefunc(): pass
-""", '', 1, 1, None, '', r"""def func(): pass""", r"""
+""", '', 1, 1, None, {'precomms': False, 'postcomms': False, 'pep8space': False}, r"""def func(): pass""", r"""
 def prefunc(): pass
 def func(): pass
 """, r"""
@@ -8873,7 +8873,7 @@ Module .. ROOT 0,0 -> 3,0
 
 (r"""
 def prefunc(): pass
-""", '', 1, 1, None, 'pep8', r"""
+""", '', 1, 1, None, {'pep8space': True}, r"""
 def func(): pass""", r"""
 def prefunc(): pass
 
@@ -8894,7 +8894,7 @@ Module .. ROOT 0,0 -> 5,0
 
 (r"""
 def prefunc(): pass
-""", '', 1, 1, None, 'pep81', r"""
+""", '', 1, 1, None, {'pep8space': 1}, r"""
 def func(): pass""", r"""
 def prefunc(): pass
 
@@ -8914,7 +8914,7 @@ Module .. ROOT 0,0 -> 4,0
 
 (r"""
 def prefunc(): pass
-""", '', 1, 1, None, '', r"""def func(): pass""", r"""
+""", '', 1, 1, None, {'precomms': False, 'postcomms': False, 'pep8space': False}, r"""def func(): pass""", r"""
 def prefunc(): pass
 def func(): pass
 """, r"""
@@ -8932,7 +8932,7 @@ Module .. ROOT 0,0 -> 3,0
 
 (r"""
 def prefunc(): pass
-""", '', 1, 1, None, 'pep8', r"""
+""", '', 1, 1, None, {'pep8space': True}, r"""
 
 def func(): pass""", r"""
 def prefunc(): pass
@@ -8954,7 +8954,7 @@ Module .. ROOT 0,0 -> 5,0
 
 (r"""
 def prefunc(): pass
-""", '', 1, 1, None, 'pep81', r"""
+""", '', 1, 1, None, {'pep8space': 1}, r"""
 
 def func(): pass""", r"""
 def prefunc(): pass
@@ -8976,7 +8976,7 @@ Module .. ROOT 0,0 -> 5,0
 
 (r"""
 def prefunc(): pass
-""", '', 1, 1, None, 'pep8', r"""
+""", '', 1, 1, None, {'pep8space': True}, r"""
 
 
 def func(): pass""", r"""
@@ -9000,7 +9000,7 @@ Module .. ROOT 0,0 -> 6,0
 
 (r"""
 import stuff
-""", '', 1, 1, None, 'pep8', r"""def func(): pass""", r"""
+""", '', 1, 1, None, {'pep8space': True}, r"""def func(): pass""", r"""
 import stuff
 
 
@@ -9020,7 +9020,7 @@ Module .. ROOT 0,0 -> 5,0
 
 (r"""
 import stuff
-""", '', 1, 1, None, 'pep8', r"""
+""", '', 1, 1, None, {'pep8space': True}, r"""
 def func(): pass""", r"""
 import stuff
 
@@ -9041,7 +9041,7 @@ Module .. ROOT 0,0 -> 5,0
 
 (r"""
 import stuff
-""", '', 1, 1, None, 'pep8', r"""
+""", '', 1, 1, None, {'pep8space': True}, r"""
 
 def func(): pass""", r"""
 import stuff
@@ -9063,7 +9063,7 @@ Module .. ROOT 0,0 -> 5,0
 
 (r"""
 import stuff
-""", '', 1, 1, None, 'pep8', r"""
+""", '', 1, 1, None, {'pep8space': True}, r"""
 
 def func(): pass""", r"""
 import stuff
@@ -9085,7 +9085,7 @@ Module .. ROOT 0,0 -> 5,0
 
 (r"""
 def prefunc(): pass
-""", '', 0, 0, None, None, r"""def func(): pass""", r"""
+""", '', 0, 0, None, {}, r"""def func(): pass""", r"""
 def func(): pass
 
 
@@ -9105,7 +9105,7 @@ Module .. ROOT 0,0 -> 5,0
 
 (r"""
 def prefunc(): pass
-""", '', 0, 0, None, 'pep81', r"""def func(): pass""", r"""
+""", '', 0, 0, None, {'pep8space': 1}, r"""def func(): pass""", r"""
 def func(): pass
 
 def prefunc(): pass
@@ -9124,7 +9124,7 @@ Module .. ROOT 0,0 -> 4,0
 
 (r"""
 def prefunc(): pass
-""", '', 0, 0, None, '', r"""def func(): pass""", r"""
+""", '', 0, 0, None, {'precomms': False, 'postcomms': False, 'pep8space': False}, r"""def func(): pass""", r"""
 def func(): pass
 def prefunc(): pass
 """, r"""
@@ -9142,7 +9142,7 @@ Module .. ROOT 0,0 -> 3,0
 
 (r"""
 def prefunc(): pass
-""", '', 0, 0, None, None, r"""def func(): pass
+""", '', 0, 0, None, {}, r"""def func(): pass
 """, r"""
 def func(): pass
 
@@ -9163,30 +9163,7 @@ Module .. ROOT 0,0 -> 5,0
 
 (r"""
 def prefunc(): pass
-""", '', 0, 0, None, None, r"""def func(): pass
-
-""", r"""
-def func(): pass
-
-
-def prefunc(): pass
-""", r"""
-Module .. ROOT 0,0 -> 5,0
-  .body[2]
-  0] FunctionDef .. 1,0 -> 1,16
-    .name 'func'
-    .body[1]
-    0] Pass .. 1,12 -> 1,16
-  1] FunctionDef .. 4,0 -> 4,19
-    .name 'prefunc'
-    .body[1]
-    0] Pass .. 4,15 -> 4,19
-"""),
-
-(r"""
-def prefunc(): pass
-""", '', 0, 0, None, None, r"""def func(): pass
-
+""", '', 0, 0, None, {}, r"""def func(): pass
 
 """, r"""
 def func(): pass
@@ -9208,7 +9185,30 @@ Module .. ROOT 0,0 -> 5,0
 
 (r"""
 def prefunc(): pass
-""", '', 0, 0, None, None, r"""def func(): pass
+""", '', 0, 0, None, {}, r"""def func(): pass
+
+
+""", r"""
+def func(): pass
+
+
+def prefunc(): pass
+""", r"""
+Module .. ROOT 0,0 -> 5,0
+  .body[2]
+  0] FunctionDef .. 1,0 -> 1,16
+    .name 'func'
+    .body[1]
+    0] Pass .. 1,12 -> 1,16
+  1] FunctionDef .. 4,0 -> 4,19
+    .name 'prefunc'
+    .body[1]
+    0] Pass .. 4,15 -> 4,19
+"""),
+
+(r"""
+def prefunc(): pass
+""", '', 0, 0, None, {}, r"""def func(): pass
 
 
 
@@ -9234,7 +9234,7 @@ Module .. ROOT 0,0 -> 6,0
 (r"""
 def prefunc(): pass
 def postfunc(): pass
-""", '', 1, 1, None, None, r"""def func(): pass""", r"""
+""", '', 1, 1, None, {}, r"""def func(): pass""", r"""
 def prefunc(): pass
 
 
@@ -9263,7 +9263,7 @@ Module .. ROOT 0,0 -> 8,0
 def prefunc(): pass
 
 def postfunc(): pass
-""", '', 1, 1, None, None, r"""def func(): pass""", r"""
+""", '', 1, 1, None, {}, r"""def func(): pass""", r"""
 def prefunc(): pass
 
 
@@ -9293,7 +9293,7 @@ def prefunc(): pass
 
 
 def postfunc(): pass
-""", '', 1, 1, None, None, r"""def func(): pass""", r"""
+""", '', 1, 1, None, {}, r"""def func(): pass""", r"""
 def prefunc(): pass
 
 
@@ -9324,7 +9324,7 @@ def prefunc(): pass
 
 
 def postfunc(): pass
-""", '', 1, 1, None, None, r"""def func(): pass""", r"""
+""", '', 1, 1, None, {}, r"""def func(): pass""", r"""
 def prefunc(): pass
 
 
@@ -9357,7 +9357,7 @@ def prefunc(): pass
 
 
 def postfunc(): pass
-""", '', 1, 1, None, None, r"""def func(): pass""", r"""
+""", '', 1, 1, None, {}, r"""def func(): pass""", r"""
 def prefunc(): pass
 
 
@@ -9387,7 +9387,7 @@ Module .. ROOT 0,0 -> 10,0
 (r"""
 def prefunc(): pass
 def postfunc(): pass
-""", '', 1, 1, None, 'pep81', r"""def func(): pass""", r"""
+""", '', 1, 1, None, {'pep8space': 1}, r"""def func(): pass""", r"""
 def prefunc(): pass
 
 def func(): pass
@@ -9413,7 +9413,7 @@ Module .. ROOT 0,0 -> 6,0
 (r"""
 def prefunc(): pass
 def postfunc(): pass
-""", '', 1, 1, None, '', r"""def func(): pass""", r"""
+""", '', 1, 1, None, {'precomms': False, 'postcomms': False, 'pep8space': False}, r"""def func(): pass""", r"""
 def prefunc(): pass
 def func(): pass
 def postfunc(): pass
@@ -9438,7 +9438,7 @@ Module .. ROOT 0,0 -> 4,0
 def prefunc(): pass
 
 def postfunc(): pass
-""", '', 1, 1, None, None, r"""def func(): pass
+""", '', 1, 1, None, {}, r"""def func(): pass
 """, r"""
 def prefunc(): pass
 
@@ -9468,7 +9468,7 @@ Module .. ROOT 0,0 -> 8,0
 def prefunc(): pass
 
 def postfunc(): pass
-""", '', 1, 1, None, None, r"""def func(): pass
+""", '', 1, 1, None, {}, r"""def func(): pass
 
 """, r"""
 def prefunc(): pass
@@ -9500,7 +9500,7 @@ Module .. ROOT 0,0 -> 9,0
 class cls:
     '''Class
        docstring'''
-""", 'body[0]', 1, 1, None, None, r"""def meth(): pass""", r"""
+""", 'body[0]', 1, 1, None, {}, r"""def meth(): pass""", r"""
 class cls:
     '''Class
        docstring'''
@@ -9524,7 +9524,7 @@ Module .. ROOT 0,0 -> 6,0
 class cls:
     '''Class
        docstring'''
-""", 'body[0]', 1, 1, None, None, r"""
+""", 'body[0]', 1, 1, None, {}, r"""
 def meth(): pass""", r"""
 class cls:
     '''Class
@@ -9549,7 +9549,7 @@ Module .. ROOT 0,0 -> 6,0
 class cls:
     '''Class
        docstring'''
-""", 'body[0]', 1, 1, None, None, r"""
+""", 'body[0]', 1, 1, None, {}, r"""
 
 def meth(): pass""", r"""
 class cls:
@@ -9575,7 +9575,7 @@ Module .. ROOT 0,0 -> 7,0
 (r"""
 class cls:
     def premeth(): pass
-""", 'body[0]', 1, 1, None, None, r"""def meth(): pass""", r"""
+""", 'body[0]', 1, 1, None, {}, r"""def meth(): pass""", r"""
 class cls:
     def premeth(): pass
 
@@ -9599,7 +9599,7 @@ Module .. ROOT 0,0 -> 5,0
 (r"""
 class cls:
     def premeth(): pass
-""", 'body[0]', 1, 1, None, None, r"""
+""", 'body[0]', 1, 1, None, {}, r"""
 def meth(): pass""", r"""
 class cls:
     def premeth(): pass
@@ -9624,7 +9624,7 @@ Module .. ROOT 0,0 -> 5,0
 (r"""
 class cls:
     def premeth(): pass
-""", 'body[0]', 1, 1, None, None, r"""
+""", 'body[0]', 1, 1, None, {}, r"""
 
 def meth(): pass""", r"""
 class cls:
@@ -9651,7 +9651,7 @@ Module .. ROOT 0,0 -> 6,0
 (r"""
 class cls:
     def postmeth(): pass
-""", 'body[0]', 0, 0, None, None, r"""def meth(): pass""", r"""
+""", 'body[0]', 0, 0, None, {}, r"""def meth(): pass""", r"""
 class cls:
     def meth(): pass
 
@@ -9675,33 +9675,7 @@ Module .. ROOT 0,0 -> 5,0
 (r"""
 class cls:
     def postmeth(): pass
-""", 'body[0]', 0, 0, None, None, r"""def meth(): pass
-""", r"""
-class cls:
-    def meth(): pass
-
-    def postmeth(): pass
-""", r"""
-Module .. ROOT 0,0 -> 5,0
-  .body[1]
-  0] ClassDef .. 1,0 -> 4,24
-    .name 'cls'
-    .body[2]
-    0] FunctionDef .. 2,4 -> 2,20
-      .name 'meth'
-      .body[1]
-      0] Pass .. 2,16 -> 2,20
-    1] FunctionDef .. 4,4 -> 4,24
-      .name 'postmeth'
-      .body[1]
-      0] Pass .. 4,20 -> 4,24
-"""),
-
-(r"""
-class cls:
-    def postmeth(): pass
-""", 'body[0]', 0, 0, None, None, r"""def meth(): pass
-
+""", 'body[0]', 0, 0, None, {}, r"""def meth(): pass
 """, r"""
 class cls:
     def meth(): pass
@@ -9726,7 +9700,33 @@ Module .. ROOT 0,0 -> 5,0
 (r"""
 class cls:
     def postmeth(): pass
-""", 'body[0]', 0, 0, None, None, r"""def meth(): pass
+""", 'body[0]', 0, 0, None, {}, r"""def meth(): pass
+
+""", r"""
+class cls:
+    def meth(): pass
+
+    def postmeth(): pass
+""", r"""
+Module .. ROOT 0,0 -> 5,0
+  .body[1]
+  0] ClassDef .. 1,0 -> 4,24
+    .name 'cls'
+    .body[2]
+    0] FunctionDef .. 2,4 -> 2,20
+      .name 'meth'
+      .body[1]
+      0] Pass .. 2,16 -> 2,20
+    1] FunctionDef .. 4,4 -> 4,24
+      .name 'postmeth'
+      .body[1]
+      0] Pass .. 4,20 -> 4,24
+"""),
+
+(r"""
+class cls:
+    def postmeth(): pass
+""", 'body[0]', 0, 0, None, {}, r"""def meth(): pass
 
 
 """, r"""
@@ -9755,7 +9755,7 @@ Module .. ROOT 0,0 -> 6,0
 class cls:
     def premeth(): pass
     def postmeth(): pass
-""", 'body[0]', 1, 1, None, None, r"""def meth(): pass""", r"""
+""", 'body[0]', 1, 1, None, {}, r"""def meth(): pass""", r"""
 class cls:
     def premeth(): pass
 
@@ -9787,7 +9787,7 @@ class cls:
     def premeth(): pass
 
     def postmeth(): pass
-""", 'body[0]', 1, 1, None, None, r"""def meth(): pass""", r"""
+""", 'body[0]', 1, 1, None, {}, r"""def meth(): pass""", r"""
 class cls:
     def premeth(): pass
 
@@ -9820,7 +9820,7 @@ class cls:
 
 
     def postmeth(): pass
-""", 'body[0]', 1, 1, None, None, r"""def meth(): pass""", r"""
+""", 'body[0]', 1, 1, None, {}, r"""def meth(): pass""", r"""
 class cls:
     def premeth(): pass
 
@@ -9855,7 +9855,7 @@ class cls:
 
 
     def postmeth(): pass
-""", 'body[0]', 1, 1, None, None, r"""def meth(): pass""", r"""
+""", 'body[0]', 1, 1, None, {}, r"""def meth(): pass""", r"""
 class cls:
     def premeth(): pass
 
@@ -9888,7 +9888,7 @@ Module .. ROOT 0,0 -> 9,0
 class cls:
     def premeth(): pass
     def postmeth(): pass
-""", 'body[0]', 1, 1, None, '', r"""def meth(): pass""", r"""
+""", 'body[0]', 1, 1, None, {'precomms': False, 'postcomms': False, 'pep8space': False}, r"""def meth(): pass""", r"""
 class cls:
     def premeth(): pass
     def meth(): pass
@@ -9918,7 +9918,7 @@ class cls:
     def premeth(): pass  # post
     # pre
     def postmeth(): pass
-""", 'body[0]', 1, 1, None, None, r"""def meth(): pass""", r"""
+""", 'body[0]', 1, 1, None, {}, r"""def meth(): pass""", r"""
 class cls:
     def premeth(): pass  # post
 
@@ -9952,7 +9952,7 @@ class cls:
     # post
     \
     def postmeth(): pass
-""", 'body[0]', 1, 1, None, None, r"""def meth(): pass""", r"""
+""", 'body[0]', 1, 1, None, {}, r"""def meth(): pass""", r"""
 class cls:
     def premeth(): pass  \
     # post
@@ -9988,7 +9988,7 @@ class cls:
 
     \
     def postmeth(): pass
-""", 'body[0]', 1, 1, None, None, r"""def meth(): pass""", r"""
+""", 'body[0]', 1, 1, None, {}, r"""def meth(): pass""", r"""
 class cls:
     def premeth(): pass
 
@@ -10022,7 +10022,7 @@ Module .. ROOT 0,0 -> 10,0
 class cls:
     def premeth(): pass
     def postmeth(): pass
-""", 'body[0]', 1, 1, None, None, r"""i = 1""", r"""
+""", 'body[0]', 1, 1, None, {}, r"""i = 1""", r"""
 class cls:
     def premeth(): pass
 
@@ -10052,7 +10052,7 @@ Module .. ROOT 0,0 -> 7,0
 (r"""
 def prefunc(): pass
 def postfunc(): pass
-""", '', 1, 1, None, None, r"""i = 1""", r"""
+""", '', 1, 1, None, {}, r"""i = 1""", r"""
 def prefunc(): pass
 
 
@@ -10081,7 +10081,7 @@ Module .. ROOT 0,0 -> 8,0
 i
 j
 k
-""", '', 1, 2, None, None, r"""l""", r"""
+""", '', 1, 2, None, {}, r"""l""", r"""
 i
 l
 k
@@ -10101,7 +10101,7 @@ i
 # pre
 j  # post
 k
-""", '', 1, 2, None, None, r"""l""", r"""
+""", '', 1, 2, None, {}, r"""l""", r"""
 i
 l
 k
@@ -10121,7 +10121,7 @@ i
 # pre
 j  # post
 k
-""", '', 1, 2, None, '', r"""l""", r"""
+""", '', 1, 2, None, {'precomms': False, 'postcomms': False, 'pep8space': False}, r"""l""", r"""
 i
 # pre
 l
@@ -10143,7 +10143,7 @@ i
 # pre
 j  # post
 k
-""", '', 1, 2, None, None, r"""# pre2
+""", '', 1, 2, None, {}, r"""# pre2
 l  # post2""", r"""
 i
 # pre2
@@ -10165,7 +10165,7 @@ i
 # pre
 j  # post
 k
-""", '', 1, 2, None, '', r"""# pre2
+""", '', 1, 2, None, {'precomms': False, 'postcomms': False, 'pep8space': False}, r"""# pre2
 l  # post2""", r"""
 i
 # pre
@@ -10189,7 +10189,7 @@ if 1:
     i
     j
     k
-""", 'body[0]', 1, 2, None, None, r"""l""", r"""
+""", 'body[0]', 1, 2, None, {}, r"""l""", r"""
 if 1:
     i
     l
@@ -10214,7 +10214,7 @@ if 1:
     # pre
     j  # post
     k
-""", 'body[0]', 1, 2, None, None, r"""l""", r"""
+""", 'body[0]', 1, 2, None, {}, r"""l""", r"""
 if 1:
     i
     l
@@ -10239,7 +10239,7 @@ if 1:
     # pre
     j  # post
     k
-""", 'body[0]', 1, 2, None, '', r"""l""", r"""
+""", 'body[0]', 1, 2, None, {'precomms': False, 'postcomms': False, 'pep8space': False}, r"""l""", r"""
 if 1:
     i
     # pre
@@ -10266,7 +10266,7 @@ if 1:
     # pre
     j  # post
     k
-""", 'body[0]', 1, 2, None, None, r"""# pre2
+""", 'body[0]', 1, 2, None, {}, r"""# pre2
 l  # post2""", r"""
 if 1:
     i
@@ -10293,7 +10293,7 @@ if 1:
     # pre
     j  # post
     k
-""", 'body[0]', 1, 2, None, '', r"""# pre2
+""", 'body[0]', 1, 2, None, {'precomms': False, 'postcomms': False, 'pep8space': False}, r"""# pre2
 l  # post2""", r"""
 if 1:
     i
@@ -10321,7 +10321,7 @@ i \
 # pre-before
 j  # post-before
 k
-""", '', 1, 2, None, '', r"""l""", r"""
+""", '', 1, 2, None, {'precomms': False, 'postcomms': False, 'pep8space': False}, r"""l""", r"""
 i \
 # pre-before
 l
@@ -10344,7 +10344,7 @@ i \
 j \
 # post-line
 k
-""", '', 1, 2, None, '', r"""l""", r"""
+""", '', 1, 2, None, {'precomms': False, 'postcomms': False, 'pep8space': False}, r"""l""", r"""
 i \
 # pre-before
 l
@@ -10368,7 +10368,7 @@ i
 j \
 # post-line
 k
-""", '', 1, 2, None, '', r"""l""", r"""
+""", '', 1, 2, None, {'precomms': False, 'postcomms': False, 'pep8space': False}, r"""l""", r"""
 i
 # pre-before
 l
@@ -10392,7 +10392,7 @@ i \
 j \
 # post-line
 k
-""", '', 1, 2, None, '', r"""l""", r"""
+""", '', 1, 2, None, {'precomms': False, 'postcomms': False, 'pep8space': False}, r"""l""", r"""
 i \
 
 l
@@ -10415,7 +10415,7 @@ i \
 # pre-before
 j  # post-before
 k
-""", '', 1, 2, None, '', r"""# pre
+""", '', 1, 2, None, {'precomms': False, 'postcomms': False, 'pep8space': False}, r"""# pre
 l  # post""", r"""
 i \
 # pre-before
@@ -10440,7 +10440,7 @@ i \
 j \
 # post-line
 k
-""", '', 1, 2, None, '', r"""# pre
+""", '', 1, 2, None, {'precomms': False, 'postcomms': False, 'pep8space': False}, r"""# pre
 l  # post""", r"""
 i \
 # pre-before
@@ -10466,7 +10466,7 @@ i
 j \
 # post-line
 k
-""", '', 1, 2, None, '', r"""# pre
+""", '', 1, 2, None, {'precomms': False, 'postcomms': False, 'pep8space': False}, r"""# pre
 l  # post""", r"""
 i
 # pre-before
@@ -10492,7 +10492,7 @@ i \
 j \
 # post-line
 k
-""", '', 1, 2, None, '', r"""# pre
+""", '', 1, 2, None, {'precomms': False, 'postcomms': False, 'pep8space': False}, r"""# pre
 l  # post""", r"""
 i \
 
@@ -10518,7 +10518,7 @@ if 1:
     # pre-before
     j  # post-before
     k
-""", 'body[0]', 1, 2, None, '', r"""l""", r"""
+""", 'body[0]', 1, 2, None, {'precomms': False, 'postcomms': False, 'pep8space': False}, r"""l""", r"""
 if 1:
     i \
     # pre-before
@@ -10546,7 +10546,7 @@ if 1:
     j \
     # post-line
     k
-""", 'body[0]', 1, 2, None, '', r"""l""", r"""
+""", 'body[0]', 1, 2, None, {'precomms': False, 'postcomms': False, 'pep8space': False}, r"""l""", r"""
 if 1:
     i \
     # pre-before
@@ -10575,7 +10575,7 @@ if 1:
     j \
     # post-line
     k
-""", 'body[0]', 1, 2, None, '', r"""l""", r"""
+""", 'body[0]', 1, 2, None, {'precomms': False, 'postcomms': False, 'pep8space': False}, r"""l""", r"""
 if 1:
     i
     # pre-before
@@ -10604,7 +10604,7 @@ if 1:
     j \
     # post-line
     k
-""", 'body[0]', 1, 2, None, '', r"""l""", r"""
+""", 'body[0]', 1, 2, None, {'precomms': False, 'postcomms': False, 'pep8space': False}, r"""l""", r"""
 if 1:
     i \
 
@@ -10632,7 +10632,7 @@ if 1:
     # pre-before
     j  # post-before
     k
-""", 'body[0]', 1, 2, None, '', r"""# pre
+""", 'body[0]', 1, 2, None, {'precomms': False, 'postcomms': False, 'pep8space': False}, r"""# pre
 l  # post""", r"""
 if 1:
     i \
@@ -10662,7 +10662,7 @@ if 1:
     j \
     # post-line
     k
-""", 'body[0]', 1, 2, None, '', r"""# pre
+""", 'body[0]', 1, 2, None, {'precomms': False, 'postcomms': False, 'pep8space': False}, r"""# pre
 l  # post""", r"""
 if 1:
     i \
@@ -10693,7 +10693,7 @@ if 1:
     j \
     # post-line
     k
-""", 'body[0]', 1, 2, None, '', r"""# pre
+""", 'body[0]', 1, 2, None, {'precomms': False, 'postcomms': False, 'pep8space': False}, r"""# pre
 l  # post""", r"""
 if 1:
     i
@@ -10724,7 +10724,7 @@ if 1:
     j \
     # post-line
     k
-""", 'body[0]', 1, 2, None, '', r"""# pre
+""", 'body[0]', 1, 2, None, {'precomms': False, 'postcomms': False, 'pep8space': False}, r"""# pre
 l  # post""", r"""
 if 1:
     i \
@@ -10750,7 +10750,7 @@ Module .. ROOT 0,0 -> 9,0
 
 (r"""
 i
-""", '', 0, 1, None, None, r"""l""", r"""
+""", '', 0, 1, None, {}, r"""l""", r"""
 l
 """, r"""
 Module .. ROOT 0,0 -> 2,0
@@ -10762,7 +10762,7 @@ Module .. ROOT 0,0 -> 2,0
 (r"""
 i
 j
-""", '', 0, 1, None, None, r"""l""", r"""
+""", '', 0, 1, None, {}, r"""l""", r"""
 l
 j
 """, r"""
@@ -10777,7 +10777,7 @@ Module .. ROOT 0,0 -> 3,0
 (r"""
 i
 j
-""", '', 1, 2, None, None, r"""l""", r"""
+""", '', 1, 2, None, {}, r"""l""", r"""
 i
 l
 """, r"""
@@ -10792,7 +10792,7 @@ Module .. ROOT 0,0 -> 3,0
 (r"""
 if 1:
     i
-""", 'body[0]', 0, 1, None, None, r"""l""", r"""
+""", 'body[0]', 0, 1, None, {}, r"""l""", r"""
 if 1:
     l
 """, r"""
@@ -10809,7 +10809,7 @@ Module .. ROOT 0,0 -> 3,0
 if 1:
     i
     j
-""", 'body[0]', 0, 1, None, None, r"""l""", r"""
+""", 'body[0]', 0, 1, None, {}, r"""l""", r"""
 if 1:
     l
     j
@@ -10829,7 +10829,7 @@ Module .. ROOT 0,0 -> 4,0
 if 1:
     i
     j
-""", 'body[0]', 1, 2, None, None, r"""l""", r"""
+""", 'body[0]', 1, 2, None, {}, r"""l""", r"""
 if 1:
     i
     l
@@ -10849,7 +10849,7 @@ Module .. ROOT 0,0 -> 4,0
 i
 j
 k
-""", '', 1, 2, None, None, r"""if 1:
+""", '', 1, 2, None, {}, r"""if 1:
     pass""", r"""
 i
 if 1:
@@ -10872,7 +10872,7 @@ Module .. ROOT 0,0 -> 5,0
 i
 if 1: pass
 k
-""", '', 1, 2, None, None, r"""l""", r"""
+""", '', 1, 2, None, {}, r"""l""", r"""
 i
 l
 k
@@ -10892,7 +10892,7 @@ i
 if 1:
     pass
 k
-""", '', 1, 2, None, None, r"""l""", r"""
+""", '', 1, 2, None, {}, r"""l""", r"""
 i
 l
 k
@@ -10912,7 +10912,7 @@ i
 if 1:
     pass
 k
-""", '', 1, 2, None, None, r"""if 2: break""", r"""
+""", '', 1, 2, None, {}, r"""if 2: break""", r"""
 i
 if 2: break
 k
@@ -10933,7 +10933,7 @@ Module .. ROOT 0,0 -> 4,0
 i
 j
 k
-""", '', 1, 2, None, None, r"""x
+""", '', 1, 2, None, {}, r"""x
 if 1:
     pass
 z""", r"""
@@ -10964,7 +10964,7 @@ Module .. ROOT 0,0 -> 7,0
 i
 if 1: pass
 k
-""", '', 1, 2, None, None, r"""x
+""", '', 1, 2, None, {}, r"""x
 l
 z""", r"""
 i
@@ -10992,7 +10992,7 @@ i
 if 1:
     pass
 k
-""", '', 1, 2, None, None, r"""x
+""", '', 1, 2, None, {}, r"""x
 l
 z""", r"""
 i
@@ -11020,7 +11020,7 @@ i
 if 1:
     pass
 k
-""", '', 1, 2, None, None, r"""x
+""", '', 1, 2, None, {}, r"""x
 if 2: break
 z""", r"""
 i
@@ -11050,7 +11050,7 @@ if 2:
     i
     j
     k
-""", 'body[0]', 1, 2, None, None, r"""if 1:
+""", 'body[0]', 1, 2, None, {}, r"""if 1:
     pass""", r"""
 if 2:
     i
@@ -11078,7 +11078,7 @@ if 2:
     i
     if 1: pass
     k
-""", 'body[0]', 1, 2, None, None, r"""l""", r"""
+""", 'body[0]', 1, 2, None, {}, r"""l""", r"""
 if 2:
     i
     l
@@ -11103,7 +11103,7 @@ if 2:
     if 1:
         pass
     k
-""", 'body[0]', 1, 2, None, None, r"""l""", r"""
+""", 'body[0]', 1, 2, None, {}, r"""l""", r"""
 if 2:
     i
     l
@@ -11128,7 +11128,7 @@ if 2:
     if 1:
         pass
     k
-""", 'body[0]', 1, 2, None, None, r"""if 2: break""", r"""
+""", 'body[0]', 1, 2, None, {}, r"""if 2: break""", r"""
 if 2:
     i
     if 2: break
@@ -11154,7 +11154,7 @@ if 2:
     i
     j
     k
-""", 'body[0]', 1, 2, None, None, r"""x
+""", 'body[0]', 1, 2, None, {}, r"""x
 if 1:
     pass
 z""", r"""
@@ -11190,7 +11190,7 @@ if 2:
     i
     if 1: pass
     k
-""", 'body[0]', 1, 2, None, None, r"""x
+""", 'body[0]', 1, 2, None, {}, r"""x
 l
 z""", r"""
 if 2:
@@ -11223,7 +11223,7 @@ if 2:
     if 1:
         pass
     k
-""", 'body[0]', 1, 2, None, None, r"""x
+""", 'body[0]', 1, 2, None, {}, r"""x
 l
 z""", r"""
 if 2:
@@ -11256,7 +11256,7 @@ if 2:
     if 1:
         pass
     k
-""", 'body[0]', 1, 2, None, None, r"""x
+""", 'body[0]', 1, 2, None, {}, r"""x
 if 2: break
 z""", r"""
 if 2:
@@ -11287,7 +11287,7 @@ Module .. ROOT 0,0 -> 7,0
 
 (r"""
 i ; j
-""", '', 1, 2, None, None, r"""l""", r"""
+""", '', 1, 2, None, {}, r"""l""", r"""
 i
 l
 
@@ -11303,7 +11303,7 @@ Module .. ROOT 0,0 -> 4,0
 (r"""
 i \
  ; j
-""", '', 1, 2, None, None, r"""l""", r"""
+""", '', 1, 2, None, {}, r"""l""", r"""
 i
 l
 
@@ -11319,7 +11319,7 @@ Module .. ROOT 0,0 -> 4,0
 (r"""
 i ; \
  j
-""", '', 1, 2, None, None, r"""l""", r"""
+""", '', 1, 2, None, {}, r"""l""", r"""
 i
 l
 
@@ -11336,7 +11336,7 @@ Module .. ROOT 0,0 -> 4,0
 i \
 ; \
 j
-""", '', 1, 2, None, None, r"""l""", r"""
+""", '', 1, 2, None, {}, r"""l""", r"""
 i
 l
 
@@ -11352,7 +11352,7 @@ Module .. ROOT 0,0 -> 4,0
 (r"""
 if 1:
     i ; j
-""", 'body[0]', 1, 2, None, None, r"""l""", r"""
+""", 'body[0]', 1, 2, None, {}, r"""l""", r"""
 if 1:
     i
     l
@@ -11373,7 +11373,7 @@ Module .. ROOT 0,0 -> 5,0
 if 1:
     i \
     ; j
-""", 'body[0]', 1, 2, None, None, r"""l""", r"""
+""", 'body[0]', 1, 2, None, {}, r"""l""", r"""
 if 1:
     i
     l
@@ -11394,7 +11394,7 @@ Module .. ROOT 0,0 -> 5,0
 if 1:
     i ; \
     j
-""", 'body[0]', 1, 2, None, None, r"""l""", r"""
+""", 'body[0]', 1, 2, None, {}, r"""l""", r"""
 if 1:
     i
     l
@@ -11416,7 +11416,7 @@ if 1:
     i \
     ; \
     j
-""", 'body[0]', 1, 2, None, None, r"""l""", r"""
+""", 'body[0]', 1, 2, None, {}, r"""l""", r"""
 if 1:
     i
     l
@@ -11435,7 +11435,7 @@ Module .. ROOT 0,0 -> 5,0
 
 (r"""
 i ; j
-""", '', 0, 1, None, None, r"""l""", r"""
+""", '', 0, 1, None, {}, r"""l""", r"""
 l
 j
 """, r"""
@@ -11450,7 +11450,7 @@ Module .. ROOT 0,0 -> 3,0
 (r"""
 i \
  ; j
-""", '', 0, 1, None, None, r"""l""", r"""
+""", '', 0, 1, None, {}, r"""l""", r"""
 l
 j
 """, r"""
@@ -11465,7 +11465,7 @@ Module .. ROOT 0,0 -> 3,0
 (r"""
 i ; \
  j
-""", '', 0, 1, None, None, r"""l""", r"""
+""", '', 0, 1, None, {}, r"""l""", r"""
 l
 j
 """, r"""
@@ -11481,7 +11481,7 @@ Module .. ROOT 0,0 -> 3,0
 i \
 ; \
 j
-""", '', 0, 1, None, None, r"""l""", r"""
+""", '', 0, 1, None, {}, r"""l""", r"""
 l
 j
 """, r"""
@@ -11496,7 +11496,7 @@ Module .. ROOT 0,0 -> 3,0
 (r"""
 if 1:
     i ; j
-""", 'body[0]', 0, 1, None, None, r"""l""", r"""
+""", 'body[0]', 0, 1, None, {}, r"""l""", r"""
 if 1:
     l
     j
@@ -11516,7 +11516,7 @@ Module .. ROOT 0,0 -> 4,0
 if 1:
     i \
      ; j
-""", 'body[0]', 0, 1, None, None, r"""l""", r"""
+""", 'body[0]', 0, 1, None, {}, r"""l""", r"""
 if 1:
     l
     j
@@ -11536,7 +11536,7 @@ Module .. ROOT 0,0 -> 4,0
 if 1:
     i ; \
      j
-""", 'body[0]', 0, 1, None, None, r"""l""", r"""
+""", 'body[0]', 0, 1, None, {}, r"""l""", r"""
 if 1:
     l
     j
@@ -11557,7 +11557,7 @@ if 1:
     i \
      ; \
      j
-""", 'body[0]', 0, 1, None, None, r"""l""", r"""
+""", 'body[0]', 0, 1, None, {}, r"""l""", r"""
 if 1:
     l
     j
@@ -11576,7 +11576,7 @@ Module .. ROOT 0,0 -> 4,0
 (r"""
 if 1: \
     i ; j
-""", 'body[0]', 0, 1, None, None, r"""l""", r"""
+""", 'body[0]', 0, 1, None, {}, r"""l""", r"""
 if 1:
     l
     j
@@ -11596,7 +11596,7 @@ Module .. ROOT 0,0 -> 4,0
 if 1: \
     i \
      ; j
-""", 'body[0]', 0, 1, None, None, r"""l""", r"""
+""", 'body[0]', 0, 1, None, {}, r"""l""", r"""
 if 1:
     l
     j
@@ -11616,7 +11616,7 @@ Module .. ROOT 0,0 -> 4,0
 if 1: \
     i ; \
      j
-""", 'body[0]', 0, 1, None, None, r"""l""", r"""
+""", 'body[0]', 0, 1, None, {}, r"""l""", r"""
 if 1:
     l
     j
@@ -11637,7 +11637,7 @@ if 1: \
     i \
      ; \
      j
-""", 'body[0]', 0, 1, None, None, r"""l""", r"""
+""", 'body[0]', 0, 1, None, {}, r"""l""", r"""
 if 1:
     l
     j
@@ -11655,7 +11655,7 @@ Module .. ROOT 0,0 -> 4,0
 
 (r"""
 i ;
-""", '', 0, 1, None, None, r"""l""", r"""
+""", '', 0, 1, None, {}, r"""l""", r"""
 l
 """, r"""
 Module .. ROOT 0,0 -> 2,0
@@ -11666,7 +11666,7 @@ Module .. ROOT 0,0 -> 2,0
 
 (r"""
 i ;  # post
-""", '', 0, 1, None, None, r"""l""", r"""
+""", '', 0, 1, None, {}, r"""l""", r"""
 l
 # post
 """, r"""
@@ -11679,7 +11679,7 @@ Module .. ROOT 0,0 -> 3,0
 (r"""
 i ; \
  # post
-""", '', 0, 1, None, None, r"""l""", r"""
+""", '', 0, 1, None, {}, r"""l""", r"""
 l
 """, r"""
 Module .. ROOT 0,0 -> 2,0
@@ -11692,7 +11692,7 @@ Module .. ROOT 0,0 -> 2,0
 i \
  ; \
  # post
-""", '', 0, 1, None, None, r"""l""", r"""
+""", '', 0, 1, None, {}, r"""l""", r"""
 l
 """, r"""
 Module .. ROOT 0,0 -> 2,0
@@ -11704,7 +11704,7 @@ Module .. ROOT 0,0 -> 2,0
 (r"""
 if 1:
     i ;
-""", 'body[0]', 0, 1, None, None, r"""l""", r"""
+""", 'body[0]', 0, 1, None, {}, r"""l""", r"""
 if 1:
     l
 """, r"""
@@ -11720,7 +11720,7 @@ Module .. ROOT 0,0 -> 3,0
 (r"""
 if 1:
     i ;  # post
-""", 'body[0]', 0, 1, None, None, r"""l""", r"""
+""", 'body[0]', 0, 1, None, {}, r"""l""", r"""
 if 1:
     l
     # post
@@ -11738,7 +11738,7 @@ Module .. ROOT 0,0 -> 4,0
 if 1:
     i ; \
  # post
-""", 'body[0]', 0, 1, None, None, r"""l""", r"""
+""", 'body[0]', 0, 1, None, {}, r"""l""", r"""
 if 1:
     l
 """, r"""
@@ -11756,7 +11756,7 @@ if 1:
     i \
  ; \
  # post
-""", 'body[0]', 0, 1, None, None, r"""l""", r"""
+""", 'body[0]', 0, 1, None, {}, r"""l""", r"""
 if 1:
     l
 """, r"""
@@ -11773,7 +11773,7 @@ Module .. ROOT 0,0 -> 3,0
 # pre
 i ; \
  j
-""", '', 0, 1, None, None, r"""**DEL**""", r"""
+""", '', 0, 1, None, {}, r"""**DEL**""", r"""
 j
 """, r"""
 Module .. ROOT 0,0 -> 2,0
@@ -11786,7 +11786,7 @@ Module .. ROOT 0,0 -> 2,0
 # pre
 i ; \
  j
-""", '', 0, 1, None, None, r"""l""", r"""
+""", '', 0, 1, None, {}, r"""l""", r"""
 l
 j
 """, r"""
@@ -11804,7 +11804,7 @@ else: \
   # pre
   i ; \
     j
-""", 'body[0]', 0, 1, 'orelse', None, r"""**DEL**""", r"""
+""", 'body[0]', 0, 1, 'orelse', {}, r"""**DEL**""", r"""
 if 1: pass
 else:
   j
@@ -11828,7 +11828,7 @@ else:
   i ; \
     j
   k
-""", 'body[0]', 0, 1, 'orelse', None, r"""**DEL**""", r"""
+""", 'body[0]', 0, 1, 'orelse', {}, r"""**DEL**""", r"""
 if 1: pass
 else:
 
@@ -11856,7 +11856,7 @@ else:
   # pre
     i ; \
     j
-""", 'body[0]', 1, 2, 'orelse', None, r"""**DEL**""", r"""
+""", 'body[0]', 1, 2, 'orelse', {}, r"""**DEL**""", r"""
 if 1: pass
 else:
     k
@@ -11883,7 +11883,7 @@ else:
   i \
  ; \
     j
-""", 'body[0]', 0, 1, 'orelse', None, r"""**DEL**""", r"""
+""", 'body[0]', 0, 1, 'orelse', {}, r"""**DEL**""", r"""
 if 1: pass
 else:
   j
@@ -11902,7 +11902,7 @@ Module .. ROOT 0,0 -> 4,0
 (r"""
 # pre
 i ; j
-""", '', 0, 1, None, None, r"""l""", r"""
+""", '', 0, 1, None, {}, r"""l""", r"""
 l
 j
 """, r"""
@@ -11918,7 +11918,7 @@ Module .. ROOT 0,0 -> 3,0
 # pre
 i \
  ; j
-""", '', 0, 1, None, None, r"""l""", r"""
+""", '', 0, 1, None, {}, r"""l""", r"""
 l
 j
 """, r"""
@@ -11934,7 +11934,7 @@ Module .. ROOT 0,0 -> 3,0
 # pre
 i ; \
  j
-""", '', 0, 1, None, None, r"""l""", r"""
+""", '', 0, 1, None, {}, r"""l""", r"""
 l
 j
 """, r"""
@@ -11951,7 +11951,7 @@ Module .. ROOT 0,0 -> 3,0
 i \
 ; \
 j
-""", '', 0, 1, None, None, r"""l""", r"""
+""", '', 0, 1, None, {}, r"""l""", r"""
 l
 j
 """, r"""
@@ -11967,7 +11967,7 @@ Module .. ROOT 0,0 -> 3,0
 if 1:
     # pre
     i ; j
-""", 'body[0]', 0, 1, None, None, r"""l""", r"""
+""", 'body[0]', 0, 1, None, {}, r"""l""", r"""
 if 1:
     l
     j
@@ -11988,7 +11988,7 @@ if 1:
     # pre
     i \
      ; j
-""", 'body[0]', 0, 1, None, None, r"""l""", r"""
+""", 'body[0]', 0, 1, None, {}, r"""l""", r"""
 if 1:
     l
     j
@@ -12009,7 +12009,7 @@ if 1:
     # pre
     i ; \
      j
-""", 'body[0]', 0, 1, None, None, r"""l""", r"""
+""", 'body[0]', 0, 1, None, {}, r"""l""", r"""
 if 1:
     l
     j
@@ -12031,7 +12031,7 @@ if 1:
     i \
      ; \
      j
-""", 'body[0]', 0, 1, None, None, r"""l""", r"""
+""", 'body[0]', 0, 1, None, {}, r"""l""", r"""
 if 1:
     l
     j
@@ -12051,7 +12051,7 @@ Module .. ROOT 0,0 -> 4,0
 if 1: \
     # pre
     i ; j
-""", 'body[0]', 0, 1, None, None, r"""l""", r"""
+""", 'body[0]', 0, 1, None, {}, r"""l""", r"""
 if 1:
     l
     j
@@ -12072,7 +12072,7 @@ if 1: \
     # pre
     i \
      ; j
-""", 'body[0]', 0, 1, None, None, r"""l""", r"""
+""", 'body[0]', 0, 1, None, {}, r"""l""", r"""
 if 1:
     l
     j
@@ -12093,7 +12093,7 @@ if 1: \
     # pre
     i ; \
      j
-""", 'body[0]', 0, 1, None, None, r"""l""", r"""
+""", 'body[0]', 0, 1, None, {}, r"""l""", r"""
 if 1:
     l
     j
@@ -12115,7 +12115,7 @@ if 1: \
     i \
      ; \
      j
-""", 'body[0]', 0, 1, None, None, r"""l""", r"""
+""", 'body[0]', 0, 1, None, {}, r"""l""", r"""
 if 1:
     l
     j
@@ -12134,7 +12134,7 @@ Module .. ROOT 0,0 -> 4,0
 (r"""
 # pre
 i ;
-""", '', 0, 1, None, None, r"""l""", r"""
+""", '', 0, 1, None, {}, r"""l""", r"""
 l
 """, r"""
 Module .. ROOT 0,0 -> 2,0
@@ -12146,7 +12146,7 @@ Module .. ROOT 0,0 -> 2,0
 (r"""
 # pre
 i ;  # post
-""", '', 0, 1, None, None, r"""l""", r"""
+""", '', 0, 1, None, {}, r"""l""", r"""
 l
 # post
 """, r"""
@@ -12160,7 +12160,7 @@ Module .. ROOT 0,0 -> 3,0
 # pre
 i ; \
  # post
-""", '', 0, 1, None, None, r"""l""", r"""
+""", '', 0, 1, None, {}, r"""l""", r"""
 l
 """, r"""
 Module .. ROOT 0,0 -> 2,0
@@ -12174,7 +12174,7 @@ Module .. ROOT 0,0 -> 2,0
 i \
  ; \
  # post
-""", '', 0, 1, None, None, r"""l""", r"""
+""", '', 0, 1, None, {}, r"""l""", r"""
 l
 """, r"""
 Module .. ROOT 0,0 -> 2,0
@@ -12187,7 +12187,7 @@ Module .. ROOT 0,0 -> 2,0
 if 1:
     # pre
     i ;
-""", 'body[0]', 0, 1, None, None, r"""l""", r"""
+""", 'body[0]', 0, 1, None, {}, r"""l""", r"""
 if 1:
     l
 """, r"""
@@ -12204,7 +12204,7 @@ Module .. ROOT 0,0 -> 3,0
 if 1:
     # pre
     i ;  # post
-""", 'body[0]', 0, 1, None, None, r"""l""", r"""
+""", 'body[0]', 0, 1, None, {}, r"""l""", r"""
 if 1:
     l
 # post
@@ -12223,7 +12223,7 @@ if 1:
     # pre
     i ; \
  # post
-""", 'body[0]', 0, 1, None, None, r"""l""", r"""
+""", 'body[0]', 0, 1, None, {}, r"""l""", r"""
 if 1:
     l
 """, r"""
@@ -12242,7 +12242,7 @@ if 1:
     i \
  ; \
  # post
-""", 'body[0]', 0, 1, None, None, r"""l""", r"""
+""", 'body[0]', 0, 1, None, {}, r"""l""", r"""
 if 1:
     l
 """, r"""
@@ -12259,7 +12259,7 @@ Module .. ROOT 0,0 -> 3,0
 def prefunc(): pass
 pass
 def postfunc(): pass
-""", '', 1, 2, None, None, r"""def func(): pass""", r"""
+""", '', 1, 2, None, {}, r"""def func(): pass""", r"""
 def prefunc(): pass
 
 
@@ -12289,7 +12289,7 @@ def prefunc(): pass
 # pre
 pass  # post
 def postfunc(): pass
-""", '', 1, 2, None, None, r"""def func(): pass""", r"""
+""", '', 1, 2, None, {}, r"""def func(): pass""", r"""
 def prefunc(): pass
 
 
@@ -12318,7 +12318,7 @@ Module .. ROOT 0,0 -> 8,0
 def prefunc(): pass
 i ; j
 def postfunc(): pass
-""", '', 1, 2, None, None, r"""def func(): pass""", r"""
+""", '', 1, 2, None, {}, r"""def func(): pass""", r"""
 def prefunc(): pass
 
 
@@ -12350,7 +12350,7 @@ Module .. ROOT 0,0 -> 9,0
 def prefunc(): pass
 i ; j
 def postfunc(): pass
-""", '', 2, 3, None, None, r"""def func(): pass""", r"""
+""", '', 2, 3, None, {}, r"""def func(): pass""", r"""
 def prefunc(): pass
 i
 
@@ -12383,7 +12383,7 @@ def prefunc(): pass
 # pre
 i ; j # post
 def postfunc(): pass
-""", '', 1, 2, None, None, r"""def func(): pass""", r"""
+""", '', 1, 2, None, {}, r"""def func(): pass""", r"""
 def prefunc(): pass
 
 
@@ -12416,7 +12416,7 @@ def prefunc(): pass
 # pre
 i ; j # post
 def postfunc(): pass
-""", '', 2, 3, None, None, r"""def func(): pass""", r"""
+""", '', 2, 3, None, {}, r"""def func(): pass""", r"""
 def prefunc(): pass
 # pre
 i
@@ -12447,7 +12447,7 @@ Module .. ROOT 0,0 -> 10,0
 
 (r"""
 def prefunc(): pass
-""", '', 1, 1, None, None, r"""def func(): pass""", r"""
+""", '', 1, 1, None, {}, r"""def func(): pass""", r"""
 def prefunc(): pass
 
 
@@ -12467,7 +12467,7 @@ Module .. ROOT 0,0 -> 5,0
 
 (r"""
 def postfunc(): pass
-""", '', 0, 0, None, None, r"""def func(): pass""", r"""
+""", '', 0, 0, None, {}, r"""def func(): pass""", r"""
 def func(): pass
 
 
@@ -12490,7 +12490,7 @@ class cls:
     def premeth(): pass
     pass
     def postmeth(): pass
-""", 'body[0]', 1, 2, None, None, r"""def meth(): pass""", r"""
+""", 'body[0]', 1, 2, None, {}, r"""def meth(): pass""", r"""
 class cls:
     def premeth(): pass
 
@@ -12523,7 +12523,7 @@ class cls:
     # pre
     pass  # post
     def postmeth(): pass
-""", 'body[0]', 1, 2, None, None, r"""def meth(): pass""", r"""
+""", 'body[0]', 1, 2, None, {}, r"""def meth(): pass""", r"""
 class cls:
     def premeth(): pass
 
@@ -12555,7 +12555,7 @@ class cls:
     def premeth(): pass
     i ; j
     def postmeth(): pass
-""", 'body[0]', 1, 2, None, None, r"""def meth(): pass""", r"""
+""", 'body[0]', 1, 2, None, {}, r"""def meth(): pass""", r"""
 class cls:
     def premeth(): pass
 
@@ -12590,7 +12590,7 @@ class cls:
     def premeth(): pass
     i ; j
     def postmeth(): pass
-""", 'body[0]', 2, 3, None, None, r"""def meth(): pass""", r"""
+""", 'body[0]', 2, 3, None, {}, r"""def meth(): pass""", r"""
 class cls:
     def premeth(): pass
     i
@@ -12626,7 +12626,7 @@ class cls:
     # pre
     i ; j # post
     def postmeth(): pass
-""", 'body[0]', 1, 2, None, None, r"""def meth(): pass""", r"""
+""", 'body[0]', 1, 2, None, {}, r"""def meth(): pass""", r"""
 class cls:
     def premeth(): pass
 
@@ -12662,7 +12662,7 @@ class cls:
     # pre
     i ; j # post
     def postmeth(): pass
-""", 'body[0]', 2, 3, None, None, r"""def meth(): pass""", r"""
+""", 'body[0]', 2, 3, None, {}, r"""def meth(): pass""", r"""
 class cls:
     def premeth(): pass
     # pre
@@ -12696,7 +12696,7 @@ Module .. ROOT 0,0 -> 9,0
 (r"""
 if 1:
     def premeth(): pass
-""", 'body[0]', 1, 1, None, None, r"""def meth(): pass""", r"""
+""", 'body[0]', 1, 1, None, {}, r"""def meth(): pass""", r"""
 if 1:
     def premeth(): pass
 
@@ -12721,7 +12721,7 @@ Module .. ROOT 0,0 -> 6,0
 (r"""
 if 1:
     def postmeth(): pass
-""", 'body[0]', 0, 0, None, None, r"""def meth(): pass""", r"""
+""", 'body[0]', 0, 0, None, {}, r"""def meth(): pass""", r"""
 if 1:
     def meth(): pass
 
@@ -12747,7 +12747,7 @@ Module .. ROOT 0,0 -> 6,0
 def f():
     i
     j
-""", 'body[0]', 1, 1, None, None, r"""def g(): pass""", r"""
+""", 'body[0]', 1, 1, None, {}, r"""def g(): pass""", r"""
 def f():
     i
 
@@ -12774,7 +12774,7 @@ Module .. ROOT 0,0 -> 7,0
 async def f():
     i
     j
-""", 'body[0]', 1, 1, None, None, r"""def g(): pass""", r"""
+""", 'body[0]', 1, 1, None, {}, r"""def g(): pass""", r"""
 async def f():
     i
 
@@ -12801,7 +12801,7 @@ Module .. ROOT 0,0 -> 7,0
 class cls:
     i
     j
-""", 'body[0]', 1, 1, None, None, r"""def g(): pass""", r"""
+""", 'body[0]', 1, 1, None, {}, r"""def g(): pass""", r"""
 class cls:
     i
 
@@ -12828,7 +12828,7 @@ Module .. ROOT 0,0 -> 7,0
 for a in b:
     i
     j
-""", 'body[0]', 1, 1, None, None, r"""def g(): pass""", r"""
+""", 'body[0]', 1, 1, None, {}, r"""def g(): pass""", r"""
 for a in b:
     i
 
@@ -12858,7 +12858,7 @@ Module .. ROOT 0,0 -> 9,0
 async for a in b:
     i
     j
-""", 'body[0]', 1, 1, None, None, r"""def g(): pass""", r"""
+""", 'body[0]', 1, 1, None, {}, r"""def g(): pass""", r"""
 async for a in b:
     i
 
@@ -12888,7 +12888,7 @@ Module .. ROOT 0,0 -> 9,0
 while a:
     i
     j
-""", 'body[0]', 1, 1, None, None, r"""def g(): pass""", r"""
+""", 'body[0]', 1, 1, None, {}, r"""def g(): pass""", r"""
 while a:
     i
 
@@ -12917,7 +12917,7 @@ Module .. ROOT 0,0 -> 9,0
 if a:
     i
     j
-""", 'body[0]', 1, 1, None, None, r"""def g(): pass""", r"""
+""", 'body[0]', 1, 1, None, {}, r"""def g(): pass""", r"""
 if a:
     i
 
@@ -12946,7 +12946,7 @@ Module .. ROOT 0,0 -> 9,0
 with a:
     i
     j
-""", 'body[0]', 1, 1, None, None, r"""def g(): pass""", r"""
+""", 'body[0]', 1, 1, None, {}, r"""def g(): pass""", r"""
 with a:
     i
 
@@ -12978,7 +12978,7 @@ Module .. ROOT 0,0 -> 9,0
 async with a:
     i
     j
-""", 'body[0]', 1, 1, None, None, r"""def g(): pass""", r"""
+""", 'body[0]', 1, 1, None, {}, r"""def g(): pass""", r"""
 async with a:
     i
 
@@ -13011,7 +13011,7 @@ match a:
     case b:
         i
         j
-""", 'body[0].cases[0]', 1, 1, None, None, r"""def g(): pass""", r"""
+""", 'body[0].cases[0]', 1, 1, None, {}, r"""def g(): pass""", r"""
 match a:
     case b:
         i
@@ -13049,7 +13049,7 @@ try:
     j
 finally:
     pass
-""", 'body[0]', 1, 1, None, None, r"""def g(): pass""", r"""
+""", 'body[0]', 1, 1, None, {}, r"""def g(): pass""", r"""
 try:
     i
 
@@ -13081,7 +13081,7 @@ Module .. ROOT 0,0 -> 11,0
 def f():
     i
     j
-""", 'body[0]', 1, 1, None, '', r"""def g(): pass""", r"""
+""", 'body[0]', 1, 1, None, {'precomms': False, 'postcomms': False, 'pep8space': False}, r"""def g(): pass""", r"""
 def f():
     i
     def g(): pass
@@ -13106,7 +13106,7 @@ Module .. ROOT 0,0 -> 5,0
 async def f():
     i
     j
-""", 'body[0]', 1, 1, None, '', r"""def g(): pass""", r"""
+""", 'body[0]', 1, 1, None, {'precomms': False, 'postcomms': False, 'pep8space': False}, r"""def g(): pass""", r"""
 async def f():
     i
     def g(): pass
@@ -13131,7 +13131,7 @@ Module .. ROOT 0,0 -> 5,0
 class cls:
     i
     j
-""", 'body[0]', 1, 1, None, '', r"""def g(): pass""", r"""
+""", 'body[0]', 1, 1, None, {'precomms': False, 'postcomms': False, 'pep8space': False}, r"""def g(): pass""", r"""
 class cls:
     i
     def g(): pass
@@ -13156,7 +13156,7 @@ Module .. ROOT 0,0 -> 5,0
 for a in b:
     i
     j
-""", 'body[0]', 1, 1, None, '', r"""def g(): pass""", r"""
+""", 'body[0]', 1, 1, None, {'precomms': False, 'postcomms': False, 'pep8space': False}, r"""def g(): pass""", r"""
 for a in b:
     i
     def g(): pass
@@ -13182,7 +13182,7 @@ Module .. ROOT 0,0 -> 5,0
 async for a in b:
     i
     j
-""", 'body[0]', 1, 1, None, '', r"""def g(): pass""", r"""
+""", 'body[0]', 1, 1, None, {'precomms': False, 'postcomms': False, 'pep8space': False}, r"""def g(): pass""", r"""
 async for a in b:
     i
     def g(): pass
@@ -13208,7 +13208,7 @@ Module .. ROOT 0,0 -> 5,0
 while a:
     i
     j
-""", 'body[0]', 1, 1, None, '', r"""def g(): pass""", r"""
+""", 'body[0]', 1, 1, None, {'precomms': False, 'postcomms': False, 'pep8space': False}, r"""def g(): pass""", r"""
 while a:
     i
     def g(): pass
@@ -13233,7 +13233,7 @@ Module .. ROOT 0,0 -> 5,0
 if a:
     i
     j
-""", 'body[0]', 1, 1, None, '', r"""def g(): pass""", r"""
+""", 'body[0]', 1, 1, None, {'precomms': False, 'postcomms': False, 'pep8space': False}, r"""def g(): pass""", r"""
 if a:
     i
     def g(): pass
@@ -13258,7 +13258,7 @@ Module .. ROOT 0,0 -> 5,0
 with a:
     i
     j
-""", 'body[0]', 1, 1, None, '', r"""def g(): pass""", r"""
+""", 'body[0]', 1, 1, None, {'precomms': False, 'postcomms': False, 'pep8space': False}, r"""def g(): pass""", r"""
 with a:
     i
     def g(): pass
@@ -13286,7 +13286,7 @@ Module .. ROOT 0,0 -> 5,0
 async with a:
     i
     j
-""", 'body[0]', 1, 1, None, '', r"""def g(): pass""", r"""
+""", 'body[0]', 1, 1, None, {'precomms': False, 'postcomms': False, 'pep8space': False}, r"""def g(): pass""", r"""
 async with a:
     i
     def g(): pass
@@ -13315,7 +13315,7 @@ match a:
     case b:
         i
         j
-""", 'body[0].cases[0]', 1, 1, None, '', r"""def g(): pass""", r"""
+""", 'body[0].cases[0]', 1, 1, None, {'precomms': False, 'postcomms': False, 'pep8space': False}, r"""def g(): pass""", r"""
 match a:
     case b:
         i
@@ -13349,7 +13349,7 @@ try:
     j
 finally:
     pass
-""", 'body[0]', 1, 1, None, '', r"""def g(): pass""", r"""
+""", 'body[0]', 1, 1, None, {'precomms': False, 'postcomms': False, 'pep8space': False}, r"""def g(): pass""", r"""
 try:
     i
     def g(): pass
@@ -13377,7 +13377,7 @@ Module .. ROOT 0,0 -> 7,0
 if 1:
     i
     j
-""", 'body[0]', 1, 1, None, 'pep81', r"""def g(): pass""", r"""
+""", 'body[0]', 1, 1, None, {'pep8space': 1}, r"""def g(): pass""", r"""
 if 1:
     i
 
@@ -13402,7 +13402,7 @@ Module .. ROOT 0,0 -> 7,0
 
 (r"""
 i ; j ; k
-""", '', 1, 2, None, None, r"""l""", r"""
+""", '', 1, 2, None, {}, r"""l""", r"""
 i
 l
 k
@@ -13421,7 +13421,7 @@ Module .. ROOT 0,0 -> 4,0
 i ; \
  j \
  ; k
-""", '', 1, 2, None, None, r"""l""", r"""
+""", '', 1, 2, None, {}, r"""l""", r"""
 i
 l
 k
@@ -13440,7 +13440,7 @@ Module .. ROOT 0,0 -> 4,0
 i \
  ; j ; \
  k
-""", '', 1, 2, None, None, r"""l""", r"""
+""", '', 1, 2, None, {}, r"""l""", r"""
 i
 l
 k
@@ -13461,7 +13461,7 @@ i \
  j \
  ; \
  k
-""", '', 1, 2, None, None, r"""l""", r"""
+""", '', 1, 2, None, {}, r"""l""", r"""
 i
 l
 k
@@ -13479,7 +13479,7 @@ Module .. ROOT 0,0 -> 4,0
 (r"""
 if 1:
     i ; j ; k
-""", 'body[0]', 1, 2, None, None, r"""l""", r"""
+""", 'body[0]', 1, 2, None, {}, r"""l""", r"""
 if 1:
     i
     l
@@ -13503,7 +13503,7 @@ if 1:
     i ; \
  j ; \
  k
-""", 'body[0]', 1, 2, None, None, r"""l""", r"""
+""", 'body[0]', 1, 2, None, {}, r"""l""", r"""
 if 1:
     i
     l
@@ -13527,7 +13527,7 @@ if 1:
     i \
  ; j ; \
  k
-""", 'body[0]', 1, 2, None, None, r"""l""", r"""
+""", 'body[0]', 1, 2, None, {}, r"""l""", r"""
 if 1:
     i
     l
@@ -13553,7 +13553,7 @@ if 1:
  j \
  ; \
  k
-""", 'body[0]', 1, 2, None, None, r"""l""", r"""
+""", 'body[0]', 1, 2, None, {}, r"""l""", r"""
 if 1:
     i
     l
@@ -13574,7 +13574,7 @@ Module .. ROOT 0,0 -> 5,0
 
 (r"""
 i ; j ; k
-""", '', 1, 2, None, None, r"""def f(): pass""", r"""
+""", '', 1, 2, None, {}, r"""def f(): pass""", r"""
 i
 
 
@@ -13599,7 +13599,7 @@ Module .. ROOT 0,0 -> 8,0
 i ; \
  j \
  ; k
-""", '', 1, 2, None, None, r"""def f(): pass""", r"""
+""", '', 1, 2, None, {}, r"""def f(): pass""", r"""
 i
 
 
@@ -13624,7 +13624,7 @@ Module .. ROOT 0,0 -> 8,0
 i \
  ; j ; \
  k
-""", '', 1, 2, None, None, r"""def f(): pass""", r"""
+""", '', 1, 2, None, {}, r"""def f(): pass""", r"""
 i
 
 
@@ -13651,7 +13651,7 @@ i \
  j \
  ; \
  k
-""", '', 1, 2, None, None, r"""def f(): pass""", r"""
+""", '', 1, 2, None, {}, r"""def f(): pass""", r"""
 i
 
 
@@ -13675,7 +13675,7 @@ Module .. ROOT 0,0 -> 8,0
 (r"""
 class cls:
     i ; j ; k
-""", 'body[0]', 1, 2, None, None, r"""def f(): pass""", r"""
+""", 'body[0]', 1, 2, None, {}, r"""def f(): pass""", r"""
 class cls:
     i
 
@@ -13703,7 +13703,7 @@ class cls:
     i ; \
  j ; \
  k
-""", 'body[0]', 1, 2, None, None, r"""def f(): pass""", r"""
+""", 'body[0]', 1, 2, None, {}, r"""def f(): pass""", r"""
 class cls:
     i
 
@@ -13731,7 +13731,7 @@ class cls:
     i \
  ; j ; \
  k
-""", 'body[0]', 1, 2, None, None, r"""def f(): pass""", r"""
+""", 'body[0]', 1, 2, None, {}, r"""def f(): pass""", r"""
 class cls:
     i
 
@@ -13761,7 +13761,7 @@ class cls:
  j \
  ; \
  k
-""", 'body[0]', 1, 2, None, None, r"""def f(): pass""", r"""
+""", 'body[0]', 1, 2, None, {}, r"""def f(): pass""", r"""
 class cls:
     i
 
@@ -13786,7 +13786,7 @@ Module .. ROOT 0,0 -> 7,0
 
 (r"""
 i ; j ;
-""", '', 1, 2, None, None, r"""def f(): pass""", r"""
+""", '', 1, 2, None, {}, r"""def f(): pass""", r"""
 i
 
 
@@ -13806,7 +13806,7 @@ Module .. ROOT 0,0 -> 5,0
 i ; \
  j \
  ;
-""", '', 1, 2, None, None, r"""def f(): pass""", r"""
+""", '', 1, 2, None, {}, r"""def f(): pass""", r"""
 i ;
 
 
@@ -13825,7 +13825,7 @@ Module .. ROOT 0,0 -> 5,0
 (r"""
 i \
  ; j ;
-""", '', 1, 2, None, None, r"""def f(): pass""", r"""
+""", '', 1, 2, None, {}, r"""def f(): pass""", r"""
 i
 
 
@@ -13846,7 +13846,7 @@ i \
  ; \
  j \
  ;
-""", '', 1, 2, None, None, r"""def f(): pass""", r"""
+""", '', 1, 2, None, {}, r"""def f(): pass""", r"""
 i \
  ;
 
@@ -13866,7 +13866,7 @@ Module .. ROOT 0,0 -> 6,0
 (r"""
 class cls:
     i ; j ;
-""", 'body[0]', 1, 2, None, None, r"""def f(): pass""", r"""
+""", 'body[0]', 1, 2, None, {}, r"""def f(): pass""", r"""
 class cls:
     i
 
@@ -13889,7 +13889,7 @@ Module .. ROOT 0,0 -> 5,0
 class cls:
     i ; \
  j ;
-""", 'body[0]', 1, 2, None, None, r"""def f(): pass""", r"""
+""", 'body[0]', 1, 2, None, {}, r"""def f(): pass""", r"""
 class cls:
     i ;
 
@@ -13912,7 +13912,7 @@ Module .. ROOT 0,0 -> 5,0
 class cls:
     i \
  ; j ;
-""", 'body[0]', 1, 2, None, None, r"""def f(): pass""", r"""
+""", 'body[0]', 1, 2, None, {}, r"""def f(): pass""", r"""
 class cls:
     i
 
@@ -13937,7 +13937,7 @@ class cls:
  ; \
  j \
  ;
-""", 'body[0]', 1, 2, None, None, r"""def f(): pass""", r"""
+""", 'body[0]', 1, 2, None, {}, r"""def f(): pass""", r"""
 class cls:
     i \
  ;
@@ -13959,7 +13959,7 @@ Module .. ROOT 0,0 -> 6,0
 
 (r"""
 i ; j ;  # post
-""", '', 1, 2, None, None, r"""def f(): pass""", r"""
+""", '', 1, 2, None, {}, r"""def f(): pass""", r"""
 i ;
 
 
@@ -13980,7 +13980,7 @@ Module .. ROOT 0,0 -> 6,0
 i ; \
  j \
  ;  # post
-""", '', 1, 2, None, None, r"""def f(): pass""", r"""
+""", '', 1, 2, None, {}, r"""def f(): pass""", r"""
 i ;
 
 
@@ -14000,7 +14000,7 @@ Module .. ROOT 0,0 -> 6,0
 (r"""
 i \
  ; j ;  # post
-""", '', 1, 2, None, None, r"""def f(): pass""", r"""
+""", '', 1, 2, None, {}, r"""def f(): pass""", r"""
 i \
  ;
 
@@ -14023,7 +14023,7 @@ i \
  ; \
  j \
  ;  # post
-""", '', 1, 2, None, None, r"""def f(): pass""", r"""
+""", '', 1, 2, None, {}, r"""def f(): pass""", r"""
 i \
  ;
 
@@ -14044,7 +14044,7 @@ Module .. ROOT 0,0 -> 7,0
 (r"""
 class cls:
     i ; j ;  # post
-""", 'body[0]', 1, 2, None, None, r"""def f(): pass""", r"""
+""", 'body[0]', 1, 2, None, {}, r"""def f(): pass""", r"""
 class cls:
     i ;
 
@@ -14068,7 +14068,7 @@ Module .. ROOT 0,0 -> 6,0
 class cls:
     i ; \
  j ;  # post
-""", 'body[0]', 1, 2, None, None, r"""def f(): pass""", r"""
+""", 'body[0]', 1, 2, None, {}, r"""def f(): pass""", r"""
 class cls:
     i ;
 
@@ -14092,7 +14092,7 @@ Module .. ROOT 0,0 -> 6,0
 class cls:
     i \
  ; j ;  # post
-""", 'body[0]', 1, 2, None, None, r"""def f(): pass""", r"""
+""", 'body[0]', 1, 2, None, {}, r"""def f(): pass""", r"""
 class cls:
     i \
  ;
@@ -14119,7 +14119,7 @@ class cls:
  ; \
  j \
  ;  # post
-""", 'body[0]', 1, 2, None, None, r"""def f(): pass""", r"""
+""", 'body[0]', 1, 2, None, {}, r"""def f(): pass""", r"""
 class cls:
     i \
  ;
@@ -14144,7 +14144,7 @@ Module .. ROOT 0,0 -> 7,0
 if 1: pass
 elif 2:
     pass
-""", 'body[0]', 0, 1, 'orelse', None, r"""break""", r"""
+""", 'body[0]', 0, 1, 'orelse', {}, r"""break""", r"""
 if 1: pass
 else:
     break
@@ -14163,7 +14163,7 @@ Module .. ROOT 0,0 -> 4,0
 if 1: pass
 elif 2:
     pass
-""", 'body[0]', 0, 1, 'orelse', None, r"""if 3: break""", r"""
+""", 'body[0]', 0, 1, 'orelse', {}, r"""if 3: break""", r"""
 if 1: pass
 else:
     if 3: break
@@ -14185,7 +14185,7 @@ Module .. ROOT 0,0 -> 4,0
 if 1: pass
 elif 2:
     pass
-""", 'body[0]', 0, 1, 'orelse', 'elif', r"""if 3: break""", r"""
+""", 'body[0]', 0, 1, 'orelse', {'precomms': False, 'postcomms': False, 'pep8space': False, 'elif': True}, r"""if 3: break""", r"""
 if 1: pass
 elif 3: break
 """, r"""
@@ -14206,7 +14206,7 @@ Module .. ROOT 0,0 -> 3,0
 if 1: pass
 else:
     pass
-""", 'body[0]', 0, 1, 'orelse', 'elif', r"""if 3: break""", r"""
+""", 'body[0]', 0, 1, 'orelse', {'precomms': False, 'postcomms': False, 'pep8space': False, 'elif': True}, r"""if 3: break""", r"""
 if 1: pass
 elif 3: break
 """, r"""
@@ -14228,7 +14228,7 @@ class cls:
     if 1: pass
     elif 2:
         pass
-""", 'body[0].body[0]', 0, 1, 'orelse', None, r"""break""", r"""
+""", 'body[0].body[0]', 0, 1, 'orelse', {}, r"""break""", r"""
 class cls:
     if 1: pass
     else:
@@ -14252,7 +14252,7 @@ class cls:
     if 1: pass
     elif 2:
         pass
-""", 'body[0].body[0]', 0, 1, 'orelse', None, r"""if 3: break""", r"""
+""", 'body[0].body[0]', 0, 1, 'orelse', {}, r"""if 3: break""", r"""
 class cls:
     if 1: pass
     else:
@@ -14279,7 +14279,7 @@ class cls:
     if 1: pass
     elif 2:
         pass
-""", 'body[0].body[0]', 0, 1, 'orelse', 'elif', r"""if 3: break""", r"""
+""", 'body[0].body[0]', 0, 1, 'orelse', {'precomms': False, 'postcomms': False, 'pep8space': False, 'elif': True}, r"""if 3: break""", r"""
 class cls:
     if 1: pass
     elif 3: break
@@ -14305,7 +14305,7 @@ class cls:
     if 1: pass
     else:
         pass
-""", 'body[0].body[0]', 0, 1, 'orelse', 'elif', r"""if 3: break""", r"""
+""", 'body[0].body[0]', 0, 1, 'orelse', {'precomms': False, 'postcomms': False, 'pep8space': False, 'elif': True}, r"""if 3: break""", r"""
 class cls:
     if 1: pass
     elif 3: break
@@ -14330,7 +14330,7 @@ Module .. ROOT 0,0 -> 4,0
 if 1: pass
 elif 2:
     pass
-""", 'body[0]', 0, 1, 'orelse', None, r"""if 3: break
+""", 'body[0]', 0, 1, 'orelse', {}, r"""if 3: break
 else:
     continue""", r"""
 if 1: pass
@@ -14358,7 +14358,7 @@ Module .. ROOT 0,0 -> 6,0
 if 1: pass
 elif 2:
     pass
-""", 'body[0]', 0, 1, 'orelse', 'elif', r"""if 3: break
+""", 'body[0]', 0, 1, 'orelse', {'precomms': False, 'postcomms': False, 'pep8space': False, 'elif': True}, r"""if 3: break
 else:
     continue""", r"""
 if 1: pass
@@ -14385,7 +14385,7 @@ Module .. ROOT 0,0 -> 5,0
 if 1: pass
 elif 2:
     pass
-""", 'body[0].orelse[0]', 0, 0, 'orelse', None, r"""if 3: break
+""", 'body[0].orelse[0]', 0, 0, 'orelse', {}, r"""if 3: break
 else:
     continue""", r"""
 if 1: pass
@@ -14420,7 +14420,7 @@ Module .. ROOT 0,0 -> 8,0
 if 1: pass
 elif 2:
     pass
-""", 'body[0].orelse[0]', 0, 0, 'orelse', 'elif', r"""if 3: break
+""", 'body[0].orelse[0]', 0, 0, 'orelse', {'precomms': False, 'postcomms': False, 'pep8space': False, 'elif': True}, r"""if 3: break
 else:
     continue""", r"""
 if 1: pass
@@ -14455,7 +14455,7 @@ class cls:
     if 1: pass
     elif 2:
         pass
-""", 'body[0].body[0]', 0, 1, 'orelse', None, r"""if 3: break
+""", 'body[0].body[0]', 0, 1, 'orelse', {}, r"""if 3: break
 else:
     continue""", r"""
 class cls:
@@ -14488,7 +14488,7 @@ class cls:
     if 1: pass
     elif 2:
         pass
-""", 'body[0].body[0]', 0, 1, 'orelse', 'elif', r"""if 3: break
+""", 'body[0].body[0]', 0, 1, 'orelse', {'precomms': False, 'postcomms': False, 'pep8space': False, 'elif': True}, r"""if 3: break
 else:
     continue""", r"""
 class cls:
@@ -14520,7 +14520,7 @@ class cls:
     if 1: pass
     elif 2:
         pass
-""", 'body[0].body[0].orelse[0]', 0, 0, 'orelse', None, r"""if 3: break
+""", 'body[0].body[0].orelse[0]', 0, 0, 'orelse', {}, r"""if 3: break
 else:
     continue""", r"""
 class cls:
@@ -14560,7 +14560,7 @@ class cls:
     if 1: pass
     elif 2:
         pass
-""", 'body[0].body[0].orelse[0]', 0, 0, 'orelse', 'elif', r"""if 3: break
+""", 'body[0].body[0].orelse[0]', 0, 0, 'orelse', {'precomms': False, 'postcomms': False, 'pep8space': False, 'elif': True}, r"""if 3: break
 else:
     continue""", r"""
 class cls:
@@ -14597,7 +14597,7 @@ Module .. ROOT 0,0 -> 8,0
 (r"""
 if 1:
     pass;
-""", 'body[0]', 0, 0, 'orelse', None, r"""i""", r"""
+""", 'body[0]', 0, 0, 'orelse', {}, r"""i""", r"""
 if 1:
     pass;
 else:
@@ -14621,7 +14621,7 @@ except:
     pass;
 finally:
     pass
-""", 'body[0]', 0, 0, 'orelse', None, r"""i""", r"""
+""", 'body[0]', 0, 0, 'orelse', {}, r"""i""", r"""
 try:
     continue
 except:
@@ -16444,14 +16444,14 @@ i = 1
 i # post
 # postpost
             ''')
-        self.assertEqual('i', a.body[0].f.copy(fmt='').src)
-        self.assertEqual('# pre\ni', a.body[0].f.copy(fmt='pre').src)
-        self.assertEqual('# pre\ni # post\n', a.body[0].f.copy(fmt='pre,post').src)
-        self.assertEqual('# prepre\n\n# pre\ni', a.body[0].f.copy(fmt='allpre').src)
+        self.assertEqual('i', a.body[0].f.copy(precomms=False, postcomms=False).src)
+        self.assertEqual('# pre\ni', a.body[0].f.copy(precomms=True, postcomms=False).src)
+        self.assertEqual('# pre\ni # post\n', a.body[0].f.copy(precomms=True, postcomms=True).src)
+        self.assertEqual('# prepre\n\n# pre\ni', a.body[0].f.copy(precomms='all', postcomms=False).src)
 
         a = parse('( i )')
-        self.assertEqual('i', a.body[0].value.f.copy(fmt='').src)
-        self.assertEqual('( i )', a.body[0].value.f.copy(fmt='pars').src)
+        self.assertEqual('i', a.body[0].value.f.copy(precomms=False, postcomms=False).src)
+        self.assertEqual('( i )', a.body[0].value.f.copy(precomms=False, postcomms=False, pars=True).src)
 
         if sys.version_info[:2] >= (3, 12):
             f = FST.fromsrc('tuple[*tuple[int, ...]]').a.body[0].value.slice.f.copy(fix=True)
@@ -16496,7 +16496,7 @@ i # post
 i # post
 # postpost
             '''.strip())
-        self.assertEqual('i', a.body[0].f.cut(fmt='').src)
+        self.assertEqual('i', a.body[0].f.cut(precomms=False, postcomms=False).src)
         self.assertEqual('# prepre\n\n# pre\n# post\n# postpost', a.f.src)
 
         a = parse('''
@@ -16506,7 +16506,7 @@ i # post
 i # post
 # postpost
             '''.strip())
-        self.assertEqual('# pre\ni', a.body[0].f.cut(fmt='pre').src)
+        self.assertEqual('# pre\ni', a.body[0].f.cut(precomms=True, postcomms=False).src)
         self.assertEqual('# prepre\n\n# post\n# postpost', a.f.src)
 
         a = parse('''
@@ -16516,7 +16516,7 @@ i # post
 i # post
 # postpost
             '''.strip())
-        self.assertEqual('# pre\ni # post\n', a.body[0].f.cut(fmt='pre,post').src)
+        self.assertEqual('# pre\ni # post\n', a.body[0].f.cut(precomms=True, postcomms=True).src)
         self.assertEqual('# prepre\n\n# postpost', a.f.src)
 
         a = parse('''
@@ -16526,16 +16526,16 @@ i # post
 i # post
 # postpost
             '''.strip())
-        self.assertEqual('# prepre\n\n# pre\ni', a.body[0].f.cut(fmt='allpre').src)
+        self.assertEqual('# prepre\n\n# pre\ni', a.body[0].f.cut(precomms='all', postcomms=False).src)
         self.assertEqual('# post\n# postpost', a.f.src)
 
         a = parse('( ( i ), )')
-        f = a.body[0].value.elts[0].f.cut(fmt='')
+        f = a.body[0].value.elts[0].f.cut(precomms=False, postcomms=False)
         self.assertEqual('()', a.f.src)
         self.assertEqual('i', f.src)
 
         a = parse('( ( i ), )')
-        f = a.body[0].value.elts[0].f.cut(fmt='pars')
+        f = a.body[0].value.elts[0].f.cut(precomms=False, postcomms=False, pars=True)
         self.assertEqual('()', a.f.src)
         self.assertEqual('( i )', f.src)
 
@@ -16902,7 +16902,7 @@ if indented:
 
         fst.body[1].cases[0].cut()
         # fst.body[1].put_slice('pass')
-        fst.body[1]._put_slice_stmt('pass', None, None, None, False, True, fst_.DEFAULT_SRC_EDIT_FMT, fst_.DEFAULT_DOCSTR, force=True)
+        fst.body[1]._put_slice_stmt('pass', None, None, None, False, True, force=True)
 
         points = [
             (fst.body[0].cases[0], 'body'),
@@ -17072,7 +17072,7 @@ if indented:
         fst = fst2
 
         fst.body[1].cases[0].cut()
-        fst.body[1]._put_slice_stmt('pass', None, None, None, False, True, fst_.DEFAULT_SRC_EDIT_FMT, fst_.DEFAULT_DOCSTR, force=True)
+        fst.body[1]._put_slice_stmt('pass', None, None, None, False, True, force=True)
 
         points = [
             (fst.body[0].cases[0], 'body'),
@@ -17107,7 +17107,7 @@ if indented:
 
         for point, field in points:
             # point.put_slice(None, field=field)
-            point._put_slice_stmt(None, None, None, field, False, True, fst_.DEFAULT_SRC_EDIT_FMT, fst_.DEFAULT_DOCSTR, force=True)
+            point._put_slice_stmt(None, None, None, field, False, True, force=True)
 
         self.assertEqual(fst.lines, [
             'match a:',
@@ -17278,7 +17278,7 @@ if indented:
 
         fst.body[1].cases[0].cut()
         # fst.body[1].put_slice('pass')
-        fst.body[1]._put_slice_stmt('pass', None, None, None, False, True, fst_.DEFAULT_SRC_EDIT_FMT, fst_.DEFAULT_DOCSTR, force=True)
+        fst.body[1]._put_slice_stmt('pass', None, None, None, False, True, force=True)
 
         points = [
             (fst.body[0].cases[0], 'body'),
@@ -17473,7 +17473,7 @@ if indented:
 
         fst.body[1].cases[0].cut()
         # fst.body[1].put_slice('pass')
-        fst.body[1]._put_slice_stmt('pass', None, None, None, False, True, fst_.DEFAULT_SRC_EDIT_FMT, fst_.DEFAULT_DOCSTR, force=True)
+        fst.body[1]._put_slice_stmt('pass', None, None, None, False, True, force=True)
 
         points = [
             (fst.body[0].cases[0], 'body'),
@@ -17642,7 +17642,7 @@ match a:
         '''.strip())
         a.body[0].cases[0].f.cut()
         # a.body[0].f.put_slice('i')
-        a.body[0].f._put_slice_stmt('i', None, None, None, False, True, fst_.DEFAULT_SRC_EDIT_FMT, fst_.DEFAULT_DOCSTR, force=True)
+        a.body[0].f._put_slice_stmt('i', None, None, None, False, True, force=True)
         self.assertEqual(a.f.src, 'match a:\n    i\n')
 
 
@@ -17723,7 +17723,7 @@ if 1:
         '''.strip())
         a.body[0].body[0].cases[0].f.cut()
         # a.body[0].body[0].f.put_slice('i')
-        a.body[0].body[0].f._put_slice_stmt('i', None, None, None, False, True, fst_.DEFAULT_SRC_EDIT_FMT, fst_.DEFAULT_DOCSTR, force=True)
+        a.body[0].body[0].f._put_slice_stmt('i', None, None, None, False, True, force=True)
         self.assertEqual(a.f.src, 'if 2:\n    match a:\n        i\n')
 
 
@@ -18248,7 +18248,7 @@ if indented:
 
         fst.body[1].cases[0].cut()
         # fst.body[1].put_slice('pass')
-        fst.body[1]._put_slice_stmt('pass', None, None, None, False, True, fst_.DEFAULT_SRC_EDIT_FMT, fst_.DEFAULT_DOCSTR, force=True)
+        fst.body[1]._put_slice_stmt('pass', None, None, None, False, True, force=True)
 
         points = [
             (fst.body[0].cases[0], 'body'),
@@ -18297,7 +18297,7 @@ if indented:
             f, field = ps.pop()
 
             # f.put_slice(bs.pop(), 0, 0, field=field)
-            f._put_slice_stmt(bs.pop(), 0, 0, field, False, True, fst_.DEFAULT_SRC_EDIT_FMT, fst_.DEFAULT_DOCSTR, force=True)
+            f._put_slice_stmt(bs.pop(), 0, 0, field, False, True, force=True)
 
         self.assertEqual(fst.src, '''
 match a:
@@ -18410,7 +18410,7 @@ if indented:
                 f, field = ps.pop()
 
                 # f.put_slice(bs.pop(), 0, 0, field=field)
-                f._put_slice_stmt(bs.pop(), 0, 0, field, False, True, fst_.DEFAULT_SRC_EDIT_FMT, fst_.DEFAULT_DOCSTR, force=True)
+                f._put_slice_stmt(bs.pop(), 0, 0, field, False, True, force=True)
 
     def test_insert_comment_into_empty_field(self):
         fst = parse('''
@@ -18470,7 +18470,7 @@ if indented:
 
         fst.body[1].cases[0].cut()
         # fst.body[1].put_slice('pass')
-        fst.body[1]._put_slice_stmt('pass', None, None, None, False, True, fst_.DEFAULT_SRC_EDIT_FMT, fst_.DEFAULT_DOCSTR, force=True)
+        fst.body[1]._put_slice_stmt('pass', None, None, None, False, True, force=True)
 
         points = [
             (fst.body[0].cases[0], 'body'),
@@ -18498,7 +18498,7 @@ if indented:
             point.get_slice(field=field, cut=True)
 
         for i, (point, field) in enumerate(reversed(points)):
-            point._put_slice_stmt(f'# {i}', 0, 0, field, False, True, fst_.DEFAULT_SRC_EDIT_FMT, fst_.DEFAULT_DOCSTR, force=True)
+            point._put_slice_stmt(f'# {i}', 0, 0, field, False, True, force=True)
 
         self.assertEqual(fst.lines, [
             'match a:',
@@ -18571,9 +18571,9 @@ finally:
         a.body[1].body[0].f.cut()
         a.body[1].handlers[0].f.cut()
         # a.body[1].f.put_slice('# pre\nn  # post', 0, 0, 'handlers')
-        a.body[1].f._put_slice_stmt('# pre\nn  # post', 0, 0, 'handlers', False, True, fst_.DEFAULT_SRC_EDIT_FMT, fst_.DEFAULT_DOCSTR, force=True)
+        a.body[1].f._put_slice_stmt('# pre\nn  # post', 0, 0, 'handlers', False, True, force=True)
         # a.body[1].f.put_slice('i', 0, 0, 'handlers')
-        a.body[1].f._put_slice_stmt('i', 0, 0, 'handlers', False, True, fst_.DEFAULT_SRC_EDIT_FMT, fst_.DEFAULT_DOCSTR, force=True)
+        a.body[1].f._put_slice_stmt('i', 0, 0, 'handlers', False, True, force=True)
         self.assertEqual(a.f.src, '''
 pass
 
@@ -18665,12 +18665,12 @@ class cls:
         for name in ('GET_SLICE_STMT_DATA', 'GET_SLICE_STMT_NOVERIFY_DATA'):
             verify = 'NOVERIFY' not in name
 
-            for src, elt, start, stop, field, fmt, _, slice_cut, _, slice_dump in globals()[name]:
+            for src, elt, start, stop, field, options, _, slice_cut, _, slice_dump in globals()[name]:
                 t = parse(src)
                 f = (eval(f't.{elt}', {'t': t}) if elt else t).f
 
                 try:
-                    s     = f.get_slice(start, stop, field, cut=False, fmt=fmt)
+                    s     = f.get_slice(start, stop, field, cut=False, **options)
                     tsrc  = t.f.src
                     ssrc  = s.src
                     sdump = s.dump(linefunc=list, compact=True)
@@ -18696,12 +18696,12 @@ class cls:
         for name in ('GET_SLICE_STMT_DATA', 'GET_SLICE_STMT_NOVERIFY_DATA'):
             verify = 'NOVERIFY' not in name
 
-            for src, elt, start, stop, field, fmt, src_cut, slice_cut, src_dump, slice_dump in globals()[name]:
+            for src, elt, start, stop, field, options, src_cut, slice_cut, src_dump, slice_dump in globals()[name]:
                 t = parse(src)
                 f = (eval(f't.{elt}', {'t': t}) if elt else t).f
 
                 try:
-                    s     = f.get_slice(start, stop, field, cut=True, fmt=fmt)
+                    s     = f.get_slice(start, stop, field, cut=True, **options)
                     tsrc  = t.f.src
                     ssrc  = s.src
                     tdump = t.f.dump(linefunc=list, compact=True)
@@ -18777,12 +18777,12 @@ class cls:
         for name in ('GET_SLICE_STMT_DATA', 'GET_SLICE_STMT_NOVERIFY_DATA'):
             verify = 'NOVERIFY' not in name
 
-            for src, elt, start, stop, field, fmt, src_cut, _, src_dump, _ in globals()[name]:
+            for i, (src, elt, start, stop, field, options, src_cut, _, src_dump, _) in enumerate(globals()[name]):
                 t = parse(src)
                 f = (eval(f't.{elt}', {'t': t}) if elt else t).f
 
                 try:
-                    f.put_slice(None, start, stop, field, fmt=fmt)
+                    f.put_slice(None, start, stop, field, **options)
 
                     tsrc  = t.f.src
                     tdump = t.f.dump(linefunc=list, compact=True)
@@ -18794,7 +18794,7 @@ class cls:
                     self.assertEqual(tdump, src_dump.strip().split('\n'))
 
                 except Exception:
-                    print(elt, start, stop)
+                    print(i, name, elt, start, stop)
                     print('---')
                     print(src)
                     print('...')
@@ -18803,12 +18803,11 @@ class cls:
                     raise
 
     def test_put_slice_stmt(self):
-        for dst, stmt, start, stop, field, fmt, src, put_src, put_dump in PUT_SLICE_STMT_DATA:
+        for i, (dst, stmt, start, stop, field, options, src, put_src, put_dump) in enumerate(PUT_SLICE_STMT_DATA):
             t = parse(dst)
             f = (eval(f't.{stmt}', {'t': t}) if stmt else t).f
 
-            f.put_slice(None if src == '**DEL**' else src, start, stop, field,
-                        fmt=fst_.DEFAULT_SRC_EDIT_FMT if fmt is None else fmt)
+            f.put_slice(None if src == '**DEL**' else src, start, stop, field, **options)
 
             tdst  = t.f.src
             tdump = t.f.dump(linefunc=list, compact=True)
@@ -18820,7 +18819,7 @@ class cls:
                 self.assertEqual(tdump, put_dump.strip().split('\n'))
 
             except Exception:
-                print(stmt, start, stop)
+                print(i, stmt, start, stop)
                 print('---')
                 print(repr(dst))
                 print('...')
@@ -19038,10 +19037,10 @@ def regen_get_slice_stmt():
         verify   = 'NOVERIFY' not in name
         newlines = []
 
-        for src, elt, start, stop, field, fmt, *_ in globals()[name]:
+        for src, elt, start, stop, field, options, *_ in globals()[name]:
             t     = parse(src)
             f     = (eval(f't.{elt}', {'t': t}) if elt else t).f
-            s     = f.get_slice(start, stop, field, cut=True, fmt=fmt)
+            s     = f.get_slice(start, stop, field, cut=True, **options)
             tsrc  = t.f.src
             ssrc  = s.src
             tdump = t.f.dump(linefunc=list, compact=True)
@@ -19051,7 +19050,7 @@ def regen_get_slice_stmt():
                 t.f.verify(raise_=True)
                 s.verify(raise_=True)
 
-            newlines.extend(f'''(r"""{src}""", {elt!r}, {start}, {stop}, {field!r}, {fmt!r}, r"""{tsrc}""", r"""{ssrc}""", r"""'''.split('\n'))
+            newlines.extend(f'''(r"""{src}""", {elt!r}, {start}, {stop}, {field!r}, {options}, r"""{tsrc}""", r"""{ssrc}""", r"""'''.split('\n'))
             newlines.extend(tdump)
             newlines.append('""", r"""')
             newlines.extend(sdump)
@@ -19101,19 +19100,18 @@ def regen_put_slice_seq():
 def regen_put_slice_stmt():
     newlines = []
 
-    for dst, stmt, start, stop, field, fmt, src, put_src, put_dump in PUT_SLICE_STMT_DATA:
+    for dst, stmt, start, stop, field, options, src, put_src, put_dump in PUT_SLICE_STMT_DATA:
         t = parse(dst)
         f = (eval(f't.{stmt}', {'t': t}) if stmt else t).f
 
-        f.put_slice(None if src == '**DEL**' else src, start, stop, field,
-                    fmt=fst_.DEFAULT_SRC_EDIT_FMT if fmt is None else fmt)
+        f.put_slice(None if src == '**DEL**' else src, start, stop, field, **options)
 
         tdst  = t.f.src
         tdump = t.f.dump(linefunc=list, compact=True)
 
         t.f.verify(raise_=True)
 
-        newlines.extend(f'''(r"""{dst}""", {stmt!r}, {start}, {stop}, {field!r}, {fmt!r}, r"""{src}""", r"""{tdst}""", r"""'''.split('\n'))
+        newlines.extend(f'''(r"""{dst}""", {stmt!r}, {start}, {stop}, {field!r}, {options!r}, r"""{src}""", r"""{tdst}""", r"""'''.split('\n'))
         newlines.extend(tdump)
         newlines.append('"""),\n')
 
