@@ -1178,29 +1178,14 @@ class FSTSrcEdit:
             respective `AST` nodes may have been removed in case of `cut`.
         - `field`: The name of the field being gotten from, e.g. `'body'`, `'orelse'`, etc...
         - `cut`: If `False` the operation is a copy, `True` means cut.
-        - `fmt`: Set of string formatting flags. Unrecognized and inapplicable flags are ignored, recognized flags are:
-            - `'pre'`: Copy and delete contiguous comment block immediately preceding statement(s).
-            - `'allpre'`: Copy and delete all comment blocks (possibly separated by empty lines) immediately preceding
-                statement(s).
-            - `'post'`: Copy and delete comment trailing on last line. Keep in mind this is the comment on the last
-                statement of a body if last element of copy is a block element.
-            - `'blkpost'`: Copy and delete single contiguous comment block following statement(s).
-            - `'allpost'`: Copy and delete all comment blocks (possibly separated by empty lines) following
-                statement(s).
-            - `'pep8'`: Does not actually reformat code according to PEP 8, just deletes up one or two empty lines
-                before functions and classes according to if they are at top level scope or not, but does not copy them.
-            - `'pep81'`: Same as `'pep8'` except deletes only 1 empty line even at top level.
-            - `'space*'`: Can be only `'space'` or with a number `'space3'`. Indicates that up to this many preceding
-                empty lines should be deleted on a cut operation. If no count specified then it means all empty lines.
-                Empty line continuations are considered empty lines. `'pep8'` can override `'space1'` for two lines at
-                top level functions and classes.
-            - `'postspace*'`: Same as `'space*'` except for trailing empty lines.
         - `block_loc`: A rough location suitable for checking comments outside of ASTS if `fpre` / `fpost` not
             available. Should include trailing newline after `flast` if one is present, but NO PARTS OF ASTS.
         - `ffirst`: The first `FST` being gotten.
         - `flast`: The last `FST` being gotten.
         - `fpre`: The preceding-first `FST`, not being gotten, may not exist if `ffirst` is first of seq.
         - `fpost`: The after-last `FST` not being gotten, may not exist if `flast` is last of seq.
+        - `options`: See `FST` source editing `options`. Options used here `precomms`, `postcomms`, `prespace`,
+            `postspace` and `pep8space`. `space` options determine how many empty lines to remove on a cut.
 
         **Returns:**
         - If `cut=False` then only the first element of the return tuple is used for the copy and the other two are
@@ -1373,10 +1358,6 @@ class FSTSrcEdit:
                     del_loc = fstloc(del_ln, del_col, (ln := del_end_ln - 1), len(lines[ln]))
 
         # delete preceding and trailing empty lines according to 'pep8' and 'space' format flags
-
-        # space     = any((s := f).startswith('space') for f in fmt) and (float('inf') if s == 'space' else int(s[5:]))
-        # postspace = any((s := f).startswith('postspace') for f in fmt) and (
-        #                 float('inf') if s == 'postspace' else int(s[9:]))
 
         prespace  = (float('inf') if (o := DEFAULT_PRESPACE if (o := options.get('prespace')) is None else o) is True
                      else int(o))
@@ -1566,23 +1547,6 @@ class FSTSrcEdit:
             nodes. Not indented, indent and mutate this object to set what will be put at `put_loc`.
         - `field`: The name of the field being gotten from, e.g. `'body'`, `'orelse'`, etc...
         - `cut`: If `False` the operation is a copy, `True` means cut.
-        - `fmt`: Set of string formatting flags. Unrecognized and inapplicable flags are ignored, recognized flags are:
-            - `'pre'`: Replace contiguous comment block immediately preceding statement(s).
-            - `'allpre'`: Replace all comment blocks (possibly separated by empty lines) immediately preceding
-                statement(s).
-            - `'post'`: replace comment trailing on last line. Keep in mind this is the comment on the last
-                statement of a body if last element of copy is a block element.
-            - `'blkpost'`: Replace single contiguous comment block following statement(s).
-            - `'allpost'`: Replace all comment blocks (possibly separated by empty lines) following statement(s).
-            - `'pep8'`: Does not actually reformat code according to PEP 8, just inserts up one or two empty lines
-                before non-first function or class being put according to destination if is top level scope or not. Also
-                removes this number of spaces if replacing a function or class so balances out in that case. In the
-                future may specify additional PEP 8 behavior.
-            - `'space*'`: Can be only `'space'` or with a number `'space3'`. Indicates that up to this many preceding
-                empty lines should be replaced. If no count specified then it means all empty lines. Empty line
-                continuations are considered empty lines. `'pep8'` applies after `'space'` to add preceding lines.
-            - `'elif'`: If putting a single `If` statement to an `orelse` field of a parent `If` statement then put it
-                as an `elif`.
         - `opener_indent`: The indent string of the block opener being put to (`if`, `with`, `class`, etc...), not the
             statements in the block.
         - `block_indent`: The indent string to be applied to `put_fst` statements in the block, which is the total
@@ -1597,6 +1561,9 @@ class FSTSrcEdit:
             first of seq.
         - `fpost`: The after-last destination `FST` or `fstloc` not being replaced, may not exist if `flast` is last of
             seq.
+        - `options`: See `FST` source editing `options`. Options used here `precomms`, `postcomms`, `prespace`,
+            `postspace`, `pep8space` and `elif`. `space` options determine how many empty lines to remove in
+            destination on replace. `pep8space` also applies on insert.
 
         **Returns:**
         - `fstloc`: location where the potentially modified `fst` source should be put, replacing whatever is at the
@@ -1808,6 +1775,19 @@ class FST:
         - `'block'`: Single contiguous comment block following position.
         - `'all'`: Comment blocks (possibly separated by empty lines) following position.
         - `None`: Use default (`True`).
+    - `prespace`: Preceding empty lines (max of this and `pep8space` used).
+        - `False`: No empty lines.
+        - `True`: All empty lines.
+        - `int`: A maximum number of empty lines.
+        - `None`: Use default (`False`).
+    - `postspace`: Same as `prespace` except for trailing empty lines.
+    - `pep8space`: Preceding and trailing empty lines for function and class definitions.
+        - `False`: No empty lines.
+        - `True`: Two empty lines at module scope and one empty line in other scopes.
+        - `1`: One empty line in all scopes.
+        - `None`: Use default (`True`).
+    - `elif`: `True` or `False`, if putting a single `If` statement to an `orelse` field of a parent `If` statement then
+        put it as an `elif`. `None` means `False`.
     """
 
     a:            AST                        ; """The actual `AST` node."""
@@ -5056,7 +5036,7 @@ class FST:
             on cut).
         - `docstr`: How to treat multiline string docstring lines. `False` means not indentable, `True` means all `Expr`
             multiline strings are indentable (as they serve no coding purpose). `'strict'` means only multiline strings
-            in expected docstring positions are indentable.
+            in expected docstring positions are indentable. `None` means use default (`True`).
 
         **Returns:**
         - `set[int]`: Set of line numbers (zero based) which are sytactically indentable.
@@ -5166,6 +5146,9 @@ class FST:
         """Return the location of enclosing parentheses if present. Will balance parentheses if `self` is an element of
         a tuple and not return the parentheses of the tuple. Likwise will not return the parentheses of an enclosing
         `arguments`  parent. Only works on (and makes sense for) `expr` or `pattern` nodes, otherwise `self.bloc`.
+
+        **Parameters:**
+        - `pars`: `True` means return parentheses if present and `self.bloc` otherwise, `False` always `self.bloc`.
 
         **Returns:**
         - `fstloc`: Location of enclosing parentheses if present else `self.bloc`.
