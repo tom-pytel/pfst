@@ -1,7 +1,8 @@
 import re
 from ast import *
 from ast import parse as ast_parse, unparse as ast_unparse
-from typing import Any, Callable, Generator, Literal, NamedTuple, Optional, TypeAlias, Union
+from io import TextIOBase
+from typing import Any, Callable, Generator, Literal, NamedTuple, Optional, TextIO, TypeAlias, Union
 
 from .util import *
 from .util import TryStar
@@ -2061,26 +2062,27 @@ class FST:
         return f'{tail} {loc[0]},{loc[1]} -> {loc[2]},{loc[3]}' if loc else tail
 
     def _dump(self, full: bool = False, indent: int = 2, cind: str = '', prefix: str = '', linefunc: Callable = print,
-              compact: bool = False):
+              compact: bool = False, eol: str = ''):
         tail = self._repr_tail()
         sind = ' ' * indent
         ast  = self.a
 
         if compact:
             if isinstance(ast, Name):
-                linefunc(f'{cind}{prefix}Name {ast.id!r} {ast.ctx.__class__.__qualname__}{" .." * bool(tail)}{tail}')
+                linefunc(f'{cind}{prefix}Name {ast.id!r} {ast.ctx.__class__.__qualname__}{" .." * bool(tail)}{tail}'
+                         f'{eol}')
 
                 return
 
             if isinstance(ast, Constant):
                 if ast.kind is None:
-                    linefunc(f'{cind}{prefix}Constant {ast.value!r}{" .." * bool(tail)}{tail}')
+                    linefunc(f'{cind}{prefix}Constant {ast.value!r}{" .." * bool(tail)}{tail}{eol}')
                 else:
-                    linefunc(f'{cind}{prefix}Constant {ast.value!r} {ast.kind}{" .." * bool(tail)}{tail}')
+                    linefunc(f'{cind}{prefix}Constant {ast.value!r} {ast.kind}{" .." * bool(tail)}{tail}{eol}')
 
                 return
 
-        linefunc(f'{cind}{prefix}{ast.__class__.__qualname__}{" .." * bool(tail)}{tail}')
+        linefunc(f'{cind}{prefix}{ast.__class__.__qualname__}{" .." * bool(tail)}{tail}{eol}')
 
         for name, child in iter_fields(ast):
             is_list = isinstance(child, list)
@@ -2090,7 +2092,8 @@ class FST:
                     continue
 
                 if name in ('ctx', 'op'):
-                    linefunc(f'{sind}{cind}.{name} {child.__class__.__qualname__ if isinstance(child, AST) else child}')
+                    linefunc(f'{sind}{cind}.{name} {child.__class__.__qualname__ if isinstance(child, AST) else child}'
+                             f'{eol}')
 
                     continue
 
@@ -2104,30 +2107,30 @@ class FST:
                              ('body', 'orelse'))
                 ):
                     if isinstance(child, AST):
-                        child.f._dump(full, indent, cind + sind, f'.{name} ', linefunc, compact)
+                        child.f._dump(full, indent, cind + sind, f'.{name} ', linefunc, compact, eol)
                     else:
-                        linefunc(f'{sind}{cind}.{name} {child!r}')
+                        linefunc(f'{sind}{cind}.{name} {child!r}{eol}')
 
                     continue
 
-                if not full and (isinstance(child, arguments) and not child.posonlyargs and not child.args and not child.vararg
-                        and not child.kwonlyargs and not child.kwarg):
+                if not full and (isinstance(child, arguments) and not child.posonlyargs and not child.args
+                                 and not child.vararg and not child.kwonlyargs and not child.kwarg):
                     continue
 
             if full or (child != []):
-                linefunc(f'{sind}{cind}.{name}{f"[{len(child)}]" if is_list else ""}')
+                linefunc(f'{sind}{cind}.{name}{f"[{len(child)}]" if is_list else ""}{eol}')
 
             if is_list:
                 for i, ast in enumerate(child):
                     if isinstance(ast, AST):
-                        ast.f._dump(full, indent, cind + sind, f'{i}] ', linefunc, compact)
+                        ast.f._dump(full, indent, cind + sind, f'{i}] ', linefunc, compact, eol)
                     else:
-                        linefunc(f'{sind}{cind}{i}] {ast!r}')
+                        linefunc(f'{sind}{cind}{i}] {ast!r}{eol}')
 
             elif isinstance(child, AST):
-                child.f._dump(full, indent, cind + sind * 2, '', linefunc, compact)
+                child.f._dump(full, indent, cind + sind * 2, '', linefunc, compact, eol)
             else:
-                linefunc(f'{sind}{sind}{cind}{child!r}')
+                linefunc(f'{sind}{sind}{cind}{child!r}{eol}')
 
     def _prev_ast_bound(self, with_loc: bool | Literal['own'] | Literal['allown'] = True) -> tuple[int, int]:
         """Get a prev bound for search after any ASTs for this object. This is safe to call for nodes that live inside
@@ -3486,31 +3489,38 @@ class FST:
 
         return self
 
-    def dump(self, linefunc: Callable = print, *, full: bool = False, indent: int = 2, compact: bool = False,
-             ) -> list[str] | None:
+    def dump(self, out: Callable | TextIO = print, *, compact: bool = False, full: bool = False, indent: int = 2,
+             eol: str | None = None) -> list[str] | None:
         """Dump a representation of the tree to stdout or return as a list of lines.
 
         **Parameters:**
-        - `linefunc`: `print` means print to stdout, `list` returns a list of lines and `str` returns a whole string.
+        - `out`: `print` means print to stdout, `list` returns a list of lines and `str` returns a whole string.
             Otherwise a `Callable[[str], None]` which is called for each line of output individually.
+        - `compact`: If `True` then the dump is compacted a bit by listing `Name` and `Constant` nodes on a single
+            line.
         - `full`: If `True` then will list all fields in nodes including empty ones, otherwise will exclude most empty
             fields.
         - `indent`: The average airspeed of an unladen swallow.
-        - `compact`: If `True` then the dump is compacted a bit by listing `Name` and `Constant` nodes on a single
-            line.
+        - 'eol': What to put at the end of each text line, `None` means newline for `TextIO` out and nothing for other.
         """
 
-        if linefunc is print:
-            return self._dump(full, indent, linefunc=print, compact=compact)
+        if isinstance(out, TextIOBase):
+            out = out.write
 
-        if linefunc in (str, list):
+            if eol is None:
+                eol = '\n'
+
+        elif eol is None:
+            eol = ''
+
+        if out in (str, list):
             lines = []
 
-            self._dump(full, indent, linefunc=lines.append, compact=compact)
+            self._dump(full, indent, linefunc=lines.append, compact=compact, eol=eol)
 
-            return lines if linefunc is list else '\n'.join(lines)
+            return lines if out is list else '\n'.join(lines)
 
-        self._dump(full, indent, linefunc=linefunc, compact=compact)
+        return self._dump(full, indent, linefunc=out, compact=compact, eol=eol)
 
     # ------------------------------------------------------------------------------------------------------------------
 

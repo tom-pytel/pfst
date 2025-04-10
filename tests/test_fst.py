@@ -16473,7 +16473,7 @@ i # post
             f     = eval(f't.{elt}', {'t': t}).f
             s     = f.copy(fix=True)
             ssrc  = s.src
-            sdump = s.dump(linefunc=list, compact=True)
+            sdump = s.dump(out=list, compact=True)
 
             try:
                 self.assertEqual(ssrc, slice_copy.strip())
@@ -18618,7 +18618,7 @@ class cls:
                 s     = f.get_slice(start, stop, cut=False)
                 tsrc  = t.f.src
                 ssrc  = s.src
-                sdump = s.dump(linefunc=list, compact=True)
+                sdump = s.dump(out=list, compact=True)
 
                 self.assertEqual(tsrc, src.strip())
                 self.assertEqual(ssrc, slice_copy.strip())
@@ -18642,8 +18642,8 @@ class cls:
                 s     = f.get_slice(start, stop, cut=True)
                 tsrc  = t.f.src
                 ssrc  = s.src
-                tdump = t.f.dump(linefunc=list, compact=True)
-                sdump = s.dump(linefunc=list, compact=True)
+                tdump = t.f.dump(out=list, compact=True)
+                sdump = s.dump(out=list, compact=True)
 
                 self.assertEqual(tsrc, src_cut.strip())
                 self.assertEqual(ssrc, slice_copy.strip())
@@ -18673,7 +18673,7 @@ class cls:
                     s     = f.get_slice(start, stop, field, cut=False, **options)
                     tsrc  = t.f.src
                     ssrc  = s.src
-                    sdump = s.dump(linefunc=list, compact=True)
+                    sdump = s.dump(out=list, compact=True)
 
                     if verify:
                         t.f.verify(raise_=True)
@@ -18704,8 +18704,8 @@ class cls:
                     s     = f.get_slice(start, stop, field, cut=True, **options)
                     tsrc  = t.f.src
                     ssrc  = s.src
-                    tdump = t.f.dump(linefunc=list, compact=True)
-                    sdump = s.dump(linefunc=list, compact=True)
+                    tdump = t.f.dump(out=list, compact=True)
+                    sdump = s.dump(out=list, compact=True)
 
                     if verify:
                         t.f.verify(raise_=True)
@@ -18736,7 +18736,7 @@ class cls:
                 f.put_slice(None, start, stop)
 
                 tdst  = t.f.src
-                tdump = t.f.dump(linefunc=list, compact=True)
+                tdump = t.f.dump(out=list, compact=True)
 
                 self.assertEqual(tdst, src_cut.strip())
                 self.assertEqual(tdump, src_dump.strip().split('\n'))
@@ -18757,7 +18757,7 @@ class cls:
                 f.put_slice(None if src == '**DEL**' else src, start, stop)
 
                 tdst  = t.f.src
-                tdump = t.f.dump(linefunc=list, compact=True)
+                tdump = t.f.dump(out=list, compact=True)
 
                 self.assertEqual(tdst, put_src.strip())
                 self.assertEqual(tdump, put_dump.strip().split('\n'))
@@ -18785,7 +18785,7 @@ class cls:
                     f.put_slice(None, start, stop, field, **options)
 
                     tsrc  = t.f.src
-                    tdump = t.f.dump(linefunc=list, compact=True)
+                    tdump = t.f.dump(out=list, compact=True)
 
                     if verify:
                         t.f.verify(raise_=True)
@@ -18810,7 +18810,7 @@ class cls:
             f.put_slice(None if src == '**DEL**' else src, start, stop, field, **options)
 
             tdst  = t.f.src
-            tdump = t.f.dump(linefunc=list, compact=True)
+            tdump = t.f.dump(out=list, compact=True)
 
             t.f.verify(raise_=True)
 
@@ -18992,7 +18992,7 @@ def regen_copy_data():
         f     = eval(f't.{elt}', {'t': t}).f
         s     = f.copy(fix=True)
         ssrc  = s.src
-        sdump = s.dump(linefunc=list, compact=True)
+        sdump = s.dump(out=list, compact=True)
 
         assert not ssrc.startswith('\n') or ssrc.endswith('\n')
 
@@ -19028,8 +19028,8 @@ def regen_get_slice_seq():
             s     = f.get_slice(start, stop, cut=True)
             tsrc  = t.f.src
             ssrc  = s.src
-            tdump = t.f.dump(linefunc=list, compact=True)
-            sdump = s.dump(linefunc=list, compact=True)
+            tdump = t.f.dump(out=list, compact=True)
+            sdump = s.dump(out=list, compact=True)
 
             assert not tsrc.startswith('\n') or tsrc.endswith('\n')
             assert not ssrc.startswith('\n') or ssrc.endswith('\n')
@@ -19066,8 +19066,8 @@ def regen_get_slice_stmt():
             s     = f.get_slice(start, stop, field, cut=True, **options)
             tsrc  = t.f.src
             ssrc  = s.src
-            tdump = t.f.dump(linefunc=list, compact=True)
-            sdump = s.dump(linefunc=list, compact=True)
+            tdump = t.f.dump(out=list, compact=True)
+            sdump = s.dump(out=list, compact=True)
 
             if verify:
                 t.f.verify(raise_=True)
@@ -19098,7 +19098,7 @@ def regen_put_slice_seq():
         f.put_slice(None if src == '**DEL**' else src, start, stop)
 
         tdst  = t.f.src
-        tdump = t.f.dump(linefunc=list, compact=True)
+        tdump = t.f.dump(out=list, compact=True)
 
         assert not tdst.startswith('\n') or tdst.endswith('\n')
 
@@ -19130,7 +19130,7 @@ def regen_put_slice_stmt():
         f.put_slice(None if src == '**DEL**' else src, start, stop, field, **options)
 
         tdst  = t.f.src
-        tdump = t.f.dump(linefunc=list, compact=True)
+        tdump = t.f.dump(out=list, compact=True)
 
         t.f.verify(raise_=True)
 

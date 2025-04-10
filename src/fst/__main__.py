@@ -40,7 +40,7 @@ def main():
     if args.no_verify:
         ast.f.verify(raise_=True)
 
-    ast.f.dump(full=args.full, indent=args.indent, compact=args.compact)
+    ast.f.dump(compact=args.compact, full=args.full, indent=args.indent)
 
 
 if __name__ == '__main__':
