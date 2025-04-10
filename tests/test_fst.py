@@ -14915,7 +14915,7 @@ k \\
         a = parse('''
 if 1: i ; j ; l ; m
             '''.strip())
-        a.f.body[0]._normalize_block()
+        a.body[0].f._normalize_block()
         a.f.verify()
         self.assertEqual(a.f.src, 'if 1:\n    i ; j ; l ; m')
 
@@ -14925,13 +14925,13 @@ def f() -> int: \\
   ; \\
   j
             '''.strip())
-        a.f.body[0]._normalize_block()
+        a.body[0].f._normalize_block()
         a.f.verify()
         self.assertEqual(a.f.src, 'def f() -> int:\n    i \\\n  ; \\\n  j')
 
         a = parse('''def f(a = """ a
 ...   # something """): i = 2''')
-        a.f.body[0]._normalize_block()
+        a.body[0].f._normalize_block()
         self.assertEqual(a.f.src, 'def f(a = """ a\n...   # something """):\n    i = 2')
 
     def test__elif_to_else_if(self):
@@ -16900,39 +16900,39 @@ if indented:
 
         fst2 = fst.copy()
 
-        fst.body[1].cases[0].cut()
-        # fst.body[1].put_slice('pass')
-        fst.body[1]._put_slice_stmt('pass', None, None, None, False, True, force=True)
+        fst.a.body[1].cases[0].f.cut()
+        # fst.a.body[1].f.put_slice('pass')
+        fst.a.body[1].f._put_slice_stmt('pass', None, None, None, False, True, force=True)
 
         points = [
-            (fst.body[0].cases[0], 'body'),
-            (fst.body[1], 'cases'),
-            (fst.body[2], 'body'),
-            (fst.body[2], 'orelse'),
+            (fst.a.body[0].cases[0].f, 'body'),
+            (fst.a.body[1].f, 'cases'),
+            (fst.a.body[2].f, 'body'),
+            (fst.a.body[2].f, 'orelse'),
 
-            (fst.body[3], 'body'),
-            (fst.body[3], 'handlers'),
-            (fst.body[3], 'orelse'),
-            (fst.body[3], 'finalbody'),
+            (fst.a.body[3].f, 'body'),
+            (fst.a.body[3].f, 'handlers'),
+            (fst.a.body[3].f, 'orelse'),
+            (fst.a.body[3].f, 'finalbody'),
 
-            (fst.body[4], 'body'),
-            (fst.body[4], 'orelse'),
-            (fst.body[5], 'body'),
-            (fst.body[5], 'orelse'),
-            (fst.body[6], 'body'),
-            (fst.body[6], 'orelse'),
-            (fst.body[7], 'body'),
-            (fst.body[8], 'body'),
-            (fst.body[9], 'body'),
-            (fst.body[10], 'body'),
-            (fst.body[11], 'body'),
-            (fst.body[12].body[0], 'body'),
-            (fst.body[12].body[0], 'orelse'),
+            (fst.a.body[4].f, 'body'),
+            (fst.a.body[4].f, 'orelse'),
+            (fst.a.body[5].f, 'body'),
+            (fst.a.body[5].f, 'orelse'),
+            (fst.a.body[6].f, 'body'),
+            (fst.a.body[6].f, 'orelse'),
+            (fst.a.body[7].f, 'body'),
+            (fst.a.body[8].f, 'body'),
+            (fst.a.body[9].f, 'body'),
+            (fst.a.body[10].f, 'body'),
+            (fst.a.body[11].f, 'body'),
+            (fst.a.body[12].body[0].f, 'body'),
+            (fst.a.body[12].body[0].f, 'orelse'),
 
-            (fst.body[13].body[0], 'body'),
-            (fst.body[13].body[0], 'handlers'),
-            (fst.body[13].body[0], 'orelse'),
-            (fst.body[13].body[0], 'finalbody'),
+            (fst.a.body[13].body[0].f, 'body'),
+            (fst.a.body[13].body[0].f, 'handlers'),
+            (fst.a.body[13].body[0].f, 'orelse'),
+            (fst.a.body[13].body[0].f, 'finalbody'),
         ]
 
         lines = []
@@ -17071,38 +17071,38 @@ if indented:
 
         fst = fst2
 
-        fst.body[1].cases[0].cut()
-        fst.body[1]._put_slice_stmt('pass', None, None, None, False, True, force=True)
+        fst.a.body[1].cases[0].f.cut()
+        fst.a.body[1].f._put_slice_stmt('pass', None, None, None, False, True, force=True)
 
         points = [
-            (fst.body[0].cases[0], 'body'),
-            (fst.body[1], 'cases'),
-            (fst.body[2], 'body'),
-            (fst.body[2], 'orelse'),
+            (fst.a.body[0].cases[0].f, 'body'),
+            (fst.a.body[1].f, 'cases'),
+            (fst.a.body[2].f, 'body'),
+            (fst.a.body[2].f, 'orelse'),
 
-            (fst.body[3], 'body'),
-            (fst.body[3], 'handlers'),
-            (fst.body[3], 'orelse'),
-            (fst.body[3], 'finalbody'),
+            (fst.a.body[3].f, 'body'),
+            (fst.a.body[3].f, 'handlers'),
+            (fst.a.body[3].f, 'orelse'),
+            (fst.a.body[3].f, 'finalbody'),
 
-            (fst.body[4], 'body'),
-            (fst.body[4], 'orelse'),
-            (fst.body[5], 'body'),
-            (fst.body[5], 'orelse'),
-            (fst.body[6], 'body'),
-            (fst.body[6], 'orelse'),
-            (fst.body[7], 'body'),
-            (fst.body[8], 'body'),
-            (fst.body[9], 'body'),
-            (fst.body[10], 'body'),
-            (fst.body[11], 'body'),
-            (fst.body[12].body[0], 'body'),
-            (fst.body[12].body[0], 'orelse'),
+            (fst.a.body[4].f, 'body'),
+            (fst.a.body[4].f, 'orelse'),
+            (fst.a.body[5].f, 'body'),
+            (fst.a.body[5].f, 'orelse'),
+            (fst.a.body[6].f, 'body'),
+            (fst.a.body[6].f, 'orelse'),
+            (fst.a.body[7].f, 'body'),
+            (fst.a.body[8].f, 'body'),
+            (fst.a.body[9].f, 'body'),
+            (fst.a.body[10].f, 'body'),
+            (fst.a.body[11].f, 'body'),
+            (fst.a.body[12].body[0].f, 'body'),
+            (fst.a.body[12].body[0].f, 'orelse'),
 
-            (fst.body[13].body[0], 'body'),
-            (fst.body[13].body[0], 'handlers'),
-            (fst.body[13].body[0], 'orelse'),
-            (fst.body[13].body[0], 'finalbody'),
+            (fst.a.body[13].body[0].f, 'body'),
+            (fst.a.body[13].body[0].f, 'handlers'),
+            (fst.a.body[13].body[0].f, 'orelse'),
+            (fst.a.body[13].body[0].f, 'finalbody'),
         ]
 
         for point, field in points:
@@ -17276,39 +17276,39 @@ if indented:
 
         fst2 = fst.copy()
 
-        fst.body[1].cases[0].cut()
-        # fst.body[1].put_slice('pass')
-        fst.body[1]._put_slice_stmt('pass', None, None, None, False, True, force=True)
+        fst.a.body[1].cases[0].f.cut()
+        # fst.a.body[1].f.put_slice('pass')
+        fst.a.body[1].f._put_slice_stmt('pass', None, None, None, False, True, force=True)
 
         points = [
-            (fst.body[0].cases[0], 'body'),
-            (fst.body[1], 'cases'),
-            (fst.body[2], 'body'),
-            (fst.body[2], 'orelse'),
+            (fst.a.body[0].cases[0].f, 'body'),
+            (fst.a.body[1].f, 'cases'),
+            (fst.a.body[2].f, 'body'),
+            (fst.a.body[2].f, 'orelse'),
 
-            (fst.body[3], 'body'),
-            (fst.body[3], 'handlers'),
-            (fst.body[3], 'orelse'),
-            (fst.body[3], 'finalbody'),
+            (fst.a.body[3].f, 'body'),
+            (fst.a.body[3].f, 'handlers'),
+            (fst.a.body[3].f, 'orelse'),
+            (fst.a.body[3].f, 'finalbody'),
 
-            (fst.body[4], 'body'),
-            (fst.body[4], 'orelse'),
-            (fst.body[5], 'body'),
-            (fst.body[5], 'orelse'),
-            (fst.body[6], 'body'),
-            (fst.body[6], 'orelse'),
-            (fst.body[7], 'body'),
-            (fst.body[8], 'body'),
-            (fst.body[9], 'body'),
-            (fst.body[10], 'body'),
-            (fst.body[11], 'body'),
-            (fst.body[12].body[0], 'body'),
-            (fst.body[12].body[0], 'orelse'),
+            (fst.a.body[4].f, 'body'),
+            (fst.a.body[4].f, 'orelse'),
+            (fst.a.body[5].f, 'body'),
+            (fst.a.body[5].f, 'orelse'),
+            (fst.a.body[6].f, 'body'),
+            (fst.a.body[6].f, 'orelse'),
+            (fst.a.body[7].f, 'body'),
+            (fst.a.body[8].f, 'body'),
+            (fst.a.body[9].f, 'body'),
+            (fst.a.body[10].f, 'body'),
+            (fst.a.body[11].f, 'body'),
+            (fst.a.body[12].body[0].f, 'body'),
+            (fst.a.body[12].body[0].f, 'orelse'),
 
-            (fst.body[13].body[0], 'body'),
-            (fst.body[13].body[0], 'handlers'),
-            (fst.body[13].body[0], 'orelse'),
-            (fst.body[13].body[0], 'finalbody'),
+            (fst.a.body[13].body[0].f, 'body'),
+            (fst.a.body[13].body[0].f, 'handlers'),
+            (fst.a.body[13].body[0].f, 'orelse'),
+            (fst.a.body[13].body[0].f, 'finalbody'),
         ]
 
         lines = []
@@ -17471,39 +17471,39 @@ if indented:
 
         fst = fst2
 
-        fst.body[1].cases[0].cut()
-        # fst.body[1].put_slice('pass')
-        fst.body[1]._put_slice_stmt('pass', None, None, None, False, True, force=True)
+        fst.a.body[1].cases[0].f.cut()
+        # fst.a.body[1].f.put_slice('pass')
+        fst.a.body[1].f._put_slice_stmt('pass', None, None, None, False, True, force=True)
 
         points = [
-            (fst.body[0].cases[0], 'body'),
-            (fst.body[1], 'cases'),
-            (fst.body[2], 'body'),
-            (fst.body[2], 'orelse'),
+            (fst.a.body[0].cases[0].f, 'body'),
+            (fst.a.body[1].f, 'cases'),
+            (fst.a.body[2].f, 'body'),
+            (fst.a.body[2].f, 'orelse'),
 
-            (fst.body[3], 'body'),
-            (fst.body[3], 'handlers'),
-            (fst.body[3], 'orelse'),
-            (fst.body[3], 'finalbody'),
+            (fst.a.body[3].f, 'body'),
+            (fst.a.body[3].f, 'handlers'),
+            (fst.a.body[3].f, 'orelse'),
+            (fst.a.body[3].f, 'finalbody'),
 
-            (fst.body[4], 'body'),
-            (fst.body[4], 'orelse'),
-            (fst.body[5], 'body'),
-            (fst.body[5], 'orelse'),
-            (fst.body[6], 'body'),
-            (fst.body[6], 'orelse'),
-            (fst.body[7], 'body'),
-            (fst.body[8], 'body'),
-            (fst.body[9], 'body'),
-            (fst.body[10], 'body'),
-            (fst.body[11], 'body'),
-            (fst.body[12].body[0], 'body'),
-            (fst.body[12].body[0], 'orelse'),
+            (fst.a.body[4].f, 'body'),
+            (fst.a.body[4].f, 'orelse'),
+            (fst.a.body[5].f, 'body'),
+            (fst.a.body[5].f, 'orelse'),
+            (fst.a.body[6].f, 'body'),
+            (fst.a.body[6].f, 'orelse'),
+            (fst.a.body[7].f, 'body'),
+            (fst.a.body[8].f, 'body'),
+            (fst.a.body[9].f, 'body'),
+            (fst.a.body[10].f, 'body'),
+            (fst.a.body[11].f, 'body'),
+            (fst.a.body[12].body[0].f, 'body'),
+            (fst.a.body[12].body[0].f, 'orelse'),
 
-            (fst.body[13].body[0], 'body'),
-            (fst.body[13].body[0], 'handlers'),
-            (fst.body[13].body[0], 'orelse'),
-            (fst.body[13].body[0], 'finalbody'),
+            (fst.a.body[13].body[0].f, 'body'),
+            (fst.a.body[13].body[0].f, 'handlers'),
+            (fst.a.body[13].body[0].f, 'orelse'),
+            (fst.a.body[13].body[0].f, 'finalbody'),
         ]
 
         for point, field in points:
@@ -17594,7 +17594,7 @@ if 1:
     i \\
 
 '''.lstrip())
-        a.f.body[0].put_slice('j', field='orelse')
+        a.body[0].f.put_slice('j', field='orelse')
         a.f.verify()
         self.assertEqual(a.f.src, 'if 1:\n    i\nelse:\n    j\n\n')
 
@@ -18246,34 +18246,34 @@ if indented:
         j = (i := k)
 '''.lstrip()).f
 
-        fst.body[1].cases[0].cut()
-        # fst.body[1].put_slice('pass')
-        fst.body[1]._put_slice_stmt('pass', None, None, None, False, True, force=True)
+        fst.a.body[1].cases[0].f.cut()
+        # fst.a.body[1].f.put_slice('pass')
+        fst.a.body[1].f._put_slice_stmt('pass', None, None, None, False, True, force=True)
 
         points = [
-            (fst.body[0].cases[0], 'body'),
-            (fst.body[1], 'cases'),
-            (fst.body[2], 'body'),
-            (fst.body[2], 'orelse'),
-            (fst.body[3], 'body'),
-            (fst.body[3], 'handlers'),
-            (fst.body[3], 'orelse'),
-            (fst.body[3], 'finalbody'),
-            (fst.body[4], 'body'),
-            (fst.body[4], 'orelse'),
-            (fst.body[5], 'body'),
-            (fst.body[5], 'orelse'),
-            (fst.body[6], 'body'),
-            (fst.body[6], 'orelse'),
-            (fst.body[7], 'body'),
-            (fst.body[8], 'body'),
-            (fst.body[9], 'body'),
-            (fst.body[10], 'body'),
-            (fst.body[11], 'body'),
-            (fst.body[12].body[0], 'body'),
-            (fst.body[12].body[0], 'handlers'),
-            (fst.body[12].body[0], 'orelse'),
-            (fst.body[12].body[0], 'finalbody'),
+            (fst.a.body[0].cases[0].f, 'body'),
+            (fst.a.body[1].f, 'cases'),
+            (fst.a.body[2].f, 'body'),
+            (fst.a.body[2].f, 'orelse'),
+            (fst.a.body[3].f, 'body'),
+            (fst.a.body[3].f, 'handlers'),
+            (fst.a.body[3].f, 'orelse'),
+            (fst.a.body[3].f, 'finalbody'),
+            (fst.a.body[4].f, 'body'),
+            (fst.a.body[4].f, 'orelse'),
+            (fst.a.body[5].f, 'body'),
+            (fst.a.body[5].f, 'orelse'),
+            (fst.a.body[6].f, 'body'),
+            (fst.a.body[6].f, 'orelse'),
+            (fst.a.body[7].f, 'body'),
+            (fst.a.body[8].f, 'body'),
+            (fst.a.body[9].f, 'body'),
+            (fst.a.body[10].f, 'body'),
+            (fst.a.body[11].f, 'body'),
+            (fst.a.body[12].body[0].f, 'body'),
+            (fst.a.body[12].body[0].f, 'handlers'),
+            (fst.a.body[12].body[0].f, 'orelse'),
+            (fst.a.body[12].body[0].f, 'finalbody'),
         ]
 
         seed(0)
@@ -18468,30 +18468,30 @@ if indented:
         pass
 '''.lstrip()).f
 
-        fst.body[1].cases[0].cut()
-        # fst.body[1].put_slice('pass')
-        fst.body[1]._put_slice_stmt('pass', None, None, None, False, True, force=True)
+        fst.a.body[1].cases[0].f.cut()
+        # fst.a.body[1].f.put_slice('pass')
+        fst.a.body[1].f._put_slice_stmt('pass', None, None, None, False, True, force=True)
 
         points = [
-            (fst.body[0].cases[0], 'body'),
-            (fst.body[1], 'cases'),
-            (fst.body[2], 'body'),
+            (fst.a.body[0].cases[0].f, 'body'),
+            (fst.a.body[1].f, 'cases'),
+            (fst.a.body[2].f, 'body'),
 
-            (fst.body[3], 'body'),
-            (fst.body[3], 'handlers'),
+            (fst.a.body[3].f, 'body'),
+            (fst.a.body[3].f, 'handlers'),
 
-            (fst.body[4], 'body'),
-            (fst.body[5], 'body'),
-            (fst.body[6], 'body'),
-            (fst.body[7], 'body'),
-            (fst.body[8], 'body'),
-            (fst.body[9], 'body'),
-            (fst.body[10], 'body'),
-            (fst.body[11], 'body'),
-            (fst.body[12].body[0], 'body'),
+            (fst.a.body[4].f, 'body'),
+            (fst.a.body[5].f, 'body'),
+            (fst.a.body[6].f, 'body'),
+            (fst.a.body[7].f, 'body'),
+            (fst.a.body[8].f, 'body'),
+            (fst.a.body[9].f, 'body'),
+            (fst.a.body[10].f, 'body'),
+            (fst.a.body[11].f, 'body'),
+            (fst.a.body[12].body[0].f, 'body'),
 
-            (fst.body[13].body[0], 'body'),
-            (fst.body[13].body[0], 'handlers'),
+            (fst.a.body[13].body[0].f, 'body'),
+            (fst.a.body[13].body[0].f, 'handlers'),
         ]
 
         for point, field in points:
@@ -18921,16 +18921,39 @@ class cls:
         a.body[0].value.f.put_slice('(a, \\\n)', 0, 3)
         self.assertEqual(a.f.src, '(a, \\\n)')
 
-    def test_fstlistproxy(self):  # TODO: add more
+    def test_fstlistproxy(self):
         a = parse('''
 class cls:
     def prefunc(): pass
     def postfunc(): pass
             '''.strip())
         self.assertIsInstance(a.f.body, fstlistproxy)
-        self.assertIsInstance(a.f.body[0].body, fstlistproxy)
-        a.f.body[0].body.cut()
-        self.assertIsInstance(a.f.body[0].body, fstlistproxy)
+        self.assertIsInstance(a.body[0].f.body, fstlistproxy)
+        a.body[0].f.body.cut()
+        self.assertIsInstance(a.body[0].f.body, fstlistproxy)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 def regen_pars_data():

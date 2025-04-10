@@ -506,7 +506,7 @@ def _fixup_field_body(ast: AST, field: str | None = None) -> tuple[str, 'AST']:
     return field, body
 
 
-def _fixup_slice_index(ast, body, field, start, stop) -> tuple[int, int]:
+def _fixup_slice_index(owner, body, field, start, stop) -> tuple[int, int]:
     len_body = len(body)
 
     if start is None:
@@ -519,8 +519,11 @@ def _fixup_slice_index(ast, body, field, start, stop) -> tuple[int, int]:
     elif stop < 0:
         stop += len_body
 
-    if start < 0 or start > len_body or stop < 0 or stop > len_body:
-        raise IndexError(f"{ast.__class__.__name__}.{field} index out of range")
+    if not 0 <= start <= len_body or not 0 <= stop <= len_body:
+        raise IndexError(f"{owner.__class__.__name__}.{field} index out of range")
+
+    if stop < start:
+        stop = start
 
     return start, stop
 
@@ -531,7 +534,6 @@ def _normalize_code(code: Code, coerce: Literal['expr'] | Literal['mod'] | None 
 
     If neither of these is requested then will convert to `ast.Module` if is `ast.Interactive` or return single
     expression node of `ast.Expression` or just return whatever the node currently is.
-
 
     **Parameters:**
     - `coerce`: What kind of coercion to apply (if any):
@@ -687,7 +689,7 @@ class fstlistproxy:
         if isinstance(idx, int):
             self.owner.put(code, idx, field=self.field)
         elif idx.step is not None:
-            raise ValueError('step slicing not supported')
+            raise IndexError('step slicing not supported')
         else:
             self.owner.put_slice(code, idx.start, idx.stop, self.field)
 
@@ -695,7 +697,7 @@ class fstlistproxy:
         if isinstance(idx, int):
             self.owner.put_slice(None, idx, idx + 1, field=self.field)
         elif idx.step is not None:
-            raise ValueError('step slicing not supported')
+            raise IndexError('step slicing not supported')
         else:
             self.owner.put_slice(None, idx.start, idx.stop, self.field)
 
@@ -705,28 +707,23 @@ class fstlistproxy:
     def cut(self, *, fix: bool = True, **options) -> 'FST':
         return self.owner.get_slice(i := self.start, i + len(self.asts), self.field, fix=fix, cut=True, **options)
 
-    def put(self, code: Code, **options) -> 'FST':  # -> Self
-        self.owner.put_slice(code, i := self.start, i + len(self.asts), self.field, True, **options)
-
-        return self
-
     def append(self, code: Code, **options) -> 'FST':  # -> Self
-        self.owner.put_slice(code, i := self.start + len(self.asts), i, self.field, True, **options)
+        self.owner.put_slice(code, i := self.start + len(self.asts), i, self.field, single=True, **options)
 
         return self
 
     def extend(self, code: Code, **options) -> 'FST':  # -> Self
-        self.owner.put_slice(code, i := self.start + len(self.asts), i, self.field, False, **options)
+        self.owner.put_slice(code, i := self.start + len(self.asts), i, self.field, single=False, **options)
 
         return self
 
     def prepend(self, code: Code, **options) -> 'FST':  # -> Self
-        self.owner.put_slice(code, i := self.start, i, self.field, True, **options)
+        self.owner.put_slice(code, i := self.start, i, self.field, single=True, **options)
 
         return self
 
     def prextend(self, code: Code, **options) -> 'FST':  # -> Self
-        self.owner.put_slice(code, i := self.start, i, self.field, False, **options)
+        self.owner.put_slice(code, i := self.start, i, self.field, single=False, **options)
 
         return self
 
@@ -1698,9 +1695,9 @@ class FSTSrcEdit:
 
         if not fpre and not fpost and is_orelse and isinstance(fst.a, If):  # possible else <-> elif changes
             put_body    = put_fst.a.body
-            orelse      = fst.orelse
+            orelse      = fst.a.orelse
             opt_elif    = DEFAULT_ELIF if (o := options.get('elif')) is None else o
-            is_old_elif = orelse[0].is_elif()
+            is_old_elif = orelse[0].f.is_elif()
             is_new_elif = opt_elif and len(put_body) == 1 and isinstance(put_body[0], If)
 
             if is_new_elif:
@@ -2259,7 +2256,7 @@ class FST:
             return key.f
 
         if idx := value.pfield.idx:
-            f   = value.parent.values[idx - 1]  # because of multiline strings, could be a fake comment start inside one which hides a valid '**'
+            f   = value.parent.a.values[idx - 1].f  # because of multiline strings, could be a fake comment start inside one which hides a valid '**'
             ln  = f.end_ln
             col = f.end_col
 
@@ -3710,6 +3707,8 @@ class FST:
 
         if stop is not False:
             return self.get_slice(start, stop, field, fix=fix, cut=cut, **options)
+        elif start is None:
+            return self.get_slice(None, None, field, fix=fix, cut=cut, **options)
 
         field, body = _fixup_field_body(self.a, field)
 
@@ -3722,7 +3721,7 @@ class FST:
 
 
     def put(self, code: Code | None, start: int | None = None, stop: int | None | Literal['False'] = False,
-            field: str | None = None, *, fix: bool = True, **options) -> 'FST':  # -> Self
+            field: str | None = None, *, fix: bool = True, single: bool = True, **options) -> 'FST':  # -> Self
         """Put an individual child node or a slice of child nodes to `self`.
 
         If the `code` being put is an `AST` or `FST` then it is consumed and should not be considered valid after this
@@ -3730,7 +3729,9 @@ class FST:
         """
 
         if stop is not False:
-            return self.put_slice(code, start, stop, field, True, fix=fix, **options)
+            return self.put_slice(code, start, stop, field, fix=fix, single=single, **options)
+        elif start is None:
+            return self.put_slice(code, None, None, field, fix=fix, single=single, **options)
 
         field, body = _fixup_field_body(self.a, field)
 
@@ -3767,7 +3768,7 @@ class FST:
 
 
     def put_slice(self, code: Code | None, start: int | None = None, stop: int | None = None,
-                  field: str | None = None, single: bool = False, *, fix: bool = True, **options) -> 'FST':  # -> Self
+                  field: str | None = None, *, fix: bool = True, single: bool = False, **options) -> 'FST':  # -> Self
         """Put an a slice of child nodes to `self`.
 
         If the `code` being put is an `AST` or `FST` then it is consumed and should not be considered valid after this
