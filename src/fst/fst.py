@@ -746,6 +746,11 @@ class fstlistproxy:
 
         return f
 
+    def replace(self, code: Code, *, fix: bool = True, **options):
+        self.fst.put_slice(code, start := self.start, self.stop, self.field, single=True, **options)
+
+        self.stop = start + 1
+
     def append(self, code: Code, **options) -> 'FST':  # -> Self
         self.fst.put_slice(code, stop := self.stop, stop, self.field, single=True, **options)
 
@@ -2768,7 +2773,7 @@ class FST:
         return self._get_seq_and_dedent(get_ast, cut, seq_loc, ffirst, flast, fpre, fpost, '{', '}')
 
     def _get_slice_stmt(self, start: int | None, stop: int | None, field: str | None, fix: bool, cut: bool,
-                        *, single: bool = False, **options) -> 'FST':
+                        single: bool = False, **options) -> 'FST':
         ast         = self.a
         field, body = _fixup_field_body(ast, field)
         start, stop = _fixup_slice_index(len(body), start, stop)
@@ -3009,6 +3014,9 @@ class FST:
                         single: bool, fix: bool, **options):
         if field is not None:
             raise ValueError(f"cannot specify a field '{field}' to assign slice to a Dict")
+
+        if single:
+            raise ValueError(f'cannot put a single item to a Dict slice')
 
         if code is None:
             put_fst = None
@@ -3744,7 +3752,7 @@ class FST:
         parenta    = parent.a
 
         if isinstance(ast, STATEMENTISH_OR_STMTMOD):
-            return parent._get_slice_stmt(idx, idx + 1, field, fix=fix, cut=True, single=True, **options)
+            return parent._get_slice_stmt(idx, idx + 1, field, fix, cut=True, single=True, **options)
 
         if isinstance(parenta, (Tuple, List, Set)):
             fst = self.copy(fix=fix, **options)
@@ -3756,7 +3764,34 @@ class FST:
         # TODO: individual nodes
         # TODO: other sequences?
 
-        raise ValueError(f"cannot cut a '{parenta.__class__.__name__}'")
+        raise ValueError(f"cannot cut from a {parenta.__class__.__name__}.{field}")
+
+
+
+
+
+    def replace(self, code: Code | None, *, fix: bool = True, **options):
+        """Replace an individual node."""
+
+        if self.is_root:
+            raise ValueError('cannot replace root node')
+
+        ast        = self.a
+        parent     = self.parent
+        field, idx = self.pfield
+        parenta    = parent.a
+
+        if isinstance(ast, STATEMENTISH):
+            return parent._put_slice_stmt(code, idx, idx + 1, field, True, fix, **options)
+
+        if isinstance(parenta, (Tuple, List, Set)):
+            return parent._put_slice_tuple_list_or_set(code, idx, idx + 1, field, True, fix, **options)
+
+        # TODO: more
+
+        raise ValueError(f"cannot replace in a {parenta.__class__.__name__}.{field}")
+
+
 
 
 
@@ -3770,15 +3805,12 @@ class FST:
         elif start is None:
             return self.get_slice(None, None, field, fix=fix, cut=cut, **options)
 
-        field, body = _fixup_field_body(self.a, field)
+        _, body = _fixup_field_body(self.a, field)
 
         if cut:
             return body[start].f.cut(fix=fix, **options)
         else:
             return body[start].f.copy(fix=fix, **options)
-
-
-
 
     def put(self, code: Code | None, start: int | None = None, stop: int | None | Literal['False'] = False,
             field: str | None = None, *, fix: bool = True, single: bool = True, **options) -> 'FST':  # -> Self
@@ -3793,11 +3825,14 @@ class FST:
         elif start is None:
             return self.put_slice(code, None, None, field, fix=fix, single=single, **options)
 
-        field, body = _fixup_field_body(self.a, field)
+        if not single:
+            raise ValueError(f"can only use 'single=True' as a non-slice put()")
 
-        # TODO: individual nodes
+        _, body = _fixup_field_body(self.a, field)
 
-        raise NotImplementedError  # TODO: THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS! THIS!
+        body[start].f.replace(code, fix=fix, **options)
+
+        return self
 
 
 
@@ -3819,6 +3854,8 @@ class FST:
 
         if self.is_empty_set_call():
             return self._get_slice_empty_set_call(start, stop, field, fix, cut)
+
+        # TODO: more
 
         raise ValueError(f"cannot get slice from a '{ast.__class__.__name__}'")
 
@@ -3851,6 +3888,8 @@ class FST:
 
         else:
             raise ValueError(f"cannot put slice to a '{ast.__class__.__name__}'")
+
+        # TODO: more
 
         return self
 

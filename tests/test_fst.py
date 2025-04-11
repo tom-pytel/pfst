@@ -18936,20 +18936,12 @@ class cls:
         self.assertEqual('a\ne', f.src)
         self.assertEqual('b\nc\nd', g.src)
 
-        f = parse('a\nb\nc').f
-        f.body[1:2] = 'd\ne'
-        self.assertEqual('a\nd\ne\nc', f.src)
-
-        # TODO: when implemented single item assignment
-
-        # f = parse('a\nb\nc').f
-        # f.body[1] = 'd'
-        # self.assertEqual('a\nd\nc', f.src)
-
-        # f = parse('a\nb\nc').f
-        # def test():
-        #     f.body[1] = 'd\ne'
-        # self.assertRaises(???, test)
+        f = parse('a\nb\nc\nd\ne').f
+        g = f.body[1:4]
+        g.replace('f')
+        self.assertEqual(1, len(g))
+        self.assertEqual('f', g[0].src)
+        self.assertEqual('a\nf\ne', f.src)
 
         f = parse('a\nb\nc').f
         g = f.body[1:2]
@@ -18985,9 +18977,26 @@ class cls:
         self.assertEqual('b', g[2].src)
         self.assertEqual('a\nd\ne\nb\nc', f.src)
 
+        f = parse('a\nb\nc').f
+        f.body[1:2] = 'd\ne'
+        self.assertEqual('a\nd\ne\nc', f.src)
+
+        f = parse('a\nb\nc').f
+        f.body[1] = 'd'
+        self.assertEqual('a\nd\nc', f.src)
+
         f = parse('a\nb\nc\nd\ne').f
         f.body[1:4] = 'f'
         self.assertEqual('a\nf\ne', f.src)
+
+        f = parse('a\nb\nc\nd\ne').f
+        f.body[1:4] = 'f\ng'
+        self.assertEqual('a\nf\ng\ne', f.src)
+
+        f = parse('a\nb\nc').f
+        def test():
+            f.body[1] = 'd\ne'
+        self.assertRaises(ValueError, test)
 
         a = parse('''
 class cls:
