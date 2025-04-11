@@ -4841,6 +4841,92 @@ Module .. ROOT 0,0 -> 0,4
   0] Pass .. 0,0 -> 0,4
 """),
 
+(r"""
+if type in ('d', 'D'): cmd = 'TYPE A'; isdir = 1
+else: cmd = 'TYPE ' + type; isdir = 0
+""", 'body[0]', 0, 2, None, {}, r"""
+if type in ('d', 'D'):
+else: cmd = 'TYPE ' + type; isdir = 0
+""", r"""cmd = 'TYPE A'; isdir = 1""", r"""
+Module .. ROOT 0,0 -> 3,0
+  .body[1]
+  0] If .. 1,0 -> 2,37
+    .test Compare .. 1,3 -> 1,21
+      .left Name 'type' Load .. 1,3 -> 1,7
+      .ops[1]
+      0] In
+      .comparators[1]
+      0] Tuple .. 1,11 -> 1,21
+        .elts[2]
+        0] Constant 'd' .. 1,12 -> 1,15
+        1] Constant 'D' .. 1,17 -> 1,20
+        .ctx Load
+    .orelse[2]
+    0] Assign .. 2,6 -> 2,26
+      .targets[1]
+      0] Name 'cmd' Store .. 2,6 -> 2,9
+      .value BinOp .. 2,12 -> 2,26
+        .left Constant 'TYPE ' .. 2,12 -> 2,19
+        .op Add
+        .right Name 'type' Load .. 2,22 -> 2,26
+    1] Assign .. 2,28 -> 2,37
+      .targets[1]
+      0] Name 'isdir' Store .. 2,28 -> 2,33
+      .value Constant 0 .. 2,36 -> 2,37
+""", r"""
+Module .. ROOT 0,0 -> 0,25
+  .body[2]
+  0] Assign .. 0,0 -> 0,14
+    .targets[1]
+    0] Name 'cmd' Store .. 0,0 -> 0,3
+    .value Constant 'TYPE A' .. 0,6 -> 0,14
+  1] Assign .. 0,16 -> 0,25
+    .targets[1]
+    0] Name 'isdir' Store .. 0,16 -> 0,21
+    .value Constant 1 .. 0,24 -> 0,25
+"""),
+
+(r"""
+if type in ('d', 'D'): cmd = 'TYPE A'
+else: cmd = 'TYPE ' + type; isdir = 0
+""", 'body[0]', 0, 2, None, {}, r"""
+if type in ('d', 'D'):
+else: cmd = 'TYPE ' + type; isdir = 0
+""", r"""cmd = 'TYPE A'""", r"""
+Module .. ROOT 0,0 -> 3,0
+  .body[1]
+  0] If .. 1,0 -> 2,37
+    .test Compare .. 1,3 -> 1,21
+      .left Name 'type' Load .. 1,3 -> 1,7
+      .ops[1]
+      0] In
+      .comparators[1]
+      0] Tuple .. 1,11 -> 1,21
+        .elts[2]
+        0] Constant 'd' .. 1,12 -> 1,15
+        1] Constant 'D' .. 1,17 -> 1,20
+        .ctx Load
+    .orelse[2]
+    0] Assign .. 2,6 -> 2,26
+      .targets[1]
+      0] Name 'cmd' Store .. 2,6 -> 2,9
+      .value BinOp .. 2,12 -> 2,26
+        .left Constant 'TYPE ' .. 2,12 -> 2,19
+        .op Add
+        .right Name 'type' Load .. 2,22 -> 2,26
+    1] Assign .. 2,28 -> 2,37
+      .targets[1]
+      0] Name 'isdir' Store .. 2,28 -> 2,33
+      .value Constant 0 .. 2,36 -> 2,37
+""", r"""
+Module .. ROOT 0,0 -> 0,14
+  .body[1]
+  0] Assign .. 0,0 -> 0,14
+    .targets[1]
+    0] Name 'cmd' Store .. 0,0 -> 0,3
+    .value Constant 'TYPE A' .. 0,6 -> 0,14
+"""),
+
 ]  # END OF GET_SLICE_STMT_NOVERIFY_DATA
 
 PUT_SLICE_SEQ_DATA = [

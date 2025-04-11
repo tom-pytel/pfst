@@ -1402,11 +1402,10 @@ class FSTSrcEdit:
 
                 del_loc = fstloc(del_ln, 0, del_end_ln, del_end_col)
 
-            elif flast is ffirst:  # avoid deleting trailing newline of only statement just past block open
+            elif fst.parent and not del_loc.end_col and del_loc.ln == block_ln:  # avoid deleting trailing newline of only statement just past block open
                 del_ln, del_col, del_end_ln, del_end_col = del_loc
 
-                if not del_end_col and del_ln == block_ln:
-                    del_loc = fstloc(del_ln, del_col, (ln := del_end_ln - 1), len(lines[ln]))
+                del_loc = fstloc(del_ln, del_col, (ln := del_end_ln - 1), len(lines[ln]))
 
         # delete preceding and trailing empty lines according to 'pep8' and 'space' format flags
 
@@ -3645,7 +3644,7 @@ class FST:
 
         return FST(ast, lines=[bistr(s) for s in lines], parse_params=parse_params)
 
-    def dump(self, out: Callable | TextIO = print, *, compact: bool = False, full: bool = False, indent: int = 2,
+    def dump(self, out: Callable | TextIO = print, compact: bool = False, *, full: bool = False, indent: int = 2,
              eol: str | None = None) -> list[str] | None:
         """Dump a representation of the tree to stdout or return as a list of lines.
 
