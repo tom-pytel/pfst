@@ -613,54 +613,36 @@ def _new_empty_module(*, from_: Optional['FST'] = None) -> 'FST':
 
 
 def _new_empty_tuple(*, from_: Optional['FST'] = None) -> 'FST':
-    ast                = Tuple(elts=[], ctx=Load())
-    fst                = FST(ast, lines=[bistr('()')], from_=from_)
-    ast.lineno         = ast.end_lineno = 1
-    ast.col_offset     = 0
-    ast.end_col_offset = 2
+    ast = Tuple(elts=[], ctx=Load(), lineno=1, col_offset=0, end_lineno=1, end_col_offset=2)
 
-    return fst
+    return FST(ast, lines=[bistr('()')], from_=from_)
 
 
 def _new_empty_list(*, from_: Optional['FST'] = None) -> 'FST':
-    ast                = List(elts=[], ctx=Load())
-    fst                = FST(ast, lines=[bistr('[]')], from_=from_)
-    ast.lineno         = ast.end_lineno = 1
-    ast.col_offset     = 0
-    ast.end_col_offset = 2
+    ast = List(elts=[], ctx=Load(), lineno=1, col_offset=0, end_lineno=1, end_col_offset=2)
 
-    return fst
+    return FST(ast, lines=[bistr('[]')], from_=from_)
 
 
 def _new_empty_dict(*, from_: Optional['FST'] = None) -> 'FST':
-    ast                = Dict(keys=[], values=[])
-    fst                = FST(ast, lines=[bistr('{}')], from_=from_)
-    ast.lineno         = ast.end_lineno = 1
-    ast.col_offset     = 0
-    ast.end_col_offset = 2
+    ast = Dict(keys=[], values=[], lineno=1, col_offset=0, end_lineno=1, end_col_offset=2)
 
-    return fst
+    return FST(ast, lines=[bistr('{}')], from_=from_)
 
 
 def _new_empty_set_curlies(ast_only: bool = False, lineno: int = 1, col_offset: int = 0, *,
                            from_: Optional['FST'] = None) -> 'FST':
-    ast                = Set(elts=[])
-    ast.lineno         = ast.end_lineno = lineno
-    ast.col_offset     = col_offset
-    ast.end_col_offset = col_offset + 2
+    ast = Set(elts=[], lineno=lineno, col_offset=col_offset, end_lineno=lineno, end_col_offset=col_offset + 2)
 
     return ast if ast_only else FST(ast, lines=[bistr('{}')], from_=from_)
 
 
 def _new_empty_set_call(ast_only: bool = False, lineno: int = 1, col_offset: int = 0, *,
                         from_: Optional['FST'] = None) -> 'FST':
-    ast                     = Call(func=Name(id='set', ctx=Load()), args=[], keywords=[])
-    ast.lineno              = ast.end_lineno = lineno
-    ast.col_offset          = col_offset
-    ast.end_col_offset      = col_offset + 5
-    ast.func.lineno         = ast.func.end_lineno = lineno
-    ast.func.col_offset     = col_offset
-    ast.func.end_col_offset = col_offset + 3
+    ast = Call(func=Name(id='set', ctx=Load(), lineno=lineno, col_offset=col_offset, end_lineno=lineno,
+                         end_col_offset=col_offset + 3),
+               args=[], keywords=[], lineno=lineno, col_offset=col_offset, end_lineno=lineno,
+               end_col_offset=col_offset + 5)
 
     return ast if ast_only else FST(ast, lines=[bistr('set()')], from_=from_)
 
@@ -677,7 +659,7 @@ class fstlistproxy:
         self.stop  = stop
 
     def __repr__(self) -> str:
-        return f'fstlistproxy{list(self)}'
+        return f'<fstlistproxy {list(self)}>'
 
     def __len__(self) -> int:
         return self.stop - self.start
@@ -714,7 +696,7 @@ class fstlistproxy:
             raise IndexError('step slicing not supported')
 
         else:
-            idx_start, idx_stop = _fixup_slice_index((stop := self.stop) - (start := self.start), idx.start, idx.stop)
+            idx_start, idx_stop = _fixup_slice_index(self.stop - (start := self.start), idx.start, idx.stop)
 
             self.fst.put_slice(code, start + idx_start, start + idx_stop, self.field)
 
@@ -747,37 +729,37 @@ class fstlistproxy:
         return f
 
     def replace(self, code: Code, *, fix: bool = True, **options):
-        self.fst.put_slice(code, start := self.start, self.stop, self.field, single=True, **options)
+        self.fst.put_slice(code, start := self.start, self.stop, self.field, fix=fix, single=True, **options)
 
         self.stop = start + 1
 
-    def append(self, code: Code, **options) -> 'FST':  # -> Self
-        self.fst.put_slice(code, stop := self.stop, stop, self.field, single=True, **options)
+    def append(self, code: Code, *, fix: bool = True, **options) -> 'FST':  # -> Self
+        self.fst.put_slice(code, stop := self.stop, stop, self.field, fix=fix, single=True, **options)
 
         self.stop = stop + 1
 
         return self
 
-    def extend(self, code: Code, **options) -> 'FST':  # -> Self
+    def extend(self, code: Code, *, fix: bool = True, **options) -> 'FST':  # -> Self
         len_before = len(asts := getattr(self.fst.a, self.field))
 
-        self.fst.put_slice(code, stop := self.stop, stop, self.field, single=False, **options)
+        self.fst.put_slice(code, stop := self.stop, stop, self.field, fix=fix, single=False, **options)
 
         self.stop = stop + (len(asts) - len_before)
 
         return self
 
-    def prepend(self, code: Code, **options) -> 'FST':  # -> Self
-        self.fst.put_slice(code, start := self.start, start, self.field, single=True, **options)
+    def prepend(self, code: Code, *, fix: bool = True, **options) -> 'FST':  # -> Self
+        self.fst.put_slice(code, start := self.start, start, self.field, fix=fix, single=True, **options)
 
         self.stop += 1
 
         return self
 
-    def prextend(self, code: Code, **options) -> 'FST':  # -> Self
+    def prextend(self, code: Code, *, fix: bool = True, **options) -> 'FST':  # -> Self
         len_before = len(asts := getattr(self.fst.a, self.field))
 
-        self.fst.put_slice(code, start := self.start, start, self.field, single=False, **options)
+        self.fst.put_slice(code, start := self.start, start, self.field, fix=fix, single=False, **options)
 
         self.stop += len(asts) - len_before
 
@@ -3014,7 +2996,6 @@ class FST:
                         single: bool, fix: bool, **options):
         if field is not None:
             raise ValueError(f"cannot specify a field '{field}' to assign slice to a Dict")
-
         if single:
             raise ValueError(f'cannot put a single item to a Dict slice')
 
