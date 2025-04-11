@@ -732,25 +732,25 @@ class fstlistproxy:
         return f
 
     def replace(self, code: Code, *, fix: bool = True, **options):
-        self.fst.put_slice(code, start := self.start, self.stop, self.field, fix=fix, single=True, **options)
+        self.fst.put_slice(code, start := self.start, self.stop, self.field, fix=fix, one=True, **options)
 
         self.stop = start + 1
 
-    def insert(self, code: Code, idx: int | Literal['end'] = 0, *, fix: bool = True, single: bool = True, **options
+    def insert(self, code: Code, idx: int | Literal['end'] = 0, *, fix: bool = True, one: bool = True, **options
                ) -> 'FST':  # -> Self
         len_before = len(asts := getattr(self.fst.a, self.field))
         idx        = (self.stop if idx == 'end' else
                       stop      if idx > (l := (stop := self.stop) - (start := self.start)) else
                       start + (idx if idx >= 0 else max(0, idx + l)))
 
-        self.fst.put_slice(code, idx, idx, self.field, fix=fix, single=single, **options)
+        self.fst.put_slice(code, idx, idx, self.field, fix=fix, one=one, **options)
 
         self.stop += len(asts) - len_before
 
         return self
 
     def append(self, code: Code, *, fix: bool = True, **options) -> 'FST':  # -> Self
-        self.fst.put_slice(code, stop := self.stop, stop, self.field, fix=fix, single=True, **options)
+        self.fst.put_slice(code, stop := self.stop, stop, self.field, fix=fix, one=True, **options)
 
         self.stop = stop + 1
 
@@ -759,14 +759,14 @@ class fstlistproxy:
     def extend(self, code: Code, *, fix: bool = True, **options) -> 'FST':  # -> Self
         len_before = len(asts := getattr(self.fst.a, self.field))
 
-        self.fst.put_slice(code, stop := self.stop, stop, self.field, fix=fix, single=False, **options)
+        self.fst.put_slice(code, stop := self.stop, stop, self.field, fix=fix, one=False, **options)
 
         self.stop = stop + (len(asts) - len_before)
 
         return self
 
     def prepend(self, code: Code, *, fix: bool = True, **options) -> 'FST':  # -> Self
-        self.fst.put_slice(code, start := self.start, start, self.field, fix=fix, single=True, **options)
+        self.fst.put_slice(code, start := self.start, start, self.field, fix=fix, one=True, **options)
 
         self.stop += 1
 
@@ -775,7 +775,7 @@ class fstlistproxy:
     def prextend(self, code: Code, *, fix: bool = True, **options) -> 'FST':  # -> Self
         len_before = len(asts := getattr(self.fst.a, self.field))
 
-        self.fst.put_slice(code, start := self.start, start, self.field, fix=fix, single=False, **options)
+        self.fst.put_slice(code, start := self.start, start, self.field, fix=fix, one=False, **options)
 
         self.stop += len(asts) - len_before
 
@@ -1619,7 +1619,7 @@ class FSTSrcEdit:
         - `fpost`: The after-last destination `FST` or `fstloc` not being replaced, may not exist if `flast` is last of
             seq.
         - `options`: See `FST` source editing `options`. Options used here `precomms`, `postcomms`, `prespace`,
-            `postspace`, `pep8space` and `elif`. `space` options determine how many empty lines to remove in
+            `postspace`, `pep8space` and `elif_`. `space` options determine how many empty lines to remove in
             destination on replace. `pep8space` also applies on insert.
 
         **Returns:**
@@ -1843,7 +1843,7 @@ class FST:
         - `True`: Two empty lines at module scope and one empty line in other scopes.
         - `1`: One empty line in all scopes.
         - `None`: Use default (`True`).
-    - `elif`: `True` or `False`, if putting a single `If` statement to an `orelse` field of a parent `If` statement then
+    - `elif_`: `True` or `False`, if putting a single `If` statement to an `orelse` field of a parent `If` statement then
         put it as an `elif`. `None` means `False`.
     """
 
@@ -2913,7 +2913,7 @@ class FST:
         return self._get_seq_and_dedent(get_ast, cut, seq_loc, ffirst, flast, fpre, fpost, '{', '}')
 
     def _get_slice_stmt(self, start: int | Literal['end'] | None, stop: int | None, field: str | None, fix: bool,
-                        cut: bool, single: bool = False, **options) -> 'FST':
+                        cut: bool, one: bool = False, **options) -> 'FST':
         ast         = self.a
         field, body = _fixup_field_body(ast, field)
         start, stop = _fixup_slice_index(len(body), start, stop)
@@ -2946,12 +2946,12 @@ class FST:
             for i in range(start, len(body)):
                 body[i].f.pfield = astfield(field, i)
 
-        if not single:
+        if not one:
             get_ast = Module(body=asts, type_ignores=[])
         elif len(asts) == 1:
             get_ast = asts[0]
         else:
-            raise ValueError(f'cannot specify `single` for multiple statements')
+            raise ValueError(f'cannot specify `one=True` if getting multiple statements')
 
         fst = self._make_fst_and_dedent(indent, get_ast, copy_loc, '', '', put_loc, put_lines,
                                         docstr=options.get('docstr'))
@@ -3010,7 +3010,7 @@ class FST:
             self._floor_start_pos(lineno, col_offset)  # because of insertion at beginning of unparenthesized tuple, pattern beginning to emerge
 
     def _put_slice_tuple_list_or_set(self, code: Code | None, start: int | Literal['end'] | None, stop: int | None,
-                                     field: str | None, single: bool, fix: bool, **options):
+                                     field: str | None, one: bool, fix: bool, **options):
         if field is not None and field != 'elts':
             raise ValueError(f"invalid field '{field}' to assign slice to a {self.a.__class__.__name__}")
 
@@ -3020,7 +3020,7 @@ class FST:
         else:
             put_fst = _normalize_code(code, 'expr', parse_params=self.root.parse_params)
 
-            if single:
+            if one:
                 a        = put_fst.a
                 put_ast  = Set(elts=[a], lineno=a.lineno, col_offset=a.col_offset, end_lineno=a.end_lineno,
                                end_col_offset=a.end_col_offset)
@@ -3076,7 +3076,7 @@ class FST:
         else:
             put_lines = put_fst._lines
 
-            if single:
+            if one:
                 pass  # noop
 
             elif not is_tuple:
@@ -3128,7 +3128,7 @@ class FST:
                 self._maybe_fix_set()
 
     def _put_slice_empty_set_call(self, code: Code | None, start: int | Literal['end'] | None, stop: int | None,
-                                  field: str | None, single: bool, fix: bool):
+                                  field: str | None, one: bool, fix: bool):
         if not fix:
             raise ValueError(f"cannot put slice to a 'set()' without specifying 'fix=True'")
 
@@ -3144,17 +3144,17 @@ class FST:
             self.pfield.set(parent.a, ast)
 
         try:
-            self._put_slice_tuple_list_or_set(code, start, stop, field, single, fix)
+            self._put_slice_tuple_list_or_set(code, start, stop, field, one, fix)
 
         finally:
             if not self.a.elts:
                 self._maybe_fix_set()  # restore 'set()'
 
     def _put_slice_dict(self, code: Code | None, start: int | Literal['end'] | None, stop: int | None,
-                        field: str | None, single: bool, fix: bool, **options):
+                        field: str | None, one: bool, fix: bool, **options):
         if field is not None:
             raise ValueError(f"cannot specify a field '{field}' to assign slice to a Dict")
-        if single:
+        if one:
             raise ValueError(f'cannot put a single item to a Dict slice')
 
         if code is None:
@@ -3240,7 +3240,7 @@ class FST:
                 key.f.pfield = astfield('keys', i)
 
     def _put_slice_stmt(self, code: Code | None, start: int | Literal['end'] | None, stop: int | None,
-                        field: str | None, single: bool, fix: bool, *, force: bool = False, **options):  # TODO: `force` is for some previously written tests, but really should fix those tests instead
+                        field: str | None, one: bool, fix: bool, *, force: bool = False, **options):  # TODO: `force` is for some previously written tests, but really should fix those tests instead
         ast         = self.a
         field, body = _fixup_field_body(ast, field)
 
@@ -3252,7 +3252,7 @@ class FST:
             put_ast  = put_fst.a
             put_body = put_ast.body
 
-            if single and len(put_body) != 1:
+            if one and len(put_body) != 1:
                 raise ValueError('expecting a single statement')
 
             node_type = ExceptHandler if field == 'handlers' else match_case if field == 'cases' else stmt
@@ -3756,7 +3756,7 @@ class FST:
         parenta    = parent.a
 
         if isinstance(ast, STATEMENTISH_OR_STMTMOD):
-            return parent._get_slice_stmt(idx, idx + 1, field, fix, cut=True, single=True, **options)
+            return parent._get_slice_stmt(idx, idx + 1, field, fix, cut=True, one=True, **options)
 
         if isinstance(parenta, (Tuple, List, Set)):
             fst = self.copy(fix=fix, **options)
@@ -3769,10 +3769,6 @@ class FST:
         # TODO: other sequences?
 
         raise ValueError(f"cannot cut from a {parenta.__class__.__name__}.{field}")
-
-
-
-
 
     def replace(self, code: Code | None, *, fix: bool = True, **options):
         """Replace an individual node."""
@@ -3795,11 +3791,6 @@ class FST:
 
         raise ValueError(f"cannot replace in a {parenta.__class__.__name__}.{field}")
 
-
-
-
-
-
     def get(self, start: int | Literal['end'] | None = None, stop: int | None | Literal[False] = False,
             field: str | None = None, *, fix: bool = True, cut: bool = False, **options) -> Optional['FST']:
         """Get an individual child node or a slice of child nodes from `self`."""
@@ -3818,7 +3809,7 @@ class FST:
 
     def put(self, code: Code | None, start: int | Literal['end'] | None = None,
             stop: int | None | Literal['False'] = False, field: str | None = None, *,
-            fix: bool = True, single: bool = True, **options) -> 'FST':  # -> Self
+            fix: bool = True, one: bool = True, **options) -> 'FST':  # -> Self
         """Put an individual child node or a slice of child nodes to `self`.
 
         If the `code` being put is an `AST` or `FST` then it is consumed and should not be considered valid after this
@@ -3826,21 +3817,18 @@ class FST:
         """
 
         if stop is not False:
-            return self.put_slice(code, start, stop, field, fix=fix, single=single, **options)
+            return self.put_slice(code, start, stop, field, fix=fix, one=one, **options)
         elif start is None:
-            return self.put_slice(code, None, None, field, fix=fix, single=single, **options)
+            return self.put_slice(code, None, None, field, fix=fix, one=one, **options)
 
-        if not single:
-            raise ValueError(f"can only use 'single=True' as a non-slice put()")
+        if not one:
+            raise ValueError(f"can only use 'one=True' as a non-slice put()")
 
         _, body = _fixup_field_body(self.a, field)
 
         body[start].f.replace(code, fix=fix, **options)
 
         return self
-
-
-
 
     def get_slice(self, start: int | Literal['end'] | None = None, stop: int | None = None, field: str | None = None, *,
                   fix: bool = True, cut: bool = False, **options) -> 'FST':
@@ -3864,13 +3852,8 @@ class FST:
 
         raise ValueError(f"cannot get slice from a '{ast.__class__.__name__}'")
 
-
-
-
-
-
     def put_slice(self, code: Code | None, start: int | Literal['end'] | None = None, stop: int | None = None,
-                  field: str | None = None, *, fix: bool = True, single: bool = False, **options) -> 'FST':  # -> Self
+                  field: str | None = None, *, fix: bool = True, one: bool = False, **options) -> 'FST':  # -> Self
         """Put an a slice of child nodes to `self`.
 
         If the `code` being put is an `AST` or `FST` then it is consumed and should not be considered valid after this
@@ -3880,16 +3863,16 @@ class FST:
         ast = self.a
 
         if isinstance(ast, STATEMENTISH_OR_STMTMOD):
-            self._put_slice_stmt(code, start, stop, field, single, fix, **options)
+            self._put_slice_stmt(code, start, stop, field, one, fix, **options)
 
         elif isinstance(ast, (Tuple, List, Set)):
-            self._put_slice_tuple_list_or_set(code, start, stop, field, single, fix)
+            self._put_slice_tuple_list_or_set(code, start, stop, field, one, fix)
 
         elif isinstance(ast, Dict):
-            self._put_slice_dict(code, start, stop, field, single, fix, **options)
+            self._put_slice_dict(code, start, stop, field, one, fix, **options)
 
         elif self.is_empty_set_call():
-            self._put_slice_empty_set_call(code, start, stop, field, single, fix)
+            self._put_slice_empty_set_call(code, start, stop, field, one, fix)
 
         else:
             raise ValueError(f"cannot put slice to a '{ast.__class__.__name__}'")
@@ -3897,13 +3880,6 @@ class FST:
         # TODO: more
 
         return self
-
-
-
-
-
-
-
 
     def get_lines(self, ln: int, col: int, end_ln: int, end_col: int) -> list[str]:
         """Get lines from currently stored source. The first and last lines are cropped to start `col` and `end_col`."""
@@ -4734,7 +4710,7 @@ class FST:
         **Parameters:**
         - `with_loc`: If `True` then only nodes with locations returned, `'own'` means only nodes with own location
             (does not recurse into non-own nodes), `'allown'` means return `'own'` nodes but recurse into nodes with
-            non-own locations, otherwise all nodes.
+            non-own locations. Otherwise `False` means all nodes.
         - `recurse_self`: Whether to allow recursion of `self` to return children or move directly to next nodes.
 
         **Returns:**
@@ -4767,7 +4743,7 @@ class FST:
         **Parameters:**
         - `with_loc`: If `True` then only nodes with locations returned, `'own'` means only nodes with own location
             (does not recurse into non-own nodes), `'allown'` means return `'own'` nodes but recurse into nodes with
-            non-own locations, otherwise all nodes.
+            non-own locations. Otherwise `False` means all nodes.
         - `recurse_self`: Whether to allow recursion of `self` to return children or move directly to prev nodes.
 
         **Returns:**
