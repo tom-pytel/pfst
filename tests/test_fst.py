@@ -18922,6 +18922,73 @@ class cls:
         self.assertEqual(a.f.src, '(a, \\\n)')
 
     def test_fstlistproxy(self):
+        self.assertEqual('a', parse('if 1: a').f.body[0].body[0].src)
+        self.assertEqual('b', parse('if 1: a\nelse: b').f.body[0].orelse[0].src)
+        self.assertEqual('a\nb\nc', parse('a\nb\nc').f.body.copy().src)
+
+        f = parse('a\nb\nc').f
+        g = f.body.cut()
+        self.assertEqual('', f.src)
+        self.assertEqual('a\nb\nc', g.src)
+
+        f = parse('a\nb\nc\nd\ne').f
+        g = f.body[1:4].cut()
+        self.assertEqual('a\ne', f.src)
+        self.assertEqual('b\nc\nd', g.src)
+
+        f = parse('a\nb\nc').f
+        f.body[1:2] = 'd\ne'
+        self.assertEqual('a\nd\ne\nc', f.src)
+
+        # TODO: when implemented single item assignment
+
+        # f = parse('a\nb\nc').f
+        # f.body[1] = 'd'
+        # self.assertEqual('a\nd\nc', f.src)
+
+        # f = parse('a\nb\nc').f
+        # def test():
+        #     f.body[1] = 'd\ne'
+        # self.assertRaises(???, test)
+
+        f = parse('a\nb\nc').f
+        g = f.body[1:2]
+        g.append('d')
+        self.assertEqual(2, len(g))
+        self.assertEqual('b', g[0].src)
+        self.assertEqual('d', g[1].src)
+        self.assertEqual('a\nb\nd\nc', f.src)
+
+        f = parse('a\nb\nc').f
+        g = f.body[1:2]
+        g.extend('d\ne')
+        self.assertEqual(3, len(g))
+        self.assertEqual('b', g[0].src)
+        self.assertEqual('d', g[1].src)
+        self.assertEqual('e', g[2].src)
+        self.assertEqual('a\nb\nd\ne\nc', f.src)
+
+        f = parse('a\nb\nc').f
+        g = f.body[1:2]
+        g.prepend('d')
+        self.assertEqual(2, len(g))
+        self.assertEqual('d', g[0].src)
+        self.assertEqual('b', g[1].src)
+        self.assertEqual('a\nd\nb\nc', f.src)
+
+        f = parse('a\nb\nc').f
+        g = f.body[1:2]
+        g.prextend('d\ne')
+        self.assertEqual(3, len(g))
+        self.assertEqual('d', g[0].src)
+        self.assertEqual('e', g[1].src)
+        self.assertEqual('b', g[2].src)
+        self.assertEqual('a\nd\ne\nb\nc', f.src)
+
+        f = parse('a\nb\nc\nd\ne').f
+        f.body[1:4] = 'f'
+        self.assertEqual('a\nf\ne', f.src)
+
         a = parse('''
 class cls:
     def prefunc(): pass
@@ -18931,30 +18998,6 @@ class cls:
         self.assertIsInstance(a.body[0].f.body, fstlistproxy)
         a.body[0].f.body.cut()
         self.assertIsInstance(a.body[0].f.body, fstlistproxy)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 def regen_pars_data():
     newlines = []

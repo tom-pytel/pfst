@@ -507,21 +507,26 @@ def _fixup_field_body(ast: AST, field: str | None = None) -> tuple[str, 'AST']:
     return field, body
 
 
-def _fixup_slice_index(owner, body, field, start, stop) -> tuple[int, int]:
-    len_body = len(body)
-
+def _fixup_slice_index(len_, start, stop) -> tuple[int, int]:
     if start is None:
         start = 0
+
     elif start < 0:
-        start += len_body
+        if (start := start + len_) < 0:
+            start = 0
+
+    elif start > len_:
+        start = len_
 
     if stop is None:
-        stop = len_body
-    elif stop < 0:
-        stop += len_body
+        stop = len_
 
-    if not 0 <= start <= len_body or not 0 <= stop <= len_body:
-        raise IndexError(f"{owner.__class__.__name__}.{field} index out of range")
+    elif stop < 0:
+        if (stop := stop + len_) < 0:
+            stop = 0
+
+    elif stop > len_:
+        stop = len_
 
     if stop < start:
         stop = start
@@ -661,70 +666,115 @@ def _new_empty_set_call(ast_only: bool = False, lineno: int = 1, col_offset: int
 
 
 class fstlistproxy:
-    def __init__(self, asts: list[AST], owner: 'FST', field: str, start: int = 0):
-        self.asts  = asts
-        self.owner = owner
+    """Proxy for list of AST nodes in a body (or any other list of AST nodes) which acts as a list of FST nodes. Is only
+    meant for short term convenience use as operations on the target FST node which are not effectuated through this
+    proxy will invalidate the start and stop positions stored here if they change the size of the list of nodes."""
+
+    def __init__(self, fst: 'FST', field: str, start: int, stop: int):
+        self.fst   = fst
         self.field = field
         self.start = start
+        self.stop  = stop
 
     def __repr__(self) -> str:
-        return f'f{list(self)}'
+        return f'fstlistproxy{list(self)}'
 
     def __len__(self) -> int:
-        return len(self.asts)
+        return self.stop - self.start
 
-    def __getitem__(self, idx: int | str | slice) -> Any:
+    def __getitem__(self, idx: int | slice | str) -> Any:
         if isinstance(idx, int):
-            return a.f if isinstance(a := self.asts[idx], AST) else a
+            if not (l := self.stop - (start := self.start)) > ((idx := idx + l) if idx < 0 else idx) >= 0:
+                raise IndexError('index out of range')
+
+            return a.f if isinstance(a := getattr(self.fst.a, self.field)[start + idx], AST) else a
 
         if isinstance(idx, str):
-            if not (a := get_func_class_or_ass_by_name(self.asts, idx)):
-                raise IndexError(f"function, class or variable '{idx}' not found")
+            if not (a := get_func_class_or_ass_by_name(getattr(self.fst.a, self.field)[self.start : self.stop],
+                                                       idx, False)):
+                raise IndexError(f"function or class '{idx}' not found")
 
             return a.f
 
-        return fstlistproxy((asts := self.asts)[idx], self.owner, self.field,
-                            start if (start := idx.start) >= 0 else start + len(asts))
+        if idx.step is not None:
+            raise IndexError('step slicing not supported')
+
+        idx_start, idx_stop = _fixup_slice_index(self.stop - (start := self.start), idx.start, idx.stop)
+
+        return fstlistproxy(self.fst, self.field, start + idx_start, start + idx_stop)
 
     def __setitem__(self, idx: int | slice, code: Code):
         if isinstance(idx, int):
-            self.owner.put(code, idx, field=self.field)
+            if not (l := self.stop - (start := self.start)) > ((idx := idx + l) if idx < 0 else idx) >= 0:
+                raise IndexError('index out of range')
+
+            self.fst.put(code, start + idx, field=self.field)
+
         elif idx.step is not None:
             raise IndexError('step slicing not supported')
+
         else:
-            self.owner.put_slice(code, idx.start, idx.stop, self.field)
+            idx_start, idx_stop = _fixup_slice_index((stop := self.stop) - (start := self.start), idx.start, idx.stop)
+
+            self.fst.put_slice(code, start + idx_start, start + idx_stop, self.field)
 
     def __delitem__(self, idx: int | slice):
         if isinstance(idx, int):
-            self.owner.put_slice(None, idx, idx + 1, field=self.field)
+            if not (l := (stop := self.stop) - (start := self.start)) > ((idx := idx + l) if idx < 0 else idx) >= 0:
+                raise IndexError('index out of range')
+
+            self.fst.put_slice(None, start + idx, start + idx + 1, field=self.field)
+
+            self.stop = max(start, stop - 1)
+
         elif idx.step is not None:
             raise IndexError('step slicing not supported')
+
         else:
-            self.owner.put_slice(None, idx.start, idx.stop, self.field)
+            idx_start, idx_stop = _fixup_slice_index(self.stop - (start := self.start), idx.start, idx.stop)
+
+            self.fst.put_slice(None, start + idx_start, start + idx_stop, self.field)
+
+            self.stop = max(start, stop - (idx_stop - idx_start))
 
     def copy(self, *, fix: bool = True, **options) -> 'FST':
-        return self.owner.get_slice(i := self.start, i + len(self.asts), self.field, fix=fix, cut=False, **options)
+        return self.fst.get_slice(self.start, self.stop, self.field, fix=fix, cut=False, **options)
 
     def cut(self, *, fix: bool = True, **options) -> 'FST':
-        return self.owner.get_slice(i := self.start, i + len(self.asts), self.field, fix=fix, cut=True, **options)
+        f         = self.fst.get_slice(start := self.start, self.stop, self.field, fix=fix, cut=True, **options)
+        self.stop = start
+
+        return f
 
     def append(self, code: Code, **options) -> 'FST':  # -> Self
-        self.owner.put_slice(code, i := self.start + len(self.asts), i, self.field, single=True, **options)
+        self.fst.put_slice(code, stop := self.stop, stop, self.field, single=True, **options)
+
+        self.stop = stop + 1
 
         return self
 
     def extend(self, code: Code, **options) -> 'FST':  # -> Self
-        self.owner.put_slice(code, i := self.start + len(self.asts), i, self.field, single=False, **options)
+        len_before = len(asts := getattr(self.fst.a, self.field))
+
+        self.fst.put_slice(code, stop := self.stop, stop, self.field, single=False, **options)
+
+        self.stop = stop + (len(asts) - len_before)
 
         return self
 
     def prepend(self, code: Code, **options) -> 'FST':  # -> Self
-        self.owner.put_slice(code, i := self.start, i, self.field, single=True, **options)
+        self.fst.put_slice(code, start := self.start, start, self.field, single=True, **options)
+
+        self.stop += 1
 
         return self
 
     def prextend(self, code: Code, **options) -> 'FST':  # -> Self
-        self.owner.put_slice(code, i := self.start, i, self.field, single=False, **options)
+        len_before = len(asts := getattr(self.fst.a, self.field))
+
+        self.fst.put_slice(code, start := self.start, start, self.field, single=False, **options)
+
+        self.stop += len(asts) - len_before
 
         return self
 
@@ -2588,7 +2638,7 @@ class FST:
         elts        = ast.elts
         is_set      = isinstance(ast, Set)
         is_tuple    = not is_set and isinstance(ast, Tuple)
-        start, stop = _fixup_slice_index(ast, elts, 'elts', start, stop)
+        start, stop = _fixup_slice_index(len(elts), start, stop)
 
         if start == stop:
             if is_set:
@@ -2681,7 +2731,7 @@ class FST:
 
         ast         = self.a
         values      = ast.values
-        start, stop = _fixup_slice_index(ast, values, 'values', start, stop)
+        start, stop = _fixup_slice_index(len(values), start, stop)
 
         if start == stop:
             return _new_empty_dict(from_=self)
@@ -2721,7 +2771,7 @@ class FST:
                         *, single: bool = False, **options) -> 'FST':
         ast         = self.a
         field, body = _fixup_field_body(ast, field)
-        start, stop = _fixup_slice_index(ast, body, field, start, stop)
+        start, stop = _fixup_slice_index(len(body), start, stop)
 
         if start == stop:
             return _new_empty_module(from_=self)
@@ -2850,7 +2900,7 @@ class FST:
 
         ast         = self.a
         elts        = ast.elts
-        start, stop = _fixup_slice_index(ast, elts, 'elts', start, stop)
+        start, stop = _fixup_slice_index(len(elts), start, stop)
         slice_len   = stop - start
 
         if not slice_len and (not put_fst or not put_ast.elts):  # deleting or assigning empty seq to empty slice of seq, noop
@@ -2972,7 +3022,7 @@ class FST:
 
         ast         = self.a
         values      = ast.values
-        start, stop = _fixup_slice_index(ast, values, 'values', start, stop)
+        start, stop = _fixup_slice_index(len(values), start, stop)
         slice_len   = stop - start
 
         if not slice_len and (not put_fst or not put_ast.keys):  # deleting or assigning empty dict to empty slice of dict, noop
@@ -3063,7 +3113,7 @@ class FST:
             if not force and any(not isinstance(bad_node := n, node_type) for n in put_body):
                 raise ValueError(f"cannot put {bad_node.__class__.__qualname__} node to '{field}' field")
 
-        start, stop = _fixup_slice_index(ast, body, field, start, stop)
+        start, stop = _fixup_slice_index(len(body), start, stop)
         slice_len   = stop - start
 
         if not slice_len and (not put_fst or (not put_body and len(ls := put_fst._lines) == 1 and not ls[0])):  # deleting empty slice or assigning empty fst to empty slice, noop
@@ -3292,7 +3342,7 @@ class FST:
 
     def __getattr__(self, name) -> Any:
         if isinstance(child := getattr(self.a, name), list):
-            return fstlistproxy(child, self, name)
+            return fstlistproxy(self, name, 0, len(child))
         elif child and isinstance(child, AST):
             return child.f
 

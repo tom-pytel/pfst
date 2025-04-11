@@ -456,19 +456,20 @@ def set_ctx(ast_or_stack: AST | list[AST], ctx: type[expr_context], *, doit=True
     return change
 
 
-def get_func_class_or_ass_by_name(asts: Iterable[AST], name: str) -> AST | None:
+def get_func_class_or_ass_by_name(asts: Iterable[AST], name: str, ass: bool = True) -> AST | None:
     for a in asts:
         if isinstance(a, (FunctionDef, AsyncFunctionDef, ClassDef)):
             if a.name == name:
                 return a
 
-        elif isinstance(a, Assign):
-            if any(isinstance(t, Name) and t.id == name for t in a.targets):
-                return a
+        elif ass:
+            if isinstance(a, Assign):
+                if any(isinstance(t, Name) and t.id == name for t in a.targets):
+                    return a
 
-        elif isinstance(a, AnnAssign):
-            if isinstance(t := a.target, Name) and t.id == name:
-                return a
+            elif isinstance(a, AnnAssign):
+                if isinstance(t := a.target, Name) and t.id == name:
+                    return a
 
     return None
 
