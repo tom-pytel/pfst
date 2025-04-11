@@ -511,6 +511,9 @@ def _fixup_slice_index(len_, start, stop) -> tuple[int, int]:
     if start is None:
         start = 0
 
+    elif start == 'end':
+        start = len_
+
     elif start < 0:
         if (start := start + len_) < 0:
             start = 0
@@ -732,6 +735,19 @@ class fstlistproxy:
         self.fst.put_slice(code, start := self.start, self.stop, self.field, fix=fix, single=True, **options)
 
         self.stop = start + 1
+
+    def insert(self, code: Code, idx: int | Literal['end'] = 0, *, fix: bool = True, single: bool = True, **options
+               ) -> 'FST':  # -> Self
+        len_before = len(asts := getattr(self.fst.a, self.field))
+        idx        = (self.stop if idx == 'end' else
+                      stop      if idx > (l := (stop := self.stop) - (start := self.start)) else
+                      start + (idx if idx >= 0 else max(0, idx + l)))
+
+        self.fst.put_slice(code, idx, idx, self.field, fix=fix, single=single, **options)
+
+        self.stop += len(asts) - len_before
+
+        return self
 
     def append(self, code: Code, *, fix: bool = True, **options) -> 'FST':  # -> Self
         self.fst.put_slice(code, stop := self.stop, stop, self.field, fix=fix, single=True, **options)
@@ -1505,6 +1521,9 @@ class FSTSrcEdit:
                     if need := need - 1:
                         if (ln := ln - 1) > bound_ln and re_empty_line.match(lines[ln]):
                             need = 0
+
+                # if need and ln > bound_ln and re_comment_line_start.match(lines[ln]):  # if preceded by comment then don't need to put lines
+                #     need = 0
 
                 prepend += need
 
@@ -2616,8 +2635,8 @@ class FST:
 
         return get_fst
 
-    def _get_slice_tuple_list_or_set(self, start: int | None, stop: int | None, field: str | None, fix: bool, cut: bool
-                                     ) -> 'FST':
+    def _get_slice_tuple_list_or_set(self, start: int | Literal['end'] | None, stop: int | None, field: str | None,
+                                     fix: bool, cut: bool) -> 'FST':
         if field is not None and field != 'elts':
             raise ValueError(f"invalid field '{field}' to slice from a {self.a.__class__.__name__}")
 
@@ -2699,20 +2718,21 @@ class FST:
 
         return fst
 
-    def _get_slice_empty_set_call(self, start: int | None, stop: int | None, field: str | None, fix: bool, cut: bool,
-                                  ) -> 'FST':
+    def _get_slice_empty_set_call(self, start: int | Literal['end'] | None, stop: int | None, field: str | None,
+                                  fix: bool, cut: bool) -> 'FST':
         if not fix:
             raise ValueError(f"cannot get slice from a 'set()' without specifying 'fix=True'")
 
         if field is not None and field != 'elts':
             raise ValueError(f"invalid field '{field}' to slice from a {self.a.__class__.__name__}")
 
-        if start or stop:
+        if stop or (start and start != 'end'):
             raise IndexError(f"Set.{field} index out of range")
 
         return _new_empty_set_call(from_=self) if fix else _new_empty_set_curlies(from_=self)
 
-    def _get_slice_dict(self, start: int | None, stop: int | None, field: str | None, fix: bool, cut: bool) -> 'FST':
+    def _get_slice_dict(self, start: int | Literal['end'] | None, stop: int | None, field: str | None, fix: bool,
+                        cut: bool) -> 'FST':
         if field is not None:
             raise ValueError(f"cannot specify a field '{field}' to slice from a Dict")
 
@@ -2754,8 +2774,8 @@ class FST:
 
         return self._get_seq_and_dedent(get_ast, cut, seq_loc, ffirst, flast, fpre, fpost, '{', '}')
 
-    def _get_slice_stmt(self, start: int | None, stop: int | None, field: str | None, fix: bool, cut: bool,
-                        single: bool = False, **options) -> 'FST':
+    def _get_slice_stmt(self, start: int | Literal['end'] | None, stop: int | None, field: str | None, fix: bool,
+                        cut: bool, single: bool = False, **options) -> 'FST':
         ast         = self.a
         field, body = _fixup_field_body(ast, field)
         start, stop = _fixup_slice_index(len(body), start, stop)
@@ -2851,8 +2871,8 @@ class FST:
         if is_unparen_tuple:
             self._floor_start_pos(lineno, col_offset)  # because of insertion at beginning of unparenthesized tuple, pattern beginning to emerge
 
-    def _put_slice_tuple_list_or_set(self, code: Code | None, start: int | None, stop: int | None, field: str | None,
-                                     single: bool, fix: bool, **options):
+    def _put_slice_tuple_list_or_set(self, code: Code | None, start: int | Literal['end'] | None, stop: int | None,
+                                     field: str | None, single: bool, fix: bool, **options):
         if field is not None and field != 'elts':
             raise ValueError(f"invalid field '{field}' to assign slice to a {self.a.__class__.__name__}")
 
@@ -2969,8 +2989,8 @@ class FST:
             elif is_self_set:
                 self._maybe_fix_set()
 
-    def _put_slice_empty_set_call(self, code: Code | None, start: int | None, stop: int | None, field: str | None,
-                                  single: bool, fix: bool):
+    def _put_slice_empty_set_call(self, code: Code | None, start: int | Literal['end'] | None, stop: int | None,
+                                  field: str | None, single: bool, fix: bool):
         if not fix:
             raise ValueError(f"cannot put slice to a 'set()' without specifying 'fix=True'")
 
@@ -2992,8 +3012,8 @@ class FST:
             if not self.a.elts:
                 self._maybe_fix_set()  # restore 'set()'
 
-    def _put_slice_dict(self, code: Code | None, start: int | None, stop: int | None, field: str | None,
-                        single: bool, fix: bool, **options):
+    def _put_slice_dict(self, code: Code | None, start: int | Literal['end'] | None, stop: int | None,
+                        field: str | None, single: bool, fix: bool, **options):
         if field is not None:
             raise ValueError(f"cannot specify a field '{field}' to assign slice to a Dict")
         if single:
@@ -3081,8 +3101,8 @@ class FST:
             if key := keys[i]:  # could be None from **
                 key.f.pfield = astfield('keys', i)
 
-    def _put_slice_stmt(self, code: Code | None, start: int | None, stop: int | None, field: str | None,
-                        single: bool, fix: bool, *, force: bool = False, **options):  # TODO: `force` is for some previously written tests, but really should fix those tests instead
+    def _put_slice_stmt(self, code: Code | None, start: int | Literal['end'] | None, stop: int | None,
+                        field: str | None, single: bool, fix: bool, *, force: bool = False, **options):  # TODO: `force` is for some previously written tests, but really should fix those tests instead
         ast         = self.a
         field, body = _fixup_field_body(ast, field)
 
@@ -3777,8 +3797,8 @@ class FST:
 
 
 
-    def get(self, start: int | None = None, stop: int | None | Literal[False] = False, field: str | None = None, *,
-            fix: bool = True, cut: bool = False, **options) -> Optional['FST']:
+    def get(self, start: int | Literal['end'] | None = None, stop: int | None | Literal[False] = False,
+            field: str | None = None, *, fix: bool = True, cut: bool = False, **options) -> Optional['FST']:
         """Get an individual child node or a slice of child nodes from `self`."""
 
         if stop is not False:
@@ -3793,8 +3813,9 @@ class FST:
         else:
             return body[start].f.copy(fix=fix, **options)
 
-    def put(self, code: Code | None, start: int | None = None, stop: int | None | Literal['False'] = False,
-            field: str | None = None, *, fix: bool = True, single: bool = True, **options) -> 'FST':  # -> Self
+    def put(self, code: Code | None, start: int | Literal['end'] | None = None,
+            stop: int | None | Literal['False'] = False, field: str | None = None, *,
+            fix: bool = True, single: bool = True, **options) -> 'FST':  # -> Self
         """Put an individual child node or a slice of child nodes to `self`.
 
         If the `code` being put is an `AST` or `FST` then it is consumed and should not be considered valid after this
@@ -3818,7 +3839,7 @@ class FST:
 
 
 
-    def get_slice(self, start: int | None = None, stop: int | None = None, field: str | None = None, *,
+    def get_slice(self, start: int | Literal['end'] | None = None, stop: int | None = None, field: str | None = None, *,
                   fix: bool = True, cut: bool = False, **options) -> 'FST':
         """Get a slice of child nodes from `self`."""
 
@@ -3845,7 +3866,7 @@ class FST:
 
 
 
-    def put_slice(self, code: Code | None, start: int | None = None, stop: int | None = None,
+    def put_slice(self, code: Code | None, start: int | Literal['end'] | None = None, stop: int | None = None,
                   field: str | None = None, *, fix: bool = True, single: bool = False, **options) -> 'FST':  # -> Self
         """Put an a slice of child nodes to `self`.
 
