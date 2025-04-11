@@ -1633,7 +1633,7 @@ class FSTSrcEdit:
         is_handler = field == 'handlers'
         is_orelse  = field == 'orelse'
         docstr     = options.get('docstr')
-        opt_elif   = DEFAULT_ELIF if (o := options.get('elif')) is None else o
+        opt_elif   = DEFAULT_ELIF if (o := options.get('elif_')) is None else o
 
         if not ffirst:  # pure insertion
             is_elif = (not fpre and not fpost and is_orelse and opt_elif and len(b := put_body) == 1 and
@@ -1756,7 +1756,7 @@ class FSTSrcEdit:
         if not fpre and not fpost and is_orelse and isinstance(fst.a, If):  # possible else <-> elif changes
             put_body    = put_fst.a.body
             orelse      = fst.a.orelse
-            opt_elif    = DEFAULT_ELIF if (o := options.get('elif')) is None else o
+            opt_elif    = DEFAULT_ELIF if (o := options.get('elif_')) is None else o
             is_old_elif = orelse[0].f.is_elif()
             is_new_elif = opt_elif and len(put_body) == 1 and isinstance(put_body[0], If)
 

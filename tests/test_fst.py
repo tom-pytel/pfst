@@ -7955,7 +7955,7 @@ Module .. ROOT 0,0 -> 4,0
 def f():
     if 1:
         pass
-""", 'body[0].body[0]', 0, 0, 'orelse', {'precomms': False, 'postcomms': False, 'pep8space': False, 'elif': True}, r"""if 2: break""", r"""
+""", 'body[0].body[0]', 0, 0, 'orelse', {'precomms': False, 'postcomms': False, 'pep8space': False, 'elif_': True}, r"""if 2: break""", r"""
 def f():
     if 1:
         pass
@@ -7982,7 +7982,7 @@ def f():
     if 1:
         pass  # post-if
     # post-line
-""", 'body[0].body[0]', 0, 0, 'orelse', {'precomms': False, 'postcomms': False, 'pep8space': False, 'elif': True}, r"""# pre
+""", 'body[0].body[0]', 0, 0, 'orelse', {'precomms': False, 'postcomms': False, 'pep8space': False, 'elif_': True}, r"""# pre
 if 2: break  # post-elif""", r"""
 def f():
     if 1:
@@ -8014,7 +8014,7 @@ def f():
     # pre
     elif 2: break  # post-elif
     # post-line
-""", 'body[0].body[0].orelse[0]', 0, 0, 'orelse', {'precomms': False, 'postcomms': False, 'pep8space': False, 'elif': True}, r"""# pre-3
+""", 'body[0].body[0].orelse[0]', 0, 0, 'orelse', {'precomms': False, 'postcomms': False, 'pep8space': False, 'elif_': True}, r"""# pre-3
 if 3:  # post-elif-3
     continue  # post-elif-continue-3""", r"""
 def f():
@@ -14221,7 +14221,7 @@ Module .. ROOT 0,0 -> 4,0
 if 1: pass
 elif 2:
     pass
-""", 'body[0]', 0, 1, 'orelse', {'precomms': False, 'postcomms': False, 'pep8space': False, 'elif': True}, r"""if 3: break""", r"""
+""", 'body[0]', 0, 1, 'orelse', {'precomms': False, 'postcomms': False, 'pep8space': False, 'elif_': True}, r"""if 3: break""", r"""
 if 1: pass
 elif 3: break
 """, r"""
@@ -14242,7 +14242,7 @@ Module .. ROOT 0,0 -> 3,0
 if 1: pass
 else:
     pass
-""", 'body[0]', 0, 1, 'orelse', {'precomms': False, 'postcomms': False, 'pep8space': False, 'elif': True}, r"""if 3: break""", r"""
+""", 'body[0]', 0, 1, 'orelse', {'precomms': False, 'postcomms': False, 'pep8space': False, 'elif_': True}, r"""if 3: break""", r"""
 if 1: pass
 elif 3: break
 """, r"""
@@ -14315,7 +14315,7 @@ class cls:
     if 1: pass
     elif 2:
         pass
-""", 'body[0].body[0]', 0, 1, 'orelse', {'precomms': False, 'postcomms': False, 'pep8space': False, 'elif': True}, r"""if 3: break""", r"""
+""", 'body[0].body[0]', 0, 1, 'orelse', {'precomms': False, 'postcomms': False, 'pep8space': False, 'elif_': True}, r"""if 3: break""", r"""
 class cls:
     if 1: pass
     elif 3: break
@@ -14341,7 +14341,7 @@ class cls:
     if 1: pass
     else:
         pass
-""", 'body[0].body[0]', 0, 1, 'orelse', {'precomms': False, 'postcomms': False, 'pep8space': False, 'elif': True}, r"""if 3: break""", r"""
+""", 'body[0].body[0]', 0, 1, 'orelse', {'precomms': False, 'postcomms': False, 'pep8space': False, 'elif_': True}, r"""if 3: break""", r"""
 class cls:
     if 1: pass
     elif 3: break
@@ -14394,7 +14394,7 @@ Module .. ROOT 0,0 -> 6,0
 if 1: pass
 elif 2:
     pass
-""", 'body[0]', 0, 1, 'orelse', {'precomms': False, 'postcomms': False, 'pep8space': False, 'elif': True}, r"""if 3: break
+""", 'body[0]', 0, 1, 'orelse', {'precomms': False, 'postcomms': False, 'pep8space': False, 'elif_': True}, r"""if 3: break
 else:
     continue""", r"""
 if 1: pass
@@ -14456,7 +14456,7 @@ Module .. ROOT 0,0 -> 8,0
 if 1: pass
 elif 2:
     pass
-""", 'body[0].orelse[0]', 0, 0, 'orelse', {'precomms': False, 'postcomms': False, 'pep8space': False, 'elif': True}, r"""if 3: break
+""", 'body[0].orelse[0]', 0, 0, 'orelse', {'precomms': False, 'postcomms': False, 'pep8space': False, 'elif_': True}, r"""if 3: break
 else:
     continue""", r"""
 if 1: pass
@@ -14524,7 +14524,7 @@ class cls:
     if 1: pass
     elif 2:
         pass
-""", 'body[0].body[0]', 0, 1, 'orelse', {'precomms': False, 'postcomms': False, 'pep8space': False, 'elif': True}, r"""if 3: break
+""", 'body[0].body[0]', 0, 1, 'orelse', {'precomms': False, 'postcomms': False, 'pep8space': False, 'elif_': True}, r"""if 3: break
 else:
     continue""", r"""
 class cls:
@@ -14596,7 +14596,7 @@ class cls:
     if 1: pass
     elif 2:
         pass
-""", 'body[0].body[0].orelse[0]', 0, 0, 'orelse', {'precomms': False, 'postcomms': False, 'pep8space': False, 'elif': True}, r"""if 3: break
+""", 'body[0].body[0].orelse[0]', 0, 0, 'orelse', {'precomms': False, 'postcomms': False, 'pep8space': False, 'elif_': True}, r"""if 3: break
 else:
     continue""", r"""
 class cls:
