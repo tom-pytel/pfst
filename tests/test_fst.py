@@ -16937,8 +16937,8 @@ if indented:
         fst2 = fst.copy()
 
         fst.a.body[1].cases[0].f.cut()
-        # fst.a.body[1].f.put_slice('pass')
-        fst.a.body[1].f._put_slice_stmt('pass', None, None, None, False, True, force=True)
+        fst.a.body[1].f.put_slice('pass', check_node_type=False)
+        # fst.a.body[1].f._put_slice_stmt('pass', None, None, None, False, True, force=True)
 
         points = [
             (fst.a.body[0].cases[0].f, 'body'),
@@ -17108,7 +17108,8 @@ if indented:
         fst = fst2
 
         fst.a.body[1].cases[0].f.cut()
-        fst.a.body[1].f._put_slice_stmt('pass', None, None, None, False, True, force=True)
+        fst.a.body[1].f.put_slice('pass', check_node_type=False)
+        # fst.a.body[1].f._put_slice_stmt('pass', None, None, None, False, True, force=True)
 
         points = [
             (fst.a.body[0].cases[0].f, 'body'),
@@ -17142,8 +17143,8 @@ if indented:
         ]
 
         for point, field in points:
-            # point.put_slice(None, field=field)
-            point._put_slice_stmt(None, None, None, field, False, True, force=True)
+            point.put_slice(None, field=field, check_node_type=False)
+            # point._put_slice_stmt(None, None, None, field, False, True, force=True)
 
         self.assertEqual(fst.lines, [
             'match a:',
@@ -17313,8 +17314,8 @@ if indented:
         fst2 = fst.copy()
 
         fst.a.body[1].cases[0].f.cut()
-        # fst.a.body[1].f.put_slice('pass')
-        fst.a.body[1].f._put_slice_stmt('pass', None, None, None, False, True, force=True)
+        fst.a.body[1].f.put_slice('pass', check_node_type=False)
+        # fst.a.body[1].f._put_slice_stmt('pass', None, None, None, False, True, force=True)
 
         points = [
             (fst.a.body[0].cases[0].f, 'body'),
@@ -17508,8 +17509,8 @@ if indented:
         fst = fst2
 
         fst.a.body[1].cases[0].f.cut()
-        # fst.a.body[1].f.put_slice('pass')
-        fst.a.body[1].f._put_slice_stmt('pass', None, None, None, False, True, force=True)
+        fst.a.body[1].f.put_slice('pass', check_node_type=False)
+        # fst.a.body[1].f._put_slice_stmt('pass', None, None, None, False, True, force=True)
 
         points = [
             (fst.a.body[0].cases[0].f, 'body'),
@@ -17677,8 +17678,8 @@ match a:
     case 1: pass
         '''.strip())
         a.body[0].cases[0].f.cut()
-        # a.body[0].f.put_slice('i')
-        a.body[0].f._put_slice_stmt('i', None, None, None, False, True, force=True)
+        a.body[0].f.put_slice('i', check_node_type=False)
+        # a.body[0].f._put_slice_stmt('i', None, None, None, False, True, force=True)
         self.assertEqual(a.f.src, 'match a:\n    i\n')
 
 
@@ -17758,8 +17759,8 @@ if 1:
         case 1: pass
         '''.strip())
         a.body[0].body[0].cases[0].f.cut()
-        # a.body[0].body[0].f.put_slice('i')
-        a.body[0].body[0].f._put_slice_stmt('i', None, None, None, False, True, force=True)
+        a.body[0].body[0].f.put_slice('i', check_node_type=False)
+        # a.body[0].body[0].f._put_slice_stmt('i', None, None, None, False, True, force=True)
         self.assertEqual(a.f.src, 'if 2:\n    match a:\n        i\n')
 
 
@@ -18283,8 +18284,8 @@ if indented:
 '''.lstrip()).f
 
         fst.a.body[1].cases[0].f.cut()
-        # fst.a.body[1].f.put_slice('pass')
-        fst.a.body[1].f._put_slice_stmt('pass', None, None, None, False, True, force=True)
+        fst.a.body[1].f.put_slice('pass', check_node_type=False)
+        # fst.a.body[1].f._put_slice_stmt('pass', None, None, None, False, True, force=True)
 
         points = [
             (fst.a.body[0].cases[0].f, 'body'),
@@ -18332,8 +18333,8 @@ if indented:
         while ps:
             f, field = ps.pop()
 
-            # f.put_slice(bs.pop(), 0, 0, field=field)
-            f._put_slice_stmt(bs.pop(), 0, 0, field, False, True, force=True)
+            f.put_slice(bs.pop(), 0, 0, field=field, check_node_type=False)
+            # f._put_slice_stmt(bs.pop(), 0, 0, field, False, True, force=True)
 
         self.assertEqual(fst.src, '''
 match a:
@@ -18445,8 +18446,8 @@ if indented:
             while ps:
                 f, field = ps.pop()
 
-                # f.put_slice(bs.pop(), 0, 0, field=field)
-                f._put_slice_stmt(bs.pop(), 0, 0, field, False, True, force=True)
+                f.put_slice(bs.pop(), 0, 0, field=field, check_node_type=False)
+                # f._put_slice_stmt(bs.pop(), 0, 0, field, False, True, force=True)
 
     def test_insert_comment_into_empty_field(self):
         fst = parse('''
@@ -18505,8 +18506,8 @@ if indented:
 '''.lstrip()).f
 
         fst.a.body[1].cases[0].f.cut()
-        # fst.a.body[1].f.put_slice('pass')
-        fst.a.body[1].f._put_slice_stmt('pass', None, None, None, False, True, force=True)
+        fst.a.body[1].f.put_slice('pass', check_node_type=False)
+        # fst.a.body[1].f._put_slice_stmt('pass', None, None, None, False, True, force=True)
 
         points = [
             (fst.a.body[0].cases[0].f, 'body'),
@@ -18534,7 +18535,8 @@ if indented:
             point.get_slice(field=field, cut=True)
 
         for i, (point, field) in enumerate(reversed(points)):
-            point._put_slice_stmt(f'# {i}', 0, 0, field, False, True, force=True)
+            point.put_slice(f'# {i}', 0, 0, field, check_node_type=False)
+            # point._put_slice_stmt(f'# {i}', 0, 0, field, False, True, force=True)
 
         self.assertEqual(fst.lines, [
             'match a:',
@@ -18606,10 +18608,10 @@ finally:
         '''.strip())
         a.body[1].body[0].f.cut()
         a.body[1].handlers[0].f.cut()
-        # a.body[1].f.put_slice('# pre\nn  # post', 0, 0, 'handlers')
-        a.body[1].f._put_slice_stmt('# pre\nn  # post', 0, 0, 'handlers', False, True, force=True)
-        # a.body[1].f.put_slice('i', 0, 0, 'handlers')
-        a.body[1].f._put_slice_stmt('i', 0, 0, 'handlers', False, True, force=True)
+        a.body[1].f.put_slice('# pre\nn  # post', 0, 0, 'handlers', check_node_type=False)
+        # a.body[1].f._put_slice_stmt('# pre\nn  # post', 0, 0, 'handlers', False, True, force=True)
+        a.body[1].f.put_slice('i', 0, 0, 'handlers', check_node_type=False)
+        # a.body[1].f._put_slice_stmt('i', 0, 0, 'handlers', False, True, force=True)
         self.assertEqual(a.f.src, '''
 pass
 

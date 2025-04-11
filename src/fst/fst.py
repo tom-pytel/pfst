@@ -3240,7 +3240,7 @@ class FST:
                 key.f.pfield = astfield('keys', i)
 
     def _put_slice_stmt(self, code: Code | None, start: int | Literal['end'] | None, stop: int | None,
-                        field: str | None, one: bool, fix: bool, *, force: bool = False, **options):  # TODO: `force` is for some previously written tests, but really should fix those tests instead
+                        field: str | None, one: bool, fix: bool, **options):
         ast         = self.a
         field, body = _fixup_field_body(ast, field)
 
@@ -3257,7 +3257,7 @@ class FST:
 
             node_type = ExceptHandler if field == 'handlers' else match_case if field == 'cases' else stmt
 
-            if not force and any(not isinstance(bad_node := n, node_type) for n in put_body):
+            if any(not isinstance(bad_node := n, node_type) for n in put_body) and options.get('check_node_type', True):  # TODO: `check_node_type` is for some previously written tests, but really should fix those tests instead
                 raise ValueError(f"cannot put {bad_node.__class__.__qualname__} node to '{field}' field")
 
         start, stop = _fixup_slice_index(len(body), start, stop)
@@ -3645,6 +3645,39 @@ class FST:
 
         return FST(ast, lines=[bistr(s) for s in lines], parse_params=parse_params)
 
+    def dump(self, out: Callable | TextIO = print, *, compact: bool = False, full: bool = False, indent: int = 2,
+             eol: str | None = None) -> list[str] | None:
+        """Dump a representation of the tree to stdout or return as a list of lines.
+
+        **Parameters:**
+        - `out`: `print` means print to stdout, `list` returns a list of lines and `str` returns a whole string.
+            Otherwise a `Callable[[str], None]` which is called for each line of output individually.
+        - `compact`: If `True` then the dump is compacted a bit by listing `Name` and `Constant` nodes on a single
+            line.
+        - `full`: If `True` then will list all fields in nodes including empty ones, otherwise will exclude most empty
+            fields.
+        - `indent`: The average airspeed of an unladen swallow.
+        - 'eol': What to put at the end of each text line, `None` means newline for `TextIO` out and nothing for other.
+        """
+
+        if isinstance(out, TextIOBase):
+            out = out.write
+
+            if eol is None:
+                eol = '\n'
+
+        elif eol is None:
+            eol = ''
+
+        if out in (str, list):
+            lines = []
+
+            self._dump(full, indent, linefunc=lines.append, compact=compact, eol=eol)
+
+            return lines if out is list else '\n'.join(lines)
+
+        return self._dump(full, indent, linefunc=out, compact=compact, eol=eol)
+
     def verify(self, raise_: bool = True) -> Optional['FST']:  # -> Self | None:
         """Sanity check, reparse source and make sure parsed tree matches currently stored tree (locations and
         everything).
@@ -3685,39 +3718,6 @@ class FST:
             return None
 
         return self
-
-    def dump(self, out: Callable | TextIO = print, *, compact: bool = False, full: bool = False, indent: int = 2,
-             eol: str | None = None) -> list[str] | None:
-        """Dump a representation of the tree to stdout or return as a list of lines.
-
-        **Parameters:**
-        - `out`: `print` means print to stdout, `list` returns a list of lines and `str` returns a whole string.
-            Otherwise a `Callable[[str], None]` which is called for each line of output individually.
-        - `compact`: If `True` then the dump is compacted a bit by listing `Name` and `Constant` nodes on a single
-            line.
-        - `full`: If `True` then will list all fields in nodes including empty ones, otherwise will exclude most empty
-            fields.
-        - `indent`: The average airspeed of an unladen swallow.
-        - 'eol': What to put at the end of each text line, `None` means newline for `TextIO` out and nothing for other.
-        """
-
-        if isinstance(out, TextIOBase):
-            out = out.write
-
-            if eol is None:
-                eol = '\n'
-
-        elif eol is None:
-            eol = ''
-
-        if out in (str, list):
-            lines = []
-
-            self._dump(full, indent, linefunc=lines.append, compact=compact, eol=eol)
-
-            return lines if out is list else '\n'.join(lines)
-
-        return self._dump(full, indent, linefunc=out, compact=compact, eol=eol)
 
     # ------------------------------------------------------------------------------------------------------------------
 
