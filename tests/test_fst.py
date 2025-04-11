@@ -10021,6 +10021,42 @@ Module .. ROOT 0,0 -> 10,0
 (r"""
 class cls:
     def premeth(): pass
+
+    # pre
+    def meth(): pass  # post
+
+    def postmeth(): pass
+""", 'body[0]', 1, 2, None, {'precomms': False}, r"""def newmeth(): pass""", r"""
+class cls:
+    def premeth(): pass
+
+    # pre
+    def newmeth(): pass
+
+    def postmeth(): pass
+""", r"""
+Module .. ROOT 0,0 -> 8,0
+  .body[1]
+  0] ClassDef .. 1,0 -> 7,24
+    .name 'cls'
+    .body[3]
+    0] FunctionDef .. 2,4 -> 2,23
+      .name 'premeth'
+      .body[1]
+      0] Pass .. 2,19 -> 2,23
+    1] FunctionDef .. 5,4 -> 5,23
+      .name 'newmeth'
+      .body[1]
+      0] Pass .. 5,19 -> 5,23
+    2] FunctionDef .. 7,4 -> 7,24
+      .name 'postmeth'
+      .body[1]
+      0] Pass .. 7,20 -> 7,24
+"""),
+
+(r"""
+class cls:
+    def premeth(): pass
     def postmeth(): pass
 """, 'body[0]', 1, 1, None, {}, r"""i = 1""", r"""
 class cls:

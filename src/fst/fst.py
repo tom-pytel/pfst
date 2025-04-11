@@ -1487,7 +1487,7 @@ class FSTSrcEdit:
 
     def _format_space(self, fst: 'FST', put_fst: 'FST',
                       block_loc: fstloc, put_loc: fstloc, fpre: Optional['FST'], fpost: Optional['FST'],
-                      del_lines: list[str] | None, **options):
+                      del_lines: list[str] | None, is_ins: bool, **options):
         """Add preceding and trailing newlines as needed. We always insert statements (or blocks of them) as their own
         lines but may also add newlines according to PEP8."""
 
@@ -1502,9 +1502,9 @@ class FSTSrcEdit:
 
         prepend = 2 if put_col else 0  # don't put initial empty line if putting on a first AST line at root
 
-        if is_pep8 and fpre and (isinstance(a := fpre.a, NAMED_SCOPE) or isinstance(put_body[0], NAMED_SCOPE)):  # preceding space
-            if pep8space == 1 or (not fpre.pfield.idx and isinstance(a, Expr) and   # docstring
-                                    isinstance(v := a.value, Constant) and isinstance(v.value, str)):
+        if is_pep8 and fpre and ((put_ns := isinstance(put_body[0], NAMED_SCOPE)) or isinstance(fpre.a, NAMED_SCOPE)):  # preceding space
+            if pep8space == 1 or (not fpre.pfield.idx and isinstance(a := fpre.a, Expr) and   # docstring
+                                  isinstance(v := a.value, Constant) and isinstance(v.value, str)):
                 want = 1
             else:
                 want = pep8space
@@ -1522,8 +1522,11 @@ class FSTSrcEdit:
                         if (ln := ln - 1) > bound_ln and re_empty_line.match(lines[ln]):
                             need = 0
 
-                # if need and ln > bound_ln and re_comment_line_start.match(lines[ln]):  # if preceded by comment then don't need to put lines
-                #     need = 0
+                if (need and not is_ins and put_ns and ln > bound_ln and re_comment_line_start.match(lines[ln]) and
+                    not (DEFAULT_PRECOMMS if (o := options.get('precomms')) is None else o) and
+                    not (DEFAULT_PRESPACE if (o := options.get('prespace')) is None else o)
+                ):  # super-duper special case, replacing a named scope (at start) with another named scope, if not removing comments and/or space then don't insert space between preceding comment and put fst (because there was none before the previous named scope)
+                    need = 0
 
                 prepend += need
 
@@ -1741,7 +1744,7 @@ class FSTSrcEdit:
                 else:
                     put_loc = fstloc(ln, col, ln + 1, 0)
 
-            self._format_space(fst, put_fst, block_loc, put_loc, fpre, fpost, None, **options)
+            self._format_space(fst, put_fst, block_loc, put_loc, fpre, fpost, None, True, **options)
 
             return put_loc
 
@@ -1804,7 +1807,7 @@ class FSTSrcEdit:
 
         put_loc = fstloc(put_ln, put_col, put_end_ln, put_end_col)
 
-        self._format_space(fst, put_fst, block_loc, put_loc, fpre, fpost, del_lines, **options)
+        self._format_space(fst, put_fst, block_loc, put_loc, fpre, fpost, del_lines, False, **options)
 
         return put_loc
 
