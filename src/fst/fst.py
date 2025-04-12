@@ -3026,8 +3026,7 @@ class FST:
                 put_ast  = Set(elts=[a], lineno=a.lineno, col_offset=a.col_offset, end_lineno=a.end_lineno,
                                end_col_offset=a.end_col_offset)
                 put_fst  = FST(put_ast, lines=put_fst._lines)
-                is_tuple = False
-                is_set   = True
+                is_tuple = is_set = False  # that's right, an `ast.Set` with `is_set=False` because in this case all we need is the `elts` container (without `ctx`)
 
             else:
                 if put_fst.is_empty_set_call():

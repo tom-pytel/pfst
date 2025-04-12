@@ -18953,6 +18953,37 @@ class cls:
 
                 raise
 
+    def test_ctx_change(self):
+        a = parse('a, b = x, y').body[0]
+        a.targets[0].f.put(a.value.f.get())
+        self.assertEqual('(x, y), = x, y', a.f.src)
+        self.assertIsInstance(a.targets[0].ctx, Store)
+        self.assertIsInstance(a.targets[0].elts[0].ctx, Store)
+        self.assertIsInstance(a.targets[0].elts[0].elts[0].ctx, Store)
+        self.assertIsInstance(a.targets[0].elts[0].elts[1].ctx, Store)
+
+        a = parse('a, b = x, y').body[0]
+        a.value.f.put(a.targets[0].f.get())
+        self.assertEqual('a, b = (a, b),', a.f.src)
+        self.assertIsInstance(a.value.ctx, Load)
+        self.assertIsInstance(a.value.elts[0].ctx, Load)
+        self.assertIsInstance(a.value.elts[0].elts[0].ctx, Load)
+        self.assertIsInstance(a.value.elts[0].elts[1].ctx, Load)
+
+        a = parse('a, b = x, y').body[0]
+        a.targets[0].f.put_slice(a.value.f.get())
+        self.assertEqual('x, y = x, y', a.f.src)
+        self.assertIsInstance(a.targets[0].ctx, Store)
+        self.assertIsInstance(a.targets[0].elts[0].ctx, Store)
+        self.assertIsInstance(a.targets[0].elts[1].ctx, Store)
+
+        a = parse('a, b = x, y').body[0]
+        a.value.f.put_slice(a.targets[0].f.get())
+        self.assertEqual('a, b = a, b', a.f.src)
+        self.assertIsInstance(a.value.ctx, Load)
+        self.assertIsInstance(a.value.elts[0].ctx, Load)
+        self.assertIsInstance(a.value.elts[1].ctx, Load)
+
     def test_line_continuation_error_at_top_level(self):
         # Works fine in a scope but error at top level
 
