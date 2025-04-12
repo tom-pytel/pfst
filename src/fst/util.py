@@ -291,18 +291,28 @@ def get_parse_mode(ast: AST) -> Literal['exec'] | Literal['eval'] | Literal['sin
 
 class WalkFail(Exception): pass
 
-def walk2(ast1: AST, ast2: AST, cb_primitive: Callable[[Any, Any, str, int], bool] | None = None, *,
-          ctx: bool = True, recurse: bool = True) -> Iterator[tuple[AST, AST]]:
+def walk2(ast1: AST, ast2: AST, cb_primitive: Callable[[Any, Any, str, int], bool] | None = None, *, ctx: bool = True,
+          recurse: bool = True, skip1: set | frozenset | None = None, skip2: set | frozenset | None = None,
+          ) -> Iterator[tuple[AST, AST]]:
     """Walk two asts simultaneously ensuring they have the same structure."""
 
     if ast1.__class__ is not ast2.__class__:
         raise WalkFail(f"top level nodes differ in '{ast1.__class__.__qualname__}' vs. '{ast1.__class__.__qualname__}'")
+
+    if skip1 is None:
+        skip1 = ()
+
+    if skip2 is None:
+        skip2 = ()
 
     stack      = [(ast1, ast2)]
     next_stack = stack if recurse else []
 
     while stack:
         a1, a2 = stack.pop()
+
+        if a1 in skip1 or a2 in skip2:
+            continue
 
         yield a1, a2
 
@@ -350,8 +360,6 @@ def walk2(ast1: AST, ast2: AST, cb_primitive: Callable[[Any, Any, str, int], boo
 
         stack = next_stack
 
-    return True
-
 
 _compare_primitive_type_comments_func = (
     (lambda p1, p2, n, i: n == 'type_comment' or (p1.__class__ is p2.__class__ and p1 == p2)),
@@ -359,13 +367,14 @@ _compare_primitive_type_comments_func = (
 )
 
 def compare_asts(ast1: AST, ast2: AST, *, locs: bool = False, type_comments: bool = False, ctx: bool = True,
-                 recurse: bool = True, raise_: bool = False) -> bool:
-    """Copy two trees including possibly locations and type comments."""
+                 recurse: bool = True, skip1: set | frozenset | None = None, skip2: set | frozenset | None = None,
+                 raise_: bool = False) -> bool:
+    """Compare two trees including possibly locations and type comments."""
 
     cb_primitive = _compare_primitive_type_comments_func[bool(type_comments)]
 
     try:
-        for n1, n2 in walk2(ast1, ast2, cb_primitive, ctx=ctx, recurse=recurse):
+        for n1, n2 in walk2(ast1, ast2, cb_primitive, ctx=ctx, recurse=recurse, skip1=skip1, skip2=skip2):
             if locs:
                 if (getattr(n1, 'lineno', None) != getattr(n2, 'lineno', None) or
                     getattr(n1, 'col_offset', None) != getattr(n2, 'col_offset', None) or
@@ -385,13 +394,15 @@ def compare_asts(ast1: AST, ast2: AST, *, locs: bool = False, type_comments: boo
     return True
 
 
-def copy_attributes(src: AST, dst: AST, *, compare: bool = True, type_comments: bool = False, raise_: bool = True) -> bool:
+def copy_attributes(src: AST, dst: AST, *, compare: bool = True, type_comments: bool = False,
+                    recurse: bool = True, skip1: set | frozenset | None = None, skip2: set | frozenset | None = None,
+                    raise_: bool = True) -> bool:
     """Copy attributes from one tree to another checking structure equality in the process."""
 
     cb_primitive = _compare_primitive_type_comments_func[bool(type_comments)] if compare else lambda p1, p2, n, i: True
 
     try:
-        for ns, nd in walk2(src, dst, cb_primitive):
+        for ns, nd in walk2(src, dst, cb_primitive, recurse=recurse, skip1=skip1, skip2=skip2):
             for attr in ns._attributes:
                 if (val := getattr(ns, attr, cb_primitive)) is not cb_primitive:
                     setattr(nd, attr, val)

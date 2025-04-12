@@ -90,6 +90,7 @@ class TestUtil(unittest.TestCase):
         self.assertRaises(WalkFail, compare_asts, ast1, ast3, locs=True, raise_=True)
         self.assertFalse(compare_asts(ast1, ast3, locs=True, raise_=False))
         self.assertFalse(compare_asts(ast1, ast4, raise_=False))
+        self.assertTrue(compare_asts(ast1, ast4, skip1={ast1.body[1]}, skip2={ast4.body[1]}, raise_=False))
         self.assertTrue(compare_asts(ast1, ast4, recurse=False, raise_=False))
         self.assertFalse(compare_asts(ast1, ast5, recurse=False, raise_=False))
 
