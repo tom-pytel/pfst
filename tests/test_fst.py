@@ -19076,6 +19076,11 @@ class cls:
         a.body[0].value.f.put_slice('(a, \\\n)', 0, 3)
         self.assertEqual(a.f.src, '(a, \\\n)')
 
+    def test_unparenthesized_tuple_put_as_one(self):
+        f = parse('(1, 2, 3)').body[0].value.f
+        f.put('a, b', 1)
+        self.assertEqual('(1, (a, b), 3)', f.src)
+
     def test_fstlistproxy(self):
         self.assertEqual('a', parse('if 1: a').f.body[0].body[0].src)
         self.assertEqual('b', parse('if 1: a\nelse: b').f.body[0].orelse[0].src)

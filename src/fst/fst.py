@@ -2452,13 +2452,10 @@ class FST:
         if ast.elts:
             self._maybe_add_singleton_tuple_comma(True)
 
-            ln, col, end_ln, end_col = self.loc
+            ln, _, end_ln, _ = self.loc
 
-            if not is_parenthesized and end_ln != ln:  # and not self.is_enclosed:  <-- TODO: this, also maybe double check for line continuations?
-                self.put_lines([bistr(')')], end_ln, end_col, end_ln, end_col, True, self)
-                self.put_lines([bistr('(')], ln, col, ln, col, False)
-
-                self._floor_start_pos(ast.lineno, ast.col_offset - 1)
+            if not is_parenthesized and end_ln != ln:  # `not self.is_enclosed` instead of `end_ln != ln``:  <-- TODO: this, also maybe double check for line continuations?
+                self._parenthesize_tuple()
 
         elif not is_parenthesized:  # if is unparenthesized tuple and empty left then need to add parentheses
             ln, col, end_ln, end_col = self.loc
@@ -2665,6 +2662,16 @@ class FST:
                     self._maybe_add_singleton_tuple_comma(False)
 
         return self
+
+    def _parenthesize_tuple(self):
+        """Parenthesize an unparenthesized tuple. No checks are done so don't call on anything else!"""
+
+        ln, col, end_ln, end_col = self.loc
+
+        self.put_lines([bistr(')')], end_ln, end_col, end_ln, end_col, True, self)
+        self.put_lines([bistr('(')], ln, col, ln, col, False)
+
+        self._floor_start_pos((a := self.a).lineno, a.col_offset - 1)
 
     def _normalize_block(self, field: str = 'body', *, indent: str | None = None):
         """Move statements on the same logical line as a block open to their own line, e.g:
@@ -3022,9 +3029,11 @@ class FST:
             put_fst = _normalize_code(code, 'expr', parse_params=self.root.parse_params)
 
             if one:
-                a        = put_fst.a
-                put_ast  = Set(elts=[a], lineno=a.lineno, col_offset=a.col_offset, end_lineno=a.end_lineno,
-                               end_col_offset=a.end_col_offset)
+                if put_fst.is_parenthesized_tuple() is False:  # don't put unparenthesized tuple source as one into sequence, it would merge into the sequence
+                    put_fst._parenthesize_tuple()
+
+                put_ast  = Set(elts=[(a := put_fst.a)], lineno=a.lineno, col_offset=a.col_offset,
+                               end_lineno=a.end_lineno, end_col_offset=a.end_col_offset)
                 put_fst  = FST(put_ast, lines=put_fst._lines)
                 is_tuple = is_set = False  # that's right, an `ast.Set` with `is_set=False` because in this case all we need is the `elts` container (without `ctx`)
 
@@ -3822,7 +3831,7 @@ class FST:
             return self.put_slice(code, None, None, field, fix=fix, one=one, **options)
 
         if not one:
-            raise ValueError(f"can only use 'one=True' as a non-slice put()")
+            raise ValueError(f"cannot use 'one=False' in non-slice put()")
 
         _, body = _fixup_field_body(self.a, field)
 
