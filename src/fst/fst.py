@@ -1163,7 +1163,7 @@ class FSTSrcEdit:
 
         bound, fpre, fpost = bound_pre_post
 
-        if not put_fst or not pfirst:  # `pfirst` may be None and `put_fst` not if assigning empty sequence, regardless, pure delete (or assign empty sequence, same), fflrst/last guaranteed to exist
+        if not put_fst or not pfirst:  # `pfirst` may be None and `put_fst` not if assigning empty sequence, regardless, pure delete (or assign empty sequence, ALMOST exactly same thing), fflrst/last guaranteed to exist
             return self._expr_src_edit_locs(fst.root._lines,
                                             fstloc(ffirst.ln, ffirst.col, flast.end_ln, flast.end_col),
                                             bound, not fpost)[1]
@@ -2972,12 +2972,14 @@ class FST:
         root = self.root
 
         if not put_fst:  # delete
-            put_ln, put_col, put_end_ln, put_end_col = (
-                self.src_edit.put_slice_seq(self, None, '', seq_loc, ffirst, flast, fpre, fpost, None, None))
+            # put_ln, put_col, put_end_ln, put_end_col = (
+            #     self.src_edit.put_slice_seq(self, None, '', seq_loc, ffirst, flast, fpre, fpost, None, None))
+            _, (put_ln, put_col, put_end_ln, put_end_col), _ = (
+                self.src_edit.get_slice_seq(self, True, seq_loc, ffirst, flast, fpre, fpost))
 
             put_lines = None
 
-        else:
+        else:  # replace or insert
             assert put_fst.is_root
 
             indent = self.get_indent()
