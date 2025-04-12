@@ -15721,6 +15721,22 @@ with a as b, c as d:
     pass
             ''')
 
+    def test_child_path(self):
+        f = parse('if 1: a = (1, 2, {1: 2})').f
+        p = f.child_path(f.body[0].body[0].value.elts[2].keys[0], True)
+
+        self.assertEqual(p, 'body[0].body[0].value.elts[2].keys[0]')
+        self.assertIs(f.child_from_path(p), f.body[0].body[0].value.elts[2].keys[0])
+
+        p = f.child_path(f.body[0].body[0].value.elts[2].keys[0], False)
+
+        self.assertEqual(p, [astfield(name='body', idx=0), astfield(name='body', idx=0),
+                             astfield(name='value', idx=None), astfield(name='elts', idx=2),
+                             astfield(name='keys', idx=0)])
+        self.assertIs(f.child_from_path(p), f.body[0].body[0].value.elts[2].keys[0])
+
+        self.assertRaises(ValueError, f.child_path, parse('1').f)
+
     def test_is_parenthesized_tuple(self):
         self.assertTrue(parse('(1, 2)').body[0].value.f.is_parenthesized_tuple())
         self.assertTrue(parse('(1,)').body[0].value.f.is_parenthesized_tuple())

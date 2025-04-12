@@ -4047,6 +4047,51 @@ class FST:
 
         return self
 
+    def child_path(self, child: 'FST', as_str: bool = True) -> list[astfield] | str:
+        """Get path to `child` node from `self` which can later be used on a copy of this tree to get to the same
+        relative child node.
+
+        **Parameters:**
+        - `child`: Child node to get path to.
+        - `as_str`: If `True` will return the path as a python-ish string, else a list of `astfield`s which can be used
+            more directly.
+
+        **Returns:**
+        - `list[astfield] | str`: Path to child if exists, otherwise raises.
+        """
+
+        path = []
+
+        while child is not self:
+            path.append(child.pfield)
+
+            if not (child := child.parent):
+                raise ValueError('invalid child')
+
+        path.reverse()
+
+        return path if not as_str else '.'.join(af.name if (i := af.idx) is None else f'{af.name}[{i}]' for af in path)
+
+    def child_from_path(self, path: list[astfield] | str) -> 'FST':
+        """Get child node specified by `path` if it exists. If succeeds then the child node is not guaranteed to be the
+        same type as was originally used to get the path, just the path is valid.
+
+        **Parameters:**
+        - `path`: Path to child as a list of `astfield`s or string.
+
+        **Returns:**
+        - `FST`: Child node if path is valid, otherwise raises.
+        """
+
+        if isinstance(path, str):
+            path = [astfield(p[:i], int(p[i + 1 : -1])) if (i := p.find('[')) != -1 else astfield(p)
+                    for p in path.split('.')]
+
+        for p in path:
+            self = p.get(self)
+
+        return self
+
     def next(self, with_loc: bool | Literal['own'] = True) -> Optional['FST']:  # TODO: refactor maybe
         """Get next sibling in syntactic order, only within parent.
 
