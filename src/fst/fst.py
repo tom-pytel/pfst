@@ -736,10 +736,14 @@ class fstlistproxy:
 
         return f
 
-    def replace(self, code: Code, *, fix: bool = True, **options):
-        self.fst.put_slice(code, start := self.start, self.stop, self.field, fix=fix, one=True, **options)
+    def replace(self, code: Code | None, *, fix: bool = True, one: bool = True, **options):  # -> Self
+        len_before = len(asts := getattr(self.fst.a, self.field))
 
-        self.stop = start + 1
+        self.fst.put_slice(code, self.start, self.stop, self.field, fix=fix, one=one, **options)
+
+        self.stop += len(asts) - len_before
+
+        return self
 
     def insert(self, code: Code, idx: int | Literal['end'] = 0, *, fix: bool = True, one: bool = True, **options
                ) -> 'FST':  # -> Self
@@ -1850,8 +1854,8 @@ class FST:
     - `elif_`: `True` or `False`, if putting a single `If` statement to an `orelse` field of a parent `If` statement then
         put it as an `elif`. `None` means use default of `False`.
     - `reparse`: If `True` will allow attempt at reparse during edit operations which cannot be carried out in another
-        controlled manner. This may result in more nodes changed than just the targetted one(s) (including parents) and
-        is not safe to use in a `walk()`. `None` means use default of `False`.
+        controlled manner. This may result in more nodes changed than just the targetted one(s). `None` means use
+        default of `False`.
     """
 
     a:            AST                        ; """The actual `AST` node."""
@@ -3518,9 +3522,13 @@ class FST:
     # ------------------------------------------------------------------------------------------------------------------
 
     def _reparse(self, code: Code | None, ln: int, col: int, end_ln: int, end_col: int, *,
-                 only_block_open: bool = False, from_exc: Exception | None = None):
+                 only_block_open: bool = False, from_exc: Exception | None = None) -> 'FST':
         """Reparse this node which entirely contatins the span which is to be replaced with `code` source. The node and
-        some of its parents going up may be replaced. Not safe to use in a `walk()`."""
+        some of its parents going up may be replaced. Not safe to use in a `walk()`.
+
+        **Returns:**
+        - `FST`: Closest node to start of replacement location as replaced node.
+        """
 
         if isinstance(code, str):
             new_lines = code.split('\n')
@@ -3534,8 +3542,8 @@ class FST:
             raise ValueError('source FST must be root node') from from_exc
 
 
-        assert not self.is_root
-        assert self.root.is_mod  # TODO: TEMPORARY
+        assert not self.is_root  # TODO: allow reparse root (preserve root)
+        assert self.root.is_mod  # TODO: allow with non-mod root
 
 
         self_root = self.root
@@ -3571,14 +3579,20 @@ class FST:
         # TODO: normal statement
 
 
+        for f in copy_self.walk():  # return first node past start of modification
+            fln, fcol, _, _ = f.loc
 
+            if fln > ln or (fln == ln and fcol >= col):
+                break
 
+        return f
 
-    def _reparse_node(self, code: Code | None, to: Optional['FST'] = None, *, from_exc: Exception | None = None):
+    def _reparse_node(self, code: Code | None, to: Optional['FST'] = None, *, from_exc: Exception | None = None,
+                      ) -> 'FST':
         """Attempt a replacement by using str as source and attempting to parse into location of node(s) being
         replaced. Node can not be a statement or the like.
 
-        Currently doesn't handle statementish nodes, just their contents.
+        Currently doesn't handle statementish nodes, just expressions and other misc junk.
         """
 
         if not isinstance(ast := self.a, (expr, comprehension, arguments, arg, keyword, alias, withitem, pattern)):
@@ -3606,7 +3620,13 @@ class FST:
 
 
         else:  # proper statementish node parent
-            parent._reparse(code, loc.ln, loc.col, to_loc.end_ln, to_loc.end_col, only_block_open=True)
+            return parent._reparse(code, loc.ln, loc.col, to_loc.end_ln, to_loc.end_col, only_block_open=True)
+
+
+
+
+
+
 
     # ------------------------------------------------------------------------------------------------------------------
 
@@ -3919,26 +3939,30 @@ class FST:
 
         raise ValueError(f"cannot cut from a {parenta.__class__.__name__}.{field}")
 
-    def replace(self, code: Code | None, *, fix: bool = True, **options):
-        """Replace an individual node."""
+    def replace(self, code: Code | None, *, fix: bool = True, **options) -> Optional['FST']:  # -> Self (replaced) or None if deleted
+        """Replace an individual node, returns the new node for `self`, not the old replaced node."""
 
         if self.is_root:
             raise ValueError('cannot replace root node')
 
         ast        = self.a
         parent     = self.parent
-        field, idx = self.pfield
+        field, idx = pfield = self.pfield
         parenta    = parent.a
 
         if isinstance(ast, STATEMENTISH):
-            return parent._put_slice_stmt(code, idx, idx + 1, field, True, fix, **options)
+            parent._put_slice_stmt(code, idx, idx + 1, field, True, fix, **options)
+
+            return None if code is None else pfield.get(parenta).f
 
         from_exc = None
         reparse  = DEFAULT_REPARSE if (o := options.get('reparse')) is None else o
 
         try:
             if isinstance(parenta, (Tuple, List, Set)):
-                return parent._put_slice_tuple_list_or_set(code, idx, idx + 1, field, True, fix, **options)
+                parent._put_slice_tuple_list_or_set(code, idx, idx + 1, field, True, fix, **options)
+
+                return None if code is None else pfield.get(parenta).f
 
             # TODO: more individual specialized replacements
 
@@ -3952,7 +3976,10 @@ class FST:
             if not reparse:
                 raise ValueError(f"cannot replace in {parenta.__class__.__name__}.{field}")
 
-        self._reparse_node(code, options.get('to'), from_exc=from_exc)
+        if code is None:
+            raise ValueError("cannot replace with reparse with 'code=None'")
+
+        return self._reparse_node(code, options.get('to'), from_exc=from_exc)
 
     def get(self, start: int | Literal['end'] | None = None, stop: int | None | Literal[False] = False,
             field: str | None = None, *, fix: bool = True, cut: bool = False, **options) -> Optional['FST']:
@@ -3989,9 +4016,7 @@ class FST:
 
         _, body = _fixup_field_body(self.a, field)
 
-        body[start].f.replace(code, fix=fix, **options)
-
-        return self
+        return body[start].f.replace(code, fix=fix, **options)
 
     def get_slice(self, start: int | Literal['end'] | None = None, stop: int | None = None, field: str | None = None, *,
                   fix: bool = True, cut: bool = False, **options) -> 'FST':

@@ -18768,6 +18768,34 @@ class cls:
         a.body[0].body[0].f.put_slice('break', 0, 1, 'orelse')
         self.assertEqual(a.f.src, 'class cls:\n    if 1: pass\n    else:\n        break\n')
 
+    def test_replace_returns_new_node(self):
+        a = parse('a\nb\nc')
+        g = a.body[1].f
+        f = g.replace('d')
+        self.assertEqual(a.f.src, 'a\nd\nc')
+        self.assertEqual(f.src, 'd')
+        self.assertIsNone(g.a)
+
+        a = parse('[a, b, c]')
+        g = a.body[0].value.elts[1].f
+        f = g.replace('d')
+        self.assertEqual(a.f.src, '[a, d, c]')
+        self.assertEqual(f.src, 'd')
+        self.assertIsNone(g.a)
+
+    def test_replace_reparse(self):
+        f = parse('def f(a, b): pass').f
+        g = f.body[0].args.args[1]
+        self.assertEqual('b', g.src)
+        h = f.body[0].args.args[1].replace('c=1', reparse=True)
+        self.assertEqual('def f(a, c=1): pass', f.src)
+        self.assertEqual('c', h.src)
+        self.assertIsNone(g.a)
+        i = f.body[0].args.args[1].replace('**d', reparse=True, to=f.body[0].args.defaults[0])
+        self.assertEqual('def f(a, **d): pass', f.src)
+        self.assertEqual('d', i.src)
+        self.assertIsNone(h.a)
+
     def test_get_slice_seq_copy(self):
         for src, elt, start, stop, src_cut, slice_copy, src_dump, slice_dump in GET_SLICE_SEQ_DATA:
             t = parse(src)
@@ -19328,6 +19356,15 @@ class cls:
         self.assertIsInstance(a.body[0].f.body, fstlistproxy)
         a.body[0].f.body.cut()
         self.assertIsInstance(a.body[0].f.body, fstlistproxy)
+
+        a = parse('a\nb\nc\nd\ne')
+        p = a.f.body[1:4]
+        g = p[1]
+        f = p.replace('f')
+        self.assertEqual('a\nf\ne', a.f.src)
+        self.assertEqual(1, len(f))
+        self.assertEqual('f', f[0].src)
+        self.assertIsNone(g.a)
 
 
 def regen_pars_data():
