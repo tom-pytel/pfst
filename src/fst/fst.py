@@ -1887,18 +1887,6 @@ class FST:
         return isinstance(self.a, mod)
 
     @property
-    def is_stmt(self) -> bool:
-        """Is a `stmt`."""
-
-        return isinstance(self.a, stmt)
-
-    @property
-    def is_stmt_or_mod(self) -> bool:
-        """Is a `stmt` or `mod` node."""
-
-        return isinstance(self.a, (stmt, mod))
-
-    @property
     def is_stmtish(self) -> bool:
         """Is a `stmt`, `ExceptHandler` or `match_case` node."""
 
@@ -1909,6 +1897,18 @@ class FST:
         """Is a `stmt`, `ExceptHandler`, `match_case` or `mod` node."""
 
         return isinstance(self.a, STATEMENTISH_OR_MOD)
+
+    @property
+    def is_stmt(self) -> bool:
+        """Is a `stmt`."""
+
+        return isinstance(self.a, stmt)
+
+    @property
+    def is_stmt_or_mod(self) -> bool:
+        """Is a `stmt` or `mod` node."""
+
+        return isinstance(self.a, (stmt, mod))
 
     @property
     def is_block(self) -> bool:
@@ -1927,6 +1927,13 @@ class FST:
 
     @property
     def is_scope(self) -> bool:
+        """Is a node which opens a scope. Types include `FunctionDef`, `AsyncFunctionDef`, `ClassDef`, `Lambda`,
+        `ListComp`, `SetComp`, `DictComp` or `GeneratorExp`."""
+
+        return isinstance(self.a, SCOPE)
+
+    @property
+    def is_scope_or_mod(self) -> bool:
         """Is a node which opens a scope. Types include `FunctionDef`, `AsyncFunctionDef`, `ClassDef`, `Lambda`,
         `ListComp`, `SetComp`, `DictComp`, `GeneratorExp` or `mod`."""
 
@@ -2405,14 +2412,6 @@ class FST:
 
             self = parent
 
-    def _repath(self) -> 'FST':
-        """Recalculate `self` from path from root. Useful if `self` has been replaced by another node by some operation.
-
-        **Returns:**
-        - `FST`: Possibly `self` or the node which took our place at our position from `root`."""
-
-        return (root := self.root).child_from_path(root.child_path(self, False))
-
     def _maybe_add_comma(self, ln: int, col: int, offset: bool, space: bool,
                          end_ln: int | None = None, end_col: int | None = None) -> bool:
         """Maybe add comma at start of span if not already present as first code in span. Will skip any closing
@@ -2773,6 +2772,14 @@ class FST:
         self.put_lines([indent + 'else:', indent + self.root.indent], ln, 0, ln, col, False)
 
     # ------------------------------------------------------------------------------------------------------------------
+
+    def _repath(self) -> 'FST':
+        """Recalculate `self` from path from root. Useful if `self` has been replaced by another node by some operation.
+
+        **Returns:**
+        - `FST`: Possibly `self` or the node which took our place at our position from `root`."""
+
+        return (root := self.root).child_from_path(root.child_path(self, False))
 
     def _make_fst_and_dedent(self, indent: Union['FST', str], ast: AST, copy_loc: fstloc,
                              prefix: str = '', suffix: str = '',
