@@ -15414,6 +15414,25 @@ def f(a, /, b, *c, d, **e):
 
                 bln, bcol = f.bln, f.bcol
 
+    def test_walk_modify(self):
+        fst = parse('if 1:\n a\n b\n c\nelse:\n d\n e').body[0].f
+        i   = 0
+
+        for f in fst.walk(self_=False):
+            if f.pfield.name in ('body', 'orelse'):
+                f.replace(str(i := i + 1))
+
+        self.assertEqual(fst.src, 'if 1:\n 1\n 2\n 3\nelse:\n 4\n 5')
+
+        fst = parse('[a, b, c]').body[0].f
+        i   = 0
+
+        for f in fst.walk(self_=False):
+            if f.pfield.name == 'elts':
+                f.replace(str(i := i + 1))
+
+        self.assertEqual(fst.src, '[1, 2, 3]')
+
     def test_next_prev(self):
         fst = parse('a and b and c and d').body[0].value.f
         a = fst.a

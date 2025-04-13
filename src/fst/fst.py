@@ -1,4 +1,5 @@
 import re
+import ast as ast_
 from ast import *
 from ast import parse as ast_parse, unparse as ast_unparse
 from io import TextIOBase
@@ -10,6 +11,7 @@ from .util import TryStar
 __all__ = [
     'parse', 'unparse', 'FST', 'FSTSrcEdit',
     'fstlistproxy', 'fstloc', 'srcwpos', 'astfield',
+    'NodeTypeError',
 ]
 
 
@@ -82,21 +84,21 @@ DEFAULT_PEP8SPACE       = True   # True | False | 1
 DEFAULT_PARS            = False  # True | False
 DEFAULT_ELIF            = False  # True | False
 
-DEFAULT_SRC_EDIT_FMT    = frozenset(('pep8', 'pre', 'post'))
-DEFAULT_COMMS_FMT       = frozenset(('pre', 'post'))
+STATEMENTISH            = (stmt, ExceptHandler, match_case)  # always in lists, cannot be inside multilines
+STATEMENTISH_OR_MOD     = STATEMENTISH + (mod,)
+STATEMENTISH_OR_STMTMOD = STATEMENTISH + (Module, Interactive)
+BLOCK                   = (FunctionDef, AsyncFunctionDef, ClassDef, For, AsyncFor, While, If, With, AsyncWith, Match,
+                           Try, TryStar, ExceptHandler, match_case)
+BLOCK_OR_MOD            = BLOCK + (mod,)
+SCOPE                   = (FunctionDef, AsyncFunctionDef, ClassDef, Lambda, ListComp, SetComp, DictComp, GeneratorExp)
+SCOPE_OR_MOD            = SCOPE + (mod,)
+NAMED_SCOPE             = (FunctionDef, AsyncFunctionDef, ClassDef)
+NAMED_SCOPE_OR_MOD      = NAMED_SCOPE + (mod,)
+ANONYMOUS_SCOPE         = (Lambda, ListComp, SetComp, DictComp, GeneratorExp)
 
 PARENTHESIZABLE         = (expr, pattern)
-STATEMENTISH            = (stmt, ExceptHandler, match_case)  # always in lists, cannot be inside multilines
-STATEMENTISH_OR_MOD     = (stmt, ExceptHandler, match_case, mod)
-STATEMENTISH_OR_STMTMOD = (stmt, ExceptHandler, match_case, Module, Interactive)
-BLOCK_OR_MOD            = (FunctionDef, AsyncFunctionDef, ClassDef, For, AsyncFor, While, If, With, AsyncWith, Match,
-                           Try, TryStar, ExceptHandler, match_case, mod)
-SCOPE_OR_MOD            = (FunctionDef, AsyncFunctionDef, ClassDef, Lambda, ListComp, SetComp, DictComp, GeneratorExp,
-                           mod)
-NAMED_SCOPE_OR_MOD      = (FunctionDef, AsyncFunctionDef, ClassDef, mod)
-NAMED_SCOPE             = (FunctionDef, AsyncFunctionDef, ClassDef)
-ANONYMOUS_SCOPE         = (Lambda, ListComp, SetComp, DictComp, GeneratorExp)
 HAS_DOCSTRING           = NAMED_SCOPE_OR_MOD
+CAN_REPLACE_PARSED      = (expr, comprehension, arguments, arg, keyword, alias, withitem, pattern)
 
 re_empty_line_start     = re.compile(r'[ \t]*')     # start of completely empty or space-filled line (from start pos, start of line indentation)
 re_empty_line           = re.compile(r'[ \t]*$')    # completely empty or space-filled line (from start pos, start of line indentation)
@@ -121,6 +123,9 @@ re_next_src_or_lcont            = re.compile(r'\s*([^\s#\\]+|\\$)')      # next 
 re_next_src_or_comment_or_lcont = re.compile(r'\s*([^\s#\\]+|#.*|\\$)')  # next non-space non-continuation code or comment text including logical line end, don't look into strings with this!
 
 Code: TypeAlias = Union['FST', AST, list[str], str]
+
+
+class NodeTypeError(ValueError): pass
 
 
 class astfield(NamedTuple):
@@ -563,12 +568,12 @@ def _normalize_code(code: Code, coerce: Literal['expr'] | Literal['mod'] | None 
         elif coerce == 'expr':
             if isinstance(ast, (Module, Interactive)):
                 if len(body := ast.body) != 1 or not isinstance(ast := body[0], Expr):
-                    raise ValueError(f'expecting single expression')
+                    raise NodeTypeError(f'expecting single expression')
 
                 ast = ast.value
 
             if not isinstance(ast, expr):
-                raise ValueError(f'expecting expression')
+                raise NodeTypeError(f'expecting expression')
 
             return ast
 
@@ -1814,7 +1819,7 @@ class FSTSrcEdit:
 class FST:
     """Preserve AST formatting information and easy manipulation.
 
-    **Source editing `options`**:
+    **Source editing `options`**: These are mostly for editing statements, though some can apply to other sequences.
     - `docstr`: Which docstrings are indentable / dedentable.
         - `False`: None.
         - `True`: All `Expr` multiline strings (as they serve no coding purpose).
@@ -1869,6 +1874,12 @@ class FST:
         return self.parent is None
 
     @property
+    def is_mod(self) -> bool:
+        """Is a `mod`."""
+
+        return isinstance(self.a, mod)
+
+    @property
     def is_stmt(self) -> bool:
         """Is a `stmt`."""
 
@@ -1882,6 +1893,12 @@ class FST:
 
     @property
     def is_stmtish(self) -> bool:
+        """Is a `stmt`, `ExceptHandler` or `match_case` node."""
+
+        return isinstance(self.a, STATEMENTISH)
+
+    @property
+    def is_stmtish_or_mod(self) -> bool:
         """Is a `stmt`, `ExceptHandler`, `match_case` or `mod` node."""
 
         return isinstance(self.a, STATEMENTISH_OR_MOD)
@@ -1889,7 +1906,14 @@ class FST:
     @property
     def is_block(self) -> bool:
         """Is a node which opens a block. Types include `FunctionDef`, `AsyncFunctionDef`, `ClassDef`, `For`,
-        `AsyncFor`, `While`, `If`, `With`, `AsyncWith`, `Match`, `Try`, `TryStar`, `ExceptHandler`, `match_case`, and
+        `AsyncFor`, `While`, `If`, `With`, `AsyncWith`, `Match`, `Try`, `TryStar`, `ExceptHandler` or `match_case`."""
+
+        return isinstance(self.a, BLOCK)
+
+    @property
+    def is_block_or_mod(self) -> bool:
+        """Is a node which opens a block. Types include `FunctionDef`, `AsyncFunctionDef`, `ClassDef`, `For`,
+        `AsyncFor`, `While`, `If`, `With`, `AsyncWith`, `Match`, `Try`, `TryStar`, `ExceptHandler`, `match_case` or
         `mod`."""
 
         return isinstance(self.a, BLOCK_OR_MOD)
@@ -1897,20 +1921,25 @@ class FST:
     @property
     def is_scope(self) -> bool:
         """Is a node which opens a scope. Types include `FunctionDef`, `AsyncFunctionDef`, `ClassDef`, `Lambda`,
-        `ListComp`, `SetComp`, `DictComp`, `GeneratorExp`, and `mod`."""
+        `ListComp`, `SetComp`, `DictComp`, `GeneratorExp` or `mod`."""
 
         return isinstance(self.a, SCOPE_OR_MOD)
 
     @property
     def is_named_scope(self) -> bool:
-        """Is a node which opens a named scope. Types include `FunctionDef`, `AsyncFunctionDef`,  `ClassDef` and
-        `mod`."""
+        """Is a node which opens a named scope. Types include `FunctionDef`, `AsyncFunctionDef` or `ClassDef`."""
+
+        return isinstance(self.a, NAMED_SCOPE)
+
+    @property
+    def is_named_scope_or_mod(self) -> bool:
+        """Is a node which opens a named scope. Types include `FunctionDef`, `AsyncFunctionDef`, `ClassDef` or `mod`."""
 
         return isinstance(self.a, NAMED_SCOPE_OR_MOD)
 
     @property
     def is_anon_scope(self) -> bool:
-        """Is a node which opens an anonymous scope. Types include `Lambda`, `ListComp`, `SetComp`, `DictComp` and
+        """Is a node which opens an anonymous scope. Types include `Lambda`, `ListComp`, `SetComp`, `DictComp` or
         `GeneratorExp`."""
 
         return isinstance(self.a, ANONYMOUS_SCOPE)
@@ -2100,12 +2129,12 @@ class FST:
         while stack:  # make sure these bad ASTs can't hurt us anymore
             if a := stack.pop():  # could be `None`s in there
                 f   = a.f
-                f.a = a.f = f.root = f.parent = None
+                f.a = a.f = None  # f.root = f.parent = None  # root, parent and pfield can still be useful after node has been removed
 
                 stack.extend(iter_child_nodes(a))
 
         if root:
-            root.a.f = root.a = root.root = root.parent = None
+            root.a.f = root.a = None  # root.root = root.parent = None
 
     def _repr_tail(self) -> str:
         try:
@@ -2724,11 +2753,12 @@ class FST:
         self.put_lines(['if'], ln, col, ln, col + 4, False)
         self.put_lines([indent + 'else:', indent + self.root.indent], ln, 0, ln, col, False)
 
+    # ------------------------------------------------------------------------------------------------------------------
+
     def _make_fst_and_dedent(self, indent: Union['FST', str], ast: AST, copy_loc: fstloc,
                              prefix: str = '', suffix: str = '',
                              put_loc: fstloc | None = None, put_lines: list[str] | None = None, *,
                              docstr: bool | str | None = None) -> 'FST':
-
         if not isinstance(indent, str):
             indent = indent.get_indent()
 
@@ -2756,7 +2786,6 @@ class FST:
                             ffirst: Union['FST', fstloc], flast: Union['FST', fstloc],
                             fpre: Union['FST', fstloc, None], fpost: Union['FST', fstloc, None],
                             prefix: str, suffix: str) -> 'FST':
-
         copy_loc, put_loc, put_lines = self.src_edit.get_slice_seq(self, cut, seq_loc, ffirst, flast, fpre, fpost)
 
         copy_ln, copy_col, copy_end_ln, copy_end_col = copy_loc
@@ -3049,8 +3078,8 @@ class FST:
                 is_set   = not is_tuple and isinstance(put_ast, Set)
 
                 if not is_tuple and not is_set and not isinstance(put_ast, List):
-                    raise ValueError(f"slice being assigned to a {self.a.__class__.__name__} "
-                                     f"must be a Tuple, List or Set, not a '{put_ast.__class__.__name__}'")
+                    raise NodeTypeError(f"slice being assigned to a {self.a.__class__.__name__} "
+                                        f"must be a Tuple, List or Set, not a '{put_ast.__class__.__name__}'")
 
         ast         = self.a
         elts        = ast.elts
@@ -3470,6 +3499,86 @@ class FST:
 
     # ------------------------------------------------------------------------------------------------------------------
 
+    def _replace_parsed(self, code: Code | None, to: Optional['FST'] = None, *, from_exc: Exception | None = None,
+                        **options):
+        """Attempt a replacement by using str as source and attempting to parse into location of node(s) being
+        replaced."""
+
+        ast = self.a
+        loc = self.loc
+
+        if not isinstance(ast, CAN_REPLACE_PARSED):
+            raise ValueError(f"cannot replace {ast.__class__.__name__}") from from_exc
+
+        parent = self.parent_stmtish(False, True)
+
+        if isinstance(parent, mod):  # non-statementish in a mod (probably Expression)
+            raise NotImplementedError from from_exc  # TODO: this
+        elif not parent:  # pure solo statement or expression
+            raise NotImplementedError from from_exc  # TODO: this
+
+        # if not parent:
+        #     raise ValueError(f'cannot replace node without a statement parent') from from_exc
+
+        if not to:
+            to_loc = loc
+        elif not (to_loc := to.loc):
+            raise ValueError(f"'to' node must have a location") from from_exc
+        elif to.parent_stmtish(True, False) is not parent:
+            raise ValueError(f"'to' node must be part of the same statement") from from_exc
+
+        # TODO: ExceptHandler
+        # TODO: match_case
+        # TODO: block open statement
+        # TODO: normal statement
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        self_root = self.root
+        copy_root = FST(Pass(), lines=self_root._lines[:])  # we don't need the ASTs, just the lines
+        path      = self_root.child_path(self, False)
+        src_lines = (code if isinstance(code, list) else code.split('\n') if isinstance(code, str) else
+                     ast_unparse(code).split('\n') if isinstance(code, AST) else
+                     code._lines if code.is_root else ast_unparse(code.src).split('\n'))
+
+        ln, col, end_ln, end_col = self.loc
+
+        copy_root.put_lines(src_lines, ln, col, end_ln, end_col)
+
+        copy_root = FST.fromsrc(copy_root.src, mode=get_parse_mode(self_root.a), **self_root.parse_params)
+        copy_self = copy_root.child_from_path(path)
+
+
+        # compare_asts(self_root.a, copy_root.a, skip1={self.a}, skip2={copy_self.a}, raise_=True)
+
+        if not compare_asts(self_root.a, copy_root.a, skip1={self.a}, skip2={copy_self.a}):
+            raise RuntimeError('could not replace')
+
+
+
+        print(copy_root.src)
+        copy_root.dump(print, True)
+
+
+
+        # copy_node = copy_root.child_from_path(self_path)
+
+
+
+
+    # ------------------------------------------------------------------------------------------------------------------
+
     def __repr__(self) -> str:
         tail = self._repr_tail()
         head = f'<fst.{(a := self.a).__class__.__name__} 0x{id(a):x}{tail}>'
@@ -3507,7 +3616,7 @@ class FST:
     # ------------------------------------------------------------------------------------------------------------------
 
     def __new__(cls, ast: AST, parent: Optional['FST'] = None, pfield: astfield | None = None, **kwargs):
-        if not (self := getattr(ast, 'f', None)):
+        if not (self := getattr(ast, 'f', None)):  # reuse FST node assigned to AST node (because otherwise it isn't valid anyway)
             self = object.__new__(cls)
 
         self.a      = ast
@@ -3764,7 +3873,7 @@ class FST:
         field, idx = self.pfield
         parenta    = parent.a
 
-        if isinstance(ast, STATEMENTISH_OR_STMTMOD):
+        if isinstance(ast, STATEMENTISH):
             return parent._get_slice_stmt(idx, idx + 1, field, fix, cut=True, one=True, **options)
 
         if isinstance(parenta, (Tuple, List, Set)):
@@ -3779,7 +3888,8 @@ class FST:
 
         raise ValueError(f"cannot cut from a {parenta.__class__.__name__}.{field}")
 
-    def replace(self, code: Code | None, *, fix: bool = True, **options):
+    def replace(self, code: Code | None, *, fix: bool = True, reparse: bool = False, to: Optional['FST'] = None,
+                **options):
         """Replace an individual node."""
 
         if self.is_root:
@@ -3793,12 +3903,25 @@ class FST:
         if isinstance(ast, STATEMENTISH):
             return parent._put_slice_stmt(code, idx, idx + 1, field, True, fix, **options)
 
-        if isinstance(parenta, (Tuple, List, Set)):
-            return parent._put_slice_tuple_list_or_set(code, idx, idx + 1, field, True, fix, **options)
+        from_exc = None
 
-        # TODO: more
+        try:
+            if isinstance(parenta, (Tuple, List, Set)):
+                return parent._put_slice_tuple_list_or_set(code, idx, idx + 1, field, True, fix, **options)
 
-        raise ValueError(f"cannot replace in a {parenta.__class__.__name__}.{field}")
+            # TODO: more individual specialized replacements
+
+        except (SyntaxError, NodeTypeError) as exc:
+            if not reparse:
+                raise
+
+            from_exc = exc
+
+        else:
+            if not reparse:
+                raise ValueError(f"cannot replace in {parenta.__class__.__name__}.{field}")
+
+        self._replace_parsed(self, code, to, from_exc=from_exc, **options)
 
     def get(self, start: int | Literal['end'] | None = None, stop: int | None | Literal[False] = False,
             field: str | None = None, *, fix: bool = True, cut: bool = False, **options) -> Optional['FST']:
@@ -3971,78 +4094,76 @@ class FST:
 
 # ------------------------------------------------------------------------------------------------------------------
 
-    def parent_stmt(self, self_: bool = False) -> Optional['FST']:
-        """The first parent which is a `stmt`. If `self_` is `True` then will check `self` first, otherwise only checks
-        parents."""
-
-        if self_ and isinstance(self.a, stmt):
-            return self
-
-        while (self := self.parent) and not isinstance(self.a, stmt):
-            pass
-
-        return self
-
-    def parent_stmt_or_mod(self, self_: bool = False) -> Optional['FST']:
+    def parent_stmt(self, self_: bool = False, mod: bool = True) -> Optional['FST']:
         """The first parent which is a `stmt` or `mod` node (if any). If `self_` is `True` then will check `self` first,
         otherwise only checks parents."""
 
-        if self_ and isinstance(self.a, (stmt, mod)):
+        types = (stmt, ast_.mod) if mod else stmt
+
+        if self_ and isinstance(self.a, types):
             return self
 
-        while (self := self.parent) and not isinstance(self.a, (stmt, mod)):
+        while (self := self.parent) and not isinstance(self.a, types):
             pass
 
         return self
 
-    def parent_stmtish(self, self_: bool = False) -> Optional['FST']:
+    def parent_stmtish(self, self_: bool = False, mod: bool = True) -> Optional['FST']:
         """The first parent which is a `stmt`, `ExceptHandler`, `match_case` or `mod` node (if any). If `self_` is
         `True` then will check `self` first, otherwise only checks parents."""
 
-        if self_ and isinstance(self.a, STATEMENTISH_OR_MOD):
+        types = STATEMENTISH_OR_MOD if mod else STATEMENTISH
+
+        if self_ and isinstance(self.a, types):
             return self
 
-        while (self := self.parent) and not isinstance(self.a, STATEMENTISH_OR_MOD):
+        while (self := self.parent) and not isinstance(self.a, types):
             pass
 
         return self
 
-    def parent_block(self, self_: bool = False) -> Optional['FST']:
+    def parent_block(self, self_: bool = False, mod: bool = True) -> Optional['FST']:
         """The first parent which opens a block that `self` lives in (if any). Types include `FunctionDef`,
         `AsyncFunctionDef`, `ClassDef`, `For`, `AsyncFor`, `While`, `If`, `With`, `AsyncWith`, `Match`, `Try`,
-        `TryStar`, `ExceptHandler`, `match_case`, and `mod`. If `self_` is `True` then will check `self` first,
-        otherwise only checks parents."""
+        `TryStar`, `ExceptHandler`, `match_case` or `mod`. If `self_` is `True` then will check `self` first, otherwise
+        only checks parents."""
 
-        if self_ and isinstance(self.a, BLOCK_OR_MOD):
+        types = BLOCK_OR_MOD if mod else BLOCK
+
+        if self_ and isinstance(self.a, types):
             return self
 
-        while (self := self.parent) and not isinstance(self.a, BLOCK_OR_MOD):
+        while (self := self.parent) and not isinstance(self.a, types):
             pass
 
         return self
 
-    def parent_scope(self, self_: bool = False) -> Optional['FST']:
+    def parent_scope(self, self_: bool = False, mod: bool = True) -> Optional['FST']:
         """The first parent which opens a scope that `self` lives in (if any). Types include `FunctionDef`,
-        `AsyncFunctionDef`, `ClassDef`, `Lambda`, `ListComp`, `SetComp`, `DictComp`, `GeneratorExp`, and `mod`. If
-        `self_` is `True` then will check `self` first, otherwise only checks parents."""
+        `AsyncFunctionDef`, `ClassDef`, `Lambda`, `ListComp`, `SetComp`, `DictComp`, `GeneratorExp` or `mod`. If `self_`
+        is `True` then will check `self` first, otherwise only checks parents."""
 
-        if self_ and isinstance(self.a, SCOPE_OR_MOD):
+        types = SCOPE_OR_MOD if mod else SCOPE
+
+        if self_ and isinstance(self.a, types):
             return self
 
-        while (self := self.parent) and not isinstance(self.a, SCOPE_OR_MOD):
+        while (self := self.parent) and not isinstance(self.a, types):
             pass
 
         return self
 
-    def parent_named_scope(self, self_: bool = False) -> Optional['FST']:
+    def parent_named_scope(self, self_: bool = False, mod: bool = True) -> Optional['FST']:
         """The first parent which opens a named scope that `self` lives in (if any). Types include `FunctionDef`,
-        `AsyncFunctionDef`, `ClassDef` and `mod`. If `self_` is `True` then will check `self` first, otherwise only
+        `AsyncFunctionDef`, `ClassDef` or `mod`. If `self_` is `True` then will check `self` first, otherwise only
         checks parents."""
 
-        if self_ and isinstance(self.a, NAMED_SCOPE_OR_MOD):
+        types = NAMED_SCOPE_OR_MOD if mod else NAMED_SCOPE
+
+        if self_ and isinstance(self.a, types):
             return self
 
-        while (self := self.parent) and not isinstance(self.a, NAMED_SCOPE_OR_MOD):
+        while (self := self.parent) and not isinstance(self.a, types):
             pass
 
         return self
@@ -4826,9 +4947,13 @@ class FST:
              scope: bool = False, back: bool = False) -> Generator['FST', bool, None]:
         """Walk self and descendants in syntactic order, `send(False)` to skip recursion into child. `send(True)` to
         allow recursion into child if called with `recurse=False` or `scope=True` would otherwise disallow it. Can send
-        multiple times, last value sent takes effect. The walk is defined forwards or backwards in that it returns a
-        parent then recurses into the children and walks those in the given direction, recursing into each child's
-        children before continuing with siblings.
+        multiple times, last value sent takes effect.
+
+        The walk is defined forwards or backwards in that it returns a parent then recurses into the children and walks
+        those in the given direction, recursing into each child's children before continuing with siblings. Walking
+        backwards will not generate the same sequence as `list(walk())[::-1]` due to this behavior.
+
+        Walked nodes can be modified or replaced as long as their parent is not changed.
 
         **Parameters:**
         - `with_loc`: If `True` then only nodes with locations returned, `'own'` means only nodes with own location
@@ -4860,6 +4985,9 @@ class FST:
 
             while (sent := (yield self)) is not None:
                 recurse_ = sent
+
+            if not self.a:
+                self = (ast := self.pfield.get(self.parent.a)).f
 
             if not recurse_:
                 return
@@ -4942,6 +5070,9 @@ class FST:
 
             while (sent := (yield fst)) is not None:
                 recurse_ = 1 if sent else False
+
+            if not fst.a:  # has been modified by the player
+                fst = (ast := fst.pfield.get(fst.parent.a)).f
 
             if recurse_ is not True:
                 if recurse_:  # user did send(True), walk this child unconditionally

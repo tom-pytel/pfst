@@ -342,10 +342,16 @@ def walk2(ast1: AST, ast2: AST, cb_primitive: Callable[[Any, Any, str, int], boo
 
                 else:
                     for i, (c1, c2) in enumerate(zip(child1, child2)):
-                        if (is_ast := isinstance(c1, AST)) ^ isinstance(c2, AST):
+                        if (is_ast1 := isinstance(c1, AST)) and c1 in skip1:
+                            continue
+
+                        if (is_ast2 := isinstance(c2, AST)) and c2 in skip2:
+                            continue
+
+                        if is_ast1 != is_ast2:
                             raise WalkFail(f"child elements differ at .{name1}[{i}] in '{a1.__class__.__qualname__}'")
 
-                        if is_ast:
+                        if is_ast1:
                             if c1.__class__ is not c2.__class__:
                                 raise WalkFail(f"child element classes differ at .{name1}[{i}] in '{a1.__class__.__qualname__}', "
                                                f"'{c1.__class__.__qualname__}' vs. '{c2.__class__.__qualname__}'")
