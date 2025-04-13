@@ -9,7 +9,7 @@ from .util import *
 from .util import TryStar
 
 __all__ = [
-    'parse', 'unparse', 'set_default', 'FST', 'FSTSrcEdit',
+    'parse', 'unparse', 'set_defaults', 'FST', 'FSTSrcEdit',
     'fstlistproxy', 'fstloc', 'srcwpos', 'astfield',
     'NodeTypeError',
 ]
@@ -205,24 +205,26 @@ def unparse(ast_obj) -> str:
     return ast_unparse(ast_obj)
 
 
-def set_default(param: str, value: Any) -> Any:
+def set_defaults(**params) -> dict[str, Any]:
     """Set global defaults for `options` parameters.
 
     **Parameters:**
-    - `param`: Parameter to set, one of the `options` parameter strings.
-    - `value`: Value for default.
+    - `**params`: Key / values of parameters to set.
 
     **Returns:**
-    - `str`: Previous default value.
+    - `params`: `dict` of previous values of changed parameters, reset with `set_defaults(**params)`.
     """
 
-    if param not in ('docstr','precomms','postcomms','prespace','postspace','pep8space','pars','elif_','reparse'):
-        raise ValueError(f"invalid parameter '{param}'")
+    ret = {}
 
-    param       = f'DEFAULT_{param.upper()}'
-    glob        = globals()
-    ret         = glob[param]
-    glob[param] = value
+    for param, value in params.items():
+        if param not in ('docstr','precomms','postcomms','prespace','postspace','pep8space','pars','elif_','reparse'):
+            raise ValueError(f"invalid parameter '{param}'")
+
+        gparam       = f'DEFAULT_{param.upper()}'
+        glob         = globals()
+        ret[param]   = glob[gparam]
+        glob[gparam] = value
 
     return ret
 
