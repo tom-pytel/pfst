@@ -2060,7 +2060,7 @@ class FST:
         return loc
 
     @property
-    def bloc(self) -> fstloc:
+    def bloc(self) -> fstloc | None:
         """Entire location of node, including any preceding decorators. Not all nodes have locations but any node which
         has a `.loc` will have a `.bloc`."""
 
@@ -4318,7 +4318,7 @@ class FST:
 
         return self
 
-    def child_path(self, child: 'FST', as_str: bool = True) -> list[astfield] | str:
+    def child_path(self, child: 'FST', as_str: bool = False) -> list[astfield] | str:
         """Get path to `child` node from `self` which can later be used on a copy of this tree to get to the same
         relative child node.
 

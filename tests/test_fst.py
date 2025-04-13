@@ -19310,6 +19310,45 @@ class cls:
 
                 raise
 
+    def test_replace_from_put_slice_data(self):
+        for i, (dst, attr, start, stop, field, options, src, put_src, put_dump) in enumerate(PUT_SLICE_DATA):
+            if options != {'reparse': True}:
+                continue
+
+            t = parse(dst)
+            f = (eval(f't.{attr}', {'t': t}) if attr else t).f
+
+            field, body = fst_._fixup_field_body(f.a)
+
+            if isinstance(field, str):
+                b1 = b2 = body
+            else:
+                b1, b2 = body, getattr(f.a, field[1])
+
+            start, stop = fst_._fixup_slice_index(len(body), start, stop)
+
+            b1[start].f.replace(None if src == '**DEL**' else src, to=b2[stop - 1].f, **options)  # reparse=True is in `options`
+
+            tdst  = t.f.src
+            tdump = t.f.dump(out=list, compact=True)
+
+            t.f.verify(raise_=True)
+
+            try:
+                self.assertEqual(tdst, put_src)
+                self.assertEqual(tdump, put_dump.strip().split('\n'))
+
+            except Exception:
+                print(i, src, start, stop, options)
+                print('---')
+                print(repr(dst))
+                print('...')
+                print(src)
+                print('...')
+                print(put_src)
+
+                raise
+
     def test_ctx_change(self):
         a = parse('a, b = x, y').body[0]
         a.targets[0].f.put(a.value.f.get())
