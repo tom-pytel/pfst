@@ -2124,20 +2124,19 @@ class FST:
                                  for idx, a in enumerate(child) if isinstance(a, AST))
 
     def _unmake_fst_tree(self, stack: list[AST] | None = None, root: Optional['FST'] = None):
-        """Destroy a tree of FST nodes by breaking links."""
+        """Destroy a tree of FST nodes by breaking links between AST and FST nodes."""
 
         if stack is None:
             stack = [self.a]
 
         while stack:  # make sure these bad ASTs can't hurt us anymore
             if a := stack.pop():  # could be `None`s in there
-                f   = a.f
-                f.a = a.f = None  # f.root = f.parent = None  # root, parent and pfield can still be useful after node has been removed
+                a.f.a = a.f = None  # root, parent and pfield are still useful after node has been removed
 
                 stack.extend(iter_child_nodes(a))
 
         if root:
-            root.a.f = root.a = None  # root.root = root.parent = None
+            root.a.f = root.a = None
 
     def _repr_tail(self) -> str:
         try:
@@ -2505,7 +2504,10 @@ class FST:
 
             self.put_lines([bistr('set()')], ln, col, end_ln, end_col, True)
 
-            ast    = self.a
+            ast = self.a
+
+            self._unmake_fst_tree()
+
             self.a = ast = _new_empty_set_call(True, ast.lineno, ast.col_offset)
             ast.f  = self
 
@@ -2659,6 +2661,8 @@ class FST:
 
                 if not inplace:
                     return FST(a, lines=lines, from_=self)
+
+                self._unmake_fst_tree()
 
                 self.a = a
                 a.f    = self
@@ -3177,7 +3181,10 @@ class FST:
 
         self.put_lines([bistr('{}')], ln, col, end_ln, end_col, True)
 
-        ast    = self.a
+        ast = self.a
+
+        self._unmake_fst_tree()
+
         self.a = ast = _new_empty_set_curlies(True, ast.lineno, ast.col_offset, from_=self)
         ast.f  = self
 
@@ -3518,8 +3525,10 @@ class FST:
         else:
             raise ValueError('source FST must be root node') from from_exc
 
+
         assert not self.is_root
         assert self.root.is_mod  # TODO: TEMPORARY
+
 
         self_root = self.root
         copy_root = FST(Pass(), lines=self_root._lines[:])  # we don't need the ASTs, just the lines
@@ -3579,11 +3588,14 @@ class FST:
         elif to.parent_stmtish(True, False) is not parent:
             raise ValueError(f"'to' node must be part of the same statement") from from_exc
 
+
         if isinstance(parent, mod):  # non-statementish in a mod (probably Expression)
             raise NotImplementedError from from_exc  # TODO: this
 
+
         elif not parent:  # pure solo statement or expression
             raise NotImplementedError from from_exc  # TODO: this
+
 
         else:  # proper statementish node parent
             parent._reparse(code, loc.ln, loc.col, to_loc.end_ln, to_loc.end_col, only_block_open=True)
