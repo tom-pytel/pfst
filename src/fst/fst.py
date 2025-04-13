@@ -9,7 +9,7 @@ from .util import *
 from .util import TryStar
 
 __all__ = [
-    'parse', 'unparse', 'FST', 'FSTSrcEdit',
+    'parse', 'unparse', 'set_default', 'FST', 'FSTSrcEdit',
     'fstlistproxy', 'fstloc', 'srcwpos', 'astfield',
     'NodeTypeError',
 ]
@@ -82,7 +82,7 @@ DEFAULT_PRESPACE        = False  # True | False | int
 DEFAULT_POSTSPACE       = False  # True | False | int
 DEFAULT_PEP8SPACE       = True   # True | False | 1
 DEFAULT_PARS            = False  # True | False
-DEFAULT_ELIF            = False  # True | False
+DEFAULT_ELIF_           = False  # True | False
 DEFAULT_REPARSE         = False  # True | False
 
 STATEMENTISH            = (stmt, ExceptHandler, match_case)  # always in lists, cannot be inside multilines
@@ -187,6 +187,28 @@ def unparse(ast_obj) -> str:
             pass
 
     return ast_unparse(ast_obj)
+
+
+def set_default(param: str, value: Any) -> Any:
+    """Set global defaults for `options` parameters.
+
+    **Parameters:**
+    - `param`: Parameter to set, one of the `options` parameter strings.
+    - `value`: Value for default.
+
+    **Returns:**
+    - `str`: Previous default value.
+    """
+
+    if param not in ('docstr','precomms','postcomms','prespace','postspace','pep8space','pars','elif_','reparse'):
+        raise ValueError(f"invalid parameter '{param}'")
+
+    param       = f'DEFAULT_{param.upper()}'
+    glob        = globals()
+    ret         = glob[param]
+    glob[param] = value
+
+    return ret
 
 
 def _with_loc(fst: 'FST', with_loc: bool | Literal['own'] = True) -> bool:
@@ -1641,7 +1663,7 @@ class FSTSrcEdit:
         is_handler = field == 'handlers'
         is_orelse  = field == 'orelse'
         docstr     = options.get('docstr')
-        opt_elif   = DEFAULT_ELIF if (o := options.get('elif_')) is None else o
+        opt_elif   = DEFAULT_ELIF_ if (o := options.get('elif_')) is None else o
 
         if not ffirst:  # pure insertion
             is_elif = (not fpre and not fpost and is_orelse and opt_elif and len(b := put_body) == 1 and
@@ -1764,7 +1786,7 @@ class FSTSrcEdit:
         if not fpre and not fpost and is_orelse and isinstance(fst.a, If):  # possible else <-> elif changes
             put_body    = put_fst.a.body
             orelse      = fst.a.orelse
-            opt_elif    = DEFAULT_ELIF if (o := options.get('elif_')) is None else o
+            opt_elif    = DEFAULT_ELIF_ if (o := options.get('elif_')) is None else o
             is_old_elif = orelse[0].f.is_elif()
             is_new_elif = opt_elif and len(put_body) == 1 and isinstance(put_body[0], If)
 
@@ -3548,10 +3570,12 @@ class FST:
             new_lines = code
         elif isinstance(code, AST):
             new_lines = ast_unparse(code)
-        elif code.is_root:  # isinstance(code, FST)
-            new_lines = code._lines
-        else:
-            raise ValueError('source FST must be root node') from from_exc
+        else:  # isinstance(code, FST)
+            new_lines = (code if code.is_root else code.copy())._lines
+        # elif code.is_root:  # isinstance(code, FST)
+        #     new_lines = code._lines
+        # else:
+        #     raise ValueError('source FST must be root node') from from_exc
 
 
         assert not self.is_root  # TODO: allow reparse root (preserve root)
@@ -4065,21 +4089,50 @@ class FST:
         if isinstance(ast, STATEMENTISH_OR_STMTMOD):
             self._put_slice_stmt(code, start, stop, field, one, fix, **options)
 
-        elif isinstance(ast, (Tuple, List, Set)):
-            self._put_slice_tuple_list_or_set(code, start, stop, field, one, fix)
+            return self
 
-        elif isinstance(ast, Dict):
-            self._put_slice_dict(code, start, stop, field, one, fix, **options)
+        from_exc = None
+        reparse  = DEFAULT_REPARSE if (o := options.get('reparse')) is None else o
 
-        elif self.is_empty_set_call():
-            self._put_slice_empty_set_call(code, start, stop, field, one, fix)
+        try:
+            if isinstance(ast, (Tuple, List, Set)):
+                self._put_slice_tuple_list_or_set(code, start, stop, field, one, fix)
 
-        # TODO: more
+                return self
+
+            if isinstance(ast, Dict):
+                self._put_slice_dict(code, start, stop, field, one, fix, **options)
+
+                return self
+
+            if self.is_empty_set_call():
+                self._put_slice_empty_set_call(code, start, stop, field, one, fix)
+
+                return self
+
+            # TODO: more individual specialized slice puts
+
+        except (SyntaxError, NodeTypeError) as exc:
+            if not reparse:
+                raise
+
+            from_exc = exc
 
         else:
-            raise ValueError(f"cannot put slice to a '{ast.__class__.__name__}'")
+            if not reparse:
+                raise ValueError(f"cannot put slice to a '{ast.__class__.__name__}'")
 
-        return self
+        if code is None:
+            raise ValueError("cannot put slice reparse with 'code=None'")
+
+
+
+
+
+
+
+
+        return self._reparse_node(code, options.get('to'), from_exc=from_exc)
 
     def get_lines(self, ln: int, col: int, end_ln: int, end_col: int) -> list[str]:
         """Get lines from currently stored source. The first and last lines are cropped to start `col` and `end_col`."""
