@@ -2401,6 +2401,14 @@ class FST:
 
             self = parent
 
+    def _repath(self) -> 'FST':
+        """Recalculate `self` from path from root. Useful if `self` has been replaced by another node by some operation.
+
+        **Returns:**
+        - `FST`: Possibly `self` or the node which took our place at our position from `root`."""
+
+        return (root := self.root).child_from_path(root.child_path(self, False))
+
     def _maybe_add_comma(self, ln: int, col: int, offset: bool, space: bool,
                          end_ln: int | None = None, end_col: int | None = None) -> bool:
         """Maybe add comma at start of span if not already present as first code in span. Will skip any closing
@@ -5010,7 +5018,7 @@ class FST:
                 recurse_ = sent
 
             if not self.a:
-                self = (ast := self.pfield.get(self.parent.a)).f
+                self = self._repath()
 
             if not recurse_:
                 return
@@ -5094,8 +5102,10 @@ class FST:
             while (sent := (yield fst)) is not None:
                 recurse_ = 1 if sent else False
 
-            if not fst.a:  # has been modified by the player
-                fst = (ast := fst.pfield.get(fst.parent.a)).f
+            if not fst.a:  # has been changed by the player
+                fst = fst._repath()
+
+            ast = fst.a  # could have just modified the ast
 
             if recurse_ is not True:
                 if recurse_:  # user did send(True), walk this child unconditionally
