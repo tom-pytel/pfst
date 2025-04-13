@@ -13147,13 +13147,11 @@ match a:
 Module .. ROOT 0,0 -> 10,0
   .body[1]
   0] Match .. 1,0 -> 9,9
-    .subject
-      Name 'a' Load .. 1,6 -> 1,7
+    .subject Name 'a' Load .. 1,6 -> 1,7
     .cases[1]
     0] match_case .. 2,4 -> 9,9
-      .pattern
-        MatchAs .. 2,9 -> 2,10
-          .name 'b'
+      .pattern MatchAs .. 2,9 -> 2,10
+        .name 'b'
       .body[3]
       0] Expr .. 3,8 -> 3,9
         .value Name 'i' Load .. 3,8 -> 3,9
@@ -13447,13 +13445,11 @@ match a:
 Module .. ROOT 0,0 -> 6,0
   .body[1]
   0] Match .. 1,0 -> 5,9
-    .subject
-      Name 'a' Load .. 1,6 -> 1,7
+    .subject Name 'a' Load .. 1,6 -> 1,7
     .cases[1]
     0] match_case .. 2,4 -> 5,9
-      .pattern
-        MatchAs .. 2,9 -> 2,10
-          .name 'b'
+      .pattern MatchAs .. 2,9 -> 2,10
+        .name 'b'
       .body[3]
       0] Expr .. 3,8 -> 3,9
         .value Name 'i' Load .. 3,8 -> 3,9
@@ -14770,6 +14766,277 @@ Module .. ROOT 0,0 -> 9,0
 """),
 
 ]  # END OF PUT_SLICE_STMT_DATA
+
+PUT_SLICE_DATA = [
+(r"""(1, 2, 3)""", 'body[0].value', 1, 2, None, {'reparse': True}, r"""*z""", r"""(1, *z, 3)""", r"""
+Module .. ROOT 0,0 -> 0,10
+  .body[1]
+  0] Expr .. 0,0 -> 0,10
+    .value Tuple .. 0,0 -> 0,10
+      .elts[3]
+      0] Constant 1 .. 0,1 -> 0,2
+      1] Starred .. 0,4 -> 0,6
+        .value Name 'z' Load .. 0,5 -> 0,6
+        .ctx Load
+      2] Constant 3 .. 0,8 -> 0,9
+      .ctx Load
+"""),
+
+(r"""(1, 2, 3)""", 'body[0].value', 0, 3, None, {'reparse': True}, r"""*z,""", r"""(*z,)""", r"""
+Module .. ROOT 0,0 -> 0,5
+  .body[1]
+  0] Expr .. 0,0 -> 0,5
+    .value Tuple .. 0,0 -> 0,5
+      .elts[1]
+      0] Starred .. 0,1 -> 0,3
+        .value Name 'z' Load .. 0,2 -> 0,3
+        .ctx Load
+      .ctx Load
+"""),
+
+(r"""1, 2, 3""", 'body[0].value', 1, 2, None, {'reparse': True}, r"""*z""", r"""1, *z, 3""", r"""
+Module .. ROOT 0,0 -> 0,8
+  .body[1]
+  0] Expr .. 0,0 -> 0,8
+    .value Tuple .. 0,0 -> 0,8
+      .elts[3]
+      0] Constant 1 .. 0,0 -> 0,1
+      1] Starred .. 0,3 -> 0,5
+        .value Name 'z' Load .. 0,4 -> 0,5
+        .ctx Load
+      2] Constant 3 .. 0,7 -> 0,8
+      .ctx Load
+"""),
+
+(r"""1, 2, 3""", 'body[0].value', 0, 3, None, {'reparse': True}, r"""*z,""", r"""*z,""", r"""
+Module .. ROOT 0,0 -> 0,3
+  .body[1]
+  0] Expr .. 0,0 -> 0,3
+    .value Tuple .. 0,0 -> 0,3
+      .elts[1]
+      0] Starred .. 0,0 -> 0,2
+        .value Name 'z' Load .. 0,1 -> 0,2
+        .ctx Load
+      .ctx Load
+"""),
+
+(r"""{a: b, c: d, e: f}""", 'body[0].value', 1, 2, None, {'reparse': True}, r"""**z""", r"""{a: b, **z, e: f}""", r"""
+Module .. ROOT 0,0 -> 0,17
+  .body[1]
+  0] Expr .. 0,0 -> 0,17
+    .value Dict .. 0,0 -> 0,17
+      .keys[3]
+      0] Name 'a' Load .. 0,1 -> 0,2
+      1] None
+      2] Name 'e' Load .. 0,12 -> 0,13
+      .values[3]
+      0] Name 'b' Load .. 0,4 -> 0,5
+      1] Name 'z' Load .. 0,9 -> 0,10
+      2] Name 'f' Load .. 0,15 -> 0,16
+"""),
+
+(r"""{a: b, c: d, e: f}""", 'body[0].value', 0, 3, None, {'reparse': True}, r"""**z""", r"""{**z}""", r"""
+Module .. ROOT 0,0 -> 0,5
+  .body[1]
+  0] Expr .. 0,0 -> 0,5
+    .value Dict .. 0,0 -> 0,5
+      .keys[1]
+      0] None
+      .values[1]
+      0] Name 'z' Load .. 0,3 -> 0,4
+"""),
+
+(r"""del a, b, c""", 'body[0]', 1, 3, None, {'reparse': True}, r"""z""", r"""del a, z""", r"""
+Module .. ROOT 0,0 -> 0,8
+  .body[1]
+  0] Delete .. 0,0 -> 0,8
+    .targets[2]
+    0] Name 'a' Del .. 0,4 -> 0,5
+    1] Name 'z' Del .. 0,7 -> 0,8
+"""),
+
+(r"""a = b = c = d""", 'body[0]', 1, 3, None, {'reparse': True}, r"""z""", r"""a = z = d""", r"""
+Module .. ROOT 0,0 -> 0,9
+  .body[1]
+  0] Assign .. 0,0 -> 0,9
+    .targets[2]
+    0] Name 'a' Store .. 0,0 -> 0,1
+    1] Name 'z' Store .. 0,4 -> 0,5
+    .value Name 'd' Load .. 0,8 -> 0,9
+"""),
+
+(r"""import a, b, c""", 'body[0]', 1, 3, None, {'reparse': True}, r"""z as xyz""", r"""import a, z as xyz""", r"""
+Module .. ROOT 0,0 -> 0,18
+  .body[1]
+  0] Import .. 0,0 -> 0,18
+    .names[2]
+    0] alias .. 0,7 -> 0,8
+      .name 'a'
+    1] alias .. 0,10 -> 0,18
+      .name 'z'
+      .asname
+        'xyz'
+"""),
+
+(r"""from mod import a, b, c""", 'body[0]', 1, 3, None, {'reparse': True}, r"""z as xyz""", r"""from mod import a, z as xyz""", r"""
+Module .. ROOT 0,0 -> 0,27
+  .body[1]
+  0] ImportFrom .. 0,0 -> 0,27
+    .module 'mod'
+    .names[2]
+    0] alias .. 0,16 -> 0,17
+      .name 'a'
+    1] alias .. 0,19 -> 0,27
+      .name 'z'
+      .asname
+        'xyz'
+    .level
+      0
+"""),
+
+(r"""a and b and c""", 'body[0].value', 1, 3, None, {'reparse': True}, r"""z""", r"""a and z""", r"""
+Module .. ROOT 0,0 -> 0,7
+  .body[1]
+  0] Expr .. 0,0 -> 0,7
+    .value BoolOp .. 0,0 -> 0,7
+      .op And
+      .values[2]
+      0] Name 'a' Load .. 0,0 -> 0,1
+      1] Name 'z' Load .. 0,6 -> 0,7
+"""),
+
+(r"""[a for a in a() for b in b() for c in c()]""", 'body[0].value', 1, 3, None, {'reparse': True}, r"""z in z()""", r"""[a for a in a() for z in z()]""", r"""
+Module .. ROOT 0,0 -> 0,29
+  .body[1]
+  0] Expr .. 0,0 -> 0,29
+    .value ListComp .. 0,0 -> 0,29
+      .elt Name 'a' Load .. 0,1 -> 0,2
+      .generators[2]
+      0] comprehension .. 0,7 -> 0,15
+        .target Name 'a' Store .. 0,7 -> 0,8
+        .iter Call .. 0,12 -> 0,15
+          .func Name 'a' Load .. 0,12 -> 0,13
+        .is_async
+          0
+      1] comprehension .. 0,20 -> 0,28
+        .target Name 'z' Store .. 0,20 -> 0,21
+        .iter Call .. 0,25 -> 0,28
+          .func Name 'z' Load .. 0,25 -> 0,26
+        .is_async
+          0
+"""),
+
+(r"""[a for a in a() if a if b if c]""", 'body[0].value.generators[0]', 1, 3, None, {'reparse': True}, r"""z""", r"""[a for a in a() if a if z]""", r"""
+Module .. ROOT 0,0 -> 0,26
+  .body[1]
+  0] Expr .. 0,0 -> 0,26
+    .value ListComp .. 0,0 -> 0,26
+      .elt Name 'a' Load .. 0,1 -> 0,2
+      .generators[1]
+      0] comprehension .. 0,7 -> 0,25
+        .target Name 'a' Store .. 0,7 -> 0,8
+        .iter Call .. 0,12 -> 0,15
+          .func Name 'a' Load .. 0,12 -> 0,13
+        .ifs[2]
+        0] Name 'a' Load .. 0,19 -> 0,20
+        1] Name 'z' Load .. 0,24 -> 0,25
+        .is_async
+          0
+"""),
+
+(r"""f(a, b, c)""", 'body[0].value', 1, 3, None, {'reparse': True}, r"""z""", r"""f(a, z)""", r"""
+Module .. ROOT 0,0 -> 0,7
+  .body[1]
+  0] Expr .. 0,0 -> 0,7
+    .value Call .. 0,0 -> 0,7
+      .func Name 'f' Load .. 0,0 -> 0,1
+      .args[2]
+      0] Name 'a' Load .. 0,2 -> 0,3
+      1] Name 'z' Load .. 0,5 -> 0,6
+"""),
+
+(r"""f(a, b, c)""", 'body[0].value', 1, 3, None, {'reparse': True}, r"""z""", r"""f(a, z)""", r"""
+Module .. ROOT 0,0 -> 0,7
+  .body[1]
+  0] Expr .. 0,0 -> 0,7
+    .value Call .. 0,0 -> 0,7
+      .func Name 'f' Load .. 0,0 -> 0,1
+      .args[2]
+      0] Name 'a' Load .. 0,2 -> 0,3
+      1] Name 'z' Load .. 0,5 -> 0,6
+"""),
+
+(r"""
+match a:
+  case [a, b, c]: pass
+""", 'body[0].cases[0].pattern', 1, 3, None, {'reparse': True}, r"""*z""", r"""
+match a:
+  case [a, *z]: pass
+""", r"""
+Module .. ROOT 0,0 -> 3,0
+  .body[1]
+  0] Match .. 1,0 -> 2,20
+    .subject Name 'a' Load .. 1,6 -> 1,7
+    .cases[1]
+    0] match_case .. 2,2 -> 2,20
+      .pattern MatchSequence .. 2,7 -> 2,14
+        .patterns[2]
+        0] MatchAs .. 2,8 -> 2,9
+          .name 'a'
+        1] MatchStar .. 2,11 -> 2,13
+          .name 'z'
+      .body[1]
+      0] Pass .. 2,16 -> 2,20
+"""),
+
+(r"""
+match a:
+  case a | b | c: pass
+""", 'body[0].cases[0].pattern', 1, 3, None, {'reparse': True}, r"""z""", r"""
+match a:
+  case a | z: pass
+""", r"""
+Module .. ROOT 0,0 -> 3,0
+  .body[1]
+  0] Match .. 1,0 -> 2,18
+    .subject Name 'a' Load .. 1,6 -> 1,7
+    .cases[1]
+    0] match_case .. 2,2 -> 2,18
+      .pattern MatchOr .. 2,7 -> 2,12
+        .patterns[2]
+        0] MatchAs .. 2,7 -> 2,8
+          .name 'a'
+        1] MatchAs .. 2,11 -> 2,12
+          .name 'z'
+      .body[1]
+      0] Pass .. 2,14 -> 2,18
+"""),
+
+(r"""
+match a:
+  case {'a': a, 'b': b, 'c': c}: pass
+""", 'body[0].cases[0].pattern', 1, 3, None, {'reparse': True}, r"""**z""", r"""
+match a:
+  case {'a': a, **z}: pass
+""", r"""
+Module .. ROOT 0,0 -> 3,0
+  .body[1]
+  0] Match .. 1,0 -> 2,26
+    .subject Name 'a' Load .. 1,6 -> 1,7
+    .cases[1]
+    0] match_case .. 2,2 -> 2,26
+      .pattern MatchMapping .. 2,7 -> 2,20
+        .keys[1]
+        0] Constant 'a' .. 2,8 -> 2,11
+        .patterns[1]
+        0] MatchAs .. 2,13 -> 2,14
+          .name 'a'
+        .rest 'z'
+      .body[1]
+      0] Pass .. 2,22 -> 2,26
+"""),
+
+]  # END OF PUT_SLICE_DATA
 
 
 def read(fnm):
@@ -19016,6 +19283,33 @@ class cls:
 
                 raise
 
+    def test_put_slice(self):
+        for i, (dst, attr, start, stop, field, options, src, put_src, put_dump) in enumerate(PUT_SLICE_DATA):
+            t = parse(dst)
+            f = (eval(f't.{attr}', {'t': t}) if attr else t).f
+
+            f.put_slice(None if src == '**DEL**' else src, start, stop, field, **options)
+
+            tdst  = t.f.src
+            tdump = t.f.dump(out=list, compact=True)
+
+            t.f.verify(raise_=True)
+
+            try:
+                self.assertEqual(tdst, put_src)
+                self.assertEqual(tdump, put_dump.strip().split('\n'))
+
+            except Exception:
+                print(i, src, start, stop, options)
+                print('---')
+                print(repr(dst))
+                print('...')
+                print(src)
+                print('...')
+                print(put_src)
+
+                raise
+
     def test_ctx_change(self):
         a = parse('a, b = x, y').body[0]
         a.targets[0].f.put(a.value.f.get())
@@ -19507,6 +19801,7 @@ match a:
         self.assertTrue(f.is_stmtish_or_mod)
         self.assertTrue(f.is_mod)
 
+
 def regen_pars_data():
     newlines = []
 
@@ -19701,6 +19996,36 @@ def regen_put_slice_stmt():
         lines = f.write('\n'.join(lines))
 
 
+def regen_put_slice():
+    newlines = []
+
+    for dst, attr, start, stop, field, options, src, put_src, put_dump in PUT_SLICE_DATA:
+        t = parse(dst)
+        f = (eval(f't.{attr}', {'t': t}) if attr else t).f
+
+        f.put_slice(None if src == '**DEL**' else src, start, stop, field, **options)
+
+        tdst  = t.f.src
+        tdump = t.f.dump(out=list, compact=True)
+
+        t.f.verify(raise_=True)
+
+        newlines.extend(f'''(r"""{dst}""", {attr!r}, {start}, {stop}, {field!r}, {options!r}, r"""{src}""", r"""{tdst}""", r"""'''.split('\n'))
+        newlines.extend(tdump)
+        newlines.append('"""),\n')
+
+    with open(sys.argv[0]) as f:
+        lines = f.read().split('\n')
+
+    start = lines.index('PUT_SLICE_DATA = [')
+    stop  = lines.index(']  # END OF PUT_SLICE_DATA')
+
+    lines[start + 1 : stop] = newlines
+
+    with open(sys.argv[0], 'w') as f:
+        lines = f.write('\n'.join(lines))
+
+
 if __name__ == '__main__':
     import argparse
 
@@ -19713,6 +20038,7 @@ if __name__ == '__main__':
     parser.add_argument('--regen-get-slice-stmt', default=False, action='store_true', help="regenerate get slice statement test data")
     parser.add_argument('--regen-put-slice-seq', default=False, action='store_true', help="regenerate put slice sequence test data")
     parser.add_argument('--regen-put-slice-stmt', default=False, action='store_true', help="regenerate put slice statement test data")
+    parser.add_argument('--regen-put-slice', default=False, action='store_true', help="regenerate put slice test data")
 
     args = parser.parse_args()
 
@@ -19739,6 +20065,10 @@ if __name__ == '__main__':
     if args.regen_put_slice_stmt or args.regen_all:
         print('Regenerating put slice statement test data...')
         regen_put_slice_stmt()
+
+    if args.regen_put_slice or args.regen_all:
+        print('Regenerating put slice test data...')
+        regen_put_slice()
 
     if (all(not getattr(args, n) for n in dir(args) if n.startswith('regen_'))):
         unittest.main()

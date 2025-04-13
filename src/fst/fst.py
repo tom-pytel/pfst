@@ -64,10 +64,24 @@ AST_FIELDS_PREV[(arguments, 'kw_defaults')] = 7
 AST_FIELDS_PREV[(arguments, 'kwarg')]       = 7
 
 AST_DEFAULT_BODY_FIELD  = {cls: field for field, classes in [
-    ('elts',     (Tuple, List, Set)),
-    ('cases',    (Match,)),
-    ('patterns', (MatchSequence, MatchOr)),
-    ('values',   (JoinedStr,)),
+    ('elts',                 (Tuple, List, Set)),
+    ('cases',                (Match,)),
+    ('patterns',             (MatchSequence, MatchOr)),
+    # ('values',               (JoinedStr,)),  # values don't have locations
+
+    ('targets',              (Delete, Assign)),
+    ('type_params',          (TypeAlias,)),
+    ('names',                (Import, ImportFrom)),
+
+    ('values',               (BoolOp,)),
+    ('generators',           (ListComp, SetComp, DictComp, GeneratorExp)),
+    ('args',                 (Call,)),
+
+    (('keys', 'values'),     (Dict,)),
+    # (('ops', 'comparators'), (Compare,)),  # comparators don't have locations
+    (('keys', 'patterns'),   (MatchMapping,)),
+    ('ifs',                  (comprehension,)),
+
     # ('value',    (Expr, Return, Await, Yield, YieldFrom, Constant, Starred, MatchValue, MatchSingleton)),  # maybe obvious single bodies in future?
     # ('pattern',  (MatchAs,)),
 ] for cls in classes}
@@ -99,6 +113,8 @@ ANONYMOUS_SCOPE         = (Lambda, ListComp, SetComp, DictComp, GeneratorExp)
 
 PARENTHESIZABLE         = (expr, pattern)
 HAS_DOCSTRING           = NAMED_SCOPE_OR_MOD
+
+STMTISH_LIST_FIELDS     = frozenset(('body', 'orelse', 'finalbody', 'handlers', 'cases'))
 
 re_empty_line_start     = re.compile(r'[ \t]*')     # start of completely empty or space-filled line (from start pos, start of line indentation)
 re_empty_line           = re.compile(r'[ \t]*$')    # completely empty or space-filled line (from start pos, start of line indentation)
@@ -525,7 +541,7 @@ def _fixup_field_body(ast: AST, field: str | None = None) -> tuple[str, 'AST']:
     if field is None:
         field = AST_DEFAULT_BODY_FIELD.get(ast.__class__, 'body')
 
-    if (body := getattr(ast, field, _fixup_field_body)) is _fixup_field_body:  # _fixup_field_body is sentinel
+    if (body := getattr(ast, field if isinstance(field, str) else field[0], _fixup_field_body)) is _fixup_field_body:  # _fixup_field_body is sentinel
         raise ValueError(f"{ast.__class__.__name__} has no field '{field}'")
 
     if not isinstance(body, list):
@@ -2223,7 +2239,7 @@ class FST:
                              'name', 'value', 'left', 'right', 'operand', 'returns', 'target',
                              'annotation', 'iter', 'test','exc', 'cause', 'msg', 'elt', 'key', 'func',
                              'slice', 'lower', 'upper', 'step', 'guard', 'optional_vars',
-                             'cls', 'bound', 'default_value',
+                             'cls', 'bound', 'default_value', 'pattern', 'subject',
                              'type_comment', 'lineno', 'tag',)
                             or (not is_list and name in
                              ('body', 'orelse'))
@@ -3570,12 +3586,10 @@ class FST:
             new_lines = code
         elif isinstance(code, AST):
             new_lines = ast_unparse(code)
+        elif code is None:
+            new_lines = [bistr('')]
         else:  # isinstance(code, FST)
             new_lines = (code if code.is_root else code.copy())._lines
-        # elif code.is_root:  # isinstance(code, FST)
-        #     new_lines = code._lines
-        # else:
-        #     raise ValueError('source FST must be root node') from from_exc
 
 
         assert not self.is_root  # TODO: allow reparse root (preserve root)
@@ -3615,7 +3629,10 @@ class FST:
         # TODO: normal statement
 
 
-        for f in copy_self.walk():  # return first node past start of modification
+        if code is None:
+            return None
+
+        for f in copy_self.walk(with_loc=True):  # return first node past start of modification
             fln, fcol, _, _ = f.loc
 
             if fln > ln or (fln == ln and fcol >= col):
@@ -3657,8 +3674,6 @@ class FST:
 
         else:  # proper statementish node parent
             return parent._reparse(code, loc.ln, loc.col, to_loc.end_ln, to_loc.end_col, only_block_open=True)
-
-
 
 
 
@@ -3976,7 +3991,10 @@ class FST:
         raise ValueError(f"cannot cut from a {parenta.__class__.__name__}.{field}")
 
     def replace(self, code: Code | None, *, fix: bool = True, **options) -> Optional['FST']:  # -> Self (replaced) or None if deleted
-        """Replace an individual node, returns the new node for `self`, not the old replaced node."""
+        """Replace an individual node, returns the new node for `self`, not the old replaced node.
+
+        Can reparse.
+        """
 
         if self.is_root:
             raise ValueError('cannot replace root node')
@@ -4011,9 +4029,6 @@ class FST:
         else:
             if not reparse:
                 raise ValueError(f"cannot replace in {parenta.__class__.__name__}.{field}")
-
-        if code is None:
-            raise ValueError("cannot replace reparse with 'code=None'")
 
         return self._reparse_node(code, options.get('to'), from_exc=from_exc)
 
@@ -4060,7 +4075,9 @@ class FST:
 
         ast = self.a
 
-        if isinstance(ast, STATEMENTISH_OR_STMTMOD):
+        ffield, _ = _fixup_field_body(ast, field)
+
+        if isinstance(ast, STATEMENTISH_OR_STMTMOD) and ffield in STMTISH_LIST_FIELDS:
             return self._get_slice_stmt(start, stop, field, fix, cut, **options)
 
         if isinstance(ast, (Tuple, List, Set)):
@@ -4082,11 +4099,15 @@ class FST:
 
         If the `code` being put is an `AST` or `FST` then it is consumed and should not be considered valid after this
         call whether it succeeds or fails.
+
+        Can reparse.
         """
 
         ast = self.a
 
-        if isinstance(ast, STATEMENTISH_OR_STMTMOD):
+        ffield, body = _fixup_field_body(ast, field)
+
+        if isinstance(ast, STATEMENTISH_OR_STMTMOD) and ffield in STMTISH_LIST_FIELDS:
             self._put_slice_stmt(code, start, stop, field, one, fix, **options)
 
             return self
@@ -4122,17 +4143,25 @@ class FST:
             if not reparse:
                 raise ValueError(f"cannot put slice to a '{ast.__class__.__name__}'")
 
-        if code is None:
-            raise ValueError("cannot put slice reparse with 'code=None'")
+        start, stop = _fixup_slice_index(len(body), start, stop)
+
+        if stop == start:
+            raise RuntimeError(f"cannot insert with 'reparse=True'")
+
+        body2 = body if isinstance(ffield, str) else getattr(ast, ffield[1])
 
 
 
+        # TODO: handle dict '**'
+
+        # isinstance(ast, Dict)
+        # ffirst = self._dict_key_or_mock_loc(keys[start], values[start].f)
 
 
 
+        body[start].f._reparse_node(code, body2[stop - 1].f, from_exc=from_exc)
 
-
-        return self._reparse_node(code, options.get('to'), from_exc=from_exc)
+        return self._repath()
 
     def get_lines(self, ln: int, col: int, end_ln: int, end_col: int) -> list[str]:
         """Get lines from currently stored source. The first and last lines are cropped to start `col` and `end_col`."""
