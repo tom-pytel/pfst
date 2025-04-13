@@ -2213,9 +2213,14 @@ class FST:
 
                     continue
 
-                if not full and (isinstance(child, arguments) and not child.posonlyargs and not child.args
-                                 and not child.vararg and not child.kwonlyargs and not child.kwarg):
-                    continue
+                if name == 'args' and isinstance(child, arguments):
+                    if child.posonlyargs or child.args or child.vararg or child.kwonlyargs or child.kwarg:
+                        child.f._dump(full, indent, cind + sind, '.args ', linefunc, compact, eol)
+
+                        continue
+
+                    elif not full:
+                        continue
 
             if full or (child != []):
                 linefunc(f'{sind}{cind}.{name}{f"[{len(child)}]" if is_list else ""}{eol}')
@@ -3821,7 +3826,7 @@ class FST:
 
         return FST(ast, lines=[bistr(s) for s in lines], parse_params=parse_params)
 
-    def dump(self, out: Callable | TextIO = print, compact: bool = False, *, full: bool = False, indent: int = 2,
+    def dump(self, out: Callable | TextIO = print, compact: bool = False, full: bool = False, *, indent: int = 2,
              eol: str | None = None) -> list[str] | None:
         """Dump a representation of the tree to stdout or return as a list of lines.
 
@@ -3984,7 +3989,7 @@ class FST:
                 raise ValueError(f"cannot replace in {parenta.__class__.__name__}.{field}")
 
         if code is None:
-            raise ValueError("cannot replace with reparse with 'code=None'")
+            raise ValueError("cannot replace reparse with 'code=None'")
 
         return self._reparse_node(code, options.get('to'), from_exc=from_exc)
 
@@ -4069,10 +4074,10 @@ class FST:
         elif self.is_empty_set_call():
             self._put_slice_empty_set_call(code, start, stop, field, one, fix)
 
+        # TODO: more
+
         else:
             raise ValueError(f"cannot put slice to a '{ast.__class__.__name__}'")
-
-        # TODO: more
 
         return self
 
