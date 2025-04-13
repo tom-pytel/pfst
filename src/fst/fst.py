@@ -83,6 +83,7 @@ DEFAULT_POSTSPACE       = False  # True | False | int
 DEFAULT_PEP8SPACE       = True   # True | False | 1
 DEFAULT_PARS            = False  # True | False
 DEFAULT_ELIF            = False  # True | False
+DEFAULT_REPARSE         = False  # True | False
 
 STATEMENTISH            = (stmt, ExceptHandler, match_case)  # always in lists, cannot be inside multilines
 STATEMENTISH_OR_MOD     = STATEMENTISH + (mod,)
@@ -98,7 +99,6 @@ ANONYMOUS_SCOPE         = (Lambda, ListComp, SetComp, DictComp, GeneratorExp)
 
 PARENTHESIZABLE         = (expr, pattern)
 HAS_DOCSTRING           = NAMED_SCOPE_OR_MOD
-CAN_REPLACE_PARSED      = (expr, comprehension, arguments, arg, keyword, alias, withitem, pattern)
 
 re_empty_line_start     = re.compile(r'[ \t]*')     # start of completely empty or space-filled line (from start pos, start of line indentation)
 re_empty_line           = re.compile(r'[ \t]*$')    # completely empty or space-filled line (from start pos, start of line indentation)
@@ -1848,7 +1848,10 @@ class FST:
         - `1`: One empty line in all scopes.
         - `None`: Use default (`True`).
     - `elif_`: `True` or `False`, if putting a single `If` statement to an `orelse` field of a parent `If` statement then
-        put it as an `elif`. `None` means `False`.
+        put it as an `elif`. `None` means use default of `False`.
+    - `reparse`: If `True` will allow attempt at reparse during edit operations which cannot be carried out in another
+        controlled manner. This may result in more nodes changed than just the targetted one(s) (including parents) and
+        is not safe to use in a `walk()`. `None` means use default of `False`.
     """
 
     a:            AST                        ; """The actual `AST` node."""
@@ -3499,34 +3502,52 @@ class FST:
 
     # ------------------------------------------------------------------------------------------------------------------
 
-    def _replace_parsed(self, code: Code | None, to: Optional['FST'] = None, *, from_exc: Exception | None = None,
-                        **options):
-        """Attempt a replacement by using str as source and attempting to parse into location of node(s) being
-        replaced."""
+    def _reparse(self, code: Code | None, ln: int, col: int, end_ln: int, end_col: int, *,
+                 only_block_open: bool = False, from_exc: Exception | None = None):
+        """Reparse this node which entirely contatins the span which is to be replaced with `code` source. The node and
+        some of its parents going up may be replaced. Not safe to use in a `walk()`."""
 
-        ast = self.a
-        loc = self.loc
+        if isinstance(code, str):
+            new_lines = code.split('\n')
+        elif isinstance(code, list):
+            new_lines = code
+        elif isinstance(code, AST):
+            new_lines = ast_unparse(code)
+        elif code.is_root:  # isinstance(code, FST)
+            new_lines = code._lines
+        else:
+            raise ValueError('source FST must be root node') from from_exc
 
-        if not isinstance(ast, CAN_REPLACE_PARSED):
-            raise ValueError(f"cannot replace {ast.__class__.__name__}") from from_exc
+        assert not self.is_root
+        assert self.root.is_mod  # TODO: TEMPORARY
 
-        parent = self.parent_stmtish(False, True)
+        self_root = self.root
+        copy_root = FST(Pass(), lines=self_root._lines[:])  # we don't need the ASTs, just the lines
+        path      = self_root.child_path(self, False)
 
-        if isinstance(parent, mod):  # non-statementish in a mod (probably Expression)
-            raise NotImplementedError from from_exc  # TODO: this
-        elif not parent:  # pure solo statement or expression
-            raise NotImplementedError from from_exc  # TODO: this
+        copy_root.put_lines(new_lines, ln, col, end_ln, end_col)
 
-        # if not parent:
-        #     raise ValueError(f'cannot replace node without a statement parent') from from_exc
+        copy_root = FST.fromsrc(copy_root.src, mode=get_parse_mode(self_root.a), **self_root.parse_params)
+        copy_self = copy_root.child_from_path(path)
+        copy_ast  = copy_self.a
 
-        if not to:
-            to_loc = loc
-        elif not (to_loc := to.loc):
-            raise ValueError(f"'to' node must have a location") from from_exc
-        elif to.parent_stmtish(True, False) is not parent:
-            raise ValueError(f"'to' node must be part of the same statement") from from_exc
+        copy_self.pfield.set(copy_self.parent.a, None)  # so that copy_root unmake doesn't zero out new node
 
+        parent = copy_self.parent = self.parent
+        pfield = copy_self.pfield = self.pfield
+
+        self_root.put_lines(new_lines, ln, col, end_ln, end_col, True, self)
+
+        for a in walk(copy_ast):
+            a.f.root = self_root
+
+        pfield.set(parent.a, copy_ast)
+
+        self._unmake_fst_tree()
+        copy_root._unmake_fst_tree()
+
+
+        # TODO: Optimize individual cases.
         # TODO: ExceptHandler
         # TODO: match_case
         # TODO: block open statement
@@ -3536,46 +3557,36 @@ class FST:
 
 
 
+    def _reparse_node(self, code: Code | None, to: Optional['FST'] = None, *, from_exc: Exception | None = None):
+        """Attempt a replacement by using str as source and attempting to parse into location of node(s) being
+        replaced. Node can not be a statement or the like.
 
+        Currently doesn't handle statementish nodes, just their contents.
+        """
 
+        if not isinstance(ast := self.a, (expr, comprehension, arguments, arg, keyword, alias, withitem, pattern)):
+            raise ValueError(f"cannot replace node type {ast.__class__.__name__}") from from_exc
 
+        if not (loc := self.loc):
+            raise ValueError('node being reparsed must have a location') from from_exc
 
+        parent = self.parent_stmtish(False, True)
 
+        if not to:
+            to_loc = loc
+        elif not (to_loc := to.loc):
+            raise ValueError(f"'to' node must have a location") from from_exc
+        elif to.parent_stmtish(True, False) is not parent:
+            raise ValueError(f"'to' node must be part of the same statement") from from_exc
 
+        if isinstance(parent, mod):  # non-statementish in a mod (probably Expression)
+            raise NotImplementedError from from_exc  # TODO: this
 
+        elif not parent:  # pure solo statement or expression
+            raise NotImplementedError from from_exc  # TODO: this
 
-
-        self_root = self.root
-        copy_root = FST(Pass(), lines=self_root._lines[:])  # we don't need the ASTs, just the lines
-        path      = self_root.child_path(self, False)
-        src_lines = (code if isinstance(code, list) else code.split('\n') if isinstance(code, str) else
-                     ast_unparse(code).split('\n') if isinstance(code, AST) else
-                     code._lines if code.is_root else ast_unparse(code.src).split('\n'))
-
-        ln, col, end_ln, end_col = self.loc
-
-        copy_root.put_lines(src_lines, ln, col, end_ln, end_col)
-
-        copy_root = FST.fromsrc(copy_root.src, mode=get_parse_mode(self_root.a), **self_root.parse_params)
-        copy_self = copy_root.child_from_path(path)
-
-
-        # compare_asts(self_root.a, copy_root.a, skip1={self.a}, skip2={copy_self.a}, raise_=True)
-
-        if not compare_asts(self_root.a, copy_root.a, skip1={self.a}, skip2={copy_self.a}):
-            raise RuntimeError('could not replace')
-
-
-
-        print(copy_root.src)
-        copy_root.dump(print, True)
-
-
-
-        # copy_node = copy_root.child_from_path(self_path)
-
-
-
+        else:  # proper statementish node parent
+            parent._reparse(code, loc.ln, loc.col, to_loc.end_ln, to_loc.end_col, only_block_open=True)
 
     # ------------------------------------------------------------------------------------------------------------------
 
@@ -3888,8 +3899,7 @@ class FST:
 
         raise ValueError(f"cannot cut from a {parenta.__class__.__name__}.{field}")
 
-    def replace(self, code: Code | None, *, fix: bool = True, reparse: bool = False, to: Optional['FST'] = None,
-                **options):
+    def replace(self, code: Code | None, *, fix: bool = True, **options):
         """Replace an individual node."""
 
         if self.is_root:
@@ -3904,6 +3914,7 @@ class FST:
             return parent._put_slice_stmt(code, idx, idx + 1, field, True, fix, **options)
 
         from_exc = None
+        reparse  = DEFAULT_REPARSE if (o := options.get('reparse')) is None else o
 
         try:
             if isinstance(parenta, (Tuple, List, Set)):
@@ -3921,7 +3932,7 @@ class FST:
             if not reparse:
                 raise ValueError(f"cannot replace in {parenta.__class__.__name__}.{field}")
 
-        self._replace_parsed(self, code, to, from_exc=from_exc, **options)
+        self._reparse_node(code, options.get('to'), from_exc=from_exc)
 
     def get(self, start: int | Literal['end'] | None = None, stop: int | None | Literal[False] = False,
             field: str | None = None, *, fix: bool = True, cut: bool = False, **options) -> Optional['FST']:
@@ -4024,7 +4035,7 @@ class FST:
     def put_lines(self, lines: list[str] | None, ln: int, col: int, end_ln: int, end_col: int,
                   inc: bool | None = None, stop_at: Optional['FST'] = None):
         """Put or delete lines to currently stored source, optionally offsetting all nodes for the change. Must specify
-        `inc` as not `None` to enable offset of nodes according to lines put."""
+        `inc` as not `False` or `True` to enable offset of nodes according to lines put."""
 
         ls = self.root._lines
 
