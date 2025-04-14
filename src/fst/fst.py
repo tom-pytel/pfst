@@ -72,6 +72,7 @@ AST_DEFAULT_BODY_FIELD  = {cls: field for field, classes in [
     ('targets',              (Delete, Assign)),
     ('type_params',          (TypeAlias,)),
     ('names',                (Import, ImportFrom)),
+    # ('items',                (With, AsyncWith)),  # so that 'body' takes precedence
 
     ('values',               (BoolOp,)),
     ('generators',           (ListComp, SetComp, DictComp, GeneratorExp)),

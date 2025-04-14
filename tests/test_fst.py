@@ -14894,6 +14894,23 @@ Module .. ROOT 0,0 -> 0,27
       0
 """),
 
+(r"""with a as a, b as b, c as c: pass""", 'body[0]', 1, 3, 'items', {'raw': True}, r"""z as xyz""", r"""with a as a, z as xyz: pass""", r"""
+Module .. ROOT 0,0 -> 0,27
+  .body[1]
+  0] With .. 0,0 -> 0,27
+    .items[2]
+    0] withitem .. 0,5 -> 0,11
+      .context_expr
+        Name 'a' Load .. 0,5 -> 0,6
+      .optional_vars Name 'a' Store .. 0,10 -> 0,11
+    1] withitem .. 0,13 -> 0,21
+      .context_expr
+        Name 'z' Load .. 0,13 -> 0,14
+      .optional_vars Name 'xyz' Store .. 0,18 -> 0,21
+    .body[1]
+    0] Pass .. 0,23 -> 0,27
+"""),
+
 (r"""a and b and c""", 'body[0].value', 1, 3, None, {'raw': True}, r"""z""", r"""a and z""", r"""
 Module .. ROOT 0,0 -> 0,7
   .body[1]
@@ -14964,6 +14981,27 @@ Module .. ROOT 0,0 -> 0,7
       .args[2]
       0] Name 'a' Load .. 0,2 -> 0,3
       1] Name 'z' Load .. 0,5 -> 0,6
+"""),
+
+(r"""
+@a
+@b
+@c
+def f(): pass
+""", 'body[0]', 1, 3, 'decorator_list', {'raw': True}, r"""z""", r"""
+@a
+@z
+def f(): pass
+""", r"""
+Module .. ROOT 0,0 -> 4,0
+  .body[1]
+  0] FunctionDef .. 3,0 -> 3,13
+    .name 'f'
+    .body[1]
+    0] Pass .. 3,9 -> 3,13
+    .decorator_list[2]
+    0] Name 'a' Load .. 1,1 -> 1,2
+    1] Name 'z' Load .. 2,1 -> 2,2
 """),
 
 (r"""
@@ -19261,14 +19299,14 @@ class cls:
             t = parse(dst)
             f = (eval(f't.{stmt}', {'t': t}) if stmt else t).f
 
-            f.put_slice(None if src == '**DEL**' else src, start, stop, field, **options)
-
-            tdst  = t.f.src
-            tdump = t.f.dump(out=list, compact=True)
-
-            t.f.verify(raise_=True)
-
             try:
+                f.put_slice(None if src == '**DEL**' else src, start, stop, field, **options)
+
+                tdst  = t.f.src
+                tdump = t.f.dump(out=list, compact=True)
+
+                t.f.verify(raise_=True)
+
                 self.assertEqual(tdst, put_src)
                 self.assertEqual(tdump, put_dump.strip().split('\n'))
 
@@ -19288,14 +19326,14 @@ class cls:
             t = parse(dst)
             f = (eval(f't.{attr}', {'t': t}) if attr else t).f
 
-            f.put_slice(None if src == '**DEL**' else src, start, stop, field, **options)
-
-            tdst  = t.f.src
-            tdump = t.f.dump(out=list, compact=True)
-
-            t.f.verify(raise_=True)
-
             try:
+                f.put_slice(None if src == '**DEL**' else src, start, stop, field, **options)
+
+                tdst  = t.f.src
+                tdump = t.f.dump(out=list, compact=True)
+
+                t.f.verify(raise_=True)
+
                 self.assertEqual(tdst, put_src)
                 self.assertEqual(tdump, put_dump.strip().split('\n'))
 
@@ -19310,7 +19348,7 @@ class cls:
 
                 raise
 
-    def test_replace_from_put_slice_data(self):
+    def test_replace_raw_from_put_slice_data(self):
         for i, (dst, attr, start, stop, field, options, src, put_src, put_dump) in enumerate(PUT_SLICE_DATA):
             if options != {'raw': True}:
                 continue
@@ -19318,23 +19356,23 @@ class cls:
             t = parse(dst)
             f = (eval(f't.{attr}', {'t': t}) if attr else t).f
 
-            field, body = fst_._fixup_field_body(f.a)
-
-            if isinstance(field, str):
-                b1 = b2 = body
-            else:
-                b1, b2 = body, getattr(f.a, field[1])
-
-            start, stop = fst_._fixup_slice_index(len(body), start, stop)
-
-            b1[start].f.replace(None if src == '**DEL**' else src, to=b2[stop - 1].f, **options)  # raw=True is in `options`
-
-            tdst  = t.f.src
-            tdump = t.f.dump(out=list, compact=True)
-
-            t.f.verify(raise_=True)
-
             try:
+                field, body = fst_._fixup_field_body(f.a, field)
+
+                if isinstance(field, str):
+                    b1 = b2 = body
+                else:
+                    b1, b2 = body, getattr(f.a, field[1])
+
+                start, stop = fst_._fixup_slice_index(len(body), start, stop)
+
+                b1[start].f.replace(None if src == '**DEL**' else src, to=b2[stop - 1].f, **options)  # raw=True is in `options`
+
+                tdst  = t.f.src
+                tdump = t.f.dump(out=list, compact=True)
+
+                t.f.verify(raise_=True)
+
                 self.assertEqual(tdst, put_src)
                 self.assertEqual(tdump, put_dump.strip().split('\n'))
 
