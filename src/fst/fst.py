@@ -97,7 +97,7 @@ DEFAULT_POSTSPACE       = False  # True | False | int
 DEFAULT_PEP8SPACE       = True   # True | False | 1
 DEFAULT_PARS            = False  # True | False
 DEFAULT_ELIF_           = False  # True | False
-DEFAULT_REPARSE         = False  # True | False
+DEFAULT_RAW             = False  # True | False
 
 STATEMENTISH            = (stmt, ExceptHandler, match_case)  # always in lists, cannot be inside multilines
 STATEMENTISH_OR_MOD     = STATEMENTISH + (mod,)
@@ -218,7 +218,7 @@ def set_defaults(**params) -> dict[str, Any]:
     ret = {}
 
     for param, value in params.items():
-        if param not in ('docstr','precomms','postcomms','prespace','postspace','pep8space','pars','elif_','reparse'):
+        if param not in ('docstr','precomms','postcomms','prespace','postspace','pep8space','pars','elif_','raw'):
             raise ValueError(f"invalid parameter '{param}'")
 
         gparam       = f'DEFAULT_{param.upper()}'
@@ -1458,9 +1458,11 @@ class FSTSrcEdit:
 
         # delete preceding and trailing empty lines according to 'pep8' and 'space' format flags
 
-        prespace  = (float('inf') if (o := DEFAULT_PRESPACE if (o := options.get('prespace')) is None else o) is True
+        prespace  = (float('inf')
+                     if ((o := DEFAULT_PRESPACE) if (o := options.get('prespace')) is None else o) is True
                      else int(o))
-        postspace = (float('inf') if (o := DEFAULT_POSTSPACE if (o := options.get('postspace')) is None else o) is True
+        postspace = (float('inf')
+                     if ((o := DEFAULT_POSTSPACE) if (o := options.get('postspace')) is None else o) is True
                      else int(o))
         pep8space = DEFAULT_PEP8SPACE if (o := options.get('pep8space')) is None else o
 
@@ -1893,9 +1895,9 @@ class FST:
         - `None`: Use default (`True`).
     - `elif_`: `True` or `False`, if putting a single `If` statement to an `orelse` field of a parent `If` statement then
         put it as an `elif`. `None` means use default of `False`.
-    - `reparse`: If `True` will allow attempt at reparse during edit operations which cannot be carried out in another
-        controlled manner. This may result in more nodes changed than just the targetted one(s). `None` means use
-        default of `False`.
+    - `raw`: If `True` will allow attempt at reparse raw combined source during edit operations which cannot be carried
+        out in another controlled manner. This may result in more nodes changed than just the targetted one(s). `None`
+        means use default of `False`.
     """
 
     a:            AST                        ; """The actual `AST` node."""
@@ -3573,8 +3575,8 @@ class FST:
 
     # ------------------------------------------------------------------------------------------------------------------
 
-    def _reparse(self, code: Code | None, ln: int, col: int, end_ln: int, end_col: int, *,
-                 only_block_open: bool = False, from_exc: Exception | None = None) -> 'FST':
+    def _reparse_raw(self, code: Code | None, ln: int, col: int, end_ln: int, end_col: int, *,
+                     only_block_open: bool = False, from_exc: Exception | None = None) -> 'FST':
         """Reparse this node which entirely contatins the span which is to be replaced with `code` source. The node and
         some of its parents going up may be replaced. Not safe to use in a `walk()`.
 
@@ -3642,8 +3644,8 @@ class FST:
 
         return f
 
-    def _reparse_node(self, code: Code | None, to: Optional['FST'] = None, *, from_exc: Exception | None = None,
-                      ) -> 'FST':
+    def _reparse_raw_node(self, code: Code | None, to: Optional['FST'] = None, *, from_exc: Exception | None = None,
+                          ) -> 'FST':
         """Attempt a replacement by using str as source and attempting to parse into location of node(s) being
         replaced. Node can not be a statement or the like.
 
@@ -3675,7 +3677,7 @@ class FST:
 
 
         else:  # proper statementish node parent
-            return parent._reparse(code, loc.ln, loc.col, to_loc.end_ln, to_loc.end_col, only_block_open=True)
+            return parent._reparse_raw(code, loc.ln, loc.col, to_loc.end_ln, to_loc.end_col, only_block_open=True)
 
 
 
@@ -4012,7 +4014,7 @@ class FST:
             return None if code is None else pfield.get(parenta).f
 
         from_exc = None
-        reparse  = DEFAULT_REPARSE if (o := options.get('reparse')) is None else o
+        raw      = DEFAULT_RAW if (o := options.get('raw')) is None else o
 
         try:
             if isinstance(parenta, (Tuple, List, Set)):
@@ -4023,16 +4025,16 @@ class FST:
             # TODO: more individual specialized replacements
 
         except (SyntaxError, NodeTypeError) as exc:
-            if not reparse:
+            if not raw:
                 raise
 
             from_exc = exc
 
         else:
-            if not reparse:
+            if not raw:
                 raise ValueError(f"cannot replace in {parenta.__class__.__name__}.{field}")
 
-        return self._reparse_node(code, options.get('to'), from_exc=from_exc)
+        return self._reparse_raw_node(code, options.get('to'), from_exc=from_exc)
 
     def get(self, start: int | Literal['end'] | None = None, stop: int | None | Literal[False] = False,
             field: str | None = None, *, fix: bool = True, cut: bool = False, **options) -> Optional['FST']:
@@ -4115,7 +4117,7 @@ class FST:
             return self
 
         from_exc = None
-        reparse  = DEFAULT_REPARSE if (o := options.get('reparse')) is None else o
+        raw      = DEFAULT_RAW if (o := options.get('raw')) is None else o
 
         try:
             if isinstance(ast, (Tuple, List, Set)):
@@ -4136,19 +4138,19 @@ class FST:
             # TODO: more individual specialized slice puts
 
         except (SyntaxError, NodeTypeError) as exc:
-            if not reparse:
+            if not raw:
                 raise
 
             from_exc = exc
 
         else:
-            if not reparse:
+            if not raw:
                 raise ValueError(f"cannot put slice to a '{ast.__class__.__name__}'")
 
         start, stop = _fixup_slice_index(len(body), start, stop)
 
         if stop == start:
-            raise RuntimeError(f"cannot insert with 'reparse=True'")
+            raise RuntimeError(f"cannot insert with 'raw=True'")
 
         body2 = body if isinstance(ffield, str) else getattr(ast, ffield[1])
 
@@ -4161,7 +4163,7 @@ class FST:
 
 
 
-        body[start].f._reparse_node(code, body2[stop - 1].f, from_exc=from_exc)
+        body[start].f._reparse_raw_node(code, body2[stop - 1].f, from_exc=from_exc)
 
         return self._repath()
 

@@ -14768,7 +14768,7 @@ Module .. ROOT 0,0 -> 9,0
 ]  # END OF PUT_SLICE_STMT_DATA
 
 PUT_SLICE_DATA = [
-(r"""(1, 2, 3)""", 'body[0].value', 1, 2, None, {'reparse': True}, r"""*z""", r"""(1, *z, 3)""", r"""
+(r"""(1, 2, 3)""", 'body[0].value', 1, 2, None, {'raw': True}, r"""*z""", r"""(1, *z, 3)""", r"""
 Module .. ROOT 0,0 -> 0,10
   .body[1]
   0] Expr .. 0,0 -> 0,10
@@ -14782,7 +14782,7 @@ Module .. ROOT 0,0 -> 0,10
       .ctx Load
 """),
 
-(r"""(1, 2, 3)""", 'body[0].value', 0, 3, None, {'reparse': True}, r"""*z,""", r"""(*z,)""", r"""
+(r"""(1, 2, 3)""", 'body[0].value', 0, 3, None, {'raw': True}, r"""*z,""", r"""(*z,)""", r"""
 Module .. ROOT 0,0 -> 0,5
   .body[1]
   0] Expr .. 0,0 -> 0,5
@@ -14794,7 +14794,7 @@ Module .. ROOT 0,0 -> 0,5
       .ctx Load
 """),
 
-(r"""1, 2, 3""", 'body[0].value', 1, 2, None, {'reparse': True}, r"""*z""", r"""1, *z, 3""", r"""
+(r"""1, 2, 3""", 'body[0].value', 1, 2, None, {'raw': True}, r"""*z""", r"""1, *z, 3""", r"""
 Module .. ROOT 0,0 -> 0,8
   .body[1]
   0] Expr .. 0,0 -> 0,8
@@ -14808,7 +14808,7 @@ Module .. ROOT 0,0 -> 0,8
       .ctx Load
 """),
 
-(r"""1, 2, 3""", 'body[0].value', 0, 3, None, {'reparse': True}, r"""*z,""", r"""*z,""", r"""
+(r"""1, 2, 3""", 'body[0].value', 0, 3, None, {'raw': True}, r"""*z,""", r"""*z,""", r"""
 Module .. ROOT 0,0 -> 0,3
   .body[1]
   0] Expr .. 0,0 -> 0,3
@@ -14820,7 +14820,7 @@ Module .. ROOT 0,0 -> 0,3
       .ctx Load
 """),
 
-(r"""{a: b, c: d, e: f}""", 'body[0].value', 1, 2, None, {'reparse': True}, r"""**z""", r"""{a: b, **z, e: f}""", r"""
+(r"""{a: b, c: d, e: f}""", 'body[0].value', 1, 2, None, {'raw': True}, r"""**z""", r"""{a: b, **z, e: f}""", r"""
 Module .. ROOT 0,0 -> 0,17
   .body[1]
   0] Expr .. 0,0 -> 0,17
@@ -14835,7 +14835,7 @@ Module .. ROOT 0,0 -> 0,17
       2] Name 'f' Load .. 0,15 -> 0,16
 """),
 
-(r"""{a: b, c: d, e: f}""", 'body[0].value', 0, 3, None, {'reparse': True}, r"""**z""", r"""{**z}""", r"""
+(r"""{a: b, c: d, e: f}""", 'body[0].value', 0, 3, None, {'raw': True}, r"""**z""", r"""{**z}""", r"""
 Module .. ROOT 0,0 -> 0,5
   .body[1]
   0] Expr .. 0,0 -> 0,5
@@ -14846,7 +14846,7 @@ Module .. ROOT 0,0 -> 0,5
       0] Name 'z' Load .. 0,3 -> 0,4
 """),
 
-(r"""del a, b, c""", 'body[0]', 1, 3, None, {'reparse': True}, r"""z""", r"""del a, z""", r"""
+(r"""del a, b, c""", 'body[0]', 1, 3, None, {'raw': True}, r"""z""", r"""del a, z""", r"""
 Module .. ROOT 0,0 -> 0,8
   .body[1]
   0] Delete .. 0,0 -> 0,8
@@ -14855,7 +14855,7 @@ Module .. ROOT 0,0 -> 0,8
     1] Name 'z' Del .. 0,7 -> 0,8
 """),
 
-(r"""a = b = c = d""", 'body[0]', 1, 3, None, {'reparse': True}, r"""z""", r"""a = z = d""", r"""
+(r"""a = b = c = d""", 'body[0]', 1, 3, None, {'raw': True}, r"""z""", r"""a = z = d""", r"""
 Module .. ROOT 0,0 -> 0,9
   .body[1]
   0] Assign .. 0,0 -> 0,9
@@ -14865,7 +14865,7 @@ Module .. ROOT 0,0 -> 0,9
     .value Name 'd' Load .. 0,8 -> 0,9
 """),
 
-(r"""import a, b, c""", 'body[0]', 1, 3, None, {'reparse': True}, r"""z as xyz""", r"""import a, z as xyz""", r"""
+(r"""import a, b, c""", 'body[0]', 1, 3, None, {'raw': True}, r"""z as xyz""", r"""import a, z as xyz""", r"""
 Module .. ROOT 0,0 -> 0,18
   .body[1]
   0] Import .. 0,0 -> 0,18
@@ -14878,7 +14878,7 @@ Module .. ROOT 0,0 -> 0,18
         'xyz'
 """),
 
-(r"""from mod import a, b, c""", 'body[0]', 1, 3, None, {'reparse': True}, r"""z as xyz""", r"""from mod import a, z as xyz""", r"""
+(r"""from mod import a, b, c""", 'body[0]', 1, 3, None, {'raw': True}, r"""z as xyz""", r"""from mod import a, z as xyz""", r"""
 Module .. ROOT 0,0 -> 0,27
   .body[1]
   0] ImportFrom .. 0,0 -> 0,27
@@ -14894,7 +14894,7 @@ Module .. ROOT 0,0 -> 0,27
       0
 """),
 
-(r"""a and b and c""", 'body[0].value', 1, 3, None, {'reparse': True}, r"""z""", r"""a and z""", r"""
+(r"""a and b and c""", 'body[0].value', 1, 3, None, {'raw': True}, r"""z""", r"""a and z""", r"""
 Module .. ROOT 0,0 -> 0,7
   .body[1]
   0] Expr .. 0,0 -> 0,7
@@ -14905,7 +14905,7 @@ Module .. ROOT 0,0 -> 0,7
       1] Name 'z' Load .. 0,6 -> 0,7
 """),
 
-(r"""[a for a in a() for b in b() for c in c()]""", 'body[0].value', 1, 3, None, {'reparse': True}, r"""z in z()""", r"""[a for a in a() for z in z()]""", r"""
+(r"""[a for a in a() for b in b() for c in c()]""", 'body[0].value', 1, 3, None, {'raw': True}, r"""z in z()""", r"""[a for a in a() for z in z()]""", r"""
 Module .. ROOT 0,0 -> 0,29
   .body[1]
   0] Expr .. 0,0 -> 0,29
@@ -14926,7 +14926,7 @@ Module .. ROOT 0,0 -> 0,29
           0
 """),
 
-(r"""[a for a in a() if a if b if c]""", 'body[0].value.generators[0]', 1, 3, None, {'reparse': True}, r"""z""", r"""[a for a in a() if a if z]""", r"""
+(r"""[a for a in a() if a if b if c]""", 'body[0].value.generators[0]', 1, 3, None, {'raw': True}, r"""z""", r"""[a for a in a() if a if z]""", r"""
 Module .. ROOT 0,0 -> 0,26
   .body[1]
   0] Expr .. 0,0 -> 0,26
@@ -14944,7 +14944,7 @@ Module .. ROOT 0,0 -> 0,26
           0
 """),
 
-(r"""f(a, b, c)""", 'body[0].value', 1, 3, None, {'reparse': True}, r"""z""", r"""f(a, z)""", r"""
+(r"""f(a, b, c)""", 'body[0].value', 1, 3, None, {'raw': True}, r"""z""", r"""f(a, z)""", r"""
 Module .. ROOT 0,0 -> 0,7
   .body[1]
   0] Expr .. 0,0 -> 0,7
@@ -14955,7 +14955,7 @@ Module .. ROOT 0,0 -> 0,7
       1] Name 'z' Load .. 0,5 -> 0,6
 """),
 
-(r"""f(a, b, c)""", 'body[0].value', 1, 3, None, {'reparse': True}, r"""z""", r"""f(a, z)""", r"""
+(r"""f(a, b, c)""", 'body[0].value', 1, 3, None, {'raw': True}, r"""z""", r"""f(a, z)""", r"""
 Module .. ROOT 0,0 -> 0,7
   .body[1]
   0] Expr .. 0,0 -> 0,7
@@ -14969,7 +14969,7 @@ Module .. ROOT 0,0 -> 0,7
 (r"""
 match a:
   case [a, b, c]: pass
-""", 'body[0].cases[0].pattern', 1, 3, None, {'reparse': True}, r"""*z""", r"""
+""", 'body[0].cases[0].pattern', 1, 3, None, {'raw': True}, r"""*z""", r"""
 match a:
   case [a, *z]: pass
 """, r"""
@@ -14992,7 +14992,7 @@ Module .. ROOT 0,0 -> 3,0
 (r"""
 match a:
   case a | b | c: pass
-""", 'body[0].cases[0].pattern', 1, 3, None, {'reparse': True}, r"""z""", r"""
+""", 'body[0].cases[0].pattern', 1, 3, None, {'raw': True}, r"""z""", r"""
 match a:
   case a | z: pass
 """, r"""
@@ -15015,7 +15015,7 @@ Module .. ROOT 0,0 -> 3,0
 (r"""
 match a:
   case {'a': a, 'b': b, 'c': c}: pass
-""", 'body[0].cases[0].pattern', 1, 3, None, {'reparse': True}, r"""**z""", r"""
+""", 'body[0].cases[0].pattern', 1, 3, None, {'raw': True}, r"""**z""", r"""
 match a:
   case {'a': a, **z}: pass
 """, r"""
@@ -19050,15 +19050,15 @@ class cls:
         self.assertEqual(f.src, 'd')
         self.assertIsNone(g.a)
 
-    def test_replace_reparse(self):
+    def test_replace_raw(self):
         f = parse('def f(a, b): pass').f
         g = f.body[0].args.args[1]
         self.assertEqual('b', g.src)
-        h = f.body[0].args.args[1].replace('c=1', reparse=True)
+        h = f.body[0].args.args[1].replace('c=1', raw=True)
         self.assertEqual('def f(a, c=1): pass', f.src)
         self.assertEqual('c', h.src)
         self.assertIsNone(g.a)
-        i = f.body[0].args.args[1].replace('**d', reparse=True, to=f.body[0].args.defaults[0])
+        i = f.body[0].args.args[1].replace('**d', raw=True, to=f.body[0].args.defaults[0])
         self.assertEqual('def f(a, **d): pass', f.src)
         self.assertEqual('d', i.src)
         self.assertIsNone(h.a)
@@ -19312,7 +19312,7 @@ class cls:
 
     def test_replace_from_put_slice_data(self):
         for i, (dst, attr, start, stop, field, options, src, put_src, put_dump) in enumerate(PUT_SLICE_DATA):
-            if options != {'reparse': True}:
+            if options != {'raw': True}:
                 continue
 
             t = parse(dst)
@@ -19327,7 +19327,7 @@ class cls:
 
             start, stop = fst_._fixup_slice_index(len(body), start, stop)
 
-            b1[start].f.replace(None if src == '**DEL**' else src, to=b2[stop - 1].f, **options)  # reparse=True is in `options`
+            b1[start].f.replace(None if src == '**DEL**' else src, to=b2[stop - 1].f, **options)  # raw=True is in `options`
 
             tdst  = t.f.src
             tdump = t.f.dump(out=list, compact=True)
