@@ -286,7 +286,7 @@ def get_parse_mode(ast: AST) -> Literal['exec'] | Literal['eval'] | Literal['sin
     if isinstance(ast, Interactive):
         return 'single'
 
-    raise ValueError('can not determine parse mode')
+    raise ValueError('cannot determine parse mode')
 
 
 class WalkFail(Exception): pass

@@ -929,7 +929,7 @@ class FSTSrcEdit:
 
                     break
 
-                elif c != '(':  # we don't actually count and check these because there may be other parens inside the `loc` which we can not see here
+                elif c != '(':  # we don't actually count and check these because there may be other parens inside the `loc` which we cannot see here
                     raise ValueError(f"expecting leading comma or open parenthesis, got '{c}'")
 
                 col      -= 1
@@ -2346,7 +2346,7 @@ class FST:
         lines = self.root._lines
 
         if isinstance(ast, match_case):
-            start = _prev_find(lines, 0, 0, first.ln, first.col, 'case')  # we can use (0,0) because we know "case" starts on a newline
+            start = _prev_find(lines, 0, 0, first.ln, first.col, 'case')  # we can use '0, 0' because we know "case" starts on a newline
 
             if ast.body:
                 return fstloc(*start, last.bend_ln, last.bend_col)
@@ -2355,11 +2355,17 @@ class FST:
 
             return fstloc(*start, end_ln, end_col + 1)
 
-        start_ln, start_col, ante_start_ln, ante_start_col, nlpars = first._lpars('allown')
+        is_comprehension = isinstance(ast, comprehension)
 
-        if not nlpars:  # not really needed, but juuust in case
-            start_ln  = first.bln
-            start_col = first.bcol
+        if is_comprehension and (prev := self.prev_step('allown', recurse_self=False)):
+            start_ln, start_col = _prev_find(lines, prev.bend_ln, prev.bend_col, first.ln, first.col, 'for')
+
+        else:
+            start_ln, start_col, ante_start_ln, ante_start_col, nlpars = first._lpars('allown')
+
+            if not nlpars:  # not really needed, but juuust in case
+                start_ln  = first.bln
+                start_col = first.bcol
 
         end_ln, end_col, ante_end_ln, ante_end_col, nrpars = last._rpars('allown')
 
@@ -2367,7 +2373,7 @@ class FST:
             end_ln  = last.bend_ln
             end_col = last.bend_col
 
-        elif isinstance(ast, comprehension):
+        elif is_comprehension:
             if ((parent := self.parent) and isinstance(parent.a, GeneratorExp) and  # correct for parenthesized GeneratorExp
                 self.pfield.idx == len(parent.a.generators) - 1
             ):
@@ -2626,7 +2632,7 @@ class FST:
     def _fix(self, inplace: bool = True) -> 'FST':
         """This is really a maybe fix source and `ctx` values for cut or copied nodes (to make subtrees parsable if the
         source is not after the operation). Normally this is called by default on newly cut / copied individual nodes.
-        Possibly reparses in order to verify expressions. If can not fix or ast is not parsable by itself then ast will
+        Possibly reparses in order to verify expressions. If cannot fix or ast is not parsable by itself then ast will
         be unchanged. Is meant to be a quick fix after a cut or copy operation, not full check, for that use
         `is_parsable()` or `verify()` depending on need. Possible source changes are `elif` to `if` and parentheses
         where needed and commas for singleton tuples.
@@ -3658,7 +3664,7 @@ class FST:
     def _reparse_raw_node(self, code: Code | None, to: Optional['FST'] = None, *, from_exc: Exception | None = None,
                           ) -> 'FST':
         """Attempt a replacement by using str as source and attempting to parse into location of node(s) being
-        replaced. Node can not be a statement or the like.
+        replaced. Node cannot be a statement or the like.
 
         Currently doesn't handle statementish nodes, just expressions and other misc junk.
         """
@@ -5578,13 +5584,14 @@ class FST:
 
         return lns
 
-    def pars(self, pars: bool = True) -> fstloc:
+    def pars(self, pars: bool = True, **options) -> fstloc:
         """Return the location of enclosing parentheses if present. Will balance parentheses if `self` is an element of
         a tuple and not return the parentheses of the tuple. Likwise will not return the parentheses of an enclosing
         `arguments`  parent. Only works on (and makes sense for) `expr` or `pattern` nodes, otherwise `self.bloc`.
 
         **Parameters:**
         - `pars`: `True` means return parentheses if present and `self.bloc` otherwise, `False` always `self.bloc`.
+        - `options`: Ignored.
 
         **Returns:**
         - `fstloc`: Location of enclosing parentheses if present else `self.bloc`.
@@ -5619,13 +5626,14 @@ class FST:
         return fstloc(pars_ln, pars_col, pars_end_ln, pars_end_col)
 
     def comms(self, precomms: bool | str | None = DEFAULT_PRECOMMS, postcomms: bool | str | None = DEFAULT_POSTCOMMS,
-              ) -> fstloc:
+              **options) -> fstloc:
         """Return the location of preceding and trailing comments if present. Only works on (and makes sense for)
         `stmt`, 'ExceptHandler' or `match_case` nodes, otherwise returns `self.bloc`.
 
         **Parameters:**
         - `precomms`: Preceding comments to get. See `FST` source editing `options`.
         - `postcomms`: Trailing comments to get. See `FST` source editing `options`.
+        - `options`: Ignored.
 
         **Returns:**
         - `fstloc`: Location from start of preceding comments to end of trailing comments, else `self.bloc` or start or

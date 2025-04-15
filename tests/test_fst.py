@@ -1271,7 +1271,7 @@ Module .. ROOT 0,0 -> 4,1
             .ctx Load
         .value Name 'v' Load .. 3,18 -> 3,19
         .generators[1]
-        0] comprehension .. 3,24 -> 3,51
+        0] comprehension .. 3,20 -> 3,51
           .target Tuple .. 3,24 -> 3,28
             .elts[2]
             0] Name 'k' Store .. 3,24 -> 3,25
@@ -1302,7 +1302,7 @@ Dict .. ROOT 0,0 -> 3,1
         .ctx Load
     .value Name 'v' Load .. 1,18 -> 1,19
     .generators[1]
-    0] comprehension .. 1,24 -> 1,77
+    0] comprehension .. 1,20 -> 1,77
       .target Tuple .. 1,24 -> 1,28
         .elts[2]
         0] Name 'k' Store .. 1,24 -> 1,25
@@ -14922,20 +14922,20 @@ Module .. ROOT 0,0 -> 0,7
       1] Name 'z' Load .. 0,6 -> 0,7
 """),
 
-(r"""[a for a in a() for b in b() for c in c()]""", 'body[0].value', 1, 3, None, {'raw': True}, r"""z in z()""", r"""[a for a in a() for z in z()]""", r"""
+(r"""[a for a in a() for b in b() for c in c()]""", 'body[0].value', 1, 3, None, {'raw': True}, r"""for z in z()""", r"""[a for a in a() for z in z()]""", r"""
 Module .. ROOT 0,0 -> 0,29
   .body[1]
   0] Expr .. 0,0 -> 0,29
     .value ListComp .. 0,0 -> 0,29
       .elt Name 'a' Load .. 0,1 -> 0,2
       .generators[2]
-      0] comprehension .. 0,7 -> 0,15
+      0] comprehension .. 0,3 -> 0,15
         .target Name 'a' Store .. 0,7 -> 0,8
         .iter Call .. 0,12 -> 0,15
           .func Name 'a' Load .. 0,12 -> 0,13
         .is_async
           0
-      1] comprehension .. 0,20 -> 0,28
+      1] comprehension .. 0,16 -> 0,28
         .target Name 'z' Store .. 0,20 -> 0,21
         .iter Call .. 0,25 -> 0,28
           .func Name 'z' Load .. 0,25 -> 0,26
@@ -14950,7 +14950,7 @@ Module .. ROOT 0,0 -> 0,26
     .value ListComp .. 0,0 -> 0,26
       .elt Name 'a' Load .. 0,1 -> 0,2
       .generators[1]
-      0] comprehension .. 0,7 -> 0,25
+      0] comprehension .. 0,3 -> 0,25
         .target Name 'a' Store .. 0,7 -> 0,8
         .iter Call .. 0,12 -> 0,15
           .func Name 'a' Load .. 0,12 -> 0,13
@@ -15453,21 +15453,21 @@ def f():
         self.assertEqual((0, 5, 0, 8), parse('with f(): pass').body[0].items[0].f.loc)  # withitem
         self.assertEqual((0, 5, 0, 13), parse('with f() as f: pass').body[0].items[0].f.loc)  # withitem
         self.assertEqual((1, 2, 1, 24), parse('match a:\n  case 2 if a == 1: pass').body[0].cases[0].f.loc)  # match_case
-        self.assertEqual((0, 7, 0, 25), parse('[i for i in range(5) if i]').body[0].value.generators[0].f.loc)  # comprehension
-        self.assertEqual((0, 7, 0, 25), parse('(i for i in range(5) if i)').body[0].value.generators[0].f.loc)  # comprehension
+        self.assertEqual((0, 3, 0, 25), parse('[i for i in range(5) if i]').body[0].value.generators[0].f.loc)  # comprehension
+        self.assertEqual((0, 3, 0, 25), parse('(i for i in range(5) if i)').body[0].value.generators[0].f.loc)  # comprehension
 
         self.assertEqual((0, 5, 0, 12), parse('with ( f() ): pass').body[0].items[0].f.loc)  # withitem w/ parens
         self.assertEqual((0, 5, 0, 21), parse('with ( f() ) as ( f ): pass').body[0].items[0].f.loc)  # withitem w/ parens
         self.assertEqual((1, 2, 1, 28), parse('match a:\n  case ( 2 ) if a == 1: pass').body[0].cases[0].f.loc)  # match_case w/ parens
-        self.assertEqual((0, 7, 0, 33), parse('[i for ( i ) in range(5) if ( i ) ]').body[0].value.generators[0].f.loc)  # comprehension w/ parens
-        self.assertEqual((0, 7, 0, 33), parse('(i for ( i ) in range(5) if ( i ) )').body[0].value.generators[0].f.loc)  # comprehension w/ parens
+        self.assertEqual((0, 3, 0, 33), parse('[i for ( i ) in range(5) if ( i ) ]').body[0].value.generators[0].f.loc)  # comprehension w/ parens
+        self.assertEqual((0, 3, 0, 33), parse('(i for ( i ) in range(5) if ( i ) )').body[0].value.generators[0].f.loc)  # comprehension w/ parens
 
         self.assertEqual('( f() ) as ( f )', parse('with ( f() ) as ( f ): pass').body[0].items[0].f.src)
         self.assertEqual('( f() ) as ( f )', parse('with ( f() ) as ( f ), ( g() ) as ( g ): pass').body[0].items[0].f.src)
         self.assertEqual('( g() ) as ( g )', parse('with ( f() ) as ( f ), ( g() ) as ( g ): pass').body[0].items[1].f.src)
         self.assertEqual('case ( 2 ) if a == 1: pass', parse('match a:\n  case ( 2 ) if a == 1: pass').body[0].cases[0].f.src)
-        self.assertEqual('( i ) in range(5) if ( i )', parse('[ ( i ) for ( i ) in range(5) if ( i ) ]').body[0].value.generators[0].f.src)
-        self.assertEqual('( i ) in range(5) if ( i )', parse('( ( i ) for ( i ) in range(5) if ( i ) )').body[0].value.generators[0].f.src)
+        self.assertEqual('for ( i ) in range(5) if ( i )', parse('[ ( i ) for ( i ) in range(5) if ( i ) ]').body[0].value.generators[0].f.src)
+        self.assertEqual('for ( i ) in range(5) if ( i )', parse('( ( i ) for ( i ) in range(5) if ( i ) )').body[0].value.generators[0].f.src)
         self.assertEqual(None, parse('def f(): pass').body[0].args.f.src)
         self.assertEqual('a', parse('def f(a): pass').body[0].args.f.src)
         self.assertEqual('a', parse('def f( a ): pass').body[0].args.f.src)
@@ -15481,10 +15481,10 @@ def f():
         self.assertEqual('*s, a, b = ( 2 )', parse('def f( *s, a, b = ( 2 ) ): pass').body[0].args.f.src)
         self.assertEqual('*, z, a, b = ( 2 ),', parse('def f( *, z, a, b = ( 2 ), ): pass').body[0].args.f.src)
         self.assertEqual('**ss', parse('def f( **ss ): pass').body[0].args.f.src)
-        self.assertEqual('( i ) in range(5) if ( i )', parse('[ ( i ) for ( i ) in range(5) if ( i ) for ( j ) in range(6) if ( j ) ]').body[0].value.generators[0].f.src)
-        self.assertEqual('( i ) in range(5) if ( i )', parse('( ( i ) for ( i ) in range(5) if ( i ) for ( j ) in range(6) if ( j ) )').body[0].value.generators[0].f.src)
-        self.assertEqual('( j ) in range(6) if ( j )', parse('[ ( i ) for ( i ) in range(5) if ( i ) for ( j ) in range(6) if ( j ) ]').body[0].value.generators[1].f.src)
-        self.assertEqual('( j ) in range(6) if ( j )', parse('( ( i ) for ( i ) in range(5) if ( i ) for ( j ) in range(6) if ( j ) )').body[0].value.generators[1].f.src)
+        self.assertEqual('for ( i ) in range(5) if ( i )', parse('[ ( i ) for ( i ) in range(5) if ( i ) for ( j ) in range(6) if ( j ) ]').body[0].value.generators[0].f.src)
+        self.assertEqual('for ( i ) in range(5) if ( i )', parse('( ( i ) for ( i ) in range(5) if ( i ) for ( j ) in range(6) if ( j ) )').body[0].value.generators[0].f.src)
+        self.assertEqual('for ( j ) in range(6) if ( j )', parse('[ ( i ) for ( i ) in range(5) if ( i ) for ( j ) in range(6) if ( j ) ]').body[0].value.generators[1].f.src)
+        self.assertEqual('for ( j ) in range(6) if ( j )', parse('( ( i ) for ( i ) in range(5) if ( i ) for ( j ) in range(6) if ( j ) )').body[0].value.generators[1].f.src)
 
     def test_bloc(self):
         ast = parse('@deco\nclass cls:\n @deco\n def meth():\n  @deco\n  class fcls: pass')
