@@ -14922,6 +14922,20 @@ Module .. ROOT 0,0 -> 0,7
       1] Name 'z' Load .. 0,6 -> 0,7
 """),
 
+(r"""a < b < c < d""", 'body[0].value', 1, 4, None, {'raw': True}, r"""x < y""", r"""a < x < y""", r"""
+Module .. ROOT 0,0 -> 0,9
+  .body[1]
+  0] Expr .. 0,0 -> 0,9
+    .value Compare .. 0,0 -> 0,9
+      .left Name 'a' Load .. 0,0 -> 0,1
+      .ops[2]
+      0] Lt .. 0,2 -> 0,3
+      1] Lt .. 0,6 -> 0,7
+      .comparators[2]
+      0] Name 'x' Load .. 0,4 -> 0,5
+      1] Name 'y' Load .. 0,8 -> 0,9
+"""),
+
 (r"""[a for a in a() for b in b() for c in c()]""", 'body[0].value', 1, 3, None, {'raw': True}, r"""for z in z()""", r"""[a for a in a() for z in z()]""", r"""
 Module .. ROOT 0,0 -> 0,29
   .body[1]
@@ -19101,6 +19115,47 @@ class cls:
         self.assertEqual('d', i.src)
         self.assertIsNone(h.a)
 
+    def test_replace_raw_from_put_slice_data(self):
+        for i, (dst, attr, start, stop, field, options, src, put_src, put_dump) in enumerate(PUT_SLICE_DATA):
+            if options != {'raw': True}:
+                continue
+
+            t = parse(dst)
+            f = (eval(f't.{attr}', {'t': t}) if attr else t).f
+
+            try:
+                field, body = fst_._fixup_field_body(a := f.a, field)
+
+                if isinstance(a, Compare):
+                    b1 = b2 = [a.left] + body  # we assume body is a.comparators in this case
+                elif isinstance(field, str):
+                    b1 = b2 = body
+                else:
+                    b1, b2 = body, getattr(f.a, field[1])
+
+                start, stop = fst_._fixup_slice_index(len(b1), start, stop)
+
+                b1[start].f.replace(None if src == '**DEL**' else src, to=b2[stop - 1].f, **options)  # raw=True is in `options`
+
+                tdst  = t.f.src
+                tdump = t.f.dump(out=list, compact=True)
+
+                t.f.verify(raise_=True)
+
+                self.assertEqual(tdst, put_src)
+                self.assertEqual(tdump, put_dump.strip().split('\n'))
+
+            except Exception:
+                print(i, src, start, stop, options)
+                print('---')
+                print(repr(dst))
+                print('...')
+                print(src)
+                print('...')
+                print(put_src)
+
+                raise
+
     def test_get_slice_seq_copy(self):
         for src, elt, start, stop, src_cut, slice_copy, src_dump, slice_dump in GET_SLICE_SEQ_DATA:
             t = parse(src)
@@ -19328,45 +19383,6 @@ class cls:
 
             try:
                 f.put_slice(None if src == '**DEL**' else src, start, stop, field, **options)
-
-                tdst  = t.f.src
-                tdump = t.f.dump(out=list, compact=True)
-
-                t.f.verify(raise_=True)
-
-                self.assertEqual(tdst, put_src)
-                self.assertEqual(tdump, put_dump.strip().split('\n'))
-
-            except Exception:
-                print(i, src, start, stop, options)
-                print('---')
-                print(repr(dst))
-                print('...')
-                print(src)
-                print('...')
-                print(put_src)
-
-                raise
-
-    def test_replace_raw_from_put_slice_data(self):
-        for i, (dst, attr, start, stop, field, options, src, put_src, put_dump) in enumerate(PUT_SLICE_DATA):
-            if options != {'raw': True}:
-                continue
-
-            t = parse(dst)
-            f = (eval(f't.{attr}', {'t': t}) if attr else t).f
-
-            try:
-                field, body = fst_._fixup_field_body(f.a, field)
-
-                if isinstance(field, str):
-                    b1 = b2 = body
-                else:
-                    b1, b2 = body, getattr(f.a, field[1])
-
-                start, stop = fst_._fixup_slice_index(len(body), start, stop)
-
-                b1[start].f.replace(None if src == '**DEL**' else src, to=b2[stop - 1].f, **options)  # raw=True is in `options`
 
                 tdst  = t.f.src
                 tdump = t.f.dump(out=list, compact=True)
