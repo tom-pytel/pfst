@@ -100,7 +100,7 @@ DEFAULT_PEP8SPACE       = True   # True | False | 1
 DEFAULT_PARS            = False  # True | False
 DEFAULT_ELIF_           = False  # True | False
 DEFAULT_FIX             = True   # True | False
-DEFAULT_RAW             = False  # True | False
+DEFAULT_RAW             = 'alt'  # True | False | 'alt'
 
 STATEMENTISH            = (stmt, ExceptHandler, match_case)  # always in lists, cannot be inside multilines
 STATEMENTISH_OR_MOD     = STATEMENTISH + (mod,)
@@ -3673,7 +3673,9 @@ class FST:
 
 
 
-        body[start].f._reparse_raw_node(code, body2[stop - 1].f)
+        options['to'] = body2[stop - 1].f
+
+        body[start].f._reparse_raw_node(code, **options)
 
         return self.repath()
 
@@ -3753,7 +3755,7 @@ class FST:
 
         return f
 
-    def _reparse_raw_node(self, code: Code | None, to: Optional['FST'] = None) -> 'FST':
+    def _reparse_raw_node(self, code: Code | None, to: Optional['FST'] = None, **options) -> 'FST':
         """Attempt a replacement by using str as source and attempting to parse into location of node(s) being
         replaced. Node cannot be a statement or the like.
 
@@ -3764,14 +3766,17 @@ class FST:
                                           operator, unaryop, cmpop)):
             raise ValueError(f"cannot replace node type {ast.__class__.__name__}")
 
-        if not (loc := self.loc):
+        pars = True if to else DEFAULT_PARS if (o := options.get('pars')) is None else o
+        loc  = self.pars(pars)
+
+        if not loc:
             raise ValueError('node being reparsed must have a location')
 
         parent = self.parent_stmtish(False, True)
 
         if not to:
             to_loc = loc
-        elif not (to_loc := to.loc):
+        elif not (to_loc := to.pars(pars)):
             raise ValueError(f"'to' node must have a location")
         elif to.parent_stmtish(True, False) is not parent:
             raise ValueError(f"'to' node must be part of the same statement")
@@ -4119,17 +4124,30 @@ class FST:
         parent     = self.parent
         field, idx = pfield = self.pfield
         parenta    = parent.a
+        raw        = DEFAULT_RAW if (o := options.get('raw')) is None else o
+        to         = options.get('to')
 
-        if isinstance(ast, STATEMENTISH):
-            parent._put_slice_stmt(code, idx, idx + 1, field, True, **options)
+        def to_idx():
+            if not to:
+                return idx + 1
+            elif to.parent is parent and (pf := to.pfield).name == field and (to_idx := pf.idx) >= idx:
+                return to_idx + 1
 
-            return None if code is None else pfield.get(parenta).f
-
-        raw = DEFAULT_RAW if (o := options.get('raw')) is None else o
+            raise NodeTypeError(f"invalid 'to' node")
 
         try:
+            if raw is True:
+                raise NodeTypeError
+            elif raw and raw != 'alt':
+                raise ValueError(f"invalid value '{raw}' for raw parameter")
+
+            if isinstance(ast, STATEMENTISH):
+                parent._put_slice_stmt(code, idx, to_idx(), field, True, **options)
+
+                return None if code is None else pfield.get(parenta).f
+
             if isinstance(parenta, (Tuple, List, Set)):
-                parent._put_slice_tuple_list_or_set(code, idx, idx + 1, field, True, **options)
+                parent._put_slice_tuple_list_or_set(code, idx, to_idx(), field, True, **options)
 
                 return None if code is None else pfield.get(parenta).f
 
@@ -4143,7 +4161,7 @@ class FST:
             if not raw:
                 raise ValueError(f"cannot replace in {parenta.__class__.__name__}.{field}")
 
-        return self._reparse_raw_node(code, options.get('to'))
+        return self._reparse_raw_node(code, **options)  # , options.get('to')
 
     def get(self, start: int | Literal['end'] | None = None, stop: int | None | Literal[False] = False,
             field: str | None = None, *, cut: bool = False, **options) -> Optional['FST']:
