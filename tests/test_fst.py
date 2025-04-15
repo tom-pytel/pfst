@@ -19115,6 +19115,50 @@ class cls:
         self.assertEqual('d', i.src)
         self.assertIsNone(h.a)
 
+        f = parse('[a for c in d for b in c for a in b]').body[0].value.f
+        g = f.generators[1].replace('for x in y', raw=True)
+        f = f.repath()
+        self.assertEqual(f.src, '[a for c in d for x in y for a in b]')
+        self.assertEqual(g.src, 'for x in y')
+        g = f.generators[1].replace(None, raw=True)
+        f = f.repath()
+        self.assertEqual(f.src, '[a for c in d  for a in b]')
+        self.assertIsNone(g)
+        g = f.generators[1].replace(None, raw=True)
+        f = f.repath()
+        self.assertEqual(f.src, '[a for c in d  ]')
+        self.assertIsNone(g)
+
+    def test_put_raw(self):
+        f = parse('[a for c in d for b in c for a in b]').body[0].value.f
+        g = f.put('for x in y', 1, raw=True)
+        self.assertIsNot(g, f)
+        self.assertEqual(g.src, '[a for c in d for x in y for a in b]')
+        f = g
+        g = f.put(None, 1, raw=True)
+        self.assertIsNot(g, f)
+        self.assertEqual(g.src, '[a for c in d  for a in b]')
+        f = g
+        g = f.put_slice(None, 1, raw=True)
+        self.assertIsNot(g, f)
+        self.assertEqual(g.src, '[a for c in d  ]')
+        f = g
+
+    def test_put_slice_raw(self):
+        f = parse('[a for c in d for b in c for a in b]').body[0].value.f
+        g = f.put_slice('for x in y', 1, 2, raw=True)
+        self.assertIsNot(g, f)
+        self.assertEqual(g.src, '[a for c in d for x in y for a in b]')
+        f = g
+        g = f.put_slice(None, 1, 2, raw=True)
+        self.assertIsNot(g, f)
+        self.assertEqual(g.src, '[a for c in d  for a in b]')
+        f = g
+        g = f.put_slice(None, 1, 2, raw=True)
+        self.assertIsNot(g, f)
+        self.assertEqual(g.src, '[a for c in d  ]')
+        f = g
+
     def test_replace_raw_from_put_slice_data(self):
         for i, (dst, attr, start, stop, field, options, src, put_src, put_dump) in enumerate(PUT_SLICE_DATA):
             if options != {'raw': True}:
@@ -19893,6 +19937,27 @@ match a:
         self.assertFalse(f.is_stmtish)
         self.assertTrue(f.is_stmtish_or_mod)
         self.assertTrue(f.is_mod)
+
+    def test_set_defaults(self):
+        new = dict(
+            docstr    = 'test_docstr',
+            precomms  = 'test_precomms',
+            postcomms = 'test_postcomms',
+            prespace  = 'test_prespace',
+            postspace = 'test_postspace',
+            pep8space = 'test_pep8space',
+            pars      = 'test_pars',
+            elif_     = 'test_elif_',
+            fix       = 'test_fix',
+            raw       = 'test_raw',
+        )
+
+        old    = set_defaults(**new)
+        newset = set_defaults(**old)
+        oldset = set_defaults(**old)
+
+        self.assertEqual(newset, new)
+        self.assertEqual(oldset, old)
 
 
 def regen_pars_data():

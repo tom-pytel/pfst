@@ -221,7 +221,7 @@ def set_defaults(**params) -> dict[str, Any]:
     ret = {}
 
     for param, value in params.items():
-        if param not in ('docstr','precomms','postcomms','prespace','postspace','pep8space','pars','elif_','raw'):
+        if param not in ('docstr','precomms','postcomms','prespace','postspace','pep8space','pars','elif_','fix','raw'):
             raise ValueError(f"invalid parameter '{param}'")
 
         gparam       = f'DEFAULT_{param.upper()}'
@@ -2876,14 +2876,6 @@ class FST:
 
     # ------------------------------------------------------------------------------------------------------------------
 
-    def _repath(self) -> 'FST':
-        """Recalculate `self` from path from root. Useful if `self` has been replaced by another node by some operation.
-
-        **Returns:**
-        - `FST`: Possibly `self` or the node which took our place at our position from `root`."""
-
-        return (root := self.root).child_from_path(root.child_path(self, False))
-
     def _make_fst_and_dedent(self, indent: Union['FST', str], ast: AST, copy_loc: fstloc,
                              prefix: str = '', suffix: str = '',
                              put_loc: fstloc | None = None, put_lines: list[str] | None = None, *,
@@ -3675,7 +3667,7 @@ class FST:
 
         body[start].f._reparse_raw_node(code, body2[stop - 1].f)
 
-        return self._repath()
+        return self.repath()
 
     # ------------------------------------------------------------------------------------------------------------------
 
@@ -3980,7 +3972,7 @@ class FST:
 
         return FST(ast, lines=[bistr(s) for s in lines], parse_params=parse_params)
 
-    def dump(self, out: Callable | TextIO = print, compact: bool = False, full: bool = False, *, indent: int = 2,
+    def dump(self, compact: bool = False, full: bool = False, *, indent: int = 2, out: Callable | TextIO = print,
              eol: str | None = None) -> list[str] | None:
         """Dump a representation of the tree to stdout or return as a list of lines.
 
@@ -4180,7 +4172,9 @@ class FST:
 
         _, body = _fixup_field_body(self.a, field)
 
-        return body[start].f.replace(code, **options)
+        body[start].f.replace(code, **options)
+
+        return self.repath()
 
     def get_slice(self, start: int | Literal['end'] | None = None, stop: int | None = None, field: str | None = None, *,
                   cut: bool = False, **options) -> 'FST':
@@ -5231,7 +5225,7 @@ class FST:
                 recurse_ = sent
 
             if not self.a:
-                self = self._repath()
+                self = self.repath()
 
             if not recurse_:
                 return
@@ -5316,7 +5310,7 @@ class FST:
                 recurse_ = 1 if sent else False
 
             if not fst.a:  # has been changed by the player
-                fst = fst._repath()
+                fst = fst.repath()
 
             ast = fst.a  # could have just modified the ast
 
@@ -5399,6 +5393,14 @@ class FST:
                     children = syntax_ordered_children(ast)
 
                     stack.extend(children if back else children[::-1])
+
+    def repath(self) -> 'FST':
+        """Recalculate `self` from path from root. Useful if `self` has been replaced by another node by some operation.
+
+        **Returns:**
+        - `FST`: Possibly `self` or the node which took our place at our position from `root`."""
+
+        return (root := self.root).child_from_path(root.child_path(self, False))
 
 # ------------------------------------------------------------------------------------------------------------------
 
