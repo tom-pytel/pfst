@@ -15668,6 +15668,13 @@ self.save_reduce(obj=obj, *rv)
         self.assertIs(l[5], a.args[0].f)
         self.assertIs(l[6], a.args[0].value.f)
 
+        f = parse('[] + [i for i in l]').body[0].value.f
+        self.assertEqual(12, len(list(f.walk(False))))
+        self.assertEqual(8, len(list(f.walk('all'))))
+        self.assertEqual(7, len(list(f.walk(True))))
+        # self.assertEqual(1, len(list(f.walk('allown'))))  # doesn't support
+        self.assertEqual(4, len(list(f.walk('own'))))
+
     def test_walk_scope(self):
         fst = FST.fromsrc("""
 def f(a, /, b, *c, d, **e):

@@ -232,15 +232,19 @@ def set_defaults(**params) -> dict[str, Any]:
     return ret
 
 
-def _with_loc(fst: 'FST', with_loc: bool | Literal['own'] = True) -> bool:
-    """Check location condition on node. Safe for low level because doesn't use `.loc` calculation machinery and faster
-    overall than checking `ast.f.loc`."""
+def _with_loc(fst: 'FST', with_loc: bool | Literal['all'] | Literal['own'] = True) -> bool:
+    """Check location condition on node. Safe for low level because doesn't use `.loc` calculation machinery."""
 
     if not with_loc:
         return True
 
     if with_loc is True:
         return not (isinstance(a := fst.a, (expr_context, boolop, operator, unaryop, cmpop)) or
+                    (isinstance(a, arguments) and not a.posonlyargs and not a.args and not a.vararg and
+                    not a.kwonlyargs and not a.kwarg))
+
+    if with_loc == 'all':
+        return not (isinstance(a := fst.a, (expr_context, boolop)) or
                     (isinstance(a, arguments) and not a.posonlyargs and not a.args and not a.vararg and
                     not a.kwonlyargs and not a.kwarg))
 
@@ -1921,6 +1925,29 @@ class FST:
     is_FST:       bool       = True          ; """@private"""  # for quick checks vs. `fstloc`
 
     @property
+    def lines(self) -> list[str] | None:
+        """Whole lines which contain this node, may also contain parts of enclosing nodes. All source lines at root."""
+
+        if self.is_root:
+            return self._lines
+        elif loc := self.bloc:
+            return self.root._lines[loc.ln : loc.end_ln + 1]
+        else:
+            return None
+
+    @property
+    def src(self) -> str | None:
+        """Source code of this node clipped out of `lines` as a single string, without any dedentation. Whole source
+        at root."""
+
+        if self.is_root:
+            return '\n'.join(self._lines)
+        elif loc := self.bloc:
+            return '\n'.join(self.get_lines(*loc))
+        else:
+            return None
+
+    @property
     def is_root(self) -> bool:
         """`True` for the root node, `False` otherwise."""
 
@@ -2003,29 +2030,6 @@ class FST:
         `GeneratorExp`."""
 
         return isinstance(self.a, ANONYMOUS_SCOPE)
-
-    @property
-    def lines(self) -> list[str] | None:
-        """Whole lines which contain this node, may also contain parts of enclosing nodes. All source lines at root."""
-
-        if self.is_root:
-            return self._lines
-        elif loc := self.bloc:
-            return self.root._lines[loc.ln : loc.end_ln + 1]
-        else:
-            return None
-
-    @property
-    def src(self) -> str | None:
-        """Source code of this node clipped out of `lines` as a single string, without any dedentation. Whole source
-        at root."""
-
-        if self.is_root:
-            return '\n'.join(self._lines)
-        elif loc := self.bloc:
-            return '\n'.join(self.get_lines(*loc))
-        else:
-            return None
 
     @property
     def has_own_loc(self) -> bool:
@@ -2285,7 +2289,8 @@ class FST:
             else:
                 linefunc(f'{sind}{sind}{cind}{child!r}{eol}')
 
-    def _prev_ast_bound(self, with_loc: bool | Literal['own'] | Literal['allown'] = True) -> tuple[int, int]:
+    def _prev_ast_bound(self, with_loc: bool | Literal['all'] | Literal['own'] | Literal['allown'] = True
+                        ) -> tuple[int, int]:
         """Get a prev bound for search after any ASTs for this object. This is safe to call for nodes that live inside
         nodes without their own locations if `with_loc='allown'`."""
 
@@ -2294,7 +2299,8 @@ class FST:
 
         return 0, 0
 
-    def _next_ast_bound(self, with_loc: bool | Literal['own'] | Literal['allown'] = True) -> tuple[int, int]:
+    def _next_ast_bound(self, with_loc: bool | Literal['all'] | Literal['own'] | Literal['allown'] = True
+                        ) -> tuple[int, int]:
         """Get a next bound for search before any ASTs for this object. This is safe to call for nodes that live inside
         nodes without their own locations if `with_loc='allown'`."""
 
@@ -2303,7 +2309,8 @@ class FST:
 
         return len(lines := self.root._lines) - 1, len(lines[-1])
 
-    def _lpars(self, with_loc: bool | Literal['own'] | Literal['allown'] = True) -> tuple[int, int, int, int, int]:
+    def _lpars(self, with_loc: bool | Literal['all'] | Literal['own'] | Literal['allown'] = True
+               ) -> tuple[int, int, int, int, int]:
         """Return the `ln` and `col` of the leftmost and ante-leftmost opening parentheses and the total number of
         opening parentheses. Doesn't take into account anything like enclosing argument parentheses, just counts. The
         leftmost bound used is the end of the previous sibling, or the start of that parent if there isn't one, or (0,0)
@@ -2320,7 +2327,8 @@ class FST:
 
         return _prev_pars(self.root._lines, *self._prev_ast_bound(with_loc), *self.bloc[:2])
 
-    def _rpars(self, with_loc: bool | Literal['own'] | Literal['allown'] = True) -> tuple[int, int, int, int, int]:
+    def _rpars(self, with_loc: bool | Literal['all'] | Literal['own'] | Literal['allown'] = True
+               ) -> tuple[int, int, int, int, int]:
         """Return the `end_ln` and `end_col` of the rightmost and ante-rightmost closing parentheses and the total
         number of closing parentheses. Doesn't take into account anything like enclosing argument parentheses, just
         counts. The rightmost bound used is the start of the next sibling, or the end of that parent if there isn't one,
@@ -4403,57 +4411,12 @@ class FST:
 
         return self
 
-    def child_path(self, child: 'FST', as_str: bool = False) -> list[astfield] | str:
-        """Get path to `child` node from `self` which can later be used on a copy of this tree to get to the same
-        relative child node.
-
-        **Parameters:**
-        - `child`: Child node to get path to.
-        - `as_str`: If `True` will return the path as a python-ish string, else a list of `astfield`s which can be used
-            more directly.
-
-        **Returns:**
-        - `list[astfield] | str`: Path to child if exists, otherwise raises.
-        """
-
-        path = []
-
-        while child is not self:
-            path.append(child.pfield)
-
-            if not (child := child.parent):
-                raise ValueError('invalid child')
-
-        path.reverse()
-
-        return path if not as_str else '.'.join(af.name if (i := af.idx) is None else f'{af.name}[{i}]' for af in path)
-
-    def child_from_path(self, path: list[astfield] | str) -> 'FST':
-        """Get child node specified by `path` if it exists. If succeeds then the child node is not guaranteed to be the
-        same type as was originally used to get the path, just the path is valid.
-
-        **Parameters:**
-        - `path`: Path to child as a list of `astfield`s or string.
-
-        **Returns:**
-        - `FST`: Child node if path is valid, otherwise raises.
-        """
-
-        if isinstance(path, str):
-            path = [astfield(p[:i], int(p[i + 1 : -1])) if (i := p.find('[')) != -1 else astfield(p)
-                    for p in path.split('.')]
-
-        for p in path:
-            self = p.get(self)
-
-        return self
-
-    def next(self, with_loc: bool | Literal['own'] = True) -> Optional['FST']:  # TODO: refactor maybe
+    def next(self, with_loc: bool | Literal['all'] | Literal['own'] = True) -> Optional['FST']:  # TODO: refactor maybe
         """Get next sibling in syntactic order, only within parent.
 
         **Parameters:**
-        - `with_loc`: If `True` then only nodes with locations returned, `'own'` means only nodes with own location,
-            otherwise all nodes. `with_loc=True` does NOT include operators (which have a computed `.loc`).
+        - `with_loc`: If `True` then only non-operator nodes with locations, `'all'` means all nodes with locations,
+            `'own'` means only nodes with own location, otherwise all nodes.
 
         **Returns:**
         - `None` if last valid sibling in parent, otherwise next node.
@@ -4736,12 +4699,12 @@ class FST:
 
         return None
 
-    def prev(self, with_loc: bool | Literal['own'] = True) -> Optional['FST']:  # TODO: refactor maybe
+    def prev(self, with_loc: bool | Literal['all'] | Literal['own'] = True) -> Optional['FST']:  # TODO: refactor maybe
         """Get previous sibling in syntactic order, only within parent.
 
         **Parameters:**
-        - `with_loc`: If `True` then only nodes with locations returned, `'own'` means only nodes with own location,
-            otherwise all nodes. `with_loc=True` does NOT include operators (which have a computed `.loc`).
+        - `with_loc`: If `True` then only non-operator nodes with locations, `'all'` means all nodes with locations,
+            `'own'` means only nodes with own location, otherwise all nodes.
 
         **Returns:**
         - `None` if first valid sibling in parent, otherwise previous node.
@@ -5025,12 +4988,12 @@ class FST:
 
         return None
 
-    def first_child(self, with_loc: bool | Literal['own'] = True) -> Optional['FST']:
+    def first_child(self, with_loc: bool | Literal['all'] | Literal['own'] = True) -> Optional['FST']:
         """Get first valid child in syntactic order.
 
         **Parameters:**
-        - `with_loc`: If `True` then only nodes with locations returned, `'own'` means only nodes with own location,
-            otherwise all nodes. `with_loc=True` does NOT include operators (which have a computed `.loc`).
+        - `with_loc`: If `True` then only non-operator nodes with locations, `'all'` means all nodes with locations,
+            `'own'` means only nodes with own location, otherwise all nodes.
 
         **Returns:**
         - `None` if no valid children, otherwise first valid child.
@@ -5050,12 +5013,12 @@ class FST:
 
         return None
 
-    def last_child(self, with_loc: bool | Literal['own'] = True) -> Optional['FST']:
+    def last_child(self, with_loc: bool | Literal['all'] | Literal['own'] = True) -> Optional['FST']:
         """Get last valid child in syntactic order.
 
         **Parameters:**
-        - `with_loc`: If `True` then only nodes with locations returned, `'own'` means only nodes with own location,
-            otherwise all nodes. `with_loc=True` does NOT include operators (which have a computed `.loc`).
+        - `with_loc`: If `True` then only non-operator nodes with locations, `'all'` means all nodes with locations,
+            `'own'` means only nodes with own location, otherwise all nodes.
 
         **Returns:**
         - `None` if no valid children, otherwise last valid child.
@@ -5082,14 +5045,15 @@ class FST:
 
         return None
 
-    def next_child(self, from_child: Optional['FST'], with_loc: bool | Literal['own'] = True) -> Optional['FST']:
+    def next_child(self, from_child: Optional['FST'], with_loc: bool | Literal['all'] | Literal['own'] = True
+                   ) -> Optional['FST']:
         """Get next child in syntactic order. Meant for simple iteration. This is a slower way to iterate, `walk()` is
         faster.
 
         **Parameters:**
         - `from_child`: Child node we are coming from which may or may not have location.
-        - `with_loc`: If `True` then only nodes with locations returned, `'own'` means only nodes with own location,
-            otherwise all nodes. `with_loc=True` does NOT include operators (which have a computed `.loc`).
+        - `with_loc`: If `True` then only non-operator nodes with locations, `'all'` means all nodes with locations,
+            `'own'` means only nodes with own location, otherwise all nodes.
 
         **Returns:**
         - `None` if last valid child in `self`, otherwise next child node.
@@ -5097,14 +5061,15 @@ class FST:
 
         return self.first_child(with_loc) if from_child is None else from_child.next(with_loc)
 
-    def prev_child(self, from_child: Optional['FST'], with_loc: bool | Literal['own'] = True) -> Optional['FST']:
+    def prev_child(self, from_child: Optional['FST'], with_loc: bool | Literal['all'] | Literal['own'] = True
+                   ) -> Optional['FST']:
         """Get previous child in syntactic order. Meant for simple iteration. This is a slower way to iterate, `walk()`
         is faster.
 
         **Parameters:**
         - `from_child`: Child node we are coming from which may or may not have location.
-        - `with_loc`: If `True` then only nodes with locations returned, `'own'` means only nodes with own location,
-            otherwise all nodes. `with_loc=True` does NOT include operators (which have a computed `.loc`).
+        - `with_loc`: If `True` then only non-operator nodes with locations, `'all'` means all nodes with locations,
+            `'own'` means only nodes with own location, otherwise all nodes.
 
         **Returns:**
         - `None` if first valid child in `self`, otherwise previous child node.
@@ -5112,16 +5077,15 @@ class FST:
 
         return self.last_child(with_loc) if from_child is None else from_child.prev(with_loc)
 
-    def next_step(self, with_loc: bool | Literal['own'] | Literal['allown'] = True, *,
+    def next_step(self, with_loc: bool | Literal['all'] | Literal['own'] | Literal['allown'] = True, *,
                   recurse_self: bool = True) -> Optional['FST']:
         """Get next node in syntactic order over entire tree. Will walk up parents and down children to get the next
         node, returning `None` only when we are at the end of the whole thing.
 
         **Parameters:**
-        - `with_loc`: If `True` then only nodes with locations returned, `'own'` means only nodes with own location
-            (does not recurse into non-own nodes), `'allown'` means return `'own'` nodes but recurse into nodes with
-            non-own locations. Otherwise `False` means all nodes. `with_loc=True` does NOT include operators (which have
-            a computed `.loc`).
+        - `with_loc`: If `True` then only nodes with locations returned, `'all'` means all nodes with locations, `'own'`
+            means only nodes with own location (does not recurse into non-own nodes), `'allown'` means return `'own'`
+            nodes but recurse into nodes with non-own locations. Otherwise `False` means all nodes.
         - `recurse_self`: Whether to allow recursion of `self` to return children or move directly to next nodes.
 
         **Returns:**
@@ -5146,16 +5110,15 @@ class FST:
 
         return fst
 
-    def prev_step(self, with_loc: bool | Literal['own'] | Literal['allown'] = True, *,
+    def prev_step(self, with_loc: bool | Literal['all'] | Literal['own'] | Literal['allown'] = True, *,
                   recurse_self: bool = True) -> Optional['FST']:
         """Get prev node in syntactic order over entire tree. Will walk up parents and down children to get the next
         node, returning `None` only when we are at the beginning of the whole thing.
 
         **Parameters:**
-        - `with_loc`: If `True` then only nodes with locations returned, `'own'` means only nodes with own location
-            (does not recurse into non-own nodes), `'allown'` means return `'own'` nodes but recurse into nodes with
-            non-own locations. Otherwise `False` means all nodes. `with_loc=True` does NOT include operators (which have
-            a computed `.loc`).
+        - `with_loc`: If `True` then only nodes with locations returned, `'all'` means all nodes with locations, `'own'`
+            means only nodes with own location (does not recurse into non-own nodes), `'allown'` means return `'own'`
+            nodes but recurse into nodes with non-own locations. Otherwise `False` means all nodes.
         - `recurse_self`: Whether to allow recursion of `self` to return children or move directly to prev nodes.
 
         **Returns:**
@@ -5180,8 +5143,8 @@ class FST:
 
         return fst
 
-    def walk(self, with_loc: bool | Literal['own'] = False, *, self_: bool = True, recurse: bool = True,
-             scope: bool = False, back: bool = False) -> Generator['FST', bool, None]:
+    def walk(self, with_loc: bool | Literal['all'] | Literal['own'] = False, *, self_: bool = True,
+             recurse: bool = True, scope: bool = False, back: bool = False) -> Generator['FST', bool, None]:
         """Walk self and descendants in syntactic order, `send(False)` to skip recursion into child. `send(True)` to
         allow recursion into child if called with `recurse=False` or `scope=True` would otherwise disallow it. Can send
         multiple times, last value sent takes effect.
@@ -5193,9 +5156,8 @@ class FST:
         Walked nodes can be modified or replaced as long as their parent is not changed.
 
         **Parameters:**
-        - `with_loc`: If `True` then only nodes with locations returned, `'own'` means only nodes with own location
-            (does not recurse into non-own nodes), otherwise all nodes. `with_loc=True` does NOT include operators
-            (which have a computed `.loc`).
+        - `with_loc`: If `True` then only nodes with locations returned, `'all'` means all nodes with locations, `'own'`
+            means only nodes with own location (does not recurse into non-own nodes), otherwise all nodes.
         - `self_`: If `True` then self will be returned first with the possibility to skip children with `send()`.
         - `recurse`: Whether to recurse into children by default, `send()` for a given node will always override this.
             Will always attempt first level of children unless walking self and `False` is sent first.
@@ -5393,6 +5355,51 @@ class FST:
                     children = syntax_ordered_children(ast)
 
                     stack.extend(children if back else children[::-1])
+
+    def child_path(self, child: 'FST', as_str: bool = False) -> list[astfield] | str:
+        """Get path to `child` node from `self` which can later be used on a copy of this tree to get to the same
+        relative child node.
+
+        **Parameters:**
+        - `child`: Child node to get path to.
+        - `as_str`: If `True` will return the path as a python-ish string, else a list of `astfield`s which can be used
+            more directly.
+
+        **Returns:**
+        - `list[astfield] | str`: Path to child if exists, otherwise raises.
+        """
+
+        path = []
+
+        while child is not self:
+            path.append(child.pfield)
+
+            if not (child := child.parent):
+                raise ValueError('invalid child')
+
+        path.reverse()
+
+        return path if not as_str else '.'.join(af.name if (i := af.idx) is None else f'{af.name}[{i}]' for af in path)
+
+    def child_from_path(self, path: list[astfield] | str) -> 'FST':
+        """Get child node specified by `path` if it exists. If succeeds then the child node is not guaranteed to be the
+        same type as was originally used to get the path, just the path is valid.
+
+        **Parameters:**
+        - `path`: Path to child as a list of `astfield`s or string.
+
+        **Returns:**
+        - `FST`: Child node if path is valid, otherwise raises.
+        """
+
+        if isinstance(path, str):
+            path = [astfield(p[:i], int(p[i + 1 : -1])) if (i := p.find('[')) != -1 else astfield(p)
+                    for p in path.split('.')]
+
+        for p in path:
+            self = p.get(self)
+
+        return self
 
     def repath(self) -> 'FST':
         """Recalculate `self` from path from root. Useful if `self` has been replaced by another node by some operation.
