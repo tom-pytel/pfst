@@ -3735,6 +3735,8 @@ class FST:
     def __new__(cls, ast: AST, parent: Optional['FST'] = None, pfield: astfield | None = None, **kwargs):
         if not (self := getattr(ast, 'f', None)):  # reuse FST node assigned to AST node (because otherwise it isn't valid anyway)
             self = object.__new__(cls)
+        else:
+            self.touch()
 
         self.a      = ast
         self.parent = parent
