@@ -7,7 +7,7 @@ from typing import Any, Callable, Iterable, Iterator, Literal
 from_iterable = chain.from_iterable
 
 __all__ = [
-    'FIELDS', 'AST_FIELDS',
+    'FIELDS', 'AST_FIELDS', 'OPCLS2STR', 'OPSTR2CLS',
     'bistr', 'get_field', 'has_type_comments', 'is_parsable', 'get_parse_mode',
     'WalkFail', 'walk2', 'compare_asts', 'copy_attributes', 'copy_ast', 'set_ctx', 'get_func_class_or_ass_by_name',
     'syntax_ordered_children',
@@ -157,6 +157,43 @@ AST_FIELDS = {cls: tuple(f for f, t in fields
                          not t.startswith('identifier') and not t.startswith('constant') and
                          not t.startswith('type_ignore'))
               for cls, fields in FIELDS.items()}
+
+OPCLS2STR = {
+    Invert:   '~',
+    Not:      'not',
+    UAdd:     '+',
+    USub:     '-',
+
+    Add:      '+',
+    Sub:      '-',
+    Mult:     '*',
+    MatMult:  '@',
+    Div:      '/',
+    Mod:      '%',
+    LShift:   '<<',
+    RShift:   '>>',
+    BitOr:    '|',
+    BitXor:   '^',
+    BitAnd:   '&',
+    FloorDiv: '//',
+    Pow:      '**',
+
+    Eq:       '==',
+    NotEq:    '!=',
+    Lt:       '<',
+    LtE:      '<=',
+    Gt:       '>',
+    GtE:      '>=',
+    Is:       'is',
+    IsNot:    'is not',
+    In:       'in',
+    NotIn:    'not in',
+
+    And:      'and',
+    Or:       'or',
+}
+
+OPSTR2CLS = {v: k for k, v in OPCLS2STR.items()}
 
 
 class bistr(str):

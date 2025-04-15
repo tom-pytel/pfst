@@ -2054,6 +2054,8 @@ class FST:
         except AttributeError:
             if not self.parent:
                 loc = fstloc(0, 0, len(ls := self._lines) - 1, len(ls[-1]))
+            elif isinstance(ast, (operator, unaryop, cmpop)):
+                loc = self._loc_operator()
             else:
                 loc = self._loc_from_children()
 
@@ -2236,7 +2238,7 @@ class FST:
                 if child is None:
                     continue
 
-                if name in ('ctx', 'op'):
+                if name == 'ctx':
                     linefunc(f'{sind}{cind}.{name} {child.__class__.__qualname__ if isinstance(child, AST) else child}'
                              f'{eol}')
 
@@ -2247,7 +2249,7 @@ class FST:
                              'annotation', 'iter', 'test','exc', 'cause', 'msg', 'elt', 'key', 'func',
                              'slice', 'lower', 'upper', 'step', 'guard', 'optional_vars',
                              'cls', 'bound', 'default_value', 'pattern', 'subject',
-                             'type_comment', 'lineno', 'tag',)
+                             'type_comment', 'lineno', 'tag', 'op')
                             or (not is_list and name in
                              ('body', 'orelse'))
                 ):
@@ -2333,6 +2335,50 @@ class FST:
         """
 
         return _next_pars(self.root._lines, *self.bloc[2:], *self._next_ast_bound(with_loc))
+
+    def _loc_operator(self) -> fstloc | None:
+        """Get location of `operator`, `unaryop` or `cmpop` from source if possible. `boolop` is not done at all because
+        a single operator can be in multiple location in a `BoolOp` and we want to be consistent."""
+
+        ast = self.a
+
+        if not (parent := self.parent) or not (op := OPCLS2STR.get(ast.__class__)):
+            return None
+
+        lines   = self.root._lines
+        parenta = parent.a
+
+        if isinstance(parenta, UnaryOp):
+            ln, col, _, _ = parenta.f.loc
+
+            return fstloc(ln, col, ln, col + len(op))
+
+        if isinstance(parenta, Compare):  # special handling due to compound operators and array of ops and comparators
+            prev = parenta.comparators[idx - 1] if (idx := self.pfield.idx) else parenta.left
+
+            _, _, end_ln, end_col = prev.f.loc
+
+            if has_space := isinstance(ast, (NotIn, IsNot)):  # stupid two-element operators, can be anything like "not    \\\n     in"
+                op, op2 = op.split(' ')
+
+            if pos := _next_find(lines, end_ln, end_col, len_lines := len(lines), 0x7fffffffffffffff, op):
+                ln, col = pos
+
+                if not has_space:
+                    return fstloc(ln, col, ln, col + len(op))
+
+                if pos := _next_find(lines, ln, col + len(op), len_lines, 0x7fffffffffffffff, op2):
+                    ln2, col2 = pos
+
+                    return fstloc(ln, col, ln2, col2 + len(op2))
+
+        elif (prev := (is_binop := getattr(parenta, 'left', None))) or (prev := getattr(parenta, 'target', None)):
+            if pos := _next_find(lines, (loc := prev.f.loc).end_ln, loc.end_col, len(lines), 0x7fffffffffffffff, op):
+                ln, col = pos
+
+                return fstloc(ln, col, ln, col + len(op) + (not is_binop))
+
+        return None
 
     def _loc_from_children(self) -> fstloc | None:
         """Meant to handle figuring out `loc` for `arguments`, `withitem`, `match_case` and `comprehension`. Use on
@@ -3653,7 +3699,7 @@ class FST:
         if code is None:
             return None
 
-        for f in copy_self.walk(with_loc=True):  # return first node past start of modification
+        for f in copy_self.walk(True):  # return first node past start of modification
             fln, fcol, _, _ = f.loc
 
             if fln > ln or (fln == ln and fcol >= col):
@@ -4392,7 +4438,7 @@ class FST:
 
         **Parameters:**
         - `with_loc`: If `True` then only nodes with locations returned, `'own'` means only nodes with own location,
-            otherwise all nodes.
+            otherwise all nodes. `with_loc=True` does NOT include operators (which have a computed `.loc`).
 
         **Returns:**
         - `None` if last valid sibling in parent, otherwise next node.
@@ -4680,7 +4726,7 @@ class FST:
 
         **Parameters:**
         - `with_loc`: If `True` then only nodes with locations returned, `'own'` means only nodes with own location,
-            otherwise all nodes.
+            otherwise all nodes. `with_loc=True` does NOT include operators (which have a computed `.loc`).
 
         **Returns:**
         - `None` if first valid sibling in parent, otherwise previous node.
@@ -4969,7 +5015,7 @@ class FST:
 
         **Parameters:**
         - `with_loc`: If `True` then only nodes with locations returned, `'own'` means only nodes with own location,
-            otherwise all nodes.
+            otherwise all nodes. `with_loc=True` does NOT include operators (which have a computed `.loc`).
 
         **Returns:**
         - `None` if no valid children, otherwise first valid child.
@@ -4994,7 +5040,7 @@ class FST:
 
         **Parameters:**
         - `with_loc`: If `True` then only nodes with locations returned, `'own'` means only nodes with own location,
-            otherwise all nodes.
+            otherwise all nodes. `with_loc=True` does NOT include operators (which have a computed `.loc`).
 
         **Returns:**
         - `None` if no valid children, otherwise last valid child.
@@ -5028,7 +5074,7 @@ class FST:
         **Parameters:**
         - `from_child`: Child node we are coming from which may or may not have location.
         - `with_loc`: If `True` then only nodes with locations returned, `'own'` means only nodes with own location,
-            otherwise all nodes.
+            otherwise all nodes. `with_loc=True` does NOT include operators (which have a computed `.loc`).
 
         **Returns:**
         - `None` if last valid child in `self`, otherwise next child node.
@@ -5043,7 +5089,7 @@ class FST:
         **Parameters:**
         - `from_child`: Child node we are coming from which may or may not have location.
         - `with_loc`: If `True` then only nodes with locations returned, `'own'` means only nodes with own location,
-            otherwise all nodes.
+            otherwise all nodes. `with_loc=True` does NOT include operators (which have a computed `.loc`).
 
         **Returns:**
         - `None` if first valid child in `self`, otherwise previous child node.
@@ -5059,7 +5105,8 @@ class FST:
         **Parameters:**
         - `with_loc`: If `True` then only nodes with locations returned, `'own'` means only nodes with own location
             (does not recurse into non-own nodes), `'allown'` means return `'own'` nodes but recurse into nodes with
-            non-own locations. Otherwise `False` means all nodes.
+            non-own locations. Otherwise `False` means all nodes. `with_loc=True` does NOT include operators (which have
+            a computed `.loc`).
         - `recurse_self`: Whether to allow recursion of `self` to return children or move directly to next nodes.
 
         **Returns:**
@@ -5092,7 +5139,8 @@ class FST:
         **Parameters:**
         - `with_loc`: If `True` then only nodes with locations returned, `'own'` means only nodes with own location
             (does not recurse into non-own nodes), `'allown'` means return `'own'` nodes but recurse into nodes with
-            non-own locations. Otherwise `False` means all nodes.
+            non-own locations. Otherwise `False` means all nodes. `with_loc=True` does NOT include operators (which have
+            a computed `.loc`).
         - `recurse_self`: Whether to allow recursion of `self` to return children or move directly to prev nodes.
 
         **Returns:**
@@ -5131,7 +5179,8 @@ class FST:
 
         **Parameters:**
         - `with_loc`: If `True` then only nodes with locations returned, `'own'` means only nodes with own location
-            (does not recurse into non-own nodes), otherwise all nodes.
+            (does not recurse into non-own nodes), otherwise all nodes. `with_loc=True` does NOT include operators
+            (which have a computed `.loc`).
         - `self_`: If `True` then self will be returned first with the possibility to skip children with `send()`.
         - `recurse`: Whether to recurse into children by default, `send()` for a given node will always override this.
             Will always attempt first level of children unless walking self and `False` is sent first.

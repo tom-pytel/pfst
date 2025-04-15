@@ -1152,16 +1152,16 @@ Module .. ROOT 0,0 -> 0,53
           .func Name 'id' Load .. 0,20 -> 0,22
           .args[1]
           0] Name 'self' Load .. 0,23 -> 0,27
-        .op BitAnd
+        .op BitAnd .. 0,29 -> 0,30
         .right BinOp .. 0,32 -> 0,50
           .left BinOp .. 0,32 -> 0,46
             .left Attribute .. 0,32 -> 0,44
               .value Name '_sys' Load .. 0,32 -> 0,36
               .attr 'maxsize'
               .ctx Load
-            .op Mult
+            .op Mult .. 0,44 -> 0,45
             .right Constant 2 .. 0,45 -> 0,46
-          .op Add
+          .op Add .. 0,47 -> 0,48
           .right Constant 1 .. 0,49 -> 0,50
       .ctx Load
 """, r"""
@@ -1183,16 +1183,16 @@ Tuple .. ROOT 0,0 -> 2,1
       .value Name 'self' Load .. 1,17 -> 1,21
       .attr '_handle'
       .ctx Load
-    .op BitAnd
+    .op BitAnd .. 1,30 -> 1,31
     .right BinOp .. 1,33 -> 1,51
       .left BinOp .. 1,33 -> 1,47
         .left Attribute .. 1,33 -> 1,45
           .value Name '_sys' Load .. 1,33 -> 1,37
           .attr 'maxsize'
           .ctx Load
-        .op Mult
+        .op Mult .. 1,45 -> 1,46
         .right Constant 2 .. 1,46 -> 1,47
-      .op Add
+      .op Add .. 1,48 -> 1,49
       .right Constant 1 .. 1,50 -> 1,51
   .ctx Load
 """),
@@ -1324,7 +1324,7 @@ Dict .. ROOT 0,0 -> 3,1
             .attr 'upper'
             .ctx Load
         .ops[1]
-        0] NotIn
+        0] NotIn .. 1,64 -> 1,70
         .comparators[1]
         0] Name 'ignore' Load .. 1,71 -> 1,77
       .is_async
@@ -1456,7 +1456,7 @@ Dict .. ROOT 0,0 -> 6,1
     .elts[1]
     0] BinOp .. 4,23 -> 5,57
       .left Constant 'err=%s transferred=%s key=%#x address=%#x' .. 4,23 -> 4,66
-      .op Mod
+      .op Mod .. 5,23 -> 5,24
       .right Tuple .. 5,25 -> 5,57
         .elts[4]
         0] Name 'err' Load .. 5,26 -> 5,29
@@ -4854,7 +4854,7 @@ Module .. ROOT 0,0 -> 3,0
     .test Compare .. 1,3 -> 1,21
       .left Name 'type' Load .. 1,3 -> 1,7
       .ops[1]
-      0] In
+      0] In .. 1,8 -> 1,10
       .comparators[1]
       0] Tuple .. 1,11 -> 1,21
         .elts[2]
@@ -4867,7 +4867,7 @@ Module .. ROOT 0,0 -> 3,0
       0] Name 'cmd' Store .. 2,6 -> 2,9
       .value BinOp .. 2,12 -> 2,26
         .left Constant 'TYPE ' .. 2,12 -> 2,19
-        .op Add
+        .op Add .. 2,20 -> 2,21
         .right Name 'type' Load .. 2,22 -> 2,26
     1] Assign .. 2,28 -> 2,37
       .targets[1]
@@ -4899,7 +4899,7 @@ Module .. ROOT 0,0 -> 3,0
     .test Compare .. 1,3 -> 1,21
       .left Name 'type' Load .. 1,3 -> 1,7
       .ops[1]
-      0] In
+      0] In .. 1,8 -> 1,10
       .comparators[1]
       0] Tuple .. 1,11 -> 1,21
         .elts[2]
@@ -4912,7 +4912,7 @@ Module .. ROOT 0,0 -> 3,0
       0] Name 'cmd' Store .. 2,6 -> 2,9
       .value BinOp .. 2,12 -> 2,26
         .left Constant 'TYPE ' .. 2,12 -> 2,19
-        .op Add
+        .op Add .. 2,20 -> 2,21
         .right Name 'type' Load .. 2,22 -> 2,26
     1] Assign .. 2,28 -> 2,37
       .targets[1]
@@ -7014,7 +7014,7 @@ Module .. ROOT 0,0 -> 1,48
         .value Dict .. 0,2 -> 1,35
           .keys[2]
           0] UnaryOp .. 0,3 -> 0,5
-            .op USub
+            .op USub .. 0,3 -> 0,4
             .operand Constant 1 .. 0,4 -> 0,5
           1] Constant 2 .. 1,19 -> 1,20
           .values[2]
