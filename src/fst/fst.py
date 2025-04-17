@@ -3,6 +3,7 @@ import ast as ast_
 from ast import *
 from ast import parse as ast_parse, unparse as ast_unparse
 from io import TextIOBase
+from itertools import takewhile
 from typing import Any, Callable, Generator, Literal, NamedTuple, Optional, TextIO, TypeAlias, Union
 
 from .util import *
@@ -3695,7 +3696,8 @@ class FST:
 
     def _reparse_raw(self, code: Code | None, ln: int, col: int, end_ln: int, end_col: int) -> 'FST':
         """Reparse this node which entirely contatins the span which is to be replaced with `code` source. The node and
-        some of its parents going up may be replaced. Not safe to use in a `walk()`.
+        some of its parents going up may be replaced. Not safe to use in a `walk()`. Don't use a `self` which may be
+        entirely deleted by the reparse.
 
         **Returns:**
         - `FST | None`: Closest node to start of replacement location as replaced node or `None` if no candidate.
@@ -3739,7 +3741,7 @@ class FST:
         else:
             self_root.put_lines(new_lines, ln, col, end_ln, end_col, True, self)  # we do this again in our own tree to offset our nodes which aren't being moved over from the modified copy
 
-            copy_self = copy_root.child_from_path(self_root.child_path(self, False))
+            copy_self = copy_root.child_from_path(self_root.child_path(self))
 
             copy_self.pfield.set(copy_self.parent.a, None)  # remove from copy tree so that copy_root unmake doesn't zero out new node
             copy_root._unmake_fst_tree()
@@ -3778,9 +3780,9 @@ class FST:
         Currently doesn't handle statementish nodes, just expressions and other misc junk.
         """
 
-        if not isinstance(ast := self.a, (expr, comprehension, arguments, arg, keyword, alias, withitem, pattern,
-                                          operator, unaryop, cmpop)):
-            raise ValueError(f"cannot replace node type {ast.__class__.__name__}")
+        # if not isinstance(ast := self.a, (expr, comprehension, arguments, arg, keyword, alias, withitem, pattern,
+        #                                   operator, unaryop, cmpop)):
+        #     raise ValueError(f"cannot replace node type {ast.__class__.__name__}")
 
         pars = True if to else DEFAULT_PARS if (o := options.get('pars')) is None else o
         loc  = self.pars(pars)
@@ -3788,18 +3790,26 @@ class FST:
         if not loc:
             raise ValueError('node being reparsed must have a location')
 
-        parent = self.parent_stmtish(False, True)
-
         if not to:
+            parent = self.parent_stmtish(False, True)
             to_loc = loc
+
         elif not (to_loc := to.pars(pars)):
             raise ValueError(f"'to' node must have a location")
-        elif to.parent_stmtish(True, False) is not parent:
-            raise ValueError(f"'to' node must be part of the same statement")
+        elif (root := self.root) is not to.root:
+            raise ValueError(f"'to' node not part of same tree")
+
+        else:
+            self_path = root.child_path(self)[:-1]  # don't include last step because we never want to send self as parent
+            to_path   = root.child_path(to)[:-1]
+            path      = list(p for p, _ in takewhile(lambda st: st[0] == st[1], zip(self_path, to_path)))
+            parent    = root.child_from_path(path)
+
 
 
         # TODO: 'if' in comprehension.ifs here, also decorator stufff
         # TODO: handle dict '**', self._dict_key_or_mock_loc(keys[start], values[start].f)
+
 
 
         if isinstance(parent, mod):  # non-statementish in a mod (probably Expression)
@@ -4182,7 +4192,9 @@ class FST:
             if not raw:
                 raise ValueError(f"cannot replace in {parenta.__class__.__name__}.{field}")
 
-        return self._reparse_raw_node(code, **options)
+        ret = self._reparse_raw_node(code, **options)
+
+        return None if code is None else ret
 
     def get(self, start: int | Literal['end'] | None = None, stop: int | None | Literal[False] = False,
             field: str | None = None, *, cut: bool = False, **options) -> Optional['FST']:
@@ -4262,6 +4274,11 @@ class FST:
         raw       = DEFAULT_RAW if (o := options.get('raw')) is None else o
 
         try:
+            if raw is True:
+                raise NodeTypeError
+            elif raw and raw != 'alt':
+                raise ValueError(f"invalid value '{raw}' for raw parameter")
+
             if isinstance(ast, STATEMENTISH_OR_STMTMOD) and ffield in STMTISH_LIST_FIELDS:
                 self._put_slice_stmt(code, start, stop, field, one, **options)
 
@@ -5445,7 +5462,7 @@ class FST:
         **Returns:**
         - `FST`: Possibly `self` or the node which took our place at our position from `root`."""
 
-        return (root := self.root).child_from_path(root.child_path(self, False))
+        return (root := self.root).child_from_path(root.child_path(self))
 
     def find_by_loc(self, ln: int, col: int, end_ln: int | None = None, end_col: int | None = None) -> Optional['FST']:
         pass

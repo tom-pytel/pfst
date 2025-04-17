@@ -19147,22 +19147,22 @@ class cls:
         self.assertEqual(g.src, '[a for c in d  for a in b]')
         f = g
         g = f.put_slice(None, 1, raw=True)
-        self.assertIsNot(g, f)
+        self.assertIs(g, f)
         self.assertEqual(g.src, '[a for c in d  ]')
         f = g
 
     def test_put_slice_raw(self):
         f = parse('[a for c in d for b in c for a in b]').body[0].value.f
         g = f.put_slice('for x in y', 1, 2, raw=True)
-        self.assertIsNot(g, f)
+        self.assertIs(g, f)
         self.assertEqual(g.src, '[a for c in d for x in y for a in b]')
         f = g
         g = f.put_slice(None, 1, 2, raw=True)
-        self.assertIsNot(g, f)
+        self.assertIs(g, f)
         self.assertEqual(g.src, '[a for c in d  for a in b]')
         f = g
         g = f.put_slice(None, 1, 2, raw=True)
-        self.assertIsNot(g, f)
+        self.assertIs(g, f)
         self.assertEqual(g.src, '[a for c in d  ]')
         f = g
 
