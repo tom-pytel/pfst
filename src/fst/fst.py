@@ -2204,6 +2204,25 @@ class FST:
         if root:
             root.a.f = root.a = None
 
+    def _set_ast(self, ast: AST, unmake: bool = True) -> AST:
+        """Set `.a` AST node for this `FST` node and `_make_fst_tree` for `self`, also set ast node in parent AST node.
+        Optionally `_unmake_fst_tree()` for with old `.a` node first. Returns old `.a` node."""
+
+        old_ast = self.a
+
+        if unmake:
+            self._unmake_fst_tree()
+
+        self.a = ast
+        ast.f  = self
+
+        self._make_fst_tree()
+
+        if parent := self.parent:
+            self.pfield.set(parent.a, ast)
+
+        return old_ast
+
     def _repr_tail(self) -> str:
         try:
             loc = self.loc
@@ -3694,7 +3713,6 @@ class FST:
             new_lines = (code if code.is_root else code.copy())._lines
 
 
-        # assert not self.is_root  # TODO: allow reparse root (preserve root)
         assert self.root.is_mod  # TODO: allow with non-mod root
 
 
@@ -3712,46 +3730,29 @@ class FST:
 
         copy_root = FST.fromsrc(copy_root.src, mode=get_parse_mode(self_root.a), **self_root.parse_params)
 
-        if self.is_root:  # replacing whole shebang but we don't want to change root FST node
-            self._unmake_fst_tree()
-
-            self.a      = copy_ast = copy_root.a
-            copy_ast.f  = self
-            copy_root.a = None
+        if self.is_root:
             self._lines = copy_root._lines
 
-            self._make_fst_tree()
+            self._set_ast(copy_root.a)
             self.touch()
 
-            return self
+        else:
+            self_root.put_lines(new_lines, ln, col, end_ln, end_col, True, self)  # we do this again in our own tree to offset our nodes which aren't being moved over from the modified copy
 
-        self_root.put_lines(new_lines, ln, col, end_ln, end_col, True, self)  # we do this again in our own tree to offset our nodes
+            copy_self = copy_root.child_from_path(self_root.child_path(self, False))
 
-        copy_self = copy_root.child_from_path(self_root.child_path(self, False))
-        copy_ast  = copy_self.a
+            copy_self.pfield.set(copy_self.parent.a, None)  # remove from copy tree so that copy_root unmake doesn't zero out new node
+            copy_root._unmake_fst_tree()
 
-        copy_self.pfield.set(copy_self.parent.a, None)  # remove from copy tree so that copy_root unmake doesn't zero out new node
-
-        parent = copy_self.parent = self.parent
-        pfield = copy_self.pfield = self.pfield
-
-        for a in walk(copy_ast):
-            a.f.root = self_root
-
-        pfield.set(parent.a, copy_ast)
-        parent.touchall(False)
-
-        self._unmake_fst_tree()
-        copy_root._unmake_fst_tree()
-
-
+            self._set_ast(copy_self.a)
+            self.touchall(False)
 
         if code is None:
             return None
 
         f = None
 
-        for f in copy_self.walk(True):  # return first node past start of modification
+        for f in self.walk(True):  # return first node at or past start of modification
             fln, fcol, fend_ln, fend_col = f.loc
 
             if fln > ln or (fln == ln and fcol >= col):
@@ -3761,7 +3762,6 @@ class FST:
             return None
 
         return f
-
 
 
 
@@ -3856,15 +3856,14 @@ class FST:
     # ------------------------------------------------------------------------------------------------------------------
 
     def __new__(cls, ast: AST, parent: Optional['FST'] = None, pfield: astfield | None = None, **kwargs):
-        if not (self := getattr(ast, 'f', None)):  # reuse FST node assigned to AST node (because otherwise it isn't valid anyway)
-            self = object.__new__(cls)
-        else:
+        if self := getattr(ast, 'f', None):  # reuse FST node assigned to AST node (because otherwise it isn't valid anyway)
             self.touch()
+        else:
+            self = ast.f = object.__new__(cls)
 
-        self.a      = ast
+        self.a      = ast  # we don't assume `self.a` is `ast` if `.f` exists
         self.parent = parent
         self.pfield = pfield
-        ast.f       = self
 
         if parent is not None:
             self.root = parent.root
