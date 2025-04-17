@@ -2210,7 +2210,7 @@ class FST:
         except Exception:  # maybe in middle of operation changing locations and lines
             loc = '????'
 
-        self.touchall(False)  # for debugging because we may have cached locs which would not have otherwise been cached during execution
+        self.touchall(True, True, False)  # for debugging because we may have cached locs which would not have otherwise been cached during execution
 
         tail = ' ROOT' if self.is_root else ''
 
@@ -2578,7 +2578,7 @@ class FST:
         elif ln == end_ln:
             self.a.end_col_offset += len(comma)
 
-            self.touchall(True, False, True)
+            self.touchall(False)
 
         return True
 
@@ -3739,7 +3739,7 @@ class FST:
             a.f.root = self_root
 
         pfield.set(parent.a, copy_ast)
-        parent.touchall(True, False, True)
+        parent.touchall(False)
 
         self._unmake_fst_tree()
         copy_root._unmake_fst_tree()
@@ -5796,7 +5796,7 @@ class FST:
 
         return self
 
-    def touchall(self, parents: bool = True, children: bool = True, self_: bool = True) -> 'FST':  # -> Self
+    def touchall(self, children: bool = True, self_: bool = True, parents: bool = True) -> 'FST':  # -> Self
         """Touch self, parents and all children, optionally."""
 
         if children:
@@ -5926,7 +5926,7 @@ class FST:
 
             f.touch()
 
-        self.touchall(True, False, False)
+        self.touchall(False, False)
 
         return self
 
@@ -5945,7 +5945,7 @@ class FST:
 
                 a.f.touch()
 
-            self.touchall(True, False, False)
+            self.touchall(False, False)
 
     def offset_cols_mapped(self, dcol_offsets: dict[int, int]):
         """Offset ast col byte offsets by a specific `dcol_offset` per line. Only modifies ast, not lines. Does not
@@ -5961,7 +5961,7 @@ class FST:
 
             a.f.touch()
 
-        self.touchall(True, False, False)
+        self.touchall(False, False)
 
     def indent_lns(self, indent: str | None = None, lns: set[int] | None = None, *,
                    skip: int = 1, docstr: bool | str | None = DEFAULT_DOCSTR) -> set[int]:
