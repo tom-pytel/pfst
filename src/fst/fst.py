@@ -1903,9 +1903,12 @@ class FST:
         put it as an `elif`. `None` means use default of `False`.
     - `fix`: Attempt to carry out basic fixes on operands like parenthesizing multiline expressions so they are
         parsable, adding commas to singleton tuples, changing `elif` to `if` for cut or copied `elif` statements, etc...
-    - `raw`: If `True` will allow attempt at reparse raw combined source during edit operations which cannot be carried
-        out in another controlled manner. This may result in more nodes changed than just the targetted one(s). `None`
-        means use default of `False`.
+    - `raw`: How to attempt at raw source operations. This may result in more nodes changed than just the targetted
+        one(s).
+        - `False`: Do not do raw source operations.
+        - `True`: Only do raw source operations.
+        - `'alt'`: Only do raw source operations if the normal operation fails in a way that raw might not.
+        - `None`: Use default (`'alt'`).
     """
 
     a:            AST                        ; """The actual `AST` node."""
@@ -2179,7 +2182,7 @@ class FST:
             stack = [self]
 
         while stack:
-            for name, child in iter_fields(a := (f := stack.pop()).a):
+            for name, child in iter_fields((f := stack.pop()).a):
                 if isinstance(child, AST):
                     stack.append(self._make_tree_fst(child, f, astfield(name)))
                 elif isinstance(child, list):
@@ -3642,8 +3645,8 @@ class FST:
         """Put a raw slice of child nodes to `self`."""
 
         ast          = self.a
-        ffield, body = _fixup_field_body(ast, field)
         is_compare   = isinstance(ast, Compare)
+        ffield, body = _fixup_field_body(ast, field)
         start, stop  = _fixup_slice_index(len(body) + is_compare, start, stop)
 
         if not is_compare:
@@ -3663,16 +3666,6 @@ class FST:
         if stop <= start:
             raise RuntimeError(f"cannot insert with 'raw=True'")
 
-
-
-
-        # TODO: handle dict '**'
-
-        # isinstance(ast, Dict)
-        # ffirst = self._dict_key_or_mock_loc(keys[start], values[start].f)
-
-
-
         options['to'] = body2[stop - 1].f
 
         body[start].f._reparse_raw_node(code, **options)
@@ -3681,8 +3674,7 @@ class FST:
 
     # ------------------------------------------------------------------------------------------------------------------
 
-    def _reparse_raw(self, code: Code | None, ln: int, col: int, end_ln: int, end_col: int, *,
-                     only_block_open: bool = False) -> 'FST':
+    def _reparse_raw(self, code: Code | None, ln: int, col: int, end_ln: int, end_col: int) -> 'FST':
         """Reparse this node which entirely contatins the span which is to be replaced with `code` source. The node and
         some of its parents going up may be replaced. Not safe to use in a `walk()`.
 
@@ -3702,34 +3694,8 @@ class FST:
             new_lines = (code if code.is_root else code.copy())._lines
 
 
-        assert not self.is_root  # TODO: allow reparse root (preserve root)
+        # assert not self.is_root  # TODO: allow reparse root (preserve root)
         assert self.root.is_mod  # TODO: allow with non-mod root
-
-
-        self_root = self.root
-        copy_root = FST(Pass(), lines=self_root._lines[:])  # we don't need the ASTs, just the lines
-        path      = self_root.child_path(self, False)
-
-        copy_root.put_lines(new_lines, ln, col, end_ln, end_col)
-
-        copy_root = FST.fromsrc(copy_root.src, mode=get_parse_mode(self_root.a), **self_root.parse_params)
-        copy_self = copy_root.child_from_path(path)
-        copy_ast  = copy_self.a
-
-        copy_self.pfield.set(copy_self.parent.a, None)  # so that copy_root unmake doesn't zero out new node
-
-        parent = copy_self.parent = self.parent
-        pfield = copy_self.pfield = self.pfield
-
-        self_root.put_lines(new_lines, ln, col, end_ln, end_col, True, self)
-
-        for a in walk(copy_ast):
-            a.f.root = self_root
-
-        pfield.set(parent.a, copy_ast)
-
-        self._unmake_fst_tree()
-        copy_root._unmake_fst_tree()
 
 
         # TODO: Optimize individual cases.
@@ -3737,6 +3703,47 @@ class FST:
         # TODO: match_case
         # TODO: block open statement
         # TODO: normal statement
+
+
+        self_root = self.root
+        copy_root = FST(Pass(), lines=self_root._lines[:])  # we don't need the ASTs, just the lines
+
+        copy_root.put_lines(new_lines, ln, col, end_ln, end_col)
+
+        copy_root = FST.fromsrc(copy_root.src, mode=get_parse_mode(self_root.a), **self_root.parse_params)
+
+        if self.is_root:  # replacing whole shebang but we don't want to change root FST node
+            self._unmake_fst_tree()
+
+            self.a      = copy_ast = copy_root.a
+            copy_ast.f  = self
+            copy_root.a = None
+            self._lines = copy_root._lines
+
+            self._make_fst_tree()
+            self.touch()
+
+            return self
+
+        self_root.put_lines(new_lines, ln, col, end_ln, end_col, True, self)  # we do this again in our own tree to offset our nodes
+
+        copy_self = copy_root.child_from_path(self_root.child_path(self, False))
+        copy_ast  = copy_self.a
+
+        copy_self.pfield.set(copy_self.parent.a, None)  # remove from copy tree so that copy_root unmake doesn't zero out new node
+
+        parent = copy_self.parent = self.parent
+        pfield = copy_self.pfield = self.pfield
+
+        for a in walk(copy_ast):
+            a.f.root = self_root
+
+        pfield.set(parent.a, copy_ast)
+        parent.touchall(True, False, True)
+
+        self._unmake_fst_tree()
+        copy_root._unmake_fst_tree()
+
 
 
         if code is None:
@@ -3754,6 +3761,15 @@ class FST:
             return None
 
         return f
+
+
+
+
+    def _reparse_raw_loc(self, code: Code | None, ln: int, col: int, end_ln: int, end_col: int) -> 'FST':
+        pass
+
+
+
 
     def _reparse_raw_node(self, code: Code | None, to: Optional['FST'] = None, **options) -> 'FST':
         """Attempt a replacement by using str as source and attempting to parse into location of node(s) being
@@ -3782,6 +3798,10 @@ class FST:
             raise ValueError(f"'to' node must be part of the same statement")
 
 
+        # TODO: 'if' in comprehension.ifs here, also decorator stufff
+        # TODO: handle dict '**', self._dict_key_or_mock_loc(keys[start], values[start].f)
+
+
         if isinstance(parent, mod):  # non-statementish in a mod (probably Expression)
             raise NotImplementedError  # TODO: this
 
@@ -3791,7 +3811,7 @@ class FST:
 
 
         else:  # proper statementish node parent
-            return parent._reparse_raw(code, loc.ln, loc.col, to_loc.end_ln, to_loc.end_col, only_block_open=True)
+            return parent._reparse_raw(code, loc.ln, loc.col, to_loc.end_ln, to_loc.end_col)
 
 
 
@@ -4151,7 +4171,9 @@ class FST:
 
                 return None if code is None else pfield.get(parenta).f
 
+
             # TODO: more individual specialized replacements
+
 
         except (SyntaxError, NodeTypeError):
             if not raw:
@@ -4161,7 +4183,7 @@ class FST:
             if not raw:
                 raise ValueError(f"cannot replace in {parenta.__class__.__name__}.{field}")
 
-        return self._reparse_raw_node(code, **options)  # , options.get('to')
+        return self._reparse_raw_node(code, **options)
 
     def get(self, start: int | Literal['end'] | None = None, stop: int | None | Literal[False] = False,
             field: str | None = None, *, cut: bool = False, **options) -> Optional['FST']:
@@ -4236,17 +4258,16 @@ class FST:
         Can reparse.
         """
 
-        ast          = self.a
-        ffield, body = _fixup_field_body(ast, field)
-
-        if isinstance(ast, STATEMENTISH_OR_STMTMOD) and ffield in STMTISH_LIST_FIELDS:
-            self._put_slice_stmt(code, start, stop, field, one, **options)
-
-            return self
-
-        raw = DEFAULT_RAW if (o := options.get('raw')) is None else o
+        ast       = self.a
+        ffield, _ = _fixup_field_body(ast, field)
+        raw       = DEFAULT_RAW if (o := options.get('raw')) is None else o
 
         try:
+            if isinstance(ast, STATEMENTISH_OR_STMTMOD) and ffield in STMTISH_LIST_FIELDS:
+                self._put_slice_stmt(code, start, stop, field, one, **options)
+
+                return self
+
             if isinstance(ast, (Tuple, List, Set)):
                 self._put_slice_tuple_list_or_set(code, start, stop, field, one, **options)
 
@@ -5426,6 +5447,13 @@ class FST:
         - `FST`: Possibly `self` or the node which took our place at our position from `root`."""
 
         return (root := self.root).child_from_path(root.child_path(self, False))
+
+    def find_by_loc(self, ln: int, col: int, end_ln: int | None = None, end_col: int | None = None) -> Optional['FST']:
+        pass
+
+
+        # TODO: this
+
 
 # ------------------------------------------------------------------------------------------------------------------
 
