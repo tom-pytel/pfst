@@ -157,6 +157,14 @@ class astfield(NamedTuple):
 
         return getattr(parent, self.name) if self.idx is None else getattr(parent, self.name)[self.idx]
 
+    def get_no_raise(self, parent: AST) -> Any:
+        """Get child node at this field in the given `parent`. Return `False` if not found instead of raising."""
+
+        return (
+            getattr(parent, self.name, False) if (idx := self.idx) is None else
+            False if (body := getattr(parent, self.name, False)) is False or idx >= len(body) else
+            body[idx])
+
     def set(self, parent: AST, child: AST):
         """Set `child` node at this field in the given `parent`."""
 
@@ -3732,7 +3740,7 @@ class FST:
 
         copy_root = FST.fromsrc(copy_root.src, mode=get_parse_mode(self_root.a), **self_root.parse_params)
 
-        if self.is_root:
+        if (copy_self := copy_root.child_from_path(self_root.child_path(self), True)) is copy_root:
             self._lines = copy_root._lines
 
             self._set_ast(copy_root.a)
@@ -3740,8 +3748,6 @@ class FST:
 
         else:
             self_root.put_lines(new_lines, ln, col, end_ln, end_col, True, self)  # we do this again in our own tree to offset our nodes which aren't being moved over from the modified copy
-
-            copy_self = copy_root.child_from_path(self_root.child_path(self))
 
             copy_self.pfield.set(copy_self.parent.a, None)  # remove from copy tree so that copy_root unmake doesn't zero out new node
             copy_root._unmake_fst_tree()
@@ -3800,8 +3806,8 @@ class FST:
             raise ValueError(f"'to' node not part of same tree")
 
         else:
-            self_path = root.child_path(self)[:-1]  # don't include last step because we never want to send self as parent
-            to_path   = root.child_path(to)[:-1]
+            self_path = root.child_path(self)
+            to_path   = root.child_path(to)
             path      = list(p for p, _ in takewhile(lambda st: st[0] == st[1], zip(self_path, to_path)))
             parent    = root.child_from_path(path)
 
@@ -4299,7 +4305,9 @@ class FST:
 
                 return self
 
+
             # TODO: more individual specialized slice puts
+
 
         except (SyntaxError, NodeTypeError):
             if not raw:
@@ -5436,15 +5444,16 @@ class FST:
 
         return path if not as_str else '.'.join(af.name if (i := af.idx) is None else f'{af.name}[{i}]' for af in path)
 
-    def child_from_path(self, path: list[astfield] | str) -> 'FST':
+    def child_from_path(self, path: list[astfield] | str, last_valid: bool = False) -> 'FST':
         """Get child node specified by `path` if it exists. If succeeds then the child node is not guaranteed to be the
         same type as was originally used to get the path, just the path is valid.
 
         **Parameters:**
         - `path`: Path to child as a list of `astfield`s or string.
+        - `last_valid`: If `True` then return the last valid node along the path, will not fail, can return `self`.
 
         **Returns:**
-        - `FST`: Child node if path is valid, otherwise raises.
+        - `FST`: Child node if path is valid, otherwise `False` if path invalid.
         """
 
         if isinstance(path, str):
@@ -5452,7 +5461,10 @@ class FST:
                     for p in path.split('.')]
 
         for p in path:
-            self = p.get(self)
+            if (next := p.get_no_raise(self)) is False:
+                return self if last_valid else False
+
+            self = next
 
         return self
 
