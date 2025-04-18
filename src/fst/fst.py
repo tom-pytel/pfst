@@ -65,8 +65,11 @@ AST_FIELDS_PREV[(arguments, 'kw_defaults')] = 7
 AST_FIELDS_PREV[(arguments, 'kwarg')]       = 7
 
 AST_DEFAULT_BODY_FIELD  = {cls: field for field, classes in [
-    ('elts',                 (Tuple, List, Set)),
+    ('body',                 (Module, Interactive, FunctionDef, AsyncFunctionDef, ClassDef, For, AsyncFor, While, If,
+                              With, AsyncWith, Try, TryStar, ExceptHandler, match_case),),
     ('cases',                (Match,)),
+
+    ('elts',                 (Tuple, List, Set)),
     ('patterns',             (MatchSequence, MatchOr)),
     # ('values',               (JoinedStr,)),  # values don't have locations in lower version pythons
 
@@ -556,8 +559,11 @@ def _prev_pars(lines: list[str], bound_ln: int, bound_col: int, pars_ln: int, pa
 
 
 def _fixup_field_body(ast: AST, field: str | None = None) -> tuple[str, 'AST']:
+    """Get `AST` member list for specified `field` or default if `field=None`."""
+
     if field is None:
-        field = AST_DEFAULT_BODY_FIELD.get(ast.__class__, 'body')
+        if not (field := AST_DEFAULT_BODY_FIELD.get(ast.__class__)):
+            raise ValueError(f"{ast.__class__.__name__} has no default body field")
 
     if (body := getattr(ast, field if isinstance(field, str) else field[0], _fixup_field_body)) is _fixup_field_body:  # _fixup_field_body is sentinel
         raise ValueError(f"{ast.__class__.__name__} has no field '{field}'")
