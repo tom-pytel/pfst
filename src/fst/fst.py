@@ -71,22 +71,33 @@ AST_DEFAULT_BODY_FIELD  = {cls: field for field, classes in [
 
     ('elts',                 (Tuple, List, Set)),
     ('patterns',             (MatchSequence, MatchOr)),
-    # ('values',               (JoinedStr,)),  # values don't have locations in lower version pythons
-
     ('targets',              (Delete, Assign)),
     ('type_params',          (TypeAlias,)),
     ('names',                (Import, ImportFrom)),
-    # ('items',                (With, AsyncWith)),  # commented out so that 'body' takes precedence
-
+    ('ifs',                  (comprehension,)),
     ('values',               (BoolOp,)),
     ('generators',           (ListComp, SetComp, DictComp, GeneratorExp)),
     ('args',                 (Call,)),
 
-    (('keys', 'values'),     (Dict,)),
-    (('keys', 'patterns'),   (MatchMapping,)),
-    ('ifs',                  (comprehension,)),
 
-    ('comparators',          (Compare,)),  # special case, we handle these programatically because of the unique representation, or could be ('ops', 'comparators')
+    # (('keys', 'values'),     (Dict,)),
+    # (('keys', 'patterns'),   (MatchMapping,)),
+    # (('ops', 'comparators'), (Compare,)),  # special case, we handle these programatically because of the unique representation, or could be ('ops', 'comparators')
+
+
+    # (('keys', 'values'),     (Dict,)),
+    # (('keys', 'patterns'),   (MatchMapping,)),
+
+    # ('comparators',          (Compare,)),  # special case, we handle these programatically because of the unique representation, or could be ('ops', 'comparators')
+
+
+    (('keys',),              (Dict,)),  # special cases, field names only exist so initial checks succeed for `field=None` but all handled programaticallyu
+    (('keys',),              (MatchMapping,)),
+    (('ops',),               (Compare,)),
+
+
+    # ('values',               (JoinedStr,)),  # values don't have locations in lower version pythons
+    # ('items',                (With, AsyncWith)),  # 'body' takes precedence
 
     # ('value',    (Expr, Return, Await, Yield, YieldFrom, Constant, Starred, MatchValue, MatchSingleton)),  # maybe obvious single bodies in future?
     # ('pattern',  (MatchAs,)),
@@ -3678,40 +3689,80 @@ class FST:
                        field: str | None = None, **options) -> 'FST':  # -> Self
         """Put a raw slice of child nodes to `self`."""
 
-        ast          = self.a
-        is_compare   = isinstance(ast, Compare)
-        ffield, body = _fixup_field_body(ast, field)
-        start, stop  = _fixup_slice_index(len(body) + is_compare, start, stop)
+        ffrom, fto = self._raw_slice_from_to(start, stop, field)
 
-        if not is_compare:
-            body2 = body if isinstance(ffield, str) else getattr(ast, ffield[1])
-        elif field is not None:
-            raise ValueError(f"cannot specify a field '{field}' to assign slice to a Compare")
+        if not (ffrom.is_FST and fto.is_FST):
+            self._reparse_raw(code, ffrom.ln, ffrom.col, fto.end_ln, fto.end_col)
 
-        else:  # virtual combined body of [Compare.left] + Compare.comparators
-            body2  = body  # body should be ast.comparators, we won't bother dealing with if user passed 'ops'
-            stop  -= 1
+        else:
+            options['to'] = fto
+
+            ffrom._reparse_raw_node(code, **options)
+
+        return self.repath()
+
+    # ------------------------------------------------------------------------------------------------------------------
+
+    def _raw_slice_from_to(self, start: int | Literal['end'] | None = None, stop: int | None = None,
+                           field: str | None = None) -> tuple[Union['FST', fstloc], Union['FST', fstloc]]:
+        ast = self.a
+
+        if isinstance(ast, Dict):
+            if field is not None:
+                raise ValueError(f"cannot specify a field '{field}' to assign slice to a Dict")
+
+            keys        = ast.keys
+            values      = ast.values
+            start, stop = _fixup_slice_index(len(keys), start, stop)
+
+            if stop == start:
+                raise RuntimeError(f"invalid slice for raw operation")
+
+            return self._dict_key_or_mock_loc(keys[start], values[start].f), values[stop - 1].f
+
+        elif isinstance(ast, MatchMapping):
+            if field is not None:
+                raise ValueError(f"cannot specify a field '{field}' to assign slice to a MatchMapping")
+
+            body        = ast.keys
+            body2       = ast.patterns
+            start, stop = _fixup_slice_index(len(body), start, stop)
+
+
+            # TODO: include `rest`?
+
+
+        elif isinstance(ast, Compare):
+            if field is not None:
+                raise ValueError(f"cannot specify a field '{field}' to assign slice to a Compare")
+
+            body = body2 = ast.comparators  # virtual combined body of [Compare.left] + Compare.comparators
+            start, stop  = _fixup_slice_index(len(body) + 1, start, stop)
+            stop        -= 1
 
             if start:
                 start -= 1
             else:
                 body = [ast.left]
 
-        if stop <= start:
-            raise RuntimeError(f"cannot insert with 'raw=True'")
 
-        options['to'] = body2[stop - 1].f
+        # TODO: 'if' in comprehension.ifs here  # elif (pfield := self.pfield) and pfield.name == 'ifs':
+        # TODO:  decorator stuff
 
-        body[start].f._reparse_raw_node(code, **options)
 
-        return self.repath()
+        else:
+            _, body     = _fixup_field_body(ast, field)
+            start, stop = _fixup_slice_index(len(body), start, stop)
+            body2       = body
 
-    # ------------------------------------------------------------------------------------------------------------------
+        if stop == start:
+            raise RuntimeError(f"invalid slice for raw operation (start cannot == stop)")
+
+        return body[start].f, body2[stop - 1].f
 
     def _reparse_raw(self, code: Code | None, ln: int, col: int, end_ln: int, end_col: int) -> 'FST':
         """Reparse this node which entirely contatins the span which is to be replaced with `code` source. The node and
-        some of its parents going up may be replaced. Not safe to use in a `walk()`. Don't use a `self` which may be
-        entirely deleted by the reparse.
+        some of its parents going up may be replaced. Not safe to use in a `walk()`.
 
         **Returns:**
         - `FST | None`: Closest node to start of replacement location as replaced node or `None` if no candidate.
@@ -3780,21 +3831,15 @@ class FST:
 
 
     def _reparse_raw_loc(self, code: Code | None, ln: int, col: int, end_ln: int, end_col: int) -> 'FST':
-        pass
 
+
+        raise NotImplementedError  # TODO: this
 
 
 
     def _reparse_raw_node(self, code: Code | None, to: Optional['FST'] = None, **options) -> 'FST':
         """Attempt a replacement by using str as source and attempting to parse into location of node(s) being
-        replaced. Node cannot be a statement or the like.
-
-        Currently doesn't handle statementish nodes, just expressions and other misc junk.
-        """
-
-        # if not isinstance(ast := self.a, (expr, comprehension, arguments, arg, keyword, alias, withitem, pattern,
-        #                                   operator, unaryop, cmpop)):
-        #     raise ValueError(f"cannot replace node type {ast.__class__.__name__}")
+        replaced. Node cannot be a statement or the like."""
 
         pars = True if to else DEFAULT_PARS if (o := options.get('pars')) is None else o
         loc  = self.pars(pars)
@@ -3804,6 +3849,7 @@ class FST:
 
         if not to:
             parent = self.parent_stmtish(False, True)
+            # parent = self  # TODO: make this work
             to_loc = loc
 
         elif not (to_loc := to.pars(pars)):
@@ -3817,27 +3863,7 @@ class FST:
             path      = list(p for p, _ in takewhile(lambda st: st[0] == st[1], zip(self_path, to_path)))
             parent    = root.child_from_path(path)
 
-
-
-        # TODO: 'if' in comprehension.ifs here, also decorator stufff
-        # TODO: handle dict '**', self._dict_key_or_mock_loc(keys[start], values[start].f)
-
-
-
-        if isinstance(parent, mod):  # non-statementish in a mod (probably Expression)
-            raise NotImplementedError  # TODO: this
-
-
-        elif not parent:  # pure solo statement or expression
-            raise NotImplementedError  # TODO: this
-
-
-        else:  # proper statementish node parent
-            return parent._reparse_raw(code, loc.ln, loc.col, to_loc.end_ln, to_loc.end_col)
-
-
-
-
+        return parent._reparse_raw(code, loc.ln, loc.col, to_loc.end_ln, to_loc.end_col)
 
     # ------------------------------------------------------------------------------------------------------------------
 

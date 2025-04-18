@@ -14846,6 +14846,21 @@ Module .. ROOT 0,0 -> 0,5
       0] Name 'z' Load .. 0,3 -> 0,4
 """),
 
+(r"""{a: b, **c, **d, **e}""", 'body[0].value', 1, 3, None, {'raw': True}, r"""f: g""", r"""{a: b, f: g, **e}""", r"""
+Module .. ROOT 0,0 -> 0,17
+  .body[1]
+  0] Expr .. 0,0 -> 0,17
+    .value Dict .. 0,0 -> 0,17
+      .keys[3]
+      0] Name 'a' Load .. 0,1 -> 0,2
+      1] Name 'f' Load .. 0,7 -> 0,8
+      2] None
+      .values[3]
+      0] Name 'b' Load .. 0,4 -> 0,5
+      1] Name 'g' Load .. 0,10 -> 0,11
+      2] Name 'e' Load .. 0,15 -> 0,16
+"""),
+
 (r"""del a, b, c""", 'body[0]', 1, 3, None, {'raw': True}, r"""z""", r"""del a, z""", r"""
 Module .. ROOT 0,0 -> 0,8
   .body[1]
@@ -19175,18 +19190,12 @@ class cls:
             f = (eval(f't.{attr}', {'t': t}) if attr else t).f
 
             try:
-                field, body = fst_._fixup_field_body(a := f.a, field)
+                ffrom, fto = f._raw_slice_from_to(start, stop, field)
 
-                if isinstance(a, Compare):
-                    b1 = b2 = [a.left] + body  # we assume body is a.comparators in this case
-                elif isinstance(field, str):
-                    b1 = b2 = body
-                else:
-                    b1, b2 = body, getattr(f.a, field[1])
+                if not (ffrom.is_FST and fto.is_FST):
+                    continue
 
-                start, stop = fst_._fixup_slice_index(len(b1), start, stop)
-
-                b1[start].f.replace(None if src == '**DEL**' else src, to=b2[stop - 1].f, **options)  # raw=True is in `options`
+                ffrom.replace(None if src == '**DEL**' else src, to=fto, **options)  # raw=True is in `options`
 
                 tdst  = t.f.src
                 tdump = t.f.dump(out=list, compact=True)
