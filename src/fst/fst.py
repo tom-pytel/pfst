@@ -255,7 +255,7 @@ def set_defaults(**params) -> dict[str, Any]:
     return ret
 
 
-def _with_loc(fst: 'FST', with_loc: bool | Literal['all'] | Literal['own'] = True) -> bool:
+def _with_loc(fst: 'FST', with_loc: bool | Literal['all', 'own'] = True) -> bool:
     """Check location condition on node. Safe for low level because doesn't use `.loc` calculation machinery."""
 
     if not with_loc:
@@ -615,8 +615,7 @@ def _fixup_slice_index(len_, start, stop) -> tuple[int, int]:
     return start, stop
 
 
-def _normalize_code(code: Code, coerce: Literal['expr'] | Literal['mod'] | None = None, *, parse_params: dict = {},
-                    ) -> 'FST':
+def _normalize_code(code: Code, coerce: Literal['expr', 'mod'] | None = None, *, parse_params: dict = {}) -> 'FST':
     """Normalize code to an `FST` and coerce to a desired format if possible.
 
     If neither of these is requested then will convert to `ast.Module` if is `ast.Interactive` or return single
@@ -2337,8 +2336,7 @@ class FST:
             else:
                 linefunc(f'{sind}{sind}{cind}{child!r}{eol}')
 
-    def _prev_ast_bound(self, with_loc: bool | Literal['all'] | Literal['own'] | Literal['allown'] = True
-                        ) -> tuple[int, int]:
+    def _prev_ast_bound(self, with_loc: bool | Literal['all', 'own', 'allown'] = True) -> tuple[int, int]:
         """Get a prev bound for search after any ASTs for this object. This is safe to call for nodes that live inside
         nodes without their own locations if `with_loc='allown'`."""
 
@@ -2347,8 +2345,7 @@ class FST:
 
         return 0, 0
 
-    def _next_ast_bound(self, with_loc: bool | Literal['all'] | Literal['own'] | Literal['allown'] = True
-                        ) -> tuple[int, int]:
+    def _next_ast_bound(self, with_loc: bool | Literal['all', 'own', 'allown'] = True) -> tuple[int, int]:
         """Get a next bound for search before any ASTs for this object. This is safe to call for nodes that live inside
         nodes without their own locations if `with_loc='allown'`."""
 
@@ -2357,8 +2354,7 @@ class FST:
 
         return len(lines := self.root._lines) - 1, len(lines[-1])
 
-    def _lpars(self, with_loc: bool | Literal['all'] | Literal['own'] | Literal['allown'] = True
-               ) -> tuple[int, int, int, int, int]:
+    def _lpars(self, with_loc: bool | Literal['all', 'own', 'allown'] = True) -> tuple[int, int, int, int, int]:
         """Return the `ln` and `col` of the leftmost and ante-leftmost opening parentheses and the total number of
         opening parentheses. Doesn't take into account anything like enclosing argument parentheses, just counts. The
         leftmost bound used is the end of the previous sibling, or the start of that parent if there isn't one, or (0,0)
@@ -2375,8 +2371,7 @@ class FST:
 
         return _prev_pars(self.root._lines, *self._prev_ast_bound(with_loc), *self.bloc[:2])
 
-    def _rpars(self, with_loc: bool | Literal['all'] | Literal['own'] | Literal['allown'] = True
-               ) -> tuple[int, int, int, int, int]:
+    def _rpars(self, with_loc: bool | Literal['all', 'own', 'allown'] = True) -> tuple[int, int, int, int, int]:
         """Return the `end_ln` and `end_col` of the rightmost and ante-rightmost closing parentheses and the total
         number of closing parentheses. Doesn't take into account anything like enclosing argument parentheses, just
         counts. The rightmost bound used is the start of the next sibling, or the end of that parent if there isn't one,
@@ -3762,7 +3757,8 @@ class FST:
 
     def _reparse_raw(self, code: Code | None, ln: int, col: int, end_ln: int, end_col: int) -> 'FST':
         """Reparse this node which entirely contatins the span which is to be replaced with `code` source. The node and
-        some of its parents going up may be replaced. Not safe to use in a `walk()`.
+        some of its parents going up may be replaced. Not safe to use in a `walk()`. Do not call with a `self` which can
+        be deleted.
 
         **Returns:**
         - `FST | None`: Closest node to start of replacement location as replaced node or `None` if no candidate.
@@ -3796,21 +3792,29 @@ class FST:
         copy_root.put_lines(new_lines, ln, col, end_ln, end_col)
 
         copy_root = FST.fromsrc(copy_root.src, mode=get_parse_mode(self_root.a), **self_root.parse_params)
+        path      = self_root.child_path(self)
 
-        if (copy_self := copy_root.child_from_path(self_root.child_path(self), True)) is copy_root:
+        while self is not self_root:
+            if copy_self := copy_root.child_from_path(path):
+                self_root.put_lines(new_lines, ln, col, end_ln, end_col, True, self)  # we do this again in our own tree to offset our nodes which aren't being moved over from the modified copy
+
+                copy_self.pfield.set(copy_self.parent.a, None)  # remove from copy tree so that copy_root unmake doesn't zero out new node
+                copy_root._unmake_fst_tree()
+
+                self._set_ast(copy_self.a)
+                self.touchall(False)
+
+                break
+
+            path.pop()
+
+            self = self.parent
+
+        else:
             self._lines = copy_root._lines
 
             self._set_ast(copy_root.a)
             self.touch()
-
-        else:
-            self_root.put_lines(new_lines, ln, col, end_ln, end_col, True, self)  # we do this again in our own tree to offset our nodes which aren't being moved over from the modified copy
-
-            copy_self.pfield.set(copy_self.parent.a, None)  # remove from copy tree so that copy_root unmake doesn't zero out new node
-            copy_root._unmake_fst_tree()
-
-            self._set_ast(copy_self.a)
-            self.touchall(False)
 
         if code is None:
             return None
@@ -3849,7 +3853,6 @@ class FST:
 
         if not to:
             parent = self.parent_stmtish(False, True)
-            # parent = self  # TODO: make this work
             to_loc = loc
 
         elif not (to_loc := to.pars(pars)):
@@ -3858,8 +3861,8 @@ class FST:
             raise ValueError(f"'to' node not part of same tree")
 
         else:
-            self_path = root.child_path(self)
-            to_path   = root.child_path(to)
+            self_path = root.child_path(self)[:-1]  # must be parent node which will not disappear
+            to_path   = root.child_path(to)[:-1]
             path      = list(p for p, _ in takewhile(lambda st: st[0] == st[1], zip(self_path, to_path)))
             parent    = root.child_from_path(path)
 
@@ -4506,7 +4509,7 @@ class FST:
 
         return self
 
-    def next(self, with_loc: bool | Literal['all'] | Literal['own'] = True) -> Optional['FST']:  # TODO: refactor maybe
+    def next(self, with_loc: bool | Literal['all', 'own'] = True) -> Optional['FST']:  # TODO: refactor maybe
         """Get next sibling in syntactic order, only within parent.
 
         **Parameters:**
@@ -4794,7 +4797,7 @@ class FST:
 
         return None
 
-    def prev(self, with_loc: bool | Literal['all'] | Literal['own'] = True) -> Optional['FST']:  # TODO: refactor maybe
+    def prev(self, with_loc: bool | Literal['all', 'own'] = True) -> Optional['FST']:  # TODO: refactor maybe
         """Get previous sibling in syntactic order, only within parent.
 
         **Parameters:**
@@ -5083,7 +5086,7 @@ class FST:
 
         return None
 
-    def first_child(self, with_loc: bool | Literal['all'] | Literal['own'] = True) -> Optional['FST']:
+    def first_child(self, with_loc: bool | Literal['all', 'own'] = True) -> Optional['FST']:
         """Get first valid child in syntactic order.
 
         **Parameters:**
@@ -5108,7 +5111,7 @@ class FST:
 
         return None
 
-    def last_child(self, with_loc: bool | Literal['all'] | Literal['own'] = True) -> Optional['FST']:
+    def last_child(self, with_loc: bool | Literal['all', 'own'] = True) -> Optional['FST']:
         """Get last valid child in syntactic order.
 
         **Parameters:**
@@ -5140,7 +5143,7 @@ class FST:
 
         return None
 
-    def next_child(self, from_child: Optional['FST'], with_loc: bool | Literal['all'] | Literal['own'] = True
+    def next_child(self, from_child: Optional['FST'], with_loc: bool | Literal['all', 'own'] = True
                    ) -> Optional['FST']:
         """Get next child in syntactic order. Meant for simple iteration. This is a slower way to iterate, `walk()` is
         faster.
@@ -5156,7 +5159,7 @@ class FST:
 
         return self.first_child(with_loc) if from_child is None else from_child.next(with_loc)
 
-    def prev_child(self, from_child: Optional['FST'], with_loc: bool | Literal['all'] | Literal['own'] = True
+    def prev_child(self, from_child: Optional['FST'], with_loc: bool | Literal['all', 'own'] = True
                    ) -> Optional['FST']:
         """Get previous child in syntactic order. Meant for simple iteration. This is a slower way to iterate, `walk()`
         is faster.
@@ -5172,7 +5175,7 @@ class FST:
 
         return self.last_child(with_loc) if from_child is None else from_child.prev(with_loc)
 
-    def next_step(self, with_loc: bool | Literal['all'] | Literal['own'] | Literal['allown'] = True, *,
+    def next_step(self, with_loc: bool | Literal['all', 'own', 'allown'] = True, *,
                   recurse_self: bool = True) -> Optional['FST']:
         """Get next node in syntactic order over entire tree. Will walk up parents and down children to get the next
         node, returning `None` only when we are at the end of the whole thing.
@@ -5205,7 +5208,7 @@ class FST:
 
         return fst
 
-    def prev_step(self, with_loc: bool | Literal['all'] | Literal['own'] | Literal['allown'] = True, *,
+    def prev_step(self, with_loc: bool | Literal['all', 'own', 'allown'] = True, *,
                   recurse_self: bool = True) -> Optional['FST']:
         """Get prev node in syntactic order over entire tree. Will walk up parents and down children to get the next
         node, returning `None` only when we are at the beginning of the whole thing.
@@ -5238,7 +5241,7 @@ class FST:
 
         return fst
 
-    def walk(self, with_loc: bool | Literal['all'] | Literal['own'] = False, *, self_: bool = True,
+    def walk(self, with_loc: bool | Literal['all', 'own'] = False, *, self_: bool = True,
              recurse: bool = True, scope: bool = False, back: bool = False) -> Generator['FST', bool, None]:
         """Walk self and descendants in syntactic order, `send(False)` to skip recursion into child. `send(True)` to
         allow recursion into child if called with `recurse=False` or `scope=True` would otherwise disallow it. Can send
