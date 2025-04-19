@@ -79,22 +79,9 @@ AST_DEFAULT_BODY_FIELD  = {cls: field for field, classes in [
     ('generators',           (ListComp, SetComp, DictComp, GeneratorExp)),
     ('args',                 (Call,)),
 
-
-    # (('keys', 'values'),     (Dict,)),
-    # (('keys', 'patterns'),   (MatchMapping,)),
-    # (('ops', 'comparators'), (Compare,)),  # special case, we handle these programatically because of the unique representation, or could be ('ops', 'comparators')
-
-
-    # (('keys', 'values'),     (Dict,)),
-    # (('keys', 'patterns'),   (MatchMapping,)),
-
-    # ('comparators',          (Compare,)),  # special case, we handle these programatically because of the unique representation, or could be ('ops', 'comparators')
-
-
     (('keys',),              (Dict,)),  # special cases, field names only exist so initial checks succeed for `field=None` but all handled programaticallyu
     (('keys',),              (MatchMapping,)),
     (('ops',),               (Compare,)),
-
 
     # ('values',               (JoinedStr,)),  # values don't have locations in lower version pythons
     # ('items',                (With, AsyncWith)),  # 'body' takes precedence
@@ -2222,7 +2209,8 @@ class FST:
 
         while stack:  # make sure these bad ASTs can't hurt us anymore
             if a := stack.pop():  # could be `None`s in there
-                a.f.a = a.f = None  # root, parent and pfield are still useful after node has been removed
+                f   = a.f
+                f.a = a.f = None  # root, parent and pfield are still useful after node has been removed
 
                 stack.extend(iter_child_nodes(a))
 
@@ -3686,13 +3674,15 @@ class FST:
 
         ffrom, fto = self._raw_slice_from_to(start, stop, field)
 
-        if not (ffrom.is_FST and fto.is_FST):
-            self._reparse_raw(code, ffrom.ln, ffrom.col, fto.end_ln, fto.end_col)
+        # if not (ffrom.is_FST and fto.is_FST):
+        #     self._reparse_raw(code, ffrom.ln, ffrom.col, fto.end_ln, fto.end_col)
 
-        else:
-            options['to'] = fto
+        # else:
+        #     options['to'] = fto
 
-            ffrom._reparse_raw_node(code, **options)
+        #     ffrom._reparse_raw_node(code, **options)
+
+        self._reparse_raw(code, ffrom.ln, ffrom.col, fto.end_ln, fto.end_col)
 
         return self.repath()
 
@@ -3700,39 +3690,32 @@ class FST:
 
     def _raw_slice_from_to(self, start: int | Literal['end'] | None = None, stop: int | None = None,
                            field: str | None = None) -> tuple[Union['FST', fstloc], Union['FST', fstloc]]:
+        def fixup_slice_index_for_raw(len_, start, stop):
+            start, stop = _fixup_slice_index(len_, start, stop)
+
+            if stop == start:
+                raise RuntimeError(f"invalid slice for raw operation")
+
+            return start, stop
+
         ast = self.a
 
         if isinstance(ast, Dict):
             if field is not None:
                 raise ValueError(f"cannot specify a field '{field}' to assign slice to a Dict")
 
-            keys        = ast.keys
-            values      = ast.values
-            start, stop = _fixup_slice_index(len(keys), start, stop)
-
-            if stop == start:
-                raise RuntimeError(f"invalid slice for raw operation")
-
-            return self._dict_key_or_mock_loc(keys[start], values[start].f), values[stop - 1].f
-
-        elif isinstance(ast, MatchMapping):
-            if field is not None:
-                raise ValueError(f"cannot specify a field '{field}' to assign slice to a MatchMapping")
-
             body        = ast.keys
-            body2       = ast.patterns
-            start, stop = _fixup_slice_index(len(body), start, stop)
+            body2       = ast.values
+            start, stop = fixup_slice_index_for_raw(len(body), start, stop)
 
+            return self._dict_key_or_mock_loc(body[start], body2[start].f), body2[stop - 1].f
 
-            # TODO: include `rest`?
-
-
-        elif isinstance(ast, Compare):
+        if isinstance(ast, Compare):
             if field is not None:
                 raise ValueError(f"cannot specify a field '{field}' to assign slice to a Compare")
 
             body = body2 = ast.comparators  # virtual combined body of [Compare.left] + Compare.comparators
-            start, stop  = _fixup_slice_index(len(body) + 1, start, stop)
+            start, stop  = fixup_slice_index_for_raw(len(body) + 1, start, stop)
             stop        -= 1
 
             if start:
@@ -3740,28 +3723,51 @@ class FST:
             else:
                 body = [ast.left]
 
+            return body[start].f, body2[stop - 1].f
 
-        # TODO: 'if' in comprehension.ifs here  # elif (pfield := self.pfield) and pfield.name == 'ifs':
-        # TODO:  decorator stuff
+        if isinstance(ast, MatchMapping):
+            if field is not None:
+                raise ValueError(f"cannot specify a field '{field}' to assign slice to a MatchMapping")
+
+            body        = ast.keys
+            body2       = ast.patterns
+            start, stop = fixup_slice_index_for_raw(len(body), start, stop)
 
 
-        else:
-            _, body     = _fixup_field_body(ast, field)
-            start, stop = _fixup_slice_index(len(body), start, stop)
-            body2       = body
+            # TODO: include `rest`?
 
-        if stop == start:
-            raise RuntimeError(f"invalid slice for raw operation (start cannot == stop)")
+            return body[start].f, body2[stop - 1].f
+
+        if isinstance(ast, comprehension):
+            body        = ast.ifs
+            start, stop = fixup_slice_index_for_raw(len(body), start, stop)
+            ffirst      = body[start].f
+            start       = _prev_find(self.root._lines, *ffirst._prev_ast_bound(), ffirst.ln, ffirst.col, 'if')
+
+            return fstloc(*start, None, None), body[stop - 1].f.pars(True)  # 'None, None' to end in fstloc() because it is not (and should not be) used
+
+        if field == 'decorator_list':
+            body        = ast.decorator_list
+            start, stop = fixup_slice_index_for_raw(len(body), start, stop)
+            ffirst      = body[start].f
+            start       = _prev_find(self.root._lines, 0, 0, ffirst.ln, ffirst.col, '@')  # we can use '0, 0' because we know "@" starts on a newline
+
+            return fstloc(*start, None, None), body[stop - 1].f.pars(True)
+
+        _, body     = _fixup_field_body(ast, field)
+        start, stop = fixup_slice_index_for_raw(len(body), start, stop)
+        body2       = body
 
         return body[start].f, body2[stop - 1].f
 
     def _reparse_raw(self, code: Code | None, ln: int, col: int, end_ln: int, end_col: int) -> 'FST':
-        """Reparse this node which entirely contatins the span which is to be replaced with `code` source. The node and
-        some of its parents going up may be replaced. Not safe to use in a `walk()`. Do not call with a `self` which can
-        be deleted.
+        """Reparse this node which entirely contatins the span which is to be replaced with `code` source. `self` must
+        be a node which entirely contains the location and is guaranteed not to be deleted. `self` and some of its
+        parents going up may be replaced. Not safe to use in a `walk()`.
 
         **Returns:**
-        - `FST | None`: Closest node to start of replacement location as replaced node or `None` if no candidate.
+        - `FST | None`: Highest level node contained entirely within replacement source or `None` if no candidate. This
+            could wind up being just an operator like '+' depending on the replacement.
         """
 
         if isinstance(code, str):
@@ -3794,43 +3800,52 @@ class FST:
         copy_root = FST.fromsrc(copy_root.src, mode=get_parse_mode(self_root.a), **self_root.parse_params)
         path      = self_root.child_path(self)
 
-        while self is not self_root:
-            if copy_self := copy_root.child_from_path(path):
-                self_root.put_lines(new_lines, ln, col, end_ln, end_col, True, self)  # we do this again in our own tree to offset our nodes which aren't being moved over from the modified copy
-
-                copy_self.pfield.set(copy_self.parent.a, None)  # remove from copy tree so that copy_root unmake doesn't zero out new node
-                copy_root._unmake_fst_tree()
-
-                self._set_ast(copy_self.a)
-                self.touchall(False)
-
-                break
-
-            path.pop()
-
-            self = self.parent
-
-        else:
+        if self is self_root:
             self._lines = copy_root._lines
 
             self._set_ast(copy_root.a)
             self.touch()
 
+        else:
+            copy_self = copy_root.child_from_path(path)
+
+            if not copy_self:
+                raise ValueError(f'could not find node after raw reparse')
+
+            self_root.put_lines(new_lines, ln, col, end_ln, end_col, True, self)  # we do this again in our own tree to offset our nodes which aren't being moved over from the modified copy
+
+            copy_self.pfield.set(copy_self.parent.a, None)  # remove from copy tree so that copy_root unmake doesn't zero out new node
+            copy_root._unmake_fst_tree()
+
+            self._set_ast(copy_self.a)
+            self.touchall(False)
+
         if code is None:
             return None
 
-        f = None
+        if len(new_lines) == 1:
+            end_ln  = ln
+            end_col = col + len(new_lines[0])
 
-        for f in self.walk(True):  # return first node at or past start of modification
-            fln, fcol, fend_ln, fend_col = f.loc
+        else:
+            end_ln  = ln + len(new_lines) - 1
+            end_col = len(new_lines[-1])
 
-            if fln > ln or (fln == ln and fcol >= col):
-                break
+        return self.find_in_loc(ln, col, end_ln, end_col)
 
-        if f and ((fend_ln < ln) or (fend_ln == ln and fend_col < col)):
-            return None
 
-        return f
+        # f = None
+
+        # for f in self.walk(True):  # return first node at or past start of modification
+        #     fln, fcol, fend_ln, fend_col = f.loc
+
+        #     if fln > ln or (fln == ln and fcol >= col):
+        #         break
+
+        # if f and ((fend_ln < ln) or (fend_ln == ln and fend_col < col)):
+        #     return None
+
+        # return f
 
 
 
@@ -3843,7 +3858,7 @@ class FST:
 
     def _reparse_raw_node(self, code: Code | None, to: Optional['FST'] = None, **options) -> 'FST':
         """Attempt a replacement by using str as source and attempting to parse into location of node(s) being
-        replaced. Node cannot be a statement or the like."""
+        replaced."""
 
         pars = True if to else DEFAULT_PARS if (o := options.get('pars')) is None else o
         loc  = self.pars(pars)
@@ -3851,8 +3866,8 @@ class FST:
         if not loc:
             raise ValueError('node being reparsed must have a location')
 
-        if not to:
-            parent = self.parent_stmtish(False, True)
+        if not to or to is self:
+            parent = self.parent_stmtish(False, True) or self  # we want parent which will not change or root node
             to_loc = loc
 
         elif not (to_loc := to.pars(pars)):
@@ -3861,7 +3876,7 @@ class FST:
             raise ValueError(f"'to' node not part of same tree")
 
         else:
-            self_path = root.child_path(self)[:-1]  # must be parent node which will not disappear
+            self_path = root.child_path(self)[:-1]  # [:-1] makes sure we get parent of whatever combination of paths
             to_path   = root.child_path(to)[:-1]
             path      = list(p for p, _ in takewhile(lambda st: st[0] == st[1], zip(self_path, to_path)))
             parent    = root.child_from_path(path)
@@ -4205,33 +4220,32 @@ class FST:
 
             raise NodeTypeError(f"invalid 'to' node")
 
-        try:
-            if raw is True:
-                raise NodeTypeError
-            elif raw and raw != 'alt':
+        if raw is not True:
+            if raw and raw != 'alt':
                 raise ValueError(f"invalid value '{raw}' for raw parameter")
 
-            if isinstance(ast, STATEMENTISH):
-                parent._put_slice_stmt(code, idx, to_idx(), field, True, **options)
+            try:
+                if isinstance(ast, STATEMENTISH):
+                    parent._put_slice_stmt(code, idx, to_idx(), field, True, **options)
 
-                return None if code is None else pfield.get(parenta).f
+                    return None if code is None else pfield.get(parenta).f
 
-            if isinstance(parenta, (Tuple, List, Set)):
-                parent._put_slice_tuple_list_or_set(code, idx, to_idx(), field, True, **options)
+                if isinstance(parenta, (Tuple, List, Set)):
+                    parent._put_slice_tuple_list_or_set(code, idx, to_idx(), field, True, **options)
 
-                return None if code is None else pfield.get(parenta).f
-
-
-            # TODO: more individual specialized replacements
+                    return None if code is None else pfield.get(parenta).f
 
 
-        except (SyntaxError, NodeTypeError):
-            if not raw:
-                raise
+                # TODO: more individual specialized replacements
 
-        else:
-            if not raw:
-                raise ValueError(f"cannot replace in {parenta.__class__.__name__}.{field}")
+
+            except (SyntaxError, NodeTypeError):
+                if not raw:
+                    raise
+
+            else:
+                if not raw:
+                    raise ValueError(f"cannot replace in {parenta.__class__.__name__}.{field}")
 
         ret = self._reparse_raw_node(code, **options)
 
@@ -4267,10 +4281,19 @@ class FST:
         elif start is None:
             return self.put_slice(code, None, None, field, one=one, **options)
 
+        if start == 'end':
+            raise ValueError(f"cannot non-slice put() to 'end'")
         if not one:
             raise ValueError(f"cannot use 'one=False' in non-slice put()")
 
         _, body = _fixup_field_body(self.a, field)
+
+        if field is None and isinstance(a := self.a, (Dict, MatchMapping, Compare)):
+            raise ValueError(f"cannot put to individual index without field in a {a.__class__.__name__}")
+
+
+            # TODO: allow this via put_slice or individual put to Compare.left/comparators?
+
 
         body[start].f.replace(code, **options)
 
@@ -4314,43 +4337,42 @@ class FST:
         ffield, _ = _fixup_field_body(ast, field)
         raw       = DEFAULT_RAW if (o := options.get('raw')) is None else o
 
-        try:
-            if raw is True:
-                raise NodeTypeError
-            elif raw and raw != 'alt':
+        if raw is not True:
+            if raw and raw != 'alt':
                 raise ValueError(f"invalid value '{raw}' for raw parameter")
 
-            if isinstance(ast, STATEMENTISH_OR_STMTMOD) and ffield in STMTISH_LIST_FIELDS:
-                self._put_slice_stmt(code, start, stop, field, one, **options)
+            try:
+                if isinstance(ast, STATEMENTISH_OR_STMTMOD) and ffield in STMTISH_LIST_FIELDS:
+                    self._put_slice_stmt(code, start, stop, field, one, **options)
 
-                return self
+                    return self
 
-            if isinstance(ast, (Tuple, List, Set)):
-                self._put_slice_tuple_list_or_set(code, start, stop, field, one, **options)
+                if isinstance(ast, (Tuple, List, Set)):
+                    self._put_slice_tuple_list_or_set(code, start, stop, field, one, **options)
 
-                return self
+                    return self
 
-            if isinstance(ast, Dict):
-                self._put_slice_dict(code, start, stop, field, one, **options)
+                if isinstance(ast, Dict):
+                    self._put_slice_dict(code, start, stop, field, one, **options)
 
-                return self
+                    return self
 
-            if self.is_empty_set_call():
-                self._put_slice_empty_set_call(code, start, stop, field, one, **options)
+                if self.is_empty_set_call():
+                    self._put_slice_empty_set_call(code, start, stop, field, one, **options)
 
-                return self
-
-
-            # TODO: more individual specialized slice puts
+                    return self
 
 
-        except (SyntaxError, NodeTypeError):
-            if not raw:
-                raise
+                # TODO: more individual specialized slice puts
 
-        else:
-            if not raw:
-                raise ValueError(f"cannot put slice to a '{ast.__class__.__name__}'")
+
+            except (SyntaxError, NodeTypeError):
+                if not raw:
+                    raise
+
+            else:
+                if not raw:
+                    raise ValueError(f"cannot put slice to a '{ast.__class__.__name__}'")
 
         return self._put_slice_raw(code, start, stop, field, **options)
 
@@ -5511,12 +5533,32 @@ class FST:
 
         return (root := self.root).child_from_path(root.child_path(self))
 
-    def find_by_loc(self, ln: int, col: int, end_ln: int | None = None, end_col: int | None = None) -> Optional['FST']:
-        pass
+    def find_in_loc(self, ln: int, col: int, end_ln: int, end_col: int) -> Optional['FST']:
+        """Find first node which is contained entirely in location."""
 
+        sln, scol, send_ln, send_col = self.loc
 
-        # TODO: this
+        if ((sln > ln or (sln == ln and scol >= col)) and
+            (send_ln < end_ln or (send_ln == end_ln and send_col <= end_col))
+        ):
+            return self
 
+        while True:
+            for f in self.walk('all', self_=False):
+                fln, fcol, fend_ln, fend_col = f.loc
+
+                if fln < ln or (fln == ln and fcol < col):
+                    continue
+
+                if fend_ln < end_ln or (fend_ln == end_ln and fend_col <= end_col):
+                    return f
+
+                self = f
+
+                break
+
+            else:
+                return None
 
 # ------------------------------------------------------------------------------------------------------------------
 

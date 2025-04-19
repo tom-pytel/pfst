@@ -14972,7 +14972,7 @@ Module .. ROOT 0,0 -> 0,29
           0
 """),
 
-(r"""[a for a in a() if a if b if c]""", 'body[0].value.generators[0]', 1, 3, None, {'raw': True}, r"""z""", r"""[a for a in a() if a if z]""", r"""
+(r"""[a for a in a() if a if b if c]""", 'body[0].value.generators[0]', 1, 3, None, {'raw': True}, r"""if z""", r"""[a for a in a() if a if z]""", r"""
 Module .. ROOT 0,0 -> 0,26
   .body[1]
   0] Expr .. 0,0 -> 0,26
@@ -15017,7 +15017,7 @@ Module .. ROOT 0,0 -> 0,7
 @b
 @c
 def f(): pass
-""", 'body[0]', 1, 3, 'decorator_list', {'raw': True}, r"""z""", r"""
+""", 'body[0]', 1, 3, 'decorator_list', {'raw': True}, r"""@z""", r"""
 @a
 @z
 def f(): pass
@@ -19181,6 +19181,36 @@ class cls:
         self.assertEqual(g.src, '[a for c in d  ]')
         f = g
 
+    def test_raw_special_fields(self):
+        self.assertRaises(ValueError, parse('{a: b, c: d, e: f}').body[0].value.f.put, '**g', 1)
+        self.assertEqual('{a: b, g: d, e: f}', parse('{a: b, c: d, e: f}').body[0].value.f.put('g', 1, field='keys').root.src)
+        self.assertEqual('{a: b, c: g, e: f}', parse('{a: b, c: d, e: f}').body[0].value.f.put('g', 1, field='values').root.src)
+        self.assertEqual('{a: b, **g, e: f}', parse('{a: b, c: d, e: f}').body[0].value.f.put_slice('**g', 1, 2).root.src)
+
+        # TODO: MatchMapping
+
+        self.assertRaises(ValueError, parse('a < b < c').body[0].value.f.put, 'z', 1)
+        # self.assertEqual('z < b < c', parse('a < b < c').body[0].value.f.put('z', field='left').root.src)  # if we eventually do put() to non-list fields
+        self.assertEqual('a < b < z', parse('a < b < c').body[0].value.f.put('z', 1, field='comparators').root.src)
+        self.assertEqual('a < b > c', parse('a < b < c').body[0].value.f.put('>', 1, field='ops').root.src)
+        self.assertEqual('a < z < c', parse('a < b < c').body[0].value.f.put_slice('z', 1, 2).root.src)
+
+        self.assertEqual('[i for i in j if a if z if c]', parse('[i for i in j if a if b if c]').body[0].value.generators[0].f.put('z', 1, field='ifs').root.src)
+        self.assertEqual('[i for i in j if a if z if c]', parse('[i for i in j if a if b if c]').body[0].value.generators[0].f.put_slice('if z', 1, 2, field='ifs').root.src)
+        self.assertEqual('[i for i in j if a if z]', parse('[i for i in j if a if b if c]').body[0].value.generators[0].f.put_slice('if z', 1, 3, field='ifs').root.src)
+        self.assertEqual('[i for i in j if z]', parse('[i for i in j if a if b if c]').body[0].value.generators[0].f.put_slice('if z', field='ifs').root.src)
+        self.assertEqual('[i for i in j if a if (z) if c]', parse('[i for i in j if a if (b) if c]').body[0].value.generators[0].f.put('z', 1, field='ifs').root.src)
+        self.assertEqual('[i for i in j if a if z if c]', parse('[i for i in j if a if (b) if c]').body[0].value.generators[0].f.put_slice('if z', 1, 2, field='ifs').root.src)
+        self.assertEqual('[i for i in j if a if z]', parse('[i for i in j if a if (b) if (c)]').body[0].value.generators[0].f.put_slice('if z', 1, 3, field='ifs').root.src)
+
+        self.assertEqual('@a\n@z\n@c\nclass cls: pass', parse('@a\n@b\n@c\nclass cls: pass').body[0].f.put('z', 1, field='decorator_list').root.src)
+        self.assertEqual('@a\n@z\n@c\nclass cls: pass', parse('@a\n@b\n@c\nclass cls: pass').body[0].f.put_slice('@z', 1, 2, field='decorator_list').root.src)
+        self.assertEqual('@a\n@z\nclass cls: pass', parse('@a\n@b\n@c\nclass cls: pass').body[0].f.put_slice('@z', 1, 3, field='decorator_list').root.src)
+        self.assertEqual('@z\nclass cls: pass', parse('@a\n@b\n@c\nclass cls: pass').body[0].f.put_slice('@z', field='decorator_list').root.src)
+        self.assertEqual('@a\n@(z)\n@c\nclass cls: pass', parse('@a\n@(b)\n@c\nclass cls: pass').body[0].f.put('z', 1, field='decorator_list').root.src)
+        self.assertEqual('@a\n@z\n@c\nclass cls: pass', parse('@a\n@(b)\n@c\nclass cls: pass').body[0].f.put_slice('@z', 1, 2, field='decorator_list').root.src)
+        self.assertEqual('@a\n@z\nclass cls: pass', parse('@a\n@(b)\n@(c)\nclass cls: pass').body[0].f.put_slice('@z', 1, 3, field='decorator_list').root.src)
+
     def test_replace_raw_from_put_slice_data(self):
         for i, (dst, attr, start, stop, field, options, src, put_src, put_dump) in enumerate(PUT_SLICE_DATA):
             if options != {'raw': True}:
@@ -19953,6 +19983,19 @@ match a:
         self.assertFalse(f.is_stmtish)
         self.assertTrue(f.is_stmtish_or_mod)
         self.assertTrue(f.is_mod)
+
+    def test_find_in_loc(self):
+        f    = parse('abc += xyz').body[0].f
+        fabc = f.target
+        fpeq = f.op
+        fxyz = f.value
+
+        self.assertIs(f, f.find_in_loc(0, 0, 0, 10))
+        self.assertIs(f, f.find_in_loc(-1, -1, 1, 11))
+        self.assertIs(fabc, f.find_in_loc(0, 0, 0, 3))
+        self.assertIs(fpeq, f.find_in_loc(0, 1, 0, 10))
+        self.assertIs(fxyz, f.find_in_loc(0, 5, 0, 10))
+        self.assertIs(None, f.find_in_loc(0, 5, 0, 6))
 
     def test_set_defaults(self):
         new = dict(
