@@ -79,9 +79,13 @@ AST_DEFAULT_BODY_FIELD  = {cls: field for field, classes in [
     ('generators',           (ListComp, SetComp, DictComp, GeneratorExp)),
     ('args',                 (Call,)),
 
-    (('keys',),              (Dict,)),  # special cases, field names only exist so initial checks succeed for `field=None` but all handled programaticallyu
-    (('keys',),              (MatchMapping,)),
-    (('ops',),               (Compare,)),
+    # (('keys',),              (Dict,)),  # special cases, field names only exist so initial checks succeed for `field=None` but all handled programaticallyu
+    # (('keys',),              (MatchMapping,)),
+    # (('ops',),               (Compare,)),
+
+    (True,                  (Dict,)),  # entries exist and `True` only so that initial checks succeed for `field=None`, but all handled programatically
+    (True,                  (MatchMapping,)),
+    (True,                  (Compare,)),
 
     # ('values',               (JoinedStr,)),  # values don't have locations in lower version pythons
     # ('items',                (With, AsyncWith)),  # 'body' takes precedence
@@ -563,7 +567,10 @@ def _fixup_field_body(ast: AST, field: str | None = None) -> tuple[str, 'AST']:
         if not (field := AST_DEFAULT_BODY_FIELD.get(ast.__class__)):
             raise ValueError(f"{ast.__class__.__name__} has no default body field")
 
-    if (body := getattr(ast, field if isinstance(field, str) else field[0], _fixup_field_body)) is _fixup_field_body:  # _fixup_field_body is sentinel
+        if field is True:
+            return False, None  # `False` field to differentiate from `None`
+
+    if (body := getattr(ast, field, _fixup_field_body)) is _fixup_field_body:  # _fixup_field_body serves as sentinel
         raise ValueError(f"{ast.__class__.__name__} has no field '{field}'")
 
     if not isinstance(body, list):
