@@ -3767,7 +3767,8 @@ class FST:
                      inc: bool | None = None) -> 'FST':
         """Reparse this node which entirely contatins the span which is to be replaced with `code` source. `self` must
         be a node which entirely contains the location and is guaranteed not to be deleted. `self` and some of its
-        parents going up may be replaced. Not safe to use in a `walk()`.
+        parents going up may be replaced (root node `FST` will never change, the `AST` it points to may though). Not
+        safe to use in a `walk()`.
 
         **Returns:**
         - `FST | None`: First highest level node contained entirely within replacement source or `None` if no candidate.
@@ -4363,7 +4364,7 @@ class FST:
         return self._put_slice_raw(code, start, stop, field, **options)
 
     def put_raw(self, code: Code | None, ln: int, col: int, end_ln: int, end_col: int, *,
-                inc: bool | None = None) -> 'FST':
+                inc: bool | None = True, **options) -> 'FST':
         """Put raw code and reparse. Can call on any node in tree for same effect.
 
         **Returns:**
@@ -4371,12 +4372,9 @@ class FST:
             `inc` is not `None` (`True` or `False`) then will attempt to return enclosing node.
         """
 
-        parent = self.root.find_loc(ln, col, end_ln, end_col, False)
+        parent = self.root.find_loc(ln, col, end_ln, end_col, False) or self.root
 
-        if not parent:
-            raise ValueError('location outside of root bounds')
-
-        return parent._reparse_raw(code, ln, col, end_ln, end_col, True)
+        return parent._reparse_raw(code, ln, col, end_ln, end_col, inc)
 
     def get_lines(self, ln: int, col: int, end_ln: int, end_col: int) -> list[str]:
         """Get lines from currently stored source. The first and last lines are cropped to start `col` and `end_col`.
@@ -5980,7 +5978,7 @@ class FST:
 
         If offsetting a zero-length node (which can result from deleting elements of an unparenthesized tuple), both the
         start and end location will be moved if exactly at offset point if `tail` is `False`. Otherwise if `tail` is
-        `True` then the start position will remain and the end position will be expanded.
+        `True` then the start position will remain and the end position will be expanded, see "Behavior" below.
 
         **Parameters:**
         - `ln`: Line of offset point.
@@ -5992,11 +5990,11 @@ class FST:
 
         **Behavior:**
         ```
-              offset here
+        start offset here
               V
           |===|
               |---|
-              |        <- special zero length span
+              |        <- special zero length span which doesn't normally exist
         0123456789ABC
 
         +2, tail=False

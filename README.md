@@ -19,8 +19,8 @@ It works by adding `FST` nodes to existing `AST` nodes as an `.f` attribute whic
 
 * `put()` individual non-slice nodes.
 * Reconcile AST nodes modified not using FST machinery.
-* Implement individual sequence slice non-raw paths.
 * Redo sequence slices for same comment behavior as statements.
-* Clean up comment handling, where to insert wrt comments, interface for modifying just those.
+  * Implement individual sequence slice non-raw paths.
+* Clean up comment handling, where to put wrt comments, interface for modifying just those.
 
-Note: The "F" in FST stands for "Fun" syntax tree.
+Trivia: The "F" in FST stands for "Fun".
