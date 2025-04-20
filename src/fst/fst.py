@@ -2530,12 +2530,9 @@ class FST:
             ln  = self.ln
             col = self.col
 
-        ln, col, s = _prev_src(self.root._lines, ln, col, value.ln, value.col)  # '**' must be there
-        end_col    = col + len(s)
+        ln, col = _prev_find(self.root._lines, ln, col, value.ln, value.col, '**')  # '**' must be there
 
-        assert s.endswith('**')
-
-        return fstloc(ln, end_col - 2, ln, end_col)
+        return fstloc(ln, col, ln, col + 2)
 
     def _floor_start_pos(self, lineno: int, col_offset: int, self_: bool = True):  # because of zero-length spans like evil unparenthesized zero-length tuples
         """Walk up parent chain (starting at `self`) setting `.lineno` and `.col_offset` to `lineno` and `col_offset` if
@@ -3693,18 +3690,15 @@ class FST:
                        field: str | None = None, **options) -> 'FST':  # -> Self
         """Put a raw slice of child nodes to `self`."""
 
-        ffrom, fto = self._raw_slice_from_to(start, stop, field)
-
-        self._reparse_raw(code, ffrom.ln, ffrom.col, fto.end_ln, fto.end_col)
+        self._reparse_raw(code, *self._raw_slice_loc(start, stop, field))
 
         return self.repath()
 
     # ------------------------------------------------------------------------------------------------------------------
 
-    def _raw_slice_from_to(self, start: int | Literal['end'] | None = None, stop: int | None = None,
-                           field: str | None = None) -> tuple[Union['FST', fstloc], Union['FST', fstloc]]:
-        """Get first and last node of a raw slice. May return fstloc locations for decorators, comprehension ifs and
-        other special case nodes."""
+    def _raw_slice_loc(self, start: int | Literal['end'] | None = None, stop: int | None = None,
+                       field: str | None = None) -> fstloc:
+        """Get location of a raw slice. Sepcial cases for decorators, comprehension ifs and other weird nodes."""
 
         def fixup_slice_index_for_raw(len_, start, stop):
             start, stop = _fixup_slice_index(len_, start, stop)
@@ -3723,8 +3717,12 @@ class FST:
             body        = ast.keys
             body2       = ast.values
             start, stop = fixup_slice_index_for_raw(len(body), start, stop)
+            start_loc   = self._dict_key_or_mock_loc(body[start], body2[start].f)
 
-            return self._dict_key_or_mock_loc(body[start], body2[start].f), body2[stop - 1].f
+            if start_loc.is_FST:
+                start_loc = start_loc.pars()
+
+            return fstloc(start_loc.ln, start_loc.col, *body2[stop - 1].f.pars()[2:])
 
         if isinstance(ast, Compare):
             if field is not None:
@@ -3739,7 +3737,7 @@ class FST:
             else:
                 body = [ast.left]
 
-            return body[start].f, body2[stop - 1].f
+            return fstloc(*body[start].f.pars()[:2], *body2[stop - 1].f.pars()[2:])
 
         if isinstance(ast, MatchMapping):
             if field is not None:
@@ -3749,29 +3747,29 @@ class FST:
             body2       = ast.patterns
             start, stop = fixup_slice_index_for_raw(len(body), start, stop)
 
-            return body[start].f, body2[stop - 1].f
+            return fstloc(*body[start].f.loc[:2], *body2[stop - 1].f.pars()[2:])
 
         if isinstance(ast, comprehension):
             body        = ast.ifs
             start, stop = fixup_slice_index_for_raw(len(body), start, stop)
             ffirst      = body[start].f
-            start       = _prev_find(self.root._lines, *ffirst._prev_ast_bound(), ffirst.ln, ffirst.col, 'if')
+            start_pos   = _prev_find(self.root._lines, *ffirst._prev_ast_bound(), ffirst.ln, ffirst.col, 'if')
 
-            return fstloc(*start, None, None), body[stop - 1].f.pars(True)  # 'None, None' to end in fstloc() because it is not (and should not be) used
+            return fstloc(*start_pos, *body[stop - 1].f.pars()[2:])
 
         if field == 'decorator_list':
             body        = ast.decorator_list
             start, stop = fixup_slice_index_for_raw(len(body), start, stop)
             ffirst      = body[start].f
-            start       = _prev_find(self.root._lines, 0, 0, ffirst.ln, ffirst.col, '@')  # we can use '0, 0' because we know "@" starts on a newline
+            start_pos   = _prev_find(self.root._lines, 0, 0, ffirst.ln, ffirst.col, '@')  # we can use '0, 0' because we know "@" starts on a newline
 
-            return fstloc(*start, None, None), body[stop - 1].f.pars(True)
+            return fstloc(*start_pos, *body[stop - 1].f.pars()[2:])
 
         _, body     = _fixup_field_body(ast, field)
         start, stop = fixup_slice_index_for_raw(len(body), start, stop)
         body2       = body
 
-        return body[start].f, body2[stop - 1].f
+        return fstloc(*body[start].f.pars()[:2], *body2[stop - 1].f.pars()[2:])
 
     def _reparse_raw(self, code: Code | None, ln: int, col: int, end_ln: int, end_col: int,
                      inc: bool | None = None) -> 'FST':

@@ -15174,11 +15174,118 @@ Module .. ROOT 0,0 -> 0,24
             0
 """),
 
-(r"""f(i for i in range(5))""", 'body[0].value', 0, 1, 'args', {'raw': True}, r"""a""", r"""fa""", r"""
-Module .. ROOT 0,0 -> 0,2
+(r"""{1: 2, **(x), (3): (4)}""", 'body[0].value', 1, 3, None, {'raw': True}, r"""**z""", r"""{1: 2, **z}""", r"""
+Module .. ROOT 0,0 -> 0,11
   .body[1]
-  0] Expr .. 0,0 -> 0,2
-    .value Name 'fa' Load .. 0,0 -> 0,2
+  0] Expr .. 0,0 -> 0,11
+    .value Dict .. 0,0 -> 0,11
+      .keys[2]
+      0] Constant 1 .. 0,1 -> 0,2
+      1] None
+      .values[2]
+      0] Constant 2 .. 0,4 -> 0,5
+      1] Name 'z' Load .. 0,9 -> 0,10
+"""),
+
+(r"""((a) < (b) < (c))""", 'body[0].value', 1, 3, None, {'raw': True}, r"""z""", r"""((a) < z)""", r"""
+Module .. ROOT 0,0 -> 0,9
+  .body[1]
+  0] Expr .. 0,0 -> 0,9
+    .value Compare .. 0,1 -> 0,8
+      .left Name 'a' Load .. 0,2 -> 0,3
+      .ops[1]
+      0] Lt .. 0,5 -> 0,6
+      .comparators[1]
+      0] Name 'z' Load .. 0,7 -> 0,8
+"""),
+
+(r"""(1, *(x), (3))""", 'body[0].value', 1, 3, None, {'raw': True}, r"""*z""", r"""(1, *z)""", r"""
+Module .. ROOT 0,0 -> 0,7
+  .body[1]
+  0] Expr .. 0,0 -> 0,7
+    .value Tuple .. 0,0 -> 0,7
+      .elts[2]
+      0] Constant 1 .. 0,1 -> 0,2
+      1] Starred .. 0,4 -> 0,6
+        .value Name 'z' Load .. 0,5 -> 0,6
+        .ctx Load
+      .ctx Load
+"""),
+
+(r"""
+match a:
+  case {'a': (a), 'b': (b), 'c': (c)}: pass
+""", 'body[0].cases[0].pattern', 1, 3, None, {'raw': True}, r"""**z""", r"""
+match a:
+  case {'a': (a), **z}: pass
+""", r"""
+Module .. ROOT 0,0 -> 3,0
+  .body[1]
+  0] Match .. 1,0 -> 2,28
+    .subject Name 'a' Load .. 1,6 -> 1,7
+    .cases[1]
+    0] match_case .. 2,2 -> 2,28
+      .pattern MatchMapping .. 2,7 -> 2,22
+        .keys[1]
+        0] Constant 'a' .. 2,8 -> 2,11
+        .patterns[1]
+        0] MatchAs .. 2,14 -> 2,15
+          .name 'a'
+        .rest 'z'
+      .body[1]
+      0] Pass .. 2,24 -> 2,28
+"""),
+
+(r"""[a for a in a() if (a) if (b) if (c)]""", 'body[0].value.generators[0]', 1, 3, None, {'raw': True}, r"""if z""", r"""[a for a in a() if (a) if z]""", r"""
+Module .. ROOT 0,0 -> 0,28
+  .body[1]
+  0] Expr .. 0,0 -> 0,28
+    .value ListComp .. 0,0 -> 0,28
+      .elt Name 'a' Load .. 0,1 -> 0,2
+      .generators[1]
+      0] comprehension .. 0,3 -> 0,27
+        .target Name 'a' Store .. 0,7 -> 0,8
+        .iter Call .. 0,12 -> 0,15
+          .func Name 'a' Load .. 0,12 -> 0,13
+        .ifs[2]
+        0] Name 'a' Load .. 0,20 -> 0,21
+        1] Name 'z' Load .. 0,26 -> 0,27
+        .is_async
+          0
+"""),
+
+(r"""
+@(a)
+@(b)
+@(c)
+def f(): pass
+""", 'body[0]', 1, 3, 'decorator_list', {'raw': True}, r"""@z""", r"""
+@(a)
+@z
+def f(): pass
+""", r"""
+Module .. ROOT 0,0 -> 4,0
+  .body[1]
+  0] FunctionDef .. 3,0 -> 3,13
+    .name 'f'
+    .body[1]
+    0] Pass .. 3,9 -> 3,13
+    .decorator_list[2]
+    0] Name 'a' Load .. 1,2 -> 1,3
+    1] Name 'z' Load .. 2,1 -> 2,2
+"""),
+
+(r"""((1), (2), (3))""", 'body[0].value', 1, 3, None, {'raw': True}, r"""*z""", r"""((1), *z)""", r"""
+Module .. ROOT 0,0 -> 0,9
+  .body[1]
+  0] Expr .. 0,0 -> 0,9
+    .value Tuple .. 0,0 -> 0,9
+      .elts[2]
+      0] Constant 1 .. 0,2 -> 0,3
+      1] Starred .. 0,6 -> 0,8
+        .value Name 'z' Load .. 0,7 -> 0,8
+        .ctx Load
+      .ctx Load
 """),
 
 ]  # END OF PUT_SLICE_DATA
@@ -19793,41 +19900,6 @@ class cls:
         self.assertEqual('@a\n@z\n@c\nclass cls: pass', parse('@a\n@(b)\n@c\nclass cls: pass').body[0].f.put_slice('@z', 1, 2, field='decorator_list').root.src)
         self.assertEqual('@a\n@z\nclass cls: pass', parse('@a\n@(b)\n@(c)\nclass cls: pass').body[0].f.put_slice('@z', 1, 3, field='decorator_list').root.src)
 
-    def test_replace_raw_from_put_slice_data(self):
-        for i, (dst, attr, start, stop, field, options, src, put_src, put_dump) in enumerate(PUT_SLICE_DATA):
-            if options != {'raw': True}:
-                continue
-
-            t = parse(dst)
-            f = (eval(f't.{attr}', {'t': t}) if attr else t).f
-
-            try:
-                ffrom, fto = f._raw_slice_from_to(start, stop, field)
-
-                if not (ffrom.is_FST and fto.is_FST):
-                    continue
-
-                ffrom.replace(None if src == '**DEL**' else src, to=fto, **options)  # raw=True is in `options`
-
-                tdst  = t.f.src
-                tdump = t.f.dump(out=list, compact=True)
-
-                t.f.verify(raise_=True)
-
-                self.assertEqual(tdst, put_src)
-                self.assertEqual(tdump, put_dump.strip().split('\n'))
-
-            except Exception:
-                print(i, src, start, stop, options)
-                print('---')
-                print(repr(dst))
-                print('...')
-                print(src)
-                print('...')
-                print(put_src)
-
-                raise
-
     def test_get_slice_seq_copy(self):
         for src, elt, start, stop, src_cut, slice_copy, src_dump, slice_dump in GET_SLICE_SEQ_DATA:
             t = parse(src)
@@ -20094,6 +20166,45 @@ class cls:
 
             except Exception:
                 print(i, attr, (ln, col, end_ln, end_col), src, options)
+                print('---')
+                print(repr(dst))
+                print('...')
+                print(src)
+                print('...')
+                print(put_src)
+
+                raise
+
+    def test_put_raw_from_put_slice_data(self):
+        for i, (dst, attr, start, stop, field, options, src, put_src, put_dump) in enumerate(PUT_SLICE_DATA):
+            if options != {'raw': True}:
+                continue
+
+            t = parse(dst)
+            f = (eval(f't.{attr}', {'t': t}) if attr else t).f
+
+            try:
+                loc = f._raw_slice_loc(start, stop, field)
+
+                f.put_raw(None if src == '**DEL**' else src, *loc, **options)
+
+                # ffrom, fto = f._raw_slice_from_to(start, stop, field)
+
+                # if not (ffrom.is_FST and fto.is_FST):
+                #     continue
+
+                # ffrom.replace(None if src == '**DEL**' else src, to=fto, **options)  # raw=True is in `options`
+
+                tdst  = f.root.src
+                tdump = f.root.dump(out=list, compact=True)
+
+                f.root.verify(raise_=True)
+
+                self.assertEqual(tdst, put_src)
+                self.assertEqual(tdump, put_dump.strip().split('\n'))
+
+            except Exception:
+                print(i, src, start, stop, options)
                 print('---')
                 print(repr(dst))
                 print('...')
