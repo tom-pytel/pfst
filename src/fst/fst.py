@@ -686,29 +686,30 @@ def _new_empty_module(*, from_: Optional['FST'] = None) -> 'FST':
     return FST(Module(body=[], type_ignores=[]), lines=[bistr('')], from_=from_)
 
 
-def _new_empty_tuple(*, from_: Optional['FST'] = None) -> 'FST':
-    ast = Tuple(elts=[], ctx=Load(), lineno=1, col_offset=0, end_lineno=1, end_col_offset=2)
+def _new_empty_tuple(*, delim: bool = True, from_: Optional['FST'] = None) -> 'FST':
+    ast = Tuple(elts=[], ctx=Load(), lineno=1, col_offset=0, end_lineno=1, end_col_offset=2 if delim else 0)
 
-    return FST(ast, lines=[bistr('()')], from_=from_)
-
-
-def _new_empty_list(*, from_: Optional['FST'] = None) -> 'FST':
-    ast = List(elts=[], ctx=Load(), lineno=1, col_offset=0, end_lineno=1, end_col_offset=2)
-
-    return FST(ast, lines=[bistr('[]')], from_=from_)
+    return FST(ast, lines=[bistr('()' if delim else '')], from_=from_)
 
 
-def _new_empty_dict(*, from_: Optional['FST'] = None) -> 'FST':
-    ast = Dict(keys=[], values=[], lineno=1, col_offset=0, end_lineno=1, end_col_offset=2)
+def _new_empty_list(*, delim: bool = True, from_: Optional['FST'] = None) -> 'FST':
+    ast = List(elts=[], ctx=Load(), lineno=1, col_offset=0, end_lineno=1, end_col_offset=2 if delim else 0)
 
-    return FST(ast, lines=[bistr('{}')], from_=from_)
+    return FST(ast, lines=[bistr('[]' if delim else '')], from_=from_)
+
+
+def _new_empty_dict(*, delim: bool = True, from_: Optional['FST'] = None) -> 'FST':
+    ast = Dict(keys=[], values=[], lineno=1, col_offset=0, end_lineno=1, end_col_offset=2 if delim else 0)
+
+    return FST(ast, lines=[bistr('{}' if delim else '')], from_=from_)
 
 
 def _new_empty_set_curlies(ast_only: bool = False, lineno: int = 1, col_offset: int = 0, *,
-                           from_: Optional['FST'] = None) -> 'FST':
-    ast = Set(elts=[], lineno=lineno, col_offset=col_offset, end_lineno=lineno, end_col_offset=col_offset + 2)
+                           delim: bool = True, from_: Optional['FST'] = None) -> 'FST':
+    ast = Set(elts=[], lineno=lineno, col_offset=col_offset, end_lineno=lineno,
+              end_col_offset=col_offset + 2 if delim else 0)
 
-    return ast if ast_only else FST(ast, lines=[bistr('{}')], from_=from_)
+    return ast if ast_only else FST(ast, lines=[bistr('{}' if delim else '')], from_=from_)
 
 
 def _new_empty_set_call(ast_only: bool = False, lineno: int = 1, col_offset: int = 0, *,
@@ -3018,11 +3019,11 @@ class FST:
 
         if start == stop:
             if is_set:
-                return _new_empty_set_call(from_=self) if fix else _new_empty_set_curlies(from_=self)
+                return _new_empty_set_call(from_=self) if fix else _new_empty_set_curlies(delim=False, from_=self)
             elif is_tuple:
-                return _new_empty_tuple(from_=self)
+                return _new_empty_tuple(delim=fix, from_=self)
             else:
-                return _new_empty_list(from_=self)
+                return _new_empty_list(delim=fix, from_=self)
 
         is_paren = is_tuple and self.is_parenthesized_tuple()
         ffirst   = elts[start].f
@@ -3076,6 +3077,9 @@ class FST:
 
                 assert self.root._lines[seq_loc.end_ln].startswith(')', seq_loc.end_col)
 
+        if not fix:
+            prefix = suffix = ''
+
         fst = self._get_seq_and_dedent(get_ast, cut, seq_loc, ffirst, flast, fpre, fpost, prefix, suffix)
 
         if fix:
@@ -3101,19 +3105,20 @@ class FST:
         if stop or (start and start != 'end'):
             raise IndexError(f"Set.{field} index out of range")
 
-        return _new_empty_set_call(from_=self) if fix else _new_empty_set_curlies(from_=self)
+        return _new_empty_set_call(from_=self) if fix else _new_empty_set_curlies(delim=False, from_=self)
 
     def _get_slice_dict(self, start: int | Literal['end'] | None, stop: int | None, field: str | None, cut: bool,
                         **options) -> 'FST':
         if field is not None:
             raise ValueError(f"cannot specify a field '{field}' to slice from a Dict")
 
+        fix         = DEFAULT_FIX if (o := options.get('fix')) is None else o
         ast         = self.a
         values      = ast.values
         start, stop = _fixup_slice_index(len(values), start, stop)
 
         if start == stop:
-            return _new_empty_dict(from_=self)
+            return _new_empty_dict(delim=fix, from_=self)
 
         keys   = ast.keys
         ffirst = self._dict_key_or_mock_loc(keys[start], values[start].f)
@@ -3144,7 +3149,12 @@ class FST:
         assert self.root._lines[self.ln].startswith('{', self.col)
         assert self.root._lines[seq_loc.end_ln].startswith('}', seq_loc.end_col)
 
-        return self._get_seq_and_dedent(get_ast, cut, seq_loc, ffirst, flast, fpre, fpost, '{', '}')
+        if fix:
+            prefix, suffix = '{}'
+        else:
+            prefix = suffix = ''
+
+        return self._get_seq_and_dedent(get_ast, cut, seq_loc, ffirst, flast, fpre, fpost, prefix, suffix)
 
     def _get_slice_stmt(self, start: int | Literal['end'] | None, stop: int | None, field: str | None, cut: bool,
                         one: bool = False, **options) -> 'FST':

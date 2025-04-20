@@ -204,7 +204,7 @@ Attribute .. ROOT 0,0 -> 0,18
 ]  # END OF COPY_DATA
 
 GET_SLICE_SEQ_DATA = [
-(r"""{1, 2}""", 'body[0].value', 0, 0, r"""
+(r"""{1, 2}""", 'body[0].value', 0, 0, {}, r"""
 {1, 2}
 """, r"""
 set()
@@ -225,7 +225,7 @@ Call .. ROOT 0,0 -> 0,5
     1,  # last line
     2,  # second line
     3,  # third line
-)""", 'body[0].value', None, None, r"""
+)""", 'body[0].value', None, None, {}, r"""
 ()
 """, r"""
 (       # hello
@@ -252,7 +252,7 @@ Tuple .. ROOT 0,0 -> 4,1
     1,  # last line
     2,  # second line
     3,  # third line
-)""", 'body[0].value', 0, 2, r"""
+)""", 'body[0].value', 0, 2, {}, r"""
 (       # hello
     3,  # third line
 )
@@ -281,7 +281,7 @@ Tuple .. ROOT 0,0 -> 3,1
     1,  # last line
     2,  # second line
     3,  # third line
-)""", 'body[0].value', 1, 2, r"""
+)""", 'body[0].value', 1, 2, {}, r"""
 (       # hello
     1,  # last line
     3,  # third line
@@ -310,7 +310,7 @@ Tuple .. ROOT 0,0 -> 2,1
     1,  # last line
     2,  # second line
     3,  # third line
-)""", 'body[0].value', 2, None, r"""
+)""", 'body[0].value', 2, None, {}, r"""
 (       # hello
     1,  # last line
     2,  # second line
@@ -337,7 +337,7 @@ Tuple .. ROOT 0,0 -> 2,1
 
 (r"""(           # hello
     1, 2, 3 # last line
-)""", 'body[0].value', None, None, r"""
+)""", 'body[0].value', None, None, {}, r"""
 ()
 """, r"""
 (           # hello
@@ -360,7 +360,7 @@ Tuple .. ROOT 0,0 -> 2,1
 
 (r"""(           # hello
     1, 2, 3 # last line
-)""", 'body[0].value', 0, 2, r"""
+)""", 'body[0].value', 0, 2, {}, r"""
 (           # hello
     3, # last line
 )
@@ -385,7 +385,7 @@ Tuple .. ROOT 0,0 -> 1,9
 
 (r"""(           # hello
     1, 2, 3 # last line
-)""", 'body[0].value', 1, 2, r"""
+)""", 'body[0].value', 1, 2, {}, r"""
 (           # hello
     1, 3 # last line
 )
@@ -409,7 +409,7 @@ Tuple .. ROOT 0,0 -> 0,4
 
 (r"""(           # hello
     1, 2, 3 # last line
-)""", 'body[0].value', 2, None, r"""
+)""", 'body[0].value', 2, None, {}, r"""
 (           # hello
     1, 2)
 """, r"""
@@ -431,7 +431,7 @@ Tuple .. ROOT 0,0 -> 1,1
   .ctx Load
 """),
 
-(r"""1, 2, 3, 4""", 'body[0].value', 1, 3, r"""
+(r"""1, 2, 3, 4""", 'body[0].value', 1, 3, {}, r"""
 1, 4
 """, r"""
 (2, 3)
@@ -452,7 +452,7 @@ Tuple .. ROOT 0,0 -> 0,6
   .ctx Load
 """),
 
-(r"""1, 2, 3, 4""", 'body[0].value', -1, None, r"""
+(r"""1, 2, 3, 4""", 'body[0].value', -1, None, {}, r"""
 1, 2, 3
 """, r"""
 (4,)
@@ -473,7 +473,7 @@ Tuple .. ROOT 0,0 -> 0,4
   .ctx Load
 """),
 
-(r"""1, 2, 3, 4""", 'body[0].value', None, None, r"""
+(r"""1, 2, 3, 4""", 'body[0].value', None, None, {}, r"""
 ()
 """, r"""
 (1, 2, 3, 4)
@@ -493,7 +493,7 @@ Tuple .. ROOT 0,0 -> 0,12
   .ctx Load
 """),
 
-(r"""1, 2, 3, 4""", 'body[0].value', 1, 1, r"""
+(r"""1, 2, 3, 4""", 'body[0].value', 1, 1, {}, r"""
 1, 2, 3, 4
 """, r"""
 ()
@@ -513,7 +513,7 @@ Tuple .. ROOT 0,0 -> 0,2
   .ctx Load
 """),
 
-(r"""1, 2, 3, 4""", 'body[0].value', 1, None, r"""
+(r"""1, 2, 3, 4""", 'body[0].value', 1, None, {}, r"""
 1,
 """, r"""
 (2, 3, 4)
@@ -534,7 +534,7 @@ Tuple .. ROOT 0,0 -> 0,9
   .ctx Load
 """),
 
-(r"""1, 2, 3, 4""", 'body[0].value', 0, 3, r"""
+(r"""1, 2, 3, 4""", 'body[0].value', 0, 3, {}, r"""
 4,
 """, r"""
 (1, 2, 3)
@@ -557,7 +557,7 @@ Tuple .. ROOT 0,0 -> 0,9
 
 (r"""(1, 2
   ,  # comment
-3, 4)""", 'body[0].value', 1, 2, r"""
+3, 4)""", 'body[0].value', 1, 2, {}, r"""
 (1, 3, 4)
 """, r"""
 (2
@@ -582,7 +582,7 @@ Tuple .. ROOT 0,0 -> 2,1
 
 (r"""(1, 2
   ,
-  3, 4)""", 'body[0].value', 1, 2, r"""
+  3, 4)""", 'body[0].value', 1, 2, {}, r"""
 (1, 3, 4)
 """, r"""
 (2
@@ -607,7 +607,7 @@ Tuple .. ROOT 0,0 -> 2,1
 
 (r"""(1, 2 \
   , \
-  3, 4)""", 'body[0].value', 1, 2, r"""
+  3, 4)""", 'body[0].value', 1, 2, {}, r"""
 (1, 3, 4)
 """, r"""
 (2 \
@@ -632,7 +632,7 @@ Tuple .. ROOT 0,0 -> 2,1
 
 (r"""(1, 2  # comment
   , \
-  3, 4)""", 'body[0].value', 1, 2, r"""
+  3, 4)""", 'body[0].value', 1, 2, {}, r"""
 (1, 3, 4)
 """, r"""
 (2  # comment
@@ -657,7 +657,7 @@ Tuple .. ROOT 0,0 -> 2,1
 
 (r"""(1, 2
   ,
-3, 4)""", 'body[0].value', 1, 2, r"""
+3, 4)""", 'body[0].value', 1, 2, {}, r"""
 (1, 3, 4)
 """, r"""
 (2
@@ -681,7 +681,7 @@ Tuple .. ROOT 0,0 -> 2,1
 """),
 
 (r"""(1, 2
-  , 3, 4)""", 'body[0].value', 1, 2, r"""
+  , 3, 4)""", 'body[0].value', 1, 2, {}, r"""
 (1, 3, 4)
 """, r"""
 (2
@@ -704,7 +704,7 @@ Tuple .. ROOT 0,0 -> 1,4
 """),
 
 (r"""(1, 2  # comment
-  , 3, 4)""", 'body[0].value', 1, 2, r"""
+  , 3, 4)""", 'body[0].value', 1, 2, {}, r"""
 (1, 3, 4)
 """, r"""
 (2  # comment
@@ -731,7 +731,7 @@ Tuple .. ROOT 0,0 -> 1,4
         1,  # last line
         2,  # second line
         3,  # third line
-    )""", 'body[0].body[0].value', None, None, r"""
+    )""", 'body[0].body[0].value', None, None, {}, r"""
 if 1:
     ()
 """, r"""
@@ -763,7 +763,7 @@ Tuple .. ROOT 0,0 -> 4,1
         1,  # last line
         2,  # second line
         3,  # third line
-    )""", 'body[0].body[0].value', 0, 2, r"""
+    )""", 'body[0].body[0].value', 0, 2, {}, r"""
 if 1:
     (       # hello
         3,  # third line
@@ -797,7 +797,7 @@ Tuple .. ROOT 0,0 -> 3,1
         1,  # last line
         2,  # second line
         3,  # third line
-    )""", 'body[0].body[0].value', 1, 2, r"""
+    )""", 'body[0].body[0].value', 1, 2, {}, r"""
 if 1:
     (       # hello
         1,  # last line
@@ -831,7 +831,7 @@ Tuple .. ROOT 0,0 -> 2,1
         1,  # last line
         2,  # second line
         3,  # third line
-    )""", 'body[0].body[0].value', 2, None, r"""
+    )""", 'body[0].body[0].value', 2, None, {}, r"""
 if 1:
     (       # hello
         1,  # last line
@@ -860,7 +860,7 @@ Tuple .. ROOT 0,0 -> 2,1
   .ctx Load
 """),
 
-(r"""{1: 2, **b, **c}""", 'body[0].value', 1, 2, r"""
+(r"""{1: 2, **b, **c}""", 'body[0].value', 1, 2, {}, r"""
 {1: 2, **c}
 """, r"""
 {**b}
@@ -883,7 +883,7 @@ Dict .. ROOT 0,0 -> 0,5
   0] Name 'b' Load .. 0,3 -> 0,4
 """),
 
-(r"""{1: 2, **b, **c}""", 'body[0].value', None, None, r"""
+(r"""{1: 2, **b, **c}""", 'body[0].value', None, None, {}, r"""
 {}
 """, r"""
 {1: 2, **b, **c}
@@ -904,7 +904,7 @@ Dict .. ROOT 0,0 -> 0,16
   2] Name 'c' Load .. 0,14 -> 0,15
 """),
 
-(r"""{1: 2, **b, **c}""", 'body[0].value', 2, None, r"""
+(r"""{1: 2, **b, **c}""", 'body[0].value', 2, None, {}, r"""
 {1: 2, **b}
 """, r"""
 {**c}
@@ -931,7 +931,7 @@ Dict .. ROOT 0,0 -> 0,5
     1,
     2,
     3,
-]""", 'body[0].value', None, None, r"""
+]""", 'body[0].value', None, None, {}, r"""
 []
 """, r"""
 [
@@ -958,7 +958,7 @@ List .. ROOT 0,0 -> 4,1
     1,
     2,
     3,
-]""", 'body[0].value', 0, 2, r"""
+]""", 'body[0].value', 0, 2, {}, r"""
 [
     3,
 ]
@@ -987,7 +987,7 @@ List .. ROOT 0,0 -> 3,1
     1,
     2,
     3,
-]""", 'body[0].value', 1, 2, r"""
+]""", 'body[0].value', 1, 2, {}, r"""
 [
     1,
     3,
@@ -1016,7 +1016,7 @@ List .. ROOT 0,0 -> 2,1
     1,
     2,
     3,
-]""", 'body[0].value', 2, None, r"""
+]""", 'body[0].value', 2, None, {}, r"""
 [
     1,
     2,
@@ -1044,7 +1044,7 @@ List .. ROOT 0,0 -> 2,1
 (r"""[            # hello
     1, 2, 3,
     4
-]""", 'body[0].value', 2, 3, r"""
+]""", 'body[0].value', 2, 3, {}, r"""
 [            # hello
     1, 2, 4
 ]
@@ -1071,7 +1071,7 @@ List .. ROOT 0,0 -> 1,1
 (r"""[            # hello
     1, 2, ( 3
      ), 4
-]""", 'body[0].value', 2, 3, r"""
+]""", 'body[0].value', 2, 3, {}, r"""
 [            # hello
     1, 2, 4
 ]
@@ -1098,7 +1098,7 @@ List .. ROOT 0,0 -> 1,7
 (r"""[            # hello
     1, 2, ( 3
      ), 4
-]""", 'body[0].value', 1, 3, r"""
+]""", 'body[0].value', 1, 3, {}, r"""
 [            # hello
     1, 4
 ]
@@ -1125,7 +1125,7 @@ List .. ROOT 0,0 -> 1,7
 (r"""[            # hello
     1, 2, ( 3
      ), 4
-]""", 'body[0].value', 1, None, r"""
+]""", 'body[0].value', 1, None, {}, r"""
 [            # hello
     1]
 """, r"""
@@ -1151,7 +1151,7 @@ List .. ROOT 0,0 -> 2,1
 
 (r"""i =                (self.__class__.__name__, self._name,
                 (self._handle & (_sys.maxsize*2 + 1)),
-                id(self) & (_sys.maxsize*2 + 1))""", 'body[0].value', 0, 3, r"""
+                id(self) & (_sys.maxsize*2 + 1))""", 'body[0].value', 0, 3, {}, r"""
 i =                (id(self) & (_sys.maxsize*2 + 1),)
 """, r"""
 (self.__class__.__name__, self._name,
@@ -1216,7 +1216,7 @@ Tuple .. ROOT 0,0 -> 2,1
 """),
 
 (r"""i = namespace = {**__main__.__builtins__.__dict__,
-             **__main__.__dict__}""", 'body[0].value', 0, 1, r"""
+             **__main__.__dict__}""", 'body[0].value', 0, 1, {}, r"""
 i = namespace = {**__main__.__dict__}
 """, r"""
 {**__main__.__builtins__.__dict__,
@@ -1256,7 +1256,7 @@ Dict .. ROOT 0,0 -> 1,1
     "PYLAUNCHER_DRYRUN": "1",
     "PYLAUNCHER_LIMIT_TO_COMPANY": "",
     **{k.upper(): v for k, v in (env or {}).items()},
-}""", 'body[0].value', None, 2, r"""
+}""", 'body[0].value', None, 2, {}, r"""
 env = {
     "PYLAUNCHER_DRYRUN": "1",
     "PYLAUNCHER_LIMIT_TO_COMPANY": "",
@@ -1352,7 +1352,7 @@ Dict .. ROOT 0,0 -> 3,1
 
 (r"""(None, False, True, 12345, 123.45, 'abcde', 'абвгд', b'abcde',
             datetime.datetime(2004, 10, 26, 10, 33, 33),
-            bytearray(b'abcde'), [12, 345], (12, 345), {'12': 345})""", 'body[0].value', 5, 7, r"""
+            bytearray(b'abcde'), [12, 345], (12, 345), {'12': 345})""", 'body[0].value', 5, 7, {}, r"""
 (None, False, True, 12345, 123.45, b'abcde',
             datetime.datetime(2004, 10, 26, 10, 33, 33),
             bytearray(b'abcde'), [12, 345], (12, 345), {'12': 345})
@@ -1410,7 +1410,7 @@ Tuple .. ROOT 0,0 -> 0,18
   .ctx Load
 """),
 
-(r"""[a, b] = c""", 'body[0].targets[0]', 1, 2, r"""
+(r"""[a, b] = c""", 'body[0].targets[0]', 1, 2, {}, r"""
 [a] = c
 """, r"""
 [b]
@@ -1438,7 +1438,7 @@ List .. ROOT 0,0 -> 0,3
                         'unexpected event'),
             'status': ('err=%s transferred=%s key=%#x address=%#x'
                        % (err, transferred, key, address),),
-                                                 'addr': address}""", 'body[0].value', 1, 4, r"""
+                                                 'addr': address}""", 'body[0].value', 1, 4, {}, r"""
 {
             'exception': exc,
                                                  'addr': address}
@@ -1485,7 +1485,7 @@ Dict .. ROOT 0,0 -> 6,1
     .ctx Load
 """),
 
-(r"""(1, (2), 3)""", 'body[0].value', 1, 2, r"""
+(r"""(1, (2), 3)""", 'body[0].value', 1, 2, {}, r"""
 (1, 3)
 """, r"""
 ((2),)
@@ -1506,7 +1506,7 @@ Tuple .. ROOT 0,0 -> 0,6
 """),
 
 (r"""@patch.dict({'a': 'b'})
-class cls: pass""", 'body[0].decorator_list[0].args[0]', 0, 1, r"""
+class cls: pass""", 'body[0].decorator_list[0].args[0]', 0, 1, {}, r"""
 @patch.dict({})
 class cls: pass
 """, r"""
@@ -1535,7 +1535,7 @@ Dict .. ROOT 0,0 -> 0,10
 """),
 
 (r"""class cls:
-    a, b = c""", 'body[0].body[0].targets[0]', 0, 2, r"""
+    a, b = c""", 'body[0].body[0].targets[0]', 0, 2, {}, r"""
 class cls:
     () = c
 """, r"""
@@ -1560,7 +1560,7 @@ Tuple .. ROOT 0,0 -> 0,6
 """),
 
 (r"""if 1:
-    yy, tm, = tm, yy""", 'body[0].body[0].targets[0]', 1, 2, r"""
+    yy, tm, = tm, yy""", 'body[0].body[0].targets[0]', 1, 2, {}, r"""
 if 1:
     yy, = tm, yy
 """, r"""
@@ -1589,7 +1589,7 @@ Tuple .. ROOT 0,0 -> 0,5
   .ctx Load
 """),
 
-(r"""{1, 2}""", 'body[0].value', 0, 2, r"""
+(r"""{1, 2}""", 'body[0].value', 0, 2, {}, r"""
 set()
 """, r"""
 {1, 2}
@@ -1606,7 +1606,7 @@ Set .. ROOT 0,0 -> 0,6
   1] Constant 2 .. 0,4 -> 0,5
 """),
 
-(r"""{1, 2}""", 'body[0].value', 0, 0, r"""
+(r"""{1, 2}""", 'body[0].value', 0, 0, {}, r"""
 {1, 2}
 """, r"""
 set()
@@ -1623,7 +1623,7 @@ Call .. ROOT 0,0 -> 0,5
   .func Name 'set' Load .. 0,0 -> 0,3
 """),
 
-(r"""set()""", 'body[0].value', 0, 0, r"""
+(r"""set()""", 'body[0].value', 0, 0, {}, r"""
 set()
 """, r"""
 set()
@@ -1638,7 +1638,7 @@ Call .. ROOT 0,0 -> 0,5
   .func Name 'set' Load .. 0,0 -> 0,3
 """),
 
-(r"""1, 2, 3,""", 'body[0].value', 0, 1, r"""
+(r"""1, 2, 3,""", 'body[0].value', 0, 1, {}, r"""
 2, 3,
 """, r"""
 (1,)
@@ -1658,7 +1658,7 @@ Tuple .. ROOT 0,0 -> 0,4
   .ctx Load
 """),
 
-(r"""1, 2, 3,""", 'body[0].value', 1, 2, r"""
+(r"""1, 2, 3,""", 'body[0].value', 1, 2, {}, r"""
 1, 3,
 """, r"""
 (2,)
@@ -1678,7 +1678,7 @@ Tuple .. ROOT 0,0 -> 0,4
   .ctx Load
 """),
 
-(r"""1, 2, 3,""", 'body[0].value', 2, 3, r"""
+(r"""1, 2, 3,""", 'body[0].value', 2, 3, {}, r"""
 1, 2,
 """, r"""
 (3,)
@@ -1698,7 +1698,7 @@ Tuple .. ROOT 0,0 -> 0,4
   .ctx Load
 """),
 
-(r"""1, 2, 3,""", 'body[0].value', 0, 2, r"""
+(r"""1, 2, 3,""", 'body[0].value', 0, 2, {}, r"""
 3,
 """, r"""
 (1, 2)
@@ -1718,7 +1718,7 @@ Tuple .. ROOT 0,0 -> 0,6
   .ctx Load
 """),
 
-(r"""1, 2, 3,""", 'body[0].value', 1, 3, r"""
+(r"""1, 2, 3,""", 'body[0].value', 1, 3, {}, r"""
 1,
 """, r"""
 (2, 3)
@@ -1738,7 +1738,7 @@ Tuple .. ROOT 0,0 -> 0,6
   .ctx Load
 """),
 
-(r"""1, 2, 3,""", 'body[0].value', 0, 3, r"""
+(r"""1, 2, 3,""", 'body[0].value', 0, 3, {}, r"""
 ()
 """, r"""
 (1, 2, 3,)
@@ -1755,6 +1755,208 @@ Tuple .. ROOT 0,0 -> 0,10
   1] Constant 2 .. 0,4 -> 0,5
   2] Constant 3 .. 0,7 -> 0,8
   .ctx Load
+"""),
+
+(r"""1,""", 'body[0].value', 0, 1, {'fix': False, 'verify': False}, r"""
+
+""", r"""
+1,
+""", r"""
+Module .. ROOT 0,0 -> 0,0
+  .body[1]
+  0] Expr .. 0,0 -> 0,0
+    .value Tuple .. 0,0 -> 0,0
+      .ctx Load
+""", r"""
+Tuple .. ROOT 0,0 -> 0,2
+  .elts[1]
+  0] Constant 1 .. 0,0 -> 0,1
+  .ctx Load
+"""),
+
+(r"""(1,)""", 'body[0].value', 0, 1, {'fix': False, 'verify': False}, r"""
+()
+""", r"""
+1,
+""", r"""
+Module .. ROOT 0,0 -> 0,2
+  .body[1]
+  0] Expr .. 0,0 -> 0,2
+    .value Tuple .. 0,0 -> 0,2
+      .ctx Load
+""", r"""
+Tuple .. ROOT 0,0 -> 0,2
+  .elts[1]
+  0] Constant 1 .. 0,0 -> 0,1
+  .ctx Load
+"""),
+
+(r"""(1,2)""", 'body[0].value', 0, 1, {'fix': False, 'verify': False}, r"""
+(2)
+""", r"""
+1
+""", r"""
+Module .. ROOT 0,0 -> 0,3
+  .body[1]
+  0] Expr .. 0,0 -> 0,3
+    .value Tuple .. 0,0 -> 0,3
+      .elts[1]
+      0] Constant 2 .. 0,1 -> 0,2
+      .ctx Load
+""", r"""
+Tuple .. ROOT 0,0 -> 0,1
+  .elts[1]
+  0] Constant 1 .. 0,0 -> 0,1
+  .ctx Load
+"""),
+
+(r"""[1]""", 'body[0].value', 0, 1, {'fix': False, 'verify': False}, r"""
+[]
+""", r"""
+1
+""", r"""
+Module .. ROOT 0,0 -> 0,2
+  .body[1]
+  0] Expr .. 0,0 -> 0,2
+    .value List .. 0,0 -> 0,2
+      .ctx Load
+""", r"""
+List .. ROOT 0,0 -> 0,1
+  .elts[1]
+  0] Constant 1 .. 0,0 -> 0,1
+  .ctx Load
+"""),
+
+(r"""{1}""", 'body[0].value', 0, 1, {'fix': False, 'verify': False}, r"""
+{}
+""", r"""
+1
+""", r"""
+Module .. ROOT 0,0 -> 0,2
+  .body[1]
+  0] Expr .. 0,0 -> 0,2
+    .value Set .. 0,0 -> 0,2
+""", r"""
+Set .. ROOT 0,0 -> 0,1
+  .elts[1]
+  0] Constant 1 .. 0,0 -> 0,1
+"""),
+
+(r"""{1:2}""", 'body[0].value', 0, 1, {'fix': False, 'verify': False}, r"""
+{}
+""", r"""
+1:2
+""", r"""
+Module .. ROOT 0,0 -> 0,2
+  .body[1]
+  0] Expr .. 0,0 -> 0,2
+    .value Dict .. 0,0 -> 0,2
+""", r"""
+Dict .. ROOT 0,0 -> 0,3
+  .keys[1]
+  0] Constant 1 .. 0,0 -> 0,1
+  .values[1]
+  0] Constant 2 .. 0,2 -> 0,3
+"""),
+
+(r"""{1:2}""", 'body[0].value', 0, 1, {'fix': False, 'verify': False}, r"""
+{}
+""", r"""
+1:2
+""", r"""
+Module .. ROOT 0,0 -> 0,2
+  .body[1]
+  0] Expr .. 0,0 -> 0,2
+    .value Dict .. 0,0 -> 0,2
+""", r"""
+Dict .. ROOT 0,0 -> 0,3
+  .keys[1]
+  0] Constant 1 .. 0,0 -> 0,1
+  .values[1]
+  0] Constant 2 .. 0,2 -> 0,3
+"""),
+
+(r"""1,""", 'body[0].value', 0, 0, {'fix': False, 'verify': False}, r"""
+1,
+""", r"""
+
+""", r"""
+Module .. ROOT 0,0 -> 0,2
+  .body[1]
+  0] Expr .. 0,0 -> 0,2
+    .value Tuple .. 0,0 -> 0,2
+      .elts[1]
+      0] Constant 1 .. 0,0 -> 0,1
+      .ctx Load
+""", r"""
+Tuple .. ROOT 0,0 -> 0,0
+  .ctx Load
+"""),
+
+(r"""(1,)""", 'body[0].value', 0, 0, {'fix': False, 'verify': False}, r"""
+(1,)
+""", r"""
+
+""", r"""
+Module .. ROOT 0,0 -> 0,4
+  .body[1]
+  0] Expr .. 0,0 -> 0,4
+    .value Tuple .. 0,0 -> 0,4
+      .elts[1]
+      0] Constant 1 .. 0,1 -> 0,2
+      .ctx Load
+""", r"""
+Tuple .. ROOT 0,0 -> 0,0
+  .ctx Load
+"""),
+
+(r"""[1]""", 'body[0].value', 0, 0, {'fix': False, 'verify': False}, r"""
+[1]
+""", r"""
+
+""", r"""
+Module .. ROOT 0,0 -> 0,3
+  .body[1]
+  0] Expr .. 0,0 -> 0,3
+    .value List .. 0,0 -> 0,3
+      .elts[1]
+      0] Constant 1 .. 0,1 -> 0,2
+      .ctx Load
+""", r"""
+List .. ROOT 0,0 -> 0,0
+  .ctx Load
+"""),
+
+(r"""{1}""", 'body[0].value', 0, 0, {'fix': False, 'verify': False}, r"""
+{1}
+""", r"""
+
+""", r"""
+Module .. ROOT 0,0 -> 0,3
+  .body[1]
+  0] Expr .. 0,0 -> 0,3
+    .value Set .. 0,0 -> 0,3
+      .elts[1]
+      0] Constant 1 .. 0,1 -> 0,2
+""", r"""
+Set .. ROOT 0,0 -> 0,0
+"""),
+
+(r"""{1:2}""", 'body[0].value', 0, 0, {'fix': False, 'verify': False}, r"""
+{1:2}
+""", r"""
+
+""", r"""
+Module .. ROOT 0,0 -> 0,5
+  .body[1]
+  0] Expr .. 0,0 -> 0,5
+    .value Dict .. 0,0 -> 0,5
+      .keys[1]
+      0] Constant 1 .. 0,1 -> 0,2
+      .values[1]
+      0] Constant 2 .. 0,3 -> 0,4
+""", r"""
+Dict .. ROOT 0,0 -> 0,0
 """),
 
 ]  # END OF GET_SLICE_SEQ_DATA
@@ -19979,12 +20181,12 @@ class cls:
         self.assertEqual('@a\n@z\nclass cls: pass', parse('@a\n@(b)\n@(c)\nclass cls: pass').body[0].f.put_slice('@z', 1, 3, field='decorator_list').root.src)
 
     def test_get_slice_seq_copy(self):
-        for src, elt, start, stop, src_cut, slice_copy, src_dump, slice_dump in GET_SLICE_SEQ_DATA:
+        for src, elt, start, stop, options, src_cut, slice_copy, src_dump, slice_dump in GET_SLICE_SEQ_DATA:
             t = parse(src)
             f = eval(f't.{elt}', {'t': t}).f
 
             try:
-                s     = f.get_slice(start, stop, cut=False)
+                s     = f.get_slice(start, stop, cut=False, **options)
                 tsrc  = t.f.src
                 ssrc  = s.src
                 sdump = s.dump(out=list, compact=True)
@@ -20003,12 +20205,12 @@ class cls:
                 raise
 
     def test_get_slice_seq_cut(self):
-        for src, elt, start, stop, src_cut, slice_copy, src_dump, slice_dump in GET_SLICE_SEQ_DATA:
+        for src, elt, start, stop, options, src_cut, slice_copy, src_dump, slice_dump in GET_SLICE_SEQ_DATA:
             t = parse(src)
             f = eval(f't.{elt}', {'t': t}).f
 
             try:
-                s     = f.get_slice(start, stop, cut=True)
+                s     = f.get_slice(start, stop, cut=True, **options)
                 tsrc  = t.f.src
                 ssrc  = s.src
                 tdump = t.f.dump(out=list, compact=True)
@@ -20097,12 +20299,12 @@ class cls:
                     raise
 
     def test_put_slice_seq_del(self):
-        for src, elt, start, stop, src_cut, slice_copy, src_dump, slice_dump in GET_SLICE_SEQ_DATA:
+        for src, elt, start, stop, options, src_cut, slice_copy, src_dump, slice_dump in GET_SLICE_SEQ_DATA:
             t = parse(src)
             f = eval(f't.{elt}', {'t': t}).f
 
             try:
-                f.put_slice(None, start, stop)
+                f.put_slice(None, start, stop, **options)
 
                 tdst  = t.f.src
                 tdump = t.f.dump(out=list, compact=True)
@@ -20923,10 +21125,10 @@ def regen_get_slice_seq():
         lines = f.read().split('\n')
 
     for name in ('GET_SLICE_SEQ_DATA',):
-        for src, elt, start, stop, *_ in globals()[name]:
+        for src, elt, start, stop, options, *_ in globals()[name]:
             t     = parse(src)
             f     = eval(f't.{elt}', {'t': t}).f
-            s     = f.get_slice(start, stop, cut=True)
+            s     = f.get_slice(start, stop, cut=True, **options)
             tsrc  = t.f.src
             ssrc  = s.src
             tdump = t.f.dump(out=list, compact=True)
@@ -20935,10 +21137,11 @@ def regen_get_slice_seq():
             assert not tsrc.startswith('\n') or tsrc.endswith('\n')
             assert not ssrc.startswith('\n') or ssrc.endswith('\n')
 
-            t.f.verify(raise_=True)
-            s.verify(raise_=True)
+            if options.get('verify', True):
+                t.f.verify(raise_=True)
+                s.verify(raise_=True)
 
-            newlines.extend(f'''(r"""{src}""", {elt!r}, {start}, {stop}, r"""\n{tsrc}\n""", r"""\n{ssrc}\n""", r"""'''.split('\n'))
+            newlines.extend(f'''(r"""{src}""", {elt!r}, {start}, {stop}, {options}, r"""\n{tsrc}\n""", r"""\n{ssrc}\n""", r"""'''.split('\n'))
             newlines.extend(tdump)
             newlines.append('""", r"""')
             newlines.extend(sdump)
