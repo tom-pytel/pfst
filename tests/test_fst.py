@@ -16288,7 +16288,7 @@ _CookiePattern = re.compile(r"""
         self.assertEqual((3, 4, 3, 5), ((n := ast.body[2].value).lineno, n.col_offset, n.end_lineno, n.end_col_offset))
 
         ast = parse(src)
-        ast.f.offset(1, 5, 0, 1, inc=True)
+        ast.f.offset(1, 5, 0, 1, True)
         self.assertEqual((1, 4, 1, 5), ((n := ast.body[0].value).lineno, n.col_offset, n.end_lineno, n.end_col_offset))
         self.assertEqual((2, 0, 2, 1), ((n := ast.body[1].targets[0]).lineno, n.col_offset, n.end_lineno, n.end_col_offset))
         self.assertEqual((2, 4, 2, 6), ((n := ast.body[1].value).lineno, n.col_offset, n.end_lineno, n.end_col_offset))
@@ -16312,7 +16312,7 @@ _CookiePattern = re.compile(r"""
         self.assertEqual((4, 4, 4, 5), ((n := ast.body[2].value).lineno, n.col_offset, n.end_lineno, n.end_col_offset))
 
         ast = parse(src)
-        ast.f.offset(1, 5, 1, -1, inc=True)
+        ast.f.offset(1, 5, 1, -1, True)
         self.assertEqual((1, 4, 1, 5), ((n := ast.body[0].value).lineno, n.col_offset, n.end_lineno, n.end_col_offset))
         self.assertEqual((2, 0, 2, 1), ((n := ast.body[1].targets[0]).lineno, n.col_offset, n.end_lineno, n.end_col_offset))
         self.assertEqual((2, 4, 3, 4), ((n := ast.body[1].value).lineno, n.col_offset, n.end_lineno, n.end_col_offset))
@@ -19151,14 +19151,14 @@ class cls:
         self.assertEqual(f.src, '[a for c in d  ]')
         self.assertIsNone(g)
 
-    def test_put_raw(self):
+    def test_put_nonslice_raw(self):
         f = parse('[a for c in d for b in c for a in b]').body[0].value.f
         g = f.put('for x in y', 1, raw=True)
-        self.assertIsNot(g, f)
+        self.assertIs(g, f)
         self.assertEqual(g.src, '[a for c in d for x in y for a in b]')
         f = g
         g = f.put(None, 1, raw=True)
-        self.assertIsNot(g, f)
+        self.assertIs(g, f)
         self.assertEqual(g.src, '[a for c in d  for a in b]')
         f = g
         g = f.put_slice(None, 1, raw=True)
@@ -19996,6 +19996,45 @@ match a:
         self.assertIs(fpeq, f.find_in_loc(0, 1, 0, 10))
         self.assertIs(fxyz, f.find_in_loc(0, 5, 0, 10))
         self.assertIs(None, f.find_in_loc(0, 5, 0, 6))
+
+    def test_find_loc(self):
+        f    = parse('abc += xyz').f
+        fass = f.body[0]
+        fabc = fass.target
+        fpeq = fass.op
+        fxyz = fass.value
+
+        self.assertIs(fass, f.find_loc(0, 0, 0, 10))
+        self.assertIs(None, f.find_loc(0, 0, 0, 10, False))
+        self.assertIs(fabc, f.find_loc(0, 0, 0, 3))
+        self.assertIs(fass, f.find_loc(0, 0, 0, 3, False))
+        self.assertIs(fass, f.find_loc(0, 0, 0, 4))
+        self.assertIs(fass, f.find_loc(0, 0, 0, 4, False))
+        self.assertIs(fass, f.find_loc(0, 3, 0, 4, False))
+        self.assertIs(fpeq, f.find_loc(0, 4, 0, 6))
+        self.assertIs(fass, f.find_loc(0, 4, 0, 6, False))
+        self.assertIs(fxyz, f.find_loc(0, 7, 0, 10))
+        self.assertIs(fass, f.find_loc(0, 7, 0, 10, False))
+        self.assertIs(fass, f.find_loc(0, 6, 0, 10))
+        self.assertIs(fass, f.find_loc(0, 6, 0, 10, False))
+
+        f  = parse('a+b').f
+        fx = f.body[0]
+        fo = fx.value
+        fa = fo.left
+        fp = fo.op
+        fb = fo.right
+
+        self.assertIs(fa, f.find_loc(0, 0, 0, 0))
+        self.assertIs(fp, f.find_loc(0, 1, 0, 1))
+        self.assertIs(fb, f.find_loc(0, 2, 0, 2))
+        self.assertIs(f, f.find_loc(0, 3, 0, 3))
+        self.assertIs(fa, f.find_loc(0, 0, 0, 1))
+        self.assertIs(fo, f.find_loc(0, 0, 0, 2))
+        self.assertIs(fo, f.find_loc(0, 0, 0, 3))
+        self.assertIs(fp, f.find_loc(0, 1, 0, 2))
+        self.assertIs(fo, f.find_loc(0, 1, 0, 3))
+        self.assertIs(fb, f.find_loc(0, 2, 0, 3))
 
     def test_set_defaults(self):
         new = dict(

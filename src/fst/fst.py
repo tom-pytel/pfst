@@ -3681,14 +3681,6 @@ class FST:
 
         ffrom, fto = self._raw_slice_from_to(start, stop, field)
 
-        # if not (ffrom.is_FST and fto.is_FST):
-        #     self._reparse_raw(code, ffrom.ln, ffrom.col, fto.end_ln, fto.end_col)
-
-        # else:
-        #     options['to'] = fto
-
-        #     ffrom._reparse_raw_node(code, **options)
-
         self._reparse_raw(code, ffrom.ln, ffrom.col, fto.end_ln, fto.end_col)
 
         return self.repath()
@@ -3697,6 +3689,9 @@ class FST:
 
     def _raw_slice_from_to(self, start: int | Literal['end'] | None = None, stop: int | None = None,
                            field: str | None = None) -> tuple[Union['FST', fstloc], Union['FST', fstloc]]:
+        """Get first and last node of a raw slice. May return fstloc locations for decorators, comprehension ifs and
+        other special case nodes."""
+
         def fixup_slice_index_for_raw(len_, start, stop):
             start, stop = _fixup_slice_index(len_, start, stop)
 
@@ -3743,6 +3738,7 @@ class FST:
 
             # TODO: include `rest`?
 
+
             return body[start].f, body2[stop - 1].f
 
         if isinstance(ast, comprehension):
@@ -3767,14 +3763,16 @@ class FST:
 
         return body[start].f, body2[stop - 1].f
 
-    def _reparse_raw(self, code: Code | None, ln: int, col: int, end_ln: int, end_col: int) -> 'FST':
+    def _reparse_raw(self, code: Code | None, ln: int, col: int, end_ln: int, end_col: int,
+                     inc: bool | None = None) -> 'FST':
         """Reparse this node which entirely contatins the span which is to be replaced with `code` source. `self` must
         be a node which entirely contains the location and is guaranteed not to be deleted. `self` and some of its
         parents going up may be replaced. Not safe to use in a `walk()`.
 
         **Returns:**
-        - `FST | None`: Highest level node contained entirely within replacement source or `None` if no candidate. This
-            could wind up being just an operator like '+' depending on the replacement.
+        - `FST | None`: First highest level node contained entirely within replacement source or `None` if no candidate.
+            This could wind up being just an operator like '+' depending on the replacement. If `inc` is passed and not
+            `None` then will attempt a `find_loc(..., inc)` if could not find candidate node.
         """
 
         if isinstance(code, str):
@@ -3809,9 +3807,7 @@ class FST:
 
         if self is self_root:
             self._lines = copy_root._lines
-
-            self._set_ast(copy_root.a)
-            self.touch()
+            copy_self   = copy_root
 
         else:
             copy_self = copy_root.child_from_path(path)
@@ -3824,8 +3820,8 @@ class FST:
             copy_self.pfield.set(copy_self.parent.a, None)  # remove from copy tree so that copy_root unmake doesn't zero out new node
             copy_root._unmake_fst_tree()
 
-            self._set_ast(copy_self.a)
-            self.touchall(False)
+        self._set_ast(copy_self.a)
+        self.touchall(False)
 
         if code is None:
             return None
@@ -3838,30 +3834,8 @@ class FST:
             end_ln  = ln + len(new_lines) - 1
             end_col = len(new_lines[-1])
 
-        return self.find_in_loc(ln, col, end_ln, end_col)
-
-
-        # f = None
-
-        # for f in self.walk(True):  # return first node at or past start of modification
-        #     fln, fcol, fend_ln, fend_col = f.loc
-
-        #     if fln > ln or (fln == ln and fcol >= col):
-        #         break
-
-        # if f and ((fend_ln < ln) or (fend_ln == ln and fend_col < col)):
-        #     return None
-
-        # return f
-
-
-
-    def _reparse_raw_loc(self, code: Code | None, ln: int, col: int, end_ln: int, end_col: int) -> 'FST':
-
-
-        raise NotImplementedError  # TODO: this
-
-
+        return self.find_in_loc(ln, col, end_ln, end_col) or (inc is not None and
+                                                              self.find_loc(ln, col, end_ln, end_col, inc))
 
     def _reparse_raw_node(self, code: Code | None, to: Optional['FST'] = None, **options) -> 'FST':
         """Attempt a replacement by using str as source and attempting to parse into location of node(s) being
@@ -3870,11 +3844,16 @@ class FST:
         pars = True if to else DEFAULT_PARS if (o := options.get('pars')) is None else o
         loc  = self.pars(pars)
 
+
+        # TODO: allow all options for removing comments and space, not just pars
+
+
         if not loc:
             raise ValueError('node being reparsed must have a location')
 
         if not to or to is self:
-            parent = self.parent_stmtish(False, True) or self  # we want parent which will not change or root node
+            # parent = self.parent_stmtish(False, True) or self  # we want parent which will not change or root node
+            parent = self.parent or self  # we want parent which will not change or root node
             to_loc = loc
 
         elif not (to_loc := to.pars(pars)):
@@ -4383,8 +4362,25 @@ class FST:
 
         return self._put_slice_raw(code, start, stop, field, **options)
 
+    def put_raw(self, code: Code | None, ln: int, col: int, end_ln: int, end_col: int, *,
+                inc: bool | None = None) -> 'FST':
+        """Put raw code and reparse. Can call on any node in tree for same effect.
+
+        **Returns:**
+        - `FST`: First highest level node contained entirely within replacement source, or if no such candidate and
+            `inc` is not `None` (`True` or `False`) then will attempt to return enclosing node.
+        """
+
+        parent = self.root.find_loc(ln, col, end_ln, end_col, False)
+
+        if not parent:
+            raise ValueError('location outside of root bounds')
+
+        return parent._reparse_raw(code, ln, col, end_ln, end_col, True)
+
     def get_lines(self, ln: int, col: int, end_ln: int, end_col: int) -> list[str]:
-        """Get lines from currently stored source. The first and last lines are cropped to start `col` and `end_col`."""
+        """Get lines from currently stored source. The first and last lines are cropped to start `col` and `end_col`.
+        Can call on any node in tree for same effect."""
 
         if end_ln == ln:
             return [bistr(self.root._lines[ln][col : end_col])]
@@ -4392,9 +4388,9 @@ class FST:
             return [bistr((ls := self.root._lines)[ln][col:])] + ls[ln + 1 : end_ln] + [bistr(ls[end_ln][:end_col])]
 
     def put_lines(self, lines: list[str] | None, ln: int, col: int, end_ln: int, end_col: int,
-                  inc: bool | None = None, stop_at: Optional['FST'] = None):
+                  tail: bool | None = None, stop_at: Optional['FST'] = None):
         """Put or delete lines to currently stored source, optionally offsetting all nodes for the change. Must specify
-        `inc` as not `False` or `True` to enable offset of nodes according to lines put."""
+        `tail` as not `False` or `True` to enable offset of nodes according to lines put."""
 
         ls = self.root._lines
 
@@ -4405,7 +4401,7 @@ class FST:
 
         # possibly offset nodes
 
-        if inc is not None:
+        if tail is not None:
             dfst_ln     = len(lines) - 1
             dln         = dfst_ln - (end_ln - ln)
             dcol_offset = lines[-1].lenbytes - ls[end_ln].c2b(end_col)
@@ -4413,7 +4409,7 @@ class FST:
             if not dfst_ln:
                 dcol_offset += ls[ln].c2b(col)
 
-            self.root.offset(end_ln, end_col, dln, dcol_offset, inc, stop_at)
+            self.root.offset(end_ln, end_col, dln, dcol_offset, tail, stop_at)
 
         # put the actual lines (or just delete)
 
@@ -4452,15 +4448,15 @@ class FST:
                 ls[ln + 1 : end_ln] = lines[1:-1]
 
     def get_src(self, ln: int, col: int, end_ln: int, end_col: int) -> list[str]:
-        """'\\n'.join(self.get_lines(...))'"""
+        """`'\\n'.join(self.get_lines(...))`. Can call on any node in tree for same effect."""
 
         return '\n'.join(self.get_lines(ln, col, end_ln, end_col))
 
     def put_src(self, src: str | None, ln: int, col: int, end_ln: int, end_col: int,
-                inc: bool = False, stop_at: Optional['FST'] = None):
-        """self.put_lines(src.split('\\n'), ...)'."""
+                tail: bool = False, stop_at: Optional['FST'] = None):
+        """`self.put_lines(src.split('\\n'), ...)`."""
 
-        self.put_lines(None if src is None else src.split('\n'), ln, col, end_ln, end_col, inc, stop_at)
+        self.put_lines(None if src is None else src.split('\n'), ln, col, end_ln, end_col, tail, stop_at)
 
 # ------------------------------------------------------------------------------------------------------------------
 
@@ -5540,13 +5536,55 @@ class FST:
 
         return (root := self.root).child_from_path(root.child_path(self))
 
+    def find_loc(self, ln: int, col: int, end_ln: int, end_col: int, inc: bool = True) -> Optional['FST']:
+        """Find lowest level node which entirely contains location (starting search at `self`).
+
+        **Parameters:**
+        - `inc`: Whether the search is inclusive or not. Inclusive means allow return of node which matches location
+            exactly. Otherwise the location must be inside the node but cannot be touching BOTH ends of the node.
+        """
+
+        fln, fcol, fend_ln, fend_col = self.loc
+
+        if ((((same_ln := fln == ln) and fcol <= col) or fln < ln) and
+            (((same_end_ln := fend_ln == end_ln) and fend_col >= end_col) or fend_ln > end_ln)
+        ):
+            if not inc and same_ln and same_end_ln and fcol == col and fend_col == end_col:
+                return None
+
+        else:
+            return None
+
+        while True:
+            for f in self.walk('all', self_=False):
+                fln, fcol, fend_ln, fend_col = f.loc
+
+                if fend_ln < ln or (fend_ln == ln and fend_col <= col):
+                    continue
+
+                if (fln > ln or ((same_ln := fln == ln) and fcol > col) or
+                    fend_ln < end_ln or ((same_end_ln := fend_ln == end_ln) and fend_col < end_col)
+                ):
+                    return self
+
+                if not inc and same_ln and same_end_ln and fcol == col and fend_col == end_col:
+                    return self
+
+                self = f
+
+                break
+
+            else:
+                return self
+
     def find_in_loc(self, ln: int, col: int, end_ln: int, end_col: int) -> Optional['FST']:
-        """Find first node which is contained entirely in location."""
+        """Find highest level first node which is contained entirely in location (inclusive, starting search at
+        `self`)."""
 
-        sln, scol, send_ln, send_col = self.loc
+        fln, fcol, fend_ln, fend_col = self.loc
 
-        if ((sln > ln or (sln == ln and scol >= col)) and
-            (send_ln < end_ln or (send_ln == end_ln and send_col <= end_col))
+        if ((fln > ln or (fln == ln and fcol >= col)) and
+            (fend_ln < end_ln or (fend_ln == end_ln and fend_col <= end_col))
         ):
             return self
 
@@ -5931,7 +5969,7 @@ class FST:
 
         return self
 
-    def offset(self, ln: int, col: int, dln: int, dcol_offset: int, inc: bool = False, stop_at: Optional['FST'] = None
+    def offset(self, ln: int, col: int, dln: int, dcol_offset: int, tail: bool = False, stop_at: Optional['FST'] = None
                ) -> 'FST':  # -> Self
         """Offset ast node positions in the tree on or after ln / col by delta line / col_offset (column byte offset).
 
@@ -5941,7 +5979,7 @@ class FST:
         Other nodes outside this tree might need offsetting so use only on root unless special circumstances.
 
         If offsetting a zero-length node (which can result from deleting elements of an unparenthesized tuple), both the
-        start and end location will be moved if exactly at offset point if `inc` is `False`. Otherwise if `inc` is
+        start and end location will be moved if exactly at offset point if `tail` is `False`. Otherwise if `tail` is
         `True` then the start position will remain and the end position will be expanded.
 
         **Parameters:**
@@ -5950,7 +5988,7 @@ class FST:
         - `dln`: Number of lines to offset everything on or after offset point, can be 0.
         - `dcol_offset`: Column offset to apply to everything ON the offset point line `ln` (in bytes). Columns not on
             line `ln` will not be changed.
-        - `inc`: Whether to offset endpoint if it falls exactly at ln / col or not (inclusive).
+        - `tail`: Whether to offset endpoint if it falls exactly at ln / col or not (inclusive).
 
         **Behavior:**
         ```
@@ -5961,28 +5999,28 @@ class FST:
               |        <- special zero length span
         0123456789ABC
 
-        +2, inc=False
+        +2, tail=False
               V
           |===|
                 |---|
                 |
         0123456789ABC
 
-        +2, inc=True
+        +2, tail=True
               V
           |=====|
                 |---|
               |.|
         0123456789ABC
 
-        -2, inc=False
+        -2, tail=False
               V
           |===|
             |---|
             |.|
         0123456789ABC
 
-        -2, inc=True
+        -2, tail=True
               V
           |=|
             |---|
@@ -6005,7 +6043,7 @@ class FST:
                     a.end_lineno += dln
 
                 elif fend_lno == lno:
-                    if (fend_colo >= colo if (inc or (fend_colo == fcolo and fend_lno == flno and
+                    if (fend_colo >= colo if (tail or (fend_colo == fcolo and fend_lno == flno and
                                                       (dln > 0 or (not dln and dcol_offset > 0)))) else
                         fend_colo > colo
                     ):
@@ -6026,7 +6064,7 @@ class FST:
                     a.lineno += dln
 
                 elif flno == lno and (
-                        fcolo >= colo if (not (inc and (fend_colo == fcolo and fend_lno == flno)) or
+                        fcolo >= colo if (not (tail and (fend_colo == fcolo and fend_lno == flno)) or
                                           dln < 0 or (not dln and dcol_offset < 0)) else
                         fcolo > colo
                 ):

@@ -17,6 +17,7 @@ It works by adding `FST` nodes to existing `AST` nodes as an `.f` attribute whic
 
 ## Todo
 
+* `put()` individual non-slice nodes.
 * Reconcile AST nodes modified not using FST machinery.
 * Implement individual sequence slice non-raw paths.
 * Redo sequence slices for same comment behavior as statements.
