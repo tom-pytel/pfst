@@ -2349,7 +2349,8 @@ class FST:
 
         return len(lines := self.root._lines) - 1, len(lines[-1])
 
-    def _lpars(self, with_loc: bool | Literal['all', 'own', 'allown'] = True) -> tuple[int, int, int, int, int]:
+    def _lpars(self, with_loc: bool | Literal['all', 'own', 'allown'] = True, *, exc_genexpr_solo: bool = False,
+               ) -> tuple[int, int, int, int, int]:
         """Return the `ln` and `col` of the leftmost and ante-leftmost opening parentheses and the total number of
         opening parentheses. Doesn't take into account anything like enclosing argument parentheses, just counts. The
         leftmost bound used is the end of the previous sibling, or the start of that parent if there isn't one, or (0,0)
@@ -2358,6 +2359,8 @@ class FST:
         **Parameters:**
         - `with_loc`: Parameter to use for AST bound search. `True` normally or `'allown'` in special cases like
             searching for parentheses to figure out node location from children.
+        - `exc_genexpr_solo`: If `True`, then will exclude left parenthesis of a single call argument generator
+            expression if it is shared with the call() arguments enclosing parentheses.
 
         **Returns:**
         - `(ln, col, ante_ln, ante_col, npars)`: The leftmost and ante-leftmost positions and total count of opening
@@ -2366,14 +2369,21 @@ class FST:
 
         ret = _prev_pars(self.root._lines, *self._prev_ast_bound(with_loc), *self.bloc[:2])
 
-        if ((parent := self.parent) and isinstance(parenta := parent.a, Call) and  # special case single arg in a call so we must exclude the call parentheses
-            self.pfield.name == 'args' and not parenta.keywords and len(parenta.args) == 1
-        ):
-            ret = _prev_pars(self.root._lines, ret[0], ret[1] + 1, *self.bloc[:2])  # exclude outermost par found from search
+        if self.is_solo_call_arg():  # special case single arg in a call so we must exclude the call arguments parentheses
+            pars_ln, pars_col, _, _, npars = ret
+
+            if exc_genexpr_solo and not npars and isinstance(self.a, GeneratorExp):  # npars == 0 indicates shared parentheses
+                ln, col, _, _  = self.loc
+                col           += 1
+
+                return ln, col, ln, col, -1
+
+            ret = _prev_pars(self.root._lines, pars_ln, pars_col + 1, *self.bloc[:2])  # exclude outermost par found from search
 
         return ret
 
-    def _rpars(self, with_loc: bool | Literal['all', 'own', 'allown'] = True) -> tuple[int, int, int, int, int]:
+    def _rpars(self, with_loc: bool | Literal['all', 'own', 'allown'] = True, *, exc_genexpr_solo: bool = False,
+               ) -> tuple[int, int, int, int, int]:
         """Return the `end_ln` and `end_col` of the rightmost and ante-rightmost closing parentheses and the total
         number of closing parentheses. Doesn't take into account anything like enclosing argument parentheses, just
         counts. The rightmost bound used is the start of the next sibling, or the end of that parent if there isn't one,
@@ -2382,6 +2392,8 @@ class FST:
         **Parameters:**
         - `with_loc`: Parameter to use for AST bound search. `True` normally or `'allown'` in special cases like
             searching for parentheses to figure out node location from children.
+        - `exc_genexpr_solo`: If `True`, then will exclude left parenthesis of a single call argument generator
+            expression if it is shared with the call() arguments enclosing parentheses.
 
         **Returns:**
         - `(end_ln, end_col, ante_end_ln, ante_end_col, npars)`: The rightmost and ante-rightmost positions and total
@@ -2390,10 +2402,16 @@ class FST:
 
         ret = _next_pars(self.root._lines, *self.bloc[2:], *self._next_ast_bound(with_loc))
 
-        if ((parent := self.parent) and isinstance(parenta := parent.a, Call) and  # special case single arg in a call so we must exclude the call parentheses
-            self.pfield.name == 'args' and not parenta.keywords and len(parenta.args) == 1
-        ):
-            ret = _next_pars(self.root._lines, *self.bloc[2:], ret[0], ret[1] - 1)  # exclude outermost par found from search
+        if self.is_solo_call_arg():  # special case single arg in a call so we must exclude the call arguments parentheses
+            pars_end_ln, pars_end_col, _, _, npars = ret
+
+            if exc_genexpr_solo and not npars and isinstance(self.a, GeneratorExp):  # npars == 0 indicates shared parentheses
+                _, _, end_ln, end_col  = self.loc
+                end_col               -= 1
+
+                return end_ln, end_col, end_ln, end_col, -1
+
+            ret = _next_pars(self.root._lines, *self.bloc[2:], pars_end_ln, pars_end_col - 1)  # exclude outermost par found from search
 
         return ret
 
@@ -3769,7 +3787,8 @@ class FST:
         start, stop = fixup_slice_index_for_raw(len(body), start, stop)
         body2       = body
 
-        return fstloc(*body[start].f.pars()[:2], *body2[stop - 1].f.pars()[2:])
+        return fstloc(*body[start].f.pars(exc_genexpr_solo=True)[:2],
+                      *body2[stop - 1].f.pars(exc_genexpr_solo=True)[2:])
 
     def _reparse_raw(self, code: Code | None, ln: int, col: int, end_ln: int, end_col: int,
                      inc: bool | None = None) -> 'FST':
@@ -3843,15 +3862,16 @@ class FST:
             end_ln  = ln + len(new_lines) - 1
             end_col = len(new_lines[-1])
 
-        return (self_root.find_in_loc(ln, col, end_ln, end_col) or  # `self_root` instead of `self` because some changes may propagate farther up the tree, line 'elif' -> 'else'
+        return (self_root.find_in_loc(ln, col, end_ln, end_col) or  # `self_root` instead of `self` because some changes may propagate farther up the tree, like 'elif' -> 'else'
                 (self_root.find_loc(ln, col, end_ln, end_col, inc) if inc is not None else None))
 
     def _reparse_raw_node(self, code: Code | None, to: Optional['FST'] = None, **options) -> 'FST':
         """Attempt a replacement by using str as source and attempting to parse into location of node(s) being
         replaced."""
 
-        pars = True if to else DEFAULT_PARS if (o := options.get('pars')) is None else o
-        loc  = self.pars(pars)
+        multi = to and to is not self
+        pars  = True if multi else DEFAULT_PARS if (o := options.get('pars')) is None else o
+        loc   = self.pars(pars, exc_genexpr_solo=True)
 
 
         # TODO: allow all options for removing comments and space, not just pars
@@ -3860,11 +3880,17 @@ class FST:
         if not loc:
             raise ValueError('node being reparsed must have a location')
 
-        if not to or to is self:
+        if not multi:
             parent = self.parent or self  # we want parent which will not change or root node
-            to_loc = loc
 
-        elif not (to_loc := to.pars(pars)):
+            if (pars or not self.is_solo_call_arg_genexpr() or
+                (to_loc := self.pars(True, exc_genexpr_solo=True))[:2] <= loc[:2]  # need to check this case if `pars` wasn't specified for a solo call arg GenExpression
+            ):
+                to_loc = loc
+            else:
+                loc = to_loc
+
+        elif not (to_loc := to.pars(pars, exc_genexpr_solo=True)):
             raise ValueError(f"'to' node must have a location")
         elif (root := self.root) is not to.root:
             raise ValueError(f"'to' node not part of same tree")
@@ -5699,6 +5725,20 @@ class FST:
 
         return isinstance(self.a, If) and self.root._lines[(loc := self.loc).ln].startswith('elif', loc.col)
 
+    def is_solo_call_arg(self) -> bool:
+        """Whether `self` is a solo Call non-keyword argument."""
+
+        return ((parent := self.parent) and self.pfield.name == 'args' and isinstance(parenta := parent.a, Call) and
+                not parenta.keywords and len(parenta.args) == 1)
+
+    def is_solo_call_arg_genexpr(self) -> bool:
+        """Whether `self` is the dreaded solo call non-keyword argument generator expression in `sum(i for i in a)`.
+        Doesn't say it shares parentheses or not, so could still be `sum((i for i in a))` or even
+        `sum(((i for i in a)))`."""
+
+        return ((parent := self.parent) and self.pfield.name == 'args' and isinstance(self.a, GeneratorExp) and
+                isinstance(parenta := parent.a, Call) and not parenta.keywords and len(parenta.args) == 1)
+
     def get_indent(self) -> str:
         """Determine proper indentation of node at `stmt` (or other similar) level at or above `self`. Even if it is a
         continuation or on same line as block statement. If indentation is impossible to determine because is solo
@@ -5869,13 +5909,15 @@ class FST:
 
         return lns
 
-    def pars(self, pars: bool = True, **options) -> fstloc:
+    def pars(self, pars: bool = True, *, exc_genexpr_solo: bool = False, **options) -> fstloc:
         """Return the location of enclosing parentheses if present. Will balance parentheses if `self` is an element of
         a tuple and not return the parentheses of the tuple. Likwise will not return the parentheses of an enclosing
         `arguments`  parent. Only works on (and makes sense for) `expr` or `pattern` nodes, otherwise `self.bloc`.
 
         **Parameters:**
         - `pars`: `True` means return parentheses if present and `self.bloc` otherwise, `False` always `self.bloc`.
+        - `exc_genexpr_solo`: If `True` then will exclude left parentheses of a single call argument generator
+            expression if it is shared with the call() arguments enclosing parentheses. Is not checked if `pars=False`.
         - `options`: Ignored.
 
         **Returns:**
@@ -5885,15 +5927,15 @@ class FST:
         if not pars or not isinstance(self.a, PARENTHESIZABLE):
             return self.bloc
 
-        pars_end_ln, pars_end_col, ante_end_ln, ante_end_col, nrpars = self._rpars()
+        pars_end_ln, pars_end_col, ante_end_ln, ante_end_col, nrpars = self._rpars(exc_genexpr_solo=exc_genexpr_solo)
 
         if not nrpars:
-            return self.bloc
+            return self.loc
 
-        pars_ln, pars_col, ante_ln, ante_col, nlpars = self._lpars()
+        pars_ln, pars_col, ante_ln, ante_col, nlpars = self._lpars(exc_genexpr_solo=exc_genexpr_solo)
 
         if not nlpars:
-            return self.bloc
+            return self.loc
 
         dpars = nlpars - nrpars
 

@@ -15288,6 +15288,57 @@ Module .. ROOT 0,0 -> 0,9
       .ctx Load
 """),
 
+(r"""f(i for i in range(5))""", 'body[0].value', 0, 1, 'args', {'raw': True}, r"""a""", r"""f(a)""", r"""
+Module .. ROOT 0,0 -> 0,4
+  .body[1]
+  0] Expr .. 0,0 -> 0,4
+    .value Call .. 0,0 -> 0,4
+      .func Name 'f' Load .. 0,0 -> 0,1
+      .args[1]
+      0] Name 'a' Load .. 0,2 -> 0,3
+"""),
+
+(r"""f((i for i in range(5)))""", 'body[0].value', 0, 1, 'args', {'raw': True}, r"""a""", r"""f(a)""", r"""
+Module .. ROOT 0,0 -> 0,4
+  .body[1]
+  0] Expr .. 0,0 -> 0,4
+    .value Call .. 0,0 -> 0,4
+      .func Name 'f' Load .. 0,0 -> 0,1
+      .args[1]
+      0] Name 'a' Load .. 0,2 -> 0,3
+"""),
+
+(r"""f(((i for i in range(5))))""", 'body[0].value', 0, 1, 'args', {'raw': True}, r"""a""", r"""f(a)""", r"""
+Module .. ROOT 0,0 -> 0,4
+  .body[1]
+  0] Expr .. 0,0 -> 0,4
+    .value Call .. 0,0 -> 0,4
+      .func Name 'f' Load .. 0,0 -> 0,1
+      .args[1]
+      0] Name 'a' Load .. 0,2 -> 0,3
+"""),
+
+(r"""f((i for i in range(5)), b)""", 'body[0].value', 0, 1, 'args', {'raw': True}, r"""a""", r"""f(a, b)""", r"""
+Module .. ROOT 0,0 -> 0,7
+  .body[1]
+  0] Expr .. 0,0 -> 0,7
+    .value Call .. 0,0 -> 0,7
+      .func Name 'f' Load .. 0,0 -> 0,1
+      .args[2]
+      0] Name 'a' Load .. 0,2 -> 0,3
+      1] Name 'b' Load .. 0,5 -> 0,6
+"""),
+
+(r"""f((i for i in range(5)), b)""", 'body[0].value', 0, 2, 'args', {'raw': True}, r"""a""", r"""f(a)""", r"""
+Module .. ROOT 0,0 -> 0,4
+  .body[1]
+  0] Expr .. 0,0 -> 0,4
+    .value Call .. 0,0 -> 0,4
+      .func Name 'f' Load .. 0,0 -> 0,1
+      .args[1]
+      0] Name 'a' Load .. 0,2 -> 0,3
+"""),
+
 ]  # END OF PUT_SLICE_DATA
 
 PUT_RAW_DATA = [
@@ -16286,6 +16337,13 @@ def f():
         p = f.pars()
         self.assertIsInstance(p, fstloc)
         self.assertEqual(p, (2, 3, 2, 4))
+
+        self.assertEqual((0, 1, 0, 15), parse('f(i for i in j)').body[0].value.args[0].f.pars())
+        self.assertEqual((0, 2, 0, 16), parse('f((i for i in j))').body[0].value.args[0].f.pars())
+        self.assertEqual((0, 2, 0, 18), parse('f(((i for i in j)))').body[0].value.args[0].f.pars())
+        self.assertEqual((0, 2, 0, 14), parse('f(i for i in j)').body[0].value.args[0].f.pars(exc_genexpr_solo=True))
+        self.assertEqual((0, 2, 0, 16), parse('f((i for i in j))').body[0].value.args[0].f.pars(exc_genexpr_solo=True))
+        self.assertEqual((0, 2, 0, 18), parse('f(((i for i in j)))').body[0].value.args[0].f.pars(exc_genexpr_solo=True))
 
     def test_walk(self):
         a = parse("""
@@ -19839,6 +19897,26 @@ class cls:
         f = f.repath()
         self.assertEqual(f.src, '[a for c in d  ]')
         self.assertIsNone(g)
+
+        f = parse('f(i for i in j)').body[0].value.args[0].f
+        g = f.replace('a', raw=True)
+        self.assertEqual(g.src, 'a')
+        self.assertEqual(f.root.src, 'f(a)')
+
+        f = parse('f((i for i in j))').body[0].value.args[0].f
+        g = f.replace('a', raw=True)
+        self.assertEqual(g.src, 'a')
+        self.assertEqual(f.root.src, 'f(a)')
+
+        f = parse('f(((i for i in j)))').body[0].value.args[0].f
+        g = f.replace('a', raw=True)
+        self.assertEqual(g.src, 'a')
+        self.assertEqual(f.root.src, 'f((a))')
+
+        f = parse('f(((i for i in j)))').body[0].value.args[0].f
+        g = f.replace('a', pars=True, raw=True)
+        self.assertEqual(g.src, 'a')
+        self.assertEqual(f.root.src, 'f(a)')
 
     def test_put_nonslice_raw(self):
         f = parse('[a for c in d for b in c for a in b]').body[0].value.f
