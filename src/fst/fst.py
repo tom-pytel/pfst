@@ -2364,7 +2364,14 @@ class FST:
             parentheses encountered.
         """
 
-        return _prev_pars(self.root._lines, *self._prev_ast_bound(with_loc), *self.bloc[:2])
+        ret = _prev_pars(self.root._lines, *self._prev_ast_bound(with_loc), *self.bloc[:2])
+
+        if ((parent := self.parent) and isinstance(parenta := parent.a, Call) and  # special case single arg in a call so we must exclude the call parentheses
+            self.pfield.name == 'args' and not parenta.keywords and len(parenta.args) == 1
+        ):
+            ret = _prev_pars(self.root._lines, ret[0], ret[1] + 1, *self.bloc[:2])  # exclude outermost par found from search
+
+        return ret
 
     def _rpars(self, with_loc: bool | Literal['all', 'own', 'allown'] = True) -> tuple[int, int, int, int, int]:
         """Return the `end_ln` and `end_col` of the rightmost and ante-rightmost closing parentheses and the total
@@ -2381,7 +2388,14 @@ class FST:
             count of closing parentheses encountered.
         """
 
-        return _next_pars(self.root._lines, *self.bloc[2:], *self._next_ast_bound(with_loc))
+        ret = _next_pars(self.root._lines, *self.bloc[2:], *self._next_ast_bound(with_loc))
+
+        if ((parent := self.parent) and isinstance(parenta := parent.a, Call) and  # special case single arg in a call so we must exclude the call parentheses
+            self.pfield.name == 'args' and not parenta.keywords and len(parenta.args) == 1
+        ):
+            ret = _next_pars(self.root._lines, *self.bloc[2:], ret[0], ret[1] - 1)  # exclude outermost par found from search
+
+        return ret
 
     def _loc_operator(self) -> fstloc | None:
         """Get location of `operator`, `unaryop` or `cmpop` from source if possible. `boolop` is not done at all because
@@ -3735,10 +3749,6 @@ class FST:
             body2       = ast.patterns
             start, stop = fixup_slice_index_for_raw(len(body), start, stop)
 
-
-            # TODO: include `rest`?
-
-
             return body[start].f, body2[stop - 1].f
 
         if isinstance(ast, comprehension):
@@ -3791,7 +3801,7 @@ class FST:
         assert self.root.is_mod  # TODO: allow with non-mod root
 
 
-        # TODO: Optimize individual cases.
+        # TODO: Optimize individual cases to only reparse what is needed.
         # TODO: ExceptHandler
         # TODO: match_case
         # TODO: block open statement
@@ -3835,8 +3845,8 @@ class FST:
             end_ln  = ln + len(new_lines) - 1
             end_col = len(new_lines[-1])
 
-        return self.find_in_loc(ln, col, end_ln, end_col) or (inc is not None and
-                                                              self.find_loc(ln, col, end_ln, end_col, inc))
+        return (self_root.find_in_loc(ln, col, end_ln, end_col) or  # `self_root` instead of `self` because some changes may propagate farther up the tree, line 'elif' -> 'else'
+                (self_root.find_loc(ln, col, end_ln, end_col, inc) if inc is not None else None))
 
     def _reparse_raw_node(self, code: Code | None, to: Optional['FST'] = None, **options) -> 'FST':
         """Attempt a replacement by using str as source and attempting to parse into location of node(s) being
@@ -3853,7 +3863,6 @@ class FST:
             raise ValueError('node being reparsed must have a location')
 
         if not to or to is self:
-            # parent = self.parent_stmtish(False, True) or self  # we want parent which will not change or root node
             parent = self.parent or self  # we want parent which will not change or root node
             to_loc = loc
 
@@ -4266,10 +4275,15 @@ class FST:
         if stop is not False:
             return self.put_slice(code, start, stop, field, one=one, **options)
         elif start is None:
+
+
+            # TODO: decide it slice operation or single element operation
+
+
             return self.put_slice(code, None, None, field, one=one, **options)
 
         if start == 'end':
-            raise ValueError(f"cannot non-slice put() to 'end'")
+            raise ValueError(f"cannot put() non-slice to 'end'")
         if not one:
             raise ValueError(f"cannot use 'one=False' in non-slice put()")
 

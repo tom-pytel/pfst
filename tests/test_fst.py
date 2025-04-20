@@ -168,6 +168,24 @@ lambda a = ( 1 ) : None
 ( 2 )
 """),
 
+(r"""
+f(i for i in j)
+""", 'body[0].value.args[0]', r"""
+(i for i in j)
+"""),
+
+(r"""
+f((i for i in j))
+""", 'body[0].value.args[0]', r"""
+(i for i in j)
+"""),
+
+(r"""
+f(((i for i in j)))
+""", 'body[0].value.args[0]', r"""
+((i for i in j))
+"""),
+
 ]  # END OF PARS_DATA
 
 COPY_DATA = [
@@ -15105,6 +15123,64 @@ Module .. ROOT 0,0 -> 3,0
       0] Pass .. 2,22 -> 2,26
 """),
 
+(r"""def f(a): pass""", 'body[0].args', 0, 1, 'args', {'raw': True}, r"""b""", r"""def f(b): pass""", r"""
+Module .. ROOT 0,0 -> 0,14
+  .body[1]
+  0] FunctionDef .. 0,0 -> 0,14
+    .name 'f'
+    .args arguments .. 0,6 -> 0,7
+      .args[1]
+      0] arg .. 0,6 -> 0,7
+        .arg 'b'
+    .body[1]
+    0] Pass .. 0,10 -> 0,14
+"""),
+
+(r"""def f(a): pass""", 'body[0].args', 0, 1, 'args', {'raw': True}, r"""""", r"""def f(): pass""", r"""
+Module .. ROOT 0,0 -> 0,13
+  .body[1]
+  0] FunctionDef .. 0,0 -> 0,13
+    .name 'f'
+    .body[1]
+    0] Pass .. 0,9 -> 0,13
+"""),
+
+(r"""def f(a): pass""", 'body[0].args', 0, 1, 'args', {'raw': True}, r"""**DEL**""", r"""def f(): pass""", r"""
+Module .. ROOT 0,0 -> 0,13
+  .body[1]
+  0] FunctionDef .. 0,0 -> 0,13
+    .name 'f'
+    .body[1]
+    0] Pass .. 0,9 -> 0,13
+"""),
+
+(r"""f(a)""", 'body[0].value', 0, 1, 'args', {'raw': True}, r"""(i for i in range(5))""", r"""f((i for i in range(5)))""", r"""
+Module .. ROOT 0,0 -> 0,24
+  .body[1]
+  0] Expr .. 0,0 -> 0,24
+    .value Call .. 0,0 -> 0,24
+      .func Name 'f' Load .. 0,0 -> 0,1
+      .args[1]
+      0] GeneratorExp .. 0,2 -> 0,23
+        .elt Name 'i' Load .. 0,3 -> 0,4
+        .generators[1]
+        0] comprehension .. 0,5 -> 0,23
+          .target Name 'i' Store .. 0,9 -> 0,10
+          .iter Call .. 0,14 -> 0,22
+            .func Name 'range' Load .. 0,14 -> 0,19
+            .args[1]
+            0] Constant 5 .. 0,20 -> 0,21
+          .is_async
+            0
+"""),
+
+(r"""f(i for i in range(5))""", 'body[0].value', 0, 1, 'args', {'raw': True}, r"""a""", r"""fa""", r"""
+Module .. ROOT 0,0 -> 0,2
+  .body[1]
+  0] Expr .. 0,0 -> 0,2
+    .value Name 'fa' Load .. 0,0 -> 0,2
+"""),
+
 ]  # END OF PUT_SLICE_DATA
 
 PUT_RAW_DATA = [
@@ -15470,6 +15546,143 @@ Module .. ROOT 0,0 -> 0,2
   .body[1]
   0] Expr .. 0,0 -> 0,2
     .value Name 'ab' Load .. 0,0 -> 0,2
+"""),
+
+(r"""
+if 1: pass
+else: pass
+""", '', (2, 0, 2, 10), {}, r"""elif 2: pass""", r"""elif 2: pass""", r"""
+if 1: pass
+elif 2: pass
+""", r"""
+Module .. ROOT 0,0 -> 3,0
+  .body[1]
+  0] If .. 1,0 -> 2,12
+    .test Constant 1 .. 1,3 -> 1,4
+    .body[1]
+    0] Pass .. 1,6 -> 1,10
+    .orelse[1]
+    0] If .. 2,0 -> 2,12
+      .test Constant 2 .. 2,5 -> 2,6
+      .body[1]
+      0] Pass .. 2,8 -> 2,12
+"""),
+
+(r"""
+if 1: pass
+else: pass
+""", '', (2, 0, 2, 5), {}, r"""elif 2:""", r"""2""", r"""
+if 1: pass
+elif 2: pass
+""", r"""
+Module .. ROOT 0,0 -> 3,0
+  .body[1]
+  0] If .. 1,0 -> 2,12
+    .test Constant 1 .. 1,3 -> 1,4
+    .body[1]
+    0] Pass .. 1,6 -> 1,10
+    .orelse[1]
+    0] If .. 2,0 -> 2,12
+      .test Constant 2 .. 2,5 -> 2,6
+      .body[1]
+      0] Pass .. 2,8 -> 2,12
+"""),
+
+(r"""
+if 1: pass
+elif 2: pass
+""", '', (2, 0, 2, 12), {}, r"""else: pass""", r"""pass""", r"""
+if 1: pass
+else: pass
+""", r"""
+Module .. ROOT 0,0 -> 3,0
+  .body[1]
+  0] If .. 1,0 -> 2,10
+    .test Constant 1 .. 1,3 -> 1,4
+    .body[1]
+    0] Pass .. 1,6 -> 1,10
+    .orelse[1]
+    0] Pass .. 2,6 -> 2,10
+"""),
+
+(r"""
+if 1: pass
+elif 2: pass
+""", '', (2, 0, 2, 7), {}, r"""else:""", r"""if 1: pass
+else: pass""", r"""
+if 1: pass
+else: pass
+""", r"""
+Module .. ROOT 0,0 -> 3,0
+  .body[1]
+  0] If .. 1,0 -> 2,10
+    .test Constant 1 .. 1,3 -> 1,4
+    .body[1]
+    0] Pass .. 1,6 -> 1,10
+    .orelse[1]
+    0] Pass .. 2,6 -> 2,10
+"""),
+
+(r"""
+try: pass
+except Exception: pass
+finally: pass
+""", '', (2, 0, 3, 0), {}, r"""""", r"""try: pass
+finally: pass""", r"""
+try: pass
+finally: pass
+""", r"""
+Module .. ROOT 0,0 -> 3,0
+  .body[1]
+  0] Try .. 1,0 -> 2,13
+    .body[1]
+    0] Pass .. 1,5 -> 1,9
+    .finalbody[1]
+    0] Pass .. 2,9 -> 2,13
+"""),
+
+(r"""def f(): pass""", '', (0, 6, 0, 6), {}, r"""a, *b, **c""", r"""a, *b, **c""", r"""def f(a, *b, **c): pass""", r"""
+Module .. ROOT 0,0 -> 0,23
+  .body[1]
+  0] FunctionDef .. 0,0 -> 0,23
+    .name 'f'
+    .args arguments .. 0,6 -> 0,16
+      .args[1]
+      0] arg .. 0,6 -> 0,7
+        .arg 'a'
+      .vararg arg .. 0,10 -> 0,11
+        .arg 'b'
+      .kwarg arg .. 0,15 -> 0,16
+        .arg 'c'
+    .body[1]
+    0] Pass .. 0,19 -> 0,23
+"""),
+
+(r"""def f(a, *b, **c): pass""", '', (0, 6, 0, 16), {}, r"""""", r"""def f(): pass""", r"""def f(): pass""", r"""
+Module .. ROOT 0,0 -> 0,13
+  .body[1]
+  0] FunctionDef .. 0,0 -> 0,13
+    .name 'f'
+    .body[1]
+    0] Pass .. 0,9 -> 0,13
+"""),
+
+(r"""def f(a, *b, **c): pass""", '', (0, 6, 0, 16), {}, r""" """, r"""def f( ): pass""", r"""def f( ): pass""", r"""
+Module .. ROOT 0,0 -> 0,14
+  .body[1]
+  0] FunctionDef .. 0,0 -> 0,14
+    .name 'f'
+    .body[1]
+    0] Pass .. 0,10 -> 0,14
+"""),
+
+(r"""def f(a, *b, **c): pass""", '', (0, 6, 0, 16), {}, r"""**DEL**""", r"""def f(): pass""", r"""def f(): pass""", r"""
+Module .. ROOT 0,0 -> 0,13
+  .body[1]
+  0] FunctionDef .. 0,0 -> 0,13
+    .name 'f'
+    .body[1]
+    0] Pass .. 0,9 -> 0,13
 """),
 
 ]  # END OF PUT_RAW_DATA
@@ -19868,7 +20081,7 @@ class cls:
             f = (eval(f't.{attr}', {'t': t}) if attr else t).f
 
             try:
-                g = f.put_raw(None if src == '**DEL**' else src, ln, col, end_ln, end_col, **options)
+                g = f.put_raw(None if src == '**DEL**' else src, ln, col, end_ln, end_col, **options) or f.root
 
                 tdst  = f.root.src
                 tdump = f.root.dump(out=list, compact=True)
@@ -20687,7 +20900,7 @@ def regen_put_raw():
         f = (eval(f't.{attr}', {'t': t}) if attr else t).f
 
         try:
-            g = f.put_raw(None if src == '**DEL**' else src, ln, col, end_ln, end_col, **options)
+            g = f.put_raw(None if src == '**DEL**' else src, ln, col, end_ln, end_col, **options) or f.root
 
             tdst  = f.root.src
             tdump = f.root.dump(out=list, compact=True)
