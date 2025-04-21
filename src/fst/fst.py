@@ -604,6 +604,50 @@ def _fixup_slice_index(len_, start, stop) -> tuple[int, int]:
     return start, stop
 
 
+def _reduce_ast(ast, coerce: Literal['expr', 'mod'] | None = None):
+    """Reduce an AST to a simplest representation based on coercion rule.
+
+    **Parameters:**
+    - `coerce`: What kind of coercion to apply (if any):
+        - `'expr'`: Want `ast.expr` if possible. Returns `Expression.body` or `Module|Interactive.body[0].value` or
+            `ast` if is `ast.exr`.
+        - `'mod'`: Want `ast.Module`, expressions are wrapped in `Expr` and put into this and all other types are put
+            directly into this.
+        - `None`: Will pull expression out of `Expression` and convert `Interactive` to `Module`, otherwise will return
+            node as is.
+
+    **Returns:**
+    - `AST`: Reduced node.
+    """
+
+    if isinstance(ast, Expression):
+        ast = ast.body
+
+    elif coerce == 'expr':
+        if isinstance(ast, (Module, Interactive)):
+            if len(body := ast.body) != 1 or not isinstance(ast := body[0], Expr):
+                raise NodeTypeError(f'expecting single expression')
+
+            ast = ast.value
+
+        if not isinstance(ast, expr):
+            raise NodeTypeError(f'expecting expression')
+
+        return ast
+
+    elif isinstance(ast, Interactive):
+        return Module(body=ast.body, type_ignores=[])
+
+    if coerce == 'mod' and not isinstance(ast, Module):
+        if isinstance(ast, expr):
+            ast = Expr(value=ast, lineno=ast.lineno, col_offset=ast.col_offset,
+                        end_lineno=ast.end_lineno, end_col_offset=ast.end_col_offset)
+
+        ast = Module(body=[ast], type_ignores=[])
+
+    return ast
+
+
 def _normalize_code(code: Code, coerce: Literal['expr', 'mod'] | None = None, *, parse_params: dict = {}) -> 'FST':
     """Normalize code to an `FST` and coerce to a desired format if possible.
 
@@ -612,55 +656,27 @@ def _normalize_code(code: Code, coerce: Literal['expr', 'mod'] | None = None, *,
 
     **Parameters:**
     - `coerce`: What kind of coercion to apply (if any):
-        - `'expr'`: Will return an `FST` with a top level `ast.expr` `AST` node if possible, raise otherwise.
-        - `'mod'`: Will return an `FST` with a top level `ast.Module` `AST` node of the single statement or a wrapped
-            expression in an `ast.Expr` node. `ExceptHandler` and `match_case` nodes are considered statements here.
-        - `None`: Will pull expression out of `ast.Expression` and convert `ast.Interactive` to `ast.Module`, otherwise
-            will return node as is, or as is parsed to `Module`.
+        - `'expr'`: Will return an `FST` with a top level `expr` `AST` node if possible, raise otherwise.
+        - `'mod'`: Will return an `FST` with a top level `Module` `AST` node of the single statement or a wrapped
+            expression in an `Expr` node. `ExceptHandler` and `match_case` nodes are considered statements here.
+        - `None`: Will pull expression out of `Expression` and convert `Interactive` to `Module`, otherwise will return
+            node as is, or as is parsed to `Module`.
 
     **Returns:**
     - `FST`: Compiled or coerced or just fixed up.
     """
-
-    def reduce(ast):
-        if isinstance(ast, Expression):
-            ast = ast.body
-
-        elif coerce == 'expr':
-            if isinstance(ast, (Module, Interactive)):
-                if len(body := ast.body) != 1 or not isinstance(ast := body[0], Expr):
-                    raise NodeTypeError(f'expecting single expression')
-
-                ast = ast.value
-
-            if not isinstance(ast, expr):
-                raise NodeTypeError(f'expecting expression')
-
-            return ast
-
-        elif isinstance(ast, Interactive):
-            return Module(body=ast.body, type_ignores=[])
-
-        if coerce == 'mod' and not isinstance(ast, Module):
-            if isinstance(ast, expr):
-                ast = Expr(value=ast, lineno=ast.lineno, col_offset=ast.col_offset,
-                           end_lineno=ast.end_lineno, end_col_offset=ast.end_col_offset)
-
-            ast = Module(body=[ast], type_ignores=[])
-
-        return ast
 
     if isinstance(code, FST):
         if not code.is_root:
             raise ValueError('expecting root FST')
 
         ast  = code.a
-        rast = reduce(ast)
+        rast = _reduce_ast(ast, coerce)
 
         return code if rast is ast else FST(rast, lines=code._lines, from_=code)
 
     if isinstance(code, AST):
-        return FST.fromast(reduce(code))  # WARNING! will not handle pure AST ExceptHandler or match_case
+        return FST.fromast(_reduce_ast(code, coerce))  # TODO: WARNING! will not handle pure AST ExceptHandler or match_case
 
     if isinstance(code, str):
         src   = code
@@ -3014,11 +3030,11 @@ class FST:
 
         if start == stop:
             if is_set:
-                return _new_empty_set_call(from_=self) if fix else _new_empty_set_curlies(delim=False, from_=self)
+                return _new_empty_set_call(from_=self) if fix else _new_empty_set_curlies(from_=self)
             elif is_tuple:
-                return _new_empty_tuple(delim=fix, from_=self)
+                return _new_empty_tuple(from_=self)
             else:
-                return _new_empty_list(delim=fix, from_=self)
+                return _new_empty_list(from_=self)
 
         is_paren = is_tuple and self.is_parenthesized_tuple()
         ffirst   = elts[start].f
@@ -3072,9 +3088,6 @@ class FST:
 
                 assert self.root._lines[seq_loc.end_ln].startswith(')', seq_loc.end_col)
 
-        if not fix:
-            prefix = suffix = ''
-
         fst = self._get_seq_and_dedent(get_ast, cut, seq_loc, ffirst, flast, fpre, fpost, prefix, suffix)
 
         if fix:
@@ -3100,7 +3113,7 @@ class FST:
         if stop or (start and start != 'end'):
             raise IndexError(f"Set.{field} index out of range")
 
-        return _new_empty_set_call(from_=self) if fix else _new_empty_set_curlies(delim=False, from_=self)
+        return _new_empty_set_call(from_=self) if fix else _new_empty_set_curlies(from_=self)
 
     def _get_slice_dict(self, start: int | Literal['end'] | None, stop: int | None, field: str | None, cut: bool,
                         **options) -> 'FST':
@@ -3113,7 +3126,7 @@ class FST:
         start, stop = _fixup_slice_index(len(values), start, stop)
 
         if start == stop:
-            return _new_empty_dict(delim=fix, from_=self)
+            return _new_empty_dict(from_=self)
 
         keys   = ast.keys
         ffirst = self._dict_key_or_mock_loc(keys[start], values[start].f)
@@ -3144,12 +3157,7 @@ class FST:
         assert self.root._lines[self.ln].startswith('{', self.col)
         assert self.root._lines[seq_loc.end_ln].startswith('}', seq_loc.end_col)
 
-        if fix:
-            prefix, suffix = '{}'
-        else:
-            prefix = suffix = ''
-
-        return self._get_seq_and_dedent(get_ast, cut, seq_loc, ffirst, flast, fpre, fpost, prefix, suffix)
+        return self._get_seq_and_dedent(get_ast, cut, seq_loc, ffirst, flast, fpre, fpost, '{', '}')
 
     def _get_slice_stmt(self, start: int | Literal['end'] | None, stop: int | None, field: str | None, cut: bool,
                         one: bool = False, **options) -> 'FST':
@@ -3712,6 +3720,27 @@ class FST:
     def _put_slice_raw(self, code: Code | None, start: int | Literal['end'] | None = None, stop: int | None = None,
                        field: str | None = None, **options) -> 'FST':  # -> Self
         """Put a raw slice of child nodes to `self`."""
+
+        if isinstance(code, AST):  # strip delimiters because we want CONTENTS of slice for raw put, not the slice object itself
+            try:
+                ast = _reduce_ast(code, 'expr')
+            except Exception:
+                pass
+
+            else:
+                if isinstance(ast, (Tuple, List, Dict, Set)):
+                    code = ast_unparse(ast)[1 : -1]
+
+        elif isinstance(code, FST):
+            try:
+                ast = _reduce_ast(code.a, 'expr')
+            except Exception:
+                pass
+
+            else:
+                if isinstance(ast, (List, Dict, Set)) or ast.f.is_parenthesized_tuple():
+                    code.put_lines(None, end_ln := code.end_ln, (end_col := code.end_col) - 1, end_ln, end_col, True)
+                    code.put_lines(None, ln := code.ln, col := code.col, ln, col + 1, False)
 
         self._reparse_raw(code, *self._raw_slice_loc(start, stop, field))
 

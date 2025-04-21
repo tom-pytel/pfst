@@ -1757,208 +1757,6 @@ Tuple .. ROOT 0,0 -> 0,10
   .ctx Load
 """),
 
-(r"""1,""", 'body[0].value', 0, 1, {'fix': False, 'verify': False}, r"""
-
-""", r"""
-1,
-""", r"""
-Module .. ROOT 0,0 -> 0,0
-  .body[1]
-  0] Expr .. 0,0 -> 0,0
-    .value Tuple .. 0,0 -> 0,0
-      .ctx Load
-""", r"""
-Tuple .. ROOT 0,0 -> 0,2
-  .elts[1]
-  0] Constant 1 .. 0,0 -> 0,1
-  .ctx Load
-"""),
-
-(r"""(1,)""", 'body[0].value', 0, 1, {'fix': False, 'verify': False}, r"""
-()
-""", r"""
-1,
-""", r"""
-Module .. ROOT 0,0 -> 0,2
-  .body[1]
-  0] Expr .. 0,0 -> 0,2
-    .value Tuple .. 0,0 -> 0,2
-      .ctx Load
-""", r"""
-Tuple .. ROOT 0,0 -> 0,2
-  .elts[1]
-  0] Constant 1 .. 0,0 -> 0,1
-  .ctx Load
-"""),
-
-(r"""(1,2)""", 'body[0].value', 0, 1, {'fix': False, 'verify': False}, r"""
-(2)
-""", r"""
-1
-""", r"""
-Module .. ROOT 0,0 -> 0,3
-  .body[1]
-  0] Expr .. 0,0 -> 0,3
-    .value Tuple .. 0,0 -> 0,3
-      .elts[1]
-      0] Constant 2 .. 0,1 -> 0,2
-      .ctx Load
-""", r"""
-Tuple .. ROOT 0,0 -> 0,1
-  .elts[1]
-  0] Constant 1 .. 0,0 -> 0,1
-  .ctx Load
-"""),
-
-(r"""[1]""", 'body[0].value', 0, 1, {'fix': False, 'verify': False}, r"""
-[]
-""", r"""
-1
-""", r"""
-Module .. ROOT 0,0 -> 0,2
-  .body[1]
-  0] Expr .. 0,0 -> 0,2
-    .value List .. 0,0 -> 0,2
-      .ctx Load
-""", r"""
-List .. ROOT 0,0 -> 0,1
-  .elts[1]
-  0] Constant 1 .. 0,0 -> 0,1
-  .ctx Load
-"""),
-
-(r"""{1}""", 'body[0].value', 0, 1, {'fix': False, 'verify': False}, r"""
-{}
-""", r"""
-1
-""", r"""
-Module .. ROOT 0,0 -> 0,2
-  .body[1]
-  0] Expr .. 0,0 -> 0,2
-    .value Set .. 0,0 -> 0,2
-""", r"""
-Set .. ROOT 0,0 -> 0,1
-  .elts[1]
-  0] Constant 1 .. 0,0 -> 0,1
-"""),
-
-(r"""{1:2}""", 'body[0].value', 0, 1, {'fix': False, 'verify': False}, r"""
-{}
-""", r"""
-1:2
-""", r"""
-Module .. ROOT 0,0 -> 0,2
-  .body[1]
-  0] Expr .. 0,0 -> 0,2
-    .value Dict .. 0,0 -> 0,2
-""", r"""
-Dict .. ROOT 0,0 -> 0,3
-  .keys[1]
-  0] Constant 1 .. 0,0 -> 0,1
-  .values[1]
-  0] Constant 2 .. 0,2 -> 0,3
-"""),
-
-(r"""{1:2}""", 'body[0].value', 0, 1, {'fix': False, 'verify': False}, r"""
-{}
-""", r"""
-1:2
-""", r"""
-Module .. ROOT 0,0 -> 0,2
-  .body[1]
-  0] Expr .. 0,0 -> 0,2
-    .value Dict .. 0,0 -> 0,2
-""", r"""
-Dict .. ROOT 0,0 -> 0,3
-  .keys[1]
-  0] Constant 1 .. 0,0 -> 0,1
-  .values[1]
-  0] Constant 2 .. 0,2 -> 0,3
-"""),
-
-(r"""1,""", 'body[0].value', 0, 0, {'fix': False, 'verify': False}, r"""
-1,
-""", r"""
-
-""", r"""
-Module .. ROOT 0,0 -> 0,2
-  .body[1]
-  0] Expr .. 0,0 -> 0,2
-    .value Tuple .. 0,0 -> 0,2
-      .elts[1]
-      0] Constant 1 .. 0,0 -> 0,1
-      .ctx Load
-""", r"""
-Tuple .. ROOT 0,0 -> 0,0
-  .ctx Load
-"""),
-
-(r"""(1,)""", 'body[0].value', 0, 0, {'fix': False, 'verify': False}, r"""
-(1,)
-""", r"""
-
-""", r"""
-Module .. ROOT 0,0 -> 0,4
-  .body[1]
-  0] Expr .. 0,0 -> 0,4
-    .value Tuple .. 0,0 -> 0,4
-      .elts[1]
-      0] Constant 1 .. 0,1 -> 0,2
-      .ctx Load
-""", r"""
-Tuple .. ROOT 0,0 -> 0,0
-  .ctx Load
-"""),
-
-(r"""[1]""", 'body[0].value', 0, 0, {'fix': False, 'verify': False}, r"""
-[1]
-""", r"""
-
-""", r"""
-Module .. ROOT 0,0 -> 0,3
-  .body[1]
-  0] Expr .. 0,0 -> 0,3
-    .value List .. 0,0 -> 0,3
-      .elts[1]
-      0] Constant 1 .. 0,1 -> 0,2
-      .ctx Load
-""", r"""
-List .. ROOT 0,0 -> 0,0
-  .ctx Load
-"""),
-
-(r"""{1}""", 'body[0].value', 0, 0, {'fix': False, 'verify': False}, r"""
-{1}
-""", r"""
-
-""", r"""
-Module .. ROOT 0,0 -> 0,3
-  .body[1]
-  0] Expr .. 0,0 -> 0,3
-    .value Set .. 0,0 -> 0,3
-      .elts[1]
-      0] Constant 1 .. 0,1 -> 0,2
-""", r"""
-Set .. ROOT 0,0 -> 0,0
-"""),
-
-(r"""{1:2}""", 'body[0].value', 0, 0, {'fix': False, 'verify': False}, r"""
-{1:2}
-""", r"""
-
-""", r"""
-Module .. ROOT 0,0 -> 0,5
-  .body[1]
-  0] Expr .. 0,0 -> 0,5
-    .value Dict .. 0,0 -> 0,5
-      .keys[1]
-      0] Constant 1 .. 0,1 -> 0,2
-      .values[1]
-      0] Constant 2 .. 0,3 -> 0,4
-""", r"""
-Dict .. ROOT 0,0 -> 0,0
-"""),
-
 ]  # END OF GET_SLICE_SEQ_DATA
 
 GET_SLICE_STMT_DATA = [
@@ -20150,7 +19948,7 @@ class cls:
         self.assertEqual(g.src, 'a')
         self.assertEqual(f.root.src, 'f(a)')
 
-    def test_put_nonslice_raw(self):
+    def test_put_raw_special(self):
         f = parse('[a for c in d for b in c for a in b]').body[0].value.f
         g = f.put('for x in y', 1, raw=True)
         self.assertIs(g, f)
@@ -20160,7 +19958,7 @@ class cls:
         self.assertIs(g, f)
         self.assertEqual(g.src, '[a for c in d  for a in b]')
         f = g
-        g = f.put_slice(None, 1, raw=True)
+        g = f.put(None, 1, raw=True)
         self.assertIs(g, f)
         self.assertEqual(g.src, '[a for c in d  ]')
         f = g
@@ -20179,6 +19977,28 @@ class cls:
         self.assertIs(g, f)
         self.assertEqual(g.src, '[a for c in d  ]')
         f = g
+
+        self.assertEqual('(a, x, y, c)', parse('(a, b, c)').body[0].value.f.put_slice('x, y', 1, 2, raw=True).root.src)
+        self.assertEqual('[a, x, y, c]', parse('[a, b, c]').body[0].value.f.put_slice('x, y', 1, 2, raw=True).root.src)
+        self.assertEqual('{a, x, y, c}', parse('{a, b, c}').body[0].value.f.put_slice('x, y', 1, 2, raw=True).root.src)
+        self.assertEqual('{a: a, x: x, y: y, c: c}', parse('{a: a, b: b, c: c}').body[0].value.f.put_slice('x: x, y: y', 1, 2, raw=True).root.src)
+
+        self.assertEqual('(a, (x, y), c)', parse('(a, b, c)').body[0].value.f.put_slice('(x, y)', 1, 2, raw=True).root.src)
+        self.assertEqual('[a, [x, y], c]', parse('[a, b, c]').body[0].value.f.put_slice('[x, y]', 1, 2, raw=True).root.src)
+        self.assertEqual('{a, {x, y}, c}', parse('{a, b, c}').body[0].value.f.put_slice('{x, y}', 1, 2, raw=True).root.src)  # invalid set but valid syntax
+        self.assertRaises(SyntaxError, parse('{a: a, b: b, c: c}').body[0].value.f.put_slice, '{x: x, y: y}', 1, 2, raw=True)
+
+        self.assertEqual('(a, x, y, c)', parse('(a, b, c)').body[0].value.f.put_slice(ast_.parse('x, y'), 1, 2, raw=True).root.src)
+        self.assertEqual('(a, x, y, c)', parse('(a, b, c)').body[0].value.f.put_slice(ast_.parse('(x, y)'), 1, 2, raw=True).root.src)
+        self.assertEqual('[a, x, y, c]', parse('[a, b, c]').body[0].value.f.put_slice(ast_.parse('[x, y]'), 1, 2, raw=True).root.src)
+        self.assertEqual('{a, x, y, c}', parse('{a, b, c}').body[0].value.f.put_slice(ast_.parse('{x, y}'), 1, 2, raw=True).root.src)
+        self.assertEqual('{a: a, x: x, y: y, c: c}', parse('{a: a, b: b, c: c}').body[0].value.f.put_slice(ast_.parse('{x: x, y: y}'), 1, 2, raw=True).root.src)
+
+        self.assertEqual('(a, x, y, c)', parse('(a, b, c)').body[0].value.f.put_slice(FST.fromsrc('x, y'), 1, 2, raw=True).root.src)
+        self.assertEqual('(a, x, y, c)', parse('(a, b, c)').body[0].value.f.put_slice(FST.fromsrc('(x, y)'), 1, 2, raw=True).root.src)
+        self.assertEqual('[a, x, y, c]', parse('[a, b, c]').body[0].value.f.put_slice(FST.fromsrc('[x, y]'), 1, 2, raw=True).root.src)
+        self.assertEqual('{a, x, y, c}', parse('{a, b, c}').body[0].value.f.put_slice(FST.fromsrc('{x, y}'), 1, 2, raw=True).root.src)
+        self.assertEqual('{a: a, x: x, y: y, c: c}', parse('{a: a, b: b, c: c}').body[0].value.f.put_slice(FST.fromsrc('{x: x, y: y}'), 1, 2, raw=True).root.src)
 
     def test_put_special_fields(self):
         self.assertEqual('{a: b, **c, e: f}', parse('{a: b, **d, e: f}').body[0].value.f.put('c', 1, field='values').root.src)
