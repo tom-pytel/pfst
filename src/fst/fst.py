@@ -2095,8 +2095,10 @@ class FST:
                 loc = fstloc(0, 0, len(ls := self._lines) - 1, len(ls[-1]))
             elif isinstance(ast, (operator, unaryop, cmpop)):
                 loc = self._loc_operator()
-            else:
+            elif isinstance(ast, (arguments, withitem, match_case, comprehension)):
                 loc = self._loc_from_children()
+            else:
+                loc = None
 
         else:
             col     = self.root._lines[ln].b2c(col_offset)
@@ -3276,9 +3278,9 @@ class FST:
                 if put_fst.is_parenthesized_tuple() is False:  # don't put unparenthesized tuple source as one into sequence, it would merge into the sequence
                     put_fst._parenthesize_tuple()
 
-                put_ast  = Set(elts=[(a := put_fst.a)], lineno=a.lineno, col_offset=a.col_offset,
-                               end_lineno=a.end_lineno, end_col_offset=a.end_col_offset)
-                put_fst  = FST(put_ast, lines=put_fst._lines)
+                put_ast  = Set(elts=[put_fst.a], lineno=1, col_offset=0, end_lineno=len(ls := put_fst._lines),
+                               end_col_offset=ls[-1].lenbytes)
+                put_fst  = FST(put_ast, lines=ls)
                 is_tuple = is_set = False  # that's right, an `ast.Set` with `is_set=False` because in this case all we need is the `elts` container (without `ctx`)
 
             else:
@@ -3741,6 +3743,10 @@ class FST:
                 if isinstance(ast, (List, Dict, Set)) or ast.f.is_parenthesized_tuple():
                     code.put_lines(None, end_ln := code.end_ln, (end_col := code.end_col) - 1, end_ln, end_col, True)
                     code.put_lines(None, ln := code.ln, col := code.col, ln, col + 1, False)
+
+
+        # TODO: STRIP TRAILING COMMA!!!
+
 
         self._reparse_raw(code, *self._raw_slice_loc(start, stop, field))
 

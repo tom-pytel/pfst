@@ -20095,6 +20095,16 @@ finally:
     pass
             '''.strip())
 
+    def test_replace_put_pars_special(self):
+        f = parse('( a )').body[0].value.f.copy(pars=True)
+        self.assertEqual('[1, ( a ), 3]', parse('[1, 2, 3]').body[0].value.elts[1].f.replace(f).root.src)
+
+        f = parse('( a )').body[0].value.f.copy(pars=True)
+        self.assertEqual('[1, ( a ), 3]', parse('[1, 2, 3]').body[0].value.f.put(f, 1).root.src)
+
+        f = parse('( a )').body[0].value.f.copy(pars=True)
+        self.assertEqual('[1, ( a ), 3]', parse('[1, 2, 3]').body[0].value.f.put_slice(f, 1, 2, one=True).root.src)
+
     def test_replace_stmt_special(self):
         a = parse('''
 if 1: pass
