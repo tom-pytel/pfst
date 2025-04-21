@@ -15637,6 +15637,36 @@ Module .. ROOT 0,0 -> 0,17
       2] Name 'e' Load .. 0,15 -> 0,16
 """),
 
+(r"""{a: b, c: d, e: f}""", '', (0, 7, 0, 10), {}, r"""**""", r"""{a: b, **d, e: f}""", r"""{a: b, **d, e: f}""", r"""
+Module .. ROOT 0,0 -> 0,17
+  .body[1]
+  0] Expr .. 0,0 -> 0,17
+    .value Dict .. 0,0 -> 0,17
+      .keys[3]
+      0] Name 'a' Load .. 0,1 -> 0,2
+      1] None
+      2] Name 'e' Load .. 0,12 -> 0,13
+      .values[3]
+      0] Name 'b' Load .. 0,4 -> 0,5
+      1] Name 'd' Load .. 0,9 -> 0,10
+      2] Name 'f' Load .. 0,15 -> 0,16
+"""),
+
+(r"""{a: b, **d, e: f}""", '', (0, 7, 0, 9), {}, r"""c: """, r"""c""", r"""{a: b, c: d, e: f}""", r"""
+Module .. ROOT 0,0 -> 0,18
+  .body[1]
+  0] Expr .. 0,0 -> 0,18
+    .value Dict .. 0,0 -> 0,18
+      .keys[3]
+      0] Name 'a' Load .. 0,1 -> 0,2
+      1] Name 'c' Load .. 0,7 -> 0,8
+      2] Name 'e' Load .. 0,13 -> 0,14
+      .values[3]
+      0] Name 'b' Load .. 0,4 -> 0,5
+      1] Name 'd' Load .. 0,10 -> 0,11
+      2] Name 'f' Load .. 0,16 -> 0,17
+"""),
+
 (r"""del a, b, c""", '', (0, 7, 0, 11), {}, r"""z""", r"""z""", r"""del a, z""", r"""
 Module .. ROOT 0,0 -> 0,8
   .body[1]
@@ -20150,15 +20180,34 @@ class cls:
         self.assertEqual(g.src, '[a for c in d  ]')
         f = g
 
-    def test_raw_special_fields(self):
-        self.assertRaises(ValueError, parse('{a: b, c: d, e: f}').body[0].value.f.put, '**g', 1)
+    def test_put_special_fields(self):
+        self.assertEqual('{a: b, **c, e: f}', parse('{a: b, **d, e: f}').body[0].value.f.put('c', 1, field='values').root.src)
+        self.assertEqual('{a: b, c: d, e: f}', parse('{a: b, **d, e: f}').body[0].value.f.put('c', 1, field='keys').root.src)
+        self.assertEqual('{a: b, **g, e: f}', parse('{a: b, c: d, e: f}').body[0].value.f.put('**g', 1).root.src)
+        self.assertEqual('{a: b, c: d, e: f}', parse('{a: b, **g, e: f}').body[0].value.f.put('c: d', 1).root.src)
         self.assertEqual('{a: b, g: d, e: f}', parse('{a: b, c: d, e: f}').body[0].value.f.put('g', 1, field='keys').root.src)
         self.assertEqual('{a: b, c: g, e: f}', parse('{a: b, c: d, e: f}').body[0].value.f.put('g', 1, field='values').root.src)
         self.assertEqual('{a: b, **g, e: f}', parse('{a: b, c: d, e: f}').body[0].value.f.put_slice('**g', 1, 2).root.src)
 
-        # TODO: MatchMapping?
+        self.assertEqual('match a:\n case {4: d, 2: b, 3: c}: pass', parse('match a:\n case {1: a, 2: b, 3: c}: pass').body[0].cases[0].pattern.f.put('4: d', 0).root.src)
+        self.assertEqual('match a:\n case {4: a, 2: b, 3: c}: pass', parse('match a:\n case {1: a, 2: b, 3: c}: pass').body[0].cases[0].pattern.f.put('4', 0, field='keys').root.src)
+        self.assertEqual('match a:\n case {1: d, 2: b, 3: c}: pass', parse('match a:\n case {1: a, 2: b, 3: c}: pass').body[0].cases[0].pattern.f.put('d', 0, field='patterns').root.src)
+        self.assertEqual('match a:\n case {1: a, 2: b, **d}: pass', parse('match a:\n case {1: a, 2: b, 3: c}: pass').body[0].cases[0].pattern.f.put('**d', 2).root.src)
+        self.assertEqual('match a:\n case {4: d, 2: b, 3: c}: pass', parse('match a:\n case {1: a, 2: b, 3: c}: pass').body[0].cases[0].pattern.f.put_slice('4: d', 0, 1).root.src)
+        self.assertEqual('match a:\n case {1: a, 4: d, 3: c}: pass', parse('match a:\n case {1: a, 2: b, 3: c}: pass').body[0].cases[0].pattern.f.put_slice('4: d', 1, 2).root.src)
+        self.assertEqual('match a:\n case {1: a, 2: b, 4: d}: pass', parse('match a:\n case {1: a, 2: b, 3: c}: pass').body[0].cases[0].pattern.f.put_slice('4: d', 2, 3).root.src)
+        self.assertEqual('match a:\n case {1: a, 4: d}: pass', parse('match a:\n case {1: a, 2: b, 3: c}: pass').body[0].cases[0].pattern.f.put_slice('4: d', 1, 3).root.src)
+        self.assertEqual('match a:\n case {4: d}: pass', parse('match a:\n case {1: a, 2: b, 3: c}: pass').body[0].cases[0].pattern.f.put_slice('4: d', 0, 3).root.src)
+        self.assertEqual('match a:\n case {4: d}: pass', parse('match a:\n case {1: a, 2: b, 3: c}: pass').body[0].cases[0].pattern.f.put_slice('4: d').root.src)
 
-        self.assertRaises(ValueError, parse('a < b < c').body[0].value.f.put, 'z', 1)
+        self.assertEqual('z < b < c', parse('a < b < c').body[0].value.f.put('z', 0).root.src)
+        self.assertEqual('a < z < c', parse('a < b < c').body[0].value.f.put('z', 1).root.src)
+        self.assertEqual('a < b < z', parse('a < b < c').body[0].value.f.put('z', 2).root.src)
+        self.assertEqual('a < b < z', parse('a < b < c').body[0].value.f.put('z', -1).root.src)
+        self.assertEqual('a < z < c', parse('a < b < c').body[0].value.f.put('z', -2).root.src)
+        self.assertEqual('z < b < c', parse('a < b < c').body[0].value.f.put('z', -3).root.src)
+        self.assertRaises(IndexError, parse('a < b < c').body[0].value.f.put, 'z', 4)
+        self.assertRaises(IndexError, parse('a < b < c').body[0].value.f.put, 'z', -4)
         self.assertEqual('z < b < c', parse('a < b < c').body[0].value.f.put('z', field='left').root.src)
         self.assertEqual('a < b < z', parse('a < b < c').body[0].value.f.put('z', 1, field='comparators').root.src)
         self.assertEqual('a < b > c', parse('a < b < c').body[0].value.f.put('>', 1, field='ops').root.src)

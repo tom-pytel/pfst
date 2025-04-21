@@ -4297,15 +4297,18 @@ class FST:
         call whether it succeeds or fails.
         """
 
+        ast     = self.a
         _, body = _fixup_field_body(self.a, field, only_list=False)
 
         if not isinstance(body, list):
             if stop is not False or start is not None:
-                raise ValueError(f"cannot pass index for non-slice put() to {a.__class__.__name__}" +
+                raise ValueError(f"cannot pass index for non-slice put() to {ast.__class__.__name__}" +
                                  f".{field}" if field else "")
 
+
             if not isinstance(body, AST):
-                raise NotImplementedError
+                raise NotImplementedError  # TODO: this
+
 
             body.f.replace(code, **options)
 
@@ -4317,18 +4320,37 @@ class FST:
             return self.put_slice(code, None, None, field, one=one, **options)
 
         if start == 'end':
-            raise ValueError(f"cannot put() non-slice to 'end'")
+            raise ValueError(f"cannot put() non-slice to index 'end'")
         if not one:
             raise ValueError(f"cannot use 'one=False' in non-slice put()")
 
-        if field is None and isinstance(a := self.a, (Dict, MatchMapping, Compare)):
-            raise ValueError(f"cannot put to individual index without field in a {a.__class__.__name__}")
+        is_dict = isinstance(ast, Dict)
 
+        if field is None:  # maybe putting to special case field?
+            if is_dict or isinstance(ast, MatchMapping):
+                if not (DEFAULT_RAW if (o := options.get('raw')) is None else o):
+                    raise ValueError(f"cannot put() non-raw without field to {ast.__class__.__name__}")
 
-            # TODO: allow this via put_slice or individual put to Compare.left/comparators?
+                key = key.f if (key := ast.keys[start]) else self._dict_key_or_mock_loc(key, ast.values[start].f)
+                end = (ast.values if is_dict else ast.patterns)[start].f
 
+                self._reparse_raw(code, key.ln, key.col, end.end_ln, end.end_col)
 
-        body[start].f.replace(code, **options)
+                return self.repath()
+
+            if isinstance(ast, Compare):
+                body = [ast.left, *ast.comparators]
+
+        if is_dict and field == 'keys' and (keys := ast.keys)[start] is None:  # '{**d}' bs
+            start_loc = self._dict_key_or_mock_loc(keys[start], ast.values[start].f)
+
+            ln, col, end_ln, end_col = start_loc.loc if start_loc.is_FST else start_loc
+
+            self.put_lines([': '], ln, col, end_ln, end_col)
+            self._reparse_raw(code, ln, col, ln, col)
+
+        else:
+            body[start].f.replace(code, **options)
 
         return self.repath()
 
@@ -4338,10 +4360,10 @@ class FST:
 
         ast = self.a
 
-        ffield, _ = _fixup_field_body(ast, field)
+        field_, _ = _fixup_field_body(ast, field)
 
         if isinstance(ast, STATEMENTISH_OR_STMTMOD):
-            if ffield in STATEMENTISH_FIELDS:
+            if field_ in STATEMENTISH_FIELDS:
                 return self._get_slice_stmt(start, stop, field, cut, **options)
 
         elif isinstance(ast, (Tuple, List, Set)):
@@ -4370,7 +4392,7 @@ class FST:
         """
 
         ast       = self.a
-        ffield, _ = _fixup_field_body(ast, field)
+        field_, _ = _fixup_field_body(ast, field)
         raw       = DEFAULT_RAW if (o := options.get('raw')) is None else o
 
         if raw is not True:
@@ -4379,7 +4401,7 @@ class FST:
 
             try:
                 if isinstance(ast, STATEMENTISH_OR_STMTMOD):
-                    if ffield in STATEMENTISH_FIELDS:
+                    if field_ in STATEMENTISH_FIELDS:
                         self._put_slice_stmt(code, start, stop, field, one, **options)
 
                         return self
