@@ -3727,7 +3727,7 @@ class FST:
             start, stop = _fixup_slice_index(len_, start, stop)
 
             if stop == start:
-                raise RuntimeError(f"invalid slice for raw operation")
+                raise ValueError(f"invalid slice for raw operation")
 
             return start, stop
 
@@ -3737,63 +3737,57 @@ class FST:
             if field is not None:
                 raise ValueError(f"cannot specify a field '{field}' to assign slice to a Dict")
 
-            body        = ast.keys
-            body2       = ast.values
-            start, stop = fixup_slice_index_for_raw(len(body), start, stop)
-            start_loc   = self._dict_key_or_mock_loc(body[start], body2[start].f)
+            keys        = ast.keys
+            values      = ast.values
+            start, stop = fixup_slice_index_for_raw(len(keys), start, stop)
+            start_loc   = self._dict_key_or_mock_loc(keys[start], values[start].f)
 
             if start_loc.is_FST:
                 start_loc = start_loc.pars()
 
-            return fstloc(start_loc.ln, start_loc.col, *body2[stop - 1].f.pars()[2:])
+            return fstloc(start_loc.ln, start_loc.col, *values[stop - 1].f.pars()[2:])
 
         if isinstance(ast, Compare):
             if field is not None:
                 raise ValueError(f"cannot specify a field '{field}' to assign slice to a Compare")
 
-            body = body2 = ast.comparators  # virtual combined body of [Compare.left] + Compare.comparators
-            start, stop  = fixup_slice_index_for_raw(len(body) + 1, start, stop)
+            comparators  = ast.comparators  # virtual combined body of [Compare.left] + Compare.comparators
+            start, stop  = fixup_slice_index_for_raw(len(comparators) + 1, start, stop)
             stop        -= 1
 
-            if start:
-                start -= 1
-            else:
-                body = [ast.left]
-
-            return fstloc(*body[start].f.pars()[:2], *body2[stop - 1].f.pars()[2:])
+            return fstloc(*(comparators[start - 1] if start else ast.left).f.pars()[:2],
+                          *(comparators[stop - 1] if stop else ast.left).f.pars()[2:])
 
         if isinstance(ast, MatchMapping):
             if field is not None:
                 raise ValueError(f"cannot specify a field '{field}' to assign slice to a MatchMapping")
 
-            body        = ast.keys
-            body2       = ast.patterns
-            start, stop = fixup_slice_index_for_raw(len(body), start, stop)
+            keys        = ast.keys
+            start, stop = fixup_slice_index_for_raw(len(keys), start, stop)
 
-            return fstloc(*body[start].f.loc[:2], *body2[stop - 1].f.pars()[2:])
+            return fstloc(*keys[start].f.loc[:2], *ast.patterns[stop - 1].f.pars()[2:])
 
         if isinstance(ast, comprehension):
-            body        = ast.ifs
-            start, stop = fixup_slice_index_for_raw(len(body), start, stop)
-            ffirst      = body[start].f
+            ifs         = ast.ifs
+            start, stop = fixup_slice_index_for_raw(len(ifs), start, stop)
+            ffirst      = ifs[start].f
             start_pos   = _prev_find(self.root._lines, *ffirst._prev_ast_bound(), ffirst.ln, ffirst.col, 'if')
 
-            return fstloc(*start_pos, *body[stop - 1].f.pars()[2:])
+            return fstloc(*start_pos, *ifs[stop - 1].f.pars()[2:])
 
         if field == 'decorator_list':
-            body        = ast.decorator_list
-            start, stop = fixup_slice_index_for_raw(len(body), start, stop)
-            ffirst      = body[start].f
+            decos       = ast.decorator_list
+            start, stop = fixup_slice_index_for_raw(len(decos), start, stop)
+            ffirst      = decos[start].f
             start_pos   = _prev_find(self.root._lines, 0, 0, ffirst.ln, ffirst.col, '@')  # we can use '0, 0' because we know "@" starts on a newline
 
-            return fstloc(*start_pos, *body[stop - 1].f.pars()[2:])
+            return fstloc(*start_pos, *decos[stop - 1].f.pars()[2:])
 
         _, body     = _fixup_field_body(ast, field)
         start, stop = fixup_slice_index_for_raw(len(body), start, stop)
-        body2       = body
 
         return fstloc(*body[start].f.pars(exc_genexpr_solo=True)[:2],
-                      *body2[stop - 1].f.pars(exc_genexpr_solo=True)[2:])
+                      *body[stop - 1].f.pars(exc_genexpr_solo=True)[2:])
 
     def _reparse_raw(self, code: Code | None, ln: int, col: int, end_ln: int, end_col: int,
                      inc: bool | None = None) -> 'FST':
@@ -4307,7 +4301,7 @@ class FST:
 
         if not isinstance(body, list):
             if stop is not False or start is not None:
-                raise ValueError(f"cannot pass index for non-slice put to {a.__class__.__name__}" +
+                raise ValueError(f"cannot pass index for non-slice put() to {a.__class__.__name__}" +
                                  f".{field}" if field else "")
 
             if not isinstance(body, AST):
