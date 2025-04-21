@@ -65,33 +65,31 @@ AST_FIELDS_PREV[(arguments, 'kw_defaults')] = 7
 AST_FIELDS_PREV[(arguments, 'kwarg')]       = 7
 
 AST_DEFAULT_BODY_FIELD  = {cls: field for field, classes in [
-    ('body',                 (Module, Interactive, FunctionDef, AsyncFunctionDef, ClassDef, For, AsyncFor, While, If,
-                              With, AsyncWith, Try, TryStar, ExceptHandler, match_case),),
-    ('cases',                (Match,)),
+    ('body',        (Module, Interactive, FunctionDef, AsyncFunctionDef, ClassDef, For, AsyncFor, While, If,
+                     With, AsyncWith, Try, TryStar, ExceptHandler, match_case),),
+    ('cases',       (Match,)),
 
-    ('elts',                 (Tuple, List, Set)),
-    ('patterns',             (MatchSequence, MatchOr)),
-    ('targets',              (Delete, Assign)),
-    ('type_params',          (TypeAlias,)),
-    ('names',                (Import, ImportFrom)),
-    ('ifs',                  (comprehension,)),
-    ('values',               (BoolOp,)),
-    ('generators',           (ListComp, SetComp, DictComp, GeneratorExp)),
-    ('args',                 (Call,)),
+    ('elts',        (Tuple, List, Set)),
+    ('patterns',    (MatchSequence, MatchOr)),
+    ('targets',     (Delete, Assign)),
+    ('type_params', (TypeAlias,)),
+    ('names',       (Import, ImportFrom)),
+    ('ifs',         (comprehension,)),
+    ('values',      (BoolOp,)),
+    ('generators',  (ListComp, SetComp, DictComp, GeneratorExp)),
+    ('args',        (Call,)),
 
-    # (('keys',),              (Dict,)),  # special cases, field names only exist so initial checks succeed for `field=None` but all handled programaticallyu
-    # (('keys',),              (MatchMapping,)),
-    # (('ops',),               (Compare,)),
+    # ('values',      (JoinedStr,)),  # values don't have locations in lower version pythons
+    # ('items',       (With, AsyncWith)),  # 'body' takes precedence
 
-    (True,                  (Dict,)),  # entries exist and `True` only so that initial checks succeed for `field=None`, but all handled programatically
-    (True,                  (MatchMapping,)),
-    (True,                  (Compare,)),
+    # special cases, field names here only for checks to succeed, otherwise all handled programatically
+    ('keys',        (Dict,)),
+    ('keys',        (MatchMapping,)),
+    ('ops',         (Compare,)),
 
-    # ('values',               (JoinedStr,)),  # values don't have locations in lower version pythons
-    # ('items',                (With, AsyncWith)),  # 'body' takes precedence
-
-    # ('value',    (Expr, Return, Await, Yield, YieldFrom, Constant, Starred, MatchValue, MatchSingleton)),  # maybe obvious single bodies in future?
-    # ('pattern',  (MatchAs,)),
+    # single value fields
+    ('value',       (Expr, Return, Await, Yield, YieldFrom, Starred, MatchValue)),
+    ('pattern',     (MatchAs,)),
 ] for cls in classes}
 
 DEFAULT_PARSE_PARAMS    = dict(filename='<unknown>', type_comments=False, feature_version=None)
@@ -123,7 +121,7 @@ ANONYMOUS_SCOPE         = (Lambda, ListComp, SetComp, DictComp, GeneratorExp)
 PARENTHESIZABLE         = (expr, pattern)
 HAS_DOCSTRING           = NAMED_SCOPE_OR_MOD
 
-STMTISH_LIST_FIELDS     = frozenset(('body', 'orelse', 'finalbody', 'handlers', 'cases'))
+STATEMENTISH_FIELDS     = frozenset(('body', 'orelse', 'finalbody', 'handlers', 'cases'))
 
 re_empty_line_start     = re.compile(r'[ \t]*')     # start of completely empty or space-filled line (from start pos, start of line indentation)
 re_empty_line           = re.compile(r'[ \t]*$')    # completely empty or space-filled line (from start pos, start of line indentation)
@@ -560,20 +558,17 @@ def _prev_pars(lines: list[str], bound_ln: int, bound_col: int, pars_ln: int, pa
         return pars_ln, pars_col, ante_ln, ante_col, npars
 
 
-def _fixup_field_body(ast: AST, field: str | None = None) -> tuple[str, 'AST']:
+def _fixup_field_body(ast: AST, field: str | None = None, only_list: bool = True) -> tuple[str, 'AST']:
     """Get `AST` member list for specified `field` or default if `field=None`."""
 
     if field is None:
         if not (field := AST_DEFAULT_BODY_FIELD.get(ast.__class__)):
             raise ValueError(f"{ast.__class__.__name__} has no default body field")
 
-        if field is True:
-            return False, None  # `False` field to differentiate from `None`
-
     if (body := getattr(ast, field, _fixup_field_body)) is _fixup_field_body:  # _fixup_field_body serves as sentinel
         raise ValueError(f"{ast.__class__.__name__} has no field '{field}'")
 
-    if not isinstance(body, list):
+    if only_list and not isinstance(body, list):
         raise ValueError(f"invalid {ast.__class__.__name__} field '{field}', must be a list")
 
     return field, body
@@ -704,22 +699,22 @@ def _new_empty_dict(*, delim: bool = True, from_: Optional['FST'] = None) -> 'FS
     return FST(ast, lines=[bistr('{}' if delim else '')], from_=from_)
 
 
-def _new_empty_set_curlies(ast_only: bool = False, lineno: int = 1, col_offset: int = 0, *,
+def _new_empty_set_curlies(only_ast: bool = False, lineno: int = 1, col_offset: int = 0, *,
                            delim: bool = True, from_: Optional['FST'] = None) -> 'FST':
     ast = Set(elts=[], lineno=lineno, col_offset=col_offset, end_lineno=lineno,
               end_col_offset=col_offset + 2 if delim else 0)
 
-    return ast if ast_only else FST(ast, lines=[bistr('{}' if delim else '')], from_=from_)
+    return ast if only_ast else FST(ast, lines=[bistr('{}' if delim else '')], from_=from_)
 
 
-def _new_empty_set_call(ast_only: bool = False, lineno: int = 1, col_offset: int = 0, *,
+def _new_empty_set_call(only_ast: bool = False, lineno: int = 1, col_offset: int = 0, *,
                         from_: Optional['FST'] = None) -> 'FST':
     ast = Call(func=Name(id='set', ctx=Load(), lineno=lineno, col_offset=col_offset, end_lineno=lineno,
                          end_col_offset=col_offset + 3),
                args=[], keywords=[], lineno=lineno, col_offset=col_offset, end_lineno=lineno,
                end_col_offset=col_offset + 5)
 
-    return ast if ast_only else FST(ast, lines=[bistr('set()')], from_=from_)
+    return ast if only_ast else FST(ast, lines=[bistr('set()')], from_=from_)
 
 
 class fstlistproxy:
@@ -2283,7 +2278,7 @@ class FST:
             is_list = isinstance(child, list)
 
             if compact:
-                if child is None:
+                if child is None and not full:
                     continue
 
                 if name == 'ctx':
@@ -3900,7 +3895,7 @@ class FST:
             else:
                 loc = to_loc
 
-        elif not (to_loc := to.pars(pars, exc_genexpr_solo=True)):
+        elif not (to_loc := to.pars(pars, exc_genexpr_solo=True)):  # pars is True here
             raise ValueError(f"'to' node must have a location")
         elif (root := self.root) is not to.root:
             raise ValueError(f"'to' node not part of same tree")
@@ -4221,8 +4216,10 @@ class FST:
 
             return fst
 
+
         # TODO: individual nodes
         # TODO: other sequences?
+
 
         raise ValueError(f"cannot cut from a {parenta.__class__.__name__}.{field}")
 
@@ -4306,22 +4303,29 @@ class FST:
         call whether it succeeds or fails.
         """
 
+        _, body = _fixup_field_body(self.a, field, only_list=False)
+
+        if not isinstance(body, list):
+            if stop is not False or start is not None:
+                raise ValueError(f"cannot pass index for non-slice put to {a.__class__.__name__}" +
+                                 f".{field}" if field else "")
+
+            if not isinstance(body, AST):
+                raise NotImplementedError
+
+            body.f.replace(code, **options)
+
+            return self.repath()
+
         if stop is not False:
             return self.put_slice(code, start, stop, field, one=one, **options)
-        elif start is None:
-
-
-            # TODO: decide it slice operation or single element operation
-
-
+        if start is None:
             return self.put_slice(code, None, None, field, one=one, **options)
 
         if start == 'end':
             raise ValueError(f"cannot put() non-slice to 'end'")
         if not one:
             raise ValueError(f"cannot use 'one=False' in non-slice put()")
-
-        _, body = _fixup_field_body(self.a, field)
 
         if field is None and isinstance(a := self.a, (Dict, MatchMapping, Compare)):
             raise ValueError(f"cannot put to individual index without field in a {a.__class__.__name__}")
@@ -4342,19 +4346,22 @@ class FST:
 
         ffield, _ = _fixup_field_body(ast, field)
 
-        if isinstance(ast, STATEMENTISH_OR_STMTMOD) and ffield in STMTISH_LIST_FIELDS:
-            return self._get_slice_stmt(start, stop, field, cut, **options)
+        if isinstance(ast, STATEMENTISH_OR_STMTMOD):
+            if ffield in STATEMENTISH_FIELDS:
+                return self._get_slice_stmt(start, stop, field, cut, **options)
 
-        if isinstance(ast, (Tuple, List, Set)):
+        elif isinstance(ast, (Tuple, List, Set)):
             return self._get_slice_tuple_list_or_set(start, stop, field, cut, **options)
 
-        if isinstance(ast, Dict):
+        elif isinstance(ast, Dict):
             return self._get_slice_dict(start, stop, field, cut, **options)
 
-        if self.is_empty_set_call():
+        elif self.is_empty_set_call():
             return self._get_slice_empty_set_call(start, stop, field, cut, **options)
 
-        # TODO: more
+
+        # TODO: more individual specialized slice gets
+
 
         raise ValueError(f"cannot get slice from a '{ast.__class__.__name__}'")
 
@@ -4377,22 +4384,23 @@ class FST:
                 raise ValueError(f"invalid value '{raw}' for raw parameter")
 
             try:
-                if isinstance(ast, STATEMENTISH_OR_STMTMOD) and ffield in STMTISH_LIST_FIELDS:
-                    self._put_slice_stmt(code, start, stop, field, one, **options)
+                if isinstance(ast, STATEMENTISH_OR_STMTMOD):
+                    if ffield in STATEMENTISH_FIELDS:
+                        self._put_slice_stmt(code, start, stop, field, one, **options)
 
-                    return self
+                        return self
 
-                if isinstance(ast, (Tuple, List, Set)):
+                elif isinstance(ast, (Tuple, List, Set)):
                     self._put_slice_tuple_list_or_set(code, start, stop, field, one, **options)
 
                     return self
 
-                if isinstance(ast, Dict):
+                elif isinstance(ast, Dict):
                     self._put_slice_dict(code, start, stop, field, one, **options)
 
                     return self
 
-                if self.is_empty_set_call():
+                elif self.is_empty_set_call():
                     self._put_slice_empty_set_call(code, start, stop, field, one, **options)
 
                     return self
@@ -5922,12 +5930,14 @@ class FST:
     def pars(self, pars: bool = True, *, exc_genexpr_solo: bool = False, **options) -> fstloc:
         """Return the location of enclosing parentheses if present. Will balance parentheses if `self` is an element of
         a tuple and not return the parentheses of the tuple. Likwise will not return the parentheses of an enclosing
-        `arguments`  parent. Only works on (and makes sense for) `expr` or `pattern` nodes, otherwise `self.bloc`.
+        `arguments`  parent. Only works on (and makes sense for) `expr` or `pattern` nodes, otherwise `self.bloc`. Also
+        handles special case of a single generator expression argument to a function sharing parameters with the call
+        arguments.
 
         **Parameters:**
         - `pars`: `True` means return parentheses if present and `self.bloc` otherwise, `False` always `self.bloc`.
         - `exc_genexpr_solo`: If `True` then will exclude left parentheses of a single call argument generator
-            expression if it is shared with the call() arguments enclosing parentheses. Is not checked if `pars=False`.
+            expression if it is shared with the call arguments enclosing parentheses. Is not checked if `pars=False`.
         - `options`: Ignored.
 
         **Returns:**

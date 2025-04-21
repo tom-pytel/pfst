@@ -19,6 +19,7 @@ It works by adding `FST` nodes to existing `AST` nodes as an `.f` attribute whic
 
 * `put()` individual non-slice nodes.
 * Reconcile AST nodes modified not using FST machinery.
+* Raw `get()` and `get_slice()`.
 * Redo sequence slices for same comment behavior as statements.
   * Implement individual sequence slice non-raw paths.
 * Clean up comment handling, where to put wrt comments, interface for modifying just those.

@@ -20494,6 +20494,15 @@ class cls:
 
                 raise
 
+    def test_put_default_non_list_field(self):
+        self.assertEqual('y', parse('n').body[0].f.put('y').root.src)  # Expr
+        self.assertEqual('return y', parse('return n').body[0].f.put('y').root.src)  # Return
+        self.assertEqual('await y', parse('await n').body[0].value.f.put('y').root.src)  # Await
+        self.assertEqual('yield y', parse('yield n').body[0].value.f.put('y').root.src)  # Yield
+        self.assertEqual('yield from y', parse('yield from n').body[0].value.f.put('y').root.src)  # YieldFrom
+        self.assertEqual('[*y]', parse('[*n]').body[0].value.elts[0].f.put('y').root.src)  # Starred
+        self.assertEqual('match a:\n case "y": pass', parse('match a:\n case "n": pass').body[0].cases[0].pattern.f.put('"y"').root.src)  # MatchValue
+
     def test_ctx_change(self):
         a = parse('a, b = x, y').body[0]
         a.targets[0].f.put(a.value.f.get())
