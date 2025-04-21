@@ -28,7 +28,7 @@ if sys.version_info[:2] < (3, 12):  # for isinstance() checks
 #   Compare       - interleaved `ops` and `comparators`
 #   MatchMapping  - interleaved `keys` and `patterns`
 #   arguments     - interleaved `posonlyargs`/`args` and `defaults` (partially), interleaved `kwonlyargs` and `kw_defaults`
-#   Call          - `args` type `Starred` can be inside `keywords`
+#   Call          - type `Starred` can be in `args`, `arg=None` in `keywords` means double starred
 FIELDS = dict([
     (Module,             (('body', 'stmt*'), ('type_ignores', 'type_ignore*'))),
     (Interactive,        (('body', 'stmt*'),)),
