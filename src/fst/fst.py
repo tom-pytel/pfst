@@ -2907,13 +2907,26 @@ class FST:
 
         return self
 
+    def _parenthesize(self):
+        """Parenthesize literally anything, just add parens around node adjusting parent locations."""
+
+        ln, col, end_ln, end_col = self.bloc
+
+        self.put_lines([')'], end_ln, end_col, end_ln, end_col, True, self)
+        self.put_lines(['('], ln, col, ln, col, False)
+
+        self.a.end_col_offset -= 1  # correct for put ')' because needed to offset tail of parents but not self
+
+        self._floor_start_pos((a := self.a).lineno, a.col_offset - 1, False)
+
     def _parenthesize_tuple(self):
-        """Parenthesize an unparenthesized tuple. No checks are done so don't call on anything else!"""
+        """Parenthesize an unparenthesized tuple, adjusting tuple location for added parentheses.. No checks are done so
+        don't call on anything else!"""
 
         ln, col, end_ln, end_col = self.loc
 
-        self.put_lines([bistr(')')], end_ln, end_col, end_ln, end_col, True, self)
-        self.put_lines([bistr('(')], ln, col, ln, col, False)
+        self.put_lines([')'], end_ln, end_col, end_ln, end_col, True, self)
+        self.put_lines(['('], ln, col, ln, col, False)
 
         self._floor_start_pos((a := self.a).lineno, a.col_offset - 1)
 

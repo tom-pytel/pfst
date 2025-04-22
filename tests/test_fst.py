@@ -16464,6 +16464,55 @@ def f():
         elif 3: pass
             '''.strip())
 
+    def test__parenthesize(self):
+        f = parse('[i]').f
+        f.body[0].value.elts[0]._parenthesize()
+        self.assertEqual('[(i)]', f.src)
+        self.assertEqual((0, 0, 0, 5), f.loc)
+        self.assertEqual((0, 0, 0, 5), f.body[0].loc)
+        self.assertEqual((0, 0, 0, 5), f.body[0].value.loc)
+        self.assertEqual((0, 2, 0, 3), f.body[0].value.elts[0].loc)
+
+        f = parse('a + b').f
+        f.body[0].value.left._parenthesize()
+        f.body[0].value.right._parenthesize()
+        self.assertEqual('(a) + (b)', f.src)
+        self.assertEqual((0, 0, 0, 9), f.loc)
+        self.assertEqual((0, 0, 0, 9), f.body[0].loc)
+        self.assertEqual((0, 0, 0, 9), f.body[0].value.loc)
+        self.assertEqual((0, 1, 0, 2), f.body[0].value.left.loc)
+        self.assertEqual((0, 4, 0, 5), f.body[0].value.op.loc)
+        self.assertEqual((0, 7, 0, 8), f.body[0].value.right.loc)
+
+        f = parse('a + b').f
+        f.body[0].value.right._parenthesize()
+        f.body[0].value.left._parenthesize()
+        self.assertEqual('(a) + (b)', f.src)
+        self.assertEqual((0, 0, 0, 9), f.loc)
+        self.assertEqual((0, 0, 0, 9), f.body[0].loc)
+        self.assertEqual((0, 0, 0, 9), f.body[0].value.loc)
+        self.assertEqual((0, 1, 0, 2), f.body[0].value.left.loc)
+        self.assertEqual((0, 4, 0, 5), f.body[0].value.op.loc)
+        self.assertEqual((0, 7, 0, 8), f.body[0].value.right.loc)
+
+    def test__parenthesize_tuple(self):
+        f = parse('i,').f
+        f.body[0].value._parenthesize_tuple()
+        self.assertEqual('(i,)', f.src)
+        self.assertEqual((0, 0, 0, 4), f.loc)
+        self.assertEqual((0, 0, 0, 4), f.body[0].loc)
+        self.assertEqual((0, 0, 0, 4), f.body[0].value.loc)
+        self.assertEqual((0, 1, 0, 2), f.body[0].value.elts[0].loc)
+
+        f = parse('a, b').f
+        f.body[0].value._parenthesize_tuple()
+        self.assertEqual('(a, b)', f.src)
+        self.assertEqual((0, 0, 0, 6), f.loc)
+        self.assertEqual((0, 0, 0, 6), f.body[0].loc)
+        self.assertEqual((0, 0, 0, 6), f.body[0].value.loc)
+        self.assertEqual((0, 1, 0, 2), f.body[0].value.elts[0].loc)
+        self.assertEqual((0, 4, 0, 5), f.body[0].value.elts[1].loc)
+
     def test_loc(self):
         self.assertEqual((0, 6, 0, 9), parse('def f(i=1): pass').body[0].args.f.loc)  # arguments
         self.assertEqual((0, 5, 0, 8), parse('with f(): pass').body[0].items[0].f.loc)  # withitem
