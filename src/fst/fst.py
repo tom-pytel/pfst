@@ -2310,7 +2310,8 @@ class FST:
                              'annotation', 'iter', 'test','exc', 'cause', 'msg', 'elt', 'key', 'func',
                              'slice', 'lower', 'upper', 'step', 'guard', 'optional_vars',
                              'cls', 'bound', 'default_value', 'pattern', 'subject',
-                             'type_comment', 'lineno', 'tag', 'op')
+                             'type_comment', 'lineno', 'tag', 'op',
+                             'simple', 'level', 'conversion', 'is_async', 'lineno')
                             or (not is_list and name in
                              ('body', 'orelse'))
                 ):
@@ -2692,7 +2693,7 @@ class FST:
 
             ln, _, end_ln, _ = self.loc
 
-            if not is_parenthesized and end_ln != ln:  # `not self.is_enclosed` instead of `end_ln != ln``:  <-- TODO: this, also maybe double check for line continuations?
+            if not is_parenthesized and end_ln != ln:  # `not self.is_enclosed` instead of `end_ln != ln``:  <-- TODO: this, also maybe double check for line continuations (aesthetic thing)?
                 self._parenthesize_tuple()
 
         elif not is_parenthesized:  # if is unparenthesized tuple and empty left then need to add parentheses

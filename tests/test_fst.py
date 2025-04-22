@@ -1304,8 +1304,7 @@ Module .. ROOT 0,0 -> 4,1
                 1] Dict .. 3,40 -> 3,42
               .attr 'items'
               .ctx Load
-          .is_async
-            0
+          .is_async 0
 """, r"""
 Dict .. ROOT 0,0 -> 3,1
   .keys[2]
@@ -1345,8 +1344,7 @@ Dict .. ROOT 0,0 -> 3,1
         0] NotIn .. 1,64 -> 1,70
         .comparators[1]
         0] Name 'ignore' Load .. 1,71 -> 1,77
-      .is_async
-        0
+      .is_async 0
   1] Constant '1' .. 2,24 -> 2,27
 """),
 
@@ -14923,8 +14921,7 @@ Module .. ROOT 0,0 -> 0,27
       .name 'z'
       .asname
         'xyz'
-    .level
-      0
+    .level 0
 """),
 
 (r"""with a as a, b as b, c as c: pass""", 'body[0]', 1, 3, 'items', {'raw': True}, r"""z as xyz""", r"""with a as a, z as xyz: pass""", r"""
@@ -14980,14 +14977,12 @@ Module .. ROOT 0,0 -> 0,29
         .target Name 'a' Store .. 0,7 -> 0,8
         .iter Call .. 0,12 -> 0,15
           .func Name 'a' Load .. 0,12 -> 0,13
-        .is_async
-          0
+        .is_async 0
       1] comprehension .. 0,16 -> 0,28
         .target Name 'z' Store .. 0,20 -> 0,21
         .iter Call .. 0,25 -> 0,28
           .func Name 'z' Load .. 0,25 -> 0,26
-        .is_async
-          0
+        .is_async 0
 """),
 
 (r"""[a for a in a() if a if b if c]""", 'body[0].value.generators[0]', 1, 3, None, {'raw': True}, r"""if z""", r"""[a for a in a() if a if z]""", r"""
@@ -15004,8 +14999,7 @@ Module .. ROOT 0,0 -> 0,26
         .ifs[2]
         0] Name 'a' Load .. 0,19 -> 0,20
         1] Name 'z' Load .. 0,24 -> 0,25
-        .is_async
-          0
+        .is_async 0
 """),
 
 (r"""f(a, b, c)""", 'body[0].value', 1, 3, None, {'raw': True}, r"""z""", r"""f(a, z)""", r"""
@@ -15170,8 +15164,7 @@ Module .. ROOT 0,0 -> 0,24
             .func Name 'range' Load .. 0,14 -> 0,19
             .args[1]
             0] Constant 5 .. 0,20 -> 0,21
-          .is_async
-            0
+          .is_async 0
 """),
 
 (r"""{1: 2, **(x), (3): (4)}""", 'body[0].value', 1, 3, None, {'raw': True}, r"""**z""", r"""{1: 2, **z}""", r"""
@@ -15250,8 +15243,7 @@ Module .. ROOT 0,0 -> 0,28
         .ifs[2]
         0] Name 'a' Load .. 0,20 -> 0,21
         1] Name 'z' Load .. 0,26 -> 0,27
-        .is_async
-          0
+        .is_async 0
 """),
 
 (r"""
@@ -15509,8 +15501,7 @@ Module .. ROOT 0,0 -> 0,27
       .name 'z'
       .asname
         'xyz'
-    .level
-      0
+    .level 0
 """),
 
 (r"""with a as a, b as b, c as c: pass""", '', (0, 13, 0, 27), {}, r"""z as xyz""", r"""z as xyz""", r"""with a as a, z as xyz: pass""", r"""
@@ -15566,14 +15557,12 @@ Module .. ROOT 0,0 -> 0,29
         .target Name 'a' Store .. 0,7 -> 0,8
         .iter Call .. 0,12 -> 0,15
           .func Name 'a' Load .. 0,12 -> 0,13
-        .is_async
-          0
+        .is_async 0
       1] comprehension .. 0,16 -> 0,28
         .target Name 'z' Store .. 0,20 -> 0,21
         .iter Call .. 0,25 -> 0,28
           .func Name 'z' Load .. 0,25 -> 0,26
-        .is_async
-          0
+        .is_async 0
 """),
 
 (r"""[a for a in a() if a if b if c]""", '', (0, 21, 0, 30), {}, r"""if z""", r"""z""", r"""[a for a in a() if a if z]""", r"""
@@ -15590,8 +15579,7 @@ Module .. ROOT 0,0 -> 0,26
         .ifs[2]
         0] Name 'a' Load .. 0,19 -> 0,20
         1] Name 'z' Load .. 0,24 -> 0,25
-        .is_async
-          0
+        .is_async 0
 """),
 
 (r"""f(a, b, c)""", '', (0, 5, 0, 9), {}, r"""z""", r"""z""", r"""f(a, z)""", r"""
