@@ -17790,6 +17790,17 @@ def func():
 
                 raise
 
+    def test_pars_special(self):
+        f = parse('((1), ( (2) ))').body[0].value.f
+        self.assertEqual(1, f.elts[0].pars(ret_count=True)[1])
+        self.assertEqual(2, f.elts[1].pars(ret_count=True)[1])
+        self.assertEqual(0, f.pars(ret_count=True)[1])
+
+        self.assertEqual(1, parse('call(((i for i in j)))').body[0].value.args[0].f.pars(ret_count=True)[1])
+        self.assertEqual(0, parse('call((i for i in j))').body[0].value.args[0].f.pars(ret_count=True)[1])
+        self.assertEqual(0, parse('call(i for i in j)').body[0].value.args[0].f.pars(ret_count=True)[1])
+        self.assertEqual(-1, parse('call(i for i in j)').body[0].value.args[0].f.pars(ret_count=True, exc_genexpr_solo=True)[1])
+
     def test_comms(self):
         f = parse('''
 # hello

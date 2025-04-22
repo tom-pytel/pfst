@@ -2908,7 +2908,7 @@ class FST:
         return self
 
     def _parenthesize_grouping(self):
-        """Parenthesize anything with non-node grouping parentheses, just add parens around node adjusting parent
+        """Parenthesize anything with non-node grouping parentheses. Just add parens around node adjusting parent
         locations but not the node itself."""
 
         ln, col, end_ln, end_col = self.bloc
@@ -2921,8 +2921,10 @@ class FST:
         self._floor_start_pos((a := self.a).lineno, a.col_offset - 1, False)
 
     def _parenthesize_tuple(self):
-        """Parenthesize an unparenthesized tuple, adjusting tuple location for added parentheses.. No checks are done so
+        """Parenthesize an unparenthesized tuple, adjusting tuple location for added parentheses. No checks are done so
         don't call on anything else!"""
+
+        # assert isinstance(self.a, Tuple)
 
         ln, col, end_ln, end_col = self.loc
 
@@ -6006,15 +6008,16 @@ class FST:
 
         return lns
 
-    def pars(self, pars: bool = True, *, exc_genexpr_solo: bool = False, **options) -> fstloc:
-        """Return the location of enclosing parentheses if present. Will balance parentheses if `self` is an element of
-        a tuple and not return the parentheses of the tuple. Likwise will not return the parentheses of an enclosing
-        `arguments`  parent. Only works on (and makes sense for) `expr` or `pattern` nodes, otherwise `self.bloc`. Also
-        handles special case of a single generator expression argument to a function sharing parameters with the call
-        arguments.
+    def pars(self, pars: bool = True, *, ret_count: bool = False, exc_genexpr_solo: bool = False, **options) -> fstloc:
+        """Return the location of enclosing grouping parentheses if present. Will balance parentheses if `self` is an
+        element of a tuple and not return the parentheses of the tuple. Likwise will not return the parentheses of an
+        enclosing `arguments` parent. Only works on (and makes sense for) `expr` or `pattern` nodes, otherwise
+        `self.bloc`. Also handles special case of a single generator expression argument to a function sharing
+        parameters with the call arguments.
 
         **Parameters:**
         - `pars`: `True` means return parentheses if present and `self.bloc` otherwise, `False` always `self.bloc`.
+        - `ret_count`: `True` means return the count of parentheses along with the location.
         - `exc_genexpr_solo`: If `True` then will exclude left parentheses of a single call argument generator
             expression if it is shared with the call arguments enclosing parentheses. Is not checked if `pars=False`.
         - `options`: Ignored.
@@ -6024,32 +6027,38 @@ class FST:
         """
 
         if not pars or not isinstance(self.a, PARENTHESIZABLE):
-            return self.bloc
+            return (self.bloc, 0) if ret_count else self.bloc
 
         pars_end_ln, pars_end_col, ante_end_ln, ante_end_col, nrpars = self._rpars(exc_genexpr_solo=exc_genexpr_solo)
 
         if not nrpars:
-            return self.loc
+            return (self.loc, 0) if ret_count else self.loc
 
         pars_ln, pars_col, ante_ln, ante_col, nlpars = self._lpars(exc_genexpr_solo=exc_genexpr_solo)
 
         if not nlpars:
-            return self.loc
+            return (self.loc, 0) if ret_count else self.loc
 
         dpars = nlpars - nrpars
 
         if dpars == 1:  # unbalanced due to enclosing tuple, will always be unbalanced if at ends of parenthesized tuple (even if solo element) due to commas
+            npars    = nrpars
             pars_ln  = ante_ln
             pars_col = ante_col
 
         elif dpars == -1:
+            npars        = nlpars
             pars_end_ln  = ante_end_ln
             pars_end_col = ante_end_col
 
         elif dpars:
             raise RuntimeError('should not get here')
+        else:
+            npars = nrpars
 
-        return fstloc(pars_ln, pars_col, pars_end_ln, pars_end_col)
+        loc = fstloc(pars_ln, pars_col, pars_end_ln, pars_end_col)
+
+        return (loc, npars) if ret_count else loc
 
     def comms(self, precomms: bool | str | None = DEFAULT_PRECOMMS, postcomms: bool | str | None = DEFAULT_POSTCOMMS,
               **options) -> fstloc:
