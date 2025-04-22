@@ -2908,7 +2908,7 @@ class FST:
         return self
 
     def _parenthesize_grouping(self):
-        """Parenthesize anything with non-node grouping parentheses. Just add parens around node adjusting parent
+        """Parenthesize anything with non-node grouping parentheses. Just adds text parens around node adjusting parent
         locations but not the node itself."""
 
         ln, col, end_ln, end_col = self.bloc
@@ -2932,6 +2932,41 @@ class FST:
         self.put_lines(['('], ln, col, ln, col, False)
 
         self._floor_start_pos((a := self.a).lineno, a.col_offset - 1)
+
+    def _unparenthesize_grouping(self, inc_genexpr_solo: bool = False):
+        """Remove grouping parentheses from anything. Just remove text parens around node adjusting parent locations but
+        not the node itself."""
+
+        pars_loc, npars = self.pars(ret_npars=True)
+        genexpr_solo    = inc_genexpr_solo and self.is_solo_call_arg_genexpr()
+
+        if not npars and not genexpr_solo:
+            return
+
+        ln , col,  end_ln,  end_col  = self.bloc
+        pln, pcol, pend_ln, pend_col = pars_loc
+
+        if genexpr_solo:  # special case merge solo argument GeneratorExp parentheses with call argument parens
+            lines                    = self.root._lines
+            _, _, cend_ln, cend_col  = self.parent.func.loc
+            pln, pcol                = _prev_find(lines, cend_ln, cend_col, pln, pcol, '(')  # it must be there
+            pend_ln, pend_col        = _next_find(lines, pend_ln, pend_col, len(lines), len(lines[-1]), ')')  # it must be there
+            pend_col                += 1
+
+        self.put_lines(None, end_ln, end_col, pend_ln, pend_col, True, self)
+        self.put_lines(None, pln, pcol, ln, col, False)
+
+    def _unparenthesize_tuple(self):
+        """Unparenthesize a parenthesized tuple, adjusting tuple location for removed parentheses. Will not
+        unparenthesize an empty tuple. No checks are done so don't call on anything else!"""
+
+        if not (self.is_parenthesized_tuple() and (a := self.a).elts):
+            return
+
+        ln, col, end_ln, end_col = self.loc
+
+        self.put_lines(None, end_ln, end_col - 1, end_ln, end_col, True, self)
+        self.put_lines(None, ln, col, ln, col + 1, False)
 
     def _normalize_block(self, field: str = 'body', *, indent: str | None = None):
         """Move statements on the same logical line as a block open to their own line, e.g:
@@ -6008,7 +6043,7 @@ class FST:
 
         return lns
 
-    def pars(self, pars: bool = True, *, ret_count: bool = False, exc_genexpr_solo: bool = False, **options) -> fstloc:
+    def pars(self, pars: bool = True, *, ret_npars: bool = False, exc_genexpr_solo: bool = False, **options) -> fstloc:
         """Return the location of enclosing grouping parentheses if present. Will balance parentheses if `self` is an
         element of a tuple and not return the parentheses of the tuple. Likwise will not return the parentheses of an
         enclosing `arguments` parent. Only works on (and makes sense for) `expr` or `pattern` nodes, otherwise
@@ -6017,9 +6052,10 @@ class FST:
 
         **Parameters:**
         - `pars`: `True` means return parentheses if present and `self.bloc` otherwise, `False` always `self.bloc`.
-        - `ret_count`: `True` means return the count of parentheses along with the location.
-        - `exc_genexpr_solo`: If `True` then will exclude left parentheses of a single call argument generator
-            expression if it is shared with the call arguments enclosing parentheses. Is not checked if `pars=False`.
+        - `ret_npars`: `True` means return the count of parentheses along with the location.
+        - `exc_genexpr_solo`: If `True` then will exclude parentheses of a single call argument generator expression if
+            they is shared with the call arguments enclosing parentheses, return -1 npars in this case. Is not checked
+            at all if `pars=False`.
         - `options`: Ignored.
 
         **Returns:**
@@ -6027,17 +6063,17 @@ class FST:
         """
 
         if not pars or not isinstance(self.a, PARENTHESIZABLE):
-            return (self.bloc, 0) if ret_count else self.bloc
+            return (self.bloc, 0) if ret_npars else self.bloc
 
         pars_end_ln, pars_end_col, ante_end_ln, ante_end_col, nrpars = self._rpars(exc_genexpr_solo=exc_genexpr_solo)
 
         if not nrpars:
-            return (self.loc, 0) if ret_count else self.loc
+            return (self.loc, 0) if ret_npars else self.loc
 
         pars_ln, pars_col, ante_ln, ante_col, nlpars = self._lpars(exc_genexpr_solo=exc_genexpr_solo)
 
         if not nlpars:
-            return (self.loc, 0) if ret_count else self.loc
+            return (self.loc, 0) if ret_npars else self.loc
 
         dpars = nlpars - nrpars
 
@@ -6058,7 +6094,7 @@ class FST:
 
         loc = fstloc(pars_ln, pars_col, pars_end_ln, pars_end_col)
 
-        return (loc, npars) if ret_count else loc
+        return (loc, npars) if ret_npars else loc
 
     def comms(self, precomms: bool | str | None = DEFAULT_PRECOMMS, postcomms: bool | str | None = DEFAULT_POSTCOMMS,
               **options) -> fstloc:
