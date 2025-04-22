@@ -2091,12 +2091,12 @@ class FST:
             end_col_offset = ast.end_col_offset
 
         except AttributeError:
-            if not self.parent:
+            if isinstance(ast, (arguments, withitem, match_case, comprehension)):  # this takes precedence over location of whole enchilada
+                loc = self._loc_from_children()
+            elif not self.parent:
                 loc = fstloc(0, 0, len(ls := self._lines) - 1, len(ls[-1]))
             elif isinstance(ast, (operator, unaryop, cmpop)):
                 loc = self._loc_operator()
-            elif isinstance(ast, (arguments, withitem, match_case, comprehension)):
-                loc = self._loc_from_children()
             else:
                 loc = None
 
@@ -2495,11 +2495,15 @@ class FST:
             return fstloc(*start, end_ln, end_col + 1)
 
         is_comprehension = isinstance(ast, comprehension)
+        start_ln         = None
 
-        if is_comprehension and (prev := self.prev_step('allown', recurse_self=False)):
-            start_ln, start_col = _prev_find(lines, prev.bend_ln, prev.bend_col, first.ln, first.col, 'for')
+        if is_comprehension:
+            prev = prev.loc if (prev := self.prev_step('allown', recurse_self=False)) else (0, 0)
 
-        else:
+            if start := _prev_find(lines, prev[-2], prev[-1], first.ln, first.col, 'for'):  # prev.bend_ln, prev.bend_col
+                start_ln, start_col = start
+
+        if start_ln is None:
             start_ln, start_col, ante_start_ln, ante_start_col, nlpars = first._lpars('allown')
 
             if not nlpars:  # not really needed, but juuust in case
@@ -3723,15 +3727,15 @@ class FST:
                        field: str | None = None, **options) -> 'FST':  # -> Self
         """Put a raw slice of child nodes to `self`."""
 
-        if isinstance(code, AST):  # strip delimiters because we want CONTENTS of slice for raw put, not the slice object itself
+        if isinstance(code, AST):
             try:
                 ast = _reduce_ast(code, 'expr')
             except Exception:
                 pass
 
             else:
-                if isinstance(ast, (Tuple, List, Dict, Set)):
-                    code = ast_unparse(ast)[1 : -1]
+                if (is_tuple := isinstance(ast, Tuple)) or isinstance(ast, (List, Dict, Set)):  # strip delimiters because we want CONTENTS of slice for raw put, not the slice object itself
+                    code = ast_unparse(ast)[1 : (-2 if is_tuple and len(ast.elts) == 1 else -1)]  # also remove singleton Tuple trailing comma
 
         elif isinstance(code, FST):
             try:
@@ -3740,13 +3744,17 @@ class FST:
                 pass
 
             else:
-                if isinstance(ast, (List, Dict, Set)) or ast.f.is_parenthesized_tuple():
-                    code.put_lines(None, end_ln := code.end_ln, (end_col := code.end_col) - 1, end_ln, end_col, True)
-                    code.put_lines(None, ln := code.ln, col := code.col, ln, col + 1, False)
+                if (is_dict := isinstance(ast, Dict)) or isinstance(ast, (Tuple, List, Set)):
+                    if ast.f.is_parenthesized_tuple() is not False:  # don't do if is unparenthesized Tuple
+                        code.put_lines(None, end_ln := code.end_ln, (end_col := code.end_col) - 1, end_ln, end_col, True)  # strip enclosing delimiters
+                        code.put_lines(None, ln := code.ln, col := code.col, ln, col + 1, False)
 
+                    if elts := ast.values if is_dict else ast.elts:
+                        if comma := _next_find(code.root._lines, (l := elts[-1].f.loc).end_ln, l.end_col, code.end_ln,
+                                               code.end_col, ','):  # strip trailing comma
+                            ln, col = comma
 
-        # TODO: STRIP TRAILING COMMA!!!
-
+                            code.put_lines(None, ln, col, ln, col + 1, False)
 
         self._reparse_raw(code, *self._raw_slice_loc(start, stop, field))
 
