@@ -101,7 +101,7 @@ DEFAULT_POSTCOMMS       = True   # True | False | 'all' | 'block'
 DEFAULT_PRESPACE        = False  # True | False | int
 DEFAULT_POSTSPACE       = False  # True | False | int
 DEFAULT_PEP8SPACE       = True   # True | False | 1
-DEFAULT_PARS            = False  # True | False
+DEFAULT_PARS            = True   # True | False
 DEFAULT_ELIF_           = False  # True | False
 DEFAULT_FIX             = True   # True | False
 DEFAULT_RAW             = 'alt'  # True | False | 'alt'
@@ -2834,7 +2834,7 @@ class FST:
                   ((code := _prev_src(self.root._lines, 0, 0, self.ln, self.col)) and code.src.endswith('('))):  # is parenthesized?
                 need_paren = False
 
-            elif isinstance(ast, (NamedExpr, Yield, YieldFrom)):
+            elif isinstance(ast, (NamedExpr, Await, Yield, YieldFrom)):
                 need_paren = True
 
             elif end_ln == ln:
@@ -2907,8 +2907,9 @@ class FST:
 
         return self
 
-    def _parenthesize(self):
-        """Parenthesize literally anything, just add parens around node adjusting parent locations."""
+    def _parenthesize_grouping(self):
+        """Parenthesize anything with non-node grouping parentheses, just add parens around node adjusting parent
+        locations but not the node itself."""
 
         ln, col, end_ln, end_col = self.bloc
 

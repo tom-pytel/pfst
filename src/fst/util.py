@@ -3,6 +3,7 @@ from array import array
 from ast import *
 from itertools import chain
 from typing import Any, Callable, Iterable, Iterator, Literal
+from enum import IntEnum, auto
 
 from_iterable = chain.from_iterable
 
@@ -22,6 +23,90 @@ if sys.version_info[:2] < (3, 12):  # for isinstance() checks
     class TypeAlias(AST): pass
 
 
+class bistr(str):
+    """Byte-indexed string, easy mapping between character and encoded byte index (including 1 past last valid unit).
+    Only positive indices."""
+
+    _c2b: array  # character to byte indices
+    _b2c: array  # byte to character indices
+
+    _i2i_same = lambda idx: idx
+
+    @property
+    def lenbytes(self) -> int:
+        return self.c2b(len(self))
+
+    def __new__(cls, s: str) -> 'bistr':
+        return s if s.__class__ is bistr else str.__new__(cls, s)
+
+    @staticmethod
+    def _make_array(len_array: int, highest_value: int) -> array:
+        if highest_value < 0x100:
+            return array('B', b'\x00' * (len_array + 1))
+        if highest_value < 0x10000:
+            return array('H', b'\x00\x00' * (len_array + 1))
+        if highest_value < 0x100000000:
+            return array('I', b'\x00\x00\x00\x00' * (len_array + 1))
+
+        return array('Q', b'\x00\x00\x00\x00\x00\x00\x00\x00' * (len_array + 1))
+
+    def c2b_lookup(self, idx):
+        return self._c2b[idx]
+
+    def c2b(self, idx: int) -> int:
+        if (lc := len(self)) == (lb := len(self.encode())):
+            self.c2b = self.b2c = bistr._i2i_same
+
+            return idx
+
+        c2b = self._c2b = self._make_array(lc, lb)
+        j   = 0
+
+        for i, c in enumerate(self):
+            c2b[i]  = j
+            j      += len(c.encode())
+
+        c2b[-1]  = j
+        self.c2b = self.c2b_lookup
+
+        return c2b[idx]
+
+    def b2c_lookup(self, idx):
+        return self._b2c[idx]
+
+    def b2c(self, idx: int) -> int:
+        if (lb := self.c2b(lc := len(self))) == lc:
+            return idx  # no chars > '\x7f' so funcs are `_i2i_same` identity
+
+        b2c = self._b2c = self._make_array(lb, lc)
+
+        for i, j in enumerate(self._c2b):
+            b2c[j] = i
+
+        k = 0
+
+        for i, j in enumerate(b2c):  # set off-boundary utf8 byte indices for safety
+            if j:
+                k = j
+            else:
+                b2c[i] = k
+
+        self.b2c = self.b2c_lookup
+
+        return b2c[idx]
+
+    def clear_cache(self):
+        try:
+            del self.c2b, self._c2b
+        except AttributeError:
+            pass
+
+        try:
+            del self.b2c, self._b2c
+        except AttributeError:
+            pass
+
+
 # Mostly in syntax order except a few special cases:
 #   BoolOp        - multiple simultaneous locations possible for single `op`
 #   Dict          - interleaved `keys` and `values`
@@ -29,6 +114,7 @@ if sys.version_info[:2] < (3, 12):  # for isinstance() checks
 #   MatchMapping  - interleaved `keys` and `patterns`
 #   arguments     - interleaved `posonlyargs`/`args` and `defaults` (partially), interleaved `kwonlyargs` and `kw_defaults`
 #   Call          - type `Starred` can be in `args`, `arg=None` in `keywords` means double starred
+
 FIELDS = dict([
     (Module,             (('body', 'stmt*'), ('type_ignores', 'type_ignore*'))),
     (Interactive,        (('body', 'stmt*'),)),
@@ -195,89 +281,166 @@ OPCLS2STR = {
 
 OPSTR2CLS = {v: k for k, v in OPCLS2STR.items()}
 
+# directly from python ast
+class _Precedence(IntEnum):
+    """Precedence table that originated from python grammar."""
 
-class bistr(str):
-    """Byte-indexed string, easy mapping between character and encoded byte index (including 1 past last valid unit).
-    Only positive indices."""
+    NAMED_EXPR = auto()      # <target> := <expr1>
+    TUPLE = auto()           # <expr1>, <expr2>
+    YIELD = auto()           # 'yield', 'yield from'
+    TEST = auto()            # 'if'-'else', 'lambda'
+    OR = auto()              # 'or'
+    AND = auto()             # 'and'
+    NOT = auto()             # 'not'
+    CMP = auto()             # '<', '>', '==', '>=', '<=', '!=',
+                             # 'in', 'not in', 'is', 'is not'
+    EXPR = auto()
+    BOR = EXPR               # '|'
+    BXOR = auto()            # '^'
+    BAND = auto()            # '&'
+    SHIFT = auto()           # '<<', '>>'
+    ARITH = auto()           # '+', '-'
+    TERM = auto()            # '*', '@', '/', '%', '//'
+    FACTOR = auto()          # unary '+', '-', '~'
+    POWER = auto()           # '**'
+    AWAIT = auto()           # 'await'
+    ATOM = auto()
 
-    _c2b: array  # character to byte indices
-    _b2c: array  # byte to character indices
-
-    _i2i_same = lambda idx: idx
-
-    @property
-    def lenbytes(self) -> int:
-        return self.c2b(len(self))
-
-    def __new__(cls, s: str) -> 'bistr':
-        return s if s.__class__ is bistr else str.__new__(cls, s)
-
-    @staticmethod
-    def _make_array(len_array: int, highest_value: int) -> array:
-        if highest_value < 0x100:
-            return array('B', b'\x00' * (len_array + 1))
-        if highest_value < 0x10000:
-            return array('H', b'\x00\x00' * (len_array + 1))
-        if highest_value < 0x100000000:
-            return array('I', b'\x00\x00\x00\x00' * (len_array + 1))
-
-        return array('Q', b'\x00\x00\x00\x00\x00\x00\x00\x00' * (len_array + 1))
-
-    def c2b_lookup(self, idx):
-        return self._c2b[idx]
-
-    def c2b(self, idx: int) -> int:
-        if (lc := len(self)) == (lb := len(self.encode())):
-            self.c2b = self.b2c = bistr._i2i_same
-
-            return idx
-
-        c2b = self._c2b = self._make_array(lc, lb)
-        j   = 0
-
-        for i, c in enumerate(self):
-            c2b[i]  = j
-            j      += len(c.encode())
-
-        c2b[-1]  = j
-        self.c2b = self.c2b_lookup
-
-        return c2b[idx]
-
-    def b2c_lookup(self, idx):
-        return self._b2c[idx]
-
-    def b2c(self, idx: int) -> int:
-        if (lb := self.c2b(lc := len(self))) == lc:
-            return idx  # no chars > '\x7f' so funcs are `_i2i_same` identity
-
-        b2c = self._b2c = self._make_array(lb, lc)
-
-        for i, j in enumerate(self._c2b):
-            b2c[j] = i
-
-        k = 0
-
-        for i, j in enumerate(b2c):  # set off-boundary utf8 byte indices for safety
-            if j:
-                k = j
-            else:
-                b2c[i] = k
-
-        self.b2c = self.b2c_lookup
-
-        return b2c[idx]
-
-    def clear_cache(self):
+    def next(self):
         try:
-            del self.c2b, self._c2b
-        except AttributeError:
-            pass
+            return self.__class__(self + 1)
+        except ValueError:
+            return self
 
-        try:
-            del self.b2c, self._b2c
-        except AttributeError:
-            pass
+# Special precedence rules:
+# * Unparenthesized tuple should always be parenthesized.
+# * Value for dict unpack has _Precedence.EXPR.
+# * BinOp, UnaryOp and BoolOp inherit precedence from `.op`.
+# * BinOp addtionally has associativity to consider, opposite operand from associativity gets precedence bumped.
+
+PRECEDENCE_NODES = {
+    BoolOp:         True,
+    NamedExpr:      _Precedence.NAMED_EXPR,
+    BinOp:          True,
+    UnaryOp:        True,
+    Lambda:         _Precedence.TEST,
+    IfExp:          _Precedence.TEST,
+    # Dict:           None,
+    # Set:            None,
+    # ListComp:       None,
+    # SetComp:        None,
+    # DictComp:       None,
+    # GeneratorExp:   None,
+    Await:          _Precedence.AWAIT,
+    Yield:          _Precedence.YIELD,
+    YieldFrom:      _Precedence.YIELD,
+    Compare:        _Precedence.CMP,
+    # Call:           None,
+    # FormattedValue: None,
+    # JoinedStr:      None,
+    # Constant:       None,
+    # Attribute:      None,
+    # Subscript:      None,
+    # Starred:        None,
+    # Name:           None,
+    # List:           None,
+    # Tuple:          None,
+    # Slice:          None,
+
+    # comprehension:  None,
+
+    # arguments:      None,
+    # arg:            None,
+    # keyword:        None,
+    # alias:          None,
+    # withitem:       None,
+    # match_case:     None,
+
+    # MatchValue:     None,
+    # MatchSingleton: None,
+    # MatchSequence:  None,
+    # MatchMapping:   None,
+    # MatchClass:     None,
+    # MatchStar:      None,
+    MatchAs:        _Precedence.TEST,
+    MatchOr:        _Precedence.BOR,
+
+    # TypeIgnore:     None,
+
+    # TypeVar:        None,
+    # ParamSpec:      None,
+    # TypeVarTuple:   None,
+}
+
+PRECEDENCE_NODE_OPERATORS = {
+    Invert:         _Precedence.FACTOR,
+    Not:            _Precedence.NOT,
+    UAdd:           _Precedence.FACTOR,
+    USub:           _Precedence.FACTOR,
+
+    Add:            _Precedence.ARITH,
+    Sub:            _Precedence.ARITH,
+    Mult:           _Precedence.TERM,
+    MatMult:        _Precedence.TERM,
+    Div:            _Precedence.TERM,
+    Mod:            _Precedence.TERM,
+    LShift:         _Precedence.SHIFT,
+    RShift:         _Precedence.SHIFT,
+    BitOr:          _Precedence.BOR,
+    BitXor:         _Precedence.BXOR,
+    BitAnd:         _Precedence.BAND,
+    FloorDiv:       _Precedence.TERM,
+    Pow:            _Precedence.POWER,
+
+    # Eq:             None,
+    # NotEq:          None,
+    # Lt:             None,
+    # LtE:            None,
+    # Gt:             None,
+    # GtE:            None,
+    # Is:             None,
+    # IsNot:          None,
+    # In:             None,
+    # NotIn:          None,
+
+    And:            _Precedence.AND,
+    Or:             _Precedence.OR,
+}
+
+PRECEDENCE_NODE_FIELDS = {  # default is _Precedence.TEST
+    (Expr, 'value'):           _Precedence.YIELD,
+    (Assign, 'target'):        _Precedence.TUPLE,
+    (For, 'target'):           _Precedence.TUPLE,
+    (AsyncFor, 'target'):      _Precedence.TUPLE,
+
+    (NamedExpr, 'target'):     _Precedence.ATOM,
+    (NamedExpr, 'value'):      _Precedence.ATOM,
+    (BinOp, 'left'):           True,                    # special case, take associativity into account
+    (BinOp, 'right'):          True,
+    (Lambda, 'body'):          _Precedence.TEST,
+    (IfExp, 'body'):           _Precedence.TEST.next(),
+    (IfExp, 'test'):           _Precedence.TEST.next(),
+    (IfExp, 'orelse'):         _Precedence.TEST,
+    (Dict, 'value'):           True,                    # special case, '**' dict unpack `.value` gets _Precedence.EXPR
+    (Await, 'value'):          _Precedence.ATOM,
+    (Yield, 'value'):          _Precedence.ATOM,
+    (YieldFrom, 'value'):      _Precedence.ATOM,
+    (Compare, 'left'):         _Precedence.CMP.next(),
+    (Compare, 'comparators'):  _Precedence.CMP.next(),
+    (Call, 'func'):            _Precedence.ATOM,
+    (FormattedValue, 'value'): _Precedence.TEST.next(),
+    (Attribute, 'value'):      _Precedence.ATOM,
+    (Subscript, 'value'):      _Precedence.ATOM,
+    (Starred, 'value'):        _Precedence.EXPR,
+
+    (comprehension, 'target'): _Precedence.TUPLE,
+    (comprehension, 'iter'):   _Precedence.TEST.next(),
+    (comprehension, 'ifs'):    _Precedence.TEST.next(),
+
+    (MatchClass, 'cls'):       _Precedence.ATOM,
+    (MatchAs, 'pattern'):      _Precedence.BOR,
+    (MatchOr, 'patterns'):     _Precedence.BOR.next(),
+}
 
 
 def get_field(node: AST, name: str, idx: int | None = None) -> AST:
