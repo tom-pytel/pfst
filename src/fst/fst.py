@@ -2656,7 +2656,7 @@ class FST:
         lines[ln] = bistr(f'{(l := lines[ln])[:col]}{comma}{l[col:]}')
 
         if offset:
-            self.root.offset(ln, col, 0, len(comma), True, self)
+            root.offset(ln, col, 0, len(comma), True, self)
 
         elif ln == end_ln:
             self.a.end_col_offset += len(comma)
@@ -3725,18 +3725,19 @@ class FST:
                 self._set_end_pos((last_child := self.last_child()).end_lineno, last_child.end_col_offset)
 
     def _put_slice_raw(self, code: Code | None, start: int | Literal['end'] | None = None, stop: int | None = None,
-                       field: str | None = None, **options) -> 'FST':  # -> Self
+                       field: str | None = None, *, one: bool = False, **options) -> 'FST':  # -> Self
         """Put a raw slice of child nodes to `self`."""
 
         if isinstance(code, AST):
-            try:
-                ast = _reduce_ast(code, 'expr')
-            except Exception:
-                pass
+            if not one:
+                try:
+                    ast = _reduce_ast(code, 'expr')
+                except Exception:
+                    pass
 
-            else:
-                if (is_tuple := isinstance(ast, Tuple)) or isinstance(ast, (List, Dict, Set)):  # strip delimiters because we want CONTENTS of slice for raw put, not the slice object itself
-                    code = ast_unparse(ast)[1 : (-2 if is_tuple and len(ast.elts) == 1 else -1)]  # also remove singleton Tuple trailing comma
+                else:
+                    if (is_tuple := isinstance(ast, Tuple)) or isinstance(ast, (List, Dict, Set)):  # strip delimiters because we want CONTENTS of slice for raw put, not the slice object itself
+                        code = ast_unparse(ast)[1 : (-2 if is_tuple and len(ast.elts) == 1 else -1)]  # also remove singleton Tuple trailing comma
 
         elif isinstance(code, FST):
             try:
@@ -3745,7 +3746,11 @@ class FST:
                 pass
 
             else:
-                if (is_dict := isinstance(ast, Dict)) or isinstance(ast, (Tuple, List, Set)):
+                if one:
+                    if ast.f.is_parenthesized_tuple() is False:  # only need to parenthesize this, others are already enclosed
+                        ast.f._parenthesize_tuple()
+
+                elif (is_dict := isinstance(ast, Dict)) or isinstance(ast, (Tuple, List, Set)):
                     if ast.f.is_parenthesized_tuple() is not False:  # don't do if is unparenthesized Tuple
                         code.put_lines(None, end_ln := code.end_ln, (end_col := code.end_col) - 1, end_ln, end_col, True)  # strip enclosing delimiters
                         code.put_lines(None, ln := code.ln, col := code.col, ln, col + 1, False)
@@ -3851,7 +3856,7 @@ class FST:
         elif isinstance(code, list):
             new_lines = code
         elif isinstance(code, AST):
-            new_lines = ast_unparse(code)
+            new_lines = ast_unparse(code).split('\n')
         elif code is None:
             new_lines = [bistr('')]
         else:  # isinstance(code, FST)
@@ -4477,7 +4482,7 @@ class FST:
                 if not raw:
                     raise ValueError(f"cannot put slice to a '{ast.__class__.__name__}'")
 
-        return self._put_slice_raw(code, start, stop, field, **options)
+        return self._put_slice_raw(code, start, stop, field, one=one, **options)
 
     def put_raw(self, code: Code | None, ln: int, col: int, end_ln: int, end_col: int, *,
                 inc: bool | None = True, **options) -> 'FST':
