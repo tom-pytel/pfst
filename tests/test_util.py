@@ -133,12 +133,12 @@ class TestUtil(unittest.TestCase):
         self.assertIsInstance(last_block_opener_child(parse('try: pass\nexcept Exception: pass\nelse: pass\nfinally: pass').body[0].handlers[0]), Name)
         self.assertIsInstance(last_block_opener_child(parse('try: pass\nexcept (Exception, BaseException): pass\nelse: pass\nfinally: pass').body[0].handlers[0]), Tuple)
         self.assertIsInstance(last_block_opener_child(parse('try: pass\nexcept (Exception, BaseException) as e: pass\nelse: pass\nfinally: pass').body[0].handlers[0]), Tuple)
-        self.assertIsNone    (last_block_opener_child(parse('try: pass\nexcept* Exception: pass\nelse: pass\nfinally: pass').body[0]))
-        self.assertIsInstance(last_block_opener_child(parse('try: pass\nexcept* Exception: pass\nelse: pass\nfinally: pass').body[0].handlers[0]), Name)
-        self.assertIsInstance(last_block_opener_child(parse('try: pass\nexcept* (Exception, BaseException): pass\nelse: pass\nfinally: pass').body[0].handlers[0]), Tuple)
-        self.assertIsInstance(last_block_opener_child(parse('try: pass\nexcept* (Exception, BaseException) as e: pass\nelse: pass\nfinally: pass').body[0].handlers[0]), Tuple)
 
         if sys.version_info[:2] >= (3, 12):
+            self.assertIsNone    (last_block_opener_child(parse('try: pass\nexcept* Exception: pass\nelse: pass\nfinally: pass').body[0]))
+            self.assertIsInstance(last_block_opener_child(parse('try: pass\nexcept* Exception: pass\nelse: pass\nfinally: pass').body[0].handlers[0]), Name)
+            self.assertIsInstance(last_block_opener_child(parse('try: pass\nexcept* (Exception, BaseException): pass\nelse: pass\nfinally: pass').body[0].handlers[0]), Tuple)
+            self.assertIsInstance(last_block_opener_child(parse('try: pass\nexcept* (Exception, BaseException) as e: pass\nelse: pass\nfinally: pass').body[0].handlers[0]), Tuple)
             self.assertIsInstance(last_block_opener_child(parse('class cls[T]: pass').body[0]), TypeVar)
 
 

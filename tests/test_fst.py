@@ -4,7 +4,7 @@ import os
 import sys
 import unittest
 import ast as ast_
-from random import seed, shuffle
+from random import randint, seed, shuffle
 
 from fst import *
 from fst import fst
@@ -16129,12 +16129,12 @@ class TestFST(unittest.TestCase):
         self.assertEqual((1, 17), parse('try: pass\nexcept Exception: pass\nelse: pass\nfinally: pass').body[0].handlers[0].f._loc_block_opener_end())
         self.assertEqual((1, 34), parse('try: pass\nexcept (Exception, BaseException): pass\nelse: pass\nfinally: pass').body[0].handlers[0].f._loc_block_opener_end())
         self.assertEqual((1, 39), parse('try: pass\nexcept (Exception, BaseException) as e: pass\nelse: pass\nfinally: pass').body[0].handlers[0].f._loc_block_opener_end())
-        self.assertEqual((0, 4),  parse('try: pass\nexcept* Exception: pass\nelse: pass\nfinally: pass').body[0].f._loc_block_opener_end())
-        self.assertEqual((1, 18),  parse('try: pass\nexcept* Exception: pass\nelse: pass\nfinally: pass').body[0].handlers[0].f._loc_block_opener_end())
-        self.assertEqual((1, 35),  parse('try: pass\nexcept* (Exception, BaseException): pass\nelse: pass\nfinally: pass').body[0].handlers[0].f._loc_block_opener_end())
-        self.assertEqual((1, 40),  parse('try: pass\nexcept* (Exception, BaseException) as e: pass\nelse: pass\nfinally: pass').body[0].handlers[0].f._loc_block_opener_end())
 
         if sys.version_info[:2] >= (3, 12):
+            self.assertEqual((0, 4),  parse('try: pass\nexcept* Exception: pass\nelse: pass\nfinally: pass').body[0].f._loc_block_opener_end())
+            self.assertEqual((1, 18), parse('try: pass\nexcept* Exception: pass\nelse: pass\nfinally: pass').body[0].handlers[0].f._loc_block_opener_end())
+            self.assertEqual((1, 35), parse('try: pass\nexcept* (Exception, BaseException): pass\nelse: pass\nfinally: pass').body[0].handlers[0].f._loc_block_opener_end())
+            self.assertEqual((1, 40), parse('try: pass\nexcept* (Exception, BaseException) as e: pass\nelse: pass\nfinally: pass').body[0].handlers[0].f._loc_block_opener_end())
             self.assertEqual((0, 13), parse('class cls[T]: pass').body[0].f._loc_block_opener_end())
 
     def test__dict_key_or_mock_loc(self):
@@ -20463,10 +20463,111 @@ class cls:
 
         f = parse('try:pass\nfinally: pass').body[0].f
         g = f.put('break', 0, raw=True)
-        # self.assertIsNot(g, f)
+        self.assertIs(g, f)
         self.assertEqual(g.src, 'try:break\nfinally: pass')
 
+        f = parse('try: pass\nexcept: pass').body[0].handlers[0].f
+        g = f.put('break', 0, raw=True)
+        self.assertIs(g, f)
+        self.assertEqual(g.src, 'except: break')
+
+        f = parse('match a:\n case 1: pass').body[0].cases[0].f
+        g = f.put('break', 0, raw=True)
+        self.assertIs(g, f)
+        self.assertEqual(g.src, 'case 1: break')
+
         self.assertEqual('y', parse('n', mode='eval').f.put('y', field='body').root.src)  # Expression.body
+
+    def test_put_raw_random_same(self):
+        seed(rndseed := randint(0, 0x7fffffff))
+
+        try:
+            master = parse('''
+def f():
+    i = 1
+
+async def af():
+    i = 2
+
+class cls:
+    i = 3
+
+for _ in ():
+    i = 4
+else:
+    i = 5
+
+async for _ in ():
+    i = 6
+else:
+    i = 7
+
+while _:
+    i = 8
+else:
+    i = 9
+
+if _:
+    i = 10
+elif _:
+    i = 11
+else:
+    i = 12
+
+with _:
+    i = 13
+
+async with _:
+    i = 14
+
+match _:
+    case 15:
+        i = 15
+
+    case 16:
+        i = 16
+
+    case 17:
+        i = 17
+
+try:
+    i = 18
+except Exception as e:
+    i = 19
+except ValueError as v:
+    i = 20
+except:
+    i = 21
+else:
+    i = 22
+finally:
+    i = 23
+                '''.strip()).f
+
+            lines = master._lines
+
+            for i in range(100):
+                copy      = master.copy()
+                ln        = randint(0, len(lines) - 1)
+                col       = randint(0, len(lines[ln]))
+                end_ln    = randint(ln, len(lines) - 1)
+                end_col   = randint(col if end_ln == ln else 0, len(lines[end_ln]))
+                put_lines = master.get_lines(ln, col, end_ln, end_col)
+
+                copy.put_raw(put_lines, ln, col, end_ln, end_col)
+                copy.verify()
+
+                compare_asts(master.a, copy.a, locs=True, raise_=True)
+
+                assert copy.src == master.src
+
+        except Exception:
+            print('Random seed was:', rndseed)
+            print(i, ln, col, end_ln, end_col)
+            print('-'*80)
+            print(copy.src)
+
+            raise
 
     def test_put_slice_raw(self):
         f = parse('[a for c in d for b in c for a in b]').body[0].value.f

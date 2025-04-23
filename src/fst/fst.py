@@ -3914,101 +3914,128 @@ class FST:
         return fstloc(*body[start].f.pars(exc_genexpr_solo=True)[:2],
                       *body[stop - 1].f.pars(exc_genexpr_solo=True)[2:])
 
+    def _reparse_raw_doit(self, new_lines: list[str], ln: int, col: int, end_ln: int, end_col: int,
+                          copy_lines: list[str], path: list[astfield] | str, set_ast: bool = True) -> 'FST':
+        """Actually do the reparse."""
+
+        copy_root = FST(Pass(), lines=copy_lines)  # we don't need the ASTs here, just the lines
+
+        copy_root.put_lines(new_lines, ln, col, end_ln, end_col)
+
+        root      = self.root
+        copy_root = FST.fromsrc(copy_root.src, mode=get_parse_mode(root.a), **root.parse_params)
+
+        if path == 'root':
+            self._lines = copy_root._lines
+            copy        = copy_root
+
+        else:
+            copy = (copy_root.child_from_path(path) if isinstance(path, list) else
+                    copy_root.body[0] if path == 'body' else
+                    copy_root.body[0].body[0] if path == 'body2' else
+                    copy_root.body[0].handlers[0] if path == 'bodyhandlers' else
+                    copy_root.body[0].body[0].handlers[0] if path == 'body2handlers' else
+                    copy_root.body[0].cases[0])  # if path == 'bodycases' else 1/0)
+
+            if not copy:
+                raise RuntimeError(f'could not find node after raw reparse')
+
+            root.put_lines(new_lines, ln, col, end_ln, end_col, True, self if set_ast else None)  # we do this again in our own tree to offset our nodes which aren't being moved over from the modified copy, can stop_at self if setting ast because it overrides self locations
+
+            copy.pfield.set(copy.parent.a, None)  # remove from copy tree so that copy_root unmake doesn't zero out new node
+            copy_root._unmake_fst_tree()
+
+        if set_ast:
+            self._set_ast(copy.a)
+            self.touchall(False)
+
+        return copy
+
     def _reparse_raw_stmtish(self, new_lines: list[str], ln: int, col: int, end_ln: int, end_col: int) -> bool:
         """Reparse only statementish or block opener part of statementish containing changes."""
 
-        if not (parent := self.parent_stmtish(True, False)):
+        if not (stmtish := self.parent_stmtish(True, False)):
             return False
 
-        indent = parent.get_indent()
+        if stmtish.is_elif():  # because of possible change 'elif' -> 'else'
+            if not (stmtish := stmtish.parent_stmtish(False, False)):
+                return False
 
-        if not (blkopen_end := parent._loc_block_opener_end()):  # non-block statement
-            root  = self.root
-            lines = root._lines
+        pln, pcol, pend_ln, pend_col = stmtish.bloc
 
-            pln, pcol, pend_ln, pend_col = parent.bloc
+        root     = self.root
+        lines    = root._lines
+        stmtisha = stmtish.a
+
+        if in_blkopen := (blkopen_end := stmtish._loc_block_opener_end()) and (end_ln, end_col) <= blkopen_end:  # block statement with modification limited to block opener
+            pend_ln, pend_col = blkopen_end
+
+        if isinstance(stmtisha, match_case):
+            copy_lines = ([bistr('')] * (pln - 1) +
+                          [bistr('match a:'), bistr(' ' * pcol + lines[pln][pcol:])] +
+                          lines[pln + 1 : pend_ln + 1])
+            path       = 'bodycases'
+
+        else:
+            indent = stmtish.get_indent()
 
             if not indent:
                 copy_lines = [bistr('')] * pln + lines[pln : pend_ln + 1]
+
             elif pln:
-                copy_lines = ([bistr('')] * (pln - 1) +
-                              [bistr('if 1:'), bistr(' ' * pcol + lines[pln][pcol:])] +
+                copy_lines = ([bistr('if 1:')] +
+                              [bistr('')] * (pln - 1) +
+                              [bistr(' ' * pcol + lines[pln][pcol:])] +
                               lines[pln + 1 : pend_ln + 1])
             else:
                 copy_lines = ([bistr(f"try:{' ' * (pcol - 4)}{lines[pln][pcol:]}")] +
                               lines[pln + 1 : pend_ln + 1] +
                               [bistr('finally: pass')])
 
-            copy_lines[pend_ln] = copy_lines[pend_ln][:pend_col]
+            if isinstance(stmtisha, ExceptHandler):
+                assert pln > bool(indent)
 
+                copy_lines[pln - 1] = bistr(indent + 'try: pass')
+                path                = 'body2handlers' if indent else 'bodyhandlers'
 
+            else:
+                path = 'body2' if indent else 'body'
 
-            copy_root           = FST(Pass(), lines=copy_lines)  # we don't need the ASTs, just the lines
+        if not in_blkopen:  # non-block statement or modifications not limited to block opener part
+            copy_lines[pend_ln] = bistr(copy_lines[pend_ln][:pend_col])
 
-            copy_root.put_lines(new_lines, ln, col, end_ln, end_col)
-
-            copy_root = FST.fromsrc(copy_root.src, mode=get_parse_mode(root.a), **root.parse_params)
-            copy      = copy_root.body[0].body[0] if indent else copy_root.body[0]
-
-            root.put_lines(new_lines, ln, col, end_ln, end_col, True, parent)  # we do this again in our own tree to offset our nodes which aren't being moved over from the modified copy
-
-            copy.pfield.set(copy.parent.a, None)  # remove from copy tree so that copy_root unmake doesn't zero out new node
-            copy_root._unmake_fst_tree()
-
-            parent._set_ast(copy.a)
-            parent.touchall(False)
-
-
-
-
+            stmtish._reparse_raw_doit(new_lines, ln, col, end_ln, end_col, copy_lines, path)
 
             return True
 
+        # modifications only to block opener line(s) of block statement
 
+        if isinstance(stmtisha, Match):
+            copy_lines[pend_ln] = bistr(copy_lines[pend_ln][:pend_col])
 
-
-
-        return False
-
-
-
-        # TODO: ExceptHandler
-        # TODO: match_case
-        # TODO: block open statement
-        # TODO: normal statement
-
-
-
-    def _reparse_raw_whole(self, new_lines: list[str], ln: int, col: int, end_ln: int, end_col: int):
-        """Reparse whole source with changes."""
-
-        assert self.root.is_mod  # TODO: allow with non-mod root
-
-        root      = self.root
-        copy_root = FST(Pass(), lines=root._lines[:])  # we don't need the ASTs, just the lines
-
-        copy_root.put_lines(new_lines, ln, col, end_ln, end_col)
-
-        copy_root = FST.fromsrc(copy_root.src, mode=get_parse_mode(root.a), **root.parse_params)
-        path      = root.child_path(self)
-
-        if self is root:
-            self._lines = copy_root._lines
-            copy        = copy_root
+            copy_lines.append(bistr(indent + ' case 1: pass'))
 
         else:
-            copy = copy_root.child_from_path(path)
+            copy_lines[pend_ln] = bistr(copy_lines[pend_ln][:pend_col] + ' pass')
 
-            if not copy:
-                raise RuntimeError(f'could not find node after raw reparse')
+            if isinstance(stmtisha, (Try, TryStar)):  # this one is just silly, nothing to put there, but we cover it
+                copy_lines.append(bistr(indent + 'finally: pass'))
 
-            root.put_lines(new_lines, ln, col, end_ln, end_col, True, self)  # we do this again in our own tree to offset our nodes which aren't being moved over from the modified copy
+        copy  = stmtish._reparse_raw_doit(new_lines, ln, col, end_ln, end_col, copy_lines, path, False)
+        copya = copy.a
 
-            copy.pfield.set(copy.parent.a, None)  # remove from copy tree so that copy_root unmake doesn't zero out new node
-            copy_root._unmake_fst_tree()
+        if not isinstance(stmtisha, match_case):  # match_case doesn't have AST location
+            copya.end_lineno     = stmtisha.end_lineno
+            copya.end_col_offset = stmtisha.end_col_offset
 
-        self._set_ast(copy.a)
-        self.touchall(False)
+        for field in STATEMENTISH_FIELDS:
+            if (body := getattr(stmtisha, field, None)) is not None:
+                setattr(copya, field, body)
+
+        stmtish._set_ast(copya)
+        stmtish.touchall(False)
+
+        return True
 
     def _reparse_raw(self, code: Code | None, ln: int, col: int, end_ln: int, end_col: int, inc: bool | None = None
                      ) -> 'FST':
@@ -4035,7 +4062,12 @@ class FST:
             new_lines = (code if code.is_root else code.copy())._lines
 
         if not self._reparse_raw_stmtish(new_lines, ln, col, end_ln, end_col):  # attempt to reparse only statement (or even only block opener)
-            self._reparse_raw_whole(new_lines, ln, col, end_ln, end_col)  # fallback to reparse all source
+            assert self.root.is_mod  # TODO: allow with non-mod root
+
+            root = self.root
+
+            self._reparse_raw_doit(new_lines, ln, col, end_ln, end_col, root._lines[:],  # fallback to reparse all source
+                                   'root' if self is root else root.child_path(self))
 
         if code is None:
             return None
