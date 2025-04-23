@@ -11,7 +11,7 @@ __all__ = [
     'FIELDS', 'AST_FIELDS', 'OPCLS2STR', 'OPSTR2CLS',
     'bistr', 'get_field', 'has_type_comments', 'is_parsable', 'get_parse_mode',
     'WalkFail', 'walk2', 'compare_asts', 'copy_attributes', 'copy_ast', 'set_ctx', 'get_func_class_or_ass_by_name',
-    'syntax_ordered_children',
+    'syntax_ordered_children', 'last_block_opener_child',
 ]
 
 
@@ -838,3 +838,25 @@ def syntax_ordered_children(ast: AST) -> list:
     """Returned `list` may contain `None` values."""
 
     return _syntax_ordered_children.get(ast.__class__, _syntax_ordered_children_default)(ast)
+
+
+def last_block_opener_child(ast: AST) -> AST | None:
+    """Return last `AST` node in the block open before the ':'. `ast` must be a valid block statement. Returns `None`
+    for things like `Try` and `except:` nodes or other block nodes which might have normally present fields missing."""
+
+    if not isinstance(ast, (FunctionDef, AsyncFunctionDef, ClassDef, For, AsyncFor, While, If, With, AsyncWith, Match,
+                            Try, TryStar, ExceptHandler, match_case)):
+        return None
+
+    for field in reversed(AST_FIELDS[ast.__class__]):
+        if field in ('body', 'orelse', 'finalbody', 'handlers', 'cases') or not (child := getattr(ast, field, None)):
+            continue
+
+        if isinstance(child, AST):
+            return child
+
+        elif isinstance(child, list):
+            if any(ret := a for a in reversed(child) if isinstance(a, AST)):
+                return ret
+
+    return None

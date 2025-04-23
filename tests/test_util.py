@@ -1,10 +1,13 @@
 #!/usr/bin/env python
 
 import os
+import sys
 import unittest
 
 import ast as ast_
+from ast import *
 from fst.util import *
+from fst.util import TypeVar, TryStar
 
 PYFNMS = sum((
     [os.path.join(path, fnm) for path, _, fnms in os.walk(top) for fnm in fnms if fnm.endswith('.py')]
@@ -79,11 +82,11 @@ class TestUtil(unittest.TestCase):
 
 
     def test_compare_asts(self):
-        ast1 = ast_.parse('def f():\n  i = 1\n  j = 2').body[0]
-        ast2 = ast_.parse('def f():\n  i = 1\n  j = 2').body[0]
-        ast3 = ast_.parse('def f():\n  i = 1\n  j =  2').body[0]
-        ast4 = ast_.parse('def f():\n  i = 1\n  k = 3').body[0]
-        ast5 = ast_.parse('def f():\n  i = 1').body[0]
+        ast1 = parse('def f():\n  i = 1\n  j = 2').body[0]
+        ast2 = parse('def f():\n  i = 1\n  j = 2').body[0]
+        ast3 = parse('def f():\n  i = 1\n  j =  2').body[0]
+        ast4 = parse('def f():\n  i = 1\n  k = 3').body[0]
+        ast5 = parse('def f():\n  i = 1').body[0]
 
         self.assertTrue(compare_asts(ast1, ast2, raise_=True))
         self.assertTrue(compare_asts(ast1, ast3, locs=False, raise_=True))
@@ -100,10 +103,43 @@ class TestUtil(unittest.TestCase):
                 src = f.read()
 
             for type_comments in (False, True):
-                ast = ast_.parse(src, type_comments=type_comments)
+                ast = parse(src, type_comments=type_comments)
                 dst = copy_ast(ast)
 
                 compare_asts(ast, dst, locs=True, type_comments=type_comments, raise_=True)
+
+    def test_last_block_opener_child(self):
+        self.assertIsInstance(last_block_opener_child(parse('def f(a) -> int: pass').body[0]), Name)
+        self.assertIsInstance(last_block_opener_child(parse('def f(a): pass').body[0]), arguments)
+        self.assertIsInstance(last_block_opener_child(parse('def f(): pass').body[0]), arguments)
+        self.assertIsInstance(last_block_opener_child(parse('async def f(a) -> int: pass').body[0]), Name)
+        self.assertIsInstance(last_block_opener_child(parse('async def f(a): pass').body[0]), arguments)
+        self.assertIsInstance(last_block_opener_child(parse('async def f(): pass').body[0]), arguments)
+        self.assertIsInstance(last_block_opener_child(parse('class cls(base, keyword=1): pass').body[0]), keyword)
+        self.assertIsInstance(last_block_opener_child(parse('class cls(base): pass').body[0]), Name)
+        self.assertIsInstance(last_block_opener_child(parse('for a in b: pass\nelse: pass').body[0]), Name)
+        self.assertIsInstance(last_block_opener_child(parse('async for a in b: pass\nelse: pass').body[0]), Name)
+        self.assertIsInstance(last_block_opener_child(parse('while a: pass\nelse: pass').body[0]), Name)
+        self.assertIsInstance(last_block_opener_child(parse('if a: pass\nelse: pass').body[0]), Name)
+        self.assertIsInstance(last_block_opener_child(parse('with f(): pass').body[0]), withitem)
+        self.assertIsInstance(last_block_opener_child(parse('with f() as v: pass').body[0]), withitem)
+        self.assertIsInstance(last_block_opener_child(parse('async with f(): pass').body[0]), withitem)
+        self.assertIsInstance(last_block_opener_child(parse('async with f() as v: pass').body[0]), withitem)
+        self.assertIsInstance(last_block_opener_child(parse('match a:\n case 2: pass').body[0]), Name)
+        self.assertIsInstance(last_block_opener_child(parse('match a:\n case 2: pass').body[0].cases[0]), MatchValue)
+        self.assertIsInstance(last_block_opener_child(parse('match a:\n case 2 if True: pass').body[0].cases[0]), Constant)
+        self.assertIsNone    (last_block_opener_child(parse('try: pass\nexcept: pass\nelse: pass\nfinally: pass').body[0]))
+        self.assertIsNone    (last_block_opener_child(parse('try: pass\nexcept: pass\nelse: pass\nfinally: pass').body[0].handlers[0]))
+        self.assertIsInstance(last_block_opener_child(parse('try: pass\nexcept Exception: pass\nelse: pass\nfinally: pass').body[0].handlers[0]), Name)
+        self.assertIsInstance(last_block_opener_child(parse('try: pass\nexcept (Exception, BaseException): pass\nelse: pass\nfinally: pass').body[0].handlers[0]), Tuple)
+        self.assertIsInstance(last_block_opener_child(parse('try: pass\nexcept (Exception, BaseException) as e: pass\nelse: pass\nfinally: pass').body[0].handlers[0]), Tuple)
+        self.assertIsNone    (last_block_opener_child(parse('try: pass\nexcept* Exception: pass\nelse: pass\nfinally: pass').body[0]))
+        self.assertIsInstance(last_block_opener_child(parse('try: pass\nexcept* Exception: pass\nelse: pass\nfinally: pass').body[0].handlers[0]), Name)
+        self.assertIsInstance(last_block_opener_child(parse('try: pass\nexcept* (Exception, BaseException): pass\nelse: pass\nfinally: pass').body[0].handlers[0]), Tuple)
+        self.assertIsInstance(last_block_opener_child(parse('try: pass\nexcept* (Exception, BaseException) as e: pass\nelse: pass\nfinally: pass').body[0].handlers[0]), Tuple)
+
+        if sys.version_info[:2] >= (3, 12):
+            self.assertIsInstance(last_block_opener_child(parse('class cls[T]: pass').body[0]), TypeVar)
 
 
 if __name__ == '__main__':

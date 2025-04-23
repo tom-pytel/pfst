@@ -3950,6 +3950,7 @@ class FST:
         self._set_ast(copy_self.a)
         self.touchall(False)
 
+
         if code is None:
             return None
 
@@ -4398,7 +4399,7 @@ class FST:
         """
 
         ast     = self.a
-        _, body = _fixup_field_body(self.a, field, only_list=False)
+        _, body = _fixup_field_body(self.a, field, False)
 
         if not isinstance(body, list):
             if stop is not False or start is not None:
@@ -4407,7 +4408,7 @@ class FST:
 
 
             if not isinstance(body, AST):
-                raise NotImplementedError  # TODO: this
+                raise NotImplementedError  # TODO: put to missing field
 
 
             body.f.replace(code, **options)
