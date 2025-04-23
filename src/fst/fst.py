@@ -2430,6 +2430,31 @@ class FST:
 
         return ret
 
+    def _loc_block_opener_end(self) -> tuple[int, int] | None:
+        """Return location of the end of the block opener line(s) for block node, just past the ':', or None if `self`
+        is not a block opener node."""
+
+        ln, col, end_ln, end_col = self.loc
+
+        if child := last_block_opener_child(a := self.a):
+            if loc := child.f.loc:  # because of empty function def arguments
+                _, _, cend_ln, cend_col = loc
+
+            else:
+                cend_ln  = ln
+                cend_col = col
+
+        elif isinstance(a, BLOCK):
+            cend_ln  = ln
+            cend_col = col
+
+        else:
+            return None
+
+        ln, col = _next_find(self.root._lines, cend_ln, cend_col, end_ln, end_col, ':')  # it must be there
+
+        return ln, col + 1
+
     def _loc_operator(self) -> fstloc | None:
         """Get location of `operator`, `unaryop` or `cmpop` from source if possible. `boolop` is not done at all because
         a single operator can be in multiple location in a `BoolOp` and we want to be consistent."""
@@ -3889,8 +3914,104 @@ class FST:
         return fstloc(*body[start].f.pars(exc_genexpr_solo=True)[:2],
                       *body[stop - 1].f.pars(exc_genexpr_solo=True)[2:])
 
-    def _reparse_raw(self, code: Code | None, ln: int, col: int, end_ln: int, end_col: int,
-                     inc: bool | None = None) -> 'FST':
+    def _reparse_raw_stmtish(self, new_lines: list[str], ln: int, col: int, end_ln: int, end_col: int) -> bool:
+        """Reparse only statementish or block opener part of statementish containing changes."""
+
+        if not (parent := self.parent_stmtish(True, False)):
+            return False
+
+        indent = parent.get_indent()
+
+        if not (blkopen_end := parent._loc_block_opener_end()):  # non-block statement
+            root  = self.root
+            lines = root._lines
+
+            pln, pcol, pend_ln, pend_col = parent.bloc
+
+            if not indent:
+                copy_lines = [bistr('')] * pln + lines[pln : pend_ln + 1]
+            elif pln:
+                copy_lines = ([bistr('')] * (pln - 1) +
+                              [bistr('if 1:'), bistr(' ' * pcol + lines[pln][pcol:])] +
+                              lines[pln + 1 : pend_ln + 1])
+            else:
+                copy_lines = ([bistr(f"try:{' ' * (pcol - 4)}{lines[pln][pcol:]}")] +
+                              lines[pln + 1 : pend_ln + 1] +
+                              [bistr('finally: pass')])
+
+            copy_lines[pend_ln] = copy_lines[pend_ln][:pend_col]
+
+
+
+            copy_root           = FST(Pass(), lines=copy_lines)  # we don't need the ASTs, just the lines
+
+            copy_root.put_lines(new_lines, ln, col, end_ln, end_col)
+
+            copy_root = FST.fromsrc(copy_root.src, mode=get_parse_mode(root.a), **root.parse_params)
+            copy      = copy_root.body[0].body[0] if indent else copy_root.body[0]
+
+            root.put_lines(new_lines, ln, col, end_ln, end_col, True, parent)  # we do this again in our own tree to offset our nodes which aren't being moved over from the modified copy
+
+            copy.pfield.set(copy.parent.a, None)  # remove from copy tree so that copy_root unmake doesn't zero out new node
+            copy_root._unmake_fst_tree()
+
+            parent._set_ast(copy.a)
+            parent.touchall(False)
+
+
+
+
+
+            return True
+
+
+
+
+
+        return False
+
+
+
+        # TODO: ExceptHandler
+        # TODO: match_case
+        # TODO: block open statement
+        # TODO: normal statement
+
+
+
+    def _reparse_raw_whole(self, new_lines: list[str], ln: int, col: int, end_ln: int, end_col: int):
+        """Reparse whole source with changes."""
+
+        assert self.root.is_mod  # TODO: allow with non-mod root
+
+        root      = self.root
+        copy_root = FST(Pass(), lines=root._lines[:])  # we don't need the ASTs, just the lines
+
+        copy_root.put_lines(new_lines, ln, col, end_ln, end_col)
+
+        copy_root = FST.fromsrc(copy_root.src, mode=get_parse_mode(root.a), **root.parse_params)
+        path      = root.child_path(self)
+
+        if self is root:
+            self._lines = copy_root._lines
+            copy        = copy_root
+
+        else:
+            copy = copy_root.child_from_path(path)
+
+            if not copy:
+                raise RuntimeError(f'could not find node after raw reparse')
+
+            root.put_lines(new_lines, ln, col, end_ln, end_col, True, self)  # we do this again in our own tree to offset our nodes which aren't being moved over from the modified copy
+
+            copy.pfield.set(copy.parent.a, None)  # remove from copy tree so that copy_root unmake doesn't zero out new node
+            copy_root._unmake_fst_tree()
+
+        self._set_ast(copy.a)
+        self.touchall(False)
+
+    def _reparse_raw(self, code: Code | None, ln: int, col: int, end_ln: int, end_col: int, inc: bool | None = None
+                     ) -> 'FST':
         """Reparse this node which entirely contatins the span which is to be replaced with `code` source. `self` must
         be a node which entirely contains the location and is guaranteed not to be deleted. `self` and some of its
         parents going up may be replaced (root node `FST` will never change, the `AST` it points to may though). Not
@@ -3899,7 +4020,7 @@ class FST:
         **Returns:**
         - `FST | None`: First highest level node contained entirely within replacement source or `None` if no candidate.
             This could wind up being just an operator like '+' depending on the replacement. If `inc` is passed and not
-            `None` then will attempt a `find_loc(..., inc)` if could not find candidate node.
+            `None` then will attempt a `find_loc(..., inc)` if could not find candidate node with `find_in_loc()`.
         """
 
         if isinstance(code, str):
@@ -3913,43 +4034,8 @@ class FST:
         else:  # isinstance(code, FST)
             new_lines = (code if code.is_root else code.copy())._lines
 
-
-        assert self.root.is_mod  # TODO: allow with non-mod root
-
-
-        # TODO: Optimize individual cases to only reparse what is needed.
-        # TODO: ExceptHandler
-        # TODO: match_case
-        # TODO: block open statement
-        # TODO: normal statement
-
-
-        self_root = self.root
-        copy_root = FST(Pass(), lines=self_root._lines[:])  # we don't need the ASTs, just the lines
-
-        copy_root.put_lines(new_lines, ln, col, end_ln, end_col)
-
-        copy_root = FST.fromsrc(copy_root.src, mode=get_parse_mode(self_root.a), **self_root.parse_params)
-        path      = self_root.child_path(self)
-
-        if self is self_root:
-            self._lines = copy_root._lines
-            copy_self   = copy_root
-
-        else:
-            copy_self = copy_root.child_from_path(path)
-
-            if not copy_self:
-                raise ValueError(f'could not find node after raw reparse')
-
-            self_root.put_lines(new_lines, ln, col, end_ln, end_col, True, self)  # we do this again in our own tree to offset our nodes which aren't being moved over from the modified copy
-
-            copy_self.pfield.set(copy_self.parent.a, None)  # remove from copy tree so that copy_root unmake doesn't zero out new node
-            copy_root._unmake_fst_tree()
-
-        self._set_ast(copy_self.a)
-        self.touchall(False)
-
+        if not self._reparse_raw_stmtish(new_lines, ln, col, end_ln, end_col):  # attempt to reparse only statement (or even only block opener)
+            self._reparse_raw_whole(new_lines, ln, col, end_ln, end_col)  # fallback to reparse all source
 
         if code is None:
             return None
@@ -3962,8 +4048,8 @@ class FST:
             end_ln  = ln + len(new_lines) - 1
             end_col = len(new_lines[-1])
 
-        return (self_root.find_in_loc(ln, col, end_ln, end_col) or  # `self_root` instead of `self` because some changes may propagate farther up the tree, like 'elif' -> 'else'
-                (self_root.find_loc(ln, col, end_ln, end_col, inc) if inc is not None else None))
+        return (self.root.find_in_loc(ln, col, end_ln, end_col) or  # `self.root` instead of `self` because some changes may propagate farther up the tree, like 'elif' -> 'else'
+                (self.root.find_loc(ln, col, end_ln, end_col, inc) if inc is not None else None))
 
     def _reparse_raw_node(self, code: Code | None, to: Optional['FST'] = None, **options) -> 'FST':
         """Attempt a replacement by using str as source and attempting to parse into location of node(s) being

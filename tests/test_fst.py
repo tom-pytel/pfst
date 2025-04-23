@@ -16104,6 +16104,39 @@ def walktest(ast):
 
 
 class TestFST(unittest.TestCase):
+    def test__loc_block_opener_end(self):
+        self.assertEqual((0, 16), parse('def f(a) -> int: pass').body[0].f._loc_block_opener_end())
+        self.assertEqual((0, 9),  parse('def f(a): pass').body[0].f._loc_block_opener_end())
+        self.assertEqual((0, 8),  parse('def f(): pass').body[0].f._loc_block_opener_end())
+        self.assertEqual((0, 22), parse('async def f(a) -> int: pass').body[0].f._loc_block_opener_end())
+        self.assertEqual((0, 15), parse('async def f(a): pass').body[0].f._loc_block_opener_end())
+        self.assertEqual((0, 14), parse('async def f(): pass').body[0].f._loc_block_opener_end())
+        self.assertEqual((0, 27), parse('class cls(base, keyword=1): pass').body[0].f._loc_block_opener_end())
+        self.assertEqual((0, 16), parse('class cls(base): pass').body[0].f._loc_block_opener_end())
+        self.assertEqual((0, 11), parse('for a in b: pass\nelse: pass').body[0].f._loc_block_opener_end())
+        self.assertEqual((0, 17), parse('async for a in b: pass\nelse: pass').body[0].f._loc_block_opener_end())
+        self.assertEqual((0, 8),  parse('while a: pass\nelse: pass').body[0].f._loc_block_opener_end())
+        self.assertEqual((0, 5),  parse('if a: pass\nelse: pass').body[0].f._loc_block_opener_end())
+        self.assertEqual((0, 9),  parse('with f(): pass').body[0].f._loc_block_opener_end())
+        self.assertEqual((0, 14), parse('with f() as v: pass').body[0].f._loc_block_opener_end())
+        self.assertEqual((0, 15), parse('async with f(): pass').body[0].f._loc_block_opener_end())
+        self.assertEqual((0, 20), parse('async with f() as v: pass').body[0].f._loc_block_opener_end())
+        self.assertEqual((0, 8),  parse('match a:\n case 2: pass').body[0].f._loc_block_opener_end())
+        self.assertEqual((1, 8),  parse('match a:\n case 2: pass').body[0].cases[0].f._loc_block_opener_end())
+        self.assertEqual((1, 16), parse('match a:\n case 2 if True: pass').body[0].cases[0].f._loc_block_opener_end())
+        self.assertEqual((0, 4),  parse('try: pass\nexcept: pass\nelse: pass\nfinally: pass').body[0].f._loc_block_opener_end())
+        self.assertEqual((1, 7),  parse('try: pass\nexcept: pass\nelse: pass\nfinally: pass').body[0].handlers[0].f._loc_block_opener_end())
+        self.assertEqual((1, 17), parse('try: pass\nexcept Exception: pass\nelse: pass\nfinally: pass').body[0].handlers[0].f._loc_block_opener_end())
+        self.assertEqual((1, 34), parse('try: pass\nexcept (Exception, BaseException): pass\nelse: pass\nfinally: pass').body[0].handlers[0].f._loc_block_opener_end())
+        self.assertEqual((1, 39), parse('try: pass\nexcept (Exception, BaseException) as e: pass\nelse: pass\nfinally: pass').body[0].handlers[0].f._loc_block_opener_end())
+        self.assertEqual((0, 4),  parse('try: pass\nexcept* Exception: pass\nelse: pass\nfinally: pass').body[0].f._loc_block_opener_end())
+        self.assertEqual((1, 18),  parse('try: pass\nexcept* Exception: pass\nelse: pass\nfinally: pass').body[0].handlers[0].f._loc_block_opener_end())
+        self.assertEqual((1, 35),  parse('try: pass\nexcept* (Exception, BaseException): pass\nelse: pass\nfinally: pass').body[0].handlers[0].f._loc_block_opener_end())
+        self.assertEqual((1, 40),  parse('try: pass\nexcept* (Exception, BaseException) as e: pass\nelse: pass\nfinally: pass').body[0].handlers[0].f._loc_block_opener_end())
+
+        if sys.version_info[:2] >= (3, 12):
+            self.assertEqual((0, 13), parse('class cls[T]: pass').body[0].f._loc_block_opener_end())
+
     def test__dict_key_or_mock_loc(self):
         a = parse('''{
     a: """test
@@ -20416,32 +20449,37 @@ class cls:
     def test_put_raw_special(self):
         f = parse('[a for c in d for b in c for a in b]').body[0].value.f
         g = f.put('for x in y', 1, raw=True)
-        self.assertIs(g, f)
+        self.assertIsNot(g, f)
         self.assertEqual(g.src, '[a for c in d for x in y for a in b]')
         f = g
         g = f.put(None, 1, raw=True)
-        self.assertIs(g, f)
+        self.assertIsNot(g, f)
         self.assertEqual(g.src, '[a for c in d  for a in b]')
         f = g
         g = f.put(None, 1, raw=True)
-        self.assertIs(g, f)
+        self.assertIsNot(g, f)
         self.assertEqual(g.src, '[a for c in d  ]')
         f = g
+
+        f = parse('try:pass\nfinally: pass').body[0].f
+        g = f.put('break', 0, raw=True)
+        # self.assertIsNot(g, f)
+        self.assertEqual(g.src, 'try:break\nfinally: pass')
 
         self.assertEqual('y', parse('n', mode='eval').f.put('y', field='body').root.src)  # Expression.body
 
     def test_put_slice_raw(self):
         f = parse('[a for c in d for b in c for a in b]').body[0].value.f
         g = f.put_slice('for x in y', 1, 2, raw=True)
-        self.assertIs(g, f)
+        self.assertIsNot(g, f)
         self.assertEqual(g.src, '[a for c in d for x in y for a in b]')
         f = g
         g = f.put_slice(None, 1, 2, raw=True)
-        self.assertIs(g, f)
+        self.assertIsNot(g, f)
         self.assertEqual(g.src, '[a for c in d  for a in b]')
         f = g
         g = f.put_slice(None, 1, 2, raw=True)
-        self.assertIs(g, f)
+        self.assertIsNot(g, f)
         self.assertEqual(g.src, '[a for c in d  ]')
         f = g
 
