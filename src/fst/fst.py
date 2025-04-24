@@ -101,7 +101,7 @@ DEFAULT_POSTCOMMS       = True   # True | False | 'all' | 'block'
 DEFAULT_PRESPACE        = False  # True | False | int
 DEFAULT_POSTSPACE       = False  # True | False | int
 DEFAULT_PEP8SPACE       = True   # True | False | 1
-DEFAULT_PARS            = True   # True | False
+DEFAULT_PARS            = 'put'  # True | False | 'put'
 DEFAULT_ELIF_           = False  # True | False
 DEFAULT_FIX             = True   # True | False
 DEFAULT_RAW             = 'alt'  # True | False | 'alt'
@@ -1930,11 +1930,19 @@ class FST:
         - `True`: Two empty lines at module scope and one empty line in other scopes.
         - `1`: One empty line in all scopes.
         - `None`: Use default (`True`).
+    - `pars`: How parentheses are handled.
+        - `False`: Parentheses are not modified. Not copied with nodes or removed on cut (except for tuple parens) or
+            automatically modified on put.
+        - `True`: Parentheses are handled automatically and cut from and copied with nodes. They are also added if
+            needed for precedence when adding nodes with enough information to make that decision (including `AST` and
+            `FST` nodes passed to raw put).
+        - `'put'`: Same as `True` except they are not returned with a cut or copied node (they are removed on cut).
+        - `None`: Use default (`'put'`).
     - `elif_`: `True` or `False`, if putting a single `If` statement to an `orelse` field of a parent `If` statement then
         put it as an `elif`. `None` means use default of `False`.
     - `fix`: Attempt to carry out basic fixes on operands like parenthesizing multiline expressions so they are
         parsable, adding commas to singleton tuples, changing `elif` to `if` for cut or copied `elif` statements, etc...
-    - `raw`: How to attempt at raw source operations. This may result in more nodes changed than just the targetted
+    - `raw`: How to attempt at raw source operations. This may result in more nodes changed than just the targeted
         one(s).
         - `False`: Do not do raw source operations.
         - `True`: Only do raw source operations.
@@ -4109,7 +4117,7 @@ class FST:
         replaced."""
 
         multi = to and to is not self
-        pars  = True if multi else DEFAULT_PARS if (o := options.get('pars')) is None else o
+        pars  = True if multi else bool(DEFAULT_PARS if (o := options.get('pars')) is None else o)
         loc   = self.pars(pars, exc_genexpr_solo=True)
 
 
@@ -4418,7 +4426,7 @@ class FST:
         if isinstance(ast, STATEMENTISH):
             loc = self.comms(options.get('precomms'), options.get('postcomms'))
         elif isinstance(ast, PARENTHESIZABLE):
-            loc = self.pars(options.get('pars'))
+            loc = self.pars((DEFAULT_PARS if (o := options.get('pars')) is None else o) is True)
         else:
             loc = self.bloc
 
@@ -6196,7 +6204,6 @@ class FST:
         - `exc_genexpr_solo`: If `True` then will exclude parentheses of a single call argument generator expression if
             they is shared with the call arguments enclosing parentheses, return -1 npars in this case. Is not checked
             at all if `pars=False`.
-        - `options`: Ignored.
 
         **Returns:**
         - `fstloc`: Location of enclosing parentheses if present else `self.bloc`.
