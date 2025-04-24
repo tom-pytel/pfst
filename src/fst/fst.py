@@ -1635,13 +1635,13 @@ class FSTSrcEdit:
 
             if postpend:  # reduce needed postpend by trailing empty lines present in destination
                 _, _, end_ln, end_col = put_loc
-                end_lines             = len(lines)
+                len_lines             = len(lines)
 
                 while postpend and re_empty_line.match(lines[end_ln], end_col):
                     postpend -= 1
                     end_col   = 0
 
-                    if (end_ln := end_ln + 1) >= end_lines:
+                    if (end_ln := end_ln + 1) >= len_lines:
                         break
 
                 postpend += not postpend
@@ -2119,16 +2119,18 @@ class FST:
         except AttributeError:
             pass
 
-        if not (loc := self.loc):
-            bloc = None
-        elif decos := getattr(self.a, 'decorator_list', None):
-            bloc = fstloc(decos[0].f.ln, loc[1], loc[2], loc[3])  # column of deco '@' will be same as our column
-        else:
-            bloc = loc
+        if (bloc := self.loc) and (decos := getattr(self.a, 'decorator_list', None)):
+            bloc = fstloc(decos[0].f.ln, bloc[1], bloc[2], bloc[3])  # column of deco '@' will be same as our column
 
         self._bloc = bloc
 
         return bloc
+
+    @property
+    def wbloc(self) -> fstloc | None:
+        """Return whole source location if at root, regardless of actual root node location, otherwise node `bloc`."""
+
+        return self.bloc if self.parent else fstloc(0, 0, len(ls := self._lines) - 1, len(ls[-1]))
 
     @property
     def ln(self) -> int:
@@ -2480,19 +2482,19 @@ class FST:
             if has_space := isinstance(ast, (NotIn, IsNot)):  # stupid two-element operators, can be anything like "not    \\\n     in"
                 op, op2 = op.split(' ')
 
-            if pos := _next_find(lines, end_ln, end_col, len_lines := len(lines), 0x7fffffffffffffff, op):
+            if pos := _next_find(lines, end_ln, end_col, end_lines := len(lines) - 1, len(lines[-1]), op):
                 ln, col = pos
 
                 if not has_space:
                     return fstloc(ln, col, ln, col + len(op))
 
-                if pos := _next_find(lines, ln, col + len(op), len_lines, 0x7fffffffffffffff, op2):
+                if pos := _next_find(lines, ln, col + len(op), end_lines, len(lines[-1]), op2):
                     ln2, col2 = pos
 
                     return fstloc(ln, col, ln2, col2 + len(op2))
 
         elif (prev := (is_binop := getattr(parenta, 'left', None))) or (prev := getattr(parenta, 'target', None)):
-            if pos := _next_find(lines, (loc := prev.f.loc).end_ln, loc.end_col, len(lines), 0x7fffffffffffffff, op):
+            if pos := _next_find(lines, (loc := prev.f.loc).end_ln, loc.end_col, len(lines) - 1, len(lines[-1]), op):
                 ln, col = pos
 
                 return fstloc(ln, col, ln, col + len(op) + (not is_binop))
@@ -2932,31 +2934,47 @@ class FST:
 
         return self
 
-    def _parenthesize_grouping(self):
+    def _parenthesize_grouping(self, whole: bool = True):
         """Parenthesize anything with non-node grouping parentheses. Just adds text parens around node adjusting parent
-        locations but not the node itself."""
+        locations but not the node itself.
 
-        ln, col, end_ln, end_col = self.bloc
+        **Parameters:**
+        - `whole`: If at root then parenthesize whole source instead of just node.
+        """
+
+        ln, col, end_ln, end_col = self.wbloc if whole else self.bloc
+        end_col_offset           = getattr(a := self.a, 'end_col_offset', None)
 
         self.put_lines([')'], end_ln, end_col, end_ln, end_col, True, self)
+
+        if end_col_offset is not None:  # maybe correct for put ')' (if was right after self) because needed to offset tail of parents but not self
+            a.end_col_offset = end_col_offset
+
         self.put_lines(['('], ln, col, ln, col, False)
-
-        self.a.end_col_offset -= 1  # correct for put ')' because needed to offset tail of parents but not self
-
         self._floor_start_pos((a := self.a).lineno, a.col_offset - 1, False)
 
-    def _parenthesize_tuple(self):
-        """Parenthesize an unparenthesized tuple, adjusting tuple location for added parentheses. No checks are done so
-        don't call on anything else!"""
+    def _parenthesize_tuple(self, whole: bool = True):
+        """Parenthesize an unparenthesized tuple, adjusting tuple location for added parentheses.
+
+        WARNING! No checks are done so don't call on anything other than an unparenthesized Tuple!
+
+        **Parameters:**
+        - `whole`: If at root then parenthesize whole source instead of just node.
+        """
 
         # assert isinstance(self.a, Tuple)
 
-        ln, col, end_ln, end_col = self.loc
+        ln, col, end_ln, end_col = self.wbloc if whole else self.loc
 
         self.put_lines([')'], end_ln, end_col, end_ln, end_col, True, self)
-        self.put_lines(['('], ln, col, ln, col, False)
 
-        self._floor_start_pos((a := self.a).lineno, a.col_offset - 1)
+        lines            = self.root._lines
+        a                = self.a
+        a.end_lineno     = end_ln + 1
+        a.end_col_offset = lines[end_ln].c2b(end_col + 1)
+
+        self.put_lines(['('], ln, col, ln, col, False)
+        self._floor_start_pos(ln + 1, lines[ln].c2b(col))
 
     def _unparenthesize_grouping(self, inc_genexpr_solo: bool = False):
         """Remove grouping parentheses from anything. Just remove text parens around node adjusting parent locations but
@@ -2975,7 +2993,7 @@ class FST:
             lines                    = self.root._lines
             _, _, cend_ln, cend_col  = self.parent.func.loc
             pln, pcol                = _prev_find(lines, cend_ln, cend_col, pln, pcol, '(')  # it must be there
-            pend_ln, pend_col        = _next_find(lines, pend_ln, pend_col, len(lines), len(lines[-1]), ')')  # it must be there
+            pend_ln, pend_col        = _next_find(lines, pend_ln, pend_col, len(lines) - 1, len(lines[-1]), ')')  # ditto
             pend_col                += 1
 
         self.put_lines(None, end_ln, end_col, pend_ln, pend_col, True, self)
@@ -2983,9 +3001,12 @@ class FST:
 
     def _unparenthesize_tuple(self):
         """Unparenthesize a parenthesized tuple, adjusting tuple location for removed parentheses. Will not
-        unparenthesize an empty tuple. No checks are done so don't call on anything else!"""
+        unparenthesize an empty tuple.
 
-        if not (self.is_parenthesized_tuple() and (a := self.a).elts):
+        WARNING! No checks are done so don't call on anything other than a parenthesized Tuple!
+        """
+
+        if not self.a.elts:
             return
 
         ln, col, end_ln, end_col = self.loc
@@ -6162,7 +6183,7 @@ class FST:
 
         return lns
 
-    def pars(self, pars: bool = True, *, ret_npars: bool = False, exc_genexpr_solo: bool = False, **options) -> fstloc:
+    def pars(self, pars: bool = True, *, ret_npars: bool = False, exc_genexpr_solo: bool = False) -> fstloc:
         """Return the location of enclosing grouping parentheses if present. Will balance parentheses if `self` is an
         element of a tuple and not return the parentheses of the tuple. Likwise will not return the parentheses of an
         enclosing `arguments` parent. Only works on (and makes sense for) `expr` or `pattern` nodes, otherwise
