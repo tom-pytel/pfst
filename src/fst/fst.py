@@ -2984,9 +2984,9 @@ class FST:
         self.put_lines(['('], ln, col, ln, col, False)
         self._floor_start_pos(ln + 1, lines[ln].c2b(col))
 
-    def _unparenthesize_grouping(self, inc_genexpr_solo: bool = False):
-        """Remove grouping parentheses from anything. Just remove text parens around node adjusting parent locations but
-        not the node itself."""
+    def _unparenthesize_grouping(self, *, inc_genexpr_solo: bool = False):
+        """Remove grouping parentheses from anything. Just remove text parens around node and everything between them
+        and node adjusting parent locations but not the node itself."""
 
         pars_loc, npars = self.pars(ret_npars=True)
         genexpr_solo    = inc_genexpr_solo and self.is_solo_call_arg_genexpr()
@@ -3009,18 +3009,23 @@ class FST:
 
     def _unparenthesize_tuple(self):
         """Unparenthesize a parenthesized tuple, adjusting tuple location for removed parentheses. Will not
-        unparenthesize an empty tuple.
+        unparenthesize an empty tuple. Removes everything between the parentheses and the actual tuple.
 
         WARNING! No checks are done so don't call on anything other than a parenthesized Tuple!
         """
 
-        if not self.a.elts:
+        if not (elts := self.a.elts):
             return
 
         ln, col, end_ln, end_col = self.loc
 
-        self.put_lines(None, end_ln, end_col - 1, end_ln, end_col, True, self)
-        self.put_lines(None, ln, col, ln, col + 1, False)
+        if comma := _next_find(self.root.lines, en_end_ln := (en := elts[-1].f).end_ln, en_end_col := en.end_col,
+                               end_ln, end_col, ','):  # need to leave trailing comma if its there
+            en_end_ln, en_end_col  = comma
+            en_end_col            += 1
+
+        self.put_lines(None, en_end_ln, en_end_col, end_ln, end_col, True, self)
+        self.put_lines(None, ln, col, (e0 := elts[0].f).ln, e0.col, False)
 
     def _normalize_block(self, field: str = 'body', *, indent: str | None = None):
         """Move statements on the same logical line as a block open to their own line, e.g:
