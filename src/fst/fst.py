@@ -2099,10 +2099,14 @@ class FST:
             end_col_offset = ast.end_col_offset
 
         except AttributeError:
-            if isinstance(ast, withitem):
+            if isinstance(ast, arguments):
+                loc = self._loc_arguments()
+            elif isinstance(ast, comprehension):
+                loc = self._loc_comprehension()
+            elif isinstance(ast, withitem):
                 loc = self._loc_withitem()
-            elif isinstance(ast, (arguments, match_case, comprehension)):
-                loc = self._loc_from_children()
+            elif isinstance(ast, match_case):
+                loc = self._loc_match_case()
             elif not self.parent:
                 loc = fstloc(0, 0, len(ls := self._lines) - 1, len(ls[-1]))
             elif isinstance(ast, (operator, unaryop, cmpop)):
@@ -2511,6 +2515,88 @@ class FST:
 
         return None
 
+    def _loc_comprehension(self) -> fstloc | None:
+        """`comprehension` location from children. Called from `.loc`."""
+
+        first = self.a.target.f
+        last  = self.last_child(True)
+        lines = self.root._lines
+
+        prev = prev.loc if (prev := self.prev_step('allown', recurse_self=False)) else (0, 0)
+
+        if start := _prev_find(lines, prev[-2], prev[-1], first.ln, first.col, 'for'):  # prev.bend_ln, prev.bend_col
+            start_ln, start_col = start
+
+        else:
+            start_ln, start_col, _, _, nlpars = first._lpars('allown')  # 'allown' so it doesn't recurse into calling `.loc`
+
+            if not nlpars:  # not really needed, but juuust in case
+                start_ln  = first.bln
+                start_col = first.bcol
+
+        end_ln, end_col, ante_end_ln, ante_end_col, nrpars = last._rpars('allown')
+
+        if not nrpars:
+            end_ln  = last.bend_ln
+            end_col = last.bend_col
+
+        elif ((parent := self.parent) and isinstance(parent.a, GeneratorExp) and  # correct for parenthesized GeneratorExp
+            self.pfield.idx == len(parent.a.generators) - 1
+        ):
+            end_ln  = ante_end_ln
+            end_col = ante_end_col
+
+        return fstloc(start_ln, start_col, end_ln, end_col)
+
+    def _loc_arguments(self) -> fstloc | None:
+        """`arguments` location from children. Called from `.loc`."""
+
+        if not (first := self.first_child(True)):
+            return None
+
+        ast   = self.a
+        last  = self.last_child(True)
+        lines = self.root._lines
+
+        start_ln, start_col, ante_start_ln, ante_start_col, nlpars = first._lpars('allown')  # 'allown' so it doesn't recurse into calling `.loc`
+
+        if not nlpars:  # not really needed, but juuust in case
+            start_ln  = first.bln
+            start_col = first.bcol
+
+        end_ln, end_col, ante_end_ln, ante_end_col, nrpars = last._rpars('allown')
+
+        if not nrpars:
+            end_ln  = last.bend_ln
+            end_col = last.bend_col
+
+        if ast.posonlyargs or ast.args:
+            leading_stars = None  # no leading stars
+        elif ast.vararg or ast.kwonlyargs:
+            leading_stars = '*'  # leading star just before varname or bare leading star with comma following
+        elif ast.kwarg:
+            leading_stars = '**'  # leading double star just before varname
+
+        if ((code := _next_src(lines, end_ln, end_col, len(lines) - 1, len(lines[-1])))  # trailing comma
+            and code.src.startswith(',')
+        ):
+            end_ln, end_col, _  = code
+            end_col            += 1
+
+        elif (parent := self.parent) and isinstance(parent.a, (FunctionDef, AsyncFunctionDef)):
+            end_ln  = ante_end_ln
+            end_col = ante_end_col
+
+            if not leading_stars:
+                start_ln  = ante_start_ln
+                start_col = ante_start_col
+
+        if leading_stars:  # find star to the left, we know it exists so we don't check for None return
+            start_ln, start_col = _prev_find(lines, *first._prev_ast_bound('allown'), start_ln, start_col,
+                                                leading_stars)
+
+        return fstloc(start_ln, start_col, end_ln, end_col)
+
     def _loc_withitem(self) -> fstloc | None:
         """`withitem` location from children. Called from `.loc`."""
 
@@ -2546,83 +2632,22 @@ class FST:
 
         return fstloc(ln, col, end_ln, end_col)
 
-    def _loc_from_children(self) -> fstloc | None:
-        """Meant to handle figuring out `loc` for `arguments`, `match_case` and `comprehension`. Use on other types of
-        nodes may or may not work correctly, especially not on `Tuple`. Called from `.loc`."""
-
-        if not (first := self.first_child(True)):
-            return None
+    def _loc_match_case(self) -> fstloc | None:
+        """`match_case` location from children. Called from `.loc`."""
 
         ast   = self.a
+        first = ast.pattern.f
         last  = self.last_child(True)
         lines = self.root._lines
 
-        if isinstance(ast, match_case):
-            start = _prev_find(lines, 0, 0, first.ln, first.col, 'case')  # we can use '0, 0' because we know "case" starts on a newline
+        start = _prev_find(lines, 0, 0, first.ln, first.col, 'case')  # we can use '0, 0' because we know "case" starts on a newline
 
-            if ast.body:
-                return fstloc(*start, last.bend_ln, last.bend_col)
+        if ast.body:
+            return fstloc(*start, last.bend_ln, last.bend_col)
 
-            end_ln, end_col = _next_find(lines, last.bend_ln, last.bend_col, len(lines) - 1, len(lines[-1]), ':')  # special case, deleted whole body, end must be set to just past the colon (which MUST follow somewhere there)
+        end_ln, end_col = _next_find(lines, last.bend_ln, last.bend_col, len(lines) - 1, len(lines[-1]), ':')  # special case, deleted whole body, end must be set to just past the colon (which MUST follow somewhere there)
 
-            return fstloc(*start, end_ln, end_col + 1)
-
-        is_comprehension = isinstance(ast, comprehension)
-        start_ln         = None
-
-        if is_comprehension:
-            prev = prev.loc if (prev := self.prev_step('allown', recurse_self=False)) else (0, 0)
-
-            if start := _prev_find(lines, prev[-2], prev[-1], first.ln, first.col, 'for'):  # prev.bend_ln, prev.bend_col
-                start_ln, start_col = start
-
-        if start_ln is None:
-            start_ln, start_col, ante_start_ln, ante_start_col, nlpars = first._lpars('allown')  # 'allown' so it doesn't recurse into calling `.loc`
-
-            if not nlpars:  # not really needed, but juuust in case
-                start_ln  = first.bln
-                start_col = first.bcol
-
-        end_ln, end_col, ante_end_ln, ante_end_col, nrpars = last._rpars('allown')
-
-        if not nrpars:
-            end_ln  = last.bend_ln
-            end_col = last.bend_col
-
-        elif is_comprehension:
-            if ((parent := self.parent) and isinstance(parent.a, GeneratorExp) and  # correct for parenthesized GeneratorExp
-                self.pfield.idx == len(parent.a.generators) - 1
-            ):
-                end_ln  = ante_end_ln
-                end_col = ante_end_col
-
-        if isinstance(ast, arguments):
-            if ast.posonlyargs or ast.args:
-                leading_stars = None  # no leading stars
-            elif ast.vararg or ast.kwonlyargs:
-                leading_stars = '*'  # leading star just before varname or bare leading star with comma following
-            elif ast.kwarg:
-                leading_stars = '**'  # leading double star just before varname
-
-            if ((code := _next_src(lines, end_ln, end_col, len(lines) - 1, len(lines[-1])))  # trailing comma
-                and code.src.startswith(',')
-            ):
-                end_ln, end_col, _  = code
-                end_col            += 1
-
-            elif (parent := self.parent) and isinstance(parent.a, (FunctionDef, AsyncFunctionDef)):
-                end_ln  = ante_end_ln
-                end_col = ante_end_col
-
-                if not leading_stars:
-                    start_ln  = ante_start_ln
-                    start_col = ante_start_col
-
-            if leading_stars:  # find star to the left, we know it exists so we don't check for None return
-                start_ln, start_col = _prev_find(lines, *first._prev_ast_bound('allown'), start_ln, start_col,
-                                                 leading_stars)
-
-        return fstloc(start_ln, start_col, end_ln, end_col)
+        return fstloc(*start, end_ln, end_col + 1)
 
     def _dict_key_or_mock_loc(self, key: AST | None, value: 'FST') -> Union['FST', fstloc]:
         """Return same dictionary key FST if exists else create and return a location for the preceding '**' code."""
