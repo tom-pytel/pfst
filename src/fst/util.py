@@ -318,7 +318,7 @@ class _Precedence(IntEnum):
 # * BinOp, UnaryOp and BoolOp inherit precedence from `.op`.
 # * BinOp addtionally has associativity to consider, opposite operand from associativity gets precedence bumped.
 
-PRECEDENCE_NODES = {
+PRECEDENCE_NODES = {  # default is _Precedence.ATOM
     BoolOp:         True,
     NamedExpr:      _Precedence.NAMED_EXPR,
     BinOp:          True,

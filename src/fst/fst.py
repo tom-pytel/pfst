@@ -118,7 +118,7 @@ NAMED_SCOPE             = (FunctionDef, AsyncFunctionDef, ClassDef)
 NAMED_SCOPE_OR_MOD      = NAMED_SCOPE + (mod,)
 ANONYMOUS_SCOPE         = (Lambda, ListComp, SetComp, DictComp, GeneratorExp)
 
-PARENTHESIZABLE         = (expr, pattern)
+PARENTHESIZABLE         = (expr, alias, withitem, pattern)
 HAS_DOCSTRING           = NAMED_SCOPE_OR_MOD
 
 STATEMENTISH_FIELDS     = frozenset(('body', 'orelse', 'finalbody', 'handlers', 'cases'))
@@ -2099,7 +2099,9 @@ class FST:
             end_col_offset = ast.end_col_offset
 
         except AttributeError:
-            if isinstance(ast, (arguments, withitem, match_case, comprehension)):  # this takes precedence over location of whole enchilada
+            if isinstance(ast, withitem):
+                loc = self._loc_withitem()
+            elif isinstance(ast, (arguments, match_case, comprehension)):
                 loc = self._loc_from_children()
             elif not self.parent:
                 loc = fstloc(0, 0, len(ls := self._lines) - 1, len(ls[-1]))
@@ -2383,7 +2385,7 @@ class FST:
 
         **Parameters:**
         - `with_loc`: Parameter to use for AST bound search. `True` normally or `'allown'` in special cases like
-            searching for parentheses to figure out node location from children.
+            searching for parentheses to figure out node location from children from `.loc` itself.
         - `exc_genexpr_solo`: If `True`, then will exclude left parenthesis of a single call argument generator
             expression if it is shared with the call() arguments enclosing parentheses.
 
@@ -2416,7 +2418,7 @@ class FST:
 
         **Parameters:**
         - `with_loc`: Parameter to use for AST bound search. `True` normally or `'allown'` in special cases like
-            searching for parentheses to figure out node location from children.
+            searching for parentheses to figure out node location from children from `.loc` itself.
         - `exc_genexpr_solo`: If `True`, then will exclude left parenthesis of a single call argument generator
             expression if it is shared with the call() arguments enclosing parentheses.
 
@@ -2509,9 +2511,44 @@ class FST:
 
         return None
 
+    def _loc_withitem(self) -> fstloc | None:
+        """`withitem` location from children. Called from `.loc`."""
+
+        ast    = self.a
+        ce     = ast.context_expr.f
+        ce_loc = ce.loc
+
+        if not (ov := ast.optional_vars):
+            return ce_loc
+
+        ov     = ov.f
+        ov_loc = ov.loc
+
+        pars_end_ln, pars_end_col, ante_end_ln, ante_end_col, nrpars = ce._rpars('allown')  # 'allown' so it doesn't recurse into calling `.loc`
+
+        if not nrpars:
+            ln, col = ce_loc[:2]
+
+        else:
+            pars_ln, pars_col, ante_ln, ante_col, nlpars = ce._lpars('allown')
+
+            ln, col = (pars_ln, pars_col) if nlpars == nrpars else (ante_ln, ante_col)
+
+        pars_ln, pars_col, ante_ln, ante_col, nlpars = ov._lpars('allown')
+
+        if not nlpars:
+            end_ln, end_col = ov_loc[2:]
+
+        else:
+            pars_end_ln, pars_end_col, ante_end_ln, ante_end_col, nrpars = ov._rpars('allown')
+
+            end_ln, end_col = (pars_end_ln, pars_end_col) if nrpars == nlpars else (ante_end_ln, ante_end_col)
+
+        return fstloc(ln, col, end_ln, end_col)
+
     def _loc_from_children(self) -> fstloc | None:
-        """Meant to handle figuring out `loc` for `arguments`, `withitem`, `match_case` and `comprehension`. Use on
-        other types of nodes may or may not work correctly, especially not on `Tuple`."""
+        """Meant to handle figuring out `loc` for `arguments`, `match_case` and `comprehension`. Use on other types of
+        nodes may or may not work correctly, especially not on `Tuple`. Called from `.loc`."""
 
         if not (first := self.first_child(True)):
             return None
@@ -2540,7 +2577,7 @@ class FST:
                 start_ln, start_col = start
 
         if start_ln is None:
-            start_ln, start_col, ante_start_ln, ante_start_col, nlpars = first._lpars('allown')
+            start_ln, start_col, ante_start_ln, ante_start_col, nlpars = first._lpars('allown')  # 'allown' so it doesn't recurse into calling `.loc`
 
             if not nlpars:  # not really needed, but juuust in case
                 start_ln  = first.bln
@@ -3077,6 +3114,34 @@ class FST:
 
         self.put_lines(['if'], ln, col, ln, col + 4, False)
         self.put_lines([indent + 'else:', indent + self.root.indent], ln, 0, ln, col, False)
+
+    def _reparse_docstrings(self, docstr: bool | str | None = None):
+        """Reparse docstrings in `self` and all descendants.
+
+        **Parameters:**
+        - `docstr`: Which strings to reparse. `True` means all `Expr` multiline strings. `'strict'` means only multiline
+            strings in expected docstring. `False` doesn't reparse anything and just returns. `None` means use default
+            (`True`).
+        """
+
+        if docstr is None:
+            docstr = DEFAULT_DOCSTR
+
+        if not docstr:
+            return
+
+        if docstr != 'strict':  # True
+            for a in walk(self.a):
+                if isinstance(a, Expr) and isinstance(v := a.value, Constant) and isinstance(v.value, str):
+                    v.value = literal_eval((f := a.f).get_src(*f.loc))
+
+        else:
+            for a in walk(self.a):
+                if isinstance(a, HAS_DOCSTRING):
+                    if ((body := a.body) and isinstance(b0 := body[0], Expr) and isinstance(v := b0.value, Constant) and
+                        isinstance(v.value, str)
+                    ):
+                        v.value = literal_eval((f := b0.f).get_src(*f.loc))
 
     # ------------------------------------------------------------------------------------------------------------------
 
@@ -6138,7 +6203,7 @@ class FST:
 
                 cur_ln, cur_col, _ = _next_src(lines, cur_ln, cur_col, end_ln, end_col)  # there must be a next one
 
-        def multiline_fstr(f: 'FST'):
+        def multiline_fstr(f: 'FST'):  # TODO: p3.12+ has locations for there, might make it easier
             """Lets try to find indentable lines by incrementally attempting to parse parts of multiline f-string."""
 
             nonlocal lns, lines
@@ -6462,7 +6527,7 @@ class FST:
         self.touchall(False, False)
 
     def indent_lns(self, indent: str | None = None, lns: set[int] | None = None, *,
-                   skip: int = 1, docstr: bool | str | None = DEFAULT_DOCSTR) -> set[int]:
+                   skip: int = 1, docstr: bool | str | None = None) -> set[int]:
         """Indent all indentable lines specified in `lns` with `indent` and adjust node locations accordingly.
 
         WARNING! This does not offset parent nodes.
@@ -6498,12 +6563,12 @@ class FST:
             if l := lines[ln]:  # only indent non-empty lines
                 lines[ln] = bistr(indent + l)
 
-        self.reparse_docstrings(docstr)
+        self._reparse_docstrings(docstr)
 
         return lns
 
     def dedent_lns(self, indent: str | None = None, lns: set[int] | None = None, *,
-                   skip: int = 1, docstr: bool | str | None = DEFAULT_DOCSTR) -> set[int]:
+                   skip: int = 1, docstr: bool | str | None = None) -> set[int]:
         """Dedent all indentable lines specified in `lns` by removing `indent` prefix and adjust node locations
         accordingly. If cannot dedent entire amount will dedent as much as possible.
 
@@ -6572,34 +6637,6 @@ class FST:
         else:
             self.offset_cols(-lindent, lns)
 
-        self.reparse_docstrings(docstr)
+        self._reparse_docstrings(docstr)
 
         return lns
-
-    def reparse_docstrings(self, docstr: bool | str | None = DEFAULT_DOCSTR):
-        """Reparse docstrings in `self` and all descendants.
-
-        **Parameters:**
-        - `docstr`: Which strings to reparse. `True` means all `Expr` multiline strings. `'strict'` means only multiline
-            strings in expected docstring. `False` doesn't reparse anything and just returns. `None` means use default
-            (`True`).
-        """
-
-        if docstr is None:
-            docstr = DEFAULT_DOCSTR
-
-        if not docstr:
-            return
-
-        if docstr != 'strict':  # True
-            for a in walk(self.a):
-                if isinstance(a, Expr) and isinstance(v := a.value, Constant) and isinstance(v.value, str):
-                    v.value = literal_eval((f := a.f).get_src(*f.loc))
-
-        else:
-            for a in walk(self.a):
-                if isinstance(a, HAS_DOCSTRING):
-                    if ((body := a.body) and isinstance(b0 := body[0], Expr) and isinstance(v := b0.value, Constant) and
-                        isinstance(v.value, str)
-                    ):
-                        v.value = literal_eval((f := b0.f).get_src(*f.loc))
