@@ -7,13 +7,59 @@ from itertools import takewhile
 from typing import Any, Callable, Generator, Literal, NamedTuple, Optional, TextIO, TypeAlias, Union
 
 from .util import *
-from .util import TryStar
+from .util import TryStar, type_param
 
 __all__ = [
     'parse', 'unparse', 'set_defaults', 'FST', 'FSTSrcEdit',
     'fstlistproxy', 'fstloc', 'srcwpos', 'astfield',
     'NodeTypeError',
 ]
+
+
+class astfield(NamedTuple):
+    name: str
+    idx:  int | None = None
+
+    def get(self, parent: AST) -> Any:
+        """Get child node at this field in the given `parent`."""
+
+        return getattr(parent, self.name) if self.idx is None else getattr(parent, self.name)[self.idx]
+
+    def get_no_raise(self, parent: AST) -> Any:
+        """Get child node at this field in the given `parent`. Return `False` if not found instead of raising."""
+
+        return (
+            getattr(parent, self.name, False) if (idx := self.idx) is None else
+            False if (body := getattr(parent, self.name, False)) is False or idx >= len(body) else
+            body[idx])
+
+    def set(self, parent: AST, child: AST):
+        """Set `child` node at this field in the given `parent`."""
+
+        if self.idx is None:
+            setattr(parent, self.name, child)
+        else:
+            getattr(parent, self.name)[self.idx] = child
+
+
+class fstloc(NamedTuple):
+    ln:      int
+    col:     int
+    end_ln:  int
+    end_col: int
+
+    bln      = property(lambda self: self.ln)       ; """Alias for `ln`."""  # for convenience
+    bcol     = property(lambda self: self.col)      ; """Alias for `col`."""
+    bend_ln  = property(lambda self: self.end_ln)   ; """Alias for `end_ln`."""
+    bend_col = property(lambda self: self.end_col)  ; """Alias for `end_col`."""
+
+    is_FST   = False                                ; """@private"""  # for quick checks vs. `FST`
+
+
+class srcwpos(NamedTuple):
+    ln:  int
+    col: int
+    src: str
 
 
 REPR_SRC_LINES = 0  # for debugging
@@ -123,6 +169,14 @@ HAS_DOCSTRING           = NAMED_SCOPE_OR_MOD
 
 STATEMENTISH_FIELDS     = frozenset(('body', 'orelse', 'finalbody', 'handlers', 'cases'))
 
+PATH_BODY               = [astfield('body', 0)]
+PATH_BODY2              = [astfield('body', 0), astfield('body', 0)]
+PATH_BODYORELSE         = [astfield('body', 0), astfield('orelse', 0)]
+PATH_BODY2ORELSE        = [astfield('body', 0), astfield('body', 0), astfield('orelse', 0)]
+PATH_BODYHANDLERS       = [astfield('body', 0), astfield('handlers', 0)]
+PATH_BODY2HANDLERS      = [astfield('body', 0), astfield('body', 0), astfield('handlers', 0)]
+PATH_BODYCASES          = [astfield('body', 0), astfield('cases', 0)]
+
 re_empty_line_start     = re.compile(r'[ \t]*')     # start of completely empty or space-filled line (from start pos, start of line indentation)
 re_empty_line           = re.compile(r'[ \t]*$')    # completely empty or space-filled line (from start pos, start of line indentation)
 re_comment_line_start   = re.compile(r'[ \t]*#')    # empty line preceding a comment
@@ -147,54 +201,7 @@ re_next_src_or_comment_or_lcont = re.compile(r'\s*([^\s#\\]+|#.*|\\$)')  # next 
 
 Code: TypeAlias = Union['FST', AST, list[str], str]
 
-
 class NodeTypeError(ValueError): pass
-
-
-class astfield(NamedTuple):
-    name: str
-    idx:  int | None = None
-
-    def get(self, parent: AST) -> Any:
-        """Get child node at this field in the given `parent`."""
-
-        return getattr(parent, self.name) if self.idx is None else getattr(parent, self.name)[self.idx]
-
-    def get_no_raise(self, parent: AST) -> Any:
-        """Get child node at this field in the given `parent`. Return `False` if not found instead of raising."""
-
-        return (
-            getattr(parent, self.name, False) if (idx := self.idx) is None else
-            False if (body := getattr(parent, self.name, False)) is False or idx >= len(body) else
-            body[idx])
-
-    def set(self, parent: AST, child: AST):
-        """Set `child` node at this field in the given `parent`."""
-
-        if self.idx is None:
-            setattr(parent, self.name, child)
-        else:
-            getattr(parent, self.name)[self.idx] = child
-
-
-class fstloc(NamedTuple):
-    ln:      int
-    col:     int
-    end_ln:  int
-    end_col: int
-
-    bln      = property(lambda self: self.ln)       ; """Alias for `ln`."""  # for convenience
-    bcol     = property(lambda self: self.col)      ; """Alias for `col`."""
-    bend_ln  = property(lambda self: self.end_ln)   ; """Alias for `end_ln`."""
-    bend_col = property(lambda self: self.end_col)  ; """Alias for `end_col`."""
-
-    is_FST   = False                                ; """@private"""  # for quick checks vs. `FST`
-
-
-class srcwpos(NamedTuple):
-    ln:  int
-    col: int
-    src: str
 
 
 def parse(source, filename='<unknown>', mode='exec', *, type_comments=False, feature_version=None, **kwargs) -> AST:
@@ -610,7 +617,8 @@ def _reduce_ast(ast, coerce: Literal['expr', 'mod'] | None = None):
     **Parameters:**
     - `coerce`: What kind of coercion to apply (if any):
         - `'expr'`: Want `ast.expr` if possible. Returns `Expression.body` or `Module|Interactive.body[0].value` or
-            `ast` if is `ast.exr`.
+            `ast` if is `ast.expr`.
+        - `'exprish'`: Same as `'expr'` but also some other expression-like nodes (for raw).
         - `'mod'`: Want `ast.Module`, expressions are wrapped in `Expr` and put into this and all other types are put
             directly into this.
         - `None`: Will pull expression out of `Expression` and convert `Interactive` to `Module`, otherwise will return
@@ -623,15 +631,16 @@ def _reduce_ast(ast, coerce: Literal['expr', 'mod'] | None = None):
     if isinstance(ast, Expression):
         ast = ast.body
 
-    elif coerce == 'expr':
+    elif coerce in ('expr', 'exprish'):
         if isinstance(ast, (Module, Interactive)):
             if len(body := ast.body) != 1 or not isinstance(ast := body[0], Expr):
                 raise NodeTypeError(f'expecting single expression')
 
             ast = ast.value
 
-        if not isinstance(ast, expr):
-            raise NodeTypeError(f'expecting expression')
+        if not isinstance(ast, expr if (is_expr := coerce == 'expr') else (expr, arg, alias, withitem, pattern,
+                                                                           type_param)):
+            raise NodeTypeError('expecting expression' if is_expr else 'expecting expressionish node')
 
         return ast
 
@@ -641,7 +650,7 @@ def _reduce_ast(ast, coerce: Literal['expr', 'mod'] | None = None):
     if coerce == 'mod' and not isinstance(ast, Module):
         if isinstance(ast, expr):
             ast = Expr(value=ast, lineno=ast.lineno, col_offset=ast.col_offset,
-                        end_lineno=ast.end_lineno, end_col_offset=ast.end_col_offset)
+                       end_lineno=ast.end_lineno, end_col_offset=ast.end_col_offset)
 
         ast = Module(body=[ast], type_ignores=[])
 
@@ -3931,26 +3940,40 @@ class FST:
         if isinstance(code, AST):
             if not one:
                 try:
-                    ast = _reduce_ast(code, 'expr')
+                    ast = _reduce_ast(code, 'exprish')
                 except Exception:
                     pass
 
                 else:
-                    if (is_tuple := isinstance(ast, Tuple)) or isinstance(ast, (List, Dict, Set)):  # strip delimiters because we want CONTENTS of slice for raw put, not the slice object itself
-                        code = ast_unparse(ast)[1 : (-2 if is_tuple and len(ast.elts) == 1 else -1)]  # also remove singleton Tuple trailing comma
+                    if isinstance(ast, Tuple):  # strip delimiters because we want CONTENTS of slice for raw put, not the slice object itself
+                        code = ast_unparse(ast)[1 : (-2 if len(ast.elts) == 1 else -1)]  # also remove singleton Tuple trailing comma
+                    elif isinstance(ast, (List, Dict, Set, MatchSequence, MatchMapping)):
+                        code = ast_unparse(ast)[1 : -1]
 
         elif isinstance(code, FST):
+            if not code.is_root:
+                raise ValueError('expecting root FST')
+
             try:
-                ast = _reduce_ast(code.a, 'expr')
+                ast = _reduce_ast(code.a, 'exprish')
             except Exception:
                 pass
 
             else:
+
+
+                # TODO: MatchSequence, MatchMapping
+
+
                 if one:
                     if ast.f.is_parenthesized_tuple() is False:  # only need to parenthesize this, others are already enclosed
                         ast.f._parenthesize_tuple()
 
+                    # TODO: parenthesize unparenthesized MatchSequence
+
                 elif (is_dict := isinstance(ast, Dict)) or isinstance(ast, (Tuple, List, Set)):
+                    # TODO: unparenthesize parenthesized MatchSequence
+
                     if ast.f.is_parenthesized_tuple() is not False:  # don't do if is unparenthesized Tuple
                         code.put_lines(None, end_ln := code.end_ln, (end_col := code.end_col) - 1, end_ln, end_col, True)  # strip enclosing delimiters
                         code.put_lines(None, ln := code.ln, col := code.col, ln, col + 1, False)
@@ -4054,12 +4077,7 @@ class FST:
             copy        = copy_root
 
         else:
-            copy = (copy_root.child_from_path(path) if isinstance(path, list) else
-                    copy_root.body[0] if path == 'body' else
-                    copy_root.body[0].body[0] if path == 'body2' else
-                    copy_root.body[0].handlers[0] if path == 'bodyhandlers' else
-                    copy_root.body[0].body[0].handlers[0] if path == 'body2handlers' else
-                    copy_root.body[0].cases[0])  # if path == 'bodycases' else 1/0)
+            copy = copy_root.child_from_path(path)
 
             if not copy:
                 raise RuntimeError(f'could not find node after raw reparse')
@@ -4081,10 +4099,6 @@ class FST:
         if not (stmtish := self.parent_stmtish(True, False)):
             return False
 
-        if stmtish.is_elif():  # because of possible change 'elif' -> 'else'
-            if not (stmtish := stmtish.parent_stmtish(False, False)):
-                return False
-
         pln, pcol, pend_ln, pend_col = stmtish.bloc
 
         root     = self.root
@@ -4098,7 +4112,7 @@ class FST:
             copy_lines = ([bistr('')] * (pln - 1) +
                           [bistr('match a:'), bistr(' ' * pcol + lines[pln][pcol:])] +
                           lines[pln + 1 : pend_ln + 1])
-            path       = 'bodycases'
+            path       = PATH_BODYCASES
 
         else:
             indent = stmtish.get_indent()
@@ -4120,10 +4134,21 @@ class FST:
                 assert pln > bool(indent)
 
                 copy_lines[pln - 1] = bistr(indent + 'try: pass')
-                path                = 'body2handlers' if indent else 'bodyhandlers'
+                path                = PATH_BODY2HANDLERS if indent else PATH_BODYHANDLERS
+
+            elif not indent:
+                if stmtish.is_elif():
+                    copy_lines[0] = bistr('if 2: pass')
+                    path          = PATH_BODYORELSE
+                else:
+                    path = PATH_BODY
 
             else:
-                path = 'body2' if indent else 'body'
+                if stmtish.is_elif():
+                    copy_lines[1] = bistr(indent + 'if 2: pass')
+                    path          = PATH_BODY2ORELSE
+                else:
+                    path = PATH_BODY2
 
         if not in_blkopen:  # non-block statement or modifications not limited to block opener part
             copy_lines[pend_ln] = bistr(copy_lines[pend_ln][:pend_col])
@@ -6495,7 +6520,7 @@ class FST:
 
                 if flno > lno:
                     if not dln and (not (decos := getattr(a, 'decorator_list', None)) or decos[0].lineno > lno):
-                        walking.send(False)  # no need to walk into something past offet point if line change is 0
+                        walking.send(False)  # no need to walk into something past offset point if line change is 0
 
                         continue
 

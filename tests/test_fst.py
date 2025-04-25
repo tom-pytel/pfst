@@ -16913,6 +16913,7 @@ def f():
         self.assertEqual('**ss', parse('def f( **ss ): pass').body[0].args.f.src)
 
         # loc calculated from children at root
+
         self.assertEqual((0, 0, 0, 12), parse('match a:\n case 1: pass').body[0].cases[0].f.copy().loc)
         self.assertEqual((0, 0, 0, 6), parse('with a as b: pass').body[0].items[0].f.copy().loc)
         self.assertEqual((0, 0, 0, 1), parse('def f(a): pass').body[0].args.f.copy().loc)
@@ -20620,6 +20621,23 @@ class cls:
         self.assertEqual(g.src, 'case 1: break')
 
         self.assertEqual('y', parse('n', mode='eval').f.put('y', field='body').root.src)  # Expression.body
+
+        # reparse source as different type of node
+
+        self.assertEqual('{a: b, 1: x, e: f}', parse('{a: b, c: d, e: f}').body[0].value.f.put_slice(
+            parse('match a:\n case {1: x}: pass').body[0].cases[0].pattern.f.copy().a, 1, 2, raw=True).root.src)
+
+        self.assertEqual('match a:\n case {1: x, 1: a, 3: z}: pass', parse('match a:\n case {1: x, 2: y, 3: z}: pass')
+                         .body[0].cases[0].pattern.f.put_slice(parse('{1: a}').body[0].value.f.copy().a, 1, 2, raw=True).root.src)
+
+        self.assertEqual('[1, a, b, 3]', parse('[1, 2, 3]').body[0].value.f.put_slice(
+            parse('match a:\n case a, b: pass').body[0].cases[0].pattern.f.copy().a, 1, 2, raw=True).root.src)
+
+        self.assertEqual('match a:\n case 1, a, b, 3: pass', parse('match a:\n case 1, 2, 3: pass')
+                         .body[0].cases[0].pattern.f.put_slice(parse('[a, b]').body[0].value.f.copy().a, 1, 2, raw=True).root.src)
+
+        self.assertEqual('match a:\n case 1 | a | b | 3: pass', parse('match a:\n case 1 | 2 | 3: pass')
+                         .body[0].cases[0].pattern.f.put_slice(parse('a | b').body[0].value.f.copy().a, 1, 2, raw=True).root.src)
 
     def test_put_raw_random_same(self):
         seed(rndseed := randint(0, 0x7fffffff))
