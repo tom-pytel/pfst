@@ -2784,7 +2784,7 @@ class FST:
 
         if (elts := self.a.elts) and len(elts) == 1:
             return self._maybe_add_comma((f := elts[0].f).end_ln, f.end_col, offset, False, self.end_ln,
-                                         self.end_col - self.is_parenthesized_tuple())
+                                         self.end_col - self._is_parenthesized_seq())
 
     def _maybe_fix_tuple(self, is_parenthesized: bool | None = None):
         # assert isinstance(self.a, Tuple)
@@ -2792,7 +2792,7 @@ class FST:
         ast = self.a
 
         if is_parenthesized is None:
-            is_parenthesized = self.is_parenthesized_tuple()
+            is_parenthesized = self._is_parenthesized_seq()
 
         if ast.elts:
             self._maybe_add_singleton_tuple_comma(True)
@@ -2927,7 +2927,7 @@ class FST:
             need_paren = None
 
             if is_tuple := isinstance(ast, Tuple):
-                if self.is_parenthesized_tuple():
+                if self._is_parenthesized_seq():
                     need_paren = False
 
                 elif (not (elts := ast.elts) or any(isinstance(e, NamedExpr) for e in elts) or (len(elts) == 1 and (
@@ -3013,8 +3013,9 @@ class FST:
 
         return self
 
-    def _is_parenthesized_seq(self, field: str) -> bool | None:
-        """Whether `self` is a parenthesized sequence of `field` or not"""
+    def _is_parenthesized_seq(self, field: str = 'elts') -> bool | None:
+        """Whether `self` is a parenthesized sequence of `field` or not. Use as `is_parenthesized_tuple()` if already
+        know is a Tuple. Other use is for `MatchSequence`."""
 
         self_ln, self_col, self_end_ln, self_end_col = self.loc
 
@@ -3291,7 +3292,7 @@ class FST:
             else:
                 return _new_empty_list(from_=self)
 
-        is_paren = is_tuple and self.is_parenthesized_tuple()
+        is_paren = is_tuple and self._is_parenthesized_seq()
         ffirst   = elts[start].f
         flast    = elts[stop - 1].f
         fpre     = elts[start - 1].f if start else None
@@ -3561,7 +3562,7 @@ class FST:
 
         is_self_tuple    = isinstance(ast, Tuple)
         is_self_set      = not is_self_tuple and isinstance(ast, Set)
-        is_self_enclosed = not is_self_tuple or self.is_parenthesized_tuple()
+        is_self_enclosed = not is_self_tuple or self._is_parenthesized_seq()
         fpre             = elts[start - 1].f if start else None
         fpost            = None if stop == len(elts) else elts[stop].f
         seq_loc          = fstloc(self.ln, self.col + is_self_enclosed, self.end_ln, self.end_col - is_self_enclosed)
@@ -3598,7 +3599,7 @@ class FST:
                 put_lines[-1] = bistr(put_lines[-1][:-1])
                 put_lines[0]  = bistr(put_lines[0][1:])
 
-            elif put_fst.is_parenthesized_tuple():
+            elif put_fst._is_parenthesized_seq():
                 put_ast.end_col_offset -= 1  # strip enclosing parentheses from source tuple
 
                 put_fst.offset(0, 1, 0, -1)
@@ -6121,44 +6122,7 @@ class FST:
         **Returns:**
         - `True` if is parenthesized `Tuple`, `False` if is unparenthesized `Tuple`, `None` if is not `Tuple`."""
 
-        if not isinstance(self.a, Tuple):
-            return None
-
-        self_ln, self_col, self_end_ln, self_end_col = self.loc
-
-        lines = self.root._lines
-
-        if not lines[self_end_ln].startswith(')', self_end_col - 1):
-            return False
-
-        if not (elts := self.a.elts):
-            return True
-
-        if not lines[self_ln].startswith('(', self_col):
-            return False
-
-        f0_ln, f0_col, f0_end_ln, f0_end_col = elts[0].f.loc
-
-        if f0_col == self_col and f0_ln == self_ln:
-            return False
-
-        _, _, fn_end_ln, fn_end_col = elts[-1].f.loc
-
-        if fn_end_col == self_end_col and fn_end_ln == self_end_ln:
-            return False
-
-        # dagnabit! have to count parens
-
-        self_end_col -= 1  # because for sure there is a comma between end of first element and end of tuple, so at worst we exclude either the tuple closing paren or a comma
-
-        nparens = _next_pars(lines, self_ln, self_col, self_end_ln, self_end_col, '(')[-1]  # yes, we use _next_pars() to count opening parens because we know conditions allow it
-
-        if not nparens:
-            return False
-
-        nparens -= _next_pars(lines, f0_end_ln, f0_end_col, self_end_ln, self_end_col)[-1]
-
-        return nparens > 0  # don't want to fiddle with checking if f0 is a parenthesized tuple
+        return self._is_parenthesized_seq() if isinstance(self.a, Tuple) else None
 
     def is_empty_set_call(self) -> bool:
         """Whether `self` is an empty `set()` call."""
