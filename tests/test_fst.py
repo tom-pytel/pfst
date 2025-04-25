@@ -20622,22 +20622,63 @@ class cls:
 
         self.assertEqual('y', parse('n', mode='eval').f.put('y', field='body').root.src)  # Expression.body
 
-        # reparse source as different type of node
+        # strip or add delimiters from/to different type of node to put as slice
 
-        self.assertEqual('{a: b, 1: x, e: f}', parse('{a: b, c: d, e: f}').body[0].value.f.put_slice(
-            parse('match a:\n case {1: x}: pass').body[0].cases[0].pattern.f.copy().a, 1, 2, raw=True).root.src)
+        f = parse('{a: b, c: d, e: f}').body[0].value.f
+        g = parse('match a:\n case {1: x}: pass').body[0].cases[0].pattern.f.copy()
+        self.assertEqual('{a: b, 1: x, e: f}', f.put_slice(g.a, 1, 2, raw=True).root.src)
 
-        self.assertEqual('match a:\n case {1: x, 1: a, 3: z}: pass', parse('match a:\n case {1: x, 2: y, 3: z}: pass')
-                         .body[0].cases[0].pattern.f.put_slice(parse('{1: a}').body[0].value.f.copy().a, 1, 2, raw=True).root.src)
+        f = parse('match a:\n case {1: x, 2: y, 3: z}: pass').body[0].cases[0].pattern.f
+        g = parse('{1: a}').body[0].value.f.copy()
+        self.assertEqual('match a:\n case {1: x, 1: a, 3: z}: pass', f.put_slice(g.a, 1, 2, raw=True).root.src)
 
-        self.assertEqual('[1, a, b, 3]', parse('[1, 2, 3]').body[0].value.f.put_slice(
-            parse('match a:\n case a, b: pass').body[0].cases[0].pattern.f.copy().a, 1, 2, raw=True).root.src)
+        f = parse('[1, 2, 3]').body[0].value.f
+        g = parse('match a:\n case a, b: pass').body[0].cases[0].pattern.f.copy()
+        self.assertEqual('[1, a, b, 3]', f.put_slice(g.a, 1, 2, raw=True).root.src)
 
-        self.assertEqual('match a:\n case 1, a, b, 3: pass', parse('match a:\n case 1, 2, 3: pass')
-                         .body[0].cases[0].pattern.f.put_slice(parse('[a, b]').body[0].value.f.copy().a, 1, 2, raw=True).root.src)
+        f = parse('[1, 2, 3]').body[0].value.f
+        g = parse('match a:\n case (a, b): pass').body[0].cases[0].pattern.f.copy()
+        self.assertEqual('[1, a, b, 3]', f.put_slice(g.a, 1, 2, raw=True).root.src)
 
-        self.assertEqual('match a:\n case 1 | a | b | 3: pass', parse('match a:\n case 1 | 2 | 3: pass')
-                         .body[0].cases[0].pattern.f.put_slice(parse('a | b').body[0].value.f.copy().a, 1, 2, raw=True).root.src)
+        f = parse('match a:\n case 1, 2, 3: pass').body[0].cases[0].pattern.f
+        g = parse('[a, b]').body[0].value.f.copy()
+        self.assertEqual('match a:\n case 1, a, b, 3: pass', f.put_slice(g.a, 1, 2, raw=True).root.src)
+
+        f = parse('match a:\n case 1, 2, 3: pass').body[0].cases[0].pattern.f
+        g = parse('[a, b]').body[0].value.f.copy()
+        self.assertEqual('match a:\n case 1, [a, b], 3: pass', f.put_slice(g.a, 1, 2, raw=True, one=True).root.src)
+
+        f = parse('match a:\n case 1 | 2 | 3: pass').body[0].cases[0].pattern.f
+        g = parse('a | b').body[0].value.f.copy()
+        self.assertEqual('match a:\n case 1 | a | b | 3: pass', f.put_slice(g.a, 1, 2, raw=True).root.src)
+
+        f = parse('{a: b, c: d, e: f}').body[0].value.f
+        g = parse('match a:\n case {1: x}: pass').body[0].cases[0].pattern.f.copy()
+        self.assertEqual('{a: b, 1: x, e: f}', f.put_slice(g, 1, 2, raw=True).root.src)
+
+        f = parse('match a:\n case {1: x, 2: y, 3: z}: pass').body[0].cases[0].pattern.f
+        g = parse('{1: a}').body[0].value.f.copy()
+        self.assertEqual('match a:\n case {1: x, 1: a, 3: z}: pass', f.put_slice(g, 1, 2, raw=True).root.src)
+
+        f = parse('[1, 2, 3]').body[0].value.f
+        g = parse('match a:\n case a, b: pass').body[0].cases[0].pattern.f.copy()
+        self.assertEqual('[1, a, b, 3]', f.put_slice(g, 1, 2, raw=True).root.src)
+
+        f = parse('[1, 2, 3]').body[0].value.f
+        g = parse('match a:\n case a, b: pass').body[0].cases[0].pattern.f.copy()
+        self.assertEqual('[1, (a, b), 3]', f.put_slice(g, 1, 2, raw=True, one=True).root.src)
+
+        f = parse('match a:\n case 1, 2, 3: pass').body[0].cases[0].pattern.f
+        g = parse('[a, b]').body[0].value.f.copy()
+        self.assertEqual('match a:\n case 1, a, b, 3: pass', f.put_slice(g, 1, 2, raw=True).root.src)
+
+        f = parse('match a:\n case 1, 2, 3: pass').body[0].cases[0].pattern.f
+        g = parse('[a, b]').body[0].value.f.copy()
+        self.assertEqual('match a:\n case 1, [a, b], 3: pass', f.put_slice(g, 1, 2, raw=True, one=True).root.src)
+
+        f = parse('match a:\n case 1 | 2 | 3: pass').body[0].cases[0].pattern.f
+        g = parse('a | b').body[0].value.f.copy()
+        self.assertEqual('match a:\n case 1 | a | b | 3: pass', f.put_slice(g, 1, 2, raw=True).root.src)
 
     def test_put_raw_random_same(self):
         seed(rndseed := randint(0, 0x7fffffff))

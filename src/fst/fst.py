@@ -152,6 +152,7 @@ DEFAULT_ELIF_           = False  # True | False
 DEFAULT_FIX             = True   # True | False
 DEFAULT_RAW             = 'alt'  # True | False | 'alt'
 
+EXPRESSIONISH           = (expr, arg, alias, withitem, pattern, type_param)
 STATEMENTISH            = (stmt, ExceptHandler, match_case)  # always in lists, cannot be inside multilines
 STATEMENTISH_OR_MOD     = STATEMENTISH + (mod,)
 STATEMENTISH_OR_STMTMOD = STATEMENTISH + (Module, Interactive)
@@ -638,8 +639,7 @@ def _reduce_ast(ast, coerce: Literal['expr', 'mod'] | None = None):
 
             ast = ast.value
 
-        if not isinstance(ast, expr if (is_expr := coerce == 'expr') else (expr, arg, alias, withitem, pattern,
-                                                                           type_param)):
+        if not isinstance(ast, expr if (is_expr := coerce == 'expr') else EXPRESSIONISH):
             raise NodeTypeError('expecting expression' if is_expr else 'expecting expressionish node')
 
         return ast
@@ -3013,6 +3013,45 @@ class FST:
 
         return self
 
+    def _is_parenthesized_seq(self, field: str) -> bool | None:
+        """Whether `self` is a parenthesized sequence of `field` or not"""
+
+        self_ln, self_col, self_end_ln, self_end_col = self.loc
+
+        lines = self.root._lines
+
+        if not lines[self_end_ln].startswith(')', self_end_col - 1):
+            return False
+
+        if not (asts := getattr(self.a, field)):
+            return True  # return True if no children because assume '()' in this case
+
+        if not lines[self_ln].startswith('(', self_col):
+            return False
+
+        f0_ln, f0_col, f0_end_ln, f0_end_col = asts[0].f.loc
+
+        if f0_col == self_col and f0_ln == self_ln:
+            return False
+
+        _, _, fn_end_ln, fn_end_col = asts[-1].f.loc
+
+        if fn_end_col == self_end_col and fn_end_ln == self_end_ln:
+            return False
+
+        # dagnabit! have to count parens
+
+        self_end_col -= 1  # because for sure there is a comma between end of first element and end of tuple, so at worst we exclude either the tuple closing paren or a comma
+
+        nparens = _next_pars(lines, self_ln, self_col, self_end_ln, self_end_col, '(')[-1]  # yes, we use _next_pars() to count opening parens because we know conditions allow it
+
+        if not nparens:
+            return False
+
+        nparens -= _next_pars(lines, f0_end_ln, f0_end_col, self_end_ln, self_end_col)[-1]
+
+        return nparens > 0  # don't want to fiddle with checking if f0 is a parenthesized tuple
+
     def _parenthesize_grouping(self, whole: bool = True):
         """Parenthesize anything with non-node grouping parentheses. Just adds text parens around node adjusting parent
         locations but not the node itself.
@@ -3960,25 +3999,28 @@ class FST:
                 pass
 
             else:
-
-
-                # TODO: MatchSequence, MatchMapping
-
+                fst = ast.f
 
                 if one:
-                    if ast.f.is_parenthesized_tuple() is False:  # only need to parenthesize this, others are already enclosed
-                        ast.f._parenthesize_tuple()
+                    if (is_par_tup := fst.is_parenthesized_tuple()) is None:  # only need to parenthesize this, others are already enclosed
+                        if isinstance(ast, MatchSequence) and not fst._is_parenthesized_seq('patterns'):
+                            fst._parenthesize_grouping()
 
-                    # TODO: parenthesize unparenthesized MatchSequence
+                    elif is_par_tup is False:
+                        fst._parenthesize_tuple()
 
-                elif (is_dict := isinstance(ast, Dict)) or isinstance(ast, (Tuple, List, Set)):
-                    # TODO: unparenthesize parenthesized MatchSequence
-
-                    if ast.f.is_parenthesized_tuple() is not False:  # don't do if is unparenthesized Tuple
+                elif ((is_dict := isinstance(ast, Dict)) or
+                      (is_match := isinstance(ast, (MatchSequence, MatchMapping))) or
+                      isinstance(ast, (Tuple, List, Set))
+                ):
+                    if not ((is_par_tup := fst.is_parenthesized_tuple()) is False or  # don't strip nonexistent delimiters if is unparenthesized Tuple or MatchSequence
+                            (is_par_tup is None and isinstance(ast, MatchSequence) and
+                             not fst._is_parenthesized_seq('patterns'))
+                    ):
                         code.put_lines(None, end_ln := code.end_ln, (end_col := code.end_col) - 1, end_ln, end_col, True)  # strip enclosing delimiters
                         code.put_lines(None, ln := code.ln, col := code.col, ln, col + 1, False)
 
-                    if elts := ast.values if is_dict else ast.elts:
+                    if elts := ast.values if is_dict else ast.patterns if is_match else ast.elts:
                         if comma := _next_find(code.root._lines, (l := elts[-1].f.loc).end_ln, l.end_col, code.end_ln,
                                                code.end_col, ','):  # strip trailing comma
                             ln, col = comma
@@ -4207,8 +4249,10 @@ class FST:
             new_lines = ast_unparse(code).split('\n')
         elif code is None:
             new_lines = [bistr('')]
-        else:  # isinstance(code, FST)
-            new_lines = (code if code.is_root else code.copy())._lines
+        elif not code.is_root:  # isinstance(code, FST)
+            raise ValueError('expecting root FST')
+        else:
+            new_lines = code._lines
 
         if not self._reparse_raw_stmtish(new_lines, ln, col, end_ln, end_col):  # attempt to reparse only statement (or even only block opener)
             assert self.root.is_mod  # TODO: allow with non-mod root
