@@ -282,238 +282,6 @@ OPCLS2STR = {
 
 OPSTR2CLS = {v: k for k, v in OPCLS2STR.items()}
 
-# directly from python ast
-class _Precedence(IntEnum):
-    """Precedence table that originated from python grammar."""
-
-    NAMED_EXPR = auto()      # <target> := <expr1>
-    TUPLE = auto()           # <expr1>, <expr2>
-    YIELD = auto()           # 'yield', 'yield from'
-    TEST = auto()            # 'if'-'else', 'lambda'
-    OR = auto()              # 'or'
-    AND = auto()             # 'and'
-    NOT = auto()             # 'not'
-    CMP = auto()             # '<', '>', '==', '>=', '<=', '!=',
-                             # 'in', 'not in', 'is', 'is not'
-    EXPR = auto()
-    BOR = EXPR               # '|'
-    BXOR = auto()            # '^'
-    BAND = auto()            # '&'
-    SHIFT = auto()           # '<<', '>>'
-    ARITH = auto()           # '+', '-'
-    TERM = auto()            # '*', '@', '/', '%', '//'
-    FACTOR = auto()          # unary '+', '-', '~'
-    POWER = auto()           # '**'
-    AWAIT = auto()           # 'await'
-    ATOM = auto()
-
-    def next(self):
-        try:
-            return self.__class__(self + 1)
-        except ValueError:
-            return self
-
-# Special precedence rules:
-# * Unparenthesized tuple should always be parenthesized.
-# * Value for dict unpack has _Precedence.EXPR.
-# * BinOp, UnaryOp and BoolOp inherit precedence from `.op`.
-# * BinOp addtionally has associativity to consider, opposite operand from associativity gets precedence bumped.
-
-PRECEDENCE_NODES = {  # default is _Precedence.ATOM
-    BoolOp:         False,  # these should be passed as the 'op'
-    NamedExpr:      _Precedence.NAMED_EXPR,
-    BinOp:          False,
-    UnaryOp:        False,
-    Lambda:         _Precedence.TEST,
-    IfExp:          _Precedence.TEST,
-    # Dict:           None,
-    # Set:            None,
-    # ListComp:       None,
-    # SetComp:        None,
-    # DictComp:       None,
-    # GeneratorExp:   None,
-    Await:          _Precedence.AWAIT,
-    Yield:          _Precedence.YIELD,
-    YieldFrom:      _Precedence.YIELD,
-    Compare:        _Precedence.CMP,
-    # Call:           None,
-    # FormattedValue: None,
-    # JoinedStr:      None,
-    # Constant:       None,
-    # Attribute:      None,
-    # Subscript:      None,
-    # Starred:        None,
-    # Name:           None,
-    # List:           None,
-    Tuple:          _Precedence.TUPLE,
-    # Slice:          None,
-
-    Invert:         _Precedence.FACTOR,
-    Not:            _Precedence.NOT,
-    UAdd:           _Precedence.FACTOR,
-    USub:           _Precedence.FACTOR,
-
-    Add:            _Precedence.ARITH,
-    Sub:            _Precedence.ARITH,
-    Mult:           _Precedence.TERM,
-    MatMult:        _Precedence.TERM,
-    Div:            _Precedence.TERM,
-    Mod:            _Precedence.TERM,
-    LShift:         _Precedence.SHIFT,
-    RShift:         _Precedence.SHIFT,
-    BitOr:          _Precedence.BOR,
-    BitXor:         _Precedence.BXOR,
-    BitAnd:         _Precedence.BAND,
-    FloorDiv:       _Precedence.TERM,
-    Pow:            _Precedence.POWER,
-
-    # Eq:             None,
-    # NotEq:          None,
-    # Lt:             None,
-    # LtE:            None,
-    # Gt:             None,
-    # GtE:            None,
-    # Is:             None,
-    # IsNot:          None,
-    # In:             None,
-    # NotIn:          None,
-
-    And:            _Precedence.AND,
-    Or:             _Precedence.OR,
-
-    # comprehension:  None,
-
-    # arguments:      None,
-    # arg:            None,
-    # keyword:        None,
-    # alias:          None,
-    # withitem:       None,
-    # match_case:     None,
-
-    # MatchValue:     None,
-    # MatchSingleton: None,
-    # MatchSequence:  None,
-    # MatchMapping:   None,
-    # MatchClass:     None,
-    # MatchStar:      None,
-    MatchAs:        _Precedence.TEST,
-    MatchOr:        _Precedence.BOR,
-
-    # TypeIgnore:     None,
-
-    # TypeVar:        None,
-    # ParamSpec:      None,
-    # TypeVarTuple:   None,
-}
-
-# PRECEDENCE_NODE_OPERATORS = {
-#     Invert:         _Precedence.FACTOR,
-#     Not:            _Precedence.NOT,
-#     UAdd:           _Precedence.FACTOR,
-#     USub:           _Precedence.FACTOR,
-
-#     Add:            _Precedence.ARITH,
-#     Sub:            _Precedence.ARITH,
-#     Mult:           _Precedence.TERM,
-#     MatMult:        _Precedence.TERM,
-#     Div:            _Precedence.TERM,
-#     Mod:            _Precedence.TERM,
-#     LShift:         _Precedence.SHIFT,
-#     RShift:         _Precedence.SHIFT,
-#     BitOr:          _Precedence.BOR,
-#     BitXor:         _Precedence.BXOR,
-#     BitAnd:         _Precedence.BAND,
-#     FloorDiv:       _Precedence.TERM,
-#     Pow:            _Precedence.POWER,
-
-#     # Eq:             None,
-#     # NotEq:          None,
-#     # Lt:             None,
-#     # LtE:            None,
-#     # Gt:             None,
-#     # GtE:            None,
-#     # Is:             None,
-#     # IsNot:          None,
-#     # In:             None,
-#     # NotIn:          None,
-
-#     And:            _Precedence.AND,
-#     Or:             _Precedence.OR,
-# }
-
-PRECEDENCE_NODE_FIELDS = {  # default is _Precedence.TEST
-    (Expr, 'value'):           _Precedence.YIELD,
-    (Assign, 'targets'):       _Precedence.TUPLE,
-    (For, 'target'):           _Precedence.TUPLE,
-    (AsyncFor, 'target'):      _Precedence.TUPLE,
-
-    (BinOp, 'values'):         False,                    # should be passed as 'op'
-    (NamedExpr, 'target'):     _Precedence.ATOM,
-    (NamedExpr, 'value'):      _Precedence.ATOM,
-    (BinOp, 'left'):           False,                    # should be passed as 'op'
-    (BinOp, 'right'):          False,                    # should be passed as 'op'
-    (UnaryOp, 'operand'):      False,                    # should be passed as 'op'
-    (Lambda, 'body'):          _Precedence.TEST,
-    (IfExp, 'body'):           _Precedence.TEST.next(),
-    (IfExp, 'test'):           _Precedence.TEST.next(),
-    (IfExp, 'orelse'):         _Precedence.TEST,
-    (Dict, 'values'):          False,                    # special case, '**' dict unpack `.value` gets _Precedence.EXPR
-    (Await, 'value'):          _Precedence.ATOM,
-    (Yield, 'value'):          _Precedence.ATOM,
-    (YieldFrom, 'value'):      _Precedence.ATOM,
-    (Compare, 'left'):         _Precedence.CMP.next(),
-    (Compare, 'comparators'):  _Precedence.CMP.next(),
-    (Call, 'func'):            _Precedence.ATOM,
-    (FormattedValue, 'value'): _Precedence.TEST.next(),
-    (Attribute, 'value'):      _Precedence.ATOM,
-    (Subscript, 'value'):      _Precedence.ATOM,
-    (Starred, 'value'):        _Precedence.EXPR,
-
-    (Invert, 'operand'):       _Precedence.FACTOR,
-    (Not, 'operand'):          _Precedence.NOT,
-    (UAdd, 'operand'):         _Precedence.FACTOR,
-    (USub, 'operand'):         _Precedence.FACTOR,
-
-    (Add, 'left'):             _Precedence.ARITH,
-    (Sub, 'left'):             _Precedence.ARITH,
-    (Mult, 'left'):            _Precedence.TERM,
-    (MatMult, 'left'):         _Precedence.TERM,
-    (Div, 'left'):             _Precedence.TERM,
-    (Mod, 'left'):             _Precedence.TERM,
-    (LShift, 'left'):          _Precedence.SHIFT,
-    (RShift, 'left'):          _Precedence.SHIFT,
-    (BitOr, 'left'):           _Precedence.BOR,
-    (BitXor, 'left'):          _Precedence.BXOR,
-    (BitAnd, 'left'):          _Precedence.BAND,
-    (FloorDiv, 'left'):        _Precedence.TERM,
-    (Pow, 'left'):             _Precedence.POWER.next(),
-
-    (Add, 'right'):            _Precedence.ARITH.next(),
-    (Sub, 'right'):            _Precedence.ARITH.next(),
-    (Mult, 'right'):           _Precedence.TERM.next(),
-    (MatMult, 'right'):        _Precedence.TERM.next(),
-    (Div, 'right'):            _Precedence.TERM.next(),
-    (Mod, 'right'):            _Precedence.TERM.next(),
-    (LShift, 'right'):         _Precedence.SHIFT.next(),
-    (RShift, 'right'):         _Precedence.SHIFT.next(),
-    (BitOr, 'right'):          _Precedence.BOR.next(),
-    (BitXor, 'right'):         _Precedence.BXOR.next(),
-    (BitAnd, 'right'):         _Precedence.BAND.next(),
-    (FloorDiv, 'right'):       _Precedence.TERM.next(),
-    (Pow, 'right'):            _Precedence.POWER,
-
-    (And, 'values'):           False,                    # special handling for BoolOp child
-    (Or, 'values'):            False,                    # special handling for BoolOp child
-
-    (comprehension, 'target'): _Precedence.TUPLE,
-    (comprehension, 'iter'):   _Precedence.TEST.next(),
-    (comprehension, 'ifs'):    _Precedence.TEST.next(),
-
-    (MatchClass, 'cls'):       _Precedence.ATOM,
-    (MatchAs, 'pattern'):      _Precedence.BOR,
-    (MatchOr, 'patterns'):     _Precedence.BOR.next(),
-}
-
 
 def get_field(node: AST, name: str, idx: int | None = None) -> AST:
     return getattr(node, name) if idx is None else getattr(node, name)[idx]
@@ -933,6 +701,203 @@ def last_block_opener_child(ast: AST) -> AST | None:
 
     return None
 
+
+# directly from python ast
+class _Precedence(IntEnum):
+    """Precedence table that originated from python grammar."""
+
+    NAMED_EXPR = auto()      # <target> := <expr1>
+    TUPLE = auto()           # <expr1>, <expr2>
+    YIELD = auto()           # 'yield', 'yield from'
+    TEST = auto()            # 'if'-'else', 'lambda'
+    OR = auto()              # 'or'
+    AND = auto()             # 'and'
+    NOT = auto()             # 'not'
+    CMP = auto()             # '<', '>', '==', '>=', '<=', '!=',
+                             # 'in', 'not in', 'is', 'is not'
+    EXPR = auto()
+    BOR = EXPR               # '|'
+    BXOR = auto()            # '^'
+    BAND = auto()            # '&'
+    SHIFT = auto()           # '<<', '>>'
+    ARITH = auto()           # '+', '-'
+    TERM = auto()            # '*', '@', '/', '%', '//'
+    FACTOR = auto()          # unary '+', '-', '~'
+    POWER = auto()           # '**'
+    AWAIT = auto()           # 'await'
+    ATOM = auto()
+
+    def next(self):
+        try:
+            return self.__class__(self + 1)
+        except ValueError:
+            return self
+
+# Special precedence rules:
+# * Unparenthesized tuple should always be parenthesized.
+# * Value for dict unpack has _Precedence.EXPR.
+# * BinOp, UnaryOp and BoolOp inherit precedence from `.op`.
+# * BinOp addtionally has associativity to consider, opposite operand from associativity gets precedence bumped.
+
+PRECEDENCE_NODES = {  # default is _Precedence.ATOM
+    BoolOp:         False,  # should be passed as the 'op'
+    NamedExpr:      _Precedence.NAMED_EXPR,
+    BinOp:          False,
+    UnaryOp:        False,
+    Lambda:         _Precedence.TEST,
+    IfExp:          _Precedence.TEST,
+    # Dict:           None,
+    # Set:            None,
+    # ListComp:       None,
+    # SetComp:        None,
+    # DictComp:       None,
+    # GeneratorExp:   None,
+    Await:          _Precedence.AWAIT,
+    Yield:          _Precedence.YIELD,
+    YieldFrom:      _Precedence.YIELD,
+    Compare:        _Precedence.CMP,
+    # Call:           None,
+    # FormattedValue: None,
+    # JoinedStr:      None,
+    # Constant:       None,
+    # Attribute:      None,
+    # Subscript:      None,
+    # Starred:        None,
+    # Name:           None,
+    # List:           None,
+    Tuple:          _Precedence.TUPLE,
+    # Slice:          None,
+
+    Invert:         _Precedence.FACTOR,
+    Not:            _Precedence.NOT,
+    UAdd:           _Precedence.FACTOR,
+    USub:           _Precedence.FACTOR,
+
+    Add:            _Precedence.ARITH,
+    Sub:            _Precedence.ARITH,
+    Mult:           _Precedence.TERM,
+    MatMult:        _Precedence.TERM,
+    Div:            _Precedence.TERM,
+    Mod:            _Precedence.TERM,
+    LShift:         _Precedence.SHIFT,
+    RShift:         _Precedence.SHIFT,
+    BitOr:          _Precedence.BOR,
+    BitXor:         _Precedence.BXOR,
+    BitAnd:         _Precedence.BAND,
+    FloorDiv:       _Precedence.TERM,
+    Pow:            _Precedence.POWER,
+
+    # Eq:             None,
+    # NotEq:          None,
+    # Lt:             None,
+    # LtE:            None,
+    # Gt:             None,
+    # GtE:            None,
+    # Is:             None,
+    # IsNot:          None,
+    # In:             None,
+    # NotIn:          None,
+
+    And:            _Precedence.AND,
+    Or:             _Precedence.OR,
+
+    # comprehension:  None,
+
+    # arguments:      None,
+    # arg:            None,
+    # keyword:        None,
+    # alias:          None,
+    # withitem:       None,
+    # match_case:     None,
+
+    # MatchValue:     None,
+    # MatchSingleton: None,
+    # MatchSequence:  None,
+    # MatchMapping:   None,
+    # MatchClass:     None,
+    # MatchStar:      None,
+    MatchAs:        _Precedence.TEST,
+    MatchOr:        _Precedence.BOR,
+
+    # TypeIgnore:     None,
+
+    # TypeVar:        None,
+    # ParamSpec:      None,
+    # TypeVarTuple:   None,
+}
+
+PRECEDENCE_NODE_FIELDS = {  # default is _Precedence.TEST
+    (Expr, 'value'):           _Precedence.YIELD,
+    (Assign, 'targets'):       _Precedence.TUPLE,
+    (For, 'target'):           _Precedence.TUPLE,
+    (AsyncFor, 'target'):      _Precedence.TUPLE,
+
+    (BinOp, 'values'):         False,                    # should be passed as the 'op'
+    (NamedExpr, 'target'):     _Precedence.ATOM,
+    (NamedExpr, 'value'):      _Precedence.ATOM,
+    (BinOp, 'left'):           False,                    # should be passed as the 'op'
+    (BinOp, 'right'):          False,                    # should be passed as the 'op'
+    (UnaryOp, 'operand'):      False,                    # should be passed as the 'op'
+    (Lambda, 'body'):          _Precedence.TEST,
+    (IfExp, 'body'):           _Precedence.TEST.next(),
+    (IfExp, 'test'):           _Precedence.TEST.next(),
+    (IfExp, 'orelse'):         _Precedence.TEST,
+    (Dict, 'values'):          False,                    # special case, '**' dict unpack `.value` gets _Precedence.EXPR
+    (Await, 'value'):          _Precedence.ATOM,
+    (Yield, 'value'):          _Precedence.ATOM,
+    (YieldFrom, 'value'):      _Precedence.ATOM,
+    (Compare, 'left'):         _Precedence.CMP.next(),
+    (Compare, 'comparators'):  _Precedence.CMP.next(),
+    (Call, 'func'):            _Precedence.ATOM,
+    (FormattedValue, 'value'): _Precedence.TEST.next(),
+    (Attribute, 'value'):      _Precedence.ATOM,
+    (Subscript, 'value'):      _Precedence.ATOM,
+    (Starred, 'value'):        _Precedence.EXPR,
+
+    (Invert, 'operand'):       _Precedence.FACTOR,
+    (Not, 'operand'):          _Precedence.NOT,
+    (UAdd, 'operand'):         _Precedence.FACTOR,
+    (USub, 'operand'):         _Precedence.FACTOR,
+
+    (Add, 'left'):             _Precedence.ARITH,
+    (Sub, 'left'):             _Precedence.ARITH,
+    (Mult, 'left'):            _Precedence.TERM,
+    (MatMult, 'left'):         _Precedence.TERM,
+    (Div, 'left'):             _Precedence.TERM,
+    (Mod, 'left'):             _Precedence.TERM,
+    (LShift, 'left'):          _Precedence.SHIFT,
+    (RShift, 'left'):          _Precedence.SHIFT,
+    (BitOr, 'left'):           _Precedence.BOR,
+    (BitXor, 'left'):          _Precedence.BXOR,
+    (BitAnd, 'left'):          _Precedence.BAND,
+    (FloorDiv, 'left'):        _Precedence.TERM,
+    (Pow, 'left'):             _Precedence.POWER.next(),
+
+    (Add, 'right'):            _Precedence.ARITH.next(),
+    (Sub, 'right'):            _Precedence.ARITH.next(),
+    (Mult, 'right'):           _Precedence.TERM.next(),
+    (MatMult, 'right'):        _Precedence.TERM.next(),
+    (Div, 'right'):            _Precedence.TERM.next(),
+    (Mod, 'right'):            _Precedence.TERM.next(),
+    (LShift, 'right'):         _Precedence.SHIFT.next(),
+    (RShift, 'right'):         _Precedence.SHIFT.next(),
+    (BitOr, 'right'):          _Precedence.BOR.next(),
+    (BitXor, 'right'):         _Precedence.BXOR.next(),
+    (BitAnd, 'right'):         _Precedence.BAND.next(),
+    (FloorDiv, 'right'):       _Precedence.TERM.next(),
+    (Pow, 'right'):            _Precedence.POWER,
+
+    (And, 'values'):           False,                    # special handling for BoolOp child
+    (Or, 'values'):            False,                    # special handling for BoolOp child
+
+    (comprehension, 'target'): _Precedence.TUPLE,
+    (comprehension, 'iter'):   _Precedence.TEST.next(),
+    (comprehension, 'ifs'):    _Precedence.TEST.next(),
+
+    (MatchClass, 'cls'):       _Precedence.ATOM,
+    (MatchAs, 'pattern'):      _Precedence.BOR,
+    (MatchOr, 'patterns'):     _Precedence.BOR.next(),
+}
 
 def precedence_require_parens(child_type: type[AST], parent_type: type[AST], field: str, *,
                               dict_key_is_None: bool = False) -> bool:

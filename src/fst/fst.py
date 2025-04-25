@@ -2799,7 +2799,7 @@ class FST:
 
             ln, _, end_ln, _ = self.loc
 
-            if not is_parenthesized and end_ln != ln:  # `not self.is_enclosed` instead of `end_ln != ln``:  <-- TODO: this, also maybe double check for line continuations (aesthetic thing)?
+            if not is_parenthesized and end_ln != ln:  # `not self.is_atom` instead of `end_ln != ln``:  <-- TODO: this, also maybe double check for line continuations (aesthetic thing)?
                 self._parenthesize_tuple()
 
         elif not is_parenthesized:  # if is unparenthesized tuple and empty left then need to add parentheses
@@ -3095,15 +3095,19 @@ class FST:
         self.put_lines(['('], ln, col, ln, col, False)
         self._floor_start_pos(ln + 1, lines[ln].c2b(col))
 
-    def _unparenthesize_grouping(self, *, inc_genexpr_solo: bool = False):
+    def _unparenthesize_grouping(self, *, inc_genexpr_solo: bool = False) -> bool:
         """Remove grouping parentheses from anything. Just remove text parens around node and everything between them
-        and node adjusting parent locations but not the node itself."""
+        and node adjusting parent locations but not the node itself.
+
+        **Returns:**
+        - `bool`: Whether parentheses were removed or not (only removed if present to begin with and removable).
+        """
 
         pars_loc, npars = self.pars(ret_npars=True)
         genexpr_solo    = inc_genexpr_solo and self.is_solo_call_arg_genexpr()
 
         if not npars and not genexpr_solo:
-            return
+            return False
 
         ln , col,  end_ln,  end_col  = self.bloc
         pln, pcol, pend_ln, pend_col = pars_loc
@@ -3118,15 +3122,20 @@ class FST:
         self.put_lines(None, end_ln, end_col, pend_ln, pend_col, True, self)
         self.put_lines(None, pln, pcol, ln, col, False)
 
-    def _unparenthesize_tuple(self):
+        return True
+
+    def _unparenthesize_tuple(self) -> bool:
         """Unparenthesize a parenthesized tuple, adjusting tuple location for removed parentheses. Will not
         unparenthesize an empty tuple. Removes everything between the parentheses and the actual tuple.
 
         WARNING! No checks are done so don't call on anything other than a parenthesized Tuple!
+
+        **Returns:**
+        - `bool`: Whether parentheses were removed or not (they may not be for an empty tuple).
         """
 
         if not (elts := self.a.elts):
-            return
+            return False
 
         ln, col, end_ln, end_col = self.loc
 
@@ -3137,6 +3146,8 @@ class FST:
 
         self.put_lines(None, en_end_ln, en_end_col, end_ln, end_col, True, self)
         self.put_lines(None, ln, col, (e0 := elts[0].f).ln, e0.col, False)
+
+        return True
 
     def _normalize_block(self, field: str = 'body', *, indent: str | None = None):
         """Move statements on the same logical line as a block open to their own line, e.g:
@@ -6116,11 +6127,34 @@ class FST:
 
         return True
 
+    def is_atom(self) -> bool:
+        """Whether `self` is enclosed in some kind of delimiters '()', '[]', '{}' or otherwise atomic like `Name`,
+        `Constant`, etc... Nodes type where this doesn't normally apply like `stmt` will return `True`.
+
+        **Returns:**
+        - `True` if is enclosed and no combination with another node can change its precedence, `False` otherwise.
+        """
+
+        ast = self.a
+
+        if isinstance(ast, (Dict, Set, ListComp, SetComp, DictComp, GeneratorExp, Await, Constant, Attribute, Subscript,
+                            Name, List)):
+            return True
+
+        if isinstance(ast, Tuple):
+            return self._is_parenthesized_seq()
+
+        if isinstance(ast, (expr, alias, withitem, pattern)):
+            return bool(self.pars(ret_npars=True)[1])
+
+        return True
+
     def is_parenthesized_tuple(self) -> bool | None:
         """Whether `self` is a parenthesized `Tuple` or not, or not a `Tuple` at all.
 
         **Returns:**
-        - `True` if is parenthesized `Tuple`, `False` if is unparenthesized `Tuple`, `None` if is not `Tuple`."""
+        - `True` if is parenthesized `Tuple`, `False` if is unparenthesized `Tuple`, `None` if is not `Tuple`.
+        """
 
         return self._is_parenthesized_seq() if isinstance(self.a, Tuple) else None
 
@@ -6698,3 +6732,51 @@ class FST:
         self._reparse_docstrings(docstr)
 
         return lns
+
+    def parenthesize(self, force: bool = False) -> bool:
+        """Parenthesize node if is not `.is_encosed()`. Will add parentheses to unparenthesized `Tuple` adjusting the
+        node location and otherwise grouping parentheses where needed.
+
+        **Parameters:**
+        - `force`: If `True` then will add another layher of parentheses regardless if already present.
+
+        **Returns:**
+        - `bool`: Whether parentheses added or not.
+        """
+
+        if self.is_atom():
+            if not force:
+                return False
+
+            self._parenthesize_grouping()
+
+            return True
+
+        if isinstance(self.a, Tuple):
+            self._parenthesize_tuple()
+        else:
+            self._parenthesize_grouping()
+
+        return True
+
+    def unparenthesize(self, tuple: bool = False) -> bool:
+        """Unparenthesize node if is `.is_encosed()`. Can remove parentheses from parenthesized tuple and adjust its
+        location but will not do so by default.
+
+        **Parameters:**
+        - `tuple`: If `True` then will remove parentheses from a parenthesized `Tuple`, otherwise only removes grouping
+            parentheses if present.
+
+        **Returns:**
+        - `bool`: Whether parentheses were removed or not.
+        """
+
+        if not self.is_atom():
+            return False
+
+        ret = self._unparenthesize_grouping()
+
+        if tuple and isinstance(self.a, Tuple):
+            ret = self._unparenthesize_tuple() or ret
+
+        return ret
