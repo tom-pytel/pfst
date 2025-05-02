@@ -2940,7 +2940,7 @@ class FST:
                   ((code := _prev_src(self.root._lines, 0, 0, self.ln, self.col)) and code.src.endswith('('))):  # is parenthesized?
                 need_paren = False
 
-            elif isinstance(ast, (NamedExpr, Await, Yield, YieldFrom)):
+            elif isinstance(ast, (NamedExpr, Yield, YieldFrom)):  # , Await
                 need_paren = True
 
             elif end_ln == ln:
@@ -4296,15 +4296,37 @@ class FST:
         pars  = True if multi else bool(DEFAULT_PARS if (o := options.get('pars')) is None else o)
         loc   = self.pars(pars, exc_genexpr_solo=True)
 
+        if not loc:
+            raise ValueError('node being reparsed must have a location')
+
 
         # TODO: allow all options for removing comments and space, not just pars
 
 
-        if not loc:
-            raise ValueError('node being reparsed must have a location')
-
         if not multi:
-            parent = self.parent or self  # we want parent which will not change or root node
+            if not (parent := self.parent):  # we want parent which will not change or root node
+                parent = self
+
+            elif pars:  # precedence parenthesizing
+                if isinstance(code, FST):
+                    if not code.is_atom():
+                        field, idx  = self.pfield
+                        childa      = code.a
+                        parenta     = parent.a
+                        child_type  = (childa.op.__class__
+                                       if (cc := childa.__class__) in (BoolOp, BinOp, UnaryOp) else cc)
+                        parent_type = (parenta.op.__class__
+                                       if (pc := parenta.__class__) in (BoolOp, BinOp, UnaryOp) else pc)
+                        key_is_None = pc is Dict and parenta.keys[idx] is None
+
+                        if precedence_require_parens(child_type, parent_type, field, dict_key_is_None=key_is_None):
+                            code.parenthesize()
+
+                elif isinstance(code, AST):
+
+
+                    pass # TODO: this
+
 
             if (pars or not self.is_solo_call_arg_genexpr() or
                 (to_loc := self.pars(True, exc_genexpr_solo=True))[:2] <= loc[:2]  # need to check this case if `pars` wasn't specified for a solo call arg GenExpression
@@ -6137,8 +6159,8 @@ class FST:
 
         ast = self.a
 
-        if isinstance(ast, (Dict, Set, ListComp, SetComp, DictComp, GeneratorExp, Await, Constant, Attribute, Subscript,
-                            Name, List)):
+        if isinstance(ast, (Dict, Set, ListComp, SetComp, DictComp, GeneratorExp, Constant, Attribute, Subscript, Name,  # , Await
+                            List)):
             return True
 
         if isinstance(ast, Tuple):
@@ -6734,7 +6756,7 @@ class FST:
         return lns
 
     def parenthesize(self, force: bool = False) -> bool:
-        """Parenthesize node if is not `.is_encosed()`. Will add parentheses to unparenthesized `Tuple` adjusting the
+        """Parenthesize node if is not `.is_atom()`. Will add parentheses to unparenthesized `Tuple` adjusting the
         node location and otherwise grouping parentheses where needed.
 
         **Parameters:**
@@ -6760,7 +6782,7 @@ class FST:
         return True
 
     def unparenthesize(self, tuple: bool = False) -> bool:
-        """Unparenthesize node if is `.is_encosed()`. Can remove parentheses from parenthesized tuple and adjust its
+        """Unparenthesize node if is `.is_atom()`. Can remove parentheses from parenthesized tuple and adjust its
         location but will not do so by default.
 
         **Parameters:**

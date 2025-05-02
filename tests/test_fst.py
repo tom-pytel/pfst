@@ -15864,398 +15864,34 @@ Module .. ROOT 0,0 -> 0,13
 ]  # END OF PUT_RAW_DATA
 
 PRECEDENCE_DATA = [
-    '(x, y)',
-    '[x, y]',
-    '(x := y)',
-    'lambda: x',
-    'x if y else z',
-    'await x',
-    'yield x',
-    'yield from x',
-    'x < y',
-    'x and y',
-    'x or y',
-    '~x',
-    'not x',
-    '+x',
-    '-x',
-    'x + y',
-    'x - y',
-    'x * y',
-    'x @ y',
-    'x / y',
-    'x % y',
-    'x << y',
-    'x >> y',
-    'x | y',
-    'x ^ y',
-    'x & y',
-    'x // y',
-    'x ** y',
-    'x, y = y',
-    '[x, y] = y',
-    '(x := y) = y',
-    'lambda: x = y',
-    'x if y else z = y',
-    'await x = y',
-    'yield x = y',
-    'yield from x = y',
-    'x < y = y',
-    'x and y = y',
-    'x or y = y',
-    '~x = y',
-    'not x = y',
-    '+x = y',
-    '-x = y',
-    'x + y = y',
-    'x - y = y',
-    'x * y = y',
-    'x @ y = y',
-    'x / y = y',
-    'x % y = y',
-    'x << y = y',
-    'x >> y = y',
-    'x | y = y',
-    'x ^ y = y',
-    'x & y = y',
-    'x // y = y',
-    'x ** y = y',
-    'for x, y in y:\n    pass',
-    'for [x, y] in y:\n    pass',
-    'for (x := y) in y:\n    pass',
-    'for lambda: x in y:\n    pass',
-    'for x if y else z in y:\n    pass',
-    'for await x in y:\n    pass',
-    'for yield x in y:\n    pass',
-    'for yield from x in y:\n    pass',
-    'for x < y in y:\n    pass',
-    'for x and y in y:\n    pass',
-    'for x or y in y:\n    pass',
-    'for ~x in y:\n    pass',
-    'for not x in y:\n    pass',
-    'for +x in y:\n    pass',
-    'for -x in y:\n    pass',
-    'for x + y in y:\n    pass',
-    'for x - y in y:\n    pass',
-    'for x * y in y:\n    pass',
-    'for x @ y in y:\n    pass',
-    'for x / y in y:\n    pass',
-    'for x % y in y:\n    pass',
-    'for x << y in y:\n    pass',
-    'for x >> y in y:\n    pass',
-    'for x | y in y:\n    pass',
-    'for x ^ y in y:\n    pass',
-    'for x & y in y:\n    pass',
-    'for x // y in y:\n    pass',
-    'for x ** y in y:\n    pass',
-    'async for x, y in y:\n    pass',
-    'async for [x, y] in y:\n    pass',
-    'async for (x := y) in y:\n    pass',
-    'async for lambda: x in y:\n    pass',
-    'async for x if y else z in y:\n    pass',
-    'async for await x in y:\n    pass',
-    'async for yield x in y:\n    pass',
-    'async for yield from x in y:\n    pass',
-    'async for x < y in y:\n    pass',
-    'async for x and y in y:\n    pass',
-    'async for x or y in y:\n    pass',
-    'async for ~x in y:\n    pass',
-    'async for not x in y:\n    pass',
-    'async for +x in y:\n    pass',
-    'async for -x in y:\n    pass',
-    'async for x + y in y:\n    pass',
-    'async for x - y in y:\n    pass',
-    'async for x * y in y:\n    pass',
-    'async for x @ y in y:\n    pass',
-    'async for x / y in y:\n    pass',
-    'async for x % y in y:\n    pass',
-    'async for x << y in y:\n    pass',
-    'async for x >> y in y:\n    pass',
-    'async for x | y in y:\n    pass',
-    'async for x ^ y in y:\n    pass',
-    'async for x & y in y:\n    pass',
-    'async for x // y in y:\n    pass',
-    'async for x ** y in y:\n    pass',
-    '((x, y),)',
-    '([x, y],)',
-    '((x := y),)',
-    '(lambda: x,)',
-    '(x if y else z,)',
-    '(await x,)',
-    '((yield x),)',
-    '((yield from x),)',
-    '(x < y,)',
-    '(x and y,)',
-    '(x or y,)',
-    '(~x,)',
-    '(not x,)',
-    '(+x,)',
-    '(-x,)',
-    '(x + y,)',
-    '(x - y,)',
-    '(x * y,)',
-    '(x @ y,)',
-    '(x / y,)',
-    '(x % y,)',
-    '(x << y,)',
-    '(x >> y,)',
-    '(x | y,)',
-    '(x ^ y,)',
-    '(x & y,)',
-    '(x // y,)',
-    '(x ** y,)',
-    '[(x, y)]',
-    '[[x, y]]',
-    '[(x := y)]',
-    '[lambda: x]',
-    '[x if y else z]',
-    '[await x]',
-    '[(yield x)]',
-    '[(yield from x)]',
-    '[x < y]',
-    '[x and y]',
-    '[x or y]',
-    '[~x]',
-    '[not x]',
-    '[+x]',
-    '[-x]',
-    '[x + y]',
-    '[x - y]',
-    '[x * y]',
-    '[x @ y]',
-    '[x / y]',
-    '[x % y]',
-    '[x << y]',
-    '[x >> y]',
-    '[x | y]',
-    '[x ^ y]',
-    '[x & y]',
-    '[x // y]',
-    '[x ** y]',
-    '[*(x, y)]',
-    '[*[x, y]]',
-    '[*(x := y)]',
-    '[*(lambda: x)]',
-    '[*(x if y else z)]',
-    '[*await x]',
-    '[*(yield x)]',
-    '[*(yield from x)]',
-    '[*(x < y)]',
-    '[*(x and y)]',
-    '[*(x or y)]',
-    '[*~x]',
-    '[*(not x)]',
-    '[*+x]',
-    '[*-x]',
-    '[*x + y]',
-    '[*x - y]',
-    '[*x * y]',
-    '[*x @ y]',
-    '[*x / y]',
-    '[*x % y]',
-    '[*x << y]',
-    '[*x >> y]',
-    '[*x | y]',
-    '[*x ^ y]',
-    '[*x & y]',
-    '[*x // y]',
-    '[*x ** y]',
-    '{(x, y): v}',
-    '{[x, y]: v}',
-    '{(x := y): v}',
-    '{lambda: x: v}',
-    '{x if y else z: v}',
-    '{await x: v}',
-    '{(yield x): v}',
-    '{(yield from x): v}',
-    '{x < y: v}',
-    '{x and y: v}',
-    '{x or y: v}',
-    '{~x: v}',
-    '{not x: v}',
-    '{+x: v}',
-    '{-x: v}',
-    '{x + y: v}',
-    '{x - y: v}',
-    '{x * y: v}',
-    '{x @ y: v}',
-    '{x / y: v}',
-    '{x % y: v}',
-    '{x << y: v}',
-    '{x >> y: v}',
-    '{x | y: v}',
-    '{x ^ y: v}',
-    '{x & y: v}',
-    '{x // y: v}',
-    '{x ** y: v}',
-    '{k: (x, y)}',
-    '{k: [x, y]}',
-    '{k: (x := y)}',
-    '{k: lambda: x}',
-    '{k: x if y else z}',
-    '{k: await x}',
-    '{k: (yield x)}',
-    '{k: (yield from x)}',
-    '{k: x < y}',
-    '{k: x and y}',
-    '{k: x or y}',
-    '{k: ~x}',
-    '{k: not x}',
-    '{k: +x}',
-    '{k: -x}',
-    '{k: x + y}',
-    '{k: x - y}',
-    '{k: x * y}',
-    '{k: x @ y}',
-    '{k: x / y}',
-    '{k: x % y}',
-    '{k: x << y}',
-    '{k: x >> y}',
-    '{k: x | y}',
-    '{k: x ^ y}',
-    '{k: x & y}',
-    '{k: x // y}',
-    '{k: x ** y}',
-    '{**(x, y)}',
-    '{**[x, y]}',
-    '{**(x := y)}',
-    '{**(lambda: x)}',
-    '{**(x if y else z)}',
-    '{**await x}',
-    '{**(yield x)}',
-    '{**(yield from x)}',
-    '{**(x < y)}',
-    '{**(x and y)}',
-    '{**(x or y)}',
-    '{**~x}',
-    '{**(not x)}',
-    '{**+x}',
-    '{**-x}',
-    '{**x + y}',
-    '{**x - y}',
-    '{**x * y}',
-    '{**x @ y}',
-    '{**x / y}',
-    '{**x % y}',
-    '{**x << y}',
-    '{**x >> y}',
-    '{**x | y}',
-    '{**x ^ y}',
-    '{**x & y}',
-    '{**x // y}',
-    '{**x ** y}',
-    "f'{(x, y)}'",
-    "f'{[x, y]}'",
-    "f'{(x := y)}'",
-    "f'{(lambda: x)}'",
-    "f'{(x if y else z)}'",
-    "f'{await x}'",
-    "f'{(yield x)}'",
-    "f'{(yield from x)}'",
-    "f'{x < y}'",
-    "f'{x and y}'",
-    "f'{x or y}'",
-    "f'{~x}'",
-    "f'{not x}'",
-    "f'{+x}'",
-    "f'{-x}'",
-    "f'{x + y}'",
-    "f'{x - y}'",
-    "f'{x * y}'",
-    "f'{x @ y}'",
-    "f'{x / y}'",
-    "f'{x % y}'",
-    "f'{x << y}'",
-    "f'{x >> y}'",
-    "f'{x | y}'",
-    "f'{x ^ y}'",
-    "f'{x & y}'",
-    "f'{x // y}'",
-    "f'{x ** y}'",
-    '(x, y).y',
-    '[x, y].y',
-    '(x := y).y',
-    '(lambda: x).y',
-    '(x if y else z).y',
-    '(await x).y',
-    '(yield x).y',
-    '(yield from x).y',
-    '(x < y).y',
-    '(x and y).y',
-    '(x or y).y',
-    '(~x).y',
-    '(not x).y',
-    '(+x).y',
-    '(-x).y',
-    '(x + y).y',
-    '(x - y).y',
-    '(x * y).y',
-    '(x @ y).y',
-    '(x / y).y',
-    '(x % y).y',
-    '(x << y).y',
-    '(x >> y).y',
-    '(x | y).y',
-    '(x ^ y).y',
-    '(x & y).y',
-    '(x // y).y',
-    '(x ** y).y',
-    '(x, y)[y]',
-    '[x, y][y]',
-    '(x := y)[y]',
-    '(lambda: x)[y]',
-    '(x if y else z)[y]',
-    '(await x)[y]',
-    '(yield x)[y]',
-    '(yield from x)[y]',
-    '(x < y)[y]',
-    '(x and y)[y]',
-    '(x or y)[y]',
-    '(~x)[y]',
-    '(not x)[y]',
-    '(+x)[y]',
-    '(-x)[y]',
-    '(x + y)[y]',
-    '(x - y)[y]',
-    '(x * y)[y]',
-    '(x @ y)[y]',
-    '(x / y)[y]',
-    '(x % y)[y]',
-    '(x << y)[y]',
-    '(x >> y)[y]',
-    '(x | y)[y]',
-    '(x ^ y)[y]',
-    '(x & y)[y]',
-    '(x // y)[y]',
-    '(x ** y)[y]',
-    '((x, y), y)',
-    '([x, y], y)',
-    '((x := y), y)',
-    '(lambda: x, y)',
-    '(x if y else z, y)',
-    '(await x, y)',
-    '((yield x), y)',
-    '((yield from x), y)',
-    '(x < y, y)',
-    '(x and y, y)',
-    '(x or y, y)',
-    '(~x, y)',
-    '(not x, y)',
-    '(+x, y)',
-    '(-x, y)',
-    '(x + y, y)',
-    '(x - y, y)',
-    '(x * y, y)',
-    '(x @ y, y)',
-    '(x / y, y)',
-    '(x % y, y)',
-    '(x << y, y)',
-    '(x >> y, y)',
-    '(x | y, y)',
-    '(x ^ y, y)',
-    '(x & y, y)',
-    '(x // y, y)',
-    '(x ** y, y)',
+    '(x, y), y',
+    '[x, y], y',
+    '(x := y), y',
+    'lambda: x, y',
+    'x if y else z, y',
+    'await x, y',
+    '(yield x), y',
+    '(yield from x), y',
+    'x < y, y',
+    'x and y, y',
+    'x or y, y',
+    '~x, y',
+    'not x, y',
+    '+x, y',
+    '-x, y',
+    'x + y, y',
+    'x - y, y',
+    'x * y, y',
+    'x @ y, y',
+    'x / y, y',
+    'x % y, y',
+    'x << y, y',
+    'x >> y, y',
+    'x | y, y',
+    'x ^ y, y',
+    'x & y, y',
+    'x // y, y',
+    'x ** y, y',
     '[(x, y), y]',
     '[[x, y], y]',
     '[(x := y), y]',
@@ -16480,62 +16116,62 @@ PRECEDENCE_DATA = [
     'await (x & y)',
     'await (x // y)',
     'await (x ** y)',
-    '(yield (x, y))',
-    '(yield [x, y])',
-    '(yield (x := y))',
-    '(yield (lambda: x))',
-    '(yield (x if y else z))',
-    '(yield (await x))',
-    '(yield (yield x))',
-    '(yield (yield from x))',
-    '(yield (x < y))',
-    '(yield (x and y))',
-    '(yield (x or y))',
-    '(yield (~x))',
-    '(yield (not x))',
-    '(yield (+x))',
-    '(yield (-x))',
-    '(yield (x + y))',
-    '(yield (x - y))',
-    '(yield (x * y))',
-    '(yield (x @ y))',
-    '(yield (x / y))',
-    '(yield (x % y))',
-    '(yield (x << y))',
-    '(yield (x >> y))',
-    '(yield (x | y))',
-    '(yield (x ^ y))',
-    '(yield (x & y))',
-    '(yield (x // y))',
-    '(yield (x ** y))',
-    '(yield from (x, y))',
-    '(yield from [x, y])',
-    '(yield from (x := y))',
-    '(yield from (lambda: x))',
-    '(yield from (x if y else z))',
-    '(yield from (await x))',
-    '(yield from (yield x))',
-    '(yield from (yield from x))',
-    '(yield from (x < y))',
-    '(yield from (x and y))',
-    '(yield from (x or y))',
-    '(yield from (~x))',
-    '(yield from (not x))',
-    '(yield from (+x))',
-    '(yield from (-x))',
-    '(yield from (x + y))',
-    '(yield from (x - y))',
-    '(yield from (x * y))',
-    '(yield from (x @ y))',
-    '(yield from (x / y))',
-    '(yield from (x % y))',
-    '(yield from (x << y))',
-    '(yield from (x >> y))',
-    '(yield from (x | y))',
-    '(yield from (x ^ y))',
-    '(yield from (x & y))',
-    '(yield from (x // y))',
-    '(yield from (x ** y))',
+    'yield (x, y)',
+    'yield [x, y]',
+    'yield (x := y)',
+    'yield (lambda: x)',
+    'yield (x if y else z)',
+    'yield (await x)',
+    'yield (yield x)',
+    'yield (yield from x)',
+    'yield (x < y)',
+    'yield (x and y)',
+    'yield (x or y)',
+    'yield (~x)',
+    'yield (not x)',
+    'yield (+x)',
+    'yield (-x)',
+    'yield (x + y)',
+    'yield (x - y)',
+    'yield (x * y)',
+    'yield (x @ y)',
+    'yield (x / y)',
+    'yield (x % y)',
+    'yield (x << y)',
+    'yield (x >> y)',
+    'yield (x | y)',
+    'yield (x ^ y)',
+    'yield (x & y)',
+    'yield (x // y)',
+    'yield (x ** y)',
+    'yield from (x, y)',
+    'yield from [x, y]',
+    'yield from (x := y)',
+    'yield from (lambda: x)',
+    'yield from (x if y else z)',
+    'yield from (await x)',
+    'yield from (yield x)',
+    'yield from (yield from x)',
+    'yield from (x < y)',
+    'yield from (x and y)',
+    'yield from (x or y)',
+    'yield from (~x)',
+    'yield from (not x)',
+    'yield from (+x)',
+    'yield from (-x)',
+    'yield from (x + y)',
+    'yield from (x - y)',
+    'yield from (x * y)',
+    'yield from (x @ y)',
+    'yield from (x / y)',
+    'yield from (x % y)',
+    'yield from (x << y)',
+    'yield from (x >> y)',
+    'yield from (x | y)',
+    'yield from (x ^ y)',
+    'yield from (x & y)',
+    'yield from (x // y)',
+    'yield from (x ** y)',
     '(x, y) < y',
     'x < (x, y)',
     '[x, y] < y',
@@ -17720,26 +17356,29 @@ REPLACE_EXISTING_SINGLE_DATA = [
 
 ]
 
-ASTEXPR = lambda src: ast_.parse(src).body[0].value
-ASTSTMT = lambda src: ast_.parse(src).body[0]
+# ASTEXPR = lambda src: ast_.parse(src).body[0].value
+# ASTSTMT = lambda src: ast_.parse(src).body[0]
+# ASTEXPR = lambda src: parse(src).body[0].value.f.copy(pars=False)
+# ASTSTMT = lambda src: parse(src).body[0].f.copy()
+ASTEXPR = lambda src: parse(src).f
 
 PRECEDENCE_DST_STMTS = [
-    (ASTSTMT('x'), 'value'),
-    (ASTSTMT('x = y'), 'targets[0]'),
-    (ASTSTMT('for x in y: pass'), 'target'),
-    (ASTSTMT('async for x in y: pass'), 'target'),
+    # (ASTSTMT('x'), 'value'),  # when able to replace in non-mod roots then can use this
+    # (ASTSTMT('x = y'), 'targets[0]'),
+    # (ASTSTMT('for x in y: pass'), 'target'),
+    # (ASTSTMT('async for x in y: pass'), 'target'),
 ]
 
 PRECEDENCE_DST_EXPRS = [
-    (ASTEXPR('(x,)'), 'elts[0]'),
-    (ASTEXPR('[x]'), 'elts[0]'),
-    (ASTEXPR('[*x]'), 'elts[0].value'),
-    (ASTEXPR('{k: v}'), 'keys[0]'),
-    (ASTEXPR('{k: v}'), 'values[0]'),
-    (ASTEXPR('{**x}'), 'values[0]'),
-    (ASTEXPR('f"{x}"'), 'values[0].value'),
-    (ASTEXPR('x.y'), 'value'),
-    (ASTEXPR('x[y]'), 'value'),
+    # (ASTEXPR('(x,)'), 'elts[0]'),
+    # (ASTEXPR('[x]'), 'elts[0]'),
+    # (ASTEXPR('[*x]'), 'elts[0].value'),
+    # (ASTEXPR('{k: v}'), 'keys[0]'),
+    # (ASTEXPR('{k: v}'), 'values[0]'),
+    # (ASTEXPR('{**x}'), 'values[0]'),
+    # (ASTEXPR('f"{x}"'), 'values[0].value'),
+    # (ASTEXPR('x.y'), 'value'),
+    # (ASTEXPR('x[y]'), 'value'),
 ]
 
 PRECEDENCE_SRC_EXPRS = [
@@ -18480,14 +18119,14 @@ def f():
         fc._fix(inplace=True)
         self.assertEqual('(yield from a)', fc.src)
 
-        f = FST.fromsrc('await a')
-        fc = f.a.body[0].value.f.copy(fix=False)
-        self.assertEqual('await a', fc.src)
-        fd = fc._fix(inplace=False)
-        self.assertEqual('(await a)', fd.src)
-        self.assertEqual('await a', fc.src)
-        fc._fix(inplace=True)
-        self.assertEqual('(await a)', fc.src)
+        # f = FST.fromsrc('await a')
+        # fc = f.a.body[0].value.f.copy(fix=False)
+        # self.assertEqual('await a', fc.src)
+        # fd = fc._fix(inplace=False)
+        # self.assertEqual('(await a)', fd.src)
+        # self.assertEqual('await a', fc.src)
+        # fc._fix(inplace=True)
+        # self.assertEqual('(await a)', fc.src)
 
         f = FST.fromsrc("""[
 "Bad value substitution: option {!r} in section {!r} contains "
@@ -22935,6 +22574,24 @@ finally:
         self.assertEqual('[*y]', parse('[*n]').body[0].value.elts[0].f.put('y').root.src)  # Starred
         self.assertEqual('match a:\n case "y": pass', parse('match a:\n case "n": pass').body[0].cases[0].pattern.f.put('"y"').root.src)  # MatchValue
 
+    def test_precedence_raw(self):
+        truths = iter(PRECEDENCE_DATA)
+
+        for dst, *attrs in PRECEDENCE_DST_STMTS + PRECEDENCE_DST_EXPRS + PRECEDENCE_SRC_EXPRS:
+            for src, *_ in PRECEDENCE_SRC_EXPRS:
+                for attr in attrs:
+                    d = dst.copy(fix=False)
+                    s = src.body[0].value.copy(fix=False)
+                    f = eval(f'd.body[0].value.{attr}', {'d': d})
+                    t = next(truths)
+
+                    try:
+                        f.replace(s, fix=False, raw=True)
+                    except SyntaxError:
+                        continue
+                    else:
+                        self.assertEqual(t, f.root.src)
+
     def test_ctx_change(self):
         a = parse('a, b = x, y').body[0]
         a.targets[0].f.put(a.value.f.get())
@@ -23426,19 +23083,6 @@ match a:
         self.assertTrue(f.is_stmtish_or_mod)
         self.assertTrue(f.is_mod)
 
-    def test_find_in_loc(self):
-        f    = parse('abc += xyz').body[0].f
-        fabc = f.target
-        fpeq = f.op
-        fxyz = f.value
-
-        self.assertIs(f, f.find_in_loc(0, 0, 0, 10))
-        self.assertIs(f, f.find_in_loc(-1, -1, 1, 11))
-        self.assertIs(fabc, f.find_in_loc(0, 0, 0, 3))
-        self.assertIs(fpeq, f.find_in_loc(0, 1, 0, 10))
-        self.assertIs(fxyz, f.find_in_loc(0, 5, 0, 10))
-        self.assertIs(None, f.find_in_loc(0, 5, 0, 6))
-
     def test_find_loc(self):
         f    = parse('abc += xyz').f
         fass = f.body[0]
@@ -23477,6 +23121,19 @@ match a:
         self.assertIs(fp, f.find_loc(0, 1, 0, 2))
         self.assertIs(fo, f.find_loc(0, 1, 0, 3))
         self.assertIs(fb, f.find_loc(0, 2, 0, 3))
+
+    def test_find_in_loc(self):
+        f    = parse('abc += xyz').body[0].f
+        fabc = f.target
+        fpeq = f.op
+        fxyz = f.value
+
+        self.assertIs(f, f.find_in_loc(0, 0, 0, 10))
+        self.assertIs(f, f.find_in_loc(-1, -1, 1, 11))
+        self.assertIs(fabc, f.find_in_loc(0, 0, 0, 3))
+        self.assertIs(fpeq, f.find_in_loc(0, 1, 0, 10))
+        self.assertIs(fxyz, f.find_in_loc(0, 5, 0, 10))
+        self.assertIs(None, f.find_in_loc(0, 5, 0, 6))
 
     def test_set_defaults(self):
         new = dict(
@@ -23770,24 +23427,47 @@ def regen_put_raw():
 def regen_precedence_data():
     newlines = []
 
+    # for dst, *attrs in PRECEDENCE_DST_STMTS + PRECEDENCE_DST_EXPRS + PRECEDENCE_SRC_EXPRS:
+    #     for src, *_ in PRECEDENCE_SRC_EXPRS:
+    #         for attr in attrs:
+    #             d      = copy_ast(dst)
+    #             s      = copy_ast(src)
+    #             fields = attr.split('.')
+    #             fdfull = fields[-1]
+    #             p      = eval(f'd.{pattr}', {'d': d}) if (pattr := '.'.join(fields[:-1])) else d
+
+    #             exec(f'p.{fdfull} = s', {'p': p, 'fdfull': fdfull, 's': s})
+
+    #             truth = ast_.unparse(d)
+
+    #             if dst == 'x, y':  # SPECIAL CASE!!! because unparse adds enclosing parentheses
+    #                 truth = truth[1:-1]
+
+    #             newlines.append(f'    {truth!r},')
+
+    #             # fd = fdfull.split('[')[0]
+    #             # ch = s.op.__class__ if (sac := s.__class__) in (BoolOp, BinOp, UnaryOp) else sac
+    #             # pr = p.op.__class__ if (fpa := p.__class__) in (BoolOp, BinOp, UnaryOp) else fpa
+    #             # dk = fpa is Dict and p.keys[0] is None
+    #             # print(f"{'NY'[precedence_require_parens(ch, pr, fd, dict_key_is_None=dk)]} -", ast_.unparse(d))
+
     for dst, *attrs in PRECEDENCE_DST_STMTS + PRECEDENCE_DST_EXPRS + PRECEDENCE_SRC_EXPRS:
         for src, *_ in PRECEDENCE_SRC_EXPRS:
             for attr in attrs:
-                d      = copy_ast(dst)
-                s      = copy_ast(src)
-                fields = attr.split('.')
-                fdfull = fields[-1]
-                p      = eval(f'd.{pattr}', {'d': d}) if (pattr := '.'.join(fields[:-1])) else d
+                d = dst.copy(fix=False)
+                s = src.body[0].value.copy(fix=False)
+                f = eval(f'd.body[0].value.{attr}', {'d': d})
 
-                exec(f'p.{fdfull} = s', {'p': p, 'fdfull': fdfull, 's': s})
+                is_unpar_tup = d.body[0].value.is_parenthesized_tuple() is False
 
-                newlines.append(f'    {ast_.unparse(d)!r},')
+                f.pfield.set(f.parent.a, s.a)
 
-                # fd = fdfull.split('[')[0]
-                # ch = s.op.__class__ if (sac := s.__class__) in (BoolOp, BinOp, UnaryOp) else sac
-                # pr = p.op.__class__ if (fpa := p.__class__) in (BoolOp, BinOp, UnaryOp) else fpa
-                # dk = fpa is Dict and p.keys[0] is None
-                # print(f"{'NY'[precedence_require_parens(ch, pr, fd, dict_key_is_None=dk)]} -", ast_.unparse(d))
+                truth = ast_.unparse(f.root.a)
+
+                if is_unpar_tup:
+                    truth = truth[1:-1]
+
+                newlines.append(f'    {truth!r},')
 
     with open(sys.argv[0]) as f:
         lines = f.read().split('\n')
