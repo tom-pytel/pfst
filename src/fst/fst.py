@@ -3015,21 +3015,21 @@ class FST:
 
         return self
 
-    def _is_parenthesized_seq(self, field: str = 'elts') -> bool | None:
-        """Whether `self` is a parenthesized sequence of `field` or not. Use as `is_parenthesized_tuple()` if already
-        know is a Tuple. Other use is for `MatchSequence`."""
+    def _is_parenthesized_seq(self, field: str = 'elts', lpar: str = '(', rpar: str = ')') -> bool | None:
+        """Whether `self` is a parenthesized sequence of `field` or not. Functions as `is_parenthesized_tuple()` if
+        already know is a Tuple. Other use is for `MatchSequence`, whether parenthesized or bracketed."""
 
         self_ln, self_col, self_end_ln, self_end_col = self.loc
 
         lines = self.root._lines
 
-        if not lines[self_end_ln].startswith(')', self_end_col - 1):
+        if not lines[self_end_ln].startswith(rpar, self_end_col - 1):
             return False
 
         if not (asts := getattr(self.a, field)):
             return True  # return True if no children because assume '()' in this case
 
-        if not lines[self_ln].startswith('(', self_col):
+        if not lines[self_ln].startswith(lpar, self_col):
             return False
 
         f0_ln, f0_col, f0_end_ln, f0_end_col = asts[0].f.loc
@@ -3046,12 +3046,12 @@ class FST:
 
         self_end_col -= 1  # because for sure there is a comma between end of first element and end of tuple, so at worst we exclude either the tuple closing paren or a comma
 
-        nparens = _next_pars(lines, self_ln, self_col, self_end_ln, self_end_col, '(')[-1]  # yes, we use _next_pars() to count opening parens because we know conditions allow it
+        nparens = _next_pars(lines, self_ln, self_col, self_end_ln, self_end_col, lpar)[-1]  # yes, we use _next_pars() to count opening parens because we know conditions allow it
 
         if not nparens:
             return False
 
-        nparens -= _next_pars(lines, f0_end_ln, f0_end_col, self_end_ln, self_end_col)[-1]
+        nparens -= _next_pars(lines, f0_end_ln, f0_end_col, self_end_ln, self_end_col, lpar)[-1]
 
         return nparens > 0  # don't want to fiddle with checking if f0 is a parenthesized tuple
 
@@ -6153,7 +6153,7 @@ class FST:
 
     def is_atom(self) -> bool:
         """Whether `self` is enclosed in some kind of delimiters '()', '[]', '{}' or otherwise atomic like `Name`,
-        `Constant`, etc... Nodes type where this doesn't normally apply like `stmt` will return `True`.
+        `Constant`, etc... Node types where this doesn't normally apply like `stmt` will return `True`.
 
         **Returns:**
         - `True` if is enclosed and no combination with another node can change its precedence, `False` otherwise.
@@ -6162,13 +6162,26 @@ class FST:
         ast = self.a
 
         if isinstance(ast, (Dict, Set, ListComp, SetComp, DictComp, GeneratorExp, Constant, Attribute, Subscript, Name,  # , Await
-                            List)):
+                            List, MatchValue, MatchSingleton, MatchMapping, MatchClass, MatchStar, MatchAs)):
             return True
 
         if isinstance(ast, Tuple):
-            return self._is_parenthesized_seq()
+            if self._is_parenthesized_seq():  # if this is False, can still be enclosed in grouping parens which is checked below
+                return True
 
-        if isinstance(ast, (expr, alias, withitem, pattern)):
+        elif isinstance(ast, MatchSequence):  # could be enclosed with '()' or '[]' which is included in the ast location
+            ln, col, _, _ = self.loc
+            lpar          = self.root._lines[ln][col]
+
+            if lpar == '(':
+                if self._is_parenthesized_seq('patterns'):
+                    return True
+
+            elif lpar == '[':
+                if self._is_parenthesized_seq('patterns', '[', ']'):
+                    return True
+
+        if isinstance(ast, (expr, pattern)):  # , alias, withitem
             return bool(self.pars(ret_npars=True)[1])
 
         return True
@@ -6611,7 +6624,7 @@ class FST:
 
     def offset_cols(self, dcol_offset: int, lns: set[int]):
         """Offset ast col byte offsets in `lns` by `dcol_offset`. Only modifies ast, not lines. Does not modify parent
-        locations."""
+        locations but touch()es parents."""
 
         if dcol_offset:
             for a in walk(self.a):
@@ -6628,7 +6641,7 @@ class FST:
 
     def offset_cols_mapped(self, dcol_offsets: dict[int, int]):
         """Offset ast col byte offsets by a specific `dcol_offset` per line. Only modifies ast, not lines. Does not
-        modify parent locations."""
+        modify parent locations but touch()es parents."""
 
         for a in walk(self.a):
             if (end_col_offset := getattr(a, 'end_col_offset', None)) is not None:

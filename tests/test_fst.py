@@ -19268,6 +19268,18 @@ with a as b, c as d:
 
         self.assertRaises(ValueError, f.child_path, parse('1').f)
 
+    def test_is_atom(self):
+        self.assertFalse(parse('1 + 2').body[0].value.f.is_atom())
+        self.assertTrue(parse('(1 + 2)').body[0].value.f.is_atom())
+
+        self.assertFalse(parse('1, 2').body[0].value.f.is_atom())
+        self.assertTrue(parse('(1, 2)').body[0].value.f.is_atom())
+        self.assertTrue(parse('[1, 2]').body[0].value.f.is_atom())
+
+        self.assertFalse(parse('match a:\n case 1, 2: pass').body[0].cases[0].pattern.f.is_atom())
+        self.assertTrue(parse('match a:\n case (1, 2): pass').body[0].cases[0].pattern.f.is_atom())
+        self.assertTrue(parse('match a:\n case [1, 2]: pass').body[0].cases[0].pattern.f.is_atom())
+
     def test_is_parenthesized_tuple(self):
         self.assertTrue(parse('(1, 2)').body[0].value.f.is_parenthesized_tuple())
         self.assertTrue(parse('(1,)').body[0].value.f.is_parenthesized_tuple())

@@ -706,25 +706,24 @@ def last_block_opener_child(ast: AST) -> AST | None:
 class _Precedence(IntEnum):
     """Precedence table that originated from python grammar."""
 
-    NAMED_EXPR = auto()      # <target> := <expr1>
-    TUPLE = auto()           # <expr1>, <expr2>
-    YIELD = auto()           # 'yield', 'yield from'
-    TEST = auto()            # 'if'-'else', 'lambda'
-    OR = auto()              # 'or'
-    AND = auto()             # 'and'
-    NOT = auto()             # 'not'
-    CMP = auto()             # '<', '>', '==', '>=', '<=', '!=',
-                             # 'in', 'not in', 'is', 'is not'
+    NAMED_EXPR = auto()  # <target> := <expr1>
+    TUPLE = auto()       # <expr1>, <expr2>
+    YIELD = auto()       # 'yield', 'yield from'
+    TEST = auto()        # 'if'-'else', 'lambda'
+    OR = auto()          # 'or'
+    AND = auto()         # 'and'
+    NOT = auto()         # 'not'
+    CMP = auto()         # '<', '>', '==', '>=', '<=', '!=', 'in', 'not in', 'is', 'is not'
     EXPR = auto()
-    BOR = EXPR               # '|'
-    BXOR = auto()            # '^'
-    BAND = auto()            # '&'
-    SHIFT = auto()           # '<<', '>>'
-    ARITH = auto()           # '+', '-'
-    TERM = auto()            # '*', '@', '/', '%', '//'
-    FACTOR = auto()          # unary '+', '-', '~'
-    POWER = auto()           # '**'
-    AWAIT = auto()           # 'await'
+    BOR = EXPR           # '|'
+    BXOR = auto()        # '^'
+    BAND = auto()        # '&'
+    SHIFT = auto()       # '<<', '>>'
+    ARITH = auto()       # '+', '-'
+    TERM = auto()        # '*', '@', '/', '%', '//'
+    FACTOR = auto()      # unary '+', '-', '~'
+    POWER = auto()       # '**'
+    AWAIT = auto()       # 'await'
     ATOM = auto()
 
     def next(self):
