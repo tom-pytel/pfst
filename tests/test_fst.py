@@ -23036,7 +23036,7 @@ finally:
         self.assertEqual('[*y]', parse('[*n]').body[0].value.elts[0].f.put('y').root.src)  # Starred
         self.assertEqual('match a:\n case "y": pass', parse('match a:\n case "n": pass').body[0].cases[0].pattern.f.put('"y"').root.src)  # MatchValue
 
-    def test_precedence_replace_raw(self):
+    def test_precedence_replace_raw_fst(self):
         truths = iter(PRECEDENCE_DATA)
 
         for dst, *attrs in PRECEDENCE_DST_STMTS + PRECEDENCE_DST_EXPRS + PRECEDENCE_SRC_EXPRS:
@@ -23046,6 +23046,29 @@ finally:
                     s = src.body[0].value.copy(fix=False)
                     f = eval(f'd.{attr}' if isinstance(d.a, stmt) else f'd.body[0].value.{attr}', {'d': d})
                     t = next(truths)
+
+                    try:
+                        f.replace(s, fix=False, raw=True)
+                    except SyntaxError:
+                        continue
+                    else:
+                        self.assertEqual(t, f.root.src)
+
+    def test_precedence_replace_raw_ast(self):
+        truths    = iter(PRECEDENCE_DATA)
+        is_low_py = sys.version_info[:2] < (3, 11)
+
+        for dst, *attrs in PRECEDENCE_DST_STMTS + PRECEDENCE_DST_EXPRS + PRECEDENCE_SRC_EXPRS:
+            for src, *_ in PRECEDENCE_SRC_EXPRS:
+                for attr in attrs:
+                    d = dst.copy(fix=False)
+                    s = src.body[0].value.copy(fix=False).a
+                    t = next(truths)
+
+                    if is_low_py and isinstance(s, Lambda):  # because unparses as 'lambda : ...'
+                        continue
+
+                    f = eval(f'd.{attr}' if isinstance(d.a, stmt) else f'd.body[0].value.{attr}', {'d': d})
 
                     try:
                         f.replace(s, fix=False, raw=True)

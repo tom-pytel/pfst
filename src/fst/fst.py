@@ -3051,7 +3051,7 @@ class FST:
         if not nparens:
             return False
 
-        nparens -= _next_pars(lines, f0_end_ln, f0_end_col, self_end_ln, self_end_col, lpar)[-1]
+        nparens -= _next_pars(lines, f0_end_ln, f0_end_col, self_end_ln, self_end_col, rpar)[-1]
 
         return nparens > 0  # don't want to fiddle with checking if f0 is a parenthesized tuple
 
@@ -4310,25 +4310,54 @@ class FST:
                 parent = self
 
             elif pars:  # precedence parenthesizing
-                if isinstance(code, FST):
-                    if not code.is_atom():
-                        field, idx  = self.pfield
-                        childa      = code.a
-                        parenta     = parent.a
-                        child_type  = (childa.op.__class__
-                                       if (cc := childa.__class__) in (BoolOp, BinOp, UnaryOp) else cc)
-                        parent_type = (parenta.op.__class__
-                                       if (pc := parenta.__class__) in (BoolOp, BinOp, UnaryOp) else pc)
-                        key_is_None = pc is Dict and parenta.keys[idx] is None
+                def require_parens(ast):
+                    field, idx  = self.pfield
+                    parenta     = parent.a
+                    child_type  = (ast.op.__class__
+                                    if (cc := ast.__class__) in (BoolOp, BinOp, UnaryOp) else cc)
+                    parent_type = (parenta.op.__class__
+                                    if (pc := parenta.__class__) in (BoolOp, BinOp, UnaryOp) else pc)
+                    key_is_None = pc is Dict and parenta.keys[idx] is None
 
-                        if precedence_require_parens(child_type, parent_type, field, dict_key_is_None=key_is_None):
-                            code.parenthesize()
+                    return precedence_require_parens(child_type, parent_type, field, dict_key_is_None=key_is_None)
+
+                if isinstance(code, FST):
+                    if not code.is_atom() and require_parens(code.a):
+                        code.parenthesize()
 
                 elif isinstance(code, AST):
+                    if not (atom := is_atom(code, tuple_as_atom=None)):
+                        if require_parens(code):
+                            code = ast_unparse(code) if atom is None else f'({ast_unparse(code)})'
+                        elif atom is None:  # strip `unparse()` parens
+                            code = ast_unparse(code)[1:-1]
 
+                # if isinstance(code, FST):
+                #     if not code.is_atom():
+                #         field, idx  = self.pfield
+                #         childa      = code.a
+                #         parenta     = parent.a
+                #         child_type  = (childa.op.__class__
+                #                        if (cc := childa.__class__) in (BoolOp, BinOp, UnaryOp) else cc)
+                #         parent_type = (parenta.op.__class__
+                #                        if (pc := parenta.__class__) in (BoolOp, BinOp, UnaryOp) else pc)
+                #         key_is_None = pc is Dict and parenta.keys[idx] is None
 
-                    pass # TODO: this
+                #         if precedence_require_parens(child_type, parent_type, field, dict_key_is_None=key_is_None):
+                #             code.parenthesize()
 
+                # elif isinstance(code, AST):
+                #     if not is_atom(code):
+                #         field, idx  = self.pfield
+                #         parenta     = parent.a
+                #         child_type  = (code.op.__class__
+                #                        if (cc := code.__class__) in (BoolOp, BinOp, UnaryOp) else cc)
+                #         parent_type = (parenta.op.__class__
+                #                        if (pc := parenta.__class__) in (BoolOp, BinOp, UnaryOp) else pc)
+                #         key_is_None = pc is Dict and parenta.keys[idx] is None
+
+                #         if precedence_require_parens(child_type, parent_type, field, dict_key_is_None=key_is_None):
+                #             code = f'({ast_unparse(code)})'
 
             if (pars or not self.is_solo_call_arg_genexpr() or
                 (to_loc := self.pars(True, exc_genexpr_solo=True))[:2] <= loc[:2]  # need to check this case if `pars` wasn't specified for a solo call arg GenExpression

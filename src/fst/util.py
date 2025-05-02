@@ -11,7 +11,7 @@ __all__ = [
     'FIELDS', 'AST_FIELDS', 'OPCLS2STR', 'OPSTR2CLS',
     'bistr', 'get_field', 'has_type_comments', 'is_parsable', 'get_parse_mode',
     'WalkFail', 'walk2', 'compare_asts', 'copy_attributes', 'copy_ast', 'set_ctx', 'get_func_class_or_ass_by_name',
-    'syntax_ordered_children', 'last_block_opener_child', 'precedence_require_parens',
+    'syntax_ordered_children', 'last_block_opener_child', 'is_atom', 'precedence_require_parens',
 ]
 
 
@@ -700,6 +700,47 @@ def last_block_opener_child(ast: AST) -> AST | None:
                 return ret
 
     return None
+
+
+def is_atom(ast: AST, *, unparse_pars_as_atom: bool | None = None, tuple_as_atom: bool | None = True,
+            matchseq_as_atom: bool | None = True) -> bool | None:
+    """Whether `ast` is enclosed in some kind of delimiters '()', '[]', '{}' when `unparse()`d or otherwise atomic like
+    `Name`, `Constant`, etc... Node types where this doesn't normally apply like `stmt` will return `True`. `Tuple` and
+    `MatchSequence` which can otherwise be ambiguous will return `True` as they `unparse()` with delimiters.
+
+    **Parameters:**
+    - `ast`: Self-explanatory.
+    - `unparse_pars_as_atom`: What to return for `NamedExpr`, `Yield` and `YieldFrom` node type as they `unparse()` with
+        enclosing parentheses. Default `None` as falsey value but also distinguishes from `False`.
+    - `tuple_as_atom`: What to return for `Tuple` as this always `unparse()`s with parentheses but these are not
+        strictly required for a `Tuple`.
+    - `matchseq_as_atom`: What to return for `MatchSequence` as this always `unparse()`s with brackets but these are not
+        strictly required for a `MatchSequence`.
+
+    **Returns:**
+    - `True` if is enclosed and no combination with another node can change its precedence, `False` otherwise. Returns
+        `unparse_pars_as_atom` value for `NamedExpr`, `Yield` and `YieldFrom`, `tuple_as_atom` value for `Tuple` and
+        `matchseq_as_atom` for `MatchSequence` as those all are special cases.
+    """
+
+    if isinstance(ast, (Dict, Set, ListComp, SetComp, DictComp, GeneratorExp, Constant, Attribute, Subscript, Name,  # , Await
+                        List, MatchValue, MatchSingleton, MatchMapping, MatchClass, MatchStar, MatchAs,
+                        MatchSequence)):
+        return True
+
+    if isinstance(ast, Tuple):
+        return tuple_as_atom
+
+    if isinstance(ast, (NamedExpr, Yield, YieldFrom)):
+        return unparse_pars_as_atom
+
+    if isinstance(ast, MatchSequence):
+        return matchseq_as_atom
+
+    if isinstance(ast, (expr, pattern)):
+        return False
+
+    return True
 
 
 # directly from python ast
