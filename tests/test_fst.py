@@ -19289,6 +19289,33 @@ _CookiePattern = re.compile(r"""
         # self.assertEqual({2}, lns)
         # self.assertEqual('@decorator\nclass cls:\npass', ast.f.src)
 
+    def test_parenthesize(self):
+        f = parse('1,').body[0].value.f.copy()
+        self.assertTrue(f.parenthesize())
+        self.assertEqual('(1,)', f.src)
+        self.assertFalse(f.parenthesize())
+        self.assertTrue(f.parenthesize(force=True))
+        self.assertEqual('((1,))', f.src)
+        self.assertFalse(f.parenthesize())
+
+        self.assertFalse(parse('()').body[0].value.f.copy().parenthesize())
+        self.assertFalse(parse('[]').body[0].value.f.copy().parenthesize())
+        self.assertFalse(parse('{}').body[0].value.f.copy().parenthesize())
+
+    def test_parenthesize(self):
+        f = parse('((1,))').body[0].value.f.copy(pars=True)
+        self.assertEqual('((1,))', f.src)
+        self.assertTrue(f.unparenthesize())
+        self.assertEqual('(1,)', f.src)
+        self.assertFalse(f.unparenthesize())
+        self.assertTrue(f.unparenthesize(tuple=True))
+        self.assertEqual('1,', f.src)
+        self.assertFalse(f.unparenthesize())
+
+        self.assertFalse(parse('()').body[0].value.f.copy().unparenthesize())
+        self.assertFalse(parse('[]').body[0].value.f.copy().unparenthesize())
+        self.assertFalse(parse('{}').body[0].value.f.copy().unparenthesize())
+
     def test_dedent_multiline_strings(self):
         f = parse('''
 class cls:

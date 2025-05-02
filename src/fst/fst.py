@@ -1977,7 +1977,8 @@ class FST:
 
     @property
     def lines(self) -> list[str] | None:
-        """Whole lines which contain this node, may also contain parts of enclosing nodes. All source lines at root."""
+        """Whole lines which contain this node, may also contain parts of enclosing nodes. If gotten at root then the
+        entire source is returned, regardless of whether the actual top level node location includes it or not."""
 
         if self.is_root:
             return self._lines
@@ -1988,8 +1989,9 @@ class FST:
 
     @property
     def src(self) -> str | None:
-        """Source code of this node clipped out of `lines` as a single string, without any dedentation. Whole source
-        at root."""
+        """Source code of this node clipped out of as a single string, without any dedentation will have indentation as
+        it appears in the top level source if multiple lines. If gotten at root then the entire source is returned,
+        regardless of whether the actual top level node location includes it or not."""
 
         if self.is_root:
             return '\n'.join(self._lines)
@@ -2084,7 +2086,8 @@ class FST:
 
     @property
     def has_own_loc(self) -> bool:
-        """`True` when the node has its own `loc` otherwise `False` if no `loc` or `loc` is calculated from children."""
+        """`True` when the node has its own location which comes directly from AST `lineno` and other location fields.
+        Otherwise `False` if no `loc` or `loc` is calculated."""
 
         return hasattr(self.a, 'end_col_offset')
 
@@ -2226,7 +2229,7 @@ class FST:
     def _make_tree_fst(ast: AST, parent: 'FST', pfield: astfield):
         """Recreate possibly non-unique AST nodes."""
 
-        if not getattr(ast, 'f', None):  # if `.f` doesn't already exist then this needs to be checked
+        if not getattr(ast, 'f', None):  # if `.f` exists then this has already been done
             if isinstance(ast, (expr_context, unaryop, operator, boolop, cmpop)):  # ast.parse() reuses simple objects, we need all objects to be unique
                 pfield.set(parent.a, ast := ast.__class__())
 
@@ -2255,8 +2258,7 @@ class FST:
 
         while stack:  # make sure these bad ASTs can't hurt us anymore
             if a := stack.pop():  # could be `None`s in there
-                f   = a.f
-                f.a = a.f = None  # root, parent and pfield are still useful after node has been removed
+                a.f.a = a.f = None  # root, parent and pfield are still useful after node has been removed
 
                 stack.extend(iter_child_nodes(a))
 
@@ -6684,7 +6686,7 @@ class FST:
     def dedent_lns(self, indent: str | None = None, lns: set[int] | None = None, *,
                    skip: int = 1, docstr: bool | str | None = None) -> set[int]:
         """Dedent all indentable lines specified in `lns` by removing `indent` prefix and adjust node locations
-        accordingly. If cannot dedent entire amount will dedent as much as possible.
+        accordingly. If cannot dedent entire amount, will dedent as much as possible.
 
         WARNING! This does not offset parent nodes.
 
