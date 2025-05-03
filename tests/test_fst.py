@@ -17845,6 +17845,330 @@ def walktest(ast):
         ast.f.loc
 
 
+def regen_pars_data():
+    newlines = []
+
+    for src, elt, *_ in PARS_DATA:
+        src   = src.strip()
+        t     = parse(src)
+        f     = eval(f't.{elt}', {'t': t}).f
+        l     = f.pars()
+        ssrc  = f.get_src(*l)
+
+        assert not ssrc.startswith('\n') or ssrc.endswith('\n')
+
+        newlines.append('(r"""')
+        newlines.extend(f'''{src}\n""", {elt!r}, r"""\n{ssrc}\n"""),\n'''.split('\n'))
+
+    with open(sys.argv[0]) as f:
+        lines = f.read().split('\n')
+
+    start = lines.index('PARS_DATA = [')
+    stop  = lines.index(']  # END OF PARS_DATA')
+
+    lines[start + 1 : stop] = newlines
+
+    with open(sys.argv[0], 'w') as f:
+        lines = f.write('\n'.join(lines))
+
+
+def regen_copy_data():
+    newlines = []
+
+    for src, elt, *_ in COPY_DATA:
+        src   = src.strip()
+        t     = parse(src)
+        f     = eval(f't.{elt}', {'t': t}).f
+        s     = f.copy(fix=True)
+        ssrc  = s.src
+        sdump = s.dump(out=list, compact=True)
+
+        assert not ssrc.startswith('\n') or ssrc.endswith('\n')
+
+        s.verify(raise_=True)
+
+        newlines.append('(r"""')
+        newlines.extend(f'''{src}\n""", {elt!r}, r"""\n{ssrc}\n""", r"""'''.split('\n'))
+        newlines.extend(sdump)
+        newlines.append('"""),\n')
+
+    with open(sys.argv[0]) as f:
+        lines = f.read().split('\n')
+
+    start = lines.index('COPY_DATA = [')
+    stop  = lines.index(']  # END OF COPY_DATA')
+
+    lines[start + 1 : stop] = newlines
+
+    with open(sys.argv[0], 'w') as f:
+        lines = f.write('\n'.join(lines))
+
+
+def regen_get_slice_seq():
+    newlines = []
+
+    with open(sys.argv[0]) as f:
+        lines = f.read().split('\n')
+
+    for name in ('GET_SLICE_SEQ_DATA',):
+        for src, elt, start, stop, options, *_ in globals()[name]:
+            t     = parse(src)
+            f     = eval(f't.{elt}', {'t': t}).f
+            s     = f.get_slice(start, stop, cut=True, **options)
+            tsrc  = t.f.src
+            ssrc  = s.src
+            tdump = t.f.dump(out=list, compact=True)
+            sdump = s.dump(out=list, compact=True)
+
+            assert not tsrc.startswith('\n') or tsrc.endswith('\n')
+            assert not ssrc.startswith('\n') or ssrc.endswith('\n')
+
+            if options.get('verify', True):
+                t.f.verify(raise_=True)
+                s.verify(raise_=True)
+
+            newlines.extend(f'''(r"""{src}""", {elt!r}, {start}, {stop}, {options}, r"""\n{tsrc}\n""", r"""\n{ssrc}\n""", r"""'''.split('\n'))
+            newlines.extend(tdump)
+            newlines.append('""", r"""')
+            newlines.extend(sdump)
+            newlines.append('"""),\n')
+
+        start = lines.index(f'{name} = [')
+        stop  = lines.index(f']  # END OF {name}')
+
+        lines[start + 1 : stop] = newlines
+
+    with open(sys.argv[0], 'w') as f:
+        lines = f.write('\n'.join(lines))
+
+
+def regen_get_slice_stmt():
+    with open(sys.argv[0]) as f:
+        lines = f.read().split('\n')
+
+    for name in ('GET_SLICE_STMT_DATA', 'GET_SLICE_STMT_NOVERIFY_DATA'):
+        verify   = 'NOVERIFY' not in name
+        newlines = []
+
+        for src, elt, start, stop, field, options, *_ in globals()[name]:
+            t     = parse(src)
+            f     = (eval(f't.{elt}', {'t': t}) if elt else t).f
+            s     = f.get_slice(start, stop, field, cut=True, **options)
+            tsrc  = t.f.src
+            ssrc  = s.src
+            tdump = t.f.dump(out=list, compact=True)
+            sdump = s.dump(out=list, compact=True)
+
+            if verify:
+                t.f.verify(raise_=True)
+                s.verify(raise_=True)
+
+            newlines.extend(f'''(r"""{src}""", {elt!r}, {start}, {stop}, {field!r}, {options}, r"""{tsrc}""", r"""{ssrc}""", r"""'''.split('\n'))
+            newlines.extend(tdump)
+            newlines.append('""", r"""')
+            newlines.extend(sdump)
+            newlines.append('"""),\n')
+
+        start = lines.index(f'{name} = [')
+        stop  = lines.index(f']  # END OF {name}')
+
+        lines[start + 1 : stop] = newlines
+
+    with open(sys.argv[0], 'w') as f:
+        lines = f.write('\n'.join(lines))
+
+
+def regen_put_slice_seq():
+    newlines = []
+
+    for dst, elt, start, stop, src, put_src, put_dump in PUT_SLICE_SEQ_DATA:
+        t = parse(dst)
+        f = eval(f't.{elt}', {'t': t}).f
+
+        f.put_slice(None if src == '**DEL**' else src, start, stop)
+
+        tdst  = t.f.src
+        tdump = t.f.dump(out=list, compact=True)
+
+        assert not tdst.startswith('\n') or tdst.endswith('\n')
+
+        t.f.verify(raise_=True)
+
+        newlines.extend(f'''(r"""{dst}""", {elt!r}, {start}, {stop}, r"""{src}""", r"""\n{tdst}\n""", r"""'''.split('\n'))
+        newlines.extend(tdump)
+        newlines.append('"""),\n')
+
+    with open(sys.argv[0]) as f:
+        lines = f.read().split('\n')
+
+    start = lines.index('PUT_SLICE_SEQ_DATA = [')
+    stop  = lines.index(']  # END OF PUT_SLICE_SEQ_DATA')
+
+    lines[start + 1 : stop] = newlines
+
+    with open(sys.argv[0], 'w') as f:
+        lines = f.write('\n'.join(lines))
+
+
+def regen_put_slice_stmt():
+    newlines = []
+
+    for dst, stmt, start, stop, field, options, src, put_src, put_dump in PUT_SLICE_STMT_DATA:
+        t = parse(dst)
+        f = (eval(f't.{stmt}', {'t': t}) if stmt else t).f
+
+        f.put_slice(None if src == '**DEL**' else src, start, stop, field, **options)
+
+        tdst  = t.f.src
+        tdump = t.f.dump(out=list, compact=True)
+
+        t.f.verify(raise_=True)
+
+        newlines.extend(f'''(r"""{dst}""", {stmt!r}, {start}, {stop}, {field!r}, {options!r}, r"""{src}""", r"""{tdst}""", r"""'''.split('\n'))
+        newlines.extend(tdump)
+        newlines.append('"""),\n')
+
+    with open(sys.argv[0]) as f:
+        lines = f.read().split('\n')
+
+    start = lines.index('PUT_SLICE_STMT_DATA = [')
+    stop  = lines.index(']  # END OF PUT_SLICE_STMT_DATA')
+
+    lines[start + 1 : stop] = newlines
+
+    with open(sys.argv[0], 'w') as f:
+        lines = f.write('\n'.join(lines))
+
+
+def regen_put_slice():
+    newlines = []
+
+    for dst, attr, start, stop, field, options, src, put_src, put_dump in PUT_SLICE_DATA:
+        t = parse(dst)
+        f = (eval(f't.{attr}', {'t': t}) if attr else t).f
+
+        f.put_slice(None if src == '**DEL**' else src, start, stop, field, **options)
+
+        tdst  = t.f.src
+        tdump = t.f.dump(out=list, compact=True)
+
+        t.f.verify(raise_=True)
+
+        newlines.extend(f'''(r"""{dst}""", {attr!r}, {start}, {stop}, {field!r}, {options!r}, r"""{src}""", r"""{tdst}""", r"""'''.split('\n'))
+        newlines.extend(tdump)
+        newlines.append('"""),\n')
+
+    with open(sys.argv[0]) as f:
+        lines = f.read().split('\n')
+
+    start = lines.index('PUT_SLICE_DATA = [')
+    stop  = lines.index(']  # END OF PUT_SLICE_DATA')
+
+    lines[start + 1 : stop] = newlines
+
+    with open(sys.argv[0], 'w') as f:
+        lines = f.write('\n'.join(lines))
+
+
+def regen_put_raw():
+    newlines = []
+
+    for i, (dst, attr, (ln, col, end_ln, end_col), options, src, put_ret, put_src, put_dump) in enumerate(PUT_RAW_DATA):
+        t = parse(dst)
+        f = (eval(f't.{attr}', {'t': t}) if attr else t).f
+
+        try:
+            g = f.put_raw(None if src == '**DEL**' else src, ln, col, end_ln, end_col, **options) or f.root
+
+            tdst  = f.root.src
+            tdump = f.root.dump(out=list, compact=True)
+
+            f.root.verify(raise_=True)
+
+            newlines.extend(f'''(r"""{dst}""", {attr!r}, ({ln}, {col}, {end_ln}, {end_col}), {options!r}, r"""{src}""", r"""{g.src}""", r"""{tdst}""", r"""'''.split('\n'))
+            newlines.extend(tdump)
+            newlines.append('"""),\n')
+
+        except Exception:
+            print(i, attr, (ln, col, end_ln, end_col), src, options)
+            print('---')
+            print(repr(dst))
+            print('...')
+            print(src)
+            print('...')
+            print(put_src)
+
+            raise
+
+    with open(sys.argv[0]) as f:
+        lines = f.read().split('\n')
+
+    start = lines.index('PUT_RAW_DATA = [')
+    stop  = lines.index(']  # END OF PUT_RAW_DATA')
+
+    lines[start + 1 : stop] = newlines
+
+    with open(sys.argv[0], 'w') as f:
+        lines = f.write('\n'.join(lines))
+
+
+def regen_precedence_data():
+    newlines = []
+
+    # for dst, *attrs in PRECEDENCE_DST_STMTS + PRECEDENCE_DST_EXPRS + PRECEDENCE_SRC_EXPRS:
+    #     for src, *_ in PRECEDENCE_SRC_EXPRS:
+    #         for attr in attrs:
+    #             d      = copy_ast(dst)
+    #             s      = copy_ast(src)
+    #             fields = attr.split('.')
+    #             fdfull = fields[-1]
+    #             p      = eval(f'd.{pattr}', {'d': d}) if (pattr := '.'.join(fields[:-1])) else d
+
+    #             exec(f'p.{fdfull} = s', {'p': p, 'fdfull': fdfull, 's': s})
+
+    #             truth = ast_.unparse(d)
+
+    #             if dst == 'x, y':  # SPECIAL CASE!!! because unparse adds enclosing parentheses
+    #                 truth = truth[1:-1]
+
+    #             newlines.append(f'    {truth!r},')
+
+    #             # fd = fdfull.split('[')[0]
+    #             # ch = s.op.__class__ if (sac := s.__class__) in (BoolOp, BinOp, UnaryOp) else sac
+    #             # pr = p.op.__class__ if (fpa := p.__class__) in (BoolOp, BinOp, UnaryOp) else fpa
+    #             # dk = fpa is Dict and p.keys[0] is None
+    #             # print(f"{'NY'[precedence_require_parens(ch, pr, fd, dict_key_is_None=dk)]} -", ast_.unparse(d))
+
+    for dst, *attrs in PRECEDENCE_DST_STMTS + PRECEDENCE_DST_EXPRS + PRECEDENCE_SRC_EXPRS:
+        for src, *_ in PRECEDENCE_SRC_EXPRS:
+            for attr in attrs:
+                d            = dst.copy(fix=False)
+                s            = src.body[0].value.copy(fix=False)
+                is_stmt      = isinstance(d.a, stmt)
+                f            = eval(f'd.{attr}' if is_stmt else f'd.body[0].value.{attr}', {'d': d})
+                is_unpar_tup = False if is_stmt else (d.body[0].value.is_parenthesized_tuple() is False)
+
+                f.pfield.set(f.parent.a, s.a)
+
+                truth = ast_.unparse(f.root.a)
+
+                if is_unpar_tup:
+                    truth = truth[1:-1]
+
+                newlines.append(f'    {truth!r},')
+
+    with open(sys.argv[0]) as f:
+        lines = f.read().split('\n')
+
+    start = lines.index('PRECEDENCE_DATA = [')
+    stop  = lines.index(']  # END OF PRECEDENCE_DATA')
+
+    lines[start + 1 : stop] = newlines
+
+    with open(sys.argv[0], 'w') as f:
+        lines = f.write('\n'.join(lines))
+
+
 class TestFST(unittest.TestCase):
     def test__loc_block_opener_end(self):
         self.assertEqual((0, 16), parse('def f(a) -> int: pass').body[0].f._loc_block_opener_end())
@@ -19691,7 +20015,14 @@ _CookiePattern = re.compile(r"""
         self.assertFalse(parse('[]').body[0].value.f.copy().parenthesize())
         self.assertFalse(parse('{}').body[0].value.f.copy().parenthesize())
 
-    def test_parenthesize(self):
+        f = parse('i = 1').body[0].f.copy()
+        f.put_lines(['# comment', ''], 0, 0, 0, 0)
+        self.assertFalse(f.parenthesize())
+        self.assertEqual('# comment\ni = 1', f.src)
+        self.assertTrue(f.parenthesize(force=True))
+        self.assertEqual('(# comment\ni = 1)', f.src)
+
+    def test_unparenthesize(self):
         f = parse('((1,))').body[0].value.f.copy(pars=True)
         self.assertEqual('((1,))', f.src)
         self.assertTrue(f.unparenthesize())
@@ -19704,6 +20035,14 @@ _CookiePattern = re.compile(r"""
         self.assertFalse(parse('()').body[0].value.f.copy().unparenthesize())
         self.assertFalse(parse('[]').body[0].value.f.copy().unparenthesize())
         self.assertFalse(parse('{}').body[0].value.f.copy().unparenthesize())
+
+        f = parse('( # pre1\n( # pre2\n1,\n # post1\n) # post2\n)').body[0].value.f.copy(pars=True)
+        self.assertEqual('( # pre1\n( # pre2\n1,\n # post1\n) # post2\n)', f.src)
+        self.assertTrue(f.unparenthesize())
+        self.assertEqual('( # pre2\n1,\n # post1\n)', f.src)
+        self.assertFalse(f.unparenthesize())
+        self.assertTrue(f.unparenthesize(tuple=True))
+        self.assertEqual('1,', f.src)
 
     def test_dedent_multiline_strings(self):
         f = parse('''
@@ -23640,330 +23979,6 @@ match a:
 
         self.assertEqual(newset, new)
         self.assertEqual(oldset, old)
-
-
-def regen_pars_data():
-    newlines = []
-
-    for src, elt, *_ in PARS_DATA:
-        src   = src.strip()
-        t     = parse(src)
-        f     = eval(f't.{elt}', {'t': t}).f
-        l     = f.pars()
-        ssrc  = f.get_src(*l)
-
-        assert not ssrc.startswith('\n') or ssrc.endswith('\n')
-
-        newlines.append('(r"""')
-        newlines.extend(f'''{src}\n""", {elt!r}, r"""\n{ssrc}\n"""),\n'''.split('\n'))
-
-    with open(sys.argv[0]) as f:
-        lines = f.read().split('\n')
-
-    start = lines.index('PARS_DATA = [')
-    stop  = lines.index(']  # END OF PARS_DATA')
-
-    lines[start + 1 : stop] = newlines
-
-    with open(sys.argv[0], 'w') as f:
-        lines = f.write('\n'.join(lines))
-
-
-def regen_copy_data():
-    newlines = []
-
-    for src, elt, *_ in COPY_DATA:
-        src   = src.strip()
-        t     = parse(src)
-        f     = eval(f't.{elt}', {'t': t}).f
-        s     = f.copy(fix=True)
-        ssrc  = s.src
-        sdump = s.dump(out=list, compact=True)
-
-        assert not ssrc.startswith('\n') or ssrc.endswith('\n')
-
-        s.verify(raise_=True)
-
-        newlines.append('(r"""')
-        newlines.extend(f'''{src}\n""", {elt!r}, r"""\n{ssrc}\n""", r"""'''.split('\n'))
-        newlines.extend(sdump)
-        newlines.append('"""),\n')
-
-    with open(sys.argv[0]) as f:
-        lines = f.read().split('\n')
-
-    start = lines.index('COPY_DATA = [')
-    stop  = lines.index(']  # END OF COPY_DATA')
-
-    lines[start + 1 : stop] = newlines
-
-    with open(sys.argv[0], 'w') as f:
-        lines = f.write('\n'.join(lines))
-
-
-def regen_get_slice_seq():
-    newlines = []
-
-    with open(sys.argv[0]) as f:
-        lines = f.read().split('\n')
-
-    for name in ('GET_SLICE_SEQ_DATA',):
-        for src, elt, start, stop, options, *_ in globals()[name]:
-            t     = parse(src)
-            f     = eval(f't.{elt}', {'t': t}).f
-            s     = f.get_slice(start, stop, cut=True, **options)
-            tsrc  = t.f.src
-            ssrc  = s.src
-            tdump = t.f.dump(out=list, compact=True)
-            sdump = s.dump(out=list, compact=True)
-
-            assert not tsrc.startswith('\n') or tsrc.endswith('\n')
-            assert not ssrc.startswith('\n') or ssrc.endswith('\n')
-
-            if options.get('verify', True):
-                t.f.verify(raise_=True)
-                s.verify(raise_=True)
-
-            newlines.extend(f'''(r"""{src}""", {elt!r}, {start}, {stop}, {options}, r"""\n{tsrc}\n""", r"""\n{ssrc}\n""", r"""'''.split('\n'))
-            newlines.extend(tdump)
-            newlines.append('""", r"""')
-            newlines.extend(sdump)
-            newlines.append('"""),\n')
-
-        start = lines.index(f'{name} = [')
-        stop  = lines.index(f']  # END OF {name}')
-
-        lines[start + 1 : stop] = newlines
-
-    with open(sys.argv[0], 'w') as f:
-        lines = f.write('\n'.join(lines))
-
-
-def regen_get_slice_stmt():
-    with open(sys.argv[0]) as f:
-        lines = f.read().split('\n')
-
-    for name in ('GET_SLICE_STMT_DATA', 'GET_SLICE_STMT_NOVERIFY_DATA'):
-        verify   = 'NOVERIFY' not in name
-        newlines = []
-
-        for src, elt, start, stop, field, options, *_ in globals()[name]:
-            t     = parse(src)
-            f     = (eval(f't.{elt}', {'t': t}) if elt else t).f
-            s     = f.get_slice(start, stop, field, cut=True, **options)
-            tsrc  = t.f.src
-            ssrc  = s.src
-            tdump = t.f.dump(out=list, compact=True)
-            sdump = s.dump(out=list, compact=True)
-
-            if verify:
-                t.f.verify(raise_=True)
-                s.verify(raise_=True)
-
-            newlines.extend(f'''(r"""{src}""", {elt!r}, {start}, {stop}, {field!r}, {options}, r"""{tsrc}""", r"""{ssrc}""", r"""'''.split('\n'))
-            newlines.extend(tdump)
-            newlines.append('""", r"""')
-            newlines.extend(sdump)
-            newlines.append('"""),\n')
-
-        start = lines.index(f'{name} = [')
-        stop  = lines.index(f']  # END OF {name}')
-
-        lines[start + 1 : stop] = newlines
-
-    with open(sys.argv[0], 'w') as f:
-        lines = f.write('\n'.join(lines))
-
-
-def regen_put_slice_seq():
-    newlines = []
-
-    for dst, elt, start, stop, src, put_src, put_dump in PUT_SLICE_SEQ_DATA:
-        t = parse(dst)
-        f = eval(f't.{elt}', {'t': t}).f
-
-        f.put_slice(None if src == '**DEL**' else src, start, stop)
-
-        tdst  = t.f.src
-        tdump = t.f.dump(out=list, compact=True)
-
-        assert not tdst.startswith('\n') or tdst.endswith('\n')
-
-        t.f.verify(raise_=True)
-
-        newlines.extend(f'''(r"""{dst}""", {elt!r}, {start}, {stop}, r"""{src}""", r"""\n{tdst}\n""", r"""'''.split('\n'))
-        newlines.extend(tdump)
-        newlines.append('"""),\n')
-
-    with open(sys.argv[0]) as f:
-        lines = f.read().split('\n')
-
-    start = lines.index('PUT_SLICE_SEQ_DATA = [')
-    stop  = lines.index(']  # END OF PUT_SLICE_SEQ_DATA')
-
-    lines[start + 1 : stop] = newlines
-
-    with open(sys.argv[0], 'w') as f:
-        lines = f.write('\n'.join(lines))
-
-
-def regen_put_slice_stmt():
-    newlines = []
-
-    for dst, stmt, start, stop, field, options, src, put_src, put_dump in PUT_SLICE_STMT_DATA:
-        t = parse(dst)
-        f = (eval(f't.{stmt}', {'t': t}) if stmt else t).f
-
-        f.put_slice(None if src == '**DEL**' else src, start, stop, field, **options)
-
-        tdst  = t.f.src
-        tdump = t.f.dump(out=list, compact=True)
-
-        t.f.verify(raise_=True)
-
-        newlines.extend(f'''(r"""{dst}""", {stmt!r}, {start}, {stop}, {field!r}, {options!r}, r"""{src}""", r"""{tdst}""", r"""'''.split('\n'))
-        newlines.extend(tdump)
-        newlines.append('"""),\n')
-
-    with open(sys.argv[0]) as f:
-        lines = f.read().split('\n')
-
-    start = lines.index('PUT_SLICE_STMT_DATA = [')
-    stop  = lines.index(']  # END OF PUT_SLICE_STMT_DATA')
-
-    lines[start + 1 : stop] = newlines
-
-    with open(sys.argv[0], 'w') as f:
-        lines = f.write('\n'.join(lines))
-
-
-def regen_put_slice():
-    newlines = []
-
-    for dst, attr, start, stop, field, options, src, put_src, put_dump in PUT_SLICE_DATA:
-        t = parse(dst)
-        f = (eval(f't.{attr}', {'t': t}) if attr else t).f
-
-        f.put_slice(None if src == '**DEL**' else src, start, stop, field, **options)
-
-        tdst  = t.f.src
-        tdump = t.f.dump(out=list, compact=True)
-
-        t.f.verify(raise_=True)
-
-        newlines.extend(f'''(r"""{dst}""", {attr!r}, {start}, {stop}, {field!r}, {options!r}, r"""{src}""", r"""{tdst}""", r"""'''.split('\n'))
-        newlines.extend(tdump)
-        newlines.append('"""),\n')
-
-    with open(sys.argv[0]) as f:
-        lines = f.read().split('\n')
-
-    start = lines.index('PUT_SLICE_DATA = [')
-    stop  = lines.index(']  # END OF PUT_SLICE_DATA')
-
-    lines[start + 1 : stop] = newlines
-
-    with open(sys.argv[0], 'w') as f:
-        lines = f.write('\n'.join(lines))
-
-
-def regen_put_raw():
-    newlines = []
-
-    for i, (dst, attr, (ln, col, end_ln, end_col), options, src, put_ret, put_src, put_dump) in enumerate(PUT_RAW_DATA):
-        t = parse(dst)
-        f = (eval(f't.{attr}', {'t': t}) if attr else t).f
-
-        try:
-            g = f.put_raw(None if src == '**DEL**' else src, ln, col, end_ln, end_col, **options) or f.root
-
-            tdst  = f.root.src
-            tdump = f.root.dump(out=list, compact=True)
-
-            f.root.verify(raise_=True)
-
-            newlines.extend(f'''(r"""{dst}""", {attr!r}, ({ln}, {col}, {end_ln}, {end_col}), {options!r}, r"""{src}""", r"""{g.src}""", r"""{tdst}""", r"""'''.split('\n'))
-            newlines.extend(tdump)
-            newlines.append('"""),\n')
-
-        except Exception:
-            print(i, attr, (ln, col, end_ln, end_col), src, options)
-            print('---')
-            print(repr(dst))
-            print('...')
-            print(src)
-            print('...')
-            print(put_src)
-
-            raise
-
-    with open(sys.argv[0]) as f:
-        lines = f.read().split('\n')
-
-    start = lines.index('PUT_RAW_DATA = [')
-    stop  = lines.index(']  # END OF PUT_RAW_DATA')
-
-    lines[start + 1 : stop] = newlines
-
-    with open(sys.argv[0], 'w') as f:
-        lines = f.write('\n'.join(lines))
-
-
-def regen_precedence_data():
-    newlines = []
-
-    # for dst, *attrs in PRECEDENCE_DST_STMTS + PRECEDENCE_DST_EXPRS + PRECEDENCE_SRC_EXPRS:
-    #     for src, *_ in PRECEDENCE_SRC_EXPRS:
-    #         for attr in attrs:
-    #             d      = copy_ast(dst)
-    #             s      = copy_ast(src)
-    #             fields = attr.split('.')
-    #             fdfull = fields[-1]
-    #             p      = eval(f'd.{pattr}', {'d': d}) if (pattr := '.'.join(fields[:-1])) else d
-
-    #             exec(f'p.{fdfull} = s', {'p': p, 'fdfull': fdfull, 's': s})
-
-    #             truth = ast_.unparse(d)
-
-    #             if dst == 'x, y':  # SPECIAL CASE!!! because unparse adds enclosing parentheses
-    #                 truth = truth[1:-1]
-
-    #             newlines.append(f'    {truth!r},')
-
-    #             # fd = fdfull.split('[')[0]
-    #             # ch = s.op.__class__ if (sac := s.__class__) in (BoolOp, BinOp, UnaryOp) else sac
-    #             # pr = p.op.__class__ if (fpa := p.__class__) in (BoolOp, BinOp, UnaryOp) else fpa
-    #             # dk = fpa is Dict and p.keys[0] is None
-    #             # print(f"{'NY'[precedence_require_parens(ch, pr, fd, dict_key_is_None=dk)]} -", ast_.unparse(d))
-
-    for dst, *attrs in PRECEDENCE_DST_STMTS + PRECEDENCE_DST_EXPRS + PRECEDENCE_SRC_EXPRS:
-        for src, *_ in PRECEDENCE_SRC_EXPRS:
-            for attr in attrs:
-                d            = dst.copy(fix=False)
-                s            = src.body[0].value.copy(fix=False)
-                is_stmt      = isinstance(d.a, stmt)
-                f            = eval(f'd.{attr}' if is_stmt else f'd.body[0].value.{attr}', {'d': d})
-                is_unpar_tup = False if is_stmt else (d.body[0].value.is_parenthesized_tuple() is False)
-
-                f.pfield.set(f.parent.a, s.a)
-
-                truth = ast_.unparse(f.root.a)
-
-                if is_unpar_tup:
-                    truth = truth[1:-1]
-
-                newlines.append(f'    {truth!r},')
-
-    with open(sys.argv[0]) as f:
-        lines = f.read().split('\n')
-
-    start = lines.index('PRECEDENCE_DATA = [')
-    stop  = lines.index(']  # END OF PRECEDENCE_DATA')
-
-    lines[start + 1 : stop] = newlines
-
-    with open(sys.argv[0], 'w') as f:
-        lines = f.write('\n'.join(lines))
 
 
 if __name__ == '__main__':

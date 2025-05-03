@@ -329,7 +329,7 @@ def _prev_src(lines: list[str], ln: int, col: int, end_ln: int, end_col: int,
 
     **CAVEAT:** Make sure the starting position (`ln`, `col`) is not inside a string because that could give false
     positives for comments or line continuations. To this end, when searching for non-AST stuff, make sure the start
-    position does not start INSODE OF or BEFORE any valid ASTs.
+    position does not start INSIDE OF or BEFORE any valid ASTs.
 
     **Parameters:**
     - `comment`: Whether to return comments found, which will be the whole comment.
@@ -3202,7 +3202,7 @@ class FST:
         self.put_lines(['if'], ln, col, ln, col + 4, False)
         self.put_lines([indent + 'else:', indent + self.root.indent], ln, 0, ln, col, False)
 
-    def _reparse_docstrings(self, docstr: bool | str | None = None):
+    def _reparse_docstrings(self, docstr: bool | Literal['strict'] | None = None):
         """Reparse docstrings in `self` and all descendants.
 
         **Parameters:**
@@ -3235,7 +3235,7 @@ class FST:
     def _make_fst_and_dedent(self, indent: Union['FST', str], ast: AST, copy_loc: fstloc,
                              prefix: str = '', suffix: str = '',
                              put_loc: fstloc | None = None, put_lines: list[str] | None = None, *,
-                             docstr: bool | str | None = None) -> 'FST':
+                             docstr: bool | Literal['strict'] | None = None) -> 'FST':
         if not isinstance(indent, str):
             indent = indent.get_indent()
 
@@ -3486,7 +3486,7 @@ class FST:
                             ffirst: Union['FST', fstloc, None], flast: Union['FST', fstloc, None],
                             fpre: Union['FST', fstloc, None], fpost: Union['FST', fstloc, None],
                             pfirst: Union['FST', fstloc, None], plast: Union['FST', fstloc, None],
-                            docstr: bool | str) -> 'FST':
+                            docstr: bool | Literal['strict']) -> 'FST':
         root = self.root
 
         if not put_fst:  # delete
@@ -4243,7 +4243,7 @@ class FST:
         return True
 
     def _reparse_raw(self, code: Code | None, ln: int, col: int, end_ln: int, end_col: int, inc: bool | None = None
-                     ) -> 'FST':
+                     ) -> Optional['FST']:
         """Reparse this node which entirely contatins the span which is to be replaced with `code` source. `self` must
         be a node which entirely contains the location and is guaranteed not to be deleted. `self` and some of its
         parents going up may be replaced (root node `FST` will never change, the `AST` it points to may though). Not
@@ -4913,12 +4913,14 @@ class FST:
         return self._put_slice_raw(code, start, stop, field, one=one, **options)
 
     def put_raw(self, code: Code | None, ln: int, col: int, end_ln: int, end_col: int, *,
-                inc: bool | None = True, **options) -> 'FST':
+                inc: bool | None = True, **options) -> Optional['FST']:
         """Put raw code and reparse. Can call on any node in tree for same effect.
 
         **Returns:**
-        - `FST`: First highest level node contained entirely within replacement source, or if no such candidate and
-            `inc` is not `None` (`True` or `False`) then will attempt to return enclosing node.
+        - `FST | None`: FIRST (there may be others following) highest level node contained entirely within replacement
+            source location, or `None` or if no such candidate and `inc=None`. If no candidate and `inc` is `True` or
+            `False` then will attempt to return a node which encloses the location with the given `inc` parameter using
+            `find_loc()`.
         """
 
         parent = self.root.find_loc(ln, col, end_ln, end_col, False) or self.root
@@ -6304,7 +6306,7 @@ class FST:
 
         return extra_indent
 
-    def get_indentable_lns(self, skip: int = 0, *, docstr: bool | str | None = None) -> set[int]:
+    def get_indentable_lns(self, skip: int = 0, *, docstr: bool | Literal['strict'] | None = None) -> set[int]:
         """Get set of indentable lines within this node.
 
         **Parameters:**
@@ -6685,7 +6687,7 @@ class FST:
         self.touchall(False, False)
 
     def indent_lns(self, indent: str | None = None, lns: set[int] | None = None, *,
-                   skip: int = 1, docstr: bool | str | None = None) -> set[int]:
+                   skip: int = 1, docstr: bool | Literal['strict'] | None = None) -> set[int]:
         """Indent all indentable lines specified in `lns` with `indent` and adjust node locations accordingly.
 
         WARNING! This does not offset parent nodes.
@@ -6726,7 +6728,7 @@ class FST:
         return lns
 
     def dedent_lns(self, indent: str | None = None, lns: set[int] | None = None, *,
-                   skip: int = 1, docstr: bool | str | None = None) -> set[int]:
+                   skip: int = 1, docstr: bool | Literal['strict'] | None = None) -> set[int]:
         """Dedent all indentable lines specified in `lns` by removing `indent` prefix and adjust node locations
         accordingly. If cannot dedent entire amount, will dedent as much as possible.
 
