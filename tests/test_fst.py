@@ -23269,7 +23269,7 @@ finally:
                 raise
 
     def test_get_slice_seq_cut(self):
-        for src, elt, start, stop, options, src_cut, slice_copy, src_dump, slice_dump in GET_SLICE_SEQ_DATA:
+        for i, (src, elt, start, stop, options, src_cut, slice_copy, src_dump, slice_dump) in enumerate(GET_SLICE_SEQ_DATA):
             t = parse(src)
             f = eval(f't.{elt}', {'t': t}).f
 
@@ -23286,7 +23286,7 @@ finally:
                 self.assertEqual(sdump, slice_dump.strip().split('\n'))
 
             except Exception:
-                print(elt, start, stop)
+                print(i, elt, start, stop)
                 print('---')
                 print(src)
                 print('...')

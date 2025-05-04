@@ -1283,7 +1283,7 @@ class FSTSrcEdit:
 
         if not put_lines[0]:
             if re_empty_line.match(l := lines[put_ln], 0, put_col):  # strip leading newline from `put_fst` if location being put already has one - NOTE: could also check re_empty_line.match(put_lines[0]) instead of just put_lines[0]
-                put_fst.put_lines(None, 0, 0, 1, re_empty_line_start.match(put_lines[1]).end(), False)
+                put_fst.put_lines2(None, 0, 0, 1, re_empty_line_start.match(put_lines[1]).end(), False)
 
             elif (new_del_col := re_line_trailing_space.match(l,
                                                               bound.col if put_ln == bound.ln else 0,
@@ -1293,20 +1293,19 @@ class FSTSrcEdit:
         if not put_lines[-1] and not re_empty_line.match(lines[(end_ln := del_loc.end_ln)], del_loc.end_col,  # add indentation to trailing newline in `put_fst` if there is stuff on the starting line of `put_loc` past the start point
             seq_loc.end_col if seq_loc.end_ln == end_ln else 0x7fffffffffffffff
         ):
-            put_fst.put_lines([bistr(re_empty_line_start.match(lines[put_ln]).group())], ln := put_fst.end_ln, 0, ln, 0,
-                              True, put_fst)
+            put_fst.put_lines2([re_empty_line_start.match(lines[put_ln]).group()], ln := put_fst.end_ln, 0, ln, 0,
+                               True, put_fst)
 
         if fpre:
             if (not (code := _next_src(lines, fpre.end_ln, fpre.end_col, del_loc.ln, del_loc.col)) or
                 not code.src.startswith(',')
             ):
-                put_fst.put_lines([bistr(', ' if put_lines[0] else ',')], 0, 0, 0, 0, False)
+                put_fst.put_lines2([', ' if put_lines[0] else ','], 0, 0, 0, 0, False)
 
         if fpost:
             if not put_fst._maybe_add_comma(plast.end_ln, plast.end_col, False, True):
                 if put_lines[-1].endswith(',', -1):  # slice being put ends on comma without a space, add one
-                    put_fst.put_lines([bistr(' ')], ln := put_fst.end_ln, col := put_fst.end_col, ln, col, True,
-                                      put_fst)
+                    put_fst.put_lines2([' '], ln := put_fst.end_ln, col := put_fst.end_col, ln, col, True, put_fst)
 
         return del_loc
 
@@ -1656,7 +1655,7 @@ class FSTSrcEdit:
                 postpend += not postpend
 
         if prepend:
-            put_fst.put_lines([''] * prepend, 0, 0, 0, 0, False)
+            put_fst.put_lines2([''] * prepend, 0, 0, 0, 0, False)
 
         if postpend:
             put_lines.extend([bistr('')] * postpend)
@@ -1812,12 +1811,12 @@ class FSTSrcEdit:
                 if is_elif:
                     ln, col, end_ln, end_col = put_body[0].f.bloc
 
-                    put_fst.put_lines(['elif'], ln, col, ln, col + 2, False)  # replace 'if' with 'elif'
+                    put_fst.put_lines2(['elif'], ln, col, ln, col + 2, False)  # replace 'if' with 'elif'
 
                 elif is_orelse:  # need to create these because they not there if body empty
-                    put_fst.put_lines([opener_indent + 'else:', ''], 0, 0, 0, 0, False)
+                    put_fst.put_lines2([opener_indent + 'else:', ''], 0, 0, 0, 0, False)
                 elif field == 'finalbody':
-                    put_fst.put_lines([opener_indent + 'finally:', ''], 0, 0, 0, 0, False)
+                    put_fst.put_lines2([opener_indent + 'finally:', ''], 0, 0, 0, 0, False)
 
                 ln, col, end_ln, end_col = block_loc
 
@@ -1861,13 +1860,13 @@ class FSTSrcEdit:
                 del_else_and_fin         = True
                 indent                   = opener_indent
 
-                put_fst.put_lines(['elif'], ln, col, ln, col + 2, False)  # replace 'if' with 'elif'
+                put_fst.put_lines2(['elif'], ln, col, ln, col + 2, False)  # replace 'if' with 'elif'
 
             elif is_old_elif:
                 indent = None
 
                 put_fst.indent_lns(block_indent, skip=0, docstr=docstr)
-                put_fst.put_lines([opener_indent + 'else:', ''], 0, 0, 0, 0, False)
+                put_fst.put_lines2([opener_indent + 'else:', ''], 0, 0, 0, 0, False)
 
         if indent is not None:
             put_fst.indent_lns(indent, skip=0, docstr=docstr)
@@ -2764,7 +2763,7 @@ class FST:
         lines[ln] = bistr(f'{(l := lines[ln])[:col]}{comma}{l[col:]}')
 
         if offset:
-            root.offset(ln, col, 0, len(comma), True, self)
+            root.offset2(ln, col, 0, len(comma), True, stop_at=self)
 
         elif ln == end_ln:
             self.a.end_col_offset += len(comma)
@@ -2807,10 +2806,8 @@ class FST:
         elif not is_parenthesized:  # if is unparenthesized tuple and empty left then need to add parentheses
             ln, col, end_ln, end_col = self.loc
 
-            self.put_lines([bistr('()')], ln, col, end_ln, end_col, True)  # WARNING! `True` may not be safe if another preceding non-containing node ends EXACTLY where the unparenthesized tuple starts, but haven't found a case where this can happen
+            self.put_lines2([bistr('()')], ln, col, end_ln, end_col, True, False)  # WARNING! `tail=True` may not be safe if another preceding non-containing node ends EXACTLY where the unparenthesized tuple starts, but haven't found a case where this can happen
 
-            if end_col == col and end_ln == ln:  # this is tricky because zero length tuple can be at the start of a parent so now we have to correct offset that was applied to all parents start positions
-                self._floor_start_pos(ast.lineno, ast.col_offset, False)  # self will not have the start point moved because of `put_lines(..., True)`
 
     def _maybe_fix_set(self):
         # assert isinstance(self.a, Set)
@@ -2818,7 +2815,7 @@ class FST:
         if not self.a.elts:
             ln, col, end_ln, end_col = self.loc
 
-            self.put_lines([bistr('set()')], ln, col, end_ln, end_col, True)
+            self.put_lines2(['set()'], ln, col, end_ln, end_col, True)
 
             ast = self.a
 
@@ -2842,7 +2839,7 @@ class FST:
             (isinstance(parenta := parent.a, If) and self.pfield == ('orelse', 0) and len(parenta.orelse) == 1 and
              self.a.col_offset == parenta.col_offset)
         ):
-            self.put_lines(None, ln, col, ln, col + 2, False)
+            self.put_lines2(None, ln, col, ln, col + 2, False)
 
     def _fix_block_del_last_child(self, bound_ln: int, bound_col: int, bound_end_ln: int, bound_end_col: int):
         """Fix end location of a block statement after its last child (position-wise, not last existing child) has been
@@ -2916,7 +2913,7 @@ class FST:
             if not inplace:
                 self = FST(copy_ast(ast), lines=(lines := lines[:]), from_=self)
 
-            self.offset(ln, col + 2, 0, -2)
+            self.offset2(ln, col + 2, 0, -2)
 
             lines[ln] = bistr((l := lines[ln])[:col] + l[col + 2:])
 
@@ -3002,7 +2999,7 @@ class FST:
                 lines[end_ln] = bistr(f'{(l := lines[end_ln])[:end_col]}){l[end_col:]}')
                 lines[ln]     = bistr(f'{(l := lines[ln])[:col]}({l[col:]}')
 
-                self.offset(ln, col, 0, 1)
+                self.offset2(ln, col, 0, 1)
 
                 if is_tuple:
                     ast.col_offset     -= 1
@@ -3064,15 +3061,9 @@ class FST:
         """
 
         ln, col, end_ln, end_col = self.wbloc if whole else self.bloc
-        end_col_offset           = getattr(a := self.a, 'end_col_offset', None)
 
-        self.put_lines([')'], end_ln, end_col, end_ln, end_col, True, self)
-
-        if end_col_offset is not None:  # maybe correct for put ')' (if was right after self) because needed to offset tail of parents but not self
-            a.end_col_offset = end_col_offset
-
-        self.put_lines(['('], ln, col, ln, col, False)
-        self._floor_start_pos((a := self.a).lineno, a.col_offset - 1, False)
+        self.put_lines2([')'], end_ln, end_col, end_ln, end_col, True, True, self, offset_stop_at=False)
+        self.offset2(*self.put_lines2(['('], ln, col, ln, col, False, False, self, offset_stop_at=False))
 
     def _parenthesize_tuple(self, whole: bool = True):
         """Parenthesize an unparenthesized tuple, adjusting tuple location for added parentheses.
@@ -3087,15 +3078,15 @@ class FST:
 
         ln, col, end_ln, end_col = self.wbloc if whole else self.loc
 
-        self.put_lines([')'], end_ln, end_col, end_ln, end_col, True, self)
+        self.put_lines2([')'], end_ln, end_col, end_ln, end_col, True, False, self)
 
         lines            = self.root._lines
         a                = self.a
         a.end_lineno     = end_ln + 1
-        a.end_col_offset = lines[end_ln].c2b(end_col + 1)
+        a.end_col_offset = lines[end_ln].c2b(end_col + 1)  # can't count on this being set by put_lines() because end of `whole` could be past end of tuple
 
-        self.put_lines(['('], ln, col, ln, col, False)
-        self._floor_start_pos(ln + 1, lines[ln].c2b(col))
+        self.put_lines2(['('], ln, col, ln, col, False)
+        self._floor_start_pos(ln + 1, lines[ln].c2b(col))  # same `whole` reason must explicitly set start pos
 
     def _unparenthesize_grouping(self, *, inc_genexpr_solo: bool = False) -> bool:
         """Remove grouping parentheses from anything. Just remove text parens around node and everything between them
@@ -3121,8 +3112,8 @@ class FST:
             pend_ln, pend_col        = _next_find(lines, pend_ln, pend_col, len(lines) - 1, len(lines[-1]), ')')  # ditto
             pend_col                += 1
 
-        self.put_lines(None, end_ln, end_col, pend_ln, pend_col, True, self)
-        self.put_lines(None, pln, pcol, ln, col, False)
+        self.put_lines2(None, end_ln, end_col, pend_ln, pend_col, True, self)
+        self.put_lines2(None, pln, pcol, ln, col, False)
 
         return True
 
@@ -3146,8 +3137,8 @@ class FST:
             en_end_ln, en_end_col  = comma
             en_end_col            += 1
 
-        self.put_lines(None, en_end_ln, en_end_col, end_ln, end_col, True, self)
-        self.put_lines(None, ln, col, (e0 := elts[0].f).ln, e0.col, False)
+        self.put_lines2(None, en_end_ln, en_end_col, end_ln, end_col, True, self)
+        self.put_lines2(None, ln, col, (e0 := elts[0].f).ln, e0.col, False)
 
         return True
 
@@ -3183,7 +3174,7 @@ class FST:
 
         ln, col = colon
 
-        self.put_lines(['', indent], ln, col + 1, b0_ln, b0_col, False)
+        self.put_lines2(['', indent], ln, col + 1, b0_ln, b0_col, False)
 
     def _elif_to_else_if(self):
         """Covnert an 'elif something:\\n  ...' to 'else:\\n  if something:\\n    ...'. Make sure to only call on an
@@ -3199,8 +3190,8 @@ class FST:
 
         ln, col, _, _ = self.loc
 
-        self.put_lines(['if'], ln, col, ln, col + 4, False)
-        self.put_lines([indent + 'else:', indent + self.root.indent], ln, 0, ln, col, False)
+        self.put_lines2(['if'], ln, col, ln, col + 4, False)
+        self.put_lines2([indent + 'else:', indent + self.root.indent], ln, 0, ln, col, False)
 
     def _reparse_docstrings(self, docstr: bool | Literal['strict'] | None = None):
         """Reparse docstrings in `self` and all descendants.
@@ -3242,7 +3233,7 @@ class FST:
         lines = self.root._lines
         fst   = FST(ast, lines=lines, from_=self)  # we use original lines for nodes offset calc before putting new lines
 
-        fst.offset(copy_loc.ln, copy_loc.col, -copy_loc.ln, len(prefix.encode()) - lines[copy_loc.ln].c2b(copy_loc.col))
+        fst.offset2(copy_loc.ln, copy_loc.col, -copy_loc.ln, len(prefix.encode()) - lines[copy_loc.ln].c2b(copy_loc.col))
 
         fst._lines = fst_lines = self.get_lines(*copy_loc)
 
@@ -3255,7 +3246,7 @@ class FST:
         fst.dedent_lns(indent, skip=bool(copy_loc.col), docstr=docstr)  # if copy location starts at column 0 then we apply dedent to it as well (preceding comment or something)
 
         if put_loc:
-            self.put_lines(put_lines, *put_loc, True)  # True because we may have an unparenthesized tuple that shrinks to a span length of 0
+            self.put_lines2(put_lines, *put_loc, True)  # True because we may have an unparenthesized tuple that shrinks to a span length of 0
 
         return fst
 
@@ -3511,7 +3502,7 @@ class FST:
             put_lines       = put_fst._lines
             fst_dcol_offset = lines[put_ln].c2b(put_col)
 
-            put_fst.offset(0, 0, put_ln, fst_dcol_offset)
+            put_fst.offset2(0, 0, put_ln, fst_dcol_offset)
 
         self_ln, self_col, _, _ = self.loc
 
@@ -3521,9 +3512,9 @@ class FST:
             col_offset = ast.col_offset
 
         if fpost:
-            root.put_lines(put_lines, put_ln, put_col, put_end_ln, put_end_col, False, None)
+            root.put_lines2(put_lines, put_ln, put_col, put_end_ln, put_end_col, False)
         else:
-            root.put_lines(put_lines, put_ln, put_col, put_end_ln, put_end_col, True, self)  # because of insertion at end and unparenthesized tuple
+            root.put_lines2(put_lines, put_ln, put_col, put_end_ln, put_end_col, True, True, self)  # because of insertion at end and unparenthesized tuple
 
         if is_unparen_tuple:
             self._floor_start_pos(lineno, col_offset)  # because of insertion at beginning of unparenthesized tuple, pattern beginning to emerge
@@ -3604,7 +3595,7 @@ class FST:
             elif not is_tuple:
                 put_ast.end_col_offset -= 1  # strip enclosing curlies or brackets from source set or list
 
-                put_fst.offset(0, 1, 0, -1)
+                put_fst.offset2(0, 1, 0, -1)
 
                 assert put_lines[0].startswith('[{'[is_set])
                 assert put_lines[-1].endswith(']}'[is_set])
@@ -3615,7 +3606,7 @@ class FST:
             elif put_fst._is_parenthesized_seq():
                 put_ast.end_col_offset -= 1  # strip enclosing parentheses from source tuple
 
-                put_fst.offset(0, 1, 0, -1)
+                put_fst.offset2(0, 1, 0, -1)
 
                 put_lines[-1] = bistr(put_lines[-1][:-1])
                 put_lines[0]  = bistr(put_lines[0][1:])
@@ -3658,7 +3649,7 @@ class FST:
 
         ln, col, end_ln, end_col = self.loc
 
-        self.put_lines([bistr('{}')], ln, col, end_ln, end_col, True)
+        self.put_lines2([bistr('{}')], ln, col, end_ln, end_col, True)
 
         ast = self.a
 
@@ -3727,7 +3718,7 @@ class FST:
             put_lines               = put_fst._lines
             put_ast.end_col_offset -= 1  # strip enclosing curlies from source dict
 
-            put_fst.offset(0, 1, 0, -1)
+            put_fst.offset2(0, 1, 0, -1)
 
             assert put_lines[0].startswith('{')
             assert put_lines[-1].endswith('}')
@@ -3953,7 +3944,7 @@ class FST:
                 self.src_edit.get_slice_stmt(self, field, True, block_loc, ffirst, flast, fpre, fpost, **options))
 
             if put_loc:
-                self.put_lines(put_lines, *put_loc, True)
+                self.put_lines2(put_lines, *put_loc, True)
 
             self._unmake_fst_tree(body[start : stop])
 
@@ -3966,8 +3957,8 @@ class FST:
                                                    block_loc, opener_indent, block_indent,
                                                    ffirst, flast, fpre, fpost, **options)
 
-            put_fst.offset(0, 0, put_loc.ln, 0 if put_fst.bln or put_fst.bcol else lines[put_loc.ln].c2b(put_loc.col))
-            self.put_lines(put_fst.lines, *put_loc, False)
+            put_fst.offset2(0, 0, put_loc.ln, 0 if put_fst.bln or put_fst.bcol else lines[put_loc.ln].c2b(put_loc.col))
+            self.put_lines2(put_fst.lines, *put_loc, False)
             self._unmake_fst_tree(body[start : stop], put_fst)
 
             body[start : stop] = put_body
@@ -4031,15 +4022,15 @@ class FST:
                             (is_par_tup is None and isinstance(ast, MatchSequence) and
                              not fst._is_parenthesized_seq('patterns'))
                     ):
-                        code.put_lines(None, end_ln := code.end_ln, (end_col := code.end_col) - 1, end_ln, end_col, True)  # strip enclosing delimiters
-                        code.put_lines(None, ln := code.ln, col := code.col, ln, col + 1, False)
+                        code.put_lines2(None, end_ln := code.end_ln, (end_col := code.end_col) - 1, end_ln, end_col, True)  # strip enclosing delimiters
+                        code.put_lines2(None, ln := code.ln, col := code.col, ln, col + 1, False)
 
                     if elts := ast.values if is_dict else ast.patterns if is_match else ast.elts:
                         if comma := _next_find(code.root._lines, (l := elts[-1].f.loc).end_ln, l.end_col, code.end_ln,
                                                code.end_col, ','):  # strip trailing comma
                             ln, col = comma
 
-                            code.put_lines(None, ln, col, ln, col + 1, False)
+                            code.put_lines2(None, ln, col, ln, col + 1, False)
 
         self._reparse_raw(code, *self._raw_slice_loc(start, stop, field))
 
@@ -4123,7 +4114,7 @@ class FST:
 
         copy_root = FST(Pass(), lines=copy_lines)  # we don't need the ASTs here, just the lines
 
-        copy_root.put_lines(new_lines, ln, col, end_ln, end_col)
+        copy_root.put_lines2(new_lines, ln, col, end_ln, end_col)
 
         root      = self.root
         copy_root = FST.fromsrc(copy_root.src, mode=get_parse_mode(root.a), **root.parse_params)
@@ -4138,7 +4129,7 @@ class FST:
             if not copy:
                 raise RuntimeError(f'could not find node after raw reparse')
 
-            root.put_lines(new_lines, ln, col, end_ln, end_col, True, self if set_ast else None)  # we do this again in our own tree to offset our nodes which aren't being moved over from the modified copy, can stop_at self if setting ast because it overrides self locations
+            root.put_lines2(new_lines, ln, col, end_ln, end_col, True, self if set_ast else None)  # we do this again in our own tree to offset our nodes which aren't being moved over from the modified copy, can stop_at self if setting ast because it overrides self locations
 
             copy.pfield.set(copy.parent.a, None)  # remove from copy tree so that copy_root unmake doesn't zero out new node
             copy_root._unmake_fst_tree()
@@ -4823,7 +4814,7 @@ class FST:
 
             ln, col, end_ln, end_col = start_loc.loc if start_loc.is_FST else start_loc
 
-            self.put_lines([': '], ln, col, end_ln, end_col)
+            self.put_lines2([': '], ln, col, end_ln, end_col)
             self._reparse_raw(code, ln, col, ln, col)
 
         else:
@@ -4996,6 +4987,92 @@ class FST:
                 ls[end_ln]          = bistr(lines[-1] + ls[end_ln][end_col:])
                 ls[ln + 1 : end_ln] = lines[1:-1]
 
+
+
+
+
+
+    def put_lines2(self, lines: list[str] | None, ln: int, col: int, end_ln: int, end_col: int,
+                  tail: bool | None = ..., head: bool | None = True, stop_at: Optional['FST'] = None, *,
+                  offset_stop_at: bool = True):
+        """Put or delete lines to currently stored source, optionally offsetting all nodes for the change. Must specify
+        `tail` as not `False` or `True` to enable offset of nodes according to lines put. `...` ellipsis value is used
+        as sentinel for `tail` to mean don't offset. Otherwise `tail` and params which followed are passed to
+        `self.offset()` with calculated offset location and deltas.
+
+        **Returns:**
+        - `(ln: int, col: int, dln: int, dcol_offset: int) | None`: If `tail` was not `...` then the calculated
+            `offset()` parameters are returned for any potential followup offsetting. The `col` parameter in this case
+            is returned as a byte offset so that `offset()` doesn't attempt to calculate the byte offset from already
+            modified source."""
+
+        ret = None
+        ls  = self.root._lines
+
+        if is_del := not lines:
+            lines = [bistr('')]
+        elif not lines[0].__class__ is bistr:
+            lines = [bistr(s) for s in lines]
+
+        # possibly offset nodes
+
+        if tail is not ...:
+            dfst_ln     = len(lines) - 1
+            dln         = dfst_ln - (end_ln - ln)
+            dcol_offset = lines[-1].lenbytes - ls[end_ln].c2b(end_col)
+            col_offset  = -ls[end_ln].c2b(end_col)
+
+            if not dfst_ln:
+                dcol_offset += ls[ln].c2b(col)
+
+            ret = (end_ln, col_offset, dln, dcol_offset)
+
+            self.root.offset2(end_ln, col_offset, dln, dcol_offset, tail, head, stop_at, offset_stop_at=offset_stop_at)
+
+        # put the actual lines (or just delete)
+
+        if is_del:
+            if end_ln == ln:
+                ls[ln] = bistr((l := ls[ln])[:col] + l[end_col:])
+
+            else:
+                ls[end_ln] = bistr(ls[ln][:col] + ls[end_ln][end_col:])
+
+                del ls[ln : end_ln]
+
+        else:
+            dln = end_ln - ln
+
+            if (nnew_ln := len(lines)) <= 1:
+                s = lines[0] if nnew_ln else ''
+
+                if not dln:  # replace single line with single or no line
+                    ls[ln] = bistr(f'{(l := ls[ln])[:col]}{s}{l[end_col:]}')
+
+                else:  # replace multiple lines with single or no line
+                    ls[ln] = bistr(f'{ls[ln][:col]}{s}{ls[end_ln][end_col:]}')
+
+                    del ls[ln + 1 : end_ln + 1]
+
+            elif not dln:  # replace single line with multiple lines
+                lend                 = bistr(lines[-1] + (l := ls[ln])[end_col:])
+                ls[ln]               = bistr(l[:col] + lines[0])
+                ls[ln + 1 : ln + 1]  = lines[1:]
+                ls[ln + nnew_ln - 1] = lend
+
+            else:  # replace multiple lines with multiple lines
+                ls[ln]              = bistr(ls[ln][:col] + lines[0])
+                ls[end_ln]          = bistr(lines[-1] + ls[end_ln][end_col:])
+                ls[ln + 1 : end_ln] = lines[1:-1]
+
+        return ret
+
+
+
+
+
+
+
     def get_src(self, ln: int, col: int, end_ln: int, end_col: int) -> list[str]:
         """`'\\n'.join(self.get_lines(...))`. Can call on any node in tree for same effect."""
 
@@ -5005,7 +5082,7 @@ class FST:
                 tail: bool = False, stop_at: Optional['FST'] = None):
         """`self.put_lines(src.split('\\n'), ...)`."""
 
-        self.put_lines(None if src is None else src.split('\n'), ln, col, end_ln, end_col, tail, stop_at)
+        self.put_lines2(None if src is None else src.split('\n'), ln, col, end_ln, end_col, tail, True, stop_at)
 
 # ------------------------------------------------------------------------------------------------------------------
 
@@ -6658,10 +6735,10 @@ class FST:
 
 
     def offset2(self, ln: int, col: int, dln: int, dcol_offset: int,
-                tail: bool | None = False, head: bool | None = True,
-                self_: bool = True, stop_at: Optional['FST'] = None, offset_stop_at: bool = True,
+                tail: bool | None = False, head: bool | None = True, stop_at: Optional['FST'] = None, *,
+                offset_stop_at: bool = True, self_: bool = True,
                 ) -> 'FST':  # -> Self
-        """Offset ast node positions in the tree on or after ln / col by delta line / col_offset (column byte offset).
+        """Offset ast node positions in the tree on or after (ln, col) by (delta line, col_offset) (column byte offset).
 
         This only offsets the positions in the `AST` nodes, doesn't change any text, so make sure that is correct before
         getting any `FST` locations from affected nodes otherwise they will be wrong.
@@ -6673,21 +6750,23 @@ class FST:
         `True` then the start position will remain and the end position will be expanded, see "Behavior" below.
 
         **Parameters:**
-        - `ln`: Line of offset point.
-        - `col`: Column of offset point (char index).
+        - `ln`: Line of offset point (0 based).
+        - `col`: Column of offset point (char index if positive). If this is negative then is treated as a byte offset
+            in the line so that the source is not used for calculations (which could be wrong if the source was already
+            changed).
         - `dln`: Number of lines to offset everything on or after offset point, can be 0.
         - `dcol_offset`: Column offset to apply to everything ON the offset point line `ln` (in bytes). Columns not on
             line `ln` will not be changed.
-        - `tail`: Whether to offset endpoint if it FALLS EXACTLY AT ln / col or not. If `False` then tail will not be
-            moved backward if at same location as head and can stop head from moving forward past it if at same
+        - `tail`: Whether to offset end endpoint if it FALLS EXACTLY AT (ln, col) or not. If `False` then tail will not
+            be moved backward if at same location as head and can stop head from moving forward past it if at same
             location. If `None` then can be moved forward with head if head at same location.
-        - `head`: Whether to offset endpoint if it FALLS EXACTLY AT ln / col or not. If `False` then head will not be
-            moved forward if at same location as tail and can stop tail from moving backward past it if at same
+        - `head`: Whether to offset start endpoint if it FALLS EXACTLY AT (ln, col) or not. If `False` then head will
+            not be moved forward if at same location as tail and can stop tail from moving backward past it if at same
             location. If `None` then can be moved backward with tail if tail at same location.
-        - `self_`: Whether to offset self or not (will recurse into children unless is `stop_at`).
         - `stop_at`: `FST` node to stop recursion at and not go into its children (recursion in siblings will not be
             affected).
         - `offset_stop_at`: Whether to apply offset to `stop_at` node or not.
+        - `self_`: Whether to offset self or not (will recurse into children unless is `stop_at`).
 
         **Behavior:**
         ```
@@ -6740,7 +6819,8 @@ class FST:
             stack = list(iter_child_nodes(self.a))
 
         lno  = ln + 1
-        colo = (l := ls[ln]).c2b(min(col, len(l))) if ln < len(ls := self.root._lines) else 0x7fffffffffffffff
+        colo = (-col if col < 0 else
+                (l := ls[ln]).c2b(min(col, len(l))) if ln < len(ls := self.root._lines) else 0x7fffffffffffffff)
         fwd  = dln > 0 or (not dln and dcol_offset >= 0)
 
         while stack:
