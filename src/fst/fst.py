@@ -2155,7 +2155,7 @@ class FST:
     def wbloc(self) -> fstloc | None:
         """Return whole source location if at root, regardless of actual root node location, otherwise node `bloc`."""
 
-        return self.bloc if self.parent else fstloc(0, 0, len(ls := self._lines) - 1, len(ls[-1]))
+        return fstloc(0, 0, len(ls := self._lines) - 1, len(ls[-1])) if self.is_root else self.bloc
 
     @property
     def ln(self) -> int:
@@ -2678,23 +2678,6 @@ class FST:
 
         return fstloc(ln, col, ln, col + 2)
 
-    def _floor_start_pos(self, lineno: int, col_offset: int, self_: bool = True):  # because of zero-length spans like evil unparenthesized zero-length tuples
-        """Walk up parent chain (starting at `self`) setting `.lineno` and `.col_offset` to `lineno` and `col_offset` if
-        they are past it. Used for correcting parents after an `offset()` which could not avoid modifying the start
-        position."""
-
-        if not self_:
-            self = self.parent
-
-        while self:
-            if (lno := getattr(a := self.a, 'lineno', -1)) > lineno or (lno == lineno and a.col_offset > col_offset):
-                a.lineno     = lineno
-                a.col_offset = col_offset
-
-                self.touch()
-
-            self = self.parent
-
     def _set_end_pos(self, end_lineno: int, end_col_offset: int, self_: bool = True):  # because of trailing non-AST junk in last statements
         """Walk up parent chain (starting at `self`) setting `.end_lineno` and `.end_col_offset` to `end_lineno` and
         `end_col_offset` if self is last child of parent. Initial `self` is corrected always. Used for correcting
@@ -2807,7 +2790,6 @@ class FST:
             ln, col, end_ln, end_col = self.loc
 
             self.put_lines([bistr('()')], ln, col, end_ln, end_col, True, False)  # WARNING! `tail=True` may not be safe if another preceding non-containing node ends EXACTLY where the unparenthesized tuple starts, but haven't found a case where this can happen
-
 
     def _maybe_fix_set(self):
         # assert isinstance(self.a, Set)
@@ -3082,11 +3064,13 @@ class FST:
 
         lines            = self.root._lines
         a                = self.a
-        a.end_lineno     = end_ln + 1
+        a.end_lineno     = end_ln + 1  # yes this can change
         a.end_col_offset = lines[end_ln].c2b(end_col + 1)  # can't count on this being set by put_lines() because end of `whole` could be past end of tuple
 
-        self.put_lines(['('], ln, col, ln, col, False)
-        self._floor_start_pos(ln + 1, lines[ln].c2b(col))  # same `whole` reason must explicitly set start pos
+        self.offset(*self.put_lines(['('], ln, col, ln, col, False, False, self), self_=False)
+
+        a.lineno     = ln + 1
+        a.col_offset = lines[ln].c2b(col)  # ditto on the `whole` thing
 
     def _unparenthesize_grouping(self, *, inc_genexpr_solo: bool = False) -> bool:
         """Remove grouping parentheses from anything. Just remove text parens around node and everything between them
@@ -3506,18 +3490,15 @@ class FST:
 
         self_ln, self_col, _, _ = self.loc
 
-        if is_unparen_tuple := put_col == self_col and put_ln == self_ln:  # beginning of stupid evil unparenthesized tuple
-            ast        = self.a
-            lineno     = ast.lineno
-            col_offset = ast.col_offset
+        if put_col == self_col and put_ln == self_ln:  # unenclosed sequence
+            self.offset(
+                *root.put_lines(put_lines, put_ln, put_col, put_end_ln, put_end_col, not fpost, False, self),
+                True, True, self_=False)
 
-        if fpost:
+        elif fpost:
             root.put_lines(put_lines, put_ln, put_col, put_end_ln, put_end_col, False)
         else:
             root.put_lines(put_lines, put_ln, put_col, put_end_ln, put_end_col, True, True, self)  # because of insertion at end and unparenthesized tuple
-
-        if is_unparen_tuple:
-            self._floor_start_pos(lineno, col_offset)  # because of insertion at beginning of unparenthesized tuple, pattern beginning to emerge
 
     def _put_slice_tuple_list_or_set(self, code: Code | None, start: int | Literal['end'] | None, stop: int | None,
                                      field: str | None, one: bool, **options):
