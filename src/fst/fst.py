@@ -5829,7 +5829,7 @@ class FST:
 
         **Parameters:**
         - `with_loc`: If `True` then only nodes with locations returned, `'all'` means all nodes with locations, `'own'`
-            means only nodes with own location (does not recurse into non-own nodes), otherwise all nodes.
+            means only nodes with own location (does not recurse into non-own nodes), otherwise `False` means all nodes.
         - `self_`: If `True` then self will be returned first with the possibility to skip children with `send()`.
         - `recurse`: Whether to recurse into children by default, `send()` for a given node will always override this.
             Will always attempt first level of children unless walking self and `False` is sent first.
@@ -6421,7 +6421,8 @@ class FST:
 
         return lns
 
-    def pars(self, pars: bool = True, *, ret_npars: bool = False, exc_genexpr_solo: bool = False) -> fstloc:
+    def pars(self, pars: bool = True, *, ret_npars: bool = False, exc_genexpr_solo: bool = False,
+             ) -> fstloc | tuple[fstloc, int]:
         """Return the location of enclosing grouping parentheses if present. Will balance parentheses if `self` is an
         element of a tuple and not return the parentheses of the tuple. Likwise will not return the parentheses of an
         enclosing `arguments` parent. Only works on (and makes sense for) `expr` or `pattern` nodes, otherwise
@@ -6652,6 +6653,150 @@ class FST:
         self.touchall(False, False)
 
         return self
+
+
+
+
+    def offset2(self, ln: int, col: int, dln: int, dcol_offset: int,
+                tail: bool | None = False, head: bool | None = True,
+                self_: bool = True, stop_at: Optional['FST'] = None, offset_stop_at: bool = True,
+                ) -> 'FST':  # -> Self
+        """Offset ast node positions in the tree on or after ln / col by delta line / col_offset (column byte offset).
+
+        This only offsets the positions in the `AST` nodes, doesn't change any text, so make sure that is correct before
+        getting any `FST` locations from affected nodes otherwise they will be wrong.
+
+        Other nodes outside this tree might need offsetting so use only on root unless special circumstances.
+
+        If offsetting a zero-length node (which can result from deleting elements of an unparenthesized tuple), both the
+        start and end location will be moved if exactly at offset point if `tail` is `False`. Otherwise if `tail` is
+        `True` then the start position will remain and the end position will be expanded, see "Behavior" below.
+
+        **Parameters:**
+        - `ln`: Line of offset point.
+        - `col`: Column of offset point (char index).
+        - `dln`: Number of lines to offset everything on or after offset point, can be 0.
+        - `dcol_offset`: Column offset to apply to everything ON the offset point line `ln` (in bytes). Columns not on
+            line `ln` will not be changed.
+        - `tail`: Whether to offset endpoint if it FALLS EXACTLY AT ln / col or not. If `False` then tail will not be
+            moved backward if at same location as head and can stop head from moving forward past it if at same
+            location. If `None` then can be moved forward with head if head at same location.
+        - `head`: Whether to offset endpoint if it FALLS EXACTLY AT ln / col or not. If `False` then head will not be
+            moved forward if at same location as tail and can stop tail from moving backward past it if at same
+            location. If `None` then can be moved backward with tail if tail at same location.
+        - `self_`: Whether to offset self or not (will recurse into children unless is `stop_at`).
+        - `stop_at`: `FST` node to stop recursion at and not go into its children (recursion in siblings will not be
+            affected).
+        - `offset_stop_at`: Whether to apply offset to `stop_at` node or not.
+
+        **Behavior:**
+        ```
+        start offset here
+              V
+          |===|
+              |---|
+              |        <- special zero length span which doesn't normally exist
+        0123456789ABC
+
+        +2, tail=False      -2, tail=False      +2, tail=None       -2, tail=False
+            head=True           head=True           head=True           head=None
+              V                   V                   V                   V
+          |===|               |===|               |===|               |===|
+                |---|           |---|                   |---|             |-|
+              |                 |.|                     |                 |
+        0123456789ABC       0123456789ABC       0123456789ABC       0123456789ABC
+
+        +2, tail=True       -2, tail=True       +2, tail=None       -2, tail=True
+            head=True           head=True           head=False          head=None
+              V                   V                   V                   V
+          |=====|             |=|                 |===|               |=|
+                |---|           |---|                 |-----|             |-|
+                |               |                     |                 |
+        0123456789ABC       0123456789ABC       0123456789ABC       0123456789ABC
+
+        +2, tail=False      -2, tail=False      -2, tail=None       +2, tail=None
+            head=False          head=False          head=None           head=None
+              V                   V                   V                   V
+          |===|               |===|               |===|               |===|
+              |-----|             |-|                 |-|                 |-----|
+              |                   |                   |                   |
+        0123456789ABC       0123456789ABC       0123456789ABC       0123456789ABC
+
+        +2, tail=True       -2, tail=True
+            head=False          head=False
+              V                   V
+          |=====|             |=|
+              |-----|             |-|
+              |.|                 |
+        0123456789ABC       0123456789ABC
+        ```
+        """
+
+        if self_:
+            stack = [self.a]
+        elif self is stop_at:
+            return
+        else:
+            stack = list(iter_child_nodes(self.a))
+
+        lno  = ln + 1
+        colo = (l := ls[ln]).c2b(min(col, len(l))) if ln < len(ls := self.root._lines) else 0x7fffffffffffffff
+        fwd  = dln > 0 or (not dln and dcol_offset >= 0)
+
+        while stack:
+            a = stack.pop()
+            f = a.f
+
+            if f is not stop_at:
+                children = iter_child_nodes(a)
+            elif offset_stop_at:
+                children = ()
+            else:
+                continue
+
+            if (fend_colo := getattr(a, 'end_col_offset', None)) is not None:
+                flno  = a.lineno
+                fcolo = a.col_offset
+
+                if (fend_lno := a.end_lineno) < lno:
+                    continue  # no need to walk into something which ends before offset point
+                elif fend_lno > lno:
+                    a.end_lineno = fend_lno + dln
+                elif fend_colo < colo:
+                    continue
+
+                elif (fend_colo > colo or
+                      (tail and (fwd or head is not False or fcolo != fend_colo or flno != fend_lno)) or  # at (ln, col), moving tail allowed and not blocked by head?
+                      (tail is None and head and fwd and fcolo == fend_colo and flno == fend_lno)):  # allowed to be and being moved by head?
+                    a.end_lineno     = fend_lno + dln
+                    a.end_col_offset = fend_colo + dcol_offset
+
+                if flno > lno:
+                    if not dln and (not (decos := getattr(a, 'decorator_list', None)) or decos[0].lineno > lno):
+                        continue  # no need to walk into something past offset point if line change is 0, don't need to touch either could not have been changed above
+
+                    a.lineno = flno + dln
+
+                elif (flno == lno and (fcolo > colo or (fcolo == colo and (
+                      (head and (not fwd or tail is not False or fcolo != fend_colo or flno != fend_lno)) or  # at (ln, col), moving head allowed and not blocked by tail?
+                      (head is None and tail and not fwd and fcolo == fend_colo and flno == fend_lno))))):  # allowed to be and being moved by tail?
+                    a.lineno     = flno + dln
+                    a.col_offset = fcolo + dcol_offset
+
+            stack.extend(children)
+            f.touch()
+
+        self.touchall(False, False)
+
+        return self
+
+
+
+
+
+
+
+
 
     def offset_cols(self, dcol_offset: int, lns: set[int]):
         """Offset ast col byte offsets in `lns` by `dcol_offset`. Only modifies ast, not lines. Does not modify parent

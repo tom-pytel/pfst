@@ -19872,6 +19872,198 @@ _CookiePattern = re.compile(r"""
         self.assertEqual((0, 4, 0, 8), m.body[1].f.loc)
         self.assertEqual((0, 4, 0, 4), m.body[2].f.loc)
 
+
+
+
+
+    def test_offset2(self):
+        src = 'i = 1\nj = 2\nk = 3'
+
+        ast = parse(src)
+        ast.f.offset2(1, 4, 0, 1)
+        self.assertEqual((1, 4, 1, 5), ((n := ast.body[0].value).lineno, n.col_offset, n.end_lineno, n.end_col_offset))
+        self.assertEqual((2, 0, 2, 6), ((n := ast.body[1]).lineno, n.col_offset, n.end_lineno, n.end_col_offset))
+        self.assertEqual((2, 0, 2, 1), ((n := ast.body[1].targets[0]).lineno, n.col_offset, n.end_lineno, n.end_col_offset))
+        self.assertEqual((2, 5, 2, 6), ((n := ast.body[1].value).lineno, n.col_offset, n.end_lineno, n.end_col_offset))
+        self.assertEqual((3, 0, 3, 1), ((n := ast.body[2].targets[0]).lineno, n.col_offset, n.end_lineno, n.end_col_offset))
+        self.assertEqual((3, 4, 3, 5), ((n := ast.body[2].value).lineno, n.col_offset, n.end_lineno, n.end_col_offset))
+
+        ast = parse(src)
+        ast.f.offset2(1, 4, 0, 1, stop_at=ast.body[1].f)
+        self.assertEqual((1, 4, 1, 5), ((n := ast.body[0].value).lineno, n.col_offset, n.end_lineno, n.end_col_offset))
+        self.assertEqual((2, 0, 2, 6), ((n := ast.body[1]).lineno, n.col_offset, n.end_lineno, n.end_col_offset))
+        self.assertEqual((2, 0, 2, 1), ((n := ast.body[1].targets[0]).lineno, n.col_offset, n.end_lineno, n.end_col_offset))
+        self.assertEqual((2, 4, 2, 5), ((n := ast.body[1].value).lineno, n.col_offset, n.end_lineno, n.end_col_offset))
+        self.assertEqual((3, 0, 3, 1), ((n := ast.body[2].targets[0]).lineno, n.col_offset, n.end_lineno, n.end_col_offset))
+        self.assertEqual((3, 4, 3, 5), ((n := ast.body[2].value).lineno, n.col_offset, n.end_lineno, n.end_col_offset))
+
+        ast = parse(src)
+        ast.f.offset2(1, 4, 0, 1, stop_at=ast.body[1].f, offset_stop_at=False)
+        self.assertEqual((1, 4, 1, 5), ((n := ast.body[0].value).lineno, n.col_offset, n.end_lineno, n.end_col_offset))
+        self.assertEqual((2, 0, 2, 5), ((n := ast.body[1]).lineno, n.col_offset, n.end_lineno, n.end_col_offset))
+        self.assertEqual((2, 0, 2, 1), ((n := ast.body[1].targets[0]).lineno, n.col_offset, n.end_lineno, n.end_col_offset))
+        self.assertEqual((2, 4, 2, 5), ((n := ast.body[1].value).lineno, n.col_offset, n.end_lineno, n.end_col_offset))
+        self.assertEqual((3, 0, 3, 1), ((n := ast.body[2].targets[0]).lineno, n.col_offset, n.end_lineno, n.end_col_offset))
+        self.assertEqual((3, 4, 3, 5), ((n := ast.body[2].value).lineno, n.col_offset, n.end_lineno, n.end_col_offset))
+
+        ast = parse(src)
+        ast.f.offset2(1, 5, 0, 1)
+        self.assertEqual((1, 4, 1, 5), ((n := ast.body[0].value).lineno, n.col_offset, n.end_lineno, n.end_col_offset))
+        self.assertEqual((2, 0, 2, 5), ((n := ast.body[1]).lineno, n.col_offset, n.end_lineno, n.end_col_offset))
+        self.assertEqual((2, 0, 2, 1), ((n := ast.body[1].targets[0]).lineno, n.col_offset, n.end_lineno, n.end_col_offset))
+        self.assertEqual((2, 4, 2, 5), ((n := ast.body[1].value).lineno, n.col_offset, n.end_lineno, n.end_col_offset))
+        self.assertEqual((3, 0, 3, 1), ((n := ast.body[2].targets[0]).lineno, n.col_offset, n.end_lineno, n.end_col_offset))
+        self.assertEqual((3, 4, 3, 5), ((n := ast.body[2].value).lineno, n.col_offset, n.end_lineno, n.end_col_offset))
+
+        ast = parse(src)
+        ast.f.offset2(1, 5, 0, 1, True)
+        self.assertEqual((1, 4, 1, 5), ((n := ast.body[0].value).lineno, n.col_offset, n.end_lineno, n.end_col_offset))
+        self.assertEqual((2, 0, 2, 6), ((n := ast.body[1]).lineno, n.col_offset, n.end_lineno, n.end_col_offset))
+        self.assertEqual((2, 0, 2, 1), ((n := ast.body[1].targets[0]).lineno, n.col_offset, n.end_lineno, n.end_col_offset))
+        self.assertEqual((2, 4, 2, 6), ((n := ast.body[1].value).lineno, n.col_offset, n.end_lineno, n.end_col_offset))
+        self.assertEqual((3, 0, 3, 1), ((n := ast.body[2].targets[0]).lineno, n.col_offset, n.end_lineno, n.end_col_offset))
+        self.assertEqual((3, 4, 3, 5), ((n := ast.body[2].value).lineno, n.col_offset, n.end_lineno, n.end_col_offset))
+
+        ast = parse(src)
+        ast.f.offset2(1, 4, 1, -1)
+        self.assertEqual((1, 4, 1, 5), ((n := ast.body[0].value).lineno, n.col_offset, n.end_lineno, n.end_col_offset))
+        self.assertEqual((2, 0, 3, 4), ((n := ast.body[1]).lineno, n.col_offset, n.end_lineno, n.end_col_offset))
+        self.assertEqual((2, 0, 2, 1), ((n := ast.body[1].targets[0]).lineno, n.col_offset, n.end_lineno, n.end_col_offset))
+        self.assertEqual((3, 3, 3, 4), ((n := ast.body[1].value).lineno, n.col_offset, n.end_lineno, n.end_col_offset))
+        self.assertEqual((4, 0, 4, 1), ((n := ast.body[2].targets[0]).lineno, n.col_offset, n.end_lineno, n.end_col_offset))
+        self.assertEqual((4, 4, 4, 5), ((n := ast.body[2].value).lineno, n.col_offset, n.end_lineno, n.end_col_offset))
+
+        ast = parse(src)
+        ast.f.offset2(1, 5, 1, -1)
+        self.assertEqual((1, 4, 1, 5), ((n := ast.body[0].value).lineno, n.col_offset, n.end_lineno, n.end_col_offset))
+        self.assertEqual((2, 0, 2, 5), ((n := ast.body[1]).lineno, n.col_offset, n.end_lineno, n.end_col_offset))
+        self.assertEqual((2, 0, 2, 1), ((n := ast.body[1].targets[0]).lineno, n.col_offset, n.end_lineno, n.end_col_offset))
+        self.assertEqual((2, 4, 2, 5), ((n := ast.body[1].value).lineno, n.col_offset, n.end_lineno, n.end_col_offset))
+        self.assertEqual((4, 0, 4, 1), ((n := ast.body[2].targets[0]).lineno, n.col_offset, n.end_lineno, n.end_col_offset))
+        self.assertEqual((4, 4, 4, 5), ((n := ast.body[2].value).lineno, n.col_offset, n.end_lineno, n.end_col_offset))
+
+        ast = parse(src)
+        ast.f.offset2(1, 5, 1, -1, True)
+        self.assertEqual((1, 4, 1, 5), ((n := ast.body[0].value).lineno, n.col_offset, n.end_lineno, n.end_col_offset))
+        self.assertEqual((2, 0, 3, 4), ((n := ast.body[1]).lineno, n.col_offset, n.end_lineno, n.end_col_offset))
+        self.assertEqual((2, 0, 2, 1), ((n := ast.body[1].targets[0]).lineno, n.col_offset, n.end_lineno, n.end_col_offset))
+        self.assertEqual((2, 4, 3, 4), ((n := ast.body[1].value).lineno, n.col_offset, n.end_lineno, n.end_col_offset))
+        self.assertEqual((4, 0, 4, 1), ((n := ast.body[2].targets[0]).lineno, n.col_offset, n.end_lineno, n.end_col_offset))
+        self.assertEqual((4, 4, 4, 5), ((n := ast.body[2].value).lineno, n.col_offset, n.end_lineno, n.end_col_offset))
+
+        def get():
+            m = parse('aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\nbbbb\ncccc')
+
+            m.body[0] = m.body[0].value
+            m.body[1] = m.body[1].value
+            m.body[2] = m.body[2].value
+
+            m.body[0].lineno         = 1
+            m.body[0].end_lineno     = 1
+            m.body[0].col_offset     = 2
+            m.body[0].end_col_offset = 6
+            m.body[1].lineno         = 1
+            m.body[1].end_lineno     = 1
+            m.body[1].col_offset     = 6
+            m.body[1].end_col_offset = 10
+            m.body[2].lineno         = 1
+            m.body[2].end_lineno     = 1
+            m.body[2].col_offset     = 6
+            m.body[2].end_col_offset = 6
+
+            return m
+
+        m = get()
+        m.f.offset2(0, 6, 0, 2, False, True)
+        self.assertEqual((0, 2, 0, 6), m.body[0].f.loc)
+        self.assertEqual((0, 8, 0, 12), m.body[1].f.loc)
+        self.assertEqual((0, 6, 0, 6), m.body[2].f.loc)
+
+        m = get()
+        m.f.offset2(0, 6, 0, 2, True, True)
+        self.assertEqual((0, 2, 0, 8), m.body[0].f.loc)
+        self.assertEqual((0, 8, 0, 12), m.body[1].f.loc)
+        self.assertEqual((0, 8, 0, 8), m.body[2].f.loc)
+
+        m = get()
+        m.f.offset2(0, 6, 0, 2, False, False)
+        self.assertEqual((0, 2, 0, 6), m.body[0].f.loc)
+        self.assertEqual((0, 6, 0, 12), m.body[1].f.loc)
+        self.assertEqual((0, 6, 0, 6), m.body[2].f.loc)
+
+        m = get()
+        m.f.offset2(0, 6, 0, 2, True, False)
+        self.assertEqual((0, 2, 0, 8), m.body[0].f.loc)
+        self.assertEqual((0, 6, 0, 12), m.body[1].f.loc)
+        self.assertEqual((0, 6, 0, 8), m.body[2].f.loc)
+
+        m = get()
+        m.f.offset2(0, 6, 0, -2, False, True)
+        self.assertEqual((0, 2, 0, 6), m.body[0].f.loc)
+        self.assertEqual((0, 4, 0, 8), m.body[1].f.loc)
+        self.assertEqual((0, 4, 0, 6), m.body[2].f.loc)
+
+        m = get()
+        m.f.offset2(0, 6, 0, -2, True, True)
+        self.assertEqual((0, 2, 0, 4), m.body[0].f.loc)
+        self.assertEqual((0, 4, 0, 8), m.body[1].f.loc)
+        self.assertEqual((0, 4, 0, 4), m.body[2].f.loc)
+
+        m = get()
+        m.f.offset2(0, 6, 0, -2, False, False)
+        self.assertEqual((0, 2, 0, 6), m.body[0].f.loc)
+        self.assertEqual((0, 6, 0, 8), m.body[1].f.loc)
+        self.assertEqual((0, 6, 0, 6), m.body[2].f.loc)
+
+        m = get()
+        m.f.offset2(0, 6, 0, -2, True, False)
+        self.assertEqual((0, 2, 0, 4), m.body[0].f.loc)
+        self.assertEqual((0, 6, 0, 8), m.body[1].f.loc)
+        self.assertEqual((0, 6, 0, 6), m.body[2].f.loc)
+
+        m = get()
+        m.f.offset2(0, 6, 0, 2, None, True)
+        self.assertEqual((0, 2, 0, 6), m.body[0].f.loc)
+        self.assertEqual((0, 8, 0, 12), m.body[1].f.loc)
+        self.assertEqual((0, 8, 0, 8), m.body[2].f.loc)
+
+        m = get()
+        m.f.offset2(0, 6, 0, 2, None, False)
+        self.assertEqual((0, 2, 0, 6), m.body[0].f.loc)
+        self.assertEqual((0, 6, 0, 12), m.body[1].f.loc)
+        self.assertEqual((0, 6, 0, 6), m.body[2].f.loc)
+
+        m = get()
+        m.f.offset2(0, 6, 0, 2, None, None)
+        self.assertEqual((0, 2, 0, 6), m.body[0].f.loc)
+        self.assertEqual((0, 6, 0, 12), m.body[1].f.loc)
+        self.assertEqual((0, 6, 0, 6), m.body[2].f.loc)
+
+        m = get()
+        m.f.offset2(0, 6, 0, -2, False, None)
+        self.assertEqual((0, 2, 0, 6), m.body[0].f.loc)
+        self.assertEqual((0, 6, 0, 8), m.body[1].f.loc)
+        self.assertEqual((0, 6, 0, 6), m.body[2].f.loc)
+
+        m = get()
+        m.f.offset2(0, 6, 0, -2, True, None)
+        self.assertEqual((0, 2, 0, 4), m.body[0].f.loc)
+        self.assertEqual((0, 6, 0, 8), m.body[1].f.loc)
+        self.assertEqual((0, 4, 0, 4), m.body[2].f.loc)
+
+        m = get()
+        m.f.offset2(0, 6, 0, -2, None, None)
+        self.assertEqual((0, 2, 0, 6), m.body[0].f.loc)
+        self.assertEqual((0, 6, 0, 8), m.body[1].f.loc)
+        self.assertEqual((0, 6, 0, 6), m.body[2].f.loc)
+
+
+
+
+
+
+
+
     def test_offset_cols(self):
         src = 'class cls:\n if True:\n  i = """\nj\n"""\n  k = 3\n else:\n  j = 2'
 
