@@ -6251,8 +6251,8 @@ class FST:
     def get_indent(self) -> str:
         """Determine proper indentation of node at `stmt` (or other similar) level at or above `self`. Even if it is a
         continuation or on same line as block statement. If indentation is impossible to determine because is solo
-        statement on same line as parent block, then the current tree default indentation is added to the  parent block
-        indentation and returned.
+        statement on same line as parent block and cannot get from other block fields then the current tree default
+        indentation is added to the parent block indentation and returned.
 
         **Returns:**
         - `str`: Entire indentation string for the block this node lives in (not just a single level).
@@ -6261,47 +6261,34 @@ class FST:
         while (parent := self.parent) and not isinstance(self.a, STATEMENTISH):
             self = parent
 
-        lines        = (root := self.root)._lines
-        extra_indent = ''  # may result from unknown indent in single line "if something: whats_my_stmt_indentation?"
+        root   = self.root
+        lines  = root._lines
+        indent = ''
 
         while parent:
-            siblings = getattr(parent.a, self.pfield.name)
-
-            for i in range(1, len(siblings)):  # first try simple rules for all elements past first one
-                self = siblings[i].f
-
-                if re_empty_line.match(line_start := lines[(ln := self.ln)], 0, col := self.col):
-                    prev    = self.prev(True)  # there must be one
-                    end_col = 0 if prev.end_ln < (preceding_ln := ln - 1) else prev.end_col
-
-                    if not re_line_continuation.match(lines[preceding_ln], end_col):
-                        return line_start[:col] + extra_indent
-
-            self        = siblings[0].f  # didn't find in siblings[1:], now the special rules for the first one
-            ln          = self.ln
-            col         = self.col
-            prev        = self.prev(True)  # there may not be one ("try" at start of module)
-            prev_end_ln = prev.end_ln if prev else -2
+            f             = getattr(parent.a, self.pfield.name)[0].f
+            ln, col, _, _ = f.loc
+            prev          = f.prev(True)  # there may not be one ("try" at start of module)
+            prev_end_ln   = prev.end_ln if prev else -2  # -2 so it never hits it
+            good_line     = ''
 
             while ln > prev_end_ln and re_empty_line.match(line_start := lines[ln], 0, col):
                 end_col = 0 if (preceding_ln := ln - 1) != prev_end_ln else prev.end_col
 
                 if not ln or not re_line_continuation.match((l := lines[preceding_ln]), end_col):
-                    return line_start[:col] + extra_indent
+                    return (line_start[:col] if col else good_line) + indent
+
+                if col:
+                    good_line = line_start[:col]
 
                 ln  = preceding_ln
                 col = len(l) - 1  # was line continuation so last char is '\' and rest should be empty
 
-            if isinstance(parent, mod):  # otherwise would add extra level of indentation
-                break
+            indent += root.indent
+            self    = parent
+            parent  = self.parent
 
-            extra_indent += root.indent
-            self          = parent
-            parent        = self.parent
-
-        # TODO: handle possibility of syntactically incorrect but indented root node?
-
-        return extra_indent
+        return indent
 
     def get_indentable_lns(self, skip: int = 0, *, docstr: bool | Literal['strict'] | None = None) -> set[int]:
         """Get set of indentable lines within this node.

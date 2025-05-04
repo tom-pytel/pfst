@@ -19698,13 +19698,13 @@ with a as b, c as d:
         self.assertEqual('   ', parse('class cls:\n def f(): # \\\n   1').body[0].body[0].body[0].f.get_indent())
 
         self.assertEqual('  ', parse('if 1:\n  2\nelse:\n   3').body[0].body[0].f.get_indent())
-        self.assertEqual('    ', parse('if 1: 2\nelse:\n   3').body[0].body[0].f.get_indent())
-        self.assertEqual('    ', parse('if 1: \\\n 2\nelse:\n   3').body[0].body[0].f.get_indent())
+        self.assertEqual('    ', parse('if 1: 2\nelse:\n   3').body[0].body[0].f.get_indent())  # candidate for sibling indentation
+        self.assertEqual('    ', parse('if 1: \\\n 2\nelse:\n   3').body[0].body[0].f.get_indent())  # candidate for sibling indentation
         self.assertEqual('  ', parse('if 1: # \\\n  2\nelse:\n   3').body[0].body[0].f.get_indent())
 
         self.assertEqual('   ', parse('if 1:\n  2\nelse:\n   3').body[0].orelse[0].f.get_indent())
-        self.assertEqual('    ', parse('if 1:\n  2\nelse: 3').body[0].orelse[0].f.get_indent())
-        self.assertEqual('    ', parse('if 1:\n  2\nelse: \\\n 3').body[0].orelse[0].f.get_indent())
+        self.assertEqual('    ', parse('if 1:\n  2\nelse: 3').body[0].orelse[0].f.get_indent())  # candidate for sibling indentation
+        self.assertEqual('    ', parse('if 1:\n  2\nelse: \\\n 3').body[0].orelse[0].f.get_indent())  # candidate for sibling indentation
         self.assertEqual('   ', parse('if 1:\n  2\nelse: # \\\n   3').body[0].orelse[0].f.get_indent())
 
         self.assertEqual('   ', parse('def f():\n   1; 2').body[0].body[1].f.get_indent())
@@ -19724,6 +19724,26 @@ with a as b, c as d:
 
         self.assertEqual('', parse('\\\ni').body[0].f.get_indent())
         self.assertEqual('    ', parse('try: i\nexcept: pass').body[0].body[0].f.get_indent())
+
+        self.assertEqual('', parse('if 1: i\nelif 2: j').body[0].f.get_indent())
+        self.assertEqual('    ', parse('if 1: i\nelif 2: j').body[0].body[0].f.get_indent())
+        self.assertEqual('', parse('if 1: i\nelif 2: j').body[0].orelse[0].f.get_indent())
+        self.assertEqual('    ', parse('if 1: i\nelif 2: j').body[0].orelse[0].body[0].f.get_indent())
+        self.assertEqual('    ', parse('if 1: i\nelif 2: j\nelse: k').body[0].orelse[0].orelse[0].f.get_indent())
+        self.assertEqual('    ', parse('if 1: i\nelif 2: j\nelif 3: k').body[0].orelse[0].orelse[0].body[0].f.get_indent())
+
+        # self.assertEqual('  ', parse('if 1: i\nelse:\n  j').body[0].body[0].f.get_indent())  # candidate for sibling indentation, nope, not doing this
+
+        self.assertEqual('  ', parse('if 1:\n\\\n  \\\n i').body[0].body[0].f.get_indent())
+        self.assertEqual('  ', parse('if 1:\n  \\\n\\\n i').body[0].body[0].f.get_indent())
+        self.assertEqual('  ', parse('if 1:\n  \\\n   \\\n\\\n i').body[0].body[0].f.get_indent())
+        self.assertEqual('   ', parse('if 1:\n   \\\n  \\\n\\\n i').body[0].body[0].f.get_indent())
+        self.assertEqual('    ', parse('if 1: \\\n\\\n  \\\n   \\\n\\\n i').body[0].body[0].f.get_indent())
+        self.assertEqual('  ', parse('if 1:\n\\\n  \\\n   \\\n\\\n i').body[0].body[0].f.get_indent())
+        self.assertEqual('     ', parse('if 1:\n\\\n\\\n     \\\n\\\n\\\n  \\\n\\\n   \\\n\\\n i').body[0].body[0].f.get_indent())
+
+        self.assertEqual('         ', parse('if 2:\n     if 1:\\\n\\\n\\\n  \\\n\\\n\\\n  \\\n\\\n   \\\n\\\n i').body[0].body[0].body[0].f.get_indent())
+        self.assertEqual('      ', parse('if 2:\n     if 1:\n\\\n      \\\n  \\\n\\\n\\\n  \\\n\\\n   \\\n\\\n i').body[0].body[0].body[0].f.get_indent())
 
     def test_get_indentable_lns(self):
         src = 'class cls:\n if True:\n  i = """\nj\n"""\n  k = "... \\\n2"\n else:\n  j \\\n=\\\n 2'
