@@ -1665,7 +1665,7 @@ class FSTSrcEdit:
 
             put_lines.extend(bistr(s) for s in del_lines[1:])
 
-        put_fst.touch()
+        put_fst._touch()
 
     def put_slice_stmt(self, fst: 'FST', put_fst: 'FST', field: str,
                        block_loc: fstloc, opener_indent: str, block_indent: str,
@@ -1779,7 +1779,7 @@ class FSTSrcEdit:
                     else:
                         put_lines[-1] = indent
 
-                    put_fst.touch()
+                    put_fst._touch()
 
             elif fpost:  # no preceding statement, only trailing
                 if is_handler or fst.is_root:  # special case, start will be after last statement or just after 'try:' colon or if is mod then there is no colon
@@ -1805,7 +1805,7 @@ class FSTSrcEdit:
                 else:
                     put_lines[-1] = bistr('')
 
-                put_fst.touch()
+                put_fst._touch()
 
             else:  # insertion into empty block
                 if is_elif:
@@ -2289,7 +2289,7 @@ class FST:
         except Exception:  # maybe in middle of operation changing locations and lines
             loc = '????'
 
-        self.touchall(True, True, False)  # for debugging because we may have cached locs which would not have otherwise been cached during execution
+        self.touch(False, True, True)  # for debugging because we may have cached locs which would not have otherwise been cached during execution
 
         tail = ' ROOT' if self.is_root else ''
 
@@ -2678,6 +2678,16 @@ class FST:
 
         return fstloc(ln, col, ln, col + 2)
 
+    def _touch(self) -> 'FST':  # -> Self
+        """AST node was modified, clear out any cached info for this node only."""
+
+        try:
+            del self._loc, self._bloc  # _bloc only exists if _loc does
+        except AttributeError:
+            pass
+
+        return self
+
     def _set_end_pos(self, end_lineno: int, end_col_offset: int, self_: bool = True):  # because of trailing non-AST junk in last statements
         """Walk up parent chain (starting at `self`) setting `.end_lineno` and `.end_col_offset` to `end_lineno` and
         `end_col_offset` if self is last child of parent. Initial `self` is corrected always. Used for correcting
@@ -2692,7 +2702,7 @@ class FST:
                     a.end_lineno     = end_lineno
                     a.end_col_offset = end_col_offset
 
-                self.touch()
+                self._touch()
 
             if not (parent := self.parent) or self.next():  # self is not parent.last_child():
                 break
@@ -2751,7 +2761,7 @@ class FST:
         elif ln == end_ln:
             self.a.end_col_offset += len(comma)
 
-            self.touchall(False)
+            self.touch(True)
 
         return True
 
@@ -2962,7 +2972,7 @@ class FST:
                 self.a = a
                 a.f    = self
 
-                self.touch()
+                self._touch()
                 self._make_fst_tree()
 
                 return self
@@ -2987,7 +2997,7 @@ class FST:
                     ast.col_offset     -= 1
                     ast.end_col_offset += 1
 
-                self.touch()
+                self._touch()
 
                 if is_tuple:
                     self._maybe_add_singleton_tuple_comma(False)
@@ -3256,7 +3266,7 @@ class FST:
         get_ast.col_offset     = 0  # before prefix
         get_ast.end_col_offset = get_fst._lines[-1].lenbytes  # after suffix
 
-        get_ast.f.touch()
+        get_ast.f._touch()
 
         return get_fst
 
@@ -4117,7 +4127,7 @@ class FST:
 
         if set_ast:
             self._set_ast(copy.a)
-            self.touchall(False)
+            self.touch(True)
 
         return copy
 
@@ -4210,7 +4220,7 @@ class FST:
                 setattr(copya, field, body)
 
         stmtish._set_ast(copya)
-        stmtish.touchall(False)
+        stmtish.touch(True)
 
         return True
 
@@ -4391,7 +4401,7 @@ class FST:
 
     def __new__(cls, ast: AST, parent: Optional['FST'] = None, pfield: astfield | None = None, **kwargs):
         if self := getattr(ast, 'f', None):  # reuse FST node assigned to AST node (because otherwise it isn't valid anyway)
-            self.touch()
+            self._touch()
         else:
             self = ast.f = object.__new__(cls)
 
@@ -6496,19 +6506,9 @@ class FST:
 
     # ------------------------------------------------------------------------------------------------------------------
 
-    def touch(self) -> 'FST':  # -> Self
-        """AST node was modified, clear out any cached info for this node specifically, call this for each node in a
-        walk with modified nodes."""
-
-        try:
-            del self._loc, self._bloc  # _bloc only exists if _loc does
-        except AttributeError:
-            pass
-
-        return self
-
-    def touchall(self, children: bool = True, self_: bool = True, parents: bool = True) -> 'FST':  # -> Self
-        """Touch self, parents and all children, optionally."""
+    def touch(self, parents: bool = False, self_: bool = True, children: bool = False) -> 'FST':  # -> Self
+        """Touch self, parents and children, optionally. Flushes location cache so that changes to AST locations will
+        get picked up."""
 
         if children:
             stack = [self.a] if self_ else list(iter_child_nodes(self.a))
@@ -6516,24 +6516,24 @@ class FST:
             while stack:
                 child = stack.pop()
 
-                child.f.touch()
+                child.f._touch()
                 stack.extend(iter_child_nodes(child))
 
         elif self_:
-            self.touch()
+            self._touch()
 
         if parents:
             parent = self
 
             while parent := parent.parent:
-                parent.touch()
+                parent._touch()
 
         return self
 
     def offset(self, ln: int, col: int, dln: int, dcol_offset: int,
-                tail: bool | None = False, head: bool | None = True, stop_at: Optional['FST'] = None, *,
-                offset_stop_at: bool = True, self_: bool = True,
-                ) -> 'FST':  # -> Self
+               tail: bool | None = False, head: bool | None = True, stop_at: Optional['FST'] = None, *,
+               offset_stop_at: bool = True, self_: bool = True,
+               ) -> 'FST':  # -> Self
         """Offset ast node positions in the tree on or after (ln, col) by (delta line, col_offset) (column byte offset).
 
         This only offsets the positions in the `AST` nodes, doesn't change any text, so make sure that is correct before
@@ -6660,9 +6660,9 @@ class FST:
                     a.col_offset = fcolo + dcol_offset
 
             stack.extend(children)
-            f.touch()
+            f._touch()
 
-        self.touchall(False, False)
+        self.touch(True, False)
 
         return self
 
@@ -6679,9 +6679,9 @@ class FST:
                     if a.end_lineno - 1 in lns:
                         a.end_col_offset = end_col_offset + dcol_offset
 
-                a.f.touch()
+                a.f._touch()
 
-            self.touchall(False, False)
+            self.touch(True, False)
 
     def offset_cols_mapped(self, dcol_offsets: dict[int, int]):
         """Offset ast col byte offsets by a specific `dcol_offset` per line. Only modifies ast, not lines. Does not
@@ -6695,9 +6695,9 @@ class FST:
                 if (dcol_offset := dcol_offsets.get(a.end_lineno - 1)) is not None:
                     a.end_col_offset = end_col_offset + dcol_offset
 
-            a.f.touch()
+            a.f._touch()
 
-        self.touchall(False, False)
+        self.touch(True, False)
 
     def indent_lns(self, indent: str | None = None, lns: set[int] | None = None, *,
                    skip: int = 1, docstr: bool | Literal['strict'] | None = None) -> set[int]:

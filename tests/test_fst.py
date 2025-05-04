@@ -19775,6 +19775,35 @@ _CookiePattern = re.compile(r"""
         self.assertEqual({0, 1}, f.get_indentable_lns(docstr=True))
         self.assertEqual({0}, f.get_indentable_lns(docstr=False))
 
+    def test_touch(self):
+        a = parse('i = [1]').body[0]
+        self.assertEqual(7, a.f.end_col)
+        self.assertEqual(7, a.value.f.end_col)
+        self.assertEqual(6, a.value.elts[0].f.end_col)
+
+        a.end_col_offset = 8
+        a.value.end_col_offset = 8
+        a.value.elts[0].end_col_offset = 7
+
+        self.assertEqual(7, a.f.end_col)
+        self.assertEqual(7, a.value.f.end_col)
+        self.assertEqual(6, a.value.elts[0].f.end_col)
+
+        a.value.f.touch()
+        self.assertEqual(7, a.f.end_col)
+        self.assertEqual(8, a.value.f.end_col)
+        self.assertEqual(6, a.value.elts[0].f.end_col)
+
+        a.value.f.touch(parents=True)
+        self.assertEqual(8, a.f.end_col)
+        self.assertEqual(8, a.value.f.end_col)
+        self.assertEqual(6, a.value.elts[0].f.end_col)
+
+        a.value.f.touch(children=True)
+        self.assertEqual(8, a.f.end_col)
+        self.assertEqual(8, a.value.f.end_col)
+        self.assertEqual(7, a.value.elts[0].f.end_col)
+
     def test_offset(self):
         src = 'i = 1\nj = 2\nk = 3'
 
