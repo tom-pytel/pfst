@@ -6304,7 +6304,7 @@ class FST:
             on cut).
         - `docstr`: How to treat multiline string docstring lines. `False` means not indentable, `True` means all `Expr`
             multiline strings are indentable (as they serve no coding purpose). `'strict'` means only multiline strings
-            in expected docstring positions are indentable. `None` means use default (`True`).
+            in expected docstring positions are indentable. `None` means use default.
 
         **Returns:**
         - `set[int]`: Set of line numbers (zero based) which are sytactically indentable.
@@ -6658,11 +6658,25 @@ class FST:
 
         return self
 
-    def offset_cols(self, dcol_offset: int, lns: set[int]):
-        """Offset ast col byte offsets in `lns` by `dcol_offset`. Only modifies ast, not lines. Does not modify parent
-        locations but touch()es parents."""
+    def offset_cols(self, lns: set[int] | dict[int, int], dcol_offset: int | None = None):
+        """Offset ast column byte offsets in `lns` by `dcol_offset` if present, otherwise `lns` must be a dict with an
+        individual `dcol_offset` per line. Only modifies ast, not lines. Does not modify parent locations but
+        `touch()`es parents."""
 
-        if dcol_offset:
+        if dcol_offset is None:  # lns is dict[int, int]
+            for a in walk(self.a):
+                if (end_col_offset := getattr(a, 'end_col_offset', None)) is not None:
+                    if dcol_offset := lns.get(a.lineno - 1):
+                        a.col_offset += dcol_offset
+
+                    if dcol_offset := lns.get(a.end_lineno - 1):
+                        a.end_col_offset = end_col_offset + dcol_offset
+
+                a.f._touch()
+
+            self.touch(True, False)
+
+        elif dcol_offset:  # lns is set[int] OR dict[int, int] (overriding with a single dcol_offset)
             for a in walk(self.a):
                 if (end_col_offset := getattr(a, 'end_col_offset', None)) is not None:
                     if a.lineno - 1 in lns:
@@ -6674,22 +6688,6 @@ class FST:
                 a.f._touch()
 
             self.touch(True, False)
-
-    def offset_cols_mapped(self, dcol_offsets: dict[int, int]):
-        """Offset ast col byte offsets by a specific `dcol_offset` per line. Only modifies ast, not lines. Does not
-        modify parent locations but touch()es parents."""
-
-        for a in walk(self.a):
-            if (end_col_offset := getattr(a, 'end_col_offset', None)) is not None:
-                if (dcol_offset := dcol_offsets.get(a.lineno - 1)) is not None:
-                    a.col_offset += dcol_offset
-
-                if (dcol_offset := dcol_offsets.get(a.end_lineno - 1)) is not None:
-                    a.end_col_offset = end_col_offset + dcol_offset
-
-            a.f._touch()
-
-        self.touch(True, False)
 
     def indent_lns(self, indent: str | None = None, lns: set[int] | None = None, *,
                    skip: int = 1, docstr: bool | Literal['strict'] | None = None) -> set[int]:
@@ -6704,7 +6702,7 @@ class FST:
         - `skip`: If not providing `lns` then this value is passed to `get_indentable_lns()`.
         - `docstr`: How to treat multiline string docstring lines. `False` means not indentable, `True` means all `Expr`
             multiline strings are indentable (as they serve no coding purpose). `'strict'` means only multiline strings
-            in expected docstring positions are indentable. `None` means use default (`True`).
+            in expected docstring positions are indentable. `None` means use default.
 
         **Returns:**
         - `set[int]`: `lns` passed in or otherwise set of line numbers (zero based) which are sytactically indentable.
@@ -6720,7 +6718,7 @@ class FST:
         if not ((lns := self.get_indentable_lns(skip, docstr=docstr)) if lns is None else lns) or not indent:
             return lns
 
-        self.offset_cols(len(indent.encode()), lns)
+        self.offset_cols(lns, len(indent.encode()))
 
         lines = root._lines
 
@@ -6745,7 +6743,7 @@ class FST:
             `get_indentable_lns(skip=skip)`.
         - `docstr`: How to treat multiline string docstring lines. `False` means not indentable, `True` means all `Expr`
             multiline strings are indentable (as they serve no coding purpose). `'strict'` means only multiline strings
-            in expected docstring positions are indentable. `None` means use default (`True`).
+            in expected docstring positions are indentable. `None` means use default.
         - `skip`: If not providing `lns` then this value is passed to `get_indentable_lns()`.
 
         **Returns:**
@@ -6798,9 +6796,9 @@ class FST:
             lines[ln] = l
 
         if dcol_offsets:
-            self.offset_cols_mapped(dcol_offsets)
+            self.offset_cols(dcol_offsets)
         else:
-            self.offset_cols(-lindent, lns)
+            self.offset_cols(lns, -lindent)
 
         self._reparse_docstrings(docstr)
 

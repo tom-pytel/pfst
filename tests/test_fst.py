@@ -20013,7 +20013,7 @@ _CookiePattern = re.compile(r"""
 
         ast = parse(src)
         lns = ast.f.get_indentable_lns(1)
-        ast.f.offset_cols(1, lns)
+        ast.f.offset_cols(lns, 1)
         self.assertEqual({1, 2, 5, 6, 7}, lns)
         self.assertEqual((0, 0, 7, 7), ast.f.loc)
         self.assertEqual((0, 0, 7, 8), ast.body[0].f.loc)
@@ -20031,7 +20031,7 @@ _CookiePattern = re.compile(r"""
 
         ast = parse(src)
         lns = ast.body[0].body[0].f.get_indentable_lns(1)
-        ast.body[0].body[0].f.offset_cols(1, lns)
+        ast.body[0].body[0].f.offset_cols(lns, 1)
         self.assertEqual({2, 5, 6, 7}, lns)
         self.assertEqual((1, 1, 7, 8), ast.body[0].body[0].f.loc)
         self.assertEqual((1, 4, 1, 8), ast.body[0].body[0].test.f.loc)
@@ -20047,7 +20047,7 @@ _CookiePattern = re.compile(r"""
 
         ast = parse(src)
         lns = ast.body[0].body[0].body[0].f.get_indentable_lns(1)
-        ast.body[0].body[0].body[0].f.offset_cols(1, lns)
+        ast.body[0].body[0].body[0].f.offset_cols(lns, 1)
         self.assertEqual(set(), lns)
         self.assertEqual((2, 2, 4, 3), ast.body[0].body[0].body[0].f.loc)
         self.assertEqual((2, 2, 2, 3), ast.body[0].body[0].body[0].targets[0].f.loc)
@@ -20058,7 +20058,7 @@ _CookiePattern = re.compile(r"""
         ast = parse(src)
         off = {0: 0, 1: 1, 2: 2, 3: 3, 4: 4}
 
-        ast.f.offset_cols_mapped(off)
+        ast.f.offset_cols(off)
         self.assertEqual((0, 0, 4, 1), ast.f.loc)
         self.assertEqual((0, 0, 0, 5), ast.body[0].f.loc)
         self.assertEqual((0, 0, 0, 1), ast.body[0].targets[0].f.loc)
