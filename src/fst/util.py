@@ -23,6 +23,10 @@ if sys.version_info[:2] < (3, 12):  # for isinstance() checks
     class ParamSpec(AST): pass
     class TypeVarTuple(AST): pass
 
+if sys.version_info[:2] < (3, 14):
+    class TemplateStr(AST): pass
+    class Interpolation(AST): pass
+
 
 class bistr(str):
     """Byte-indexed string, easy mapping between character and encoded byte index (including 1 past last valid unit).
@@ -168,7 +172,9 @@ FIELDS = dict([
     (Compare,            (('left', 'expr'), ('ops', 'cmpop*'), ('comparators', 'expr*'))),
     (Call,               (('func', 'expr'), ('args', 'expr*'), ('keywords', 'keyword*'))),
     (FormattedValue,     (('value', 'expr'), ('format_spec', 'expr?'), ('conversion', 'int'))),
+    (Interpolation,      (('value', 'expr'), ('constant', 'str'), ('conversion', 'int'), ('format_spec', 'expr?'))),
     (JoinedStr,          (('values', 'expr*'),)),
+    (TemplateStr,        (('values', 'expr*'),)),
     (Constant,           (('value', 'constant'), ('kind', 'string?'))),
     (Attribute,          (('value', 'expr'), ('attr', 'identifier'), ('ctx', 'expr_context'))),
     (Subscript,          (('value', 'expr'), ('slice', 'expr'), ('ctx', 'expr_context'))),
@@ -303,7 +309,7 @@ def is_parsable(ast: AST) -> bool:
         return False
 
     if isinstance(ast, (
-        ExceptHandler, Slice, FormattedValue, Starred, TypeIgnore,
+        ExceptHandler, Slice, FormattedValue, Interpolation, Starred, TypeIgnore,
         expr_context, unaryop, boolop, operator, cmpop,
         alias, arguments, comprehension, withitem, match_case, pattern, type_ignore,
         arg, keyword,
@@ -798,7 +804,9 @@ PRECEDENCE_NODES = {  # default is _Precedence.ATOM
     Compare:        _Precedence.CMP,
     # Call:           None,
     # FormattedValue: None,
+    # Interpolation:  None,
     # JoinedStr:      None,
+    # TemplateStr:    None,
     # Constant:       None,
     # Attribute:      None,
     # Subscript:      None,
@@ -890,6 +898,7 @@ PRECEDENCE_NODE_FIELDS = {  # default is _Precedence.TEST
     (Compare, 'comparators'):  _Precedence.CMP.next(),
     (Call, 'func'):            _Precedence.ATOM,
     (FormattedValue, 'value'): _Precedence.TEST.next(),
+    (Interpolation, 'value'):  _Precedence.TEST.next(),
     (Attribute, 'value'):      _Precedence.ATOM,
     (Subscript, 'value'):      _Precedence.ATOM,
     (Starred, 'value'):        _Precedence.EXPR,

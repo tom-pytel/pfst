@@ -7,7 +7,7 @@ from itertools import takewhile
 from typing import Any, Callable, Generator, Literal, NamedTuple, Optional, TextIO, TypeAlias, Union
 
 from .util import *
-from .util import TryStar, type_param
+from .util import TryStar, TemplateStr, Interpolation, type_param
 
 __all__ = [
     'parse', 'unparse', 'set_defaults', 'FST', 'FSTSrcEdit',
@@ -6087,7 +6087,8 @@ class FST:
 
         **Parameters:**
         - `inc`: Whether the search is inclusive or not. Inclusive means allow return of node which matches location
-            exactly. Otherwise the location must be inside the node but cannot be touching BOTH ends of the node.
+            exactly. Otherwise the location must be inside the node but cannot be touching BOTH ends of the node. This
+            basically determines whether you can get the exact node of the location or its parent.
         """
 
         fln, fcol, fend_ln, fend_col = self.loc
@@ -6169,12 +6170,14 @@ class FST:
                     return False
 
         elif parent:
-            if isinstance(ast, JoinedStr):  # formatspec '.1f' type strings without quote delimiters
-                if self.pfield.name == 'format_spec' and isinstance(parent.a, FormattedValue):
+            if isinstance(ast, (JoinedStr, TemplateStr)):  # formatspec '.1f' type strings without quote delimiters
+                if self.pfield.name == 'format_spec' and isinstance(parent.a, (FormattedValue, Interpolation)):
                     return False
 
             elif isinstance(ast, Constant):  # string parts of f-string without quote delimiters
-                if self.pfield.name == 'values' and isinstance(parent.a, JoinedStr) and isinstance(ast.value, str):
+                if (self.pfield.name == 'values' and isinstance(parent.a, (JoinedStr, TemplateStr)) and
+                    isinstance(ast.value, str)
+                ):
                     return False
 
         return True
@@ -6398,7 +6401,7 @@ class FST:
                 )))):
                     multiline_str(f)
 
-            elif isinstance(a, JoinedStr):
+            elif isinstance(a, (JoinedStr, TemplateStr)):
                 multiline_fstr(f)
 
                 walking.send(False)  # skip everything inside regardless, because it is evil

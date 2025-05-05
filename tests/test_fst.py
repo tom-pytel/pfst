@@ -8,6 +8,7 @@ from random import randint, seed, shuffle
 
 from fst import *
 from fst import fst
+from fst.util import TemplateStr
 fst_ = fst
 
 PYFNMS = sum((
@@ -17700,6 +17701,8 @@ REPLACE_EXISTING_SINGLE_DATA = [
 
 # FormattedValue, no locations in py3.10
 # JoinedStr, no locations in py3.10
+# Interpolation, no exist in py3.10
+# TemplateStr, no exist in py3.10
 
 # Attribute
 # (('value', 'expr'), ('attr', 'identifier'), ('ctx', 'expr_context'))),
@@ -19228,7 +19231,7 @@ def f(a, /, b, *c, d, **e):
             bln, bcol = 0, 0
 
             for f in (gen := ast.f.walk(True)):
-                if isinstance(f.a, JoinedStr):  # these are borked
+                if isinstance(f.a, (JoinedStr, TemplateStr)):  # these are borked
                     gen.send(False)
 
                     continue
@@ -21005,7 +21008,6 @@ if indented:
 
         fst.a.body[1].cases[0].f.cut()
         fst.a.body[1].f.put_slice('pass', check_node_type=False)
-        # fst.a.body[1].f._put_slice_stmt('pass', None, None, None, False, True, force=True)
 
         points = [
             (fst.a.body[0].cases[0].f, 'body'),
@@ -21176,7 +21178,6 @@ if indented:
 
         fst.a.body[1].cases[0].f.cut()
         fst.a.body[1].f.put_slice('pass', check_node_type=False)
-        # fst.a.body[1].f._put_slice_stmt('pass', None, None, None, False, True, force=True)
 
         points = [
             (fst.a.body[0].cases[0].f, 'body'),
@@ -21211,7 +21212,6 @@ if indented:
 
         for point, field in points:
             point.put_slice(None, field=field, check_node_type=False)
-            # point._put_slice_stmt(None, None, None, field, False, True, force=True)
 
         self.assertEqual(fst.lines, [
             'match a:',
@@ -21382,7 +21382,6 @@ if indented:
 
         fst.a.body[1].cases[0].f.cut()
         fst.a.body[1].f.put_slice('pass', check_node_type=False)
-        # fst.a.body[1].f._put_slice_stmt('pass', None, None, None, False, True, force=True)
 
         points = [
             (fst.a.body[0].cases[0].f, 'body'),
@@ -21577,7 +21576,6 @@ if indented:
 
         fst.a.body[1].cases[0].f.cut()
         fst.a.body[1].f.put_slice('pass', check_node_type=False)
-        # fst.a.body[1].f._put_slice_stmt('pass', None, None, None, False, True, force=True)
 
         points = [
             (fst.a.body[0].cases[0].f, 'body'),
@@ -21746,7 +21744,6 @@ match a:
         '''.strip())
         a.body[0].cases[0].f.cut()
         a.body[0].f.put_slice('i', check_node_type=False)
-        # a.body[0].f._put_slice_stmt('i', None, None, None, False, True, force=True)
         self.assertEqual(a.f.src, 'match a:\n    i\n')
 
 
@@ -21827,7 +21824,6 @@ if 1:
         '''.strip())
         a.body[0].body[0].cases[0].f.cut()
         a.body[0].body[0].f.put_slice('i', check_node_type=False)
-        # a.body[0].body[0].f._put_slice_stmt('i', None, None, None, False, True, force=True)
         self.assertEqual(a.f.src, 'if 2:\n    match a:\n        i\n')
 
 
@@ -22352,7 +22348,6 @@ if indented:
 
         fst.a.body[1].cases[0].f.cut()
         fst.a.body[1].f.put_slice('pass', check_node_type=False)
-        # fst.a.body[1].f._put_slice_stmt('pass', None, None, None, False, True, force=True)
 
         points = [
             (fst.a.body[0].cases[0].f, 'body'),
@@ -22401,7 +22396,6 @@ if indented:
             f, field = ps.pop()
 
             f.put_slice(bs.pop(), 0, 0, field=field, check_node_type=False)
-            # f._put_slice_stmt(bs.pop(), 0, 0, field, False, True, force=True)
 
         self.assertEqual(fst.src, '''
 match a:
@@ -22514,7 +22508,6 @@ if indented:
                 f, field = ps.pop()
 
                 f.put_slice(bs.pop(), 0, 0, field=field, check_node_type=False)
-                # f._put_slice_stmt(bs.pop(), 0, 0, field, False, True, force=True)
 
     def test_insert_comment_into_empty_field(self):
         fst = parse('''
@@ -22574,7 +22567,6 @@ if indented:
 
         fst.a.body[1].cases[0].f.cut()
         fst.a.body[1].f.put_slice('pass', check_node_type=False)
-        # fst.a.body[1].f._put_slice_stmt('pass', None, None, None, False, True, force=True)
 
         points = [
             (fst.a.body[0].cases[0].f, 'body'),
@@ -22603,7 +22595,6 @@ if indented:
 
         for i, (point, field) in enumerate(reversed(points)):
             point.put_slice(f'# {i}', 0, 0, field, check_node_type=False)
-            # point._put_slice_stmt(f'# {i}', 0, 0, field, False, True, force=True)
 
         self.assertEqual(fst.lines, [
             'match a:',
@@ -22676,9 +22667,7 @@ finally:
         a.body[1].body[0].f.cut()
         a.body[1].handlers[0].f.cut()
         a.body[1].f.put_slice('# pre\nn  # post', 0, 0, 'handlers', check_node_type=False)
-        # a.body[1].f._put_slice_stmt('# pre\nn  # post', 0, 0, 'handlers', False, True, force=True)
         a.body[1].f.put_slice('i', 0, 0, 'handlers', check_node_type=False)
-        # a.body[1].f._put_slice_stmt('i', 0, 0, 'handlers', False, True, force=True)
         self.assertEqual(a.f.src, '''
 pass
 
