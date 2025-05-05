@@ -205,7 +205,8 @@ Code: TypeAlias = Union['FST', AST, list[str], str]
 class NodeTypeError(ValueError): pass
 
 
-def parse(source, filename='<unknown>', mode='exec', *, type_comments=False, feature_version=None, **kwargs) -> AST:
+def parse(source, filename='<unknown>', mode='exec', *, type_comments=False, feature_version=None, optimize=-1,
+          **kwargs) -> AST:
     """Executes `ast.parse()` and then adds `FST` nodes to the parsed tree. Drop-in replacement for `ast.parse()`. For
     parameters, see `ast.parse()`. Returned `AST` tree has added `.f` attribute at each node which accesses the parallel
     `FST` tree."""
@@ -566,6 +567,22 @@ def _prev_pars(lines: list[str], bound_ln: int, bound_col: int, pars_ln: int, pa
         return pars_ln, pars_col, ante_ln, ante_col, npars
 
 
+def _params_offset(lines: list[bistr], put_lines: list[bistr], ln: int, col: int, end_ln: int, end_col: int,
+                   ) -> tuple[int, int, int, int]:
+    """Calculate location and delta parameters for the `offset()` function. The `col` parameter is calculated as a byte
+    offset so that the `offset()` function is does not have to access the source at all."""
+
+    dfst_ln     = len(put_lines) - 1
+    dln         = dfst_ln - (end_ln - ln)
+    dcol_offset = put_lines[-1].lenbytes - lines[end_ln].c2b(end_col)
+    col_offset  = -lines[end_ln].c2b(end_col)
+
+    if not dfst_ln:
+        dcol_offset += lines[ln].c2b(col)
+
+    return end_ln, col_offset, dln, dcol_offset
+
+
 def _fixup_field_body(ast: AST, field: str | None = None, only_list: bool = True) -> tuple[str, 'AST']:
     """Get `AST` member list for specified `field` or default if `field=None`."""
 
@@ -725,7 +742,7 @@ def _new_empty_dict(*, from_: Optional['FST'] = None) -> 'FST':
 
 
 def _new_empty_set(only_ast: bool = False, lineno: int = 1, col_offset: int = 0, *,
-                   from_: Optional['FST'] = None) -> 'FST':
+                   from_: Optional['FST'] = None) -> Union['FST', AST]:
     ast = Set(elts=[
         Starred(value=Tuple(elts=[], ctx=Load(), lineno=lineno, col_offset=col_offset+2,
                             end_lineno=lineno, end_col_offset=col_offset+4),
@@ -736,7 +753,7 @@ def _new_empty_set(only_ast: bool = False, lineno: int = 1, col_offset: int = 0,
 
 
 def _new_empty_set_curlies(only_ast: bool = False, lineno: int = 1, col_offset: int = 0, *,
-                           from_: Optional['FST'] = None) -> 'FST':
+                           from_: Optional['FST'] = None) -> Union['FST', AST]:
     ast = Set(elts=[], lineno=lineno, col_offset=col_offset, end_lineno=lineno,
               end_col_offset=col_offset + 2)
 
@@ -2282,6 +2299,8 @@ class FST:
         if parent := self.parent:
             self.pfield.set(parent.a, ast)
 
+        self._touch()
+
         return old_ast
 
     def _repr_tail(self) -> str:
@@ -2757,7 +2776,7 @@ class FST:
         lines[ln] = bistr(f'{(l := lines[ln])[:col]}{comma}{l[col:]}')
 
         if offset:
-            root.offset(ln, col, 0, len(comma), True, stop_at=self)
+            root.offset(ln, col, 0, len(comma), True, exclude=self)
 
         elif ln == end_ln:
             self.a.end_col_offset += len(comma)
@@ -3056,8 +3075,8 @@ class FST:
 
         ln, col, end_ln, end_col = self.wbloc if whole else self.bloc
 
-        self.put_src([')'], end_ln, end_col, end_ln, end_col, True, True, self, offset_stop_at=False)
-        self.offset(*self.put_src(['('], ln, col, ln, col, False, False, self, offset_stop_at=False))
+        self.put_src([')'], end_ln, end_col, end_ln, end_col, True, True, self, offset_excluded=False)
+        self.offset(*self.put_src(['('], ln, col, ln, col, False, False, self, offset_excluded=False))
 
     def _parenthesize_tuple(self, whole: bool = True):
         """Parenthesize an unparenthesized tuple, adjusting tuple location for added parentheses.
@@ -3642,11 +3661,11 @@ class FST:
 
         ln, col, end_ln, end_col = self.loc
 
+        empty   = _new_empty_set_curlies(False, (a := self.a).lineno, a.col_offset, from_=self)
         old_src = self.get_src(ln, col, end_ln, end_col, True)
-        old_ast = copy_ast(self.a)
+        old_ast = self._set_ast(empty.a)
 
-        self.put_src(['{}'], ln, col, end_ln, end_col, True)
-        self._set_ast(_new_empty_set_curlies(True, old_ast.lineno, old_ast.col_offset, from_=self))
+        self.put_src(empty._lines, ln, col, end_ln, end_col, True, True, self, offset_excluded=False)
 
         try:
             self._put_slice_tuple_list_or_set(code, start, stop, field, one, **options)
@@ -4117,7 +4136,7 @@ class FST:
             if not copy:
                 raise RuntimeError(f'could not find node after raw reparse')
 
-            root.put_src(new_lines, ln, col, end_ln, end_col, True, self if set_ast else None)  # we do this again in our own tree to offset our nodes which aren't being moved over from the modified copy, can stop_at self if setting ast because it overrides self locations
+            root.put_src(new_lines, ln, col, end_ln, end_col, True, self if set_ast else None)  # we do this again in our own tree to offset our nodes which aren't being moved over from the modified copy, can exclude self if setting ast because it overrides self locations
 
             copy.pfield.set(copy.parent.a, None)  # remove from copy tree so that copy_root unmake doesn't zero out new node
             copy_root._unmake_fst_tree()
@@ -4550,13 +4569,13 @@ class FST:
         """Dump a representation of the tree to stdout or return as a list of lines.
 
         **Parameters:**
-        - `out`: `print` means print to stdout, `list` returns a list of lines and `str` returns a whole string.
-            Otherwise a `Callable[[str], None]` which is called for each line of output individually.
         - `compact`: If `True` then the dump is compacted a bit by listing `Name` and `Constant` nodes on a single
             line.
         - `full`: If `True` then will list all fields in nodes including empty ones, otherwise will exclude most empty
             fields.
         - `indent`: The average airspeed of an unladen swallow.
+        - `out`: `print` means print to stdout, `list` returns a list of lines and `str` returns a whole string.
+            Otherwise a `Callable[[str], None]` which is called for each line of output individually.
         - 'eol': What to put at the end of each text line, `None` means newline for `TextIO` out and nothing for other.
         """
 
@@ -4828,7 +4847,7 @@ class FST:
             return self._get_slice_dict(start, stop, field, cut, **options)
 
         elif self.is_empty_set_call() or self.is_empty_set_seq():
-            return self._get_slice_empty_set_call(start, stop, field, cut, **options)
+            return self._get_slice_empty_set(start, stop, field, cut, **options)
 
 
         # TODO: more individual specialized slice gets
@@ -4924,9 +4943,9 @@ class FST:
                     if end_ln == ln else
                     '\n'.join([ls[ln][col:]] + ls[ln + 1 : end_ln] + [ls[end_ln][:end_col]]))
 
-    def put_src(self, lines: str | list[str] | None, ln: int, col: int, end_ln: int, end_col: int,
-                tail: bool | None = ..., head: bool | None = True, stop_at: Optional['FST'] = None, *,
-                offset_stop_at: bool = True):
+    def put_src(self, src: str | list[str] | None, ln: int, col: int, end_ln: int, end_col: int,
+                tail: bool | None = ..., head: bool | None = True, exclude: Optional['FST'] = None, *,
+                offset_excluded: bool = True) -> tuple[int, int, int, int] | None:
         """Put or delete new source to currently stored source, optionally offsetting all nodes for the change. Must
         specify `tail` as `True`, `False` or `None` to enable offset of nodes according to source put. `...` ellipsis
         value is used as sentinel for `tail` to mean don't offset. Otherwise `tail` and params which followed are passed
@@ -4935,37 +4954,27 @@ class FST:
         **Returns:**
         - `(ln: int, col: int, dln: int, dcol_offset: int) | None`: If `tail` was not `...` then the calculated
             `offset()` parameters are returned for any potential followup offsetting. The `col` parameter in this case
-            is returned as a byte offset so that `offset()` doesn't attempt to calculate ir from already modified
+            is returned as a byte offset so that `offset()` doesn't attempt to calculate it from already modified
             source."""
 
         ret = None
         ls  = self.root._lines
 
-        if is_del := lines is None:
+        if is_del := src is None:
             lines = [bistr('')]
-        elif isinstance(lines, str):
-            lines = [bistr(s) for s in lines.split('\n')]
-        elif not lines[0].__class__ is bistr:  # lines is list[str]
-            lines = [bistr(s) for s in lines]
+        elif isinstance(src, str):
+            lines = [bistr(s) for s in src.split('\n')]
+        elif not src[0].__class__ is bistr:  # lines is list[str]
+            lines = [bistr(s) for s in src]
+        else:
+            lines = src
 
-        # possibly offset nodes
+        if tail is not ...:  # possibly offset nodes
+            ret = _params_offset(ls, lines, ln, col, end_ln, end_col)
 
-        if tail is not ...:
-            dfst_ln     = len(lines) - 1
-            dln         = dfst_ln - (end_ln - ln)
-            dcol_offset = lines[-1].lenbytes - ls[end_ln].c2b(end_col)
-            col_offset  = -ls[end_ln].c2b(end_col)
+            self.root.offset(*ret, tail, head, exclude, offset_excluded=offset_excluded)
 
-            if not dfst_ln:
-                dcol_offset += ls[ln].c2b(col)
-
-            ret = (end_ln, col_offset, dln, dcol_offset)
-
-            self.root.offset(end_ln, col_offset, dln, dcol_offset, tail, head, stop_at, offset_stop_at=offset_stop_at)
-
-        # put the actual lines (or just delete)
-
-        if is_del:
+        if is_del:  # delete lines
             if end_ln == ln:
                 ls[ln] = bistr((l := ls[ln])[:col] + l[end_col:])
 
@@ -4974,7 +4983,7 @@ class FST:
 
                 del ls[ln : end_ln]
 
-        else:
+        else:  # put lines
             dln = end_ln - ln
 
             if (nnew_ln := len(lines)) <= 1:
@@ -6525,8 +6534,8 @@ class FST:
         return self
 
     def offset(self, ln: int, col: int, dln: int, dcol_offset: int,
-               tail: bool | None = False, head: bool | None = True, stop_at: Optional['FST'] = None, *,
-               offset_stop_at: bool = True, self_: bool = True,
+               tail: bool | None = False, head: bool | None = True, exclude: Optional['FST'] = None, *,
+               offset_excluded: bool = True, self_: bool = True,
                ) -> 'FST':  # -> Self
         """Offset ast node positions in the tree on or after (ln, col) by (delta line, col_offset) (column byte offset).
 
@@ -6553,10 +6562,10 @@ class FST:
         - `head`: Whether to offset start endpoint if it FALLS EXACTLY AT (ln, col) or not. If `False` then head will
             not be moved forward if at same location as tail and can stop tail from moving backward past it if at same
             location. If `None` then can be moved backward with tail if tail at same location.
-        - `stop_at`: `FST` node to stop recursion at and not go into its children (recursion in siblings will not be
+        - `exclude`: `FST` node to stop recursion at and not go into its children (recursion in siblings will not be
             affected).
-        - `offset_stop_at`: Whether to apply offset to `stop_at` node or not.
-        - `self_`: Whether to offset self or not (will recurse into children unless is `stop_at`).
+        - `offset_excluded`: Whether to apply offset to `exclude`d node or not.
+        - `self_`: Whether to offset self or not (will recurse into children unless is `exclude`).
 
         **Behavior:**
         ```
@@ -6603,7 +6612,7 @@ class FST:
 
         if self_:
             stack = [self.a]
-        elif self is stop_at:
+        elif self is exclude:
             return
         else:
             stack = list(iter_child_nodes(self.a))
@@ -6617,12 +6626,14 @@ class FST:
             a = stack.pop()
             f = a.f
 
-            if f is not stop_at:
+            if f is not exclude:
                 children = iter_child_nodes(a)
-            elif offset_stop_at:
+            elif offset_excluded:
                 children = ()
             else:
                 continue
+
+            f._touch()
 
             if (fend_colo := getattr(a, 'end_col_offset', None)) is not None:
                 flno  = a.lineno
@@ -6654,7 +6665,6 @@ class FST:
                     a.col_offset = fcolo + dcol_offset
 
             stack.extend(children)
-            f._touch()
 
         self.touch(True, False)
 

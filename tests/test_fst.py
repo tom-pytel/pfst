@@ -19864,7 +19864,7 @@ _CookiePattern = re.compile(r"""
         self.assertEqual((3, 4, 3, 5), ((n := ast.body[2].value).lineno, n.col_offset, n.end_lineno, n.end_col_offset))
 
         ast = parse(src)
-        ast.f.offset(1, 4, 0, 1, stop_at=ast.body[1].f)
+        ast.f.offset(1, 4, 0, 1, exclude=ast.body[1].f)
         self.assertEqual((1, 4, 1, 5), ((n := ast.body[0].value).lineno, n.col_offset, n.end_lineno, n.end_col_offset))
         self.assertEqual((2, 0, 2, 6), ((n := ast.body[1]).lineno, n.col_offset, n.end_lineno, n.end_col_offset))
         self.assertEqual((2, 0, 2, 1), ((n := ast.body[1].targets[0]).lineno, n.col_offset, n.end_lineno, n.end_col_offset))
@@ -19873,7 +19873,7 @@ _CookiePattern = re.compile(r"""
         self.assertEqual((3, 4, 3, 5), ((n := ast.body[2].value).lineno, n.col_offset, n.end_lineno, n.end_col_offset))
 
         ast = parse(src)
-        ast.f.offset(1, 4, 0, 1, stop_at=ast.body[1].f, offset_stop_at=False)
+        ast.f.offset(1, 4, 0, 1, exclude=ast.body[1].f, offset_excluded=False)
         self.assertEqual((1, 4, 1, 5), ((n := ast.body[0].value).lineno, n.col_offset, n.end_lineno, n.end_col_offset))
         self.assertEqual((2, 0, 2, 5), ((n := ast.body[1]).lineno, n.col_offset, n.end_lineno, n.end_col_offset))
         self.assertEqual((2, 0, 2, 1), ((n := ast.body[1].targets[0]).lineno, n.col_offset, n.end_lineno, n.end_col_offset))
