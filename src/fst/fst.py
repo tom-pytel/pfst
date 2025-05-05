@@ -706,40 +706,41 @@ def _new_empty_module(*, from_: Optional['FST'] = None) -> 'FST':
     return FST(Module(body=[], type_ignores=[]), lines=[bistr('')], from_=from_)
 
 
-def _new_empty_tuple(*, delim: bool = True, from_: Optional['FST'] = None) -> 'FST':
-    ast = Tuple(elts=[], ctx=Load(), lineno=1, col_offset=0, end_lineno=1, end_col_offset=2 if delim else 0)
+def _new_empty_tuple(*, from_: Optional['FST'] = None) -> 'FST':
+    ast = Tuple(elts=[], ctx=Load(), lineno=1, col_offset=0, end_lineno=1, end_col_offset=2)
 
-    return FST(ast, lines=[bistr('()' if delim else '')], from_=from_)
-
-
-def _new_empty_list(*, delim: bool = True, from_: Optional['FST'] = None) -> 'FST':
-    ast = List(elts=[], ctx=Load(), lineno=1, col_offset=0, end_lineno=1, end_col_offset=2 if delim else 0)
-
-    return FST(ast, lines=[bistr('[]' if delim else '')], from_=from_)
+    return FST(ast, lines=[bistr('()')], from_=from_)
 
 
-def _new_empty_dict(*, delim: bool = True, from_: Optional['FST'] = None) -> 'FST':
-    ast = Dict(keys=[], values=[], lineno=1, col_offset=0, end_lineno=1, end_col_offset=2 if delim else 0)
+def _new_empty_list(*, from_: Optional['FST'] = None) -> 'FST':
+    ast = List(elts=[], ctx=Load(), lineno=1, col_offset=0, end_lineno=1, end_col_offset=2)
 
-    return FST(ast, lines=[bistr('{}' if delim else '')], from_=from_)
+    return FST(ast, lines=[bistr('[]')], from_=from_)
+
+
+def _new_empty_dict(*, from_: Optional['FST'] = None) -> 'FST':
+    ast = Dict(keys=[], values=[], lineno=1, col_offset=0, end_lineno=1, end_col_offset=2)
+
+    return FST(ast, lines=[bistr('{}')], from_=from_)
+
+
+def _new_empty_set(only_ast: bool = False, lineno: int = 1, col_offset: int = 0, *,
+                   from_: Optional['FST'] = None) -> 'FST':
+    ast = Set(elts=[
+        Starred(value=Tuple(elts=[], ctx=Load(), lineno=lineno, col_offset=col_offset+2,
+                            end_lineno=lineno, end_col_offset=col_offset+4),
+                ctx=Load(), lineno=lineno, col_offset=col_offset+1, end_lineno=lineno, end_col_offset=col_offset+4)
+    ], lineno=lineno, col_offset=col_offset, end_lineno=lineno, end_col_offset=col_offset+5)
+
+    return ast if only_ast else FST(ast, lines=[bistr('{*()}')], from_=from_)
 
 
 def _new_empty_set_curlies(only_ast: bool = False, lineno: int = 1, col_offset: int = 0, *,
-                           delim: bool = True, from_: Optional['FST'] = None) -> 'FST':
+                           from_: Optional['FST'] = None) -> 'FST':
     ast = Set(elts=[], lineno=lineno, col_offset=col_offset, end_lineno=lineno,
-              end_col_offset=col_offset + 2 if delim else 0)
+              end_col_offset=col_offset + 2)
 
-    return ast if only_ast else FST(ast, lines=[bistr('{}' if delim else '')], from_=from_)
-
-
-def _new_empty_set_call(only_ast: bool = False, lineno: int = 1, col_offset: int = 0, *,
-                        from_: Optional['FST'] = None) -> 'FST':
-    ast = Call(func=Name(id='set', ctx=Load(), lineno=lineno, col_offset=col_offset, end_lineno=lineno,
-                         end_col_offset=col_offset + 3),
-               args=[], keywords=[], lineno=lineno, col_offset=col_offset, end_lineno=lineno,
-               end_col_offset=col_offset + 5)
-
-    return ast if only_ast else FST(ast, lines=[bistr('set()')], from_=from_)
+    return ast if only_ast else FST(ast, lines=[bistr('{}')], from_=from_)
 
 
 class fstlistproxy:
@@ -2807,19 +2808,20 @@ class FST:
         if not self.a.elts:
             ln, col, end_ln, end_col = self.loc
 
-            self.put_src(['set()'], ln, col, end_ln, end_col, True)
+            self.put_src(['{*()}'], ln, col, end_ln, end_col, True)
+            self._set_ast(_new_empty_set(True, (a := self.a).lineno, a.col_offset))
 
-            ast = self.a
+            # ast = self.a
 
-            self._unmake_fst_tree()
+            # self._unmake_fst_tree()
 
-            self.a = ast = _new_empty_set_call(True, ast.lineno, ast.col_offset)
-            ast.f  = self
+            # self.a = ast = _new_empty_set(True, ast.lineno, ast.col_offset)
+            # ast.f  = self
 
-            if parent := self.parent:
-                self.pfield.set(parent.a, ast)
+            # if parent := self.parent:
+            #     self.pfield.set(parent.a, ast)
 
-            self._make_fst_tree([FST(ast.func, self, astfield('func'))])
+            # self._make_fst_tree([FST(ast.func, self, astfield('func'))])
 
     def _maybe_fix_if(self):
         # assert isinstance(self.a, If)
@@ -3284,7 +3286,7 @@ class FST:
 
         if start == stop:
             if is_set:
-                return _new_empty_set_call(from_=self) if fix else _new_empty_set_curlies(from_=self)
+                return _new_empty_set(from_=self)
             elif is_tuple:
                 return _new_empty_tuple(from_=self)
             else:
@@ -3354,12 +3356,12 @@ class FST:
 
         return fst
 
-    def _get_slice_empty_set_call(self, start: int | Literal['end'] | None, stop: int | None, field: str | None,
+    def _get_slice_empty_set(self, start: int | Literal['end'] | None, stop: int | None, field: str | None,
                                   cut: bool, **options) -> 'FST':
         fix = DEFAULT_FIX if (o := options.get('fix')) is None else o
 
         if not fix:
-            raise ValueError(f"cannot get slice from a 'set()' without specifying 'fix=True'")
+            raise ValueError(f"cannot get slice from an empty Set without specifying 'fix=True'")
 
         if field is not None and field != 'elts':
             raise ValueError(f"invalid field '{field}' to slice from a {self.a.__class__.__name__}")
@@ -3367,7 +3369,7 @@ class FST:
         if stop or (start and start != 'end'):
             raise IndexError(f"Set.{field} index out of range")
 
-        return _new_empty_set_call(from_=self) if fix else _new_empty_set_curlies(from_=self)
+        return _new_empty_set(from_=self)
 
     def _get_slice_dict(self, start: int | Literal['end'] | None, stop: int | None, field: str | None, cut: bool,
                         **options) -> 'FST':
@@ -3533,11 +3535,11 @@ class FST:
                 is_tuple = is_set = False  # that's right, an `ast.Set` with `is_set=False` because in this case all we need is the `elts` container (without `ctx`)
 
             else:
-                if put_fst.is_empty_set_call():
+                if put_fst.is_empty_set_call() or put_fst.is_empty_set_seq():
                     if fix:
                         put_fst = _new_empty_set_curlies(from_=self)
                     else:
-                        raise ValueError(f"cannot put 'set()' as a slice without specifying 'fix=True'")
+                        raise ValueError(f"cannot put empty Set as a slice without specifying 'fix=True'")
 
                 put_ast  = put_fst.a
                 is_tuple = isinstance(put_ast, Tuple)
@@ -3631,33 +3633,28 @@ class FST:
             elif is_self_set:
                 self._maybe_fix_set()
 
-    def _put_slice_empty_set_call(self, code: Code | None, start: int | Literal['end'] | None, stop: int | None,
+    def _put_slice_empty_set(self, code: Code | None, start: int | Literal['end'] | None, stop: int | None,
                                   field: str | None, one: bool, **options):
         fix = DEFAULT_FIX if (o := options.get('fix')) is None else o
 
         if not fix:
-            raise ValueError(f"cannot put slice to a 'set()' without specifying 'fix=True'")
+            raise ValueError(f"cannot put slice to an empty Set without specifying 'fix=True'")
 
         ln, col, end_ln, end_col = self.loc
 
+        old_src = self.get_src(ln, col, end_ln, end_col, True)
+        old_ast = copy_ast(self.a)
+
         self.put_src(['{}'], ln, col, end_ln, end_col, True)
-
-        ast = self.a
-
-        self._unmake_fst_tree()
-
-        self.a = ast = _new_empty_set_curlies(True, ast.lineno, ast.col_offset, from_=self)
-        ast.f  = self
-
-        if parent := self.parent:
-            self.pfield.set(parent.a, ast)
+        self._set_ast(_new_empty_set_curlies(True, old_ast.lineno, old_ast.col_offset, from_=self))
 
         try:
             self._put_slice_tuple_list_or_set(code, start, stop, field, one, **options)
 
         finally:
             if not self.a.elts:
-                self._maybe_fix_set()  # restore 'set()'
+                self.put_src(old_src, *self.loc, True)  # restore previous empty set representation
+                self._set_ast(old_ast)
 
     def _put_slice_dict(self, code: Code | None, start: int | Literal['end'] | None, stop: int | None,
                         field: str | None, one: bool, **options):
@@ -4817,8 +4814,7 @@ class FST:
                   cut: bool = False, **options) -> 'FST':
         """Get a slice of child nodes from `self`."""
 
-        ast = self.a
-
+        ast       = self.a
         field_, _ = _fixup_field_body(ast, field)
 
         if isinstance(ast, STATEMENTISH_OR_STMTMOD):
@@ -4831,7 +4827,7 @@ class FST:
         elif isinstance(ast, Dict):
             return self._get_slice_dict(start, stop, field, cut, **options)
 
-        elif self.is_empty_set_call():
+        elif self.is_empty_set_call() or self.is_empty_set_seq():
             return self._get_slice_empty_set_call(start, stop, field, cut, **options)
 
 
@@ -4875,8 +4871,8 @@ class FST:
 
                     return self
 
-                elif self.is_empty_set_call():
-                    self._put_slice_empty_set_call(code, start, stop, field, one, **options)
+                elif self.is_empty_set_call() or self.is_empty_set_seq():
+                    self._put_slice_empty_set(code, start, stop, field, one, **options)
 
                     return self
 
@@ -6233,6 +6229,12 @@ class FST:
 
         return (isinstance(ast := self.a, Call) and not ast.args and not ast.keywords and
                 isinstance(func := ast.func, Name) and func.id == 'set' and isinstance(func.ctx, Load))
+
+    def is_empty_set_seq(self) -> bool:
+        """Whether `self` is an empty Set from an empty sequence, recognized are `{*()}`, `{*[]}` and `{*{}}`."""
+
+        return (isinstance(ast := self.a, Set) and len(elts := ast.elts) == 1 and isinstance(e0 := elts[0], Starred) and
+                ((isinstance(v := e0.value, (Tuple, List)) and not v.elts) or (isinstance(v, Dict) and not v.keys)))
 
     def is_elif(self) -> bool:
         """Whether `self` is an `elif`."""

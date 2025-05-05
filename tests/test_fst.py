@@ -208,7 +208,7 @@ GET_SLICE_SEQ_DATA = [
 (r"""{1, 2}""", 'body[0].value', 0, 0, {}, r"""
 {1, 2}
 """, r"""
-set()
+{*()}
 """, r"""
 Module .. ROOT 0,0 -> 0,6
   .body[1]
@@ -218,8 +218,12 @@ Module .. ROOT 0,0 -> 0,6
       0] Constant 1 .. 0,1 -> 0,2
       1] Constant 2 .. 0,4 -> 0,5
 """, r"""
-Call .. ROOT 0,0 -> 0,5
-  .func Name 'set' Load .. 0,0 -> 0,3
+Set .. ROOT 0,0 -> 0,5
+  .elts[1]
+  0] Starred .. 0,1 -> 0,4
+    .value Tuple .. 0,2 -> 0,4
+      .ctx Load
+    .ctx Load
 """),
 
 (r"""(       # hello
@@ -1589,15 +1593,19 @@ Tuple .. ROOT 0,0 -> 0,5
 """),
 
 (r"""{1, 2}""", 'body[0].value', 0, 2, {}, r"""
-set()
+{*()}
 """, r"""
 {1, 2}
 """, r"""
 Module .. ROOT 0,0 -> 0,5
   .body[1]
   0] Expr .. 0,0 -> 0,5
-    .value Call .. 0,0 -> 0,5
-      .func Name 'set' Load .. 0,0 -> 0,3
+    .value Set .. 0,0 -> 0,5
+      .elts[1]
+      0] Starred .. 0,1 -> 0,4
+        .value Tuple .. 0,2 -> 0,4
+          .ctx Load
+        .ctx Load
 """, r"""
 Set .. ROOT 0,0 -> 0,6
   .elts[2]
@@ -1608,7 +1616,7 @@ Set .. ROOT 0,0 -> 0,6
 (r"""{1, 2}""", 'body[0].value', 0, 0, {}, r"""
 {1, 2}
 """, r"""
-set()
+{*()}
 """, r"""
 Module .. ROOT 0,0 -> 0,6
   .body[1]
@@ -1618,14 +1626,18 @@ Module .. ROOT 0,0 -> 0,6
       0] Constant 1 .. 0,1 -> 0,2
       1] Constant 2 .. 0,4 -> 0,5
 """, r"""
-Call .. ROOT 0,0 -> 0,5
-  .func Name 'set' Load .. 0,0 -> 0,3
+Set .. ROOT 0,0 -> 0,5
+  .elts[1]
+  0] Starred .. 0,1 -> 0,4
+    .value Tuple .. 0,2 -> 0,4
+      .ctx Load
+    .ctx Load
 """),
 
 (r"""set()""", 'body[0].value', 0, 0, {}, r"""
 set()
 """, r"""
-set()
+{*()}
 """, r"""
 Module .. ROOT 0,0 -> 0,5
   .body[1]
@@ -1633,8 +1645,12 @@ Module .. ROOT 0,0 -> 0,5
     .value Call .. 0,0 -> 0,5
       .func Name 'set' Load .. 0,0 -> 0,3
 """, r"""
-Call .. ROOT 0,0 -> 0,5
-  .func Name 'set' Load .. 0,0 -> 0,3
+Set .. ROOT 0,0 -> 0,5
+  .elts[1]
+  0] Starred .. 0,1 -> 0,4
+    .value Tuple .. 0,2 -> 0,4
+      .ctx Load
+    .ctx Load
 """),
 
 (r"""1, 2, 3,""", 'body[0].value', 0, 1, {}, r"""
@@ -4975,7 +4991,7 @@ Module .. ROOT 0,0 -> 0,2
 
    )""", r"""
 if 1:
-  set()
+  {*()}
 """, r"""
 Module .. ROOT 0,0 -> 1,7
   .body[1]
@@ -4983,8 +4999,12 @@ Module .. ROOT 0,0 -> 1,7
     .test Constant 1 .. 0,3 -> 0,4
     .body[1]
     0] Expr .. 1,2 -> 1,7
-      .value Call .. 1,2 -> 1,7
-        .func Name 'set' Load .. 1,2 -> 1,5
+      .value Set .. 1,2 -> 1,7
+        .elts[1]
+        0] Starred .. 1,3 -> 1,6
+          .value Tuple .. 1,4 -> 1,6
+            .ctx Load
+          .ctx Load
 """),
 
 (r"""{
@@ -7094,13 +7114,17 @@ Module .. ROOT 0,0 -> 0,9
 """),
 
 (r"""{1, 2}""", 'body[0].value', 0, 2, r"""()""", r"""
-set()
+{*()}
 """, r"""
 Module .. ROOT 0,0 -> 0,5
   .body[1]
   0] Expr .. 0,0 -> 0,5
-    .value Call .. 0,0 -> 0,5
-      .func Name 'set' Load .. 0,0 -> 0,3
+    .value Set .. 0,0 -> 0,5
+      .elts[1]
+      0] Starred .. 0,1 -> 0,4
+        .value Tuple .. 0,2 -> 0,4
+          .ctx Load
+        .ctx Load
 """),
 
 (r"""set()""", 'body[0].value', 0, 0, r"""()""", r"""
@@ -23293,7 +23317,7 @@ finally:
                     raise
 
     def test_put_slice_seq_del(self):
-        for src, elt, start, stop, options, src_cut, slice_copy, src_dump, slice_dump in GET_SLICE_SEQ_DATA:
+        for i, (src, elt, start, stop, options, src_cut, slice_copy, src_dump, slice_dump) in enumerate(GET_SLICE_SEQ_DATA):
             t = parse(src)
             f = eval(f't.{elt}', {'t': t}).f
 
@@ -23307,14 +23331,14 @@ finally:
                 self.assertEqual(tdump, src_dump.strip().split('\n'))
 
             except Exception:
-                print(elt, start, stop)
+                print(i, elt, start, stop)
                 print('---')
                 print(src)
 
                 raise
 
     def test_put_slice_seq(self):
-        for dst, elt, start, stop, src, put_src, put_dump in PUT_SLICE_SEQ_DATA:
+        for i, (dst, elt, start, stop, src, put_src, put_dump) in enumerate(PUT_SLICE_SEQ_DATA):
             t = parse(dst)
             f = eval(f't.{elt}', {'t': t}).f
 
@@ -23328,7 +23352,7 @@ finally:
                 self.assertEqual(tdump, put_dump.strip().split('\n'))
 
             except Exception:
-                print(elt, start, stop)
+                print(i, elt, start, stop)
                 print('---')
                 print(dst)
                 print('...')
