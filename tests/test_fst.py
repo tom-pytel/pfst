@@ -20152,7 +20152,7 @@ _CookiePattern = re.compile(r"""
         self.assertFalse(parse('{}').body[0].value.f.copy().parenthesize())
 
         f = parse('i = 1').body[0].f.copy()
-        f.put_lines(['# comment', ''], 0, 0, 0, 0)
+        f.put_src(['# comment', ''], 0, 0, 0, 0)
         self.assertFalse(f.parenthesize())
         self.assertEqual('# comment\ni = 1', f.src)
         self.assertTrue(f.parenthesize(force=True))
@@ -20243,13 +20243,13 @@ def func():
         src = 'class cls:\n if True:\n  i = 1\n else:\n  j = 2'
         ast = parse(src)
 
-        self.assertEqual(src.split('\n'), ast.f.get_lines(*ast.f.loc))
-        self.assertEqual(src.split('\n'), ast.body[0].f.get_lines(*ast.body[0].f.loc))
-        self.assertEqual('if True:\n  i = 1\n else:\n  j = 2'.split('\n'), ast.body[0].body[0].f.get_lines(*ast.body[0].body[0].f.loc))
-        self.assertEqual(['i = 1'], ast.body[0].body[0].body[0].f.get_lines(*ast.body[0].body[0].body[0].f.loc))
-        self.assertEqual(['j = 2'], ast.body[0].body[0].orelse[0].f.get_lines(*ast.body[0].body[0].orelse[0].f.loc))
+        self.assertEqual(src.split('\n'), ast.f.get_src(*ast.f.loc, True))
+        self.assertEqual(src.split('\n'), ast.body[0].f.get_src(*ast.body[0].f.loc, True))
+        self.assertEqual('if True:\n  i = 1\n else:\n  j = 2'.split('\n'), ast.body[0].body[0].f.get_src(*ast.body[0].body[0].f.loc, True))
+        self.assertEqual(['i = 1'], ast.body[0].body[0].body[0].f.get_src(*ast.body[0].body[0].body[0].f.loc, True))
+        self.assertEqual(['j = 2'], ast.body[0].body[0].orelse[0].f.get_src(*ast.body[0].body[0].orelse[0].f.loc, True))
 
-        self.assertEqual(['True:', '  i'], ast.f.root.get_lines(1, 4, 2, 3))
+        self.assertEqual(['True:', '  i'], ast.f.root.get_src(1, 4, 2, 3, True))
 
     def test_put_src(self):
         f = FST(Load(), lines=[bistr('')])
@@ -22996,7 +22996,7 @@ finally:
                 col       = randint(0, len(lines[ln]))
                 end_ln    = randint(ln, len(lines) - 1)
                 end_col   = randint(col if end_ln == ln else 0, len(lines[end_ln]))
-                put_lines = master.get_lines(ln, col, end_ln, end_col)
+                put_lines = master.get_src(ln, col, end_ln, end_col, True)
 
                 copy.put_raw(put_lines, ln, col, end_ln, end_col)
                 copy.verify()
