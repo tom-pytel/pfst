@@ -4224,7 +4224,7 @@ class FST:
 
         return True
 
-    def _reparse_raw(self, code: Code | None, ln: int, col: int, end_ln: int, end_col: int, inc: bool | None = None
+    def _reparse_raw(self, code: Code | None, ln: int, col: int, end_ln: int, end_col: int, exact: bool | None = None
                      ) -> Optional['FST']:
         """Reparse this node which entirely contatins the span which is to be replaced with `code` source. `self` must
         be a node which entirely contains the location and is guaranteed not to be deleted. `self` and some of its
@@ -4232,9 +4232,9 @@ class FST:
         safe to use in a `walk()`.
 
         **Returns:**
-        - `FST | None`: First highest level node contained entirely within replacement source or `None` if no candidate.
-            This could wind up being just an operator like '+' depending on the replacement. If `inc` is passed and not
-            `None` then will attempt a `find_loc(..., inc)` if could not find candidate node with `find_in_loc()`.
+        - `FST | None`: FIRST highest level node contained entirely within replacement source or `None` if no candidate.
+            This could wind up being just an operator like '+' depending on the replacement. If `exact` is passed and
+            not `None` then will attempt a `find_loc(..., exact)` if could not find candidate node with `find_in_loc()`.
         """
 
         if isinstance(code, str):
@@ -4270,7 +4270,7 @@ class FST:
             end_col = len(new_lines[-1])
 
         return (self.root.find_in_loc(ln, col, end_ln, end_col) or  # `self.root` instead of `self` because some changes may propagate farther up the tree, like 'elif' -> 'else'
-                (self.root.find_loc(ln, col, end_ln, end_col, inc) if inc is not None else None))
+                (self.root.find_loc(ln, col, end_ln, end_col, exact) if exact is not None else None))
 
     def _reparse_raw_node(self, code: Code | None, to: Optional['FST'] = None, **options) -> 'FST':
         """Attempt a replacement by using str as source and attempting to parse into location of node(s) being
@@ -4895,19 +4895,18 @@ class FST:
         return self._put_slice_raw(code, start, stop, field, one=one, **options)
 
     def put_raw(self, code: Code | None, ln: int, col: int, end_ln: int, end_col: int, *,
-                inc: bool | None = True, **options) -> Optional['FST']:
+                exact: bool | None = True, **options) -> Optional['FST']:
         """Put raw code and reparse. Can call on any node in tree for same effect.
 
         **Returns:**
-        - `FST | None`: FIRST (there may be others following) highest level node contained entirely within replacement
-            source location, or `None` or if no such candidate and `inc=None`. If no candidate and `inc` is `True` or
-            `False` then will attempt to return a node which encloses the location with the given `inc` parameter using
-            `find_loc()`.
+        - `FST | None`: FIRST highest level node contained entirely within replacement source location (there may be
+            others following), or `None` or if no such candidate and `exact=None`. If no candidate and `exact` is `True`
+            or `False` then will attempt to return a node which encloses the location using `find_loc(..., exact)`.
         """
 
         parent = self.root.find_loc(ln, col, end_ln, end_col, False) or self.root
 
-        return parent._reparse_raw(code, ln, col, end_ln, end_col, inc)
+        return parent._reparse_raw(code, ln, col, end_ln, end_col, exact)
 
     def get_src(self, ln: int, col: int, end_ln: int, end_col: int, as_lines: bool = False) -> str | list[str]:
         """Get source at location, without dedenting or any other modification, Returned as a string or individual
@@ -6084,13 +6083,14 @@ class FST:
 
         return (root := self.root).child_from_path(root.child_path(self))
 
-    def find_loc(self, ln: int, col: int, end_ln: int, end_col: int, inc: bool = True) -> Optional['FST']:
+    def find_loc(self, ln: int, col: int, end_ln: int, end_col: int, exact: bool = True) -> Optional['FST']:
         """Find lowest level node which entirely contains location (starting search at `self`).
 
         **Parameters:**
-        - `inc`: Whether the search is inclusive or not. Inclusive means allow return of node which matches location
-            exactly. Otherwise the location must be inside the node but cannot be touching BOTH ends of the node. This
-            basically determines whether you can get the exact node of the location or its parent.
+        - `exact`: Whether to allow return of exact location match with node or not. `True` means allow return of node
+            which matches location exactly. Otherwise the location must be inside the node but cannot be touching BOTH
+            ends of the node. This basically determines whether you can get the exact node of the location or its
+            parent.
         """
 
         fln, fcol, fend_ln, fend_col = self.loc
@@ -6098,7 +6098,7 @@ class FST:
         if ((((same_ln := fln == ln) and fcol <= col) or fln < ln) and
             (((same_end_ln := fend_ln == end_ln) and fend_col >= end_col) or fend_ln > end_ln)
         ):
-            if not inc and same_ln and same_end_ln and fcol == col and fend_col == end_col:
+            if not exact and same_ln and same_end_ln and fcol == col and fend_col == end_col:
                 return None
 
         else:
@@ -6116,7 +6116,7 @@ class FST:
                 ):
                     return self
 
-                if not inc and same_ln and same_end_ln and fcol == col and fend_col == end_col:
+                if not exact and same_ln and same_end_ln and fcol == col and fend_col == end_col:
                     return self
 
                 self = f
