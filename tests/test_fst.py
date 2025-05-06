@@ -23562,6 +23562,37 @@ finally:
                     else:
                         self.assertEqual(t, f.root.src)
 
+    def test_empty_set_slice(self):
+        f = parse('set()').body[0].value.f
+        self.assertEqual('{*()}', f.get_slice(0, 0, cut=True).src)
+        self.assertEqual('set()', f.src)
+        self.assertEqual('set()', f.put_slice('{*()}', 0, 0).src)
+        f.root.verify()
+
+        f = parse('{*()}').body[0].value.f
+        self.assertEqual('{*()}', f.get_slice(0, 0, cut=True).src)
+        self.assertEqual('{*()}', f.src)
+        self.assertEqual('{*()}', f.put_slice('{*()}', 0, 0).src)
+        f.root.verify()
+
+        f = parse('{*[]}').body[0].value.f
+        self.assertEqual('{*()}', f.get_slice(0, 0, cut=True).src)
+        self.assertEqual('{*[]}', f.src)
+        self.assertEqual('{*[]}', f.put_slice('{*()}', 0, 0).src)
+        f.root.verify()
+
+        f = parse('{*{}}').body[0].value.f
+        self.assertEqual('{*()}', f.get_slice(0, 0, cut=True).src)
+        self.assertEqual('{*{}}', f.src)
+        self.assertEqual('{*{}}', f.put_slice('{*()}', 0, 0).src)
+        f.root.verify()
+
+        f = parse('{ * ( ) }').body[0].value.f
+        self.assertEqual('{*()}', f.get_slice(0, 0, cut=True).src)
+        self.assertEqual('{ * ( ) }', f.src)
+        self.assertEqual('{ * ( ) }', f.put_slice('{*()}', 0, 0).src)
+        f.root.verify()
+
     def test_ctx_change(self):
         a = parse('a, b = x, y').body[0]
         a.targets[0].f.put(a.value.f.get())
