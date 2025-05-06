@@ -330,10 +330,12 @@ def _prev_src(lines: list[str], ln: int, col: int, end_ln: int, end_col: int,
             return state.pop()
 
         while m := p.match(l, c, ec):
-            c = m.end(1)
+            s = m.group(1)
 
-            if (not comment and l.startswith('#', c)) or (not lcont and l.startswith('\\', c)):
+            if (not comment and s.startswith('#')) or (lcont is False and s == '\\'):
                 break
+
+            c = m.end(1)
 
             state.append(m)
 

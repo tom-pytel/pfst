@@ -18434,7 +18434,17 @@ k \\
         self.assertEqual((0, 0, 'a'), fst._prev_src(['a b c \\'], 0, 0, 0, 2, True, None, state=state))
         self.assertEqual(None, fst._prev_src(['a b c \\'], 0, 0, 0, 0, True, None, state=state))
 
-    def test__next_pref_find(self):
+        self.assertEqual((0, 0, '('), fst._prev_src(['(# comment', ''], 0, 0, 1, 0))
+        self.assertEqual((0, 1, '# comment'), fst._prev_src(['(# comment', ''], 0, 0, 1, 0, True))
+        self.assertEqual((0, 0, '('), fst._prev_src(['(\\', ''], 0, 0, 1, 0))
+        self.assertEqual((0, 0, '('), fst._prev_src(['(\\', ''], 0, 0, 1, 0, False, False))
+        self.assertEqual((0, 1, '\\'), fst._prev_src(['(\\', ''], 0, 0, 1, 0, False, True))
+        self.assertEqual((0, 0, '('), fst._prev_src(['(\\', ''], 0, 0, 1, 0, False, None))
+        self.assertEqual((0, 0, '('), fst._prev_src(['(\\', ''], 0, 0, 1, 0, True, False))
+        self.assertEqual((0, 1, '\\'), fst._prev_src(['(\\', ''], 0, 0, 1, 0, True, True))
+        self.assertEqual((0, 0, '('), fst._prev_src(['(\\', ''], 0, 0, 1, 0, True, None))
+
+    def test__next_prev_find(self):
         lines = '''
   ; \\
   # hello
@@ -23704,24 +23714,20 @@ finally:
         self.assertIsInstance(a.value.elts[0].ctx, Load)
         self.assertIsInstance(a.value.elts[1].ctx, Load)
 
-    def test_line_continuation_error_at_top_level(self):
-        # Works fine in a scope but error at top level
+    def test_line_continuation_issue_at_top_level(self):
+        a = parse('''
+i ; \\
+ j
+        '''.strip())
+        a.f.put_slice(None, 0, 1)
+        self.assertTrue(a.f.verify(raise_=False))
 
-#         a = parse('''
-# i ; \\
-#  j
-#         '''.strip())
-#         a.f.put_slice(None, 0, 1)
-#         self.assertFalse(a.f.verify(raise_=False))
-
-#         a = parse('''
-# i ; \\
-#  j
-#         '''.strip())
-#         a.f.put_slice('l', 0, 1)
-#         self.assertFalse(a.f.verify(raise_=False))
-
-        pass
+        a = parse('''
+i ; \\
+ j
+        '''.strip())
+        a.f.put_slice('l', 0, 1)
+        self.assertTrue(a.f.verify(raise_=False))
 
     def test_unparenthesized_tuple_with_line_continuations(self):
         # backslashes are annoying to include in the regenerable test cases
