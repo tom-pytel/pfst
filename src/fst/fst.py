@@ -232,7 +232,7 @@ def set_defaults(**params) -> dict[str, Any]:
     """Set global defaults for `options` parameters.
 
     **Parameters:**
-    - `**params`: Key / values of parameters to set.
+    - `params`: Key / values of parameters to set.
 
     **Returns:**
     - `params`: `dict` of previous values of changed parameters, reset with `set_defaults(**params)`.
@@ -4371,15 +4371,46 @@ class FST:
 
     def __new__(cls, ast_or_src: AST | str | bytes | list[str] | None = None,
                 parent: Optional['FST'] = None, pfield: astfield | None = None, **kwargs):
+        """Create a new individual `FST` node or full tree from `AST` with `lines` or create from just an `AST` or just
+        source.
+
+        **Parameters:**
+        - `ast_or_src`: `AST` node for `FST` or source code in the form of a `str`, encoded `bytes` or a list of lines.
+            If an `AST` then will be processed differently depending on if `lines` is provided or not.
+        - `parent`: Parent node for this node. If provided then this is just a simple node and it is created with the
+            `self.parent` and `self.pfield` set to passed params. If `None` then it means the creation of a full new
+            `FST` tree.
+        - `pfield`: `astfield` indication position in parent of this node. If `parent` is provided then this is assumed
+            to exist and set as `self.pfield`.
+        - `kwargs`: Contextual parameters:
+            - `lines`: If this is provided and `parent` is `None` then this will be a new root `FST` node and the
+                children of the provided `ast_or_src` (as `AST`) are walked to create `FST` nodes and the full tree.
+                Only valid when creating a root node.
+            - `from_`: If this is provided then it must be an `FST` node from which this node is being created. This
+                allows to copy parse parameters and already determined default indentation.
+            - `parse_params`: A `dict` with values for 'filename', 'type_comments' and 'feature_version' which will be
+                used for any `AST` reparse done on this tree. Only valid when creating a root node.
+            - `indent`: Indentation string to use as default indentation. If not provided and not gotten from `from_`
+                then indentation will be inferred from source. Only valid when creating a root node.
+            - `filename`, `mode`, `type_comments` and `feature_version`: If creating from an `AST` or source only then
+                these are the parameteres passed to the respective `.new()`, `.fromsrc()` or `.fromast()` functions.
+                Only valid when `parent=None` and no `lines`.
+        """
 
         if parent is None:  # creating top level shortcut
             if (lines := kwargs.get('lines')) is None:  # if lines missing then is shortcut create from source or AST
-                if ast_or_src is None:
-                    return FST.new(**kwargs)
-                if isinstance(ast_or_src, AST):
-                    return FST.fromast(ast_or_src, **kwargs)
+                params = {k: v for k in ('filename', 'mode', 'type_comments', 'feature_version')
+                          if (v := kwargs.get(k)) is not None}
 
-                return FST.fromsrc(ast_or_src, **kwargs)
+                if from_ := kwargs.get('from_'): # copy parse params from source tree
+                    params = {**from_.root.parse_params, **params}
+
+                if ast_or_src is None:
+                    return FST.new(**params)
+                if isinstance(ast_or_src, AST):
+                    return FST.fromast(ast_or_src, **params)
+
+                return FST.fromsrc(ast_or_src, **params)
 
         # creating actual node
 
@@ -4409,9 +4440,46 @@ class FST:
 
         else:
             self.parse_params = kwargs.get('parse_params', DEFAULT_PARSE_PARAMS)
-            self.indent       = kwargs.get('indent', DEFAULT_INDENT)
+            self.indent       = kwargs.get('indent', '?')
 
         self._make_fst_tree()
+
+        if self.indent == '?':  # infer indentation from source, just use first indentation found for performance, don't try to find most common or anything like that
+            if not isinstance(ast_or_src, Module):
+                self.indent = DEFAULT_INDENT
+
+            else:
+                for a in ast_or_src.body:
+                    if isinstance(a, (FunctionDef, AsyncFunctionDef, ClassDef, With, AsyncWith, ExceptHandler,
+                                      match_case)):  # we check ExceptHandler and match_case because they may be supported as standalone parsed elements eventually
+                        indent = a.body[0].f.get_indent()
+
+                    elif isinstance(a, (For, AsyncFor, While, If)):
+                        if (indent := a.body[0].f.get_indent()) == '?' and (orelse := a.orelse):
+                            if not (indent := orelse[0].f.get_indent()):  # because can be 'elif'
+                                indent = '?'
+
+                    elif isinstance(a, (Try, TryStar)):
+                        if (indent := a.body[0].f.get_indent()) == '?':
+                            if not (orelse := a.orelse) or (indent := orelse[0].f.get_indent()) == '?':
+                                if not (finalbody := a.finalbody) or (indent := finalbody[0].f.get_indent()) == '?':
+                                    for handler in a.handlers:
+                                        if (indent := handler.body[0].f.get_indent()) != '?':
+                                            break
+
+                    elif isinstance(a, Match):
+                        indent = a.cases[0].f.get_indent()
+
+                    else:
+                        continue
+
+                    if indent != '?':
+                        self.indent = indent
+
+                        break
+
+                else:
+                    self.indent = DEFAULT_INDENT
 
         return self
 

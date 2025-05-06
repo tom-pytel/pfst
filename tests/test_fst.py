@@ -18948,7 +18948,7 @@ def f():
             fc._fix(inplace=True)
             self.assertEqual('(*tuple[int, ...],)', fc.src)
 
-    def test_FST_shortcut_create(self):
+    def test___new__(self):
         f = FST()
         self.assertEqual('', f.src)
         self.assertIsInstance(f.a, Module)
@@ -18978,6 +18978,55 @@ def f():
         self.assertEqual('i', f.src)
         self.assertIsInstance(f.a, Expression)
         self.assertIsInstance(f.a.body, Name)
+
+        v = sys.version_info[:2]
+        f = FST.fromsrc('i', filename='fnm', type_comments=True, feature_version=v)
+
+        g = FST('j', from_=f)
+        self.assertEqual('fnm', g.parse_params['filename'])
+        self.assertEqual(True, g.parse_params['type_comments'])
+        self.assertEqual(v, g.parse_params['feature_version'])
+
+        g = FST('j', from_=f, filename='blah', type_comments=False, feature_version=(3, 10))
+        self.assertEqual('blah', g.parse_params['filename'])
+        self.assertEqual(False, g.parse_params['type_comments'])
+        self.assertEqual((3, 10), g.parse_params['feature_version'])
+
+    def test_infer_indent(self):
+        self.assertEqual('    ', FST.fromsrc('def f(): pass').indent)
+        self.assertEqual('  ', FST.fromsrc('def f():\n  pass').indent)
+        self.assertEqual('  ', FST.fromsrc('async def f():\n  pass').indent)
+        self.assertEqual('  ', FST.fromsrc('class cls:\n  pass').indent)
+        self.assertEqual('  ', FST.fromsrc('with a:\n  pass').indent)
+        self.assertEqual('  ', FST.fromsrc('async with a:\n  pass').indent)
+        self.assertEqual('  ', FST.fromsrc('for a in b:\n  pass').indent)
+        self.assertEqual('  ', FST.fromsrc('for a in b: pass\nelse:\n  pass').indent)
+        self.assertEqual('  ', FST.fromsrc('for a in b:\n  pass\nelse: pass').indent)
+        self.assertEqual('  ', FST.fromsrc('async for a in b:\n  pass').indent)
+        self.assertEqual('  ', FST.fromsrc('async for a in b: pass\nelse:\n  pass').indent)
+        self.assertEqual('  ', FST.fromsrc('async for a in b:\n  pass\nelse: pass').indent)
+        self.assertEqual('  ', FST.fromsrc('while a:\n  pass').indent)
+        self.assertEqual('  ', FST.fromsrc('while a: pass\nelse:\n  pass').indent)
+        self.assertEqual('  ', FST.fromsrc('while a:\n  pass\nelse: pass').indent)
+        self.assertEqual('  ', FST.fromsrc('if 1:\n  pass').indent)
+        self.assertEqual('  ', FST.fromsrc('if 1: pass\nelse:\n  pass').indent)
+        self.assertEqual('  ', FST.fromsrc('if 1:\n  pass\nelse: pass').indent)
+        self.assertEqual('  ', FST.fromsrc('try:\n  pass\nexcept: pass').indent)
+        self.assertEqual('  ', FST.fromsrc('try: pass\nexcept:\n  pass').indent)
+        self.assertEqual('  ', FST.fromsrc('try: pass\nexcept: pass\nelse:\n  pass').indent)
+        self.assertEqual('  ', FST.fromsrc('try: pass\nexcept: pass\nelse: pass\nfinally:\n  pass').indent)
+        self.assertEqual('  ', FST.fromsrc('try: pass\nexcept: pass\nelse:\n  pass\nfinally: pass').indent)
+        self.assertEqual('  ', FST.fromsrc('try: pass\nexcept:\n  pass\nelse: pass\nfinally: pass').indent)
+        self.assertEqual('  ', FST.fromsrc('try:\n  pass\nexcept: pass\nelse: pass\nfinally: pass').indent)
+
+        if sys.version_info[:2] >= (3, 11):
+            self.assertEqual('  ', FST.fromsrc('try:\n  pass\nexcept* Exception: pass').indent)
+            self.assertEqual('  ', FST.fromsrc('try: pass\nexcept* Exception:\n  pass').indent)
+            self.assertEqual('  ', FST.fromsrc('try: pass\nexcept* Exception: pass\nelse:\n  pass').indent)
+            self.assertEqual('  ', FST.fromsrc('try: pass\nexcept* Exception: pass\nelse: pass\nfinally:\n  pass').indent)
+            self.assertEqual('  ', FST.fromsrc('try: pass\nexcept* Exception: pass\nelse:\n  pass\nfinally: pass').indent)
+            self.assertEqual('  ', FST.fromsrc('try: pass\nexcept* Exception:\n  pass\nelse: pass\nfinally: pass').indent)
+            self.assertEqual('  ', FST.fromsrc('try:\n  pass\nexcept* Exception: pass\nelse: pass\nfinally: pass').indent)
 
     def test_loc(self):
         self.assertEqual((0, 6, 0, 9), parse('def f(i=1): pass').body[0].args.f.loc)  # arguments
@@ -19751,18 +19800,18 @@ with a as b, c as d:
         self.assertEqual('  ', parse('def f(): # \\\n  1').body[0].body[0].f.get_indent())
 
         self.assertEqual('    ', parse('class cls:\n def f():\n    1').body[0].body[0].body[0].f.get_indent())
-        self.assertEqual('     ', parse('class cls:\n def f(): 1').body[0].body[0].body[0].f.get_indent())
-        self.assertEqual('     ', parse('class cls:\n def f(): \\\n   1').body[0].body[0].body[0].f.get_indent())
+        self.assertEqual('  ', parse('class cls:\n def f(): 1').body[0].body[0].body[0].f.get_indent())  # indentation inferred otherwise would be '     '
+        self.assertEqual('  ', parse('class cls:\n def f(): \\\n   1').body[0].body[0].body[0].f.get_indent())  # indentation inferred otherwise would be '     '
         self.assertEqual('   ', parse('class cls:\n def f(): # \\\n   1').body[0].body[0].body[0].f.get_indent())
 
         self.assertEqual('  ', parse('if 1:\n  2\nelse:\n   3').body[0].body[0].f.get_indent())
-        self.assertEqual('    ', parse('if 1: 2\nelse:\n   3').body[0].body[0].f.get_indent())  # candidate for sibling indentation
-        self.assertEqual('    ', parse('if 1: \\\n 2\nelse:\n   3').body[0].body[0].f.get_indent())  # candidate for sibling indentation
+        self.assertEqual('   ', parse('if 1: 2\nelse:\n   3').body[0].body[0].f.get_indent())  # candidate for sibling indentation, indentation inferred otherwise would be '    '
+        self.assertEqual('   ', parse('if 1: \\\n 2\nelse:\n   3').body[0].body[0].f.get_indent())  # candidate for sibling indentation, indentation inferred otherwise would be '    '
         self.assertEqual('  ', parse('if 1: # \\\n  2\nelse:\n   3').body[0].body[0].f.get_indent())
 
         self.assertEqual('   ', parse('if 1:\n  2\nelse:\n   3').body[0].orelse[0].f.get_indent())
-        self.assertEqual('    ', parse('if 1:\n  2\nelse: 3').body[0].orelse[0].f.get_indent())  # candidate for sibling indentation
-        self.assertEqual('    ', parse('if 1:\n  2\nelse: \\\n 3').body[0].orelse[0].f.get_indent())  # candidate for sibling indentation
+        self.assertEqual('  ', parse('if 1:\n  2\nelse: 3').body[0].orelse[0].f.get_indent())  # candidate for sibling indentation, indentation inferred otherwise would be '    '
+        self.assertEqual('  ', parse('if 1:\n  2\nelse: \\\n 3').body[0].orelse[0].f.get_indent())  # candidate for sibling indentation, indentation inferred otherwise would be '    '
         self.assertEqual('   ', parse('if 1:\n  2\nelse: # \\\n   3').body[0].orelse[0].f.get_indent())
 
         self.assertEqual('   ', parse('def f():\n   1; 2').body[0].body[1].f.get_indent())
@@ -19800,7 +19849,7 @@ with a as b, c as d:
         self.assertEqual('  ', parse('if 1:\n\\\n  \\\n   \\\n\\\n i').body[0].body[0].f.get_indent())
         self.assertEqual('     ', parse('if 1:\n\\\n\\\n     \\\n\\\n\\\n  \\\n\\\n   \\\n\\\n i').body[0].body[0].f.get_indent())
 
-        self.assertEqual('         ', parse('if 2:\n     if 1:\\\n\\\n\\\n  \\\n\\\n\\\n  \\\n\\\n   \\\n\\\n i').body[0].body[0].body[0].f.get_indent())
+        self.assertEqual('          ', parse('if 2:\n     if 1:\\\n\\\n\\\n  \\\n\\\n\\\n  \\\n\\\n   \\\n\\\n i').body[0].body[0].body[0].f.get_indent())  # indentation inferred otherwise would be '         '
         self.assertEqual('      ', parse('if 2:\n     if 1:\n\\\n      \\\n  \\\n\\\n\\\n  \\\n\\\n   \\\n\\\n i').body[0].body[0].body[0].f.get_indent())
 
     def test_get_indentable_lns(self):
