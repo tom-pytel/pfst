@@ -4369,13 +4369,26 @@ class FST:
 
     # ------------------------------------------------------------------------------------------------------------------
 
-    def __new__(cls, ast: AST, parent: Optional['FST'] = None, pfield: astfield | None = None, **kwargs):
-        if self := getattr(ast, 'f', None):  # reuse FST node assigned to AST node (because otherwise it isn't valid anyway)
+    def __new__(cls, ast_or_src: AST | str | bytes | list[str] | None = None,
+                parent: Optional['FST'] = None, pfield: astfield | None = None, **kwargs):
+
+        if parent is None:  # creating top level shortcut
+            if (lines := kwargs.get('lines')) is None:  # if lines missing then is shortcut create from source or AST
+                if ast_or_src is None:
+                    return FST.new(**kwargs)
+                if isinstance(ast_or_src, AST):
+                    return FST.fromast(ast_or_src, **kwargs)
+
+                return FST.fromsrc(ast_or_src, **kwargs)
+
+        # creating actual node
+
+        if self := getattr(ast_or_src, 'f', None):  # reuse FST node assigned to AST node (because otherwise it isn't valid anyway)
             self._touch()
         else:
-            self = ast.f = object.__new__(cls)
+            self = ast_or_src.f = object.__new__(cls)
 
-        self.a      = ast  # we don't assume `self.a` is `ast` if `.f` exists
+        self.a      = ast_or_src  # we don't assume `self.a` is `ast_or_src` if `.f` exists
         self.parent = parent
         self.pfield = pfield
 
@@ -4387,9 +4400,7 @@ class FST:
         # ROOT
 
         self.root   = self
-        self._lines = ((lines if lines[0].__class__ is bistr else [bistr(s) for s in lines])
-                       if (lines := kwargs.get('lines')) else
-                       [bistr('')])
+        self._lines = lines if lines[0].__class__ is bistr else [bistr(s) for s in lines]
 
         if from_ := kwargs.get('from_'):  # copy params from source tree
             from_root         = from_.root
@@ -4430,7 +4441,7 @@ class FST:
         else:
             raise ValueError(f"invalid mode '{mode}'")
 
-        return FST(ast, parse_params=parse_params)
+        return FST(ast, lines=[bistr('')], parse_params=parse_params)
 
     @staticmethod
     def fromsrc(source: str | bytes | list[str], filename: str = '<unknown>', mode: str = 'exec', *,
@@ -4471,7 +4482,7 @@ class FST:
         """Add `FST` to existing `AST` tree, optionally copying positions from reparsed `AST` (default) or whole `AST`
         for new `FST`.
 
-        Do not set `calc_loc` to `False` unless you parsed the `AST` from a previous output of `ast.unparse()`,
+        WARNING! Do not set `calc_loc` to `False` unless you parsed the `AST` from a previous output of `ast.unparse()`,
         otherwise there will almost certainly be problems!
 
         **Parameters:**
@@ -6247,7 +6258,7 @@ class FST:
                 if not ln or not re_line_continuation.match((l := lines[preceding_ln]), end_col):
                     return (line_start[:col] if col else good_line) + indent
 
-                if col:
+                if col:  # we do this to skip backslashes at the start of line as those are just a noop
                     good_line = line_start[:col]
 
                 ln  = preceding_ln

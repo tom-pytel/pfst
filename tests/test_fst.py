@@ -18948,6 +18948,37 @@ def f():
             fc._fix(inplace=True)
             self.assertEqual('(*tuple[int, ...],)', fc.src)
 
+    def test_FST_shortcut_create(self):
+        f = FST()
+        self.assertEqual('', f.src)
+        self.assertIsInstance(f.a, Module)
+        self.assertEqual([], f.a.body)
+
+        f = FST(mode='single')
+        self.assertEqual('', f.src)
+        self.assertIsInstance(f.a, Interactive)
+        self.assertEqual([], f.a.body)
+
+        f = FST(mode='eval')
+        self.assertEqual('', f.src)
+        self.assertIsInstance(f.a, Expression)
+        self.assertIsNone(f.a.body)
+
+        f = FST('i = 1')
+        self.assertEqual('i = 1', f.src)
+        self.assertIsInstance(f.a, Module)
+        self.assertIsInstance(f.a.body[0], Assign)
+
+        f = FST('i = 1', mode='single')
+        self.assertEqual('i = 1', f.src)
+        self.assertIsInstance(f.a, Interactive)
+        self.assertIsInstance(f.a.body[0], Assign)
+
+        f = FST('i', mode='eval')
+        self.assertEqual('i', f.src)
+        self.assertIsInstance(f.a, Expression)
+        self.assertIsInstance(f.a.body, Name)
+
     def test_loc(self):
         self.assertEqual((0, 6, 0, 9), parse('def f(i=1): pass').body[0].args.f.loc)  # arguments
         self.assertEqual((0, 5, 0, 8), parse('with f(): pass').body[0].items[0].f.loc)  # withitem
