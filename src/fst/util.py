@@ -321,18 +321,14 @@ def is_parsable(ast: AST) -> bool:
 
 
 def get_parse_mode(ast: AST) -> Literal['exec'] | Literal['eval'] | Literal['single']:
-    if isinstance(ast, stmt):
+    if isinstance(ast, (stmt, Module)):
         return 'exec'
-    if isinstance(ast, expr):
-        return 'eval'
-    if isinstance(ast, Module):
-        return 'exec'
-    if isinstance(ast, Expression):
+    if isinstance(ast, (expr, Expression)):
         return 'eval'
     if isinstance(ast, Interactive):
         return 'single'
 
-    raise ValueError('cannot determine parse mode')
+    return None
 
 
 class WalkFail(Exception): pass

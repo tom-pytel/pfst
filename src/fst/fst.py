@@ -11,7 +11,7 @@ from .util import TryStar, TemplateStr, Interpolation, type_param
 
 __all__ = [
     'parse', 'unparse', 'set_defaults', 'FST', 'FSTSrcEdit',
-    'fstlistproxy', 'fstloc', 'srcwpos', 'astfield',
+    'fstlist', 'fstloc', 'srcwpos', 'astfield',
     'NodeTypeError',
 ]
 
@@ -205,8 +205,7 @@ Code: TypeAlias = Union['FST', AST, list[str], str]
 class NodeTypeError(ValueError): pass
 
 
-def parse(source, filename='<unknown>', mode='exec', *, type_comments=False, feature_version=None, optimize=-1,
-          **kwargs) -> AST:
+def parse(source, filename='<unknown>', mode='exec', *, type_comments=False, feature_version=None, **kwargs) -> AST:
     """Executes `ast.parse()` and then adds `FST` nodes to the parsed tree. Drop-in replacement for `ast.parse()`. For
     parameters, see `ast.parse()`. Returned `AST` tree has added `.f` attribute at each node which accesses the parallel
     `FST` tree."""
@@ -760,7 +759,7 @@ def _new_empty_set_curlies(only_ast: bool = False, lineno: int = 1, col_offset: 
     return ast if only_ast else FST(ast, lines=[bistr('{}')], from_=from_)
 
 
-class fstlistproxy:
+class fstlist:
     """Proxy for list of AST nodes in a body (or any other list of AST nodes) which acts as a list of FST nodes. Is only
     meant for short term convenience use as operations on the target FST node which are not effectuated through this
     proxy will invalidate the start and stop positions stored here if they change the size of the list of nodes."""
@@ -772,7 +771,7 @@ class fstlistproxy:
         self.stop  = stop
 
     def __repr__(self) -> str:
-        return f'<fstlistproxy {list(self)}>'
+        return f'<fstlist {list(self)}>'
 
     def __len__(self) -> int:
         return self.stop - self.start
@@ -796,7 +795,7 @@ class fstlistproxy:
 
         idx_start, idx_stop = _fixup_slice_index(self.stop - (start := self.start), idx.start, idx.stop)
 
-        return fstlistproxy(self.fst, self.field, start + idx_start, start + idx_stop)
+        return fstlist(self.fst, self.field, start + idx_start, start + idx_stop)
 
     def __setitem__(self, idx: int | slice, code: Code):
         if isinstance(idx, int):
@@ -2830,18 +2829,6 @@ class FST:
             self.put_src(['{*()}'], ln, col, end_ln, end_col, True)
             self._set_ast(_new_empty_set(True, (a := self.a).lineno, a.col_offset))
 
-            # ast = self.a
-
-            # self._unmake_fst_tree()
-
-            # self.a = ast = _new_empty_set(True, ast.lineno, ast.col_offset)
-            # ast.f  = self
-
-            # if parent := self.parent:
-            #     self.pfield.set(parent.a, ast)
-
-            # self._make_fst_tree([FST(ast.func, self, astfield('func'))])
-
     def _maybe_fix_if(self):
         # assert isinstance(self.a, If)
 
@@ -2988,13 +2975,7 @@ class FST:
                 if not inplace:
                     return FST(a, lines=lines, from_=self)
 
-                self._unmake_fst_tree()
-
-                self.a = a
-                a.f    = self
-
-                self._touch()
-                self._make_fst_tree()
+                self._set_ast(a)
 
                 return self
 
@@ -4124,7 +4105,7 @@ class FST:
         copy_root.put_src(new_lines, ln, col, end_ln, end_col)
 
         root      = self.root
-        copy_root = FST.fromsrc(copy_root.src, mode=get_parse_mode(root.a), **root.parse_params)
+        copy_root = FST.fromsrc(copy_root.src, mode=get_parse_mode(root.a) or 'exec', **root.parse_params)
 
         if path == 'root':
             self._lines = copy_root._lines
@@ -4330,33 +4311,6 @@ class FST:
                         elif atom is None:  # strip `unparse()` parens
                             code = ast_unparse(code)[1:-1]
 
-                # if isinstance(code, FST):
-                #     if not code.is_atom():
-                #         field, idx  = self.pfield
-                #         childa      = code.a
-                #         parenta     = parent.a
-                #         child_type  = (childa.op.__class__
-                #                        if (cc := childa.__class__) in (BoolOp, BinOp, UnaryOp) else cc)
-                #         parent_type = (parenta.op.__class__
-                #                        if (pc := parenta.__class__) in (BoolOp, BinOp, UnaryOp) else pc)
-                #         key_is_None = pc is Dict and parenta.keys[idx] is None
-
-                #         if precedence_require_parens(child_type, parent_type, field, dict_key_is_None=key_is_None):
-                #             code.parenthesize()
-
-                # elif isinstance(code, AST):
-                #     if not is_atom(code):
-                #         field, idx  = self.pfield
-                #         parenta     = parent.a
-                #         child_type  = (code.op.__class__
-                #                        if (cc := code.__class__) in (BoolOp, BinOp, UnaryOp) else cc)
-                #         parent_type = (parenta.op.__class__
-                #                        if (pc := parenta.__class__) in (BoolOp, BinOp, UnaryOp) else pc)
-                #         key_is_None = pc is Dict and parenta.keys[idx] is None
-
-                #         if precedence_require_parens(child_type, parent_type, field, dict_key_is_None=key_is_None):
-                #             code = f'({ast_unparse(code)})'
-
             if (pars or not self.is_solo_call_arg_genexpr() or
                 (to_loc := self.pars(True, exc_genexpr_solo=True))[:2] <= loc[:2]  # need to check this case if `pars` wasn't specified for a solo call arg GenExpression
             ):
@@ -4407,8 +4361,8 @@ class FST:
 
     def __getattr__(self, name) -> Any:
         if isinstance(child := getattr(self.a, name), list):
-            return fstlistproxy(self, name, 0, len(child))
-        elif child and isinstance(child, AST):
+            return fstlist(self, name, 0, len(child))
+        elif isinstance(child, AST):
             return child.f
 
         return child
@@ -4508,7 +4462,7 @@ class FST:
         parse_params = dict(filename=filename, type_comments=type_comments, feature_version=feature_version)
         ast          = ast_parse(source, mode=mode, **parse_params)
 
-        return FST(ast, lines=lines, parse_params=parse_params)
+        return FST(ast, lines=[bistr(s) for s in lines], parse_params=parse_params)  # not just convert to bistr but to make a copy at the same time
 
     @staticmethod
     def fromast(ast: AST, filename: str = '<unknown>', mode: str | None = None, *,
@@ -4528,9 +4482,8 @@ class FST:
         - `type_comments`: `ast.parse()` parameter.
         - `feature_version`: `ast.parse()` parameter.
         - `calc_loc`: Get actual node positions by unparsing then parsing again. Use when you are not certain node
-            positions are correct or even present. Updates original ast unless set to "copy", in which case a copied
-            `AST` is used. Set to `False` when you know positions are correct and want to use given `AST`. Default
-            `True`.
+            positions are correct or even present. Updates original `AST` unless set to "copy", in which case a copied
+            `AST` is used. Set to `False` when you know positions are correct and want to use given `AST`
 
         **Returns:**
         - `FST`: The augmented tree with `.f` attributes added to each `AST` node for `FST` access.
@@ -4545,7 +4498,7 @@ class FST:
         parse_params = dict(filename=filename, type_comments=type_comments, feature_version=feature_version)
 
         if calc_loc:
-            astp = ast_parse(src, mode=get_parse_mode(ast) if mode is None else mode, **parse_params)
+            astp = ast_parse(src, mode=get_parse_mode(ast) or 'exec' if mode is None else mode, **parse_params)
 
             if astp.__class__ is not ast.__class__:
                 astp = astp.body if isinstance(astp, Expression) else astp.body[0]
@@ -4615,7 +4568,7 @@ class FST:
         parse_params = self.parse_params
 
         try:
-            astp = ast_parse(self.src, mode=get_parse_mode(ast), **parse_params)
+            astp = ast_parse(self.src, mode=get_parse_mode(ast) or 'exec', **parse_params)
 
         except SyntaxError:
             if raise_:

@@ -23721,7 +23721,7 @@ finally:
         f.put('a, b', 1)
         self.assertEqual('(1, (a, b), 3)', f.src)
 
-    def test_fstlistproxy(self):
+    def test_fstlist(self):
         self.assertEqual('a', parse('if 1: a').f.body[0].body[0].src)
         self.assertEqual('b', parse('if 1: a\nelse: b').f.body[0].orelse[0].src)
         self.assertEqual('a\nb\nc', parse('a\nb\nc').f.body.copy().src)
@@ -23929,10 +23929,10 @@ class cls:
     def prefunc(): pass
     def postfunc(): pass
             '''.strip())
-        self.assertIsInstance(a.f.body, fstlistproxy)
-        self.assertIsInstance(a.body[0].f.body, fstlistproxy)
+        self.assertIsInstance(a.f.body, fstlist)
+        self.assertIsInstance(a.body[0].f.body, fstlist)
         a.body[0].f.body.cut()
-        self.assertIsInstance(a.body[0].f.body, fstlistproxy)
+        self.assertIsInstance(a.body[0].f.body, fstlist)
 
         a = parse('a\nb\nc\nd\ne')
         p = a.f.body[1:4]
