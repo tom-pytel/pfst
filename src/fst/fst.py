@@ -10,7 +10,7 @@ from .util import *
 from .util import TryStar, TemplateStr, Interpolation, type_param
 
 __all__ = [
-    'parse', 'unparse', 'set_defaults', 'FST', 'FSTSrcEdit',
+    'parse', 'unparse', 'FST', 'FSTSrcEdit',
     'fstlist', 'fstloc', 'srcwpos', 'astfield',
     'NodeTypeError',
 ]
@@ -141,6 +141,7 @@ AST_DEFAULT_BODY_FIELD  = {cls: field for field, classes in [
 DEFAULT_PARSE_PARAMS    = dict(filename='<unknown>', type_comments=False, feature_version=None)
 DEFAULT_INDENT          = '    '
 
+# TODO: remove these and just initialize in FST.OPTIONS
 DEFAULT_DOCSTR          = True   # True | False | 'strict'
 DEFAULT_PRECOMMS        = True   # True | False | 'all'
 DEFAULT_POSTCOMMS       = True   # True | False | 'all' | 'block'
@@ -226,30 +227,6 @@ def unparse(ast_obj) -> str:
             pass
 
     return ast_unparse(ast_obj)
-
-
-def set_defaults(**params) -> dict[str, Any]:
-    """Set global defaults for `options` parameters.
-
-    **Parameters:**
-    - `params`: Key / values of parameters to set.
-
-    **Returns:**
-    - `params`: `dict` of previous values of changed parameters, reset with `set_defaults(**params)`.
-    """
-
-    ret = {}
-
-    for param, value in params.items():
-        if param not in ('docstr','precomms','postcomms','prespace','postspace','pep8space','pars','elif_','fix','raw'):
-            raise ValueError(f"invalid parameter '{param}'")
-
-        gparam       = f'DEFAULT_{param.upper()}'
-        glob         = globals()
-        ret[param]   = glob[gparam]
-        glob[gparam] = value
-
-    return ret
 
 
 def _with_loc(fst: 'FST', with_loc: bool | Literal['all', 'own'] = True) -> bool:
@@ -1520,13 +1497,9 @@ class FSTSrcEdit:
 
         # delete preceding and trailing empty lines according to 'pep8' and 'space' format flags
 
-        prespace  = (float('inf')
-                     if ((o := DEFAULT_PRESPACE) if (o := options.get('prespace')) is None else o) is True
-                     else int(o))
-        postspace = (float('inf')
-                     if ((o := DEFAULT_POSTSPACE) if (o := options.get('postspace')) is None else o) is True
-                     else int(o))
-        pep8space = DEFAULT_PEP8SPACE if (o := options.get('pep8space')) is None else o
+        prespace  = (float('inf') if (o := FST.get_option('prespace', options)) is True else int(o))
+        postspace = (float('inf') if (o := FST.get_option('postspace', options)) is True else int(o))
+        pep8space = FST.get_option('pep8space', options)
 
         if pep8space:
             pep8space = 2 if pep8space is True and (p := fst.parent_scope(True)) and isinstance(p.a, mod) else 1
@@ -1607,7 +1580,7 @@ class FSTSrcEdit:
         put_lines = put_fst._lines
         put_body  = put_fst.a.body
         put_col   = put_loc.col
-        pep8space = DEFAULT_PEP8SPACE if (o := options.get('pep8space')) is None else o
+        pep8space = FST.get_option('pep8space', options)
 
         if is_pep8 := bool(put_body) and pep8space:  # no pep8 checks if only text being put (no AST body)
             pep8space = 2 if pep8space is True and (p := fst.parent_scope(True)) and isinstance(p.a, mod) else 1
@@ -1635,8 +1608,7 @@ class FSTSrcEdit:
                             need = 0
 
                 if (need and not is_ins and put_ns and ln > bound_ln and re_comment_line_start.match(lines[ln]) and
-                    not (DEFAULT_PRECOMMS if (o := options.get('precomms')) is None else o) and
-                    not (DEFAULT_PRESPACE if (o := options.get('prespace')) is None else o)
+                    not FST.get_option('precomms', options) and not FST.get_option('prespace', options)
                 ):  # super-duper special case, replacing a named scope (at start) with another named scope, if not removing comments and/or space then don't insert space between preceding comment and put fst (because there was none before the previous named scope)
                     need = 0
 
@@ -1745,7 +1717,7 @@ class FSTSrcEdit:
         is_handler = field == 'handlers'
         is_orelse  = field == 'orelse'
         docstr     = options.get('docstr')
-        opt_elif   = DEFAULT_ELIF_ if (o := options.get('elif_')) is None else o
+        opt_elif   = FST.get_option('elif_', options)
 
         if not ffirst:  # pure insertion
             is_elif = (not fpre and not fpost and is_orelse and opt_elif and len(b := put_body) == 1 and
@@ -1868,7 +1840,7 @@ class FSTSrcEdit:
         if not fpre and not fpost and is_orelse and isinstance(fst.a, If):  # possible else <-> elif changes
             put_body    = put_fst.a.body
             orelse      = fst.a.orelse
-            opt_elif    = DEFAULT_ELIF_ if (o := options.get('elif_')) is None else o
+            opt_elif    = FST.get_option('elif_', options)
             is_old_elif = orelse[0].f.is_elif()
             is_new_elif = opt_elif and len(put_body) == 1 and isinstance(put_body[0], If)
 
@@ -1990,6 +1962,19 @@ class FST:
     # class attributes
     src_edit:     FSTSrcEdit = FSTSrcEdit()  ; """@private"""
     is_FST:       bool       = True          ; """@private"""  # for quick checks vs. `fstloc`
+
+    OPTIONS = {
+        'docstr':    DEFAULT_DOCSTR,     # True | False | 'strict'
+        'precomms':  DEFAULT_PRECOMMS,   # True | False | 'all'
+        'postcomms': DEFAULT_POSTCOMMS,  # True | False | 'all' | 'block'
+        'prespace':  DEFAULT_PRESPACE,   # True | False | int
+        'postspace': DEFAULT_POSTSPACE,  # True | False | int
+        'pep8space': DEFAULT_PEP8SPACE,  # True | False | 1
+        'pars':      DEFAULT_PARS,       # True | False | 'put'
+        'elif_':     DEFAULT_ELIF_,      # True | False
+        'fix':       DEFAULT_FIX,        # True | False
+        'raw':       DEFAULT_RAW,        # True | False | 'alt'
+    }  ; """@private"""
 
     @property
     def lines(self) -> list[str] | None:
@@ -3277,7 +3262,7 @@ class FST:
         if field is not None and field != 'elts':
             raise ValueError(f"invalid field '{field}' to slice from a {self.a.__class__.__name__}")
 
-        fix         = DEFAULT_FIX if (o := options.get('fix')) is None else o
+        fix         = FST.get_option('fix', options)
         ast         = self.a
         elts        = ast.elts
         is_set      = isinstance(ast, Set)
@@ -3358,7 +3343,7 @@ class FST:
 
     def _get_slice_empty_set(self, start: int | Literal['end'] | None, stop: int | None, field: str | None,
                                   cut: bool, **options) -> 'FST':
-        fix = DEFAULT_FIX if (o := options.get('fix')) is None else o
+        fix = FST.get_option('fix', options)
 
         if not fix:
             raise ValueError(f"cannot get slice from an empty Set without specifying 'fix=True'")
@@ -3376,7 +3361,7 @@ class FST:
         if field is not None:
             raise ValueError(f"cannot specify a field '{field}' to slice from a Dict")
 
-        fix         = DEFAULT_FIX if (o := options.get('fix')) is None else o
+        fix         = FST.get_option('fix', options)
         ast         = self.a
         values      = ast.values
         start, stop = _fixup_slice_index(len(values), start, stop)
@@ -3417,7 +3402,7 @@ class FST:
 
     def _get_slice_stmt(self, start: int | Literal['end'] | None, stop: int | None, field: str | None, cut: bool,
                         one: bool = False, **options) -> 'FST':
-        fix         = DEFAULT_FIX if (o := options.get('fix')) is None else o
+        fix         = FST.get_option('fix', options)
         ast         = self.a
         field, body = _fixup_field_body(ast, field)
         start, stop = _fixup_slice_index(len(body), start, stop)
@@ -3517,7 +3502,7 @@ class FST:
         if field is not None and field != 'elts':
             raise ValueError(f"invalid field '{field}' to assign slice to a {self.a.__class__.__name__}")
 
-        fix = DEFAULT_FIX if (o := options.get('fix')) is None else o
+        fix = FST.get_option('fix', options)
 
         if code is None:
             put_fst = None
@@ -3635,7 +3620,7 @@ class FST:
 
     def _put_slice_empty_set(self, code: Code | None, start: int | Literal['end'] | None, stop: int | None,
                                   field: str | None, one: bool, **options):
-        fix = DEFAULT_FIX if (o := options.get('fix')) is None else o
+        fix = FST.get_option('fix', options)
 
         if not fix:
             raise ValueError(f"cannot put slice to an empty Set without specifying 'fix=True'")
@@ -4274,7 +4259,7 @@ class FST:
         replaced."""
 
         multi = to and to is not self
-        pars  = True if multi else bool(DEFAULT_PARS if (o := options.get('pars')) is None else o)
+        pars  = True if multi else bool(FST.get_option('pars', options))
         loc   = self.pars(pars, exc_genexpr_solo=True)
 
         if not loc:
@@ -4400,7 +4385,7 @@ class FST:
         if parent is None:  # creating top level shortcut
             if (lines := kwargs.get('lines')) is None:  # if lines missing then is shortcut create from source or AST
                 params = {k: v for k in ('filename', 'mode', 'type_comments', 'feature_version')
-                          if (v := kwargs.get(k)) is not None}
+                          if (v := kwargs.get(k, k)) is not k}  # k used as sentinel
 
                 if from_ := kwargs.get('from_'): # copy parse params from source tree
                     params = {**from_.root.parse_params, **params}
@@ -4670,12 +4655,44 @@ class FST:
 
         return self
 
+    @staticmethod
+    def get_option(option: str, options: dict[str, Any]) -> Any:
+        """Get option from options dict or default if option not in dict or is `None` there.
+
+        **Parameters:**
+        - `option`: Name of option to get.
+        - `options`: Dictionary which may or may not contain the requested option.
+
+        **Returns:**
+        - `Any`: Default option of if not found in `options` else that option.
+        """
+
+        return FST.OPTIONS.get(option) if (o := options.get(option)) is None else o
+
+    @staticmethod
+    def set_options(**options) -> dict[str, Any]:
+        """Set defaults for `options` parameters.
+
+        **Parameters:**
+        - `options`: Key / values of parameters to set.
+
+        **Returns:**
+        - `options`: `dict` of previous values of changed parameters, reset with `set_options(**options)`.
+        """
+
+        fstopts = FST.OPTIONS
+        ret     = {o: fstopts[o] for o in options}
+
+        fstopts.update(options)
+
+        return ret
+
     # ------------------------------------------------------------------------------------------------------------------
 
     def copy(self, **options) -> 'FST':
         """Copy an individual node to a top level tree, dedenting and fixing as necessary."""
 
-        fix    = DEFAULT_FIX if (o := options.get('fix')) is None else o
+        fix    = FST.get_option('fix', options)
         ast    = self.a
         newast = copy_ast(ast)
 
@@ -4737,7 +4754,7 @@ class FST:
         parent     = self.parent
         field, idx = pfield = self.pfield
         parenta    = parent.a
-        raw        = DEFAULT_RAW if (o := options.get('raw')) is None else o
+        raw        = FST.get_option('raw', options)
         to         = options.get('to')
 
         def to_idx():
@@ -4835,7 +4852,7 @@ class FST:
 
         if field is None:  # maybe putting to special case field?
             if is_dict or isinstance(ast, MatchMapping):
-                if not (DEFAULT_RAW if (o := options.get('raw')) is None else o):
+                if not FST.get_option('raw', options):
                     raise ValueError(f"cannot put() non-raw without field to {ast.__class__.__name__}")
 
                 key = key.f if (key := ast.keys[start]) else self._dict_key_or_mock_loc(key, ast.values[start].f)
@@ -4899,7 +4916,7 @@ class FST:
 
         ast       = self.a
         field_, _ = _fixup_field_body(ast, field)
-        raw       = DEFAULT_RAW if (o := options.get('raw')) is None else o
+        raw       = FST.get_option('raw', options)
 
         if raw is not True:
             if raw and raw != 'alt':

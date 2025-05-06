@@ -18984,13 +18984,13 @@ def f():
 
         g = FST('j', from_=f)
         self.assertEqual('fnm', g.parse_params['filename'])
-        self.assertEqual(True, g.parse_params['type_comments'])
+        self.assertIs(True, g.parse_params['type_comments'])
         self.assertEqual(v, g.parse_params['feature_version'])
 
-        g = FST('j', from_=f, filename='blah', type_comments=False, feature_version=(3, 10))
+        g = FST('j', from_=f, filename='blah', type_comments=False, feature_version=None)
         self.assertEqual('blah', g.parse_params['filename'])
-        self.assertEqual(False, g.parse_params['type_comments'])
-        self.assertEqual((3, 10), g.parse_params['feature_version'])
+        self.assertIs(False, g.parse_params['type_comments'])
+        self.assertIs(None, g.parse_params['feature_version'])
 
     def test_infer_indent(self):
         self.assertEqual('    ', FST.fromsrc('def f(): pass').indent)
@@ -22833,7 +22833,7 @@ class cls:
         self.assertIsNone(g.a)
 
     def test_replace_raw(self):
-        old_defaults = set_defaults(pars=False)
+        old_defaults = FST.set_options(pars=False)
 
         f = parse('def f(a, b): pass').f
         g = f.body[0].args.args[1]
@@ -22878,7 +22878,7 @@ class cls:
 
         self.assertEqual('y', parse('n', mode='eval').body.f.replace('y').root.src)  # Expression.body
 
-        set_defaults(**old_defaults)
+        FST.set_options(**old_defaults)
 
     def test_replace_existing_single(self):
         for i, (dst, attr, options, src, put_ret, put_src) in enumerate(REPLACE_EXISTING_SINGLE_DATA):
@@ -23217,7 +23217,7 @@ finally:
         self.assertRaises(SyntaxError, parse('{a: a, b: b, c: c}').body[0].value.f.put_slice, ast_.parse('{x: x, y: y,}'), 1, 2, one=True, raw=True)
 
     def test_put_special_fields(self):
-        old_defaults = set_defaults(pars=False)
+        old_defaults = FST.set_options(pars=False)
 
         self.assertEqual('{a: b, **c, e: f}', parse('{a: b, **d, e: f}').body[0].value.f.put('c', 1, field='values').root.src)
         self.assertEqual('{a: b, c: d, e: f}', parse('{a: b, **d, e: f}').body[0].value.f.put('c', 1, field='keys').root.src)
@@ -23276,7 +23276,7 @@ finally:
         self.assertEqual('@a\n@z\n@c\nclass cls: pass', parse('@a\n@(b)\n@c\nclass cls: pass').body[0].f.put_slice('@z', 1, 2, field='decorator_list').root.src)
         self.assertEqual('@a\n@z\nclass cls: pass', parse('@a\n@(b)\n@(c)\nclass cls: pass').body[0].f.put_slice('@z', 1, 3, field='decorator_list').root.src)
 
-        set_defaults(**old_defaults)
+        FST.set_options(**old_defaults)
 
     def test_get_slice_seq_copy(self):
         for src, elt, start, stop, options, src_cut, slice_copy, src_dump, slice_dump in GET_SLICE_SEQ_DATA:
@@ -24216,7 +24216,7 @@ match a:
         self.assertIs(fxyz, f.find_in_loc(0, 5, 0, 10))
         self.assertIs(None, f.find_in_loc(0, 5, 0, 6))
 
-    def test_set_defaults(self):
+    def test_set_option(self):
         new = dict(
             docstr    = 'test_docstr',
             precomms  = 'test_precomms',
@@ -24230,9 +24230,9 @@ match a:
             raw       = 'test_raw',
         )
 
-        old    = set_defaults(**new)
-        newset = set_defaults(**old)
-        oldset = set_defaults(**old)
+        old    = FST.set_options(**new)
+        newset = FST.set_options(**old)
+        oldset = FST.set_options(**old)
 
         self.assertEqual(newset, new)
         self.assertEqual(oldset, old)
