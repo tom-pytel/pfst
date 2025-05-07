@@ -253,15 +253,20 @@ AST_FIELDS = {cls: tuple(f for f, t in fields
 
 # DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG!
 # AST_FIELDS2 = {cls: tuple(f'{f}: {t}' for f, t in fields
-#                          if not t.startswith('int') and not t.startswith('string') and
-#                          not t.startswith('identifier') and not t.startswith('constant') and
-#                          not t.startswith('type_ignore'))
-#               for cls, fields in FIELDS.items()}
+#                           if not t.startswith('int') and not t.startswith('string') and
+#                           not t.startswith('identifier') and not t.startswith('constant') and
+#                           not t.startswith('type_ignore')
+#                ) for cls, fields in FIELDS.items()}
 # for cls, fts in AST_FIELDS2.items():
 #     if fts:
 #         print(cls.__name__)
 #         for ft in fts:
 #             print(f'    {ft}')
+# AST_FIELDS2 = {cls: tuple((f, t) for f, t in fields) for cls, fields in FIELDS.items()}
+# for cls, fts in AST_FIELDS2.items():
+#     if fts:
+#         for f, t in fts:
+#             print(f'({cls.__name__}, {f!r}): _put_one_default,  # {t}')
 
 OPCLS2STR = {
     Invert:   '~',

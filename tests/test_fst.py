@@ -17575,7 +17575,7 @@ PRECEDENCE_DATA = [
 
 # end of refreshable data
 
-REPLACE_EXISTING_SINGLE_DATA = [
+REPLACE_EXISTING_ONE_DATA = [
 # FunctionDef
 ("@d\ndef f(a) -> r: pass", 'body[0].decorator_list[0]', {}, "z", "z", "@z\ndef f(a) -> r: pass"),
 ("@d\ndef f(a) -> r: pass", 'body[0].args', {}, "z", "z", "@d\ndef f(z) -> r: pass"),
@@ -22890,8 +22890,8 @@ class cls:
 
         FST.set_options(**old_defaults)
 
-    def test_replace_existing_single(self):
-        for i, (dst, attr, options, src, put_ret, put_src) in enumerate(REPLACE_EXISTING_SINGLE_DATA):
+    def test_replace_existing_one(self):
+        for i, (dst, attr, options, src, put_ret, put_src) in enumerate(REPLACE_EXISTING_ONE_DATA):
             t = parse(dst)
             f = (eval(f't.{attr}', {'t': t}) if attr else t).f
 
@@ -22918,8 +22918,8 @@ class cls:
 
                 raise
 
-    def test_put_existing_single(self):
-        for i, (dst, attr, options, src, put_ret, put_src) in enumerate(REPLACE_EXISTING_SINGLE_DATA):
+    def test_put_existing_one(self):
+        for i, (dst, attr, options, src, put_ret, put_src) in enumerate(REPLACE_EXISTING_ONE_DATA):
             t = parse(dst)
             f = (eval(f't.{attr}', {'t': t}) if attr else t).f
 
