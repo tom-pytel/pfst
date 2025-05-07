@@ -23036,6 +23036,20 @@ class cls:
         g = parse('a | b').body[0].value.f.copy()
         self.assertEqual('match a:\n case 1 | a | b | 3: pass', f.put_slice(g, 1, 2, raw=True).root.src)
 
+        # make sure we can't put TO location behind self
+
+        f = parse('[1, 2, 3]').body[0].value.f
+        self.assertEqual('[1, 4]', f.elts[1].replace('4', to=f.elts[2]).root.src)
+
+        f = parse('[1, 2, 3]').body[0].value.f
+        self.assertRaises(ValueError, f.elts[1].replace, '4', to=f.elts[0])
+
+        f = parse('a = b').body[0].f
+        self.assertEqual('c', f.targets[0].replace('c', to=f.value).root.src)
+
+        f = parse('a = b').body[0].f
+        self.assertRaises(ValueError, f.value.replace, 'c', to=f.targets[0])
+
     def test_put_raw_random_same(self):
         seed(rndseed := randint(0, 0x7fffffff))
 

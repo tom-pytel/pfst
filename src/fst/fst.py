@@ -125,7 +125,7 @@ AST_DEFAULT_BODY_FIELD  = {cls: field for field, classes in [
     ('generators',  (ListComp, SetComp, DictComp, GeneratorExp)),
     ('args',        (Call,)),
 
-    # ('values',      (JoinedStr,)),  # values don't have locations in lower version pythons
+    # ('values',      (JoinedStr, TemplateStr)),  # values don't have locations in lower version pythons for JoinedStr
     # ('items',       (With, AsyncWith)),  # 'body' takes precedence
 
     # special cases, field names here only for checks to succeed, otherwise all handled programatically
@@ -134,7 +134,7 @@ AST_DEFAULT_BODY_FIELD  = {cls: field for field, classes in [
     ('ops',         (Compare,)),
 
     # single value fields
-    ('value',       (Expr, Return, Await, Yield, YieldFrom, Starred, MatchValue)),
+    ('value',       (Expr, Return, Await, Yield, YieldFrom, FormattedValue, Interpolation, Starred, MatchValue)),
     ('pattern',     (MatchAs,)),
 ] for cls in classes}
 
@@ -2816,7 +2816,7 @@ class FST:
             self.put_src(['{*()}'], ln, col, end_ln, end_col, True)
             self._set_ast(_new_empty_set(True, (a := self.a).lineno, a.col_offset))
 
-    def _maybe_fix_if(self):
+    def _maybe_fix_elif(self):
         # assert isinstance(self.a, If)
 
         ln, col, _, _ = self.loc
@@ -3206,6 +3206,315 @@ class FST:
 
     # ------------------------------------------------------------------------------------------------------------------
 
+    def _raw_slice_loc(self, start: int | Literal['end'] | None = None, stop: int | None = None,
+                       field: str | None = None) -> fstloc:
+        """Get location of a raw slice. Sepcial cases for decorators, comprehension ifs and other weird nodes."""
+
+        def fixup_slice_index_for_raw(len_, start, stop):
+            start, stop = _fixup_slice_index(len_, start, stop)
+
+            if stop == start:
+                raise ValueError(f"invalid slice for raw operation")
+
+            return start, stop
+
+        ast = self.a
+
+        if isinstance(ast, Dict):
+            if field is not None:
+                raise ValueError(f"cannot specify a field '{field}' to assign slice to a Dict")
+
+            keys        = ast.keys
+            values      = ast.values
+            start, stop = fixup_slice_index_for_raw(len(keys), start, stop)
+            start_loc   = self._dict_key_or_mock_loc(keys[start], values[start].f)
+
+            if start_loc.is_FST:
+                start_loc = start_loc.pars()
+
+            return fstloc(start_loc.ln, start_loc.col, *values[stop - 1].f.pars()[2:])
+
+        if isinstance(ast, Compare):
+            if field is not None:
+                raise ValueError(f"cannot specify a field '{field}' to assign slice to a Compare")
+
+            comparators  = ast.comparators  # virtual combined body of [Compare.left] + Compare.comparators
+            start, stop  = fixup_slice_index_for_raw(len(comparators) + 1, start, stop)
+            stop        -= 1
+
+            return fstloc(*(comparators[start - 1] if start else ast.left).f.pars()[:2],
+                          *(comparators[stop - 1] if stop else ast.left).f.pars()[2:])
+
+        if isinstance(ast, MatchMapping):
+            if field is not None:
+                raise ValueError(f"cannot specify a field '{field}' to assign slice to a MatchMapping")
+
+            keys        = ast.keys
+            start, stop = fixup_slice_index_for_raw(len(keys), start, stop)
+
+            return fstloc(*keys[start].f.loc[:2], *ast.patterns[stop - 1].f.pars()[2:])
+
+        if isinstance(ast, comprehension):
+            ifs         = ast.ifs
+            start, stop = fixup_slice_index_for_raw(len(ifs), start, stop)
+            ffirst      = ifs[start].f
+            start_pos   = _prev_find(self.root._lines, *ffirst._prev_ast_bound(), ffirst.ln, ffirst.col, 'if')
+
+            return fstloc(*start_pos, *ifs[stop - 1].f.pars()[2:])
+
+        if field == 'decorator_list':
+            decos       = ast.decorator_list
+            start, stop = fixup_slice_index_for_raw(len(decos), start, stop)
+            ffirst      = decos[start].f
+            start_pos   = _prev_find(self.root._lines, 0, 0, ffirst.ln, ffirst.col, '@')  # we can use '0, 0' because we know "@" starts on a newline
+
+            return fstloc(*start_pos, *decos[stop - 1].f.pars()[2:])
+
+        _, body     = _fixup_field_body(ast, field)
+        start, stop = fixup_slice_index_for_raw(len(body), start, stop)
+
+        return fstloc(*body[start].f.pars(exc_genexpr_solo=True)[:2],
+                      *body[stop - 1].f.pars(exc_genexpr_solo=True)[2:])
+
+    def _reparse_raw_doit(self, new_lines: list[str], ln: int, col: int, end_ln: int, end_col: int,
+                          copy_lines: list[str], path: list[astfield] | str, set_ast: bool = True) -> 'FST':
+        """Actually do the reparse."""
+
+        copy_root = FST(Pass(), lines=copy_lines)  # we don't need the ASTs here, just the lines
+
+        copy_root.put_src(new_lines, ln, col, end_ln, end_col)
+
+        root      = self.root
+        copy_root = FST.fromsrc(copy_root.src, mode=get_parse_mode(root.a) or 'exec', **root.parse_params)
+
+        if path == 'root':
+            self._lines = copy_root._lines
+            copy        = copy_root
+
+        else:
+            copy = copy_root.child_from_path(path)
+
+            if not copy:
+                raise RuntimeError(f'could not find node after raw reparse')
+
+            root.put_src(new_lines, ln, col, end_ln, end_col, True, self if set_ast else None)  # we do this again in our own tree to offset our nodes which aren't being moved over from the modified copy, can exclude self if setting ast because it overrides self locations
+
+            copy.pfield.set(copy.parent.a, None)  # remove from copy tree so that copy_root unmake doesn't zero out new node
+            copy_root._unmake_fst_tree()
+
+        if set_ast:
+            self._set_ast(copy.a)
+            self.touch(True)
+
+        return copy
+
+    def _reparse_raw_stmtish(self, new_lines: list[str], ln: int, col: int, end_ln: int, end_col: int) -> bool:
+        """Reparse only statementish or block opener part of statementish containing changes."""
+
+        if not (stmtish := self.parent_stmtish(True, False)):
+            return False
+
+        pln, pcol, pend_ln, pend_col = stmtish.bloc
+
+        root     = self.root
+        lines    = root._lines
+        stmtisha = stmtish.a
+
+        if in_blkopen := (blkopen_end := stmtish._loc_block_opener_end()) and (end_ln, end_col) <= blkopen_end:  # block statement with modification limited to block opener
+            pend_ln, pend_col = blkopen_end
+
+        if isinstance(stmtisha, match_case):
+            copy_lines = ([bistr('')] * (pln - 1) +
+                          [bistr('match a:'), bistr(' ' * pcol + lines[pln][pcol:])] +
+                          lines[pln + 1 : pend_ln + 1])
+            path       = PATH_BODYCASES
+
+        else:
+            indent = stmtish.get_indent()
+
+            if not indent:
+                copy_lines = [bistr('')] * pln + lines[pln : pend_ln + 1]
+
+            elif pln:
+                copy_lines = ([bistr('if 1:')] +
+                              [bistr('')] * (pln - 1) +
+                              [bistr(' ' * pcol + lines[pln][pcol:])] +
+                              lines[pln + 1 : pend_ln + 1])
+            else:
+                copy_lines = ([bistr(f"try:{' ' * (pcol - 4)}{lines[pln][pcol:]}")] +
+                              lines[pln + 1 : pend_ln + 1] +
+                              [bistr('finally: pass')])
+
+            if isinstance(stmtisha, ExceptHandler):
+                assert pln > bool(indent)
+
+                copy_lines[pln - 1] = bistr(indent + 'try: pass')
+                path                = PATH_BODY2HANDLERS if indent else PATH_BODYHANDLERS
+
+            elif not indent:
+                if stmtish.is_elif():
+                    copy_lines[0] = bistr('if 2: pass')
+                    path          = PATH_BODYORELSE
+                else:
+                    path = PATH_BODY
+
+            else:
+                if stmtish.is_elif():
+                    copy_lines[1] = bistr(indent + 'if 2: pass')
+                    path          = PATH_BODY2ORELSE
+                else:
+                    path = PATH_BODY2
+
+        if not in_blkopen:  # non-block statement or modifications not limited to block opener part
+            copy_lines[pend_ln] = bistr(copy_lines[pend_ln][:pend_col])
+
+            stmtish._reparse_raw_doit(new_lines, ln, col, end_ln, end_col, copy_lines, path)
+
+            return True
+
+        # modifications only to block opener line(s) of block statement
+
+        if isinstance(stmtisha, Match):
+            copy_lines[pend_ln] = bistr(copy_lines[pend_ln][:pend_col])
+
+            copy_lines.append(bistr(indent + ' case 1: pass'))
+
+        else:
+            copy_lines[pend_ln] = bistr(copy_lines[pend_ln][:pend_col] + ' pass')
+
+            if isinstance(stmtisha, (Try, TryStar)):  # this one is just silly, nothing to put there, but we cover it
+                copy_lines.append(bistr(indent + 'finally: pass'))
+
+        copy  = stmtish._reparse_raw_doit(new_lines, ln, col, end_ln, end_col, copy_lines, path, False)
+        copya = copy.a
+
+        if not isinstance(stmtisha, match_case):  # match_case doesn't have AST location
+            copya.end_lineno     = stmtisha.end_lineno
+            copya.end_col_offset = stmtisha.end_col_offset
+
+        for field in STATEMENTISH_FIELDS:
+            if (body := getattr(stmtisha, field, None)) is not None:
+                setattr(copya, field, body)
+
+        stmtish._set_ast(copya)
+        stmtish.touch(True)
+
+        return True
+
+    def _reparse_raw(self, code: Code | None, ln: int, col: int, end_ln: int, end_col: int, exact: bool | None = None
+                     ) -> Optional['FST']:
+        """Reparse this node which entirely contatins the span which is to be replaced with `code` source. `self` must
+        be a node which entirely contains the location and is guaranteed not to be deleted. `self` and some of its
+        parents going up may be replaced (root node `FST` will never change, the `AST` it points to may though). Not
+        safe to use in a `walk()`.
+
+        **Returns:**
+        - `FST | None`: FIRST highest level node contained entirely within replacement source or `None` if no candidate.
+            This could wind up being just an operator like '+' depending on the replacement. If `exact` is passed and
+            not `None` then will attempt a `find_loc(..., exact)` if could not find candidate node with `find_in_loc()`.
+        """
+
+        if isinstance(code, str):
+            new_lines = code.split('\n')
+        elif isinstance(code, list):
+            new_lines = code
+        elif isinstance(code, AST):
+            new_lines = ast_unparse(code).split('\n')
+        elif code is None:
+            new_lines = [bistr('')]
+        elif not code.is_root:  # isinstance(code, FST)
+            raise ValueError('expecting root FST')
+        else:
+            new_lines = code._lines
+
+        if not self._reparse_raw_stmtish(new_lines, ln, col, end_ln, end_col):  # attempt to reparse only statement (or even only block opener)
+            assert self.root.is_mod  # TODO: allow with non-mod root
+
+            root = self.root
+
+            self._reparse_raw_doit(new_lines, ln, col, end_ln, end_col, root._lines[:],  # fallback to reparse all source
+                                   'root' if self is root else root.child_path(self))
+
+        if code is None:
+            return None
+
+        if len(new_lines) == 1:
+            end_ln  = ln
+            end_col = col + len(new_lines[0])
+
+        else:
+            end_ln  = ln + len(new_lines) - 1
+            end_col = len(new_lines[-1])
+
+        return (self.root.find_in_loc(ln, col, end_ln, end_col) or  # `self.root` instead of `self` because some changes may propagate farther up the tree, like 'elif' -> 'else'
+                (self.root.find_loc(ln, col, end_ln, end_col, exact) if exact is not None else None))
+
+    def _reparse_raw_node(self, code: Code | None, to: Optional['FST'] = None, **options) -> 'FST':
+        """Attempt a replacement by using str as source and attempting to parse into location of node(s) being
+        replaced."""
+
+        multi = to and to is not self
+        pars  = True if multi else bool(FST.get_option('pars', options))
+        loc   = self.pars(pars, exc_genexpr_solo=True)
+
+        if not loc:
+            raise ValueError('node being reparsed must have a location')
+
+
+        # TODO: allow all options for removing comments and space, not just pars
+
+
+        if not multi:
+            if not (parent := self.parent):  # we want parent which will not change or root node
+                parent = self
+
+            elif pars:  # precedence parenthesizing
+                def require_parens(ast):
+                    field, idx  = self.pfield
+                    parenta     = parent.a
+                    child_type  = (ast.op.__class__
+                                    if (cc := ast.__class__) in (BoolOp, BinOp, UnaryOp) else cc)
+                    parent_type = (parenta.op.__class__
+                                    if (pc := parenta.__class__) in (BoolOp, BinOp, UnaryOp) else pc)
+                    key_is_None = pc is Dict and parenta.keys[idx] is None
+
+                    return precedence_require_parens(child_type, parent_type, field, dict_key_is_None=key_is_None)
+
+                if isinstance(code, FST):
+                    if not code.is_atom() and require_parens(code.a):
+                        code.parenthesize()
+
+                elif isinstance(code, AST):
+                    if not (atom := is_atom(code, tuple_as_atom=None)):
+                        if require_parens(code):
+                            code = ast_unparse(code) if atom is None else f'({ast_unparse(code)})'
+                        elif atom is None:  # strip `unparse()` parens
+                            code = ast_unparse(code)[1:-1]
+
+            if (pars or not self.is_solo_call_arg_genexpr() or
+                (to_loc := self.pars(True, exc_genexpr_solo=True))[:2] <= loc[:2]  # need to check this case if `pars` wasn't specified for a solo call arg GenExpression
+            ):
+                to_loc = loc
+            else:
+                loc = to_loc
+
+        elif not (to_loc := to.pars(pars, exc_genexpr_solo=True)):  # pars is True here
+            raise ValueError(f"'to' node must have a location")
+        elif (root := self.root) is not to.root:
+            raise ValueError(f"'to' node not part of same tree")
+        elif to_loc[:2] < loc[:2]:
+            raise ValueError(f"'to' node must follow self")
+
+        else:
+            self_path = root.child_path(self)[:-1]  # [:-1] makes sure we get parent of whatever combination of paths
+            to_path   = root.child_path(to)[:-1]
+            path      = list(p for p, _ in takewhile(lambda st: st[0] == st[1], zip(self_path, to_path)))
+            parent    = root.child_from_path(path)
+
+        return parent._reparse_raw(code, loc.ln, loc.col, to_loc.end_ln, to_loc.end_col)
+
+    # ------------------------------------------------------------------------------------------------------------------
+
     def _make_fst_and_dedent(self, indent: Union['FST', str], ast: AST, copy_loc: fstloc,
                              prefix: str = '', suffix: str = '',
                              put_loc: fstloc | None = None, put_lines: list[str] | None = None, *,
@@ -3452,7 +3761,7 @@ class FST:
 
         if fix:
             if len(asts) == 1 and isinstance(a := asts[0], If):
-                a.f._maybe_fix_if()
+                a.f._maybe_fix_elif()
 
         return fst
 
@@ -4013,310 +4322,65 @@ class FST:
 
     # ------------------------------------------------------------------------------------------------------------------
 
-    def _raw_slice_loc(self, start: int | Literal['end'] | None = None, stop: int | None = None,
-                       field: str | None = None) -> fstloc:
-        """Get location of a raw slice. Sepcial cases for decorators, comprehension ifs and other weird nodes."""
+    def _to_to_slice_idx(self, idx: int, to: Optional['FST']):
+        """If a `to` parameter is passed then try to convert it to an index in the same body list as `self`."""
 
-        def fixup_slice_index_for_raw(len_, start, stop):
-            start, stop = _fixup_slice_index(len_, start, stop)
+        if not to:
+            return idx + 1
 
-            if stop == start:
-                raise ValueError(f"invalid slice for raw operation")
+        elif to.parent is self.parent is not None and (pf := to.pfield).name == self.pfield.name:
+            if (to_idx := pf.idx) < idx:
+                raise ValueError("invalid 'to' node, must follow self in body")
 
-            return start, stop
+            return to_idx + 1
 
-        ast = self.a
+        raise NodeTypeError(f"invalid 'to' node")
 
-        if isinstance(ast, Dict):
-            if field is not None:
-                raise ValueError(f"cannot specify a field '{field}' to assign slice to a Dict")
+    def _put_one(self, code: Code, idx: int | None, field: str, **options) -> Optional['FST']:
+        """Put new, replace or delete a node (or limited non-node) to a field of `self`."""
 
-            keys        = ast.keys
-            values      = ast.values
-            start, stop = fixup_slice_index_for_raw(len(keys), start, stop)
-            start_loc   = self._dict_key_or_mock_loc(keys[start], values[start].f)
+        if isinstance(body := getattr(self.a, field), list):
+            body = body[idx]
 
-            if start_loc.is_FST:
-                start_loc = start_loc.pars()
+        self = body.f
 
-            return fstloc(start_loc.ln, start_loc.col, *values[stop - 1].f.pars()[2:])
+        ast        = self.a
+        parent     = self.parent
+        field, idx = pfield = self.pfield
+        parenta    = parent.a
+        raw        = FST.get_option('raw', options)
+        to         = options.get('to')
 
-        if isinstance(ast, Compare):
-            if field is not None:
-                raise ValueError(f"cannot specify a field '{field}' to assign slice to a Compare")
+        if raw is not True:
+            if raw and raw != 'alt':
+                raise ValueError(f"invalid value for raw parameter '{raw}'")
 
-            comparators  = ast.comparators  # virtual combined body of [Compare.left] + Compare.comparators
-            start, stop  = fixup_slice_index_for_raw(len(comparators) + 1, start, stop)
-            stop        -= 1
+            try:
+                if isinstance(ast, STATEMENTISH):
+                    parent._put_slice_stmt(code, idx, self._to_to_slice_idx(idx, to), field, True, **options)
 
-            return fstloc(*(comparators[start - 1] if start else ast.left).f.pars()[:2],
-                          *(comparators[stop - 1] if stop else ast.left).f.pars()[2:])
+                    return None if code is None else pfield.get(parenta).f
 
-        if isinstance(ast, MatchMapping):
-            if field is not None:
-                raise ValueError(f"cannot specify a field '{field}' to assign slice to a MatchMapping")
+                if isinstance(parenta, (Tuple, List, Set)):
+                    parent._put_slice_tuple_list_or_set(code, idx, self._to_to_slice_idx(idx, to), field, True, **options)
 
-            keys        = ast.keys
-            start, stop = fixup_slice_index_for_raw(len(keys), start, stop)
+                    return None if code is None else pfield.get(parenta).f
 
-            return fstloc(*keys[start].f.loc[:2], *ast.patterns[stop - 1].f.pars()[2:])
 
-        if isinstance(ast, comprehension):
-            ifs         = ast.ifs
-            start, stop = fixup_slice_index_for_raw(len(ifs), start, stop)
-            ffirst      = ifs[start].f
-            start_pos   = _prev_find(self.root._lines, *ffirst._prev_ast_bound(), ffirst.ln, ffirst.col, 'if')
+                # TODO: more individual specialized replacements
 
-            return fstloc(*start_pos, *ifs[stop - 1].f.pars()[2:])
 
-        if field == 'decorator_list':
-            decos       = ast.decorator_list
-            start, stop = fixup_slice_index_for_raw(len(decos), start, stop)
-            ffirst      = decos[start].f
-            start_pos   = _prev_find(self.root._lines, 0, 0, ffirst.ln, ffirst.col, '@')  # we can use '0, 0' because we know "@" starts on a newline
-
-            return fstloc(*start_pos, *decos[stop - 1].f.pars()[2:])
-
-        _, body     = _fixup_field_body(ast, field)
-        start, stop = fixup_slice_index_for_raw(len(body), start, stop)
-
-        return fstloc(*body[start].f.pars(exc_genexpr_solo=True)[:2],
-                      *body[stop - 1].f.pars(exc_genexpr_solo=True)[2:])
-
-    def _reparse_raw_doit(self, new_lines: list[str], ln: int, col: int, end_ln: int, end_col: int,
-                          copy_lines: list[str], path: list[astfield] | str, set_ast: bool = True) -> 'FST':
-        """Actually do the reparse."""
-
-        copy_root = FST(Pass(), lines=copy_lines)  # we don't need the ASTs here, just the lines
-
-        copy_root.put_src(new_lines, ln, col, end_ln, end_col)
-
-        root      = self.root
-        copy_root = FST.fromsrc(copy_root.src, mode=get_parse_mode(root.a) or 'exec', **root.parse_params)
-
-        if path == 'root':
-            self._lines = copy_root._lines
-            copy        = copy_root
-
-        else:
-            copy = copy_root.child_from_path(path)
-
-            if not copy:
-                raise RuntimeError(f'could not find node after raw reparse')
-
-            root.put_src(new_lines, ln, col, end_ln, end_col, True, self if set_ast else None)  # we do this again in our own tree to offset our nodes which aren't being moved over from the modified copy, can exclude self if setting ast because it overrides self locations
-
-            copy.pfield.set(copy.parent.a, None)  # remove from copy tree so that copy_root unmake doesn't zero out new node
-            copy_root._unmake_fst_tree()
-
-        if set_ast:
-            self._set_ast(copy.a)
-            self.touch(True)
-
-        return copy
-
-    def _reparse_raw_stmtish(self, new_lines: list[str], ln: int, col: int, end_ln: int, end_col: int) -> bool:
-        """Reparse only statementish or block opener part of statementish containing changes."""
-
-        if not (stmtish := self.parent_stmtish(True, False)):
-            return False
-
-        pln, pcol, pend_ln, pend_col = stmtish.bloc
-
-        root     = self.root
-        lines    = root._lines
-        stmtisha = stmtish.a
-
-        if in_blkopen := (blkopen_end := stmtish._loc_block_opener_end()) and (end_ln, end_col) <= blkopen_end:  # block statement with modification limited to block opener
-            pend_ln, pend_col = blkopen_end
-
-        if isinstance(stmtisha, match_case):
-            copy_lines = ([bistr('')] * (pln - 1) +
-                          [bistr('match a:'), bistr(' ' * pcol + lines[pln][pcol:])] +
-                          lines[pln + 1 : pend_ln + 1])
-            path       = PATH_BODYCASES
-
-        else:
-            indent = stmtish.get_indent()
-
-            if not indent:
-                copy_lines = [bistr('')] * pln + lines[pln : pend_ln + 1]
-
-            elif pln:
-                copy_lines = ([bistr('if 1:')] +
-                              [bistr('')] * (pln - 1) +
-                              [bistr(' ' * pcol + lines[pln][pcol:])] +
-                              lines[pln + 1 : pend_ln + 1])
-            else:
-                copy_lines = ([bistr(f"try:{' ' * (pcol - 4)}{lines[pln][pcol:]}")] +
-                              lines[pln + 1 : pend_ln + 1] +
-                              [bistr('finally: pass')])
-
-            if isinstance(stmtisha, ExceptHandler):
-                assert pln > bool(indent)
-
-                copy_lines[pln - 1] = bistr(indent + 'try: pass')
-                path                = PATH_BODY2HANDLERS if indent else PATH_BODYHANDLERS
-
-            elif not indent:
-                if stmtish.is_elif():
-                    copy_lines[0] = bistr('if 2: pass')
-                    path          = PATH_BODYORELSE
-                else:
-                    path = PATH_BODY
+            except (SyntaxError, NodeTypeError):
+                if not raw:
+                    raise
 
             else:
-                if stmtish.is_elif():
-                    copy_lines[1] = bistr(indent + 'if 2: pass')
-                    path          = PATH_BODY2ORELSE
-                else:
-                    path = PATH_BODY2
+                if not raw:
+                    raise ValueError(f"cannot replace in {parenta.__class__.__name__}.{field}")
 
-        if not in_blkopen:  # non-block statement or modifications not limited to block opener part
-            copy_lines[pend_ln] = bistr(copy_lines[pend_ln][:pend_col])
+        ret = self._reparse_raw_node(code, **options)
 
-            stmtish._reparse_raw_doit(new_lines, ln, col, end_ln, end_col, copy_lines, path)
-
-            return True
-
-        # modifications only to block opener line(s) of block statement
-
-        if isinstance(stmtisha, Match):
-            copy_lines[pend_ln] = bistr(copy_lines[pend_ln][:pend_col])
-
-            copy_lines.append(bistr(indent + ' case 1: pass'))
-
-        else:
-            copy_lines[pend_ln] = bistr(copy_lines[pend_ln][:pend_col] + ' pass')
-
-            if isinstance(stmtisha, (Try, TryStar)):  # this one is just silly, nothing to put there, but we cover it
-                copy_lines.append(bistr(indent + 'finally: pass'))
-
-        copy  = stmtish._reparse_raw_doit(new_lines, ln, col, end_ln, end_col, copy_lines, path, False)
-        copya = copy.a
-
-        if not isinstance(stmtisha, match_case):  # match_case doesn't have AST location
-            copya.end_lineno     = stmtisha.end_lineno
-            copya.end_col_offset = stmtisha.end_col_offset
-
-        for field in STATEMENTISH_FIELDS:
-            if (body := getattr(stmtisha, field, None)) is not None:
-                setattr(copya, field, body)
-
-        stmtish._set_ast(copya)
-        stmtish.touch(True)
-
-        return True
-
-    def _reparse_raw(self, code: Code | None, ln: int, col: int, end_ln: int, end_col: int, exact: bool | None = None
-                     ) -> Optional['FST']:
-        """Reparse this node which entirely contatins the span which is to be replaced with `code` source. `self` must
-        be a node which entirely contains the location and is guaranteed not to be deleted. `self` and some of its
-        parents going up may be replaced (root node `FST` will never change, the `AST` it points to may though). Not
-        safe to use in a `walk()`.
-
-        **Returns:**
-        - `FST | None`: FIRST highest level node contained entirely within replacement source or `None` if no candidate.
-            This could wind up being just an operator like '+' depending on the replacement. If `exact` is passed and
-            not `None` then will attempt a `find_loc(..., exact)` if could not find candidate node with `find_in_loc()`.
-        """
-
-        if isinstance(code, str):
-            new_lines = code.split('\n')
-        elif isinstance(code, list):
-            new_lines = code
-        elif isinstance(code, AST):
-            new_lines = ast_unparse(code).split('\n')
-        elif code is None:
-            new_lines = [bistr('')]
-        elif not code.is_root:  # isinstance(code, FST)
-            raise ValueError('expecting root FST')
-        else:
-            new_lines = code._lines
-
-        if not self._reparse_raw_stmtish(new_lines, ln, col, end_ln, end_col):  # attempt to reparse only statement (or even only block opener)
-            assert self.root.is_mod  # TODO: allow with non-mod root
-
-            root = self.root
-
-            self._reparse_raw_doit(new_lines, ln, col, end_ln, end_col, root._lines[:],  # fallback to reparse all source
-                                   'root' if self is root else root.child_path(self))
-
-        if code is None:
-            return None
-
-        if len(new_lines) == 1:
-            end_ln  = ln
-            end_col = col + len(new_lines[0])
-
-        else:
-            end_ln  = ln + len(new_lines) - 1
-            end_col = len(new_lines[-1])
-
-        return (self.root.find_in_loc(ln, col, end_ln, end_col) or  # `self.root` instead of `self` because some changes may propagate farther up the tree, like 'elif' -> 'else'
-                (self.root.find_loc(ln, col, end_ln, end_col, exact) if exact is not None else None))
-
-    def _reparse_raw_node(self, code: Code | None, to: Optional['FST'] = None, **options) -> 'FST':
-        """Attempt a replacement by using str as source and attempting to parse into location of node(s) being
-        replaced."""
-
-        multi = to and to is not self
-        pars  = True if multi else bool(FST.get_option('pars', options))
-        loc   = self.pars(pars, exc_genexpr_solo=True)
-
-        if not loc:
-            raise ValueError('node being reparsed must have a location')
-
-
-        # TODO: allow all options for removing comments and space, not just pars
-
-
-        if not multi:
-            if not (parent := self.parent):  # we want parent which will not change or root node
-                parent = self
-
-            elif pars:  # precedence parenthesizing
-                def require_parens(ast):
-                    field, idx  = self.pfield
-                    parenta     = parent.a
-                    child_type  = (ast.op.__class__
-                                    if (cc := ast.__class__) in (BoolOp, BinOp, UnaryOp) else cc)
-                    parent_type = (parenta.op.__class__
-                                    if (pc := parenta.__class__) in (BoolOp, BinOp, UnaryOp) else pc)
-                    key_is_None = pc is Dict and parenta.keys[idx] is None
-
-                    return precedence_require_parens(child_type, parent_type, field, dict_key_is_None=key_is_None)
-
-                if isinstance(code, FST):
-                    if not code.is_atom() and require_parens(code.a):
-                        code.parenthesize()
-
-                elif isinstance(code, AST):
-                    if not (atom := is_atom(code, tuple_as_atom=None)):
-                        if require_parens(code):
-                            code = ast_unparse(code) if atom is None else f'({ast_unparse(code)})'
-                        elif atom is None:  # strip `unparse()` parens
-                            code = ast_unparse(code)[1:-1]
-
-            if (pars or not self.is_solo_call_arg_genexpr() or
-                (to_loc := self.pars(True, exc_genexpr_solo=True))[:2] <= loc[:2]  # need to check this case if `pars` wasn't specified for a solo call arg GenExpression
-            ):
-                to_loc = loc
-            else:
-                loc = to_loc
-
-        elif not (to_loc := to.pars(pars, exc_genexpr_solo=True)):  # pars is True here
-            raise ValueError(f"'to' node must have a location")
-        elif (root := self.root) is not to.root:
-            raise ValueError(f"'to' node not part of same tree")
-
-        else:
-            self_path = root.child_path(self)[:-1]  # [:-1] makes sure we get parent of whatever combination of paths
-            to_path   = root.child_path(to)[:-1]
-            path      = list(p for p, _ in takewhile(lambda st: st[0] == st[1], zip(self_path, to_path)))
-            parent    = root.child_from_path(path)
-
-        return parent._reparse_raw(code, loc.ln, loc.col, to_loc.end_ln, to_loc.end_col)
+        return None if code is None else ret
 
     # ------------------------------------------------------------------------------------------------------------------
 
@@ -4583,6 +4647,38 @@ class FST:
 
         return FST(ast, lines=[bistr(s) for s in lines], parse_params=parse_params)
 
+    @staticmethod
+    def get_option(option: str, options: dict[str, Any]) -> Any:
+        """Get option from options dict or default if option not in dict or is `None` there.
+
+        **Parameters:**
+        - `option`: Name of option to get.
+        - `options`: Dictionary which may or may not contain the requested option.
+
+        **Returns:**
+        - `Any`: Default option of if not found in `options` else that option.
+        """
+
+        return FST.OPTIONS.get(option) if (o := options.get(option)) is None else o
+
+    @staticmethod
+    def set_options(**options) -> dict[str, Any]:
+        """Set defaults for `options` parameters.
+
+        **Parameters:**
+        - `options`: Key / values of parameters to set.
+
+        **Returns:**
+        - `options`: `dict` of previous values of changed parameters, reset with `set_options(**options)`.
+        """
+
+        fstopts = FST.OPTIONS
+        ret     = {o: fstopts[o] for o in options}
+
+        fstopts.update(options)
+
+        return ret
+
     def dump(self, compact: bool = False, full: bool = False, *, indent: int = 2, out: Callable | TextIO = print,
              eol: str | None = None) -> list[str] | None:
         """Dump a representation of the tree to stdout or return as a list of lines.
@@ -4657,38 +4753,6 @@ class FST:
 
         return self
 
-    @staticmethod
-    def get_option(option: str, options: dict[str, Any]) -> Any:
-        """Get option from options dict or default if option not in dict or is `None` there.
-
-        **Parameters:**
-        - `option`: Name of option to get.
-        - `options`: Dictionary which may or may not contain the requested option.
-
-        **Returns:**
-        - `Any`: Default option of if not found in `options` else that option.
-        """
-
-        return FST.OPTIONS.get(option) if (o := options.get(option)) is None else o
-
-    @staticmethod
-    def set_options(**options) -> dict[str, Any]:
-        """Set defaults for `options` parameters.
-
-        **Parameters:**
-        - `options`: Key / values of parameters to set.
-
-        **Returns:**
-        - `options`: `dict` of previous values of changed parameters, reset with `set_options(**options)`.
-        """
-
-        fstopts = FST.OPTIONS
-        ret     = {o: fstopts[o] for o in options}
-
-        fstopts.update(options)
-
-        return ret
-
     # ------------------------------------------------------------------------------------------------------------------
 
     def copy(self, **options) -> 'FST':
@@ -4744,63 +4808,75 @@ class FST:
         raise ValueError(f"cannot cut from a {parenta.__class__.__name__}.{field}")
 
     def replace(self, code: Code | None, **options) -> Optional['FST']:  # -> Self (replaced) or None if deleted
-        """Replace an individual node, returns the new node for `self`, not the old replaced node.
-
-        Can reparse.
+        """Replace or delete (`code=None`) an individual node. Returns the new node for `self`, not the old replaced
+        node, or `None` if was deleted or raw replaced and old node disappeared.
         """
 
-        if self.is_root:
+        if not (parent := self.parent):
             raise ValueError('cannot replace root node')
 
-        ast        = self.a
-        parent     = self.parent
-        field, idx = pfield = self.pfield
-        parenta    = parent.a
-        raw        = FST.get_option('raw', options)
-        to         = options.get('to')
-
-        def to_idx():
-            if not to:
-                return idx + 1
-            elif to.parent is parent and (pf := to.pfield).name == field and (to_idx := pf.idx) >= idx:
-                return to_idx + 1
-
-            raise NodeTypeError(f"invalid 'to' node")
-
-        if raw is not True:
-            if raw and raw != 'alt':
-                raise ValueError(f"invalid value '{raw}' for raw parameter")
-
-            try:
-                if isinstance(ast, STATEMENTISH):
-                    parent._put_slice_stmt(code, idx, to_idx(), field, True, **options)
-
-                    return None if code is None else pfield.get(parenta).f
-
-                if isinstance(parenta, (Tuple, List, Set)):
-                    parent._put_slice_tuple_list_or_set(code, idx, to_idx(), field, True, **options)
-
-                    return None if code is None else pfield.get(parenta).f
+        return parent._put_one(code, (pf := self.pfield).idx, pf.name, **options)
 
 
-                # TODO: more individual specialized replacements
+        # field, idx = self.pfield
+        # self = parent
+
+        # if isinstance(body := getattr(self.a, field), list):
+        #     body = body[idx]
+
+        # self = body.f
 
 
-            except (SyntaxError, NodeTypeError):
-                if not raw:
-                    raise
 
-            else:
-                if not raw:
-                    raise ValueError(f"cannot replace in {parenta.__class__.__name__}.{field}")
+        # ast        = self.a
+        # parent     = self.parent
+        # field, idx = pfield = self.pfield
+        # parenta    = parent.a
+        # raw        = FST.get_option('raw', options)
+        # to         = options.get('to')
 
-        ret = self._reparse_raw_node(code, **options)
+        # def to_idx():
+        #     if not to:
+        #         return idx + 1
+        #     elif to.parent is parent and (pf := to.pfield).name == field and (to_idx := pf.idx) >= idx:
+        #         return to_idx + 1
 
-        return None if code is None else ret
+        #     raise NodeTypeError(f"invalid 'to' node")
+
+        # if raw is not True:
+        #     if raw and raw != 'alt':
+        #         raise ValueError(f"invalid value '{raw}' for raw parameter")
+
+        #     try:
+        #         if isinstance(ast, STATEMENTISH):
+        #             parent._put_slice_stmt(code, idx, to_idx(), field, True, **options)
+
+        #             return None if code is None else pfield.get(parenta).f
+
+        #         if isinstance(parenta, (Tuple, List, Set)):
+        #             parent._put_slice_tuple_list_or_set(code, idx, to_idx(), field, True, **options)
+
+        #             return None if code is None else pfield.get(parenta).f
+
+
+        #         # TODO: more individual specialized replacements
+
+
+        #     except (SyntaxError, NodeTypeError):
+        #         if not raw:
+        #             raise
+
+        #     else:
+        #         if not raw:
+        #             raise ValueError(f"cannot replace in {parenta.__class__.__name__}.{field}")
+
+        # ret = self._reparse_raw_node(code, **options)
+
+        # return None if code is None else ret
 
     def get(self, start: int | Literal['end'] | None = None, stop: int | None | Literal[False] = False,
             field: str | None = None, *, cut: bool = False, **options) -> Optional['FST']:
-        """Get an individual child node or a slice of child nodes from `self`."""
+        """Copy or cut an individual child node or a slice of child nodes from `self`."""
 
         if stop is not False:
             return self.get_slice(start, stop, field, cut=cut, **options)
@@ -4819,24 +4895,19 @@ class FST:
             one: bool = True, **options) -> 'FST':  # -> Self
         """Put an individual child node or a slice of child nodes to `self`.
 
-        If the `code` being put is an `AST` or `FST` then it is consumed and should not be considered valid after this
-        call whether it succeeds or fails.
+        WARNING! If the `code` being put is an `AST` or `FST` then it is consumed and should be considered invalid after
+        this call, whether it succeeds or fails.
         """
 
-        ast     = self.a
-        _, body = _fixup_field_body(self.a, field, False)
+        ast          = self.a
+        field_, body = _fixup_field_body(self.a, field, False)
 
-        if not isinstance(body, list):
+        if not isinstance(body, list):  # put to individual field
             if stop is not False or start is not None:
                 raise ValueError(f"cannot pass index for non-slice put() to {ast.__class__.__name__}" +
                                  f".{field}" if field else "")
 
-
-            if not isinstance(body, AST):
-                raise NotImplementedError  # TODO: put to missing field
-
-
-            body.f.replace(code, **options)
+            self._put_one(code, start, field_, **options)
 
             return self.repath()
 
@@ -4865,9 +4936,15 @@ class FST:
                 return self.repath()
 
             if isinstance(ast, Compare):
-                body = [ast.left, *ast.comparators]
+                if start < 0:
+                    start += len(ast.comparators) + 1
 
-        if is_dict and field == 'keys' and (keys := ast.keys)[start] is None:  # '{**d}' bs
+                    if start < 0:
+                        raise IndexError('invalid index')
+
+                field_, start = ('comparators', start - 1) if start else ('left', None)
+
+        if is_dict and field == 'keys' and (keys := ast.keys)[start] is None:  # '{**d}' with key=None
             start_loc = self._dict_key_or_mock_loc(keys[start], ast.values[start].f)
 
             ln, col, end_ln, end_col = start_loc.loc if start_loc.is_FST else start_loc
@@ -4876,7 +4953,7 @@ class FST:
             self._reparse_raw(code, ln, col, ln, col)
 
         else:
-            body[start].f.replace(code, **options)
+            self._put_one(code, start, field_, **options)
 
         return self.repath()
 
