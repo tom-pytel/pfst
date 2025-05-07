@@ -111,13 +111,13 @@ AST_FIELDS_PREV[(arguments, 'kw_defaults')] = 7
 AST_FIELDS_PREV[(arguments, 'kwarg')]       = 7
 
 AST_DEFAULT_BODY_FIELD  = {cls: field for field, classes in [
-    ('body',        (Module, Interactive, FunctionDef, AsyncFunctionDef, ClassDef, For, AsyncFor, While, If,
+    ('body',        (Module, Interactive, Expression, FunctionDef, AsyncFunctionDef, ClassDef, For, AsyncFor, While, If,
                      With, AsyncWith, Try, TryStar, ExceptHandler, match_case),),
     ('cases',       (Match,)),
 
     ('elts',        (Tuple, List, Set)),
     ('patterns',    (MatchSequence, MatchOr)),
-    ('targets',     (Delete, Assign)),
+    ('targets',     (Delete,)),  # , Assign)),
     ('type_params', (TypeAlias,)),
     ('names',       (Import, ImportFrom)),
     ('ifs',         (comprehension,)),
@@ -134,7 +134,7 @@ AST_DEFAULT_BODY_FIELD  = {cls: field for field, classes in [
     ('ops',         (Compare,)),
 
     # single value fields
-    ('value',       (Expr, Return, Await, Yield, YieldFrom, FormattedValue, Interpolation, Starred, MatchValue)),
+    ('value',       (Expr, Return, Assign, Await, Yield, YieldFrom, FormattedValue, Interpolation, Starred, MatchValue)),
     ('pattern',     (MatchAs,)),
 ] for cls in classes}
 
@@ -607,7 +607,7 @@ def _fixup_slice_index(len_, start, stop) -> tuple[int, int]:
     return start, stop
 
 
-def _reduce_ast(ast, coerce: Literal['expr', 'mod'] | None = None):
+def _reduce_ast(ast, coerce: Literal['expr', 'exprish', 'mod'] | None = None):
     """Reduce an AST to a simplest representation based on coercion rule.
 
     **Parameters:**
@@ -652,7 +652,8 @@ def _reduce_ast(ast, coerce: Literal['expr', 'mod'] | None = None):
     return ast
 
 
-def _normalize_code(code: Code, coerce: Literal['expr', 'mod'] | None = None, *, parse_params: dict = {}) -> 'FST':
+def _normalize_code(code: Code, coerce: Literal['expr', 'exprish', 'mod'] | None = None, *, parse_params: dict = {},
+                    ) -> 'FST':
     """Normalize code to an `FST` and coerce to a desired format if possible.
 
     If neither of these is requested then will convert to `ast.Module` if is `ast.Interactive` or return single
@@ -776,7 +777,7 @@ class fstlist:
 
         return fstlist(self.fst, self.field, start + idx_start, start + idx_stop)
 
-    def __setitem__(self, idx: int | slice, code: Code):
+    def __setitem__(self, idx: int | slice, code: Code | None):
         if isinstance(idx, int):
             if not (l := self.stop - (start := self.start)) > ((idx := idx + l) if idx < 0 else idx) >= 0:
                 raise IndexError('index out of range')
@@ -2277,6 +2278,9 @@ class FST:
         if unmake:
             self._unmake_fst_tree()
 
+            if f := getattr(ast, 'f', None):
+                f.a = None
+
         self.a = ast
         ast.f  = self
 
@@ -3468,27 +3472,16 @@ class FST:
             if not (parent := self.parent):  # we want parent which will not change or root node
                 parent = self
 
-            elif pars:  # precedence parenthesizing
-                def require_parens(ast):
-                    field, idx  = self.pfield
-                    parenta     = parent.a
-                    child_type  = (ast.op.__class__
-                                    if (cc := ast.__class__) in (BoolOp, BinOp, UnaryOp) else cc)
-                    parent_type = (parenta.op.__class__
-                                    if (pc := parenta.__class__) in (BoolOp, BinOp, UnaryOp) else pc)
-                    key_is_None = pc is Dict and parenta.keys[idx] is None
-
-                    return precedence_require_parens(child_type, parent_type, field, dict_key_is_None=key_is_None)
-
+            elif pars:  # precedence parenthesizing, we do not remove existing parens here, just add if needed
                 if isinstance(code, FST):
-                    if not code.is_atom() and require_parens(code.a):
+                    if not code.is_atom() and precedence_require_parens(code.a, parent.a, *self.pfield):
                         code.parenthesize()
 
                 elif isinstance(code, AST):
-                    if not (atom := is_atom(code, tuple_as_atom=None)):
-                        if require_parens(code):
-                            code = ast_unparse(code) if atom is None else f'({ast_unparse(code)})'
-                        elif atom is None:  # strip `unparse()` parens
+                    if not (is_atom_ := is_atom(code, tuple_as_atom=None)):
+                        if precedence_require_parens(code, parent.a, *self.pfield):
+                            code = ast_unparse(code) if is_atom_ is None else f'({ast_unparse(code)})'
+                        elif is_atom_ is None:  # strip `unparse()` parens
                             code = ast_unparse(code)[1:-1]
 
             if (pars or not self.is_solo_call_arg_genexpr() or
@@ -4322,11 +4315,11 @@ class FST:
 
     # ------------------------------------------------------------------------------------------------------------------
 
-    def _to_to_slice_idx(self, idx: int, to: Optional['FST']):
+    def _to_to_slice_idx(self, idx: int, field: str, to: Optional['FST']):
         """If a `to` parameter is passed then try to convert it to an index in the same body list as `self`."""
 
         if not to:
-            return idx + 1
+            return idx + 1 or len(getattr(self.a, field))  # or for negative indices
 
         elif to.parent is self.parent is not None and (pf := to.pfield).name == self.pfield.name:
             if (to_idx := pf.idx) < idx:
@@ -4336,22 +4329,51 @@ class FST:
 
         raise NodeTypeError(f"invalid 'to' node")
 
-    def _put_one_stmtish(self, code: Code, idx: int, field: str, **options) -> Optional['FST']:
-        """Put a single statementish node to a list of them (body, orelse, handlers, finalbody or cases)."""
+    def _put_one_stmtish(self, code: Code | None, idx: int | None, field: str, child: Any, **options,
+                         ) -> Optional['FST']:
+        """Put or delete a single statementish node to a list of them (body, orelse, handlers, finalbody or cases)."""
 
-        self._put_slice_stmtish(code, idx, self._to_to_slice_idx(idx, options.get('to')), field, True, **options)
+        self._put_slice_stmtish(code, idx, self._to_to_slice_idx(idx, field, options.get('to')), field, True, **options)
 
         return None if code is None else getattr(self.a, field)[idx].f
 
-    def _put_one_tuple_list_or_set(self, code: Code, idx: int, field: str, **options) -> Optional['FST']:
-        """Put a single expression to a Tuple, List or Set elts."""
+    def _put_one_tuple_list_or_set(self, code: Code | None, idx: int | None, field: str, child: Any, **options,
+                                   ) -> Optional['FST']:
+        """Put or delete a single expression to a Tuple, List or Set elts."""
 
-        self._put_slice_tuple_list_or_set(code, idx, self._to_to_slice_idx(idx, options.get('to')), field, True,
+        self._put_slice_tuple_list_or_set(code, idx, self._to_to_slice_idx(idx, field, options.get('to')), field, True,
                                           **options)
 
         return None if code is None else getattr(self.a, field)[idx].f
 
-    def _put_one(self, code: Code, idx: int | None, field: str, **options) -> Optional['FST']:
+    def _put_one_mandatory_expr(self, code: Code | None, idx: int | None, field: str, child: Any, **options,
+                                ) -> Optional['FST']:
+        """Put a single mandatory expression node."""
+
+        if code is None:
+            raise ValueError(f'cannot delete a {self.a.__class__.__name__}.{field}')
+        if idx is not None:
+            raise IndexError(f'{self.a.__class__.__name__}.{field} does not take an index')
+        if options.get('to'):
+            raise NodeTypeError(f"cannot put with 'to' to {self.a.__class__.__name__}.{field}")
+
+        ast     = self.a
+        put_fst = _normalize_code(code, 'expr', parse_params=self.root.parse_params)
+        put_ast = put_fst.a
+        pars    = bool(FST.get_option('pars', options))
+        childf  = child.f
+        loc     = childf.pars(pars)
+
+        if pars:  # precedence parenthesizing, we do not remove existing parens here, just add if needed
+            if not put_fst.is_atom() and precedence_require_parens(put_ast, ast, field, None):
+                put_fst.parenthesize()
+
+        self.put_src(put_fst._lines, *loc, False)
+        childf._set_ast(put_ast)
+
+        return put_ast.f
+
+    def _put_one(self, code: Code | None, idx: int | None, field: str, **options) -> Optional['FST']:
         """Put new, replace or delete a node (or limited non-node) to a field of `self`."""
 
         if isinstance(child := getattr(self.a, field), list):
@@ -4366,7 +4388,7 @@ class FST:
 
             try:
                 if handler := FST._PUT_ONE_HANDLERS.get((ast.__class__, field)):
-                    return handler(self, code, idx, field, **options)
+                    return handler(self, code, idx, field, child, **options)
 
 
                 # TODO: more individual specialized replacements
@@ -4388,7 +4410,7 @@ class FST:
         (Module, 'body'):                     _put_one_stmtish, # stmt*
         # (Module, 'type_ignores'):             _put_one_default, # type_ignore*
         (Interactive, 'body'):                _put_one_stmtish, # stmt*
-        # (Expression, 'body'):                 _put_one_default, # expr
+        (Expression, 'body'):                 _put_one_mandatory_expr, # expr
         # (FunctionType, 'argtypes'):           _put_one_default, # expr*
         # (FunctionType, 'returns'):            _put_one_default, # expr
         # (FunctionDef, 'decorator_list'):      _put_one_default, # expr*
@@ -4414,7 +4436,7 @@ class FST:
         # (Return, 'value'):                    _put_one_default, # expr?
         # (Delete, 'targets'):                  _put_one_default, # expr*
         # (Assign, 'targets'):                  _put_one_default, # expr*
-        # (Assign, 'value'):                    _put_one_default, # expr
+        (Assign, 'value'):                    _put_one_mandatory_expr, # expr
         # (Assign, 'type_comment'):             _put_one_default, # string?
         # (TypeAlias, 'name'):                  _put_one_default, # expr
         # (TypeAlias, 'type_params'):           _put_one_default, # type_param*
@@ -4755,7 +4777,7 @@ class FST:
         if mode == 'exec':
             ast = Module(body=[], type_ignores=[])
         elif mode == 'eval':
-            ast = Expression(body=Constant(value=None, lineno=1, col_offset=0, en_lineno=1, end_col_offset=4))
+            ast = Expression(body=Constant(value=None, lineno=1, col_offset=0, end_lineno=1, end_col_offset=4))
         elif mode == 'single':
             ast = Interactive(body=[])
         else:
@@ -4822,6 +4844,10 @@ class FST:
 
         src   = ast_unparse(ast)
         lines = src.split('\n')
+
+
+        # TODO: unparenthesize unnecessarily parenthesized expressions (NamedExpr, Yield, YieldFrom)?
+
 
         if type_comments is None:
             type_comments = has_type_comments(ast)
@@ -5022,12 +5048,24 @@ class FST:
             field: str | None = None, *, cut: bool = False, **options) -> Optional['FST']:
         """Copy or cut an individual child node or a slice of child nodes from `self`."""
 
+        ast          = self.a
+        field_, body = _fixup_field_body(ast, field, False)
+
+        if not isinstance(body, list):  # get from individual field
+            if stop is not False or start is not None:
+                raise IndexError(f"cannot pass index for non-slice get() to {ast.__class__.__name__}" +
+                                 f".{field}" if field else "")
+
+            raise NotImplementedError
+
+
+            # TODO: get single-field non-indexed stuff
+
+
         if stop is not False:
             return self.get_slice(start, stop, field, cut=cut, **options)
         elif start is None:
             return self.get_slice(None, None, field, cut=cut, **options)
-
-        _, body = _fixup_field_body(self.a, field)
 
         if cut:
             return body[start].f.cut(**options)
@@ -5044,11 +5082,11 @@ class FST:
         """
 
         ast          = self.a
-        field_, body = _fixup_field_body(self.a, field, False)
+        field_, body = _fixup_field_body(ast, field, False)
 
         if not isinstance(body, list):  # put to individual field
             if stop is not False or start is not None:
-                raise ValueError(f"cannot pass index for non-slice put() to {ast.__class__.__name__}" +
+                raise IndexError(f"cannot pass index for non-slice put() to {ast.__class__.__name__}" +
                                  f".{field}" if field else "")
 
             self._put_one(code, start, field_, **options)
@@ -5061,7 +5099,7 @@ class FST:
             return self.put_slice(code, None, None, field, one=one, **options)
 
         if start == 'end':
-            raise ValueError(f"cannot put() non-slice to index 'end'")
+            raise IndexError(f"cannot put() non-slice to index 'end'")
         if not one:
             raise ValueError(f"cannot use 'one=False' in non-slice put()")
 

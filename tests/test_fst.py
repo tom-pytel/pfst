@@ -14911,7 +14911,7 @@ Module .. ROOT 0,0 -> 0,8
     1] Name 'z' Del .. 0,7 -> 0,8
 """),
 
-(r"""a = b = c = d""", 'body[0]', 1, 3, None, {'raw': True}, r"""z""", r"""a = z = d""", r"""
+(r"""a = b = c = d""", 'body[0]', 1, 3, 'targets', {'raw': True}, r"""z""", r"""a = z = d""", r"""
 Module .. ROOT 0,0 -> 0,9
   .body[1]
   0] Assign .. 0,0 -> 0,9
@@ -15357,6 +15357,117 @@ Module .. ROOT 0,0 -> 0,4
 """),
 
 ]  # END OF PUT_SLICE_DATA
+
+PUT_ONE_DATA = [
+(r"""i = 1
+j = 2
+k = 3""", '', 1, None, {'raw': False}, r"""l = 4""", r"""i = 1
+l = 4
+k = 3""", r"""
+Module .. ROOT 0,0 -> 2,5
+  .body[3]
+  0] Assign .. 0,0 -> 0,5
+    .targets[1]
+    0] Name 'i' Store .. 0,0 -> 0,1
+    .value Constant 1 .. 0,4 -> 0,5
+  1] Assign .. 1,0 -> 1,5
+    .targets[1]
+    0] Name 'l' Store .. 1,0 -> 1,1
+    .value Constant 4 .. 1,4 -> 1,5
+  2] Assign .. 2,0 -> 2,5
+    .targets[1]
+    0] Name 'k' Store .. 2,0 -> 2,1
+    .value Constant 3 .. 2,4 -> 2,5
+"""),
+
+(r"""i = 1
+j = 2
+k = 3""", '', -1, None, {'raw': False}, r"""l = 4""", r"""i = 1
+j = 2
+l = 4
+""", r"""
+Module .. ROOT 0,0 -> 3,0
+  .body[3]
+  0] Assign .. 0,0 -> 0,5
+    .targets[1]
+    0] Name 'i' Store .. 0,0 -> 0,1
+    .value Constant 1 .. 0,4 -> 0,5
+  1] Assign .. 1,0 -> 1,5
+    .targets[1]
+    0] Name 'j' Store .. 1,0 -> 1,1
+    .value Constant 2 .. 1,4 -> 1,5
+  2] Assign .. 2,0 -> 2,5
+    .targets[1]
+    0] Name 'l' Store .. 2,0 -> 2,1
+    .value Constant 4 .. 2,4 -> 2,5
+"""),
+
+(r"""i = 1
+j = 2
+k = 3""", '', -3, None, {'raw': False}, r"""l = 4""", r"""l = 4
+j = 2
+k = 3""", r"""
+Module .. ROOT 0,0 -> 2,5
+  .body[3]
+  0] Assign .. 0,0 -> 0,5
+    .targets[1]
+    0] Name 'l' Store .. 0,0 -> 0,1
+    .value Constant 4 .. 0,4 -> 0,5
+  1] Assign .. 1,0 -> 1,5
+    .targets[1]
+    0] Name 'j' Store .. 1,0 -> 1,1
+    .value Constant 2 .. 1,4 -> 1,5
+  2] Assign .. 2,0 -> 2,5
+    .targets[1]
+    0] Name 'k' Store .. 2,0 -> 2,1
+    .value Constant 3 .. 2,4 -> 2,5
+"""),
+
+(r"""i = 1
+j = 2
+k = 3""", '', -4, None, {'raw': False}, r"""l = 4""", r"""**IndexError('list index out of range')**""", r"""
+"""),
+
+(r"""(1, 2, 3)""", 'body[0].value', 1, None, {'raw': False}, r"""4""", r"""(1, 4, 3)""", r"""
+Module .. ROOT 0,0 -> 0,9
+  .body[1]
+  0] Expr .. 0,0 -> 0,9
+    .value Tuple .. 0,0 -> 0,9
+      .elts[3]
+      0] Constant 1 .. 0,1 -> 0,2
+      1] Constant 4 .. 0,4 -> 0,5
+      2] Constant 3 .. 0,7 -> 0,8
+      .ctx Load
+"""),
+
+(r"""(1, 2, 3)""", 'body[0].value', -1, None, {'raw': False}, r"""4""", r"""(1, 2, 4)""", r"""
+Module .. ROOT 0,0 -> 0,9
+  .body[1]
+  0] Expr .. 0,0 -> 0,9
+    .value Tuple .. 0,0 -> 0,9
+      .elts[3]
+      0] Constant 1 .. 0,1 -> 0,2
+      1] Constant 2 .. 0,4 -> 0,5
+      2] Constant 4 .. 0,7 -> 0,8
+      .ctx Load
+"""),
+
+(r"""(1, 2, 3)""", 'body[0].value', -3, None, {'raw': False}, r"""4""", r"""(4, 2, 3)""", r"""
+Module .. ROOT 0,0 -> 0,9
+  .body[1]
+  0] Expr .. 0,0 -> 0,9
+    .value Tuple .. 0,0 -> 0,9
+      .elts[3]
+      0] Constant 4 .. 0,1 -> 0,2
+      1] Constant 2 .. 0,4 -> 0,5
+      2] Constant 3 .. 0,7 -> 0,8
+      .ctx Load
+"""),
+
+(r"""(1, 2, 3)""", 'body[0].value', -4, None, {'raw': False}, r"""4""", r"""**IndexError('list index out of range')**""", r"""
+"""),
+
+]  # END OF PUT_ONE_DATA
 
 PUT_RAW_DATA = [
 (r"""(1, 2, 3)""", '', (0, 4, 0, 5), {}, r"""*z""", r"""*z""", r"""(1, *z, 3)""", r"""
@@ -17577,151 +17688,151 @@ PRECEDENCE_DATA = [
 
 REPLACE_EXISTING_ONE_DATA = [
 # FunctionDef
-("@d\ndef f(a) -> r: pass", 'body[0].decorator_list[0]', {}, "z", "z", "@z\ndef f(a) -> r: pass"),
-("@d\ndef f(a) -> r: pass", 'body[0].args', {}, "z", "z", "@d\ndef f(z) -> r: pass"),
-("@d\ndef f(a) -> r: pass", 'body[0].returns', {}, "z", "z", "@d\ndef f(a) -> z: pass"),
+("@d\ndef f(a) -> r: pass", 'body[0].decorator_list[0]', {'raw': True}, "z", "z", "@z\ndef f(a) -> r: pass"),
+("@d\ndef f(a) -> r: pass", 'body[0].args', {'raw': True}, "z", "z", "@d\ndef f(z) -> r: pass"),
+("@d\ndef f(a) -> r: pass", 'body[0].returns', {'raw': True}, "z", "z", "@d\ndef f(a) -> z: pass"),
 
 # AsyncFunctionDef
-("@d\nasync def f(a) -> r: pass", 'body[0].decorator_list[0]', {}, "z", "z", "@z\nasync def f(a) -> r: pass"),
-("@d\nasync def f(a) -> r: pass", 'body[0].args', {}, "z", "z", "@d\nasync def f(z) -> r: pass"),
-("@d\nasync def f(a) -> r: pass", 'body[0].returns', {}, "z", "z", "@d\nasync def f(a) -> z: pass"),
+("@d\nasync def f(a) -> r: pass", 'body[0].decorator_list[0]', {'raw': True}, "z", "z", "@z\nasync def f(a) -> r: pass"),
+("@d\nasync def f(a) -> r: pass", 'body[0].args', {'raw': True}, "z", "z", "@d\nasync def f(z) -> r: pass"),
+("@d\nasync def f(a) -> r: pass", 'body[0].returns', {'raw': True}, "z", "z", "@d\nasync def f(a) -> z: pass"),
 
 # ClassDef
-("@d\nclass c(b, k=v): pass", 'body[0].decorator_list[0]', {}, "z", "z", "@z\nclass c(b, k=v): pass"),
-("@d\nclass c(b, k=v): pass", 'body[0].bases[0]', {}, "z", "z", "@d\nclass c(z, k=v): pass"),
-("@d\nclass c(b, k=v): pass", 'body[0].keywords[0]', {}, "z=y", "z=y", "@d\nclass c(b, z=y): pass"),
+("@d\nclass c(b, k=v): pass", 'body[0].decorator_list[0]', {'raw': True}, "z", "z", "@z\nclass c(b, k=v): pass"),
+("@d\nclass c(b, k=v): pass", 'body[0].bases[0]', {'raw': True}, "z", "z", "@d\nclass c(z, k=v): pass"),
+("@d\nclass c(b, k=v): pass", 'body[0].keywords[0]', {'raw': True}, "z=y", "z=y", "@d\nclass c(b, z=y): pass"),
 
 # Return
-("return r", 'body[0].value', {}, "z", "z", "return z"),
+("return r", 'body[0].value', {'raw': True}, "z", "z", "return z"),
 
 # Delete
-("del d", 'body[0].targets[0]', {}, "z", "z", "del z"),
+("del d", 'body[0].targets[0]', {'raw': True}, "z", "z", "del z"),
 
 # Assign
-("t = v", 'body[0].targets[0]', {}, "z", "z", "z = v"),
-("t = v", 'body[0].value', {}, "z", "z", "t = z"),
+("t = v", 'body[0].targets[0]', {'raw': True}, "z", "z", "z = v"),
+("t = v", 'body[0].value', {'raw': True}, "z", "z", "t = z"),
 
 # AugAssign
-("t += v", 'body[0].target', {}, "z", "z", "z += v"),
-("t += v", 'body[0].op', {}, "-=", "-=", "t -= v"),
-("t += v", 'body[0].value', {}, "z", "z", "t += z"),
+("t += v", 'body[0].target', {'raw': True}, "z", "z", "z += v"),
+("t += v", 'body[0].op', {'raw': True}, "-=", "-=", "t -= v"),
+("t += v", 'body[0].value', {'raw': True}, "z", "z", "t += z"),
 
 # AnnAssign
-("t: int = v", 'body[0].target', {}, "z", "z", "z: int = v"),
-("t: int = v", 'body[0].annotation', {}, "z", "z", "t: z = v"),
-("t: int = v", 'body[0].value', {}, "z", "z", "t: int = z"),
+("t: int = v", 'body[0].target', {'raw': True}, "z", "z", "z: int = v"),
+("t: int = v", 'body[0].annotation', {'raw': True}, "z", "z", "t: z = v"),
+("t: int = v", 'body[0].value', {'raw': True}, "z", "z", "t: int = z"),
 
 # For
-("for i in r: pass", 'body[0].target', {}, "z", "z", "for z in r: pass"),
-("for i in r: pass", 'body[0].iter', {}, "z", "z", "for i in z: pass"),
+("for i in r: pass", 'body[0].target', {'raw': True}, "z", "z", "for z in r: pass"),
+("for i in r: pass", 'body[0].iter', {'raw': True}, "z", "z", "for i in z: pass"),
 
 # AsyncFor
-("async for i in r: pass", 'body[0].target', {}, "z", "z", "async for z in r: pass"),
-("async for i in r: pass", 'body[0].iter', {}, "z", "z", "async for i in z: pass"),
+("async for i in r: pass", 'body[0].target', {'raw': True}, "z", "z", "async for z in r: pass"),
+("async for i in r: pass", 'body[0].iter', {'raw': True}, "z", "z", "async for i in z: pass"),
 
 # While
-("while t: pass", 'body[0].test', {}, "z", "z", "while z: pass"),
+("while t: pass", 'body[0].test', {'raw': True}, "z", "z", "while z: pass"),
 
 # If
-("if t: pass", 'body[0].test', {}, "z", "z", "if z: pass"),
+("if t: pass", 'body[0].test', {'raw': True}, "z", "z", "if z: pass"),
 
 # With
-("with c: pass", 'body[0].items[0]', {}, "z", "z", "with z: pass"),
+("with c: pass", 'body[0].items[0]', {'raw': True}, "z", "z", "with z: pass"),
 
 # AsyncWith
-("async with c: pass", 'body[0].items[0]', {}, "z", "z", "async with z: pass"),
+("async with c: pass", 'body[0].items[0]', {'raw': True}, "z", "z", "async with z: pass"),
 
 # Match
-("match s:\n case 1: pass", 'body[0].subject', {}, "z", "z", "match z:\n case 1: pass"),
+("match s:\n case 1: pass", 'body[0].subject', {'raw': True}, "z", "z", "match z:\n case 1: pass"),
 
 # Raise
-("raise e from c", 'body[0].exc', {}, "z", "z", "raise z from c"),
-("raise e from c", 'body[0].cause', {}, "z", "z", "raise e from z"),
+("raise e from c", 'body[0].exc', {'raw': True}, "z", "z", "raise z from c"),
+("raise e from c", 'body[0].cause', {'raw': True}, "z", "z", "raise e from z"),
 
 # Try
-("try: pass\nexcept Exception as e: pass", 'body[0].handlers[0]', {}, "except: pass", "except: pass", "try: pass\nexcept: pass"),
+("try: pass\nexcept Exception as e: pass", 'body[0].handlers[0]', {'raw': True}, "except: pass", "except: pass", "try: pass\nexcept: pass"),
 
-# TryStar, working on py3.10 so no TryStar
+# TryStar, not available on py3.10 so no TryStar
 
 # Assert
-("assert a, m", 'body[0].test', {}, "z", "z", "assert z, m"),
-("assert a, m", 'body[0].msg', {}, "z", "z", "assert a, z"),
+("assert a, m", 'body[0].test', {'raw': True}, "z", "z", "assert z, m"),
+("assert a, m", 'body[0].msg', {'raw': True}, "z", "z", "assert a, z"),
 
 # Import
-("import p as n", 'body[0].names[0]', {}, "z as y", "z as y", "import z as y"),
+("import p as n", 'body[0].names[0]', {'raw': True}, "z as y", "z as y", "import z as y"),
 
 # ImportFrom
-("from g import p as n", 'body[0].names[0]', {}, "z as y", "z as y", "from g import z as y"),
+("from g import p as n", 'body[0].names[0]', {'raw': True}, "z as y", "z as y", "from g import z as y"),
 
 # Expr
-("e", 'body[0].value', {}, "z", "z", "z"),
+("e", 'body[0].value', {'raw': True}, "z", "z", "z"),
 
 # BoolOp
-("a and b", 'body[0].value.values[0]', {}, "z", "z", "z and b"),
+("a and b", 'body[0].value.values[0]', {'raw': True}, "z", "z", "z and b"),
 
 # NamedExpr
-("(t := v)", 'body[0].value.target', {}, "z", "z", "(z := v)"),
-("(t := v)", 'body[0].value.value', {}, "z", "z", "(t := z)"),
+("(t := v)", 'body[0].value.target', {'raw': True}, "z", "z", "(z := v)"),
+("(t := v)", 'body[0].value.value', {'raw': True}, "z", "z", "(t := z)"),
 
 # BinOp
-("a + b", 'body[0].value.left', {}, "z", "z", "z + b"),
-("a + b", 'body[0].value.op', {}, "-", "-", "a - b"),
-("a + b", 'body[0].value.right', {}, "z", "z", "a + z"),
+("a + b", 'body[0].value.left', {'raw': True}, "z", "z", "z + b"),
+("a + b", 'body[0].value.op', {'raw': True}, "-", "-", "a - b"),
+("a + b", 'body[0].value.right', {'raw': True}, "z", "z", "a + z"),
 
 # UnaryOp
-("+a", 'body[0].value.op', {}, "-", "-", "-a"),
-("+a", 'body[0].value.operand', {}, "z", "z", "+z"),
+("+a", 'body[0].value.op', {'raw': True}, "-", "-", "-a"),
+("+a", 'body[0].value.operand', {'raw': True}, "z", "z", "+z"),
 
 # Lambda
-("lambda a: None", 'body[0].value.args', {}, "z", "z", "lambda z: None"),
+("lambda a: None", 'body[0].value.args', {'raw': True}, "z", "z", "lambda z: None"),
 
 # IfExp
-("a if t else b", 'body[0].value.body', {}, "z", "z", "z if t else b"),
-("a if t else b", 'body[0].value.test', {}, "z", "z", "a if z else b"),
-("a if t else b", 'body[0].value.orelse', {}, "z", "z", "a if t else z"),
+("a if t else b", 'body[0].value.body', {'raw': True}, "z", "z", "z if t else b"),
+("a if t else b", 'body[0].value.test', {'raw': True}, "z", "z", "a if z else b"),
+("a if t else b", 'body[0].value.orelse', {'raw': True}, "z", "z", "a if t else z"),
 
 # Dict
-("{a: b}", 'body[0].value.keys[0]', {}, "z", "z", "{z: b}"),
-("{a: b}", 'body[0].value.values[0]', {}, "z", "z", "{a: z}"),
+("{a: b}", 'body[0].value.keys[0]', {'raw': True}, "z", "z", "{z: b}"),
+("{a: b}", 'body[0].value.values[0]', {'raw': True}, "z", "z", "{a: z}"),
 
 # Set
-("{a}", 'body[0].value.elts[0]', {}, "z", "z", "{z}"),
+("{a}", 'body[0].value.elts[0]', {'raw': True}, "z", "z", "{z}"),
 
 # ListComp
-("[i for i in t]", 'body[0].value.elt', {}, "z", "z", "[z for i in t]"),
-("[i for i in t]", 'body[0].value.generators[0]', {}, "for z in y", "for z in y", "[i for z in y]"),
+("[i for i in t]", 'body[0].value.elt', {'raw': True}, "z", "z", "[z for i in t]"),
+("[i for i in t]", 'body[0].value.generators[0]', {'raw': True}, "for z in y", "for z in y", "[i for z in y]"),
 
 # SetComp
-("{i for i in t}", 'body[0].value.elt', {}, "z", "z", "{z for i in t}"),
-("{i for i in t}", 'body[0].value.generators[0]', {}, "for z in y", "for z in y", "{i for z in y}"),
+("{i for i in t}", 'body[0].value.elt', {'raw': True}, "z", "z", "{z for i in t}"),
+("{i for i in t}", 'body[0].value.generators[0]', {'raw': True}, "for z in y", "for z in y", "{i for z in y}"),
 
 # DictComp
-("{k: v for i in t}", 'body[0].value.key', {}, "z", "z", "{z: v for i in t}"),
-("{k: v for i in t}", 'body[0].value.value', {}, "z", "z", "{k: z for i in t}"),
-("{k: v for i in t}", 'body[0].value.generators[0]', {}, "for z in y", "for z in y", "{k: v for z in y}"),
+("{k: v for i in t}", 'body[0].value.key', {'raw': True}, "z", "z", "{z: v for i in t}"),
+("{k: v for i in t}", 'body[0].value.value', {'raw': True}, "z", "z", "{k: z for i in t}"),
+("{k: v for i in t}", 'body[0].value.generators[0]', {'raw': True}, "for z in y", "for z in y", "{k: v for z in y}"),
 
 # GeneratorExp
-("(i for i in t)", 'body[0].value.elt', {}, "z", "z", "(z for i in t)"),
-("(i for i in t)", 'body[0].value.generators[0]', {}, "for z in y", "for z in y", "(i for z in y)"),
+("(i for i in t)", 'body[0].value.elt', {'raw': True}, "z", "z", "(z for i in t)"),
+("(i for i in t)", 'body[0].value.generators[0]', {'raw': True}, "for z in y", "for z in y", "(i for z in y)"),
 
 # Await
-("await w", 'body[0].value.value', {}, "z", "z", "await z"),
+("await w", 'body[0].value.value', {'raw': True}, "z", "z", "await z"),
 
 # Yield
-("yield w", 'body[0].value.value', {}, "z", "z", "yield z"),
+("yield w", 'body[0].value.value', {'raw': True}, "z", "z", "yield z"),
 
 # YieldFrom
-("yield from w", 'body[0].value.value', {}, "z", "z", "yield from z"),
+("yield from w", 'body[0].value.value', {'raw': True}, "z", "z", "yield from z"),
 
 # Compare
-("a < b", 'body[0].value.left', {}, "z", "z", "z < b"),
-("a < b", 'body[0].value.ops[0]', {}, ">", ">", "a > b"),
-("a < b", 'body[0].value.comparators[0]', {}, "z", "z", "a < z"),
+("a < b", 'body[0].value.left', {'raw': True}, "z", "z", "z < b"),
+("a < b", 'body[0].value.ops[0]', {'raw': True}, ">", ">", "a > b"),
+("a < b", 'body[0].value.comparators[0]', {'raw': True}, "z", "z", "a < z"),
 
 # Call
-("c(a, b=c)", 'body[0].value.func', {}, "z", "z", "z(a, b=c)"),
-("c(a, b=c)", 'body[0].value.args[0]', {}, "z", "z", "c(z, b=c)"),
-("c(a, b=c)", 'body[0].value.keywords[0]', {}, "z=y", "z=y", "c(a, z=y)"),
+("c(a, b=c)", 'body[0].value.func', {'raw': True}, "z", "z", "z(a, b=c)"),
+("c(a, b=c)", 'body[0].value.args[0]', {'raw': True}, "z", "z", "c(z, b=c)"),
+("c(a, b=c)", 'body[0].value.keywords[0]', {'raw': True}, "z=y", "z=y", "c(a, z=y)"),
 
 # FormattedValue, no locations in py3.10
 # JoinedStr, no locations in py3.10
@@ -17732,76 +17843,76 @@ REPLACE_EXISTING_ONE_DATA = [
 # (('value', 'expr'), ('attr', 'identifier'), ('ctx', 'expr_context'))),
 
 # Subscript
-("v[s]", 'body[0].value.value', {}, "z", "z", "z[s]"),
-("v[s]", 'body[0].value.slice', {}, "z", "z", "v[z]"),
+("v[s]", 'body[0].value.value', {'raw': True}, "z", "z", "z[s]"),
+("v[s]", 'body[0].value.slice', {'raw': True}, "z", "z", "v[z]"),
 
 # Starred
-("[*s]", 'body[0].value.elts[0].value', {}, "z", "z", "[*z]"),
+("[*s]", 'body[0].value.elts[0].value', {'raw': True}, "z", "z", "[*z]"),
 
 # List
-("[e]", 'body[0].value.elts[0]', {}, "z", "z", "[z]"),
+("[e]", 'body[0].value.elts[0]', {'raw': True}, "z", "z", "[z]"),
 
 # Tuple
-("(e,)", 'body[0].value.elts[0]', {}, "z", "z", "(z,)"),
+("(e,)", 'body[0].value.elts[0]', {'raw': True}, "z", "z", "(z,)"),
 
 # Slice
-("v[a:b:c]", 'body[0].value.slice.lower', {}, "z", "z", "v[z:b:c]"),
-("v[a:b:c]", 'body[0].value.slice.upper', {}, "z", "z", "v[a:z:c]"),
-("v[a:b:c]", 'body[0].value.slice.step', {}, "z", "z", "v[a:b:z]"),
+("v[a:b:c]", 'body[0].value.slice.lower', {'raw': True}, "z", "z", "v[z:b:c]"),
+("v[a:b:c]", 'body[0].value.slice.upper', {'raw': True}, "z", "z", "v[a:z:c]"),
+("v[a:b:c]", 'body[0].value.slice.step', {'raw': True}, "z", "z", "v[a:b:z]"),
 
 # comprehension
-("[i for i in t if s]", 'body[0].value.generators[0].target', {}, "z", "z", "[i for z in t if s]"),
-("[i for i in t if s]", 'body[0].value.generators[0].iter', {}, "z", "z", "[i for i in z if s]"),
-("[i for i in t if s]", 'body[0].value.generators[0].ifs[0]', {}, "z", "z", "[i for i in t if z]"),
+("[i for i in t if s]", 'body[0].value.generators[0].target', {'raw': True}, "z", "z", "[i for z in t if s]"),
+("[i for i in t if s]", 'body[0].value.generators[0].iter', {'raw': True}, "z", "z", "[i for i in z if s]"),
+("[i for i in t if s]", 'body[0].value.generators[0].ifs[0]', {'raw': True}, "z", "z", "[i for i in t if z]"),
 
 # ExceptHandler
-("try: pass\nexcept Exception as e: pass", 'body[0].handlers[0].type', {}, "z", "z", "try: pass\nexcept z as e: pass"),
+("try: pass\nexcept Exception as e: pass", 'body[0].handlers[0].type', {'raw': True}, "z", "z", "try: pass\nexcept z as e: pass"),
 
 # arguments
-("def f(a, /, b=1, *c, d=2, **e): pass", 'body[0].args.posonlyargs[0]', {}, "z", "z", "def f(z, /, b=1, *c, d=2, **e): pass"),
-("def f(a, /, b=1, *c, d=2, **e): pass", 'body[0].args.args[0]', {}, "z", "z", "def f(a, /, z=1, *c, d=2, **e): pass"),
-("def f(a, /, b=1, *c, d=2, **e): pass", 'body[0].args.defaults[0]', {}, "z", "z", "def f(a, /, b=z, *c, d=2, **e): pass"),
-("def f(a, /, b=1, *c, d=2, **e): pass", 'body[0].args.vararg', {}, "z", "z", "def f(a, /, b=1, *z, d=2, **e): pass"),
-("def f(a, /, b=1, *c, d=2, **e): pass", 'body[0].args.kwonlyargs[0]', {}, "z", "z", "def f(a, /, b=1, *c, z=2, **e): pass"),
-("def f(a, /, b=1, *c, d=2, **e): pass", 'body[0].args.kw_defaults[0]', {}, "z", "z", "def f(a, /, b=1, *c, d=z, **e): pass"),
-("def f(a, /, b=1, *c, d=2, **e): pass", 'body[0].args.kwarg', {}, "z", "z", "def f(a, /, b=1, *c, d=2, **z): pass"),
+("def f(a, /, b=1, *c, d=2, **e): pass", 'body[0].args.posonlyargs[0]', {'raw': True}, "z", "z", "def f(z, /, b=1, *c, d=2, **e): pass"),
+("def f(a, /, b=1, *c, d=2, **e): pass", 'body[0].args.args[0]', {'raw': True}, "z", "z", "def f(a, /, z=1, *c, d=2, **e): pass"),
+("def f(a, /, b=1, *c, d=2, **e): pass", 'body[0].args.defaults[0]', {'raw': True}, "z", "z", "def f(a, /, b=z, *c, d=2, **e): pass"),
+("def f(a, /, b=1, *c, d=2, **e): pass", 'body[0].args.vararg', {'raw': True}, "z", "z", "def f(a, /, b=1, *z, d=2, **e): pass"),
+("def f(a, /, b=1, *c, d=2, **e): pass", 'body[0].args.kwonlyargs[0]', {'raw': True}, "z", "z", "def f(a, /, b=1, *c, z=2, **e): pass"),
+("def f(a, /, b=1, *c, d=2, **e): pass", 'body[0].args.kw_defaults[0]', {'raw': True}, "z", "z", "def f(a, /, b=1, *c, d=z, **e): pass"),
+("def f(a, /, b=1, *c, d=2, **e): pass", 'body[0].args.kwarg', {'raw': True}, "z", "z", "def f(a, /, b=1, *c, d=2, **z): pass"),
 
 # arg
-("def f(a: int): pass", 'body[0].args.args[0].annotation', {}, "z", "z", "def f(a: z): pass"),
+("def f(a: int): pass", 'body[0].args.args[0].annotation', {'raw': True}, "z", "z", "def f(a: z): pass"),
 
 # keyword
-("class c(k=v): pass", 'body[0].keywords[0].value', {}, "z", "z", "class c(k=z): pass"),
+("class c(k=v): pass", 'body[0].keywords[0].value', {'raw': True}, "z", "z", "class c(k=z): pass"),
 
 # alias nothing to test
 
 # withitem
-("with c as n: pass", 'body[0].items[0].context_expr', {}, "z", "z", "with z as n: pass"),
-("with c as n: pass", 'body[0].items[0].optional_vars', {}, "z", "z", "with c as z: pass"),
+("with c as n: pass", 'body[0].items[0].context_expr', {'raw': True}, "z", "z", "with z as n: pass"),
+("with c as n: pass", 'body[0].items[0].optional_vars', {'raw': True}, "z", "z", "with c as z: pass"),
 
 # match_case
-("match s:\n case 1 as a if g: pass", 'body[0].cases[0].pattern', {}, "'z'", "'z'", "match s:\n case 'z' if g: pass"),
-("match s:\n case 1 as a if g: pass", 'body[0].cases[0].guard', {}, "z", "z", "match s:\n case 1 as a if z: pass"),
+("match s:\n case 1 as a if g: pass", 'body[0].cases[0].pattern', {'raw': True}, "'z'", "'z'", "match s:\n case 'z' if g: pass"),
+("match s:\n case 1 as a if g: pass", 'body[0].cases[0].guard', {'raw': True}, "z", "z", "match s:\n case 1 as a if z: pass"),
 
 # MatchValue
-("match s:\n case 1: pass", 'body[0].cases[0].pattern.value', {}, "2", "2", "match s:\n case 2: pass"),
+("match s:\n case 1: pass", 'body[0].cases[0].pattern.value', {'raw': True}, "2", "2", "match s:\n case 2: pass"),
 
 # MatchSequence
-("match s:\n case 1, 2: pass", 'body[0].cases[0].pattern.patterns[1].value', {}, "3", "3", "match s:\n case 1, 3: pass"),
+("match s:\n case 1, 2: pass", 'body[0].cases[0].pattern.patterns[1].value', {'raw': True}, "3", "3", "match s:\n case 1, 3: pass"),
 
 # MatchMapping
-("match s:\n case {1: a, **b}: pass", 'body[0].cases[0].pattern.keys[0]', {}, "2", "2", "match s:\n case {2: a, **b}: pass"),
-("match s:\n case {1: a, **b}: pass", 'body[0].cases[0].pattern.patterns[0]', {}, "z", "z", "match s:\n case {1: z, **b}: pass"),
+("match s:\n case {1: a, **b}: pass", 'body[0].cases[0].pattern.keys[0]', {'raw': True}, "2", "2", "match s:\n case {2: a, **b}: pass"),
+("match s:\n case {1: a, **b}: pass", 'body[0].cases[0].pattern.patterns[0]', {'raw': True}, "z", "z", "match s:\n case {1: z, **b}: pass"),
 
 # MatchClass
-("match s:\n case c(1, a=2): pass", 'body[0].cases[0].pattern.cls', {}, "z", "z", "match s:\n case z(1, a=2): pass"),
-("match s:\n case c(1, a=2): pass", 'body[0].cases[0].pattern.patterns[0].value', {}, "3", "3", "match s:\n case c(3, a=2): pass"),
-("match s:\n case c(1, a=2): pass", 'body[0].cases[0].pattern.kwd_patterns[0].value', {}, "3", "3", "match s:\n case c(1, a=3): pass"),
+("match s:\n case c(1, a=2): pass", 'body[0].cases[0].pattern.cls', {'raw': True}, "z", "z", "match s:\n case z(1, a=2): pass"),
+("match s:\n case c(1, a=2): pass", 'body[0].cases[0].pattern.patterns[0].value', {'raw': True}, "3", "3", "match s:\n case c(3, a=2): pass"),
+("match s:\n case c(1, a=2): pass", 'body[0].cases[0].pattern.kwd_patterns[0].value', {'raw': True}, "3", "3", "match s:\n case c(1, a=3): pass"),
 
 # MatchAs
-("match s:\n case 1 as a: pass", 'body[0].cases[0].pattern.pattern', {}, "2", "2", "match s:\n case 2 as a: pass"),
+("match s:\n case 1 as a: pass", 'body[0].cases[0].pattern.pattern', {'raw': True}, "2", "2", "match s:\n case 2 as a: pass"),
 
 # MatchOr
-("match s:\n case 1 | 2: pass", 'body[0].cases[0].pattern.patterns[0].value', {}, "3", "3", "match s:\n case 3 | 2: pass"),
+("match s:\n case 1 | 2: pass", 'body[0].cases[0].pattern.patterns[0].value', {'raw': True}, "3", "3", "match s:\n case 3 | 2: pass"),
 
 ]
 
@@ -18090,6 +18201,54 @@ def regen_put_slice():
 
     start = lines.index('PUT_SLICE_DATA = [')
     stop  = lines.index(']  # END OF PUT_SLICE_DATA')
+
+    lines[start + 1 : stop] = newlines
+
+    with open(sys.argv[0], 'w') as f:
+        lines = f.write('\n'.join(lines))
+
+
+def regen_put_one():
+    newlines = []
+
+    for i, (dst, attr, idx, field, options, src, put_src, put_dump) in enumerate(PUT_ONE_DATA):
+        t = parse(dst)
+        f = (eval(f't.{attr}', {'t': t}) if attr else t).f
+
+        try:
+            try:
+                f.put(None if src == '**DEL**' else src, idx, field=field, **options)
+
+            except Exception as exc:
+                tdst  = f'**{exc!r}**'
+                tdump = ''
+
+            else:
+                tdst  = f.root.src
+                tdump = f.root.dump(out=list, compact=True)
+
+                f.root.verify(raise_=True)
+
+            newlines.extend(f'''(r"""{dst}""", {attr!r}, {idx}, {field!r}, {options!r}, r"""{src}""", r"""{tdst}""", r"""'''.split('\n'))
+            newlines.extend(tdump)
+            newlines.append('"""),\n')
+
+        except Exception:
+            print(i, attr, idx, field, src, options)
+            print('---')
+            print(repr(dst))
+            print('...')
+            print(src)
+            print('...')
+            print(put_src)
+
+            raise
+
+    with open(sys.argv[0]) as f:
+        lines = f.read().split('\n')
+
+    start = lines.index('PUT_ONE_DATA = [')
+    stop  = lines.index(']  # END OF PUT_ONE_DATA')
 
     lines[start + 1 : stop] = newlines
 
@@ -18972,7 +19131,7 @@ def f():
         f = FST(mode='eval')
         self.assertEqual('', f.src)
         self.assertIsInstance(f.a, Expression)
-        self.assertIsNone(f.a.body)
+        self.assertIsInstance(f.a.body, expr)
 
         f = FST('i = 1')
         self.assertEqual('i = 1', f.src)
@@ -22886,7 +23045,7 @@ class cls:
         self.assertEqual(g.src, 'a')
         self.assertEqual(f.root.src, 'f((a))')
 
-        self.assertEqual('y', parse('n', mode='eval').body.f.replace('y').root.src)  # Expression.body
+        self.assertEqual('y', parse('n', mode='eval').body.f.replace('y', raw=True).root.src)  # Expression.body
 
         FST.set_options(**old_defaults)
 
@@ -22945,201 +23104,6 @@ class cls:
                 print(put_src)
 
                 raise
-
-    def test_put_raw_special(self):
-        f = parse('[a for c in d for b in c for a in b]').body[0].value.f
-        g = f.put('for x in y', 1, raw=True)
-        self.assertIsNot(g, f)
-        self.assertEqual(g.src, '[a for c in d for x in y for a in b]')
-        f = g
-        g = f.put(None, 1, raw=True)
-        self.assertIsNot(g, f)
-        self.assertEqual(g.src, '[a for c in d  for a in b]')
-        f = g
-        g = f.put(None, 1, raw=True)
-        self.assertIsNot(g, f)
-        self.assertEqual(g.src, '[a for c in d  ]')
-        f = g
-
-        f = parse('try:pass\nfinally: pass').body[0].f
-        g = f.put('break', 0, raw=True)
-        self.assertIs(g, f)
-        self.assertEqual(g.src, 'try:break\nfinally: pass')
-
-        f = parse('try: pass\nexcept: pass').body[0].handlers[0].f
-        g = f.put('break', 0, raw=True)
-        self.assertIs(g, f)
-        self.assertEqual(g.src, 'except: break')
-
-        f = parse('match a:\n case 1: pass').body[0].cases[0].f
-        g = f.put('break', 0, raw=True)
-        self.assertIs(g, f)
-        self.assertEqual(g.src, 'case 1: break')
-
-        self.assertEqual('y', parse('n', mode='eval').f.put('y', field='body').root.src)  # Expression.body
-
-        # strip or add delimiters from/to different type of node to put as slice
-
-        f = parse('{a: b, c: d, e: f}').body[0].value.f
-        g = parse('match a:\n case {1: x}: pass').body[0].cases[0].pattern.f.copy()
-        self.assertEqual('{a: b, 1: x, e: f}', f.put_slice(g.a, 1, 2, raw=True).root.src)
-
-        f = parse('match a:\n case {1: x, 2: y, 3: z}: pass').body[0].cases[0].pattern.f
-        g = parse('{1: a}').body[0].value.f.copy()
-        self.assertEqual('match a:\n case {1: x, 1: a, 3: z}: pass', f.put_slice(g.a, 1, 2, raw=True).root.src)
-
-        f = parse('[1, 2, 3]').body[0].value.f
-        g = parse('match a:\n case a, b: pass').body[0].cases[0].pattern.f.copy()
-        self.assertEqual('[1, a, b, 3]', f.put_slice(g.a, 1, 2, raw=True).root.src)
-
-        f = parse('[1, 2, 3]').body[0].value.f
-        g = parse('match a:\n case (a, b): pass').body[0].cases[0].pattern.f.copy()
-        self.assertEqual('[1, a, b, 3]', f.put_slice(g.a, 1, 2, raw=True).root.src)
-
-        f = parse('match a:\n case 1, 2, 3: pass').body[0].cases[0].pattern.f
-        g = parse('[a, b]').body[0].value.f.copy()
-        self.assertEqual('match a:\n case 1, a, b, 3: pass', f.put_slice(g.a, 1, 2, raw=True).root.src)
-
-        f = parse('match a:\n case 1, 2, 3: pass').body[0].cases[0].pattern.f
-        g = parse('[a, b]').body[0].value.f.copy()
-        self.assertEqual('match a:\n case 1, [a, b], 3: pass', f.put_slice(g.a, 1, 2, raw=True, one=True).root.src)
-
-        f = parse('match a:\n case 1 | 2 | 3: pass').body[0].cases[0].pattern.f
-        g = parse('a | b').body[0].value.f.copy()
-        self.assertEqual('match a:\n case 1 | a | b | 3: pass', f.put_slice(g.a, 1, 2, raw=True).root.src)
-
-        f = parse('{a: b, c: d, e: f}').body[0].value.f
-        g = parse('match a:\n case {1: x}: pass').body[0].cases[0].pattern.f.copy()
-        self.assertEqual('{a: b, 1: x, e: f}', f.put_slice(g, 1, 2, raw=True).root.src)
-
-        f = parse('match a:\n case {1: x, 2: y, 3: z}: pass').body[0].cases[0].pattern.f
-        g = parse('{1: a}').body[0].value.f.copy()
-        self.assertEqual('match a:\n case {1: x, 1: a, 3: z}: pass', f.put_slice(g, 1, 2, raw=True).root.src)
-
-        f = parse('[1, 2, 3]').body[0].value.f
-        g = parse('match a:\n case a, b: pass').body[0].cases[0].pattern.f.copy()
-        self.assertEqual('[1, a, b, 3]', f.put_slice(g, 1, 2, raw=True).root.src)
-
-        f = parse('[1, 2, 3]').body[0].value.f
-        g = parse('match a:\n case a, b: pass').body[0].cases[0].pattern.f.copy()
-        self.assertEqual('[1, (a, b), 3]', f.put_slice(g, 1, 2, raw=True, one=True).root.src)
-
-        f = parse('match a:\n case 1, 2, 3: pass').body[0].cases[0].pattern.f
-        g = parse('[a, b]').body[0].value.f.copy()
-        self.assertEqual('match a:\n case 1, a, b, 3: pass', f.put_slice(g, 1, 2, raw=True).root.src)
-
-        f = parse('match a:\n case 1, 2, 3: pass').body[0].cases[0].pattern.f
-        g = parse('[a, b]').body[0].value.f.copy()
-        self.assertEqual('match a:\n case 1, [a, b], 3: pass', f.put_slice(g, 1, 2, raw=True, one=True).root.src)
-
-        f = parse('match a:\n case 1 | 2 | 3: pass').body[0].cases[0].pattern.f
-        g = parse('a | b').body[0].value.f.copy()
-        self.assertEqual('match a:\n case 1 | a | b | 3: pass', f.put_slice(g, 1, 2, raw=True).root.src)
-
-        # make sure we can't put TO location behind self
-
-        f = parse('[1, 2, 3]').body[0].value.f
-        self.assertEqual('[1, 4]', f.elts[1].replace('4', to=f.elts[2]).root.src)
-
-        f = parse('[1, 2, 3]').body[0].value.f
-        self.assertRaises(ValueError, f.elts[1].replace, '4', to=f.elts[0])
-
-        f = parse('a = b').body[0].f
-        self.assertEqual('c', f.targets[0].replace('c', to=f.value).root.src)
-
-        f = parse('a = b').body[0].f
-        self.assertRaises(ValueError, f.value.replace, 'c', to=f.targets[0])
-
-    def test_put_raw_random_same(self):
-        seed(rndseed := randint(0, 0x7fffffff))
-
-        try:
-            master = parse('''
-def f():
-    i = 1
-
-async def af():
-    i = 2
-
-class cls:
-    i = 3
-
-for _ in ():
-    i = 4
-else:
-    i = 5
-
-async for _ in ():
-    i = 6
-else:
-    i = 7
-
-while _:
-    i = 8
-else:
-    i = 9
-
-if _:
-    i = 10
-elif _:
-    i = 11
-else:
-    i = 12
-
-with _:
-    i = 13
-
-async with _:
-    i = 14
-
-match _:
-    case 15:
-        i = 15
-
-    case 16:
-        i = 16
-
-    case 17:
-        i = 17
-
-try:
-    i = 18
-except Exception as e:
-    i = 19
-except ValueError as v:
-    i = 20
-except:
-    i = 21
-else:
-    i = 22
-finally:
-    i = 23
-                '''.strip()).f
-
-            lines = master._lines
-
-            for i in range(100):
-                copy      = master.copy()
-                ln        = randint(0, len(lines) - 1)
-                col       = randint(0, len(lines[ln]))
-                end_ln    = randint(ln, len(lines) - 1)
-                end_col   = randint(col if end_ln == ln else 0, len(lines[end_ln]))
-                put_lines = master.get_src(ln, col, end_ln, end_col, True)
-
-                copy.put_raw(put_lines, ln, col, end_ln, end_col)
-                copy.verify()
-
-                compare_asts(master.a, copy.a, locs=True, raise_=True)
-
-                assert copy.src == master.src
-
-        except Exception:
-            print('Random seed was:', rndseed)
-            print(i, ln, col, end_ln, end_col)
-            print('-'*80)
-            print(copy.src)
-
-            raise
 
     def test_put_slice_raw(self):
         f = parse('[a for c in d for b in c for a in b]').body[0].value.f
@@ -23549,6 +23513,63 @@ finally:
 
                 raise
 
+    def test_put_one(self):
+        for i, (dst, attr, idx, field, options, src, put_src, put_dump) in enumerate(PUT_ONE_DATA):
+            t = parse(dst)
+            f = (eval(f't.{attr}', {'t': t}) if attr else t).f
+
+            try:
+                try:
+                    f.put(None if src == '**DEL**' else src, idx, field=field, **options)
+
+                except Exception as exc:
+                    if not put_dump.strip() and put_src.startswith('**') and put_src.endswith('**'):
+                        tdst  = f'**{exc!r}**'
+                        tdump = ['']
+
+                    else:
+                        raise
+
+                else:
+                    tdst  = f.root.src
+                    tdump = f.root.dump(out=list, compact=True)
+
+                    f.root.verify(raise_=True)
+
+                self.assertEqual(tdst, put_src)
+                self.assertEqual(tdump, put_dump.strip().split('\n'))
+
+            except Exception:
+                print(i, attr, idx, field, src, options)
+                print('---')
+                print(repr(dst))
+                print('...')
+                print(src)
+                print('...')
+                print(put_src)
+
+                raise
+
+    def test_put_one_special(self):
+        f = parse('i', mode='eval').f
+        self.assertIsInstance(f.a.body, expr)
+        f.put('j', raw=False)
+        self.assertEqual('j', f.src)
+        self.assertRaises(SyntaxError, f.put, 'k = 1', raw=False)
+        self.assertRaises(IndexError, f.put, 'k', 1, raw=False)
+
+        g = parse('yield 1').body[0].value.f.copy(fix=False)
+        self.assertEqual('yield 1', g.src)
+        f.put(g, raw=False)
+        self.assertEqual('(yield 1)', f.src)
+
+        g = parse('l = 2').body[0].f.copy()
+        self.assertEqual('l = 2', g.src)
+        self.assertRaises(NodeTypeError, f.put, g, raw=False)
+
+        f.put('m', raw=False)
+        self.assertEqual('m', f.src)
+
     def test_put_raw(self):
         for i, (dst, attr, (ln, col, end_ln, end_col), options, src, put_ret, put_src, put_dump) in enumerate(PUT_RAW_DATA):
             t = parse(dst)
@@ -23576,6 +23597,201 @@ finally:
                 print(put_src)
 
                 raise
+
+    def test_put_raw_special(self):
+        f = parse('[a for c in d for b in c for a in b]').body[0].value.f
+        g = f.put('for x in y', 1, raw=True)
+        self.assertIsNot(g, f)
+        self.assertEqual(g.src, '[a for c in d for x in y for a in b]')
+        f = g
+        g = f.put(None, 1, raw=True)
+        self.assertIsNot(g, f)
+        self.assertEqual(g.src, '[a for c in d  for a in b]')
+        f = g
+        g = f.put(None, 1, raw=True)
+        self.assertIsNot(g, f)
+        self.assertEqual(g.src, '[a for c in d  ]')
+        f = g
+
+        f = parse('try:pass\nfinally: pass').body[0].f
+        g = f.put('break', 0, raw=True)
+        self.assertIs(g, f)
+        self.assertEqual(g.src, 'try:break\nfinally: pass')
+
+        f = parse('try: pass\nexcept: pass').body[0].handlers[0].f
+        g = f.put('break', 0, raw=True)
+        self.assertIs(g, f)
+        self.assertEqual(g.src, 'except: break')
+
+        f = parse('match a:\n case 1: pass').body[0].cases[0].f
+        g = f.put('break', 0, raw=True)
+        self.assertIs(g, f)
+        self.assertEqual(g.src, 'case 1: break')
+
+        self.assertEqual('y', parse('n', mode='eval').f.put('y', field='body', raw=True).root.src)  # Expression.body
+
+        # strip or add delimiters from/to different type of node to put as slice
+
+        f = parse('{a: b, c: d, e: f}').body[0].value.f
+        g = parse('match a:\n case {1: x}: pass').body[0].cases[0].pattern.f.copy()
+        self.assertEqual('{a: b, 1: x, e: f}', f.put_slice(g.a, 1, 2, raw=True).root.src)
+
+        f = parse('match a:\n case {1: x, 2: y, 3: z}: pass').body[0].cases[0].pattern.f
+        g = parse('{1: a}').body[0].value.f.copy()
+        self.assertEqual('match a:\n case {1: x, 1: a, 3: z}: pass', f.put_slice(g.a, 1, 2, raw=True).root.src)
+
+        f = parse('[1, 2, 3]').body[0].value.f
+        g = parse('match a:\n case a, b: pass').body[0].cases[0].pattern.f.copy()
+        self.assertEqual('[1, a, b, 3]', f.put_slice(g.a, 1, 2, raw=True).root.src)
+
+        f = parse('[1, 2, 3]').body[0].value.f
+        g = parse('match a:\n case (a, b): pass').body[0].cases[0].pattern.f.copy()
+        self.assertEqual('[1, a, b, 3]', f.put_slice(g.a, 1, 2, raw=True).root.src)
+
+        f = parse('match a:\n case 1, 2, 3: pass').body[0].cases[0].pattern.f
+        g = parse('[a, b]').body[0].value.f.copy()
+        self.assertEqual('match a:\n case 1, a, b, 3: pass', f.put_slice(g.a, 1, 2, raw=True).root.src)
+
+        f = parse('match a:\n case 1, 2, 3: pass').body[0].cases[0].pattern.f
+        g = parse('[a, b]').body[0].value.f.copy()
+        self.assertEqual('match a:\n case 1, [a, b], 3: pass', f.put_slice(g.a, 1, 2, raw=True, one=True).root.src)
+
+        f = parse('match a:\n case 1 | 2 | 3: pass').body[0].cases[0].pattern.f
+        g = parse('a | b').body[0].value.f.copy()
+        self.assertEqual('match a:\n case 1 | a | b | 3: pass', f.put_slice(g.a, 1, 2, raw=True).root.src)
+
+        f = parse('{a: b, c: d, e: f}').body[0].value.f
+        g = parse('match a:\n case {1: x}: pass').body[0].cases[0].pattern.f.copy()
+        self.assertEqual('{a: b, 1: x, e: f}', f.put_slice(g, 1, 2, raw=True).root.src)
+
+        f = parse('match a:\n case {1: x, 2: y, 3: z}: pass').body[0].cases[0].pattern.f
+        g = parse('{1: a}').body[0].value.f.copy()
+        self.assertEqual('match a:\n case {1: x, 1: a, 3: z}: pass', f.put_slice(g, 1, 2, raw=True).root.src)
+
+        f = parse('[1, 2, 3]').body[0].value.f
+        g = parse('match a:\n case a, b: pass').body[0].cases[0].pattern.f.copy()
+        self.assertEqual('[1, a, b, 3]', f.put_slice(g, 1, 2, raw=True).root.src)
+
+        f = parse('[1, 2, 3]').body[0].value.f
+        g = parse('match a:\n case a, b: pass').body[0].cases[0].pattern.f.copy()
+        self.assertEqual('[1, (a, b), 3]', f.put_slice(g, 1, 2, raw=True, one=True).root.src)
+
+        f = parse('match a:\n case 1, 2, 3: pass').body[0].cases[0].pattern.f
+        g = parse('[a, b]').body[0].value.f.copy()
+        self.assertEqual('match a:\n case 1, a, b, 3: pass', f.put_slice(g, 1, 2, raw=True).root.src)
+
+        f = parse('match a:\n case 1, 2, 3: pass').body[0].cases[0].pattern.f
+        g = parse('[a, b]').body[0].value.f.copy()
+        self.assertEqual('match a:\n case 1, [a, b], 3: pass', f.put_slice(g, 1, 2, raw=True, one=True).root.src)
+
+        f = parse('match a:\n case 1 | 2 | 3: pass').body[0].cases[0].pattern.f
+        g = parse('a | b').body[0].value.f.copy()
+        self.assertEqual('match a:\n case 1 | a | b | 3: pass', f.put_slice(g, 1, 2, raw=True).root.src)
+
+        # make sure we can't put TO location behind self
+
+        f = parse('[1, 2, 3]').body[0].value.f
+        self.assertEqual('[1, 4]', f.elts[1].replace('4', to=f.elts[2]).root.src)
+
+        f = parse('[1, 2, 3]').body[0].value.f
+        self.assertRaises(ValueError, f.elts[1].replace, '4', to=f.elts[0])
+
+        f = parse('a = b').body[0].f
+        self.assertEqual('c', f.targets[0].replace('c', to=f.value).root.src)
+
+        f = parse('a = b').body[0].f
+        self.assertRaises(ValueError, f.value.replace, 'c', to=f.targets[0])
+
+    def test_put_raw_random_same(self):
+        seed(rndseed := randint(0, 0x7fffffff))
+
+        try:
+            master = parse('''
+def f():
+    i = 1
+
+async def af():
+    i = 2
+
+class cls:
+    i = 3
+
+for _ in ():
+    i = 4
+else:
+    i = 5
+
+async for _ in ():
+    i = 6
+else:
+    i = 7
+
+while _:
+    i = 8
+else:
+    i = 9
+
+if _:
+    i = 10
+elif _:
+    i = 11
+else:
+    i = 12
+
+with _:
+    i = 13
+
+async with _:
+    i = 14
+
+match _:
+    case 15:
+        i = 15
+
+    case 16:
+        i = 16
+
+    case 17:
+        i = 17
+
+try:
+    i = 18
+except Exception as e:
+    i = 19
+except ValueError as v:
+    i = 20
+except:
+    i = 21
+else:
+    i = 22
+finally:
+    i = 23
+                '''.strip()).f
+
+            lines = master._lines
+
+            for i in range(100):
+                copy      = master.copy()
+                ln        = randint(0, len(lines) - 1)
+                col       = randint(0, len(lines[ln]))
+                end_ln    = randint(ln, len(lines) - 1)
+                end_col   = randint(col if end_ln == ln else 0, len(lines[end_ln]))
+                put_lines = master.get_src(ln, col, end_ln, end_col, True)
+
+                copy.put_raw(put_lines, ln, col, end_ln, end_col)
+                copy.verify()
+
+                compare_asts(master.a, copy.a, locs=True, raise_=True)
+
+                assert copy.src == master.src
+
+        except Exception:
+            print('Random seed was:', rndseed)
+            print(i, ln, col, end_ln, end_col)
+            print('-'*80)
+            print(copy.src)
+
+            raise
 
     def test_put_raw_from_put_slice_data(self):
         for i, (dst, attr, start, stop, field, options, src, put_src, put_dump) in enumerate(PUT_SLICE_DATA):
@@ -24271,6 +24487,7 @@ if __name__ == '__main__':
     parser.add_argument('--regen-put-slice-seq', default=False, action='store_true', help="regenerate put slice sequence test data")
     parser.add_argument('--regen-put-slice-stmt', default=False, action='store_true', help="regenerate put slice statement test data")
     parser.add_argument('--regen-put-slice', default=False, action='store_true', help="regenerate put slice test data")
+    parser.add_argument('--regen-put-one', default=False, action='store_true', help="regenerate put one test data")
     parser.add_argument('--regen-put-raw', default=False, action='store_true', help="regenerate put raw test data")
     parser.add_argument('--regen-precedence', default=False, action='store_true', help="regenerate precedence test data")
 
@@ -24303,6 +24520,10 @@ if __name__ == '__main__':
     if args.regen_put_slice or args.regen_all:
         print('Regenerating put slice test data...')
         regen_put_slice()
+
+    if args.regen_put_one or args.regen_all:
+        print('Regenerating put one test data...')
+        regen_put_one()
 
     if args.regen_put_raw or args.regen_all:
         print('Regenerating put raw test data...')

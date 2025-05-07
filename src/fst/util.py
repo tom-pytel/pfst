@@ -11,7 +11,8 @@ __all__ = [
     'FIELDS', 'AST_FIELDS', 'OPCLS2STR', 'OPSTR2CLS',
     'bistr', 'get_field', 'has_type_comments', 'is_parsable', 'get_parse_mode',
     'WalkFail', 'walk2', 'compare_asts', 'copy_attributes', 'copy_ast', 'set_ctx', 'get_func_class_or_ass_by_name',
-    'syntax_ordered_children', 'last_block_opener_child', 'is_atom', 'precedence_require_parens',
+    'syntax_ordered_children', 'last_block_opener_child', 'is_atom',
+    'precedence_require_parens_by_type', 'precedence_require_parens',
 ]
 
 
@@ -961,11 +962,11 @@ PRECEDENCE_NODE_FIELDS = {  # default is _Precedence.TEST
     (MatchOr, 'patterns'):     _Precedence.BOR.next(),
 }
 
-def precedence_require_parens(child_type: type[AST], parent_type: type[AST], field: str, *,
-                              dict_key_is_None: bool = False) -> bool:
-    """Returns whether parentheses are required for for the child for the given parent / child structure or not. Both
-    parent and child `BoolOp`, `BinOp` and `UnaryOp` types should be passed as the type of the 'op' field. Special case
-    if the parent is a `Dict.values[i]` where the respective `keys[i]` is `None`, `dict_key_is_None` should be `True."""
+def precedence_require_parens_by_type(child_type: type[AST], parent_type: type[AST], field: str, *,
+                                      dict_key_is_None: bool = False) -> bool:
+    """Returns whether parentheses are required for the child for the given parent / child structure or not. Both parent
+    and child `BoolOp`, `BinOp` and `UnaryOp` types should be passed as the type of the 'op' field. Special case if the
+    parent is a `Dict.values[i]` where the respective `keys[i]` is `None`, `dict_key_is_None` should be `True."""
 
     child_precedence  = PRECEDENCE_NODES.get(child_type, _Precedence.ATOM)
     parent_precedence = PRECEDENCE_NODE_FIELDS.get((parent_type, field), _Precedence.TEST)
@@ -974,7 +975,7 @@ def precedence_require_parens(child_type: type[AST], parent_type: type[AST], fie
 
     if not parent_precedence:
         if parent_type is Dict:
-            parent_precedence = _Precedence.EXPR if dict_key_is_None else _Precedence.TEST
+            parent_precedence = _Precedence.EXPR if dict_key_is_None and field == 'values' else _Precedence.TEST
 
         elif parent_type is And:
             if child_type is And:
@@ -992,3 +993,14 @@ def precedence_require_parens(child_type: type[AST], parent_type: type[AST], fie
             assert False, "type of 'op' should be passed"
 
     return child_precedence < parent_precedence
+
+def precedence_require_parens(child: AST, parent: AST, field: str, idx: int | None = None) -> bool:
+    """Returns whether parentheses are required for the child for the given parent / child structure or not."""
+
+    child_type  = (child.op.__class__
+                   if (child_cls := child.__class__) in (BoolOp, BinOp, UnaryOp) else child_cls)
+    parent_type = (parent.op.__class__
+                   if (parent_cls := parent.__class__) in (BoolOp, BinOp, UnaryOp) else parent_cls)
+    key_is_None = parent_cls is Dict and parent.keys[idx] is None
+
+    return precedence_require_parens_by_type(child_type, parent_type, field, dict_key_is_None=key_is_None)
