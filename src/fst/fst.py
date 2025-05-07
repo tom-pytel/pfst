@@ -3280,7 +3280,7 @@ class FST:
         return fstloc(*body[start].f.pars(exc_genexpr_solo=True)[:2],
                       *body[stop - 1].f.pars(exc_genexpr_solo=True)[2:])
 
-    def _reparse_raw_doit(self, new_lines: list[str], ln: int, col: int, end_ln: int, end_col: int,
+    def _reparse_raw(self, new_lines: list[str], ln: int, col: int, end_ln: int, end_col: int,
                           copy_lines: list[str], path: list[astfield] | str, set_ast: bool = True) -> 'FST':
         """Actually do the reparse."""
 
@@ -3372,7 +3372,7 @@ class FST:
         if not in_blkopen:  # non-block statement or modifications not limited to block opener part
             copy_lines[pend_ln] = bistr(copy_lines[pend_ln][:pend_col])
 
-            stmtish._reparse_raw_doit(new_lines, ln, col, end_ln, end_col, copy_lines, path)
+            stmtish._reparse_raw(new_lines, ln, col, end_ln, end_col, copy_lines, path)
 
             return True
 
@@ -3389,7 +3389,7 @@ class FST:
             if isinstance(stmtisha, (Try, TryStar)):  # this one is just silly, nothing to put there, but we cover it
                 copy_lines.append(bistr(indent + 'finally: pass'))
 
-        copy  = stmtish._reparse_raw_doit(new_lines, ln, col, end_ln, end_col, copy_lines, path, False)
+        copy  = stmtish._reparse_raw(new_lines, ln, col, end_ln, end_col, copy_lines, path, False)
         copya = copy.a
 
         if not isinstance(stmtisha, match_case):  # match_case doesn't have AST location
@@ -3405,8 +3405,8 @@ class FST:
 
         return True
 
-    def _reparse_raw(self, code: Code | None, ln: int, col: int, end_ln: int, end_col: int, exact: bool | None = None
-                     ) -> Optional['FST']:
+    def _reparse_raw_loc(self, code: Code | None, ln: int, col: int, end_ln: int, end_col: int,
+                         exact: bool | None = None) -> Optional['FST']:
         """Reparse this node which entirely contatins the span which is to be replaced with `code` source. `self` must
         be a node which entirely contains the location and is guaranteed not to be deleted. `self` and some of its
         parents going up may be replaced (root node `FST` will never change, the `AST` it points to may though). Not
@@ -3436,8 +3436,8 @@ class FST:
 
             root = self.root
 
-            self._reparse_raw_doit(new_lines, ln, col, end_ln, end_col, root._lines[:],  # fallback to reparse all source
-                                   'root' if self is root else root.child_path(self))
+            self._reparse_raw(new_lines, ln, col, end_ln, end_col, root._lines[:],  # fallback to reparse all source
+                              'root' if self is root else root.child_path(self))
 
         if code is None:
             return None
@@ -3472,7 +3472,7 @@ class FST:
             if not (parent := self.parent):  # we want parent which will not change or root node
                 parent = self
 
-            elif pars:  # precedence parenthesizing, we do not remove existing parens here, just add if needed
+            elif pars:  # precedence parenthesizing
                 if isinstance(code, FST):
                     if not code.is_atom() and precedence_require_parens(code.a, parent.a, *self.pfield):
                         code.parenthesize()
@@ -3504,7 +3504,7 @@ class FST:
             path      = list(p for p, _ in takewhile(lambda st: st[0] == st[1], zip(self_path, to_path)))
             parent    = root.child_from_path(path)
 
-        return parent._reparse_raw(code, loc.ln, loc.col, to_loc.end_ln, to_loc.end_col)
+        return parent._reparse_raw_loc(code, loc.ln, loc.col, to_loc.end_ln, to_loc.end_col)
 
     # ------------------------------------------------------------------------------------------------------------------
 
@@ -4309,7 +4309,7 @@ class FST:
 
                             code.put_src(None, ln, col, ln, col + 1, False)
 
-        self._reparse_raw(code, *self._raw_slice_loc(start, stop, field))
+        self._reparse_raw_loc(code, *self._raw_slice_loc(start, stop, field))
 
         return self.repath()
 
@@ -4346,9 +4346,9 @@ class FST:
 
         return None if code is None else getattr(self.a, field)[idx].f
 
-    def _put_one_mandatory_expr(self, code: Code | None, idx: int | None, field: str, child: Any, **options,
-                                ) -> Optional['FST']:
-        """Put a single mandatory expression node."""
+    def _put_one_required_expr(self, code: Code | None, idx: int | None, field: str, child: Any, **options,
+                               ) -> Optional['FST']:
+        """Put a single required expression node."""
 
         if code is None:
             raise ValueError(f'cannot delete a {self.a.__class__.__name__}.{field}')
@@ -4364,11 +4364,20 @@ class FST:
         childf  = child.f
         loc     = childf.pars(pars)
 
-        if pars:  # precedence parenthesizing, we do not remove existing parens here, just add if needed
+        if pars:  # precedence parenthesizing
             if not put_fst.is_atom() and precedence_require_parens(put_ast, ast, field, None):
                 put_fst.parenthesize()
 
-        self.put_src(put_fst._lines, *loc, False)
+        put_fst.indent_lns(childf.get_indent(), docstr=options.get('docstr'))
+
+        ln, col, end_ln, end_col = loc
+
+        lines       = self.root._lines
+        put_lines   = put_fst._lines
+        dcol_offset = lines[ln].c2b(col)
+
+        put_fst.offset(0, 0, ln, dcol_offset)
+        self.put_src(put_lines, ln, col, end_ln, end_col, True)
         childf._set_ast(put_ast)
 
         return put_ast.f
@@ -4410,7 +4419,7 @@ class FST:
         (Module, 'body'):                     _put_one_stmtish, # stmt*
         # (Module, 'type_ignores'):             _put_one_default, # type_ignore*
         (Interactive, 'body'):                _put_one_stmtish, # stmt*
-        (Expression, 'body'):                 _put_one_mandatory_expr, # expr
+        (Expression, 'body'):                 _put_one_required_expr, # expr
         # (FunctionType, 'argtypes'):           _put_one_default, # expr*
         # (FunctionType, 'returns'):            _put_one_default, # expr
         # (FunctionDef, 'decorator_list'):      _put_one_default, # expr*
@@ -4436,7 +4445,7 @@ class FST:
         # (Return, 'value'):                    _put_one_default, # expr?
         # (Delete, 'targets'):                  _put_one_default, # expr*
         # (Assign, 'targets'):                  _put_one_default, # expr*
-        (Assign, 'value'):                    _put_one_mandatory_expr, # expr
+        (Assign, 'value'):                    _put_one_required_expr, # expr
         # (Assign, 'type_comment'):             _put_one_default, # string?
         # (TypeAlias, 'name'):                  _put_one_default, # expr
         # (TypeAlias, 'type_params'):           _put_one_default, # type_param*
@@ -5113,7 +5122,7 @@ class FST:
                 key = key.f if (key := ast.keys[start]) else self._dict_key_or_mock_loc(key, ast.values[start].f)
                 end = (ast.values if is_dict else ast.patterns)[start].f
 
-                self._reparse_raw(code, key.ln, key.col, end.end_ln, end.end_col)
+                self._reparse_raw_loc(code, key.ln, key.col, end.end_ln, end.end_col)
 
                 return self.repath()
 
@@ -5132,7 +5141,7 @@ class FST:
             ln, col, end_ln, end_col = start_loc.loc if start_loc.is_FST else start_loc
 
             self.put_src([': '], ln, col, end_ln, end_col)
-            self._reparse_raw(code, ln, col, ln, col)
+            self._reparse_raw_loc(code, ln, col, ln, col)
 
         else:
             self._put_one(code, start, field_, **options)
@@ -5231,7 +5240,7 @@ class FST:
 
         parent = self.root.find_loc(ln, col, end_ln, end_col, False) or self.root
 
-        return parent._reparse_raw(code, ln, col, end_ln, end_col, exact)
+        return parent._reparse_raw_loc(code, ln, col, end_ln, end_col, exact)
 
     def get_src(self, ln: int, col: int, end_ln: int, end_col: int, as_lines: bool = False) -> str | list[str]:
         """Get source at location, without dedenting or any other modification, Returned as a string or individual

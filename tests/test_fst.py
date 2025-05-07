@@ -15467,6 +15467,63 @@ Module .. ROOT 0,0 -> 0,9
 (r"""(1, 2, 3)""", 'body[0].value', -4, None, {'raw': False}, r"""4""", r"""**IndexError('list index out of range')**""", r"""
 """),
 
+(r"""i = j""", 'body[0]', None, None, {'raw': False}, r"""k""", r"""i = k""", r"""
+Module .. ROOT 0,0 -> 0,5
+  .body[1]
+  0] Assign .. 0,0 -> 0,5
+    .targets[1]
+    0] Name 'i' Store .. 0,0 -> 0,1
+    .value Name 'k' Load .. 0,4 -> 0,5
+"""),
+
+(r"""i = j""", 'body[0]', None, None, {'raw': False}, r"""a, b""", r"""i = (a, b)""", r"""
+Module .. ROOT 0,0 -> 0,10
+  .body[1]
+  0] Assign .. 0,0 -> 0,10
+    .targets[1]
+    0] Name 'i' Store .. 0,0 -> 0,1
+    .value Tuple .. 0,4 -> 0,10
+      .elts[2]
+      0] Name 'a' Load .. 0,5 -> 0,6
+      1] Name 'b' Load .. 0,8 -> 0,9
+      .ctx Load
+"""),
+
+(r"""i = j""", 'body[0]', None, None, {'raw': False, 'pars': False}, r"""a, b""", r"""i = a, b""", r"""
+Module .. ROOT 0,0 -> 0,8
+  .body[1]
+  0] Assign .. 0,0 -> 0,8
+    .targets[1]
+    0] Name 'i' Store .. 0,0 -> 0,1
+    .value Tuple .. 0,4 -> 0,8
+      .elts[2]
+      0] Name 'a' Load .. 0,4 -> 0,5
+      1] Name 'b' Load .. 0,7 -> 0,8
+      .ctx Load
+"""),
+
+(r"""i = (j)""", 'body[0]', None, None, {'raw': False, 'pars': False}, r"""(a := b)""", r"""i = ((a := b))""", r"""
+Module .. ROOT 0,0 -> 0,14
+  .body[1]
+  0] Assign .. 0,0 -> 0,14
+    .targets[1]
+    0] Name 'i' Store .. 0,0 -> 0,1
+    .value NamedExpr .. 0,6 -> 0,12
+      .target Name 'a' Store .. 0,6 -> 0,7
+      .value Name 'b' Load .. 0,11 -> 0,12
+"""),
+
+(r"""i = (j)""", 'body[0]', None, None, {'raw': False}, r"""(a := b)""", r"""i = (a := b)""", r"""
+Module .. ROOT 0,0 -> 0,12
+  .body[1]
+  0] Assign .. 0,0 -> 0,12
+    .targets[1]
+    0] Name 'i' Store .. 0,0 -> 0,1
+    .value NamedExpr .. 0,5 -> 0,11
+      .target Name 'a' Store .. 0,5 -> 0,6
+      .value Name 'b' Load .. 0,10 -> 0,11
+"""),
+
 ]  # END OF PUT_ONE_DATA
 
 PUT_RAW_DATA = [
