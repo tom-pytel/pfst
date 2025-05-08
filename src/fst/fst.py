@@ -3480,21 +3480,36 @@ class FST:
                 parent = self
 
             else:  # the checks below require a parent and don't make sense if there isn't one
-                if isinstance(code, FST):
-                    if precedence_require_parens(code.a, parent.a, *self.pfield):
-                        if not code.is_atom() and (pars or not self.pars(ret_npars=True)[1]):
-                            code.parenthesize()
+                if isinstance(self.a, PARENTHESIZABLE):
+                    if isinstance(code, AST):
+                        if pars and isinstance(code, PARENTHESIZABLE):
+                            if not (is_atom_ := is_atom(code, tuple_as_atom=None)):
+                                if precedence_require_parens(code, parent.a, *self.pfield):
+                                    code = ast_unparse(code) if is_atom_ is None else f'({ast_unparse(code)})'
+                                elif is_atom_ is None:  # strip `unparse()` parens
+                                    code = ast_unparse(code)[1:-1]
 
-                    elif pars:  # remove parens only if allowed to
-                        code.unparenthesize()
+                    elif isinstance(code, FST):
+                        if isinstance(a := code.a, (Module, Interactive)):
+                            a = a.body[0] if len(a.body) == 1 else None
+                        elif isinstance(a, Expression):
+                            a = a.body
 
-                elif isinstance(code, AST):
-                    if pars:
-                        if not (is_atom_ := is_atom(code, tuple_as_atom=None)):
-                            if precedence_require_parens(code, parent.a, *self.pfield):
-                                code = ast_unparse(code) if is_atom_ is None else f'({ast_unparse(code)})'
-                            elif is_atom_ is None:  # strip `unparse()` parens
-                                code = ast_unparse(code)[1:-1]
+                        if isinstance(a, Expr):
+                            a = a.value
+
+                        if isinstance(a, PARENTHESIZABLE):
+                            effpars = pars or a.f.is_parenthesized_tuple() is False
+                            loc     = self.pars(effpars, exc_genexpr_solo=True)  # TODO: need to redo here with new `a`, should refactor to avoid this
+
+                            if precedence_require_parens(a, parent.a, *self.pfield):
+                                if not a.f.is_atom() and (effpars or not self.pars(ret_npars=True)[1]):
+                                    a.f.parenthesize()
+
+                            elif pars:  # remove parens only if allowed to
+                                a.f.unparenthesize()
+
+                            code = code._lines
 
                 if (pars or not self.is_solo_call_arg_genexpr() or  # if original loc included `arguments` parentheses shared with solo GeneratorExp call arg then need to leave those in place
                     (to_loc := self.pars(True, exc_genexpr_solo=True))[:2] <= loc[:2]

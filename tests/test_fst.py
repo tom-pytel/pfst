@@ -24272,6 +24272,48 @@ class cls:
 
                 raise
 
+    def test_put_one_nonraw_as_raw(self):
+        for i, (dst, attr, idx, field, options, src, put_src, put_dump) in enumerate(PUT_ONE_DATA):
+            t = parse(dst)
+            f = (eval(f't.{attr}', {'t': t}) if attr else t).f
+
+            try:
+                if options.get('raw') is not False:
+                    continue
+
+                options = {**options, 'raw': True}
+
+                try:
+                    f.put(None if src == '**DEL**' else FST(src), idx, field=field, **options)
+
+                except Exception as exc:
+                    if not put_dump.strip() and put_src.startswith('**') and put_src.endswith('**'):
+                        tdst  = f'**{exc!r}**'
+                        tdump = ['']
+
+                    else:
+                        raise
+
+                else:
+                    tdst  = f.root.src
+                    # tdump = f.root.dump(out=list, compact=True)
+
+                    f.root.verify(raise_=True)
+
+                self.assertEqual(tdst.strip(), put_src.strip())          # .strip() due to differences in newline handling
+                # self.assertEqual(tdump, put_dump.strip().split('\n'))  # skip due to differences in newline handling
+
+            except Exception:
+                print(i, attr, idx, field, src, options)
+                print('---')
+                print(repr(dst))
+                print('...')
+                print(src)
+                print('...')
+                print(put_src)
+
+                raise
+
     def test_put_one_special(self):
         f = parse('i', mode='eval').f
         self.assertIsInstance(f.a.body, expr)
