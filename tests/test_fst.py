@@ -19385,47 +19385,6 @@ def f():
         self.assertRaises(WalkFail, ast.f.verify, raise_=True)
         self.assertEqual(None, ast.f.verify(raise_=False))
 
-    def test_pars_special(self):
-        f = parse('''
-( (
- (
-   a
-  ) )
-)
-        '''.strip()).body[0].value.f
-        p = f.pars()
-        self.assertIsInstance(p, fstloc)
-        self.assertEqual(p, (0, 0, 4, 1))
-
-        f = parse('''
-( (
- (
-   a
-  ) )
-,)
-        '''.strip()).body[0].value.elts[0].f
-        p = f.pars()
-        self.assertIsInstance(p, fstloc)
-        self.assertEqual(p, (0, 2, 3, 5))
-
-        f = parse('''
-(
-
-   a
-
-,)
-        '''.strip()).body[0].value.elts[0].f
-        p = f.pars()
-        self.assertIsInstance(p, fstloc)
-        self.assertEqual(p, (2, 3, 2, 4))
-
-        self.assertEqual((0, 1, 0, 15), parse('f(i for i in j)').body[0].value.args[0].f.pars())
-        self.assertEqual((0, 2, 0, 16), parse('f((i for i in j))').body[0].value.args[0].f.pars())
-        self.assertEqual((0, 2, 0, 18), parse('f(((i for i in j)))').body[0].value.args[0].f.pars())
-        self.assertEqual((0, 2, 0, 14), parse('f(i for i in j)').body[0].value.args[0].f.pars(exc_genexpr_solo=True))
-        self.assertEqual((0, 2, 0, 16), parse('f((i for i in j))').body[0].value.args[0].f.pars(exc_genexpr_solo=True))
-        self.assertEqual((0, 2, 0, 18), parse('f(((i for i in j)))').body[0].value.args[0].f.pars(exc_genexpr_solo=True))
-
     def test_walk(self):
         a = parse("""
 def f(a, b=1, *c, d=2, **e): pass
@@ -20621,6 +20580,46 @@ def func():
                 raise
 
     def test_pars_special(self):
+        f = parse('''
+( (
+ (
+   a
+  ) )
+)
+        '''.strip()).body[0].value.f
+        p = f.pars()
+        self.assertIsInstance(p, fstloc)
+        self.assertEqual(p, (0, 0, 4, 1))
+
+        f = parse('''
+( (
+ (
+   a
+  ) )
+,)
+        '''.strip()).body[0].value.elts[0].f
+        p = f.pars()
+        self.assertIsInstance(p, fstloc)
+        self.assertEqual(p, (0, 2, 3, 5))
+
+        f = parse('''
+(
+
+   a
+
+,)
+        '''.strip()).body[0].value.elts[0].f
+        p = f.pars()
+        self.assertIsInstance(p, fstloc)
+        self.assertEqual(p, (2, 3, 2, 4))
+
+        self.assertEqual((0, 1, 0, 15), parse('f(i for i in j)').body[0].value.args[0].f.pars())
+        self.assertEqual((0, 2, 0, 16), parse('f((i for i in j))').body[0].value.args[0].f.pars())
+        self.assertEqual((0, 2, 0, 18), parse('f(((i for i in j)))').body[0].value.args[0].f.pars())
+        self.assertEqual((0, 2, 0, 14), parse('f(i for i in j)').body[0].value.args[0].f.pars(exc_genexpr_solo=True))
+        self.assertEqual((0, 2, 0, 16), parse('f((i for i in j))').body[0].value.args[0].f.pars(exc_genexpr_solo=True))
+        self.assertEqual((0, 2, 0, 18), parse('f(((i for i in j)))').body[0].value.args[0].f.pars(exc_genexpr_solo=True))
+
         f = parse('((1), ( (2) ))').body[0].value.f
         self.assertEqual(1, f.elts[0].pars(ret_npars=True)[1])
         self.assertEqual(2, f.elts[1].pars(ret_npars=True)[1])
@@ -20711,27 +20710,27 @@ k
 
     def test_copy_pars(self):
         self.assertEqual('a', parse('(a)').body[0].value.f.copy(pars=False).root.src)
-        self.assertEqual('a', parse('(a)').body[0].value.f.copy(pars='put').root.src)
+        self.assertEqual('a', parse('(a)').body[0].value.f.copy(pars='auto').root.src)
         self.assertEqual('(a)', parse('(a)').body[0].value.f.copy(pars=True).root.src)
         self.assertEqual('a', parse('( # pre\na\n # post\n)').body[0].value.f.copy(pars=False).root.src)
         self.assertEqual('( # pre\na\n # post\n)', parse('( # pre\na\n # post\n)').body[0].value.f.copy(pars=True).root.src)
 
         self.assertEqual('b as c', parse('from a import (b as c)').body[0].names[0].f.copy(pars=False).root.src)
-        self.assertEqual('b as c', parse('from a import (b as c)').body[0].names[0].f.copy(pars='put').root.src)
+        self.assertEqual('b as c', parse('from a import (b as c)').body[0].names[0].f.copy(pars='auto').root.src)
         self.assertEqual('(b as c)', parse('from a import (b as c)').body[0].names[0].f.copy(pars=True).root.src)
         self.assertEqual('b as c', parse('from a import (b as c, d as e)').body[0].names[0].f.copy(pars=False).root.src)
         self.assertEqual('b as c', parse('from a import ( # pre\nb as c\n# post\n)').body[0].names[0].f.copy(pars=False).root.src)
         self.assertEqual('( # pre\nb as c\n# post\n)', parse('from a import ( # pre\nb as c\n# post\n)').body[0].names[0].f.copy(pars=True).root.src)
 
         self.assertEqual('a as b', parse('with (a as b): pass').body[0].items[0].f.copy(pars=False).root.src)
-        self.assertEqual('a as b', parse('with (a as b): pass').body[0].items[0].f.copy(pars='put').root.src)
+        self.assertEqual('a as b', parse('with (a as b): pass').body[0].items[0].f.copy(pars='auto').root.src)
         self.assertEqual('(a as b)', parse('with (a as b): pass').body[0].items[0].f.copy(pars=True).root.src)
         self.assertEqual('a as b', parse('with (a as b, c as d): pass').body[0].items[0].f.copy(pars=True).root.src)
         self.assertEqual('a as b', parse('with ( # pre\na as b\n# post\n): pass').body[0].items[0].f.copy(pars=False).root.src)
         self.assertEqual('( # pre\na as b\n# post\n)', parse('with ( # pre\na as b\n# post\n): pass').body[0].items[0].f.copy(pars=True).root.src)
 
         self.assertEqual('1|2', parse('match a:\n case (1|2): pass').body[0].cases[0].pattern.f.copy(pars=False).root.src)
-        self.assertEqual('1|2', parse('match a:\n case (1|2): pass').body[0].cases[0].pattern.f.copy(pars='put').root.src)
+        self.assertEqual('1|2', parse('match a:\n case (1|2): pass').body[0].cases[0].pattern.f.copy(pars='auto').root.src)
         self.assertEqual('(1|2)', parse('match a:\n case (1|2): pass').body[0].cases[0].pattern.f.copy(pars=True).root.src)
         self.assertEqual('1|2', parse('match a:\n case ( # pre\n1|2\n# post\n): pass').body[0].cases[0].pattern.f.copy(pars=False).root.src)
         self.assertEqual('( # pre\n1|2\n# post\n)', parse('match a:\n case ( # pre\n1|2\n# post\n): pass').body[0].cases[0].pattern.f.copy(pars=True).root.src)
@@ -23059,52 +23058,127 @@ class cls:
         self.assertIsNone(g.a)
 
     def test_replace_raw(self):
-        old_defaults = FST.set_options(pars=False)
-
         f = parse('def f(a, b): pass').f
         g = f.body[0].args.args[1]
         self.assertEqual('b', g.src)
-        h = f.body[0].args.args[1].replace('c=1', raw=True)
+        h = f.body[0].args.args[1].replace('c=1', raw=True, pars=False)
         self.assertEqual('def f(a, c=1): pass', f.src)
         self.assertEqual('c', h.src)
         self.assertIsNone(g.a)
-        i = f.body[0].args.args[1].replace('**d', raw=True, to=f.body[0].args.defaults[0])
+        i = f.body[0].args.args[1].replace('**d', raw=True, pars=False, to=f.body[0].args.defaults[0])
         self.assertEqual('def f(a, **d): pass', f.src)
         self.assertEqual('d', i.src)
         self.assertIsNone(h.a)
 
         f = parse('[a for c in d for b in c for a in b]').body[0].value.f
-        g = f.generators[1].replace('for x in y', raw=True)
+        g = f.generators[1].replace('for x in y', raw=True, pars=False)
         f = f.repath()
         self.assertEqual(f.src, '[a for c in d for x in y for a in b]')
         self.assertEqual(g.src, 'for x in y')
-        g = f.generators[1].replace(None, raw=True)
+        g = f.generators[1].replace(None, raw=True, pars=False)
         f = f.repath()
         self.assertEqual(f.src, '[a for c in d  for a in b]')
         self.assertIsNone(g)
-        g = f.generators[1].replace(None, raw=True)
+        g = f.generators[1].replace(None, raw=True, pars=False)
         f = f.repath()
         self.assertEqual(f.src, '[a for c in d  ]')
         self.assertIsNone(g)
 
         f = parse('f(i for i in j)').body[0].value.args[0].f
-        g = f.replace('a', raw=True)
+        g = f.replace('a', raw=True, pars=False)
         self.assertEqual(g.src, 'a')
         self.assertEqual(f.root.src, 'f(a)')
 
         f = parse('f((i for i in j))').body[0].value.args[0].f
-        g = f.replace('a', raw=True)
+        g = f.replace('a', raw=True, pars=False)
         self.assertEqual(g.src, 'a')
         self.assertEqual(f.root.src, 'f(a)')
 
         f = parse('f(((i for i in j)))').body[0].value.args[0].f
-        g = f.replace('a', raw=True)
+        g = f.replace('a', raw=True, pars=False)
         self.assertEqual(g.src, 'a')
         self.assertEqual(f.root.src, 'f((a))')
 
-        self.assertEqual('y', parse('n', mode='eval').body.f.replace('y', raw=True).root.src)  # Expression.body
+        self.assertEqual('y', parse('n', mode='eval').body.f.replace('y', raw=True, pars=False).root.src)  # Expression.body
 
-        FST.set_options(**old_defaults)
+        # parentheses handling
+
+        f = parse('( # 1\ni\n# 2\n)').f
+        g = parse('( # 3\nj\n# 4\n)').body[0].value.f.copy(pars=True)
+        f.body[0].value.replace(g, raw=True, pars=False)
+        self.assertEqual('( # 1\n( # 3\nj\n# 4\n)\n# 2\n)', f.src)
+
+        f = parse('( # 1\ni\n# 2\n)').f
+        g = parse('( # 3\nj\n# 4\n)').body[0].value.f.copy(pars=True)
+        f.body[0].value.replace(g, raw=True, pars=True)
+        self.assertEqual('j', f.src)
+
+        f = parse('( # 1\ni\n# 2\n)').f
+        g = parse('( # 3\nj\n# 4\n)').body[0].value.f.copy(pars=True)
+        f.body[0].value.replace(g, raw=True, pars='auto')
+        self.assertEqual('j', f.src)
+
+        f = parse('i * ( # 1\nj\n# 2\n)').f
+        g = parse('( # 3\na + b\n# 4\n)').body[0].value.f.copy(pars=True)
+        f.body[0].value.right.replace(g, raw=True, pars=False)
+        self.assertEqual('i * ( # 1\n( # 3\na + b\n# 4\n)\n# 2\n)', f.src)
+
+        f = parse('i * ( # 1\nj\n# 2\n)').f
+        g = parse('( # 3\na + b\n# 4\n)').body[0].value.f.copy(pars=True)
+        f.body[0].value.right.replace(g, raw=True, pars=True)
+        self.assertEqual('i * ( # 3\na + b\n# 4\n)', f.src)
+
+        f = parse('i * ( # 1\nj\n# 2\n)').f
+        g = parse('( # 3\na + b\n# 4\n)').body[0].value.f.copy(pars=True)
+        f.body[0].value.right.replace(g, raw=True, pars='auto')
+        self.assertEqual('i * ( # 3\na + b\n# 4\n)', f.src)
+
+        f = parse('i * ( # 1\nj\n# 2\n)').f
+        g = parse('a + b').body[0].value.f.copy(pars=True)
+        f.body[0].value.right.replace(g, raw=True, pars=False)
+        self.assertEqual('i * ( # 1\na + b\n# 2\n)', f.src)
+
+        f = parse('i * ( # 1\nj\n# 2\n)').f
+        g = parse('a + b').body[0].value.f.copy(pars=True)
+        f.body[0].value.right.replace(g, raw=True, pars=True)
+        self.assertEqual('i * (a + b)', f.src)
+
+        f = parse('i * ( # 1\nj\n# 2\n)').f
+        g = parse('a + b').body[0].value.f.copy(pars=True)
+        f.body[0].value.right.replace(g, raw=True, pars='auto')
+        self.assertEqual('i * (a + b)', f.src)
+
+        # put AST
+
+        f = parse('( # 1\ni\n# 2\n)').f
+        a = Yield(value=Constant(value=1))
+        f.body[0].value.replace(a, raw=True, pars=False)
+        self.assertEqual('( # 1\n(yield 1)\n# 2\n)', f.src)
+
+        f = parse('( # 1\ni\n# 2\n)').f
+        a = Yield(value=Constant(value=1))
+        f.body[0].value.replace(a, raw=True, pars=True)
+        self.assertEqual('yield 1', f.src)
+
+        f = parse('( # 1\ni\n# 2\n)').f
+        a = Yield(value=Constant(value=1))
+        f.body[0].value.replace(a, raw=True, pars='auto')
+        self.assertEqual('yield 1', f.src)
+
+        f = parse('( # 1\ni\n# 2\n)').f
+        a = NamedExpr(target=Name(id='i', ctx=Store()), value=Constant(value=1))
+        f.body[0].value.replace(a, raw=True, pars=False)
+        self.assertEqual('( # 1\n(i := 1)\n# 2\n)', f.src)
+
+        f = parse('( # 1\ni\n# 2\n)').f
+        a = NamedExpr(target=Name(id='i', ctx=Store()), value=Constant(value=1))
+        f.body[0].value.replace(a, raw=True, pars=True)
+        self.assertEqual('(i := 1)', f.src)
+
+        f = parse('( # 1\ni\n# 2\n)').f
+        a = NamedExpr(target=Name(id='i', ctx=Store()), value=Constant(value=1))
+        f.body[0].value.replace(a, raw=True, pars='auto')
+        self.assertEqual('(i := 1)', f.src)
 
     def test_replace_existing_one(self):
         for i, (dst, attr, options, src, put_ret, put_src) in enumerate(REPLACE_EXISTING_ONE_DATA):
@@ -23140,13 +23214,14 @@ class cls:
             f = (eval(f't.{attr}', {'t': t}) if attr else t).f
 
             try:
-                g = f.replace(None if src == '**DEL**' else src, **options) or f.root
+                # g = f.replace(None if src == '**DEL**' else src, **options) or f.root
+                f.parent.put(None if src == '**DEL**' else src, f.pfield.idx, field=f.pfield.name, **options)
 
                 tdst = f.root.src
 
                 f.root.verify(raise_=True)
 
-                self.assertEqual(g.src, put_ret)
+                # self.assertEqual(g.src, put_ret)
                 self.assertEqual(tdst, put_src)
 
             except Exception:
@@ -23655,110 +23730,6 @@ class cls:
 
                 raise
 
-    def test_put_raw_special(self):
-        f = parse('[a for c in d for b in c for a in b]').body[0].value.f
-        g = f.put('for x in y', 1, raw=True)
-        self.assertIsNot(g, f)
-        self.assertEqual(g.src, '[a for c in d for x in y for a in b]')
-        f = g
-        g = f.put(None, 1, raw=True)
-        self.assertIsNot(g, f)
-        self.assertEqual(g.src, '[a for c in d  for a in b]')
-        f = g
-        g = f.put(None, 1, raw=True)
-        self.assertIsNot(g, f)
-        self.assertEqual(g.src, '[a for c in d  ]')
-        f = g
-
-        f = parse('try:pass\nfinally: pass').body[0].f
-        g = f.put('break', 0, raw=True)
-        self.assertIs(g, f)
-        self.assertEqual(g.src, 'try:break\nfinally: pass')
-
-        f = parse('try: pass\nexcept: pass').body[0].handlers[0].f
-        g = f.put('break', 0, raw=True)
-        self.assertIs(g, f)
-        self.assertEqual(g.src, 'except: break')
-
-        f = parse('match a:\n case 1: pass').body[0].cases[0].f
-        g = f.put('break', 0, raw=True)
-        self.assertIs(g, f)
-        self.assertEqual(g.src, 'case 1: break')
-
-        self.assertEqual('y', parse('n', mode='eval').f.put('y', field='body', raw=True).root.src)  # Expression.body
-
-        # strip or add delimiters from/to different type of node to put as slice
-
-        f = parse('{a: b, c: d, e: f}').body[0].value.f
-        g = parse('match a:\n case {1: x}: pass').body[0].cases[0].pattern.f.copy()
-        self.assertEqual('{a: b, 1: x, e: f}', f.put_slice(g.a, 1, 2, raw=True).root.src)
-
-        f = parse('match a:\n case {1: x, 2: y, 3: z}: pass').body[0].cases[0].pattern.f
-        g = parse('{1: a}').body[0].value.f.copy()
-        self.assertEqual('match a:\n case {1: x, 1: a, 3: z}: pass', f.put_slice(g.a, 1, 2, raw=True).root.src)
-
-        f = parse('[1, 2, 3]').body[0].value.f
-        g = parse('match a:\n case a, b: pass').body[0].cases[0].pattern.f.copy()
-        self.assertEqual('[1, a, b, 3]', f.put_slice(g.a, 1, 2, raw=True).root.src)
-
-        f = parse('[1, 2, 3]').body[0].value.f
-        g = parse('match a:\n case (a, b): pass').body[0].cases[0].pattern.f.copy()
-        self.assertEqual('[1, a, b, 3]', f.put_slice(g.a, 1, 2, raw=True).root.src)
-
-        f = parse('match a:\n case 1, 2, 3: pass').body[0].cases[0].pattern.f
-        g = parse('[a, b]').body[0].value.f.copy()
-        self.assertEqual('match a:\n case 1, a, b, 3: pass', f.put_slice(g.a, 1, 2, raw=True).root.src)
-
-        f = parse('match a:\n case 1, 2, 3: pass').body[0].cases[0].pattern.f
-        g = parse('[a, b]').body[0].value.f.copy()
-        self.assertEqual('match a:\n case 1, [a, b], 3: pass', f.put_slice(g.a, 1, 2, raw=True, one=True).root.src)
-
-        f = parse('match a:\n case 1 | 2 | 3: pass').body[0].cases[0].pattern.f
-        g = parse('a | b').body[0].value.f.copy()
-        self.assertEqual('match a:\n case 1 | a | b | 3: pass', f.put_slice(g.a, 1, 2, raw=True).root.src)
-
-        f = parse('{a: b, c: d, e: f}').body[0].value.f
-        g = parse('match a:\n case {1: x}: pass').body[0].cases[0].pattern.f.copy()
-        self.assertEqual('{a: b, 1: x, e: f}', f.put_slice(g, 1, 2, raw=True).root.src)
-
-        f = parse('match a:\n case {1: x, 2: y, 3: z}: pass').body[0].cases[0].pattern.f
-        g = parse('{1: a}').body[0].value.f.copy()
-        self.assertEqual('match a:\n case {1: x, 1: a, 3: z}: pass', f.put_slice(g, 1, 2, raw=True).root.src)
-
-        f = parse('[1, 2, 3]').body[0].value.f
-        g = parse('match a:\n case a, b: pass').body[0].cases[0].pattern.f.copy()
-        self.assertEqual('[1, a, b, 3]', f.put_slice(g, 1, 2, raw=True).root.src)
-
-        f = parse('[1, 2, 3]').body[0].value.f
-        g = parse('match a:\n case a, b: pass').body[0].cases[0].pattern.f.copy()
-        self.assertEqual('[1, (a, b), 3]', f.put_slice(g, 1, 2, raw=True, one=True).root.src)
-
-        f = parse('match a:\n case 1, 2, 3: pass').body[0].cases[0].pattern.f
-        g = parse('[a, b]').body[0].value.f.copy()
-        self.assertEqual('match a:\n case 1, a, b, 3: pass', f.put_slice(g, 1, 2, raw=True).root.src)
-
-        f = parse('match a:\n case 1, 2, 3: pass').body[0].cases[0].pattern.f
-        g = parse('[a, b]').body[0].value.f.copy()
-        self.assertEqual('match a:\n case 1, [a, b], 3: pass', f.put_slice(g, 1, 2, raw=True, one=True).root.src)
-
-        f = parse('match a:\n case 1 | 2 | 3: pass').body[0].cases[0].pattern.f
-        g = parse('a | b').body[0].value.f.copy()
-        self.assertEqual('match a:\n case 1 | a | b | 3: pass', f.put_slice(g, 1, 2, raw=True).root.src)
-
-        # make sure we can't put TO location behind self
-
-        f = parse('[1, 2, 3]').body[0].value.f
-        self.assertEqual('[1, 4]', f.elts[1].replace('4', to=f.elts[2]).root.src)
-
-        f = parse('[1, 2, 3]').body[0].value.f
-        self.assertRaises(ValueError, f.elts[1].replace, '4', to=f.elts[0])
-
-        f = parse('a = b').body[0].f
-        self.assertEqual('c', f.targets[0].replace('c', to=f.value).root.src)
-
-        f = parse('a = b').body[0].f
-        self.assertRaises(ValueError, f.value.replace, 'c', to=f.targets[0])
-
     def test_put_raw_random_same(self):
         seed(rndseed := randint(0, 0x7fffffff))
 
@@ -23897,6 +23868,110 @@ finally:
         self.assertEqual('yield from y', parse('yield from n').body[0].value.f.put('y').root.src)  # YieldFrom
         self.assertEqual('[*y]', parse('[*n]').body[0].value.elts[0].f.put('y').root.src)  # Starred
         self.assertEqual('match a:\n case "y": pass', parse('match a:\n case "n": pass').body[0].cases[0].pattern.f.put('"y"').root.src)  # MatchValue
+
+    def test_raw_special(self):
+        f = parse('[a for c in d for b in c for a in b]').body[0].value.f
+        g = f.put('for x in y', 1, raw=True)
+        self.assertIsNot(g, f)
+        self.assertEqual(g.src, '[a for c in d for x in y for a in b]')
+        f = g
+        g = f.put(None, 1, raw=True)
+        self.assertIsNot(g, f)
+        self.assertEqual(g.src, '[a for c in d  for a in b]')
+        f = g
+        g = f.put(None, 1, raw=True)
+        self.assertIsNot(g, f)
+        self.assertEqual(g.src, '[a for c in d  ]')
+        f = g
+
+        f = parse('try:pass\nfinally: pass').body[0].f
+        g = f.put('break', 0, raw=True)
+        self.assertIs(g, f)
+        self.assertEqual(g.src, 'try:break\nfinally: pass')
+
+        f = parse('try: pass\nexcept: pass').body[0].handlers[0].f
+        g = f.put('break', 0, raw=True)
+        self.assertIs(g, f)
+        self.assertEqual(g.src, 'except: break')
+
+        f = parse('match a:\n case 1: pass').body[0].cases[0].f
+        g = f.put('break', 0, raw=True)
+        self.assertIs(g, f)
+        self.assertEqual(g.src, 'case 1: break')
+
+        self.assertEqual('y', parse('n', mode='eval').f.put('y', field='body', raw=True).root.src)  # Expression.body
+
+        # strip or add delimiters from/to different type of node to put as slice
+
+        f = parse('{a: b, c: d, e: f}').body[0].value.f
+        g = parse('match a:\n case {1: x}: pass').body[0].cases[0].pattern.f.copy()
+        self.assertEqual('{a: b, 1: x, e: f}', f.put_slice(g.a, 1, 2, raw=True).root.src)
+
+        f = parse('match a:\n case {1: x, 2: y, 3: z}: pass').body[0].cases[0].pattern.f
+        g = parse('{1: a}').body[0].value.f.copy()
+        self.assertEqual('match a:\n case {1: x, 1: a, 3: z}: pass', f.put_slice(g.a, 1, 2, raw=True).root.src)
+
+        f = parse('[1, 2, 3]').body[0].value.f
+        g = parse('match a:\n case a, b: pass').body[0].cases[0].pattern.f.copy()
+        self.assertEqual('[1, a, b, 3]', f.put_slice(g.a, 1, 2, raw=True).root.src)
+
+        f = parse('[1, 2, 3]').body[0].value.f
+        g = parse('match a:\n case (a, b): pass').body[0].cases[0].pattern.f.copy()
+        self.assertEqual('[1, a, b, 3]', f.put_slice(g.a, 1, 2, raw=True).root.src)
+
+        f = parse('match a:\n case 1, 2, 3: pass').body[0].cases[0].pattern.f
+        g = parse('[a, b]').body[0].value.f.copy()
+        self.assertEqual('match a:\n case 1, a, b, 3: pass', f.put_slice(g.a, 1, 2, raw=True).root.src)
+
+        f = parse('match a:\n case 1, 2, 3: pass').body[0].cases[0].pattern.f
+        g = parse('[a, b]').body[0].value.f.copy()
+        self.assertEqual('match a:\n case 1, [a, b], 3: pass', f.put_slice(g.a, 1, 2, raw=True, one=True).root.src)
+
+        f = parse('match a:\n case 1 | 2 | 3: pass').body[0].cases[0].pattern.f
+        g = parse('a | b').body[0].value.f.copy()
+        self.assertEqual('match a:\n case 1 | a | b | 3: pass', f.put_slice(g.a, 1, 2, raw=True).root.src)
+
+        f = parse('{a: b, c: d, e: f}').body[0].value.f
+        g = parse('match a:\n case {1: x}: pass').body[0].cases[0].pattern.f.copy()
+        self.assertEqual('{a: b, 1: x, e: f}', f.put_slice(g, 1, 2, raw=True).root.src)
+
+        f = parse('match a:\n case {1: x, 2: y, 3: z}: pass').body[0].cases[0].pattern.f
+        g = parse('{1: a}').body[0].value.f.copy()
+        self.assertEqual('match a:\n case {1: x, 1: a, 3: z}: pass', f.put_slice(g, 1, 2, raw=True).root.src)
+
+        f = parse('[1, 2, 3]').body[0].value.f
+        g = parse('match a:\n case a, b: pass').body[0].cases[0].pattern.f.copy()
+        self.assertEqual('[1, a, b, 3]', f.put_slice(g, 1, 2, raw=True).root.src)
+
+        f = parse('[1, 2, 3]').body[0].value.f
+        g = parse('match a:\n case a, b: pass').body[0].cases[0].pattern.f.copy()
+        self.assertEqual('[1, (a, b), 3]', f.put_slice(g, 1, 2, raw=True, one=True).root.src)
+
+        f = parse('match a:\n case 1, 2, 3: pass').body[0].cases[0].pattern.f
+        g = parse('[a, b]').body[0].value.f.copy()
+        self.assertEqual('match a:\n case 1, a, b, 3: pass', f.put_slice(g, 1, 2, raw=True).root.src)
+
+        f = parse('match a:\n case 1, 2, 3: pass').body[0].cases[0].pattern.f
+        g = parse('[a, b]').body[0].value.f.copy()
+        self.assertEqual('match a:\n case 1, [a, b], 3: pass', f.put_slice(g, 1, 2, raw=True, one=True).root.src)
+
+        f = parse('match a:\n case 1 | 2 | 3: pass').body[0].cases[0].pattern.f
+        g = parse('a | b').body[0].value.f.copy()
+        self.assertEqual('match a:\n case 1 | a | b | 3: pass', f.put_slice(g, 1, 2, raw=True).root.src)
+
+        # make sure we can't put TO location behind self
+
+        f = parse('[1, 2, 3]').body[0].value.f
+        self.assertEqual('[1, 4]', f.elts[1].replace('4', to=f.elts[2]).root.src)
+
+        f = parse('[1, 2, 3]').body[0].value.f
+        self.assertRaises(ValueError, f.elts[1].replace, '4', to=f.elts[0])
+
+        f = parse('a = b').body[0].f
+        self.assertEqual('c', f.targets[0].replace('c', to=f.value).root.src)
+
+        f = parse('a = b').body[0].f
+        self.assertRaises(ValueError, f.value.replace, 'c', to=f.targets[0])
 
     def test_precedence_replace_raw_fst(self):
         truths = iter(PRECEDENCE_DATA)

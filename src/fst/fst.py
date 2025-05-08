@@ -142,16 +142,16 @@ DEFAULT_PARSE_PARAMS    = dict(filename='<unknown>', type_comments=False, featur
 DEFAULT_INDENT          = '    '
 
 # TODO: remove these and just initialize in FST.OPTIONS
-DEFAULT_DOCSTR          = True   # True | False | 'strict'
-DEFAULT_PRECOMMS        = True   # True | False | 'all'
-DEFAULT_POSTCOMMS       = True   # True | False | 'all' | 'block'
-DEFAULT_PRESPACE        = False  # True | False | int
-DEFAULT_POSTSPACE       = False  # True | False | int
-DEFAULT_PEP8SPACE       = True   # True | False | 1
-DEFAULT_PARS            = 'put'  # True | False | 'put'
-DEFAULT_ELIF_           = False  # True | False
-DEFAULT_FIX             = True   # True | False
-DEFAULT_RAW             = 'alt'  # True | False | 'alt'
+DEFAULT_DOCSTR          = True    # True | False | 'strict'
+DEFAULT_PRECOMMS        = True    # True | False | 'all'
+DEFAULT_POSTCOMMS       = True    # True | False | 'all' | 'block'
+DEFAULT_PRESPACE        = False   # True | False | int
+DEFAULT_POSTSPACE       = False   # True | False | int
+DEFAULT_PEP8SPACE       = True    # True | False | 1
+DEFAULT_PARS            = 'auto'  # True | False | 'auto'
+DEFAULT_ELIF_           = False   # True | False
+DEFAULT_FIX             = True    # True | False
+DEFAULT_RAW             = 'auto'  # True | False | 'auto'
 
 EXPRESSIONISH           = (expr, arg, alias, withitem, pattern, type_param)
 STATEMENTISH            = (stmt, ExceptHandler, match_case)  # always in lists, cannot be inside multilines
@@ -1931,13 +1931,15 @@ class FST:
         - `1`: One empty line in all scopes.
         - `None`: Use default (`True`).
     - `pars`: How parentheses are handled.
-        - `False`: Parentheses are not modified. Not copied with nodes or removed on cut (except for tuple parens) or
-            automatically modified on put.
-        - `True`: Parentheses are handled automatically and cut from and copied with nodes. They are also added if
-            needed for precedence when adding nodes with enough information to make that decision (including `AST` and
-            `FST` nodes passed to raw put).
-        - `'put'`: Same as `True` except they are not returned with a cut or copied node (they are removed on cut).
-        - `None`: Use default (`'put'`).
+        - `False`: Parentheses are not modified generally. Not copied with nodes or removed on cut or automatically
+            modified on put, except added if needed for precedence. They are removed on slice cut due to starting and
+            ending on different elements.
+        - `True`: Parentheses are handled automatically and cut from and copied with nodes. They are added or removed
+            as needed for precedence when putting nodes (for raw put that means must be `AST` or `FST` nodes passed to
+            raw put to node, not location).
+        - `'auto'`: Same as `True` except they are not returned with a cut or copied node, though they are still removed
+             on cut.
+        - `None`: Use default (`'auto'`).
     - `elif_`: `True` or `False`, if putting a single `If` statement to an `orelse` field of a parent `If` statement then
         put it as an `elif`. `None` means use default of `False`.
     - `fix`: Attempt to carry out basic fixes on operands like parenthesizing multiline expressions so they are
@@ -1946,8 +1948,8 @@ class FST:
         one(s).
         - `False`: Do not do raw source operations.
         - `True`: Only do raw source operations.
-        - `'alt'`: Only do raw source operations if the normal operation fails in a way that raw might not.
-        - `None`: Use default (`'alt'`).
+        - `'auto'`: Only do raw source operations if the normal operation fails in a way that raw might not.
+        - `None`: Use default (`'auto'`).
     """
 
     a:            AST                        ; """The actual `AST` node."""
@@ -1973,10 +1975,10 @@ class FST:
         'prespace':  DEFAULT_PRESPACE,   # True | False | int
         'postspace': DEFAULT_POSTSPACE,  # True | False | int
         'pep8space': DEFAULT_PEP8SPACE,  # True | False | 1
-        'pars':      DEFAULT_PARS,       # True | False | 'put'
+        'pars':      DEFAULT_PARS,       # True | False | 'auto'
         'elif_':     DEFAULT_ELIF_,      # True | False
         'fix':       DEFAULT_FIX,        # True | False
-        'raw':       DEFAULT_RAW,        # True | False | 'alt'
+        'raw':       DEFAULT_RAW,        # True | False | 'auto'
     }  ; """@private"""
 
     @property
@@ -3459,7 +3461,7 @@ class FST:
 
         multi = to and to is not self
         pars  = True if multi else bool(FST.get_option('pars', options))
-        loc   = self.pars(pars, exc_genexpr_solo=True)
+        loc   = self.pars(pars, exc_genexpr_solo=True)  # we don't check for unparenthesized Tuple code FST here because if it is then will just be parsed into a Tuple anyway
 
         if not loc:
             raise ValueError('node being reparsed must have a location')
@@ -3472,24 +3474,29 @@ class FST:
             if not (parent := self.parent):  # we want parent which will not change or root node
                 parent = self
 
-            elif pars:  # precedence parenthesizing
+            else:  # the checks below require a parent and don't make sense if there isn't one
                 if isinstance(code, FST):
-                    if not code.is_atom() and precedence_require_parens(code.a, parent.a, *self.pfield):
-                        code.parenthesize()
+                    if precedence_require_parens(code.a, parent.a, *self.pfield):
+                        if not code.is_atom() and (pars or not self.pars(ret_npars=True)[1]):
+                            code.parenthesize()
+
+                    elif pars:  # remove parens only if allowed to
+                        code.unparenthesize()
 
                 elif isinstance(code, AST):
-                    if not (is_atom_ := is_atom(code, tuple_as_atom=None)):
-                        if precedence_require_parens(code, parent.a, *self.pfield):
-                            code = ast_unparse(code) if is_atom_ is None else f'({ast_unparse(code)})'
-                        elif is_atom_ is None:  # strip `unparse()` parens
-                            code = ast_unparse(code)[1:-1]
+                    if pars:
+                        if not (is_atom_ := is_atom(code, tuple_as_atom=None)):
+                            if precedence_require_parens(code, parent.a, *self.pfield):
+                                code = ast_unparse(code) if is_atom_ is None else f'({ast_unparse(code)})'
+                            elif is_atom_ is None:  # strip `unparse()` parens
+                                code = ast_unparse(code)[1:-1]
 
-            if (pars or not self.is_solo_call_arg_genexpr() or
-                (to_loc := self.pars(True, exc_genexpr_solo=True))[:2] <= loc[:2]  # need to check this case if `pars` wasn't specified for a solo call arg GenExpression
-            ):
-                to_loc = loc
-            else:
-                loc = to_loc
+                if (pars or not self.is_solo_call_arg_genexpr() or  # if original loc included `arguments` parentheses shared with solo GeneratorExp call arg then need to leave those in place
+                    (to_loc := self.pars(True, exc_genexpr_solo=True))[:2] <= loc[:2]
+                ):
+                    to_loc = loc
+                else:
+                    loc = to_loc
 
         elif not (to_loc := to.pars(pars, exc_genexpr_solo=True)):  # pars is True here
             raise ValueError(f"'to' node must have a location")
@@ -3535,7 +3542,7 @@ class FST:
 
         return fst
 
-    def _get_seq_and_dedent(self, get_ast: AST, cut: bool, seq_loc: fstloc,
+    def _get_slice_seq_and_dedent(self, get_ast: AST, cut: bool, seq_loc: fstloc,
                             ffirst: Union['FST', fstloc], flast: Union['FST', fstloc],
                             fpre: Union['FST', fstloc, None], fpost: Union['FST', fstloc, None],
                             prefix: str, suffix: str) -> 'FST':
@@ -3633,7 +3640,7 @@ class FST:
 
                 assert self.root._lines[seq_loc.end_ln].startswith(')', seq_loc.end_col)
 
-        fst = self._get_seq_and_dedent(get_ast, cut, seq_loc, ffirst, flast, fpre, fpost, prefix, suffix)
+        fst = self._get_slice_seq_and_dedent(get_ast, cut, seq_loc, ffirst, flast, fpre, fpost, prefix, suffix)
 
         if fix:
             if is_set:
@@ -3702,7 +3709,7 @@ class FST:
         assert self.root._lines[self.ln].startswith('{', self.col)
         assert self.root._lines[seq_loc.end_ln].startswith('}', seq_loc.end_col)
 
-        return self._get_seq_and_dedent(get_ast, cut, seq_loc, ffirst, flast, fpre, fpost, '{', '}')
+        return self._get_slice_seq_and_dedent(get_ast, cut, seq_loc, ffirst, flast, fpre, fpost, '{', '}')
 
     def _get_slice_stmtish(self, start: int | Literal['end'] | None, stop: int | None, field: str | None, cut: bool,
                         one: bool = False, **options) -> 'FST':
@@ -3758,7 +3765,7 @@ class FST:
 
         return fst
 
-    def _put_seq_and_indent(self, put_fst: Optional['FST'], seq_loc: fstloc,
+    def _put_slice_seq_and_indent(self, put_fst: Optional['FST'], seq_loc: fstloc,
                             ffirst: Union['FST', fstloc, None], flast: Union['FST', fstloc, None],
                             fpre: Union['FST', fstloc, None], fpost: Union['FST', fstloc, None],
                             pfirst: Union['FST', fstloc, None], plast: Union['FST', fstloc, None],
@@ -3861,7 +3868,7 @@ class FST:
             flast  = elts[stop - 1].f
 
         if not put_fst:
-            self._put_seq_and_indent(None, seq_loc, ffirst, flast, fpre, fpost, None, None, options.get('docstr'))
+            self._put_slice_seq_and_indent(None, seq_loc, ffirst, flast, fpre, fpost, None, None, options.get('docstr'))
             self._unmake_fst_tree(elts[start : stop])
 
             del elts[start : stop]
@@ -3900,7 +3907,7 @@ class FST:
                 pfirst = selts[0].f
                 plast  = selts[-1].f
 
-            self._put_seq_and_indent(put_fst, seq_loc, ffirst, flast, fpre, fpost, pfirst, plast, options.get('docstr'))
+            self._put_slice_seq_and_indent(put_fst, seq_loc, ffirst, flast, fpre, fpost, pfirst, plast, options.get('docstr'))
             self._unmake_fst_tree(elts[start : stop], put_fst)
 
             elts[start : stop] = put_ast.elts
@@ -3983,7 +3990,7 @@ class FST:
             flast  = values[stop - 1].f
 
         if not put_fst:
-            self._put_seq_and_indent(None, seq_loc, ffirst, flast, fpre, fpost, None, None, options.get('docstr'))
+            self._put_slice_seq_and_indent(None, seq_loc, ffirst, flast, fpre, fpost, None, None, options.get('docstr'))
             self._unmake_fst_tree(keys[start : stop] + values[start : stop])
 
             del keys[start : stop]
@@ -4010,7 +4017,7 @@ class FST:
                 pfirst = put_fst._dict_key_or_mock_loc(skeys[0], put_ast.values[0].f)
                 plast  = put_ast.values[-1].f
 
-            self._put_seq_and_indent(put_fst, seq_loc, ffirst, flast, fpre, fpost, pfirst, plast, options.get('docstr'))
+            self._put_slice_seq_and_indent(put_fst, seq_loc, ffirst, flast, fpre, fpost, pfirst, plast, options.get('docstr'))
             self._unmake_fst_tree(keys[start : stop] + values[start : stop], put_fst)
 
             keys[start : stop]   = put_ast.keys
@@ -4360,6 +4367,9 @@ class FST:
         ast     = self.a
         put_fst = _normalize_code(code, 'expr', parse_params=self.root.parse_params)
         put_ast = put_fst.a
+
+
+
         pars    = bool(FST.get_option('pars', options))
         childf  = child.f
         loc     = childf.pars(pars)
@@ -4367,6 +4377,9 @@ class FST:
         if pars:  # precedence parenthesizing
             if not put_fst.is_atom() and precedence_require_parens(put_ast, ast, field, None):
                 put_fst.parenthesize()
+
+
+
 
         put_fst.indent_lns(childf.get_indent(), docstr=options.get('docstr'))
 
@@ -4392,16 +4405,12 @@ class FST:
         raw = FST.get_option('raw', options)
 
         if raw is not True:
-            if raw and raw != 'alt':
+            if raw and raw != 'auto':
                 raise ValueError(f"invalid value for raw parameter '{raw}'")
 
             try:
                 if handler := FST._PUT_ONE_HANDLERS.get((ast.__class__, field)):
                     return handler(self, code, idx, field, child, **options)
-
-
-                # TODO: more individual specialized replacements
-
 
             except (SyntaxError, NodeTypeError):
                 if not raw:
@@ -4414,6 +4423,10 @@ class FST:
         ret = child.f._reparse_raw_node(code, **options)
 
         return None if code is None else ret
+
+
+    # TODO: finish these
+
 
     _PUT_ONE_HANDLERS = {
         (Module, 'body'):                     _put_one_stmtish, # stmt*
@@ -5189,7 +5202,7 @@ class FST:
         raw       = FST.get_option('raw', options)
 
         if raw is not True:
-            if raw and raw != 'alt':
+            if raw and raw != 'auto':
                 raise ValueError(f"invalid value '{raw}' for raw parameter")
 
             try:
