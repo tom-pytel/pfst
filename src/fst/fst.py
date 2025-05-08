@@ -111,31 +111,36 @@ AST_FIELDS_PREV[(arguments, 'kw_defaults')] = 7
 AST_FIELDS_PREV[(arguments, 'kwarg')]       = 7
 
 AST_DEFAULT_BODY_FIELD  = {cls: field for field, classes in [
-    ('body',        (Module, Interactive, Expression, FunctionDef, AsyncFunctionDef, ClassDef, For, AsyncFor, While, If,
-                     With, AsyncWith, Try, TryStar, ExceptHandler, match_case),),
-    ('cases',       (Match,)),
+    ('body',         (Module, Interactive, Expression, FunctionDef, AsyncFunctionDef, ClassDef, For, AsyncFor, While, If,
+                      With, AsyncWith, Try, TryStar, ExceptHandler, Lambda, match_case),),
+    ('cases',        (Match,)),
 
-    ('elts',        (Tuple, List, Set)),
-    ('patterns',    (MatchSequence, MatchOr)),
-    ('targets',     (Delete,)),  # , Assign)),
-    ('type_params', (TypeAlias,)),
-    ('names',       (Import, ImportFrom)),
-    ('ifs',         (comprehension,)),
-    ('values',      (BoolOp,)),
-    ('generators',  (ListComp, SetComp, DictComp, GeneratorExp)),
-    ('args',        (Call,)),
+    ('elts',         (Tuple, List, Set)),
+    ('patterns',     (MatchSequence, MatchOr)),
+    ('targets',      (Delete,)),  # , Assign)),
+    ('type_params',  (TypeAlias,)),
+    ('names',        (Import, ImportFrom)),
+    ('ifs',          (comprehension,)),
+    ('values',       (BoolOp,)),
+    ('generators',   (ListComp, SetComp, DictComp, GeneratorExp)),
+    ('args',         (Call,)),
 
-    # ('values',      (JoinedStr, TemplateStr)),  # values don't have locations in lower version pythons for JoinedStr
-    # ('items',       (With, AsyncWith)),  # 'body' takes precedence
+    # ('values',       (JoinedStr, TemplateStr)),  # values don't have locations in lower version pythons for JoinedStr
+    # ('items',        (With, AsyncWith)),  # 'body' takes precedence
 
     # special cases, field names here only for checks to succeed, otherwise all handled programatically
-    ('keys',        (Dict,)),
-    ('keys',        (MatchMapping,)),
-    ('ops',         (Compare,)),
+    ('keys',         (Dict,)),
+    ('keys',         (MatchMapping,)),
+    ('ops',          (Compare,)),
 
-    # single value fields
-    ('value',       (Expr, Return, Assign, Await, Yield, YieldFrom, FormattedValue, Interpolation, Starred, MatchValue)),
-    ('pattern',     (MatchAs,)),
+    # other single value fields
+    ('value',        (Expr, Return, Assign, AugAssign, NamedExpr, Await, Yield, YieldFrom, FormattedValue, Interpolation,
+                      Attribute, Subscript, Starred, keyword, MatchValue)),
+    ('test',         (Assert,)),
+    ('operand',      (UnaryOp,)),
+    # ('elt',          (ListComp, SetComp, GeneratorExp)),  # 'generators' take precedence because name is longer and more annoying to type out
+    ('context_expr', (withitem,)),
+    ('pattern',      (MatchAs,)),
 ] for cls in classes}
 
 DEFAULT_PARSE_PARAMS    = dict(filename='<unknown>', type_comments=False, feature_version=None)
@@ -4353,7 +4358,7 @@ class FST:
 
         return None if code is None else getattr(self.a, field)[idx].f
 
-    def _put_one_required_expr(self, code: Code | None, idx: int | None, field: str, child: Any, **options,
+    def _put_one_expr_required(self, code: Code | None, idx: int | None, field: str, child: Any, **options,
                                ) -> Optional['FST']:
         """Put a single required expression node."""
 
@@ -4367,19 +4372,17 @@ class FST:
         ast     = self.a
         put_fst = _normalize_code(code, 'expr', parse_params=self.root.parse_params)
         put_ast = put_fst.a
-
-
-
-        pars    = bool(FST.get_option('pars', options))
         childf  = child.f
-        loc     = childf.pars(pars)
+        pars    = bool(FST.get_option('pars', options))
+        effpars = pars or put_fst.is_parenthesized_tuple() is False  # need tuple check because otherwise location would be wrong after
+        loc     = childf.pars(effpars)  # don't need exc_genexpr_solo=True here because guaranteed not to be this
 
-        if pars:  # precedence parenthesizing
-            if not put_fst.is_atom() and precedence_require_parens(put_ast, ast, field, None):
+        if precedence_require_parens(put_ast, ast, field, None):
+            if not put_fst.is_atom() and (effpars or not childf.pars(ret_npars=True)[1]):
                 put_fst.parenthesize()
 
-
-
+        elif pars:  # remove parens only if allowed to
+            put_fst.unparenthesize()
 
         put_fst.indent_lns(childf.get_indent(), docstr=options.get('docstr'))
 
@@ -4432,7 +4435,7 @@ class FST:
         (Module, 'body'):                     _put_one_stmtish, # stmt*
         # (Module, 'type_ignores'):             _put_one_default, # type_ignore*
         (Interactive, 'body'):                _put_one_stmtish, # stmt*
-        (Expression, 'body'):                 _put_one_required_expr, # expr
+        (Expression, 'body'):                 _put_one_expr_required, # expr
         # (FunctionType, 'argtypes'):           _put_one_default, # expr*
         # (FunctionType, 'returns'):            _put_one_default, # expr
         # (FunctionDef, 'decorator_list'):      _put_one_default, # expr*
@@ -4458,32 +4461,32 @@ class FST:
         # (Return, 'value'):                    _put_one_default, # expr?
         # (Delete, 'targets'):                  _put_one_default, # expr*
         # (Assign, 'targets'):                  _put_one_default, # expr*
-        (Assign, 'value'):                    _put_one_required_expr, # expr
+        (Assign, 'value'):                    _put_one_expr_required, # expr
         # (Assign, 'type_comment'):             _put_one_default, # string?
         # (TypeAlias, 'name'):                  _put_one_default, # expr
         # (TypeAlias, 'type_params'):           _put_one_default, # type_param*
         # (TypeAlias, 'value'):                 _put_one_default, # expr
         # (AugAssign, 'target'):                _put_one_default, # expr
         # (AugAssign, 'op'):                    _put_one_default, # operator
-        # (AugAssign, 'value'):                 _put_one_default, # expr
+        (AugAssign, 'value'):                 _put_one_expr_required, # expr
         # (AnnAssign, 'target'):                _put_one_default, # expr
         # (AnnAssign, 'annotation'):            _put_one_default, # expr
         # (AnnAssign, 'value'):                 _put_one_default, # expr?
         # (AnnAssign, 'simple'):                _put_one_default, # int
         # (For, 'target'):                      _put_one_default, # expr
-        # (For, 'iter'):                        _put_one_default, # expr
+        (For, 'iter'):                        _put_one_expr_required, # expr
         (For, 'body'):                        _put_one_stmtish, # stmt*
         (For, 'orelse'):                      _put_one_stmtish, # stmt*
         # (For, 'type_comment'):                _put_one_default, # string?
         # (AsyncFor, 'target'):                 _put_one_default, # expr
-        # (AsyncFor, 'iter'):                   _put_one_default, # expr
+        (AsyncFor, 'iter'):                   _put_one_expr_required, # expr
         (AsyncFor, 'body'):                   _put_one_stmtish, # stmt*
         (AsyncFor, 'orelse'):                 _put_one_stmtish, # stmt*
         # (AsyncFor, 'type_comment'):           _put_one_default, # string?
-        # (While, 'test'):                      _put_one_default, # expr
+        (While, 'test'):                      _put_one_expr_required, # expr
         (While, 'body'):                      _put_one_stmtish, # stmt*
         (While, 'orelse'):                    _put_one_stmtish, # stmt*
-        # (If, 'test'):                         _put_one_default, # expr
+        (If, 'test'):                         _put_one_expr_required, # expr
         (If, 'body'):                         _put_one_stmtish, # stmt*
         (If, 'orelse'):                       _put_one_stmtish, # stmt*
         # (With, 'items'):                      _put_one_default, # withitem*
@@ -4492,7 +4495,7 @@ class FST:
         # (AsyncWith, 'items'):                 _put_one_default, # withitem*
         (AsyncWith, 'body'):                  _put_one_stmtish, # stmt*
         # (AsyncWith, 'type_comment'):          _put_one_default, # string?
-        # (Match, 'subject'):                   _put_one_default, # expr
+        (Match, 'subject'):                   _put_one_expr_required, # expr
         (Match, 'cases'):                     _put_one_stmtish, # match_case*
         # (Raise, 'exc'):                       _put_one_default, # expr?
         # (Raise, 'cause'):                     _put_one_default, # expr?
@@ -4504,7 +4507,7 @@ class FST:
         (TryStar, 'handlers'):                _put_one_stmtish, # excepthandler*
         (TryStar, 'orelse'):                  _put_one_stmtish, # stmt*
         (TryStar, 'finalbody'):               _put_one_stmtish, # stmt*
-        # (Assert, 'test'):                     _put_one_default, # expr
+        (Assert, 'test'):                     _put_one_expr_required, # expr
         # (Assert, 'msg'):                      _put_one_default, # expr?
         # (Import, 'names'):                    _put_one_default, # alias*
         # (ImportFrom, 'module'):               _put_one_default, # identifier?
@@ -4512,46 +4515,46 @@ class FST:
         # (ImportFrom, 'level'):                _put_one_default, # int?
         # (Global, 'names'):                    _put_one_default, # identifier*
         # (Nonlocal, 'names'):                  _put_one_default, # identifier*
-        # (Expr, 'value'):                      _put_one_default, # expr
+        (Expr, 'value'):                      _put_one_expr_required, # expr
         # (BoolOp, 'op'):                       _put_one_default, # boolop
         # (BoolOp, 'values'):                   _put_one_default, # expr*
         # (NamedExpr, 'target'):                _put_one_default, # expr
-        # (NamedExpr, 'value'):                 _put_one_default, # expr
-        # (BinOp, 'left'):                      _put_one_default, # expr
+        (NamedExpr, 'value'):                 _put_one_expr_required, # expr
+        (BinOp, 'left'):                      _put_one_expr_required, # expr
         # (BinOp, 'op'):                        _put_one_default, # operator
-        # (BinOp, 'right'):                     _put_one_default, # expr
+        (BinOp, 'right'):                     _put_one_expr_required, # expr
         # (UnaryOp, 'op'):                      _put_one_default, # unaryop
-        # (UnaryOp, 'operand'):                 _put_one_default, # expr
+        (UnaryOp, 'operand'):                 _put_one_expr_required, # expr
         # (Lambda, 'args'):                     _put_one_default, # arguments
-        # (Lambda, 'body'):                     _put_one_default, # expr
-        # (IfExp, 'body'):                      _put_one_default, # expr
-        # (IfExp, 'test'):                      _put_one_default, # expr
-        # (IfExp, 'orelse'):                    _put_one_default, # expr
-        # (Dict, 'keys'):                       _put_one_default, # expr*
-        # (Dict, 'values'):                     _put_one_default, # expr*
+        (Lambda, 'body'):                     _put_one_expr_required, # expr
+        (IfExp, 'body'):                      _put_one_expr_required, # expr
+        (IfExp, 'test'):                      _put_one_expr_required, # expr
+        (IfExp, 'orelse'):                    _put_one_expr_required, # expr
+        # (Dict, 'keys'):                       _put_one_default, # expr*           - takes idx, handle special key=None?
+        # (Dict, 'values'):                     _put_one_default, # expr*           - takes idx,
         (Set, 'elts'):                        _put_one_tuple_list_or_set, # expr*
-        # (ListComp, 'elt'):                    _put_one_default, # expr
+        (ListComp, 'elt'):                    _put_one_expr_required, # expr
         # (ListComp, 'generators'):             _put_one_default, # comprehension*
-        # (SetComp, 'elt'):                     _put_one_default, # expr
+        (SetComp, 'elt'):                     _put_one_expr_required, # expr
         # (SetComp, 'generators'):              _put_one_default, # comprehension*
-        # (DictComp, 'key'):                    _put_one_default, # expr
-        # (DictComp, 'value'):                  _put_one_default, # expr
+        (DictComp, 'key'):                    _put_one_expr_required, # expr
+        (DictComp, 'value'):                  _put_one_expr_required, # expr
         # (DictComp, 'generators'):             _put_one_default, # comprehension*
-        # (GeneratorExp, 'elt'):                _put_one_default, # expr
+        (GeneratorExp, 'elt'):                _put_one_expr_required, # expr
         # (GeneratorExp, 'generators'):         _put_one_default, # comprehension*
-        # (Await, 'value'):                     _put_one_default, # expr
+        (Await, 'value'):                     _put_one_expr_required, # expr
         # (Yield, 'value'):                     _put_one_default, # expr?
-        # (YieldFrom, 'value'):                 _put_one_default, # expr
+        (YieldFrom, 'value'):                 _put_one_expr_required, # expr
         # (Compare, 'left'):                    _put_one_default, # expr
         # (Compare, 'ops'):                     _put_one_default, # cmpop*
         # (Compare, 'comparators'):             _put_one_default, # expr*
-        # (Call, 'func'):                       _put_one_default, # expr
+        # (Call, 'func'):                       _put_one_default, # expr            - identifier
         # (Call, 'args'):                       _put_one_default, # expr*
         # (Call, 'keywords'):                   _put_one_default, # keyword*
-        # (FormattedValue, 'value'):            _put_one_default, # expr
+        (FormattedValue, 'value'):            _put_one_expr_required, # expr
         # (FormattedValue, 'format_spec'):      _put_one_default, # expr?
         # (FormattedValue, 'conversion'):       _put_one_default, # int
-        # (Interpolation, 'value'):             _put_one_default, # expr
+        # (Interpolation, 'value'):             _put_one_default, # expr            - need to change .str as well as expr
         # (Interpolation, 'constant'):          _put_one_default, # str
         # (Interpolation, 'conversion'):        _put_one_default, # int
         # (Interpolation, 'format_spec'):       _put_one_default, # expr?
@@ -4559,13 +4562,13 @@ class FST:
         # (TemplateStr, 'values'):              _put_one_default, # expr*
         # (Constant, 'value'):                  _put_one_default, # constant
         # (Constant, 'kind'):                   _put_one_default, # string?
-        # (Attribute, 'value'):                 _put_one_default, # expr
+        (Attribute, 'value'):                 _put_one_expr_required, # expr
         # (Attribute, 'attr'):                  _put_one_default, # identifier
         # (Attribute, 'ctx'):                   _put_one_default, # expr_context
-        # (Subscript, 'value'):                 _put_one_default, # expr
+        (Subscript, 'value'):                 _put_one_expr_required, # expr
         # (Subscript, 'slice'):                 _put_one_default, # expr
         # (Subscript, 'ctx'):                   _put_one_default, # expr_context
-        # (Starred, 'value'):                   _put_one_default, # expr
+        (Starred, 'value'):                   _put_one_expr_required, # expr
         # (Starred, 'ctx'):                     _put_one_default, # expr_context
         # (Name, 'id'):                         _put_one_default, # identifier
         # (Name, 'ctx'):                        _put_one_default, # expr_context
@@ -4576,8 +4579,8 @@ class FST:
         # (Slice, 'lower'):                     _put_one_default, # expr?
         # (Slice, 'upper'):                     _put_one_default, # expr?
         # (Slice, 'step'):                      _put_one_default, # expr?
-        # (comprehension, 'target'):            _put_one_default, # expr
-        # (comprehension, 'iter'):              _put_one_default, # expr
+        # (comprehension, 'target'):            _put_one_default, # expr            - Name or Tuple (maybe empty?)
+        (comprehension, 'iter'):              _put_one_expr_required, # expr
         # (comprehension, 'ifs'):               _put_one_default, # expr*
         # (comprehension, 'is_async'):          _put_one_default, # int
         # (ExceptHandler, 'type'):              _put_one_default, # expr?
@@ -4594,15 +4597,15 @@ class FST:
         # (arg, 'annotation'):                  _put_one_default, # expr?
         # (arg, 'type_comment'):                _put_one_default, # string?
         # (keyword, 'arg'):                     _put_one_default, # identifier?
-        # (keyword, 'value'):                   _put_one_default, # expr
+        (keyword, 'value'):                   _put_one_expr_required, # expr
         # (alias, 'name'):                      _put_one_default, # identifier
         # (alias, 'asname'):                    _put_one_default, # identifier?
-        # (withitem, 'context_expr'):           _put_one_default, # expr
+        (withitem, 'context_expr'):           _put_one_expr_required, # expr
         # (withitem, 'optional_vars'):          _put_one_default, # expr?
         # (match_case, 'pattern'):              _put_one_default, # pattern
         # (match_case, 'guard'):                _put_one_default, # expr?
         (match_case, 'body'):                 _put_one_stmtish, # stmt*
-        # (MatchValue, 'value'):                _put_one_default, # expr
+        # (MatchValue, 'value'):                _put_one_default, # expr            - limited values, Constant? Name becomes MatchAs
         # (MatchSingleton, 'value'):            _put_one_default, # constant
         # (MatchSequence, 'patterns'):          _put_one_default, # pattern*
         # (MatchMapping, 'keys'):               _put_one_default, # expr*
@@ -7174,7 +7177,7 @@ class FST:
 
         return True
 
-    def unparenthesize(self, tuple: bool = False) -> bool:
+    def unparenthesize(self, tuple_: bool = False) -> bool:
         """Unparenthesize node if is `.is_atom()`. Can remove parentheses from parenthesized tuple and adjust its
         location but will not do so by default.
 
@@ -7191,7 +7194,7 @@ class FST:
 
         ret = self._unparenthesize_grouping()
 
-        if tuple and isinstance(self.a, Tuple):
+        if tuple_ and isinstance(self.a, Tuple):
             ret = self._unparenthesize_tuple() or ret
 
         return ret

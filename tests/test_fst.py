@@ -15489,17 +15489,28 @@ Module .. ROOT 0,0 -> 0,10
       .ctx Load
 """),
 
-(r"""i = j""", 'body[0]', None, None, {'raw': False, 'pars': False}, r"""a, b""", r"""i = a, b""", r"""
-Module .. ROOT 0,0 -> 0,8
+(r"""i = j""", 'body[0]', None, None, {'raw': False, 'pars': False}, r"""a, b""", r"""i = (a, b)""", r"""
+Module .. ROOT 0,0 -> 0,10
   .body[1]
-  0] Assign .. 0,0 -> 0,8
+  0] Assign .. 0,0 -> 0,10
     .targets[1]
     0] Name 'i' Store .. 0,0 -> 0,1
-    .value Tuple .. 0,4 -> 0,8
+    .value Tuple .. 0,4 -> 0,10
       .elts[2]
-      0] Name 'a' Load .. 0,4 -> 0,5
-      1] Name 'b' Load .. 0,7 -> 0,8
+      0] Name 'a' Load .. 0,5 -> 0,6
+      1] Name 'b' Load .. 0,8 -> 0,9
       .ctx Load
+"""),
+
+(r"""i = (j)""", 'body[0]', None, None, {'raw': False}, r"""(a := b)""", r"""i = (a := b)""", r"""
+Module .. ROOT 0,0 -> 0,12
+  .body[1]
+  0] Assign .. 0,0 -> 0,12
+    .targets[1]
+    0] Name 'i' Store .. 0,0 -> 0,1
+    .value NamedExpr .. 0,5 -> 0,11
+      .target Name 'a' Store .. 0,5 -> 0,6
+      .value Name 'b' Load .. 0,10 -> 0,11
 """),
 
 (r"""i = (j)""", 'body[0]', None, None, {'raw': False, 'pars': False}, r"""(a := b)""", r"""i = ((a := b))""", r"""
@@ -15513,15 +15524,594 @@ Module .. ROOT 0,0 -> 0,14
       .value Name 'b' Load .. 0,11 -> 0,12
 """),
 
-(r"""i = (j)""", 'body[0]', None, None, {'raw': False}, r"""(a := b)""", r"""i = (a := b)""", r"""
+(r"""i""", 'body[0]', None, None, {'raw': False}, r"""j""", r"""j""", r"""
+Module .. ROOT 0,0 -> 0,1
+  .body[1]
+  0] Expr .. 0,0 -> 0,1
+    .value Name 'j' Load .. 0,0 -> 0,1
+"""),
+
+(r"""i""", 'body[0]', None, None, {'raw': False}, r"""a, b""", r"""(a, b)""", r"""
+Module .. ROOT 0,0 -> 0,6
+  .body[1]
+  0] Expr .. 0,0 -> 0,6
+    .value Tuple .. 0,0 -> 0,6
+      .elts[2]
+      0] Name 'a' Load .. 0,1 -> 0,2
+      1] Name 'b' Load .. 0,4 -> 0,5
+      .ctx Load
+"""),
+
+(r"""( # 1
+i
+# 2
+)""", 'body[0]', None, None, {'raw': False, 'pars': False}, r"""( # 3
+j
+# 4
+)""", r"""( # 1
+( # 3
+j
+# 4
+)
+# 2
+)""", r"""
+Module .. ROOT 0,0 -> 6,1
+  .body[1]
+  0] Expr .. 0,0 -> 6,1
+    .value Name 'j' Load .. 2,0 -> 2,1
+"""),
+
+(r"""( # 1
+i
+# 2
+)""", 'body[0]', None, None, {'raw': False, 'pars': True}, r"""( # 3
+j
+# 4
+)""", r"""j""", r"""
+Module .. ROOT 0,0 -> 0,1
+  .body[1]
+  0] Expr .. 0,0 -> 0,1
+    .value Name 'j' Load .. 0,0 -> 0,1
+"""),
+
+(r"""( # 1
+i
+# 2
+)""", 'body[0]', None, None, {'raw': False, 'pars': 'auto'}, r"""( # 3
+j
+# 4
+)""", r"""j""", r"""
+Module .. ROOT 0,0 -> 0,1
+  .body[1]
+  0] Expr .. 0,0 -> 0,1
+    .value Name 'j' Load .. 0,0 -> 0,1
+"""),
+
+(r"""( # 1
+i
+# 2
+)""", 'body[0]', None, None, {'raw': False, 'pars': False}, r"""a, b""", r"""(a, b)""", r"""
+Module .. ROOT 0,0 -> 0,6
+  .body[1]
+  0] Expr .. 0,0 -> 0,6
+    .value Tuple .. 0,0 -> 0,6
+      .elts[2]
+      0] Name 'a' Load .. 0,1 -> 0,2
+      1] Name 'b' Load .. 0,4 -> 0,5
+      .ctx Load
+"""),
+
+(r"""( # 1
+i
+# 2
+)""", 'body[0]', None, None, {'raw': False, 'pars': True}, r"""a, b""", r"""(a, b)""", r"""
+Module .. ROOT 0,0 -> 0,6
+  .body[1]
+  0] Expr .. 0,0 -> 0,6
+    .value Tuple .. 0,0 -> 0,6
+      .elts[2]
+      0] Name 'a' Load .. 0,1 -> 0,2
+      1] Name 'b' Load .. 0,4 -> 0,5
+      .ctx Load
+"""),
+
+(r"""( # 1
+i
+# 2
+)""", 'body[0]', None, None, {'raw': False, 'pars': 'auto'}, r"""a, b""", r"""(a, b)""", r"""
+Module .. ROOT 0,0 -> 0,6
+  .body[1]
+  0] Expr .. 0,0 -> 0,6
+    .value Tuple .. 0,0 -> 0,6
+      .elts[2]
+      0] Name 'a' Load .. 0,1 -> 0,2
+      1] Name 'b' Load .. 0,4 -> 0,5
+      .ctx Load
+"""),
+
+(r"""(f())""", 'body[0]', None, None, {'raw': False, 'pars': False}, r"""g()""", r"""(g())""", r"""
+Module .. ROOT 0,0 -> 0,5
+  .body[1]
+  0] Expr .. 0,0 -> 0,5
+    .value Call .. 0,1 -> 0,4
+      .func Name 'g' Load .. 0,1 -> 0,2
+"""),
+
+(r"""(f())""", 'body[0]', None, None, {'raw': False, 'pars': True}, r"""g()""", r"""g()""", r"""
+Module .. ROOT 0,0 -> 0,3
+  .body[1]
+  0] Expr .. 0,0 -> 0,3
+    .value Call .. 0,0 -> 0,3
+      .func Name 'g' Load .. 0,0 -> 0,1
+"""),
+
+(r"""(f())""", 'body[0]', None, None, {'raw': False, 'pars': False}, r"""(g())""", r"""((g()))""", r"""
+Module .. ROOT 0,0 -> 0,7
+  .body[1]
+  0] Expr .. 0,0 -> 0,7
+    .value Call .. 0,2 -> 0,5
+      .func Name 'g' Load .. 0,2 -> 0,3
+"""),
+
+(r"""(f())""", 'body[0]', None, None, {'raw': False, 'pars': True}, r"""(g())""", r"""g()""", r"""
+Module .. ROOT 0,0 -> 0,3
+  .body[1]
+  0] Expr .. 0,0 -> 0,3
+    .value Call .. 0,0 -> 0,3
+      .func Name 'g' Load .. 0,0 -> 0,1
+"""),
+
+(r"""i += j""", 'body[0]', None, None, {'raw': False}, r"""a, b""", r"""i += (a, b)""", r"""
+Module .. ROOT 0,0 -> 0,11
+  .body[1]
+  0] AugAssign .. 0,0 -> 0,11
+    .target Name 'i' Store .. 0,0 -> 0,1
+    .op Add .. 0,2 -> 0,4
+    .value Tuple .. 0,5 -> 0,11
+      .elts[2]
+      0] Name 'a' Load .. 0,6 -> 0,7
+      1] Name 'b' Load .. 0,9 -> 0,10
+      .ctx Load
+"""),
+
+(r"""for i in j: pass""", 'body[0]', None, 'iter', {'raw': False}, r"""a, b""", r"""for i in (a, b): pass""", r"""
+Module .. ROOT 0,0 -> 0,21
+  .body[1]
+  0] For .. 0,0 -> 0,21
+    .target Name 'i' Store .. 0,4 -> 0,5
+    .iter Tuple .. 0,9 -> 0,15
+      .elts[2]
+      0] Name 'a' Load .. 0,10 -> 0,11
+      1] Name 'b' Load .. 0,13 -> 0,14
+      .ctx Load
+    .body[1]
+    0] Pass .. 0,17 -> 0,21
+"""),
+
+(r"""async for i in j: pass""", 'body[0]', None, 'iter', {'raw': False}, r"""a, b""", r"""async for i in (a, b): pass""", r"""
+Module .. ROOT 0,0 -> 0,27
+  .body[1]
+  0] AsyncFor .. 0,0 -> 0,27
+    .target Name 'i' Store .. 0,10 -> 0,11
+    .iter Tuple .. 0,15 -> 0,21
+      .elts[2]
+      0] Name 'a' Load .. 0,16 -> 0,17
+      1] Name 'b' Load .. 0,19 -> 0,20
+      .ctx Load
+    .body[1]
+    0] Pass .. 0,23 -> 0,27
+"""),
+
+(r"""while i: pass""", 'body[0]', None, 'test', {'raw': False}, r"""a, b""", r"""while (a, b): pass""", r"""
+Module .. ROOT 0,0 -> 0,18
+  .body[1]
+  0] While .. 0,0 -> 0,18
+    .test Tuple .. 0,6 -> 0,12
+      .elts[2]
+      0] Name 'a' Load .. 0,7 -> 0,8
+      1] Name 'b' Load .. 0,10 -> 0,11
+      .ctx Load
+    .body[1]
+    0] Pass .. 0,14 -> 0,18
+"""),
+
+(r"""if i: pass""", 'body[0]', None, 'test', {'raw': False}, r"""a, b""", r"""if (a, b): pass""", r"""
+Module .. ROOT 0,0 -> 0,15
+  .body[1]
+  0] If .. 0,0 -> 0,15
+    .test Tuple .. 0,3 -> 0,9
+      .elts[2]
+      0] Name 'a' Load .. 0,4 -> 0,5
+      1] Name 'b' Load .. 0,7 -> 0,8
+      .ctx Load
+    .body[1]
+    0] Pass .. 0,11 -> 0,15
+"""),
+
+(r"""match i:
+  case 1: pass""", 'body[0]', None, 'subject', {'raw': False}, r"""a, b""", r"""match (a, b):
+  case 1: pass""", r"""
+Module .. ROOT 0,0 -> 1,14
+  .body[1]
+  0] Match .. 0,0 -> 1,14
+    .subject Tuple .. 0,6 -> 0,12
+      .elts[2]
+      0] Name 'a' Load .. 0,7 -> 0,8
+      1] Name 'b' Load .. 0,10 -> 0,11
+      .ctx Load
+    .cases[1]
+    0] match_case .. 1,2 -> 1,14
+      .pattern MatchValue .. 1,7 -> 1,8
+        .value Constant 1 .. 1,7 -> 1,8
+      .body[1]
+      0] Pass .. 1,10 -> 1,14
+"""),
+
+(r"""assert i""", 'body[0]', None, None, {'raw': False}, r"""a, b""", r"""assert (a, b)""", r"""
+Module .. ROOT 0,0 -> 0,13
+  .body[1]
+  0] Assert .. 0,0 -> 0,13
+    .test Tuple .. 0,7 -> 0,13
+      .elts[2]
+      0] Name 'a' Load .. 0,8 -> 0,9
+      1] Name 'b' Load .. 0,11 -> 0,12
+      .ctx Load
+"""),
+
+(r"""(i := j)""", 'body[0].value', None, None, {'raw': False}, r"""a, b""", r"""(i := (a, b))""", r"""
+Module .. ROOT 0,0 -> 0,13
+  .body[1]
+  0] Expr .. 0,0 -> 0,13
+    .value NamedExpr .. 0,1 -> 0,12
+      .target Name 'i' Store .. 0,1 -> 0,2
+      .value Tuple .. 0,6 -> 0,12
+        .elts[2]
+        0] Name 'a' Load .. 0,7 -> 0,8
+        1] Name 'b' Load .. 0,10 -> 0,11
+        .ctx Load
+"""),
+
+(r"""i * j""", 'body[0].value', None, 'left', {'raw': False}, r"""a + b""", r"""(a + b) * j""", r"""
+Module .. ROOT 0,0 -> 0,11
+  .body[1]
+  0] Expr .. 0,0 -> 0,11
+    .value BinOp .. 0,0 -> 0,11
+      .left BinOp .. 0,1 -> 0,6
+        .left Name 'a' Load .. 0,1 -> 0,2
+        .op Add .. 0,3 -> 0,4
+        .right Name 'b' Load .. 0,5 -> 0,6
+      .op Mult .. 0,8 -> 0,9
+      .right Name 'j' Load .. 0,10 -> 0,11
+"""),
+
+(r"""i * j""", 'body[0].value', None, 'right', {'raw': False}, r"""a + b""", r"""i * (a + b)""", r"""
+Module .. ROOT 0,0 -> 0,11
+  .body[1]
+  0] Expr .. 0,0 -> 0,11
+    .value BinOp .. 0,0 -> 0,11
+      .left Name 'i' Load .. 0,0 -> 0,1
+      .op Mult .. 0,2 -> 0,3
+      .right BinOp .. 0,5 -> 0,10
+        .left Name 'a' Load .. 0,5 -> 0,6
+        .op Add .. 0,7 -> 0,8
+        .right Name 'b' Load .. 0,9 -> 0,10
+"""),
+
+(r"""-i""", 'body[0].value', None, None, {'raw': False}, r"""a + b""", r"""-(a + b)""", r"""
+Module .. ROOT 0,0 -> 0,8
+  .body[1]
+  0] Expr .. 0,0 -> 0,8
+    .value UnaryOp .. 0,0 -> 0,8
+      .op USub .. 0,0 -> 0,1
+      .operand BinOp .. 0,2 -> 0,7
+        .left Name 'a' Load .. 0,2 -> 0,3
+        .op Add .. 0,4 -> 0,5
+        .right Name 'b' Load .. 0,6 -> 0,7
+"""),
+
+(r"""lambda: i""", 'body[0].value', None, None, {'raw': False}, r"""a, b""", r"""lambda: (a, b)""", r"""
+Module .. ROOT 0,0 -> 0,14
+  .body[1]
+  0] Expr .. 0,0 -> 0,14
+    .value Lambda .. 0,0 -> 0,14
+      .body Tuple .. 0,8 -> 0,14
+        .elts[2]
+        0] Name 'a' Load .. 0,9 -> 0,10
+        1] Name 'b' Load .. 0,12 -> 0,13
+        .ctx Load
+"""),
+
+(r"""i if j else k""", 'body[0].value', None, 'body', {'raw': False}, r"""a if b else c""", r"""(a if b else c) if j else k""", r"""
+Module .. ROOT 0,0 -> 0,27
+  .body[1]
+  0] Expr .. 0,0 -> 0,27
+    .value IfExp .. 0,0 -> 0,27
+      .test Name 'j' Load .. 0,19 -> 0,20
+      .body IfExp .. 0,1 -> 0,14
+        .test Name 'b' Load .. 0,6 -> 0,7
+        .body Name 'a' Load .. 0,1 -> 0,2
+        .orelse Name 'c' Load .. 0,13 -> 0,14
+      .orelse Name 'k' Load .. 0,26 -> 0,27
+"""),
+
+(r"""i if j else k""", 'body[0].value', None, 'test', {'raw': False}, r"""a if b else c""", r"""i if (a if b else c) else k""", r"""
+Module .. ROOT 0,0 -> 0,27
+  .body[1]
+  0] Expr .. 0,0 -> 0,27
+    .value IfExp .. 0,0 -> 0,27
+      .test IfExp .. 0,6 -> 0,19
+        .test Name 'b' Load .. 0,11 -> 0,12
+        .body Name 'a' Load .. 0,6 -> 0,7
+        .orelse Name 'c' Load .. 0,18 -> 0,19
+      .body Name 'i' Load .. 0,0 -> 0,1
+      .orelse Name 'k' Load .. 0,26 -> 0,27
+"""),
+
+(r"""i if j else k""", 'body[0].value', None, 'orelse', {'raw': False}, r"""a if b else c""", r"""i if j else a if b else c""", r"""
+Module .. ROOT 0,0 -> 0,25
+  .body[1]
+  0] Expr .. 0,0 -> 0,25
+    .value IfExp .. 0,0 -> 0,25
+      .test Name 'j' Load .. 0,5 -> 0,6
+      .body Name 'i' Load .. 0,0 -> 0,1
+      .orelse IfExp .. 0,12 -> 0,25
+        .test Name 'b' Load .. 0,17 -> 0,18
+        .body Name 'a' Load .. 0,12 -> 0,13
+        .orelse Name 'c' Load .. 0,24 -> 0,25
+"""),
+
+(r"""[i for i in j]""", 'body[0].value', None, 'elt', {'raw': False}, r"""a, b""", r"""[(a, b) for i in j]""", r"""
+Module .. ROOT 0,0 -> 0,19
+  .body[1]
+  0] Expr .. 0,0 -> 0,19
+    .value ListComp .. 0,0 -> 0,19
+      .elt Tuple .. 0,1 -> 0,7
+        .elts[2]
+        0] Name 'a' Load .. 0,2 -> 0,3
+        1] Name 'b' Load .. 0,5 -> 0,6
+        .ctx Load
+      .generators[1]
+      0] comprehension .. 0,8 -> 0,18
+        .target Name 'i' Store .. 0,12 -> 0,13
+        .iter Name 'j' Load .. 0,17 -> 0,18
+        .is_async 0
+"""),
+
+(r"""{i for i in j}""", 'body[0].value', None, 'elt', {'raw': False}, r"""a, b""", r"""{(a, b) for i in j}""", r"""
+Module .. ROOT 0,0 -> 0,19
+  .body[1]
+  0] Expr .. 0,0 -> 0,19
+    .value SetComp .. 0,0 -> 0,19
+      .elt Tuple .. 0,1 -> 0,7
+        .elts[2]
+        0] Name 'a' Load .. 0,2 -> 0,3
+        1] Name 'b' Load .. 0,5 -> 0,6
+        .ctx Load
+      .generators[1]
+      0] comprehension .. 0,8 -> 0,18
+        .target Name 'i' Store .. 0,12 -> 0,13
+        .iter Name 'j' Load .. 0,17 -> 0,18
+        .is_async 0
+"""),
+
+(r"""{k: v for i in j}""", 'body[0].value', None, 'key', {'raw': False}, r"""a, b""", r"""{(a, b): v for i in j}""", r"""
+Module .. ROOT 0,0 -> 0,22
+  .body[1]
+  0] Expr .. 0,0 -> 0,22
+    .value DictComp .. 0,0 -> 0,22
+      .key Tuple .. 0,1 -> 0,7
+        .elts[2]
+        0] Name 'a' Load .. 0,2 -> 0,3
+        1] Name 'b' Load .. 0,5 -> 0,6
+        .ctx Load
+      .value Name 'v' Load .. 0,9 -> 0,10
+      .generators[1]
+      0] comprehension .. 0,11 -> 0,21
+        .target Name 'i' Store .. 0,15 -> 0,16
+        .iter Name 'j' Load .. 0,20 -> 0,21
+        .is_async 0
+"""),
+
+(r"""{k: v for i in j}""", 'body[0].value', None, 'value', {'raw': False}, r"""a, b""", r"""{k: (a, b) for i in j}""", r"""
+Module .. ROOT 0,0 -> 0,22
+  .body[1]
+  0] Expr .. 0,0 -> 0,22
+    .value DictComp .. 0,0 -> 0,22
+      .key Name 'k' Load .. 0,1 -> 0,2
+      .value Tuple .. 0,4 -> 0,10
+        .elts[2]
+        0] Name 'a' Load .. 0,5 -> 0,6
+        1] Name 'b' Load .. 0,8 -> 0,9
+        .ctx Load
+      .generators[1]
+      0] comprehension .. 0,11 -> 0,21
+        .target Name 'i' Store .. 0,15 -> 0,16
+        .iter Name 'j' Load .. 0,20 -> 0,21
+        .is_async 0
+"""),
+
+(r"""(i for i in j)""", 'body[0].value', None, 'elt', {'raw': False}, r"""a, b""", r"""((a, b) for i in j)""", r"""
+Module .. ROOT 0,0 -> 0,19
+  .body[1]
+  0] Expr .. 0,0 -> 0,19
+    .value GeneratorExp .. 0,0 -> 0,19
+      .elt Tuple .. 0,1 -> 0,7
+        .elts[2]
+        0] Name 'a' Load .. 0,2 -> 0,3
+        1] Name 'b' Load .. 0,5 -> 0,6
+        .ctx Load
+      .generators[1]
+      0] comprehension .. 0,8 -> 0,18
+        .target Name 'i' Store .. 0,12 -> 0,13
+        .iter Name 'j' Load .. 0,17 -> 0,18
+        .is_async 0
+"""),
+
+(r"""await i""", 'body[0].value', None, None, {'raw': False}, r"""a, b""", r"""await (a, b)""", r"""
 Module .. ROOT 0,0 -> 0,12
   .body[1]
-  0] Assign .. 0,0 -> 0,12
-    .targets[1]
-    0] Name 'i' Store .. 0,0 -> 0,1
-    .value NamedExpr .. 0,5 -> 0,11
-      .target Name 'a' Store .. 0,5 -> 0,6
-      .value Name 'b' Load .. 0,10 -> 0,11
+  0] Expr .. 0,0 -> 0,12
+    .value Await .. 0,0 -> 0,12
+      .value Tuple .. 0,6 -> 0,12
+        .elts[2]
+        0] Name 'a' Load .. 0,7 -> 0,8
+        1] Name 'b' Load .. 0,10 -> 0,11
+        .ctx Load
+"""),
+
+(r"""yield from i""", 'body[0].value', None, None, {'raw': False}, r"""a, b""", r"""yield from (a, b)""", r"""
+Module .. ROOT 0,0 -> 0,17
+  .body[1]
+  0] Expr .. 0,0 -> 0,17
+    .value YieldFrom .. 0,0 -> 0,17
+      .value Tuple .. 0,11 -> 0,17
+        .elts[2]
+        0] Name 'a' Load .. 0,12 -> 0,13
+        1] Name 'b' Load .. 0,15 -> 0,16
+        .ctx Load
+"""),
+
+(r"""f'{i}'""", 'body[0].value.values[0]', None, None, {'raw': False}, r"""a, b""", r"""f'{(a, b)}'""", r"""
+Module .. ROOT 0,0 -> 0,11
+  .body[1]
+  0] Expr .. 0,0 -> 0,11
+    .value JoinedStr .. 0,0 -> 0,11
+      .values[1]
+      0] FormattedValue .. 0,2 -> 0,10
+        .value Tuple .. 0,3 -> 0,9
+          .elts[2]
+          0] Name 'a' Load .. 0,4 -> 0,5
+          1] Name 'b' Load .. 0,7 -> 0,8
+          .ctx Load
+        .conversion -1
+"""),
+
+(r"""i.j""", 'body[0].value', None, None, {'raw': False}, r"""a, b""", r"""(a, b).j""", r"""
+Module .. ROOT 0,0 -> 0,8
+  .body[1]
+  0] Expr .. 0,0 -> 0,8
+    .value Attribute .. 0,0 -> 0,8
+      .value Tuple .. 0,0 -> 0,6
+        .elts[2]
+        0] Name 'a' Load .. 0,1 -> 0,2
+        1] Name 'b' Load .. 0,4 -> 0,5
+        .ctx Load
+      .attr 'j'
+      .ctx Load
+"""),
+
+(r"""i[j]""", 'body[0].value', None, None, {'raw': False}, r"""a, b""", r"""(a, b)[j]""", r"""
+Module .. ROOT 0,0 -> 0,9
+  .body[1]
+  0] Expr .. 0,0 -> 0,9
+    .value Subscript .. 0,0 -> 0,9
+      .value Tuple .. 0,0 -> 0,6
+        .elts[2]
+        0] Name 'a' Load .. 0,1 -> 0,2
+        1] Name 'b' Load .. 0,4 -> 0,5
+        .ctx Load
+      .slice Name 'j' Load .. 0,7 -> 0,8
+      .ctx Load
+"""),
+
+(r"""[*i]""", 'body[0].value.elts[0]', None, None, {'raw': False}, r"""a, b""", r"""[*(a, b)]""", r"""
+Module .. ROOT 0,0 -> 0,9
+  .body[1]
+  0] Expr .. 0,0 -> 0,9
+    .value List .. 0,0 -> 0,9
+      .elts[1]
+      0] Starred .. 0,1 -> 0,8
+        .value Tuple .. 0,2 -> 0,8
+          .elts[2]
+          0] Name 'a' Load .. 0,3 -> 0,4
+          1] Name 'b' Load .. 0,6 -> 0,7
+          .ctx Load
+        .ctx Load
+      .ctx Load
+"""),
+
+(r"""[i for i in j]""", 'body[0].value.generators[0]', None, 'iter', {'raw': False}, r"""a, b""", r"""[i for i in (a, b)]""", r"""
+Module .. ROOT 0,0 -> 0,19
+  .body[1]
+  0] Expr .. 0,0 -> 0,19
+    .value ListComp .. 0,0 -> 0,19
+      .elt Name 'i' Load .. 0,1 -> 0,2
+      .generators[1]
+      0] comprehension .. 0,3 -> 0,18
+        .target Name 'i' Store .. 0,7 -> 0,8
+        .iter Tuple .. 0,12 -> 0,18
+          .elts[2]
+          0] Name 'a' Load .. 0,13 -> 0,14
+          1] Name 'b' Load .. 0,16 -> 0,17
+          .ctx Load
+        .is_async 0
+"""),
+
+(r"""[i for i in j]""", 'body[0].value.generators[0]', None, 'iter', {'raw': False}, r"""a, b""", r"""[i for i in (a, b)]""", r"""
+Module .. ROOT 0,0 -> 0,19
+  .body[1]
+  0] Expr .. 0,0 -> 0,19
+    .value ListComp .. 0,0 -> 0,19
+      .elt Name 'i' Load .. 0,1 -> 0,2
+      .generators[1]
+      0] comprehension .. 0,3 -> 0,18
+        .target Name 'i' Store .. 0,7 -> 0,8
+        .iter Tuple .. 0,12 -> 0,18
+          .elts[2]
+          0] Name 'a' Load .. 0,13 -> 0,14
+          1] Name 'b' Load .. 0,16 -> 0,17
+          .ctx Load
+        .is_async 0
+"""),
+
+(r"""f(i=j)""", 'body[0].value.keywords[0]', None, None, {'raw': False}, r"""a, b""", r"""f(i=(a, b))""", r"""
+Module .. ROOT 0,0 -> 0,11
+  .body[1]
+  0] Expr .. 0,0 -> 0,11
+    .value Call .. 0,0 -> 0,11
+      .func Name 'f' Load .. 0,0 -> 0,1
+      .keywords[1]
+      0] keyword .. 0,2 -> 0,10
+        .arg 'i'
+        .value Tuple .. 0,4 -> 0,10
+          .elts[2]
+          0] Name 'a' Load .. 0,5 -> 0,6
+          1] Name 'b' Load .. 0,8 -> 0,9
+          .ctx Load
+"""),
+
+(r"""class cls(i=j): pass""", 'body[0].keywords[0]', None, None, {'raw': False}, r"""a, b""", r"""class cls(i=(a, b)): pass""", r"""
+Module .. ROOT 0,0 -> 0,25
+  .body[1]
+  0] ClassDef .. 0,0 -> 0,25
+    .name 'cls'
+    .keywords[1]
+    0] keyword .. 0,10 -> 0,18
+      .arg 'i'
+      .value Tuple .. 0,12 -> 0,18
+        .elts[2]
+        0] Name 'a' Load .. 0,13 -> 0,14
+        1] Name 'b' Load .. 0,16 -> 0,17
+        .ctx Load
+    .body[1]
+    0] Pass .. 0,21 -> 0,25
+"""),
+
+(r"""with i as j: pass""", 'body[0].items[0]', None, None, {'raw': False}, r"""a, b""", r"""with (a, b) as j: pass""", r"""
+Module .. ROOT 0,0 -> 0,22
+  .body[1]
+  0] With .. 0,0 -> 0,22
+    .items[1]
+    0] withitem .. 0,5 -> 0,16
+      .context_expr
+        Tuple .. 0,5 -> 0,11
+          .elts[2]
+          0] Name 'a' Load .. 0,6 -> 0,7
+          1] Name 'b' Load .. 0,9 -> 0,10
+          .ctx Load
+      .optional_vars Name 'j' Store .. 0,15 -> 0,16
+    .body[1]
+    0] Pass .. 0,18 -> 0,22
 """),
 
 ]  # END OF PUT_ONE_DATA
@@ -20453,7 +21043,7 @@ _CookiePattern = re.compile(r"""
         self.assertTrue(f.unparenthesize())
         self.assertEqual('(1,)', f.src)
         self.assertFalse(f.unparenthesize())
-        self.assertTrue(f.unparenthesize(tuple=True))
+        self.assertTrue(f.unparenthesize(tuple_=True))
         self.assertEqual('1,', f.src)
         self.assertFalse(f.unparenthesize())
 
@@ -20466,7 +21056,7 @@ _CookiePattern = re.compile(r"""
         self.assertTrue(f.unparenthesize())
         self.assertEqual('( # pre2\n1,\n # post1\n)', f.src)
         self.assertFalse(f.unparenthesize())
-        self.assertTrue(f.unparenthesize(tuple=True))
+        self.assertTrue(f.unparenthesize(tuple_=True))
         self.assertEqual('1,', f.src)
 
     def test_dedent_multiline_strings(self):
