@@ -15971,7 +15971,7 @@ Module .. ROOT 0,0 -> 0,17
         .ctx Load
 """),
 
-(r"""f'{i}'""", 'body[0].value.values[0]', None, None, {'raw': False}, r"""a, b""", r"""f'{(a, b)}'""", r"""
+(r"""f'{i}'""", 'body[0].value.values[0]', None, None, {'raw': False, '_verdump': 12}, r"""a, b""", r"""f'{(a, b)}'""", r"""
 Module .. ROOT 0,0 -> 0,11
   .body[1]
   0] Expr .. 0,0 -> 0,11
@@ -17024,6 +17024,64 @@ PRECEDENCE_DATA = [
     '(x & y)[y]',
     '(x // y)[y]',
     '(x ** y)[y]',
+    'call(z)',
+    'call((x, y))',
+    'call([x, y])',
+    'call((x := y))',
+    'call(lambda: x)',
+    'call(x if y else z)',
+    'call(await x)',
+    'call((yield x))',
+    'call((yield from x))',
+    'call(x < y)',
+    'call(x and y)',
+    'call(x or y)',
+    'call(~x)',
+    'call(not x)',
+    'call(+x)',
+    'call(-x)',
+    'call(x + y)',
+    'call(x - y)',
+    'call(x * y)',
+    'call(x @ y)',
+    'call(x / y)',
+    'call(x % y)',
+    'call(x << y)',
+    'call(x >> y)',
+    'call(x | y)',
+    'call(x ^ y)',
+    'call(x & y)',
+    'call(x // y)',
+    'call(x ** y)',
+    'call(**z)',
+    'call(**(x, y))',
+    'call(**[x, y])',
+    'call(**(x := y))',
+    'call(**lambda: x)',
+    'call(**x if y else z)',
+    'call(**await x)',
+    'call(**(yield x))',
+    'call(**(yield from x))',
+    'call(**x < y)',
+    'call(**x and y)',
+    'call(**x or y)',
+    'call(**~x)',
+    'call(**not x)',
+    'call(**+x)',
+    'call(**-x)',
+    'call(**x + y)',
+    'call(**x - y)',
+    'call(**x * y)',
+    'call(**x @ y)',
+    'call(**x / y)',
+    'call(**x % y)',
+    'call(**x << y)',
+    'call(**x >> y)',
+    'call(**x | y)',
+    'call(**x ^ y)',
+    'call(**x & y)',
+    'call(**x // y)',
+    'call(**x ** y)',
     'z, y',
     '(x, y), y',
     '[x, y], y',
@@ -18586,6 +18644,8 @@ PRECEDENCE_DST_EXPRS = [
     (ASTEXPR("f'{x}'"), 'values[0].value'),
     (ASTEXPR('x.y'), 'value'),
     (ASTEXPR('x[y]'), 'value'),
+    (ASTEXPR('call(a)'), 'args[0]'),
+    (ASTEXPR('call(**a)'), 'keywords[0].value'),
 ]
 
 PRECEDENCE_SRC_EXPRS = [
@@ -24259,6 +24319,10 @@ class cls:
                     f.root.verify(raise_=True)
 
                 self.assertEqual(tdst, put_src)
+
+                if (vd := options.get('_verdump')) and sys.version_info[:2] < (3, vd):
+                    continue
+
                 self.assertEqual(tdump, put_dump.strip().split('\n'))
 
             except Exception:
@@ -25256,6 +25320,10 @@ if __name__ == '__main__':
     parser.add_argument('--regen-precedence', default=False, action='store_true', help="regenerate precedence test data")
 
     args = parser.parse_args()
+
+    if any(getattr(args, n) for n in dir(args) if n.startswith('regen_')):
+        if sys.version_info[:2] < (3, 12):
+            raise RuntimeError('cannot regenerate on python version < 3.12')
 
     if args.regen_pars or args.regen_all:
         print('Regenerating parentheses test data...')

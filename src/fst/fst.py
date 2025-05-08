@@ -2019,7 +2019,7 @@ class FST:
 
     @property
     def is_mod(self) -> bool:
-        """Is a `mod`."""
+        """Is a `mod` node."""
 
         return isinstance(self.a, mod)
 
