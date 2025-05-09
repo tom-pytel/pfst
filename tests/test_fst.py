@@ -21342,12 +21342,12 @@ pass
 # whenever
             '''.split('\n')
 
-        self.assertEqual((2, 0), FST.src_edit.pre_comments(lines, 0, 0, 3, 2))
-        self.assertEqual((4, 0), FST.src_edit.post_comments(lines, 3, 6, 5, 0))
-        self.assertEqual(None, FST.src_edit.pre_comments(lines, 0, 0, 2, 2))
-        self.assertEqual(None, FST.src_edit.post_comments(lines, 2, 9, 5, 0))
-        self.assertEqual((0, 0), FST.src_edit.pre_comments(lines, 0, 0, 2, 2, 'all'))
-        self.assertEqual((5, 0), FST.src_edit.post_comments(lines, 3, 6, 5, 0, 'all'))
+        self.assertEqual((2, 0), fst._src_edit.pre_comments(lines, 0, 0, 3, 2))
+        self.assertEqual((4, 0), fst._src_edit.post_comments(lines, 3, 6, 5, 0))
+        self.assertEqual(None, fst._src_edit.pre_comments(lines, 0, 0, 2, 2))
+        self.assertEqual(None, fst._src_edit.post_comments(lines, 2, 9, 5, 0))
+        self.assertEqual((0, 0), fst._src_edit.pre_comments(lines, 0, 0, 2, 2, 'all'))
+        self.assertEqual((5, 0), fst._src_edit.post_comments(lines, 3, 6, 5, 0, 'all'))
 
         lines = '''
 i ; \\
@@ -21356,7 +21356,7 @@ j # post
 k
 '''.strip().split('\n')
 
-        self.assertEqual((1, 0), FST.src_edit.pre_comments(lines, 0, 1, 2, 0))
+        self.assertEqual((1, 0), fst._src_edit.pre_comments(lines, 0, 1, 2, 0))
 
     def test_copy_pars(self):
         self.assertEqual('a', parse('(a)').body[0].value.f.copy(pars=False).root.src)
