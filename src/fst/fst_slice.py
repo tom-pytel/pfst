@@ -1,7 +1,6 @@
 """Slice FST methods."""
 
 from ast import *
-from ast import unparse as ast_unparse
 from typing import Literal, Optional, Union
 
 from .astutil import *
@@ -16,33 +15,6 @@ from .shared import (
 
 from .srcedit import _src_edit
 
-
-def _make_fst_and_dedent(self: 'FST', indent: Union['FST', str], ast: AST, copy_loc: fstloc,
-                            prefix: str = '', suffix: str = '',
-                            put_loc: fstloc | None = None, put_lines: list[str] | None = None, *,
-                            docstr: bool | Literal['strict'] | None = None) -> 'FST':
-    if not isinstance(indent, str):
-        indent = indent.get_indent()
-
-    lines = self.root._lines
-    fst   = FST(ast, lines=lines, from_=self)  # we use original lines for nodes offset calc before putting new lines
-
-    fst.offset(copy_loc.ln, copy_loc.col, -copy_loc.ln, len(prefix.encode()) - lines[copy_loc.ln].c2b(copy_loc.col))
-
-    fst._lines = fst_lines = self.get_src(*copy_loc, True)
-
-    if suffix:
-        fst_lines[-1] = bistr(fst_lines[-1] + suffix)
-
-    if prefix:
-        fst_lines[0] = bistr(prefix + fst_lines[0])
-
-    fst.dedent_lns(indent, skip=bool(copy_loc.col), docstr=docstr)  # if copy location starts at column 0 then we apply dedent to it as well (preceding comment or something)
-
-    if put_loc:
-        self.put_src(put_lines, *put_loc, True)  # True because we may have an unparenthesized tuple that shrinks to a span length of 0
-
-    return fst
 
 def _get_slice_seq_and_dedent(self: 'FST', get_ast: AST, cut: bool, seq_loc: fstloc,
                         ffirst: Union['FST', fstloc], flast: Union['FST', fstloc],
@@ -69,6 +41,7 @@ def _get_slice_seq_and_dedent(self: 'FST', get_ast: AST, cut: bool, seq_loc: fst
     get_ast.f._touch()
 
     return get_fst
+
 
 def _get_slice_tuple_list_or_set(self: 'FST', start: int | Literal['end'] | None, stop: int | None, field: str | None,
                                     cut: bool, **options) -> 'FST':
@@ -154,6 +127,7 @@ def _get_slice_tuple_list_or_set(self: 'FST', start: int | Literal['end'] | None
 
     return fst
 
+
 def _get_slice_empty_set(self: 'FST', start: int | Literal['end'] | None, stop: int | None, field: str | None,
                                 cut: bool, **options) -> 'FST':
     fix = FST.get_option('fix', options)
@@ -168,6 +142,7 @@ def _get_slice_empty_set(self: 'FST', start: int | Literal['end'] | None, stop: 
         raise IndexError(f"Set.{field} index out of range")
 
     return self._new_empty_set(from_=self)
+
 
 def _get_slice_dict(self: 'FST', start: int | Literal['end'] | None, stop: int | None, field: str | None, cut: bool,
                     **options) -> 'FST':
@@ -212,6 +187,7 @@ def _get_slice_dict(self: 'FST', start: int | Literal['end'] | None, stop: int |
     assert self.root._lines[seq_loc.end_ln].startswith('}', seq_loc.end_col)
 
     return self._get_slice_seq_and_dedent(get_ast, cut, seq_loc, ffirst, flast, fpre, fpost, '{', '}')
+
 
 def _get_slice_stmtish(self: 'FST', start: int | Literal['end'] | None, stop: int | None, field: str | None, cut: bool,
                     one: bool = False, **options) -> 'FST':
@@ -267,6 +243,7 @@ def _get_slice_stmtish(self: 'FST', start: int | Literal['end'] | None, stop: in
 
     return fst
 
+
 def _put_slice_seq_and_indent(self: 'FST', put_fst: Optional['FST'], seq_loc: fstloc,
                         ffirst: Union['FST', fstloc, None], flast: Union['FST', fstloc, None],
                         fpre: Union['FST', fstloc, None], fpost: Union['FST', fstloc, None],
@@ -309,6 +286,7 @@ def _put_slice_seq_and_indent(self: 'FST', put_fst: Optional['FST'], seq_loc: fs
         root.put_src(put_lines, put_ln, put_col, put_end_ln, put_end_col, False)
     else:
         root.put_src(put_lines, put_ln, put_col, put_end_ln, put_end_col, True, True, self)  # because of insertion at end and unparenthesized tuple
+
 
 def _put_slice_tuple_list_or_set(self: 'FST', code: Code | None, start: int | Literal['end'] | None, stop: int | None,
                                     field: str | None, one: bool, **options):
@@ -431,6 +409,7 @@ def _put_slice_tuple_list_or_set(self: 'FST', code: Code | None, start: int | Li
         elif is_self_set:
             self._maybe_fix_set()
 
+
 def _put_slice_empty_set(self: 'FST', code: Code | None, start: int | Literal['end'] | None, stop: int | None,
                                 field: str | None, one: bool, **options):
     fix = FST.get_option('fix', options)
@@ -453,6 +432,7 @@ def _put_slice_empty_set(self: 'FST', code: Code | None, start: int | Literal['e
         if not self.a.elts:
             self.put_src(old_src, *self.loc, True)  # restore previous empty set representation
             self._set_ast(old_ast)
+
 
 def _put_slice_dict(self: 'FST', code: Code | None, start: int | Literal['end'] | None, stop: int | None,
                     field: str | None, one: bool, **options):
@@ -542,6 +522,7 @@ def _put_slice_dict(self: 'FST', code: Code | None, start: int | Literal['end'] 
 
         if key := keys[i]:  # could be None from **
             key.f.pfield = astfield('keys', i)
+
 
 def _put_slice_stmtish(self: 'FST', code: Code | None, start: int | Literal['end'] | None, stop: int | None,
                     field: str | None, one: bool, **options):

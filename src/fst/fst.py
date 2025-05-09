@@ -2079,7 +2079,8 @@ class FST:
         _unparenthesize_tuple,
         _normalize_block,
         _elif_to_else_if,
-        _reparse_docstrings,)
+        _reparse_docstrings,
+        _make_fst_and_dedent,)
 
     from .fst_raw import (
         _raw_slice_loc,
@@ -2090,7 +2091,6 @@ class FST:
         _put_slice_raw,)
 
     from .fst_slice import (
-        _make_fst_and_dedent,
         _get_slice_seq_and_dedent,
         _get_slice_tuple_list_or_set,
         _get_slice_empty_set,

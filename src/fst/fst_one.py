@@ -6,9 +6,7 @@ from typing import Any, Optional
 from .astutil import *
 from .astutil import TryStar
 
-from .shared import (
-    Code, NodeTypeError,
-)
+from .shared import Code, NodeTypeError
 
 
 def _to_to_slice_idx(self: 'FST', idx: int, field: str, to: Optional['FST']):
@@ -25,6 +23,7 @@ def _to_to_slice_idx(self: 'FST', idx: int, field: str, to: Optional['FST']):
 
     raise NodeTypeError(f"invalid 'to' node")
 
+
 def _put_one_stmtish(self: 'FST', code: Code | None, idx: int | None, field: str, child: Any, **options,
                         ) -> Optional['FST']:
     """Put or delete a single statementish node to a list of them (body, orelse, handlers, finalbody or cases)."""
@@ -32,6 +31,7 @@ def _put_one_stmtish(self: 'FST', code: Code | None, idx: int | None, field: str
     self._put_slice_stmtish(code, idx, self._to_to_slice_idx(idx, field, options.get('to')), field, True, **options)
 
     return None if code is None else getattr(self.a, field)[idx].f
+
 
 def _put_one_tuple_list_or_set(self: 'FST', code: Code | None, idx: int | None, field: str, child: Any, **options,
                                 ) -> Optional['FST']:
@@ -41,6 +41,7 @@ def _put_one_tuple_list_or_set(self: 'FST', code: Code | None, idx: int | None, 
                                         **options)
 
     return None if code is None else getattr(self.a, field)[idx].f
+
 
 def _put_one_expr_required(self: 'FST', code: Code | None, idx: int | None, field: str, child: Any, **options,
                             ) -> Optional['FST']:
@@ -81,6 +82,7 @@ def _put_one_expr_required(self: 'FST', code: Code | None, idx: int | None, fiel
     childf._set_ast(put_ast)
 
     return put_ast.f
+
 
 def _put_one(self: 'FST', code: Code | None, idx: int | None, field: str, **options) -> Optional['FST']:
     """Put new, replace or delete a node (or limited non-node) to a field of `self`."""

@@ -96,6 +96,7 @@ def _raw_slice_loc(self: 'FST', start: int | Literal['end'] | None = None, stop:
     return fstloc(*body[start].f.pars(exc_genexpr_solo=True)[:2],
                     *body[stop - 1].f.pars(exc_genexpr_solo=True)[2:])
 
+
 def _reparse_raw(self: 'FST', new_lines: list[str], ln: int, col: int, end_ln: int, end_col: int,
                         copy_lines: list[str], path: list[astfield] | str, set_ast: bool = True) -> 'FST':
     """Actually do the reparse."""
@@ -127,6 +128,7 @@ def _reparse_raw(self: 'FST', new_lines: list[str], ln: int, col: int, end_ln: i
         self.touch(True)
 
     return copy
+
 
 def _reparse_raw_stmtish(self: 'FST', new_lines: list[str], ln: int, col: int, end_ln: int, end_col: int) -> bool:
     """Reparse only statementish or block opener part of statementish containing changes."""
@@ -221,6 +223,7 @@ def _reparse_raw_stmtish(self: 'FST', new_lines: list[str], ln: int, col: int, e
 
     return True
 
+
 def _reparse_raw_loc(self: 'FST', code: Code | None, ln: int, col: int, end_ln: int, end_col: int,
                         exact: bool | None = None) -> Optional['FST']:
     """Reparse this node which entirely contatins the span which is to be replaced with `code` source. `self` must
@@ -268,6 +271,7 @@ def _reparse_raw_loc(self: 'FST', code: Code | None, ln: int, col: int, end_ln: 
 
     return (self.root.find_in_loc(ln, col, end_ln, end_col) or  # `self.root` instead of `self` because some changes may propagate farther up the tree, like 'elif' -> 'else'
             (self.root.find_loc(ln, col, end_ln, end_col, exact) if exact is not None else None))
+
 
 def _reparse_raw_node(self: 'FST', code: Code | None, to: Optional['FST'] = None, **options) -> 'FST':
     """Attempt a replacement by using str as source and attempting to parse into location of node(s) being
@@ -360,6 +364,7 @@ def _reparse_raw_node(self: 'FST', code: Code | None, to: Optional['FST'] = None
         parent    = root.child_from_path(path)
 
     return parent._reparse_raw_loc(code, loc.ln, loc.col, to_loc.end_ln, to_loc.end_col)
+
 
 def _put_slice_raw(self: 'FST', code: Code | None, start: int | Literal['end'] | None = None, stop: int | None = None,
                     field: str | None = None, *, one: bool = False, **options) -> 'FST':  # -> Self

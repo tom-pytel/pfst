@@ -62,9 +62,11 @@ def _normalize_code(code: Code, coerce: Literal['expr', 'exprish', 'mod'] | None
 
     return FST(ast, lines=lines)
 
+
 @staticmethod
 def _new_empty_module(*, from_: Optional['FST'] = None) -> 'FST':
     return FST(Module(body=[], type_ignores=[]), lines=[bistr('')], from_=from_)
+
 
 @staticmethod
 def _new_empty_tuple(*, from_: Optional['FST'] = None) -> 'FST':
@@ -72,17 +74,20 @@ def _new_empty_tuple(*, from_: Optional['FST'] = None) -> 'FST':
 
     return FST(ast, lines=[bistr('()')], from_=from_)
 
+
 @staticmethod
 def _new_empty_list(*, from_: Optional['FST'] = None) -> 'FST':
     ast = List(elts=[], ctx=Load(), lineno=1, col_offset=0, end_lineno=1, end_col_offset=2)
 
     return FST(ast, lines=[bistr('[]')], from_=from_)
 
+
 @staticmethod
 def _new_empty_dict(*, from_: Optional['FST'] = None) -> 'FST':
     ast = Dict(keys=[], values=[], lineno=1, col_offset=0, end_lineno=1, end_col_offset=2)
 
     return FST(ast, lines=[bistr('{}')], from_=from_)
+
 
 @staticmethod
 def _new_empty_set(only_ast: bool = False, lineno: int = 1, col_offset: int = 0, *,
@@ -95,6 +100,7 @@ def _new_empty_set(only_ast: bool = False, lineno: int = 1, col_offset: int = 0,
 
     return ast if only_ast else FST(ast, lines=[bistr('{*()}')], from_=from_)
 
+
 @staticmethod
 def _new_empty_set_curlies(only_ast: bool = False, lineno: int = 1, col_offset: int = 0, *,
                         from_: Optional['FST'] = None) -> Union['FST', AST]:
@@ -102,6 +108,7 @@ def _new_empty_set_curlies(only_ast: bool = False, lineno: int = 1, col_offset: 
             end_col_offset=col_offset + 2)
 
     return ast if only_ast else FST(ast, lines=[bistr('{}')], from_=from_)
+
 
 @staticmethod
 def _make_tree_fst(ast: AST, parent: 'FST', pfield: astfield):
@@ -112,6 +119,7 @@ def _make_tree_fst(ast: AST, parent: 'FST', pfield: astfield):
             pfield.set(parent.a, ast := ast.__class__())
 
     return FST(ast, parent, pfield)
+
 
 def _make_fst_tree(self: 'FST', stack: list['FST'] | None = None):
     """Create tree of FST nodes, one for each AST node from root. Call only on root or with pre-made stack of nodes
@@ -128,6 +136,7 @@ def _make_fst_tree(self: 'FST', stack: list['FST'] | None = None):
                 stack.extend(self._make_tree_fst(a, f, astfield(name, idx))
                                 for idx, a in enumerate(child) if isinstance(a, AST))
 
+
 def _unmake_fst_tree(self: 'FST', stack: list[AST] | None = None, root: Optional['FST'] = None):
     """Destroy a tree of FST nodes by breaking links between AST and FST nodes."""
 
@@ -142,6 +151,7 @@ def _unmake_fst_tree(self: 'FST', stack: list[AST] | None = None, root: Optional
 
     if root:
         root.a.f = root.a = None
+
 
 def _set_ast(self: 'FST', ast: AST, unmake: bool = True) -> AST:
     """Set `.a` AST node for this `FST` node and `_make_fst_tree` for `self`, also set ast node in parent AST node.
@@ -167,6 +177,7 @@ def _set_ast(self: 'FST', ast: AST, unmake: bool = True) -> AST:
 
     return old_ast
 
+
 def _repr_tail(self: 'FST') -> str:
     try:
         loc = self.loc
@@ -178,6 +189,7 @@ def _repr_tail(self: 'FST') -> str:
     tail = ' ROOT' if self.is_root else ''
 
     return f'{tail} {loc[0]},{loc[1]} -> {loc[2]},{loc[3]}' if loc else tail
+
 
 def _dump(self: 'FST', full: bool = False, indent: int = 2, cind: str = '', prefix: str = '', linefunc: Callable = print,
             compact: bool = False, eol: str = ''):
@@ -256,6 +268,7 @@ def _dump(self: 'FST', full: bool = False, indent: int = 2, cind: str = '', pref
         else:
             linefunc(f'{sind}{sind}{cind}{child!r}{eol}')
 
+
 def _prev_ast_bound(self: 'FST', with_loc: bool | Literal['all', 'own', 'allown'] = True) -> tuple[int, int]:
     """Get a prev bound for search after any ASTs for this object. This is safe to call for nodes that live inside
     nodes without their own locations if `with_loc='allown'`."""
@@ -265,6 +278,7 @@ def _prev_ast_bound(self: 'FST', with_loc: bool | Literal['all', 'own', 'allown'
 
     return 0, 0
 
+
 def _next_ast_bound(self: 'FST', with_loc: bool | Literal['all', 'own', 'allown'] = True) -> tuple[int, int]:
     """Get a next bound for search before any ASTs for this object. This is safe to call for nodes that live inside
     nodes without their own locations if `with_loc='allown'`."""
@@ -273,6 +287,7 @@ def _next_ast_bound(self: 'FST', with_loc: bool | Literal['all', 'own', 'allown'
         return next.bloc[:2]
 
     return len(lines := self.root._lines) - 1, len(lines[-1])
+
 
 def _lpars(self: 'FST', with_loc: bool | Literal['all', 'own', 'allown'] = True, *, exc_genexpr_solo: bool = False,
             ) -> tuple[int, int, int, int, int]:
@@ -307,6 +322,7 @@ def _lpars(self: 'FST', with_loc: bool | Literal['all', 'own', 'allown'] = True,
 
     return ret
 
+
 def _rpars(self: 'FST', with_loc: bool | Literal['all', 'own', 'allown'] = True, *, exc_genexpr_solo: bool = False,
             ) -> tuple[int, int, int, int, int]:
     """Return the `end_ln` and `end_col` of the rightmost and ante-rightmost closing parentheses and the total
@@ -340,6 +356,7 @@ def _rpars(self: 'FST', with_loc: bool | Literal['all', 'own', 'allown'] = True,
 
     return ret
 
+
 def _loc_block_opener_end(self: 'FST') -> tuple[int, int] | None:
     """Return location of the end of the block opener line(s) for block node, just past the ':', or None if `self`
     is not a block opener node."""
@@ -364,6 +381,7 @@ def _loc_block_opener_end(self: 'FST') -> tuple[int, int] | None:
     ln, col = _next_find(self.root._lines, cend_ln, cend_col, end_ln, end_col, ':')  # it must be there
 
     return ln, col + 1
+
 
 def _loc_operator(self: 'FST') -> fstloc | None:
     """Get location of `operator`, `unaryop` or `cmpop` from source if possible. `boolop` is not done at all because
@@ -409,6 +427,7 @@ def _loc_operator(self: 'FST') -> fstloc | None:
 
     return None
 
+
 def _loc_comprehension(self: 'FST') -> fstloc | None:
     """`comprehension` location from children. Called from `.loc`."""
 
@@ -441,6 +460,7 @@ def _loc_comprehension(self: 'FST') -> fstloc | None:
         end_col = ante_end_col
 
     return fstloc(start_ln, start_col, end_ln, end_col)
+
 
 def _loc_arguments(self: 'FST') -> fstloc | None:
     """`arguments` location from children. Called from `.loc`."""
@@ -491,6 +511,7 @@ def _loc_arguments(self: 'FST') -> fstloc | None:
 
     return fstloc(start_ln, start_col, end_ln, end_col)
 
+
 def _loc_withitem(self: 'FST') -> fstloc | None:
     """`withitem` location from children. Called from `.loc`."""
 
@@ -526,6 +547,7 @@ def _loc_withitem(self: 'FST') -> fstloc | None:
 
     return fstloc(ln, col, end_ln, end_col)
 
+
 def _loc_match_case(self: 'FST') -> fstloc | None:
     """`match_case` location from children. Called from `.loc`."""
 
@@ -542,6 +564,7 @@ def _loc_match_case(self: 'FST') -> fstloc | None:
     end_ln, end_col = _next_find(lines, last.bend_ln, last.bend_col, len(lines) - 1, len(lines[-1]), ':')  # special case, deleted whole body, end must be set to just past the colon (which MUST follow somewhere there)
 
     return fstloc(*start, end_ln, end_col + 1)
+
 
 def _dict_key_or_mock_loc(self: 'FST', key: AST | None, value: 'FST') -> Union['FST', fstloc]:
     """Return same dictionary key FST if exists else create and return a location for the preceding '**' code."""
@@ -562,6 +585,7 @@ def _dict_key_or_mock_loc(self: 'FST', key: AST | None, value: 'FST') -> Union['
 
     return fstloc(ln, col, ln, col + 2)
 
+
 def _touch(self: 'FST') -> 'FST':  # -> Self
     """AST node was modified, clear out any cached info for this node only."""
 
@@ -571,6 +595,7 @@ def _touch(self: 'FST') -> 'FST':  # -> Self
         pass
 
     return self
+
 
 def _set_end_pos(self: 'FST', end_lineno: int, end_col_offset: int, self_: bool = True):  # because of trailing non-AST junk in last statements
     """Walk up parent chain (starting at `self`) setting `.end_lineno` and `.end_col_offset` to `end_lineno` and
@@ -592,6 +617,7 @@ def _set_end_pos(self: 'FST', end_lineno: int, end_col_offset: int, self_: bool 
             break
 
         self = parent
+
 
 def _maybe_add_comma(self: 'FST', ln: int, col: int, offset: bool, space: bool,
                         end_ln: int | None = None, end_col: int | None = None) -> bool:
@@ -649,6 +675,7 @@ def _maybe_add_comma(self: 'FST', ln: int, col: int, offset: bool, space: bool,
 
     return True
 
+
 def _maybe_add_singleton_tuple_comma(self: 'FST', offset: bool):
     """Maybe add comma to tuple if is singleton and comma not already there, parenthesization not checked or taken
     into account. `self.a` must be a `Tuple`.
@@ -663,6 +690,7 @@ def _maybe_add_singleton_tuple_comma(self: 'FST', offset: bool):
     if (elts := self.a.elts) and len(elts) == 1:
         return self._maybe_add_comma((f := elts[0].f).end_ln, f.end_col, offset, False, self.end_ln,
                                         self.end_col - self._is_parenthesized_seq())
+
 
 def _maybe_fix_tuple(self: 'FST', is_parenthesized: bool | None = None):
     # assert isinstance(self.a, Tuple)
@@ -685,6 +713,7 @@ def _maybe_fix_tuple(self: 'FST', is_parenthesized: bool | None = None):
 
         self.put_src(['()'], ln, col, end_ln, end_col, True, False)  # WARNING! `tail=True` may not be safe if another preceding non-containing node ends EXACTLY where the unparenthesized tuple starts, but haven't found a case where this can happen
 
+
 def _maybe_fix_set(self: 'FST'):
     # assert isinstance(self.a, Set)
 
@@ -693,6 +722,7 @@ def _maybe_fix_set(self: 'FST'):
 
         self.put_src(['{*()}'], ln, col, end_ln, end_col, True)
         self._set_ast(self._new_empty_set(True, (a := self.a).lineno, a.col_offset))
+
 
 def _maybe_fix_elif(self: 'FST'):
     # assert isinstance(self.a, If)
@@ -705,6 +735,7 @@ def _maybe_fix_elif(self: 'FST'):
             self.a.col_offset == parenta.col_offset)
     ):
         self.put_src(None, ln, col, ln, col + 2, False)
+
 
 def _fix_block_del_last_child(self: 'FST', bound_ln: int, bound_col: int, bound_end_ln: int, bound_end_col: int):
     """Fix end location of a block statement after its last child (position-wise, not last existing child) has been
@@ -739,6 +770,7 @@ def _fix_block_del_last_child(self: 'FST', bound_ln: int, bound_col: int, bound_
         end_col_offset = lines[end_ln].c2b(end_col)
 
     self._set_end_pos(end_lineno, end_col_offset)
+
 
 def _fix(self: 'FST', inplace: bool = True) -> 'FST':
     """This is really a maybe fix source and `ctx` values for cut or copied nodes (to make subtrees parsable if the
@@ -871,6 +903,7 @@ def _fix(self: 'FST', inplace: bool = True) -> 'FST':
 
     return self
 
+
 def _is_parenthesized_seq(self: 'FST', field: str = 'elts', lpar: str = '(', rpar: str = ')') -> bool | None:
     """Whether `self` is a parenthesized sequence of `field` or not. Functions as `is_parenthesized_tuple()` if
     already know is a Tuple. Other use is for `MatchSequence`, whether parenthesized or bracketed."""
@@ -911,6 +944,7 @@ def _is_parenthesized_seq(self: 'FST', field: str = 'elts', lpar: str = '(', rpa
 
     return nparens > 0  # don't want to fiddle with checking if f0 is a parenthesized tuple
 
+
 def _parenthesize_grouping(self: 'FST', whole: bool = True):
     """Parenthesize anything with non-node grouping parentheses. Just adds text parens around node adjusting parent
     locations but not the node itself.
@@ -923,6 +957,7 @@ def _parenthesize_grouping(self: 'FST', whole: bool = True):
 
     self.put_src([')'], end_ln, end_col, end_ln, end_col, True, True, self, offset_excluded=False)
     self.offset(*self.put_src(['('], ln, col, ln, col, False, False, self, offset_excluded=False))
+
 
 def _parenthesize_tuple(self: 'FST', whole: bool = True):
     """Parenthesize an unparenthesized tuple, adjusting tuple location for added parentheses.
@@ -948,6 +983,7 @@ def _parenthesize_tuple(self: 'FST', whole: bool = True):
 
     a.lineno     = ln + 1
     a.col_offset = lines[ln].c2b(col)  # ditto on the `whole` thing
+
 
 def _unparenthesize_grouping(self: 'FST', *, inc_genexpr_solo: bool = False) -> bool:
     """Remove grouping parentheses from anything. Just remove text parens around node and everything between them
@@ -978,6 +1014,7 @@ def _unparenthesize_grouping(self: 'FST', *, inc_genexpr_solo: bool = False) -> 
 
     return True
 
+
 def _unparenthesize_tuple(self: 'FST') -> bool:
     """Unparenthesize a parenthesized tuple, adjusting tuple location for removed parentheses. Will not
     unparenthesize an empty tuple. Removes everything between the parentheses and the actual tuple.
@@ -1002,6 +1039,7 @@ def _unparenthesize_tuple(self: 'FST') -> bool:
     self.put_src(None, ln, col, (e0 := elts[0].f).ln, e0.col, False)
 
     return True
+
 
 def _normalize_block(self: 'FST', field: str = 'body', *, indent: str | None = None):
     """Move statements on the same logical line as a block open to their own line, e.g:
@@ -1037,6 +1075,7 @@ def _normalize_block(self: 'FST', field: str = 'body', *, indent: str | None = N
 
     self.put_src(['', indent], ln, col + 1, b0_ln, b0_col, False)
 
+
 def _elif_to_else_if(self: 'FST'):
     """Covnert an 'elif something:\\n  ...' to 'else:\\n  if something:\\n    ...'. Make sure to only call on an
     actual `elif`, meaning the lone `If` statement in the parent's `orelse` block which is an actual `elif` and not
@@ -1053,6 +1092,7 @@ def _elif_to_else_if(self: 'FST'):
 
     self.put_src(['if'], ln, col, ln, col + 4, False)
     self.put_src([indent + 'else:', indent + self.root.indent], ln, 0, ln, col, False)
+
 
 def _reparse_docstrings(self: 'FST', docstr: bool | Literal['strict'] | None = None):
     """Reparse docstrings in `self` and all descendants.
@@ -1080,6 +1120,34 @@ def _reparse_docstrings(self: 'FST', docstr: bool | Literal['strict'] | None = N
                     isinstance(v.value, str)
                 ):
                     v.value = literal_eval((f := b0.f).get_src(*f.loc))
+
+
+def _make_fst_and_dedent(self: 'FST', indent: Union['FST', str], ast: AST, copy_loc: fstloc,
+                         prefix: str = '', suffix: str = '',
+                         put_loc: fstloc | None = None, put_lines: list[str] | None = None, *,
+                         docstr: bool | Literal['strict'] | None = None) -> 'FST':
+    if not isinstance(indent, str):
+        indent = indent.get_indent()
+
+    lines = self.root._lines
+    fst   = FST(ast, lines=lines, from_=self)  # we use original lines for nodes offset calc before putting new lines
+
+    fst.offset(copy_loc.ln, copy_loc.col, -copy_loc.ln, len(prefix.encode()) - lines[copy_loc.ln].c2b(copy_loc.col))
+
+    fst._lines = fst_lines = self.get_src(*copy_loc, True)
+
+    if suffix:
+        fst_lines[-1] = bistr(fst_lines[-1] + suffix)
+
+    if prefix:
+        fst_lines[0] = bistr(prefix + fst_lines[0])
+
+    fst.dedent_lns(indent, skip=bool(copy_loc.col), docstr=docstr)  # if copy location starts at column 0 then we apply dedent to it as well (preceding comment or something)
+
+    if put_loc:
+        self.put_src(put_lines, *put_loc, True)  # True because we may have an unparenthesized tuple that shrinks to a span length of 0
+
+    return fst
 
 
 from .fst import FST
