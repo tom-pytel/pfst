@@ -17,9 +17,9 @@ from .srcedit import _src_edit
 
 
 def _get_slice_seq_and_dedent(self: 'FST', get_ast: AST, cut: bool, seq_loc: fstloc,
-                        ffirst: Union['FST', fstloc], flast: Union['FST', fstloc],
-                        fpre: Union['FST', fstloc, None], fpost: Union['FST', fstloc, None],
-                        prefix: str, suffix: str) -> 'FST':
+                              ffirst: Union['FST', fstloc], flast: Union['FST', fstloc],
+                              fpre: Union['FST', fstloc, None], fpost: Union['FST', fstloc, None],
+                              prefix: str, suffix: str) -> 'FST':
     copy_loc, put_loc, put_lines = _src_edit.get_slice_seq(self, cut, seq_loc, ffirst, flast, fpre, fpost)
 
     copy_ln, copy_col, copy_end_ln, copy_end_col = copy_loc
@@ -43,8 +43,54 @@ def _get_slice_seq_and_dedent(self: 'FST', get_ast: AST, cut: bool, seq_loc: fst
     return get_fst
 
 
+def _put_slice_seq_and_indent(self: 'FST', put_fst: Optional['FST'], seq_loc: fstloc,
+                              ffirst: Union['FST', fstloc, None], flast: Union['FST', fstloc, None],
+                              fpre: Union['FST', fstloc, None], fpost: Union['FST', fstloc, None],
+                              pfirst: Union['FST', fstloc, None], plast: Union['FST', fstloc, None],
+                              docstr: bool | Literal['strict']) -> 'FST':
+    root = self.root
+
+    if not put_fst:  # delete
+        # put_ln, put_col, put_end_ln, put_end_col = (
+        #     _src_edit.put_slice_seq(self, None, '', seq_loc, ffirst, flast, fpre, fpost, None, None))
+        _, (put_ln, put_col, put_end_ln, put_end_col), _ = (
+            _src_edit.get_slice_seq(self, True, seq_loc, ffirst, flast, fpre, fpost))
+
+        put_lines = None
+
+    else:  # replace or insert
+        assert put_fst.is_root
+
+        indent = self.get_indent()
+
+        put_fst.indent_lns(indent, docstr=docstr)
+
+        put_ln, put_col, put_end_ln, put_end_col = (
+            _src_edit.put_slice_seq(self, put_fst, indent, seq_loc, ffirst, flast, fpre, fpost, pfirst, plast))
+
+        lines           = root._lines
+        put_lines       = put_fst._lines
+        fst_dcol_offset = lines[put_ln].c2b(put_col)
+
+        put_fst.offset(0, 0, put_ln, fst_dcol_offset)
+
+    self_ln, self_col, _, _ = self.loc
+
+    if put_col == self_col and put_ln == self_ln:  # unenclosed sequence
+        self.offset(
+            *root.put_src(put_lines, put_ln, put_col, put_end_ln, put_end_col, not fpost, False, self),
+            True, True, self_=False)
+
+    elif fpost:
+        root.put_src(put_lines, put_ln, put_col, put_end_ln, put_end_col, False)
+    else:
+        root.put_src(put_lines, put_ln, put_col, put_end_ln, put_end_col, True, True, self)  # because of insertion at end and unparenthesized tuple
+
+
+# ----------------------------------------------------------------------------------------------------------------------
+
 def _get_slice_tuple_list_or_set(self: 'FST', start: int | Literal['end'] | None, stop: int | None, field: str | None,
-                                    cut: bool, **options) -> 'FST':
+                                 cut: bool, **options) -> 'FST':
     if field is not None and field != 'elts':
         raise ValueError(f"invalid field '{field}' to slice from a {self.a.__class__.__name__}")
 
@@ -115,7 +161,7 @@ def _get_slice_tuple_list_or_set(self: 'FST', start: int | Literal['end'] | None
 
             assert self.root._lines[seq_loc.end_ln].startswith(')', seq_loc.end_col)
 
-    fst = self._get_slice_seq_and_dedent(get_ast, cut, seq_loc, ffirst, flast, fpre, fpost, prefix, suffix)
+    fst = _get_slice_seq_and_dedent(self, get_ast, cut, seq_loc, ffirst, flast, fpre, fpost, prefix, suffix)
 
     if fix:
         if is_set:
@@ -129,7 +175,7 @@ def _get_slice_tuple_list_or_set(self: 'FST', start: int | Literal['end'] | None
 
 
 def _get_slice_empty_set(self: 'FST', start: int | Literal['end'] | None, stop: int | None, field: str | None,
-                                cut: bool, **options) -> 'FST':
+                         cut: bool, **options) -> 'FST':
     fix = FST.get_option('fix', options)
 
     if not fix:
@@ -186,11 +232,11 @@ def _get_slice_dict(self: 'FST', start: int | Literal['end'] | None, stop: int |
     assert self.root._lines[self.ln].startswith('{', self.col)
     assert self.root._lines[seq_loc.end_ln].startswith('}', seq_loc.end_col)
 
-    return self._get_slice_seq_and_dedent(get_ast, cut, seq_loc, ffirst, flast, fpre, fpost, '{', '}')
+    return _get_slice_seq_and_dedent(self, get_ast, cut, seq_loc, ffirst, flast, fpre, fpost, '{', '}')
 
 
 def _get_slice_stmtish(self: 'FST', start: int | Literal['end'] | None, stop: int | None, field: str | None, cut: bool,
-                    one: bool = False, **options) -> 'FST':
+                       one: bool = False, **options) -> 'FST':
     fix         = FST.get_option('fix', options)
     ast         = self.a
     field, body = _fixup_field_body(ast, field)
@@ -244,52 +290,8 @@ def _get_slice_stmtish(self: 'FST', start: int | Literal['end'] | None, stop: in
     return fst
 
 
-def _put_slice_seq_and_indent(self: 'FST', put_fst: Optional['FST'], seq_loc: fstloc,
-                        ffirst: Union['FST', fstloc, None], flast: Union['FST', fstloc, None],
-                        fpre: Union['FST', fstloc, None], fpost: Union['FST', fstloc, None],
-                        pfirst: Union['FST', fstloc, None], plast: Union['FST', fstloc, None],
-                        docstr: bool | Literal['strict']) -> 'FST':
-    root = self.root
-
-    if not put_fst:  # delete
-        # put_ln, put_col, put_end_ln, put_end_col = (
-        #     _src_edit.put_slice_seq(self, None, '', seq_loc, ffirst, flast, fpre, fpost, None, None))
-        _, (put_ln, put_col, put_end_ln, put_end_col), _ = (
-            _src_edit.get_slice_seq(self, True, seq_loc, ffirst, flast, fpre, fpost))
-
-        put_lines = None
-
-    else:  # replace or insert
-        assert put_fst.is_root
-
-        indent = self.get_indent()
-
-        put_fst.indent_lns(indent, docstr=docstr)
-
-        put_ln, put_col, put_end_ln, put_end_col = (
-            _src_edit.put_slice_seq(self, put_fst, indent, seq_loc, ffirst, flast, fpre, fpost, pfirst, plast))
-
-        lines           = root._lines
-        put_lines       = put_fst._lines
-        fst_dcol_offset = lines[put_ln].c2b(put_col)
-
-        put_fst.offset(0, 0, put_ln, fst_dcol_offset)
-
-    self_ln, self_col, _, _ = self.loc
-
-    if put_col == self_col and put_ln == self_ln:  # unenclosed sequence
-        self.offset(
-            *root.put_src(put_lines, put_ln, put_col, put_end_ln, put_end_col, not fpost, False, self),
-            True, True, self_=False)
-
-    elif fpost:
-        root.put_src(put_lines, put_ln, put_col, put_end_ln, put_end_col, False)
-    else:
-        root.put_src(put_lines, put_ln, put_col, put_end_ln, put_end_col, True, True, self)  # because of insertion at end and unparenthesized tuple
-
-
 def _put_slice_tuple_list_or_set(self: 'FST', code: Code | None, start: int | Literal['end'] | None, stop: int | None,
-                                    field: str | None, one: bool, **options):
+                                 field: str | None, one: bool, **options):
     if field is not None and field != 'elts':
         raise ValueError(f"invalid field '{field}' to assign slice to a {self.a.__class__.__name__}")
 
@@ -348,7 +350,7 @@ def _put_slice_tuple_list_or_set(self: 'FST', code: Code | None, start: int | Li
         flast  = elts[stop - 1].f
 
     if not put_fst:
-        self._put_slice_seq_and_indent(None, seq_loc, ffirst, flast, fpre, fpost, None, None, options.get('docstr'))
+        _put_slice_seq_and_indent(self, None, seq_loc, ffirst, flast, fpre, fpost, None, None, options.get('docstr'))
         self._unmake_fst_tree(elts[start : stop])
 
         del elts[start : stop]
@@ -387,7 +389,7 @@ def _put_slice_tuple_list_or_set(self: 'FST', code: Code | None, start: int | Li
             pfirst = selts[0].f
             plast  = selts[-1].f
 
-        self._put_slice_seq_and_indent(put_fst, seq_loc, ffirst, flast, fpre, fpost, pfirst, plast, options.get('docstr'))
+        _put_slice_seq_and_indent(self, put_fst, seq_loc, ffirst, flast, fpre, fpost, pfirst, plast, options.get('docstr'))
         self._unmake_fst_tree(elts[start : stop], put_fst)
 
         elts[start : stop] = put_ast.elts
@@ -411,7 +413,7 @@ def _put_slice_tuple_list_or_set(self: 'FST', code: Code | None, start: int | Li
 
 
 def _put_slice_empty_set(self: 'FST', code: Code | None, start: int | Literal['end'] | None, stop: int | None,
-                                field: str | None, one: bool, **options):
+                         field: str | None, one: bool, **options):
     fix = FST.get_option('fix', options)
 
     if not fix:
@@ -472,7 +474,7 @@ def _put_slice_dict(self: 'FST', code: Code | None, start: int | Literal['end'] 
         flast  = values[stop - 1].f
 
     if not put_fst:
-        self._put_slice_seq_and_indent(None, seq_loc, ffirst, flast, fpre, fpost, None, None, options.get('docstr'))
+        _put_slice_seq_and_indent(self, None, seq_loc, ffirst, flast, fpre, fpost, None, None, options.get('docstr'))
         self._unmake_fst_tree(keys[start : stop] + values[start : stop])
 
         del keys[start : stop]
@@ -499,7 +501,7 @@ def _put_slice_dict(self: 'FST', code: Code | None, start: int | Literal['end'] 
             pfirst = put_fst._dict_key_or_mock_loc(skeys[0], put_ast.values[0].f)
             plast  = put_ast.values[-1].f
 
-        self._put_slice_seq_and_indent(put_fst, seq_loc, ffirst, flast, fpre, fpost, pfirst, plast, options.get('docstr'))
+        _put_slice_seq_and_indent(self, put_fst, seq_loc, ffirst, flast, fpre, fpost, pfirst, plast, options.get('docstr'))
         self._unmake_fst_tree(keys[start : stop] + values[start : stop], put_fst)
 
         keys[start : stop]   = put_ast.keys
@@ -525,7 +527,7 @@ def _put_slice_dict(self: 'FST', code: Code | None, start: int | Literal['end'] 
 
 
 def _put_slice_stmtish(self: 'FST', code: Code | None, start: int | Literal['end'] | None, stop: int | None,
-                    field: str | None, one: bool, **options):
+                       field: str | None, one: bool, **options):
     ast         = self.a
     field, body = _fixup_field_body(ast, field)
 

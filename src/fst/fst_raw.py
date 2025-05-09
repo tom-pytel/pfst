@@ -27,7 +27,7 @@ PATH_BODYCASES     = [astfield('body', 0), astfield('cases', 0)]
 
 
 def _raw_slice_loc(self: 'FST', start: int | Literal['end'] | None = None, stop: int | None = None,
-                    field: str | None = None) -> fstloc:
+                   field: str | None = None) -> fstloc:
     """Get location of a raw slice. Sepcial cases for decorators, comprehension ifs and other weird nodes."""
 
     def fixup_slice_index_for_raw(len_, start, stop):
@@ -97,8 +97,10 @@ def _raw_slice_loc(self: 'FST', start: int | Literal['end'] | None = None, stop:
                     *body[stop - 1].f.pars(exc_genexpr_solo=True)[2:])
 
 
+# ----------------------------------------------------------------------------------------------------------------------
+
 def _reparse_raw(self: 'FST', new_lines: list[str], ln: int, col: int, end_ln: int, end_col: int,
-                        copy_lines: list[str], path: list[astfield] | str, set_ast: bool = True) -> 'FST':
+                 copy_lines: list[str], path: list[astfield] | str, set_ast: bool = True) -> 'FST':
     """Actually do the reparse."""
 
     copy_root = FST(Pass(), lines=copy_lines)  # we don't need the ASTs here, just the lines
@@ -225,7 +227,7 @@ def _reparse_raw_stmtish(self: 'FST', new_lines: list[str], ln: int, col: int, e
 
 
 def _reparse_raw_loc(self: 'FST', code: Code | None, ln: int, col: int, end_ln: int, end_col: int,
-                        exact: bool | None = None) -> Optional['FST']:
+                     exact: bool | None = None) -> Optional['FST']:
     """Reparse this node which entirely contatins the span which is to be replaced with `code` source. `self` must
     be a node which entirely contains the location and is guaranteed not to be deleted. `self` and some of its
     parents going up may be replaced (root node `FST` will never change, the `AST` it points to may though). Not
@@ -367,7 +369,7 @@ def _reparse_raw_node(self: 'FST', code: Code | None, to: Optional['FST'] = None
 
 
 def _put_slice_raw(self: 'FST', code: Code | None, start: int | Literal['end'] | None = None, stop: int | None = None,
-                    field: str | None = None, *, one: bool = False, **options) -> 'FST':  # -> Self
+                   field: str | None = None, *, one: bool = False, **options) -> 'FST':  # -> Self
     """Put a raw slice of child nodes to `self`."""
 
     if isinstance(code, AST):
@@ -421,7 +423,7 @@ def _put_slice_raw(self: 'FST', code: Code | None, start: int | Literal['end'] |
 
                         code.put_src(None, ln, col, ln, col + 1, False)
 
-    self._reparse_raw_loc(code, *self._raw_slice_loc(start, stop, field))
+    self._reparse_raw_loc(code, *_raw_slice_loc(self, start, stop, field))
 
     return self.repath()
 

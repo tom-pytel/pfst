@@ -24522,6 +24522,8 @@ finally:
             raise
 
     def test_put_raw_from_put_slice_data(self):
+        from fst.fst_raw import _raw_slice_loc
+
         for i, (dst, attr, start, stop, field, options, src, put_src, put_dump) in enumerate(PUT_SLICE_DATA):
             if options != {'raw': True}:
                 continue
@@ -24530,7 +24532,7 @@ finally:
             f = (eval(f't.{attr}', {'t': t}) if attr else t).f
 
             try:
-                loc = f._raw_slice_loc(start, stop, field)
+                loc = _raw_slice_loc(f, start, stop, field)
 
                 f.put_raw(None if src == '**DEL**' else src, *loc, **options)
 

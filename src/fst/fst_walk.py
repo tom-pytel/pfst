@@ -54,6 +54,7 @@ AST_FIELDS_PREV[(arguments, 'defaults')]    = 7
 AST_FIELDS_PREV[(arguments, 'kw_defaults')] = 7
 AST_FIELDS_PREV[(arguments, 'kwarg')]       = 7
 
+# ----------------------------------------------------------------------------------------------------------------------
 
 def _with_loc(fst: 'FST', with_loc: bool | Literal['all', 'own'] = True) -> bool:
     """Check location condition on node. Safe for low level because doesn't use `.loc` calculation machinery."""
@@ -713,7 +714,7 @@ def last_child(self: 'FST', with_loc: bool | Literal['all', 'own'] = True) -> Op
 
 
 def next_child(self: 'FST', from_child: Optional['FST'], with_loc: bool | Literal['all', 'own'] = True
-                ) -> Optional['FST']:
+               ) -> Optional['FST']:
     """Get next child in syntactic order. Meant for simple iteration. This is a slower way to iterate, `walk()` is
     faster.
 
@@ -730,7 +731,7 @@ def next_child(self: 'FST', from_child: Optional['FST'], with_loc: bool | Litera
 
 
 def prev_child(self: 'FST', from_child: Optional['FST'], with_loc: bool | Literal['all', 'own'] = True
-                ) -> Optional['FST']:
+               ) -> Optional['FST']:
     """Get previous child in syntactic order. Meant for simple iteration. This is a slower way to iterate, `walk()`
     is faster.
 
@@ -747,7 +748,7 @@ def prev_child(self: 'FST', from_child: Optional['FST'], with_loc: bool | Litera
 
 
 def next_step(self: 'FST', with_loc: bool | Literal['all', 'own', 'allown'] = True, *,
-                recurse_self: bool = True) -> Optional['FST']:
+              recurse_self: bool = True) -> Optional['FST']:
     """Get next node in syntactic order over entire tree. Will walk up parents and down children to get the next
     node, returning `None` only when we are at the end of the whole thing.
 
@@ -781,7 +782,7 @@ def next_step(self: 'FST', with_loc: bool | Literal['all', 'own', 'allown'] = Tr
 
 
 def prev_step(self: 'FST', with_loc: bool | Literal['all', 'own', 'allown'] = True, *,
-                recurse_self: bool = True) -> Optional['FST']:
+              recurse_self: bool = True) -> Optional['FST']:
     """Get prev node in syntactic order over entire tree. Will walk up parents and down children to get the next
     node, returning `None` only when we are at the beginning of the whole thing.
 
@@ -815,7 +816,7 @@ def prev_step(self: 'FST', with_loc: bool | Literal['all', 'own', 'allown'] = Tr
 
 
 def walk(self: 'FST', with_loc: bool | Literal['all', 'own'] = False, *, self_: bool = True,
-            recurse: bool = True, scope: bool = False, back: bool = False) -> Generator['FST', bool, None]:
+         recurse: bool = True, scope: bool = False, back: bool = False) -> Generator['FST', bool, None]:
     """Walk self and descendants in syntactic order, `send(False)` to skip recursion into child. `send(True)` to
     allow recursion into child if called with `recurse=False` or `scope=True` would otherwise disallow it. Can send
     multiple times, last value sent takes effect.

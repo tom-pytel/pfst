@@ -86,7 +86,7 @@ class _FSTCircularImportStandin(metaclass=_FSTCircularImportStandinMeta):
 
         return FST(*args, **kwargs)
 
-FST = _FSTCircularImportStandin
+FST = _FSTCircularImportStandin  # predefined so that imports in the real `FST` class get this
 
 
 class FST:
@@ -2083,7 +2083,6 @@ class FST:
         _make_fst_and_dedent,)
 
     from .fst_raw import (
-        _raw_slice_loc,
         _reparse_raw,
         _reparse_raw_stmtish,
         _reparse_raw_loc,
@@ -2091,19 +2090,16 @@ class FST:
         _put_slice_raw,)
 
     from .fst_slice import (
-        _get_slice_seq_and_dedent,
         _get_slice_tuple_list_or_set,
         _get_slice_empty_set,
         _get_slice_dict,
         _get_slice_stmtish,
-        _put_slice_seq_and_indent,
         _put_slice_tuple_list_or_set,
         _put_slice_empty_set,
         _put_slice_dict,
         _put_slice_stmtish,)
 
     from .fst_one import (
-        _to_to_slice_idx,
         _put_one_stmtish,
         _put_one_tuple_list_or_set,
         _put_one_expr_required,

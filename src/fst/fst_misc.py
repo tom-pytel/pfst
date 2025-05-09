@@ -15,6 +15,7 @@ from .shared import (
     _reduce_ast
 )
 
+# ----------------------------------------------------------------------------------------------------------------------
 
 @staticmethod
 def _normalize_code(code: Code, coerce: Literal['expr', 'exprish', 'mod'] | None = None, *,
@@ -91,7 +92,7 @@ def _new_empty_dict(*, from_: Optional['FST'] = None) -> 'FST':
 
 @staticmethod
 def _new_empty_set(only_ast: bool = False, lineno: int = 1, col_offset: int = 0, *,
-                from_: Optional['FST'] = None) -> Union['FST', AST]:
+                   from_: Optional['FST'] = None) -> Union['FST', AST]:
     ast = Set(elts=[
         Starred(value=Tuple(elts=[], ctx=Load(), lineno=lineno, col_offset=col_offset+2,
                             end_lineno=lineno, end_col_offset=col_offset+4),
@@ -103,7 +104,7 @@ def _new_empty_set(only_ast: bool = False, lineno: int = 1, col_offset: int = 0,
 
 @staticmethod
 def _new_empty_set_curlies(only_ast: bool = False, lineno: int = 1, col_offset: int = 0, *,
-                        from_: Optional['FST'] = None) -> Union['FST', AST]:
+                           from_: Optional['FST'] = None) -> Union['FST', AST]:
     ast = Set(elts=[], lineno=lineno, col_offset=col_offset, end_lineno=lineno,
             end_col_offset=col_offset + 2)
 
@@ -192,7 +193,7 @@ def _repr_tail(self: 'FST') -> str:
 
 
 def _dump(self: 'FST', full: bool = False, indent: int = 2, cind: str = '', prefix: str = '', linefunc: Callable = print,
-            compact: bool = False, eol: str = ''):
+          compact: bool = False, eol: str = ''):
     tail = self._repr_tail()
     sind = ' ' * indent
     ast  = self.a
@@ -290,7 +291,7 @@ def _next_ast_bound(self: 'FST', with_loc: bool | Literal['all', 'own', 'allown'
 
 
 def _lpars(self: 'FST', with_loc: bool | Literal['all', 'own', 'allown'] = True, *, exc_genexpr_solo: bool = False,
-            ) -> tuple[int, int, int, int, int]:
+           ) -> tuple[int, int, int, int, int]:
     """Return the `ln` and `col` of the leftmost and ante-leftmost opening parentheses and the total number of
     opening parentheses. Doesn't take into account anything like enclosing argument parentheses, just counts. The
     leftmost bound used is the end of the previous sibling, or the start of that parent if there isn't one, or (0,0)
@@ -324,7 +325,7 @@ def _lpars(self: 'FST', with_loc: bool | Literal['all', 'own', 'allown'] = True,
 
 
 def _rpars(self: 'FST', with_loc: bool | Literal['all', 'own', 'allown'] = True, *, exc_genexpr_solo: bool = False,
-            ) -> tuple[int, int, int, int, int]:
+           ) -> tuple[int, int, int, int, int]:
     """Return the `end_ln` and `end_col` of the rightmost and ante-rightmost closing parentheses and the total
     number of closing parentheses. Doesn't take into account anything like enclosing argument parentheses, just
     counts. The rightmost bound used is the start of the next sibling, or the end of that parent if there isn't one,
@@ -620,7 +621,7 @@ def _set_end_pos(self: 'FST', end_lineno: int, end_col_offset: int, self_: bool 
 
 
 def _maybe_add_comma(self: 'FST', ln: int, col: int, offset: bool, space: bool,
-                        end_ln: int | None = None, end_col: int | None = None) -> bool:
+                     end_ln: int | None = None, end_col: int | None = None) -> bool:
     """Maybe add comma at start of span if not already present as first code in span. Will skip any closing
     parentheses for check and add.
 
