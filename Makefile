@@ -18,7 +18,7 @@ test:  ## Run basic unit tests
 
 .PHONY: docs
 docs:  ## Compile documentation
-	pdoc -o docs -d markdown fst
+	pdoc -o docs -d markdown fst.fst
 
 
 .PHONY: clean

@@ -129,9 +129,9 @@ AST_DEFAULT_BODY_FIELD  = {cls: field for field, classes in [
     # ('items',        (With, AsyncWith)),  # 'body' takes precedence
 
     # special cases, field names here only for checks to succeed, otherwise all handled programatically
-    ('keys',         (Dict,)),
-    ('keys',         (MatchMapping,)),
-    ('ops',          (Compare,)),
+    (None,           (Dict,)),
+    (None,           (MatchMapping,)),
+    (None,           (Compare,)),
 
     # other single value fields
     ('value',        (Expr, Return, Assign, AugAssign, NamedExpr, Await, Yield, YieldFrom, FormattedValue, Interpolation,
@@ -570,10 +570,13 @@ def _fixup_field_body(ast: AST, field: str | None = None, only_list: bool = True
     """Get `AST` member list for specified `field` or default if `field=None`."""
 
     if field is None:
-        if not (field := AST_DEFAULT_BODY_FIELD.get(ast.__class__)):
+        if (field := AST_DEFAULT_BODY_FIELD.get(ast.__class__, _fixup_field_body)) is _fixup_field_body:  # _fixup_field_body serves as sentinel
             raise ValueError(f"{ast.__class__.__name__} has no default body field")
 
-    if (body := getattr(ast, field, _fixup_field_body)) is _fixup_field_body:  # _fixup_field_body serves as sentinel
+        if field is None:  # special case
+            return None, []
+
+    if (body := getattr(ast, field, _fixup_field_body)) is _fixup_field_body:
         raise ValueError(f"{ast.__class__.__name__} has no field '{field}'")
 
     if only_list and not isinstance(body, list):
@@ -3518,6 +3521,25 @@ class FST:
                 else:
                     loc = to_loc
 
+            # elif pars:  # precedence parenthesizing
+            #     if isinstance(code, FST):
+            #         if not code.is_atom() and precedence_require_parens(code.a, parent.a, *self.pfield):
+            #             code.parenthesize()
+
+            #     elif isinstance(code, AST):
+            #         if not (is_atom_ := is_atom(code, tuple_as_atom=None)):
+            #             if precedence_require_parens(code, parent.a, *self.pfield):
+            #                 code = ast_unparse(code) if is_atom_ is None else f'({ast_unparse(code)})'
+            #             elif is_atom_ is None:  # strip `unparse()` parens
+            #                 code = ast_unparse(code)[1:-1]
+
+            if (pars or not self.is_solo_call_arg_genexpr() or  # if original loc included `arguments` parentheses shared with solo GeneratorExp call arg then need to leave those in place
+                (to_loc := self.pars(True, exc_genexpr_solo=True))[:2] <= loc[:2]
+            ):
+                to_loc = loc
+            else:
+                loc = to_loc
+
         elif not (to_loc := to.pars(pars, exc_genexpr_solo=True)):  # pars is True here
             raise ValueError(f"'to' node must have a location")
         elif (root := self.root) is not to.root:
@@ -5088,8 +5110,8 @@ class FST:
             field: str | None = None, *, cut: bool = False, **options) -> Optional['FST']:
         """Copy or cut an individual child node or a slice of child nodes from `self`."""
 
-        ast          = self.a
-        field_, body = _fixup_field_body(ast, field, False)
+        ast     = self.a
+        _, body = _fixup_field_body(ast, field, False)
 
         if not isinstance(body, list):  # get from individual field
             if stop is not False or start is not None:
@@ -5113,7 +5135,7 @@ class FST:
             return body[start].f.copy(**options)
 
     def put(self, code: Code | None, start: int | Literal['end'] | None = None,
-            stop: int | None | Literal['False'] = False, field: str | None = None, *,
+            stop: int | None | Literal[False] = False, field: str | None = None, *,
             one: bool = True, **options) -> 'FST':  # -> Self
         """Put an individual child node or a slice of child nodes to `self`.
 
@@ -5167,6 +5189,9 @@ class FST:
                 field_, start = ('comparators', start - 1) if start else ('left', None)
 
         if is_dict and field == 'keys' and (keys := ast.keys)[start] is None:  # '{**d}' with key=None
+            if not FST.get_option('raw', options):
+                raise ValueError(f"cannot put() non-raw to ** Dict.key")
+
             start_loc = self._dict_key_or_mock_loc(keys[start], ast.values[start].f)
 
             ln, col, end_ln, end_col = start_loc.loc if start_loc.is_FST else start_loc
