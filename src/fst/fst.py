@@ -8,7 +8,24 @@ from typing import Any, Callable, Generator, Literal, NamedTuple, Optional, Text
 
 from .astutil import *
 from .astutil import TypeAlias, TryStar, type_param, TypeVar, ParamSpec, TypeVarTuple, TemplateStr, Interpolation
-from .shared import *
+from .shared import (
+    astfield, fstloc, srcwpos,
+    AST_FIELDS_NEXT, AST_FIELDS_PREV, AST_DEFAULT_BODY_FIELD, EXPRESSIONISH,
+    STATEMENTISH, STATEMENTISH_OR_MOD, STATEMENTISH_OR_STMTMOD, BLOCK, BLOCK_OR_MOD, SCOPE, SCOPE_OR_MOD, NAMED_SCOPE,
+    NAMED_SCOPE_OR_MOD, ANONYMOUS_SCOPE, PARENTHESIZABLE, HAS_DOCSTRING,
+    STATEMENTISH_FIELDS,
+    PATH_BODY, PATH_BODY2, PATH_BODYORELSE, PATH_BODY2ORELSE, PATH_BODYHANDLERS, PATH_BODY2HANDLERS, PATH_BODYCASES,
+    DEFAULT_PARSE_PARAMS, DEFAULT_INDENT,
+    DEFAULT_DOCSTR, DEFAULT_PRECOMMS, DEFAULT_POSTCOMMS, DEFAULT_PRESPACE, DEFAULT_POSTSPACE, DEFAULT_PEP8SPACE,
+    DEFAULT_PARS, DEFAULT_ELIF_, DEFAULT_FIX, DEFAULT_RAW,
+    re_empty_line_start, re_empty_line, re_comment_line_start, re_line_continuation, re_line_trailing_space,
+    re_oneline_str, re_contline_str_start, re_contline_str_end_sq, re_contline_str_end_dq, re_multiline_str_start,
+    re_multiline_str_end_sq, re_multiline_str_end_dq, re_empty_line_cont_or_comment, re_next_src,
+    re_next_src_or_comment, re_next_src_or_lcont, re_next_src_or_comment_or_lcont,
+    Code, NodeTypeError,
+    _with_loc, _next_src, _prev_src, _next_find, _prev_find, _next_pars, _prev_pars, _params_offset, _fixup_field_body,
+    _fixup_slice_index, _reduce_ast
+)
 
 __all__ = [
     'parse', 'unparse', 'FST', 'FSTSrcEdit',
@@ -128,141 +145,6 @@ def _new_empty_set_curlies(only_ast: bool = False, lineno: int = 1, col_offset: 
               end_col_offset=col_offset + 2)
 
     return ast if only_ast else FST(ast, lines=[bistr('{}')], from_=from_)
-
-
-class fstlist:
-    """Proxy for list of AST nodes in a body (or any other list of AST nodes) which acts as a list of FST nodes. Is only
-    meant for short term convenience use as operations on the target FST node which are not effectuated through this
-    proxy will invalidate the start and stop positions stored here if they change the size of the list of nodes."""
-
-    def __init__(self, fst: 'FST', field: str, start: int, stop: int):
-        self.fst   = fst
-        self.field = field
-        self.start = start
-        self.stop  = stop
-
-    def __repr__(self) -> str:
-        return f'<fstlist {list(self)}>'
-
-    def __len__(self) -> int:
-        return self.stop - self.start
-
-    def __getitem__(self, idx: int | slice | str) -> Any:
-        if isinstance(idx, int):
-            if not (l := self.stop - (start := self.start)) > ((idx := idx + l) if idx < 0 else idx) >= 0:
-                raise IndexError('index out of range')
-
-            return a.f if isinstance(a := getattr(self.fst.a, self.field)[start + idx], AST) else a
-
-        if isinstance(idx, str):
-            if not (a := get_func_class_or_ass_by_name(getattr(self.fst.a, self.field)[self.start : self.stop],
-                                                       idx, False)):
-                raise IndexError(f"function or class '{idx}' not found")
-
-            return a.f
-
-        if idx.step is not None:
-            raise IndexError('step slicing not supported')
-
-        idx_start, idx_stop = _fixup_slice_index(self.stop - (start := self.start), idx.start, idx.stop)
-
-        return fstlist(self.fst, self.field, start + idx_start, start + idx_stop)
-
-    def __setitem__(self, idx: int | slice, code: Code | None):
-        if isinstance(idx, int):
-            if not (l := self.stop - (start := self.start)) > ((idx := idx + l) if idx < 0 else idx) >= 0:
-                raise IndexError('index out of range')
-
-            self.fst.put(code, start + idx, field=self.field)
-
-        elif idx.step is not None:
-            raise IndexError('step slicing not supported')
-
-        else:
-            idx_start, idx_stop = _fixup_slice_index(self.stop - (start := self.start), idx.start, idx.stop)
-
-            self.fst.put_slice(code, start + idx_start, start + idx_stop, self.field)
-
-    def __delitem__(self, idx: int | slice):
-        if isinstance(idx, int):
-            if not (l := (stop := self.stop) - (start := self.start)) > ((idx := idx + l) if idx < 0 else idx) >= 0:
-                raise IndexError('index out of range')
-
-            self.fst.put_slice(None, start + idx, start + idx + 1, field=self.field)
-
-            self.stop = max(start, stop - 1)
-
-        elif idx.step is not None:
-            raise IndexError('step slicing not supported')
-
-        else:
-            idx_start, idx_stop = _fixup_slice_index(self.stop - (start := self.start), idx.start, idx.stop)
-
-            self.fst.put_slice(None, start + idx_start, start + idx_stop, self.field)
-
-            self.stop = max(start, stop - (idx_stop - idx_start))
-
-    def copy(self, **options) -> 'FST':
-        return self.fst.get_slice(self.start, self.stop, self.field, cut=False, **options)
-
-    def cut(self, **options) -> 'FST':
-        f         = self.fst.get_slice(start := self.start, self.stop, self.field, cut=True, **options)
-        self.stop = start
-
-        return f
-
-    def replace(self, code: Code | None, one: bool = True, **options):  # -> Self
-        len_before = len(asts := getattr(self.fst.a, self.field))
-
-        self.fst.put_slice(code, self.start, self.stop, self.field, one=one, **options)
-
-        self.stop += len(asts) - len_before
-
-        return self
-
-    def insert(self, code: Code, idx: int | Literal['end'] = 0, one: bool = True, **options) -> 'FST':  # -> Self
-        len_before = len(asts := getattr(self.fst.a, self.field))
-        idx        = (self.stop if idx == 'end' else
-                      stop      if idx > (l := (stop := self.stop) - (start := self.start)) else
-                      start + (idx if idx >= 0 else max(0, idx + l)))
-
-        self.fst.put_slice(code, idx, idx, self.field, one=one, **options)
-
-        self.stop += len(asts) - len_before
-
-        return self
-
-    def append(self, code: Code, **options) -> 'FST':  # -> Self
-        self.fst.put_slice(code, stop := self.stop, stop, self.field, one=True, **options)
-
-        self.stop = stop + 1
-
-        return self
-
-    def extend(self, code: Code, **options) -> 'FST':  # -> Self
-        len_before = len(asts := getattr(self.fst.a, self.field))
-
-        self.fst.put_slice(code, stop := self.stop, stop, self.field, one=False, **options)
-
-        self.stop = stop + (len(asts) - len_before)
-
-        return self
-
-    def prepend(self, code: Code, **options) -> 'FST':  # -> Self
-        self.fst.put_slice(code, start := self.start, start, self.field, one=True, **options)
-
-        self.stop += 1
-
-        return self
-
-    def prextend(self, code: Code, **options) -> 'FST':  # -> Self
-        len_before = len(asts := getattr(self.fst.a, self.field))
-
-        self.fst.put_slice(code, start := self.start, start, self.field, one=False, **options)
-
-        self.stop += len(asts) - len_before
-
-        return self
 
 
 class FSTSrcEdit:
@@ -6621,3 +6503,6 @@ class FST:
             ret = self._unparenthesize_tuple() or ret
 
         return ret
+
+
+from .fstlist import fstlist

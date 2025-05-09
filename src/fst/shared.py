@@ -5,9 +5,6 @@ from typing import Any, Literal, NamedTuple, TypeAlias, Union
 from .astutil import *
 from .astutil import TypeAlias, TryStar, type_param, TypeVar, ParamSpec, TypeVarTuple, TemplateStr, Interpolation
 
-_START_GLOBALS                   = globals().copy()
-_START_GLOBALS['_START_GLOBALS'] = True
-
 
 class astfield(NamedTuple):
     name: str
@@ -627,6 +624,3 @@ def _reduce_ast(ast, coerce: Literal['expr', 'exprish', 'mod'] | None = None):
 
     return ast
 
-
-__all__ = [n for n in globals() if n not in _START_GLOBALS]
-# print(__all__)
