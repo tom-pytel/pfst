@@ -11,7 +11,7 @@ from .astutil import TryStar
 from .shared import (
     astfield, fstloc,
     PARENTHESIZABLE,
-    STATEMENTISH_FIELDS,
+    STMTISH_FIELDS,
     Code,
     _next_find, _prev_find, _fixup_field_body,
     _fixup_slice_index, _reduce_ast,
@@ -216,7 +216,7 @@ def _reparse_raw_stmtish(self: 'FST', new_lines: list[str], ln: int, col: int, e
         copya.end_lineno     = stmtisha.end_lineno
         copya.end_col_offset = stmtisha.end_col_offset
 
-    for field in STATEMENTISH_FIELDS:
+    for field in STMTISH_FIELDS:
         if (body := getattr(stmtisha, field, None)) is not None:
             setattr(copya, field, body)
 

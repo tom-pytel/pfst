@@ -10,9 +10,9 @@ from .astutil import TryStar, TemplateStr, Interpolation
 
 from .shared import (
     astfield, fstloc,
-    STATEMENTISH, STATEMENTISH_OR_MOD, STATEMENTISH_OR_STMTMOD, BLOCK, BLOCK_OR_MOD, SCOPE, SCOPE_OR_MOD, NAMED_SCOPE,
+    STMTISH, STMTISH_OR_MOD, STMTISH_OR_STMTMOD, BLOCK, BLOCK_OR_MOD, SCOPE, SCOPE_OR_MOD, NAMED_SCOPE,
     NAMED_SCOPE_OR_MOD, ANONYMOUS_SCOPE, PARENTHESIZABLE, HAS_DOCSTRING,
-    STATEMENTISH_FIELDS,
+    STMTISH_FIELDS,
     re_empty_line_start, re_empty_line, re_comment_line_start, re_line_continuation, re_line_trailing_space,
     re_oneline_str, re_contline_str_start, re_contline_str_end_sq, re_contline_str_end_dq, re_multiline_str_start,
     re_multiline_str_end_sq, re_multiline_str_end_dq,
@@ -198,13 +198,13 @@ class FST:
     def is_stmtish(self) -> bool:
         """Is a `stmt`, `ExceptHandler` or `match_case` node."""
 
-        return isinstance(self.a, STATEMENTISH)
+        return isinstance(self.a, STMTISH)
 
     @property
     def is_stmtish_or_mod(self) -> bool:
         """Is a `stmt`, `ExceptHandler`, `match_case` or `mod` node."""
 
-        return isinstance(self.a, STATEMENTISH_OR_MOD)
+        return isinstance(self.a, STMTISH_OR_MOD)
 
     @property
     def is_stmt(self) -> bool:
@@ -784,7 +784,7 @@ class FST:
         if self.is_root:
             return FST(newast, lines=self._lines[:], from_=self)
 
-        if isinstance(ast, STATEMENTISH):
+        if isinstance(ast, STMTISH):
             loc = self.comms(options.get('precomms'), options.get('postcomms'))
         elif isinstance(ast, PARENTHESIZABLE):
             loc = self.pars(options.get('pars') is True)
@@ -809,7 +809,7 @@ class FST:
         field, idx = self.pfield
         parenta    = parent.a
 
-        if isinstance(ast, STATEMENTISH):
+        if isinstance(ast, STMTISH):
             return parent._get_slice_stmtish(idx, idx + 1, field, cut=True, one=True, **options)
 
         if isinstance(parenta, (Tuple, List, Set)):
@@ -941,8 +941,8 @@ class FST:
         ast       = self.a
         field_, _ = _fixup_field_body(ast, field)
 
-        if isinstance(ast, STATEMENTISH_OR_STMTMOD):
-            if field_ in STATEMENTISH_FIELDS:
+        if isinstance(ast, STMTISH_OR_STMTMOD):
+            if field_ in STMTISH_FIELDS:
                 return self._get_slice_stmtish(start, stop, field, cut, **options)
 
         elif isinstance(ast, (Tuple, List, Set)):
@@ -979,8 +979,8 @@ class FST:
                 raise ValueError(f"invalid value '{raw}' for raw parameter")
 
             try:
-                if isinstance(ast, STATEMENTISH_OR_STMTMOD):
-                    if field_ in STATEMENTISH_FIELDS:
+                if isinstance(ast, STMTISH_OR_STMTMOD):
+                    if field_ in STMTISH_FIELDS:
                         self._put_slice_stmtish(code, start, stop, field, one, **options)
 
                         return self
@@ -1147,7 +1147,7 @@ class FST:
         """The first parent which is a `stmt`, `ExceptHandler`, `match_case` or `mod` node (if any). If `self_` is
         `True` then will check `self` first, otherwise only checks parents."""
 
-        types = STATEMENTISH_OR_MOD if mod else STATEMENTISH
+        types = STMTISH_OR_MOD if mod else STMTISH
 
         if self_ and isinstance(self.a, types):
             return self
@@ -1447,7 +1447,7 @@ class FST:
         - `str`: Entire indentation string for the block this node lives in (not just a single level).
         """
 
-        while (parent := self.parent) and not isinstance(self.a, STATEMENTISH):
+        while (parent := self.parent) and not isinstance(self.a, STMTISH):
             self = parent
 
         root   = self.root
@@ -1571,7 +1571,7 @@ class FST:
         lines  = self.root.lines
         lns    = set(range(skip, len(self._lines))) if self.is_root else set(range(self.bln + skip, self.bend_ln + 1))
 
-        while (parent := self.parent) and not isinstance(self.a, STATEMENTISH):
+        while (parent := self.parent) and not isinstance(self.a, STMTISH):
             self = parent
 
         for f in (walking := self.walk(False)):  # find multiline strings and exclude their unindentable lines
@@ -1666,7 +1666,7 @@ class FST:
         if postcomms is None:
             postcomms = self.get_option('postcomms')
 
-        if not (precomms or postcomms) or not isinstance(self.a, STATEMENTISH):
+        if not (precomms or postcomms) or not isinstance(self.a, STMTISH):
             return self.bloc
 
         lines = self.root._lines
