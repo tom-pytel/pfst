@@ -1039,4 +1039,7 @@ class SrcEdit:
         return put_loc
 
 
+_src_edit = SrcEdit()
+
+
 from .fst import FST

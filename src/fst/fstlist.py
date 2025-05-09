@@ -10,6 +10,11 @@ class fstlist:
     meant for short term convenience use as operations on the target FST node which are not effectuated through this
     proxy will invalidate the start and stop positions stored here if they change the size of the list of nodes."""
 
+    fst:   'FST'
+    field: str
+    start: int
+    stop:  int
+
     def __init__(self, fst: 'FST', field: str, start: int, stop: int):
         self.fst   = fst
         self.field = field
