@@ -1841,7 +1841,7 @@ class FST:
 
         return self
 
-    def offset_cols(self, lns: set[int] | dict[int, int], dcol_offset: int | None = None):
+    def offset_lns(self, lns: set[int] | dict[int, int], dcol_offset: int | None = None):
         """Offset ast column byte offsets in `lns` by `dcol_offset` if present, otherwise `lns` must be a dict with an
         individual `dcol_offset` per line. Only modifies ast, not lines. Does not modify parent locations but
         `touch()`es parents."""
@@ -1901,7 +1901,7 @@ class FST:
         if not ((lns := self.get_indentable_lns(skip, docstr=docstr)) if lns is None else lns) or not indent:
             return lns
 
-        self.offset_cols(lns, len(indent.encode()))
+        self.offset_lns(lns, len(indent.encode()))
 
         lines = root._lines
 
@@ -1979,9 +1979,9 @@ class FST:
             lines[ln] = l
 
         if dcol_offsets:
-            self.offset_cols(dcol_offsets)
+            self.offset_lns(dcol_offsets)
         else:
-            self.offset_cols(lns, -lindent)
+            self.offset_lns(lns, -lindent)
 
         self._reparse_docstrings(docstr)
 

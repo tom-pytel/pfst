@@ -5,7 +5,7 @@ from ast import *
 from typing import Any, Literal, NamedTuple, TypeAlias, Union
 
 from .astutil import *
-from .astutil import TypeAlias, TryStar, type_param, TypeVar, ParamSpec, TypeVarTuple, TemplateStr, Interpolation
+from .astutil import TypeAlias, TryStar, type_param, Interpolation
 
 
 class astfield(NamedTuple):
@@ -437,7 +437,7 @@ def _prev_pars(lines: list[str], bound_ln: int, bound_col: int, pars_ln: int, pa
 def _params_offset(lines: list[bistr], put_lines: list[bistr], ln: int, col: int, end_ln: int, end_col: int,
                    ) -> tuple[int, int, int, int]:
     """Calculate location and delta parameters for the `offset()` function. The `col` parameter is calculated as a byte
-    offset so that the `offset()` function is does not have to access the source at all."""
+    offset so that the `offset()` function does not have to access the source at all."""
 
     dfst_ln     = len(put_lines) - 1
     dln         = dfst_ln - (end_ln - ln)
@@ -542,6 +542,3 @@ def _reduce_ast(ast, coerce: Literal['expr', 'exprish', 'mod'] | None = None) ->
         ast = Module(body=[ast], type_ignores=[])
 
     return ast
-
-
-# from .fst import FST
