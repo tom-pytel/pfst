@@ -3,22 +3,12 @@ from typing import Optional, Union
 
 from .astutil import bistr
 from .shared import (
-    astfield, fstloc, srcwpos,
-    AST_FIELDS_NEXT, AST_FIELDS_PREV, AST_DEFAULT_BODY_FIELD, EXPRESSIONISH,
-    STATEMENTISH, STATEMENTISH_OR_MOD, STATEMENTISH_OR_STMTMOD, BLOCK, BLOCK_OR_MOD, SCOPE, SCOPE_OR_MOD, NAMED_SCOPE,
-    NAMED_SCOPE_OR_MOD, ANONYMOUS_SCOPE, PARENTHESIZABLE, HAS_DOCSTRING,
-    STATEMENTISH_FIELDS,
-    PATH_BODY, PATH_BODY2, PATH_BODYORELSE, PATH_BODY2ORELSE, PATH_BODYHANDLERS, PATH_BODY2HANDLERS, PATH_BODYCASES,
-    DEFAULT_PARSE_PARAMS, DEFAULT_INDENT,
-    DEFAULT_DOCSTR, DEFAULT_PRECOMMS, DEFAULT_POSTCOMMS, DEFAULT_PRESPACE, DEFAULT_POSTSPACE, DEFAULT_PEP8SPACE,
-    DEFAULT_PARS, DEFAULT_ELIF_, DEFAULT_FIX, DEFAULT_RAW,
-    re_empty_line_start, re_empty_line, re_comment_line_start, re_line_continuation, re_line_trailing_space,
-    re_oneline_str, re_contline_str_start, re_contline_str_end_sq, re_contline_str_end_dq, re_multiline_str_start,
-    re_multiline_str_end_sq, re_multiline_str_end_dq, re_empty_line_cont_or_comment, re_next_src,
-    re_next_src_or_comment, re_next_src_or_lcont, re_next_src_or_comment_or_lcont,
-    Code, NodeTypeError,
-    _with_loc, _next_src, _prev_src, _next_find, _prev_find, _next_pars, _prev_pars, _params_offset, _fixup_field_body,
-    _fixup_slice_index, _reduce_ast
+    fstloc,
+    NAMED_SCOPE,
+    DEFAULT_PRECOMMS, DEFAULT_POSTCOMMS,
+    re_empty_line_start, re_empty_line, re_comment_line_start, re_line_trailing_space,
+    re_empty_line_cont_or_comment,
+    _next_src, _prev_src, _next_find, _prev_find, _next_pars, _prev_pars,
 )
 
 

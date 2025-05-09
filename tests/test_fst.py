@@ -19110,95 +19110,95 @@ two  # fake comment start""", **b
         self.assertEqual((1, 19, 1, 21), a.f._dict_key_or_mock_loc(a.keys[1], a.values[1].f))
 
     def test__normalize_code(self):
-        f = fst._normalize_code('i')
+        f = FST._normalize_code('i')
         self.assertIsInstance(f.a, Module)
         self.assertIsInstance(f.a.body[0], Expr)
         self.assertIsInstance(f.a.body[0].value, Name)
 
-        f = fst._normalize_code('i', coerce='expr')
+        f = FST._normalize_code('i', coerce='expr')
         self.assertIsInstance(f.a, Name)
 
-        f = fst._normalize_code(['i'])
+        f = FST._normalize_code(['i'])
         self.assertIsInstance(f.a, Module)
         self.assertIsInstance(f.a.body[0], Expr)
         self.assertIsInstance(f.a.body[0].value, Name)
 
-        f = fst._normalize_code(['i'], coerce='expr')
+        f = FST._normalize_code(['i'], coerce='expr')
         self.assertIsInstance(f.a, Name)
 
-        f = fst._normalize_code(ast_.parse('i'))
+        f = FST._normalize_code(ast_.parse('i'))
         self.assertIsInstance(f.a, Module)
         self.assertIsInstance(f.a.body[0], Expr)
         self.assertIsInstance(f.a.body[0].value, Name)
 
-        f = fst._normalize_code(ast_.parse('i', mode='single'))
+        f = FST._normalize_code(ast_.parse('i', mode='single'))
         self.assertIsInstance(f.a, Module)
         self.assertIsInstance(f.a.body[0], Expr)
         self.assertIsInstance(f.a.body[0].value, Name)
 
-        f = fst._normalize_code(ast_.parse('i'), coerce='expr')
+        f = FST._normalize_code(ast_.parse('i'), coerce='expr')
         self.assertIsInstance(f.a, Name)
 
-        f = fst._normalize_code(ast_.parse('i', mode='eval'))
+        f = FST._normalize_code(ast_.parse('i', mode='eval'))
         self.assertIsInstance(f.a, Name)
 
-        f = fst._normalize_code(ast_.parse('i', mode='eval'), coerce='expr')
+        f = FST._normalize_code(ast_.parse('i', mode='eval'), coerce='expr')
         self.assertIsInstance(f.a, Name)
 
-        f = fst._normalize_code(FST.fromsrc('i'))
+        f = FST._normalize_code(FST.fromsrc('i'))
         self.assertIsInstance(f.a, Module)
         self.assertIsInstance(f.a.body[0], Expr)
         self.assertIsInstance(f.a.body[0].value, Name)
 
-        f = fst._normalize_code(FST.fromsrc('i', mode='single'))
+        f = FST._normalize_code(FST.fromsrc('i', mode='single'))
         self.assertIsInstance(f.a, Module)
         self.assertIsInstance(f.a.body[0], Expr)
         self.assertIsInstance(f.a.body[0].value, Name)
 
-        f = fst._normalize_code(FST.fromsrc('i', mode='eval'))
+        f = FST._normalize_code(FST.fromsrc('i', mode='eval'))
         self.assertIsInstance(f.a, Name)
 
-        f = fst._normalize_code(FST.fromsrc('i'), coerce='expr')
+        f = FST._normalize_code(FST.fromsrc('i'), coerce='expr')
         self.assertIsInstance(f.a, Name)
 
-        f = fst._normalize_code(FST.fromsrc('i', mode='eval'), coerce='expr')
+        f = FST._normalize_code(FST.fromsrc('i', mode='eval'), coerce='expr')
         self.assertIsInstance(f.a, Name)
 
         # mod
 
-        f = fst._normalize_code('i', coerce='mod')
+        f = FST._normalize_code('i', coerce='mod')
         self.assertIsInstance(f.a, Module)
 
-        f = fst._normalize_code(ast_.parse('i'), coerce='mod')
-        self.assertIsInstance(f.a, Module)
-        self.assertIsInstance(f.a.body[0], Expr)
-        self.assertIsInstance(f.a.body[0].value, Name)
-
-        f = fst._normalize_code(ast_.parse('i').body[0], coerce='mod')
+        f = FST._normalize_code(ast_.parse('i'), coerce='mod')
         self.assertIsInstance(f.a, Module)
         self.assertIsInstance(f.a.body[0], Expr)
         self.assertIsInstance(f.a.body[0].value, Name)
 
-        f = fst._normalize_code(ast_.parse('i', mode='eval'), coerce='mod')
+        f = FST._normalize_code(ast_.parse('i').body[0], coerce='mod')
         self.assertIsInstance(f.a, Module)
         self.assertIsInstance(f.a.body[0], Expr)
         self.assertIsInstance(f.a.body[0].value, Name)
 
-        f = fst._normalize_code(ast_.parse('i', mode='eval').body, coerce='mod')
+        f = FST._normalize_code(ast_.parse('i', mode='eval'), coerce='mod')
         self.assertIsInstance(f.a, Module)
         self.assertIsInstance(f.a.body[0], Expr)
         self.assertIsInstance(f.a.body[0].value, Name)
 
-        f = fst._normalize_code(ast_.parse('i', mode='single'), coerce='mod')
+        f = FST._normalize_code(ast_.parse('i', mode='eval').body, coerce='mod')
         self.assertIsInstance(f.a, Module)
         self.assertIsInstance(f.a.body[0], Expr)
         self.assertIsInstance(f.a.body[0].value, Name)
 
-        f = fst._normalize_code(parse('try: pass\nexcept: pass').body[0].handlers[0].f.copy(), coerce='mod')
+        f = FST._normalize_code(ast_.parse('i', mode='single'), coerce='mod')
+        self.assertIsInstance(f.a, Module)
+        self.assertIsInstance(f.a.body[0], Expr)
+        self.assertIsInstance(f.a.body[0].value, Name)
+
+        f = FST._normalize_code(parse('try: pass\nexcept: pass').body[0].handlers[0].f.copy(), coerce='mod')
         self.assertIsInstance(f.a, Module)
         self.assertIsInstance(f.a.body[0], ExceptHandler)
 
-        f = fst._normalize_code(parse('match a:\n  case 1: pass').body[0].cases[0].f.copy(), coerce='mod')
+        f = FST._normalize_code(parse('match a:\n  case 1: pass').body[0].cases[0].f.copy(), coerce='mod')
         self.assertIsInstance(f.a, Module)
         self.assertIsInstance(f.a.body[0], match_case)
 

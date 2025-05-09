@@ -60,93 +60,6 @@ def unparse(ast_obj) -> str:
     return ast_unparse(ast_obj)
 
 
-def _normalize_code(code: Code, coerce: Literal['expr', 'exprish', 'mod'] | None = None, *, parse_params: dict = {},
-                    ) -> 'FST':
-    """Normalize code to an `FST` and coerce to a desired format if possible.
-
-    If neither of these is requested then will convert to `ast.Module` if is `ast.Interactive` or return single
-    expression node of `ast.Expression` or just return whatever the node currently is.
-
-    **Parameters:**
-    - `coerce`: What kind of coercion to apply (if any):
-        - `'expr'`: Will return an `FST` with a top level `expr` `AST` node if possible, raise otherwise.
-        - `'mod'`: Will return an `FST` with a top level `Module` `AST` node of the single statement or a wrapped
-            expression in an `Expr` node. `ExceptHandler` and `match_case` nodes are considered statements here.
-        - `None`: Will pull expression out of `Expression` and convert `Interactive` to `Module`, otherwise will return
-            node as is, or as is parsed to `Module`.
-
-    **Returns:**
-    - `FST`: Compiled or coerced or just fixed up.
-    """
-
-    if isinstance(code, FST):
-        if not code.is_root:
-            raise ValueError('expecting root FST')
-
-        ast  = code.a
-        rast = _reduce_ast(ast, coerce)
-
-        return code if rast is ast else FST(rast, lines=code._lines, from_=code)
-
-    if isinstance(code, AST):
-        return FST.fromast(_reduce_ast(code, coerce))  # TODO: WARNING! will not handle pure AST ExceptHandler or match_case
-
-    if isinstance(code, str):
-        src   = code
-        lines = code.split('\n')
-
-    else:  # isinstance(code, list):
-        src   = '\n'.join(code)
-        lines = code
-
-    ast = (ast_parse(src, mode='eval', **parse_params).body
-           if coerce == 'expr' else
-           ast_parse(src, mode='exec', **parse_params))
-
-    return FST(ast, lines=lines)
-
-
-def _new_empty_module(*, from_: Optional['FST'] = None) -> 'FST':
-    return FST(Module(body=[], type_ignores=[]), lines=[bistr('')], from_=from_)
-
-
-def _new_empty_tuple(*, from_: Optional['FST'] = None) -> 'FST':
-    ast = Tuple(elts=[], ctx=Load(), lineno=1, col_offset=0, end_lineno=1, end_col_offset=2)
-
-    return FST(ast, lines=[bistr('()')], from_=from_)
-
-
-def _new_empty_list(*, from_: Optional['FST'] = None) -> 'FST':
-    ast = List(elts=[], ctx=Load(), lineno=1, col_offset=0, end_lineno=1, end_col_offset=2)
-
-    return FST(ast, lines=[bistr('[]')], from_=from_)
-
-
-def _new_empty_dict(*, from_: Optional['FST'] = None) -> 'FST':
-    ast = Dict(keys=[], values=[], lineno=1, col_offset=0, end_lineno=1, end_col_offset=2)
-
-    return FST(ast, lines=[bistr('{}')], from_=from_)
-
-
-def _new_empty_set(only_ast: bool = False, lineno: int = 1, col_offset: int = 0, *,
-                   from_: Optional['FST'] = None) -> Union['FST', AST]:
-    ast = Set(elts=[
-        Starred(value=Tuple(elts=[], ctx=Load(), lineno=lineno, col_offset=col_offset+2,
-                            end_lineno=lineno, end_col_offset=col_offset+4),
-                ctx=Load(), lineno=lineno, col_offset=col_offset+1, end_lineno=lineno, end_col_offset=col_offset+4)
-    ], lineno=lineno, col_offset=col_offset, end_lineno=lineno, end_col_offset=col_offset+5)
-
-    return ast if only_ast else FST(ast, lines=[bistr('{*()}')], from_=from_)
-
-
-def _new_empty_set_curlies(only_ast: bool = False, lineno: int = 1, col_offset: int = 0, *,
-                           from_: Optional['FST'] = None) -> Union['FST', AST]:
-    ast = Set(elts=[], lineno=lineno, col_offset=col_offset, end_lineno=lineno,
-              end_col_offset=col_offset + 2)
-
-    return ast if only_ast else FST(ast, lines=[bistr('{}')], from_=from_)
-
-
 class FST:
     """Preserve AST formatting information and easy manipulation.
 
@@ -477,6 +390,93 @@ class FST:
                            "you're accessing an FST node")
 
     # ------------------------------------------------------------------------------------------------------------------
+
+    @staticmethod
+    def _normalize_code(code: Code, coerce: Literal['expr', 'exprish', 'mod'] | None = None, *,
+                        parse_params: dict = {}) -> 'FST':
+        """Normalize code to an `FST` and coerce to a desired format if possible.
+
+        If neither of these is requested then will convert to `ast.Module` if is `ast.Interactive` or return single
+        expression node of `ast.Expression` or just return whatever the node currently is.
+
+        **Parameters:**
+        - `coerce`: What kind of coercion to apply (if any):
+            - `'expr'`: Will return an `FST` with a top level `expr` `AST` node if possible, raise otherwise.
+            - `'mod'`: Will return an `FST` with a top level `Module` `AST` node of the single statement or a wrapped
+                expression in an `Expr` node. `ExceptHandler` and `match_case` nodes are considered statements here.
+            - `None`: Will pull expression out of `Expression` and convert `Interactive` to `Module`, otherwise will return
+                node as is, or as is parsed to `Module`.
+
+        **Returns:**
+        - `FST`: Compiled or coerced or just fixed up.
+        """
+
+        if isinstance(code, FST):
+            if not code.is_root:
+                raise ValueError('expecting root FST')
+
+            ast  = code.a
+            rast = _reduce_ast(ast, coerce)
+
+            return code if rast is ast else FST(rast, lines=code._lines, from_=code)
+
+        if isinstance(code, AST):
+            return FST.fromast(_reduce_ast(code, coerce))  # TODO: WARNING! will not handle pure AST ExceptHandler or match_case
+
+        if isinstance(code, str):
+            src   = code
+            lines = code.split('\n')
+
+        else:  # isinstance(code, list):
+            src   = '\n'.join(code)
+            lines = code
+
+        ast = (ast_parse(src, mode='eval', **parse_params).body
+            if coerce == 'expr' else
+            ast_parse(src, mode='exec', **parse_params))
+
+        return FST(ast, lines=lines)
+
+    @staticmethod
+    def _new_empty_module(*, from_: Optional['FST'] = None) -> 'FST':
+        return FST(Module(body=[], type_ignores=[]), lines=[bistr('')], from_=from_)
+
+    @staticmethod
+    def _new_empty_tuple(*, from_: Optional['FST'] = None) -> 'FST':
+        ast = Tuple(elts=[], ctx=Load(), lineno=1, col_offset=0, end_lineno=1, end_col_offset=2)
+
+        return FST(ast, lines=[bistr('()')], from_=from_)
+
+    @staticmethod
+    def _new_empty_list(*, from_: Optional['FST'] = None) -> 'FST':
+        ast = List(elts=[], ctx=Load(), lineno=1, col_offset=0, end_lineno=1, end_col_offset=2)
+
+        return FST(ast, lines=[bistr('[]')], from_=from_)
+
+    @staticmethod
+    def _new_empty_dict(*, from_: Optional['FST'] = None) -> 'FST':
+        ast = Dict(keys=[], values=[], lineno=1, col_offset=0, end_lineno=1, end_col_offset=2)
+
+        return FST(ast, lines=[bistr('{}')], from_=from_)
+
+    @staticmethod
+    def _new_empty_set(only_ast: bool = False, lineno: int = 1, col_offset: int = 0, *,
+                    from_: Optional['FST'] = None) -> Union['FST', AST]:
+        ast = Set(elts=[
+            Starred(value=Tuple(elts=[], ctx=Load(), lineno=lineno, col_offset=col_offset+2,
+                                end_lineno=lineno, end_col_offset=col_offset+4),
+                    ctx=Load(), lineno=lineno, col_offset=col_offset+1, end_lineno=lineno, end_col_offset=col_offset+4)
+        ], lineno=lineno, col_offset=col_offset, end_lineno=lineno, end_col_offset=col_offset+5)
+
+        return ast if only_ast else FST(ast, lines=[bistr('{*()}')], from_=from_)
+
+    @staticmethod
+    def _new_empty_set_curlies(only_ast: bool = False, lineno: int = 1, col_offset: int = 0, *,
+                            from_: Optional['FST'] = None) -> Union['FST', AST]:
+        ast = Set(elts=[], lineno=lineno, col_offset=col_offset, end_lineno=lineno,
+                end_col_offset=col_offset + 2)
+
+        return ast if only_ast else FST(ast, lines=[bistr('{}')], from_=from_)
 
     @staticmethod
     def _make_tree_fst(ast: AST, parent: 'FST', pfield: astfield):
@@ -1067,7 +1067,7 @@ class FST:
             ln, col, end_ln, end_col = self.loc
 
             self.put_src(['{*()}'], ln, col, end_ln, end_col, True)
-            self._set_ast(_new_empty_set(True, (a := self.a).lineno, a.col_offset))
+            self._set_ast(self._new_empty_set(True, (a := self.a).lineno, a.col_offset))
 
     def _maybe_fix_elif(self):
         # assert isinstance(self.a, If)
@@ -1863,11 +1863,11 @@ class FST:
 
         if start == stop:
             if is_set:
-                return _new_empty_set(from_=self)
+                return self._new_empty_set(from_=self)
             elif is_tuple:
-                return _new_empty_tuple(from_=self)
+                return self._new_empty_tuple(from_=self)
             else:
-                return _new_empty_list(from_=self)
+                return self._new_empty_list(from_=self)
 
         is_paren = is_tuple and self._is_parenthesized_seq()
         ffirst   = elts[start].f
@@ -1946,7 +1946,7 @@ class FST:
         if stop or (start and start != 'end'):
             raise IndexError(f"Set.{field} index out of range")
 
-        return _new_empty_set(from_=self)
+        return self._new_empty_set(from_=self)
 
     def _get_slice_dict(self, start: int | Literal['end'] | None, stop: int | None, field: str | None, cut: bool,
                         **options) -> 'FST':
@@ -1959,7 +1959,7 @@ class FST:
         start, stop = _fixup_slice_index(len(values), start, stop)
 
         if start == stop:
-            return _new_empty_dict(from_=self)
+            return self._new_empty_dict(from_=self)
 
         keys   = ast.keys
         ffirst = self._dict_key_or_mock_loc(keys[start], values[start].f)
@@ -2000,7 +2000,7 @@ class FST:
         start, stop = _fixup_slice_index(len(body), start, stop)
 
         if start == stop:
-            return _new_empty_module(from_=self)
+            return self._new_empty_module(from_=self)
 
         ffirst = body[start].f
         flast  = body[stop - 1].f
@@ -2100,7 +2100,7 @@ class FST:
             put_fst = None
 
         else:
-            put_fst = _normalize_code(code, 'expr', parse_params=self.root.parse_params)
+            put_fst = self._normalize_code(code, 'expr', parse_params=self.root.parse_params)
 
             if one:
                 if put_fst.is_parenthesized_tuple() is False:  # don't put unparenthesized tuple source as one into sequence, it would merge into the sequence
@@ -2114,7 +2114,7 @@ class FST:
             else:
                 if put_fst.is_empty_set_call() or put_fst.is_empty_set_seq():
                     if fix:
-                        put_fst = _new_empty_set_curlies(from_=self)
+                        put_fst = self._new_empty_set_curlies(from_=self)
                     else:
                         raise ValueError(f"cannot put empty Set as a slice without specifying 'fix=True'")
 
@@ -2219,7 +2219,7 @@ class FST:
 
         ln, col, end_ln, end_col = self.loc
 
-        empty   = _new_empty_set_curlies(False, (a := self.a).lineno, a.col_offset, from_=self)
+        empty   = self._new_empty_set_curlies(False, (a := self.a).lineno, a.col_offset, from_=self)
         old_src = self.get_src(ln, col, end_ln, end_col, True)
         old_ast = self._set_ast(empty.a)
 
@@ -2244,7 +2244,7 @@ class FST:
             put_fst = None
 
         else:
-            put_fst = _normalize_code(code, 'expr', parse_params=self.root.parse_params)
+            put_fst = self._normalize_code(code, 'expr', parse_params=self.root.parse_params)
             put_ast = put_fst.a
 
             if not isinstance(put_ast, Dict):
@@ -2331,7 +2331,7 @@ class FST:
             put_fst = None
 
         else:
-            put_fst  = _normalize_code(code, 'mod', parse_params=self.root.parse_params)
+            put_fst  = self._normalize_code(code, 'mod', parse_params=self.root.parse_params)
             put_ast  = put_fst.a
             put_body = put_ast.body
 
@@ -2645,7 +2645,7 @@ class FST:
             raise NodeTypeError(f"cannot put with 'to' to {self.a.__class__.__name__}.{field}")
 
         ast     = self.a
-        put_fst = _normalize_code(code, 'expr', parse_params=self.root.parse_params)
+        put_fst = self._normalize_code(code, 'expr', parse_params=self.root.parse_params)
         put_ast = put_fst.a
         childf  = child.f
         pars    = bool(FST.get_option('pars', options))
