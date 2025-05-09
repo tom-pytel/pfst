@@ -8,7 +8,7 @@ from random import randint, seed, shuffle
 
 from fst import *
 from fst import fst
-from fst.util import TemplateStr
+from fst.astutil import TemplateStr
 fst_ = fst
 
 PYFNMS = sum((

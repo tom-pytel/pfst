@@ -1,3 +1,3 @@
 from ast import *
-from .util import *
+from .astutil import *
 from .fst import *

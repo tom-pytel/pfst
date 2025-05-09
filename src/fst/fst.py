@@ -6,8 +6,8 @@ from io import TextIOBase
 from itertools import takewhile
 from typing import Any, Callable, Generator, Literal, NamedTuple, Optional, TextIO, TypeAlias, Union
 
-from .util import *
-from .util import TypeAlias, TryStar, type_param, TypeVar, ParamSpec, TypeVarTuple, TemplateStr, Interpolation
+from .astutil import *
+from .astutil import TypeAlias, TryStar, type_param, TypeVar, ParamSpec, TypeVarTuple, TemplateStr, Interpolation
 
 __all__ = [
     'parse', 'unparse', 'FST', 'FSTSrcEdit',

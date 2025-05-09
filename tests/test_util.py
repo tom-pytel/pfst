@@ -6,8 +6,8 @@ import unittest
 
 import ast as ast_
 from ast import *
-from fst.util import *
-from fst.util import TypeVar, TryStar
+from fst.astutil import *
+from fst.astutil import TypeVar, TryStar
 
 PYFNMS = sum((
     [os.path.join(path, fnm) for path, _, fnms in os.walk(top) for fnm in fnms if fnm.endswith('.py')]
