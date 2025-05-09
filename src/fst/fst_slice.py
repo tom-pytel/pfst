@@ -88,6 +88,8 @@ def _put_slice_seq_and_indent(self: 'FST', put_fst: Optional['FST'], seq_loc: fs
 
 
 # ----------------------------------------------------------------------------------------------------------------------
+_GLOBALS = globals() | {'_GLOBALS': None}
+
 
 def _get_slice_tuple_list_or_set(self: 'FST', start: int | Literal['end'] | None, stop: int | None, field: str | None,
                                  cut: bool, **options) -> 'FST':
@@ -745,5 +747,7 @@ def _put_slice_stmtish(self: 'FST', code: Code | None, start: int | Literal['end
         elif put_body:
             self._set_end_pos((last_child := self.last_child()).end_lineno, last_child.end_col_offset)
 
+
+__all__ = [n for n in globals() if n not in _GLOBALS]
 
 from .fst import FST

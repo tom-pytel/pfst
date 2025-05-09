@@ -17,8 +17,13 @@ test:  ## Run basic unit tests
 
 
 .PHONY: docs
-docs:  ## Compile documentation
-	pdoc -o docs -d markdown fst.fst
+docs:  ## Compile all documentation, including private functions, for dev
+	pdoc -o docs -d markdown fst.fst fst.fstlist fst.shared fst.astutil
+
+
+.PHONY: docs-all
+docs-all:  ## Compile documentation
+	pdoc -o docs -d markdown fst
 
 
 .PHONY: clean

@@ -54,7 +54,6 @@ AST_FIELDS_PREV[(arguments, 'defaults')]    = 7
 AST_FIELDS_PREV[(arguments, 'kw_defaults')] = 7
 AST_FIELDS_PREV[(arguments, 'kwarg')]       = 7
 
-# ----------------------------------------------------------------------------------------------------------------------
 
 def _with_loc(fst: 'FST', with_loc: bool | Literal['all', 'own'] = True) -> bool:
     """Check location condition on node. Safe for low level because doesn't use `.loc` calculation machinery."""
@@ -73,6 +72,9 @@ def _with_loc(fst: 'FST', with_loc: bool | Literal['all', 'own'] = True) -> bool
                     not a.kwonlyargs and not a.kwarg))
 
     return fst.has_own_loc  # with_loc == 'own'
+
+
+# ----------------------------------------------------------------------------------------------------------------------
 
 
 def next(self: 'FST', with_loc: bool | Literal['all', 'own'] = True) -> Optional['FST']:  # TODO: refactor maybe

@@ -42,6 +42,8 @@ class bistr(str):
 
     @property
     def lenbytes(self) -> int:
+        """Length of encoded string in bytes."""
+
         return self.c2b(len(self))
 
     def __new__(cls, s: str) -> 'bistr':
@@ -58,10 +60,12 @@ class bistr(str):
 
         return array('Q', b'\x00\x00\x00\x00\x00\x00\x00\x00' * (len_array + 1))
 
-    def c2b_lookup(self, idx):
+    def _c2b_lookup(self, idx):
         return self._c2b[idx]
 
     def c2b(self, idx: int) -> int:
+        """Character to encoded byte index, [0..len(str)] inclusive."""
+
         if (lc := len(self)) == (lb := len(self.encode())):
             self.c2b = self.b2c = bistr._i2i_same
 
@@ -75,14 +79,17 @@ class bistr(str):
             j      += len(c.encode())
 
         c2b[-1]  = j
-        self.c2b = self.c2b_lookup
+        self.c2b = self._c2b_lookup
 
         return c2b[idx]
 
-    def b2c_lookup(self, idx):
+    def _b2c_lookup(self, idx):
         return self._b2c[idx]
 
     def b2c(self, idx: int) -> int:
+        """Encoded byte to character index, [0..len(str.encode())] inclusive. Indices inside encoded characters are
+        mapped to the beginning of the character."""
+
         if (lb := self.c2b(lc := len(self))) == lc:
             return idx  # no chars > '\x7f' so funcs are `_i2i_same` identity
 
@@ -99,11 +106,13 @@ class bistr(str):
             else:
                 b2c[i] = k
 
-        self.b2c = self.b2c_lookup
+        self.b2c = self._b2c_lookup
 
         return b2c[idx]
 
     def clear_cache(self):
+        """Remove the lookup array (if need to save some memory)."""
+
         try:
             del self.c2b, self._c2b
         except AttributeError:
@@ -245,14 +254,14 @@ FIELDS = dict([
     (TypeVar,            (('name', 'identifier'), ('bound', 'expr?'), ('default_value', 'expr?'))),
     (ParamSpec,          (('name', 'identifier'), ('default_value', 'expr?'))),
     (TypeVarTuple,       (('name', 'identifier'), ('default_value', 'expr?'))),
-])
+])  ; """List of all fields for AST classes: [(`AST` class, (('field name', 'type name'), ...)), ...]"""
 
 # only fields which can contain an AST, {cls: ('field1', 'field2', ...), ...}
 AST_FIELDS = {cls: tuple(f for f, t in fields
                          if not t.startswith('int') and not t.startswith('string') and
                          not t.startswith('identifier') and not t.startswith('constant') and
                          not t.startswith('type_ignore'))
-              for cls, fields in FIELDS.items()}
+              for cls, fields in FIELDS.items()}  ; """Mapping of `AST` class to tuple of fields which may contain an `AST` node or `list` of `AST` nodes or `None` if optional `AST` node."""
 
 OPCLS2STR = {
     Invert:   '~',
@@ -287,9 +296,9 @@ OPCLS2STR = {
 
     And:      'and',
     Or:       'or',
-}
+}  ; "Mapping of operator AST class to operator string, e.g. `ast.Add`: '+'."
 
-OPSTR2CLS = {v: k for k, v in OPCLS2STR.items()}
+OPSTR2CLS = {v: k for k, v in OPCLS2STR.items()}  ; """Mapping of operator string to operator AST class, e.g. '+': `ast.Add`. """
 
 
 def get_field(node: AST, name: str, idx: int | None = None) -> AST:
@@ -324,7 +333,7 @@ def is_parsable(ast: AST) -> bool:
     return True
 
 
-def get_parse_mode(ast: AST) -> Literal['exec'] | Literal['eval'] | Literal['single']:
+def get_parse_mode(ast: AST) -> Literal['exec', 'eval', 'single']:
     if isinstance(ast, (stmt, Module)):
         return 'exec'
     if isinstance(ast, (expr, Expression)):
@@ -335,7 +344,8 @@ def get_parse_mode(ast: AST) -> Literal['exec'] | Literal['eval'] | Literal['sin
     return None
 
 
-class WalkFail(Exception): pass
+class WalkFail(Exception):
+    """Raised in `walk2()`, `compare_asts()` and `copy_attributes()` on match failure."""
 
 def walk2(ast1: AST, ast2: AST, cb_primitive: Callable[[Any, Any, str, int], bool] | None = None, *, ctx: bool = True,
           recurse: bool = True, skip1: set | frozenset | None = None, skip2: set | frozenset | None = None,
@@ -688,7 +698,7 @@ def syntax_ordered_children(ast: AST) -> list:
 
 def last_block_opener_child(ast: AST) -> AST | None:
     """Return last `AST` node in the block open before the ':'. `ast` must be a valid block statement. Returns `None`
-    for things like `Try` and `except:` nodes or other block nodes which might have normally present fields missing."""
+    for things like `Try` and empty `ExceptHandler` nodes or other block nodes which might have normally present fields missing."""
 
     if not isinstance(ast, (FunctionDef, AsyncFunctionDef, ClassDef, For, AsyncFor, While, If, With, AsyncWith, Match,
                             Try, TryStar, ExceptHandler, match_case)):

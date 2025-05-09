@@ -145,4 +145,6 @@ class fstlist:
         return self
 
 
+__all__ = ['fstlist']
+
 from .fst import FST

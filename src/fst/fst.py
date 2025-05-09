@@ -22,8 +22,6 @@ from .shared import (
 
 __all__ = [
     'parse', 'unparse', 'FST',
-    'fstlist', 'fstloc', 'astfield',
-    'NodeTypeError',
 ]
 
 REPR_SRC_LINES = 0  # for debugging
@@ -709,7 +707,7 @@ class FST:
         - `indent`: The average airspeed of an unladen swallow.
         - `out`: `print` means print to stdout, `list` returns a list of lines and `str` returns a whole string.
             Otherwise a `Callable[[str], None]` which is called for each line of output individually.
-        - 'eol': What to put at the end of each text line, `None` means newline for `TextIO` out and nothing for other.
+        - `eol`: What to put at the end of each text line, `None` means newline for `TextIO` out and nothing for other.
         """
 
         if isinstance(out, TextIOBase):

@@ -8,52 +8,6 @@ from .astutil import *
 from .astutil import TypeAlias, TryStar, type_param, Interpolation
 
 
-class astfield(NamedTuple):
-    name: str
-    idx:  int | None = None
-
-    def get(self, parent: AST) -> Any:
-        """Get child node at this field in the given `parent`."""
-
-        return getattr(parent, self.name) if self.idx is None else getattr(parent, self.name)[self.idx]
-
-    def get_no_raise(self, parent: AST) -> Any:
-        """Get child node at this field in the given `parent`. Return `False` if not found instead of raising."""
-
-        return (
-            getattr(parent, self.name, False) if (idx := self.idx) is None else
-            False if (body := getattr(parent, self.name, False)) is False or idx >= len(body) else
-            body[idx])
-
-    def set(self, parent: AST, child: AST):
-        """Set `child` node at this field in the given `parent`."""
-
-        if self.idx is None:
-            setattr(parent, self.name, child)
-        else:
-            getattr(parent, self.name)[self.idx] = child
-
-
-class fstloc(NamedTuple):
-    ln:      int
-    col:     int
-    end_ln:  int
-    end_col: int
-
-    bln      = property(lambda self: self.ln)       ; """Alias for `ln`."""  # for convenience
-    bcol     = property(lambda self: self.col)      ; """Alias for `col`."""
-    bend_ln  = property(lambda self: self.end_ln)   ; """Alias for `end_ln`."""
-    bend_col = property(lambda self: self.end_col)  ; """Alias for `end_col`."""
-
-    is_FST   = False                                ; """@private"""  # for quick checks vs. `FST`
-
-
-class srcwpos(NamedTuple):
-    ln:  int
-    col: int
-    src: str
-
-
 AST_DEFAULT_BODY_FIELD  = {cls: field for field, classes in [
     ('body',         (Module, Interactive, Expression, FunctionDef, AsyncFunctionDef, ClassDef, For, AsyncFor, While, If,
                       With, AsyncWith, Try, TryStar, ExceptHandler, Lambda, match_case),),
@@ -127,14 +81,61 @@ re_next_src_or_comment          = re.compile(r'\s*([^\s#\\]+|#.*)')      # next 
 re_next_src_or_lcont            = re.compile(r'\s*([^\s#\\]+|\\$)')      # next non-space non-comment code including logical line end, don't look into strings with this!
 re_next_src_or_comment_or_lcont = re.compile(r'\s*([^\s#\\]+|#.*|\\$)')  # next non-space non-continuation code or comment text including logical line end, don't look into strings with this!
 
-
 Code = Union['FST', AST, list[str], str]
+
+_GLOBALS = globals() | {'_GLOBALS': None}
 
 
 class NodeTypeError(ValueError):
     """Exception used when a raw reparse is possible."""
 
     pass
+
+
+class astfield(NamedTuple):
+    name: str
+    idx:  int | None = None
+
+    def get(self, parent: AST) -> Any:
+        """Get child node at this field in the given `parent`."""
+
+        return getattr(parent, self.name) if self.idx is None else getattr(parent, self.name)[self.idx]
+
+    def get_no_raise(self, parent: AST) -> Any:
+        """Get child node at this field in the given `parent`. Return `False` if not found instead of raising."""
+
+        return (
+            getattr(parent, self.name, False) if (idx := self.idx) is None else
+            False if (body := getattr(parent, self.name, False)) is False or idx >= len(body) else
+            body[idx])
+
+    def set(self, parent: AST, child: AST):
+        """Set `child` node at this field in the given `parent`."""
+
+        if self.idx is None:
+            setattr(parent, self.name, child)
+        else:
+            getattr(parent, self.name)[self.idx] = child
+
+
+class fstloc(NamedTuple):
+    ln:      int
+    col:     int
+    end_ln:  int
+    end_col: int
+
+    bln      = property(lambda self: self.ln)       ; """Alias for `ln`."""  # for convenience
+    bcol     = property(lambda self: self.col)      ; """Alias for `col`."""
+    bend_ln  = property(lambda self: self.end_ln)   ; """Alias for `end_ln`."""
+    bend_col = property(lambda self: self.end_col)  ; """Alias for `end_col`."""
+
+    is_FST   = False                                ; """@private"""  # for quick checks vs. `FST`
+
+
+class srcwpos(NamedTuple):
+    ln:  int
+    col: int
+    src: str
 
 
 def _next_src(lines: list[str], ln: int, col: int, end_ln: int, end_col: int,
@@ -542,3 +543,7 @@ def _reduce_ast(ast, coerce: Literal['expr', 'exprish', 'mod'] | None = None) ->
         ast = Module(body=[ast], type_ignores=[])
 
     return ast
+
+
+__all__ = ['NodeTypeError', 'astfield', 'fstloc']
+# __all__ = [n for n in globals() if n not in _GLOBALS]

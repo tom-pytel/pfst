@@ -25,6 +25,8 @@ def _to_to_slice_idx(self: 'FST', idx: int, field: str, to: Optional['FST']):
 
 
 # ----------------------------------------------------------------------------------------------------------------------
+_GLOBALS = globals() | {'_GLOBALS': None}
+
 
 def _put_one_stmtish(self: 'FST', code: Code | None, idx: int | None, field: str, child: Any, **options,
                      ) -> Optional['FST']:
@@ -116,8 +118,8 @@ def _put_one(self: 'FST', code: Code | None, idx: int | None, field: str, **opti
     return None if code is None else ret
 
 
-# TODO: finish these
-
+# ----------------------------------------------------------------------------------------------------------------------
+__all__ = [n for n in globals() if n not in _GLOBALS]
 
 _PUT_ONE_HANDLERS = {
     (Module, 'body'):                     _put_one_stmtish, # stmt*
@@ -317,6 +319,10 @@ _PUT_ONE_HANDLERS = {
     # (TypeVarTuple, 'name'):               _put_one_default, # identifier
     # (TypeVarTuple, 'default_value'):      _put_one_default, # expr?
 }
+
+
+# TODO: finish these
+
 
 
 from .fst import FST

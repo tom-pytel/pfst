@@ -98,6 +98,8 @@ def _raw_slice_loc(self: 'FST', start: int | Literal['end'] | None = None, stop:
 
 
 # ----------------------------------------------------------------------------------------------------------------------
+_GLOBALS = globals() | {'_GLOBALS': None}
+
 
 def _reparse_raw(self: 'FST', new_lines: list[str], ln: int, col: int, end_ln: int, end_col: int,
                  copy_lines: list[str], path: list[astfield] | str, set_ast: bool = True) -> 'FST':
@@ -427,5 +429,7 @@ def _put_slice_raw(self: 'FST', code: Code | None, start: int | Literal['end'] |
 
     return self.repath()
 
+
+__all__ = [n for n in globals() if n not in _GLOBALS]
 
 from .fst import FST

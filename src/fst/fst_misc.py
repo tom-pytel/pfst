@@ -16,6 +16,8 @@ from .shared import (
 )
 
 # ----------------------------------------------------------------------------------------------------------------------
+_GLOBALS = globals() | {'_GLOBALS': None}
+
 
 @staticmethod
 def _normalize_code(code: Code, coerce: Literal['expr', 'exprish', 'mod'] | None = None, *,
@@ -1150,5 +1152,7 @@ def _make_fst_and_dedent(self: 'FST', indent: Union['FST', str], ast: AST, copy_
 
     return fst
 
+
+__all__ = [n for n in globals() if n not in _GLOBALS]
 
 from .fst import FST
