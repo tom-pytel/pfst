@@ -1,3 +1,5 @@
+"""Source location editing stuff."""
+
 from ast import *
 from typing import Optional, Union
 

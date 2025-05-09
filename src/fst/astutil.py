@@ -1,3 +1,5 @@
+"""Standalone AST utilities."""
+
 import sys
 from array import array
 from ast import *

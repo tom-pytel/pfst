@@ -1,3 +1,5 @@
+"""Lowest level shared data and functions."""
+
 import re
 from ast import *
 from typing import Any, Literal, NamedTuple, TypeAlias, Union
