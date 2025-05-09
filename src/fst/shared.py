@@ -151,29 +151,6 @@ HAS_DOCSTRING           = NAMED_SCOPE_OR_MOD
 
 STATEMENTISH_FIELDS     = frozenset(('body', 'orelse', 'finalbody', 'handlers', 'cases'))
 
-PATH_BODY               = [astfield('body', 0)]
-PATH_BODY2              = [astfield('body', 0), astfield('body', 0)]
-PATH_BODYORELSE         = [astfield('body', 0), astfield('orelse', 0)]
-PATH_BODY2ORELSE        = [astfield('body', 0), astfield('body', 0), astfield('orelse', 0)]
-PATH_BODYHANDLERS       = [astfield('body', 0), astfield('handlers', 0)]
-PATH_BODY2HANDLERS      = [astfield('body', 0), astfield('body', 0), astfield('handlers', 0)]
-PATH_BODYCASES          = [astfield('body', 0), astfield('cases', 0)]
-
-DEFAULT_PARSE_PARAMS    = dict(filename='<unknown>', type_comments=False, feature_version=None)
-DEFAULT_INDENT          = '    '
-
-# TODO: remove these and just initialize in FST.OPTIONS
-DEFAULT_DOCSTR          = True    # True | False | 'strict'
-DEFAULT_PRECOMMS        = True    # True | False | 'all'
-DEFAULT_POSTCOMMS       = True    # True | False | 'all' | 'block'
-DEFAULT_PRESPACE        = False   # True | False | int
-DEFAULT_POSTSPACE       = False   # True | False | int
-DEFAULT_PEP8SPACE       = True    # True | False | 1
-DEFAULT_PARS            = 'auto'  # True | False | 'auto'
-DEFAULT_ELIF_           = False   # True | False
-DEFAULT_FIX             = True    # True | False
-DEFAULT_RAW             = 'auto'  # True | False | 'auto'
-
 re_empty_line_start     = re.compile(r'[ \t]*')     # start of completely empty or space-filled line (from start pos, start of line indentation)
 re_empty_line           = re.compile(r'[ \t]*$')    # completely empty or space-filled line (from start pos, start of line indentation)
 re_comment_line_start   = re.compile(r'[ \t]*#')    # empty line preceding a comment
@@ -582,7 +559,7 @@ def _fixup_slice_index(len_, start, stop) -> tuple[int, int]:
     return start, stop
 
 
-def _reduce_ast(ast, coerce: Literal['expr', 'exprish', 'mod'] | None = None):
+def _reduce_ast(ast, coerce: Literal['expr', 'exprish', 'mod'] | None = None) -> AST:
     """Reduce an AST to a simplest representation based on coercion rule.
 
     **Parameters:**
@@ -626,3 +603,5 @@ def _reduce_ast(ast, coerce: Literal['expr', 'exprish', 'mod'] | None = None):
 
     return ast
 
+
+from .fst import FST

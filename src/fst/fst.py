@@ -1,41 +1,12 @@
 import ast as ast_
 import inspect
-import re
 from ast import *
 from ast import parse as ast_parse, unparse as ast_unparse
 from io import TextIOBase
-from itertools import takewhile
-from typing import Any, Callable, Generator, Literal, NamedTuple, Optional, TextIO, TypeAlias, Union
+from typing import Any, Callable, Generator, Literal, Optional, TextIO
 
 from .astutil import *
-from .astutil import TypeAlias, TryStar, type_param, TypeVar, ParamSpec, TypeVarTuple, TemplateStr, Interpolation
-
-from .shared import (
-    astfield, fstloc, srcwpos,
-    AST_FIELDS_NEXT, AST_FIELDS_PREV, AST_DEFAULT_BODY_FIELD, EXPRESSIONISH,
-    STATEMENTISH, STATEMENTISH_OR_MOD, STATEMENTISH_OR_STMTMOD, BLOCK, BLOCK_OR_MOD, SCOPE, SCOPE_OR_MOD, NAMED_SCOPE,
-    NAMED_SCOPE_OR_MOD, ANONYMOUS_SCOPE, PARENTHESIZABLE, HAS_DOCSTRING,
-    STATEMENTISH_FIELDS,
-    PATH_BODY, PATH_BODY2, PATH_BODYORELSE, PATH_BODY2ORELSE, PATH_BODYHANDLERS, PATH_BODY2HANDLERS, PATH_BODYCASES,
-    DEFAULT_PARSE_PARAMS, DEFAULT_INDENT,
-    DEFAULT_DOCSTR, DEFAULT_PRECOMMS, DEFAULT_POSTCOMMS, DEFAULT_PRESPACE, DEFAULT_POSTSPACE, DEFAULT_PEP8SPACE,
-    DEFAULT_PARS, DEFAULT_ELIF_, DEFAULT_FIX, DEFAULT_RAW,
-    re_empty_line_start, re_empty_line, re_comment_line_start, re_line_continuation, re_line_trailing_space,
-    re_oneline_str, re_contline_str_start, re_contline_str_end_sq, re_contline_str_end_dq, re_multiline_str_start,
-    re_multiline_str_end_sq, re_multiline_str_end_dq, re_empty_line_cont_or_comment, re_next_src,
-    re_next_src_or_comment, re_next_src_or_lcont, re_next_src_or_comment_or_lcont,
-    Code, NodeTypeError,
-    _with_loc, _next_src, _prev_src, _next_find, _prev_find, _next_pars, _prev_pars, _params_offset, _fixup_field_body,
-    _fixup_slice_index, _reduce_ast
-)
-
-__all__ = [
-    'parse', 'unparse', 'FST',
-    'fstlist', 'fstloc', 'astfield',
-    'NodeTypeError',
-]
-
-REPR_SRC_LINES = 0  # for debugging
+from .astutil import TryStar, TemplateStr, Interpolation
 
 
 class _FSTCircularImportStandinMeta(type):
@@ -57,6 +28,46 @@ class _FSTCircularImportStandin(metaclass=_FSTCircularImportStandinMeta):
         return FST(*args, **kwargs)
 
 FST = _FSTCircularImportStandin
+
+
+from .shared import (
+    astfield, fstloc,
+    AST_FIELDS_NEXT, AST_FIELDS_PREV, AST_DEFAULT_BODY_FIELD, EXPRESSIONISH,
+    STATEMENTISH, STATEMENTISH_OR_MOD, STATEMENTISH_OR_STMTMOD, BLOCK, BLOCK_OR_MOD, SCOPE, SCOPE_OR_MOD, NAMED_SCOPE,
+    NAMED_SCOPE_OR_MOD, ANONYMOUS_SCOPE, PARENTHESIZABLE, HAS_DOCSTRING,
+    STATEMENTISH_FIELDS,
+    re_empty_line_start, re_empty_line, re_comment_line_start, re_line_continuation, re_line_trailing_space,
+    re_oneline_str, re_contline_str_start, re_contline_str_end_sq, re_contline_str_end_dq, re_multiline_str_start,
+    re_multiline_str_end_sq, re_multiline_str_end_dq, re_empty_line_cont_or_comment, re_next_src,
+    re_next_src_or_comment, re_next_src_or_lcont, re_next_src_or_comment_or_lcont,
+    Code, NodeTypeError,
+    _with_loc, _next_src, _prev_src, _next_find, _prev_find, _next_pars, _prev_pars, _params_offset, _fixup_field_body,
+    _fixup_slice_index, _reduce_ast
+)
+
+__all__ = [
+    'parse', 'unparse', 'FST',
+    'fstlist', 'fstloc', 'astfield',
+    'NodeTypeError',
+]
+
+REPR_SRC_LINES = 0  # for debugging
+
+DEFAULT_PARSE_PARAMS = dict(filename='<unknown>', type_comments=False, feature_version=None)
+DEFAULT_INDENT       = '    '
+
+OPTIONS = {
+    'docstr':    True,    # True | False | 'strict'
+    'precomms':  True,    # True | False | 'all'
+    'postcomms': True,    # True | False | 'all' | 'block'
+    'prespace':  False,   # True | False | int
+    'postspace': False,   # True | False | int
+    'pep8space': True,    # True | False | 1
+    'pars':      'auto',  # True | False | 'auto'
+    'elif_':     False,   # True | False
+    'fix':       True,    # True | False
+    'raw':       'auto',  # True | False | 'auto'
+}
 
 
 def parse(source, filename='<unknown>', mode='exec', *, type_comments=False, feature_version=None, **kwargs) -> AST:
@@ -149,19 +160,6 @@ class FST:
 
     # class attributes
     is_FST:       bool = True      ; """@private"""  # for quick checks vs. `fstloc`
-
-    OPTIONS = {
-        'docstr':    DEFAULT_DOCSTR,     # True | False | 'strict'
-        'precomms':  DEFAULT_PRECOMMS,   # True | False | 'all'
-        'postcomms': DEFAULT_POSTCOMMS,  # True | False | 'all' | 'block'
-        'prespace':  DEFAULT_PRESPACE,   # True | False | int
-        'postspace': DEFAULT_POSTSPACE,  # True | False | int
-        'pep8space': DEFAULT_PEP8SPACE,  # True | False | 1
-        'pars':      DEFAULT_PARS,       # True | False | 'auto'
-        'elif_':     DEFAULT_ELIF_,      # True | False
-        'fix':       DEFAULT_FIX,        # True | False
-        'raw':       DEFAULT_RAW,        # True | False | 'auto'
-    }  ; """@private"""
 
     @property
     def lines(self) -> list[str] | None:
@@ -463,6 +461,7 @@ class FST:
         _reparse_raw_stmtish,
         _reparse_raw_loc,
         _reparse_raw_node,
+        _put_slice_raw,
     )
 
     from .fst_slice import (
@@ -477,7 +476,6 @@ class FST:
         _put_slice_empty_set,
         _put_slice_dict,
         _put_slice_stmtish,
-        _put_slice_raw,
     )
 
     from .fst_one import (
@@ -758,7 +756,7 @@ class FST:
         return FST(ast, lines=[bistr(s) for s in lines], parse_params=parse_params)
 
     @staticmethod
-    def get_option(option: str, options: dict[str, Any]) -> Any:
+    def get_option(option: str, options: dict[str, Any] = {}) -> Any:
         """Get option from options dict or default if option not in dict or is `None` there.
 
         **Parameters:**
@@ -769,7 +767,7 @@ class FST:
         - `Any`: Default option of if not found in `options` else that option.
         """
 
-        return FST.OPTIONS.get(option) if (o := options.get(option)) is None else o
+        return OPTIONS.get(option) if (o := options.get(option)) is None else o
 
     @staticmethod
     def set_options(**options) -> dict[str, Any]:
@@ -782,10 +780,9 @@ class FST:
         - `options`: `dict` of previous values of changed parameters, reset with `set_options(**options)`.
         """
 
-        fstopts = FST.OPTIONS
-        ret     = {o: fstopts[o] for o in options}
+        ret = {o: OPTIONS[o] for o in options}
 
-        fstopts.update(options)
+        OPTIONS.update(options)
 
         return ret
 
@@ -878,7 +875,7 @@ class FST:
         if isinstance(ast, STATEMENTISH):
             loc = self.comms(options.get('precomms'), options.get('postcomms'))
         elif isinstance(ast, PARENTHESIZABLE):
-            loc = self.pars((DEFAULT_PARS if (o := options.get('pars')) is None else o) is True)
+            loc = self.pars(options.get('pars') is True)
         else:
             loc = self.bloc
 
@@ -2588,7 +2585,7 @@ class FST:
                 cur_col = 0
 
         if docstr is None:
-            docstr = DEFAULT_DOCSTR
+            docstr = self.get_option('docstr')
 
         strict = docstr == 'strict'
         lines  = self.root.lines
@@ -2670,8 +2667,7 @@ class FST:
 
         return (loc, npars) if ret_npars else loc
 
-    def comms(self, precomms: bool | str | None = DEFAULT_PRECOMMS, postcomms: bool | str | None = DEFAULT_POSTCOMMS,
-              **options) -> fstloc:
+    def comms(self, precomms: bool | str | None = None, postcomms: bool | str | None = None, **options) -> fstloc:
         """Return the location of preceding and trailing comments if present. Only works on (and makes sense for)
         `stmt`, 'ExceptHandler' or `match_case` nodes, otherwise returns `self.bloc`.
 
@@ -2686,10 +2682,9 @@ class FST:
         """
 
         if precomms is None:
-            precomms = DEFAULT_PRECOMMS
-
+            precomms = self.get_option('precomms')
         if postcomms is None:
-            postcomms = DEFAULT_POSTCOMMS
+            postcomms = self.get_option('postcomms')
 
         if not (precomms or postcomms) or not isinstance(self.a, STATEMENTISH):
             return self.bloc
@@ -2920,7 +2915,7 @@ class FST:
         if indent is None:
             indent = root.indent
         if docstr is None:
-            docstr = DEFAULT_DOCSTR
+            docstr = self.get_option('docstr')
 
         if not ((lns := self.get_indentable_lns(skip, docstr=docstr)) if lns is None else lns) or not indent:
             return lns
@@ -2962,7 +2957,7 @@ class FST:
         if indent is None:
             indent = root.indent
         if docstr is None:
-            docstr = DEFAULT_DOCSTR
+            docstr = self.get_option('docstr')
 
         if not ((lns := self.get_indentable_lns(skip, docstr=docstr)) if lns is None else lns) or not indent:
             return lns

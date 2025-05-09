@@ -7,7 +7,6 @@ from .astutil import bistr
 from .shared import (
     fstloc,
     NAMED_SCOPE,
-    DEFAULT_PRECOMMS, DEFAULT_POSTCOMMS,
     re_empty_line_start, re_empty_line, re_comment_line_start, re_line_trailing_space,
     re_empty_line_cont_or_comment,
     _next_src, _prev_src, _next_find, _prev_find, _next_pars, _prev_pars,
@@ -210,7 +209,7 @@ class SrcEdit:
         return fstloc(copy_ln, copy_col, copy_end_ln, copy_end_col), fstloc(del_ln, del_col, del_end_ln, del_end_col)
 
     def pre_comments(self, lines: list[bistr], bound_ln: int, bound_col: int, bound_end_ln: int, bound_end_col: int,
-                     precomms: bool | str | None = DEFAULT_PRECOMMS) -> tuple[int, int] | None:
+                     precomms: bool | str | None = None) -> tuple[int, int] | None:
         """Return the position of the start of any preceding comments to the element which is assumed to live just past
         (`bound_ln`, `bound_col`). Returns `None` if no preceding comment. If preceding entire line comments exist then
         the returned position column should be 0 (the start of the line) to indicate that it is a full line comment.
@@ -227,8 +226,7 @@ class SrcEdit:
         """
 
         if precomms is None:
-            precomms = DEFAULT_PRECOMMS
-
+            precomms = FST.get_option('precomms')
         if not precomms:
             return None
 
@@ -251,7 +249,7 @@ class SrcEdit:
         return None if pre_ln is None else (pre_ln, pre_col)
 
     def post_comments(self, lines: list[bistr], bound_ln: int, bound_col: int, bound_end_ln: int, bound_end_col: int,
-                      postcomms: bool | str | None = DEFAULT_POSTCOMMS) -> tuple[int, int] | None:
+                      postcomms: bool | str | None = None) -> tuple[int, int] | None:
         """Return the position of the end of any trailing comments to the element which is assumed to live just before
         (`bound_end_ln`, `bound_end_col`). Returns `None` if no trailing comment. Should return the location at the
         start of the next line if comment present because a comment should never be on the last line, but if a comment
@@ -267,8 +265,7 @@ class SrcEdit:
         """
 
         if postcomms is None:
-            postcomms = DEFAULT_POSTCOMMS
-
+            postcomms = FST.get_option('postcomms')
         if not postcomms:
             return None
 

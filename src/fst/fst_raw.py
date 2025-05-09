@@ -1,35 +1,29 @@
 """Raw reparse FST methods."""
 
-import ast as ast_
-import inspect
-import re
 from ast import *
-from ast import parse as ast_parse, unparse as ast_unparse
-from io import TextIOBase
+from ast import unparse as ast_unparse
 from itertools import takewhile
-from typing import Any, Callable, Generator, Literal, NamedTuple, Optional, TextIO, TypeAlias, Union
+from typing import Literal, Optional
 
 from .astutil import *
-from .astutil import TypeAlias, TryStar, type_param, TypeVar, ParamSpec, TypeVarTuple, TemplateStr, Interpolation
+from .astutil import TryStar
 
 from .shared import (
-    astfield, fstloc, srcwpos,
-    AST_FIELDS_NEXT, AST_FIELDS_PREV, AST_DEFAULT_BODY_FIELD, EXPRESSIONISH,
-    STATEMENTISH, STATEMENTISH_OR_MOD, STATEMENTISH_OR_STMTMOD, BLOCK, BLOCK_OR_MOD, SCOPE, SCOPE_OR_MOD, NAMED_SCOPE,
-    NAMED_SCOPE_OR_MOD, ANONYMOUS_SCOPE, PARENTHESIZABLE, HAS_DOCSTRING,
+    astfield, fstloc,
+    PARENTHESIZABLE,
     STATEMENTISH_FIELDS,
-    PATH_BODY, PATH_BODY2, PATH_BODYORELSE, PATH_BODY2ORELSE, PATH_BODYHANDLERS, PATH_BODY2HANDLERS, PATH_BODYCASES,
-    DEFAULT_PARSE_PARAMS, DEFAULT_INDENT,
-    DEFAULT_DOCSTR, DEFAULT_PRECOMMS, DEFAULT_POSTCOMMS, DEFAULT_PRESPACE, DEFAULT_POSTSPACE, DEFAULT_PEP8SPACE,
-    DEFAULT_PARS, DEFAULT_ELIF_, DEFAULT_FIX, DEFAULT_RAW,
-    re_empty_line_start, re_empty_line, re_comment_line_start, re_line_continuation, re_line_trailing_space,
-    re_oneline_str, re_contline_str_start, re_contline_str_end_sq, re_contline_str_end_dq, re_multiline_str_start,
-    re_multiline_str_end_sq, re_multiline_str_end_dq, re_empty_line_cont_or_comment, re_next_src,
-    re_next_src_or_comment, re_next_src_or_lcont, re_next_src_or_comment_or_lcont,
-    Code, NodeTypeError,
-    _with_loc, _next_src, _prev_src, _next_find, _prev_find, _next_pars, _prev_pars, _params_offset, _fixup_field_body,
-    _fixup_slice_index, _reduce_ast
+    Code,
+    _next_find, _prev_find, _fixup_field_body,
+    _fixup_slice_index, _reduce_ast,
 )
+
+PATH_BODY          = [astfield('body', 0)]
+PATH_BODY2         = [astfield('body', 0), astfield('body', 0)]
+PATH_BODYORELSE    = [astfield('body', 0), astfield('orelse', 0)]
+PATH_BODY2ORELSE   = [astfield('body', 0), astfield('body', 0), astfield('orelse', 0)]
+PATH_BODYHANDLERS  = [astfield('body', 0), astfield('handlers', 0)]
+PATH_BODY2HANDLERS = [astfield('body', 0), astfield('body', 0), astfield('handlers', 0)]
+PATH_BODYCASES     = [astfield('body', 0), astfield('cases', 0)]
 
 
 def _raw_slice_loc(self: 'FST', start: int | Literal['end'] | None = None, stop: int | None = None,
@@ -366,6 +360,65 @@ def _reparse_raw_node(self: 'FST', code: Code | None, to: Optional['FST'] = None
         parent    = root.child_from_path(path)
 
     return parent._reparse_raw_loc(code, loc.ln, loc.col, to_loc.end_ln, to_loc.end_col)
+
+def _put_slice_raw(self: 'FST', code: Code | None, start: int | Literal['end'] | None = None, stop: int | None = None,
+                    field: str | None = None, *, one: bool = False, **options) -> 'FST':  # -> Self
+    """Put a raw slice of child nodes to `self`."""
+
+    if isinstance(code, AST):
+        if not one:
+            try:
+                ast = _reduce_ast(code, 'exprish')
+            except Exception:
+                pass
+
+            else:
+                if isinstance(ast, Tuple):  # strip delimiters because we want CONTENTS of slice for raw put, not the slice object itself
+                    code = ast_unparse(ast)[1 : (-2 if len(ast.elts) == 1 else -1)]  # also remove singleton Tuple trailing comma
+                elif isinstance(ast, (List, Dict, Set, MatchSequence, MatchMapping)):
+                    code = ast_unparse(ast)[1 : -1]
+
+    elif isinstance(code, FST):
+        if not code.is_root:
+            raise ValueError('expecting root FST')
+
+        try:
+            ast = _reduce_ast(code.a, 'exprish')
+        except Exception:
+            pass
+
+        else:
+            fst = ast.f
+
+            if one:
+                if (is_par_tup := fst.is_parenthesized_tuple()) is None:  # only need to parenthesize this, others are already enclosed
+                    if isinstance(ast, MatchSequence) and not fst._is_parenthesized_seq('patterns'):
+                        fst._parenthesize_grouping()
+
+                elif is_par_tup is False:
+                    fst._parenthesize_tuple()
+
+            elif ((is_dict := isinstance(ast, Dict)) or
+                    (is_match := isinstance(ast, (MatchSequence, MatchMapping))) or
+                    isinstance(ast, (Tuple, List, Set))
+            ):
+                if not ((is_par_tup := fst.is_parenthesized_tuple()) is False or  # don't strip nonexistent delimiters if is unparenthesized Tuple or MatchSequence
+                        (is_par_tup is None and isinstance(ast, MatchSequence) and
+                            not fst._is_parenthesized_seq('patterns'))
+                ):
+                    code.put_src(None, end_ln := code.end_ln, (end_col := code.end_col) - 1, end_ln, end_col, True)  # strip enclosing delimiters
+                    code.put_src(None, ln := code.ln, col := code.col, ln, col + 1, False)
+
+                if elts := ast.values if is_dict else ast.patterns if is_match else ast.elts:
+                    if comma := _next_find(code.root._lines, (l := elts[-1].f.loc).end_ln, l.end_col, code.end_ln,
+                                            code.end_col, ','):  # strip trailing comma
+                        ln, col = comma
+
+                        code.put_src(None, ln, col, ln, col + 1, False)
+
+    self._reparse_raw_loc(code, *self._raw_slice_loc(start, stop, field))
+
+    return self.repath()
 
 
 from .fst import FST

@@ -1,34 +1,18 @@
 """Misc lower level FST methods."""
 
-import ast as ast_
-import inspect
-import re
 from ast import *
-from ast import parse as ast_parse, unparse as ast_unparse
-from io import TextIOBase
-from itertools import takewhile
-from typing import Any, Callable, Generator, Literal, NamedTuple, Optional, TextIO, TypeAlias, Union
+from ast import parse as ast_parse
+from typing import Callable, Literal, Optional, Union
 
 from .astutil import *
-from .astutil import TypeAlias, TryStar, type_param, TypeVar, ParamSpec, TypeVarTuple, TemplateStr, Interpolation
 
 from .shared import (
-    astfield, fstloc, srcwpos,
-    AST_FIELDS_NEXT, AST_FIELDS_PREV, AST_DEFAULT_BODY_FIELD, EXPRESSIONISH,
-    STATEMENTISH, STATEMENTISH_OR_MOD, STATEMENTISH_OR_STMTMOD, BLOCK, BLOCK_OR_MOD, SCOPE, SCOPE_OR_MOD, NAMED_SCOPE,
-    NAMED_SCOPE_OR_MOD, ANONYMOUS_SCOPE, PARENTHESIZABLE, HAS_DOCSTRING,
-    STATEMENTISH_FIELDS,
-    PATH_BODY, PATH_BODY2, PATH_BODYORELSE, PATH_BODY2ORELSE, PATH_BODYHANDLERS, PATH_BODY2HANDLERS, PATH_BODYCASES,
-    DEFAULT_PARSE_PARAMS, DEFAULT_INDENT,
-    DEFAULT_DOCSTR, DEFAULT_PRECOMMS, DEFAULT_POSTCOMMS, DEFAULT_PRESPACE, DEFAULT_POSTSPACE, DEFAULT_PEP8SPACE,
-    DEFAULT_PARS, DEFAULT_ELIF_, DEFAULT_FIX, DEFAULT_RAW,
-    re_empty_line_start, re_empty_line, re_comment_line_start, re_line_continuation, re_line_trailing_space,
-    re_oneline_str, re_contline_str_start, re_contline_str_end_sq, re_contline_str_end_dq, re_multiline_str_start,
-    re_multiline_str_end_sq, re_multiline_str_end_dq, re_empty_line_cont_or_comment, re_next_src,
-    re_next_src_or_comment, re_next_src_or_lcont, re_next_src_or_comment_or_lcont,
-    Code, NodeTypeError,
-    _with_loc, _next_src, _prev_src, _next_find, _prev_find, _next_pars, _prev_pars, _params_offset, _fixup_field_body,
-    _fixup_slice_index, _reduce_ast
+    astfield, fstloc,
+    BLOCK,
+    HAS_DOCSTRING,
+    Code,
+    _next_src, _prev_src, _next_find, _prev_find, _next_pars, _prev_pars,
+    _reduce_ast
 )
 
 
@@ -1080,8 +1064,7 @@ def _reparse_docstrings(self: 'FST', docstr: bool | Literal['strict'] | None = N
     """
 
     if docstr is None:
-        docstr = DEFAULT_DOCSTR
-
+        docstr = self.get_option('docstr')
     if not docstr:
         return
 
