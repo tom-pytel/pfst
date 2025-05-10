@@ -87,9 +87,8 @@ def _put_slice_seq_and_indent(self: 'FST', put_fst: Optional['FST'], seq_loc: fs
         root.put_src(put_lines, put_ln, put_col, put_end_ln, put_end_col, True, True, self)  # because of insertion at end and unparenthesized tuple
 
 
-# ----------------------------------------------------------------------------------------------------------------------
 _GLOBALS = globals() | {'_GLOBALS': None}
-
+# ----------------------------------------------------------------------------------------------------------------------
 
 def _get_slice_tuple_list_or_set(self: 'FST', start: int | Literal['end'] | None, stop: int | None, field: str | None,
                                  cut: bool, **options) -> 'FST':

@@ -83,8 +83,8 @@ _AST_DEFAULT_BODY_FIELD  = {cls: field for field, classes in [
     ('pattern',      (MatchAs,)),
 ] for cls in classes}
 
-# ----------------------------------------------------------------------------------------------------------------------
 _GLOBALS = globals() | {'_GLOBALS': None}
+# ----------------------------------------------------------------------------------------------------------------------
 
 Code = Union['FST', AST, list[str], str]
 
@@ -131,6 +131,9 @@ class fstloc(NamedTuple):
     bcol     = property(lambda self: self.col)      ; """Alias for `col`."""
     bend_ln  = property(lambda self: self.end_ln)   ; """Alias for `end_ln`."""
     bend_col = property(lambda self: self.end_col)  ; """Alias for `end_col`."""
+    loc      = property(lambda self: self)          ; """To be able to use as FST.loc."""
+    bloc     = loc
+    bwloc    = loc
 
     is_FST   = False                                ; """@private"""  # for quick checks vs. `FST`
 
@@ -337,14 +340,14 @@ def _prev_find(lines: list[str], ln: int, col: int, end_ln: int, end_col: int, s
 
     if first:
         if code := _prev_src(lines, ln, col, end_ln, end_col, comment, lcont, state=state):
-            cln, ccol, csrc = code
+            ln, col, csrc = code
 
             if comment and csrc.startswith('#'):
                 if csrc.startswith(src):
-                    return cln, ccol
+                    return ln, col
 
             elif csrc.endswith(src):
-                return cln, ccol + len(csrc) - len(src)
+                return ln, col + len(csrc) - len(src)
 
     else:
         if state is None:
@@ -363,11 +366,45 @@ def _prev_find(lines: list[str], ln: int, col: int, end_ln: int, end_col: int, s
     return None
 
 
+def _next_find_re(lines: list[str], ln: int, col: int, end_ln: int, end_col: int, pat: re.Pattern, first: bool = False,
+                  *, comment: bool = False, lcont: bool | None = False) -> srcwpos | None:
+    """Find location of a regex pattern in the bound walking forward from the start. Returns `None` if string not found.
+
+    **Parameters:**
+    - `first`: If `False` then will skip over anything else which is not the string and keep looking until it hits the
+        end of the bound. If `True` then will only succeed if `src` is the first thing found.
+    - `comment`: The `comment` parameter to `_next_src()`, can stop search on comments if `first` is `True`.
+    - `lcont`: The `lcont` parameter to `_next_src()`. Can stop search on line continuation if `first` is `True`.
+
+    **Returns:**
+    - `srcwpos | None`: Location of start of `pat` and the string matching the pattern or `None` if not found with the
+        given parameters.
+    """
+
+    if first:
+        if code := _next_src(lines, ln, col, end_ln, end_col, comment, lcont):
+            ln, col, csrc = code
+
+            if m := pat.match(csrc):
+                return srcwpos(ln, col, m.group())
+
+    else:
+        while code := _next_src(lines, ln, col, end_ln, end_col, comment, lcont):
+            ln, col, csrc = code
+
+            if m := pat.search(csrc):
+                return srcwpos(ln, col + m.start(), m.group())
+
+            col += len(csrc)
+
+    return None
+
+
 def _next_pars(lines: list[str], pars_end_ln: int, pars_end_col: int, bound_end_ln: int, bound_end_col: int,
                par: str = ')') -> tuple[int, int, int, int, int]:
-        """Count number of closing parenthesis (or any specified character) starting a `pars_end_ln`, `pars_end_col`
-        until the end of the bound. The count ends if a non `par` character is encountered and the last and also
-        ante-last ending position of a `par` is returned along with the count.
+        """Count number of closing parentheses (or any specified character) starting a `pars_end_ln`, `pars_end_col`
+        until the end of the bound. The count ends if a non `par` character is encountered while searching forward and
+        the last and also ante-last ending position of a `par` (after the `par`) is returned along with the count.
 
         **Returns:**
         - `(pars_end_ln, pars_end_col, ante_end_ln, ante_end_col, npars)`: The rightmost and ante-rightmost ending
@@ -402,9 +439,9 @@ def _next_pars(lines: list[str], pars_end_ln: int, pars_end_col: int, bound_end_
 
 def _prev_pars(lines: list[str], bound_ln: int, bound_col: int, pars_ln: int, pars_col: int, par: str = '(',
                ) -> tuple[int, int, int, int, int]:
-        """Count number of opening parenthesis (or any specified character) starting a `pars_ln`, `pars_col` until the
-        start of the bound. The count ends if a non `par` character is encountered and the last and also ante-last
-        starting position of a `par` is returned along with the count.
+        """Count number of opening parentheses (or any specified character) starting a `pars_ln`, `pars_col` until the
+        start of the bound. The count ends if a non `par` character is encountered while searching backward and the last
+        and also ante-last starting position of a `par` is returned along with the count.
 
         **Returns:**
         - `(pars_ln, pars_col, ante_ln, ante_col, npars)`: The leftmost and ante-leftmost starting positions and total
@@ -548,4 +585,5 @@ def _reduce_ast(ast, coerce: Literal['expr', 'exprish', 'mod'] | None = None) ->
     return ast
 
 
+# ----------------------------------------------------------------------------------------------------------------------
 __all_private__ = [n for n in globals() if n not in _GLOBALS]

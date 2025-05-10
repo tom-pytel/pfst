@@ -97,9 +97,8 @@ def _raw_slice_loc(self: 'FST', start: int | Literal['end'] | None = None, stop:
                     *body[stop - 1].f.pars(exc_genexpr_solo=True)[2:])
 
 
-# ----------------------------------------------------------------------------------------------------------------------
 _GLOBALS = globals() | {'_GLOBALS': None}
-
+# ----------------------------------------------------------------------------------------------------------------------
 
 def _reparse_raw(self: 'FST', new_lines: list[str], ln: int, col: int, end_ln: int, end_col: int,
                  copy_lines: list[str], path: list[astfield] | str, set_ast: bool = True) -> 'FST':
@@ -307,13 +306,7 @@ def _reparse_raw_node(self: 'FST', code: Code | None, to: Optional['FST'] = None
                                 code = ast_unparse(code)[1:-1]
 
                 elif isinstance(code, FST):
-                    if isinstance(a := code.a, (Module, Interactive)):
-                        a = a.body[0] if len(a.body) == 1 else None
-                    elif isinstance(a, Expression):
-                        a = a.body
-
-                    if isinstance(a, Expr):
-                        a = a.value
+                    a = reduce_ast(code.a, True, False)
 
                     if isinstance(a, PARENTHESIZABLE):
                         effpars = pars or a.f.is_parenthesized_tuple() is False

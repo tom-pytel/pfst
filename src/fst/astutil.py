@@ -1,5 +1,7 @@
 """Standalone AST utilities."""
 
+from keyword import iskeyword as keyword_iskeyword
+import re
 import sys
 from array import array
 from ast import *
@@ -11,7 +13,8 @@ from_iterable = chain.from_iterable
 
 __all__ = [
     'FIELDS', 'AST_FIELDS', 'OPCLS2STR', 'OPSTR2CLS',
-    'bistr', 'get_field', 'has_type_comments', 'is_parsable', 'get_parse_mode',
+    'bistr',
+    'is_valid_identifier', 'reduce_ast', 'get_field', 'has_type_comments', 'is_parsable', 'get_parse_mode',
     'WalkFail', 'walk2', 'compare_asts', 'copy_attributes', 'copy_ast', 'set_ctx', 'get_func_class_or_ass_by_name',
     'syntax_ordered_children', 'last_block_opener_child', 'is_atom',
     'precedence_require_parens_by_type', 'precedence_require_parens',
@@ -299,6 +302,45 @@ OPCLS2STR = {
 }  ; "Mapping of operator AST class to operator string, e.g. `ast.Add`: '+'."
 
 OPSTR2CLS = {v: k for k, v in OPCLS2STR.items()}  ; """Mapping of operator string to operator AST class, e.g. '+': `ast.Add`. """
+
+
+_re_identifier = re.compile(r'^[^\d\W]\w*$')
+
+def is_valid_identifier(s: str) -> bool:
+    """Check if `s` is a valid python identifier."""
+
+    return (_re_identifier.match(s) or False) and not keyword_iskeyword(s)
+
+
+def reduce_ast(ast: AST, reduce_Expr: bool = True, multi_mod: bool | None = True) -> AST | None:
+    """Reduce a `mod` / `Expr` wrapped expression or single statement if possible, otherwise return original `AST`.
+
+    **Parameters:**
+    - `ast`: `AST` to reduce.
+    - `reduce_Expr`: Whether to reduce a single `Expr` node and return its expression or not.
+    - `multi_mod`: If `ast` is a `mod` with multiple statements then:
+        - `True`: Return it.
+        - `False`: Raise ValueError.
+        - `None`: Return `None`.
+    """
+
+    if isinstance(ast, (Module, Interactive)):
+        if len(body := ast.body) == 1:
+            ast = body[0]
+
+            return ast.value if isinstance(ast, Expr) and reduce_Expr else ast
+
+        elif multi_mod is None:
+            return None
+        elif multi_mod is False:
+            raise ValueError('expecting single element')
+
+    elif isinstance(ast, Expression):
+        return ast.body
+    elif isinstance(ast, Expr) and reduce_Expr:
+        return ast.value
+
+    return ast
 
 
 def get_field(node: AST, name: str, idx: int | None = None) -> AST:

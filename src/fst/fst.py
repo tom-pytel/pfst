@@ -13,7 +13,7 @@ from .shared import (
     STMTISH, STMTISH_OR_MOD, STMTISH_OR_STMTMOD, BLOCK, BLOCK_OR_MOD, SCOPE, SCOPE_OR_MOD, NAMED_SCOPE,
     NAMED_SCOPE_OR_MOD, ANONYMOUS_SCOPE, PARENTHESIZABLE, HAS_DOCSTRING,
     STMTISH_FIELDS,
-    re_empty_line_start, re_empty_line, re_comment_line_start, re_line_continuation, re_line_trailing_space,
+    re_empty_line_start, re_empty_line, re_line_continuation,
     re_oneline_str, re_contline_str_start, re_contline_str_end_sq, re_contline_str_end_dq, re_multiline_str_start,
     re_multiline_str_end_sq, re_multiline_str_end_dq,
     Code, NodeTypeError,
@@ -2096,9 +2096,6 @@ class FST:
         _put_slice_stmtish,)
 
     from .fst_one import (
-        _put_one_stmtish,
-        _put_one_tuple_list_or_set,
-        _put_one_expr_required,
         _put_one,)
 
     @property

@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import os
+import re
 import sys
 import unittest
 import ast as ast_
@@ -19359,6 +19360,36 @@ k \\
         self.assertEqual(None, _next_find(lines, 3, 0, 6, 0, '# word', False, comment=True, lcont=None))
         self.assertEqual((5, 2), _next_find(lines, 3, 0, 6, 0, '# word', False, comment=True, lcont=True))
         self.assertEqual(None, _next_find(lines, 3, 0, 6, 0, '# word', True, comment=True, lcont=True))
+
+    def test__next_find_re(self):
+        from fst.shared import _next_find_re
+
+        lines = '''
+  \\
+  # hello
+  aaab ; \\
+  # world
+b # word
+            '''.split('\n')
+        pat = re.compile('a*b')
+
+        self.assertEqual((3, 2, 'aaab'), _next_find_re(lines, 2, 0, 6, 0, pat))
+        self.assertEqual((3, 2, 'aaab'), _next_find_re(lines, 2, 0, 6, 0, pat, True))
+        self.assertEqual(None, _next_find_re(lines, 2, 0, 6, 0, pat, True, comment=True))
+        self.assertEqual((3, 2, 'aaab'), _next_find_re(lines, 2, 0, 6, 0, pat, True, lcont=True))
+        self.assertEqual(None, _next_find_re(lines, 2, 0, 6, 0, pat, True, lcont=None))
+        self.assertEqual((3, 3, 'aab'), _next_find_re(lines, 3, 3, 6, 0, pat, False))
+        self.assertEqual((3, 4, 'ab'), _next_find_re(lines, 3, 4, 6, 0, pat, False))
+        self.assertEqual((3, 5, 'b'), _next_find_re(lines, 3, 5, 6, 0, pat, True))
+        self.assertEqual(None, _next_find_re(lines, 3, 6, 6, 0, pat, True))
+        self.assertEqual((5, 0, 'b'), _next_find_re(lines, 3, 6, 6, 0, pat, False))
+        self.assertEqual(None, _next_find_re(lines, 3, 6, 6, 0, pat, True))
+        self.assertEqual((5, 0, 'b'), _next_find_re(lines, 3, 6, 6, 0, pat, False, comment=True))
+        self.assertEqual(None, _next_find_re(lines, 3, 6, 6, 0, pat, False, comment=True, lcont=None))
+        self.assertEqual((5, 0, 'b'), _next_find_re(lines, 4, 0, 6, 0, pat, False, comment=False, lcont=False))
+        self.assertEqual(None, _next_find_re(lines, 4, 0, 6, 0, pat, False, comment=True, lcont=None))
+        self.assertEqual((5, 0, 'b'), _next_find_re(lines, 4, 0, 6, 0, pat, False, comment=True, lcont=True))
+        self.assertEqual(None, _next_find_re(lines, 4, 0, 6, 0, pat, True, comment=True, lcont=True))
 
     def test__normalize_block(self):
         a = parse('''
