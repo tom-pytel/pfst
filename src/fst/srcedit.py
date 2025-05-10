@@ -9,8 +9,7 @@ from .shared import (
     NAMED_SCOPE,
     re_empty_line_start, re_empty_line, re_comment_line_start, re_line_trailing_space,
     re_empty_line_cont_or_comment,
-    _next_src, _prev_src, _next_find, _prev_find, _next_pars, _prev_pars,
-)
+    _next_src, _prev_src, _next_find, _prev_find, _next_pars, _prev_pars,)
 
 
 class SrcEdit:

@@ -748,6 +748,7 @@ def _put_slice_stmtish(self: 'FST', code: Code | None, start: int | Literal['end
             self._set_end_pos((last_child := self.last_child()).end_lineno, last_child.end_col_offset)
 
 
-__all__ = [n for n in globals() if n not in _GLOBALS]
+# ----------------------------------------------------------------------------------------------------------------------
+__all_private__ = [n for n in globals() if n not in _GLOBALS]
 
 from .fst import FST

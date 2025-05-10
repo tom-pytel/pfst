@@ -7,39 +7,8 @@ from typing import Any, Literal, NamedTuple, TypeAlias, Union
 from .astutil import *
 from .astutil import TypeAlias, TryStar, type_param, Interpolation
 
+__all__ = ['NodeTypeError', 'astfield', 'fstloc']
 
-AST_DEFAULT_BODY_FIELD  = {cls: field for field, classes in [
-    ('body',         (Module, Interactive, Expression, FunctionDef, AsyncFunctionDef, ClassDef, For, AsyncFor, While, If,
-                      With, AsyncWith, Try, TryStar, ExceptHandler, Lambda, match_case),),
-    ('cases',        (Match,)),
-
-    ('elts',         (Tuple, List, Set)),
-    ('patterns',     (MatchSequence, MatchOr)),
-    ('targets',      (Delete,)),  # , Assign)),
-    ('type_params',  (TypeAlias,)),
-    ('names',        (Import, ImportFrom)),
-    ('ifs',          (comprehension,)),
-    ('values',       (BoolOp,)),
-    ('generators',   (ListComp, SetComp, DictComp, GeneratorExp)),
-    ('args',         (Call,)),
-
-    # ('values',       (JoinedStr, TemplateStr)),  # values don't have locations in lower version pythons for JoinedStr
-    # ('items',        (With, AsyncWith)),  # 'body' takes precedence
-
-    # special cases, field names here only for checks to succeed, otherwise all handled programatically
-    (None,           (Dict,)),
-    (None,           (MatchMapping,)),
-    (None,           (Compare,)),
-
-    # other single value fields
-    ('value',        (Expr, Return, Assign, AugAssign, NamedExpr, Await, Yield, YieldFrom, FormattedValue, Interpolation,
-                      Attribute, Subscript, Starred, keyword, MatchValue)),
-    ('test',         (Assert,)),
-    ('operand',      (UnaryOp,)),
-    # ('elt',          (ListComp, SetComp, GeneratorExp)),  # 'generators' take precedence because name is longer and more annoying to type out
-    ('context_expr', (withitem,)),
-    ('pattern',      (MatchAs,)),
-] for cls in classes}
 
 EXPRISH                 = (expr, arg, alias, withitem, pattern, type_param)
 STMTISH                 = (stmt, ExceptHandler, match_case)  # always in lists, cannot be inside multilines
@@ -81,9 +50,43 @@ re_next_src_or_comment          = re.compile(r'\s*([^\s#\\]+|#.*)')      # next 
 re_next_src_or_lcont            = re.compile(r'\s*([^\s#\\]+|\\$)')      # next non-space non-comment code including logical line end, don't look into strings with this!
 re_next_src_or_comment_or_lcont = re.compile(r'\s*([^\s#\\]+|#.*|\\$)')  # next non-space non-continuation code or comment text including logical line end, don't look into strings with this!
 
-Code = Union['FST', AST, list[str], str]
+_AST_DEFAULT_BODY_FIELD  = {cls: field for field, classes in [
+    ('body',         (Module, Interactive, Expression, FunctionDef, AsyncFunctionDef, ClassDef, For, AsyncFor, While, If,
+                      With, AsyncWith, Try, TryStar, ExceptHandler, Lambda, match_case),),
+    ('cases',        (Match,)),
 
+    ('elts',         (Tuple, List, Set)),
+    ('patterns',     (MatchSequence, MatchOr)),
+    ('targets',      (Delete,)),  # , Assign)),
+    ('type_params',  (TypeAlias,)),
+    ('names',        (Import, ImportFrom)),
+    ('ifs',          (comprehension,)),
+    ('values',       (BoolOp,)),
+    ('generators',   (ListComp, SetComp, DictComp, GeneratorExp)),
+    ('args',         (Call,)),
+
+    # ('values',       (JoinedStr, TemplateStr)),  # values don't have locations in lower version pythons for JoinedStr
+    # ('items',        (With, AsyncWith)),  # 'body' takes precedence
+
+    # special cases, field names here only for checks to succeed, otherwise all handled programatically
+    (None,           (Dict,)),
+    (None,           (MatchMapping,)),
+    (None,           (Compare,)),
+
+    # other single value fields
+    ('value',        (Expr, Return, Assign, AugAssign, NamedExpr, Await, Yield, YieldFrom, FormattedValue, Interpolation,
+                      Attribute, Subscript, Starred, keyword, MatchValue)),
+    ('test',         (Assert,)),
+    ('operand',      (UnaryOp,)),
+    # ('elt',          (ListComp, SetComp, GeneratorExp)),  # 'generators' take precedence because name is longer and more annoying to type out
+    ('context_expr', (withitem,)),
+    ('pattern',      (MatchAs,)),
+] for cls in classes}
+
+# ----------------------------------------------------------------------------------------------------------------------
 _GLOBALS = globals() | {'_GLOBALS': None}
+
+Code = Union['FST', AST, list[str], str]
 
 
 class NodeTypeError(ValueError):
@@ -455,7 +458,7 @@ def _fixup_field_body(ast: AST, field: str | None = None, only_list: bool = True
     """Get `AST` member list for specified `field` or default if `field=None`."""
 
     if field is None:
-        if (field := AST_DEFAULT_BODY_FIELD.get(ast.__class__, _fixup_field_body)) is _fixup_field_body:  # _fixup_field_body serves as sentinel
+        if (field := _AST_DEFAULT_BODY_FIELD.get(ast.__class__, _fixup_field_body)) is _fixup_field_body:  # _fixup_field_body serves as sentinel
             raise ValueError(f"{ast.__class__.__name__} has no default body field")
 
         if field is None:  # special case
@@ -545,5 +548,4 @@ def _reduce_ast(ast, coerce: Literal['expr', 'exprish', 'mod'] | None = None) ->
     return ast
 
 
-__all__ = ['NodeTypeError', 'astfield', 'fstloc']
-# __all__ = [n for n in globals() if n not in _GLOBALS]
+__all_private__ = [n for n in globals() if n not in _GLOBALS]

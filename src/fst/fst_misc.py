@@ -570,7 +570,7 @@ def _loc_match_case(self: 'FST') -> fstloc | None:
 
 
 def _dict_key_or_mock_loc(self: 'FST', key: AST | None, value: 'FST') -> Union['FST', fstloc]:
-    """Return same dictionary key FST if exists else create and return a location for the preceding '**' code."""
+    """Return same dictionary key `FST` if exists, otherwise return a location for the preceding '**' code."""
 
     if key:
         return key.f
@@ -1153,6 +1153,7 @@ def _make_fst_and_dedent(self: 'FST', indent: Union['FST', str], ast: AST, copy_
     return fst
 
 
-__all__ = [n for n in globals() if n not in _GLOBALS]
+# ----------------------------------------------------------------------------------------------------------------------
+__all_private__ = [n for n in globals() if n not in _GLOBALS]
 
 from .fst import FST

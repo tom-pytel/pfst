@@ -626,7 +626,7 @@ _syntax_ordered_children_elts         = lambda ast: ast.elts[:]
 _syntax_ordered_children_elts_and_ctx = lambda ast: [*ast.elts, ast.ctx]
 _syntax_ordered_children_ctx          = lambda ast: [ast.ctx]
 
-_syntax_ordered_children = {
+_SYNTAX_ORDERED_CHILDREN = {
     # quick optimized get
 
     Return:       _syntax_ordered_children_value,
@@ -693,7 +693,7 @@ _syntax_ordered_children = {
 def syntax_ordered_children(ast: AST) -> list:
     """Returned `list` may contain `None` values."""
 
-    return _syntax_ordered_children.get(ast.__class__, _syntax_ordered_children_default)(ast)
+    return _SYNTAX_ORDERED_CHILDREN.get(ast.__class__, _syntax_ordered_children_default)(ast)
 
 
 def last_block_opener_child(ast: AST) -> AST | None:
@@ -795,7 +795,7 @@ class _Precedence(IntEnum):
 # * BinOp, UnaryOp and BoolOp inherit precedence from `.op`.
 # * BinOp addtionally has associativity to consider, opposite operand from associativity gets precedence bumped.
 
-PRECEDENCE_NODES = {  # default is _Precedence.ATOM
+_PRECEDENCE_NODES = {  # default is _Precedence.ATOM
     BoolOp:         False,  # should be passed as the 'op'
     NamedExpr:      _Precedence.NAMED_EXPR,
     BinOp:          False,
@@ -884,7 +884,7 @@ PRECEDENCE_NODES = {  # default is _Precedence.ATOM
     # TypeVarTuple:   None,
 }
 
-PRECEDENCE_NODE_FIELDS = {  # default is _Precedence.TEST
+_PRECEDENCE_NODE_FIELDS = {  # default is _Precedence.TEST
     (Expr, 'value'):           _Precedence.YIELD,
     (Assign, 'targets'):       _Precedence.TUPLE,
     (For, 'target'):           _Precedence.TUPLE,
@@ -964,8 +964,8 @@ def precedence_require_parens_by_type(child_type: type[AST], parent_type: type[A
     and child `BoolOp`, `BinOp` and `UnaryOp` types should be passed as the type of the 'op' field. Special case if the
     parent is a `Dict.values[i]` where the respective `keys[i]` is `None`, `dict_key_is_None` should be `True."""
 
-    child_precedence  = PRECEDENCE_NODES.get(child_type, _Precedence.ATOM)
-    parent_precedence = PRECEDENCE_NODE_FIELDS.get((parent_type, field), _Precedence.TEST)
+    child_precedence  = _PRECEDENCE_NODES.get(child_type, _Precedence.ATOM)
+    parent_precedence = _PRECEDENCE_NODE_FIELDS.get((parent_type, field), _Precedence.TEST)
 
     assert child_precedence, "type of 'op' should be passed"
 

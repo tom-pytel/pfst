@@ -17,13 +17,13 @@ from .shared import (
     _fixup_slice_index, _reduce_ast,
 )
 
-PATH_BODY          = [astfield('body', 0)]
-PATH_BODY2         = [astfield('body', 0), astfield('body', 0)]
-PATH_BODYORELSE    = [astfield('body', 0), astfield('orelse', 0)]
-PATH_BODY2ORELSE   = [astfield('body', 0), astfield('body', 0), astfield('orelse', 0)]
-PATH_BODYHANDLERS  = [astfield('body', 0), astfield('handlers', 0)]
-PATH_BODY2HANDLERS = [astfield('body', 0), astfield('body', 0), astfield('handlers', 0)]
-PATH_BODYCASES     = [astfield('body', 0), astfield('cases', 0)]
+_PATH_BODY          = [astfield('body', 0)]
+_PATH_BODY2         = [astfield('body', 0), astfield('body', 0)]
+_PATH_BODYORELSE    = [astfield('body', 0), astfield('orelse', 0)]
+_PATH_BODY2ORELSE   = [astfield('body', 0), astfield('body', 0), astfield('orelse', 0)]
+_PATH_BODYHANDLERS  = [astfield('body', 0), astfield('handlers', 0)]
+_PATH_BODY2HANDLERS = [astfield('body', 0), astfield('body', 0), astfield('handlers', 0)]
+_PATH_BODYCASES     = [astfield('body', 0), astfield('cases', 0)]
 
 
 def _raw_slice_loc(self: 'FST', start: int | Literal['end'] | None = None, stop: int | None = None,
@@ -153,7 +153,7 @@ def _reparse_raw_stmtish(self: 'FST', new_lines: list[str], ln: int, col: int, e
         copy_lines = ([bistr('')] * (pln - 1) +
                         [bistr('match a:'), bistr(' ' * pcol + lines[pln][pcol:])] +
                         lines[pln + 1 : pend_ln + 1])
-        path       = PATH_BODYCASES
+        path       = _PATH_BODYCASES
 
     else:
         indent = stmtish.get_indent()
@@ -175,21 +175,21 @@ def _reparse_raw_stmtish(self: 'FST', new_lines: list[str], ln: int, col: int, e
             assert pln > bool(indent)
 
             copy_lines[pln - 1] = bistr(indent + 'try: pass')
-            path                = PATH_BODY2HANDLERS if indent else PATH_BODYHANDLERS
+            path                = _PATH_BODY2HANDLERS if indent else _PATH_BODYHANDLERS
 
         elif not indent:
             if stmtish.is_elif():
                 copy_lines[0] = bistr('if 2: pass')
-                path          = PATH_BODYORELSE
+                path          = _PATH_BODYORELSE
             else:
-                path = PATH_BODY
+                path = _PATH_BODY
 
         else:
             if stmtish.is_elif():
                 copy_lines[1] = bistr(indent + 'if 2: pass')
-                path          = PATH_BODY2ORELSE
+                path          = _PATH_BODY2ORELSE
             else:
-                path = PATH_BODY2
+                path = _PATH_BODY2
 
     if not in_blkopen:  # non-block statement or modifications not limited to block opener part
         copy_lines[pend_ln] = bistr(copy_lines[pend_ln][:pend_col])
@@ -430,6 +430,7 @@ def _put_slice_raw(self: 'FST', code: Code | None, start: int | Literal['end'] |
     return self.repath()
 
 
-__all__ = [n for n in globals() if n not in _GLOBALS]
+# ----------------------------------------------------------------------------------------------------------------------
+__all_private__ = [n for n in globals() if n not in _GLOBALS]
 
 from .fst import FST

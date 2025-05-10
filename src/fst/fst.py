@@ -17,19 +17,18 @@ from .shared import (
     re_oneline_str, re_contline_str_start, re_contline_str_end_sq, re_contline_str_end_dq, re_multiline_str_start,
     re_multiline_str_end_sq, re_multiline_str_end_dq,
     Code, NodeTypeError,
-    _next_src, _params_offset, _fixup_field_body,
-)
+    _next_src, _params_offset, _fixup_field_body,)
 
 __all__ = [
     'parse', 'unparse', 'FST',
 ]
 
-REPR_SRC_LINES = 0  # for debugging
+_REPR_SRC_LINES = 0  # for debugging
 
-DEFAULT_PARSE_PARAMS = dict(filename='<unknown>', type_comments=False, feature_version=None)
-DEFAULT_INDENT       = '    '
+_DEFAULT_PARSE_PARAMS = dict(filename='<unknown>', type_comments=False, feature_version=None)
+_DEFAULT_INDENT       = '    '
 
-OPTIONS = {
+_OPTIONS = {
     'docstr':    True,    # True | False | 'strict'
     'precomms':  True,    # True | False | 'all'
     'postcomms': True,    # True | False | 'all' | 'block'
@@ -80,7 +79,7 @@ class _FSTCircularImportStandin(metaclass=_FSTCircularImportStandinMeta):
     analysis in IDEs due to the later override with the real `FST` class."""
 
     def __new__(cls, *args, **kwargs):
-        inspect.currentframe().f_back.f_globals['FST'] = FST
+        cls.is_FST  # trigger metaclass
 
         return FST(*args, **kwargs)
 
@@ -88,57 +87,7 @@ FST = _FSTCircularImportStandin  # predefined so that imports in the real `FST` 
 
 
 class FST:
-    """Preserve AST formatting information and easy manipulation.
-
-    **Source editing `options`**: These are mostly for editing statements, though some can apply to other sequences.
-    - `docstr`: Which docstrings are indentable / dedentable.
-        - `False`: None.
-        - `True`: All `Expr` multiline strings (as they serve no coding purpose).
-        - `'strict'`: Only multiline strings in expected docstring positions (functions and classes).
-        - `None`: Use default (`True`).
-    - `precomms`: Preceding comments.
-        - `False`: No preceding comments.
-        - `True`: Single contiguous comment block immediately preceding position.
-        - `'all'`: Comment blocks (possibly separated by empty lines) preceding position.
-        - `None`: Use default (`True`).
-    - `postcomms`: Trailing comments.
-        - `False`: No trailing comments.
-        - `True`: Only comment trailing on line of position, nothing past that on its own lines.
-        - `'block'`: Single contiguous comment block following position.
-        - `'all'`: Comment blocks (possibly separated by empty lines) following position.
-        - `None`: Use default (`True`).
-    - `prespace`: Preceding empty lines (max of this and `pep8space` used).
-        - `False`: No empty lines.
-        - `True`: All empty lines.
-        - `int`: A maximum number of empty lines.
-        - `None`: Use default (`False`).
-    - `postspace`: Same as `prespace` except for trailing empty lines.
-    - `pep8space`: Preceding and trailing empty lines for function and class definitions.
-        - `False`: No empty lines.
-        - `True`: Two empty lines at module scope and one empty line in other scopes.
-        - `1`: One empty line in all scopes.
-        - `None`: Use default (`True`).
-    - `pars`: How parentheses are handled.
-        - `False`: Parentheses are not modified generally. Not copied with nodes or removed on cut or automatically
-            modified on put, except added if needed for precedence. They are removed on slice cut due to starting and
-            ending on different elements.
-        - `True`: Parentheses are handled automatically and cut from and copied with nodes. They are added or removed
-            as needed for precedence when putting nodes (for raw put that means must be `AST` or `FST` nodes passed to
-            raw put to node, not location).
-        - `'auto'`: Same as `True` except they are not returned with a cut or copied node, though they are still removed
-             on cut.
-        - `None`: Use default (`'auto'`).
-    - `elif_`: `True` or `False`, if putting a single `If` statement to an `orelse` field of a parent `If` statement then
-        put it as an `elif`. `None` means use default of `False`.
-    - `fix`: Attempt to carry out basic fixes on operands like parenthesizing multiline expressions so they are
-        parsable, adding commas to singleton tuples, changing `elif` to `if` for cut or copied `elif` statements, etc...
-    - `raw`: How to attempt at raw source operations. This may result in more nodes changed than just the targeted
-        one(s).
-        - `False`: Do not do raw source operations.
-        - `True`: Only do raw source operations.
-        - `'auto'`: Only do raw source operations if the normal operation fails in a way that raw might not.
-        - `None`: Use default (`'auto'`).
-    """
+    """Preserve AST formatting information and easy manipulation."""
 
     a:            AST              ; """The actual `AST` node."""
     parent:       Optional['FST']  ; """Parent `FST` node, `None` in root node."""
@@ -274,8 +223,8 @@ class FST:
     @property
     def loc(self) -> fstloc | None:
         """Zero based character indexed location of node (may not be entire location if node has decorators). Not all
-        nodes have locations, specifically leaf nodes like operations and `expr_context`. Other nodes which normally
-        don't have locations like `arguments` have this location calculated from their children or source."""
+        nodes have locations (like `expr_context`). Other nodes which normally don't have locations like `arguments` or
+        most operators have this location calculated from their children or source."""
 
         try:
             return self._loc
@@ -334,7 +283,8 @@ class FST:
 
     @property
     def wbloc(self) -> fstloc | None:
-        """Return whole source location if at root, regardless of actual root node location, otherwise node `bloc`."""
+        """Whole source location if at root, regardless of actual root node location which may only span part of the
+        source due to parentheses or comments. If not root node then is just `bloc`."""
 
         return fstloc(0, 0, len(ls := self._lines) - 1, len(ls[-1])) if self.is_root else self.bloc
 
@@ -364,7 +314,7 @@ class FST:
 
     @property
     def bln(self) -> int:  # bounding location including @decorators
-        """Line number of the first line of this node or the first preceding decorator (0 based)."""
+        """Line number of the first line of this node or the first decorator if present (0 based)."""
 
         return (l := self.bloc) and l[0]
 
@@ -374,25 +324,25 @@ class FST:
 
     @property
     def lineno(self) -> int:  # 1 based
-        """Line number of the first line of this node (1 based), available for all nodes which have `loc`."""
+        """AST-style Line number of the first line of this node (1 based), available for all nodes which have `loc`."""
 
         return (loc := self.loc) and loc[0] + 1
 
     @property
     def col_offset(self) -> int:  # byte index
-        """BYTE index of the start of this node (0 based), available for all nodes which have `loc`."""
+        """AST-style BYTE index of the start of this node (0 based), available for all nodes which have `loc`."""
 
         return (loc := self.loc) and self.root._lines[loc[0]].c2b(loc[1])
 
     @property
     def end_lineno(self) -> int:  # 1 based
-        """Line number of the LAST LINE of this node (1 based), available for all nodes which have `loc`."""
+        """AST-style Line number of the LAST LINE of this node (1 based), available for all nodes which have `loc`."""
 
         return (loc := self.loc) and loc[2] + 1
 
     @property
     def end_col_offset(self) -> int:  # byte index
-        """CHARACTER index one past the end of this node (0 based), available for all nodes which have `loc`."""
+        """AST-style CHARACTER index one past the end of this node (0 based), available for all nodes which have `loc`."""
 
         return (loc := self.loc) and self.root._lines[loc[2]].c2b(loc[3])
 
@@ -403,17 +353,17 @@ class FST:
         tail = self._repr_tail()
         head = f'<fst.{(a := self.a).__class__.__name__} 0x{id(a):x}{tail}>'
 
-        if not REPR_SRC_LINES:
+        if not _REPR_SRC_LINES:
             return head
 
         try:
             ln, col, end_ln, end_col = self.loc
 
-            if end_ln - ln + 1 <= REPR_SRC_LINES:
+            if end_ln - ln + 1 <= _REPR_SRC_LINES:
                 ls = self.root._lines[ln : end_ln + 1]
             else:
-                ls = (self.root._lines[ln : ln + ((REPR_SRC_LINES + 1) // 2)] + ['...'] +
-                      self.root._lines[end_ln - ((REPR_SRC_LINES - 2) // 2) : end_ln + 1])
+                ls = (self.root._lines[ln : ln + ((_REPR_SRC_LINES + 1) // 2)] + ['...'] +
+                      self.root._lines[end_ln - ((_REPR_SRC_LINES - 2) // 2) : end_ln + 1])
 
             ls[-1] = ls[-1][:end_col]
             ls[0]  = ' ' * col + ls[0][col:]
@@ -503,14 +453,14 @@ class FST:
             self.indent       = kwargs.get('indent', from_root.indent)
 
         else:
-            self.parse_params = kwargs.get('parse_params', DEFAULT_PARSE_PARAMS)
+            self.parse_params = kwargs.get('parse_params', _DEFAULT_PARSE_PARAMS)
             self.indent       = kwargs.get('indent', '?')
 
         self._make_fst_tree()
 
         if self.indent == '?':  # infer indentation from source, just use first indentation found for performance, don't try to find most common or anything like that
             if not isinstance(ast_or_src, Module):
-                self.indent = DEFAULT_INDENT
+                self.indent = _DEFAULT_INDENT
 
             else:
                 for a in ast_or_src.body:
@@ -543,12 +493,12 @@ class FST:
                         break
 
                 else:
-                    self.indent = DEFAULT_INDENT
+                    self.indent = _DEFAULT_INDENT
 
         return self
 
     @staticmethod
-    def new(filename: str = '<unknown>', mode: str = 'exec', *,
+    def new(filename: str = '<unknown>', mode: Literal['exec', 'eval', 'single'] = 'exec', *,
             type_comments: bool = False, feature_version: tuple[int, int] | None = None) -> 'FST':
         """Create a new empty `FST` tree with the top level node dictated by the `mode` parameter.
 
@@ -576,7 +526,8 @@ class FST:
         return FST(ast, lines=[bistr('')], parse_params=parse_params)
 
     @staticmethod
-    def fromsrc(source: str | bytes | list[str], filename: str = '<unknown>', mode: str = 'exec', *,
+    def fromsrc(source: str | bytes | list[str], filename: str = '<unknown>',
+                mode: Literal['exec', 'eval', 'single'] = 'exec', *,
                 type_comments: bool = False, feature_version: tuple[int, int] | None = None) -> 'FST':
         """Parse and create a new `FST` tree from source, preserving the original source and locations.
 
@@ -608,7 +559,7 @@ class FST:
         return FST(ast, lines=[bistr(s) for s in lines], parse_params=parse_params)  # not just convert to bistr but to make a copy at the same time
 
     @staticmethod
-    def fromast(ast: AST, filename: str = '<unknown>', mode: str | None = None, *,
+    def fromast(ast: AST, filename: str = '<unknown>', mode: Literal['exec', 'eval', 'single'] | None = None, *,
                 type_comments: bool | None = False, feature_version=None,
                 calc_loc: bool | Literal['copy'] = True) -> 'FST':
         """Add `FST` to existing `AST` tree, optionally copying positions from reparsed `AST` (default) or whole `AST`
@@ -673,10 +624,10 @@ class FST:
         - `options`: Dictionary which may or may not contain the requested option.
 
         **Returns:**
-        - `Any`: Default option of if not found in `options` else that option.
+        - `Any`: Default option of if not found in `options` or is `None` there, otherwise the value from `options`.
         """
 
-        return OPTIONS.get(option) if (o := options.get(option)) is None else o
+        return _OPTIONS.get(option) if (o := options.get(option)) is None else o
 
     @staticmethod
     def set_options(**options) -> dict[str, Any]:
@@ -684,14 +635,61 @@ class FST:
 
         **Parameters:**
         - `options`: Key / values of parameters to set.
+            - `docstr`: Which docstrings are indentable / dedentable.
+                - `False`: None.
+                - `True`: All `Expr` multiline strings (as they serve no coding purpose).
+                - `'strict'`: Only multiline strings in expected docstring positions (functions and classes).
+                - `None`: Use default (`True`).
+            - `precomms`: Preceding comments.
+                - `False`: No preceding comments.
+                - `True`: Single contiguous comment block immediately preceding position.
+                - `'all'`: Comment blocks (possibly separated by empty lines) preceding position.
+                - `None`: Use default (`True`).
+            - `postcomms`: Trailing comments.
+                - `False`: No trailing comments.
+                - `True`: Only comment trailing on line of position, nothing past that on its own lines.
+                - `'block'`: Single contiguous comment block following position.
+                - `'all'`: Comment blocks (possibly separated by empty lines) following position.
+                - `None`: Use default (`True`).
+            - `prespace`: Preceding empty lines (max of this and `pep8space` used).
+                - `False`: No empty lines.
+                - `True`: All empty lines.
+                - `int`: A maximum number of empty lines.
+                - `None`: Use default (`False`).
+            - `postspace`: Same as `prespace` except for trailing empty lines.
+            - `pep8space`: Preceding and trailing empty lines for function and class definitions.
+                - `False`: No empty lines.
+                - `True`: Two empty lines at module scope and one empty line in other scopes.
+                - `1`: One empty line in all scopes.
+                - `None`: Use default (`True`).
+            - `pars`: How parentheses are handled.
+                - `False`: Parentheses are not modified generally. Not copied with nodes or removed on cut or automatically
+                    modified on put, except added if needed for precedence. They are removed on slice cut due to starting and
+                    ending on different elements.
+                - `True`: Parentheses are handled automatically and cut from and copied with nodes. They are added or removed
+                    as needed for precedence when putting nodes (for raw put that means must be `AST` or `FST` nodes passed to
+                    raw put to node, not location).
+                - `'auto'`: Same as `True` except they are not returned with a cut or copied node, though they are still removed
+                    on cut.
+                - `None`: Use default (`'auto'`).
+            - `elif_`: `True` or `False`, if putting a single `If` statement to an `orelse` field of a parent `If` statement then
+                put it as an `elif`. `None` means use default of `False`.
+            - `fix`: Attempt to carry out basic fixes on operands like parenthesizing multiline expressions so they are
+                parsable, adding commas to singleton tuples, changing `elif` to `if` for cut or copied `elif` statements, etc...
+            - `raw`: How to attempt at raw source operations. This may result in more nodes changed than just the targeted
+                one(s).
+                - `False`: Do not do raw source operations.
+                - `True`: Only do raw source operations.
+                - `'auto'`: Only do raw source operations if the normal operation fails in a way that raw might not.
+                - `None`: Use default (`'auto'`).
 
         **Returns:**
         - `options`: `dict` of previous values of changed parameters, reset with `set_options(**options)`.
         """
 
-        ret = {o: OPTIONS[o] for o in options}
+        ret = {o: _OPTIONS[o] for o in options}
 
-        OPTIONS.update(options)
+        _OPTIONS.update(options)
 
         return ret
 
@@ -1411,7 +1409,7 @@ class FST:
                 isinstance(func := ast.func, Name) and func.id == 'set' and isinstance(func.ctx, Load))
 
     def is_empty_set_seq(self) -> bool:
-        """Whether `self` is an empty Set from an empty sequence, recognized are `{*()}`, `{*[]}` and `{*{}}`."""
+        """Whether `self` is an empty `Set` from an empty sequence, recognized are `{*()}`, `{*[]}` and `{*{}}`."""
 
         return (isinstance(ast := self.a, Set) and len(elts := ast.elts) == 1 and isinstance(e0 := elts[0], Starred) and
                 ((isinstance(v := e0.value, (Tuple, List)) and not v.elts) or (isinstance(v, Dict) and not v.keys)))
@@ -1761,11 +1759,11 @@ class FST:
                 |               |                     |                 |
         0123456789ABC       0123456789ABC       0123456789ABC       0123456789ABC
 
-        +2, tail=False      -2, tail=False      -2, tail=None       +2, tail=None
+        +2, tail=False      -2, tail=False      +2, tail=None       -2, tail=None
             head=False          head=False          head=None           head=None
               V                   V                   V                   V
           |===|               |===|               |===|               |===|
-              |-----|             |-|                 |-|                 |-----|
+              |-----|             |-|                 |-----|             |-|
               |                   |                   |                   |
         0123456789ABC       0123456789ABC       0123456789ABC       0123456789ABC
 
@@ -1841,7 +1839,7 @@ class FST:
 
     def offset_lns(self, lns: set[int] | dict[int, int], dcol_offset: int | None = None):
         """Offset ast column byte offsets in `lns` by `dcol_offset` if present, otherwise `lns` must be a dict with an
-        individual `dcol_offset` per line. Only modifies ast, not lines. Does not modify parent locations but
+        individual `dcol_offset` per line. Only modifies `AST`, not lines. Does not modify parent locations but
         `touch()`es parents."""
 
         if dcol_offset is None:  # lns is dict[int, int]

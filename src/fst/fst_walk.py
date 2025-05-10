@@ -7,52 +7,51 @@ from .astutil import *
 
 from .shared import astfield
 
-
-AST_FIELDS_NEXT: dict[tuple[type[AST], str], str | None] = dict(sum((  # next field name from AST class and current field name
+_AST_FIELDS_NEXT: dict[tuple[type[AST], str], str | None] = dict(sum((  # next field name from AST class and current field name
     [] if not fields else
     [((cls, fields[0]), None)] if len(fields) == 1 else
     [((cls, fields[i]), fields[i + 1]) for i in range(len(fields) - 1)] + [((cls, fields[-1]), None)]
     for cls, fields in AST_FIELDS.items()), start=[])
 )
 
-AST_FIELDS_NEXT[(Dict, 'keys')]             = 0  # special cases
-AST_FIELDS_NEXT[(Dict, 'values')]           = 1
-AST_FIELDS_NEXT[(Compare, 'ops')]           = 2
-AST_FIELDS_NEXT[(Compare, 'comparators')]   = 3
-AST_FIELDS_NEXT[(Compare, 'left')]          = 'comparators'  # black magic juju
-AST_FIELDS_NEXT[(MatchMapping, 'keys')]     = 4
-AST_FIELDS_NEXT[(MatchMapping, 'patterns')] = 5
-AST_FIELDS_NEXT[(Call, 'args')]             = 6
-AST_FIELDS_NEXT[(Call, 'keywords')]         = 6
-AST_FIELDS_NEXT[(arguments, 'posonlyargs')] = 7
-AST_FIELDS_NEXT[(arguments, 'args')]        = 7
-AST_FIELDS_NEXT[(arguments, 'vararg')]      = 7
-AST_FIELDS_NEXT[(arguments, 'kwonlyargs')]  = 7
-AST_FIELDS_NEXT[(arguments, 'defaults')]    = 7
-AST_FIELDS_NEXT[(arguments, 'kw_defaults')] = 7
+_AST_FIELDS_NEXT[(Dict, 'keys')]             = 0  # special cases
+_AST_FIELDS_NEXT[(Dict, 'values')]           = 1
+_AST_FIELDS_NEXT[(Compare, 'ops')]           = 2
+_AST_FIELDS_NEXT[(Compare, 'comparators')]   = 3
+_AST_FIELDS_NEXT[(Compare, 'left')]          = 'comparators'  # black magic juju
+_AST_FIELDS_NEXT[(MatchMapping, 'keys')]     = 4
+_AST_FIELDS_NEXT[(MatchMapping, 'patterns')] = 5
+_AST_FIELDS_NEXT[(Call, 'args')]             = 6
+_AST_FIELDS_NEXT[(Call, 'keywords')]         = 6
+_AST_FIELDS_NEXT[(arguments, 'posonlyargs')] = 7
+_AST_FIELDS_NEXT[(arguments, 'args')]        = 7
+_AST_FIELDS_NEXT[(arguments, 'vararg')]      = 7
+_AST_FIELDS_NEXT[(arguments, 'kwonlyargs')]  = 7
+_AST_FIELDS_NEXT[(arguments, 'defaults')]    = 7
+_AST_FIELDS_NEXT[(arguments, 'kw_defaults')] = 7
 
-AST_FIELDS_PREV: dict[tuple[type[AST], str], str | None] = dict(sum((  # previous field name from AST class and current field name
+_AST_FIELDS_PREV: dict[tuple[type[AST], str], str | None] = dict(sum((  # previous field name from AST class and current field name
     [] if not fields else
     [((cls, fields[0]), None)] if len(fields) == 1 else
     [((cls, fields[i + 1]), fields[i]) for i in range(len(fields) - 1)] + [((cls, fields[0]), None)]
     for cls, fields in AST_FIELDS.items()), start=[])
 )
 
-AST_FIELDS_PREV[(Dict, 'keys')]             = 0  # special cases
-AST_FIELDS_PREV[(Dict, 'values')]           = 1
-AST_FIELDS_PREV[(Compare, 'ops')]           = 2
-AST_FIELDS_PREV[(Compare, 'comparators')]   = 3
-AST_FIELDS_PREV[(MatchMapping, 'keys')]     = 4
-AST_FIELDS_PREV[(MatchMapping, 'patterns')] = 5
-AST_FIELDS_PREV[(Call, 'args')]             = 6
-AST_FIELDS_PREV[(Call, 'keywords')]         = 6
-AST_FIELDS_PREV[(arguments, 'posonlyargs')] = 7
-AST_FIELDS_PREV[(arguments, 'args')]        = 7
-AST_FIELDS_PREV[(arguments, 'vararg')]      = 7
-AST_FIELDS_PREV[(arguments, 'kwonlyargs')]  = 7
-AST_FIELDS_PREV[(arguments, 'defaults')]    = 7
-AST_FIELDS_PREV[(arguments, 'kw_defaults')] = 7
-AST_FIELDS_PREV[(arguments, 'kwarg')]       = 7
+_AST_FIELDS_PREV[(Dict, 'keys')]             = 0  # special cases
+_AST_FIELDS_PREV[(Dict, 'values')]           = 1
+_AST_FIELDS_PREV[(Compare, 'ops')]           = 2
+_AST_FIELDS_PREV[(Compare, 'comparators')]   = 3
+_AST_FIELDS_PREV[(MatchMapping, 'keys')]     = 4
+_AST_FIELDS_PREV[(MatchMapping, 'patterns')] = 5
+_AST_FIELDS_PREV[(Call, 'args')]             = 6
+_AST_FIELDS_PREV[(Call, 'keywords')]         = 6
+_AST_FIELDS_PREV[(arguments, 'posonlyargs')] = 7
+_AST_FIELDS_PREV[(arguments, 'args')]        = 7
+_AST_FIELDS_PREV[(arguments, 'vararg')]      = 7
+_AST_FIELDS_PREV[(arguments, 'kwonlyargs')]  = 7
+_AST_FIELDS_PREV[(arguments, 'defaults')]    = 7
+_AST_FIELDS_PREV[(arguments, 'kw_defaults')] = 7
+_AST_FIELDS_PREV[(arguments, 'kwarg')]       = 7
 
 
 def _with_loc(fst: 'FST', with_loc: bool | Literal['all', 'own'] = True) -> bool:
@@ -76,13 +75,16 @@ def _with_loc(fst: 'FST', with_loc: bool | Literal['all', 'own'] = True) -> bool
 
 # ----------------------------------------------------------------------------------------------------------------------
 
-
 def next(self: 'FST', with_loc: bool | Literal['all', 'own'] = True) -> Optional['FST']:  # TODO: refactor maybe
     """Get next sibling in syntactic order, only within parent.
 
     **Parameters:**
-    - `with_loc`: If `True` then only non-operator nodes with locations, `'all'` means all nodes with locations,
-        `'own'` means only nodes with own location, otherwise all nodes.
+    - `with_loc`: Return nodes depending on if they have a location or not.
+        - `True`: Only nodes with `AST` locations returned but also larger computed location nodes like `comprehension`,
+            `withitem`, `match_case` and `arguments` (but only if there actually are arguments present).
+        - `'all'`: Same as `True` but also operators (excluding `and` and `or`) with calculated locations.
+        - `'own'`: Only nodes with own location (does not recurse into non-own nodes).
+        - `False`: All nodes with or without location.
 
     **Returns:**
     - `None` if last valid sibling in parent, otherwise next node.
@@ -95,7 +97,7 @@ def next(self: 'FST', with_loc: bool | Literal['all', 'own'] = True) -> Optional
     name, idx = self.pfield
 
     while True:
-        next = AST_FIELDS_NEXT[(aparent.__class__, name)]
+        next = _AST_FIELDS_NEXT[(aparent.__class__, name)]
 
         if isinstance(next, int):  # special case?
             while True:
@@ -342,7 +344,7 @@ def next(self: 'FST', with_loc: bool | Literal['all', 'own'] = True) -> Optional
 
                     break
 
-                next = AST_FIELDS_NEXT[(aparent.__class__, name)]
+                next = _AST_FIELDS_NEXT[(aparent.__class__, name)]
 
                 continue
 
@@ -370,8 +372,12 @@ def prev(self: 'FST', with_loc: bool | Literal['all', 'own'] = True) -> Optional
     """Get previous sibling in syntactic order, only within parent.
 
     **Parameters:**
-    - `with_loc`: If `True` then only non-operator nodes with locations, `'all'` means all nodes with locations,
-        `'own'` means only nodes with own location, otherwise all nodes.
+    - `with_loc`: Return nodes depending on if they have a location or not.
+        - `True`: Only nodes with `AST` locations returned but also larger computed location nodes like `comprehension`,
+            `withitem`, `match_case` and `arguments` (but only if there actually are arguments present).
+        - `'all'`: Same as `True` but also operators (excluding `and` and `or`) with calculated locations.
+        - `'own'`: Only nodes with own location (does not recurse into non-own nodes).
+        - `False`: All nodes with or without location.
 
     **Returns:**
     - `None` if first valid sibling in parent, otherwise previous node.
@@ -384,7 +390,7 @@ def prev(self: 'FST', with_loc: bool | Literal['all', 'own'] = True) -> Optional
     name, idx = self.pfield
 
     while True:
-        prev = AST_FIELDS_PREV[(aparent.__class__, name)]
+        prev = _AST_FIELDS_PREV[(aparent.__class__, name)]
 
         if isinstance(prev, int):  # special case?
             while True:
@@ -640,7 +646,7 @@ def prev(self: 'FST', with_loc: bool | Literal['all', 'own'] = True) -> Optional
                 elif isinstance(sibling, list) and (idx := len(sibling)):
                     break
 
-                prev = AST_FIELDS_PREV[(aparent.__class__, name)]
+                prev = _AST_FIELDS_PREV[(aparent.__class__, name)]
 
                 continue
 
@@ -660,8 +666,12 @@ def first_child(self: 'FST', with_loc: bool | Literal['all', 'own'] = True) -> O
     """Get first valid child in syntactic order.
 
     **Parameters:**
-    - `with_loc`: If `True` then only non-operator nodes with locations, `'all'` means all nodes with locations,
-        `'own'` means only nodes with own location, otherwise all nodes.
+    - `with_loc`: Return nodes depending on if they have a location or not.
+        - `True`: Only nodes with `AST` locations returned but also larger computed location nodes like `comprehension`,
+            `withitem`, `match_case` and `arguments` (but only if there actually are arguments present).
+        - `'all'`: Same as `True` but also operators (excluding `and` and `or`) with calculated locations.
+        - `'own'`: Only nodes with own location (does not recurse into non-own nodes).
+        - `False`: All nodes with or without location.
 
     **Returns:**
     - `None` if no valid children, otherwise first valid child.
@@ -686,8 +696,12 @@ def last_child(self: 'FST', with_loc: bool | Literal['all', 'own'] = True) -> Op
     """Get last valid child in syntactic order.
 
     **Parameters:**
-    - `with_loc`: If `True` then only non-operator nodes with locations, `'all'` means all nodes with locations,
-        `'own'` means only nodes with own location, otherwise all nodes.
+    - `with_loc`: Return nodes depending on if they have a location or not.
+        - `True`: Only nodes with `AST` locations returned but also larger computed location nodes like `comprehension`,
+            `withitem`, `match_case` and `arguments` (but only if there actually are arguments present).
+        - `'all'`: Same as `True` but also operators (excluding `and` and `or`) with calculated locations.
+        - `'own'`: Only nodes with own location (does not recurse into non-own nodes).
+        - `False`: All nodes with or without location.
 
     **Returns:**
     - `None` if no valid children, otherwise last valid child.
@@ -722,8 +736,12 @@ def next_child(self: 'FST', from_child: Optional['FST'], with_loc: bool | Litera
 
     **Parameters:**
     - `from_child`: Child node we are coming from which may or may not have location.
-    - `with_loc`: If `True` then only non-operator nodes with locations, `'all'` means all nodes with locations,
-        `'own'` means only nodes with own location, otherwise all nodes.
+    - `with_loc`: Return nodes depending on if they have a location or not.
+        - `True`: Only nodes with `AST` locations returned but also larger computed location nodes like `comprehension`,
+            `withitem`, `match_case` and `arguments` (but only if there actually are arguments present).
+        - `'all'`: Same as `True` but also operators (excluding `and` and `or`) with calculated locations.
+        - `'own'`: Only nodes with own location (does not recurse into non-own nodes).
+        - `False`: All nodes with or without location.
 
     **Returns:**
     - `None` if last valid child in `self`, otherwise next child node.
@@ -739,8 +757,12 @@ def prev_child(self: 'FST', from_child: Optional['FST'], with_loc: bool | Litera
 
     **Parameters:**
     - `from_child`: Child node we are coming from which may or may not have location.
-    - `with_loc`: If `True` then only non-operator nodes with locations, `'all'` means all nodes with locations,
-        `'own'` means only nodes with own location, otherwise all nodes.
+    - `with_loc`: Return nodes depending on if they have a location or not.
+        - `True`: Only nodes with `AST` locations returned but also larger computed location nodes like `comprehension`,
+            `withitem`, `match_case` and `arguments` (but only if there actually are arguments present).
+        - `'all'`: Same as `True` but also operators (excluding `and` and `or`) with calculated locations.
+        - `'own'`: Only nodes with own location (does not recurse into non-own nodes).
+        - `False`: All nodes with or without location.
 
     **Returns:**
     - `None` if first valid child in `self`, otherwise previous child node.
@@ -755,10 +777,14 @@ def next_step(self: 'FST', with_loc: bool | Literal['all', 'own', 'allown'] = Tr
     node, returning `None` only when we are at the end of the whole thing.
 
     **Parameters:**
-    - `with_loc`: If `True` then only nodes with locations returned, `'all'` means all nodes with locations, `'own'`
-        means only nodes with own location (does not recurse into non-own nodes), `'allown'` means return `'own'`
-        nodes but recurse into nodes with non-own locations. Otherwise `False` means all nodes.
-    - `recurse_self`: Whether to allow recursion of `self` to return children or move directly to next nodes.
+    - `with_loc`: Return nodes depending on if they have a location or not.
+        - `True`: Only nodes with `AST` locations returned but also larger computed location nodes like `comprehension`,
+            `withitem`, `match_case` and `arguments` (but only if there actually are arguments present).
+        - `'all'`: Same as `True` but also operators (excluding `and` and `or`) with calculated locations.
+        - `'own'`: Only nodes with own location (does not recurse into non-own nodes).
+        - `'allown'` Same as `'own'` but recurse into nodes with non-own locations.
+        - `False`: All nodes with or without location.
+    - `recurse_self`: Whether to allow recursion into `self` to return children or move directly to next nodes.
 
     **Returns:**
     - `None` if last valid node in tree, otherwise next node in order.
@@ -789,10 +815,14 @@ def prev_step(self: 'FST', with_loc: bool | Literal['all', 'own', 'allown'] = Tr
     node, returning `None` only when we are at the beginning of the whole thing.
 
     **Parameters:**
-    - `with_loc`: If `True` then only nodes with locations returned, `'all'` means all nodes with locations, `'own'`
-        means only nodes with own location (does not recurse into non-own nodes), `'allown'` means return `'own'`
-        nodes but recurse into nodes with non-own locations. Otherwise `False` means all nodes.
-    - `recurse_self`: Whether to allow recursion of `self` to return children or move directly to prev nodes.
+    - `with_loc`: Return nodes depending on if they have a location or not.
+        - `True`: Only nodes with `AST` locations returned but also larger computed location nodes like `comprehension`,
+            `withitem`, `match_case` and `arguments` (but only if there actually are arguments present).
+        - `'all'`: Same as `True` but also operators (excluding `and` and `or`) with calculated locations.
+        - `'own'`: Only nodes with own location (does not recurse into non-own nodes).
+        - `'allown'` Same as `'own'` but recurse into nodes with non-own locations.
+        - `False`: All nodes with or without location.
+    - `recurse_self`: Whether to allow recursion into `self` to return children or move directly to prev nodes.
 
     **Returns:**
     - `None` if first valid node in tree, otherwise prev node in order.
@@ -830,8 +860,12 @@ def walk(self: 'FST', with_loc: bool | Literal['all', 'own'] = False, *, self_: 
     Walked nodes can be modified or replaced as long as their parent is not changed.
 
     **Parameters:**
-    - `with_loc`: If `True` then only nodes with locations returned, `'all'` means all nodes with locations, `'own'`
-        means only nodes with own location (does not recurse into non-own nodes), otherwise `False` means all nodes.
+    - `with_loc`: Return nodes depending on if they have a location or not.
+        - `True`: Only nodes with `AST` locations returned but also larger computed location nodes like `comprehension`,
+            `withitem`, `match_case` and `arguments` (but only if there actually are arguments present).
+        - `'all'`: Same as `True` but also operators (excluding `and` and `or`) with calculated locations.
+        - `'own'`: Only nodes with own location (does not recurse into non-own nodes).
+        - `False`: All nodes with or without location.
     - `self_`: If `True` then self will be returned first with the possibility to skip children with `send()`.
     - `recurse`: Whether to recurse into children by default, `send()` for a given node will always override this.
         Will always attempt first level of children unless walking self and `False` is sent first.
