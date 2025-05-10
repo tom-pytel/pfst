@@ -73,13 +73,18 @@ class _FSTCircularImportStandinMeta(type):
 
         return getattr(FST, name)
 
+    def __instancecheck__(cls, instance):
+        inspect.currentframe().f_back.f_globals['FST'] = FST
+
+        return isinstance(instance, FST)
+
 class _FSTCircularImportStandin(metaclass=_FSTCircularImportStandinMeta):
     """Temporary standin for circular import of `FST`. Proxies `FST()` and `FST.attr` and sets `FST` in caller globals
     to the actual `FST` class on first access. The import will also resolve to the actual `FST` class for static type
     analysis in IDEs due to the later override with the real `FST` class."""
 
     def __new__(cls, *args, **kwargs):
-        cls.is_FST  # trigger metaclass
+        inspect.currentframe().f_back.f_globals['FST'] = FST
 
         return FST(*args, **kwargs)
 

@@ -16115,6 +16115,102 @@ Module .. ROOT 0,0 -> 0,22
     0] Pass .. 0,18 -> 0,22
 """),
 
+(r"""def oldname(): pass""", 'body[0]', None, 'name', {'raw': False}, r"""new""", r"""def new(): pass""", r"""
+Module .. ROOT 0,0 -> 0,15
+  .body[1]
+  0] FunctionDef .. 0,0 -> 0,15
+    .name 'new'
+    .body[1]
+    0] Pass .. 0,11 -> 0,15
+"""),
+
+(r"""async def oldname(): pass""", 'body[0]', None, 'name', {'raw': False}, r"""new""", r"""async def new(): pass""", r"""
+Module .. ROOT 0,0 -> 0,21
+  .body[1]
+  0] AsyncFunctionDef .. 0,0 -> 0,21
+    .name 'new'
+    .body[1]
+    0] Pass .. 0,17 -> 0,21
+"""),
+
+(r"""class oldname: pass""", 'body[0]', None, 'name', {'raw': False}, r"""new""", r"""class new: pass""", r"""
+Module .. ROOT 0,0 -> 0,15
+  .body[1]
+  0] ClassDef .. 0,0 -> 0,15
+    .name 'new'
+    .body[1]
+    0] Pass .. 0,11 -> 0,15
+"""),
+
+(r"""oldname""", 'body[0].value', None, 'id', {'raw': False}, r"""new""", r"""new""", r"""
+Module .. ROOT 0,0 -> 0,3
+  .body[1]
+  0] Expr .. 0,0 -> 0,3
+    .value Name 'new' Load .. 0,0 -> 0,3
+"""),
+
+(r"""def f(oldarg=val): pass""", 'body[0].args.args[0]', None, 'arg', {'raw': False}, r"""new""", r"""def f(new=val): pass""", r"""
+Module .. ROOT 0,0 -> 0,20
+  .body[1]
+  0] FunctionDef .. 0,0 -> 0,20
+    .name 'f'
+    .args arguments .. 0,6 -> 0,13
+      .args[1]
+      0] arg .. 0,6 -> 0,9
+        .arg 'new'
+      .defaults[1]
+      0] Name 'val' Load .. 0,10 -> 0,13
+    .body[1]
+    0] Pass .. 0,16 -> 0,20
+"""),
+
+(r"""import oldname as thing""", 'body[0].names[0]', None, 'name', {'raw': False}, r"""new""", r"""import new as thing""", r"""
+Module .. ROOT 0,0 -> 0,19
+  .body[1]
+  0] Import .. 0,0 -> 0,19
+    .names[1]
+    0] alias .. 0,7 -> 0,19
+      .name 'new'
+      .asname
+        'thing'
+"""),
+
+(r"""def f[T](): pass""", 'body[0].type_params[0]', None, 'name', {'raw': False, 'ver': 12}, r"""new""", r"""def f[new](): pass""", r"""
+Module .. ROOT 0,0 -> 0,18
+  .body[1]
+  0] FunctionDef .. 0,0 -> 0,18
+    .name 'f'
+    .body[1]
+    0] Pass .. 0,14 -> 0,18
+    .type_params[1]
+    0] TypeVar .. 0,6 -> 0,9
+      .name 'new'
+"""),
+
+(r"""def f[*T](): pass""", 'body[0].type_params[0]', None, 'name', {'raw': False, 'ver': 12}, r"""new""", r"""def f[*new](): pass""", r"""
+Module .. ROOT 0,0 -> 0,19
+  .body[1]
+  0] FunctionDef .. 0,0 -> 0,19
+    .name 'f'
+    .body[1]
+    0] Pass .. 0,15 -> 0,19
+    .type_params[1]
+    0] TypeVarTuple .. 0,6 -> 0,10
+      .name 'new'
+"""),
+
+(r"""def f[**T](): pass""", 'body[0].type_params[0]', None, 'name', {'raw': False, 'ver': 12}, r"""new""", r"""def f[**new](): pass""", r"""
+Module .. ROOT 0,0 -> 0,20
+  .body[1]
+  0] FunctionDef .. 0,0 -> 0,20
+    .name 'f'
+    .body[1]
+    0] Pass .. 0,16 -> 0,20
+    .type_params[1]
+    0] ParamSpec .. 0,6 -> 0,11
+      .name 'new'
+"""),
+
 ]  # END OF PUT_ONE_DATA
 
 PUT_RAW_DATA = [
@@ -24331,7 +24427,12 @@ class cls:
                 raise
 
     def test_put_one(self):
+        ver = sys.version_info[1]
+
         for i, (dst, attr, idx, field, options, src, put_src, put_dump) in enumerate(PUT_ONE_DATA):
+            if options.get('ver', 0) > ver:
+                continue
+
             t = parse(dst)
             f = (eval(f't.{attr}', {'t': t}) if attr else t).f
 
@@ -24372,7 +24473,15 @@ class cls:
                 raise
 
     def test_put_one_nonraw_as_raw(self):
+        ver = sys.version_info[1]
+
         for i, (dst, attr, idx, field, options, src, put_src, put_dump) in enumerate(PUT_ONE_DATA):
+            if field in ('name', 'id', 'arg'):  # TODO: raw for non-AST fields?
+                continue
+
+            if options.get('ver', 0) > ver:
+                continue
+
             t = parse(dst)
             f = (eval(f't.{attr}', {'t': t}) if attr else t).f
 
