@@ -61,13 +61,9 @@ def _normalize_code(code: Code, coerce: Literal['expr', 'exprish', 'mod'] | None
 
     ast = ast_parse(src, **parse_params)
 
-    if coerce == 'expr':
-        if not (ast := reduce_ast(ast, multi_mod=None)) or not isinstance(ast, expr):
-            raise NodeTypeError('expecting single expression')
-
-    elif coerce == 'exprish':
-        if not (ast := reduce_ast(ast, multi_mod=None)):
-            raise NodeTypeError('expecting single expressionish')
+    if (is_expr := coerce == 'expr') or coerce == 'exprish':
+        if not (ast := reduce_ast(ast, multi_mod=None)) or (is_expr and not isinstance(ast, expr)):
+            raise NodeTypeError(f'expecting single {"expression" if is_expr else "expressionish"}')
 
     return FST(ast, lines=lines)
 

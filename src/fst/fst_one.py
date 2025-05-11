@@ -7,7 +7,7 @@ from typing import Any, Optional
 from .astutil import *
 from .astutil import TypeAlias, TryStar, type_param, TypeVar, ParamSpec, TypeVarTuple, TemplateStr, Interpolation
 
-from .shared import Code, NodeTypeError, _next_find, _next_find_re
+from .shared import Code, NodeTypeError, _fixup_one_index, _next_find, _next_find_re
 
 
 _re_identifier = re.compile(r'[^\d\W]\w*')
@@ -25,17 +25,19 @@ def _code_as_identifier(code: Code) -> str | None:
     return code.id if isinstance(code, Name) else None
 
 
-def _to_to_slice_idx(self: 'FST', idx: int, field: str, to: Optional['FST']):
+def _slice_indices(self: 'FST', idx: int, child: list[AST], to: Optional['FST']):
     """If a `to` parameter is passed then try to convert it to an index in the same field body list of `self`."""
 
+    idx = _fixup_one_index(len(child), idx)
+
     if not to:
-        return idx + 1 or len(getattr(self.a, field))  # 'or' for -1 index to go to end of body
+        return idx, idx + 1
 
     elif to.parent is self.parent is not None and (pf := to.pfield).name == self.pfield.name:
         if (to_idx := pf.idx) < idx:
             raise ValueError("invalid 'to' node, must follow self in body")
 
-        return to_idx + 1
+        return idx, to_idx + 1
 
     raise NodeTypeError(f"invalid 'to' node")
 
@@ -71,20 +73,20 @@ def _put_one_identifier(self: 'FST', code: Code | None, idx: int | None, field: 
     setattr(self.a, field, code)
 
 
-def _put_one_stmtish(self: 'FST', code: Code | None, idx: int | None, field: str, child: Any, extra: Any, **options,
-                     ) -> Optional['FST']:
+def _put_one_stmtish(self: 'FST', code: Code | None, idx: int | None, field: str, child: list[AST], extra: Any,
+                     **options) -> Optional['FST']:
     """Put or delete a single statementish node to a list of them (body, orelse, handlers, finalbody or cases)."""
 
-    self._put_slice_stmtish(code, idx, _to_to_slice_idx(self, idx, field, options.get('to')), field, True, **options)
+    self._put_slice_stmtish(code, *_slice_indices(self, idx, child, options.get('to')), field, True, **options)
 
     return None if code is None else getattr(self.a, field)[idx].f
 
 
-def _put_one_tuple_list_or_set(self: 'FST', code: Code | None, idx: int | None, field: str, child: Any, extra: Any,
-                               **options) -> Optional['FST']:
+def _put_one_tuple_list_or_set(self: 'FST', code: Code | None, idx: int | None, field: str, child: list[AST],
+                               extra: Any, **options) -> Optional['FST']:
     """Put or delete a single expression to a Tuple, List or Set elts."""
 
-    self._put_slice_tuple_list_or_set(code, idx, _to_to_slice_idx(self, idx, field, options.get('to')), field, True,
+    self._put_slice_tuple_list_or_set(code, *_slice_indices(self, idx, child, options.get('to')), field, True,
                                       **options)
 
     return None if code is None else getattr(self.a, field)[idx].f
@@ -97,10 +99,21 @@ def _put_one_expr_required(self: 'FST', code: Code | None, idx: int | None, fiel
 
     if code is None:
         raise ValueError(f'cannot delete {self.a.__class__.__name__}.{field}')
-    if idx is not None:
-        raise IndexError(f'{self.a.__class__.__name__}.{field} does not take an index')
     if options.get('to'):
         raise NodeTypeError(f"cannot put with 'to' to {self.a.__class__.__name__}.{field}")
+
+    if isinstance(child, list):
+        if idx is None:
+            raise IndexError(f'{self.a.__class__.__name__}.{field} needs an index')
+
+        child = child[idx]
+
+    else:
+        if idx is not None:
+            raise IndexError(f'{self.a.__class__.__name__}.{field} does not take an index')
+
+    if not child:
+        raise ValueError(f'cannot replace nonexistent {self.a.__class__.__name__}.{field}')
 
     put_fst = self._normalize_code(code, 'expr', parse_params=self.root.parse_params)
     put_ast = put_fst.a
@@ -126,7 +139,7 @@ def _put_one_expr_required(self: 'FST', code: Code | None, idx: int | None, fiel
     effpars = pars or put_fst.is_parenthesized_tuple() is False  # need tuple check because otherwise location would be wrong after
     loc     = childf.pars(effpars)  # don't need exc_genexpr_solo=True here because guaranteed not to be this
 
-    if precedence_require_parens(put_ast, ast, field, None):
+    if precedence_require_parens(put_ast, ast, field, idx):
         if not put_fst.is_atom() and (effpars or not childf.pars(ret_npars=True)[1]):
             put_fst.parenthesize()
 
@@ -155,11 +168,9 @@ _GLOBALS = globals() | {'_GLOBALS': None}
 def _put_one(self: 'FST', code: Code | None, idx: int | None, field: str, **options) -> Optional['FST']:
     """Put new, replace or delete a node (or limited non-node) to a field of `self`."""
 
-    if isinstance(child := getattr(self.a, field), list):
-        child = child[idx]
-
-    ast = self.a
-    raw = FST.get_option('raw', options)
+    ast   = self.a
+    child = getattr(self.a, field)
+    raw   = FST.get_option('raw', options)
 
     if raw is not True:
         if raw and raw != 'auto':
@@ -178,6 +189,9 @@ def _put_one(self: 'FST', code: Code | None, idx: int | None, field: str, **opti
         else:
             if not raw:
                 raise ValueError(f"cannot replace {ast.__class__.__name__}.{field}")
+
+    if isinstance(child, list):
+        child = child[idx]
 
     ret = child.f._reparse_raw_node(code, **options)
 
@@ -276,8 +290,8 @@ _PUT_ONE_HANDLERS = {
     (IfExp, 'body'):                      (_put_one_expr_required, None), # expr
     (IfExp, 'test'):                      (_put_one_expr_required, None), # expr
     (IfExp, 'orelse'):                    (_put_one_expr_required, None), # expr
-    # (Dict, 'keys'):                       (_put_one_default, None), # expr*                                           - takes idx, handle special key=None?
-    # (Dict, 'values'):                     (_put_one_default, None), # expr*                                           - takes idx,
+    (Dict, 'keys'):                       (_put_one_expr_required, None), # expr*                                       - takes idx, handle special key=None?
+    (Dict, 'values'):                     (_put_one_expr_required, None), # expr*                                       - takes idx,
     (Set, 'elts'):                        (_put_one_tuple_list_or_set, None), # expr*
     (ListComp, 'elt'):                    (_put_one_expr_required, None), # expr
     # (ListComp, 'generators'):             (_put_one_default, None), # comprehension*
@@ -293,10 +307,10 @@ _PUT_ONE_HANDLERS = {
     (YieldFrom, 'value'):                 (_put_one_expr_required, None), # expr
     (Compare, 'left'):                    (_put_one_expr_required, None), # expr
     # (Compare, 'ops'):                     (_put_one_default, None), # cmpop*
-    # (Compare, 'comparators'):             (_put_one_default, None), # expr*
+    (Compare, 'comparators'):             (_put_one_expr_required, None), # expr*
     (Call, 'func'):                       (_put_one_expr_required, None), # expr
     # (Call, 'args'):                       (_put_one_default, None), # expr*                                           - slice
-    # (Call, 'keywords'):                   (_put_one_default, None), # keyword*
+    # (Call, 'keywords'):                   (_put_one_default, None), # keyword*                                        - slice
     (FormattedValue, 'value'):            (_put_one_expr_required, None), # expr
     # (FormattedValue, 'format_spec'):      (_put_one_default, None), # expr?
     # (FormattedValue, 'conversion'):       (_put_one_default, None), # int
@@ -304,8 +318,8 @@ _PUT_ONE_HANDLERS = {
     # (Interpolation, 'constant'):          (_put_one_default, None), # str
     # (Interpolation, 'conversion'):        (_put_one_default, None), # int
     # (Interpolation, 'format_spec'):       (_put_one_default, None), # expr?
-    # (JoinedStr, 'values'):                (_put_one_default, None), # expr*                                           - ???
-    # (TemplateStr, 'values'):              (_put_one_default, None), # expr*                                           - ???
+    # (JoinedStr, 'values'):                (_put_one_default, None), # expr*                                           - ??? no location on py < 3.12
+    # (TemplateStr, 'values'):              (_put_one_default, None), # expr*                                           - ??? no location on py < 3.12
     # (Constant, 'value'):                  (_put_one_default, None), # constant
     # (Constant, 'kind'):                   (_put_one_default, None), # string?
     (Attribute, 'value'):                 (_put_one_expr_required, None), # expr
@@ -328,7 +342,7 @@ _PUT_ONE_HANDLERS = {
     (ExceptHandler, 'body'):              (_put_one_stmtish, None), # stmt*
     # (arguments, 'posonlyargs'):           (_put_one_default, None), # arg*
     # (arguments, 'args'):                  (_put_one_default, None), # arg*
-    # (arguments, 'defaults'):              (_put_one_default, None), # expr*
+    (arguments, 'defaults'):              (_put_one_expr_required, None), # expr*
     # (arguments, 'vararg'):                (_put_one_default, None), # arg?
     # (arguments, 'kwonlyargs'):            (_put_one_default, None), # arg*
     # (arguments, 'kw_defaults'):           (_put_one_default, None), # expr*                                           - can have None with special rules
@@ -347,7 +361,7 @@ _PUT_ONE_HANDLERS = {
     # (MatchValue, 'value'):                (_put_one_default, None), # expr                                            - limited values, Constant? Name becomes MatchAs
     # (MatchSingleton, 'value'):            (_put_one_default, None), # constant
     # (MatchSequence, 'patterns'):          (_put_one_default, None), # pattern*
-    # (MatchMapping, 'keys'):               (_put_one_default, None), # expr*
+    (MatchMapping, 'keys'):               (_put_one_expr_required, (Constant, Attribute)), # expr*  TODO: XXX are there any others allowed?
     # (MatchMapping, 'patterns'):           (_put_one_default, None), # pattern*
     # (MatchMapping, 'rest'):               (_put_one_default, None), # identifier?
     (MatchClass, 'cls'):                  (_put_one_expr_required, (Name, Attribute)), # expr

@@ -920,7 +920,7 @@ class FST:
 
         if is_dict and field == 'keys' and (keys := ast.keys)[start] is None:  # '{**d}' with key=None
             if not FST.get_option('raw', options):
-                raise ValueError(f"cannot put() non-raw to ** Dict.key")
+                raise ValueError(f"cannot put() non-raw to '**' Dict.key")
 
             start_loc = self._dict_key_or_mock_loc(keys[start], ast.values[start].f)
 

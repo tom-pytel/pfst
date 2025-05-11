@@ -15426,7 +15426,7 @@ Module .. ROOT 0,0 -> 2,5
 
 (r"""i = 1
 j = 2
-k = 3""", '', -4, None, {'raw': False}, r"""l = 4""", r"""**IndexError('list index out of range')**""", r"""
+k = 3""", '', -4, None, {'raw': False}, r"""l = 4""", r"""**IndexError('index out of range')**""", r"""
 """),
 
 (r"""(1, 2, 3)""", 'body[0].value', 1, None, {'raw': False}, r"""4""", r"""(1, 4, 3)""", r"""
@@ -15465,7 +15465,7 @@ Module .. ROOT 0,0 -> 0,9
       .ctx Load
 """),
 
-(r"""(1, 2, 3)""", 'body[0].value', -4, None, {'raw': False}, r"""4""", r"""**IndexError('list index out of range')**""", r"""
+(r"""(1, 2, 3)""", 'body[0].value', -4, None, {'raw': False}, r"""4""", r"""**IndexError('index out of range')**""", r"""
 """),
 
 (r"""i = j""", 'body[0]', None, None, {'raw': False}, r"""**DEL**""", r"""**ValueError('cannot delete Assign.value')**""", r"""
@@ -16461,6 +16461,89 @@ Module .. ROOT 0,0 -> 1,20
           .value Name 'new' Load .. 1,6 -> 1,9
           .attr 'to'
           .ctx Load
+      .body[1]
+      0] Pass .. 1,16 -> 1,20
+"""),
+
+(r"""{i: j}""", 'body[0].value', 0, 'keys', {'raw': False}, r"""yield 1""", r"""{(yield 1): j}""", r"""
+Module .. ROOT 0,0 -> 0,14
+  .body[1]
+  0] Expr .. 0,0 -> 0,14
+    .value Dict .. 0,0 -> 0,14
+      .keys[1]
+      0] Yield .. 0,2 -> 0,9
+        .value Constant 1 .. 0,8 -> 0,9
+      .values[1]
+      0] Name 'j' Load .. 0,12 -> 0,13
+"""),
+
+(r"""{i: j}""", 'body[0].value', 0, 'values', {'raw': False}, r"""yield 1""", r"""{i: (yield 1)}""", r"""
+Module .. ROOT 0,0 -> 0,14
+  .body[1]
+  0] Expr .. 0,0 -> 0,14
+    .value Dict .. 0,0 -> 0,14
+      .keys[1]
+      0] Name 'i' Load .. 0,1 -> 0,2
+      .values[1]
+      0] Yield .. 0,5 -> 0,12
+        .value Constant 1 .. 0,11 -> 0,12
+"""),
+
+(r"""{**i}""", 'body[0].value', 0, 'keys', {'raw': False}, r"""yield 1""", r"""**ValueError("cannot put() non-raw to '**' Dict.key")**""", r"""
+"""),
+
+(r"""a < b""", 'body[0].value', 0, 'comparators', {'raw': False}, r"""yield 1""", r"""a < (yield 1)""", r"""
+Module .. ROOT 0,0 -> 0,13
+  .body[1]
+  0] Expr .. 0,0 -> 0,13
+    .value Compare .. 0,0 -> 0,13
+      .left Name 'a' Load .. 0,0 -> 0,1
+      .ops[1]
+      0] Lt .. 0,2 -> 0,3
+      .comparators[1]
+      0] Yield .. 0,5 -> 0,12
+        .value Constant 1 .. 0,11 -> 0,12
+"""),
+
+(r"""def f(a, b=1, c=2): pass""", 'body[0].args', 0, 'defaults', {'raw': False}, r"""yield 1""", r"""def f(a, b=(yield 1), c=2): pass""", r"""
+Module .. ROOT 0,0 -> 0,32
+  .body[1]
+  0] FunctionDef .. 0,0 -> 0,32
+    .name 'f'
+    .args arguments .. 0,6 -> 0,25
+      .args[3]
+      0] arg .. 0,6 -> 0,7
+        .arg 'a'
+      1] arg .. 0,9 -> 0,10
+        .arg 'b'
+      2] arg .. 0,22 -> 0,23
+        .arg 'c'
+      .defaults[2]
+      0] Yield .. 0,12 -> 0,19
+        .value Constant 1 .. 0,18 -> 0,19
+      1] Constant 2 .. 0,24 -> 0,25
+    .body[1]
+    0] Pass .. 0,28 -> 0,32
+"""),
+
+(r"""match a:
+ case {1: i}: pass""", 'body[0].cases[0].pattern', 0, 'keys', {'raw': False}, r"""a.b""", r"""match a:
+ case {a.b: i}: pass""", r"""
+Module .. ROOT 0,0 -> 1,20
+  .body[1]
+  0] Match .. 0,0 -> 1,20
+    .subject Name 'a' Load .. 0,6 -> 0,7
+    .cases[1]
+    0] match_case .. 1,1 -> 1,20
+      .pattern MatchMapping .. 1,6 -> 1,14
+        .keys[1]
+        0] Attribute .. 1,7 -> 1,10
+          .value Name 'a' Load .. 1,7 -> 1,8
+          .attr 'b'
+          .ctx Load
+        .patterns[1]
+        0] MatchAs .. 1,12 -> 1,13
+          .name 'i'
       .body[1]
       0] Pass .. 1,16 -> 1,20
 """),
