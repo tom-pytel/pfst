@@ -15990,6 +15990,23 @@ Module .. ROOT 0,0 -> 0,11
         .conversion -1
 """),
 
+(r"""t'{i}'""", 'body[0].value.values[0]', None, None, {'raw': False, '_ver': 14}, r"""a, b""", r"""t'{(a, b)}'""", r"""
+Module .. ROOT 0,0 -> 0,11
+  .body[1]
+  0] Expr .. 0,0 -> 0,11
+    .value TemplateStr .. 0,0 -> 0,11
+      .values[1]
+      0] Interpolation .. 0,2 -> 0,10
+        .value Tuple .. 0,3 -> 0,9
+          .elts[2]
+          0] Name 'a' Load .. 0,4 -> 0,5
+          1] Name 'b' Load .. 0,7 -> 0,8
+          .ctx Load
+        .str
+          '(a, b)'
+        .conversion -1
+"""),
+
 (r"""i.j""", 'body[0].value', None, None, {'raw': False}, r"""a, b""", r"""(a, b).j""", r"""
 Module .. ROOT 0,0 -> 0,8
   .body[1]
@@ -16181,7 +16198,7 @@ Module .. ROOT 0,0 -> 0,19
         'thing'
 """),
 
-(r"""def f[T](): pass""", 'body[0].type_params[0]', None, 'name', {'raw': False, 'ver': 12}, r"""new""", r"""def f[new](): pass""", r"""
+(r"""def f[T](): pass""", 'body[0].type_params[0]', None, 'name', {'raw': False, '_ver': 12}, r"""new""", r"""def f[new](): pass""", r"""
 Module .. ROOT 0,0 -> 0,18
   .body[1]
   0] FunctionDef .. 0,0 -> 0,18
@@ -16193,7 +16210,7 @@ Module .. ROOT 0,0 -> 0,18
       .name 'new'
 """),
 
-(r"""def f[*T](): pass""", 'body[0].type_params[0]', None, 'name', {'raw': False, 'ver': 12}, r"""new""", r"""def f[*new](): pass""", r"""
+(r"""def f[*T](): pass""", 'body[0].type_params[0]', None, 'name', {'raw': False, '_ver': 12}, r"""new""", r"""def f[*new](): pass""", r"""
 Module .. ROOT 0,0 -> 0,19
   .body[1]
   0] FunctionDef .. 0,0 -> 0,19
@@ -16205,7 +16222,7 @@ Module .. ROOT 0,0 -> 0,19
       .name 'new'
 """),
 
-(r"""def f[**T](): pass""", 'body[0].type_params[0]', None, 'name', {'raw': False, 'ver': 12}, r"""new""", r"""def f[**new](): pass""", r"""
+(r"""def f[**T](): pass""", 'body[0].type_params[0]', None, 'name', {'raw': False, '_ver': 12}, r"""new""", r"""def f[**new](): pass""", r"""
 Module .. ROOT 0,0 -> 0,20
   .body[1]
   0] FunctionDef .. 0,0 -> 0,20
@@ -16381,10 +16398,10 @@ Module .. ROOT 0,0 -> 0,22
         .is_async 0
 """),
 
-(r"""type i = j""", 'body[0]', None, 'name', {'raw': False, 'ver': 12}, r"""1""", r"""**NodeTypeError('expecting a Name for TypeAlias.name, got Constant')**""", r"""
+(r"""type i = j""", 'body[0]', None, 'name', {'raw': False, '_ver': 12}, r"""1""", r"""**NodeTypeError('expecting a Name for TypeAlias.name, got Constant')**""", r"""
 """),
 
-(r"""type i = j""", 'body[0]', None, 'name', {'raw': False, 'ver': 12}, r"""new""", r"""type new = j""", r"""
+(r"""type i = j""", 'body[0]', None, 'name', {'raw': False, '_ver': 12}, r"""new""", r"""type new = j""", r"""
 Module .. ROOT 0,0 -> 0,12
   .body[1]
   0] TypeAlias .. 0,0 -> 0,12
@@ -16392,7 +16409,7 @@ Module .. ROOT 0,0 -> 0,12
     .value Name 'j' Load .. 0,11 -> 0,12
 """),
 
-(r"""type i = j""", 'body[0]', None, None, {'raw': False, 'ver': 12}, r"""new""", r"""type i = new""", r"""
+(r"""type i = j""", 'body[0]', None, None, {'raw': False, '_ver': 12}, r"""new""", r"""type i = new""", r"""
 Module .. ROOT 0,0 -> 0,12
   .body[1]
   0] TypeAlias .. 0,0 -> 0,12
@@ -24767,7 +24784,7 @@ class cls:
         ver = sys.version_info[1]
 
         for i, (dst, attr, idx, field, options, src, put_src, put_dump) in enumerate(PUT_ONE_DATA):
-            if options.get('ver', 0) > ver:
+            if options.get('_ver', 0) > ver:
                 continue
 
             t = parse(dst)
@@ -24816,7 +24833,7 @@ class cls:
     #         if field in ('name', 'id', 'arg'):  # TODO: raw for non-AST fields?
     #             continue
 
-    #         if options.get('ver', 0) > ver:
+    #         if options.get('_ver', 0) > ver:
     #             continue
 
     #         t = parse(dst)

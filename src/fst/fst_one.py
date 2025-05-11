@@ -162,6 +162,17 @@ def _put_one_expr_required(self: 'FST', code: Code | None, idx: int | None, fiel
     return put_ast.f
 
 
+def _put_one_Interpolation_value(self: 'FST', code: Code | None, idx: int | None, field: str, child: Any,
+                                 extra: tuple[type[AST]] | list[type[AST]] | type[AST] | None,
+                                 **options) -> Optional['FST']:
+    """Put Interpolation.value. Do normal expr put and if successful copy source to `.str` attribute."""
+
+    ret        = _put_one_expr_required(self, code, idx, field, child, extra, **options)
+    self.a.str = self.get_src(*ret.loc)
+
+    return ret
+
+
 _GLOBALS = globals() | {'_GLOBALS': None}
 # ----------------------------------------------------------------------------------------------------------------------
 
@@ -342,7 +353,7 @@ _PUT_ONE_HANDLERS = {
     (FormattedValue, 'value'):            (_put_one_expr_required, None), # expr
     # (FormattedValue, 'format_spec'):      (_put_one_default, None), # expr?
     # (FormattedValue, 'conversion'):       (_put_one_default, None), # int
-    # (Interpolation, 'value'):             (_put_one_default, None), # expr                                            - need to change .str as well as expr
+    (Interpolation, 'value'):             (_put_one_Interpolation_value, None), # expr                                            - need to change .str as well as expr
     # (Interpolation, 'constant'):          (_put_one_default, None), # str
     # (Interpolation, 'conversion'):        (_put_one_default, None), # int
     # (Interpolation, 'format_spec'):       (_put_one_default, None), # expr?
