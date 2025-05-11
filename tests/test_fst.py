@@ -16416,6 +16416,55 @@ Module .. ROOT 0,0 -> 0,13
       0] Name 'j' Load .. 0,12 -> 0,13
 """),
 
+(r"""call()""", 'body[0].value', None, 'func', {'raw': False}, r"""new, to""", r"""(new, to)()""", r"""
+Module .. ROOT 0,0 -> 0,11
+  .body[1]
+  0] Expr .. 0,0 -> 0,11
+    .value Call .. 0,0 -> 0,11
+      .func Tuple .. 0,0 -> 0,9
+        .elts[2]
+        0] Name 'new' Load .. 0,1 -> 0,4
+        1] Name 'to' Load .. 0,6 -> 0,8
+        .ctx Load
+"""),
+
+(r"""match a:
+ case c(): pass""", 'body[0].cases[0].pattern', None, 'cls', {'raw': False}, r"""new, to""", r"""**NodeTypeError('expecting one of (Name, Attribute) for MatchClass.cls, got Tuple')**""", r"""
+"""),
+
+(r"""match a:
+ case c(): pass""", 'body[0].cases[0].pattern', None, 'cls', {'raw': False}, r"""new""", r"""match a:
+ case new(): pass""", r"""
+Module .. ROOT 0,0 -> 1,17
+  .body[1]
+  0] Match .. 0,0 -> 1,17
+    .subject Name 'a' Load .. 0,6 -> 0,7
+    .cases[1]
+    0] match_case .. 1,1 -> 1,17
+      .pattern MatchClass .. 1,6 -> 1,11
+        .cls Name 'new' Load .. 1,6 -> 1,9
+      .body[1]
+      0] Pass .. 1,13 -> 1,17
+"""),
+
+(r"""match a:
+ case c(): pass""", 'body[0].cases[0].pattern', None, 'cls', {'raw': False}, r"""new.to""", r"""match a:
+ case new.to(): pass""", r"""
+Module .. ROOT 0,0 -> 1,20
+  .body[1]
+  0] Match .. 0,0 -> 1,20
+    .subject Name 'a' Load .. 0,6 -> 0,7
+    .cases[1]
+    0] match_case .. 1,1 -> 1,20
+      .pattern MatchClass .. 1,6 -> 1,14
+        .cls Attribute .. 1,6 -> 1,12
+          .value Name 'new' Load .. 1,6 -> 1,9
+          .attr 'to'
+          .ctx Load
+      .body[1]
+      0] Pass .. 1,16 -> 1,20
+"""),
+
 ]  # END OF PUT_ONE_DATA
 
 PUT_RAW_DATA = [
