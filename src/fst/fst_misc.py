@@ -238,7 +238,7 @@ def _dump(self: 'FST', full: bool = False, indent: int = 2, cind: str = '', pref
                             'slice', 'lower', 'upper', 'step', 'guard', 'optional_vars',
                             'cls', 'bound', 'default_value', 'pattern', 'subject',
                             'type_comment', 'lineno', 'tag', 'op',
-                            'simple', 'level', 'conversion', 'is_async', 'lineno')
+                            'simple', 'level', 'conversion', 'str', 'is_async', 'lineno')
                         or (not is_list and name in
                             ('body', 'orelse'))
             ):

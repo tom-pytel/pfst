@@ -842,24 +842,25 @@ class FST:
         ast     = self.a
         _, body = _fixup_field_body(ast, field, False)
 
-        if not isinstance(body, list):  # get from individual field
-            if stop is not False or start is not None:
-                raise IndexError(f"cannot pass index for non-slice get() to {ast.__class__.__name__}" +
-                                 f".{field}" if field else "")
+        if isinstance(body, list):  # get from individual field
+            if stop is not False:
+                return self.get_slice(start, stop, field, cut=cut, **options)
+            if start is None:
+                return self.get_slice(None, None, field, cut=cut, **options)
 
+        elif stop is not False or start is not None:
+            raise IndexError(f"cannot pass index for non-slice get() to {ast.__class__.__name__}" +
+                             (f".{field}" if field else ""))
+
+
+        else:
             raise NotImplementedError
 
 
             # TODO: get single-field non-indexed stuff
 
 
-        if stop is not False:
-            return self.get_slice(start, stop, field, cut=cut, **options)
-        elif start is None:
-            return self.get_slice(None, None, field, cut=cut, **options)
-
-
-        # TODO: special case indexed stuff like Compare
+        # TODO: special case indexed stuff like Compare, maybe in _get_one()
 
 
         if cut:
@@ -879,19 +880,15 @@ class FST:
         ast          = self.a
         field_, body = _fixup_field_body(ast, field, False)
 
-        if not isinstance(body, list):  # put to individual field
-            if stop is not False or start is not None:
-                raise IndexError(f"cannot pass index for non-slice put() to {ast.__class__.__name__}" +
-                                 f".{field}" if field else "")
+        if isinstance(body, list):
+            if stop is not False:
+                return self.put_slice(code, start, stop, field, one=one, **options)
+            if start is None:
+                return self.put_slice(code, None, None, field, one=one, **options)
 
-            self._put_one(code, start, field_, **options)
-
-            return self.repath()
-
-        if stop is not False:
-            return self.put_slice(code, start, stop, field, one=one, **options)
-        if start is None:
-            return self.put_slice(code, None, None, field, one=one, **options)
+        elif stop is not False or start is not None:
+            raise IndexError(f"cannot pass index for non-slice put() to {ast.__class__.__name__}" +
+                             f".{field}" if field else "")
 
         if start == 'end':
             raise IndexError(f"cannot put() non-slice to index 'end'")

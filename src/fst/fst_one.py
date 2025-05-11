@@ -42,7 +42,7 @@ def _slice_indices(self: 'FST', idx: int, child: list[AST], to: Optional['FST'])
     raise NodeTypeError(f"invalid 'to' node")
 
 
-def _put_one_stmtish(self: 'FST', code: Code | None, idx: int | None, field: str, child: list[AST], extra: Any,
+def _put_one_stmtish(self: 'FST', code: Code | None, idx: int | None, field: str, child: list[AST], extra: None,
                      **options) -> Optional['FST']:
     """Put or delete a single statementish node to a list of them (body, orelse, handlers, finalbody or cases)."""
 
@@ -52,7 +52,7 @@ def _put_one_stmtish(self: 'FST', code: Code | None, idx: int | None, field: str
 
 
 def _put_one_tuple_list_or_set(self: 'FST', code: Code | None, idx: int | None, field: str, child: list[AST],
-                               extra: Any, **options) -> Optional['FST']:
+                               extra: None, **options) -> Optional['FST']:
     """Put or delete a single expression to a Tuple, List or Set elts."""
 
     self._put_slice_tuple_list_or_set(code, *_slice_indices(self, idx, child, options.get('to')), field, True,
@@ -61,7 +61,7 @@ def _put_one_tuple_list_or_set(self: 'FST', code: Code | None, idx: int | None, 
     return None if code is None else getattr(self.a, field)[idx].f
 
 
-def _put_one_identifier(self: 'FST', code: Code | None, idx: int | None, field: str, child: Any, extra: Any, **options,
+def _put_one_identifier(self: 'FST', code: Code | None, idx: int | None, field: str, child: Any, extra: None, **options,
                         ) -> Optional['FST']:
     """Put a single required identifier."""
 
@@ -125,13 +125,12 @@ def _put_one_expr_required(self: 'FST', code: Code | None, idx: int | None, fiel
                                      f'{self.a.__class__.__name__}.{field}') +
                                     f', got {put_ast.__class__.__name__}')
 
-        else:  # single AST type or tuple means only these allowed
-            if not isinstance(put_ast, extra):
-                raise NodeTypeError((f'expecting a {extra.__name__} for {self.a.__class__.__name__}.{field}'
-                                     if isinstance(extra, type) else
-                                     f'expecting one of ({", ".join(c.__name__ for c in extra)}) for '
-                                     f'{self.a.__class__.__name__}.{field}') +
-                                    f', got {put_ast.__class__.__name__}')
+        elif not isinstance(put_ast, extra):  # single AST type or tuple means only these allowed
+            raise NodeTypeError((f'expecting a {extra.__name__} for {self.a.__class__.__name__}.{field}'
+                                 if isinstance(extra, type) else
+                                 f'expecting one of ({", ".join(c.__name__ for c in extra)}) for '
+                                 f'{self.a.__class__.__name__}.{field}') +
+                                f', got {put_ast.__class__.__name__}')
 
     ast     = self.a
     childf  = child.f
@@ -160,6 +159,17 @@ def _put_one_expr_required(self: 'FST', code: Code | None, idx: int | None, fiel
     childf._set_ast(put_ast)
 
     return put_ast.f
+
+
+def _put_one_Dict_key(self: 'FST', code: Code | None, idx: int | None, field: str, child: Any,
+                      extra: tuple[type[AST]] | list[type[AST]] | type[AST] | None,
+                      **options) -> Optional['FST']:
+    """Allow for deleting or adding a `Dict` key value to change between `a: b` and `**b`."""
+
+    return _put_one_expr_required(self, code, idx, field, child, extra, **options)
+
+
+    # TODO: this
 
 
 def _put_one_Interpolation_value(self: 'FST', code: Code | None, idx: int | None, field: str, child: Any,
@@ -225,7 +235,7 @@ def _put_one(self: 'FST', code: Code | None, idx: int | None, field: str, **opti
     if is_dict and field == 'keys' and (keys := ast.keys)[idx] is None:  # '{**d}' with key=None
         start_loc = self._dict_key_or_mock_loc(keys[idx], ast.values[idx].f)
 
-        ln, col, end_ln, end_col = start_loc.loc if start_loc.is_FST else start_loc
+        ln, col, end_ln, end_col = start_loc.loc
 
         self.put_src([': '], ln, col, end_ln, end_col)
         self._reparse_raw_loc(code, ln, col, ln, col)
@@ -248,13 +258,13 @@ _PUT_ONE_HANDLERS = {
     (FunctionDef, 'name'):                (_put_one_identifier, 'def'), # identifier
     # (FunctionDef, 'type_params'):         (_put_one_default, None), # type_param*                                     - slice
     # (FunctionDef, 'args'):                (_put_one_default, None), # arguments                                       - need special parse
-    # (FunctionDef, 'returns'):             (_put_one_default, None), # expr?
+    # (FunctionDef, 'returns'):             (_put_one_default, None), # expr?                                           - SPECIAL LOCATION CASE!
     (FunctionDef, 'body'):                (_put_one_stmtish, None), # stmt*
     # (AsyncFunctionDef, 'decorator_list'): (_put_one_default, None), # expr*                                           - slice
     (AsyncFunctionDef, 'name'):           (_put_one_identifier, 'def'), # identifier
     # (AsyncFunctionDef, 'type_params'):    (_put_one_default, None), # type_param*                                     - slice
-    # (AsyncFunctionDef, 'args'):           (_put_one_default, None), # arguments
-    # (AsyncFunctionDef, 'returns'):        (_put_one_default, None), # expr?
+    # (AsyncFunctionDef, 'args'):           (_put_one_default, None), # arguments                                       - need special parse
+    # (AsyncFunctionDef, 'returns'):        (_put_one_default, None), # expr?                                           - SPECIAL LOCATION OPTIONAL TAIL: '->'
     (AsyncFunctionDef, 'body'):           (_put_one_stmtish, None), # stmt*
     # (ClassDef, 'decorator_list'):         (_put_one_default, None), # expr*                                           - slice
     (ClassDef, 'name'):                   (_put_one_identifier, 'class'), # identifier
@@ -262,19 +272,19 @@ _PUT_ONE_HANDLERS = {
     # (ClassDef, 'bases'):                  (_put_one_default, None), # expr*                                           - slice
     # (ClassDef, 'keywords'):               (_put_one_default, None), # keyword*
     (ClassDef, 'body'):                   (_put_one_stmtish, None), # stmt*
-    # (Return, 'value'):                    (_put_one_default, None), # expr?
+    # (Return, 'value'):                    (_put_one_default, None), # expr?                                           - OPTIONAL TAIL: ''
     # (Delete, 'targets'):                  (_put_one_default, None), # expr*                                           - slice
     # (Assign, 'targets'):                  (_put_one_default, None), # expr*                                           - slice
     (Assign, 'value'):                    (_put_one_expr_required, None), # expr
     (TypeAlias, 'name'):                  (_put_one_expr_required, Name), # expr
-    # (TypeAlias, 'type_params'):           (_put_one_default, None), # type_param*
+    # (TypeAlias, 'type_params'):           (_put_one_default, None), # type_param*                                     - slice
     (TypeAlias, 'value'):                 (_put_one_expr_required, None), # expr
     (AugAssign, 'target'):                (_put_one_expr_required, (Name, Attribute, Subscript)), # expr
     # (AugAssign, 'op'):                    (_put_one_default, None), # operator
     (AugAssign, 'value'):                 (_put_one_expr_required, None), # expr
     (AnnAssign, 'target'):                (_put_one_expr_required, (Name, Attribute, Subscript)), # expr
     (AnnAssign, 'annotation'):            (_put_one_expr_required, [Lambda, Yield, YieldFrom, Await, NamedExpr]), # expr
-    # (AnnAssign, 'value'):                 (_put_one_default, None), # expr?
+    # (AnnAssign, 'value'):                 (_put_one_default, None), # expr?                                           - OPTIONAL TAIL: '='
     # (AnnAssign, 'simple'):                (_put_one_default, None), # int
     (For, 'target'):                      (_put_one_expr_required, (Name, Tuple, List)), # expr
     (For, 'iter'):                        (_put_one_expr_required, None), # expr
@@ -296,8 +306,8 @@ _PUT_ONE_HANDLERS = {
     (AsyncWith, 'body'):                  (_put_one_stmtish, None), # stmt*
     (Match, 'subject'):                   (_put_one_expr_required, None), # expr
     (Match, 'cases'):                     (_put_one_stmtish, None), # match_case*
-    # (Raise, 'exc'):                       (_put_one_default, None), # expr?
-    # (Raise, 'cause'):                     (_put_one_default, None), # expr?
+    # (Raise, 'exc'):                       (_put_one_default, None), # expr?                                           - CONTINGENT OPTIONAL MIDDLE: ''
+    # (Raise, 'cause'):                     (_put_one_default, None), # expr?                                           - CONTINGENT OPTIONAL TAIL: 'from'
     (Try, 'body'):                        (_put_one_stmtish, None), # stmt*
     (Try, 'handlers'):                    (_put_one_stmtish, None), # excepthandler*
     (Try, 'orelse'):                      (_put_one_stmtish, None), # stmt*
@@ -307,7 +317,7 @@ _PUT_ONE_HANDLERS = {
     (TryStar, 'orelse'):                  (_put_one_stmtish, None), # stmt*
     (TryStar, 'finalbody'):               (_put_one_stmtish, None), # stmt*
     (Assert, 'test'):                     (_put_one_expr_required, None), # expr
-    # (Assert, 'msg'):                      (_put_one_default, None), # expr?
+    # (Assert, 'msg'):                      (_put_one_default, None), # expr?                                           - OPTIONAL TAIL: ''
     # (Import, 'names'):                    (_put_one_default, None), # alias*
     # (ImportFrom, 'module'):               (_put_one_default, None), # identifier?
     # (ImportFrom, 'names'):                (_put_one_default, None), # alias*
@@ -324,7 +334,7 @@ _PUT_ONE_HANDLERS = {
     (BinOp, 'right'):                     (_put_one_expr_required, None), # expr
     # (UnaryOp, 'op'):                      (_put_one_default, None), # unaryop
     (UnaryOp, 'operand'):                 (_put_one_expr_required, None), # expr
-    # (Lambda, 'args'):                     (_put_one_default, None), # arguments
+    # (Lambda, 'args'):                     (_put_one_default, None), # arguments                                       - need special parse
     (Lambda, 'body'):                     (_put_one_expr_required, None), # expr
     (IfExp, 'body'):                      (_put_one_expr_required, None), # expr
     (IfExp, 'test'):                      (_put_one_expr_required, None), # expr
@@ -336,13 +346,13 @@ _PUT_ONE_HANDLERS = {
     # (ListComp, 'generators'):             (_put_one_default, None), # comprehension*
     (SetComp, 'elt'):                     (_put_one_expr_required, None), # expr
     # (SetComp, 'generators'):              (_put_one_default, None), # comprehension*
-    (DictComp, 'key'):                    (_put_one_expr_required, None), # expr
+    (DictComp, 'key'):                    (_put_one_Dict_key, None), # expr                                             TODO: this!
     (DictComp, 'value'):                  (_put_one_expr_required, None), # expr
     # (DictComp, 'generators'):             (_put_one_default, None), # comprehension*
     (GeneratorExp, 'elt'):                (_put_one_expr_required, None), # expr
     # (GeneratorExp, 'generators'):         (_put_one_default, None), # comprehension*
     (Await, 'value'):                     (_put_one_expr_required, None), # expr
-    # (Yield, 'value'):                     (_put_one_default, None), # expr?
+    # (Yield, 'value'):                     (_put_one_default, None), # expr?                                           - OPTIONAL TAIL: ''
     (YieldFrom, 'value'):                 (_put_one_expr_required, None), # expr
     (Compare, 'left'):                    (_put_one_expr_required, None), # expr
     # (Compare, 'ops'):                     (_put_one_default, None), # cmpop*
@@ -353,13 +363,13 @@ _PUT_ONE_HANDLERS = {
     (FormattedValue, 'value'):            (_put_one_expr_required, None), # expr
     # (FormattedValue, 'format_spec'):      (_put_one_default, None), # expr?
     # (FormattedValue, 'conversion'):       (_put_one_default, None), # int
-    (Interpolation, 'value'):             (_put_one_Interpolation_value, None), # expr                                            - need to change .str as well as expr
+    (Interpolation, 'value'):             (_put_one_Interpolation_value, None), # expr
     # (Interpolation, 'constant'):          (_put_one_default, None), # str
     # (Interpolation, 'conversion'):        (_put_one_default, None), # int
     # (Interpolation, 'format_spec'):       (_put_one_default, None), # expr?
     # (JoinedStr, 'values'):                (_put_one_default, None), # expr*                                           - ??? no location on py < 3.12
     # (TemplateStr, 'values'):              (_put_one_default, None), # expr*                                           - ??? no location on py < 3.12
-    # (Constant, 'value'):                  (_put_one_default, None), # constant
+    # (Constant, 'value'):                  (_put_one_default, None), # constant                                        - can do via restricted expr Constant
     # (Constant, 'kind'):                   (_put_one_default, None), # string?
     (Attribute, 'value'):                 (_put_one_expr_required, None), # expr
     # (Attribute, 'attr'):                  (_put_one_default, None), # identifier                                      - after the "value."
@@ -387,20 +397,20 @@ _PUT_ONE_HANDLERS = {
     # (arguments, 'kw_defaults'):           (_put_one_default, None), # expr*                                           - can have None with special rules
     # (arguments, 'kwarg'):                 (_put_one_default, None), # arg?
     (arg, 'arg'):                         (_put_one_identifier, None), # identifier
-    # (arg, 'annotation'):                  (_put_one_default, None), # expr?
+    # (arg, 'annotation'):                  (_put_one_default, None), # expr?                                           - OPTIONAL TAIL: ':' - [Lambda, Yield, YieldFrom, Await, NamedExpr]
     # (keyword, 'arg'):                     (_put_one_default, None), # identifier?
     (keyword, 'value'):                   (_put_one_expr_required, None), # expr
     (alias, 'name'):                      (_put_one_identifier, None), # identifier
     # (alias, 'asname'):                    (_put_one_default, None), # identifier?
     (withitem, 'context_expr'):           (_put_one_expr_required, None), # expr
-    # (withitem, 'optional_vars'):          (_put_one_default, None), # expr?
+    # (withitem, 'optional_vars'):          (_put_one_default, None), # expr?                                           - OPTIONAL TAIL: 'as' - Name
     # (match_case, 'pattern'):              (_put_one_default, None), # pattern
-    # (match_case, 'guard'):                (_put_one_default, None), # expr?
+    # (match_case, 'guard'):                (_put_one_default, None), # expr?                                           - OPTIONAL TAIL: 'if'
     (match_case, 'body'):                 (_put_one_stmtish, None), # stmt*
     # (MatchValue, 'value'):                (_put_one_default, None), # expr                                            - limited values, Constant? Name becomes MatchAs
     # (MatchSingleton, 'value'):            (_put_one_default, None), # constant
     # (MatchSequence, 'patterns'):          (_put_one_default, None), # pattern*
-    (MatchMapping, 'keys'):               (_put_one_expr_required, (Constant, Attribute)), # expr*  TODO: XXX are there any others allowed?
+    (MatchMapping, 'keys'):               (_put_one_expr_required, (Constant, Attribute)), # expr*                      TODO: XXX are there any others allowed?
     # (MatchMapping, 'patterns'):           (_put_one_default, None), # pattern*
     # (MatchMapping, 'rest'):               (_put_one_default, None), # identifier?
     (MatchClass, 'cls'):                  (_put_one_expr_required, (Name, Attribute)), # expr
@@ -413,11 +423,11 @@ _PUT_ONE_HANDLERS = {
     # (MatchOr, 'patterns'):                (_put_one_default, None), # pattern*
     (TypeVar, 'name'):                    (_put_one_identifier, None), # identifier
     # (TypeVar, 'bound'):                   (_put_one_default, None), # expr?
-    # (TypeVar, 'default_value'):           (_put_one_default, None), # expr?
+    # (TypeVar, 'default_value'):           (_put_one_default, None), # expr?                                           - OPTIONAL TAIL: '='
     (ParamSpec, 'name'):                  (_put_one_identifier, '**'), # identifier
-    # (ParamSpec, 'default_value'):         (_put_one_default, None), # expr?
+    # (ParamSpec, 'default_value'):         (_put_one_default, None), # expr?                                           - OPTIONAL TAIL: '='
     (TypeVarTuple, 'name'):               (_put_one_identifier, '*'), # identifier
-    # (TypeVarTuple, 'default_value'):      (_put_one_default, None), # expr?
+    # (TypeVarTuple, 'default_value'):      (_put_one_default, None), # expr?                                           - OPTIONAL TAIL: '='
 
 
     # NOT DONE:

@@ -16002,8 +16002,7 @@ Module .. ROOT 0,0 -> 0,11
           0] Name 'a' Load .. 0,4 -> 0,5
           1] Name 'b' Load .. 0,7 -> 0,8
           .ctx Load
-        .str
-          '(a, b)'
+        .str '(a, b)'
         .conversion -1
 """),
 
