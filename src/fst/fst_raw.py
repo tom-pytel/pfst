@@ -14,7 +14,7 @@ from .shared import (
     STMTISH_FIELDS,
     Code,
     _next_find, _prev_find, _fixup_field_body,
-    _fixup_slice_index, _reduce_ast,
+    _fixup_slice_index, _coerce_ast,
 )
 
 _PATH_BODY          = [astfield('body', 0)]
@@ -370,7 +370,7 @@ def _put_slice_raw(self: 'FST', code: Code | None, start: int | Literal['end'] |
     if isinstance(code, AST):
         if not one:
             try:
-                ast = _reduce_ast(code, 'exprish')
+                ast = _coerce_ast(code, 'exprish')
             except Exception:
                 pass
 
@@ -385,7 +385,7 @@ def _put_slice_raw(self: 'FST', code: Code | None, start: int | Literal['end'] |
             raise ValueError('expecting root FST')
 
         try:
-            ast = _reduce_ast(code.a, 'exprish')
+            ast = _coerce_ast(code.a, 'exprish')
         except Exception:
             pass
 

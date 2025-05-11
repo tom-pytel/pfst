@@ -540,7 +540,7 @@ def _fixup_slice_index(len_, start, stop) -> tuple[int, int]:
     return start, stop
 
 
-def _reduce_ast(ast, coerce: Literal['expr', 'exprish', 'mod'] | None = None) -> AST:
+def _coerce_ast(ast, coerce: Literal['expr', 'exprish', 'mod'] | None = None) -> AST:
     """Reduce an AST to a simplest representation based on coercion rule.
 
     **Parameters:**

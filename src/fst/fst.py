@@ -860,6 +860,10 @@ class FST:
         elif start is None:
             return self.get_slice(None, None, field, cut=cut, **options)
 
+
+        # TODO: special case indexed stuff like Compare
+
+
         if cut:
             return body[start].f.cut(**options)
         else:

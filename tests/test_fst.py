@@ -24781,13 +24781,19 @@ class cls:
         self.assertIsInstance(f.a.body, expr)
         f.put('j', raw=False)
         self.assertEqual('j', f.src)
-        self.assertRaises(SyntaxError, f.put, 'k = 1', raw=False)
+        self.assertRaises(NodeTypeError, f.put, 'k = 1', raw=False)
         self.assertRaises(IndexError, f.put, 'k', 1, raw=False)
 
         g = parse('yield 1').body[0].value.f.copy(fix=False)
         self.assertEqual('yield 1', g.src)
         f.put(g, raw=False)
         self.assertEqual('(yield 1)', f.src)
+
+        f.put('yield from a', raw=False)
+        self.assertEqual('(yield from a)', f.src)
+
+        f.put('await x', raw=False)
+        self.assertEqual('await x', f.src)
 
         g = parse('l = 2').body[0].f.copy()
         self.assertEqual('l = 2', g.src)

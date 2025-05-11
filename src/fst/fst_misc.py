@@ -7,20 +7,20 @@ from typing import Callable, Literal, Optional, Union
 from .astutil import *
 
 from .shared import (
-    astfield, fstloc,
+    NodeTypeError, astfield, fstloc,
     BLOCK,
     HAS_DOCSTRING,
     Code,
     _next_src, _prev_src, _next_find, _prev_find, _next_pars, _prev_pars,
-    _reduce_ast
+    _coerce_ast
 )
 
 _GLOBALS = globals() | {'_GLOBALS': None}
 # ----------------------------------------------------------------------------------------------------------------------
 
 @staticmethod
-def _normalize_code(code: Code, coerce: Literal['expr', 'exprish', 'mod'] | None = None, *,
-                    parse_params: dict = {}) -> 'FST':
+def _normalize_code(code: Code, coerce: Literal['expr', 'exprish', 'mod'] | None = None, *, parse_params: dict = {},
+                    ) -> 'FST':
     """Normalize code to an `FST` and coerce to a desired format if possible.
 
     If neither of these is requested then will convert to `ast.Module` if is `ast.Interactive` or return single
@@ -29,6 +29,7 @@ def _normalize_code(code: Code, coerce: Literal['expr', 'exprish', 'mod'] | None
     **Parameters:**
     - `coerce`: What kind of coercion to apply (if any):
         - `'expr'`: Will return an `FST` with a top level `expr` `AST` node if possible, raise otherwise.
+        - `'exprish'`: Same as `'expr'` but also some other expression-like nodes (for raw).
         - `'mod'`: Will return an `FST` with a top level `Module` `AST` node of the single statement or a wrapped
             expression in an `Expr` node. `ExceptHandler` and `match_case` nodes are considered statements here.
         - `None`: Will pull expression out of `Expression` and convert `Interactive` to `Module`, otherwise will return
@@ -43,12 +44,12 @@ def _normalize_code(code: Code, coerce: Literal['expr', 'exprish', 'mod'] | None
             raise ValueError('expecting root FST')
 
         ast  = code.a
-        rast = _reduce_ast(ast, coerce)
+        rast = _coerce_ast(ast, coerce)
 
         return code if rast is ast else FST(rast, lines=code._lines, from_=code)
 
     if isinstance(code, AST):
-        return FST.fromast(_reduce_ast(code, coerce))  # TODO: WARNING! will not handle pure AST ExceptHandler or match_case
+        return FST.fromast(_coerce_ast(code, coerce))  # TODO: WARNING! will not handle pure AST ExceptHandler or match_case
 
     if isinstance(code, str):
         src   = code
@@ -58,9 +59,15 @@ def _normalize_code(code: Code, coerce: Literal['expr', 'exprish', 'mod'] | None
         src   = '\n'.join(code)
         lines = code
 
-    ast = (ast_parse(src, mode='eval', **parse_params).body
-        if coerce == 'expr' else
-        ast_parse(src, mode='exec', **parse_params))
+    ast = ast_parse(src, **parse_params)
+
+    if coerce == 'expr':
+        if not (ast := reduce_ast(ast, multi_mod=None)) or not isinstance(ast, expr):
+            raise NodeTypeError('expecting single expression')
+
+    elif coerce == 'exprish':
+        if not (ast := reduce_ast(ast, multi_mod=None)):
+            raise NodeTypeError('expecting single expressionish')
 
     return FST(ast, lines=lines)
 
