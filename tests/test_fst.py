@@ -16272,6 +16272,18 @@ Module .. ROOT 0,0 -> 0,6
     .simple 1
 """),
 
+(r"""i: j""", 'body[0]', None, 'annotation', {'raw': False}, r"""(yield 1)""", r"""**NodeTypeError('cannot be one of (Lambda, Yield, YieldFrom, Await, NamedExpr) for AnnAssign.annotation, got Yield')**""", r"""
+"""),
+
+(r"""i: j""", 'body[0]', None, 'annotation', {'raw': False}, r"""new""", r"""i: new""", r"""
+Module .. ROOT 0,0 -> 0,6
+  .body[1]
+  0] AnnAssign .. 0,0 -> 0,6
+    .target Name 'i' Store .. 0,0 -> 0,1
+    .annotation Name 'new' Load .. 0,3 -> 0,6
+    .simple 1
+"""),
+
 (r"""for i in j: pass""", 'body[0]', None, 'target', {'raw': False}, r"""new""", r"""for new in j: pass""", r"""
 Module .. ROOT 0,0 -> 0,18
   .body[1]
@@ -16367,6 +16379,41 @@ Module .. ROOT 0,0 -> 0,22
           .ctx Store
         .iter Name 'j' Load .. 0,20 -> 0,21
         .is_async 0
+"""),
+
+(r"""type i = j""", 'body[0]', None, 'name', {'raw': False, 'ver': 12}, r"""1""", r"""**NodeTypeError('expecting a Name for TypeAlias.name, got Constant')**""", r"""
+"""),
+
+(r"""type i = j""", 'body[0]', None, 'name', {'raw': False, 'ver': 12}, r"""new""", r"""type new = j""", r"""
+Module .. ROOT 0,0 -> 0,12
+  .body[1]
+  0] TypeAlias .. 0,0 -> 0,12
+    .name Name 'new' Store .. 0,5 -> 0,8
+    .value Name 'j' Load .. 0,11 -> 0,12
+"""),
+
+(r"""type i = j""", 'body[0]', None, None, {'raw': False, 'ver': 12}, r"""new""", r"""type i = new""", r"""
+Module .. ROOT 0,0 -> 0,12
+  .body[1]
+  0] TypeAlias .. 0,0 -> 0,12
+    .name Name 'i' Store .. 0,5 -> 0,6
+    .value Name 'new' Load .. 0,9 -> 0,12
+"""),
+
+(r"""i < j""", 'body[0].value', None, 'left', {'raw': False}, r"""new, to""", r"""(new, to) < j""", r"""
+Module .. ROOT 0,0 -> 0,13
+  .body[1]
+  0] Expr .. 0,0 -> 0,13
+    .value Compare .. 0,0 -> 0,13
+      .left Tuple .. 0,0 -> 0,9
+        .elts[2]
+        0] Name 'new' Load .. 0,1 -> 0,4
+        1] Name 'to' Load .. 0,6 -> 0,8
+        .ctx Load
+      .ops[1]
+      0] Lt .. 0,10 -> 0,11
+      .comparators[1]
+      0] Name 'j' Load .. 0,12 -> 0,13
 """),
 
 ]  # END OF PUT_ONE_DATA
