@@ -787,10 +787,8 @@ class FST:
 
         if isinstance(ast, STMTISH):
             loc = self.comms(options.get('precomms'), options.get('postcomms'))
-        elif isinstance(ast, PARENTHESIZABLE):
-            loc = self.pars(options.get('pars') is True)
         else:
-            loc = self.bloc
+            loc = self.pars(options.get('pars') is True)
 
         if not loc:
             raise ValueError('cannot copy node which does not have location')
@@ -900,37 +898,7 @@ class FST:
         if not one:
             raise ValueError(f"cannot use 'one=False' in non-slice put()")
 
-        is_dict = isinstance(ast, Dict)
-
-        if field is None:  # maybe putting to special case field?
-            if is_dict or isinstance(ast, MatchMapping):
-                if not FST.get_option('raw', options):
-                    raise ValueError(f"cannot put() non-raw without field to {ast.__class__.__name__}")
-
-                key = key.f if (key := ast.keys[start]) else self._dict_key_or_mock_loc(key, ast.values[start].f)
-                end = (ast.values if is_dict else ast.patterns)[start].f
-
-                self._reparse_raw_loc(code, key.ln, key.col, end.end_ln, end.end_col)
-
-                return self.repath()
-
-            if isinstance(ast, Compare):
-                start         = _fixup_one_index(len(ast.comparators) + 1, start)  # need to do this because of compound body including 'left'
-                field_, start = ('comparators', start - 1) if start else ('left', None)
-
-        if is_dict and field == 'keys' and (keys := ast.keys)[start] is None:  # '{**d}' with key=None
-            if not FST.get_option('raw', options):
-                raise ValueError(f"cannot put() non-raw to '**' Dict.key")
-
-            start_loc = self._dict_key_or_mock_loc(keys[start], ast.values[start].f)
-
-            ln, col, end_ln, end_col = start_loc.loc if start_loc.is_FST else start_loc
-
-            self.put_src([': '], ln, col, end_ln, end_col)
-            self._reparse_raw_loc(code, ln, col, ln, col)
-
-        else:
-            self._put_one(code, start, field_, **options)
+        self._put_one(code, start, field_, **options)
 
         return self.repath()
 
@@ -1012,7 +980,7 @@ class FST:
                 if not raw:
                     raise ValueError(f"cannot put slice to a '{ast.__class__.__name__}'")
 
-        return self._put_slice_raw(code, start, stop, field, one=one, **options)
+        return self._reparse_raw_slice(code, start, stop, field, one=one, **options)
 
     def put_raw(self, code: Code | None, ln: int, col: int, end_ln: int, end_col: int, *,
                 exact: bool | None = True, **options) -> Optional['FST']:
@@ -2087,7 +2055,7 @@ class FST:
         _reparse_raw_stmtish,
         _reparse_raw_loc,
         _reparse_raw_node,
-        _put_slice_raw,)
+        _reparse_raw_slice,)
 
     from .fst_slice import (
         _get_slice_tuple_list_or_set,

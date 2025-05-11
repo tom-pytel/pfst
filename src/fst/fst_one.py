@@ -42,6 +42,25 @@ def _slice_indices(self: 'FST', idx: int, child: list[AST], to: Optional['FST'])
     raise NodeTypeError(f"invalid 'to' node")
 
 
+def _put_one_stmtish(self: 'FST', code: Code | None, idx: int | None, field: str, child: list[AST], extra: Any,
+                     **options) -> Optional['FST']:
+    """Put or delete a single statementish node to a list of them (body, orelse, handlers, finalbody or cases)."""
+
+    self._put_slice_stmtish(code, *_slice_indices(self, idx, child, options.get('to')), field, True, **options)
+
+    return None if code is None else getattr(self.a, field)[idx].f
+
+
+def _put_one_tuple_list_or_set(self: 'FST', code: Code | None, idx: int | None, field: str, child: list[AST],
+                               extra: Any, **options) -> Optional['FST']:
+    """Put or delete a single expression to a Tuple, List or Set elts."""
+
+    self._put_slice_tuple_list_or_set(code, *_slice_indices(self, idx, child, options.get('to')), field, True,
+                                      **options)
+
+    return None if code is None else getattr(self.a, field)[idx].f
+
+
 def _put_one_identifier(self: 'FST', code: Code | None, idx: int | None, field: str, child: Any, extra: Any, **options,
                         ) -> Optional['FST']:
     """Put a single required identifier."""
@@ -71,25 +90,6 @@ def _put_one_identifier(self: 'FST', code: Code | None, idx: int | None, field: 
     self.put_src(code, ln, col, end_ln, end_col, True)
 
     setattr(self.a, field, code)
-
-
-def _put_one_stmtish(self: 'FST', code: Code | None, idx: int | None, field: str, child: list[AST], extra: Any,
-                     **options) -> Optional['FST']:
-    """Put or delete a single statementish node to a list of them (body, orelse, handlers, finalbody or cases)."""
-
-    self._put_slice_stmtish(code, *_slice_indices(self, idx, child, options.get('to')), field, True, **options)
-
-    return None if code is None else getattr(self.a, field)[idx].f
-
-
-def _put_one_tuple_list_or_set(self: 'FST', code: Code | None, idx: int | None, field: str, child: list[AST],
-                               extra: Any, **options) -> Optional['FST']:
-    """Put or delete a single expression to a Tuple, List or Set elts."""
-
-    self._put_slice_tuple_list_or_set(code, *_slice_indices(self, idx, child, options.get('to')), field, True,
-                                      **options)
-
-    return None if code is None else getattr(self.a, field)[idx].f
 
 
 def _put_one_expr_required(self: 'FST', code: Code | None, idx: int | None, field: str, child: Any,
@@ -169,7 +169,7 @@ def _put_one(self: 'FST', code: Code | None, idx: int | None, field: str, **opti
     """Put new, replace or delete a node (or limited non-node) to a field of `self`."""
 
     ast   = self.a
-    child = getattr(self.a, field)
+    child = getattr(self.a, field) if field else None
     raw   = FST.get_option('raw', options)
 
     if raw is not True:
@@ -193,6 +193,34 @@ def _put_one(self: 'FST', code: Code | None, idx: int | None, field: str, **opti
     if isinstance(child, list):
         child = child[idx]
 
+    # special raw cases, TODO: move into dedicated _put_raw or do via _PUT_ONE_RAW_HANDLERS
+
+    is_dict = isinstance(ast, Dict)
+
+    if field is None:  # maybe putting to special case field?
+        if is_dict or isinstance(ast, MatchMapping):
+            key = key.f if (key := ast.keys[idx]) else self._dict_key_or_mock_loc(key, ast.values[idx].f)
+            end = (ast.values if is_dict else ast.patterns)[idx].f
+
+            self._reparse_raw_loc(code, key.ln, key.col, end.end_ln, end.end_col)
+
+            return self.repath()
+
+        if isinstance(ast, Compare):
+            idx   = _fixup_one_index(len(ast.comparators) + 1, idx)  # need to do this because of compound body including 'left'
+            child = ast.comparators[idx - 1] if idx else ast.left
+            # field_, idx = ('comparators', idx - 1) if idx else ('left', None)
+
+    if is_dict and field == 'keys' and (keys := ast.keys)[idx] is None:  # '{**d}' with key=None
+        start_loc = self._dict_key_or_mock_loc(keys[idx], ast.values[idx].f)
+
+        ln, col, end_ln, end_col = start_loc.loc if start_loc.is_FST else start_loc
+
+        self.put_src([': '], ln, col, end_ln, end_col)
+        self._reparse_raw_loc(code, ln, col, ln, col)
+
+        return self.repath()
+
     ret = child.f._reparse_raw_node(code, **options)
 
     return None if code is None else ret
@@ -208,7 +236,7 @@ _PUT_ONE_HANDLERS = {
     # (FunctionDef, 'decorator_list'):      (_put_one_default, None), # expr*                                           - slice
     (FunctionDef, 'name'):                (_put_one_identifier, 'def'), # identifier
     # (FunctionDef, 'type_params'):         (_put_one_default, None), # type_param*                                     - slice
-    # (FunctionDef, 'args'):                (_put_one_default, None), # arguments
+    # (FunctionDef, 'args'):                (_put_one_default, None), # arguments                                       - need special parse
     # (FunctionDef, 'returns'):             (_put_one_default, None), # expr?
     (FunctionDef, 'body'):                (_put_one_stmtish, None), # stmt*
     # (AsyncFunctionDef, 'decorator_list'): (_put_one_default, None), # expr*                                           - slice
@@ -290,8 +318,8 @@ _PUT_ONE_HANDLERS = {
     (IfExp, 'body'):                      (_put_one_expr_required, None), # expr
     (IfExp, 'test'):                      (_put_one_expr_required, None), # expr
     (IfExp, 'orelse'):                    (_put_one_expr_required, None), # expr
-    (Dict, 'keys'):                       (_put_one_expr_required, None), # expr*                                       - takes idx, handle special key=None?
-    (Dict, 'values'):                     (_put_one_expr_required, None), # expr*                                       - takes idx,
+    (Dict, 'keys'):                       (_put_one_expr_required, None), # expr*                                       - handle special key=None?
+    (Dict, 'values'):                     (_put_one_expr_required, None), # expr*
     (Set, 'elts'):                        (_put_one_tuple_list_or_set, None), # expr*
     (ListComp, 'elt'):                    (_put_one_expr_required, None), # expr
     # (ListComp, 'generators'):             (_put_one_default, None), # comprehension*

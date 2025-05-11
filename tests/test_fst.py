@@ -16489,7 +16489,7 @@ Module .. ROOT 0,0 -> 0,14
         .value Constant 1 .. 0,11 -> 0,12
 """),
 
-(r"""{**i}""", 'body[0].value', 0, 'keys', {'raw': False}, r"""yield 1""", r"""**ValueError("cannot put() non-raw to '**' Dict.key")**""", r"""
+(r"""{**i}""", 'body[0].value', 0, 'keys', {'raw': False}, r"""yield 1""", r"""**ValueError('cannot replace nonexistent Dict.keys')**""", r"""
 """),
 
 (r"""a < b""", 'body[0].value', 0, 'comparators', {'raw': False}, r"""yield 1""", r"""a < (yield 1)""", r"""
@@ -24455,7 +24455,7 @@ class cls:
         self.assertRaises(SyntaxError, parse('{a: a, b: b, c: c}').body[0].value.f.put_slice, ast_.parse('{x: x, y: y,}'), 1, 2, one=True, raw=True)
 
     def test_put_special_fields(self):
-        old_defaults = FST.set_options(pars=False)
+        old_options = FST.set_options(pars=False, raw=True)
 
         self.assertEqual('{a: b, **c, e: f}', parse('{a: b, **d, e: f}').body[0].value.f.put('c', 1, field='values').root.src)
         self.assertEqual('{a: b, c: d, e: f}', parse('{a: b, **d, e: f}').body[0].value.f.put('c', 1, field='keys').root.src)
@@ -24514,7 +24514,7 @@ class cls:
         self.assertEqual('@a\n@z\n@c\nclass cls: pass', parse('@a\n@(b)\n@c\nclass cls: pass').body[0].f.put_slice('@z', 1, 2, field='decorator_list').root.src)
         self.assertEqual('@a\n@z\nclass cls: pass', parse('@a\n@(b)\n@(c)\nclass cls: pass').body[0].f.put_slice('@z', 1, 3, field='decorator_list').root.src)
 
-        FST.set_options(**old_defaults)
+        FST.set_options(**old_options)
 
     def test_get_slice_seq_copy(self):
         for src, elt, start, stop, options, src_cut, slice_copy, src_dump, slice_dump in GET_SLICE_SEQ_DATA:

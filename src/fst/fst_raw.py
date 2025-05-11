@@ -276,7 +276,7 @@ def _reparse_raw_loc(self: 'FST', code: Code | None, ln: int, col: int, end_ln: 
             (self.root.find_loc(ln, col, end_ln, end_col, exact) if exact is not None else None))
 
 
-def _reparse_raw_node(self: 'FST', code: Code | None, to: Optional['FST'] = None, **options) -> 'FST':
+def _reparse_raw_node(self: 'FST', code: Code | None, to: Optional['FST'] = None, **options) -> Optional['FST']:
     """Attempt a replacement by using str as source and attempting to parse into location of node(s) being
     replaced."""
 
@@ -363,8 +363,8 @@ def _reparse_raw_node(self: 'FST', code: Code | None, to: Optional['FST'] = None
     return parent._reparse_raw_loc(code, loc.ln, loc.col, to_loc.end_ln, to_loc.end_col)
 
 
-def _put_slice_raw(self: 'FST', code: Code | None, start: int | Literal['end'] | None = None, stop: int | None = None,
-                   field: str | None = None, *, one: bool = False, **options) -> 'FST':  # -> Self
+def _reparse_raw_slice(self: 'FST', code: Code | None, start: int | Literal['end'] | None = None, stop: int | None = None,
+                       field: str | None = None, *, one: bool = False, **options) -> 'FST':  # -> Self
     """Put a raw slice of child nodes to `self`."""
 
     if isinstance(code, AST):
