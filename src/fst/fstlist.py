@@ -2,7 +2,7 @@ from ast import *
 from typing import Any, Literal
 
 from .astutil import *
-from .shared import Code, _fixup_slice_index
+from .shared import Code, _fixup_one_index, _fixup_slice_index
 
 
 class fstlist:
@@ -29,8 +29,7 @@ class fstlist:
 
     def __getitem__(self, idx: int | slice | str) -> Any:
         if isinstance(idx, int):
-            if not (l := self.stop - (start := self.start)) > ((idx := idx + l) if idx < 0 else idx) >= 0:
-                raise IndexError('index out of range')
+            idx = _fixup_one_index(self.stop - (start := self.start), idx)
 
             return a.f if isinstance(a := getattr(self.fst.a, self.field)[start + idx], AST) else a
 
@@ -50,8 +49,7 @@ class fstlist:
 
     def __setitem__(self, idx: int | slice, code: Code | None):
         if isinstance(idx, int):
-            if not (l := self.stop - (start := self.start)) > ((idx := idx + l) if idx < 0 else idx) >= 0:
-                raise IndexError('index out of range')
+            idx = _fixup_one_index(self.stop - (start := self.start), idx)
 
             self.fst.put(code, start + idx, field=self.field)
 
@@ -65,8 +63,7 @@ class fstlist:
 
     def __delitem__(self, idx: int | slice):
         if isinstance(idx, int):
-            if not (l := (stop := self.stop) - (start := self.start)) > ((idx := idx + l) if idx < 0 else idx) >= 0:
-                raise IndexError('index out of range')
+            idx = _fixup_one_index((stop := self.stop) - (start := self.start), idx)
 
             self.fst.put_slice(None, start + idx, start + idx + 1, field=self.field)
 

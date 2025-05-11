@@ -510,6 +510,13 @@ def _fixup_field_body(ast: AST, field: str | None = None, only_list: bool = True
     return field, body
 
 
+def _fixup_one_index(len_, idx) -> int:
+    if not (0 <= ((idx := idx + len_) if idx < 0 else idx) < len_):
+        raise IndexError('index out of range')
+
+    return idx
+
+
 def _fixup_slice_index(len_, start, stop) -> tuple[int, int]:
     if start is None:
         start = 0

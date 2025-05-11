@@ -17,7 +17,7 @@ from .shared import (
     re_oneline_str, re_contline_str_start, re_contline_str_end_sq, re_contline_str_end_dq, re_multiline_str_start,
     re_multiline_str_end_sq, re_multiline_str_end_dq,
     Code, NodeTypeError,
-    _next_src, _params_offset, _fixup_field_body,)
+    _next_src, _params_offset, _fixup_field_body, _fixup_one_index)
 
 __all__ = [
     'parse', 'unparse', 'FST',
@@ -915,12 +915,7 @@ class FST:
                 return self.repath()
 
             if isinstance(ast, Compare):
-                if start < 0:  # need to do this because of compound body including 'left'
-                    start += len(ast.comparators) + 1
-
-                    if start < 0:
-                        raise IndexError('invalid index')
-
+                start         = _fixup_one_index(len(ast.comparators) + 1, start)  # need to do this because of compound body including 'left'
                 field_, start = ('comparators', start - 1) if start else ('left', None)
 
         if is_dict and field == 'keys' and (keys := ast.keys)[start] is None:  # '{**d}' with key=None
