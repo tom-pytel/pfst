@@ -16521,6 +16521,102 @@ Module .. ROOT 0,0 -> 0,13
         .value Constant 1 .. 0,11 -> 0,12
 """),
 
+(r"""a < b < c""", 'body[0].value', 0, None, {'raw': False}, r"""yield 1""", r"""(yield 1) < b < c""", r"""
+Module .. ROOT 0,0 -> 0,17
+  .body[1]
+  0] Expr .. 0,0 -> 0,17
+    .value Compare .. 0,0 -> 0,17
+      .left Yield .. 0,1 -> 0,8
+        .value Constant 1 .. 0,7 -> 0,8
+      .ops[2]
+      0] Lt .. 0,10 -> 0,11
+      1] Lt .. 0,14 -> 0,15
+      .comparators[2]
+      0] Name 'b' Load .. 0,12 -> 0,13
+      1] Name 'c' Load .. 0,16 -> 0,17
+"""),
+
+(r"""a < b < c""", 'body[0].value', 1, None, {'raw': False}, r"""yield 1""", r"""a < (yield 1) < c""", r"""
+Module .. ROOT 0,0 -> 0,17
+  .body[1]
+  0] Expr .. 0,0 -> 0,17
+    .value Compare .. 0,0 -> 0,17
+      .left Name 'a' Load .. 0,0 -> 0,1
+      .ops[2]
+      0] Lt .. 0,2 -> 0,3
+      1] Lt .. 0,14 -> 0,15
+      .comparators[2]
+      0] Yield .. 0,5 -> 0,12
+        .value Constant 1 .. 0,11 -> 0,12
+      1] Name 'c' Load .. 0,16 -> 0,17
+"""),
+
+(r"""a < b < c""", 'body[0].value', 2, None, {'raw': False}, r"""yield 1""", r"""a < b < (yield 1)""", r"""
+Module .. ROOT 0,0 -> 0,17
+  .body[1]
+  0] Expr .. 0,0 -> 0,17
+    .value Compare .. 0,0 -> 0,17
+      .left Name 'a' Load .. 0,0 -> 0,1
+      .ops[2]
+      0] Lt .. 0,2 -> 0,3
+      1] Lt .. 0,6 -> 0,7
+      .comparators[2]
+      0] Name 'b' Load .. 0,4 -> 0,5
+      1] Yield .. 0,9 -> 0,16
+        .value Constant 1 .. 0,15 -> 0,16
+"""),
+
+(r"""a < b < c""", 'body[0].value', 3, None, {'raw': False}, r"""yield 1""", r"""**IndexError('index out of range')**""", r"""
+"""),
+
+(r"""a < b < c""", 'body[0].value', -1, None, {'raw': False}, r"""yield 1""", r"""a < b < (yield 1)""", r"""
+Module .. ROOT 0,0 -> 0,17
+  .body[1]
+  0] Expr .. 0,0 -> 0,17
+    .value Compare .. 0,0 -> 0,17
+      .left Name 'a' Load .. 0,0 -> 0,1
+      .ops[2]
+      0] Lt .. 0,2 -> 0,3
+      1] Lt .. 0,6 -> 0,7
+      .comparators[2]
+      0] Name 'b' Load .. 0,4 -> 0,5
+      1] Yield .. 0,9 -> 0,16
+        .value Constant 1 .. 0,15 -> 0,16
+"""),
+
+(r"""a < b < c""", 'body[0].value', -2, None, {'raw': False}, r"""yield 1""", r"""a < (yield 1) < c""", r"""
+Module .. ROOT 0,0 -> 0,17
+  .body[1]
+  0] Expr .. 0,0 -> 0,17
+    .value Compare .. 0,0 -> 0,17
+      .left Name 'a' Load .. 0,0 -> 0,1
+      .ops[2]
+      0] Lt .. 0,2 -> 0,3
+      1] Lt .. 0,14 -> 0,15
+      .comparators[2]
+      0] Yield .. 0,5 -> 0,12
+        .value Constant 1 .. 0,11 -> 0,12
+      1] Name 'c' Load .. 0,16 -> 0,17
+"""),
+
+(r"""a < b < c""", 'body[0].value', -3, None, {'raw': False}, r"""yield 1""", r"""(yield 1) < b < c""", r"""
+Module .. ROOT 0,0 -> 0,17
+  .body[1]
+  0] Expr .. 0,0 -> 0,17
+    .value Compare .. 0,0 -> 0,17
+      .left Yield .. 0,1 -> 0,8
+        .value Constant 1 .. 0,7 -> 0,8
+      .ops[2]
+      0] Lt .. 0,10 -> 0,11
+      1] Lt .. 0,14 -> 0,15
+      .comparators[2]
+      0] Name 'b' Load .. 0,12 -> 0,13
+      1] Name 'c' Load .. 0,16 -> 0,17
+"""),
+
+(r"""a < b < c""", 'body[0].value', -4, None, {'raw': False}, r"""yield 1""", r"""**IndexError('index out of range')**""", r"""
+"""),
+
 (r"""def f(a, b=1, c=2): pass""", 'body[0].args', 0, 'defaults', {'raw': False}, r"""yield 1""", r"""def f(a, b=(yield 1), c=2): pass""", r"""
 Module .. ROOT 0,0 -> 0,32
   .body[1]

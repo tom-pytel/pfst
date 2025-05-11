@@ -97,11 +97,6 @@ def _put_one_expr_required(self: 'FST', code: Code | None, idx: int | None, fiel
                            **options) -> Optional['FST']:
     """Put a single required expression."""
 
-    if code is None:
-        raise ValueError(f'cannot delete {self.a.__class__.__name__}.{field}')
-    if options.get('to'):
-        raise NodeTypeError(f"cannot put with 'to' to {self.a.__class__.__name__}.{field}")
-
     if isinstance(child, list):
         if idx is None:
             raise IndexError(f'{self.a.__class__.__name__}.{field} needs an index')
@@ -112,8 +107,13 @@ def _put_one_expr_required(self: 'FST', code: Code | None, idx: int | None, fiel
         if idx is not None:
             raise IndexError(f'{self.a.__class__.__name__}.{field} does not take an index')
 
+    if code is None:
+        raise ValueError(f'cannot delete {self.a.__class__.__name__}.{field}{f"[{idx}]" if idx else ""}')
+    if options.get('to'):
+        raise NodeTypeError(f"cannot put with 'to' to {self.a.__class__.__name__}.{field}{f'[{idx}]' if idx else ''}")
+
     if not child:
-        raise ValueError(f'cannot replace nonexistent {self.a.__class__.__name__}.{field}')
+        raise ValueError(f'cannot replace nonexistent {self.a.__class__.__name__}.{field}{f"[{idx}]" if idx else ""}')
 
     put_fst = self._normalize_code(code, 'expr', parse_params=self.root.parse_params)
     put_ast = put_fst.a
@@ -122,14 +122,14 @@ def _put_one_expr_required(self: 'FST', code: Code | None, idx: int | None, fiel
         if isinstance(extra, list):  # list means these types not allowed
             if isinstance(put_ast, tuple(extra)):
                 raise NodeTypeError((f'cannot be one of ({", ".join(c.__name__ for c in extra)}) for '
-                                     f'{self.a.__class__.__name__}.{field}') +
+                                     f'{self.a.__class__.__name__}.{field}{f"[{idx}]" if idx else ""}') +
                                     f', got {put_ast.__class__.__name__}')
 
         elif not isinstance(put_ast, extra):  # single AST type or tuple means only these allowed
             raise NodeTypeError((f'expecting a {extra.__name__} for {self.a.__class__.__name__}.{field}'
                                  if isinstance(extra, type) else
                                  f'expecting one of ({", ".join(c.__name__ for c in extra)}) for '
-                                 f'{self.a.__class__.__name__}.{field}') +
+                                 f'{self.a.__class__.__name__}.{field}{f"[{idx}]" if idx else ""}') +
                                 f', got {put_ast.__class__.__name__}')
 
     ast     = self.a
@@ -159,6 +159,29 @@ def _put_one_expr_required(self: 'FST', code: Code | None, idx: int | None, fiel
     childf._set_ast(put_ast)
 
     return put_ast.f
+
+
+def _put_one_Compare_None(self: 'FST', code: Code | None, idx: int | None, field: str, child: Any,
+                          extra: tuple[type[AST]] | list[type[AST]] | type[AST] | None,
+                          **options) -> Optional['FST']:
+
+    """Put to combined [Compare.left, Compare.comparators] using this total indexing."""
+
+    ast         = self.a
+    comparators = ast.comparators
+    idx         = _fixup_one_index(len(comparators) + 1, idx)
+
+    if idx:
+        field = 'comparators'
+        idx   = idx - 1
+        child = comparators
+
+    else:
+        field = 'left'
+        idx   = None
+        child = ast.left
+
+    return _put_one_expr_required(self, code, idx, field, child, extra, **options)
 
 
 def _put_one_Dict_key(self: 'FST', code: Code | None, idx: int | None, field: str, child: Any,
@@ -258,7 +281,7 @@ _PUT_ONE_HANDLERS = {
     (FunctionDef, 'name'):                (_put_one_identifier, 'def'), # identifier
     # (FunctionDef, 'type_params'):         (_put_one_default, None), # type_param*                                     - slice
     # (FunctionDef, 'args'):                (_put_one_default, None), # arguments                                       - need special parse
-    # (FunctionDef, 'returns'):             (_put_one_default, None), # expr?                                           - SPECIAL LOCATION CASE!
+    # (FunctionDef, 'returns'):             (_put_one_default, None), # expr?                                           - SPECIAL LOCATION OPTIONAL TAIL: '->'                                           - SPECIAL LOCATION CASE!
     (FunctionDef, 'body'):                (_put_one_stmtish, None), # stmt*
     # (AsyncFunctionDef, 'decorator_list'): (_put_one_default, None), # expr*                                           - slice
     (AsyncFunctionDef, 'name'):           (_put_one_identifier, 'def'), # identifier
@@ -357,6 +380,7 @@ _PUT_ONE_HANDLERS = {
     (Compare, 'left'):                    (_put_one_expr_required, None), # expr
     # (Compare, 'ops'):                     (_put_one_default, None), # cmpop*
     (Compare, 'comparators'):             (_put_one_expr_required, None), # expr*
+    (Compare, None):                      (_put_one_Compare_None, None), # expr*
     (Call, 'func'):                       (_put_one_expr_required, None), # expr
     # (Call, 'args'):                       (_put_one_default, None), # expr*                                           - slice
     # (Call, 'keywords'):                   (_put_one_default, None), # keyword*                                        - slice
@@ -422,7 +446,7 @@ _PUT_ONE_HANDLERS = {
     # (MatchAs, 'name'):                    (_put_one_default, None), # identifier?
     # (MatchOr, 'patterns'):                (_put_one_default, None), # pattern*
     (TypeVar, 'name'):                    (_put_one_identifier, None), # identifier
-    # (TypeVar, 'bound'):                   (_put_one_default, None), # expr?
+    # (TypeVar, 'bound'):                   (_put_one_default, None), # expr?                                           - OPTIONAL MIDDLE: ':'
     # (TypeVar, 'default_value'):           (_put_one_default, None), # expr?                                           - OPTIONAL TAIL: '='
     (ParamSpec, 'name'):                  (_put_one_identifier, '**'), # identifier
     # (ParamSpec, 'default_value'):         (_put_one_default, None), # expr?                                           - OPTIONAL TAIL: '='
