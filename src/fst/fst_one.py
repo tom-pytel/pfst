@@ -97,8 +97,9 @@ def _put_one_tuple_list_or_set(self: 'FST', code: Code | None, idx: int | None, 
 
 
 
-def _put_one_expr(self: 'FST', code: Code | None, idx: int | None, field: str, child: Any, extra: Any, **options,
-                  ) -> Optional['FST']:
+def _put_one_expr_required(self: 'FST', code: Code | None, idx: int | None, field: str, child: Any,
+                           extra: tuple[type[AST]] | type[AST] | None,
+                           **options) -> Optional['FST']:
     """Put a single required expression."""
 
     if code is None:
@@ -108,9 +109,17 @@ def _put_one_expr(self: 'FST', code: Code | None, idx: int | None, field: str, c
     if options.get('to'):
         raise NodeTypeError(f"cannot put with 'to' to {self.a.__class__.__name__}.{field}")
 
-    ast     = self.a
     put_fst = self._normalize_code(code, 'expr', parse_params=self.root.parse_params)
     put_ast = put_fst.a
+
+    if extra and not isinstance(put_fst.a, extra):
+        raise NodeTypeError((f'expecting a {extra.__name__} for {self.a.__class__.__name__}.{field}'
+                             if isinstance(extra, type) else
+                             f'expecting one of ({", ".join(c.__name__ for c in extra)}) for '
+                             f'{self.a.__class__.__name__}.{field}') +
+                            f', got {put_ast.__class__.__name__}')
+
+    ast     = self.a
     childf  = child.f
     pars    = bool(FST.get_option('pars', options))
     effpars = pars or put_fst.is_parenthesized_tuple() is False  # need tuple check because otherwise location would be wrong after
@@ -133,6 +142,7 @@ def _put_one_expr(self: 'FST', code: Code | None, idx: int | None, field: str, c
 
     put_fst.offset(0, 0, ln, dcol_offset)
     self.put_src(put_lines, ln, col, end_ln, end_col, True)
+    set_ctx(put_ast, ((ctx := getattr(child, 'ctx', None)) and ctx.__class__) or Load)
     childf._set_ast(put_ast)
 
     return put_ast.f
@@ -166,7 +176,7 @@ def _put_one(self: 'FST', code: Code | None, idx: int | None, field: str, **opti
 
         else:
             if not raw:
-                raise ValueError(f"cannot replace in {ast.__class__.__name__}.{field}")
+                raise ValueError(f"cannot replace {ast.__class__.__name__}.{field}")
 
     ret = child.f._reparse_raw_node(code, **options)
 
@@ -180,7 +190,7 @@ _PUT_ONE_HANDLERS = {
     (Module, 'body'):                     (_put_one_stmtish, None), # stmt*
     # (Module, 'type_ignores'):             (_put_one_default, None), # type_ignore*
     (Interactive, 'body'):                (_put_one_stmtish, None), # stmt*
-    (Expression, 'body'):                 (_put_one_expr, None), # expr
+    (Expression, 'body'):                 (_put_one_expr_required, None), # expr
     # (FunctionType, 'argtypes'):           (_put_one_default, None), # expr*
     # (FunctionType, 'returns'):            (_put_one_default, None), # expr
     # (FunctionDef, 'decorator_list'):      (_put_one_default, None), # expr*
@@ -206,32 +216,32 @@ _PUT_ONE_HANDLERS = {
     # (Return, 'value'):                    (_put_one_default, None), # expr?
     # (Delete, 'targets'):                  (_put_one_default, None), # expr*
     # (Assign, 'targets'):                  (_put_one_default, None), # expr*
-    (Assign, 'value'):                    (_put_one_expr, None), # expr
+    (Assign, 'value'):                    (_put_one_expr_required, None), # expr
     # (Assign, 'type_comment'):             (_put_one_default, None), # string?
     # (TypeAlias, 'name'):                  (_put_one_default, None), # expr
     # (TypeAlias, 'type_params'):           (_put_one_default, None), # type_param*
     # (TypeAlias, 'value'):                 (_put_one_default, None), # expr
-    # (AugAssign, 'target'):                (_put_one_default, None), # expr
+    (AugAssign, 'target'):                (_put_one_expr_required, (Name, Attribute, Subscript)), # expr
     # (AugAssign, 'op'):                    (_put_one_default, None), # operator
-    (AugAssign, 'value'):                 (_put_one_expr, None), # expr
-    # (AnnAssign, 'target'):                (_put_one_default, None), # expr
+    (AugAssign, 'value'):                 (_put_one_expr_required, None), # expr
+    (AnnAssign, 'target'):                (_put_one_expr_required, (Name, Attribute, Subscript)), # expr
     # (AnnAssign, 'annotation'):            (_put_one_default, None), # expr
     # (AnnAssign, 'value'):                 (_put_one_default, None), # expr?
     # (AnnAssign, 'simple'):                (_put_one_default, None), # int
-    # (For, 'target'):                      (_put_one_default, None), # expr
-    (For, 'iter'):                        (_put_one_expr, None), # expr
+    (For, 'target'):                      (_put_one_expr_required, (Name, Tuple, List)), # expr
+    (For, 'iter'):                        (_put_one_expr_required, None), # expr
     (For, 'body'):                        (_put_one_stmtish, None), # stmt*
     (For, 'orelse'):                      (_put_one_stmtish, None), # stmt*
     # (For, 'type_comment'):                (_put_one_default, None), # string?
-    # (AsyncFor, 'target'):                 (_put_one_default, None), # expr
-    (AsyncFor, 'iter'):                   (_put_one_expr, None), # expr
+    (AsyncFor, 'target'):                 (_put_one_expr_required, (Name, Tuple, List)), # expr
+    (AsyncFor, 'iter'):                   (_put_one_expr_required, None), # expr
     (AsyncFor, 'body'):                   (_put_one_stmtish, None), # stmt*
     (AsyncFor, 'orelse'):                 (_put_one_stmtish, None), # stmt*
     # (AsyncFor, 'type_comment'):           (_put_one_default, None), # string?
-    (While, 'test'):                      (_put_one_expr, None), # expr
+    (While, 'test'):                      (_put_one_expr_required, None), # expr
     (While, 'body'):                      (_put_one_stmtish, None), # stmt*
     (While, 'orelse'):                    (_put_one_stmtish, None), # stmt*
-    (If, 'test'):                         (_put_one_expr, None), # expr
+    (If, 'test'):                         (_put_one_expr_required, None), # expr
     (If, 'body'):                         (_put_one_stmtish, None), # stmt*
     (If, 'orelse'):                       (_put_one_stmtish, None), # stmt*
     # (With, 'items'):                      (_put_one_default, None), # withitem*
@@ -240,7 +250,7 @@ _PUT_ONE_HANDLERS = {
     # (AsyncWith, 'items'):                 (_put_one_default, None), # withitem*
     (AsyncWith, 'body'):                  (_put_one_stmtish, None), # stmt*
     # (AsyncWith, 'type_comment'):          (_put_one_default, None), # string?
-    (Match, 'subject'):                   (_put_one_expr, None), # expr
+    (Match, 'subject'):                   (_put_one_expr_required, None), # expr
     (Match, 'cases'):                     (_put_one_stmtish, None), # match_case*
     # (Raise, 'exc'):                       (_put_one_default, None), # expr?
     # (Raise, 'cause'):                     (_put_one_default, None), # expr?
@@ -252,7 +262,7 @@ _PUT_ONE_HANDLERS = {
     (TryStar, 'handlers'):                (_put_one_stmtish, None), # excepthandler*
     (TryStar, 'orelse'):                  (_put_one_stmtish, None), # stmt*
     (TryStar, 'finalbody'):               (_put_one_stmtish, None), # stmt*
-    (Assert, 'test'):                     (_put_one_expr, None), # expr
+    (Assert, 'test'):                     (_put_one_expr_required, None), # expr
     # (Assert, 'msg'):                      (_put_one_default, None), # expr?
     # (Import, 'names'):                    (_put_one_default, None), # alias*
     # (ImportFrom, 'module'):               (_put_one_default, None), # identifier?
@@ -260,43 +270,43 @@ _PUT_ONE_HANDLERS = {
     # (ImportFrom, 'level'):                (_put_one_default, None), # int?
     # (Global, 'names'):                    (_put_one_default, None), # identifier*
     # (Nonlocal, 'names'):                  (_put_one_default, None), # identifier*
-    (Expr, 'value'):                      (_put_one_expr, None), # expr
+    (Expr, 'value'):                      (_put_one_expr_required, None), # expr
     # (BoolOp, 'op'):                       (_put_one_default, None), # boolop
     # (BoolOp, 'values'):                   (_put_one_default, None), # expr*
-    # (NamedExpr, 'target'):                (_put_one_default, None), # expr
-    (NamedExpr, 'value'):                 (_put_one_expr, None), # expr
-    (BinOp, 'left'):                      (_put_one_expr, None), # expr
+    (NamedExpr, 'target'):                (_put_one_expr_required, Name), # expr
+    (NamedExpr, 'value'):                 (_put_one_expr_required, None), # expr
+    (BinOp, 'left'):                      (_put_one_expr_required, None), # expr
     # (BinOp, 'op'):                        (_put_one_default, None), # operator
-    (BinOp, 'right'):                     (_put_one_expr, None), # expr
+    (BinOp, 'right'):                     (_put_one_expr_required, None), # expr
     # (UnaryOp, 'op'):                      (_put_one_default, None), # unaryop
-    (UnaryOp, 'operand'):                 (_put_one_expr, None), # expr
+    (UnaryOp, 'operand'):                 (_put_one_expr_required, None), # expr
     # (Lambda, 'args'):                     (_put_one_default, None), # arguments
-    (Lambda, 'body'):                     (_put_one_expr, None), # expr
-    (IfExp, 'body'):                      (_put_one_expr, None), # expr
-    (IfExp, 'test'):                      (_put_one_expr, None), # expr
-    (IfExp, 'orelse'):                    (_put_one_expr, None), # expr
+    (Lambda, 'body'):                     (_put_one_expr_required, None), # expr
+    (IfExp, 'body'):                      (_put_one_expr_required, None), # expr
+    (IfExp, 'test'):                      (_put_one_expr_required, None), # expr
+    (IfExp, 'orelse'):                    (_put_one_expr_required, None), # expr
     # (Dict, 'keys'):                       (_put_one_default, None), # expr*           - takes idx, handle special key=None?
     # (Dict, 'values'):                     (_put_one_default, None), # expr*           - takes idx,
     (Set, 'elts'):                        (_put_one_tuple_list_or_set, None), # expr*
-    (ListComp, 'elt'):                    (_put_one_expr, None), # expr
+    (ListComp, 'elt'):                    (_put_one_expr_required, None), # expr
     # (ListComp, 'generators'):             (_put_one_default, None), # comprehension*
-    (SetComp, 'elt'):                     (_put_one_expr, None), # expr
+    (SetComp, 'elt'):                     (_put_one_expr_required, None), # expr
     # (SetComp, 'generators'):              (_put_one_default, None), # comprehension*
-    (DictComp, 'key'):                    (_put_one_expr, None), # expr
-    (DictComp, 'value'):                  (_put_one_expr, None), # expr
+    (DictComp, 'key'):                    (_put_one_expr_required, None), # expr
+    (DictComp, 'value'):                  (_put_one_expr_required, None), # expr
     # (DictComp, 'generators'):             (_put_one_default, None), # comprehension*
-    (GeneratorExp, 'elt'):                (_put_one_expr, None), # expr
+    (GeneratorExp, 'elt'):                (_put_one_expr_required, None), # expr
     # (GeneratorExp, 'generators'):         (_put_one_default, None), # comprehension*
-    (Await, 'value'):                     (_put_one_expr, None), # expr
+    (Await, 'value'):                     (_put_one_expr_required, None), # expr
     # (Yield, 'value'):                     (_put_one_default, None), # expr?
-    (YieldFrom, 'value'):                 (_put_one_expr, None), # expr
+    (YieldFrom, 'value'):                 (_put_one_expr_required, None), # expr
     # (Compare, 'left'):                    (_put_one_default, None), # expr
     # (Compare, 'ops'):                     (_put_one_default, None), # cmpop*
     # (Compare, 'comparators'):             (_put_one_default, None), # expr*
     # (Call, 'func'):                       (_put_one_default, None), # expr            - identifier
     # (Call, 'args'):                       (_put_one_default, None), # expr*
     # (Call, 'keywords'):                   (_put_one_default, None), # keyword*
-    (FormattedValue, 'value'):            (_put_one_expr, None), # expr
+    (FormattedValue, 'value'):            (_put_one_expr_required, None), # expr
     # (FormattedValue, 'format_spec'):      (_put_one_default, None), # expr?
     # (FormattedValue, 'conversion'):       (_put_one_default, None), # int
     # (Interpolation, 'value'):             (_put_one_default, None), # expr            - need to change .str as well as expr
@@ -307,13 +317,13 @@ _PUT_ONE_HANDLERS = {
     # (TemplateStr, 'values'):              (_put_one_default, None), # expr*
     # (Constant, 'value'):                  (_put_one_default, None), # constant
     # (Constant, 'kind'):                   (_put_one_default, None), # string?
-    (Attribute, 'value'):                 (_put_one_expr, None), # expr
+    (Attribute, 'value'):                 (_put_one_expr_required, None), # expr
     # (Attribute, 'attr'):                  (_put_one_default, None), # identifier      - after the "value."
     # (Attribute, 'ctx'):                   (_put_one_default, None), # expr_context
-    (Subscript, 'value'):                 (_put_one_expr, None), # expr
+    (Subscript, 'value'):                 (_put_one_expr_required, None), # expr
     # (Subscript, 'slice'):                 (_put_one_default, None), # expr
     # (Subscript, 'ctx'):                   (_put_one_default, None), # expr_context
-    (Starred, 'value'):                   (_put_one_expr, None), # expr
+    (Starred, 'value'):                   (_put_one_expr_required, None), # expr
     # (Starred, 'ctx'):                     (_put_one_default, None), # expr_context
     (Name, 'id'):                         (_put_one_identifier, None), # identifier
     # (Name, 'ctx'):                        (_put_one_default, None), # expr_context
@@ -324,8 +334,8 @@ _PUT_ONE_HANDLERS = {
     # (Slice, 'lower'):                     (_put_one_default, None), # expr?
     # (Slice, 'upper'):                     (_put_one_default, None), # expr?
     # (Slice, 'step'):                      (_put_one_default, None), # expr?
-    # (comprehension, 'target'):            (_put_one_default, None), # expr            - Name or Tuple (maybe empty?)
-    (comprehension, 'iter'):              (_put_one_expr, None), # expr
+    (comprehension, 'target'):            (_put_one_expr_required, (Name, Tuple, List)), # expr
+    (comprehension, 'iter'):              (_put_one_expr_required, None), # expr
     # (comprehension, 'ifs'):               (_put_one_default, None), # expr*
     # (comprehension, 'is_async'):          (_put_one_default, None), # int
     # (ExceptHandler, 'type'):              (_put_one_default, None), # expr?
@@ -342,10 +352,10 @@ _PUT_ONE_HANDLERS = {
     # (arg, 'annotation'):                  (_put_one_default, None), # expr?
     # (arg, 'type_comment'):                (_put_one_default, None), # string?
     # (keyword, 'arg'):                     (_put_one_default, None), # identifier?
-    (keyword, 'value'):                   (_put_one_expr, None), # expr
+    (keyword, 'value'):                   (_put_one_expr_required, None), # expr
     (alias, 'name'):                      (_put_one_identifier, None), # identifier
     # (alias, 'asname'):                    (_put_one_default, None), # identifier?
-    (withitem, 'context_expr'):           (_put_one_expr, None), # expr
+    (withitem, 'context_expr'):           (_put_one_expr_required, None), # expr
     # (withitem, 'optional_vars'):          (_put_one_default, None), # expr?
     # (match_case, 'pattern'):              (_put_one_default, None), # pattern
     # (match_case, 'guard'):                (_put_one_default, None), # expr?

@@ -15,8 +15,8 @@ __all__ = [
     'FIELDS', 'AST_FIELDS', 'OPCLS2STR', 'OPSTR2CLS',
     'bistr',
     'is_valid_identifier', 'reduce_ast', 'get_field', 'has_type_comments', 'is_parsable', 'get_parse_mode',
-    'WalkFail', 'walk2', 'compare_asts', 'copy_attributes', 'copy_ast', 'set_ctx', 'get_func_class_or_ass_by_name',
-    'syntax_ordered_children', 'last_block_opener_child', 'is_atom',
+    'WalkFail', 'walk2', 'compare_asts', 'copy_attributes', 'copy_ast', 'set_ctx',
+    'get_func_class_or_ass_by_name', 'syntax_ordered_children', 'last_block_opener_child', 'is_atom',
     'precedence_require_parens_by_type', 'precedence_require_parens',
 ]
 
