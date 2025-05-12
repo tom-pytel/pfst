@@ -1976,7 +1976,7 @@ class FST:
         _next_ast_bound,
         _lpars,
         _rpars,
-        _loc_block_opener_end,
+        _loc_block_header_end,
         _loc_operator,
         _loc_comprehension,
         _loc_arguments,

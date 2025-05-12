@@ -9,7 +9,7 @@ from .astutil import TypeAlias, TryStar, type_param, TypeVar, ParamSpec, TypeVar
 
 from .shared import (
     STMTISH, Code, NodeTypeError, astfield, fstloc, srcwpos,
-    _next_find, _next_find_re, _fixup_one_index,)
+    _next_find, _prev_find, _next_find_re, _fixup_one_index,)
 
 _re_identifier = re.compile(r'[^\d\W]\w*')
 
@@ -81,56 +81,69 @@ def _code_as_identifier(code: Code) -> str | None:
 
 FieldInfo = tuple[srcwpos, type[expr_context], bool, bool]  # (start, ctx, can_put, can_del)
 
+def _field_info_FunctionDef_returns(self: 'FST') -> FieldInfo:
+    if returns := self.a.returns:
+        returnsf              = returns.f
+        ln, col               = prev.loc[2:] if (prev := returnsf.prev()) else self.loc[:2]
+        end_ln, end_col, _, _ = returnsf.loc
+
+    else:
+        ln, col, end_ln, end_col = self._loc_block_header_end(True)
+
+    end_ln, end_col = _prev_find(self.root._lines, ln, col, end_ln, end_col, ')')  # must be there
+
+    return srcwpos(end_ln, end_col + 1, ' -> '), Load, True, True
+
 def _field_info_Return_value(self: 'FST') -> FieldInfo:
-    return srcwpos((loc := self.loc).ln, loc.col + 6, ''), Load, True, True
+    return srcwpos((loc := self.loc).ln, loc.col + 6, ' '), Load, True, True
 
 def _field_info_AnnAssign_value(self: 'FST') -> FieldInfo:
-    return srcwpos((loc := self.a.annotation.f.pars()).end_ln, loc.end_col, '='), Load, True, True
+    return srcwpos((loc := self.a.annotation.f.pars()).end_ln, loc.end_col, ' = '), Load, True, True
 
 def _field_info_Raise_exc(self: 'FST') -> FieldInfo:
-    return srcwpos((loc := self.loc).ln, loc.col + 5, ''), Load, True, not self.a.cause
+    return srcwpos((loc := self.loc).ln, loc.col + 5, ' '), Load, True, not self.a.cause
 
 def _field_info_Raise_cause(self: 'FST') -> FieldInfo:
     if exc := self.a.exc:
-        return srcwpos((loc := exc.f.pars()).end_ln, loc.end_col, 'from'), Load, bool(exc), True
+        return srcwpos((loc := exc.f.pars()).end_ln, loc.end_col, ' from '), Load, bool(exc), True
     else:
-        return srcwpos((loc := self.loc).ln, loc.col + 5, 'from'), Load, bool(exc), True
+        return srcwpos((loc := self.loc).ln, loc.col + 5, ' from '), Load, bool(exc), True
 
 def _field_info_Assert_msg(self: 'FST') -> FieldInfo:
-    return srcwpos((loc := self.a.test.f.pars()).end_ln, loc.end_col, ','), Load, True, True
+    return srcwpos((loc := self.a.test.f.pars()).end_ln, loc.end_col, ', '), Load, True, True
 
 def _field_info_Yield_value(self: 'FST') -> FieldInfo:
-    return srcwpos((loc := self.loc).ln, loc.col + 5, ''), Load, True, True
+    return srcwpos((loc := self.loc).ln, loc.col + 5, ' '), Load, True, True
 
 def _field_info_arg_annotation(self: 'FST') -> FieldInfo:
-    return srcwpos((loc := self.loc).ln, loc.col + len(self.a.arg), ':'), Load, True, True
+    return srcwpos((loc := self.loc).ln, loc.col + len(self.a.arg), ': '), Load, True, True
 
 def _field_info_withitem_optional_vars(self: 'FST') -> FieldInfo:
-    return srcwpos((loc := self.a.context_expr.f.pars()).end_ln, loc.end_col, 'as'), Store, True, True
+    return srcwpos((loc := self.a.context_expr.f.pars()).end_ln, loc.end_col, ' as '), Store, True, True
 
 def _field_info_match_case_guard(self: 'FST') -> FieldInfo:
-    return srcwpos((loc := self.a.pattern.f.pars()).end_ln, loc.end_col, 'if'), Load, True, True
+    return srcwpos((loc := self.a.pattern.f.pars()).end_ln, loc.end_col, ' if '), Load, True, True
 
 def _field_info_TypeVar_bound(self: 'FST') -> FieldInfo:
-    return srcwpos((loc := self.loc).ln, loc.col + len(self.a.name), ':'), Load, True, True
+    return srcwpos((loc := self.loc).ln, loc.col + len(self.a.name), ': '), Load, True, True
 
 def _field_info_TypeVar_default_value(self: 'FST') -> FieldInfo:
     if bound := self.a.bound:
-        return srcwpos((loc := bound.f.pars()).end_ln, loc.end_col, '='), Load, True, True
+        return srcwpos((loc := bound.f.pars()).end_ln, loc.end_col, ' = '), Load, True, True
     else:
-        return srcwpos((loc := self.loc).ln, loc.col + len(self.a.name), '='), Load, True, True
+        return srcwpos((loc := self.loc).ln, loc.col + len(self.a.name), ' = '), Load, True, True
 
 def _field_info_ParamSpec_default_value(self: 'FST') -> FieldInfo:
     ln, col, end_ln, end_col = self.loc
     ln, col, src             = _next_find_re(self.root._lines, ln, col + 2, end_ln, end_col, _re_identifier)  # + '**', identifier must be there
 
-    return srcwpos(ln, col + len(src), '='), Load, True, True
+    return srcwpos(ln, col + len(src), ' = '), Load, True, True
 
 def _field_info_TypeVarTuple_default_value(self: 'FST') -> FieldInfo:
     ln, col, end_ln, end_col = self.loc
     ln, col, src             = _next_find_re(self.root._lines, ln, col + 1, end_ln, end_col, _re_identifier)  # + '*', identifier must be there
 
-    return srcwpos(ln, col + len(src), '='), Load, True, True
+    return srcwpos(ln, col + len(src), ' = '), Load, True, True
 
 
 def _make_expr_fst(self: 'FST', code: Code | None, idx: int | None, field: str,
@@ -258,14 +271,14 @@ def _put_one_expr_optional(self: 'FST', code: Code | None, idx: int | None, fiel
     if not can_put:
         raise ValueError(f'cannot create {self.a.__class__.__name__}.{field} in this state')
 
-    if pos := self._loc_block_opener_end():
+    if pos := self._loc_block_header_end():
         end_ln, end_col  = pos
         end_col         -= 1
 
     else:
         _, _, end_ln, end_col = self.pars()
 
-    prefix  = ' ' if not prefix else f'{prefix} ' if prefix in ',:' else f' {prefix} '
+    # prefix  = ' ' if not prefix else f'{prefix} ' if prefix in ',:' else f' {prefix} '
     loc     = fstloc(ln, col, end_ln, end_col)
     put_fst = _make_expr_fst(self, code, idx, field, required_extra, loc, ctx, prefix, **options)
     put_fst = FST(put_fst.a, self, astfield(field))
@@ -444,13 +457,13 @@ _PUT_ONE_HANDLERS = {
     (FunctionDef, 'name'):                (_put_one_identifier_required, 'def'), # identifier
     # (FunctionDef, 'type_params'):         (_put_one_default, None), # type_param*                                     - slice
     # (FunctionDef, 'args'):                (_put_one_default, None), # arguments                                       - need special parse
-    # (FunctionDef, 'returns'):             (_put_one_default, None), # expr?                                           - SPECIAL LOCATION OPTIONAL TAIL: '->'                                           - SPECIAL LOCATION CASE!
+    (FunctionDef, 'returns'):             (_put_one_expr_optional, (_field_info_FunctionDef_returns, None)), # expr?    - SPECIAL LOCATION OPTIONAL TAIL: '->'                                           - SPECIAL LOCATION CASE!
     (FunctionDef, 'body'):                (_put_one_stmtish, None), # stmt*
     # (AsyncFunctionDef, 'decorator_list'): (_put_one_default, None), # expr*                                           - slice
     (AsyncFunctionDef, 'name'):           (_put_one_identifier_required, 'def'), # identifier
     # (AsyncFunctionDef, 'type_params'):    (_put_one_default, None), # type_param*                                     - slice
     # (AsyncFunctionDef, 'args'):           (_put_one_default, None), # arguments                                       - need special parse
-    # (AsyncFunctionDef, 'returns'):        (_put_one_default, None), # expr?                                           - SPECIAL LOCATION OPTIONAL TAIL: '->'
+    (AsyncFunctionDef, 'returns'):        (_put_one_expr_optional, (_field_info_FunctionDef_returns, None)), # expr?    - SPECIAL LOCATION OPTIONAL TAIL: '->'
     (AsyncFunctionDef, 'body'):           (_put_one_stmtish, None), # stmt*
     # (ClassDef, 'decorator_list'):         (_put_one_default, None), # expr*                                           - slice
     (ClassDef, 'name'):                   (_put_one_identifier_required, 'class'), # identifier

@@ -134,7 +134,7 @@ def _reparse_raw(self: 'FST', new_lines: list[str], ln: int, col: int, end_ln: i
 
 
 def _reparse_raw_stmtish(self: 'FST', new_lines: list[str], ln: int, col: int, end_ln: int, end_col: int) -> bool:
-    """Reparse only statementish or block opener part of statementish containing changes."""
+    """Reparse only statementish or block header part of statementish containing changes."""
 
     if not (stmtish := self.parent_stmtish(True, False)):
         return False
@@ -145,7 +145,7 @@ def _reparse_raw_stmtish(self: 'FST', new_lines: list[str], ln: int, col: int, e
     lines    = root._lines
     stmtisha = stmtish.a
 
-    if in_blkopen := (blkopen_end := stmtish._loc_block_opener_end()) and (end_ln, end_col) <= blkopen_end:  # block statement with modification limited to block opener
+    if in_blkopen := (blkopen_end := stmtish._loc_block_header_end()) and (end_ln, end_col) <= blkopen_end:  # block statement with modification limited to block header
         pend_ln, pend_col = blkopen_end
 
     if isinstance(stmtisha, match_case):
@@ -190,14 +190,14 @@ def _reparse_raw_stmtish(self: 'FST', new_lines: list[str], ln: int, col: int, e
             else:
                 path = _PATH_BODY2
 
-    if not in_blkopen:  # non-block statement or modifications not limited to block opener part
+    if not in_blkopen:  # non-block statement or modifications not limited to block header part
         copy_lines[pend_ln] = bistr(copy_lines[pend_ln][:pend_col])
 
         stmtish._reparse_raw(new_lines, ln, col, end_ln, end_col, copy_lines, path)
 
         return True
 
-    # modifications only to block opener line(s) of block statement
+    # modifications only to block header line(s) of block statement
 
     if isinstance(stmtisha, Match):
         copy_lines[pend_ln] = bistr(copy_lines[pend_ln][:pend_col])
@@ -253,7 +253,7 @@ def _reparse_raw_loc(self: 'FST', code: Code | None, ln: int, col: int, end_ln: 
     else:
         new_lines = code._lines
 
-    if not self._reparse_raw_stmtish(new_lines, ln, col, end_ln, end_col):  # attempt to reparse only statement (or even only block opener)
+    if not self._reparse_raw_stmtish(new_lines, ln, col, end_ln, end_col):  # attempt to reparse only statement (or even only block header)
         assert self.root.is_mod  # TODO: allow with non-mod root
 
         root = self.root

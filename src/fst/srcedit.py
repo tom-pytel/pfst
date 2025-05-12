@@ -818,7 +818,7 @@ class SrcEdit:
         prepended to `put_fst` for the final put. If replacing whole body of 'orelse' or 'finalbody' then the original
         'else:' or 'finally:' is not deleted (along with any preceding comments or spaces).
 
-        Block being inserted into assumed to be normalized (no statement or multiple statements on block opener logical
+        Block being inserted into assumed to be normalized (no statement or multiple statements on block header logical
         line).
 
         **Parameters:**
@@ -827,7 +827,7 @@ class SrcEdit:
             nodes. Not indented, indent and mutate this object to set what will be put at `put_loc`.
         - `field`: The name of the field being gotten from, e.g. `'body'`, `'orelse'`, etc...
         - `cut`: If `False` the operation is a copy, `True` means cut.
-        - `opener_indent`: The indent string of the block opener being put to (`if`, `with`, `class`, etc...), not the
+        - `opener_indent`: The indent string of the block header being put to (`if`, `with`, `class`, etc...), not the
             statements in the block.
         - `block_indent`: The indent string to be applied to `put_fst` statements in the block, which is the total
             indentation (including `opener_indent`) of the statements in the block.

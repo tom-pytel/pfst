@@ -362,9 +362,15 @@ def _rpars(self: 'FST', with_loc: bool | Literal['all', 'own', 'allown'] = True,
     return ret
 
 
-def _loc_block_opener_end(self: 'FST') -> tuple[int, int] | None:
-    """Return location of the end of the block opener line(s) for block node, just past the ':', or None if `self`
-    is not a block opener node."""
+def _loc_block_header_end(self: 'FST', ret_bound: bool = False) -> fstloc | tuple[int, int] | None:
+    """Return location of the end of the block header line(s) for block node, just past the ':', or None if `self`
+    is not a block header node.
+
+    **Parameters:**
+    - `ret_bound`: If `False` then just returns the end position. `True` means return the range used for the search,
+        which includes a start at the end of the last child node in the block header or beginning of the block node if
+        no child nodes in header.
+    """
 
     ln, col, end_ln, end_col = self.loc
 
@@ -385,7 +391,7 @@ def _loc_block_opener_end(self: 'FST') -> tuple[int, int] | None:
 
     ln, col = _next_find(self.root._lines, cend_ln, cend_col, end_ln, end_col, ':')  # it must be there
 
-    return ln, col + 1
+    return fstloc(cend_ln, cend_col, ln, col + 1) if ret_bound else (ln, col + 1)
 
 
 def _loc_operator(self: 'FST') -> fstloc | None:
