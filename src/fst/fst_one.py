@@ -2,12 +2,12 @@
 
 import re
 from ast import *
-from typing import Any, Optional
+from typing import Any, Callable, Optional, Union
 
 from .astutil import *
 from .astutil import TypeAlias, TryStar, type_param, TypeVar, ParamSpec, TypeVarTuple, TemplateStr, Interpolation
 
-from .shared import STMTISH, Code, NodeTypeError, _fixup_one_index, _next_find, _next_find_re
+from .shared import STMTISH, Code, NodeTypeError, astfield, fstloc, srcwpos, _fixup_one_index, _next_find, _next_find_re
 
 
 def _slice_indices(self: 'FST', idx: int, field: str, body: list[AST], to: Optional['FST']):
@@ -78,6 +78,242 @@ def _code_as_identifier(code: Code) -> str | None:
     return code.id if isinstance(code, Name) else None
 
 
+def _start_prefix_Return_value(self: 'FST') -> srcwpos:
+    """The start position (right after 'return') and prefix src ('') for a value node for a Return."""
+
+    return srcwpos((loc := self.loc).ln, loc.col + 6, '')
+
+
+def _make_expr_fst(self: 'FST', code: Code | None, idx: int | None, field: str,
+                   extra: tuple[type[AST]] | list[type[AST]] | type[AST] | None,
+                   target: Union['FST', fstloc], ctx: type[expr_context], prefix: str  = '',
+                   **options) -> tuple['FST', fstloc]:
+    """Make an expression `FST` from `Code` for a field/idx containing an existing node creating a new one. Takes care
+    of parenthesizing, indenting and offsetting."""
+
+    put_fst = self._normalize_code(code, 'expr', parse_params=self.root.parse_params)
+    put_ast = put_fst.a
+
+    if extra:
+        if isinstance(extra, list):  # list means these types not allowed
+            if isinstance(put_ast, tuple(extra)):
+                raise NodeTypeError((f'cannot be one of ({", ".join(c.__name__ for c in extra)}) for '
+                                     f'{self.a.__class__.__name__}.{field}{f"[{idx}]" if idx else ""}') +
+                                    f', got {put_ast.__class__.__name__}')
+
+        elif not isinstance(put_ast, extra):  # single AST type or tuple means only these allowed
+            raise NodeTypeError((f'expecting a {extra.__name__} for {self.a.__class__.__name__}.{field}'
+                                 if isinstance(extra, type) else
+                                 f'expecting one of ({", ".join(c.__name__ for c in extra)}) for '
+                                 f'{self.a.__class__.__name__}.{field}{f"[{idx}]" if idx else ""}') +
+                                f', got {put_ast.__class__.__name__}')
+
+    pars    = bool(FST.get_option('pars', options))
+    delpars = pars or put_fst.is_parenthesized_tuple() is False  # need tuple check because otherwise location would be wrong after
+    is_FST  = target.is_FST
+
+    if precedence_require_parens(put_ast, self.a, field, idx):
+        if not put_fst.is_atom() and (delpars or not is_FST or not target.pars(ret_npars=True)[1]):
+            put_fst.parenthesize()
+
+    elif pars:  # remove parens only if allowed to
+        put_fst.unparenthesize()
+
+    if prefix:
+        put_fst.put_src([prefix], 0, 0, 0, 0, True)
+
+    put_fst.indent_lns(self.get_indent(), docstr=options.get('docstr'))
+
+    ln, col, _, _ = loc = target.pars(delpars) if target.is_FST else target
+    dcol_offset   = self.root._lines[ln].c2b(col)
+
+    put_fst.offset(0, 0, ln, dcol_offset)
+    # self.put_src(put_lines, ln, col, end_ln, end_col, True, exclude=target)  # excluding an fstloc will do nothing
+    set_ctx(put_ast, ctx)
+
+    return put_fst, loc
+
+
+def _put_one_expr_required(self: 'FST', code: Code | None, idx: int | None, field: str, child: list[AST] | AST | None,
+                           extra: tuple[type[AST]] | list[type[AST]] | type[AST] | None,
+                           **options) -> Optional['FST']:
+    """Put a single required expression. Can be standalone or as part of sequence."""
+
+    if isinstance(child, list):
+        if idx is None:
+            raise IndexError(f'{self.a.__class__.__name__}.{field} needs an index')
+
+        child = child[idx]
+
+    elif idx is not None:
+        raise IndexError(f'{self.a.__class__.__name__}.{field} does not take an index')
+
+    if code is None:
+        raise ValueError(f'cannot delete {self.a.__class__.__name__}.{field}{f"[{idx}]" if idx else ""}')
+    if options.get('to'):
+        raise NodeTypeError(f"cannot put with 'to' to {self.a.__class__.__name__}.{field}")
+
+    if not child:
+        raise ValueError(f'cannot replace nonexistent {self.a.__class__.__name__}.{field}{f"[{idx}]" if idx else ""}')
+
+
+
+    childf = child.f
+    ctx    = ((ctx := getattr(child, 'ctx', None)) and ctx.__class__) or Load
+
+    put_fst, (ln, col, end_ln, end_col) = _make_expr_fst(self, code, idx, field, extra, childf, ctx, **options)
+
+    self.put_src(put_fst._lines, ln, col, end_ln, end_col, True, exclude=childf)
+    childf._set_ast(put_fst.a)
+
+    return childf
+
+
+
+    # put_fst = self._normalize_code(code, 'expr', parse_params=self.root.parse_params)
+    # put_ast = put_fst.a
+
+    # if extra:
+    #     if isinstance(extra, list):  # list means these types not allowed
+    #         if isinstance(put_ast, tuple(extra)):
+    #             raise NodeTypeError((f'cannot be one of ({", ".join(c.__name__ for c in extra)}) for '
+    #                                  f'{self.a.__class__.__name__}.{field}{f"[{idx}]" if idx else ""}') +
+    #                                 f', got {put_ast.__class__.__name__}')
+
+    #     elif not isinstance(put_ast, extra):  # single AST type or tuple means only these allowed
+    #         raise NodeTypeError((f'expecting a {extra.__name__} for {self.a.__class__.__name__}.{field}'
+    #                              if isinstance(extra, type) else
+    #                              f'expecting one of ({", ".join(c.__name__ for c in extra)}) for '
+    #                              f'{self.a.__class__.__name__}.{field}{f"[{idx}]" if idx else ""}') +
+    #                             f', got {put_ast.__class__.__name__}')
+
+    # ast     = self.a
+    # childf  = child.f
+    # pars    = bool(FST.get_option('pars', options))
+    # delpars = pars or put_fst.is_parenthesized_tuple() is False  # need tuple check because otherwise location would be wrong after
+    # loc     = childf.pars(delpars)  # don't need exc_genexpr_solo=True here because guaranteed not to be this
+
+    # if precedence_require_parens(put_ast, ast, field, idx):
+    #     if not put_fst.is_atom() and (delpars or not childf.pars(ret_npars=True)[1]):
+    #         put_fst.parenthesize()
+
+    # elif pars:  # remove parens only if allowed to
+    #     put_fst.unparenthesize()
+
+    # put_fst.indent_lns(childf.get_indent(), docstr=options.get('docstr'))
+
+    # ln, col, end_ln, end_col = loc
+
+    # lines       = self.root._lines
+    # put_lines   = put_fst._lines
+    # dcol_offset = lines[ln].c2b(col)
+
+    # put_fst.offset(0, 0, ln, dcol_offset)
+    # self.put_src(put_lines, ln, col, end_ln, end_col, True, exclude=childf)
+    # set_ctx(put_ast, ((ctx := getattr(child, 'ctx', None)) and ctx.__class__) or Load)
+    # childf._set_ast(put_ast)
+
+    # return put_ast.f
+
+
+def _put_one_expr_optional(self: 'FST', code: Code | None, idx: int | None, field: str, child: AST,
+                           extra: tuple[
+                               Callable[['FST'], srcwpos],
+                               tuple[type[AST]] | list[type[AST]] | type[AST] | None,
+                           ], **options) -> Optional['FST']:
+    """Put new, replace or delete an optional expression. Only standalone"""
+
+    if idx is not None:
+        raise IndexError(f'{self.a.__class__.__name__}.{field} does not take an index')
+    if options.get('to'):
+        raise NodeTypeError(f"cannot put with 'to' to {self.a.__class__.__name__}.{field}")
+
+    start_prefix, required_extra = extra
+
+    if code is None:
+        if not child:  # delete nonexistent node, noop
+            return None
+
+    elif child:  # replace existing node
+        return _put_one_expr_required(self, code, idx, field, child, required_extra, **options)
+
+    ln, col, prefix = start_prefix(self)
+
+    if code is None:  # delete existing node
+        childf = child.f
+
+        self.put_src(None, ln, col, childf.end_ln, childf.end_col, True)
+        setattr(self.a, field, None)
+        childf._unmake_fst_tree()
+
+        return None
+
+    # put new node
+
+    prefix = f' {prefix} ' if prefix else ' '
+    loc    = fstloc(ln, col, self.end_ln, self.end_col)
+
+    put_fst, (ln, col, end_ln, end_col) = _make_expr_fst(self, code, idx, field, required_extra, loc, Load, prefix,
+                                                         **options)
+
+    self.put_src(put_fst._lines, ln, col, end_ln, end_col, True)
+    self._make_fst_tree([put_fst := FST(put_fst.a, self, astfield(field))])
+    put_fst.pfield.set(self.a, put_fst.a)
+
+    return put_fst
+
+
+
+
+    raise NotImplementedError
+
+
+
+def _put_one_Dict_key(self: 'FST', code: Code | None, idx: int | None, field: str, child: list[AST],
+                      extra: tuple[type[AST]] | list[type[AST]] | type[AST] | None,
+                      **options) -> Optional['FST']:
+    """Allow for deleting or adding a `Dict` key value to change between `a: b` and `**b`."""
+
+    return _put_one_expr_required(self, code, idx, field, child, extra, **options)
+
+
+    # TODO: this
+
+
+def _put_one_Compare_None(self: 'FST', code: Code | None, idx: int | None, field: str, child: None,
+                          extra: tuple[type[AST]] | list[type[AST]] | type[AST] | None,
+                          **options) -> Optional['FST']:
+
+    """Put to combined [Compare.left, Compare.comparators] using this total indexing."""
+
+    ast         = self.a
+    comparators = ast.comparators
+    idx         = _fixup_one_index(len(comparators) + 1, idx)
+
+    if idx:
+        field = 'comparators'
+        idx   = idx - 1
+        child = comparators
+
+    else:
+        field = 'left'
+        idx   = None
+        child = ast.left
+
+    return _put_one_expr_required(self, code, idx, field, child, extra, **options)
+
+
+def _put_one_Interpolation_value(self: 'FST', code: Code | None, idx: int | None, field: str, child: AST,
+                                 extra: tuple[type[AST]] | list[type[AST]] | type[AST] | None,
+                                 **options) -> Optional['FST']:
+    """Put Interpolation.value. Do normal expr put and if successful copy source to `.str` attribute."""
+
+    ret        = _put_one_expr_required(self, code, idx, field, child, extra, **options)
+    self.a.str = self.get_src(*ret.loc)
+
+    return ret
+
+
 def _put_one_stmtish(self: 'FST', code: Code | None, idx: int | None, field: str, child: list[AST], extra: None,
                      **options) -> Optional['FST']:
     """Put or delete a single statementish node to a list of them (body, orelse, handlers, finalbody or cases)."""
@@ -97,8 +333,8 @@ def _put_one_tuple_list_or_set(self: 'FST', code: Code | None, idx: int | None, 
     return None if code is None else getattr(self.a, field)[idx].f
 
 
-def _put_one_identifier(self: 'FST', code: Code | None, idx: int | None, field: str, child: Any, extra: str | None,
-                        **options) -> str:
+def _put_one_identifier_required(self: 'FST', code: Code | None, idx: int | None, field: str, child: str,
+                                 extra: str | None, **options) -> str:
     """Put a single required identifier."""
 
     if code is None:
@@ -128,120 +364,6 @@ def _put_one_identifier(self: 'FST', code: Code | None, idx: int | None, field: 
     setattr(self.a, field, code)
 
     return code
-
-
-def _put_one_expr_required(self: 'FST', code: Code | None, idx: int | None, field: str, child: Any,
-                           extra: tuple[type[AST]] | list[type[AST]] | type[AST] | None,
-                           **options) -> Optional['FST']:
-    """Put a single required expression."""
-
-    if isinstance(child, list):
-        if idx is None:
-            raise IndexError(f'{self.a.__class__.__name__}.{field} needs an index')
-
-        child = child[idx]
-
-    else:
-        if idx is not None:
-            raise IndexError(f'{self.a.__class__.__name__}.{field} does not take an index')
-
-    if code is None:
-        raise ValueError(f'cannot delete {self.a.__class__.__name__}.{field}{f"[{idx}]" if idx else ""}')
-    if options.get('to'):
-        raise NodeTypeError(f"cannot put with 'to' to {self.a.__class__.__name__}.{field}{f'[{idx}]' if idx else ''}")
-
-    if not child:
-        raise ValueError(f'cannot replace nonexistent {self.a.__class__.__name__}.{field}{f"[{idx}]" if idx else ""}')
-
-    put_fst = self._normalize_code(code, 'expr', parse_params=self.root.parse_params)
-    put_ast = put_fst.a
-
-    if extra:
-        if isinstance(extra, list):  # list means these types not allowed
-            if isinstance(put_ast, tuple(extra)):
-                raise NodeTypeError((f'cannot be one of ({", ".join(c.__name__ for c in extra)}) for '
-                                     f'{self.a.__class__.__name__}.{field}{f"[{idx}]" if idx else ""}') +
-                                    f', got {put_ast.__class__.__name__}')
-
-        elif not isinstance(put_ast, extra):  # single AST type or tuple means only these allowed
-            raise NodeTypeError((f'expecting a {extra.__name__} for {self.a.__class__.__name__}.{field}'
-                                 if isinstance(extra, type) else
-                                 f'expecting one of ({", ".join(c.__name__ for c in extra)}) for '
-                                 f'{self.a.__class__.__name__}.{field}{f"[{idx}]" if idx else ""}') +
-                                f', got {put_ast.__class__.__name__}')
-
-    ast     = self.a
-    childf  = child.f
-    pars    = bool(FST.get_option('pars', options))
-    delpars = pars or put_fst.is_parenthesized_tuple() is False  # need tuple check because otherwise location would be wrong after
-    loc     = childf.pars(delpars)  # don't need exc_genexpr_solo=True here because guaranteed not to be this
-
-    if precedence_require_parens(put_ast, ast, field, idx):
-        if not put_fst.is_atom() and (delpars or not childf.pars(ret_npars=True)[1]):
-            put_fst.parenthesize()
-
-    elif pars:  # remove parens only if allowed to
-        put_fst.unparenthesize()
-
-    put_fst.indent_lns(childf.get_indent(), docstr=options.get('docstr'))
-
-    ln, col, end_ln, end_col = loc
-
-    lines       = self.root._lines
-    put_lines   = put_fst._lines
-    dcol_offset = lines[ln].c2b(col)
-
-    put_fst.offset(0, 0, ln, dcol_offset)
-    self.put_src(put_lines, ln, col, end_ln, end_col, True)
-    set_ctx(put_ast, ((ctx := getattr(child, 'ctx', None)) and ctx.__class__) or Load)
-    childf._set_ast(put_ast)
-
-    return put_ast.f
-
-
-def _put_one_Compare_None(self: 'FST', code: Code | None, idx: int | None, field: str, child: Any,
-                          extra: tuple[type[AST]] | list[type[AST]] | type[AST] | None,
-                          **options) -> Optional['FST']:
-
-    """Put to combined [Compare.left, Compare.comparators] using this total indexing."""
-
-    ast         = self.a
-    comparators = ast.comparators
-    idx         = _fixup_one_index(len(comparators) + 1, idx)
-
-    if idx:
-        field = 'comparators'
-        idx   = idx - 1
-        child = comparators
-
-    else:
-        field = 'left'
-        idx   = None
-        child = ast.left
-
-    return _put_one_expr_required(self, code, idx, field, child, extra, **options)
-
-
-def _put_one_Dict_key(self: 'FST', code: Code | None, idx: int | None, field: str, child: Any,
-                      extra: tuple[type[AST]] | list[type[AST]] | type[AST] | None,
-                      **options) -> Optional['FST']:
-    """Allow for deleting or adding a `Dict` key value to change between `a: b` and `**b`."""
-
-    return _put_one_expr_required(self, code, idx, field, child, extra, **options)
-
-
-    # TODO: this
-
-
-def _put_one_Interpolation_value(self: 'FST', code: Code | None, idx: int | None, field: str, child: Any,
-                                 extra: tuple[type[AST]] | list[type[AST]] | type[AST] | None,
-                                 **options) -> Optional['FST']:
-    """Put Interpolation.value. Do normal expr put and if successful copy source to `.str` attribute."""
-
-    ret        = _put_one_expr_required(self, code, idx, field, child, extra, **options)
-    self.a.str = self.get_src(*ret.loc)
-
-    return ret
 
 
 def _put_one(self: 'FST', code: Code | None, idx: int | None, field: str | None, **options) -> Optional['FST']:
@@ -312,24 +434,24 @@ _PUT_ONE_HANDLERS = {
     (Interactive, 'body'):                (_put_one_stmtish, None), # stmt*
     (Expression, 'body'):                 (_put_one_expr_required, None), # expr
     # (FunctionDef, 'decorator_list'):      (_put_one_default, None), # expr*                                           - slice
-    (FunctionDef, 'name'):                (_put_one_identifier, 'def'), # identifier
+    (FunctionDef, 'name'):                (_put_one_identifier_required, 'def'), # identifier
     # (FunctionDef, 'type_params'):         (_put_one_default, None), # type_param*                                     - slice
     # (FunctionDef, 'args'):                (_put_one_default, None), # arguments                                       - need special parse
     # (FunctionDef, 'returns'):             (_put_one_default, None), # expr?                                           - SPECIAL LOCATION OPTIONAL TAIL: '->'                                           - SPECIAL LOCATION CASE!
     (FunctionDef, 'body'):                (_put_one_stmtish, None), # stmt*
     # (AsyncFunctionDef, 'decorator_list'): (_put_one_default, None), # expr*                                           - slice
-    (AsyncFunctionDef, 'name'):           (_put_one_identifier, 'def'), # identifier
+    (AsyncFunctionDef, 'name'):           (_put_one_identifier_required, 'def'), # identifier
     # (AsyncFunctionDef, 'type_params'):    (_put_one_default, None), # type_param*                                     - slice
     # (AsyncFunctionDef, 'args'):           (_put_one_default, None), # arguments                                       - need special parse
     # (AsyncFunctionDef, 'returns'):        (_put_one_default, None), # expr?                                           - SPECIAL LOCATION OPTIONAL TAIL: '->'
     (AsyncFunctionDef, 'body'):           (_put_one_stmtish, None), # stmt*
     # (ClassDef, 'decorator_list'):         (_put_one_default, None), # expr*                                           - slice
-    (ClassDef, 'name'):                   (_put_one_identifier, 'class'), # identifier
+    (ClassDef, 'name'):                   (_put_one_identifier_required, 'class'), # identifier
     # (ClassDef, 'type_params'):            (_put_one_default, None), # type_param*                                     - slice
     # (ClassDef, 'bases'):                  (_put_one_default, None), # expr*                                           - slice
     # (ClassDef, 'keywords'):               (_put_one_default, None), # keyword*
     (ClassDef, 'body'):                   (_put_one_stmtish, None), # stmt*
-    # (Return, 'value'):                    (_put_one_default, None), # expr?                                           - OPTIONAL TAIL: ''
+    (Return, 'value'):                    (_put_one_expr_optional, (_start_prefix_Return_value, None)), # expr?         - OPTIONAL TAIL: ''
     # (Delete, 'targets'):                  (_put_one_default, None), # expr*                                           - slice
     # (Assign, 'targets'):                  (_put_one_default, None), # expr*                                           - slice
     (Assign, 'value'):                    (_put_one_expr_required, None), # expr
@@ -434,7 +556,7 @@ _PUT_ONE_HANDLERS = {
     (Subscript, 'value'):                 (_put_one_expr_required, None), # expr
     # (Subscript, 'slice'):                 (_put_one_default, None), # expr
     (Starred, 'value'):                   (_put_one_expr_required, None), # expr
-    (Name, 'id'):                         (_put_one_identifier, None), # identifier
+    (Name, 'id'):                         (_put_one_identifier_required, None), # identifier
     (List, 'elts'):                       (_put_one_tuple_list_or_set, None), # expr*
     (Tuple, 'elts'):                      (_put_one_tuple_list_or_set, None), # expr*
     # (Slice, 'lower'):                     (_put_one_default, None), # expr?
@@ -454,11 +576,11 @@ _PUT_ONE_HANDLERS = {
     # (arguments, 'kwonlyargs'):            (_put_one_default, None), # arg*
     # (arguments, 'kw_defaults'):           (_put_one_default, None), # expr*                                           - can have None with special rules
     # (arguments, 'kwarg'):                 (_put_one_default, None), # arg?
-    (arg, 'arg'):                         (_put_one_identifier, None), # identifier
+    (arg, 'arg'):                         (_put_one_identifier_required, None), # identifier
     # (arg, 'annotation'):                  (_put_one_default, None), # expr?                                           - OPTIONAL TAIL: ':' - [Lambda, Yield, YieldFrom, Await, NamedExpr]
     # (keyword, 'arg'):                     (_put_one_default, None), # identifier?
     (keyword, 'value'):                   (_put_one_expr_required, None), # expr
-    (alias, 'name'):                      (_put_one_identifier, None), # identifier
+    (alias, 'name'):                      (_put_one_identifier_required, None), # identifier
     # (alias, 'asname'):                    (_put_one_default, None), # identifier?
     (withitem, 'context_expr'):           (_put_one_expr_required, None), # expr
     # (withitem, 'optional_vars'):          (_put_one_default, None), # expr?                                           - OPTIONAL TAIL: 'as' - Name
@@ -479,12 +601,12 @@ _PUT_ONE_HANDLERS = {
     # (MatchAs, 'pattern'):                 (_put_one_default, None), # pattern?
     # (MatchAs, 'name'):                    (_put_one_default, None), # identifier?
     # (MatchOr, 'patterns'):                (_put_one_default, None), # pattern*
-    (TypeVar, 'name'):                    (_put_one_identifier, None), # identifier
+    (TypeVar, 'name'):                    (_put_one_identifier_required, None), # identifier
     # (TypeVar, 'bound'):                   (_put_one_default, None), # expr?                                           - OPTIONAL MIDDLE: ':'
     # (TypeVar, 'default_value'):           (_put_one_default, None), # expr?                                           - OPTIONAL TAIL: '='
-    (ParamSpec, 'name'):                  (_put_one_identifier, '**'), # identifier
+    (ParamSpec, 'name'):                  (_put_one_identifier_required, '**'), # identifier
     # (ParamSpec, 'default_value'):         (_put_one_default, None), # expr?                                           - OPTIONAL TAIL: '='
-    (TypeVarTuple, 'name'):               (_put_one_identifier, '*'), # identifier
+    (TypeVarTuple, 'name'):               (_put_one_identifier_required, '*'), # identifier
     # (TypeVarTuple, 'default_value'):      (_put_one_default, None), # expr?                                           - OPTIONAL TAIL: '='
 
 

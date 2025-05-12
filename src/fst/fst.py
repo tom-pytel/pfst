@@ -791,58 +791,6 @@ class FST:
 
         return parent._get_one((pf := self.pfield).idx, pf.name, True, **options)
 
-
-    # def copy(self, **options) -> 'FST':
-    #     """Copy an individual node to a top level tree, dedenting and fixing as necessary."""
-
-    #     fix    = FST.get_option('fix', options)
-    #     ast    = self.a
-    #     newast = copy_ast(ast)
-
-    #     if self.is_root:
-    #         return FST(newast, lines=self._lines[:], from_=self)
-
-    #     if isinstance(ast, STMTISH):
-    #         loc = self.comms(options.get('precomms'), options.get('postcomms'))
-    #     else:
-    #         loc = self.pars(options.get('pars') is True)
-
-    #     if not loc:
-    #         raise ValueError('cannot copy node which does not have location')
-
-    #     fst = self._make_fst_and_dedent(self, newast, loc, docstr=options.get('docstr'))
-
-    #     return fst._fix(inplace=True) if fix else fst
-
-    # def cut(self, **options) -> 'FST':
-    #     """Cut out an individual node to a top level tree (if possible), dedenting and fixing as necessary."""
-
-    #     if self.is_root:
-    #         raise ValueError('cannot cut root node')
-
-    #     ast        = self.a
-    #     parent     = self.parent
-    #     field, idx = self.pfield
-    #     parenta    = parent.a
-
-    #     if isinstance(ast, STMTISH):
-    #         return parent._get_slice_stmtish(idx, idx + 1, field, cut=True, one=True, **options)
-
-    #     if isinstance(parenta, (Tuple, List, Set)):
-    #         fst = self.copy(**options)
-
-    #         parent._put_slice_tuple_list_or_set(None, idx, idx + 1, field, False, **options)
-
-    #         return fst
-
-
-    #     # TODO: individual nodes
-    #     # TODO: other sequences?
-
-
-    #     raise ValueError(f"cannot cut from a {parenta.__class__.__name__}.{field}")
-
-
     def replace(self, code: Code | None, **options) -> Optional['FST']:  # -> Self (replaced) or None if deleted
         """Replace or delete (`code=None`) an individual node. Returns the new node for `self`, not the old replaced
         node, or `None` if was deleted or raw replaced and old node disappeared.

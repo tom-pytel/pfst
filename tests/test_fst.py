@@ -16660,6 +16660,32 @@ Module .. ROOT 0,0 -> 1,20
       0] Pass .. 1,16 -> 1,20
 """),
 
+(r"""return a""", 'body[0]', None, None, {'raw': False}, r"""new""", r"""return new""", r"""
+Module .. ROOT 0,0 -> 0,10
+  .body[1]
+  0] Return .. 0,0 -> 0,10
+    .value Name 'new' Load .. 0,7 -> 0,10
+"""),
+
+(r"""return a""", 'body[0]', None, None, {'raw': False}, r"""**DEL**""", r"""return""", r"""
+Module .. ROOT 0,0 -> 0,6
+  .body[1]
+  0] Return .. 0,0 -> 0,6
+"""),
+
+(r"""return""", 'body[0]', None, None, {'raw': False}, r"""**DEL**""", r"""return""", r"""
+Module .. ROOT 0,0 -> 0,6
+  .body[1]
+  0] Return .. 0,0 -> 0,6
+"""),
+
+(r"""return""", 'body[0]', None, None, {'raw': False}, r"""new""", r"""return new""", r"""
+Module .. ROOT 0,0 -> 0,10
+  .body[1]
+  0] Return .. 0,0 -> 0,10
+    .value Name 'new' Load .. 0,7 -> 0,10
+"""),
+
 ]  # END OF PUT_ONE_DATA
 
 PUT_RAW_DATA = [
