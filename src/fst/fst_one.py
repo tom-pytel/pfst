@@ -77,33 +77,33 @@ def _code_as_identifier(code: Code) -> str | None:
     return code.id if isinstance(code, Name) else None
 
 
-StartPrefix = tuple[srcwpos, type[expr_context], bool, bool]  # (srcwpos, ctx, can_put, can_del)
+FieldInfo = tuple[srcwpos, type[expr_context], bool, bool]  # (start, ctx, can_put, can_del)
 
-def _start_prefix_Return_value(self: 'FST') -> StartPrefix:
+def _field_info_Return_value(self: 'FST') -> FieldInfo:
     return srcwpos((loc := self.loc).ln, loc.col + 6, ''), Load, True, True
 
-def _start_prefix_AnnAssign_value(self: 'FST') -> StartPrefix:
+def _field_info_AnnAssign_value(self: 'FST') -> FieldInfo:
     return srcwpos((loc := self.a.annotation.f.pars()).end_ln, loc.end_col, '='), Load, True, True
 
-def _start_prefix_Raise_exc(self: 'FST') -> StartPrefix:
+def _field_info_Raise_exc(self: 'FST') -> FieldInfo:
     return srcwpos((loc := self.loc).ln, loc.col + 5, ''), Load, True, not self.a.cause
 
-def _start_prefix_Raise_cause(self: 'FST') -> StartPrefix:
+def _field_info_Raise_cause(self: 'FST') -> FieldInfo:
     if exc := self.a.exc:
         return srcwpos((loc := exc.f.pars()).end_ln, loc.end_col, 'from'), Load, bool(exc), True
     else:
         return srcwpos((loc := self.loc).ln, loc.col + 5, 'from'), Load, bool(exc), True
 
-def _start_prefix_Assert_msg(self: 'FST') -> StartPrefix:
+def _field_info_Assert_msg(self: 'FST') -> FieldInfo:
     return srcwpos((loc := self.a.test.f.pars()).end_ln, loc.end_col, ','), Load, True, True
 
-def _start_prefix_Yield_value(self: 'FST') -> StartPrefix:
+def _field_info_Yield_value(self: 'FST') -> FieldInfo:
     return srcwpos((loc := self.loc).ln, loc.col + 5, ''), Load, True, True
 
-def _start_prefix_arg_annotation(self: 'FST') -> StartPrefix:
+def _field_info_arg_annotation(self: 'FST') -> FieldInfo:
     return srcwpos((loc := self.loc).ln, loc.col + len(self.a.arg), ':'), Load, True, True
 
-def _start_prefix_withitem_optional_vars(self: 'FST') -> StartPrefix:
+def _field_info_withitem_optional_vars(self: 'FST') -> FieldInfo:
     return srcwpos((loc := self.a.context_expr.f.pars()).end_ln, loc.end_col, 'as'), Store, True, True
 
 
@@ -203,7 +203,7 @@ def _put_one_expr_optional(self: 'FST', code: Code | None, idx: int | None, fiel
     if options.get('to'):
         raise NodeTypeError(f"cannot put with 'to' to {self.a.__class__.__name__}.{field}")
 
-    start_prefix, required_extra = extra
+    field_info, required_extra = extra
 
     if code is None:
         if not child:  # delete nonexistent node, noop
@@ -212,7 +212,7 @@ def _put_one_expr_optional(self: 'FST', code: Code | None, idx: int | None, fiel
     elif child:  # replace existing node
         return _put_one_expr_required(self, code, idx, field, child, required_extra, **options)
 
-    (ln, col, prefix), ctx, can_put, can_del = start_prefix(self)
+    (ln, col, prefix), ctx, can_put, can_del = field_info(self)
 
     if code is None:  # delete existing node
         if not can_del:
@@ -428,7 +428,7 @@ _PUT_ONE_HANDLERS = {
     # (ClassDef, 'bases'):                  (_put_one_default, None), # expr*                                           - slice
     # (ClassDef, 'keywords'):               (_put_one_default, None), # keyword*
     (ClassDef, 'body'):                   (_put_one_stmtish, None), # stmt*
-    (Return, 'value'):                    (_put_one_expr_optional, (_start_prefix_Return_value, None)), # expr?         - OPTIONAL TAIL: ''
+    (Return, 'value'):                    (_put_one_expr_optional, (_field_info_Return_value, None)), # expr?         - OPTIONAL TAIL: ''
     # (Delete, 'targets'):                  (_put_one_default, None), # expr*                                           - slice
     # (Assign, 'targets'):                  (_put_one_default, None), # expr*                                           - slice
     (Assign, 'value'):                    (_put_one_expr_required, None), # expr
@@ -440,7 +440,7 @@ _PUT_ONE_HANDLERS = {
     (AugAssign, 'value'):                 (_put_one_expr_required, None), # expr
     (AnnAssign, 'target'):                (_put_one_expr_required, (Name, Attribute, Subscript)), # expr
     (AnnAssign, 'annotation'):            (_put_one_expr_required, [Lambda, Yield, YieldFrom, Await, NamedExpr]), # expr
-    (AnnAssign, 'value'):                 (_put_one_expr_optional, (_start_prefix_AnnAssign_value, None)), # expr?      - OPTIONAL TAIL: '='
+    (AnnAssign, 'value'):                 (_put_one_expr_optional, (_field_info_AnnAssign_value, None)), # expr?      - OPTIONAL TAIL: '='
     # (AnnAssign, 'simple'):                (_put_one_default, None), # int
     (For, 'target'):                      (_put_one_expr_required, (Name, Tuple, List)), # expr
     (For, 'iter'):                        (_put_one_expr_required, None), # expr
@@ -462,8 +462,8 @@ _PUT_ONE_HANDLERS = {
     (AsyncWith, 'body'):                  (_put_one_stmtish, None), # stmt*
     (Match, 'subject'):                   (_put_one_expr_required, None), # expr
     (Match, 'cases'):                     (_put_one_stmtish, None), # match_case*
-    (Raise, 'exc'):                       (_put_one_expr_optional, (_start_prefix_Raise_exc, None)), # expr?            - OPTIONAL MIDDLE: ''
-    (Raise, 'cause'):                     (_put_one_expr_optional, (_start_prefix_Raise_cause, None)), # expr?          - CONTINGENT OPTIONAL TAIL: 'from'
+    (Raise, 'exc'):                       (_put_one_expr_optional, (_field_info_Raise_exc, None)), # expr?            - OPTIONAL MIDDLE: ''
+    (Raise, 'cause'):                     (_put_one_expr_optional, (_field_info_Raise_cause, None)), # expr?          - CONTINGENT OPTIONAL TAIL: 'from'
     (Try, 'body'):                        (_put_one_stmtish, None), # stmt*
     (Try, 'handlers'):                    (_put_one_stmtish, None), # excepthandler*
     (Try, 'orelse'):                      (_put_one_stmtish, None), # stmt*
@@ -473,7 +473,7 @@ _PUT_ONE_HANDLERS = {
     (TryStar, 'orelse'):                  (_put_one_stmtish, None), # stmt*
     (TryStar, 'finalbody'):               (_put_one_stmtish, None), # stmt*
     (Assert, 'test'):                     (_put_one_expr_required, None), # expr
-    (Assert, 'msg'):                      (_put_one_expr_optional, (_start_prefix_Assert_msg, None)), # expr?           - OPTIONAL TAIL: ','
+    (Assert, 'msg'):                      (_put_one_expr_optional, (_field_info_Assert_msg, None)), # expr?           - OPTIONAL TAIL: ','
     # (Import, 'names'):                    (_put_one_default, None), # alias*
     # (ImportFrom, 'module'):               (_put_one_default, None), # identifier?
     # (ImportFrom, 'names'):                (_put_one_default, None), # alias*
@@ -508,7 +508,7 @@ _PUT_ONE_HANDLERS = {
     (GeneratorExp, 'elt'):                (_put_one_expr_required, None), # expr
     # (GeneratorExp, 'generators'):         (_put_one_default, None), # comprehension*
     (Await, 'value'):                     (_put_one_expr_required, None), # expr
-    (Yield, 'value'):                     (_put_one_expr_optional, (_start_prefix_Yield_value, None)), # expr?          - OPTIONAL TAIL: ''
+    (Yield, 'value'):                     (_put_one_expr_optional, (_field_info_Yield_value, None)), # expr?          - OPTIONAL TAIL: ''
     (YieldFrom, 'value'):                 (_put_one_expr_required, None), # expr
     (Compare, 'left'):                    (_put_one_expr_required, None), # expr
     # (Compare, 'ops'):                     (_put_one_default, None), # cmpop*
@@ -554,13 +554,13 @@ _PUT_ONE_HANDLERS = {
     # (arguments, 'kw_defaults'):           (_put_one_default, None), # expr*                                           - can have None with special rules
     # (arguments, 'kwarg'):                 (_put_one_default, None), # arg?
     (arg, 'arg'):                         (_put_one_identifier_required, None), # identifier
-    (arg, 'annotation'):                  (_put_one_expr_optional, (_start_prefix_arg_annotation, [Lambda, Yield, YieldFrom, Await, NamedExpr])), # expr?  - OPTIONAL TAIL: ':' - [Lambda, Yield, YieldFrom, Await, NamedExpr]
+    (arg, 'annotation'):                  (_put_one_expr_optional, (_field_info_arg_annotation, [Lambda, Yield, YieldFrom, Await, NamedExpr])), # expr?  - OPTIONAL TAIL: ':' - [Lambda, Yield, YieldFrom, Await, NamedExpr]
     # (keyword, 'arg'):                     (_put_one_default, None), # identifier?
     (keyword, 'value'):                   (_put_one_expr_required, None), # expr
     (alias, 'name'):                      (_put_one_identifier_required, None), # identifier
     # (alias, 'asname'):                    (_put_one_default, None), # identifier?
     (withitem, 'context_expr'):           (_put_one_expr_required, None), # expr
-    (withitem, 'optional_vars'):          (_put_one_expr_optional, (_start_prefix_withitem_optional_vars, (Name, Tuple, List))), # expr?  - OPTIONAL TAIL: 'as' - Name
+    (withitem, 'optional_vars'):          (_put_one_expr_optional, (_field_info_withitem_optional_vars, (Name, Tuple, List))), # expr?  - OPTIONAL TAIL: 'as' - Name
     # (match_case, 'pattern'):              (_put_one_default, None), # pattern
     # (match_case, 'guard'):                (_put_one_default, None), # expr?                                           - OPTIONAL TAIL: 'if'
     (match_case, 'body'):                 (_put_one_stmtish, None), # stmt*
