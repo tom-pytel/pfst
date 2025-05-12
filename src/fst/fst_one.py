@@ -2,7 +2,7 @@
 
 import re
 from ast import *
-from typing import Any, Callable, Optional, Union
+from typing import Callable, Optional, Union
 
 from .astutil import *
 from .astutil import TypeAlias, TryStar, type_param, TypeVar, ParamSpec, TypeVarTuple, TemplateStr, Interpolation
@@ -471,7 +471,6 @@ _PUT_ONE_HANDLERS = {
     (AnnAssign, 'target'):                (_put_one_expr_required, (Name, Attribute, Subscript)), # expr
     (AnnAssign, 'annotation'):            (_put_one_expr_required, [Lambda, Yield, YieldFrom, Await, NamedExpr]), # expr
     (AnnAssign, 'value'):                 (_put_one_expr_optional, (_field_info_AnnAssign_value, None)), # expr?        - OPTIONAL TAIL: '='
-    # (AnnAssign, 'simple'):                (_put_one_default, None), # int
     (For, 'target'):                      (_put_one_expr_required, (Name, Tuple, List)), # expr
     (For, 'iter'):                        (_put_one_expr_required, None), # expr
     (For, 'body'):                        (_put_one_stmtish, None), # stmt*
@@ -507,7 +506,6 @@ _PUT_ONE_HANDLERS = {
     # (Import, 'names'):                    (_put_one_default, None), # alias*
     # (ImportFrom, 'module'):               (_put_one_default, None), # identifier?
     # (ImportFrom, 'names'):                (_put_one_default, None), # alias*
-    # (ImportFrom, 'level'):                (_put_one_default, None), # int?
     # (Global, 'names'):                    (_put_one_default, None), # identifier*
     # (Nonlocal, 'names'):                  (_put_one_default, None), # identifier*
     (Expr, 'value'):                      (_put_one_expr_required, None), # expr
@@ -549,15 +547,11 @@ _PUT_ONE_HANDLERS = {
     # (Call, 'keywords'):                   (_put_one_default, None), # keyword*                                        - slice
     (FormattedValue, 'value'):            (_put_one_expr_required, None), # expr
     # (FormattedValue, 'format_spec'):      (_put_one_default, None), # expr?
-    # (FormattedValue, 'conversion'):       (_put_one_default, None), # int
     (Interpolation, 'value'):             (_put_one_Interpolation_value, None), # expr
-    # (Interpolation, 'constant'):          (_put_one_default, None), # str
-    # (Interpolation, 'conversion'):        (_put_one_default, None), # int
     # (Interpolation, 'format_spec'):       (_put_one_default, None), # expr?
     # (JoinedStr, 'values'):                (_put_one_default, None), # expr*                                           - ??? no location on py < 3.12
     # (TemplateStr, 'values'):              (_put_one_default, None), # expr*                                           - ??? no location on py < 3.12
     # (Constant, 'value'):                  (_put_one_default, None), # constant                                        - can do via restricted expr Constant
-    # (Constant, 'kind'):                   (_put_one_default, None), # string?
     (Attribute, 'value'):                 (_put_one_expr_required, None), # expr
     # (Attribute, 'attr'):                  (_put_one_default, None), # identifier                                      - after the "value."
     (Subscript, 'value'):                 (_put_one_expr_required, None), # expr
@@ -572,7 +566,6 @@ _PUT_ONE_HANDLERS = {
     (comprehension, 'target'):            (_put_one_expr_required, (Name, Tuple, List)), # expr
     (comprehension, 'iter'):              (_put_one_expr_required, None), # expr
     # (comprehension, 'ifs'):               (_put_one_default, None), # expr*                                           - slice
-    # (comprehension, 'is_async'):          (_put_one_default, None), # int
     # (ExceptHandler, 'type'):              (_put_one_default, None), # expr?
     # (ExceptHandler, 'name'):              (_put_one_default, None), # identifier?
     (ExceptHandler, 'body'):              (_put_one_stmtish, None), # stmt*
@@ -640,6 +633,13 @@ _PUT_ONE_HANDLERS = {
     # (List, 'ctx'):                        (_put_one_default, None), # expr_context
     # (Tuple, 'ctx'):                       (_put_one_default, None), # expr_context
 
+    # (AnnAssign, 'simple'):                (_put_one_default, None), # int
+    # (ImportFrom, 'level'):                (_put_one_default, None), # int?
+    # (FormattedValue, 'conversion'):       (_put_one_default, None), # int
+    # (Interpolation, 'constant'):          (_put_one_default, None), # str
+    # (Interpolation, 'conversion'):        (_put_one_default, None), # int
+    # (Constant, 'kind'):                   (_put_one_default, None), # string?
+    # (comprehension, 'is_async'):          (_put_one_default, None), # int
     # (TypeIgnore, 'lineno'):               (_put_one_default, None), # int
     # (TypeIgnore, 'tag'):                  (_put_one_default, None), # string
 }

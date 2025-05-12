@@ -20142,19 +20142,27 @@ REPLACE_EXISTING_ONE_DATA = [
 # ListComp
 ("[i for i in t]", 'body[0].value.elt', {'raw': True}, "z", "z", "[z for i in t]"),
 ("[i for i in t]", 'body[0].value.generators[0]', {'raw': True}, "for z in y", "for z in y", "[i for z in y]"),
+("[i for i in t]", 'body[0].value.generators[0]', {'raw': True}, "async for z in y", "async for z in y", "[i async for z in y]"),
+("[i async for i in t]", 'body[0].value.generators[0]', {'raw': True}, "for z in y", "for z in y", "[i for z in y]"),
 
 # SetComp
 ("{i for i in t}", 'body[0].value.elt', {'raw': True}, "z", "z", "{z for i in t}"),
 ("{i for i in t}", 'body[0].value.generators[0]', {'raw': True}, "for z in y", "for z in y", "{i for z in y}"),
+("{i for i in t}", 'body[0].value.generators[0]', {'raw': True}, "async for z in y", "async for z in y", "{i async for z in y}"),
+("{i async for i in t}", 'body[0].value.generators[0]', {'raw': True}, "for z in y", "for z in y", "{i for z in y}"),
 
 # DictComp
 ("{k: v for i in t}", 'body[0].value.key', {'raw': True}, "z", "z", "{z: v for i in t}"),
 ("{k: v for i in t}", 'body[0].value.value', {'raw': True}, "z", "z", "{k: z for i in t}"),
 ("{k: v for i in t}", 'body[0].value.generators[0]', {'raw': True}, "for z in y", "for z in y", "{k: v for z in y}"),
+("{k: v for i in t}", 'body[0].value.generators[0]', {'raw': True}, "async for z in y", "async for z in y", "{k: v async for z in y}"),
+("{k: v async for i in t}", 'body[0].value.generators[0]', {'raw': True}, "for z in y", "for z in y", "{k: v for z in y}"),
 
 # GeneratorExp
 ("(i for i in t)", 'body[0].value.elt', {'raw': True}, "z", "z", "(z for i in t)"),
 ("(i for i in t)", 'body[0].value.generators[0]', {'raw': True}, "for z in y", "for z in y", "(i for z in y)"),
+("(i for i in t)", 'body[0].value.generators[0]', {'raw': True}, "async for z in y", "async for z in y", "(i async for z in y)"),
+("(i async for i in t)", 'body[0].value.generators[0]', {'raw': True}, "for z in y", "for z in y", "(i for z in y)"),
 
 # Await
 ("await w", 'body[0].value.value', {'raw': True}, "z", "z", "await z"),

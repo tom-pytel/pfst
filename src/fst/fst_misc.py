@@ -436,7 +436,8 @@ def _loc_operator(self: 'FST') -> fstloc | None:
 def _loc_comprehension(self: 'FST') -> fstloc | None:
     """`comprehension` location from children. Called from `.loc`."""
 
-    first = self.a.target.f
+    ast   = self.a
+    first = ast.target.f
     last  = self.last_child(True)
     lines = self.root._lines
 
@@ -444,6 +445,9 @@ def _loc_comprehension(self: 'FST') -> fstloc | None:
 
     if start := _prev_find(lines, prev[-2], prev[-1], first.ln, first.col, 'for'):  # prev.bend_ln, prev.bend_col
         start_ln, start_col = start
+
+        if ast.is_async and (start := _prev_find(lines, prev[-2], prev[-1], start_ln, start_col, 'async')):
+            start_ln, start_col = start
 
     else:
         start_ln, start_col, _, _, nlpars = first._lpars('allown')  # 'allown' so it doesn't recurse into calling `.loc`
