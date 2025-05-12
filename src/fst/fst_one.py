@@ -7,7 +7,11 @@ from typing import Any, Callable, Optional, Union
 from .astutil import *
 from .astutil import TypeAlias, TryStar, type_param, TypeVar, ParamSpec, TypeVarTuple, TemplateStr, Interpolation
 
-from .shared import STMTISH, Code, NodeTypeError, astfield, fstloc, srcwpos, _fixup_one_index, _next_find, _next_find_re
+from .shared import (
+    STMTISH, Code, NodeTypeError, astfield, fstloc, srcwpos,
+    _next_find, _next_find_re, _fixup_one_index,)
+
+_re_identifier = re.compile(r'[^\d\W]\w*')
 
 
 def _slice_indices(self: 'FST', idx: int, field: str, body: list[AST], to: Optional['FST']):
@@ -63,8 +67,6 @@ def _get_one(self: 'FST', idx: int | None, field: str, cut: bool, **options) -> 
 # ----------------------------------------------------------------------------------------------------------------------
 # put
 
-_re_identifier = re.compile(r'[^\d\W]\w*')
-
 def _code_as_identifier(code: Code) -> str | None:
     if isinstance(code, str):
         return code if is_valid_identifier(code) else None
@@ -105,6 +107,30 @@ def _field_info_arg_annotation(self: 'FST') -> FieldInfo:
 
 def _field_info_withitem_optional_vars(self: 'FST') -> FieldInfo:
     return srcwpos((loc := self.a.context_expr.f.pars()).end_ln, loc.end_col, 'as'), Store, True, True
+
+def _field_info_match_case_guard(self: 'FST') -> FieldInfo:
+    return srcwpos((loc := self.a.pattern.f.pars()).end_ln, loc.end_col, 'if'), Load, True, True
+
+def _field_info_TypeVar_bound(self: 'FST') -> FieldInfo:
+    return srcwpos((loc := self.loc).ln, loc.col + len(self.a.name), ':'), Load, True, True
+
+def _field_info_TypeVar_default_value(self: 'FST') -> FieldInfo:
+    if bound := self.a.bound:
+        return srcwpos((loc := bound.f.pars()).end_ln, loc.end_col, '='), Load, True, True
+    else:
+        return srcwpos((loc := self.loc).ln, loc.col + len(self.a.name), '='), Load, True, True
+
+def _field_info_ParamSpec_default_value(self: 'FST') -> FieldInfo:
+    ln, col, end_ln, end_col = self.loc
+    ln, col, src             = _next_find_re(self.root._lines, ln, col + 2, end_ln, end_col, _re_identifier)  # + '**', identifier must be there
+
+    return srcwpos(ln, col + len(src), '='), Load, True, True
+
+def _field_info_TypeVarTuple_default_value(self: 'FST') -> FieldInfo:
+    ln, col, end_ln, end_col = self.loc
+    ln, col, src             = _next_find_re(self.root._lines, ln, col + 1, end_ln, end_col, _re_identifier)  # + '*', identifier must be there
+
+    return srcwpos(ln, col + len(src), '='), Load, True, True
 
 
 def _make_expr_fst(self: 'FST', code: Code | None, idx: int | None, field: str,
@@ -232,7 +258,12 @@ def _put_one_expr_optional(self: 'FST', code: Code | None, idx: int | None, fiel
     if not can_put:
         raise ValueError(f'cannot create {self.a.__class__.__name__}.{field} in this state')
 
-    _, _, end_ln, end_col = self.pars()
+    if pos := self._loc_block_opener_end():
+        end_ln, end_col  = pos
+        end_col         -= 1
+
+    else:
+        _, _, end_ln, end_col = self.pars()
 
     prefix  = ' ' if not prefix else f'{prefix} ' if prefix in ',:' else f' {prefix} '
     loc     = fstloc(ln, col, end_ln, end_col)
@@ -387,7 +418,6 @@ def _put_one(self: 'FST', code: Code | None, idx: int | None, field: str | None,
         if isinstance(ast, Compare):
             idx   = _fixup_one_index(len(ast.comparators) + 1, idx)  # need to do this because of compound body including 'left'
             child = ast.comparators[idx - 1] if idx else ast.left
-            # field_, idx = ('comparators', idx - 1) if idx else ('left', None)
 
     if is_dict and field == 'keys' and (keys := ast.keys)[idx] is None:  # '{**d}' with key=None
         start_loc = self._dict_key_or_mock_loc(keys[idx], ast.values[idx].f)
@@ -428,7 +458,7 @@ _PUT_ONE_HANDLERS = {
     # (ClassDef, 'bases'):                  (_put_one_default, None), # expr*                                           - slice
     # (ClassDef, 'keywords'):               (_put_one_default, None), # keyword*
     (ClassDef, 'body'):                   (_put_one_stmtish, None), # stmt*
-    (Return, 'value'):                    (_put_one_expr_optional, (_field_info_Return_value, None)), # expr?         - OPTIONAL TAIL: ''
+    (Return, 'value'):                    (_put_one_expr_optional, (_field_info_Return_value, None)), # expr?           - OPTIONAL TAIL: ''
     # (Delete, 'targets'):                  (_put_one_default, None), # expr*                                           - slice
     # (Assign, 'targets'):                  (_put_one_default, None), # expr*                                           - slice
     (Assign, 'value'):                    (_put_one_expr_required, None), # expr
@@ -440,7 +470,7 @@ _PUT_ONE_HANDLERS = {
     (AugAssign, 'value'):                 (_put_one_expr_required, None), # expr
     (AnnAssign, 'target'):                (_put_one_expr_required, (Name, Attribute, Subscript)), # expr
     (AnnAssign, 'annotation'):            (_put_one_expr_required, [Lambda, Yield, YieldFrom, Await, NamedExpr]), # expr
-    (AnnAssign, 'value'):                 (_put_one_expr_optional, (_field_info_AnnAssign_value, None)), # expr?      - OPTIONAL TAIL: '='
+    (AnnAssign, 'value'):                 (_put_one_expr_optional, (_field_info_AnnAssign_value, None)), # expr?        - OPTIONAL TAIL: '='
     # (AnnAssign, 'simple'):                (_put_one_default, None), # int
     (For, 'target'):                      (_put_one_expr_required, (Name, Tuple, List)), # expr
     (For, 'iter'):                        (_put_one_expr_required, None), # expr
@@ -462,8 +492,8 @@ _PUT_ONE_HANDLERS = {
     (AsyncWith, 'body'):                  (_put_one_stmtish, None), # stmt*
     (Match, 'subject'):                   (_put_one_expr_required, None), # expr
     (Match, 'cases'):                     (_put_one_stmtish, None), # match_case*
-    (Raise, 'exc'):                       (_put_one_expr_optional, (_field_info_Raise_exc, None)), # expr?            - OPTIONAL MIDDLE: ''
-    (Raise, 'cause'):                     (_put_one_expr_optional, (_field_info_Raise_cause, None)), # expr?          - CONTINGENT OPTIONAL TAIL: 'from'
+    (Raise, 'exc'):                       (_put_one_expr_optional, (_field_info_Raise_exc, None)), # expr?              - OPTIONAL MIDDLE: ''
+    (Raise, 'cause'):                     (_put_one_expr_optional, (_field_info_Raise_cause, None)), # expr?            - CONTINGENT OPTIONAL TAIL: 'from'
     (Try, 'body'):                        (_put_one_stmtish, None), # stmt*
     (Try, 'handlers'):                    (_put_one_stmtish, None), # excepthandler*
     (Try, 'orelse'):                      (_put_one_stmtish, None), # stmt*
@@ -473,7 +503,7 @@ _PUT_ONE_HANDLERS = {
     (TryStar, 'orelse'):                  (_put_one_stmtish, None), # stmt*
     (TryStar, 'finalbody'):               (_put_one_stmtish, None), # stmt*
     (Assert, 'test'):                     (_put_one_expr_required, None), # expr
-    (Assert, 'msg'):                      (_put_one_expr_optional, (_field_info_Assert_msg, None)), # expr?           - OPTIONAL TAIL: ','
+    (Assert, 'msg'):                      (_put_one_expr_optional, (_field_info_Assert_msg, None)), # expr?             - OPTIONAL TAIL: ','
     # (Import, 'names'):                    (_put_one_default, None), # alias*
     # (ImportFrom, 'module'):               (_put_one_default, None), # identifier?
     # (ImportFrom, 'names'):                (_put_one_default, None), # alias*
@@ -508,7 +538,7 @@ _PUT_ONE_HANDLERS = {
     (GeneratorExp, 'elt'):                (_put_one_expr_required, None), # expr
     # (GeneratorExp, 'generators'):         (_put_one_default, None), # comprehension*
     (Await, 'value'):                     (_put_one_expr_required, None), # expr
-    (Yield, 'value'):                     (_put_one_expr_optional, (_field_info_Yield_value, None)), # expr?          - OPTIONAL TAIL: ''
+    (Yield, 'value'):                     (_put_one_expr_optional, (_field_info_Yield_value, None)), # expr?            - OPTIONAL TAIL: ''
     (YieldFrom, 'value'):                 (_put_one_expr_required, None), # expr
     (Compare, 'left'):                    (_put_one_expr_required, None), # expr
     # (Compare, 'ops'):                     (_put_one_default, None), # cmpop*
@@ -562,7 +592,7 @@ _PUT_ONE_HANDLERS = {
     (withitem, 'context_expr'):           (_put_one_expr_required, None), # expr
     (withitem, 'optional_vars'):          (_put_one_expr_optional, (_field_info_withitem_optional_vars, (Name, Tuple, List))), # expr?  - OPTIONAL TAIL: 'as' - Name
     # (match_case, 'pattern'):              (_put_one_default, None), # pattern
-    # (match_case, 'guard'):                (_put_one_default, None), # expr?                                           - OPTIONAL TAIL: 'if'
+    (match_case, 'guard'):                (_put_one_expr_optional, (_field_info_match_case_guard, None)), # expr?       - OPTIONAL TAIL: 'if'
     (match_case, 'body'):                 (_put_one_stmtish, None), # stmt*
     # (MatchValue, 'value'):                (_put_one_default, None), # expr                                            - limited values, Constant? Name becomes MatchAs
     # (MatchSingleton, 'value'):            (_put_one_default, None), # constant
@@ -579,12 +609,12 @@ _PUT_ONE_HANDLERS = {
     # (MatchAs, 'name'):                    (_put_one_default, None), # identifier?
     # (MatchOr, 'patterns'):                (_put_one_default, None), # pattern*
     (TypeVar, 'name'):                    (_put_one_identifier_required, None), # identifier
-    # (TypeVar, 'bound'):                   (_put_one_default, None), # expr?                                           - OPTIONAL MIDDLE: ':'
-    # (TypeVar, 'default_value'):           (_put_one_default, None), # expr?                                           - OPTIONAL TAIL: '='
+    (TypeVar, 'bound'):                   (_put_one_expr_optional, (_field_info_TypeVar_bound, None)), # expr?          - OPTIONAL MIDDLE: ':'
+    (TypeVar, 'default_value'):           (_put_one_expr_optional, (_field_info_TypeVar_default_value, None)), # expr?  - OPTIONAL TAIL: '='
     (ParamSpec, 'name'):                  (_put_one_identifier_required, '**'), # identifier
-    # (ParamSpec, 'default_value'):         (_put_one_default, None), # expr?                                           - OPTIONAL TAIL: '='
+    (ParamSpec, 'default_value'):         (_put_one_expr_optional, (_field_info_ParamSpec_default_value, None)), # expr?  - OPTIONAL TAIL: '='
     (TypeVarTuple, 'name'):               (_put_one_identifier_required, '*'), # identifier
-    # (TypeVarTuple, 'default_value'):      (_put_one_default, None), # expr?                                           - OPTIONAL TAIL: '='
+    (TypeVarTuple, 'default_value'):      (_put_one_expr_optional, (_field_info_TypeVarTuple_default_value, None)), # expr?  - OPTIONAL TAIL: '='
 
 
     # NOT DONE:

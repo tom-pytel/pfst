@@ -17154,6 +17154,602 @@ Module .. ROOT 0,0 -> 0,21
     0] Pass .. 0,17 -> 0,21
 """),
 
+(r"""with (a): pass""", 'body[0].items[0]', None, 'optional_vars', {'raw': False}, r"""new, to""", r"""with (a) as (new, to): pass""", r"""
+Module .. ROOT 0,0 -> 0,27
+  .body[1]
+  0] With .. 0,0 -> 0,27
+    .items[1]
+    0] withitem .. 0,5 -> 0,21
+      .context_expr
+        Name 'a' Load .. 0,6 -> 0,7
+      .optional_vars Tuple .. 0,12 -> 0,21
+        .elts[2]
+        0] Name 'new' Store .. 0,13 -> 0,16
+        1] Name 'to' Store .. 0,18 -> 0,20
+        .ctx Store
+    .body[1]
+    0] Pass .. 0,23 -> 0,27
+"""),
+
+(r"""with (a): pass""", 'body[0].items[0]', None, 'optional_vars', {'raw': False}, r"""[new, to]""", r"""with (a) as [new, to]: pass""", r"""
+Module .. ROOT 0,0 -> 0,27
+  .body[1]
+  0] With .. 0,0 -> 0,27
+    .items[1]
+    0] withitem .. 0,5 -> 0,21
+      .context_expr
+        Name 'a' Load .. 0,6 -> 0,7
+      .optional_vars List .. 0,12 -> 0,21
+        .elts[2]
+        0] Name 'new' Store .. 0,13 -> 0,16
+        1] Name 'to' Store .. 0,18 -> 0,20
+        .ctx Store
+    .body[1]
+    0] Pass .. 0,23 -> 0,27
+"""),
+
+(r"""with (a): pass""", 'body[0].items[0]', None, 'optional_vars', {'raw': False}, r"""f()""", r"""**NodeTypeError('expecting one of (Name, Tuple, List) for withitem.optional_vars, got Call')**""", r"""
+"""),
+
+(r"""match a:
+ case 1 if b: pass""", 'body[0].cases[0]', None, 'guard', {'raw': False}, r"""new""", r"""match a:
+ case 1 if new: pass""", r"""
+Module .. ROOT 0,0 -> 1,20
+  .body[1]
+  0] Match .. 0,0 -> 1,20
+    .subject Name 'a' Load .. 0,6 -> 0,7
+    .cases[1]
+    0] match_case .. 1,1 -> 1,20
+      .pattern MatchValue .. 1,6 -> 1,7
+        .value Constant 1 .. 1,6 -> 1,7
+      .guard Name 'new' Load .. 1,11 -> 1,14
+      .body[1]
+      0] Pass .. 1,16 -> 1,20
+"""),
+
+(r"""match a:
+ case 1 if (b): pass""", 'body[0].cases[0]', None, 'guard', {'raw': False}, r"""new""", r"""match a:
+ case 1 if new: pass""", r"""
+Module .. ROOT 0,0 -> 1,20
+  .body[1]
+  0] Match .. 0,0 -> 1,20
+    .subject Name 'a' Load .. 0,6 -> 0,7
+    .cases[1]
+    0] match_case .. 1,1 -> 1,20
+      .pattern MatchValue .. 1,6 -> 1,7
+        .value Constant 1 .. 1,6 -> 1,7
+      .guard Name 'new' Load .. 1,11 -> 1,14
+      .body[1]
+      0] Pass .. 1,16 -> 1,20
+"""),
+
+(r"""match a:
+ case 1 if b: pass""", 'body[0].cases[0]', None, 'guard', {'raw': False}, r"""**DEL**""", r"""match a:
+ case 1: pass""", r"""
+Module .. ROOT 0,0 -> 1,13
+  .body[1]
+  0] Match .. 0,0 -> 1,13
+    .subject Name 'a' Load .. 0,6 -> 0,7
+    .cases[1]
+    0] match_case .. 1,1 -> 1,13
+      .pattern MatchValue .. 1,6 -> 1,7
+        .value Constant 1 .. 1,6 -> 1,7
+      .body[1]
+      0] Pass .. 1,9 -> 1,13
+"""),
+
+(r"""match a:
+ case 1 if (b): pass""", 'body[0].cases[0]', None, 'guard', {'raw': False}, r"""**DEL**""", r"""match a:
+ case 1: pass""", r"""
+Module .. ROOT 0,0 -> 1,13
+  .body[1]
+  0] Match .. 0,0 -> 1,13
+    .subject Name 'a' Load .. 0,6 -> 0,7
+    .cases[1]
+    0] match_case .. 1,1 -> 1,13
+      .pattern MatchValue .. 1,6 -> 1,7
+        .value Constant 1 .. 1,6 -> 1,7
+      .body[1]
+      0] Pass .. 1,9 -> 1,13
+"""),
+
+(r"""match a:
+ case 1: pass""", 'body[0].cases[0]', None, 'guard', {'raw': False}, r"""**DEL**""", r"""match a:
+ case 1: pass""", r"""
+Module .. ROOT 0,0 -> 1,13
+  .body[1]
+  0] Match .. 0,0 -> 1,13
+    .subject Name 'a' Load .. 0,6 -> 0,7
+    .cases[1]
+    0] match_case .. 1,1 -> 1,13
+      .pattern MatchValue .. 1,6 -> 1,7
+        .value Constant 1 .. 1,6 -> 1,7
+      .body[1]
+      0] Pass .. 1,9 -> 1,13
+"""),
+
+(r"""match a:
+ case 1: pass""", 'body[0].cases[0]', None, 'guard', {'raw': False}, r"""new""", r"""match a:
+ case 1 if new: pass""", r"""
+Module .. ROOT 0,0 -> 1,20
+  .body[1]
+  0] Match .. 0,0 -> 1,20
+    .subject Name 'a' Load .. 0,6 -> 0,7
+    .cases[1]
+    0] match_case .. 1,1 -> 1,20
+      .pattern MatchValue .. 1,6 -> 1,7
+        .value Constant 1 .. 1,6 -> 1,7
+      .guard Name 'new' Load .. 1,11 -> 1,14
+      .body[1]
+      0] Pass .. 1,16 -> 1,20
+"""),
+
+(r"""type t[T: a] = ...""", 'body[0].type_params[0]', None, 'bound', {'raw': False, '_ver': 13}, r"""new""", r"""type t[T: new] = ...""", r"""
+Module .. ROOT 0,0 -> 0,20
+  .body[1]
+  0] TypeAlias .. 0,0 -> 0,20
+    .name Name 't' Store .. 0,5 -> 0,6
+    .type_params[1]
+    0] TypeVar .. 0,7 -> 0,13
+      .name 'T'
+      .bound Name 'new' Load .. 0,10 -> 0,13
+    .value Constant Ellipsis .. 0,17 -> 0,20
+"""),
+
+(r"""type t[T: (a)] = ...""", 'body[0].type_params[0]', None, 'bound', {'raw': False, '_ver': 13}, r"""new""", r"""type t[T: new] = ...""", r"""
+Module .. ROOT 0,0 -> 0,20
+  .body[1]
+  0] TypeAlias .. 0,0 -> 0,20
+    .name Name 't' Store .. 0,5 -> 0,6
+    .type_params[1]
+    0] TypeVar .. 0,7 -> 0,13
+      .name 'T'
+      .bound Name 'new' Load .. 0,10 -> 0,13
+    .value Constant Ellipsis .. 0,17 -> 0,20
+"""),
+
+(r"""type t[T: a] = ...""", 'body[0].type_params[0]', None, 'bound', {'raw': False, '_ver': 13}, r"""**DEL**""", r"""type t[T] = ...""", r"""
+Module .. ROOT 0,0 -> 0,15
+  .body[1]
+  0] TypeAlias .. 0,0 -> 0,15
+    .name Name 't' Store .. 0,5 -> 0,6
+    .type_params[1]
+    0] TypeVar .. 0,7 -> 0,8
+      .name 'T'
+    .value Constant Ellipsis .. 0,12 -> 0,15
+"""),
+
+(r"""type t[T: (a)] = ...""", 'body[0].type_params[0]', None, 'bound', {'raw': False, '_ver': 13}, r"""**DEL**""", r"""type t[T] = ...""", r"""
+Module .. ROOT 0,0 -> 0,15
+  .body[1]
+  0] TypeAlias .. 0,0 -> 0,15
+    .name Name 't' Store .. 0,5 -> 0,6
+    .type_params[1]
+    0] TypeVar .. 0,7 -> 0,8
+      .name 'T'
+    .value Constant Ellipsis .. 0,12 -> 0,15
+"""),
+
+(r"""type t[T] = ...""", 'body[0].type_params[0]', None, 'bound', {'raw': False, '_ver': 13}, r"""**DEL**""", r"""type t[T] = ...""", r"""
+Module .. ROOT 0,0 -> 0,15
+  .body[1]
+  0] TypeAlias .. 0,0 -> 0,15
+    .name Name 't' Store .. 0,5 -> 0,6
+    .type_params[1]
+    0] TypeVar .. 0,7 -> 0,8
+      .name 'T'
+    .value Constant Ellipsis .. 0,12 -> 0,15
+"""),
+
+(r"""type t[T] = ...""", 'body[0].type_params[0]', None, 'bound', {'raw': False, '_ver': 13}, r"""new""", r"""type t[T: new] = ...""", r"""
+Module .. ROOT 0,0 -> 0,20
+  .body[1]
+  0] TypeAlias .. 0,0 -> 0,20
+    .name Name 't' Store .. 0,5 -> 0,6
+    .type_params[1]
+    0] TypeVar .. 0,7 -> 0,13
+      .name 'T'
+      .bound Name 'new' Load .. 0,10 -> 0,13
+    .value Constant Ellipsis .. 0,17 -> 0,20
+"""),
+
+(r"""type t[T = a] = ...""", 'body[0].type_params[0]', None, 'default_value', {'raw': False, '_ver': 13}, r"""new""", r"""type t[T = new] = ...""", r"""
+Module .. ROOT 0,0 -> 0,21
+  .body[1]
+  0] TypeAlias .. 0,0 -> 0,21
+    .name Name 't' Store .. 0,5 -> 0,6
+    .type_params[1]
+    0] TypeVar .. 0,7 -> 0,14
+      .name 'T'
+      .default_value Name 'new' Load .. 0,11 -> 0,14
+    .value Constant Ellipsis .. 0,18 -> 0,21
+"""),
+
+(r"""type t[T = (a)] = ...""", 'body[0].type_params[0]', None, 'default_value', {'raw': False, '_ver': 13}, r"""new""", r"""type t[T = new] = ...""", r"""
+Module .. ROOT 0,0 -> 0,21
+  .body[1]
+  0] TypeAlias .. 0,0 -> 0,21
+    .name Name 't' Store .. 0,5 -> 0,6
+    .type_params[1]
+    0] TypeVar .. 0,7 -> 0,14
+      .name 'T'
+      .default_value Name 'new' Load .. 0,11 -> 0,14
+    .value Constant Ellipsis .. 0,18 -> 0,21
+"""),
+
+(r"""type t[T = a] = ...""", 'body[0].type_params[0]', None, 'default_value', {'raw': False, '_ver': 13}, r"""**DEL**""", r"""type t[T] = ...""", r"""
+Module .. ROOT 0,0 -> 0,15
+  .body[1]
+  0] TypeAlias .. 0,0 -> 0,15
+    .name Name 't' Store .. 0,5 -> 0,6
+    .type_params[1]
+    0] TypeVar .. 0,7 -> 0,8
+      .name 'T'
+    .value Constant Ellipsis .. 0,12 -> 0,15
+"""),
+
+(r"""type t[T = (a)] = ...""", 'body[0].type_params[0]', None, 'default_value', {'raw': False, '_ver': 13}, r"""**DEL**""", r"""type t[T] = ...""", r"""
+Module .. ROOT 0,0 -> 0,15
+  .body[1]
+  0] TypeAlias .. 0,0 -> 0,15
+    .name Name 't' Store .. 0,5 -> 0,6
+    .type_params[1]
+    0] TypeVar .. 0,7 -> 0,8
+      .name 'T'
+    .value Constant Ellipsis .. 0,12 -> 0,15
+"""),
+
+(r"""type t[T] = ...""", 'body[0].type_params[0]', None, 'default_value', {'raw': False, '_ver': 13}, r"""**DEL**""", r"""type t[T] = ...""", r"""
+Module .. ROOT 0,0 -> 0,15
+  .body[1]
+  0] TypeAlias .. 0,0 -> 0,15
+    .name Name 't' Store .. 0,5 -> 0,6
+    .type_params[1]
+    0] TypeVar .. 0,7 -> 0,8
+      .name 'T'
+    .value Constant Ellipsis .. 0,12 -> 0,15
+"""),
+
+(r"""type t[T] = ...""", 'body[0].type_params[0]', None, 'default_value', {'raw': False, '_ver': 13}, r"""new""", r"""type t[T = new] = ...""", r"""
+Module .. ROOT 0,0 -> 0,21
+  .body[1]
+  0] TypeAlias .. 0,0 -> 0,21
+    .name Name 't' Store .. 0,5 -> 0,6
+    .type_params[1]
+    0] TypeVar .. 0,7 -> 0,14
+      .name 'T'
+      .default_value Name 'new' Load .. 0,11 -> 0,14
+    .value Constant Ellipsis .. 0,18 -> 0,21
+"""),
+
+(r"""type t[T: int = a] = ...""", 'body[0].type_params[0]', None, 'default_value', {'raw': False, '_ver': 13}, r"""new""", r"""type t[T: int = new] = ...""", r"""
+Module .. ROOT 0,0 -> 0,26
+  .body[1]
+  0] TypeAlias .. 0,0 -> 0,26
+    .name Name 't' Store .. 0,5 -> 0,6
+    .type_params[1]
+    0] TypeVar .. 0,7 -> 0,19
+      .name 'T'
+      .bound Name 'int' Load .. 0,10 -> 0,13
+      .default_value Name 'new' Load .. 0,16 -> 0,19
+    .value Constant Ellipsis .. 0,23 -> 0,26
+"""),
+
+(r"""type t[T: (int) = (a)] = ...""", 'body[0].type_params[0]', None, 'default_value', {'raw': False, '_ver': 13}, r"""new""", r"""type t[T: (int) = new] = ...""", r"""
+Module .. ROOT 0,0 -> 0,28
+  .body[1]
+  0] TypeAlias .. 0,0 -> 0,28
+    .name Name 't' Store .. 0,5 -> 0,6
+    .type_params[1]
+    0] TypeVar .. 0,7 -> 0,21
+      .name 'T'
+      .bound Name 'int' Load .. 0,11 -> 0,14
+      .default_value Name 'new' Load .. 0,18 -> 0,21
+    .value Constant Ellipsis .. 0,25 -> 0,28
+"""),
+
+(r"""type t[T: int = a] = ...""", 'body[0].type_params[0]', None, 'default_value', {'raw': False, '_ver': 13}, r"""**DEL**""", r"""type t[T: int] = ...""", r"""
+Module .. ROOT 0,0 -> 0,20
+  .body[1]
+  0] TypeAlias .. 0,0 -> 0,20
+    .name Name 't' Store .. 0,5 -> 0,6
+    .type_params[1]
+    0] TypeVar .. 0,7 -> 0,13
+      .name 'T'
+      .bound Name 'int' Load .. 0,10 -> 0,13
+    .value Constant Ellipsis .. 0,17 -> 0,20
+"""),
+
+(r"""type t[T: (int) = (a)] = ...""", 'body[0].type_params[0]', None, 'default_value', {'raw': False, '_ver': 13}, r"""**DEL**""", r"""type t[T: (int)] = ...""", r"""
+Module .. ROOT 0,0 -> 0,22
+  .body[1]
+  0] TypeAlias .. 0,0 -> 0,22
+    .name Name 't' Store .. 0,5 -> 0,6
+    .type_params[1]
+    0] TypeVar .. 0,7 -> 0,15
+      .name 'T'
+      .bound Name 'int' Load .. 0,11 -> 0,14
+    .value Constant Ellipsis .. 0,19 -> 0,22
+"""),
+
+(r"""type t[T: int] = ...""", 'body[0].type_params[0]', None, 'default_value', {'raw': False, '_ver': 13}, r"""**DEL**""", r"""type t[T: int] = ...""", r"""
+Module .. ROOT 0,0 -> 0,20
+  .body[1]
+  0] TypeAlias .. 0,0 -> 0,20
+    .name Name 't' Store .. 0,5 -> 0,6
+    .type_params[1]
+    0] TypeVar .. 0,7 -> 0,13
+      .name 'T'
+      .bound Name 'int' Load .. 0,10 -> 0,13
+    .value Constant Ellipsis .. 0,17 -> 0,20
+"""),
+
+(r"""type t[T: int] = ...""", 'body[0].type_params[0]', None, 'default_value', {'raw': False, '_ver': 13}, r"""new""", r"""type t[T: int = new] = ...""", r"""
+Module .. ROOT 0,0 -> 0,26
+  .body[1]
+  0] TypeAlias .. 0,0 -> 0,26
+    .name Name 't' Store .. 0,5 -> 0,6
+    .type_params[1]
+    0] TypeVar .. 0,7 -> 0,19
+      .name 'T'
+      .bound Name 'int' Load .. 0,10 -> 0,13
+      .default_value Name 'new' Load .. 0,16 -> 0,19
+    .value Constant Ellipsis .. 0,23 -> 0,26
+"""),
+
+(r"""type t[T: (int)] = ...""", 'body[0].type_params[0]', None, 'default_value', {'raw': False, '_ver': 13}, r"""new""", r"""type t[T: (int) = new] = ...""", r"""
+Module .. ROOT 0,0 -> 0,28
+  .body[1]
+  0] TypeAlias .. 0,0 -> 0,28
+    .name Name 't' Store .. 0,5 -> 0,6
+    .type_params[1]
+    0] TypeVar .. 0,7 -> 0,21
+      .name 'T'
+      .bound Name 'int' Load .. 0,11 -> 0,14
+      .default_value Name 'new' Load .. 0,18 -> 0,21
+    .value Constant Ellipsis .. 0,25 -> 0,28
+"""),
+
+(r"""type t[**T = a] = ...""", 'body[0].type_params[0]', None, 'default_value', {'raw': False, '_ver': 13}, r"""new""", r"""type t[**T = new] = ...""", r"""
+Module .. ROOT 0,0 -> 0,23
+  .body[1]
+  0] TypeAlias .. 0,0 -> 0,23
+    .name Name 't' Store .. 0,5 -> 0,6
+    .type_params[1]
+    0] ParamSpec .. 0,7 -> 0,16
+      .name 'T'
+      .default_value Name 'new' Load .. 0,13 -> 0,16
+    .value Constant Ellipsis .. 0,20 -> 0,23
+"""),
+
+(r"""type t[**T = (a)] = ...""", 'body[0].type_params[0]', None, 'default_value', {'raw': False, '_ver': 13}, r"""new""", r"""type t[**T = new] = ...""", r"""
+Module .. ROOT 0,0 -> 0,23
+  .body[1]
+  0] TypeAlias .. 0,0 -> 0,23
+    .name Name 't' Store .. 0,5 -> 0,6
+    .type_params[1]
+    0] ParamSpec .. 0,7 -> 0,16
+      .name 'T'
+      .default_value Name 'new' Load .. 0,13 -> 0,16
+    .value Constant Ellipsis .. 0,20 -> 0,23
+"""),
+
+(r"""type t[**T = a] = ...""", 'body[0].type_params[0]', None, 'default_value', {'raw': False, '_ver': 13}, r"""**DEL**""", r"""type t[**T] = ...""", r"""
+Module .. ROOT 0,0 -> 0,17
+  .body[1]
+  0] TypeAlias .. 0,0 -> 0,17
+    .name Name 't' Store .. 0,5 -> 0,6
+    .type_params[1]
+    0] ParamSpec .. 0,7 -> 0,10
+      .name 'T'
+    .value Constant Ellipsis .. 0,14 -> 0,17
+"""),
+
+(r"""type t[**T = (a)] = ...""", 'body[0].type_params[0]', None, 'default_value', {'raw': False, '_ver': 13}, r"""**DEL**""", r"""type t[**T] = ...""", r"""
+Module .. ROOT 0,0 -> 0,17
+  .body[1]
+  0] TypeAlias .. 0,0 -> 0,17
+    .name Name 't' Store .. 0,5 -> 0,6
+    .type_params[1]
+    0] ParamSpec .. 0,7 -> 0,10
+      .name 'T'
+    .value Constant Ellipsis .. 0,14 -> 0,17
+"""),
+
+(r"""type t[**T] = ...""", 'body[0].type_params[0]', None, 'default_value', {'raw': False, '_ver': 13}, r"""**DEL**""", r"""type t[**T] = ...""", r"""
+Module .. ROOT 0,0 -> 0,17
+  .body[1]
+  0] TypeAlias .. 0,0 -> 0,17
+    .name Name 't' Store .. 0,5 -> 0,6
+    .type_params[1]
+    0] ParamSpec .. 0,7 -> 0,10
+      .name 'T'
+    .value Constant Ellipsis .. 0,14 -> 0,17
+"""),
+
+(r"""type t[**T] = ...""", 'body[0].type_params[0]', None, 'default_value', {'raw': False, '_ver': 13}, r"""new""", r"""type t[**T = new] = ...""", r"""
+Module .. ROOT 0,0 -> 0,23
+  .body[1]
+  0] TypeAlias .. 0,0 -> 0,23
+    .name Name 't' Store .. 0,5 -> 0,6
+    .type_params[1]
+    0] ParamSpec .. 0,7 -> 0,16
+      .name 'T'
+      .default_value Name 'new' Load .. 0,13 -> 0,16
+    .value Constant Ellipsis .. 0,20 -> 0,23
+"""),
+
+(r"""type t[**T=a] = ...""", 'body[0].type_params[0]', None, 'default_value', {'raw': False, '_ver': 13}, r"""**DEL**""", r"""type t[**T] = ...""", r"""
+Module .. ROOT 0,0 -> 0,17
+  .body[1]
+  0] TypeAlias .. 0,0 -> 0,17
+    .name Name 't' Store .. 0,5 -> 0,6
+    .type_params[1]
+    0] ParamSpec .. 0,7 -> 0,10
+      .name 'T'
+    .value Constant Ellipsis .. 0,14 -> 0,17
+"""),
+
+(r"""type t[**T=a] = ...""", 'body[0].type_params[0]', None, 'default_value', {'raw': False, '_ver': 13}, r"""new""", r"""type t[**T=new] = ...""", r"""
+Module .. ROOT 0,0 -> 0,21
+  .body[1]
+  0] TypeAlias .. 0,0 -> 0,21
+    .name Name 't' Store .. 0,5 -> 0,6
+    .type_params[1]
+    0] ParamSpec .. 0,7 -> 0,14
+      .name 'T'
+      .default_value Name 'new' Load .. 0,11 -> 0,14
+    .value Constant Ellipsis .. 0,18 -> 0,21
+"""),
+
+(r"""type t[ ** T] = ...""", 'body[0].type_params[0]', None, 'default_value', {'raw': False, '_ver': 13}, r"""new""", r"""type t[ ** T = new] = ...""", r"""
+Module .. ROOT 0,0 -> 0,25
+  .body[1]
+  0] TypeAlias .. 0,0 -> 0,25
+    .name Name 't' Store .. 0,5 -> 0,6
+    .type_params[1]
+    0] ParamSpec .. 0,8 -> 0,18
+      .name 'T'
+      .default_value Name 'new' Load .. 0,15 -> 0,18
+    .value Constant Ellipsis .. 0,22 -> 0,25
+"""),
+
+(r"""type t[ \
+ ** \
+ T] = ...""", 'body[0].type_params[0]', None, 'default_value', {'raw': False, '_ver': 13}, r"""new""", r"""type t[ \
+ ** \
+ T = new] = ...""", r"""
+Module .. ROOT 0,0 -> 2,15
+  .body[1]
+  0] TypeAlias .. 0,0 -> 2,15
+    .name Name 't' Store .. 0,5 -> 0,6
+    .type_params[1]
+    0] ParamSpec .. 1,1 -> 2,8
+      .name 'T'
+      .default_value Name 'new' Load .. 2,5 -> 2,8
+    .value Constant Ellipsis .. 2,12 -> 2,15
+"""),
+
+(r"""type t[*T = a] = ...""", 'body[0].type_params[0]', None, 'default_value', {'raw': False, '_ver': 13}, r"""new""", r"""type t[*T = new] = ...""", r"""
+Module .. ROOT 0,0 -> 0,22
+  .body[1]
+  0] TypeAlias .. 0,0 -> 0,22
+    .name Name 't' Store .. 0,5 -> 0,6
+    .type_params[1]
+    0] TypeVarTuple .. 0,7 -> 0,15
+      .name 'T'
+      .default_value Name 'new' Load .. 0,12 -> 0,15
+    .value Constant Ellipsis .. 0,19 -> 0,22
+"""),
+
+(r"""type t[*T = (a)] = ...""", 'body[0].type_params[0]', None, 'default_value', {'raw': False, '_ver': 13}, r"""new""", r"""type t[*T = new] = ...""", r"""
+Module .. ROOT 0,0 -> 0,22
+  .body[1]
+  0] TypeAlias .. 0,0 -> 0,22
+    .name Name 't' Store .. 0,5 -> 0,6
+    .type_params[1]
+    0] TypeVarTuple .. 0,7 -> 0,15
+      .name 'T'
+      .default_value Name 'new' Load .. 0,12 -> 0,15
+    .value Constant Ellipsis .. 0,19 -> 0,22
+"""),
+
+(r"""type t[*T = a] = ...""", 'body[0].type_params[0]', None, 'default_value', {'raw': False, '_ver': 13}, r"""**DEL**""", r"""type t[*T] = ...""", r"""
+Module .. ROOT 0,0 -> 0,16
+  .body[1]
+  0] TypeAlias .. 0,0 -> 0,16
+    .name Name 't' Store .. 0,5 -> 0,6
+    .type_params[1]
+    0] TypeVarTuple .. 0,7 -> 0,9
+      .name 'T'
+    .value Constant Ellipsis .. 0,13 -> 0,16
+"""),
+
+(r"""type t[*T = (a)] = ...""", 'body[0].type_params[0]', None, 'default_value', {'raw': False, '_ver': 13}, r"""**DEL**""", r"""type t[*T] = ...""", r"""
+Module .. ROOT 0,0 -> 0,16
+  .body[1]
+  0] TypeAlias .. 0,0 -> 0,16
+    .name Name 't' Store .. 0,5 -> 0,6
+    .type_params[1]
+    0] TypeVarTuple .. 0,7 -> 0,9
+      .name 'T'
+    .value Constant Ellipsis .. 0,13 -> 0,16
+"""),
+
+(r"""type t[*T] = ...""", 'body[0].type_params[0]', None, 'default_value', {'raw': False, '_ver': 13}, r"""**DEL**""", r"""type t[*T] = ...""", r"""
+Module .. ROOT 0,0 -> 0,16
+  .body[1]
+  0] TypeAlias .. 0,0 -> 0,16
+    .name Name 't' Store .. 0,5 -> 0,6
+    .type_params[1]
+    0] TypeVarTuple .. 0,7 -> 0,9
+      .name 'T'
+    .value Constant Ellipsis .. 0,13 -> 0,16
+"""),
+
+(r"""type t[*T] = ...""", 'body[0].type_params[0]', None, 'default_value', {'raw': False, '_ver': 13}, r"""new""", r"""type t[*T = new] = ...""", r"""
+Module .. ROOT 0,0 -> 0,22
+  .body[1]
+  0] TypeAlias .. 0,0 -> 0,22
+    .name Name 't' Store .. 0,5 -> 0,6
+    .type_params[1]
+    0] TypeVarTuple .. 0,7 -> 0,15
+      .name 'T'
+      .default_value Name 'new' Load .. 0,12 -> 0,15
+    .value Constant Ellipsis .. 0,19 -> 0,22
+"""),
+
+(r"""type t[*T=a] = ...""", 'body[0].type_params[0]', None, 'default_value', {'raw': False, '_ver': 13}, r"""**DEL**""", r"""type t[*T] = ...""", r"""
+Module .. ROOT 0,0 -> 0,16
+  .body[1]
+  0] TypeAlias .. 0,0 -> 0,16
+    .name Name 't' Store .. 0,5 -> 0,6
+    .type_params[1]
+    0] TypeVarTuple .. 0,7 -> 0,9
+      .name 'T'
+    .value Constant Ellipsis .. 0,13 -> 0,16
+"""),
+
+(r"""type t[*T=a] = ...""", 'body[0].type_params[0]', None, 'default_value', {'raw': False, '_ver': 13}, r"""new""", r"""type t[*T=new] = ...""", r"""
+Module .. ROOT 0,0 -> 0,20
+  .body[1]
+  0] TypeAlias .. 0,0 -> 0,20
+    .name Name 't' Store .. 0,5 -> 0,6
+    .type_params[1]
+    0] TypeVarTuple .. 0,7 -> 0,13
+      .name 'T'
+      .default_value Name 'new' Load .. 0,10 -> 0,13
+    .value Constant Ellipsis .. 0,17 -> 0,20
+"""),
+
+(r"""type t[ * T] = ...""", 'body[0].type_params[0]', None, 'default_value', {'raw': False, '_ver': 13}, r"""new""", r"""type t[ * T = new] = ...""", r"""
+Module .. ROOT 0,0 -> 0,24
+  .body[1]
+  0] TypeAlias .. 0,0 -> 0,24
+    .name Name 't' Store .. 0,5 -> 0,6
+    .type_params[1]
+    0] TypeVarTuple .. 0,8 -> 0,17
+      .name 'T'
+      .default_value Name 'new' Load .. 0,14 -> 0,17
+    .value Constant Ellipsis .. 0,21 -> 0,24
+"""),
+
+(r"""type t[ \
+ * \
+ T] = ...""", 'body[0].type_params[0]', None, 'default_value', {'raw': False, '_ver': 13}, r"""new""", r"""type t[ \
+ * \
+ T = new] = ...""", r"""
+Module .. ROOT 0,0 -> 2,15
+  .body[1]
+  0] TypeAlias .. 0,0 -> 2,15
+    .name Name 't' Store .. 0,5 -> 0,6
+    .type_params[1]
+    0] TypeVarTuple .. 1,1 -> 2,8
+      .name 'T'
+      .default_value Name 'new' Load .. 2,5 -> 2,8
+    .value Constant Ellipsis .. 2,12 -> 2,15
+"""),
+
 ]  # END OF PUT_ONE_DATA
 
 PUT_RAW_DATA = [
