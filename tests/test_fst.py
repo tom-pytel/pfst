@@ -16288,7 +16288,7 @@ Module .. ROOT 0,0 -> 0,6
     .simple 1
 """),
 
-(r"""i: j""", 'body[0]', None, 'annotation', {'raw': False}, r"""(yield 1)""", r"""**NodeTypeError('cannot be one of (Lambda, Yield, YieldFrom, Await, NamedExpr) for AnnAssign.annotation, got Yield')**""", r"""
+(r"""i: j""", 'body[0]', None, 'annotation', {'raw': False}, r"""(yield 1)""", r"""**NodeTypeError('AnnAssign.annotation cannot be Yield')**""", r"""
 """),
 
 (r"""i: j""", 'body[0]', None, 'annotation', {'raw': False}, r"""new""", r"""i: new""", r"""
@@ -16865,6 +16865,293 @@ Module .. ROOT 0,0 -> 0,16
   0] Raise .. 0,0 -> 0,16
     .exc Name 'e' Load .. 0,7 -> 0,8
     .cause Name 'c' Load .. 0,15 -> 0,16
+"""),
+
+(r"""assert a, b""", 'body[0]', None, 'msg', {'raw': False}, r"""new""", r"""assert a, new""", r"""
+Module .. ROOT 0,0 -> 0,13
+  .body[1]
+  0] Assert .. 0,0 -> 0,13
+    .test Name 'a' Load .. 0,7 -> 0,8
+    .msg Name 'new' Load .. 0,10 -> 0,13
+"""),
+
+(r"""assert a, (b)""", 'body[0]', None, 'msg', {'raw': False}, r"""new""", r"""assert a, new""", r"""
+Module .. ROOT 0,0 -> 0,13
+  .body[1]
+  0] Assert .. 0,0 -> 0,13
+    .test Name 'a' Load .. 0,7 -> 0,8
+    .msg Name 'new' Load .. 0,10 -> 0,13
+"""),
+
+(r"""assert a, b""", 'body[0]', None, 'msg', {'raw': False}, r"""**DEL**""", r"""assert a""", r"""
+Module .. ROOT 0,0 -> 0,8
+  .body[1]
+  0] Assert .. 0,0 -> 0,8
+    .test Name 'a' Load .. 0,7 -> 0,8
+"""),
+
+(r"""assert a, (b)""", 'body[0]', None, 'msg', {'raw': False}, r"""**DEL**""", r"""assert a""", r"""
+Module .. ROOT 0,0 -> 0,8
+  .body[1]
+  0] Assert .. 0,0 -> 0,8
+    .test Name 'a' Load .. 0,7 -> 0,8
+"""),
+
+(r"""assert a""", 'body[0]', None, 'msg', {'raw': False}, r"""**DEL**""", r"""assert a""", r"""
+Module .. ROOT 0,0 -> 0,8
+  .body[1]
+  0] Assert .. 0,0 -> 0,8
+    .test Name 'a' Load .. 0,7 -> 0,8
+"""),
+
+(r"""assert a""", 'body[0]', None, 'msg', {'raw': False}, r"""new""", r"""assert a, new""", r"""
+Module .. ROOT 0,0 -> 0,13
+  .body[1]
+  0] Assert .. 0,0 -> 0,13
+    .test Name 'a' Load .. 0,7 -> 0,8
+    .msg Name 'new' Load .. 0,10 -> 0,13
+"""),
+
+(r"""yield a""", 'body[0].value', None, None, {'raw': False}, r"""new""", r"""yield new""", r"""
+Module .. ROOT 0,0 -> 0,9
+  .body[1]
+  0] Expr .. 0,0 -> 0,9
+    .value Yield .. 0,0 -> 0,9
+      .value Name 'new' Load .. 0,6 -> 0,9
+"""),
+
+(r"""yield (a)""", 'body[0].value', None, None, {'raw': False}, r"""new""", r"""yield new""", r"""
+Module .. ROOT 0,0 -> 0,9
+  .body[1]
+  0] Expr .. 0,0 -> 0,9
+    .value Yield .. 0,0 -> 0,9
+      .value Name 'new' Load .. 0,6 -> 0,9
+"""),
+
+(r"""yield a""", 'body[0].value', None, None, {'raw': False}, r"""**DEL**""", r"""yield""", r"""
+Module .. ROOT 0,0 -> 0,5
+  .body[1]
+  0] Expr .. 0,0 -> 0,5
+    .value Yield .. 0,0 -> 0,5
+"""),
+
+(r"""yield (a)""", 'body[0].value', None, None, {'raw': False}, r"""**DEL**""", r"""yield""", r"""
+Module .. ROOT 0,0 -> 0,5
+  .body[1]
+  0] Expr .. 0,0 -> 0,5
+    .value Yield .. 0,0 -> 0,5
+"""),
+
+(r"""yield""", 'body[0].value', None, None, {'raw': False}, r"""**DEL**""", r"""yield""", r"""
+Module .. ROOT 0,0 -> 0,5
+  .body[1]
+  0] Expr .. 0,0 -> 0,5
+    .value Yield .. 0,0 -> 0,5
+"""),
+
+(r"""yield""", 'body[0].value', None, None, {'raw': False}, r"""new""", r"""yield new""", r"""
+Module .. ROOT 0,0 -> 0,9
+  .body[1]
+  0] Expr .. 0,0 -> 0,9
+    .value Yield .. 0,0 -> 0,9
+      .value Name 'new' Load .. 0,6 -> 0,9
+"""),
+
+(r"""def f(a: b): pass""", 'body[0].args.args[0]', None, 'annotation', {'raw': False}, r"""new""", r"""def f(a: new): pass""", r"""
+Module .. ROOT 0,0 -> 0,19
+  .body[1]
+  0] FunctionDef .. 0,0 -> 0,19
+    .name 'f'
+    .args arguments .. 0,6 -> 0,12
+      .args[1]
+      0] arg .. 0,6 -> 0,12
+        .arg 'a'
+        .annotation Name 'new' Load .. 0,9 -> 0,12
+    .body[1]
+    0] Pass .. 0,15 -> 0,19
+"""),
+
+(r"""def f(a: (b)): pass""", 'body[0].args.args[0]', None, 'annotation', {'raw': False}, r"""new""", r"""def f(a: new): pass""", r"""
+Module .. ROOT 0,0 -> 0,19
+  .body[1]
+  0] FunctionDef .. 0,0 -> 0,19
+    .name 'f'
+    .args arguments .. 0,6 -> 0,12
+      .args[1]
+      0] arg .. 0,6 -> 0,12
+        .arg 'a'
+        .annotation Name 'new' Load .. 0,9 -> 0,12
+    .body[1]
+    0] Pass .. 0,15 -> 0,19
+"""),
+
+(r"""def f(a: b): pass""", 'body[0].args.args[0]', None, 'annotation', {'raw': False}, r"""**DEL**""", r"""def f(a): pass""", r"""
+Module .. ROOT 0,0 -> 0,14
+  .body[1]
+  0] FunctionDef .. 0,0 -> 0,14
+    .name 'f'
+    .args arguments .. 0,6 -> 0,7
+      .args[1]
+      0] arg .. 0,6 -> 0,7
+        .arg 'a'
+    .body[1]
+    0] Pass .. 0,10 -> 0,14
+"""),
+
+(r"""def f(a: (b)): pass""", 'body[0].args.args[0]', None, 'annotation', {'raw': False}, r"""**DEL**""", r"""def f(a): pass""", r"""
+Module .. ROOT 0,0 -> 0,14
+  .body[1]
+  0] FunctionDef .. 0,0 -> 0,14
+    .name 'f'
+    .args arguments .. 0,6 -> 0,7
+      .args[1]
+      0] arg .. 0,6 -> 0,7
+        .arg 'a'
+    .body[1]
+    0] Pass .. 0,10 -> 0,14
+"""),
+
+(r"""def f(a): pass""", 'body[0].args.args[0]', None, 'annotation', {'raw': False}, r"""**DEL**""", r"""def f(a): pass""", r"""
+Module .. ROOT 0,0 -> 0,14
+  .body[1]
+  0] FunctionDef .. 0,0 -> 0,14
+    .name 'f'
+    .args arguments .. 0,6 -> 0,7
+      .args[1]
+      0] arg .. 0,6 -> 0,7
+        .arg 'a'
+    .body[1]
+    0] Pass .. 0,10 -> 0,14
+"""),
+
+(r"""def f(a): pass""", 'body[0].args.args[0]', None, 'annotation', {'raw': False}, r"""new""", r"""def f(a: new): pass""", r"""
+Module .. ROOT 0,0 -> 0,19
+  .body[1]
+  0] FunctionDef .. 0,0 -> 0,19
+    .name 'f'
+    .args arguments .. 0,6 -> 0,12
+      .args[1]
+      0] arg .. 0,6 -> 0,12
+        .arg 'a'
+        .annotation Name 'new' Load .. 0,9 -> 0,12
+    .body[1]
+    0] Pass .. 0,15 -> 0,19
+"""),
+
+(r"""def f(a): pass""", 'body[0].args.args[0]', None, 'annotation', {'raw': False}, r"""lambda: x""", r"""**NodeTypeError('arg.annotation cannot be Lambda')**""", r"""
+"""),
+
+(r"""with a as b: pass""", 'body[0].items[0]', None, 'optional_vars', {'raw': False}, r"""new""", r"""with a as new: pass""", r"""
+Module .. ROOT 0,0 -> 0,19
+  .body[1]
+  0] With .. 0,0 -> 0,19
+    .items[1]
+    0] withitem .. 0,5 -> 0,13
+      .context_expr
+        Name 'a' Load .. 0,5 -> 0,6
+      .optional_vars Name 'new' Store .. 0,10 -> 0,13
+    .body[1]
+    0] Pass .. 0,15 -> 0,19
+"""),
+
+(r"""with a as (b): pass""", 'body[0].items[0]', None, 'optional_vars', {'raw': False}, r"""new""", r"""with a as new: pass""", r"""
+Module .. ROOT 0,0 -> 0,19
+  .body[1]
+  0] With .. 0,0 -> 0,19
+    .items[1]
+    0] withitem .. 0,5 -> 0,13
+      .context_expr
+        Name 'a' Load .. 0,5 -> 0,6
+      .optional_vars Name 'new' Store .. 0,10 -> 0,13
+    .body[1]
+    0] Pass .. 0,15 -> 0,19
+"""),
+
+(r"""with (a as (b)): pass""", 'body[0].items[0]', None, 'optional_vars', {'raw': False}, r"""new""", r"""with (a as new): pass""", r"""
+Module .. ROOT 0,0 -> 0,21
+  .body[1]
+  0] With .. 0,0 -> 0,21
+    .items[1]
+    0] withitem .. 0,6 -> 0,14
+      .context_expr
+        Name 'a' Load .. 0,6 -> 0,7
+      .optional_vars Name 'new' Store .. 0,11 -> 0,14
+    .body[1]
+    0] Pass .. 0,17 -> 0,21
+"""),
+
+(r"""with a as b: pass""", 'body[0].items[0]', None, 'optional_vars', {'raw': False}, r"""**DEL**""", r"""with a: pass""", r"""
+Module .. ROOT 0,0 -> 0,12
+  .body[1]
+  0] With .. 0,0 -> 0,12
+    .items[1]
+    0] withitem .. 0,5 -> 0,6
+      .context_expr
+        Name 'a' Load .. 0,5 -> 0,6
+    .body[1]
+    0] Pass .. 0,8 -> 0,12
+"""),
+
+(r"""with a as (b): pass""", 'body[0].items[0]', None, 'optional_vars', {'raw': False}, r"""**DEL**""", r"""with a: pass""", r"""
+Module .. ROOT 0,0 -> 0,12
+  .body[1]
+  0] With .. 0,0 -> 0,12
+    .items[1]
+    0] withitem .. 0,5 -> 0,6
+      .context_expr
+        Name 'a' Load .. 0,5 -> 0,6
+    .body[1]
+    0] Pass .. 0,8 -> 0,12
+"""),
+
+(r"""with (a as (b)): pass""", 'body[0].items[0]', None, 'optional_vars', {'raw': False}, r"""**DEL**""", r"""with (a): pass""", r"""
+Module .. ROOT 0,0 -> 0,14
+  .body[1]
+  0] With .. 0,0 -> 0,14
+    .items[1]
+    0] withitem .. 0,6 -> 0,7
+      .context_expr
+        Name 'a' Load .. 0,6 -> 0,7
+    .body[1]
+    0] Pass .. 0,10 -> 0,14
+"""),
+
+(r"""with a: pass""", 'body[0].items[0]', None, 'optional_vars', {'raw': False}, r"""**DEL**""", r"""with a: pass""", r"""
+Module .. ROOT 0,0 -> 0,12
+  .body[1]
+  0] With .. 0,0 -> 0,12
+    .items[1]
+    0] withitem .. 0,5 -> 0,6
+      .context_expr
+        Name 'a' Load .. 0,5 -> 0,6
+    .body[1]
+    0] Pass .. 0,8 -> 0,12
+"""),
+
+(r"""with a: pass""", 'body[0].items[0]', None, 'optional_vars', {'raw': False}, r"""new""", r"""with a as new: pass""", r"""
+Module .. ROOT 0,0 -> 0,19
+  .body[1]
+  0] With .. 0,0 -> 0,19
+    .items[1]
+    0] withitem .. 0,5 -> 0,13
+      .context_expr
+        Name 'a' Load .. 0,5 -> 0,6
+      .optional_vars Name 'new' Store .. 0,10 -> 0,13
+    .body[1]
+    0] Pass .. 0,15 -> 0,19
+"""),
+
+(r"""with (a): pass""", 'body[0].items[0]', None, 'optional_vars', {'raw': False}, r"""new""", r"""with (a) as new: pass""", r"""
+Module .. ROOT 0,0 -> 0,21
+  .body[1]
+  0] With .. 0,0 -> 0,21
+    .items[1]
+    0] withitem .. 0,5 -> 0,15
+      .context_expr
+        Name 'a' Load .. 0,6 -> 0,7
+      .optional_vars Name 'new' Store .. 0,12 -> 0,15
+    .body[1]
+    0] Pass .. 0,17 -> 0,21
 """),
 
 ]  # END OF PUT_ONE_DATA
