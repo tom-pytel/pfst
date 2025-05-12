@@ -778,52 +778,70 @@ class FST:
     def copy(self, **options) -> 'FST':
         """Copy an individual node to a top level tree, dedenting and fixing as necessary."""
 
-        fix    = FST.get_option('fix', options)
-        ast    = self.a
-        newast = copy_ast(ast)
+        if not (parent := self.parent):
+            return FST(copy_ast(self.a), lines=self._lines[:], from_=self)
 
-        if self.is_root:
-            return FST(newast, lines=self._lines[:], from_=self)
-
-        if isinstance(ast, STMTISH):
-            loc = self.comms(options.get('precomms'), options.get('postcomms'))
-        else:
-            loc = self.pars(options.get('pars') is True)
-
-        if not loc:
-            raise ValueError('cannot copy node which does not have location')
-
-        fst = self._make_fst_and_dedent(self, newast, loc, docstr=options.get('docstr'))
-
-        return fst._fix(inplace=True) if fix else fst
+        return parent._get_one((pf := self.pfield).idx, pf.name, False, **options)
 
     def cut(self, **options) -> 'FST':
         """Cut out an individual node to a top level tree (if possible), dedenting and fixing as necessary."""
 
-        if self.is_root:
+        if not (parent := self.parent):
             raise ValueError('cannot cut root node')
 
-        ast        = self.a
-        parent     = self.parent
-        field, idx = self.pfield
-        parenta    = parent.a
-
-        if isinstance(ast, STMTISH):
-            return parent._get_slice_stmtish(idx, idx + 1, field, cut=True, one=True, **options)
-
-        if isinstance(parenta, (Tuple, List, Set)):
-            fst = self.copy(**options)
-
-            parent._put_slice_tuple_list_or_set(None, idx, idx + 1, field, False, **options)
-
-            return fst
+        return parent._get_one((pf := self.pfield).idx, pf.name, True, **options)
 
 
-        # TODO: individual nodes
-        # TODO: other sequences?
+    # def copy(self, **options) -> 'FST':
+    #     """Copy an individual node to a top level tree, dedenting and fixing as necessary."""
+
+    #     fix    = FST.get_option('fix', options)
+    #     ast    = self.a
+    #     newast = copy_ast(ast)
+
+    #     if self.is_root:
+    #         return FST(newast, lines=self._lines[:], from_=self)
+
+    #     if isinstance(ast, STMTISH):
+    #         loc = self.comms(options.get('precomms'), options.get('postcomms'))
+    #     else:
+    #         loc = self.pars(options.get('pars') is True)
+
+    #     if not loc:
+    #         raise ValueError('cannot copy node which does not have location')
+
+    #     fst = self._make_fst_and_dedent(self, newast, loc, docstr=options.get('docstr'))
+
+    #     return fst._fix(inplace=True) if fix else fst
+
+    # def cut(self, **options) -> 'FST':
+    #     """Cut out an individual node to a top level tree (if possible), dedenting and fixing as necessary."""
+
+    #     if self.is_root:
+    #         raise ValueError('cannot cut root node')
+
+    #     ast        = self.a
+    #     parent     = self.parent
+    #     field, idx = self.pfield
+    #     parenta    = parent.a
+
+    #     if isinstance(ast, STMTISH):
+    #         return parent._get_slice_stmtish(idx, idx + 1, field, cut=True, one=True, **options)
+
+    #     if isinstance(parenta, (Tuple, List, Set)):
+    #         fst = self.copy(**options)
+
+    #         parent._put_slice_tuple_list_or_set(None, idx, idx + 1, field, False, **options)
+
+    #         return fst
 
 
-        raise ValueError(f"cannot cut from a {parenta.__class__.__name__}.{field}")
+    #     # TODO: individual nodes
+    #     # TODO: other sequences?
+
+
+    #     raise ValueError(f"cannot cut from a {parenta.__class__.__name__}.{field}")
+
 
     def replace(self, code: Code | None, **options) -> Optional['FST']:  # -> Self (replaced) or None if deleted
         """Replace or delete (`code=None`) an individual node. Returns the new node for `self`, not the old replaced
@@ -836,37 +854,26 @@ class FST:
         return parent._put_one(code, (pf := self.pfield).idx, pf.name, **options)
 
     def get(self, start: int | Literal['end'] | None = None, stop: int | None | Literal[False] = False,
-            field: str | None = None, *, cut: bool = False, **options) -> Optional['FST']:
+            field: str | None = None, *, cut: bool = False, **options) -> Any:
         """Copy or cut an individual child node or a slice of child nodes from `self`."""
 
-        ast     = self.a
-        _, body = _fixup_field_body(ast, field, False)
+        ast          = self.a
+        field_, body = _fixup_field_body(ast, field, False)
 
-        if isinstance(body, list):  # get from individual field
+        if isinstance(body, list):
             if stop is not False:
                 return self.get_slice(start, stop, field, cut=cut, **options)
             if start is None:
                 return self.get_slice(None, None, field, cut=cut, **options)
 
+            if start == 'end':
+                raise IndexError(f"cannot get() non-slice from index 'end'")
+
         elif stop is not False or start is not None:
             raise IndexError(f"cannot pass index for non-slice get() to {ast.__class__.__name__}" +
                              (f".{field}" if field else ""))
 
-
-        else:
-            raise NotImplementedError
-
-
-            # TODO: get single-field non-indexed stuff
-
-
-        # TODO: special case indexed stuff like Compare, maybe in _get_one()
-
-
-        if cut:
-            return body[start].f.cut(**options)
-        else:
-            return body[start].f.copy(**options)
+        return self._get_one(start, field_, cut, **options)
 
     def put(self, code: Code | None, start: int | Literal['end'] | None = None,
             stop: int | None | Literal[False] = False, field: str | None = None, *,
@@ -886,12 +893,13 @@ class FST:
             if start is None:
                 return self.put_slice(code, None, None, field, one=one, **options)
 
+            if start == 'end':
+                raise IndexError(f"cannot put() non-slice to index 'end'")
+
         elif stop is not False or start is not None:
             raise IndexError(f"cannot pass index for non-slice put() to {ast.__class__.__name__}" +
                              f".{field}" if field else "")
 
-        if start == 'end':
-            raise IndexError(f"cannot put() non-slice to index 'end'")
         if not one:
             raise ValueError(f"cannot use 'one=False' in non-slice put()")
 
@@ -2011,7 +2019,6 @@ class FST:
         _new_empty_dict,
         _new_empty_set,
         _new_empty_set_curlies,
-        _make_tree_fst,
         _make_fst_tree,
         _unmake_fst_tree,
         _set_ast,
@@ -2065,6 +2072,7 @@ class FST:
         _put_slice_stmtish,)
 
     from .fst_one import (
+        _get_one,
         _put_one,)
 
     @property

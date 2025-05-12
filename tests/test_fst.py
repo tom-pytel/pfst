@@ -24997,6 +24997,10 @@ class cls:
         f.put('m', raw=False)
         self.assertEqual('m', f.src)
 
+        f = parse('[1, 2, 3, 4]').body[0].value.f
+        f.put('5', 1, raw=False, to=f.elts[2])
+        self.assertEqual('[1, 5, 4]', f.src)
+
     def test_put_raw(self):
         for i, (dst, attr, (ln, col, end_ln, end_col), options, src, put_ret, put_src, put_dump) in enumerate(PUT_RAW_DATA):
             t = parse(dst)

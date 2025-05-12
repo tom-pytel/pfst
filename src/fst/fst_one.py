@@ -7,33 +7,18 @@ from typing import Any, Optional
 from .astutil import *
 from .astutil import TypeAlias, TryStar, type_param, TypeVar, ParamSpec, TypeVarTuple, TemplateStr, Interpolation
 
-from .shared import Code, NodeTypeError, _fixup_one_index, _next_find, _next_find_re
+from .shared import STMTISH, Code, NodeTypeError, _fixup_one_index, _next_find, _next_find_re
 
 
-_re_identifier = re.compile(r'[^\d\W]\w*')
-
-
-def _code_as_identifier(code: Code) -> str | None:
-    if isinstance(code, str):
-        return code if is_valid_identifier(code) else None
-    if isinstance(code, list):
-        return code if is_valid_identifier(code := ''.join(code)) else None  # join without newlines to ignore one or two extraneous ones
-
-    if isinstance(code, FST):
-        code = code.a
-
-    return code.id if isinstance(code, Name) else None
-
-
-def _slice_indices(self: 'FST', idx: int, child: list[AST], to: Optional['FST']):
+def _slice_indices(self: 'FST', idx: int, field: str, body: list[AST], to: Optional['FST']):
     """If a `to` parameter is passed then try to convert it to an index in the same field body list of `self`."""
 
-    idx = _fixup_one_index(len(child), idx)
+    idx = _fixup_one_index(len(body), idx)
 
     if not to:
         return idx, idx + 1
 
-    elif to.parent is self.parent is not None and (pf := to.pfield).name == self.pfield.name:
+    elif to.parent is self is not None and (pf := to.pfield).name == field:
         if (to_idx := pf.idx) < idx:
             raise ValueError("invalid 'to' node, must follow self in body")
 
@@ -42,11 +27,62 @@ def _slice_indices(self: 'FST', idx: int, child: list[AST], to: Optional['FST'])
     raise NodeTypeError(f"invalid 'to' node")
 
 
+# ----------------------------------------------------------------------------------------------------------------------
+# get
+
+def _get_one(self: 'FST', idx: int | None, field: str, cut: bool, **options) -> Optional['FST']:
+    """Copy or cut (if possible) a node or non-node from a field of `self`."""
+
+    ast    = self.a
+    child  = getattr(ast, field)
+    childa = child if idx is None else child[idx]
+
+    if isinstance(childa, STMTISH):
+        return self._get_slice_stmtish(*_slice_indices(self, idx, field, child, None), field, cut=cut, one=True,
+                                       **options)
+
+    childf = childa.f
+    loc    = childf.pars(options.get('pars') is True)
+
+    if not loc:
+        raise ValueError('cannot copy node which does not have a location')
+
+    fst = childf._make_fst_and_dedent(childf, copy_ast(childa), loc, docstr=options.get('docstr'))
+
+    if cut:
+        options['to'] = None
+
+        self._put_one(None, idx, field, **options)
+
+    if FST.get_option('fix', options):
+        fst = fst._fix(inplace=True)
+
+    return fst
+
+
+# ----------------------------------------------------------------------------------------------------------------------
+# put
+
+_re_identifier = re.compile(r'[^\d\W]\w*')
+
+
+def _code_as_identifier(code: Code) -> str | None:
+    if isinstance(code, str):
+        return code if is_valid_identifier(code) else None
+    if isinstance(code, list):
+        return code if len(code) == 1 and is_valid_identifier(code := code[0]) else None  # join without newlines to ignore one or two extraneous ones
+
+    if isinstance(code, FST):
+        code = code.a
+
+    return code.id if isinstance(code, Name) else None
+
+
 def _put_one_stmtish(self: 'FST', code: Code | None, idx: int | None, field: str, child: list[AST], extra: None,
                      **options) -> Optional['FST']:
     """Put or delete a single statementish node to a list of them (body, orelse, handlers, finalbody or cases)."""
 
-    self._put_slice_stmtish(code, *_slice_indices(self, idx, child, options.get('to')), field, True, **options)
+    self._put_slice_stmtish(code, *_slice_indices(self, idx, field, child, options.get('to')), field, True, **options)
 
     return None if code is None else getattr(self.a, field)[idx].f
 
@@ -55,14 +91,14 @@ def _put_one_tuple_list_or_set(self: 'FST', code: Code | None, idx: int | None, 
                                extra: None, **options) -> Optional['FST']:
     """Put or delete a single expression to a Tuple, List or Set elts."""
 
-    self._put_slice_tuple_list_or_set(code, *_slice_indices(self, idx, child, options.get('to')), field, True,
+    self._put_slice_tuple_list_or_set(code, *_slice_indices(self, idx, field, child, options.get('to')), field, True,
                                       **options)
 
     return None if code is None else getattr(self.a, field)[idx].f
 
 
-def _put_one_identifier(self: 'FST', code: Code | None, idx: int | None, field: str, child: Any, extra: None, **options,
-                        ) -> Optional['FST']:
+def _put_one_identifier(self: 'FST', code: Code | None, idx: int | None, field: str, child: Any, extra: str | None,
+                        **options) -> str:
     """Put a single required identifier."""
 
     if code is None:
@@ -90,6 +126,8 @@ def _put_one_identifier(self: 'FST', code: Code | None, idx: int | None, field: 
     self.put_src(code, ln, col, end_ln, end_col, True)
 
     setattr(self.a, field, code)
+
+    return code
 
 
 def _put_one_expr_required(self: 'FST', code: Code | None, idx: int | None, field: str, child: Any,
@@ -135,11 +173,11 @@ def _put_one_expr_required(self: 'FST', code: Code | None, idx: int | None, fiel
     ast     = self.a
     childf  = child.f
     pars    = bool(FST.get_option('pars', options))
-    effpars = pars or put_fst.is_parenthesized_tuple() is False  # need tuple check because otherwise location would be wrong after
-    loc     = childf.pars(effpars)  # don't need exc_genexpr_solo=True here because guaranteed not to be this
+    delpars = pars or put_fst.is_parenthesized_tuple() is False  # need tuple check because otherwise location would be wrong after
+    loc     = childf.pars(delpars)  # don't need exc_genexpr_solo=True here because guaranteed not to be this
 
     if precedence_require_parens(put_ast, ast, field, idx):
-        if not put_fst.is_atom() and (effpars or not childf.pars(ret_npars=True)[1]):
+        if not put_fst.is_atom() and (delpars or not childf.pars(ret_npars=True)[1]):
             put_fst.parenthesize()
 
     elif pars:  # remove parens only if allowed to
@@ -206,10 +244,7 @@ def _put_one_Interpolation_value(self: 'FST', code: Code | None, idx: int | None
     return ret
 
 
-_GLOBALS = globals() | {'_GLOBALS': None}
-# ----------------------------------------------------------------------------------------------------------------------
-
-def _put_one(self: 'FST', code: Code | None, idx: int | None, field: str, **options) -> Optional['FST']:
+def _put_one(self: 'FST', code: Code | None, idx: int | None, field: str | None, **options) -> Optional['FST']:
     """Put new, replace or delete a node (or limited non-node) to a field of `self`."""
 
     ast   = self.a
@@ -232,7 +267,7 @@ def _put_one(self: 'FST', code: Code | None, idx: int | None, field: str, **opti
 
         else:
             if not raw:
-                raise ValueError(f"cannot replace {ast.__class__.__name__}.{field}")
+                raise ValueError(f'cannot {"delete" if code is None else "replace"} {ast.__class__.__name__}.{field}')
 
     if isinstance(child, list):
         child = child[idx]
@@ -270,8 +305,7 @@ def _put_one(self: 'FST', code: Code | None, idx: int | None, field: str, **opti
     return None if code is None else ret
 
 
-# ----------------------------------------------------------------------------------------------------------------------
-__all_private__ = [n for n in globals() if n not in _GLOBALS]
+# TODO: finish these
 
 _PUT_ONE_HANDLERS = {
     (Module, 'body'):                     (_put_one_stmtish, None), # stmt*
@@ -481,8 +515,8 @@ _PUT_ONE_HANDLERS = {
     # (TypeIgnore, 'tag'):                  (_put_one_default, None), # string
 }
 
-
-# TODO: finish these
+# ----------------------------------------------------------------------------------------------------------------------
+__all_private__ = ['_get_one', '_put_one']
 
 
 from .fst import FST

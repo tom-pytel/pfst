@@ -15,6 +15,17 @@ from .shared import (
     _coerce_ast
 )
 
+
+def _make_tree_fst(ast: AST, parent: 'FST', pfield: astfield):
+    """Recreate possibly non-unique AST nodes."""
+
+    if not getattr(ast, 'f', None):  # if `.f` exists then this has already been done
+        if isinstance(ast, (expr_context, unaryop, operator, boolop, cmpop)):  # ast.parse() reuses simple objects, we need all objects to be unique
+            pfield.set(parent.a, ast := ast.__class__())
+
+    return FST(ast, parent, pfield)
+
+
 _GLOBALS = globals() | {'_GLOBALS': None}
 # ----------------------------------------------------------------------------------------------------------------------
 
@@ -115,17 +126,6 @@ def _new_empty_set_curlies(only_ast: bool = False, lineno: int = 1, col_offset: 
     return ast if only_ast else FST(ast, lines=[bistr('{}')], from_=from_)
 
 
-@staticmethod
-def _make_tree_fst(ast: AST, parent: 'FST', pfield: astfield):
-    """Recreate possibly non-unique AST nodes."""
-
-    if not getattr(ast, 'f', None):  # if `.f` exists then this has already been done
-        if isinstance(ast, (expr_context, unaryop, operator, boolop, cmpop)):  # ast.parse() reuses simple objects, we need all objects to be unique
-            pfield.set(parent.a, ast := ast.__class__())
-
-    return FST(ast, parent, pfield)
-
-
 def _make_fst_tree(self: 'FST', stack: list['FST'] | None = None):
     """Create tree of FST nodes, one for each AST node from root. Call only on root or with pre-made stack of nodes
     to walk."""
@@ -136,10 +136,10 @@ def _make_fst_tree(self: 'FST', stack: list['FST'] | None = None):
     while stack:
         for name, child in iter_fields((f := stack.pop()).a):
             if isinstance(child, AST):
-                stack.append(self._make_tree_fst(child, f, astfield(name)))
+                stack.append(_make_tree_fst(child, f, astfield(name)))
             elif isinstance(child, list):
-                stack.extend(self._make_tree_fst(a, f, astfield(name, idx))
-                                for idx, a in enumerate(child) if isinstance(a, AST))
+                stack.extend(_make_tree_fst(a, f, astfield(name, idx))
+                             for idx, a in enumerate(child) if isinstance(a, AST))
 
 
 def _unmake_fst_tree(self: 'FST', stack: list[AST] | None = None, root: Optional['FST'] = None):
