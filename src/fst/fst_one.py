@@ -78,16 +78,31 @@ def _code_as_identifier(code: Code) -> str | None:
     return code.id if isinstance(code, Name) else None
 
 
-def _start_prefix_Return_value(self: 'FST') -> srcwpos:
-    """The start position (right after 'return') and prefix src ('') for a value node for a Return."""
+StartPrefix = tuple[srcwpos, bool, bool]  # (srcwpos, can_put, can_del)
 
-    return srcwpos((loc := self.loc).ln, loc.col + 6, '')
+def _start_prefix_Return_value(self: 'FST') -> StartPrefix:
+    return srcwpos((loc := self.loc).ln, loc.col + 6, ''), True, True
+
+
+def _start_prefix_AnnAssign_value(self: 'FST') -> StartPrefix:
+    return srcwpos((loc := self.a.annotation.f.pars()).end_ln, loc.end_col, '='), True, True
+
+
+def _start_prefix_Raise_exc(self: 'FST') -> StartPrefix:
+    return srcwpos((loc := self.loc).ln, loc.col + 5, ''), True, not self.a.cause
+
+
+def _start_prefix_Raise_cause(self: 'FST') -> StartPrefix:
+    if exc := self.a.exc:
+        return srcwpos((loc := exc.f.pars()).end_ln, loc.end_col, 'from'), bool(exc), True
+    else:
+        return srcwpos((loc := self.loc).ln, loc.col + 5, 'from'), bool(exc), True
 
 
 def _make_expr_fst(self: 'FST', code: Code | None, idx: int | None, field: str,
                    extra: tuple[type[AST]] | list[type[AST]] | type[AST] | None,
                    target: Union['FST', fstloc], ctx: type[expr_context], prefix: str  = '',
-                   **options) -> tuple['FST', fstloc]:
+                   **options) -> 'FST':
     """Make an expression `FST` from `Code` for a field/idx containing an existing node creating a new one. Takes care
     of parenthesizing, indenting and offsetting."""
 
@@ -109,7 +124,7 @@ def _make_expr_fst(self: 'FST', code: Code | None, idx: int | None, field: str,
                                 f', got {put_ast.__class__.__name__}')
 
     pars    = bool(FST.get_option('pars', options))
-    delpars = pars or put_fst.is_parenthesized_tuple() is False  # need tuple check because otherwise location would be wrong after
+    delpars = pars or put_fst.is_parenthesized_tuple() is False  # need tuple check because otherwise Tuple location would be wrong after (wouldn't include possible enclosing parens)
     is_FST  = target.is_FST
 
     if precedence_require_parens(put_ast, self.a, field, idx):
@@ -124,14 +139,18 @@ def _make_expr_fst(self: 'FST', code: Code | None, idx: int | None, field: str,
 
     put_fst.indent_lns(self.get_indent(), docstr=options.get('docstr'))
 
-    ln, col, _, _ = loc = target.pars(delpars) if target.is_FST else target
-    dcol_offset   = self.root._lines[ln].c2b(col)
+    ln, col, end_ln, end_col = target.pars(delpars) if target.is_FST else target
+
+    dcol_offset = self.root._lines[ln].c2b(col)
 
     put_fst.offset(0, 0, ln, dcol_offset)
-    # self.put_src(put_lines, ln, col, end_ln, end_col, True, exclude=target)  # excluding an fstloc will do nothing
+
+    params_offset = self.put_src(put_fst._lines, ln, col, end_ln, end_col, True, exclude=self)
+
+    self.offset(*params_offset, exclude=target, self_=False)
     set_ctx(put_ast, ctx)
 
-    return put_fst, loc
+    return put_fst
 
 
 def _put_one_expr_required(self: 'FST', code: Code | None, idx: int | None, field: str, child: list[AST] | AST | None,
@@ -158,62 +177,14 @@ def _put_one_expr_required(self: 'FST', code: Code | None, idx: int | None, fiel
 
 
 
-    childf = child.f
-    ctx    = ((ctx := getattr(child, 'ctx', None)) and ctx.__class__) or Load
+    childf  = child.f
+    ctx     = ((ctx := getattr(child, 'ctx', None)) and ctx.__class__) or Load
+    put_fst = _make_expr_fst(self, code, idx, field, extra, childf, ctx, **options)
 
-    put_fst, (ln, col, end_ln, end_col) = _make_expr_fst(self, code, idx, field, extra, childf, ctx, **options)
-
-    self.put_src(put_fst._lines, ln, col, end_ln, end_col, True, exclude=childf)
+    # self.put_src(put_fst._lines, ln, col, end_ln, end_col, True, exclude=childf)
     childf._set_ast(put_fst.a)
 
     return childf
-
-
-
-    # put_fst = self._normalize_code(code, 'expr', parse_params=self.root.parse_params)
-    # put_ast = put_fst.a
-
-    # if extra:
-    #     if isinstance(extra, list):  # list means these types not allowed
-    #         if isinstance(put_ast, tuple(extra)):
-    #             raise NodeTypeError((f'cannot be one of ({", ".join(c.__name__ for c in extra)}) for '
-    #                                  f'{self.a.__class__.__name__}.{field}{f"[{idx}]" if idx else ""}') +
-    #                                 f', got {put_ast.__class__.__name__}')
-
-    #     elif not isinstance(put_ast, extra):  # single AST type or tuple means only these allowed
-    #         raise NodeTypeError((f'expecting a {extra.__name__} for {self.a.__class__.__name__}.{field}'
-    #                              if isinstance(extra, type) else
-    #                              f'expecting one of ({", ".join(c.__name__ for c in extra)}) for '
-    #                              f'{self.a.__class__.__name__}.{field}{f"[{idx}]" if idx else ""}') +
-    #                             f', got {put_ast.__class__.__name__}')
-
-    # ast     = self.a
-    # childf  = child.f
-    # pars    = bool(FST.get_option('pars', options))
-    # delpars = pars or put_fst.is_parenthesized_tuple() is False  # need tuple check because otherwise location would be wrong after
-    # loc     = childf.pars(delpars)  # don't need exc_genexpr_solo=True here because guaranteed not to be this
-
-    # if precedence_require_parens(put_ast, ast, field, idx):
-    #     if not put_fst.is_atom() and (delpars or not childf.pars(ret_npars=True)[1]):
-    #         put_fst.parenthesize()
-
-    # elif pars:  # remove parens only if allowed to
-    #     put_fst.unparenthesize()
-
-    # put_fst.indent_lns(childf.get_indent(), docstr=options.get('docstr'))
-
-    # ln, col, end_ln, end_col = loc
-
-    # lines       = self.root._lines
-    # put_lines   = put_fst._lines
-    # dcol_offset = lines[ln].c2b(col)
-
-    # put_fst.offset(0, 0, ln, dcol_offset)
-    # self.put_src(put_lines, ln, col, end_ln, end_col, True, exclude=childf)
-    # set_ctx(put_ast, ((ctx := getattr(child, 'ctx', None)) and ctx.__class__) or Load)
-    # childf._set_ast(put_ast)
-
-    # return put_ast.f
 
 
 def _put_one_expr_optional(self: 'FST', code: Code | None, idx: int | None, field: str, child: AST,
@@ -237,12 +208,16 @@ def _put_one_expr_optional(self: 'FST', code: Code | None, idx: int | None, fiel
     elif child:  # replace existing node
         return _put_one_expr_required(self, code, idx, field, child, required_extra, **options)
 
-    ln, col, prefix = start_prefix(self)
+    (ln, col, prefix), can_put, can_del = start_prefix(self)
 
     if code is None:  # delete existing node
-        childf = child.f
+        if not can_del:
+            raise ValueError(f'cannot delete {self.a.__class__.__name__}.{field} in this state')
 
-        self.put_src(None, ln, col, childf.end_ln, childf.end_col, True)
+        childf                   = child.f
+        end_ln, end_col, _, _, _ = childf._rpars()
+
+        self.put_src(None, ln, col, end_ln, end_col, True)
         setattr(self.a, field, None)
         childf._unmake_fst_tree()
 
@@ -250,23 +225,19 @@ def _put_one_expr_optional(self: 'FST', code: Code | None, idx: int | None, fiel
 
     # put new node
 
-    prefix = f' {prefix} ' if prefix else ' '
-    loc    = fstloc(ln, col, self.end_ln, self.end_col)
+    if not can_put:
+        raise ValueError(f'cannot create {self.a.__class__.__name__}.{field} in this state')
 
-    put_fst, (ln, col, end_ln, end_col) = _make_expr_fst(self, code, idx, field, required_extra, loc, Load, prefix,
-                                                         **options)
+    prefix  = f' {prefix} ' if prefix else ' '
+    loc     = fstloc(ln, col, self.end_ln, self.end_col)
+    put_fst = _make_expr_fst(self, code, idx, field, required_extra, loc, Load, prefix, **options)
+    put_fst = FST(put_fst.a, self, astfield(field))
 
-    self.put_src(put_fst._lines, ln, col, end_ln, end_col, True)
-    self._make_fst_tree([put_fst := FST(put_fst.a, self, astfield(field))])
+    # self.put_src(put_fst._lines, ln, col, end_ln, end_col, True)
+    self._make_fst_tree([put_fst])
     put_fst.pfield.set(self.a, put_fst.a)
 
     return put_fst
-
-
-
-
-    raise NotImplementedError
-
 
 
 def _put_one_Dict_key(self: 'FST', code: Code | None, idx: int | None, field: str, child: list[AST],
@@ -463,7 +434,7 @@ _PUT_ONE_HANDLERS = {
     (AugAssign, 'value'):                 (_put_one_expr_required, None), # expr
     (AnnAssign, 'target'):                (_put_one_expr_required, (Name, Attribute, Subscript)), # expr
     (AnnAssign, 'annotation'):            (_put_one_expr_required, [Lambda, Yield, YieldFrom, Await, NamedExpr]), # expr
-    # (AnnAssign, 'value'):                 (_put_one_default, None), # expr?                                           - OPTIONAL TAIL: '='
+    (AnnAssign, 'value'):                 (_put_one_expr_optional, (_start_prefix_AnnAssign_value, None)), # expr?      - OPTIONAL TAIL: '='
     # (AnnAssign, 'simple'):                (_put_one_default, None), # int
     (For, 'target'):                      (_put_one_expr_required, (Name, Tuple, List)), # expr
     (For, 'iter'):                        (_put_one_expr_required, None), # expr
@@ -485,8 +456,8 @@ _PUT_ONE_HANDLERS = {
     (AsyncWith, 'body'):                  (_put_one_stmtish, None), # stmt*
     (Match, 'subject'):                   (_put_one_expr_required, None), # expr
     (Match, 'cases'):                     (_put_one_stmtish, None), # match_case*
-    # (Raise, 'exc'):                       (_put_one_default, None), # expr?                                           - CONTINGENT OPTIONAL MIDDLE: ''
-    # (Raise, 'cause'):                     (_put_one_default, None), # expr?                                           - CONTINGENT OPTIONAL TAIL: 'from'
+    (Raise, 'exc'):                       (_put_one_expr_optional, (_start_prefix_Raise_exc, None)), # expr?            - CONTINGENT OPTIONAL MIDDLE: ''
+    (Raise, 'cause'):                     (_put_one_expr_optional, (_start_prefix_Raise_cause, None)), # expr?          - CONTINGENT OPTIONAL TAIL: 'from'
     (Try, 'body'):                        (_put_one_stmtish, None), # stmt*
     (Try, 'handlers'):                    (_put_one_stmtish, None), # excepthandler*
     (Try, 'orelse'):                      (_put_one_stmtish, None), # stmt*

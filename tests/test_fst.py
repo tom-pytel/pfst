@@ -16667,7 +16667,20 @@ Module .. ROOT 0,0 -> 0,10
     .value Name 'new' Load .. 0,7 -> 0,10
 """),
 
+(r"""return (a)""", 'body[0]', None, None, {'raw': False}, r"""new""", r"""return new""", r"""
+Module .. ROOT 0,0 -> 0,10
+  .body[1]
+  0] Return .. 0,0 -> 0,10
+    .value Name 'new' Load .. 0,7 -> 0,10
+"""),
+
 (r"""return a""", 'body[0]', None, None, {'raw': False}, r"""**DEL**""", r"""return""", r"""
+Module .. ROOT 0,0 -> 0,6
+  .body[1]
+  0] Return .. 0,0 -> 0,6
+"""),
+
+(r"""return (a)""", 'body[0]', None, None, {'raw': False}, r"""**DEL**""", r"""return""", r"""
 Module .. ROOT 0,0 -> 0,6
   .body[1]
   0] Return .. 0,0 -> 0,6
@@ -16684,6 +16697,174 @@ Module .. ROOT 0,0 -> 0,10
   .body[1]
   0] Return .. 0,0 -> 0,10
     .value Name 'new' Load .. 0,7 -> 0,10
+"""),
+
+(r"""a: b = c""", 'body[0]', None, None, {'raw': False}, r"""new""", r"""a: b = new""", r"""
+Module .. ROOT 0,0 -> 0,10
+  .body[1]
+  0] AnnAssign .. 0,0 -> 0,10
+    .target Name 'a' Store .. 0,0 -> 0,1
+    .annotation Name 'b' Load .. 0,3 -> 0,4
+    .value Name 'new' Load .. 0,7 -> 0,10
+    .simple 1
+"""),
+
+(r"""a: b = (c)""", 'body[0]', None, None, {'raw': False}, r"""new""", r"""a: b = new""", r"""
+Module .. ROOT 0,0 -> 0,10
+  .body[1]
+  0] AnnAssign .. 0,0 -> 0,10
+    .target Name 'a' Store .. 0,0 -> 0,1
+    .annotation Name 'b' Load .. 0,3 -> 0,4
+    .value Name 'new' Load .. 0,7 -> 0,10
+    .simple 1
+"""),
+
+(r"""a: b = c""", 'body[0]', None, None, {'raw': False}, r"""**DEL**""", r"""a: b""", r"""
+Module .. ROOT 0,0 -> 0,4
+  .body[1]
+  0] AnnAssign .. 0,0 -> 0,4
+    .target Name 'a' Store .. 0,0 -> 0,1
+    .annotation Name 'b' Load .. 0,3 -> 0,4
+    .simple 1
+"""),
+
+(r"""a: b = (c)""", 'body[0]', None, None, {'raw': False}, r"""**DEL**""", r"""a: b""", r"""
+Module .. ROOT 0,0 -> 0,4
+  .body[1]
+  0] AnnAssign .. 0,0 -> 0,4
+    .target Name 'a' Store .. 0,0 -> 0,1
+    .annotation Name 'b' Load .. 0,3 -> 0,4
+    .simple 1
+"""),
+
+(r"""a: b""", 'body[0]', None, None, {'raw': False}, r"""**DEL**""", r"""a: b""", r"""
+Module .. ROOT 0,0 -> 0,4
+  .body[1]
+  0] AnnAssign .. 0,0 -> 0,4
+    .target Name 'a' Store .. 0,0 -> 0,1
+    .annotation Name 'b' Load .. 0,3 -> 0,4
+    .simple 1
+"""),
+
+(r"""a: b""", 'body[0]', None, None, {'raw': False}, r"""new""", r"""a: b = new""", r"""
+Module .. ROOT 0,0 -> 0,10
+  .body[1]
+  0] AnnAssign .. 0,0 -> 0,10
+    .target Name 'a' Store .. 0,0 -> 0,1
+    .annotation Name 'b' Load .. 0,3 -> 0,4
+    .value Name 'new' Load .. 0,7 -> 0,10
+    .simple 1
+"""),
+
+(r"""raise e""", 'body[0]', None, None, {'raw': False}, r"""new""", r"""raise new""", r"""
+Module .. ROOT 0,0 -> 0,9
+  .body[1]
+  0] Raise .. 0,0 -> 0,9
+    .exc Name 'new' Load .. 0,6 -> 0,9
+"""),
+
+(r"""raise (e)""", 'body[0]', None, None, {'raw': False}, r"""new""", r"""raise new""", r"""
+Module .. ROOT 0,0 -> 0,9
+  .body[1]
+  0] Raise .. 0,0 -> 0,9
+    .exc Name 'new' Load .. 0,6 -> 0,9
+"""),
+
+(r"""raise e""", 'body[0]', None, None, {'raw': False}, r"""**DEL**""", r"""raise""", r"""
+Module .. ROOT 0,0 -> 0,5
+  .body[1]
+  0] Raise .. 0,0 -> 0,5
+"""),
+
+(r"""raise (e)""", 'body[0]', None, None, {'raw': False}, r"""**DEL**""", r"""raise""", r"""
+Module .. ROOT 0,0 -> 0,5
+  .body[1]
+  0] Raise .. 0,0 -> 0,5
+"""),
+
+(r"""raise e from cause""", 'body[0]', None, None, {'raw': False}, r"""**DEL**""", r"""**ValueError('cannot delete Raise.exc in this state')**""", r"""
+"""),
+
+(r"""raise""", 'body[0]', None, None, {'raw': False}, r"""**DEL**""", r"""raise""", r"""
+Module .. ROOT 0,0 -> 0,5
+  .body[1]
+  0] Raise .. 0,0 -> 0,5
+"""),
+
+(r"""raise""", 'body[0]', None, None, {'raw': False}, r"""new""", r"""raise new""", r"""
+Module .. ROOT 0,0 -> 0,9
+  .body[1]
+  0] Raise .. 0,0 -> 0,9
+    .exc Name 'new' Load .. 0,6 -> 0,9
+"""),
+
+(r"""raise e from c""", 'body[0]', None, 'cause', {'raw': False}, r"""new""", r"""raise e from new""", r"""
+Module .. ROOT 0,0 -> 0,16
+  .body[1]
+  0] Raise .. 0,0 -> 0,16
+    .exc Name 'e' Load .. 0,6 -> 0,7
+    .cause Name 'new' Load .. 0,13 -> 0,16
+"""),
+
+(r"""raise e from (c)""", 'body[0]', None, 'cause', {'raw': False}, r"""new""", r"""raise e from new""", r"""
+Module .. ROOT 0,0 -> 0,16
+  .body[1]
+  0] Raise .. 0,0 -> 0,16
+    .exc Name 'e' Load .. 0,6 -> 0,7
+    .cause Name 'new' Load .. 0,13 -> 0,16
+"""),
+
+(r"""raise e from c""", 'body[0]', None, 'cause', {'raw': False}, r"""**DEL**""", r"""raise e""", r"""
+Module .. ROOT 0,0 -> 0,7
+  .body[1]
+  0] Raise .. 0,0 -> 0,7
+    .exc Name 'e' Load .. 0,6 -> 0,7
+"""),
+
+(r"""raise e from (c)""", 'body[0]', None, 'cause', {'raw': False}, r"""**DEL**""", r"""raise e""", r"""
+Module .. ROOT 0,0 -> 0,7
+  .body[1]
+  0] Raise .. 0,0 -> 0,7
+    .exc Name 'e' Load .. 0,6 -> 0,7
+"""),
+
+(r"""raise (e) from c""", 'body[0]', None, 'cause', {'raw': False}, r"""**DEL**""", r"""raise (e)""", r"""
+Module .. ROOT 0,0 -> 0,9
+  .body[1]
+  0] Raise .. 0,0 -> 0,9
+    .exc Name 'e' Load .. 0,7 -> 0,8
+"""),
+
+(r"""raise""", 'body[0]', None, 'cause', {'raw': False}, r"""**DEL**""", r"""raise""", r"""
+Module .. ROOT 0,0 -> 0,5
+  .body[1]
+  0] Raise .. 0,0 -> 0,5
+"""),
+
+(r"""raise e""", 'body[0]', None, 'cause', {'raw': False}, r"""**DEL**""", r"""raise e""", r"""
+Module .. ROOT 0,0 -> 0,7
+  .body[1]
+  0] Raise .. 0,0 -> 0,7
+    .exc Name 'e' Load .. 0,6 -> 0,7
+"""),
+
+(r"""raise""", 'body[0]', None, 'cause', {'raw': False}, r"""c""", r"""**ValueError('cannot create Raise.cause in this state')**""", r"""
+"""),
+
+(r"""raise e""", 'body[0]', None, 'cause', {'raw': False}, r"""c""", r"""raise e from c""", r"""
+Module .. ROOT 0,0 -> 0,14
+  .body[1]
+  0] Raise .. 0,0 -> 0,14
+    .exc Name 'e' Load .. 0,6 -> 0,7
+    .cause Name 'c' Load .. 0,13 -> 0,14
+"""),
+
+(r"""raise (e)""", 'body[0]', None, 'cause', {'raw': False}, r"""c""", r"""raise (e) from c""", r"""
+Module .. ROOT 0,0 -> 0,16
+  .body[1]
+  0] Raise .. 0,0 -> 0,16
+    .exc Name 'e' Load .. 0,7 -> 0,8
+    .cause Name 'c' Load .. 0,15 -> 0,16
 """),
 
 ]  # END OF PUT_ONE_DATA

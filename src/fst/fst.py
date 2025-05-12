@@ -1657,7 +1657,7 @@ class FST:
         - `exclude`: `FST` node to stop recursion at and not go into its children (recursion in siblings will not be
             affected).
         - `offset_excluded`: Whether to apply offset to `exclude`d node or not.
-        - `self_`: Whether to offset self or not (will recurse into children unless is `exclude`).
+        - `self_`: Whether to offset self or not (will recurse into children regardless unless is `self` is `exclude`).
 
         **Behavior:**
         ```

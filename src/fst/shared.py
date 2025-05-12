@@ -74,8 +74,9 @@ _AST_DEFAULT_BODY_FIELD  = {cls: field for field, classes in [
     (None,           (Compare,)),
 
     # other single value fields
-    ('value',        (Expr, Return, Assign, TypeAlias, AugAssign, NamedExpr, Await, Yield, YieldFrom,
+    ('value',        (Expr, Return, Assign, TypeAlias, AugAssign, AnnAssign, NamedExpr, Await, Yield, YieldFrom,
                       FormattedValue, Interpolation, Attribute, Subscript, Starred, keyword, MatchValue)),
+    ('exc',          (Raise,)),
     ('test',         (Assert,)),
     ('operand',      (UnaryOp,)),
     # ('elt',          (ListComp, SetComp, GeneratorExp)),  # 'generators' take precedence because name is longer and more annoying to type out
