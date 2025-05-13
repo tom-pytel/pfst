@@ -2,6 +2,7 @@
 
 import re
 from ast import *
+from types import FunctionType
 from typing import Any, Callable, Optional, Union
 
 from .astutil import *
@@ -132,6 +133,19 @@ def _normalize_code_op(code: Code,
     return code
 
 
+def _is_valid_MatchAs_value(ast: AST) -> bool:
+    if isinstance(ast, Constant):
+        return isinstance(ast.value, (str, int, float, complex))
+    if isinstance(ast, Attribute):
+        return True
+    if isinstance(ast, BinOp):
+        return (isinstance(ast.op, Add) and
+                isinstance(l := ast.left, Constant) and isinstance(r := ast.right, Constant) and
+                isinstance(l.value, (int, float)) and isinstance(r.value, complex))
+
+    return False
+
+
 _FieldInfo = tuple[srcwpos, type[expr_context], bool, bool]  # (start, ctx, can_put, can_del)
 
 def _field_info_FunctionDef_returns(self: 'FST', idx: int | None) -> _FieldInfo:
@@ -220,7 +234,7 @@ def _validate_put(self: 'FST', code: Code | None, idx: int | None, field: str,  
         raise IndexError(f'{self.a.__class__.__name__}.{field} does not take an index')
 
     if not can_del and code is None:
-        raise ValueError(f'cannot delete {self.a.__class__.__name__}.{field}{f"[{idx}]" if idx else ""}')
+        raise ValueError(f'cannot delete {self.a.__class__.__name__}.{field}{"" if idx is None else f"[{idx}]"}')
     if options.get('to'):
         raise NodeTypeError(f"cannot put with 'to' to {self.a.__class__.__name__}.{field}")
 
@@ -240,14 +254,19 @@ def _make_expr_fst(self: 'FST', code: Code | None, idx: int | None, field: str,
     if types:
         if isinstance(types, list):  # list means these types not allowed
             if isinstance(put_ast, tuple(types)):
-                raise NodeTypeError(f'{self.a.__class__.__name__}.{field}{f"[{idx}] " if idx else " "}'
+                raise NodeTypeError(f'{self.a.__class__.__name__}.{field}{" " if idx is None else f"[{idx}] "}'
                                     f'cannot be {put_ast.__class__.__name__}')
+
+        elif isinstance(types, FunctionType):
+            if not types(put_ast):
+                raise NodeTypeError(f'invalid value for {self.a.__class__.__name__}.{field}' +
+                                    ('' if idx is None else f'[{idx}]'))
 
         elif not isinstance(put_ast, types):  # single AST type or tuple means only these allowed
             raise NodeTypeError((f'expecting a {types.__name__} for {self.a.__class__.__name__}.{field}'
                                  if isinstance(types, type) else
                                  f'expecting one of ({", ".join(c.__name__ for c in types)}) for '
-                                 f'{self.a.__class__.__name__}.{field}{f"[{idx}]" if idx else ""}') +
+                                 f'{self.a.__class__.__name__}.{field}{"" if idx is None else f"[{idx}]"}') +
                                 f', got {put_ast.__class__.__name__}')
 
     pars    = bool(FST.get_option('pars', options))
@@ -268,12 +287,10 @@ def _make_expr_fst(self: 'FST', code: Code | None, idx: int | None, field: str,
 
     ln, col, end_ln, end_col = target.pars(delpars) if target.is_FST else target
 
-    dcol_offset = self.root._lines[ln].c2b(col)
-
-    put_fst.offset(0, 0, ln, dcol_offset)
-
+    dcol_offset   = self.root._lines[ln].c2b(col)
     params_offset = self.put_src(put_fst._lines, ln, col, end_ln, end_col, True, exclude=self)
 
+    put_fst.offset(0, 0, ln, dcol_offset)
     self.offset(*params_offset, exclude=target, self_=False)
     set_ctx(put_ast, ctx)
 
@@ -289,7 +306,8 @@ def _put_one_expr_required(self: 'FST', code: Code | None, idx: int | None, fiel
         child = _validate_put(self, code, idx, field, child, options)
 
         if not child:
-            raise ValueError(f'cannot replace nonexistent {self.a.__class__.__name__}.{field}{f"[{idx}]" if idx else ""}')
+            raise ValueError(f'cannot replace nonexistent {self.a.__class__.__name__}.{field}' +
+                             ("" if idx is None else f"[{idx}]"))
 
     childf  = child.f
     ctx     = ((ctx := getattr(child, 'ctx', None)) and ctx.__class__) or Load
@@ -401,6 +419,23 @@ def _put_one_Interpolation_value(self: 'FST', code: Code | None, idx: int | None
     return ret
 
 
+def _put_one_MatchValue_value(self: 'FST', code: Code | None, idx: int | None, field: str, child: AST,
+                              extra: tuple[type[AST]] | list[type[AST]] | type[AST] | None,
+                              **options) -> 'FST':
+    """Put MatchValue.value. Need to do this because a standalone MatchValue encompassing a parenthesized constant ends
+    before the closing parenthesis and so doesn't get offset correctly."""
+
+    ret              = _put_one_expr_required(self, code, idx, field, child, _is_valid_MatchAs_value, **options)
+    a                = self.a
+    v                = a.value
+    a.lineno         = v.lineno
+    a.col_offset     = v.col_offset
+    a.end_lineno     = v.end_lineno
+    a.end_col_offset = v.end_col_offset
+
+    return ret
+
+
 def _put_one_identifier_required(self: 'FST', code: Code | None, idx: int | None, field: str, child: str,
                                  extra: str | None, **options) -> str:
     """Put a single required identifier."""
@@ -440,7 +475,7 @@ def _put_one_op(self: 'FST', code: Code | None, idx: int | None, field: str, chi
 
     ln, col, end_ln, end_col = childf.loc
 
-    self.put_src(code._lines, ln, col, end_ln, end_col, True)  # True necessary?
+    self.put_src(code._lines, ln, col, end_ln, end_col, False)
     child.f._set_ast(code.a)
 
     return childf
@@ -678,7 +713,7 @@ _PUT_ONE_HANDLERS = {
     # (match_case, 'pattern'):              (_put_one_default, None), # pattern
     (match_case, 'guard'):                (_put_one_expr_optional, (_field_info_match_case_guard, None)), # expr?       - OPTIONAL TAIL: 'if'
     (match_case, 'body'):                 (_put_one_stmtish, None), # stmt*
-    # (MatchValue, 'value'):                (_put_one_default, None), # expr                                            - limited values, Constant? Name becomes MatchAs
+    (MatchValue, 'value'):                (_put_one_MatchValue_value, None), # expr                                     - limited values, Constant? Name becomes MatchAs
     # (MatchSingleton, 'value'):            (_put_one_default, None), # constant
     # (MatchSequence, 'patterns'):          (_put_one_default, None), # pattern*
     (MatchMapping, 'keys'):               (_put_one_expr_required, (Constant, Attribute)), # expr*                      TODO: XXX are there any others allowed?

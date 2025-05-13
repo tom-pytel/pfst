@@ -1707,7 +1707,7 @@ class FST:
             stack = list(iter_child_nodes(self.a))
 
         lno  = ln + 1
-        colo = (-col if col < 0 else
+        colo = (-col if col <= 0 else  # yes, -0 to not look up 0
                 (l := ls[ln]).c2b(min(col, len(l))) if ln < len(ls := self.root._lines) else 0x7fffffffffffffff)
         fwd  = dln > 0 or (not dln and dcol_offset >= 0)
 
