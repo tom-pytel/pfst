@@ -434,7 +434,7 @@ def _loc_operator(self: 'FST') -> fstloc | None:
         if pos := _next_find(lines, (loc := prev.f.loc).end_ln, loc.end_col, len(lines) - 1, len(lines[-1]), op):
             ln, col = pos
 
-            return fstloc(ln, col, ln, col + len(op) + (not is_binop))
+            return fstloc(ln, col, ln, col + len(op) + (not is_binop))  # 'not is_binop' adds AugAssign '=' len
 
     return None
 

@@ -459,46 +459,43 @@ class FST:
 
         else:
             self.parse_params = kwargs.get('parse_params', _DEFAULT_PARSE_PARAMS)
-            self.indent       = kwargs.get('indent', '?')
+            self.indent       = (('?' if isinstance(ast_or_src, Module) else _DEFAULT_INDENT)
+                                 if (i := kwargs.get('indent')) is None else i)
 
         self._make_fst_tree()
 
         if self.indent == '?':  # infer indentation from source, just use first indentation found for performance, don't try to find most common or anything like that
-            if not isinstance(ast_or_src, Module):
-                self.indent = _DEFAULT_INDENT
+            for a in ast_or_src.body:
+                if isinstance(a, (FunctionDef, AsyncFunctionDef, ClassDef, With, AsyncWith, ExceptHandler,
+                                    match_case)):  # we check ExceptHandler and match_case because they may be supported as standalone parsed elements eventually
+                    indent = a.body[0].f.get_indent()
 
-            else:
-                for a in ast_or_src.body:
-                    if isinstance(a, (FunctionDef, AsyncFunctionDef, ClassDef, With, AsyncWith, ExceptHandler,
-                                      match_case)):  # we check ExceptHandler and match_case because they may be supported as standalone parsed elements eventually
-                        indent = a.body[0].f.get_indent()
+                elif isinstance(a, (For, AsyncFor, While, If)):
+                    if (indent := a.body[0].f.get_indent()) == '?' and (orelse := a.orelse):
+                        if not (indent := orelse[0].f.get_indent()):  # because can be 'elif'
+                            indent = '?'
 
-                    elif isinstance(a, (For, AsyncFor, While, If)):
-                        if (indent := a.body[0].f.get_indent()) == '?' and (orelse := a.orelse):
-                            if not (indent := orelse[0].f.get_indent()):  # because can be 'elif'
-                                indent = '?'
+                elif isinstance(a, (Try, TryStar)):
+                    if (indent := a.body[0].f.get_indent()) == '?':
+                        if not (orelse := a.orelse) or (indent := orelse[0].f.get_indent()) == '?':
+                            if not (finalbody := a.finalbody) or (indent := finalbody[0].f.get_indent()) == '?':
+                                for handler in a.handlers:
+                                    if (indent := handler.body[0].f.get_indent()) != '?':
+                                        break
 
-                    elif isinstance(a, (Try, TryStar)):
-                        if (indent := a.body[0].f.get_indent()) == '?':
-                            if not (orelse := a.orelse) or (indent := orelse[0].f.get_indent()) == '?':
-                                if not (finalbody := a.finalbody) or (indent := finalbody[0].f.get_indent()) == '?':
-                                    for handler in a.handlers:
-                                        if (indent := handler.body[0].f.get_indent()) != '?':
-                                            break
-
-                    elif isinstance(a, Match):
-                        indent = a.cases[0].f.get_indent()
-
-                    else:
-                        continue
-
-                    if indent != '?':
-                        self.indent = indent
-
-                        break
+                elif isinstance(a, Match):
+                    indent = a.cases[0].f.get_indent()
 
                 else:
-                    self.indent = _DEFAULT_INDENT
+                    continue
+
+                if indent != '?':
+                    self.indent = indent
+
+                    break
+
+            else:
+                self.indent = _DEFAULT_INDENT
 
         return self
 

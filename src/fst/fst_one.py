@@ -68,6 +68,9 @@ def _get_one(self: 'FST', idx: int | None, field: str, cut: bool, **options) -> 
 # put
 
 def _code_as_identifier(code: Code) -> str | None:
+
+    # TODO: handle text identifiers with multiple lines, preceding and following comments, line continuations and maybe semicolons? I am going nuts with this, definitely...
+
     if isinstance(code, str):
         return code if is_valid_identifier(code) else None
     if isinstance(code, list):
@@ -79,9 +82,58 @@ def _code_as_identifier(code: Code) -> str | None:
     return code.id if isinstance(code, Name) else None
 
 
-FieldInfo = tuple[srcwpos, type[expr_context], bool, bool]  # (start, ctx, can_put, can_del)
+_normalize_code_str2op = {
+    AugAssign: OPSTR2CLS_AUG,
+    BoolOp:    OPSTR2CLS_BOOL,
+    BinOp:     OPSTR2CLS_BIN,
+    UnaryOp:   OPSTR2CLS_UNARY,
+    Compare:   OPSTR2CLS_CMP,
+    None:      OPSTR2CLSWAUG,
+}
 
-def _field_info_FunctionDef_returns(self: 'FST') -> FieldInfo:
+_normalize_code_ops = {
+    AugAssign: frozenset(OPSTR2CLS_AUG.values()),
+    BoolOp:    frozenset(OPSTR2CLS_BOOL.values()),
+    BinOp:     frozenset(OPSTR2CLS_BIN.values()),
+    UnaryOp:   frozenset(OPSTR2CLS_UNARY.values()),
+    Compare:   frozenset(OPSTR2CLS_CMP.values()),
+    None:      frozenset(OPSTR2CLS.values()),
+}
+
+def _normalize_code_op(code: Code,
+                       target: type[AugAssign] | type[BoolOp] | type[BinOp] | type[UnaryOp] | type[Compare] |
+                       None = None) -> 'FST':
+
+    # TODO: handle text operators with multiple lines, preceding following comments, line continuations and maybe semicolons?
+
+    if isinstance(code, FST):
+        if (src := code.get_src(*code.loc)) not in _normalize_code_str2op[target]:
+            raise NodeTypeError(f'bad operator {src!r}')
+
+    elif isinstance(code, AST):
+        code = FST(code, lines=[(OPCLS2STR_AUG if target is AugAssign else OPCLS2STR).get(code.__class__, '')])
+
+    else:
+        if isinstance(code, list):
+            code = '\n'.join(lines := code)
+        else:
+            lines = code.split('\n')
+
+        if not (cls := _normalize_code_str2op[target].get(code)):
+            raise NodeTypeError(f'bad operator {code!r}')
+
+        code = FST(cls(), lines=lines)
+
+    if code.a.__class__ not in _normalize_code_ops[target]:
+        raise NodeTypeError(f'expecting operator{f" for {target.__name__}" if target else ""}'
+                            f', got {code.a.__class__.__name__}')
+
+    return code
+
+
+_FieldInfo = tuple[srcwpos, type[expr_context], bool, bool]  # (start, ctx, can_put, can_del)
+
+def _field_info_FunctionDef_returns(self: 'FST') -> _FieldInfo:
     if returns := self.a.returns:
         returnsf              = returns.f
         ln, col               = prev.loc[2:] if (prev := returnsf.prev()) else self.loc[:2]
@@ -94,52 +146,52 @@ def _field_info_FunctionDef_returns(self: 'FST') -> FieldInfo:
 
     return srcwpos(end_ln, end_col + 1, ' -> '), Load, True, True
 
-def _field_info_Return_value(self: 'FST') -> FieldInfo:
+def _field_info_Return_value(self: 'FST') -> _FieldInfo:
     return srcwpos((loc := self.loc).ln, loc.col + 6, ' '), Load, True, True
 
-def _field_info_AnnAssign_value(self: 'FST') -> FieldInfo:
+def _field_info_AnnAssign_value(self: 'FST') -> _FieldInfo:
     return srcwpos((loc := self.a.annotation.f.pars()).end_ln, loc.end_col, ' = '), Load, True, True
 
-def _field_info_Raise_exc(self: 'FST') -> FieldInfo:
+def _field_info_Raise_exc(self: 'FST') -> _FieldInfo:
     return srcwpos((loc := self.loc).ln, loc.col + 5, ' '), Load, True, not self.a.cause
 
-def _field_info_Raise_cause(self: 'FST') -> FieldInfo:
+def _field_info_Raise_cause(self: 'FST') -> _FieldInfo:
     if exc := self.a.exc:
         return srcwpos((loc := exc.f.pars()).end_ln, loc.end_col, ' from '), Load, bool(exc), True
     else:
         return srcwpos((loc := self.loc).ln, loc.col + 5, ' from '), Load, bool(exc), True
 
-def _field_info_Assert_msg(self: 'FST') -> FieldInfo:
+def _field_info_Assert_msg(self: 'FST') -> _FieldInfo:
     return srcwpos((loc := self.a.test.f.pars()).end_ln, loc.end_col, ', '), Load, True, True
 
-def _field_info_Yield_value(self: 'FST') -> FieldInfo:
+def _field_info_Yield_value(self: 'FST') -> _FieldInfo:
     return srcwpos((loc := self.loc).ln, loc.col + 5, ' '), Load, True, True
 
-def _field_info_arg_annotation(self: 'FST') -> FieldInfo:
+def _field_info_arg_annotation(self: 'FST') -> _FieldInfo:
     return srcwpos((loc := self.loc).ln, loc.col + len(self.a.arg), ': '), Load, True, True
 
-def _field_info_withitem_optional_vars(self: 'FST') -> FieldInfo:
+def _field_info_withitem_optional_vars(self: 'FST') -> _FieldInfo:
     return srcwpos((loc := self.a.context_expr.f.pars()).end_ln, loc.end_col, ' as '), Store, True, True
 
-def _field_info_match_case_guard(self: 'FST') -> FieldInfo:
+def _field_info_match_case_guard(self: 'FST') -> _FieldInfo:
     return srcwpos((loc := self.a.pattern.f.pars()).end_ln, loc.end_col, ' if '), Load, True, True
 
-def _field_info_TypeVar_bound(self: 'FST') -> FieldInfo:
+def _field_info_TypeVar_bound(self: 'FST') -> _FieldInfo:
     return srcwpos((loc := self.loc).ln, loc.col + len(self.a.name), ': '), Load, True, True
 
-def _field_info_TypeVar_default_value(self: 'FST') -> FieldInfo:
+def _field_info_TypeVar_default_value(self: 'FST') -> _FieldInfo:
     if bound := self.a.bound:
         return srcwpos((loc := bound.f.pars()).end_ln, loc.end_col, ' = '), Load, True, True
     else:
         return srcwpos((loc := self.loc).ln, loc.col + len(self.a.name), ' = '), Load, True, True
 
-def _field_info_ParamSpec_default_value(self: 'FST') -> FieldInfo:
+def _field_info_ParamSpec_default_value(self: 'FST') -> _FieldInfo:
     ln, col, end_ln, end_col = self.loc
     ln, col, src             = _next_find_re(self.root._lines, ln, col + 2, end_ln, end_col, _re_identifier)  # + '**', identifier must be there
 
     return srcwpos(ln, col + len(src), ' = '), Load, True, True
 
-def _field_info_TypeVarTuple_default_value(self: 'FST') -> FieldInfo:
+def _field_info_TypeVarTuple_default_value(self: 'FST') -> _FieldInfo:
     ln, col, end_ln, end_col = self.loc
     ln, col, src             = _next_find_re(self.root._lines, ln, col + 1, end_ln, end_col, _re_identifier)  # + '*', identifier must be there
 
@@ -147,7 +199,7 @@ def _field_info_TypeVarTuple_default_value(self: 'FST') -> FieldInfo:
 
 
 def _make_expr_fst(self: 'FST', code: Code | None, idx: int | None, field: str,
-                   extra: tuple[type[AST]] | list[type[AST]] | type[AST] | None,
+                   types: tuple[type[AST]] | list[type[AST]] | type[AST] | None,  # single or tuple means allow only these, list means do not allow these
                    target: Union['FST', fstloc], ctx: type[expr_context], prefix: str  = '',
                    **options) -> 'FST':
     """Make an expression `FST` from `Code` for a field/idx containing an existing node creating a new one. Takes care
@@ -156,16 +208,16 @@ def _make_expr_fst(self: 'FST', code: Code | None, idx: int | None, field: str,
     put_fst = self._normalize_code(code, 'expr', parse_params=self.root.parse_params)
     put_ast = put_fst.a
 
-    if extra:
-        if isinstance(extra, list):  # list means these types not allowed
-            if isinstance(put_ast, tuple(extra)):
+    if types:
+        if isinstance(types, list):  # list means these types not allowed
+            if isinstance(put_ast, tuple(types)):
                 raise NodeTypeError(f'{self.a.__class__.__name__}.{field}{f"[{idx}] " if idx else " "}'
                                     f'cannot be {put_ast.__class__.__name__}')
 
-        elif not isinstance(put_ast, extra):  # single AST type or tuple means only these allowed
-            raise NodeTypeError((f'expecting a {extra.__name__} for {self.a.__class__.__name__}.{field}'
-                                 if isinstance(extra, type) else
-                                 f'expecting one of ({", ".join(c.__name__ for c in extra)}) for '
+        elif not isinstance(put_ast, types):  # single AST type or tuple means only these allowed
+            raise NodeTypeError((f'expecting a {types.__name__} for {self.a.__class__.__name__}.{field}'
+                                 if isinstance(types, type) else
+                                 f'expecting one of ({", ".join(c.__name__ for c in types)}) for '
                                  f'{self.a.__class__.__name__}.{field}{f"[{idx}]" if idx else ""}') +
                                 f', got {put_ast.__class__.__name__}')
 
@@ -201,7 +253,7 @@ def _make_expr_fst(self: 'FST', code: Code | None, idx: int | None, field: str,
 
 def _put_one_expr_required(self: 'FST', code: Code | None, idx: int | None, field: str, child: list[AST] | AST | None,
                            extra: tuple[type[AST]] | list[type[AST]] | type[AST] | None,
-                           **options) -> Optional['FST']:
+                           **options) -> 'FST':
     """Put a single required expression. Can be standalone or as part of sequence."""
 
     if isinstance(child, list):
@@ -278,7 +330,6 @@ def _put_one_expr_optional(self: 'FST', code: Code | None, idx: int | None, fiel
     else:
         _, _, end_ln, end_col = self.pars()
 
-    # prefix  = ' ' if not prefix else f'{prefix} ' if prefix in ',:' else f' {prefix} '
     loc     = fstloc(ln, col, end_ln, end_col)
     put_fst = _make_expr_fst(self, code, idx, field, required_extra, loc, ctx, prefix, **options)
     put_fst = FST(put_fst.a, self, astfield(field))
@@ -303,7 +354,7 @@ def _put_one_Dict_key(self: 'FST', code: Code | None, idx: int | None, field: st
 
 def _put_one_Compare_None(self: 'FST', code: Code | None, idx: int | None, field: str, child: None,
                           extra: tuple[type[AST]] | list[type[AST]] | type[AST] | None,
-                          **options) -> Optional['FST']:
+                          **options) -> 'FST':
 
     """Put to combined [Compare.left, Compare.comparators] using this total indexing."""
 
@@ -326,13 +377,75 @@ def _put_one_Compare_None(self: 'FST', code: Code | None, idx: int | None, field
 
 def _put_one_Interpolation_value(self: 'FST', code: Code | None, idx: int | None, field: str, child: AST,
                                  extra: tuple[type[AST]] | list[type[AST]] | type[AST] | None,
-                                 **options) -> Optional['FST']:
+                                 **options) -> 'FST':
     """Put Interpolation.value. Do normal expr put and if successful copy source to `.str` attribute."""
 
     ret        = _put_one_expr_required(self, code, idx, field, child, extra, **options)
     self.a.str = self.get_src(*ret.loc)
 
     return ret
+
+
+def _put_one_identifier_required(self: 'FST', code: Code | None, idx: int | None, field: str, child: str,
+                                 extra: str | None, **options) -> str:
+    """Put a single required identifier."""
+
+    if code is None:
+        raise ValueError(f'cannot delete {self.a.__class__.__name__}.{field}')
+    if idx is not None:
+        raise IndexError(f'{self.a.__class__.__name__}.{field} does not take an index')
+    if options.get('to'):
+        raise NodeTypeError(f"cannot put with 'to' to {self.a.__class__.__name__}.{field}")
+    if not (code := _code_as_identifier(code)):
+        raise NodeTypeError(f"expecting identifier for {self.a.__class__.__name__}.{field}")
+
+    ln, col, end_ln, end_col = self.loc
+    lines                    = self.root._lines
+
+    if not extra:
+        m            = _re_identifier.match(lines[ln], col, end_col)  # must be there
+        col, end_col = m.span()
+
+    else:
+        ln, col      = _next_find(lines, ln, col, end_ln, end_col, extra, lcont=None)  # must be there
+        ln, col, src =  _next_find_re(lines, ln, col + len(extra), end_ln, end_col, _re_identifier, lcont=None)  # must be there
+        end_ln       = ln
+        end_col      = col + len(src)
+
+    self.put_src(code, ln, col, end_ln, end_col, True)
+
+    setattr(self.a, field, code)
+
+    return code
+
+
+def _put_one_op(self: 'FST', code: Code | None, idx: int | None, field: str, child: str,
+                extra: tuple[type[AST], str], **options) -> 'FST':
+    """Put a single opertation, with or without '=' for AugAssign."""
+
+    if isinstance(child, list):
+        if idx is None:
+            raise IndexError(f'{self.a.__class__.__name__}.{field} needs an index')
+
+        child = child[idx]
+
+    elif idx is not None:
+        raise IndexError(f'{self.a.__class__.__name__}.{field} does not take an index')
+
+    if code is None:
+        raise ValueError(f'cannot delete {self.a.__class__.__name__}.{field}')
+    if options.get('to'):
+        raise NodeTypeError(f"cannot put with 'to' to {self.a.__class__.__name__}.{field}")
+
+    code   = _normalize_code_op(code, self.a.__class__)
+    childf = child.f
+
+    ln, col, end_ln, end_col = childf.loc
+
+    self.put_src(code._lines, ln, col, end_ln, end_col, True)  # True necessary?
+    child.f._set_ast(code.a)
+
+    return childf
 
 
 def _put_one_stmtish(self: 'FST', code: Code | None, idx: int | None, field: str, child: list[AST], extra: None,
@@ -352,39 +465,6 @@ def _put_one_tuple_list_or_set(self: 'FST', code: Code | None, idx: int | None, 
                                       **options)
 
     return None if code is None else getattr(self.a, field)[idx].f
-
-
-def _put_one_identifier_required(self: 'FST', code: Code | None, idx: int | None, field: str, child: str,
-                                 extra: str | None, **options) -> str:
-    """Put a single required identifier."""
-
-    if code is None:
-        raise ValueError(f'cannot delete {self.a.__class__.__name__}.{field}')
-    if idx is not None:
-        raise IndexError(f'{self.a.__class__.__name__}.{field} does not take an index')
-    if options.get('to'):
-        raise NodeTypeError(f"cannot put with 'to' to {self.a.__class__.__name__}.{field}")
-    if not (code := _code_as_identifier(code)):
-        raise NodeTypeError(f"expecting identifier for {self.a.__class__.__name__}.{field}")
-
-    ln, col, end_ln, end_col = self.loc  # specifically don't want possible decorator on func or class
-    lines                    = self.root._lines
-
-    if not extra:
-        m            = _re_identifier.match(lines[ln], col, end_col)  # must be there
-        col, end_col = m.span()
-
-    else:
-        ln, col      = _next_find(lines, ln, col, end_ln, end_col, extra, lcont=None)  # must be there
-        ln, col, src =  _next_find_re(lines, ln, col + len(extra), end_ln, end_col, _re_identifier, lcont=None)  # must be there
-        end_ln       = ln
-        end_col      = col + len(src)
-
-    self.put_src(code, ln, col, end_ln, end_col, True)
-
-    setattr(self.a, field, code)
-
-    return code
 
 
 def _put_one(self: 'FST', code: Code | None, idx: int | None, field: str | None, **options) -> Optional['FST']:
@@ -456,20 +536,20 @@ _PUT_ONE_HANDLERS = {
     # (FunctionDef, 'decorator_list'):      (_put_one_default, None), # expr*                                           - slice
     (FunctionDef, 'name'):                (_put_one_identifier_required, 'def'), # identifier
     # (FunctionDef, 'type_params'):         (_put_one_default, None), # type_param*                                     - slice
-    # (FunctionDef, 'args'):                (_put_one_default, None), # arguments                                       - need special parse
+    # (FunctionDef, 'args'):                (_put_one_default, None), # arguments
     (FunctionDef, 'returns'):             (_put_one_expr_optional, (_field_info_FunctionDef_returns, None)), # expr?    - SPECIAL LOCATION OPTIONAL TAIL: '->'                                           - SPECIAL LOCATION CASE!
     (FunctionDef, 'body'):                (_put_one_stmtish, None), # stmt*
     # (AsyncFunctionDef, 'decorator_list'): (_put_one_default, None), # expr*                                           - slice
     (AsyncFunctionDef, 'name'):           (_put_one_identifier_required, 'def'), # identifier
     # (AsyncFunctionDef, 'type_params'):    (_put_one_default, None), # type_param*                                     - slice
-    # (AsyncFunctionDef, 'args'):           (_put_one_default, None), # arguments                                       - need special parse
+    # (AsyncFunctionDef, 'args'):           (_put_one_default, None), # arguments
     (AsyncFunctionDef, 'returns'):        (_put_one_expr_optional, (_field_info_FunctionDef_returns, None)), # expr?    - SPECIAL LOCATION OPTIONAL TAIL: '->'
     (AsyncFunctionDef, 'body'):           (_put_one_stmtish, None), # stmt*
     # (ClassDef, 'decorator_list'):         (_put_one_default, None), # expr*                                           - slice
     (ClassDef, 'name'):                   (_put_one_identifier_required, 'class'), # identifier
     # (ClassDef, 'type_params'):            (_put_one_default, None), # type_param*                                     - slice
     # (ClassDef, 'bases'):                  (_put_one_default, None), # expr*                                           - slice
-    # (ClassDef, 'keywords'):               (_put_one_default, None), # keyword*
+    # (ClassDef, 'keywords'):               (_put_one_default, None), # keyword*                                        - slice
     (ClassDef, 'body'):                   (_put_one_stmtish, None), # stmt*
     (Return, 'value'):                    (_put_one_expr_optional, (_field_info_Return_value, None)), # expr?           - OPTIONAL TAIL: ''
     # (Delete, 'targets'):                  (_put_one_default, None), # expr*                                           - slice
@@ -479,7 +559,7 @@ _PUT_ONE_HANDLERS = {
     # (TypeAlias, 'type_params'):           (_put_one_default, None), # type_param*                                     - slice
     (TypeAlias, 'value'):                 (_put_one_expr_required, None), # expr
     (AugAssign, 'target'):                (_put_one_expr_required, (Name, Attribute, Subscript)), # expr
-    # (AugAssign, 'op'):                    (_put_one_default, None), # operator
+    (AugAssign, 'op'):                    (_put_one_op, None), # operator
     (AugAssign, 'value'):                 (_put_one_expr_required, None), # expr
     (AnnAssign, 'target'):                (_put_one_expr_required, (Name, Attribute, Subscript)), # expr
     (AnnAssign, 'annotation'):            (_put_one_expr_required, [Lambda, Yield, YieldFrom, Await, NamedExpr]), # expr
@@ -498,9 +578,9 @@ _PUT_ONE_HANDLERS = {
     (If, 'test'):                         (_put_one_expr_required, None), # expr
     (If, 'body'):                         (_put_one_stmtish, None), # stmt*
     (If, 'orelse'):                       (_put_one_stmtish, None), # stmt*
-    # (With, 'items'):                      (_put_one_default, None), # withitem*
+    # (With, 'items'):                      (_put_one_default, None), # withitem*                                       - slice
     (With, 'body'):                       (_put_one_stmtish, None), # stmt*
-    # (AsyncWith, 'items'):                 (_put_one_default, None), # withitem*
+    # (AsyncWith, 'items'):                 (_put_one_default, None), # withitem*                                       - slice
     (AsyncWith, 'body'):                  (_put_one_stmtish, None), # stmt*
     (Match, 'subject'):                   (_put_one_expr_required, None), # expr
     (Match, 'cases'):                     (_put_one_stmtish, None), # match_case*
@@ -527,9 +607,9 @@ _PUT_ONE_HANDLERS = {
     (NamedExpr, 'target'):                (_put_one_expr_required, Name), # expr
     (NamedExpr, 'value'):                 (_put_one_expr_required, None), # expr
     (BinOp, 'left'):                      (_put_one_expr_required, None), # expr
-    # (BinOp, 'op'):                        (_put_one_default, None), # operator
+    (BinOp, 'op'):                        (_put_one_op, None), # operator
     (BinOp, 'right'):                     (_put_one_expr_required, None), # expr
-    # (UnaryOp, 'op'):                      (_put_one_default, None), # unaryop
+    (UnaryOp, 'op'):                      (_put_one_op, None), # unaryop
     (UnaryOp, 'operand'):                 (_put_one_expr_required, None), # expr
     # (Lambda, 'args'):                     (_put_one_default, None), # arguments                                       - need special parse
     (Lambda, 'body'):                     (_put_one_expr_required, None), # expr
@@ -552,7 +632,7 @@ _PUT_ONE_HANDLERS = {
     (Yield, 'value'):                     (_put_one_expr_optional, (_field_info_Yield_value, None)), # expr?            - OPTIONAL TAIL: ''
     (YieldFrom, 'value'):                 (_put_one_expr_required, None), # expr
     (Compare, 'left'):                    (_put_one_expr_required, None), # expr
-    # (Compare, 'ops'):                     (_put_one_default, None), # cmpop*
+    (Compare, 'ops'):                     (_put_one_op, None), # cmpop*
     (Compare, 'comparators'):             (_put_one_expr_required, None), # expr*
     (Compare, None):                      (_put_one_Compare_None, None), # expr*
     (Call, 'func'):                       (_put_one_expr_required, None), # expr
@@ -625,6 +705,7 @@ _PUT_ONE_HANDLERS = {
 
     # NOT DONE:
     # =========
+
     # (Module, 'type_ignores'):             (_put_one_default, None), # type_ignore*
 
     # (FunctionType, 'argtypes'):           (_put_one_default, None), # expr*

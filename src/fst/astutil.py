@@ -12,7 +12,9 @@ from enum import IntEnum, auto
 from_iterable = chain.from_iterable
 
 __all__ = [
-    'FIELDS', 'AST_FIELDS', 'OPCLS2STR', 'OPSTR2CLS',
+    'FIELDS', 'AST_FIELDS',
+    'OPSTR2CLS_UNARY', 'OPSTR2CLS_BIN', 'OPSTR2CLS_CMP', 'OPSTR2CLS_BOOL', 'OPSTR2CLS_AUG',
+    'OPSTR2CLS', 'OPSTR2CLSWAUG', 'OPCLS2STR', 'OPCLS2STR_AUG',
     'bistr',
     'is_valid_identifier', 'reduce_ast', 'get_field', 'has_type_comments', 'is_parsable', 'get_parse_mode',
     'WalkFail', 'walk2', 'compare_asts', 'copy_attributes', 'copy_ast', 'set_ctx',
@@ -266,42 +268,67 @@ AST_FIELDS = {cls: tuple(f for f, t in fields
                          not t.startswith('type_ignore'))
               for cls, fields in FIELDS.items()}  ; """Mapping of `AST` class to tuple of fields which may contain an `AST` node or `list` of `AST` nodes or `None` if optional `AST` node."""
 
-OPCLS2STR = {
-    Invert:   '~',
-    Not:      'not',
-    UAdd:     '+',
-    USub:     '-',
+OPSTR2CLS_UNARY = {
+    '~':      Invert,
+    'not':    Not,
+    '+':      UAdd,
+    '-':      USub,
+}
 
-    Add:      '+',
-    Sub:      '-',
-    Mult:     '*',
-    MatMult:  '@',
-    Div:      '/',
-    Mod:      '%',
-    LShift:   '<<',
-    RShift:   '>>',
-    BitOr:    '|',
-    BitXor:   '^',
-    BitAnd:   '&',
-    FloorDiv: '//',
-    Pow:      '**',
+OPSTR2CLS_BIN = {
+    '+':      Add,
+    '-':      Sub,
+    '*':      Mult,
+    '@':      MatMult,
+    '/':      Div,
+    '%':      Mod,
+    '<<':     LShift,
+    '>>':     RShift,
+    '|':      BitOr,
+    '^':      BitXor,
+    '&':      BitAnd,
+    '//':     FloorDiv,
+    '**':     Pow,
+}
 
-    Eq:       '==',
-    NotEq:    '!=',
-    Lt:       '<',
-    LtE:      '<=',
-    Gt:       '>',
-    GtE:      '>=',
-    Is:       'is',
-    IsNot:    'is not',
-    In:       'in',
-    NotIn:    'not in',
+OPSTR2CLS_CMP = {
+    '==':     Eq,
+    '!=':     NotEq,
+    '<':      Lt,
+    '<=':     LtE,
+    '>':      Gt,
+    '>=':     GtE,
+    'is':     Is,
+    'is not': IsNot,
+    'in':     In,
+    'not in': NotIn,
+}
 
-    And:      'and',
-    Or:       'or',
-}  ; "Mapping of operator AST class to operator string, e.g. `ast.Add`: '+'."
+OPSTR2CLS_BOOL = {
+    'and':    And,
+    'or':     Or,
+}
 
-OPSTR2CLS = {v: k for k, v in OPCLS2STR.items()}  ; """Mapping of operator string to operator AST class, e.g. '+': `ast.Add`. """
+OPSTR2CLS_AUG = {
+    '+=':     Add,
+    '-=':     Sub,
+    '*=':     Mult,
+    '@=':     MatMult,
+    '/=':     Div,
+    '%=':     Mod,
+    '<<=':    LShift,
+    '>>=':    RShift,
+    '|=':     BitOr,
+    '^=':     BitXor,
+    '&=':     BitAnd,
+    '//=':    FloorDiv,
+    '**=':    Pow,
+}  ; """Mapping of operator string with '=' suffix to binary operator AST class for AugAssign, e.g. '+=': `ast.Add`."""
+
+OPSTR2CLS     = {**OPSTR2CLS_UNARY, **OPSTR2CLS_BIN, **OPSTR2CLS_CMP, **OPSTR2CLS_BOOL}  ; """Mapping of operator string to operator AST class, e.g. '+': `ast.Add`. Unary '-' and '+' are overridden by the binary versions."""
+OPSTR2CLSWAUG = {**OPSTR2CLS, **OPSTR2CLS}  ; """Mapping of all operator strings to operator AST class including AugAssign operators."""
+OPCLS2STR     = {v: k for d in (OPSTR2CLS_UNARY, OPSTR2CLS_BIN, OPSTR2CLS_CMP, OPSTR2CLS_BOOL) for k, v in d.items()}  ; "Mapping of operator AST class to operator string, e.g. `ast.Add`: '+'."
+OPCLS2STR_AUG = {v: k for k, v in OPSTR2CLS_AUG.items()}  ; "Mapping of operator AST class to operator string mapping to augmented operator strings, e.g. `ast.Add`: '+='."
 
 
 _re_identifier = re.compile(r'^[^\d\W]\w*$')
