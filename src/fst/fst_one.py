@@ -134,7 +134,7 @@ def _normalize_code_op(code: Code,
 
 _FieldInfo = tuple[srcwpos, type[expr_context], bool, bool]  # (start, ctx, can_put, can_del)
 
-def _field_info_FunctionDef_returns(self: 'FST') -> _FieldInfo:
+def _field_info_FunctionDef_returns(self: 'FST', idx: int | None) -> _FieldInfo:
     if returns := self.a.returns:
         returnsf              = returns.f
         ln, col               = prev.loc[2:] if (prev := returnsf.prev()) else self.loc[:2]
@@ -147,52 +147,58 @@ def _field_info_FunctionDef_returns(self: 'FST') -> _FieldInfo:
 
     return srcwpos(end_ln, end_col + 1, ' -> '), Load, True, True
 
-def _field_info_Return_value(self: 'FST') -> _FieldInfo:
+def _field_info_Return_value(self: 'FST', idx: int | None) -> _FieldInfo:
     return srcwpos((loc := self.loc).ln, loc.col + 6, ' '), Load, True, True
 
-def _field_info_AnnAssign_value(self: 'FST') -> _FieldInfo:
+def _field_info_AnnAssign_value(self: 'FST', idx: int | None) -> _FieldInfo:
     return srcwpos((loc := self.a.annotation.f.pars()).end_ln, loc.end_col, ' = '), Load, True, True
 
-def _field_info_Raise_exc(self: 'FST') -> _FieldInfo:
+def _field_info_Raise_exc(self: 'FST', idx: int | None) -> _FieldInfo:
     return srcwpos((loc := self.loc).ln, loc.col + 5, ' '), Load, True, not self.a.cause
 
-def _field_info_Raise_cause(self: 'FST') -> _FieldInfo:
+def _field_info_Raise_cause(self: 'FST', idx: int | None) -> _FieldInfo:
     if exc := self.a.exc:
         return srcwpos((loc := exc.f.pars()).end_ln, loc.end_col, ' from '), Load, bool(exc), True
     else:
         return srcwpos((loc := self.loc).ln, loc.col + 5, ' from '), Load, bool(exc), True
 
-def _field_info_Assert_msg(self: 'FST') -> _FieldInfo:
+def _field_info_Assert_msg(self: 'FST', idx: int | None) -> _FieldInfo:
     return srcwpos((loc := self.a.test.f.pars()).end_ln, loc.end_col, ', '), Load, True, True
 
-def _field_info_Yield_value(self: 'FST') -> _FieldInfo:
+def _field_info_Yield_value(self: 'FST', idx: int | None) -> _FieldInfo:
     return srcwpos((loc := self.loc).ln, loc.col + 5, ' '), Load, True, True
 
-def _field_info_arg_annotation(self: 'FST') -> _FieldInfo:
+def _field_info_arguments_kw_defaults(self: 'FST', idx: int | None) -> _FieldInfo:
+    if ann := (arg := self.a.kwonlyargs[idx]).annotation:
+        return srcwpos((loc := ann.f.pars()).end_ln, loc.end_col, ' = '), Load, True, True
+    else:
+        return srcwpos((loc := arg.f.loc).ln, loc.col + len(arg.arg), '='), Load, True, True
+
+def _field_info_arg_annotation(self: 'FST', idx: int | None) -> _FieldInfo:
     return srcwpos((loc := self.loc).ln, loc.col + len(self.a.arg), ': '), Load, True, True
 
-def _field_info_withitem_optional_vars(self: 'FST') -> _FieldInfo:
+def _field_info_withitem_optional_vars(self: 'FST', idx: int | None) -> _FieldInfo:
     return srcwpos((loc := self.a.context_expr.f.pars()).end_ln, loc.end_col, ' as '), Store, True, True
 
-def _field_info_match_case_guard(self: 'FST') -> _FieldInfo:
+def _field_info_match_case_guard(self: 'FST', idx: int | None) -> _FieldInfo:
     return srcwpos((loc := self.a.pattern.f.pars()).end_ln, loc.end_col, ' if '), Load, True, True
 
-def _field_info_TypeVar_bound(self: 'FST') -> _FieldInfo:
+def _field_info_TypeVar_bound(self: 'FST', idx: int | None) -> _FieldInfo:
     return srcwpos((loc := self.loc).ln, loc.col + len(self.a.name), ': '), Load, True, True
 
-def _field_info_TypeVar_default_value(self: 'FST') -> _FieldInfo:
+def _field_info_TypeVar_default_value(self: 'FST', idx: int | None) -> _FieldInfo:
     if bound := self.a.bound:
         return srcwpos((loc := bound.f.pars()).end_ln, loc.end_col, ' = '), Load, True, True
     else:
         return srcwpos((loc := self.loc).ln, loc.col + len(self.a.name), ' = '), Load, True, True
 
-def _field_info_ParamSpec_default_value(self: 'FST') -> _FieldInfo:
+def _field_info_ParamSpec_default_value(self: 'FST', idx: int | None) -> _FieldInfo:
     ln, col, end_ln, end_col = self.loc
     ln, col, src             = _next_find_re(self.root._lines, ln, col + 2, end_ln, end_col, _re_identifier)  # + '**', identifier must be there
 
     return srcwpos(ln, col + len(src), ' = '), Load, True, True
 
-def _field_info_TypeVarTuple_default_value(self: 'FST') -> _FieldInfo:
+def _field_info_TypeVarTuple_default_value(self: 'FST', idx: int | None) -> _FieldInfo:
     ln, col, end_ln, end_col = self.loc
     ln, col, src             = _next_find_re(self.root._lines, ln, col + 1, end_ln, end_col, _re_identifier)  # + '*', identifier must be there
 
@@ -276,13 +282,14 @@ def _make_expr_fst(self: 'FST', code: Code | None, idx: int | None, field: str,
 
 def _put_one_expr_required(self: 'FST', code: Code | None, idx: int | None, field: str, child: list[AST] | AST | None,
                            extra: tuple[type[AST]] | list[type[AST]] | type[AST] | None,
-                           **options) -> 'FST':
+                           validate: bool = True, **options) -> 'FST':
     """Put a single required expression. Can be standalone or as part of sequence."""
 
-    child = _validate_put(self, code, idx, field, child, options)
+    if validate:
+        child = _validate_put(self, code, idx, field, child, options)
 
-    if not child:
-        raise ValueError(f'cannot replace nonexistent {self.a.__class__.__name__}.{field}{f"[{idx}]" if idx else ""}')
+        if not child:
+            raise ValueError(f'cannot replace nonexistent {self.a.__class__.__name__}.{field}{f"[{idx}]" if idx else ""}')
 
     childf  = child.f
     ctx     = ((ctx := getattr(child, 'ctx', None)) and ctx.__class__) or Load
@@ -298,19 +305,20 @@ def _put_one_expr_optional(self: 'FST', code: Code | None, idx: int | None, fiel
                                Callable[['FST'], srcwpos],
                                tuple[type[AST]] | list[type[AST]] | type[AST] | None,
                            ], **options) -> Optional['FST']:
-    """Put new, replace or delete an optional expression. Only standalone"""
+    """Put new, replace or delete an optional expression."""
+
+    child = _validate_put(self, code, idx, field, child, options, can_del=True)
 
     field_info, required_extra = extra
 
-    if code is not None and child:  # replace existing node
-        return _put_one_expr_required(self, code, idx, field, child, required_extra, **options)
+    if code is None:
+        if not child:  # delete nonexistent node, noop
+            return None
 
-    _validate_put(self, code, idx, field, child, options, can_del=True)
+    elif child:  # replace existing node
+        return _put_one_expr_required(self, code, idx, field, child, required_extra, False, **options)
 
-    if code is None and not child:  # delete nonexistent node, noop
-        return None
-
-    (ln, col, prefix), ctx, can_put, can_del = field_info(self)
+    (ln, col, prefix), ctx, can_put, can_del = field_info(self, idx)
 
     if code is None:  # delete existing node
         if not can_del:
@@ -320,7 +328,7 @@ def _put_one_expr_optional(self: 'FST', code: Code | None, idx: int | None, fiel
         _, _, end_ln, end_col = childf.pars()
 
         self.put_src(None, ln, col, end_ln, end_col, True)
-        setattr(self.a, field, None)
+        set_field(self.a, None, field, idx)
         childf._unmake_fst_tree()
 
         return None
@@ -339,7 +347,7 @@ def _put_one_expr_optional(self: 'FST', code: Code | None, idx: int | None, fiel
 
     loc     = fstloc(ln, col, end_ln, end_col)
     put_fst = _make_expr_fst(self, code, idx, field, required_extra, loc, ctx, prefix, **options)
-    put_fst = FST(put_fst.a, self, astfield(field))
+    put_fst = FST(put_fst.a, self, astfield(field, idx))
 
     self._make_fst_tree([put_fst])
     put_fst.pfield.set(self.a, put_fst.a)
@@ -657,7 +665,7 @@ _PUT_ONE_HANDLERS = {
     (arguments, 'defaults'):              (_put_one_expr_required, None), # expr*
     # (arguments, 'vararg'):                (_put_one_default, None), # arg?
     # (arguments, 'kwonlyargs'):            (_put_one_default, None), # arg*
-    # (arguments, 'kw_defaults'):           (_put_one_default, None), # expr*                                           - can have None with special rules
+    (arguments, 'kw_defaults'):           (_put_one_expr_optional, (_field_info_arguments_kw_defaults, None)), # expr*  - can have None with special rules
     # (arguments, 'kwarg'):                 (_put_one_default, None), # arg?
     (arg, 'arg'):                         (_put_one_identifier_required, None), # identifier
     (arg, 'annotation'):                  (_put_one_expr_optional, (_field_info_arg_annotation, [Lambda, Yield, YieldFrom, Await, NamedExpr])), # expr?  - OPTIONAL TAIL: ':' - [Lambda, Yield, YieldFrom, Await, NamedExpr]

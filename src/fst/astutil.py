@@ -16,7 +16,7 @@ __all__ = [
     'OPSTR2CLS_UNARY', 'OPSTR2CLS_BIN', 'OPSTR2CLS_CMP', 'OPSTR2CLS_BOOL', 'OPSTR2CLS_AUG',
     'OPSTR2CLS', 'OPSTR2CLSWAUG', 'OPCLS2STR', 'OPCLS2STR_AUG',
     'bistr',
-    'is_valid_identifier', 'reduce_ast', 'get_field', 'has_type_comments', 'is_parsable', 'get_parse_mode',
+    'is_valid_identifier', 'reduce_ast', 'get_field', 'set_field', 'has_type_comments', 'is_parsable', 'get_parse_mode',
     'WalkFail', 'walk2', 'compare_asts', 'copy_attributes', 'copy_ast', 'set_ctx',
     'get_func_class_or_ass_by_name', 'syntax_ordered_children', 'last_block_opener_child', 'is_atom',
     'precedence_require_parens_by_type', 'precedence_require_parens',
@@ -370,8 +370,15 @@ def reduce_ast(ast: AST, reduce_Expr: bool = True, multi_mod: bool | None = True
     return ast
 
 
-def get_field(node: AST, name: str, idx: int | None = None) -> AST:
-    return getattr(node, name) if idx is None else getattr(node, name)[idx]
+def get_field(parent: AST, name: str, idx: int | None = None) -> AST:
+    return getattr(parent, name) if idx is None else getattr(parent, name)[idx]
+
+
+def set_field(parent: AST, child: AST, name: str, idx: int | None = None):
+    if idx is None:
+        setattr(parent, name, child)
+    else:
+        getattr(parent, name)[idx] = child
 
 
 def has_type_comments(ast: AST) -> bool:

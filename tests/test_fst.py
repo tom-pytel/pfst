@@ -17897,6 +17897,192 @@ Module .. ROOT 0,0 -> 0,29
 (r"""a < b""", 'body[0].value', 0, 'ops', {'raw': False}, r"""new""", r"""**NodeTypeError("bad operator 'new'")**""", r"""
 """),
 
+(r"""def f(*, a=b): pass""", 'body[0].args', 0, 'kw_defaults', {'raw': False}, r"""new""", r"""def f(*, a=new): pass""", r"""
+Module .. ROOT 0,0 -> 0,21
+  .body[1]
+  0] FunctionDef .. 0,0 -> 0,21
+    .name 'f'
+    .args arguments .. 0,6 -> 0,14
+      .kwonlyargs[1]
+      0] arg .. 0,9 -> 0,10
+        .arg 'a'
+      .kw_defaults[1]
+      0] Name 'new' Load .. 0,11 -> 0,14
+    .body[1]
+    0] Pass .. 0,17 -> 0,21
+"""),
+
+(r"""def f(*, a=(b)): pass""", 'body[0].args', 0, 'kw_defaults', {'raw': False}, r"""new""", r"""def f(*, a=new): pass""", r"""
+Module .. ROOT 0,0 -> 0,21
+  .body[1]
+  0] FunctionDef .. 0,0 -> 0,21
+    .name 'f'
+    .args arguments .. 0,6 -> 0,14
+      .kwonlyargs[1]
+      0] arg .. 0,9 -> 0,10
+        .arg 'a'
+      .kw_defaults[1]
+      0] Name 'new' Load .. 0,11 -> 0,14
+    .body[1]
+    0] Pass .. 0,17 -> 0,21
+"""),
+
+(r"""def f(*, a=b): pass""", 'body[0].args', 0, 'kw_defaults', {'raw': False}, r"""**DEL**""", r"""def f(*, a): pass""", r"""
+Module .. ROOT 0,0 -> 0,17
+  .body[1]
+  0] FunctionDef .. 0,0 -> 0,17
+    .name 'f'
+    .args arguments .. 0,6 -> 0,10
+      .kwonlyargs[1]
+      0] arg .. 0,9 -> 0,10
+        .arg 'a'
+      .kw_defaults[1]
+      0] None
+    .body[1]
+    0] Pass .. 0,13 -> 0,17
+"""),
+
+(r"""def f(*, a=(b)): pass""", 'body[0].args', 0, 'kw_defaults', {'raw': False}, r"""**DEL**""", r"""def f(*, a): pass""", r"""
+Module .. ROOT 0,0 -> 0,17
+  .body[1]
+  0] FunctionDef .. 0,0 -> 0,17
+    .name 'f'
+    .args arguments .. 0,6 -> 0,10
+      .kwonlyargs[1]
+      0] arg .. 0,9 -> 0,10
+        .arg 'a'
+      .kw_defaults[1]
+      0] None
+    .body[1]
+    0] Pass .. 0,13 -> 0,17
+"""),
+
+(r"""def f(*, a): pass""", 'body[0].args', 0, 'kw_defaults', {'raw': False}, r"""**DEL**""", r"""def f(*, a): pass""", r"""
+Module .. ROOT 0,0 -> 0,17
+  .body[1]
+  0] FunctionDef .. 0,0 -> 0,17
+    .name 'f'
+    .args arguments .. 0,6 -> 0,10
+      .kwonlyargs[1]
+      0] arg .. 0,9 -> 0,10
+        .arg 'a'
+      .kw_defaults[1]
+      0] None
+    .body[1]
+    0] Pass .. 0,13 -> 0,17
+"""),
+
+(r"""def f(*, a): pass""", 'body[0].args', 0, 'kw_defaults', {'raw': False}, r"""new""", r"""def f(*, a=new): pass""", r"""
+Module .. ROOT 0,0 -> 0,21
+  .body[1]
+  0] FunctionDef .. 0,0 -> 0,21
+    .name 'f'
+    .args arguments .. 0,6 -> 0,14
+      .kwonlyargs[1]
+      0] arg .. 0,9 -> 0,10
+        .arg 'a'
+      .kw_defaults[1]
+      0] Name 'new' Load .. 0,11 -> 0,14
+    .body[1]
+    0] Pass .. 0,17 -> 0,21
+"""),
+
+(r"""def f(*, a: int = b): pass""", 'body[0].args', 0, 'kw_defaults', {'raw': False}, r"""new""", r"""def f(*, a: int = new): pass""", r"""
+Module .. ROOT 0,0 -> 0,28
+  .body[1]
+  0] FunctionDef .. 0,0 -> 0,28
+    .name 'f'
+    .args arguments .. 0,6 -> 0,21
+      .kwonlyargs[1]
+      0] arg .. 0,9 -> 0,15
+        .arg 'a'
+        .annotation Name 'int' Load .. 0,12 -> 0,15
+      .kw_defaults[1]
+      0] Name 'new' Load .. 0,18 -> 0,21
+    .body[1]
+    0] Pass .. 0,24 -> 0,28
+"""),
+
+(r"""def f(*, a: (int) = (b)): pass""", 'body[0].args', 0, 'kw_defaults', {'raw': False}, r"""new""", r"""def f(*, a: (int) = new): pass""", r"""
+Module .. ROOT 0,0 -> 0,30
+  .body[1]
+  0] FunctionDef .. 0,0 -> 0,30
+    .name 'f'
+    .args arguments .. 0,6 -> 0,23
+      .kwonlyargs[1]
+      0] arg .. 0,9 -> 0,17
+        .arg 'a'
+        .annotation Name 'int' Load .. 0,13 -> 0,16
+      .kw_defaults[1]
+      0] Name 'new' Load .. 0,20 -> 0,23
+    .body[1]
+    0] Pass .. 0,26 -> 0,30
+"""),
+
+(r"""def f(*, a: int = b): pass""", 'body[0].args', 0, 'kw_defaults', {'raw': False}, r"""**DEL**""", r"""def f(*, a: int): pass""", r"""
+Module .. ROOT 0,0 -> 0,22
+  .body[1]
+  0] FunctionDef .. 0,0 -> 0,22
+    .name 'f'
+    .args arguments .. 0,6 -> 0,15
+      .kwonlyargs[1]
+      0] arg .. 0,9 -> 0,15
+        .arg 'a'
+        .annotation Name 'int' Load .. 0,12 -> 0,15
+      .kw_defaults[1]
+      0] None
+    .body[1]
+    0] Pass .. 0,18 -> 0,22
+"""),
+
+(r"""def f(*, a: (int) = (b)): pass""", 'body[0].args', 0, 'kw_defaults', {'raw': False}, r"""**DEL**""", r"""def f(*, a: (int)): pass""", r"""
+Module .. ROOT 0,0 -> 0,24
+  .body[1]
+  0] FunctionDef .. 0,0 -> 0,24
+    .name 'f'
+    .args arguments .. 0,6 -> 0,17
+      .kwonlyargs[1]
+      0] arg .. 0,9 -> 0,17
+        .arg 'a'
+        .annotation Name 'int' Load .. 0,13 -> 0,16
+      .kw_defaults[1]
+      0] None
+    .body[1]
+    0] Pass .. 0,20 -> 0,24
+"""),
+
+(r"""def f(*, a: int): pass""", 'body[0].args', 0, 'kw_defaults', {'raw': False}, r"""**DEL**""", r"""def f(*, a: int): pass""", r"""
+Module .. ROOT 0,0 -> 0,22
+  .body[1]
+  0] FunctionDef .. 0,0 -> 0,22
+    .name 'f'
+    .args arguments .. 0,6 -> 0,15
+      .kwonlyargs[1]
+      0] arg .. 0,9 -> 0,15
+        .arg 'a'
+        .annotation Name 'int' Load .. 0,12 -> 0,15
+      .kw_defaults[1]
+      0] None
+    .body[1]
+    0] Pass .. 0,18 -> 0,22
+"""),
+
+(r"""def f(*, a: int): pass""", 'body[0].args', 0, 'kw_defaults', {'raw': False}, r"""new""", r"""def f(*, a: int = new): pass""", r"""
+Module .. ROOT 0,0 -> 0,28
+  .body[1]
+  0] FunctionDef .. 0,0 -> 0,28
+    .name 'f'
+    .args arguments .. 0,6 -> 0,21
+      .kwonlyargs[1]
+      0] arg .. 0,9 -> 0,15
+        .arg 'a'
+        .annotation Name 'int' Load .. 0,12 -> 0,15
+      .kw_defaults[1]
+      0] Name 'new' Load .. 0,18 -> 0,21
+    .body[1]
+    0] Pass .. 0,24 -> 0,28
+"""),
+
 ]  # END OF PUT_ONE_DATA
 
 PUT_RAW_DATA = [
