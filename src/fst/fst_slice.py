@@ -310,7 +310,7 @@ def _put_slice_tuple_list_or_set(self: 'FST', code: Code | None, start: int | Li
 
             put_ast  = Set(elts=[put_fst.a], lineno=1, col_offset=0, end_lineno=len(ls := put_fst._lines),
                             end_col_offset=ls[-1].lenbytes)
-            put_fst  = FST(put_ast, lines=ls)
+            put_fst  = FST(put_ast, lines=ls, from_=self)
             is_tuple = is_set = False  # that's right, an `ast.Set` with `is_set=False` because in this case all we need is the `elts` container (without `ctx`)
 
         else:

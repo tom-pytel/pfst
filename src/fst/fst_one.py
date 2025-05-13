@@ -2,7 +2,7 @@
 
 import re
 from ast import *
-from typing import Callable, Optional, Union
+from typing import Any, Callable, Optional, Union
 
 from .astutil import *
 from .astutil import TypeAlias, TryStar, type_param, TypeVar, ParamSpec, TypeVarTuple, TemplateStr, Interpolation
@@ -103,6 +103,7 @@ _normalize_code_ops = {
 def _normalize_code_op(code: Code,
                        target: type[AugAssign] | type[BoolOp] | type[BinOp] | type[UnaryOp] | type[Compare] |
                        None = None) -> 'FST':
+    """Convert `code` to an operator `FST` of the kind we need if is possible."""
 
     # TODO: handle text operators with multiple lines, preceding following comments, line continuations and maybe semicolons?
 
@@ -198,6 +199,28 @@ def _field_info_TypeVarTuple_default_value(self: 'FST') -> _FieldInfo:
     return srcwpos(ln, col + len(src), ' = '), Load, True, True
 
 
+def _validate_put(self: 'FST', code: Code | None, idx: int | None, field: str,  child: list[AST] | AST | None,
+                  options: dict[str: Any], *, can_del: bool = False) -> AST | None:
+    """Check that `idx` was passed (or not) as needed and that not deleting if not possible and that `to` raw parameter
+    is not present."""
+
+    if isinstance(child, list):
+        if idx is None:
+            raise IndexError(f'{self.a.__class__.__name__}.{field} needs an index')
+
+        child = child[idx]
+
+    elif idx is not None:
+        raise IndexError(f'{self.a.__class__.__name__}.{field} does not take an index')
+
+    if not can_del and code is None:
+        raise ValueError(f'cannot delete {self.a.__class__.__name__}.{field}{f"[{idx}]" if idx else ""}')
+    if options.get('to'):
+        raise NodeTypeError(f"cannot put with 'to' to {self.a.__class__.__name__}.{field}")
+
+    return child
+
+
 def _make_expr_fst(self: 'FST', code: Code | None, idx: int | None, field: str,
                    types: tuple[type[AST]] | list[type[AST]] | type[AST] | None,  # single or tuple means allow only these, list means do not allow these
                    target: Union['FST', fstloc], ctx: type[expr_context], prefix: str  = '',
@@ -256,19 +279,7 @@ def _put_one_expr_required(self: 'FST', code: Code | None, idx: int | None, fiel
                            **options) -> 'FST':
     """Put a single required expression. Can be standalone or as part of sequence."""
 
-    if isinstance(child, list):
-        if idx is None:
-            raise IndexError(f'{self.a.__class__.__name__}.{field} needs an index')
-
-        child = child[idx]
-
-    elif idx is not None:
-        raise IndexError(f'{self.a.__class__.__name__}.{field} does not take an index')
-
-    if code is None:
-        raise ValueError(f'cannot delete {self.a.__class__.__name__}.{field}{f"[{idx}]" if idx else ""}')
-    if options.get('to'):
-        raise NodeTypeError(f"cannot put with 'to' to {self.a.__class__.__name__}.{field}")
+    child = _validate_put(self, code, idx, field, child, options)
 
     if not child:
         raise ValueError(f'cannot replace nonexistent {self.a.__class__.__name__}.{field}{f"[{idx}]" if idx else ""}')
@@ -289,19 +300,15 @@ def _put_one_expr_optional(self: 'FST', code: Code | None, idx: int | None, fiel
                            ], **options) -> Optional['FST']:
     """Put new, replace or delete an optional expression. Only standalone"""
 
-    if idx is not None:
-        raise IndexError(f'{self.a.__class__.__name__}.{field} does not take an index')
-    if options.get('to'):
-        raise NodeTypeError(f"cannot put with 'to' to {self.a.__class__.__name__}.{field}")
-
     field_info, required_extra = extra
 
-    if code is None:
-        if not child:  # delete nonexistent node, noop
-            return None
-
-    elif child:  # replace existing node
+    if code is not None and child:  # replace existing node
         return _put_one_expr_required(self, code, idx, field, child, required_extra, **options)
+
+    _validate_put(self, code, idx, field, child, options, can_del=True)
+
+    if code is None and not child:  # delete nonexistent node, noop
+        return None
 
     (ln, col, prefix), ctx, can_put, can_del = field_info(self)
 
@@ -390,12 +397,8 @@ def _put_one_identifier_required(self: 'FST', code: Code | None, idx: int | None
                                  extra: str | None, **options) -> str:
     """Put a single required identifier."""
 
-    if code is None:
-        raise ValueError(f'cannot delete {self.a.__class__.__name__}.{field}')
-    if idx is not None:
-        raise IndexError(f'{self.a.__class__.__name__}.{field} does not take an index')
-    if options.get('to'):
-        raise NodeTypeError(f"cannot put with 'to' to {self.a.__class__.__name__}.{field}")
+    _validate_put(self, code, idx, field, child, options)
+
     if not (code := _code_as_identifier(code)):
         raise NodeTypeError(f"expecting identifier for {self.a.__class__.__name__}.{field}")
 
@@ -423,20 +426,7 @@ def _put_one_op(self: 'FST', code: Code | None, idx: int | None, field: str, chi
                 extra: tuple[type[AST], str], **options) -> 'FST':
     """Put a single opertation, with or without '=' for AugAssign."""
 
-    if isinstance(child, list):
-        if idx is None:
-            raise IndexError(f'{self.a.__class__.__name__}.{field} needs an index')
-
-        child = child[idx]
-
-    elif idx is not None:
-        raise IndexError(f'{self.a.__class__.__name__}.{field} does not take an index')
-
-    if code is None:
-        raise ValueError(f'cannot delete {self.a.__class__.__name__}.{field}')
-    if options.get('to'):
-        raise NodeTypeError(f"cannot put with 'to' to {self.a.__class__.__name__}.{field}")
-
+    child  = _validate_put(self, code, idx, field, child, options)
     code   = _normalize_code_op(code, self.a.__class__)
     childf = child.f
 
