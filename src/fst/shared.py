@@ -81,6 +81,7 @@ _AST_DEFAULT_BODY_FIELD  = {cls: field for field, classes in [
     ('operand',      (UnaryOp,)),
     # ('elt',          (ListComp, SetComp, GeneratorExp)),  # 'generators' take precedence because name is longer and more annoying to type out
     ('arg',          (arg,)),
+    ('name',         (alias,)),
     ('context_expr', (withitem,)),
     ('pattern',      (MatchAs,)),
 ] for cls in classes}

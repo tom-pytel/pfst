@@ -19609,6 +19609,302 @@ Module .. ROOT 0,0 -> 2,9
     .level 2
 """),
 
+(r"""import a as b""", 'body[0].names[0]', None, 'asname', {'raw': False}, r"""new""", r"""import a as new""", r"""
+Module .. ROOT 0,0 -> 0,15
+  .body[1]
+  0] Import .. 0,0 -> 0,15
+    .names[1]
+    0] alias .. 0,7 -> 0,15
+      .name 'a'
+      .asname
+        'new'
+"""),
+
+(r"""import a as b""", 'body[0].names[0]', None, 'asname', {'raw': False}, r"""**DEL**""", r"""import a""", r"""
+Module .. ROOT 0,0 -> 0,8
+  .body[1]
+  0] Import .. 0,0 -> 0,8
+    .names[1]
+    0] alias .. 0,7 -> 0,8
+      .name 'a'
+"""),
+
+(r"""import a""", 'body[0].names[0]', None, 'asname', {'raw': False}, r"""new""", r"""import a as new""", r"""
+Module .. ROOT 0,0 -> 0,15
+  .body[1]
+  0] Import .. 0,0 -> 0,15
+    .names[1]
+    0] alias .. 0,7 -> 0,15
+      .name 'a'
+      .asname
+        'new'
+"""),
+
+(r"""import a""", 'body[0].names[0]', None, 'asname', {'raw': False}, r"""**DEL**""", r"""import a""", r"""
+Module .. ROOT 0,0 -> 0,8
+  .body[1]
+  0] Import .. 0,0 -> 0,8
+    .names[1]
+    0] alias .. 0,7 -> 0,8
+      .name 'a'
+"""),
+
+(r"""import a as b, c""", 'body[0].names[0]', None, 'asname', {'raw': False}, r"""new""", r"""import a as new, c""", r"""
+Module .. ROOT 0,0 -> 0,18
+  .body[1]
+  0] Import .. 0,0 -> 0,18
+    .names[2]
+    0] alias .. 0,7 -> 0,15
+      .name 'a'
+      .asname
+        'new'
+    1] alias .. 0,17 -> 0,18
+      .name 'c'
+"""),
+
+(r"""import a as b, c""", 'body[0].names[0]', None, 'asname', {'raw': False}, r"""**DEL**""", r"""import a, c""", r"""
+Module .. ROOT 0,0 -> 0,11
+  .body[1]
+  0] Import .. 0,0 -> 0,11
+    .names[2]
+    0] alias .. 0,7 -> 0,8
+      .name 'a'
+    1] alias .. 0,10 -> 0,11
+      .name 'c'
+"""),
+
+(r"""import a, c""", 'body[0].names[0]', None, 'asname', {'raw': False}, r"""new""", r"""import a as new, c""", r"""
+Module .. ROOT 0,0 -> 0,18
+  .body[1]
+  0] Import .. 0,0 -> 0,18
+    .names[2]
+    0] alias .. 0,7 -> 0,15
+      .name 'a'
+      .asname
+        'new'
+    1] alias .. 0,17 -> 0,18
+      .name 'c'
+"""),
+
+(r"""import a, c""", 'body[0].names[0]', None, 'asname', {'raw': False}, r"""**DEL**""", r"""import a, c""", r"""
+Module .. ROOT 0,0 -> 0,11
+  .body[1]
+  0] Import .. 0,0 -> 0,11
+    .names[2]
+    0] alias .. 0,7 -> 0,8
+      .name 'a'
+    1] alias .. 0,10 -> 0,11
+      .name 'c'
+"""),
+
+(r"""import c, a as b""", 'body[0].names[1]', None, 'asname', {'raw': False}, r"""new""", r"""import c, a as new""", r"""
+Module .. ROOT 0,0 -> 0,18
+  .body[1]
+  0] Import .. 0,0 -> 0,18
+    .names[2]
+    0] alias .. 0,7 -> 0,8
+      .name 'c'
+    1] alias .. 0,10 -> 0,18
+      .name 'a'
+      .asname
+        'new'
+"""),
+
+(r"""import c, a as b""", 'body[0].names[1]', None, 'asname', {'raw': False}, r"""**DEL**""", r"""import c, a""", r"""
+Module .. ROOT 0,0 -> 0,11
+  .body[1]
+  0] Import .. 0,0 -> 0,11
+    .names[2]
+    0] alias .. 0,7 -> 0,8
+      .name 'c'
+    1] alias .. 0,10 -> 0,11
+      .name 'a'
+"""),
+
+(r"""import c, a""", 'body[0].names[1]', None, 'asname', {'raw': False}, r"""new""", r"""import c, a as new""", r"""
+Module .. ROOT 0,0 -> 0,18
+  .body[1]
+  0] Import .. 0,0 -> 0,18
+    .names[2]
+    0] alias .. 0,7 -> 0,8
+      .name 'c'
+    1] alias .. 0,10 -> 0,18
+      .name 'a'
+      .asname
+        'new'
+"""),
+
+(r"""import c, a""", 'body[0].names[1]', None, 'asname', {'raw': False}, r"""**DEL**""", r"""import c, a""", r"""
+Module .. ROOT 0,0 -> 0,11
+  .body[1]
+  0] Import .. 0,0 -> 0,11
+    .names[2]
+    0] alias .. 0,7 -> 0,8
+      .name 'c'
+    1] alias .. 0,10 -> 0,11
+      .name 'a'
+"""),
+
+(r"""from z import (a as b)""", 'body[0].names[0]', None, 'asname', {'raw': False}, r"""new""", r"""from z import (a as new)""", r"""
+Module .. ROOT 0,0 -> 0,24
+  .body[1]
+  0] ImportFrom .. 0,0 -> 0,24
+    .module 'z'
+    .names[1]
+    0] alias .. 0,15 -> 0,23
+      .name 'a'
+      .asname
+        'new'
+    .level 0
+"""),
+
+(r"""from z import (a as b)""", 'body[0].names[0]', None, 'asname', {'raw': False}, r"""**DEL**""", r"""from z import (a)""", r"""
+Module .. ROOT 0,0 -> 0,17
+  .body[1]
+  0] ImportFrom .. 0,0 -> 0,17
+    .module 'z'
+    .names[1]
+    0] alias .. 0,15 -> 0,16
+      .name 'a'
+    .level 0
+"""),
+
+(r"""from z import (a)""", 'body[0].names[0]', None, 'asname', {'raw': False}, r"""new""", r"""from z import (a as new)""", r"""
+Module .. ROOT 0,0 -> 0,24
+  .body[1]
+  0] ImportFrom .. 0,0 -> 0,24
+    .module 'z'
+    .names[1]
+    0] alias .. 0,15 -> 0,23
+      .name 'a'
+      .asname
+        'new'
+    .level 0
+"""),
+
+(r"""from z import (a)""", 'body[0].names[0]', None, 'asname', {'raw': False}, r"""**DEL**""", r"""from z import (a)""", r"""
+Module .. ROOT 0,0 -> 0,17
+  .body[1]
+  0] ImportFrom .. 0,0 -> 0,17
+    .module 'z'
+    .names[1]
+    0] alias .. 0,15 -> 0,16
+      .name 'a'
+    .level 0
+"""),
+
+(r"""from z import (a as b, c)""", 'body[0].names[0]', None, 'asname', {'raw': False}, r"""new""", r"""from z import (a as new, c)""", r"""
+Module .. ROOT 0,0 -> 0,27
+  .body[1]
+  0] ImportFrom .. 0,0 -> 0,27
+    .module 'z'
+    .names[2]
+    0] alias .. 0,15 -> 0,23
+      .name 'a'
+      .asname
+        'new'
+    1] alias .. 0,25 -> 0,26
+      .name 'c'
+    .level 0
+"""),
+
+(r"""from z import (a as b, c)""", 'body[0].names[0]', None, 'asname', {'raw': False}, r"""**DEL**""", r"""from z import (a, c)""", r"""
+Module .. ROOT 0,0 -> 0,20
+  .body[1]
+  0] ImportFrom .. 0,0 -> 0,20
+    .module 'z'
+    .names[2]
+    0] alias .. 0,15 -> 0,16
+      .name 'a'
+    1] alias .. 0,18 -> 0,19
+      .name 'c'
+    .level 0
+"""),
+
+(r"""from z import (a, c)""", 'body[0].names[0]', None, 'asname', {'raw': False}, r"""new""", r"""from z import (a as new, c)""", r"""
+Module .. ROOT 0,0 -> 0,27
+  .body[1]
+  0] ImportFrom .. 0,0 -> 0,27
+    .module 'z'
+    .names[2]
+    0] alias .. 0,15 -> 0,23
+      .name 'a'
+      .asname
+        'new'
+    1] alias .. 0,25 -> 0,26
+      .name 'c'
+    .level 0
+"""),
+
+(r"""from z import (a, c)""", 'body[0].names[0]', None, 'asname', {'raw': False}, r"""**DEL**""", r"""from z import (a, c)""", r"""
+Module .. ROOT 0,0 -> 0,20
+  .body[1]
+  0] ImportFrom .. 0,0 -> 0,20
+    .module 'z'
+    .names[2]
+    0] alias .. 0,15 -> 0,16
+      .name 'a'
+    1] alias .. 0,18 -> 0,19
+      .name 'c'
+    .level 0
+"""),
+
+(r"""from z import (c, a as b)""", 'body[0].names[1]', None, 'asname', {'raw': False}, r"""new""", r"""from z import (c, a as new)""", r"""
+Module .. ROOT 0,0 -> 0,27
+  .body[1]
+  0] ImportFrom .. 0,0 -> 0,27
+    .module 'z'
+    .names[2]
+    0] alias .. 0,15 -> 0,16
+      .name 'c'
+    1] alias .. 0,18 -> 0,26
+      .name 'a'
+      .asname
+        'new'
+    .level 0
+"""),
+
+(r"""from z import (c, a as b)""", 'body[0].names[1]', None, 'asname', {'raw': False}, r"""**DEL**""", r"""from z import (c, a)""", r"""
+Module .. ROOT 0,0 -> 0,20
+  .body[1]
+  0] ImportFrom .. 0,0 -> 0,20
+    .module 'z'
+    .names[2]
+    0] alias .. 0,15 -> 0,16
+      .name 'c'
+    1] alias .. 0,18 -> 0,19
+      .name 'a'
+    .level 0
+"""),
+
+(r"""from z import (c, a)""", 'body[0].names[1]', None, 'asname', {'raw': False}, r"""new""", r"""from z import (c, a as new)""", r"""
+Module .. ROOT 0,0 -> 0,27
+  .body[1]
+  0] ImportFrom .. 0,0 -> 0,27
+    .module 'z'
+    .names[2]
+    0] alias .. 0,15 -> 0,16
+      .name 'c'
+    1] alias .. 0,18 -> 0,26
+      .name 'a'
+      .asname
+        'new'
+    .level 0
+"""),
+
+(r"""from z import (c, a)""", 'body[0].names[1]', None, 'asname', {'raw': False}, r"""**DEL**""", r"""from z import (c, a)""", r"""
+Module .. ROOT 0,0 -> 0,20
+  .body[1]
+  0] ImportFrom .. 0,0 -> 0,20
+    .module 'z'
+    .names[2]
+    0] alias .. 0,15 -> 0,16
+      .name 'c'
+    1] alias .. 0,18 -> 0,19
+      .name 'a'
+    .level 0
+"""),
+
 ]  # END OF PUT_ONE_DATA
 
 

@@ -281,6 +281,9 @@ def _field_info_arguments_kw_defaults(self: 'FST', idx: int | None) -> _FieldInf
 def _field_info_arg_annotation(self: 'FST', idx: int | None) -> _FieldInfo:
     return _FieldInfo(fstloc((loc := self.loc).ln, loc.col + len(self.a.arg), self.end_ln, self.end_col), ': ')
 
+def _field_info_alias_asname(self: 'FST', idx: int | None) -> _FieldInfo:
+    return _FieldInfo(fstloc(self.ln, self.col + len(self.a.name), self.end_ln, self.end_col), ' as ')
+
 def _field_info_withitem_optional_vars(self: 'FST', idx: int | None) -> _FieldInfo:
     _, _, ln, col = self.a.context_expr.f.pars()
 
@@ -583,7 +586,7 @@ def _put_one_identifier_optional(self: 'FST', code: Code | None, idx: int | None
         if not can_del:
             raise ValueError(f'cannot delete {self.a.__class__.__name__}.{field} in this state')
 
-        self.put_src(None, *loc, False)
+        self.put_src(None, *loc, True)
         set_field(self.a, None, field, idx)
 
         return None
@@ -864,7 +867,7 @@ _PUT_ONE_HANDLERS = {
     # (keyword, 'arg'):                     (_put_one_default, None), # identifier?
     (keyword, 'value'):                   (_put_one_expr_required, None), # expr
     (alias, 'name'):                      (_put_one_identifier_required, None), # identifier
-    # (alias, 'asname'):                    (_put_one_default, None), # identifier?
+    (alias, 'asname'):                    (_put_one_identifier_optional, _field_info_alias_asname), # identifier?
     (withitem, 'context_expr'):           (_put_one_expr_required, None), # expr
     (withitem, 'optional_vars'):          (_put_one_expr_optional, (_field_info_withitem_optional_vars, (Name, Tuple, List))), # expr?  - OPTIONAL TAIL: 'as' - Name
     # (match_case, 'pattern'):              (_put_one_default, None), # pattern
