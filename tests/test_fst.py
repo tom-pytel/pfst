@@ -16798,6 +16798,22 @@ Module .. ROOT 0,0 -> 0,9
     .exc Name 'new' Load .. 0,6 -> 0,9
 """),
 
+(r"""raise e from cause""", 'body[0]', None, None, {'raw': False}, r"""new""", r"""raise new from cause""", r"""
+Module .. ROOT 0,0 -> 0,20
+  .body[1]
+  0] Raise .. 0,0 -> 0,20
+    .exc Name 'new' Load .. 0,6 -> 0,9
+    .cause Name 'cause' Load .. 0,15 -> 0,20
+"""),
+
+(r"""raise (e) from cause""", 'body[0]', None, None, {'raw': False}, r"""new""", r"""raise new from cause""", r"""
+Module .. ROOT 0,0 -> 0,20
+  .body[1]
+  0] Raise .. 0,0 -> 0,20
+    .exc Name 'new' Load .. 0,6 -> 0,9
+    .cause Name 'cause' Load .. 0,15 -> 0,20
+"""),
+
 (r"""raise e from c""", 'body[0]', None, 'cause', {'raw': False}, r"""new""", r"""raise e from new""", r"""
 Module .. ROOT 0,0 -> 0,16
   .body[1]
@@ -16865,6 +16881,25 @@ Module .. ROOT 0,0 -> 0,16
   0] Raise .. 0,0 -> 0,16
     .exc Name 'e' Load .. 0,7 -> 0,8
     .cause Name 'c' Load .. 0,15 -> 0,16
+"""),
+
+(r"""assert a, b""", 'body[0]', None, None, {'raw': False}, r"""new""", r"""assert new, b""", r"""
+Module .. ROOT 0,0 -> 0,13
+  .body[1]
+  0] Assert .. 0,0 -> 0,13
+    .test Name 'new' Load .. 0,7 -> 0,10
+    .msg Name 'b' Load .. 0,12 -> 0,13
+"""),
+
+(r"""assert a, (b)""", 'body[0]', None, None, {'raw': False}, r"""new""", r"""assert new, (b)""", r"""
+Module .. ROOT 0,0 -> 0,15
+  .body[1]
+  0] Assert .. 0,0 -> 0,15
+    .test Name 'new' Load .. 0,7 -> 0,10
+    .msg Name 'b' Load .. 0,13 -> 0,14
+"""),
+
+(r"""assert a, b""", 'body[0]', None, None, {'raw': False}, r"""**DEL**""", r"""**ValueError('cannot delete Assert.test')**""", r"""
 """),
 
 (r"""assert a, b""", 'body[0]', None, 'msg', {'raw': False}, r"""new""", r"""assert a, new""", r"""
@@ -17116,6 +17151,31 @@ Module .. ROOT 0,0 -> 0,14
     0] Pass .. 0,10 -> 0,14
 """),
 
+(r"""with (a as b): pass""", 'body[0].items[0]', None, 'optional_vars', {'raw': False}, r"""new""", r"""with (a as new): pass""", r"""
+Module .. ROOT 0,0 -> 0,21
+  .body[1]
+  0] With .. 0,0 -> 0,21
+    .items[1]
+    0] withitem .. 0,6 -> 0,14
+      .context_expr
+        Name 'a' Load .. 0,6 -> 0,7
+      .optional_vars Name 'new' Store .. 0,11 -> 0,14
+    .body[1]
+    0] Pass .. 0,17 -> 0,21
+"""),
+
+(r"""with (a as b): pass""", 'body[0].items[0]', None, 'optional_vars', {'raw': False}, r"""**DEL**""", r"""with (a): pass""", r"""
+Module .. ROOT 0,0 -> 0,14
+  .body[1]
+  0] With .. 0,0 -> 0,14
+    .items[1]
+    0] withitem .. 0,6 -> 0,7
+      .context_expr
+        Name 'a' Load .. 0,6 -> 0,7
+    .body[1]
+    0] Pass .. 0,10 -> 0,14
+"""),
+
 (r"""with a: pass""", 'body[0].items[0]', None, 'optional_vars', {'raw': False}, r"""**DEL**""", r"""with a: pass""", r"""
 Module .. ROOT 0,0 -> 0,12
   .body[1]
@@ -17282,6 +17342,84 @@ Module .. ROOT 0,0 -> 1,20
       .guard Name 'new' Load .. 1,11 -> 1,14
       .body[1]
       0] Pass .. 1,16 -> 1,20
+"""),
+
+(r"""match a:
+ case (1): pass""", 'body[0].cases[0]', None, 'guard', {'raw': False}, r"""new""", r"""match a:
+ case (1) if new: pass""", r"""
+Module .. ROOT 0,0 -> 1,22
+  .body[1]
+  0] Match .. 0,0 -> 1,22
+    .subject Name 'a' Load .. 0,6 -> 0,7
+    .cases[1]
+    0] match_case .. 1,1 -> 1,22
+      .pattern MatchValue .. 1,7 -> 1,8
+        .value Constant 1 .. 1,7 -> 1,8
+      .guard Name 'new' Load .. 1,13 -> 1,16
+      .body[1]
+      0] Pass .. 1,18 -> 1,22
+"""),
+
+(r"""match a:
+ case 1 if b  : pass""", 'body[0].cases[0]', None, 'guard', {'raw': False}, r"""**DEL**""", r"""match a:
+ case 1: pass""", r"""
+Module .. ROOT 0,0 -> 1,13
+  .body[1]
+  0] Match .. 0,0 -> 1,13
+    .subject Name 'a' Load .. 0,6 -> 0,7
+    .cases[1]
+    0] match_case .. 1,1 -> 1,13
+      .pattern MatchValue .. 1,6 -> 1,7
+        .value Constant 1 .. 1,6 -> 1,7
+      .body[1]
+      0] Pass .. 1,9 -> 1,13
+"""),
+
+(r"""match a:
+ case 1 if (b)  : pass""", 'body[0].cases[0]', None, 'guard', {'raw': False}, r"""**DEL**""", r"""match a:
+ case 1: pass""", r"""
+Module .. ROOT 0,0 -> 1,13
+  .body[1]
+  0] Match .. 0,0 -> 1,13
+    .subject Name 'a' Load .. 0,6 -> 0,7
+    .cases[1]
+    0] match_case .. 1,1 -> 1,13
+      .pattern MatchValue .. 1,6 -> 1,7
+        .value Constant 1 .. 1,6 -> 1,7
+      .body[1]
+      0] Pass .. 1,9 -> 1,13
+"""),
+
+(r"""match a:
+ case 1  : pass""", 'body[0].cases[0]', None, 'guard', {'raw': False}, r"""new""", r"""match a:
+ case 1 if new: pass""", r"""
+Module .. ROOT 0,0 -> 1,20
+  .body[1]
+  0] Match .. 0,0 -> 1,20
+    .subject Name 'a' Load .. 0,6 -> 0,7
+    .cases[1]
+    0] match_case .. 1,1 -> 1,20
+      .pattern MatchValue .. 1,6 -> 1,7
+        .value Constant 1 .. 1,6 -> 1,7
+      .guard Name 'new' Load .. 1,11 -> 1,14
+      .body[1]
+      0] Pass .. 1,16 -> 1,20
+"""),
+
+(r"""match a:
+ case (1)  : pass""", 'body[0].cases[0]', None, 'guard', {'raw': False}, r"""new""", r"""match a:
+ case (1) if new: pass""", r"""
+Module .. ROOT 0,0 -> 1,22
+  .body[1]
+  0] Match .. 0,0 -> 1,22
+    .subject Name 'a' Load .. 0,6 -> 0,7
+    .cases[1]
+    0] match_case .. 1,1 -> 1,22
+      .pattern MatchValue .. 1,7 -> 1,8
+        .value Constant 1 .. 1,7 -> 1,8
+      .guard Name 'new' Load .. 1,13 -> 1,16
+      .body[1]
+      0] Pass .. 1,18 -> 1,22
 """),
 
 (r"""type t[T: a] = ...""", 'body[0].type_params[0]', None, 'bound', {'raw': False, '_ver': 13}, r"""new""", r"""type t[T: new] = ...""", r"""
@@ -17807,6 +17945,25 @@ Module .. ROOT 0,0 -> 0,20
     .returns Name 'new' Load .. 0,11 -> 0,14
 """),
 
+(r"""def f() -> (a)  : pass""", 'body[0]', None, 'returns', {'raw': False}, r"""**DEL**""", r"""def f(): pass""", r"""
+Module .. ROOT 0,0 -> 0,13
+  .body[1]
+  0] FunctionDef .. 0,0 -> 0,13
+    .name 'f'
+    .body[1]
+    0] Pass .. 0,9 -> 0,13
+"""),
+
+(r"""def f()  : pass""", 'body[0]', None, 'returns', {'raw': False}, r"""new""", r"""def f() -> new: pass""", r"""
+Module .. ROOT 0,0 -> 0,20
+  .body[1]
+  0] FunctionDef .. 0,0 -> 0,20
+    .name 'f'
+    .body[1]
+    0] Pass .. 0,16 -> 0,20
+    .returns Name 'new' Load .. 0,11 -> 0,14
+"""),
+
 (r"""async def f(**b) -> a: pass""", 'body[0]', None, 'returns', {'raw': False}, r"""new""", r"""async def f(**b) -> new: pass""", r"""
 Module .. ROOT 0,0 -> 0,29
   .body[1]
@@ -17985,6 +18142,113 @@ Module .. ROOT 0,0 -> 0,21
       0] Name 'new' Load .. 0,11 -> 0,14
     .body[1]
     0] Pass .. 0,17 -> 0,21
+"""),
+
+(r"""def f(*, a, c=d): pass""", 'body[0].args', 0, 'kw_defaults', {'raw': False}, r"""new""", r"""def f(*, a=new, c=d): pass""", r"""
+Module .. ROOT 0,0 -> 0,26
+  .body[1]
+  0] FunctionDef .. 0,0 -> 0,26
+    .name 'f'
+    .args arguments .. 0,6 -> 0,19
+      .kwonlyargs[2]
+      0] arg .. 0,9 -> 0,10
+        .arg 'a'
+      1] arg .. 0,16 -> 0,17
+        .arg 'c'
+      .kw_defaults[2]
+      0] Name 'new' Load .. 0,11 -> 0,14
+      1] Name 'd' Load .. 0,18 -> 0,19
+    .body[1]
+    0] Pass .. 0,22 -> 0,26
+"""),
+
+(r"""def f(*, a: (int), c=d): pass""", 'body[0].args', 0, 'kw_defaults', {'raw': False}, r"""new""", r"""def f(*, a: (int) = new, c=d): pass""", r"""
+Module .. ROOT 0,0 -> 0,35
+  .body[1]
+  0] FunctionDef .. 0,0 -> 0,35
+    .name 'f'
+    .args arguments .. 0,6 -> 0,28
+      .kwonlyargs[2]
+      0] arg .. 0,9 -> 0,17
+        .arg 'a'
+        .annotation Name 'int' Load .. 0,13 -> 0,16
+      1] arg .. 0,25 -> 0,26
+        .arg 'c'
+      .kw_defaults[2]
+      0] Name 'new' Load .. 0,20 -> 0,23
+      1] Name 'd' Load .. 0,27 -> 0,28
+    .body[1]
+    0] Pass .. 0,31 -> 0,35
+"""),
+
+(r"""def f(*, a=b, c=d): pass""", 'body[0].args', 0, 'kw_defaults', {'raw': False}, r"""**DEL**""", r"""def f(*, a, c=d): pass""", r"""
+Module .. ROOT 0,0 -> 0,22
+  .body[1]
+  0] FunctionDef .. 0,0 -> 0,22
+    .name 'f'
+    .args arguments .. 0,6 -> 0,15
+      .kwonlyargs[2]
+      0] arg .. 0,9 -> 0,10
+        .arg 'a'
+      1] arg .. 0,12 -> 0,13
+        .arg 'c'
+      .kw_defaults[2]
+      0] None
+      1] Name 'd' Load .. 0,14 -> 0,15
+    .body[1]
+    0] Pass .. 0,18 -> 0,22
+"""),
+
+(r"""def f(*, a, **c): pass""", 'body[0].args', 0, 'kw_defaults', {'raw': False}, r"""new""", r"""def f(*, a=new, **c): pass""", r"""
+Module .. ROOT 0,0 -> 0,26
+  .body[1]
+  0] FunctionDef .. 0,0 -> 0,26
+    .name 'f'
+    .args arguments .. 0,6 -> 0,19
+      .kwonlyargs[1]
+      0] arg .. 0,9 -> 0,10
+        .arg 'a'
+      .kw_defaults[1]
+      0] Name 'new' Load .. 0,11 -> 0,14
+      .kwarg arg .. 0,18 -> 0,19
+        .arg 'c'
+    .body[1]
+    0] Pass .. 0,22 -> 0,26
+"""),
+
+(r"""def f(*, a: (int), **c): pass""", 'body[0].args', 0, 'kw_defaults', {'raw': False}, r"""new""", r"""def f(*, a: (int) = new, **c): pass""", r"""
+Module .. ROOT 0,0 -> 0,35
+  .body[1]
+  0] FunctionDef .. 0,0 -> 0,35
+    .name 'f'
+    .args arguments .. 0,6 -> 0,28
+      .kwonlyargs[1]
+      0] arg .. 0,9 -> 0,17
+        .arg 'a'
+        .annotation Name 'int' Load .. 0,13 -> 0,16
+      .kw_defaults[1]
+      0] Name 'new' Load .. 0,20 -> 0,23
+      .kwarg arg .. 0,27 -> 0,28
+        .arg 'c'
+    .body[1]
+    0] Pass .. 0,31 -> 0,35
+"""),
+
+(r"""def f(*, a=b, **c): pass""", 'body[0].args', 0, 'kw_defaults', {'raw': False}, r"""**DEL**""", r"""def f(*, a, **c): pass""", r"""
+Module .. ROOT 0,0 -> 0,22
+  .body[1]
+  0] FunctionDef .. 0,0 -> 0,22
+    .name 'f'
+    .args arguments .. 0,6 -> 0,15
+      .kwonlyargs[1]
+      0] arg .. 0,9 -> 0,10
+        .arg 'a'
+      .kw_defaults[1]
+      0] None
+      .kwarg arg .. 0,14 -> 0,15
+        .arg 'c'
+    .body[1]
+    0] Pass .. 0,18 -> 0,22
 """),
 
 (r"""def f(*, a: int = b): pass""", 'body[0].args', 0, 'kw_defaults', {'raw': False}, r"""new""", r"""def f(*, a: int = new): pass""", r"""
@@ -18231,7 +18495,833 @@ Module .. ROOT 0,0 -> 1,13
       0] Pass .. 1,9 -> 1,13
 """),
 
+(r"""a[b:]""", 'body[0].value.slice', None, 'lower', {'raw': False}, r"""new""", r"""a[new:]""", r"""
+Module .. ROOT 0,0 -> 0,7
+  .body[1]
+  0] Expr .. 0,0 -> 0,7
+    .value Subscript .. 0,0 -> 0,7
+      .value Name 'a' Load .. 0,0 -> 0,1
+      .slice Slice .. 0,2 -> 0,6
+        .lower Name 'new' Load .. 0,2 -> 0,5
+      .ctx Load
+"""),
+
+(r"""a[(b):]""", 'body[0].value.slice', None, 'lower', {'raw': False}, r"""new""", r"""a[new:]""", r"""
+Module .. ROOT 0,0 -> 0,7
+  .body[1]
+  0] Expr .. 0,0 -> 0,7
+    .value Subscript .. 0,0 -> 0,7
+      .value Name 'a' Load .. 0,0 -> 0,1
+      .slice Slice .. 0,2 -> 0,6
+        .lower Name 'new' Load .. 0,2 -> 0,5
+      .ctx Load
+"""),
+
+(r"""a[b:]""", 'body[0].value.slice', None, 'lower', {'raw': False}, r"""**DEL**""", r"""a[:]""", r"""
+Module .. ROOT 0,0 -> 0,4
+  .body[1]
+  0] Expr .. 0,0 -> 0,4
+    .value Subscript .. 0,0 -> 0,4
+      .value Name 'a' Load .. 0,0 -> 0,1
+      .slice Slice .. 0,2 -> 0,3
+      .ctx Load
+"""),
+
+(r"""a[(b):]""", 'body[0].value.slice', None, 'lower', {'raw': False}, r"""**DEL**""", r"""a[:]""", r"""
+Module .. ROOT 0,0 -> 0,4
+  .body[1]
+  0] Expr .. 0,0 -> 0,4
+    .value Subscript .. 0,0 -> 0,4
+      .value Name 'a' Load .. 0,0 -> 0,1
+      .slice Slice .. 0,2 -> 0,3
+      .ctx Load
+"""),
+
+(r"""a[:]""", 'body[0].value.slice', None, 'lower', {'raw': False}, r"""**DEL**""", r"""a[:]""", r"""
+Module .. ROOT 0,0 -> 0,4
+  .body[1]
+  0] Expr .. 0,0 -> 0,4
+    .value Subscript .. 0,0 -> 0,4
+      .value Name 'a' Load .. 0,0 -> 0,1
+      .slice Slice .. 0,2 -> 0,3
+      .ctx Load
+"""),
+
+(r"""a[:]""", 'body[0].value.slice', None, 'lower', {'raw': False}, r"""new""", r"""a[new:]""", r"""
+Module .. ROOT 0,0 -> 0,7
+  .body[1]
+  0] Expr .. 0,0 -> 0,7
+    .value Subscript .. 0,0 -> 0,7
+      .value Name 'a' Load .. 0,0 -> 0,1
+      .slice Slice .. 0,2 -> 0,6
+        .lower Name 'new' Load .. 0,2 -> 0,5
+      .ctx Load
+"""),
+
+(r"""a[::]""", 'body[0].value.slice', None, 'lower', {'raw': False}, r"""new""", r"""a[new::]""", r"""
+Module .. ROOT 0,0 -> 0,8
+  .body[1]
+  0] Expr .. 0,0 -> 0,8
+    .value Subscript .. 0,0 -> 0,8
+      .value Name 'a' Load .. 0,0 -> 0,1
+      .slice Slice .. 0,2 -> 0,7
+        .lower Name 'new' Load .. 0,2 -> 0,5
+      .ctx Load
+"""),
+
+(r"""a[:(b):]""", 'body[0].value.slice', None, 'lower', {'raw': False}, r"""new""", r"""a[new:(b):]""", r"""
+Module .. ROOT 0,0 -> 0,11
+  .body[1]
+  0] Expr .. 0,0 -> 0,11
+    .value Subscript .. 0,0 -> 0,11
+      .value Name 'a' Load .. 0,0 -> 0,1
+      .slice Slice .. 0,2 -> 0,10
+        .lower Name 'new' Load .. 0,2 -> 0,5
+        .upper Name 'b' Load .. 0,7 -> 0,8
+      .ctx Load
+"""),
+
+(r"""a[ : ]""", 'body[0].value.slice', None, 'lower', {'raw': False}, r"""new""", r"""a[ new: ]""", r"""
+Module .. ROOT 0,0 -> 0,9
+  .body[1]
+  0] Expr .. 0,0 -> 0,9
+    .value Subscript .. 0,0 -> 0,9
+      .value Name 'a' Load .. 0,0 -> 0,1
+      .slice Slice .. 0,3 -> 0,7
+        .lower Name 'new' Load .. 0,3 -> 0,6
+      .ctx Load
+"""),
+
+(r"""a[ b : ]""", 'body[0].value.slice', None, 'lower', {'raw': False}, r"""**DEL**""", r"""a[ : ]""", r"""
+Module .. ROOT 0,0 -> 0,6
+  .body[1]
+  0] Expr .. 0,0 -> 0,6
+    .value Subscript .. 0,0 -> 0,6
+      .value Name 'a' Load .. 0,0 -> 0,1
+      .slice Slice .. 0,3 -> 0,4
+      .ctx Load
+"""),
+
+(r"""a[':':]""", 'body[0].value.slice', None, 'lower', {'raw': False}, r"""new""", r"""a[new:]""", r"""
+Module .. ROOT 0,0 -> 0,7
+  .body[1]
+  0] Expr .. 0,0 -> 0,7
+    .value Subscript .. 0,0 -> 0,7
+      .value Name 'a' Load .. 0,0 -> 0,1
+      .slice Slice .. 0,2 -> 0,6
+        .lower Name 'new' Load .. 0,2 -> 0,5
+      .ctx Load
+"""),
+
+(r"""a[':':]""", 'body[0].value.slice', None, 'lower', {'raw': False}, r"""**DEL**""", r"""a[:]""", r"""
+Module .. ROOT 0,0 -> 0,4
+  .body[1]
+  0] Expr .. 0,0 -> 0,4
+    .value Subscript .. 0,0 -> 0,4
+      .value Name 'a' Load .. 0,0 -> 0,1
+      .slice Slice .. 0,2 -> 0,3
+      .ctx Load
+"""),
+
+(r"""a[:b]""", 'body[0].value.slice', None, 'upper', {'raw': False}, r"""new""", r"""a[:new]""", r"""
+Module .. ROOT 0,0 -> 0,7
+  .body[1]
+  0] Expr .. 0,0 -> 0,7
+    .value Subscript .. 0,0 -> 0,7
+      .value Name 'a' Load .. 0,0 -> 0,1
+      .slice Slice .. 0,2 -> 0,6
+        .upper Name 'new' Load .. 0,3 -> 0,6
+      .ctx Load
+"""),
+
+(r"""a[:(b)]""", 'body[0].value.slice', None, 'upper', {'raw': False}, r"""new""", r"""a[:new]""", r"""
+Module .. ROOT 0,0 -> 0,7
+  .body[1]
+  0] Expr .. 0,0 -> 0,7
+    .value Subscript .. 0,0 -> 0,7
+      .value Name 'a' Load .. 0,0 -> 0,1
+      .slice Slice .. 0,2 -> 0,6
+        .upper Name 'new' Load .. 0,3 -> 0,6
+      .ctx Load
+"""),
+
+(r"""a[:b]""", 'body[0].value.slice', None, 'upper', {'raw': False}, r"""**DEL**""", r"""a[:]""", r"""
+Module .. ROOT 0,0 -> 0,4
+  .body[1]
+  0] Expr .. 0,0 -> 0,4
+    .value Subscript .. 0,0 -> 0,4
+      .value Name 'a' Load .. 0,0 -> 0,1
+      .slice Slice .. 0,2 -> 0,3
+      .ctx Load
+"""),
+
+(r"""a[:(b)]""", 'body[0].value.slice', None, 'upper', {'raw': False}, r"""**DEL**""", r"""a[:]""", r"""
+Module .. ROOT 0,0 -> 0,4
+  .body[1]
+  0] Expr .. 0,0 -> 0,4
+    .value Subscript .. 0,0 -> 0,4
+      .value Name 'a' Load .. 0,0 -> 0,1
+      .slice Slice .. 0,2 -> 0,3
+      .ctx Load
+"""),
+
+(r"""a[:]""", 'body[0].value.slice', None, 'upper', {'raw': False}, r"""**DEL**""", r"""a[:]""", r"""
+Module .. ROOT 0,0 -> 0,4
+  .body[1]
+  0] Expr .. 0,0 -> 0,4
+    .value Subscript .. 0,0 -> 0,4
+      .value Name 'a' Load .. 0,0 -> 0,1
+      .slice Slice .. 0,2 -> 0,3
+      .ctx Load
+"""),
+
+(r"""a[:]""", 'body[0].value.slice', None, 'upper', {'raw': False}, r"""new""", r"""a[:new]""", r"""
+Module .. ROOT 0,0 -> 0,7
+  .body[1]
+  0] Expr .. 0,0 -> 0,7
+    .value Subscript .. 0,0 -> 0,7
+      .value Name 'a' Load .. 0,0 -> 0,1
+      .slice Slice .. 0,2 -> 0,6
+        .upper Name 'new' Load .. 0,3 -> 0,6
+      .ctx Load
+"""),
+
+(r"""a[::]""", 'body[0].value.slice', None, 'upper', {'raw': False}, r"""new""", r"""a[:new:]""", r"""
+Module .. ROOT 0,0 -> 0,8
+  .body[1]
+  0] Expr .. 0,0 -> 0,8
+    .value Subscript .. 0,0 -> 0,8
+      .value Name 'a' Load .. 0,0 -> 0,1
+      .slice Slice .. 0,2 -> 0,7
+        .upper Name 'new' Load .. 0,3 -> 0,6
+      .ctx Load
+"""),
+
+(r"""a[ : ]""", 'body[0].value.slice', None, 'upper', {'raw': False}, r"""new""", r"""a[ :new ]""", r"""
+Module .. ROOT 0,0 -> 0,9
+  .body[1]
+  0] Expr .. 0,0 -> 0,9
+    .value Subscript .. 0,0 -> 0,9
+      .value Name 'a' Load .. 0,0 -> 0,1
+      .slice Slice .. 0,3 -> 0,7
+        .upper Name 'new' Load .. 0,4 -> 0,7
+      .ctx Load
+"""),
+
+(r"""a[ : b ]""", 'body[0].value.slice', None, 'upper', {'raw': False}, r"""**DEL**""", r"""a[ : ]""", r"""
+Module .. ROOT 0,0 -> 0,6
+  .body[1]
+  0] Expr .. 0,0 -> 0,6
+    .value Subscript .. 0,0 -> 0,6
+      .value Name 'a' Load .. 0,0 -> 0,1
+      .slice Slice .. 0,3 -> 0,4
+      .ctx Load
+"""),
+
+(r"""a[ : : ]""", 'body[0].value.slice', None, 'upper', {'raw': False}, r"""new""", r"""a[ :new: ]""", r"""
+Module .. ROOT 0,0 -> 0,10
+  .body[1]
+  0] Expr .. 0,0 -> 0,10
+    .value Subscript .. 0,0 -> 0,10
+      .value Name 'a' Load .. 0,0 -> 0,1
+      .slice Slice .. 0,3 -> 0,8
+        .upper Name 'new' Load .. 0,4 -> 0,7
+      .ctx Load
+"""),
+
+(r"""a[ : b : ]""", 'body[0].value.slice', None, 'upper', {'raw': False}, r"""**DEL**""", r"""a[ :: ]""", r"""
+Module .. ROOT 0,0 -> 0,7
+  .body[1]
+  0] Expr .. 0,0 -> 0,7
+    .value Subscript .. 0,0 -> 0,7
+      .value Name 'a' Load .. 0,0 -> 0,1
+      .slice Slice .. 0,3 -> 0,5
+      .ctx Load
+"""),
+
+(r"""a[:b:]""", 'body[0].value.slice', None, 'upper', {'raw': False}, r"""new""", r"""a[:new:]""", r"""
+Module .. ROOT 0,0 -> 0,8
+  .body[1]
+  0] Expr .. 0,0 -> 0,8
+    .value Subscript .. 0,0 -> 0,8
+      .value Name 'a' Load .. 0,0 -> 0,1
+      .slice Slice .. 0,2 -> 0,7
+        .upper Name 'new' Load .. 0,3 -> 0,6
+      .ctx Load
+"""),
+
+(r"""a[:(b):]""", 'body[0].value.slice', None, 'upper', {'raw': False}, r"""new""", r"""a[:new:]""", r"""
+Module .. ROOT 0,0 -> 0,8
+  .body[1]
+  0] Expr .. 0,0 -> 0,8
+    .value Subscript .. 0,0 -> 0,8
+      .value Name 'a' Load .. 0,0 -> 0,1
+      .slice Slice .. 0,2 -> 0,7
+        .upper Name 'new' Load .. 0,3 -> 0,6
+      .ctx Load
+"""),
+
+(r"""a[:b:]""", 'body[0].value.slice', None, 'upper', {'raw': False}, r"""**DEL**""", r"""a[::]""", r"""
+Module .. ROOT 0,0 -> 0,5
+  .body[1]
+  0] Expr .. 0,0 -> 0,5
+    .value Subscript .. 0,0 -> 0,5
+      .value Name 'a' Load .. 0,0 -> 0,1
+      .slice Slice .. 0,2 -> 0,4
+      .ctx Load
+"""),
+
+(r"""a[:(b):]""", 'body[0].value.slice', None, 'upper', {'raw': False}, r"""**DEL**""", r"""a[::]""", r"""
+Module .. ROOT 0,0 -> 0,5
+  .body[1]
+  0] Expr .. 0,0 -> 0,5
+    .value Subscript .. 0,0 -> 0,5
+      .value Name 'a' Load .. 0,0 -> 0,1
+      .slice Slice .. 0,2 -> 0,4
+      .ctx Load
+"""),
+
+(r"""a[:':']""", 'body[0].value.slice', None, 'upper', {'raw': False}, r"""new""", r"""a[:new]""", r"""
+Module .. ROOT 0,0 -> 0,7
+  .body[1]
+  0] Expr .. 0,0 -> 0,7
+    .value Subscript .. 0,0 -> 0,7
+      .value Name 'a' Load .. 0,0 -> 0,1
+      .slice Slice .. 0,2 -> 0,6
+        .upper Name 'new' Load .. 0,3 -> 0,6
+      .ctx Load
+"""),
+
+(r"""a[:':']""", 'body[0].value.slice', None, 'upper', {'raw': False}, r"""**DEL**""", r"""a[:]""", r"""
+Module .. ROOT 0,0 -> 0,4
+  .body[1]
+  0] Expr .. 0,0 -> 0,4
+    .value Subscript .. 0,0 -> 0,4
+      .value Name 'a' Load .. 0,0 -> 0,1
+      .slice Slice .. 0,2 -> 0,3
+      .ctx Load
+"""),
+
+(r"""a[:':':]""", 'body[0].value.slice', None, 'upper', {'raw': False}, r"""new""", r"""a[:new:]""", r"""
+Module .. ROOT 0,0 -> 0,8
+  .body[1]
+  0] Expr .. 0,0 -> 0,8
+    .value Subscript .. 0,0 -> 0,8
+      .value Name 'a' Load .. 0,0 -> 0,1
+      .slice Slice .. 0,2 -> 0,7
+        .upper Name 'new' Load .. 0,3 -> 0,6
+      .ctx Load
+"""),
+
+(r"""a[:':':]""", 'body[0].value.slice', None, 'upper', {'raw': False}, r"""**DEL**""", r"""a[::]""", r"""
+Module .. ROOT 0,0 -> 0,5
+  .body[1]
+  0] Expr .. 0,0 -> 0,5
+    .value Subscript .. 0,0 -> 0,5
+      .value Name 'a' Load .. 0,0 -> 0,1
+      .slice Slice .. 0,2 -> 0,4
+      .ctx Load
+"""),
+
+(r"""a[":":':']""", 'body[0].value.slice', None, 'upper', {'raw': False}, r"""new""", r"""a[":":new]""", r"""
+Module .. ROOT 0,0 -> 0,10
+  .body[1]
+  0] Expr .. 0,0 -> 0,10
+    .value Subscript .. 0,0 -> 0,10
+      .value Name 'a' Load .. 0,0 -> 0,1
+      .slice Slice .. 0,2 -> 0,9
+        .lower Constant ':' .. 0,2 -> 0,5
+        .upper Name 'new' Load .. 0,6 -> 0,9
+      .ctx Load
+"""),
+
+(r"""a[":":':']""", 'body[0].value.slice', None, 'upper', {'raw': False}, r"""**DEL**""", r"""a[":":]""", r"""
+Module .. ROOT 0,0 -> 0,7
+  .body[1]
+  0] Expr .. 0,0 -> 0,7
+    .value Subscript .. 0,0 -> 0,7
+      .value Name 'a' Load .. 0,0 -> 0,1
+      .slice Slice .. 0,2 -> 0,6
+        .lower Constant ':' .. 0,2 -> 0,5
+      .ctx Load
+"""),
+
+(r"""a[":":':':]""", 'body[0].value.slice', None, 'upper', {'raw': False}, r"""new""", r"""a[":":new:]""", r"""
+Module .. ROOT 0,0 -> 0,11
+  .body[1]
+  0] Expr .. 0,0 -> 0,11
+    .value Subscript .. 0,0 -> 0,11
+      .value Name 'a' Load .. 0,0 -> 0,1
+      .slice Slice .. 0,2 -> 0,10
+        .lower Constant ':' .. 0,2 -> 0,5
+        .upper Name 'new' Load .. 0,6 -> 0,9
+      .ctx Load
+"""),
+
+(r"""a[":":':':]""", 'body[0].value.slice', None, 'upper', {'raw': False}, r"""**DEL**""", r"""a[":"::]""", r"""
+Module .. ROOT 0,0 -> 0,8
+  .body[1]
+  0] Expr .. 0,0 -> 0,8
+    .value Subscript .. 0,0 -> 0,8
+      .value Name 'a' Load .. 0,0 -> 0,1
+      .slice Slice .. 0,2 -> 0,7
+        .lower Constant ':' .. 0,2 -> 0,5
+      .ctx Load
+"""),
+
+(r"""a[::b]""", 'body[0].value.slice', None, 'step', {'raw': False}, r"""new""", r"""a[::new]""", r"""
+Module .. ROOT 0,0 -> 0,8
+  .body[1]
+  0] Expr .. 0,0 -> 0,8
+    .value Subscript .. 0,0 -> 0,8
+      .value Name 'a' Load .. 0,0 -> 0,1
+      .slice Slice .. 0,2 -> 0,7
+        .step Name 'new' Load .. 0,4 -> 0,7
+      .ctx Load
+"""),
+
+(r"""a[::(b)]""", 'body[0].value.slice', None, 'step', {'raw': False}, r"""new""", r"""a[::new]""", r"""
+Module .. ROOT 0,0 -> 0,8
+  .body[1]
+  0] Expr .. 0,0 -> 0,8
+    .value Subscript .. 0,0 -> 0,8
+      .value Name 'a' Load .. 0,0 -> 0,1
+      .slice Slice .. 0,2 -> 0,7
+        .step Name 'new' Load .. 0,4 -> 0,7
+      .ctx Load
+"""),
+
+(r"""a[::b]""", 'body[0].value.slice', None, 'step', {'raw': False}, r"""**DEL**""", r"""a[::]""", r"""
+Module .. ROOT 0,0 -> 0,5
+  .body[1]
+  0] Expr .. 0,0 -> 0,5
+    .value Subscript .. 0,0 -> 0,5
+      .value Name 'a' Load .. 0,0 -> 0,1
+      .slice Slice .. 0,2 -> 0,4
+      .ctx Load
+"""),
+
+(r"""a[::(b)]""", 'body[0].value.slice', None, 'step', {'raw': False}, r"""**DEL**""", r"""a[::]""", r"""
+Module .. ROOT 0,0 -> 0,5
+  .body[1]
+  0] Expr .. 0,0 -> 0,5
+    .value Subscript .. 0,0 -> 0,5
+      .value Name 'a' Load .. 0,0 -> 0,1
+      .slice Slice .. 0,2 -> 0,4
+      .ctx Load
+"""),
+
+(r"""a[::]""", 'body[0].value.slice', None, 'step', {'raw': False}, r"""**DEL**""", r"""a[::]""", r"""
+Module .. ROOT 0,0 -> 0,5
+  .body[1]
+  0] Expr .. 0,0 -> 0,5
+    .value Subscript .. 0,0 -> 0,5
+      .value Name 'a' Load .. 0,0 -> 0,1
+      .slice Slice .. 0,2 -> 0,4
+      .ctx Load
+"""),
+
+(r"""a[::]""", 'body[0].value.slice', None, 'step', {'raw': False}, r"""new""", r"""a[::new]""", r"""
+Module .. ROOT 0,0 -> 0,8
+  .body[1]
+  0] Expr .. 0,0 -> 0,8
+    .value Subscript .. 0,0 -> 0,8
+      .value Name 'a' Load .. 0,0 -> 0,1
+      .slice Slice .. 0,2 -> 0,7
+        .step Name 'new' Load .. 0,4 -> 0,7
+      .ctx Load
+"""),
+
+(r"""a[:]""", 'body[0].value.slice', None, 'step', {'raw': False}, r"""new""", r"""a[::new]""", r"""
+Module .. ROOT 0,0 -> 0,8
+  .body[1]
+  0] Expr .. 0,0 -> 0,8
+    .value Subscript .. 0,0 -> 0,8
+      .value Name 'a' Load .. 0,0 -> 0,1
+      .slice Slice .. 0,2 -> 0,7
+        .step Name 'new' Load .. 0,4 -> 0,7
+      .ctx Load
+"""),
+
+(r"""a[ :: ]""", 'body[0].value.slice', None, 'step', {'raw': False}, r"""new""", r"""a[ ::new ]""", r"""
+Module .. ROOT 0,0 -> 0,10
+  .body[1]
+  0] Expr .. 0,0 -> 0,10
+    .value Subscript .. 0,0 -> 0,10
+      .value Name 'a' Load .. 0,0 -> 0,1
+      .slice Slice .. 0,3 -> 0,8
+        .step Name 'new' Load .. 0,5 -> 0,8
+      .ctx Load
+"""),
+
+(r"""a[ : ]""", 'body[0].value.slice', None, 'step', {'raw': False}, r"""new""", r"""a[ ::new ]""", r"""
+Module .. ROOT 0,0 -> 0,10
+  .body[1]
+  0] Expr .. 0,0 -> 0,10
+    .value Subscript .. 0,0 -> 0,10
+      .value Name 'a' Load .. 0,0 -> 0,1
+      .slice Slice .. 0,3 -> 0,8
+        .step Name 'new' Load .. 0,5 -> 0,8
+      .ctx Load
+"""),
+
+(r"""a[ :: b ]""", 'body[0].value.slice', None, 'step', {'raw': False}, r"""**DEL**""", r"""a[ :: ]""", r"""
+Module .. ROOT 0,0 -> 0,7
+  .body[1]
+  0] Expr .. 0,0 -> 0,7
+    .value Subscript .. 0,0 -> 0,7
+      .value Name 'a' Load .. 0,0 -> 0,1
+      .slice Slice .. 0,3 -> 0,5
+      .ctx Load
+"""),
+
+(r"""a[ : : ]""", 'body[0].value.slice', None, 'step', {'raw': False}, r"""new""", r"""a[ : :new ]""", r"""
+Module .. ROOT 0,0 -> 0,11
+  .body[1]
+  0] Expr .. 0,0 -> 0,11
+    .value Subscript .. 0,0 -> 0,11
+      .value Name 'a' Load .. 0,0 -> 0,1
+      .slice Slice .. 0,3 -> 0,9
+        .step Name 'new' Load .. 0,6 -> 0,9
+      .ctx Load
+"""),
+
+(r"""a[ : b : ]""", 'body[0].value.slice', None, 'step', {'raw': False}, r"""**DEL**""", r"""a[ : b : ]""", r"""
+Module .. ROOT 0,0 -> 0,10
+  .body[1]
+  0] Expr .. 0,0 -> 0,10
+    .value Subscript .. 0,0 -> 0,10
+      .value Name 'a' Load .. 0,0 -> 0,1
+      .slice Slice .. 0,3 -> 0,8
+        .upper Name 'b' Load .. 0,5 -> 0,6
+      .ctx Load
+"""),
+
+(r"""a[:b]""", 'body[0].value.slice', None, 'step', {'raw': False}, r"""new""", r"""a[:b:new]""", r"""
+Module .. ROOT 0,0 -> 0,9
+  .body[1]
+  0] Expr .. 0,0 -> 0,9
+    .value Subscript .. 0,0 -> 0,9
+      .value Name 'a' Load .. 0,0 -> 0,1
+      .slice Slice .. 0,2 -> 0,8
+        .upper Name 'b' Load .. 0,3 -> 0,4
+        .step Name 'new' Load .. 0,5 -> 0,8
+      .ctx Load
+"""),
+
+(r"""a[:(b)]""", 'body[0].value.slice', None, 'step', {'raw': False}, r"""new""", r"""a[:(b):new]""", r"""
+Module .. ROOT 0,0 -> 0,11
+  .body[1]
+  0] Expr .. 0,0 -> 0,11
+    .value Subscript .. 0,0 -> 0,11
+      .value Name 'a' Load .. 0,0 -> 0,1
+      .slice Slice .. 0,2 -> 0,10
+        .upper Name 'b' Load .. 0,4 -> 0,5
+        .step Name 'new' Load .. 0,7 -> 0,10
+      .ctx Load
+"""),
+
+(r"""a[:b]""", 'body[0].value.slice', None, 'step', {'raw': False}, r"""**DEL**""", r"""a[:b]""", r"""
+Module .. ROOT 0,0 -> 0,5
+  .body[1]
+  0] Expr .. 0,0 -> 0,5
+    .value Subscript .. 0,0 -> 0,5
+      .value Name 'a' Load .. 0,0 -> 0,1
+      .slice Slice .. 0,2 -> 0,4
+        .upper Name 'b' Load .. 0,3 -> 0,4
+      .ctx Load
+"""),
+
+(r"""a[:(b)]""", 'body[0].value.slice', None, 'step', {'raw': False}, r"""**DEL**""", r"""a[:(b)]""", r"""
+Module .. ROOT 0,0 -> 0,7
+  .body[1]
+  0] Expr .. 0,0 -> 0,7
+    .value Subscript .. 0,0 -> 0,7
+      .value Name 'a' Load .. 0,0 -> 0,1
+      .slice Slice .. 0,2 -> 0,6
+        .upper Name 'b' Load .. 0,4 -> 0,5
+      .ctx Load
+"""),
+
+(r"""a[:':']""", 'body[0].value.slice', None, 'step', {'raw': False}, r"""new""", r"""a[:':':new]""", r"""
+Module .. ROOT 0,0 -> 0,11
+  .body[1]
+  0] Expr .. 0,0 -> 0,11
+    .value Subscript .. 0,0 -> 0,11
+      .value Name 'a' Load .. 0,0 -> 0,1
+      .slice Slice .. 0,2 -> 0,10
+        .upper Constant ':' .. 0,3 -> 0,6
+        .step Name 'new' Load .. 0,7 -> 0,10
+      .ctx Load
+"""),
+
+(r"""a[:':']""", 'body[0].value.slice', None, 'step', {'raw': False}, r"""**DEL**""", r"""a[:':']""", r"""
+Module .. ROOT 0,0 -> 0,7
+  .body[1]
+  0] Expr .. 0,0 -> 0,7
+    .value Subscript .. 0,0 -> 0,7
+      .value Name 'a' Load .. 0,0 -> 0,1
+      .slice Slice .. 0,2 -> 0,6
+        .upper Constant ':' .. 0,3 -> 0,6
+      .ctx Load
+"""),
+
+(r"""a[:':':]""", 'body[0].value.slice', None, 'step', {'raw': False}, r"""new""", r"""a[:':':new]""", r"""
+Module .. ROOT 0,0 -> 0,11
+  .body[1]
+  0] Expr .. 0,0 -> 0,11
+    .value Subscript .. 0,0 -> 0,11
+      .value Name 'a' Load .. 0,0 -> 0,1
+      .slice Slice .. 0,2 -> 0,10
+        .upper Constant ':' .. 0,3 -> 0,6
+        .step Name 'new' Load .. 0,7 -> 0,10
+      .ctx Load
+"""),
+
+(r"""a[:':':]""", 'body[0].value.slice', None, 'step', {'raw': False}, r"""**DEL**""", r"""a[:':':]""", r"""
+Module .. ROOT 0,0 -> 0,8
+  .body[1]
+  0] Expr .. 0,0 -> 0,8
+    .value Subscript .. 0,0 -> 0,8
+      .value Name 'a' Load .. 0,0 -> 0,1
+      .slice Slice .. 0,2 -> 0,7
+        .upper Constant ':' .. 0,3 -> 0,6
+      .ctx Load
+"""),
+
+(r"""a[::':']""", 'body[0].value.slice', None, 'step', {'raw': False}, r"""new""", r"""a[::new]""", r"""
+Module .. ROOT 0,0 -> 0,8
+  .body[1]
+  0] Expr .. 0,0 -> 0,8
+    .value Subscript .. 0,0 -> 0,8
+      .value Name 'a' Load .. 0,0 -> 0,1
+      .slice Slice .. 0,2 -> 0,7
+        .step Name 'new' Load .. 0,4 -> 0,7
+      .ctx Load
+"""),
+
+(r"""a[::':']""", 'body[0].value.slice', None, 'step', {'raw': False}, r"""**DEL**""", r"""a[::]""", r"""
+Module .. ROOT 0,0 -> 0,5
+  .body[1]
+  0] Expr .. 0,0 -> 0,5
+    .value Subscript .. 0,0 -> 0,5
+      .value Name 'a' Load .. 0,0 -> 0,1
+      .slice Slice .. 0,2 -> 0,4
+      .ctx Load
+"""),
+
+(r"""a[":":':']""", 'body[0].value.slice', None, 'step', {'raw': False}, r"""new""", r"""a[":":':':new]""", r"""
+Module .. ROOT 0,0 -> 0,14
+  .body[1]
+  0] Expr .. 0,0 -> 0,14
+    .value Subscript .. 0,0 -> 0,14
+      .value Name 'a' Load .. 0,0 -> 0,1
+      .slice Slice .. 0,2 -> 0,13
+        .lower Constant ':' .. 0,2 -> 0,5
+        .upper Constant ':' .. 0,6 -> 0,9
+        .step Name 'new' Load .. 0,10 -> 0,13
+      .ctx Load
+"""),
+
+(r"""a[":":':']""", 'body[0].value.slice', None, 'step', {'raw': False}, r"""**DEL**""", r"""a[":":':']""", r"""
+Module .. ROOT 0,0 -> 0,10
+  .body[1]
+  0] Expr .. 0,0 -> 0,10
+    .value Subscript .. 0,0 -> 0,10
+      .value Name 'a' Load .. 0,0 -> 0,1
+      .slice Slice .. 0,2 -> 0,9
+        .lower Constant ':' .. 0,2 -> 0,5
+        .upper Constant ':' .. 0,6 -> 0,9
+      .ctx Load
+"""),
+
+(r"""a[":":':':]""", 'body[0].value.slice', None, 'step', {'raw': False}, r"""new""", r"""a[":":':':new]""", r"""
+Module .. ROOT 0,0 -> 0,14
+  .body[1]
+  0] Expr .. 0,0 -> 0,14
+    .value Subscript .. 0,0 -> 0,14
+      .value Name 'a' Load .. 0,0 -> 0,1
+      .slice Slice .. 0,2 -> 0,13
+        .lower Constant ':' .. 0,2 -> 0,5
+        .upper Constant ':' .. 0,6 -> 0,9
+        .step Name 'new' Load .. 0,10 -> 0,13
+      .ctx Load
+"""),
+
+(r"""a[":":':':]""", 'body[0].value.slice', None, 'step', {'raw': False}, r"""**DEL**""", r"""a[":":':':]""", r"""
+Module .. ROOT 0,0 -> 0,11
+  .body[1]
+  0] Expr .. 0,0 -> 0,11
+    .value Subscript .. 0,0 -> 0,11
+      .value Name 'a' Load .. 0,0 -> 0,1
+      .slice Slice .. 0,2 -> 0,10
+        .lower Constant ':' .. 0,2 -> 0,5
+        .upper Constant ':' .. 0,6 -> 0,9
+      .ctx Load
+"""),
+
+(r"""a[":"::':']""", 'body[0].value.slice', None, 'step', {'raw': False}, r"""new""", r"""a[":"::new]""", r"""
+Module .. ROOT 0,0 -> 0,11
+  .body[1]
+  0] Expr .. 0,0 -> 0,11
+    .value Subscript .. 0,0 -> 0,11
+      .value Name 'a' Load .. 0,0 -> 0,1
+      .slice Slice .. 0,2 -> 0,10
+        .lower Constant ':' .. 0,2 -> 0,5
+        .step Name 'new' Load .. 0,7 -> 0,10
+      .ctx Load
+"""),
+
+(r"""a[":"::':']""", 'body[0].value.slice', None, 'step', {'raw': False}, r"""**DEL**""", r"""a[":"::]""", r"""
+Module .. ROOT 0,0 -> 0,8
+  .body[1]
+  0] Expr .. 0,0 -> 0,8
+    .value Subscript .. 0,0 -> 0,8
+      .value Name 'a' Load .. 0,0 -> 0,1
+      .slice Slice .. 0,2 -> 0,7
+        .lower Constant ':' .. 0,2 -> 0,5
+      .ctx Load
+"""),
+
+(r"""try: pass
+except e: pass""", 'body[0].handlers[0]', None, 'type', {'raw': False}, r"""new""", r"""try: pass
+except new: pass""", r"""
+Module .. ROOT 0,0 -> 1,16
+  .body[1]
+  0] Try .. 0,0 -> 1,16
+    .body[1]
+    0] Pass .. 0,5 -> 0,9
+    .handlers[1]
+    0] ExceptHandler .. 1,0 -> 1,16
+      .type Name 'new' Load .. 1,7 -> 1,10
+      .body[1]
+      0] Pass .. 1,12 -> 1,16
+"""),
+
+(r"""try: pass
+except (e): pass""", 'body[0].handlers[0]', None, 'type', {'raw': False}, r"""new""", r"""try: pass
+except new: pass""", r"""
+Module .. ROOT 0,0 -> 1,16
+  .body[1]
+  0] Try .. 0,0 -> 1,16
+    .body[1]
+    0] Pass .. 0,5 -> 0,9
+    .handlers[1]
+    0] ExceptHandler .. 1,0 -> 1,16
+      .type Name 'new' Load .. 1,7 -> 1,10
+      .body[1]
+      0] Pass .. 1,12 -> 1,16
+"""),
+
+(r"""try: pass
+except e: pass""", 'body[0].handlers[0]', None, 'type', {'raw': False}, r"""**DEL**""", r"""try: pass
+except: pass""", r"""
+Module .. ROOT 0,0 -> 1,12
+  .body[1]
+  0] Try .. 0,0 -> 1,12
+    .body[1]
+    0] Pass .. 0,5 -> 0,9
+    .handlers[1]
+    0] ExceptHandler .. 1,0 -> 1,12
+      .body[1]
+      0] Pass .. 1,8 -> 1,12
+"""),
+
+(r"""try: pass
+except (e): pass""", 'body[0].handlers[0]', None, 'type', {'raw': False}, r"""**DEL**""", r"""try: pass
+except: pass""", r"""
+Module .. ROOT 0,0 -> 1,12
+  .body[1]
+  0] Try .. 0,0 -> 1,12
+    .body[1]
+    0] Pass .. 0,5 -> 0,9
+    .handlers[1]
+    0] ExceptHandler .. 1,0 -> 1,12
+      .body[1]
+      0] Pass .. 1,8 -> 1,12
+"""),
+
+(r"""try: pass
+except e as n: pass""", 'body[0].handlers[0]', None, 'type', {'raw': False}, r"""**DEL**""", r"""**ValueError('cannot delete ExceptHandler.type in this state')**""", r"""
+"""),
+
+(r"""try: pass
+except: pass""", 'body[0].handlers[0]', None, 'type', {'raw': False}, r"""**DEL**""", r"""try: pass
+except: pass""", r"""
+Module .. ROOT 0,0 -> 1,12
+  .body[1]
+  0] Try .. 0,0 -> 1,12
+    .body[1]
+    0] Pass .. 0,5 -> 0,9
+    .handlers[1]
+    0] ExceptHandler .. 1,0 -> 1,12
+      .body[1]
+      0] Pass .. 1,8 -> 1,12
+"""),
+
+(r"""try: pass
+except: pass""", 'body[0].handlers[0]', None, 'type', {'raw': False}, r"""new""", r"""try: pass
+except new: pass""", r"""
+Module .. ROOT 0,0 -> 1,16
+  .body[1]
+  0] Try .. 0,0 -> 1,16
+    .body[1]
+    0] Pass .. 0,5 -> 0,9
+    .handlers[1]
+    0] ExceptHandler .. 1,0 -> 1,16
+      .type Name 'new' Load .. 1,7 -> 1,10
+      .body[1]
+      0] Pass .. 1,12 -> 1,16
+"""),
+
+(r"""try: pass
+except e as n: pass""", 'body[0].handlers[0]', None, 'type', {'raw': False}, r"""new""", r"""try: pass
+except new as n: pass""", r"""
+Module .. ROOT 0,0 -> 1,21
+  .body[1]
+  0] Try .. 0,0 -> 1,21
+    .body[1]
+    0] Pass .. 0,5 -> 0,9
+    .handlers[1]
+    0] ExceptHandler .. 1,0 -> 1,21
+      .type Name 'new' Load .. 1,7 -> 1,10
+      .name 'n'
+      .body[1]
+      0] Pass .. 1,17 -> 1,21
+"""),
+
+(r"""try: pass
+except (e) as n: pass""", 'body[0].handlers[0]', None, 'type', {'raw': False}, r"""new""", r"""try: pass
+except new as n: pass""", r"""
+Module .. ROOT 0,0 -> 1,21
+  .body[1]
+  0] Try .. 0,0 -> 1,21
+    .body[1]
+    0] Pass .. 0,5 -> 0,9
+    .handlers[1]
+    0] ExceptHandler .. 1,0 -> 1,21
+      .type Name 'new' Load .. 1,7 -> 1,10
+      .name 'n'
+      .body[1]
+      0] Pass .. 1,17 -> 1,21
+"""),
+
 ]  # END OF PUT_ONE_DATA
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 PUT_RAW_DATA = [
 (r"""(1, 2, 3)""", '', (0, 4, 0, 5), {}, r"""*z""", r"""*z""", r"""(1, *z, 3)""", r"""
