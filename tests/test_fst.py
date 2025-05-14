@@ -20483,7 +20483,7 @@ Module .. ROOT 0,0 -> 1,22
 """),
 
 (r"""match a:
- case cls(a=b): pass""", 'body[0].cases[0].pattern', 0, 'kwd_attrs', {'raw': False}, r"""1""", r"""**NodeTypeError('expecting identifier for MatchClass.kwd_attrs')**""", r"""
+ case cls(a=b): pass""", 'body[0].cases[0].pattern', 0, 'kwd_attrs', {'raw': False}, r"""1""", r"""**NodeTypeError("expecting identifier, got '1'")**""", r"""
 """),
 
 (r"""match a:

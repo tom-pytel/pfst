@@ -68,19 +68,27 @@ def _get_one(self: 'FST', idx: int | None, field: str, cut: bool, **options) -> 
 # ----------------------------------------------------------------------------------------------------------------------
 # put
 
-def _code_as_identifier(code: Code) -> str | None:
+def _code_as_identifier(code: Code) -> str:
+    if isinstance(code, list):
+        if len(code) != 1:
+            raise NodeTypeError(f'expecting onle line identifier, got {len(code)} lines')
 
-    # TODO: handle text identifiers with multiple lines, preceding and following comments, line continuations and maybe semicolons?
+        code = code[0]
 
     if isinstance(code, str):
-        return code if is_valid_identifier(code) else None
-    if isinstance(code, list):
-        return code if len(code) == 1 and is_valid_identifier(code := code[0]) else None  # join without newlines to ignore one or two extraneous ones
+        if not is_valid_identifier(code):
+            raise NodeTypeError(f'expecting identifier, got {code!r}')
 
-    if isinstance(code, FST):
-        code = code.a
+    else:
+        if isinstance(code, FST):
+            code = code.a
 
-    return code.id if isinstance(code, Name) else None
+        if not isinstance(code, Name):
+            raise NodeTypeError(f'expecting identifier (Name), got {code.__class__.__name__}')
+
+        return code.id
+
+    return code
 
 
 _normalize_code_str2op = {
@@ -105,8 +113,6 @@ def _normalize_code_op(code: Code,
                        target: type[AugAssign] | type[BoolOp] | type[BinOp] | type[UnaryOp] | type[Compare] |
                        None = None) -> 'FST':
     """Convert `code` to an operator `FST` of the kind we need if is possible."""
-
-    # TODO: handle text operators with multiple lines, preceding following comments, line continuations and maybe semicolons?
 
     if isinstance(code, FST):
         if (src := code.get_src(*code.loc)) not in _normalize_code_str2op[target]:
@@ -525,13 +531,6 @@ def _put_one_Interpolation_value(self: 'FST', code: Code | None, idx: int | None
     return ret
 
 
-def _validate_code_as_identifier(self: 'FST', code: Code | None, field: str) -> str:
-    if not (code := _code_as_identifier(code)):
-        raise NodeTypeError(f"expecting identifier for {self.a.__class__.__name__}.{field}")
-
-    return code
-
-
 def _put_one_MatchValue_value(self: 'FST', code: Code | None, idx: int | None, field: str, child: AST, extra: None,
                               **options) -> 'FST':
     """Put MatchValue.value. Need to do this because a standalone MatchValue encompassing a parenthesized constant ends
@@ -555,7 +554,7 @@ def _put_one_identifier_required(self: 'FST', code: Code | None, idx: int | None
     if validate:
         _validate_put(self, code, idx, field, child, options)
 
-    code                     = _validate_code_as_identifier(self, code, field)
+    code                     = _code_as_identifier(code)
     ln, col, end_ln, end_col = loc or self.loc
     lines                    = self.root._lines
 
@@ -603,7 +602,7 @@ def _put_one_identifier_optional(self: 'FST', code: Code | None, idx: int | None
     if not can_put:
         raise ValueError(f'cannot create {self.a.__class__.__name__}.{field} in this state')
 
-    code          = _validate_code_as_identifier(self, code, field)
+    code          = _code_as_identifier(code)
     params_offset = self.put_src(prefix + code, *loc, True, exclude=self)
 
     self.offset(*params_offset, self_=False)
@@ -677,7 +676,7 @@ def _put_one_MatchAs_name(self: 'FST', code: Code | None, idx: int | None, field
     if code is None:
         code = '_'
     else:
-        code = _validate_code_as_identifier(self, code, field)
+        code = _code_as_identifier(code)
 
     loc = self.loc
 
@@ -870,7 +869,7 @@ _PUT_ONE_HANDLERS = {
     # (Global, 'names'):                    (_put_one_default, None), # identifier*                                     - slice (special)
     # (Nonlocal, 'names'):                  (_put_one_default, None), # identifier*                                     - slice (special)
     (Expr, 'value'):                      (_put_one_expr_required, None), # expr
-    # (BoolOp, 'op'):                       (_put_one_default, None), # boolop
+    # (BoolOp, 'op'):                       (_put_one_default, None), # boolop                                          - OP MAY NOT HAVE UNIQUE LOCATION!
     # (BoolOp, 'values'):                   (_put_one_default, None), # expr*                                           - slice
     (NamedExpr, 'target'):                (_put_one_expr_required, Name), # expr
     (NamedExpr, 'value'):                 (_put_one_expr_required, None), # expr
@@ -916,7 +915,7 @@ _PUT_ONE_HANDLERS = {
     (Attribute, 'value'):                 (_put_one_expr_required, None), # expr
     (Attribute, 'attr'):                  (_put_one_Attribute_attr, None), # identifier                                 - after the "value."
     (Subscript, 'value'):                 (_put_one_expr_required, None), # expr
-    # (Subscript, 'slice'):                 (_put_one_default, None), # expr                                            - need special parse 'slice'
+    # (Subscript, 'slice'):                 (_put_one_default, None), # expr                                            - special parse 'slice'
     (Starred, 'value'):                   (_put_one_expr_required, None), # expr
     (Name, 'id'):                         (_put_one_identifier_required, None), # identifier
     (List, 'elts'):                       (_put_one_tuple_list_or_set, None), # expr*
@@ -930,13 +929,13 @@ _PUT_ONE_HANDLERS = {
     (ExceptHandler, 'type'):              (_put_one_expr_optional, (_field_info_ExceptHandler_type, None)), # expr?
     (ExceptHandler, 'name'):              (_put_one_ExceptHandler_name, None), # identifier?
     (ExceptHandler, 'body'):              (_put_one_stmtish, None), # stmt*
-    # (arguments, 'posonlyargs'):           (_put_one_default, None), # arg*                                            - need special parse 'arg'
-    # (arguments, 'args'):                  (_put_one_default, None), # arg*                                            - need special parse 'arg'
+    # (arguments, 'posonlyargs'):           (_put_one_default, None), # arg*                                            - special parse 'arg'
+    # (arguments, 'args'):                  (_put_one_default, None), # arg*                                            - special parse 'arg'
     (arguments, 'defaults'):              (_put_one_expr_required, None), # expr*
-    # (arguments, 'vararg'):                (_put_one_default, None), # arg?
-    # (arguments, 'kwonlyargs'):            (_put_one_default, None), # arg*                                            - need special parse 'arg'
+    # (arguments, 'vararg'):                (_put_one_default, None), # arg?                                            - special parse 'arg'
+    # (arguments, 'kwonlyargs'):            (_put_one_default, None), # arg*                                            - special parse 'arg'
     (arguments, 'kw_defaults'):           (_put_one_expr_optional, (_field_info_arguments_kw_defaults, None)), # expr*  - can have None with special rules
-    # (arguments, 'kwarg'):                 (_put_one_default, None), # arg?
+    # (arguments, 'kwarg'):                 (_put_one_default, None), # arg?                                            - special parse 'arg'
     (arg, 'arg'):                         (_put_one_identifier_required, None), # identifier
     (arg, 'annotation'):                  (_put_one_expr_optional, (_field_info_arg_annotation, [Lambda, Yield, YieldFrom, Await, NamedExpr])), # expr?  - OPTIONAL TAIL: ':' - [Lambda, Yield, YieldFrom, Await, NamedExpr]
     # (keyword, 'arg'):                     (_put_one_default, None), # identifier?
@@ -945,14 +944,14 @@ _PUT_ONE_HANDLERS = {
     (alias, 'asname'):                    (_put_one_identifier_optional, _field_info_alias_asname), # identifier?
     (withitem, 'context_expr'):           (_put_one_expr_required, None), # expr
     (withitem, 'optional_vars'):          (_put_one_expr_optional, (_field_info_withitem_optional_vars, (Name, Tuple, List))), # expr?  - OPTIONAL TAIL: 'as' - Name
-    # (match_case, 'pattern'):              (_put_one_default, None), # pattern
+    # (match_case, 'pattern'):              (_put_one_default, None), # pattern                                         - special parse
     (match_case, 'guard'):                (_put_one_expr_optional, (_field_info_match_case_guard, None)), # expr?       - OPTIONAL TAIL: 'if'
     (match_case, 'body'):                 (_put_one_stmtish, None), # stmt*
     (MatchValue, 'value'):                (_put_one_MatchValue_value, None), # expr                                     - limited values, Constant? Name becomes MatchAs
     # (MatchSingleton, 'value'):            (_put_one_default, None), # constant
-    # (MatchSequence, 'patterns'):          (_put_one_default, None), # pattern*
+    # (MatchSequence, 'patterns'):          (_put_one_default, None), # pattern*                                        - slice
     (MatchMapping, 'keys'):               (_put_one_expr_required, (Constant, Attribute)), # expr*                      TODO: XXX are there any others allowed?
-    # (MatchMapping, 'patterns'):           (_put_one_default, None), # pattern*                                        - special parse
+    # (MatchMapping, 'patterns'):           (_put_one_default, None), # pattern*                                        - slice
     # (MatchMapping, 'rest'):               (_put_one_default, None), # identifier?
     (MatchClass, 'cls'):                  (_put_one_expr_required, (Name, Attribute)), # expr
     # (MatchClass, 'patterns'):             (_put_one_default, None), # pattern*                                        - slice
