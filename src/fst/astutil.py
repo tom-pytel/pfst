@@ -374,7 +374,7 @@ def get_field(parent: AST, name: str, idx: int | None = None) -> AST:
     return getattr(parent, name) if idx is None else getattr(parent, name)[idx]
 
 
-def set_field(parent: AST, child: AST, name: str, idx: int | None = None):
+def set_field(parent: AST, child: Any, name: str, idx: int | None = None):
     if idx is None:
         setattr(parent, name, child)
     else:

@@ -20458,27 +20458,81 @@ Module .. ROOT 0,0 -> 1,15
       0] Pass .. 1,11 -> 1,15
 """),
 
+(r"""match a:
+ case cls(a=b): pass""", 'body[0].cases[0].pattern', 0, 'kwd_attrs', {'raw': False}, r"""new""", r"""match a:
+ case cls(new=b): pass""", r"""
+Module .. ROOT 0,0 -> 1,22
+  .body[1]
+  0] Match .. 0,0 -> 1,22
+    .subject Name 'a' Load .. 0,6 -> 0,7
+    .cases[1]
+    0] match_case .. 1,1 -> 1,22
+      .pattern MatchClass .. 1,6 -> 1,16
+        .cls Name 'cls' Load .. 1,6 -> 1,9
+        .kwd_attrs[1]
+        0] 'new'
+        .kwd_patterns[1]
+        0] MatchAs .. 1,14 -> 1,15
+          .name 'b'
+      .body[1]
+      0] Pass .. 1,18 -> 1,22
+"""),
+
+(r"""match a:
+ case cls(a=b): pass""", 'body[0].cases[0].pattern', 0, 'kwd_attrs', {'raw': False}, r"""**DEL**""", r"""**ValueError('cannot delete MatchClass.kwd_attrs[0]')**""", r"""
+"""),
+
+(r"""match a:
+ case cls(a=b): pass""", 'body[0].cases[0].pattern', 0, 'kwd_attrs', {'raw': False}, r"""1""", r"""**NodeTypeError('expecting identifier for MatchClass.kwd_attrs')**""", r"""
+"""),
+
+(r"""match a:
+ case cls(a=b, c=d): pass""", 'body[0].cases[0].pattern', 1, 'kwd_attrs', {'raw': False}, r"""new""", r"""match a:
+ case cls(a=b, new=d): pass""", r"""
+Module .. ROOT 0,0 -> 1,27
+  .body[1]
+  0] Match .. 0,0 -> 1,27
+    .subject Name 'a' Load .. 0,6 -> 0,7
+    .cases[1]
+    0] match_case .. 1,1 -> 1,27
+      .pattern MatchClass .. 1,6 -> 1,21
+        .cls Name 'cls' Load .. 1,6 -> 1,9
+        .kwd_attrs[2]
+        0] 'a'
+        1] 'new'
+        .kwd_patterns[2]
+        0] MatchAs .. 1,12 -> 1,13
+          .name 'b'
+        1] MatchAs .. 1,19 -> 1,20
+          .name 'd'
+      .body[1]
+      0] Pass .. 1,23 -> 1,27
+"""),
+
+(r"""match a:
+ case cls(a=(b), c=d): pass""", 'body[0].cases[0].pattern', 1, 'kwd_attrs', {'raw': False}, r"""new""", r"""match a:
+ case cls(a=(b), new=d): pass""", r"""
+Module .. ROOT 0,0 -> 1,29
+  .body[1]
+  0] Match .. 0,0 -> 1,29
+    .subject Name 'a' Load .. 0,6 -> 0,7
+    .cases[1]
+    0] match_case .. 1,1 -> 1,29
+      .pattern MatchClass .. 1,6 -> 1,23
+        .cls Name 'cls' Load .. 1,6 -> 1,9
+        .kwd_attrs[2]
+        0] 'a'
+        1] 'new'
+        .kwd_patterns[2]
+        0] MatchAs .. 1,13 -> 1,14
+          .name 'b'
+        1] MatchAs .. 1,21 -> 1,22
+          .name 'd'
+      .body[1]
+      0] Pass .. 1,25 -> 1,29
+"""),
+
 ]  # END OF PUT_ONE_DATA
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 PUT_RAW_DATA = [
 (r"""(1, 2, 3)""", '', (0, 4, 0, 5), {}, r"""*z""", r"""*z""", r"""(1, *z, 3)""", r"""

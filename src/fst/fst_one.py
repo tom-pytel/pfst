@@ -70,7 +70,7 @@ def _get_one(self: 'FST', idx: int | None, field: str, cut: bool, **options) -> 
 
 def _code_as_identifier(code: Code) -> str | None:
 
-    # TODO: handle text identifiers with multiple lines, preceding and following comments, line continuations and maybe semicolons? I am going nuts with this, definitely...
+    # TODO: handle text identifiers with multiple lines, preceding and following comments, line continuations and maybe semicolons?
 
     if isinstance(code, str):
         return code if is_valid_identifier(code) else None
@@ -570,7 +570,7 @@ def _put_one_identifier_required(self: 'FST', code: Code | None, idx: int | None
         end_col      = col + len(src)
 
     self.put_src(code, ln, col, end_ln, end_col, True)
-    setattr(self.a, field, code)
+    set_field(self.a, code, field, idx)
 
     return code
 
@@ -626,6 +626,29 @@ def _put_one_ExceptHandler_name(self: 'FST', code: Code | None, idx: int | None,
         typef.parenthesize()
 
     return ret
+
+
+def _put_one_MatchClass_kwd_attrs(self: 'FST', code: Code | None, idx: int | None, field: str, child: AST, extra: None,
+                                  **options) -> 'FST':
+    child        = _validate_put(self, code, idx, field, child, options)
+    ast          = self.a
+    lines        = self.root._lines
+    kwd_patterns = ast.kwd_patterns
+
+    if idx:
+        _, _, ln, col = kwd_patterns[idx - 1].f.loc
+    elif patterns := ast.patterns:
+        _, _, ln, col = patterns[-1].f.loc
+    else:
+        _, _, ln, col = ast.cls.f.loc
+
+    end_ln, end_col = _prev_find(lines, ln, col, *kwd_patterns[idx].f.loc[:2], '=')  # must be there
+    ln, col, src    = _prev_src(lines, ln, col, end_ln, end_col)  # must be there
+    end_col         = col + len(src)
+    col             = end_col - len(src.lstrip('(,'))
+
+    return _put_one_identifier_required(self, code, idx, field, child, None, fstloc(ln, col, ln, end_col), False,
+                                        **options)
 
 
 def _put_one_MatchStar_name(self: 'FST', code: Code | None, idx: int | None, field: str, child: AST, extra: None,
@@ -929,12 +952,12 @@ _PUT_ONE_HANDLERS = {
     # (MatchSingleton, 'value'):            (_put_one_default, None), # constant
     # (MatchSequence, 'patterns'):          (_put_one_default, None), # pattern*
     (MatchMapping, 'keys'):               (_put_one_expr_required, (Constant, Attribute)), # expr*                      TODO: XXX are there any others allowed?
-    # (MatchMapping, 'patterns'):           (_put_one_default, None), # pattern*
+    # (MatchMapping, 'patterns'):           (_put_one_default, None), # pattern*                                        - special parse
     # (MatchMapping, 'rest'):               (_put_one_default, None), # identifier?
     (MatchClass, 'cls'):                  (_put_one_expr_required, (Name, Attribute)), # expr
     # (MatchClass, 'patterns'):             (_put_one_default, None), # pattern*                                        - slice
-    # (MatchClass, 'kwd_attrs'):            (_put_one_default, None), # identifier*
-    # (MatchClass, 'kwd_patterns'):         (_put_one_default, None), # pattern*
+    (MatchClass, 'kwd_attrs'):            (_put_one_MatchClass_kwd_attrs, None), # identifier*
+    # (MatchClass, 'kwd_patterns'):         (_put_one_default, None), # pattern*                                        - special parse
     (MatchStar, 'name'):                  (_put_one_MatchStar_name, None), # identifier?
     # (MatchAs, 'pattern'):                 (_put_one_default, None), # pattern?                                        - special parse
     (MatchAs, 'name'):                    (_put_one_MatchAs_name, None), # identifier?
