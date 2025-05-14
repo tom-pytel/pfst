@@ -443,17 +443,9 @@ def _put_one_expr_optional(self: 'FST', code: Code | None, idx: int | None, fiel
         if not can_del:
             raise ValueError(f'cannot delete {self.a.__class__.__name__}.{field} in this state')
 
-        childf = child.f
-
-
-        # if end_ln == -1:
-        #     _, _, end_ln, end_col = childf.pars()
-
-
-
         self.put_src(None, ln, col, end_ln, end_col, True)
         set_field(self.a, None, field, idx)
-        childf._unmake_fst_tree()
+        child.f._unmake_fst_tree()
 
         return None
 
@@ -461,26 +453,6 @@ def _put_one_expr_optional(self: 'FST', code: Code | None, idx: int | None, fiel
 
     if not can_put:
         raise ValueError(f'cannot create {self.a.__class__.__name__}.{field} in this state')
-
-
-
-
-    # TODO: end needs to come from _field_info()  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
-
-
-    # if end_ln == -1:
-    #     if pos := self._loc_block_header_end():
-    #         end_ln, end_col  = pos
-    #         end_col         -= 1
-
-    #     else:
-    #         _, _, end_ln, end_col = self.pars()
-    #         # _, _, end_ln, end_col = self.loc  # self.pars() for withitem.optional_vars
-
-
-
-
 
     loc     = fstloc(ln, col, end_ln, end_col)
     put_fst = _make_expr_fst(self, code, idx, field, required_extra, loc, ctx, prefix, **options)
@@ -556,7 +528,7 @@ def _put_one_MatchValue_value(self: 'FST', code: Code | None, idx: int | None, f
 
 
 def _put_one_identifier_required(self: 'FST', code: Code | None, idx: int | None, field: str, child: str,
-                                 extra: str | None, **options) -> str:
+                                 extra: str | None, loc: fstloc | None = None, **options) -> str:
     """Put a single required identifier."""
 
     _validate_put(self, code, idx, field, child, options)
@@ -564,7 +536,7 @@ def _put_one_identifier_required(self: 'FST', code: Code | None, idx: int | None
     if not (code := _code_as_identifier(code)):
         raise NodeTypeError(f"expecting identifier for {self.a.__class__.__name__}.{field}")
 
-    ln, col, end_ln, end_col = self.loc
+    ln, col, end_ln, end_col = loc or self.loc
     lines                    = self.root._lines
 
     if not extra:
@@ -578,10 +550,59 @@ def _put_one_identifier_required(self: 'FST', code: Code | None, idx: int | None
         end_col      = col + len(src)
 
     self.put_src(code, ln, col, end_ln, end_col, True)
-
     setattr(self.a, field, code)
 
     return code
+
+
+def _put_one_identifier_optional(self: 'FST', code: Code | None, idx: int | None, field: str, child: AST,
+                                 extra: tuple[Callable[['FST'], srcwpos], str | None], **options) -> Optional['FST']:
+    """Put new, replace or delete an optional identifier."""
+
+    child = _validate_put(self, code, idx, field, child, options, can_del=True)
+
+    field_info, required_extra = extra
+
+    if code is None:
+        if not child:  # delete nonexistent node, noop
+            return None
+
+    elif child:  # replace existing node
+        return _put_one_identifier_required(self, code, idx, field, child, required_extra, False, **options)
+
+    raise NotImplementedError
+
+    # (ln, col, end_ln, end_col), prefix, ctx, can_put, can_del = field_info(self, idx)
+
+    # if code is None:  # delete existing node
+    #     if not can_del:
+    #         raise ValueError(f'cannot delete {self.a.__class__.__name__}.{field} in this state')
+
+    #     self.put_src(None, ln, col, end_ln, end_col, True)
+    #     set_field(self.a, None, field, idx)
+    #     child.f._unmake_fst_tree()
+
+    #     return None
+
+    # # put new node
+
+    # if not can_put:
+    #     raise ValueError(f'cannot create {self.a.__class__.__name__}.{field} in this state')
+
+    # loc     = fstloc(ln, col, end_ln, end_col)
+    # put_fst = _make_expr_fst(self, code, idx, field, required_extra, loc, ctx, prefix, **options)
+    # put_fst = FST(put_fst.a, self, astfield(field, idx))
+
+    # self._make_fst_tree([put_fst])
+    # put_fst.pfield.set(self.a, put_fst.a)
+
+    # return put_fst
+
+
+def _put_one_Attribute_attr(self: 'FST', code: Code | None, idx: int | None, field: str, child: str, extra: str | None,
+                            **options) -> str:
+    return _put_one_identifier_required(self, code, idx, field, child, '.',
+                                        fstloc(*self.a.value.f.loc[2:], *self.loc[2:]), **options)
 
 
 def _put_one_op(self: 'FST', code: Code | None, idx: int | None, field: str, child: str,
@@ -798,7 +819,7 @@ _PUT_ONE_HANDLERS = {
     # (TemplateStr, 'values'):              (_put_one_default, None), # expr*                                           - ??? no location on py < 3.12
     # (Constant, 'value'):                  (_put_one_default, None), # constant                                        - can do via restricted expr Constant
     (Attribute, 'value'):                 (_put_one_expr_required, None), # expr
-    # (Attribute, 'attr'):                  (_put_one_default, None), # identifier                                      - after the "value."
+    (Attribute, 'attr'):                  (_put_one_Attribute_attr, None), # identifier                                 - after the "value."
     (Subscript, 'value'):                 (_put_one_expr_required, None), # expr
     # (Subscript, 'slice'):                 (_put_one_default, None), # expr
     (Starred, 'value'):                   (_put_one_expr_required, None), # expr

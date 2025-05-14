@@ -17076,6 +17076,33 @@ Module .. ROOT 0,0 -> 0,19
 (r"""def f(a): pass""", 'body[0].args.args[0]', None, 'annotation', {'raw': False}, r"""lambda: x""", r"""**NodeTypeError('arg.annotation cannot be Lambda')**""", r"""
 """),
 
+(r"""def f(a :  ( b ) ): pass""", 'body[0].args.args[0]', None, 'annotation', {'raw': False}, r"""new""", r"""def f(a :  new ): pass""", r"""
+Module .. ROOT 0,0 -> 0,22
+  .body[1]
+  0] FunctionDef .. 0,0 -> 0,22
+    .name 'f'
+    .args arguments .. 0,6 -> 0,14
+      .args[1]
+      0] arg .. 0,6 -> 0,14
+        .arg 'a'
+        .annotation Name 'new' Load .. 0,11 -> 0,14
+    .body[1]
+    0] Pass .. 0,18 -> 0,22
+"""),
+
+(r"""def f(a   :  ( b ) ): pass""", 'body[0].args.args[0]', None, 'annotation', {'raw': False}, r"""**DEL**""", r"""def f(a ): pass""", r"""
+Module .. ROOT 0,0 -> 0,15
+  .body[1]
+  0] FunctionDef .. 0,0 -> 0,15
+    .name 'f'
+    .args arguments .. 0,6 -> 0,7
+      .args[1]
+      0] arg .. 0,6 -> 0,7
+        .arg 'a'
+    .body[1]
+    0] Pass .. 0,11 -> 0,15
+"""),
+
 (r"""with a as b: pass""", 'body[0].items[0]', None, 'optional_vars', {'raw': False}, r"""new""", r"""with a as new: pass""", r"""
 Module .. ROOT 0,0 -> 0,19
   .body[1]
@@ -19304,6 +19331,39 @@ Module .. ROOT 0,0 -> 1,21
       .name 'n'
       .body[1]
       0] Pass .. 1,17 -> 1,21
+"""),
+
+(r"""a.b""", 'body[0].value', None, 'attr', {'raw': False}, r"""new""", r"""a.new""", r"""
+Module .. ROOT 0,0 -> 0,5
+  .body[1]
+  0] Expr .. 0,0 -> 0,5
+    .value Attribute .. 0,0 -> 0,5
+      .value Name 'a' Load .. 0,0 -> 0,1
+      .attr 'new'
+      .ctx Load
+"""),
+
+(r"""(a).b""", 'body[0].value', None, 'attr', {'raw': False}, r"""new""", r"""(a).new""", r"""
+Module .. ROOT 0,0 -> 0,7
+  .body[1]
+  0] Expr .. 0,0 -> 0,7
+    .value Attribute .. 0,0 -> 0,7
+      .value Name 'a' Load .. 0,1 -> 0,2
+      .attr 'new'
+      .ctx Load
+"""),
+
+(r"""(a) . b""", 'body[0].value', None, 'attr', {'raw': False}, r"""new""", r"""(a) . new""", r"""
+Module .. ROOT 0,0 -> 0,9
+  .body[1]
+  0] Expr .. 0,0 -> 0,9
+    .value Attribute .. 0,0 -> 0,9
+      .value Name 'a' Load .. 0,1 -> 0,2
+      .attr 'new'
+      .ctx Load
+"""),
+
+(r"""a.b""", 'body[0].value', None, 'attr', {'raw': False}, r"""**DEL**""", r"""**ValueError('cannot delete Attribute.attr')**""", r"""
 """),
 
 ]  # END OF PUT_ONE_DATA
