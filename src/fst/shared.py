@@ -202,7 +202,7 @@ def _prev_src(lines: list[str], ln: int, col: int, end_ln: int, end_col: int,
     necessarily AST stuff, it can be commas, colons, the 'try' keyword, etc... Code can include multiple AST nodes in
     return str if there are no spaces between them like 'a+b'.
 
-    **CAVEAT:** Make sure the starting position (`ln`, `col`) is not inside a string because that could give false
+    **WARNING:** Make sure the starting position (`ln`, `col`) is not inside a string because that could give false
     positives for comments or line continuations. To this end, when searching for non-AST stuff, make sure the start
     position does not start INSIDE OF or BEFORE any valid ASTs.
 

@@ -10,7 +10,7 @@ from .astutil import TypeAlias, TryStar, type_param, TypeVar, ParamSpec, TypeVar
 
 from .shared import (
     STMTISH, Code, NodeTypeError, astfield, fstloc, srcwpos,
-    _next_find, _prev_find, _next_find_re, _fixup_one_index,)
+    _prev_src, _next_find, _prev_find, _next_find_re, _fixup_one_index,)
 
 _re_identifier = re.compile(r'[^\d\W]\w*')
 
@@ -189,6 +189,17 @@ def _field_info_Raise_cause(self: 'FST', idx: int | None) -> _FieldInfo:
 def _field_info_Assert_msg(self: 'FST', idx: int | None) -> _FieldInfo:
     return _FieldInfo(fstloc((loc := self.a.test.f.pars()).end_ln, loc.end_col, self.end_ln, self.end_col), ', ')
 
+def _field_info_ImportFrom_module(self: 'FST', idx: int | None) -> _FieldInfo:
+    ln, col, src = _prev_src(self.root.lines, self_ln := self.ln, self_col := self.col, *self.a.names[0].f.loc[:2])  # 'import'
+
+    assert src == 'import'
+
+    ln, col, src = _prev_src(self.root.lines, self_ln, self_col, ln, col)  # must be there, the module name with any/some/all preceding '.' level indicators
+    end_col      = col + len(src)
+    col          = end_col - len(src.lstrip('.'))
+
+    return _FieldInfo(fstloc(ln, col, ln, end_col), '', can_del=bool(self.a.level))
+
 def _field_info_Yield_value(self: 'FST', idx: int | None) -> _FieldInfo:
     return _FieldInfo(fstloc((loc := self.loc).ln, loc.col + 5, self.end_ln, self.end_col), ' ')
 
@@ -249,9 +260,6 @@ def _field_info_ExceptHandler_name(self: 'FST', idx: int | None) -> _FieldInfo:
     end_col         -= 1
 
     return _FieldInfo(fstloc(ln, col, end_ln, end_col), ' as ', can_put=bool(type_))
-
-
-
 
 def _field_info_arguments_kw_defaults(self: 'FST', idx: int | None) -> _FieldInfo:
     if ann := (arg := self.a.kwonlyargs[idx]).annotation:
@@ -718,13 +726,13 @@ _PUT_ONE_HANDLERS = {
     # (FunctionDef, 'decorator_list'):      (_put_one_default, None), # expr*                                           - slice
     (FunctionDef, 'name'):                (_put_one_identifier_required, 'def'), # identifier
     # (FunctionDef, 'type_params'):         (_put_one_default, None), # type_param*                                     - slice
-    # (FunctionDef, 'args'):                (_put_one_default, None), # arguments
+    # (FunctionDef, 'args'):                (_put_one_default, None), # arguments                                       - special parse
     (FunctionDef, 'returns'):             (_put_one_expr_optional, (_field_info_FunctionDef_returns, None)), # expr?    - SPECIAL LOCATION OPTIONAL TAIL: '->'                                           - SPECIAL LOCATION CASE!
     (FunctionDef, 'body'):                (_put_one_stmtish, None), # stmt*
     # (AsyncFunctionDef, 'decorator_list'): (_put_one_default, None), # expr*                                           - slice
     (AsyncFunctionDef, 'name'):           (_put_one_identifier_required, 'def'), # identifier
     # (AsyncFunctionDef, 'type_params'):    (_put_one_default, None), # type_param*                                     - slice
-    # (AsyncFunctionDef, 'args'):           (_put_one_default, None), # arguments
+    # (AsyncFunctionDef, 'args'):           (_put_one_default, None), # arguments                                       - special parse
     (AsyncFunctionDef, 'returns'):        (_put_one_expr_optional, (_field_info_FunctionDef_returns, None)), # expr?    - SPECIAL LOCATION OPTIONAL TAIL: '->'
     (AsyncFunctionDef, 'body'):           (_put_one_stmtish, None), # stmt*
     # (ClassDef, 'decorator_list'):         (_put_one_default, None), # expr*                                           - slice
@@ -778,11 +786,11 @@ _PUT_ONE_HANDLERS = {
     (TryStar, 'finalbody'):               (_put_one_stmtish, None), # stmt*
     (Assert, 'test'):                     (_put_one_expr_required, None), # expr
     (Assert, 'msg'):                      (_put_one_expr_optional, (_field_info_Assert_msg, None)), # expr?             - OPTIONAL TAIL: ','
-    # (Import, 'names'):                    (_put_one_default, None), # alias*
-    # (ImportFrom, 'module'):               (_put_one_default, None), # identifier?
-    # (ImportFrom, 'names'):                (_put_one_default, None), # alias*
-    # (Global, 'names'):                    (_put_one_default, None), # identifier*
-    # (Nonlocal, 'names'):                  (_put_one_default, None), # identifier*
+    # (Import, 'names'):                    (_put_one_default, None), # alias*                                          - slice (special)
+    (ImportFrom, 'module'):               (_put_one_identifier_optional, _field_info_ImportFrom_module), # identifier?
+    # (ImportFrom, 'names'):                (_put_one_default, None), # alias*                                          - slice (special)
+    # (Global, 'names'):                    (_put_one_default, None), # identifier*                                     - slice (special)
+    # (Nonlocal, 'names'):                  (_put_one_default, None), # identifier*                                     - slice (special)
     (Expr, 'value'):                      (_put_one_expr_required, None), # expr
     # (BoolOp, 'op'):                       (_put_one_default, None), # boolop
     # (BoolOp, 'values'):                   (_put_one_default, None), # expr*                                           - slice
@@ -793,23 +801,23 @@ _PUT_ONE_HANDLERS = {
     (BinOp, 'right'):                     (_put_one_expr_required, None), # expr
     (UnaryOp, 'op'):                      (_put_one_op, None), # unaryop
     (UnaryOp, 'operand'):                 (_put_one_expr_required, None), # expr
-    # (Lambda, 'args'):                     (_put_one_default, None), # arguments                                       - need special parse
+    # (Lambda, 'args'):                     (_put_one_default, None), # arguments                                       - special parse
     (Lambda, 'body'):                     (_put_one_expr_required, None), # expr
     (IfExp, 'body'):                      (_put_one_expr_required, None), # expr
     (IfExp, 'test'):                      (_put_one_expr_required, None), # expr
     (IfExp, 'orelse'):                    (_put_one_expr_required, None), # expr
-    (Dict, 'keys'):                       (_put_one_expr_required, None), # expr*                                       - handle special key=None?
+    (Dict, 'keys'):                       (_put_one_Dict_key, None), # expr*                                            TODO: handle special key=None
     (Dict, 'values'):                     (_put_one_expr_required, None), # expr*
     (Set, 'elts'):                        (_put_one_tuple_list_or_set, None), # expr*
     (ListComp, 'elt'):                    (_put_one_expr_required, None), # expr
-    # (ListComp, 'generators'):             (_put_one_default, None), # comprehension*
+    # (ListComp, 'generators'):             (_put_one_default, None), # comprehension*                                  - slice
     (SetComp, 'elt'):                     (_put_one_expr_required, None), # expr
-    # (SetComp, 'generators'):              (_put_one_default, None), # comprehension*
-    (DictComp, 'key'):                    (_put_one_Dict_key, None), # expr                                             TODO: this!
+    # (SetComp, 'generators'):              (_put_one_default, None), # comprehension*                                  - slice
+    (DictComp, 'key'):                    (_put_one_expr_required, None), # expr
     (DictComp, 'value'):                  (_put_one_expr_required, None), # expr
-    # (DictComp, 'generators'):             (_put_one_default, None), # comprehension*
+    # (DictComp, 'generators'):             (_put_one_default, None), # comprehension*                                  - slice
     (GeneratorExp, 'elt'):                (_put_one_expr_required, None), # expr
-    # (GeneratorExp, 'generators'):         (_put_one_default, None), # comprehension*
+    # (GeneratorExp, 'generators'):         (_put_one_default, None), # comprehension*                                  - slice
     (Await, 'value'):                     (_put_one_expr_required, None), # expr
     (Yield, 'value'):                     (_put_one_expr_optional, (_field_info_Yield_value, None)), # expr?            - OPTIONAL TAIL: ''
     (YieldFrom, 'value'):                 (_put_one_expr_required, None), # expr

@@ -19498,6 +19498,117 @@ Module .. ROOT 0,0 -> 1,26
 except: pass""", 'body[0].handlers[0]', None, 'name', {'raw': False}, r"""new""", r"""**ValueError('cannot create ExceptHandler.name in this state')**""", r"""
 """),
 
+(r"""from a import *""", 'body[0]', None, 'module', {'raw': False}, r"""new""", r"""from new import *""", r"""
+Module .. ROOT 0,0 -> 0,17
+  .body[1]
+  0] ImportFrom .. 0,0 -> 0,17
+    .module 'new'
+    .names[1]
+    0] alias .. 0,16 -> 0,17
+      .name '*'
+    .level 0
+"""),
+
+(r"""from a import *""", 'body[0]', None, 'module', {'raw': False}, r"""**DEL**""", r"""**ValueError('cannot delete ImportFrom.module in this state')**""", r"""
+"""),
+
+(r"""from .a import *""", 'body[0]', None, 'module', {'raw': False}, r"""new""", r"""from .new import *""", r"""
+Module .. ROOT 0,0 -> 0,18
+  .body[1]
+  0] ImportFrom .. 0,0 -> 0,18
+    .module 'new'
+    .names[1]
+    0] alias .. 0,17 -> 0,18
+      .name '*'
+    .level 1
+"""),
+
+(r"""from .a import *""", 'body[0]', None, 'module', {'raw': False}, r"""**DEL**""", r"""from . import *""", r"""
+Module .. ROOT 0,0 -> 0,15
+  .body[1]
+  0] ImportFrom .. 0,0 -> 0,15
+    .names[1]
+    0] alias .. 0,14 -> 0,15
+      .name '*'
+    .level 1
+"""),
+
+(r"""from . a import *""", 'body[0]', None, 'module', {'raw': False}, r"""new""", r"""from . new import *""", r"""
+Module .. ROOT 0,0 -> 0,19
+  .body[1]
+  0] ImportFrom .. 0,0 -> 0,19
+    .module 'new'
+    .names[1]
+    0] alias .. 0,18 -> 0,19
+      .name '*'
+    .level 1
+"""),
+
+(r"""from . a import *""", 'body[0]', None, 'module', {'raw': False}, r"""**DEL**""", r"""from .  import *""", r"""
+Module .. ROOT 0,0 -> 0,16
+  .body[1]
+  0] ImportFrom .. 0,0 -> 0,16
+    .names[1]
+    0] alias .. 0,15 -> 0,16
+      .name '*'
+    .level 1
+"""),
+
+(r"""from . import *""", 'body[0]', None, 'module', {'raw': False}, r"""new""", r"""from .new import *""", r"""
+Module .. ROOT 0,0 -> 0,18
+  .body[1]
+  0] ImportFrom .. 0,0 -> 0,18
+    .module 'new'
+    .names[1]
+    0] alias .. 0,17 -> 0,18
+      .name '*'
+    .level 1
+"""),
+
+(r"""from . \
+ .\
+a import *""", 'body[0]', None, 'module', {'raw': False}, r"""new""", r"""from . \
+ .\
+new import *""", r"""
+Module .. ROOT 0,0 -> 2,12
+  .body[1]
+  0] ImportFrom .. 0,0 -> 2,12
+    .module 'new'
+    .names[1]
+    0] alias .. 2,11 -> 2,12
+      .name '*'
+    .level 2
+"""),
+
+(r"""from . \
+.\
+  a import *""", 'body[0]', None, 'module', {'raw': False}, r"""**DEL**""", r"""from . \
+.\
+   import *""", r"""
+Module .. ROOT 0,0 -> 2,11
+  .body[1]
+  0] ImportFrom .. 0,0 -> 2,11
+    .names[1]
+    0] alias .. 2,10 -> 2,11
+      .name '*'
+    .level 2
+"""),
+
+(r"""from . \
+ . \
+ import *""", 'body[0]', None, 'module', {'raw': False}, r"""new""", r"""from . \
+ .new \
+ import *""", r"""
+Module .. ROOT 0,0 -> 2,9
+  .body[1]
+  0] ImportFrom .. 0,0 -> 2,9
+    .module 'new'
+    .names[1]
+    0] alias .. 2,8 -> 2,9
+      .name '*'
+    .level 2
+"""),
+
 ]  # END OF PUT_ONE_DATA
 
 
