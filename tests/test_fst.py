@@ -19210,6 +19210,39 @@ Module .. ROOT 0,0 -> 0,8
       .ctx Load
 """),
 
+(r"""a.b""", 'body[0].value', None, 'attr', {'raw': False}, r"""new""", r"""a.new""", r"""
+Module .. ROOT 0,0 -> 0,5
+  .body[1]
+  0] Expr .. 0,0 -> 0,5
+    .value Attribute .. 0,0 -> 0,5
+      .value Name 'a' Load .. 0,0 -> 0,1
+      .attr 'new'
+      .ctx Load
+"""),
+
+(r"""(a).b""", 'body[0].value', None, 'attr', {'raw': False}, r"""new""", r"""(a).new""", r"""
+Module .. ROOT 0,0 -> 0,7
+  .body[1]
+  0] Expr .. 0,0 -> 0,7
+    .value Attribute .. 0,0 -> 0,7
+      .value Name 'a' Load .. 0,1 -> 0,2
+      .attr 'new'
+      .ctx Load
+"""),
+
+(r"""(a) . b""", 'body[0].value', None, 'attr', {'raw': False}, r"""new""", r"""(a) . new""", r"""
+Module .. ROOT 0,0 -> 0,9
+  .body[1]
+  0] Expr .. 0,0 -> 0,9
+    .value Attribute .. 0,0 -> 0,9
+      .value Name 'a' Load .. 0,1 -> 0,2
+      .attr 'new'
+      .ctx Load
+"""),
+
+(r"""a.b""", 'body[0].value', None, 'attr', {'raw': False}, r"""**DEL**""", r"""**ValueError('cannot delete Attribute.attr')**""", r"""
+"""),
+
 (r"""try: pass
 except e: pass""", 'body[0].handlers[0]', None, 'type', {'raw': False}, r"""new""", r"""try: pass
 except new: pass""", r"""
@@ -19333,40 +19366,144 @@ Module .. ROOT 0,0 -> 1,21
       0] Pass .. 1,17 -> 1,21
 """),
 
-(r"""a.b""", 'body[0].value', None, 'attr', {'raw': False}, r"""new""", r"""a.new""", r"""
-Module .. ROOT 0,0 -> 0,5
+(r"""try: pass
+except e as n: pass""", 'body[0].handlers[0]', None, 'name', {'raw': False}, r"""new""", r"""try: pass
+except e as new: pass""", r"""
+Module .. ROOT 0,0 -> 1,21
   .body[1]
-  0] Expr .. 0,0 -> 0,5
-    .value Attribute .. 0,0 -> 0,5
-      .value Name 'a' Load .. 0,0 -> 0,1
-      .attr 'new'
-      .ctx Load
+  0] Try .. 0,0 -> 1,21
+    .body[1]
+    0] Pass .. 0,5 -> 0,9
+    .handlers[1]
+    0] ExceptHandler .. 1,0 -> 1,21
+      .type Name 'e' Load .. 1,7 -> 1,8
+      .name 'new'
+      .body[1]
+      0] Pass .. 1,17 -> 1,21
 """),
 
-(r"""(a).b""", 'body[0].value', None, 'attr', {'raw': False}, r"""new""", r"""(a).new""", r"""
-Module .. ROOT 0,0 -> 0,7
+(r"""try: pass
+except (e) as n: pass""", 'body[0].handlers[0]', None, 'name', {'raw': False}, r"""new""", r"""try: pass
+except (e) as new: pass""", r"""
+Module .. ROOT 0,0 -> 1,23
   .body[1]
-  0] Expr .. 0,0 -> 0,7
-    .value Attribute .. 0,0 -> 0,7
-      .value Name 'a' Load .. 0,1 -> 0,2
-      .attr 'new'
-      .ctx Load
+  0] Try .. 0,0 -> 1,23
+    .body[1]
+    0] Pass .. 0,5 -> 0,9
+    .handlers[1]
+    0] ExceptHandler .. 1,0 -> 1,23
+      .type Name 'e' Load .. 1,8 -> 1,9
+      .name 'new'
+      .body[1]
+      0] Pass .. 1,19 -> 1,23
 """),
 
-(r"""(a) . b""", 'body[0].value', None, 'attr', {'raw': False}, r"""new""", r"""(a) . new""", r"""
-Module .. ROOT 0,0 -> 0,9
+(r"""try: pass
+except e as n: pass""", 'body[0].handlers[0]', None, 'name', {'raw': False}, r"""**DEL**""", r"""try: pass
+except e: pass""", r"""
+Module .. ROOT 0,0 -> 1,14
   .body[1]
-  0] Expr .. 0,0 -> 0,9
-    .value Attribute .. 0,0 -> 0,9
-      .value Name 'a' Load .. 0,1 -> 0,2
-      .attr 'new'
-      .ctx Load
+  0] Try .. 0,0 -> 1,14
+    .body[1]
+    0] Pass .. 0,5 -> 0,9
+    .handlers[1]
+    0] ExceptHandler .. 1,0 -> 1,14
+      .type Name 'e' Load .. 1,7 -> 1,8
+      .body[1]
+      0] Pass .. 1,10 -> 1,14
 """),
 
-(r"""a.b""", 'body[0].value', None, 'attr', {'raw': False}, r"""**DEL**""", r"""**ValueError('cannot delete Attribute.attr')**""", r"""
+(r"""try: pass
+except (e) as n: pass""", 'body[0].handlers[0]', None, 'name', {'raw': False}, r"""**DEL**""", r"""try: pass
+except (e): pass""", r"""
+Module .. ROOT 0,0 -> 1,16
+  .body[1]
+  0] Try .. 0,0 -> 1,16
+    .body[1]
+    0] Pass .. 0,5 -> 0,9
+    .handlers[1]
+    0] ExceptHandler .. 1,0 -> 1,16
+      .type Name 'e' Load .. 1,8 -> 1,9
+      .body[1]
+      0] Pass .. 1,12 -> 1,16
+"""),
+
+(r"""try: pass
+except e: pass""", 'body[0].handlers[0]', None, 'name', {'raw': False}, r"""**DEL**""", r"""try: pass
+except e: pass""", r"""
+Module .. ROOT 0,0 -> 1,14
+  .body[1]
+  0] Try .. 0,0 -> 1,14
+    .body[1]
+    0] Pass .. 0,5 -> 0,9
+    .handlers[1]
+    0] ExceptHandler .. 1,0 -> 1,14
+      .type Name 'e' Load .. 1,7 -> 1,8
+      .body[1]
+      0] Pass .. 1,10 -> 1,14
+"""),
+
+(r"""try: pass
+except (e): pass""", 'body[0].handlers[0]', None, 'name', {'raw': False}, r"""**DEL**""", r"""try: pass
+except (e): pass""", r"""
+Module .. ROOT 0,0 -> 1,16
+  .body[1]
+  0] Try .. 0,0 -> 1,16
+    .body[1]
+    0] Pass .. 0,5 -> 0,9
+    .handlers[1]
+    0] ExceptHandler .. 1,0 -> 1,16
+      .type Name 'e' Load .. 1,8 -> 1,9
+      .body[1]
+      0] Pass .. 1,12 -> 1,16
+"""),
+
+(r"""try: pass
+except e: pass""", 'body[0].handlers[0]', None, 'name', {'raw': False}, r"""new""", r"""try: pass
+except e as new: pass""", r"""
+Module .. ROOT 0,0 -> 1,21
+  .body[1]
+  0] Try .. 0,0 -> 1,21
+    .body[1]
+    0] Pass .. 0,5 -> 0,9
+    .handlers[1]
+    0] ExceptHandler .. 1,0 -> 1,21
+      .type Name 'e' Load .. 1,7 -> 1,8
+      .name 'new'
+      .body[1]
+      0] Pass .. 1,17 -> 1,21
+"""),
+
+(r"""try: pass
+except e, f: pass""", 'body[0].handlers[0]', None, 'name', {'raw': False, '_ver': 14}, r"""new""", r"""try: pass
+except (e, f) as new: pass""", r"""
+Module .. ROOT 0,0 -> 1,26
+  .body[1]
+  0] Try .. 0,0 -> 1,26
+    .body[1]
+    0] Pass .. 0,5 -> 0,9
+    .handlers[1]
+    0] ExceptHandler .. 1,0 -> 1,26
+      .type Tuple .. 1,7 -> 1,13
+        .elts[2]
+        0] Name 'e' Load .. 1,8 -> 1,9
+        1] Name 'f' Load .. 1,11 -> 1,12
+        .ctx Load
+      .name 'new'
+      .body[1]
+      0] Pass .. 1,22 -> 1,26
+"""),
+
+(r"""try: pass
+except: pass""", 'body[0].handlers[0]', None, 'name', {'raw': False}, r"""new""", r"""**ValueError('cannot create ExceptHandler.name in this state')**""", r"""
 """),
 
 ]  # END OF PUT_ONE_DATA
+
+
+
+
+
 
 
 

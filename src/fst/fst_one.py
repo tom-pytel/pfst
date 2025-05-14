@@ -147,7 +147,7 @@ def _is_valid_MatchAs_value(ast: AST) -> bool:
 
 
 class _FieldInfo(NamedTuple):
-    loc:     fstloc
+    loc:     fstloc  # For expr?: This is only used for create new or delete (and is set appropriately), replace is done using existing child location. For identifier? this is the search span.
     prefix:  str                = ' '
     ctx:     type[expr_context] = Load
     can_put: bool               = True
@@ -233,17 +233,22 @@ def _field_info_ExceptHandler_type(self: 'FST', idx: int | None) -> _FieldInfo:
     if type_ := self.a.type:
         _, _, end_ln, end_col = type_.f.pars()
     else:
-        end_ln, end_col  = self._loc_block_header_end()
+        end_ln, end_col  = self._loc_block_header_end()  # because 'name' can not be there
         end_col         -= 1
 
     return _FieldInfo(fstloc((loc := self.loc).ln, loc.col + 6, end_ln, end_col), ' ', can_del=not self.a.name)
 
+def _field_info_ExceptHandler_name(self: 'FST', idx: int | None) -> _FieldInfo:
+    if type_ := self.a.type:
+        _, _, ln, col = type_.f.pars()
+    else:
+        ln  = self.ln
+        col = self.col + 6
 
-# def _field_info_ExceptHandler_name(self: 'FST', idx: int | None) -> _FieldInfo:
-#     if exc := self.a.exc:
-#         return srcwpos((loc := exc.f.pars()).end_ln, loc.end_col, ' from '), Load, bool(exc), True
-#     else:
-#         return srcwpos((loc := self.loc).ln, loc.col + 5, ' from '), Load, bool(exc), True
+    end_ln, end_col  = self._loc_block_header_end()
+    end_col         -= 1
+
+    return _FieldInfo(fstloc(ln, col, end_ln, end_col), ' as ', can_put=bool(type_))
 
 
 
@@ -421,7 +426,7 @@ def _put_one_expr_required(self: 'FST', code: Code | None, idx: int | None, fiel
 
 def _put_one_expr_optional(self: 'FST', code: Code | None, idx: int | None, field: str, child: AST,
                            extra: tuple[
-                               Callable[['FST'], srcwpos],
+                               Callable[['FST'], _FieldInfo],
                                tuple[type[AST]] | list[type[AST]] | type[AST] | None,
                            ], **options) -> Optional['FST']:
     """Put new, replace or delete an optional expression."""
@@ -431,19 +436,19 @@ def _put_one_expr_optional(self: 'FST', code: Code | None, idx: int | None, fiel
     field_info, required_extra = extra
 
     if code is None:
-        if not child:  # delete nonexistent node, noop
+        if child is None:  # delete nonexistent node, noop
             return None
 
     elif child:  # replace existing node
         return _put_one_expr_required(self, code, idx, field, child, required_extra, False, **options)
 
-    (ln, col, end_ln, end_col), prefix, ctx, can_put, can_del = field_info(self, idx)
+    loc, prefix, ctx, can_put, can_del = field_info(self, idx)
 
     if code is None:  # delete existing node
         if not can_del:
             raise ValueError(f'cannot delete {self.a.__class__.__name__}.{field} in this state')
 
-        self.put_src(None, ln, col, end_ln, end_col, True)
+        self.put_src(None, *loc, True)
         set_field(self.a, None, field, idx)
         child.f._unmake_fst_tree()
 
@@ -454,7 +459,6 @@ def _put_one_expr_optional(self: 'FST', code: Code | None, idx: int | None, fiel
     if not can_put:
         raise ValueError(f'cannot create {self.a.__class__.__name__}.{field} in this state')
 
-    loc     = fstloc(ln, col, end_ln, end_col)
     put_fst = _make_expr_fst(self, code, idx, field, required_extra, loc, ctx, prefix, **options)
     put_fst = FST(put_fst.a, self, astfield(field, idx))
 
@@ -528,10 +532,11 @@ def _put_one_MatchValue_value(self: 'FST', code: Code | None, idx: int | None, f
 
 
 def _put_one_identifier_required(self: 'FST', code: Code | None, idx: int | None, field: str, child: str,
-                                 extra: str | None, loc: fstloc | None = None, **options) -> str:
+                                 extra: str | None, loc: fstloc | None = None, validate: bool = True, **options) -> str:
     """Put a single required identifier."""
 
-    _validate_put(self, code, idx, field, child, options)
+    if validate:
+        _validate_put(self, code, idx, field, child, options)
 
     if not (code := _code_as_identifier(code)):
         raise NodeTypeError(f"expecting identifier for {self.a.__class__.__name__}.{field}")
@@ -556,53 +561,57 @@ def _put_one_identifier_required(self: 'FST', code: Code | None, idx: int | None
 
 
 def _put_one_identifier_optional(self: 'FST', code: Code | None, idx: int | None, field: str, child: AST,
-                                 extra: tuple[Callable[['FST'], srcwpos], str | None], **options) -> Optional['FST']:
+                                 field_info: Callable[['FST'], _FieldInfo], **options) -> Optional['FST']:
     """Put new, replace or delete an optional identifier."""
 
     child = _validate_put(self, code, idx, field, child, options, can_del=True)
 
-    field_info, required_extra = extra
+    if code is None and child is None:  # delete nonexistent identifier, noop
+        return None
 
-    if code is None:
-        if not child:  # delete nonexistent node, noop
-            return None
+    loc, prefix, _, can_put, can_del = field_info(self, idx)
 
-    elif child:  # replace existing node
-        return _put_one_identifier_required(self, code, idx, field, child, required_extra, False, **options)
+    if code is None:  # delete existing identifier
+        if not can_del:
+            raise ValueError(f'cannot delete {self.a.__class__.__name__}.{field} in this state')
 
-    raise NotImplementedError
+        self.put_src(None, *loc, False)
+        set_field(self.a, None, field, idx)
 
-    # (ln, col, end_ln, end_col), prefix, ctx, can_put, can_del = field_info(self, idx)
+        return None
 
-    # if code is None:  # delete existing node
-    #     if not can_del:
-    #         raise ValueError(f'cannot delete {self.a.__class__.__name__}.{field} in this state')
+    elif child is not None:  # replace existing identifier
+        return _put_one_identifier_required(self, code, idx, field, child, prefix.strip(), loc, False, **options)
 
-    #     self.put_src(None, ln, col, end_ln, end_col, True)
-    #     set_field(self.a, None, field, idx)
-    #     child.f._unmake_fst_tree()
+    # # put new identifier
 
-    #     return None
+    if not can_put:
+        raise ValueError(f'cannot create {self.a.__class__.__name__}.{field} in this state')
+    if not (code := _code_as_identifier(code)):
+        raise NodeTypeError(f"expecting identifier for {self.a.__class__.__name__}.{field}")
 
-    # # put new node
+    params_offset = self.put_src(prefix + code, *loc, True, exclude=self)
 
-    # if not can_put:
-    #     raise ValueError(f'cannot create {self.a.__class__.__name__}.{field} in this state')
+    self.offset(*params_offset, self_=False)
+    setattr(self.a, field, code)
 
-    # loc     = fstloc(ln, col, end_ln, end_col)
-    # put_fst = _make_expr_fst(self, code, idx, field, required_extra, loc, ctx, prefix, **options)
-    # put_fst = FST(put_fst.a, self, astfield(field, idx))
-
-    # self._make_fst_tree([put_fst])
-    # put_fst.pfield.set(self.a, put_fst.a)
-
-    # return put_fst
+    return code
 
 
 def _put_one_Attribute_attr(self: 'FST', code: Code | None, idx: int | None, field: str, child: str, extra: str | None,
                             **options) -> str:
     return _put_one_identifier_required(self, code, idx, field, child, '.',
                                         fstloc(*self.a.value.f.loc[2:], *self.loc[2:]), **options)
+
+
+def _put_one_ExceptHandler_name(self: 'FST', code: Code | None, idx: int | None, field: str, child: str, extra: None,
+                                **options) -> str:
+    ret = _put_one_identifier_optional(self, code, idx, field, child, _field_info_ExceptHandler_name, **options)
+
+    if ret and (typef := self.a.type.f).is_parenthesized_tuple() is False:
+        typef.parenthesize()
+
+    return ret
 
 
 def _put_one_op(self: 'FST', code: Code | None, idx: int | None, field: str, child: str,
@@ -821,7 +830,7 @@ _PUT_ONE_HANDLERS = {
     (Attribute, 'value'):                 (_put_one_expr_required, None), # expr
     (Attribute, 'attr'):                  (_put_one_Attribute_attr, None), # identifier                                 - after the "value."
     (Subscript, 'value'):                 (_put_one_expr_required, None), # expr
-    # (Subscript, 'slice'):                 (_put_one_default, None), # expr
+    # (Subscript, 'slice'):                 (_put_one_default, None), # expr                                            - need special parse 'slice'
     (Starred, 'value'):                   (_put_one_expr_required, None), # expr
     (Name, 'id'):                         (_put_one_identifier_required, None), # identifier
     (List, 'elts'):                       (_put_one_tuple_list_or_set, None), # expr*
@@ -833,13 +842,13 @@ _PUT_ONE_HANDLERS = {
     (comprehension, 'iter'):              (_put_one_expr_required, None), # expr
     # (comprehension, 'ifs'):               (_put_one_default, None), # expr*                                           - slice
     (ExceptHandler, 'type'):              (_put_one_expr_optional, (_field_info_ExceptHandler_type, None)), # expr?
-    # (ExceptHandler, 'name'):              (_put_one_default, None), # identifier?
+    (ExceptHandler, 'name'):              (_put_one_ExceptHandler_name, None), # identifier?
     (ExceptHandler, 'body'):              (_put_one_stmtish, None), # stmt*
-    # (arguments, 'posonlyargs'):           (_put_one_default, None), # arg*
-    # (arguments, 'args'):                  (_put_one_default, None), # arg*
+    # (arguments, 'posonlyargs'):           (_put_one_default, None), # arg*                                            - need special parse 'arg'
+    # (arguments, 'args'):                  (_put_one_default, None), # arg*                                            - need special parse 'arg'
     (arguments, 'defaults'):              (_put_one_expr_required, None), # expr*
     # (arguments, 'vararg'):                (_put_one_default, None), # arg?
-    # (arguments, 'kwonlyargs'):            (_put_one_default, None), # arg*
+    # (arguments, 'kwonlyargs'):            (_put_one_default, None), # arg*                                            - need special parse 'arg'
     (arguments, 'kw_defaults'):           (_put_one_expr_optional, (_field_info_arguments_kw_defaults, None)), # expr*  - can have None with special rules
     # (arguments, 'kwarg'):                 (_put_one_default, None), # arg?
     (arg, 'arg'):                         (_put_one_identifier_required, None), # identifier
