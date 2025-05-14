@@ -525,8 +525,14 @@ def _put_one_Interpolation_value(self: 'FST', code: Code | None, idx: int | None
     return ret
 
 
-def _put_one_MatchValue_value(self: 'FST', code: Code | None, idx: int | None, field: str, child: AST,
-                              extra: tuple[type[AST]] | list[type[AST]] | type[AST] | None,
+def _validate_code_as_identifier(self: 'FST', code: Code | None, field: str) -> str:
+    if not (code := _code_as_identifier(code)):
+        raise NodeTypeError(f"expecting identifier for {self.a.__class__.__name__}.{field}")
+
+    return code
+
+
+def _put_one_MatchValue_value(self: 'FST', code: Code | None, idx: int | None, field: str, child: AST, extra: None,
                               **options) -> 'FST':
     """Put MatchValue.value. Need to do this because a standalone MatchValue encompassing a parenthesized constant ends
     before the closing parenthesis and so doesn't get offset correctly."""
@@ -549,9 +555,7 @@ def _put_one_identifier_required(self: 'FST', code: Code | None, idx: int | None
     if validate:
         _validate_put(self, code, idx, field, child, options)
 
-    if not (code := _code_as_identifier(code)):
-        raise NodeTypeError(f"expecting identifier for {self.a.__class__.__name__}.{field}")
-
+    code                     = _validate_code_as_identifier(self, code, field)
     ln, col, end_ln, end_col = loc or self.loc
     lines                    = self.root._lines
 
@@ -594,13 +598,12 @@ def _put_one_identifier_optional(self: 'FST', code: Code | None, idx: int | None
     elif child is not None:  # replace existing identifier
         return _put_one_identifier_required(self, code, idx, field, child, prefix.strip(), loc, False, **options)
 
-    # # put new identifier
+    # put new identifier
 
     if not can_put:
         raise ValueError(f'cannot create {self.a.__class__.__name__}.{field} in this state')
-    if not (code := _code_as_identifier(code)):
-        raise NodeTypeError(f"expecting identifier for {self.a.__class__.__name__}.{field}")
 
+    code          = _validate_code_as_identifier(self, code, field)
     params_offset = self.put_src(prefix + code, *loc, True, exclude=self)
 
     self.offset(*params_offset, self_=False)
@@ -621,6 +624,55 @@ def _put_one_ExceptHandler_name(self: 'FST', code: Code | None, idx: int | None,
 
     if ret and (typef := self.a.type.f).is_parenthesized_tuple() is False:
         typef.parenthesize()
+
+    return ret
+
+
+def _put_one_MatchStar_name(self: 'FST', code: Code | None, idx: int | None, field: str, child: AST, extra: None,
+                            **options) -> 'FST':
+    """Slightly annoying MatchStar.name. '_' really means delete."""
+
+    if code is None:
+        code = '_'
+
+    ln, col, end_ln, end_col = self.loc
+
+    ret = _put_one_identifier_required(self, code, idx, field, child, None, fstloc(ln, col + 1, end_ln, end_col),
+                                       **options)
+
+    if self.a.name == '_':
+        self.a.name = None
+
+    return ret
+
+
+def _put_one_MatchAs_name(self: 'FST', code: Code | None, idx: int | None, field: str, child: AST, extra: None,
+                          **options) -> 'FST':
+    """Very annoying MatchAs.name. '_' really means delete, which can't be done if there is a pattern, and can't be
+    assigned to a pattern."""
+
+    if code is None:
+        code = '_'
+    else:
+        code = _validate_code_as_identifier(self, code, field)
+
+    loc = self.loc
+
+    if pattern := self.a.pattern:
+        if code == '_':
+            raise ValueError("cannot change MatchAs with pattern into wildcard '_'")
+
+        ln, col = pattern.f.pars()[2:]
+        prefix  = 'as'
+
+    else:
+        ln, col = loc[:2]
+        prefix  = None
+
+    ret = _put_one_identifier_required(self, code, idx, field, child, prefix, fstloc(ln, col, *loc[2:]), **options)
+
+    if self.a.name == '_':
+        self.a.name = None
 
     return ret
 
@@ -880,13 +932,13 @@ _PUT_ONE_HANDLERS = {
     # (MatchMapping, 'patterns'):           (_put_one_default, None), # pattern*
     # (MatchMapping, 'rest'):               (_put_one_default, None), # identifier?
     (MatchClass, 'cls'):                  (_put_one_expr_required, (Name, Attribute)), # expr
-    # (MatchClass, 'patterns'):             (_put_one_default, None), # pattern*
+    # (MatchClass, 'patterns'):             (_put_one_default, None), # pattern*                                        - slice
     # (MatchClass, 'kwd_attrs'):            (_put_one_default, None), # identifier*
     # (MatchClass, 'kwd_patterns'):         (_put_one_default, None), # pattern*
-    # (MatchStar, 'name'):                  (_put_one_default, None), # identifier?
-    # (MatchAs, 'pattern'):                 (_put_one_default, None), # pattern?
-    # (MatchAs, 'name'):                    (_put_one_default, None), # identifier?
-    # (MatchOr, 'patterns'):                (_put_one_default, None), # pattern*
+    (MatchStar, 'name'):                  (_put_one_MatchStar_name, None), # identifier?
+    # (MatchAs, 'pattern'):                 (_put_one_default, None), # pattern?                                        - special parse
+    (MatchAs, 'name'):                    (_put_one_MatchAs_name, None), # identifier?
+    # (MatchOr, 'patterns'):                (_put_one_default, None), # pattern*                                        - slice
     (TypeVar, 'name'):                    (_put_one_identifier_required, None), # identifier
     (TypeVar, 'bound'):                   (_put_one_expr_optional, (_field_info_TypeVar_bound, None)), # expr?          - OPTIONAL MIDDLE: ':'
     (TypeVar, 'default_value'):           (_put_one_expr_optional, (_field_info_TypeVar_default_value, None)), # expr?  - OPTIONAL TAIL: '='
