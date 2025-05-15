@@ -2,14 +2,14 @@
 
 import re
 from ast import *
-from types import FunctionType
+from types import EllipsisType, FunctionType
 from typing import Any, Callable, NamedTuple, Optional, Union
 
 from .astutil import *
 from .astutil import TypeAlias, TryStar, type_param, TypeVar, ParamSpec, TypeVarTuple, TemplateStr, Interpolation
 
 from .shared import (
-    STMTISH, Code, NodeTypeError, astfield, fstloc, srcwpos,
+    STMTISH, Code, NodeTypeError, astfield, fstloc,
     _next_src, _prev_src, _next_find, _prev_find, _next_find_re, _fixup_one_index,)
 
 _re_identifier = re.compile(r'[^\d\W]\w*')
@@ -67,6 +67,22 @@ def _get_one(self: 'FST', idx: int | None, field: str, cut: bool, **options) -> 
 
 # ----------------------------------------------------------------------------------------------------------------------
 # put
+
+class onestatic(NamedTuple):
+    getinfo:  Callable[['FST', 'onestatic', int | None, str], 'oneinfo'] | None
+    restrict: type[AST] | tuple[type[AST]] | list[type[AST]] | Callable[[AST], bool] | None = None
+    base:     type[AST]          = expr
+    ctx:      type[expr_context] = Load
+    delstr:   str                = ''  # or '**'
+    suffix:   str                = ''  # or ': ' for dict '**'
+
+
+class oneinfo(NamedTuple):
+    static:      onestatic
+    prefix:      str           = ''    # prefix to add on insert
+    loc_insdel:  fstloc | None = None  # only present if insert (put new to nonexistent) or delete is possible and is the location for the specific mutually-exclusive operation
+    loc_ident:   fstloc | None = None  # location of identifier
+
 
 def _code_as_identifier(code: Code) -> str:
     if isinstance(code, list):
@@ -139,6 +155,10 @@ def _normalize_code_op(code: Code,
     return code
 
 
+def _is_valid_MatchSingleton_value(ast: AST) -> bool:
+    return isinstance(ast, Constant) and ast.value in (True, False, None)
+
+
 def _is_valid_MatchAs_value(ast: AST) -> bool:
     if isinstance(ast, Constant):
         return isinstance(ast.value, (str, int, float, complex))
@@ -152,7 +172,7 @@ def _is_valid_MatchAs_value(ast: AST) -> bool:
     return False
 
 
-def _validate_put(self: 'FST', code: Code | None, idx: int | None, field: str,  child: list[AST] | AST | None,
+def _validate_put(self: 'FST', code: Code | None, idx: int | None, field: str, child: list[AST] | AST | None,
                   options: dict[str: Any], *, can_del: bool = False) -> AST | None:
     """Check that `idx` was passed (or not) as needed and that not deleting if not possible and that `to` raw parameter
     is not present."""
@@ -174,24 +194,31 @@ def _validate_put(self: 'FST', code: Code | None, idx: int | None, field: str,  
     return child
 
 
+def _validate_put_ast(self: 'FST', put_ast: AST, idx: int | None, field: str, static: onestatic):
+    if restrict := static.restrict:
+        if isinstance(restrict, list):  # list means these types not allowed
+            if isinstance(put_ast, tuple(restrict)):
+                raise NodeTypeError(f'{self.a.__class__.__name__}.{field}{" " if idx is None else f"[{idx}] "}'
+                                    f'cannot be {put_ast.__class__.__name__}')
+
+        elif isinstance(restrict, FunctionType):
+            if not restrict(put_ast):
+                raise NodeTypeError(f'invalid value for {self.a.__class__.__name__}.{field}' +
+                                    ('' if idx is None else f'[{idx}]'))
+
+        elif not isinstance(put_ast, restrict):  # single AST type or tuple means only these allowed
+            raise NodeTypeError((f'expecting a {restrict.__name__} for {self.a.__class__.__name__}.{field}'
+                                 if isinstance(restrict, type) else
+                                 f'expecting one of ({", ".join(c.__name__ for c in restrict)}) for '
+                                 f'{self.a.__class__.__name__}.{field}{"" if idx is None else f"[{idx}]"}') +
+                                f', got {put_ast.__class__.__name__}')
+
+
 # ......................................................................................................................
 # field info
 
-class onestatic(NamedTuple):
-    getinfo:  Callable[['FST', 'onestatic', int | None, str], 'oneinfo'] | None
-    restrict: type[AST] | tuple[type[AST]] | list[type[AST]] | Callable[[AST], bool] | None = None
-    base:     type[AST]          = expr
-    ctx:      type[expr_context] = Load
-    delstr:   str                = ''  # or '**'
-    suffix:   str                = ''  # or ': ' for dict '**'
-
-
-class oneinfo(NamedTuple):
-    static:      onestatic
-    prefix:      str           = ' '   # prefix to add on insert
-    loc_insdel:  fstloc | None = None  # only present if insert (put new to nonexistent) or delete is possible and is the location for the specific mutually-exclusive operation
-    loc_ident:   fstloc | None = None  # location of identifier
-
+def _oneinfo_constant(self: 'FST', static: onestatic, idx: int | None, field: str) -> oneinfo:  # only Constant and MatchSingleton
+    return oneinfo(static, '', None, self.loc)
 
 def _oneinfo_expr_required(self: 'FST', static: onestatic, idx: int | None, field: str) -> oneinfo:
     return oneinfo(static)
@@ -542,6 +569,22 @@ def _oneinfo_TypeVarTuple_name(self: 'FST', static: onestatic, idx: int | None, 
 # ......................................................................................................................
 # other
 
+def _put_one_constant(self: 'FST', code: Code | None, idx: int | None, field: str, child: constant, static: onestatic,
+                      **options) -> 'FST':
+    """Put a single constant value, only Constant and MatchSingleton (and only exists because of the second one)."""
+
+    child   = _validate_put(self, code, idx, field, child, options)
+    put_fst = self._normalize_code(code, 'expr', parse_params=self.root.parse_params)
+    put_ast = put_fst.a
+
+    _validate_put_ast(self, put_ast, idx, field, static)
+    self.put_src(put_fst.get_src(*put_fst.loc, True), *self.loc, True)  # we want pure constant, no parens or spaces or comments or anything
+
+    self.a.value = put_ast.value
+
+    return self  # this breaks the rule of returning the child node but would never be used anyway
+
+
 def _put_one_op(self: 'FST', code: Code | None, idx: int | None, field: str, child: str, static: None,
                 **options) -> 'FST':
     """Put a single opertation, with or without '=' for AugAssign."""
@@ -589,23 +632,7 @@ def _make_expr_fst(self: 'FST', code: Code | None, idx: int | None, field: str, 
     put_fst = self._normalize_code(code, 'expr', parse_params=self.root.parse_params)
     put_ast = put_fst.a
 
-    if restrict := static.restrict:
-        if isinstance(restrict, list):  # list means these types not allowed
-            if isinstance(put_ast, tuple(restrict)):
-                raise NodeTypeError(f'{self.a.__class__.__name__}.{field}{" " if idx is None else f"[{idx}] "}'
-                                    f'cannot be {put_ast.__class__.__name__}')
-
-        elif isinstance(restrict, FunctionType):
-            if not restrict(put_ast):
-                raise NodeTypeError(f'invalid value for {self.a.__class__.__name__}.{field}' +
-                                    ('' if idx is None else f'[{idx}]'))
-
-        elif not isinstance(put_ast, restrict):  # single AST type or tuple means only these allowed
-            raise NodeTypeError((f'expecting a {restrict.__name__} for {self.a.__class__.__name__}.{field}'
-                                 if isinstance(restrict, type) else
-                                 f'expecting one of ({", ".join(c.__name__ for c in restrict)}) for '
-                                 f'{self.a.__class__.__name__}.{field}{"" if idx is None else f"[{idx}]"}') +
-                                f', got {put_ast.__class__.__name__}')
+    _validate_put_ast(self, put_ast, idx, field, static)
 
     pars    = bool(FST.get_option('pars', options))
     delpars = pars or put_fst.is_parenthesized_tuple() is False  # need tuple check because otherwise Tuple location would be wrong after (wouldn't include possible enclosing parens)
@@ -1027,7 +1054,7 @@ _PUT_ONE_HANDLERS = {
     # (Interpolation, 'format_spec'):       (_put_one_default, None, None), # expr?
     # (JoinedStr, 'values'):                (_put_one_default, None, None), # expr*                                           - ??? no location on py < 3.12
     # (TemplateStr, 'values'):              (_put_one_default, None, None), # expr*                                           - ??? no location on py < 3.12
-    # (Constant, 'value'):                  (_put_one_default, None, None), # constant                                        - can do via restricted expr Constant
+    (Constant, 'value'):                  (_put_one_constant, None, onestatic(_oneinfo_constant, Constant, base=Constant)), # constant
     (Attribute, 'value'):                 (_put_one_expr_required, None, _onestatic_expr_required), # expr
     (Attribute, 'attr'):                  (_put_one_identifier_required, None, onestatic(_oneinfo_Attribute_attr, base=str)), # identifier  - after the "value."
     (Subscript, 'value'):                 (_put_one_expr_required, None, _onestatic_expr_required), # expr
@@ -1064,7 +1091,7 @@ _PUT_ONE_HANDLERS = {
     (match_case, 'guard'):                (_put_one_expr_optional, None, onestatic(_oneinfo_match_case_guard)), # expr?       - OPTIONAL TAIL: 'if'
     (match_case, 'body'):                 (_put_one_stmtish, None, None), # stmt*
     (MatchValue, 'value'):                (_put_one_MatchValue_value, None, onestatic(_oneinfo_expr_required, _is_valid_MatchAs_value)), # expr  - limited values, Constant? Name becomes MatchAs
-    # (MatchSingleton, 'value'):            (_put_one_default, None, None), # constant
+    (MatchSingleton, 'value'):            (_put_one_constant, None, onestatic(_oneinfo_constant, _is_valid_MatchSingleton_value, base=Constant)), # constant
     # (MatchSequence, 'patterns'):          (_put_one_default, None, None), # pattern*                                        - slice
     (MatchMapping, 'keys'):               (_put_one_expr_required, None, onestatic(_oneinfo_expr_required, (Constant, Attribute))), # expr*  TODO: XXX are there any others allowed?
     # (MatchMapping, 'patterns'):           (_put_one_default, None, None), # pattern*                                        - slice

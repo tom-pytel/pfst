@@ -19315,14 +19315,80 @@ Module .. ROOT 0,0 -> 0,8
       .ctx Load
 """),
 
-(r"""a""", 'body[0].value', None, None, {'raw': False}, r"""new""", r"""new""", r"""
+(r"""...""", 'body[0].value', None, None, {'raw': False}, r"""**DEL**""", r"""**ValueError('cannot delete Constant.value')**""", r"""
+"""),
+
+(r"""...""", 'body[0].value', None, None, {'raw': False}, r"""new""", r"""**NodeTypeError('expecting a Constant for Constant.value, got Name')**""", r"""
+"""),
+
+(r"""...""", 'body[0].value', None, None, {'raw': False}, r"""...""", r"""...""", r"""
 Module .. ROOT 0,0 -> 0,3
   .body[1]
   0] Expr .. 0,0 -> 0,3
-    .value Name 'new' Load .. 0,0 -> 0,3
+    .value Constant Ellipsis .. 0,0 -> 0,3
 """),
 
-(r"""a""", 'body[0].value', None, None, {'raw': False}, r"""**DEL**""", r"""**ValueError('cannot delete Name.id')**""", r"""
+(r"""...""", 'body[0].value', None, None, {'raw': False}, r"""1""", r"""1""", r"""
+Module .. ROOT 0,0 -> 0,1
+  .body[1]
+  0] Expr .. 0,0 -> 0,1
+    .value Constant 1 .. 0,0 -> 0,1
+"""),
+
+(r"""...""", 'body[0].value', None, None, {'raw': False}, r"""1.0""", r"""1.0""", r"""
+Module .. ROOT 0,0 -> 0,3
+  .body[1]
+  0] Expr .. 0,0 -> 0,3
+    .value Constant 1.0 .. 0,0 -> 0,3
+"""),
+
+(r"""...""", 'body[0].value', None, None, {'raw': False}, r"""1j""", r"""1j""", r"""
+Module .. ROOT 0,0 -> 0,2
+  .body[1]
+  0] Expr .. 0,0 -> 0,2
+    .value Constant 1j .. 0,0 -> 0,2
+"""),
+
+(r"""...""", 'body[0].value', None, None, {'raw': False}, r"""'str'""", r"""'str'""", r"""
+Module .. ROOT 0,0 -> 0,5
+  .body[1]
+  0] Expr .. 0,0 -> 0,5
+    .value Constant 'str' .. 0,0 -> 0,5
+"""),
+
+(r"""...""", 'body[0].value', None, None, {'raw': False}, r"""b'bytes'""", r"""b'bytes'""", r"""
+Module .. ROOT 0,0 -> 0,8
+  .body[1]
+  0] Expr .. 0,0 -> 0,8
+    .value Constant b'bytes' .. 0,0 -> 0,8
+"""),
+
+(r"""...""", 'body[0].value', None, None, {'raw': False}, r"""True""", r"""True""", r"""
+Module .. ROOT 0,0 -> 0,4
+  .body[1]
+  0] Expr .. 0,0 -> 0,4
+    .value Constant True .. 0,0 -> 0,4
+"""),
+
+(r"""...""", 'body[0].value', None, None, {'raw': False}, r"""False""", r"""False""", r"""
+Module .. ROOT 0,0 -> 0,5
+  .body[1]
+  0] Expr .. 0,0 -> 0,5
+    .value Constant False .. 0,0 -> 0,5
+"""),
+
+(r"""...""", 'body[0].value', None, None, {'raw': False}, r"""None""", r"""None""", r"""
+Module .. ROOT 0,0 -> 0,4
+  .body[1]
+  0] Expr .. 0,0 -> 0,4
+    .value Constant None .. 0,0 -> 0,4
+"""),
+
+(r"""None""", 'body[0].value', None, None, {'raw': False}, r"""...""", r"""...""", r"""
+Module .. ROOT 0,0 -> 0,3
+  .body[1]
+  0] Expr .. 0,0 -> 0,3
+    .value Constant Ellipsis .. 0,0 -> 0,3
 """),
 
 (r"""a.b""", 'body[0].value', None, 'attr', {'raw': False}, r"""new""", r"""a.new""", r"""
@@ -19356,6 +19422,16 @@ Module .. ROOT 0,0 -> 0,9
 """),
 
 (r"""a.b""", 'body[0].value', None, 'attr', {'raw': False}, r"""**DEL**""", r"""**ValueError('cannot delete Attribute.attr')**""", r"""
+"""),
+
+(r"""a""", 'body[0].value', None, None, {'raw': False}, r"""new""", r"""new""", r"""
+Module .. ROOT 0,0 -> 0,3
+  .body[1]
+  0] Expr .. 0,0 -> 0,3
+    .value Name 'new' Load .. 0,0 -> 0,3
+"""),
+
+(r"""a""", 'body[0].value', None, None, {'raw': False}, r"""**DEL**""", r"""**ValueError('cannot delete Name.id')**""", r"""
 """),
 
 (r"""try: pass
@@ -20018,6 +20094,58 @@ Module .. ROOT 0,0 -> 0,20
     1] alias .. 0,18 -> 0,19
       .name 'a'
     .level 0
+"""),
+
+(r"""match a:
+ case None: pass""", 'body[0].cases[0].pattern', None, None, {'raw': False}, r"""True""", r"""match a:
+ case True: pass""", r"""
+Module .. ROOT 0,0 -> 1,16
+  .body[1]
+  0] Match .. 0,0 -> 1,16
+    .subject Name 'a' Load .. 0,6 -> 0,7
+    .cases[1]
+    0] match_case .. 1,1 -> 1,16
+      .pattern MatchSingleton .. 1,6 -> 1,10
+        .value True
+      .body[1]
+      0] Pass .. 1,12 -> 1,16
+"""),
+
+(r"""match a:
+ case None: pass""", 'body[0].cases[0].pattern', None, None, {'raw': False}, r"""False""", r"""match a:
+ case False: pass""", r"""
+Module .. ROOT 0,0 -> 1,17
+  .body[1]
+  0] Match .. 0,0 -> 1,17
+    .subject Name 'a' Load .. 0,6 -> 0,7
+    .cases[1]
+    0] match_case .. 1,1 -> 1,17
+      .pattern MatchSingleton .. 1,6 -> 1,11
+        .value False
+      .body[1]
+      0] Pass .. 1,13 -> 1,17
+"""),
+
+(r"""match a:
+ case None: pass""", 'body[0].cases[0].pattern', None, None, {'raw': False}, r"""None""", r"""match a:
+ case None: pass""", r"""
+Module .. ROOT 0,0 -> 1,16
+  .body[1]
+  0] Match .. 0,0 -> 1,16
+    .subject Name 'a' Load .. 0,6 -> 0,7
+    .cases[1]
+    0] match_case .. 1,1 -> 1,16
+      .pattern MatchSingleton .. 1,6 -> 1,10
+      .body[1]
+      0] Pass .. 1,12 -> 1,16
+"""),
+
+(r"""match a:
+ case None: pass""", 'body[0].cases[0].pattern', None, None, {'raw': False}, r"""new""", r"""**NodeTypeError('invalid value for MatchSingleton.value')**""", r"""
+"""),
+
+(r"""match a:
+ case None: pass""", 'body[0].cases[0].pattern', None, None, {'raw': False}, r"""**DEL**""", r"""**ValueError('cannot delete MatchSingleton.value')**""", r"""
 """),
 
 (r"""match a:

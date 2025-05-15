@@ -75,7 +75,8 @@ _AST_DEFAULT_BODY_FIELD  = {cls: field for field, classes in [
 
     # other single value fields
     ('value',        (Expr, Return, Assign, TypeAlias, AugAssign, AnnAssign, NamedExpr, Await, Yield, YieldFrom,
-                      FormattedValue, Interpolation, Attribute, Subscript, Starred, keyword, MatchValue)),
+                      FormattedValue, Interpolation, Constant, Attribute, Subscript, Starred, keyword, MatchValue,
+                      MatchSingleton)),
     ('exc',          (Raise,)),
     ('test',         (Assert,)),
     ('operand',      (UnaryOp,)),

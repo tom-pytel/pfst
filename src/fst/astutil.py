@@ -6,6 +6,7 @@ import sys
 from array import array
 from ast import *
 from itertools import chain
+from types import  EllipsisType
 from typing import Any, Callable, Iterable, Iterator, Literal
 from enum import IntEnum, auto
 
@@ -15,7 +16,7 @@ __all__ = [
     'FIELDS', 'AST_FIELDS',
     'OPSTR2CLS_UNARY', 'OPSTR2CLS_BIN', 'OPSTR2CLS_CMP', 'OPSTR2CLS_BOOL', 'OPSTR2CLS_AUG',
     'OPSTR2CLS', 'OPSTR2CLSWAUG', 'OPCLS2STR', 'OPCLS2STR_AUG',
-    'bistr',
+    'bistr', 'constant',
     'is_valid_identifier', 'reduce_ast', 'get_field', 'set_field', 'has_type_comments', 'is_parsable', 'get_parse_mode',
     'WalkFail', 'walk2', 'compare_asts', 'copy_attributes', 'copy_ast', 'set_ctx',
     'get_func_class_or_ass_by_name', 'syntax_ordered_children', 'last_block_opener_child', 'is_atom',
@@ -128,6 +129,8 @@ class bistr(str):
         except AttributeError:
             pass
 
+
+constant = EllipsisType | int | float | complex | str | bytes | bool | None
 
 # Mostly in syntax order except a few special cases:
 #   BoolOp        - multiple simultaneous locations possible for single `op`
