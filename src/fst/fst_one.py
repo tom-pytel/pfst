@@ -287,6 +287,14 @@ def _oneinfo_ImportFrom_module(self: 'FST', static: onestatic, idx: int | None, 
 
     return oneinfo(static, '', loc := fstloc(ln, col, ln, end_col), loc)
 
+def _oneinfo_Dict_key(self: 'FST', static: onestatic, idx: int | None, field: str) -> oneinfo:
+    key                   = (a := self.a).keys[idx]
+    value                 = a.values[idx].f
+    end_ln, end_col, _, _ = value.pars()
+    ln, col, _, _         = self._dict_key_or_mock_loc(key, value) if key is None else key.f.pars()
+
+    return oneinfo(static, '', fstloc(ln, col, end_ln, end_col))
+
 def _oneinfo_Yield_value(self: 'FST', static: onestatic, idx: int | None, field: str) -> oneinfo:
     return oneinfo(static, ' ', fstloc((loc := self.loc).ln, loc.col + 5, loc.end_ln, loc.end_col))
 
@@ -394,6 +402,13 @@ def _oneinfo_arguments_kw_defaults(self: 'FST', static: onestatic, idx: int | No
 
 def _oneinfo_arg_annotation(self: 'FST', static: onestatic, idx: int | None, field: str) -> oneinfo:
     return oneinfo(static, ': ', fstloc((loc := self.loc).ln, loc.col + len(self.a.arg), self.end_ln, self.end_col))
+
+def _oneinfo_keyword_arg(self: 'FST', static: onestatic, idx: int | None, field: str) -> oneinfo:
+    end_ln, end_col, _, _ = (a := self.a).value.f.pars()
+    ln, col, _, _         = self.loc
+    arg_end_col           = col + 2 if a.arg is None else _re_identifier.match(self.root._lines[ln], col).end() # must be there
+
+    return oneinfo(static, '', fstloc(ln, col, end_ln, end_col), fstloc(ln, col, ln, arg_end_col))
 
 def _oneinfo_alias_asname(self: 'FST', static: onestatic, idx: int | None, field: str) -> oneinfo:
     ln, col, end_ln, end_col  = self.loc
@@ -545,8 +560,9 @@ def _put_one_tuple_list_or_set(self: 'FST', code: Code | None, idx: int | None, 
 # ......................................................................................................................
 # expr
 
-def __make_expr_fst(self: 'FST', code: Code | None, idx: int | None, field: str, static: onestatic,
-                    target: Union['FST', fstloc], ctx: type[expr_context], prefix: str  = '', **options) -> 'FST':
+def _make_expr_fst(self: 'FST', code: Code | None, idx: int | None, field: str, static: onestatic,
+                   target: Union['FST', fstloc], ctx: type[expr_context], prefix: str  = '', suffix: str = '',
+                   **options) -> 'FST':
     """Make an expression `FST` from `Code` for a field/idx containing an existing node creating a new one. Takes care
     of parenthesizing, indenting and offsetting."""
 
@@ -585,6 +601,9 @@ def __make_expr_fst(self: 'FST', code: Code | None, idx: int | None, field: str,
     if prefix:
         put_fst.put_src([prefix], 0, 0, 0, 0, True)
 
+    if suffix:
+        ls[-1] = bistr((ls := put_fst._lines)[-1] + suffix)  # don't need to offset anything so just tack onto the end
+
     put_fst.indent_lns(self.get_indent(), docstr=options.get('docstr'))
 
     ln, col, end_ln, end_col = target.pars(delpars) if target.is_FST else target
@@ -612,7 +631,7 @@ def _put_one_expr_required(self: 'FST', code: Code | None, idx: int | None, fiel
 
     childf  = child.f
     ctx     = ((ctx := getattr(child, 'ctx', None)) and ctx.__class__) or Load
-    put_fst = __make_expr_fst(self, code, idx, field, static, childf, ctx, **options)
+    put_fst = _make_expr_fst(self, code, idx, field, static, childf, ctx, **options)
 
     childf._set_ast(put_fst.a)
 
@@ -639,7 +658,7 @@ def _put_one_expr_optional(self: 'FST', code: Code | None, idx: int | None, fiel
         if not loc:
             raise ValueError(f'cannot delete {self.a.__class__.__name__}.{field} in this state')
 
-        self.put_src(None, *loc, True)
+        self.put_src(static.delstr or None, *loc, True)
         set_field(self.a, None, field, idx)
         child.f._unmake_fst_tree()
 
@@ -650,27 +669,13 @@ def _put_one_expr_optional(self: 'FST', code: Code | None, idx: int | None, fiel
     if not loc:
         raise ValueError(f'cannot create {self.a.__class__.__name__}.{field} in this state')
 
-    put_fst = __make_expr_fst(self, code, idx, field, static, loc, static.ctx, info.prefix, **options)
+    put_fst = _make_expr_fst(self, code, idx, field, static, loc, static.ctx, info.prefix, static.suffix, **options)
     put_fst = FST(put_fst.a, self, astfield(field, idx))
 
     self._make_fst_tree([put_fst])
     put_fst.pfield.set(self.a, put_fst.a)
 
     return put_fst
-
-
-def _put_one_Dict_key(self: 'FST', code: Code | None, idx: int | None, field: str, child: list[AST],
-                      static: onestatic, **options) -> Optional['FST']:
-    """Allow for deleting or adding a `Dict` key value to change between `a: b` and `**b`."""
-
-    return _put_one_expr_required(self, code, idx, field, child, static, **options)
-
-
-    # TODO: this
-
-
-
-
 
 
 def _put_one_Compare_None(self: 'FST', code: Code | None, idx: int | None, field: str, child: None,
@@ -754,7 +759,7 @@ def _put_one_identifier_optional(self: 'FST', code: Code | None, idx: int | None
         if not loc:
             raise ValueError(f'cannot delete {self.a.__class__.__name__}.{field} in this state')
 
-        self.put_src(None, *loc, True)
+        self.put_src(static.delstr or None, *loc, True)
         set_field(self.a, None, field, idx)
 
         return None
@@ -769,7 +774,7 @@ def _put_one_identifier_optional(self: 'FST', code: Code | None, idx: int | None
         if not loc:
             raise ValueError(f'cannot create {self.a.__class__.__name__}.{field} in this state')
 
-        params_offset = self.put_src(info.prefix + code, *loc, True, exclude=self)
+        params_offset = self.put_src(info.prefix + code + static.suffix, *loc, True, exclude=self)
 
         self.offset(*params_offset, self_=False)
         set_field(self.a, code, field, idx)
@@ -974,7 +979,7 @@ _PUT_ONE_HANDLERS = {
     (IfExp, 'body'):                      (_put_one_expr_required, None, _onestatic_expr_required), # expr
     (IfExp, 'test'):                      (_put_one_expr_required, None, _onestatic_expr_required), # expr
     (IfExp, 'orelse'):                    (_put_one_expr_required, None, _onestatic_expr_required), # expr
-    (Dict, 'keys'):                       (_put_one_Dict_key, None, _onestatic_expr_required), # expr*                        TODO: handle special key=None
+    (Dict, 'keys'):                       (_put_one_expr_optional, None, onestatic(_oneinfo_Dict_key, delstr='**', suffix=': ')), # expr*
     (Dict, 'values'):                     (_put_one_expr_required, None, _onestatic_expr_required), # expr*
     (Set, 'elts'):                        (_put_one_tuple_list_or_set, None, None), # expr*
     (ListComp, 'elt'):                    (_put_one_expr_required, None, _onestatic_expr_required), # expr
@@ -1029,7 +1034,7 @@ _PUT_ONE_HANDLERS = {
     # (arguments, 'kwarg'):                 (_put_one_default, None, None), # arg?                                            - special parse 'arg'
     (arg, 'arg'):                         (_put_one_identifier_required, None, _onestatic_identifier_required), # identifier
     (arg, 'annotation'):                  (_put_one_expr_optional, None, onestatic(_oneinfo_arg_annotation, [Lambda, Yield, YieldFrom, Await, NamedExpr])), # expr?  - OPTIONAL TAIL: ':'
-    # (keyword, 'arg'):                     (_put_one_default, None, None), # identifier?
+    (keyword, 'arg'):                     (_put_one_identifier_optional, None, onestatic(_oneinfo_keyword_arg, base=str, delstr='**', suffix='=')), # identifier?
     (keyword, 'value'):                   (_put_one_expr_required, None, _onestatic_expr_required), # expr
     (alias, 'name'):                      (_put_one_identifier_required, None, _onestatic_identifier_required), # identifier
     (alias, 'asname'):                    (_put_one_identifier_optional, None, onestatic(_oneinfo_alias_asname, base=str)), # identifier?

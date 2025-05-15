@@ -16505,7 +16505,27 @@ Module .. ROOT 0,0 -> 0,14
         .value Constant 1 .. 0,11 -> 0,12
 """),
 
-(r"""{**i}""", 'body[0].value', 0, 'keys', {'raw': False}, r"""yield 1""", r"""**ValueError('cannot replace nonexistent Dict.keys[0]')**""", r"""
+(r"""{**i}""", 'body[0].value', 0, 'keys', {'raw': False}, r"""yield 1""", r"""{(yield 1): i}""", r"""
+Module .. ROOT 0,0 -> 0,14
+  .body[1]
+  0] Expr .. 0,0 -> 0,14
+    .value Dict .. 0,0 -> 0,14
+      .keys[1]
+      0] Yield .. 0,2 -> 0,9
+        .value Constant 1 .. 0,8 -> 0,9
+      .values[1]
+      0] Name 'i' Load .. 0,12 -> 0,13
+"""),
+
+(r"""{(yield 1): i}""", 'body[0].value', 0, 'keys', {'raw': False}, r"""**DEL**""", r"""{**i}""", r"""
+Module .. ROOT 0,0 -> 0,5
+  .body[1]
+  0] Expr .. 0,0 -> 0,5
+    .value Dict .. 0,0 -> 0,5
+      .keys[1]
+      0] None
+      .values[1]
+      0] Name 'i' Load .. 0,3 -> 0,4
 """),
 
 (r"""a < b""", 'body[0].value', 0, 'comparators', {'raw': False}, r"""yield 1""", r"""a < (yield 1)""", r"""
@@ -18372,6 +18392,91 @@ Module .. ROOT 0,0 -> 0,28
       0] Name 'new' Load .. 0,18 -> 0,21
     .body[1]
     0] Pass .. 0,24 -> 0,28
+"""),
+
+(r"""class c(a=b): pass""", 'body[0].keywords[0]', None, 'arg', {'raw': False}, r"""new""", r"""class c(new=b): pass""", r"""
+Module .. ROOT 0,0 -> 0,20
+  .body[1]
+  0] ClassDef .. 0,0 -> 0,20
+    .name 'c'
+    .keywords[1]
+    0] keyword .. 0,8 -> 0,13
+      .arg 'new'
+      .value Name 'b' Load .. 0,12 -> 0,13
+    .body[1]
+    0] Pass .. 0,16 -> 0,20
+"""),
+
+(r"""class c(a=b): pass""", 'body[0].keywords[0]', None, 'arg', {'raw': False}, r"""**DEL**""", r"""class c(**b): pass""", r"""
+Module .. ROOT 0,0 -> 0,18
+  .body[1]
+  0] ClassDef .. 0,0 -> 0,18
+    .name 'c'
+    .keywords[1]
+    0] keyword .. 0,8 -> 0,11
+      .value Name 'b' Load .. 0,10 -> 0,11
+    .body[1]
+    0] Pass .. 0,14 -> 0,18
+"""),
+
+(r"""class c(**b): pass""", 'body[0].keywords[0]', None, 'arg', {'raw': False}, r"""**DEL**""", r"""class c(**b): pass""", r"""
+Module .. ROOT 0,0 -> 0,18
+  .body[1]
+  0] ClassDef .. 0,0 -> 0,18
+    .name 'c'
+    .keywords[1]
+    0] keyword .. 0,8 -> 0,11
+      .value Name 'b' Load .. 0,10 -> 0,11
+    .body[1]
+    0] Pass .. 0,14 -> 0,18
+"""),
+
+(r"""class c(**b): pass""", 'body[0].keywords[0]', None, 'arg', {'raw': False}, r"""new""", r"""class c(new=b): pass""", r"""
+Module .. ROOT 0,0 -> 0,20
+  .body[1]
+  0] ClassDef .. 0,0 -> 0,20
+    .name 'c'
+    .keywords[1]
+    0] keyword .. 0,8 -> 0,13
+      .arg 'new'
+      .value Name 'b' Load .. 0,12 -> 0,13
+    .body[1]
+    0] Pass .. 0,16 -> 0,20
+"""),
+
+(r"""class c( a
+ =
+ b
+ ): pass""", 'body[0].keywords[0]', None, 'arg', {'raw': False}, r"""new""", r"""class c( new
+ =
+ b
+ ): pass""", r"""
+Module .. ROOT 0,0 -> 3,8
+  .body[1]
+  0] ClassDef .. 0,0 -> 3,8
+    .name 'c'
+    .keywords[1]
+    0] keyword .. 0,9 -> 2,2
+      .arg 'new'
+      .value Name 'b' Load .. 2,1 -> 2,2
+    .body[1]
+    0] Pass .. 3,4 -> 3,8
+"""),
+
+(r"""class c( a
+ =
+ b
+ ): pass""", 'body[0].keywords[0]', None, 'arg', {'raw': False}, r"""**DEL**""", r"""class c( **b
+ ): pass""", r"""
+Module .. ROOT 0,0 -> 1,8
+  .body[1]
+  0] ClassDef .. 0,0 -> 1,8
+    .name 'c'
+    .keywords[1]
+    0] keyword .. 0,9 -> 0,12
+      .value Name 'b' Load .. 0,11 -> 0,12
+    .body[1]
+    0] Pass .. 1,4 -> 1,8
 """),
 
 (r"""match a:
@@ -28856,56 +28961,6 @@ class cls:
                 print(put_src)
 
                 raise
-
-    # def test_put_one_nonraw_as_raw(self):
-    #     ver = sys.version_info[1]
-
-    #     for i, (dst, attr, idx, field, options, src, put_src, put_dump) in enumerate(PUT_ONE_DATA):
-    #         if field in ('name', 'id', 'arg'):  # TODO: raw for non-AST fields?
-    #             continue
-
-    #         if options.get('_ver', 0) > ver:
-    #             continue
-
-    #         t = parse(dst)
-    #         f = (eval(f't.{attr}', {'t': t}) if attr else t).f
-
-    #         try:
-    #             if options.get('raw') is not False:
-    #                 continue
-
-    #             options = {**options, 'raw': True}
-
-    #             try:
-    #                 f.put(None if src == '**DEL**' else FST(src), idx, field=field, **options)
-
-    #             except Exception as exc:
-    #                 if not put_dump.strip() and put_src.startswith('**') and put_src.endswith('**'):
-    #                     tdst  = f'**{exc!r}**'
-    #                     tdump = ['']
-
-    #                 else:
-    #                     raise
-
-    #             else:
-    #                 tdst  = f.root.src
-    #                 # tdump = f.root.dump(out=list, compact=True)
-
-    #                 f.root.verify(raise_=True)
-
-    #             self.assertEqual(tdst.strip(), put_src.strip())          # .strip() due to differences in newline handling
-    #             # self.assertEqual(tdump, put_dump.strip().split('\n'))  # skip due to differences in newline handling
-
-    #         except Exception:
-    #             print(i, attr, idx, field, src, options)
-    #             print('---')
-    #             print(repr(dst))
-    #             print('...')
-    #             print(src)
-    #             print('...')
-    #             print(put_src)
-
-    #             raise
 
     def test_put_one_special(self):
         f = parse('i', mode='eval').f
