@@ -2,7 +2,7 @@
 
 import re
 from ast import *
-from typing import Any, Literal, NamedTuple, TypeAlias, Union
+from typing import Any, Callable, Literal, NamedTuple, TypeAlias, Union
 
 from .astutil import *
 from .astutil import TypeAlias, TryStar, type_param, Interpolation
@@ -80,6 +80,7 @@ _AST_DEFAULT_BODY_FIELD  = {cls: field for field, classes in [
     ('test',         (Assert,)),
     ('operand',      (UnaryOp,)),
     # ('elt',          (ListComp, SetComp, GeneratorExp)),  # 'generators' take precedence because name is longer and more annoying to type out
+    ('id',           (Name,)),
     ('arg',          (arg,)),
     ('name',         (alias,)),
     ('context_expr', (withitem,)),
@@ -136,7 +137,7 @@ class fstloc(NamedTuple):
     bend_col = property(lambda self: self.end_col)  ; """Alias for `end_col`."""
     loc      = property(lambda self: self)          ; """To be able to use as FST.loc."""
     bloc     = loc
-    bwloc    = loc
+    wbloc    = loc
 
     is_FST   = False                                ; """@private"""  # for quick checks vs. `FST`
 

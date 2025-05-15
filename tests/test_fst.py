@@ -19210,6 +19210,16 @@ Module .. ROOT 0,0 -> 0,8
       .ctx Load
 """),
 
+(r"""a""", 'body[0].value', None, None, {'raw': False}, r"""new""", r"""new""", r"""
+Module .. ROOT 0,0 -> 0,3
+  .body[1]
+  0] Expr .. 0,0 -> 0,3
+    .value Name 'new' Load .. 0,0 -> 0,3
+"""),
+
+(r"""a""", 'body[0].value', None, None, {'raw': False}, r"""**DEL**""", r"""**ValueError('cannot delete Name.id')**""", r"""
+"""),
+
 (r"""a.b""", 'body[0].value', None, 'attr', {'raw': False}, r"""new""", r"""a.new""", r"""
 Module .. ROOT 0,0 -> 0,5
   .body[1]
@@ -19383,7 +19393,7 @@ Module .. ROOT 0,0 -> 1,21
 """),
 
 (r"""try: pass
-except (e) as n: pass""", 'body[0].handlers[0]', None, 'name', {'raw': False}, r"""new""", r"""try: pass
+except (e) as a: pass""", 'body[0].handlers[0]', None, 'name', {'raw': False}, r"""new""", r"""try: pass
 except (e) as new: pass""", r"""
 Module .. ROOT 0,0 -> 1,23
   .body[1]
@@ -19849,7 +19859,7 @@ Module .. ROOT 0,0 -> 0,20
     .level 0
 """),
 
-(r"""from z import (c, a as b)""", 'body[0].names[1]', None, 'asname', {'raw': False}, r"""new""", r"""from z import (c, a as new)""", r"""
+(r"""from z import (c, b as a)""", 'body[0].names[1]', None, 'asname', {'raw': False}, r"""new""", r"""from z import (c, b as new)""", r"""
 Module .. ROOT 0,0 -> 0,27
   .body[1]
   0] ImportFrom .. 0,0 -> 0,27
@@ -19858,7 +19868,7 @@ Module .. ROOT 0,0 -> 0,27
     0] alias .. 0,15 -> 0,16
       .name 'c'
     1] alias .. 0,18 -> 0,26
-      .name 'a'
+      .name 'b'
       .asname
         'new'
     .level 0
@@ -20530,6 +20540,52 @@ Module .. ROOT 0,0 -> 1,29
           .name 'd'
       .body[1]
       0] Pass .. 1,25 -> 1,29
+"""),
+
+(r"""match a:
+ case cls( a = ( b ) , c=d): pass""", 'body[0].cases[0].pattern', 0, 'kwd_attrs', {'raw': False}, r"""new""", r"""match a:
+ case cls( new = ( b ) , c=d): pass""", r"""
+Module .. ROOT 0,0 -> 1,35
+  .body[1]
+  0] Match .. 0,0 -> 1,35
+    .subject Name 'a' Load .. 0,6 -> 0,7
+    .cases[1]
+    0] match_case .. 1,1 -> 1,35
+      .pattern MatchClass .. 1,6 -> 1,29
+        .cls Name 'cls' Load .. 1,6 -> 1,9
+        .kwd_attrs[2]
+        0] 'new'
+        1] 'c'
+        .kwd_patterns[2]
+        0] MatchAs .. 1,19 -> 1,20
+          .name 'b'
+        1] MatchAs .. 1,27 -> 1,28
+          .name 'd'
+      .body[1]
+      0] Pass .. 1,31 -> 1,35
+"""),
+
+(r"""match a:
+ case cls(a=(b),  c = d): pass""", 'body[0].cases[0].pattern', 1, 'kwd_attrs', {'raw': False}, r"""new""", r"""match a:
+ case cls(a=(b),  new = d): pass""", r"""
+Module .. ROOT 0,0 -> 1,32
+  .body[1]
+  0] Match .. 0,0 -> 1,32
+    .subject Name 'a' Load .. 0,6 -> 0,7
+    .cases[1]
+    0] match_case .. 1,1 -> 1,32
+      .pattern MatchClass .. 1,6 -> 1,26
+        .cls Name 'cls' Load .. 1,6 -> 1,9
+        .kwd_attrs[2]
+        0] 'a'
+        1] 'new'
+        .kwd_patterns[2]
+        0] MatchAs .. 1,13 -> 1,14
+          .name 'b'
+        1] MatchAs .. 1,24 -> 1,25
+          .name 'd'
+      .body[1]
+      0] Pass .. 1,28 -> 1,32
 """),
 
 ]  # END OF PUT_ONE_DATA

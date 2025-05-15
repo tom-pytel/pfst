@@ -893,9 +893,6 @@ class FST:
         raw       = FST.get_option('raw', options)
 
         if raw is not True:
-            if raw and raw != 'auto':
-                raise ValueError(f"invalid value '{raw}' for raw parameter")
-
             try:
                 if isinstance(ast, STMTISH_OR_STMTMOD):
                     if field_ in STMTISH_FIELDS:
