@@ -443,6 +443,26 @@ def _oneinfo_match_case_guard(self: 'FST', static: onestatic, idx: int | None, f
 
     return oneinfo(static, ' if ', fstloc(ln, col, end_ln, end_col))
 
+def _oneinfo_MatchMapping_rest(self: 'FST', static: onestatic, idx: int | None, field: str) -> oneinfo:
+    ln, col, end_ln, end_col  = self.loc
+    end_col                  -= 1
+
+    if patterns := (a := self.a).patterns:
+        _, _, ln, col = patterns[-1].f.pars()
+        prefix        = ', **'
+
+    else:
+        col    += 1
+        prefix  = '**'
+
+    if (rest := a.rest) is None:
+        loc_ident = None
+    else:
+        rest_ln, rest_col = _next_find(self.root._lines, ln, col, end_ln, end_col, rest)
+        loc_ident         = fstloc(rest_ln, rest_col, rest_ln, rest_col + len(rest))
+
+    return oneinfo(static, prefix, fstloc(ln, col, end_ln, end_col), loc_ident)
+
 def _oneinfo_MatchClass_kwd_attrs(self: 'FST', static: onestatic, idx: int | None, field: str) -> oneinfo:
     ast          = self.a
     lines        = self.root._lines
@@ -1048,7 +1068,7 @@ _PUT_ONE_HANDLERS = {
     # (MatchSequence, 'patterns'):          (_put_one_default, None, None), # pattern*                                        - slice
     (MatchMapping, 'keys'):               (_put_one_expr_required, None, onestatic(_oneinfo_expr_required, (Constant, Attribute))), # expr*  TODO: XXX are there any others allowed?
     # (MatchMapping, 'patterns'):           (_put_one_default, None, None), # pattern*                                        - slice
-    # (MatchMapping, 'rest'):               (_put_one_default, None, None), # identifier?
+    (MatchMapping, 'rest'):               (_put_one_identifier_optional, None, onestatic(_oneinfo_MatchMapping_rest, base=str)), # identifier?
     (MatchClass, 'cls'):                  (_put_one_expr_required, None, onestatic(_oneinfo_expr_required, (Name, Attribute))), # expr
     # (MatchClass, 'patterns'):             (_put_one_default, None, None), # pattern*                                        - slice
     (MatchClass, 'kwd_attrs'):            (_put_one_identifier_required, None, onestatic(_oneinfo_MatchClass_kwd_attrs, base=str)), # identifier*
