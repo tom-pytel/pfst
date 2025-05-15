@@ -13125,8 +13125,7 @@ Module .. ROOT 0,0 -> 9,0
   0] With .. 1,0 -> 8,5
     .items[1]
     0] withitem .. 1,5 -> 1,6
-      .context_expr
-        Name 'a' Load .. 1,5 -> 1,6
+      .context_expr Name 'a' Load .. 1,5 -> 1,6
     .body[3]
     0] Expr .. 2,4 -> 2,5
       .value Name 'i' Load .. 2,4 -> 2,5
@@ -13157,8 +13156,7 @@ Module .. ROOT 0,0 -> 9,0
   0] AsyncWith .. 1,0 -> 8,5
     .items[1]
     0] withitem .. 1,11 -> 1,12
-      .context_expr
-        Name 'a' Load .. 1,11 -> 1,12
+      .context_expr Name 'a' Load .. 1,11 -> 1,12
     .body[3]
     0] Expr .. 2,4 -> 2,5
       .value Name 'i' Load .. 2,4 -> 2,5
@@ -13431,8 +13429,7 @@ Module .. ROOT 0,0 -> 5,0
   0] With .. 1,0 -> 4,5
     .items[1]
     0] withitem .. 1,5 -> 1,6
-      .context_expr
-        Name 'a' Load .. 1,5 -> 1,6
+      .context_expr Name 'a' Load .. 1,5 -> 1,6
     .body[3]
     0] Expr .. 2,4 -> 2,5
       .value Name 'i' Load .. 2,4 -> 2,5
@@ -13459,8 +13456,7 @@ Module .. ROOT 0,0 -> 5,0
   0] AsyncWith .. 1,0 -> 4,5
     .items[1]
     0] withitem .. 1,11 -> 1,12
-      .context_expr
-        Name 'a' Load .. 1,11 -> 1,12
+      .context_expr Name 'a' Load .. 1,11 -> 1,12
     .body[3]
     0] Expr .. 2,4 -> 2,5
       .value Name 'i' Load .. 2,4 -> 2,5
@@ -14956,12 +14952,10 @@ Module .. ROOT 0,0 -> 0,27
   0] With .. 0,0 -> 0,27
     .items[2]
     0] withitem .. 0,5 -> 0,11
-      .context_expr
-        Name 'a' Load .. 0,5 -> 0,6
+      .context_expr Name 'a' Load .. 0,5 -> 0,6
       .optional_vars Name 'a' Store .. 0,10 -> 0,11
     1] withitem .. 0,13 -> 0,21
-      .context_expr
-        Name 'z' Load .. 0,13 -> 0,14
+      .context_expr Name 'z' Load .. 0,13 -> 0,14
       .optional_vars Name 'xyz' Store .. 0,18 -> 0,21
     .body[1]
     0] Pass .. 0,23 -> 0,27
@@ -16123,12 +16117,11 @@ Module .. ROOT 0,0 -> 0,22
   0] With .. 0,0 -> 0,22
     .items[1]
     0] withitem .. 0,5 -> 0,16
-      .context_expr
-        Tuple .. 0,5 -> 0,11
-          .elts[2]
-          0] Name 'a' Load .. 0,6 -> 0,7
-          1] Name 'b' Load .. 0,9 -> 0,10
-          .ctx Load
+      .context_expr Tuple .. 0,5 -> 0,11
+        .elts[2]
+        0] Name 'a' Load .. 0,6 -> 0,7
+        1] Name 'b' Load .. 0,9 -> 0,10
+        .ctx Load
       .optional_vars Name 'j' Store .. 0,15 -> 0,16
     .body[1]
     0] Pass .. 0,18 -> 0,22
@@ -17129,8 +17122,7 @@ Module .. ROOT 0,0 -> 0,19
   0] With .. 0,0 -> 0,19
     .items[1]
     0] withitem .. 0,5 -> 0,13
-      .context_expr
-        Name 'a' Load .. 0,5 -> 0,6
+      .context_expr Name 'a' Load .. 0,5 -> 0,6
       .optional_vars Name 'new' Store .. 0,10 -> 0,13
     .body[1]
     0] Pass .. 0,15 -> 0,19
@@ -17142,8 +17134,7 @@ Module .. ROOT 0,0 -> 0,19
   0] With .. 0,0 -> 0,19
     .items[1]
     0] withitem .. 0,5 -> 0,13
-      .context_expr
-        Name 'a' Load .. 0,5 -> 0,6
+      .context_expr Name 'a' Load .. 0,5 -> 0,6
       .optional_vars Name 'new' Store .. 0,10 -> 0,13
     .body[1]
     0] Pass .. 0,15 -> 0,19
@@ -17155,8 +17146,7 @@ Module .. ROOT 0,0 -> 0,21
   0] With .. 0,0 -> 0,21
     .items[1]
     0] withitem .. 0,6 -> 0,14
-      .context_expr
-        Name 'a' Load .. 0,6 -> 0,7
+      .context_expr Name 'a' Load .. 0,6 -> 0,7
       .optional_vars Name 'new' Store .. 0,11 -> 0,14
     .body[1]
     0] Pass .. 0,17 -> 0,21
@@ -17168,8 +17158,7 @@ Module .. ROOT 0,0 -> 0,12
   0] With .. 0,0 -> 0,12
     .items[1]
     0] withitem .. 0,5 -> 0,6
-      .context_expr
-        Name 'a' Load .. 0,5 -> 0,6
+      .context_expr Name 'a' Load .. 0,5 -> 0,6
     .body[1]
     0] Pass .. 0,8 -> 0,12
 """),
@@ -17180,8 +17169,7 @@ Module .. ROOT 0,0 -> 0,12
   0] With .. 0,0 -> 0,12
     .items[1]
     0] withitem .. 0,5 -> 0,6
-      .context_expr
-        Name 'a' Load .. 0,5 -> 0,6
+      .context_expr Name 'a' Load .. 0,5 -> 0,6
     .body[1]
     0] Pass .. 0,8 -> 0,12
 """),
@@ -17192,8 +17180,7 @@ Module .. ROOT 0,0 -> 0,14
   0] With .. 0,0 -> 0,14
     .items[1]
     0] withitem .. 0,6 -> 0,7
-      .context_expr
-        Name 'a' Load .. 0,6 -> 0,7
+      .context_expr Name 'a' Load .. 0,6 -> 0,7
     .body[1]
     0] Pass .. 0,10 -> 0,14
 """),
@@ -17204,8 +17191,7 @@ Module .. ROOT 0,0 -> 0,21
   0] With .. 0,0 -> 0,21
     .items[1]
     0] withitem .. 0,6 -> 0,14
-      .context_expr
-        Name 'a' Load .. 0,6 -> 0,7
+      .context_expr Name 'a' Load .. 0,6 -> 0,7
       .optional_vars Name 'new' Store .. 0,11 -> 0,14
     .body[1]
     0] Pass .. 0,17 -> 0,21
@@ -17217,8 +17203,7 @@ Module .. ROOT 0,0 -> 0,14
   0] With .. 0,0 -> 0,14
     .items[1]
     0] withitem .. 0,6 -> 0,7
-      .context_expr
-        Name 'a' Load .. 0,6 -> 0,7
+      .context_expr Name 'a' Load .. 0,6 -> 0,7
     .body[1]
     0] Pass .. 0,10 -> 0,14
 """),
@@ -17229,8 +17214,7 @@ Module .. ROOT 0,0 -> 0,12
   0] With .. 0,0 -> 0,12
     .items[1]
     0] withitem .. 0,5 -> 0,6
-      .context_expr
-        Name 'a' Load .. 0,5 -> 0,6
+      .context_expr Name 'a' Load .. 0,5 -> 0,6
     .body[1]
     0] Pass .. 0,8 -> 0,12
 """),
@@ -17241,8 +17225,7 @@ Module .. ROOT 0,0 -> 0,19
   0] With .. 0,0 -> 0,19
     .items[1]
     0] withitem .. 0,5 -> 0,13
-      .context_expr
-        Name 'a' Load .. 0,5 -> 0,6
+      .context_expr Name 'a' Load .. 0,5 -> 0,6
       .optional_vars Name 'new' Store .. 0,10 -> 0,13
     .body[1]
     0] Pass .. 0,15 -> 0,19
@@ -17254,8 +17237,7 @@ Module .. ROOT 0,0 -> 0,21
   0] With .. 0,0 -> 0,21
     .items[1]
     0] withitem .. 0,5 -> 0,15
-      .context_expr
-        Name 'a' Load .. 0,6 -> 0,7
+      .context_expr Name 'a' Load .. 0,6 -> 0,7
       .optional_vars Name 'new' Store .. 0,12 -> 0,15
     .body[1]
     0] Pass .. 0,17 -> 0,21
@@ -17267,8 +17249,7 @@ Module .. ROOT 0,0 -> 0,27
   0] With .. 0,0 -> 0,27
     .items[1]
     0] withitem .. 0,5 -> 0,21
-      .context_expr
-        Name 'a' Load .. 0,6 -> 0,7
+      .context_expr Name 'a' Load .. 0,6 -> 0,7
       .optional_vars Tuple .. 0,12 -> 0,21
         .elts[2]
         0] Name 'new' Store .. 0,13 -> 0,16
@@ -17284,8 +17265,7 @@ Module .. ROOT 0,0 -> 0,27
   0] With .. 0,0 -> 0,27
     .items[1]
     0] withitem .. 0,5 -> 0,21
-      .context_expr
-        Name 'a' Load .. 0,6 -> 0,7
+      .context_expr Name 'a' Load .. 0,6 -> 0,7
       .optional_vars List .. 0,12 -> 0,21
         .elts[2]
         0] Name 'new' Store .. 0,13 -> 0,16
@@ -21162,12 +21142,10 @@ Module .. ROOT 0,0 -> 0,27
   0] With .. 0,0 -> 0,27
     .items[2]
     0] withitem .. 0,5 -> 0,11
-      .context_expr
-        Name 'a' Load .. 0,5 -> 0,6
+      .context_expr Name 'a' Load .. 0,5 -> 0,6
       .optional_vars Name 'a' Store .. 0,10 -> 0,11
     1] withitem .. 0,13 -> 0,21
-      .context_expr
-        Name 'z' Load .. 0,13 -> 0,14
+      .context_expr Name 'z' Load .. 0,13 -> 0,14
       .optional_vars Name 'xyz' Store .. 0,18 -> 0,21
     .body[1]
     0] Pass .. 0,23 -> 0,27

@@ -196,8 +196,8 @@ def _repr_tail(self: 'FST') -> str:
     return f'{tail} {loc[0]},{loc[1]} -> {loc[2]},{loc[3]}' if loc else tail
 
 
-def _dump(self: 'FST', full: bool = False, indent: int = 2, cind: str = '', prefix: str = '', linefunc: Callable = print,
-          compact: bool = False, eol: str = ''):
+def _dump(self: 'FST', full: bool = False, indent: int = 2, cind: str = '', prefix: str = '',
+          linefunc: Callable = print, compact: bool = False, eol: str = ''):
     tail = self._repr_tail()
     sind = ' ' * indent
     ast  = self.a
@@ -235,7 +235,7 @@ def _dump(self: 'FST', full: bool = False, indent: int = 2, cind: str = '', pref
             if (name in ('type', 'id', 'attr', 'module', 'arg', 'vararg', 'kwarg', 'rest', 'format_spec',
                             'name', 'value', 'left', 'right', 'operand', 'returns', 'target',
                             'annotation', 'iter', 'test','exc', 'cause', 'msg', 'elt', 'key', 'func',
-                            'slice', 'lower', 'upper', 'step', 'guard', 'optional_vars',
+                            'slice', 'lower', 'upper', 'step', 'guard', 'context_expr', 'optional_vars',
                             'cls', 'bound', 'default_value', 'pattern', 'subject',
                             'type_comment', 'lineno', 'tag', 'op',
                             'simple', 'level', 'conversion', 'str', 'is_async', 'lineno')
