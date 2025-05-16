@@ -20963,7 +20963,7 @@ Module .. ROOT 0,0 -> 1,32
       0] Pass .. 1,28 -> 1,32
 """),
 
-(r"""del a, (b), c""", 'body[0]', 0, None, {'raw': False}, r"""**DEL**""", r"""**ValueError("cannot put slice to a 'Delete'")**""", r"""
+(r"""del a, (b), c""", 'body[0]', 0, None, {'raw': False}, r"""**DEL**""", r"""**ValueError('cannot put slice to Delete.targets')**""", r"""
 """),
 
 (r"""del a, (b), c""", 'body[0]', 0, None, {'raw': False}, r"""new""", r"""del new, (b), c""", r"""
@@ -21026,7 +21026,7 @@ Module .. ROOT 0,0 -> 0,18
 (r"""del a, (b), c""", 'body[0]', -4, None, {'raw': False}, r"""new""", r"""**IndexError('index out of range')**""", r"""
 """),
 
-(r"""a = (b, c) = d = z""", 'body[0]', 0, 'targets', {'raw': False}, r"""**DEL**""", r"""**ValueError("cannot put slice to a 'Assign'")**""", r"""
+(r"""a = (b, c) = d = z""", 'body[0]', 0, 'targets', {'raw': False}, r"""**DEL**""", r"""**ValueError('cannot put slice to Assign.targets')**""", r"""
 """),
 
 (r"""a = (b, c) = d = z""", 'body[0]', 0, 'targets', {'raw': False}, r"""new""", r"""new = (b, c) = d = z""", r"""
@@ -21108,6 +21108,412 @@ Module .. ROOT 0,0 -> 0,21
 """),
 
 (r"""del a, (b, c), d""", 'body[0]', -4, 'targets', {'raw': False}, r"""new""", r"""**IndexError('index out of range')**""", r"""
+"""),
+
+(r"""@a
+@(b)
+def c(): pass""", 'body[0]', 0, 'decorator_list', {'raw': False}, r"""**DEL**""", r"""**ValueError('cannot put slice to FunctionDef.decorator_list')**""", r"""
+"""),
+
+(r"""@a
+@(b)
+def c(): pass""", 'body[0]', 0, 'decorator_list', {'raw': False}, r"""new""", r"""@new
+@(b)
+def c(): pass""", r"""
+Module .. ROOT 0,0 -> 2,13
+  .body[1]
+  0] FunctionDef .. 2,0 -> 2,13
+    .name 'c'
+    .body[1]
+    0] Pass .. 2,9 -> 2,13
+    .decorator_list[2]
+    0] Name 'new' Load .. 0,1 -> 0,4
+    1] Name 'b' Load .. 1,2 -> 1,3
+"""),
+
+(r"""@a
+@(b)
+def c(): pass""", 'body[0]', 1, 'decorator_list', {'raw': False}, r"""new""", r"""@a
+@new
+def c(): pass""", r"""
+Module .. ROOT 0,0 -> 2,13
+  .body[1]
+  0] FunctionDef .. 2,0 -> 2,13
+    .name 'c'
+    .body[1]
+    0] Pass .. 2,9 -> 2,13
+    .decorator_list[2]
+    0] Name 'a' Load .. 0,1 -> 0,2
+    1] Name 'new' Load .. 1,1 -> 1,4
+"""),
+
+(r"""@a
+@(b)
+def c(): pass""", 'body[0]', -1, 'decorator_list', {'raw': False}, r"""new""", r"""@a
+@new
+def c(): pass""", r"""
+Module .. ROOT 0,0 -> 2,13
+  .body[1]
+  0] FunctionDef .. 2,0 -> 2,13
+    .name 'c'
+    .body[1]
+    0] Pass .. 2,9 -> 2,13
+    .decorator_list[2]
+    0] Name 'a' Load .. 0,1 -> 0,2
+    1] Name 'new' Load .. 1,1 -> 1,4
+"""),
+
+(r"""@a
+@(b)
+def c(): pass""", 'body[0]', -2, 'decorator_list', {'raw': False}, r"""f()""", r"""@f()
+@(b)
+def c(): pass""", r"""
+Module .. ROOT 0,0 -> 2,13
+  .body[1]
+  0] FunctionDef .. 2,0 -> 2,13
+    .name 'c'
+    .body[1]
+    0] Pass .. 2,9 -> 2,13
+    .decorator_list[2]
+    0] Call .. 0,1 -> 0,4
+      .func Name 'f' Load .. 0,1 -> 0,2
+    1] Name 'b' Load .. 1,2 -> 1,3
+"""),
+
+(r"""@a
+@(b)
+def c(): pass""", 'body[0]', -4, 'decorator_list', {'raw': False}, r"""new""", r"""**IndexError('index out of range')**""", r"""
+"""),
+
+(r"""@a
+@(b)
+async def c(): pass""", 'body[0]', 0, 'decorator_list', {'raw': False}, r"""**DEL**""", r"""**ValueError('cannot put slice to AsyncFunctionDef.decorator_list')**""", r"""
+"""),
+
+(r"""@a
+@(b)
+async def c(): pass""", 'body[0]', 0, 'decorator_list', {'raw': False}, r"""new""", r"""@new
+@(b)
+async def c(): pass""", r"""
+Module .. ROOT 0,0 -> 2,19
+  .body[1]
+  0] AsyncFunctionDef .. 2,0 -> 2,19
+    .name 'c'
+    .body[1]
+    0] Pass .. 2,15 -> 2,19
+    .decorator_list[2]
+    0] Name 'new' Load .. 0,1 -> 0,4
+    1] Name 'b' Load .. 1,2 -> 1,3
+"""),
+
+(r"""@a
+@(b)
+async def c(): pass""", 'body[0]', 1, 'decorator_list', {'raw': False}, r"""new""", r"""@a
+@new
+async def c(): pass""", r"""
+Module .. ROOT 0,0 -> 2,19
+  .body[1]
+  0] AsyncFunctionDef .. 2,0 -> 2,19
+    .name 'c'
+    .body[1]
+    0] Pass .. 2,15 -> 2,19
+    .decorator_list[2]
+    0] Name 'a' Load .. 0,1 -> 0,2
+    1] Name 'new' Load .. 1,1 -> 1,4
+"""),
+
+(r"""@a
+@(b)
+async def c(): pass""", 'body[0]', -1, 'decorator_list', {'raw': False}, r"""new""", r"""@a
+@new
+async def c(): pass""", r"""
+Module .. ROOT 0,0 -> 2,19
+  .body[1]
+  0] AsyncFunctionDef .. 2,0 -> 2,19
+    .name 'c'
+    .body[1]
+    0] Pass .. 2,15 -> 2,19
+    .decorator_list[2]
+    0] Name 'a' Load .. 0,1 -> 0,2
+    1] Name 'new' Load .. 1,1 -> 1,4
+"""),
+
+(r"""@a
+@(b)
+async def c(): pass""", 'body[0]', -2, 'decorator_list', {'raw': False}, r"""f()""", r"""@f()
+@(b)
+async def c(): pass""", r"""
+Module .. ROOT 0,0 -> 2,19
+  .body[1]
+  0] AsyncFunctionDef .. 2,0 -> 2,19
+    .name 'c'
+    .body[1]
+    0] Pass .. 2,15 -> 2,19
+    .decorator_list[2]
+    0] Call .. 0,1 -> 0,4
+      .func Name 'f' Load .. 0,1 -> 0,2
+    1] Name 'b' Load .. 1,2 -> 1,3
+"""),
+
+(r"""@a
+@(b)
+async def c(): pass""", 'body[0]', -4, 'decorator_list', {'raw': False}, r"""new""", r"""**IndexError('index out of range')**""", r"""
+"""),
+
+(r"""@a
+@(b)
+class c: pass""", 'body[0]', 0, 'decorator_list', {'raw': False}, r"""**DEL**""", r"""**ValueError('cannot put slice to ClassDef.decorator_list')**""", r"""
+"""),
+
+(r"""@a
+@(b)
+class c: pass""", 'body[0]', 0, 'decorator_list', {'raw': False}, r"""new""", r"""@new
+@(b)
+class c: pass""", r"""
+Module .. ROOT 0,0 -> 2,13
+  .body[1]
+  0] ClassDef .. 2,0 -> 2,13
+    .name 'c'
+    .body[1]
+    0] Pass .. 2,9 -> 2,13
+    .decorator_list[2]
+    0] Name 'new' Load .. 0,1 -> 0,4
+    1] Name 'b' Load .. 1,2 -> 1,3
+"""),
+
+(r"""@a
+@(b)
+class c: pass""", 'body[0]', 1, 'decorator_list', {'raw': False}, r"""new""", r"""@a
+@new
+class c: pass""", r"""
+Module .. ROOT 0,0 -> 2,13
+  .body[1]
+  0] ClassDef .. 2,0 -> 2,13
+    .name 'c'
+    .body[1]
+    0] Pass .. 2,9 -> 2,13
+    .decorator_list[2]
+    0] Name 'a' Load .. 0,1 -> 0,2
+    1] Name 'new' Load .. 1,1 -> 1,4
+"""),
+
+(r"""@a
+@(b)
+class c: pass""", 'body[0]', -1, 'decorator_list', {'raw': False}, r"""new""", r"""@a
+@new
+class c: pass""", r"""
+Module .. ROOT 0,0 -> 2,13
+  .body[1]
+  0] ClassDef .. 2,0 -> 2,13
+    .name 'c'
+    .body[1]
+    0] Pass .. 2,9 -> 2,13
+    .decorator_list[2]
+    0] Name 'a' Load .. 0,1 -> 0,2
+    1] Name 'new' Load .. 1,1 -> 1,4
+"""),
+
+(r"""@a
+@(b)
+class c: pass""", 'body[0]', -2, 'decorator_list', {'raw': False}, r"""f()""", r"""@f()
+@(b)
+class c: pass""", r"""
+Module .. ROOT 0,0 -> 2,13
+  .body[1]
+  0] ClassDef .. 2,0 -> 2,13
+    .name 'c'
+    .body[1]
+    0] Pass .. 2,9 -> 2,13
+    .decorator_list[2]
+    0] Call .. 0,1 -> 0,4
+      .func Name 'f' Load .. 0,1 -> 0,2
+    1] Name 'b' Load .. 1,2 -> 1,3
+"""),
+
+(r"""@a
+@(b)
+class c: pass""", 'body[0]', -4, 'decorator_list', {'raw': False}, r"""new""", r"""**IndexError('index out of range')**""", r"""
+"""),
+
+(r"""class c(a, (b)): pass""", 'body[0]', 0, 'bases', {'raw': False}, r"""**DEL**""", r"""**ValueError('cannot put slice to ClassDef.bases')**""", r"""
+"""),
+
+(r"""class c(a, (b)): pass""", 'body[0]', 0, 'bases', {'raw': False}, r"""new""", r"""class c(new, (b)): pass""", r"""
+Module .. ROOT 0,0 -> 0,23
+  .body[1]
+  0] ClassDef .. 0,0 -> 0,23
+    .name 'c'
+    .bases[2]
+    0] Name 'new' Load .. 0,8 -> 0,11
+    1] Name 'b' Load .. 0,14 -> 0,15
+    .body[1]
+    0] Pass .. 0,19 -> 0,23
+"""),
+
+(r"""class c(a, (b)): pass""", 'body[0]', 1, 'bases', {'raw': False}, r"""new""", r"""class c(a, new): pass""", r"""
+Module .. ROOT 0,0 -> 0,21
+  .body[1]
+  0] ClassDef .. 0,0 -> 0,21
+    .name 'c'
+    .bases[2]
+    0] Name 'a' Load .. 0,8 -> 0,9
+    1] Name 'new' Load .. 0,11 -> 0,14
+    .body[1]
+    0] Pass .. 0,17 -> 0,21
+"""),
+
+(r"""class c(a, (b)): pass""", 'body[0]', -1, 'bases', {'raw': False}, r"""new""", r"""class c(a, new): pass""", r"""
+Module .. ROOT 0,0 -> 0,21
+  .body[1]
+  0] ClassDef .. 0,0 -> 0,21
+    .name 'c'
+    .bases[2]
+    0] Name 'a' Load .. 0,8 -> 0,9
+    1] Name 'new' Load .. 0,11 -> 0,14
+    .body[1]
+    0] Pass .. 0,17 -> 0,21
+"""),
+
+(r"""class c(a, (b)): pass""", 'body[0]', -2, 'bases', {'raw': False}, r"""f()""", r"""class c(f(), (b)): pass""", r"""
+Module .. ROOT 0,0 -> 0,23
+  .body[1]
+  0] ClassDef .. 0,0 -> 0,23
+    .name 'c'
+    .bases[2]
+    0] Call .. 0,8 -> 0,11
+      .func Name 'f' Load .. 0,8 -> 0,9
+    1] Name 'b' Load .. 0,14 -> 0,15
+    .body[1]
+    0] Pass .. 0,19 -> 0,23
+"""),
+
+(r"""class c(a, (b)): pass""", 'body[0]', -4, 'bases', {'raw': False}, r"""new""", r"""**IndexError('index out of range')**""", r"""
+"""),
+
+(r"""a and (b) and c""", 'body[0].value', 0, None, {'raw': False}, r"""**DEL**""", r"""**ValueError('cannot put slice to BoolOp.values')**""", r"""
+"""),
+
+(r"""a and (b) and c""", 'body[0].value', 0, None, {'raw': False}, r"""new""", r"""new and (b) and c""", r"""
+Module .. ROOT 0,0 -> 0,17
+  .body[1]
+  0] Expr .. 0,0 -> 0,17
+    .value BoolOp .. 0,0 -> 0,17
+      .op And
+      .values[3]
+      0] Name 'new' Load .. 0,0 -> 0,3
+      1] Name 'b' Load .. 0,9 -> 0,10
+      2] Name 'c' Load .. 0,16 -> 0,17
+"""),
+
+(r"""a and (b) and c""", 'body[0].value', 1, None, {'raw': False}, r"""new""", r"""a and new and c""", r"""
+Module .. ROOT 0,0 -> 0,15
+  .body[1]
+  0] Expr .. 0,0 -> 0,15
+    .value BoolOp .. 0,0 -> 0,15
+      .op And
+      .values[3]
+      0] Name 'a' Load .. 0,0 -> 0,1
+      1] Name 'new' Load .. 0,6 -> 0,9
+      2] Name 'c' Load .. 0,14 -> 0,15
+"""),
+
+(r"""a and (b) and c""", 'body[0].value', -1, None, {'raw': False}, r"""new""", r"""a and (b) and new""", r"""
+Module .. ROOT 0,0 -> 0,17
+  .body[1]
+  0] Expr .. 0,0 -> 0,17
+    .value BoolOp .. 0,0 -> 0,17
+      .op And
+      .values[3]
+      0] Name 'a' Load .. 0,0 -> 0,1
+      1] Name 'b' Load .. 0,7 -> 0,8
+      2] Name 'new' Load .. 0,14 -> 0,17
+"""),
+
+(r"""a and (b) and c""", 'body[0].value', -2, None, {'raw': False}, r"""f()""", r"""a and f() and c""", r"""
+Module .. ROOT 0,0 -> 0,15
+  .body[1]
+  0] Expr .. 0,0 -> 0,15
+    .value BoolOp .. 0,0 -> 0,15
+      .op And
+      .values[3]
+      0] Name 'a' Load .. 0,0 -> 0,1
+      1] Call .. 0,6 -> 0,9
+        .func Name 'f' Load .. 0,6 -> 0,7
+      2] Name 'c' Load .. 0,14 -> 0,15
+"""),
+
+(r"""a and (b) and c""", 'body[0].value', -4, None, {'raw': False}, r"""new""", r"""**IndexError('index out of range')**""", r"""
+"""),
+
+(r"""[i for i in j if a if (b)]""", 'body[0].value.generators[0]', 0, 'ifs', {'raw': False}, r"""**DEL**""", r"""**ValueError('cannot put slice to comprehension.ifs')**""", r"""
+"""),
+
+(r"""[i for i in j if a if (b)]""", 'body[0].value.generators[0]', 0, 'ifs', {'raw': False}, r"""new""", r"""[i for i in j if new if (b)]""", r"""
+Module .. ROOT 0,0 -> 0,28
+  .body[1]
+  0] Expr .. 0,0 -> 0,28
+    .value ListComp .. 0,0 -> 0,28
+      .elt Name 'i' Load .. 0,1 -> 0,2
+      .generators[1]
+      0] comprehension .. 0,3 -> 0,27
+        .target Name 'i' Store .. 0,7 -> 0,8
+        .iter Name 'j' Load .. 0,12 -> 0,13
+        .ifs[2]
+        0] Name 'new' Load .. 0,17 -> 0,20
+        1] Name 'b' Load .. 0,25 -> 0,26
+        .is_async 0
+"""),
+
+(r"""[i for i in j if a if (b)]""", 'body[0].value.generators[0]', 1, 'ifs', {'raw': False}, r"""new""", r"""[i for i in j if a if new]""", r"""
+Module .. ROOT 0,0 -> 0,26
+  .body[1]
+  0] Expr .. 0,0 -> 0,26
+    .value ListComp .. 0,0 -> 0,26
+      .elt Name 'i' Load .. 0,1 -> 0,2
+      .generators[1]
+      0] comprehension .. 0,3 -> 0,25
+        .target Name 'i' Store .. 0,7 -> 0,8
+        .iter Name 'j' Load .. 0,12 -> 0,13
+        .ifs[2]
+        0] Name 'a' Load .. 0,17 -> 0,18
+        1] Name 'new' Load .. 0,22 -> 0,25
+        .is_async 0
+"""),
+
+(r"""[i for i in j if a if (b)]""", 'body[0].value.generators[0]', -1, 'ifs', {'raw': False}, r"""new""", r"""[i for i in j if a if new]""", r"""
+Module .. ROOT 0,0 -> 0,26
+  .body[1]
+  0] Expr .. 0,0 -> 0,26
+    .value ListComp .. 0,0 -> 0,26
+      .elt Name 'i' Load .. 0,1 -> 0,2
+      .generators[1]
+      0] comprehension .. 0,3 -> 0,25
+        .target Name 'i' Store .. 0,7 -> 0,8
+        .iter Name 'j' Load .. 0,12 -> 0,13
+        .ifs[2]
+        0] Name 'a' Load .. 0,17 -> 0,18
+        1] Name 'new' Load .. 0,22 -> 0,25
+        .is_async 0
+"""),
+
+(r"""[i for i in j if a if (b)]""", 'body[0].value.generators[0]', -2, 'ifs', {'raw': False}, r"""f()""", r"""[i for i in j if f() if (b)]""", r"""
+Module .. ROOT 0,0 -> 0,28
+  .body[1]
+  0] Expr .. 0,0 -> 0,28
+    .value ListComp .. 0,0 -> 0,28
+      .elt Name 'i' Load .. 0,1 -> 0,2
+      .generators[1]
+      0] comprehension .. 0,3 -> 0,27
+        .target Name 'i' Store .. 0,7 -> 0,8
+        .iter Name 'j' Load .. 0,12 -> 0,13
+        .ifs[2]
+        0] Call .. 0,17 -> 0,20
+          .func Name 'f' Load .. 0,17 -> 0,18
+        1] Name 'b' Load .. 0,25 -> 0,26
+        .is_async 0
+"""),
+
+(r"""[i for i in j if a if (b)]""", 'body[0].value.generators[0]', -4, 'ifs', {'raw': False}, r"""new""", r"""**IndexError('index out of range')**""", r"""
 """),
 
 ]  # END OF PUT_ONE_DATA

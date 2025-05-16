@@ -36,7 +36,7 @@ def _get_slice(self: 'FST', start: int | Literal['end'] | None, stop: int | None
     # TODO: more individual specialized slice gets
 
 
-    raise ValueError(f"cannot get slice from a '{ast.__class__.__name__}'")
+    raise ValueError(f"cannot get slice from {ast.__class__.__name__}.{field}")
 
 
 # ----------------------------------------------------------------------------------------------------------------------
@@ -82,7 +82,7 @@ def _put_slice(self: 'FST', code: Code | None, start: int | Literal['end'] | Non
 
         else:
             if not raw:
-                raise ValueError(f"cannot put slice to a '{ast.__class__.__name__}'")
+                raise ValueError(f"cannot put slice to {ast.__class__.__name__}.{field}")
 
     return self._reparse_raw_slice(code, start, stop, field, one=one, **options)
 
