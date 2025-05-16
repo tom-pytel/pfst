@@ -20963,6 +20963,153 @@ Module .. ROOT 0,0 -> 1,32
       0] Pass .. 1,28 -> 1,32
 """),
 
+(r"""del a, (b), c""", 'body[0]', 0, None, {'raw': False}, r"""**DEL**""", r"""**ValueError("cannot put slice to a 'Delete'")**""", r"""
+"""),
+
+(r"""del a, (b), c""", 'body[0]', 0, None, {'raw': False}, r"""new""", r"""del new, (b), c""", r"""
+Module .. ROOT 0,0 -> 0,15
+  .body[1]
+  0] Delete .. 0,0 -> 0,15
+    .targets[3]
+    0] Name 'new' Del .. 0,4 -> 0,7
+    1] Name 'b' Del .. 0,10 -> 0,11
+    2] Name 'c' Del .. 0,14 -> 0,15
+"""),
+
+(r"""del a, (b), c""", 'body[0]', 1, None, {'raw': False}, r"""new""", r"""del a, new, c""", r"""
+Module .. ROOT 0,0 -> 0,13
+  .body[1]
+  0] Delete .. 0,0 -> 0,13
+    .targets[3]
+    0] Name 'a' Del .. 0,4 -> 0,5
+    1] Name 'new' Del .. 0,7 -> 0,10
+    2] Name 'c' Del .. 0,12 -> 0,13
+"""),
+
+(r"""del a, (b), c""", 'body[0]', 2, None, {'raw': False}, r"""new""", r"""del a, (b), new""", r"""
+Module .. ROOT 0,0 -> 0,15
+  .body[1]
+  0] Delete .. 0,0 -> 0,15
+    .targets[3]
+    0] Name 'a' Del .. 0,4 -> 0,5
+    1] Name 'b' Del .. 0,8 -> 0,9
+    2] Name 'new' Del .. 0,12 -> 0,15
+"""),
+
+(r"""del a, (b), c""", 'body[0]', -1, None, {'raw': False}, r"""new""", r"""del a, (b), new""", r"""
+Module .. ROOT 0,0 -> 0,15
+  .body[1]
+  0] Delete .. 0,0 -> 0,15
+    .targets[3]
+    0] Name 'a' Del .. 0,4 -> 0,5
+    1] Name 'b' Del .. 0,8 -> 0,9
+    2] Name 'new' Del .. 0,12 -> 0,15
+"""),
+
+(r"""del a, (b), c""", 'body[0]', -1, None, {'raw': False}, r"""x, y""", r"""del a, (b), (x, y)""", r"""
+Module .. ROOT 0,0 -> 0,18
+  .body[1]
+  0] Delete .. 0,0 -> 0,18
+    .targets[3]
+    0] Name 'a' Del .. 0,4 -> 0,5
+    1] Name 'b' Del .. 0,8 -> 0,9
+    2] Tuple .. 0,12 -> 0,18
+      .elts[2]
+      0] Name 'x' Del .. 0,13 -> 0,14
+      1] Name 'y' Del .. 0,16 -> 0,17
+      .ctx Del
+"""),
+
+(r"""del a, (b), c""", 'body[0]', -1, None, {'raw': False}, r"""f()""", r"""**NodeTypeError('expecting one of (Name, Attribute, Subscript, Tuple, List) for Delete.targets[-1], got Call')**""", r"""
+"""),
+
+(r"""del a, (b), c""", 'body[0]', -4, None, {'raw': False}, r"""new""", r"""**IndexError('index out of range')**""", r"""
+"""),
+
+(r"""a = (b, c) = d = z""", 'body[0]', 0, 'targets', {'raw': False}, r"""**DEL**""", r"""**ValueError("cannot put slice to a 'Assign'")**""", r"""
+"""),
+
+(r"""a = (b, c) = d = z""", 'body[0]', 0, 'targets', {'raw': False}, r"""new""", r"""new = (b, c) = d = z""", r"""
+Module .. ROOT 0,0 -> 0,20
+  .body[1]
+  0] Assign .. 0,0 -> 0,20
+    .targets[3]
+    0] Name 'new' Store .. 0,0 -> 0,3
+    1] Tuple .. 0,6 -> 0,12
+      .elts[2]
+      0] Name 'b' Store .. 0,7 -> 0,8
+      1] Name 'c' Store .. 0,10 -> 0,11
+      .ctx Store
+    2] Name 'd' Store .. 0,15 -> 0,16
+    .value Name 'z' Load .. 0,19 -> 0,20
+"""),
+
+(r"""a = (b, c) = d = z""", 'body[0]', 1, 'targets', {'raw': False}, r"""new""", r"""a = new = d = z""", r"""
+Module .. ROOT 0,0 -> 0,15
+  .body[1]
+  0] Assign .. 0,0 -> 0,15
+    .targets[3]
+    0] Name 'a' Store .. 0,0 -> 0,1
+    1] Name 'new' Store .. 0,4 -> 0,7
+    2] Name 'd' Store .. 0,10 -> 0,11
+    .value Name 'z' Load .. 0,14 -> 0,15
+"""),
+
+(r"""a = (b, c) = d = z""", 'body[0]', 2, 'targets', {'raw': False}, r"""new""", r"""a = (b, c) = new = z""", r"""
+Module .. ROOT 0,0 -> 0,20
+  .body[1]
+  0] Assign .. 0,0 -> 0,20
+    .targets[3]
+    0] Name 'a' Store .. 0,0 -> 0,1
+    1] Tuple .. 0,4 -> 0,10
+      .elts[2]
+      0] Name 'b' Store .. 0,5 -> 0,6
+      1] Name 'c' Store .. 0,8 -> 0,9
+      .ctx Store
+    2] Name 'new' Store .. 0,13 -> 0,16
+    .value Name 'z' Load .. 0,19 -> 0,20
+"""),
+
+(r"""a = (b, c) = d = z""", 'body[0]', -1, 'targets', {'raw': False}, r"""new""", r"""a = (b, c) = new = z""", r"""
+Module .. ROOT 0,0 -> 0,20
+  .body[1]
+  0] Assign .. 0,0 -> 0,20
+    .targets[3]
+    0] Name 'a' Store .. 0,0 -> 0,1
+    1] Tuple .. 0,4 -> 0,10
+      .elts[2]
+      0] Name 'b' Store .. 0,5 -> 0,6
+      1] Name 'c' Store .. 0,8 -> 0,9
+      .ctx Store
+    2] Name 'new' Store .. 0,13 -> 0,16
+    .value Name 'z' Load .. 0,19 -> 0,20
+"""),
+
+(r"""a = (b, c) = d = z""", 'body[0]', -1, 'targets', {'raw': False}, r"""x, y""", r"""a = (b, c) = x, y = z""", r"""
+Module .. ROOT 0,0 -> 0,21
+  .body[1]
+  0] Assign .. 0,0 -> 0,21
+    .targets[3]
+    0] Name 'a' Store .. 0,0 -> 0,1
+    1] Tuple .. 0,4 -> 0,10
+      .elts[2]
+      0] Name 'b' Store .. 0,5 -> 0,6
+      1] Name 'c' Store .. 0,8 -> 0,9
+      .ctx Store
+    2] Tuple .. 0,13 -> 0,17
+      .elts[2]
+      0] Name 'x' Store .. 0,13 -> 0,14
+      1] Name 'y' Store .. 0,16 -> 0,17
+      .ctx Store
+    .value Name 'z' Load .. 0,20 -> 0,21
+"""),
+
+(r"""del a, (b, c), d""", 'body[0]', -1, 'targets', {'raw': False}, r"""f()""", r"""**NodeTypeError('expecting one of (Name, Attribute, Subscript, Tuple, List) for Delete.targets[-1], got Call')**""", r"""
+"""),
+
+(r"""del a, (b, c), d""", 'body[0]', -4, 'targets', {'raw': False}, r"""new""", r"""**IndexError('index out of range')**""", r"""
+"""),
+
 ]  # END OF PUT_ONE_DATA
 
 PUT_RAW_DATA = [

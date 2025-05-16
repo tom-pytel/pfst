@@ -229,7 +229,8 @@ def _oneinfo_expr_required(self: 'FST', static: onestatic, idx: int | None, fiel
 
 _onestatic_expr_required = onestatic(_oneinfo_expr_required)
 _onestatic_target_Name   = onestatic(_oneinfo_expr_required, Name, ctx=Store)
-_onestatic_Assign_target = onestatic(_oneinfo_expr_required, (Name, Attribute, Subscript), ctx=Store)
+_onestatic_target_single = onestatic(_oneinfo_expr_required, (Name, Attribute, Subscript), ctx=Store)
+_onestatic_target        = onestatic(_oneinfo_expr_required, (Name, Attribute, Subscript, Tuple, List), ctx=Store)
 _onestatic_For_target    = onestatic(_oneinfo_expr_required, (Name, Tuple, List), ctx=Store)
 
 def _oneinfo_identifier_required(self: 'FST', static: onestatic, idx: int | None, field: str, prefix: str | None = None,
@@ -618,8 +619,9 @@ def _put_one_tuple_list_or_set(self: 'FST', code: Code | None, idx: int | None, 
                                static: None, **options) -> Optional['FST']:
     """Put or delete a single expression to a Tuple, List or Set elts."""
 
-    self._put_slice_tuple_list_or_set(code, *_slice_indices(self, idx, field, child, options.get('to')), field, True,
-                                      **options)
+    # self._put_slice_tuple_list_or_set(code, *_slice_indices(self, idx, field, child, options.get('to')), field, True,
+    #                                   **options)
+    self._put_slice(code, *_slice_indices(self, idx, field, child, options.get('to')), field, True, **options)
 
     return None if code is None else getattr(self.a, field)[idx].f
 
@@ -727,6 +729,18 @@ def _put_one_expr_optional(self: 'FST', code: Code | None, idx: int | None, fiel
     put_fst.pfield.set(self.a, put_fst.a)
 
     return put_fst
+
+
+def _put_one_expr_sliceable(self: 'FST', code: Code | None, idx: int | None, field: str, child: AST, static: onestatic,
+                            **options) -> Optional['FST']:
+    """If deleting then will do so using slice operation, otherwise just a required expression."""
+
+    if code is None:
+        self._put_slice(code, *_slice_indices(self, idx, field, child, options.get('to')), field, True, **options)
+
+        return None
+
+    return _put_one_expr_required(self, code, idx, field, child, static, **options)
 
 
 def _put_one_Compare_None(self: 'FST', code: Code | None, idx: int | None, field: str, child: None,
@@ -966,16 +980,16 @@ _PUT_ONE_HANDLERS = {
     # (ClassDef, 'keywords'):               (_put_one_default, None, None), # keyword*                                        - slice
     (ClassDef, 'body'):                   (_put_one_stmtish, None, None), # stmt*
     (Return, 'value'):                    (_put_one_expr_optional, None, onestatic(_oneinfo_Return_value)), # expr?           - OPTIONAL TAIL: ''
-    # (Delete, 'targets'):                  (_put_one_default, None, None), # expr*                                           - slice
-    # (Assign, 'targets'):                  (_put_one_default, None, None), # expr*                                           - slice
+    (Delete, 'targets'):                  (_put_one_expr_sliceable, None, _onestatic_target), # expr*                  - slice
+    (Assign, 'targets'):                  (_put_one_expr_sliceable, None, _onestatic_target), # expr*                  - slice
     (Assign, 'value'):                    (_put_one_expr_required, None, _onestatic_expr_required), # expr
     (TypeAlias, 'name'):                  (_put_one_expr_required, None, _onestatic_target_Name), # expr
     # (TypeAlias, 'type_params'):           (_put_one_default, None, None), # type_param*                                     - slice
     (TypeAlias, 'value'):                 (_put_one_expr_required, None, _onestatic_expr_required), # expr
-    (AugAssign, 'target'):                (_put_one_expr_required, None, _onestatic_Assign_target), # expr
+    (AugAssign, 'target'):                (_put_one_expr_required, None, _onestatic_target_single), # expr
     (AugAssign, 'op'):                    (_put_one_op, None, None), # operator
     (AugAssign, 'value'):                 (_put_one_expr_required, None, _onestatic_expr_required), # expr
-    (AnnAssign, 'target'):                (_put_one_expr_required, None, _onestatic_Assign_target), # expr
+    (AnnAssign, 'target'):                (_put_one_expr_required, None, _onestatic_target_single), # expr
     (AnnAssign, 'annotation'):            (_put_one_expr_required, None, onestatic(_oneinfo_expr_required, [Lambda, Yield, YieldFrom, Await, NamedExpr])), # expr
     (AnnAssign, 'value'):                 (_put_one_expr_optional, None, onestatic(_oneinfo_AnnAssign_value)), # expr?        - OPTIONAL TAIL: '='
     (For, 'target'):                      (_put_one_expr_required, None, _onestatic_For_target), # expr

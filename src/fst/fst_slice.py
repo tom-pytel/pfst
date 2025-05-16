@@ -12,7 +12,7 @@ from .shared import (
 
 # ----------------------------------------------------------------------------------------------------------------------
 
-def _get_slice(self: 'FST', start: int | Literal['end'] | None, stop: int | None, field: str | None, *, cut: bool,
+def _get_slice(self: 'FST', start: int | Literal['end'] | None, stop: int | None, field: str | None, cut: bool,
                **options) -> 'FST':
     """Get a slice of child nodes from `self`."""
 
@@ -42,7 +42,7 @@ def _get_slice(self: 'FST', start: int | Literal['end'] | None, stop: int | None
 # ----------------------------------------------------------------------------------------------------------------------
 
 def _put_slice(self: 'FST', code: Code | None, start: int | Literal['end'] | None, stop: int | None, field: str | None,
-               *, one: bool = False, **options) -> 'FST':  # -> Self
+               one: bool = False, **options) -> 'FST':  # -> Self
     """Put an a slice of child nodes to `self`."""
 
     ast       = self.a

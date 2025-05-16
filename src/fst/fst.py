@@ -807,9 +807,9 @@ class FST:
 
         if isinstance(body, list):
             if stop is not False:
-                return self._get_slice(start, stop, field, cut=cut, **options)
+                return self._get_slice(start, stop, field, cut, **options)
             if start is None:
-                return self._get_slice(None, None, field, cut=cut, **options)
+                return self._get_slice(None, None, field, cut, **options)
 
             if start == 'end':
                 raise IndexError(f"cannot get() non-slice from index 'end'")
@@ -834,9 +834,9 @@ class FST:
 
         if isinstance(body, list):
             if stop is not False:
-                return self._put_slice(code, start, stop, field, one=one, **options)
+                return self._put_slice(code, start, stop, field, one, **options)
             if start is None:
-                return self._put_slice(code, None, None, field, one=one, **options)
+                return self._put_slice(code, None, None, field, one, **options)
 
             if start == 'end':
                 raise IndexError(f"cannot put() non-slice to index 'end'")
@@ -862,7 +862,7 @@ class FST:
         if not isinstance(body, list):
             raise ValueError(f'cannot get slice from non-list field {ast.__class__.__name__}.{field}')
 
-        return self._get_slice(start, stop, field, cut=cut, **options)
+        return self._get_slice(start, stop, field, cut, **options)
 
     def put_slice(self, code: Code | None, start: int | Literal['end'] | None = None, stop: int | None = None,
                   field: str | None = None, *, one: bool = False, **options) -> 'FST':  # -> Self
@@ -880,7 +880,7 @@ class FST:
         if not isinstance(body, list):
             raise ValueError(f'cannot put slice to non-list field {ast.__class__.__name__}.{field}')
 
-        return self._put_slice(code, start, stop, field, one=one, **options)
+        return self._put_slice(code, start, stop, field, one, **options)
 
     def put_raw(self, code: Code | None, ln: int, col: int, end_ln: int, end_col: int, *,
                 exact: bool | None = True, **options) -> Optional['FST']:
