@@ -63,7 +63,7 @@ _AST_DEFAULT_BODY_FIELD  = {cls: field for field, classes in [
     ('ifs',          (comprehension,)),
     ('values',       (BoolOp,)),
     ('generators',   (ListComp, SetComp, DictComp, GeneratorExp)),
-    ('args',         (Call,)),
+    ('args',         (Call,)),  # potential conflict of default body with put to empty 'set()'
 
     # ('values',       (JoinedStr, TemplateStr)),  # values don't have locations in lower version pythons for JoinedStr
     # ('items',        (With, AsyncWith)),  # 'body' takes precedence

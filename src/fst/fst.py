@@ -807,9 +807,9 @@ class FST:
 
         if isinstance(body, list):
             if stop is not False:
-                return self.get_slice(start, stop, field, cut=cut, **options)
+                return self._get_slice(start, stop, field, cut=cut, **options)
             if start is None:
-                return self.get_slice(None, None, field, cut=cut, **options)
+                return self._get_slice(None, None, field, cut=cut, **options)
 
             if start == 'end':
                 raise IndexError(f"cannot get() non-slice from index 'end'")
@@ -834,9 +834,9 @@ class FST:
 
         if isinstance(body, list):
             if stop is not False:
-                return self.put_slice(code, start, stop, field, one=one, **options)
+                return self._put_slice(code, start, stop, field, one=one, **options)
             if start is None:
-                return self.put_slice(code, None, None, field, one=one, **options)
+                return self._put_slice(code, None, None, field, one=one, **options)
 
             if start == 'end':
                 raise IndexError(f"cannot put() non-slice to index 'end'")
@@ -856,27 +856,13 @@ class FST:
                   cut: bool = False, **options) -> 'FST':
         """Get a slice of child nodes from `self`."""
 
-        ast       = self.a
-        field_, _ = _fixup_field_body(ast, field)
+        ast     = self.a
+        _, body = _fixup_field_body(ast, field)
 
-        if isinstance(ast, STMTISH_OR_STMTMOD):
-            if field_ in STMTISH_FIELDS:
-                return self._get_slice_stmtish(start, stop, field, cut, **options)
+        if not isinstance(body, list):
+            raise ValueError(f'cannot get slice from non-list field {ast.__class__.__name__}.{field}')
 
-        elif isinstance(ast, (Tuple, List, Set)):
-            return self._get_slice_tuple_list_or_set(start, stop, field, cut, **options)
-
-        elif isinstance(ast, Dict):
-            return self._get_slice_dict(start, stop, field, cut, **options)
-
-        elif self.is_empty_set_call() or self.is_empty_set_seq():
-            return self._get_slice_empty_set(start, stop, field, cut, **options)
-
-
-        # TODO: more individual specialized slice gets
-
-
-        raise ValueError(f"cannot get slice from a '{ast.__class__.__name__}'")
+        return self._get_slice(start, stop, field, cut=cut, **options)
 
     def put_slice(self, code: Code | None, start: int | Literal['end'] | None = None, stop: int | None = None,
                   field: str | None = None, *, one: bool = False, **options) -> 'FST':  # -> Self
@@ -888,46 +874,13 @@ class FST:
         Can reparse.
         """
 
-        ast       = self.a
-        field_, _ = _fixup_field_body(ast, field)
-        raw       = FST.get_option('raw', options)
+        ast     = self.a
+        _, body = _fixup_field_body(ast, field)
 
-        if raw is not True:
-            try:
-                if isinstance(ast, STMTISH_OR_STMTMOD):
-                    if field_ in STMTISH_FIELDS:
-                        self._put_slice_stmtish(code, start, stop, field, one, **options)
+        if not isinstance(body, list):
+            raise ValueError(f'cannot put slice to non-list field {ast.__class__.__name__}.{field}')
 
-                        return self
-
-                elif isinstance(ast, (Tuple, List, Set)):
-                    self._put_slice_tuple_list_or_set(code, start, stop, field, one, **options)
-
-                    return self
-
-                elif isinstance(ast, Dict):
-                    self._put_slice_dict(code, start, stop, field, one, **options)
-
-                    return self
-
-                elif self.is_empty_set_call() or self.is_empty_set_seq():
-                    self._put_slice_empty_set(code, start, stop, field, one, **options)
-
-                    return self
-
-
-                # TODO: more individual specialized slice puts
-
-
-            except (SyntaxError, NodeTypeError):
-                if not raw:
-                    raise
-
-            else:
-                if not raw:
-                    raise ValueError(f"cannot put slice to a '{ast.__class__.__name__}'")
-
-        return self._reparse_raw_slice(code, start, stop, field, one=one, **options)
+        return self._put_slice(code, start, stop, field, one=one, **options)
 
     def put_raw(self, code: Code | None, ln: int, col: int, end_ln: int, end_col: int, *,
                 exact: bool | None = True, **options) -> Optional['FST']:
@@ -2003,7 +1956,7 @@ class FST:
         _reparse_raw_node,
         _reparse_raw_slice,)
 
-    from .fst_slice import (
+    from .fst_slice_old import (
         _get_slice_tuple_list_or_set,
         _get_slice_empty_set,
         _get_slice_dict,
@@ -2012,6 +1965,10 @@ class FST:
         _put_slice_empty_set,
         _put_slice_dict,
         _put_slice_stmtish,)
+
+    from .fst_slice import (
+        _get_slice,
+        _put_slice,)
 
     from .fst_one import (
         _get_one,

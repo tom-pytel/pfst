@@ -181,6 +181,8 @@ def _validate_put(self: 'FST', code: Code | None, idx: int | None, field: str, c
         if idx is None:
             raise IndexError(f'{self.a.__class__.__name__}.{field} needs an index')
 
+        _fixup_one_index(len(child), idx)
+
         child = child[idx]
 
     elif idx is not None:
