@@ -21516,6 +21516,109 @@ Module .. ROOT 0,0 -> 0,28
 (r"""[i for i in j if a if (b)]""", 'body[0].value.generators[0]', -4, 'ifs', {'raw': False}, r"""new""", r"""**IndexError('index out of range')**""", r"""
 """),
 
+(r"""call(a, (b))""", 'body[0].value', 0, None, {'raw': False}, r"""**DEL**""", r"""**ValueError('cannot put slice to Call.args')**""", r"""
+"""),
+
+(r"""call(a, (b))""", 'body[0].value', 0, None, {'raw': False}, r"""new""", r"""call(new, (b))""", r"""
+Module .. ROOT 0,0 -> 0,14
+  .body[1]
+  0] Expr .. 0,0 -> 0,14
+    .value Call .. 0,0 -> 0,14
+      .func Name 'call' Load .. 0,0 -> 0,4
+      .args[2]
+      0] Name 'new' Load .. 0,5 -> 0,8
+      1] Name 'b' Load .. 0,11 -> 0,12
+"""),
+
+(r"""call(a, (b))""", 'body[0].value', 1, None, {'raw': False}, r"""new""", r"""call(a, new)""", r"""
+Module .. ROOT 0,0 -> 0,12
+  .body[1]
+  0] Expr .. 0,0 -> 0,12
+    .value Call .. 0,0 -> 0,12
+      .func Name 'call' Load .. 0,0 -> 0,4
+      .args[2]
+      0] Name 'a' Load .. 0,5 -> 0,6
+      1] Name 'new' Load .. 0,8 -> 0,11
+"""),
+
+(r"""call(a, (b))""", 'body[0].value', -1, None, {'raw': False}, r"""new""", r"""call(a, new)""", r"""
+Module .. ROOT 0,0 -> 0,12
+  .body[1]
+  0] Expr .. 0,0 -> 0,12
+    .value Call .. 0,0 -> 0,12
+      .func Name 'call' Load .. 0,0 -> 0,4
+      .args[2]
+      0] Name 'a' Load .. 0,5 -> 0,6
+      1] Name 'new' Load .. 0,8 -> 0,11
+"""),
+
+(r"""call(a, (b))""", 'body[0].value', -2, None, {'raw': False}, r"""f()""", r"""call(f(), (b))""", r"""
+Module .. ROOT 0,0 -> 0,14
+  .body[1]
+  0] Expr .. 0,0 -> 0,14
+    .value Call .. 0,0 -> 0,14
+      .func Name 'call' Load .. 0,0 -> 0,4
+      .args[2]
+      0] Call .. 0,5 -> 0,8
+        .func Name 'f' Load .. 0,5 -> 0,6
+      1] Name 'b' Load .. 0,11 -> 0,12
+"""),
+
+(r"""call(a, (b))""", 'body[0].value', -4, None, {'raw': False}, r"""new""", r"""**IndexError('index out of range')**""", r"""
+"""),
+
+(r"""call(i for i in j)""", 'body[0].value', 0, None, {'raw': False}, r"""new""", r"""call(new)""", r"""
+Module .. ROOT 0,0 -> 0,9
+  .body[1]
+  0] Expr .. 0,0 -> 0,9
+    .value Call .. 0,0 -> 0,9
+      .func Name 'call' Load .. 0,0 -> 0,4
+      .args[1]
+      0] Name 'new' Load .. 0,5 -> 0,8
+"""),
+
+(r"""call((i for i in j))""", 'body[0].value', 0, None, {'raw': False}, r"""new""", r"""call(new)""", r"""
+Module .. ROOT 0,0 -> 0,9
+  .body[1]
+  0] Expr .. 0,0 -> 0,9
+    .value Call .. 0,0 -> 0,9
+      .func Name 'call' Load .. 0,0 -> 0,4
+      .args[1]
+      0] Name 'new' Load .. 0,5 -> 0,8
+"""),
+
+(r"""call(i for i in j)""", 'body[0].value', 0, None, {'raw': False}, r"""(a for a in b)""", r"""call((a for a in b))""", r"""
+Module .. ROOT 0,0 -> 0,20
+  .body[1]
+  0] Expr .. 0,0 -> 0,20
+    .value Call .. 0,0 -> 0,20
+      .func Name 'call' Load .. 0,0 -> 0,4
+      .args[1]
+      0] GeneratorExp .. 0,5 -> 0,19
+        .elt Name 'a' Load .. 0,6 -> 0,7
+        .generators[1]
+        0] comprehension .. 0,8 -> 0,19
+          .target Name 'a' Store .. 0,12 -> 0,13
+          .iter Name 'b' Load .. 0,17 -> 0,18
+          .is_async 0
+"""),
+
+(r"""call((i for i in j))""", 'body[0].value', 0, None, {'raw': False}, r"""(a for a in b)""", r"""call((a for a in b))""", r"""
+Module .. ROOT 0,0 -> 0,20
+  .body[1]
+  0] Expr .. 0,0 -> 0,20
+    .value Call .. 0,0 -> 0,20
+      .func Name 'call' Load .. 0,0 -> 0,4
+      .args[1]
+      0] GeneratorExp .. 0,5 -> 0,19
+        .elt Name 'a' Load .. 0,6 -> 0,7
+        .generators[1]
+        0] comprehension .. 0,8 -> 0,19
+          .target Name 'a' Store .. 0,12 -> 0,13
+          .iter Name 'b' Load .. 0,17 -> 0,18
+          .is_async 0
+"""),
+
 ]  # END OF PUT_ONE_DATA
 
 PUT_RAW_DATA = [

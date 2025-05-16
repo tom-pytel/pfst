@@ -659,7 +659,7 @@ def _make_expr_fst(self: 'FST', code: Code | None, idx: int | None, field: str, 
 
     put_fst.indent_lns(self.get_indent(), docstr=options.get('docstr'))
 
-    ln, col, end_ln, end_col = target.pars(delpars) if target.is_FST else target
+    ln, col, end_ln, end_col = target.pars(delpars, exc_genexpr_solo=True) if target.is_FST else target
 
     dcol_offset   = self.root._lines[ln].c2b(col)
     params_offset = self.put_src(put_fst._lines, ln, col, end_ln, end_col, True, False, exclude=self)
@@ -1064,7 +1064,7 @@ _PUT_ONE_HANDLERS = {
     (Compare, 'comparators'):             (_put_one_expr_required, None, _onestatic_expr_required), # expr*
     (Compare, None):                      (_put_one_Compare_None, None, _onestatic_expr_required), # expr*
     (Call, 'func'):                       (_put_one_expr_required, None, _onestatic_expr_required), # expr
-    # (Call, 'args'):                       (_put_one_default, None, None), # expr*                                           - slice
+    (Call, 'args'):                       (_put_one_expr_sliceable, None, _onestatic_expr_required), # expr*                  - slice
     # (Call, 'keywords'):                   (_put_one_default, None, None), # keyword*                                        - slice
     (FormattedValue, 'value'):            (_put_one_expr_required, None, _onestatic_expr_required), # expr
     # (FormattedValue, 'format_spec'):      (_put_one_default, None, None), # expr?
