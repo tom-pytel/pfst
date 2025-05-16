@@ -2,7 +2,7 @@ from ast import *
 from typing import Any, Literal
 
 from .astutil import *
-from .shared import Code, _fixup_one_index, _fixup_slice_index
+from .shared import Code, _fixup_one_index, _fixup_slice_indices
 
 
 class fstlist:
@@ -43,7 +43,7 @@ class fstlist:
         if idx.step is not None:
             raise IndexError('step slicing not supported')
 
-        idx_start, idx_stop = _fixup_slice_index(self.stop - (start := self.start), idx.start, idx.stop)
+        idx_start, idx_stop = _fixup_slice_indices(self.stop - (start := self.start), idx.start, idx.stop)
 
         return fstlist(self.fst, self.field, start + idx_start, start + idx_stop)
 
@@ -57,7 +57,7 @@ class fstlist:
             raise IndexError('step slicing not supported')
 
         else:
-            idx_start, idx_stop = _fixup_slice_index(self.stop - (start := self.start), idx.start, idx.stop)
+            idx_start, idx_stop = _fixup_slice_indices(self.stop - (start := self.start), idx.start, idx.stop)
 
             self.fst.put_slice(code, start + idx_start, start + idx_stop, self.field)
 
@@ -73,7 +73,7 @@ class fstlist:
             raise IndexError('step slicing not supported')
 
         else:
-            idx_start, idx_stop = _fixup_slice_index(self.stop - (start := self.start), idx.start, idx.stop)
+            idx_start, idx_stop = _fixup_slice_indices(self.stop - (start := self.start), idx.start, idx.stop)
 
             self.fst.put_slice(None, start + idx_start, start + idx_stop, self.field)
 

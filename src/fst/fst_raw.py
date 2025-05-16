@@ -14,7 +14,7 @@ from .shared import (
     STMTISH_FIELDS,
     Code,
     _next_find, _prev_find, _fixup_field_body,
-    _fixup_slice_index, _coerce_ast,
+    _fixup_slice_indices, _coerce_ast,
 )
 
 _PATH_BODY          = [astfield('body', 0)]
@@ -31,7 +31,7 @@ def _raw_slice_loc(self: 'FST', start: int | Literal['end'] | None = None, stop:
     """Get location of a raw slice. Sepcial cases for decorators, comprehension ifs and other weird nodes."""
 
     def fixup_slice_index_for_raw(len_, start, stop):
-        start, stop = _fixup_slice_index(len_, start, stop)
+        start, stop = _fixup_slice_indices(len_, start, stop)
 
         if stop == start:
             raise ValueError(f"invalid slice for raw operation")

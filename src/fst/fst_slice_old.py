@@ -10,7 +10,7 @@ from .shared import (
     astfield, fstloc,
     Code, NodeTypeError,
     _next_find, _prev_find, _fixup_field_body,
-    _fixup_slice_index
+    _fixup_slice_indices
 )
 
 from .srcedit import _src_edit
@@ -100,7 +100,7 @@ def _get_slice_tuple_list_or_set(self: 'FST', start: int | Literal['end'] | None
     elts        = ast.elts
     is_set      = isinstance(ast, Set)
     is_tuple    = not is_set and isinstance(ast, Tuple)
-    start, stop = _fixup_slice_index(len(elts), start, stop)
+    start, stop = _fixup_slice_indices(len(elts), start, stop)
 
     if start == stop:
         if is_set:
@@ -199,7 +199,7 @@ def _get_slice_dict(self: 'FST', start: int | Literal['end'] | None, stop: int |
     fix         = FST.get_option('fix', options)
     ast         = self.a
     values      = ast.values
-    start, stop = _fixup_slice_index(len(values), start, stop)
+    start, stop = _fixup_slice_indices(len(values), start, stop)
 
     if start == stop:
         return self._new_empty_dict(from_=self)
@@ -241,7 +241,7 @@ def _get_slice_stmtish(self: 'FST', start: int | Literal['end'] | None, stop: in
     fix         = FST.get_option('fix', options)
     ast         = self.a
     field, body = _fixup_field_body(ast, field)
-    start, stop = _fixup_slice_index(len(body), start, stop)
+    start, stop = _fixup_slice_indices(len(body), start, stop)
 
     if start == stop:
         return self._new_empty_module(from_=self)
@@ -330,7 +330,7 @@ def _put_slice_tuple_list_or_set(self: 'FST', code: Code | None, start: int | Li
 
     ast         = self.a
     elts        = ast.elts
-    start, stop = _fixup_slice_index(len(elts), start, stop)
+    start, stop = _fixup_slice_indices(len(elts), start, stop)
     slice_len   = stop - start
 
     if not slice_len and (not put_fst or not put_ast.elts):  # deleting or assigning empty seq to empty slice of seq, noop
@@ -456,7 +456,7 @@ def _put_slice_dict(self: 'FST', code: Code | None, start: int | Literal['end'] 
 
     ast         = self.a
     values      = ast.values
-    start, stop = _fixup_slice_index(len(values), start, stop)
+    start, stop = _fixup_slice_indices(len(values), start, stop)
     slice_len   = stop - start
 
     if not slice_len and (not put_fst or not put_ast.keys):  # deleting or assigning empty dict to empty slice of dict, noop
@@ -548,7 +548,7 @@ def _put_slice_stmtish(self: 'FST', code: Code | None, start: int | Literal['end
         if any(not isinstance(bad_node := n, node_type) for n in put_body) and options.get('check_node_type', True):  # TODO: `check_node_type` is for some previously written tests, but really should fix those tests instead
             raise ValueError(f"cannot put {bad_node.__class__.__qualname__} node to '{field}' field")
 
-    start, stop = _fixup_slice_index(len(body), start, stop)
+    start, stop = _fixup_slice_indices(len(body), start, stop)
     slice_len   = stop - start
 
     if not slice_len and (not put_fst or (not put_body and len(ls := put_fst._lines) == 1 and not ls[0])):  # deleting empty slice or assigning empty fst to empty slice, noop

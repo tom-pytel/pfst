@@ -85,6 +85,8 @@ def _slice_indices(self: 'FST', idx: int, field: str, body: list[AST], to: Optio
 
 
 def _code_as_identifier(code: Code) -> str:
+    """Convert `Code` to valid identifier string if possible."""
+
     if isinstance(code, list):
         if len(code) != 1:
             raise NodeTypeError(f'expecting onle line identifier, got {len(code)} lines')
@@ -107,7 +109,7 @@ def _code_as_identifier(code: Code) -> str:
     return code
 
 
-_normalize_code_str2op = {
+_code_as_op_str2op = {
     AugAssign: OPSTR2CLS_AUG,
     BoolOp:    OPSTR2CLS_BOOL,
     BinOp:     OPSTR2CLS_BIN,
@@ -116,7 +118,7 @@ _normalize_code_str2op = {
     None:      OPSTR2CLSWAUG,
 }
 
-_normalize_code_ops = {
+_code_as_op_ops = {
     AugAssign: frozenset(OPSTR2CLS_AUG.values()),
     BoolOp:    frozenset(OPSTR2CLS_BOOL.values()),
     BinOp:     frozenset(OPSTR2CLS_BIN.values()),
@@ -125,13 +127,13 @@ _normalize_code_ops = {
     None:      frozenset(OPSTR2CLS.values()),
 }
 
-def _normalize_code_op(code: Code,
-                       target: type[AugAssign] | type[BoolOp] | type[BinOp] | type[UnaryOp] | type[Compare] |
-                       None = None) -> 'FST':
-    """Convert `code` to an operator `FST` of the kind we need if is possible."""
+def _code_as_op(code: Code,
+                target: type[AugAssign] | type[BoolOp] | type[BinOp] | type[UnaryOp] | type[Compare] | None = None,
+                ) -> 'FST':
+    """Convert `code` to an operator `FST` for the given target if is possible."""
 
     if isinstance(code, FST):
-        if (src := code.get_src(*code.loc)) not in _normalize_code_str2op[target]:
+        if (src := code.get_src(*code.loc)) not in _code_as_op_str2op[target]:
             raise NodeTypeError(f'bad operator {src!r}')
 
     elif isinstance(code, AST):
@@ -143,12 +145,12 @@ def _normalize_code_op(code: Code,
         else:
             lines = code.split('\n')
 
-        if not (cls := _normalize_code_str2op[target].get(code)):
+        if not (cls := _code_as_op_str2op[target].get(code)):
             raise NodeTypeError(f'bad operator {code!r}')
 
         code = FST(cls(), lines=lines)
 
-    if code.a.__class__ not in _normalize_code_ops[target]:
+    if code.a.__class__ not in _code_as_op_ops[target]:
         raise NodeTypeError(f'expecting operator{f" for {target.__name__}" if target else ""}'
                             f', got {code.a.__class__.__name__}')
 
@@ -217,361 +219,6 @@ def _validate_put_ast(self: 'FST', put_ast: AST, idx: int | None, field: str, st
 
 
 # ......................................................................................................................
-# field info
-
-_oneinfo_default = oneinfo()
-
-def _one_info_constant(self: 'FST', static: onestatic, idx: int | None, field: str) -> oneinfo:  # only Constant and MatchSingleton
-    return oneinfo('', None, self.loc)
-
-def _one_info_expr_required(self: 'FST', static: onestatic, idx: int | None, field: str) -> oneinfo:
-    return _oneinfo_default
-
-_onestatic_expr_required = onestatic(_one_info_expr_required)
-_onestatic_target_Name   = onestatic(_one_info_expr_required, Name, ctx=Store)
-_onestatic_target_single = onestatic(_one_info_expr_required, (Name, Attribute, Subscript), ctx=Store)
-_onestatic_target        = onestatic(_one_info_expr_required, (Name, Attribute, Subscript, Tuple, List), ctx=Store)
-_onestatic_For_target    = onestatic(_one_info_expr_required, (Name, Tuple, List), ctx=Store)
-
-def _one_info_identifier_required(self: 'FST', static: onestatic, idx: int | None, field: str, prefix: str | None = None,
-                                 ) -> oneinfo:  # required, cannot delete or put new
-    ln, col, end_ln, end_col = self.loc
-    lines                    = self.root._lines
-
-    if not prefix:
-        end_col = _re_identifier.match(lines[ln], col, end_col).end()  # must be there
-
-    else:
-        ln, col      = _next_find(lines, ln, col, end_ln, end_col, prefix, lcont=None)  # must be there, have to search because could be preceded by something (like 'async')
-        ln, col, src =  _next_find_re(lines, ln, col + len(prefix), end_ln, end_col, _re_identifier, lcont=None)  # must be there
-        end_col      = col + len(src)
-
-    return oneinfo('', None, fstloc(ln, col, ln, end_col))
-
-_onestatic_identifier_required = onestatic(_one_info_identifier_required, base=str)
-
-def _one_info_FunctionDef_name(self: 'FST', static: onestatic, idx: int | None, field: str) -> oneinfo:
-    return _one_info_identifier_required(self, static, idx, field, 'def')
-
-_onestatic_Functiondef_name = onestatic(_one_info_FunctionDef_name, base=str)
-
-def _one_info_FunctionDef_returns(self: 'FST', static: onestatic, idx: int | None, field: str) -> oneinfo:
-    ln, col, end_ln, end_col = self._loc_block_header_end(True)
-    ret_end_ln               = end_ln
-    ret_end_col              = end_col - 1
-
-    if returns := self.a.returns:
-        ln, col               = prev.loc[2:] if (prev := (retf := returns.f).prev()) else self.loc[:2]
-        end_ln, end_col, _, _ = retf.pars()
-
-    args_end_ln, args_end_col = _prev_find(self.root._lines, ln, col, end_ln, end_col, ')')  # must be there
-
-    return oneinfo(' -> ', fstloc(args_end_ln, args_end_col + 1, ret_end_ln, ret_end_col))
-
-_onestatic_FunctionDef_returns = onestatic(_one_info_FunctionDef_returns)
-
-def _one_info_ClassDef_name(self: 'FST', static: onestatic, idx: int | None, field: str) -> oneinfo:
-    return _one_info_identifier_required(self, static, idx, field, 'class')
-
-def _one_info_Return_value(self: 'FST', static: onestatic, idx: int | None, field: str) -> oneinfo:
-    return oneinfo(' ', fstloc((loc := self.loc).ln, loc.col + 6, loc.end_ln, loc.end_col))
-
-def _one_info_AnnAssign_value(self: 'FST', static: onestatic, idx: int | None, field: str) -> oneinfo:
-    return oneinfo(' = ',
-                   fstloc((loc := self.a.annotation.f.pars()).end_ln, loc.end_col, self.end_ln, self.end_col))
-
-def _one_info_Raise_exc(self: 'FST', static: onestatic, idx: int | None, field: str) -> oneinfo:
-    if self.a.cause:
-        return _oneinfo_default  # can not del (and exists, so can't put new)
-
-    ln, col, end_ln, end_col = self.loc
-
-    return oneinfo(' ', fstloc(ln, col + 5, end_ln, end_col))
-
-def _one_info_Raise_cause(self: 'FST', static: onestatic, idx: int | None, field: str) -> oneinfo:
-    if not (exc := self.a.exc):
-        return _oneinfo_default  # can not put (or del because cause doesn't exist)
-
-    _, _, ln, col = exc.f.pars()
-
-    return oneinfo(' from ', fstloc(ln, col, self.end_ln, self.end_col))
-
-def _one_info_Assert_msg(self: 'FST', static: onestatic, idx: int | None, field: str) -> oneinfo:
-    return oneinfo(', ', fstloc((loc := self.a.test.f.pars()).end_ln, loc.end_col, self.end_ln, self.end_col))
-
-def _one_info_ImportFrom_module(self: 'FST', static: onestatic, idx: int | None, field: str) -> oneinfo:
-    ln, col, end_ln, end_col = self.loc
-    lines                    = self.root._lines
-
-    if not self.a.level:  # cannot insert or delete
-        ln, col, src =  _next_find_re(lines, ln, col + 4, end_ln, end_col, _re_identifier, lcont=None)  # must be there, col+4 is for 'from'
-        end_col      = col + len(src)
-
-        return oneinfo('', None, fstloc(ln, col, ln, end_col))
-
-    ln, col, src = _prev_src(self.root.lines, self_ln := self.ln, self_col := self.col, *self.a.names[0].f.loc[:2])
-
-    assert src == 'import'
-
-    ln, col, src = _prev_src(self.root.lines, self_ln, self_col, ln, col)  # must be there, the module name with any/some/all preceding '.' level indicators
-    end_col      = col + len(src)
-    col          = end_col - len(src.lstrip('.'))
-
-    return oneinfo('', loc := fstloc(ln, col, ln, end_col), loc)
-
-def _one_info_Dict_key(self: 'FST', static: onestatic, idx: int | None, field: str) -> oneinfo:
-    key                   = (a := self.a).keys[idx]
-    value                 = a.values[idx].f
-    end_ln, end_col, _, _ = value.pars()
-    ln, col, _, _         = self._dict_key_or_mock_loc(key, value) if key is None else key.f.pars()
-
-    return oneinfo('', fstloc(ln, col, end_ln, end_col))
-
-def _one_info_Yield_value(self: 'FST', static: onestatic, idx: int | None, field: str) -> oneinfo:
-    return oneinfo(' ', fstloc((loc := self.loc).ln, loc.col + 5, loc.end_ln, loc.end_col))
-
-def _one_info_Attribute_attr(self: 'FST', static: onestatic, idx: int | None, field: str) -> oneinfo:
-    _, _, ln, col         = self.a.value.f.loc
-    _, _, end_ln, end_col = self.loc
-    lines                 = self.root.lines
-    ln, col               = _next_find(lines, ln, col, end_ln, end_col, '.')  # must be there
-    ln, col, src          = _next_src(lines, ln, col + 1, end_ln, end_col)  # must be there
-
-    return oneinfo('', None, fstloc(ln, col, ln, col + len(src)))
-
-def _one_info_Slice_lower(self: 'FST', static: onestatic, idx: int | None, field: str) -> oneinfo:
-    ln, col, end_ln, end_col = self.loc
-
-    if lower := self.a.lower:
-        end_ln, end_col = _next_find(self.root._lines, (loc := lower.f.loc).end_ln, loc.end_col, end_ln, end_col, ':')  # must be there
-    else:
-        end_ln, end_col = _next_find(self.root._lines, ln, col, end_ln, end_col, ':')  # must be there
-
-    return oneinfo('', fstloc(ln, col, end_ln, end_col))
-
-_onestatic_Slice_lower = onestatic(_one_info_Slice_lower)
-
-def _one_info_Slice_upper(self: 'FST', static: onestatic, idx: int | None, field: str) -> oneinfo:
-    ln                    = (lloc := _one_info_Slice_lower(self, _onestatic_Slice_lower, idx, field).loc_insdel).end_ln
-    col                   = lloc.end_col + 1
-    _, _, end_ln, end_col = self.loc
-
-    if upper := self.a.upper:
-        end = _next_find(self.root._lines, (loc := upper.f.loc).end_ln, loc.end_col, end_ln, end_col, ':')  # may or may not be there
-    else:
-        end = _next_find(self.root._lines, ln, col, end_ln, end_col, ':')  # may or may not be there
-
-    if end:
-        end_ln, end_col = end
-
-    return oneinfo('', fstloc(ln, col, end_ln, end_col))
-
-_onestatic_Slice_upper = onestatic(_one_info_Slice_upper)
-
-def _one_info_Slice_step(self: 'FST', static: onestatic, idx: int | None, field: str) -> oneinfo:
-    ln  = (uloc := _one_info_Slice_upper(self, _onestatic_Slice_upper, idx, field).loc_insdel).end_ln
-    col = uloc.end_col
-
-    if self.root._lines[ln].startswith(':', col):
-        col    += 1
-        prefix  = ''
-    else:
-        prefix = ':'
-
-    return oneinfo(prefix, fstloc(ln, col, self.end_ln, self.end_col))
-
-_onestatic_Slice_step = onestatic(_one_info_Slice_step)
-
-def _one_info_ExceptHandler_type(self: 'FST', static: onestatic, idx: int | None, field: str) -> oneinfo:
-    if (a := self.a).name:
-        return _oneinfo_default  # can not del (and exists, so can't put new)
-
-    if type_ := a.type:
-        _, _, end_ln, end_col = type_.f.pars()
-    else:
-        end_ln, end_col  = self._loc_block_header_end()  # because 'name' can not be there
-        end_col         -= 1
-
-    return oneinfo(' ', fstloc((loc := self.loc).ln, loc.col + 6, end_ln, end_col))
-
-def _one_info_ExceptHandler_name(self: 'FST', static: onestatic, idx: int | None, field: str) -> oneinfo:
-    if not (type_ := (a := self.a).type):
-        return _oneinfo_default  # can not put new and does not exist
-
-    _, _, ln, col   = type_.f.pars()
-    end_ln, end_col = self._loc_block_header_end()
-    loc_insdel      = fstloc(ln, col, end_ln, end_col - 1)
-
-    if (name := a.name) is None:
-        loc_ident = None
-
-    else:
-        lines     = self.root.lines
-        ln, col   = _next_find(lines, ln, col, end_ln, end_col, 'as')  # skip the 'as'
-        ln, col   = _next_find(lines, ln, col + 2, end_ln, end_col, name)  # must be there
-        loc_ident = fstloc(ln, col, ln, col + len(name))
-
-    return oneinfo(' as ', loc_insdel, loc_ident)
-
-def _one_info_arguments_kw_defaults(self: 'FST', static: onestatic, idx: int | None, field: str) -> oneinfo:
-    if ann := (arg := self.a.kwonlyargs[idx]).annotation:
-        _, _, ln, col = ann.f.pars()
-        prefix        = ' = '
-
-    else:
-        ln     = (loc := arg.f.loc).ln
-        col    = loc.col + len(arg.arg)
-        prefix = '='
-
-    if default := self.a.kw_defaults[idx]:
-        _, _, end_ln, end_col = default.f.pars()
-
-    else:
-        end_ln  = ln
-        end_col = col
-
-    return oneinfo(prefix, fstloc(ln, col, end_ln, end_col))
-
-def _one_info_arg_annotation(self: 'FST', static: onestatic, idx: int | None, field: str) -> oneinfo:
-    return oneinfo(': ', fstloc((loc := self.loc).ln, loc.col + len(self.a.arg), self.end_ln, self.end_col))
-
-def _one_info_keyword_arg(self: 'FST', static: onestatic, idx: int | None, field: str) -> oneinfo:
-    end_ln, end_col, _, _ = (a := self.a).value.f.pars()
-    ln, col, _, _         = self.loc
-    arg_end_col           = col + 2 if a.arg is None else _re_identifier.match(self.root._lines[ln], col).end() # must be there
-
-    return oneinfo('', fstloc(ln, col, end_ln, end_col), fstloc(ln, col, ln, arg_end_col))
-
-def _one_info_alias_asname(self: 'FST', static: onestatic, idx: int | None, field: str) -> oneinfo:
-    ln, col, end_ln, end_col  = self.loc
-    loc_insdel                = fstloc(ln, col + len((a := self.a).name), end_ln, end_col)
-
-    if (asname := a.asname) is None:
-        loc_ident = None
-
-    else:
-        lines     = self.root.lines
-        ln, col   = _next_find(lines, ln, col, end_ln, end_col, 'as')  # skip the 'as'
-        ln, col   = _next_find(lines, ln, col + 2, end_ln, end_col, asname)  # must be there
-        loc_ident = fstloc(ln, col, ln, col + len(asname))
-
-    return oneinfo(' as ', loc_insdel, loc_ident)
-
-def _one_info_withitem_optional_vars(self: 'FST', static: onestatic, idx: int | None, field: str) -> oneinfo:
-    _, _, ln, col = self.a.context_expr.f.pars()
-
-    if optional_vars := self.a.optional_vars:
-        _, _, end_ln, end_col = optional_vars.f.pars()
-    else:
-        end_ln  = ln
-        end_col = col
-
-    return oneinfo(' as ', fstloc(ln, col, end_ln, end_col))
-
-def _one_info_match_case_guard(self: 'FST', static: onestatic, idx: int | None, field: str) -> oneinfo:
-    _, _, ln, col          = self.a.pattern.f.pars()
-    _, _, end_ln, end_col  = self._loc_block_header_end(True)
-    end_col               -= 1
-
-    return oneinfo(' if ', fstloc(ln, col, end_ln, end_col))
-
-def _one_info_MatchMapping_rest(self: 'FST', static: onestatic, idx: int | None, field: str) -> oneinfo:
-    ln, col, end_ln, end_col  = self.loc
-    end_col                  -= 1
-
-    if patterns := (a := self.a).patterns:
-        _, _, ln, col = patterns[-1].f.pars()
-        prefix        = ', **'
-
-    else:
-        col    += 1
-        prefix  = '**'
-
-    if (rest := a.rest) is None:
-        loc_ident = None
-    else:
-        rest_ln, rest_col = _next_find(self.root._lines, ln, col, end_ln, end_col, rest)
-        loc_ident         = fstloc(rest_ln, rest_col, rest_ln, rest_col + len(rest))
-
-    return oneinfo(prefix, fstloc(ln, col, end_ln, end_col), loc_ident)
-
-def _one_info_MatchClass_kwd_attrs(self: 'FST', static: onestatic, idx: int | None, field: str) -> oneinfo:
-    ast          = self.a
-    lines        = self.root._lines
-    kwd_patterns = ast.kwd_patterns
-
-    if idx % len(kwd_patterns):  # could be negative
-        _, _, ln, col = kwd_patterns[idx - 1].f.loc
-    elif patterns := ast.patterns:
-        _, _, ln, col = patterns[-1].f.loc
-    else:
-        _, _, ln, col = ast.cls.f.loc
-
-    end_ln, end_col = _prev_find(lines, ln, col, *kwd_patterns[idx].f.loc[:2], '=')  # must be there
-    ln, col, src    = _prev_src(lines, ln, col, end_ln, end_col)  # must be there
-    end_col         = col + len(src)
-    col             = end_col - len(src.lstrip('(,'))
-
-    return oneinfo('', None, fstloc(ln, col, ln, end_col))
-
-def _one_info_MatchStar_name(self: 'FST', static: onestatic, idx: int | None, field: str) -> oneinfo:
-    return _one_info_identifier_required(self, static, idx, field, '*')
-
-def _one_info_MatchAs_name(self: 'FST', static: onestatic, idx: int | None, field: str) -> oneinfo:
-    ln, col, end_ln, end_col = self.loc
-
-    if (pattern := (a := self.a).pattern) is None:
-        prefix  = ''
-
-    else:
-        prefix  = 'as'
-        lines   = self.root.lines
-        ln, col = _next_find(lines, *pattern.f.pars()[2:], end_ln, end_col, 'as')  # skip the 'as'
-        ln, col = _next_find(lines, ln, col + 2, end_ln, end_col, a.name or '_')
-
-    return oneinfo(prefix, None, fstloc(ln, col, ln, end_col))
-
-def _one_info_TypeVar_bound(self: 'FST', static: onestatic, idx: int | None, field: str) -> oneinfo:
-    ln  = self.ln
-    col = self.col + len(self.a.name)
-
-    if bound := self.a.bound:
-        _, _, end_ln, end_col = bound.f.pars()
-    else:
-        end_ln  = ln
-        end_col = col
-
-    return oneinfo(': ', fstloc(ln, col, end_ln, end_col))
-
-def _one_info_TypeVar_default_value(self: 'FST', static: onestatic, idx: int | None, field: str) -> oneinfo:
-    if bound := self.a.bound:
-        _, _, ln, col = bound.f.pars()
-    else:
-        ln  = self.ln
-        col = self.col + len(self.a.name)
-
-    return oneinfo(' = ', fstloc(ln, col, self.end_ln, self.end_col))
-
-def _one_info_ParamSpec_name(self: 'FST', static: onestatic, idx: int | None, field: str) -> oneinfo:
-    return _one_info_identifier_required(self, static, idx, field, '**')
-
-def _one_info_ParamSpec_default_value(self: 'FST', static: onestatic, idx: int | None, field: str) -> oneinfo:
-    ln, col, end_ln, end_col = self.loc
-    ln, col, src             = _next_find_re(self.root._lines, ln, col + 2, end_ln, end_col, _re_identifier)  # + '**', identifier must be there
-
-    return oneinfo(' = ', fstloc(ln, col + len(src), self.end_ln, self.end_col))
-
-def _one_info_TypeVarTuple_default_value(self: 'FST', static: onestatic, idx: int | None, field: str) -> oneinfo:
-    ln, col, end_ln, end_col = self.loc
-    ln, col, src             = _next_find_re(self.root._lines, ln, col + 1, end_ln, end_col, _re_identifier)  # + '*', identifier must be there
-
-    return oneinfo(' = ', fstloc(ln, col + len(src), self.end_ln, self.end_col))
-
-def _one_info_TypeVarTuple_name(self: 'FST', static: onestatic, idx: int | None, field: str) -> oneinfo:
-    return _one_info_identifier_required(self, static, idx, field, '*')
-
-
-# ......................................................................................................................
 # other
 
 def _put_one_constant(self: 'FST', code: Code | None, idx: int | None, field: str, child: constant, static: onestatic,
@@ -587,7 +234,7 @@ def _put_one_constant(self: 'FST', code: Code | None, idx: int | None, field: st
 
     self.a.value = put_ast.value
 
-    return self  # this breaks the rule of returning the child node but would never be used anyway
+    return self  # this breaks the rule of returning the child node since it is just a primitive
 
 
 def _put_one_op(self: 'FST', code: Code | None, idx: int | None, field: str, child: str, static: None,
@@ -595,7 +242,7 @@ def _put_one_op(self: 'FST', code: Code | None, idx: int | None, field: str, chi
     """Put a single opertation, with or without '=' for AugAssign."""
 
     child  = _validate_put(self, code, idx, field, child, options)
-    code   = _normalize_code_op(code, self.a.__class__)
+    code   = _code_as_op(code, self.a.__class__)
     childf = child.f
 
     ln, col, end_ln, end_col = childf.loc
@@ -954,6 +601,359 @@ def _put_one(self: 'FST', code: Code | None, idx: int | None, field: str | None,
 
 
 # ......................................................................................................................
+# field info
+
+_oneinfo_default = oneinfo()
+
+def _one_info_constant(self: 'FST', static: onestatic, idx: int | None, field: str) -> oneinfo:  # only Constant and MatchSingleton
+    return oneinfo('', None, self.loc)
+
+def _one_info_expr_required(self: 'FST', static: onestatic, idx: int | None, field: str) -> oneinfo:
+    return _oneinfo_default
+
+_onestatic_expr_required = onestatic(_one_info_expr_required)
+_onestatic_target_Name   = onestatic(_one_info_expr_required, Name, ctx=Store)
+_onestatic_target_single = onestatic(_one_info_expr_required, (Name, Attribute, Subscript), ctx=Store)
+_onestatic_target        = onestatic(_one_info_expr_required, (Name, Attribute, Subscript, Tuple, List), ctx=Store)
+_onestatic_For_target    = onestatic(_one_info_expr_required, (Name, Tuple, List), ctx=Store)
+
+def _one_info_identifier_required(self: 'FST', static: onestatic, idx: int | None, field: str, prefix: str | None = None,
+                                 ) -> oneinfo:  # required, cannot delete or put new
+    ln, col, end_ln, end_col = self.loc
+    lines                    = self.root._lines
+
+    if not prefix:
+        end_col = _re_identifier.match(lines[ln], col, end_col).end()  # must be there
+
+    else:
+        ln, col      = _next_find(lines, ln, col, end_ln, end_col, prefix, lcont=None)  # must be there, have to search because could be preceded by something (like 'async')
+        ln, col, src =  _next_find_re(lines, ln, col + len(prefix), end_ln, end_col, _re_identifier, lcont=None)  # must be there
+        end_col      = col + len(src)
+
+    return oneinfo('', None, fstloc(ln, col, ln, end_col))
+
+_onestatic_identifier_required = onestatic(_one_info_identifier_required, base=str)
+
+def _one_info_FunctionDef_name(self: 'FST', static: onestatic, idx: int | None, field: str) -> oneinfo:
+    return _one_info_identifier_required(self, static, idx, field, 'def')
+
+_onestatic_Functiondef_name = onestatic(_one_info_FunctionDef_name, base=str)
+
+def _one_info_FunctionDef_returns(self: 'FST', static: onestatic, idx: int | None, field: str) -> oneinfo:
+    ln, col, end_ln, end_col = self._loc_block_header_end(True)
+    ret_end_ln               = end_ln
+    ret_end_col              = end_col - 1
+
+    if returns := self.a.returns:
+        ln, col               = prev.loc[2:] if (prev := (retf := returns.f).prev()) else self.loc[:2]
+        end_ln, end_col, _, _ = retf.pars()
+
+    args_end_ln, args_end_col = _prev_find(self.root._lines, ln, col, end_ln, end_col, ')')  # must be there
+
+    return oneinfo(' -> ', fstloc(args_end_ln, args_end_col + 1, ret_end_ln, ret_end_col))
+
+_onestatic_FunctionDef_returns = onestatic(_one_info_FunctionDef_returns)
+
+def _one_info_ClassDef_name(self: 'FST', static: onestatic, idx: int | None, field: str) -> oneinfo:
+    return _one_info_identifier_required(self, static, idx, field, 'class')
+
+def _one_info_Return_value(self: 'FST', static: onestatic, idx: int | None, field: str) -> oneinfo:
+    return oneinfo(' ', fstloc((loc := self.loc).ln, loc.col + 6, loc.end_ln, loc.end_col))
+
+def _one_info_AnnAssign_value(self: 'FST', static: onestatic, idx: int | None, field: str) -> oneinfo:
+    return oneinfo(' = ',
+                   fstloc((loc := self.a.annotation.f.pars()).end_ln, loc.end_col, self.end_ln, self.end_col))
+
+def _one_info_Raise_exc(self: 'FST', static: onestatic, idx: int | None, field: str) -> oneinfo:
+    if self.a.cause:
+        return _oneinfo_default  # can not del (and exists, so can't put new)
+
+    ln, col, end_ln, end_col = self.loc
+
+    return oneinfo(' ', fstloc(ln, col + 5, end_ln, end_col))
+
+def _one_info_Raise_cause(self: 'FST', static: onestatic, idx: int | None, field: str) -> oneinfo:
+    if not (exc := self.a.exc):
+        return _oneinfo_default  # can not put (or del because cause doesn't exist)
+
+    _, _, ln, col = exc.f.pars()
+
+    return oneinfo(' from ', fstloc(ln, col, self.end_ln, self.end_col))
+
+def _one_info_Assert_msg(self: 'FST', static: onestatic, idx: int | None, field: str) -> oneinfo:
+    return oneinfo(', ', fstloc((loc := self.a.test.f.pars()).end_ln, loc.end_col, self.end_ln, self.end_col))
+
+def _one_info_ImportFrom_module(self: 'FST', static: onestatic, idx: int | None, field: str) -> oneinfo:
+    ln, col, end_ln, end_col = self.loc
+    lines                    = self.root._lines
+
+    if not self.a.level:  # cannot insert or delete
+        ln, col, src =  _next_find_re(lines, ln, col + 4, end_ln, end_col, _re_identifier, lcont=None)  # must be there, col+4 is for 'from'
+        end_col      = col + len(src)
+
+        return oneinfo('', None, fstloc(ln, col, ln, end_col))
+
+    ln, col, src = _prev_src(self.root.lines, self_ln := self.ln, self_col := self.col, *self.a.names[0].f.loc[:2])
+
+    assert src == 'import'
+
+    ln, col, src = _prev_src(self.root.lines, self_ln, self_col, ln, col)  # must be there, the module name with any/some/all preceding '.' level indicators
+    end_col      = col + len(src)
+    col          = end_col - len(src.lstrip('.'))
+
+    return oneinfo('', loc := fstloc(ln, col, ln, end_col), loc)
+
+def _one_info_Dict_key(self: 'FST', static: onestatic, idx: int | None, field: str) -> oneinfo:
+    key                   = (a := self.a).keys[idx]
+    value                 = a.values[idx].f
+    end_ln, end_col, _, _ = value.pars()
+    ln, col, _, _         = self._dict_key_or_mock_loc(key, value) if key is None else key.f.pars()
+
+    return oneinfo('', fstloc(ln, col, end_ln, end_col))
+
+def _one_info_Yield_value(self: 'FST', static: onestatic, idx: int | None, field: str) -> oneinfo:
+    return oneinfo(' ', fstloc((loc := self.loc).ln, loc.col + 5, loc.end_ln, loc.end_col))
+
+def _one_info_Attribute_attr(self: 'FST', static: onestatic, idx: int | None, field: str) -> oneinfo:
+    _, _, ln, col         = self.a.value.f.loc
+    _, _, end_ln, end_col = self.loc
+    lines                 = self.root.lines
+    ln, col               = _next_find(lines, ln, col, end_ln, end_col, '.')  # must be there
+    ln, col, src          = _next_src(lines, ln, col + 1, end_ln, end_col)  # must be there
+
+    return oneinfo('', None, fstloc(ln, col, ln, col + len(src)))
+
+def _one_info_Slice_lower(self: 'FST', static: onestatic, idx: int | None, field: str) -> oneinfo:
+    ln, col, end_ln, end_col = self.loc
+
+    if lower := self.a.lower:
+        end_ln, end_col = _next_find(self.root._lines, (loc := lower.f.loc).end_ln, loc.end_col, end_ln, end_col, ':')  # must be there
+    else:
+        end_ln, end_col = _next_find(self.root._lines, ln, col, end_ln, end_col, ':')  # must be there
+
+    return oneinfo('', fstloc(ln, col, end_ln, end_col))
+
+_onestatic_Slice_lower = onestatic(_one_info_Slice_lower)
+
+def _one_info_Slice_upper(self: 'FST', static: onestatic, idx: int | None, field: str) -> oneinfo:
+    ln                    = (lloc := _one_info_Slice_lower(self, _onestatic_Slice_lower, idx, field).loc_insdel).end_ln
+    col                   = lloc.end_col + 1
+    _, _, end_ln, end_col = self.loc
+
+    if upper := self.a.upper:
+        end = _next_find(self.root._lines, (loc := upper.f.loc).end_ln, loc.end_col, end_ln, end_col, ':')  # may or may not be there
+    else:
+        end = _next_find(self.root._lines, ln, col, end_ln, end_col, ':')  # may or may not be there
+
+    if end:
+        end_ln, end_col = end
+
+    return oneinfo('', fstloc(ln, col, end_ln, end_col))
+
+_onestatic_Slice_upper = onestatic(_one_info_Slice_upper)
+
+def _one_info_Slice_step(self: 'FST', static: onestatic, idx: int | None, field: str) -> oneinfo:
+    ln  = (uloc := _one_info_Slice_upper(self, _onestatic_Slice_upper, idx, field).loc_insdel).end_ln
+    col = uloc.end_col
+
+    if self.root._lines[ln].startswith(':', col):
+        col    += 1
+        prefix  = ''
+    else:
+        prefix = ':'
+
+    return oneinfo(prefix, fstloc(ln, col, self.end_ln, self.end_col))
+
+_onestatic_Slice_step = onestatic(_one_info_Slice_step)
+
+def _one_info_ExceptHandler_type(self: 'FST', static: onestatic, idx: int | None, field: str) -> oneinfo:
+    if (a := self.a).name:
+        return _oneinfo_default  # can not del (and exists, so can't put new)
+
+    if type_ := a.type:
+        _, _, end_ln, end_col = type_.f.pars()
+    else:
+        end_ln, end_col  = self._loc_block_header_end()  # because 'name' can not be there
+        end_col         -= 1
+
+    return oneinfo(' ', fstloc((loc := self.loc).ln, loc.col + 6, end_ln, end_col))
+
+def _one_info_ExceptHandler_name(self: 'FST', static: onestatic, idx: int | None, field: str) -> oneinfo:
+    if not (type_ := (a := self.a).type):
+        return _oneinfo_default  # can not put new and does not exist
+
+    _, _, ln, col   = type_.f.pars()
+    end_ln, end_col = self._loc_block_header_end()
+    loc_insdel      = fstloc(ln, col, end_ln, end_col - 1)
+
+    if (name := a.name) is None:
+        loc_ident = None
+
+    else:
+        lines     = self.root.lines
+        ln, col   = _next_find(lines, ln, col, end_ln, end_col, 'as')  # skip the 'as'
+        ln, col   = _next_find(lines, ln, col + 2, end_ln, end_col, name)  # must be there
+        loc_ident = fstloc(ln, col, ln, col + len(name))
+
+    return oneinfo(' as ', loc_insdel, loc_ident)
+
+def _one_info_arguments_kw_defaults(self: 'FST', static: onestatic, idx: int | None, field: str) -> oneinfo:
+    if ann := (arg := self.a.kwonlyargs[idx]).annotation:
+        _, _, ln, col = ann.f.pars()
+        prefix        = ' = '
+
+    else:
+        ln     = (loc := arg.f.loc).ln
+        col    = loc.col + len(arg.arg)
+        prefix = '='
+
+    if default := self.a.kw_defaults[idx]:
+        _, _, end_ln, end_col = default.f.pars()
+
+    else:
+        end_ln  = ln
+        end_col = col
+
+    return oneinfo(prefix, fstloc(ln, col, end_ln, end_col))
+
+def _one_info_arg_annotation(self: 'FST', static: onestatic, idx: int | None, field: str) -> oneinfo:
+    return oneinfo(': ', fstloc((loc := self.loc).ln, loc.col + len(self.a.arg), self.end_ln, self.end_col))
+
+def _one_info_keyword_arg(self: 'FST', static: onestatic, idx: int | None, field: str) -> oneinfo:
+    end_ln, end_col, _, _ = (a := self.a).value.f.pars()
+    ln, col, _, _         = self.loc
+    arg_end_col           = col + 2 if a.arg is None else _re_identifier.match(self.root._lines[ln], col).end() # must be there
+
+    return oneinfo('', fstloc(ln, col, end_ln, end_col), fstloc(ln, col, ln, arg_end_col))
+
+def _one_info_alias_asname(self: 'FST', static: onestatic, idx: int | None, field: str) -> oneinfo:
+    ln, col, end_ln, end_col  = self.loc
+    loc_insdel                = fstloc(ln, col + len((a := self.a).name), end_ln, end_col)
+
+    if (asname := a.asname) is None:
+        loc_ident = None
+
+    else:
+        lines     = self.root.lines
+        ln, col   = _next_find(lines, ln, col, end_ln, end_col, 'as')  # skip the 'as'
+        ln, col   = _next_find(lines, ln, col + 2, end_ln, end_col, asname)  # must be there
+        loc_ident = fstloc(ln, col, ln, col + len(asname))
+
+    return oneinfo(' as ', loc_insdel, loc_ident)
+
+def _one_info_withitem_optional_vars(self: 'FST', static: onestatic, idx: int | None, field: str) -> oneinfo:
+    _, _, ln, col = self.a.context_expr.f.pars()
+
+    if optional_vars := self.a.optional_vars:
+        _, _, end_ln, end_col = optional_vars.f.pars()
+    else:
+        end_ln  = ln
+        end_col = col
+
+    return oneinfo(' as ', fstloc(ln, col, end_ln, end_col))
+
+def _one_info_match_case_guard(self: 'FST', static: onestatic, idx: int | None, field: str) -> oneinfo:
+    _, _, ln, col          = self.a.pattern.f.pars()
+    _, _, end_ln, end_col  = self._loc_block_header_end(True)
+    end_col               -= 1
+
+    return oneinfo(' if ', fstloc(ln, col, end_ln, end_col))
+
+def _one_info_MatchMapping_rest(self: 'FST', static: onestatic, idx: int | None, field: str) -> oneinfo:
+    ln, col, end_ln, end_col  = self.loc
+    end_col                  -= 1
+
+    if patterns := (a := self.a).patterns:
+        _, _, ln, col = patterns[-1].f.pars()
+        prefix        = ', **'
+
+    else:
+        col    += 1
+        prefix  = '**'
+
+    if (rest := a.rest) is None:
+        loc_ident = None
+    else:
+        rest_ln, rest_col = _next_find(self.root._lines, ln, col, end_ln, end_col, rest)
+        loc_ident         = fstloc(rest_ln, rest_col, rest_ln, rest_col + len(rest))
+
+    return oneinfo(prefix, fstloc(ln, col, end_ln, end_col), loc_ident)
+
+def _one_info_MatchClass_kwd_attrs(self: 'FST', static: onestatic, idx: int | None, field: str) -> oneinfo:
+    ast          = self.a
+    lines        = self.root._lines
+    kwd_patterns = ast.kwd_patterns
+
+    if idx % len(kwd_patterns):  # could be negative
+        _, _, ln, col = kwd_patterns[idx - 1].f.loc
+    elif patterns := ast.patterns:
+        _, _, ln, col = patterns[-1].f.loc
+    else:
+        _, _, ln, col = ast.cls.f.loc
+
+    end_ln, end_col = _prev_find(lines, ln, col, *kwd_patterns[idx].f.loc[:2], '=')  # must be there
+    ln, col, src    = _prev_src(lines, ln, col, end_ln, end_col)  # must be there
+    end_col         = col + len(src)
+    col             = end_col - len(src.lstrip('(,'))
+
+    return oneinfo('', None, fstloc(ln, col, ln, end_col))
+
+def _one_info_MatchStar_name(self: 'FST', static: onestatic, idx: int | None, field: str) -> oneinfo:
+    return _one_info_identifier_required(self, static, idx, field, '*')
+
+def _one_info_MatchAs_name(self: 'FST', static: onestatic, idx: int | None, field: str) -> oneinfo:
+    ln, col, end_ln, end_col = self.loc
+
+    if (pattern := (a := self.a).pattern) is None:
+        prefix  = ''
+
+    else:
+        prefix  = 'as'
+        lines   = self.root.lines
+        ln, col = _next_find(lines, *pattern.f.pars()[2:], end_ln, end_col, 'as')  # skip the 'as'
+        ln, col = _next_find(lines, ln, col + 2, end_ln, end_col, a.name or '_')
+
+    return oneinfo(prefix, None, fstloc(ln, col, ln, end_col))
+
+def _one_info_TypeVar_bound(self: 'FST', static: onestatic, idx: int | None, field: str) -> oneinfo:
+    ln  = self.ln
+    col = self.col + len(self.a.name)
+
+    if bound := self.a.bound:
+        _, _, end_ln, end_col = bound.f.pars()
+    else:
+        end_ln  = ln
+        end_col = col
+
+    return oneinfo(': ', fstloc(ln, col, end_ln, end_col))
+
+def _one_info_TypeVar_default_value(self: 'FST', static: onestatic, idx: int | None, field: str) -> oneinfo:
+    if bound := self.a.bound:
+        _, _, ln, col = bound.f.pars()
+    else:
+        ln  = self.ln
+        col = self.col + len(self.a.name)
+
+    return oneinfo(' = ', fstloc(ln, col, self.end_ln, self.end_col))
+
+def _one_info_ParamSpec_name(self: 'FST', static: onestatic, idx: int | None, field: str) -> oneinfo:
+    return _one_info_identifier_required(self, static, idx, field, '**')
+
+def _one_info_ParamSpec_default_value(self: 'FST', static: onestatic, idx: int | None, field: str) -> oneinfo:
+    ln, col, end_ln, end_col = self.loc
+    ln, col, src             = _next_find_re(self.root._lines, ln, col + 2, end_ln, end_col, _re_identifier)  # + '**', identifier must be there
+
+    return oneinfo(' = ', fstloc(ln, col + len(src), self.end_ln, self.end_col))
+
+def _one_info_TypeVarTuple_default_value(self: 'FST', static: onestatic, idx: int | None, field: str) -> oneinfo:
+    ln, col, end_ln, end_col = self.loc
+    ln, col, src             = _next_find_re(self.root._lines, ln, col + 1, end_ln, end_col, _re_identifier)  # + '*', identifier must be there
+
+    return oneinfo(' = ', fstloc(ln, col + len(src), self.end_ln, self.end_col))
+
+def _one_info_TypeVarTuple_name(self: 'FST', static: onestatic, idx: int | None, field: str) -> oneinfo:
+    return _one_info_identifier_required(self, static, idx, field, '*')
+
 
 # TODO: finish these
 

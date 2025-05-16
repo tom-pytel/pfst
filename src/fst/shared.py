@@ -522,7 +522,7 @@ def _fixup_one_index(len_, idx) -> int:
     return idx
 
 
-def _fixup_slice_index(len_, start, stop) -> tuple[int, int]:
+def _fixup_slice_indices(len_, start, stop) -> tuple[int, int]:
     if start is None:
         start = 0
 
