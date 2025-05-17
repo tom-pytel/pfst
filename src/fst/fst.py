@@ -1437,7 +1437,7 @@ class FST:
             docstr = self.get_option('docstr')
 
         strict = docstr == 'strict'
-        lines  = self.root.lines
+        lines  = self.root._lines
         lns    = set(range(skip, len(self._lines))) if self.is_root else set(range(self.bln + skip, self.bend_ln + 1))
 
         while (parent := self.parent) and not isinstance(self.a, STMTISH):

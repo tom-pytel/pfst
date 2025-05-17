@@ -1045,8 +1045,8 @@ def _unparenthesize_tuple(self: 'FST') -> bool:
 
     ln, col, end_ln, end_col = self.loc
 
-    if comma := _next_find(self.root.lines, en_end_ln := (en := elts[-1].f).end_ln, en_end_col := en.end_col,
-                            end_ln, end_col, ','):  # need to leave trailing comma if its there
+    if comma := _next_find(self.root._lines, en_end_ln := (en := elts[-1].f).end_ln, en_end_col := en.end_col,
+                           end_ln, end_col, ','):  # need to leave trailing comma if its there
         en_end_ln, en_end_col  = comma
         en_end_col            += 1
 

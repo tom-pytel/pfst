@@ -22223,6 +22223,130 @@ Module .. ROOT 0,0 -> 1,18
  case {1: c} | (d()): pass""", 'body[0].cases[0]', 0, 'pattern', {'raw': False}, r"""new""", r"""**IndexError('match_case.pattern does not take an index')**""", r"""
 """),
 
+(r"""match a:
+ case 1 as b: pass""", 'body[0].cases[0].pattern', None, None, {'raw': False}, r"""c.d""", r"""match a:
+ case c.d as b: pass""", r"""
+Module .. ROOT 0,0 -> 1,20
+  .body[1]
+  0] Match .. 0,0 -> 1,20
+    .subject Name 'a' Load .. 0,6 -> 0,7
+    .cases[1]
+    0] match_case .. 1,1 -> 1,20
+      .pattern MatchAs .. 1,6 -> 1,14
+        .pattern MatchValue .. 1,6 -> 1,9
+          .value Attribute .. 1,6 -> 1,9
+            .value Name 'c' Load .. 1,6 -> 1,7
+            .attr 'd'
+            .ctx Load
+        .name 'b'
+      .body[1]
+      0] Pass .. 1,16 -> 1,20
+"""),
+
+(r"""match a:
+ case (1) as b: pass""", 'body[0].cases[0].pattern', None, None, {'raw': False}, r"""c.d""", r"""match a:
+ case c.d as b: pass""", r"""
+Module .. ROOT 0,0 -> 1,20
+  .body[1]
+  0] Match .. 0,0 -> 1,20
+    .subject Name 'a' Load .. 0,6 -> 0,7
+    .cases[1]
+    0] match_case .. 1,1 -> 1,20
+      .pattern MatchAs .. 1,6 -> 1,14
+        .pattern MatchValue .. 1,6 -> 1,9
+          .value Attribute .. 1,6 -> 1,9
+            .value Name 'c' Load .. 1,6 -> 1,7
+            .attr 'd'
+            .ctx Load
+        .name 'b'
+      .body[1]
+      0] Pass .. 1,16 -> 1,20
+"""),
+
+(r"""match a:
+ case ((1) as b): pass""", 'body[0].cases[0].pattern', None, None, {'raw': False}, r"""c.d""", r"""match a:
+ case (c.d as b): pass""", r"""
+Module .. ROOT 0,0 -> 1,22
+  .body[1]
+  0] Match .. 0,0 -> 1,22
+    .subject Name 'a' Load .. 0,6 -> 0,7
+    .cases[1]
+    0] match_case .. 1,1 -> 1,22
+      .pattern MatchAs .. 1,7 -> 1,15
+        .pattern MatchValue .. 1,7 -> 1,10
+          .value Attribute .. 1,7 -> 1,10
+            .value Name 'c' Load .. 1,7 -> 1,8
+            .attr 'd'
+            .ctx Load
+        .name 'b'
+      .body[1]
+      0] Pass .. 1,18 -> 1,22
+"""),
+
+(r"""match a:
+ case 1 as b: pass""", 'body[0].cases[0].pattern', None, None, {'raw': False}, r"""**DEL**""", r"""match a:
+ case b: pass""", r"""
+Module .. ROOT 0,0 -> 1,13
+  .body[1]
+  0] Match .. 0,0 -> 1,13
+    .subject Name 'a' Load .. 0,6 -> 0,7
+    .cases[1]
+    0] match_case .. 1,1 -> 1,13
+      .pattern MatchAs .. 1,6 -> 1,7
+        .name 'b'
+      .body[1]
+      0] Pass .. 1,9 -> 1,13
+"""),
+
+(r"""match a:
+ case (1) as b: pass""", 'body[0].cases[0].pattern', None, None, {'raw': False}, r"""**DEL**""", r"""match a:
+ case b: pass""", r"""
+Module .. ROOT 0,0 -> 1,13
+  .body[1]
+  0] Match .. 0,0 -> 1,13
+    .subject Name 'a' Load .. 0,6 -> 0,7
+    .cases[1]
+    0] match_case .. 1,1 -> 1,13
+      .pattern MatchAs .. 1,6 -> 1,7
+        .name 'b'
+      .body[1]
+      0] Pass .. 1,9 -> 1,13
+"""),
+
+(r"""match a:
+ case ((1) as b): pass""", 'body[0].cases[0].pattern', None, None, {'raw': False}, r"""**DEL**""", r"""match a:
+ case (b): pass""", r"""
+Module .. ROOT 0,0 -> 1,15
+  .body[1]
+  0] Match .. 0,0 -> 1,15
+    .subject Name 'a' Load .. 0,6 -> 0,7
+    .cases[1]
+    0] match_case .. 1,1 -> 1,15
+      .pattern MatchAs .. 1,7 -> 1,8
+        .name 'b'
+      .body[1]
+      0] Pass .. 1,11 -> 1,15
+"""),
+
+(r"""match a:
+ case b: pass""", 'body[0].cases[0].pattern', None, None, {'raw': False}, r"""**DEL**""", r"""match a:
+ case b: pass""", r"""
+Module .. ROOT 0,0 -> 1,13
+  .body[1]
+  0] Match .. 0,0 -> 1,13
+    .subject Name 'a' Load .. 0,6 -> 0,7
+    .cases[1]
+    0] match_case .. 1,1 -> 1,13
+      .pattern MatchAs .. 1,6 -> 1,7
+        .name 'b'
+      .body[1]
+      0] Pass .. 1,9 -> 1,13
+"""),
+
+(r"""match a:
+ case _: pass""", 'body[0].cases[0].pattern', None, None, {'raw': False}, r"""c.d""", r"""**ValueError('cannot create MatchAs.pattern in this state')**""", r"""
+"""),
+
 ]  # END OF PUT_ONE_DATA
 
 PUT_RAW_DATA = [

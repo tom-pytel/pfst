@@ -612,11 +612,11 @@ def _one_info_ImportFrom_module(self: 'FST', static: onestatic, idx: int | None,
 
         return oneinfo('', None, fstloc(ln, col, ln, end_col))
 
-    ln, col, src = _prev_src(self.root.lines, self_ln := self.ln, self_col := self.col, *self.a.names[0].f.loc[:2])
+    ln, col, src = _prev_src(self.root._lines, self_ln := self.ln, self_col := self.col, *self.a.names[0].f.loc[:2])
 
     assert src == 'import'
 
-    ln, col, src = _prev_src(self.root.lines, self_ln, self_col, ln, col)  # must be there, the module name with any/some/all preceding '.' level indicators
+    ln, col, src = _prev_src(self.root._lines, self_ln, self_col, ln, col)  # must be there, the module name with any/some/all preceding '.' level indicators
     end_col      = col + len(src)
     col          = end_col - len(src.lstrip('.'))
 
@@ -636,7 +636,7 @@ def _one_info_Yield_value(self: 'FST', static: onestatic, idx: int | None, field
 def _one_info_Attribute_attr(self: 'FST', static: onestatic, idx: int | None, field: str) -> oneinfo:
     _, _, ln, col         = self.a.value.f.loc
     _, _, end_ln, end_col = self.loc
-    lines                 = self.root.lines
+    lines                 = self.root._lines
     ln, col               = _next_find(lines, ln, col, end_ln, end_col, '.')  # must be there
     ln, col, src          = _next_src(lines, ln, col + 1, end_ln, end_col)  # must be there
 
@@ -709,7 +709,7 @@ def _one_info_ExceptHandler_name(self: 'FST', static: onestatic, idx: int | None
         loc_ident = None
 
     else:
-        lines     = self.root.lines
+        lines     = self.root._lines
         ln, col   = _next_find(lines, ln, col, end_ln, end_col, 'as')  # skip the 'as'
         ln, col   = _next_find(lines, ln, col + 2, end_ln, end_col, name)  # must be there
         loc_ident = fstloc(ln, col, ln, col + len(name))
@@ -753,7 +753,7 @@ def _one_info_alias_asname(self: 'FST', static: onestatic, idx: int | None, fiel
         loc_ident = None
 
     else:
-        lines     = self.root.lines
+        lines     = self.root._lines
         ln, col   = _next_find(lines, ln, col, end_ln, end_col, 'as')  # skip the 'as'
         ln, col   = _next_find(lines, ln, col + 2, end_ln, end_col, asname)  # must be there
         loc_ident = fstloc(ln, col, ln, col + len(asname))
@@ -820,6 +820,21 @@ def _one_info_MatchClass_kwd_attrs(self: 'FST', static: onestatic, idx: int | No
 def _one_info_MatchStar_name(self: 'FST', static: onestatic, idx: int | None, field: str) -> oneinfo:
     return _one_info_identifier_required(self, static, idx, field, '*')
 
+def _one_info_MatchAs_pattern(self: 'FST', static: onestatic, idx: int | None, field: str) -> oneinfo:
+    if (name := (a := self.a).name) is None:
+        return _oneinfo_default  # cannot insert or delete because is wildcard '_'
+
+    ln, col, end_ln, end_col = self.loc
+
+    if (pattern := a.pattern) is None:
+        return oneinfo('', fstloc(ln, col, ln, col))
+
+    lines           = self.root._lines
+    as_ln, as_col   = _next_find(lines, *pattern.f.pars()[2:], end_ln, end_col, 'as')  # skip the 'as'
+    end_ln, end_col = _next_find(lines, as_ln, as_col + 2, end_ln, end_col, name)
+
+    return oneinfo('', fstloc(ln, col, end_ln, end_col))
+
 def _one_info_MatchAs_name(self: 'FST', static: onestatic, idx: int | None, field: str) -> oneinfo:
     ln, col, end_ln, end_col = self.loc
 
@@ -828,7 +843,7 @@ def _one_info_MatchAs_name(self: 'FST', static: onestatic, idx: int | None, fiel
 
     else:
         prefix  = 'as'
-        lines   = self.root.lines
+        lines   = self.root._lines
         ln, col = _next_find(lines, *pattern.f.pars()[2:], end_ln, end_col, 'as')  # skip the 'as'
         ln, col = _next_find(lines, ln, col + 2, end_ln, end_col, a.name or '_')
 
@@ -1038,7 +1053,7 @@ _PUT_ONE_HANDLERS = {
     (MatchClass, 'kwd_attrs'):            (_put_one_identifier_required, None, onestatic(_one_info_MatchClass_kwd_attrs, coerce=None)), # identifier*
     (MatchClass, 'kwd_patterns'):         (_put_one_exprish_sliceable, None, _onestatic_pattern_required), # pattern*  - special parse
     (MatchStar, 'name'):                  (_put_one_MatchStar_name, None, onestatic(_one_info_MatchStar_name, coerce=None)), # identifier?
-    # (MatchAs, 'pattern'):                 (_put_one_default, None, None), # pattern?                                        - special parse
+    (MatchAs, 'pattern'):                 (_put_one_exprish_optional, None, onestatic(_one_info_MatchAs_pattern, coerce=_code_as_pattern, suffix=' as ')), # pattern?  - special parse
     (MatchAs, 'name'):                    (_put_one_MatchAs_name, None, onestatic(_one_info_MatchAs_name, coerce=None)), # identifier?
     (MatchOr, 'patterns'):                (_put_one_exprish_sliceable, None, _onestatic_pattern_required), # pattern*  - slice
     (TypeVar, 'name'):                    (_put_one_identifier_required, None, _onestatic_identifier_required), # identifier
