@@ -4,6 +4,7 @@ from ast import *
 from ast import parse as ast_parse, unparse as ast_unparse
 
 from .astutil import *
+from .astutil import type_param, TypeVar, ParamSpec, TypeVarTuple
 
 from .shared import (
     Code, NodeTypeError,
@@ -30,6 +31,20 @@ _code_as_op_ops = {
 
 _GLOBALS = globals() | {'_GLOBALS': None}
 # ----------------------------------------------------------------------------------------------------------------------
+
+@staticmethod
+def _parse_type_param(src: str, parse_params: dict = {}) -> AST:
+    """Parse to an `ast.type_param` or raise `SyntaxError`."""
+
+    ast = ast_parse(f'type t[\n{src}] = None', **parse_params).body[0].type_params[0]
+
+    for a in walk(ast):
+        if end_lineno := getattr(a, 'end_lineno', None):
+            a.end_lineno  = end_lineno - 1
+            a.lineno     -= 1
+
+    return ast
+
 
 @staticmethod
 def _parse_pattern(src: str, parse_params: dict = {}) -> AST:
@@ -112,6 +127,32 @@ def _code_as_op(self: 'FST', code: Code,
                             f', got {code.a.__class__.__name__}')
 
     return code
+
+
+def _code_as_type_param(self: 'FST', code: Code) -> 'FST':
+    """Convert `code` to a type_param (TypeVar, ParamSpec, TypeVarTuple) `FST` if possible."""
+
+    if isinstance(code, FST):
+        if not isinstance(code.a, (TypeVar, ParamSpec, TypeVarTuple)):
+            raise NodeTypeError(f'expecting type_param, got {code.a.__class__.__name__}')
+
+        return code
+
+    if isinstance(code, AST):
+        if not isinstance(code, type_param):
+            raise NodeTypeError(f'expecting type_param, got {code.__class__.__name__}')
+
+        code  = ast_unparse(code)
+        lines = code.split('\n')
+
+    elif isinstance(code, list):
+        code = '\n'.join(lines := code)
+    else:  # str
+        lines = code.split('\n')
+
+    ast = _parse_type_param(code, self.root.parse_params)
+
+    return FST(ast, lines=lines)
 
 
 def _code_as_pattern(self: 'FST', code: Code) -> 'FST':

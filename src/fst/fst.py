@@ -1952,10 +1952,12 @@ class FST:
     )
 
     from .fst_parse import (
+        _parse_type_param,
         _parse_pattern,
         _parse_expr,
         _code_as_identifier,
         _code_as_op,
+        _code_as_type_param,
         _code_as_pattern,
         _code_as_expr,
     )

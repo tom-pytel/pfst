@@ -22347,6 +22347,330 @@ Module .. ROOT 0,0 -> 1,13
  case _: pass""", 'body[0].cases[0].pattern', None, None, {'raw': False}, r"""c.d""", r"""**ValueError('cannot create MatchAs.pattern in this state')**""", r"""
 """),
 
+(r"""def f[T: int, U: (str)](): pass""", 'body[0]', 0, 'type_params', {'raw': False, '_ver': 12}, r"""**DEL**""", r"""**ValueError('cannot put slice to FunctionDef.type_params')**""", r"""
+"""),
+
+(r"""def f[T: int, U: (str)](): pass""", 'body[0]', 0, 'type_params', {'raw': False, '_ver': 12}, r"""V: list[int]""", r"""def f[V: list[int], U: (str)](): pass""", r"""
+Module .. ROOT 0,0 -> 0,37
+  .body[1]
+  0] FunctionDef .. 0,0 -> 0,37
+    .name 'f'
+    .body[1]
+    0] Pass .. 0,33 -> 0,37
+    .type_params[2]
+    0] TypeVar .. 0,6 -> 0,18
+      .name 'V'
+      .bound Subscript .. 0,9 -> 0,18
+        .value Name 'list' Load .. 0,9 -> 0,13
+        .slice Name 'int' Load .. 0,14 -> 0,17
+        .ctx Load
+    1] TypeVar .. 0,20 -> 0,28
+      .name 'U'
+      .bound Name 'str' Load .. 0,24 -> 0,27
+"""),
+
+(r"""def f[T: int, U: (str)](): pass""", 'body[0]', 1, 'type_params', {'raw': False, '_ver': 12}, r"""V: list[int]""", r"""def f[T: int, V: list[int]](): pass""", r"""
+Module .. ROOT 0,0 -> 0,35
+  .body[1]
+  0] FunctionDef .. 0,0 -> 0,35
+    .name 'f'
+    .body[1]
+    0] Pass .. 0,31 -> 0,35
+    .type_params[2]
+    0] TypeVar .. 0,6 -> 0,12
+      .name 'T'
+      .bound Name 'int' Load .. 0,9 -> 0,12
+    1] TypeVar .. 0,14 -> 0,26
+      .name 'V'
+      .bound Subscript .. 0,17 -> 0,26
+        .value Name 'list' Load .. 0,17 -> 0,21
+        .slice Name 'int' Load .. 0,22 -> 0,25
+        .ctx Load
+"""),
+
+(r"""def f[T: int, U: (str)](): pass""", 'body[0]', -1, 'type_params', {'raw': False, '_ver': 12}, r"""V: list[int]""", r"""def f[T: int, V: list[int]](): pass""", r"""
+Module .. ROOT 0,0 -> 0,35
+  .body[1]
+  0] FunctionDef .. 0,0 -> 0,35
+    .name 'f'
+    .body[1]
+    0] Pass .. 0,31 -> 0,35
+    .type_params[2]
+    0] TypeVar .. 0,6 -> 0,12
+      .name 'T'
+      .bound Name 'int' Load .. 0,9 -> 0,12
+    1] TypeVar .. 0,14 -> 0,26
+      .name 'V'
+      .bound Subscript .. 0,17 -> 0,26
+        .value Name 'list' Load .. 0,17 -> 0,21
+        .slice Name 'int' Load .. 0,22 -> 0,25
+        .ctx Load
+"""),
+
+(r"""def f[T: int, U: (str)](): pass""", 'body[0]', -2, 'type_params', {'raw': False, '_ver': 12}, r"""V: list[int]""", r"""def f[V: list[int], U: (str)](): pass""", r"""
+Module .. ROOT 0,0 -> 0,37
+  .body[1]
+  0] FunctionDef .. 0,0 -> 0,37
+    .name 'f'
+    .body[1]
+    0] Pass .. 0,33 -> 0,37
+    .type_params[2]
+    0] TypeVar .. 0,6 -> 0,18
+      .name 'V'
+      .bound Subscript .. 0,9 -> 0,18
+        .value Name 'list' Load .. 0,9 -> 0,13
+        .slice Name 'int' Load .. 0,14 -> 0,17
+        .ctx Load
+    1] TypeVar .. 0,20 -> 0,28
+      .name 'U'
+      .bound Name 'str' Load .. 0,24 -> 0,27
+"""),
+
+(r"""def f[T: int, U: (str)](): pass""", 'body[0]', -4, 'type_params', {'raw': False, '_ver': 12}, r"""V: list[int]""", r"""**IndexError('index out of range')**""", r"""
+"""),
+
+(r"""async def f[T: int, U: (str)](): pass""", 'body[0]', 0, 'type_params', {'raw': False, '_ver': 12}, r"""**DEL**""", r"""**ValueError('cannot put slice to AsyncFunctionDef.type_params')**""", r"""
+"""),
+
+(r"""async def f[T: int, U: (str)](): pass""", 'body[0]', 0, 'type_params', {'raw': False, '_ver': 12}, r"""V: list[int]""", r"""async def f[V: list[int], U: (str)](): pass""", r"""
+Module .. ROOT 0,0 -> 0,43
+  .body[1]
+  0] AsyncFunctionDef .. 0,0 -> 0,43
+    .name 'f'
+    .body[1]
+    0] Pass .. 0,39 -> 0,43
+    .type_params[2]
+    0] TypeVar .. 0,12 -> 0,24
+      .name 'V'
+      .bound Subscript .. 0,15 -> 0,24
+        .value Name 'list' Load .. 0,15 -> 0,19
+        .slice Name 'int' Load .. 0,20 -> 0,23
+        .ctx Load
+    1] TypeVar .. 0,26 -> 0,34
+      .name 'U'
+      .bound Name 'str' Load .. 0,30 -> 0,33
+"""),
+
+(r"""async def f[T: int, U: (str)](): pass""", 'body[0]', 1, 'type_params', {'raw': False, '_ver': 12}, r"""V: list[int]""", r"""async def f[T: int, V: list[int]](): pass""", r"""
+Module .. ROOT 0,0 -> 0,41
+  .body[1]
+  0] AsyncFunctionDef .. 0,0 -> 0,41
+    .name 'f'
+    .body[1]
+    0] Pass .. 0,37 -> 0,41
+    .type_params[2]
+    0] TypeVar .. 0,12 -> 0,18
+      .name 'T'
+      .bound Name 'int' Load .. 0,15 -> 0,18
+    1] TypeVar .. 0,20 -> 0,32
+      .name 'V'
+      .bound Subscript .. 0,23 -> 0,32
+        .value Name 'list' Load .. 0,23 -> 0,27
+        .slice Name 'int' Load .. 0,28 -> 0,31
+        .ctx Load
+"""),
+
+(r"""async def f[T: int, U: (str)](): pass""", 'body[0]', -1, 'type_params', {'raw': False, '_ver': 12}, r"""V: list[int]""", r"""async def f[T: int, V: list[int]](): pass""", r"""
+Module .. ROOT 0,0 -> 0,41
+  .body[1]
+  0] AsyncFunctionDef .. 0,0 -> 0,41
+    .name 'f'
+    .body[1]
+    0] Pass .. 0,37 -> 0,41
+    .type_params[2]
+    0] TypeVar .. 0,12 -> 0,18
+      .name 'T'
+      .bound Name 'int' Load .. 0,15 -> 0,18
+    1] TypeVar .. 0,20 -> 0,32
+      .name 'V'
+      .bound Subscript .. 0,23 -> 0,32
+        .value Name 'list' Load .. 0,23 -> 0,27
+        .slice Name 'int' Load .. 0,28 -> 0,31
+        .ctx Load
+"""),
+
+(r"""async def f[T: int, U: (str)](): pass""", 'body[0]', -2, 'type_params', {'raw': False, '_ver': 12}, r"""V: list[int]""", r"""async def f[V: list[int], U: (str)](): pass""", r"""
+Module .. ROOT 0,0 -> 0,43
+  .body[1]
+  0] AsyncFunctionDef .. 0,0 -> 0,43
+    .name 'f'
+    .body[1]
+    0] Pass .. 0,39 -> 0,43
+    .type_params[2]
+    0] TypeVar .. 0,12 -> 0,24
+      .name 'V'
+      .bound Subscript .. 0,15 -> 0,24
+        .value Name 'list' Load .. 0,15 -> 0,19
+        .slice Name 'int' Load .. 0,20 -> 0,23
+        .ctx Load
+    1] TypeVar .. 0,26 -> 0,34
+      .name 'U'
+      .bound Name 'str' Load .. 0,30 -> 0,33
+"""),
+
+(r"""async def f[T: int, U: (str)](): pass""", 'body[0]', -4, 'type_params', {'raw': False, '_ver': 12}, r"""V: list[int]""", r"""**IndexError('index out of range')**""", r"""
+"""),
+
+(r"""class c[T: int, U: (str)]: pass""", 'body[0]', 0, 'type_params', {'raw': False, '_ver': 12}, r"""**DEL**""", r"""**ValueError('cannot put slice to ClassDef.type_params')**""", r"""
+"""),
+
+(r"""class c[T: int, U: (str)]: pass""", 'body[0]', 0, 'type_params', {'raw': False, '_ver': 12}, r"""V: list[int]""", r"""class c[V: list[int], U: (str)]: pass""", r"""
+Module .. ROOT 0,0 -> 0,37
+  .body[1]
+  0] ClassDef .. 0,0 -> 0,37
+    .name 'c'
+    .body[1]
+    0] Pass .. 0,33 -> 0,37
+    .type_params[2]
+    0] TypeVar .. 0,8 -> 0,20
+      .name 'V'
+      .bound Subscript .. 0,11 -> 0,20
+        .value Name 'list' Load .. 0,11 -> 0,15
+        .slice Name 'int' Load .. 0,16 -> 0,19
+        .ctx Load
+    1] TypeVar .. 0,22 -> 0,30
+      .name 'U'
+      .bound Name 'str' Load .. 0,26 -> 0,29
+"""),
+
+(r"""class c[T: int, U: (str)]: pass""", 'body[0]', 1, 'type_params', {'raw': False, '_ver': 12}, r"""V: list[int]""", r"""class c[T: int, V: list[int]]: pass""", r"""
+Module .. ROOT 0,0 -> 0,35
+  .body[1]
+  0] ClassDef .. 0,0 -> 0,35
+    .name 'c'
+    .body[1]
+    0] Pass .. 0,31 -> 0,35
+    .type_params[2]
+    0] TypeVar .. 0,8 -> 0,14
+      .name 'T'
+      .bound Name 'int' Load .. 0,11 -> 0,14
+    1] TypeVar .. 0,16 -> 0,28
+      .name 'V'
+      .bound Subscript .. 0,19 -> 0,28
+        .value Name 'list' Load .. 0,19 -> 0,23
+        .slice Name 'int' Load .. 0,24 -> 0,27
+        .ctx Load
+"""),
+
+(r"""class c[T: int, U: (str)]: pass""", 'body[0]', -1, 'type_params', {'raw': False, '_ver': 12}, r"""V: list[int]""", r"""class c[T: int, V: list[int]]: pass""", r"""
+Module .. ROOT 0,0 -> 0,35
+  .body[1]
+  0] ClassDef .. 0,0 -> 0,35
+    .name 'c'
+    .body[1]
+    0] Pass .. 0,31 -> 0,35
+    .type_params[2]
+    0] TypeVar .. 0,8 -> 0,14
+      .name 'T'
+      .bound Name 'int' Load .. 0,11 -> 0,14
+    1] TypeVar .. 0,16 -> 0,28
+      .name 'V'
+      .bound Subscript .. 0,19 -> 0,28
+        .value Name 'list' Load .. 0,19 -> 0,23
+        .slice Name 'int' Load .. 0,24 -> 0,27
+        .ctx Load
+"""),
+
+(r"""class c[T: int, U: (str)]: pass""", 'body[0]', -2, 'type_params', {'raw': False, '_ver': 12}, r"""V: list[int]""", r"""class c[V: list[int], U: (str)]: pass""", r"""
+Module .. ROOT 0,0 -> 0,37
+  .body[1]
+  0] ClassDef .. 0,0 -> 0,37
+    .name 'c'
+    .body[1]
+    0] Pass .. 0,33 -> 0,37
+    .type_params[2]
+    0] TypeVar .. 0,8 -> 0,20
+      .name 'V'
+      .bound Subscript .. 0,11 -> 0,20
+        .value Name 'list' Load .. 0,11 -> 0,15
+        .slice Name 'int' Load .. 0,16 -> 0,19
+        .ctx Load
+    1] TypeVar .. 0,22 -> 0,30
+      .name 'U'
+      .bound Name 'str' Load .. 0,26 -> 0,29
+"""),
+
+(r"""class c[T: int, U: (str)]: pass""", 'body[0]', -4, 'type_params', {'raw': False, '_ver': 12}, r"""V: list[int]""", r"""**IndexError('index out of range')**""", r"""
+"""),
+
+(r"""type t[T: int, U: (str)] = ...""", 'body[0]', 0, 'type_params', {'raw': False, '_ver': 12}, r"""**DEL**""", r"""**ValueError('cannot put slice to TypeAlias.type_params')**""", r"""
+"""),
+
+(r"""type t[T: int, U: (str)] = ...""", 'body[0]', 0, 'type_params', {'raw': False, '_ver': 12}, r"""V: list[int]""", r"""type t[V: list[int], U: (str)] = ...""", r"""
+Module .. ROOT 0,0 -> 0,36
+  .body[1]
+  0] TypeAlias .. 0,0 -> 0,36
+    .name Name 't' Store .. 0,5 -> 0,6
+    .type_params[2]
+    0] TypeVar .. 0,7 -> 0,19
+      .name 'V'
+      .bound Subscript .. 0,10 -> 0,19
+        .value Name 'list' Load .. 0,10 -> 0,14
+        .slice Name 'int' Load .. 0,15 -> 0,18
+        .ctx Load
+    1] TypeVar .. 0,21 -> 0,29
+      .name 'U'
+      .bound Name 'str' Load .. 0,25 -> 0,28
+    .value Constant Ellipsis .. 0,33 -> 0,36
+"""),
+
+(r"""type t[T: int, U: (str)] = ...""", 'body[0]', 1, 'type_params', {'raw': False, '_ver': 12}, r"""V: list[int]""", r"""type t[T: int, V: list[int]] = ...""", r"""
+Module .. ROOT 0,0 -> 0,34
+  .body[1]
+  0] TypeAlias .. 0,0 -> 0,34
+    .name Name 't' Store .. 0,5 -> 0,6
+    .type_params[2]
+    0] TypeVar .. 0,7 -> 0,13
+      .name 'T'
+      .bound Name 'int' Load .. 0,10 -> 0,13
+    1] TypeVar .. 0,15 -> 0,27
+      .name 'V'
+      .bound Subscript .. 0,18 -> 0,27
+        .value Name 'list' Load .. 0,18 -> 0,22
+        .slice Name 'int' Load .. 0,23 -> 0,26
+        .ctx Load
+    .value Constant Ellipsis .. 0,31 -> 0,34
+"""),
+
+(r"""type t[T: int, U: (str)] = ...""", 'body[0]', -1, 'type_params', {'raw': False, '_ver': 12}, r"""V: list[int]""", r"""type t[T: int, V: list[int]] = ...""", r"""
+Module .. ROOT 0,0 -> 0,34
+  .body[1]
+  0] TypeAlias .. 0,0 -> 0,34
+    .name Name 't' Store .. 0,5 -> 0,6
+    .type_params[2]
+    0] TypeVar .. 0,7 -> 0,13
+      .name 'T'
+      .bound Name 'int' Load .. 0,10 -> 0,13
+    1] TypeVar .. 0,15 -> 0,27
+      .name 'V'
+      .bound Subscript .. 0,18 -> 0,27
+        .value Name 'list' Load .. 0,18 -> 0,22
+        .slice Name 'int' Load .. 0,23 -> 0,26
+        .ctx Load
+    .value Constant Ellipsis .. 0,31 -> 0,34
+"""),
+
+(r"""type t[T: int, U: (str)] = ...""", 'body[0]', -2, 'type_params', {'raw': False, '_ver': 12}, r"""V: list[int]""", r"""type t[V: list[int], U: (str)] = ...""", r"""
+Module .. ROOT 0,0 -> 0,36
+  .body[1]
+  0] TypeAlias .. 0,0 -> 0,36
+    .name Name 't' Store .. 0,5 -> 0,6
+    .type_params[2]
+    0] TypeVar .. 0,7 -> 0,19
+      .name 'V'
+      .bound Subscript .. 0,10 -> 0,19
+        .value Name 'list' Load .. 0,10 -> 0,14
+        .slice Name 'int' Load .. 0,15 -> 0,18
+        .ctx Load
+    1] TypeVar .. 0,21 -> 0,29
+      .name 'U'
+      .bound Name 'str' Load .. 0,25 -> 0,28
+    .value Constant Ellipsis .. 0,33 -> 0,36
+"""),
+
+(r"""type t[T: int, U: (str)] = ...""", 'body[0]', -4, 'type_params', {'raw': False, '_ver': 12}, r"""V: list[int]""", r"""**IndexError('index out of range')**""", r"""
+"""),
+
 ]  # END OF PUT_ONE_DATA
 
 PUT_RAW_DATA = [

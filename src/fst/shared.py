@@ -2,7 +2,7 @@
 
 import re
 from ast import *
-from typing import Any, Callable, Literal, NamedTuple, TypeAlias, Union
+from typing import Any, Literal, NamedTuple, TypeAlias, Union
 
 from .astutil import *
 from .astutil import TypeAlias, TryStar, type_param, Interpolation
