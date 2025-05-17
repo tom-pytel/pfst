@@ -1,8 +1,7 @@
 """Misc lower level FST methods."""
 
-import re
 from ast import *
-from types import EllipsisType, FunctionType
+from types import FunctionType
 from typing import Any, Callable, NamedTuple, Optional, Union
 
 from .astutil import *
@@ -10,9 +9,8 @@ from .astutil import TypeAlias, TryStar, type_param, TypeVar, ParamSpec, TypeVar
 
 from .shared import (
     STMTISH, Code, NodeTypeError, astfield, fstloc,
-    _next_src, _prev_src, _next_find, _prev_find, _next_find_re, _fixup_one_index,)
-
-_re_identifier = re.compile(r'[^\d\W]\w*')
+    _next_src, _prev_src, _next_find, _prev_find, _next_find_re, _fixup_one_index,
+)
 
 
 # ----------------------------------------------------------------------------------------------------------------------
@@ -84,96 +82,6 @@ def _slice_indices(self: 'FST', idx: int, field: str, body: list[AST], to: Optio
     raise NodeTypeError(f"invalid 'to' node")
 
 
-def _code_as_identifier(code: Code) -> str:
-    """Convert `Code` to valid identifier string if possible."""
-
-    if isinstance(code, list):
-        if len(code) != 1:
-            raise NodeTypeError(f'expecting onle line identifier, got {len(code)} lines')
-
-        code = code[0]
-
-    if isinstance(code, str):
-        if not is_valid_identifier(code):
-            raise NodeTypeError(f'expecting identifier, got {code!r}')
-
-    else:
-        if isinstance(code, FST):
-            code = code.a
-
-        if not isinstance(code, Name):
-            raise NodeTypeError(f'expecting identifier (Name), got {code.__class__.__name__}')
-
-        return code.id
-
-    return code
-
-
-_code_as_op_str2op = {
-    AugAssign: OPSTR2CLS_AUG,
-    BoolOp:    OPSTR2CLS_BOOL,
-    BinOp:     OPSTR2CLS_BIN,
-    UnaryOp:   OPSTR2CLS_UNARY,
-    Compare:   OPSTR2CLS_CMP,
-    None:      OPSTR2CLSWAUG,
-}
-
-_code_as_op_ops = {
-    AugAssign: frozenset(OPSTR2CLS_AUG.values()),
-    BoolOp:    frozenset(OPSTR2CLS_BOOL.values()),
-    BinOp:     frozenset(OPSTR2CLS_BIN.values()),
-    UnaryOp:   frozenset(OPSTR2CLS_UNARY.values()),
-    Compare:   frozenset(OPSTR2CLS_CMP.values()),
-    None:      frozenset(OPSTR2CLS.values()),
-}
-
-def _code_as_op(code: Code,
-                target: type[AugAssign] | type[BoolOp] | type[BinOp] | type[UnaryOp] | type[Compare] | None = None,
-                ) -> 'FST':
-    """Convert `code` to an operator `FST` for the given target if is possible."""
-
-    if isinstance(code, FST):
-        if (src := code.get_src(*code.loc)) not in _code_as_op_str2op[target]:
-            raise NodeTypeError(f'bad operator {src!r}')
-
-    elif isinstance(code, AST):
-        code = FST(code, lines=[(OPCLS2STR_AUG if target is AugAssign else OPCLS2STR).get(code.__class__, '')])
-
-    else:
-        if isinstance(code, list):
-            code = '\n'.join(lines := code)
-        else:
-            lines = code.split('\n')
-
-        if not (cls := _code_as_op_str2op[target].get(code)):
-            raise NodeTypeError(f'bad operator {code!r}')
-
-        code = FST(cls(), lines=lines)
-
-    if code.a.__class__ not in _code_as_op_ops[target]:
-        raise NodeTypeError(f'expecting operator{f" for {target.__name__}" if target else ""}'
-                            f', got {code.a.__class__.__name__}')
-
-    return code
-
-
-def _is_valid_MatchSingleton_value(ast: AST) -> bool:
-    return isinstance(ast, Constant) and ast.value in (True, False, None)
-
-
-def _is_valid_MatchAs_value(ast: AST) -> bool:
-    if isinstance(ast, Constant):
-        return isinstance(ast.value, (str, int, float, complex))
-    if isinstance(ast, Attribute):
-        return True
-    if isinstance(ast, BinOp):
-        return (isinstance(ast.op, Add) and
-                isinstance(l := ast.left, Constant) and isinstance(r := ast.right, Constant) and
-                isinstance(l.value, (int, float)) and isinstance(r.value, complex))
-
-    return False
-
-
 def _validate_put(self: 'FST', code: Code | None, idx: int | None, field: str, child: list[AST] | AST | None,
                   options: dict[str: Any], *, can_del: bool = False) -> AST | None:
     """Check that `idx` was passed (or not) as needed and that not deleting if not possible and that `to` raw parameter
@@ -226,7 +134,8 @@ def _put_one_constant(self: 'FST', code: Code | None, idx: int | None, field: st
     """Put a single constant value, only Constant and MatchSingleton (and only exists because of the second one)."""
 
     child   = _validate_put(self, code, idx, field, child, options)
-    put_fst = self._normalize_code(code, 'expr', parse_params=self.root.parse_params)
+    # put_fst = self._normalize_code(code, 'expr', parse_params=self.root.parse_params)
+    put_fst = self._code_as_expr(code)
     put_ast = put_fst.a
 
     _validate_put_ast(self, put_ast, idx, field, static)
@@ -242,7 +151,7 @@ def _put_one_op(self: 'FST', code: Code | None, idx: int | None, field: str, chi
     """Put a single opertation, with or without '=' for AugAssign."""
 
     child  = _validate_put(self, code, idx, field, child, options)
-    code   = _code_as_op(code, self.a.__class__)
+    code   = self._code_as_op(code, self.a.__class__)
     childf = child.f
 
     ln, col, end_ln, end_col = childf.loc
@@ -282,7 +191,8 @@ def _make_expr_fst(self: 'FST', code: Code | None, idx: int | None, field: str, 
     """Make an expression `FST` from `Code` for a field/idx containing an existing node creating a new one. Takes care
     of parenthesizing, indenting and offsetting."""
 
-    put_fst = self._normalize_code(code, 'expr', parse_params=self.root.parse_params)
+    # put_fst = self._normalize_code(code, 'expr', parse_params=self.root.parse_params)
+    put_fst = self._code_as_expr(code)
     put_ast = put_fst.a
 
     _validate_put_ast(self, put_ast, idx, field, static)
@@ -446,7 +356,7 @@ def _put_one_identifier_required(self: 'FST', code: Code | None, idx: int | None
 
     _validate_put(self, code, idx, field, child, options)
 
-    code = _code_as_identifier(code)
+    code = self._code_as_identifier(code)
     info = static.getinfo(self, static, idx, field)
 
     self.put_src(code, *info.loc_ident, True)
@@ -476,7 +386,7 @@ def _put_one_identifier_optional(self: 'FST', code: Code | None, idx: int | None
 
         return None
 
-    code = _code_as_identifier(code)
+    code = self._code_as_identifier(code)
 
     if child is not None:  # replace existing identifier
         self.put_src(code, *info.loc_ident, True)
@@ -527,7 +437,7 @@ def _put_one_MatchAs_name(self: 'FST', code: Code | None, idx: int | None, field
     if code is None:
         code = '_'
     else:
-        code = _code_as_identifier(code)
+        code = self._code_as_identifier(code)
 
     if self.a.pattern and code == '_':
         raise ValueError("cannot change MatchAs with pattern into wildcard '_'")
@@ -623,11 +533,11 @@ def _one_info_identifier_required(self: 'FST', static: onestatic, idx: int | Non
     lines                    = self.root._lines
 
     if not prefix:
-        end_col = _re_identifier.match(lines[ln], col, end_col).end()  # must be there
+        end_col = re_identifier.match(lines[ln], col, end_col).end()  # must be there
 
     else:
         ln, col      = _next_find(lines, ln, col, end_ln, end_col, prefix, lcont=None)  # must be there, have to search because could be preceded by something (like 'async')
-        ln, col, src =  _next_find_re(lines, ln, col + len(prefix), end_ln, end_col, _re_identifier, lcont=None)  # must be there
+        ln, col, src =  _next_find_re(lines, ln, col + len(prefix), end_ln, end_col, re_identifier, lcont=None)  # must be there
         end_col      = col + len(src)
 
     return oneinfo('', None, fstloc(ln, col, ln, end_col))
@@ -688,7 +598,7 @@ def _one_info_ImportFrom_module(self: 'FST', static: onestatic, idx: int | None,
     lines                    = self.root._lines
 
     if not self.a.level:  # cannot insert or delete
-        ln, col, src =  _next_find_re(lines, ln, col + 4, end_ln, end_col, _re_identifier, lcont=None)  # must be there, col+4 is for 'from'
+        ln, col, src =  _next_find_re(lines, ln, col + 4, end_ln, end_col, re_identifier, lcont=None)  # must be there, col+4 is for 'from'
         end_col      = col + len(src)
 
         return oneinfo('', None, fstloc(ln, col, ln, end_col))
@@ -822,7 +732,7 @@ def _one_info_arg_annotation(self: 'FST', static: onestatic, idx: int | None, fi
 def _one_info_keyword_arg(self: 'FST', static: onestatic, idx: int | None, field: str) -> oneinfo:
     end_ln, end_col, _, _ = (a := self.a).value.f.pars()
     ln, col, _, _         = self.loc
-    arg_end_col           = col + 2 if a.arg is None else _re_identifier.match(self.root._lines[ln], col).end() # must be there
+    arg_end_col           = col + 2 if a.arg is None else re_identifier.match(self.root._lines[ln], col).end() # must be there
 
     return oneinfo('', fstloc(ln, col, end_ln, end_col), fstloc(ln, col, ln, arg_end_col))
 
@@ -941,13 +851,13 @@ def _one_info_ParamSpec_name(self: 'FST', static: onestatic, idx: int | None, fi
 
 def _one_info_ParamSpec_default_value(self: 'FST', static: onestatic, idx: int | None, field: str) -> oneinfo:
     ln, col, end_ln, end_col = self.loc
-    ln, col, src             = _next_find_re(self.root._lines, ln, col + 2, end_ln, end_col, _re_identifier)  # + '**', identifier must be there
+    ln, col, src             = _next_find_re(self.root._lines, ln, col + 2, end_ln, end_col, re_identifier)  # + '**', identifier must be there
 
     return oneinfo(' = ', fstloc(ln, col + len(src), self.end_ln, self.end_col))
 
 def _one_info_TypeVarTuple_default_value(self: 'FST', static: onestatic, idx: int | None, field: str) -> oneinfo:
     ln, col, end_ln, end_col = self.loc
-    ln, col, src             = _next_find_re(self.root._lines, ln, col + 1, end_ln, end_col, _re_identifier)  # + '*', identifier must be there
+    ln, col, src             = _next_find_re(self.root._lines, ln, col + 1, end_ln, end_col, re_identifier)  # + '*', identifier must be there
 
     return oneinfo(' = ', fstloc(ln, col + len(src), self.end_ln, self.end_col))
 
@@ -1108,8 +1018,8 @@ _PUT_ONE_HANDLERS = {
     # (match_case, 'pattern'):              (_put_one_default, None, None), # pattern                                         - special parse
     (match_case, 'guard'):                (_put_one_expr_optional, None, onestatic(_one_info_match_case_guard)), # expr?       - OPTIONAL TAIL: 'if'
     (match_case, 'body'):                 (_put_one_stmtish, None, None), # stmt*
-    (MatchValue, 'value'):                (_put_one_MatchValue_value, None, onestatic(_one_info_expr_required, _is_valid_MatchAs_value)), # expr  - limited values, Constant? Name becomes MatchAs
-    (MatchSingleton, 'value'):            (_put_one_constant, None, onestatic(_one_info_constant, _is_valid_MatchSingleton_value, base=Constant)), # constant
+    (MatchValue, 'value'):                (_put_one_MatchValue_value, None, onestatic(_one_info_expr_required, is_valid_MatchAs_value)), # expr  - limited values, Constant? Name becomes MatchAs
+    (MatchSingleton, 'value'):            (_put_one_constant, None, onestatic(_one_info_constant, is_valid_MatchSingleton_value, base=Constant)), # constant
     # (MatchSequence, 'patterns'):          (_put_one_default, None, None), # pattern*                                        - slice
     (MatchMapping, 'keys'):               (_put_one_expr_required, None, onestatic(_one_info_expr_required, (Constant, Attribute))), # expr*  TODO: XXX are there any others allowed?
     # (MatchMapping, 'patterns'):           (_put_one_default, None, None), # pattern*                                        - slice

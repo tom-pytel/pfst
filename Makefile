@@ -24,7 +24,7 @@ docs:  ## Compile documentation
 
 .PHONY: all-docs
 all-docs:  ## Compile all documentation, including private functions, for dev
-	python make_docs.py --private fst.fst fst.fstlist fst.shared fst.astutil fst.fst_raw fst.fst_slice_old fst.fst_one fst.fst_walk fst.fst_misc fst.srcedit
+	python make_docs.py --private fst.fst fst.fstlist fst.shared fst.astutil fst.fst_parse fst.fst_raw fst.fst_slice_old fst.fst_slice fst.fst_one fst.fst_walk fst.fst_misc fst.srcedit
 
 
 .PHONY: clean

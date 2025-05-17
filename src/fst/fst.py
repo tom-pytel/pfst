@@ -450,7 +450,7 @@ class FST:
         # ROOT
 
         self.root   = self
-        self._lines = lines if lines[0].__class__ is bistr else [bistr(s) for s in lines]
+        self._lines = lines if isinstance(lines[0], bistr) else [bistr(s) for s in lines]
 
         if from_ := kwargs.get('from_'):  # copy params from source tree
             from_root         = from_.root
@@ -615,7 +615,7 @@ class FST:
             elif not copy_attributes(astp, ast, compare=True, type_comments=type_comments, raise_=False):
                 raise RuntimeError('could not reparse ast identically')
 
-        return FST(ast, lines=[bistr(s) for s in lines], parse_params=parse_params)
+        return FST(ast, lines=lines, parse_params=parse_params)
 
     @staticmethod
     def get_option(option: str, options: dict[str, Any] = {}) -> Any:
@@ -937,7 +937,7 @@ class FST:
             lines = [bistr('')]
         elif isinstance(src, str):
             lines = [bistr(s) for s in src.split('\n')]
-        elif not src[0].__class__ is bistr:  # lines is list[str]
+        elif not isinstance(src[0], bistr):  # lines is list[str]
             lines = [bistr(s) for s in src]
         else:
             lines = src
@@ -995,7 +995,8 @@ class FST:
         prev_child,
         next_step,
         prev_step,
-        walk,)
+        walk,
+    )
 
     def parent_stmt(self, self_: bool = False, mod: bool = True) -> Optional['FST']:
         """The first parent which is a `stmt` or `mod` node (if any). If `self_` is `True` then will check `self` first,
@@ -1947,14 +1948,25 @@ class FST:
         _normalize_block,
         _elif_to_else_if,
         _reparse_docstrings,
-        _make_fst_and_dedent,)
+        _make_fst_and_dedent,
+    )
+
+    from .fst_parse import (
+        _parse_pattern,
+        _parse_expr,
+        _code_as_identifier,
+        _code_as_op,
+        _code_as_pattern,
+        _code_as_expr,
+    )
 
     from .fst_raw import (
         _reparse_raw,
         _reparse_raw_stmtish,
         _reparse_raw_loc,
         _reparse_raw_node,
-        _reparse_raw_slice,)
+        _reparse_raw_slice,
+    )
 
     from .fst_slice_old import (
         _get_slice_tuple_list_or_set,
@@ -1964,15 +1976,18 @@ class FST:
         _put_slice_tuple_list_or_set,
         _put_slice_empty_set,
         _put_slice_dict,
-        _put_slice_stmtish,)
+        _put_slice_stmtish,
+    )
 
     from .fst_slice import (
         _get_slice,
-        _put_slice,)
+        _put_slice,
+    )
 
     from .fst_one import (
         _get_one,
-        _put_one,)
+        _put_one,
+    )
 
     @property
     def f(self):

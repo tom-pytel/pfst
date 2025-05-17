@@ -7,7 +7,8 @@ from .astutil import *
 
 from .shared import (
     STMTISH_OR_STMTMOD, STMTISH_FIELDS, Code, NodeTypeError,
-    _fixup_field_body,)
+    _fixup_field_body,
+)
 
 
 # ----------------------------------------------------------------------------------------------------------------------

@@ -9,7 +9,7 @@ from .astutil import *
 from .astutil import TryStar
 
 from .shared import (
-    astfield, fstloc,
+    NodeTypeError, astfield, fstloc,
     PARENTHESIZABLE,
     STMTISH_FIELDS,
     Code,
@@ -306,7 +306,7 @@ def _reparse_raw_node(self: 'FST', code: Code | None, to: Optional['FST'] = None
                                 code = ast_unparse(code)[1:-1]
 
                 elif isinstance(code, FST):
-                    a = reduce_ast(code.a, True, False)
+                    a = reduce_ast(code.a, NodeTypeError)
 
                     if isinstance(a, PARENTHESIZABLE):
                         effpars = pars or a.f.is_parenthesized_tuple() is False

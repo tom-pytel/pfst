@@ -16,8 +16,10 @@ __all__ = [
     'FIELDS', 'AST_FIELDS',
     'OPSTR2CLS_UNARY', 'OPSTR2CLS_BIN', 'OPSTR2CLS_CMP', 'OPSTR2CLS_BOOL', 'OPSTR2CLS_AUG',
     'OPSTR2CLS', 'OPSTR2CLSWAUG', 'OPCLS2STR', 'OPCLS2STR_AUG',
+    're_identifier_only', 're_identifier',
     'bistr', 'constant',
-    'is_valid_identifier', 'reduce_ast', 'get_field', 'set_field', 'has_type_comments', 'is_parsable', 'get_parse_mode',
+    'is_valid_identifier', 'is_valid_MatchSingleton_value', 'is_valid_MatchAs_value',
+    'reduce_ast', 'get_field', 'set_field', 'has_type_comments', 'is_parsable', 'get_parse_mode',
     'WalkFail', 'walk2', 'compare_asts', 'copy_attributes', 'copy_ast', 'set_ctx',
     'get_func_class_or_ass_by_name', 'syntax_ordered_children', 'last_block_opener_child', 'is_atom',
     'precedence_require_parens_by_type', 'precedence_require_parens',
@@ -53,7 +55,7 @@ class bistr(str):
         return self.c2b(len(self))
 
     def __new__(cls, s: str) -> 'bistr':
-        return s if s.__class__ is bistr else str.__new__(cls, s)
+        return s if isinstance(s, bistr) else str.__new__(cls, s)
 
     @staticmethod
     def _make_array(len_array: int, highest_value: int) -> array:
@@ -333,25 +335,44 @@ OPSTR2CLSWAUG = {**OPSTR2CLS, **OPSTR2CLS}  ; """Mapping of all operator strings
 OPCLS2STR     = {v: k for d in (OPSTR2CLS_UNARY, OPSTR2CLS_BIN, OPSTR2CLS_CMP, OPSTR2CLS_BOOL) for k, v in d.items()}  ; "Mapping of operator AST class to operator string, e.g. `ast.Add`: '+'."
 OPCLS2STR_AUG = {v: k for k, v in OPSTR2CLS_AUG.items()}  ; "Mapping of operator AST class to operator string mapping to augmented operator strings, e.g. `ast.Add`: '+='."
 
+re_identifier_only = re.compile(r'^[^\d\W]\w*$')
+re_identifier      = re.compile(r'[^\d\W]\w*')
 
-_re_identifier = re.compile(r'^[^\d\W]\w*$')
 
 def is_valid_identifier(s: str) -> bool:
     """Check if `s` is a valid python identifier."""
 
-    return (_re_identifier.match(s) or False) and not keyword_iskeyword(s)
+    return (re_identifier.match(s) or False) and not keyword_iskeyword(s)
 
 
-def reduce_ast(ast: AST, reduce_Expr: bool = True, multi_mod: bool | None = True) -> AST | None:
-    """Reduce a `mod` / `Expr` wrapped expression or single statement if possible, otherwise return original `AST`.
+def is_valid_MatchSingleton_value(ast: AST) -> bool:
+    return isinstance(ast, Constant) and ast.value in (True, False, None)
+
+
+def is_valid_MatchAs_value(ast: AST) -> bool:
+    if isinstance(ast, Constant):
+        return isinstance(ast.value, (str, int, float, complex))
+    if isinstance(ast, Attribute):
+        return True
+    if isinstance(ast, BinOp):
+        return (isinstance(ast.op, Add) and
+                isinstance(l := ast.left, Constant) and isinstance(r := ast.right, Constant) and
+                isinstance(l.value, (int, float)) and isinstance(r.value, complex))
+
+    return False
+
+
+def reduce_ast(ast: AST, multi_mod: bool | type[Exception] = False, reduce_Expr: bool = True) -> AST | None:
+    """Reduce a `mod` / `Expr` wrapped expression or single statement if possible, otherwise return original `AST`, None
+    or raise.
 
     **Parameters:**
     - `ast`: `AST` to reduce.
-    - `reduce_Expr`: Whether to reduce a single `Expr` node and return its expression or not.
     - `multi_mod`: If `ast` is a `mod` with multiple statements then:
         - `True`: Return it.
-        - `False`: Raise ValueError.
-        - `None`: Return `None`.
+        - `False`: Return `None`.
+        - `type[Exception]`: If an exception class is passed then will `raise multi_mod(error)`.
+    - `reduce_Expr`: Whether to reduce a single `Expr` node and return its expression or not.
     """
 
     if isinstance(ast, (Module, Interactive)):
@@ -360,10 +381,10 @@ def reduce_ast(ast: AST, reduce_Expr: bool = True, multi_mod: bool | None = True
 
             return ast.value if isinstance(ast, Expr) and reduce_Expr else ast
 
-        elif multi_mod is None:
-            return None
         elif multi_mod is False:
-            raise ValueError('expecting single element')
+            return None
+        elif multi_mod is not True:
+            raise multi_mod('expecting single element')
 
     elif isinstance(ast, Expression):
         return ast.body
