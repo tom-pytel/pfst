@@ -1024,7 +1024,7 @@ _PUT_ONE_HANDLERS = {
     (alias, 'asname'):                    (_put_one_identifier_optional, None, onestatic(_one_info_alias_asname, coerce=None)), # identifier?
     (withitem, 'context_expr'):           (_put_one_exprish_required, None, _onestatic_exprish_required), # expr
     (withitem, 'optional_vars'):          (_put_one_exprish_optional, None, onestatic(_one_info_withitem_optional_vars, (Name, Tuple, List), ctx=Store)), # expr?  - OPTIONAL TAIL: 'as' - Name
-    # (match_case, 'pattern'):              (_put_one_default, None, None), # pattern                                         - special parse
+    (match_case, 'pattern'):              (_put_one_exprish_required, None, _onestatic_pattern_required), # pattern  - special parse
     (match_case, 'guard'):                (_put_one_exprish_optional, None, onestatic(_one_info_match_case_guard)), # expr?       - OPTIONAL TAIL: 'if'
     (match_case, 'body'):                 (_put_one_stmtish, None, None), # stmt*
     (MatchValue, 'value'):                (_put_one_MatchValue_value, None, onestatic(_one_info_exprish_required, is_valid_MatchAs_value)), # expr  - limited values, Constant? Name becomes MatchAs

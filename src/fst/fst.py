@@ -843,8 +843,7 @@ class FST:
                 raise IndexError(f"cannot put() non-slice to index 'end'")
 
         elif stop is not False or start is not None:
-            raise IndexError(f"cannot pass index for non-slice put() to {ast.__class__.__name__}" +
-                             (f".{field}" if field else ""))
+            raise IndexError(f'{ast.__class__.__name__}.{field_} does not take an index')
 
         if not one:
             raise ValueError(f"cannot use 'one=False' in non-slice put()")
