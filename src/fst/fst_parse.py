@@ -79,6 +79,13 @@ def _parse_expr(src: str, parse_params: dict = {}) -> AST:
 
 
 @staticmethod
+def _parse_Slice(src: str, parse_params: dict = {}) -> AST:
+    """Parse to an `ast.Slice` or raise `SyntaxError`, e.g. "start:stop:step"."""
+
+    return _offset_linenos(ast_parse(f'a[\n{src}]', **parse_params).body[0].value.slice, -1)
+
+
+@staticmethod
 def _parse_comprehension(src: str, parse_params: dict = {}) -> AST:
     """Parse to an `ast.comprehension` or raise `SyntaxError`, e.g. "async for i in something() if i"."""
 
@@ -94,21 +101,21 @@ def _parse_arg(src: str, parse_params: dict = {}) -> AST:
 
 @staticmethod
 def _parse_keyword(src: str, parse_params: dict = {}) -> AST:
-    """Parse to an `ast.keyword` or raise `SyntaxError`, e.g. "var: list[int]"."""
+    """Parse to an `ast.keyword` or raise `SyntaxError`, e.g. "var=val"."""
 
     return _offset_linenos(ast_parse(f'f(\n{src})', **parse_params).body[0].value.keywords[0], -1)
 
 
 @staticmethod
 def _parse_alias(src: str, parse_params: dict = {}) -> AST:
-    """Parse to an `ast.alias` or raise `SyntaxError`, e.g. "var: list[int]"."""
+    """Parse to an `ast.alias` or raise `SyntaxError`, e.g. "name as alias"."""
 
     return _offset_linenos(ast_parse(f'from . import (\n{src})', **parse_params).body[0].names[0], -1)
 
 
 @staticmethod
 def _parse_withitem(src: str, parse_params: dict = {}) -> AST:
-    """Parse to an `ast.withitem` or raise `SyntaxError`, e.g. "var: list[int]"."""
+    """Parse to an `ast.withitem` or raise `SyntaxError`, e.g. "something() as var"."""
 
     return _offset_linenos(ast_parse(f'with (\n{src}): pass', **parse_params).body[0].items[0], -1)
 
@@ -153,6 +160,12 @@ def _code_as_expr(self: 'FST', code: Code) -> 'FST':
     ast = _parse_expr(code, self.root.parse_params)
 
     return FST(ast, lines=lines)
+
+
+def _code_as_Slice(self: 'FST', code: Code) -> 'FST':
+    """Convert `code` to a Slice `FST` if possible."""
+
+    return _code_as(self, code, Slice, _parse_Slice)
 
 
 def _code_as_op(self: 'FST', code: Code,

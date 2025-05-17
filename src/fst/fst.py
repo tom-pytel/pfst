@@ -1953,6 +1953,7 @@ class FST:
 
     from .fst_parse import (
         _parse_expr,
+        _parse_Slice,
         _parse_comprehension,
         _parse_arg,
         _parse_keyword,
@@ -1961,6 +1962,7 @@ class FST:
         _parse_pattern,
         _parse_type_param,
         _code_as_expr,
+        _code_as_Slice,
         _code_as_op,
         _code_as_comprehension,
         _code_as_arg,
