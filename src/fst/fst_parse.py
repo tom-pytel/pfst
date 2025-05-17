@@ -2,6 +2,7 @@
 
 from ast import *
 from ast import parse as ast_parse, unparse as ast_unparse
+from typing import Callable
 
 from .astutil import *
 from .astutil import type_param, TypeVar, ParamSpec, TypeVarTuple
@@ -29,35 +30,59 @@ _code_as_op_ops = {
 }
 
 
+def _offset_linenos(ast: AST, delta: int) -> AST:
+    for a in walk(ast):
+        if end_lineno := getattr(a, 'end_lineno', None):
+            a.end_lineno  = end_lineno + delta
+            a.lineno     += delta
+
+    return ast
+
+
+def _code_as(self: 'FST', code: Code, ast_type: type[AST], parse: Callable[['FST', Code], 'FST']) -> 'FST':
+    if isinstance(code, FST):
+        if not isinstance(code.a, ast_type):
+            raise NodeTypeError(f'expecting {ast_type.__name__}, got {code.a.__class__.__name__}')
+
+        return code
+
+    if isinstance(code, AST):
+        if not isinstance(code, ast_type):
+            raise NodeTypeError(f'expecting {ast_type.__name__}, got {code.__class__.__name__}')
+
+        code  = ast_unparse(code)
+        lines = code.split('\n')
+
+    elif isinstance(code, list):
+        code = '\n'.join(lines := code)
+    else:  # str
+        lines = code.split('\n')
+
+    return FST(parse(code, self.root.parse_params), lines=lines)
+
+
 _GLOBALS = globals() | {'_GLOBALS': None}
 # ----------------------------------------------------------------------------------------------------------------------
 
 @staticmethod
+def _parse_comprehension(src: str, parse_params: dict = {}) -> AST:
+    """Parse to an `ast.comprehension` or raise `SyntaxError`, e.g. "async for i in something() if i"."""
+
+    return _offset_linenos(ast_parse(f'[_ \n{src}]', **parse_params).body[0].value.generators[0], -1)
+
+
+@staticmethod
 def _parse_type_param(src: str, parse_params: dict = {}) -> AST:
-    """Parse to an `ast.type_param` or raise `SyntaxError`."""
+    """Parse to an `ast.type_param` or raise `SyntaxError`, e.g. "t: Base = Subclass"."""
 
-    ast = ast_parse(f'type t[\n{src}] = None', **parse_params).body[0].type_params[0]
-
-    for a in walk(ast):
-        if end_lineno := getattr(a, 'end_lineno', None):
-            a.end_lineno  = end_lineno - 1
-            a.lineno     -= 1
-
-    return ast
+    return _offset_linenos(ast_parse(f'type t[\n{src}] = None', **parse_params).body[0].type_params[0], -1)
 
 
 @staticmethod
 def _parse_pattern(src: str, parse_params: dict = {}) -> AST:
-    """Parse to an `ast.pattern` or raise `SyntaxError`."""
+    """Parse to an `ast.pattern` or raise `SyntaxError`, e.g. "{a.b: i, **rest}"."""
 
-    ast = ast_parse(f'match _:\n case \\\n{src}: pass', **parse_params).body[0].cases[0].pattern
-
-    for a in walk(ast):
-        if end_lineno := getattr(a, 'end_lineno', None):
-            a.end_lineno  = end_lineno - 2
-            a.lineno     -= 2
-
-    return ast
+    return _offset_linenos(ast_parse(f'match _:\n case \\\n{src}: pass', **parse_params).body[0].cases[0].pattern, -2)
 
 
 @staticmethod
@@ -129,56 +154,22 @@ def _code_as_op(self: 'FST', code: Code,
     return code
 
 
+def _code_as_comprehension(self: 'FST', code: Code) -> 'FST':
+    """Convert `code` to a comprehension `FST` if possible."""
+
+    return _code_as(self, code, comprehension, _parse_comprehension)
+
+
 def _code_as_type_param(self: 'FST', code: Code) -> 'FST':
     """Convert `code` to a type_param (TypeVar, ParamSpec, TypeVarTuple) `FST` if possible."""
 
-    if isinstance(code, FST):
-        if not isinstance(code.a, (TypeVar, ParamSpec, TypeVarTuple)):
-            raise NodeTypeError(f'expecting type_param, got {code.a.__class__.__name__}')
-
-        return code
-
-    if isinstance(code, AST):
-        if not isinstance(code, type_param):
-            raise NodeTypeError(f'expecting type_param, got {code.__class__.__name__}')
-
-        code  = ast_unparse(code)
-        lines = code.split('\n')
-
-    elif isinstance(code, list):
-        code = '\n'.join(lines := code)
-    else:  # str
-        lines = code.split('\n')
-
-    ast = _parse_type_param(code, self.root.parse_params)
-
-    return FST(ast, lines=lines)
+    return _code_as(self, code, type_param, _parse_type_param)
 
 
 def _code_as_pattern(self: 'FST', code: Code) -> 'FST':
     """Convert `code` to a pattern `FST` if possible."""
 
-    if isinstance(code, FST):
-        if not isinstance(code.a, pattern):
-            raise NodeTypeError(f'expecting pattern, got {code.a.__class__.__name__}')
-
-        return code
-
-    if isinstance(code, AST):
-        if not isinstance(code, pattern):
-            raise NodeTypeError(f'expecting pattern, got {code.__class__.__name__}')
-
-        code  = ast_unparse(code)
-        lines = code.split('\n')
-
-    elif isinstance(code, list):
-        code = '\n'.join(lines := code)
-    else:  # str
-        lines = code.split('\n')
-
-    ast = _parse_pattern(code, self.root.parse_params)
-
-    return FST(ast, lines=lines)
+    return _code_as(self, code, pattern, _parse_pattern)
 
 
 def _code_as_expr(self: 'FST', code: Code) -> 'FST':

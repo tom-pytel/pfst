@@ -22671,6 +22671,306 @@ Module .. ROOT 0,0 -> 0,36
 (r"""type t[T: int, U: (str)] = ...""", 'body[0]', -4, 'type_params', {'raw': False, '_ver': 12}, r"""V: list[int]""", r"""**IndexError('index out of range')**""", r"""
 """),
 
+(r"""[i for j in k async for (i) in j]""", 'body[0].value', 0, 'generators', {'raw': False}, r"""**DEL**""", r"""**ValueError('cannot put slice to ListComp.generators')**""", r"""
+"""),
+
+(r"""[i for j in k async for (i) in j]""", 'body[0].value', 0, 'generators', {'raw': False}, r"""async for a in b""", r"""[i async for a in b async for (i) in j]""", r"""
+Module .. ROOT 0,0 -> 0,39
+  .body[1]
+  0] Expr .. 0,0 -> 0,39
+    .value ListComp .. 0,0 -> 0,39
+      .elt Name 'i' Load .. 0,1 -> 0,2
+      .generators[2]
+      0] comprehension .. 0,3 -> 0,19
+        .target Name 'a' Store .. 0,13 -> 0,14
+        .iter Name 'b' Load .. 0,18 -> 0,19
+        .is_async 1
+      1] comprehension .. 0,20 -> 0,38
+        .target Name 'i' Store .. 0,31 -> 0,32
+        .iter Name 'j' Load .. 0,37 -> 0,38
+        .is_async 1
+"""),
+
+(r"""[i for j in k async for (i) in j]""", 'body[0].value', 1, 'generators', {'raw': False}, r"""async for a in b""", r"""[i for j in k async for a in b]""", r"""
+Module .. ROOT 0,0 -> 0,31
+  .body[1]
+  0] Expr .. 0,0 -> 0,31
+    .value ListComp .. 0,0 -> 0,31
+      .elt Name 'i' Load .. 0,1 -> 0,2
+      .generators[2]
+      0] comprehension .. 0,3 -> 0,13
+        .target Name 'j' Store .. 0,7 -> 0,8
+        .iter Name 'k' Load .. 0,12 -> 0,13
+        .is_async 0
+      1] comprehension .. 0,14 -> 0,30
+        .target Name 'a' Store .. 0,24 -> 0,25
+        .iter Name 'b' Load .. 0,29 -> 0,30
+        .is_async 1
+"""),
+
+(r"""[i for j in k async for (i) in j]""", 'body[0].value', -1, 'generators', {'raw': False}, r"""async for a in b""", r"""[i for j in k async for a in b]""", r"""
+Module .. ROOT 0,0 -> 0,31
+  .body[1]
+  0] Expr .. 0,0 -> 0,31
+    .value ListComp .. 0,0 -> 0,31
+      .elt Name 'i' Load .. 0,1 -> 0,2
+      .generators[2]
+      0] comprehension .. 0,3 -> 0,13
+        .target Name 'j' Store .. 0,7 -> 0,8
+        .iter Name 'k' Load .. 0,12 -> 0,13
+        .is_async 0
+      1] comprehension .. 0,14 -> 0,30
+        .target Name 'a' Store .. 0,24 -> 0,25
+        .iter Name 'b' Load .. 0,29 -> 0,30
+        .is_async 1
+"""),
+
+(r"""[i for j in k async for (i) in j]""", 'body[0].value', -2, 'generators', {'raw': False}, r"""async for a in b""", r"""[i async for a in b async for (i) in j]""", r"""
+Module .. ROOT 0,0 -> 0,39
+  .body[1]
+  0] Expr .. 0,0 -> 0,39
+    .value ListComp .. 0,0 -> 0,39
+      .elt Name 'i' Load .. 0,1 -> 0,2
+      .generators[2]
+      0] comprehension .. 0,3 -> 0,19
+        .target Name 'a' Store .. 0,13 -> 0,14
+        .iter Name 'b' Load .. 0,18 -> 0,19
+        .is_async 1
+      1] comprehension .. 0,20 -> 0,38
+        .target Name 'i' Store .. 0,31 -> 0,32
+        .iter Name 'j' Load .. 0,37 -> 0,38
+        .is_async 1
+"""),
+
+(r"""[i for j in k async for (i) in j]""", 'body[0].value', -4, 'generators', {'raw': False}, r"""async for a in b""", r"""**IndexError('index out of range')**""", r"""
+"""),
+
+(r"""{i for j in k async for (i) in j}""", 'body[0].value', 0, 'generators', {'raw': False}, r"""**DEL**""", r"""**ValueError('cannot put slice to SetComp.generators')**""", r"""
+"""),
+
+(r"""{i for j in k async for (i) in j}""", 'body[0].value', 0, 'generators', {'raw': False}, r"""async for a in b""", r"""{i async for a in b async for (i) in j}""", r"""
+Module .. ROOT 0,0 -> 0,39
+  .body[1]
+  0] Expr .. 0,0 -> 0,39
+    .value SetComp .. 0,0 -> 0,39
+      .elt Name 'i' Load .. 0,1 -> 0,2
+      .generators[2]
+      0] comprehension .. 0,3 -> 0,19
+        .target Name 'a' Store .. 0,13 -> 0,14
+        .iter Name 'b' Load .. 0,18 -> 0,19
+        .is_async 1
+      1] comprehension .. 0,20 -> 0,38
+        .target Name 'i' Store .. 0,31 -> 0,32
+        .iter Name 'j' Load .. 0,37 -> 0,38
+        .is_async 1
+"""),
+
+(r"""{i for j in k async for (i) in j}""", 'body[0].value', 1, 'generators', {'raw': False}, r"""async for a in b""", r"""{i for j in k async for a in b}""", r"""
+Module .. ROOT 0,0 -> 0,31
+  .body[1]
+  0] Expr .. 0,0 -> 0,31
+    .value SetComp .. 0,0 -> 0,31
+      .elt Name 'i' Load .. 0,1 -> 0,2
+      .generators[2]
+      0] comprehension .. 0,3 -> 0,13
+        .target Name 'j' Store .. 0,7 -> 0,8
+        .iter Name 'k' Load .. 0,12 -> 0,13
+        .is_async 0
+      1] comprehension .. 0,14 -> 0,30
+        .target Name 'a' Store .. 0,24 -> 0,25
+        .iter Name 'b' Load .. 0,29 -> 0,30
+        .is_async 1
+"""),
+
+(r"""{i for j in k async for (i) in j}""", 'body[0].value', -1, 'generators', {'raw': False}, r"""async for a in b""", r"""{i for j in k async for a in b}""", r"""
+Module .. ROOT 0,0 -> 0,31
+  .body[1]
+  0] Expr .. 0,0 -> 0,31
+    .value SetComp .. 0,0 -> 0,31
+      .elt Name 'i' Load .. 0,1 -> 0,2
+      .generators[2]
+      0] comprehension .. 0,3 -> 0,13
+        .target Name 'j' Store .. 0,7 -> 0,8
+        .iter Name 'k' Load .. 0,12 -> 0,13
+        .is_async 0
+      1] comprehension .. 0,14 -> 0,30
+        .target Name 'a' Store .. 0,24 -> 0,25
+        .iter Name 'b' Load .. 0,29 -> 0,30
+        .is_async 1
+"""),
+
+(r"""{i for j in k async for (i) in j}""", 'body[0].value', -2, 'generators', {'raw': False}, r"""async for a in b""", r"""{i async for a in b async for (i) in j}""", r"""
+Module .. ROOT 0,0 -> 0,39
+  .body[1]
+  0] Expr .. 0,0 -> 0,39
+    .value SetComp .. 0,0 -> 0,39
+      .elt Name 'i' Load .. 0,1 -> 0,2
+      .generators[2]
+      0] comprehension .. 0,3 -> 0,19
+        .target Name 'a' Store .. 0,13 -> 0,14
+        .iter Name 'b' Load .. 0,18 -> 0,19
+        .is_async 1
+      1] comprehension .. 0,20 -> 0,38
+        .target Name 'i' Store .. 0,31 -> 0,32
+        .iter Name 'j' Load .. 0,37 -> 0,38
+        .is_async 1
+"""),
+
+(r"""{i for j in k async for (i) in j}""", 'body[0].value', -4, 'generators', {'raw': False}, r"""async for a in b""", r"""**IndexError('index out of range')**""", r"""
+"""),
+
+(r"""{i: i for j in k async for (i) in j}""", 'body[0].value', 0, 'generators', {'raw': False}, r"""**DEL**""", r"""**ValueError('cannot put slice to DictComp.generators')**""", r"""
+"""),
+
+(r"""{i: i for j in k async for (i) in j}""", 'body[0].value', 0, 'generators', {'raw': False}, r"""async for a in b""", r"""{i: i async for a in b async for (i) in j}""", r"""
+Module .. ROOT 0,0 -> 0,42
+  .body[1]
+  0] Expr .. 0,0 -> 0,42
+    .value DictComp .. 0,0 -> 0,42
+      .key Name 'i' Load .. 0,1 -> 0,2
+      .value Name 'i' Load .. 0,4 -> 0,5
+      .generators[2]
+      0] comprehension .. 0,6 -> 0,22
+        .target Name 'a' Store .. 0,16 -> 0,17
+        .iter Name 'b' Load .. 0,21 -> 0,22
+        .is_async 1
+      1] comprehension .. 0,23 -> 0,41
+        .target Name 'i' Store .. 0,34 -> 0,35
+        .iter Name 'j' Load .. 0,40 -> 0,41
+        .is_async 1
+"""),
+
+(r"""{i: i for j in k async for (i) in j}""", 'body[0].value', 1, 'generators', {'raw': False}, r"""async for a in b""", r"""{i: i for j in k async for a in b}""", r"""
+Module .. ROOT 0,0 -> 0,34
+  .body[1]
+  0] Expr .. 0,0 -> 0,34
+    .value DictComp .. 0,0 -> 0,34
+      .key Name 'i' Load .. 0,1 -> 0,2
+      .value Name 'i' Load .. 0,4 -> 0,5
+      .generators[2]
+      0] comprehension .. 0,6 -> 0,16
+        .target Name 'j' Store .. 0,10 -> 0,11
+        .iter Name 'k' Load .. 0,15 -> 0,16
+        .is_async 0
+      1] comprehension .. 0,17 -> 0,33
+        .target Name 'a' Store .. 0,27 -> 0,28
+        .iter Name 'b' Load .. 0,32 -> 0,33
+        .is_async 1
+"""),
+
+(r"""{i: i for j in k async for (i) in j}""", 'body[0].value', -1, 'generators', {'raw': False}, r"""async for a in b""", r"""{i: i for j in k async for a in b}""", r"""
+Module .. ROOT 0,0 -> 0,34
+  .body[1]
+  0] Expr .. 0,0 -> 0,34
+    .value DictComp .. 0,0 -> 0,34
+      .key Name 'i' Load .. 0,1 -> 0,2
+      .value Name 'i' Load .. 0,4 -> 0,5
+      .generators[2]
+      0] comprehension .. 0,6 -> 0,16
+        .target Name 'j' Store .. 0,10 -> 0,11
+        .iter Name 'k' Load .. 0,15 -> 0,16
+        .is_async 0
+      1] comprehension .. 0,17 -> 0,33
+        .target Name 'a' Store .. 0,27 -> 0,28
+        .iter Name 'b' Load .. 0,32 -> 0,33
+        .is_async 1
+"""),
+
+(r"""{i: i for j in k async for (i) in j}""", 'body[0].value', -2, 'generators', {'raw': False}, r"""async for a in b""", r"""{i: i async for a in b async for (i) in j}""", r"""
+Module .. ROOT 0,0 -> 0,42
+  .body[1]
+  0] Expr .. 0,0 -> 0,42
+    .value DictComp .. 0,0 -> 0,42
+      .key Name 'i' Load .. 0,1 -> 0,2
+      .value Name 'i' Load .. 0,4 -> 0,5
+      .generators[2]
+      0] comprehension .. 0,6 -> 0,22
+        .target Name 'a' Store .. 0,16 -> 0,17
+        .iter Name 'b' Load .. 0,21 -> 0,22
+        .is_async 1
+      1] comprehension .. 0,23 -> 0,41
+        .target Name 'i' Store .. 0,34 -> 0,35
+        .iter Name 'j' Load .. 0,40 -> 0,41
+        .is_async 1
+"""),
+
+(r"""{i: i for j in k async for (i) in j}""", 'body[0].value', -4, 'generators', {'raw': False}, r"""async for a in b""", r"""**IndexError('index out of range')**""", r"""
+"""),
+
+(r"""(i for j in k async for (i) in j)""", 'body[0].value', 0, 'generators', {'raw': False}, r"""**DEL**""", r"""**ValueError('cannot put slice to GeneratorExp.generators')**""", r"""
+"""),
+
+(r"""(i for j in k async for (i) in j)""", 'body[0].value', 0, 'generators', {'raw': False}, r"""async for a in b""", r"""(i async for a in b async for (i) in j)""", r"""
+Module .. ROOT 0,0 -> 0,39
+  .body[1]
+  0] Expr .. 0,0 -> 0,39
+    .value GeneratorExp .. 0,0 -> 0,39
+      .elt Name 'i' Load .. 0,1 -> 0,2
+      .generators[2]
+      0] comprehension .. 0,3 -> 0,19
+        .target Name 'a' Store .. 0,13 -> 0,14
+        .iter Name 'b' Load .. 0,18 -> 0,19
+        .is_async 1
+      1] comprehension .. 0,20 -> 0,38
+        .target Name 'i' Store .. 0,31 -> 0,32
+        .iter Name 'j' Load .. 0,37 -> 0,38
+        .is_async 1
+"""),
+
+(r"""(i for j in k async for (i) in j)""", 'body[0].value', 1, 'generators', {'raw': False}, r"""async for a in b""", r"""(i for j in k async for a in b)""", r"""
+Module .. ROOT 0,0 -> 0,31
+  .body[1]
+  0] Expr .. 0,0 -> 0,31
+    .value GeneratorExp .. 0,0 -> 0,31
+      .elt Name 'i' Load .. 0,1 -> 0,2
+      .generators[2]
+      0] comprehension .. 0,3 -> 0,13
+        .target Name 'j' Store .. 0,7 -> 0,8
+        .iter Name 'k' Load .. 0,12 -> 0,13
+        .is_async 0
+      1] comprehension .. 0,14 -> 0,30
+        .target Name 'a' Store .. 0,24 -> 0,25
+        .iter Name 'b' Load .. 0,29 -> 0,30
+        .is_async 1
+"""),
+
+(r"""(i for j in k async for (i) in j)""", 'body[0].value', -1, 'generators', {'raw': False}, r"""async for a in b""", r"""(i for j in k async for a in b)""", r"""
+Module .. ROOT 0,0 -> 0,31
+  .body[1]
+  0] Expr .. 0,0 -> 0,31
+    .value GeneratorExp .. 0,0 -> 0,31
+      .elt Name 'i' Load .. 0,1 -> 0,2
+      .generators[2]
+      0] comprehension .. 0,3 -> 0,13
+        .target Name 'j' Store .. 0,7 -> 0,8
+        .iter Name 'k' Load .. 0,12 -> 0,13
+        .is_async 0
+      1] comprehension .. 0,14 -> 0,30
+        .target Name 'a' Store .. 0,24 -> 0,25
+        .iter Name 'b' Load .. 0,29 -> 0,30
+        .is_async 1
+"""),
+
+(r"""(i for j in k async for (i) in j)""", 'body[0].value', -2, 'generators', {'raw': False}, r"""async for a in b""", r"""(i async for a in b async for (i) in j)""", r"""
+Module .. ROOT 0,0 -> 0,39
+  .body[1]
+  0] Expr .. 0,0 -> 0,39
+    .value GeneratorExp .. 0,0 -> 0,39
+      .elt Name 'i' Load .. 0,1 -> 0,2
+      .generators[2]
+      0] comprehension .. 0,3 -> 0,19
+        .target Name 'a' Store .. 0,13 -> 0,14
+        .iter Name 'b' Load .. 0,18 -> 0,19
+        .is_async 1
+      1] comprehension .. 0,20 -> 0,38
+        .target Name 'i' Store .. 0,31 -> 0,32
+        .iter Name 'j' Load .. 0,37 -> 0,38
+        .is_async 1
+"""),
+
+(r"""(i for j in k async for (i) in j)""", 'body[0].value', -4, 'generators', {'raw': False}, r"""async for a in b""", r"""**IndexError('index out of range')**""", r"""
+"""),
+
 ]  # END OF PUT_ONE_DATA
 
 PUT_RAW_DATA = [

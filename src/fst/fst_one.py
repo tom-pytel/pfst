@@ -11,7 +11,7 @@ from .shared import (
     STMTISH, Code, NodeTypeError, astfield, fstloc,
     _next_src, _prev_src, _next_find, _prev_find, _next_find_re, _fixup_one_index,
 )
-from .fst_parse import _code_as_type_param, _code_as_pattern, _code_as_expr
+from .fst_parse import _code_as_comprehension, _code_as_type_param, _code_as_pattern, _code_as_expr
 
 
 # ----------------------------------------------------------------------------------------------------------------------
@@ -529,13 +529,14 @@ def _one_info_constant(self: 'FST', static: onestatic, idx: int | None, field: s
 def _one_info_exprish_required(self: 'FST', static: onestatic, idx: int | None, field: str) -> oneinfo:
     return _oneinfo_default
 
-_onestatic_exprish_required    = onestatic(_one_info_exprish_required)
-_onestatic_pattern_required    = onestatic(_one_info_exprish_required, coerce=_code_as_pattern)
-_onestatic_type_param_required = onestatic(_one_info_exprish_required, coerce=_code_as_type_param)
-_onestatic_target_Name         = onestatic(_one_info_exprish_required, Name, ctx=Store)
-_onestatic_target_single       = onestatic(_one_info_exprish_required, (Name, Attribute, Subscript), ctx=Store)
-_onestatic_target              = onestatic(_one_info_exprish_required, (Name, Attribute, Subscript, Tuple, List), ctx=Store)
-_onestatic_For_target          = onestatic(_one_info_exprish_required, (Name, Tuple, List), ctx=Store)
+_onestatic_exprish_required       = onestatic(_one_info_exprish_required)
+_onestatic_pattern_required       = onestatic(_one_info_exprish_required, coerce=_code_as_pattern)
+_onestatic_type_param_required    = onestatic(_one_info_exprish_required, coerce=_code_as_type_param)
+_onestatic_comprehension_required = onestatic(_one_info_exprish_required, coerce=_code_as_comprehension)
+_onestatic_target_Name            = onestatic(_one_info_exprish_required, Name, ctx=Store)
+_onestatic_target_single          = onestatic(_one_info_exprish_required, (Name, Attribute, Subscript), ctx=Store)
+_onestatic_target                 = onestatic(_one_info_exprish_required, (Name, Attribute, Subscript, Tuple, List), ctx=Store)
+_onestatic_For_target             = onestatic(_one_info_exprish_required, (Name, Tuple, List), ctx=Store)
 
 def _one_info_identifier_required(self: 'FST', static: onestatic, idx: int | None, field: str, prefix: str | None = None,
                                  ) -> oneinfo:  # required, cannot delete or put new
@@ -983,14 +984,14 @@ _PUT_ONE_HANDLERS = {
     (Dict, 'values'):                     (_put_one_exprish_required, None, _onestatic_exprish_required), # expr*
     (Set, 'elts'):                        (_put_one_tuple_list_or_set, None, None), # expr*
     (ListComp, 'elt'):                    (_put_one_exprish_required, None, _onestatic_exprish_required), # expr
-    # (ListComp, 'generators'):             (_put_one_default, None, None), # comprehension*                                  - slice
+    (ListComp, 'generators'):             (_put_one_exprish_sliceable, None, _onestatic_comprehension_required), # comprehension*
     (SetComp, 'elt'):                     (_put_one_exprish_required, None, _onestatic_exprish_required), # expr
-    # (SetComp, 'generators'):              (_put_one_default, None, None), # comprehension*                                  - slice
+    (SetComp, 'generators'):              (_put_one_exprish_sliceable, None, _onestatic_comprehension_required), # comprehension*
     (DictComp, 'key'):                    (_put_one_exprish_required, None, _onestatic_exprish_required), # expr
     (DictComp, 'value'):                  (_put_one_exprish_required, None, _onestatic_exprish_required), # expr
-    # (DictComp, 'generators'):             (_put_one_default, None, None), # comprehension*                                  - slice
+    (DictComp, 'generators'):             (_put_one_exprish_sliceable, None, _onestatic_comprehension_required), # comprehension*
     (GeneratorExp, 'elt'):                (_put_one_exprish_required, None, _onestatic_exprish_required), # expr
-    # (GeneratorExp, 'generators'):         (_put_one_default, None, None), # comprehension*                                  - slice
+    (GeneratorExp, 'generators'):         (_put_one_exprish_sliceable, None, _onestatic_comprehension_required), # comprehension*
     (Await, 'value'):                     (_put_one_exprish_required, None, _onestatic_exprish_required), # expr
     (Yield, 'value'):                     (_put_one_exprish_optional, None, onestatic(_one_info_Yield_value)), # expr?
     (YieldFrom, 'value'):                 (_put_one_exprish_required, None, _onestatic_exprish_required), # expr
