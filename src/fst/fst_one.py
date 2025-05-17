@@ -52,11 +52,12 @@ def _get_one(self: 'FST', idx: int | None, field: str, cut: bool, **options) -> 
 
 class onestatic(NamedTuple):
     getinfo:  Callable[['FST', 'onestatic', int | None, str], 'oneinfo'] | None
-    restrict: type[AST] | tuple[type[AST]] | list[type[AST]] | Callable[[AST], bool] | None = None
-    coerce:   Callable[['FST', Code], 'FST']                                                = _code_as_expr
-    ctx:      type[expr_context]                                                            = Load
-    delstr:   str                                                                           = ''  # or '**'
-    suffix:   str                                                                           = ''  # or ': ' for dict '**'
+    # restrict: type[AST] | tuple[type[AST]] | list[type[AST]] | Callable[[AST], bool] | None = None
+    restrict: type[AST] | tuple[type[AST]] | Callable[[AST], bool] | None = None
+    coerce:   Callable[['FST', Code], 'FST']                              = _code_as_expr
+    ctx:      type[expr_context]                                          = Load
+    delstr:   str                                                         = ''  # or '**'
+    suffix:   str                                                         = ''  # or ': ' for dict '**'
 
 
 class oneinfo(NamedTuple):
@@ -109,12 +110,17 @@ def _validate_put(self: 'FST', code: Code | None, idx: int | None, field: str, c
 
 def _validate_put_ast(self: 'FST', put_ast: AST, idx: int | None, field: str, static: onestatic):
     if restrict := static.restrict:
-        if isinstance(restrict, list):  # list means these types not allowed
-            if isinstance(put_ast, tuple(restrict)):
-                raise NodeTypeError(f'{self.a.__class__.__name__}.{field}{" " if idx is None else f"[{idx}] "}'
-                                    f'cannot be {put_ast.__class__.__name__}')
+        # if isinstance(restrict, list):  # list means these types not allowed
+        #     if isinstance(put_ast, tuple(restrict)):
+        #         raise NodeTypeError(f'{self.a.__class__.__name__}.{field}{" " if idx is None else f"[{idx}] "}'
+        #                             f'cannot be {put_ast.__class__.__name__}')
 
-        elif isinstance(restrict, FunctionType):
+        # elif isinstance(restrict, FunctionType):
+        #     if not restrict(put_ast):
+        #         raise NodeTypeError(f'invalid value for {self.a.__class__.__name__}.{field}' +
+        #                             ('' if idx is None else f'[{idx}]'))
+
+        if isinstance(restrict, FunctionType):
             if not restrict(put_ast):
                 raise NodeTypeError(f'invalid value for {self.a.__class__.__name__}.{field}' +
                                     ('' if idx is None else f'[{idx}]'))
@@ -926,7 +932,7 @@ _PUT_ONE_HANDLERS = {
     (AugAssign, 'op'):                    (_put_one_op, None, None), # operator
     (AugAssign, 'value'):                 (_put_one_exprish_required, None, _onestatic_exprish_required), # expr
     (AnnAssign, 'target'):                (_put_one_exprish_required, None, _onestatic_target_single), # expr
-    (AnnAssign, 'annotation'):            (_put_one_exprish_required, None, onestatic(_one_info_exprish_required, [Lambda, Yield, YieldFrom, Await, NamedExpr])), # expr
+    (AnnAssign, 'annotation'):            (_put_one_exprish_required, None, onestatic(_one_info_exprish_required)), # expr  - exclude [Lambda, Yield, YieldFrom, Await, NamedExpr]?
     (AnnAssign, 'value'):                 (_put_one_exprish_optional, None, onestatic(_one_info_AnnAssign_value)), # expr?
     (For, 'target'):                      (_put_one_exprish_required, None, _onestatic_For_target), # expr
     (For, 'iter'):                        (_put_one_exprish_required, None, _onestatic_exprish_required), # expr
@@ -1034,7 +1040,7 @@ _PUT_ONE_HANDLERS = {
     (arguments, 'kw_defaults'):           (_put_one_exprish_optional, None, onestatic(_one_info_arguments_kw_defaults)), # expr*
     # (arguments, 'kwarg'):                 (_put_one_default, None, None), # arg?                                            - special parse 'arg'
     (arg, 'arg'):                         (_put_one_identifier_required, None, _onestatic_identifier_required), # identifier
-    (arg, 'annotation'):                  (_put_one_exprish_optional, None, onestatic(_one_info_arg_annotation, [Lambda, Yield, YieldFrom, Await, NamedExpr])), # expr?
+    (arg, 'annotation'):                  (_put_one_exprish_optional, None, onestatic(_one_info_arg_annotation)), # expr?  - exclude [Lambda, Yield, YieldFrom, Await, NamedExpr]?
     (keyword, 'arg'):                     (_put_one_identifier_optional, None, onestatic(_one_info_keyword_arg, coerce=None, delstr='**', suffix='=')), # identifier?
     (keyword, 'value'):                   (_put_one_exprish_required, None, _onestatic_exprish_required), # expr
     (alias, 'name'):                      (_put_one_identifier_required, None, _onestatic_identifier_required), # identifier

@@ -16281,7 +16281,14 @@ Module .. ROOT 0,0 -> 0,6
     .simple 1
 """),
 
-(r"""i: j""", 'body[0]', None, 'annotation', {'raw': False}, r"""(yield 1)""", r"""**NodeTypeError('AnnAssign.annotation cannot be Yield')**""", r"""
+(r"""i: j""", 'body[0]', None, 'annotation', {'raw': False}, r"""(yield 1)""", r"""i: (yield 1)""", r"""
+Module .. ROOT 0,0 -> 0,12
+  .body[1]
+  0] AnnAssign .. 0,0 -> 0,12
+    .target Name 'i' Store .. 0,0 -> 0,1
+    .annotation Yield .. 0,4 -> 0,11
+      .value Constant 1 .. 0,10 -> 0,11
+    .simple 1
 """),
 
 (r"""i: j""", 'body[0]', None, 'annotation', {'raw': False}, r"""new""", r"""i: new""", r"""
@@ -17086,7 +17093,19 @@ Module .. ROOT 0,0 -> 0,19
     0] Pass .. 0,15 -> 0,19
 """),
 
-(r"""def f(a): pass""", 'body[0].args.args[0]', None, 'annotation', {'raw': False}, r"""lambda: x""", r"""**NodeTypeError('arg.annotation cannot be Lambda')**""", r"""
+(r"""def f(a): pass""", 'body[0].args.args[0]', None, 'annotation', {'raw': False}, r"""lambda: x""", r"""def f(a: lambda: x): pass""", r"""
+Module .. ROOT 0,0 -> 0,25
+  .body[1]
+  0] FunctionDef .. 0,0 -> 0,25
+    .name 'f'
+    .args arguments .. 0,6 -> 0,18
+      .args[1]
+      0] arg .. 0,6 -> 0,18
+        .arg 'a'
+        .annotation Lambda .. 0,9 -> 0,18
+          .body Name 'x' Load .. 0,17 -> 0,18
+    .body[1]
+    0] Pass .. 0,21 -> 0,25
 """),
 
 (r"""def f(a :  ( b ) ): pass""", 'body[0].args.args[0]', None, 'annotation', {'raw': False}, r"""new""", r"""def f(a :  new ): pass""", r"""
