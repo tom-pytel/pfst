@@ -21619,6 +21619,532 @@ Module .. ROOT 0,0 -> 0,20
           .is_async 0
 """),
 
+(r"""match a:
+ case 1 as b, (2): pass""", 'body[0].cases[0].pattern', 0, None, {'raw': False}, r"""**DEL**""", r"""**ValueError('cannot put slice to MatchSequence.patterns')**""", r"""
+"""),
+
+(r"""match a:
+ case 1 as b, (2): pass""", 'body[0].cases[0].pattern', 0, None, {'raw': False}, r"""new""", r"""match a:
+ case new, (2): pass""", r"""
+Module .. ROOT 0,0 -> 1,20
+  .body[1]
+  0] Match .. 0,0 -> 1,20
+    .subject Name 'a' Load .. 0,6 -> 0,7
+    .cases[1]
+    0] match_case .. 1,1 -> 1,20
+      .pattern MatchSequence .. 1,6 -> 1,14
+        .patterns[2]
+        0] MatchAs .. 1,6 -> 1,9
+          .name 'new'
+        1] MatchValue .. 1,12 -> 1,13
+          .value Constant 2 .. 1,12 -> 1,13
+      .body[1]
+      0] Pass .. 1,16 -> 1,20
+"""),
+
+(r"""match a:
+ case 1 as b, (2): pass""", 'body[0].cases[0].pattern', 1, None, {'raw': False}, r"""new""", r"""match a:
+ case 1 as b, new: pass""", r"""
+Module .. ROOT 0,0 -> 1,23
+  .body[1]
+  0] Match .. 0,0 -> 1,23
+    .subject Name 'a' Load .. 0,6 -> 0,7
+    .cases[1]
+    0] match_case .. 1,1 -> 1,23
+      .pattern MatchSequence .. 1,6 -> 1,17
+        .patterns[2]
+        0] MatchAs .. 1,6 -> 1,12
+          .pattern MatchValue .. 1,6 -> 1,7
+            .value Constant 1 .. 1,6 -> 1,7
+          .name 'b'
+        1] MatchAs .. 1,14 -> 1,17
+          .name 'new'
+      .body[1]
+      0] Pass .. 1,19 -> 1,23
+"""),
+
+(r"""match a:
+ case 1 as b, (2): pass""", 'body[0].cases[0].pattern', -1, None, {'raw': False}, r"""{1: c, **d}""", r"""match a:
+ case 1 as b, {1: c, **d}: pass""", r"""
+Module .. ROOT 0,0 -> 1,31
+  .body[1]
+  0] Match .. 0,0 -> 1,31
+    .subject Name 'a' Load .. 0,6 -> 0,7
+    .cases[1]
+    0] match_case .. 1,1 -> 1,31
+      .pattern MatchSequence .. 1,6 -> 1,25
+        .patterns[2]
+        0] MatchAs .. 1,6 -> 1,12
+          .pattern MatchValue .. 1,6 -> 1,7
+            .value Constant 1 .. 1,6 -> 1,7
+          .name 'b'
+        1] MatchMapping .. 1,14 -> 1,25
+          .keys[1]
+          0] Constant 1 .. 1,15 -> 1,16
+          .patterns[1]
+          0] MatchAs .. 1,18 -> 1,19
+            .name 'c'
+          .rest 'd'
+      .body[1]
+      0] Pass .. 1,27 -> 1,31
+"""),
+
+(r"""match a:
+ case 1 as b, (2): pass""", 'body[0].cases[0].pattern', -2, None, {'raw': False}, r"""f(c=d)""", r"""match a:
+ case f(c=d), (2): pass""", r"""
+Module .. ROOT 0,0 -> 1,23
+  .body[1]
+  0] Match .. 0,0 -> 1,23
+    .subject Name 'a' Load .. 0,6 -> 0,7
+    .cases[1]
+    0] match_case .. 1,1 -> 1,23
+      .pattern MatchSequence .. 1,6 -> 1,17
+        .patterns[2]
+        0] MatchClass .. 1,6 -> 1,12
+          .cls Name 'f' Load .. 1,6 -> 1,7
+          .kwd_attrs[1]
+          0] 'c'
+          .kwd_patterns[1]
+          0] MatchAs .. 1,10 -> 1,11
+            .name 'd'
+        1] MatchValue .. 1,15 -> 1,16
+          .value Constant 2 .. 1,15 -> 1,16
+      .body[1]
+      0] Pass .. 1,19 -> 1,23
+"""),
+
+(r"""match a:
+ case 1 as b, (2): pass""", 'body[0].cases[0].pattern', -4, None, {'raw': False}, r"""new""", r"""**IndexError('index out of range')**""", r"""
+"""),
+
+(r"""match a:
+ case {1: a, 2: (b), **rest}: pass""", 'body[0].cases[0].pattern', 0, 'patterns', {'raw': False}, r"""**DEL**""", r"""**ValueError('cannot put slice to MatchMapping.patterns')**""", r"""
+"""),
+
+(r"""match a:
+ case {1: a, 2: (b), **rest}: pass""", 'body[0].cases[0].pattern', 0, 'patterns', {'raw': False}, r"""new""", r"""match a:
+ case {1: new, 2: (b), **rest}: pass""", r"""
+Module .. ROOT 0,0 -> 1,36
+  .body[1]
+  0] Match .. 0,0 -> 1,36
+    .subject Name 'a' Load .. 0,6 -> 0,7
+    .cases[1]
+    0] match_case .. 1,1 -> 1,36
+      .pattern MatchMapping .. 1,6 -> 1,30
+        .keys[2]
+        0] Constant 1 .. 1,7 -> 1,8
+        1] Constant 2 .. 1,15 -> 1,16
+        .patterns[2]
+        0] MatchAs .. 1,10 -> 1,13
+          .name 'new'
+        1] MatchAs .. 1,19 -> 1,20
+          .name 'b'
+        .rest 'rest'
+      .body[1]
+      0] Pass .. 1,32 -> 1,36
+"""),
+
+(r"""match a:
+ case {1: a, 2: (b), **rest}: pass""", 'body[0].cases[0].pattern', 1, 'patterns', {'raw': False}, r"""new""", r"""match a:
+ case {1: a, 2: new, **rest}: pass""", r"""
+Module .. ROOT 0,0 -> 1,34
+  .body[1]
+  0] Match .. 0,0 -> 1,34
+    .subject Name 'a' Load .. 0,6 -> 0,7
+    .cases[1]
+    0] match_case .. 1,1 -> 1,34
+      .pattern MatchMapping .. 1,6 -> 1,28
+        .keys[2]
+        0] Constant 1 .. 1,7 -> 1,8
+        1] Constant 2 .. 1,13 -> 1,14
+        .patterns[2]
+        0] MatchAs .. 1,10 -> 1,11
+          .name 'a'
+        1] MatchAs .. 1,16 -> 1,19
+          .name 'new'
+        .rest 'rest'
+      .body[1]
+      0] Pass .. 1,30 -> 1,34
+"""),
+
+(r"""match a:
+ case {1: a, 2: (b), **rest}: pass""", 'body[0].cases[0].pattern', -1, 'patterns', {'raw': False}, r"""{1: c, **d}""", r"""match a:
+ case {1: a, 2: {1: c, **d}, **rest}: pass""", r"""
+Module .. ROOT 0,0 -> 1,42
+  .body[1]
+  0] Match .. 0,0 -> 1,42
+    .subject Name 'a' Load .. 0,6 -> 0,7
+    .cases[1]
+    0] match_case .. 1,1 -> 1,42
+      .pattern MatchMapping .. 1,6 -> 1,36
+        .keys[2]
+        0] Constant 1 .. 1,7 -> 1,8
+        1] Constant 2 .. 1,13 -> 1,14
+        .patterns[2]
+        0] MatchAs .. 1,10 -> 1,11
+          .name 'a'
+        1] MatchMapping .. 1,16 -> 1,27
+          .keys[1]
+          0] Constant 1 .. 1,17 -> 1,18
+          .patterns[1]
+          0] MatchAs .. 1,20 -> 1,21
+            .name 'c'
+          .rest 'd'
+        .rest 'rest'
+      .body[1]
+      0] Pass .. 1,38 -> 1,42
+"""),
+
+(r"""match a:
+ case {1: a, 2: (b), **rest}: pass""", 'body[0].cases[0].pattern', -2, 'patterns', {'raw': False}, r"""f(c=d)""", r"""match a:
+ case {1: f(c=d), 2: (b), **rest}: pass""", r"""
+Module .. ROOT 0,0 -> 1,39
+  .body[1]
+  0] Match .. 0,0 -> 1,39
+    .subject Name 'a' Load .. 0,6 -> 0,7
+    .cases[1]
+    0] match_case .. 1,1 -> 1,39
+      .pattern MatchMapping .. 1,6 -> 1,33
+        .keys[2]
+        0] Constant 1 .. 1,7 -> 1,8
+        1] Constant 2 .. 1,18 -> 1,19
+        .patterns[2]
+        0] MatchClass .. 1,10 -> 1,16
+          .cls Name 'f' Load .. 1,10 -> 1,11
+          .kwd_attrs[1]
+          0] 'c'
+          .kwd_patterns[1]
+          0] MatchAs .. 1,14 -> 1,15
+            .name 'd'
+        1] MatchAs .. 1,22 -> 1,23
+          .name 'b'
+        .rest 'rest'
+      .body[1]
+      0] Pass .. 1,35 -> 1,39
+"""),
+
+(r"""match a:
+ case {1: a, 2: (b), **rest}: pass""", 'body[0].cases[0].pattern', -4, 'patterns', {'raw': False}, r"""new""", r"""**IndexError('index out of range')**""", r"""
+"""),
+
+(r"""match a:
+ case c(a, (b)): pass""", 'body[0].cases[0].pattern', 0, 'patterns', {'raw': False}, r"""**DEL**""", r"""**ValueError('cannot put slice to MatchClass.patterns')**""", r"""
+"""),
+
+(r"""match a:
+ case c(a, (b)): pass""", 'body[0].cases[0].pattern', 0, 'patterns', {'raw': False}, r"""new""", r"""match a:
+ case c(new, (b)): pass""", r"""
+Module .. ROOT 0,0 -> 1,23
+  .body[1]
+  0] Match .. 0,0 -> 1,23
+    .subject Name 'a' Load .. 0,6 -> 0,7
+    .cases[1]
+    0] match_case .. 1,1 -> 1,23
+      .pattern MatchClass .. 1,6 -> 1,17
+        .cls Name 'c' Load .. 1,6 -> 1,7
+        .patterns[2]
+        0] MatchAs .. 1,8 -> 1,11
+          .name 'new'
+        1] MatchAs .. 1,14 -> 1,15
+          .name 'b'
+      .body[1]
+      0] Pass .. 1,19 -> 1,23
+"""),
+
+(r"""match a:
+ case c(a, (b)): pass""", 'body[0].cases[0].pattern', 1, 'patterns', {'raw': False}, r"""new""", r"""match a:
+ case c(a, new): pass""", r"""
+Module .. ROOT 0,0 -> 1,21
+  .body[1]
+  0] Match .. 0,0 -> 1,21
+    .subject Name 'a' Load .. 0,6 -> 0,7
+    .cases[1]
+    0] match_case .. 1,1 -> 1,21
+      .pattern MatchClass .. 1,6 -> 1,15
+        .cls Name 'c' Load .. 1,6 -> 1,7
+        .patterns[2]
+        0] MatchAs .. 1,8 -> 1,9
+          .name 'a'
+        1] MatchAs .. 1,11 -> 1,14
+          .name 'new'
+      .body[1]
+      0] Pass .. 1,17 -> 1,21
+"""),
+
+(r"""match a:
+ case c(a, (b)): pass""", 'body[0].cases[0].pattern', -1, 'patterns', {'raw': False}, r"""{1: c, **d}""", r"""match a:
+ case c(a, {1: c, **d}): pass""", r"""
+Module .. ROOT 0,0 -> 1,29
+  .body[1]
+  0] Match .. 0,0 -> 1,29
+    .subject Name 'a' Load .. 0,6 -> 0,7
+    .cases[1]
+    0] match_case .. 1,1 -> 1,29
+      .pattern MatchClass .. 1,6 -> 1,23
+        .cls Name 'c' Load .. 1,6 -> 1,7
+        .patterns[2]
+        0] MatchAs .. 1,8 -> 1,9
+          .name 'a'
+        1] MatchMapping .. 1,11 -> 1,22
+          .keys[1]
+          0] Constant 1 .. 1,12 -> 1,13
+          .patterns[1]
+          0] MatchAs .. 1,15 -> 1,16
+            .name 'c'
+          .rest 'd'
+      .body[1]
+      0] Pass .. 1,25 -> 1,29
+"""),
+
+(r"""match a:
+ case c(a, (b)): pass""", 'body[0].cases[0].pattern', -2, 'patterns', {'raw': False}, r"""f(c=d)""", r"""match a:
+ case c(f(c=d), (b)): pass""", r"""
+Module .. ROOT 0,0 -> 1,26
+  .body[1]
+  0] Match .. 0,0 -> 1,26
+    .subject Name 'a' Load .. 0,6 -> 0,7
+    .cases[1]
+    0] match_case .. 1,1 -> 1,26
+      .pattern MatchClass .. 1,6 -> 1,20
+        .cls Name 'c' Load .. 1,6 -> 1,7
+        .patterns[2]
+        0] MatchClass .. 1,8 -> 1,14
+          .cls Name 'f' Load .. 1,8 -> 1,9
+          .kwd_attrs[1]
+          0] 'c'
+          .kwd_patterns[1]
+          0] MatchAs .. 1,12 -> 1,13
+            .name 'd'
+        1] MatchAs .. 1,17 -> 1,18
+          .name 'b'
+      .body[1]
+      0] Pass .. 1,22 -> 1,26
+"""),
+
+(r"""match a:
+ case c(a, (b)): pass""", 'body[0].cases[0].pattern', -4, 'patterns', {'raw': False}, r"""new""", r"""**IndexError('index out of range')**""", r"""
+"""),
+
+(r"""match a:
+ case c(a={1: c}, b=(d())): pass""", 'body[0].cases[0].pattern', 0, 'kwd_patterns', {'raw': False}, r"""**DEL**""", r"""**ValueError('cannot put slice to MatchClass.kwd_patterns')**""", r"""
+"""),
+
+(r"""match a:
+ case c(a={1: c}, b=(d())): pass""", 'body[0].cases[0].pattern', 0, 'kwd_patterns', {'raw': False}, r"""new""", r"""match a:
+ case c(a=new, b=(d())): pass""", r"""
+Module .. ROOT 0,0 -> 1,29
+  .body[1]
+  0] Match .. 0,0 -> 1,29
+    .subject Name 'a' Load .. 0,6 -> 0,7
+    .cases[1]
+    0] match_case .. 1,1 -> 1,29
+      .pattern MatchClass .. 1,6 -> 1,23
+        .cls Name 'c' Load .. 1,6 -> 1,7
+        .kwd_attrs[2]
+        0] 'a'
+        1] 'b'
+        .kwd_patterns[2]
+        0] MatchAs .. 1,10 -> 1,13
+          .name 'new'
+        1] MatchClass .. 1,18 -> 1,21
+          .cls Name 'd' Load .. 1,18 -> 1,19
+      .body[1]
+      0] Pass .. 1,25 -> 1,29
+"""),
+
+(r"""match a:
+ case c(a={1: c}, b=(d())): pass""", 'body[0].cases[0].pattern', 1, 'kwd_patterns', {'raw': False}, r"""new""", r"""match a:
+ case c(a={1: c}, b=new): pass""", r"""
+Module .. ROOT 0,0 -> 1,30
+  .body[1]
+  0] Match .. 0,0 -> 1,30
+    .subject Name 'a' Load .. 0,6 -> 0,7
+    .cases[1]
+    0] match_case .. 1,1 -> 1,30
+      .pattern MatchClass .. 1,6 -> 1,24
+        .cls Name 'c' Load .. 1,6 -> 1,7
+        .kwd_attrs[2]
+        0] 'a'
+        1] 'b'
+        .kwd_patterns[2]
+        0] MatchMapping .. 1,10 -> 1,16
+          .keys[1]
+          0] Constant 1 .. 1,11 -> 1,12
+          .patterns[1]
+          0] MatchAs .. 1,14 -> 1,15
+            .name 'c'
+        1] MatchAs .. 1,20 -> 1,23
+          .name 'new'
+      .body[1]
+      0] Pass .. 1,26 -> 1,30
+"""),
+
+(r"""match a:
+ case c(a={1: c}, b=(d())): pass""", 'body[0].cases[0].pattern', -1, 'kwd_patterns', {'raw': False}, r"""{1: c, **d}""", r"""match a:
+ case c(a={1: c}, b={1: c, **d}): pass""", r"""
+Module .. ROOT 0,0 -> 1,38
+  .body[1]
+  0] Match .. 0,0 -> 1,38
+    .subject Name 'a' Load .. 0,6 -> 0,7
+    .cases[1]
+    0] match_case .. 1,1 -> 1,38
+      .pattern MatchClass .. 1,6 -> 1,32
+        .cls Name 'c' Load .. 1,6 -> 1,7
+        .kwd_attrs[2]
+        0] 'a'
+        1] 'b'
+        .kwd_patterns[2]
+        0] MatchMapping .. 1,10 -> 1,16
+          .keys[1]
+          0] Constant 1 .. 1,11 -> 1,12
+          .patterns[1]
+          0] MatchAs .. 1,14 -> 1,15
+            .name 'c'
+        1] MatchMapping .. 1,20 -> 1,31
+          .keys[1]
+          0] Constant 1 .. 1,21 -> 1,22
+          .patterns[1]
+          0] MatchAs .. 1,24 -> 1,25
+            .name 'c'
+          .rest 'd'
+      .body[1]
+      0] Pass .. 1,34 -> 1,38
+"""),
+
+(r"""match a:
+ case c(a={1: c}, b=(d())): pass""", 'body[0].cases[0].pattern', -2, 'kwd_patterns', {'raw': False}, r"""f(c=d)""", r"""match a:
+ case c(a=f(c=d), b=(d())): pass""", r"""
+Module .. ROOT 0,0 -> 1,32
+  .body[1]
+  0] Match .. 0,0 -> 1,32
+    .subject Name 'a' Load .. 0,6 -> 0,7
+    .cases[1]
+    0] match_case .. 1,1 -> 1,32
+      .pattern MatchClass .. 1,6 -> 1,26
+        .cls Name 'c' Load .. 1,6 -> 1,7
+        .kwd_attrs[2]
+        0] 'a'
+        1] 'b'
+        .kwd_patterns[2]
+        0] MatchClass .. 1,10 -> 1,16
+          .cls Name 'f' Load .. 1,10 -> 1,11
+          .kwd_attrs[1]
+          0] 'c'
+          .kwd_patterns[1]
+          0] MatchAs .. 1,14 -> 1,15
+            .name 'd'
+        1] MatchClass .. 1,21 -> 1,24
+          .cls Name 'd' Load .. 1,21 -> 1,22
+      .body[1]
+      0] Pass .. 1,28 -> 1,32
+"""),
+
+(r"""match a:
+ case c(a={1: c}, b=(d())): pass""", 'body[0].cases[0].pattern', -4, 'kwd_patterns', {'raw': False}, r"""new""", r"""**IndexError('index out of range')**""", r"""
+"""),
+
+(r"""match a:
+ case {1: c} | (d()): pass""", 'body[0].cases[0].pattern', 0, None, {'raw': False}, r"""**DEL**""", r"""**ValueError('cannot put slice to MatchOr.patterns')**""", r"""
+"""),
+
+(r"""match a:
+ case {1: c} | (d()): pass""", 'body[0].cases[0].pattern', 0, None, {'raw': False}, r"""new""", r"""match a:
+ case new | (d()): pass""", r"""
+Module .. ROOT 0,0 -> 1,23
+  .body[1]
+  0] Match .. 0,0 -> 1,23
+    .subject Name 'a' Load .. 0,6 -> 0,7
+    .cases[1]
+    0] match_case .. 1,1 -> 1,23
+      .pattern MatchOr .. 1,6 -> 1,17
+        .patterns[2]
+        0] MatchAs .. 1,6 -> 1,9
+          .name 'new'
+        1] MatchClass .. 1,13 -> 1,16
+          .cls Name 'd' Load .. 1,13 -> 1,14
+      .body[1]
+      0] Pass .. 1,19 -> 1,23
+"""),
+
+(r"""match a:
+ case {1: c} | (d()): pass""", 'body[0].cases[0].pattern', 1, None, {'raw': False}, r"""new""", r"""match a:
+ case {1: c} | new: pass""", r"""
+Module .. ROOT 0,0 -> 1,24
+  .body[1]
+  0] Match .. 0,0 -> 1,24
+    .subject Name 'a' Load .. 0,6 -> 0,7
+    .cases[1]
+    0] match_case .. 1,1 -> 1,24
+      .pattern MatchOr .. 1,6 -> 1,18
+        .patterns[2]
+        0] MatchMapping .. 1,6 -> 1,12
+          .keys[1]
+          0] Constant 1 .. 1,7 -> 1,8
+          .patterns[1]
+          0] MatchAs .. 1,10 -> 1,11
+            .name 'c'
+        1] MatchAs .. 1,15 -> 1,18
+          .name 'new'
+      .body[1]
+      0] Pass .. 1,20 -> 1,24
+"""),
+
+(r"""match a:
+ case {1: c} | (d()): pass""", 'body[0].cases[0].pattern', -1, None, {'raw': False}, r"""{1: c, **d}""", r"""match a:
+ case {1: c} | {1: c, **d}: pass""", r"""
+Module .. ROOT 0,0 -> 1,32
+  .body[1]
+  0] Match .. 0,0 -> 1,32
+    .subject Name 'a' Load .. 0,6 -> 0,7
+    .cases[1]
+    0] match_case .. 1,1 -> 1,32
+      .pattern MatchOr .. 1,6 -> 1,26
+        .patterns[2]
+        0] MatchMapping .. 1,6 -> 1,12
+          .keys[1]
+          0] Constant 1 .. 1,7 -> 1,8
+          .patterns[1]
+          0] MatchAs .. 1,10 -> 1,11
+            .name 'c'
+        1] MatchMapping .. 1,15 -> 1,26
+          .keys[1]
+          0] Constant 1 .. 1,16 -> 1,17
+          .patterns[1]
+          0] MatchAs .. 1,19 -> 1,20
+            .name 'c'
+          .rest 'd'
+      .body[1]
+      0] Pass .. 1,28 -> 1,32
+"""),
+
+(r"""match a:
+ case {1: c} | (d()): pass""", 'body[0].cases[0].pattern', -2, None, {'raw': False}, r"""f(c=d)""", r"""match a:
+ case f(c=d) | (d()): pass""", r"""
+Module .. ROOT 0,0 -> 1,26
+  .body[1]
+  0] Match .. 0,0 -> 1,26
+    .subject Name 'a' Load .. 0,6 -> 0,7
+    .cases[1]
+    0] match_case .. 1,1 -> 1,26
+      .pattern MatchOr .. 1,6 -> 1,20
+        .patterns[2]
+        0] MatchClass .. 1,6 -> 1,12
+          .cls Name 'f' Load .. 1,6 -> 1,7
+          .kwd_attrs[1]
+          0] 'c'
+          .kwd_patterns[1]
+          0] MatchAs .. 1,10 -> 1,11
+            .name 'd'
+        1] MatchClass .. 1,16 -> 1,19
+          .cls Name 'd' Load .. 1,16 -> 1,17
+      .body[1]
+      0] Pass .. 1,22 -> 1,26
+"""),
+
+(r"""match a:
+ case {1: c} | (d()): pass""", 'body[0].cases[0].pattern', -4, None, {'raw': False}, r"""new""", r"""**IndexError('index out of range')**""", r"""
+"""),
+
 ]  # END OF PUT_ONE_DATA
 
 PUT_RAW_DATA = [

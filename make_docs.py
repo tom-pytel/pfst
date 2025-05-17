@@ -112,6 +112,7 @@ if __name__ == "__main__":
     for f in all_funcs:  # change all 'FST' __annotations__ to point to actual FST class
         if anns := getattr(f, '__annotations__'):
             for a, v in anns.items():
+                # print(f, a, v)  # DEBUG!
                 if v in allFST:
                     anns[a] = FST
                 elif (w := fixTyping(v)) is not v:

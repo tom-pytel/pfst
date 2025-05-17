@@ -636,7 +636,8 @@ class FST:
         """Set defaults for `options` parameters.
 
         **Parameters:**
-        - `options`: Key / values of parameters to set.
+        - `options`: Key / values of parameters to set. These can also be passed to various methods and override the
+            defaults set here.
             - `docstr`: Which docstrings are indentable / dedentable.
                 - `False`: None.
                 - `True`: All `Expr` multiline strings (as they serve no coding purpose).
