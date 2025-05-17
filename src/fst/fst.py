@@ -356,7 +356,7 @@ class FST:
 
     def __repr__(self) -> str:
         tail = self._repr_tail()
-        head = f'<fst.{(a := self.a).__class__.__name__} 0x{id(a):x}{tail}>'
+        head = f'<FST.{self.a.__class__.__name__}{tail}>'
 
         if not _REPR_SRC_LINES:
             return head
@@ -1952,16 +1952,24 @@ class FST:
     )
 
     from .fst_parse import (
-        _parse_comprehension,
-        _parse_type_param,
-        _parse_pattern,
         _parse_expr,
-        _code_as_identifier,
+        _parse_comprehension,
+        _parse_arg,
+        _parse_keyword,
+        _parse_alias,
+        _parse_withitem,
+        _parse_pattern,
+        _parse_type_param,
+        _code_as_expr,
         _code_as_op,
         _code_as_comprehension,
-        _code_as_type_param,
+        _code_as_arg,
+        _code_as_keyword,
+        _code_as_alias,
+        _code_as_withitem,
         _code_as_pattern,
-        _code_as_expr,
+        _code_as_type_param,
+        _code_as_identifier,
     )
 
     from .fst_raw import (

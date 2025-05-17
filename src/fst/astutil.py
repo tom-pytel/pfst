@@ -132,7 +132,10 @@ class bistr(str):
             pass
 
 
-constant = EllipsisType | int | float | complex | str | bytes | bool | None
+constant           = EllipsisType | int | float | complex | str | bytes | bool | None
+
+re_identifier_only = re.compile(r'^[^\d\W]\w*$')
+re_identifier      = re.compile(r'[^\d\W]\w*')
 
 # Mostly in syntax order except a few special cases:
 #   BoolOp        - multiple simultaneous locations possible for single `op`
@@ -334,9 +337,6 @@ OPSTR2CLS     = {**OPSTR2CLS_UNARY, **OPSTR2CLS_BIN, **OPSTR2CLS_CMP, **OPSTR2CL
 OPSTR2CLSWAUG = {**OPSTR2CLS, **OPSTR2CLS}  ; """Mapping of all operator strings to operator AST class including AugAssign operators."""
 OPCLS2STR     = {v: k for d in (OPSTR2CLS_UNARY, OPSTR2CLS_BIN, OPSTR2CLS_CMP, OPSTR2CLS_BOOL) for k, v in d.items()}  ; "Mapping of operator AST class to operator string, e.g. `ast.Add`: '+'."
 OPCLS2STR_AUG = {v: k for k, v in OPSTR2CLS_AUG.items()}  ; "Mapping of operator AST class to operator string mapping to augmented operator strings, e.g. `ast.Add`: '+='."
-
-re_identifier_only = re.compile(r'^[^\d\W]\w*$')
-re_identifier      = re.compile(r'[^\d\W]\w*')
 
 
 def is_valid_identifier(s: str) -> bool:

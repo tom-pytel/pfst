@@ -22,7 +22,7 @@ class fstlist:
         self.stop  = stop
 
     def __repr__(self) -> str:
-        return f'<fstlist {list(self)}>'
+        return f'<fstlist {self.fst!r}.{self.field}[{self.start}:{self.stop}] {list(self)}>'
 
     def __len__(self) -> int:
         return self.stop - self.start

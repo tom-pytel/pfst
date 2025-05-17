@@ -65,27 +65,6 @@ _GLOBALS = globals() | {'_GLOBALS': None}
 # ----------------------------------------------------------------------------------------------------------------------
 
 @staticmethod
-def _parse_comprehension(src: str, parse_params: dict = {}) -> AST:
-    """Parse to an `ast.comprehension` or raise `SyntaxError`, e.g. "async for i in something() if i"."""
-
-    return _offset_linenos(ast_parse(f'[_ \n{src}]', **parse_params).body[0].value.generators[0], -1)
-
-
-@staticmethod
-def _parse_type_param(src: str, parse_params: dict = {}) -> AST:
-    """Parse to an `ast.type_param` or raise `SyntaxError`, e.g. "t: Base = Subclass"."""
-
-    return _offset_linenos(ast_parse(f'type t[\n{src}] = None', **parse_params).body[0].type_params[0], -1)
-
-
-@staticmethod
-def _parse_pattern(src: str, parse_params: dict = {}) -> AST:
-    """Parse to an `ast.pattern` or raise `SyntaxError`, e.g. "{a.b: i, **rest}"."""
-
-    return _offset_linenos(ast_parse(f'match _:\n case \\\n{src}: pass', **parse_params).body[0].cases[0].pattern, -2)
-
-
-@staticmethod
 def _parse_expr(src: str, parse_params: dict = {}) -> AST:
     """Parse to an `ast.expr` or raise `SyntaxError`."""
 
@@ -99,29 +78,81 @@ def _parse_expr(src: str, parse_params: dict = {}) -> AST:
     return ast.value
 
 
-def _code_as_identifier(self: 'FST', code: Code) -> str:
-    """Convert `Code` to valid identifier string if possible."""
+@staticmethod
+def _parse_comprehension(src: str, parse_params: dict = {}) -> AST:
+    """Parse to an `ast.comprehension` or raise `SyntaxError`, e.g. "async for i in something() if i"."""
 
-    if isinstance(code, list):
-        if len(code) != 1:
-            raise NodeTypeError(f'expecting onle line identifier, got {len(code)} lines')
+    return _offset_linenos(ast_parse(f'[_ \n{src}]', **parse_params).body[0].value.generators[0], -1)
 
-        code = code[0]
 
-    if isinstance(code, str):
-        if not is_valid_identifier(code):
-            raise NodeTypeError(f'expecting identifier, got {code!r}')
+@staticmethod
+def _parse_arg(src: str, parse_params: dict = {}) -> AST:
+    """Parse to an `ast.arg` or raise `SyntaxError`, e.g. "var: list[int]"."""
 
-    else:
-        if isinstance(code, FST):
-            code = code.a
+    return _offset_linenos(ast_parse(f'def f(\n{src}): pass', **parse_params).body[0].args.args[0], -1)
 
-        if not isinstance(code, Name):
-            raise NodeTypeError(f'expecting identifier (Name), got {code.__class__.__name__}')
 
-        return code.id
+@staticmethod
+def _parse_keyword(src: str, parse_params: dict = {}) -> AST:
+    """Parse to an `ast.keyword` or raise `SyntaxError`, e.g. "var: list[int]"."""
 
-    return code
+    return _offset_linenos(ast_parse(f'f(\n{src})', **parse_params).body[0].value.keywords[0], -1)
+
+
+@staticmethod
+def _parse_alias(src: str, parse_params: dict = {}) -> AST:
+    """Parse to an `ast.alias` or raise `SyntaxError`, e.g. "var: list[int]"."""
+
+    return _offset_linenos(ast_parse(f'from . import (\n{src})', **parse_params).body[0].names[0], -1)
+
+
+@staticmethod
+def _parse_withitem(src: str, parse_params: dict = {}) -> AST:
+    """Parse to an `ast.withitem` or raise `SyntaxError`, e.g. "var: list[int]"."""
+
+    return _offset_linenos(ast_parse(f'with (\n{src}): pass', **parse_params).body[0].items[0], -1)
+
+
+@staticmethod
+def _parse_pattern(src: str, parse_params: dict = {}) -> AST:
+    """Parse to an `ast.pattern` or raise `SyntaxError`, e.g. "{a.b: i, **rest}"."""
+
+    return _offset_linenos(ast_parse(f'match _:\n case \\\n{src}: pass', **parse_params).body[0].cases[0].pattern, -2)
+
+
+@staticmethod
+def _parse_type_param(src: str, parse_params: dict = {}) -> AST:
+    """Parse to an `ast.type_param` or raise `SyntaxError`, e.g. "t: Base = Subclass"."""
+
+    return _offset_linenos(ast_parse(f'type t[\n{src}] = None', **parse_params).body[0].type_params[0], -1)
+
+
+# ......................................................................................................................
+
+def _code_as_expr(self: 'FST', code: Code) -> 'FST':
+    """Convert `code` to an expr `FST` if possible."""
+
+    if isinstance(code, FST):
+        if not isinstance(ast := reduce_ast(codea := code.a, NodeTypeError), expr):
+            raise NodeTypeError(f'expecting expression, got {ast.__class__.__name__}')
+
+        return code if ast is codea else FST(ast, lines=code._lines, from_=code)
+
+    if isinstance(code, AST):
+        if not isinstance(code, expr):
+            raise NodeTypeError(f'expecting expression, got {code.__class__.__name__}')
+
+        code  = ast_unparse(code)
+        lines = code.split('\n')
+
+    elif isinstance(code, list):
+        code = '\n'.join(lines := code)
+    else:  # str
+        lines = code.split('\n')
+
+    ast = _parse_expr(code, self.root.parse_params)
+
+    return FST(ast, lines=lines)
 
 
 def _code_as_op(self: 'FST', code: Code,
@@ -160,10 +191,28 @@ def _code_as_comprehension(self: 'FST', code: Code) -> 'FST':
     return _code_as(self, code, comprehension, _parse_comprehension)
 
 
-def _code_as_type_param(self: 'FST', code: Code) -> 'FST':
-    """Convert `code` to a type_param (TypeVar, ParamSpec, TypeVarTuple) `FST` if possible."""
+def _code_as_arg(self: 'FST', code: Code) -> 'FST':
+    """Convert `code` to an arg `FST` if possible."""
 
-    return _code_as(self, code, type_param, _parse_type_param)
+    return _code_as(self, code, arg, _parse_arg)
+
+
+def _code_as_keyword(self: 'FST', code: Code) -> 'FST':
+    """Convert `code` to a keyword `FST` if possible."""
+
+    return _code_as(self, code, keyword, _parse_keyword)
+
+
+def _code_as_alias(self: 'FST', code: Code) -> 'FST':
+    """Convert `code` to a alias `FST` if possible."""
+
+    return _code_as(self, code, alias, _parse_alias)
+
+
+def _code_as_withitem(self: 'FST', code: Code) -> 'FST':
+    """Convert `code` to a withitem `FST` if possible."""
+
+    return _code_as(self, code, withitem, _parse_withitem)
 
 
 def _code_as_pattern(self: 'FST', code: Code) -> 'FST':
@@ -172,30 +221,35 @@ def _code_as_pattern(self: 'FST', code: Code) -> 'FST':
     return _code_as(self, code, pattern, _parse_pattern)
 
 
-def _code_as_expr(self: 'FST', code: Code) -> 'FST':
-    """Convert `code` to an expr `FST` if possible."""
+def _code_as_type_param(self: 'FST', code: Code) -> 'FST':
+    """Convert `code` to a type_param `FST` if possible."""
 
-    if isinstance(code, FST):
-        if not isinstance(ast := reduce_ast(codea := code.a, NodeTypeError), expr):
-            raise NodeTypeError(f'expecting expression, got {ast.__class__.__name__}')
+    return _code_as(self, code, type_param, _parse_type_param)
 
-        return code if ast is codea else FST(ast, lines=code._lines, from_=code)
 
-    if isinstance(code, AST):
-        if not isinstance(code, expr):
-            raise NodeTypeError(f'expecting expression, got {code.__class__.__name__}')
+def _code_as_identifier(self: 'FST', code: Code) -> str:
+    """Convert `Code` to valid identifier string if possible."""
 
-        code  = ast_unparse(code)
-        lines = code.split('\n')
+    if isinstance(code, list):
+        if len(code) != 1:
+            raise NodeTypeError(f'expecting single line identifier, got {len(code)} lines')
 
-    elif isinstance(code, list):
-        code = '\n'.join(lines := code)
-    else:  # str
-        lines = code.split('\n')
+        code = code[0]
 
-    ast = _parse_expr(code, self.root.parse_params)
+    if isinstance(code, str):
+        if not is_valid_identifier(code):
+            raise NodeTypeError(f'expecting identifier, got {code!r}')
 
-    return FST(ast, lines=lines)
+    else:
+        if isinstance(code, FST):
+            code = code.a
+
+        if not isinstance(code, Name):
+            raise NodeTypeError(f'expecting identifier (Name), got {code.__class__.__name__}')
+
+        return code.id
+
+    return code
 
 
 # ----------------------------------------------------------------------------------------------------------------------

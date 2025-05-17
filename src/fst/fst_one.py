@@ -11,7 +11,7 @@ from .shared import (
     STMTISH, Code, NodeTypeError, astfield, fstloc,
     _next_src, _prev_src, _next_find, _prev_find, _next_find_re, _fixup_one_index,
 )
-from .fst_parse import _code_as_comprehension, _code_as_type_param, _code_as_pattern, _code_as_expr
+from .fst_parse import _code_as_expr, _code_as_pattern, _code_as_comprehension, _code_as_type_param
 
 
 # ----------------------------------------------------------------------------------------------------------------------
