@@ -143,7 +143,12 @@ def _code_as_expr(self: 'FST', code: Code) -> 'FST':
         if not isinstance(ast := reduce_ast(codea := code.a, NodeTypeError), expr):
             raise NodeTypeError(f'expecting expression, got {ast.__class__.__name__}')
 
-        return code if ast is codea else FST(ast, lines=code._lines, from_=code)
+        if ast is codea:
+            return code
+
+        ast.f._unmake_fst_parents()
+
+        return FST(ast, lines=code._lines, from_=code)
 
     if isinstance(code, AST):
         if not isinstance(code, expr):

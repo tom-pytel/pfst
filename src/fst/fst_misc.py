@@ -57,7 +57,13 @@ def _normalize_code(code: Code, coerce: Literal['expr', 'exprish', 'mod'] | None
         ast  = code.a
         rast = _coerce_ast(ast, coerce)
 
-        return code if rast is ast else FST(rast, lines=code._lines, from_=code)
+        if rast is ast:
+            return code
+
+        if f := getattr(rast, 'f', None):
+            f._unmake_fst_parents()
+
+        return FST(rast, lines=code._lines, from_=code)
 
     if isinstance(code, AST):
         return FST.fromast(_coerce_ast(code, coerce))  # TODO: WARNING! will not handle pure AST ExceptHandler or match_case
@@ -142,8 +148,9 @@ def _make_fst_tree(self: 'FST', stack: list['FST'] | None = None):
                              for idx, a in enumerate(child) if isinstance(a, AST))
 
 
-def _unmake_fst_tree(self: 'FST', stack: list[AST] | None = None, root: Optional['FST'] = None):
-    """Destroy a tree of FST nodes by breaking links between AST and FST nodes."""
+def _unmake_fst_tree(self: 'FST', stack: list[AST] | None = None):
+    """Destroy a tree of FST child nodes by breaking links between AST and FST nodes. This mainly helps make sure
+    destroyed FST nodes can't be reused in a way that might corrupt valid remaining trees."""
 
     if stack is None:
         stack = [self.a]
@@ -154,13 +161,26 @@ def _unmake_fst_tree(self: 'FST', stack: list[AST] | None = None, root: Optional
 
             stack.extend(iter_child_nodes(a))
 
-    if root:
-        root.a.f = root.a = None
+
+def _unmake_fst_parents(self: 'FST', self_: bool = False):
+    """Walk up parent list unmaking each parent along the way. This does not unmake the entire parent tree, just the
+    parents directly above this node (and including it if `self_` is `True). Meant for when you know the parents are
+    just a direct succession like Expr -> Module."""
+
+    if self_:
+        self.a.f = self.a = None
+
+    while self := self.parent:
+        self.a.f = self.a = None
 
 
 def _set_ast(self: 'FST', ast: AST, unmake: bool = True) -> AST:
     """Set `.a` AST node for this `FST` node and `_make_fst_tree` for `self`, also set ast node in parent AST node.
-    Optionally `_unmake_fst_tree()` for with old `.a` node first. Returns old `.a` node."""
+    Optionally `_unmake_fst_tree()` for with old `.a` node first. Returns old `.a` node.
+
+    **Parameters:**
+    - `unmake`: Whether to unmake the FST tree being replaced or not. Should really always unmake.
+    """
 
     old_ast = self.a
 

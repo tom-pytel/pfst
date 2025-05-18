@@ -26820,6 +26820,49 @@ def f():
             self.assertEqual('  ', FST.fromsrc('try: pass\nexcept* Exception:\n  pass\nelse: pass\nfinally: pass').indent)
             self.assertEqual('  ', FST.fromsrc('try:\n  pass\nexcept* Exception: pass\nelse: pass\nfinally: pass').indent)
 
+    def test_unmake_fst_in_operations(self):
+        f = parse('(1, 2, 3)').f
+        g = parse('(4, 5)').f
+        i = f.body[0].value.elts[1]
+        h = g.body[0]
+        f.body[0].value.put_slice(g, 1, 2)
+        self.assertEqual('(1, 4, 5, 3)', f.src)
+        self.assertIsNone(i.a)
+        self.assertIsNone(h.a)
+        self.assertIsNone(g.a)
+
+        f = parse('[1, 2, 3]').f
+        g = parse('[4, 5]').f
+        i = f.body[0].value.elts[1]
+        h = g.body[0]
+        f.body[0].value.put_slice(g, 1, 2)
+        self.assertEqual('[1, 4, 5, 3]', f.src)
+        self.assertIsNone(i.a)
+        self.assertIsNone(h.a)
+        self.assertIsNone(g.a)
+
+        f = parse('{1, 2, 3}').f
+        g = parse('{4, 5}').f
+        i = f.body[0].value.elts[1]
+        h = g.body[0]
+        f.body[0].value.put_slice(g, 1, 2)
+        self.assertEqual('{1, 4, 5, 3}', f.src)
+        self.assertIsNone(i.a)
+        self.assertIsNone(h.a)
+        self.assertIsNone(g.a)
+
+        f = parse('{1:1, 1:1, 3:3}').f
+        g = parse('{4:4, 5:5}').f
+        ik = f.body[0].value.keys[1]
+        iv = f.body[0].value.values[1]
+        h = g.body[0]
+        f.body[0].value.put_slice(g, 1, 2)
+        self.assertEqual('{1:1, 4:4, 5:5, 3:3}', f.src)
+        self.assertIsNone(ik.a)
+        self.assertIsNone(iv.a)
+        self.assertIsNone(h.a)
+        self.assertIsNone(g.a)
+
     def test_loc(self):
         self.assertEqual((0, 6, 0, 9), parse('def f(i=1): pass').body[0].args.f.loc)  # arguments
         self.assertEqual((0, 5, 0, 8), parse('with f(): pass').body[0].items[0].f.loc)  # withitem

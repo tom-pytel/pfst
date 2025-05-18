@@ -1917,6 +1917,7 @@ class FST:
         _new_empty_set_curlies,
         _make_fst_tree,
         _unmake_fst_tree,
+        _unmake_fst_parents,
         _set_ast,
         _repr_tail,
         _dump,

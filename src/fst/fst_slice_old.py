@@ -391,7 +391,8 @@ def _put_slice_tuple_list_or_set(self: 'FST', code: Code | None, start: int | Li
             plast  = selts[-1].f
 
         _put_slice_seq_and_indent(self, put_fst, seq_loc, ffirst, flast, fpre, fpost, pfirst, plast, options.get('docstr'))
-        self._unmake_fst_tree(elts[start : stop], put_fst)
+        self._unmake_fst_tree(elts[start : stop])
+        put_fst._unmake_fst_parents(True)
 
         elts[start : stop] = put_ast.elts
 
@@ -503,7 +504,8 @@ def _put_slice_dict(self: 'FST', code: Code | None, start: int | Literal['end'] 
             plast  = put_ast.values[-1].f
 
         _put_slice_seq_and_indent(self, put_fst, seq_loc, ffirst, flast, fpre, fpost, pfirst, plast, options.get('docstr'))
-        self._unmake_fst_tree(keys[start : stop] + values[start : stop], put_fst)
+        self._unmake_fst_tree(keys[start : stop] + values[start : stop])
+        put_fst._unmake_fst_parents(True)
 
         keys[start : stop]   = put_ast.keys
         values[start : stop] = put_ast.values
@@ -728,7 +730,8 @@ def _put_slice_stmtish(self: 'FST', code: Code | None, start: int | Literal['end
 
         put_fst.offset(0, 0, put_loc.ln, 0 if put_fst.bln or put_fst.bcol else lines[put_loc.ln].c2b(put_loc.col))
         self.put_src(put_fst.lines, *put_loc, False)
-        self._unmake_fst_tree(body[start : stop], put_fst)
+        self._unmake_fst_tree(body[start : stop])
+        put_fst._unmake_fst_parents(True)
 
         body[start : stop] = put_body
 
