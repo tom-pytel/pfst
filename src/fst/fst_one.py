@@ -11,8 +11,10 @@ from .shared import (
     STMTISH, Code, NodeTypeError, astfield, fstloc,
     _next_src, _prev_src, _next_find, _prev_find, _next_find_re, _fixup_one_index,
 )
+
 from .fst_parse import (
-    _code_as_expr, _code_as_pattern, _code_as_comprehension, _code_as_arg, _code_as_keyword,  _code_as_type_param,
+    _code_as_expr, _code_as_pattern, _code_as_comprehension, _code_as_arg, _code_as_keyword, _code_as_alias,
+    _code_as_withitem, _code_as_type_param,
 )
 
 
@@ -538,11 +540,13 @@ def _one_info_exprish_required(self: 'FST', static: onestatic, idx: int | None, 
     return _oneinfo_default
 
 _onestatic_exprish_required       = onestatic(_one_info_exprish_required)
-_onestatic_pattern_required       = onestatic(_one_info_exprish_required, coerce=_code_as_pattern)
-_onestatic_type_param_required    = onestatic(_one_info_exprish_required, coerce=_code_as_type_param)
 _onestatic_comprehension_required = onestatic(_one_info_exprish_required, coerce=_code_as_comprehension)
 _onestatic_arg_required           = onestatic(_one_info_exprish_required, coerce=_code_as_arg)
 _onestatic_keyword_required       = onestatic(_one_info_exprish_required, coerce=_code_as_keyword)
+_onestatic_alias_required         = onestatic(_one_info_exprish_required, coerce=_code_as_alias)
+_onestatic_withitem_required      = onestatic(_one_info_exprish_required, coerce=_code_as_withitem)
+_onestatic_pattern_required       = onestatic(_one_info_exprish_required, coerce=_code_as_pattern)
+_onestatic_type_param_required    = onestatic(_one_info_exprish_required, coerce=_code_as_type_param)
 _onestatic_target_Name            = onestatic(_one_info_exprish_required, Name, ctx=Store)
 _onestatic_target_single          = onestatic(_one_info_exprish_required, (Name, Attribute, Subscript), ctx=Store)
 _onestatic_target                 = onestatic(_one_info_exprish_required, (Name, Attribute, Subscript, Tuple, List), ctx=Store)
@@ -952,9 +956,9 @@ _PUT_ONE_HANDLERS = {
     (If, 'test'):                         (_put_one_exprish_required, None, _onestatic_exprish_required), # expr
     (If, 'body'):                         (_put_one_stmtish, None, None), # stmt*
     (If, 'orelse'):                       (_put_one_stmtish, None, None), # stmt*
-    # (With, 'items'):                      (_put_one_default, None, None), # withitem*                                       - slice
+    (With, 'items'):                      (_put_one_exprish_sliceable, None, _onestatic_withitem_required), # withitem*
     (With, 'body'):                       (_put_one_stmtish, None, None), # stmt*
-    # (AsyncWith, 'items'):                 (_put_one_default, None, None), # withitem*                                       - slice
+    (AsyncWith, 'items'):                 (_put_one_exprish_sliceable, None, _onestatic_withitem_required), # withitem*
     (AsyncWith, 'body'):                  (_put_one_stmtish, None, None), # stmt*
     (Match, 'subject'):                   (_put_one_exprish_required, None, _onestatic_exprish_required), # expr
     (Match, 'cases'):                     (_put_one_stmtish, None, None), # match_case*

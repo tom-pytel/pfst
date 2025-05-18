@@ -23372,6 +23372,150 @@ Module .. ROOT 0,0 -> 0,22
 (r"""call(a=1, b = (2))""", 'body[0].value', -4, 'keywords', {'raw': False}, r"""new=(3)""", r"""**IndexError('index out of range')**""", r"""
 """),
 
+(r"""with (a as b, (f()) as d): pass""", 'body[0]', 0, 'items', {'raw': False}, r"""**DEL**""", r"""**ValueError('cannot put slice to With.items')**""", r"""
+"""),
+
+(r"""with (a as b, (f()) as d): pass""", 'body[0]', 0, 'items', {'raw': False}, r"""g() as new""", r"""with (g() as new, (f()) as d): pass""", r"""
+Module .. ROOT 0,0 -> 0,35
+  .body[1]
+  0] With .. 0,0 -> 0,35
+    .items[2]
+    0] withitem .. 0,6 -> 0,16
+      .context_expr Call .. 0,6 -> 0,9
+        .func Name 'g' Load .. 0,6 -> 0,7
+      .optional_vars Name 'new' Store .. 0,13 -> 0,16
+    1] withitem .. 0,18 -> 0,28
+      .context_expr Call .. 0,19 -> 0,22
+        .func Name 'f' Load .. 0,19 -> 0,20
+      .optional_vars Name 'd' Store .. 0,27 -> 0,28
+    .body[1]
+    0] Pass .. 0,31 -> 0,35
+"""),
+
+(r"""with (a as b, (f()) as d): pass""", 'body[0]', 1, 'items', {'raw': False}, r"""g() as new""", r"""with (a as b, g() as new): pass""", r"""
+Module .. ROOT 0,0 -> 0,31
+  .body[1]
+  0] With .. 0,0 -> 0,31
+    .items[2]
+    0] withitem .. 0,6 -> 0,12
+      .context_expr Name 'a' Load .. 0,6 -> 0,7
+      .optional_vars Name 'b' Store .. 0,11 -> 0,12
+    1] withitem .. 0,14 -> 0,24
+      .context_expr Call .. 0,14 -> 0,17
+        .func Name 'g' Load .. 0,14 -> 0,15
+      .optional_vars Name 'new' Store .. 0,21 -> 0,24
+    .body[1]
+    0] Pass .. 0,27 -> 0,31
+"""),
+
+(r"""with (a as b, (f()) as d): pass""", 'body[0]', -1, 'items', {'raw': False}, r"""g() as new""", r"""with (a as b, g() as new): pass""", r"""
+Module .. ROOT 0,0 -> 0,31
+  .body[1]
+  0] With .. 0,0 -> 0,31
+    .items[2]
+    0] withitem .. 0,6 -> 0,12
+      .context_expr Name 'a' Load .. 0,6 -> 0,7
+      .optional_vars Name 'b' Store .. 0,11 -> 0,12
+    1] withitem .. 0,14 -> 0,24
+      .context_expr Call .. 0,14 -> 0,17
+        .func Name 'g' Load .. 0,14 -> 0,15
+      .optional_vars Name 'new' Store .. 0,21 -> 0,24
+    .body[1]
+    0] Pass .. 0,27 -> 0,31
+"""),
+
+(r"""with (a as b, (f()) as d): pass""", 'body[0]', -2, 'items', {'raw': False}, r"""g() as new""", r"""with (g() as new, (f()) as d): pass""", r"""
+Module .. ROOT 0,0 -> 0,35
+  .body[1]
+  0] With .. 0,0 -> 0,35
+    .items[2]
+    0] withitem .. 0,6 -> 0,16
+      .context_expr Call .. 0,6 -> 0,9
+        .func Name 'g' Load .. 0,6 -> 0,7
+      .optional_vars Name 'new' Store .. 0,13 -> 0,16
+    1] withitem .. 0,18 -> 0,28
+      .context_expr Call .. 0,19 -> 0,22
+        .func Name 'f' Load .. 0,19 -> 0,20
+      .optional_vars Name 'd' Store .. 0,27 -> 0,28
+    .body[1]
+    0] Pass .. 0,31 -> 0,35
+"""),
+
+(r"""with (a as b, (f()) as d): pass""", 'body[0]', -4, 'items', {'raw': False}, r"""g() as new""", r"""**IndexError('index out of range')**""", r"""
+"""),
+
+(r"""async with (a as b, (f()) as d): pass""", 'body[0]', 0, 'items', {'raw': False}, r"""**DEL**""", r"""**ValueError('cannot put slice to AsyncWith.items')**""", r"""
+"""),
+
+(r"""async with (a as b, (f()) as d): pass""", 'body[0]', 0, 'items', {'raw': False}, r"""g() as new""", r"""async with (g() as new, (f()) as d): pass""", r"""
+Module .. ROOT 0,0 -> 0,41
+  .body[1]
+  0] AsyncWith .. 0,0 -> 0,41
+    .items[2]
+    0] withitem .. 0,12 -> 0,22
+      .context_expr Call .. 0,12 -> 0,15
+        .func Name 'g' Load .. 0,12 -> 0,13
+      .optional_vars Name 'new' Store .. 0,19 -> 0,22
+    1] withitem .. 0,24 -> 0,34
+      .context_expr Call .. 0,25 -> 0,28
+        .func Name 'f' Load .. 0,25 -> 0,26
+      .optional_vars Name 'd' Store .. 0,33 -> 0,34
+    .body[1]
+    0] Pass .. 0,37 -> 0,41
+"""),
+
+(r"""async with (a as b, (f()) as d): pass""", 'body[0]', 1, 'items', {'raw': False}, r"""g() as new""", r"""async with (a as b, g() as new): pass""", r"""
+Module .. ROOT 0,0 -> 0,37
+  .body[1]
+  0] AsyncWith .. 0,0 -> 0,37
+    .items[2]
+    0] withitem .. 0,12 -> 0,18
+      .context_expr Name 'a' Load .. 0,12 -> 0,13
+      .optional_vars Name 'b' Store .. 0,17 -> 0,18
+    1] withitem .. 0,20 -> 0,30
+      .context_expr Call .. 0,20 -> 0,23
+        .func Name 'g' Load .. 0,20 -> 0,21
+      .optional_vars Name 'new' Store .. 0,27 -> 0,30
+    .body[1]
+    0] Pass .. 0,33 -> 0,37
+"""),
+
+(r"""async with (a as b, (f()) as d): pass""", 'body[0]', -1, 'items', {'raw': False}, r"""g() as new""", r"""async with (a as b, g() as new): pass""", r"""
+Module .. ROOT 0,0 -> 0,37
+  .body[1]
+  0] AsyncWith .. 0,0 -> 0,37
+    .items[2]
+    0] withitem .. 0,12 -> 0,18
+      .context_expr Name 'a' Load .. 0,12 -> 0,13
+      .optional_vars Name 'b' Store .. 0,17 -> 0,18
+    1] withitem .. 0,20 -> 0,30
+      .context_expr Call .. 0,20 -> 0,23
+        .func Name 'g' Load .. 0,20 -> 0,21
+      .optional_vars Name 'new' Store .. 0,27 -> 0,30
+    .body[1]
+    0] Pass .. 0,33 -> 0,37
+"""),
+
+(r"""async with (a as b, (f()) as d): pass""", 'body[0]', -2, 'items', {'raw': False}, r"""g() as new""", r"""async with (g() as new, (f()) as d): pass""", r"""
+Module .. ROOT 0,0 -> 0,41
+  .body[1]
+  0] AsyncWith .. 0,0 -> 0,41
+    .items[2]
+    0] withitem .. 0,12 -> 0,22
+      .context_expr Call .. 0,12 -> 0,15
+        .func Name 'g' Load .. 0,12 -> 0,13
+      .optional_vars Name 'new' Store .. 0,19 -> 0,22
+    1] withitem .. 0,24 -> 0,34
+      .context_expr Call .. 0,25 -> 0,28
+        .func Name 'f' Load .. 0,25 -> 0,26
+      .optional_vars Name 'd' Store .. 0,33 -> 0,34
+    .body[1]
+    0] Pass .. 0,37 -> 0,41
+"""),
+
+(r"""async with (a as b, (f()) as d): pass""", 'body[0]', -4, 'items', {'raw': False}, r"""g() as new""", r"""**IndexError('index out of range')**""", r"""
+"""),
+
 ]  # END OF PUT_ONE_DATA
 
 PUT_RAW_DATA = [
