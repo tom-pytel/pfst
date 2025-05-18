@@ -11,7 +11,7 @@ from .shared import (
     STMTISH, Code, NodeTypeError, astfield, fstloc,
     _next_src, _prev_src, _next_find, _prev_find, _next_find_re, _fixup_one_index,
 )
-from .fst_parse import _code_as_expr, _code_as_pattern, _code_as_comprehension, _code_as_type_param
+from .fst_parse import _code_as_expr, _code_as_pattern, _code_as_comprehension, _code_as_arg, _code_as_type_param
 
 
 # ----------------------------------------------------------------------------------------------------------------------
@@ -539,6 +539,7 @@ _onestatic_exprish_required       = onestatic(_one_info_exprish_required)
 _onestatic_pattern_required       = onestatic(_one_info_exprish_required, coerce=_code_as_pattern)
 _onestatic_type_param_required    = onestatic(_one_info_exprish_required, coerce=_code_as_type_param)
 _onestatic_comprehension_required = onestatic(_one_info_exprish_required, coerce=_code_as_comprehension)
+_onestatic_arg_required           = onestatic(_one_info_exprish_required, coerce=_code_as_arg)
 _onestatic_target_Name            = onestatic(_one_info_exprish_required, Name, ctx=Store)
 _onestatic_target_single          = onestatic(_one_info_exprish_required, (Name, Attribute, Subscript), ctx=Store)
 _onestatic_target                 = onestatic(_one_info_exprish_required, (Name, Attribute, Subscript, Tuple, List), ctx=Store)
@@ -1032,11 +1033,11 @@ _PUT_ONE_HANDLERS = {
     (ExceptHandler, 'type'):              (_put_one_exprish_optional, None, onestatic(_one_info_ExceptHandler_type)), # expr?
     (ExceptHandler, 'name'):              (_put_one_ExceptHandler_name, None, onestatic(_one_info_ExceptHandler_name, coerce=None)), # identifier?
     (ExceptHandler, 'body'):              (_put_one_stmtish, None, None), # stmt*
-    # (arguments, 'posonlyargs'):           (_put_one_default, None, None), # arg*                                            - special parse 'arg'
-    # (arguments, 'args'):                  (_put_one_default, None, None), # arg*                                            - special parse 'arg'
+    (arguments, 'posonlyargs'):           (_put_one_exprish_sliceable, None, _onestatic_arg_required), # arg*
+    (arguments, 'args'):                  (_put_one_exprish_sliceable, None, _onestatic_arg_required), # arg*
     (arguments, 'defaults'):              (_put_one_exprish_required, None, _onestatic_exprish_required), # expr*
     # (arguments, 'vararg'):                (_put_one_default, None, None), # arg?                                            - special parse 'arg'
-    # (arguments, 'kwonlyargs'):            (_put_one_default, None, None), # arg*                                            - special parse 'arg'
+    (arguments, 'kwonlyargs'):            (_put_one_exprish_sliceable, None, _onestatic_arg_required), # arg*
     (arguments, 'kw_defaults'):           (_put_one_exprish_optional, None, onestatic(_one_info_arguments_kw_defaults)), # expr*
     # (arguments, 'kwarg'):                 (_put_one_default, None, None), # arg?                                            - special parse 'arg'
     (arg, 'arg'):                         (_put_one_identifier_required, None, _onestatic_identifier_required), # identifier

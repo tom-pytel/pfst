@@ -22990,6 +22990,220 @@ Module .. ROOT 0,0 -> 0,39
 (r"""(i for j in k async for (i) in j)""", 'body[0].value', -4, 'generators', {'raw': False}, r"""async for a in b""", r"""**IndexError('index out of range')**""", r"""
 """),
 
+(r"""def f(a: int = 1, b: (str)='', /): pass""", 'body[0].args', 0, 'posonlyargs', {'raw': False}, r"""**DEL**""", r"""**ValueError('cannot put slice to arguments.posonlyargs')**""", r"""
+"""),
+
+(r"""def f(a: int = 1, b: (str)='', /): pass""", 'body[0].args', 0, 'posonlyargs', {'raw': False}, r"""new""", r"""def f(new = 1, b: (str)='', /): pass""", r"""
+Module .. ROOT 0,0 -> 0,36
+  .body[1]
+  0] FunctionDef .. 0,0 -> 0,36
+    .name 'f'
+    .args arguments .. 0,5 -> 0,27
+      .posonlyargs[2]
+      0] arg .. 0,6 -> 0,9
+        .arg 'new'
+      1] arg .. 0,15 -> 0,23
+        .arg 'b'
+        .annotation Name 'str' Load .. 0,19 -> 0,22
+      .defaults[2]
+      0] Constant 1 .. 0,12 -> 0,13
+      1] Constant '' .. 0,24 -> 0,26
+    .body[1]
+    0] Pass .. 0,32 -> 0,36
+"""),
+
+(r"""def f(a: int = 1, b: (str)='', /): pass""", 'body[0].args', 1, 'posonlyargs', {'raw': False}, r"""new""", r"""def f(a: int = 1, new='', /): pass""", r"""
+Module .. ROOT 0,0 -> 0,34
+  .body[1]
+  0] FunctionDef .. 0,0 -> 0,34
+    .name 'f'
+    .args arguments .. 0,5 -> 0,25
+      .posonlyargs[2]
+      0] arg .. 0,6 -> 0,12
+        .arg 'a'
+        .annotation Name 'int' Load .. 0,9 -> 0,12
+      1] arg .. 0,18 -> 0,21
+        .arg 'new'
+      .defaults[2]
+      0] Constant 1 .. 0,15 -> 0,16
+      1] Constant '' .. 0,22 -> 0,24
+    .body[1]
+    0] Pass .. 0,30 -> 0,34
+"""),
+
+(r"""def f(a: int = 1, b: (str)='', /): pass""", 'body[0].args', -1, 'posonlyargs', {'raw': False}, r"""new""", r"""def f(a: int = 1, new='', /): pass""", r"""
+Module .. ROOT 0,0 -> 0,34
+  .body[1]
+  0] FunctionDef .. 0,0 -> 0,34
+    .name 'f'
+    .args arguments .. 0,5 -> 0,25
+      .posonlyargs[2]
+      0] arg .. 0,6 -> 0,12
+        .arg 'a'
+        .annotation Name 'int' Load .. 0,9 -> 0,12
+      1] arg .. 0,18 -> 0,21
+        .arg 'new'
+      .defaults[2]
+      0] Constant 1 .. 0,15 -> 0,16
+      1] Constant '' .. 0,22 -> 0,24
+    .body[1]
+    0] Pass .. 0,30 -> 0,34
+"""),
+
+(r"""def f(a: int = 1, b: (str)='', /): pass""", 'body[0].args', -2, 'posonlyargs', {'raw': False}, r"""new""", r"""def f(new = 1, b: (str)='', /): pass""", r"""
+Module .. ROOT 0,0 -> 0,36
+  .body[1]
+  0] FunctionDef .. 0,0 -> 0,36
+    .name 'f'
+    .args arguments .. 0,5 -> 0,27
+      .posonlyargs[2]
+      0] arg .. 0,6 -> 0,9
+        .arg 'new'
+      1] arg .. 0,15 -> 0,23
+        .arg 'b'
+        .annotation Name 'str' Load .. 0,19 -> 0,22
+      .defaults[2]
+      0] Constant 1 .. 0,12 -> 0,13
+      1] Constant '' .. 0,24 -> 0,26
+    .body[1]
+    0] Pass .. 0,32 -> 0,36
+"""),
+
+(r"""def f(a: int = 1, b: (str)='', /): pass""", 'body[0].args', -4, 'posonlyargs', {'raw': False}, r"""new""", r"""**IndexError('index out of range')**""", r"""
+"""),
+
+(r"""def f(a: int = 1, b: (str)=''): pass""", 'body[0].args', 0, 'args', {'raw': False}, r"""**DEL**""", r"""**ValueError('cannot put slice to arguments.args')**""", r"""
+"""),
+
+(r"""def f(a: int = 1, b: (str)=''): pass""", 'body[0].args', 0, 'args', {'raw': False}, r"""new""", r"""def f(new = 1, b: (str)=''): pass""", r"""
+Module .. ROOT 0,0 -> 0,33
+  .body[1]
+  0] FunctionDef .. 0,0 -> 0,33
+    .name 'f'
+    .args arguments .. 0,6 -> 0,26
+      .args[2]
+      0] arg .. 0,6 -> 0,9
+        .arg 'new'
+      1] arg .. 0,15 -> 0,23
+        .arg 'b'
+        .annotation Name 'str' Load .. 0,19 -> 0,22
+      .defaults[2]
+      0] Constant 1 .. 0,12 -> 0,13
+      1] Constant '' .. 0,24 -> 0,26
+    .body[1]
+    0] Pass .. 0,29 -> 0,33
+"""),
+
+(r"""def f(a: int = 1, b: (str)=''): pass""", 'body[0].args', 1, 'args', {'raw': False}, r"""new""", r"""def f(a: int = 1, new=''): pass""", r"""
+Module .. ROOT 0,0 -> 0,31
+  .body[1]
+  0] FunctionDef .. 0,0 -> 0,31
+    .name 'f'
+    .args arguments .. 0,6 -> 0,24
+      .args[2]
+      0] arg .. 0,6 -> 0,12
+        .arg 'a'
+        .annotation Name 'int' Load .. 0,9 -> 0,12
+      1] arg .. 0,18 -> 0,21
+        .arg 'new'
+      .defaults[2]
+      0] Constant 1 .. 0,15 -> 0,16
+      1] Constant '' .. 0,22 -> 0,24
+    .body[1]
+    0] Pass .. 0,27 -> 0,31
+"""),
+
+(r"""def f(a: int = 1, b: (str)=''): pass""", 'body[0].args', -1, 'args', {'raw': False}, r"""new""", r"""def f(a: int = 1, new=''): pass""", r"""
+Module .. ROOT 0,0 -> 0,31
+  .body[1]
+  0] FunctionDef .. 0,0 -> 0,31
+    .name 'f'
+    .args arguments .. 0,6 -> 0,24
+      .args[2]
+      0] arg .. 0,6 -> 0,12
+        .arg 'a'
+        .annotation Name 'int' Load .. 0,9 -> 0,12
+      1] arg .. 0,18 -> 0,21
+        .arg 'new'
+      .defaults[2]
+      0] Constant 1 .. 0,15 -> 0,16
+      1] Constant '' .. 0,22 -> 0,24
+    .body[1]
+    0] Pass .. 0,27 -> 0,31
+"""),
+
+(r"""def f(a: int = 1, b: (str)=''): pass""", 'body[0].args', -2, 'args', {'raw': False}, r"""new""", r"""def f(new = 1, b: (str)=''): pass""", r"""
+Module .. ROOT 0,0 -> 0,33
+  .body[1]
+  0] FunctionDef .. 0,0 -> 0,33
+    .name 'f'
+    .args arguments .. 0,6 -> 0,26
+      .args[2]
+      0] arg .. 0,6 -> 0,9
+        .arg 'new'
+      1] arg .. 0,15 -> 0,23
+        .arg 'b'
+        .annotation Name 'str' Load .. 0,19 -> 0,22
+      .defaults[2]
+      0] Constant 1 .. 0,12 -> 0,13
+      1] Constant '' .. 0,24 -> 0,26
+    .body[1]
+    0] Pass .. 0,29 -> 0,33
+"""),
+
+(r"""def f(a: int = 1, b: (str)=''): pass""", 'body[0].args', -4, 'args', {'raw': False}, r"""new""", r"""**IndexError('index out of range')**""", r"""
+"""),
+
+(r"""def f(*, a: int = 1, b: (str)=''): pass""", 'body[0].args', 0, 'akwonlyrgs', {'raw': False}, r"""**DEL**""", r"""**ValueError("arguments has no field 'akwonlyrgs'")**""", r"""
+"""),
+
+(r"""def f(*, a: int = 1, b: (str)=''): pass""", 'body[0].args', 0, 'akwonlyrgs', {'raw': False}, r"""new""", r"""**ValueError("arguments has no field 'akwonlyrgs'")**""", r"""
+"""),
+
+(r"""def f(*, a: int = 1, b: (str)=''): pass""", 'body[0].args', 1, 'akwonlyrgs', {'raw': False}, r"""new""", r"""**ValueError("arguments has no field 'akwonlyrgs'")**""", r"""
+"""),
+
+(r"""def f(*, a: int = 1, b: (str)=''): pass""", 'body[0].args', -1, 'kwonlyargs', {'raw': False}, r"""new""", r"""def f(*, a: int = 1, new=''): pass""", r"""
+Module .. ROOT 0,0 -> 0,34
+  .body[1]
+  0] FunctionDef .. 0,0 -> 0,34
+    .name 'f'
+    .args arguments .. 0,6 -> 0,27
+      .kwonlyargs[2]
+      0] arg .. 0,9 -> 0,15
+        .arg 'a'
+        .annotation Name 'int' Load .. 0,12 -> 0,15
+      1] arg .. 0,21 -> 0,24
+        .arg 'new'
+      .kw_defaults[2]
+      0] Constant 1 .. 0,18 -> 0,19
+      1] Constant '' .. 0,25 -> 0,27
+    .body[1]
+    0] Pass .. 0,30 -> 0,34
+"""),
+
+(r"""def f(*, a: int = 1, b: (str)=''): pass""", 'body[0].args', -2, 'kwonlyargs', {'raw': False}, r"""new""", r"""def f(*, new = 1, b: (str)=''): pass""", r"""
+Module .. ROOT 0,0 -> 0,36
+  .body[1]
+  0] FunctionDef .. 0,0 -> 0,36
+    .name 'f'
+    .args arguments .. 0,6 -> 0,29
+      .kwonlyargs[2]
+      0] arg .. 0,9 -> 0,12
+        .arg 'new'
+      1] arg .. 0,18 -> 0,26
+        .arg 'b'
+        .annotation Name 'str' Load .. 0,22 -> 0,25
+      .kw_defaults[2]
+      0] Constant 1 .. 0,15 -> 0,16
+      1] Constant '' .. 0,27 -> 0,29
+    .body[1]
+    0] Pass .. 0,32 -> 0,36
+"""),
+
+(r"""def f(*, a: int = 1, b: (str)=''): pass""", 'body[0].args', -4, 'kwonlyargs', {'raw': False}, r"""new""", r"""**IndexError('index out of range')**""", r"""
+"""),
+
 ]  # END OF PUT_ONE_DATA
 
 PUT_RAW_DATA = [

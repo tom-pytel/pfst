@@ -80,7 +80,6 @@ _AST_DEFAULT_BODY_FIELD  = {cls: field for field, classes in [
     ('exc',          (Raise,)),
     ('test',         (Assert,)),
     ('operand',      (UnaryOp,)),
-    # ('elt',          (ListComp, SetComp, GeneratorExp)),  # 'generators' take precedence because name is longer and more annoying to type out
     ('id',           (Name,)),
     ('arg',          (arg,)),
     ('name',         (alias,)),
