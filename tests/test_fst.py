@@ -23648,7 +23648,82 @@ Module .. ROOT 0,0 -> 0,30
 (r"""from z import (a, c as d)""", 'body[0]', -4, 'names', {'raw': False}, r"""f as g""", r"""**IndexError('index out of range')**""", r"""
 """),
 
+(r"""a[b:c:d]""", 'body[0].value', None, 'slice', {'raw': False}, r"""**DEL**""", r"""**ValueError('cannot delete Subscript.slice')**""", r"""
+"""),
+
+(r"""a[b:c:d]""", 'body[0].value', None, 'slice', {'raw': False}, r"""e, f""", r"""a[e, f]""", r"""
+Module .. ROOT 0,0 -> 0,7
+  .body[1]
+  0] Expr .. 0,0 -> 0,7
+    .value Subscript .. 0,0 -> 0,7
+      .value Name 'a' Load .. 0,0 -> 0,1
+      .slice Tuple .. 0,2 -> 0,6
+        .elts[2]
+        0] Name 'e' Load .. 0,2 -> 0,3
+        1] Name 'f' Load .. 0,5 -> 0,6
+        .ctx Load
+      .ctx Load
+"""),
+
+(r"""a[b,c,d]""", 'body[0].value', None, 'slice', {'raw': False}, r"""g""", r"""a[g]""", r"""
+Module .. ROOT 0,0 -> 0,4
+  .body[1]
+  0] Expr .. 0,0 -> 0,4
+    .value Subscript .. 0,0 -> 0,4
+      .value Name 'a' Load .. 0,0 -> 0,1
+      .slice Name 'g' Load .. 0,2 -> 0,3
+      .ctx Load
+"""),
+
+(r"""a[b:c:d]""", 'body[0].value', 0, 'slice', {'raw': False}, r"""h""", r"""**IndexError('Subscript.slice does not take an index')**""", r"""
+"""),
+
+(r"""a[b]""", 'body[0].value', None, 'slice', {'raw': False}, r"""h:i:j""", r"""a[h:i:j]""", r"""
+Module .. ROOT 0,0 -> 0,8
+  .body[1]
+  0] Expr .. 0,0 -> 0,8
+    .value Subscript .. 0,0 -> 0,8
+      .value Name 'a' Load .. 0,0 -> 0,1
+      .slice Slice .. 0,2 -> 0,7
+        .lower Name 'h' Load .. 0,2 -> 0,3
+        .upper Name 'i' Load .. 0,4 -> 0,5
+        .step Name 'j' Load .. 0,6 -> 0,7
+      .ctx Load
+"""),
+
 ]  # END OF PUT_ONE_DATA
+
+
+# (r"""def f(a=1): pass""", 'body[0]', None, 'args', {'raw': False}, r"""**DEL**""", r"""**ValueError('cannot put slice to ImportFrom.names')**""", r"""
+# """),
+
+# (r"""def f(a=1): pass""", 'body[0]', None, 'args', {'raw': False}, r"""a: list[str], /, b: int = 1, *c, d=100, **e""", r"""**ValueError('cannot put slice to ImportFrom.names')**""", r"""
+# """),
+
+# (r"""def f(): pass""", 'body[0]', None, 'args', {'raw': False}, r"""a: list[str], /, b: int = 1, *c, d=100, **e""", r"""**ValueError('cannot put slice to ImportFrom.names')**""", r"""
+# """),
+
+# (r"""def f(a=1): pass""", 'body[0]', 0, 'args', {'raw': False}, r"""a: list[str], /, b: int = 1, *c, d=100, **e""", r"""**ValueError('cannot put slice to ImportFrom.names')**""", r"""
+# """),
+
+# (r"""def f(a=1): pass""", 'body[0]', None, 'args', {'raw': False}, r"""""", r"""**ValueError('cannot put slice to ImportFrom.names')**""", r"""
+# """),
+
+# (r"""async def f(a=1): pass""", 'body[0]', None, 'args', {'raw': False}, r"""**DEL**""", r"""**ValueError('cannot put slice to ImportFrom.names')**""", r"""
+# """),
+
+# (r"""async def f(a=1): pass""", 'body[0]', None, 'args', {'raw': False}, r"""a: list[str], /, b: int = 1, *c, d=100, **e""", r"""**ValueError('cannot put slice to ImportFrom.names')**""", r"""
+# """),
+
+# (r"""async def f(): pass""", 'body[0]', None, 'args', {'raw': False}, r"""a: list[str], /, b: int = 1, *c, d=100, **e""", r"""**ValueError('cannot put slice to ImportFrom.names')**""", r"""
+# """),
+
+# (r"""async def f(a=1): pass""", 'body[0]', 0, 'args', {'raw': False}, r"""a: list[str], /, b: int = 1, *c, d=100, **e""", r"""**ValueError('cannot put slice to ImportFrom.names')**""", r"""
+# """),
+
+# (r"""async def f(a=1): pass""", 'body[0]', None, 'args', {'raw': False}, r"""""", r"""**ValueError('cannot put slice to ImportFrom.names')**""", r"""
+# """),
+
 
 PUT_RAW_DATA = [
 (r"""(1, 2, 3)""", '', (0, 4, 0, 5), {}, r"""*z""", r"""*z""", r"""(1, *z, 3)""", r"""
@@ -24556,6 +24631,35 @@ PRECEDENCE_DATA = [
     '(x & y)[y]',
     '(x // y)[y]',
     '(x ** y)[y]',
+    'x[z]',
+    'x[x, y]',
+    'x[[x, y]]',
+    'x[(x := y)]',
+    'x[lambda: x]',
+    'x[x if y else z]',
+    'x[await x]',
+    'x[(yield x)]',
+    'x[(yield from x)]',
+    'x[x < y]',
+    'x[x and y]',
+    'x[x or y]',
+    'x[~x]',
+    'x[not x]',
+    'x[+x]',
+    'x[-x]',
+    'x[x + y]',
+    'x[x - y]',
+    'x[x * y]',
+    'x[x @ y]',
+    'x[x / y]',
+    'x[x % y]',
+    'x[x << y]',
+    'x[x >> y]',
+    'x[x | y]',
+    'x[x ^ y]',
+    'x[x & y]',
+    'x[x // y]',
+    'x[x ** y]',
     'call(z)',
     'call((x, y))',
     'call([x, y])',
@@ -26184,6 +26288,7 @@ PRECEDENCE_DST_EXPRS = [
     (ASTEXPR("f'{x}'"), 'values[0].value'),
     (ASTEXPR('x.y'), 'value'),
     (ASTEXPR('x[y]'), 'value'),
+    (ASTEXPR('x[y]'), 'slice'),
     (ASTEXPR('call(a)'), 'args[0]'),
     (ASTEXPR('call(**a)'), 'keywords[0].value'),
 ]

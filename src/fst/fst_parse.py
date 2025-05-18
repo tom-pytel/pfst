@@ -93,6 +93,20 @@ def _parse_comprehension(src: str, parse_params: dict = {}) -> AST:
 
 
 @staticmethod
+def _parse_arguments(src: str, parse_params: dict = {}) -> AST:
+    """Parse to an `ast.arguments` or raise `SyntaxError`, e.g. "a: list[str], /, b: int = 1, *c, d=100, **e"."""
+
+    return _offset_linenos(ast_parse(f'def f(\n{src}): pass', **parse_params).body[0].args, -1)
+
+
+@staticmethod
+def _parse_arguments_lambda(src: str, parse_params: dict = {}) -> AST:
+    """Parse to an `ast.arguments` for a `Lambda` or raise `SyntaxError`, e.g. "a, /, b, *c, d=100, **e"."""
+
+    return _offset_linenos(ast_parse(f'lambda \\\n{src}: None', **parse_params).body[0].value.args, -1)
+
+
+@staticmethod
 def _parse_arg(src: str, parse_params: dict = {}) -> AST:
     """Parse to an `ast.arg` or raise `SyntaxError`, e.g. "var: list[int]"."""
 
@@ -173,40 +187,22 @@ def _code_as_Slice(self: 'FST', code: Code) -> 'FST':
     return _code_as(self, code, Slice, _parse_Slice)
 
 
-def _code_as_op(self: 'FST', code: Code,
-                target: type[AugAssign] | type[BoolOp] | type[BinOp] | type[UnaryOp] | type[Compare] | None = None,
-                ) -> 'FST':
-    """Convert `code` to an operator `FST` for the given target if possible."""
-
-    if isinstance(code, FST):
-        if (src := code.get_src(*code.loc)) not in _code_as_op_str2op[target]:
-            raise NodeTypeError(f'bad operator {src!r}')
-
-    elif isinstance(code, AST):
-        code = FST(code, lines=[(OPCLS2STR_AUG if target is AugAssign else OPCLS2STR).get(code.__class__, '')])
-
-    else:
-        if isinstance(code, list):
-            code = '\n'.join(lines := code)
-        else:
-            lines = code.split('\n')
-
-        if not (cls := _code_as_op_str2op[target].get(code)):
-            raise NodeTypeError(f'bad operator {code!r}')
-
-        code = FST(cls(), lines=lines)
-
-    if code.a.__class__ not in _code_as_op_ops[target]:
-        raise NodeTypeError(f'expecting operator{f" for {target.__name__}" if target else ""}'
-                            f', got {code.a.__class__.__name__}')
-
-    return code
-
-
 def _code_as_comprehension(self: 'FST', code: Code) -> 'FST':
     """Convert `code` to a comprehension `FST` if possible."""
 
     return _code_as(self, code, comprehension, _parse_comprehension)
+
+
+def _code_as_arguments(self: 'FST', code: Code) -> 'FST':
+    """Convert `code` to a arguments `FST` if possible."""
+
+    return _code_as(self, code, arguments, _parse_arguments)
+
+
+def _code_as_arguments_lambda(self: 'FST', code: Code) -> 'FST':
+    """Convert `code` to a lambda arguments `FST` if possible (no annotations allowed)."""
+
+    return _code_as(self, code, arguments, _parse_arguments_lambda)
 
 
 def _code_as_arg(self: 'FST', code: Code) -> 'FST':
@@ -243,6 +239,36 @@ def _code_as_type_param(self: 'FST', code: Code) -> 'FST':
     """Convert `code` to a type_param `FST` if possible."""
 
     return _code_as(self, code, type_param, _parse_type_param)
+
+
+def _code_as_op(self: 'FST', code: Code,
+                target: type[AugAssign] | type[BoolOp] | type[BinOp] | type[UnaryOp] | type[Compare] | None = None,
+                ) -> 'FST':
+    """Convert `code` to an operator `FST` for the given target if possible."""
+
+    if isinstance(code, FST):
+        if (src := code.get_src(*code.loc)) not in _code_as_op_str2op[target]:
+            raise NodeTypeError(f'bad operator {src!r}')
+
+    elif isinstance(code, AST):
+        code = FST(code, lines=[(OPCLS2STR_AUG if target is AugAssign else OPCLS2STR).get(code.__class__, '')])
+
+    else:
+        if isinstance(code, list):
+            code = '\n'.join(lines := code)
+        else:
+            lines = code.split('\n')
+
+        if not (cls := _code_as_op_str2op[target].get(code)):
+            raise NodeTypeError(f'bad operator {code!r}')
+
+        code = FST(cls(), lines=lines)
+
+    if code.a.__class__ not in _code_as_op_ops[target]:
+        raise NodeTypeError(f'expecting operator{f" for {target.__name__}" if target else ""}'
+                            f', got {code.a.__class__.__name__}')
+
+    return code
 
 
 def _code_as_identifier(self: 'FST', code: Code) -> str:

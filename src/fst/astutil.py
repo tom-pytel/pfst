@@ -1011,6 +1011,7 @@ _PRECEDENCE_NODE_FIELDS = {  # default is _Precedence.TEST
     (Interpolation, 'value'):  _Precedence.TEST.next(),
     (Attribute, 'value'):      _Precedence.ATOM,
     (Subscript, 'value'):      _Precedence.ATOM,
+    (Subscript, 'slice'):      False,                    # unparenthesized tuples put to slice don't need parens
     (Starred, 'value'):        _Precedence.EXPR,
 
     (Invert, 'operand'):       _Precedence.FACTOR,
@@ -1072,6 +1073,9 @@ def precedence_require_parens_by_type(child_type: type[AST], parent_type: type[A
     if not parent_precedence:
         if parent_type is Dict:
             parent_precedence = _Precedence.EXPR if dict_key_is_None and field == 'values' else _Precedence.TEST
+
+        elif parent_type is Subscript:
+            parent_precedence = _Precedence.TUPLE if child_type is Tuple else _Precedence.TEST
 
         elif parent_type is And:
             if child_type is And:

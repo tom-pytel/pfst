@@ -13,8 +13,8 @@ from .shared import (
 )
 
 from .fst_parse import (
-    _code_as_expr, _code_as_pattern, _code_as_comprehension, _code_as_arg, _code_as_keyword, _code_as_alias,
-    _code_as_withitem, _code_as_type_param,
+    _code_as_expr, _code_as_Slice, _code_as_pattern, _code_as_comprehension, _code_as_arguments,
+    _code_as_arguments_lambda, _code_as_arg, _code_as_keyword, _code_as_alias, _code_as_withitem, _code_as_type_param,
 )
 
 
@@ -539,18 +539,21 @@ def _one_info_constant(self: 'FST', static: onestatic, idx: int | None, field: s
 def _one_info_exprish_required(self: 'FST', static: onestatic, idx: int | None, field: str) -> oneinfo:
     return _oneinfo_default
 
-_onestatic_exprish_required       = onestatic(_one_info_exprish_required)
-_onestatic_comprehension_required = onestatic(_one_info_exprish_required, coerce=_code_as_comprehension)
-_onestatic_arg_required           = onestatic(_one_info_exprish_required, coerce=_code_as_arg)
-_onestatic_keyword_required       = onestatic(_one_info_exprish_required, coerce=_code_as_keyword)
-_onestatic_alias_required         = onestatic(_one_info_exprish_required, coerce=_code_as_alias)
-_onestatic_withitem_required      = onestatic(_one_info_exprish_required, coerce=_code_as_withitem)
-_onestatic_pattern_required       = onestatic(_one_info_exprish_required, coerce=_code_as_pattern)
-_onestatic_type_param_required    = onestatic(_one_info_exprish_required, coerce=_code_as_type_param)
-_onestatic_target_Name            = onestatic(_one_info_exprish_required, Name, ctx=Store)
-_onestatic_target_single          = onestatic(_one_info_exprish_required, (Name, Attribute, Subscript), ctx=Store)
-_onestatic_target                 = onestatic(_one_info_exprish_required, (Name, Attribute, Subscript, Tuple, List), ctx=Store)
-_onestatic_For_target             = onestatic(_one_info_exprish_required, (Name, Tuple, List), ctx=Store)
+_onestatic_exprish_required          = onestatic(_one_info_exprish_required)
+_onestatic_Slice_required            = onestatic(_one_info_exprish_required, coerce=_code_as_Slice)
+_onestatic_comprehension_required    = onestatic(_one_info_exprish_required, coerce=_code_as_comprehension)
+_onestatic_arguments_required        = onestatic(_one_info_exprish_required, coerce=_code_as_arguments)
+_onestatic_arguments_lambda_required = onestatic(_one_info_exprish_required, coerce=_code_as_arguments_lambda)
+_onestatic_arg_required              = onestatic(_one_info_exprish_required, coerce=_code_as_arg)
+_onestatic_keyword_required          = onestatic(_one_info_exprish_required, coerce=_code_as_keyword)
+_onestatic_alias_required            = onestatic(_one_info_exprish_required, coerce=_code_as_alias)
+_onestatic_withitem_required         = onestatic(_one_info_exprish_required, coerce=_code_as_withitem)
+_onestatic_pattern_required          = onestatic(_one_info_exprish_required, coerce=_code_as_pattern)
+_onestatic_type_param_required       = onestatic(_one_info_exprish_required, coerce=_code_as_type_param)
+_onestatic_target_Name               = onestatic(_one_info_exprish_required, Name, ctx=Store)
+_onestatic_target_single             = onestatic(_one_info_exprish_required, (Name, Attribute, Subscript), ctx=Store)
+_onestatic_target                    = onestatic(_one_info_exprish_required, (Name, Attribute, Subscript, Tuple, List), ctx=Store)
+_onestatic_For_target                = onestatic(_one_info_exprish_required, (Name, Tuple, List), ctx=Store)
 
 def _one_info_identifier_required(self: 'FST', static: onestatic, idx: int | None, field: str, prefix: str | None = None,
                                  ) -> oneinfo:  # required, cannot delete or put new
@@ -914,13 +917,13 @@ _PUT_ONE_HANDLERS = {
     (FunctionDef, 'decorator_list'):      (_put_one_exprish_sliceable, None, _onestatic_exprish_required), # expr*
     (FunctionDef, 'name'):                (_put_one_identifier_required, None, _onestatic_Functiondef_name), # identifier
     (FunctionDef, 'type_params'):         (_put_one_exprish_sliceable, None, _onestatic_type_param_required), # type_param*
-    # (FunctionDef, 'args'):                (_put_one_default, None, None), # arguments                                       - special parse
+    # (FunctionDef, 'args'):                (_put_one_exprish_required, None, _onestatic_arguments_required), # arguments
     (FunctionDef, 'returns'):             (_put_one_exprish_optional, None, _onestatic_FunctionDef_returns), # expr?
     (FunctionDef, 'body'):                (_put_one_stmtish, None, None), # stmt*
     (AsyncFunctionDef, 'decorator_list'): (_put_one_exprish_sliceable, None, _onestatic_exprish_required), # expr*
     (AsyncFunctionDef, 'name'):           (_put_one_identifier_required, None, _onestatic_Functiondef_name), # identifier
     (AsyncFunctionDef, 'type_params'):    (_put_one_exprish_sliceable, None, _onestatic_type_param_required), # type_param*
-    # (AsyncFunctionDef, 'args'):           (_put_one_default, None, None), # arguments                                       - special parse
+    # (AsyncFunctionDef, 'args'):           (_put_one_exprish_required, None, _onestatic_arguments_required), # arguments
     (AsyncFunctionDef, 'returns'):        (_put_one_exprish_optional, None, _onestatic_FunctionDef_returns), # expr?
     (AsyncFunctionDef, 'body'):           (_put_one_stmtish, None, None), # stmt*
     (ClassDef, 'decorator_list'):         (_put_one_exprish_sliceable, None, _onestatic_exprish_required), # expr*
@@ -1026,7 +1029,7 @@ _PUT_ONE_HANDLERS = {
     (Attribute, 'value'):                 (_put_one_exprish_required, None, _onestatic_exprish_required), # expr
     (Attribute, 'attr'):                  (_put_one_identifier_required, None, onestatic(_one_info_Attribute_attr, coerce=None)), # identifier
     (Subscript, 'value'):                 (_put_one_exprish_required, None, _onestatic_exprish_required), # expr
-    # (Subscript, 'slice'):                 (_put_one_default, None, None), # expr                                            - special parse 'slice'
+    (Subscript, 'slice'):                 (_put_one_exprish_required, None, _onestatic_Slice_required), # expr
     (Starred, 'value'):                   (_put_one_exprish_required, None, _onestatic_exprish_required), # expr
     (Name, 'id'):                         (_put_one_identifier_required, None, _onestatic_identifier_required), # identifier
     (List, 'elts'):                       (_put_one_tuple_list_or_set, None, None), # expr*
