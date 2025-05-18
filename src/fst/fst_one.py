@@ -974,9 +974,9 @@ _PUT_ONE_HANDLERS = {
     (TryStar, 'finalbody'):               (_put_one_stmtish, None, None), # stmt*
     (Assert, 'test'):                     (_put_one_exprish_required, None, _onestatic_exprish_required), # expr
     (Assert, 'msg'):                      (_put_one_exprish_optional, None, onestatic(_one_info_Assert_msg)), # expr?
-    # (Import, 'names'):                    (_put_one_default, None, None), # alias*                                          - slice (special)
+    (Import, 'names'):                    (_put_one_exprish_sliceable, None, _onestatic_alias_required), # alias*
     (ImportFrom, 'module'):               (_put_one_identifier_optional, None, onestatic(_one_info_ImportFrom_module, coerce=None)), # identifier?
-    # (ImportFrom, 'names'):                (_put_one_default, None, None), # alias*                                          - slice (special)
+    (ImportFrom, 'names'):                (_put_one_exprish_sliceable, None, _onestatic_alias_required), # alias*
     # (Global, 'names'):                    (_put_one_default, None, None), # identifier*                                     - slice (special)
     # (Nonlocal, 'names'):                  (_put_one_default, None, None), # identifier*                                     - slice (special)
     (Expr, 'value'):                      (_put_one_exprish_required, None, _onestatic_exprish_required), # expr

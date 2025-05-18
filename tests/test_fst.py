@@ -23516,6 +23516,138 @@ Module .. ROOT 0,0 -> 0,41
 (r"""async with (a as b, (f()) as d): pass""", 'body[0]', -4, 'items', {'raw': False}, r"""g() as new""", r"""**IndexError('index out of range')**""", r"""
 """),
 
+(r"""import a, c.d as e""", 'body[0]', 0, 'names', {'raw': False}, r"""**DEL**""", r"""**ValueError('cannot put slice to Import.names')**""", r"""
+"""),
+
+(r"""import a, c.d as e""", 'body[0]', 0, 'names', {'raw': False}, r"""f as g""", r"""import f as g, c.d as e""", r"""
+Module .. ROOT 0,0 -> 0,23
+  .body[1]
+  0] Import .. 0,0 -> 0,23
+    .names[2]
+    0] alias .. 0,7 -> 0,13
+      .name 'f'
+      .asname
+        'g'
+    1] alias .. 0,15 -> 0,23
+      .name 'c.d'
+      .asname
+        'e'
+"""),
+
+(r"""import a, c.d as e""", 'body[0]', 1, 'names', {'raw': False}, r"""f as g""", r"""import a, f as g""", r"""
+Module .. ROOT 0,0 -> 0,16
+  .body[1]
+  0] Import .. 0,0 -> 0,16
+    .names[2]
+    0] alias .. 0,7 -> 0,8
+      .name 'a'
+    1] alias .. 0,10 -> 0,16
+      .name 'f'
+      .asname
+        'g'
+"""),
+
+(r"""import a, c.d as e""", 'body[0]', -1, 'names', {'raw': False}, r"""f as g""", r"""import a, f as g""", r"""
+Module .. ROOT 0,0 -> 0,16
+  .body[1]
+  0] Import .. 0,0 -> 0,16
+    .names[2]
+    0] alias .. 0,7 -> 0,8
+      .name 'a'
+    1] alias .. 0,10 -> 0,16
+      .name 'f'
+      .asname
+        'g'
+"""),
+
+(r"""import a, c.d as e""", 'body[0]', -2, 'names', {'raw': False}, r"""f as g""", r"""import f as g, c.d as e""", r"""
+Module .. ROOT 0,0 -> 0,23
+  .body[1]
+  0] Import .. 0,0 -> 0,23
+    .names[2]
+    0] alias .. 0,7 -> 0,13
+      .name 'f'
+      .asname
+        'g'
+    1] alias .. 0,15 -> 0,23
+      .name 'c.d'
+      .asname
+        'e'
+"""),
+
+(r"""import a, c.d as e""", 'body[0]', -4, 'names', {'raw': False}, r"""f as g""", r"""**IndexError('index out of range')**""", r"""
+"""),
+
+(r"""from z import (a, c as d)""", 'body[0]', 0, 'names', {'raw': False}, r"""**DEL**""", r"""**ValueError('cannot put slice to ImportFrom.names')**""", r"""
+"""),
+
+(r"""from z import (a, c as d)""", 'body[0]', 0, 'names', {'raw': False}, r"""f as g""", r"""from z import (f as g, c as d)""", r"""
+Module .. ROOT 0,0 -> 0,30
+  .body[1]
+  0] ImportFrom .. 0,0 -> 0,30
+    .module 'z'
+    .names[2]
+    0] alias .. 0,15 -> 0,21
+      .name 'f'
+      .asname
+        'g'
+    1] alias .. 0,23 -> 0,29
+      .name 'c'
+      .asname
+        'd'
+    .level 0
+"""),
+
+(r"""from z import (a, c as d)""", 'body[0]', 1, 'names', {'raw': False}, r"""f as g""", r"""from z import (a, f as g)""", r"""
+Module .. ROOT 0,0 -> 0,25
+  .body[1]
+  0] ImportFrom .. 0,0 -> 0,25
+    .module 'z'
+    .names[2]
+    0] alias .. 0,15 -> 0,16
+      .name 'a'
+    1] alias .. 0,18 -> 0,24
+      .name 'f'
+      .asname
+        'g'
+    .level 0
+"""),
+
+(r"""from z import (a, c as d)""", 'body[0]', -1, 'names', {'raw': False}, r"""f as g""", r"""from z import (a, f as g)""", r"""
+Module .. ROOT 0,0 -> 0,25
+  .body[1]
+  0] ImportFrom .. 0,0 -> 0,25
+    .module 'z'
+    .names[2]
+    0] alias .. 0,15 -> 0,16
+      .name 'a'
+    1] alias .. 0,18 -> 0,24
+      .name 'f'
+      .asname
+        'g'
+    .level 0
+"""),
+
+(r"""from z import (a, c as d)""", 'body[0]', -2, 'names', {'raw': False}, r"""f as g""", r"""from z import (f as g, c as d)""", r"""
+Module .. ROOT 0,0 -> 0,30
+  .body[1]
+  0] ImportFrom .. 0,0 -> 0,30
+    .module 'z'
+    .names[2]
+    0] alias .. 0,15 -> 0,21
+      .name 'f'
+      .asname
+        'g'
+    1] alias .. 0,23 -> 0,29
+      .name 'c'
+      .asname
+        'd'
+    .level 0
+"""),
+
+(r"""from z import (a, c as d)""", 'body[0]', -4, 'names', {'raw': False}, r"""f as g""", r"""**IndexError('index out of range')**""", r"""
+"""),
+
 ]  # END OF PUT_ONE_DATA
 
 PUT_RAW_DATA = [
