@@ -156,8 +156,34 @@ def _put_one_constant(self: 'FST', code: Code | None, idx: int | None, field: st
     return self  # this breaks the rule of returning the child node since it is just a primitive
 
 
-def _put_one_op(self: 'FST', code: Code | None, idx: int | None, field: str, child: str, static: None,
-                **options) -> 'FST':
+def _put_one_BoolOp_op(self: 'FST', code: Code | None, idx: int | None, field: str, child: type[boolop], static: None,
+                       **options) -> 'FST':
+    """Put BoolOp op to potentially multiple places."""
+
+    child  = _validate_put(self, code, idx, field, child, options)
+    code   = self._code_as_op(code, BoolOp)
+    childf = child.f
+    src    = 'and' if isinstance(codea := code.a, And) else 'or'
+    tgt    = 'and' if isinstance(child, And) else 'or'
+    ltgt   = len(tgt)
+    lines  = self.root._lines
+
+    _, _, end_ln, end_col = self.loc
+
+    for value in self.a.values[:-1]:
+        _, _, ln, col = value.f.pars().loc
+        ln, col       = _next_find(lines, ln, col, end_ln, end_col, tgt)  # must be there
+
+        self.put_src(src, ln, col, ln, col + ltgt, False)
+
+    childf._set_ast(codea)
+
+    return childf
+
+
+def _put_one_op(self: 'FST', code: Code | None, idx: int | None, field: str,
+                child: type[boolop] | type[operator] | type[unaryop] | type[cmpop],
+                static: None, **options) -> 'FST':
     """Put a single opertation, with or without '=' for AugAssign."""
 
     child  = _validate_put(self, code, idx, field, child, options)
@@ -167,7 +193,7 @@ def _put_one_op(self: 'FST', code: Code | None, idx: int | None, field: str, chi
     ln, col, end_ln, end_col = childf.loc
 
     self.put_src(code._lines, ln, col, end_ln, end_col, False)
-    child.f._set_ast(code.a)
+    childf._set_ast(code.a)
 
     return childf
 
@@ -1043,7 +1069,7 @@ _PUT_ONE_HANDLERS = {
     (Global, 'names'):                    (_put_one_identifier_sliceable, None, _onestatic_Global_Nonlocal_names), # identifier*
     (Nonlocal, 'names'):                  (_put_one_identifier_sliceable, None, _onestatic_Global_Nonlocal_names), # identifier*
     (Expr, 'value'):                      (_put_one_exprish_required, None, _onestatic_exprish_required), # expr
-    # (BoolOp, 'op'):                       (_put_one_default, None, None), # boolop                                          - OP MAY NOT HAVE UNIQUE LOCATION!
+    (BoolOp, 'op'):                       (_put_one_BoolOp_op, None, _onestatic_identifier_required), # boolop
     (BoolOp, 'values'):                   (_put_one_exprish_sliceable, None, _onestatic_exprish_required), # expr*
     (NamedExpr, 'target'):                (_put_one_exprish_required, None, _onestatic_target_Name), # expr
     (NamedExpr, 'value'):                 (_put_one_exprish_required, None, _onestatic_exprish_required), # expr

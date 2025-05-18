@@ -18088,7 +18088,7 @@ Module .. ROOT 0,0 -> 0,29
 (r"""a += b""", 'body[0]', None, 'op', {'raw': False}, r"""new""", r"""**NodeTypeError("bad operator 'new'")**""", r"""
 """),
 
-(r"""a and b""", 'body[0].value', None, 'op', {'raw': False}, r"""new""", r"""**ValueError('cannot replace BoolOp.op')**""", r"""
+(r"""a and b""", 'body[0].value', None, 'op', {'raw': False}, r"""new""", r"""**NodeTypeError("bad operator 'new'")**""", r"""
 """),
 
 (r"""a + b""", 'body[0].value', None, 'op', {'raw': False}, r"""new""", r"""**NodeTypeError("bad operator 'new'")**""", r"""
@@ -24110,9 +24110,69 @@ Module .. ROOT 0,0 -> 0,12
       .body Constant None .. 0,8 -> 0,12
 """),
 
+(r"""a and b""", 'body[0].value', None, 'op', {'raw': False}, r"""or""", r"""a or b""", r"""
+Module .. ROOT 0,0 -> 0,6
+  .body[1]
+  0] Expr .. 0,0 -> 0,6
+    .value BoolOp .. 0,0 -> 0,6
+      .op Or
+      .values[2]
+      0] Name 'a' Load .. 0,0 -> 0,1
+      1] Name 'b' Load .. 0,5 -> 0,6
+"""),
+
+(r"""a and b""", 'body[0].value', None, 'op', {'raw': False}, r"""+""", r"""**NodeTypeError("bad operator '+'")**""", r"""
+"""),
+
+(r"""a and b and c""", 'body[0].value', None, 'op', {'raw': False}, r"""or""", r"""a or b or c""", r"""
+Module .. ROOT 0,0 -> 0,11
+  .body[1]
+  0] Expr .. 0,0 -> 0,11
+    .value BoolOp .. 0,0 -> 0,11
+      .op Or
+      .values[3]
+      0] Name 'a' Load .. 0,0 -> 0,1
+      1] Name 'b' Load .. 0,5 -> 0,6
+      2] Name 'c' Load .. 0,10 -> 0,11
+"""),
+
+(r"""(a) or ( b ) or (
+c
+)""", 'body[0].value', None, 'op', {'raw': False}, r"""and""", r"""(a) and ( b ) and (
+c
+)""", r"""
+Module .. ROOT 0,0 -> 2,1
+  .body[1]
+  0] Expr .. 0,0 -> 2,1
+    .value BoolOp .. 0,0 -> 2,1
+      .op And
+      .values[3]
+      0] Name 'a' Load .. 0,1 -> 0,2
+      1] Name 'b' Load .. 0,10 -> 0,11
+      2] Name 'c' Load .. 1,0 -> 1,1
+"""),
+
+(r"""a\
+and\
+b \
+  and \
+ c""", 'body[0].value', None, 'op', {'raw': False}, r"""or""", r"""a\
+or\
+b \
+  or \
+ c""", r"""
+Module .. ROOT 0,0 -> 4,2
+  .body[1]
+  0] Expr .. 0,0 -> 4,2
+    .value BoolOp .. 0,0 -> 4,2
+      .op Or
+      .values[3]
+      0] Name 'a' Load .. 0,0 -> 0,1
+      1] Name 'b' Load .. 2,0 -> 2,1
+      2] Name 'c' Load .. 4,1 -> 4,2
+"""),
+
 ]  # END OF PUT_ONE_DATA
-
-
 
 PUT_RAW_DATA = [
 (r"""(1, 2, 3)""", '', (0, 4, 0, 5), {}, r"""*z""", r"""*z""", r"""(1, *z, 3)""", r"""
@@ -32490,11 +32550,11 @@ class cls:
         self.assertRaises(NodeTypeError, parse('a *= b').body[0].f.put, '~', field='op', raw=False)
         self.assertRaises(NodeTypeError, parse('a *= b').body[0].f.put, '<', field='op', raw=False)
 
-        self.assertRaises(ValueError, parse('a or b').body[0].value.f.put, '*=', field='op', raw=False)
-        self.assertRaises(ValueError, parse('a or b').body[0].value.f.put, 'and', field='op', raw=False)
-        self.assertRaises(ValueError, parse('a or b').body[0].value.f.put, '/', field='op', raw=False)
-        self.assertRaises(ValueError, parse('a or b').body[0].value.f.put, '~', field='op', raw=False)
-        self.assertRaises(ValueError, parse('a or b').body[0].value.f.put, '<', field='op', raw=False)
+        self.assertRaises(NodeTypeError, parse('a or b').body[0].value.f.put, '*=', field='op', raw=False)
+        self.assertEqual('a and b', parse('a or b').body[0].value.f.put('and', field='op', raw=False).src)
+        self.assertRaises(NodeTypeError, parse('a or b').body[0].value.f.put, '/', field='op', raw=False)
+        self.assertRaises(NodeTypeError, parse('a or b').body[0].value.f.put, '~', field='op', raw=False)
+        self.assertRaises(NodeTypeError, parse('a or b').body[0].value.f.put, '<', field='op', raw=False)
 
         self.assertRaises(NodeTypeError, parse('a + b').body[0].value.f.put, '*=', field='op', raw=False)
         self.assertRaises(NodeTypeError, parse('a + b').body[0].value.f.put, 'and', field='op', raw=False)
@@ -32520,11 +32580,11 @@ class cls:
         self.assertRaises(NodeTypeError, parse('a *= b').body[0].f.put, ['~'], field='op', raw=False)
         self.assertRaises(NodeTypeError, parse('a *= b').body[0].f.put, ['<'], field='op', raw=False)
 
-        self.assertRaises(ValueError, parse('a or b').body[0].value.f.put, ['*='], field='op', raw=False)
-        self.assertRaises(ValueError, parse('a or b').body[0].value.f.put, ['and'], field='op', raw=False)
-        self.assertRaises(ValueError, parse('a or b').body[0].value.f.put, ['/'], field='op', raw=False)
-        self.assertRaises(ValueError, parse('a or b').body[0].value.f.put, ['~'], field='op', raw=False)
-        self.assertRaises(ValueError, parse('a or b').body[0].value.f.put, ['<'], field='op', raw=False)
+        self.assertRaises(NodeTypeError, parse('a or b').body[0].value.f.put, ['*='], field='op', raw=False)
+        self.assertEqual('a and b', parse('a or b').body[0].value.f.put(['and'], field='op', raw=False).src)
+        self.assertRaises(NodeTypeError, parse('a or b').body[0].value.f.put, ['/'], field='op', raw=False)
+        self.assertRaises(NodeTypeError, parse('a or b').body[0].value.f.put, ['~'], field='op', raw=False)
+        self.assertRaises(NodeTypeError, parse('a or b').body[0].value.f.put, ['<'], field='op', raw=False)
 
         self.assertRaises(NodeTypeError, parse('a + b').body[0].value.f.put, ['*='], field='op', raw=False)
         self.assertRaises(NodeTypeError, parse('a + b').body[0].value.f.put, ['and'], field='op', raw=False)
@@ -32550,11 +32610,11 @@ class cls:
         self.assertRaises(NodeTypeError, parse('a *= b').body[0].f.put, Invert(), field='op', raw=False)
         self.assertRaises(NodeTypeError, parse('a *= b').body[0].f.put, Lt(), field='op', raw=False)
 
-        self.assertRaises(ValueError, parse('a or b').body[0].value.f.put, Mult(), field='op', raw=False)
-        self.assertRaises(ValueError, parse('a or b').body[0].value.f.put, And(), field='op', raw=False)
-        self.assertRaises(ValueError, parse('a or b').body[0].value.f.put, Div(), field='op', raw=False)
-        self.assertRaises(ValueError, parse('a or b').body[0].value.f.put, Invert(), field='op', raw=False)
-        self.assertRaises(ValueError, parse('a or b').body[0].value.f.put, Lt(), field='op', raw=False)
+        self.assertRaises(NodeTypeError, parse('a or b').body[0].value.f.put, Mult(), field='op', raw=False)
+        self.assertEqual('a and b', parse('a or b').body[0].value.f.put(And(), field='op', raw=False).src)
+        self.assertRaises(NodeTypeError, parse('a or b').body[0].value.f.put, Div(), field='op', raw=False)
+        self.assertRaises(NodeTypeError, parse('a or b').body[0].value.f.put, Invert(), field='op', raw=False)
+        self.assertRaises(NodeTypeError, parse('a or b').body[0].value.f.put, Lt(), field='op', raw=False)
 
         self.assertEqual('a * b', parse('a + b').body[0].value.f.put(Mult(), field='op', raw=False).src)
         self.assertRaises(NodeTypeError, parse('a + b').body[0].value.f.put, And(), field='op', raw=False)
@@ -32580,11 +32640,11 @@ class cls:
         self.assertRaises(NodeTypeError, parse('a *= b').body[0].f.put, FST(Invert(), lines=['~']), field='op', raw=False)
         self.assertRaises(NodeTypeError, parse('a *= b').body[0].f.put, FST(Lt(), lines=['~']), field='op', raw=False)
 
-        self.assertRaises(ValueError, parse('a or b').body[0].value.f.put, FST(Mult(), lines=['*']), field='op', raw=False)
-        self.assertRaises(ValueError, parse('a or b').body[0].value.f.put, FST(And(), lines=['and']), field='op', raw=False)
-        self.assertRaises(ValueError, parse('a or b').body[0].value.f.put, FST(Div(), lines=['/']), field='op', raw=False)
-        self.assertRaises(ValueError, parse('a or b').body[0].value.f.put, FST(Invert(), lines=['~']), field='op', raw=False)
-        self.assertRaises(ValueError, parse('a or b').body[0].value.f.put, FST(Lt(), lines=['~']), field='op', raw=False)
+        self.assertRaises(NodeTypeError, parse('a or b').body[0].value.f.put, FST(Mult(), lines=['*']), field='op', raw=False)
+        self.assertEqual('a and b', parse('a or b').body[0].value.f.put(FST(And(), lines=['and']), field='op', raw=False).src)
+        self.assertRaises(NodeTypeError, parse('a or b').body[0].value.f.put, FST(Div(), lines=['/']), field='op', raw=False)
+        self.assertRaises(NodeTypeError, parse('a or b').body[0].value.f.put, FST(Invert(), lines=['~']), field='op', raw=False)
+        self.assertRaises(NodeTypeError, parse('a or b').body[0].value.f.put, FST(Lt(), lines=['~']), field='op', raw=False)
 
         self.assertEqual('a * b', parse('a + b').body[0].value.f.put(FST(Mult(), lines=['*']), field='op', raw=False).src)
         self.assertRaises(NodeTypeError, parse('a + b').body[0].value.f.put, FST(And(), lines=['and']), field='op', raw=False)
