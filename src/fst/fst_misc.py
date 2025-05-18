@@ -498,7 +498,7 @@ def _loc_comprehension(self: 'FST') -> fstloc | None:
 
 
 def _loc_arguments(self: 'FST') -> fstloc | None:
-    """`arguments` location from children. Called from `.loc`."""
+    """`arguments` location from children. Called from `.loc`. Returns `None` when there are no arguments."""
 
     if not (first := self.first_child(True)):
         return None
@@ -541,10 +541,33 @@ def _loc_arguments(self: 'FST') -> fstloc | None:
             start_col = ante_start_col
 
     if leading_stars:  # find star to the left, we know it exists so we don't check for None return
-        start_ln, start_col = _prev_find(lines, *first._prev_ast_bound('allown'), start_ln, start_col,
-                                            leading_stars)
+        start_ln, start_col = _prev_find(lines, *first._prev_ast_bound('allown'), start_ln, start_col, leading_stars)
 
     return fstloc(start_ln, start_col, end_ln, end_col)
+
+
+def _loc_arguments_empty(self: 'FST') -> fstloc:
+    """`arguments` location for empty arguments ONLY! DO NOT CALL FOR NONEMPTY ARGUMENTS!"""
+
+    if not (parent := self.parent):
+        return fstloc(0, 0, len(ls := self._lines), len(ls[-1]))  # parent=None means we are root
+
+    ln, col, end_ln, end_col = parent.loc
+    lines                    = self.root._lines
+
+    if isinstance(parenta := parent.a, Lambda):
+        col             += 6
+        end_ln, end_col  = _next_find(lines, ln, col, end_ln, end_col, ':')
+
+    else:
+        if type_params := getattr(parenta, 'type_params', None):  # doesn't exist in py < 3.12
+            _, _, ln, col = type_params[-1].f.loc
+
+        ln, col          = _next_find(lines, ln, col, end_ln, end_col, '(')
+        col             += 1
+        end_ln, end_col  = _next_find(lines, ln, col, end_ln, end_col, ')')
+
+    return fstloc(ln, col, end_ln, end_col)
 
 
 def _loc_withitem(self: 'FST') -> fstloc | None:

@@ -1929,6 +1929,7 @@ class FST:
         _loc_operator,
         _loc_comprehension,
         _loc_arguments,
+        _loc_arguments_empty,
         _loc_withitem,
         _loc_match_case,
         _dict_key_or_mock_loc,

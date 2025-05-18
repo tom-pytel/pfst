@@ -231,14 +231,15 @@ def _make_exprish_fst(self: 'FST', code: Code | None, idx: int | None, field: st
     params_offset = self.put_src(put_fst._lines, ln, col, end_ln, end_col, True, False, exclude=self)
 
     put_fst.offset(0, 0, ln, dcol_offset)
-    self.offset(*params_offset, exclude=target, self_=False)
+    self.offset(*params_offset, exclude=target, self_=False)  # excluding an fstloc instead of FST is harmless, will not exclude anything
     set_ctx(put_ast, ctx)
 
     return put_fst
 
 
 def _put_one_exprish_required(self: 'FST', code: Code | None, idx: int | None, field: str, child: list[AST] | AST | None,
-                              static: onestatic, validate: bool = True, **options) -> 'FST':
+                              static: onestatic, validate: bool = True, target: fstloc | None = None, prefix: str = '',
+                              **options) -> 'FST':
     """Put a single required expression. Can be standalone or as part of sequence."""
 
     if validate:
@@ -250,7 +251,7 @@ def _put_one_exprish_required(self: 'FST', code: Code | None, idx: int | None, f
 
     childf  = child.f
     ctx     = ((ctx := getattr(child, 'ctx', None)) and ctx.__class__) or Load
-    put_fst = _make_exprish_fst(self, code, idx, field, static, childf, ctx, **options)
+    put_fst = _make_exprish_fst(self, code, idx, field, static, target or childf, ctx, prefix, **options)
 
     childf._set_ast(put_fst.a)
 
@@ -309,6 +310,15 @@ def _put_one_exprish_sliceable(self: 'FST', code: Code | None, idx: int | None, 
     return _put_one_exprish_required(self, code, idx, field, child, static, **options)
 
 
+def _put_one_FunctionDef_arguments(self: 'FST', code: Code | None, idx: int | None, field: str, child: AST,
+                                   static: onestatic, **options) -> 'FST':
+    """Put FunctionDef.arguments. Does not have location if there are no arguments."""
+
+    return _put_one_exprish_required(self, code, idx, field, child, static, True,
+                                     None if (args := self.a.args.f).loc else args._loc_arguments_empty(),
+                                     **options)
+
+
 def _put_one_Compare_None(self: 'FST', code: Code | None, idx: int | None, field: str, child: None,
                           static: onestatic, **options) -> 'FST':
     """Put to combined [Compare.left, Compare.comparators] using this total indexing."""
@@ -338,6 +348,26 @@ def _put_one_Interpolation_value(self: 'FST', code: Code | None, idx: int | None
     self.a.str = self.get_src(*ret.loc)
 
     return ret
+
+
+def _put_one_Lambda_arguments(self: 'FST', code: Code | None, idx: int | None, field: str, child: AST,
+                              static: onestatic, **options) -> 'FST':
+    """Put Lambda.arguments. Does not have location if there are no arguments."""
+
+    child  = _validate_put(self, code, idx, field, child, options)  # we want to do it in same order as all other puts
+    code   = static.coerce(self, code)  # and we coerce here just so we can check if is empty args being put to set the prefix correctly
+    prefix = ' ' if code.loc else ''  # if arguments has .loc then it is not empty
+
+    if not (args := self.a.args.f).loc:
+        target = args._loc_arguments_empty()
+
+    else:  # need whole arguments location (including preceding space) because may be replacing with empty arguments
+        _, _, last_ln, last_col  = args.last_child().loc
+        ln, col, end_ln, end_col = self.loc
+        end_ln, end_col          = _next_find(self.root._lines, last_ln, last_col, end_ln, end_col, ':')
+        target                   = fstloc(ln, col + 6, end_ln, end_col)
+
+    return _put_one_exprish_required(self, code, idx, field, child, static, False, target, prefix, **options)
 
 
 def _put_one_MatchValue_value(self: 'FST', code: Code | None, idx: int | None, field: str, child: AST,
@@ -587,7 +617,7 @@ _onestatic_identifier_required = onestatic(_one_info_identifier_required, coerce
 def _one_info_FunctionDef_name(self: 'FST', static: onestatic, idx: int | None, field: str) -> oneinfo:
     return _one_info_identifier_required(self, static, idx, field, 'def')
 
-_onestatic_Functiondef_name = onestatic(_one_info_FunctionDef_name, coerce=None)
+_onestatic_FunctionDef_name = onestatic(_one_info_FunctionDef_name, coerce=None)
 
 def _one_info_FunctionDef_returns(self: 'FST', static: onestatic, idx: int | None, field: str) -> oneinfo:
     ln, col, end_ln, end_col = self._loc_block_header_end(True)
@@ -945,15 +975,15 @@ _PUT_ONE_HANDLERS = {
     (Interactive, 'body'):                (_put_one_stmtish, None, None), # stmt*
     (Expression, 'body'):                 (_put_one_exprish_required, None, _onestatic_exprish_required), # expr
     (FunctionDef, 'decorator_list'):      (_put_one_exprish_sliceable, None, _onestatic_exprish_required), # expr*
-    (FunctionDef, 'name'):                (_put_one_identifier_required, None, _onestatic_Functiondef_name), # identifier
+    (FunctionDef, 'name'):                (_put_one_identifier_required, None, _onestatic_FunctionDef_name), # identifier
     (FunctionDef, 'type_params'):         (_put_one_exprish_sliceable, None, _onestatic_type_param_required), # type_param*
-    # (FunctionDef, 'args'):                (_put_one_exprish_required, None, _onestatic_arguments_required), # arguments
+    (FunctionDef, 'args'):                (_put_one_FunctionDef_arguments, None, _onestatic_arguments_required), # arguments
     (FunctionDef, 'returns'):             (_put_one_exprish_optional, None, _onestatic_FunctionDef_returns), # expr?
     (FunctionDef, 'body'):                (_put_one_stmtish, None, None), # stmt*
     (AsyncFunctionDef, 'decorator_list'): (_put_one_exprish_sliceable, None, _onestatic_exprish_required), # expr*
-    (AsyncFunctionDef, 'name'):           (_put_one_identifier_required, None, _onestatic_Functiondef_name), # identifier
+    (AsyncFunctionDef, 'name'):           (_put_one_identifier_required, None, _onestatic_FunctionDef_name), # identifier
     (AsyncFunctionDef, 'type_params'):    (_put_one_exprish_sliceable, None, _onestatic_type_param_required), # type_param*
-    # (AsyncFunctionDef, 'args'):           (_put_one_exprish_required, None, _onestatic_arguments_required), # arguments
+    (AsyncFunctionDef, 'args'):           (_put_one_FunctionDef_arguments, None, _onestatic_arguments_required), # arguments
     (AsyncFunctionDef, 'returns'):        (_put_one_exprish_optional, None, _onestatic_FunctionDef_returns), # expr?
     (AsyncFunctionDef, 'body'):           (_put_one_stmtish, None, None), # stmt*
     (ClassDef, 'decorator_list'):         (_put_one_exprish_sliceable, None, _onestatic_exprish_required), # expr*
@@ -1022,7 +1052,7 @@ _PUT_ONE_HANDLERS = {
     (BinOp, 'right'):                     (_put_one_exprish_required, None, _onestatic_exprish_required), # expr
     (UnaryOp, 'op'):                      (_put_one_op, None, None), # unaryop
     (UnaryOp, 'operand'):                 (_put_one_exprish_required, None, _onestatic_exprish_required), # expr
-    # (Lambda, 'args'):                     (_put_one_default, None, None), # arguments                                       - special parse
+    (Lambda, 'args'):                     (_put_one_Lambda_arguments, None, _onestatic_arguments_lambda_required), # arguments
     (Lambda, 'body'):                     (_put_one_exprish_required, None, _onestatic_exprish_required), # expr
     (IfExp, 'body'):                      (_put_one_exprish_required, None, _onestatic_exprish_required), # expr
     (IfExp, 'test'):                      (_put_one_exprish_required, None, _onestatic_exprish_required), # expr

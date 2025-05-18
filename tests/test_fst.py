@@ -23787,38 +23787,331 @@ Module .. ROOT 0,0 -> 3,1
 (r"""nonlocal a, b""", 'body[0]', -4, 'names', {'raw': False}, r"""new""", r"""**IndexError('index out of range')**""", r"""
 """),
 
+(r"""def f(a=1): pass""", 'body[0]', None, 'args', {'raw': False}, r"""**DEL**""", r"""**ValueError('cannot delete FunctionDef.args')**""", r"""
+"""),
+
+(r"""def f(a=1): pass""", 'body[0]', None, 'args', {'raw': False}, r"""a: list[str], /, b: int = 1, *c, d=100, **e""", r"""def f(a: list[str], /, b: int = 1, *c, d=100, **e): pass""", r"""
+Module .. ROOT 0,0 -> 0,56
+  .body[1]
+  0] FunctionDef .. 0,0 -> 0,56
+    .name 'f'
+    .args arguments .. 0,6 -> 0,49
+      .posonlyargs[1]
+      0] arg .. 0,6 -> 0,18
+        .arg 'a'
+        .annotation Subscript .. 0,9 -> 0,18
+          .value Name 'list' Load .. 0,9 -> 0,13
+          .slice Name 'str' Load .. 0,14 -> 0,17
+          .ctx Load
+      .args[1]
+      0] arg .. 0,23 -> 0,29
+        .arg 'b'
+        .annotation Name 'int' Load .. 0,26 -> 0,29
+      .vararg arg .. 0,36 -> 0,37
+        .arg 'c'
+      .kwonlyargs[1]
+      0] arg .. 0,39 -> 0,40
+        .arg 'd'
+      .kw_defaults[1]
+      0] Constant 100 .. 0,41 -> 0,44
+      .kwarg arg .. 0,48 -> 0,49
+        .arg 'e'
+      .defaults[1]
+      0] Constant 1 .. 0,32 -> 0,33
+    .body[1]
+    0] Pass .. 0,52 -> 0,56
+"""),
+
+(r"""def f(): pass""", 'body[0]', None, 'args', {'raw': False}, r"""a: list[str], /, b: int = 1, *c, d=100, **e""", r"""def f(a: list[str], /, b: int = 1, *c, d=100, **e): pass""", r"""
+Module .. ROOT 0,0 -> 0,56
+  .body[1]
+  0] FunctionDef .. 0,0 -> 0,56
+    .name 'f'
+    .args arguments .. 0,6 -> 0,49
+      .posonlyargs[1]
+      0] arg .. 0,6 -> 0,18
+        .arg 'a'
+        .annotation Subscript .. 0,9 -> 0,18
+          .value Name 'list' Load .. 0,9 -> 0,13
+          .slice Name 'str' Load .. 0,14 -> 0,17
+          .ctx Load
+      .args[1]
+      0] arg .. 0,23 -> 0,29
+        .arg 'b'
+        .annotation Name 'int' Load .. 0,26 -> 0,29
+      .vararg arg .. 0,36 -> 0,37
+        .arg 'c'
+      .kwonlyargs[1]
+      0] arg .. 0,39 -> 0,40
+        .arg 'd'
+      .kw_defaults[1]
+      0] Constant 100 .. 0,41 -> 0,44
+      .kwarg arg .. 0,48 -> 0,49
+        .arg 'e'
+      .defaults[1]
+      0] Constant 1 .. 0,32 -> 0,33
+    .body[1]
+    0] Pass .. 0,52 -> 0,56
+"""),
+
+(r"""def f(\
+\
+): pass""", 'body[0]', None, 'args', {'raw': False}, r"""a: list[str], /, b: int = 1, *c, d=100, **e""", r"""def f(a: list[str], /, b: int = 1, *c, d=100, **e): pass""", r"""
+Module .. ROOT 0,0 -> 0,56
+  .body[1]
+  0] FunctionDef .. 0,0 -> 0,56
+    .name 'f'
+    .args arguments .. 0,6 -> 0,49
+      .posonlyargs[1]
+      0] arg .. 0,6 -> 0,18
+        .arg 'a'
+        .annotation Subscript .. 0,9 -> 0,18
+          .value Name 'list' Load .. 0,9 -> 0,13
+          .slice Name 'str' Load .. 0,14 -> 0,17
+          .ctx Load
+      .args[1]
+      0] arg .. 0,23 -> 0,29
+        .arg 'b'
+        .annotation Name 'int' Load .. 0,26 -> 0,29
+      .vararg arg .. 0,36 -> 0,37
+        .arg 'c'
+      .kwonlyargs[1]
+      0] arg .. 0,39 -> 0,40
+        .arg 'd'
+      .kw_defaults[1]
+      0] Constant 100 .. 0,41 -> 0,44
+      .kwarg arg .. 0,48 -> 0,49
+        .arg 'e'
+      .defaults[1]
+      0] Constant 1 .. 0,32 -> 0,33
+    .body[1]
+    0] Pass .. 0,52 -> 0,56
+"""),
+
+(r"""def f(a=1): pass""", 'body[0]', 0, 'args', {'raw': False}, r"""a: list[str], /, b: int = 1, *c, d=100, **e""", r"""**IndexError('FunctionDef.args does not take an index')**""", r"""
+"""),
+
+(r"""def f(a=1): pass""", 'body[0]', None, 'args', {'raw': False}, r"""""", r"""def f(): pass""", r"""
+Module .. ROOT 0,0 -> 0,13
+  .body[1]
+  0] FunctionDef .. 0,0 -> 0,13
+    .name 'f'
+    .body[1]
+    0] Pass .. 0,9 -> 0,13
+"""),
+
+(r"""async def f(a=1): pass""", 'body[0]', None, 'args', {'raw': False}, r"""**DEL**""", r"""**ValueError('cannot delete AsyncFunctionDef.args')**""", r"""
+"""),
+
+(r"""async def f(a=1): pass""", 'body[0]', None, 'args', {'raw': False}, r"""a: list[str], /, b: int = 1, *c, d=100, **e""", r"""async def f(a: list[str], /, b: int = 1, *c, d=100, **e): pass""", r"""
+Module .. ROOT 0,0 -> 0,62
+  .body[1]
+  0] AsyncFunctionDef .. 0,0 -> 0,62
+    .name 'f'
+    .args arguments .. 0,12 -> 0,55
+      .posonlyargs[1]
+      0] arg .. 0,12 -> 0,24
+        .arg 'a'
+        .annotation Subscript .. 0,15 -> 0,24
+          .value Name 'list' Load .. 0,15 -> 0,19
+          .slice Name 'str' Load .. 0,20 -> 0,23
+          .ctx Load
+      .args[1]
+      0] arg .. 0,29 -> 0,35
+        .arg 'b'
+        .annotation Name 'int' Load .. 0,32 -> 0,35
+      .vararg arg .. 0,42 -> 0,43
+        .arg 'c'
+      .kwonlyargs[1]
+      0] arg .. 0,45 -> 0,46
+        .arg 'd'
+      .kw_defaults[1]
+      0] Constant 100 .. 0,47 -> 0,50
+      .kwarg arg .. 0,54 -> 0,55
+        .arg 'e'
+      .defaults[1]
+      0] Constant 1 .. 0,38 -> 0,39
+    .body[1]
+    0] Pass .. 0,58 -> 0,62
+"""),
+
+(r"""async def f(): pass""", 'body[0]', None, 'args', {'raw': False}, r"""a: list[str], /, b: int = 1, *c, d=100, **e""", r"""async def f(a: list[str], /, b: int = 1, *c, d=100, **e): pass""", r"""
+Module .. ROOT 0,0 -> 0,62
+  .body[1]
+  0] AsyncFunctionDef .. 0,0 -> 0,62
+    .name 'f'
+    .args arguments .. 0,12 -> 0,55
+      .posonlyargs[1]
+      0] arg .. 0,12 -> 0,24
+        .arg 'a'
+        .annotation Subscript .. 0,15 -> 0,24
+          .value Name 'list' Load .. 0,15 -> 0,19
+          .slice Name 'str' Load .. 0,20 -> 0,23
+          .ctx Load
+      .args[1]
+      0] arg .. 0,29 -> 0,35
+        .arg 'b'
+        .annotation Name 'int' Load .. 0,32 -> 0,35
+      .vararg arg .. 0,42 -> 0,43
+        .arg 'c'
+      .kwonlyargs[1]
+      0] arg .. 0,45 -> 0,46
+        .arg 'd'
+      .kw_defaults[1]
+      0] Constant 100 .. 0,47 -> 0,50
+      .kwarg arg .. 0,54 -> 0,55
+        .arg 'e'
+      .defaults[1]
+      0] Constant 1 .. 0,38 -> 0,39
+    .body[1]
+    0] Pass .. 0,58 -> 0,62
+"""),
+
+(r"""async def f(\
+\
+): pass""", 'body[0]', None, 'args', {'raw': False}, r"""a: list[str], /, b: int = 1, *c, d=100, **e""", r"""async def f(a: list[str], /, b: int = 1, *c, d=100, **e): pass""", r"""
+Module .. ROOT 0,0 -> 0,62
+  .body[1]
+  0] AsyncFunctionDef .. 0,0 -> 0,62
+    .name 'f'
+    .args arguments .. 0,12 -> 0,55
+      .posonlyargs[1]
+      0] arg .. 0,12 -> 0,24
+        .arg 'a'
+        .annotation Subscript .. 0,15 -> 0,24
+          .value Name 'list' Load .. 0,15 -> 0,19
+          .slice Name 'str' Load .. 0,20 -> 0,23
+          .ctx Load
+      .args[1]
+      0] arg .. 0,29 -> 0,35
+        .arg 'b'
+        .annotation Name 'int' Load .. 0,32 -> 0,35
+      .vararg arg .. 0,42 -> 0,43
+        .arg 'c'
+      .kwonlyargs[1]
+      0] arg .. 0,45 -> 0,46
+        .arg 'd'
+      .kw_defaults[1]
+      0] Constant 100 .. 0,47 -> 0,50
+      .kwarg arg .. 0,54 -> 0,55
+        .arg 'e'
+      .defaults[1]
+      0] Constant 1 .. 0,38 -> 0,39
+    .body[1]
+    0] Pass .. 0,58 -> 0,62
+"""),
+
+(r"""async def f(a=1): pass""", 'body[0]', 0, 'args', {'raw': False}, r"""a: list[str], /, b: int = 1, *c, d=100, **e""", r"""**IndexError('AsyncFunctionDef.args does not take an index')**""", r"""
+"""),
+
+(r"""async def f(a=1): pass""", 'body[0]', None, 'args', {'raw': False}, r"""""", r"""async def f(): pass""", r"""
+Module .. ROOT 0,0 -> 0,19
+  .body[1]
+  0] AsyncFunctionDef .. 0,0 -> 0,19
+    .name 'f'
+    .body[1]
+    0] Pass .. 0,15 -> 0,19
+"""),
+
+(r"""lambda a=1: None""", 'body[0].value', None, 'args', {'raw': False}, r"""**DEL**""", r"""**ValueError('cannot delete Lambda.args')**""", r"""
+"""),
+
+(r"""lambda a=1: None""", 'body[0].value', None, 'args', {'raw': False}, r"""a: list[str], /, b: int = 1, *c, d=100, **e""", r"""**SyntaxError**""", r"""
+"""),
+
+(r"""lambda a=1: None""", 'body[0].value', None, 'args', {'raw': False}, r"""a, /, b=1, *c, d=100, **e""", r"""lambda a, /, b=1, *c, d=100, **e: None""", r"""
+Module .. ROOT 0,0 -> 0,38
+  .body[1]
+  0] Expr .. 0,0 -> 0,38
+    .value Lambda .. 0,0 -> 0,38
+      .args arguments .. 0,7 -> 0,32
+        .posonlyargs[1]
+        0] arg .. 0,7 -> 0,8
+          .arg 'a'
+        .args[1]
+        0] arg .. 0,13 -> 0,14
+          .arg 'b'
+        .vararg arg .. 0,19 -> 0,20
+          .arg 'c'
+        .kwonlyargs[1]
+        0] arg .. 0,22 -> 0,23
+          .arg 'd'
+        .kw_defaults[1]
+        0] Constant 100 .. 0,24 -> 0,27
+        .kwarg arg .. 0,31 -> 0,32
+          .arg 'e'
+        .defaults[1]
+        0] Constant 1 .. 0,15 -> 0,16
+      .body Constant None .. 0,34 -> 0,38
+"""),
+
+(r"""lambda: None""", 'body[0].value', None, 'args', {'raw': False}, r"""a, /, b=1, *c, d=100, **e""", r"""lambda a, /, b=1, *c, d=100, **e: None""", r"""
+Module .. ROOT 0,0 -> 0,38
+  .body[1]
+  0] Expr .. 0,0 -> 0,38
+    .value Lambda .. 0,0 -> 0,38
+      .args arguments .. 0,7 -> 0,32
+        .posonlyargs[1]
+        0] arg .. 0,7 -> 0,8
+          .arg 'a'
+        .args[1]
+        0] arg .. 0,13 -> 0,14
+          .arg 'b'
+        .vararg arg .. 0,19 -> 0,20
+          .arg 'c'
+        .kwonlyargs[1]
+        0] arg .. 0,22 -> 0,23
+          .arg 'd'
+        .kw_defaults[1]
+        0] Constant 100 .. 0,24 -> 0,27
+        .kwarg arg .. 0,31 -> 0,32
+          .arg 'e'
+        .defaults[1]
+        0] Constant 1 .. 0,15 -> 0,16
+      .body Constant None .. 0,34 -> 0,38
+"""),
+
+(r"""lambda\
+\
+: None""", 'body[0].value', None, 'args', {'raw': False}, r"""a, /, b=1, *c, d=100, **e""", r"""lambda a, /, b=1, *c, d=100, **e: None""", r"""
+Module .. ROOT 0,0 -> 0,38
+  .body[1]
+  0] Expr .. 0,0 -> 0,38
+    .value Lambda .. 0,0 -> 0,38
+      .args arguments .. 0,7 -> 0,32
+        .posonlyargs[1]
+        0] arg .. 0,7 -> 0,8
+          .arg 'a'
+        .args[1]
+        0] arg .. 0,13 -> 0,14
+          .arg 'b'
+        .vararg arg .. 0,19 -> 0,20
+          .arg 'c'
+        .kwonlyargs[1]
+        0] arg .. 0,22 -> 0,23
+          .arg 'd'
+        .kw_defaults[1]
+        0] Constant 100 .. 0,24 -> 0,27
+        .kwarg arg .. 0,31 -> 0,32
+          .arg 'e'
+        .defaults[1]
+        0] Constant 1 .. 0,15 -> 0,16
+      .body Constant None .. 0,34 -> 0,38
+"""),
+
+(r"""lambda a=1: None""", 'body[0].value', 0, 'args', {'raw': False}, r"""a, /, b=1, *c, d=100, **e""", r"""**IndexError('Lambda.args does not take an index')**""", r"""
+"""),
+
+(r"""lambda a=1: None""", 'body[0].value', None, 'args', {'raw': False}, r"""""", r"""lambda: None""", r"""
+Module .. ROOT 0,0 -> 0,12
+  .body[1]
+  0] Expr .. 0,0 -> 0,12
+    .value Lambda .. 0,0 -> 0,12
+      .body Constant None .. 0,8 -> 0,12
+"""),
+
 ]  # END OF PUT_ONE_DATA
 
-
-# (r"""def f(a=1): pass""", 'body[0]', None, 'args', {'raw': False}, r"""**DEL**""", r"""**ValueError('cannot put slice to ImportFrom.names')**""", r"""
-# """),
-
-# (r"""def f(a=1): pass""", 'body[0]', None, 'args', {'raw': False}, r"""a: list[str], /, b: int = 1, *c, d=100, **e""", r"""**ValueError('cannot put slice to ImportFrom.names')**""", r"""
-# """),
-
-# (r"""def f(): pass""", 'body[0]', None, 'args', {'raw': False}, r"""a: list[str], /, b: int = 1, *c, d=100, **e""", r"""**ValueError('cannot put slice to ImportFrom.names')**""", r"""
-# """),
-
-# (r"""def f(a=1): pass""", 'body[0]', 0, 'args', {'raw': False}, r"""a: list[str], /, b: int = 1, *c, d=100, **e""", r"""**ValueError('cannot put slice to ImportFrom.names')**""", r"""
-# """),
-
-# (r"""def f(a=1): pass""", 'body[0]', None, 'args', {'raw': False}, r"""""", r"""**ValueError('cannot put slice to ImportFrom.names')**""", r"""
-# """),
-
-# (r"""async def f(a=1): pass""", 'body[0]', None, 'args', {'raw': False}, r"""**DEL**""", r"""**ValueError('cannot put slice to ImportFrom.names')**""", r"""
-# """),
-
-# (r"""async def f(a=1): pass""", 'body[0]', None, 'args', {'raw': False}, r"""a: list[str], /, b: int = 1, *c, d=100, **e""", r"""**ValueError('cannot put slice to ImportFrom.names')**""", r"""
-# """),
-
-# (r"""async def f(): pass""", 'body[0]', None, 'args', {'raw': False}, r"""a: list[str], /, b: int = 1, *c, d=100, **e""", r"""**ValueError('cannot put slice to ImportFrom.names')**""", r"""
-# """),
-
-# (r"""async def f(a=1): pass""", 'body[0]', 0, 'args', {'raw': False}, r"""a: list[str], /, b: int = 1, *c, d=100, **e""", r"""**ValueError('cannot put slice to ImportFrom.names')**""", r"""
-# """),
-
-# (r"""async def f(a=1): pass""", 'body[0]', None, 'args', {'raw': False}, r"""""", r"""**ValueError('cannot put slice to ImportFrom.names')**""", r"""
-# """),
 
 
 PUT_RAW_DATA = [
@@ -26668,7 +26961,7 @@ def regen_put_one():
                 f.put(None if src == '**DEL**' else src, idx, field=field, **options)
 
             except Exception as exc:
-                tdst  = f'**{exc!r}**'
+                tdst  = '**SyntaxError**' if isinstance(exc, SyntaxError) else f'**{exc!r}**'
                 tdump = ''
 
             else:
@@ -32129,7 +32422,7 @@ class cls:
 
                 except Exception as exc:
                     if not put_dump.strip() and put_src.startswith('**') and put_src.endswith('**'):
-                        tdst  = f'**{exc!r}**'
+                        tdst  = '**SyntaxError**' if isinstance(exc, SyntaxError) else f'**{exc!r}**'
                         tdump = ['']
 
                     else:
