@@ -164,7 +164,7 @@ def _unmake_fst_tree(self: 'FST', stack: list[AST] | None = None):
 
 def _unmake_fst_parents(self: 'FST', self_: bool = False):
     """Walk up parent list unmaking each parent along the way. This does not unmake the entire parent tree, just the
-    parents directly above this node (and including it if `self_` is `True). Meant for when you know the parents are
+    parents directly above this node (and including `self` if `self_` is `True). Meant for when you know the parents are
     just a direct succession like Expr -> Module."""
 
     if self_:

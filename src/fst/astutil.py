@@ -1075,7 +1075,7 @@ def precedence_require_parens_by_type(child_type: type[AST], parent_type: type[A
             parent_precedence = _Precedence.EXPR if dict_key_is_None and field == 'values' else _Precedence.TEST
 
         elif parent_type is Subscript:
-            parent_precedence = _Precedence.TUPLE if child_type is Tuple else _Precedence.TEST
+            parent_precedence = _Precedence.TUPLE if child_type is Tuple else _Precedence.TEST  # tuples in slice don't need parens
 
         elif parent_type is And:
             if child_type is And:

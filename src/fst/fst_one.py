@@ -413,6 +413,18 @@ def _put_one_identifier_optional(self: 'FST', code: Code | None, idx: int | None
     return code
 
 
+def _put_one_identifier_sliceable(self: 'FST', code: Code | None, idx: int | None, field: str, child: AST, static: onestatic,
+                                  **options) -> Optional['FST']:
+    """If deleting then will do so using slice operation, otherwise just a required identifier."""
+
+    if code is None:
+        self._put_slice(code, *_slice_indices(self, idx, field, child, options.get('to')), field, True, **options)
+
+        return None
+
+    return _put_one_identifier_required(self, code, idx, field, child, static, **options)
+
+
 def _put_one_ExceptHandler_name(self: 'FST', code: Code | None, idx: int | None, field: str, child: str,
                                 static: onestatic, **options) -> str:
     ret = _put_one_identifier_optional(self, code, idx, field, child, static, **options)
@@ -640,6 +652,24 @@ def _one_info_ImportFrom_module(self: 'FST', static: onestatic, idx: int | None,
     col          = end_col - len(src.lstrip('.'))
 
     return oneinfo('', loc := fstloc(ln, col, ln, end_col), loc)
+
+def _one_info_Global_Nonlocal_names(self: 'FST', static: onestatic, idx: int | None, field: str) -> oneinfo:
+    ln, col, end_ln, end_col = self.loc
+
+    col   += 6 if isinstance(self.a, Global) else 8
+    lines  = self.root._lines
+    idx    = idx % len(names := self.names)
+
+    while idx:  # skip the commas
+        ln, col  = _next_find(lines, ln, col, end_ln, end_col, ',')  # must be there (idx assumed to be validated)
+        col     += 1
+        idx     -= 1
+
+    ln, col, src = _next_find_re(lines, ln, col, end_ln, end_col, re_identifier)  # must be there
+
+    return oneinfo('', None, fstloc(ln, col, ln, col + len(src)))
+
+_onestatic_Global_Nonlocal_names = onestatic(_one_info_Global_Nonlocal_names, coerce=None)
 
 def _one_info_Dict_key(self: 'FST', static: onestatic, idx: int | None, field: str) -> oneinfo:
     key                   = (a := self.a).keys[idx]
@@ -980,8 +1010,8 @@ _PUT_ONE_HANDLERS = {
     (Import, 'names'):                    (_put_one_exprish_sliceable, None, _onestatic_alias_required), # alias*
     (ImportFrom, 'module'):               (_put_one_identifier_optional, None, onestatic(_one_info_ImportFrom_module, coerce=None)), # identifier?
     (ImportFrom, 'names'):                (_put_one_exprish_sliceable, None, _onestatic_alias_required), # alias*
-    # (Global, 'names'):                    (_put_one_default, None, None), # identifier*                                     - slice (special)
-    # (Nonlocal, 'names'):                  (_put_one_default, None, None), # identifier*                                     - slice (special)
+    (Global, 'names'):                    (_put_one_identifier_sliceable, None, _onestatic_Global_Nonlocal_names), # identifier*
+    (Nonlocal, 'names'):                  (_put_one_identifier_sliceable, None, _onestatic_Global_Nonlocal_names), # identifier*
     (Expr, 'value'):                      (_put_one_exprish_required, None, _onestatic_exprish_required), # expr
     # (BoolOp, 'op'):                       (_put_one_default, None, None), # boolop                                          - OP MAY NOT HAVE UNIQUE LOCATION!
     (BoolOp, 'values'):                   (_put_one_exprish_sliceable, None, _onestatic_exprish_required), # expr*

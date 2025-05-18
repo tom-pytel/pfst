@@ -23691,6 +23691,102 @@ Module .. ROOT 0,0 -> 0,8
       .ctx Load
 """),
 
+(r"""global a, b""", 'body[0]', 0, 'names', {'raw': False}, r"""**DEL**""", r"""**ValueError('cannot put slice to Global.names')**""", r"""
+"""),
+
+(r"""global a, b""", 'body[0]', 0, 'names', {'raw': False}, r"""new""", r"""global new, b""", r"""
+Module .. ROOT 0,0 -> 0,13
+  .body[1]
+  0] Global .. 0,0 -> 0,13
+    .names[2]
+    0] 'new'
+    1] 'b'
+"""),
+
+(r"""global a, b""", 'body[0]', 1, 'names', {'raw': False}, r"""new""", r"""global a, new""", r"""
+Module .. ROOT 0,0 -> 0,13
+  .body[1]
+  0] Global .. 0,0 -> 0,13
+    .names[2]
+    0] 'a'
+    1] 'new'
+"""),
+
+(r"""global a, b""", 'body[0]', -1, 'names', {'raw': False}, r"""new""", r"""global a, new""", r"""
+Module .. ROOT 0,0 -> 0,13
+  .body[1]
+  0] Global .. 0,0 -> 0,13
+    .names[2]
+    0] 'a'
+    1] 'new'
+"""),
+
+(r"""global \
+a \
+,\
+b""", 'body[0]', -2, 'names', {'raw': False}, r"""new""", r"""global \
+new \
+,\
+b""", r"""
+Module .. ROOT 0,0 -> 3,1
+  .body[1]
+  0] Global .. 0,0 -> 3,1
+    .names[2]
+    0] 'new'
+    1] 'b'
+"""),
+
+(r"""global a, b""", 'body[0]', -4, 'names', {'raw': False}, r"""new""", r"""**IndexError('index out of range')**""", r"""
+"""),
+
+(r"""nonlocal a, b""", 'body[0]', 0, 'names', {'raw': False}, r"""**DEL**""", r"""**ValueError('cannot put slice to Nonlocal.names')**""", r"""
+"""),
+
+(r"""nonlocal a, b""", 'body[0]', 0, 'names', {'raw': False}, r"""new""", r"""nonlocal new, b""", r"""
+Module .. ROOT 0,0 -> 0,15
+  .body[1]
+  0] Nonlocal .. 0,0 -> 0,15
+    .names[2]
+    0] 'new'
+    1] 'b'
+"""),
+
+(r"""nonlocal a, b""", 'body[0]', 1, 'names', {'raw': False}, r"""new""", r"""nonlocal a, new""", r"""
+Module .. ROOT 0,0 -> 0,15
+  .body[1]
+  0] Nonlocal .. 0,0 -> 0,15
+    .names[2]
+    0] 'a'
+    1] 'new'
+"""),
+
+(r"""nonlocal a, b""", 'body[0]', -1, 'names', {'raw': False}, r"""new""", r"""nonlocal a, new""", r"""
+Module .. ROOT 0,0 -> 0,15
+  .body[1]
+  0] Nonlocal .. 0,0 -> 0,15
+    .names[2]
+    0] 'a'
+    1] 'new'
+"""),
+
+(r"""nonlocal \
+a \
+,\
+b""", 'body[0]', -2, 'names', {'raw': False}, r"""new""", r"""nonlocal \
+new \
+,\
+b""", r"""
+Module .. ROOT 0,0 -> 3,1
+  .body[1]
+  0] Nonlocal .. 0,0 -> 3,1
+    .names[2]
+    0] 'new'
+    1] 'b'
+"""),
+
+(r"""nonlocal a, b""", 'body[0]', -4, 'names', {'raw': False}, r"""new""", r"""**IndexError('index out of range')**""", r"""
+"""),
+
 ]  # END OF PUT_ONE_DATA
 
 
