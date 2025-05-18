@@ -11,7 +11,9 @@ from .shared import (
     STMTISH, Code, NodeTypeError, astfield, fstloc,
     _next_src, _prev_src, _next_find, _prev_find, _next_find_re, _fixup_one_index,
 )
-from .fst_parse import _code_as_expr, _code_as_pattern, _code_as_comprehension, _code_as_arg, _code_as_type_param
+from .fst_parse import (
+    _code_as_expr, _code_as_pattern, _code_as_comprehension, _code_as_arg, _code_as_keyword,  _code_as_type_param,
+)
 
 
 # ----------------------------------------------------------------------------------------------------------------------
@@ -540,6 +542,7 @@ _onestatic_pattern_required       = onestatic(_one_info_exprish_required, coerce
 _onestatic_type_param_required    = onestatic(_one_info_exprish_required, coerce=_code_as_type_param)
 _onestatic_comprehension_required = onestatic(_one_info_exprish_required, coerce=_code_as_comprehension)
 _onestatic_arg_required           = onestatic(_one_info_exprish_required, coerce=_code_as_arg)
+_onestatic_keyword_required       = onestatic(_one_info_exprish_required, coerce=_code_as_keyword)
 _onestatic_target_Name            = onestatic(_one_info_exprish_required, Name, ctx=Store)
 _onestatic_target_single          = onestatic(_one_info_exprish_required, (Name, Attribute, Subscript), ctx=Store)
 _onestatic_target                 = onestatic(_one_info_exprish_required, (Name, Attribute, Subscript, Tuple, List), ctx=Store)
@@ -920,7 +923,7 @@ _PUT_ONE_HANDLERS = {
     (ClassDef, 'name'):                   (_put_one_identifier_required, None, onestatic(_one_info_ClassDef_name, coerce=None)), # identifier
     (ClassDef, 'type_params'):            (_put_one_exprish_sliceable, None, _onestatic_type_param_required), # type_param*
     (ClassDef, 'bases'):                  (_put_one_exprish_sliceable, None, _onestatic_exprish_required), # expr*
-    # (ClassDef, 'keywords'):               (_put_one_default, None, None), # keyword*                                        - slice
+    (ClassDef, 'keywords'):               (_put_one_exprish_sliceable, None, _onestatic_keyword_required), # keyword*
     (ClassDef, 'body'):                   (_put_one_stmtish, None, None), # stmt*
     (Return, 'value'):                    (_put_one_exprish_optional, None, onestatic(_one_info_Return_value)), # expr?
     (Delete, 'targets'):                  (_put_one_exprish_sliceable, None, _onestatic_target), # expr*
@@ -1008,7 +1011,7 @@ _PUT_ONE_HANDLERS = {
     (Compare, None):                      (_put_one_Compare_None, None, _onestatic_exprish_required), # expr*
     (Call, 'func'):                       (_put_one_exprish_required, None, _onestatic_exprish_required), # expr
     (Call, 'args'):                       (_put_one_exprish_sliceable, None, _onestatic_exprish_required), # expr*
-    # (Call, 'keywords'):                   (_put_one_default, None, None), # keyword*                                        - slice
+    (Call, 'keywords'):                   (_put_one_exprish_sliceable, None, _onestatic_keyword_required), # keyword*
     (FormattedValue, 'value'):            (_put_one_exprish_required, None, _onestatic_exprish_required), # expr
     # (FormattedValue, 'format_spec'):      (_put_one_default, None, None), # expr?
     (Interpolation, 'value'):             (_put_one_Interpolation_value, None, _onestatic_exprish_required), # expr

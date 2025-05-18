@@ -23154,13 +23154,45 @@ Module .. ROOT 0,0 -> 0,33
 (r"""def f(a: int = 1, b: (str)=''): pass""", 'body[0].args', -4, 'args', {'raw': False}, r"""new""", r"""**IndexError('index out of range')**""", r"""
 """),
 
-(r"""def f(*, a: int = 1, b: (str)=''): pass""", 'body[0].args', 0, 'akwonlyrgs', {'raw': False}, r"""**DEL**""", r"""**ValueError("arguments has no field 'akwonlyrgs'")**""", r"""
+(r"""def f(*, a: int = 1, b: (str)=''): pass""", 'body[0].args', 0, 'kwonlyargs', {'raw': False}, r"""**DEL**""", r"""**ValueError('cannot put slice to arguments.kwonlyargs')**""", r"""
 """),
 
-(r"""def f(*, a: int = 1, b: (str)=''): pass""", 'body[0].args', 0, 'akwonlyrgs', {'raw': False}, r"""new""", r"""**ValueError("arguments has no field 'akwonlyrgs'")**""", r"""
+(r"""def f(*, a: int = 1, b: (str)=''): pass""", 'body[0].args', 0, 'kwonlyargs', {'raw': False}, r"""new""", r"""def f(*, new = 1, b: (str)=''): pass""", r"""
+Module .. ROOT 0,0 -> 0,36
+  .body[1]
+  0] FunctionDef .. 0,0 -> 0,36
+    .name 'f'
+    .args arguments .. 0,6 -> 0,29
+      .kwonlyargs[2]
+      0] arg .. 0,9 -> 0,12
+        .arg 'new'
+      1] arg .. 0,18 -> 0,26
+        .arg 'b'
+        .annotation Name 'str' Load .. 0,22 -> 0,25
+      .kw_defaults[2]
+      0] Constant 1 .. 0,15 -> 0,16
+      1] Constant '' .. 0,27 -> 0,29
+    .body[1]
+    0] Pass .. 0,32 -> 0,36
 """),
 
-(r"""def f(*, a: int = 1, b: (str)=''): pass""", 'body[0].args', 1, 'akwonlyrgs', {'raw': False}, r"""new""", r"""**ValueError("arguments has no field 'akwonlyrgs'")**""", r"""
+(r"""def f(*, a: int = 1, b: (str)=''): pass""", 'body[0].args', 1, 'kwonlyargs', {'raw': False}, r"""new""", r"""def f(*, a: int = 1, new=''): pass""", r"""
+Module .. ROOT 0,0 -> 0,34
+  .body[1]
+  0] FunctionDef .. 0,0 -> 0,34
+    .name 'f'
+    .args arguments .. 0,6 -> 0,27
+      .kwonlyargs[2]
+      0] arg .. 0,9 -> 0,15
+        .arg 'a'
+        .annotation Name 'int' Load .. 0,12 -> 0,15
+      1] arg .. 0,21 -> 0,24
+        .arg 'new'
+      .kw_defaults[2]
+      0] Constant 1 .. 0,18 -> 0,19
+      1] Constant '' .. 0,25 -> 0,27
+    .body[1]
+    0] Pass .. 0,30 -> 0,34
 """),
 
 (r"""def f(*, a: int = 1, b: (str)=''): pass""", 'body[0].args', -1, 'kwonlyargs', {'raw': False}, r"""new""", r"""def f(*, a: int = 1, new=''): pass""", r"""
@@ -23202,6 +23234,142 @@ Module .. ROOT 0,0 -> 0,36
 """),
 
 (r"""def f(*, a: int = 1, b: (str)=''): pass""", 'body[0].args', -4, 'kwonlyargs', {'raw': False}, r"""new""", r"""**IndexError('index out of range')**""", r"""
+"""),
+
+(r"""class c(a=1, b = (2)): pass""", 'body[0]', 0, 'keywords', {'raw': False}, r"""**DEL**""", r"""**ValueError('cannot put slice to ClassDef.keywords')**""", r"""
+"""),
+
+(r"""class c(a=1, b = (2)): pass""", 'body[0]', 0, 'keywords', {'raw': False}, r"""new=(3)""", r"""class c(new=(3), b = (2)): pass""", r"""
+Module .. ROOT 0,0 -> 0,31
+  .body[1]
+  0] ClassDef .. 0,0 -> 0,31
+    .name 'c'
+    .keywords[2]
+    0] keyword .. 0,8 -> 0,15
+      .arg 'new'
+      .value Constant 3 .. 0,13 -> 0,14
+    1] keyword .. 0,17 -> 0,24
+      .arg 'b'
+      .value Constant 2 .. 0,22 -> 0,23
+    .body[1]
+    0] Pass .. 0,27 -> 0,31
+"""),
+
+(r"""class c(a=1, b = (2)): pass""", 'body[0]', 1, 'keywords', {'raw': False}, r"""new=(3)""", r"""class c(a=1, new=(3)): pass""", r"""
+Module .. ROOT 0,0 -> 0,27
+  .body[1]
+  0] ClassDef .. 0,0 -> 0,27
+    .name 'c'
+    .keywords[2]
+    0] keyword .. 0,8 -> 0,11
+      .arg 'a'
+      .value Constant 1 .. 0,10 -> 0,11
+    1] keyword .. 0,13 -> 0,20
+      .arg 'new'
+      .value Constant 3 .. 0,18 -> 0,19
+    .body[1]
+    0] Pass .. 0,23 -> 0,27
+"""),
+
+(r"""class c(a=1, b = (2)): pass""", 'body[0]', -1, 'keywords', {'raw': False}, r"""new=(3)""", r"""class c(a=1, new=(3)): pass""", r"""
+Module .. ROOT 0,0 -> 0,27
+  .body[1]
+  0] ClassDef .. 0,0 -> 0,27
+    .name 'c'
+    .keywords[2]
+    0] keyword .. 0,8 -> 0,11
+      .arg 'a'
+      .value Constant 1 .. 0,10 -> 0,11
+    1] keyword .. 0,13 -> 0,20
+      .arg 'new'
+      .value Constant 3 .. 0,18 -> 0,19
+    .body[1]
+    0] Pass .. 0,23 -> 0,27
+"""),
+
+(r"""class c(a=1, b = (2)): pass""", 'body[0]', -2, 'keywords', {'raw': False}, r"""new=(3)""", r"""class c(new=(3), b = (2)): pass""", r"""
+Module .. ROOT 0,0 -> 0,31
+  .body[1]
+  0] ClassDef .. 0,0 -> 0,31
+    .name 'c'
+    .keywords[2]
+    0] keyword .. 0,8 -> 0,15
+      .arg 'new'
+      .value Constant 3 .. 0,13 -> 0,14
+    1] keyword .. 0,17 -> 0,24
+      .arg 'b'
+      .value Constant 2 .. 0,22 -> 0,23
+    .body[1]
+    0] Pass .. 0,27 -> 0,31
+"""),
+
+(r"""class c(a=1, b = (2)): pass""", 'body[0]', -4, 'keywords', {'raw': False}, r"""new=(3)""", r"""**IndexError('index out of range')**""", r"""
+"""),
+
+(r"""call(a=1, b = (2))""", 'body[0].value', 0, 'keywords', {'raw': False}, r"""**DEL**""", r"""**ValueError('cannot put slice to Call.keywords')**""", r"""
+"""),
+
+(r"""call(a=1, b = (2))""", 'body[0].value', 0, 'keywords', {'raw': False}, r"""new=(3)""", r"""call(new=(3), b = (2))""", r"""
+Module .. ROOT 0,0 -> 0,22
+  .body[1]
+  0] Expr .. 0,0 -> 0,22
+    .value Call .. 0,0 -> 0,22
+      .func Name 'call' Load .. 0,0 -> 0,4
+      .keywords[2]
+      0] keyword .. 0,5 -> 0,12
+        .arg 'new'
+        .value Constant 3 .. 0,10 -> 0,11
+      1] keyword .. 0,14 -> 0,21
+        .arg 'b'
+        .value Constant 2 .. 0,19 -> 0,20
+"""),
+
+(r"""call(a=1, b = (2))""", 'body[0].value', 1, 'keywords', {'raw': False}, r"""new=(3)""", r"""call(a=1, new=(3))""", r"""
+Module .. ROOT 0,0 -> 0,18
+  .body[1]
+  0] Expr .. 0,0 -> 0,18
+    .value Call .. 0,0 -> 0,18
+      .func Name 'call' Load .. 0,0 -> 0,4
+      .keywords[2]
+      0] keyword .. 0,5 -> 0,8
+        .arg 'a'
+        .value Constant 1 .. 0,7 -> 0,8
+      1] keyword .. 0,10 -> 0,17
+        .arg 'new'
+        .value Constant 3 .. 0,15 -> 0,16
+"""),
+
+(r"""call(a=1, b = (2))""", 'body[0].value', -1, 'keywords', {'raw': False}, r"""new=(3)""", r"""call(a=1, new=(3))""", r"""
+Module .. ROOT 0,0 -> 0,18
+  .body[1]
+  0] Expr .. 0,0 -> 0,18
+    .value Call .. 0,0 -> 0,18
+      .func Name 'call' Load .. 0,0 -> 0,4
+      .keywords[2]
+      0] keyword .. 0,5 -> 0,8
+        .arg 'a'
+        .value Constant 1 .. 0,7 -> 0,8
+      1] keyword .. 0,10 -> 0,17
+        .arg 'new'
+        .value Constant 3 .. 0,15 -> 0,16
+"""),
+
+(r"""call(a=1, b = (2))""", 'body[0].value', -2, 'keywords', {'raw': False}, r"""new=(3)""", r"""call(new=(3), b = (2))""", r"""
+Module .. ROOT 0,0 -> 0,22
+  .body[1]
+  0] Expr .. 0,0 -> 0,22
+    .value Call .. 0,0 -> 0,22
+      .func Name 'call' Load .. 0,0 -> 0,4
+      .keywords[2]
+      0] keyword .. 0,5 -> 0,12
+        .arg 'new'
+        .value Constant 3 .. 0,10 -> 0,11
+      1] keyword .. 0,14 -> 0,21
+        .arg 'b'
+        .value Constant 2 .. 0,19 -> 0,20
+"""),
+
+(r"""call(a=1, b = (2))""", 'body[0].value', -4, 'keywords', {'raw': False}, r"""new=(3)""", r"""**IndexError('index out of range')**""", r"""
 """),
 
 ]  # END OF PUT_ONE_DATA
