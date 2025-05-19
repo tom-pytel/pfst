@@ -3,7 +3,7 @@ import inspect
 from ast import *
 from ast import parse as ast_parse, unparse as ast_unparse
 from io import TextIOBase
-from typing import Any, Callable, Literal, Optional, TextIO
+from typing import Any, Callable, Literal, Optional, TextIO, Union
 
 from .astutil import *
 from .astutil import TryStar, TemplateStr, Interpolation
@@ -1097,7 +1097,7 @@ class FST:
 
         return path if not as_str else '.'.join(af.name if (i := af.idx) is None else f'{af.name}[{i}]' for af in path)
 
-    def child_from_path(self, path: list[astfield] | str, last_valid: bool = False) -> 'FST':
+    def child_from_path(self, path: list[astfield] | str, last_valid: bool = False) -> Union['FST', Literal[False]]:
         """Get child node specified by `path` if it exists. If succeeds then the child node is not guaranteed to be the
         same type as was originally used to get the path, just the path is valid.
 
@@ -1509,6 +1509,14 @@ class FST:
 
         elif dpars:
             raise RuntimeError('should not get here')
+
+        elif self.pfield == ('bases', 0) and len((a := self.parent.a).bases) == 1 and not a.keywords: # special case "class cls(base)", need to preserve bases parens
+            pars_ln      = ante_ln
+            pars_col     = ante_col
+            pars_end_ln  = ante_end_ln
+            pars_end_col = ante_end_col
+            npars        = nrpars - 1
+
         else:
             npars = nrpars
 

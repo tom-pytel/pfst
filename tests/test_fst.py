@@ -21409,6 +21409,56 @@ Module .. ROOT 0,0 -> 0,23
 (r"""class c(a, (b)): pass""", 'body[0]', -4, 'bases', {'raw': False}, r"""new""", r"""**IndexError('index out of range')**""", r"""
 """),
 
+(r"""class c(a): pass""", 'body[0]', 0, 'bases', {'raw': False}, r"""**DEL**""", r"""**ValueError('cannot put slice to ClassDef.bases')**""", r"""
+"""),
+
+(r"""class c(a): pass""", 'body[0]', 0, 'bases', {'raw': False}, r"""new""", r"""class c(new): pass""", r"""
+Module .. ROOT 0,0 -> 0,18
+  .body[1]
+  0] ClassDef .. 0,0 -> 0,18
+    .name 'c'
+    .bases[1]
+    0] Name 'new' Load .. 0,8 -> 0,11
+    .body[1]
+    0] Pass .. 0,14 -> 0,18
+"""),
+
+(r"""class c(a,): pass""", 'body[0]', 0, 'bases', {'raw': False}, r"""new""", r"""class c(new,): pass""", r"""
+Module .. ROOT 0,0 -> 0,19
+  .body[1]
+  0] ClassDef .. 0,0 -> 0,19
+    .name 'c'
+    .bases[1]
+    0] Name 'new' Load .. 0,8 -> 0,11
+    .body[1]
+    0] Pass .. 0,15 -> 0,19
+"""),
+
+(r"""class c((a)): pass""", 'body[0]', 0, 'bases', {'raw': False}, r"""**DEL**""", r"""**ValueError('cannot put slice to ClassDef.bases')**""", r"""
+"""),
+
+(r"""class c((a)): pass""", 'body[0]', 0, 'bases', {'raw': False}, r"""new""", r"""class c(new): pass""", r"""
+Module .. ROOT 0,0 -> 0,18
+  .body[1]
+  0] ClassDef .. 0,0 -> 0,18
+    .name 'c'
+    .bases[1]
+    0] Name 'new' Load .. 0,8 -> 0,11
+    .body[1]
+    0] Pass .. 0,14 -> 0,18
+"""),
+
+(r"""class c((a),): pass""", 'body[0]', 0, 'bases', {'raw': False}, r"""new""", r"""class c(new,): pass""", r"""
+Module .. ROOT 0,0 -> 0,19
+  .body[1]
+  0] ClassDef .. 0,0 -> 0,19
+    .name 'c'
+    .bases[1]
+    0] Name 'new' Load .. 0,8 -> 0,11
+    .body[1]
+    0] Pass .. 0,15 -> 0,19
+"""),
+
 (r"""a and (b) and c""", 'body[0].value', 0, None, {'raw': False}, r"""**DEL**""", r"""**ValueError('cannot put slice to BoolOp.values')**""", r"""
 """),
 

@@ -939,12 +939,18 @@ def _fix(self: 'FST', inplace: bool = True) -> 'FST':
         need_ctx = set_ctx(ast, Load, doit=False)
 
         if (need_ctx or need_paren) and not inplace:
-            ast   = copy_ast(ast)
+            ast = copy_ast(ast)
+
+            if need_ctx:
+                set_ctx(ast, Load)
+
             lines = lines[:]
             self  = FST(ast, lines=lines, from_=self)
 
-        if need_ctx:
+        elif need_ctx:
             set_ctx(ast, Load)
+
+            self._make_fst_tree()  # TODO: this is quick HACK fix, redo _fix()
 
         if need_paren:
             lines[end_ln] = bistr(f'{(l := lines[end_ln])[:end_col]}){l[end_col:]}')
