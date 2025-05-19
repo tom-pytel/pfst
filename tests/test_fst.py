@@ -24747,6 +24747,23 @@ Module .. ROOT 0,0 -> 0,24
     0] Pass .. 0,20 -> 0,24
 """),
 
+(r"""def f(b=(2),): pass""", 'body[0].args', None, 'vararg', {'raw': False}, r"""new""", r"""def f(b=(2), *new,): pass""", r"""
+Module .. ROOT 0,0 -> 0,25
+  .body[1]
+  0] FunctionDef .. 0,0 -> 0,25
+    .name 'f'
+    .args arguments .. 0,6 -> 0,18
+      .args[1]
+      0] arg .. 0,6 -> 0,7
+        .arg 'b'
+      .vararg arg .. 0,14 -> 0,17
+        .arg 'new'
+      .defaults[1]
+      0] Constant 2 .. 0,9 -> 0,10
+    .body[1]
+    0] Pass .. 0,21 -> 0,25
+"""),
+
 (r"""def f(b): pass""", 'body[0].args', None, 'vararg', {'raw': False}, r"""new""", r"""def f(b, *new): pass""", r"""
 Module .. ROOT 0,0 -> 0,20
   .body[1]
@@ -24913,6 +24930,22 @@ Module .. ROOT 0,0 -> 0,24
       .body Constant None .. 0,20 -> 0,24
 """),
 
+(r"""lambda b=(2),: None""", 'body[0].value.args', None, 'vararg', {'raw': False}, r"""new""", r"""lambda b=(2), *new,: None""", r"""
+Module .. ROOT 0,0 -> 0,25
+  .body[1]
+  0] Expr .. 0,0 -> 0,25
+    .value Lambda .. 0,0 -> 0,25
+      .args arguments .. 0,7 -> 0,19
+        .args[1]
+        0] arg .. 0,7 -> 0,8
+          .arg 'b'
+        .vararg arg .. 0,15 -> 0,18
+          .arg 'new'
+        .defaults[1]
+        0] Constant 2 .. 0,10 -> 0,11
+      .body Constant None .. 0,21 -> 0,25
+"""),
+
 (r"""lambda b: None""", 'body[0].value.args', None, 'vararg', {'raw': False}, r"""new""", r"""lambda b, *new: None""", r"""
 Module .. ROOT 0,0 -> 0,20
   .body[1]
@@ -25011,6 +25044,422 @@ Module .. ROOT 0,0 -> 0,34
         .defaults[1]
         0] Constant 1 .. 0,10 -> 0,11
       .body Constant None .. 0,30 -> 0,34
+"""),
+
+(r"""def f(**e): pass""", 'body[0].args', None, 'kwarg', {'raw': False}, r"""**DEL**""", r"""def f(): pass""", r"""
+Module .. ROOT 0,0 -> 0,13
+  .body[1]
+  0] FunctionDef .. 0,0 -> 0,13
+    .name 'f'
+    .body[1]
+    0] Pass .. 0,9 -> 0,13
+"""),
+
+(r"""def f(**e): pass""", 'body[0].args', None, 'kwarg', {'raw': False}, r"""new""", r"""def f(**new): pass""", r"""
+Module .. ROOT 0,0 -> 0,18
+  .body[1]
+  0] FunctionDef .. 0,0 -> 0,18
+    .name 'f'
+    .args arguments .. 0,6 -> 0,11
+      .kwarg arg .. 0,8 -> 0,11
+        .arg 'new'
+    .body[1]
+    0] Pass .. 0,14 -> 0,18
+"""),
+
+(r"""def f(d=(1), **e): pass""", 'body[0].args', None, 'kwarg', {'raw': False}, r"""**DEL**""", r"""def f(d=(1)): pass""", r"""
+Module .. ROOT 0,0 -> 0,18
+  .body[1]
+  0] FunctionDef .. 0,0 -> 0,18
+    .name 'f'
+    .args arguments .. 0,6 -> 0,11
+      .args[1]
+      0] arg .. 0,6 -> 0,7
+        .arg 'd'
+      .defaults[1]
+      0] Constant 1 .. 0,9 -> 0,10
+    .body[1]
+    0] Pass .. 0,14 -> 0,18
+"""),
+
+(r"""def f(d=(1), **e): pass""", 'body[0].args', None, 'kwarg', {'raw': False}, r"""new""", r"""def f(d=(1), **new): pass""", r"""
+Module .. ROOT 0,0 -> 0,25
+  .body[1]
+  0] FunctionDef .. 0,0 -> 0,25
+    .name 'f'
+    .args arguments .. 0,6 -> 0,18
+      .args[1]
+      0] arg .. 0,6 -> 0,7
+        .arg 'd'
+      .kwarg arg .. 0,15 -> 0,18
+        .arg 'new'
+      .defaults[1]
+      0] Constant 1 .. 0,9 -> 0,10
+    .body[1]
+    0] Pass .. 0,21 -> 0,25
+"""),
+
+(r"""def f(*c, **e): pass""", 'body[0].args', None, 'kwarg', {'raw': False}, r"""**DEL**""", r"""def f(*c): pass""", r"""
+Module .. ROOT 0,0 -> 0,15
+  .body[1]
+  0] FunctionDef .. 0,0 -> 0,15
+    .name 'f'
+    .args arguments .. 0,6 -> 0,8
+      .vararg arg .. 0,7 -> 0,8
+        .arg 'c'
+    .body[1]
+    0] Pass .. 0,11 -> 0,15
+"""),
+
+(r"""def f(*c, **e): pass""", 'body[0].args', None, 'kwarg', {'raw': False}, r"""new""", r"""def f(*c, **new): pass""", r"""
+Module .. ROOT 0,0 -> 0,22
+  .body[1]
+  0] FunctionDef .. 0,0 -> 0,22
+    .name 'f'
+    .args arguments .. 0,6 -> 0,15
+      .vararg arg .. 0,7 -> 0,8
+        .arg 'c'
+      .kwarg arg .. 0,12 -> 0,15
+        .arg 'new'
+    .body[1]
+    0] Pass .. 0,18 -> 0,22
+"""),
+
+(r"""def f(a, /, **e): pass""", 'body[0].args', None, 'kwarg', {'raw': False}, r"""**DEL**""", r"""def f(a, /): pass""", r"""
+Module .. ROOT 0,0 -> 0,17
+  .body[1]
+  0] FunctionDef .. 0,0 -> 0,17
+    .name 'f'
+    .args arguments .. 0,6 -> 0,10
+      .posonlyargs[1]
+      0] arg .. 0,6 -> 0,7
+        .arg 'a'
+    .body[1]
+    0] Pass .. 0,13 -> 0,17
+"""),
+
+(r"""def f(a=(2), /, **e): pass""", 'body[0].args', None, 'kwarg', {'raw': False}, r"""**DEL**""", r"""def f(a=(2), /): pass""", r"""
+Module .. ROOT 0,0 -> 0,21
+  .body[1]
+  0] FunctionDef .. 0,0 -> 0,21
+    .name 'f'
+    .args arguments .. 0,6 -> 0,14
+      .posonlyargs[1]
+      0] arg .. 0,6 -> 0,7
+        .arg 'a'
+      .defaults[1]
+      0] Constant 2 .. 0,9 -> 0,10
+    .body[1]
+    0] Pass .. 0,17 -> 0,21
+"""),
+
+(r"""def f(a: int, /, **e): pass""", 'body[0].args', None, 'kwarg', {'raw': False}, r"""**DEL**""", r"""def f(a: int, /): pass""", r"""
+Module .. ROOT 0,0 -> 0,22
+  .body[1]
+  0] FunctionDef .. 0,0 -> 0,22
+    .name 'f'
+    .args arguments .. 0,6 -> 0,15
+      .posonlyargs[1]
+      0] arg .. 0,6 -> 0,12
+        .arg 'a'
+        .annotation Name 'int' Load .. 0,9 -> 0,12
+    .body[1]
+    0] Pass .. 0,18 -> 0,22
+"""),
+
+(r"""def f(a, /, **e): pass""", 'body[0].args', None, 'kwarg', {'raw': False}, r"""new""", r"""def f(a, /, **new): pass""", r"""
+Module .. ROOT 0,0 -> 0,24
+  .body[1]
+  0] FunctionDef .. 0,0 -> 0,24
+    .name 'f'
+    .args arguments .. 0,6 -> 0,17
+      .posonlyargs[1]
+      0] arg .. 0,6 -> 0,7
+        .arg 'a'
+      .kwarg arg .. 0,14 -> 0,17
+        .arg 'new'
+    .body[1]
+    0] Pass .. 0,20 -> 0,24
+"""),
+
+(r"""lambda **e: None""", 'body[0].value.args', None, 'kwarg', {'raw': False}, r"""**DEL**""", r"""lambda: None""", r"""
+Module .. ROOT 0,0 -> 0,12
+  .body[1]
+  0] Expr .. 0,0 -> 0,12
+    .value Lambda .. 0,0 -> 0,12
+      .body Constant None .. 0,8 -> 0,12
+"""),
+
+(r"""lambda **e: None""", 'body[0].value.args', None, 'kwarg', {'raw': False}, r"""new""", r"""lambda **new: None""", r"""
+Module .. ROOT 0,0 -> 0,18
+  .body[1]
+  0] Expr .. 0,0 -> 0,18
+    .value Lambda .. 0,0 -> 0,18
+      .args arguments .. 0,7 -> 0,12
+        .kwarg arg .. 0,9 -> 0,12
+          .arg 'new'
+      .body Constant None .. 0,14 -> 0,18
+"""),
+
+(r"""lambda d=(1), **e: None""", 'body[0].value.args', None, 'kwarg', {'raw': False}, r"""**DEL**""", r"""lambda d=(1): None""", r"""
+Module .. ROOT 0,0 -> 0,18
+  .body[1]
+  0] Expr .. 0,0 -> 0,18
+    .value Lambda .. 0,0 -> 0,18
+      .args arguments .. 0,7 -> 0,12
+        .args[1]
+        0] arg .. 0,7 -> 0,8
+          .arg 'd'
+        .defaults[1]
+        0] Constant 1 .. 0,10 -> 0,11
+      .body Constant None .. 0,14 -> 0,18
+"""),
+
+(r"""lambda d=(1), **e: None""", 'body[0].value.args', None, 'kwarg', {'raw': False}, r"""new""", r"""lambda d=(1), **new: None""", r"""
+Module .. ROOT 0,0 -> 0,25
+  .body[1]
+  0] Expr .. 0,0 -> 0,25
+    .value Lambda .. 0,0 -> 0,25
+      .args arguments .. 0,7 -> 0,19
+        .args[1]
+        0] arg .. 0,7 -> 0,8
+          .arg 'd'
+        .kwarg arg .. 0,16 -> 0,19
+          .arg 'new'
+        .defaults[1]
+        0] Constant 1 .. 0,10 -> 0,11
+      .body Constant None .. 0,21 -> 0,25
+"""),
+
+(r"""lambda *c, **e: None""", 'body[0].value.args', None, 'kwarg', {'raw': False}, r"""**DEL**""", r"""lambda *c: None""", r"""
+Module .. ROOT 0,0 -> 0,15
+  .body[1]
+  0] Expr .. 0,0 -> 0,15
+    .value Lambda .. 0,0 -> 0,15
+      .args arguments .. 0,7 -> 0,9
+        .vararg arg .. 0,8 -> 0,9
+          .arg 'c'
+      .body Constant None .. 0,11 -> 0,15
+"""),
+
+(r"""lambda *c, **e: None""", 'body[0].value.args', None, 'kwarg', {'raw': False}, r"""new""", r"""lambda *c, **new: None""", r"""
+Module .. ROOT 0,0 -> 0,22
+  .body[1]
+  0] Expr .. 0,0 -> 0,22
+    .value Lambda .. 0,0 -> 0,22
+      .args arguments .. 0,7 -> 0,16
+        .vararg arg .. 0,8 -> 0,9
+          .arg 'c'
+        .kwarg arg .. 0,13 -> 0,16
+          .arg 'new'
+      .body Constant None .. 0,18 -> 0,22
+"""),
+
+(r"""lambda a, /, **e: None""", 'body[0].value.args', None, 'kwarg', {'raw': False}, r"""**DEL**""", r"""lambda a, /: None""", r"""
+Module .. ROOT 0,0 -> 0,17
+  .body[1]
+  0] Expr .. 0,0 -> 0,17
+    .value Lambda .. 0,0 -> 0,17
+      .args arguments .. 0,7 -> 0,11
+        .posonlyargs[1]
+        0] arg .. 0,7 -> 0,8
+          .arg 'a'
+      .body Constant None .. 0,13 -> 0,17
+"""),
+
+(r"""lambda a=(2), /, **e: None""", 'body[0].value.args', None, 'kwarg', {'raw': False}, r"""**DEL**""", r"""lambda a=(2), /: None""", r"""
+Module .. ROOT 0,0 -> 0,21
+  .body[1]
+  0] Expr .. 0,0 -> 0,21
+    .value Lambda .. 0,0 -> 0,21
+      .args arguments .. 0,7 -> 0,15
+        .posonlyargs[1]
+        0] arg .. 0,7 -> 0,8
+          .arg 'a'
+        .defaults[1]
+        0] Constant 2 .. 0,10 -> 0,11
+      .body Constant None .. 0,17 -> 0,21
+"""),
+
+(r"""lambda a, /, **e: None""", 'body[0].value.args', None, 'kwarg', {'raw': False}, r"""new""", r"""lambda a, /, **new: None""", r"""
+Module .. ROOT 0,0 -> 0,24
+  .body[1]
+  0] Expr .. 0,0 -> 0,24
+    .value Lambda .. 0,0 -> 0,24
+      .args arguments .. 0,7 -> 0,18
+        .posonlyargs[1]
+        0] arg .. 0,7 -> 0,8
+          .arg 'a'
+        .kwarg arg .. 0,15 -> 0,18
+          .arg 'new'
+      .body Constant None .. 0,20 -> 0,24
+"""),
+
+(r"""def f(): pass""", 'body[0].args', None, 'kwarg', {'raw': False}, r"""new""", r"""def f(**new): pass""", r"""
+Module .. ROOT 0,0 -> 0,18
+  .body[1]
+  0] FunctionDef .. 0,0 -> 0,18
+    .name 'f'
+    .args arguments .. 0,6 -> 0,11
+      .kwarg arg .. 0,8 -> 0,11
+        .arg 'new'
+    .body[1]
+    0] Pass .. 0,14 -> 0,18
+"""),
+
+(r"""def f(c=(1)): pass""", 'body[0].args', None, 'kwarg', {'raw': False}, r"""new""", r"""def f(c=(1), **new): pass""", r"""
+Module .. ROOT 0,0 -> 0,25
+  .body[1]
+  0] FunctionDef .. 0,0 -> 0,25
+    .name 'f'
+    .args arguments .. 0,6 -> 0,18
+      .args[1]
+      0] arg .. 0,6 -> 0,7
+        .arg 'c'
+      .kwarg arg .. 0,15 -> 0,18
+        .arg 'new'
+      .defaults[1]
+      0] Constant 1 .. 0,9 -> 0,10
+    .body[1]
+    0] Pass .. 0,21 -> 0,25
+"""),
+
+(r"""def f(c=(1),): pass""", 'body[0].args', None, 'kwarg', {'raw': False}, r"""new""", r"""def f(c=(1), **new): pass""", r"""
+Module .. ROOT 0,0 -> 0,25
+  .body[1]
+  0] FunctionDef .. 0,0 -> 0,25
+    .name 'f'
+    .args arguments .. 0,6 -> 0,18
+      .args[1]
+      0] arg .. 0,6 -> 0,7
+        .arg 'c'
+      .kwarg arg .. 0,15 -> 0,18
+        .arg 'new'
+      .defaults[1]
+      0] Constant 1 .. 0,9 -> 0,10
+    .body[1]
+    0] Pass .. 0,21 -> 0,25
+"""),
+
+(r"""def f(a=(1), /): pass""", 'body[0].args', None, 'kwarg', {'raw': False}, r"""new""", r"""def f(a=(1), /, **new): pass""", r"""
+Module .. ROOT 0,0 -> 0,28
+  .body[1]
+  0] FunctionDef .. 0,0 -> 0,28
+    .name 'f'
+    .args arguments .. 0,6 -> 0,21
+      .posonlyargs[1]
+      0] arg .. 0,6 -> 0,7
+        .arg 'a'
+      .kwarg arg .. 0,18 -> 0,21
+        .arg 'new'
+      .defaults[1]
+      0] Constant 1 .. 0,9 -> 0,10
+    .body[1]
+    0] Pass .. 0,24 -> 0,28
+"""),
+
+(r"""def f(a: int, /): pass""", 'body[0].args', None, 'kwarg', {'raw': False}, r"""new""", r"""def f(a: int, /, **new): pass""", r"""
+Module .. ROOT 0,0 -> 0,29
+  .body[1]
+  0] FunctionDef .. 0,0 -> 0,29
+    .name 'f'
+    .args arguments .. 0,6 -> 0,22
+      .posonlyargs[1]
+      0] arg .. 0,6 -> 0,12
+        .arg 'a'
+        .annotation Name 'int' Load .. 0,9 -> 0,12
+      .kwarg arg .. 0,19 -> 0,22
+        .arg 'new'
+    .body[1]
+    0] Pass .. 0,25 -> 0,29
+"""),
+
+(r"""def f(a, /): pass""", 'body[0].args', None, 'kwarg', {'raw': False}, r"""new""", r"""def f(a, /, **new): pass""", r"""
+Module .. ROOT 0,0 -> 0,24
+  .body[1]
+  0] FunctionDef .. 0,0 -> 0,24
+    .name 'f'
+    .args arguments .. 0,6 -> 0,17
+      .posonlyargs[1]
+      0] arg .. 0,6 -> 0,7
+        .arg 'a'
+      .kwarg arg .. 0,14 -> 0,17
+        .arg 'new'
+    .body[1]
+    0] Pass .. 0,20 -> 0,24
+"""),
+
+(r"""lambda: None""", 'body[0].value.args', None, 'kwarg', {'raw': False}, r"""new""", r"""lambda **new: None""", r"""
+Module .. ROOT 0,0 -> 0,18
+  .body[1]
+  0] Expr .. 0,0 -> 0,18
+    .value Lambda .. 0,0 -> 0,18
+      .args arguments .. 0,7 -> 0,12
+        .kwarg arg .. 0,9 -> 0,12
+          .arg 'new'
+      .body Constant None .. 0,14 -> 0,18
+"""),
+
+(r"""lambda c=(1): None""", 'body[0].value.args', None, 'kwarg', {'raw': False}, r"""new""", r"""lambda c=(1), **new: None""", r"""
+Module .. ROOT 0,0 -> 0,25
+  .body[1]
+  0] Expr .. 0,0 -> 0,25
+    .value Lambda .. 0,0 -> 0,25
+      .args arguments .. 0,7 -> 0,19
+        .args[1]
+        0] arg .. 0,7 -> 0,8
+          .arg 'c'
+        .kwarg arg .. 0,16 -> 0,19
+          .arg 'new'
+        .defaults[1]
+        0] Constant 1 .. 0,10 -> 0,11
+      .body Constant None .. 0,21 -> 0,25
+"""),
+
+(r"""lambda c=(1),: None""", 'body[0].value.args', None, 'kwarg', {'raw': False}, r"""new""", r"""lambda c=(1), **new: None""", r"""
+Module .. ROOT 0,0 -> 0,25
+  .body[1]
+  0] Expr .. 0,0 -> 0,25
+    .value Lambda .. 0,0 -> 0,25
+      .args arguments .. 0,7 -> 0,19
+        .args[1]
+        0] arg .. 0,7 -> 0,8
+          .arg 'c'
+        .kwarg arg .. 0,16 -> 0,19
+          .arg 'new'
+        .defaults[1]
+        0] Constant 1 .. 0,10 -> 0,11
+      .body Constant None .. 0,21 -> 0,25
+"""),
+
+(r"""lambda a=(1), /: None""", 'body[0].value.args', None, 'kwarg', {'raw': False}, r"""new""", r"""lambda a=(1), /, **new: None""", r"""
+Module .. ROOT 0,0 -> 0,28
+  .body[1]
+  0] Expr .. 0,0 -> 0,28
+    .value Lambda .. 0,0 -> 0,28
+      .args arguments .. 0,7 -> 0,22
+        .posonlyargs[1]
+        0] arg .. 0,7 -> 0,8
+          .arg 'a'
+        .kwarg arg .. 0,19 -> 0,22
+          .arg 'new'
+        .defaults[1]
+        0] Constant 1 .. 0,10 -> 0,11
+      .body Constant None .. 0,24 -> 0,28
+"""),
+
+(r"""lambda a, /: None""", 'body[0].value.args', None, 'kwarg', {'raw': False}, r"""new""", r"""lambda a, /, **new: None""", r"""
+Module .. ROOT 0,0 -> 0,24
+  .body[1]
+  0] Expr .. 0,0 -> 0,24
+    .value Lambda .. 0,0 -> 0,24
+      .args arguments .. 0,7 -> 0,18
+        .posonlyargs[1]
+        0] arg .. 0,7 -> 0,8
+          .arg 'a'
+        .kwarg arg .. 0,15 -> 0,18
+          .arg 'new'
+      .body Constant None .. 0,20 -> 0,24
 """),
 
 ]  # END OF PUT_ONE_DATA

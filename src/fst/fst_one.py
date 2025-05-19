@@ -56,14 +56,12 @@ def _get_one(self: 'FST', idx: int | None, field: str, cut: bool, **options) -> 
 
 class onestatic(NamedTuple):
     getinfo:  Callable[['FST', 'onestatic', int | None, str], 'oneinfo'] | None
-    # restrict: type[AST] | tuple[type[AST]] | list[type[AST]] | Callable[[AST], bool] | None = None
     restrict: type[AST] | tuple[type[AST]] | Callable[[AST], bool] | None = None
     coerce:   Callable[['FST', Code], 'FST']                              = _code_as_expr
     ctx:      type[expr_context]                                          = Load
 
 
 class oneinfo(NamedTuple):
-    # static:      onestatic
     prefix:      str           = ''    # prefix to add on insert
     loc_insdel:  fstloc | None = None  # only present if insert (put new to nonexistent) or delete is possible and is the location for the specific mutually-exclusive operation
     loc_ident:   fstloc | None = None  # location of identifier
@@ -114,16 +112,6 @@ def _validate_put(self: 'FST', code: Code | None, idx: int | None, field: str, c
 
 def _validate_put_ast(self: 'FST', put_ast: AST, idx: int | None, field: str, static: onestatic):
     if restrict := static.restrict:
-        # if isinstance(restrict, list):  # list means these types not allowed
-        #     if isinstance(put_ast, tuple(restrict)):
-        #         raise NodeTypeError(f'{self.a.__class__.__name__}.{field}{" " if idx is None else f"[{idx}] "}'
-        #                             f'cannot be {put_ast.__class__.__name__}')
-
-        # elif isinstance(restrict, FunctionType):
-        #     if not restrict(put_ast):
-        #         raise NodeTypeError(f'invalid value for {self.a.__class__.__name__}.{field}' +
-        #                             ('' if idx is None else f'[{idx}]'))
-
         if isinstance(restrict, FunctionType):
             if not restrict(put_ast):
                 raise NodeTypeError(f'invalid value for {self.a.__class__.__name__}.{field}' +
@@ -824,8 +812,6 @@ def _one_info_ExceptHandler_name(self: 'FST', static: onestatic, idx: int | None
 
     return oneinfo(' as ', loc_insdel, loc_ident)
 
-
-
 def _one_info_arguments_vararg(self: 'FST', static: onestatic, idx: int | None, field: str) -> oneinfo:
     if vararg := (a := self.a).vararg:  # delete location
         ln, col, end_ln, end_col = (varargf := vararg.f).pars()
@@ -922,6 +908,50 @@ def _one_info_arguments_kw_defaults(self: 'FST', static: onestatic, idx: int | N
         end_col = col
 
     return oneinfo(prefix, fstloc(ln, col, end_ln, end_col))
+
+def _one_info_arguments_kwarg(self: 'FST', static: onestatic, idx: int | None, field: str) -> oneinfo:
+    if kwarg := (a := self.a).kwarg:  # delete location
+        if not (prev := (kwargf := kwarg.f).prev()):
+            if not (parent := self.parent) or not isinstance(parent.a, Lambda):
+                return oneinfo('', self.loc)
+
+            ln, col, _, _ = parent.loc
+
+            return oneinfo('', fstloc(ln, col + 6, self.end_ln, self.end_col))
+
+        if not (a.posonlyargs and ((field := prev.pfield.name) == 'posonlyargs' or
+            (field == 'defaults' and prev.prev().pfield.name == 'posonlyargs'))
+        ):
+            _, _, ln, col = prev.pars()
+
+        else:
+            ln, col  = _next_find(self.root._lines, prev.end_ln, prev.end_col, kwargf.ln, kwargf.col, '/')  # must be there
+            col     += 1
+
+        return oneinfo('', fstloc(ln, col, self.end_ln, self.end_col))
+
+    # insert location
+
+    if not (loc := self.loc):
+        loc    = self._loc_arguments_empty()
+        prefix = ' **' if (parent := self.parent) and isinstance(parent.a, Lambda) else '**'
+
+        return oneinfo(prefix, loc)
+
+    _, _, end_ln, end_col = loc
+
+    last = self.last_child()
+
+    if not (a.posonlyargs and ((field := last.pfield.name) == 'posonlyargs' or
+        (field == 'defaults' and last.prev().pfield.name == 'posonlyargs'))
+    ):
+        _, _, ln, col = last.pars()
+
+    else:
+        ln, col  = _next_find(self.root._lines, last.end_ln, last.end_col, end_ln, end_col, '/')  # must be there
+        col     += 1
+
+    return oneinfo(', **', fstloc(ln, col, end_ln, end_col))
 
 def _one_info_arg_annotation(self: 'FST', static: onestatic, idx: int | None, field: str) -> oneinfo:
     return oneinfo(': ', fstloc((loc := self.loc).ln, loc.col + len(self.a.arg), self.end_ln, self.end_col))
@@ -1215,12 +1245,10 @@ _PUT_ONE_HANDLERS = {
     (arguments, 'posonlyargs'):           (_put_one_exprish_sliceable, None, _onestatic_arg_required), # arg*
     (arguments, 'args'):                  (_put_one_exprish_sliceable, None, _onestatic_arg_required), # arg*
     (arguments, 'defaults'):              (_put_one_exprish_required, None, _onestatic_exprish_required), # expr*
-
     (arguments, 'vararg'):                (_put_one_exprish_optional, None, onestatic(_one_info_arguments_vararg, coerce=_code_as_arg)), # arg?
-
     (arguments, 'kwonlyargs'):            (_put_one_exprish_sliceable, None, _onestatic_arg_required), # arg*
     (arguments, 'kw_defaults'):           (_put_one_exprish_optional, None, onestatic(_one_info_arguments_kw_defaults)), # expr*
-    # (arguments, 'kwarg'):                 (_put_one_default, None, None), # arg?                                            - special parse 'arg'
+    (arguments, 'kwarg'):                 (_put_one_exprish_optional, None, onestatic(_one_info_arguments_kwarg, coerce=_code_as_arg)), # arg?
     (arg, 'arg'):                         (_put_one_identifier_required, None, _onestatic_identifier_required), # identifier
     (arg, 'annotation'):                  (_put_one_exprish_optional, None, onestatic(_one_info_arg_annotation)), # expr?  - exclude [Lambda, Yield, YieldFrom, Await, NamedExpr]?
     (keyword, 'arg'):                     (_put_one_identifier_optional, None, onestatic(_one_info_keyword_arg, coerce=None)), # identifier?
