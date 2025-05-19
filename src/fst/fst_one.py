@@ -60,8 +60,6 @@ class onestatic(NamedTuple):
     restrict: type[AST] | tuple[type[AST]] | Callable[[AST], bool] | None = None
     coerce:   Callable[['FST', Code], 'FST']                              = _code_as_expr
     ctx:      type[expr_context]                                          = Load
-    delstr:   str                                                         = ''  # or '**'
-    suffix:   str                                                         = ''  # or ': ' for dict '**'
 
 
 class oneinfo(NamedTuple):
@@ -69,6 +67,8 @@ class oneinfo(NamedTuple):
     prefix:      str           = ''    # prefix to add on insert
     loc_insdel:  fstloc | None = None  # only present if insert (put new to nonexistent) or delete is possible and is the location for the specific mutually-exclusive operation
     loc_ident:   fstloc | None = None  # location of identifier
+    suffix:      str           = ''    # or ': ' for dict '**'
+    delstr:      str           = ''    # or '**'
 
 
 def _slice_indices(self: 'FST', idx: int, field: str, body: list[AST], to: Optional['FST']):
@@ -171,7 +171,7 @@ def _put_one_BoolOp_op(self: 'FST', code: Code | None, idx: int | None, field: s
     _, _, end_ln, end_col = self.loc
 
     for value in self.a.values[:-1]:
-        _, _, ln, col = value.f.pars().loc
+        _, _, ln, col = value.f.pars()
         ln, col       = _next_find(lines, ln, col, end_ln, end_col, tgt)  # must be there
 
         self.put_src(src, ln, col, ln, col + ltgt, False)
@@ -304,7 +304,7 @@ def _put_one_exprish_optional(self: 'FST', code: Code | None, idx: int | None, f
         if not loc:
             raise ValueError(f'cannot delete {self.a.__class__.__name__}.{field} in this state')
 
-        self.put_src(static.delstr or None, *loc, True)
+        self.put_src(info.delstr or None, *loc, True)
         set_field(self.a, None, field, idx)
         child.f._unmake_fst_tree()
 
@@ -315,7 +315,7 @@ def _put_one_exprish_optional(self: 'FST', code: Code | None, idx: int | None, f
     if not loc:
         raise ValueError(f'cannot create {self.a.__class__.__name__}.{field} in this state')
 
-    put_fst = _make_exprish_fst(self, code, idx, field, static, loc, static.ctx, info.prefix, static.suffix, **options)
+    put_fst = _make_exprish_fst(self, code, idx, field, static, loc, static.ctx, info.prefix, info.suffix, **options)
     put_fst = FST(put_fst.a, self, astfield(field, idx))
 
     self._make_fst_tree([put_fst])
@@ -340,7 +340,7 @@ def _put_one_FunctionDef_arguments(self: 'FST', code: Code | None, idx: int | No
                                    static: onestatic, **options) -> 'FST':
     """Put FunctionDef.arguments. Does not have location if there are no arguments."""
 
-    return _put_one_exprish_required(self, code, idx, field, child, static, True,
+    return _put_one_exprish_required(self, code or '', idx, field, child, static, True,
                                      None if (args := self.a.args.f).loc else args._loc_arguments_empty(),
                                      **options)
 
@@ -379,6 +379,9 @@ def _put_one_Interpolation_value(self: 'FST', code: Code | None, idx: int | None
 def _put_one_Lambda_arguments(self: 'FST', code: Code | None, idx: int | None, field: str, child: AST,
                               static: onestatic, **options) -> 'FST':
     """Put Lambda.arguments. Does not have location if there are no arguments."""
+
+    if code is None:
+        code = ''
 
     child  = _validate_put(self, code, idx, field, child, options)  # we want to do it in same order as all other puts
     code   = static.coerce(self, code)  # and we coerce here just so we can check if is empty args being put to set the prefix correctly
@@ -446,7 +449,7 @@ def _put_one_identifier_optional(self: 'FST', code: Code | None, idx: int | None
         if not loc:
             raise ValueError(f'cannot delete {self.a.__class__.__name__}.{field} in this state')
 
-        self.put_src(static.delstr or None, *loc, True)
+        self.put_src(info.delstr or None, *loc, True)
         set_field(self.a, None, field, idx)
 
         return None
@@ -461,7 +464,7 @@ def _put_one_identifier_optional(self: 'FST', code: Code | None, idx: int | None
         if not loc:
             raise ValueError(f'cannot create {self.a.__class__.__name__}.{field} in this state')
 
-        params_offset = self.put_src(info.prefix + code + static.suffix, *loc, True, exclude=self)
+        params_offset = self.put_src(info.prefix + code + info.suffix, *loc, True, exclude=self)
 
         self.offset(*params_offset, self_=False)
         set_field(self.a, code, field, idx)
@@ -733,7 +736,7 @@ def _one_info_Dict_key(self: 'FST', static: onestatic, idx: int | None, field: s
     end_ln, end_col, _, _ = value.pars()
     ln, col, _, _         = self._dict_key_or_mock_loc(key, value) if key is None else key.f.pars()
 
-    return oneinfo('', fstloc(ln, col, end_ln, end_col))
+    return oneinfo('', fstloc(ln, col, end_ln, end_col), None, ': ', '**')
 
 def _one_info_Yield_value(self: 'FST', static: onestatic, idx: int | None, field: str) -> oneinfo:
     return oneinfo(' ', fstloc((loc := self.loc).ln, loc.col + 5, loc.end_ln, loc.end_col))
@@ -821,6 +824,86 @@ def _one_info_ExceptHandler_name(self: 'FST', static: onestatic, idx: int | None
 
     return oneinfo(' as ', loc_insdel, loc_ident)
 
+
+
+def _one_info_arguments_vararg(self: 'FST', static: onestatic, idx: int | None, field: str) -> oneinfo:
+    if vararg := (a := self.a).vararg:  # delete location
+        ln, col, end_ln, end_col = (varargf := vararg.f).pars()
+
+        if prev := varargf.prev():
+            delstr = ', *' if a.kwonlyargs else ''
+
+            if not (a.posonlyargs and ((field := prev.pfield.name) == 'posonlyargs' or
+                (field == 'defaults' and prev.prev().pfield.name == 'posonlyargs'))
+            ):
+                _, _, ln, col = prev.pars()
+
+                return oneinfo('', fstloc(ln, col, end_ln, end_col), delstr=delstr)
+
+            ln, col = _next_find(self.root._lines, prev.end_ln, prev.end_col, end_ln, end_col, '/')  # must be there
+
+            return oneinfo('', fstloc(ln, col + 1, end_ln, end_col), delstr=delstr)
+
+        if next := varargf.next():
+            if a.kwonlyargs and next.pfield.name == 'kwonlyargs':
+                next_ln, next_col, _, _ = next.pars()
+
+                return oneinfo('', fstloc(self.ln, self.col, next_ln, next_col), delstr='*, ')
+
+            end_ln, end_col = _next_find(self.root._lines, end_ln, end_col, next.ln, next.col, '**')  # must be there
+
+            return oneinfo('', fstloc(self.ln, self.col, end_ln, end_col))
+
+        if not (parent := self.parent) or not isinstance(parent.a, Lambda):
+            return oneinfo('', self.loc)
+
+        ln, col, _, _ = parent.loc
+
+        return oneinfo('', fstloc(ln, col + 6, end_ln, end_col))
+
+    # insert location
+
+    if kwonlyargs := a.kwonlyargs:
+        end_ln, end_col, _, _ = (kwonlyarg := kwonlyargs[0].f).loc
+
+        if prev := kwonlyarg.prev():
+            _, _, ln, col = prev.loc
+        else:
+            ln, col, _, _ = self.loc
+
+        ln, col = _next_find(self.root._lines, ln, col, end_ln, end_col, '*')  # must be there
+
+        return oneinfo('', fstloc(ln, (col := col + 1), ln, col))
+
+    if kwarg := a.kwarg:
+        end_ln, end_col, _, _ = (kwargf := kwarg.f).loc
+
+        if prev := kwargf.prev():
+            _, _, ln, col = prev.loc
+        else:
+            ln, col, _, _ = self.loc
+
+        ln, col = _next_find(self.root._lines, ln, col, end_ln, end_col, '**')  # must be there
+
+        return oneinfo('*', fstloc(ln, col, ln, col), None, ', ')
+
+    if a.args:
+        _, _, ln, col = self.last_child().pars()
+
+        return oneinfo(', *', fstloc(ln, col, ln, col))
+
+    if a.posonlyargs:
+        _, _, ln, col = self.last_child().loc
+
+        ln, col = _next_find(self.root._lines, ln, col, self.end_ln, self.end_col, '/')  # must be there
+
+        return oneinfo(', *', fstloc(ln, (col := col + 1), ln, col))
+
+    loc    = self._loc_arguments_empty()
+    prefix = ' *' if (parent := self.parent) and isinstance(parent.a, Lambda) else '*'
+
+    return oneinfo(prefix, loc)
+
 def _one_info_arguments_kw_defaults(self: 'FST', static: onestatic, idx: int | None, field: str) -> oneinfo:
     if ann := (arg := self.a.kwonlyargs[idx]).annotation:
         _, _, ln, col = ann.f.pars()
@@ -848,7 +931,7 @@ def _one_info_keyword_arg(self: 'FST', static: onestatic, idx: int | None, field
     ln, col, _, _         = self.loc
     arg_end_col           = col + 2 if a.arg is None else re_identifier.match(self.root._lines[ln], col).end() # must be there
 
-    return oneinfo('', fstloc(ln, col, end_ln, end_col), fstloc(ln, col, ln, arg_end_col))
+    return oneinfo('', fstloc(ln, col, end_ln, end_col), fstloc(ln, col, ln, arg_end_col), '=', '**')
 
 def _one_info_alias_asname(self: 'FST', static: onestatic, idx: int | None, field: str) -> oneinfo:
     ln, col, end_ln, end_col  = self.loc
@@ -938,7 +1021,7 @@ def _one_info_MatchAs_pattern(self: 'FST', static: onestatic, idx: int | None, f
     as_ln, as_col   = _next_find(lines, *pattern.f.pars()[2:], end_ln, end_col, 'as')  # skip the 'as'
     end_ln, end_col = _next_find(lines, as_ln, as_col + 2, end_ln, end_col, name)
 
-    return oneinfo('', fstloc(ln, col, end_ln, end_col))
+    return oneinfo('', fstloc(ln, col, end_ln, end_col), None, ' as ')
 
 def _one_info_MatchAs_name(self: 'FST', static: onestatic, idx: int | None, field: str) -> oneinfo:
     ln, col, end_ln, end_col = self.loc
@@ -1083,7 +1166,7 @@ _PUT_ONE_HANDLERS = {
     (IfExp, 'body'):                      (_put_one_exprish_required, None, _onestatic_exprish_required), # expr
     (IfExp, 'test'):                      (_put_one_exprish_required, None, _onestatic_exprish_required), # expr
     (IfExp, 'orelse'):                    (_put_one_exprish_required, None, _onestatic_exprish_required), # expr
-    (Dict, 'keys'):                       (_put_one_exprish_optional, None, onestatic(_one_info_Dict_key, delstr='**', suffix=': ')), # expr*
+    (Dict, 'keys'):                       (_put_one_exprish_optional, None, onestatic(_one_info_Dict_key)), # expr*
     (Dict, 'values'):                     (_put_one_exprish_required, None, _onestatic_exprish_required), # expr*
     (Set, 'elts'):                        (_put_one_tuple_list_or_set, None, None), # expr*
     (ListComp, 'elt'):                    (_put_one_exprish_required, None, _onestatic_exprish_required), # expr
@@ -1132,13 +1215,15 @@ _PUT_ONE_HANDLERS = {
     (arguments, 'posonlyargs'):           (_put_one_exprish_sliceable, None, _onestatic_arg_required), # arg*
     (arguments, 'args'):                  (_put_one_exprish_sliceable, None, _onestatic_arg_required), # arg*
     (arguments, 'defaults'):              (_put_one_exprish_required, None, _onestatic_exprish_required), # expr*
-    # (arguments, 'vararg'):                (_put_one_default, None, None), # arg?                                            - special parse 'arg'
+
+    (arguments, 'vararg'):                (_put_one_exprish_optional, None, onestatic(_one_info_arguments_vararg, coerce=_code_as_arg)), # arg?
+
     (arguments, 'kwonlyargs'):            (_put_one_exprish_sliceable, None, _onestatic_arg_required), # arg*
     (arguments, 'kw_defaults'):           (_put_one_exprish_optional, None, onestatic(_one_info_arguments_kw_defaults)), # expr*
     # (arguments, 'kwarg'):                 (_put_one_default, None, None), # arg?                                            - special parse 'arg'
     (arg, 'arg'):                         (_put_one_identifier_required, None, _onestatic_identifier_required), # identifier
     (arg, 'annotation'):                  (_put_one_exprish_optional, None, onestatic(_one_info_arg_annotation)), # expr?  - exclude [Lambda, Yield, YieldFrom, Await, NamedExpr]?
-    (keyword, 'arg'):                     (_put_one_identifier_optional, None, onestatic(_one_info_keyword_arg, coerce=None, delstr='**', suffix='=')), # identifier?
+    (keyword, 'arg'):                     (_put_one_identifier_optional, None, onestatic(_one_info_keyword_arg, coerce=None)), # identifier?
     (keyword, 'value'):                   (_put_one_exprish_required, None, _onestatic_exprish_required), # expr
     (alias, 'name'):                      (_put_one_identifier_required, None, _onestatic_identifier_required), # identifier
     (alias, 'asname'):                    (_put_one_identifier_optional, None, onestatic(_one_info_alias_asname, coerce=None)), # identifier?
@@ -1158,7 +1243,7 @@ _PUT_ONE_HANDLERS = {
     (MatchClass, 'kwd_attrs'):            (_put_one_identifier_required, None, onestatic(_one_info_MatchClass_kwd_attrs, coerce=None)), # identifier*
     (MatchClass, 'kwd_patterns'):         (_put_one_exprish_sliceable, None, _onestatic_pattern_required), # pattern*
     (MatchStar, 'name'):                  (_put_one_MatchStar_name, None, onestatic(_one_info_MatchStar_name, coerce=None)), # identifier?
-    (MatchAs, 'pattern'):                 (_put_one_exprish_optional, None, onestatic(_one_info_MatchAs_pattern, coerce=_code_as_pattern, suffix=' as ')), # pattern?
+    (MatchAs, 'pattern'):                 (_put_one_exprish_optional, None, onestatic(_one_info_MatchAs_pattern, coerce=_code_as_pattern)), # pattern?
     (MatchAs, 'name'):                    (_put_one_MatchAs_name, None, onestatic(_one_info_MatchAs_name, coerce=None)), # identifier?
     (MatchOr, 'patterns'):                (_put_one_exprish_sliceable, None, _onestatic_pattern_required), # pattern*
     (TypeVar, 'name'):                    (_put_one_identifier_required, None, _onestatic_identifier_required), # identifier

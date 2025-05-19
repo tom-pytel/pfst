@@ -464,7 +464,7 @@ def _loc_comprehension(self: 'FST') -> fstloc | None:
 
     ast   = self.a
     first = ast.target.f
-    last  = self.last_child(True)
+    last  = self.last_child()
     lines = self.root._lines
 
     prev = prev.loc if (prev := self.prev_step('allown', recurse_self=False)) else (0, 0)
@@ -500,31 +500,33 @@ def _loc_comprehension(self: 'FST') -> fstloc | None:
 def _loc_arguments(self: 'FST') -> fstloc | None:
     """`arguments` location from children. Called from `.loc`. Returns `None` when there are no arguments."""
 
-    if not (first := self.first_child(True)):
+    if not (first := self.first_child()):
         return None
 
     ast   = self.a
-    last  = self.last_child(True)
+    last  = self.last_child()
     lines = self.root._lines
 
-    start_ln, start_col, ante_start_ln, ante_start_col, nlpars = first._lpars('allown')  # 'allown' so it doesn't recurse into calling `.loc`
+    start_ln, start_col, ante_start_ln, ante_start_col, _ = first._lpars('allown')  # 'allown' so it doesn't recurse into calling `.loc`
+    end_ln, end_col, ante_end_ln, ante_end_col, _         = last._rpars('allown')
 
-    if not nlpars:  # not really needed, but juuust in case
-        start_ln  = first.bln
-        start_col = first.bcol
+    if has_args_pars := (parent := self.parent) and isinstance(parent.a, (FunctionDef, AsyncFunctionDef)):
+        start_ln  = ante_start_ln
+        start_col = ante_start_col
 
-    end_ln, end_col, ante_end_ln, ante_end_col, nrpars = last._rpars('allown')
+    if ast.posonlyargs:
+        leading_stars  = None  # no leading stars
+        trailing_slash = False if ast.args or ast.vararg or ast.kwonlyargs or ast.kwarg else True
 
-    if not nrpars:
-        end_ln  = last.bend_ln
-        end_col = last.bend_col
+    else:
+        trailing_slash = False
 
-    if ast.posonlyargs or ast.args:
-        leading_stars = None  # no leading stars
-    elif ast.vararg or ast.kwonlyargs:
-        leading_stars = '*'  # leading star just before varname or bare leading star with comma following
-    elif ast.kwarg:
-        leading_stars = '**'  # leading double star just before varname
+        if ast.args:
+            leading_stars = None  # no leading stars
+        elif ast.vararg or ast.kwonlyargs:
+            leading_stars = '*'  # leading star just before varname or bare leading star with comma following
+        elif ast.kwarg:
+            leading_stars = '**'  # leading double star just before varname
 
     if ((code := _next_src(lines, end_ln, end_col, len(lines) - 1, len(lines[-1])))  # trailing comma
         and code.src.startswith(',')
@@ -532,16 +534,16 @@ def _loc_arguments(self: 'FST') -> fstloc | None:
         end_ln, end_col, _  = code
         end_col            += 1
 
-    elif (parent := self.parent) and isinstance(parent.a, (FunctionDef, AsyncFunctionDef)):
+    elif has_args_pars:
         end_ln  = ante_end_ln
         end_col = ante_end_col
 
-        if not leading_stars:
-            start_ln  = ante_start_ln
-            start_col = ante_start_col
-
     if leading_stars:  # find star to the left, we know it exists so we don't check for None return
         start_ln, start_col = _prev_find(lines, *first._prev_ast_bound('allown'), start_ln, start_col, leading_stars)
+
+    if trailing_slash:
+        end_ln, end_col  = _next_find(lines, end_ln, end_col, len(lines), 0x7fffffffffffffff, '/')  # must be there
+        end_col         += 1
 
     return fstloc(start_ln, start_col, end_ln, end_col)
 
@@ -611,7 +613,7 @@ def _loc_match_case(self: 'FST') -> fstloc | None:
 
     ast   = self.a
     first = ast.pattern.f
-    last  = self.last_child(True)
+    last  = self.last_child()
     lines = self.root._lines
 
     start = _prev_find(lines, 0, 0, first.ln, first.col, 'case')  # we can use '0, 0' because we know "case" starts on a newline
@@ -808,7 +810,7 @@ def _fix_block_del_last_child(self: 'FST', bound_ln: int, bound_col: int, bound_
 
     end_lineno = None
 
-    if last_child := self.last_child(True):  # easy enough when we have a new last child
+    if last_child := self.last_child():  # easy enough when we have a new last child
         if last_child.pfield.name in ('body', 'orelse', 'handlers', 'finalbody', 'cases'):  # but make sure its past the block open colon
             end_lineno     = last_child.end_lineno
             end_col_offset = last_child.end_col_offset
