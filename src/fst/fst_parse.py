@@ -79,8 +79,9 @@ def _parse_expr(src: str, parse_params: dict = {}) -> AST:
 
 
 @staticmethod
-def _parse_Slice(src: str, parse_params: dict = {}) -> AST:
-    """Parse to an `ast.Slice` or raise `SyntaxError`, e.g. "start:stop:step"."""
+def _parse_slice(src: str, parse_params: dict = {}) -> AST:
+    """Parse to an `ast.Slice` or anything else that can go into `Subscript.slice` or raise `SyntaxError`, e.g.
+    "start:stop:step"."""
 
     return _offset_linenos(ast_parse(f'a[\n{src}]', **parse_params).body[0].value.slice, -1)
 
@@ -181,10 +182,10 @@ def _code_as_expr(self: 'FST', code: Code) -> 'FST':
     return FST(ast, lines=lines)
 
 
-def _code_as_Slice(self: 'FST', code: Code) -> 'FST':
-    """Convert `code` to a Slice `FST` if possible."""
+def _code_as_slice(self: 'FST', code: Code) -> 'FST':
+    """Convert `code` to a Slice `FST` if possible (or anthing else that can serve in `Subscript.slice`)."""
 
-    return _code_as(self, code, Slice, _parse_Slice)
+    return _code_as(self, code, expr, _parse_slice)
 
 
 def _code_as_comprehension(self: 'FST', code: Code) -> 'FST':

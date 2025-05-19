@@ -13,7 +13,7 @@ from .shared import (
 )
 
 from .fst_parse import (
-    _code_as_expr, _code_as_Slice, _code_as_pattern, _code_as_comprehension, _code_as_arguments,
+    _code_as_expr, _code_as_slice, _code_as_pattern, _code_as_comprehension, _code_as_arguments,
     _code_as_arguments_lambda, _code_as_arg, _code_as_keyword, _code_as_alias, _code_as_withitem, _code_as_type_param,
 )
 
@@ -599,7 +599,7 @@ def _one_info_exprish_required(self: 'FST', static: onestatic, idx: int | None, 
     return _oneinfo_default
 
 _onestatic_exprish_required          = onestatic(_one_info_exprish_required)
-_onestatic_Slice_required            = onestatic(_one_info_exprish_required, coerce=_code_as_Slice)
+_onestatic_Slice_required            = onestatic(_one_info_exprish_required, coerce=_code_as_slice)
 _onestatic_comprehension_required    = onestatic(_one_info_exprish_required, coerce=_code_as_comprehension)
 _onestatic_arguments_required        = onestatic(_one_info_exprish_required, coerce=_code_as_arguments)
 _onestatic_arguments_lambda_required = onestatic(_one_info_exprish_required, coerce=_code_as_arguments_lambda)

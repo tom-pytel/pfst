@@ -16028,6 +16028,57 @@ Module .. ROOT 0,0 -> 0,9
       .ctx Load
 """),
 
+(r"""i[j]""", 'body[0].value', None, 'slice', {'raw': False}, r"""a, b""", r"""i[a, b]""", r"""
+Module .. ROOT 0,0 -> 0,7
+  .body[1]
+  0] Expr .. 0,0 -> 0,7
+    .value Subscript .. 0,0 -> 0,7
+      .value Name 'i' Load .. 0,0 -> 0,1
+      .slice Tuple .. 0,2 -> 0,6
+        .elts[2]
+        0] Name 'a' Load .. 0,2 -> 0,3
+        1] Name 'b' Load .. 0,5 -> 0,6
+        .ctx Load
+      .ctx Load
+"""),
+
+(r"""i[j]""", 'body[0].value', None, 'slice', {'raw': False}, r"""x:y:z""", r"""i[x:y:z]""", r"""
+Module .. ROOT 0,0 -> 0,8
+  .body[1]
+  0] Expr .. 0,0 -> 0,8
+    .value Subscript .. 0,0 -> 0,8
+      .value Name 'i' Load .. 0,0 -> 0,1
+      .slice Slice .. 0,2 -> 0,7
+        .lower Name 'x' Load .. 0,2 -> 0,3
+        .upper Name 'y' Load .. 0,4 -> 0,5
+        .step Name 'z' Load .. 0,6 -> 0,7
+      .ctx Load
+"""),
+
+(r"""i[a:b:c]""", 'body[0].value', None, 'slice', {'raw': False}, r"""a, b""", r"""i[a, b]""", r"""
+Module .. ROOT 0,0 -> 0,7
+  .body[1]
+  0] Expr .. 0,0 -> 0,7
+    .value Subscript .. 0,0 -> 0,7
+      .value Name 'i' Load .. 0,0 -> 0,1
+      .slice Tuple .. 0,2 -> 0,6
+        .elts[2]
+        0] Name 'a' Load .. 0,2 -> 0,3
+        1] Name 'b' Load .. 0,5 -> 0,6
+        .ctx Load
+      .ctx Load
+"""),
+
+(r"""i[a:b:c]""", 'body[0].value', None, 'slice', {'raw': False}, r"""z""", r"""i[z]""", r"""
+Module .. ROOT 0,0 -> 0,4
+  .body[1]
+  0] Expr .. 0,0 -> 0,4
+    .value Subscript .. 0,0 -> 0,4
+      .value Name 'i' Load .. 0,0 -> 0,1
+      .slice Name 'z' Load .. 0,2 -> 0,3
+      .ctx Load
+"""),
+
 (r"""[*i]""", 'body[0].value.elts[0]', None, None, {'raw': False}, r"""a, b""", r"""[*(a, b)]""", r"""
 Module .. ROOT 0,0 -> 0,9
   .body[1]
