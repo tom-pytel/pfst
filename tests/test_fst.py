@@ -29729,6 +29729,11 @@ def f():
             walktest(fst.a)
             fst.verify(raise_=True)
 
+    def test_fromast_special(self):
+        f = FST.fromast(ast_.parse('*t').body[0].value)
+        self.assertEqual('*t', f.src)
+        self.assertIsInstance(f.a, Starred)
+
     def test_verify(self):
         ast = parse('i = 1')
         ast.f.verify(raise_=True)

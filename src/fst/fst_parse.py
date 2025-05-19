@@ -312,7 +312,7 @@ def _code_as_identifier(self: 'FST', code: Code) -> str:
 
 
 def _code_as_identifier_dotted(self: 'FST', code: Code) -> str:
-    """Convert `Code` to valid dotted identifier string if possible."""
+    """Convert `Code` to valid dotted identifier string if possible (for Import module)."""
 
     if isinstance(code, list):
         if len(code) != 1:

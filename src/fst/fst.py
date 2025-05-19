@@ -598,13 +598,12 @@ class FST:
         parse_params = dict(filename=filename, type_comments=type_comments, feature_version=feature_version)
 
         if calc_loc:
-            astp = ast_parse(src, mode=get_parse_mode(ast) or 'exec' if mode is None else mode, **parse_params)
+            astp = ast_parse(src, **parse_params)
+            cls  = ast.__class__
 
-            if astp.__class__ is not ast.__class__:
-                astp = astp.body if isinstance(astp, Expression) else astp.body[0]
-
-                if astp.__class__ is not ast.__class__:
-                    raise RuntimeError('could not reproduce ast')
+            if not (astp.__class__ is cls or (len(astp.body) == 1 and (astp := astp.body[0]).__class__ is cls) or
+                    (isinstance(astp, Expr) and (astp := astp.value).__class__ is cls)):
+                raise RuntimeError('could not reproduce ast')
 
             if calc_loc == 'copy':
                 if not compare_asts(astp, ast, type_comments=type_comments, raise_=False):
