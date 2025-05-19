@@ -16,9 +16,9 @@ __all__ = [
     'FIELDS', 'AST_FIELDS',
     'OPSTR2CLS_UNARY', 'OPSTR2CLS_BIN', 'OPSTR2CLS_CMP', 'OPSTR2CLS_BOOL', 'OPSTR2CLS_AUG',
     'OPSTR2CLS', 'OPSTR2CLSWAUG', 'OPCLS2STR', 'OPCLS2STR_AUG',
-    're_identifier_only', 're_identifier',
+    're_identifier_only', 're_identifier', 're_identifier_dotted_only', 're_identifier_dotted',
     'bistr', 'constant',
-    'is_valid_identifier', 'is_valid_MatchSingleton_value', 'is_valid_MatchAs_value',
+    'is_valid_identifier', 'is_valid_identifier_dotted', 'is_valid_MatchSingleton_value', 'is_valid_MatchAs_value',
     'reduce_ast', 'get_field', 'set_field', 'has_type_comments', 'is_parsable', 'get_parse_mode',
     'WalkFail', 'walk2', 'compare_asts', 'copy_attributes', 'copy_ast', 'set_ctx',
     'get_func_class_or_ass_by_name', 'syntax_ordered_children', 'last_block_opener_child', 'is_atom',
@@ -132,10 +132,12 @@ class bistr(str):
             pass
 
 
-constant           = EllipsisType | int | float | complex | str | bytes | bool | None
+constant = EllipsisType | int | float | complex | str | bytes | bool | None
 
-re_identifier_only = re.compile(r'^[^\d\W]\w*$')
-re_identifier      = re.compile(r'[^\d\W]\w*')
+re_identifier_only        = re.compile(r'^[^\d\W]\w*$')
+re_identifier             = re.compile(r'[^\d\W]\w*')
+re_identifier_dotted_only = re.compile(r'^[^\d\W]\w*(?:\.[^\d\W]\w*)*$')
+re_identifier_dotted      = re.compile(r'[^\d\W]\w*(?:\.[^\d\W]\w*)*')
 
 # Mostly in syntax order except a few special cases:
 #   BoolOp        - multiple simultaneous locations possible for single `op`
@@ -342,7 +344,13 @@ OPCLS2STR_AUG = {v: k for k, v in OPSTR2CLS_AUG.items()}  ; "Mapping of operator
 def is_valid_identifier(s: str) -> bool:
     """Check if `s` is a valid python identifier."""
 
-    return (re_identifier.match(s) or False) and not keyword_iskeyword(s)
+    return (re_identifier_only.match(s) or False) and not keyword_iskeyword(s)
+
+
+def is_valid_identifier_dotted(s: str) -> bool:
+    """Check if `s` is a valid dotted identifier (for modules)."""
+
+    return (re_identifier_dotted_only.match(s) or False) and not keyword_iskeyword(s)
 
 
 def is_valid_MatchSingleton_value(ast: AST) -> bool:

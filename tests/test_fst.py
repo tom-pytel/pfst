@@ -19750,6 +19750,17 @@ Module .. ROOT 0,0 -> 0,17
     .level 0
 """),
 
+(r"""from a import *""", 'body[0]', None, 'module', {'raw': False}, r"""x.y""", r"""from x.y import *""", r"""
+Module .. ROOT 0,0 -> 0,17
+  .body[1]
+  0] ImportFrom .. 0,0 -> 0,17
+    .module 'x.y'
+    .names[1]
+    0] alias .. 0,16 -> 0,17
+      .name '*'
+    .level 0
+"""),
+
 (r"""from a import *""", 'body[0]', None, 'module', {'raw': False}, r"""**DEL**""", r"""**ValueError('cannot delete ImportFrom.module in this state')**""", r"""
 """),
 
@@ -19758,6 +19769,17 @@ Module .. ROOT 0,0 -> 0,18
   .body[1]
   0] ImportFrom .. 0,0 -> 0,18
     .module 'new'
+    .names[1]
+    0] alias .. 0,17 -> 0,18
+      .name '*'
+    .level 1
+"""),
+
+(r"""from .a import *""", 'body[0]', None, 'module', {'raw': False}, r"""x.y""", r"""from .x.y import *""", r"""
+Module .. ROOT 0,0 -> 0,18
+  .body[1]
+  0] ImportFrom .. 0,0 -> 0,18
+    .module 'x.y'
     .names[1]
     0] alias .. 0,17 -> 0,18
       .name '*'
@@ -19779,6 +19801,17 @@ Module .. ROOT 0,0 -> 0,19
   .body[1]
   0] ImportFrom .. 0,0 -> 0,19
     .module 'new'
+    .names[1]
+    0] alias .. 0,18 -> 0,19
+      .name '*'
+    .level 1
+"""),
+
+(r"""from . a import *""", 'body[0]', None, 'module', {'raw': False}, r"""x.y""", r"""from . x.y import *""", r"""
+Module .. ROOT 0,0 -> 0,19
+  .body[1]
+  0] ImportFrom .. 0,0 -> 0,19
+    .module 'x.y'
     .names[1]
     0] alias .. 0,18 -> 0,19
       .name '*'
@@ -19847,6 +19880,95 @@ Module .. ROOT 0,0 -> 2,9
     .names[1]
     0] alias .. 2,8 -> 2,9
       .name '*'
+    .level 2
+"""),
+
+(r"""from a.b import c""", 'body[0]', None, 'module', {'raw': False}, r"""**DEL**""", r"""**ValueError('cannot delete ImportFrom.module in this state')**""", r"""
+"""),
+
+(r"""from a.b import c""", 'body[0]', None, 'module', {'raw': False}, r"""new""", r"""from new import c""", r"""
+Module .. ROOT 0,0 -> 0,17
+  .body[1]
+  0] ImportFrom .. 0,0 -> 0,17
+    .module 'new'
+    .names[1]
+    0] alias .. 0,16 -> 0,17
+      .name 'c'
+    .level 0
+"""),
+
+(r"""from a.b import c""", 'body[0]', None, 'module', {'raw': False}, r"""x.y""", r"""from x.y import c""", r"""
+Module .. ROOT 0,0 -> 0,17
+  .body[1]
+  0] ImportFrom .. 0,0 -> 0,17
+    .module 'x.y'
+    .names[1]
+    0] alias .. 0,16 -> 0,17
+      .name 'c'
+    .level 0
+"""),
+
+(r"""from .a.b import c""", 'body[0]', None, 'module', {'raw': False}, r"""**DEL**""", r"""from . import c""", r"""
+Module .. ROOT 0,0 -> 0,15
+  .body[1]
+  0] ImportFrom .. 0,0 -> 0,15
+    .names[1]
+    0] alias .. 0,14 -> 0,15
+      .name 'c'
+    .level 1
+"""),
+
+(r"""from .a.b import c""", 'body[0]', None, 'module', {'raw': False}, r"""new""", r"""from .new import c""", r"""
+Module .. ROOT 0,0 -> 0,18
+  .body[1]
+  0] ImportFrom .. 0,0 -> 0,18
+    .module 'new'
+    .names[1]
+    0] alias .. 0,17 -> 0,18
+      .name 'c'
+    .level 1
+"""),
+
+(r"""from .a.b import c""", 'body[0]', None, 'module', {'raw': False}, r"""x.y""", r"""from .x.y import c""", r"""
+Module .. ROOT 0,0 -> 0,18
+  .body[1]
+  0] ImportFrom .. 0,0 -> 0,18
+    .module 'x.y'
+    .names[1]
+    0] alias .. 0,17 -> 0,18
+      .name 'c'
+    .level 1
+"""),
+
+(r"""from ..a.b import c""", 'body[0]', None, 'module', {'raw': False}, r"""**DEL**""", r"""from .. import c""", r"""
+Module .. ROOT 0,0 -> 0,16
+  .body[1]
+  0] ImportFrom .. 0,0 -> 0,16
+    .names[1]
+    0] alias .. 0,15 -> 0,16
+      .name 'c'
+    .level 2
+"""),
+
+(r"""from ..a.b import c""", 'body[0]', None, 'module', {'raw': False}, r"""new""", r"""from ..new import c""", r"""
+Module .. ROOT 0,0 -> 0,19
+  .body[1]
+  0] ImportFrom .. 0,0 -> 0,19
+    .module 'new'
+    .names[1]
+    0] alias .. 0,18 -> 0,19
+      .name 'c'
+    .level 2
+"""),
+
+(r"""from ..a.b import c""", 'body[0]', None, 'module', {'raw': False}, r"""x.y""", r"""from ..x.y import c""", r"""
+Module .. ROOT 0,0 -> 0,19
+  .body[1]
+  0] ImportFrom .. 0,0 -> 0,19
+    .module 'x.y'
+    .names[1]
+    0] alias .. 0,18 -> 0,19
+      .name 'c'
     .level 2
 """),
 
@@ -23677,6 +23799,21 @@ Module .. ROOT 0,0 -> 0,23
 """),
 
 (r"""import a, c.d as e""", 'body[0]', -4, 'names', {'raw': False}, r"""f as g""", r"""**IndexError('index out of range')**""", r"""
+"""),
+
+(r"""import a, c.d as e""", 'body[0]', 0, 'names', {'raw': False}, r"""x.y as z""", r"""import x.y as z, c.d as e""", r"""
+Module .. ROOT 0,0 -> 0,25
+  .body[1]
+  0] Import .. 0,0 -> 0,25
+    .names[2]
+    0] alias .. 0,7 -> 0,15
+      .name 'x.y'
+      .asname
+        'z'
+    1] alias .. 0,17 -> 0,25
+      .name 'c.d'
+      .asname
+        'e'
 """),
 
 (r"""from z import (a, c as d)""", 'body[0]', 0, 'names', {'raw': False}, r"""**DEL**""", r"""**ValueError('cannot put slice to ImportFrom.names')**""", r"""

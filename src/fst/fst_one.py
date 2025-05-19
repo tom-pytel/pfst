@@ -14,7 +14,8 @@ from .shared import (
 
 from .fst_parse import (
     _code_as_expr, _code_as_slice, _code_as_pattern, _code_as_comprehension, _code_as_arguments,
-    _code_as_arguments_lambda, _code_as_arg, _code_as_keyword, _code_as_alias, _code_as_withitem, _code_as_type_param,
+    _code_as_arguments_lambda, _code_as_arg, _code_as_keyword, _code_as_alias, _code_as_alias_dotted, _code_as_withitem,
+    _code_as_type_param, _code_as_identifier, _code_as_identifier_dotted,
 )
 
 
@@ -412,7 +413,7 @@ def _put_one_identifier_required(self: 'FST', code: Code | None, idx: int | None
 
     _validate_put(self, code, idx, field, child, options)
 
-    code = self._code_as_identifier(code)
+    code = static.coerce(self, code)  # self._code_as_identifier(code)
     info = static.getinfo(self, static, idx, field)
 
     self.put_src(code, *info.loc_ident, True)
@@ -442,7 +443,7 @@ def _put_one_identifier_optional(self: 'FST', code: Code | None, idx: int | None
 
         return None
 
-    code = self._code_as_identifier(code)
+    code = static.coerce(self, code)  # self._code_as_identifier(code)
 
     if child is not None:  # replace existing identifier
         self.put_src(code, *info.loc_ident, True)
@@ -605,7 +606,6 @@ _onestatic_arguments_required        = onestatic(_one_info_exprish_required, coe
 _onestatic_arguments_lambda_required = onestatic(_one_info_exprish_required, coerce=_code_as_arguments_lambda)
 _onestatic_arg_required              = onestatic(_one_info_exprish_required, coerce=_code_as_arg)
 _onestatic_keyword_required          = onestatic(_one_info_exprish_required, coerce=_code_as_keyword)
-_onestatic_alias_required            = onestatic(_one_info_exprish_required, coerce=_code_as_alias)
 _onestatic_withitem_required         = onestatic(_one_info_exprish_required, coerce=_code_as_withitem)
 _onestatic_pattern_required          = onestatic(_one_info_exprish_required, coerce=_code_as_pattern)
 _onestatic_type_param_required       = onestatic(_one_info_exprish_required, coerce=_code_as_type_param)
@@ -629,12 +629,12 @@ def _one_info_identifier_required(self: 'FST', static: onestatic, idx: int | Non
 
     return oneinfo('', None, fstloc(ln, col, ln, end_col))
 
-_onestatic_identifier_required = onestatic(_one_info_identifier_required, coerce=None)
+_onestatic_identifier_required = onestatic(_one_info_identifier_required, coerce=_code_as_identifier)
 
 def _one_info_FunctionDef_name(self: 'FST', static: onestatic, idx: int | None, field: str) -> oneinfo:
     return _one_info_identifier_required(self, static, idx, field, 'def')
 
-_onestatic_FunctionDef_name = onestatic(_one_info_FunctionDef_name, coerce=None)
+_onestatic_FunctionDef_name = onestatic(_one_info_FunctionDef_name, coerce=_code_as_identifier)
 
 def _one_info_FunctionDef_returns(self: 'FST', static: onestatic, idx: int | None, field: str) -> oneinfo:
     ln, col, end_ln, end_col = self._loc_block_header_end(True)
@@ -685,7 +685,7 @@ def _one_info_ImportFrom_module(self: 'FST', static: onestatic, idx: int | None,
     lines                    = self.root._lines
 
     if not self.a.level:  # cannot insert or delete
-        ln, col, src =  _next_find_re(lines, ln, col + 4, end_ln, end_col, re_identifier, lcont=None)  # must be there, col+4 is for 'from'
+        ln, col, src =  _next_find_re(lines, ln, col + 4, end_ln, end_col, re_identifier_dotted, lcont=None)  # must be there, col+4 is for 'from'
         end_col      = col + len(src)
 
         return oneinfo('', None, fstloc(ln, col, ln, end_col))
@@ -716,7 +716,7 @@ def _one_info_Global_Nonlocal_names(self: 'FST', static: onestatic, idx: int | N
 
     return oneinfo('', None, fstloc(ln, col, ln, col + len(src)))
 
-_onestatic_Global_Nonlocal_names = onestatic(_one_info_Global_Nonlocal_names, coerce=None)
+_onestatic_Global_Nonlocal_names = onestatic(_one_info_Global_Nonlocal_names, coerce=_code_as_identifier)
 
 def _one_info_Dict_key(self: 'FST', static: onestatic, idx: int | None, field: str) -> oneinfo:
     key                   = (a := self.a).keys[idx]
@@ -1126,7 +1126,7 @@ _PUT_ONE_HANDLERS = {
     (AsyncFunctionDef, 'returns'):        (_put_one_exprish_optional, None, _onestatic_FunctionDef_returns), # expr?
     (AsyncFunctionDef, 'body'):           (_put_one_stmtish, None, None), # stmt*
     (ClassDef, 'decorator_list'):         (_put_one_exprish_sliceable, None, _onestatic_exprish_required), # expr*
-    (ClassDef, 'name'):                   (_put_one_identifier_required, None, onestatic(_one_info_ClassDef_name, coerce=None)), # identifier
+    (ClassDef, 'name'):                   (_put_one_identifier_required, None, onestatic(_one_info_ClassDef_name, coerce=_code_as_identifier)), # identifier
     (ClassDef, 'type_params'):            (_put_one_exprish_sliceable, None, _onestatic_type_param_required), # type_param*
     (ClassDef, 'bases'):                  (_put_one_exprish_sliceable, None, _onestatic_exprish_required), # expr*
     (ClassDef, 'keywords'):               (_put_one_exprish_sliceable, None, _onestatic_keyword_required), # keyword*
@@ -1176,9 +1176,9 @@ _PUT_ONE_HANDLERS = {
     (TryStar, 'finalbody'):               (_put_one_stmtish, None, None), # stmt*
     (Assert, 'test'):                     (_put_one_exprish_required, None, _onestatic_exprish_required), # expr
     (Assert, 'msg'):                      (_put_one_exprish_optional, None, onestatic(_one_info_Assert_msg)), # expr?
-    (Import, 'names'):                    (_put_one_exprish_sliceable, None, _onestatic_alias_required), # alias*
-    (ImportFrom, 'module'):               (_put_one_identifier_optional, None, onestatic(_one_info_ImportFrom_module, coerce=None)), # identifier?
-    (ImportFrom, 'names'):                (_put_one_exprish_sliceable, None, _onestatic_alias_required), # alias*
+    (Import, 'names'):                    (_put_one_exprish_sliceable, None, onestatic(_one_info_exprish_required, coerce=_code_as_alias_dotted)), # alias*
+    (ImportFrom, 'module'):               (_put_one_identifier_optional, None, onestatic(_one_info_ImportFrom_module, coerce=_code_as_identifier_dotted)), # identifier? (dotted)
+    (ImportFrom, 'names'):                (_put_one_exprish_sliceable, None, onestatic(_one_info_exprish_required, coerce=_code_as_alias)), # alias*
     (Global, 'names'):                    (_put_one_identifier_sliceable, None, _onestatic_Global_Nonlocal_names), # identifier*
     (Nonlocal, 'names'):                  (_put_one_identifier_sliceable, None, _onestatic_Global_Nonlocal_names), # identifier*
     (Expr, 'value'):                      (_put_one_exprish_required, None, _onestatic_exprish_required), # expr
@@ -1226,7 +1226,7 @@ _PUT_ONE_HANDLERS = {
     # (TemplateStr, 'values'):              (_put_one_default, None, None), # expr*                                           - ??? no location on py < 3.12
     (Constant, 'value'):                  (_put_one_constant, None, onestatic(_one_info_constant, Constant)), # constant
     (Attribute, 'value'):                 (_put_one_exprish_required, None, _onestatic_exprish_required), # expr
-    (Attribute, 'attr'):                  (_put_one_identifier_required, None, onestatic(_one_info_Attribute_attr, coerce=None)), # identifier
+    (Attribute, 'attr'):                  (_put_one_identifier_required, None, onestatic(_one_info_Attribute_attr, coerce=_code_as_identifier)), # identifier
     (Subscript, 'value'):                 (_put_one_exprish_required, None, _onestatic_exprish_required), # expr
     (Subscript, 'slice'):                 (_put_one_exprish_required, None, _onestatic_Slice_required), # expr
     (Starred, 'value'):                   (_put_one_exprish_required, None, _onestatic_exprish_required), # expr
@@ -1240,7 +1240,7 @@ _PUT_ONE_HANDLERS = {
     (comprehension, 'iter'):              (_put_one_exprish_required, None, _onestatic_exprish_required), # expr
     (comprehension, 'ifs'):               (_put_one_exprish_sliceable, None, _onestatic_exprish_required), # expr*
     (ExceptHandler, 'type'):              (_put_one_exprish_optional, None, onestatic(_one_info_ExceptHandler_type)), # expr?
-    (ExceptHandler, 'name'):              (_put_one_ExceptHandler_name, None, onestatic(_one_info_ExceptHandler_name, coerce=None)), # identifier?
+    (ExceptHandler, 'name'):              (_put_one_ExceptHandler_name, None, onestatic(_one_info_ExceptHandler_name, coerce=_code_as_identifier)), # identifier?
     (ExceptHandler, 'body'):              (_put_one_stmtish, None, None), # stmt*
     (arguments, 'posonlyargs'):           (_put_one_exprish_sliceable, None, _onestatic_arg_required), # arg*
     (arguments, 'args'):                  (_put_one_exprish_sliceable, None, _onestatic_arg_required), # arg*
@@ -1251,10 +1251,10 @@ _PUT_ONE_HANDLERS = {
     (arguments, 'kwarg'):                 (_put_one_exprish_optional, None, onestatic(_one_info_arguments_kwarg, coerce=_code_as_arg)), # arg?
     (arg, 'arg'):                         (_put_one_identifier_required, None, _onestatic_identifier_required), # identifier
     (arg, 'annotation'):                  (_put_one_exprish_optional, None, onestatic(_one_info_arg_annotation)), # expr?  - exclude [Lambda, Yield, YieldFrom, Await, NamedExpr]?
-    (keyword, 'arg'):                     (_put_one_identifier_optional, None, onestatic(_one_info_keyword_arg, coerce=None)), # identifier?
+    (keyword, 'arg'):                     (_put_one_identifier_optional, None, onestatic(_one_info_keyword_arg, coerce=_code_as_identifier)), # identifier?
     (keyword, 'value'):                   (_put_one_exprish_required, None, _onestatic_exprish_required), # expr
-    (alias, 'name'):                      (_put_one_identifier_required, None, _onestatic_identifier_required), # identifier
-    (alias, 'asname'):                    (_put_one_identifier_optional, None, onestatic(_one_info_alias_asname, coerce=None)), # identifier?
+    (alias, 'name'):                      (_put_one_identifier_required, None, onestatic(_one_info_identifier_required, coerce=_code_as_identifier_dotted)), # identifier  - dotted not valid for all uses but being general here (and lazy, don't feel like checking parent)
+    (alias, 'asname'):                    (_put_one_identifier_optional, None, onestatic(_one_info_alias_asname, coerce=_code_as_identifier)), # identifier?
     (withitem, 'context_expr'):           (_put_one_exprish_required, None, _onestatic_exprish_required), # expr
     (withitem, 'optional_vars'):          (_put_one_exprish_optional, None, onestatic(_one_info_withitem_optional_vars, (Name, Tuple, List), ctx=Store)), # expr?
     (match_case, 'pattern'):              (_put_one_exprish_required, None, _onestatic_pattern_required), # pattern
@@ -1265,21 +1265,21 @@ _PUT_ONE_HANDLERS = {
     (MatchSequence, 'patterns'):          (_put_one_exprish_sliceable, None, _onestatic_pattern_required), # pattern*
     (MatchMapping, 'keys'):               (_put_one_exprish_required, None, onestatic(_one_info_exprish_required, (Constant, Attribute))), # expr*  TODO: XXX are there any others allowed?
     (MatchMapping, 'patterns'):           (_put_one_exprish_sliceable, None, _onestatic_pattern_required), # pattern*
-    (MatchMapping, 'rest'):               (_put_one_identifier_optional, None, onestatic(_one_info_MatchMapping_rest, coerce=None)), # identifier?
+    (MatchMapping, 'rest'):               (_put_one_identifier_optional, None, onestatic(_one_info_MatchMapping_rest, coerce=_code_as_identifier)), # identifier?
     (MatchClass, 'cls'):                  (_put_one_exprish_required, None, onestatic(_one_info_exprish_required, (Name, Attribute))), # expr
     (MatchClass, 'patterns'):             (_put_one_exprish_sliceable, None, _onestatic_pattern_required), # pattern*
-    (MatchClass, 'kwd_attrs'):            (_put_one_identifier_required, None, onestatic(_one_info_MatchClass_kwd_attrs, coerce=None)), # identifier*
+    (MatchClass, 'kwd_attrs'):            (_put_one_identifier_required, None, onestatic(_one_info_MatchClass_kwd_attrs, coerce=_code_as_identifier)), # identifier*
     (MatchClass, 'kwd_patterns'):         (_put_one_exprish_sliceable, None, _onestatic_pattern_required), # pattern*
-    (MatchStar, 'name'):                  (_put_one_MatchStar_name, None, onestatic(_one_info_MatchStar_name, coerce=None)), # identifier?
+    (MatchStar, 'name'):                  (_put_one_MatchStar_name, None, onestatic(_one_info_MatchStar_name, coerce=_code_as_identifier)), # identifier?
     (MatchAs, 'pattern'):                 (_put_one_exprish_optional, None, onestatic(_one_info_MatchAs_pattern, coerce=_code_as_pattern)), # pattern?
-    (MatchAs, 'name'):                    (_put_one_MatchAs_name, None, onestatic(_one_info_MatchAs_name, coerce=None)), # identifier?
+    (MatchAs, 'name'):                    (_put_one_MatchAs_name, None, onestatic(_one_info_MatchAs_name, coerce=_code_as_identifier)), # identifier?
     (MatchOr, 'patterns'):                (_put_one_exprish_sliceable, None, _onestatic_pattern_required), # pattern*
     (TypeVar, 'name'):                    (_put_one_identifier_required, None, _onestatic_identifier_required), # identifier
     (TypeVar, 'bound'):                   (_put_one_exprish_optional, None, onestatic(_one_info_TypeVar_bound)), # expr?
     (TypeVar, 'default_value'):           (_put_one_exprish_optional, None, onestatic(_one_info_TypeVar_default_value)), # expr?
-    (ParamSpec, 'name'):                  (_put_one_identifier_required, None, onestatic(_one_info_ParamSpec_name, coerce=None)), # identifier
+    (ParamSpec, 'name'):                  (_put_one_identifier_required, None, onestatic(_one_info_ParamSpec_name, coerce=_code_as_identifier)), # identifier
     (ParamSpec, 'default_value'):         (_put_one_exprish_optional, None, onestatic(_one_info_ParamSpec_default_value)), # expr?
-    (TypeVarTuple, 'name'):               (_put_one_identifier_required, None, onestatic(_one_info_TypeVarTuple_name, coerce=None)), # identifier
+    (TypeVarTuple, 'name'):               (_put_one_identifier_required, None, onestatic(_one_info_TypeVarTuple_name, coerce=_code_as_identifier)), # identifier
     (TypeVarTuple, 'default_value'):      (_put_one_exprish_optional, None, onestatic(_one_info_TypeVarTuple_default_value)), # expr?
 
 

@@ -129,6 +129,14 @@ def _parse_alias(src: str, parse_params: dict = {}) -> AST:
 
 
 @staticmethod
+def _parse_alias_dotted(src: str, parse_params: dict = {}) -> AST:
+    """Parse to an `ast.alias`, allowing dotted notation (not all aliases are created equal), or raise `SyntaxError`,
+    e.g. "name as alias"."""
+
+    return _offset_linenos(ast_parse(f'import \\\n{src}', **parse_params).body[0].names[0], -1)
+
+
+@staticmethod
 def _parse_withitem(src: str, parse_params: dict = {}) -> AST:
     """Parse to an `ast.withitem` or raise `SyntaxError`, e.g. "something() as var"."""
 
@@ -224,6 +232,12 @@ def _code_as_alias(self: 'FST', code: Code) -> 'FST':
     return _code_as(self, code, alias, _parse_alias)
 
 
+def _code_as_alias_dotted(self: 'FST', code: Code) -> 'FST':
+    """Convert `code` to a alias `FST` if possible."""
+
+    return _code_as(self, code, alias, _parse_alias_dotted)
+
+
 def _code_as_withitem(self: 'FST', code: Code) -> 'FST':
     """Convert `code` to a withitem `FST` if possible."""
 
@@ -291,6 +305,32 @@ def _code_as_identifier(self: 'FST', code: Code) -> str:
 
         if not isinstance(code, Name):
             raise NodeTypeError(f'expecting identifier (Name), got {code.__class__.__name__}')
+
+        return code.id
+
+    return code
+
+
+def _code_as_identifier_dotted(self: 'FST', code: Code) -> str:
+    """Convert `Code` to valid dotted identifier string if possible."""
+
+    if isinstance(code, list):
+        if len(code) != 1:
+            raise NodeTypeError(f'expecting single line identifier, got {len(code)} lines')
+
+        code = code[0]
+
+    if isinstance(code, str):
+        if not is_valid_identifier_dotted(code):
+            raise NodeTypeError(f'expecting identifier, got {code!r}')
+
+    else:
+        raise NotImplementedError
+        if isinstance(code, FST):
+            code = code.a
+
+        if not isinstance(code, Name):
+            raise NodeTypeError(f'expecting identifier (Name or Attribute), got {code.__class__.__name__}')
 
         return code.id
 
