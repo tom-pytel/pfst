@@ -1105,7 +1105,8 @@ class FST:
         - `last_valid`: If `True` then return the last valid node along the path, will not fail, can return `self`.
 
         **Returns:**
-        - `FST`: Child node if path is valid, otherwise `False` if path invalid.
+        - `FST`: Child node if path is valid, otherwise `False` if path invalid. `False` and not `None` because `None`
+            can be in a field that can hold an `AST` but `False` can not.
         """
 
         if isinstance(path, str):
@@ -1286,10 +1287,14 @@ class FST:
         return (isinstance(ast := self.a, Set) and len(elts := ast.elts) == 1 and isinstance(e0 := elts[0], Starred) and
                 ((isinstance(v := e0.value, (Tuple, List)) and not v.elts) or (isinstance(v, Dict) and not v.keys)))
 
-    def is_elif(self) -> bool:
-        """Whether `self` is an `elif`."""
+    def is_elif(self) -> bool | None:
+        """Whether `self` is an `elif` or not, or not an `If` at all.
 
-        return isinstance(self.a, If) and self.root._lines[(loc := self.loc).ln].startswith('elif', loc.col)
+        **Returns:**
+        - `True` if is 'elif' `If`, `False` if is normal `If`, `None` if is not `If`.
+        """
+
+        return self.root._lines[(loc := self.loc).ln].startswith('elif', loc.col) if isinstance(self.a, If) else None
 
     def is_solo_call_arg(self) -> bool:
         """Whether `self` is a solo Call non-keyword argument."""
@@ -1985,8 +1990,9 @@ class FST:
         _code_as_withitem,
         _code_as_pattern,
         _code_as_type_param,
-        _code_as_op,
         _code_as_identifier,
+        _code_as_identifier_dotted,
+        _code_as_op,
     )
 
     from .fst_raw import (

@@ -1143,7 +1143,7 @@ def _normalize_block(self: 'FST', field: str = 'body', *, indent: str | None = N
 
 
 def _elif_to_else_if(self: 'FST'):
-    """Covnert an 'elif something:\\n  ...' to 'else:\\n  if something:\\n    ...'. Make sure to only call on an
+    """Convert an 'elif something:\\n  ...' to 'else:\\n  if something:\\n    ...'. Make sure to only call on an
     actual `elif`, meaning the lone `If` statement in the parent's `orelse` block which is an actual `elif` and not
     an `if`."""
 

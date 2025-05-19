@@ -256,36 +256,6 @@ def _code_as_type_param(self: 'FST', code: Code) -> 'FST':
     return _code_as(self, code, type_param, _parse_type_param)
 
 
-def _code_as_op(self: 'FST', code: Code,
-                target: type[AugAssign] | type[BoolOp] | type[BinOp] | type[UnaryOp] | type[Compare] | None = None,
-                ) -> 'FST':
-    """Convert `code` to an operator `FST` for the given target if possible."""
-
-    if isinstance(code, FST):
-        if (src := code.get_src(*code.loc)) not in _code_as_op_str2op[target]:
-            raise NodeTypeError(f'bad operator {src!r}')
-
-    elif isinstance(code, AST):
-        code = FST(code, lines=[(OPCLS2STR_AUG if target is AugAssign else OPCLS2STR).get(code.__class__, '')])
-
-    else:
-        if isinstance(code, list):
-            code = '\n'.join(lines := code)
-        else:
-            lines = code.split('\n')
-
-        if not (cls := _code_as_op_str2op[target].get(code)):
-            raise NodeTypeError(f'bad operator {code!r}')
-
-        code = FST(cls(), lines=lines)
-
-    if code.a.__class__ not in _code_as_op_ops[target]:
-        raise NodeTypeError(f'expecting operator{f" for {target.__name__}" if target else ""}'
-                            f', got {code.a.__class__.__name__}')
-
-    return code
-
-
 def _code_as_identifier(self: 'FST', code: Code) -> str:
     """Convert `Code` to valid identifier string if possible."""
 
@@ -325,7 +295,11 @@ def _code_as_identifier_dotted(self: 'FST', code: Code) -> str:
             raise NodeTypeError(f'expecting identifier, got {code!r}')
 
     else:
+
+
         raise NotImplementedError
+
+
         if isinstance(code, FST):
             code = code.a
 
@@ -333,6 +307,36 @@ def _code_as_identifier_dotted(self: 'FST', code: Code) -> str:
             raise NodeTypeError(f'expecting identifier (Name or Attribute), got {code.__class__.__name__}')
 
         return code.id
+
+    return code
+
+
+def _code_as_op(self: 'FST', code: Code,
+                target: type[AugAssign] | type[BoolOp] | type[BinOp] | type[UnaryOp] | type[Compare] | None = None,
+                ) -> 'FST':
+    """Convert `code` to an operator `FST` for the given target if possible."""
+
+    if isinstance(code, FST):
+        if (src := code.get_src(*code.loc)) not in _code_as_op_str2op[target]:
+            raise NodeTypeError(f'bad operator {src!r}')
+
+    elif isinstance(code, AST):
+        code = FST(code, lines=[(OPCLS2STR_AUG if target is AugAssign else OPCLS2STR).get(code.__class__, '')])
+
+    else:
+        if isinstance(code, list):
+            code = '\n'.join(lines := code)
+        else:
+            lines = code.split('\n')
+
+        if not (cls := _code_as_op_str2op[target].get(code)):
+            raise NodeTypeError(f'bad operator {code!r}')
+
+        code = FST(cls(), lines=lines)
+
+    if code.a.__class__ not in _code_as_op_ops[target]:
+        raise NodeTypeError(f'expecting operator{f" for {target.__name__}" if target else ""}'
+                            f', got {code.a.__class__.__name__}')
 
     return code
 
