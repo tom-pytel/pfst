@@ -1232,8 +1232,9 @@ class FST:
         return True
 
     def is_atom(self) -> bool:
-        """Whether `self` is enclosed in some kind of delimiters '()', '[]', '{}' or otherwise atomic like `Name`,
-        `Constant`, etc... Node types where this doesn't normally apply like `stmt` will return `True`.
+        """Whether `self` is atomic like `Name`, `Constant`, `List`, etc... Or otherwise enclosed in some kind of
+        delimiters '()', '[]', '{}' so that it functions as a parsable atom and cannot be split up by precedence rules
+        when reparsed. Node types where this doesn't normally apply like `stmt` will return `True`.
 
         **Returns:**
         - `True` if is enclosed and no combination with another node can change its precedence, `False` otherwise.
@@ -1241,8 +1242,9 @@ class FST:
 
         ast = self.a
 
-        if isinstance(ast, (Dict, Set, ListComp, SetComp, DictComp, GeneratorExp, Constant, Attribute, Subscript, Name,  # , Await
-                            List, MatchValue, MatchSingleton, MatchMapping, MatchClass, MatchStar, MatchAs)):
+        if isinstance(ast, (Dict, Set, ListComp, SetComp, DictComp, GeneratorExp, Call, JoinedStr, TemplateStr,  # , Await?
+                            Constant, Attribute, Subscript, Starred, Name, List, Slice,
+                            MatchValue, MatchSingleton, MatchMapping, MatchClass, MatchStar, MatchAs)):
             return True
 
         if isinstance(ast, Tuple):
@@ -1260,6 +1262,8 @@ class FST:
             elif lpar == '[':
                 if self._is_parenthesized_seq('patterns', '[', ']'):
                     return True
+
+            return False
 
         if isinstance(ast, (expr, pattern)):  # , alias, withitem
             return bool(self.pars(ret_npars=True)[1])

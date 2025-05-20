@@ -971,8 +971,9 @@ def _fix(self: 'FST', inplace: bool = True) -> 'FST':
 
 
 def _is_parenthesized_seq(self: 'FST', field: str = 'elts', lpar: str = '(', rpar: str = ')') -> bool | None:
-    """Whether `self` is a parenthesized sequence of `field` or not. Functions as `is_parenthesized_tuple()` if
-    already know is a Tuple. Other use is for `MatchSequence`, whether parenthesized or bracketed."""
+    """Whether `self` is a parenthesized sequence of `field` or not. Makes sure the entire node is surrounded by a
+    balanced pair of `lpar` and `rpar`. Functions as `is_parenthesized_tuple()` if already know is a Tuple. Other use is
+    for `MatchSequence`, whether parenthesized or bracketed."""
 
     self_ln, self_col, self_end_ln, self_end_col = self.loc
 

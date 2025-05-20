@@ -8,7 +8,7 @@ from .astutil import *
 from .astutil import type_param, TypeVar, ParamSpec, TypeVarTuple
 
 from .shared import (
-    Code, NodeTypeError,
+    Code, NodeTypeError, _shortstr
 )
 
 _code_as_op_str2op = {
@@ -259,24 +259,15 @@ def _code_as_type_param(self: 'FST', code: Code) -> 'FST':
 def _code_as_identifier(self: 'FST', code: Code) -> str:
     """Convert `Code` to valid identifier string if possible."""
 
-    if isinstance(code, list):
-        if len(code) != 1:
-            raise NodeTypeError(f'expecting single line identifier, got {len(code)} lines')
+    if isinstance(code, FST):
+        code = code.src
+    elif isinstance(code, AST):
+        code = ast_unparse(code)
+    elif isinstance(code, list):
+        code = '\n'.join(code)
 
-        code = code[0]
-
-    if isinstance(code, str):
-        if not is_valid_identifier(code):
-            raise NodeTypeError(f'expecting identifier, got {code!r}')
-
-    else:
-        if isinstance(code, FST):
-            code = code.a
-
-        if not isinstance(code, Name):
-            raise NodeTypeError(f'expecting identifier (Name), got {code.__class__.__name__}')
-
-        return code.id
+    if not is_valid_identifier_dotted(code):
+        raise NodeTypeError(f'expecting identifier, got {_shortstr(code)!r}')
 
     return code
 
@@ -284,29 +275,15 @@ def _code_as_identifier(self: 'FST', code: Code) -> str:
 def _code_as_identifier_dotted(self: 'FST', code: Code) -> str:
     """Convert `Code` to valid dotted identifier string if possible (for Import module)."""
 
-    if isinstance(code, list):
-        if len(code) != 1:
-            raise NodeTypeError(f'expecting single line identifier, got {len(code)} lines')
+    if isinstance(code, FST):
+        code = code.src
+    elif isinstance(code, AST):
+        code = ast_unparse(code)
+    elif isinstance(code, list):
+        code = '\n'.join(code)
 
-        code = code[0]
-
-    if isinstance(code, str):
-        if not is_valid_identifier_dotted(code):
-            raise NodeTypeError(f'expecting identifier, got {code!r}')
-
-    else:
-
-
-        raise NotImplementedError
-
-
-        if isinstance(code, FST):
-            code = code.a
-
-        if not isinstance(code, Name):
-            raise NodeTypeError(f'expecting identifier (Name or Attribute), got {code.__class__.__name__}')
-
-        return code.id
+    if not is_valid_identifier_dotted(code):
+        raise NodeTypeError(f'expecting dotted identifier, got {_shortstr(code)!r}')
 
     return code
 

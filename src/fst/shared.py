@@ -2,6 +2,7 @@
 
 import re
 from ast import *
+from math import log10
 from typing import Any, Literal, NamedTuple, TypeAlias, Union
 
 from .astutil import *
@@ -146,6 +147,17 @@ class srcwpos(NamedTuple):
     ln:  int
     col: int
     src: str
+
+
+def _shortstr(s: str, maxlen: int = 64) -> str:
+    """Return string of maximum length `maxlen`, shortening if necessary to "start .. [X chars] .. end"."""
+
+    if (l := len(s)) <= maxlen:
+        return s
+
+    t = maxlen - 16 - (int(log10(l)) + 1)
+
+    return f'{s[:(t+1)//2]} .. [{l} chars] .. {s[-(t//2):]}'
 
 
 def _next_src(lines: list[str], ln: int, col: int, end_ln: int, end_col: int,
