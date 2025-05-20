@@ -29012,6 +29012,386 @@ b # word
         self.assertEqual((5, 0, 'b'), _next_find_re(lines, 4, 0, 6, 0, pat, False, comment=True, lcont=True))
         self.assertEqual(None, _next_find_re(lines, 4, 0, 6, 0, pat, True, comment=True, lcont=True))
 
+    def test__multiline_str_continuation_lns(self):
+        from fst.shared import _multiline_str_continuation_lns as mscl
+
+        self.assertEqual([], mscl(ls := r'''
+'a'
+            '''.strip().split('\n'), 0, 0, len(ls) - 1, len(ls[-1])))
+
+        self.assertEqual([], mscl(ls := r'''
+"a"
+            '''.strip().split('\n'), 0, 0, len(ls) - 1, len(ls[-1])))
+
+        self.assertEqual([1], mscl(ls := r'''
+"""a
+b"""
+            '''.strip().split('\n'), 0, 0, len(ls) - 1, len(ls[-1])))
+
+        self.assertEqual([1, 2], mscl(ls := r'''
+"""a
+
+b"""
+            '''.strip().split('\n'), 0, 0, len(ls) - 1, len(ls[-1])))
+
+        self.assertEqual([], mscl(ls := r'''
+"a"
+"b"
+            '''.strip().split('\n'), 0, 0, len(ls) - 1, len(ls[-1])))
+
+        self.assertEqual([1], mscl(ls := r'''
+"a\
+b"
+            '''.strip().split('\n'), 0, 0, len(ls) - 1, len(ls[-1])))
+
+        self.assertEqual([1], mscl(ls := r'''
+"a" "c\
+b"
+            '''.strip().split('\n'), 0, 0, len(ls) - 1, len(ls[-1])))
+
+        self.assertEqual([1], mscl(ls := r'''
+"a" "z" "c\
+b"
+            '''.strip().split('\n'), 0, 0, len(ls) - 1, len(ls[-1])))
+
+        self.assertEqual([1], mscl(ls := r'''
+"a" "z" "c\
+b" """y"""
+            '''.strip().split('\n'), 0, 0, len(ls) - 1, len(ls[-1])))
+
+        self.assertEqual([1, 2], mscl(ls := r'''
+"a" "z" "c\
+b" """y
+"""
+            '''.strip().split('\n'), 0, 0, len(ls) - 1, len(ls[-1])))
+
+        self.assertEqual([1, 2], mscl(ls := r'''
+"a" "z" "c\
+b" "x" """y
+"""
+            '''.strip().split('\n'), 0, 0, len(ls) - 1, len(ls[-1])))
+
+        self.assertEqual([1], mscl(ls := r'''
+"a" """c
+b"""
+            '''.strip().split('\n'), 0, 0, len(ls) - 1, len(ls[-1])))
+
+        self.assertEqual([1, 2], mscl(ls := r'''
+"a" """c
+b""" "d\
+e"
+            '''.strip().split('\n'), 0, 0, len(ls) - 1, len(ls[-1])))
+
+        self.assertEqual([1, 3], mscl(ls := r'''
+"a" """c
+b"""
+"d\
+e"
+            '''.strip().split('\n'), 0, 0, len(ls) - 1, len(ls[-1])))
+
+        self.assertEqual([1, 3, 4], mscl(ls := r'''
+"a" """c
+b"""
+"d\
+\
+e"
+            '''.strip().split('\n'), 0, 0, len(ls) - 1, len(ls[-1])))
+
+        self.assertEqual([1, 4, 5], mscl(ls := r'''
+"a" """c
+b"""
+
+"d\
+\
+e"
+            '''.strip().split('\n'), 0, 0, len(ls) - 1, len(ls[-1])))
+
+        self.assertEqual([1, 4, 5], mscl(ls := r'''
+b"a" b"""c
+b"""
+
+b"d\
+\
+e"
+            '''.strip().split('\n'), 0, 0, len(ls) - 1, len(ls[-1])))
+
+        self.assertEqual([1, 4, 5], mscl(ls := r'''
+u"a" u"""c
+b"""
+
+u"d\
+\
+e"
+            '''.strip().split('\n'), 0, 0, len(ls) - 1, len(ls[-1])))
+
+        self.assertEqual([1, 4, 5], mscl(ls := r'''
+r"a" r"""c
+b"""
+
+r"d\
+\
+e"
+            '''.strip().split('\n'), 0, 0, len(ls) - 1, len(ls[-1])))
+
+    def test__multiline_fstr_continuation_lns(self):
+        from fst.shared import _multiline_fstr_continuation_lns as mscl
+
+        self.assertEqual([], mscl(ls := r'''
+f'a'
+            '''.strip().split('\n'), 0, 0, len(ls) - 1, len(ls[-1])))
+
+        self.assertEqual([], mscl(ls := r'''
+f"a"
+            '''.strip().split('\n'), 0, 0, len(ls) - 1, len(ls[-1])))
+
+        self.assertEqual([1], mscl(ls := r'''
+f"""a
+b"""
+            '''.strip().split('\n'), 0, 0, len(ls) - 1, len(ls[-1])))
+
+        self.assertEqual([1, 2], mscl(ls := r'''
+f"""a
+
+b"""
+            '''.strip().split('\n'), 0, 0, len(ls) - 1, len(ls[-1])))
+
+        self.assertEqual([], mscl(ls := r'''
+f"a"
+"b"
+            '''.strip().split('\n'), 0, 0, len(ls) - 1, len(ls[-1])))
+
+        self.assertEqual([1], mscl(ls := r'''
+f"a\
+b"
+            '''.strip().split('\n'), 0, 0, len(ls) - 1, len(ls[-1])))
+
+        self.assertEqual([1], mscl(ls := r'''
+f"a" f"c\
+b"
+            '''.strip().split('\n'), 0, 0, len(ls) - 1, len(ls[-1])))
+
+        self.assertEqual([1], mscl(ls := r'''
+f"a" f"""c
+b"""
+            '''.strip().split('\n'), 0, 0, len(ls) - 1, len(ls[-1])))
+
+        self.assertEqual([1, 2], mscl(ls := r'''
+f"a" f"""c
+b""" "d\
+e"
+            '''.strip().split('\n'), 0, 0, len(ls) - 1, len(ls[-1])))
+
+        self.assertEqual([1, 3], mscl(ls := r'''
+f"a" f"""c
+b"""
+f"d\
+e"
+            '''.strip().split('\n'), 0, 0, len(ls) - 1, len(ls[-1])))
+
+        self.assertEqual([1, 3, 4], mscl(ls := r'''
+f"a" f"""c
+b"""
+f"d\
+\
+e"
+            '''.strip().split('\n'), 0, 0, len(ls) - 1, len(ls[-1])))
+
+        self.assertEqual([1, 4, 5], mscl(ls := r'''
+f"a" f"""c
+b"""
+
+f"d\
+\
+e"
+            '''.strip().split('\n'), 0, 0, len(ls) - 1, len(ls[-1])))
+
+        # with values
+
+        self.assertEqual([], mscl(ls := r'''
+f"a{1}b"
+            '''.strip().split('\n'), 0, 0, len(ls) - 1, len(ls[-1])))
+
+        self.assertEqual([1], mscl(ls := r'''
+f"a{(1,
+2)}b"
+            '''.strip().split('\n'), 0, 0, len(ls) - 1, len(ls[-1])))
+
+        self.assertEqual([1], mscl(ls := r'''
+f"a{(1,\
+2)}b"""
+            '''.strip().split('\n'), 0, 0, len(ls) - 1, len(ls[-1])))
+
+        self.assertEqual([1, 2], mscl(ls := r'''
+f"a{(1,\
+2)}b""" f"c\
+d"
+            '''.strip().split('\n'), 0, 0, len(ls) - 1, len(ls[-1])))
+
+        self.assertEqual([1, 2, 3], mscl(ls := r'''
+f"a{(1,
+2)}b" f"""{3}
+{4}
+{5}"""
+            '''.strip().split('\n'), 0, 0, len(ls) - 1, len(ls[-1])))
+
+        self.assertEqual([1, 2, 3, 4, 5], mscl(ls := r'''
+f"a{(1,
+
+2)}b" f"""{3}
+
+{4}
+{5}"""
+            '''.strip().split('\n'), 0, 0, len(ls) - 1, len(ls[-1])))
+
+        self.assertEqual([1, 2, 3, 4, 5], mscl(ls := r'''
+f"a{(1,
+
+2)}b" f"""{3}
+
+{4}
+{5}""" f"x"
+            '''.strip().split('\n'), 0, 0, len(ls) - 1, len(ls[-1])))
+
+        self.assertEqual([1, 2, 3, 4, 5, 6], mscl(ls := r'''
+f"a{(1,
+
+2)}b" f"""{3}
+
+{4}
+{5}""" f"x\
+y"
+            '''.strip().split('\n'), 0, 0, len(ls) - 1, len(ls[-1])))
+
+    def test__multiline_tstr_continuation_lns(self):
+        from fst.shared import _multiline_fstr_continuation_lns as mscl
+
+        if sys.version_info[:2] >= (3, 14):
+            self.assertEqual([], mscl(ls := r'''
+t'a'
+                '''.strip().split('\n'), 0, 0, len(ls) - 1, len(ls[-1])))
+
+            self.assertEqual([], mscl(ls := r'''
+t"a"
+                '''.strip().split('\n'), 0, 0, len(ls) - 1, len(ls[-1])))
+
+            self.assertEqual([1], mscl(ls := r'''
+t"""a
+b"""
+                '''.strip().split('\n'), 0, 0, len(ls) - 1, len(ls[-1])))
+
+            self.assertEqual([1, 2], mscl(ls := r'''
+t"""a
+
+b"""
+                '''.strip().split('\n'), 0, 0, len(ls) - 1, len(ls[-1])))
+
+            self.assertEqual([], mscl(ls := r'''
+t"a"
+"b"
+                '''.strip().split('\n'), 0, 0, len(ls) - 1, len(ls[-1])))
+
+            self.assertEqual([1], mscl(ls := r'''
+t"a\
+b"
+                '''.strip().split('\n'), 0, 0, len(ls) - 1, len(ls[-1])))
+
+            self.assertEqual([1], mscl(ls := r'''
+t"a" t"c\
+b"
+                '''.strip().split('\n'), 0, 0, len(ls) - 1, len(ls[-1])))
+
+            self.assertEqual([1], mscl(ls := r'''
+t"a" t"""c
+b"""
+                '''.strip().split('\n'), 0, 0, len(ls) - 1, len(ls[-1])))
+
+            self.assertEqual([1, 2], mscl(ls := r'''
+t"a" t"""c
+b""" "d\
+e"
+                '''.strip().split('\n'), 0, 0, len(ls) - 1, len(ls[-1])))
+
+            self.assertEqual([1, 3], mscl(ls := r'''
+t"a" t"""c
+b"""
+t"d\
+e"
+                '''.strip().split('\n'), 0, 0, len(ls) - 1, len(ls[-1])))
+
+            self.assertEqual([1, 3, 4], mscl(ls := r'''
+t"a" t"""c
+b"""
+t"d\
+\
+e"
+                '''.strip().split('\n'), 0, 0, len(ls) - 1, len(ls[-1])))
+
+            self.assertEqual([1, 4, 5], mscl(ls := r'''
+t"a" t"""c
+b"""
+
+t"d\
+\
+e"
+                '''.strip().split('\n'), 0, 0, len(ls) - 1, len(ls[-1])))
+
+        # with values
+
+            self.assertEqual([], mscl(ls := r'''
+t"a{1}b"
+                '''.strip().split('\n'), 0, 0, len(ls) - 1, len(ls[-1])))
+
+            self.assertEqual([1], mscl(ls := r'''
+t"a{(1,
+2)}b"
+                '''.strip().split('\n'), 0, 0, len(ls) - 1, len(ls[-1])))
+
+            self.assertEqual([1], mscl(ls := r'''
+t"a{(1,\
+2)}b"""
+                '''.strip().split('\n'), 0, 0, len(ls) - 1, len(ls[-1])))
+
+            self.assertEqual([1, 2], mscl(ls := r'''
+t"a{(1,\
+2)}b""" t"c\
+d"
+                '''.strip().split('\n'), 0, 0, len(ls) - 1, len(ls[-1])))
+
+            self.assertEqual([1, 2, 3], mscl(ls := r'''
+t"a{(1,
+2)}b" t"""{3}
+{4}
+{5}"""
+                '''.strip().split('\n'), 0, 0, len(ls) - 1, len(ls[-1])))
+
+            self.assertEqual([1, 2, 3, 4, 5], mscl(ls := r'''
+t"a{(1,
+
+2)}b" t"""{3}
+
+{4}
+{5}"""
+                '''.strip().split('\n'), 0, 0, len(ls) - 1, len(ls[-1])))
+
+            self.assertEqual([1, 2, 3, 4, 5], mscl(ls := r'''
+t"a{(1,
+
+2)}b" t"""{3}
+
+{4}
+{5}""" t"x"
+                '''.strip().split('\n'), 0, 0, len(ls) - 1, len(ls[-1])))
+
+            self.assertEqual([1, 2, 3, 4, 5, 6], mscl(ls := r'''
+t"a{(1,
+
+2)}b" t"""{3}
+
+{4}
+{5}""" t"x\
+y"
+                '''.strip().split('\n'), 0, 0, len(ls) - 1, len(ls[-1])))
+
     def test__normalize_block(self):
         a = parse('''
 if 1: i ; j ; l ; m
@@ -30245,6 +30625,8 @@ with a as b, c as d:
     def test_is_atom(self):
         self.assertFalse(parse('1 + 2').body[0].value.f.is_atom())
         self.assertTrue(parse('(1 + 2)').body[0].value.f.is_atom())
+        self.assertTrue(parse('(1 + 2)').body[0].value.f.is_atom())
+        self.assertFalse(parse('(1 + 2)').body[0].value.f.is_atom(grouping_pars=False))
 
         self.assertFalse(parse('1, 2').body[0].value.f.is_atom())
         self.assertTrue(parse('(1, 2)').body[0].value.f.is_atom())
@@ -30443,6 +30825,13 @@ _CookiePattern = re.compile(r"""
         use the check command instead"
             '''.strip())
         self.assertEqual({0, 1}, f.get_indentable_lns(docstr=True))
+        self.assertEqual({0}, f.get_indentable_lns(docstr=False))
+
+        f = FST.fromsrc('''
+f"distutils.command.sdist.check_metadata is deprecated, \\
+        use the check command instead"
+            '''.strip())
+        self.assertEqual({0}, f.get_indentable_lns(docstr=True))  # because f-strings cannot be docstrings
         self.assertEqual({0}, f.get_indentable_lns(docstr=False))
 
     def test_touch(self):
@@ -35085,7 +35474,7 @@ match a:
         self.assertIs(fxyz, f.find_in_loc(0, 5, 0, 10))
         self.assertIs(None, f.find_in_loc(0, 5, 0, 6))
 
-    def test_set_option(self):
+    def test_set_options(self):
         new = dict(
             docstr    = 'test_docstr',
             precomms  = 'test_precomms',

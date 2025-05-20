@@ -608,5 +608,86 @@ def _coerce_ast(ast, coerce: Literal['expr', 'exprish', 'mod'] | None = None) ->
     return ast
 
 
+def _multiline_str_continuation_lns(lines: list[str], ln: int, col: int, end_ln: int, end_col: int) -> list[int]:
+    """Return the line numbers of a potentially multiline string `Constant`. The location passed MUST be from the
+    `Constant` `AST` node or calculated to be the same, otherwise this function will fail."""
+
+    def walk_multiline(start_ln, end_ln, m, re_str_end):
+        nonlocal lns, lines
+
+        col = m.end()
+
+        for ln in range(start_ln, end_ln + 1):
+            if m := re_str_end.match(lines[ln], col):
+                break
+
+            col = 0
+
+        else:
+            raise RuntimeError('should not get here')
+
+        lns.extend(range(start_ln + 1, ln + 1))
+
+        return ln, m.end()
+
+    lns = []
+
+    if end_ln <= ln:
+        return lns
+
+    while True:
+        if not (m := re_multiline_str_start.match(l := lines[ln], col)):
+            if m := re_oneline_str.match(l, col):
+                col = m.end()
+
+            else:  # UGH! a line continuation string, pffft...
+                m          = re_contline_str_start.match(l, col)
+                re_str_end = re_contline_str_end_sq if m.group(1) == "'" else re_contline_str_end_dq
+                ln, col    = walk_multiline(ln, end_ln, m, re_str_end)  # find end of multiline line continuation string
+
+        else:
+            re_str_end = re_multiline_str_end_sq if m.group(1) == "'''" else re_multiline_str_end_dq
+            ln, col    = walk_multiline(ln, end_ln, m, re_str_end)  # find end of multiline string
+
+        if ln == end_ln and col == end_col:
+            break
+
+        ln, col, _ = _next_src(lines, ln, col, end_ln, end_col)  # there must be a next one
+
+    return lns
+
+
+def _multiline_fstr_continuation_lns(lines: list[str], ln: int, col: int, end_ln: int, end_col: int) -> list[int]:  # TODO: p3.12+ has locations for there, might make it easier
+    """Lets try to find indentable lines by incrementally attempting to parse parts of multiline f-string (or t-)."""
+
+    lns = []
+
+    if end_ln <= ln:
+        return lns
+
+    while True:
+        ls = [lines[ln][col:].lstrip()]
+
+        for cur_ln in range(ln + 1, end_ln + 1):
+            try:
+                parse('\n'.join(ls))
+
+            except SyntaxError:
+                lns.append(cur_ln)
+                ls.append(lines[cur_ln])
+
+            else:
+                break
+
+        if (ln := cur_ln) >= end_ln:
+            assert ln == end_ln
+
+            break
+
+        col = 0
+
+    return lns
+
+
 # ----------------------------------------------------------------------------------------------------------------------
 __all_private__ = [n for n in globals() if n not in _GLOBALS]

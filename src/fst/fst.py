@@ -10,14 +10,12 @@ from .astutil import TryStar, TemplateStr, Interpolation
 
 from .shared import (
     astfield, fstloc,
-    STMTISH, STMTISH_OR_MOD, STMTISH_OR_STMTMOD, BLOCK, BLOCK_OR_MOD, SCOPE, SCOPE_OR_MOD, NAMED_SCOPE,
+    STMTISH, STMTISH_OR_MOD, BLOCK, BLOCK_OR_MOD, SCOPE, SCOPE_OR_MOD, NAMED_SCOPE,
     NAMED_SCOPE_OR_MOD, ANONYMOUS_SCOPE, PARENTHESIZABLE, HAS_DOCSTRING,
-    STMTISH_FIELDS,
     re_empty_line_start, re_empty_line, re_line_continuation,
-    re_oneline_str, re_contline_str_start, re_contline_str_end_sq, re_contline_str_end_dq, re_multiline_str_start,
-    re_multiline_str_end_sq, re_multiline_str_end_dq,
-    Code, NodeTypeError,
-    _next_src, _params_offset, _fixup_field_body, _fixup_one_index)
+    Code,
+    _params_offset, _fixup_field_body, _multiline_str_continuation_lns, _multiline_fstr_continuation_lns,
+)
 
 __all__ = [
     'parse', 'unparse', 'FST',
@@ -1231,42 +1229,44 @@ class FST:
 
         return True
 
-    def is_atom(self) -> bool:
-        """Whether `self` is atomic like `Name`, `Constant`, `List`, etc... Or otherwise enclosed in some kind of
-        delimiters '()', '[]', '{}' so that it functions as a parsable atom and cannot be split up by precedence rules
-        when reparsed. Node types where this doesn't normally apply like `stmt` will return `True`.
+    def is_atom(self, grouping_pars: bool = True) -> bool:
+        """Whether `self` is innately atomic like `Name`, `Constant`, `List`, etc... Or otherwise enclosed in some kind
+        of delimiters '()', '[]', '{}' so that it functions as a parsable atom and cannot be split up by precedence
+        rules when reparsed. Node types where this doesn't normally apply like `stmt` or 'alias' return `True`.
+
+        **Parameters:**
+        - `grouping_pars`: Whether to check for grouping parentheses or not for node types which are not innately
+            atomic (`NamedExpr`, `BinOp`, `Yield`, etc...). If `True` then '(a + b)' is considered atomic, if `False`
+            then it is not.
 
         **Returns:**
-        - `True` if is enclosed and no combination with another node can change its precedence, `False` otherwise.
+        - `True` if node and source is parsably atomic and no combination with another node can change its precedence,
+            `False` otherwise.
         """
 
         ast = self.a
 
-        if isinstance(ast, (Dict, Set, ListComp, SetComp, DictComp, GeneratorExp, Call, JoinedStr, TemplateStr,  # , Await?
-                            Constant, Attribute, Subscript, Starred, Name, List, Slice,
+        if isinstance(ast, (Dict, Set, ListComp, SetComp, DictComp, GeneratorExp, Call, JoinedStr, TemplateStr,  # , Await?  # is the highest precedence thing but not really atom
+                            Constant, Attribute, Subscript, Starred, Name, List,  # Slice,  # slice is weird
                             MatchValue, MatchSingleton, MatchMapping, MatchClass, MatchStar, MatchAs)):
             return True
 
         if isinstance(ast, Tuple):
-            if self._is_parenthesized_seq():  # if this is False, can still be enclosed in grouping parens which is checked below
-                return True
+            return self._is_parenthesized_seq()  # if this is False then cannot be enclosed in grouping parens because that would reparse to a parenthesized Tuple and so is inconsistent
 
         elif isinstance(ast, MatchSequence):  # could be enclosed with '()' or '[]' which is included in the ast location
             ln, col, _, _ = self.loc
             lpar          = self.root._lines[ln][col]
 
             if lpar == '(':
-                if self._is_parenthesized_seq('patterns'):
-                    return True
+                return self._is_parenthesized_seq('patterns')
+            if lpar == '[':
+                return self._is_parenthesized_seq('patterns', '[', ']')
 
-            elif lpar == '[':
-                if self._is_parenthesized_seq('patterns', '[', ']'):
-                    return True
+            return False  # like Tuple cannot be enclosed in grouping parens
 
-            return False
-
-        if isinstance(ast, (expr, pattern)):  # , alias, withitem
-            return bool(self.pars(ret_npars=True)[1])
+        if isinstance(ast, (expr, pattern)):
+            return bool(self.pars(ret_npars=True)[1]) if grouping_pars else False
 
         return True
 
@@ -1371,76 +1371,6 @@ class FST:
         - `set[int]`: Set of line numbers (zero based) which are sytactically indentable.
         """
 
-        def walk_multiline(cur_ln, end_ln, m, re_str_end):
-            nonlocal lns, lines
-
-            col = m.end()
-
-            for ln in range(cur_ln, end_ln + 1):
-                if m := re_str_end.match(lines[ln], col):
-                    break
-
-                col = 0
-
-            else:
-                raise RuntimeError('should not get here')
-
-            lns -= set(range(cur_ln + 1, ln + 1))  # specifically leave out first line of multiline string because that is indentable
-
-            return ln, m.end()
-
-        def multiline_str(f: 'FST'):
-            nonlocal lns, lines
-
-            cur_ln, cur_col, end_ln, end_col = f.loc
-
-            while True:
-                if not (m := re_multiline_str_start.match(l := lines[cur_ln], cur_col)):
-                    if m := re_oneline_str.match(l, cur_col):
-                        cur_col = m.end()
-
-                    else:  # UGH! a line continuation string, pffft...
-                        m               = re_contline_str_start.match(l, cur_col)
-                        re_str_end      = re_contline_str_end_sq if m.group(1) == "'" else re_contline_str_end_dq
-                        cur_ln, cur_col = walk_multiline(cur_ln, end_ln, m, re_str_end)  # find end of multiline line continuation string
-
-                else:
-                    re_str_end      = re_multiline_str_end_sq if m.group(1) == "'''" else re_multiline_str_end_dq
-                    cur_ln, cur_col = walk_multiline(cur_ln, end_ln, m, re_str_end)  # find end of multiline string
-
-                if cur_ln == end_ln and cur_col == end_col:
-                    break
-
-                cur_ln, cur_col, _ = _next_src(lines, cur_ln, cur_col, end_ln, end_col)  # there must be a next one
-
-        def multiline_fstr(f: 'FST'):  # TODO: p3.12+ has locations for there, might make it easier
-            """Lets try to find indentable lines by incrementally attempting to parse parts of multiline f-string."""
-
-            nonlocal lns, lines
-
-            cur_ln, cur_col, end_ln, _ = f.loc
-
-            while True:
-                ls = [lines[cur_ln][cur_col:].lstrip()]
-
-                for ln in range(cur_ln + 1, end_ln + 1):
-                    try:
-                        ast_parse('\n'.join(ls))
-
-                    except SyntaxError:
-                        lns.remove(ln)
-                        ls.append(lines[ln])
-
-                    else:
-                        break
-
-                if (cur_ln := ln) >= end_ln:
-                    assert cur_ln == end_ln
-
-                    break
-
-                cur_col = 0
-
         if docstr is None:
             docstr = self.get_option('docstr')
 
@@ -1462,10 +1392,10 @@ class FST:
                          (not strict or ((pparent := parent.parent) and parent.pfield == ('body', 0) and
                                          isinstance(pparent.a, HAS_DOCSTRING)
                 )))):
-                    multiline_str(f)
+                    lns.difference_update(_multiline_str_continuation_lns(lines, *f.loc))
 
             elif isinstance(a, (JoinedStr, TemplateStr)):
-                multiline_fstr(f)
+                lns.difference_update(_multiline_fstr_continuation_lns(lines, *f.loc))
 
                 walking.send(False)  # skip everything inside regardless, because it is evil
 
@@ -1475,9 +1405,9 @@ class FST:
              ) -> fstloc | tuple[fstloc, int]:
         """Return the location of enclosing grouping parentheses if present. Will balance parentheses if `self` is an
         element of a tuple and not return the parentheses of the tuple. Likwise will not return the parentheses of an
-        enclosing `arguments` parent. Only works on (and makes sense for) `expr` or `pattern` nodes, otherwise
-        `self.bloc`. Also handles special case of a single generator expression argument to a function sharing
-        parameters with the call arguments.
+        enclosing `arguments` parent or class bases list. Only works on (and makes sense for) `expr` or `pattern` nodes,
+        otherwise returns `self.bloc`. Also handles special case of a single generator expression argument to a function
+        sharing parameters with the call arguments.
 
         **Parameters:**
         - `pars`: `True` means return parentheses if present and `self.bloc` otherwise, `False` always `self.bloc`.
