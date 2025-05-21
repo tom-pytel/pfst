@@ -128,17 +128,19 @@ class astfield(NamedTuple):
 
 
 class fstloc(NamedTuple):
-    ln:      int
-    col:     int
-    end_ln:  int
-    end_col: int
+    """Full location span."""
+
+    ln:      int  ; """Start line number."""
+    col:     int  ; """Start column."""
+    end_ln:  int  ; """End line number."""
+    end_col: int  ; """End column."""
 
     bln      = property(lambda self: self.ln)       ; """Alias for `ln`."""  # for convenience
     bcol     = property(lambda self: self.col)      ; """Alias for `col`."""
     bend_ln  = property(lambda self: self.end_ln)   ; """Alias for `end_ln`."""
     bend_col = property(lambda self: self.end_col)  ; """Alias for `end_col`."""
-    loc      = property(lambda self: self)          ; """To be able to use as FST.loc."""
-    bloc     = loc
+    loc      = property(lambda self: self)          ; """To be able to use as `FST.loc`."""
+    bloc     = loc                                  ; """Alias for `loc`."""
     wbloc    = loc
 
     is_FST   = False                                ; """@private"""  # for quick checks vs. `FST`

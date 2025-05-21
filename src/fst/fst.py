@@ -1562,15 +1562,27 @@ class FST:
         if not pars or not isinstance(self.a, PARENTHESIZABLE):  # pars around all `alias`es or `withitem`s are considered part of the parent even if there is only one of those elements which looks parenthesized
             return (self.bloc, 0) if ret_npars else self.bloc
 
+        try:
+            cached = self._cache[key := 'pars1' if exc_genexpr_solo else 'pars0']
+
+            return cached if ret_npars else cached[0]
+
+        except KeyError:
+            pass
+
         pars_end_ln, pars_end_col, ante_end_ln, ante_end_col, nrpars = self._rpars(exc_genexpr_solo=exc_genexpr_solo)
 
         if not nrpars:
-            return (self.bloc, 0) if ret_npars else self.bloc
+            val = self._cache[key] = (self.bloc, 0)
+
+            return val if ret_npars else self.bloc
 
         pars_ln, pars_col, ante_ln, ante_col, nlpars = self._lpars(exc_genexpr_solo=exc_genexpr_solo)
 
         if not nlpars:
-            return (self.bloc, 0) if ret_npars else self.bloc
+            val = self._cache[key] = (self.bloc, 0)
+
+            return val if ret_npars else self.bloc
 
         dpars = nlpars - nrpars
 
@@ -1598,8 +1610,9 @@ class FST:
             npars = nrpars
 
         loc = fstloc(pars_ln, pars_col, pars_end_ln, pars_end_col)
+        val = self._cache[key] = (loc, npars)
 
-        return (loc, npars) if ret_npars else loc
+        return val if ret_npars else loc
 
     def comms(self, precomms: bool | str | None = None, postcomms: bool | str | None = None, **options) -> fstloc:
         """Return the location of preceding and trailing comments if present. Only works on (and makes sense for)
