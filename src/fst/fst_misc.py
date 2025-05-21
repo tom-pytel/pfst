@@ -392,11 +392,15 @@ def _loc_block_header_end(self: 'FST', ret_bound: bool = False) -> fstloc | tupl
         no child nodes in header.
     """
 
+    # assert isinstance(self.s, BLOCK)
+
     ln, col, end_ln, end_col = self.loc
 
-    if child := last_block_opener_child(a := self.a):
-        if loc := child.f.loc:  # because of empty function def arguments
+    if child := last_block_header_child(a := self.a):
+        if loc := (child := child.f).loc:  # because of empty function def arguments which won't have a .loc
             _, _, cend_ln, cend_col = loc
+        elif child := child.prev():  # guaranteed to have loc if is there
+            _, _, cend_ln, cend_col = child.loc
 
         else:
             cend_ln  = ln
@@ -417,6 +421,8 @@ def _loc_block_header_end(self: 'FST', ret_bound: bool = False) -> fstloc | tupl
 def _loc_operator(self: 'FST') -> fstloc | None:
     """Get location of `operator`, `unaryop` or `cmpop` from source if possible. `boolop` is not done at all because
     a single operator can be in multiple location in a `BoolOp` and we want to be consistent."""
+
+    # assert isinstance(self.s, (operator, unaryop, cmpop))
 
     ast = self.a
 
@@ -462,6 +468,8 @@ def _loc_operator(self: 'FST') -> fstloc | None:
 def _loc_comprehension(self: 'FST') -> fstloc | None:
     """`comprehension` location from children. Called from `.loc`."""
 
+    # assert isinstance(self.s, comprehension)
+
     ast   = self.a
     first = ast.target.f
     last  = self.last_child()
@@ -499,6 +507,8 @@ def _loc_comprehension(self: 'FST') -> fstloc | None:
 
 def _loc_arguments(self: 'FST') -> fstloc | None:
     """`arguments` location from children. Called from `.loc`. Returns `None` when there are no arguments."""
+
+    # assert isinstance(self.s, arguments)
 
     if not (first := self.first_child()):
         return None
@@ -551,6 +561,8 @@ def _loc_arguments(self: 'FST') -> fstloc | None:
 def _loc_arguments_empty(self: 'FST') -> fstloc:
     """`arguments` location for empty arguments ONLY! DO NOT CALL FOR NONEMPTY ARGUMENTS!"""
 
+    # assert isinstance(self.s, arguments)
+
     if not (parent := self.parent):
         return fstloc(0, 0, len(ls := self._lines), len(ls[-1]))  # parent=None means we are root
 
@@ -574,6 +586,8 @@ def _loc_arguments_empty(self: 'FST') -> fstloc:
 
 def _loc_withitem(self: 'FST') -> fstloc | None:
     """`withitem` location from children. Called from `.loc`."""
+
+    # assert isinstance(self.s, withitem)
 
     ast    = self.a
     ce     = ast.context_expr.f
@@ -611,6 +625,8 @@ def _loc_withitem(self: 'FST') -> fstloc | None:
 def _loc_match_case(self: 'FST') -> fstloc | None:
     """`match_case` location from children. Called from `.loc`."""
 
+    # assert isinstance(self.a, match_case)
+
     ast   = self.a
     first = ast.pattern.f
     last  = self.last_child()
@@ -624,6 +640,68 @@ def _loc_match_case(self: 'FST') -> fstloc | None:
     end_ln, end_col = _next_find(lines, last.bend_ln, last.bend_col, len(lines) - 1, len(lines[-1]), ':')  # special case, deleted whole body, end must be set to just past the colon (which MUST follow somewhere there)
 
     return fstloc(*start, end_ln, end_col + 1)
+
+
+def _loc_call_pars(self: 'FST') -> fstloc:
+    # assert isinstance(self.s, Call)
+
+    ast                   = self.a
+    lines                 = self.root._lines
+    _, _, ln, col         = ast.func.f.loc
+    _, _, end_ln, end_col = self.loc
+
+    lpar_ln, lpar_col = _next_find(lines, ln, col, end_ln, end_col, '(')  # must be there
+
+    if keywords := ast.keywords:
+        _, _, ln, col = keywords[-1].f.loc
+    elif args := ast.args:
+        _, _, ln, col = args[-1].f.loc
+
+    else:
+        ln  = lpar_ln
+        col = lpar_col + 1
+
+    rpar_ln, rpar_col = _next_find(lines, ln, col, end_ln, end_col, ')')  # must be there
+
+    return fstloc(lpar_ln, lpar_col, rpar_ln, rpar_col + 1)
+
+
+def _loc_subscript_brackets(self: 'FST') -> fstloc:
+    # assert isinstance(self.s, Subscript)
+
+    ast                   = self.a
+    lines                 = self.root._lines
+    _, _, ln, col         = ast.value.f.loc
+    _, _, end_ln, end_col = self.loc
+    lbrkt_ln, lbrkt_col   = _next_find(lines, ln, col, end_ln, end_col, '[')  # must be there
+    _, _, ln, col         = ast.slice.f.loc
+    rbrkt_ln, rbrkt_col   = _next_find(lines, ln, col, end_ln, end_col, ']')  # must be there
+
+    return fstloc(lbrkt_ln, lbrkt_col, rbrkt_ln, rbrkt_col + 1)
+
+
+def _loc_matchclass_pars(self: 'FST') -> fstloc:
+    # assert isinstance(self.s, MatchClass)
+
+    ast                   = self.a
+    lines                 = self.root._lines
+    _, _, ln, col         = ast.cls.f.loc
+    _, _, end_ln, end_col = self.loc
+
+    lpar_ln, lpar_col = _next_find(lines, ln, col, end_ln, end_col, '(')  # must be there
+
+    if kwd_patterns := ast.kwd_patterns:
+        _, _, ln, col = kwd_patterns[-1].f.loc
+    elif patterns := ast.patterns:
+        _, _, ln, col = patterns[-1].f.loc
+
+    else:
+        ln  = lpar_ln
+        col = lpar_col + 1
+
+    rpar_ln, rpar_col = _next_find(lines, ln, col, end_ln, end_col, ')')  # must be there
+
+    return fstloc(lpar_ln, lpar_col, rpar_ln, rpar_col + 1)
 
 
 def _dict_key_or_mock_loc(self: 'FST', key: AST | None, value: 'FST') -> Union['FST', fstloc]:
@@ -790,10 +868,7 @@ def _maybe_fix_elif(self: 'FST'):
     ln, col, _, _ = self.loc
     lines         = self.root._lines
 
-    if lines[ln].startswith('elif', col) and (not (parent := self.parent) or not
-        (isinstance(parenta := parent.a, If) and self.pfield == ('orelse', 0) and len(parenta.orelse) == 1 and
-            self.a.col_offset == parenta.col_offset)
-    ):
+    if lines[ln].startswith('elif', col):
         self.put_src(None, ln, col, ln, col + 2, False)
 
 

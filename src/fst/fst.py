@@ -6,13 +6,13 @@ from io import TextIOBase
 from typing import Any, Callable, Literal, Optional, TextIO, Union
 
 from .astutil import *
-from .astutil import TryStar, TemplateStr, Interpolation
+from .astutil import TryStar, TemplateStr, Interpolation, type_param
 
 from .shared import (
     astfield, fstloc,
     STMTISH, STMTISH_OR_MOD, BLOCK, BLOCK_OR_MOD, SCOPE, SCOPE_OR_MOD, NAMED_SCOPE,
     NAMED_SCOPE_OR_MOD, ANONYMOUS_SCOPE, PARENTHESIZABLE, HAS_DOCSTRING,
-    re_empty_line_start, re_empty_line, re_line_continuation,
+    re_empty_line_start, re_empty_line, re_line_continuation, re_line_end_cont_or_comment,
     Code,
     _params_offset, _fixup_field_body, _multiline_str_continuation_lns, _multiline_fstr_continuation_lns,
 )
@@ -61,6 +61,20 @@ def unparse(ast_obj) -> str:
             pass
 
     return ast_unparse(ast_obj)
+
+
+class _EnclosedASTMock:
+    """Used in `is_enclosed()`."""
+
+    class _EnclosedFSTMock:
+        def __init__(self, loc):
+            self.loc = loc
+
+        def is_enclosed(self):
+            return True
+
+    def __init__(self, loc):
+        self.f = self._EnclosedFSTMock(loc)
 
 
 class _FSTCircularImportStandinMeta(type):
@@ -1202,8 +1216,9 @@ class FST:
     # Low level queries
 
     def is_parsable(self) -> bool:
-        """Really means the AST is `unparse()`able and then re`parse()`able which will get it to this top level AST node
-        surrounded by the appropriate `ast.mod`. The source may change a bit though, parentheses, 'if' <-> 'elif'."""
+        """Really means the AST is `ast.unparse()`able and then re`ast.parse()`able which will get it to this top level
+        AST node surrounded by the appropriate `ast.mod`. The source may change a bit though, parentheses,
+        'if' <-> 'elif'."""
 
         if not is_parsable(self.a) or not self.loc:
             return False
@@ -1229,55 +1244,176 @@ class FST:
 
         return True
 
-    def is_atom(self, grouping_pars: bool = True) -> bool:
-        """Whether `self` is innately atomic like `Name`, `Constant`, `List`, etc... Or otherwise enclosed in some kind
-        of delimiters '()', '[]', '{}' so that it functions as a parsable atom and cannot be split up by precedence
-        rules when reparsed. Node types where this doesn't normally apply like `stmt` or 'alias' return `True`.
+    def is_atom(self, pars: bool = True) -> bool | Literal['pars']:
+        """Whether `self` is innately atomic precedence-wise like `Name`, `Constant`, `List`, etc... Or otherwise
+        optionally enclosed in parentheses so that it functions as a parsable atom and cannot be split up by precedence
+        rules when reparsed.
+
+        Node types where this doesn't normally apply like `stmt` or 'alias' return `True`. This does not guarantee
+        parsability as an otherwise atomic node could be spread across multiple lines without line continuations or
+        grouping parentheses, see `is_enclosed()` for that. Though if this function returns `'pars'` then `self` is
+        enclosed due to the grouping parentheses.
 
         **Parameters:**
-        - `grouping_pars`: Whether to check for grouping parentheses or not for node types which are not innately
-            atomic (`NamedExpr`, `BinOp`, `Yield`, etc...). If `True` then '(a + b)' is considered atomic, if `False`
-            then it is not.
+        - `pars`: Whether to check for grouping parentheses or not for node types which are not innately atomic
+            (`NamedExpr`, `BinOp`, `Yield`, etc...). If `True` then '(a + b)' is considered atomic, if `False` then it
+            is not.
 
         **Returns:**
-        - `True` if node and source is parsably atomic and no combination with another node can change its precedence,
-            `False` otherwise.
+        - `True` if node is atomic and no combination in the source will make it parse to a different node. `'pars'` if
+            is atomic due to enclosing grouping parentheses and would not be otherwise. `False` means not atomic.
         """
 
         ast = self.a
 
-        if isinstance(ast, (Dict, Set, ListComp, SetComp, DictComp, GeneratorExp, Call, JoinedStr, TemplateStr,  # , Await?  # is the highest precedence thing but not really atom
-                            Constant, Attribute, Subscript, Starred, Name, List,  # Slice,  # slice is weird
-                            MatchValue, MatchSingleton, MatchMapping, MatchClass, MatchStar, MatchAs)):
+        if isinstance(ast, (Dict, Set, ListComp, SetComp, DictComp, GeneratorExp, Call, JoinedStr, TemplateStr,  # , Await?  # is the highest precedence thing but not technically atom
+                            Constant, Attribute, Subscript, Name, List,
+                            MatchValue, MatchSingleton, MatchMapping, MatchClass, MatchStar, MatchAs,
+                            expr_context, boolop, operator, unaryop, cmpop, comprehension, ExceptHandler, arguments,
+                            arg, keyword, alias, withitem, type_param,
+                            stmt, match_case, mod, TypeIgnore)):
             return True
 
-        if isinstance(ast, Tuple):
-            return self._is_parenthesized_seq()  # if this is False then cannot be enclosed in grouping parens because that would reparse to a parenthesized Tuple and so is inconsistent
+        if (ret := self.is_parenthesized_tuple()) is not None:  # if this is False then cannot be enclosed in grouping parens because that would reparse to a parenthesized Tuple and so is inconsistent
+            return ret
 
-        elif isinstance(ast, MatchSequence):  # could be enclosed with '()' or '[]' which is included in the ast location
-            ln, col, _, _ = self.loc
-            lpar          = self.root._lines[ln][col]
+        if (ret := self.is_enclosed_matchsequence()) is not None:  # like Tuple, cannot be enclosed in grouping parens
+            return ret
 
-            if lpar == '(':
-                return self._is_parenthesized_seq('patterns')
-            if lpar == '[':
-                return self._is_parenthesized_seq('patterns', '[', ']')
+        assert isinstance(ast, (expr, pattern))
 
-            return False  # like Tuple cannot be enclosed in grouping parens
+        return 'pars' if pars and self.pars(ret_npars=True)[1] else False
 
-        if isinstance(ast, (expr, pattern)):
-            return bool(self.pars(ret_npars=True)[1]) if grouping_pars else False
+    def is_enclosed(self, pars: bool = True) -> bool | Literal['pars']:
+        """Whether `self` lives on a single line or is otherwise enclosed in some kind of delimiters '()', '[]', '{}' or
+        entirely terminated with line continuations so that it can be parsed without error due to being spread across
+        multiple lines. This does not mean it can't have other errors, such as a `Slice` outside of `Subscript.slice`.
+
+        Node types where this doesn't normally apply like `stmt`, `ExceptHandler`, `boolop`, `expr_context`, etc...
+        return True. Node types that are not enclosed but which are never used without being enclosed by a parent like
+        `Slice`, `keyword` or `type_param` will also return True. Other node types which cannot be enclosed individually
+        and do not have line continuations but would need a parent to enclose them like `arguments` or the `cmpop`s
+        `is not` or `not in` will return `False` if not on a single line or not parenthesized.
+
+        This function does NOT check whether `self` is enclosed by some parent up the tree if it is not enclosed itself,
+        for that see `is_enclosed_by_parents()`.
+
+        **Parameters:**
+        - `pars`: Whether to check for grouping parentheses or not for nodes which are not enclosed or otherwise
+            multiline-safe. Grouping parentheses are different from tuple parentheses which are always checked.
+
+        **Returns:**
+        - `True` if node is enclosed. `'pars'` if is enclosed by grouping parentheses and would not be otherwise.
+            `False` means not enclosed and should be parenthesized or put into an enclosed parent for successful parse.
+        """
+
+        ast = self.a
+
+        if isinstance(ast, (Dict, Set, ListComp, SetComp, DictComp, GeneratorExp, FormattedValue, Interpolation,
+                            Name, List, Slice,
+                            MatchValue, MatchSingleton, MatchMapping,
+                            expr_context, boolop, operator, unaryop, ExceptHandler, keyword, type_param,
+                            stmt, match_case, mod, TypeIgnore)):
+            return True
+
+        ln, col, end_ln, end_col = self.loc
+
+        if end_ln == ln:
+            return True
+
+        if pars and self.pars(ret_npars=True)[1]:
+            return 'pars'
+
+        if isinstance(ast, Constant):
+            if not isinstance(ast.value, str):
+                return True
+
+            return len(_multiline_str_continuation_lns(self.root._lines, ln, col, end_ln, end_col)) == end_ln - ln
+
+        if isinstance(ast, (JoinedStr, TemplateStr)):
+            return len(_multiline_fstr_continuation_lns(self.root._lines, ln, col, end_ln, end_col)) == end_ln - ln
+
+        if (ret := self.is_parenthesized_tuple()) is not None:
+            if ret:
+                return True
+
+        elif (ret := self.is_enclosed_matchsequence()) is not None:
+            if ret:
+                return True
+
+        last_ln = ln
+        lines   = self.root._lines
+
+        if isinstance(ast, Call):
+            children = [ast.func, _EnclosedASTMock(self._loc_call_pars())]
+        elif isinstance(ast, Subscript):
+            children = [ast.value, _EnclosedASTMock(self._loc_subscript_brackets())]
+        elif isinstance(ast, MatchClass):
+            children = [ast.cls, _EnclosedASTMock(self._loc_matchclass_pars())]
+        else:  # we don't check always-enclosed statement fields here because statements will never get here
+            children = syntax_ordered_children(ast)
+
+        for child in children:
+            if not child or not (loc := (childf := child.f).loc) or (child_end_ln := loc.end_ln) == last_ln:
+                continue
+
+            for ln in range(last_ln, loc.ln):
+                if re_line_end_cont_or_comment.match(lines[ln]).group(1) != '\\':
+                    return False
+
+            if not childf.is_enclosed():
+                return False
+
+            last_ln = child_end_ln
+
+        for ln in range(last_ln, end_ln):  # tail
+            if re_line_end_cont_or_comment.match(lines[ln]).group(1) != '\\':
+                return False
 
         return True
+
+    def is_enclosed_by_parents(self) -> bool:
+        """Whether `self` is enclosed by some parent up the tree. This is different from `is_enclosed()` as it does not
+        check for line continuations or anyting like that, just enclosing delimiters like from `Call` or `arguments`
+        parentheses, `List` brackets, `FormattedValue`, parent grouping parentheses, etc..."""
+
+        pass
+
+
+
+
+
 
     def is_parenthesized_tuple(self) -> bool | None:
         """Whether `self` is a parenthesized `Tuple` or not, or not a `Tuple` at all.
 
         **Returns:**
-        - `True` if is parenthesized `Tuple`, `False` if is unparenthesized `Tuple`, `None` if is not `Tuple`.
+        - `True` if is parenthesized `Tuple`, `False` if is unparenthesized `Tuple`, `None` if is not `Tuple` at all.
         """
 
         return self._is_parenthesized_seq() if isinstance(self.a, Tuple) else None
+
+    def is_enclosed_matchsequence(self) -> bool | None:
+        """Whether `self` is an enclosed `MatchSequence` or not, or not a `MatchSequence` at all (can be pars '()' or
+        brackets '[]').
+
+        **Returns:**
+        - `True` if is enclosed `MatchSequence`, `False` if is unparenthesized `MatchSequence`, `None` if is not
+            `MatchSequence` at all.
+        """
+
+        if not isinstance(self.a, MatchSequence):
+            return None
+
+        ln, col, _, _ = self.loc
+        lpar          = self.root._lines[ln][col]
+
+        if lpar == '(':
+            return self._is_parenthesized_seq('patterns')
+        if lpar == '[':
+            return self._is_parenthesized_seq('patterns', '[', ']')
+
+        return False
 
     def is_empty_set_call(self) -> bool:
         """Whether `self` is an empty `set()` call."""
@@ -1295,7 +1431,7 @@ class FST:
         """Whether `self` is an `elif` or not, or not an `If` at all.
 
         **Returns:**
-        - `True` if is 'elif' `If`, `False` if is normal `If`, `None` if is not `If`.
+        - `True` if is 'elif' `If`, `False` if is normal `If`, `None` if is not `If` at all.
         """
 
         return self.root._lines[(loc := self.loc).ln].startswith('elif', loc.col) if isinstance(self.a, If) else None
@@ -1402,7 +1538,7 @@ class FST:
         return lns
 
     def pars(self, pars: bool = True, *, ret_npars: bool = False, exc_genexpr_solo: bool = False,
-             ) -> fstloc | tuple[fstloc, int]:
+             ) -> fstloc | tuple[fstloc | None, int] | None:
         """Return the location of enclosing grouping parentheses if present. Will balance parentheses if `self` is an
         element of a tuple and not return the parentheses of the tuple. Likwise will not return the parentheses of an
         enclosing `arguments` parent or class bases list. Only works on (and makes sense for) `expr` or `pattern` nodes,
@@ -1417,10 +1553,13 @@ class FST:
             at all if `pars=False`.
 
         **Returns:**
-        - `fstloc`: Location of enclosing parentheses if present else `self.bloc`.
+        - `fstloc | None`: Location of enclosing parentheses if present else `self.bloc` (which can be `None`).
+        - `(fstloc, count)`: Location of enclosing parentheses or `self.bloc` and number of nested parens found (if
+            requested with `ret_npars`). `count` can be -1 in the case of a `GeneratorExp` sharing parentheses with
+            `Call` `arguments` if it is the only argument, if checking for this enabled with `exc_genexpr_solo`.
         """
 
-        if not pars or not isinstance(self.a, PARENTHESIZABLE):
+        if not pars or not isinstance(self.a, PARENTHESIZABLE):  # pars around all `alias`es or `withitem`s are considered part of the parent even if there is only one of those elements which looks parenthesized
             return (self.bloc, 0) if ret_npars else self.bloc
 
         pars_end_ln, pars_end_col, ante_end_ln, ante_end_col, nrpars = self._rpars(exc_genexpr_solo=exc_genexpr_solo)
@@ -1448,7 +1587,7 @@ class FST:
         elif dpars:
             raise RuntimeError('should not get here')
 
-        elif self.pfield == ('bases', 0) and len((a := self.parent.a).bases) == 1 and not a.keywords: # special case "class cls(base)", need to preserve bases parens
+        elif self.pfield == ('bases', 0) and len((a := self.parent.a).bases) == 1 and not a.keywords: # special case "class cls(base)", need to preserve bases parens, don't need to check for comma because if there is one then pars would be unbalanced
             pars_ln      = ante_ln
             pars_col     = ante_col
             pars_end_ln  = ante_end_ln
@@ -1878,6 +2017,9 @@ class FST:
         _loc_arguments_empty,
         _loc_withitem,
         _loc_match_case,
+        _loc_call_pars,
+        _loc_subscript_brackets,
+        _loc_matchclass_pars,
         _dict_key_or_mock_loc,
         _touch,
         _set_end_pos,

@@ -21,7 +21,7 @@ __all__ = [
     'is_valid_identifier', 'is_valid_identifier_dotted', 'is_valid_MatchSingleton_value', 'is_valid_MatchAs_value',
     'reduce_ast', 'get_field', 'set_field', 'has_type_comments', 'is_parsable', 'get_parse_mode',
     'WalkFail', 'walk2', 'compare_asts', 'copy_attributes', 'copy_ast', 'set_ctx',
-    'get_func_class_or_ass_by_name', 'syntax_ordered_children', 'last_block_opener_child', 'is_atom',
+    'get_func_class_or_ass_by_name', 'syntax_ordered_children', 'last_block_header_child', 'is_atom',
     'precedence_require_parens_by_type', 'precedence_require_parens',
 ]
 
@@ -616,6 +616,8 @@ def copy_ast(ast: AST | None) -> AST:
 
 
 def set_ctx(ast_or_stack: AST | list[AST], ctx: type[expr_context], *, doit=True) -> bool:
+    """`doit=False` used to query if any context-modifiable `ctx` present."""
+
     change = False
     stack  = [ast_or_stack] if isinstance(ast_or_stack, AST) else ast_or_stack
 
@@ -804,12 +806,12 @@ def syntax_ordered_children(ast: AST) -> list:
     return _SYNTAX_ORDERED_CHILDREN.get(ast.__class__, _syntax_ordered_children_default)(ast)
 
 
-def last_block_opener_child(ast: AST) -> AST | None:
+def last_block_header_child(ast: AST) -> AST | None:
     """Return last `AST` node in the block open before the ':'. `ast` must be a valid block statement. Returns `None`
     for things like `Try` and empty `ExceptHandler` nodes or other block nodes which might have normally present fields missing."""
 
     if not isinstance(ast, (FunctionDef, AsyncFunctionDef, ClassDef, For, AsyncFor, While, If, With, AsyncWith, Match,
-                            Try, TryStar, ExceptHandler, match_case)):
+                            ExceptHandler, match_case)):  # Try, TryStar open blocks but don't have children
         return None
 
     for field in reversed(AST_FIELDS[ast.__class__]):

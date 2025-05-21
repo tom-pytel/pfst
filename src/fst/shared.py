@@ -24,7 +24,7 @@ NAMED_SCOPE             = (FunctionDef, AsyncFunctionDef, ClassDef)
 NAMED_SCOPE_OR_MOD      = NAMED_SCOPE + (mod,)
 ANONYMOUS_SCOPE         = (Lambda, ListComp, SetComp, DictComp, GeneratorExp)
 
-PARENTHESIZABLE         = (expr, alias, withitem, pattern)
+PARENTHESIZABLE         = (expr, pattern)
 HAS_DOCSTRING           = NAMED_SCOPE_OR_MOD
 
 STMTISH_FIELDS          = frozenset(('body', 'orelse', 'finalbody', 'handlers', 'cases'))
@@ -44,7 +44,8 @@ re_multiline_str_start  = re.compile(r'(?:b|r|rb|br|u|)  (\'\'\'|""")', re.VERBO
 re_multiline_str_end_sq = re.compile(r'(?:\\.|[^\\])*?  \'\'\'', re.VERBOSE)
 re_multiline_str_end_dq = re.compile(r'(?:\\.|[^\\])*?  """', re.VERBOSE)
 
-re_empty_line_cont_or_comment   = re.compile(r'[ \t]*(\\|#.*)?$')        # emmpty line or line continuation or a pure comment line
+re_empty_line_cont_or_comment   = re.compile(r'[ \t]*(\\|#.*)?$')        # empty line or line continuation or a pure comment line
+re_line_end_cont_or_comment     = re.compile(r'.*?(\\|#.*)?$')           # line end line continuation or a comment
 
 re_next_src                     = re.compile(r'\s*([^\s#\\]+)')          # next non-space non-continuation non-comment code text, don't look into strings with this!
 re_next_src_or_comment          = re.compile(r'\s*([^\s#\\]+|#.*)')      # next non-space non-continuation code or comment text, don't look into strings with this!
@@ -657,8 +658,12 @@ def _multiline_str_continuation_lns(lines: list[str], ln: int, col: int, end_ln:
     return lns
 
 
-def _multiline_fstr_continuation_lns(lines: list[str], ln: int, col: int, end_ln: int, end_col: int) -> list[int]:  # TODO: p3.12+ has locations for there, might make it easier
+def _multiline_fstr_continuation_lns(lines: list[str], ln: int, col: int, end_ln: int, end_col: int) -> list[int]:
     """Lets try to find indentable lines by incrementally attempting to parse parts of multiline f-string (or t-)."""
+
+
+    # TODO: p3.12+ has locations for these which should allow no use of parse
+
 
     lns = []
 
