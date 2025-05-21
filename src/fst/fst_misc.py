@@ -15,8 +15,10 @@ from .shared import (
     _coerce_ast
 )
 
+_astfieldctx = astfield('ctx')
 
-def _make_tree_fst(ast: AST, parent: 'FST', pfield: astfield):
+
+def _make_tree_fst(ast: AST, parent: 'FST', pfield: astfield) -> 'FST':
     """Recreate possibly non-unique AST nodes."""
 
     if not getattr(ast, 'f', None):  # if `.f` exists then this has already been done
@@ -201,6 +203,29 @@ def _set_ast(self: 'FST', ast: AST, unmake: bool = True) -> AST:
     self._touch()
 
     return old_ast
+
+
+def _set_ctx(self: 'FST', ctx: type[expr_context]):
+    """Set `ctx` field for `self` and applicable children. Differs from `astutil.set_ctx()` by creating `FST` nodes
+    directly. When the `astutil` one is used it is followed by something which creates the `FST` nodes for the new
+    `ctx` fields."""
+
+    stack = [self.a]
+
+    while stack:
+        a = stack.pop()
+
+        if (((is_seq := isinstance(a, (Tuple, List))) or (is_starred := isinstance(a, Starred)) or
+            isinstance(a, (Name, Subscript, Attribute))) and not isinstance(a.ctx, ctx)
+        ):
+            a.ctx = child = ctx()
+
+            _make_tree_fst(child, a.f, _astfieldctx)
+
+            if is_seq:
+                stack.extend(a.elts)
+            elif is_starred:
+                stack.append(a.value)
 
 
 def _repr_tail(self: 'FST') -> str:
@@ -649,21 +674,9 @@ def _loc_call_pars(self: 'FST') -> fstloc:
     lines                 = self.root._lines
     _, _, ln, col         = ast.func.f.loc
     _, _, end_ln, end_col = self.loc
+    ln, col               = _next_find(lines, ln, col, end_ln, end_col, '(')  # must be there
 
-    lpar_ln, lpar_col = _next_find(lines, ln, col, end_ln, end_col, '(')  # must be there
-
-    if keywords := ast.keywords:
-        _, _, ln, col = keywords[-1].f.loc
-    elif args := ast.args:
-        _, _, ln, col = args[-1].f.loc
-
-    else:
-        ln  = lpar_ln
-        col = lpar_col + 1
-
-    rpar_ln, rpar_col = _next_find(lines, ln, col, end_ln, end_col, ')')  # must be there
-
-    return fstloc(lpar_ln, lpar_col, rpar_ln, rpar_col + 1)
+    return fstloc(ln, col, end_ln, end_col)
 
 
 def _loc_subscript_brackets(self: 'FST') -> fstloc:
@@ -673,11 +686,9 @@ def _loc_subscript_brackets(self: 'FST') -> fstloc:
     lines                 = self.root._lines
     _, _, ln, col         = ast.value.f.loc
     _, _, end_ln, end_col = self.loc
-    lbrkt_ln, lbrkt_col   = _next_find(lines, ln, col, end_ln, end_col, '[')  # must be there
-    _, _, ln, col         = ast.slice.f.loc
-    rbrkt_ln, rbrkt_col   = _next_find(lines, ln, col, end_ln, end_col, ']')  # must be there
+    ln, col               = _next_find(lines, ln, col, end_ln, end_col, '[')  # must be there
 
-    return fstloc(lbrkt_ln, lbrkt_col, rbrkt_ln, rbrkt_col + 1)
+    return fstloc(ln, col, end_ln, end_col)
 
 
 def _loc_matchclass_pars(self: 'FST') -> fstloc:
@@ -687,21 +698,9 @@ def _loc_matchclass_pars(self: 'FST') -> fstloc:
     lines                 = self.root._lines
     _, _, ln, col         = ast.cls.f.loc
     _, _, end_ln, end_col = self.loc
+    ln, col               = _next_find(lines, ln, col, end_ln, end_col, '(')  # must be there
 
-    lpar_ln, lpar_col = _next_find(lines, ln, col, end_ln, end_col, '(')  # must be there
-
-    if kwd_patterns := ast.kwd_patterns:
-        _, _, ln, col = kwd_patterns[-1].f.loc
-    elif patterns := ast.patterns:
-        _, _, ln, col = patterns[-1].f.loc
-
-    else:
-        ln  = lpar_ln
-        col = lpar_col + 1
-
-    rpar_ln, rpar_col = _next_find(lines, ln, col, end_ln, end_col, ')')  # must be there
-
-    return fstloc(lpar_ln, lpar_col, rpar_ln, rpar_col + 1)
+    return fstloc(ln, col, end_ln, end_col)
 
 
 def _dict_key_or_mock_loc(self: 'FST', key: AST | None, value: 'FST') -> Union['FST', fstloc]:
@@ -827,7 +826,7 @@ def _maybe_add_singleton_tuple_comma(self: 'FST', offset: bool):
 
     if (elts := self.a.elts) and len(elts) == 1:
         return self._maybe_add_comma((f := elts[0].f).end_ln, f.end_col, offset, False, self.end_ln,
-                                        self.end_col - self._is_parenthesized_seq())
+                                     self.end_col - self._is_parenthesized_seq())
 
 
 def _maybe_fix_tuple(self: 'FST', is_parenthesized: bool | None = None):
@@ -872,6 +871,52 @@ def _maybe_fix_elif(self: 'FST'):
         self.put_src(None, ln, col, ln, col + 2, False)
 
 
+def _maybe_fix(self: 'FST', pars: bool = True):
+    """Maybe fix source and `ctx` values for cut or copied nodes (to make subtrees parsable if the source is not after
+    the operation). If cannot fix or ast is not parsable by itself then ast will be unchanged. Is meant to be a quick
+    fix after a cut or copy operation, not full check, for that use `verify()`.
+
+    WARNING! Only call on root node!
+    """
+
+    # assert self.is_root
+
+    if isinstance(ast := self.a, If):
+        self._maybe_fix_elif()
+
+    elif isinstance(ast, expr):
+        if not self.loc or not self.is_parsable():
+            return
+
+        self._set_ctx(Load)  # anything that is excluded by is_parsable() or does not have .loc does not need this
+
+        if not pars:
+            return
+
+        ast        = self.a
+        need_paren = None
+
+        if is_tuple := isinstance(ast, Tuple):
+            if self._is_parenthesized_seq():
+                need_paren = False
+            elif any(isinstance(e, NamedExpr) and not e.f.pars(ret_npars=True)[1] for e in ast.elts):  # unparenthesized walrus in naked tuple?
+                need_paren = True
+
+            self._maybe_add_singleton_tuple_comma(False)  # this exists because of copy lone Starred out of a Subscript.slice
+
+        elif isinstance(ast, NamedExpr):  # naked walrus
+            need_paren = True
+
+        if need_paren is None:
+            need_paren = not self.is_enclosed()
+
+        if need_paren:
+            if is_tuple:
+                self._parenthesize_tuple()
+            else:
+                self._parenthesize_grouping()
+
+
 def _fix_block_del_last_child(self: 'FST', bound_ln: int, bound_col: int, bound_end_ln: int, bound_end_col: int):
     """Fix end location of a block statement after its last child (position-wise, not last existing child) has been
     cut or deleted. Will set end position of `self` and any parents who `self` is the last child of to the new last
@@ -907,142 +952,144 @@ def _fix_block_del_last_child(self: 'FST', bound_ln: int, bound_col: int, bound_
     self._set_end_pos(end_lineno, end_col_offset)
 
 
-def _fix(self: 'FST', inplace: bool = True) -> 'FST':
-    """This is really a maybe fix source and `ctx` values for cut or copied nodes (to make subtrees parsable if the
-    source is not after the operation). Normally this is called by default on newly cut / copied individual nodes.
-    Possibly reparses in order to verify expressions. If cannot fix or ast is not parsable by itself then ast will
-    be unchanged. Is meant to be a quick fix after a cut or copy operation, not full check, for that use
-    `is_parsable()` or `verify()` depending on need. Possible source changes are `elif` to `if` and parentheses
-    where needed and commas for singleton tuples.
+# def _fix(self: 'FST', inplace: bool = True) -> 'FST':
+#     """This is really a maybe fix source and `ctx` values for cut or copied nodes (to make subtrees parsable if the
+#     source is not after the operation). Normally this is called by default on newly cut / copied individual nodes.
+#     Possibly reparses in order to verify expressions. If cannot fix or ast is not parsable by itself then ast will
+#     be unchanged. Is meant to be a quick fix after a cut or copy operation, not full check, for that use
+#     `is_parsable()` or `verify()` depending on need. Possible source changes are `elif` to `if` and parentheses
+#     where needed and commas for singleton tuples.
 
-    **Parameters:**
-    - `inplace`: If `True` then changes will be made to `self`. If `False` then `self` may be returned if no changes
-        made, otherwise a modified copy is returned.
+#     **Parameters:**
+#     - `inplace`: If `True` then changes will be made to `self`. If `False` then `self` may be returned if no changes
+#         made, otherwise a modified copy is returned.
 
-    **Returns:**
-    - `self` if unchanged or modified in place or a new `FST` object otherwise.
-    """
+#     **Returns:**
+#     - `self` if unchanged or modified in place or a new `FST` object otherwise.
+#     """
 
-    if not self.is_root:
-        raise RuntimeError('can only be called on root node')
+#     raise NotImplementedError
 
-    if not (loc := self.loc):
-        return self
+#     if not self.is_root:
+#         raise RuntimeError('can only be called on root node')
 
-    ln, col, end_ln, end_col = loc
+#     if not (loc := self.loc):
+#         return self
 
-    ast   = self.a
-    lines = self._lines
+#     ln, col, end_ln, end_col = loc
 
-    # if / elif statement
+#     ast   = self.a
+#     lines = self._lines
 
-    if isinstance(ast, If):
-        if (l := lines[ln]).startswith('if', col):
-            return self
+#     # if / elif statement
 
-        assert l.startswith('elif', col)
+#     if isinstance(ast, If):
+#         if (l := lines[ln]).startswith('if', col):
+#             return self
 
-        if not inplace:
-            self = FST(copy_ast(ast), lines=(lines := lines[:]), from_=self)
+#         assert l.startswith('elif', col)
 
-        self.offset(ln, col + 2, 0, -2)
+#         if not inplace:
+#             self = FST(copy_ast(ast), lines=(lines := lines[:]), from_=self)
 
-        lines[ln] = bistr((l := lines[ln])[:col] + l[col + 2:])
+#         self.offset(ln, col + 2, 0, -2)
 
-    # expression maybe parenthesize and proper ctx (Load)
+#         lines[ln] = bistr((l := lines[ln])[:col] + l[col + 2:])
 
-    elif (isinstance(ast, expr)):
-        if not self.is_parsable():  # may be Slice or Starred
-            return self
+#     # expression maybe parenthesize and proper ctx (Load)
 
-        need_paren = None
+#     elif (isinstance(ast, expr)):
+#         if not self.is_parsable():  # may be Slice or Starred
+#             return self
 
-        if is_tuple := isinstance(ast, Tuple):
-            if self._is_parenthesized_seq():
-                need_paren = False
+#         need_paren = None
 
-            elif (not (elts := ast.elts) or any(isinstance(e, NamedExpr) for e in elts) or (len(elts) == 1 and (
-                    not (code := _next_src(lines, (f0 := elts[0].f).end_ln, f0.end_col, end_ln, end_col, False, None))
-                    or  # if comma not on logical line then definitely need to add parens, if no comma then the parens are incidental but we want that code path for adding the singleton comma
-                    not code.src.startswith(',')))):
-                need_paren = True
+#         if is_tuple := isinstance(ast, Tuple):
+#             if self._is_parenthesized_seq():
+#                 need_paren = False
 
-        elif (isinstance(ast, (Name, List, Set, Dict, ListComp, SetComp, DictComp, GeneratorExp)) or
-                ((code := _prev_src(self.root._lines, 0, 0, self.ln, self.col)) and code.src.endswith('('))):  # is parenthesized?
-            need_paren = False
+#             elif (not (elts := ast.elts) or any(isinstance(e, NamedExpr) for e in elts) or (len(elts) == 1 and (
+#                     not (code := _next_src(lines, (f0 := elts[0].f).end_ln, f0.end_col, end_ln, end_col, False, None))
+#                     or  # if comma not on logical line then definitely need to add parens, if no comma then the parens are incidental but we want that code path for adding the singleton comma
+#                     not code.src.startswith(',')))):
+#                 need_paren = True
 
-        elif isinstance(ast, (NamedExpr, Yield, YieldFrom)):  # , Await
-            need_paren = True
+#         elif (isinstance(ast, (Name, List, Set, Dict, ListComp, SetComp, DictComp, GeneratorExp)) or
+#                 ((code := _prev_src(self.root._lines, 0, 0, self.ln, self.col)) and code.src.endswith('('))):  # is parenthesized?
+#             need_paren = False
 
-        elif end_ln == ln:
-            need_paren = False
+#         elif isinstance(ast, (NamedExpr, Yield, YieldFrom)):  # , Await
+#             need_paren = True
 
-        if need_paren is None:
-            try:
-                a = ast_parse(src := self.src, mode='eval', **self.parse_params)
+#         elif end_ln == ln:
+#             need_paren = False
 
-            except SyntaxError:  # if expression not parsing then try parenthesize
-                tail = (',)' if is_tuple and len(ast.elts) == 1 and lines[end_ln][end_col - 1] != ',' else ')')  # WARNING! this won't work for expressions followed by comments, but all comments should be followed by a newline in normal operation
+#         if need_paren is None:
+#             try:
+#                 a = ast_parse(src := self.src, mode='eval', **self.parse_params)
 
-                try:
-                    a = ast_parse(f'({src}{tail}', mode='eval', **self.parse_params)
-                except SyntaxError:
-                    return self
+#             except SyntaxError:  # if expression not parsing then try parenthesize
+#                 tail = (',)' if is_tuple and len(ast.elts) == 1 and lines[end_ln][end_col - 1] != ',' else ')')  # WARNING! this won't work for expressions followed by comments, but all comments should be followed by a newline in normal operation
 
-                if not inplace:
-                    lines = lines[:]
+#                 try:
+#                     a = ast_parse(f'({src}{tail}', mode='eval', **self.parse_params)
+#                 except SyntaxError:
+#                     return self
 
-                lines[end_ln] = bistr(f'{(l := lines[end_ln])[:end_col]}{tail}{l[end_col:]}')
-                lines[ln]     = bistr(f'{(l := lines[ln])[:col]}({l[col:]}')
+#                 if not inplace:
+#                     lines = lines[:]
 
-            else:
-                if compare_asts(a.body, ast, locs=True, type_comments=True, recurse=False):  # only top level compare needed for `ctx` and structure check
-                    return self
+#                 lines[end_ln] = bistr(f'{(l := lines[end_ln])[:end_col]}{tail}{l[end_col:]}')
+#                 lines[ln]     = bistr(f'{(l := lines[ln])[:col]}({l[col:]}')
 
-                if not inplace:
-                    lines = lines[:]
+#             else:
+#                 if compare_asts(a.body, ast, locs=True, type_comments=True, recurse=False):  # only top level compare needed for `ctx` and structure check
+#                     return self
 
-            a = a.body  # we know parsed to an Expression but original was not an Expression
+#                 if not inplace:
+#                     lines = lines[:]
 
-            if not inplace:
-                return FST(a, lines=lines, from_=self)
+#             a = a.body  # we know parsed to an Expression but original was not an Expression
 
-            self._set_ast(a)
+#             if not inplace:
+#                 return FST(a, lines=lines, from_=self)
 
-            return self
+#             self._set_ast(a)
 
-        need_ctx = set_ctx(ast, Load, doit=False)
+#             return self
 
-        if (need_ctx or need_paren) and not inplace:
-            ast = copy_ast(ast)
+#         need_ctx = set_ctx(ast, Load, doit=False)
 
-            if need_ctx:
-                set_ctx(ast, Load)
+#         if (need_ctx or need_paren) and not inplace:
+#             ast = copy_ast(ast)
 
-            lines = lines[:]
-            self  = FST(ast, lines=lines, from_=self)
+#             if need_ctx:
+#                 set_ctx(ast, Load)
 
-        elif need_ctx:
-            set_ctx(ast, Load)
+#             lines = lines[:]
+#             self  = FST(ast, lines=lines, from_=self)
 
-            self._make_fst_tree()  # TODO: this is quick HACK fix, redo _fix()
+#         elif need_ctx:
+#             set_ctx(ast, Load)
 
-        if need_paren:
-            lines[end_ln] = bistr(f'{(l := lines[end_ln])[:end_col]}){l[end_col:]}')
-            lines[ln]     = bistr(f'{(l := lines[ln])[:col]}({l[col:]}')
+#             self._make_fst_tree()  # TODO: this is quick HACK fix, redo _fix()
 
-            self.offset(ln, col, 0, 1)
+#         if need_paren:
+#             lines[end_ln] = bistr(f'{(l := lines[end_ln])[:end_col]}){l[end_col:]}')
+#             lines[ln]     = bistr(f'{(l := lines[ln])[:col]}({l[col:]}')
 
-            if is_tuple:
-                ast.col_offset     -= 1
-                ast.end_col_offset += 1
+#             self.offset(ln, col, 0, 1)
 
-            self._touch()
+#             if is_tuple:
+#                 ast.col_offset     -= 1
+#                 ast.end_col_offset += 1
 
-            if is_tuple:
-                self._maybe_add_singleton_tuple_comma(False)
+#             self._touch()
 
-    return self
+#             if is_tuple:
+#                 self._maybe_add_singleton_tuple_comma(False)
+
+#     return self
 
 
 def _is_parenthesized_seq(self: 'FST', field: str = 'elts', lpar: str = '(', rpar: str = ')') -> bool:

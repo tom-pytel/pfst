@@ -758,7 +758,7 @@ class FST:
         parse_params = self.parse_params
 
         try:
-            astp = ast_parse(self.src, mode=get_parse_mode(ast) or 'exec', **parse_params)
+            astp = ast_parse(self.src, **parse_params)
 
         except SyntaxError:
             if raise_:
@@ -766,12 +766,11 @@ class FST:
 
             return None
 
-        if not isinstance(ast, mod):
-            if isinstance(astp, Expression):
-                astp = astp.body
-            elif len(astp.body) == 1:
-                astp = astp.body[0]
-            elif raise_:
+        cls = ast.__class__
+
+        if not (astp.__class__ is cls or (len(astp.body) == 1 and (astp := astp.body[0]).__class__ is cls) or
+                (isinstance(astp, Expr) and (astp := astp.value).__class__ is cls)):
+            if raise_:
                 raise ValueError('verify failed reparse')
             else:
                 return None
@@ -1325,7 +1324,7 @@ class FST:
             return 'pars'
 
         if isinstance(ast, Constant):
-            if not isinstance(ast.value, str):
+            if not isinstance(ast.value, (str, bytes)):
                 return True
 
             return len(_multiline_str_continuation_lns(self.root._lines, ln, col, end_ln, end_col)) == end_ln - ln
@@ -2004,6 +2003,7 @@ class FST:
         _unmake_fst_tree,
         _unmake_fst_parents,
         _set_ast,
+        _set_ctx,
         _repr_tail,
         _dump,
         _prev_ast_bound,
@@ -2028,8 +2028,9 @@ class FST:
         _maybe_fix_tuple,
         _maybe_fix_set,
         _maybe_fix_elif,
+        _maybe_fix,
         _fix_block_del_last_child,
-        _fix,
+        # _fix,
         _is_parenthesized_seq,
         _parenthesize_grouping,
         _parenthesize_tuple,

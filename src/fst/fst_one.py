@@ -46,8 +46,7 @@ def _get_one(self: 'FST', idx: int | None, field: str, cut: bool, **options) -> 
 
         self._put_one(None, idx, field, **options)
 
-    if FST.get_option('fix', options):
-        fst = fst._fix(inplace=True)
+    fst._maybe_fix(self.get_option('pars', options))
 
     return fst
 

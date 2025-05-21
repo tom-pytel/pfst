@@ -615,13 +615,14 @@ def copy_ast(ast: AST | None) -> AST:
     return ret
 
 
-def set_ctx(ast_or_stack: AST | list[AST], ctx: type[expr_context], *, doit=True) -> bool:
+def set_ctx(ast_or_stack: AST | list[AST], ctx: type[expr_context], *, doit=True,
+            ) -> bool:
     """`doit=False` used to query if any context-modifiable `ctx` present."""
 
     change = False
     stack  = [ast_or_stack] if isinstance(ast_or_stack, AST) else ast_or_stack
 
-    while stack:  # anything that might have been a ctx Store or Del before (outside NamedExpr) set to Load
+    while stack:
         if a := stack.pop():  # might be `None`s in there
             if (((is_seq := isinstance(a, (Tuple, List))) or (is_starred := isinstance(a, Starred)) or
                 isinstance(a, (Name, Subscript, Attribute))) and not isinstance(a.ctx, ctx)

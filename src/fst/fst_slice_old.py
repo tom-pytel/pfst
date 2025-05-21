@@ -95,7 +95,6 @@ def _get_slice_tuple_list_or_set(self: 'FST', start: int | Literal['end'] | None
     if field is not None and field != 'elts':
         raise ValueError(f"invalid field '{field}' to slice from a {self.a.__class__.__name__}")
 
-    fix         = FST.get_option('fix', options)
     ast         = self.a
     elts        = ast.elts
     is_set      = isinstance(ast, Set)
@@ -136,7 +135,7 @@ def _get_slice_tuple_list_or_set(self: 'FST', start: int | Literal['end'] | None
         ctx     = ast.ctx.__class__
         get_ast = ast.__class__(elts=asts, ctx=ctx())
 
-        if fix and not issubclass(ctx, Load):
+        if not issubclass(ctx, Load):
             set_ctx(get_ast, Load)
 
         if is_tuple:
@@ -164,24 +163,18 @@ def _get_slice_tuple_list_or_set(self: 'FST', start: int | Literal['end'] | None
 
     fst = _get_slice_seq_and_dedent(self, get_ast, cut, seq_loc, ffirst, flast, fpre, fpost, prefix, suffix)
 
-    if fix:
-        if is_set:
-            self._maybe_fix_set()
+    if is_set:
+        self._maybe_fix_set()
 
-        elif is_tuple:
-            fst._maybe_add_singleton_tuple_comma(False)  # maybe need to add a postfix comma to copied single element tuple if is not already there
-            self._maybe_fix_tuple(is_paren)
+    elif is_tuple:
+        fst._maybe_add_singleton_tuple_comma(False)  # maybe need to add a postfix comma to copied single element tuple if is not already there
+        self._maybe_fix_tuple(is_paren)
 
     return fst
 
 
 def _get_slice_empty_set(self: 'FST', start: int | Literal['end'] | None, stop: int | None, field: str | None,
                          cut: bool, **options) -> 'FST':
-    fix = FST.get_option('fix', options)
-
-    if not fix:
-        raise ValueError(f"cannot get slice from an empty Set without specifying 'fix=True'")
-
     if field is not None and field != 'elts':
         raise ValueError(f"invalid field '{field}' to slice from a {self.a.__class__.__name__}")
 
@@ -196,7 +189,6 @@ def _get_slice_dict(self: 'FST', start: int | Literal['end'] | None, stop: int |
     if field is not None:
         raise ValueError(f"cannot specify a field '{field}' to slice from a Dict")
 
-    fix         = FST.get_option('fix', options)
     ast         = self.a
     values      = ast.values
     start, stop = _fixup_slice_indices(len(values), start, stop)
@@ -238,7 +230,6 @@ def _get_slice_dict(self: 'FST', start: int | Literal['end'] | None, stop: int |
 
 def _get_slice_stmtish(self: 'FST', start: int | Literal['end'] | None, stop: int | None, field: str | None, cut: bool,
                        one: bool = False, **options) -> 'FST':
-    fix         = FST.get_option('fix', options)
     ast         = self.a
     field, body = _fixup_field_body(ast, field)
     start, stop = _fixup_slice_indices(len(body), start, stop)
@@ -284,9 +275,8 @@ def _get_slice_stmtish(self: 'FST', start: int | Literal['end'] | None, stop: in
     if cut and is_last_child:  # correct for removed last child nodes or last nodes past the block open colon
         self._fix_block_del_last_child(block_loc.ln, block_loc.col, put_loc.ln, put_loc.col)
 
-    if fix:
-        if len(asts) == 1 and isinstance(a := asts[0], If):
-            a.f._maybe_fix_elif()
+    if len(asts) == 1 and isinstance(a := asts[0], If):
+        a.f._maybe_fix_elif()
 
     return fst
 
@@ -295,8 +285,6 @@ def _put_slice_tuple_list_or_set(self: 'FST', code: Code | None, start: int | Li
                                  field: str | None, one: bool, **options):
     if field is not None and field != 'elts':
         raise ValueError(f"invalid field '{field}' to assign slice to a {self.a.__class__.__name__}")
-
-    fix = FST.get_option('fix', options)
 
     if code is None:
         put_fst = None
@@ -315,10 +303,7 @@ def _put_slice_tuple_list_or_set(self: 'FST', code: Code | None, start: int | Li
 
         else:
             if put_fst.is_empty_set_call() or put_fst.is_empty_set_seq():
-                if fix:
-                    put_fst = self._new_empty_set_curlies(from_=self)
-                else:
-                    raise ValueError(f"cannot put empty Set as a slice without specifying 'fix=True'")
+                put_fst = self._new_empty_set_curlies(from_=self)
 
             put_ast  = put_fst.a
             is_tuple = isinstance(put_ast, Tuple)
@@ -399,7 +384,7 @@ def _put_slice_tuple_list_or_set(self: 'FST', code: Code | None, start: int | Li
         put_len = len(put_ast.elts)
         stack   = [FST(elts[i], self, astfield('elts', i)) for i in range(start, start + put_len)]
 
-        if fix and stack and not is_set:
+        if stack and not is_set:
             set_ctx([f.a for f in stack], Load if is_self_set else ast.ctx.__class__)
 
         self._make_fst_tree(stack)
@@ -407,20 +392,14 @@ def _put_slice_tuple_list_or_set(self: 'FST', code: Code | None, start: int | Li
     for i in range(start + put_len, len(elts)):
         elts[i].f.pfield = astfield('elts', i)
 
-    if fix:
-        if is_self_tuple:
-            self._maybe_fix_tuple(is_self_enclosed)
-        elif is_self_set:
-            self._maybe_fix_set()
+    if is_self_tuple:
+        self._maybe_fix_tuple(is_self_enclosed)
+    elif is_self_set:
+        self._maybe_fix_set()
 
 
 def _put_slice_empty_set(self: 'FST', code: Code | None, start: int | Literal['end'] | None, stop: int | None,
                          field: str | None, one: bool, **options):
-    fix = FST.get_option('fix', options)
-
-    if not fix:
-        raise ValueError(f"cannot put slice to an empty Set without specifying 'fix=True'")
-
     ln, col, end_ln, end_col = self.loc
 
     empty   = self._new_empty_set_curlies(False, (a := self.a).lineno, a.col_offset, from_=self)

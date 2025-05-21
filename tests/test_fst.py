@@ -29750,110 +29750,61 @@ def f():
         self.assertEqual((0, 0, 0, 2), f.loc)
         self.assertEqual((0, 0, 0, 1), f.elts[0].loc)
 
-    def test__fix(self):
+    def test__maybe_fix(self):
         f = FST.fromsrc('if 1:\n a\nelif 2:\n b')
-        fc = f.a.body[0].orelse[0].f.copy(fix=False)
-        self.assertEqual(fc.lines[0], 'elif 2:')
-        fc._fix(inplace=True)
+        fc = f.a.body[0].orelse[0].f.copy()
         self.assertEqual(fc.lines[0], 'if 2:')
         fc.verify(raise_=True)
 
         f = FST.fromsrc('(1 +\n2)')
-        fc = f.a.body[0].value.f.copy(fix=False)
+        fc = f.a.body[0].value.f.copy(pars=False)
         self.assertEqual(fc.src, '1 +\n2')
-        fc._fix(inplace=True)
+        fc._maybe_fix(pars=True)
         self.assertEqual(fc.src, '(1 +\n2)')
         fc.verify(raise_=True)
 
         f = FST.fromsrc('i = 1')
         self.assertIs(f.a.body[0].targets[0].ctx.__class__, Store)
-        fc = f.a.body[0].targets[0].f.copy(fix=False)
-        self.assertIs(fc.a.ctx.__class__, Store)
-        fc._fix(inplace=True)
+        fc = f.a.body[0].targets[0].f.copy()
         self.assertIs(fc.a.ctx.__class__, Load)
         fc.verify(raise_=True)
 
         f = FST.fromsrc('if 1: pass\nelif 2: pass').a.body[0].orelse[0].f.copy(fix=False)
-        self.assertEqual('elif 2: pass', f.src)
-
-        g = f._fix(inplace=False)
-        self.assertIsNot(g, f)
-        self.assertEqual('if 2: pass', g.src)
-        self.assertEqual('elif 2: pass', f.src)
-
-        g = f._fix(inplace=True)
-        self.assertIs(g, f)
-        self.assertEqual('if 2: pass', g.src)
         self.assertEqual('if 2: pass', f.src)
 
-        f = FST.fromsrc('i, j = 1, 2').a.body[0].targets[0].f.copy(fix=False)
+        f = FST.fromsrc('i, j = 1, 2').a.body[0].targets[0].f.copy(pars=False)
         self.assertEqual('i, j', f.src)
-        self.assertIsNot(f, f._fix(inplace=False))
+        fc._maybe_fix(pars=True)
+        self.assertEqual('i, j', f.src)  # because doesn't NEED them
 
-        g = f._fix(inplace=False)
-        self.assertFalse(compare_asts(f.a, g.a))
-        self.assertIs(g, g._fix(inplace=False))
-
-        f = FST.fromsrc('match w := x,:\n case 0: pass').a.body[0].subject.f.copy(fix=False)
+        f = FST.fromsrc('match w := x,:\n case 0: pass').a.body[0].subject.f.copy(pars=False)
         self.assertEqual('w := x,', f.src)
-
-        g = f._fix(inplace=False)
-        self.assertEqual('(w := x,)', g.src)
-        self.assertTrue(compare_asts(f.a, g.a, locs=False))
-        self.assertFalse(compare_asts(f.a, g.a, locs=True))
-        self.assertIs(g, g._fix(inplace=False))
-
-        f = FST.fromsrc('(1 +\n2)')
-        fc = f.a.body[0].value.f.copy(fix=False)
-        self.assertEqual('1 +\n2', fc.src)
-        fd = fc._fix(inplace=False)
-        self.assertEqual('(1 +\n2)', fd.src)
-        fc._fix(inplace=True)
-        self.assertEqual('(1 +\n2)', fc.src)
+        f._maybe_fix(pars=True)
+        self.assertEqual('(w := x,)', f.src)
 
         f = FST.fromsrc('yield a1, a2')
-        fc = f.a.body[0].value.f.copy(fix=False)
+        fc = f.a.body[0].value.f.copy(pars=False)
         self.assertEqual('yield a1, a2', fc.src)
-        fd = fc._fix(inplace=False)
-        self.assertEqual('(yield a1, a2)', fd.src)
+        fc._maybe_fix(pars=True)
         self.assertEqual('yield a1, a2', fc.src)
-        fc._fix(inplace=True)
-        self.assertEqual('(yield a1, a2)', fc.src)
 
         f = FST.fromsrc('yield from a')
         fc = f.a.body[0].value.f.copy(fix=False)
         self.assertEqual('yield from a', fc.src)
-        fd = fc._fix(inplace=False)
-        self.assertEqual('(yield from a)', fd.src)
+        fc._maybe_fix(pars=True)
         self.assertEqual('yield from a', fc.src)
-        fc._fix(inplace=True)
-        self.assertEqual('(yield from a)', fc.src)
-
-        # f = FST.fromsrc('await a')
-        # fc = f.a.body[0].value.f.copy(fix=False)
-        # self.assertEqual('await a', fc.src)
-        # fd = fc._fix(inplace=False)
-        # self.assertEqual('(await a)', fd.src)
-        # self.assertEqual('await a', fc.src)
-        # fc._fix(inplace=True)
-        # self.assertEqual('(await a)', fc.src)
 
         f = FST.fromsrc("""[
 "Bad value substitution: option {!r} in section {!r} contains "
                "an interpolation key {!r} which is not a valid option name. "
                "Raw value: {!r}".format
 ]""".strip())
-        fc = f.a.body[0].value.elts[0].f.copy(fix=False)
+        fc = f.a.body[0].value.elts[0].f.copy(pars=False)
         self.assertEqual("""
 "Bad value substitution: option {!r} in section {!r} contains "
                "an interpolation key {!r} which is not a valid option name. "
                "Raw value: {!r}".format""".strip(), fc.src)
-        fd = fc._fix(inplace=False)
-        self.assertEqual("""
-("Bad value substitution: option {!r} in section {!r} contains "
-               "an interpolation key {!r} which is not a valid option name. "
-               "Raw value: {!r}".format)""".strip(), fd.src)
-        fc._fix(inplace=True)
+        fc._maybe_fix(pars=True)
         self.assertEqual("""
 ("Bad value substitution: option {!r} in section {!r} contains "
                "an interpolation key {!r} which is not a valid option name. "
@@ -29863,26 +29814,20 @@ def f():
 ((is_seq := isinstance(a, (Tuple, List))) or (is_starred := isinstance(a, Starred)) or
             isinstance(a, (Name, Subscript, Attribute)))
         """.strip())
-        fc = f.a.body[0].value.f.copy(fix=False)
+        fc = f.a.body[0].value.f.copy(pars=False)
         self.assertEqual("""
 (is_seq := isinstance(a, (Tuple, List))) or (is_starred := isinstance(a, Starred)) or
             isinstance(a, (Name, Subscript, Attribute))""".strip(), fc.src)
-        fd = fc._fix(inplace=False)
-        self.assertEqual("""
-((is_seq := isinstance(a, (Tuple, List))) or (is_starred := isinstance(a, Starred)) or
-            isinstance(a, (Name, Subscript, Attribute)))""".strip(), fd.src)
-        fc._fix(inplace=True)
+        fc._maybe_fix(pars=True)
         self.assertEqual("""
 ((is_seq := isinstance(a, (Tuple, List))) or (is_starred := isinstance(a, Starred)) or
             isinstance(a, (Name, Subscript, Attribute)))""".strip(), fc.src)
 
         if sys.version_info[:2] >= (3, 12):
-            fc = FST.fromsrc('tuple[*tuple[int, ...]]').a.body[0].value.slice.f.copy(fix=False)
+            fc = FST.fromsrc('tuple[*tuple[int, ...]]').a.body[0].value.slice.f.copy(pars=False)
             self.assertEqual('*tuple[int, ...]', fc.src)
-            fd = fc._fix(inplace=False)
-            self.assertEqual('(*tuple[int, ...],)', fd.src)
-            fc._fix(inplace=True)
-            self.assertEqual('(*tuple[int, ...],)', fc.src)
+            fc._maybe_fix(pars=True)
+            self.assertEqual('*tuple[int, ...],', fc.src)
 
     def test___new__(self):
         f = FST()
@@ -31697,8 +31642,8 @@ k
         f = FST.fromsrc('match w := x,:\n case 0: pass').a.body[0].subject.f.copy(fix=True)
         self.assertEqual('(w := x,)', f.src)
 
-        f = FST.fromsrc('a[1:2, 3:4]').a.body[0].value.slice.f.copy(fix=False)
-        self.assertIs(f._fix(inplace=False), f)
+        # f = FST.fromsrc('a[1:2, 3:4]').a.body[0].value.slice.f.copy(fix=False)
+        # self.assertIs(f._fix(inplace=False), f)
         # self.assertRaises(SyntaxError, f.fix)
         # self.assertIs(None, f._fix(raise_=False))
 
@@ -31833,8 +31778,11 @@ i # post
         self.assertEqual('( i )', a.body[0].value.f.copy(precomms=False, postcomms=False, pars=True).src)
 
         if sys.version_info[:2] >= (3, 12):
+            f = FST.fromsrc('a[*b]').a.body[0].value.slice.f.copy(fix=True)
+            self.assertEqual('*b,', f.src)
+
             f = FST.fromsrc('tuple[*tuple[int, ...]]').a.body[0].value.slice.f.copy(fix=True)
-            self.assertEqual('(*tuple[int, ...],)', f.src)
+            self.assertEqual('*tuple[int, ...],', f.src)
 
     def test_copy_bulk(self):
         for fnm in PYFNMS:
