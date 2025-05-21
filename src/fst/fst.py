@@ -244,8 +244,8 @@ class FST:
         most operators have this location calculated from their children or source."""
 
         try:
-            return self._loc
-        except AttributeError:
+            return self._cache['loc']
+        except KeyError:
             pass
 
         ast = self.a
@@ -277,7 +277,7 @@ class FST:
             end_col = self.root._lines[end_ln].b2c(end_col_offset)
             loc     = fstloc(ln, col, end_ln, end_col)
 
-        self._loc = loc
+        self._cache['loc'] = loc
 
         return loc
 
@@ -287,14 +287,14 @@ class FST:
         has a `.loc` will have a `.bloc`."""
 
         try:
-            return self._bloc
-        except AttributeError:
+            return self._cache['bloc']
+        except KeyError:
             pass
 
         if (bloc := self.loc) and (decos := getattr(self.a, 'decorator_list', None)):
             bloc = fstloc(decos[0].f.ln, bloc[1], bloc[2], bloc[3])  # column of deco '@' will be same as our column
 
-        self._bloc = bloc
+        self._cache['bloc'] = bloc
 
         return bloc
 
@@ -453,6 +453,7 @@ class FST:
         self.a      = ast_or_src  # we don't assume `self.a` is `ast_or_src` if `.f` exists
         self.parent = parent
         self.pfield = pfield
+        self._cache = {}
 
         if parent is not None:
             self.root = parent.root
@@ -1564,12 +1565,12 @@ class FST:
         pars_end_ln, pars_end_col, ante_end_ln, ante_end_col, nrpars = self._rpars(exc_genexpr_solo=exc_genexpr_solo)
 
         if not nrpars:
-            return (self.loc, 0) if ret_npars else self.loc
+            return (self.bloc, 0) if ret_npars else self.bloc
 
         pars_ln, pars_col, ante_ln, ante_col, nlpars = self._lpars(exc_genexpr_solo=exc_genexpr_solo)
 
         if not nlpars:
-            return (self.loc, 0) if ret_npars else self.loc
+            return (self.bloc, 0) if ret_npars else self.bloc
 
         dpars = nlpars - nrpars
 
@@ -2030,7 +2031,6 @@ class FST:
         _maybe_fix_elif,
         _maybe_fix,
         _fix_block_del_last_child,
-        # _fix,
         _is_parenthesized_seq,
         _parenthesize_grouping,
         _parenthesize_tuple,
