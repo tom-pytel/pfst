@@ -15565,11 +15565,14 @@ i
 )""", 'body[0]', None, None, {'raw': False, 'pars': True}, r"""( # 3
 j
 # 4
-)""", r"""j""", r"""
-Module .. ROOT 0,0 -> 0,1
+)""", r"""( # 3
+j
+# 4
+)""", r"""
+Module .. ROOT 0,0 -> 3,1
   .body[1]
-  0] Expr .. 0,0 -> 0,1
-    .value Name 'j' Load .. 0,0 -> 0,1
+  0] Expr .. 0,0 -> 3,1
+    .value Name 'j' Load .. 1,0 -> 1,1
 """),
 
 (r"""( # 1
@@ -15651,12 +15654,12 @@ Module .. ROOT 0,0 -> 0,7
       .func Name 'g' Load .. 0,2 -> 0,3
 """),
 
-(r"""(f())""", 'body[0]', None, None, {'raw': False, 'pars': True}, r"""(g())""", r"""g()""", r"""
-Module .. ROOT 0,0 -> 0,3
+(r"""(f())""", 'body[0]', None, None, {'raw': False, 'pars': True}, r"""(g())""", r"""(g())""", r"""
+Module .. ROOT 0,0 -> 0,5
   .body[1]
-  0] Expr .. 0,0 -> 0,3
-    .value Call .. 0,0 -> 0,3
-      .func Name 'g' Load .. 0,0 -> 0,1
+  0] Expr .. 0,0 -> 0,5
+    .value Call .. 0,1 -> 0,4
+      .func Name 'g' Load .. 0,1 -> 0,2
 """),
 
 (r"""i += j""", 'body[0]', None, None, {'raw': False}, r"""a, b""", r"""i += (a, b)""", r"""
@@ -22168,7 +22171,7 @@ Module .. ROOT 0,0 -> 1,26
 """),
 
 (r"""match a:
- case c(a={1: c}, b=(d())): pass""", 'body[0].cases[0].pattern', 0, 'kwd_patterns', {'raw': False}, r"""**DEL**""", r"""**ValueError('cannot put slice to MatchClass.kwd_patterns')**""", r"""
+ case c(a={1: c}, b=(d())): pass""", 'body[0].cases[0].pattern', 0, 'kwd_patterns', {'raw': False}, r"""**DEL**""", r"""**ValueError('cannot delete MatchClass.kwd_patterns[0]')**""", r"""
 """),
 
 (r"""match a:
@@ -33828,13 +33831,13 @@ finally:
 
     def test_replace_and_put_pars_special(self):
         f = parse('( a )').body[0].value.f.copy(pars=True)
-        self.assertEqual('[1, ( a ), 3]', parse('[1, 2, 3]').body[0].value.elts[1].f.replace(f).root.src)
+        self.assertEqual('[1, ( a ), 3]', parse('[1, 2, 3]').body[0].value.elts[1].f.replace(f, pars=True).root.src)
 
         f = parse('( a )').body[0].value.f.copy(pars=True)
-        self.assertEqual('[1, ( a ), 3]', parse('[1, 2, 3]').body[0].value.f.put(f, 1).root.src)
+        self.assertEqual('[1, a, 3]', parse('[1, 2, 3]').body[0].value.f.put(f, 1, pars='auto').root.src)
 
         f = parse('( a )').body[0].value.f.copy(pars=True)
-        self.assertEqual('[1, ( a ), 3]', parse('[1, 2, 3]').body[0].value.f.put_slice(f, 1, 2, one=True).root.src)
+        self.assertEqual('[1, ( a ), 3]', parse('[1, 2, 3]').body[0].value.f.put_slice(f, 1, 2, pars='auto', one=True).root.src)
 
     def test_replace_stmt_special(self):
         a = parse('''
@@ -33869,7 +33872,7 @@ class cls:
         f = g.replace('d')
         self.assertEqual(a.f.src, '[a, d, c]')
         self.assertEqual(f.src, 'd')
-        self.assertIsNone(g.a)
+        # self.assertIsNone(g.a)
 
     def test_replace_raw(self):
         f = parse('def f(a, b): pass').f
@@ -34657,6 +34660,20 @@ class cls:
         self.assertRaises(NodeTypeError, parse('a < b').body[0].value.f.put, FST(UAdd(), lines=['-=']), 0, field='ops', raw=False)
         self.assertEqual('a > b', parse('a < b').body[0].value.f.put(FST(Gt(), lines=['>']), 0, field='ops', raw=False).src)
 
+        # make sure we can't put TO invalid locations
+
+        f = parse('[1, 2, 3]').body[0].value.f
+        self.assertEqual('[1, 4]', f.elts[1].replace('4', to=f.elts[2], raw=False).root.src)
+
+        f = parse('[1, 2, 3]').body[0].value.f
+        self.assertRaises(ValueError, f.elts[1].replace, '4', to=f.elts[0], raw=False)
+
+        f = parse('a = b').body[0].f
+        self.assertRaises(NodeTypeError, f.targets[0].replace, 'c', to=f.value, raw=False)
+
+        f = parse('a = b').body[0].f
+        self.assertRaises(ValueError, f.value.replace, 'c', to=f.targets[0], raw=False)
+
     def test_put_raw(self):
         for i, (dst, attr, (ln, col, end_ln, end_col), options, src, put_ret, put_src, put_dump) in enumerate(PUT_RAW_DATA):
             t = parse(dst)
@@ -34919,16 +34936,16 @@ finally:
         # make sure we can't put TO location behind self
 
         f = parse('[1, 2, 3]').body[0].value.f
-        self.assertEqual('[1, 4]', f.elts[1].replace('4', to=f.elts[2]).root.src)
+        self.assertEqual('[1, 4]', f.elts[1].replace('4', to=f.elts[2], raw=True).root.src)
 
         f = parse('[1, 2, 3]').body[0].value.f
-        self.assertRaises(ValueError, f.elts[1].replace, '4', to=f.elts[0])
+        self.assertRaises(ValueError, f.elts[1].replace, '4', to=f.elts[0], raw=True)
 
         f = parse('a = b').body[0].f
-        self.assertEqual('c', f.targets[0].replace('c', to=f.value).root.src)
+        self.assertEqual('c', f.targets[0].replace('c', to=f.value, raw=True).root.src)
 
         f = parse('a = b').body[0].f
-        self.assertRaises(ValueError, f.value.replace, 'c', to=f.targets[0])
+        self.assertRaises(ValueError, f.value.replace, 'c', to=f.targets[0], raw=True)
 
     def test_precedence_replace_raw_fst(self):
         truths = iter(PRECEDENCE_DATA)

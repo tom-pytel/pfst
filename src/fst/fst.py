@@ -653,50 +653,61 @@ class FST:
                 - `False`: None.
                 - `True`: All `Expr` multiline strings (as they serve no coding purpose).
                 - `'strict'`: Only multiline strings in expected docstring positions (functions and classes).
-                - `None`: Use default (`True`).
+                - `None`: Use default.
             - `precomms`: Preceding comments.
                 - `False`: No preceding comments.
                 - `True`: Single contiguous comment block immediately preceding position.
                 - `'all'`: Comment blocks (possibly separated by empty lines) preceding position.
-                - `None`: Use default (`True`).
+                - `None`: Use default.
             - `postcomms`: Trailing comments.
                 - `False`: No trailing comments.
                 - `True`: Only comment trailing on line of position, nothing past that on its own lines.
                 - `'block'`: Single contiguous comment block following position.
                 - `'all'`: Comment blocks (possibly separated by empty lines) following position.
-                - `None`: Use default (`True`).
+                - `None`: Use default.
             - `prespace`: Preceding empty lines (max of this and `pep8space` used).
                 - `False`: No empty lines.
                 - `True`: All empty lines.
                 - `int`: A maximum number of empty lines.
-                - `None`: Use default (`False`).
+                - `None`: Use default.
             - `postspace`: Same as `prespace` except for trailing empty lines.
             - `pep8space`: Preceding and trailing empty lines for function and class definitions.
                 - `False`: No empty lines.
                 - `True`: Two empty lines at module scope and one empty line in other scopes.
                 - `1`: One empty line in all scopes.
-                - `None`: Use default (`True`).
-            - `pars`: How parentheses are handled.
-                - `False`: Parentheses are not modified generally. Not copied with nodes or removed on cut or automatically
-                    modified on put, except added if needed for precedence. They are removed on slice cut due to starting and
-                    ending on different elements.
-                - `True`: Parentheses are handled automatically and cut from and copied with nodes. They are added or removed
-                    as needed for precedence when putting nodes (for raw put that means must be `AST` or `FST` nodes passed to
-                    raw put to node, not location).
-                - `'auto'`: Same as `True` except they are not returned with a cut or copied node, though they are still removed
-                    on cut.
-                - `None`: Use default (`'auto'`).
+                - `None`: Use default.
+            - `pars`: How parentheses are handled, can be `False`, `True` or `'auto'`. This is for individual puts, for
+                slices parentheses are always unchanged.
+                - `False`: Parentheses are not MODIFIED, doesn't mean remove all parentheses. Not copied with nodes or
+                    removed on put from source or destination.
+                - `True`: Parentheses are copied with nodes, added to copies if needed and not present, removed from
+                    destination on put if not needed there (but not source). For raw put this only applies to `AST` or
+                    `FST` nodes passed since those allow enough information for deciding parenthesization.
+                - `'auto'`: Same as `True` except they are not returned with a copy and possibly removed from source
+                    on put if not needed (removed from destination first if needed and present on both).
+                - `None`: Use default.
             - `elif_`: `True` or `False`, if putting a single `If` statement to an `orelse` field of a parent `If` statement then
-                put it as an `elif`. `None` means use default of `False`.
+                put it as an `elif`. `None` means use default.
             - `raw`: How to attempt at raw source operations. This may result in more nodes changed than just the targeted
                 one(s).
                 - `False`: Do not do raw source operations.
                 - `True`: Only do raw source operations.
                 - `'auto'`: Only do raw source operations if the normal operation fails in a way that raw might not.
-                - `None`: Use default (`'auto'`).
+                - `None`: Use default.
 
         **Returns:**
         - `options`: `dict` of previous values of changed parameters, reset with `set_options(**options)`.
+
+        **Notes:**
+        `pars` behavior:
+        ```
+                                                                False      True    'auto'
+        Copy pars from source on copy/cut:                         no       yes        no
+        Add pars needed for parsability to copy:                   no       yes       yes
+        Remove unneeded pars from destination on put:              no       yes       yes
+        Remove unneeded pars from source on put:                   no        no       yes
+        Add pars needed for parse/precedence to source on put:     no       yes       yes
+        ```
         """
 
         ret = {o: _OPTIONS[o] for o in options}
@@ -1554,7 +1565,8 @@ class FST:
         - `fstloc | None`: Location of enclosing parentheses if present else `self.bloc` (which can be `None`).
         - `(fstloc, count)`: Location of enclosing parentheses or `self.bloc` and number of nested parens found (if
             requested with `count`). `count` can be -1 in the case of a `GeneratorExp` sharing parentheses with
-            `Call` `arguments` if it is the only argument, if checking for this enabled with `shared`.
+            `Call` `arguments` if it is the only argument, but only if these parentheses are explicitly excluded with
+            `shared=False`.
         """
 
         if not pars or not isinstance(self.a, PARENTHESIZABLE):  # pars around all `alias`es or `withitem`s are considered part of the parent even if there is only one of those elements which looks parenthesized
@@ -1644,7 +1656,8 @@ class FST:
                tail: bool | None = False, head: bool | None = True, exclude: Optional['FST'] = None, *,
                offset_excluded: bool = True, self_: bool = True,
                ) -> 'FST':  # -> Self
-        """Offset ast node positions in the tree on or after (ln, col) by (delta line, col_offset) (column byte offset).
+        """Offset `AST` node positions in the tree on or after (ln, col) by (delta line, col_offset) (column byte
+        offset).
 
         This only offsets the positions in the `AST` nodes, doesn't change any text, so make sure that is correct before
         getting any `FST` locations from affected nodes otherwise they will be wrong.
@@ -1652,8 +1665,8 @@ class FST:
         Other nodes outside this tree might need offsetting so use only on root unless special circumstances.
 
         If offsetting a zero-length node (which can result from deleting elements of an unparenthesized tuple), both the
-        start and end location will be moved if exactly at offset point if `tail` is `False`. Otherwise if `tail` is
-        `True` then the start position will remain and the end position will be expanded, see "Behavior" below.
+        start and end location will be moved according to `tail` and `head` rules if exactly at offset point, see
+        "Behavior" below.
 
         **Parameters:**
         - `ln`: Line of offset point (0 based).
