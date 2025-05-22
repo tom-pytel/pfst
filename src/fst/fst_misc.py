@@ -490,7 +490,7 @@ def _loc_operator(self: 'FST') -> fstloc | None:
     return None
 
 
-def _loc_comprehension(self: 'FST') -> fstloc | None:
+def _loc_comprehension(self: 'FST') -> fstloc:
     """`comprehension` location from children. Called from `.loc`."""
 
     # assert isinstance(self.s, comprehension)
@@ -609,7 +609,7 @@ def _loc_arguments_empty(self: 'FST') -> fstloc:
     return fstloc(ln, col, end_ln, end_col)
 
 
-def _loc_withitem(self: 'FST') -> fstloc | None:
+def _loc_withitem(self: 'FST') -> fstloc:
     """`withitem` location from children. Called from `.loc`."""
 
     # assert isinstance(self.s, withitem)
@@ -648,7 +648,7 @@ def _loc_withitem(self: 'FST') -> fstloc | None:
     return fstloc(ln, col, end_ln, end_col)
 
 
-def _loc_match_case(self: 'FST') -> fstloc | None:
+def _loc_match_case(self: 'FST') -> fstloc:
     """`match_case` location from children. Called from `.loc`."""
 
     # assert isinstance(self.a, match_case)
@@ -668,7 +668,7 @@ def _loc_match_case(self: 'FST') -> fstloc | None:
     return fstloc(*start, end_ln, end_col + 1)
 
 
-def _loc_call_pars(self: 'FST') -> fstloc:
+def _loc_Call_pars(self: 'FST') -> fstloc:
     # assert isinstance(self.s, Call)
 
     ast                   = self.a
@@ -680,7 +680,7 @@ def _loc_call_pars(self: 'FST') -> fstloc:
     return fstloc(ln, col, end_ln, end_col)
 
 
-def _loc_subscript_brackets(self: 'FST') -> fstloc:
+def _loc_Subscript_brackets(self: 'FST') -> fstloc:
     # assert isinstance(self.s, Subscript)
 
     ast                   = self.a
@@ -692,7 +692,7 @@ def _loc_subscript_brackets(self: 'FST') -> fstloc:
     return fstloc(ln, col, end_ln, end_col)
 
 
-def _loc_matchclass_pars(self: 'FST') -> fstloc:
+def _loc_MatchClass_pars(self: 'FST') -> fstloc:
     # assert isinstance(self.s, MatchClass)
 
     ast                   = self.a
@@ -948,6 +948,24 @@ def _maybe_fix(self: 'FST', pars: bool = True):
                 self._parenthesize_tuple()
             else:
                 self._parenthesize_grouping()
+
+
+def _is_parenthesized_ImportFrom_names(self: 'FST') -> bool:
+    # assert isinstance(self.a, ImportFrom)
+
+    ln, col, _, _         = self.loc
+    end_ln, end_col, _, _ = self.a.names[0].f.loc
+
+    return _prev_src(self.root._lines, ln, col, end_ln, end_col).src.endswith('(')  # something is there for sure
+
+
+def _is_parenthesized_With_items(self: 'FST') -> bool:
+    # assert isinstance(self.a, (With, AsyncWith))
+
+    ln, col, _, _         = self.loc
+    end_ln, end_col, _, _ = self.a.items[0].f.loc  # will include any pars in child so don't need to depar
+
+    return _prev_src(self.root._lines, ln, col, end_ln, end_col).src.endswith('(')  # something is there for sure
 
 
 def _is_parenthesized_seq(self: 'FST', field: str = 'elts', lpar: str = '(', rpar: str = ')') -> bool:

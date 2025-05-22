@@ -6,7 +6,7 @@ from io import TextIOBase
 from typing import Any, Callable, Literal, Optional, TextIO, Union
 
 from .astutil import *
-from .astutil import TryStar, TemplateStr, Interpolation, type_param
+from .astutil import TypeAlias, TryStar, TemplateStr, Interpolation, type_param
 
 from .shared import (
     astfield, fstloc,
@@ -1278,8 +1278,8 @@ class FST:
 
         ast = self.a
 
-        if isinstance(ast, (Dict, Set, ListComp, SetComp, DictComp, GeneratorExp, Call, JoinedStr, TemplateStr,  # , Await?  # is the highest precedence thing but not technically atom
-                            Constant, Attribute, Subscript, Name, List,
+        if isinstance(ast, (List, Dict, Set, ListComp, SetComp, DictComp, GeneratorExp, Call, JoinedStr, TemplateStr,  # , Await?  # is the highest precedence thing but not technically atom
+                            Constant, Attribute, Subscript, Name,
                             MatchValue, MatchSingleton, MatchMapping, MatchClass, MatchStar, MatchAs,
                             expr_context, boolop, operator, unaryop, cmpop, comprehension, ExceptHandler, arguments,
                             arg, keyword, alias, withitem, type_param,
@@ -1321,8 +1321,8 @@ class FST:
 
         ast = self.a
 
-        if isinstance(ast, (Dict, Set, ListComp, SetComp, DictComp, GeneratorExp, FormattedValue, Interpolation,
-                            Name, List, Slice,
+        if isinstance(ast, (List, Dict, Set, ListComp, SetComp, DictComp, GeneratorExp, FormattedValue, Interpolation,
+                            Name, Slice,
                             MatchValue, MatchSingleton, MatchMapping,
                             expr_context, boolop, operator, unaryop, ExceptHandler, keyword, type_param,
                             stmt, match_case, mod, TypeIgnore)):
@@ -1357,11 +1357,11 @@ class FST:
         lines   = self.root._lines
 
         if isinstance(ast, Call):
-            children = [ast.func, _EnclosedASTMock(self._loc_call_pars())]
+            children = [ast.func, _EnclosedASTMock(self._loc_Call_pars())]
         elif isinstance(ast, Subscript):
-            children = [ast.value, _EnclosedASTMock(self._loc_subscript_brackets())]
+            children = [ast.value, _EnclosedASTMock(self._loc_Subscript_brackets())]
         elif isinstance(ast, MatchClass):
-            children = [ast.cls, _EnclosedASTMock(self._loc_matchclass_pars())]
+            children = [ast.cls, _EnclosedASTMock(self._loc_MatchClass_pars())]
         else:  # we don't check always-enclosed statement fields here because statements will never get here
             children = syntax_ordered_children(ast)
 
@@ -1387,35 +1387,68 @@ class FST:
     def is_enclosed_in_parents(self) -> bool:
         """Whether `self` is enclosed by some parent up the tree. This is different from `is_enclosed()` as it does not
         check for line continuations or anyting like that, just enclosing delimiters like from `Call` or `arguments`
-        parentheses, `List` brackets, `FormattedValue`, parent grouping parentheses, etc..."""
+        parentheses, `List` brackets, `FormattedValue`, parent grouping parentheses, etc... Statements do not generally
+        enclose except for a few parts like `FunctionDef` `args` or `type_params`, `ClassDef` `bases`, etc...
+
+        WARNING! This will not pick up parentheses which belong to `self` and the rules for this can be confusing. E.g.
+        In 'with (a): pass` the parentheses belong to the variable `a` while `with (a as b): pass` they belong to the
+        `with` because `alias`es cannot be parenthesized.
+        """
+
+        if isinstance(self.a, expr_context):  # so that the `ctx` of a List is not considered enclosed by default
+            if not (self := self.parent):
+                return False
 
         while parent := self.parent:
             parenta = parent.a
 
-            if isinstance(parenta, (Dict, Set, ListComp, SetComp, DictComp, GeneratorExp, JoinedStr, TemplateStr,
-                                    List, MatchMapping)):
+            if isinstance(parenta, (List, Dict, Set, ListComp, SetComp, DictComp, GeneratorExp,
+                                    FormattedValue, Interpolation, JoinedStr, TemplateStr,
+                                    MatchMapping)):
                 return True
 
-            if parent.is_parenthesized_tuple():
+            if isinstance(parenta, (FunctionDef, AsyncFunctionDef)):
+                return self.pfield.name in ('type_params', 'args')
+
+            if isinstance(parenta, ClassDef):
+                return self.pfield.name in ('type_params', 'bases', 'keywords')
+
+            if isinstance(parenta, TypeAlias):
+                return self.pfield.name == 'type_params'
+
+            if isinstance(parenta, ImportFrom):
+                return parent._is_parenthesized_ImportFrom_names()  # we know we are in `names`
+
+            if isinstance(parenta, (With, AsyncWith)):
+                return parent._is_parenthesized_With_items()  # we know we are in `names`
+
+            if isinstance(parenta, (stmt, ExceptHandler, match_case, mod, TypeIgnore)):
+                return False
+
+            if isinstance(parenta, Call):
+                if self.pfield.name in ('args', 'keywords'):
+                    return True
+
+            elif isinstance(parenta, Subscript):
+                if self.pfield.name == 'slice':
+                    return True
+
+            elif isinstance(parenta, MatchClass):
+                if self.pfield.name in ('patterns', 'kwd_attrs', 'kwd_patterns'):
+                    return True
+
+            elif (ret := parent.is_parenthesized_tuple()) is not None:
+                if ret:
+                    return True
+
+            elif (ret := parent.is_enclosed_matchsequence()) is not None:
+                if ret:
+                    return True
+
+            if parent.pars(True)[1]:
                 return True
 
-            if parent.is_enclosed_matchsequence():
-                return True
-
-
-            # ImportFrom.names - if parenthesized
-            # With/AsyncWith.items - if parenthesized
-
-            # Call.args/keywords
-            # Subscript.slice
-            # MatchClass.patterns/kwd_attrs/kwd_patterns
-
-
-
-            if isinstance(parenta, (expr, pattern)) and parent.pars(True)[1]:
-                return True
-
-
+            self = parent
 
         return False
 
@@ -1490,12 +1523,6 @@ class FST:
 
         return ((parent := self.parent) and self.pfield.name == 'bases' and len((parenta := parent.a).bases) == 1 and
                 not parenta.keywords)
-
-    # def is_solo_withitem_context_expr(self) -> bool:
-    #     """Whether `self` is a solo `withitem` element of `With/AsyncWith.items` without an `optional_vars`."""
-
-    #     return ((parent := self.parent) and self.pfield.name == 'context_expr' and not parent.a.optional_vars and
-    #             (grandparent := parent.parent) and parent.pfield.name == 'items' and len(grandparent.a.items) == 1)
 
     def get_indent(self) -> str:
         """Determine proper indentation of node at `stmt` (or other similar) level at or above `self`. Even if it is a
@@ -1623,16 +1650,16 @@ class FST:
         pars_end_ln, pars_end_col, ante_end_ln, ante_end_col, nrpars = self._rpars(shared=shared)
 
         if not nrpars:
-            val = self._cache[key] = (self.bloc, 0)
+            locncount = self._cache[key] = (self.bloc, 0)
 
-            return val if count else self.bloc
+            return locncount if count else self.bloc
 
         pars_ln, pars_col, ante_ln, ante_col, nlpars = self._lpars(shared=shared)
 
         if not nlpars:
-            val = self._cache[key] = (self.bloc, 0)
+            locncount = self._cache[key] = (self.bloc, 0)
 
-            return val if count else self.bloc
+            return locncount if count else self.bloc
 
         dpars = nlpars - nrpars
 
@@ -1659,10 +1686,10 @@ class FST:
         else:
             npars = nrpars
 
-        loc = fstloc(pars_ln, pars_col, pars_end_ln, pars_end_col)
-        val = self._cache[key] = (loc, npars)
+        loc       = fstloc(pars_ln, pars_col, pars_end_ln, pars_end_col)
+        locncount = self._cache[key] = (loc, npars)
 
-        return val if count else loc
+        return locncount if count else loc
 
     # ------------------------------------------------------------------------------------------------------------------
     # Low level modifications
@@ -2052,9 +2079,9 @@ class FST:
         _loc_arguments_empty,
         _loc_withitem,
         _loc_match_case,
-        _loc_call_pars,
-        _loc_subscript_brackets,
-        _loc_matchclass_pars,
+        _loc_Call_pars,
+        _loc_Subscript_brackets,
+        _loc_MatchClass_pars,
         _dict_key_or_mock_loc,
         _touch,
         _set_end_pos,
@@ -2065,6 +2092,8 @@ class FST:
         _maybe_fix_set,
         _maybe_fix_elif,
         _maybe_fix,
+        _is_parenthesized_ImportFrom_names,
+        _is_parenthesized_With_items,
         _is_parenthesized_seq,
         _parenthesize_grouping,
         _parenthesize_tuple,
