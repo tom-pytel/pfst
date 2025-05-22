@@ -1286,10 +1286,10 @@ class FST:
                             stmt, match_case, mod, TypeIgnore)):
             return True
 
-        if (ret := self.is_parenthesized_tuple()) is not None:  # if this is False then cannot be enclosed in grouping parens because that would reparse to a parenthesized Tuple and so is inconsistent
+        if (ret := self.is_parenthesized_tuple()) is not None:  # if this is False then cannot be enclosed in grouping pars because that would reparse to a parenthesized Tuple and so is inconsistent
             return ret
 
-        if (ret := self.is_enclosed_matchsequence()) is not None:  # like Tuple, cannot be enclosed in grouping parens
+        if (ret := self.is_enclosed_matchsequence()) is not None:  # like Tuple, cannot be enclosed in grouping pars
             return ret
 
         assert isinstance(ast, (expr, pattern))
@@ -1308,7 +1308,7 @@ class FST:
         `is not` or `not in` will return `False` if not on a single line or not parenthesized.
 
         This function does NOT check whether `self` is enclosed by some parent up the tree if it is not enclosed itself,
-        for that see `is_enclosed_by_parents()`.
+        for that see `is_enclosed_in_parents()`.
 
         **Parameters:**
         - `pars`: Whether to check for grouping parentheses or not for nodes which are not enclosed or otherwise
@@ -1384,17 +1384,40 @@ class FST:
 
         return True
 
-    def is_enclosed_by_parents(self) -> bool:
+    def is_enclosed_in_parents(self) -> bool:
         """Whether `self` is enclosed by some parent up the tree. This is different from `is_enclosed()` as it does not
         check for line continuations or anyting like that, just enclosing delimiters like from `Call` or `arguments`
         parentheses, `List` brackets, `FormattedValue`, parent grouping parentheses, etc..."""
 
-        pass
+        while parent := self.parent:
+            parenta = parent.a
+
+            if isinstance(parenta, (Dict, Set, ListComp, SetComp, DictComp, GeneratorExp, JoinedStr, TemplateStr,
+                                    List, MatchMapping)):
+                return True
+
+            if parent.is_parenthesized_tuple():
+                return True
+
+            if parent.is_enclosed_matchsequence():
+                return True
+
+
+            # ImportFrom.names - if parenthesized
+            # With/AsyncWith.items - if parenthesized
+
+            # Call.args/keywords
+            # Subscript.slice
+            # MatchClass.patterns/kwd_attrs/kwd_patterns
 
 
 
+            if isinstance(parenta, (expr, pattern)) and parent.pars(True)[1]:
+                return True
 
 
+
+        return False
 
     def is_parenthesized_tuple(self) -> bool | None:
         """Whether `self` is a parenthesized `Tuple` or not, or not a `Tuple` at all.
@@ -1461,6 +1484,18 @@ class FST:
 
         return ((parent := self.parent) and self.pfield.name == 'args' and isinstance(self.a, GeneratorExp) and
                 isinstance(parenta := parent.a, Call) and not parenta.keywords and len(parenta.args) == 1)
+
+    def is_solo_class_base(self) -> bool:
+        """Whether `self` is a solo class base in list without any keywords."""
+
+        return ((parent := self.parent) and self.pfield.name == 'bases' and len((parenta := parent.a).bases) == 1 and
+                not parenta.keywords)
+
+    # def is_solo_withitem_context_expr(self) -> bool:
+    #     """Whether `self` is a solo `withitem` element of `With/AsyncWith.items` without an `optional_vars`."""
+
+    #     return ((parent := self.parent) and self.pfield.name == 'context_expr' and not parent.a.optional_vars and
+    #             (grandparent := parent.parent) and parent.pfield.name == 'items' and len(grandparent.a.items) == 1)
 
     def get_indent(self) -> str:
         """Determine proper indentation of node at `stmt` (or other similar) level at or above `self`. Even if it is a
@@ -1567,8 +1602,8 @@ class FST:
 
         **Returns:**
         - `fstloc | None`: Location of enclosing parentheses if present else `self.bloc` (which can be `None`).
-        - `(fstloc, count)`: Location of enclosing parentheses or `self.bloc` and number of nested parens found (if
-            requested with `count`). `count` can be -1 in the case of a `GeneratorExp` sharing parentheses with
+        - `(fstloc, count)`: Location of enclosing parentheses or `self.bloc` and number of nested parenthesess found
+            (if requested with `count`). `count` can be -1 in the case of a `GeneratorExp` sharing parentheses with
             `Call` `arguments` if it is the only argument, but only if these parentheses are explicitly excluded with
             `shared=False`.
         """
@@ -1614,7 +1649,7 @@ class FST:
         elif dpars:
             raise RuntimeError('should not get here')
 
-        elif self.pfield == ('bases', 0) and len((a := self.parent.a).bases) == 1 and not a.keywords: # special case "class cls(base)", need to preserve bases parens, don't need to check for comma because if there is one then pars would be unbalanced
+        elif self.is_solo_class_base():  # special case where we don't want the outermost pars, don't need to check for comma because if there is one then pars would be unbalanced, to not erase class base pars when replacing
             pars_ln      = ante_ln
             pars_col     = ante_col
             pars_end_ln  = ante_end_ln

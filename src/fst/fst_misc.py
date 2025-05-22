@@ -619,9 +619,10 @@ def _loc_withitem(self: 'FST') -> fstloc | None:
     ce_loc = ce.loc
 
     if not (ov := ast.optional_vars):
-        return ce_loc
+        ov = ce
+    else:
+        ov = ov.f
 
-    ov     = ov.f
     ov_loc = ov.loc
 
     pars_end_ln, pars_end_col, ante_end_ln, ante_end_col, nrpars = ce._rpars('allown')  # 'allown' so it doesn't recurse into calling `.loc`

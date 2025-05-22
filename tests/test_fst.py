@@ -17252,7 +17252,7 @@ Module .. ROOT 0,0 -> 0,14
   .body[1]
   0] With .. 0,0 -> 0,14
     .items[1]
-    0] withitem .. 0,6 -> 0,7
+    0] withitem .. 0,5 -> 0,8
       .context_expr Name 'a' Load .. 0,6 -> 0,7
     .body[1]
     0] Pass .. 0,10 -> 0,14
@@ -17275,7 +17275,7 @@ Module .. ROOT 0,0 -> 0,14
   .body[1]
   0] With .. 0,0 -> 0,14
     .items[1]
-    0] withitem .. 0,6 -> 0,7
+    0] withitem .. 0,5 -> 0,8
       .context_expr Name 'a' Load .. 0,6 -> 0,7
     .body[1]
     0] Pass .. 0,10 -> 0,14
@@ -29963,7 +29963,7 @@ def f():
         self.assertEqual((0, 3, 0, 25), parse('[i for i in range(5) if i]').body[0].value.generators[0].f.loc)  # comprehension
         self.assertEqual((0, 3, 0, 25), parse('(i for i in range(5) if i)').body[0].value.generators[0].f.loc)  # comprehension
 
-        self.assertEqual((0, 7, 0, 10), parse('with ( f() ): pass').body[0].items[0].f.loc)  # withitem w/ parens
+        self.assertEqual((0, 5, 0, 12), parse('with ( f() ): pass').body[0].items[0].f.loc)  # withitem only context_expr w/ parens
         self.assertEqual((0, 5, 0, 21), parse('with ( f() ) as ( f ): pass').body[0].items[0].f.loc)  # withitem w/ parens
         self.assertEqual((1, 2, 1, 28), parse('match a:\n  case ( 2 ) if a == 1: pass').body[0].cases[0].f.loc)  # match_case w/ parens
         self.assertEqual((0, 3, 0, 33), parse('[i for ( i ) in range(5) if ( i ) ]').body[0].value.generators[0].f.loc)  # comprehension w/ parens
@@ -29974,7 +29974,7 @@ def f():
         self.assertEqual('( f() ) as ( f )', parse('with ( f() ) as ( f ): pass').body[0].items[0].f.src)
         self.assertEqual('( f() ) as ( f )', parse('with ( f() ) as ( f ), ( g() ) as ( g ): pass').body[0].items[0].f.src)
         self.assertEqual('( g() ) as ( g )', parse('with ( f() ) as ( f ), ( g() ) as ( g ): pass').body[0].items[1].f.src)
-        self.assertEqual('f()', parse('with ( f() ): pass').body[0].items[0].f.src)
+        self.assertEqual('( f() )', parse('with ( f() ): pass').body[0].items[0].f.src)
         self.assertEqual('a as b', parse('with (a as b): pass').body[0].items[0].f.src)
         self.assertEqual('a as b', parse('with (a as b, c as d): pass').body[0].items[0].f.src)
         self.assertEqual('c as d', parse('with (a as b, c as d): pass').body[0].items[1].f.src)
@@ -30776,6 +30776,10 @@ y")
         if sys.version_info[:2] >= (3, 12):
             self.assertTrue(FST('a, f"{(1,\n2)}", c').body[0].value.copy(fix=False, pars=False).is_enclosed())
 
+    def test_is_enclosed_in_parents(self):
+        pass
+
+
     def test_is_parenthesized_tuple(self):
         self.assertTrue(parse('(1, 2)').body[0].value.f.is_parenthesized_tuple())
         self.assertTrue(parse('(1,)').body[0].value.f.is_parenthesized_tuple())
@@ -31521,6 +31525,20 @@ def func():
         self.assertEqual((0, 8, 0, 9), parse('class c(b,): pass').body[0].bases[0].f.pars())
         self.assertEqual((0, 8, 0, 11), parse('class c((b)): pass').body[0].bases[0].f.pars())
         self.assertEqual((0, 8, 0, 11), parse('class c((b),): pass').body[0].bases[0].f.pars())
+
+        self.assertEqual((0, 5, 0, 8), parse('with (a): pass').body[0].items[0].context_expr.f.pars())
+        self.assertEqual((0, 5, 0, 8), parse('with (a): pass').body[0].items[0].f.pars())
+        self.assertEqual((0, 5, 0, 10), parse('with ((a)): pass').body[0].items[0].context_expr.f.pars())
+        self.assertEqual((0, 5, 0, 10), parse('with ((a)): pass').body[0].items[0].f.pars())
+        self.assertEqual((0, 6, 0, 7), parse('with (a as b): pass').body[0].items[0].context_expr.f.pars())
+        self.assertEqual((0, 6, 0, 12), parse('with (a as b): pass').body[0].items[0].f.pars())
+        self.assertEqual((0, 6, 0, 9), parse('with ((a) as b): pass').body[0].items[0].context_expr.f.pars())
+        self.assertEqual((0, 6, 0, 14), parse('with ((a) as b): pass').body[0].items[0].f.pars())
+        self.assertRaises(SyntaxError, parse, 'with ((a as b)): pass')
+
+
+
+
 
     def test_copy_pars(self):
         self.assertEqual('a', parse('(a)').body[0].value.f.copy(pars=False).root.src)
