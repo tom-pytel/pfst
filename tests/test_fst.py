@@ -34674,6 +34674,31 @@ class cls:
         f = parse('a = b').body[0].f
         self.assertRaises(ValueError, f.value.replace, 'c', to=f.targets[0], raw=False)
 
+        # Generally reject FormattedValue and Slice
+
+        f = parse('a = b').body[0].f
+        s = parse('s[a:b]').body[0].value.slice.f.copy()
+        v = parse('f"{a}"').body[0].value.values[0].f.copy()  # .src will be wrong on py < 3.12 but we only care about the AST
+        self.assertRaises(NodeTypeError, f.put, s, field='value', raw=False)
+        self.assertRaises(NodeTypeError, f.put, v, field='value', raw=False)
+
+        # Slice in tuple
+
+        f = parse('s[a:b, x:y:z]').body[0].value.f
+        t = f.slice.copy()
+        s0 = t.elts[0].copy()
+        s1 = t.elts[1].copy()
+        self.assertEqual('a:b, x:y:z', t.src)
+        self.assertEqual('a:b', s0.src)
+        self.assertEqual('x:y:z', s1.src)
+
+        f.put(t, field='slice', raw=False)
+        self.assertEqual('a:b, x:y:z', f.slice.src)
+        f.slice.put(s1, 0, raw=False)
+        self.assertEqual('x:y:z, x:y:z', f.slice.src)
+        f.slice.put(s0, 1, raw=False)
+        self.assertEqual('x:y:z, a:b', f.slice.src)
+
     def test_put_raw(self):
         for i, (dst, attr, (ln, col, end_ln, end_col), options, src, put_ret, put_src, put_dump) in enumerate(PUT_RAW_DATA):
             t = parse(dst)

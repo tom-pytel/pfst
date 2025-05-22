@@ -200,17 +200,6 @@ def _put_one_stmtish(self: 'FST', code: Code | None, idx: int | None, field: str
     return None if code is None else getattr(self.a, field)[idx].f
 
 
-def _put_one_tuple_list_or_set(self: 'FST', code: Code | None, idx: int | None, field: str, child: list[AST],
-                               static: None, **options) -> Optional['FST']:
-    """Put or delete a single expression to a Tuple, List or Set elts."""
-
-    # self._put_slice_tuple_list_or_set(code, *_slice_indices(self, idx, field, child, options.get('to')), field, True,
-    #                                   **options)
-    self._put_slice(code, *_slice_indices(self, idx, field, child, options.get('to')), field, True, **options)
-
-    return None if code is None else getattr(self.a, field)[idx].f
-
-
 # ......................................................................................................................
 # exprish (expr, pattern, comprehension, etc...)
 
@@ -595,8 +584,9 @@ def _put_one(self: 'FST', code: Code | None, idx: int | None, field: str | None,
 # ......................................................................................................................
 # field info
 
-_restrict_default = [FormattedValue, Interpolation, Slice]
-_oneinfo_default  = oneinfo()
+_restrict_default     = [FormattedValue, Interpolation, Slice]
+_restrict_fstr_values = [FormattedValue, Interpolation]
+_oneinfo_default      = oneinfo()
 
 def _one_info_constant(self: 'FST', static: onestatic, idx: int | None, field: str) -> oneinfo:  # only Constant and MatchSingleton
     return oneinfo('', None, self.loc)
@@ -605,7 +595,7 @@ def _one_info_exprish_required(self: 'FST', static: onestatic, idx: int | None, 
     return _oneinfo_default
 
 _onestatic_expr_required             = onestatic(_one_info_exprish_required, _restrict_default)
-_onestatic_Slice_required            = onestatic(_one_info_exprish_required, [FormattedValue, Interpolation], coerce=_code_as_slice)
+_onestatic_Slice_required            = onestatic(_one_info_exprish_required, _restrict_fstr_values, coerce=_code_as_slice)
 _onestatic_comprehension_required    = onestatic(_one_info_exprish_required, _restrict_default, coerce=_code_as_comprehension)
 _onestatic_arguments_required        = onestatic(_one_info_exprish_required, _restrict_default, coerce=_code_as_arguments)
 _onestatic_arguments_lambda_required = onestatic(_one_info_exprish_required, _restrict_default, coerce=_code_as_arguments_lambda)
@@ -1237,7 +1227,7 @@ _PUT_ONE_HANDLERS = {
     (Starred, 'value'):                   (_put_one_exprish_required, None, _onestatic_expr_required), # expr
     (Name, 'id'):                         (_put_one_identifier_required, None, _onestatic_identifier_required), # identifier
     (List, 'elts'):                       (_put_one_exprish_sliceable, None, _onestatic_expr_required), # expr*
-    (Tuple, 'elts'):                      (_put_one_exprish_sliceable, None, _onestatic_expr_required), # expr*
+    (Tuple, 'elts'):                      (_put_one_exprish_sliceable, None, onestatic(_one_info_exprish_required, _restrict_fstr_values)), # expr*
     (Slice, 'lower'):                     (_put_one_exprish_optional, None, _onestatic_Slice_lower), # expr?
     (Slice, 'upper'):                     (_put_one_exprish_optional, None, _onestatic_Slice_upper), # expr?
     (Slice, 'step'):                      (_put_one_exprish_optional, None, _onestatic_Slice_step), # expr?
