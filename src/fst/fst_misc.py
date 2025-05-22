@@ -134,6 +134,97 @@ def _new_empty_set_curlies(only_ast: bool = False, lineno: int = 1, col_offset: 
     return ast if only_ast else FST(ast, ['{}'], from_=from_)
 
 
+def _repr_tail(self: 'FST') -> str:
+    try:
+        loc = self.loc
+    except Exception:  # maybe in middle of operation changing locations and lines
+        loc = '????'
+
+    self.touch(False, True, True)  # for debugging because we may have cached locs which would not have otherwise been cached during execution
+
+    tail = ' ROOT' if self.is_root else ''
+
+    return f'{tail} {loc[0]},{loc[1]} -> {loc[2]},{loc[3]}' if loc else tail
+
+
+def _dump(self: 'FST', full: bool = False, indent: int = 2, cind: str = '', prefix: str = '',
+          linefunc: Callable = print, compact: bool = False, eol: str = ''):
+    tail = self._repr_tail()
+    sind = ' ' * indent
+    ast  = self.a
+
+    if compact:
+        if isinstance(ast, Name):
+            linefunc(f'{cind}{prefix}Name {ast.id!r} {ast.ctx.__class__.__qualname__}{" .." * bool(tail)}{tail}'
+                        f'{eol}')
+
+            return
+
+        if isinstance(ast, Constant):
+            if ast.kind is None:
+                linefunc(f'{cind}{prefix}Constant {ast.value!r}{" .." * bool(tail)}{tail}{eol}')
+            else:
+                linefunc(f'{cind}{prefix}Constant {ast.value!r} {ast.kind}{" .." * bool(tail)}{tail}{eol}')
+
+            return
+
+    linefunc(f'{cind}{prefix}{ast.__class__.__qualname__}{" .." * bool(tail)}{tail}{eol}')
+
+    for name, child in iter_fields(ast):
+        is_list = isinstance(child, list)
+
+        if compact:
+            if child is None and not full:
+                continue
+
+            if name == 'ctx':
+                linefunc(f'{sind}{cind}.{name} {child.__class__.__qualname__ if isinstance(child, AST) else child}'
+                            f'{eol}')
+
+                continue
+
+            if (name in ('type', 'id', 'attr', 'module', 'arg', 'vararg', 'kwarg', 'rest', 'format_spec',
+                            'name', 'value', 'left', 'right', 'operand', 'returns', 'target',
+                            'annotation', 'iter', 'test','exc', 'cause', 'msg', 'elt', 'key', 'func',
+                            'slice', 'lower', 'upper', 'step', 'guard', 'context_expr', 'optional_vars',
+                            'cls', 'bound', 'default_value', 'pattern', 'subject',
+                            'type_comment', 'lineno', 'tag', 'op',
+                            'simple', 'level', 'conversion', 'str', 'is_async', 'lineno')
+                        or (not is_list and name in
+                            ('body', 'orelse'))
+            ):
+                if isinstance(child, AST):
+                    child.f._dump(full, indent, cind + sind, f'.{name} ', linefunc, compact, eol)
+                else:
+                    linefunc(f'{sind}{cind}.{name} {child!r}{eol}')
+
+                continue
+
+            if name == 'args' and isinstance(child, arguments):
+                if child.posonlyargs or child.args or child.vararg or child.kwonlyargs or child.kwarg:
+                    child.f._dump(full, indent, cind + sind, '.args ', linefunc, compact, eol)
+
+                    continue
+
+                elif not full:
+                    continue
+
+        if full or (child != []):
+            linefunc(f'{sind}{cind}.{name}{f"[{len(child)}]" if is_list else ""}{eol}')
+
+        if is_list:
+            for i, ast in enumerate(child):
+                if isinstance(ast, AST):
+                    ast.f._dump(full, indent, cind + sind, f'{i}] ', linefunc, compact, eol)
+                else:
+                    linefunc(f'{sind}{cind}{i}] {ast!r}{eol}')
+
+        elif isinstance(child, AST):
+            child.f._dump(full, indent, cind + sind * 2, '', linefunc, compact, eol)
+        else:
+            linefunc(f'{sind}{sind}{cind}{child!r}{eol}')
+
+
 def _make_fst_tree(self: 'FST', stack: list['FST'] | None = None):
     """Create tree of FST nodes, one for each AST node from root. Call only on root or with pre-made stack of nodes
     to walk."""
@@ -226,97 +317,6 @@ def _set_ctx(self: 'FST', ctx: type[expr_context]):
                 stack.extend(a.elts)
             elif is_starred:
                 stack.append(a.value)
-
-
-def _repr_tail(self: 'FST') -> str:
-    try:
-        loc = self.loc
-    except Exception:  # maybe in middle of operation changing locations and lines
-        loc = '????'
-
-    self.touch(False, True, True)  # for debugging because we may have cached locs which would not have otherwise been cached during execution
-
-    tail = ' ROOT' if self.is_root else ''
-
-    return f'{tail} {loc[0]},{loc[1]} -> {loc[2]},{loc[3]}' if loc else tail
-
-
-def _dump(self: 'FST', full: bool = False, indent: int = 2, cind: str = '', prefix: str = '',
-          linefunc: Callable = print, compact: bool = False, eol: str = ''):
-    tail = self._repr_tail()
-    sind = ' ' * indent
-    ast  = self.a
-
-    if compact:
-        if isinstance(ast, Name):
-            linefunc(f'{cind}{prefix}Name {ast.id!r} {ast.ctx.__class__.__qualname__}{" .." * bool(tail)}{tail}'
-                        f'{eol}')
-
-            return
-
-        if isinstance(ast, Constant):
-            if ast.kind is None:
-                linefunc(f'{cind}{prefix}Constant {ast.value!r}{" .." * bool(tail)}{tail}{eol}')
-            else:
-                linefunc(f'{cind}{prefix}Constant {ast.value!r} {ast.kind}{" .." * bool(tail)}{tail}{eol}')
-
-            return
-
-    linefunc(f'{cind}{prefix}{ast.__class__.__qualname__}{" .." * bool(tail)}{tail}{eol}')
-
-    for name, child in iter_fields(ast):
-        is_list = isinstance(child, list)
-
-        if compact:
-            if child is None and not full:
-                continue
-
-            if name == 'ctx':
-                linefunc(f'{sind}{cind}.{name} {child.__class__.__qualname__ if isinstance(child, AST) else child}'
-                            f'{eol}')
-
-                continue
-
-            if (name in ('type', 'id', 'attr', 'module', 'arg', 'vararg', 'kwarg', 'rest', 'format_spec',
-                            'name', 'value', 'left', 'right', 'operand', 'returns', 'target',
-                            'annotation', 'iter', 'test','exc', 'cause', 'msg', 'elt', 'key', 'func',
-                            'slice', 'lower', 'upper', 'step', 'guard', 'context_expr', 'optional_vars',
-                            'cls', 'bound', 'default_value', 'pattern', 'subject',
-                            'type_comment', 'lineno', 'tag', 'op',
-                            'simple', 'level', 'conversion', 'str', 'is_async', 'lineno')
-                        or (not is_list and name in
-                            ('body', 'orelse'))
-            ):
-                if isinstance(child, AST):
-                    child.f._dump(full, indent, cind + sind, f'.{name} ', linefunc, compact, eol)
-                else:
-                    linefunc(f'{sind}{cind}.{name} {child!r}{eol}')
-
-                continue
-
-            if name == 'args' and isinstance(child, arguments):
-                if child.posonlyargs or child.args or child.vararg or child.kwonlyargs or child.kwarg:
-                    child.f._dump(full, indent, cind + sind, '.args ', linefunc, compact, eol)
-
-                    continue
-
-                elif not full:
-                    continue
-
-        if full or (child != []):
-            linefunc(f'{sind}{cind}.{name}{f"[{len(child)}]" if is_list else ""}{eol}')
-
-        if is_list:
-            for i, ast in enumerate(child):
-                if isinstance(ast, AST):
-                    ast.f._dump(full, indent, cind + sind, f'{i}] ', linefunc, compact, eol)
-                else:
-                    linefunc(f'{sind}{cind}{i}] {ast!r}{eol}')
-
-        elif isinstance(child, AST):
-            child.f._dump(full, indent, cind + sind * 2, '', linefunc, compact, eol)
-        else:
-            linefunc(f'{sind}{sind}{cind}{child!r}{eol}')
 
 
 def _prev_ast_bound(self: 'FST', with_loc: bool | Literal['all', 'own', 'allown'] = True) -> tuple[int, int]:

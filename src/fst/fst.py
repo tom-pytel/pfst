@@ -365,7 +365,7 @@ class FST:
 
     def __repr__(self) -> str:
         tail = self._repr_tail()
-        head = f'<FST.{self.a.__class__.__name__}{tail}>'
+        head = f'<{self.a.__class__.__name__}{tail}>'
 
         if not _REPR_SRC_LINES:
             return head
