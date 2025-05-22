@@ -1018,7 +1018,7 @@ def _parenthesize_grouping(self: 'FST', whole: bool = True):
     - `whole`: If at root then parenthesize whole source instead of just node.
     """
 
-    ln, col, end_ln, end_col = self.wbloc if whole else self.bloc
+    ln, col, end_ln, end_col = self.whole_loc if whole and self.is_root else self.loc
 
     self.put_src([')'], end_ln, end_col, end_ln, end_col, True, True, self, offset_excluded=False)
     self.offset(*self.put_src(['('], ln, col, ln, col, False, False, self, offset_excluded=False))
@@ -1035,7 +1035,7 @@ def _parenthesize_tuple(self: 'FST', whole: bool = True):
 
     # assert isinstance(self.a, Tuple)
 
-    ln, col, end_ln, end_col = self.wbloc if whole else self.loc
+    ln, col, end_ln, end_col = self.whole_loc if whole and self.is_root else self.loc
 
     self.put_src([')'], end_ln, end_col, end_ln, end_col, True, False, self)
 
@@ -1089,6 +1089,8 @@ def _unparenthesize_tuple(self: 'FST') -> bool:
     **Returns:**
     - `bool`: Whether parentheses were removed or not (they may not be for an empty tuple).
     """
+
+    # assert isinstance(self.a, Tuple)
 
     if not (elts := self.a.elts):
         return False

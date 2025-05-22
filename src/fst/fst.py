@@ -230,6 +230,12 @@ class FST:
         return isinstance(self.a, ANONYMOUS_SCOPE)
 
     @property
+    def whole_loc(self) -> fstloc:
+        """Whole source location, from 0,0 to end of entire source, regardless of node being checked."""
+
+        return fstloc(0, 0, len(ls := self._lines) - 1, len(ls[-1]))
+
+    @property
     def has_own_loc(self) -> bool:
         """`True` when the node has its own location which comes directly from AST `lineno` and other location fields.
         Otherwise `False` if no `loc` or `loc` is calculated."""
@@ -296,13 +302,6 @@ class FST:
         self._cache['bloc'] = bloc
 
         return bloc
-
-    @property
-    def wbloc(self) -> fstloc | None:
-        """Whole source location if at root, regardless of actual root node location which may only span part of the
-        source due to parentheses or comments. If not root node then is just `bloc`."""
-
-        return fstloc(0, 0, len(ls := self._lines) - 1, len(ls[-1])) if self.is_root else self.bloc
 
     @property
     def ln(self) -> int:
