@@ -339,7 +339,7 @@ def _next_ast_bound(self: 'FST', with_loc: bool | Literal['all', 'own', 'allown'
     return len(lines := self.root._lines) - 1, len(lines[-1])
 
 
-def _lpars(self: 'FST', with_loc: bool | Literal['all', 'own', 'allown'] = True, *, exc_genexpr_solo: bool = False,
+def _lpars(self: 'FST', with_loc: bool | Literal['all', 'own', 'allown'] = True, *, shared: bool = True,
            ) -> tuple[int, int, int, int, int]:
     """Return the `ln` and `col` of the leftmost and ante-leftmost opening parentheses and the total number of
     opening parentheses. Doesn't take into account anything like enclosing argument parentheses, just counts. The
@@ -349,8 +349,8 @@ def _lpars(self: 'FST', with_loc: bool | Literal['all', 'own', 'allown'] = True,
     **Parameters:**
     - `with_loc`: Parameter to use for AST bound search. `True` normally or `'allown'` in special cases like
         searching for parentheses to figure out node location from children from `.loc` itself.
-    - `exc_genexpr_solo`: If `True`, then will exclude left parenthesis of a single call argument generator
-        expression if it is shared with the call() arguments enclosing parentheses.
+    - `shared`: If `True`, then will include left parenthesis of a single call argument generator expression if it is
+        shared with the call() arguments enclosing parentheses, otherwise no.
 
     **Returns:**
     - `(ln, col, ante_ln, ante_col, npars)`: The leftmost and ante-leftmost positions and total count of opening
@@ -362,7 +362,7 @@ def _lpars(self: 'FST', with_loc: bool | Literal['all', 'own', 'allown'] = True,
     if self.is_solo_call_arg():  # special case single arg in a call so we must exclude the call arguments parentheses
         pars_ln, pars_col, _, _, npars = ret
 
-        if exc_genexpr_solo and not npars and isinstance(self.a, GeneratorExp):  # npars == 0 indicates shared parentheses
+        if not shared and not npars and isinstance(self.a, GeneratorExp):  # npars == 0 indicates shared parentheses
             ln, col, _, _  = self.loc
             col           += 1
 
@@ -373,7 +373,7 @@ def _lpars(self: 'FST', with_loc: bool | Literal['all', 'own', 'allown'] = True,
     return ret
 
 
-def _rpars(self: 'FST', with_loc: bool | Literal['all', 'own', 'allown'] = True, *, exc_genexpr_solo: bool = False,
+def _rpars(self: 'FST', with_loc: bool | Literal['all', 'own', 'allown'] = True, *, shared: bool = True,
            ) -> tuple[int, int, int, int, int]:
     """Return the `end_ln` and `end_col` of the rightmost and ante-rightmost closing parentheses and the total
     number of closing parentheses. Doesn't take into account anything like enclosing argument parentheses, just
@@ -383,8 +383,8 @@ def _rpars(self: 'FST', with_loc: bool | Literal['all', 'own', 'allown'] = True,
     **Parameters:**
     - `with_loc`: Parameter to use for AST bound search. `True` normally or `'allown'` in special cases like
         searching for parentheses to figure out node location from children from `.loc` itself.
-    - `exc_genexpr_solo`: If `True`, then will exclude left parenthesis of a single call argument generator
-        expression if it is shared with the call() arguments enclosing parentheses.
+    - `shared`: If `True`, then will include right parenthesis of a single call argument generator expression if it is
+        shared with the call() arguments enclosing parentheses, otherwise no.
 
     **Returns:**
     - `(end_ln, end_col, ante_end_ln, ante_end_col, npars)`: The rightmost and ante-rightmost positions and total
@@ -396,7 +396,7 @@ def _rpars(self: 'FST', with_loc: bool | Literal['all', 'own', 'allown'] = True,
     if self.is_solo_call_arg():  # special case single arg in a call so we must exclude the call arguments parentheses
         pars_end_ln, pars_end_col, _, _, npars = ret
 
-        if exc_genexpr_solo and not npars and isinstance(self.a, GeneratorExp):  # npars == 0 indicates shared parentheses
+        if not shared and not npars and isinstance(self.a, GeneratorExp):  # npars == 0 indicates shared parentheses
             _, _, end_ln, end_col  = self.loc
             end_col               -= 1
 
@@ -753,6 +753,41 @@ def _set_end_pos(self: 'FST', end_lineno: int, end_col_offset: int, self_: bool 
         self = parent
 
 
+def _set_block_end_from_last_child(self: 'FST', bound_ln: int, bound_col: int, bound_end_ln: int, bound_end_col: int):
+    """Fix end location of a block statement after its last child (position-wise, not last existing child) has been
+    cut or deleted. Will set end position of `self` and any parents who `self` is the last child of to the new last
+    child if it is past the block-open colon, otherwise set end at just past the block-open colon.
+
+    **Parameters:**
+    - `bound_ln`, `bound_col`: Position before block colon but after and pre-colon `AST` node.
+    - `bound_end_ln`, `bound_end_col`: Position after block colon, probably start of deleted region, only used if
+        new last child is before colon.
+    """
+
+    end_lineno = None
+
+    if last_child := self.last_child():  # easy enough when we have a new last child
+        if last_child.pfield.name in ('body', 'orelse', 'handlers', 'finalbody', 'cases'):  # but make sure its past the block open colon
+            end_lineno     = last_child.end_lineno
+            end_col_offset = last_child.end_col_offset
+
+    if end_lineno is None:
+        lines = self.root._lines
+
+        if end := _prev_find(lines, bound_ln, bound_col, bound_end_ln, bound_end_col, ':'):  # find first preceding block colon, its there unless first opened block in module
+            end_ln, end_col  = end
+            end_col         += 1  # just past the colon
+
+        else:
+            end_ln  = bound_ln
+            end_col = bound_col
+
+        end_lineno     = end_ln + 1
+        end_col_offset = lines[end_ln].c2b(end_col)
+
+    self._set_end_pos(end_lineno, end_col_offset)
+
+
 def _maybe_add_comma(self: 'FST', ln: int, col: int, offset: bool, space: bool,
                      end_ln: int | None = None, end_col: int | None = None) -> bool:
     """Maybe add comma at start of span if not already present as first code in span. Will skip any closing
@@ -896,7 +931,7 @@ def _maybe_fix(self: 'FST', pars: bool = True):
         if is_tuple := isinstance(ast, Tuple):
             if self._is_parenthesized_seq():
                 need_paren = False
-            elif any(isinstance(e, NamedExpr) and not e.f.pars(ret_npars=True)[1] for e in ast.elts):  # unparenthesized walrus in naked tuple?
+            elif any(isinstance(e, NamedExpr) and not e.f.pars(True)[1] for e in ast.elts):  # unparenthesized walrus in naked tuple?
                 need_paren = True
 
             self._maybe_add_singleton_tuple_comma(False)  # this exists because of copy lone Starred out of a Subscript.slice
@@ -912,41 +947,6 @@ def _maybe_fix(self: 'FST', pars: bool = True):
                 self._parenthesize_tuple()
             else:
                 self._parenthesize_grouping()
-
-
-def _fix_block_del_last_child(self: 'FST', bound_ln: int, bound_col: int, bound_end_ln: int, bound_end_col: int):
-    """Fix end location of a block statement after its last child (position-wise, not last existing child) has been
-    cut or deleted. Will set end position of `self` and any parents who `self` is the last child of to the new last
-    child if it is past the block-open colon, otherwise set end at just past the block-open colon.
-
-    **Parameters:**
-    - `bound_ln`, `bound_col`: Position before block colon but after and pre-colon `AST` node.
-    - `bound_end_ln`, `bound_end_col`: Position after block colon, probably start of deleted region, only used if
-        new last child is before colon.
-    """
-
-    end_lineno = None
-
-    if last_child := self.last_child():  # easy enough when we have a new last child
-        if last_child.pfield.name in ('body', 'orelse', 'handlers', 'finalbody', 'cases'):  # but make sure its past the block open colon
-            end_lineno     = last_child.end_lineno
-            end_col_offset = last_child.end_col_offset
-
-    if end_lineno is None:
-        lines = self.root._lines
-
-        if end := _prev_find(lines, bound_ln, bound_col, bound_end_ln, bound_end_col, ':'):  # find first preceding block colon, its there unless first opened block in module
-            end_ln, end_col  = end
-            end_col         += 1  # just past the colon
-
-        else:
-            end_ln  = bound_ln
-            end_col = bound_col
-
-        end_lineno     = end_ln + 1
-        end_col_offset = lines[end_ln].c2b(end_col)
-
-    self._set_end_pos(end_lineno, end_col_offset)
 
 
 def _is_parenthesized_seq(self: 'FST', field: str = 'elts', lpar: str = '(', rpar: str = ')') -> bool:
@@ -1039,7 +1039,7 @@ def _unparenthesize_grouping(self: 'FST', *, inc_genexpr_solo: bool = False) -> 
     - `bool`: Whether parentheses were removed or not (only removed if present to begin with and removable).
     """
 
-    pars_loc, npars = self.pars(ret_npars=True)
+    pars_loc, npars = self.pars(True)
     genexpr_solo    = inc_genexpr_solo and self.is_solo_call_arg_genexpr()
 
     if not npars and not genexpr_solo:

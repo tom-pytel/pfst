@@ -34,7 +34,7 @@ def _get_one(self: 'FST', idx: int | None, field: str, cut: bool, **options) -> 
                                        **options)
 
     childf = childa.f
-    loc    = childf.pars(options.get('pars') is True)
+    loc    = childf.pars(pars=options.get('pars') is True)
 
     if not loc:
         raise ValueError('cannot copy node which does not have a location')
@@ -225,7 +225,7 @@ def _make_exprish_fst(self: 'FST', code: Code | None, idx: int | None, field: st
     is_FST  = target.is_FST
 
     if precedence_require_parens(put_ast, self.a, field, idx):
-        if not put_fst.is_atom() and (delpars or not is_FST or not target.pars(ret_npars=True)[1]):
+        if not put_fst.is_atom() and (delpars or not is_FST or not target.pars(True)[1]):
             put_fst.parenthesize()
 
     elif pars:  # remove parens only if allowed to
@@ -239,7 +239,7 @@ def _make_exprish_fst(self: 'FST', code: Code | None, idx: int | None, field: st
 
     put_fst.indent_lns(self.get_indent(), docstr=options.get('docstr'))
 
-    ln, col, end_ln, end_col = target.pars(delpars, exc_genexpr_solo=True) if target.is_FST else target
+    ln, col, end_ln, end_col = target.pars(shared=False, pars=delpars) if target.is_FST else target
 
     dcol_offset   = self.root._lines[ln].c2b(col)
     params_offset = self.put_src(put_fst._lines, ln, col, end_ln, end_col, True, False, exclude=self)

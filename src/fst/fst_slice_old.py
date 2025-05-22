@@ -273,7 +273,7 @@ def _get_slice_stmtish(self: 'FST', start: int | Literal['end'] | None, stop: in
                                     docstr=options.get('docstr'))
 
     if cut and is_last_child:  # correct for removed last child nodes or last nodes past the block open colon
-        self._fix_block_del_last_child(block_loc.ln, block_loc.col, put_loc.ln, put_loc.col)
+        self._set_block_end_from_last_child(block_loc.ln, block_loc.col, put_loc.ln, put_loc.col)
 
     if len(asts) == 1 and isinstance(a := asts[0], If):
         a.f._maybe_fix_elif()
@@ -724,7 +724,7 @@ def _put_slice_stmtish(self: 'FST', code: Code | None, start: int | Literal['end
 
     if is_last_child:  # correct parent for modified / removed last child nodes
         if not put_fst:
-            self._fix_block_del_last_child(block_loc.ln, block_loc.col, put_loc.ln, put_loc.col)
+            self._set_block_end_from_last_child(block_loc.ln, block_loc.col, put_loc.ln, put_loc.col)
         elif put_body:
             self._set_end_pos((last_child := self.last_child()).end_lineno, last_child.end_col_offset)
 

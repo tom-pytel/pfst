@@ -93,8 +93,8 @@ def _raw_slice_loc(self: 'FST', start: int | Literal['end'] | None = None, stop:
     _, body     = _fixup_field_body(ast, field)
     start, stop = fixup_slice_index_for_raw(len(body), start, stop)
 
-    return fstloc(*body[start].f.pars(exc_genexpr_solo=True)[:2],
-                    *body[stop - 1].f.pars(exc_genexpr_solo=True)[2:])
+    return fstloc(*body[start].f.pars(shared=False)[:2],
+                    *body[stop - 1].f.pars(shared=False)[2:])
 
 
 _GLOBALS = globals() | {'_GLOBALS': None}
@@ -282,7 +282,7 @@ def _reparse_raw_node(self: 'FST', code: Code | None, to: Optional['FST'] = None
 
     multi = to and to is not self
     pars  = True if multi else bool(FST.get_option('pars', options))
-    loc   = self.pars(pars, exc_genexpr_solo=True)  # we don't check for unparenthesized Tuple code FST here because if it is then will just be parsed into a Tuple anyway
+    loc   = self.pars(shared=False, pars=pars)  # we don't check for unparenthesized Tuple code FST here because if it is then will just be parsed into a Tuple anyway
 
     if not loc:
         raise ValueError('node being reparsed must have a location')
@@ -310,10 +310,10 @@ def _reparse_raw_node(self: 'FST', code: Code | None, to: Optional['FST'] = None
 
                     if isinstance(a, PARENTHESIZABLE):
                         effpars = pars or a.f.is_parenthesized_tuple() is False
-                        loc     = self.pars(effpars, exc_genexpr_solo=True)  # TODO: need to redo here with new `a`, should refactor to avoid this
+                        loc     = self.pars(shared=False, pars=effpars)  # TODO: need to redo here with new `a`, should refactor to avoid this
 
                         if precedence_require_parens(a, parent.a, *self.pfield):
-                            if not a.f.is_atom() and (effpars or not self.pars(ret_npars=True)[1]):
+                            if not a.f.is_atom() and (effpars or not self.pars(True)[1]):
                                 a.f.parenthesize()
 
                         elif pars:  # remove parens only if allowed to
@@ -322,7 +322,7 @@ def _reparse_raw_node(self: 'FST', code: Code | None, to: Optional['FST'] = None
                         code = code._lines
 
             if (pars or not self.is_solo_call_arg_genexpr() or  # if original loc included `arguments` parentheses shared with solo GeneratorExp call arg then need to leave those in place
-                (to_loc := self.pars(True, exc_genexpr_solo=True))[:2] <= loc[:2]
+                (to_loc := self.pars(shared=False))[:2] <= loc[:2]
             ):
                 to_loc = loc
             else:
@@ -341,13 +341,13 @@ def _reparse_raw_node(self: 'FST', code: Code | None, to: Optional['FST'] = None
         #                 code = ast_unparse(code)[1:-1]
 
         if (pars or not self.is_solo_call_arg_genexpr() or  # if original loc included `arguments` parentheses shared with solo GeneratorExp call arg then need to leave those in place
-            (to_loc := self.pars(True, exc_genexpr_solo=True))[:2] <= loc[:2]
+            (to_loc := self.pars(shared=False))[:2] <= loc[:2]
         ):
             to_loc = loc
         else:
             loc = to_loc
 
-    elif not (to_loc := to.pars(pars, exc_genexpr_solo=True)):  # pars is True here
+    elif not (to_loc := to.pars(shared=False, pars=pars)):  # pars is True here
         raise ValueError(f"'to' node must have a location")
     elif (root := self.root) is not to.root:
         raise ValueError(f"'to' node not part of same tree")

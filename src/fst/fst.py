@@ -1282,7 +1282,7 @@ class FST:
 
         assert isinstance(ast, (expr, pattern))
 
-        return 'pars' if pars and self.pars(ret_npars=True)[1] else False
+        return 'pars' if pars and self.pars(True)[1] else False
 
     def is_enclosed(self, pars: bool = True) -> bool | Literal['pars']:
         """Whether `self` lives on a single line or is otherwise enclosed in some kind of delimiters '()', '[]', '{}' or
@@ -1321,7 +1321,7 @@ class FST:
         if end_ln == ln:
             return True
 
-        if pars and self.pars(ret_npars=True)[1]:
+        if pars and self.pars(True)[1]:
             return 'pars'
 
         if isinstance(ast, Constant):
@@ -1537,7 +1537,7 @@ class FST:
 
         return lns
 
-    def pars(self, pars: bool = True, *, ret_npars: bool = False, exc_genexpr_solo: bool = False,
+    def pars(self, count: bool = False, *, shared: bool = True, pars: bool = True,
              ) -> fstloc | tuple[fstloc | None, int] | None:
         """Return the location of enclosing grouping parentheses if present. Will balance parentheses if `self` is an
         element of a tuple and not return the parentheses of the tuple. Likwise will not return the parentheses of an
@@ -1546,43 +1546,45 @@ class FST:
         sharing parameters with the call arguments.
 
         **Parameters:**
-        - `pars`: `True` means return parentheses if present and `self.bloc` otherwise, `False` always `self.bloc`.
-        - `ret_npars`: `True` means return the count of parentheses along with the location.
-        - `exc_genexpr_solo`: If `True` then will exclude parentheses of a single call argument generator expression if
-            they is shared with the call arguments enclosing parentheses, return -1 npars in this case. Is not checked
-            at all if `pars=False`.
+        - `count`: `True` means return the number of parentheses along with the location, otherwise just the location.
+        - `shared`: If `True` then will include parentheses of a single call argument generator expression if they are
+            shared with the call arguments enclosing parentheses, return -1 count in this case. If `False` then Does not
+            return these, and thus not a full valid `GeneratorExp` location. Is not checked at all if `pars=False`.
+        - `pars`: `True` means return parentheses if present and `self.bloc` otherwise, `False` always `self.bloc`. This
+            parameter exists purely for convenience.
 
         **Returns:**
         - `fstloc | None`: Location of enclosing parentheses if present else `self.bloc` (which can be `None`).
         - `(fstloc, count)`: Location of enclosing parentheses or `self.bloc` and number of nested parens found (if
-            requested with `ret_npars`). `count` can be -1 in the case of a `GeneratorExp` sharing parentheses with
-            `Call` `arguments` if it is the only argument, if checking for this enabled with `exc_genexpr_solo`.
+            requested with `count`). `count` can be -1 in the case of a `GeneratorExp` sharing parentheses with
+            `Call` `arguments` if it is the only argument, if checking for this enabled with `shared`.
         """
 
         if not pars or not isinstance(self.a, PARENTHESIZABLE):  # pars around all `alias`es or `withitem`s are considered part of the parent even if there is only one of those elements which looks parenthesized
-            return (self.bloc, 0) if ret_npars else self.bloc
+            return (self.bloc, 0) if count else self.bloc
+
+        key = 'parsS' if shared else 'parsN'
 
         try:
-            cached = self._cache[key := 'pars1' if exc_genexpr_solo else 'pars0']
-
-            return cached if ret_npars else cached[0]
-
+            cached = self._cache[key]
         except KeyError:
             pass
+        else:
+            return cached if count else cached[0]
 
-        pars_end_ln, pars_end_col, ante_end_ln, ante_end_col, nrpars = self._rpars(exc_genexpr_solo=exc_genexpr_solo)
+        pars_end_ln, pars_end_col, ante_end_ln, ante_end_col, nrpars = self._rpars(shared=shared)
 
         if not nrpars:
             val = self._cache[key] = (self.bloc, 0)
 
-            return val if ret_npars else self.bloc
+            return val if count else self.bloc
 
-        pars_ln, pars_col, ante_ln, ante_col, nlpars = self._lpars(exc_genexpr_solo=exc_genexpr_solo)
+        pars_ln, pars_col, ante_ln, ante_col, nlpars = self._lpars(shared=shared)
 
         if not nlpars:
             val = self._cache[key] = (self.bloc, 0)
 
-            return val if ret_npars else self.bloc
+            return val if count else self.bloc
 
         dpars = nlpars - nrpars
 
@@ -1612,7 +1614,7 @@ class FST:
         loc = fstloc(pars_ln, pars_col, pars_end_ln, pars_end_col)
         val = self._cache[key] = (loc, npars)
 
-        return val if ret_npars else loc
+        return val if count else loc
 
     def comms(self, precomms: bool | str | None = None, postcomms: bool | str | None = None, **options) -> fstloc:
         """Return the location of preceding and trailing comments if present. Only works on (and makes sense for)
@@ -2037,13 +2039,13 @@ class FST:
         _dict_key_or_mock_loc,
         _touch,
         _set_end_pos,
+        _set_block_end_from_last_child,
         _maybe_add_comma,
         _maybe_add_singleton_tuple_comma,
         _maybe_fix_tuple,
         _maybe_fix_set,
         _maybe_fix_elif,
         _maybe_fix,
-        _fix_block_del_last_child,
         _is_parenthesized_seq,
         _parenthesize_grouping,
         _parenthesize_tuple,
