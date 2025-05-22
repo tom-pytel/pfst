@@ -35,7 +35,6 @@ _OPTIONS = {
     'pep8space': True,    # True | False | 1
     'pars':      'auto',  # True | False | 'auto'
     'elif_':     False,   # True | False
-    'fix':       True,    # True | False
     'raw':       'auto',  # True | False | 'auto'
 }
 
@@ -689,8 +688,6 @@ class FST:
                 - `None`: Use default (`'auto'`).
             - `elif_`: `True` or `False`, if putting a single `If` statement to an `orelse` field of a parent `If` statement then
                 put it as an `elif`. `None` means use default of `False`.
-            - `fix`: Attempt to carry out basic fixes on operands like parenthesizing multiline expressions so they are
-                parsable, adding commas to singleton tuples, changing `elif` to `if` for cut or copied `elif` statements, etc...
             - `raw`: How to attempt at raw source operations. This may result in more nodes changed than just the targeted
                 one(s).
                 - `False`: Do not do raw source operations.
@@ -1615,36 +1612,6 @@ class FST:
         val = self._cache[key] = (loc, npars)
 
         return val if count else loc
-
-    def comms(self, precomms: bool | str | None = None, postcomms: bool | str | None = None, **options) -> fstloc:
-        """Return the location of preceding and trailing comments if present. Only works on (and makes sense for)
-        `stmt`, 'ExceptHandler' or `match_case` nodes, otherwise returns `self.bloc`.
-
-        **Parameters:**
-        - `precomms`: Preceding comments to get. See `FST` source editing `options`.
-        - `postcomms`: Trailing comments to get. See `FST` source editing `options`.
-        - `options`: Ignored.
-
-        **Returns:**
-        - `fstloc`: Location from start of preceding comments to end of trailing comments, else `self.bloc` or start or
-            end from it if preceding or trailing comment(s) not found.
-        """
-
-        if precomms is None:
-            precomms = self.get_option('precomms')
-        if postcomms is None:
-            postcomms = self.get_option('postcomms')
-
-        if not (precomms or postcomms) or not isinstance(self.a, STMTISH):
-            return self.bloc
-
-        lines = self.root._lines
-        loc   = self.bloc
-
-        return fstloc(
-            *(_src_edit.pre_comments(lines, *self._prev_ast_bound(), loc.ln, loc.col, precomms) or loc[:2]),
-            *(_src_edit.post_comments(lines, loc.end_ln, loc.end_col, *self._next_ast_bound(), postcomms) or loc[2:]),
-        )
 
     # ------------------------------------------------------------------------------------------------------------------
     # Low level modifications

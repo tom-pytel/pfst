@@ -31519,84 +31519,6 @@ def func():
         self.assertEqual((0, 8, 0, 11), parse('class c((b)): pass').body[0].bases[0].f.pars())
         self.assertEqual((0, 8, 0, 11), parse('class c((b),): pass').body[0].bases[0].f.pars())
 
-    def test_comms(self):
-        f = parse('''
-# hello
-
-# world
-pass  # postcomment
-# next line
-
-# last line
-pass
-        '''.strip()).body[0].f
-
-        g = f.comms()
-        self.assertIsInstance(g, fstloc)
-        self.assertEqual((2, 0, 4, 0), g)
-        g = f.comms(True, False)
-        self.assertIsInstance(g, fstloc)
-        self.assertEqual((2, 0, 3, 4), g)
-        g = f.comms('all', False)
-        self.assertIsInstance(g, fstloc)
-        self.assertEqual((0, 0, 3, 4), g)
-        g = f.comms(False, True)
-        self.assertIsInstance(g, fstloc)
-        self.assertEqual((3, 0, 4, 0), g)
-        g = f.comms(False, 'block')
-        self.assertIsInstance(g, fstloc)
-        self.assertEqual((3, 0, 5, 0), g)
-        g = f.comms(False, 'all')
-        self.assertIsInstance(g, fstloc)
-        self.assertEqual((3, 0, 7, 0), g)
-
-        g = f.comms()
-        self.assertIsInstance(g, fstloc)
-        self.assertEqual((2, 0, 4, 0), g)
-        g = f.comms(True, False)
-        self.assertIsInstance(g, fstloc)
-        self.assertEqual((2, 0, 3, 4), g)
-        g = f.comms(False, True)
-        self.assertIsInstance(g, fstloc)
-        self.assertEqual((3, 0, 4, 0), g)
-        g = f.comms(False, False)
-        self.assertIs(g, f.loc)
-
-        f = parse('''
-pass
-# next line
-
-# last line
-pass
-        '''.strip()).body[0].f
-
-        g = f.comms(False, 'all')
-        self.assertIsInstance(g, fstloc)
-        self.assertEqual('pass\n# next line\n\n# last line\n', f.get_src(*g))
-
-        lines = '''  # hello
-
-  # world
-  pass  # whatever
-# whenever
-            '''.split('\n')
-
-        self.assertEqual((2, 0), fst._src_edit.pre_comments(lines, 0, 0, 3, 2))
-        self.assertEqual((4, 0), fst._src_edit.post_comments(lines, 3, 6, 5, 0))
-        self.assertEqual(None, fst._src_edit.pre_comments(lines, 0, 0, 2, 2))
-        self.assertEqual(None, fst._src_edit.post_comments(lines, 2, 9, 5, 0))
-        self.assertEqual((0, 0), fst._src_edit.pre_comments(lines, 0, 0, 2, 2, 'all'))
-        self.assertEqual((5, 0), fst._src_edit.post_comments(lines, 3, 6, 5, 0, 'all'))
-
-        lines = '''
-i ; \\
-# pre
-j # post
-k
-'''.strip().split('\n')
-
-        self.assertEqual((1, 0), fst._src_edit.pre_comments(lines, 0, 1, 2, 0))
-
     def test_copy_pars(self):
         self.assertEqual('a', parse('(a)').body[0].value.f.copy(pars=False).root.src)
         self.assertEqual('a', parse('(a)').body[0].value.f.copy(pars='auto').root.src)
@@ -35629,7 +35551,6 @@ match a:
             pep8space = 'test_pep8space',
             pars      = 'test_pars',
             elif_     = 'test_elif_',
-            fix       = 'test_fix',
             raw       = 'test_raw',
         )
 
