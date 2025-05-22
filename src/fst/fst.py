@@ -109,8 +109,7 @@ class FST:
     parent:       Optional['FST']  ; """Parent `FST` node, `None` in root node."""
     pfield:       astfield | None  ; """The `astfield` location of this node in the parent, `None` in root node."""
     root:         'FST'            ; """The root node of this tree, `self` in root node."""
-    _loc:         fstloc | None    # cache, MAY NOT EXIST!
-    _bloc:        fstloc | None    # cache, MAY NOT EXIST! bounding location, including preceding decorators
+    _cache:       dict
 
     # ROOT ONLY
     parse_params: dict[str, Any]   ; """The parameters to use for any `ast.parse()` that needs to be done (filename, type_comments, feature_version), root node only."""
@@ -399,22 +398,22 @@ class FST:
         return child
 
     def __new__(cls, ast_or_src: AST | str | bytes | list[str] | None = None,
-                parent: Optional['FST'] = None, pfield: astfield | None = None, **kwargs):
+                parent_or_lines: Union['FST', list[str], None] = None, pfield: astfield | None = None, **kwargs):
         """Create a new individual `FST` node or full tree from `AST` with `lines` or create from just an `AST` or just
         source.
 
         **Parameters:**
         - `ast_or_src`: `AST` node for `FST` or source code in the form of a `str`, encoded `bytes` or a list of lines.
-            If an `AST` then will be processed differently depending on if `lines` is provided or not.
-        - `parent`: Parent node for this node. If provided then this is just a simple node and it is created with the
-            `self.parent` and `self.pfield` set to passed params. If `None` then it means the creation of a full new
-            `FST` tree.
-        - `pfield`: `astfield` indication position in parent of this node. If `parent` is provided then this is assumed
-            to exist and set as `self.pfield`.
+            If an `AST` then will be processed differently depending on if creating child node, top level node or using
+            this as a shortcut.
+        - `parent_or_lines`: Parent node for this child node or lines for a root node creating a new tree. If `pfield`
+            is none and this as well then the call is a shortcut to create a full tree from an `AST` node or source
+            provided in `ast_or_src`.
+        - `pfield`: `astfield` indication position in parent of this node. If provided then creating a simple child node
+            and it is created with the `self.parent_or_lines` node as parent and `self.pfield` set to passed params. If
+            `None` then it means the creation of a full new `FST` tree and this is the root node with `parent_or_lines`
+            providing the source.
         - `kwargs`: Contextual parameters:
-            - `lines`: If this is provided and `parent` is `None` then this will be a new root `FST` node and the
-                children of the provided `ast_or_src` (as `AST`) are walked to create `FST` nodes and the full tree.
-                Only valid when creating a root node.
             - `from_`: If this is provided then it must be an `FST` node from which this node is being created. This
                 allows to copy parse parameters and already determined default indentation.
             - `parse_params`: A `dict` with values for 'filename', 'type_comments' and 'feature_version' which will be
@@ -423,23 +422,22 @@ class FST:
                 then indentation will be inferred from source. Only valid when creating a root node.
             - `filename`, `mode`, `type_comments` and `feature_version`: If creating from an `AST` or source only then
                 these are the parameteres passed to the respective `.new()`, `.fromsrc()` or `.fromast()` functions.
-                Only valid when `parent=None` and no `lines`.
+                Only valid when `parent_or_lines` and `pfield` are `None`.
         """
 
-        if parent is None:  # creating top level shortcut
-            if (lines := kwargs.get('lines')) is None:  # if lines missing then is shortcut create from source or AST
-                params = {k: v for k in ('filename', 'mode', 'type_comments', 'feature_version')
-                          if (v := kwargs.get(k, k)) is not k}  # k used as sentinel
+        if pfield is None and parent_or_lines is None:  # top level shortcut
+            params = {k: v for k in ('filename', 'mode', 'type_comments', 'feature_version')
+                        if (v := kwargs.get(k, k)) is not k}  # k used as sentinel
 
-                if from_ := kwargs.get('from_'): # copy parse params from source tree
-                    params = {**from_.root.parse_params, **params}
+            if from_ := kwargs.get('from_'): # copy parse params from source tree
+                params = {**from_.root.parse_params, **params}
 
-                if ast_or_src is None:
-                    return FST.new(**params)
-                if isinstance(ast_or_src, AST):
-                    return FST.fromast(ast_or_src, **params)
+            if ast_or_src is None:
+                return FST.new(**params)
+            if isinstance(ast_or_src, AST):
+                return FST.fromast(ast_or_src, **params)
 
-                return FST.fromsrc(ast_or_src, **params)
+            return FST.fromsrc(ast_or_src, **params)
 
         # creating actual node
 
@@ -449,19 +447,20 @@ class FST:
             self = ast_or_src.f = object.__new__(cls)
 
         self.a      = ast_or_src  # we don't assume `self.a` is `ast_or_src` if `.f` exists
-        self.parent = parent
         self.pfield = pfield
         self._cache = {}
 
-        if parent is not None:
-            self.root = parent.root
+        if pfield is not None:
+            self.parent = parent_or_lines
+            self.root   = parent_or_lines.root
 
             return self
 
         # ROOT
 
+        self.parent = None
         self.root   = self
-        self._lines = lines if isinstance(lines[0], bistr) else [bistr(s) for s in lines]
+        self._lines = [bistr(s) for s in parent_or_lines] if kwargs.get('copy_lines', True) else parent_or_lines
 
         if from_ := kwargs.get('from_'):  # copy params from source tree
             from_root         = from_.root
@@ -470,8 +469,11 @@ class FST:
 
         else:
             self.parse_params = kwargs.get('parse_params', _DEFAULT_PARSE_PARAMS)
-            self.indent       = (('?' if isinstance(ast_or_src, Module) else _DEFAULT_INDENT)
-                                 if (i := kwargs.get('indent')) is None else i)
+            self.indent       = (('?'
+                                  if isinstance(ast_or_src, Module) else
+                                  _DEFAULT_INDENT)
+                                 if (indent := kwargs.get('indent')) is None else
+                                 indent)
 
         self._make_fst_tree()
 
@@ -536,7 +538,7 @@ class FST:
         else:
             raise ValueError(f"invalid mode '{mode}'")
 
-        return FST(ast, lines=[bistr('')], parse_params=parse_params)
+        return FST(ast, [''], parse_params=parse_params)
 
     @staticmethod
     def fromsrc(source: str | bytes | list[str], filename: str = '<unknown>',
@@ -569,7 +571,7 @@ class FST:
         parse_params = dict(filename=filename, type_comments=type_comments, feature_version=feature_version)
         ast          = ast_parse(source, mode=mode, **parse_params)
 
-        return FST(ast, lines=[bistr(s) for s in lines], parse_params=parse_params)  # not just convert to bistr but to make a copy at the same time
+        return FST(ast, lines, parse_params=parse_params)  # not just convert to bistr but to make a copy at the same time
 
     @staticmethod
     def fromast(ast: AST, filename: str = '<unknown>', mode: Literal['exec', 'eval', 'single'] | None = None, *,
@@ -625,7 +627,7 @@ class FST:
             elif not copy_attributes(astp, ast, compare=True, type_comments=type_comments, raise_=False):
                 raise RuntimeError('could not reparse ast identically')
 
-        return FST(ast, lines=lines, parse_params=parse_params)
+        return FST(ast, lines, parse_params=parse_params)
 
     @staticmethod
     def get_option(option: str, options: dict[str, Any] = {}) -> Any:
@@ -795,7 +797,7 @@ class FST:
         """Copy an individual node to a top level tree, dedenting and fixing as necessary."""
 
         if not (parent := self.parent):
-            return FST(copy_ast(self.a), lines=self._lines[:], from_=self)
+            return FST(copy_ast(self.a), self._lines[:], from_=self, copy_lines=False)
 
         return parent._get_one((pf := self.pfield).idx, pf.name, False, **options)
 
@@ -1288,7 +1290,7 @@ class FST:
         if (ret := self.is_parenthesized_tuple()) is not None:  # if this is False then cannot be enclosed in grouping pars because that would reparse to a parenthesized Tuple and so is inconsistent
             return ret
 
-        if (ret := self.is_enclosed_matchsequence()) is not None:  # like Tuple, cannot be enclosed in grouping pars
+        if (ret := self.is_enclosed_matchseq()) is not None:  # like Tuple, cannot be enclosed in grouping pars
             return ret
 
         assert isinstance(ast, (expr, pattern))
@@ -1348,7 +1350,7 @@ class FST:
             if ret:
                 return True
 
-        elif (ret := self.is_enclosed_matchsequence()) is not None:
+        elif (ret := self.is_enclosed_matchseq()) is not None:
             if ret:
                 return True
 
@@ -1440,7 +1442,7 @@ class FST:
                 if ret:
                     return True
 
-            elif (ret := parent.is_enclosed_matchsequence()) is not None:
+            elif (ret := parent.is_enclosed_matchseq()) is not None:
                 if ret:
                     return True
 
@@ -1460,7 +1462,7 @@ class FST:
 
         return self._is_parenthesized_seq() if isinstance(self.a, Tuple) else None
 
-    def is_enclosed_matchsequence(self) -> bool | None:
+    def is_enclosed_matchseq(self) -> bool | None:
         """Whether `self` is an enclosed `MatchSequence` or not, or not a `MatchSequence` at all (can be pars '()' or
         brackets '[]').
 
@@ -1509,7 +1511,7 @@ class FST:
         return ((parent := self.parent) and self.pfield.name == 'args' and isinstance(parenta := parent.a, Call) and
                 not parenta.keywords and len(parenta.args) == 1)
 
-    def is_solo_call_arg_genexpr(self) -> bool:
+    def is_solo_call_arg_genexp(self) -> bool:
         """Whether `self` is the dreaded solo call non-keyword argument generator expression in `sum(i for i in a)`.
         Doesn't say it shares parentheses or not, so could still be `sum((i for i in a))` or even
         `sum(((i for i in a)))`."""

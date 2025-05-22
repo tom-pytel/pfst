@@ -58,7 +58,7 @@ def _code_as(self: 'FST', code: Code, ast_type: type[AST], parse: Callable[['FST
     else:  # str
         lines = code.split('\n')
 
-    return FST(parse(code, self.root.parse_params), lines=lines)
+    return FST(parse(code, self.root.parse_params), lines)
 
 
 _GLOBALS = globals() | {'_GLOBALS': None}
@@ -171,7 +171,7 @@ def _code_as_expr(self: 'FST', code: Code) -> 'FST':
 
         ast.f._unmake_fst_parents()
 
-        return FST(ast, lines=code._lines, from_=code)
+        return FST(ast, code._lines, from_=code, copy_lines=False)
 
     if isinstance(code, AST):
         if not isinstance(code, expr):
@@ -187,7 +187,7 @@ def _code_as_expr(self: 'FST', code: Code) -> 'FST':
 
     ast = _parse_expr(code, self.root.parse_params)
 
-    return FST(ast, lines=lines)
+    return FST(ast, lines)
 
 
 def _code_as_slice(self: 'FST', code: Code) -> 'FST':
@@ -298,7 +298,7 @@ def _code_as_op(self: 'FST', code: Code,
             raise NodeTypeError(f'bad operator {src!r}')
 
     elif isinstance(code, AST):
-        code = FST(code, lines=[(OPCLS2STR_AUG if target is AugAssign else OPCLS2STR).get(code.__class__, '')])
+        code = FST(code, [(OPCLS2STR_AUG if target is AugAssign else OPCLS2STR).get(code.__class__, '')])
 
     else:
         if isinstance(code, list):
@@ -309,7 +309,7 @@ def _code_as_op(self: 'FST', code: Code,
         if not (cls := _code_as_op_str2op[target].get(code)):
             raise NodeTypeError(f'bad operator {code!r}')
 
-        code = FST(cls(), lines=lines)
+        code = FST(cls(), lines)
 
     if code.a.__class__ not in _code_as_op_ops[target]:
         raise NodeTypeError(f'expecting operator{f" for {target.__name__}" if target else ""}'

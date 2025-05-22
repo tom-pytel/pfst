@@ -65,7 +65,7 @@ def _normalize_code(code: Code, coerce: Literal['expr', 'exprish', 'mod'] | None
         if f := getattr(rast, 'f', None):
             f._unmake_fst_parents()
 
-        return FST(rast, lines=code._lines, from_=code)
+        return FST(rast, code._lines, from_=code, copy_lines=False)
 
     if isinstance(code, AST):
         return FST.fromast(_coerce_ast(code, coerce))  # TODO: WARNING! will not handle pure AST ExceptHandler or match_case
@@ -84,33 +84,33 @@ def _normalize_code(code: Code, coerce: Literal['expr', 'exprish', 'mod'] | None
         if not (ast := reduce_ast(ast, False)) or (is_expr and not isinstance(ast, expr)):
             raise NodeTypeError(f'expecting single {"expression" if is_expr else "expressionish"}')
 
-    return FST(ast, lines=lines)
+    return FST(ast, lines)
 
 
 @staticmethod
 def _new_empty_module(*, from_: Optional['FST'] = None) -> 'FST':
-    return FST(Module(body=[], type_ignores=[]), lines=[bistr('')], from_=from_)
+    return FST(Module(body=[], type_ignores=[]), [''], from_=from_)
 
 
 @staticmethod
 def _new_empty_tuple(*, from_: Optional['FST'] = None) -> 'FST':
     ast = Tuple(elts=[], ctx=Load(), lineno=1, col_offset=0, end_lineno=1, end_col_offset=2)
 
-    return FST(ast, lines=[bistr('()')], from_=from_)
+    return FST(ast, ['()'], from_=from_)
 
 
 @staticmethod
 def _new_empty_list(*, from_: Optional['FST'] = None) -> 'FST':
     ast = List(elts=[], ctx=Load(), lineno=1, col_offset=0, end_lineno=1, end_col_offset=2)
 
-    return FST(ast, lines=[bistr('[]')], from_=from_)
+    return FST(ast, ['[]'], from_=from_)
 
 
 @staticmethod
 def _new_empty_dict(*, from_: Optional['FST'] = None) -> 'FST':
     ast = Dict(keys=[], values=[], lineno=1, col_offset=0, end_lineno=1, end_col_offset=2)
 
-    return FST(ast, lines=[bistr('{}')], from_=from_)
+    return FST(ast, ['{}'], from_=from_)
 
 
 @staticmethod
@@ -122,7 +122,7 @@ def _new_empty_set(only_ast: bool = False, lineno: int = 1, col_offset: int = 0,
                 ctx=Load(), lineno=lineno, col_offset=col_offset+1, end_lineno=lineno, end_col_offset=col_offset+4)
     ], lineno=lineno, col_offset=col_offset, end_lineno=lineno, end_col_offset=col_offset+5)
 
-    return ast if only_ast else FST(ast, lines=[bistr('{*()}')], from_=from_)
+    return ast if only_ast else FST(ast, ['{*()}'], from_=from_)
 
 
 @staticmethod
@@ -131,7 +131,7 @@ def _new_empty_set_curlies(only_ast: bool = False, lineno: int = 1, col_offset: 
     ast = Set(elts=[], lineno=lineno, col_offset=col_offset, end_lineno=lineno,
             end_col_offset=col_offset + 2)
 
-    return ast if only_ast else FST(ast, lines=[bistr('{}')], from_=from_)
+    return ast if only_ast else FST(ast, ['{}'], from_=from_)
 
 
 def _make_fst_tree(self: 'FST', stack: list['FST'] | None = None):
@@ -1059,7 +1059,7 @@ def _unparenthesize_grouping(self: 'FST', *, inc_genexpr_solo: bool = False) -> 
     """
 
     pars_loc, npars = self.pars(True)
-    genexpr_solo    = inc_genexpr_solo and self.is_solo_call_arg_genexpr()
+    genexpr_solo    = inc_genexpr_solo and self.is_solo_call_arg_genexp()
 
     if not npars and not genexpr_solo:
         return False
@@ -1197,7 +1197,7 @@ def _make_fst_and_dedent(self: 'FST', indent: Union['FST', str], ast: AST, copy_
         indent = indent.get_indent()
 
     lines = self.root._lines
-    fst   = FST(ast, lines=lines, from_=self)  # we use original lines for nodes offset calc before putting new lines
+    fst   = FST(ast, lines, from_=self, copy_lines=False)  # we use original lines for nodes offset calc before putting new lines
 
     fst.offset(copy_loc.ln, copy_loc.col, -copy_loc.ln, len(prefix.encode()) - lines[copy_loc.ln].c2b(copy_loc.col))
 

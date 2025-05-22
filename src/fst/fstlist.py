@@ -97,7 +97,7 @@ class fstlist:
 
         return self
 
-    def insert(self, code: Code, idx: int | Literal['end'] = 0, one: bool = True, **options) -> 'FST':  # -> Self
+    def insert(self, code: Code, idx: int | Literal['end'] = 0, *, one: bool = True, **options) -> 'FST':  # -> Self
         len_before = len(asts := getattr(self.fst.a, self.field))
         idx        = (self.stop if idx == 'end' else
                       stop      if idx > (l := (stop := self.stop) - (start := self.start)) else

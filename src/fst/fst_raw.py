@@ -104,7 +104,7 @@ def _reparse_raw(self: 'FST', new_lines: list[str], ln: int, col: int, end_ln: i
                  copy_lines: list[str], path: list[astfield] | str, set_ast: bool = True) -> 'FST':
     """Actually do the reparse."""
 
-    copy_root = FST(Pass(), lines=copy_lines)  # we don't need the ASTs here, just the lines
+    copy_root = FST(Pass(), copy_lines, copy_lines=False)  # we don't need the ASTs here, just the lines
 
     copy_root.put_src(new_lines, ln, col, end_ln, end_col)
 
@@ -150,8 +150,8 @@ def _reparse_raw_stmtish(self: 'FST', new_lines: list[str], ln: int, col: int, e
 
     if isinstance(stmtisha, match_case):
         copy_lines = ([bistr('')] * (pln - 1) +
-                        [bistr('match a:'), bistr(' ' * pcol + lines[pln][pcol:])] +
-                        lines[pln + 1 : pend_ln + 1])
+                      [bistr('match a:'), bistr(' ' * pcol + lines[pln][pcol:])] +
+                      lines[pln + 1 : pend_ln + 1])
         path       = _PATH_BODYCASES
 
     else:
@@ -259,7 +259,7 @@ def _reparse_raw_loc(self: 'FST', code: Code | None, ln: int, col: int, end_ln: 
         root = self.root
 
         self._reparse_raw(new_lines, ln, col, end_ln, end_col, root._lines[:],  # fallback to reparse all source
-                            'root' if self is root else root.child_path(self))
+                          'root' if self is root else root.child_path(self))
 
     if code is None:
         return None
@@ -321,7 +321,7 @@ def _reparse_raw_node(self: 'FST', code: Code | None, to: Optional['FST'] = None
 
                         code = code._lines
 
-            if (pars or not self.is_solo_call_arg_genexpr() or  # if original loc included `arguments` parentheses shared with solo GeneratorExp call arg then need to leave those in place
+            if (pars or not self.is_solo_call_arg_genexp() or  # if original loc included `arguments` parentheses shared with solo GeneratorExp call arg then need to leave those in place
                 (to_loc := self.pars(shared=False))[:2] <= loc[:2]
             ):
                 to_loc = loc
@@ -340,7 +340,7 @@ def _reparse_raw_node(self: 'FST', code: Code | None, to: Optional['FST'] = None
         #             elif is_atom_ is None:  # strip `unparse()` parens
         #                 code = ast_unparse(code)[1:-1]
 
-        if (pars or not self.is_solo_call_arg_genexpr() or  # if original loc included `arguments` parentheses shared with solo GeneratorExp call arg then need to leave those in place
+        if (pars or not self.is_solo_call_arg_genexp() or  # if original loc included `arguments` parentheses shared with solo GeneratorExp call arg then need to leave those in place
             (to_loc := self.pars(shared=False))[:2] <= loc[:2]
         ):
             to_loc = loc
