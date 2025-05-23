@@ -1548,8 +1548,14 @@ class FST:
 
         return self.root._lines[(loc := self.loc).ln].startswith('elif', loc.col) if isinstance(self.a, If) else None
 
+    def is_solo_class_base(self) -> bool:
+        """Whether `self` is a solo `ClassDef` base in list without any keywords."""
+
+        return ((parent := self.parent) and self.pfield.name == 'bases' and len((parenta := parent.a).bases) == 1 and
+                not parenta.keywords)
+
     def is_solo_call_arg(self) -> bool:
-        """Whether `self` is a solo Call non-keyword argument."""
+        """Whether `self` is a solo `Call` non-keyword argument."""
 
         return ((parent := self.parent) and self.pfield.name == 'args' and isinstance(parenta := parent.a, Call) and
                 not parenta.keywords and len(parenta.args) == 1)
@@ -1562,11 +1568,11 @@ class FST:
         return ((parent := self.parent) and self.pfield.name == 'args' and isinstance(self.a, GeneratorExp) and
                 isinstance(parenta := parent.a, Call) and not parenta.keywords and len(parenta.args) == 1)
 
-    def is_solo_class_base(self) -> bool:
-        """Whether `self` is a solo class base in list without any keywords."""
+    def is_solo_matchcls_pat(self) -> bool:
+        """Whether `self` is a solo `MatchClass` non-keyword pattern."""
 
-        return ((parent := self.parent) and self.pfield.name == 'bases' and len((parenta := parent.a).bases) == 1 and
-                not parenta.keywords)
+        return ((parent := self.parent) and self.pfield.name == 'patterns' and
+                isinstance(parenta := parent.a, MatchClass) and not parenta.kwd_patterns and len(parenta.patterns) == 1)
 
     def get_indent(self) -> str:
         """Determine proper indentation of node at `stmt` (or other similar) level at or above `self`. Even if it is a
@@ -1716,15 +1722,17 @@ class FST:
 
             return locncount if count else self.bloc
 
-        if llpars <= lrpars and (external_pars := self.is_solo_class_base() or self.is_solo_call_arg()):
+        if llpars <= lrpars and (self.is_solo_call_arg() or self.is_solo_class_base() or self.is_solo_matchcls_pat()):
             llpars -= 1
 
         if llpars != lrpars:  # unbalanced pars so we know we can safely use the lower count
             loc = fstloc(*lpars[npars], *rpars[npars]) if (npars := min(llpars, lrpars) - 1) else self.bloc
-
         else:
-            npars = llpars - (2 if external_pars else 1)
-            loc   = fstloc(*lpars[npars], *rpars[npars]) if npars else self.bloc
+            loc = fstloc(*lpars[npars], *rpars[npars]) if (npars := llpars - 1) else self.bloc
+
+        # else:
+        #     npars = llpars - (2 if external_pars else 1)
+        #     loc   = fstloc(*lpars[npars], *rpars[npars]) if npars else self.bloc
 
         locncount = self._cache[key] = (loc, npars)
 
