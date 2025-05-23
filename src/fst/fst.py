@@ -52,20 +52,6 @@ def _swizzle_getput_params(start: int | Literal['end'] | None, stop: int | None 
     return start, stop, field
 
 
-class _EnclosedASTMock:
-    """Used in `is_enclosed()`."""
-
-    class _EnclosedFSTMock:
-        def __init__(self, loc):
-            self.loc = loc
-
-        def is_enclosed(self):
-            return True
-
-    def __init__(self, loc):
-        self.f = self._EnclosedFSTMock(loc)
-
-
 class _FSTCircularImportStandinMeta(type):
     """Class attribute getter for temporary circular import standin class for FST."""
 
@@ -1377,11 +1363,11 @@ class FST:
         lines   = self.root._lines
 
         if isinstance(ast, Call):
-            children = [ast.func, _EnclosedASTMock(self._loc_Call_pars())]
+            children = [ast.func, mock(f=mock(loc=self._loc_Call_pars(), is_enclosed=lambda: True))]
         elif isinstance(ast, Subscript):
-            children = [ast.value, _EnclosedASTMock(self._loc_Subscript_brackets())]
+            children = [ast.value, mock(f=mock(loc=self._loc_Subscript_brackets(), is_enclosed=lambda: True))]
         elif isinstance(ast, MatchClass):
-            children = [ast.cls, _EnclosedASTMock(self._loc_MatchClass_pars())]
+            children = [ast.cls, mock(f=mock(loc=self._loc_MatchClass_pars(), is_enclosed=lambda: True))]
         else:  # we don't check always-enclosed statement fields here because statements will never get here
             children = syntax_ordered_children(ast)
 
@@ -1421,10 +1407,10 @@ class FST:
         """
 
         if field:
-            if field != 'ctx':  # so that the `ctx` of a List is not considered enclosed by default
+            if field != 'ctx':  # so that the `ctx` of a List is not considered enclosed
                 self = mock(parent=self, pfield=astfield(field))
 
-        elif isinstance(self.a, expr_context):  # so that the `ctx` of a List is not considered enclosed by default
+        elif isinstance(self.a, expr_context):  # so that the `ctx` of a List is not considered enclosed
             if not (self := self.parent):
                 return False
 

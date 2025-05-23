@@ -254,8 +254,7 @@ def _make_exprish_fst(self: 'FST', code: Code | None, idx: int | None, field: st
 def _put_one_exprish_required(self: 'FST', code: Code | None, idx: int | None, field: str, child: list[AST] | AST | None,
                               static: onestatic, validate: bool = True, target: fstloc | None = None, prefix: str = '',
                               **options) -> 'FST':
-    """Put a single required expression. Can be standalone or as part of sequence. `target` used for writing
-    `FunctionDef` and `Lambda` arguments."""
+    """Put a single required expression. Can be standalone or as part of sequence."""
 
     if validate:
         child = _validate_put(self, code, idx, field, child, options)
