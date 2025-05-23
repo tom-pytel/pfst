@@ -214,8 +214,7 @@ def _make_exprish_fst(self: 'FST', code: Code | None, idx: int | None, field: st
 
     _validate_put_ast(self, put_ast, idx, field, static)
 
-
-
+    # figure out parentheses
 
     pars    = FST.get_option('pars', options)
     delpars = pars or put_fst.is_parenthesized_tuple() is False  # need tuple check because otherwise Tuple location would be wrong after (wouldn't include possible enclosing parens)
@@ -230,6 +229,58 @@ def _make_exprish_fst(self: 'FST', code: Code | None, idx: int | None, field: st
 
 
 
+    # need_pars = lambda: ((not put_fst.is_atom(False) and precedence_require_parens(put_ast, self.a, field, idx)) or
+    #                      (not self.is_enclosed_in_parents(field) and not put_fst.is_enclosed()))
+    # delpars   = False
+
+    # if pars := FST.get_option('pars', options):
+    #     if put_fst.pars(True)[1]:
+    #         delpars = True
+
+    #     if pars == 'auto':
+    #         pass
+
+
+    #     # if src_have_pars:
+    #     # DELPARS
+
+    #     # if pars_auto:
+    #     #     if not need_pars:
+    #     #     UNPARENTHESIZE
+
+    #     # else:
+    #     # if dst_have_pars and src_is_unpar_tuple:
+    #     #     DELPARS
+    #     #     dst_have_pars = False
+
+    #     # if dst_have_pars:
+    #     #     if not need_pars:
+    #     #     DELPARS
+
+    #     # elif need_pars:
+    #     #     PARENTHESIZE
+
+
+
+
+
+
+
+
+
+    if not target.is_FST:
+        ln, col, end_ln, end_col = target
+
+    else:
+        loc = target.pars(shared=False, pars=delpars)
+
+        if not delpars and target.is_solo_call_arg_genexp():  # need to check this otherwise might eat up Call args pars
+            if (loc2 := target.pars(shared=False)) > loc:
+                loc = loc2
+
+        ln, col, end_ln, end_col = loc
+
+    # do it
 
     if prefix:
         put_fst.put_src([prefix], 0, 0, 0, 0, True)
@@ -238,8 +289,6 @@ def _make_exprish_fst(self: 'FST', code: Code | None, idx: int | None, field: st
         ls[-1] = bistr((ls := put_fst._lines)[-1] + suffix)  # don't need to offset anything so just tack onto the end
 
     put_fst.indent_lns(self.get_indent(), docstr=options.get('docstr'))
-
-    ln, col, end_ln, end_col = target.pars(shared=False, pars=delpars) if target.is_FST else target
 
     dcol_offset   = self.root._lines[ln].c2b(col)
     params_offset = self.put_src(put_fst._lines, ln, col, end_ln, end_col, True, False, exclude=self)

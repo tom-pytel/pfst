@@ -1527,7 +1527,7 @@ class FST:
 
     def is_solo_call_arg_genexp(self) -> bool:
         """Whether `self` is the dreaded solo call non-keyword argument generator expression in `sum(i for i in a)`.
-        Doesn't say it shares parentheses or not, so could still be `sum((i for i in a))` or even
+        This function doesn't say it shares its parentheses or not, so could still be `sum((i for i in a))` or even
         `sum(((i for i in a)))`."""
 
         return ((parent := self.parent) and self.pfield.name == 'args' and isinstance(self.a, GeneratorExp) and

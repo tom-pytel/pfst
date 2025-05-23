@@ -34923,6 +34923,20 @@ class cls:
         f.put('5', 1, raw=False, to=f.elts[2])
         self.assertEqual('[1, 5, 4]', f.src)
 
+        # make sure put doesn't eat arguments pars
+
+        f = parse('f(i for i in j)').body[0].value.f
+        f.put('a', 0, 'args', pars=False, raw=False)
+        self.assertEqual('f(a)', f.src)
+
+        f = parse('f((i for i in j))').body[0].value.f
+        f.put('a', 0, 'args', pars=False, raw=False)
+        self.assertEqual('f(a)', f.src)
+
+        f = parse('f(((i for i in j)))').body[0].value.f
+        f.put('a', 0, 'args', pars=False, raw=False)
+        self.assertEqual('f((a))', f.src)
+
         # ops
 
         self.assertEqual('a >>= b', parse('a *= b').body[0].f.put('>>=', field='op', raw=False).src)
