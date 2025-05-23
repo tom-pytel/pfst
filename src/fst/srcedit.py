@@ -1038,5 +1038,4 @@ class SrcEdit:
 
 _src_edit = SrcEdit()
 
-
-from .fst import FST
+from .fst import FST  # this imports a fake FST which is replaced in globals() on first use

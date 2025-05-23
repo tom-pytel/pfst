@@ -39,27 +39,17 @@ _OPTIONS = {
 }
 
 
-def parse(source, filename='<unknown>', mode='exec', *, type_comments=False, feature_version=None, **kwargs) -> AST:
-    """Executes `ast.parse()` and then adds `FST` nodes to the parsed tree. Drop-in replacement for `ast.parse()`. For
-    parameters, see `ast.parse()`. Returned `AST` tree has added `.f` attribute at each node which accesses the parallel
-    `FST` tree."""
+def _swizzle_getput_params(start: int | Literal['end'] | None, stop: int | None | Literal[False], field: str | None,
+                           default_stop: Literal[False] | None,
+                           ) -> tuple[int | Literal['end'] | None,int | None | Literal[False], str | None]:
+    """Allow passing `stop` and `field` positionally."""
 
-    return FST.fromsrc(source, filename, mode, type_comments=type_comments, feature_version=feature_version, **kwargs).a
+    if isinstance(start, str) and start != 'end':
+        return None, default_stop, start
+    if isinstance(stop, str):
+        return start, default_stop, stop
 
-
-def unparse(ast_obj) -> str:
-    """Returns the formatted source that is kept for this tree. Drop-in replacement for `ast.unparse()`."""
-
-    if (f := getattr(ast_obj, 'f', None)) and isinstance(f, FST) and f.loc:
-        if f.is_root:
-            return f.src
-
-        try:
-            return f.copy().src
-        except Exception:
-            pass
-
-    return ast_unparse(ast_obj)
+    return start, stop, field
 
 
 class _EnclosedASTMock:
@@ -100,6 +90,31 @@ class _FSTCircularImportStandin(metaclass=_FSTCircularImportStandinMeta):
         return FST(*args, **kwargs)
 
 FST = _FSTCircularImportStandin  # predefined so that imports in the real `FST` class get this
+
+
+# ----------------------------------------------------------------------------------------------------------------------
+
+def parse(source, filename='<unknown>', mode='exec', *, type_comments=False, feature_version=None, **kwargs) -> AST:
+    """Executes `ast.parse()` and then adds `FST` nodes to the parsed tree. Drop-in replacement for `ast.parse()`. For
+    parameters, see `ast.parse()`. Returned `AST` tree has added `.f` attribute at each node which accesses the parallel
+    `FST` tree."""
+
+    return FST.fromsrc(source, filename, mode, type_comments=type_comments, feature_version=feature_version, **kwargs).a
+
+
+def unparse(ast_obj) -> str:
+    """Returns the formatted source that is kept for this tree. Drop-in replacement for `ast.unparse()`."""
+
+    if (f := getattr(ast_obj, 'f', None)) and isinstance(f, FST) and f.loc:
+        if f.is_root:
+            return f.src
+
+        try:
+            return f.copy().src
+        except Exception:
+            pass
+
+    return ast_unparse(ast_obj)
 
 
 class FST:
@@ -823,6 +838,8 @@ class FST:
             field: str | None = None, *, cut: bool = False, **options) -> Any:
         """Copy or cut an individual child node or a slice of child nodes from `self`."""
 
+        start, stop, field = _swizzle_getput_params(start, stop, field, False)
+
         ast          = self.a
         field_, body = _fixup_field_body(ast, field, False)
 
@@ -850,6 +867,8 @@ class FST:
         this call, whether it succeeds or fails.
         """
 
+        start, stop, field = _swizzle_getput_params(start, stop, field, False)
+
         ast          = self.a
         field_, body = _fixup_field_body(ast, field, False)
 
@@ -876,6 +895,8 @@ class FST:
                   cut: bool = False, **options) -> 'FST':
         """Get a slice of child nodes from `self`."""
 
+        start, stop, field = _swizzle_getput_params(start, stop, field, None)
+
         ast     = self.a
         _, body = _fixup_field_body(ast, field)
 
@@ -893,6 +914,8 @@ class FST:
 
         Can reparse.
         """
+
+        start, stop, field = _swizzle_getput_params(start, stop, field, None)
 
         ast     = self.a
         _, body = _fixup_field_body(ast, field)

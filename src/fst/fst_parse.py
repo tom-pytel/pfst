@@ -321,4 +321,4 @@ def _code_as_op(self: 'FST', code: Code,
 # ----------------------------------------------------------------------------------------------------------------------
 __all_private__ = [n for n in globals() if n not in _GLOBALS]
 
-from .fst import FST
+from .fst import FST  # this imports a fake FST which is replaced in globals() on first use

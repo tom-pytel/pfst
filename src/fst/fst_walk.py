@@ -75,7 +75,7 @@ def _with_loc(fst: 'FST', with_loc: bool | Literal['all', 'own'] = True) -> bool
 
 # ----------------------------------------------------------------------------------------------------------------------
 
-def next(self: 'FST', with_loc: bool | Literal['all', 'own'] = True) -> Optional['FST']:  # TODO: refactor maybe
+def next(self: 'FST', with_loc: bool | Literal['all', 'own'] = True) -> Optional['FST']:  # TODO: refactor
     """Get next sibling in syntactic order, only within parent.
 
     **Parameters:**
@@ -368,7 +368,7 @@ def next(self: 'FST', with_loc: bool | Literal['all', 'own'] = True) -> Optional
     return None
 
 
-def prev(self: 'FST', with_loc: bool | Literal['all', 'own'] = True) -> Optional['FST']:  # TODO: refactor maybe
+def prev(self: 'FST', with_loc: bool | Literal['all', 'own'] = True) -> Optional['FST']:  # TODO: refactor
     """Get previous sibling in syntactic order, only within parent.
 
     **Parameters:**
@@ -1065,4 +1065,4 @@ def walk(self: 'FST', with_loc: bool | Literal['all', 'own'] = False, *, self_: 
                 stack.extend(children if back else children[::-1])
 
 
-from .fst import FST
+from .fst import FST  # this imports a fake FST which is replaced in globals() on first use

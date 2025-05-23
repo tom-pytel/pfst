@@ -91,5 +91,4 @@ def _put_slice(self: 'FST', code: Code | None, start: int | Literal['end'] | Non
 # ----------------------------------------------------------------------------------------------------------------------
 __all_private__ = ['_get_slice', '_put_slice']
 
-
-from .fst import FST
+from .fst import FST  # this imports a fake FST which is replaced in globals() on first use

@@ -1,4 +1,5 @@
 from ast import *
+from builtins import slice
 from typing import Any, Literal
 
 from .astutil import *
@@ -8,7 +9,7 @@ from .shared import Code, _fixup_one_index, _fixup_slice_indices
 class fstlist:
     """Proxy for list of AST nodes in a body (or any other list of AST nodes) which acts as a list of FST nodes. Is only
     meant for short term convenience use as operations on the target FST node which are not effectuated through this
-    proxy will invalidate the start and stop positions stored here if they change the size of the list of nodes."""
+    proxy may invalidate the start and stop positions stored here if they change the size of the list of nodes."""
 
     fst:   'FST'
     field: str
@@ -144,4 +145,4 @@ class fstlist:
 
 __all__ = ['fstlist']
 
-from .fst import FST
+from .fst import FST  # this imports a fake FST which is replaced in globals() on first use
