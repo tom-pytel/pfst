@@ -216,65 +216,52 @@ def _make_exprish_fst(self: 'FST', code: Code | None, idx: int | None, field: st
 
     # figure out parentheses
 
-    pars    = FST.get_option('pars', options)
-    delpars = pars or put_fst.is_parenthesized_tuple() is False  # need tuple check because otherwise Tuple location would be wrong after (wouldn't include possible enclosing parens)
-    is_FST  = target.is_FST
 
-    if precedence_require_parens(put_ast, self.a, field, idx):
-        if not put_fst.is_atom() and (delpars or not is_FST or not target.pars(True)[1]):
-            put_fst.parenthesize()
+    # def need_pars(adding):  # DEBUG!
+    #     a = put_fst.is_atom(pars=False)
+    #     b = precedence_require_parens(put_ast, self.a, field, idx)
+    #     c = self.is_enclosed_in_parents(field)
+    #     d = put_fst.is_enclosed(pars=adding)
 
-    elif pars == 'auto':  # remove parens only if allowed to
-        put_fst.unparenthesize()
+    #     return (not a and b) or (not c and not d)
 
 
+    need_pars    = lambda adding: (
+        (not put_fst.is_atom(pars=False) and precedence_require_parens(put_ast, self.a, field, idx)) or
+        (not self.is_enclosed_in_parents(field) and not put_fst.is_enclosed(pars=adding)))
+    pars         = FST.get_option('pars', options)
+    tgt_is_FST   = target.is_FST
+    del_tgt_pars = False
 
-    # need_pars = lambda: ((not put_fst.is_atom(False) and precedence_require_parens(put_ast, self.a, field, idx)) or
-    #                      (not self.is_enclosed_in_parents(field) and not put_fst.is_enclosed()))
-    # delpars   = False
+    if pars:
+        if put_fst.pars(True)[1]:  # src has grouping pars
+            del_tgt_pars = True
 
-    # if pars := FST.get_option('pars', options):
-    #     if put_fst.pars(True)[1]:
-    #         delpars = True
+            if pars == 'auto':
+                if not need_pars(False):
+                    put_fst._unparenthesize_grouping()
 
-    #     if pars == 'auto':
-    #         pass
+        else:  # src does not have grouping pars
+            if ((tgt_has_pars := tgt_is_FST and (tgt_pars := target.pars(shared=False)) is not target.bloc) and
+                put_fst.is_parenthesized_tuple() is False
+            ):
+                del_tgt_pars = True
+                tgt_has_pars = False
 
+            if tgt_has_pars:
+                if not need_pars(True):
+                    del_tgt_pars = True
 
-    #     # if src_have_pars:
-    #     # DELPARS
+            elif need_pars(True):
+                put_fst.parenthesize()  # could be parenthesizing grouping or a tuple
 
-    #     # if pars_auto:
-    #     #     if not need_pars:
-    #     #     UNPARENTHESIZE
-
-    #     # else:
-    #     # if dst_have_pars and src_is_unpar_tuple:
-    #     #     DELPARS
-    #     #     dst_have_pars = False
-
-    #     # if dst_have_pars:
-    #     #     if not need_pars:
-    #     #     DELPARS
-
-    #     # elif need_pars:
-    #     #     PARENTHESIZE
-
-
-
-
-
-
-
-
-
-    if not target.is_FST:
+    if not tgt_is_FST:
         ln, col, end_ln, end_col = target
 
     else:
-        loc = target.pars(shared=False, pars=delpars)
+        loc = target.pars(shared=False, pars=del_tgt_pars)
 
-        if not delpars and target.is_solo_call_arg_genexp():  # need to check this otherwise might eat up Call args pars
+        if not del_tgt_pars and target.is_solo_call_arg_genexp():  # need to check this otherwise might eat Call args pars
             if (loc2 := target.pars(shared=False)) > loc:
                 loc = loc2
 
@@ -526,7 +513,7 @@ def _put_one_ExceptHandler_name(self: 'FST', code: Code | None, idx: int | None,
     ret = _put_one_identifier_optional(self, code, idx, field, child, static, **options)
 
     if ret and (typef := self.a.type.f).is_parenthesized_tuple() is False:
-        typef.parenthesize()
+        typef._parenthesize_tuple()
 
     return ret
 

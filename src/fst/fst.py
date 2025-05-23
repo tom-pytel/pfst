@@ -1262,7 +1262,7 @@ class FST:
 
         return True
 
-    def is_atom(self, pars: bool = True) -> bool | Literal['pars']:
+    def is_atom(self, *, pars: bool = True, enclosed: bool = False) -> bool | Literal['pars']:
         """Whether `self` is innately atomic precedence-wise like `Name`, `Constant`, `List`, etc... Or otherwise
         optionally enclosed in parentheses so that it functions as a parsable atom and cannot be split up by precedence
         rules when reparsed.
@@ -1276,6 +1276,9 @@ class FST:
         - `pars`: Whether to check for grouping parentheses or not for node types which are not innately atomic
             (`NamedExpr`, `BinOp`, `Yield`, etc...). If `True` then '(a + b)' is considered atomic, if `False` then it
             is not.
+        - `enclosed': If `True` then will only consider nodes atomic which are definitely enclosed like `List` or
+            parenthesized tuple. Nodes which may be split up across multiple lines like `Call` or `Attribute` will not
+            be considered atomic and will return `False` unless `pars=True` and grouping parentheses present.
 
         **Returns:**
         - `True` if node is atomic and no combination in the source will make it parse to a different node. `'pars'` if
@@ -1284,13 +1287,34 @@ class FST:
 
         ast = self.a
 
-        if isinstance(ast, (List, Dict, Set, ListComp, SetComp, DictComp, GeneratorExp, Call, JoinedStr, TemplateStr,  # , Await?  # is the highest precedence thing but not technically atom
-                            Constant, Attribute, Subscript, Name,
-                            MatchValue, MatchSingleton, MatchMapping, MatchClass, MatchStar, MatchAs,
-                            expr_context, boolop, operator, unaryop, cmpop, comprehension, ExceptHandler, arguments,
-                            arg, keyword, alias, withitem, type_param,
+        # if isinstance(ast, (List, Dict, Set, ListComp, SetComp, DictComp, GeneratorExp, Call, JoinedStr, TemplateStr,  # Await? is the highest precedence thing but not technically atom
+        #                     Constant, Attribute, Subscript, Name,
+        #                     MatchValue, MatchSingleton, MatchMapping, MatchClass, MatchStar, MatchAs,
+        #                     expr_context, boolop, operator, unaryop, cmpop, comprehension, ExceptHandler, arguments,
+        #                     arg, keyword, alias, withitem, type_param,
+        #                     stmt, match_case, mod, TypeIgnore)):
+        #     return True
+
+        if isinstance(ast, (List, Dict, Set, ListComp, SetComp, DictComp, GeneratorExp, Name,
+                            MatchValue, MatchSingleton, MatchMapping,
+                            expr_context, boolop, operator, unaryop, ExceptHandler,
                             stmt, match_case, mod, TypeIgnore)):
             return True
+
+        if not enclosed:
+            if isinstance(ast, (Call, JoinedStr, TemplateStr, Constant, Attribute, Subscript,
+                                MatchClass, MatchStar, MatchAs,
+                                cmpop, comprehension, arguments,
+                                arg, keyword, alias, withitem, type_param)):
+                return True
+
+        elif isinstance(ast, Constant):
+            if not isinstance(ast.value, (str, bytes)):
+                return True
+
+        elif isinstance(ast, cmpop):
+            if not isinstance(ast, (IsNot, NotIn)):  # could be spread across multiple lines
+                return True
 
         if (ret := self.is_parenthesized_tuple()) is not None:  # if this is False then cannot be enclosed in grouping pars because that would reparse to a parenthesized Tuple and so is inconsistent
             return ret
@@ -1302,16 +1326,16 @@ class FST:
 
         return 'pars' if pars and self.pars(True)[1] else False
 
-    def is_enclosed(self, pars: bool = True) -> bool | Literal['pars']:
+    def is_enclosed(self, *, pars: bool = True) -> bool | Literal['pars']:
         """Whether `self` lives on a single line or is otherwise enclosed in some kind of delimiters '()', '[]', '{}' or
         entirely terminated with line continuations so that it can be parsed without error due to being spread across
         multiple lines. This does not mean it can't have other errors, such as a `Slice` outside of `Subscript.slice`.
 
         Node types where this doesn't normally apply like `stmt`, `ExceptHandler`, `boolop`, `expr_context`, etc...
-        return True. Node types that are not enclosed but which are never used without being enclosed by a parent like
-        `Slice`, `keyword` or `type_param` will also return True. Other node types which cannot be enclosed individually
-        and do not have line continuations but would need a parent to enclose them like `arguments` or the `cmpop`s
-        `is not` or `not in` will return `False` if not on a single line or not parenthesized.
+        return `True`. Node types that are not enclosed but which are never used without being enclosed by a parent like
+        `Slice`, `keyword` or `type_param` will also return `True`. Other node types which cannot be enclosed
+        individually and do not have line continuations but would need a parent to enclose them like `arguments` or the
+        `cmpop`s `is not` or `not in` will return `False` if not on a single line or not parenthesized.
 
         This function does NOT check whether `self` is enclosed by some parent up the tree if it is not enclosed itself,
         for that see `is_enclosed_in_parents()`.
@@ -1334,7 +1358,10 @@ class FST:
                             stmt, match_case, mod, TypeIgnore)):
             return True
 
-        ln, col, end_ln, end_col = self.loc
+        if not (loc := self.loc):  # this catches empty `arguments` mostly
+            return True
+
+        ln, col, end_ln, end_col = loc
 
         if end_ln == ln:
             return True
@@ -1394,7 +1421,7 @@ class FST:
         """Whether `self` is enclosed by some parent up the tree. This is different from `is_enclosed()` as it does not
         check for line continuations or anyting like that, just enclosing delimiters like from `Call` or `arguments`
         parentheses, `List` brackets, `FormattedValue`, parent grouping parentheses, etc... Statements do not generally
-        enclose except for a few parts like `FunctionDef` `args` or `type_params`, `ClassDef` `bases`, etc...
+        enclose except for a few parts of things like `FunctionDef` `args` or `type_params`, `ClassDef` `bases`, etc...
 
         **Parameters:**
         - `field`: This is meant to allow check for nonexistent child which would go into this field of `self`. If this
@@ -1402,8 +1429,10 @@ class FST:
 
         WARNING! This will not pick up parentheses which belong to `self` and the rules for this can be confusing. E.g.
         In 'with (a): pass` the parentheses belong to the variable `a` while `with (a as b): pass` they belong to the
-        `with` because `alias`es cannot be parenthesized. Will pick up parentheses which belong to `self` if `field` is
-        passed because in that case `self` is considered the first parent.
+        `with` because `alias`es cannot be parenthesized.
+
+        Will pick up parentheses which belong to `self` if `field` is passed because in that case `self` is considered
+        the first parent and we are really considering the node which would live at `field`, whether it exists or not.
         """
 
         if field:
@@ -2008,18 +2037,18 @@ class FST:
 
         return lns
 
-    def parenthesize(self, force: bool = False) -> bool:
-        """Parenthesize node if is not `.is_atom()`. Will add parentheses to unparenthesized `Tuple` adjusting the
-        node location and otherwise grouping parentheses where needed.
+    def parenthesize(self, *, force: bool = False) -> bool:
+        """Parenthesize node if it MAY need it. Will not parenthesize atoms which are always enclosed like `List` unless
+        `force=True`. Will add parentheses to unparenthesized `Tuple` adjusting the node location.
 
         **Parameters:**
-        - `force`: If `True` then will add another layher of parentheses regardless if already present.
+        - `force`: If `True` then will add another layer of parentheses regardless if any already present.
 
         **Returns:**
         - `bool`: Whether parentheses added or not.
         """
 
-        if self.is_atom():
+        if self.is_atom(enclosed=True):
             if not force:
                 return False
 
@@ -2034,12 +2063,12 @@ class FST:
 
         return True
 
-    def unparenthesize(self, tuple_: bool = False) -> bool:
-        """Unparenthesize node if is `.is_atom()`. Can remove parentheses from parenthesized tuple and adjust its
-        location but will not do so by default.
+    def unparenthesize(self, *, tuple_: bool = False) -> bool:
+        """Remove all parentheses from node if present. Normally removes just grouping parentheses but can also remove
+        tuple parentheses if `tuple_=True`.
 
         **Parameters:**
-        - `tuple`: If `True` then will remove parentheses from a parenthesized `Tuple`, otherwise only removes grouping
+        - `tuple_`: If `True` then will remove parentheses from a parenthesized `Tuple`, otherwise only removes grouping
             parentheses if present.
 
         **Returns:**

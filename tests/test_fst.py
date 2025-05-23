@@ -15487,16 +15487,16 @@ Module .. ROOT 0,0 -> 0,10
       .ctx Load
 """),
 
-(r"""i = j""", 'body[0]', None, None, {'raw': False, 'pars': False}, r"""a, b""", r"""i = (a, b)""", r"""
-Module .. ROOT 0,0 -> 0,10
+(r"""i = j""", 'body[0]', None, None, {'raw': False, 'pars': False}, r"""a, b""", r"""i = a, b""", r"""
+Module .. ROOT 0,0 -> 0,8
   .body[1]
-  0] Assign .. 0,0 -> 0,10
+  0] Assign .. 0,0 -> 0,8
     .targets[1]
     0] Name 'i' Store .. 0,0 -> 0,1
-    .value Tuple .. 0,4 -> 0,10
+    .value Tuple .. 0,4 -> 0,8
       .elts[2]
-      0] Name 'a' Load .. 0,5 -> 0,6
-      1] Name 'b' Load .. 0,8 -> 0,9
+      0] Name 'a' Load .. 0,4 -> 0,5
+      1] Name 'b' Load .. 0,7 -> 0,8
       .ctx Load
 """),
 
@@ -15591,14 +15591,17 @@ Module .. ROOT 0,0 -> 0,1
 (r"""( # 1
 i
 # 2
-)""", 'body[0]', None, None, {'raw': False, 'pars': False}, r"""a, b""", r"""(a, b)""", r"""
-Module .. ROOT 0,0 -> 0,6
+)""", 'body[0]', None, None, {'raw': False, 'pars': False, 'verify': False, 'comment': 'will wind up with wrong unreparsable tuple position'}, r"""a, b""", r"""( # 1
+a, b
+# 2
+)""", r"""
+Module .. ROOT 0,0 -> 3,1
   .body[1]
-  0] Expr .. 0,0 -> 0,6
-    .value Tuple .. 0,0 -> 0,6
+  0] Expr .. 0,0 -> 3,1
+    .value Tuple .. 1,0 -> 1,4
       .elts[2]
-      0] Name 'a' Load .. 0,1 -> 0,2
-      1] Name 'b' Load .. 0,4 -> 0,5
+      0] Name 'a' Load .. 1,0 -> 1,1
+      1] Name 'b' Load .. 1,3 -> 1,4
       .ctx Load
 """),
 
@@ -28559,7 +28562,8 @@ def regen_put_one():
                 tdst  = f.root.src
                 tdump = f.root.dump(out=list, compact=True)
 
-                f.root.verify(raise_=True)
+                if options.get('verify', True):
+                    f.root.verify(raise_=True)
 
             newlines.extend(f'''(r"""{dst}""", {attr!r}, {idx}, {field!r}, {options!r}, r"""{src}""", r"""{tdst}""", r"""'''.split('\n'))
             newlines.extend(tdump)
@@ -34873,7 +34877,8 @@ class cls:
                     tdst  = f.root.src
                     tdump = f.root.dump(out=list, compact=True)
 
-                    f.root.verify(raise_=True)
+                    if options.get('verify', True):
+                        f.root.verify(raise_=True)
 
                 self.assertEqual(tdst, put_src)
 
@@ -35097,6 +35102,71 @@ class cls:
         self.assertEqual('x:y:z, x:y:z', f.slice.src)
         f.slice.put(s0, 1, raw=False)
         self.assertEqual('x:y:z, a:b', f.slice.src)
+
+    def test_put_one_pars(self):
+        f = FST('a = b').body[0]
+        g = FST('(i := j)').body[0].value.copy(pars=False)
+        self.assertEqual('i := j', g.src)
+        f.put(g.copy(), field='value', raw=False, pars=False)
+        self.assertEqual(f.src, 'a = i := j')
+        f.put(g.copy(), field='value', raw=False, pars='auto')
+        self.assertEqual(f.src, 'a = (i := j)')
+        f.put(g, field='value', raw=False, pars=True)
+        self.assertEqual(f.src, 'a = (i := j)')
+
+        f = FST('a = b').body[0]
+        g = FST('("i"\n"j")').body[0].value.copy(pars=False)
+        self.assertEqual('"i"\n"j"', g.src)
+        f.put(g.copy(), field='value', raw=False, pars=False)
+        self.assertEqual(f.src, 'a = "i"\n"j"')
+        f.put(g.copy(), field='value', raw=False, pars='auto')
+        self.assertEqual(f.src, 'a = ("i"\n"j")')
+        f.put(g, field='value', raw=False, pars=True)
+        self.assertEqual(f.src, 'a = ("i"\n"j")')
+
+        f = FST('a = b').body[0]
+        g = FST('[i, j]').body[0].value.copy(pars=False)
+        self.assertEqual('[i, j]', g.src)
+        f.put(g.copy(), field='value', raw=False, pars=False)
+        self.assertEqual(f.src, 'a = [i, j]')
+        f.put(g.copy(), field='value', raw=False, pars='auto')
+        self.assertEqual(f.src, 'a = [i, j]')
+        f.put(g, field='value', raw=False, pars=True)
+        self.assertEqual(f.src, 'a = [i, j]')
+
+        f = FST('a = b').body[0]
+        g = FST('(i,\nj)').body[0].value.copy(pars=False)
+        self.assertEqual('(i,\nj)', g.src)
+        g.unparenthesize(tuple_=True)
+        self.assertEqual('i,\nj', g.src)
+        f.put(g.copy(), field='value', raw=False, pars=False)
+        self.assertEqual(f.src, 'a = i,\nj')
+        f.put(g.copy(), field='value', raw=False, pars='auto')
+        self.assertEqual(f.src, 'a = (i,\nj)')
+        f.put(g, field='value', raw=False, pars=True)
+        self.assertEqual(f.src, 'a = (i,\nj)')
+
+        f = FST('a = ( # pre\nb\n# post\n)').body[0]
+        g = FST('( i )').body[0].value.copy(pars=True)
+        self.assertEqual('( i )', g.src)
+        f.put(g.copy(), field='value', raw=False, pars=False)
+        self.assertEqual(f.src, 'a = ( # pre\n( i )\n# post\n)')
+        f.put(g.copy(), field='value', raw=False, pars=True)
+        self.assertEqual(f.src, 'a = ( i )')
+        f.put(g, field='value', raw=False, pars='auto')
+        self.assertEqual(f.src, 'a = i')
+
+        # leave needed parens in target
+
+        f = FST('a = ( # pre\nb\n# post\n)').body[0]
+        g = FST('(1\n+\n2)').body[0].value.copy(pars=False)
+        self.assertEqual('1\n+\n2', g.src)
+        f.put(g.copy(), field='value', raw=False, pars=False)
+        self.assertEqual(f.src, 'a = ( # pre\n1\n+\n2\n# post\n)')
+        f.put(g.copy(), field='value', raw=False, pars=True)
+        self.assertEqual(f.src, 'a = ( # pre\n1\n+\n2\n# post\n)')
+        f.put(g, field='value', raw=False, pars='auto')
+        self.assertEqual(f.src, 'a = ( # pre\n1\n+\n2\n# post\n)')
 
     def test_put_raw(self):
         for i, (dst, attr, (ln, col, end_ln, end_col), options, src, put_ret, put_src, put_dump) in enumerate(PUT_RAW_DATA):

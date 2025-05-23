@@ -1051,8 +1051,8 @@ def _parenthesize_tuple(self: 'FST', whole: bool = True):
 
 
 def _unparenthesize_grouping(self: 'FST', *, inc_genexpr_solo: bool = False) -> bool:
-    """Remove grouping parentheses from anything. Just remove text parens around node and everything between them
-    and node adjusting parent locations but not the node itself.
+    """Remove grouping parentheses from anything if present. Just remove text parens around node and everything between
+    them and node adjusting parent locations but not the node itself.
 
     **Returns:**
     - `bool`: Whether parentheses were removed or not (only removed if present to begin with and removable).
