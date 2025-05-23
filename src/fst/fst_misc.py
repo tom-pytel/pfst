@@ -407,6 +407,36 @@ def _rpars(self: 'FST', with_loc: bool | Literal['all', 'own', 'allown'] = True,
     return ret
 
 
+def _lpars2(self: 'FST', with_loc: bool | Literal['all', 'own', 'allown'] = True) -> list[tuple[int, int]]:
+    """Return list of coordinates of left of self and opening parentheses on the left. The leftmost bound used is the
+    end of the previous sibling, or the start of that parent if there isn't one, or (0,0) if no parent.
+
+    **Parameters:**
+    - `with_loc`: Parameter to use for AST bound search. `True` normally or `'allown'` in special cases like
+        searching for parentheses to figure out node location from children from `.loc` itself.
+
+    **Returns:**
+    - `[(self.bln, self.bcol), (ln_par1, col_par1), (ln_par2, col_par2), ...]`
+    """
+
+    return _prev_pars2(self.root._lines, *self._prev_ast_bound(with_loc), *self.bloc[:2])
+
+
+def _rpars2(self: 'FST', with_loc: bool | Literal['all', 'own', 'allown'] = True) -> list[tuple[int, int]]:
+    """Return list of coordinates of the right of self and closing parentheses on the right. The rightmost bound used is
+    the start of the next sibling, or the end of that parent if there isn't one, or the end of `self.root._lines`.
+
+    **Parameters:**
+    - `with_loc`: Parameter to use for AST bound search. `True` normally or `'allown'` in special cases like
+        searching for parentheses to figure out node location from children from `.loc` itself.
+
+    **Returns:**
+    - `[(self.bend_ln, self.bend_col), (ln_end_par1, col_end_par1), (ln_end_par2, col_end_par2), ...]`
+    """
+
+    return _next_pars2(self.root._lines, *self.bloc[2:], *self._next_ast_bound(with_loc))
+
+
 def _loc_block_header_end(self: 'FST', ret_bound: bool = False) -> fstloc | tuple[int, int] | None:
     """Return location of the end of the block header line(s) for block node, just past the ':', or None if `self`
     is not a block header node.
@@ -500,32 +530,29 @@ def _loc_comprehension(self: 'FST') -> fstloc:
     last  = self.last_child()
     lines = self.root._lines
 
-    prev = prev.loc if (prev := self.prev_step('allown', recurse_self=False)) else (0, 0)
+    if prev := self.prev_step('allown', recurse_self=False):
+        ln, col, _, _ = prev.loc
+    else:
+        ln = col = 0
 
-    if start := _prev_find(lines, prev[-2], prev[-1], first.ln, first.col, 'for'):  # prev.bend_ln, prev.bend_col
-        start_ln, start_col = start
+    start_ln, start_col = _prev_find(lines, ln, col, first.ln, first.col, 'for')  # must be there
 
-        if ast.is_async and (start := _prev_find(lines, prev[-2], prev[-1], start_ln, start_col, 'async')):
-            start_ln, start_col = start
+    if ast.is_async:
+        start_ln, start_col = _prev_find(lines, ln, col, start_ln, start_col, 'async')  # must be there
+
+    rpars = last._rpars2('allown')
+
+    if (lrpars := len(rpars)) == 1:  # no pars, just use end of last
+        end_ln, end_col = rpars[0]
 
     else:
-        start_ln, start_col, _, _, nlpars = first._lpars('allown')  # 'allown' so it doesn't recurse into calling `.loc`
+        is_genexp_last = ((parent := self.parent) and isinstance(parent.a, GeneratorExp) and  # correct for parenthesized GeneratorExp
+                          self.pfield.idx == len(parent.a.generators) - 1)
 
-        if not nlpars:  # not really needed, but juuust in case
-            start_ln  = first.bln
-            start_col = first.bcol
-
-    end_ln, end_col, ante_end_ln, ante_end_col, nrpars = last._rpars('allown')
-
-    if not nrpars:
-        end_ln  = last.bend_ln
-        end_col = last.bend_col
-
-    elif ((parent := self.parent) and isinstance(parent.a, GeneratorExp) and  # correct for parenthesized GeneratorExp
-        self.pfield.idx == len(parent.a.generators) - 1
-    ):
-        end_ln  = ante_end_ln
-        end_col = ante_end_col
+        if is_genexp_last and lrpars == 2:  # can't be pars on left since only par on right was close of GeneratorExp
+            end_ln, end_col = rpars[0]
+        else:
+            end_ln, end_col = rpars[len(last._lpars2('allown')) - 1]  # get rpar according to how many pars on left
 
     return fstloc(start_ln, start_col, end_ln, end_col)
 

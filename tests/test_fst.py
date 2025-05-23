@@ -15178,7 +15178,7 @@ Module .. ROOT 0,0 -> 0,24
       0] GeneratorExp .. 0,2 -> 0,23
         .elt Name 'i' Load .. 0,3 -> 0,4
         .generators[1]
-        0] comprehension .. 0,5 -> 0,23
+        0] comprehension .. 0,5 -> 0,22
           .target Name 'i' Store .. 0,9 -> 0,10
           .iter Call .. 0,14 -> 0,22
             .func Name 'range' Load .. 0,14 -> 0,19
@@ -21845,7 +21845,7 @@ Module .. ROOT 0,0 -> 0,20
       0] GeneratorExp .. 0,5 -> 0,19
         .elt Name 'a' Load .. 0,6 -> 0,7
         .generators[1]
-        0] comprehension .. 0,8 -> 0,19
+        0] comprehension .. 0,8 -> 0,18
           .target Name 'a' Store .. 0,12 -> 0,13
           .iter Name 'b' Load .. 0,17 -> 0,18
           .is_async 0
@@ -21861,7 +21861,7 @@ Module .. ROOT 0,0 -> 0,20
       0] GeneratorExp .. 0,5 -> 0,19
         .elt Name 'a' Load .. 0,6 -> 0,7
         .generators[1]
-        0] comprehension .. 0,8 -> 0,19
+        0] comprehension .. 0,8 -> 0,18
           .target Name 'a' Store .. 0,12 -> 0,13
           .iter Name 'b' Load .. 0,17 -> 0,18
           .is_async 0
@@ -31894,17 +31894,14 @@ def func():
         self.assertEqual((0, 15, 0, 21), parse('from a import (b as c)').body[0].names[0].f.pars())
         self.assertRaises(SyntaxError, parse, 'from a import ((b as c))')
 
-        # special tricky cases, large pars delta
+        # tricky cases, large pars delta
 
-
-
-
-        # self.assertEqual('i for i in (j)', FST('((i for i in (j)))').body[0].value.generators[0].src)
-        # self.assertEqual((0, 2, 0, 5), FST('(((a), b))').body[0].value.elts[0].pars())
-        # self.assertEqual((0, 5, 0, 8), FST('call((i),)').body[0].value.args[0].pars())
-
-
-
+        self.assertEqual('for i in (j)', FST('((i for i in (j)))').body[0].value.generators[0].src)
+        self.assertEqual((0, 2, 0, 5), FST('(((a), b))').body[0].value.elts[0].pars())
+        self.assertEqual((0, 5, 0, 8), FST('call((i),)').body[0].value.args[0].pars())
+        self.assertEqual((0, 5, 0, 10), FST('call(((i)),)').body[0].value.args[0].pars())
+        self.assertEqual((0, 8, 0, 13), FST('class c(((b))): pass').body[0].bases[0].pars())
+        self.assertEqual((0, 8, 0, 13), FST('class c(((b)),): pass').body[0].bases[0].pars())
 
     def test_pars_is_bloc_when_no_pars(self):
         self.assertIsNot((f := FST('(a)').body[0].value).pars(), f.bloc)

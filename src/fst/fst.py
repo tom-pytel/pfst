@@ -1695,32 +1695,33 @@ class FST:
         else:
             return cached if count else cached[0]
 
-        pars_end_ln, pars_end_col, ante_end_ln, ante_end_col, nrpars = self._rpars(shared=shared)
+        rpars = self._rpars2()
 
-        if not nrpars:
+        if (lrpars := len(rpars)) == 1:  # no pars on right
+            if not shared and self.is_solo_call_arg_genexp():
+                ln, col, end_ln, end_col = self.bloc
+                locncount                = (fstloc(ln, col + 1, end_ln, end_col - 1), -1)
+
+            else:
+                locncount = (self.bloc, 0)
+
+            self._cache[key] = locncount
+
+            return locncount if count else locncount[0]
+
+        lpars = self._lpars2()
+
+        if (llpars := len(lpars)) == 1:  # no pars on left
             locncount = self._cache[key] = (self.bloc, 0)
 
             return locncount if count else self.bloc
 
-        pars_ln, pars_col, ante_ln, ante_col, nlpars = self._lpars(shared=shared)
+        if llpars != lrpars:  # unpalanced pars so we know we can safely use the lower count
+            loc = fstloc(*lpars[npars], *rpars[npars]) if (npars := min(llpars, lrpars) - 1) else self.bloc
 
-        if not nlpars:
-            locncount = self._cache[key] = (self.bloc, 0)
-
-            return locncount if count else self.bloc
-
-        dpars = nlpars - nrpars
-
-        if dpars == 1:  # unbalanced due to enclosing tuple, will always be unbalanced if at ends of parenthesized tuple (even if solo element) due to commas, should only ever be unbalanced one unit in one direction or the other
-            loc = fstloc(ante_ln, ante_col, pars_end_ln, pars_end_col) if (npars := nrpars) else self.bloc
-        elif dpars == -1:
-            loc = fstloc(pars_ln, pars_col, ante_end_ln, ante_end_col) if (npars := nlpars) else self.bloc
-        elif dpars:
-            raise RuntimeError('should not get here')
-        elif self.is_solo_class_base():  # special case where we don't want the outermost pars, to not erase class base pars when replacing, don't need to check for comma because if there is one then pars would be unbalanced
-            loc = fstloc(ante_ln, ante_col, ante_end_ln, ante_end_col) if (npars := nrpars - 1) else self.bloc
         else:
-            loc = fstloc(pars_ln, pars_col, pars_end_ln, pars_end_col) if (npars := nrpars) else self.bloc
+            npars = llpars - (2 if self.is_solo_class_base() or self.is_solo_call_arg() else 1)
+            loc   = fstloc(*lpars[npars], *rpars[npars]) if npars else self.bloc
 
         locncount = self._cache[key] = (loc, npars)
 
@@ -2107,6 +2108,8 @@ class FST:
         _next_ast_bound,
         _lpars,
         _rpars,
+        _lpars2,
+        _rpars2,
         _loc_block_header_end,
         _loc_operator,
         _loc_comprehension,
