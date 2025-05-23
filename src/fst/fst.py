@@ -347,7 +347,7 @@ class FST:
 
         return (l := self.bloc) and l[0]
 
-    bcol     = col  # for symmetry, also may eventually be distinct
+    bcol     = col  # for symmetry
     bend_ln  = end_ln
     bend_col = end_col
 
@@ -442,7 +442,7 @@ class FST:
 
         if pfield is None and parent_or_lines is None:  # top level shortcut
             params = {k: v for k in ('filename', 'mode', 'type_comments', 'feature_version')
-                        if (v := kwargs.get(k, k)) is not k}  # k used as sentinel
+                      if (v := kwargs.get(k, k)) is not k}  # k used as sentinel
 
             if from_ := kwargs.get('from_'): # copy parse params from source tree
                 params = {**from_.root.parse_params, **params}
@@ -1648,7 +1648,11 @@ class FST:
             parameter exists purely for convenience.
 
         **Returns:**
-        - `fstloc | None`: Location of enclosing parentheses if present else `self.bloc` (which can be `None`).
+        - `fstloc | None`: Location of enclosing parentheses if present else `self.bloc` (which can be `None`). If you
+            don't need an exact count of parentheses and just need to know if there are or not then the return can be
+            checked if `fst.pars() is fst.bloc`. If there are no parentheses then `.bloc` is guaranteed to be returned
+            identically. This can also be used to check for negative count in the case of `shared=False` via
+            `fst.pars() > fst.bloc`.
         - `(fstloc, count)`: Location of enclosing parentheses or `self.bloc` and number of nested parenthesess found
             (if requested with `count`). `count` can be -1 in the case of a `GeneratorExp` sharing parentheses with
             `Call` `arguments` if it is the only argument, but only if these parentheses are explicitly excluded with
@@ -1683,30 +1687,17 @@ class FST:
 
         dpars = nlpars - nrpars
 
-        if dpars == 1:  # unbalanced due to enclosing tuple, will always be unbalanced if at ends of parenthesized tuple (even if solo element) due to commas
-            npars    = nrpars
-            pars_ln  = ante_ln
-            pars_col = ante_col
-
+        if dpars == 1:  # unbalanced due to enclosing tuple, will always be unbalanced if at ends of parenthesized tuple (even if solo element) due to commas, should only ever be unbalanced one unit in one direction or the other
+            loc = fstloc(ante_ln, ante_col, pars_end_ln, pars_end_col) if (npars := nrpars) else self.bloc
         elif dpars == -1:
-            npars        = nlpars
-            pars_end_ln  = ante_end_ln
-            pars_end_col = ante_end_col
-
+            loc = fstloc(pars_ln, pars_col, ante_end_ln, ante_end_col) if (npars := nlpars) else self.bloc
         elif dpars:
             raise RuntimeError('should not get here')
-
-        elif self.is_solo_class_base():  # special case where we don't want the outermost pars, don't need to check for comma because if there is one then pars would be unbalanced, to not erase class base pars when replacing
-            pars_ln      = ante_ln
-            pars_col     = ante_col
-            pars_end_ln  = ante_end_ln
-            pars_end_col = ante_end_col
-            npars        = nrpars - 1
-
+        elif self.is_solo_class_base():  # special case where we don't want the outermost pars, to not erase class base pars when replacing, don't need to check for comma because if there is one then pars would be unbalanced
+            loc = fstloc(ante_ln, ante_col, ante_end_ln, ante_end_col) if (npars := nrpars - 1) else self.bloc
         else:
-            npars = nrpars
+            loc = fstloc(pars_ln, pars_col, pars_end_ln, pars_end_col) if (npars := nrpars) else self.bloc
 
-        loc       = fstloc(pars_ln, pars_col, pars_end_ln, pars_end_col)
         locncount = self._cache[key] = (loc, npars)
 
         return locncount if count else loc

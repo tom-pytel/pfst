@@ -31713,6 +31713,23 @@ def func():
         self.assertEqual((0, 15, 0, 21), parse('from a import (b as c)').body[0].names[0].f.pars())
         self.assertRaises(SyntaxError, parse, 'from a import ((b as c))')
 
+    def test_pars_is_bloc_when_no_pars(self):
+        self.assertIsNot((f := FST('(a)').body[0].value).pars(), f.bloc)
+        self.assertIs((f := FST('(a, b)').body[0].value.elts[0]).pars(), f.bloc)
+        self.assertIs((f := FST('(a, b)').body[0].value.elts[1]).pars(), f.bloc)
+        self.assertIsNot((f := FST('((a), b)').body[0].value.elts[0]).pars(), f.bloc)
+        self.assertIsNot((f := FST('(a, (b))').body[0].value.elts[1]).pars(), f.bloc)
+
+        self.assertIs((f := FST('(a, b)').body[0].value).pars(), f.bloc)
+        self.assertIsNot((f := FST('((a, b))').body[0].value).pars(), f.bloc)
+
+        self.assertIs((f := FST('f(i for i in j)').body[0].value.args[0]).pars(), f.bloc)
+        self.assertIsNot((f := FST('f(i for i in j)').body[0].value.args[0]).pars(shared=False), f.bloc)
+        self.assertTrue((f := FST('f(i for i in j)').body[0].value.args[0]).pars(shared=False) > f.bloc)
+        self.assertIs((f := FST('f((i for i in j))').body[0].value.args[0]).pars(shared=False), f.bloc)
+        self.assertIsNot((f := FST('f(((i for i in j)))').body[0].value.args[0]).pars(shared=False), f.bloc)
+        self.assertTrue((f := FST('f(((i for i in j)))').body[0].value.args[0]).pars(shared=False) < f.bloc)
+
     def test_copy_pars(self):
         self.assertEqual('a', parse('(a)').body[0].value.f.copy(pars=False).root.src)
         self.assertEqual('a', parse('(a)').body[0].value.f.copy(pars='auto').root.src)
