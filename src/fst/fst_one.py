@@ -214,6 +214,9 @@ def _make_exprish_fst(self: 'FST', code: Code | None, idx: int | None, field: st
 
     _validate_put_ast(self, put_ast, idx, field, static)
 
+
+
+
     pars    = FST.get_option('pars', options)
     delpars = pars or put_fst.is_parenthesized_tuple() is False  # need tuple check because otherwise Tuple location would be wrong after (wouldn't include possible enclosing parens)
     is_FST  = target.is_FST
@@ -224,6 +227,9 @@ def _make_exprish_fst(self: 'FST', code: Code | None, idx: int | None, field: st
 
     elif pars == 'auto':  # remove parens only if allowed to
         put_fst.unparenthesize()
+
+
+
 
     if prefix:
         put_fst.put_src([prefix], 0, 0, 0, 0, True)
@@ -248,7 +254,8 @@ def _make_exprish_fst(self: 'FST', code: Code | None, idx: int | None, field: st
 def _put_one_exprish_required(self: 'FST', code: Code | None, idx: int | None, field: str, child: list[AST] | AST | None,
                               static: onestatic, validate: bool = True, target: fstloc | None = None, prefix: str = '',
                               **options) -> 'FST':
-    """Put a single required expression. Can be standalone or as part of sequence."""
+    """Put a single required expression. Can be standalone or as part of sequence. `target` used for writing
+    `FunctionDef` and `Lambda` arguments."""
 
     if validate:
         child = _validate_put(self, code, idx, field, child, options)

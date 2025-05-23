@@ -9,7 +9,7 @@ from .astutil import *
 from .astutil import TypeAlias, TryStar, TemplateStr, Interpolation, type_param
 
 from .shared import (
-    astfield, fstloc,
+    astfield, fstloc, mock,
     STMTISH, STMTISH_OR_MOD, BLOCK, BLOCK_OR_MOD, SCOPE, SCOPE_OR_MOD, NAMED_SCOPE,
     NAMED_SCOPE_OR_MOD, ANONYMOUS_SCOPE, PARENTHESIZABLE, HAS_DOCSTRING,
     re_empty_line_start, re_empty_line, re_line_continuation, re_line_end_cont_or_comment,
@@ -1404,18 +1404,27 @@ class FST:
 
         return True
 
-    def is_enclosed_in_parents(self) -> bool:
+    def is_enclosed_in_parents(self, field: str | None = None) -> bool:
         """Whether `self` is enclosed by some parent up the tree. This is different from `is_enclosed()` as it does not
         check for line continuations or anyting like that, just enclosing delimiters like from `Call` or `arguments`
         parentheses, `List` brackets, `FormattedValue`, parent grouping parentheses, etc... Statements do not generally
         enclose except for a few parts like `FunctionDef` `args` or `type_params`, `ClassDef` `bases`, etc...
 
+        **Parameters:**
+        - `field`: This is meant to allow check for nonexistent child which would go into this field of `self`. If this
+            is not `None` then `self` is considered the first parent with an imaginary child being checked at `field`.
+
         WARNING! This will not pick up parentheses which belong to `self` and the rules for this can be confusing. E.g.
         In 'with (a): pass` the parentheses belong to the variable `a` while `with (a as b): pass` they belong to the
-        `with` because `alias`es cannot be parenthesized.
+        `with` because `alias`es cannot be parenthesized. Will pick up parentheses which belong to `self` if `field` is
+        passed because in that case `self` is considered the first parent.
         """
 
-        if isinstance(self.a, expr_context):  # so that the `ctx` of a List is not considered enclosed by default
+        if field:
+            if field != 'ctx':  # so that the `ctx` of a List is not considered enclosed by default
+                self = mock(parent=self, pfield=astfield(field))
+
+        elif isinstance(self.a, expr_context):  # so that the `ctx` of a List is not considered enclosed by default
             if not (self := self.parent):
                 return False
 

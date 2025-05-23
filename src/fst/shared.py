@@ -152,6 +152,12 @@ class srcwpos(NamedTuple):
     src: str
 
 
+class mock:
+    def __init__(self, **kwargs):
+        for name, value in kwargs.items():
+            setattr(self, name, value)
+
+
 def _shortstr(s: str, maxlen: int = 64) -> str:
     """Return string of maximum length `maxlen`, shortening if necessary to "start .. [X chars] .. end"."""
 
