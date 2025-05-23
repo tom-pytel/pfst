@@ -31902,6 +31902,11 @@ def func():
         self.assertEqual((0, 5, 0, 10), FST('call(((i)),)').body[0].value.args[0].pars())
         self.assertEqual((0, 8, 0, 13), FST('class c(((b))): pass').body[0].bases[0].pars())
         self.assertEqual((0, 8, 0, 13), FST('class c(((b)),): pass').body[0].bases[0].pars())
+        self.assertEqual((0, 22, 0, 25), FST('call(i for i in range(256))').body[0].value.args[0].generators[0].iter.args[0].pars())
+
+        f = parse('bytes((x ^ 0x5C) for x in range(256))').body[0].value.f
+        f.args[0].generators[0].iter.put('256', 0, field='args', raw=False)
+        self.assertEqual('bytes((x ^ 0x5C) for x in range(256))', f.root.src)
 
     def test_pars_is_bloc_when_no_pars(self):
         self.assertIsNot((f := FST('(a)').body[0].value).pars(), f.bloc)

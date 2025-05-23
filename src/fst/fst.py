@@ -1716,11 +1716,14 @@ class FST:
 
             return locncount if count else self.bloc
 
-        if llpars != lrpars:  # unpalanced pars so we know we can safely use the lower count
+        if llpars <= lrpars and (external_pars := self.is_solo_class_base() or self.is_solo_call_arg()):
+            llpars -= 1
+
+        if llpars != lrpars:  # unbalanced pars so we know we can safely use the lower count
             loc = fstloc(*lpars[npars], *rpars[npars]) if (npars := min(llpars, lrpars) - 1) else self.bloc
 
         else:
-            npars = llpars - (2 if self.is_solo_class_base() or self.is_solo_call_arg() else 1)
+            npars = llpars - (2 if external_pars else 1)
             loc   = fstloc(*lpars[npars], *rpars[npars]) if npars else self.bloc
 
         locncount = self._cache[key] = (loc, npars)
