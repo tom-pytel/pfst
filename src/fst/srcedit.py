@@ -9,7 +9,7 @@ from .shared import (
     NAMED_SCOPE,
     re_empty_line_start, re_empty_line, re_comment_line_start, re_line_trailing_space,
     re_empty_line_cont_or_comment,
-    _next_src, _prev_src, _next_find, _prev_find, _next_pars, _prev_pars,
+    _next_src, _prev_src, _next_find, _prev_find, _next_pars, _prev_pars, _next_pars2, _prev_pars2,
 )
 
 
@@ -32,10 +32,10 @@ class SrcEdit:
             start_col = seq_loc.col
 
         else:
-            start_ln, start_col, _, _, npars = (
-                _next_pars(lines, fpre.end_ln, fpre.end_col, seq_loc.end_ln, seq_loc.end_col))
+            start_ln, start_col = (pars :=
+                _next_pars2(lines, fpre.end_ln, fpre.end_col, seq_loc.end_ln, seq_loc.end_col))[-1]
 
-            if npars:
+            if len(pars) > 1:
                 fpre = fstloc(fpre.ln, fpre.col, start_ln, start_col)
 
         if not fpost:
@@ -55,9 +55,9 @@ class SrcEdit:
                 from_ln  = seq_loc.ln
                 from_col = seq_loc.col
 
-            stop_ln, stop_col, _, _, npars = _prev_pars(lines, from_ln, from_col, fpost.ln, fpost.col)
+            stop_ln, stop_col = (pars := _prev_pars2(lines, from_ln, from_col, fpost.ln, fpost.col))[-1]
 
-            if npars:
+            if len(pars) > 1:
                 fpost = fstloc(stop_ln, stop_col, fpost.end_ln, fpost.end_col)
 
         return fstloc(start_ln, start_col, stop_ln, stop_col), fpre, fpost

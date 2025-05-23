@@ -31894,6 +31894,18 @@ def func():
         self.assertEqual((0, 15, 0, 21), parse('from a import (b as c)').body[0].names[0].f.pars())
         self.assertRaises(SyntaxError, parse, 'from a import ((b as c))')
 
+        # special tricky cases, large pars delta
+
+
+
+
+        # self.assertEqual('i for i in (j)', FST('((i for i in (j)))').body[0].value.generators[0].src)
+        # self.assertEqual((0, 2, 0, 5), FST('(((a), b))').body[0].value.elts[0].pars())
+        # self.assertEqual((0, 5, 0, 8), FST('call((i),)').body[0].value.args[0].pars())
+
+
+
+
     def test_pars_is_bloc_when_no_pars(self):
         self.assertIsNot((f := FST('(a)').body[0].value).pars(), f.bloc)
         self.assertIs((f := FST('(a, b)').body[0].value.elts[0]).pars(), f.bloc)
@@ -35156,7 +35168,7 @@ class cls:
         f.put(g, field='value', raw=False, pars='auto')
         self.assertEqual(f.src, 'a = i')
 
-        # leave needed parens in target
+        # leave needed pars in target
 
         f = FST('a = ( # pre\nb\n# post\n)').body[0]
         g = FST('(1\n+\n2)').body[0].value.copy(pars=False)
@@ -35637,6 +35649,58 @@ i ; \\
         f.put('a, b', 1)
         self.assertEqual('(1, (a, b), 3)', f.src)
 
+    def test_find_loc(self):
+        f    = parse('abc += xyz').f
+        fass = f.body[0]
+        fabc = fass.target
+        fpeq = fass.op
+        fxyz = fass.value
+
+        self.assertIs(fass, f.find_loc(0, 0, 0, 10))
+        self.assertIs(None, f.find_loc(0, 0, 0, 10, False))
+        self.assertIs(fabc, f.find_loc(0, 0, 0, 3))
+        self.assertIs(fass, f.find_loc(0, 0, 0, 3, False))
+        self.assertIs(fass, f.find_loc(0, 0, 0, 4))
+        self.assertIs(fass, f.find_loc(0, 0, 0, 4, False))
+        self.assertIs(fass, f.find_loc(0, 3, 0, 4, False))
+        self.assertIs(fpeq, f.find_loc(0, 4, 0, 6))
+        self.assertIs(fass, f.find_loc(0, 4, 0, 6, False))
+        self.assertIs(fxyz, f.find_loc(0, 7, 0, 10))
+        self.assertIs(fass, f.find_loc(0, 7, 0, 10, False))
+        self.assertIs(fass, f.find_loc(0, 6, 0, 10))
+        self.assertIs(fass, f.find_loc(0, 6, 0, 10, False))
+
+        f  = parse('a+b').f
+        fx = f.body[0]
+        fo = fx.value
+        fa = fo.left
+        fp = fo.op
+        fb = fo.right
+
+        self.assertIs(fa, f.find_loc(0, 0, 0, 0))
+        self.assertIs(fp, f.find_loc(0, 1, 0, 1))
+        self.assertIs(fb, f.find_loc(0, 2, 0, 2))
+        self.assertIs(f, f.find_loc(0, 3, 0, 3))
+        self.assertIs(fa, f.find_loc(0, 0, 0, 1))
+        self.assertIs(fo, f.find_loc(0, 0, 0, 2))
+        self.assertIs(fo, f.find_loc(0, 0, 0, 3))
+        self.assertIs(fp, f.find_loc(0, 1, 0, 2))
+        self.assertIs(fo, f.find_loc(0, 1, 0, 3))
+        self.assertIs(fb, f.find_loc(0, 2, 0, 3))
+
+    def test_find_in_loc(self):
+        f    = parse('abc += xyz').body[0].f
+        fabc = f.target
+        fpeq = f.op
+        fxyz = f.value
+
+        self.assertIs(f, f.find_in_loc(0, 0, 0, 10))
+        self.assertIs(f, f.find_in_loc(-1, -1, 1, 11))
+        self.assertIs(fabc, f.find_in_loc(0, 0, 0, 3))
+        self.assertIs(fpeq, f.find_in_loc(0, 1, 0, 10))
+        self.assertIs(fxyz, f.find_in_loc(0, 5, 0, 10))
+        self.assertIs(None, f.find_in_loc(0, 5, 0, 6))
+
     def test_fstlist(self):
         self.assertEqual('a', parse('if 1: a').f.body[0].body[0].src)
         self.assertEqual('b', parse('if 1: a\nelse: b').f.body[0].orelse[0].src)
@@ -35999,58 +36063,6 @@ match a:
         self.assertFalse(f.is_stmtish)
         self.assertTrue(f.is_stmtish_or_mod)
         self.assertTrue(f.is_mod)
-
-    def test_find_loc(self):
-        f    = parse('abc += xyz').f
-        fass = f.body[0]
-        fabc = fass.target
-        fpeq = fass.op
-        fxyz = fass.value
-
-        self.assertIs(fass, f.find_loc(0, 0, 0, 10))
-        self.assertIs(None, f.find_loc(0, 0, 0, 10, False))
-        self.assertIs(fabc, f.find_loc(0, 0, 0, 3))
-        self.assertIs(fass, f.find_loc(0, 0, 0, 3, False))
-        self.assertIs(fass, f.find_loc(0, 0, 0, 4))
-        self.assertIs(fass, f.find_loc(0, 0, 0, 4, False))
-        self.assertIs(fass, f.find_loc(0, 3, 0, 4, False))
-        self.assertIs(fpeq, f.find_loc(0, 4, 0, 6))
-        self.assertIs(fass, f.find_loc(0, 4, 0, 6, False))
-        self.assertIs(fxyz, f.find_loc(0, 7, 0, 10))
-        self.assertIs(fass, f.find_loc(0, 7, 0, 10, False))
-        self.assertIs(fass, f.find_loc(0, 6, 0, 10))
-        self.assertIs(fass, f.find_loc(0, 6, 0, 10, False))
-
-        f  = parse('a+b').f
-        fx = f.body[0]
-        fo = fx.value
-        fa = fo.left
-        fp = fo.op
-        fb = fo.right
-
-        self.assertIs(fa, f.find_loc(0, 0, 0, 0))
-        self.assertIs(fp, f.find_loc(0, 1, 0, 1))
-        self.assertIs(fb, f.find_loc(0, 2, 0, 2))
-        self.assertIs(f, f.find_loc(0, 3, 0, 3))
-        self.assertIs(fa, f.find_loc(0, 0, 0, 1))
-        self.assertIs(fo, f.find_loc(0, 0, 0, 2))
-        self.assertIs(fo, f.find_loc(0, 0, 0, 3))
-        self.assertIs(fp, f.find_loc(0, 1, 0, 2))
-        self.assertIs(fo, f.find_loc(0, 1, 0, 3))
-        self.assertIs(fb, f.find_loc(0, 2, 0, 3))
-
-    def test_find_in_loc(self):
-        f    = parse('abc += xyz').body[0].f
-        fabc = f.target
-        fpeq = f.op
-        fxyz = f.value
-
-        self.assertIs(f, f.find_in_loc(0, 0, 0, 10))
-        self.assertIs(f, f.find_in_loc(-1, -1, 1, 11))
-        self.assertIs(fabc, f.find_in_loc(0, 0, 0, 3))
-        self.assertIs(fpeq, f.find_in_loc(0, 1, 0, 10))
-        self.assertIs(fxyz, f.find_in_loc(0, 5, 0, 10))
-        self.assertIs(None, f.find_in_loc(0, 5, 0, 6))
 
     def test_set_options(self):
         new = dict(

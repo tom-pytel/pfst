@@ -11,7 +11,7 @@ from .shared import (
     BLOCK,
     HAS_DOCSTRING,
     Code,
-    _next_src, _prev_src, _next_find, _prev_find, _next_pars, _prev_pars,
+    _next_src, _prev_src, _next_find, _prev_find, _next_pars, _prev_pars, _next_pars2, _prev_pars2,
     _coerce_ast
 )
 
@@ -1000,12 +1000,12 @@ def _is_parenthesized_seq(self: 'FST', field: str = 'elts', lpar: str = '(', rpa
 
     self_end_col -= 1  # because for sure there is a comma between end of first element and end of tuple, so at worst we exclude either the tuple closing paren or a comma
 
-    nparens = _next_pars(lines, self_ln, self_col, self_end_ln, self_end_col, lpar)[-1]  # yes, we use _next_pars() to count opening parens because we know conditions allow it
+    nparens = len(_next_pars2(lines, self_ln, self_col, self_end_ln, self_end_col, lpar)) - 1  # yes, we use _next_pars() to count opening parens because we know conditions allow it
 
     if not nparens:
         return False
 
-    nparens -= _next_pars(lines, f0_end_ln, f0_end_col, self_end_ln, self_end_col, rpar)[-1]
+    nparens -= len(_next_pars2(lines, f0_end_ln, f0_end_col, self_end_ln, self_end_col, rpar)) - 1
 
     return nparens > 0  # don't want to fiddle with checking if f0 is a parenthesized tuple
 

@@ -500,6 +500,72 @@ def _prev_pars(lines: list[str], bound_ln: int, bound_col: int, pars_ln: int, pa
         return pars_ln, pars_col, ante_ln, ante_col, npars
 
 
+def _next_pars2(lines: list[str], pars_end_ln: int, pars_end_col: int, bound_end_ln: int, bound_end_col: int,
+               par: str = ')') -> list[tuple[int, int]]:
+        """Return a list of the locations of closing parentheses (just past, or any specified character) starting at
+        (`pars_end_ln`, `pars_end_col`) until the end of the bound. The list includes (`pars_end_ln`, `pars_end_col`) as
+        the first element. The list ends if a non `par` character is encountered while searching forward.
+
+        **Returns:**
+        - `[(pars_end_ln, pars_end_col), (ln_end_par1, col_end_par1), (ln_end_par2, col_end_par2), ...]`
+        """
+
+        pars = [(pars_end_ln, pars_end_col)]
+
+        while code := _next_src(lines, pars_end_ln, pars_end_col, bound_end_ln, bound_end_col):
+            ln, col, src = code
+
+            for c in src:
+                if c != par:
+                    break
+
+                pars_end_ln  = ln
+                pars_end_col = (col := col + 1)
+
+                pars.append((pars_end_ln, pars_end_col))
+
+            else:
+                continue
+
+            break
+
+        return pars
+
+
+def _prev_pars2(lines: list[str], bound_ln: int, bound_col: int, pars_ln: int, pars_col: int, par: str = '(',
+               ) -> list[tuple[int, int]]:
+        """Return a list of the locations of opening parentheses (or any specified character) starting at (`pars_ln`,
+        `pars_col`) until the start of the bound. The list includes (`pars_ln`, `pars_col`) as the first element. The
+        list ends if a non `par` character is encountered while searching backward.
+
+        **Returns:**
+        - `[(pars_ln, pars_col), (ln_par1, col_par1), (ln_par2, col_par2), ...]`
+        """
+
+        pars  = [(pars_ln, pars_col)]
+        state = []
+
+        while code := _prev_src(lines, bound_ln, bound_col, pars_ln, pars_col, state=state):
+            ln, col, src  = code
+            col          += len(src)
+
+            for c in src[::-1]:
+                if c != par:
+                    break
+
+                pars_ln  = ln
+                pars_col = (col := col - 1)
+
+                pars.append((pars_ln, pars_col))
+
+            else:
+                continue
+
+            break
+
+        return pars
+
+
 def _params_offset(lines: list[bistr], put_lines: list[bistr], ln: int, col: int, end_ln: int, end_col: int,
                    ) -> tuple[int, int, int, int]:
     """Calculate location and delta parameters for the `offset()` function. The `col` parameter is calculated as a byte
