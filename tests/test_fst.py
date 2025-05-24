@@ -35274,6 +35274,11 @@ class cls:
         f.body[0].put('b', 'target', raw=False, pars=True)
         self.assertEqual('b: int', f.src)
 
+        f = FST('with (\na\n): pass')
+        g = f.body[0].items[0].copy()
+        f.body[0].put(g, 0, 'items')
+        self.assertEqual('with (\na\n): pass', f.src)
+
     def test_put_raw(self):
         for i, (dst, attr, (ln, col, end_ln, end_col), options, src, put_ret, put_src, put_dump) in enumerate(PUT_RAW_DATA):
             t = parse(dst)

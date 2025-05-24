@@ -668,7 +668,6 @@ _onestatic_type_param_required       = onestatic(_one_info_exprish_required, _re
 _onestatic_target_Name               = onestatic(_one_info_exprish_required, Name, ctx=Store)
 _onestatic_target_single             = onestatic(_one_info_exprish_required, (Name, Attribute, Subscript), ctx=Store)
 _onestatic_target                    = onestatic(_one_info_exprish_required, (Name, Attribute, Subscript, Tuple, List), ctx=Store)
-_onestatic_For_target                = onestatic(_one_info_exprish_required, (Name, Tuple, List), ctx=Store)
 
 def _one_info_identifier_required(self: 'FST', static: onestatic, idx: int | None, field: str, prefix: str | None = None,
                                  ) -> oneinfo:  # required, cannot delete or put new
@@ -1200,11 +1199,11 @@ _PUT_ONE_HANDLERS = {
     (AnnAssign, 'target'):                (_put_one_exprish_required, None, _onestatic_target_single), # expr
     (AnnAssign, 'annotation'):            (_put_one_exprish_required, None, onestatic(_one_info_exprish_required, _restrict_default)), # expr  - exclude [Lambda, Yield, YieldFrom, Await, NamedExpr]?
     (AnnAssign, 'value'):                 (_put_one_exprish_optional, None, onestatic(_one_info_AnnAssign_value, _restrict_default)), # expr?
-    (For, 'target'):                      (_put_one_exprish_required, None, _onestatic_For_target), # expr
+    (For, 'target'):                      (_put_one_exprish_required, None, _onestatic_target), # expr
     (For, 'iter'):                        (_put_one_exprish_required, None, _onestatic_expr_required), # expr
     (For, 'body'):                        (_put_one_stmtish, None, None), # stmt*
     (For, 'orelse'):                      (_put_one_stmtish, None, None), # stmt*
-    (AsyncFor, 'target'):                 (_put_one_exprish_required, None, _onestatic_For_target), # expr
+    (AsyncFor, 'target'):                 (_put_one_exprish_required, None, _onestatic_target), # expr
     (AsyncFor, 'iter'):                   (_put_one_exprish_required, None, _onestatic_expr_required), # expr
     (AsyncFor, 'body'):                   (_put_one_stmtish, None, None), # stmt*
     (AsyncFor, 'orelse'):                 (_put_one_stmtish, None, None), # stmt*
@@ -1278,8 +1277,8 @@ _PUT_ONE_HANDLERS = {
     # (FormattedValue, 'format_spec'):      (_put_one_default, None, None), # expr?
     (Interpolation, 'value'):             (_put_one_Interpolation_value, None, _onestatic_expr_required), # expr
     # (Interpolation, 'format_spec'):       (_put_one_default, None, None), # expr?
-    # (JoinedStr, 'values'):                (_put_one_default, None, None), # expr*                                           - ??? no location on py < 3.12
-    # (TemplateStr, 'values'):              (_put_one_default, None, None), # expr*                                           - ??? no location on py < 3.12
+    # (JoinedStr, 'values'):                (_put_one_default, None, None), # expr*  - ??? no location on py < 3.12
+    # (TemplateStr, 'values'):              (_put_one_default, None, None), # expr*  - ??? no location on py < 3.12
     (Constant, 'value'):                  (_put_one_constant, None, onestatic(_one_info_constant, Constant)), # constant
     (Attribute, 'value'):                 (_put_one_exprish_required, None, _onestatic_expr_required), # expr
     (Attribute, 'attr'):                  (_put_one_identifier_required, None, onestatic(_one_info_Attribute_attr, _restrict_default, coerce=_code_as_identifier)), # identifier
@@ -1292,7 +1291,7 @@ _PUT_ONE_HANDLERS = {
     (Slice, 'lower'):                     (_put_one_exprish_optional, None, _onestatic_Slice_lower), # expr?
     (Slice, 'upper'):                     (_put_one_exprish_optional, None, _onestatic_Slice_upper), # expr?
     (Slice, 'step'):                      (_put_one_exprish_optional, None, _onestatic_Slice_step), # expr?
-    (comprehension, 'target'):            (_put_one_exprish_required, None, _onestatic_For_target), # expr
+    (comprehension, 'target'):            (_put_one_exprish_required, None, _onestatic_target), # expr
     (comprehension, 'iter'):              (_put_one_exprish_required, None, _onestatic_expr_required), # expr
     (comprehension, 'ifs'):               (_put_one_exprish_sliceable, None, _onestatic_expr_required), # expr*
     (ExceptHandler, 'type'):              (_put_one_exprish_optional, None, onestatic(_one_info_ExceptHandler_type, _restrict_default)), # expr?

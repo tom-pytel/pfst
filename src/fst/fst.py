@@ -1300,13 +1300,19 @@ class FST:
                                 arg, keyword, alias, withitem, type_param)):
                 return True
 
+        elif isinstance(ast, (comprehension, arguments, arg, keyword, alias, type_param)):  # can't be parenthesized
+            return False
+
         elif isinstance(ast, Constant):
-            if not isinstance(ast.value, (str, bytes)):
+            if not isinstance(ast.value, (str, bytes)):  # str and bytes can be multiline implicit needing parentheses
                 return True
 
+        elif isinstance(ast, withitem):  # isn't atom on its own and can't be parenthesized directly but if only has context_expr then take on value of that if starts and ends on same lines
+            return (not ast.optional_vars and self.loc[::2] == (ce := ast.context_expr.f).pars()[::2] and
+                    ce.is_atom(pars=pars, enclosed=enclosed))
+
         elif isinstance(ast, cmpop):
-            if not isinstance(ast, (IsNot, NotIn)):  # could be spread across multiple lines
-                return True
+            return not isinstance(ast, (IsNot, NotIn))  # could be spread across multiple lines
 
         if (ret := self.is_parenthesized_tuple()) is not None:  # if this is False then cannot be enclosed in grouping pars because that would reparse to a parenthesized Tuple and so is inconsistent
             return ret
