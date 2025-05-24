@@ -1730,10 +1730,6 @@ class FST:
         else:
             loc = fstloc(*lpars[npars], *rpars[npars]) if (npars := llpars - 1) else self.bloc
 
-        # else:
-        #     npars = llpars - (2 if external_pars else 1)
-        #     loc   = fstloc(*lpars[npars], *rpars[npars]) if npars else self.bloc
-
         locncount = self._cache[key] = (loc, npars)
 
         return locncount if count else loc

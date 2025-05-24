@@ -29677,7 +29677,7 @@ def f():
         self.assertEqual((0, 5, 0, 19), f.body[0].value.args[0].loc)
 
         f = parse('call((((i for i in j))))').f
-        f.body[0].value.args[0]._unparenthesize_grouping(inc_genexpr_solo=True)
+        f.body[0].value.args[0]._unparenthesize_grouping(share=True)
         self.assertEqual(f.src, 'call(i for i in j)')
         self.assertEqual((0, 0, 0, 18), f.loc)
         self.assertEqual((0, 0, 0, 18), f.body[0].loc)
@@ -29686,13 +29686,31 @@ def f():
         self.assertEqual((0, 4, 0, 18), f.body[0].value.args[0].loc)
 
         f = parse('call( ( ( (i for i in j) ) ) )').f
-        f.body[0].value.args[0]._unparenthesize_grouping(inc_genexpr_solo=True)
+        f.body[0].value.args[0]._unparenthesize_grouping(share=True)
         self.assertEqual(f.src, 'call(i for i in j)')
         self.assertEqual((0, 0, 0, 18), f.loc)
         self.assertEqual((0, 0, 0, 18), f.body[0].loc)
         self.assertEqual((0, 0, 0, 18), f.body[0].value.loc)
         self.assertEqual((0, 0, 0, 4), f.body[0].value.func.loc)
         self.assertEqual((0, 4, 0, 18), f.body[0].value.args[0].loc)
+
+        f = parse('call((((i for i in j))),)').f
+        f.body[0].value.args[0]._unparenthesize_grouping(share=True)
+        self.assertEqual(f.src, 'call(i for i in j)')
+        self.assertEqual((0, 0, 0, 18), f.loc)
+        self.assertEqual((0, 0, 0, 18), f.body[0].loc)
+        self.assertEqual((0, 0, 0, 18), f.body[0].value.loc)
+        self.assertEqual((0, 0, 0, 4), f.body[0].value.func.loc)
+        self.assertEqual((0, 4, 0, 18), f.body[0].value.args[0].loc)
+
+        f = parse('call((((i for i in j))),)').f
+        f.body[0].value.args[0]._unparenthesize_grouping(share=False)
+        self.assertEqual(f.src, 'call((i for i in j),)')
+        self.assertEqual((0, 0, 0, 21), f.loc)
+        self.assertEqual((0, 0, 0, 21), f.body[0].loc)
+        self.assertEqual((0, 0, 0, 21), f.body[0].value.loc)
+        self.assertEqual((0, 0, 0, 4), f.body[0].value.func.loc)
+        self.assertEqual((0, 5, 0, 19), f.body[0].value.args[0].loc)
 
         f = parse('( # pre\ni\n# post\n)').f
         f.body[0].value._unparenthesize_grouping()
@@ -29717,6 +29735,25 @@ def f():
         f._unparenthesize_grouping()
         self.assertEqual('i', f.src)
         self.assertEqual((0, 0, 0, 1), f.loc)
+
+        # replace with space where directly touching other text
+
+        f = FST('[a for a in b if(a)if(a)]')
+        f.body[0].value.generators[0].ifs[0]._unparenthesize_grouping()
+        f.body[0].value.generators[0].ifs[1]._unparenthesize_grouping()
+        self.assertEqual('[a for a in b if a if a]', f.src)
+
+        f = FST('for(a)in b: pass')
+        f.body[0].target._unparenthesize_grouping()
+        self.assertEqual('for a in b: pass', f.src)
+
+        f = FST('assert(test)')
+        f.body[0].test._unparenthesize_grouping()
+        self.assertEqual('assert test', f.src)
+
+        f = FST('assert({test})')
+        f.body[0].test._unparenthesize_grouping()
+        self.assertEqual('assert{test}', f.src)
 
     def test__unparenthesize_tuple(self):
         f = parse('()').f
@@ -29756,6 +29793,29 @@ def f():
         self.assertEqual('i,', f.src)
         self.assertEqual((0, 0, 0, 2), f.loc)
         self.assertEqual((0, 0, 0, 1), f.elts[0].loc)
+
+        # replace with space where directly touching other text
+
+        f = FST('[a for a in b if(a,b)if(a,)if(a,b)]')
+        f.body[0].value.generators[0].ifs[0]._unparenthesize_tuple()
+        f.body[0].value.generators[0].ifs[1]._unparenthesize_tuple()
+        f.body[0].value.generators[0].ifs[2]._unparenthesize_tuple()
+        self.assertEqual('[a for a in b if a,b if a,if a,b]', f.src)
+        f.body[0].value.generators[0].ifs[0]._parenthesize_tuple()  # so that it will verify
+        f.body[0].value.generators[0].ifs[1]._parenthesize_tuple()
+        f.body[0].value.generators[0].ifs[2]._parenthesize_tuple()
+        self.assertEqual('[a for a in b if (a,b) if (a,)if (a,b)]', f.src)
+        f.verify()
+
+        f = FST('for(a,b)in b: pass')
+        f.body[0].target._unparenthesize_tuple()
+        self.assertEqual('for a,b in b: pass', f.src)
+        f.verify()
+
+        f = FST('for(a,)in b: pass')
+        f.body[0].target._unparenthesize_tuple()
+        self.assertEqual('for a,in b: pass', f.src)
+        f.verify()
 
     def test__maybe_fix(self):
         f = FST.fromsrc('if 1:\n a\nelif 2:\n b')

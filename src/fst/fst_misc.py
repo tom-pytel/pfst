@@ -1,5 +1,6 @@
 """Misc lower level FST methods."""
 
+import re
 from ast import *
 from ast import parse as ast_parse
 from typing import Callable, Literal, Optional, Union
@@ -16,6 +17,9 @@ from .shared import (
 )
 
 _astfieldctx = astfield('ctx')
+
+_re_par_open_alnums  = re.compile(r'\w[(]\w')
+_re_par_close_alnums = re.compile(r'\w[)]\w')
 
 
 def _make_tree_fst(ast: AST, parent: 'FST', pfield: astfield) -> 'FST':
@@ -1077,32 +1081,50 @@ def _parenthesize_tuple(self: 'FST', whole: bool = True):
     a.col_offset = lines[ln].c2b(col)  # ditto on the `whole` thing
 
 
-def _unparenthesize_grouping(self: 'FST', *, inc_genexpr_solo: bool = False) -> bool:
+def _unparenthesize_grouping(self: 'FST', *, share: bool = False) -> bool:
     """Remove grouping parentheses from anything if present. Just remove text parens around node and everything between
     them and node adjusting parent locations but not the node itself.
+
+    **Parameters:**
+    - `shared`: Whether to allow merge of parentheses into shared single call argument generator expression or not.
 
     **Returns:**
     - `bool`: Whether parentheses were removed or not (only removed if present to begin with and removable).
     """
 
     pars_loc, npars = self.pars(True)
-    genexpr_solo    = inc_genexpr_solo and self.is_solo_call_arg_genexp()
 
-    if not npars and not genexpr_solo:
+    if share:
+        share = self.is_solo_call_arg_genexp()
+
+    if not npars and not share:
         return False
 
     ln , col,  end_ln,  end_col  = self.bloc
     pln, pcol, pend_ln, pend_col = pars_loc
 
-    if genexpr_solo:  # special case merge solo argument GeneratorExp parentheses with call argument parens
+    if share:  # special case merge solo argument GeneratorExp parentheses with call argument parens
         lines                    = self.root._lines
         _, _, cend_ln, cend_col  = self.parent.func.loc
         pln, pcol                = _prev_find(lines, cend_ln, cend_col, pln, pcol, '(')  # it must be there
         pend_ln, pend_col        = _next_find(lines, pend_ln, pend_col, len(lines) - 1, len(lines[-1]), ')')  # ditto
         pend_col                += 1
 
-    self.put_src(None, end_ln, end_col, pend_ln, pend_col, True, self)
-    self.put_src(None, pln, pcol, ln, col, False)
+        self.put_src(None, end_ln, end_col, pend_ln, pend_col, True, self)
+        self.put_src(None, pln, pcol, ln, col, False)
+
+    else:  # in all other case we need to make sure par is not separating us from an alphanumeric on either side, and if so then just replace that par with a space
+        lines = self.root._lines
+
+        if pend_col >= 2 and _re_par_close_alnums.match(l := lines[pend_ln], pend_col - 2):
+            lines[pend_ln] = bistr(l[:pend_col - 1] + ' ' + l[pend_col:])
+        else:
+            self.put_src(None, end_ln, end_col, pend_ln, pend_col, True, self)
+
+        if pcol and _re_par_open_alnums.match(l := lines[pln], pcol - 1):
+            lines[pln] = bistr(l[:pcol] + ' ' + l[pcol + 1:])
+        else:
+            self.put_src(None, pln, pcol, ln, col, False)
 
     return True
 
@@ -1123,14 +1145,24 @@ def _unparenthesize_tuple(self: 'FST') -> bool:
         return False
 
     ln, col, end_ln, end_col = self.loc
+    lines                    = self.root._lines
 
     if comma := _next_find(self.root._lines, en_end_ln := (en := elts[-1].f).end_ln, en_end_col := en.end_col,
                            end_ln, end_col, ','):  # need to leave trailing comma if its there
         en_end_ln, en_end_col  = comma
         en_end_col            += 1
 
+    else:  # when no trailing comma need to make sure par is not separating us from an alphanumeric on either side, and if so then insert a space at the end before deleting the right par
+        if end_col >= 2 and _re_par_close_alnums.match(lines[end_ln], end_col - 2):
+            self.put_src(' ', end_ln, end_col, end_ln, end_col, False, self)
+
+    head_alnums = col and _re_par_open_alnums.match(lines[ln], col - 1)  # if open has alnumns on both sides then insert space there too
+
     self.put_src(None, en_end_ln, en_end_col, end_ln, end_col, True, self)
     self.put_src(None, ln, col, (e0 := elts[0].f).ln, e0.col, False)
+
+    if head_alnums:  # but put after delete par to keep locations same
+        self.put_src(' ', ln, col, ln, col, False)
 
     return True
 
