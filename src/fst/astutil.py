@@ -994,7 +994,7 @@ _PRECEDENCE_NODES = {  # default is _Precedence.ATOM
     # MatchMapping:   None,
     # MatchClass:     None,
     # MatchStar:      None,
-    MatchAs:        True,  # special case decided py presence or absence of `pattern`
+    MatchAs:        True,             # special case precedence decided py presence or absence of `pattern`
     MatchOr:        _Precedence.BOR,
 
     # TypeIgnore:     None,
@@ -1029,7 +1029,7 @@ _PRECEDENCE_NODE_FIELDS = {  # default is _Precedence.TEST
     (Call, 'func'):            _Precedence.ATOM,
     (FormattedValue, 'value'): _Precedence.TEST.next(),
     (Interpolation, 'value'):  _Precedence.TEST.next(),
-    (Attribute, 'value'):      _Precedence.ATOM,
+    (Attribute, 'value'):      False,                    # Constant integers require parentheses
     (Subscript, 'value'):      _Precedence.ATOM,
     (Subscript, 'slice'):      False,                    # unparenthesized tuples put to slice don't need parens
     (Starred, 'value'):        _Precedence.EXPR,
@@ -1079,15 +1079,18 @@ _PRECEDENCE_NODE_FIELDS = {  # default is _Precedence.TEST
     (MatchOr, 'patterns'):     _Precedence.BOR.next(),
 }
 
-def precedence_require_parens_by_type(child_type: type[AST], parent_type: type[AST], field: str, *,
-                                      dict_key_or_matchas_pat_is_None: bool = False) -> bool:
+def precedence_require_parens_by_type(child_type: type[AST], parent_type: type[AST], field: str,
+                                      flags: dict[str, bool] = {}) -> bool:
     """Returns whether parentheses are required for the child for the given parent / child structure or not. Both parent
     and child `BoolOp`, `BinOp` and `UnaryOp` types should be passed as the type of the 'op' field.
 
-    Special case if the parent is a `Dict.values[i]` where the respective `keys[i]` is `None`,
-    `dict_key_or_matchas_pat_is_None` should be `True. It should also be `True` for the case of a `MatchAs` with a
-    `pattern` that is `None`. This is shared because the two different types will never be in a parent/child
-    relationship."""
+    **Parameters**:
+    - `flags`: Special case flags, assumed `False` if not passed as `True`:
+        - `dict_key_None`: Parent is `Dict` and the corresponding key is `None`, leading to `**value`. Only has effect
+            if 'field' is `'value'`, otherwise no effect.
+        - `matchas_pat_None`: Child is `MatchAs` and the `pattern` is `None` (just a name).
+        - `attr_val_int`: Parent is `Attribute` and child is a `Constant` integer.
+    """
 
     child_precedence  = _PRECEDENCE_NODES.get(child_type, _Precedence.ATOM)
     parent_precedence = _PRECEDENCE_NODE_FIELDS.get((parent_type, field), _Precedence.TEST)
@@ -1095,12 +1098,17 @@ def precedence_require_parens_by_type(child_type: type[AST], parent_type: type[A
     assert child_precedence, "type of 'op' should be passed for 'BoolOp', 'BinOp' or 'UnaryOp'"
 
     if child_precedence is True:
-        child_precedence = _Precedence.ATOM if dict_key_or_matchas_pat_is_None else _Precedence.TEST
+        child_precedence = _Precedence.ATOM if flags.get('matchas_pat_None') else _Precedence.TEST
 
     if not parent_precedence:
         if parent_type is Dict:
-            parent_precedence = (_Precedence.EXPR if dict_key_or_matchas_pat_is_None and field == 'values' else
-                                 _Precedence.TEST)
+            parent_precedence = _Precedence.EXPR if flags.get('dict_key_None') else _Precedence.TEST
+
+        elif parent_type is Attribute:
+            if flags.get('attr_val_int'):
+                return True
+
+            parent_precedence = _Precedence.ATOM
 
         elif parent_type is Subscript:
             parent_precedence = _Precedence.TUPLE if child_type is Tuple else _Precedence.TEST  # tuples in slice don't need parens
@@ -1125,17 +1133,21 @@ def precedence_require_parens_by_type(child_type: type[AST], parent_type: type[A
 def precedence_require_parens(child: AST, parent: AST, field: str, idx: int | None = None) -> bool:
     """Returns whether parentheses are required for the child for the given parent / child structure or not."""
 
+    flags       = {}
     child_type  = (child.op.__class__
                    if (child_cls := child.__class__) in (BoolOp, BinOp, UnaryOp) else child_cls)
     parent_type = (parent.op.__class__
                    if (parent_cls := parent.__class__) in (BoolOp, BinOp, UnaryOp) else parent_cls)
 
-    dict_key_or_matchas_pat_is_None = False
+    if child_cls is MatchAs and child.pattern is None:
+        flags['matchas_pat_None'] = True
 
     if parent_cls is Dict:
-        dict_key_or_matchas_pat_is_None = parent.keys[idx] is None
-    if child_cls is MatchAs:
-        dict_key_or_matchas_pat_is_None = child.pattern is None
+        if parent.keys[idx] is None:
+            flags['dict_key_None'] = True
 
-    return precedence_require_parens_by_type(child_type, parent_type, field,
-                                             dict_key_or_matchas_pat_is_None=dict_key_or_matchas_pat_is_None)
+    elif parent_cls is Attribute:
+        if child_cls is Constant and isinstance(child.value, int):
+            flags['attr_val_int'] = True
+
+    return precedence_require_parens_by_type(child_type, parent_type, field, flags)

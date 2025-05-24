@@ -219,12 +219,23 @@ def _make_exprish_fst(self: 'FST', code: Code | None, idx: int | None, field: st
 
     # figure out parentheses
 
-    need_pars    = lambda adding: (
-        (not put_fst.is_atom(pars=False) and precedence_require_parens(put_ast, self.a, field, idx)) or
-        (not self.is_enclosed_in_parents(field) and not put_fst.is_enclosed(pars=adding)))
     pars         = FST.get_option('pars', options)
     tgt_is_FST   = target.is_FST
     del_tgt_pars = False
+
+    def need_pars(adding: bool) -> bool:
+        if not put_fst.is_atom(pars=False):
+             if precedence_require_parens(put_ast, self.a, field, idx):
+                 return True
+
+        elif (tgt_is_FST and field == 'value' and isinstance(put_ast, Constant) and isinstance(put_ast.value, int) and  # veeery special case "3.__abs__()" -> "(3).__abs__()"
+              (tgt_parent := target.parent) and isinstance(tgt_parent.a, Attribute)):
+            return True
+
+        if not self.is_enclosed_in_parents(field) and not put_fst.is_enclosed(pars=adding):
+            return True
+
+        return False
 
     if pars:
         if put_fst.pars(True)[1]:  # src has grouping pars

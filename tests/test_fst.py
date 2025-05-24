@@ -35262,6 +35262,10 @@ class cls:
         f.body[0].cases[0].pattern.patterns[0].put(g, None, field='value')
         self.assertEqual('match a:\n case range(10): pass', f.src)
 
+        f = FST('(1).to_bytes(2, "little")')
+        f.body[0].value.func.put('2', raw=False)
+        self.assertEqual('(2).to_bytes(2, "little")', f.src)
+
     def test_put_raw(self):
         for i, (dst, attr, (ln, col, end_ln, end_col), options, src, put_ret, put_src, put_dump) in enumerate(PUT_RAW_DATA):
             t = parse(dst)
