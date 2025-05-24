@@ -246,7 +246,7 @@ def _make_exprish_fst(self: 'FST', code: Code | None, idx: int | None, field: st
                     put_fst._unparenthesize_grouping()
 
         else:  # src does not have grouping pars
-            if ((tgt_has_pars := tgt_is_FST and (tgt_pars := target.pars(shared=False)) is not target.bloc) and
+            if ((tgt_has_pars := tgt_is_FST and target.pars(True, shared=False)[1]) and
                 put_fst.is_parenthesized_tuple() is False
             ):
                 del_tgt_pars = True
@@ -254,7 +254,9 @@ def _make_exprish_fst(self: 'FST', code: Code | None, idx: int | None, field: st
 
             if tgt_has_pars:
                 if not need_pars(True):
-                    del_tgt_pars = True
+                    if pars is True or not (field == 'target' and (tgt_parent := target.parent) and  # suuuper minor special case, don't automatically unparenthesize AnnAssign targets
+                                            isinstance(tgt_parent.a, AnnAssign)):
+                        del_tgt_pars = True
 
             elif need_pars(True):
                 put_fst.parenthesize()  # could be parenthesizing grouping or a tuple
@@ -1310,7 +1312,7 @@ _PUT_ONE_HANDLERS = {
     (alias, 'name'):                      (_put_one_identifier_required, None, onestatic(_one_info_identifier_required, _restrict_default, coerce=_code_as_identifier_dotted)), # identifier  - dotted not valid for all uses but being general here (and lazy, don't feel like checking parent)
     (alias, 'asname'):                    (_put_one_identifier_optional, None, onestatic(_one_info_alias_asname, _restrict_default, coerce=_code_as_identifier)), # identifier?
     (withitem, 'context_expr'):           (_put_one_exprish_required, None, _onestatic_expr_required), # expr
-    (withitem, 'optional_vars'):          (_put_one_exprish_optional, None, onestatic(_one_info_withitem_optional_vars, (Name, Tuple, List), ctx=Store)), # expr?
+    (withitem, 'optional_vars'):          (_put_one_exprish_optional, None, onestatic(_one_info_withitem_optional_vars, (Name, Tuple, List, Attribute, Subscript), ctx=Store)), # expr?
     (match_case, 'pattern'):              (_put_one_exprish_required, None, _onestatic_pattern_required), # pattern
     (match_case, 'guard'):                (_put_one_exprish_optional, None, onestatic(_one_info_match_case_guard, _restrict_default)), # expr?
     (match_case, 'body'):                 (_put_one_stmtish, None, None), # stmt*

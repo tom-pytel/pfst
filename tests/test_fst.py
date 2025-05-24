@@ -17351,7 +17351,7 @@ Module .. ROOT 0,0 -> 0,27
     0] Pass .. 0,23 -> 0,27
 """),
 
-(r"""with (a): pass""", 'body[0].items[0]', None, 'optional_vars', {'raw': False}, r"""f()""", r"""**NodeTypeError('expecting one of (Name, Tuple, List) for withitem.optional_vars, got Call')**""", r"""
+(r"""with (a): pass""", 'body[0].items[0]', None, 'optional_vars', {'raw': False}, r"""f()""", r"""**NodeTypeError('expecting one of (Name, Tuple, List, Attribute, Subscript) for withitem.optional_vars, got Call')**""", r"""
 """),
 
 (r"""match a:
@@ -35265,6 +35265,14 @@ class cls:
         f = FST('(1).to_bytes(2, "little")')
         f.body[0].value.func.put('2', raw=False)
         self.assertEqual('(2).to_bytes(2, "little")', f.src)
+
+        f = FST('(a): int')
+        f.body[0].put('b', 'target', raw=False, pars='auto')
+        self.assertEqual('(b): int', f.src)
+
+        f = FST('(a): int')
+        f.body[0].put('b', 'target', raw=False, pars=True)
+        self.assertEqual('b: int', f.src)
 
     def test_put_raw(self):
         for i, (dst, attr, (ln, col, end_ln, end_col), options, src, put_ret, put_src, put_dump) in enumerate(PUT_RAW_DATA):
