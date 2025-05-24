@@ -1,5 +1,6 @@
-"""Misc lower level FST methods."""
+"""Get and put single node."""
 
+import re
 from ast import *
 from types import FunctionType
 from typing import Any, Callable, NamedTuple, Optional, Union
@@ -17,6 +18,8 @@ from .fst_parse import (
     _code_as_arguments_lambda, _code_as_arg, _code_as_keyword, _code_as_alias, _code_as_alias_dotted, _code_as_withitem,
     _code_as_type_param, _code_as_identifier, _code_as_identifier_dotted,
 )
+
+_re_merged_alnum = re.compile(r'\w\w')
 
 
 # ----------------------------------------------------------------------------------------------------------------------
@@ -216,16 +219,6 @@ def _make_exprish_fst(self: 'FST', code: Code | None, idx: int | None, field: st
 
     # figure out parentheses
 
-
-    # def need_pars(adding):  # DEBUG!
-    #     a = put_fst.is_atom(pars=False)
-    #     b = precedence_require_parens(put_ast, self.a, field, idx)
-    #     c = self.is_enclosed_in_parents(field)
-    #     d = put_fst.is_enclosed(pars=adding)
-
-    #     return (not a and b) or (not c and not d)
-
-
     need_pars    = lambda adding: (
         (not put_fst.is_atom(pars=False) and precedence_require_parens(put_ast, self.a, field, idx)) or
         (not self.is_enclosed_in_parents(field) and not put_fst.is_enclosed(pars=adding)))
@@ -255,6 +248,8 @@ def _make_exprish_fst(self: 'FST', code: Code | None, idx: int | None, field: st
             elif need_pars(True):
                 put_fst.parenthesize()  # could be parenthesizing grouping or a tuple
 
+    # figure out put target location
+
     if not tgt_is_FST:
         ln, col, end_ln, end_col = target
 
@@ -266,6 +261,17 @@ def _make_exprish_fst(self: 'FST', code: Code | None, idx: int | None, field: st
                 loc = loc2
 
         ln, col, end_ln, end_col = loc
+
+    # make sure put doesn't merge alphanumerics
+
+    lines     = self.root._lines
+    put_lines = put_fst._lines
+
+    if col and _re_merged_alnum.match(lines[ln][col - 1] + (prefix or put_lines[0][:1])):  # if start would merge then prepend prefix with space
+        prefix = ' ' + prefix
+
+    if end_col < len(l := lines[end_ln]) and _re_merged_alnum.match((suffix or put_lines[-1])[-1:] + l[end_col]):  # if end would merge then append space to suffix
+        suffix = suffix + ' '
 
     # do it
 

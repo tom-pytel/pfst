@@ -35152,7 +35152,7 @@ class cls:
         f = parse('a = b').body[0].f
         self.assertRaises(ValueError, f.value.replace, 'c', to=f.targets[0], raw=False)
 
-        # Generally reject FormattedValue and Slice
+        # generally reject FormattedValue and Slice
 
         f = parse('a = b').body[0].f
         s = parse('s[a:b]').body[0].value.slice.f.copy()
@@ -35160,7 +35160,7 @@ class cls:
         self.assertRaises(NodeTypeError, f.put, s, field='value', raw=False)
         self.assertRaises(NodeTypeError, f.put, v, field='value', raw=False)
 
-        # Slice in tuple
+        # slice in tuple
 
         f = parse('s[a:b, x:y:z]').body[0].value.f
         t = f.slice.copy()
@@ -35176,6 +35176,14 @@ class cls:
         self.assertEqual('x:y:z, x:y:z', f.slice.src)
         f.slice.put(s0, 1, raw=False)
         self.assertEqual('x:y:z, a:b', f.slice.src)
+
+        # make sure we don't merge alnums on unparenthesize
+
+        f = FST('[a for a in b if(a)if(a)]')
+        f.body[0].value.generators[0].put('a', 0, field='ifs')
+        f.body[0].value.generators[0].put('a', 1, field='ifs')
+        self.assertEqual('[a for a in b if a if a]', f.src)
+        f.verify()
 
     def test_put_one_pars(self):
         f = FST('a = b').body[0]
