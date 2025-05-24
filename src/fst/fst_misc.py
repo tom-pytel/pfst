@@ -605,7 +605,14 @@ def _loc_arguments(self: 'FST') -> fstloc | None:
         end_col = ante_end_col
 
     if leading_stars:  # find star to the left, we know it exists so we don't check for None return
-        start_ln, start_col = _prev_find(lines, *first._prev_ast_bound('allown'), start_ln, start_col, leading_stars)
+        if (prev := first.prev()) or (prev := self.prev()):  # previous arg or maybe type_params
+            _, _, bound_ln, bound_col = prev.loc
+        elif parent := self.parent:  # start of FunctionDef or Lambda
+            bound_ln, bound_col, _, _ = parent.loc
+        else:
+            bound_ln = bound_col = 0
+
+        start_ln, start_col = _prev_find(lines, bound_ln, bound_col, start_ln, start_col, leading_stars)
 
     if trailing_slash:
         end_ln, end_col  = _next_find(lines, end_ln, end_col, len(lines), 0x7fffffffffffffff, '/')  # must be there

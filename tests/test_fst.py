@@ -30105,6 +30105,10 @@ def f():
         self.assertEqual((0, 0, 0, 19), parse('def f( *, z, a, b = ( 2 ), ): pass').body[0].args.f.copy().loc)
         self.assertEqual((0, 0, 0, 4), parse('def f( **ss ): pass').body[0].args.f.copy().loc)
 
+        # special cases found
+
+        self.assertEqual((0, 12, 0, 14), FST('f"a{(lambda *a: b)}"').body[0].value.values[1].value.args.loc)
+
     def test_bloc(self):
         ast = parse('@deco\nclass cls:\n @deco\n def meth():\n  @deco\n  class fcls: pass')
 

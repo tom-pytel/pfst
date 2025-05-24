@@ -6,7 +6,7 @@ import sys
 from array import array
 from ast import *
 from itertools import chain
-from types import  EllipsisType
+from types import  EllipsisType, NoneType
 from typing import Any, Callable, Iterable, Iterator, Literal
 from enum import IntEnum, auto
 
@@ -18,7 +18,8 @@ __all__ = [
     'OPSTR2CLS', 'OPSTR2CLSWAUG', 'OPCLS2STR', 'OPCLS2STR_AUG',
     're_identifier_only', 're_identifier', 're_identifier_dotted_only', 're_identifier_dotted',
     'bistr', 'constant',
-    'is_valid_identifier', 'is_valid_identifier_dotted', 'is_valid_MatchSingleton_value', 'is_valid_MatchAs_value',
+    'is_valid_identifier', 'is_valid_identifier_dotted', 'is_valid_MatchSingleton_value', 'is_valid_MatchValue_value',
+    'is_valid_MatchMapping_key',
     'reduce_ast', 'get_field', 'set_field', 'has_type_comments', 'is_parsable', 'get_parse_mode',
     'WalkFail', 'walk2', 'compare_asts', 'copy_attributes', 'copy_ast', 'set_ctx',
     'get_func_class_or_ass_by_name', 'syntax_ordered_children', 'last_block_header_child', 'is_atom',
@@ -357,20 +358,56 @@ def is_valid_MatchSingleton_value(ast: AST) -> bool:
     return isinstance(ast, Constant) and ast.value in (True, False, None)
 
 
-def is_valid_MatchAs_value(ast: AST) -> bool:
-    while isinstance(ast, UnaryOp):
+def is_valid_MatchValue_value(ast: AST) -> bool:
+    if isinstance(ast, Attribute):
+        return True
+
+    if isinstance(ast, UnaryOp):
+        if not isinstance(ast.op, USub):
+            return False
+
         ast = ast.operand
 
     if isinstance(ast, Constant):
         return isinstance(ast.value, (str, bytes, int, float, complex))
-    if isinstance(ast, Attribute):
-        return True
 
     if isinstance(ast, BinOp):
         if isinstance(ast.op, (Add, Sub)) and isinstance(r := ast.right, Constant) and isinstance(r.value, complex):
             l = ast.left
 
-            while isinstance(l, UnaryOp):
+            if isinstance(l, UnaryOp):
+                if not isinstance(l.op, USub):
+                    return False
+
+                l = l.operand
+
+            if isinstance(l, Constant) and isinstance(l.value, (int, float)):
+                return True
+
+    return False
+
+
+def is_valid_MatchMapping_key(ast: AST) -> bool:
+    if isinstance(ast, Attribute):
+        return True
+
+    if isinstance(ast, UnaryOp):
+        if not isinstance(ast.op, USub):
+            return False
+
+        ast = ast.operand
+
+    if isinstance(ast, Constant):
+        return isinstance(ast.value, (str, bytes, int, float, complex, bool, NoneType))
+
+    if isinstance(ast, BinOp):
+        if isinstance(ast.op, (Add, Sub)) and isinstance(r := ast.right, Constant) and isinstance(r.value, complex):
+            l = ast.left
+
+            if isinstance(l, UnaryOp):
+                if not isinstance(l.op, USub):
+                    return False
+
                 l = l.operand
 
             if isinstance(l, Constant) and isinstance(l.value, (int, float)):
