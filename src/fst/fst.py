@@ -1287,14 +1287,6 @@ class FST:
 
         ast = self.a
 
-        # if isinstance(ast, (List, Dict, Set, ListComp, SetComp, DictComp, GeneratorExp, Call, JoinedStr, TemplateStr,  # Await? is the highest precedence thing but not technically atom
-        #                     Constant, Attribute, Subscript, Name,
-        #                     MatchValue, MatchSingleton, MatchMapping, MatchClass, MatchStar, MatchAs,
-        #                     expr_context, boolop, operator, unaryop, cmpop, comprehension, ExceptHandler, arguments,
-        #                     arg, keyword, alias, withitem, type_param,
-        #                     stmt, match_case, mod, TypeIgnore)):
-        #     return True
-
         if isinstance(ast, (List, Dict, Set, ListComp, SetComp, DictComp, GeneratorExp, Name,
                             MatchValue, MatchSingleton, MatchMapping,
                             expr_context, boolop, operator, unaryop, ExceptHandler,
@@ -1303,7 +1295,7 @@ class FST:
 
         if not enclosed:
             if isinstance(ast, (Call, JoinedStr, TemplateStr, Constant, Attribute, Subscript,
-                                MatchClass, MatchStar, MatchAs,
+                                MatchClass, MatchStar,
                                 cmpop, comprehension, arguments,
                                 arg, keyword, alias, withitem, type_param)):
                 return True
@@ -1569,7 +1561,14 @@ class FST:
                 isinstance(parenta := parent.a, Call) and not parenta.keywords and len(parenta.args) == 1)
 
     def is_solo_matchcls_pat(self) -> bool:
-        """Whether `self` is a solo `MatchClass` non-keyword pattern."""
+        """Whether `self` is a solo `MatchClass` non-keyword pattern. The solo `Constant` held by a `MatchValue`
+        qualifies as `True` for this check if the `MatchValue` does."""
+
+        if not (parent := self.parent):
+            return False
+
+        if isinstance(parenta := parent.a, MatchValue):
+            self = parent
 
         return ((parent := self.parent) and self.pfield.name == 'patterns' and
                 isinstance(parenta := parent.a, MatchClass) and not parenta.kwd_patterns and len(parenta.patterns) == 1)

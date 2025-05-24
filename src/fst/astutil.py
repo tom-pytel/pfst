@@ -358,14 +358,23 @@ def is_valid_MatchSingleton_value(ast: AST) -> bool:
 
 
 def is_valid_MatchAs_value(ast: AST) -> bool:
+    while isinstance(ast, UnaryOp):
+        ast = ast.operand
+
     if isinstance(ast, Constant):
-        return isinstance(ast.value, (str, int, float, complex))
+        return isinstance(ast.value, (str, bytes, int, float, complex))
     if isinstance(ast, Attribute):
         return True
+
     if isinstance(ast, BinOp):
-        return (isinstance(ast.op, Add) and
-                isinstance(l := ast.left, Constant) and isinstance(r := ast.right, Constant) and
-                isinstance(l.value, (int, float)) and isinstance(r.value, complex))
+        if isinstance(ast.op, (Add, Sub)) and isinstance(r := ast.right, Constant) and isinstance(r.value, complex):
+            l = ast.left
+
+            while isinstance(l, UnaryOp):
+                l = l.operand
+
+            if isinstance(l, Constant) and isinstance(l.value, (int, float)):
+                return True
 
     return False
 
@@ -985,7 +994,7 @@ _PRECEDENCE_NODES = {  # default is _Precedence.ATOM
     # MatchMapping:   None,
     # MatchClass:     None,
     # MatchStar:      None,
-    MatchAs:        _Precedence.TEST,
+    MatchAs:        True,  # special case decided py presence or absence of `pattern`
     MatchOr:        _Precedence.BOR,
 
     # TypeIgnore:     None,
@@ -1071,19 +1080,27 @@ _PRECEDENCE_NODE_FIELDS = {  # default is _Precedence.TEST
 }
 
 def precedence_require_parens_by_type(child_type: type[AST], parent_type: type[AST], field: str, *,
-                                      dict_key_is_None: bool = False) -> bool:
+                                      dict_key_or_matchas_pat_is_None: bool = False) -> bool:
     """Returns whether parentheses are required for the child for the given parent / child structure or not. Both parent
-    and child `BoolOp`, `BinOp` and `UnaryOp` types should be passed as the type of the 'op' field. Special case if the
-    parent is a `Dict.values[i]` where the respective `keys[i]` is `None`, `dict_key_is_None` should be `True."""
+    and child `BoolOp`, `BinOp` and `UnaryOp` types should be passed as the type of the 'op' field.
+
+    Special case if the parent is a `Dict.values[i]` where the respective `keys[i]` is `None`,
+    `dict_key_or_matchas_pat_is_None` should be `True. It should also be `True` for the case of a `MatchAs` with a
+    `pattern` that is `None`. This is shared because the two different types will never be in a parent/child
+    relationship."""
 
     child_precedence  = _PRECEDENCE_NODES.get(child_type, _Precedence.ATOM)
     parent_precedence = _PRECEDENCE_NODE_FIELDS.get((parent_type, field), _Precedence.TEST)
 
-    assert child_precedence, "type of 'op' should be passed"
+    assert child_precedence, "type of 'op' should be passed for 'BoolOp', 'BinOp' or 'UnaryOp'"
+
+    if child_precedence is True:
+        child_precedence = _Precedence.ATOM if dict_key_or_matchas_pat_is_None else _Precedence.TEST
 
     if not parent_precedence:
         if parent_type is Dict:
-            parent_precedence = _Precedence.EXPR if dict_key_is_None and field == 'values' else _Precedence.TEST
+            parent_precedence = (_Precedence.EXPR if dict_key_or_matchas_pat_is_None and field == 'values' else
+                                 _Precedence.TEST)
 
         elif parent_type is Subscript:
             parent_precedence = _Precedence.TUPLE if child_type is Tuple else _Precedence.TEST  # tuples in slice don't need parens
@@ -1112,6 +1129,13 @@ def precedence_require_parens(child: AST, parent: AST, field: str, idx: int | No
                    if (child_cls := child.__class__) in (BoolOp, BinOp, UnaryOp) else child_cls)
     parent_type = (parent.op.__class__
                    if (parent_cls := parent.__class__) in (BoolOp, BinOp, UnaryOp) else parent_cls)
-    key_is_None = parent_cls is Dict and parent.keys[idx] is None
 
-    return precedence_require_parens_by_type(child_type, parent_type, field, dict_key_is_None=key_is_None)
+    dict_key_or_matchas_pat_is_None = False
+
+    if parent_cls is Dict:
+        dict_key_or_matchas_pat_is_None = parent.keys[idx] is None
+    if child_cls is MatchAs:
+        dict_key_or_matchas_pat_is_None = child.pattern is None
+
+    return precedence_require_parens_by_type(child_type, parent_type, field,
+                                             dict_key_or_matchas_pat_is_None=dict_key_or_matchas_pat_is_None)

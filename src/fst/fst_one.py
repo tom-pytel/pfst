@@ -1306,7 +1306,7 @@ _PUT_ONE_HANDLERS = {
     (MatchValue, 'value'):                (_put_one_MatchValue_value, None, onestatic(_one_info_exprish_required, is_valid_MatchAs_value)), # expr
     (MatchSingleton, 'value'):            (_put_one_constant, None, onestatic(_one_info_constant, is_valid_MatchSingleton_value)), # constant
     (MatchSequence, 'patterns'):          (_put_one_exprish_sliceable, None, _onestatic_pattern_required), # pattern*
-    (MatchMapping, 'keys'):               (_put_one_exprish_required, None, onestatic(_one_info_exprish_required, (Constant, Attribute))), # expr*  TODO: XXX are there any others allowed?
+    (MatchMapping, 'keys'):               (_put_one_exprish_required, None, onestatic(_one_info_exprish_required, (Constant, Attribute, UnaryOp, BinOp))), # expr*  Ops for `-1` or `2+3j`, TODO: XXX are there any others allowed?
     (MatchMapping, 'patterns'):           (_put_one_exprish_sliceable, None, _onestatic_pattern_required), # pattern*
     (MatchMapping, 'rest'):               (_put_one_identifier_optional, None, onestatic(_one_info_MatchMapping_rest, _restrict_default, coerce=_code_as_identifier)), # identifier?
     (MatchClass, 'cls'):                  (_put_one_exprish_required, None, onestatic(_one_info_exprish_required, (Name, Attribute))), # expr

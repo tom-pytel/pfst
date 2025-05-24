@@ -535,7 +535,7 @@ def _loc_comprehension(self: 'FST') -> fstloc:
     lines = self.root._lines
 
     if prev := self.prev_step('allown', recurse_self=False):
-        ln, col, _, _ = prev.loc
+        _, _, ln, col = prev.loc
     else:
         ln = col = 0
 

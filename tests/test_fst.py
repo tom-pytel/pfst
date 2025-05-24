@@ -28659,7 +28659,7 @@ def regen_precedence_data():
     #             # ch = s.op.__class__ if (sac := s.__class__) in (BoolOp, BinOp, UnaryOp) else sac
     #             # pr = p.op.__class__ if (fpa := p.__class__) in (BoolOp, BinOp, UnaryOp) else fpa
     #             # dk = fpa is Dict and p.keys[0] is None
-    #             # print(f"{'NY'[precedence_require_parens(ch, pr, fd, dict_key_is_None=dk)]} -", ast_.unparse(d))
+    #             # print(f"{'NY'[precedence_require_parens(ch, pr, fd, dict_key_or_matchas_pat_is_None=dk)]} -", ast_.unparse(d))
 
     for dst, *attrs in PRECEDENCE_DST_STMTS + PRECEDENCE_DST_EXPRS + PRECEDENCE_SRC_EXPRS:
         for src, *_ in PRECEDENCE_SRC_EXPRS:
@@ -35249,6 +35249,18 @@ class cls:
         self.assertEqual(f.src, 'a = ( # pre\n1\n+\n2\n# post\n)')
         f.put(g, field='value', raw=False, pars='auto')
         self.assertEqual(f.src, 'a = ( # pre\n1\n+\n2\n# post\n)')
+
+        # misc cases
+
+        f = FST('match a:\n case (0 as z) | (1 as z): pass')
+        g = f.body[0].cases[0].pattern.patterns[0].copy(pars=False)
+        f.body[0].cases[0].pattern.put(g, 0, field='patterns', raw=False)
+        self.assertEqual('match a:\n case (0 as z) | (1 as z): pass', f.src)
+
+        f = FST('match a:\n case range(10): pass')
+        g = f.body[0].cases[0].pattern.patterns[0].value.copy(pars=False)
+        f.body[0].cases[0].pattern.patterns[0].put(g, None, field='value')
+        self.assertEqual('match a:\n case range(10): pass', f.src)
 
     def test_put_raw(self):
         for i, (dst, attr, (ln, col, end_ln, end_col), options, src, put_ret, put_src, put_dump) in enumerate(PUT_RAW_DATA):
