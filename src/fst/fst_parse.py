@@ -65,6 +65,13 @@ _GLOBALS = globals() | {'_GLOBALS': None}
 # ----------------------------------------------------------------------------------------------------------------------
 
 @staticmethod
+def _parse_stmts(src: str, parse_params: dict = {}) -> AST:
+    """Parse one or more `stmt`s and return them in a `Module` `body` (just `ast.parse()` basically)."""
+
+    return ast_parse(src, **parse_params)
+
+
+@staticmethod
 def _parse_expr(src: str, parse_params: dict = {}) -> AST:
     """Parse to an `ast.expr` or raise `SyntaxError`."""
 
@@ -81,7 +88,7 @@ def _parse_expr(src: str, parse_params: dict = {}) -> AST:
 @staticmethod
 def _parse_slice(src: str, parse_params: dict = {}) -> AST:
     """Parse to an `ast.Slice` or anything else that can go into `Subscript.slice` or raise `SyntaxError`, e.g.
-    "start:stop:step"."""
+    "start:stop:step" or "name" or even "a:b, c:d:e, g"."""
 
     return _offset_linenos(ast_parse(f'a[\n{src}]', **parse_params).body[0].value.slice, -1)
 
@@ -91,6 +98,18 @@ def _parse_comprehension(src: str, parse_params: dict = {}) -> AST:
     """Parse to an `ast.comprehension` or raise `SyntaxError`, e.g. "async for i in something() if i"."""
 
     return _offset_linenos(ast_parse(f'[_ \n{src}]', **parse_params).body[0].value.generators[0], -1)
+
+
+@staticmethod
+def _parse_ExceptHandlers(src: str, parse_params: dict = {}) -> AST:
+    """Parse one or more `ExceptHandler`s and return them in a `Module` `body` or raise `SyntaxError`."""
+
+    ast = ast_parse(f'try: pass\n{src}', **parse_params).body[0]
+
+    if ast.orelse or ast.finalbody:
+        raise SyntaxError("not expecting 'else' or 'finally' blocks")
+
+    return Module(body=_offset_linenos(ast, -1).handlers, type_ignores=[])
 
 
 @staticmethod
@@ -159,6 +178,39 @@ def _parse_type_param(src: str, parse_params: dict = {}) -> AST:
 
 # ......................................................................................................................
 
+def _code_as_stmts(self: 'FST', code: Code) -> 'FST':
+    """Convert `code` to zero or more `stmt`s and return in the `body` of a `Module` `FST` if possible."""
+
+    if isinstance(code, FST):
+        ast = code.a
+
+        if isinstance(ast, stmt):
+            return FST(Module(body=[ast], type_ignores=[]), code._lines, from_=code, do_line_copy=False)
+
+        if isinstance(ast, Module):
+            if all(isinstance(a, stmt) for a in ast.body):
+                return code
+
+            raise NodeTypeError(f'expecting zero or more stmts, got '
+                                f'[{_shortstr(", ".join(a.__class__.__name__ for a in ast.body))}]')
+
+        raise NodeTypeError(f'expecting zero or more stmts, got {ast.__class__.__name__}')
+
+    if isinstance(code, AST):
+        if not isinstance(code, stmt):
+            raise NodeTypeError(f'expecting zero or more stmts, got {code.__class__.__name__}')
+
+        code  = ast_unparse(code)
+        lines = code.split('\n')
+
+    elif isinstance(code, list):
+        code = '\n'.join(lines := code)
+    else:  # str
+        lines = code.split('\n')
+
+    return FST(_parse_stmts(code, self.root.parse_params), lines)
+
+
 def _code_as_expr(self: 'FST', code: Code) -> 'FST':
     """Convert `code` to an expr `FST` if possible."""
 
@@ -171,7 +223,7 @@ def _code_as_expr(self: 'FST', code: Code) -> 'FST':
 
         ast.f._unmake_fst_parents()
 
-        return FST(ast, code._lines, from_=code, copy_lines=False)
+        return FST(ast, code._lines, from_=code, do_line_copy=False)
 
     if isinstance(code, AST):
         if not isinstance(code, expr):
@@ -200,6 +252,39 @@ def _code_as_comprehension(self: 'FST', code: Code) -> 'FST':
     """Convert `code` to a comprehension `FST` if possible."""
 
     return _code_as(self, code, comprehension, _parse_comprehension)
+
+
+def _code_as_ExceptHandlers(self: 'FST', code: Code) -> 'FST':
+    """Convert `code` to zero or more `ExceptHandler`s and return in the `body` of a `Module` `FST` if possible."""
+
+    if isinstance(code, FST):
+        ast = code.a
+
+        if isinstance(ast, ExceptHandler):
+            return FST(Module(body=[ast], type_ignores=[]), code._lines, from_=code, do_line_copy=False)
+
+        if isinstance(ast, Module):
+            if all(isinstance(a, ExceptHandler) for a in ast.body):
+                return code
+
+            raise NodeTypeError(f'expecting zero or more ExceptHandlers, got '
+                                f'[{_shortstr(", ".join(a.__class__.__name__ for a in ast.body))}]')
+
+        raise NodeTypeError(f'expecting zero or more ExceptHandlers, got {ast.__class__.__name__}')
+
+    if isinstance(code, AST):
+        if not isinstance(code, ExceptHandler):
+            raise NodeTypeError(f'expecting zero or more ExceptHandlers, got {code.__class__.__name__}')
+
+        code  = ast_unparse(code)
+        lines = code.split('\n')
+
+    elif isinstance(code, list):
+        code = '\n'.join(lines := code)
+    else:  # str
+        lines = code.split('\n')
+
+    return FST(_parse_ExceptHandlers(code, self.root.parse_params), lines)
 
 
 def _code_as_arguments(self: 'FST', code: Code) -> 'FST':

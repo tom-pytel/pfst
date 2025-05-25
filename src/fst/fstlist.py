@@ -143,6 +143,7 @@ class fstlist:
         return self
 
 
+# ----------------------------------------------------------------------------------------------------------------------
 __all__ = ['fstlist']
 
 from .fst import FST  # this imports a fake FST which is replaced in globals() on first use

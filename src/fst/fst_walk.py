@@ -1065,4 +1065,6 @@ def walk(self: 'FST', with_loc: bool | Literal['all', 'own'] = False, *, self_: 
                 stack.extend(children if back else children[::-1])
 
 
+# ----------------------------------------------------------------------------------------------------------------------
+
 from .fst import FST  # this imports a fake FST which is replaced in globals() on first use

@@ -69,7 +69,7 @@ def _normalize_code(code: Code, coerce: Literal['expr', 'exprish', 'mod'] | None
         if f := getattr(rast, 'f', None):
             f._unmake_fst_parents()
 
-        return FST(rast, code._lines, from_=code, copy_lines=False)
+        return FST(rast, code._lines, from_=code, do_line_copy=False)
 
     if isinstance(code, AST):
         return FST.fromast(_coerce_ast(code, coerce))  # TODO: WARNING! will not handle pure AST ExceptHandler or match_case
@@ -1187,7 +1187,7 @@ def _make_fst_and_dedent(self: 'FST', indent: Union['FST', str], ast: AST, copy_
         indent = indent.get_indent()
 
     lines = self.root._lines
-    fst   = FST(ast, lines, from_=self, copy_lines=False)  # we use original lines for nodes offset calc before putting new lines
+    fst   = FST(ast, lines, from_=self, do_line_copy=False)  # we use original lines for nodes offset calc before putting new lines
 
     fst.offset(copy_loc.ln, copy_loc.col, -copy_loc.ln, len(prefix.encode()) - lines[copy_loc.ln].c2b(copy_loc.col))
 
