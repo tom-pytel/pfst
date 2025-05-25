@@ -543,7 +543,7 @@ class FST:
         return FST(ast, [''], parse_params=parse_params)
 
     @staticmethod
-    def fromsrc(source: str | bytes | list[str], filename: str = '<unknown>',
+    def fromsrc(src: str | bytes | list[str], filename: str = '<unknown>',
                 mode: Literal['exec', 'eval', 'single'] = 'exec', *,
                 type_comments: bool = False, feature_version: tuple[int, int] | None = None) -> 'FST':
         """Parse and create a new `FST` tree from source, preserving the original source and locations.
@@ -560,18 +560,18 @@ class FST:
         - `FST`: The parsed tree with `.f` attributes added to each `AST` node for `FST` access.
         """
 
-        if isinstance(source, bytes):
-            source = source.decode()
+        if isinstance(src, bytes):
+            src = src.decode()
 
-        if isinstance(source, str):
-            lines  = source.split('\n')
+        if isinstance(src, str):
+            lines = src.split('\n')
 
         else:
-            lines  = source
-            source = '\n'.join(lines)
+            lines = src
+            src   = '\n'.join(lines)
 
         parse_params = dict(filename=filename, type_comments=type_comments, feature_version=feature_version)
-        ast          = ast_parse(source, mode=mode, **parse_params)
+        ast          = ast_parse(src, mode=mode, **parse_params)
 
         return FST(ast, lines, parse_params=parse_params)  # not just convert to bistr but to make a copy at the same time
 
@@ -646,7 +646,7 @@ class FST:
         return _OPTIONS.get(option) if (o := options.get(option)) is None else o
 
     @staticmethod
-    def set_options(**options) -> dict[str, Any]:
+    def set_option(**options) -> dict[str, Any]:
         """Set defaults for `options` parameters.
 
         **Parameters:**
@@ -699,7 +699,7 @@ class FST:
                 - `None`: Use default.
 
         **Returns:**
-        - `options`: `dict` of previous values of changed parameters, reset with `set_options(**options)`.
+        - `options`: `dict` of previous values of changed parameters, reset with `set_option(**options)`.
 
         **Notes:**
         `pars` behavior:
@@ -720,7 +720,7 @@ class FST:
         return ret
 
     def dump(self, compact: bool = False, full: bool = False, *, indent: int = 2, out: Callable | TextIO = print,
-             eol: str | None = None) -> list[str] | None:
+             eol: str | None = None) -> str | list[str] | None:
         """Dump a representation of the tree to stdout or return as a list of lines.
 
         **Parameters:**
@@ -1236,8 +1236,7 @@ class FST:
 
     def is_parsable(self) -> bool:
         """Really means the AST is `ast.unparse()`able and then re`ast.parse()`able which will get it to this top level
-        AST node surrounded by the appropriate `ast.mod`. The source may change a bit though, parentheses,
-        'if' <-> 'elif'."""
+        AST node (surrounded by an `ast.mod`). The source may change a bit though, parentheses, 'if' <-> 'elif'."""
 
         if not is_parsable(self.a) or not self.loc:
             return False
@@ -2162,7 +2161,7 @@ class FST:
         _parse_arguments_lambda,
         _parse_arg,
         _parse_keyword,
-        _parse_alias,
+        _parse_alias_maybe_star,
         _parse_alias_dotted,
         _parse_withitem,
         _parse_pattern,
@@ -2174,13 +2173,15 @@ class FST:
         _code_as_arguments_lambda,
         _code_as_arg,
         _code_as_keyword,
-        _code_as_alias,
+        _code_as_alias_maybe_star,
         _code_as_alias_dotted,
         _code_as_withitem,
         _code_as_pattern,
         _code_as_type_param,
         _code_as_identifier,
         _code_as_identifier_dotted,
+        _code_as_identifier_maybe_star,
+        _code_as_identifier_alias,
         _code_as_op,
     )
 

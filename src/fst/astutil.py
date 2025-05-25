@@ -16,10 +16,11 @@ __all__ = [
     'FIELDS', 'AST_FIELDS',
     'OPSTR2CLS_UNARY', 'OPSTR2CLS_BIN', 'OPSTR2CLS_CMP', 'OPSTR2CLS_BOOL', 'OPSTR2CLS_AUG',
     'OPSTR2CLS', 'OPSTR2CLSWAUG', 'OPCLS2STR', 'OPCLS2STR_AUG',
-    're_identifier_only', 're_identifier', 're_identifier_dotted_only', 're_identifier_dotted',
+    're_identifier', 're_identifier_only', 're_identifier_dotted', 're_identifier_dotted_only',
+    're_identifier_or_star', 're_identifier_or_star_only', 're_identifier_alias', 're_identifier_alias_only',
     'bistr', 'constant',
-    'is_valid_identifier', 'is_valid_identifier_dotted', 'is_valid_MatchSingleton_value', 'is_valid_MatchValue_value',
-    'is_valid_MatchMapping_key',
+    'is_valid_identifier', 'is_valid_identifier_dotted', 'is_valid_identifier_maybe_star', 'is_valid_identifier_alias',
+    'is_valid_MatchSingleton_value', 'is_valid_MatchValue_value', 'is_valid_MatchMapping_key',
     'reduce_ast', 'get_field', 'set_field', 'has_type_comments', 'is_parsable', 'get_parse_mode',
     'WalkFail', 'walk2', 'compare_asts', 'copy_attributes', 'copy_ast', 'set_ctx',
     'get_func_class_or_ass_by_name', 'syntax_ordered_children', 'last_block_header_child', 'is_atom',
@@ -135,10 +136,14 @@ class bistr(str):
 
 constant = EllipsisType | int | float | complex | str | bytes | bool | None
 
-re_identifier_only        = re.compile(r'^[^\d\W]\w*$')
-re_identifier             = re.compile(r'[^\d\W]\w*')
-re_identifier_dotted_only = re.compile(r'^[^\d\W]\w*(?:\.[^\d\W]\w*)*$')
-re_identifier_dotted      = re.compile(r'[^\d\W]\w*(?:\.[^\d\W]\w*)*')
+re_identifier              = re.compile(r'[^\d\W]\w*')
+re_identifier_only         = re.compile(r'^[^\d\W]\w*$')
+re_identifier_dotted       = re.compile(r'[^\d\W]\w*(?:\.[^\d\W]\w*)*')
+re_identifier_dotted_only  = re.compile(r'^[^\d\W]\w*(?:\.[^\d\W]\w*)*$')
+re_identifier_or_star      = re.compile(r'(?:\*|[^\d\W]\w*)')
+re_identifier_or_star_only = re.compile(r'^(?:\*|[^\d\W]\w*)$')
+re_identifier_alias        = re.compile(r'(?:\*|[^\d\W]\w*(?:\.[^\d\W]\w*)*)')
+re_identifier_alias_only   = re.compile(r'^(?:\*|[^\d\W]\w*(?:\.[^\d\W]\w*)*)$')
 
 # Mostly in syntax order except a few special cases:
 #   BoolOp        - multiple simultaneous locations possible for single `op`
@@ -349,9 +354,21 @@ def is_valid_identifier(s: str) -> bool:
 
 
 def is_valid_identifier_dotted(s: str) -> bool:
-    """Check if `s` is a valid dotted identifier (for modules)."""
+    """Check if `s` is a valid python dotted identifier (for modules)."""
 
     return (re_identifier_dotted_only.match(s) or False) and not keyword_iskeyword(s)
+
+
+def is_valid_identifier_maybe_star(s: str) -> bool:
+    """Check if `s` is a valid python identifier or a star '*'."""
+
+    return (re_identifier_or_star_only.match(s) or False) and not keyword_iskeyword(s)
+
+
+def is_valid_identifier_alias(s: str) -> bool:
+    """Check if `s` is a valid python dotted identifier or a star '*'."""
+
+    return (re_identifier_alias_only.match(s) or False) and not keyword_iskeyword(s)
 
 
 def is_valid_MatchSingleton_value(ast: AST) -> bool:

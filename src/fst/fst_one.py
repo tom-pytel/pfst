@@ -15,8 +15,8 @@ from .shared import (
 
 from .fst_parse import (
     _code_as_expr, _code_as_slice, _code_as_pattern, _code_as_comprehension, _code_as_arguments,
-    _code_as_arguments_lambda, _code_as_arg, _code_as_keyword, _code_as_alias, _code_as_alias_dotted, _code_as_withitem,
-    _code_as_type_param, _code_as_identifier, _code_as_identifier_dotted,
+    _code_as_arguments_lambda, _code_as_arg, _code_as_keyword, _code_as_alias_maybe_star, _code_as_alias_dotted,
+    _code_as_withitem, _code_as_type_param, _code_as_identifier, _code_as_identifier_dotted, _code_as_identifier_alias,
 )
 
 _re_merged_alnum = re.compile(r'\w\w')
@@ -444,8 +444,8 @@ def _put_one_Lambda_arguments(self: 'FST', code: Code | None, idx: int | None, f
 
 def _put_one_MatchValue_value(self: 'FST', code: Code | None, idx: int | None, field: str, child: AST,
                               static: onestatic, **options) -> 'FST':
-    """Put MatchValue.value. Need to do this because a standalone MatchValue encompassing a parenthesized constant ends
-    before the closing parenthesis and so doesn't get offset correctly."""
+    """Put MatchValue.value. Need to do this because a standalone MatchValue does not encompass parenthesized value
+    parentheses."""
 
     ret              = _put_one_exprish_required(self, code, idx, field, child, static, **options)
     a                = self.a
@@ -584,7 +584,7 @@ def _put_one(self: 'FST', code: Code | None, idx: int | None, field: str | None,
         slice operations.
     - `idx`: The index in the body list of the field to put, or `None` if is a standalone node.
     - `field`: The `AST` field to modify.
-    - `options`: See `FST.set_options`.
+    - `options`: See `FST.set_option`.
     """
 
     ast      = self.a
@@ -686,6 +686,12 @@ def _one_info_identifier_required(self: 'FST', static: onestatic, idx: int | Non
 
 _onestatic_identifier_required = onestatic(_one_info_identifier_required, _restrict_default, coerce=_code_as_identifier)
 
+def _one_info_identifier_alias(self: 'FST', static: onestatic, idx: int | None, field: str) -> oneinfo:  # required, cannot delete or put new
+    ln, col, _, end_col = self.loc
+    end_col             = re_identifier_alias.match(self.root._lines[ln], col, end_col).end()  # must be there
+
+    return oneinfo('', None, fstloc(ln, col, ln, end_col))
+
 def _one_info_FunctionDef_name(self: 'FST', static: onestatic, idx: int | None, field: str) -> oneinfo:
     return _one_info_identifier_required(self, static, idx, field, 'def')
 
@@ -745,13 +751,11 @@ def _one_info_ImportFrom_module(self: 'FST', static: onestatic, idx: int | None,
 
         return oneinfo('', None, fstloc(ln, col, ln, end_col))
 
-    ln, col, src = _prev_src(self.root._lines, self_ln := self.ln, self_col := self.col, *self.a.names[0].f.loc[:2])
-
-    assert src == 'import'
-
-    ln, col, src = _prev_src(self.root._lines, self_ln, self_col, ln, col)  # must be there, the module name with any/some/all preceding '.' level indicators
-    end_col      = col + len(src)
-    col          = end_col - len(src.lstrip('.'))
+    self_ln, self_col, _, _ = self.loc
+    ln, col                 = _prev_find(self.root._lines, self_ln, self_col, *self.a.names[0].f.loc[:2], 'import')
+    ln, col, src            = _prev_src(self.root._lines, self_ln, self_col, ln, col)  # must be there, the module name with any/some/all preceding '.' level indicators
+    end_col                 = col + len(src)
+    col                     = end_col - len(src.lstrip('.'))
 
     return oneinfo('', loc := fstloc(ln, col, ln, end_col), loc)
 
@@ -1233,7 +1237,7 @@ _PUT_ONE_HANDLERS = {
     (Assert, 'msg'):                      (_put_one_exprish_optional, None, onestatic(_one_info_Assert_msg, _restrict_default)), # expr?
     (Import, 'names'):                    (_put_one_exprish_sliceable, None, onestatic(_one_info_exprish_required, _restrict_default, coerce=_code_as_alias_dotted)), # alias*
     (ImportFrom, 'module'):               (_put_one_identifier_optional, None, onestatic(_one_info_ImportFrom_module, _restrict_default, coerce=_code_as_identifier_dotted)), # identifier? (dotted)
-    (ImportFrom, 'names'):                (_put_one_exprish_sliceable, None, onestatic(_one_info_exprish_required, _restrict_default, coerce=_code_as_alias)), # alias*
+    (ImportFrom, 'names'):                (_put_one_exprish_sliceable, None, onestatic(_one_info_exprish_required, _restrict_default, coerce=_code_as_alias_maybe_star)), # alias*
     (Global, 'names'):                    (_put_one_identifier_sliceable, None, _onestatic_Global_Nonlocal_names), # identifier*
     (Nonlocal, 'names'):                  (_put_one_identifier_sliceable, None, _onestatic_Global_Nonlocal_names), # identifier*
     (Expr, 'value'):                      (_put_one_exprish_required, None, _onestatic_expr_required), # expr
@@ -1308,7 +1312,7 @@ _PUT_ONE_HANDLERS = {
     (arg, 'annotation'):                  (_put_one_exprish_optional, None, onestatic(_one_info_arg_annotation, _restrict_default)), # expr?  - exclude [Lambda, Yield, YieldFrom, Await, NamedExpr]?
     (keyword, 'arg'):                     (_put_one_identifier_optional, None, onestatic(_one_info_keyword_arg, _restrict_default, coerce=_code_as_identifier)), # identifier?
     (keyword, 'value'):                   (_put_one_exprish_required, None, _onestatic_expr_required), # expr
-    (alias, 'name'):                      (_put_one_identifier_required, None, onestatic(_one_info_identifier_required, _restrict_default, coerce=_code_as_identifier_dotted)), # identifier  - dotted not valid for all uses but being general here (and lazy, don't feel like checking parent)
+    (alias, 'name'):                      (_put_one_identifier_required, None, onestatic(_one_info_identifier_alias, _restrict_default, coerce=_code_as_identifier_alias)), # identifier  - alias star or dotted not valid for all uses but being general here (and lazy, don't feel like checking parent)
     (alias, 'asname'):                    (_put_one_identifier_optional, None, onestatic(_one_info_alias_asname, _restrict_default, coerce=_code_as_identifier)), # identifier?
     (withitem, 'context_expr'):           (_put_one_exprish_required, None, _onestatic_expr_required), # expr
     (withitem, 'optional_vars'):          (_put_one_exprish_optional, None, onestatic(_one_info_withitem_optional_vars, (Name, Tuple, List, Attribute, Subscript), ctx=Store)), # expr?

@@ -122,7 +122,7 @@ def _parse_keyword(src: str, parse_params: dict = {}) -> AST:
 
 
 @staticmethod
-def _parse_alias(src: str, parse_params: dict = {}) -> AST:
+def _parse_alias_maybe_star(src: str, parse_params: dict = {}) -> AST:
     """Parse to an `ast.alias` or raise `SyntaxError`, e.g. "name as alias"."""
 
     return _offset_linenos(ast_parse(f'from . import (\n{src})', **parse_params).body[0].names[0], -1)
@@ -226,14 +226,14 @@ def _code_as_keyword(self: 'FST', code: Code) -> 'FST':
     return _code_as(self, code, keyword, _parse_keyword)
 
 
-def _code_as_alias(self: 'FST', code: Code) -> 'FST':
-    """Convert `code` to a alias `FST` if possible."""
+def _code_as_alias_maybe_star(self: 'FST', code: Code) -> 'FST':
+    """Convert `code` to a alias `FST` if possible, possibly star as in `alias` for `FromImport.names`."""
 
-    return _code_as(self, code, alias, _parse_alias)
+    return _code_as(self, code, alias, _parse_alias_maybe_star)
 
 
 def _code_as_alias_dotted(self: 'FST', code: Code) -> 'FST':
-    """Convert `code` to a alias `FST` if possible."""
+    """Convert `code` to a alias `FST` if possible, dotted as in `alias` for `Import.names`."""
 
     return _code_as(self, code, alias, _parse_alias_dotted)
 
@@ -266,7 +266,7 @@ def _code_as_identifier(self: 'FST', code: Code) -> str:
     elif isinstance(code, list):
         code = '\n'.join(code)
 
-    if not is_valid_identifier_dotted(code):
+    if not is_valid_identifier(code):
         raise NodeTypeError(f'expecting identifier, got {_shortstr(code)!r}')
 
     return code
@@ -284,6 +284,38 @@ def _code_as_identifier_dotted(self: 'FST', code: Code) -> str:
 
     if not is_valid_identifier_dotted(code):
         raise NodeTypeError(f'expecting dotted identifier, got {_shortstr(code)!r}')
+
+    return code
+
+
+def _code_as_identifier_maybe_star(self: 'FST', code: Code) -> str:
+    """Convert `Code` to valid identifier string or star '*' if possible (for ImportFrom names)."""
+
+    if isinstance(code, FST):
+        code = code.src
+    elif isinstance(code, AST):
+        code = ast_unparse(code)
+    elif isinstance(code, list):
+        code = '\n'.join(code)
+
+    if not is_valid_identifier_maybe_star(code):
+        raise NodeTypeError(f"expecting identifier or '*', got {_shortstr(code)!r}")
+
+    return code
+
+
+def _code_as_identifier_alias(self: 'FST', code: Code) -> str:
+    """Convert `Code` to valid dotted identifier string or star '*' if possible (for any alias)."""
+
+    if isinstance(code, FST):
+        code = code.src
+    elif isinstance(code, AST):
+        code = ast_unparse(code)
+    elif isinstance(code, list):
+        code = '\n'.join(code)
+
+    if not is_valid_identifier_alias(code):
+        raise NodeTypeError(f"expecting dotted identifier or '*', got {_shortstr(code)!r}")
 
     return code
 
