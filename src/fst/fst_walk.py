@@ -80,11 +80,11 @@ def next(self: 'FST', with_loc: bool | Literal['all', 'own'] = True) -> Optional
 
     **Parameters:**
     - `with_loc`: Return nodes depending on if they have a location or not.
+        - `False`: All nodes with or without location.
         - `True`: Only nodes with `AST` locations returned but also larger computed location nodes like `comprehension`,
             `withitem`, `match_case` and `arguments` (but only if there actually are arguments present).
         - `'all'`: Same as `True` but also operators (excluding `and` and `or`) with calculated locations.
         - `'own'`: Only nodes with own location (does not recurse into non-own nodes).
-        - `False`: All nodes with or without location.
 
     **Returns:**
     - `None` if last valid sibling in parent, otherwise next node.
@@ -373,11 +373,11 @@ def prev(self: 'FST', with_loc: bool | Literal['all', 'own'] = True) -> Optional
 
     **Parameters:**
     - `with_loc`: Return nodes depending on if they have a location or not.
+        - `False`: All nodes with or without location.
         - `True`: Only nodes with `AST` locations returned but also larger computed location nodes like `comprehension`,
             `withitem`, `match_case` and `arguments` (but only if there actually are arguments present).
         - `'all'`: Same as `True` but also operators (excluding `and` and `or`) with calculated locations.
         - `'own'`: Only nodes with own location (does not recurse into non-own nodes).
-        - `False`: All nodes with or without location.
 
     **Returns:**
     - `None` if first valid sibling in parent, otherwise previous node.
@@ -667,11 +667,11 @@ def first_child(self: 'FST', with_loc: bool | Literal['all', 'own'] = True) -> O
 
     **Parameters:**
     - `with_loc`: Return nodes depending on if they have a location or not.
+        - `False`: All nodes with or without location.
         - `True`: Only nodes with `AST` locations returned but also larger computed location nodes like `comprehension`,
             `withitem`, `match_case` and `arguments` (but only if there actually are arguments present).
         - `'all'`: Same as `True` but also operators (excluding `and` and `or`) with calculated locations.
         - `'own'`: Only nodes with own location (does not recurse into non-own nodes).
-        - `False`: All nodes with or without location.
 
     **Returns:**
     - `None` if no valid children, otherwise first valid child.
@@ -697,11 +697,11 @@ def last_child(self: 'FST', with_loc: bool | Literal['all', 'own'] = True) -> Op
 
     **Parameters:**
     - `with_loc`: Return nodes depending on if they have a location or not.
+        - `False`: All nodes with or without location.
         - `True`: Only nodes with `AST` locations returned but also larger computed location nodes like `comprehension`,
             `withitem`, `match_case` and `arguments` (but only if there actually are arguments present).
         - `'all'`: Same as `True` but also operators (excluding `and` and `or`) with calculated locations.
         - `'own'`: Only nodes with own location (does not recurse into non-own nodes).
-        - `False`: All nodes with or without location.
 
     **Returns:**
     - `None` if no valid children, otherwise last valid child.
@@ -737,11 +737,11 @@ def next_child(self: 'FST', from_child: Optional['FST'], with_loc: bool | Litera
     **Parameters:**
     - `from_child`: Child node we are coming from which may or may not have location.
     - `with_loc`: Return nodes depending on if they have a location or not.
+        - `False`: All nodes with or without location.
         - `True`: Only nodes with `AST` locations returned but also larger computed location nodes like `comprehension`,
             `withitem`, `match_case` and `arguments` (but only if there actually are arguments present).
         - `'all'`: Same as `True` but also operators (excluding `and` and `or`) with calculated locations.
         - `'own'`: Only nodes with own location (does not recurse into non-own nodes).
-        - `False`: All nodes with or without location.
 
     **Returns:**
     - `None` if last valid child in `self`, otherwise next child node.
@@ -758,11 +758,11 @@ def prev_child(self: 'FST', from_child: Optional['FST'], with_loc: bool | Litera
     **Parameters:**
     - `from_child`: Child node we are coming from which may or may not have location.
     - `with_loc`: Return nodes depending on if they have a location or not.
+        - `False`: All nodes with or without location.
         - `True`: Only nodes with `AST` locations returned but also larger computed location nodes like `comprehension`,
             `withitem`, `match_case` and `arguments` (but only if there actually are arguments present).
         - `'all'`: Same as `True` but also operators (excluding `and` and `or`) with calculated locations.
         - `'own'`: Only nodes with own location (does not recurse into non-own nodes).
-        - `False`: All nodes with or without location.
 
     **Returns:**
     - `None` if first valid child in `self`, otherwise previous child node.
@@ -778,12 +778,12 @@ def next_step(self: 'FST', with_loc: bool | Literal['all', 'own', 'allown'] = Tr
 
     **Parameters:**
     - `with_loc`: Return nodes depending on if they have a location or not.
+        - `False`: All nodes with or without location.
         - `True`: Only nodes with `AST` locations returned but also larger computed location nodes like `comprehension`,
             `withitem`, `match_case` and `arguments` (but only if there actually are arguments present).
         - `'all'`: Same as `True` but also operators (excluding `and` and `or`) with calculated locations.
         - `'own'`: Only nodes with own location (does not recurse into non-own nodes).
         - `'allown'` Same as `'own'` but recurse into nodes with non-own locations.
-        - `False`: All nodes with or without location.
     - `recurse_self`: Whether to allow recursion into `self` to return children or move directly to next nodes.
 
     **Returns:**
@@ -816,12 +816,12 @@ def prev_step(self: 'FST', with_loc: bool | Literal['all', 'own', 'allown'] = Tr
 
     **Parameters:**
     - `with_loc`: Return nodes depending on if they have a location or not.
+        - `False`: All nodes with or without location.
         - `True`: Only nodes with `AST` locations returned but also larger computed location nodes like `comprehension`,
             `withitem`, `match_case` and `arguments` (but only if there actually are arguments present).
         - `'all'`: Same as `True` but also operators (excluding `and` and `or`) with calculated locations.
         - `'own'`: Only nodes with own location (does not recurse into non-own nodes).
         - `'allown'` Same as `'own'` but recurse into nodes with non-own locations.
-        - `False`: All nodes with or without location.
     - `recurse_self`: Whether to allow recursion into `self` to return children or move directly to prev nodes.
 
     **Returns:**
@@ -861,11 +861,11 @@ def walk(self: 'FST', with_loc: bool | Literal['all', 'own'] = False, *, self_: 
 
     **Parameters:**
     - `with_loc`: Return nodes depending on if they have a location or not.
+        - `False`: All nodes with or without location.
         - `True`: Only nodes with `AST` locations returned but also larger computed location nodes like `comprehension`,
             `withitem`, `match_case` and `arguments` (but only if there actually are arguments present).
         - `'all'`: Same as `True` but also operators (excluding `and` and `or`) with calculated locations.
         - `'own'`: Only nodes with own location (does not recurse into non-own nodes).
-        - `False`: All nodes with or without location.
     - `self_`: If `True` then self will be returned first with the possibility to skip children with `send()`.
     - `recurse`: Whether to recurse into children by default, `send()` for a given node will always override this.
         Will always attempt first level of children unless walking self and `False` is sent first.

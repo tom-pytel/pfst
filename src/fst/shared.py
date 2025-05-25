@@ -89,6 +89,7 @@ _AST_DEFAULT_BODY_FIELD  = {cls: field for field, classes in [
     ('pattern',      (MatchAs,)),
 ] for cls in classes}
 
+
 _GLOBALS = globals() | {'_GLOBALS': None}
 # ----------------------------------------------------------------------------------------------------------------------
 
@@ -426,81 +427,6 @@ def _next_find_re(lines: list[str], ln: int, col: int, end_ln: int, end_col: int
 
 
 def _next_pars(lines: list[str], pars_end_ln: int, pars_end_col: int, bound_end_ln: int, bound_end_col: int,
-               par: str = ')') -> tuple[int, int, int, int, int]:
-        """Count number of closing parentheses (or any specified character) starting a `pars_end_ln`, `pars_end_col`
-        until the end of the bound. The count ends if a non `par` character is encountered while searching forward and
-        the last and also ante-last ending position of a `par` (after the `par`) is returned along with the count.
-
-        **Returns:**
-        - `(pars_end_ln, pars_end_col, ante_end_ln, ante_end_col, npars)`: The rightmost and ante-rightmost ending
-            positions and total count of closing parentheses encountered. `pars_end_*` and `ante_end_*` will be same if
-            no parentheses found.
-        """
-
-        ante_end_ln  = pars_end_ln
-        ante_end_col = pars_end_col
-        npars        = 0
-
-        while code := _next_src(lines, pars_end_ln, pars_end_col, bound_end_ln, bound_end_col):
-            ln, col, src = code
-
-            for c in src:
-                if c != par:
-                    break
-
-                ante_end_ln   = pars_end_ln
-                ante_end_col  = pars_end_col
-                pars_end_ln   = ln
-                pars_end_col  = (col := col + 1)
-                npars        += 1
-
-            else:
-                continue
-
-            break
-
-        return pars_end_ln, pars_end_col, ante_end_ln, ante_end_col, npars
-
-
-def _prev_pars(lines: list[str], bound_ln: int, bound_col: int, pars_ln: int, pars_col: int, par: str = '(',
-               ) -> tuple[int, int, int, int, int]:
-        """Count number of opening parentheses (or any specified character) starting a `pars_ln`, `pars_col` until the
-        start of the bound. The count ends if a non `par` character is encountered while searching backward and the last
-        and also ante-last starting position of a `par` is returned along with the count.
-
-        **Returns:**
-        - `(pars_ln, pars_col, ante_ln, ante_col, npars)`: The leftmost and ante-leftmost starting positions and total
-            count of opening parentheses encountered. `pars_*` and `ante_*` will be same if no parentheses found.
-        """
-
-        ante_ln  = pars_ln
-        ante_col = pars_col
-        npars    = 0
-        state    = []
-
-        while code := _prev_src(lines, bound_ln, bound_col, pars_ln, pars_col, state=state):
-            ln, col, src  = code
-            col          += len(src)
-
-            for c in src[::-1]:
-                if c != par:
-                    break
-
-                ante_ln   = pars_ln
-                ante_col  = pars_col
-                pars_ln   = ln
-                pars_col  = (col := col - 1)
-                npars    += 1
-
-            else:
-                continue
-
-            break
-
-        return pars_ln, pars_col, ante_ln, ante_col, npars
-
-
-def _next_pars2(lines: list[str], pars_end_ln: int, pars_end_col: int, bound_end_ln: int, bound_end_col: int,
                par: str = ')') -> list[tuple[int, int]]:
         """Return a list of the locations of closing parentheses (just past, or any specified character) starting at
         (`pars_end_ln`, `pars_end_col`) until the end of the bound. The list includes (`pars_end_ln`, `pars_end_col`) as
@@ -532,7 +458,7 @@ def _next_pars2(lines: list[str], pars_end_ln: int, pars_end_col: int, bound_end
         return pars
 
 
-def _prev_pars2(lines: list[str], bound_ln: int, bound_col: int, pars_ln: int, pars_col: int, par: str = '(',
+def _prev_pars(lines: list[str], bound_ln: int, bound_col: int, pars_ln: int, pars_col: int, par: str = '(',
                ) -> list[tuple[int, int]]:
         """Return a list of the locations of opening parentheses (or any specified character) starting at (`pars_ln`,
         `pars_col`) until the start of the bound. The list includes (`pars_ln`, `pars_col`) as the first element. The

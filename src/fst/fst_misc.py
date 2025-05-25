@@ -12,7 +12,7 @@ from .shared import (
     BLOCK,
     HAS_DOCSTRING,
     Code,
-    _next_src, _prev_src, _next_find, _prev_find, _next_pars, _prev_pars, _next_pars2, _prev_pars2,
+    _next_src, _prev_src, _next_find, _prev_find, _next_pars, _prev_pars,
     _coerce_ast
 )
 
@@ -323,122 +323,48 @@ def _set_ctx(self: 'FST', ctx: type[expr_context]):
                 stack.append(a.value)
 
 
-def _prev_ast_bound(self: 'FST', with_loc: bool | Literal['all', 'own', 'allown'] = True) -> tuple[int, int]:
-    """Get a prev bound for search after any ASTs for this object. This is safe to call for nodes that live inside
-    nodes without their own locations if `with_loc='allown'`."""
+def _next_bound(self: 'FST', with_loc: bool | Literal['all', 'own'] = 'all') -> tuple[int, int]:
+    """Get a next bound for search before any following ASTs for this object within parent. If no siblings found after
+    self then return end of parent. If no parent then return end of source."""
+
+    if next := self.next(with_loc):
+        return next.bloc[:2]
+    elif parent := self.parent:
+        return parent.bloc[2:]
+
+    return len(ls := self.root._lines) - 1, len(ls[-1])
+
+
+def _prev_bound(self: 'FST', with_loc: bool | Literal['all', 'own'] = 'all') -> tuple[int, int]:
+    """Get a prev bound for search after any previous ASTs for this object within parent. If no siblings found before
+    self then return start of parent. If no parent then return (0, 0)."""
+
+    if prev := self.prev(with_loc):
+        return prev.bloc[2:]
+    elif parent := self.parent:
+        return parent.bloc[:2]
+    else:
+        return 0, 0
+
+
+def _next_bound_step(self: 'FST', with_loc: bool | Literal['all', 'own', 'allown'] = 'all') -> tuple[int, int]:
+    """Get a next bound for search before any following ASTs for this object using `next_step()`. This is safe to call
+    for nodes that live inside nodes without their own locations if `with_loc='allown'`."""
+
+    if next := self.next_step(with_loc, recurse_self=False):
+        return next.bloc[:2]
+
+    return len(ls := self.root._lines) - 1, len(ls[-1])
+
+
+def _prev_bound_step(self: 'FST', with_loc: bool | Literal['all', 'own', 'allown'] = 'all') -> tuple[int, int]:
+    """Get a prev bound for search after any previous ASTs for this object using `prev_step()`. This is safe to call for
+    nodes that live inside nodes without their own locations if `with_loc='allown'`."""
 
     if prev := self.prev_step(with_loc, recurse_self=False):
         return prev.bloc[2:]
 
     return 0, 0
-
-
-def _next_ast_bound(self: 'FST', with_loc: bool | Literal['all', 'own', 'allown'] = True) -> tuple[int, int]:
-    """Get a next bound for search before any ASTs for this object. This is safe to call for nodes that live inside
-    nodes without their own locations if `with_loc='allown'`."""
-
-    if next := self.next_step(with_loc, recurse_self=False):
-        return next.bloc[:2]
-
-    return len(lines := self.root._lines) - 1, len(lines[-1])
-
-
-def _lpars(self: 'FST', with_loc: bool | Literal['all', 'own', 'allown'] = True, *, shared: bool = True,
-           ) -> tuple[int, int, int, int, int]:
-    """Return the `ln` and `col` of the leftmost and ante-leftmost opening parentheses and the total number of
-    opening parentheses. Doesn't take into account anything like enclosing argument parentheses, just counts. The
-    leftmost bound used is the end of the previous sibling, or the start of that parent if there isn't one, or (0,0)
-    if no parent.
-
-    **Parameters:**
-    - `with_loc`: Parameter to use for AST bound search. `True` normally or `'allown'` in special cases like
-        searching for parentheses to figure out node location from children from `.loc` itself.
-    - `shared`: If `True`, then will include left parenthesis of a single call argument generator expression if it is
-        shared with the call() arguments enclosing parentheses, otherwise no.
-
-    **Returns:**
-    - `(ln, col, ante_ln, ante_col, npars)`: The leftmost and ante-leftmost positions and total count of opening
-        parentheses encountered.
-    """
-
-    ret = _prev_pars(self.root._lines, *self._prev_ast_bound(with_loc), *self.bloc[:2])
-
-    if self.is_solo_call_arg():  # special case single arg in a call so we must exclude the call arguments parentheses
-        pars_ln, pars_col, _, _, npars = ret
-
-        if not shared and not npars and isinstance(self.a, GeneratorExp):  # npars == 0 indicates shared parentheses
-            ln, col, _, _  = self.loc
-            col           += 1
-
-            return ln, col, ln, col, -1
-
-        ret = _prev_pars(self.root._lines, pars_ln, pars_col + 1, *self.bloc[:2])  # exclude outermost par found from search
-
-    return ret
-
-
-def _rpars(self: 'FST', with_loc: bool | Literal['all', 'own', 'allown'] = True, *, shared: bool = True,
-           ) -> tuple[int, int, int, int, int]:
-    """Return the `end_ln` and `end_col` of the rightmost and ante-rightmost closing parentheses and the total
-    number of closing parentheses. Doesn't take into account anything like enclosing argument parentheses, just
-    counts. The rightmost bound used is the start of the next sibling, or the end of that parent if there isn't one,
-    or the end of `self.root._lines`.
-
-    **Parameters:**
-    - `with_loc`: Parameter to use for AST bound search. `True` normally or `'allown'` in special cases like
-        searching for parentheses to figure out node location from children from `.loc` itself.
-    - `shared`: If `True`, then will include right parenthesis of a single call argument generator expression if it is
-        shared with the call() arguments enclosing parentheses, otherwise no.
-
-    **Returns:**
-    - `(end_ln, end_col, ante_end_ln, ante_end_col, npars)`: The rightmost and ante-rightmost positions and total
-        count of closing parentheses encountered.
-    """
-
-    ret = _next_pars(self.root._lines, *self.bloc[2:], *self._next_ast_bound(with_loc))
-
-    if self.is_solo_call_arg():  # special case single arg in a call so we must exclude the call arguments parentheses
-        pars_end_ln, pars_end_col, _, _, npars = ret
-
-        if not shared and not npars and isinstance(self.a, GeneratorExp):  # npars == 0 indicates shared parentheses
-            _, _, end_ln, end_col  = self.loc
-            end_col               -= 1
-
-            return end_ln, end_col, end_ln, end_col, -1
-
-        ret = _next_pars(self.root._lines, *self.bloc[2:], pars_end_ln, pars_end_col - 1)  # exclude outermost par found from search
-
-    return ret
-
-
-def _lpars2(self: 'FST', with_loc: bool | Literal['all', 'own', 'allown'] = True) -> list[tuple[int, int]]:
-    """Return list of coordinates of left of self and opening parentheses on the left. The leftmost bound used is the
-    end of the previous sibling, or the start of that parent if there isn't one, or (0,0) if no parent.
-
-    **Parameters:**
-    - `with_loc`: Parameter to use for AST bound search. `True` normally or `'allown'` in special cases like
-        searching for parentheses to figure out node location from children from `.loc` itself.
-
-    **Returns:**
-    - `[(self.bln, self.bcol), (ln_par1, col_par1), (ln_par2, col_par2), ...]`
-    """
-
-    return _prev_pars2(self.root._lines, *self._prev_ast_bound(with_loc), *self.bloc[:2])
-
-
-def _rpars2(self: 'FST', with_loc: bool | Literal['all', 'own', 'allown'] = True) -> list[tuple[int, int]]:
-    """Return list of coordinates of the right of self and closing parentheses on the right. The rightmost bound used is
-    the start of the next sibling, or the end of that parent if there isn't one, or the end of `self.root._lines`.
-
-    **Parameters:**
-    - `with_loc`: Parameter to use for AST bound search. `True` normally or `'allown'` in special cases like
-        searching for parentheses to figure out node location from children from `.loc` itself.
-
-    **Returns:**
-    - `[(self.bend_ln, self.bend_col), (ln_end_par1, col_end_par1), (ln_end_par2, col_end_par2), ...]`
-    """
-
-    return _next_pars2(self.root._lines, *self.bloc[2:], *self._next_ast_bound(with_loc))
 
 
 def _loc_block_header_end(self: 'FST', ret_bound: bool = False) -> fstloc | tuple[int, int] | None:
@@ -531,10 +457,10 @@ def _loc_comprehension(self: 'FST') -> fstloc:
 
     ast   = self.a
     first = ast.target.f
-    last  = self.last_child()
+    last  = ifs[-1].f if (ifs := ast.ifs) else ast.iter.f  # self.last_child(), could be .iter or last .ifs
     lines = self.root._lines
 
-    if prev := self.prev_step('allown', recurse_self=False):
+    if prev := self.prev_step('allown', recurse_self=False):  # 'allown' so it doesn't recurse into calling `.loc`
         _, _, ln, col = prev.loc
     else:
         ln = col = 0
@@ -544,7 +470,7 @@ def _loc_comprehension(self: 'FST') -> fstloc:
     if ast.is_async:
         start_ln, start_col = _prev_find(lines, ln, col, start_ln, start_col, 'async')  # must be there
 
-    rpars = last._rpars2('allown')
+    rpars = _next_pars(lines, last.end_ln, last.end_col, *self._next_bound_step('allown'))
 
     if (lrpars := len(rpars)) == 1:  # no pars, just use end of last
         end_ln, end_col = rpars[0]
@@ -556,7 +482,8 @@ def _loc_comprehension(self: 'FST') -> fstloc:
         if is_genexp_last and lrpars == 2:  # can't be pars on left since only par on right was close of GeneratorExp
             end_ln, end_col = rpars[0]
         else:
-            end_ln, end_col = rpars[len(last._lpars2('allown')) - 1]  # get rpar according to how many pars on left
+
+            end_ln, end_col = rpars[len(_prev_pars(lines, *last._prev_bound(), last.ln, last.col)) - 1]  # get rpar according to how many pars on left
 
     return fstloc(start_ln, start_col, end_ln, end_col)
 
@@ -569,16 +496,14 @@ def _loc_arguments(self: 'FST') -> fstloc | None:
     if not (first := self.first_child()):
         return None
 
-    ast   = self.a
-    last  = self.last_child()
-    lines = self.root._lines
+    ast       = self.a
+    last      = self.last_child()
+    lines     = self.root._lines
+    end_lines = len(lines) - 1
+    rpars     = _next_pars(lines, last.end_ln, last.end_col, *self._next_bound())
 
-    start_ln, start_col, ante_start_ln, ante_start_col, _ = first._lpars('allown')  # 'allown' so it doesn't recurse into calling `.loc`
-    end_ln, end_col, ante_end_ln, ante_end_col, _         = last._rpars('allown')
-
-    if has_args_pars := (parent := self.parent) and isinstance(parent.a, (FunctionDef, AsyncFunctionDef)):
-        start_ln  = ante_start_ln
-        start_col = ante_start_col
+    end_ln, end_col           = rpars[-1]
+    start_ln, start_col, _, _ = first.loc
 
     if ast.posonlyargs:
         leading_stars  = None  # no leading stars
@@ -594,29 +519,23 @@ def _loc_arguments(self: 'FST') -> fstloc | None:
         elif ast.kwarg:
             leading_stars = '**'  # leading double star just before varname
 
-    if ((code := _next_src(lines, end_ln, end_col, len(lines) - 1, len(lines[-1])))  # trailing comma
-        and code.src.startswith(',')
-    ):
+    if (code := _next_src(lines, end_ln, end_col, end_lines, 0x7fffffffffffffff)) and code.src.startswith(','):  # trailing comma
         end_ln, end_col, _  = code
         end_col            += 1
 
-    elif has_args_pars:
-        end_ln  = ante_end_ln
-        end_col = ante_end_col
+    elif (parent := self.parent) and isinstance(parent.a, (FunctionDef, AsyncFunctionDef)):  # arguments enclosed in pars
+        end_ln, end_col = rpars[-2]  # must be there
 
     if leading_stars:  # find star to the left, we know it exists so we don't check for None return
-        if (prev := first.prev()) or (prev := self.prev()):  # previous arg or maybe type_params
-            _, _, bound_ln, bound_col = prev.loc
-        elif parent := self.parent:  # start of FunctionDef or Lambda
-            bound_ln, bound_col, _, _ = parent.loc
-        else:
-            bound_ln = bound_col = 0
-
-        start_ln, start_col = _prev_find(lines, bound_ln, bound_col, start_ln, start_col, leading_stars)
+        start_ln, start_col = _prev_find(lines, *self._prev_bound(), start_ln, start_col, leading_stars)
 
     if trailing_slash:
-        end_ln, end_col  = _next_find(lines, end_ln, end_col, len(lines), 0x7fffffffffffffff, '/')  # must be there
+        end_ln, end_col  = _next_find(lines, end_ln, end_col, end_lines, 0x7fffffffffffffff, '/')  # must be there
         end_col         += 1
+
+        if (code := _next_src(lines, end_ln, end_col, end_lines, 0x7fffffffffffffff)) and code.src.startswith(','):  # silly, but, trailing comma trailing slash
+            end_ln, end_col, _  = code
+            end_col            += 1
 
     return fstloc(start_ln, start_col, end_ln, end_col)
 
@@ -627,7 +546,7 @@ def _loc_arguments_empty(self: 'FST') -> fstloc:
     # assert isinstance(self.s, arguments)
 
     if not (parent := self.parent):
-        return fstloc(0, 0, len(ls := self._lines), len(ls[-1]))  # parent=None means we are root
+        return fstloc(0, 0, len(ls := self._lines) - 1, len(ls[-1]))  # parent=None means we are root
 
     ln, col, end_ln, end_col = parent.loc
     lines                    = self.root._lines
@@ -652,36 +571,42 @@ def _loc_withitem(self: 'FST') -> fstloc:
 
     # assert isinstance(self.s, withitem)
 
-    ast    = self.a
-    ce     = ast.context_expr.f
-    ce_loc = ce.loc
+    ast   = self.a
+    ce    = ast.context_expr.f
+    lines = self.root._lines
+
+    ce_ln, ce_col, ce_end_ln, ce_end_col = ce_loc = ce.loc
 
     if not (ov := ast.optional_vars):
-        ov = ce
-    else:
-        ov = ov.f
+        rpars = _next_pars(lines, ce_end_ln, ce_end_col, *self._next_bound_step('allown'))  # 'allown' so it doesn't recurse into calling `.loc`
 
-    ov_loc = ov.loc
+        if (lrpars := len(rpars)) == 1:
+            return ce_loc
 
-    pars_end_ln, pars_end_col, ante_end_ln, ante_end_col, nrpars = ce._rpars('allown')  # 'allown' so it doesn't recurse into calling `.loc`
+        lpars = _prev_pars(lines, *self._prev_bound_step('allown'), ce_ln, ce_col)
+        npars = min(lrpars, len(lpars)) - 1
 
-    if not nrpars:
-        ln, col = ce_loc[:2]
+        return fstloc(*lpars[npars], *rpars[npars])
 
-    else:
-        pars_ln, pars_col, ante_ln, ante_col, nlpars = ce._lpars('allown')
+    ov_ln, ov_col, ov_end_ln, ov_end_col = ov_loc = ov.f.loc
 
-        ln, col = (pars_ln, pars_col) if nlpars == nrpars else (ante_ln, ante_col)
+    rpars = _next_pars(lines, ce_end_ln, ce_end_col, ov_ln, ov_col)
 
-    pars_ln, pars_col, ante_ln, ante_col, nlpars = ov._lpars('allown')
-
-    if not nlpars:
-        end_ln, end_col = ov_loc[2:]
+    if (lrpars := len(rpars)) == 1:
+        ln  = ce_ln
+        col = ce_col
 
     else:
-        pars_end_ln, pars_end_col, ante_end_ln, ante_end_col, nrpars = ov._rpars('allown')
+        lpars   = _prev_pars(lines, *self._prev_bound_step('allown'), ce_ln, ce_col)
+        ln, col = lpars[min(lrpars, len(lpars)) - 1]
 
-        end_ln, end_col = (pars_end_ln, pars_end_col) if nrpars == nlpars else (ante_end_ln, ante_end_col)
+    lpars = _prev_pars(lines, ce_end_ln, ce_end_col, ov_ln, ov_col)
+
+    if (llpars := len(lpars)) == 1:
+        return fstloc(ln, col, ov_end_ln, ov_end_col)
+
+    rpars           = _next_pars(lines, ov_end_ln, ov_end_col, *self._next_bound_step('allown'))
+    end_ln, end_col = rpars[min(llpars, len(rpars)) - 1]
 
     return fstloc(ln, col, end_ln, end_col)
 
@@ -1038,12 +963,12 @@ def _is_parenthesized_seq(self: 'FST', field: str = 'elts', lpar: str = '(', rpa
 
     self_end_col -= 1  # because for sure there is a comma between end of first element and end of tuple, so at worst we exclude either the tuple closing paren or a comma
 
-    nparens = len(_next_pars2(lines, self_ln, self_col, self_end_ln, self_end_col, lpar)) - 1  # yes, we use _next_pars() to count opening parens because we know conditions allow it
+    nparens = len(_next_pars(lines, self_ln, self_col, self_end_ln, self_end_col, lpar)) - 1  # yes, we use _next_pars() to count opening parens because we know conditions allow it
 
     if not nparens:
         return False
 
-    nparens -= len(_next_pars2(lines, f0_end_ln, f0_end_col, self_end_ln, self_end_col, rpar)) - 1
+    nparens -= len(_next_pars(lines, f0_end_ln, f0_end_col, self_end_ln, self_end_col, rpar)) - 1
 
     return nparens > 0  # don't want to fiddle with checking if f0 is a parenthesized tuple
 
@@ -1197,8 +1122,7 @@ def _normalize_block(self: 'FST', field: str = 'body', *, indent: str | None = N
     b0_ln, b0_col, _, _ = b0.bloc
     root                = self.root
 
-    if not (colon := _prev_find(root._lines, *b0._prev_ast_bound(), b0_ln, b0_col, ':', True,
-                                comment=True, lcont=None)):
+    if not (colon := _prev_find(root._lines, *b0._prev_bound(), b0_ln, b0_col, ':', True, comment=True, lcont=None)):  # must be there
         return
 
     if indent is None:

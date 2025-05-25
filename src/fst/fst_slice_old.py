@@ -243,8 +243,8 @@ def _get_slice_stmtish(self: 'FST', start: int | Literal['end'] | None, stop: in
     fpost  = body[stop].f if stop < len(body) else None
     indent = ffirst.get_indent()
 
-    block_loc = fstloc(*(fpre.bloc[2:] if fpre else ffirst._prev_ast_bound()),
-                        *(fpost.bloc[:2] if fpost else flast._next_ast_bound()))
+    block_loc = fstloc(*(fpre.bloc[2:] if fpre else ffirst._prev_bound_step()),
+                        *(fpost.bloc[:2] if fpost else flast._next_bound_step()))
 
     copy_loc, put_loc, put_lines = (
         _src_edit.get_slice_stmt(self, field, cut, block_loc, ffirst, flast, fpre, fpost, **options))
@@ -559,8 +559,8 @@ def _put_slice_stmtish(self: 'FST', code: Code | None, start: int | Literal['end
         ffirst = body[start].f
         flast  = body[stop - 1].f
 
-        block_loc = fstloc(*(fpre.bloc[2:] if fpre else ffirst._prev_ast_bound()),
-                            *(fpost.bloc[:2] if fpost else flast._next_ast_bound()))
+        block_loc = fstloc(*(fpre.bloc[2:] if fpre else ffirst._prev_bound_step()),
+                            *(fpost.bloc[:2] if fpost else flast._next_bound_step()))
 
         is_last_child = not fpost and not flast.next()
 
@@ -571,7 +571,7 @@ def _put_slice_stmtish(self: 'FST', code: Code | None, start: int | Literal['end
             f._elif_to_else_if()
 
         if fpre:
-            block_loc     = fstloc(*fpre.bloc[2:], *(fpost.bloc[:2] if fpost else fpre._next_ast_bound()))
+            block_loc     = fstloc(*fpre.bloc[2:], *(fpost.bloc[:2] if fpost else fpre._next_bound_step()))
             is_last_child = not fpost and not fpre.next()
 
         elif fpost:
@@ -580,11 +580,11 @@ def _put_slice_stmtish(self: 'FST', code: Code | None, start: int | Literal['end
                 block_loc     = fstloc(ln, col, ln, col)
 
             elif field != 'handlers' or ast.body:
-                block_loc = fstloc(*fpost._prev_ast_bound(), *fpost.bloc[:2])
+                block_loc = fstloc(*fpost._prev_bound_step(), *fpost.bloc[:2])
 
             else:  # special case because 'try:' doesn't have ASTs inside it and each 'except:' lives at the 'try:' indentation level
                 end_ln, end_col = fpost.bloc[:2]
-                ln, col         = _prev_find(lines, *fpost._prev_ast_bound(), end_ln, end_col, ':')
+                ln, col         = _prev_find(lines, *fpost._prev_bound_step(), end_ln, end_col, ':')
                 block_loc       = fstloc(ln, col + 1, end_ln, end_col)
 
             is_last_child = False
@@ -595,7 +595,7 @@ def _put_slice_stmtish(self: 'FST', code: Code | None, start: int | Literal['end
 
             if isinstance(ast, (FunctionDef, AsyncFunctionDef, ClassDef, With, AsyncWith, Match, ExceptHandler,
                                 match_case)):  # only one block possible, 'body' or 'cases'
-                block_loc     = fstloc(*self.bloc[2:], *self._next_ast_bound())  # end of bloc will be just past ':'
+                block_loc     = fstloc(*self.bloc[2:], *self._next_bound_step())  # end of bloc will be just past ':'
                 is_last_child = True
 
             elif isinstance(ast, mod):  # put after all header stuff in module
@@ -609,9 +609,9 @@ def _put_slice_stmtish(self: 'FST', code: Code | None, start: int | Literal['end
                     is_last_child = True
 
                     if not (body_ := ast.body):
-                        block_loc = fstloc(*self.bloc[2:], *self._next_ast_bound())
+                        block_loc = fstloc(*self.bloc[2:], *self._next_bound_step())
                     else:
-                        block_loc = fstloc(*body_[-1].f.bloc[2:], *self._next_ast_bound())
+                        block_loc = fstloc(*body_[-1].f.bloc[2:], *self._next_bound_step())
 
                 else:  # field == 'body':
                     if orelse := ast.orelse:
@@ -620,7 +620,7 @@ def _put_slice_stmtish(self: 'FST', code: Code | None, start: int | Literal['end
                         is_last_child = False
 
                     else:
-                        block_loc     = fstloc(*self.bloc[2:], *self._next_ast_bound())
+                        block_loc     = fstloc(*self.bloc[2:], *self._next_bound_step())
                         is_last_child = True
 
             else:  # isinstance(ast, (Try, TryStar))
@@ -630,9 +630,9 @@ def _put_slice_stmtish(self: 'FST', code: Code | None, start: int | Literal['end
                     is_last_child = True
 
                     if not (block := ast.orelse) and not (block := ast.handlers) and not (block := ast.body):
-                        block_loc = fstloc(*self.bloc[2:], *self._next_ast_bound())
+                        block_loc = fstloc(*self.bloc[2:], *self._next_bound_step())
                     else:
-                        block_loc = fstloc(*block[-1].f.bloc[2:], *self._next_ast_bound())
+                        block_loc = fstloc(*block[-1].f.bloc[2:], *self._next_bound_step())
 
                 elif field == 'orelse':
                     if finalbody := ast.finalbody:
@@ -640,7 +640,7 @@ def _put_slice_stmtish(self: 'FST', code: Code | None, start: int | Literal['end
                         is_last_child   = False
 
                     else:
-                        end_ln, end_col = self._next_ast_bound()
+                        end_ln, end_col = self._next_bound_step()
                         is_last_child   = True
 
                     if not (block := ast.handlers) and not (block := ast.body):
@@ -660,7 +660,7 @@ def _put_slice_stmtish(self: 'FST', code: Code | None, start: int | Literal['end
                         is_last_child   = False
 
                     else:
-                        end_ln, end_col = self._next_ast_bound()
+                        end_ln, end_col = self._next_bound_step()
                         is_last_child   = True
 
                     if not (body_ := ast.body):
@@ -684,7 +684,7 @@ def _put_slice_stmtish(self: 'FST', code: Code | None, start: int | Literal['end
                         is_last_child   = False
 
                     else:
-                        end_ln, end_col = self._next_ast_bound()
+                        end_ln, end_col = self._next_bound_step()
                         is_last_child   = True
 
                     ln, col   = _prev_find(lines, *self.bloc[:2], end_ln, end_col, ':')

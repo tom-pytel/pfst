@@ -18637,50 +18637,50 @@ Module .. ROOT 0,0 -> 1,16
 
 (r"""match a:
  case (1): pass""", 'body[0].cases[0].pattern', None, None, {'raw': False}, r"""2""", r"""match a:
- case 2: pass""", r"""
-Module .. ROOT 0,0 -> 1,13
+ case (2): pass""", r"""
+Module .. ROOT 0,0 -> 1,15
   .body[1]
-  0] Match .. 0,0 -> 1,13
+  0] Match .. 0,0 -> 1,15
     .subject Name 'a' Load .. 0,6 -> 0,7
     .cases[1]
-    0] match_case .. 1,1 -> 1,13
-      .pattern MatchValue .. 1,6 -> 1,7
-        .value Constant 2 .. 1,6 -> 1,7
+    0] match_case .. 1,1 -> 1,15
+      .pattern MatchValue .. 1,7 -> 1,8
+        .value Constant 2 .. 1,7 -> 1,8
       .body[1]
-      0] Pass .. 1,9 -> 1,13
+      0] Pass .. 1,11 -> 1,15
 """),
 
 (r"""match a:
  case (1): pass""", 'body[0].cases[0].pattern', None, None, {'raw': False}, r"""1+2j""", r"""match a:
- case 1+2j: pass""", r"""
-Module .. ROOT 0,0 -> 1,16
+ case (1+2j): pass""", r"""
+Module .. ROOT 0,0 -> 1,18
   .body[1]
-  0] Match .. 0,0 -> 1,16
+  0] Match .. 0,0 -> 1,18
     .subject Name 'a' Load .. 0,6 -> 0,7
     .cases[1]
-    0] match_case .. 1,1 -> 1,16
-      .pattern MatchValue .. 1,6 -> 1,10
-        .value BinOp .. 1,6 -> 1,10
-          .left Constant 1 .. 1,6 -> 1,7
-          .op Add .. 1,7 -> 1,8
-          .right Constant 2j .. 1,8 -> 1,10
+    0] match_case .. 1,1 -> 1,18
+      .pattern MatchValue .. 1,7 -> 1,11
+        .value BinOp .. 1,7 -> 1,11
+          .left Constant 1 .. 1,7 -> 1,8
+          .op Add .. 1,8 -> 1,9
+          .right Constant 2j .. 1,9 -> 1,11
       .body[1]
-      0] Pass .. 1,12 -> 1,16
+      0] Pass .. 1,14 -> 1,18
 """),
 
 (r"""match a:
  case (1+2j): pass""", 'body[0].cases[0].pattern', None, None, {'raw': False}, r"""3""", r"""match a:
- case 3: pass""", r"""
-Module .. ROOT 0,0 -> 1,13
+ case (3): pass""", r"""
+Module .. ROOT 0,0 -> 1,15
   .body[1]
-  0] Match .. 0,0 -> 1,13
+  0] Match .. 0,0 -> 1,15
     .subject Name 'a' Load .. 0,6 -> 0,7
     .cases[1]
-    0] match_case .. 1,1 -> 1,13
-      .pattern MatchValue .. 1,6 -> 1,7
-        .value Constant 3 .. 1,6 -> 1,7
+    0] match_case .. 1,1 -> 1,15
+      .pattern MatchValue .. 1,7 -> 1,8
+        .value Constant 3 .. 1,7 -> 1,8
       .body[1]
-      0] Pass .. 1,9 -> 1,13
+      0] Pass .. 1,11 -> 1,15
 """),
 
 (r"""a[b:]""", 'body[0].value.slice', None, 'lower', {'raw': False}, r"""new""", r"""a[new:]""", r"""
@@ -25633,6 +25633,21 @@ Module .. ROOT 0,0 -> 0,24
     0] Pass .. 0,20 -> 0,24
 """),
 
+(r"""def f(a, /, ): pass""", 'body[0].args', None, 'kwarg', {'raw': False}, r"""new""", r"""def f(a, /, **new ): pass""", r"""
+Module .. ROOT 0,0 -> 0,25
+  .body[1]
+  0] FunctionDef .. 0,0 -> 0,25
+    .name 'f'
+    .args arguments .. 0,6 -> 0,17
+      .posonlyargs[1]
+      0] arg .. 0,6 -> 0,7
+        .arg 'a'
+      .kwarg arg .. 0,14 -> 0,17
+        .arg 'new'
+    .body[1]
+    0] Pass .. 0,21 -> 0,25
+"""),
+
 (r"""lambda: None""", 'body[0].value.args', None, 'kwarg', {'raw': False}, r"""new""", r"""lambda **new: None""", r"""
 Module .. ROOT 0,0 -> 0,18
   .body[1]
@@ -25704,6 +25719,20 @@ Module .. ROOT 0,0 -> 0,24
         .kwarg arg .. 0,15 -> 0,18
           .arg 'new'
       .body Constant None .. 0,20 -> 0,24
+"""),
+
+(r"""lambda a, /, : None""", 'body[0].value.args', None, 'kwarg', {'raw': False}, r"""new""", r"""lambda a, /, **new : None""", r"""
+Module .. ROOT 0,0 -> 0,25
+  .body[1]
+  0] Expr .. 0,0 -> 0,25
+    .value Lambda .. 0,0 -> 0,25
+      .args arguments .. 0,7 -> 0,18
+        .posonlyargs[1]
+        0] arg .. 0,7 -> 0,8
+          .arg 'a'
+        .kwarg arg .. 0,15 -> 0,18
+          .arg 'new'
+      .body Constant None .. 0,21 -> 0,25
 """),
 
 ]  # END OF PUT_ONE_DATA
@@ -30071,6 +30100,8 @@ def f():
         self.assertEqual('**ss', parse('lambda **ss : None').body[0].value.args.f.src)
         self.assertEqual('a, /', parse('lambda a, /: None').body[0].value.args.f.src)
         self.assertEqual('a, /', parse('lambda  a, / : None').body[0].value.args.f.src)
+        self.assertEqual('a, /,', parse('lambda a, /, : None').body[0].value.args.f.src)
+        self.assertEqual('a, / ,', parse('lambda  a, / , : None').body[0].value.args.f.src)
         self.assertEqual('*, z, a, b = 2', parse('def f(*, z, a, b = 2): pass').body[0].args.f.src)
         self.assertEqual('*, z, a, b = ( 2 )', parse('def f(*, z, a, b = ( 2 )): pass').body[0].args.f.src)
         self.assertEqual('*, z, a, b = ( 2 )', parse('def f( *, z, a, b = ( 2 ) ): pass').body[0].args.f.src)
@@ -30079,6 +30110,8 @@ def f():
         self.assertEqual('**ss', parse('def f( **ss ): pass').body[0].args.f.src)
         self.assertEqual('a, /', parse('def f(a, /): pass').body[0].args.f.src)
         self.assertEqual('a, /', parse('def f( a, / ): pass').body[0].args.f.src)
+        self.assertEqual('a, /,', parse('def f(a, /,): pass').body[0].args.f.src)
+        self.assertEqual('a, / ,', parse('def f(a, / , ): pass').body[0].args.f.src)
 
         # loc calculated from children at root
 
@@ -30105,7 +30138,7 @@ def f():
         self.assertEqual((0, 0, 0, 19), parse('def f( *, z, a, b = ( 2 ), ): pass').body[0].args.f.copy().loc)
         self.assertEqual((0, 0, 0, 4), parse('def f( **ss ): pass').body[0].args.f.copy().loc)
 
-        # special cases found
+        # special cases
 
         self.assertEqual((0, 12, 0, 14), FST('f"a{(lambda *a: b)}"').body[0].value.values[1].value.args.loc)
 
@@ -35254,6 +35287,38 @@ class cls:
         f.put(g, field='value', raw=False, pars='auto')
         self.assertEqual(f.src, 'a = ( # pre\n1\n+\n2\n# post\n)')
 
+        # annoying solo MatchValue
+
+        f = FST('match a:\n case (1): pass')
+        f.body[0].cases[0].pattern.put('(2)', pars='auto')
+        self.assertEqual('match a:\n case (2): pass', f.src)
+        f.verify()
+
+        f = FST('match a:\n case (1): pass')
+        f.body[0].cases[0].pattern.put('(2)', pars=True)
+        self.assertEqual('match a:\n case ((2)): pass', f.src)
+        f.verify()
+
+        f = FST('match a:\n case (1): pass')
+        f.body[0].cases[0].pattern.put('(2)', pars=False)
+        self.assertEqual('match a:\n case ((2)): pass', f.src)
+        f.verify()
+
+        f = FST('match a:\n case (1): pass')
+        f.body[0].cases[0].put('(2)', field='pattern', pars='auto')
+        self.assertEqual('match a:\n case 2: pass', f.src)
+        f.verify()
+
+        f = FST('match a:\n case (1): pass')
+        f.body[0].cases[0].put('(2)', field='pattern', pars=True)
+        self.assertEqual('match a:\n case (2): pass', f.src)
+        f.verify()
+
+        f = FST('match a:\n case (1): pass')
+        f.body[0].cases[0].put('(2)', field='pattern', pars=False)
+        self.assertEqual('match a:\n case ((2)): pass', f.src)
+        f.verify()
+
         # misc cases
 
         f = FST('match a:\n case (0 as z) | (1 as z): pass')
@@ -35282,6 +35347,11 @@ class cls:
         g = f.body[0].items[0].copy()
         f.body[0].put(g, 0, 'items')
         self.assertEqual('with (\na\n): pass', f.src)
+
+        f = FST('match a:\n case (1): pass')
+        f.body[0].cases[0].pattern.put('(2)')
+        self.assertEqual('match a:\n case (2): pass', f.src)
+        f.body[0].cases[0].pattern.put('(3)', pars=True)
 
     def test_put_raw(self):
         for i, (dst, attr, (ln, col, end_ln, end_col), options, src, put_ret, put_src, put_dump) in enumerate(PUT_RAW_DATA):

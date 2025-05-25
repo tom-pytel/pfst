@@ -14,6 +14,7 @@ from .shared import (
     NAMED_SCOPE_OR_MOD, ANONYMOUS_SCOPE, PARENTHESIZABLE, HAS_DOCSTRING,
     re_empty_line_start, re_empty_line, re_line_continuation, re_line_end_cont_or_comment,
     Code,
+    _next_pars, _prev_pars,
     _params_offset, _fixup_field_body, _multiline_str_continuation_lns, _multiline_fstr_continuation_lns,
 )
 
@@ -1706,7 +1707,7 @@ class FST:
         else:
             return cached if count else cached[0]
 
-        rpars = self._rpars2()
+        rpars = _next_pars(self.root._lines, *self.bloc[2:], *self._next_bound())
 
         if (lrpars := len(rpars)) == 1:  # no pars on right
             if not shared and self.is_solo_call_arg_genexp():
@@ -1720,7 +1721,7 @@ class FST:
 
             return locncount if count else locncount[0]
 
-        lpars = self._lpars2()
+        lpars = _prev_pars(self.root._lines, *self._prev_bound(), *self.bloc[:2])
 
         if (llpars := len(lpars)) == 1:  # no pars on left
             locncount = self._cache[key] = (self.bloc, 0)
@@ -2116,12 +2117,10 @@ class FST:
         _set_ctx,
         _repr_tail,
         _dump,
-        _prev_ast_bound,
-        _next_ast_bound,
-        _lpars,
-        _rpars,
-        _lpars2,
-        _rpars2,
+        _next_bound,
+        _prev_bound,
+        _next_bound_step,
+        _prev_bound_step,
         _loc_block_header_end,
         _loc_operator,
         _loc_comprehension,
