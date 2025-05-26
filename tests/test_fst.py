@@ -31914,10 +31914,12 @@ match a:
 
         g0 = g.body[0].copy()
         h = f._code_as_match_cases(g0.a)
+        self.assertTrue(ast_.unparse(g0.a), h.src)
         self.assertTrue(compare_asts(h.body[0].a, g0.a, locs=False, raise_=True))
 
         g1 = g.body[1].copy()
         h = f._code_as_match_cases(g1.a)
+        self.assertTrue(ast_.unparse(g1.a), h.src)
         self.assertTrue(compare_asts(h.body[0].a, g1.a, locs=False, raise_=True))
 
     def test_put_src(self):

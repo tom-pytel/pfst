@@ -39,7 +39,7 @@ def _offset_linenos(ast: AST, delta: int) -> AST:
     return ast
 
 
-def _code_as_op(self: 'FST', code: Code, ast_type: type[AST], opstr2cls: dict[str, type[AST]],
+def _code_as_op(code: Code, ast_type: type[AST], parse_params: dict, opstr2cls: dict[str, type[AST]],
                  opcls2str: dict[type[AST], str] = OPCLS2STR) -> 'FST':
     """Convert `code` to an operation `FST` if possible."""
 
@@ -56,7 +56,7 @@ def _code_as_op(self: 'FST', code: Code, ast_type: type[AST], opstr2cls: dict[st
         if not isinstance(code, ast_type):
             raise NodeTypeError(f'expecting {ast_type.__name__}, got {code.__class__.__name__}')
 
-        return FST(code, [opcls2str[code.__class__]], parse_params=self.root.parse_params)
+        return FST(code, [opcls2str[code.__class__]], parse_params=parse_params)
 
     elif isinstance(code, list):
         code = '\n'.join(lines := code)
@@ -66,10 +66,10 @@ def _code_as_op(self: 'FST', code: Code, ast_type: type[AST], opstr2cls: dict[st
     if not (cls := opstr2cls.get(code := code.strip())):
         raise NodeTypeError(f'expecting {ast_type.__name__}, got {_shortstr(code)!r}')
 
-    return FST(cls(), lines, parse_params=self.root.parse_params)
+    return FST(cls(), lines, parse_params=parse_params)
 
 
-def _code_as(self: 'FST', code: Code, ast_type: type[AST], parse: Callable[['FST', Code], 'FST']) -> 'FST':
+def _code_as(code: Code, ast_type: type[AST], parse_params: dict, parse: Callable[['FST', Code], 'FST']) -> 'FST':
     if isinstance(code, FST):
         if not isinstance(code.a, ast_type):
             raise NodeTypeError(f'expecting {ast_type.__name__}, got {code.a.__class__.__name__}')
@@ -88,7 +88,7 @@ def _code_as(self: 'FST', code: Code, ast_type: type[AST], parse: Callable[['FST
     else:  # str
         lines = code.split('\n')
 
-    return FST(parse(code, parse_params := self.root.parse_params), lines, parse_params=parse_params)
+    return FST(parse(code, parse_params), lines, parse_params=parse_params)
 
 
 _GLOBALS = globals() | {'_GLOBALS': None}
@@ -245,7 +245,8 @@ def _parse_type_param(src: str, parse_params: dict = {}) -> AST:
 
 # ......................................................................................................................
 
-def _code_as_stmts(self: 'FST', code: Code) -> 'FST':
+@staticmethod
+def _code_as_stmts(code: Code, parse_params: dict = {}) -> 'FST':
     """Convert `code` to zero or more `stmt`s and return in the `body` of a `Module` `FST` if possible."""
 
     if isinstance(code, FST):
@@ -280,10 +281,11 @@ def _code_as_stmts(self: 'FST', code: Code) -> 'FST':
     else:  # str
         lines = code.split('\n')
 
-    return FST(_parse_stmts(code, parse_params := self.root.parse_params), lines, parse_params=parse_params)
+    return FST(_parse_stmts(code, parse_params), lines, parse_params=parse_params)
 
 
-def _code_as_expr(self: 'FST', code: Code) -> 'FST':
+@staticmethod
+def _code_as_expr(code: Code, parse_params: dict = {}) -> 'FST':
     """Convert `code` to an expr `FST` if possible."""
 
     if isinstance(code, FST):
@@ -309,52 +311,60 @@ def _code_as_expr(self: 'FST', code: Code) -> 'FST':
     else:  # str
         lines = code.split('\n')
 
-    return FST(_parse_expr(code, parse_params := self.root.parse_params), lines, parse_params=parse_params)
+    return FST(_parse_expr(code, parse_params), lines, parse_params=parse_params)
 
 
-def _code_as_slice(self: 'FST', code: Code) -> 'FST':
+@staticmethod
+def _code_as_slice(code: Code, parse_params: dict = {}) -> 'FST':
     """Convert `code` to a Slice `FST` if possible (or anthing else that can serve in `Subscript.slice`)."""
 
-    return _code_as(self, code, expr, _parse_slice)
+    return _code_as(code, expr, parse_params, _parse_slice)
 
 
-def _code_as_boolop(self: 'FST', code: Code) -> 'FST':
+@staticmethod
+def _code_as_boolop(code: Code, parse_params: dict = {}) -> 'FST':
     """Convert `code` to a `boolop` `FST` if possible."""
 
-    return _code_as_op(self, code, boolop, OPSTR2CLS_BOOL)
+    return _code_as_op(code, boolop, parse_params, OPSTR2CLS_BOOL)
 
 
-def _code_as_operator(self: 'FST', code: Code) -> 'FST':
+@staticmethod
+def _code_as_operator(code: Code, parse_params: dict = {}) -> 'FST':
     """Convert `code` to a `operator` `FST` if possible."""
 
-    return _code_as_op(self, code, operator, OPSTR2CLS_BIN)
+    return _code_as_op(code, operator, parse_params, OPSTR2CLS_BIN)
 
 
-def _code_as_operator_aug(self: 'FST', code: Code) -> 'FST':
+@staticmethod
+def _code_as_operator_aug(code: Code, parse_params: dict = {}) -> 'FST':
     """Convert `code` to an augmented `operator` `FST` if possible, e.g. "+="."""
 
-    return _code_as_op(self, code, operator, OPSTR2CLS_AUG, OPCLS2STR_AUG)
+    return _code_as_op(code, operator, parse_params, OPSTR2CLS_AUG, OPCLS2STR_AUG)
 
 
-def _code_as_unaryop(self: 'FST', code: Code) -> 'FST':
+@staticmethod
+def _code_as_unaryop(code: Code, parse_params: dict = {}) -> 'FST':
     """Convert `code` to a `unaryop` `FST` if possible."""
 
-    return _code_as_op(self, code, unaryop, OPSTR2CLS_UNARY)
+    return _code_as_op(code, unaryop, parse_params, OPSTR2CLS_UNARY)
 
 
-def _code_as_cmpop(self: 'FST', code: Code) -> 'FST':
+@staticmethod
+def _code_as_cmpop(code: Code, parse_params: dict = {}) -> 'FST':
     """Convert `code` to a `cmpop` `FST` if possible."""
 
-    return _code_as_op(self, code, cmpop, OPSTR2CLS_CMP)
+    return _code_as_op(code, cmpop, parse_params, OPSTR2CLS_CMP)
 
 
-def _code_as_comprehension(self: 'FST', code: Code) -> 'FST':
+@staticmethod
+def _code_as_comprehension(code: Code, parse_params: dict = {}) -> 'FST':
     """Convert `code` to a comprehension `FST` if possible."""
 
-    return _code_as(self, code, comprehension, _parse_comprehension)
+    return _code_as(code, comprehension, parse_params, _parse_comprehension)
 
 
-def _code_as_ExceptHandlers(self: 'FST', code: Code) -> 'FST':
+@staticmethod
+def _code_as_ExceptHandlers(code: Code, parse_params: dict = {}) -> 'FST':
     """Convert `code` to zero or more `ExceptHandler`s and return in the `body` of a `Module` `FST` if possible."""
 
     if isinstance(code, FST):
@@ -384,52 +394,60 @@ def _code_as_ExceptHandlers(self: 'FST', code: Code) -> 'FST':
     else:  # str
         lines = code.split('\n')
 
-    return FST(_parse_ExceptHandlers(code, parse_params := self.root.parse_params), lines, parse_params=parse_params)
+    return FST(_parse_ExceptHandlers(code, parse_params), lines, parse_params=parse_params)
 
 
-def _code_as_arguments(self: 'FST', code: Code) -> 'FST':
+@staticmethod
+def _code_as_arguments(code: Code, parse_params: dict = {}) -> 'FST':
     """Convert `code` to a arguments `FST` if possible."""
 
-    return _code_as(self, code, arguments, _parse_arguments)
+    return _code_as(code, arguments, parse_params, _parse_arguments)
 
 
-def _code_as_arguments_lambda(self: 'FST', code: Code) -> 'FST':
+@staticmethod
+def _code_as_arguments_lambda(code: Code, parse_params: dict = {}) -> 'FST':
     """Convert `code` to a lambda arguments `FST` if possible (no annotations allowed)."""
 
-    return _code_as(self, code, arguments, _parse_arguments_lambda)
+    return _code_as(code, arguments, parse_params, _parse_arguments_lambda)
 
 
-def _code_as_arg(self: 'FST', code: Code) -> 'FST':
+@staticmethod
+def _code_as_arg(code: Code, parse_params: dict = {}) -> 'FST':
     """Convert `code` to an arg `FST` if possible."""
 
-    return _code_as(self, code, arg, _parse_arg)
+    return _code_as(code, arg, parse_params, _parse_arg)
 
 
-def _code_as_keyword(self: 'FST', code: Code) -> 'FST':
+@staticmethod
+def _code_as_keyword(code: Code, parse_params: dict = {}) -> 'FST':
     """Convert `code` to a keyword `FST` if possible."""
 
-    return _code_as(self, code, keyword, _parse_keyword)
+    return _code_as(code, keyword, parse_params, _parse_keyword)
 
 
-def _code_as_alias_maybe_star(self: 'FST', code: Code) -> 'FST':
+@staticmethod
+def _code_as_alias_maybe_star(code: Code, parse_params: dict = {}) -> 'FST':
     """Convert `code` to a alias `FST` if possible, possibly star as in `alias` for `FromImport.names`."""
 
-    return _code_as(self, code, alias, _parse_alias_maybe_star)
+    return _code_as(code, alias, parse_params, _parse_alias_maybe_star)
 
 
-def _code_as_alias_dotted(self: 'FST', code: Code) -> 'FST':
+@staticmethod
+def _code_as_alias_dotted(code: Code, parse_params: dict = {}) -> 'FST':
     """Convert `code` to a alias `FST` if possible, dotted as in `alias` for `Import.names`."""
 
-    return _code_as(self, code, alias, _parse_alias_dotted)
+    return _code_as(code, alias, parse_params, _parse_alias_dotted)
 
 
-def _code_as_withitem(self: 'FST', code: Code) -> 'FST':
+@staticmethod
+def _code_as_withitem(code: Code, parse_params: dict = {}) -> 'FST':
     """Convert `code` to a withitem `FST` if possible."""
 
-    return _code_as(self, code, withitem, _parse_withitem)
+    return _code_as(code, withitem, parse_params, _parse_withitem)
 
 
-def _code_as_match_cases(self: 'FST', code: Code) -> 'FST':
+@staticmethod
+def _code_as_match_cases(code: Code, parse_params: dict = {}) -> 'FST':
     """Convert `code` to zero or more `match_case`s and return in the `body` of a `Module` `FST` if possible."""
 
     if isinstance(code, FST):
@@ -459,22 +477,25 @@ def _code_as_match_cases(self: 'FST', code: Code) -> 'FST':
     else:  # str
         lines = code.split('\n')
 
-    return FST(_parse_match_cases(code, parse_params := self.root.parse_params), lines, parse_params=parse_params)
+    return FST(_parse_match_cases(code, parse_params), lines, parse_params=parse_params)
 
 
-def _code_as_pattern(self: 'FST', code: Code) -> 'FST':
+@staticmethod
+def _code_as_pattern(code: Code, parse_params: dict = {}) -> 'FST':
     """Convert `code` to a pattern `FST` if possible."""
 
-    return _code_as(self, code, pattern, _parse_pattern)
+    return _code_as(code, pattern, parse_params, _parse_pattern)
 
 
-def _code_as_type_param(self: 'FST', code: Code) -> 'FST':
+@staticmethod
+def _code_as_type_param(code: Code, parse_params: dict = {}) -> 'FST':
     """Convert `code` to a type_param `FST` if possible."""
 
-    return _code_as(self, code, type_param, _parse_type_param)
+    return _code_as(code, type_param, parse_params, _parse_type_param)
 
 
-def _code_as_identifier(self: 'FST', code: Code) -> str:
+@staticmethod
+def _code_as_identifier(code: Code, parse_params: dict = {}) -> str:
     """Convert `Code` to valid identifier string if possible."""
 
     if isinstance(code, FST):
@@ -490,7 +511,8 @@ def _code_as_identifier(self: 'FST', code: Code) -> str:
     return code
 
 
-def _code_as_identifier_dotted(self: 'FST', code: Code) -> str:
+@staticmethod
+def _code_as_identifier_dotted(code: Code, parse_params: dict = {}) -> str:
     """Convert `Code` to valid dotted identifier string if possible (for Import module)."""
 
     if isinstance(code, FST):
@@ -506,7 +528,8 @@ def _code_as_identifier_dotted(self: 'FST', code: Code) -> str:
     return code
 
 
-def _code_as_identifier_maybe_star(self: 'FST', code: Code) -> str:
+@staticmethod
+def _code_as_identifier_maybe_star(code: Code, parse_params: dict = {}) -> str:
     """Convert `Code` to valid identifier string or star '*' if possible (for ImportFrom names)."""
 
     if isinstance(code, FST):
@@ -522,7 +545,8 @@ def _code_as_identifier_maybe_star(self: 'FST', code: Code) -> str:
     return code
 
 
-def _code_as_identifier_alias(self: 'FST', code: Code) -> str:
+@staticmethod
+def _code_as_identifier_alias(code: Code, parse_params: dict = {}) -> str:
     """Convert `Code` to valid dotted identifier string or star '*' if possible (for any alias)."""
 
     if isinstance(code, FST):
