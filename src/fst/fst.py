@@ -462,7 +462,7 @@ class FST:
 
         self.parent = None
         self.root   = self
-        self._lines = [bistr(s) for s in parent_or_lines] if kwargs.get('do_line_copy', True) else parent_or_lines
+        self._lines = [bistr(s) for s in parent_or_lines] if kwargs.get('lcopy', True) else parent_or_lines
 
         if from_ := kwargs.get('from_'):  # copy params from source tree
             from_root         = from_.root
@@ -799,7 +799,7 @@ class FST:
         """Copy an individual node to a top level tree, dedenting and fixing as necessary."""
 
         if not (parent := self.parent):
-            return FST(copy_ast(self.a), self._lines[:], from_=self, do_line_copy=False)
+            return FST(copy_ast(self.a), self._lines[:], from_=self, lcopy=False)
 
         return parent._get_one((pf := self.pfield).idx, pf.name, False, **options)
 
@@ -1641,7 +1641,7 @@ class FST:
 
         strict = docstr == 'strict'
         lines  = self.root._lines
-        lns    = set(range(skip, len(self._lines))) if self.is_root else set(range(self.bln + skip, self.bend_ln + 1))
+        lns    = set(range(skip, len(lines))) if self.is_root else set(range(self.bln + skip, self.bend_ln + 1))
 
         while (parent := self.parent) and not isinstance(self.a, STMTISH):
             self = parent
@@ -2166,6 +2166,7 @@ class FST:
         _parse_alias_maybe_star,
         _parse_alias_dotted,
         _parse_withitem,
+        _parse_match_cases,
         _parse_pattern,
         _parse_type_param,
         _code_as_stmts,
@@ -2180,6 +2181,7 @@ class FST:
         _code_as_alias_maybe_star,
         _code_as_alias_dotted,
         _code_as_withitem,
+        _code_as_match_cases,
         _code_as_pattern,
         _code_as_type_param,
         _code_as_identifier,

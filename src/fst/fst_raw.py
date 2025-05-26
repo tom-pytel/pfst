@@ -104,7 +104,7 @@ def _reparse_raw(self: 'FST', new_lines: list[str], ln: int, col: int, end_ln: i
                  copy_lines: list[str], path: list[astfield] | str, set_ast: bool = True) -> 'FST':
     """Actually do the reparse."""
 
-    copy_root = FST(Pass(), copy_lines, do_line_copy=False)  # we don't need the ASTs here, just the lines
+    copy_root = FST(Pass(), copy_lines, lcopy=False)  # we don't need the ASTs here, just the lines
 
     copy_root.put_src(new_lines, ln, col, end_ln, end_col)
 

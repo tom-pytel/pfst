@@ -22,6 +22,23 @@ from .fst_parse import (
 _re_merged_alnum = re.compile(r'\w\w')
 
 
+def _slice_indices(self: 'FST', idx: int, field: str, body: list[AST], to: Optional['FST']):
+    """If a `to` parameter is passed then try to convert it to an index in the same field body list of `self`."""
+
+    idx = _fixup_one_index(len(body), idx)
+
+    if not to:
+        return idx, idx + 1
+
+    elif to.parent is self is not None and (pf := to.pfield).name == field:
+        if (to_idx := pf.idx) < idx:
+            raise ValueError("invalid 'to' node, must follow self in body")
+
+        return idx, to_idx + 1
+
+    raise NodeTypeError(f"invalid 'to' node")
+
+
 # ----------------------------------------------------------------------------------------------------------------------
 # get
 
@@ -72,23 +89,6 @@ class oneinfo(NamedTuple):
     delstr:      str           = ''    # or '**'
 
 
-def _slice_indices(self: 'FST', idx: int, field: str, body: list[AST], to: Optional['FST']):
-    """If a `to` parameter is passed then try to convert it to an index in the same field body list of `self`."""
-
-    idx = _fixup_one_index(len(body), idx)
-
-    if not to:
-        return idx, idx + 1
-
-    elif to.parent is self is not None and (pf := to.pfield).name == field:
-        if (to_idx := pf.idx) < idx:
-            raise ValueError("invalid 'to' node, must follow self in body")
-
-        return idx, to_idx + 1
-
-    raise NodeTypeError(f"invalid 'to' node")
-
-
 def _validate_put(self: 'FST', code: Code | None, idx: int | None, field: str, child: list[AST] | AST | None,
                   options: dict[str, Any], *, can_del: bool = False) -> AST | None:
     """Check that `idx` was passed (or not) as needed and that not deleting if not possible and that `to` raw parameter
@@ -108,7 +108,7 @@ def _validate_put(self: 'FST', code: Code | None, idx: int | None, field: str, c
     if not can_del and code is None:
         raise ValueError(f'cannot delete {self.a.__class__.__name__}.{field}{"" if idx is None else f"[{idx}]"}')
     if options.get('to'):
-        raise NodeTypeError(f"cannot put with 'to' to {self.a.__class__.__name__}.{field}")
+        raise NodeTypeError(f"cannot put with 'to' to {self.a.__class__.__name__}.{field} without 'raw'")
 
     return child
 
@@ -371,8 +371,15 @@ def _put_one_exprish_sliceable(self: 'FST', code: Code | None, idx: int | None, 
                                **options) -> Optional['FST']:
     """If deleting then will do so using slice operation, otherwise just a required expression."""
 
-    if (to := options.get('to')) or code is None:
-        self._put_slice(code, *_slice_indices(self, idx, field, child, to), field, True, **options)
+    # if (to := options.get('to')) or code is None:
+    #     self._put_slice(code, *_slice_indices(self, idx, field, child, to), field, True, **options)
+
+    #     return None if code is None else child[idx].f
+    if code is None:
+        if options.get('to'):
+            raise NodeTypeError("delete with 'to' requires 'raw'")
+
+        self._put_slice(code, idx := _fixup_one_index(len(child), idx), idx + 1, field, True, **options)
 
         return None if code is None else child[idx].f
 
@@ -519,8 +526,15 @@ def _put_one_identifier_sliceable(self: 'FST', code: Code | None, idx: int | Non
                                   **options) -> Optional['FST']:
     """If deleting then will do so using slice operation, otherwise just a required identifier."""
 
-    if (to := options.get('to')) or code is None:
-        self._put_slice(code, *_slice_indices(self, idx, field, child, to), field, True, **options)
+    # if (to := options.get('to')) or code is None:
+    #     self._put_slice(code, *_slice_indices(self, idx, field, child, to), field, True, **options)
+
+    #     return None if code is None else child[idx]
+    if code is None:
+        if options.get('to'):
+            raise NodeTypeError("delete with 'to' requires 'raw'")
+
+        self._put_slice(code, idx := _fixup_one_index(len(child), idx), idx + 1, field, True, **options)
 
         return None if code is None else child[idx]
 

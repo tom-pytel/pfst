@@ -58,7 +58,7 @@ def _code_as(self: 'FST', code: Code, ast_type: type[AST], parse: Callable[['FST
     else:  # str
         lines = code.split('\n')
 
-    return FST(parse(code, self.root.parse_params), lines)
+    return FST(parse(code, parse_params := self.root.parse_params), lines, parse_params=parse_params)
 
 
 _GLOBALS = globals() | {'_GLOBALS': None}
@@ -163,6 +163,43 @@ def _parse_withitem(src: str, parse_params: dict = {}) -> AST:
 
 
 @staticmethod
+def _parse_match_cases(src: str, parse_params: dict = {}) -> AST:
+    """Parse one or more `match_case`s and return them in a `Module` `body` or raise `SyntaxError`."""
+
+    lines = [bistr('match x:')] + [bistr(' ' + l) for l in src.split('\n')]
+    ast   = ast_parse('\n'.join(lines), **parse_params)
+    fst   = FST(ast, lines, parse_params=parse_params, lcopy=False)
+    lns   = fst.get_indentable_lns(docstr=False)
+
+    if len(lns) != len(lines):  # if there are multiline strings then we need to dedent them and reparse, because of f-strings, TODO: optimize out second reparse if no f-strings
+        strlns = set(range(len(lines)))
+
+        strlns.difference_update(lns)
+
+        for ln in strlns:
+            lines[ln] = bistr(lines[ln][1:])
+
+        ast = ast_parse('\n'.join(lines), **parse_params)
+        fst = FST(ast, lines, parse_params=parse_params, lcopy=False)
+
+    for ln in lns:
+        lines[ln] = bistr(lines[ln][1:])
+
+    for a in walk(ast):
+        if (end_col_offset := getattr(a, 'end_col_offset', None)) is not None:
+            a.lineno     = lineno     = a.lineno - 1
+            a.end_lineno = end_lineno = a.end_lineno - 1
+
+            if lineno in lns:
+                a.col_offset -= 1
+
+            if end_lineno in lns:
+                a.end_col_offset = end_col_offset - 1
+
+    return Module(body=ast.body[0].cases, type_ignores=[])
+
+
+@staticmethod
 def _parse_pattern(src: str, parse_params: dict = {}) -> AST:
     """Parse to an `ast.pattern` or raise `SyntaxError`, e.g. "{a.b: i, **rest}"."""
 
@@ -182,19 +219,24 @@ def _code_as_stmts(self: 'FST', code: Code) -> 'FST':
     """Convert `code` to zero or more `stmt`s and return in the `body` of a `Module` `FST` if possible."""
 
     if isinstance(code, FST):
-        ast = code.a
+        codea = code.a
 
-        if isinstance(ast, stmt):
-            return FST(Module(body=[ast], type_ignores=[]), code._lines, from_=code, do_line_copy=False)
+        if isinstance(codea, stmt):
+            return FST(Module(body=[codea], type_ignores=[]), code._lines, from_=code, lcopy=False)
 
-        if isinstance(ast, Module):
-            if all(isinstance(a, stmt) for a in ast.body):
+        if isinstance(codea, Module):
+            if all(isinstance(a, stmt) for a in codea.body):
                 return code
 
             raise NodeTypeError(f'expecting zero or more stmts, got '
-                                f'[{_shortstr(", ".join(a.__class__.__name__ for a in ast.body))}]')
+                                f'[{_shortstr(", ".join(a.__class__.__name__ for a in codea.body))}]')
 
-        raise NodeTypeError(f'expecting zero or more stmts, got {ast.__class__.__name__}')
+        if isinstance(codea, Interactive):
+            code._unmake_fst_parents()
+
+            return FST(Module(body=code.body, type_ignores=[]), code._lines, from_=code, lcopy=False)
+
+        raise NodeTypeError(f'expecting zero or more stmts, got {codea.__class__.__name__}')
 
     if isinstance(code, AST):
         if not isinstance(code, stmt):
@@ -208,7 +250,7 @@ def _code_as_stmts(self: 'FST', code: Code) -> 'FST':
     else:  # str
         lines = code.split('\n')
 
-    return FST(_parse_stmts(code, self.root.parse_params), lines)
+    return FST(_parse_stmts(code, parse_params := self.root.parse_params), lines, parse_params=parse_params)
 
 
 def _code_as_expr(self: 'FST', code: Code) -> 'FST':
@@ -223,7 +265,7 @@ def _code_as_expr(self: 'FST', code: Code) -> 'FST':
 
         ast.f._unmake_fst_parents()
 
-        return FST(ast, code._lines, from_=code, do_line_copy=False)
+        return FST(ast, code._lines, from_=code, lcopy=False)
 
     if isinstance(code, AST):
         if not isinstance(code, expr):
@@ -237,9 +279,7 @@ def _code_as_expr(self: 'FST', code: Code) -> 'FST':
     else:  # str
         lines = code.split('\n')
 
-    ast = _parse_expr(code, self.root.parse_params)
-
-    return FST(ast, lines)
+    return FST(_parse_expr(code, parse_params := self.root.parse_params), lines, parse_params=parse_params)
 
 
 def _code_as_slice(self: 'FST', code: Code) -> 'FST':
@@ -258,19 +298,19 @@ def _code_as_ExceptHandlers(self: 'FST', code: Code) -> 'FST':
     """Convert `code` to zero or more `ExceptHandler`s and return in the `body` of a `Module` `FST` if possible."""
 
     if isinstance(code, FST):
-        ast = code.a
+        codea = code.a
 
-        if isinstance(ast, ExceptHandler):
-            return FST(Module(body=[ast], type_ignores=[]), code._lines, from_=code, do_line_copy=False)
+        if isinstance(codea, ExceptHandler):
+            return FST(Module(body=[codea], type_ignores=[]), code._lines, from_=code, lcopy=False)
 
-        if isinstance(ast, Module):
-            if all(isinstance(a, ExceptHandler) for a in ast.body):
+        if isinstance(codea, Module):
+            if all(isinstance(a, ExceptHandler) for a in codea.body):
                 return code
 
             raise NodeTypeError(f'expecting zero or more ExceptHandlers, got '
-                                f'[{_shortstr(", ".join(a.__class__.__name__ for a in ast.body))}]')
+                                f'[{_shortstr(", ".join(a.__class__.__name__ for a in codea.body))}]')
 
-        raise NodeTypeError(f'expecting zero or more ExceptHandlers, got {ast.__class__.__name__}')
+        raise NodeTypeError(f'expecting zero or more ExceptHandlers, got {codea.__class__.__name__}')
 
     if isinstance(code, AST):
         if not isinstance(code, ExceptHandler):
@@ -284,7 +324,7 @@ def _code_as_ExceptHandlers(self: 'FST', code: Code) -> 'FST':
     else:  # str
         lines = code.split('\n')
 
-    return FST(_parse_ExceptHandlers(code, self.root.parse_params), lines)
+    return FST(_parse_ExceptHandlers(code, parse_params := self.root.parse_params), lines, parse_params=parse_params)
 
 
 def _code_as_arguments(self: 'FST', code: Code) -> 'FST':
@@ -327,6 +367,39 @@ def _code_as_withitem(self: 'FST', code: Code) -> 'FST':
     """Convert `code` to a withitem `FST` if possible."""
 
     return _code_as(self, code, withitem, _parse_withitem)
+
+
+def _code_as_match_cases(self: 'FST', code: Code) -> 'FST':
+    """Convert `code` to zero or more `match_case`s and return in the `body` of a `Module` `FST` if possible."""
+
+    if isinstance(code, FST):
+        codea = code.a
+
+        if isinstance(codea, match_case):
+            return FST(Module(body=[codea], type_ignores=[]), code._lines, from_=code, lcopy=False)
+
+        if isinstance(codea, Module):
+            if all(isinstance(a, match_case) for a in codea.body):
+                return code
+
+            raise NodeTypeError(f'expecting zero or more match_cases, got '
+                                f'[{_shortstr(", ".join(a.__class__.__name__ for a in codea.body))}]')
+
+        raise NodeTypeError(f'expecting zero or more match_cases, got {codea.__class__.__name__}')
+
+    if isinstance(code, AST):
+        if not isinstance(code, match_case):
+            raise NodeTypeError(f'expecting zero or more match_cases, got {code.__class__.__name__}')
+
+        code  = ast_unparse(code)
+        lines = code.split('\n')
+
+    elif isinstance(code, list):
+        code = '\n'.join(lines := code)
+    else:  # str
+        lines = code.split('\n')
+
+    return FST(_parse_match_cases(code, parse_params := self.root.parse_params), lines, parse_params=parse_params)
 
 
 def _code_as_pattern(self: 'FST', code: Code) -> 'FST':
@@ -415,7 +488,8 @@ def _code_as_op(self: 'FST', code: Code,
             raise NodeTypeError(f'bad operator {src!r}')
 
     elif isinstance(code, AST):
-        code = FST(code, [(OPCLS2STR_AUG if target is AugAssign else OPCLS2STR).get(code.__class__, '')])
+        code = FST(code, [(OPCLS2STR_AUG if target is AugAssign else OPCLS2STR).get(code.__class__, '')],
+                   parse_params=self.root.parse_params)
 
     else:
         if isinstance(code, list):
@@ -426,7 +500,7 @@ def _code_as_op(self: 'FST', code: Code,
         if not (cls := _code_as_op_str2op[target].get(code)):
             raise NodeTypeError(f'bad operator {code!r}')
 
-        code = FST(cls(), lines)
+        code = FST(cls(), lines, parse_params=self.root.parse_params)
 
     if code.a.__class__ not in _code_as_op_ops[target]:
         raise NodeTypeError(f'expecting operator{f" for {target.__name__}" if target else ""}'

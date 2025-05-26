@@ -31881,6 +31881,46 @@ def func():
 
         self.assertEqual(['True:', '  i'], ast.f.root.get_src(1, 4, 2, 3, True))
 
+    def test_code_as_match_cases(self):
+        f = FST(r'''
+match a:
+    case 1:
+        def f():
+            """doc
+  string"""
+
+            pass
+
+        i = f"""a
+  {test}
+        b"""
+
+    case 2:
+        ("a"
+"b")
+        k = \
+("c"
+    "d")
+'''.strip())
+
+        g = f.body[0].get_slice(field='cases')
+        print(g.src)
+
+        h = f._code_as_match_cases(g.copy())
+        self.assertEqual(h.src, g.src)
+        self.assertTrue(compare_asts(h.a, g.a, locs=True, raise_=True))
+
+        h = f._code_as_match_cases(g.src)
+        self.assertTrue(compare_asts(h.a, g.a, locs=True, raise_=True))
+
+        g0 = g.body[0].copy()
+        h = f._code_as_match_cases(g0.a)
+        self.assertTrue(compare_asts(h.body[0].a, g0.a, locs=False, raise_=True))
+
+        g1 = g.body[1].copy()
+        h = f._code_as_match_cases(g1.a)
+        self.assertTrue(compare_asts(h.body[0].a, g1.a, locs=False, raise_=True))
+
     def test_put_src(self):
         f = FST(Load(), [''])
         f.put_src('test', 0, 0, 0, 0)
@@ -35036,8 +35076,11 @@ class cls:
         self.assertEqual('m', f.src)
 
         f = parse('[1, 2, 3, 4]').body[0].value.f
-        f.put('5', 1, raw=False, to=f.elts[2])
-        self.assertEqual('[1, 5, 4]', f.src)
+        self.assertRaises(NodeTypeError, f.put, '5', 1, raw=False, to=f.elts[2])
+
+        f = parse('[1, 2, 3, 4]').body[0].value.f
+        g = f.put('5', 1, raw='auto', to=f.elts[2])
+        self.assertEqual('[1, 5, 4]', g.src)
 
         # make sure put doesn't eat arguments pars
 
@@ -35178,7 +35221,8 @@ class cls:
         # make sure we can't put TO invalid locations
 
         f = parse('[1, 2, 3]').body[0].value.f
-        self.assertEqual('[1, 4]', f.elts[1].replace('4', to=f.elts[2], raw=False).root.src)
+        # self.assertEqual('[1, 4]', f.elts[1].replace('4', to=f.elts[2], raw=False).root.src)
+        self.assertRaises(NodeTypeError, f.elts[1].replace, '4', to=f.elts[2], raw=False)
 
         f = parse('[1, 2, 3]').body[0].value.f
         self.assertRaises(ValueError, f.elts[1].replace, '4', to=f.elts[0], raw=False)
