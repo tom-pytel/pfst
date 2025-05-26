@@ -18142,19 +18142,19 @@ Module .. ROOT 0,0 -> 0,29
     .returns Name 'new' Load .. 0,20 -> 0,23
 """),
 
-(r"""a += b""", 'body[0]', None, 'op', {'raw': False}, r"""new""", r"""**NodeTypeError("bad operator 'new'")**""", r"""
+(r"""a += b""", 'body[0]', None, 'op', {'raw': False}, r"""new""", r"""**NodeTypeError("expecting operator, got 'new'")**""", r"""
 """),
 
-(r"""a and b""", 'body[0].value', None, 'op', {'raw': False}, r"""new""", r"""**NodeTypeError("bad operator 'new'")**""", r"""
+(r"""a and b""", 'body[0].value', None, 'op', {'raw': False}, r"""new""", r"""**NodeTypeError("expecting boolop, got 'new'")**""", r"""
 """),
 
-(r"""a + b""", 'body[0].value', None, 'op', {'raw': False}, r"""new""", r"""**NodeTypeError("bad operator 'new'")**""", r"""
+(r"""a + b""", 'body[0].value', None, 'op', {'raw': False}, r"""new""", r"""**NodeTypeError("expecting operator, got 'new'")**""", r"""
 """),
 
-(r"""-a""", 'body[0].value', None, 'op', {'raw': False}, r"""new""", r"""**NodeTypeError("bad operator 'new'")**""", r"""
+(r"""-a""", 'body[0].value', None, 'op', {'raw': False}, r"""new""", r"""**NodeTypeError("expecting unaryop, got 'new'")**""", r"""
 """),
 
-(r"""a < b""", 'body[0].value', 0, 'ops', {'raw': False}, r"""new""", r"""**NodeTypeError("bad operator 'new'")**""", r"""
+(r"""a < b""", 'body[0].value', 0, 'ops', {'raw': False}, r"""new""", r"""**NodeTypeError("expecting cmpop, got 'new'")**""", r"""
 """),
 
 (r"""def f(*, a=b): pass""", 'body[0].args', 0, 'kw_defaults', {'raw': False}, r"""new""", r"""def f(*, a=new): pass""", r"""
@@ -24382,7 +24382,7 @@ Module .. ROOT 0,0 -> 0,6
       1] Name 'b' Load .. 0,5 -> 0,6
 """),
 
-(r"""a and b""", 'body[0].value', None, 'op', {'raw': False}, r"""+""", r"""**NodeTypeError("bad operator '+'")**""", r"""
+(r"""a and b""", 'body[0].value', None, 'op', {'raw': False}, r"""+""", r"""**NodeTypeError("expecting boolop, got '+'")**""", r"""
 """),
 
 (r"""a and b and c""", 'body[0].value', None, 'op', {'raw': False}, r"""or""", r"""a or b or c""", r"""
@@ -31904,7 +31904,6 @@ match a:
 '''.strip())
 
         g = f.body[0].get_slice(field='cases')
-        print(g.src)
 
         h = f._code_as_match_cases(g.copy())
         self.assertEqual(h.src, g.src)

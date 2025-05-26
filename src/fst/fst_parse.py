@@ -39,6 +39,36 @@ def _offset_linenos(ast: AST, delta: int) -> AST:
     return ast
 
 
+def _code_as_op(self: 'FST', code: Code, ast_type: type[AST], opstr2cls: dict[str, type[AST]],
+                 opcls2str: dict[type[AST], str] = OPCLS2STR) -> 'FST':
+    """Convert `code` to an operation `FST` if possible."""
+
+    if isinstance(code, FST):
+        if not isinstance(code.a, ast_type):
+            raise NodeTypeError(f'expecting {ast_type.__name__}, got {code.a.__class__.__name__}')
+
+        if (src := code.get_src(*code.loc)) != (expected := opcls2str[code.a.__class__]):
+            raise NodeTypeError(f'expecting {expected!r}, got {_shortstr(src)!r}')
+
+        return code
+
+    if isinstance(code, AST):
+        if not isinstance(code, ast_type):
+            raise NodeTypeError(f'expecting {ast_type.__name__}, got {code.__class__.__name__}')
+
+        return FST(code, [opcls2str[code.__class__]], parse_params=self.root.parse_params)
+
+    elif isinstance(code, list):
+        code = '\n'.join(lines := code)
+    else:  # str
+        lines = code.split('\n')
+
+    if not (cls := opstr2cls.get(code := code.strip())):
+        raise NodeTypeError(f'expecting {ast_type.__name__}, got {_shortstr(code)!r}')
+
+    return FST(cls(), lines, parse_params=self.root.parse_params)
+
+
 def _code_as(self: 'FST', code: Code, ast_type: type[AST], parse: Callable[['FST', Code], 'FST']) -> 'FST':
     if isinstance(code, FST):
         if not isinstance(code.a, ast_type):
@@ -288,6 +318,36 @@ def _code_as_slice(self: 'FST', code: Code) -> 'FST':
     return _code_as(self, code, expr, _parse_slice)
 
 
+def _code_as_boolop(self: 'FST', code: Code) -> 'FST':
+    """Convert `code` to a `boolop` `FST` if possible."""
+
+    return _code_as_op(self, code, boolop, OPSTR2CLS_BOOL)
+
+
+def _code_as_operator(self: 'FST', code: Code) -> 'FST':
+    """Convert `code` to a `operator` `FST` if possible."""
+
+    return _code_as_op(self, code, operator, OPSTR2CLS_BIN)
+
+
+def _code_as_operator_aug(self: 'FST', code: Code) -> 'FST':
+    """Convert `code` to an augmented `operator` `FST` if possible, e.g. "+="."""
+
+    return _code_as_op(self, code, operator, OPSTR2CLS_AUG, OPCLS2STR_AUG)
+
+
+def _code_as_unaryop(self: 'FST', code: Code) -> 'FST':
+    """Convert `code` to a `unaryop` `FST` if possible."""
+
+    return _code_as_op(self, code, unaryop, OPSTR2CLS_UNARY)
+
+
+def _code_as_cmpop(self: 'FST', code: Code) -> 'FST':
+    """Convert `code` to a `cmpop` `FST` if possible."""
+
+    return _code_as_op(self, code, cmpop, OPSTR2CLS_CMP)
+
+
 def _code_as_comprehension(self: 'FST', code: Code) -> 'FST':
     """Convert `code` to a comprehension `FST` if possible."""
 
@@ -474,37 +534,6 @@ def _code_as_identifier_alias(self: 'FST', code: Code) -> str:
 
     if not is_valid_identifier_alias(code):
         raise NodeTypeError(f"expecting dotted identifier or '*', got {_shortstr(code)!r}")
-
-    return code
-
-
-def _code_as_op(self: 'FST', code: Code,
-                target: type[AugAssign] | type[BoolOp] | type[BinOp] | type[UnaryOp] | type[Compare] | None = None,
-                ) -> 'FST':
-    """Convert `code` to an operator `FST` for the given target if possible."""
-
-    if isinstance(code, FST):
-        if (src := code.get_src(*code.loc)) not in _code_as_op_str2op[target]:
-            raise NodeTypeError(f'bad operator {src!r}')
-
-    elif isinstance(code, AST):
-        code = FST(code, [(OPCLS2STR_AUG if target is AugAssign else OPCLS2STR).get(code.__class__, '')],
-                   parse_params=self.root.parse_params)
-
-    else:
-        if isinstance(code, list):
-            code = '\n'.join(lines := code)
-        else:
-            lines = code.split('\n')
-
-        if not (cls := _code_as_op_str2op[target].get(code)):
-            raise NodeTypeError(f'bad operator {code!r}')
-
-        code = FST(cls(), lines, parse_params=self.root.parse_params)
-
-    if code.a.__class__ not in _code_as_op_ops[target]:
-        raise NodeTypeError(f'expecting operator{f" for {target.__name__}" if target else ""}'
-                            f', got {code.a.__class__.__name__}')
 
     return code
 

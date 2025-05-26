@@ -2172,6 +2172,11 @@ class FST:
         _code_as_stmts,
         _code_as_expr,
         _code_as_slice,
+        _code_as_boolop,
+        _code_as_operator,
+        _code_as_operator_aug,
+        _code_as_unaryop,
+        _code_as_cmpop,
         _code_as_comprehension,
         _code_as_ExceptHandlers,
         _code_as_arguments,
@@ -2188,7 +2193,6 @@ class FST:
         _code_as_identifier_dotted,
         _code_as_identifier_maybe_star,
         _code_as_identifier_alias,
-        _code_as_op,
     )
 
     from .fst_raw import (

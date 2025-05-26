@@ -14,7 +14,9 @@ from .shared import (
 )
 
 from .fst_parse import (
-    _code_as_expr, _code_as_slice, _code_as_pattern, _code_as_comprehension, _code_as_arguments,
+    _code_as_expr, _code_as_slice,
+    _code_as_boolop, _code_as_operator, _code_as_operator_aug, _code_as_unaryop, _code_as_cmpop,
+    _code_as_pattern, _code_as_comprehension, _code_as_arguments,
     _code_as_arguments_lambda, _code_as_arg, _code_as_keyword, _code_as_alias_maybe_star, _code_as_alias_dotted,
     _code_as_withitem, _code_as_type_param, _code_as_identifier, _code_as_identifier_dotted, _code_as_identifier_alias,
 )
@@ -157,7 +159,7 @@ def _put_one_BoolOp_op(self: 'FST', code: Code | None, idx: int | None, field: s
     """Put BoolOp op to potentially multiple places."""
 
     child  = _validate_put(self, code, idx, field, child, options)
-    code   = self._code_as_op(code, BoolOp)
+    code   = _code_as_boolop(self, code)
     childf = child.f
     src    = 'and' if isinstance(codea := code.a, And) else 'or'
     tgt    = 'and' if isinstance(child, And) else 'or'
@@ -180,10 +182,10 @@ def _put_one_BoolOp_op(self: 'FST', code: Code | None, idx: int | None, field: s
 def _put_one_op(self: 'FST', code: Code | None, idx: int | None, field: str,
                 child: type[boolop] | type[operator] | type[unaryop] | type[cmpop],
                 static: None, **options) -> 'FST':
-    """Put a single opertation, with or without '=' for AugAssign."""
+    """Put a single operation, with or without '=' for AugAssign."""
 
     child  = _validate_put(self, code, idx, field, child, options)
-    code   = self._code_as_op(code, self.a.__class__)
+    code   = static.coerce(self, code)
     childf = child.f
 
     ln, col, end_ln, end_col = childf.loc
@@ -1212,7 +1214,7 @@ _PUT_ONE_HANDLERS = {
     (TypeAlias, 'type_params'):           (_put_one_exprish_sliceable, None, _onestatic_type_param_required), # type_param*
     (TypeAlias, 'value'):                 (_put_one_exprish_required, None, _onestatic_expr_required), # expr
     (AugAssign, 'target'):                (_put_one_exprish_required, None, _onestatic_target_single), # expr
-    (AugAssign, 'op'):                    (_put_one_op, None, None), # operator
+    (AugAssign, 'op'):                    (_put_one_op, None, onestatic(None, coerce=_code_as_operator_aug)), # operator
     (AugAssign, 'value'):                 (_put_one_exprish_required, None, _onestatic_expr_required), # expr
     (AnnAssign, 'target'):                (_put_one_exprish_required, None, _onestatic_target_single), # expr
     (AnnAssign, 'annotation'):            (_put_one_exprish_required, None, onestatic(_one_info_exprish_required, _restrict_default)), # expr  - exclude [Lambda, Yield, YieldFrom, Await, NamedExpr]?
@@ -1260,9 +1262,9 @@ _PUT_ONE_HANDLERS = {
     (NamedExpr, 'target'):                (_put_one_exprish_required, None, _onestatic_target_Name), # expr
     (NamedExpr, 'value'):                 (_put_one_exprish_required, None, _onestatic_expr_required), # expr
     (BinOp, 'left'):                      (_put_one_exprish_required, None, _onestatic_expr_required), # expr
-    (BinOp, 'op'):                        (_put_one_op, None, None), # operator
+    (BinOp, 'op'):                        (_put_one_op, None, onestatic(None, coerce=_code_as_operator)), # operator
     (BinOp, 'right'):                     (_put_one_exprish_required, None, _onestatic_expr_required), # expr
-    (UnaryOp, 'op'):                      (_put_one_op, None, None), # unaryop
+    (UnaryOp, 'op'):                      (_put_one_op, None, onestatic(None, coerce=_code_as_unaryop)), # unaryop
     (UnaryOp, 'operand'):                 (_put_one_exprish_required, None, _onestatic_expr_required), # expr
     (Lambda, 'args'):                     (_put_one_Lambda_arguments, None, _onestatic_arguments_lambda_required), # arguments
     (Lambda, 'body'):                     (_put_one_exprish_required, None, _onestatic_expr_required), # expr
@@ -1285,7 +1287,7 @@ _PUT_ONE_HANDLERS = {
     (Yield, 'value'):                     (_put_one_exprish_optional, None, onestatic(_one_info_Yield_value, _restrict_default)), # expr?
     (YieldFrom, 'value'):                 (_put_one_exprish_required, None, _onestatic_expr_required), # expr
     (Compare, 'left'):                    (_put_one_exprish_required, None, _onestatic_expr_required), # expr
-    (Compare, 'ops'):                     (_put_one_op, None, None), # cmpop*
+    (Compare, 'ops'):                     (_put_one_op, None, onestatic(None, coerce=_code_as_cmpop)), # cmpop*
     (Compare, 'comparators'):             (_put_one_exprish_required, None, _onestatic_expr_required), # expr*
     (Compare, None):                      (_put_one_Compare_None, None, _onestatic_expr_required), # expr*
     (Call, 'func'):                       (_put_one_exprish_required, None, _onestatic_expr_required), # expr
