@@ -1,5 +1,7 @@
+class FST:
+    """Temporary standin for circular import of real `FST` class."""
+
 import ast as ast_
-import inspect
 from ast import *
 from ast import parse as ast_parse, unparse as ast_unparse
 from io import TextIOBase
@@ -51,32 +53,6 @@ def _swizzle_getput_params(start: int | Literal['end'] | None, stop: int | None 
         return start, default_stop, stop
 
     return start, stop, field
-
-
-class _FSTCircularImportStandinMeta(type):
-    """Class attribute getter for temporary circular import standin class for FST."""
-
-    def __getattr__(cls, name):
-        inspect.currentframe().f_back.f_globals['FST'] = FST
-
-        return getattr(FST, name)
-
-    def __instancecheck__(cls, instance):
-        inspect.currentframe().f_back.f_globals['FST'] = FST
-
-        return isinstance(instance, FST)
-
-class _FSTCircularImportStandin(metaclass=_FSTCircularImportStandinMeta):
-    """Temporary standin for circular import of `FST`. Proxies `FST()` and `FST.attr` and sets `FST` in caller globals
-    to the actual `FST` class on first access. The import will also resolve to the actual `FST` class for static type
-    analysis in IDEs due to the later override with the real `FST` class."""
-
-    def __new__(cls, *args, **kwargs):
-        inspect.currentframe().f_back.f_globals['FST'] = FST
-
-        return FST(*args, **kwargs)
-
-FST = _FSTCircularImportStandin  # predefined so that imports in the real `FST` class get this
 
 
 # ----------------------------------------------------------------------------------------------------------------------
@@ -2233,4 +2209,8 @@ class FST:
 
 
 from .fstlist import fstlist
-from .srcedit import _src_edit  # , SrcEdit
+
+from . import fst_misc, fst_one, fst_parse, fst_raw, fst_slice_old, fst_slice, fst_walk, srcedit
+
+fst_misc.FST = fst_one.FST = fst_parse.FST = fst_raw.FST = fst_slice_old.FST = fst_slice.FST = fst_walk.FST = \
+    srcedit.FST = FST
