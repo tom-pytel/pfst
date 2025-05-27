@@ -122,9 +122,16 @@ def _parse_expr_or_slice(src: str, parse_params: dict = {}) -> AST:
     Using this, naked `Starred` expressions parse to just the `Starred` and not a `Tuple` like in `_parse_slice()`."""
 
     try:
+        ast = _parse_slice(src, parse_params)
+    except SyntaxError:  # in case of lone Starred on py < 3.11
         return _parse_expr(src, parse_params)
-    except SyntaxError:
-        return _parse_slice(src, parse_params)
+
+    if (isinstance(ast, Tuple) and len(elts := ast.elts) == 1 and isinstance(e0 := elts[0], Starred) and  # check for this one stupid case
+        e0.end_col_offset == ast.end_col_offset and e0.end_lineno == ast.end_lineno
+    ):
+        return e0
+
+    return ast
 
 
 @staticmethod
@@ -164,7 +171,12 @@ def _parse_arguments_lambda(src: str, parse_params: dict = {}) -> AST:
 def _parse_arg(src: str, parse_params: dict = {}) -> AST:
     """Parse to an `ast.arg` or raise `SyntaxError`, e.g. "var: list[int]"."""
 
-    return _offset_linenos(ast_parse(f'def f(\n{src}): pass', **parse_params).body[0].args.args[0], -1)
+    try:
+        ast = ast_parse(f'def f(\n{src}): pass', **parse_params).body[0].args.args[0]
+    except SyntaxError:  # may be '*vararg: *starred'
+        ast = ast_parse(f'def f(*\n{src}): pass', **parse_params).body[0].args.vararg
+
+    return _offset_linenos(ast, -1)
 
 
 @staticmethod

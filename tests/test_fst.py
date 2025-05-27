@@ -35608,18 +35608,32 @@ class cls:
         f.body[0].targets[0].put(g.a, 1, raw=False)
         self.assertEqual('a, *b = c', f.src)
 
-        # except vs. except*
-
         if sys.version_info[:2] >= (3, 11):
+            # except vs. except*
+
             f = FST('try:\n    pass\nexcept Exception:\n    pass').body[0].handlers[0].copy()
 
             g = FST('try:\n    pass\nexcept* ValueError:\n    pass')
-            g.body[0].put(f.copy().a, 0, field='handlers')
+            g.body[0].put(f.copy().a, 0, field='handlers', raw=False)
             self.assertEqual('try:\n    pass\nexcept* Exception:\n    pass\n', g.src)
 
             g = FST('try:\n    pass\nexcept ValueError:\n    pass')
-            g.body[0].put(f.a, 0, field='handlers')
+            g.body[0].put(f.a, 0, field='handlers', raw=False)
             self.assertEqual('try:\n    pass\nexcept Exception:\n    pass\n', g.src)
+
+            # *args: *starred annotation
+
+            f = FST('def f(*args: *starred): pass')
+            g = f.body[0].args.vararg.copy()
+            f.body[0].args.put(g.a, 'vararg', raw=False)
+            self.assertEqual('def f(*args: *starred): pass', f.src)
+
+        # tuple slice in annotation
+
+        f = FST('def f(x: a[b:c, d:e]): pass')
+        g = f.body[0].args.args[0].annotation.slice.elts[0].copy()
+        f.body[0].args.args[0].annotation.slice.put(g.src, 0, 'elts', raw=False)
+        self.assertEqual('def f(x: a[b:c, d:e]): pass', f.src)
 
     def test_put_one_pars(self):
         f = FST('a = b').body[0]
