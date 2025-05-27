@@ -135,6 +135,16 @@ def _parse_expr_or_slice(src: str, parse_params: dict = {}) -> AST:
 
 
 @staticmethod
+def _parse_expr_call_arg(src: str, parse_params: dict = {}) -> AST:
+    """Parse to an `expr` or in the context of a `Call.args` which treats `Starred` differently."""
+
+    try:
+        return _parse_expr(src, parse_params)
+    except SyntaxError:  # stuff like '*[] or []'
+        return _offset_linenos(ast_parse(f'f(\n{src})', **parse_params).body[0].value.args[0], -1)
+
+
+@staticmethod
 def _parse_comprehension(src: str, parse_params: dict = {}) -> AST:
     """Parse to an `ast.comprehension` or raise `SyntaxError`, e.g. "async for i in something() if i"."""
 
@@ -318,7 +328,7 @@ def _code_as_stmts(code: Code, parse_params: dict = {}) -> 'FST':
 
 
 @staticmethod
-def _code_as_expr(code: Code, parse_params: dict = {}, orslice: bool = False) -> 'FST':
+def _code_as_expr(code: Code, parse_params: dict = {}, orslice: bool = False, callarg: bool = False) -> 'FST':
     """Convert `code` to an `expr` or optionally `Slice` `FST` if possible.
 
     **Parameters:**
@@ -355,7 +365,7 @@ def _code_as_expr(code: Code, parse_params: dict = {}, orslice: bool = False) ->
     else:  # str
         lines = code.split('\n')
 
-    return FST((_parse_expr_or_slice if orslice else _parse_expr)
+    return FST((_parse_expr_or_slice if orslice else _parse_expr_call_arg if callarg else _parse_expr)
                (code, parse_params), lines, parse_params=parse_params)._sanitize()
 
 
@@ -373,6 +383,13 @@ def _code_as_expr_or_slice(code: Code, parse_params: dict = {}, orslice: bool = 
     expressions in a `Subscript` `slice` field."""
 
     return _code_as_expr(code, parse_params, True)
+
+
+@staticmethod
+def _code_as_expr_call_arg(code: Code, parse_params: dict = {}, orslice: bool = False) -> 'FST':
+    """Convert `code` to an `expr` in the context of a `Call.args` which has special parse rules for `Starred`."""
+
+    return _code_as_expr(code, parse_params, False, True)
 
 
 @staticmethod

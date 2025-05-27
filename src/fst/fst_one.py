@@ -14,7 +14,7 @@ from .shared import (
 )
 
 from .fst_parse import (
-    _code_as_expr, _code_as_slice, _code_as_expr_or_slice,
+    _code_as_expr, _code_as_slice, _code_as_expr_or_slice, _code_as_expr_call_arg,
     _code_as_boolop, _code_as_operator, _code_as_operator_aug, _code_as_unaryop, _code_as_cmpop,
     _code_as_pattern, _code_as_comprehension, _code_as_arguments,
     _code_as_arguments_lambda, _code_as_arg, _code_as_keyword, _code_as_alias_maybe_star, _code_as_alias_dotted,
@@ -1290,7 +1290,7 @@ _PUT_ONE_HANDLERS = {
     (Compare, 'comparators'):             (_put_one_exprish_required, None, _onestatic_expr_required), # expr*
     (Compare, None):                      (_put_one_Compare_None, None, _onestatic_expr_required), # expr*
     (Call, 'func'):                       (_put_one_exprish_required, None, _onestatic_expr_required), # expr
-    (Call, 'args'):                       (_put_one_exprish_sliceable, None, _onestatic_expr_required), # expr*
+    (Call, 'args'):                       (_put_one_exprish_sliceable, None, onestatic(_one_info_exprish_required, _restrict_default, code_as=_code_as_expr_call_arg)), # expr*
     (Call, 'keywords'):                   (_put_one_exprish_sliceable, None, _onestatic_keyword_required), # keyword*
     (FormattedValue, 'value'):            (_put_one_exprish_required, None, _onestatic_expr_required), # expr
     # (FormattedValue, 'format_spec'):      (_put_one_default, None, None), # expr?

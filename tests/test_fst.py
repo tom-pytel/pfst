@@ -32199,6 +32199,12 @@ match a:
 
         self.assertRaises(ValueError, f._code_as_stmtishs, f.body[0].cases[0])
 
+        # special 'case' non-keyword
+
+        self.assertIsInstance(FST._code_as_stmtishs('case 1: pass').body[0].a, match_case)
+        self.assertIsInstance(FST._code_as_stmtishs('case = 1').body[0].a, Assign)
+        self.assertIsInstance(FST._code_as_stmtishs('case.b = 1').body[0].a, Assign)
+
     def test_code_as_sanitize(self):
         CODE_ASES = [
             (FST._code_as_expr, 'f(a)'),
@@ -35635,12 +35641,30 @@ class cls:
         f.body[0].args.args[0].annotation.slice.put(g.src, 0, 'elts', raw=False)
         self.assertEqual('def f(x: a[b:c, d:e]): pass', f.src)
 
-        # naked MatchStar
+        # naked MatchStar and other star/sequence
 
         f = FST('match x: \n case [*_]: pass')
         g = f.body[0].cases[0].pattern.patterns[0].copy()
         f.body[0].cases[0].pattern.put(g.a, 0, 'patterns', raw=False)
         self.assertEqual('match x: \n case [*_]: pass', f.src)
+
+        f = FST('match x: \n case 1: pass')
+        f.body[0].cases[0].put('*x, 1,', 'pattern', raw=False)
+        self.assertEqual('match x: \n case *x, 1,: pass', f.src)
+
+        f = FST('match x: \n case 1: pass')
+        f.body[0].cases[0].put('1, *x,', 'pattern', raw=False)
+        self.assertEqual('match x: \n case 1, *x,: pass', f.src)
+
+        # special Call.args but not otherwise
+
+        f = FST('call(a)')
+        f.body[0].value.put('*[] or []', 0, 'args', raw=False)
+        self.assertEqual('call(*[] or [])', f.src)
+
+        f = FST('call(a)')
+        f.body[0].value.put('yield 1', 0, 'args', raw=False)
+        self.assertEqual('call((yield 1))', f.src)
 
     def test_put_one_pars(self):
         f = FST('a = b').body[0]
