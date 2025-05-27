@@ -249,7 +249,12 @@ def _parse_match_cases(src: str, parse_params: dict = {}) -> AST:
 def _parse_pattern(src: str, parse_params: dict = {}) -> AST:
     """Parse to an `ast.pattern` or raise `SyntaxError`, e.g. "{a.b: i, **rest}"."""
 
-    return _offset_linenos(ast_parse(f'match _:\n case \\\n{src}: pass', **parse_params).body[0].cases[0].pattern, -2)
+    try:
+        ast = ast_parse(f'match _:\n case \\\n{src}: pass', **parse_params).body[0].cases[0].pattern
+    except SyntaxError:  # in case of MatchStar "*_"
+        ast = ast_parse(f'match _:\n case [\\\n{src}]: pass', **parse_params).body[0].cases[0].pattern.patterns[0]
+
+    return _offset_linenos(ast, -2)
 
 
 @staticmethod

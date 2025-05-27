@@ -35635,6 +35635,13 @@ class cls:
         f.body[0].args.args[0].annotation.slice.put(g.src, 0, 'elts', raw=False)
         self.assertEqual('def f(x: a[b:c, d:e]): pass', f.src)
 
+        # naked MatchStar
+
+        f = FST('match x: \n case [*_]: pass')
+        g = f.body[0].cases[0].pattern.patterns[0].copy()
+        f.body[0].cases[0].pattern.put(g.a, 0, 'patterns', raw=False)
+        self.assertEqual('match x: \n case [*_]: pass', f.src)
+
     def test_put_one_pars(self):
         f = FST('a = b').body[0]
         g = FST('(i := j)').body[0].value.copy(pars=False)
