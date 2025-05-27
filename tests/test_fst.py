@@ -25735,6 +25735,22 @@ Module .. ROOT 0,0 -> 0,25
       .body Constant None .. 0,21 -> 0,25
 """),
 
+(r"""f'{-0.:.1f}'""", 'body[0].value.values[0].value', None, 'operand', {'raw': False, '_ver': 12}, r"""0.0""", r"""f'{-0.0:.1f}'""", r"""
+Module .. ROOT 0,0 -> 0,13
+  .body[1]
+  0] Expr .. 0,0 -> 0,13
+    .value JoinedStr .. 0,0 -> 0,13
+      .values[1]
+      0] FormattedValue .. 0,2 -> 0,12
+        .value UnaryOp .. 0,3 -> 0,7
+          .op USub .. 0,3 -> 0,4
+          .operand Constant 0.0 .. 0,4 -> 0,7
+        .conversion -1
+        .format_spec JoinedStr .. 0,7 -> 0,11
+          .values[1]
+          0] Constant '.1f' .. 0,8 -> 0,11
+"""),
+
 ]  # END OF PUT_ONE_DATA
 
 PUT_RAW_DATA = [

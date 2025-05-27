@@ -298,11 +298,26 @@ def _make_exprish_fst(self: 'FST', code: Code | None, idx: int | None, field: st
 
     put_fst.indent_lns(self.get_indent(), docstr=options.get('docstr'))
 
-    dcol_offset   = self.root._lines[ln].c2b(col)
-    params_offset = self.put_src(put_fst._lines, ln, col, end_ln, end_col, True, False, exclude=self)
 
-    put_fst.offset(0, 0, ln, dcol_offset)
+    # TODO: REMOVE once fix verified
+    # dcol_offset   = self.root._lines[ln].c2b(col)
+    # print('-'*80); self.parent.dump(True); print('.'*80)  # DEBUG!
+    # params_offset = self.put_src(put_fst._lines, ln, col, end_ln, end_col, True, False, exclude=self)
+
+    # put_fst.offset(0, 0, ln, dcol_offset)
+    # self.offset(*params_offset, exclude=target, self_=False)  # excluding an fstloc instead of FST is harmless, will not exclude anything
+    # print('-'*80); self.parent.dump(True); print('.'*80)  # DEBUG!
+    # set_ctx(put_ast, ctx)
+    # TODO: REMOVE once fix verified
+
+
+    dcol_offset   = self.root._lines[ln].c2b(col)
+    params_offset = self.put_src(put_fst._lines, ln, col, end_ln, end_col, True, True, exclude=self,
+                                 offset_excluded=False)
+
+    self.offset(*params_offset, True, False, exclude=self)  # we need to do three individual .offset()s (first one in put_src) in order to handle insert to lower/upper in 'a[::]' as well as change constant in 'f"{-0.:.1f}"' correctly
     self.offset(*params_offset, exclude=target, self_=False)  # excluding an fstloc instead of FST is harmless, will not exclude anything
+    put_fst.offset(0, 0, ln, dcol_offset)
     set_ctx(put_ast, ctx)
 
     return put_fst
