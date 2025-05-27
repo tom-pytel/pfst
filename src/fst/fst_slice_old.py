@@ -290,7 +290,7 @@ def _put_slice_tuple_list_or_set(self: 'FST', code: Code | None, start: int | Li
         put_fst = None
 
     else:
-        put_fst = self._normalize_code(code, 'expr', parse_params=self.root.parse_params)
+        put_fst = self._code_as_expr(code, self.root.parse_params)
 
         if one:
             if put_fst.is_parenthesized_tuple() is False:  # don't put unparenthesized tuple source as one into sequence, it would merge into the sequence
@@ -428,7 +428,7 @@ def _put_slice_dict(self: 'FST', code: Code | None, start: int | Literal['end'] 
         put_fst = None
 
     else:
-        put_fst = self._normalize_code(code, 'expr', parse_params=self.root.parse_params)
+        put_fst = self._code_as_expr(code, self.root.parse_params)
         put_ast = put_fst.a
 
         if not isinstance(put_ast, Dict):
@@ -517,7 +517,7 @@ def _put_slice_stmtish(self: 'FST', code: Code | None, start: int | Literal['end
         put_fst = None
 
     else:
-        put_fst  = self._normalize_code(code, 'mod', parse_params=self.root.parse_params)
+        put_fst  = self._code_as_stmtishs(code, self.root.parse_params)
         put_ast  = put_fst.a
         put_body = put_ast.body
 

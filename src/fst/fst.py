@@ -2078,7 +2078,6 @@ class FST:
     # Private and other misc stuff
 
     from .fst_misc import (
-        _normalize_code,
         _new_empty_module,
         _new_empty_tuple,
         _new_empty_list,
@@ -2169,6 +2168,7 @@ class FST:
         _code_as_identifier_dotted,
         _code_as_identifier_maybe_star,
         _code_as_identifier_alias,
+        _code_as_stmtishs,
     )
 
     from .fst_raw import (

@@ -28767,99 +28767,6 @@ two  # fake comment start""", **b
             }''').body[0].value
         self.assertEqual((1, 19, 1, 21), a.f._dict_key_or_mock_loc(a.keys[1], a.values[1].f))
 
-    def test__normalize_code(self):
-        f = FST._normalize_code('i')
-        self.assertIsInstance(f.a, Module)
-        self.assertIsInstance(f.a.body[0], Expr)
-        self.assertIsInstance(f.a.body[0].value, Name)
-
-        f = FST._normalize_code('i', coerce='expr')
-        self.assertIsInstance(f.a, Name)
-
-        f = FST._normalize_code(['i'])
-        self.assertIsInstance(f.a, Module)
-        self.assertIsInstance(f.a.body[0], Expr)
-        self.assertIsInstance(f.a.body[0].value, Name)
-
-        f = FST._normalize_code(['i'], coerce='expr')
-        self.assertIsInstance(f.a, Name)
-
-        f = FST._normalize_code(ast_.parse('i'))
-        self.assertIsInstance(f.a, Module)
-        self.assertIsInstance(f.a.body[0], Expr)
-        self.assertIsInstance(f.a.body[0].value, Name)
-
-        f = FST._normalize_code(ast_.parse('i', mode='single'))
-        self.assertIsInstance(f.a, Module)
-        self.assertIsInstance(f.a.body[0], Expr)
-        self.assertIsInstance(f.a.body[0].value, Name)
-
-        f = FST._normalize_code(ast_.parse('i'), coerce='expr')
-        self.assertIsInstance(f.a, Name)
-
-        f = FST._normalize_code(ast_.parse('i', mode='eval'))
-        self.assertIsInstance(f.a, Name)
-
-        f = FST._normalize_code(ast_.parse('i', mode='eval'), coerce='expr')
-        self.assertIsInstance(f.a, Name)
-
-        f = FST._normalize_code(FST.fromsrc('i'))
-        self.assertIsInstance(f.a, Module)
-        self.assertIsInstance(f.a.body[0], Expr)
-        self.assertIsInstance(f.a.body[0].value, Name)
-
-        f = FST._normalize_code(FST.fromsrc('i', mode='single'))
-        self.assertIsInstance(f.a, Module)
-        self.assertIsInstance(f.a.body[0], Expr)
-        self.assertIsInstance(f.a.body[0].value, Name)
-
-        f = FST._normalize_code(FST.fromsrc('i', mode='eval'))
-        self.assertIsInstance(f.a, Name)
-
-        f = FST._normalize_code(FST.fromsrc('i'), coerce='expr')
-        self.assertIsInstance(f.a, Name)
-
-        f = FST._normalize_code(FST.fromsrc('i', mode='eval'), coerce='expr')
-        self.assertIsInstance(f.a, Name)
-
-        # mod
-
-        f = FST._normalize_code('i', coerce='mod')
-        self.assertIsInstance(f.a, Module)
-
-        f = FST._normalize_code(ast_.parse('i'), coerce='mod')
-        self.assertIsInstance(f.a, Module)
-        self.assertIsInstance(f.a.body[0], Expr)
-        self.assertIsInstance(f.a.body[0].value, Name)
-
-        f = FST._normalize_code(ast_.parse('i').body[0], coerce='mod')
-        self.assertIsInstance(f.a, Module)
-        self.assertIsInstance(f.a.body[0], Expr)
-        self.assertIsInstance(f.a.body[0].value, Name)
-
-        f = FST._normalize_code(ast_.parse('i', mode='eval'), coerce='mod')
-        self.assertIsInstance(f.a, Module)
-        self.assertIsInstance(f.a.body[0], Expr)
-        self.assertIsInstance(f.a.body[0].value, Name)
-
-        f = FST._normalize_code(ast_.parse('i', mode='eval').body, coerce='mod')
-        self.assertIsInstance(f.a, Module)
-        self.assertIsInstance(f.a.body[0], Expr)
-        self.assertIsInstance(f.a.body[0].value, Name)
-
-        f = FST._normalize_code(ast_.parse('i', mode='single'), coerce='mod')
-        self.assertIsInstance(f.a, Module)
-        self.assertIsInstance(f.a.body[0], Expr)
-        self.assertIsInstance(f.a.body[0].value, Name)
-
-        f = FST._normalize_code(parse('try: pass\nexcept: pass').body[0].handlers[0].f.copy(), coerce='mod')
-        self.assertIsInstance(f.a, Module)
-        self.assertIsInstance(f.a.body[0], ExceptHandler)
-
-        f = FST._normalize_code(parse('match a:\n  case 1: pass').body[0].cases[0].f.copy(), coerce='mod')
-        self.assertIsInstance(f.a, Module)
-        self.assertIsInstance(f.a.body[0], match_case)
-
     def test__next_prev_src(self):
         from fst.shared import _next_src, _prev_src
 
@@ -31881,7 +31788,7 @@ def func():
 
         self.assertEqual(['True:', '  i'], ast.f.root.get_src(1, 4, 2, 3, True))
 
-    def test_code_as(self):
+    def test_code_as_simple(self):
         # stmts
 
         f = FST(r'''
@@ -31898,6 +31805,9 @@ call(a)
         h = f._code_as_stmts(f.src)
         self.assertTrue(compare_asts(h.a, f.a, locs=True, raise_=True))
 
+        h = f._code_as_stmts(f.a)
+        self.assertTrue(compare_asts(h.a, f.a, locs=False, raise_=True))
+
         f0 = f.body[0].copy()
         h = f._code_as_stmts(f0.a)
         self.assertEqual(ast_.unparse(f0.a), h.src)
@@ -31908,12 +31818,38 @@ call(a)
         self.assertEqual(ast_.unparse(f1.a), h.src)
         self.assertTrue(compare_asts(h.body[0].a, f1.a, locs=False, raise_=True))
 
+        g = FST('from a import b').body[0].names[0]
         self.assertRaises(ValueError, f._code_as_stmts, f.body[0].test)
-        self.assertRaises(NodeTypeError, f._code_as_stmts, f.body[0].test.copy())
-        self.assertRaises(NodeTypeError, f._code_as_stmts, f.body[0].test.a)
+        self.assertRaises(NodeTypeError, f._code_as_stmts, g.copy())
+        self.assertRaises(NodeTypeError, f._code_as_stmts, g.a)
         self.assertRaises(SyntaxError, f._code_as_stmts, 'except Exception: pass')
 
+        f = FST('f(a)')
+        h = f._code_as_stmts(f.body[0].value.copy())
+        self.assertEqual(h.src, f.src)
+        self.assertTrue(compare_asts(h.a, f.a, locs=True, raise_=True))
+
+        h = f._code_as_stmts(f.src)
+        self.assertEqual(h.src, f.src)
+        self.assertTrue(compare_asts(h.a, f.a, locs=True, raise_=True))
+
+        h = f._code_as_stmts(f.a)
+        self.assertEqual(h.src, f.src)
+        self.assertTrue(compare_asts(h.a, f.a, locs=True, raise_=True))
+
         # expr
+
+        f = FST('a if b else {"c": f()}', mode='eval')
+
+        h = f._code_as_expr(f.copy())
+        self.assertEqual(h.src, f.src)
+        self.assertTrue(compare_asts(h.a, f.body.a, locs=True, raise_=True))
+
+        f = FST('a if b else {"c": f()}', mode='single')
+
+        h = f._code_as_expr(f.copy())
+        self.assertEqual(h.src, f.src)
+        self.assertTrue(compare_asts(h.a, f.body[0].value.a, locs=True, raise_=True))
 
         f = FST('a if b else {"c": f()}')
 
@@ -32132,6 +32068,136 @@ match a:
         self.assertEqual('*', FST._code_as_identifier_alias(f.copy()))
         self.assertEqual('*', FST._code_as_identifier_alias(f.a))
         self.assertEqual('*', FST._code_as_identifier_alias(f.src))
+
+    def test_code_as_stmtishs(self):
+        f = FST(r'''
+if 1:
+    pass
+
+call(a)
+'''.strip())
+
+        h = f._code_as_stmtishs(f.copy())
+        self.assertEqual(h.src, f.src)
+        self.assertTrue(compare_asts(h.a, f.a, locs=True, raise_=True))
+
+        h = f._code_as_stmtishs(f.src)
+        self.assertTrue(compare_asts(h.a, f.a, locs=True, raise_=True))
+
+        h = f._code_as_stmtishs(f.a)
+        self.assertTrue(compare_asts(h.a, f.a, locs=False, raise_=True))
+
+        f0 = f.body[0].copy()
+        h = f._code_as_stmtishs(f0.a)
+        self.assertEqual(ast_.unparse(f0.a), h.src)
+        self.assertTrue(compare_asts(h.body[0].a, f0.a, locs=False, raise_=True))
+
+        f1 = f.body[1].copy()
+        h = f._code_as_stmtishs(f1.a)
+        self.assertEqual(ast_.unparse(f1.a), h.src)
+        self.assertTrue(compare_asts(h.body[0].a, f1.a, locs=False, raise_=True))
+
+        g = FST('from a import b').body[0].names[0]
+        self.assertRaises(ValueError, f._code_as_stmtishs, f.body[0].test)
+        self.assertRaises(NodeTypeError, f._code_as_stmtishs, g.copy())
+        self.assertRaises(NodeTypeError, f._code_as_stmtishs, g.a)
+
+        f = FST('f(a)')
+        h = f._code_as_stmtishs(f.body[0].value.copy())
+        self.assertEqual(h.src, f.src)
+        self.assertTrue(compare_asts(h.a, f.a, locs=True, raise_=True))
+
+        h = f._code_as_stmtishs(f.src)
+        self.assertEqual(h.src, f.src)
+        self.assertTrue(compare_asts(h.a, f.a, locs=True, raise_=True))
+
+        h = f._code_as_stmtishs(f.a)
+        self.assertEqual(h.src, f.src)
+        self.assertTrue(compare_asts(h.a, f.a, locs=True, raise_=True))
+
+        f = FST(r'''
+try: pass
+except (ValueError, RuntimeError) as exc:
+    def f():
+        """doc
+  string"""
+
+        pass
+
+    i = f"""a
+  {test}
+        b"""
+
+except Exception:
+    ("a"
+"b")
+    k = \
+("c"
+    "d")
+'''.strip())
+
+        g = f.body[0].get_slice(field='handlers')
+
+        h = f._code_as_stmtishs(g.copy())
+        self.assertEqual(h.src, g.src)
+        self.assertTrue(compare_asts(h.a, g.a, locs=True, raise_=True))
+
+        h = f._code_as_stmtishs(g.src)
+        self.assertTrue(compare_asts(h.a, g.a, locs=True, raise_=True))
+
+        g0 = g.body[0].copy()
+        h = f._code_as_stmtishs(g0.a)
+        self.assertEqual(ast_.unparse(g0.a), h.src)
+        self.assertTrue(compare_asts(h.body[0].a, g0.a, locs=False, raise_=True))
+
+        g1 = g.body[1].copy()
+        h = f._code_as_stmtishs(g1.a)
+        self.assertEqual(ast_.unparse(g1.a), h.src)
+        self.assertTrue(compare_asts(h.body[0].a, g1.a, locs=False, raise_=True))
+
+        self.assertRaises(ValueError, f._code_as_stmtishs, f.body[0].handlers[0])
+
+        f = FST(r'''
+match a:
+    case 1:
+        def f():
+            """doc
+  string"""
+
+            pass
+
+        i = f"""a
+  {test}
+        b"""
+
+    case 2:
+        ("a"
+"b")
+        k = \
+("c"
+    "d")
+'''.strip())
+
+        g = f.body[0].get_slice(field='cases')
+
+        h = f._code_as_stmtishs(g.copy())
+        self.assertEqual(h.src, g.src)
+        self.assertTrue(compare_asts(h.a, g.a, locs=True, raise_=True))
+
+        h = f._code_as_stmtishs(g.src)
+        self.assertTrue(compare_asts(h.a, g.a, locs=True, raise_=True))
+
+        g0 = g.body[0].copy()
+        h = f._code_as_stmtishs(g0.a)
+        self.assertEqual(ast_.unparse(g0.a), h.src)
+        self.assertTrue(compare_asts(h.body[0].a, g0.a, locs=False, raise_=True))
+
+        g1 = g.body[1].copy()
+        h = f._code_as_stmtishs(g1.a)
+        self.assertEqual(ast_.unparse(g1.a), h.src)
+        self.assertTrue(compare_asts(h.body[0].a, g1.a, locs=False, raise_=True))
+
+        self.assertRaises(ValueError, f._code_as_stmtishs, f.body[0].cases[0])
 
     def test_put_src(self):
         f = FST(Load(), [''])

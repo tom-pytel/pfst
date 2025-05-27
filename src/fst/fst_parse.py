@@ -1,33 +1,19 @@
 """Misc lower level FST methods."""
 
+import re
 from ast import *
 from ast import parse as ast_parse, unparse as ast_unparse
 from typing import Callable
 
 from .astutil import *
-from .astutil import type_param, TypeVar, ParamSpec, TypeVarTuple
+from .astutil import type_param
 
 from .shared import (
-    Code, NodeTypeError, _shortstr
+    Code, NodeTypeError, _next_src, _shortstr
 )
 
-_code_as_op_str2op = {
-    AugAssign: OPSTR2CLS_AUG,
-    BoolOp:    OPSTR2CLS_BOOL,
-    BinOp:     OPSTR2CLS_BIN,
-    UnaryOp:   OPSTR2CLS_UNARY,
-    Compare:   OPSTR2CLS_CMP,
-    None:      OPSTR2CLSWAUG,
-}
-
-_code_as_op_ops = {
-    AugAssign: frozenset(OPSTR2CLS_AUG.values()),
-    BoolOp:    frozenset(OPSTR2CLS_BOOL.values()),
-    BinOp:     frozenset(OPSTR2CLS_BIN.values()),
-    UnaryOp:   frozenset(OPSTR2CLS_UNARY.values()),
-    Compare:   frozenset(OPSTR2CLS_CMP.values()),
-    None:      frozenset(OPSTR2CLS.values()),
-}
+_re_except = re.compile(r'\bexcept\b')
+_re_case   = re.compile(r'\bcase\b')
 
 
 def _offset_linenos(ast: AST, delta: int) -> AST:
@@ -262,6 +248,15 @@ def _code_as_stmts(code: Code, parse_params: dict = {}) -> 'FST':
 
         codea = code.a
 
+        if isinstance(codea, Expression):  # coerce Expression to expr
+            code._unmake_fst_parents()
+
+            codea = codea.body
+
+        if isinstance(codea, expr):  # coerce expr to Expr stmt
+            codea = Expr(value=codea, lineno=codea.lineno, col_offset=codea.col_offset,
+                         end_lineno=codea.end_lineno, end_col_offset=codea.end_col_offset)
+
         if isinstance(codea, stmt):
             return FST(Module(body=[codea], type_ignores=[]), code._lines, from_=code, lcopy=False)
 
@@ -280,7 +275,7 @@ def _code_as_stmts(code: Code, parse_params: dict = {}) -> 'FST':
         raise NodeTypeError(f'expecting zero or more stmts, got {codea.__class__.__name__}')
 
     if isinstance(code, AST):
-        if not isinstance(code, stmt):
+        if not isinstance(code, (stmt, expr, Module, Interactive, Expression)):  # all these can be coerced into stmts
             raise NodeTypeError(f'expecting zero or more stmts, got {code.__class__.__name__}')
 
         code  = ast_unparse(code)
@@ -596,6 +591,72 @@ def _code_as_identifier_alias(code: Code, parse_params: dict = {}) -> str:
 
     return code
 
+
+@staticmethod
+def _code_as_stmtishs(code: Code, parse_params: dict = {}) -> 'FST':
+    """Convert `code` to zero or more `stmtish`s and return in the `body` of a `Module` `FST` if possible. If source
+    is passed then will check for presence of `except` or `case` at start to determine if are `ExceptHandler`s or
+    `match_case`s or `stmt`s."""
+
+    if is_fst := isinstance(code, FST):
+        ast = code.a
+    elif isinstance(code, AST):
+        ast = code
+
+    else:
+        if isinstance(code, list):
+            code = '\n'.join(lines := code)
+        else:  # str
+            lines = code.split('\n')
+
+        if firstsrc := _next_src(lines, 0, 0, len(lines) - 1, len(lines[-1])):
+            if _re_except.match(firstsrc.src):
+                return _code_as_ExceptHandlers(code, parse_params)
+            if _re_case.match(firstsrc.src):
+                return _code_as_match_cases(code, parse_params)
+
+        return _code_as_stmts(code, parse_params)
+
+    if isinstance(ast, (stmt, expr, Expression)):
+        return _code_as_stmts(code, parse_params)
+    if isinstance(ast, ExceptHandler):
+        return _code_as_ExceptHandlers(code, parse_params)
+    if isinstance(ast, match_case):
+        return _code_as_match_cases(code, parse_params)
+
+    if not (is_mod := isinstance(ast, Module)) and not isinstance(ast, Interactive):
+        raise NodeTypeError(f'expecting zero or more stmts, ExceptHandlers or match_cases, got '
+                            f'{ast.__class__.__name__}')
+
+    if body := ast.body:
+        if isinstance(b0 := body[0], stmt):
+            code_type = stmt
+        elif isinstance(b0, ExceptHandler):
+            code_type = ExceptHandler
+        elif isinstance(b0, match_case):
+            code_type = match_case
+        else:
+            code_type = None
+
+        if not code_type or not all(isinstance(a, code_type) for a in body):
+            raise NodeTypeError(f'expecting zero or more stmts, ExceptHandlers or match_cases, got '
+                                f'[{_shortstr(", ".join(a.__class__.__name__ for a in body))}]')
+
+    if is_fst:
+        if is_mod:
+            return code
+
+        return FST(Module(body=body, type_ignores=[]), code._lines, from_=code, lcopy=False)
+
+    if not body:
+        return FST(Module(body=[], type_ignores=[]), [bistr('')], parse_params=parse_params, lcopy=False)
+
+    if code_type is stmt:
+        return _code_as_stmts(code, parse_params)
+    if code_type is ExceptHandler:
+        return _code_as_ExceptHandlers(code, parse_params)
+
+    return _code_as_match_cases(code, parse_params)
 
 # ----------------------------------------------------------------------------------------------------------------------
 __all_private__ = [n for n in globals() if n not in _GLOBALS]

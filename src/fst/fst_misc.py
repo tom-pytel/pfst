@@ -36,62 +36,6 @@ _GLOBALS = globals() | {'_GLOBALS': None}
 # ----------------------------------------------------------------------------------------------------------------------
 
 @staticmethod
-def _normalize_code(code: Code, coerce: Literal['expr', 'exprish', 'mod'] | None = None, *, parse_params: dict = {},
-                    ) -> 'FST':
-    """Normalize code to an `FST` and coerce to a desired format if possible.
-
-    If neither of these is requested then will convert to `ast.Module` if is `ast.Interactive` or return single
-    expression node of `ast.Expression` or just return whatever the node currently is.
-
-    **Parameters:**
-    - `coerce`: What kind of coercion to apply (if any):
-        - `'expr'`: Will return an `FST` with a top level `expr` `AST` node if possible, raise otherwise.
-        - `'exprish'`: Same as `'expr'` but also some other expression-like nodes (for raw).
-        - `'mod'`: Will return an `FST` with a top level `Module` `AST` node of the single statement or a wrapped
-            expression in an `Expr` node. `ExceptHandler` and `match_case` nodes are considered statements here.
-        - `None`: Will pull expression out of `Expression` and convert `Interactive` to `Module`, otherwise will return
-            node as is, or as is parsed to `Module`.
-
-    **Returns:**
-    - `FST`: Compiled or coerced or just fixed up.
-    """
-
-    if isinstance(code, FST):
-        if not code.is_root:
-            raise ValueError('expecting root FST')
-
-        ast  = code.a
-        rast = _coerce_ast(ast, coerce)
-
-        if rast is ast:
-            return code
-
-        if f := getattr(rast, 'f', None):
-            f._unmake_fst_parents()
-
-        return FST(rast, code._lines, from_=code, lcopy=False)
-
-    if isinstance(code, AST):
-        return FST.fromast(_coerce_ast(code, coerce))  # TODO: WARNING! will not handle pure AST ExceptHandler or match_case
-
-    if isinstance(code, str):
-        src   = code
-        lines = code.split('\n')
-
-    else:  # isinstance(code, list):
-        src   = '\n'.join(code)
-        lines = code
-
-    ast = ast_parse(src, **parse_params)
-
-    if (is_expr := coerce == 'expr') or coerce == 'exprish':
-        if not (ast := reduce_ast(ast, False)) or (is_expr and not isinstance(ast, expr)):
-            raise NodeTypeError(f'expecting single {"expression" if is_expr else "expressionish"}')
-
-    return FST(ast, lines)
-
-
-@staticmethod
 def _new_empty_module(*, from_: Optional['FST'] = None) -> 'FST':
     return FST(Module(body=[], type_ignores=[]), [''], from_=from_)
 
