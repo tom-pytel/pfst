@@ -35601,6 +35601,13 @@ class cls:
         f.body[0].put(g, 'value', pars=False)
         self.assertEqual('a = c', f.src)
 
+        # don't parenthesize put of starred to tuple
+
+        f = FST('a, *b = c')
+        g = f.body[0].targets[0].elts[1].copy()
+        f.body[0].targets[0].put(g.a, 1, raw=False)
+        self.assertEqual('a, *b = c', f.src)
+
     def test_put_one_pars(self):
         f = FST('a = b').body[0]
         g = FST('(i := j)').body[0].value.copy(pars=False)
