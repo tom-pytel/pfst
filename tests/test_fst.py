@@ -35608,6 +35608,19 @@ class cls:
         f.body[0].targets[0].put(g.a, 1, raw=False)
         self.assertEqual('a, *b = c', f.src)
 
+        # except vs. except*
+
+        if sys.version_info[:2] >= (3, 11):
+            f = FST('try:\n    pass\nexcept Exception:\n    pass').body[0].handlers[0].copy()
+
+            g = FST('try:\n    pass\nexcept* ValueError:\n    pass')
+            g.body[0].put(f.copy().a, 0, field='handlers')
+            self.assertEqual('try:\n    pass\nexcept* Exception:\n    pass\n', g.src)
+
+            g = FST('try:\n    pass\nexcept ValueError:\n    pass')
+            g.body[0].put(f.a, 0, field='handlers')
+            self.assertEqual('try:\n    pass\nexcept Exception:\n    pass\n', g.src)
+
     def test_put_one_pars(self):
         f = FST('a = b').body[0]
         g = FST('(i := j)').body[0].value.copy(pars=False)

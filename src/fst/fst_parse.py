@@ -6,7 +6,7 @@ from ast import parse as ast_parse, unparse as ast_unparse
 from typing import Callable
 
 from .astutil import *
-from .astutil import type_param
+from .astutil import TryStar, type_param
 
 from .shared import (
     Code, NodeTypeError, _next_src, _shortstr
@@ -401,8 +401,12 @@ def _code_as_comprehension(code: Code, parse_params: dict = {}) -> 'FST':
 
 
 @staticmethod
-def _code_as_ExceptHandlers(code: Code, parse_params: dict = {}) -> 'FST':
-    """Convert `code` to zero or more `ExceptHandler`s and return in the `body` of a `Module` `FST` if possible."""
+def _code_as_ExceptHandlers(code: Code, parse_params: dict = {}, *, is_trystar: bool = False) -> 'FST':
+    """Convert `code` to zero or more `ExceptHandler`s and return in the `body` of a `Module` `FST` if possible.
+
+    **Parameters:**
+    - `is_trystar`: Hint used when unparsing an `AST` `code` to get the correct `except` or `except*` source.
+    """
 
     if isinstance(code, FST):
         if not code.is_root:
@@ -426,7 +430,12 @@ def _code_as_ExceptHandlers(code: Code, parse_params: dict = {}) -> 'FST':
         if not isinstance(code, ExceptHandler):
             raise NodeTypeError(f'expecting zero or more ExceptHandlers, got {code.__class__.__name__}')
 
-        code  = ast_unparse(code)
+        if is_trystar:
+            code = unparse(TryStar(body=[Pass()], handlers=[code], orelse=[], finalbody=[]))
+            code = code[code.index('except'):]
+        else:
+            code = ast_unparse(code)
+
         lines = code.split('\n')
 
     elif isinstance(code, list):
@@ -622,7 +631,7 @@ def _code_as_identifier_alias(code: Code, parse_params: dict = {}) -> str:
 
 
 @staticmethod
-def _code_as_stmtishs(code: Code, parse_params: dict = {}) -> 'FST':
+def _code_as_stmtishs(code: Code, parse_params: dict = {}, *, is_trystar: bool = False) -> 'FST':
     """Convert `code` to zero or more `stmtish`s and return in the `body` of a `Module` `FST` if possible. If source
     is passed then will check for presence of `except` or `case` at start to determine if are `ExceptHandler`s or
     `match_case`s or `stmt`s."""
@@ -649,7 +658,7 @@ def _code_as_stmtishs(code: Code, parse_params: dict = {}) -> 'FST':
     if isinstance(ast, (stmt, expr, Expression)):
         return _code_as_stmts(code, parse_params)
     if isinstance(ast, ExceptHandler):
-        return _code_as_ExceptHandlers(code, parse_params)
+        return _code_as_ExceptHandlers(code, parse_params, is_trystar=is_trystar)
     if isinstance(ast, match_case):
         return _code_as_match_cases(code, parse_params)
 
@@ -683,7 +692,7 @@ def _code_as_stmtishs(code: Code, parse_params: dict = {}) -> 'FST':
     if code_type is stmt:
         return _code_as_stmts(code, parse_params)
     if code_type is ExceptHandler:
-        return _code_as_ExceptHandlers(code, parse_params)
+        return _code_as_ExceptHandlers(code, parse_params, is_trystar=is_trystar)
 
     return _code_as_match_cases(code, parse_params)
 

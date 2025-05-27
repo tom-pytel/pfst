@@ -517,7 +517,7 @@ def _put_slice_stmtish(self: 'FST', code: Code | None, start: int | Literal['end
         put_fst = None
 
     else:
-        put_fst  = self._code_as_stmtishs(code, self.root.parse_params)
+        put_fst  = self._code_as_stmtishs(code, self.root.parse_params, is_trystar=isinstance(ast, TryStar))
         put_ast  = put_fst.a
         put_body = put_ast.body
 
