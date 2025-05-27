@@ -208,7 +208,7 @@ class FST:
 
     @property
     def whole_loc(self) -> fstloc:
-        """Whole source location, from 0,0 to end of entire source, regardless of node being checked."""
+        """Whole source location, from 0,0 to end of source. Works from any node (not just root)."""
 
         return fstloc(0, 0, len(ls := self._lines) - 1, len(ls[-1]))
 
@@ -2107,6 +2107,7 @@ class FST:
         _loc_MatchClass_pars,
         _dict_key_or_mock_loc,
         _touch,
+        _sanitize,
         _set_end_pos,
         _set_block_end_from_last_child,
         _maybe_add_comma,

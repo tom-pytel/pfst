@@ -47,15 +47,13 @@ def _code_as_op(code: Code, ast_type: type[AST], parse_params: dict, opstr2cls: 
 
         return FST(code, [opcls2str[code.__class__]], parse_params=parse_params)
 
-    elif isinstance(code, list):
-        code = '\n'.join(lines := code)
-    else:  # str
-        lines = code.split('\n')
+    if isinstance(code, list):
+        code = '\n'.join(code)
 
     if not (cls := opstr2cls.get(code := code.strip())):
         raise NodeTypeError(f'expecting {ast_type.__name__}, got {_shortstr(code)!r}')
 
-    return FST(cls(), lines, parse_params=parse_params)
+    return FST(cls(), code.split('\n'), parse_params=parse_params)
 
 
 def _code_as(code: Code, ast_type: type[AST], parse_params: dict, parse: Callable[['FST', Code], 'FST'], *,
@@ -67,7 +65,7 @@ def _code_as(code: Code, ast_type: type[AST], parse_params: dict, parse: Callabl
         if not isinstance(code.a, ast_type):
             raise NodeTypeError(f'expecting {ast_type.__name__}, got {code.a.__class__.__name__}')
 
-        return code
+        return code._sanitize()
 
     if isinstance(code, AST):
         if not isinstance(code, ast_type):
@@ -81,7 +79,7 @@ def _code_as(code: Code, ast_type: type[AST], parse_params: dict, parse: Callabl
     else:  # str
         lines = code.split('\n')
 
-    return FST(parse(code, parse_params), lines, parse_params=parse_params)
+    return FST(parse(code, parse_params), lines, parse_params=parse_params)._sanitize()
 
 
 _GLOBALS = globals() | {'_GLOBALS': None}
@@ -301,11 +299,11 @@ def _code_as_expr(code: Code, parse_params: dict = {}) -> 'FST':
             raise NodeTypeError(f'expecting expression, got {ast.__class__.__name__}')
 
         if ast is codea:
-            return code
+            return code._sanitize()
 
         ast.f._unmake_fst_parents()
 
-        return FST(ast, code._lines, from_=code, lcopy=False)
+        return FST(ast, code._lines, from_=code, lcopy=False)._sanitize()
 
     if isinstance(code, AST):
         if not isinstance(code, expr):
@@ -319,7 +317,7 @@ def _code_as_expr(code: Code, parse_params: dict = {}) -> 'FST':
     else:  # str
         lines = code.split('\n')
 
-    return FST(_parse_expr(code, parse_params), lines, parse_params=parse_params)
+    return FST(_parse_expr(code, parse_params), lines, parse_params=parse_params)._sanitize()
 
 
 @staticmethod

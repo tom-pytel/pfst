@@ -31990,14 +31990,14 @@ match a:
             (FST._code_as_slice, 'body[0].value.slice', 'a[b:c:d, e:f]'),
             (FST._code_as_operator, 'body[0].value.op', 'a + b'),
             (FST._code_as_operator_aug, 'body[0].op', 'a += b'),
-            (FST._code_as_unaryop, 'body[0].value.op', '-a'),
+            (FST._code_as_unaryop, 'body[0].value.op', '~a'),
             (FST._code_as_cmpop, 'body[0].value.ops[0]', 'a < b'),
             (FST._code_as_comprehension, 'body[0].value.generators[0]', '[i for i in j if i < 0]'),
             (FST._code_as_arguments, 'body[0].args', 'def f(a: str, /, b: int = 1, *c: tuple[bool], d: float = 2.0, **e: dict): pass'),
             (FST._code_as_arguments_lambda, 'body[0].value.args', 'lambda a, /, b=1, *c, d=2, **e: None'),
             (FST._code_as_arg, 'body[0].args.args[0]', 'def f(a: str = "test"): pass'),
             (FST._code_as_keyword, 'body[0].keywords[0]', 'class cls(meta=something): pass'),
-            (FST._code_as_keyword, 'body[0].value.keywords[0]', 'call(key=word)'),
+            (FST._code_as_keyword, 'body[0].value.keywords[0]', 'call(key = word)'),
             (FST._code_as_alias_maybe_star, 'body[0].names[0]', 'from a import b'),
             (FST._code_as_alias_maybe_star, 'body[0].names[0]', 'from a import *'),
             (FST._code_as_alias_dotted, 'body[0].names[0]', 'import a'),
@@ -32198,6 +32198,54 @@ match a:
         self.assertTrue(compare_asts(h.body[0].a, g1.a, locs=False, raise_=True))
 
         self.assertRaises(ValueError, f._code_as_stmtishs, f.body[0].cases[0])
+
+    def test_code_as_sanitize(self):
+        CODE_ASES = [
+            (FST._code_as_expr, 'f(a)'),
+            (FST._code_as_slice, 'b:c:d'),
+            (FST._code_as_slice, 'b:c:d, e:f'),
+            (FST._code_as_operator, '+'),
+            (FST._code_as_operator_aug, '+='),
+            (FST._code_as_unaryop, '~'),
+            (FST._code_as_cmpop, '<'),
+            (FST._code_as_comprehension, 'for i in j if i < 0'),
+            (FST._code_as_arguments, 'a: str, /, b: int = 1, *c: tuple[bool], d: float = 2.0, **e: dict'),
+            (FST._code_as_arguments_lambda, 'a, /, b=1, *c, d=2, **e'),
+            (FST._code_as_arg, 'a: str'),
+            (FST._code_as_keyword, 'meta=something'),
+            (FST._code_as_keyword, 'key = word'),
+            (FST._code_as_alias_maybe_star, 'b'),
+            (FST._code_as_alias_maybe_star, '*'),
+            (FST._code_as_alias_dotted, 'a'),
+            (FST._code_as_alias_dotted, 'a.b'),
+            (FST._code_as_withitem, 'a'),
+            (FST._code_as_withitem, 'a as b'),
+            (FST._code_as_pattern, '42'),
+            (FST._code_as_pattern, 'None'),
+            (FST._code_as_pattern, '[_, *_]'),
+            (FST._code_as_pattern, '{"key": _}'),
+            (FST._code_as_pattern, 'SomeClass(attr=val)'),
+            (FST._code_as_pattern, 'as_var'),
+            (FST._code_as_pattern, '1 | 2 | 3'),
+            (FST._code_as_pattern, '_'),
+        ]
+
+        if sys.version_info[:2] >= (3, 12):
+            CODE_ASES.extend([
+                (FST._code_as_type_param, 'T: int'),
+            ])
+
+        for code_as, src in CODE_ASES:
+            self.assertEqual(src, code_as(src).src)
+            self.assertEqual(src, code_as(f'{src}  ').src)
+
+            if code_as in (FST._code_as_expr, FST._code_as_pattern):  # parenthesizable things so lets abuse
+                srcp = f'(\n# pre\n{src} # post\n# post2\n)'
+
+                self.assertEqual(srcp, code_as(srcp).src)
+
+                if code_as is FST._code_as_expr:
+                    self.assertEqual(src, code_as(srcp[1:-1]).src)
 
     def test_put_src(self):
         f = FST(Load(), [''])
@@ -35543,6 +35591,15 @@ class cls:
         f.body[0].value.generators[0].put('a', 1, field='ifs')
         self.assertEqual('[a for a in b if a if a]', f.src)
         f.verify()
+
+        # check that it sanitizes
+
+        f = FST('a = b')
+        g = FST('c').body[0].value.copy()
+        g.put_src(' # line\n# post', 0, 1, 0, 1, False)
+        g.put_src('# pre\n', 0, 0, 0, 0, False)
+        f.body[0].put(g, 'value', pars=False)
+        self.assertEqual('a = c', f.src)
 
     def test_put_one_pars(self):
         f = FST('a = b').body[0]

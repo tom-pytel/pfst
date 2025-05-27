@@ -639,6 +639,30 @@ def _touch(self: 'FST') -> 'FST':  # -> Self
     return self
 
 
+def _sanitize(self: 'FST') -> 'FST':  # -> Self
+    """Quick check to make sure that nodes which are not `stmt`, `ExceptHandler`, `match_case` or `mod` don't have any
+    extra junk in the source and that the parenthesized location matches the whole location of the source. If not then
+    fix."""
+
+    if not self.is_root:
+        raise ValueError('can only be called on root node')
+
+    if not (loc := self.pars()) or loc == self.whole_loc:
+        return self
+
+    ln, col, end_ln, end_col = loc
+    lines                    = self._lines
+
+    self.offset(ln, col, -ln, -lines[ln].c2b(col))
+
+    lines[end_ln] = bistr(lines[end_ln][:end_col])
+    lines[ln]     = bistr(lines[ln][col:])
+
+    del lines[end_ln + 1:], lines[:ln]
+
+    return self
+
+
 def _set_end_pos(self: 'FST', end_lineno: int, end_col_offset: int, self_: bool = True):  # because of trailing non-AST junk in last statements
     """Walk up parent chain (starting at `self`) setting `.end_lineno` and `.end_col_offset` to `end_lineno` and
     `end_col_offset` if self is last child of parent. Initial `self` is corrected always. Used for correcting
