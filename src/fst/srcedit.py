@@ -1039,4 +1039,4 @@ class SrcEdit:
 # ----------------------------------------------------------------------------------------------------------------------
 _src_edit = SrcEdit()
 
-from .fst import FST  # this imports a fake FST which is replaced in globals() on first use
+from .fst import FST  # this imports a fake FST which is replaced in globals() when fst.py finishes loading

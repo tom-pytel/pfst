@@ -732,4 +732,4 @@ def _put_slice_stmtish(self: 'FST', code: Code | None, start: int | Literal['end
 # ----------------------------------------------------------------------------------------------------------------------
 __all_private__ = [n for n in globals() if n not in _GLOBALS]
 
-from .fst import FST  # this imports a fake FST which is replaced in globals() on first use
+from .fst import FST  # this imports a fake FST which is replaced in globals() when fst.py finishes loading

@@ -1395,4 +1395,4 @@ _PUT_ONE_HANDLERS = {
 # ----------------------------------------------------------------------------------------------------------------------
 __all_private__ = ['_get_one', '_put_one']
 
-from .fst import FST  # this imports a fake FST which is replaced in globals() on first use
+from .fst import FST  # this imports a fake FST which is replaced in globals() when fst.py finishes loading

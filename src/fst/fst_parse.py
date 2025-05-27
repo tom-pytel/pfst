@@ -12,8 +12,8 @@ from .shared import (
     Code, NodeTypeError, _next_src, _shortstr
 )
 
-_re_except = re.compile(r'\bexcept\b')
-_re_case   = re.compile(r'\bcase\b')
+_re_except = re.compile(r'except\b')
+_re_case   = re.compile(r'case\b\s*(?:[\\\w({[\'"-]|\.\d)')
 
 
 def _offset_linenos(ast: AST, delta: int) -> AST:
@@ -249,12 +249,15 @@ def _parse_match_cases(src: str, parse_params: dict = {}) -> AST:
 def _parse_pattern(src: str, parse_params: dict = {}) -> AST:
     """Parse to an `ast.pattern` or raise `SyntaxError`, e.g. "{a.b: i, **rest}"."""
 
-    try:
-        ast = ast_parse(f'match _:\n case \\\n{src}: pass', **parse_params).body[0].cases[0].pattern
-    except SyntaxError:  # in case of MatchStar "*_"
-        ast = ast_parse(f'match _:\n case [\\\n{src}]: pass', **parse_params).body[0].cases[0].pattern.patterns[0]
+    # try:
+    #     ast = ast_parse(f'match _:\n case \\\n{src}: pass', **parse_params).body[0].cases[0].pattern
+    # except SyntaxError:  # in case of MatchStar "*_"
+    #     ast = ast_parse(f'match _:\n case [\\\n{src}]: pass', **parse_params).body[0].cases[0].pattern.patterns[0]
 
-    return _offset_linenos(ast, -2)
+    # return _offset_linenos(ast, -2)
+
+    return _offset_linenos(ast_parse(f'match _:\n case [\\\n{src}]: pass', **parse_params)
+                           .body[0].cases[0].pattern.patterns[0], -2)
 
 
 @staticmethod
@@ -667,8 +670,12 @@ def _code_as_stmtishs(code: Code, parse_params: dict = {}, *, is_trystar: bool =
         if firstsrc := _next_src(lines, 0, 0, len(lines) - 1, len(lines[-1])):
             if _re_except.match(firstsrc.src):
                 return _code_as_ExceptHandlers(code, parse_params)
-            if _re_case.match(firstsrc.src):
-                return _code_as_match_cases(code, parse_params)
+
+            if _re_case.match(lines[firstsrc.ln], firstsrc.col):  # need full line because firstsrc.src is cut off at first space
+                try:
+                    return _code_as_match_cases(code, parse_params)
+                except SyntaxError:  # 'case' is not a protected keyword, the regex checks most cases but not all possible so fall back to parse stmts
+                    pass
 
         return _code_as_stmts(code, parse_params)
 
@@ -713,7 +720,8 @@ def _code_as_stmtishs(code: Code, parse_params: dict = {}, *, is_trystar: bool =
 
     return _code_as_match_cases(code, parse_params)
 
+
 # ----------------------------------------------------------------------------------------------------------------------
 __all_private__ = [n for n in globals() if n not in _GLOBALS]
 
-from .fst import FST  # this imports a fake FST which is replaced in globals() on first use
+from .fst import FST  # this imports a fake FST which is replaced in globals() when fst.py finishes loading

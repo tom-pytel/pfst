@@ -146,4 +146,4 @@ class fstlist:
 # ----------------------------------------------------------------------------------------------------------------------
 __all__ = ['fstlist']
 
-from .fst import FST  # this imports a fake FST which is replaced in globals() on first use
+from .fst import FST  # this imports a fake FST which is replaced in globals() when fst.py finishes loading
