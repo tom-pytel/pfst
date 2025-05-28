@@ -56,7 +56,7 @@ def _get_one(self: 'FST', idx: int | None, field: str, cut: bool, **options) -> 
                                        **options)
 
     childf = childa.f
-    loc    = childf.pars(pars=options.get('pars') is True)
+    loc    = childf.pars(pars=self.get_option('pars', options) is True)
 
     if not loc:
         raise ValueError('cannot copy node which does not have a location')

@@ -95,7 +95,7 @@ class FST:
     _lines:       list[bistr]
 
     # class attributes
-    is_FST:       bool = True      ; """@private"""  # for quick checks vs. `fstloc`
+    is_FST:       bool = True      ; """@private"""  # for quick checks vs. `fstloc` or `fstlist`
 
     @property
     def lines(self) -> list[str] | None:

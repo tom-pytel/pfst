@@ -16,6 +16,8 @@ class fstlist:
     start: int
     stop:  int
 
+    is_FST = False  ; """@private"""  # for quick checks vs. `FST`
+
     def __init__(self, fst: 'FST', field: str, start: int, stop: int):
         self.fst   = fst
         self.field = field
