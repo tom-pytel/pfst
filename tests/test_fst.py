@@ -35813,6 +35813,231 @@ class cls:
         self.assertEqual('match a:\n case (2): pass', f.src)
         f.body[0].cases[0].pattern.put('(3)', pars=True)
 
+    def test_put_one_pars_needed_matrix(self):
+        # pars=True, needed for precedence, needed for parse, present in dst, present in src
+        f = FST('i * (# dst\nj # dst\n)').body[0].value
+        g = FST('(# src\nx\n+\ny # src\n)').body[0].value.copy(pars=True)
+        self.assertEqual('(# src\nx\n+\ny # src\n)', g.src)
+        f.put(g, field='right', pars=True)
+        self.assertEqual('i * (# src\nx\n+\ny # src\n)', f.root.src)
+
+        # pars=True, needed for precedence, needed for parse, present in dst, not present in src
+        f = FST('i * (# dst\nj # dst\n)').body[0].value
+        g = FST('(# src\nx\n+\ny # src\n)').body[0].value.copy(pars=False)
+        self.assertEqual('x\n+\ny', g.src)
+        f.put(g, field='right', pars=True)
+        self.assertEqual('i * (# dst\nx\n+\ny # dst\n)', f.root.src)
+
+        # pars=True, needed for precedence, needed for parse, not present in dst, present in src
+        f = FST('i * j').body[0].value
+        g = FST('(# src\nx\n+\ny # src\n)').body[0].value.copy(pars=True)
+        self.assertEqual('(# src\nx\n+\ny # src\n)', g.src)
+        f.put(g, field='right', pars=True)
+        self.assertEqual('i * (# src\nx\n+\ny # src\n)', f.root.src)
+
+        # pars=True, needed for precedence, needed for parse, not present in dst, not present in src
+        f = FST('i * j').body[0].value
+        g = FST('(# src\nx\n+\ny # src\n)').body[0].value.copy(pars=False)
+        self.assertEqual('x\n+\ny', g.src)
+        f.put(g, field='right', pars=True)
+        self.assertEqual('i * (x\n+\ny)', f.root.src)
+
+        # pars=True, needed for precedence, not needed for parse, present in dst, present in src
+        f = FST('i * (# dst\nj # dst\n)').body[0].value
+        g = FST('(# src\nx + y # src\n)').body[0].value.copy(pars=True)
+        self.assertEqual('(# src\nx + y # src\n)', g.src)
+        f.put(g, field='right', pars=True)
+        self.assertEqual('i * (# src\nx + y # src\n)', f.root.src)
+
+        # pars=True, needed for precedence, not needed for parse, present in dst, not present in src
+        f = FST('i * (# dst\nj # dst\n)').body[0].value
+        g = FST('(# src\nx + y # src\n)').body[0].value.copy(pars=False)
+        self.assertEqual('x + y', g.src)
+        f.put(g, field='right', pars=True)
+        self.assertEqual('i * (# dst\nx + y # dst\n)', f.root.src)
+
+        # pars=True, needed for precedence, not needed for parse, not present in dst, present in src
+        f = FST('i * j').body[0].value
+        g = FST('(# src\nx + y # src\n)').body[0].value.copy(pars=True)
+        self.assertEqual('(# src\nx + y # src\n)', g.src)
+        f.put(g, field='right', pars=True)
+        self.assertEqual('i * (# src\nx + y # src\n)', f.root.src)
+
+        # pars=True, needed for precedence, not needed for parse, not present in dst, not present in src
+        f = FST('i * j').body[0].value
+        g = FST('(# src\nx + y # src\n)').body[0].value.copy(pars=False)
+        self.assertEqual('x + y', g.src)
+        f.put(g, field='right', pars=True)
+        self.assertEqual('i * (x + y)', f.root.src)
+
+        # pars=True, not needed for precedence, needed for parse, present in dst, present in src
+        f = FST('i + (# dst\nj # dst\n)').body[0].value
+        g = FST('(# src\nx\n*\ny # src\n)').body[0].value.copy(pars=True)
+        self.assertEqual('(# src\nx\n*\ny # src\n)', g.src)
+        f.put(g, field='right', pars=True)
+        self.assertEqual('i + (# src\nx\n*\ny # src\n)', f.root.src)
+
+        # pars=True, not needed for precedence, needed for parse, present in dst, not present in src
+        f = FST('i + (# dst\nj # dst\n)').body[0].value
+        g = FST('(# src\nx\n*\ny # src\n)').body[0].value.copy(pars=False)
+        self.assertEqual('x\n*\ny', g.src)
+        f.put(g, field='right', pars=True)
+        self.assertEqual('i + (# dst\nx\n*\ny # dst\n)', f.root.src)
+
+        # pars=True, not needed for precedence, needed for parse, not present in dst, present in src
+        f = FST('i + j').body[0].value
+        g = FST('(# src\nx\n*\ny # src\n)').body[0].value.copy(pars=True)
+        self.assertEqual('(# src\nx\n*\ny # src\n)', g.src)
+        f.put(g, field='right', pars=True)
+        self.assertEqual('i + (# src\nx\n*\ny # src\n)', f.root.src)
+
+        # pars=True, not needed for precedence, needed for parse, not present in dst, not present in src
+        f = FST('i + j').body[0].value
+        g = FST('(# src\nx\n*\ny # src\n)').body[0].value.copy(pars=False)
+        self.assertEqual('x\n*\ny', g.src)
+        f.put(g, field='right', pars=True)
+        self.assertEqual('i + (x\n*\ny)', f.root.src)
+
+        # pars=True, not needed for precedence, not needed for parse, present in dst, present in src
+        f = FST('i + (# dst\nj # dst\n)').body[0].value
+        g = FST('(# src\nx * y # src\n)').body[0].value.copy(pars=True)
+        self.assertEqual('(# src\nx * y # src\n)', g.src)
+        f.put(g, field='right', pars=True)
+        self.assertEqual('i + (# src\nx * y # src\n)', f.root.src)
+
+        # pars=True, not needed for precedence, not needed for parse, present in dst, not present in src
+        f = FST('i + (# dst\nj # dst\n)').body[0].value
+        g = FST('(# src\nx * y # src\n)').body[0].value.copy(pars=False)
+        self.assertEqual('x * y', g.src)
+        f.put(g, field='right', pars=True)
+        self.assertEqual('i + x * y', f.root.src)
+
+        # pars=True, not needed for precedence, not needed for parse, not present in dst, present in src
+        f = FST('i + j').body[0].value
+        g = FST('(# src\nx * y # src\n)').body[0].value.copy(pars=True)
+        self.assertEqual('(# src\nx * y # src\n)', g.src)
+        f.put(g, field='right', pars=True)
+        self.assertEqual('i + (# src\nx * y # src\n)', f.root.src)
+
+        # pars=True, not needed for precedence, not needed for parse, not present in dst, not present in src
+        f = FST('i + j').body[0].value
+        g = FST('(# src\nx * y # src\n)').body[0].value.copy(pars=False)
+        self.assertEqual('x * y', g.src)
+        f.put(g, field='right', pars=True)
+        self.assertEqual('i + x * y', f.root.src)
+
+        # pars='auto', needed for precedence, needed for parse, present in dst, present in src
+        f = FST('i * (# dst\nj # dst\n)').body[0].value
+        g = FST('(# src\nx\n+\ny # src\n)').body[0].value.copy(pars=True)
+        self.assertEqual('(# src\nx\n+\ny # src\n)', g.src)
+        f.put(g, field='right', pars='auto')
+        self.assertEqual('i * (# src\nx\n+\ny # src\n)', f.root.src)
+
+        # pars='auto', needed for precedence, needed for parse, present in dst, not present in src
+        f = FST('i * (# dst\nj # dst\n)').body[0].value
+        g = FST('(# src\nx\n+\ny # src\n)').body[0].value.copy(pars=False)
+        self.assertEqual('x\n+\ny', g.src)
+        f.put(g, field='right', pars='auto')
+        self.assertEqual('i * (# dst\nx\n+\ny # dst\n)', f.root.src)
+
+        # pars='auto', needed for precedence, needed for parse, not present in dst, present in src
+        f = FST('i * j').body[0].value
+        g = FST('(# src\nx\n+\ny # src\n)').body[0].value.copy(pars=True)
+        self.assertEqual('(# src\nx\n+\ny # src\n)', g.src)
+        f.put(g, field='right', pars='auto')
+        self.assertEqual('i * (# src\nx\n+\ny # src\n)', f.root.src)
+
+        # pars='auto', needed for precedence, needed for parse, not present in dst, not present in src
+        f = FST('i * j').body[0].value
+        g = FST('(# src\nx\n+\ny # src\n)').body[0].value.copy(pars=False)
+        self.assertEqual('x\n+\ny', g.src)
+        f.put(g, field='right', pars='auto')
+        self.assertEqual('i * (x\n+\ny)', f.root.src)
+
+        # pars='auto', needed for precedence, not needed for parse, present in dst, present in src
+        f = FST('i * (# dst\nj # dst\n)').body[0].value
+        g = FST('(# src\nx + y # src\n)').body[0].value.copy(pars=True)
+        self.assertEqual('(# src\nx + y # src\n)', g.src)
+        f.put(g, field='right', pars='auto')
+        self.assertEqual('i * (# src\nx + y # src\n)', f.root.src)
+
+        # pars='auto', needed for precedence, not needed for parse, present in dst, not present in src
+        f = FST('i * (# dst\nj # dst\n)').body[0].value
+        g = FST('(# src\nx + y # src\n)').body[0].value.copy(pars=False)
+        self.assertEqual('x + y', g.src)
+        f.put(g, field='right', pars='auto')
+        self.assertEqual('i * (# dst\nx + y # dst\n)', f.root.src)
+
+        # pars='auto', needed for precedence, not needed for parse, not present in dst, present in src
+        f = FST('i * j').body[0].value
+        g = FST('(# src\nx + y # src\n)').body[0].value.copy(pars=True)
+        self.assertEqual('(# src\nx + y # src\n)', g.src)
+        f.put(g, field='right', pars='auto')
+        self.assertEqual('i * (# src\nx + y # src\n)', f.root.src)
+
+        # pars='auto', needed for precedence, not needed for parse, not present in dst, not present in src
+        f = FST('i * j').body[0].value
+        g = FST('(# src\nx + y # src\n)').body[0].value.copy(pars=False)
+        self.assertEqual('x + y', g.src)
+        f.put(g, field='right', pars='auto')
+        self.assertEqual('i * (x + y)', f.root.src)
+
+        # pars='auto', not needed for precedence, needed for parse, present in dst, present in src
+        f = FST('i + (# dst\nj # dst\n)').body[0].value
+        g = FST('(# src\nx\n*\ny # src\n)').body[0].value.copy(pars=True)
+        self.assertEqual('(# src\nx\n*\ny # src\n)', g.src)
+        f.put(g, field='right', pars='auto')
+        self.assertEqual('i + (# src\nx\n*\ny # src\n)', f.root.src)
+
+        # pars='auto', not needed for precedence, needed for parse, present in dst, not present in src
+        f = FST('i + (# dst\nj # dst\n)').body[0].value
+        g = FST('(# src\nx\n*\ny # src\n)').body[0].value.copy(pars=False)
+        self.assertEqual('x\n*\ny', g.src)
+        f.put(g, field='right', pars='auto')
+        self.assertEqual('i + (# dst\nx\n*\ny # dst\n)', f.root.src)
+
+        # pars='auto', not needed for precedence, needed for parse, not present in dst, present in src
+        f = FST('i + j').body[0].value
+        g = FST('(# src\nx\n*\ny # src\n)').body[0].value.copy(pars=True)
+        self.assertEqual('(# src\nx\n*\ny # src\n)', g.src)
+        f.put(g, field='right', pars='auto')
+        self.assertEqual('i + (# src\nx\n*\ny # src\n)', f.root.src)
+
+        # pars='auto', not needed for precedence, needed for parse, not present in dst, not present in src
+        f = FST('i + j').body[0].value
+        g = FST('(# src\nx\n*\ny # src\n)').body[0].value.copy(pars=False)
+        self.assertEqual('x\n*\ny', g.src)
+        f.put(g, field='right', pars='auto')
+        self.assertEqual('i + (x\n*\ny)', f.root.src)
+
+        # pars='auto', not needed for precedence, not needed for parse, present in dst, present in src
+        f = FST('i + (# dst\nj # dst\n)').body[0].value
+        g = FST('(# src\nx * y # src\n)').body[0].value.copy(pars=True)
+        self.assertEqual('(# src\nx * y # src\n)', g.src)
+        f.put(g, field='right', pars='auto')
+        self.assertEqual('i + x * y', f.root.src)
+
+        # pars='auto', not needed for precedence, not needed for parse, present in dst, not present in src
+        f = FST('i + (# dst\nj # dst\n)').body[0].value
+        g = FST('(# src\nx * y # src\n)').body[0].value.copy(pars=False)
+        self.assertEqual('x * y', g.src)
+        f.put(g, field='right', pars='auto')
+        self.assertEqual('i + x * y', f.root.src)
+
+        # pars='auto', not needed for precedence, not needed for parse, not present in dst, present in src
+        f = FST('i + j').body[0].value
+        g = FST('(# src\nx * y # src\n)').body[0].value.copy(pars=True)
+        self.assertEqual('(# src\nx * y # src\n)', g.src)
+        f.put(g, field='right', pars='auto')
+        self.assertEqual('i + x * y', f.root.src)
+
+        # pars='auto', not needed for precedence, not needed for parse, not present in dst, not present in src
+        f = FST('i + j').body[0].value
+        g = FST('(# src\nx * y # src\n)').body[0].value.copy(pars=False)
+        self.assertEqual('x * y', g.src)
+        f.put(g, field='right', pars='auto')
+        self.assertEqual('i + x * y', f.root.src)
+
     def test_put_raw(self):
         for i, (dst, attr, (ln, col, end_ln, end_col), options, src, put_ret, put_src, put_dump) in enumerate(PUT_RAW_DATA):
             t = parse(dst)
