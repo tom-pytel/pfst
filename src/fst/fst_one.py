@@ -880,7 +880,14 @@ def _one_info_ExceptHandler_type(self: 'FST', static: onestatic, idx: int | None
         end_ln, end_col  = self._loc_block_header_end()  # because 'name' can not be there
         end_col         -= 1
 
-    return oneinfo(' ', fstloc((loc := self.loc).ln, loc.col + 6, end_ln, end_col))
+    ln, col, _, _ = self.loc
+    col           = col + 6  # 'except'
+
+    if star := _next_src(self.root.lines, ln, col, end_ln, end_col):  # 'except*'?
+        if star.src.startswith('*'):
+            return _oneinfo_default  # can not del type from except* and can not insert because can never not exist
+
+    return oneinfo(' ', fstloc(ln, col, end_ln, end_col))
 
 def _one_info_ExceptHandler_name(self: 'FST', static: onestatic, idx: int | None, field: str) -> oneinfo:
     if not (type_ := (a := self.a).type):

@@ -35691,6 +35691,17 @@ class cls:
         f.body[0].cases[0].pattern.put(g, 'pattern', raw=False)
         self.assertEqual('match a:\n case _ as unknown: pass', f.src)
 
+        # except* can't delete type
+
+        f = FST('''
+try:
+	raise ExceptionGroup("eg", [ValueError(42)])
+except* (TypeError, ExceptionGroup):
+	pass
+        '''.strip())
+        g = f.body[0].handlers[0]
+        self.assertRaises(ValueError, g.put, None, 'type', raw=False)
+
     def test_put_one_pars(self):
         f = FST('a = b').body[0]
         g = FST('(i := j)').body[0].value.copy(pars=False)
