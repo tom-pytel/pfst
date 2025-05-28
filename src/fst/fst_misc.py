@@ -642,7 +642,7 @@ def _touch(self: 'FST') -> 'FST':  # -> Self
 def _sanitize(self: 'FST') -> 'FST':  # -> Self
     """Quick check to make sure that nodes which are not `stmt`, `ExceptHandler`, `match_case` or `mod` don't have any
     extra junk in the source and that the parenthesized location matches the whole location of the source. If not then
-    fix."""
+    fix by removing the junk."""
 
     if not self.is_root:
         raise ValueError('can only be called on root node')

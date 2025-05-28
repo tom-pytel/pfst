@@ -943,7 +943,10 @@ def _one_info_ExceptHandler_name(self: 'FST', static: onestatic, idx: int | None
 
 def _one_info_arguments_vararg(self: 'FST', static: onestatic, idx: int | None, field: str) -> oneinfo:
     if vararg := (a := self.a).vararg:  # delete location
-        ln, col, end_ln, end_col = (varargf := vararg.f).pars()
+        if next := (varargf := vararg.f).next():
+            _, _, end_ln, end_col = varargf.pars()
+        else:
+            _, _, end_ln, end_col = self.loc  # there may be a trailing comma
 
         if prev := varargf.prev():
             delstr = ', *' if a.kwonlyargs else ''
@@ -959,7 +962,7 @@ def _one_info_arguments_vararg(self: 'FST', static: onestatic, idx: int | None, 
 
             return oneinfo('', fstloc(ln, col + 1, end_ln, end_col), delstr=delstr)
 
-        if next := varargf.next():
+        if next:
             if a.kwonlyargs and next.pfield.name == 'kwonlyargs':
                 next_ln, next_col, _, _ = next.pars()
 

@@ -35728,6 +35728,22 @@ except* (TypeError, ExceptionGroup):
         self.assertEqual('{a: (lambda b: None)}', f.src)
         f.verify()
 
+        # lone vararg del trailing comma
+
+        f = FST('lambda *args,: 0').body[0].value.copy()
+        g = f.args.vararg.copy()
+        f.args.put(None, 'vararg')
+        self.assertEqual('lambda: 0', f.src)
+        f.args.put(g, 'vararg')
+        self.assertEqual('lambda *args: 0', f.src)
+
+        f = FST('def f(*args,): pass').body[0].copy()
+        g = f.args.vararg.copy()
+        f.args.put(None, 'vararg')
+        self.assertEqual('def f(): pass', f.src)
+        f.args.put(g, 'vararg')
+        self.assertEqual('def f(*args): pass', f.src)
+
     def test_put_one_pars(self):
         f = FST('a = b').body[0]
         g = FST('(i := j)').body[0].value.copy(pars=False)
