@@ -6,7 +6,7 @@ from typing import Literal
 from .astutil import *
 
 from .shared import (
-    STMTISH_OR_STMTMOD, STMTISH_FIELDS, Code, NodeTypeError,
+    STMTISH_OR_STMTMOD, STMTISH_FIELDS, Code, NodeError,
     _fixup_field_body,
 )
 
@@ -77,7 +77,7 @@ def _put_slice(self: 'FST', code: Code | None, start: int | Literal['end'] | Non
             # TODO: more individual specialized slice puts
 
 
-        except (SyntaxError, NodeTypeError):
+        except (SyntaxError, NodeError):
             if not raw:
                 raise
 

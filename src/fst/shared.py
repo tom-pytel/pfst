@@ -8,7 +8,7 @@ from typing import Any, Literal, NamedTuple, TypeAlias, Union
 from .astutil import *
 from .astutil import TypeAlias, TryStar, type_param, Interpolation
 
-__all__ = ['NodeTypeError', 'astfield', 'fstloc']
+__all__ = ['NodeError', 'astfield', 'fstloc']
 
 
 EXPRISH                 = (expr, arg, alias, withitem, pattern, type_param)
@@ -96,7 +96,7 @@ _GLOBALS = globals() | {'_GLOBALS': None}
 Code = Union['FST', AST, list[str], str]
 
 
-class NodeTypeError(ValueError):
+class NodeError(ValueError):
     """Exception used when a raw reparse is possible."""
 
     pass
@@ -587,12 +587,12 @@ def _coerce_ast(ast, coerce: Literal['expr', 'exprish', 'mod'] | None = None) ->
     elif coerce in ('expr', 'exprish'):
         if isinstance(ast, (Module, Interactive)):
             if len(body := ast.body) != 1 or not isinstance(ast := body[0], Expr):
-                raise NodeTypeError(f'expecting single expression')
+                raise NodeError(f'expecting single expression')
 
             ast = ast.value
 
         if not isinstance(ast, expr if (is_expr := coerce == 'expr') else EXPRISH):
-            raise NodeTypeError('expecting expression' if is_expr else 'expecting expressionish node')
+            raise NodeError('expecting expression' if is_expr else 'expecting expressionish node')
 
         return ast
 

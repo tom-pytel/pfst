@@ -9,7 +9,7 @@ from .astutil import *
 from .astutil import TypeAlias, TryStar, type_param, TypeVar, ParamSpec, TypeVarTuple, TemplateStr, Interpolation
 
 from .shared import (
-    STMTISH, Code, NodeTypeError, astfield, fstloc,
+    STMTISH, Code, NodeError, astfield, fstloc,
     _next_src, _prev_src, _next_find, _prev_find, _next_find_re, _fixup_one_index,
 )
 
@@ -38,7 +38,7 @@ def _slice_indices(self: 'FST', idx: int, field: str, body: list[AST], to: Optio
 
         return idx, to_idx + 1
 
-    raise NodeTypeError(f"invalid 'to' node")
+    raise NodeError(f"invalid 'to' node")
 
 
 # ----------------------------------------------------------------------------------------------------------------------
@@ -110,7 +110,7 @@ def _validate_put(self: 'FST', code: Code | None, idx: int | None, field: str, c
     if not can_del and code is None:
         raise ValueError(f'cannot delete {self.a.__class__.__name__}.{field}{"" if idx is None else f"[{idx}]"}')
     if options.get('to'):
-        raise NodeTypeError(f"cannot put with 'to' to {self.a.__class__.__name__}.{field} without 'raw'")
+        raise NodeError(f"cannot put with 'to' to {self.a.__class__.__name__}.{field} without 'raw'")
 
     return child
 
@@ -119,20 +119,20 @@ def _validate_put_ast(self: 'FST', put_ast: AST, idx: int | None, field: str, st
     if restrict := static.restrict:
         if isinstance(restrict, list):  # list means these types not allowed
             if isinstance(put_ast, tuple(restrict)):
-                raise NodeTypeError(f'{self.a.__class__.__name__}.{field}{" " if idx is None else f"[{idx}] "}'
-                                    f'cannot be {put_ast.__class__.__name__}')
+                raise NodeError(f'{self.a.__class__.__name__}.{field}{" " if idx is None else f"[{idx}] "}'
+                                f'cannot be {put_ast.__class__.__name__}')
 
         elif isinstance(restrict, FunctionType):
             if not restrict(put_ast):
-                raise NodeTypeError(f'invalid value for {self.a.__class__.__name__}.{field}' +
-                                    ('' if idx is None else f'[{idx}]'))
+                raise NodeError(f'invalid value for {self.a.__class__.__name__}.{field}' +
+                                ('' if idx is None else f'[{idx}]'))
 
         elif not isinstance(put_ast, restrict):  # single AST type or tuple means only these allowed
-            raise NodeTypeError((f'expecting a {restrict.__name__} for {self.a.__class__.__name__}.{field}'
-                                 if isinstance(restrict, type) else
-                                 f'expecting one of ({", ".join(c.__name__ for c in restrict)}) for '
-                                 f'{self.a.__class__.__name__}.{field}{"" if idx is None else f"[{idx}]"}') +
-                                f', got {put_ast.__class__.__name__}')
+            raise NodeError((f'expecting a {restrict.__name__} for {self.a.__class__.__name__}.{field}'
+                              if isinstance(restrict, type) else
+                              f'expecting one of ({", ".join(c.__name__ for c in restrict)}) for '
+                              f'{self.a.__class__.__name__}.{field}{"" if idx is None else f"[{idx}]"}') +
+                             f', got {put_ast.__class__.__name__}')
 
 
 # ......................................................................................................................
@@ -397,7 +397,7 @@ def _put_one_exprish_sliceable(self: 'FST', code: Code | None, idx: int | None, 
     #     return None if code is None else child[idx].f
     if code is None:
         if options.get('to'):
-            raise NodeTypeError("delete with 'to' requires 'raw'")
+            raise NodeError("delete with 'to' requires 'raw'")
 
         self._put_slice(code, idx := _fixup_one_index(len(child), idx), idx + 1, field, True, **options)
 
@@ -552,7 +552,7 @@ def _put_one_identifier_sliceable(self: 'FST', code: Code | None, idx: int | Non
     #     return None if code is None else child[idx]
     if code is None:
         if options.get('to'):
-            raise NodeTypeError("delete with 'to' requires 'raw'")
+            raise NodeError("delete with 'to' requires 'raw'")
 
         self._put_slice(code, idx := _fixup_one_index(len(child), idx), idx + 1, field, True, **options)
 
@@ -633,7 +633,7 @@ def _put_one(self: 'FST', code: Code | None, idx: int | None, field: str | None,
 
                 return handler_non_raw(self, code, idx, field, child, static, **options)
 
-        except (SyntaxError, NodeTypeError):
+        except (SyntaxError, NodeError):
             if not raw:
                 raise
 

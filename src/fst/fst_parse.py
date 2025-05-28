@@ -9,7 +9,7 @@ from .astutil import *
 from .astutil import TryStar, type_param
 
 from .shared import (
-    Code, NodeTypeError, _next_src, _shortstr
+    Code, NodeError, _next_src, _shortstr
 )
 
 _re_except = re.compile(r'except\b')
@@ -34,16 +34,16 @@ def _code_as_op(code: Code, ast_type: type[AST], parse_params: dict, opstr2cls: 
             raise ValueError('expecting root node')
 
         if not isinstance(code.a, ast_type):
-            raise NodeTypeError(f'expecting {ast_type.__name__}, got {code.a.__class__.__name__}')
+            raise NodeError(f'expecting {ast_type.__name__}, got {code.a.__class__.__name__}')
 
         if (src := code.get_src(*code.loc)) != (expected := opcls2str[code.a.__class__]):
-            raise NodeTypeError(f'expecting {expected!r}, got {_shortstr(src)!r}')
+            raise NodeError(f'expecting {expected!r}, got {_shortstr(src)!r}')
 
         return code
 
     if isinstance(code, AST):
         if not isinstance(code, ast_type):
-            raise NodeTypeError(f'expecting {ast_type.__name__}, got {code.__class__.__name__}')
+            raise NodeError(f'expecting {ast_type.__name__}, got {code.__class__.__name__}')
 
         return FST(code, [opcls2str[code.__class__]], parse_params=parse_params)
 
@@ -51,7 +51,7 @@ def _code_as_op(code: Code, ast_type: type[AST], parse_params: dict, opstr2cls: 
         code = '\n'.join(code)
 
     if not (cls := opstr2cls.get(code := code.strip())):
-        raise NodeTypeError(f'expecting {ast_type.__name__}, got {_shortstr(code)!r}')
+        raise NodeError(f'expecting {ast_type.__name__}, got {_shortstr(code)!r}')
 
     return FST(cls(), code.split('\n'), parse_params=parse_params)
 
@@ -63,13 +63,13 @@ def _code_as(code: Code, ast_type: type[AST], parse_params: dict, parse: Callabl
             raise ValueError('expecting root node')
 
         if not isinstance(code.a, ast_type):
-            raise NodeTypeError(f'expecting {ast_type.__name__}, got {code.a.__class__.__name__}')
+            raise NodeError(f'expecting {ast_type.__name__}, got {code.a.__class__.__name__}')
 
         return code._sanitize()
 
     if isinstance(code, AST):
         if not isinstance(code, ast_type):
-            raise NodeTypeError(f'expecting {ast_type.__name__}, got {code.__class__.__name__}')
+            raise NodeError(f'expecting {ast_type.__name__}, got {code.__class__.__name__}')
 
         code  = ast_unparse(code)[1:-1] if not tup_pars and isinstance(code, Tuple) and code.elts else ast_unparse(code)
         lines = code.split('\n')
@@ -99,9 +99,9 @@ def _parse_expr(src: str, parse_params: dict = {}) -> AST:
     body = ast_parse(src, **parse_params).body
 
     if len(body) != 1:
-        raise NodeTypeError('expecting single expression')
+        raise NodeError('expecting single expression')
     elif not isinstance(ast := body[0], Expr):
-        raise NodeTypeError(f'expecting expression, got {ast.__class__.__name__}')
+        raise NodeError(f'expecting expression, got {ast.__class__.__name__}')
 
     return ast.value
 
@@ -302,19 +302,19 @@ def _code_as_stmts(code: Code, parse_params: dict = {}) -> 'FST':
             if all(isinstance(a, stmt) for a in codea.body):
                 return code
 
-            raise NodeTypeError(f'expecting zero or more stmts, got '
-                                f'[{_shortstr(", ".join(a.__class__.__name__ for a in codea.body))}]')
+            raise NodeError(f'expecting zero or more stmts, got '
+                            f'[{_shortstr(", ".join(a.__class__.__name__ for a in codea.body))}]')
 
         if isinstance(codea, Interactive):
             code._unmake_fst_parents()
 
             return FST(Module(body=code.body, type_ignores=[]), code._lines, from_=code, lcopy=False)
 
-        raise NodeTypeError(f'expecting zero or more stmts, got {codea.__class__.__name__}')
+        raise NodeError(f'expecting zero or more stmts, got {codea.__class__.__name__}')
 
     if isinstance(code, AST):
         if not isinstance(code, (stmt, expr, Module, Interactive, Expression)):  # all these can be coerced into stmts
-            raise NodeTypeError(f'expecting zero or more stmts, got {code.__class__.__name__}')
+            raise NodeError(f'expecting zero or more stmts, got {code.__class__.__name__}')
 
         code  = ast_unparse(code)
         lines = code.split('\n')
@@ -341,9 +341,9 @@ def _code_as_expr(code: Code, parse_params: dict = {}, orslice: bool = False, ca
         if not code.is_root:
             raise ValueError('expecting root node')
 
-        if not isinstance(ast := reduce_ast(codea := code.a, NodeTypeError), (expr, Slice) if orslice else expr):
-            raise NodeTypeError(f'expecting {"expression or Slice" if orslice else "expression"}, got '
-                                f'{ast.__class__.__name__}')
+        if not isinstance(ast := reduce_ast(codea := code.a, NodeError), (expr, Slice) if orslice else expr):
+            raise NodeError(f'expecting {"expression or Slice" if orslice else "expression"}, got '
+                            f'{ast.__class__.__name__}')
 
         if ast is codea:
             return code._sanitize()
@@ -354,8 +354,8 @@ def _code_as_expr(code: Code, parse_params: dict = {}, orslice: bool = False, ca
 
     if isinstance(code, AST):
         if not isinstance(code, (expr, Slice) if orslice else expr):
-            raise NodeTypeError(f'expecting {"expression or Slice" if orslice else "expression"}, got '
-                                f'{code.__class__.__name__}')
+            raise NodeError(f'expecting {"expression or Slice" if orslice else "expression"}, got '
+                            f'{code.__class__.__name__}')
 
         code  = ast_unparse(code)
         lines = code.split('\n')
@@ -455,14 +455,14 @@ def _code_as_ExceptHandlers(code: Code, parse_params: dict = {}, *, is_trystar: 
             if all(isinstance(a, ExceptHandler) for a in codea.body):
                 return code
 
-            raise NodeTypeError(f'expecting zero or more ExceptHandlers, got '
-                                f'[{_shortstr(", ".join(a.__class__.__name__ for a in codea.body))}]')
+            raise NodeError(f'expecting zero or more ExceptHandlers, got '
+                            f'[{_shortstr(", ".join(a.__class__.__name__ for a in codea.body))}]')
 
-        raise NodeTypeError(f'expecting zero or more ExceptHandlers, got {codea.__class__.__name__}')
+        raise NodeError(f'expecting zero or more ExceptHandlers, got {codea.__class__.__name__}')
 
     if isinstance(code, AST):
         if not isinstance(code, ExceptHandler):
-            raise NodeTypeError(f'expecting zero or more ExceptHandlers, got {code.__class__.__name__}')
+            raise NodeError(f'expecting zero or more ExceptHandlers, got {code.__class__.__name__}')
 
         if is_trystar:
             code = unparse(TryStar(body=[Pass()], handlers=[code], orelse=[], finalbody=[]))
@@ -546,14 +546,14 @@ def _code_as_match_cases(code: Code, parse_params: dict = {}) -> 'FST':
             if all(isinstance(a, match_case) for a in codea.body):
                 return code
 
-            raise NodeTypeError(f'expecting zero or more match_cases, got '
-                                f'[{_shortstr(", ".join(a.__class__.__name__ for a in codea.body))}]')
+            raise NodeError(f'expecting zero or more match_cases, got '
+                            f'[{_shortstr(", ".join(a.__class__.__name__ for a in codea.body))}]')
 
-        raise NodeTypeError(f'expecting zero or more match_cases, got {codea.__class__.__name__}')
+        raise NodeError(f'expecting zero or more match_cases, got {codea.__class__.__name__}')
 
     if isinstance(code, AST):
         if not isinstance(code, match_case):
-            raise NodeTypeError(f'expecting zero or more match_cases, got {code.__class__.__name__}')
+            raise NodeError(f'expecting zero or more match_cases, got {code.__class__.__name__}')
 
         code  = ast_unparse(code)
         lines = code.split('\n')
@@ -596,7 +596,7 @@ def _code_as_identifier(code: Code, parse_params: dict = {}) -> str:
         code = '\n'.join(code)
 
     if not is_valid_identifier(code):
-        raise NodeTypeError(f'expecting identifier, got {_shortstr(code)!r}')
+        raise NodeError(f'expecting identifier, got {_shortstr(code)!r}')
 
     return code
 
@@ -617,7 +617,7 @@ def _code_as_identifier_dotted(code: Code, parse_params: dict = {}) -> str:
         code = '\n'.join(code)
 
     if not is_valid_identifier_dotted(code):
-        raise NodeTypeError(f'expecting dotted identifier, got {_shortstr(code)!r}')
+        raise NodeError(f'expecting dotted identifier, got {_shortstr(code)!r}')
 
     return code
 
@@ -638,7 +638,7 @@ def _code_as_identifier_maybe_star(code: Code, parse_params: dict = {}) -> str:
         code = '\n'.join(code)
 
     if not is_valid_identifier_maybe_star(code):
-        raise NodeTypeError(f"expecting identifier or '*', got {_shortstr(code)!r}")
+        raise NodeError(f"expecting identifier or '*', got {_shortstr(code)!r}")
 
     return code
 
@@ -659,7 +659,7 @@ def _code_as_identifier_alias(code: Code, parse_params: dict = {}) -> str:
         code = '\n'.join(code)
 
     if not is_valid_identifier_alias(code):
-        raise NodeTypeError(f"expecting dotted identifier or '*', got {_shortstr(code)!r}")
+        raise NodeError(f"expecting dotted identifier or '*', got {_shortstr(code)!r}")
 
     return code
 
@@ -701,8 +701,8 @@ def _code_as_stmtishs(code: Code, parse_params: dict = {}, *, is_trystar: bool =
         return _code_as_match_cases(code, parse_params)
 
     if not (is_mod := isinstance(ast, Module)) and not isinstance(ast, Interactive):
-        raise NodeTypeError(f'expecting zero or more stmts, ExceptHandlers or match_cases, got '
-                            f'{ast.__class__.__name__}')
+        raise NodeError(f'expecting zero or more stmts, ExceptHandlers or match_cases, got '
+                        f'{ast.__class__.__name__}')
 
     if body := ast.body:
         if isinstance(b0 := body[0], stmt):
@@ -715,8 +715,8 @@ def _code_as_stmtishs(code: Code, parse_params: dict = {}, *, is_trystar: bool =
             code_type = None
 
         if not code_type or not all(isinstance(a, code_type) for a in body):
-            raise NodeTypeError(f'expecting zero or more stmts, ExceptHandlers or match_cases, got '
-                                f'[{_shortstr(", ".join(a.__class__.__name__ for a in body))}]')
+            raise NodeError(f'expecting zero or more stmts, ExceptHandlers or match_cases, got '
+                            f'[{_shortstr(", ".join(a.__class__.__name__ for a in body))}]')
 
     if is_fst:
         if is_mod:

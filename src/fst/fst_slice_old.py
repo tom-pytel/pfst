@@ -8,7 +8,7 @@ from .astutil import TryStar
 
 from .shared import (
     astfield, fstloc,
-    Code, NodeTypeError,
+    Code, NodeError,
     _next_find, _prev_find, _fixup_field_body,
     _fixup_slice_indices
 )
@@ -310,8 +310,8 @@ def _put_slice_tuple_list_or_set(self: 'FST', code: Code | None, start: int | Li
             is_set   = not is_tuple and isinstance(put_ast, Set)
 
             if not is_tuple and not is_set and not isinstance(put_ast, List):
-                raise NodeTypeError(f"slice being assigned to a {self.a.__class__.__name__} "
-                                    f"must be a Tuple, List or Set, not a '{put_ast.__class__.__name__}'")
+                raise NodeError(f"slice being assigned to a {self.a.__class__.__name__} "
+                                f"must be a Tuple, List or Set, not a '{put_ast.__class__.__name__}'")
 
     ast         = self.a
     elts        = ast.elts

@@ -16283,7 +16283,7 @@ Module .. ROOT 0,0 -> 0,20
       .name 'new'
 """),
 
-(r"""i += j""", 'body[0]', None, 'target', {'raw': False}, r"""1""", r"""**NodeTypeError('expecting one of (Name, Attribute, Subscript) for AugAssign.target, got Constant')**""", r"""
+(r"""i += j""", 'body[0]', None, 'target', {'raw': False}, r"""1""", r"""**NodeError('expecting one of (Name, Attribute, Subscript) for AugAssign.target, got Constant')**""", r"""
 """),
 
 (r"""i += j""", 'body[0]', None, 'target', {'raw': False}, r"""new""", r"""new += j""", r"""
@@ -16395,7 +16395,7 @@ Module .. ROOT 0,0 -> 0,24
     0] Pass .. 0,20 -> 0,24
 """),
 
-(r"""(i := j)""", 'body[0].value', None, 'target', {'raw': False}, r"""1""", r"""**NodeTypeError('expecting a Name for NamedExpr.target, got Constant')**""", r"""
+(r"""(i := j)""", 'body[0].value', None, 'target', {'raw': False}, r"""1""", r"""**NodeError('expecting a Name for NamedExpr.target, got Constant')**""", r"""
 """),
 
 (r"""(i := j)""", 'body[0].value', None, 'target', {'raw': False}, r"""new""", r"""(new := j)""", r"""
@@ -16454,7 +16454,7 @@ Module .. ROOT 0,0 -> 0,22
         .is_async 0
 """),
 
-(r"""type i = j""", 'body[0]', None, 'name', {'raw': False, '_ver': 12}, r"""1""", r"""**NodeTypeError('expecting a Name for TypeAlias.name, got Constant')**""", r"""
+(r"""type i = j""", 'body[0]', None, 'name', {'raw': False, '_ver': 12}, r"""1""", r"""**NodeError('expecting a Name for TypeAlias.name, got Constant')**""", r"""
 """),
 
 (r"""type i = j""", 'body[0]', None, 'name', {'raw': False, '_ver': 12}, r"""new""", r"""type new = j""", r"""
@@ -16502,7 +16502,7 @@ Module .. ROOT 0,0 -> 0,11
 """),
 
 (r"""match a:
- case c(): pass""", 'body[0].cases[0].pattern', None, 'cls', {'raw': False}, r"""new, to""", r"""**NodeTypeError('expecting one of (Name, Attribute) for MatchClass.cls, got Tuple')**""", r"""
+ case c(): pass""", 'body[0].cases[0].pattern', None, 'cls', {'raw': False}, r"""new, to""", r"""**NodeError('expecting one of (Name, Attribute) for MatchClass.cls, got Tuple')**""", r"""
 """),
 
 (r"""match a:
@@ -17351,7 +17351,7 @@ Module .. ROOT 0,0 -> 0,27
     0] Pass .. 0,23 -> 0,27
 """),
 
-(r"""with (a): pass""", 'body[0].items[0]', None, 'optional_vars', {'raw': False}, r"""f()""", r"""**NodeTypeError('expecting one of (Name, Tuple, List, Attribute, Subscript) for withitem.optional_vars, got Call')**""", r"""
+(r"""with (a): pass""", 'body[0].items[0]', None, 'optional_vars', {'raw': False}, r"""f()""", r"""**NodeError('expecting one of (Name, Tuple, List, Attribute, Subscript) for withitem.optional_vars, got Call')**""", r"""
 """),
 
 (r"""match a:
@@ -18142,19 +18142,19 @@ Module .. ROOT 0,0 -> 0,29
     .returns Name 'new' Load .. 0,20 -> 0,23
 """),
 
-(r"""a += b""", 'body[0]', None, 'op', {'raw': False}, r"""new""", r"""**NodeTypeError("expecting operator, got 'new'")**""", r"""
+(r"""a += b""", 'body[0]', None, 'op', {'raw': False}, r"""new""", r"""**NodeError("expecting operator, got 'new'")**""", r"""
 """),
 
-(r"""a and b""", 'body[0].value', None, 'op', {'raw': False}, r"""new""", r"""**NodeTypeError("expecting boolop, got 'new'")**""", r"""
+(r"""a and b""", 'body[0].value', None, 'op', {'raw': False}, r"""new""", r"""**NodeError("expecting boolop, got 'new'")**""", r"""
 """),
 
-(r"""a + b""", 'body[0].value', None, 'op', {'raw': False}, r"""new""", r"""**NodeTypeError("expecting operator, got 'new'")**""", r"""
+(r"""a + b""", 'body[0].value', None, 'op', {'raw': False}, r"""new""", r"""**NodeError("expecting operator, got 'new'")**""", r"""
 """),
 
-(r"""-a""", 'body[0].value', None, 'op', {'raw': False}, r"""new""", r"""**NodeTypeError("expecting unaryop, got 'new'")**""", r"""
+(r"""-a""", 'body[0].value', None, 'op', {'raw': False}, r"""new""", r"""**NodeError("expecting unaryop, got 'new'")**""", r"""
 """),
 
-(r"""a < b""", 'body[0].value', 0, 'ops', {'raw': False}, r"""new""", r"""**NodeTypeError("expecting cmpop, got 'new'")**""", r"""
+(r"""a < b""", 'body[0].value', 0, 'ops', {'raw': False}, r"""new""", r"""**NodeError("expecting cmpop, got 'new'")**""", r"""
 """),
 
 (r"""def f(*, a=b): pass""", 'body[0].args', 0, 'kw_defaults', {'raw': False}, r"""new""", r"""def f(*, a=new): pass""", r"""
@@ -18614,7 +18614,7 @@ Module .. ROOT 0,0 -> 1,15
 """),
 
 (r"""match a:
- case 1: pass""", 'body[0].cases[0].pattern', None, None, {'raw': False}, r"""b""", r"""**NodeTypeError('invalid value for MatchValue.value')**""", r"""
+ case 1: pass""", 'body[0].cases[0].pattern', None, None, {'raw': False}, r"""b""", r"""**NodeError('invalid value for MatchValue.value')**""", r"""
 """),
 
 (r"""match a:
@@ -19374,7 +19374,7 @@ Module .. ROOT 0,0 -> 0,8
 (r"""...""", 'body[0].value', None, None, {'raw': False}, r"""**DEL**""", r"""**ValueError('cannot delete Constant.value')**""", r"""
 """),
 
-(r"""...""", 'body[0].value', None, None, {'raw': False}, r"""new""", r"""**NodeTypeError('expecting a Constant for Constant.value, got Name')**""", r"""
+(r"""...""", 'body[0].value', None, None, {'raw': False}, r"""new""", r"""**NodeError('expecting a Constant for Constant.value, got Name')**""", r"""
 """),
 
 (r"""...""", 'body[0].value', None, None, {'raw': False}, r"""...""", r"""...""", r"""
@@ -20319,7 +20319,7 @@ Module .. ROOT 0,0 -> 1,16
 """),
 
 (r"""match a:
- case None: pass""", 'body[0].cases[0].pattern', None, None, {'raw': False}, r"""new""", r"""**NodeTypeError('invalid value for MatchSingleton.value')**""", r"""
+ case None: pass""", 'body[0].cases[0].pattern', None, None, {'raw': False}, r"""new""", r"""**NodeError('invalid value for MatchSingleton.value')**""", r"""
 """),
 
 (r"""match a:
@@ -21066,7 +21066,7 @@ Module .. ROOT 0,0 -> 1,22
 """),
 
 (r"""match a:
- case cls(a=b): pass""", 'body[0].cases[0].pattern', 0, 'kwd_attrs', {'raw': False}, r"""1""", r"""**NodeTypeError("expecting identifier, got '1'")**""", r"""
+ case cls(a=b): pass""", 'body[0].cases[0].pattern', 0, 'kwd_attrs', {'raw': False}, r"""1""", r"""**NodeError("expecting identifier, got '1'")**""", r"""
 """),
 
 (r"""match a:
@@ -21218,7 +21218,7 @@ Module .. ROOT 0,0 -> 0,18
       .ctx Del
 """),
 
-(r"""del a, (b), c""", 'body[0]', -1, None, {'raw': False}, r"""f()""", r"""**NodeTypeError('expecting one of (Name, Attribute, Subscript, Tuple, List) for Delete.targets[-1], got Call')**""", r"""
+(r"""del a, (b), c""", 'body[0]', -1, None, {'raw': False}, r"""f()""", r"""**NodeError('expecting one of (Name, Attribute, Subscript, Tuple, List) for Delete.targets[-1], got Call')**""", r"""
 """),
 
 (r"""del a, (b), c""", 'body[0]', -4, None, {'raw': False}, r"""new""", r"""**IndexError('index out of range')**""", r"""
@@ -21302,7 +21302,7 @@ Module .. ROOT 0,0 -> 0,21
     .value Name 'z' Load .. 0,20 -> 0,21
 """),
 
-(r"""del a, (b, c), d""", 'body[0]', -1, 'targets', {'raw': False}, r"""f()""", r"""**NodeTypeError('expecting one of (Name, Attribute, Subscript, Tuple, List) for Delete.targets[-1], got Call')**""", r"""
+(r"""del a, (b, c), d""", 'body[0]', -1, 'targets', {'raw': False}, r"""f()""", r"""**NodeError('expecting one of (Name, Attribute, Subscript, Tuple, List) for Delete.targets[-1], got Call')**""", r"""
 """),
 
 (r"""del a, (b, c), d""", 'body[0]', -4, 'targets', {'raw': False}, r"""new""", r"""**IndexError('index out of range')**""", r"""
@@ -24382,7 +24382,7 @@ Module .. ROOT 0,0 -> 0,6
       1] Name 'b' Load .. 0,5 -> 0,6
 """),
 
-(r"""a and b""", 'body[0].value', None, 'op', {'raw': False}, r"""+""", r"""**NodeTypeError("expecting boolop, got '+'")**""", r"""
+(r"""a and b""", 'body[0].value', None, 'op', {'raw': False}, r"""+""", r"""**NodeError("expecting boolop, got '+'")**""", r"""
 """),
 
 (r"""a and b and c""", 'body[0].value', None, 'op', {'raw': False}, r"""or""", r"""a or b or c""", r"""
@@ -31836,8 +31836,8 @@ call(a)
 
         g = FST('from a import b').body[0].names[0]
         self.assertRaises(ValueError, f._code_as_stmts, f.body[0].test)
-        self.assertRaises(NodeTypeError, f._code_as_stmts, g.copy())
-        self.assertRaises(NodeTypeError, f._code_as_stmts, g.a)
+        self.assertRaises(NodeError, f._code_as_stmts, g.copy())
+        self.assertRaises(NodeError, f._code_as_stmts, g.a)
         self.assertRaises(SyntaxError, f._code_as_stmts, 'except Exception: pass')
 
         f = FST('f(a)')
@@ -31890,9 +31890,9 @@ call(a)
         self.assertTrue(compare_asts(h.a, g.a, locs=False, raise_=True))
 
         self.assertRaises(ValueError, f._code_as_expr, FST('i = 1').body[0])
-        self.assertRaises(NodeTypeError, f._code_as_expr, FST('i = 1').body[0].copy())
-        self.assertRaises(NodeTypeError, f._code_as_expr, f.body[0].a)
-        self.assertRaises(NodeTypeError, f._code_as_expr, 'pass')
+        self.assertRaises(NodeError, f._code_as_expr, FST('i = 1').body[0].copy())
+        self.assertRaises(NodeError, f._code_as_expr, f.body[0].a)
+        self.assertRaises(NodeError, f._code_as_expr, 'pass')
 
         # ExceptHandlers
 
@@ -32115,8 +32115,8 @@ call(a)
 
         g = FST('from a import b').body[0].names[0]
         self.assertRaises(ValueError, f._code_as_stmtishs, f.body[0].test)
-        self.assertRaises(NodeTypeError, f._code_as_stmtishs, g.copy())
-        self.assertRaises(NodeTypeError, f._code_as_stmtishs, g.a)
+        self.assertRaises(NodeError, f._code_as_stmtishs, g.copy())
+        self.assertRaises(NodeError, f._code_as_stmtishs, g.a)
 
         f = FST('f(a)')
         h = f._code_as_stmtishs(f.body[0].value.copy())
@@ -35402,7 +35402,7 @@ class cls:
         self.assertIsInstance(f.a.body, expr)
         f.put('j', raw=False)
         self.assertEqual('j', f.src)
-        self.assertRaises(NodeTypeError, f.put, 'k = 1', raw=False)
+        self.assertRaises(NodeError, f.put, 'k = 1', raw=False)
         self.assertRaises(IndexError, f.put, 'k', 1, raw=False)
 
         g = parse('yield 1').body[0].value.f.copy(fix=False)
@@ -35418,13 +35418,13 @@ class cls:
 
         g = parse('l = 2').body[0].f.copy()
         self.assertEqual('l = 2', g.src)
-        self.assertRaises(NodeTypeError, f.put, g, raw=False)
+        self.assertRaises(NodeError, f.put, g, raw=False)
 
         f.put('m', raw=False)
         self.assertEqual('m', f.src)
 
         f = parse('[1, 2, 3, 4]').body[0].value.f
-        self.assertRaises(NodeTypeError, f.put, '5', 1, raw=False, to=f.elts[2])
+        self.assertRaises(NodeError, f.put, '5', 1, raw=False, to=f.elts[2])
 
         f = parse('[1, 2, 3, 4]').body[0].value.f
         g = f.put('5', 1, raw='auto', to=f.elts[2])
@@ -35447,136 +35447,136 @@ class cls:
         # ops
 
         self.assertEqual('a >>= b', parse('a *= b').body[0].f.put('>>=', field='op', raw=False).src)
-        self.assertRaises(NodeTypeError, parse('a *= b').body[0].f.put, 'and', field='op', raw=False)
-        self.assertRaises(NodeTypeError, parse('a *= b').body[0].f.put, '*', field='op', raw=False)
-        self.assertRaises(NodeTypeError, parse('a *= b').body[0].f.put, '~', field='op', raw=False)
-        self.assertRaises(NodeTypeError, parse('a *= b').body[0].f.put, '<', field='op', raw=False)
+        self.assertRaises(NodeError, parse('a *= b').body[0].f.put, 'and', field='op', raw=False)
+        self.assertRaises(NodeError, parse('a *= b').body[0].f.put, '*', field='op', raw=False)
+        self.assertRaises(NodeError, parse('a *= b').body[0].f.put, '~', field='op', raw=False)
+        self.assertRaises(NodeError, parse('a *= b').body[0].f.put, '<', field='op', raw=False)
 
-        self.assertRaises(NodeTypeError, parse('a or b').body[0].value.f.put, '*=', field='op', raw=False)
+        self.assertRaises(NodeError, parse('a or b').body[0].value.f.put, '*=', field='op', raw=False)
         self.assertEqual('a and b', parse('a or b').body[0].value.f.put('and', field='op', raw=False).src)
-        self.assertRaises(NodeTypeError, parse('a or b').body[0].value.f.put, '/', field='op', raw=False)
-        self.assertRaises(NodeTypeError, parse('a or b').body[0].value.f.put, '~', field='op', raw=False)
-        self.assertRaises(NodeTypeError, parse('a or b').body[0].value.f.put, '<', field='op', raw=False)
+        self.assertRaises(NodeError, parse('a or b').body[0].value.f.put, '/', field='op', raw=False)
+        self.assertRaises(NodeError, parse('a or b').body[0].value.f.put, '~', field='op', raw=False)
+        self.assertRaises(NodeError, parse('a or b').body[0].value.f.put, '<', field='op', raw=False)
 
-        self.assertRaises(NodeTypeError, parse('a + b').body[0].value.f.put, '*=', field='op', raw=False)
-        self.assertRaises(NodeTypeError, parse('a + b').body[0].value.f.put, 'and', field='op', raw=False)
+        self.assertRaises(NodeError, parse('a + b').body[0].value.f.put, '*=', field='op', raw=False)
+        self.assertRaises(NodeError, parse('a + b').body[0].value.f.put, 'and', field='op', raw=False)
         self.assertEqual('a >> b', parse('a + b').body[0].value.f.put('>>', field='op', raw=False).src)
-        self.assertRaises(NodeTypeError, parse('a + b').body[0].value.f.put, '~', field='op', raw=False)
-        self.assertRaises(NodeTypeError, parse('a + b').body[0].value.f.put, '<', field='op', raw=False)
+        self.assertRaises(NodeError, parse('a + b').body[0].value.f.put, '~', field='op', raw=False)
+        self.assertRaises(NodeError, parse('a + b').body[0].value.f.put, '<', field='op', raw=False)
 
-        self.assertRaises(NodeTypeError, parse('-a').body[0].value.f.put, '*=', field='op', raw=False)
-        self.assertRaises(NodeTypeError, parse('-a').body[0].value.f.put, 'and', field='op', raw=False)
-        self.assertRaises(NodeTypeError, parse('-a').body[0].value.f.put, '*', field='op', raw=False)
+        self.assertRaises(NodeError, parse('-a').body[0].value.f.put, '*=', field='op', raw=False)
+        self.assertRaises(NodeError, parse('-a').body[0].value.f.put, 'and', field='op', raw=False)
+        self.assertRaises(NodeError, parse('-a').body[0].value.f.put, '*', field='op', raw=False)
         self.assertEqual('+a', parse('-a').body[0].value.f.put('+', field='op', raw=False).src)
-        self.assertRaises(NodeTypeError, parse('-a').body[0].value.f.put, '<', field='op', raw=False)
+        self.assertRaises(NodeError, parse('-a').body[0].value.f.put, '<', field='op', raw=False)
 
-        self.assertRaises(NodeTypeError, parse('a is not b').body[0].value.f.put, '*=', 0, field='ops', raw=False)
-        self.assertRaises(NodeTypeError, parse('a is not b').body[0].value.f.put, 'and', 0, field='ops', raw=False)
-        self.assertRaises(NodeTypeError, parse('a is not b').body[0].value.f.put, '*', 0, field='ops', raw=False)
-        self.assertRaises(NodeTypeError, parse('a is not b').body[0].value.f.put, '~', 0, field='ops', raw=False)
+        self.assertRaises(NodeError, parse('a is not b').body[0].value.f.put, '*=', 0, field='ops', raw=False)
+        self.assertRaises(NodeError, parse('a is not b').body[0].value.f.put, 'and', 0, field='ops', raw=False)
+        self.assertRaises(NodeError, parse('a is not b').body[0].value.f.put, '*', 0, field='ops', raw=False)
+        self.assertRaises(NodeError, parse('a is not b').body[0].value.f.put, '~', 0, field='ops', raw=False)
         self.assertEqual('a > b', parse('a is not b').body[0].value.f.put('>', 0, field='ops', raw=False).src)
 
         self.assertEqual('a >>= b', parse('a *= b').body[0].f.put(['>>='], field='op', raw=False).src)
-        self.assertRaises(NodeTypeError, parse('a *= b').body[0].f.put, ['and'], field='op', raw=False)
-        self.assertRaises(NodeTypeError, parse('a *= b').body[0].f.put, ['*'], field='op', raw=False)
-        self.assertRaises(NodeTypeError, parse('a *= b').body[0].f.put, ['~'], field='op', raw=False)
-        self.assertRaises(NodeTypeError, parse('a *= b').body[0].f.put, ['<'], field='op', raw=False)
+        self.assertRaises(NodeError, parse('a *= b').body[0].f.put, ['and'], field='op', raw=False)
+        self.assertRaises(NodeError, parse('a *= b').body[0].f.put, ['*'], field='op', raw=False)
+        self.assertRaises(NodeError, parse('a *= b').body[0].f.put, ['~'], field='op', raw=False)
+        self.assertRaises(NodeError, parse('a *= b').body[0].f.put, ['<'], field='op', raw=False)
 
-        self.assertRaises(NodeTypeError, parse('a or b').body[0].value.f.put, ['*='], field='op', raw=False)
+        self.assertRaises(NodeError, parse('a or b').body[0].value.f.put, ['*='], field='op', raw=False)
         self.assertEqual('a and b', parse('a or b').body[0].value.f.put(['and'], field='op', raw=False).src)
-        self.assertRaises(NodeTypeError, parse('a or b').body[0].value.f.put, ['/'], field='op', raw=False)
-        self.assertRaises(NodeTypeError, parse('a or b').body[0].value.f.put, ['~'], field='op', raw=False)
-        self.assertRaises(NodeTypeError, parse('a or b').body[0].value.f.put, ['<'], field='op', raw=False)
+        self.assertRaises(NodeError, parse('a or b').body[0].value.f.put, ['/'], field='op', raw=False)
+        self.assertRaises(NodeError, parse('a or b').body[0].value.f.put, ['~'], field='op', raw=False)
+        self.assertRaises(NodeError, parse('a or b').body[0].value.f.put, ['<'], field='op', raw=False)
 
-        self.assertRaises(NodeTypeError, parse('a + b').body[0].value.f.put, ['*='], field='op', raw=False)
-        self.assertRaises(NodeTypeError, parse('a + b').body[0].value.f.put, ['and'], field='op', raw=False)
+        self.assertRaises(NodeError, parse('a + b').body[0].value.f.put, ['*='], field='op', raw=False)
+        self.assertRaises(NodeError, parse('a + b').body[0].value.f.put, ['and'], field='op', raw=False)
         self.assertEqual('a >> b', parse('a + b').body[0].value.f.put(['>>'], field='op', raw=False).src)
-        self.assertRaises(NodeTypeError, parse('a + b').body[0].value.f.put, ['~'], field='op', raw=False)
-        self.assertRaises(NodeTypeError, parse('a + b').body[0].value.f.put, ['<'], field='op', raw=False)
+        self.assertRaises(NodeError, parse('a + b').body[0].value.f.put, ['~'], field='op', raw=False)
+        self.assertRaises(NodeError, parse('a + b').body[0].value.f.put, ['<'], field='op', raw=False)
 
-        self.assertRaises(NodeTypeError, parse('-a').body[0].value.f.put, ['*='], field='op', raw=False)
-        self.assertRaises(NodeTypeError, parse('-a').body[0].value.f.put, ['and'], field='op', raw=False)
-        self.assertRaises(NodeTypeError, parse('-a').body[0].value.f.put, ['*'], field='op', raw=False)
+        self.assertRaises(NodeError, parse('-a').body[0].value.f.put, ['*='], field='op', raw=False)
+        self.assertRaises(NodeError, parse('-a').body[0].value.f.put, ['and'], field='op', raw=False)
+        self.assertRaises(NodeError, parse('-a').body[0].value.f.put, ['*'], field='op', raw=False)
         self.assertEqual('+a', parse('-a').body[0].value.f.put(['+'], field='op', raw=False).src)
-        self.assertRaises(NodeTypeError, parse('-a').body[0].value.f.put, ['<'], field='op', raw=False)
+        self.assertRaises(NodeError, parse('-a').body[0].value.f.put, ['<'], field='op', raw=False)
 
-        self.assertRaises(NodeTypeError, parse('a < b').body[0].value.f.put, ['*='], 0, field='ops', raw=False)
-        self.assertRaises(NodeTypeError, parse('a < b').body[0].value.f.put, ['and'], 0, field='ops', raw=False)
-        self.assertRaises(NodeTypeError, parse('a < b').body[0].value.f.put, ['*'], 0, field='ops', raw=False)
-        self.assertRaises(NodeTypeError, parse('a < b').body[0].value.f.put, ['~'], 0, field='ops', raw=False)
+        self.assertRaises(NodeError, parse('a < b').body[0].value.f.put, ['*='], 0, field='ops', raw=False)
+        self.assertRaises(NodeError, parse('a < b').body[0].value.f.put, ['and'], 0, field='ops', raw=False)
+        self.assertRaises(NodeError, parse('a < b').body[0].value.f.put, ['*'], 0, field='ops', raw=False)
+        self.assertRaises(NodeError, parse('a < b').body[0].value.f.put, ['~'], 0, field='ops', raw=False)
         self.assertEqual('a > b', parse('a < b').body[0].value.f.put(['>'], 0, field='ops', raw=False).src)
 
         self.assertEqual('a >>= b', parse('a *= b').body[0].f.put(RShift(), field='op', raw=False).src)
-        self.assertRaises(NodeTypeError, parse('a *= b').body[0].f.put, And(), field='op', raw=False)
+        self.assertRaises(NodeError, parse('a *= b').body[0].f.put, And(), field='op', raw=False)
         self.assertEqual('a *= b', parse('a *= b').body[0].f.put(Mult(), field='op', raw=False).src)
-        self.assertRaises(NodeTypeError, parse('a *= b').body[0].f.put, Invert(), field='op', raw=False)
-        self.assertRaises(NodeTypeError, parse('a *= b').body[0].f.put, Lt(), field='op', raw=False)
+        self.assertRaises(NodeError, parse('a *= b').body[0].f.put, Invert(), field='op', raw=False)
+        self.assertRaises(NodeError, parse('a *= b').body[0].f.put, Lt(), field='op', raw=False)
 
-        self.assertRaises(NodeTypeError, parse('a or b').body[0].value.f.put, Mult(), field='op', raw=False)
+        self.assertRaises(NodeError, parse('a or b').body[0].value.f.put, Mult(), field='op', raw=False)
         self.assertEqual('a and b', parse('a or b').body[0].value.f.put(And(), field='op', raw=False).src)
-        self.assertRaises(NodeTypeError, parse('a or b').body[0].value.f.put, Div(), field='op', raw=False)
-        self.assertRaises(NodeTypeError, parse('a or b').body[0].value.f.put, Invert(), field='op', raw=False)
-        self.assertRaises(NodeTypeError, parse('a or b').body[0].value.f.put, Lt(), field='op', raw=False)
+        self.assertRaises(NodeError, parse('a or b').body[0].value.f.put, Div(), field='op', raw=False)
+        self.assertRaises(NodeError, parse('a or b').body[0].value.f.put, Invert(), field='op', raw=False)
+        self.assertRaises(NodeError, parse('a or b').body[0].value.f.put, Lt(), field='op', raw=False)
 
         self.assertEqual('a * b', parse('a + b').body[0].value.f.put(Mult(), field='op', raw=False).src)
-        self.assertRaises(NodeTypeError, parse('a + b').body[0].value.f.put, And(), field='op', raw=False)
+        self.assertRaises(NodeError, parse('a + b').body[0].value.f.put, And(), field='op', raw=False)
         self.assertEqual('a >> b', parse('a + b').body[0].value.f.put(RShift(), field='op', raw=False).src)
-        self.assertRaises(NodeTypeError, parse('a + b').body[0].value.f.put, Invert(), field='op', raw=False)
-        self.assertRaises(NodeTypeError, parse('a + b').body[0].value.f.put, Lt(), field='op', raw=False)
+        self.assertRaises(NodeError, parse('a + b').body[0].value.f.put, Invert(), field='op', raw=False)
+        self.assertRaises(NodeError, parse('a + b').body[0].value.f.put, Lt(), field='op', raw=False)
 
-        self.assertRaises(NodeTypeError, parse('-a').body[0].value.f.put, Mult(), field='op', raw=False)
-        self.assertRaises(NodeTypeError, parse('-a').body[0].value.f.put, And(), field='op', raw=False)
-        self.assertRaises(NodeTypeError, parse('-a').body[0].value.f.put, Sub(), field='op', raw=False)
+        self.assertRaises(NodeError, parse('-a').body[0].value.f.put, Mult(), field='op', raw=False)
+        self.assertRaises(NodeError, parse('-a').body[0].value.f.put, And(), field='op', raw=False)
+        self.assertRaises(NodeError, parse('-a').body[0].value.f.put, Sub(), field='op', raw=False)
         self.assertEqual('+a', parse('-a').body[0].value.f.put(UAdd(), field='op', raw=False).src)
-        self.assertRaises(NodeTypeError, parse('-a').body[0].value.f.put, Lt(), field='op', raw=False)
+        self.assertRaises(NodeError, parse('-a').body[0].value.f.put, Lt(), field='op', raw=False)
 
-        self.assertRaises(NodeTypeError, parse('a < b').body[0].value.f.put, Mult(), 0, field='ops', raw=False)
-        self.assertRaises(NodeTypeError, parse('a < b').body[0].value.f.put, And(), 0, field='ops', raw=False)
-        self.assertRaises(NodeTypeError, parse('a < b').body[0].value.f.put, Sub(), 0, field='ops', raw=False)
-        self.assertRaises(NodeTypeError, parse('a < b').body[0].value.f.put, UAdd(), 0, field='ops', raw=False)
+        self.assertRaises(NodeError, parse('a < b').body[0].value.f.put, Mult(), 0, field='ops', raw=False)
+        self.assertRaises(NodeError, parse('a < b').body[0].value.f.put, And(), 0, field='ops', raw=False)
+        self.assertRaises(NodeError, parse('a < b').body[0].value.f.put, Sub(), 0, field='ops', raw=False)
+        self.assertRaises(NodeError, parse('a < b').body[0].value.f.put, UAdd(), 0, field='ops', raw=False)
         self.assertEqual('a > b', parse('a < b').body[0].value.f.put(Gt(), 0, field='ops', raw=False).src)
 
         self.assertEqual('a >>= b', parse('a *= b').body[0].f.put(FST(RShift(), ['>>=']), field='op', raw=False).src)
-        self.assertRaises(NodeTypeError, parse('a *= b').body[0].f.put, FST(And(), ['and']), field='op', raw=False)
-        self.assertRaises(NodeTypeError, parse('a *= b').body[0].f.put, FST(Add(), ['+']), field='op', raw=False)
-        self.assertRaises(NodeTypeError, parse('a *= b').body[0].f.put, FST(Invert(), ['~']), field='op', raw=False)
-        self.assertRaises(NodeTypeError, parse('a *= b').body[0].f.put, FST(Lt(), ['~']), field='op', raw=False)
+        self.assertRaises(NodeError, parse('a *= b').body[0].f.put, FST(And(), ['and']), field='op', raw=False)
+        self.assertRaises(NodeError, parse('a *= b').body[0].f.put, FST(Add(), ['+']), field='op', raw=False)
+        self.assertRaises(NodeError, parse('a *= b').body[0].f.put, FST(Invert(), ['~']), field='op', raw=False)
+        self.assertRaises(NodeError, parse('a *= b').body[0].f.put, FST(Lt(), ['~']), field='op', raw=False)
 
-        self.assertRaises(NodeTypeError, parse('a or b').body[0].value.f.put, FST(Mult(), ['*']), field='op', raw=False)
+        self.assertRaises(NodeError, parse('a or b').body[0].value.f.put, FST(Mult(), ['*']), field='op', raw=False)
         self.assertEqual('a and b', parse('a or b').body[0].value.f.put(FST(And(), ['and']), field='op', raw=False).src)
-        self.assertRaises(NodeTypeError, parse('a or b').body[0].value.f.put, FST(Div(), ['/']), field='op', raw=False)
-        self.assertRaises(NodeTypeError, parse('a or b').body[0].value.f.put, FST(Invert(), ['~']), field='op', raw=False)
-        self.assertRaises(NodeTypeError, parse('a or b').body[0].value.f.put, FST(Lt(), ['~']), field='op', raw=False)
+        self.assertRaises(NodeError, parse('a or b').body[0].value.f.put, FST(Div(), ['/']), field='op', raw=False)
+        self.assertRaises(NodeError, parse('a or b').body[0].value.f.put, FST(Invert(), ['~']), field='op', raw=False)
+        self.assertRaises(NodeError, parse('a or b').body[0].value.f.put, FST(Lt(), ['~']), field='op', raw=False)
 
         self.assertEqual('a * b', parse('a + b').body[0].value.f.put(FST(Mult(), ['*']), field='op', raw=False).src)
-        self.assertRaises(NodeTypeError, parse('a + b').body[0].value.f.put, FST(And(), ['and']), field='op', raw=False)
-        self.assertRaises(NodeTypeError, parse('a + b').body[0].value.f.put, FST(RShift(), ['>>=']), field='op', raw=False)
-        self.assertRaises(NodeTypeError, parse('a + b').body[0].value.f.put, FST(Invert(), ['~']), field='op', raw=False)
-        self.assertRaises(NodeTypeError, parse('a + b').body[0].value.f.put, FST(Lt(), ['~']), field='op', raw=False)
+        self.assertRaises(NodeError, parse('a + b').body[0].value.f.put, FST(And(), ['and']), field='op', raw=False)
+        self.assertRaises(NodeError, parse('a + b').body[0].value.f.put, FST(RShift(), ['>>=']), field='op', raw=False)
+        self.assertRaises(NodeError, parse('a + b').body[0].value.f.put, FST(Invert(), ['~']), field='op', raw=False)
+        self.assertRaises(NodeError, parse('a + b').body[0].value.f.put, FST(Lt(), ['~']), field='op', raw=False)
 
-        self.assertRaises(NodeTypeError, parse('-a').body[0].value.f.put, FST(Mult(), ['*']), field='op', raw=False)
-        self.assertRaises(NodeTypeError, parse('-a').body[0].value.f.put, FST(And(), ['and']), field='op', raw=False)
-        self.assertRaises(NodeTypeError, parse('-a').body[0].value.f.put, FST(Sub(), ['-=']), field='op', raw=False)
+        self.assertRaises(NodeError, parse('-a').body[0].value.f.put, FST(Mult(), ['*']), field='op', raw=False)
+        self.assertRaises(NodeError, parse('-a').body[0].value.f.put, FST(And(), ['and']), field='op', raw=False)
+        self.assertRaises(NodeError, parse('-a').body[0].value.f.put, FST(Sub(), ['-=']), field='op', raw=False)
         self.assertEqual('+a', parse('-a').body[0].value.f.put(FST(UAdd(), ['+']), field='op', raw=False).src)
-        self.assertRaises(NodeTypeError, parse('-a').body[0].value.f.put, FST(Lt(), ['-=']), field='op', raw=False)
+        self.assertRaises(NodeError, parse('-a').body[0].value.f.put, FST(Lt(), ['-=']), field='op', raw=False)
 
-        self.assertRaises(NodeTypeError, parse('a < b').body[0].value.f.put, FST(Mult(), ['*']), 0, field='ops', raw=False)
-        self.assertRaises(NodeTypeError, parse('a < b').body[0].value.f.put, FST(And(), ['and']), 0, field='ops', raw=False)
-        self.assertRaises(NodeTypeError, parse('a < b').body[0].value.f.put, FST(Sub(), ['-=']), 0, field='ops', raw=False)
-        self.assertRaises(NodeTypeError, parse('a < b').body[0].value.f.put, FST(UAdd(), ['-=']), 0, field='ops', raw=False)
+        self.assertRaises(NodeError, parse('a < b').body[0].value.f.put, FST(Mult(), ['*']), 0, field='ops', raw=False)
+        self.assertRaises(NodeError, parse('a < b').body[0].value.f.put, FST(And(), ['and']), 0, field='ops', raw=False)
+        self.assertRaises(NodeError, parse('a < b').body[0].value.f.put, FST(Sub(), ['-=']), 0, field='ops', raw=False)
+        self.assertRaises(NodeError, parse('a < b').body[0].value.f.put, FST(UAdd(), ['-=']), 0, field='ops', raw=False)
         self.assertEqual('a > b', parse('a < b').body[0].value.f.put(FST(Gt(), ['>']), 0, field='ops', raw=False).src)
 
         # make sure we can't put TO invalid locations
 
         f = parse('[1, 2, 3]').body[0].value.f
         # self.assertEqual('[1, 4]', f.elts[1].replace('4', to=f.elts[2], raw=False).root.src)
-        self.assertRaises(NodeTypeError, f.elts[1].replace, '4', to=f.elts[2], raw=False)
+        self.assertRaises(NodeError, f.elts[1].replace, '4', to=f.elts[2], raw=False)
 
         f = parse('[1, 2, 3]').body[0].value.f
         self.assertRaises(ValueError, f.elts[1].replace, '4', to=f.elts[0], raw=False)
 
         f = parse('a = b').body[0].f
-        self.assertRaises(NodeTypeError, f.targets[0].replace, 'c', to=f.value, raw=False)
+        self.assertRaises(NodeError, f.targets[0].replace, 'c', to=f.value, raw=False)
 
         f = parse('a = b').body[0].f
         self.assertRaises(ValueError, f.value.replace, 'c', to=f.targets[0], raw=False)
@@ -35586,8 +35586,8 @@ class cls:
         f = parse('a = b').body[0].f
         s = parse('s[a:b]').body[0].value.slice.f.copy()
         v = parse('f"{a}"').body[0].value.values[0].f.copy()  # .src will be wrong on py < 3.12 but we only care about the AST
-        self.assertRaises(NodeTypeError, f.put, s, field='value', raw=False)
-        self.assertRaises(NodeTypeError, f.put, v, field='value', raw=False)
+        self.assertRaises(NodeError, f.put, s, field='value', raw=False)
+        self.assertRaises(NodeError, f.put, v, field='value', raw=False)
 
         # slice in tuple
 

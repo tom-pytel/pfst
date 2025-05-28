@@ -8,7 +8,7 @@ from typing import Callable, Literal, Optional, Union
 from .astutil import *
 
 from .shared import (
-    NodeTypeError, astfield, fstloc,
+    NodeError, astfield, fstloc,
     BLOCK,
     HAS_DOCSTRING,
     Code,
