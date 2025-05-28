@@ -35643,6 +35643,17 @@ class cls:
             g.body[0].put(f.a, 0, field='handlers', raw=False)
             self.assertEqual('try:\n    pass\nexcept Exception:\n    pass\n', g.src)
 
+			# except* can't delete type
+
+            f = FST('''
+try:
+	raise ExceptionGroup("eg", [ValueError(42)])
+except* (TypeError, ExceptionGroup):
+	pass
+            '''.strip())
+            g = f.body[0].handlers[0]
+            self.assertRaises(ValueError, g.put, None, 'type', raw=False)
+
             # *args: *starred annotation
 
             f = FST('def f(*args: *starred): pass')
@@ -35691,17 +35702,13 @@ class cls:
         f.body[0].cases[0].pattern.put(g, 'pattern', raw=False)
         self.assertEqual('match a:\n case _ as unknown: pass', f.src)
 
-        if sys.version_info[:2] >= (3, 11):
-			# except* can't delete type
+        # can't delete keyword.arg if non-keywords follow
 
-            f = FST('''
-try:
-	raise ExceptionGroup("eg", [ValueError(42)])
-except* (TypeError, ExceptionGroup):
-	pass
-            '''.strip())
-            g = f.body[0].handlers[0]
-            self.assertRaises(ValueError, g.put, None, 'type', raw=False)
+        f = FST('call(a=b, *c)').body[0].value.copy()
+        self.assertRaises(ValueError, f.keywords[0].put, None, 'arg')
+
+        f = FST('class c(a=b, *c): pass').body[0].copy()
+        self.assertRaises(ValueError, f.keywords[0].put, None, 'arg')
 
     def test_put_one_pars(self):
         f = FST('a = b').body[0]

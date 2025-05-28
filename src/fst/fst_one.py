@@ -571,6 +571,20 @@ def _put_one_ExceptHandler_name(self: 'FST', code: Code | None, idx: int | None,
     return ret
 
 
+def _put_one_keyword_arg(self: 'FST', code: Code | None, idx: int | None, field: str, child: str,
+                         static: onestatic, **options) -> str:
+    if code is None and (parent := self.parent):
+        if isinstance(parenta := parent.a, Call):
+            if (args := parenta.args) and args[-1].f.loc > self.loc:
+                raise ValueError(f'cannot delete Call.keywords[{self.pfield.idx}].arg in this state (non-keywords follow)')
+
+        elif isinstance(parenta, ClassDef):
+            if (bases := parenta.bases) and bases[-1].f.loc > self.loc:
+                raise ValueError(f'cannot delete ClassDef.keywords[{self.pfield.idx}].arg in this state (non-keywords follow)')
+
+    return _put_one_identifier_optional(self, code, idx, field, child, static, **options)
+
+
 def _put_one_MatchStar_name(self: 'FST', code: Code | None, idx: int | None, field: str, child: str, static: onestatic,
                             **options) -> str:
     """Slightly annoying MatchStar.name. '_' really means delete."""
@@ -1350,7 +1364,7 @@ _PUT_ONE_HANDLERS = {
     (arguments, 'kwarg'):                 (_put_one_exprish_optional, None, onestatic(_one_info_arguments_kwarg, _restrict_default, code_as=_code_as_arg)), # arg?
     (arg, 'arg'):                         (_put_one_identifier_required, None, _onestatic_identifier_required), # identifier
     (arg, 'annotation'):                  (_put_one_exprish_optional, None, onestatic(_one_info_arg_annotation, _restrict_default)), # expr?  - exclude [Lambda, Yield, YieldFrom, Await, NamedExpr]?
-    (keyword, 'arg'):                     (_put_one_identifier_optional, None, onestatic(_one_info_keyword_arg, _restrict_default, code_as=_code_as_identifier)), # identifier?
+    (keyword, 'arg'):                     (_put_one_keyword_arg, None, onestatic(_one_info_keyword_arg, _restrict_default, code_as=_code_as_identifier)), # identifier?
     (keyword, 'value'):                   (_put_one_exprish_required, None, _onestatic_expr_required), # expr
     (alias, 'name'):                      (_put_one_identifier_required, None, onestatic(_one_info_identifier_alias, _restrict_default, code_as=_code_as_identifier_alias)), # identifier  - alias star or dotted not valid for all uses but being general here (and lazy, don't feel like checking parent)
     (alias, 'asname'):                    (_put_one_identifier_optional, None, onestatic(_one_info_alias_asname, _restrict_default, code_as=_code_as_identifier)), # identifier?
