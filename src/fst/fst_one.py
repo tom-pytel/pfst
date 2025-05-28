@@ -299,26 +299,29 @@ def _make_exprish_fst(self: 'FST', code: Code | None, idx: int | None, field: st
     put_fst.indent_lns(self.get_indent(), docstr=options.get('docstr'))
 
 
-    # TODO: REMOVE once fix verified
-    # dcol_offset   = self.root._lines[ln].c2b(col)
-    # print('-'*80); self.parent.dump(True); print('.'*80)  # DEBUG!
-    # params_offset = self.put_src(put_fst._lines, ln, col, end_ln, end_col, True, False, exclude=self)
+    dcol_offset    = self.root._lines[ln].c2b(col)
+    end_col_offset = lines[end_ln].c2b(end_col)
+    params_offset  = self.put_src(put_fst._lines, ln, col, end_ln, end_col, True, False, exclude=self)
 
-    # put_fst.offset(0, 0, ln, dcol_offset)
-    # self.offset(*params_offset, exclude=target, self_=False)  # excluding an fstloc instead of FST is harmless, will not exclude anything
-    # print('-'*80); self.parent.dump(True); print('.'*80)  # DEBUG!
-    # set_ctx(put_ast, ctx)
-    # TODO: REMOVE once fix verified
-
-
-    dcol_offset   = self.root._lines[ln].c2b(col)
-    params_offset = self.put_src(put_fst._lines, ln, col, end_ln, end_col, True, True, exclude=self,
-                                 offset_excluded=False)
-
-    self.offset(*params_offset, True, False, exclude=self)  # we need to do three individual .offset()s (first one in put_src) in order to handle insert to lower/upper in 'a[::]' as well as change constant in 'f"{-0.:.1f}"' correctly
     self.offset(*params_offset, exclude=target, self_=False)  # excluding an fstloc instead of FST is harmless, will not exclude anything
     put_fst.offset(0, 0, ln, dcol_offset)
     set_ctx(put_ast, ctx)
+
+    # possibly fix FormattedValue and Interpolation .format_spec location if present above self - because can follow IMMEDIATELY after modified value (which doesn't normally happen in py syntax) and thus would not have their start offset due to head=False in put_src() above
+
+    cur = self
+
+    while parent := cur.parent:
+        if isinstance(parenta := parent.a, (FormattedValue, Interpolation)):
+            if (cur.pfield.name == 'value' and (fs := parenta.format_spec) and
+                fs.col_offset == end_col_offset and fs.lineno == end_ln + 1
+            ):
+                fs.lineno     = (a := self.a).end_lineno
+                fs.col_offset = a.end_col_offset
+
+            break
+
+        cur = parent
 
     return put_fst
 
