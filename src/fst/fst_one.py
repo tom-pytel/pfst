@@ -1134,13 +1134,13 @@ def _one_info_MatchAs_pattern(self: 'FST', static: onestatic, idx: int | None, f
     ln, col, end_ln, end_col = self.loc
 
     if (pattern := a.pattern) is None:
-        return oneinfo('', fstloc(ln, col, ln, col))
+        return oneinfo('', fstloc(ln, col, ln, col), None, ' as ')
 
     lines           = self.root._lines
     as_ln, as_col   = _next_find(lines, *pattern.f.pars()[2:], end_ln, end_col, 'as')  # skip the 'as'
     end_ln, end_col = _next_find(lines, as_ln, as_col + 2, end_ln, end_col, name)
 
-    return oneinfo('', fstloc(ln, col, end_ln, end_col), None, ' as ')
+    return oneinfo('', fstloc(ln, col, end_ln, end_col))
 
 def _one_info_MatchAs_name(self: 'FST', static: onestatic, idx: int | None, field: str) -> oneinfo:
     ln, col, end_ln, end_col = self.loc

@@ -35682,6 +35682,15 @@ class cls:
         f.body[0].value.put('yield 1', 0, 'args', raw=False)
         self.assertEqual('call((yield 1))', f.src)
 
+        # MatchAs, ugh...
+
+        f = FST('match a:\n case _ as unknown: pass')
+        g = f.body[0].cases[0].pattern.pattern.copy()
+        f.body[0].cases[0].pattern.put(None, 'pattern', raw=False)
+        self.assertEqual('match a:\n case unknown: pass', f.src)
+        f.body[0].cases[0].pattern.put(g, 'pattern', raw=False)
+        self.assertEqual('match a:\n case _ as unknown: pass', f.src)
+
     def test_put_one_pars(self):
         f = FST('a = b').body[0]
         g = FST('(i := j)').body[0].value.copy(pars=False)
