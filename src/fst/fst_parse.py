@@ -123,7 +123,7 @@ def _parse_expr_or_slice(src: str, parse_params: dict = {}) -> AST:
 
     try:
         ast = _parse_slice(src, parse_params)
-    except SyntaxError:  # in case of lone Starred on py < 3.11
+    except SyntaxError:  # in case of lone naked Starred in slice in py < 3.11
         return _parse_expr(src, parse_params)
 
     if (isinstance(ast, Tuple) and len(elts := ast.elts) == 1 and isinstance(e0 := elts[0], Starred) and  # check for this one stupid case

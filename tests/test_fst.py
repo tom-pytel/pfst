@@ -29629,7 +29629,7 @@ def f():
         self.assertEqual((0, 5, 0, 19), f.body[0].value.args[0].loc)
 
         f = parse('call((((i for i in j))))').f
-        f.body[0].value.args[0]._unparenthesize_grouping(share=True)
+        f.body[0].value.args[0]._unparenthesize_grouping(shared=True)
         self.assertEqual(f.src, 'call(i for i in j)')
         self.assertEqual((0, 0, 0, 18), f.loc)
         self.assertEqual((0, 0, 0, 18), f.body[0].loc)
@@ -29638,7 +29638,7 @@ def f():
         self.assertEqual((0, 4, 0, 18), f.body[0].value.args[0].loc)
 
         f = parse('call( ( ( (i for i in j) ) ) )').f
-        f.body[0].value.args[0]._unparenthesize_grouping(share=True)
+        f.body[0].value.args[0]._unparenthesize_grouping(shared=True)
         self.assertEqual(f.src, 'call(i for i in j)')
         self.assertEqual((0, 0, 0, 18), f.loc)
         self.assertEqual((0, 0, 0, 18), f.body[0].loc)
@@ -29647,7 +29647,7 @@ def f():
         self.assertEqual((0, 4, 0, 18), f.body[0].value.args[0].loc)
 
         f = parse('call((((i for i in j))),)').f
-        f.body[0].value.args[0]._unparenthesize_grouping(share=True)
+        f.body[0].value.args[0]._unparenthesize_grouping(shared=True)
         self.assertEqual(f.src, 'call(i for i in j)')
         self.assertEqual((0, 0, 0, 18), f.loc)
         self.assertEqual((0, 0, 0, 18), f.body[0].loc)
@@ -29656,7 +29656,7 @@ def f():
         self.assertEqual((0, 4, 0, 18), f.body[0].value.args[0].loc)
 
         f = parse('call((((i for i in j))),)').f
-        f.body[0].value.args[0]._unparenthesize_grouping(share=False)
+        f.body[0].value.args[0]._unparenthesize_grouping(shared=False)
         self.assertEqual(f.src, 'call((i for i in j),)')
         self.assertEqual((0, 0, 0, 21), f.loc)
         self.assertEqual((0, 0, 0, 21), f.body[0].loc)
