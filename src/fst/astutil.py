@@ -1134,7 +1134,7 @@ _PRECEDENCE_NODE_FIELDS = {  # default is _Precedence.TEST
 }
 
 def precedence_require_parens_by_type(child_type: type[AST], parent_type: type[AST], field: str,
-                                      flags: dict[str, bool] = {}) -> bool:
+                                      **flags: dict[str, bool]) -> bool:
     """Returns whether parentheses are required for the child for the given parent / child structure or not. Both parent
     and child `BoolOp`, `BinOp` and `UnaryOp` types should be passed as the type of the 'op' field.
 
@@ -1204,4 +1204,4 @@ def precedence_require_parens(child: AST, parent: AST, field: str, idx: int | No
         if child_cls is Constant and isinstance(child.value, int):
             flags['attr_val_int'] = True
 
-    return precedence_require_parens_by_type(child_type, parent_type, field, flags)
+    return precedence_require_parens_by_type(child_type, parent_type, field, **flags)

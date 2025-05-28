@@ -469,6 +469,20 @@ def _put_one_Lambda_arguments(self: 'FST', code: Code | None, idx: int | None, f
     return _put_one_exprish_required(self, code, idx, field, child, static, False, target, prefix, **options)
 
 
+def _put_one_Dict_keys(self: 'FST', code: Code | None, idx: int | None, field: str, child: AST,
+                       static: onestatic, **options) -> 'FST':
+    """Put optional dict key and if deleted parenthesize the value if needed."""
+
+    ret = _put_one_exprish_optional(self, code, idx, field, child, static, **options)
+
+    if (code is None and not (value := (a := self.a).values[idx].f).is_atom() and
+        precedence_require_parens_by_type(value.a.__class__, a.__class__, 'values', dict_key_None=True)
+    ):
+        value._parenthesize_grouping()
+
+    return ret
+
+
 def _put_one_MatchValue_value(self: 'FST', code: Code | None, idx: int | None, field: str, child: AST,
                               static: onestatic, **options) -> 'FST':
     """Put MatchValue.value. Need to do this because a standalone MatchValue does not encompass parenthesized value
@@ -573,6 +587,8 @@ def _put_one_ExceptHandler_name(self: 'FST', code: Code | None, idx: int | None,
 
 def _put_one_keyword_arg(self: 'FST', code: Code | None, idx: int | None, field: str, child: str,
                          static: onestatic, **options) -> str:
+    """Don't allow delete keyword.arg if non-keywords follow."""
+
     if code is None and (parent := self.parent):
         if isinstance(parenta := parent.a, Call):
             if (args := parenta.args) and args[-1].f.loc > self.loc:
@@ -1309,7 +1325,7 @@ _PUT_ONE_HANDLERS = {
     (IfExp, 'body'):                      (_put_one_exprish_required, None, _onestatic_expr_required), # expr
     (IfExp, 'test'):                      (_put_one_exprish_required, None, _onestatic_expr_required), # expr
     (IfExp, 'orelse'):                    (_put_one_exprish_required, None, _onestatic_expr_required), # expr
-    (Dict, 'keys'):                       (_put_one_exprish_optional, None, onestatic(_one_info_Dict_key, _restrict_default)), # expr*
+    (Dict, 'keys'):                       (_put_one_Dict_keys, None, onestatic(_one_info_Dict_key, _restrict_default)), # expr*
     (Dict, 'values'):                     (_put_one_exprish_required, None, _onestatic_expr_required), # expr*
     (Set, 'elts'):                        (_put_one_exprish_sliceable, None, _onestatic_expr_required), # expr*
     (ListComp, 'elt'):                    (_put_one_exprish_required, None, _onestatic_expr_required), # expr

@@ -35660,6 +35660,7 @@ except* (TypeError, ExceptionGroup):
             g = f.body[0].args.vararg.copy()
             f.body[0].args.put(g.a, 'vararg', raw=False)
             self.assertEqual('def f(*args: *starred): pass', f.src)
+            f.verify()
 
         # tuple slice in annotation
 
@@ -35667,6 +35668,7 @@ except* (TypeError, ExceptionGroup):
         g = f.body[0].args.args[0].annotation.slice.elts[0].copy()
         f.body[0].args.args[0].annotation.slice.put(g.src, 0, 'elts', raw=False)
         self.assertEqual('def f(x: a[b:c, d:e]): pass', f.src)
+        f.verify()
 
         # naked MatchStar and other star/sequence
 
@@ -35674,24 +35676,29 @@ except* (TypeError, ExceptionGroup):
         g = f.body[0].cases[0].pattern.patterns[0].copy()
         f.body[0].cases[0].pattern.put(g.a, 0, 'patterns', raw=False)
         self.assertEqual('match x: \n case [*_]: pass', f.src)
+        f.verify()
 
         f = FST('match x: \n case 1: pass')
         f.body[0].cases[0].put('*x, 1,', 'pattern', raw=False)
         self.assertEqual('match x: \n case *x, 1,: pass', f.src)
+        f.verify()
 
         f = FST('match x: \n case 1: pass')
         f.body[0].cases[0].put('1, *x,', 'pattern', raw=False)
         self.assertEqual('match x: \n case 1, *x,: pass', f.src)
+        f.verify()
 
         # special Call.args but not otherwise
 
         f = FST('call(a)')
         f.body[0].value.put('*[] or []', 0, 'args', raw=False)
         self.assertEqual('call(*[] or [])', f.src)
+        f.verify()
 
         f = FST('call(a)')
         f.body[0].value.put('yield 1', 0, 'args', raw=False)
         self.assertEqual('call((yield 1))', f.src)
+        f.verify()
 
         # MatchAs, ugh...
 
@@ -35701,6 +35708,7 @@ except* (TypeError, ExceptionGroup):
         self.assertEqual('match a:\n case unknown: pass', f.src)
         f.body[0].cases[0].pattern.put(g, 'pattern', raw=False)
         self.assertEqual('match a:\n case _ as unknown: pass', f.src)
+        f.verify()
 
         # can't delete keyword.arg if non-keywords follow
 
@@ -35709,6 +35717,16 @@ except* (TypeError, ExceptionGroup):
 
         f = FST('class c(a=b, *c): pass').body[0].copy()
         self.assertRaises(ValueError, f.keywords[0].put, None, 'arg')
+
+        # parenthesize value of deleted Dict key if it needs it
+
+        f = FST('{a: lambda b: None}')
+        g = f.body[0].value.keys[0].copy()
+        f.body[0].value.put(None, 0, 'keys')
+        self.assertEqual('{**(lambda b: None)}', f.src)
+        f.body[0].value.put(g.a, 0, 'keys')
+        self.assertEqual('{a: (lambda b: None)}', f.src)
+        f.verify()
 
     def test_put_one_pars(self):
         f = FST('a = b').body[0]
