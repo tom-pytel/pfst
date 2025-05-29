@@ -1642,7 +1642,7 @@ class FST:
 
         return lns
 
-    def pars(self, count: bool = False, *, shared: bool = True, pars: bool = True,
+    def pars(self, ret_count: bool = False, *, shared: bool = True, pars: bool = True,
              ) -> fstloc | tuple[fstloc | None, int] | None:
         """Return the location of enclosing grouping parentheses if present. Will balance parentheses if `self` is an
         element of a tuple and not return the parentheses of the tuple. Likwise will not return the parentheses of an
@@ -1651,27 +1651,28 @@ class FST:
         sharing parameters with the call arguments.
 
         **Parameters:**
-        - `count`: `True` means return the number of parentheses along with the location, otherwise just the location.
+        - `ret_count`: `True` means return the number of parentheses along with the location, otherwise just the
+            location.
         - `shared`: If `True` then will include parentheses of a single call argument generator expression if they are
-            shared with the call arguments enclosing parentheses, return -1 count in this case. If `False` then Does not
-            return these, and thus not a full valid `GeneratorExp` location. Is not checked at all if `pars=False`.
+            shared with the call arguments enclosing parentheses, return -1 ret_count in this case. If `False` then Does
+            not return these, and thus not a full valid `GeneratorExp` location. Is not checked at all if `pars=False`.
         - `pars`: `True` means return parentheses if present and `self.bloc` otherwise, `False` always `self.bloc`. This
             parameter exists purely for convenience.
 
         **Returns:**
         - `fstloc | None`: Location of enclosing parentheses if present else `self.bloc` (which can be `None`). If you
-            don't need an exact count of parentheses and just need to know if there are or not then the return can be
-            checked if `fst.pars() is fst.bloc`. If there are no parentheses then `.bloc` is guaranteed to be returned
-            identically. This can also be used to check for negative count in the case of `shared=False` via
-            `fst.pars() > fst.bloc`.
-        - `(fstloc, count)`: Location of enclosing parentheses or `self.bloc` and number of nested parenthesess found
-            (if requested with `count`). `count` can be -1 in the case of a `GeneratorExp` sharing parentheses with
-            `Call` `arguments` if it is the only argument, but only if these parentheses are explicitly excluded with
-            `shared=False`.
+            don't need an exact ret_count of parentheses and just need to know if there are or not then the return can
+            be checked if `fst.pars() is fst.bloc`. If there are no parentheses then `.bloc` is guaranteed to be
+            returned identically. This can also be used to check for negative ret_count in the case of `shared=False`
+            via `fst.pars() > fst.bloc`.
+        - `(fstloc, ret_count)`: Location of enclosing parentheses or `self.bloc` and number of nested parenthesess
+            found (if requested with `ret_count`). `ret_count` can be -1 in the case of a `GeneratorExp` sharing
+            parentheses with `Call` `arguments` if it is the only argument, but only if these parentheses are explicitly
+            excluded with `shared=False`.
         """
 
         if not pars or not isinstance(self.a, PARENTHESIZABLE):  # pars around all `alias`es or `withitem`s are considered part of the parent even if there is only one of those elements which looks parenthesized
-            return (self.bloc, 0) if count else self.bloc
+            return (self.bloc, 0) if ret_count else self.bloc
 
         key = 'parsS' if shared else 'parsN'
 
@@ -1680,7 +1681,7 @@ class FST:
         except KeyError:
             pass
         else:
-            return cached if count else cached[0]
+            return cached if ret_count else cached[0]
 
         rpars = _next_pars(self.root._lines, *self.bloc[2:], *self._next_bound())
 
@@ -1694,14 +1695,14 @@ class FST:
 
             self._cache[key] = locncount
 
-            return locncount if count else locncount[0]
+            return locncount if ret_count else locncount[0]
 
         lpars = _prev_pars(self.root._lines, *self._prev_bound(), *self.bloc[:2])
 
         if (llpars := len(lpars)) == 1:  # no pars on left
             locncount = self._cache[key] = (self.bloc, 0)
 
-            return locncount if count else self.bloc
+            return locncount if ret_count else self.bloc
 
         if llpars <= lrpars and (self.is_solo_call_arg() or self.is_solo_class_base() or self.is_solo_matchcls_pat()):
             llpars -= 1
@@ -1713,7 +1714,7 @@ class FST:
 
         locncount = self._cache[key] = (loc, npars)
 
-        return locncount if count else loc
+        return locncount if ret_count else loc
 
     # ------------------------------------------------------------------------------------------------------------------
     # Low level modifications

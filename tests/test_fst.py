@@ -15591,7 +15591,7 @@ Module .. ROOT 0,0 -> 0,1
 (r"""( # 1
 i
 # 2
-)""", 'body[0]', None, None, {'raw': False, 'pars': False, 'verify': False, 'comment': 'will wind up with wrong unreparsable tuple position'}, r"""a, b""", r"""( # 1
+)""", 'body[0]', None, None, {'raw': False, 'pars': False, '_verify': False, 'comment': 'will wind up with wrong unreparsable tuple position'}, r"""a, b""", r"""( # 1
 a, b
 # 2
 )""", r"""
@@ -28441,7 +28441,7 @@ def regen_get_slice_seq():
             assert not tsrc.startswith('\n') or tsrc.endswith('\n')
             assert not ssrc.startswith('\n') or ssrc.endswith('\n')
 
-            if options.get('verify', True):
+            if options.get('_verify', True):
                 t.f.verify(raise_=True)
                 s.verify(raise_=True)
 
@@ -28607,7 +28607,7 @@ def regen_put_one():
                 tdst  = f.root.src
                 tdump = f.root.dump(out=list, compact=True)
 
-                if options.get('verify', True):
+                if options.get('_verify', True):
                     f.root.verify(raise_=True)
 
             newlines.extend(f'''(r"""{dst}""", {attr!r}, {idx}, {field!r}, {options!r}, r"""{src}""", r"""{tdst}""", r"""'''.split('\n'))
@@ -35376,7 +35376,7 @@ class cls:
                     tdst  = f.root.src
                     tdump = f.root.dump(out=list, compact=True)
 
-                    if options.get('verify', True):
+                    if options.get('_verify', True):
                         f.root.verify(raise_=True)
 
                 self.assertEqual(tdst, put_src)
