@@ -326,9 +326,9 @@ def _make_exprish_fst(self: 'FST', code: Code | None, idx: int | None, field: st
     return put_fst
 
 
-def _put_one_exprish_required(self: 'FST', code: Code | None, idx: int | None, field: str, child: list[AST] | AST | None,
-                              static: onestatic, validate: bool = True, target: fstloc | None = None, prefix: str = '',
-                              **options) -> 'FST':
+def _put_one_exprish_required(self: 'FST', code: Code | None, idx: int | None, field: str,
+                              child: list[AST] | AST | None, static: onestatic, validate: bool = True,
+                              target: fstloc | None = None, prefix: str = '', **options) -> 'FST':
     """Put a single required expression. Can be standalone or as part of sequence."""
 
     if validate:
@@ -347,8 +347,8 @@ def _put_one_exprish_required(self: 'FST', code: Code | None, idx: int | None, f
     return childf
 
 
-def _put_one_exprish_optional(self: 'FST', code: Code | None, idx: int | None, field: str, child: AST, static: onestatic,
-                              **options) -> Optional['FST']:
+def _put_one_exprish_optional(self: 'FST', code: Code | None, idx: int | None, field: str, child: AST,
+                              static: onestatic, **options) -> Optional['FST']:
     """Put new, replace or delete an optional expression."""
 
     child = _validate_put(self, code, idx, field, child, options, can_del=True)
@@ -387,21 +387,15 @@ def _put_one_exprish_optional(self: 'FST', code: Code | None, idx: int | None, f
     return put_fst
 
 
-def _put_one_exprish_sliceable(self: 'FST', code: Code | None, idx: int | None, field: str, child: AST, static: onestatic,
-                               **options) -> Optional['FST']:
+def _put_one_exprish_sliceable(self: 'FST', code: Code | None, idx: int | None, field: str, child: AST,
+                               static: onestatic, **options) -> Optional['FST']:
     """If deleting then will do so using slice operation, otherwise just a required expression."""
 
-    # if (to := options.get('to')) or code is None:
-    #     self._put_slice(code, *_slice_indices(self, idx, field, child, to), field, True, **options)
-
-    #     return None if code is None else child[idx].f
     if code is None:
         if options.get('to'):
             raise NodeError("delete with 'to' requires 'raw'")
 
-        self._put_slice(code, idx := _fixup_one_index(len(child), idx), idx + 1, field, True, **options)
-
-        return None if code is None else child[idx].f
+        return lambda: self._put_slice(code, i := _fixup_one_index(len(child), idx), i + 1, field, True, **options)  # this informs _put_one() to delegate operation to this
 
     return _put_one_exprish_required(self, code, idx, field, child, static, **options)
 
@@ -434,16 +428,6 @@ def _put_one_Compare_None(self: 'FST', code: Code | None, idx: int | None, field
         child = ast.left
 
     return _put_one_exprish_required(self, code, idx, field, child, static, **options)
-
-
-def _put_one_Interpolation_value(self: 'FST', code: Code | None, idx: int | None, field: str, child: AST,
-                                 static: onestatic, **options) -> 'FST':
-    """Put Interpolation.value. Do normal expr put and if successful copy source to `.str` attribute."""
-
-    ret        = _put_one_exprish_required(self, code, idx, field, child, static, **options)
-    self.a.str = self.get_src(*ret.loc)
-
-    return ret
 
 
 def _put_one_Lambda_arguments(self: 'FST', code: Code | None, idx: int | None, field: str, child: AST,
@@ -576,23 +560,19 @@ def _put_one_identifier_sliceable(self: 'FST', code: Code | None, idx: int | Non
                                   static: onestatic, **options) -> Optional['FST']:
     """If deleting then will do so using slice operation, otherwise just a required identifier."""
 
-    # if (to := options.get('to')) or code is None:
-    #     self._put_slice(code, *_slice_indices(self, idx, field, child, to), field, True, **options)
-
-    #     return None if code is None else child[idx]
     if code is None:
         if options.get('to'):
             raise NodeError("delete with 'to' requires 'raw'")
 
-        self._put_slice(code, idx := _fixup_one_index(len(child), idx), idx + 1, field, True, **options)
-
-        return None if code is None else child[idx]
+        return lambda: self._put_slice(code, i := _fixup_one_index(len(child), idx), i + 1, field, True, **options)  # this informs _put_one() to delegate operation to this
 
     return _put_one_identifier_required(self, code, idx, field, child, static, **options)
 
 
 def _put_one_ExceptHandler_name(self: 'FST', code: Code | None, idx: int | None, field: str, child: str,
                                 static: onestatic, **options) -> str:
+    """If adding a name to an ExceptHandler with tuple of exceptions then make sure it is parenthesized."""
+
     ret = _put_one_identifier_optional(self, code, idx, field, child, static, **options)
 
     if ret and (typef := self.a.type.f).is_parenthesized_tuple() is False:
@@ -667,23 +647,38 @@ def _put_one(self: 'FST', code: Code | None, idx: int | None, field: str | None,
     - `options`: See `FST.set_option`.
     """
 
-    ast      = self.a
-    child    = getattr(self.a, field) if field else None
-    raw      = FST.get_option('raw', options)
-    handlers = _PUT_ONE_HANDLERS.get((ast.__class__, field))
+    ast             = self.a
+    child           = getattr(self.a, field) if field else None
+    raw             = FST.get_option('raw', options)
+    handlers        = _PUT_ONE_HANDLERS.get((ast.__class__, field))
+    before_state    = FST._before_modify(self, field)
+    ret_or_delegate = None
 
     if raw is not True:
         try:
             if handlers:
-                handler_non_raw, _, static = handlers
+                handler, _, static = handlers
+                ret_or_delegate    = handler(self, code, idx, field, child, static, **options)
 
-                return handler_non_raw(self, code, idx, field, child, static, **options)
+                if not isinstance(ret_or_delegate, FunctionType):
+                    FST._after_modify(self, before_state)
+
+                    return ret_or_delegate
 
         except (SyntaxError, NodeError):
             if not raw:
                 raise
 
         else:
+            if ret_or_delegate is not None:  # delegate operation to slice?
+                # return ret_or_delegate()
+
+                ret = ret_or_delegate()
+
+                FST._after_modify(ret, before_state)  # TODO: REMOVE THIS! once slice operations do this themselves
+
+                return ret
+
             if not raw:
                 raise ValueError(f'cannot {"delete" if code is None else "replace"} {ast.__class__.__name__}.{field}')
 
@@ -1372,7 +1367,7 @@ _PUT_ONE_HANDLERS = {
     (Call, 'keywords'):                   (_put_one_exprish_sliceable, None, _onestatic_keyword_required), # keyword*
     (FormattedValue, 'value'):            (_put_one_exprish_required, None, _onestatic_expr_required), # expr
     # (FormattedValue, 'format_spec'):      (_put_one_default, None, None), # expr?
-    (Interpolation, 'value'):             (_put_one_Interpolation_value, None, _onestatic_expr_required), # expr
+    (Interpolation, 'value'):             (_put_one_exprish_required, None, _onestatic_expr_required), # expr
     # (Interpolation, 'format_spec'):       (_put_one_default, None, None), # expr?
     # (JoinedStr, 'values'):                (_put_one_default, None, None), # expr*  - ??? no location on py < 3.12
     # (TemplateStr, 'values'):              (_put_one_default, None, None), # expr*  - ??? no location on py < 3.12

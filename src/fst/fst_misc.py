@@ -2,18 +2,17 @@
 
 import re
 from ast import *
-from ast import parse as ast_parse
-from typing import Callable, Literal, Optional, Union
+from types import EllipsisType
+from typing import Any, Callable, Literal, Optional, Union
 
 from .astutil import *
+from .astutil import Interpolation
 
 from .shared import (
-    NodeError, astfield, fstloc,
+    astfield, fstloc,
     BLOCK,
     HAS_DOCSTRING,
-    Code,
     _next_src, _prev_src, _next_find, _prev_find, _next_pars, _prev_pars,
-    _coerce_ast
 )
 
 _astfieldctx = astfield('ctx')
@@ -34,6 +33,62 @@ def _make_tree_fst(ast: AST, parent: 'FST', pfield: astfield) -> 'FST':
 
 _GLOBALS = globals() | {'_GLOBALS': None}
 # ----------------------------------------------------------------------------------------------------------------------
+
+@staticmethod
+def _before_modify(fst: 'FST', field: str | None | EllipsisType = ...) -> Any:
+    """Call before modifying `FST` node (even just source) to mark possible data for updates after modification. This
+    function just collects data so is safe to call without a corresponding `_after_modify()`.
+
+    **Parameters**:
+    - `fst`: Parent node of field being modified (because actual child may be being created and may not exist yet) or
+        actual child field node if `field` is `...` (parent `FST` and field will be gotten from this child).
+    - `field`: Name of field being modified or `...` to indicate that `fst` is the child. `None` is accepted as a valid
+        value and `...` is used as no value because some modifications can specify `None` as a virtual field.
+    """
+
+    # TODO: update f/t-string f"{val=}" preceding string constants for updated value with '=', evil thing
+
+    if field is ...:
+        field = fst.pfield
+
+        if not (fst := fst.parent):
+            return (..., ...)
+
+        field = fst.name
+
+    return (fst, field) if isinstance(fst.a, expr) else (..., ...)
+
+
+@staticmethod
+def _after_modify(fst: Optional['FST'], before_state: Any):
+    """Call after modifying `FST` node to apply any needed changes to parents.
+
+    Currently only updates `TemplateStr.str` but is meant to evetually update `JoinedStr`/`TemplateStr` `f'{v=}'` style
+    self-documenting string `Constants`.
+
+    **Parameters:**
+    - `fst`: Parent node of modified field AFTER modification (may have changed or not exist anymore).
+    - `before_state`: Return value of previously called `_before_modify()`.
+    """
+
+    fst_before, field = before_state
+
+    if fst is not fst_before:  # if parent changed then entire statement was reparsed and we have nothing to do, or is Ellipsis because wan't expr to begin with
+        return
+
+    while isinstance(a := fst.a, expr):
+        if field == 'value' and isinstance(a, Interpolation):
+            ln, col, _, _         = fst.loc
+            _, _, end_ln, end_col = a.value.f.pars()
+            a.str                 = fst.get_src(ln, col + 1, end_ln, end_col)
+
+        field = fst.pfield
+
+        if not (fst := fst.parent):
+            break
+
+        field = field.name
+
 
 @staticmethod
 def _new_empty_module(*, from_: Optional['FST'] = None) -> 'FST':

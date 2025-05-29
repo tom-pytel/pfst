@@ -2079,6 +2079,8 @@ class FST:
     # Private and other misc stuff
 
     from .fst_misc import (
+        _before_modify,
+        _after_modify,
         _new_empty_module,
         _new_empty_tuple,
         _new_empty_list,

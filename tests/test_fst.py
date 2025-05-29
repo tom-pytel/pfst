@@ -35766,6 +35766,27 @@ except* (TypeError, ExceptionGroup):
         self.assertEqual('with (a): pass', f.src)
         f.verify()
 
+        if sys.version_info[:2] >= (3, 14):
+            # make sure TemplateStr.str gets modified
+
+            f = FST('''
+t"{
+t'{
+(
+a
+)
+=
+!r:>16}'
+!r:>16}"
+'''.strip())
+            self.assertEqual("\nt'{\n(\na\n)\n=\n!r:>16}'", f.body[0].value.values[0].str)
+            self.assertEqual('\n(\na\n)', f.body[0].value.values[0].value.values[1].str)
+
+            f.body[0].value.values[0].value.values[1].put('b')
+
+            self.assertEqual("\nt'{\nb\n=\n!r:>16}'", f.body[0].value.values[0].str)
+            self.assertEqual('\nb', f.body[0].value.values[0].value.values[1].str)
+
     def test_put_one_pars(self):
         f = FST('a = b').body[0]
         g = FST('(i := j)').body[0].value.copy(pars=False)
