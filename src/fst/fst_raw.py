@@ -13,7 +13,7 @@ from .shared import (
     PARENTHESIZABLE,
     STMTISH_FIELDS,
     Code,
-    _next_find, _prev_find, _fixup_field_body,
+    _next_find, _prev_find,
     _fixup_slice_indices, _coerce_ast,
 )
 
@@ -26,8 +26,7 @@ _PATH_BODY2HANDLERS = [astfield('body', 0), astfield('body', 0), astfield('handl
 _PATH_BODYCASES     = [astfield('body', 0), astfield('cases', 0)]
 
 
-def _raw_slice_loc(self: 'FST', start: int | Literal['end'] | None = None, stop: int | None = None,
-                   field: str | None = None) -> fstloc:
+def _raw_slice_loc(self: 'FST', start: int | Literal['end'] | None, stop: int | None, field: str) -> fstloc:
     """Get location of a raw slice. Sepcial cases for decorators, comprehension ifs and other weird nodes."""
 
     def fixup_slice_index_for_raw(len_, start, stop):
@@ -41,7 +40,7 @@ def _raw_slice_loc(self: 'FST', start: int | Literal['end'] | None = None, stop:
     ast = self.a
 
     if isinstance(ast, Dict):
-        if field is not None:
+        if field:
             raise ValueError(f"cannot specify a field '{field}' to assign slice to a Dict")
 
         keys        = ast.keys
@@ -55,7 +54,7 @@ def _raw_slice_loc(self: 'FST', start: int | Literal['end'] | None = None, stop:
         return fstloc(start_loc.ln, start_loc.col, *values[stop - 1].f.pars()[2:])
 
     if isinstance(ast, Compare):
-        if field is not None:
+        if field:
             raise ValueError(f"cannot specify a field '{field}' to assign slice to a Compare")
 
         comparators  = ast.comparators  # virtual combined body of [Compare.left] + Compare.comparators
@@ -66,7 +65,7 @@ def _raw_slice_loc(self: 'FST', start: int | Literal['end'] | None = None, stop:
                         *(comparators[stop - 1] if stop else ast.left).f.pars()[2:])
 
     if isinstance(ast, MatchMapping):
-        if field is not None:
+        if field:
             raise ValueError(f"cannot specify a field '{field}' to assign slice to a MatchMapping")
 
         keys        = ast.keys
@@ -90,11 +89,11 @@ def _raw_slice_loc(self: 'FST', start: int | Literal['end'] | None = None, stop:
 
         return fstloc(*start_pos, *decos[stop - 1].f.pars()[2:])
 
-    _, body     = _fixup_field_body(ast, field)
+    body        = getattr(ast, field)  # field must be valid by here
     start, stop = fixup_slice_index_for_raw(len(body), start, stop)
 
     return fstloc(*body[start].f.pars(shared=False)[:2],
-                    *body[stop - 1].f.pars(shared=False)[2:])
+                  *body[stop - 1].f.pars(shared=False)[2:])
 
 
 _GLOBALS = globals() | {'_GLOBALS': None}
@@ -363,8 +362,8 @@ def _reparse_raw_node(self: 'FST', code: Code | None, to: Optional['FST'] = None
     return parent._reparse_raw_loc(code, loc.ln, loc.col, to_loc.end_ln, to_loc.end_col)
 
 
-def _reparse_raw_slice(self: 'FST', code: Code | None, start: int | Literal['end'] | None = None, stop: int | None = None,
-                       field: str | None = None, *, one: bool = False, **options) -> 'FST':  # -> Self
+def _reparse_raw_slice(self: 'FST', code: Code | None, start: int | Literal['end'] | None, stop: int | None, field: str,
+                       *, one: bool = False, **options) -> 'FST':  # -> Self
     """Put a raw slice of child nodes to `self`."""
 
     if isinstance(code, AST):

@@ -801,23 +801,22 @@ class FST:
             field: str | None = None, *, cut: bool = False, **options) -> Any:
         """Copy or cut an individual child node or a slice of child nodes from `self`."""
 
+        ast                = self.a
         start, stop, field = _swizzle_getput_params(start, stop, field, False)
-
-        ast          = self.a
-        field_, body = _fixup_field_body(ast, field, False)
+        field_, body       = _fixup_field_body(ast, field, False)
 
         if isinstance(body, list):
             if stop is not False:
-                return self._get_slice(start, stop, field, cut, **options)
+                return self._get_slice(start, stop, field_, cut, **options)
             if start is None:
-                return self._get_slice(None, None, field, cut, **options)
+                return self._get_slice(None, None, field_, cut, **options)
 
             if start == 'end':
                 raise IndexError(f"cannot get() non-slice from index 'end'")
 
         elif stop is not False or start is not None:
             raise IndexError(f"cannot pass index for non-slice get() to {ast.__class__.__name__}" +
-                             (f".{field}" if field else ""))
+                             (f".{field_}" if field_ else ""))
 
         return self._get_one(start, field_, cut, **options)
 
@@ -830,16 +829,15 @@ class FST:
         this call, whether it succeeds or fails.
         """
 
+        ast                = self.a
         start, stop, field = _swizzle_getput_params(start, stop, field, False)
-
-        ast          = self.a
-        field_, body = _fixup_field_body(ast, field, False)
+        field_, body       = _fixup_field_body(ast, field, False)
 
         if isinstance(body, list):
             if stop is not False:
-                return self._put_slice(code, start, stop, field, one, **options)
+                return self._put_slice(code, start, stop, field_, one, **options)
             if start is None:
-                return self._put_slice(code, None, None, field, one, **options)
+                return self._put_slice(code, None, None, field_, one, **options)
 
             if start == 'end':
                 raise IndexError(f"cannot put() non-slice to index 'end'")
@@ -858,15 +856,14 @@ class FST:
                   cut: bool = False, **options) -> 'FST':
         """Get a slice of child nodes from `self`."""
 
+        ast                = self.a
         start, stop, field = _swizzle_getput_params(start, stop, field, None)
-
-        ast     = self.a
-        _, body = _fixup_field_body(ast, field)
+        field_, body       = _fixup_field_body(ast, field)
 
         if not isinstance(body, list):
-            raise ValueError(f'cannot get slice from non-list field {ast.__class__.__name__}.{field}')
+            raise ValueError(f'cannot get slice from non-list field {ast.__class__.__name__}.{field_}')
 
-        return self._get_slice(start, stop, field, cut, **options)
+        return self._get_slice(start, stop, field_, cut, **options)
 
     def put_slice(self, code: Code | None, start: int | Literal['end'] | None = None, stop: int | None = None,
                   field: str | None = None, *, one: bool = False, **options) -> 'FST':  # -> Self
@@ -878,15 +875,14 @@ class FST:
         Can reparse.
         """
 
+        ast                = self.a
         start, stop, field = _swizzle_getput_params(start, stop, field, None)
-
-        ast     = self.a
-        _, body = _fixup_field_body(ast, field)
+        field_, body       = _fixup_field_body(ast, field)
 
         if not isinstance(body, list):
-            raise ValueError(f'cannot put slice to non-list field {ast.__class__.__name__}.{field}')
+            raise ValueError(f'cannot put slice to non-list field {ast.__class__.__name__}.{field_}')
 
-        return self._put_slice(code, start, stop, field, one, **options)
+        return self._put_slice(code, start, stop, field_, one, **options)
 
     def put_raw(self, code: Code | None, ln: int, col: int, end_ln: int, end_col: int, *,
                 exact: bool | None = True, **options) -> Optional['FST']:
@@ -2199,11 +2195,11 @@ class FST:
 
     from .fst_slice_old import (
         _get_slice_tuple_list_or_set,
-        _get_slice_empty_set,
+        # _get_slice_empty_set,
         _get_slice_dict,
         _get_slice_stmtish,
         _put_slice_tuple_list_or_set,
-        _put_slice_empty_set,
+        # _put_slice_empty_set,
         _put_slice_dict,
         _put_slice_stmtish,
     )

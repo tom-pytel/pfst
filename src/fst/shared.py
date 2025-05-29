@@ -71,9 +71,9 @@ _AST_DEFAULT_BODY_FIELD  = {cls: field for field, classes in [
     # ('items',        (With, AsyncWith)),  # 'body' takes precedence
 
     # special cases, field names here only for checks to succeed, otherwise all handled programatically
-    (None,           (Dict,)),
-    (None,           (MatchMapping,)),
-    (None,           (Compare,)),
+    ('',             (Dict,)),
+    ('',             (MatchMapping,)),
+    ('',             (Compare,)),
 
     # other single value fields
     ('value',        (Expr, Return, Assign, TypeAlias, AugAssign, AnnAssign, NamedExpr, Await, Yield, YieldFrom,
@@ -511,12 +511,12 @@ def _params_offset(lines: list[bistr], put_lines: list[bistr], ln: int, col: int
 def _fixup_field_body(ast: AST, field: str | None = None, only_list: bool = True) -> tuple[str, 'AST']:
     """Get `AST` member list for specified `field` or default if `field=None`."""
 
-    if field is None:
+    if not field:
         if (field := _AST_DEFAULT_BODY_FIELD.get(ast.__class__, _fixup_field_body)) is _fixup_field_body:  # _fixup_field_body serves as sentinel
             raise ValueError(f"{ast.__class__.__name__} has no default body field")
 
-        if field is None:  # special case
-            return None, []
+        if not field:  # special case ''
+            return '', []
 
     if (body := getattr(ast, field, _fixup_field_body)) is _fixup_field_body:
         raise ValueError(f"{ast.__class__.__name__} has no field '{field}'")

@@ -635,7 +635,7 @@ def _put_one_MatchAs_name(self: 'FST', code: Code | None, idx: int | None, field
 
 # ......................................................................................................................
 
-def _put_one(self: 'FST', code: Code | None, idx: int | None, field: str | None, **options) -> Optional['FST']:
+def _put_one(self: 'FST', code: Code | None, idx: int | None, field: str, **options) -> Optional['FST']:
     """Put new, replace or delete a node (or limited non-node) to a field of `self`.
 
     **Parameters:**
@@ -693,7 +693,7 @@ def _put_one(self: 'FST', code: Code | None, idx: int | None, field: str | None,
 
     is_dict = isinstance(ast, Dict)
 
-    if field is None:  # maybe putting to special case field?
+    if not field:  # maybe putting to special case field?
         if is_dict or isinstance(ast, MatchMapping):
             key = key.f if (key := ast.keys[idx]) else self._dict_key_or_mock_loc(key, ast.values[idx].f)
             end = (ast.values if is_dict else ast.patterns)[idx].f
@@ -1361,7 +1361,7 @@ _PUT_ONE_HANDLERS = {
     (Compare, 'left'):                    (_put_one_exprish_required, None, _onestatic_expr_required), # expr
     (Compare, 'ops'):                     (_put_one_op, None, onestatic(None, code_as=_code_as_cmpop)), # cmpop*
     (Compare, 'comparators'):             (_put_one_exprish_required, None, _onestatic_expr_required), # expr*
-    (Compare, None):                      (_put_one_Compare_None, None, _onestatic_expr_required), # expr*
+    (Compare, ''):                        (_put_one_Compare_None, None, _onestatic_expr_required), # expr*
     (Call, 'func'):                       (_put_one_exprish_required, None, _onestatic_expr_required), # expr
     (Call, 'args'):                       (_put_one_exprish_sliceable, None, onestatic(_one_info_exprish_required, _restrict_default, code_as=_code_as_expr_call_arg)), # expr*
     (Call, 'keywords'):                   (_put_one_exprish_sliceable, None, _onestatic_keyword_required), # keyword*

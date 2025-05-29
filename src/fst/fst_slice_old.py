@@ -9,7 +9,7 @@ from .astutil import TryStar
 from .shared import (
     astfield, fstloc,
     Code, NodeError,
-    _next_find, _prev_find, _fixup_field_body,
+    _next_find, _prev_find,
     _fixup_slice_indices
 )
 
@@ -90,9 +90,9 @@ def _put_slice_seq_and_indent(self: 'FST', put_fst: Optional['FST'], seq_loc: fs
 _GLOBALS = globals() | {'_GLOBALS': None}
 # ----------------------------------------------------------------------------------------------------------------------
 
-def _get_slice_tuple_list_or_set(self: 'FST', start: int | Literal['end'] | None, stop: int | None, field: str | None,
+def _get_slice_tuple_list_or_set(self: 'FST', start: int | Literal['end'] | None, stop: int | None, field: str,
                                  cut: bool, **options) -> 'FST':
-    if field is not None and field != 'elts':
+    if field != 'elts':
         raise ValueError(f"invalid field '{field}' to slice from a {self.a.__class__.__name__}")
 
     ast         = self.a
@@ -173,20 +173,20 @@ def _get_slice_tuple_list_or_set(self: 'FST', start: int | Literal['end'] | None
     return fst
 
 
-def _get_slice_empty_set(self: 'FST', start: int | Literal['end'] | None, stop: int | None, field: str | None,
-                         cut: bool, **options) -> 'FST':
-    if field is not None and field != 'elts':
-        raise ValueError(f"invalid field '{field}' to slice from a {self.a.__class__.__name__}")
+# def _get_slice_empty_set(self: 'FST', start: int | Literal['end'] | None, stop: int | None, field: str,
+#                          cut: bool, **options) -> 'FST':
+#     if field is not None and field != 'elts':
+#         raise ValueError(f"invalid field '{field}' to slice from a {self.a.__class__.__name__}")
 
-    if stop or (start and start != 'end'):
-        raise IndexError(f"Set.{field} index out of range")
+#     if stop or (start and start != 'end'):
+#         raise IndexError(f"Set.{field} index out of range")
 
-    return self._new_empty_set(from_=self)
+#     return self._new_empty_set(from_=self)
 
 
-def _get_slice_dict(self: 'FST', start: int | Literal['end'] | None, stop: int | None, field: str | None, cut: bool,
+def _get_slice_dict(self: 'FST', start: int | Literal['end'] | None, stop: int | None, field: str, cut: bool,
                     **options) -> 'FST':
-    if field is not None:
+    if field:
         raise ValueError(f"cannot specify a field '{field}' to slice from a Dict")
 
     ast         = self.a
@@ -228,10 +228,10 @@ def _get_slice_dict(self: 'FST', start: int | Literal['end'] | None, stop: int |
     return _get_slice_seq_and_dedent(self, get_ast, cut, seq_loc, ffirst, flast, fpre, fpost, '{', '}')
 
 
-def _get_slice_stmtish(self: 'FST', start: int | Literal['end'] | None, stop: int | None, field: str | None, cut: bool,
+def _get_slice_stmtish(self: 'FST', start: int | Literal['end'] | None, stop: int | None, field: str, cut: bool,
                        one: bool = False, **options) -> 'FST':
     ast         = self.a
-    field, body = _fixup_field_body(ast, field)
+    body        = getattr(ast, field)
     start, stop = _fixup_slice_indices(len(body), start, stop)
 
     if start == stop:
@@ -282,8 +282,8 @@ def _get_slice_stmtish(self: 'FST', start: int | Literal['end'] | None, stop: in
 
 
 def _put_slice_tuple_list_or_set(self: 'FST', code: Code | None, start: int | Literal['end'] | None, stop: int | None,
-                                 field: str | None, one: bool, **options):
-    if field is not None and field != 'elts':
+                                 field: str, one: bool, **options):
+    if field != 'elts':
         raise ValueError(f"invalid field '{field}' to assign slice to a {self.a.__class__.__name__}")
 
     if code is None:
@@ -398,28 +398,28 @@ def _put_slice_tuple_list_or_set(self: 'FST', code: Code | None, start: int | Li
         self._maybe_fix_set()
 
 
-def _put_slice_empty_set(self: 'FST', code: Code | None, start: int | Literal['end'] | None, stop: int | None,
-                         field: str | None, one: bool, **options):
-    ln, col, end_ln, end_col = self.loc
+# def _put_slice_empty_set(self: 'FST', code: Code | None, start: int | Literal['end'] | None, stop: int | None,
+#                          field: str, one: bool, **options):
+#     ln, col, end_ln, end_col = self.loc
 
-    empty   = self._new_empty_set_curlies(False, (a := self.a).lineno, a.col_offset, from_=self)
-    old_src = self.get_src(ln, col, end_ln, end_col, True)
-    old_ast = self._set_ast(empty.a)
+#     empty   = self._new_empty_set_curlies(False, (a := self.a).lineno, a.col_offset, from_=self)
+#     old_src = self.get_src(ln, col, end_ln, end_col, True)
+#     old_ast = self._set_ast(empty.a)
 
-    self.put_src(empty._lines, ln, col, end_ln, end_col, True, True, self, offset_excluded=False)
+#     self.put_src(empty._lines, ln, col, end_ln, end_col, True, True, self, offset_excluded=False)
 
-    try:
-        self._put_slice_tuple_list_or_set(code, start, stop, field, one, **options)
+#     try:
+#         self._put_slice_tuple_list_or_set(code, start, stop, field, one, **options)
 
-    finally:
-        if not self.a.elts:
-            self.put_src(old_src, *self.loc, True)  # restore previous empty set representation
-            self._set_ast(old_ast)
+#     finally:
+#         if not self.a.elts:
+#             self.put_src(old_src, *self.loc, True)  # restore previous empty set representation
+#             self._set_ast(old_ast)
 
 
 def _put_slice_dict(self: 'FST', code: Code | None, start: int | Literal['end'] | None, stop: int | None,
-                    field: str | None, one: bool, **options):
-    if field is not None:
+                    field: str, one: bool, **options):
+    if field:
         raise ValueError(f"cannot specify a field '{field}' to assign slice to a Dict")
     if one:
         raise ValueError(f'cannot put a single item to a Dict slice')
@@ -509,9 +509,9 @@ def _put_slice_dict(self: 'FST', code: Code | None, start: int | Literal['end'] 
 
 
 def _put_slice_stmtish(self: 'FST', code: Code | None, start: int | Literal['end'] | None, stop: int | None,
-                       field: str | None, one: bool, **options):
-    ast         = self.a
-    field, body = _fixup_field_body(ast, field)
+                       field: str, one: bool, **options):
+    ast  = self.a
+    body = getattr(ast, field)
 
     if code is None:
         put_fst = None

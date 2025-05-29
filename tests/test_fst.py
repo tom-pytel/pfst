@@ -1635,25 +1635,6 @@ Set .. ROOT 0,0 -> 0,5
     .ctx Load
 """),
 
-(r"""set()""", 'body[0].value', 0, 0, {}, r"""
-set()
-""", r"""
-{*()}
-""", r"""
-Module .. ROOT 0,0 -> 0,5
-  .body[1]
-  0] Expr .. 0,0 -> 0,5
-    .value Call .. 0,0 -> 0,5
-      .func Name 'set' Load .. 0,0 -> 0,3
-""", r"""
-Set .. ROOT 0,0 -> 0,5
-  .elts[1]
-  0] Starred .. 0,1 -> 0,4
-    .value Tuple .. 0,2 -> 0,4
-      .ctx Load
-    .ctx Load
-"""),
-
 (r"""1, 2, 3,""", 'body[0].value', 0, 1, {}, r"""
 2, 3,
 """, r"""
@@ -5075,7 +5056,7 @@ Module .. ROOT 0,0 -> 0,2
       .ctx Load
 """),
 
-(r"""(1, 2)""", 'body[0].value', 1, 2, r"""set()""", r"""
+(r"""(1, 2)""", 'body[0].value', 1, 2, r"""{*()}""", r"""
 (1,)
 """, r"""
 Module .. ROOT 0,0 -> 0,4
@@ -5087,7 +5068,7 @@ Module .. ROOT 0,0 -> 0,4
       .ctx Load
 """),
 
-(r"""1, 2""", 'body[0].value', 1, 2, r"""set()""", r"""
+(r"""1, 2""", 'body[0].value', 1, 2, r"""{*()}""", r"""
 1,
 """, r"""
 Module .. ROOT 0,0 -> 0,2
@@ -5099,7 +5080,7 @@ Module .. ROOT 0,0 -> 0,2
       .ctx Load
 """),
 
-(r"""1, 2""", 'body[0].value', 0, 2, r"""set()""", r"""
+(r"""1, 2""", 'body[0].value', 0, 2, r"""{*()}""", r"""
 ()
 """, r"""
 Module .. ROOT 0,0 -> 0,2
@@ -7128,26 +7109,34 @@ Module .. ROOT 0,0 -> 0,5
         .ctx Load
 """),
 
-(r"""set()""", 'body[0].value', 0, 0, r"""()""", r"""
-set()
+(r"""{*()}""", 'body[0].value', 0, 0, r"""()""", r"""
+{*()}
 """, r"""
 Module .. ROOT 0,0 -> 0,5
   .body[1]
   0] Expr .. 0,0 -> 0,5
-    .value Call .. 0,0 -> 0,5
-      .func Name 'set' Load .. 0,0 -> 0,3
+    .value Set .. 0,0 -> 0,5
+      .elts[1]
+      0] Starred .. 0,1 -> 0,4
+        .value Tuple .. 0,2 -> 0,4
+          .ctx Load
+        .ctx Load
 """),
 
-(r"""set()""", 'body[0].value', 0, 0, r"""(1, 2)""", r"""
-{1, 2}
+(r"""{*()}""", 'body[0].value', 0, 0, r"""(1, 2)""", r"""
+{1, 2, *()}
 """, r"""
-Module .. ROOT 0,0 -> 0,6
+Module .. ROOT 0,0 -> 0,11
   .body[1]
-  0] Expr .. 0,0 -> 0,6
-    .value Set .. 0,0 -> 0,6
-      .elts[2]
+  0] Expr .. 0,0 -> 0,11
+    .value Set .. 0,0 -> 0,11
+      .elts[3]
       0] Constant 1 .. 0,1 -> 0,2
       1] Constant 2 .. 0,4 -> 0,5
+      2] Starred .. 0,7 -> 0,10
+        .value Tuple .. 0,8 -> 0,10
+          .ctx Load
+        .ctx Load
 """),
 
 (r"""1, 2, 3,""", 'body[0].value', 0, 0, r"""a,""", r"""
@@ -35815,9 +35804,12 @@ a
             self.assertEqual('\n(\na\n)', f.body[0].value.values[0].value.values[1].str)
 
             f.body[0].value.values[0].value.values[1].put('b')
-
             self.assertEqual("\nt'{\nb\n=\n!r:>16}'", f.body[0].value.values[0].str)
             self.assertEqual('\nb', f.body[0].value.values[0].value.values[1].str)
+
+            f = FST('t"{a}"').body[0].value.copy()
+            f.values[0].put('b')
+            self.assertEqual('b', f.a.values[0].str)
 
     def test_put_one_pars(self):
         f = FST('a = b').body[0]
@@ -36295,6 +36287,7 @@ finally:
             raise
 
     def test_put_raw_from_put_slice_data(self):
+        from fst.shared import _fixup_field_body
         from fst.fst_raw import _raw_slice_loc
 
         for i, (dst, attr, start, stop, field, options, src, put_src, put_dump) in enumerate(PUT_SLICE_DATA):
@@ -36305,7 +36298,8 @@ finally:
             f = (eval(f't.{attr}', {'t': t}) if attr else t).f
 
             try:
-                loc = _raw_slice_loc(f, start, stop, field)
+                field, _ = _fixup_field_body(f.a, field)
+                loc      = _raw_slice_loc(f, start, stop, field)
 
                 f.put_raw(None if src == '**DEL**' else src, *loc, **options)
 
@@ -36490,11 +36484,11 @@ finally:
                         self.assertEqual(t, f.root.src)
 
     def test_empty_set_slice(self):
-        f = parse('set()').body[0].value.f
-        self.assertEqual('{*()}', f.get_slice(0, 0, cut=True).src)
-        self.assertEqual('set()', f.src)
-        self.assertEqual('set()', f.put_slice('{*()}', 0, 0).src)
-        f.root.verify()
+        # f = parse('set()').body[0].value.f
+        # self.assertEqual('{*()}', f.get_slice(0, 0, cut=True).src)
+        # self.assertEqual('set()', f.src)
+        # self.assertEqual('set()', f.put_slice('{*()}', 0, 0).src)
+        # f.root.verify()
 
         f = parse('{*()}').body[0].value.f
         self.assertEqual('{*()}', f.get_slice(0, 0, cut=True).src)

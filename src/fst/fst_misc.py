@@ -34,15 +34,15 @@ _GLOBALS = globals() | {'_GLOBALS': None}
 # ----------------------------------------------------------------------------------------------------------------------
 
 @staticmethod
-def _before_modify(fst: 'FST', field: str | None | Literal[False] = False) -> Any:
+def _before_modify(fst: 'FST', field: str | Literal[False] = False) -> Any:
     """Call before modifying `FST` node (even just source) to mark possible data for updates after modification. This
     function just collects data so is safe to call without a corresponding `_after_modify()`.
 
     **Parameters**:
     - `fst`: Parent node of field being modified (because actual child may be being created and may not exist yet) or
         actual child field node if `field` is `False` (parent `FST` and field will be gotten from this child).
-    - `field`: Name of field being modified or `False` to indicate that `fst` is the child. `None` is accepted as a valid
-        value and `False` is used as no value because some modifications can specify `None` as a virtual field.
+    - `field`: Name of field being modified or `False` to indicate that `fst` is the child. `False` is used to
+        differentiate the `None` values that can be passed to `FST.put()`, even though those should not make it here.
     """
 
     # TODO: update f/t-string f"{val=}" preceding string constants for updated value with '=', evil thing
