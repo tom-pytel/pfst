@@ -661,7 +661,7 @@ def _put_one(self: 'FST', code: Code | None, idx: int | None, field: str | None,
                 ret_or_delegate    = handler(self, code, idx, field, child, static, **options)
 
                 if not isinstance(ret_or_delegate, FunctionType):
-                    FST._after_modify(self, before_state)
+                    FST._after_modify(before_state)
 
                     return ret_or_delegate
 
@@ -675,7 +675,7 @@ def _put_one(self: 'FST', code: Code | None, idx: int | None, field: str | None,
 
                 ret = ret_or_delegate()
 
-                FST._after_modify(ret, before_state)  # TODO: REMOVE THIS! once slice operations do this themselves
+                FST._after_modify(before_state, ret)  # TODO: REMOVE THIS! once slice operations do this themselves
 
                 return ret
 

@@ -31711,6 +31711,22 @@ f"distutils.command.sdist.check_metadata is deprecated, \\
         self.assertTrue(f.parenthesize(force=True))
         self.assertEqual('(# comment\ni = 1)', f.src)
 
+        if sys.version_info[:2] >= (3, 14):  # make sure parent Interpolation.str gets modified
+            f = FST('t"{a}"').body[0].value.copy()
+            f.values[0].value.parenthesize(force=True)
+            self.assertEqual('t"{(a)}"', f.src)
+            self.assertEqual('(a)', f.values[0].str)
+
+            f = FST('t"{a,}"').body[0].value.copy()
+            f.values[0].value.parenthesize(force=True)
+            self.assertEqual('t"{(a,)}"', f.src)
+            self.assertEqual('(a,)', f.values[0].str)
+
+            f = FST('t"{a+b}"').body[0].value.copy()
+            f.values[0].value.parenthesize()
+            self.assertEqual('t"{(a+b)}"', f.src)
+            self.assertEqual('(a+b)', f.values[0].str)
+
     def test_unparenthesize(self):
         f = parse('((1,))').body[0].value.f.copy(pars=True)
         self.assertEqual('((1,))', f.src)
@@ -31732,6 +31748,22 @@ f"distutils.command.sdist.check_metadata is deprecated, \\
         self.assertFalse(f.unparenthesize())
         self.assertTrue(f.unparenthesize(tuple_=True))
         self.assertEqual('1,', f.src)
+
+        if sys.version_info[:2] >= (3, 14):  # make sure parent Interpolation.str gets modified
+            f = FST('t"{(a)}"').body[0].value.copy()
+            f.values[0].value.unparenthesize()
+            self.assertEqual('t"{a}"', f.src)
+            self.assertEqual('a', f.values[0].str)
+
+            f = FST('t"{((a,))}"').body[0].value.copy()
+            f.values[0].value.unparenthesize()
+            self.assertEqual('t"{(a,)}"', f.src)
+            self.assertEqual('(a,)', f.values[0].str)
+
+            f = FST('t"{((a,))}"').body[0].value.copy()
+            f.values[0].value.unparenthesize(tuple_=True)
+            self.assertEqual('t"{a,}"', f.src)
+            self.assertEqual('a,', f.values[0].str)
 
     def test_dedent_multiline_strings(self):
         f = parse('''

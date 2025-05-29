@@ -2,7 +2,6 @@
 
 import re
 from ast import *
-from types import EllipsisType
 from typing import Any, Callable, Literal, Optional, Union
 
 from .astutil import *
@@ -35,45 +34,50 @@ _GLOBALS = globals() | {'_GLOBALS': None}
 # ----------------------------------------------------------------------------------------------------------------------
 
 @staticmethod
-def _before_modify(fst: 'FST', field: str | None | EllipsisType = ...) -> Any:
+def _before_modify(fst: 'FST', field: str | None | Literal[False] = False) -> Any:
     """Call before modifying `FST` node (even just source) to mark possible data for updates after modification. This
     function just collects data so is safe to call without a corresponding `_after_modify()`.
 
     **Parameters**:
     - `fst`: Parent node of field being modified (because actual child may be being created and may not exist yet) or
-        actual child field node if `field` is `...` (parent `FST` and field will be gotten from this child).
-    - `field`: Name of field being modified or `...` to indicate that `fst` is the child. `None` is accepted as a valid
-        value and `...` is used as no value because some modifications can specify `None` as a virtual field.
+        actual child field node if `field` is `False` (parent `FST` and field will be gotten from this child).
+    - `field`: Name of field being modified or `False` to indicate that `fst` is the child. `None` is accepted as a valid
+        value and `False` is used as no value because some modifications can specify `None` as a virtual field.
     """
 
     # TODO: update f/t-string f"{val=}" preceding string constants for updated value with '=', evil thing
 
-    if field is ...:
+    if field is False:
         field = fst.pfield
 
         if not (fst := fst.parent):
-            return (..., ...)
+            return (False, False)
 
-        field = fst.name
+        field = field.name
 
-    return (fst, field) if isinstance(fst.a, expr) else (..., ...)
+    return (fst, field) if isinstance(fst.a, expr) else (False, False)
 
 
 @staticmethod
-def _after_modify(fst: Optional['FST'], before_state: Any):
+def _after_modify(before_state: Any, fst: Optional['FST'] | Literal[False] = False):
     """Call after modifying `FST` node to apply any needed changes to parents.
 
     Currently only updates `TemplateStr.str` but is meant to evetually update `JoinedStr`/`TemplateStr` `f'{v=}'` style
     self-documenting string `Constants`.
 
     **Parameters:**
-    - `fst`: Parent node of modified field AFTER modification (may have changed or not exist anymore).
     - `before_state`: Return value of previously called `_before_modify()`.
+    - `fst`: Parent node of modified field AFTER modification (may have changed or not exist anymore). Or can be special
+        value `False` to indicate that parent was not changed, this is just a convenience for shorthand calls.
     """
 
     fst_before, field = before_state
 
-    if fst is not fst_before:  # if parent changed then entire statement was reparsed and we have nothing to do, or is Ellipsis because wan't expr to begin with
+    if fst is False:
+        if (fst := fst_before) is False:
+            return
+
+    elif fst is not fst_before:  # if parent changed then entire statement was reparsed and we have nothing to do, or fst_before is Ellipsis because wan't expr to begin with
         return
 
     while isinstance(a := fst.a, expr):
