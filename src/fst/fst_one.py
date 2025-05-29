@@ -14,7 +14,7 @@ from .shared import (
 )
 
 from .fst_parse import (
-    _code_as_expr, _code_as_slice, _code_as_expr_or_slice, _code_as_expr_call_arg,
+    _code_as_expr, _code_as_slice, _code_as_expr_slice_tuple, _code_as_expr_call_arg,
     _code_as_boolop, _code_as_operator, _code_as_operator_aug, _code_as_unaryop, _code_as_cmpop,
     _code_as_pattern, _code_as_comprehension, _code_as_arguments,
     _code_as_arguments_lambda, _code_as_arg, _code_as_keyword, _code_as_alias_maybe_star, _code_as_alias_dotted,
@@ -572,8 +572,8 @@ def _put_one_identifier_optional(self: 'FST', code: Code | None, idx: int | None
     return code
 
 
-def _put_one_identifier_sliceable(self: 'FST', code: Code | None, idx: int | None, field: str, child: AST, static: onestatic,
-                                  **options) -> Optional['FST']:
+def _put_one_identifier_sliceable(self: 'FST', code: Code | None, idx: int | None, field: str, child: AST,
+                                  static: onestatic, **options) -> Optional['FST']:
     """If deleting then will do so using slice operation, otherwise just a required identifier."""
 
     # if (to := options.get('to')) or code is None:
@@ -686,6 +686,10 @@ def _put_one(self: 'FST', code: Code | None, idx: int | None, field: str | None,
         else:
             if not raw:
                 raise ValueError(f'cannot {"delete" if code is None else "replace"} {ast.__class__.__name__}.{field}')
+
+
+    # TODO: redo raw starting below
+
 
     if isinstance(child, list):
         child = child[idx]
@@ -1380,7 +1384,7 @@ _PUT_ONE_HANDLERS = {
     (Starred, 'value'):                   (_put_one_exprish_required, None, _onestatic_expr_required), # expr
     (Name, 'id'):                         (_put_one_identifier_required, None, _onestatic_identifier_required), # identifier
     (List, 'elts'):                       (_put_one_exprish_sliceable, None, _onestatic_expr_required), # expr*
-    (Tuple, 'elts'):                      (_put_one_exprish_sliceable, None, onestatic(_one_info_exprish_required, _restrict_fstr_values, code_as=_code_as_expr_or_slice)), # expr*  - special handling because Tuples can contain Slices in a .slice field
+    (Tuple, 'elts'):                      (_put_one_exprish_sliceable, None, onestatic(_one_info_exprish_required, _restrict_fstr_values, code_as=_code_as_expr_slice_tuple)), # expr*  - special handling because Tuples can contain Slices in a .slice field
     (Slice, 'lower'):                     (_put_one_exprish_optional, None, _onestatic_Slice_lower), # expr?
     (Slice, 'upper'):                     (_put_one_exprish_optional, None, _onestatic_Slice_upper), # expr?
     (Slice, 'step'):                      (_put_one_exprish_optional, None, _onestatic_Slice_step), # expr?

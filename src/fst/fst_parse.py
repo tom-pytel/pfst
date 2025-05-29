@@ -116,7 +116,7 @@ def _parse_slice(src: str, parse_params: dict = {}) -> AST:
 
 
 @staticmethod
-def _parse_expr_or_slice(src: str, parse_params: dict = {}) -> AST:
+def _parse_expr_slice_tuple(src: str, parse_params: dict = {}) -> AST:
     """Parse to an `ast.expr` or `ast.Slice` or raise `SyntaxError`. This exists because otherwise a naked `Starred`
     expression parses to an implicit single element `Tuple` and the caller of this function does not want that behavior.
     Using this, naked `Starred` expressions parse to just the `Starred` and not a `Tuple` like in `_parse_slice()`."""
@@ -328,7 +328,7 @@ def _code_as_stmts(code: Code, parse_params: dict = {}) -> 'FST':
 
 
 @staticmethod
-def _code_as_expr(code: Code, parse_params: dict = {}, orslice: bool = False, callarg: bool = False) -> 'FST':
+def _code_as_expr(code: Code, parse_params: dict = {}, parse: Callable[[Code, dict], 'FST'] = _parse_expr) -> 'FST':
     """Convert `code` to an `expr` or optionally `Slice` `FST` if possible.
 
     **Parameters:**
@@ -341,9 +341,10 @@ def _code_as_expr(code: Code, parse_params: dict = {}, orslice: bool = False, ca
         if not code.is_root:
             raise ValueError('expecting root node')
 
-        if not isinstance(ast := reduce_ast(codea := code.a, NodeError), (expr, Slice) if orslice else expr):
-            raise NodeError(f'expecting {"expression or Slice" if orslice else "expression"}, got '
-                            f'{ast.__class__.__name__}')
+        if not isinstance(ast := reduce_ast(codea := code.a, NodeError), expr):
+            raise NodeError('expecting ' +
+                ("slice " if parse is _parse_expr_slice_tuple else "call arg " if parse is _parse_expr_call_arg else "") +
+                f'expression, got {ast.__class__.__name__}')
 
         if ast is codea:
             return code._sanitize()
@@ -353,9 +354,10 @@ def _code_as_expr(code: Code, parse_params: dict = {}, orslice: bool = False, ca
         return FST(ast, code._lines, from_=code, lcopy=False)._sanitize()
 
     if isinstance(code, AST):
-        if not isinstance(code, (expr, Slice) if orslice else expr):
-            raise NodeError(f'expecting {"expression or Slice" if orslice else "expression"}, got '
-                            f'{code.__class__.__name__}')
+        if not isinstance(code, expr):
+            raise NodeError('expecting ' +
+                ("slice " if parse is _parse_expr_slice_tuple else "call arg " if parse is _parse_expr_call_arg else "") +
+                f'expression, got {code.__class__.__name__}')
 
         code  = ast_unparse(code)
         lines = code.split('\n')
@@ -365,8 +367,7 @@ def _code_as_expr(code: Code, parse_params: dict = {}, orslice: bool = False, ca
     else:  # str
         lines = code.split('\n')
 
-    return FST((_parse_expr_or_slice if orslice else _parse_expr_call_arg if callarg else _parse_expr)
-               (code, parse_params), lines, parse_params=parse_params)._sanitize()
+    return FST(parse(code, parse_params), lines, parse_params=parse_params)._sanitize()
 
 
 @staticmethod
@@ -378,18 +379,18 @@ def _code_as_slice(code: Code, parse_params: dict = {}) -> 'FST':
 
 
 @staticmethod
-def _code_as_expr_or_slice(code: Code, parse_params: dict = {}, orslice: bool = False) -> 'FST':
+def _code_as_expr_slice_tuple(code: Code, parse_params: dict = {}, orslice: bool = False) -> 'FST':
     """Convert `code` to an `expr` or `Slice` `FST` if possible. This exists because of the behavior of naked `Starred`
     expressions in a `Subscript` `slice` field."""
 
-    return _code_as_expr(code, parse_params, True)
+    return _code_as_expr(code, parse_params, _parse_expr_slice_tuple)
 
 
 @staticmethod
 def _code_as_expr_call_arg(code: Code, parse_params: dict = {}, orslice: bool = False) -> 'FST':
     """Convert `code` to an `expr` in the context of a `Call.args` which has special parse rules for `Starred`."""
 
-    return _code_as_expr(code, parse_params, False, True)
+    return _code_as_expr(code, parse_params, _parse_expr_call_arg)
 
 
 @staticmethod
