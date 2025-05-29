@@ -476,7 +476,7 @@ def _put_one_Dict_keys(self: 'FST', code: Code | None, idx: int | None, field: s
     ret = _put_one_exprish_optional(self, code, idx, field, child, static, **options)
 
     if (code is None and not (value := (a := self.a).values[idx].f).is_atom() and
-        precedence_require_parens_by_type(value.a.__class__, a.__class__, 'values', dict_key_None=True)
+        precedence_require_parens(value.a, a, 'values',  idx)
     ):
         value._parenthesize_grouping()
 
