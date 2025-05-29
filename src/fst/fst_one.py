@@ -651,17 +651,17 @@ def _put_one(self: 'FST', code: Code | None, idx: int | None, field: str, **opti
     child           = getattr(self.a, field) if field else None
     raw             = FST.get_option('raw', options)
     handlers        = _PUT_ONE_HANDLERS.get((ast.__class__, field))
-    before_state    = FST._before_modify(self, field)
+    modified        = self._modifying(field)
     ret_or_delegate = None
 
     if raw is not True:
         try:
             if handlers:
                 handler, _, static = handlers
-                ret_or_delegate    = handler(self, code, idx, field, child, static, **options)
+                ret_or_delegate    = handler(self, code, idx, field, child, static, modified=modified, **options)
 
                 if not isinstance(ret_or_delegate, FunctionType):
-                    FST._after_modify(before_state)
+                    modified()
 
                     return ret_or_delegate
 
@@ -671,13 +671,7 @@ def _put_one(self: 'FST', code: Code | None, idx: int | None, field: str, **opti
 
         else:
             if ret_or_delegate is not None:  # delegate operation to slice?
-                # return ret_or_delegate()
-
-                ret = ret_or_delegate()
-
-                FST._after_modify(before_state, ret)  # TODO: REMOVE THIS! once slice operations do this themselves
-
-                return ret
+                return ret_or_delegate()
 
             if not raw:
                 raise ValueError(f'cannot {"delete" if code is None else "replace"} {ast.__class__.__name__}.{field}')

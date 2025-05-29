@@ -35371,6 +35371,18 @@ class cls:
 
                 raise
 
+    def test_put_slice_special(self):
+        if sys.version_info[:2] >= (3, 14):  # make sure parent Interpolation.str gets modified
+            f = FST('t"{(1, 2)}"').body[0].value.copy()
+            f.values[0].value.put_slice("()")
+            self.assertEqual('()', f.values[0].value.src)
+            self.assertEqual('()', f.values[0].str)
+
+            f = FST('t"{(1, 2)}"').body[0].value.copy()
+            f.values[0].value.put("()", None, None, one=False)
+            self.assertEqual('()', f.values[0].value.src)
+            self.assertEqual('()', f.values[0].str)
+
     def test_put_one(self):
         ver = sys.version_info[1]
 

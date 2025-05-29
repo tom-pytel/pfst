@@ -2038,21 +2038,21 @@ class FST:
             if not force:
                 return False
 
-            before_state = FST._before_modify(self)
+            modified = self._modifying()
 
             self._parenthesize_grouping()
-            FST._after_modify(before_state)
+            modified()
 
             return True
 
-        before_state = FST._before_modify(self)
+        modified = self._modifying()
 
         if isinstance(self.a, Tuple):
             self._parenthesize_tuple()
         else:
             self._parenthesize_grouping()
 
-        FST._after_modify(before_state)
+        modified()
 
         return True
 
@@ -2071,13 +2071,13 @@ class FST:
         if not self.is_atom():
             return False
 
-        before_state = FST._before_modify(self)
-        ret          = self._unparenthesize_grouping()
+        modified = self._modifying()
+        ret      = self._unparenthesize_grouping()
 
         if tuple_ and isinstance(self.a, Tuple):
             ret = self._unparenthesize_tuple() or ret
 
-        FST._after_modify(before_state)
+        modified()
 
         return ret
 
@@ -2085,8 +2085,6 @@ class FST:
     # Private and other misc stuff
 
     from .fst_misc import (
-        _before_modify,
-        _after_modify,
         _new_empty_module,
         _new_empty_tuple,
         _new_empty_list,
@@ -2136,6 +2134,7 @@ class FST:
         _elif_to_else_if,
         _reparse_docstrings,
         _make_fst_and_dedent,
+        _modifying,
     )
 
     from .fst_parse import (

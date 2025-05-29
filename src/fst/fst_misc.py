@@ -34,67 +34,6 @@ _GLOBALS = globals() | {'_GLOBALS': None}
 # ----------------------------------------------------------------------------------------------------------------------
 
 @staticmethod
-def _before_modify(fst: 'FST', field: str | Literal[False] = False) -> Any:
-    """Call before modifying `FST` node (even just source) to mark possible data for updates after modification. This
-    function just collects data so is safe to call without a corresponding `_after_modify()`.
-
-    **Parameters**:
-    - `fst`: Parent node of field being modified (because actual child may be being created and may not exist yet) or
-        actual child field node if `field` is `False` (parent `FST` and field will be gotten from this child).
-    - `field`: Name of field being modified or `False` to indicate that `fst` is the child. `False` is used to
-        differentiate the `None` values that can be passed to `FST.put()`, even though those should not make it here.
-    """
-
-    # TODO: update f/t-string f"{val=}" preceding string constants for updated value with '=', evil thing
-
-    if field is False:
-        field = fst.pfield
-
-        if not (fst := fst.parent):
-            return (False, False)
-
-        field = field.name
-
-    return (fst, field) if isinstance(fst.a, expr) else (False, False)
-
-
-@staticmethod
-def _after_modify(before_state: Any, fst: Optional['FST'] | Literal[False] = False):
-    """Call after modifying `FST` node to apply any needed changes to parents.
-
-    Currently only updates `TemplateStr.str` but is meant to evetually update `JoinedStr`/`TemplateStr` `f'{v=}'` style
-    self-documenting string `Constants`.
-
-    **Parameters:**
-    - `before_state`: Return value of previously called `_before_modify()`.
-    - `fst`: Parent node of modified field AFTER modification (may have changed or not exist anymore). Or can be special
-        value `False` to indicate that parent was not changed, this is just a convenience for shorthand calls.
-    """
-
-    fst_before, field = before_state
-
-    if fst is False:
-        if (fst := fst_before) is False:
-            return
-
-    elif fst is not fst_before:  # if parent changed then entire statement was reparsed and we have nothing to do, or fst_before is Ellipsis because wan't expr to begin with
-        return
-
-    while isinstance(a := fst.a, expr):
-        if field == 'value' and isinstance(a, Interpolation):
-            ln, col, _, _         = fst.loc
-            _, _, end_ln, end_col = a.value.f.pars()
-            a.str                 = fst.get_src(ln, col + 1, end_ln, end_col)
-
-        field = fst.pfield
-
-        if not (fst := fst.parent):
-            break
-
-        field = field.name
-
-
-@staticmethod
 def _new_empty_module(*, from_: Optional['FST'] = None) -> 'FST':
     return FST(Module(body=[], type_ignores=[]), [''], from_=from_)
 
@@ -1232,6 +1171,68 @@ def _make_fst_and_dedent(self: 'FST', indent: Union['FST', str], ast: AST, copy_
         self.put_src(put_lines, *put_loc, True)  # True because we may have an unparenthesized tuple that shrinks to a span length of 0
 
     return fst
+
+
+def _modifying(self: 'FST', field: str | Literal[False] = False) -> Callable[[Optional['FST']], None]:
+    """Call before modifying `FST` node (even just source) to mark possible data for updates after modification. This
+    function just collects information so is safe to call without ever calling the return value.
+
+    **Parameters:**
+    - `self`: Parent of or actual node being modified, depending on value of `field` (because actual child may be being
+        created and may not exist yet).
+    - `field`: Name of field being modified or `False` to indicate that `self` is the child, in which case the parent
+        and field will be gotten from `self`.
+
+    **Returns:**
+    - `Callable` Should be called after successful modification. If no modification done or error occurred then does not
+        need to be called, nothing bad happens.
+    """
+
+    # TODO: update f/t-string f"{val=}" preceding string constants for updated value with '=', evil thing
+
+    if field is False:
+        field = self.pfield
+
+        if not (self := self.parent):
+            return lambda new_self=None: None
+
+        field = field.name
+
+    if not isinstance(self.a, expr):
+        return lambda new_self=None: None
+
+    def modified(new_self: Optional['FST'] | Literal[False] = False):
+        """Call after modifying `FST` node to apply any needed changes to parents.
+
+        Currently only updates `TemplateStr.str` but is meant to evetually update `JoinedStr`/`TemplateStr` `f'{v=}'`
+        style self-documenting string `Constants`.
+
+        **Parameters:**
+        - `new_self`: Parent node of modified field AFTER modification (may have changed or not exist anymore). Or can
+            be special value `False` to indicate that `self` was definitely not changed, this is just a convenience.
+        """
+
+        if new_self is False:
+            new_self = self
+        elif new_self is not self:  # if parent of field changed then entire statement was reparsed and we have nothing to do
+            return
+
+        field_ = field
+
+        while isinstance(a := new_self.a, expr):
+            if field_ == 'value' and isinstance(a, Interpolation):
+                ln, col, _, _         = new_self.loc
+                _, _, end_ln, end_col = a.value.f.pars()
+                a.str                 = new_self.get_src(ln, col + 1, end_ln, end_col)
+
+            field_ = new_self.pfield
+
+            if not (new_self := new_self.parent):
+                break
+
+            field_ = field_.name
+
+    return modified
 
 
 # ----------------------------------------------------------------------------------------------------------------------
