@@ -10,7 +10,7 @@ from .astutil import TypeAlias, TryStar, type_param, TypeVar, ParamSpec, TypeVar
 
 from .shared import (
     STMTISH, Code, NodeError, astfield, fstloc,
-    _next_src, _prev_src, _next_find, _prev_find, _next_find_re, _fixup_one_index,
+    _next_src, _prev_src, _next_find, _prev_find, _next_find_re, _prev_pars, _fixup_one_index,
 )
 
 from .fst_parse import (
@@ -479,6 +479,22 @@ def _put_one_Dict_keys(self: 'FST', code: Code | None, idx: int | None, field: s
         precedence_require_parens_by_type(value.a.__class__, a.__class__, 'values', dict_key_None=True)
     ):
         value._parenthesize_grouping()
+
+    return ret
+
+
+def _put_one_withitem_optional_vars(self: 'FST', code: Code | None, idx: int | None, field: str, child: str,
+                         static: onestatic, **options) -> str:
+    """If delete leaves a single parenthesized context_expr `Tuple` then need to parenthesize that, otherwise it can be
+    reparsed as multiple `withitems` instead of a single `Tuple`."""
+
+    ret = _put_one_exprish_optional(self, code, idx, field, child, static, **options)
+
+    if (code is None and (parent := self.parent) and isinstance(parenta := parent.a, (With, AsyncWith)) and
+        len(parenta.items) == 1 and (f := self.a.context_expr.f).is_parenthesized_tuple() and
+        len(_prev_pars(self.root.lines, parent.ln, parent.col, f.ln, f.col)) == 1  # no pars between start of `with` and start of parenthesized tuple?
+    ):
+        f._parenthesize_grouping()
 
     return ret
 
@@ -1388,7 +1404,7 @@ _PUT_ONE_HANDLERS = {
     (alias, 'name'):                      (_put_one_identifier_required, None, onestatic(_one_info_identifier_alias, _restrict_default, code_as=_code_as_identifier_alias)), # identifier  - alias star or dotted not valid for all uses but being general here (and lazy, don't feel like checking parent)
     (alias, 'asname'):                    (_put_one_identifier_optional, None, onestatic(_one_info_alias_asname, _restrict_default, code_as=_code_as_identifier)), # identifier?
     (withitem, 'context_expr'):           (_put_one_exprish_required, None, _onestatic_expr_required), # expr
-    (withitem, 'optional_vars'):          (_put_one_exprish_optional, None, onestatic(_one_info_withitem_optional_vars, (Name, Tuple, List, Attribute, Subscript), ctx=Store)), # expr?
+    (withitem, 'optional_vars'):          (_put_one_withitem_optional_vars, None, onestatic(_one_info_withitem_optional_vars, (Name, Tuple, List, Attribute, Subscript), ctx=Store)), # expr?
     (match_case, 'pattern'):              (_put_one_exprish_required, None, _onestatic_pattern_required), # pattern
     (match_case, 'guard'):                (_put_one_exprish_optional, None, onestatic(_one_info_match_case_guard, _restrict_default)), # expr?
     (match_case, 'body'):                 (_put_one_stmtish, None, None), # stmt*

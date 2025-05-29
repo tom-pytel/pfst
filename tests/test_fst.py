@@ -35744,6 +35744,28 @@ except* (TypeError, ExceptionGroup):
         f.args.put(g, 'vararg')
         self.assertEqual('def f(*args): pass', f.src)
 
+        # lone parenthesized tuple in unparenthesized With.items left after delete of optional_vars needs grouping pars
+
+        f = FST('with (a, b) as c: pass').body[0].copy()
+        f.items[0].put(None, 'optional_vars', raw=False)
+        self.assertEqual('with ((a, b)): pass', f.src)
+        f.verify()
+
+        f = FST('with ((a, b) as c): pass').body[0].copy()
+        f.items[0].put(None, 'optional_vars', raw=False)
+        self.assertEqual('with ((a, b)): pass', f.src)
+        f.verify()
+
+        f = FST('with ((a, b)) as c: pass').body[0].copy()
+        f.items[0].put(None, 'optional_vars', raw=False)
+        self.assertEqual('with ((a, b)): pass', f.src)
+        f.verify()
+
+        f = FST('with (a) as c: pass').body[0].copy()
+        f.items[0].put(None, 'optional_vars', raw=False)
+        self.assertEqual('with (a): pass', f.src)
+        f.verify()
+
     def test_put_one_pars(self):
         f = FST('a = b').body[0]
         g = FST('(i := j)').body[0].value.copy(pars=False)
@@ -35875,7 +35897,7 @@ except* (TypeError, ExceptionGroup):
         self.assertEqual('match a:\n case (2): pass', f.src)
         f.body[0].cases[0].pattern.put('(3)', pars=True)
 
-    def test_put_one_pars_needed_matrix(self):
+    def test_put_one_pars_need_matrix(self):
         # pars=True, needed for precedence, needed for parse, present in dst, present in src
         f = FST('i * (# dst\nj # dst\n)').body[0].value
         g = FST('(# src\nx\n+\ny # src\n)').body[0].value.copy(pars=True)
