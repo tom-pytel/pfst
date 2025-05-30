@@ -815,8 +815,7 @@ class FST:
                 raise IndexError(f"cannot get() non-slice from index 'end'")
 
         elif stop is not False or start is not None:
-            raise IndexError(f"cannot pass index for non-slice get() to {ast.__class__.__name__}" +
-                             (f".{field_}" if field_ else ""))
+            raise IndexError(f'{ast.__class__.__name__}{(f".{field_}" if field_ else "")} does not take an index')
 
         return self._get_one(start, field_, cut, **options)
 
@@ -843,7 +842,7 @@ class FST:
                 raise IndexError(f"cannot put() non-slice to index 'end'")
 
         elif stop is not False or start is not None:
-            raise IndexError(f'{ast.__class__.__name__}.{field_} does not take an index')
+            raise IndexError(f'{ast.__class__.__name__}{(f".{field_}" if field_ else "")} does not take an index')
 
         if not one:
             raise ValueError(f"cannot use 'one=False' in non-slice put()")

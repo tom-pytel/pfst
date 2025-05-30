@@ -24,24 +24,7 @@ from .fst_parse import (
 _re_merged_alnum = re.compile(r'\w\w')
 
 
-def _slice_indices(self: 'FST', idx: int, field: str, body: list[AST], to: Optional['FST']):
-    """If a `to` parameter is passed then try to convert it to an index in the same field body list of `self`."""
-
-    idx = _fixup_one_index(len(body), idx)
-
-    if not to:
-        return idx, idx + 1
-
-    elif to.parent is self is not None and (pf := to.pfield).name == field:
-        if (to_idx := pf.idx) < idx:
-            raise ValueError("invalid 'to' node, must follow self in body")
-
-        return idx, to_idx + 1
-
-    raise NodeError(f"invalid 'to' node")
-
-
-def _Compare_None_index(self: 'FST', idx: int | None) -> tuple[int, str, AST | list[AST]]:
+def _params_Compare_None(self: 'FST', idx: int | None) -> tuple[int, str, AST | list[AST]]:
     ast         = self.a
     comparators = ast.comparators
     idx         = _fixup_one_index(len(comparators) + 1, idx)
@@ -59,16 +42,21 @@ def _get_one(self: 'FST', idx: int | None, field: str, cut: bool, **options) -> 
 
     if field:
         child = getattr(ast, field)
+
+        if isinstance(child, list):
+            idx = _fixup_one_index(len(child), idx)
+        elif idx is not None:
+            raise IndexError(f'{child.__class__.__name__}.{field} does not take an index')
+
     elif not isinstance(ast, Compare):
         raise ValueError(f'cannot get single element from combined field of {ast.__class__.__name__}')
     else:
-        idx, field, child = _Compare_None_index(self, idx)
+        idx, field, child = _params_Compare_None(self, idx)
 
     childa = child if idx is None else child[idx]
 
     if isinstance(childa, STMTISH):
-        return self._get_slice_stmtish(*_slice_indices(self, idx, field, child, None), field, cut=cut, one=True,
-                                       **options)
+        return self._get_slice_stmtish(idx, idx + 1, field, cut=cut, one=True, **options)
 
     if not isinstance(childa, AST):  # empty None field or identifier or some other constant
         ret = childa
@@ -129,8 +117,6 @@ def _validate_put(self: 'FST', code: Code | None, idx: int | None, field: str, c
 
     if not can_del and code is None:
         raise ValueError(f'cannot delete {self.a.__class__.__name__}.{field}{"" if idx is None else f"[{idx}]"}')
-    if options.get('to'):
-        raise NodeError(f"cannot put with 'to' to {self.a.__class__.__name__}.{field} without 'raw'")
 
     return child
 
@@ -220,7 +206,9 @@ def _put_one_stmtish(self: 'FST', code: Code | None, idx: int | None, field: str
                      **options) -> Optional['FST']:
     """Put or delete a single statementish node to a list of them (body, orelse, handlers, finalbody or cases)."""
 
-    self._put_slice_stmtish(code, *_slice_indices(self, idx, field, child, options.get('to')), field, True, **options)
+    idx = _fixup_one_index(len(child), idx)
+
+    self._put_slice_stmtish(code, idx, idx + 1, field, True, **options)
 
     return None if code is None else getattr(self.a, field)[idx].f
 
@@ -412,9 +400,6 @@ def _put_one_exprish_sliceable(self: 'FST', code: Code | None, idx: int | None, 
     """If deleting then will do so using slice operation, otherwise just a required expression."""
 
     if code is None:
-        if options.get('to'):
-            raise NodeError("delete with 'to' requires 'raw'")
-
         return lambda: self._put_slice(code, i := _fixup_one_index(len(child), idx), i + 1, field, True, **options)  # this informs _put_one() to delegate operation to this
 
     return _put_one_exprish_required(self, code, idx, field, child, static, **options)
@@ -433,7 +418,7 @@ def _put_one_Compare_None(self: 'FST', code: Code | None, idx: int | None, field
                           static: onestatic, **options) -> 'FST':
     """Put to combined [Compare.left, Compare.comparators] using this total indexing."""
 
-    idx, field, child = _Compare_None_index(self, idx)
+    idx, field, child = _params_Compare_None(self, idx)
 
     return _put_one_exprish_required(self, code, idx, field, child, static, **options)
 
@@ -569,9 +554,6 @@ def _put_one_identifier_sliceable(self: 'FST', code: Code | None, idx: int | Non
     """If deleting then will do so using slice operation, otherwise just a required identifier."""
 
     if code is None:
-        if options.get('to'):
-            raise NodeError("delete with 'to' requires 'raw'")
-
         return lambda: self._put_slice(code, i := _fixup_one_index(len(child), idx), i + 1, field, True, **options)  # this informs _put_one() to delegate operation to this
 
     return _put_one_identifier_required(self, code, idx, field, child, static, **options)
@@ -664,7 +646,15 @@ def _put_one(self: 'FST', code: Code | None, idx: int | None, field: str, **opti
 
     if raw is not True:
         try:
-            if handlers:
+            if options.get('to'):
+                raise NodeError(f"cannot put with 'to' to {self.a.__class__.__name__}"
+                                f"{f'.{field}' if field else ''} without 'raw'")
+
+            if not handlers:
+                raise NodeError(f"cannot {'delete' if code is None else 'replace'} {ast.__class__.__name__}"
+                                f"{f'.{field}' if field else ' combined field'}")
+
+            else:
                 handler, _, static = handlers
                 ret_or_delegate    = handler(self, code, idx, field, child, static, modified=modified, **options)
 
@@ -680,10 +670,6 @@ def _put_one(self: 'FST', code: Code | None, idx: int | None, field: str, **opti
         else:
             if ret_or_delegate is not None:  # delegate operation to slice?
                 return ret_or_delegate()
-
-            if not raw:
-                raise ValueError(f'cannot {"delete" if code is None else "replace"} {ast.__class__.__name__}.{field}')
-
 
     # TODO: redo raw starting below
 
