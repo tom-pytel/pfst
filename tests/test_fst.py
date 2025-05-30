@@ -21299,7 +21299,7 @@ Module .. ROOT 0,0 -> 0,21
 
 (r"""@a
 @(b)
-def c(): pass""", 'body[0]', 0, 'decorator_list', {}, r"""**DEL**""", r"""**ValueError('cannot put slice to FunctionDef.decorator_list')**""", r"""
+def c(): pass""", 'body[0]', 0, 'decorator_list', {'raw': False}, r"""**DEL**""", r"""**ValueError('cannot put slice to FunctionDef.decorator_list')**""", r"""
 """),
 
 (r"""@a
@@ -21374,7 +21374,7 @@ def c(): pass""", 'body[0]', -4, 'decorator_list', {}, r"""new""", r"""**IndexEr
 
 (r"""@a
 @(b)
-async def c(): pass""", 'body[0]', 0, 'decorator_list', {}, r"""**DEL**""", r"""**ValueError('cannot put slice to AsyncFunctionDef.decorator_list')**""", r"""
+async def c(): pass""", 'body[0]', 0, 'decorator_list', {'raw': False}, r"""**DEL**""", r"""**ValueError('cannot put slice to AsyncFunctionDef.decorator_list')**""", r"""
 """),
 
 (r"""@a
@@ -21449,7 +21449,7 @@ async def c(): pass""", 'body[0]', -4, 'decorator_list', {}, r"""new""", r"""**I
 
 (r"""@a
 @(b)
-class c: pass""", 'body[0]', 0, 'decorator_list', {}, r"""**DEL**""", r"""**ValueError('cannot put slice to ClassDef.decorator_list')**""", r"""
+class c: pass""", 'body[0]', 0, 'decorator_list', {'raw': False}, r"""**DEL**""", r"""**ValueError('cannot put slice to ClassDef.decorator_list')**""", r"""
 """),
 
 (r"""@a
@@ -21682,7 +21682,7 @@ Module .. ROOT 0,0 -> 0,15
 (r"""a and (b) and c""", 'body[0].value', -4, None, {}, r"""new""", r"""**IndexError('index out of range')**""", r"""
 """),
 
-(r"""[i for i in j if a if (b)]""", 'body[0].value.generators[0]', 0, 'ifs', {}, r"""**DEL**""", r"""**ValueError('cannot put slice to comprehension.ifs')**""", r"""
+(r"""[i for i in j if a if (b)]""", 'body[0].value.generators[0]', 0, 'ifs', {'raw': False}, r"""**DEL**""", r"""**ValueError('cannot put slice to comprehension.ifs')**""", r"""
 """),
 
 (r"""[i for i in j if a if (b)]""", 'body[0].value.generators[0]', 0, 'ifs', {}, r"""new""", r"""[i for i in j if new if (b)]""", r"""
@@ -35134,11 +35134,13 @@ class cls:
         g = f.generators[1].replace(None, raw=True, pars=False)
         f = f.repath()
         self.assertEqual(f.src, '[a for c in d  for a in b]')
-        self.assertIsNone(g)
+        # self.assertIsNone(g)
+        self.assertEqual(g.src, '[a for c in d  for a in b]')
         g = f.generators[1].replace(None, raw=True, pars=False)
         f = f.repath()
         self.assertEqual(f.src, '[a for c in d  ]')
-        self.assertIsNone(g)
+        # self.assertIsNone(g)
+        self.assertEqual(g.src, '[a for c in d  ]')
 
         f = parse('f(i for i in j)').body[0].value.args[0].f
         g = f.replace('a', raw=True, pars=False)
@@ -35508,6 +35510,9 @@ class cls:
         self.assertEqual('@a\n@(z)\n@c\nclass cls: pass', parse('@a\n@(b)\n@c\nclass cls: pass').body[0].f.put('z', 1, field='decorator_list').root.src)
         self.assertEqual('@a\n@z\n@c\nclass cls: pass', parse('@a\n@(b)\n@c\nclass cls: pass').body[0].f.put_slice('@z', 1, 2, field='decorator_list').root.src)
         self.assertEqual('@a\n@z\nclass cls: pass', parse('@a\n@(b)\n@(c)\nclass cls: pass').body[0].f.put_slice('@z', 1, 3, field='decorator_list').root.src)
+
+        self.assertEqual('{a: b, e: f}', FST('{a: b, c: d, e: f}').body[0].value.put(None, 1, raw='auto').root.src)
+        self.assertEqual('{a: b, e: f}', FST('{a: b, c: d, e: f}').body[0].value.put(None, 1, raw=False).root.src)
 
         FST.set_option(**old_options)
 

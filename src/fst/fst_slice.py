@@ -41,31 +41,34 @@ def _get_slice(self: 'FST', start: int | Literal['end'] | None, stop: int | None
 # ----------------------------------------------------------------------------------------------------------------------
 
 def _put_slice(self: 'FST', code: Code | None, start: int | Literal['end'] | None, stop: int | None, field: str,
-               one: bool = False, modified: Callable[[Optional['FST']], None] | None = None, **options) -> 'FST':  # -> Self
+               one: bool = False, **options) -> 'FST':  # -> Self
     """Put an a slice of child nodes to `self`."""
 
     ast = self.a
     raw = FST.get_option('raw', options)
 
-    if modified is None:
-        modified = self._modifying(field)
-
     if raw is not True:
         try:
             if isinstance(ast, STMTISH_OR_STMTMOD):
                 if field in STMTISH_FIELDS:
+                    modified = self._modifying(field)
+
                     self._put_slice_stmtish(code, start, stop, field, one, **options)
                     modified()
 
                     return self
 
             elif isinstance(ast, (Tuple, List, Set)):
+                modified = self._modifying(field)
+
                 self._put_slice_tuple_list_or_set(code, start, stop, field, one, **options)
                 modified()
 
                 return self
 
             elif isinstance(ast, Dict):
+                modified = self._modifying(field)
+
                 self._put_slice_dict(code, start, stop, field, one, **options)
                 modified()
 
