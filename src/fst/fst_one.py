@@ -41,36 +41,56 @@ def _slice_indices(self: 'FST', idx: int, field: str, body: list[AST], to: Optio
     raise NodeError(f"invalid 'to' node")
 
 
+def _Compare_None_index(self: 'FST', idx: int | None) -> tuple[int, str, AST | list[AST]]:
+    ast         = self.a
+    comparators = ast.comparators
+    idx         = _fixup_one_index(len(comparators) + 1, idx)
+
+    return (idx - 1, 'comparators', comparators) if idx else (None, 'left', ast.left)
+
+
 # ----------------------------------------------------------------------------------------------------------------------
 # get
 
-def _get_one(self: 'FST', idx: int | None, field: str, cut: bool, **options) -> Optional['FST']:
+def _get_one(self: 'FST', idx: int | None, field: str, cut: bool, **options) -> Optional['FST'] | constant:
     """Copy or cut (if possible) a node or non-node from a field of `self`."""
 
-    ast    = self.a
-    child  = getattr(ast, field)
+    ast = self.a
+
+    if field:
+        child = getattr(ast, field)
+    elif not isinstance(ast, Compare):
+        raise ValueError(f'cannot get single element from combined field of {ast.__class__.__name__}')
+    else:
+        idx, field, child = _Compare_None_index(self, idx)
+
     childa = child if idx is None else child[idx]
 
     if isinstance(childa, STMTISH):
         return self._get_slice_stmtish(*_slice_indices(self, idx, field, child, None), field, cut=cut, one=True,
                                        **options)
 
-    childf = childa.f
-    loc    = childf.pars(pars=self.get_option('pars', options) is True)
+    if not isinstance(childa, AST):  # empty None field or identifier or some other constant
+        ret = childa
 
-    if not loc:
-        raise ValueError('cannot copy node which does not have a location')
+    else:
+        childf = childa.f
+        loc    = childf.pars(pars=self.get_option('pars', options) is True)
 
-    fst = childf._make_fst_and_dedent(childf, copy_ast(childa), loc, docstr=options.get('docstr'))
+        if not loc:
+            raise ValueError('cannot copy node which does not have a location')
+
+        ret = childf._make_fst_and_dedent(childf, copy_ast(childa), loc, docstr=options.get('docstr'))
+
+        ret._maybe_fix(self.get_option('pars', options))
 
     if cut:
-        options['to'] = None
+        options['raw'] = False
+        options['to']  = None
 
         self._put_one(None, idx, field, **options)
 
-    fst._maybe_fix(self.get_option('pars', options))
-
-    return fst
+    return ret
 
 
 # ----------------------------------------------------------------------------------------------------------------------
@@ -413,19 +433,7 @@ def _put_one_Compare_None(self: 'FST', code: Code | None, idx: int | None, field
                           static: onestatic, **options) -> 'FST':
     """Put to combined [Compare.left, Compare.comparators] using this total indexing."""
 
-    ast         = self.a
-    comparators = ast.comparators
-    idx         = _fixup_one_index(len(comparators) + 1, idx)
-
-    if idx:
-        field = 'comparators'
-        idx   = idx - 1
-        child = comparators
-
-    else:
-        field = 'left'
-        idx   = None
-        child = ast.left
+    idx, field, child = _Compare_None_index(self, idx)
 
     return _put_one_exprish_required(self, code, idx, field, child, static, **options)
 
