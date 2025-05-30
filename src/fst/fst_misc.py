@@ -979,12 +979,12 @@ def _parenthesize_tuple(self: 'FST', whole: bool = True):
     a.col_offset = lines[ln].c2b(col)  # ditto on the `whole` thing
 
 
-def _unparenthesize_grouping(self: 'FST', *, shared: bool = False) -> bool:
+def _unparenthesize_grouping(self: 'FST', share: bool = True) -> bool:
     """Remove grouping parentheses from anything if present. Just remove text parens around node and everything between
     them and node adjusting parent locations but not the node itself.
 
     **Parameters:**
-    - `shared`: Whether to allow merge of parentheses into shared single call argument generator expression or not.
+    - `share`: Whether to allow merge of parentheses into share single call argument generator expression or not.
 
     **Returns:**
     - `bool`: Whether parentheses were removed or not (only removed if present to begin with and removable).
@@ -992,16 +992,16 @@ def _unparenthesize_grouping(self: 'FST', *, shared: bool = False) -> bool:
 
     pars_loc, npars = self.pars(True)
 
-    if shared:
-        shared = self.is_solo_call_arg_genexp()
+    if share:
+        share = self.is_solo_call_arg_genexp()
 
-    if not npars and not shared:
+    if not npars and not share:
         return False
 
     ln , col,  end_ln,  end_col  = self.bloc
     pln, pcol, pend_ln, pend_col = pars_loc
 
-    if shared:  # special case merge solo argument GeneratorExp parentheses with call argument parens
+    if share:  # special case merge solo argument GeneratorExp parentheses with call argument parens
         lines                    = self.root._lines
         _, _, cend_ln, cend_col  = self.parent.func.loc
         pln, pcol                = _prev_find(lines, cend_ln, cend_col, pln, pcol, '(')  # it must be there

@@ -72,6 +72,7 @@ def _code_as(code: Code, ast_type: type[AST], parse_params: dict, parse: Callabl
             raise NodeError(f'expecting {ast_type.__name__}, got {code.__class__.__name__}')
 
         code  = ast_unparse(code)[1:-1] if not tup_pars and isinstance(code, Tuple) and code.elts else ast_unparse(code)
+        code  = code.strip()  # comprehension unparses with leading space
         lines = code.split('\n')
 
     elif isinstance(code, list):

@@ -890,7 +890,7 @@ class FST:
 
         **Returns:**
         - `FST | None`: FIRST highest level node contained entirely within replacement source location (there may be
-            others following), or `None` or if no such candidate and `exact=None`. If no candidate and `exact` is `True`
+            others following), or `None` if no such candidate and `exact=None`. If no candidate and `exact` is `True`
             or `False` then will attempt to return a node which encloses the location using `find_loc(..., exact)`.
         """
 
@@ -2023,12 +2023,13 @@ class FST:
 
         return lns
 
-    def parenthesize(self, *, force: bool = False) -> bool:
+    def parenthesize(self, *, force: bool = False, whole: bool = True) -> bool:
         """Parenthesize node if it MAY need it. Will not parenthesize atoms which are always enclosed like `List` unless
         `force=True`. Will add parentheses to unparenthesized `Tuple` adjusting the node location.
 
         **Parameters:**
         - `force`: If `True` then will add another layer of parentheses regardless if any already present.
+        - `whole`: If at root then parenthesize whole source instead of just node.
 
         **Returns:**
         - `bool`: Whether parentheses added or not.
@@ -2040,7 +2041,7 @@ class FST:
 
             modified = self._modifying()
 
-            self._parenthesize_grouping()
+            self._parenthesize_grouping(whole)
             modified()
 
             return True
@@ -2048,21 +2049,22 @@ class FST:
         modified = self._modifying()
 
         if isinstance(self.a, Tuple):
-            self._parenthesize_tuple()
+            self._parenthesize_tuple(whole)
         else:
-            self._parenthesize_grouping()
+            self._parenthesize_grouping(whole)
 
         modified()
 
         return True
 
-    def unparenthesize(self, *, tuple_: bool = False) -> bool:
+    def unparenthesize(self, *, tuple_: bool = False, share: bool = True) -> bool:
         """Remove all parentheses from node if present. Normally removes just grouping parentheses but can also remove
         tuple parentheses if `tuple_=True`.
 
         **Parameters:**
         - `tuple_`: If `True` then will remove parentheses from a parenthesized `Tuple`, otherwise only removes grouping
             parentheses if present.
+        - `share`: Whether to allow merge of parentheses into share single call argument generator expression or not.
 
         **Returns:**
         - `bool`: Whether parentheses were removed or not.
@@ -2072,7 +2074,7 @@ class FST:
             return False
 
         modified = self._modifying()
-        ret      = self._unparenthesize_grouping()
+        ret      = self._unparenthesize_grouping(share)
 
         if tuple_ and isinstance(self.a, Tuple):
             ret = self._unparenthesize_tuple() or ret

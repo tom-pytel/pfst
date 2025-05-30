@@ -857,8 +857,6 @@ def walk(self: 'FST', with_loc: bool | Literal['all', 'own'] = False, *, self_: 
     those in the given direction, recursing into each child's children before continuing with siblings. Walking
     backwards will not generate the same sequence as `list(walk())[::-1]` due to this behavior.
 
-    Walked nodes can be modified or replaced as long as their parent is not changed.
-
     **Parameters:**
     - `with_loc`: Return nodes depending on if they have a location or not.
         - `False`: All nodes with or without location.
@@ -881,7 +879,7 @@ def walk(self: 'FST', with_loc: bool | Literal['all', 'own'] = False, *, self_: 
     for node in (walking := target.walk()):
         ...
         if i_dont_like_the_node:
-            walking.send(False)  # skip walking this node's children, don't use return value here, keep using for loop as normal
+            walking.send(False)  # skip walking this node's children, don't use return value from send() here
     ```
     """
 
