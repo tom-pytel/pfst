@@ -434,15 +434,7 @@ def _put_one_Lambda_arguments(self: 'FST', code: Code | None, idx: int | None, f
     child  = _validate_put(self, code, idx, field, child, options)  # we want to do it in same order as all other puts
     code   = static.code_as(code, self.root.parse_params)  # and we coerce here just so we can check if is empty args being put to set the prefix correctly
     prefix = ' ' if code.loc else ''  # if arguments has .loc then it is not empty
-
-    if not (args := self.a.args.f).loc:
-        target = args._loc_arguments_empty()
-
-    else:  # need whole arguments location (including preceding space) because may be replacing with empty arguments
-        _, _, last_ln, last_col  = args.last_child().loc
-        ln, col, end_ln, end_col = self.loc
-        end_ln, end_col          = _next_find(self.root._lines, last_ln, last_col, end_ln, end_col, ':')
-        target                   = fstloc(ln, col + 6, end_ln, end_col)
+    target = self._loc_lambda_args_entire()
 
     return _put_one_exprish_required(self, code, idx, field, child, static, False, target, prefix, **options)
 
@@ -699,12 +691,23 @@ def _put_one_raw(self: 'FST', code: Code | None, idx: int | None, field: str, ch
 
     if loc is None:
         if childf:
-            loc = childf.pars(shared=False, pars=pars)
+            if isinstance(child, arguments):  # empty arguments do not have a location and lambda args need to add or remove a preceding space
+                if not (loc := childf.loc):
+                    loc = childf._loc_arguments_empty()
 
-            if (loc and not pars and childf.is_solo_call_arg_genexp() and  # if loc includes `arguments` parentheses shared with solo GeneratorExp call arg then need to leave those in place
-                (non_shared_loc := childf.pars(shared=False)) > loc
-            ):
-                loc = non_shared_loc
+                    if not is_del_or_empty and isinstance(ast, Lambda):  # adding to nonexistent lambda pars, need to add space prefix
+                        code[0] = ' ' + code[0]
+
+                elif is_del_or_empty and isinstance(ast, Lambda):  # deleting existing lambda pars, need to eat space prefix
+                    loc = self._loc_lambda_args_entire()
+
+            else:
+                loc = childf.pars(shared=False, pars=pars)
+
+                if (loc and not pars and childf.is_solo_call_arg_genexp() and  # if loc includes `arguments` parentheses shared with solo GeneratorExp call arg then need to leave those in place
+                    (non_shared_loc := childf.pars(shared=False)) > loc
+                ):
+                    loc = non_shared_loc
 
         if loc is None and info and not is_del_or_empty:  # identifier
             loc = info.loc_insdel
@@ -736,7 +739,10 @@ def _put_one_raw(self: 'FST', code: Code | None, idx: int | None, field: str, ch
 
         if to_loc is None:
             if not (to_loc := to.pars(shared=False, pars=pars)):
-                raise ValueError(f"'to' node must have a location")
+                if isinstance(to.a, arguments):
+                    to_loc = to._loc_arguments_empty()
+                else:
+                    raise ValueError(f"'to' node must have a location")
 
             if not pars and to.is_solo_call_arg_genexp() and (non_shared_loc := to.pars(shared=False)) > to_loc:
                 to_loc = non_shared_loc
@@ -800,46 +806,6 @@ def _put_one(self: 'FST', code: Code | None, idx: int | None, field: str, **opti
             if ret_or_delegate is not None:  # delegate operation to slice?
                 return ret_or_delegate()
 
-
-
-    # TODO: redo raw starting below
-
-
-    # if isinstance(child, list):
-    #     child = child[idx]
-
-    # # special raw cases, TODO: move into dedicated _put_raw or do via _PUT_ONE_RAW_HANDLERS
-
-    # is_dict = isinstance(ast, Dict)
-
-    # if not field:  # maybe putting to special case field?
-    #     if is_dict or isinstance(ast, MatchMapping):
-    #         key = key.f if (key := ast.keys[idx]) else self._dict_key_or_mock_loc(key, ast.values[idx].f)
-    #         end = (ast.values if is_dict else ast.patterns)[idx].f
-
-    #         self._reparse_raw_loc(code, key.ln, key.col, end.end_ln, end.end_col)
-
-    #         return self.repath()
-
-    #     if isinstance(ast, Compare):
-    #         idx   = _fixup_one_index(len(ast.comparators) + 1, idx)  # need to do this because of compound body including 'left'
-    #         child = ast.comparators[idx - 1] if idx else ast.left
-
-    # if is_dict and field == 'keys' and (keys := ast.keys)[idx] is None:  # '{**d}' with key=None
-    #     start_loc = self._dict_key_or_mock_loc(keys[idx], ast.values[idx].f)
-
-    #     ln, col, end_ln, end_col = start_loc.loc
-
-    #     self.put_src([': '], ln, col, end_ln, end_col)
-    #     self._reparse_raw_loc(code, ln, col, ln, col)
-
-    #     return self.repath()
-
-    # ret = child.f._reparse_raw_node(code, **options)
-
-    # return None if code is None else ret
-
-
     return _put_one_raw(self, code, idx, field, child, handlers and handlers[-1], **options)
 
 
@@ -869,8 +835,8 @@ _onestatic_target_Name               = onestatic(_one_info_exprish_required, Nam
 _onestatic_target_single             = onestatic(_one_info_exprish_required, (Name, Attribute, Subscript), ctx=Store)
 _onestatic_target                    = onestatic(_one_info_exprish_required, (Name, Attribute, Subscript, Tuple, List), ctx=Store)
 
-def _one_info_identifier_required(self: 'FST', static: onestatic, idx: int | None, field: str, prefix: str | None = None,
-                                 ) -> oneinfo:  # required, cannot delete or put new
+def _one_info_identifier_required(self: 'FST', static: onestatic, idx: int | None, field: str,  # required, cannot delete or put new
+                                  prefix: str | None = None) -> oneinfo:
     ln, col, end_ln, end_col = self.loc
     lines                    = self.root._lines
 
@@ -1450,7 +1416,7 @@ _PUT_ONE_HANDLERS = {
     (Global, 'names'):                    (_put_one_identifier_sliceable, None, _onestatic_Global_Nonlocal_names), # identifier*
     (Nonlocal, 'names'):                  (_put_one_identifier_sliceable, None, _onestatic_Global_Nonlocal_names), # identifier*
     (Expr, 'value'):                      (_put_one_exprish_required, None, _onestatic_expr_required), # expr
-    (BoolOp, 'op'):                       (_put_one_BoolOp_op, None, _onestatic_identifier_required), # boolop
+    (BoolOp, 'op'):                       (_put_one_BoolOp_op, None, onestatic(None)), # boolop  - very special case gets handled entirely in _put_one_BoolOp_op
     (BoolOp, 'values'):                   (_put_one_exprish_sliceable, None, _onestatic_expr_required), # expr*
     (NamedExpr, 'target'):                (_put_one_exprish_required, None, _onestatic_target_Name), # expr
     (NamedExpr, 'value'):                 (_put_one_exprish_required, None, _onestatic_expr_required), # expr

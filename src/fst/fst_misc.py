@@ -485,7 +485,7 @@ def _loc_arguments(self: 'FST') -> fstloc | None:
 def _loc_arguments_empty(self: 'FST') -> fstloc:
     """`arguments` location for empty arguments ONLY! DO NOT CALL FOR NONEMPTY ARGUMENTS!"""
 
-    # assert isinstance(self.s, arguments)
+    # assert isinstance(self.a, arguments)
 
     if not (parent := self.parent):
         return fstloc(0, 0, len(ls := self._lines) - 1, len(ls[-1]))  # parent=None means we are root
@@ -504,6 +504,26 @@ def _loc_arguments_empty(self: 'FST') -> fstloc:
         ln, col          = _next_find(lines, ln, col, end_ln, end_col, '(')
         col             += 1
         end_ln, end_col  = _next_find(lines, ln, col, end_ln, end_col, ')')
+
+    return fstloc(ln, col, end_ln, end_col)
+
+
+def _loc_lambda_args_entire(self: 'FST') -> fstloc:
+    """`Lambda` `args` entire location from just past `lambda` keyword to ':', empty or not. `self` is the `Lambda`, not
+    the `arguments`."""
+
+    # assert isinstance(self.a, Lambda)
+
+    ln, col, end_ln, end_col  = self.loc
+    col                      += 6
+    lines                     = self.root._lines
+
+    if not (args := self.a.args.f).loc:
+        end_ln, end_col = _next_find(lines, ln, col, end_ln, end_col, ':')
+
+    else:
+        _, _, lln, lcol = args.last_child().loc
+        end_ln, end_col = _next_find(lines, lln, lcol, end_ln, end_col, ':')
 
     return fstloc(ln, col, end_ln, end_col)
 

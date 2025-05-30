@@ -2108,6 +2108,7 @@ class FST:
         _loc_comprehension,
         _loc_arguments,
         _loc_arguments_empty,
+        _loc_lambda_args_entire,
         _loc_withitem,
         _loc_match_case,
         _loc_Call_pars,
@@ -2190,7 +2191,6 @@ class FST:
         _reparse_raw,
         _reparse_raw_stmtish,
         _reparse_raw_loc,
-        _reparse_raw_node,
         _reparse_raw_slice,
     )
 

@@ -15345,7 +15345,7 @@ Module .. ROOT 0,0 -> 0,4
 PUT_ONE_DATA = [
 (r"""i = 1
 j = 2
-k = 3""", '', 1, None, {'raw': False}, r"""l = 4""", r"""i = 1
+k = 3""", '', 1, None, {}, r"""l = 4""", r"""i = 1
 l = 4
 k = 3""", r"""
 Module .. ROOT 0,0 -> 2,5
@@ -15366,7 +15366,7 @@ Module .. ROOT 0,0 -> 2,5
 
 (r"""i = 1
 j = 2
-k = 3""", '', -1, None, {'raw': False}, r"""l = 4""", r"""i = 1
+k = 3""", '', -1, None, {}, r"""l = 4""", r"""i = 1
 j = 2
 l = 4
 """, r"""
@@ -15388,7 +15388,7 @@ Module .. ROOT 0,0 -> 3,0
 
 (r"""i = 1
 j = 2
-k = 3""", '', -3, None, {'raw': False}, r"""l = 4""", r"""l = 4
+k = 3""", '', -3, None, {}, r"""l = 4""", r"""l = 4
 j = 2
 k = 3""", r"""
 Module .. ROOT 0,0 -> 2,5
@@ -15409,10 +15409,10 @@ Module .. ROOT 0,0 -> 2,5
 
 (r"""i = 1
 j = 2
-k = 3""", '', -4, None, {'raw': False}, r"""l = 4""", r"""**IndexError('index out of range')**""", r"""
+k = 3""", '', -4, None, {}, r"""l = 4""", r"""**IndexError('index out of range')**""", r"""
 """),
 
-(r"""(1, 2, 3)""", 'body[0].value', 1, None, {'raw': False}, r"""4""", r"""(1, 4, 3)""", r"""
+(r"""(1, 2, 3)""", 'body[0].value', 1, None, {}, r"""4""", r"""(1, 4, 3)""", r"""
 Module .. ROOT 0,0 -> 0,9
   .body[1]
   0] Expr .. 0,0 -> 0,9
@@ -15424,7 +15424,7 @@ Module .. ROOT 0,0 -> 0,9
       .ctx Load
 """),
 
-(r"""(1, 2, 3)""", 'body[0].value', -1, None, {'raw': False}, r"""4""", r"""(1, 2, 4)""", r"""
+(r"""(1, 2, 3)""", 'body[0].value', -1, None, {}, r"""4""", r"""(1, 2, 4)""", r"""
 Module .. ROOT 0,0 -> 0,9
   .body[1]
   0] Expr .. 0,0 -> 0,9
@@ -15436,7 +15436,7 @@ Module .. ROOT 0,0 -> 0,9
       .ctx Load
 """),
 
-(r"""(1, 2, 3)""", 'body[0].value', -3, None, {'raw': False}, r"""4""", r"""(4, 2, 3)""", r"""
+(r"""(1, 2, 3)""", 'body[0].value', -3, None, {}, r"""4""", r"""(4, 2, 3)""", r"""
 Module .. ROOT 0,0 -> 0,9
   .body[1]
   0] Expr .. 0,0 -> 0,9
@@ -15448,13 +15448,13 @@ Module .. ROOT 0,0 -> 0,9
       .ctx Load
 """),
 
-(r"""(1, 2, 3)""", 'body[0].value', -4, None, {'raw': False}, r"""4""", r"""**IndexError('index out of range')**""", r"""
+(r"""(1, 2, 3)""", 'body[0].value', -4, None, {}, r"""4""", r"""**IndexError('index out of range')**""", r"""
 """),
 
-(r"""i = j""", 'body[0]', None, None, {'raw': False}, r"""**DEL**""", r"""**ValueError('cannot delete Assign.value')**""", r"""
+(r"""i = j""", 'body[0]', None, None, {}, r"""**DEL**""", r"""**ValueError('cannot delete Assign.value')**""", r"""
 """),
 
-(r"""i = j""", 'body[0]', None, None, {'raw': False}, r"""k""", r"""i = k""", r"""
+(r"""i = j""", 'body[0]', None, None, {}, r"""k""", r"""i = k""", r"""
 Module .. ROOT 0,0 -> 0,5
   .body[1]
   0] Assign .. 0,0 -> 0,5
@@ -15476,7 +15476,7 @@ Module .. ROOT 0,0 -> 0,10
       .ctx Load
 """),
 
-(r"""i = j""", 'body[0]', None, None, {'raw': False, 'pars': False}, r"""a, b""", r"""i = a, b""", r"""
+(r"""i = j""", 'body[0]', None, None, {'pars': False}, r"""a, b""", r"""i = a, b""", r"""
 Module .. ROOT 0,0 -> 0,8
   .body[1]
   0] Assign .. 0,0 -> 0,8
@@ -15489,7 +15489,7 @@ Module .. ROOT 0,0 -> 0,8
       .ctx Load
 """),
 
-(r"""i = (j)""", 'body[0]', None, None, {'raw': False}, r"""(a := b)""", r"""i = (a := b)""", r"""
+(r"""i = (j)""", 'body[0]', None, None, {}, r"""(a := b)""", r"""i = (a := b)""", r"""
 Module .. ROOT 0,0 -> 0,12
   .body[1]
   0] Assign .. 0,0 -> 0,12
@@ -15500,7 +15500,7 @@ Module .. ROOT 0,0 -> 0,12
       .value Name 'b' Load .. 0,10 -> 0,11
 """),
 
-(r"""i = (j)""", 'body[0]', None, None, {'raw': False, 'pars': False}, r"""(a := b)""", r"""i = ((a := b))""", r"""
+(r"""i = (j)""", 'body[0]', None, None, {'pars': False}, r"""(a := b)""", r"""i = ((a := b))""", r"""
 Module .. ROOT 0,0 -> 0,14
   .body[1]
   0] Assign .. 0,0 -> 0,14
@@ -15511,7 +15511,7 @@ Module .. ROOT 0,0 -> 0,14
       .value Name 'b' Load .. 0,11 -> 0,12
 """),
 
-(r"""i""", 'body[0]', None, None, {'raw': False}, r"""j""", r"""j""", r"""
+(r"""i""", 'body[0]', None, None, {}, r"""j""", r"""j""", r"""
 Module .. ROOT 0,0 -> 0,1
   .body[1]
   0] Expr .. 0,0 -> 0,1
@@ -15532,7 +15532,7 @@ Module .. ROOT 0,0 -> 0,6
 (r"""( # 1
 i
 # 2
-)""", 'body[0]', None, None, {'raw': False, 'pars': False}, r"""( # 3
+)""", 'body[0]', None, None, {'pars': False}, r"""( # 3
 j
 # 4
 )""", r"""( # 1
@@ -15551,7 +15551,7 @@ Module .. ROOT 0,0 -> 6,1
 (r"""( # 1
 i
 # 2
-)""", 'body[0]', None, None, {'raw': False, 'pars': True}, r"""( # 3
+)""", 'body[0]', None, None, {'pars': True}, r"""( # 3
 j
 # 4
 )""", r"""( # 3
@@ -15580,7 +15580,7 @@ Module .. ROOT 0,0 -> 0,1
 (r"""( # 1
 i
 # 2
-)""", 'body[0]', None, None, {'raw': False, 'pars': False, '_verify': False, 'comment': 'will wind up with wrong unreparsable tuple position'}, r"""a, b""", r"""( # 1
+)""", 'body[0]', None, None, {'pars': False, '_verify': False, 'comment': 'will wind up with wrong unreparsable tuple position'}, r"""a, b""", r"""( # 1
 a, b
 # 2
 )""", r"""
@@ -15622,7 +15622,7 @@ Module .. ROOT 0,0 -> 0,6
       .ctx Load
 """),
 
-(r"""(f())""", 'body[0]', None, None, {'raw': False, 'pars': False}, r"""g()""", r"""(g())""", r"""
+(r"""(f())""", 'body[0]', None, None, {'pars': False}, r"""g()""", r"""(g())""", r"""
 Module .. ROOT 0,0 -> 0,5
   .body[1]
   0] Expr .. 0,0 -> 0,5
@@ -15630,7 +15630,7 @@ Module .. ROOT 0,0 -> 0,5
       .func Name 'g' Load .. 0,1 -> 0,2
 """),
 
-(r"""(f())""", 'body[0]', None, None, {'raw': False, 'pars': True}, r"""g()""", r"""g()""", r"""
+(r"""(f())""", 'body[0]', None, None, {'pars': True}, r"""g()""", r"""g()""", r"""
 Module .. ROOT 0,0 -> 0,3
   .body[1]
   0] Expr .. 0,0 -> 0,3
@@ -15638,7 +15638,7 @@ Module .. ROOT 0,0 -> 0,3
       .func Name 'g' Load .. 0,0 -> 0,1
 """),
 
-(r"""(f())""", 'body[0]', None, None, {'raw': False, 'pars': False}, r"""(g())""", r"""((g()))""", r"""
+(r"""(f())""", 'body[0]', None, None, {'pars': False}, r"""(g())""", r"""((g()))""", r"""
 Module .. ROOT 0,0 -> 0,7
   .body[1]
   0] Expr .. 0,0 -> 0,7
@@ -15646,7 +15646,7 @@ Module .. ROOT 0,0 -> 0,7
       .func Name 'g' Load .. 0,2 -> 0,3
 """),
 
-(r"""(f())""", 'body[0]', None, None, {'raw': False, 'pars': True}, r"""(g())""", r"""(g())""", r"""
+(r"""(f())""", 'body[0]', None, None, {'pars': True}, r"""(g())""", r"""(g())""", r"""
 Module .. ROOT 0,0 -> 0,5
   .body[1]
   0] Expr .. 0,0 -> 0,5
@@ -15840,7 +15840,7 @@ Module .. ROOT 0,0 -> 0,27
       .orelse Name 'k' Load .. 0,26 -> 0,27
 """),
 
-(r"""i if j else k""", 'body[0].value', None, 'orelse', {'raw': False}, r"""a if b else c""", r"""i if j else a if b else c""", r"""
+(r"""i if j else k""", 'body[0].value', None, 'orelse', {}, r"""a if b else c""", r"""i if j else a if b else c""", r"""
 Module .. ROOT 0,0 -> 0,25
   .body[1]
   0] Expr .. 0,0 -> 0,25
@@ -16023,7 +16023,7 @@ Module .. ROOT 0,0 -> 0,9
       .ctx Load
 """),
 
-(r"""i[j]""", 'body[0].value', None, 'slice', {'raw': False}, r"""a, b""", r"""i[a, b]""", r"""
+(r"""i[j]""", 'body[0].value', None, 'slice', {}, r"""a, b""", r"""i[a, b]""", r"""
 Module .. ROOT 0,0 -> 0,7
   .body[1]
   0] Expr .. 0,0 -> 0,7
@@ -16037,7 +16037,7 @@ Module .. ROOT 0,0 -> 0,7
       .ctx Load
 """),
 
-(r"""i[j]""", 'body[0].value', None, 'slice', {'raw': False}, r"""x:y:z""", r"""i[x:y:z]""", r"""
+(r"""i[j]""", 'body[0].value', None, 'slice', {}, r"""x:y:z""", r"""i[x:y:z]""", r"""
 Module .. ROOT 0,0 -> 0,8
   .body[1]
   0] Expr .. 0,0 -> 0,8
@@ -16050,7 +16050,7 @@ Module .. ROOT 0,0 -> 0,8
       .ctx Load
 """),
 
-(r"""i[a:b:c]""", 'body[0].value', None, 'slice', {'raw': False}, r"""a, b""", r"""i[a, b]""", r"""
+(r"""i[a:b:c]""", 'body[0].value', None, 'slice', {}, r"""a, b""", r"""i[a, b]""", r"""
 Module .. ROOT 0,0 -> 0,7
   .body[1]
   0] Expr .. 0,0 -> 0,7
@@ -16064,7 +16064,7 @@ Module .. ROOT 0,0 -> 0,7
       .ctx Load
 """),
 
-(r"""i[a:b:c]""", 'body[0].value', None, 'slice', {'raw': False}, r"""z""", r"""i[z]""", r"""
+(r"""i[a:b:c]""", 'body[0].value', None, 'slice', {}, r"""z""", r"""i[z]""", r"""
 Module .. ROOT 0,0 -> 0,4
   .body[1]
   0] Expr .. 0,0 -> 0,4
@@ -16173,10 +16173,10 @@ Module .. ROOT 0,0 -> 0,22
     0] Pass .. 0,18 -> 0,22
 """),
 
-(r"""def oldname(): pass""", 'body[0]', None, 'name', {'raw': False}, r"""**DEL**""", r"""**ValueError('cannot delete FunctionDef.name')**""", r"""
+(r"""def oldname(): pass""", 'body[0]', None, 'name', {}, r"""**DEL**""", r"""**ValueError('cannot delete FunctionDef.name')**""", r"""
 """),
 
-(r"""def oldname(): pass""", 'body[0]', None, 'name', {'raw': False}, r"""new""", r"""def new(): pass""", r"""
+(r"""def oldname(): pass""", 'body[0]', None, 'name', {}, r"""new""", r"""def new(): pass""", r"""
 Module .. ROOT 0,0 -> 0,15
   .body[1]
   0] FunctionDef .. 0,0 -> 0,15
@@ -16185,7 +16185,7 @@ Module .. ROOT 0,0 -> 0,15
     0] Pass .. 0,11 -> 0,15
 """),
 
-(r"""async def oldname(): pass""", 'body[0]', None, 'name', {'raw': False}, r"""new""", r"""async def new(): pass""", r"""
+(r"""async def oldname(): pass""", 'body[0]', None, 'name', {}, r"""new""", r"""async def new(): pass""", r"""
 Module .. ROOT 0,0 -> 0,21
   .body[1]
   0] AsyncFunctionDef .. 0,0 -> 0,21
@@ -16194,7 +16194,7 @@ Module .. ROOT 0,0 -> 0,21
     0] Pass .. 0,17 -> 0,21
 """),
 
-(r"""class oldname: pass""", 'body[0]', None, 'name', {'raw': False}, r"""new""", r"""class new: pass""", r"""
+(r"""class oldname: pass""", 'body[0]', None, 'name', {}, r"""new""", r"""class new: pass""", r"""
 Module .. ROOT 0,0 -> 0,15
   .body[1]
   0] ClassDef .. 0,0 -> 0,15
@@ -16203,14 +16203,14 @@ Module .. ROOT 0,0 -> 0,15
     0] Pass .. 0,11 -> 0,15
 """),
 
-(r"""oldname""", 'body[0].value', None, 'id', {'raw': False}, r"""new""", r"""new""", r"""
+(r"""oldname""", 'body[0].value', None, 'id', {}, r"""new""", r"""new""", r"""
 Module .. ROOT 0,0 -> 0,3
   .body[1]
   0] Expr .. 0,0 -> 0,3
     .value Name 'new' Load .. 0,0 -> 0,3
 """),
 
-(r"""def f(oldarg=val): pass""", 'body[0].args.args[0]', None, 'arg', {'raw': False}, r"""new""", r"""def f(new=val): pass""", r"""
+(r"""def f(oldarg=val): pass""", 'body[0].args.args[0]', None, 'arg', {}, r"""new""", r"""def f(new=val): pass""", r"""
 Module .. ROOT 0,0 -> 0,20
   .body[1]
   0] FunctionDef .. 0,0 -> 0,20
@@ -16225,7 +16225,7 @@ Module .. ROOT 0,0 -> 0,20
     0] Pass .. 0,16 -> 0,20
 """),
 
-(r"""import oldname as thing""", 'body[0].names[0]', None, 'name', {'raw': False}, r"""new""", r"""import new as thing""", r"""
+(r"""import oldname as thing""", 'body[0].names[0]', None, 'name', {}, r"""new""", r"""import new as thing""", r"""
 Module .. ROOT 0,0 -> 0,19
   .body[1]
   0] Import .. 0,0 -> 0,19
@@ -16236,7 +16236,7 @@ Module .. ROOT 0,0 -> 0,19
         'thing'
 """),
 
-(r"""def f[T](): pass""", 'body[0].type_params[0]', None, 'name', {'raw': False, '_ver': 12}, r"""new""", r"""def f[new](): pass""", r"""
+(r"""def f[T](): pass""", 'body[0].type_params[0]', None, 'name', {'_ver': 12}, r"""new""", r"""def f[new](): pass""", r"""
 Module .. ROOT 0,0 -> 0,18
   .body[1]
   0] FunctionDef .. 0,0 -> 0,18
@@ -16248,7 +16248,7 @@ Module .. ROOT 0,0 -> 0,18
       .name 'new'
 """),
 
-(r"""def f[*T](): pass""", 'body[0].type_params[0]', None, 'name', {'raw': False, '_ver': 12}, r"""new""", r"""def f[*new](): pass""", r"""
+(r"""def f[*T](): pass""", 'body[0].type_params[0]', None, 'name', {'_ver': 12}, r"""new""", r"""def f[*new](): pass""", r"""
 Module .. ROOT 0,0 -> 0,19
   .body[1]
   0] FunctionDef .. 0,0 -> 0,19
@@ -16260,7 +16260,7 @@ Module .. ROOT 0,0 -> 0,19
       .name 'new'
 """),
 
-(r"""def f[**T](): pass""", 'body[0].type_params[0]', None, 'name', {'raw': False, '_ver': 12}, r"""new""", r"""def f[**new](): pass""", r"""
+(r"""def f[**T](): pass""", 'body[0].type_params[0]', None, 'name', {'_ver': 12}, r"""new""", r"""def f[**new](): pass""", r"""
 Module .. ROOT 0,0 -> 0,20
   .body[1]
   0] FunctionDef .. 0,0 -> 0,20
@@ -16272,10 +16272,10 @@ Module .. ROOT 0,0 -> 0,20
       .name 'new'
 """),
 
-(r"""i += j""", 'body[0]', None, 'target', {'raw': False}, r"""1""", r"""**NodeError('expecting one of (Name, Attribute, Subscript) for AugAssign.target, got Constant')**""", r"""
+(r"""i += j""", 'body[0]', None, 'target', {}, r"""1""", r"""**NodeError('expecting one of (Name, Attribute, Subscript) for AugAssign.target, got Constant')**""", r"""
 """),
 
-(r"""i += j""", 'body[0]', None, 'target', {'raw': False}, r"""new""", r"""new += j""", r"""
+(r"""i += j""", 'body[0]', None, 'target', {}, r"""new""", r"""new += j""", r"""
 Module .. ROOT 0,0 -> 0,8
   .body[1]
   0] AugAssign .. 0,0 -> 0,8
@@ -16284,7 +16284,7 @@ Module .. ROOT 0,0 -> 0,8
     .value Name 'j' Load .. 0,7 -> 0,8
 """),
 
-(r"""i += j""", 'body[0]', None, 'target', {'raw': False}, r"""new.to""", r"""new.to += j""", r"""
+(r"""i += j""", 'body[0]', None, 'target', {}, r"""new.to""", r"""new.to += j""", r"""
 Module .. ROOT 0,0 -> 0,11
   .body[1]
   0] AugAssign .. 0,0 -> 0,11
@@ -16296,7 +16296,7 @@ Module .. ROOT 0,0 -> 0,11
     .value Name 'j' Load .. 0,10 -> 0,11
 """),
 
-(r"""i += j""", 'body[0]', None, 'target', {'raw': False}, r"""new[to]""", r"""new[to] += j""", r"""
+(r"""i += j""", 'body[0]', None, 'target', {}, r"""new[to]""", r"""new[to] += j""", r"""
 Module .. ROOT 0,0 -> 0,12
   .body[1]
   0] AugAssign .. 0,0 -> 0,12
@@ -16308,7 +16308,7 @@ Module .. ROOT 0,0 -> 0,12
     .value Name 'j' Load .. 0,11 -> 0,12
 """),
 
-(r"""i: j = 1""", 'body[0]', None, 'target', {'raw': False}, r"""new""", r"""new: j = 1""", r"""
+(r"""i: j = 1""", 'body[0]', None, 'target', {}, r"""new""", r"""new: j = 1""", r"""
 Module .. ROOT 0,0 -> 0,10
   .body[1]
   0] AnnAssign .. 0,0 -> 0,10
@@ -16318,7 +16318,7 @@ Module .. ROOT 0,0 -> 0,10
     .simple 1
 """),
 
-(r"""i: j""", 'body[0]', None, 'target', {'raw': False}, r"""new""", r"""new: j""", r"""
+(r"""i: j""", 'body[0]', None, 'target', {}, r"""new""", r"""new: j""", r"""
 Module .. ROOT 0,0 -> 0,6
   .body[1]
   0] AnnAssign .. 0,0 -> 0,6
@@ -16327,7 +16327,7 @@ Module .. ROOT 0,0 -> 0,6
     .simple 1
 """),
 
-(r"""i: j""", 'body[0]', None, 'annotation', {'raw': False}, r"""(yield 1)""", r"""i: (yield 1)""", r"""
+(r"""i: j""", 'body[0]', None, 'annotation', {}, r"""(yield 1)""", r"""i: (yield 1)""", r"""
 Module .. ROOT 0,0 -> 0,12
   .body[1]
   0] AnnAssign .. 0,0 -> 0,12
@@ -16337,7 +16337,7 @@ Module .. ROOT 0,0 -> 0,12
     .simple 1
 """),
 
-(r"""i: j""", 'body[0]', None, 'annotation', {'raw': False}, r"""new""", r"""i: new""", r"""
+(r"""i: j""", 'body[0]', None, 'annotation', {}, r"""new""", r"""i: new""", r"""
 Module .. ROOT 0,0 -> 0,6
   .body[1]
   0] AnnAssign .. 0,0 -> 0,6
@@ -16346,7 +16346,7 @@ Module .. ROOT 0,0 -> 0,6
     .simple 1
 """),
 
-(r"""for i in j: pass""", 'body[0]', None, 'target', {'raw': False}, r"""new""", r"""for new in j: pass""", r"""
+(r"""for i in j: pass""", 'body[0]', None, 'target', {}, r"""new""", r"""for new in j: pass""", r"""
 Module .. ROOT 0,0 -> 0,18
   .body[1]
   0] For .. 0,0 -> 0,18
@@ -16356,7 +16356,7 @@ Module .. ROOT 0,0 -> 0,18
     0] Pass .. 0,14 -> 0,18
 """),
 
-(r"""for i in j: pass""", 'body[0]', None, 'target', {'raw': False}, r"""(new, to)""", r"""for (new, to) in j: pass""", r"""
+(r"""for i in j: pass""", 'body[0]', None, 'target', {}, r"""(new, to)""", r"""for (new, to) in j: pass""", r"""
 Module .. ROOT 0,0 -> 0,24
   .body[1]
   0] For .. 0,0 -> 0,24
@@ -16370,7 +16370,7 @@ Module .. ROOT 0,0 -> 0,24
     0] Pass .. 0,20 -> 0,24
 """),
 
-(r"""for i in j: pass""", 'body[0]', None, 'target', {'raw': False}, r"""[new, to]""", r"""for [new, to] in j: pass""", r"""
+(r"""for i in j: pass""", 'body[0]', None, 'target', {}, r"""[new, to]""", r"""for [new, to] in j: pass""", r"""
 Module .. ROOT 0,0 -> 0,24
   .body[1]
   0] For .. 0,0 -> 0,24
@@ -16384,10 +16384,10 @@ Module .. ROOT 0,0 -> 0,24
     0] Pass .. 0,20 -> 0,24
 """),
 
-(r"""(i := j)""", 'body[0].value', None, 'target', {'raw': False}, r"""1""", r"""**NodeError('expecting a Name for NamedExpr.target, got Constant')**""", r"""
+(r"""(i := j)""", 'body[0].value', None, 'target', {}, r"""1""", r"""**NodeError('expecting a Name for NamedExpr.target, got Constant')**""", r"""
 """),
 
-(r"""(i := j)""", 'body[0].value', None, 'target', {'raw': False}, r"""new""", r"""(new := j)""", r"""
+(r"""(i := j)""", 'body[0].value', None, 'target', {}, r"""new""", r"""(new := j)""", r"""
 Module .. ROOT 0,0 -> 0,10
   .body[1]
   0] Expr .. 0,0 -> 0,10
@@ -16396,7 +16396,7 @@ Module .. ROOT 0,0 -> 0,10
       .value Name 'j' Load .. 0,8 -> 0,9
 """),
 
-(r"""[i for i in j]""", 'body[0].value.generators[0]', None, 'target', {'raw': False}, r"""new""", r"""[i for new in j]""", r"""
+(r"""[i for i in j]""", 'body[0].value.generators[0]', None, 'target', {}, r"""new""", r"""[i for new in j]""", r"""
 Module .. ROOT 0,0 -> 0,16
   .body[1]
   0] Expr .. 0,0 -> 0,16
@@ -16409,7 +16409,7 @@ Module .. ROOT 0,0 -> 0,16
         .is_async 0
 """),
 
-(r"""[i for i in j]""", 'body[0].value.generators[0]', None, 'target', {'raw': False}, r"""(new, to)""", r"""[i for (new, to) in j]""", r"""
+(r"""[i for i in j]""", 'body[0].value.generators[0]', None, 'target', {}, r"""(new, to)""", r"""[i for (new, to) in j]""", r"""
 Module .. ROOT 0,0 -> 0,22
   .body[1]
   0] Expr .. 0,0 -> 0,22
@@ -16426,7 +16426,7 @@ Module .. ROOT 0,0 -> 0,22
         .is_async 0
 """),
 
-(r"""[i for i in j]""", 'body[0].value.generators[0]', None, 'target', {'raw': False}, r"""[new, to]""", r"""[i for [new, to] in j]""", r"""
+(r"""[i for i in j]""", 'body[0].value.generators[0]', None, 'target', {}, r"""[new, to]""", r"""[i for [new, to] in j]""", r"""
 Module .. ROOT 0,0 -> 0,22
   .body[1]
   0] Expr .. 0,0 -> 0,22
@@ -16443,10 +16443,10 @@ Module .. ROOT 0,0 -> 0,22
         .is_async 0
 """),
 
-(r"""type i = j""", 'body[0]', None, 'name', {'raw': False, '_ver': 12}, r"""1""", r"""**NodeError('expecting a Name for TypeAlias.name, got Constant')**""", r"""
+(r"""type i = j""", 'body[0]', None, 'name', {'_ver': 12}, r"""1""", r"""**NodeError('expecting a Name for TypeAlias.name, got Constant')**""", r"""
 """),
 
-(r"""type i = j""", 'body[0]', None, 'name', {'raw': False, '_ver': 12}, r"""new""", r"""type new = j""", r"""
+(r"""type i = j""", 'body[0]', None, 'name', {'_ver': 12}, r"""new""", r"""type new = j""", r"""
 Module .. ROOT 0,0 -> 0,12
   .body[1]
   0] TypeAlias .. 0,0 -> 0,12
@@ -16454,7 +16454,7 @@ Module .. ROOT 0,0 -> 0,12
     .value Name 'j' Load .. 0,11 -> 0,12
 """),
 
-(r"""type i = j""", 'body[0]', None, None, {'raw': False, '_ver': 12}, r"""new""", r"""type i = new""", r"""
+(r"""type i = j""", 'body[0]', None, None, {'_ver': 12}, r"""new""", r"""type i = new""", r"""
 Module .. ROOT 0,0 -> 0,12
   .body[1]
   0] TypeAlias .. 0,0 -> 0,12
@@ -16495,7 +16495,7 @@ Module .. ROOT 0,0 -> 0,11
 """),
 
 (r"""match a:
- case c(): pass""", 'body[0].cases[0].pattern', None, 'cls', {'raw': False}, r"""new""", r"""match a:
+ case c(): pass""", 'body[0].cases[0].pattern', None, 'cls', {}, r"""new""", r"""match a:
  case new(): pass""", r"""
 Module .. ROOT 0,0 -> 1,17
   .body[1]
@@ -16510,7 +16510,7 @@ Module .. ROOT 0,0 -> 1,17
 """),
 
 (r"""match a:
- case c(): pass""", 'body[0].cases[0].pattern', None, 'cls', {'raw': False}, r"""new.to""", r"""match a:
+ case c(): pass""", 'body[0].cases[0].pattern', None, 'cls', {}, r"""new.to""", r"""match a:
  case new.to(): pass""", r"""
 Module .. ROOT 0,0 -> 1,20
   .body[1]
@@ -16563,7 +16563,7 @@ Module .. ROOT 0,0 -> 0,14
       0] Name 'i' Load .. 0,12 -> 0,13
 """),
 
-(r"""{(yield 1): i}""", 'body[0].value', 0, 'keys', {'raw': False}, r"""**DEL**""", r"""{**i}""", r"""
+(r"""{(yield 1): i}""", 'body[0].value', 0, 'keys', {}, r"""**DEL**""", r"""{**i}""", r"""
 Module .. ROOT 0,0 -> 0,5
   .body[1]
   0] Expr .. 0,0 -> 0,5
@@ -16632,7 +16632,7 @@ Module .. ROOT 0,0 -> 0,17
         .value Constant 1 .. 0,15 -> 0,16
 """),
 
-(r"""a < b < c""", 'body[0].value', 3, None, {'raw': False}, r"""yield 1""", r"""**IndexError('index out of range')**""", r"""
+(r"""a < b < c""", 'body[0].value', 3, None, {}, r"""yield 1""", r"""**IndexError('index out of range')**""", r"""
 """),
 
 (r"""a < b < c""", 'body[0].value', -1, None, {'raw': False}, r"""yield 1""", r"""a < b < (yield 1)""", r"""
@@ -16680,7 +16680,7 @@ Module .. ROOT 0,0 -> 0,17
       1] Name 'c' Load .. 0,16 -> 0,17
 """),
 
-(r"""a < b < c""", 'body[0].value', -4, None, {'raw': False}, r"""yield 1""", r"""**IndexError('index out of range')**""", r"""
+(r"""a < b < c""", 'body[0].value', -4, None, {}, r"""yield 1""", r"""**IndexError('index out of range')**""", r"""
 """),
 
 (r"""def f(a, b=1, c=2): pass""", 'body[0].args', 0, 'defaults', {'raw': False}, r"""yield 1""", r"""def f(a, b=(yield 1), c=2): pass""", r"""
@@ -16705,7 +16705,7 @@ Module .. ROOT 0,0 -> 0,32
 """),
 
 (r"""match a:
- case {1: i}: pass""", 'body[0].cases[0].pattern', 0, 'keys', {'raw': False}, r"""a.b""", r"""match a:
+ case {1: i}: pass""", 'body[0].cases[0].pattern', 0, 'keys', {}, r"""a.b""", r"""match a:
  case {a.b: i}: pass""", r"""
 Module .. ROOT 0,0 -> 1,20
   .body[1]
@@ -16726,46 +16726,46 @@ Module .. ROOT 0,0 -> 1,20
       0] Pass .. 1,16 -> 1,20
 """),
 
-(r"""return a""", 'body[0]', None, None, {'raw': False}, r"""new""", r"""return new""", r"""
+(r"""return a""", 'body[0]', None, None, {}, r"""new""", r"""return new""", r"""
 Module .. ROOT 0,0 -> 0,10
   .body[1]
   0] Return .. 0,0 -> 0,10
     .value Name 'new' Load .. 0,7 -> 0,10
 """),
 
-(r"""return (a)""", 'body[0]', None, None, {'raw': False}, r"""new""", r"""return new""", r"""
+(r"""return (a)""", 'body[0]', None, None, {}, r"""new""", r"""return new""", r"""
 Module .. ROOT 0,0 -> 0,10
   .body[1]
   0] Return .. 0,0 -> 0,10
     .value Name 'new' Load .. 0,7 -> 0,10
 """),
 
-(r"""return a""", 'body[0]', None, None, {'raw': False}, r"""**DEL**""", r"""return""", r"""
+(r"""return a""", 'body[0]', None, None, {}, r"""**DEL**""", r"""return""", r"""
 Module .. ROOT 0,0 -> 0,6
   .body[1]
   0] Return .. 0,0 -> 0,6
 """),
 
-(r"""return (a)""", 'body[0]', None, None, {'raw': False}, r"""**DEL**""", r"""return""", r"""
+(r"""return (a)""", 'body[0]', None, None, {}, r"""**DEL**""", r"""return""", r"""
 Module .. ROOT 0,0 -> 0,6
   .body[1]
   0] Return .. 0,0 -> 0,6
 """),
 
-(r"""return""", 'body[0]', None, None, {'raw': False}, r"""**DEL**""", r"""return""", r"""
+(r"""return""", 'body[0]', None, None, {}, r"""**DEL**""", r"""return""", r"""
 Module .. ROOT 0,0 -> 0,6
   .body[1]
   0] Return .. 0,0 -> 0,6
 """),
 
-(r"""return""", 'body[0]', None, None, {'raw': False}, r"""new""", r"""return new""", r"""
+(r"""return""", 'body[0]', None, None, {}, r"""new""", r"""return new""", r"""
 Module .. ROOT 0,0 -> 0,10
   .body[1]
   0] Return .. 0,0 -> 0,10
     .value Name 'new' Load .. 0,7 -> 0,10
 """),
 
-(r"""a: b = c""", 'body[0]', None, None, {'raw': False}, r"""new""", r"""a: b = new""", r"""
+(r"""a: b = c""", 'body[0]', None, None, {}, r"""new""", r"""a: b = new""", r"""
 Module .. ROOT 0,0 -> 0,10
   .body[1]
   0] AnnAssign .. 0,0 -> 0,10
@@ -16775,7 +16775,7 @@ Module .. ROOT 0,0 -> 0,10
     .simple 1
 """),
 
-(r"""a: b = (c)""", 'body[0]', None, None, {'raw': False}, r"""new""", r"""a: b = new""", r"""
+(r"""a: b = (c)""", 'body[0]', None, None, {}, r"""new""", r"""a: b = new""", r"""
 Module .. ROOT 0,0 -> 0,10
   .body[1]
   0] AnnAssign .. 0,0 -> 0,10
@@ -16785,7 +16785,7 @@ Module .. ROOT 0,0 -> 0,10
     .simple 1
 """),
 
-(r"""a: b = c""", 'body[0]', None, None, {'raw': False}, r"""**DEL**""", r"""a: b""", r"""
+(r"""a: b = c""", 'body[0]', None, None, {}, r"""**DEL**""", r"""a: b""", r"""
 Module .. ROOT 0,0 -> 0,4
   .body[1]
   0] AnnAssign .. 0,0 -> 0,4
@@ -16794,7 +16794,7 @@ Module .. ROOT 0,0 -> 0,4
     .simple 1
 """),
 
-(r"""a: b = (c)""", 'body[0]', None, None, {'raw': False}, r"""**DEL**""", r"""a: b""", r"""
+(r"""a: b = (c)""", 'body[0]', None, None, {}, r"""**DEL**""", r"""a: b""", r"""
 Module .. ROOT 0,0 -> 0,4
   .body[1]
   0] AnnAssign .. 0,0 -> 0,4
@@ -16803,7 +16803,7 @@ Module .. ROOT 0,0 -> 0,4
     .simple 1
 """),
 
-(r"""a: b""", 'body[0]', None, None, {'raw': False}, r"""**DEL**""", r"""a: b""", r"""
+(r"""a: b""", 'body[0]', None, None, {}, r"""**DEL**""", r"""a: b""", r"""
 Module .. ROOT 0,0 -> 0,4
   .body[1]
   0] AnnAssign .. 0,0 -> 0,4
@@ -16812,7 +16812,7 @@ Module .. ROOT 0,0 -> 0,4
     .simple 1
 """),
 
-(r"""a: b""", 'body[0]', None, None, {'raw': False}, r"""new""", r"""a: b = new""", r"""
+(r"""a: b""", 'body[0]', None, None, {}, r"""new""", r"""a: b = new""", r"""
 Module .. ROOT 0,0 -> 0,10
   .body[1]
   0] AnnAssign .. 0,0 -> 0,10
@@ -16822,49 +16822,49 @@ Module .. ROOT 0,0 -> 0,10
     .simple 1
 """),
 
-(r"""raise e""", 'body[0]', None, None, {'raw': False}, r"""new""", r"""raise new""", r"""
+(r"""raise e""", 'body[0]', None, None, {}, r"""new""", r"""raise new""", r"""
 Module .. ROOT 0,0 -> 0,9
   .body[1]
   0] Raise .. 0,0 -> 0,9
     .exc Name 'new' Load .. 0,6 -> 0,9
 """),
 
-(r"""raise (e)""", 'body[0]', None, None, {'raw': False}, r"""new""", r"""raise new""", r"""
+(r"""raise (e)""", 'body[0]', None, None, {}, r"""new""", r"""raise new""", r"""
 Module .. ROOT 0,0 -> 0,9
   .body[1]
   0] Raise .. 0,0 -> 0,9
     .exc Name 'new' Load .. 0,6 -> 0,9
 """),
 
-(r"""raise e""", 'body[0]', None, None, {'raw': False}, r"""**DEL**""", r"""raise""", r"""
+(r"""raise e""", 'body[0]', None, None, {}, r"""**DEL**""", r"""raise""", r"""
 Module .. ROOT 0,0 -> 0,5
   .body[1]
   0] Raise .. 0,0 -> 0,5
 """),
 
-(r"""raise (e)""", 'body[0]', None, None, {'raw': False}, r"""**DEL**""", r"""raise""", r"""
+(r"""raise (e)""", 'body[0]', None, None, {}, r"""**DEL**""", r"""raise""", r"""
 Module .. ROOT 0,0 -> 0,5
   .body[1]
   0] Raise .. 0,0 -> 0,5
 """),
 
-(r"""raise e from cause""", 'body[0]', None, None, {'raw': False}, r"""**DEL**""", r"""**ValueError('cannot delete Raise.exc in this state')**""", r"""
+(r"""raise e from cause""", 'body[0]', None, None, {}, r"""**DEL**""", r"""**ValueError('cannot delete Raise.exc in this state')**""", r"""
 """),
 
-(r"""raise""", 'body[0]', None, None, {'raw': False}, r"""**DEL**""", r"""raise""", r"""
+(r"""raise""", 'body[0]', None, None, {}, r"""**DEL**""", r"""raise""", r"""
 Module .. ROOT 0,0 -> 0,5
   .body[1]
   0] Raise .. 0,0 -> 0,5
 """),
 
-(r"""raise""", 'body[0]', None, None, {'raw': False}, r"""new""", r"""raise new""", r"""
+(r"""raise""", 'body[0]', None, None, {}, r"""new""", r"""raise new""", r"""
 Module .. ROOT 0,0 -> 0,9
   .body[1]
   0] Raise .. 0,0 -> 0,9
     .exc Name 'new' Load .. 0,6 -> 0,9
 """),
 
-(r"""raise e from cause""", 'body[0]', None, None, {'raw': False}, r"""new""", r"""raise new from cause""", r"""
+(r"""raise e from cause""", 'body[0]', None, None, {}, r"""new""", r"""raise new from cause""", r"""
 Module .. ROOT 0,0 -> 0,20
   .body[1]
   0] Raise .. 0,0 -> 0,20
@@ -16872,7 +16872,7 @@ Module .. ROOT 0,0 -> 0,20
     .cause Name 'cause' Load .. 0,15 -> 0,20
 """),
 
-(r"""raise (e) from cause""", 'body[0]', None, None, {'raw': False}, r"""new""", r"""raise new from cause""", r"""
+(r"""raise (e) from cause""", 'body[0]', None, None, {}, r"""new""", r"""raise new from cause""", r"""
 Module .. ROOT 0,0 -> 0,20
   .body[1]
   0] Raise .. 0,0 -> 0,20
@@ -16880,7 +16880,7 @@ Module .. ROOT 0,0 -> 0,20
     .cause Name 'cause' Load .. 0,15 -> 0,20
 """),
 
-(r"""raise e from c""", 'body[0]', None, 'cause', {'raw': False}, r"""new""", r"""raise e from new""", r"""
+(r"""raise e from c""", 'body[0]', None, 'cause', {}, r"""new""", r"""raise e from new""", r"""
 Module .. ROOT 0,0 -> 0,16
   .body[1]
   0] Raise .. 0,0 -> 0,16
@@ -16888,7 +16888,7 @@ Module .. ROOT 0,0 -> 0,16
     .cause Name 'new' Load .. 0,13 -> 0,16
 """),
 
-(r"""raise e from (c)""", 'body[0]', None, 'cause', {'raw': False}, r"""new""", r"""raise e from new""", r"""
+(r"""raise e from (c)""", 'body[0]', None, 'cause', {}, r"""new""", r"""raise e from new""", r"""
 Module .. ROOT 0,0 -> 0,16
   .body[1]
   0] Raise .. 0,0 -> 0,16
@@ -16896,21 +16896,21 @@ Module .. ROOT 0,0 -> 0,16
     .cause Name 'new' Load .. 0,13 -> 0,16
 """),
 
-(r"""raise e from c""", 'body[0]', None, 'cause', {'raw': False}, r"""**DEL**""", r"""raise e""", r"""
+(r"""raise e from c""", 'body[0]', None, 'cause', {}, r"""**DEL**""", r"""raise e""", r"""
 Module .. ROOT 0,0 -> 0,7
   .body[1]
   0] Raise .. 0,0 -> 0,7
     .exc Name 'e' Load .. 0,6 -> 0,7
 """),
 
-(r"""raise e from (c)""", 'body[0]', None, 'cause', {'raw': False}, r"""**DEL**""", r"""raise e""", r"""
+(r"""raise e from (c)""", 'body[0]', None, 'cause', {}, r"""**DEL**""", r"""raise e""", r"""
 Module .. ROOT 0,0 -> 0,7
   .body[1]
   0] Raise .. 0,0 -> 0,7
     .exc Name 'e' Load .. 0,6 -> 0,7
 """),
 
-(r"""raise (e) from c""", 'body[0]', None, 'cause', {'raw': False}, r"""**DEL**""", r"""raise (e)""", r"""
+(r"""raise (e) from c""", 'body[0]', None, 'cause', {}, r"""**DEL**""", r"""raise (e)""", r"""
 Module .. ROOT 0,0 -> 0,9
   .body[1]
   0] Raise .. 0,0 -> 0,9
@@ -16923,17 +16923,17 @@ Module .. ROOT 0,0 -> 0,5
   0] Raise .. 0,0 -> 0,5
 """),
 
-(r"""raise e""", 'body[0]', None, 'cause', {'raw': False}, r"""**DEL**""", r"""raise e""", r"""
+(r"""raise e""", 'body[0]', None, 'cause', {}, r"""**DEL**""", r"""raise e""", r"""
 Module .. ROOT 0,0 -> 0,7
   .body[1]
   0] Raise .. 0,0 -> 0,7
     .exc Name 'e' Load .. 0,6 -> 0,7
 """),
 
-(r"""raise""", 'body[0]', None, 'cause', {'raw': False}, r"""c""", r"""**ValueError('cannot create Raise.cause in this state')**""", r"""
+(r"""raise""", 'body[0]', None, 'cause', {}, r"""c""", r"""**ValueError('cannot create Raise.cause in this state')**""", r"""
 """),
 
-(r"""raise e""", 'body[0]', None, 'cause', {'raw': False}, r"""c""", r"""raise e from c""", r"""
+(r"""raise e""", 'body[0]', None, 'cause', {}, r"""c""", r"""raise e from c""", r"""
 Module .. ROOT 0,0 -> 0,14
   .body[1]
   0] Raise .. 0,0 -> 0,14
@@ -16941,7 +16941,7 @@ Module .. ROOT 0,0 -> 0,14
     .cause Name 'c' Load .. 0,13 -> 0,14
 """),
 
-(r"""raise (e)""", 'body[0]', None, 'cause', {'raw': False}, r"""c""", r"""raise (e) from c""", r"""
+(r"""raise (e)""", 'body[0]', None, 'cause', {}, r"""c""", r"""raise (e) from c""", r"""
 Module .. ROOT 0,0 -> 0,16
   .body[1]
   0] Raise .. 0,0 -> 0,16
@@ -16949,7 +16949,7 @@ Module .. ROOT 0,0 -> 0,16
     .cause Name 'c' Load .. 0,15 -> 0,16
 """),
 
-(r"""assert a, b""", 'body[0]', None, None, {'raw': False}, r"""new""", r"""assert new, b""", r"""
+(r"""assert a, b""", 'body[0]', None, None, {}, r"""new""", r"""assert new, b""", r"""
 Module .. ROOT 0,0 -> 0,13
   .body[1]
   0] Assert .. 0,0 -> 0,13
@@ -16957,7 +16957,7 @@ Module .. ROOT 0,0 -> 0,13
     .msg Name 'b' Load .. 0,12 -> 0,13
 """),
 
-(r"""assert a, (b)""", 'body[0]', None, None, {'raw': False}, r"""new""", r"""assert new, (b)""", r"""
+(r"""assert a, (b)""", 'body[0]', None, None, {}, r"""new""", r"""assert new, (b)""", r"""
 Module .. ROOT 0,0 -> 0,15
   .body[1]
   0] Assert .. 0,0 -> 0,15
@@ -16965,10 +16965,10 @@ Module .. ROOT 0,0 -> 0,15
     .msg Name 'b' Load .. 0,13 -> 0,14
 """),
 
-(r"""assert a, b""", 'body[0]', None, None, {'raw': False}, r"""**DEL**""", r"""**ValueError('cannot delete Assert.test')**""", r"""
+(r"""assert a, b""", 'body[0]', None, None, {}, r"""**DEL**""", r"""**ValueError('cannot delete Assert.test')**""", r"""
 """),
 
-(r"""assert a, b""", 'body[0]', None, 'msg', {'raw': False}, r"""new""", r"""assert a, new""", r"""
+(r"""assert a, b""", 'body[0]', None, 'msg', {}, r"""new""", r"""assert a, new""", r"""
 Module .. ROOT 0,0 -> 0,13
   .body[1]
   0] Assert .. 0,0 -> 0,13
@@ -16976,7 +16976,7 @@ Module .. ROOT 0,0 -> 0,13
     .msg Name 'new' Load .. 0,10 -> 0,13
 """),
 
-(r"""assert a, (b)""", 'body[0]', None, 'msg', {'raw': False}, r"""new""", r"""assert a, new""", r"""
+(r"""assert a, (b)""", 'body[0]', None, 'msg', {}, r"""new""", r"""assert a, new""", r"""
 Module .. ROOT 0,0 -> 0,13
   .body[1]
   0] Assert .. 0,0 -> 0,13
@@ -16984,28 +16984,28 @@ Module .. ROOT 0,0 -> 0,13
     .msg Name 'new' Load .. 0,10 -> 0,13
 """),
 
-(r"""assert a, b""", 'body[0]', None, 'msg', {'raw': False}, r"""**DEL**""", r"""assert a""", r"""
+(r"""assert a, b""", 'body[0]', None, 'msg', {}, r"""**DEL**""", r"""assert a""", r"""
 Module .. ROOT 0,0 -> 0,8
   .body[1]
   0] Assert .. 0,0 -> 0,8
     .test Name 'a' Load .. 0,7 -> 0,8
 """),
 
-(r"""assert a, (b)""", 'body[0]', None, 'msg', {'raw': False}, r"""**DEL**""", r"""assert a""", r"""
+(r"""assert a, (b)""", 'body[0]', None, 'msg', {}, r"""**DEL**""", r"""assert a""", r"""
 Module .. ROOT 0,0 -> 0,8
   .body[1]
   0] Assert .. 0,0 -> 0,8
     .test Name 'a' Load .. 0,7 -> 0,8
 """),
 
-(r"""assert a""", 'body[0]', None, 'msg', {'raw': False}, r"""**DEL**""", r"""assert a""", r"""
+(r"""assert a""", 'body[0]', None, 'msg', {}, r"""**DEL**""", r"""assert a""", r"""
 Module .. ROOT 0,0 -> 0,8
   .body[1]
   0] Assert .. 0,0 -> 0,8
     .test Name 'a' Load .. 0,7 -> 0,8
 """),
 
-(r"""assert a""", 'body[0]', None, 'msg', {'raw': False}, r"""new""", r"""assert a, new""", r"""
+(r"""assert a""", 'body[0]', None, 'msg', {}, r"""new""", r"""assert a, new""", r"""
 Module .. ROOT 0,0 -> 0,13
   .body[1]
   0] Assert .. 0,0 -> 0,13
@@ -17013,7 +17013,7 @@ Module .. ROOT 0,0 -> 0,13
     .msg Name 'new' Load .. 0,10 -> 0,13
 """),
 
-(r"""yield a""", 'body[0].value', None, None, {'raw': False}, r"""new""", r"""yield new""", r"""
+(r"""yield a""", 'body[0].value', None, None, {}, r"""new""", r"""yield new""", r"""
 Module .. ROOT 0,0 -> 0,9
   .body[1]
   0] Expr .. 0,0 -> 0,9
@@ -17021,7 +17021,7 @@ Module .. ROOT 0,0 -> 0,9
       .value Name 'new' Load .. 0,6 -> 0,9
 """),
 
-(r"""yield (a)""", 'body[0].value', None, None, {'raw': False}, r"""new""", r"""yield new""", r"""
+(r"""yield (a)""", 'body[0].value', None, None, {}, r"""new""", r"""yield new""", r"""
 Module .. ROOT 0,0 -> 0,9
   .body[1]
   0] Expr .. 0,0 -> 0,9
@@ -17029,28 +17029,28 @@ Module .. ROOT 0,0 -> 0,9
       .value Name 'new' Load .. 0,6 -> 0,9
 """),
 
-(r"""yield a""", 'body[0].value', None, None, {'raw': False}, r"""**DEL**""", r"""yield""", r"""
+(r"""yield a""", 'body[0].value', None, None, {}, r"""**DEL**""", r"""yield""", r"""
 Module .. ROOT 0,0 -> 0,5
   .body[1]
   0] Expr .. 0,0 -> 0,5
     .value Yield .. 0,0 -> 0,5
 """),
 
-(r"""yield (a)""", 'body[0].value', None, None, {'raw': False}, r"""**DEL**""", r"""yield""", r"""
+(r"""yield (a)""", 'body[0].value', None, None, {}, r"""**DEL**""", r"""yield""", r"""
 Module .. ROOT 0,0 -> 0,5
   .body[1]
   0] Expr .. 0,0 -> 0,5
     .value Yield .. 0,0 -> 0,5
 """),
 
-(r"""yield""", 'body[0].value', None, None, {'raw': False}, r"""**DEL**""", r"""yield""", r"""
+(r"""yield""", 'body[0].value', None, None, {}, r"""**DEL**""", r"""yield""", r"""
 Module .. ROOT 0,0 -> 0,5
   .body[1]
   0] Expr .. 0,0 -> 0,5
     .value Yield .. 0,0 -> 0,5
 """),
 
-(r"""yield""", 'body[0].value', None, None, {'raw': False}, r"""new""", r"""yield new""", r"""
+(r"""yield""", 'body[0].value', None, None, {}, r"""new""", r"""yield new""", r"""
 Module .. ROOT 0,0 -> 0,9
   .body[1]
   0] Expr .. 0,0 -> 0,9
@@ -17058,7 +17058,7 @@ Module .. ROOT 0,0 -> 0,9
       .value Name 'new' Load .. 0,6 -> 0,9
 """),
 
-(r"""def f(a: b): pass""", 'body[0].args.args[0]', None, 'annotation', {'raw': False}, r"""new""", r"""def f(a: new): pass""", r"""
+(r"""def f(a: b): pass""", 'body[0].args.args[0]', None, 'annotation', {}, r"""new""", r"""def f(a: new): pass""", r"""
 Module .. ROOT 0,0 -> 0,19
   .body[1]
   0] FunctionDef .. 0,0 -> 0,19
@@ -17072,7 +17072,7 @@ Module .. ROOT 0,0 -> 0,19
     0] Pass .. 0,15 -> 0,19
 """),
 
-(r"""def f(a: (b)): pass""", 'body[0].args.args[0]', None, 'annotation', {'raw': False}, r"""new""", r"""def f(a: new): pass""", r"""
+(r"""def f(a: (b)): pass""", 'body[0].args.args[0]', None, 'annotation', {}, r"""new""", r"""def f(a: new): pass""", r"""
 Module .. ROOT 0,0 -> 0,19
   .body[1]
   0] FunctionDef .. 0,0 -> 0,19
@@ -17086,7 +17086,7 @@ Module .. ROOT 0,0 -> 0,19
     0] Pass .. 0,15 -> 0,19
 """),
 
-(r"""def f(a: b): pass""", 'body[0].args.args[0]', None, 'annotation', {'raw': False}, r"""**DEL**""", r"""def f(a): pass""", r"""
+(r"""def f(a: b): pass""", 'body[0].args.args[0]', None, 'annotation', {}, r"""**DEL**""", r"""def f(a): pass""", r"""
 Module .. ROOT 0,0 -> 0,14
   .body[1]
   0] FunctionDef .. 0,0 -> 0,14
@@ -17099,7 +17099,7 @@ Module .. ROOT 0,0 -> 0,14
     0] Pass .. 0,10 -> 0,14
 """),
 
-(r"""def f(a: (b)): pass""", 'body[0].args.args[0]', None, 'annotation', {'raw': False}, r"""**DEL**""", r"""def f(a): pass""", r"""
+(r"""def f(a: (b)): pass""", 'body[0].args.args[0]', None, 'annotation', {}, r"""**DEL**""", r"""def f(a): pass""", r"""
 Module .. ROOT 0,0 -> 0,14
   .body[1]
   0] FunctionDef .. 0,0 -> 0,14
@@ -17112,7 +17112,7 @@ Module .. ROOT 0,0 -> 0,14
     0] Pass .. 0,10 -> 0,14
 """),
 
-(r"""def f(a): pass""", 'body[0].args.args[0]', None, 'annotation', {'raw': False}, r"""**DEL**""", r"""def f(a): pass""", r"""
+(r"""def f(a): pass""", 'body[0].args.args[0]', None, 'annotation', {}, r"""**DEL**""", r"""def f(a): pass""", r"""
 Module .. ROOT 0,0 -> 0,14
   .body[1]
   0] FunctionDef .. 0,0 -> 0,14
@@ -17125,7 +17125,7 @@ Module .. ROOT 0,0 -> 0,14
     0] Pass .. 0,10 -> 0,14
 """),
 
-(r"""def f(a): pass""", 'body[0].args.args[0]', None, 'annotation', {'raw': False}, r"""new""", r"""def f(a: new): pass""", r"""
+(r"""def f(a): pass""", 'body[0].args.args[0]', None, 'annotation', {}, r"""new""", r"""def f(a: new): pass""", r"""
 Module .. ROOT 0,0 -> 0,19
   .body[1]
   0] FunctionDef .. 0,0 -> 0,19
@@ -17139,7 +17139,7 @@ Module .. ROOT 0,0 -> 0,19
     0] Pass .. 0,15 -> 0,19
 """),
 
-(r"""def f(a): pass""", 'body[0].args.args[0]', None, 'annotation', {'raw': False}, r"""lambda: x""", r"""def f(a: lambda: x): pass""", r"""
+(r"""def f(a): pass""", 'body[0].args.args[0]', None, 'annotation', {}, r"""lambda: x""", r"""def f(a: lambda: x): pass""", r"""
 Module .. ROOT 0,0 -> 0,25
   .body[1]
   0] FunctionDef .. 0,0 -> 0,25
@@ -17154,7 +17154,7 @@ Module .. ROOT 0,0 -> 0,25
     0] Pass .. 0,21 -> 0,25
 """),
 
-(r"""def f(a :  ( b ) ): pass""", 'body[0].args.args[0]', None, 'annotation', {'raw': False}, r"""new""", r"""def f(a :  new ): pass""", r"""
+(r"""def f(a :  ( b ) ): pass""", 'body[0].args.args[0]', None, 'annotation', {}, r"""new""", r"""def f(a :  new ): pass""", r"""
 Module .. ROOT 0,0 -> 0,22
   .body[1]
   0] FunctionDef .. 0,0 -> 0,22
@@ -17168,7 +17168,7 @@ Module .. ROOT 0,0 -> 0,22
     0] Pass .. 0,18 -> 0,22
 """),
 
-(r"""def f(a   :  ( b ) ): pass""", 'body[0].args.args[0]', None, 'annotation', {'raw': False}, r"""**DEL**""", r"""def f(a ): pass""", r"""
+(r"""def f(a   :  ( b ) ): pass""", 'body[0].args.args[0]', None, 'annotation', {}, r"""**DEL**""", r"""def f(a ): pass""", r"""
 Module .. ROOT 0,0 -> 0,15
   .body[1]
   0] FunctionDef .. 0,0 -> 0,15
@@ -17181,7 +17181,7 @@ Module .. ROOT 0,0 -> 0,15
     0] Pass .. 0,11 -> 0,15
 """),
 
-(r"""with a as b: pass""", 'body[0].items[0]', None, 'optional_vars', {'raw': False}, r"""new""", r"""with a as new: pass""", r"""
+(r"""with a as b: pass""", 'body[0].items[0]', None, 'optional_vars', {}, r"""new""", r"""with a as new: pass""", r"""
 Module .. ROOT 0,0 -> 0,19
   .body[1]
   0] With .. 0,0 -> 0,19
@@ -17193,7 +17193,7 @@ Module .. ROOT 0,0 -> 0,19
     0] Pass .. 0,15 -> 0,19
 """),
 
-(r"""with a as (b): pass""", 'body[0].items[0]', None, 'optional_vars', {'raw': False}, r"""new""", r"""with a as new: pass""", r"""
+(r"""with a as (b): pass""", 'body[0].items[0]', None, 'optional_vars', {}, r"""new""", r"""with a as new: pass""", r"""
 Module .. ROOT 0,0 -> 0,19
   .body[1]
   0] With .. 0,0 -> 0,19
@@ -17205,7 +17205,7 @@ Module .. ROOT 0,0 -> 0,19
     0] Pass .. 0,15 -> 0,19
 """),
 
-(r"""with (a as (b)): pass""", 'body[0].items[0]', None, 'optional_vars', {'raw': False}, r"""new""", r"""with (a as new): pass""", r"""
+(r"""with (a as (b)): pass""", 'body[0].items[0]', None, 'optional_vars', {}, r"""new""", r"""with (a as new): pass""", r"""
 Module .. ROOT 0,0 -> 0,21
   .body[1]
   0] With .. 0,0 -> 0,21
@@ -17217,7 +17217,7 @@ Module .. ROOT 0,0 -> 0,21
     0] Pass .. 0,17 -> 0,21
 """),
 
-(r"""with a as b: pass""", 'body[0].items[0]', None, 'optional_vars', {'raw': False}, r"""**DEL**""", r"""with a: pass""", r"""
+(r"""with a as b: pass""", 'body[0].items[0]', None, 'optional_vars', {}, r"""**DEL**""", r"""with a: pass""", r"""
 Module .. ROOT 0,0 -> 0,12
   .body[1]
   0] With .. 0,0 -> 0,12
@@ -17228,7 +17228,7 @@ Module .. ROOT 0,0 -> 0,12
     0] Pass .. 0,8 -> 0,12
 """),
 
-(r"""with a as (b): pass""", 'body[0].items[0]', None, 'optional_vars', {'raw': False}, r"""**DEL**""", r"""with a: pass""", r"""
+(r"""with a as (b): pass""", 'body[0].items[0]', None, 'optional_vars', {}, r"""**DEL**""", r"""with a: pass""", r"""
 Module .. ROOT 0,0 -> 0,12
   .body[1]
   0] With .. 0,0 -> 0,12
@@ -17239,7 +17239,7 @@ Module .. ROOT 0,0 -> 0,12
     0] Pass .. 0,8 -> 0,12
 """),
 
-(r"""with (a as (b)): pass""", 'body[0].items[0]', None, 'optional_vars', {'raw': False}, r"""**DEL**""", r"""with (a): pass""", r"""
+(r"""with (a as (b)): pass""", 'body[0].items[0]', None, 'optional_vars', {}, r"""**DEL**""", r"""with (a): pass""", r"""
 Module .. ROOT 0,0 -> 0,14
   .body[1]
   0] With .. 0,0 -> 0,14
@@ -17250,7 +17250,7 @@ Module .. ROOT 0,0 -> 0,14
     0] Pass .. 0,10 -> 0,14
 """),
 
-(r"""with (a as b): pass""", 'body[0].items[0]', None, 'optional_vars', {'raw': False}, r"""new""", r"""with (a as new): pass""", r"""
+(r"""with (a as b): pass""", 'body[0].items[0]', None, 'optional_vars', {}, r"""new""", r"""with (a as new): pass""", r"""
 Module .. ROOT 0,0 -> 0,21
   .body[1]
   0] With .. 0,0 -> 0,21
@@ -17262,7 +17262,7 @@ Module .. ROOT 0,0 -> 0,21
     0] Pass .. 0,17 -> 0,21
 """),
 
-(r"""with (a as b): pass""", 'body[0].items[0]', None, 'optional_vars', {'raw': False}, r"""**DEL**""", r"""with (a): pass""", r"""
+(r"""with (a as b): pass""", 'body[0].items[0]', None, 'optional_vars', {}, r"""**DEL**""", r"""with (a): pass""", r"""
 Module .. ROOT 0,0 -> 0,14
   .body[1]
   0] With .. 0,0 -> 0,14
@@ -17273,7 +17273,7 @@ Module .. ROOT 0,0 -> 0,14
     0] Pass .. 0,10 -> 0,14
 """),
 
-(r"""with a: pass""", 'body[0].items[0]', None, 'optional_vars', {'raw': False}, r"""**DEL**""", r"""with a: pass""", r"""
+(r"""with a: pass""", 'body[0].items[0]', None, 'optional_vars', {}, r"""**DEL**""", r"""with a: pass""", r"""
 Module .. ROOT 0,0 -> 0,12
   .body[1]
   0] With .. 0,0 -> 0,12
@@ -17284,7 +17284,7 @@ Module .. ROOT 0,0 -> 0,12
     0] Pass .. 0,8 -> 0,12
 """),
 
-(r"""with a: pass""", 'body[0].items[0]', None, 'optional_vars', {'raw': False}, r"""new""", r"""with a as new: pass""", r"""
+(r"""with a: pass""", 'body[0].items[0]', None, 'optional_vars', {}, r"""new""", r"""with a as new: pass""", r"""
 Module .. ROOT 0,0 -> 0,19
   .body[1]
   0] With .. 0,0 -> 0,19
@@ -17296,7 +17296,7 @@ Module .. ROOT 0,0 -> 0,19
     0] Pass .. 0,15 -> 0,19
 """),
 
-(r"""with (a): pass""", 'body[0].items[0]', None, 'optional_vars', {'raw': False}, r"""new""", r"""with (a) as new: pass""", r"""
+(r"""with (a): pass""", 'body[0].items[0]', None, 'optional_vars', {}, r"""new""", r"""with (a) as new: pass""", r"""
 Module .. ROOT 0,0 -> 0,21
   .body[1]
   0] With .. 0,0 -> 0,21
@@ -17324,7 +17324,7 @@ Module .. ROOT 0,0 -> 0,27
     0] Pass .. 0,23 -> 0,27
 """),
 
-(r"""with (a): pass""", 'body[0].items[0]', None, 'optional_vars', {'raw': False}, r"""[new, to]""", r"""with (a) as [new, to]: pass""", r"""
+(r"""with (a): pass""", 'body[0].items[0]', None, 'optional_vars', {}, r"""[new, to]""", r"""with (a) as [new, to]: pass""", r"""
 Module .. ROOT 0,0 -> 0,27
   .body[1]
   0] With .. 0,0 -> 0,27
@@ -17340,11 +17340,11 @@ Module .. ROOT 0,0 -> 0,27
     0] Pass .. 0,23 -> 0,27
 """),
 
-(r"""with (a): pass""", 'body[0].items[0]', None, 'optional_vars', {'raw': False}, r"""f()""", r"""**NodeError('expecting one of (Name, Tuple, List, Attribute, Subscript) for withitem.optional_vars, got Call')**""", r"""
+(r"""with (a): pass""", 'body[0].items[0]', None, 'optional_vars', {}, r"""f()""", r"""**NodeError('expecting one of (Name, Tuple, List, Attribute, Subscript) for withitem.optional_vars, got Call')**""", r"""
 """),
 
 (r"""match a:
- case 1 if b: pass""", 'body[0].cases[0]', None, 'guard', {'raw': False}, r"""new""", r"""match a:
+ case 1 if b: pass""", 'body[0].cases[0]', None, 'guard', {}, r"""new""", r"""match a:
  case 1 if new: pass""", r"""
 Module .. ROOT 0,0 -> 1,20
   .body[1]
@@ -17360,7 +17360,7 @@ Module .. ROOT 0,0 -> 1,20
 """),
 
 (r"""match a:
- case 1 if (b): pass""", 'body[0].cases[0]', None, 'guard', {'raw': False}, r"""new""", r"""match a:
+ case 1 if (b): pass""", 'body[0].cases[0]', None, 'guard', {}, r"""new""", r"""match a:
  case 1 if new: pass""", r"""
 Module .. ROOT 0,0 -> 1,20
   .body[1]
@@ -17376,7 +17376,7 @@ Module .. ROOT 0,0 -> 1,20
 """),
 
 (r"""match a:
- case 1 if b: pass""", 'body[0].cases[0]', None, 'guard', {'raw': False}, r"""**DEL**""", r"""match a:
+ case 1 if b: pass""", 'body[0].cases[0]', None, 'guard', {}, r"""**DEL**""", r"""match a:
  case 1: pass""", r"""
 Module .. ROOT 0,0 -> 1,13
   .body[1]
@@ -17391,7 +17391,7 @@ Module .. ROOT 0,0 -> 1,13
 """),
 
 (r"""match a:
- case 1 if (b): pass""", 'body[0].cases[0]', None, 'guard', {'raw': False}, r"""**DEL**""", r"""match a:
+ case 1 if (b): pass""", 'body[0].cases[0]', None, 'guard', {}, r"""**DEL**""", r"""match a:
  case 1: pass""", r"""
 Module .. ROOT 0,0 -> 1,13
   .body[1]
@@ -17406,7 +17406,7 @@ Module .. ROOT 0,0 -> 1,13
 """),
 
 (r"""match a:
- case 1: pass""", 'body[0].cases[0]', None, 'guard', {'raw': False}, r"""**DEL**""", r"""match a:
+ case 1: pass""", 'body[0].cases[0]', None, 'guard', {}, r"""**DEL**""", r"""match a:
  case 1: pass""", r"""
 Module .. ROOT 0,0 -> 1,13
   .body[1]
@@ -17421,7 +17421,7 @@ Module .. ROOT 0,0 -> 1,13
 """),
 
 (r"""match a:
- case 1: pass""", 'body[0].cases[0]', None, 'guard', {'raw': False}, r"""new""", r"""match a:
+ case 1: pass""", 'body[0].cases[0]', None, 'guard', {}, r"""new""", r"""match a:
  case 1 if new: pass""", r"""
 Module .. ROOT 0,0 -> 1,20
   .body[1]
@@ -17437,7 +17437,7 @@ Module .. ROOT 0,0 -> 1,20
 """),
 
 (r"""match a:
- case (1): pass""", 'body[0].cases[0]', None, 'guard', {'raw': False}, r"""new""", r"""match a:
+ case (1): pass""", 'body[0].cases[0]', None, 'guard', {}, r"""new""", r"""match a:
  case (1) if new: pass""", r"""
 Module .. ROOT 0,0 -> 1,22
   .body[1]
@@ -17453,7 +17453,7 @@ Module .. ROOT 0,0 -> 1,22
 """),
 
 (r"""match a:
- case 1 if b  : pass""", 'body[0].cases[0]', None, 'guard', {'raw': False}, r"""**DEL**""", r"""match a:
+ case 1 if b  : pass""", 'body[0].cases[0]', None, 'guard', {}, r"""**DEL**""", r"""match a:
  case 1: pass""", r"""
 Module .. ROOT 0,0 -> 1,13
   .body[1]
@@ -17468,7 +17468,7 @@ Module .. ROOT 0,0 -> 1,13
 """),
 
 (r"""match a:
- case 1 if (b)  : pass""", 'body[0].cases[0]', None, 'guard', {'raw': False}, r"""**DEL**""", r"""match a:
+ case 1 if (b)  : pass""", 'body[0].cases[0]', None, 'guard', {}, r"""**DEL**""", r"""match a:
  case 1: pass""", r"""
 Module .. ROOT 0,0 -> 1,13
   .body[1]
@@ -17483,7 +17483,7 @@ Module .. ROOT 0,0 -> 1,13
 """),
 
 (r"""match a:
- case 1  : pass""", 'body[0].cases[0]', None, 'guard', {'raw': False}, r"""new""", r"""match a:
+ case 1  : pass""", 'body[0].cases[0]', None, 'guard', {}, r"""new""", r"""match a:
  case 1 if new: pass""", r"""
 Module .. ROOT 0,0 -> 1,20
   .body[1]
@@ -17499,7 +17499,7 @@ Module .. ROOT 0,0 -> 1,20
 """),
 
 (r"""match a:
- case (1)  : pass""", 'body[0].cases[0]', None, 'guard', {'raw': False}, r"""new""", r"""match a:
+ case (1)  : pass""", 'body[0].cases[0]', None, 'guard', {}, r"""new""", r"""match a:
  case (1) if new: pass""", r"""
 Module .. ROOT 0,0 -> 1,22
   .body[1]
@@ -17514,7 +17514,7 @@ Module .. ROOT 0,0 -> 1,22
       0] Pass .. 1,18 -> 1,22
 """),
 
-(r"""type t[T: a] = ...""", 'body[0].type_params[0]', None, 'bound', {'raw': False, '_ver': 13}, r"""new""", r"""type t[T: new] = ...""", r"""
+(r"""type t[T: a] = ...""", 'body[0].type_params[0]', None, 'bound', {'_ver': 13}, r"""new""", r"""type t[T: new] = ...""", r"""
 Module .. ROOT 0,0 -> 0,20
   .body[1]
   0] TypeAlias .. 0,0 -> 0,20
@@ -17526,7 +17526,7 @@ Module .. ROOT 0,0 -> 0,20
     .value Constant Ellipsis .. 0,17 -> 0,20
 """),
 
-(r"""type t[T: (a)] = ...""", 'body[0].type_params[0]', None, 'bound', {'raw': False, '_ver': 13}, r"""new""", r"""type t[T: new] = ...""", r"""
+(r"""type t[T: (a)] = ...""", 'body[0].type_params[0]', None, 'bound', {'_ver': 13}, r"""new""", r"""type t[T: new] = ...""", r"""
 Module .. ROOT 0,0 -> 0,20
   .body[1]
   0] TypeAlias .. 0,0 -> 0,20
@@ -17538,7 +17538,7 @@ Module .. ROOT 0,0 -> 0,20
     .value Constant Ellipsis .. 0,17 -> 0,20
 """),
 
-(r"""type t[T: a] = ...""", 'body[0].type_params[0]', None, 'bound', {'raw': False, '_ver': 13}, r"""**DEL**""", r"""type t[T] = ...""", r"""
+(r"""type t[T: a] = ...""", 'body[0].type_params[0]', None, 'bound', {'_ver': 13}, r"""**DEL**""", r"""type t[T] = ...""", r"""
 Module .. ROOT 0,0 -> 0,15
   .body[1]
   0] TypeAlias .. 0,0 -> 0,15
@@ -17549,7 +17549,7 @@ Module .. ROOT 0,0 -> 0,15
     .value Constant Ellipsis .. 0,12 -> 0,15
 """),
 
-(r"""type t[T: (a)] = ...""", 'body[0].type_params[0]', None, 'bound', {'raw': False, '_ver': 13}, r"""**DEL**""", r"""type t[T] = ...""", r"""
+(r"""type t[T: (a)] = ...""", 'body[0].type_params[0]', None, 'bound', {'_ver': 13}, r"""**DEL**""", r"""type t[T] = ...""", r"""
 Module .. ROOT 0,0 -> 0,15
   .body[1]
   0] TypeAlias .. 0,0 -> 0,15
@@ -17560,7 +17560,7 @@ Module .. ROOT 0,0 -> 0,15
     .value Constant Ellipsis .. 0,12 -> 0,15
 """),
 
-(r"""type t[T] = ...""", 'body[0].type_params[0]', None, 'bound', {'raw': False, '_ver': 13}, r"""**DEL**""", r"""type t[T] = ...""", r"""
+(r"""type t[T] = ...""", 'body[0].type_params[0]', None, 'bound', {'_ver': 13}, r"""**DEL**""", r"""type t[T] = ...""", r"""
 Module .. ROOT 0,0 -> 0,15
   .body[1]
   0] TypeAlias .. 0,0 -> 0,15
@@ -17571,7 +17571,7 @@ Module .. ROOT 0,0 -> 0,15
     .value Constant Ellipsis .. 0,12 -> 0,15
 """),
 
-(r"""type t[T] = ...""", 'body[0].type_params[0]', None, 'bound', {'raw': False, '_ver': 13}, r"""new""", r"""type t[T: new] = ...""", r"""
+(r"""type t[T] = ...""", 'body[0].type_params[0]', None, 'bound', {'_ver': 13}, r"""new""", r"""type t[T: new] = ...""", r"""
 Module .. ROOT 0,0 -> 0,20
   .body[1]
   0] TypeAlias .. 0,0 -> 0,20
@@ -17583,7 +17583,7 @@ Module .. ROOT 0,0 -> 0,20
     .value Constant Ellipsis .. 0,17 -> 0,20
 """),
 
-(r"""type t[T = a] = ...""", 'body[0].type_params[0]', None, 'default_value', {'raw': False, '_ver': 13}, r"""new""", r"""type t[T = new] = ...""", r"""
+(r"""type t[T = a] = ...""", 'body[0].type_params[0]', None, 'default_value', {'_ver': 13}, r"""new""", r"""type t[T = new] = ...""", r"""
 Module .. ROOT 0,0 -> 0,21
   .body[1]
   0] TypeAlias .. 0,0 -> 0,21
@@ -17595,7 +17595,7 @@ Module .. ROOT 0,0 -> 0,21
     .value Constant Ellipsis .. 0,18 -> 0,21
 """),
 
-(r"""type t[T = (a)] = ...""", 'body[0].type_params[0]', None, 'default_value', {'raw': False, '_ver': 13}, r"""new""", r"""type t[T = new] = ...""", r"""
+(r"""type t[T = (a)] = ...""", 'body[0].type_params[0]', None, 'default_value', {'_ver': 13}, r"""new""", r"""type t[T = new] = ...""", r"""
 Module .. ROOT 0,0 -> 0,21
   .body[1]
   0] TypeAlias .. 0,0 -> 0,21
@@ -17607,7 +17607,7 @@ Module .. ROOT 0,0 -> 0,21
     .value Constant Ellipsis .. 0,18 -> 0,21
 """),
 
-(r"""type t[T = a] = ...""", 'body[0].type_params[0]', None, 'default_value', {'raw': False, '_ver': 13}, r"""**DEL**""", r"""type t[T] = ...""", r"""
+(r"""type t[T = a] = ...""", 'body[0].type_params[0]', None, 'default_value', {'_ver': 13}, r"""**DEL**""", r"""type t[T] = ...""", r"""
 Module .. ROOT 0,0 -> 0,15
   .body[1]
   0] TypeAlias .. 0,0 -> 0,15
@@ -17618,7 +17618,7 @@ Module .. ROOT 0,0 -> 0,15
     .value Constant Ellipsis .. 0,12 -> 0,15
 """),
 
-(r"""type t[T = (a)] = ...""", 'body[0].type_params[0]', None, 'default_value', {'raw': False, '_ver': 13}, r"""**DEL**""", r"""type t[T] = ...""", r"""
+(r"""type t[T = (a)] = ...""", 'body[0].type_params[0]', None, 'default_value', {'_ver': 13}, r"""**DEL**""", r"""type t[T] = ...""", r"""
 Module .. ROOT 0,0 -> 0,15
   .body[1]
   0] TypeAlias .. 0,0 -> 0,15
@@ -17629,7 +17629,7 @@ Module .. ROOT 0,0 -> 0,15
     .value Constant Ellipsis .. 0,12 -> 0,15
 """),
 
-(r"""type t[T] = ...""", 'body[0].type_params[0]', None, 'default_value', {'raw': False, '_ver': 13}, r"""**DEL**""", r"""type t[T] = ...""", r"""
+(r"""type t[T] = ...""", 'body[0].type_params[0]', None, 'default_value', {'_ver': 13}, r"""**DEL**""", r"""type t[T] = ...""", r"""
 Module .. ROOT 0,0 -> 0,15
   .body[1]
   0] TypeAlias .. 0,0 -> 0,15
@@ -17640,7 +17640,7 @@ Module .. ROOT 0,0 -> 0,15
     .value Constant Ellipsis .. 0,12 -> 0,15
 """),
 
-(r"""type t[T] = ...""", 'body[0].type_params[0]', None, 'default_value', {'raw': False, '_ver': 13}, r"""new""", r"""type t[T = new] = ...""", r"""
+(r"""type t[T] = ...""", 'body[0].type_params[0]', None, 'default_value', {'_ver': 13}, r"""new""", r"""type t[T = new] = ...""", r"""
 Module .. ROOT 0,0 -> 0,21
   .body[1]
   0] TypeAlias .. 0,0 -> 0,21
@@ -17652,7 +17652,7 @@ Module .. ROOT 0,0 -> 0,21
     .value Constant Ellipsis .. 0,18 -> 0,21
 """),
 
-(r"""type t[T: int = a] = ...""", 'body[0].type_params[0]', None, 'default_value', {'raw': False, '_ver': 13}, r"""new""", r"""type t[T: int = new] = ...""", r"""
+(r"""type t[T: int = a] = ...""", 'body[0].type_params[0]', None, 'default_value', {'_ver': 13}, r"""new""", r"""type t[T: int = new] = ...""", r"""
 Module .. ROOT 0,0 -> 0,26
   .body[1]
   0] TypeAlias .. 0,0 -> 0,26
@@ -17665,7 +17665,7 @@ Module .. ROOT 0,0 -> 0,26
     .value Constant Ellipsis .. 0,23 -> 0,26
 """),
 
-(r"""type t[T: (int) = (a)] = ...""", 'body[0].type_params[0]', None, 'default_value', {'raw': False, '_ver': 13}, r"""new""", r"""type t[T: (int) = new] = ...""", r"""
+(r"""type t[T: (int) = (a)] = ...""", 'body[0].type_params[0]', None, 'default_value', {'_ver': 13}, r"""new""", r"""type t[T: (int) = new] = ...""", r"""
 Module .. ROOT 0,0 -> 0,28
   .body[1]
   0] TypeAlias .. 0,0 -> 0,28
@@ -17678,7 +17678,7 @@ Module .. ROOT 0,0 -> 0,28
     .value Constant Ellipsis .. 0,25 -> 0,28
 """),
 
-(r"""type t[T: int = a] = ...""", 'body[0].type_params[0]', None, 'default_value', {'raw': False, '_ver': 13}, r"""**DEL**""", r"""type t[T: int] = ...""", r"""
+(r"""type t[T: int = a] = ...""", 'body[0].type_params[0]', None, 'default_value', {'_ver': 13}, r"""**DEL**""", r"""type t[T: int] = ...""", r"""
 Module .. ROOT 0,0 -> 0,20
   .body[1]
   0] TypeAlias .. 0,0 -> 0,20
@@ -17690,7 +17690,7 @@ Module .. ROOT 0,0 -> 0,20
     .value Constant Ellipsis .. 0,17 -> 0,20
 """),
 
-(r"""type t[T: (int) = (a)] = ...""", 'body[0].type_params[0]', None, 'default_value', {'raw': False, '_ver': 13}, r"""**DEL**""", r"""type t[T: (int)] = ...""", r"""
+(r"""type t[T: (int) = (a)] = ...""", 'body[0].type_params[0]', None, 'default_value', {'_ver': 13}, r"""**DEL**""", r"""type t[T: (int)] = ...""", r"""
 Module .. ROOT 0,0 -> 0,22
   .body[1]
   0] TypeAlias .. 0,0 -> 0,22
@@ -17702,7 +17702,7 @@ Module .. ROOT 0,0 -> 0,22
     .value Constant Ellipsis .. 0,19 -> 0,22
 """),
 
-(r"""type t[T: int] = ...""", 'body[0].type_params[0]', None, 'default_value', {'raw': False, '_ver': 13}, r"""**DEL**""", r"""type t[T: int] = ...""", r"""
+(r"""type t[T: int] = ...""", 'body[0].type_params[0]', None, 'default_value', {'_ver': 13}, r"""**DEL**""", r"""type t[T: int] = ...""", r"""
 Module .. ROOT 0,0 -> 0,20
   .body[1]
   0] TypeAlias .. 0,0 -> 0,20
@@ -17714,7 +17714,7 @@ Module .. ROOT 0,0 -> 0,20
     .value Constant Ellipsis .. 0,17 -> 0,20
 """),
 
-(r"""type t[T: int] = ...""", 'body[0].type_params[0]', None, 'default_value', {'raw': False, '_ver': 13}, r"""new""", r"""type t[T: int = new] = ...""", r"""
+(r"""type t[T: int] = ...""", 'body[0].type_params[0]', None, 'default_value', {'_ver': 13}, r"""new""", r"""type t[T: int = new] = ...""", r"""
 Module .. ROOT 0,0 -> 0,26
   .body[1]
   0] TypeAlias .. 0,0 -> 0,26
@@ -17727,7 +17727,7 @@ Module .. ROOT 0,0 -> 0,26
     .value Constant Ellipsis .. 0,23 -> 0,26
 """),
 
-(r"""type t[T: (int)] = ...""", 'body[0].type_params[0]', None, 'default_value', {'raw': False, '_ver': 13}, r"""new""", r"""type t[T: (int) = new] = ...""", r"""
+(r"""type t[T: (int)] = ...""", 'body[0].type_params[0]', None, 'default_value', {'_ver': 13}, r"""new""", r"""type t[T: (int) = new] = ...""", r"""
 Module .. ROOT 0,0 -> 0,28
   .body[1]
   0] TypeAlias .. 0,0 -> 0,28
@@ -17740,7 +17740,7 @@ Module .. ROOT 0,0 -> 0,28
     .value Constant Ellipsis .. 0,25 -> 0,28
 """),
 
-(r"""type t[**T = a] = ...""", 'body[0].type_params[0]', None, 'default_value', {'raw': False, '_ver': 13}, r"""new""", r"""type t[**T = new] = ...""", r"""
+(r"""type t[**T = a] = ...""", 'body[0].type_params[0]', None, 'default_value', {'_ver': 13}, r"""new""", r"""type t[**T = new] = ...""", r"""
 Module .. ROOT 0,0 -> 0,23
   .body[1]
   0] TypeAlias .. 0,0 -> 0,23
@@ -17752,7 +17752,7 @@ Module .. ROOT 0,0 -> 0,23
     .value Constant Ellipsis .. 0,20 -> 0,23
 """),
 
-(r"""type t[**T = (a)] = ...""", 'body[0].type_params[0]', None, 'default_value', {'raw': False, '_ver': 13}, r"""new""", r"""type t[**T = new] = ...""", r"""
+(r"""type t[**T = (a)] = ...""", 'body[0].type_params[0]', None, 'default_value', {'_ver': 13}, r"""new""", r"""type t[**T = new] = ...""", r"""
 Module .. ROOT 0,0 -> 0,23
   .body[1]
   0] TypeAlias .. 0,0 -> 0,23
@@ -17764,7 +17764,7 @@ Module .. ROOT 0,0 -> 0,23
     .value Constant Ellipsis .. 0,20 -> 0,23
 """),
 
-(r"""type t[**T = a] = ...""", 'body[0].type_params[0]', None, 'default_value', {'raw': False, '_ver': 13}, r"""**DEL**""", r"""type t[**T] = ...""", r"""
+(r"""type t[**T = a] = ...""", 'body[0].type_params[0]', None, 'default_value', {'_ver': 13}, r"""**DEL**""", r"""type t[**T] = ...""", r"""
 Module .. ROOT 0,0 -> 0,17
   .body[1]
   0] TypeAlias .. 0,0 -> 0,17
@@ -17775,7 +17775,7 @@ Module .. ROOT 0,0 -> 0,17
     .value Constant Ellipsis .. 0,14 -> 0,17
 """),
 
-(r"""type t[**T = (a)] = ...""", 'body[0].type_params[0]', None, 'default_value', {'raw': False, '_ver': 13}, r"""**DEL**""", r"""type t[**T] = ...""", r"""
+(r"""type t[**T = (a)] = ...""", 'body[0].type_params[0]', None, 'default_value', {'_ver': 13}, r"""**DEL**""", r"""type t[**T] = ...""", r"""
 Module .. ROOT 0,0 -> 0,17
   .body[1]
   0] TypeAlias .. 0,0 -> 0,17
@@ -17786,7 +17786,7 @@ Module .. ROOT 0,0 -> 0,17
     .value Constant Ellipsis .. 0,14 -> 0,17
 """),
 
-(r"""type t[**T] = ...""", 'body[0].type_params[0]', None, 'default_value', {'raw': False, '_ver': 13}, r"""**DEL**""", r"""type t[**T] = ...""", r"""
+(r"""type t[**T] = ...""", 'body[0].type_params[0]', None, 'default_value', {'_ver': 13}, r"""**DEL**""", r"""type t[**T] = ...""", r"""
 Module .. ROOT 0,0 -> 0,17
   .body[1]
   0] TypeAlias .. 0,0 -> 0,17
@@ -17797,7 +17797,7 @@ Module .. ROOT 0,0 -> 0,17
     .value Constant Ellipsis .. 0,14 -> 0,17
 """),
 
-(r"""type t[**T] = ...""", 'body[0].type_params[0]', None, 'default_value', {'raw': False, '_ver': 13}, r"""new""", r"""type t[**T = new] = ...""", r"""
+(r"""type t[**T] = ...""", 'body[0].type_params[0]', None, 'default_value', {'_ver': 13}, r"""new""", r"""type t[**T = new] = ...""", r"""
 Module .. ROOT 0,0 -> 0,23
   .body[1]
   0] TypeAlias .. 0,0 -> 0,23
@@ -17809,7 +17809,7 @@ Module .. ROOT 0,0 -> 0,23
     .value Constant Ellipsis .. 0,20 -> 0,23
 """),
 
-(r"""type t[**T=a] = ...""", 'body[0].type_params[0]', None, 'default_value', {'raw': False, '_ver': 13}, r"""**DEL**""", r"""type t[**T] = ...""", r"""
+(r"""type t[**T=a] = ...""", 'body[0].type_params[0]', None, 'default_value', {'_ver': 13}, r"""**DEL**""", r"""type t[**T] = ...""", r"""
 Module .. ROOT 0,0 -> 0,17
   .body[1]
   0] TypeAlias .. 0,0 -> 0,17
@@ -17820,7 +17820,7 @@ Module .. ROOT 0,0 -> 0,17
     .value Constant Ellipsis .. 0,14 -> 0,17
 """),
 
-(r"""type t[**T=a] = ...""", 'body[0].type_params[0]', None, 'default_value', {'raw': False, '_ver': 13}, r"""new""", r"""type t[**T=new] = ...""", r"""
+(r"""type t[**T=a] = ...""", 'body[0].type_params[0]', None, 'default_value', {'_ver': 13}, r"""new""", r"""type t[**T=new] = ...""", r"""
 Module .. ROOT 0,0 -> 0,21
   .body[1]
   0] TypeAlias .. 0,0 -> 0,21
@@ -17832,7 +17832,7 @@ Module .. ROOT 0,0 -> 0,21
     .value Constant Ellipsis .. 0,18 -> 0,21
 """),
 
-(r"""type t[ ** T] = ...""", 'body[0].type_params[0]', None, 'default_value', {'raw': False, '_ver': 13}, r"""new""", r"""type t[ ** T = new] = ...""", r"""
+(r"""type t[ ** T] = ...""", 'body[0].type_params[0]', None, 'default_value', {'_ver': 13}, r"""new""", r"""type t[ ** T = new] = ...""", r"""
 Module .. ROOT 0,0 -> 0,25
   .body[1]
   0] TypeAlias .. 0,0 -> 0,25
@@ -17846,7 +17846,7 @@ Module .. ROOT 0,0 -> 0,25
 
 (r"""type t[ \
  ** \
- T] = ...""", 'body[0].type_params[0]', None, 'default_value', {'raw': False, '_ver': 13}, r"""new""", r"""type t[ \
+ T] = ...""", 'body[0].type_params[0]', None, 'default_value', {'_ver': 13}, r"""new""", r"""type t[ \
  ** \
  T = new] = ...""", r"""
 Module .. ROOT 0,0 -> 2,15
@@ -17860,7 +17860,7 @@ Module .. ROOT 0,0 -> 2,15
     .value Constant Ellipsis .. 2,12 -> 2,15
 """),
 
-(r"""type t[*T = a] = ...""", 'body[0].type_params[0]', None, 'default_value', {'raw': False, '_ver': 13}, r"""new""", r"""type t[*T = new] = ...""", r"""
+(r"""type t[*T = a] = ...""", 'body[0].type_params[0]', None, 'default_value', {'_ver': 13}, r"""new""", r"""type t[*T = new] = ...""", r"""
 Module .. ROOT 0,0 -> 0,22
   .body[1]
   0] TypeAlias .. 0,0 -> 0,22
@@ -17872,7 +17872,7 @@ Module .. ROOT 0,0 -> 0,22
     .value Constant Ellipsis .. 0,19 -> 0,22
 """),
 
-(r"""type t[*T = (a)] = ...""", 'body[0].type_params[0]', None, 'default_value', {'raw': False, '_ver': 13}, r"""new""", r"""type t[*T = new] = ...""", r"""
+(r"""type t[*T = (a)] = ...""", 'body[0].type_params[0]', None, 'default_value', {'_ver': 13}, r"""new""", r"""type t[*T = new] = ...""", r"""
 Module .. ROOT 0,0 -> 0,22
   .body[1]
   0] TypeAlias .. 0,0 -> 0,22
@@ -17884,7 +17884,7 @@ Module .. ROOT 0,0 -> 0,22
     .value Constant Ellipsis .. 0,19 -> 0,22
 """),
 
-(r"""type t[*T = a] = ...""", 'body[0].type_params[0]', None, 'default_value', {'raw': False, '_ver': 13}, r"""**DEL**""", r"""type t[*T] = ...""", r"""
+(r"""type t[*T = a] = ...""", 'body[0].type_params[0]', None, 'default_value', {'_ver': 13}, r"""**DEL**""", r"""type t[*T] = ...""", r"""
 Module .. ROOT 0,0 -> 0,16
   .body[1]
   0] TypeAlias .. 0,0 -> 0,16
@@ -17895,7 +17895,7 @@ Module .. ROOT 0,0 -> 0,16
     .value Constant Ellipsis .. 0,13 -> 0,16
 """),
 
-(r"""type t[*T = (a)] = ...""", 'body[0].type_params[0]', None, 'default_value', {'raw': False, '_ver': 13}, r"""**DEL**""", r"""type t[*T] = ...""", r"""
+(r"""type t[*T = (a)] = ...""", 'body[0].type_params[0]', None, 'default_value', {'_ver': 13}, r"""**DEL**""", r"""type t[*T] = ...""", r"""
 Module .. ROOT 0,0 -> 0,16
   .body[1]
   0] TypeAlias .. 0,0 -> 0,16
@@ -17906,7 +17906,7 @@ Module .. ROOT 0,0 -> 0,16
     .value Constant Ellipsis .. 0,13 -> 0,16
 """),
 
-(r"""type t[*T] = ...""", 'body[0].type_params[0]', None, 'default_value', {'raw': False, '_ver': 13}, r"""**DEL**""", r"""type t[*T] = ...""", r"""
+(r"""type t[*T] = ...""", 'body[0].type_params[0]', None, 'default_value', {'_ver': 13}, r"""**DEL**""", r"""type t[*T] = ...""", r"""
 Module .. ROOT 0,0 -> 0,16
   .body[1]
   0] TypeAlias .. 0,0 -> 0,16
@@ -17917,7 +17917,7 @@ Module .. ROOT 0,0 -> 0,16
     .value Constant Ellipsis .. 0,13 -> 0,16
 """),
 
-(r"""type t[*T] = ...""", 'body[0].type_params[0]', None, 'default_value', {'raw': False, '_ver': 13}, r"""new""", r"""type t[*T = new] = ...""", r"""
+(r"""type t[*T] = ...""", 'body[0].type_params[0]', None, 'default_value', {'_ver': 13}, r"""new""", r"""type t[*T = new] = ...""", r"""
 Module .. ROOT 0,0 -> 0,22
   .body[1]
   0] TypeAlias .. 0,0 -> 0,22
@@ -17929,7 +17929,7 @@ Module .. ROOT 0,0 -> 0,22
     .value Constant Ellipsis .. 0,19 -> 0,22
 """),
 
-(r"""type t[*T=a] = ...""", 'body[0].type_params[0]', None, 'default_value', {'raw': False, '_ver': 13}, r"""**DEL**""", r"""type t[*T] = ...""", r"""
+(r"""type t[*T=a] = ...""", 'body[0].type_params[0]', None, 'default_value', {'_ver': 13}, r"""**DEL**""", r"""type t[*T] = ...""", r"""
 Module .. ROOT 0,0 -> 0,16
   .body[1]
   0] TypeAlias .. 0,0 -> 0,16
@@ -17940,7 +17940,7 @@ Module .. ROOT 0,0 -> 0,16
     .value Constant Ellipsis .. 0,13 -> 0,16
 """),
 
-(r"""type t[*T=a] = ...""", 'body[0].type_params[0]', None, 'default_value', {'raw': False, '_ver': 13}, r"""new""", r"""type t[*T=new] = ...""", r"""
+(r"""type t[*T=a] = ...""", 'body[0].type_params[0]', None, 'default_value', {'_ver': 13}, r"""new""", r"""type t[*T=new] = ...""", r"""
 Module .. ROOT 0,0 -> 0,20
   .body[1]
   0] TypeAlias .. 0,0 -> 0,20
@@ -17952,7 +17952,7 @@ Module .. ROOT 0,0 -> 0,20
     .value Constant Ellipsis .. 0,17 -> 0,20
 """),
 
-(r"""type t[ * T] = ...""", 'body[0].type_params[0]', None, 'default_value', {'raw': False, '_ver': 13}, r"""new""", r"""type t[ * T = new] = ...""", r"""
+(r"""type t[ * T] = ...""", 'body[0].type_params[0]', None, 'default_value', {'_ver': 13}, r"""new""", r"""type t[ * T = new] = ...""", r"""
 Module .. ROOT 0,0 -> 0,24
   .body[1]
   0] TypeAlias .. 0,0 -> 0,24
@@ -17966,7 +17966,7 @@ Module .. ROOT 0,0 -> 0,24
 
 (r"""type t[ \
  * \
- T] = ...""", 'body[0].type_params[0]', None, 'default_value', {'raw': False, '_ver': 13}, r"""new""", r"""type t[ \
+ T] = ...""", 'body[0].type_params[0]', None, 'default_value', {'_ver': 13}, r"""new""", r"""type t[ \
  * \
  T = new] = ...""", r"""
 Module .. ROOT 0,0 -> 2,15
@@ -17980,7 +17980,7 @@ Module .. ROOT 0,0 -> 2,15
     .value Constant Ellipsis .. 2,12 -> 2,15
 """),
 
-(r"""def f() -> a: pass""", 'body[0]', None, 'returns', {'raw': False}, r"""new""", r"""def f() -> new: pass""", r"""
+(r"""def f() -> a: pass""", 'body[0]', None, 'returns', {}, r"""new""", r"""def f() -> new: pass""", r"""
 Module .. ROOT 0,0 -> 0,20
   .body[1]
   0] FunctionDef .. 0,0 -> 0,20
@@ -17990,7 +17990,7 @@ Module .. ROOT 0,0 -> 0,20
     .returns Name 'new' Load .. 0,11 -> 0,14
 """),
 
-(r"""def f() -> (a): pass""", 'body[0]', None, 'returns', {'raw': False}, r"""new""", r"""def f() -> new: pass""", r"""
+(r"""def f() -> (a): pass""", 'body[0]', None, 'returns', {}, r"""new""", r"""def f() -> new: pass""", r"""
 Module .. ROOT 0,0 -> 0,20
   .body[1]
   0] FunctionDef .. 0,0 -> 0,20
@@ -18000,7 +18000,7 @@ Module .. ROOT 0,0 -> 0,20
     .returns Name 'new' Load .. 0,11 -> 0,14
 """),
 
-(r"""def f() -> a: pass""", 'body[0]', None, 'returns', {'raw': False}, r"""**DEL**""", r"""def f(): pass""", r"""
+(r"""def f() -> a: pass""", 'body[0]', None, 'returns', {}, r"""**DEL**""", r"""def f(): pass""", r"""
 Module .. ROOT 0,0 -> 0,13
   .body[1]
   0] FunctionDef .. 0,0 -> 0,13
@@ -18009,7 +18009,7 @@ Module .. ROOT 0,0 -> 0,13
     0] Pass .. 0,9 -> 0,13
 """),
 
-(r"""def f() -> (a): pass""", 'body[0]', None, 'returns', {'raw': False}, r"""**DEL**""", r"""def f(): pass""", r"""
+(r"""def f() -> (a): pass""", 'body[0]', None, 'returns', {}, r"""**DEL**""", r"""def f(): pass""", r"""
 Module .. ROOT 0,0 -> 0,13
   .body[1]
   0] FunctionDef .. 0,0 -> 0,13
@@ -18018,7 +18018,7 @@ Module .. ROOT 0,0 -> 0,13
     0] Pass .. 0,9 -> 0,13
 """),
 
-(r"""def f(): pass""", 'body[0]', None, 'returns', {'raw': False}, r"""**DEL**""", r"""def f(): pass""", r"""
+(r"""def f(): pass""", 'body[0]', None, 'returns', {}, r"""**DEL**""", r"""def f(): pass""", r"""
 Module .. ROOT 0,0 -> 0,13
   .body[1]
   0] FunctionDef .. 0,0 -> 0,13
@@ -18027,7 +18027,7 @@ Module .. ROOT 0,0 -> 0,13
     0] Pass .. 0,9 -> 0,13
 """),
 
-(r"""def f(): pass""", 'body[0]', None, 'returns', {'raw': False}, r"""new""", r"""def f() -> new: pass""", r"""
+(r"""def f(): pass""", 'body[0]', None, 'returns', {}, r"""new""", r"""def f() -> new: pass""", r"""
 Module .. ROOT 0,0 -> 0,20
   .body[1]
   0] FunctionDef .. 0,0 -> 0,20
@@ -18037,7 +18037,7 @@ Module .. ROOT 0,0 -> 0,20
     .returns Name 'new' Load .. 0,11 -> 0,14
 """),
 
-(r"""def f() -> (a)  : pass""", 'body[0]', None, 'returns', {'raw': False}, r"""**DEL**""", r"""def f(): pass""", r"""
+(r"""def f() -> (a)  : pass""", 'body[0]', None, 'returns', {}, r"""**DEL**""", r"""def f(): pass""", r"""
 Module .. ROOT 0,0 -> 0,13
   .body[1]
   0] FunctionDef .. 0,0 -> 0,13
@@ -18046,7 +18046,7 @@ Module .. ROOT 0,0 -> 0,13
     0] Pass .. 0,9 -> 0,13
 """),
 
-(r"""def f()  : pass""", 'body[0]', None, 'returns', {'raw': False}, r"""new""", r"""def f() -> new: pass""", r"""
+(r"""def f()  : pass""", 'body[0]', None, 'returns', {}, r"""new""", r"""def f() -> new: pass""", r"""
 Module .. ROOT 0,0 -> 0,20
   .body[1]
   0] FunctionDef .. 0,0 -> 0,20
@@ -18056,7 +18056,7 @@ Module .. ROOT 0,0 -> 0,20
     .returns Name 'new' Load .. 0,11 -> 0,14
 """),
 
-(r"""async def f(**b) -> a: pass""", 'body[0]', None, 'returns', {'raw': False}, r"""new""", r"""async def f(**b) -> new: pass""", r"""
+(r"""async def f(**b) -> a: pass""", 'body[0]', None, 'returns', {}, r"""new""", r"""async def f(**b) -> new: pass""", r"""
 Module .. ROOT 0,0 -> 0,29
   .body[1]
   0] AsyncFunctionDef .. 0,0 -> 0,29
@@ -18069,7 +18069,7 @@ Module .. ROOT 0,0 -> 0,29
     .returns Name 'new' Load .. 0,20 -> 0,23
 """),
 
-(r"""async def f(**b) -> (a): pass""", 'body[0]', None, 'returns', {'raw': False}, r"""new""", r"""async def f(**b) -> new: pass""", r"""
+(r"""async def f(**b) -> (a): pass""", 'body[0]', None, 'returns', {}, r"""new""", r"""async def f(**b) -> new: pass""", r"""
 Module .. ROOT 0,0 -> 0,29
   .body[1]
   0] AsyncFunctionDef .. 0,0 -> 0,29
@@ -18082,7 +18082,7 @@ Module .. ROOT 0,0 -> 0,29
     .returns Name 'new' Load .. 0,20 -> 0,23
 """),
 
-(r"""async def f(**b) -> a: pass""", 'body[0]', None, 'returns', {'raw': False}, r"""**DEL**""", r"""async def f(**b): pass""", r"""
+(r"""async def f(**b) -> a: pass""", 'body[0]', None, 'returns', {}, r"""**DEL**""", r"""async def f(**b): pass""", r"""
 Module .. ROOT 0,0 -> 0,22
   .body[1]
   0] AsyncFunctionDef .. 0,0 -> 0,22
@@ -18094,7 +18094,7 @@ Module .. ROOT 0,0 -> 0,22
     0] Pass .. 0,18 -> 0,22
 """),
 
-(r"""async def f(**b) -> (a): pass""", 'body[0]', None, 'returns', {'raw': False}, r"""**DEL**""", r"""async def f(**b): pass""", r"""
+(r"""async def f(**b) -> (a): pass""", 'body[0]', None, 'returns', {}, r"""**DEL**""", r"""async def f(**b): pass""", r"""
 Module .. ROOT 0,0 -> 0,22
   .body[1]
   0] AsyncFunctionDef .. 0,0 -> 0,22
@@ -18106,7 +18106,7 @@ Module .. ROOT 0,0 -> 0,22
     0] Pass .. 0,18 -> 0,22
 """),
 
-(r"""async def f(**b): pass""", 'body[0]', None, 'returns', {'raw': False}, r"""**DEL**""", r"""async def f(**b): pass""", r"""
+(r"""async def f(**b): pass""", 'body[0]', None, 'returns', {}, r"""**DEL**""", r"""async def f(**b): pass""", r"""
 Module .. ROOT 0,0 -> 0,22
   .body[1]
   0] AsyncFunctionDef .. 0,0 -> 0,22
@@ -18118,7 +18118,7 @@ Module .. ROOT 0,0 -> 0,22
     0] Pass .. 0,18 -> 0,22
 """),
 
-(r"""async def f(**b): pass""", 'body[0]', None, 'returns', {'raw': False}, r"""new""", r"""async def f(**b) -> new: pass""", r"""
+(r"""async def f(**b): pass""", 'body[0]', None, 'returns', {}, r"""new""", r"""async def f(**b) -> new: pass""", r"""
 Module .. ROOT 0,0 -> 0,29
   .body[1]
   0] AsyncFunctionDef .. 0,0 -> 0,29
@@ -18131,22 +18131,22 @@ Module .. ROOT 0,0 -> 0,29
     .returns Name 'new' Load .. 0,20 -> 0,23
 """),
 
-(r"""a += b""", 'body[0]', None, 'op', {'raw': False}, r"""new""", r"""**NodeError("expecting operator, got 'new'")**""", r"""
+(r"""a += b""", 'body[0]', None, 'op', {}, r"""new""", r"""**NodeError("expecting operator, got 'new'")**""", r"""
 """),
 
-(r"""a and b""", 'body[0].value', None, 'op', {'raw': False}, r"""new""", r"""**NodeError("expecting boolop, got 'new'")**""", r"""
+(r"""a and b""", 'body[0].value', None, 'op', {}, r"""new""", r"""**NodeError("expecting boolop, got 'new'")**""", r"""
 """),
 
-(r"""a + b""", 'body[0].value', None, 'op', {'raw': False}, r"""new""", r"""**NodeError("expecting operator, got 'new'")**""", r"""
+(r"""a + b""", 'body[0].value', None, 'op', {}, r"""new""", r"""**NodeError("expecting operator, got 'new'")**""", r"""
 """),
 
 (r"""-a""", 'body[0].value', None, 'op', {'raw': False}, r"""new""", r"""**NodeError("expecting unaryop, got 'new'")**""", r"""
 """),
 
-(r"""a < b""", 'body[0].value', 0, 'ops', {'raw': False}, r"""new""", r"""**NodeError("expecting cmpop, got 'new'")**""", r"""
+(r"""a < b""", 'body[0].value', 0, 'ops', {}, r"""new""", r"""**NodeError("expecting cmpop, got 'new'")**""", r"""
 """),
 
-(r"""def f(*, a=b): pass""", 'body[0].args', 0, 'kw_defaults', {'raw': False}, r"""new""", r"""def f(*, a=new): pass""", r"""
+(r"""def f(*, a=b): pass""", 'body[0].args', 0, 'kw_defaults', {}, r"""new""", r"""def f(*, a=new): pass""", r"""
 Module .. ROOT 0,0 -> 0,21
   .body[1]
   0] FunctionDef .. 0,0 -> 0,21
@@ -18161,7 +18161,7 @@ Module .. ROOT 0,0 -> 0,21
     0] Pass .. 0,17 -> 0,21
 """),
 
-(r"""def f(*, a=(b)): pass""", 'body[0].args', 0, 'kw_defaults', {'raw': False}, r"""new""", r"""def f(*, a=new): pass""", r"""
+(r"""def f(*, a=(b)): pass""", 'body[0].args', 0, 'kw_defaults', {}, r"""new""", r"""def f(*, a=new): pass""", r"""
 Module .. ROOT 0,0 -> 0,21
   .body[1]
   0] FunctionDef .. 0,0 -> 0,21
@@ -18176,7 +18176,7 @@ Module .. ROOT 0,0 -> 0,21
     0] Pass .. 0,17 -> 0,21
 """),
 
-(r"""def f(*, a=b): pass""", 'body[0].args', 0, 'kw_defaults', {'raw': False}, r"""**DEL**""", r"""def f(*, a): pass""", r"""
+(r"""def f(*, a=b): pass""", 'body[0].args', 0, 'kw_defaults', {}, r"""**DEL**""", r"""def f(*, a): pass""", r"""
 Module .. ROOT 0,0 -> 0,17
   .body[1]
   0] FunctionDef .. 0,0 -> 0,17
@@ -18191,7 +18191,7 @@ Module .. ROOT 0,0 -> 0,17
     0] Pass .. 0,13 -> 0,17
 """),
 
-(r"""def f(*, a=(b)): pass""", 'body[0].args', 0, 'kw_defaults', {'raw': False}, r"""**DEL**""", r"""def f(*, a): pass""", r"""
+(r"""def f(*, a=(b)): pass""", 'body[0].args', 0, 'kw_defaults', {}, r"""**DEL**""", r"""def f(*, a): pass""", r"""
 Module .. ROOT 0,0 -> 0,17
   .body[1]
   0] FunctionDef .. 0,0 -> 0,17
@@ -18206,7 +18206,7 @@ Module .. ROOT 0,0 -> 0,17
     0] Pass .. 0,13 -> 0,17
 """),
 
-(r"""def f(*, a): pass""", 'body[0].args', 0, 'kw_defaults', {'raw': False}, r"""**DEL**""", r"""def f(*, a): pass""", r"""
+(r"""def f(*, a): pass""", 'body[0].args', 0, 'kw_defaults', {}, r"""**DEL**""", r"""def f(*, a): pass""", r"""
 Module .. ROOT 0,0 -> 0,17
   .body[1]
   0] FunctionDef .. 0,0 -> 0,17
@@ -18221,7 +18221,7 @@ Module .. ROOT 0,0 -> 0,17
     0] Pass .. 0,13 -> 0,17
 """),
 
-(r"""def f(*, a): pass""", 'body[0].args', 0, 'kw_defaults', {'raw': False}, r"""new""", r"""def f(*, a=new): pass""", r"""
+(r"""def f(*, a): pass""", 'body[0].args', 0, 'kw_defaults', {}, r"""new""", r"""def f(*, a=new): pass""", r"""
 Module .. ROOT 0,0 -> 0,21
   .body[1]
   0] FunctionDef .. 0,0 -> 0,21
@@ -18236,7 +18236,7 @@ Module .. ROOT 0,0 -> 0,21
     0] Pass .. 0,17 -> 0,21
 """),
 
-(r"""def f(*, a, c=d): pass""", 'body[0].args', 0, 'kw_defaults', {'raw': False}, r"""new""", r"""def f(*, a=new, c=d): pass""", r"""
+(r"""def f(*, a, c=d): pass""", 'body[0].args', 0, 'kw_defaults', {}, r"""new""", r"""def f(*, a=new, c=d): pass""", r"""
 Module .. ROOT 0,0 -> 0,26
   .body[1]
   0] FunctionDef .. 0,0 -> 0,26
@@ -18254,7 +18254,7 @@ Module .. ROOT 0,0 -> 0,26
     0] Pass .. 0,22 -> 0,26
 """),
 
-(r"""def f(*, a: (int), c=d): pass""", 'body[0].args', 0, 'kw_defaults', {'raw': False}, r"""new""", r"""def f(*, a: (int) = new, c=d): pass""", r"""
+(r"""def f(*, a: (int), c=d): pass""", 'body[0].args', 0, 'kw_defaults', {}, r"""new""", r"""def f(*, a: (int) = new, c=d): pass""", r"""
 Module .. ROOT 0,0 -> 0,35
   .body[1]
   0] FunctionDef .. 0,0 -> 0,35
@@ -18273,7 +18273,7 @@ Module .. ROOT 0,0 -> 0,35
     0] Pass .. 0,31 -> 0,35
 """),
 
-(r"""def f(*, a=b, c=d): pass""", 'body[0].args', 0, 'kw_defaults', {'raw': False}, r"""**DEL**""", r"""def f(*, a, c=d): pass""", r"""
+(r"""def f(*, a=b, c=d): pass""", 'body[0].args', 0, 'kw_defaults', {}, r"""**DEL**""", r"""def f(*, a, c=d): pass""", r"""
 Module .. ROOT 0,0 -> 0,22
   .body[1]
   0] FunctionDef .. 0,0 -> 0,22
@@ -18291,7 +18291,7 @@ Module .. ROOT 0,0 -> 0,22
     0] Pass .. 0,18 -> 0,22
 """),
 
-(r"""def f(*, a, **c): pass""", 'body[0].args', 0, 'kw_defaults', {'raw': False}, r"""new""", r"""def f(*, a=new, **c): pass""", r"""
+(r"""def f(*, a, **c): pass""", 'body[0].args', 0, 'kw_defaults', {}, r"""new""", r"""def f(*, a=new, **c): pass""", r"""
 Module .. ROOT 0,0 -> 0,26
   .body[1]
   0] FunctionDef .. 0,0 -> 0,26
@@ -18308,7 +18308,7 @@ Module .. ROOT 0,0 -> 0,26
     0] Pass .. 0,22 -> 0,26
 """),
 
-(r"""def f(*, a: (int), **c): pass""", 'body[0].args', 0, 'kw_defaults', {'raw': False}, r"""new""", r"""def f(*, a: (int) = new, **c): pass""", r"""
+(r"""def f(*, a: (int), **c): pass""", 'body[0].args', 0, 'kw_defaults', {}, r"""new""", r"""def f(*, a: (int) = new, **c): pass""", r"""
 Module .. ROOT 0,0 -> 0,35
   .body[1]
   0] FunctionDef .. 0,0 -> 0,35
@@ -18326,7 +18326,7 @@ Module .. ROOT 0,0 -> 0,35
     0] Pass .. 0,31 -> 0,35
 """),
 
-(r"""def f(*, a=b, **c): pass""", 'body[0].args', 0, 'kw_defaults', {'raw': False}, r"""**DEL**""", r"""def f(*, a, **c): pass""", r"""
+(r"""def f(*, a=b, **c): pass""", 'body[0].args', 0, 'kw_defaults', {}, r"""**DEL**""", r"""def f(*, a, **c): pass""", r"""
 Module .. ROOT 0,0 -> 0,22
   .body[1]
   0] FunctionDef .. 0,0 -> 0,22
@@ -18343,7 +18343,7 @@ Module .. ROOT 0,0 -> 0,22
     0] Pass .. 0,18 -> 0,22
 """),
 
-(r"""def f(*, a: int = b): pass""", 'body[0].args', 0, 'kw_defaults', {'raw': False}, r"""new""", r"""def f(*, a: int = new): pass""", r"""
+(r"""def f(*, a: int = b): pass""", 'body[0].args', 0, 'kw_defaults', {}, r"""new""", r"""def f(*, a: int = new): pass""", r"""
 Module .. ROOT 0,0 -> 0,28
   .body[1]
   0] FunctionDef .. 0,0 -> 0,28
@@ -18359,7 +18359,7 @@ Module .. ROOT 0,0 -> 0,28
     0] Pass .. 0,24 -> 0,28
 """),
 
-(r"""def f(*, a: (int) = (b)): pass""", 'body[0].args', 0, 'kw_defaults', {'raw': False}, r"""new""", r"""def f(*, a: (int) = new): pass""", r"""
+(r"""def f(*, a: (int) = (b)): pass""", 'body[0].args', 0, 'kw_defaults', {}, r"""new""", r"""def f(*, a: (int) = new): pass""", r"""
 Module .. ROOT 0,0 -> 0,30
   .body[1]
   0] FunctionDef .. 0,0 -> 0,30
@@ -18375,7 +18375,7 @@ Module .. ROOT 0,0 -> 0,30
     0] Pass .. 0,26 -> 0,30
 """),
 
-(r"""def f(*, a: int = b): pass""", 'body[0].args', 0, 'kw_defaults', {'raw': False}, r"""**DEL**""", r"""def f(*, a: int): pass""", r"""
+(r"""def f(*, a: int = b): pass""", 'body[0].args', 0, 'kw_defaults', {}, r"""**DEL**""", r"""def f(*, a: int): pass""", r"""
 Module .. ROOT 0,0 -> 0,22
   .body[1]
   0] FunctionDef .. 0,0 -> 0,22
@@ -18391,7 +18391,7 @@ Module .. ROOT 0,0 -> 0,22
     0] Pass .. 0,18 -> 0,22
 """),
 
-(r"""def f(*, a: (int) = (b)): pass""", 'body[0].args', 0, 'kw_defaults', {'raw': False}, r"""**DEL**""", r"""def f(*, a: (int)): pass""", r"""
+(r"""def f(*, a: (int) = (b)): pass""", 'body[0].args', 0, 'kw_defaults', {}, r"""**DEL**""", r"""def f(*, a: (int)): pass""", r"""
 Module .. ROOT 0,0 -> 0,24
   .body[1]
   0] FunctionDef .. 0,0 -> 0,24
@@ -18407,7 +18407,7 @@ Module .. ROOT 0,0 -> 0,24
     0] Pass .. 0,20 -> 0,24
 """),
 
-(r"""def f(*, a: int): pass""", 'body[0].args', 0, 'kw_defaults', {'raw': False}, r"""**DEL**""", r"""def f(*, a: int): pass""", r"""
+(r"""def f(*, a: int): pass""", 'body[0].args', 0, 'kw_defaults', {}, r"""**DEL**""", r"""def f(*, a: int): pass""", r"""
 Module .. ROOT 0,0 -> 0,22
   .body[1]
   0] FunctionDef .. 0,0 -> 0,22
@@ -18423,7 +18423,7 @@ Module .. ROOT 0,0 -> 0,22
     0] Pass .. 0,18 -> 0,22
 """),
 
-(r"""def f(*, a: int): pass""", 'body[0].args', 0, 'kw_defaults', {'raw': False}, r"""new""", r"""def f(*, a: int = new): pass""", r"""
+(r"""def f(*, a: int): pass""", 'body[0].args', 0, 'kw_defaults', {}, r"""new""", r"""def f(*, a: int = new): pass""", r"""
 Module .. ROOT 0,0 -> 0,28
   .body[1]
   0] FunctionDef .. 0,0 -> 0,28
@@ -18439,7 +18439,7 @@ Module .. ROOT 0,0 -> 0,28
     0] Pass .. 0,24 -> 0,28
 """),
 
-(r"""class c(a=b): pass""", 'body[0].keywords[0]', None, 'arg', {'raw': False}, r"""new""", r"""class c(new=b): pass""", r"""
+(r"""class c(a=b): pass""", 'body[0].keywords[0]', None, 'arg', {}, r"""new""", r"""class c(new=b): pass""", r"""
 Module .. ROOT 0,0 -> 0,20
   .body[1]
   0] ClassDef .. 0,0 -> 0,20
@@ -18452,7 +18452,7 @@ Module .. ROOT 0,0 -> 0,20
     0] Pass .. 0,16 -> 0,20
 """),
 
-(r"""class c(a=b): pass""", 'body[0].keywords[0]', None, 'arg', {'raw': False}, r"""**DEL**""", r"""class c(**b): pass""", r"""
+(r"""class c(a=b): pass""", 'body[0].keywords[0]', None, 'arg', {}, r"""**DEL**""", r"""class c(**b): pass""", r"""
 Module .. ROOT 0,0 -> 0,18
   .body[1]
   0] ClassDef .. 0,0 -> 0,18
@@ -18464,7 +18464,7 @@ Module .. ROOT 0,0 -> 0,18
     0] Pass .. 0,14 -> 0,18
 """),
 
-(r"""class c(**b): pass""", 'body[0].keywords[0]', None, 'arg', {'raw': False}, r"""**DEL**""", r"""class c(**b): pass""", r"""
+(r"""class c(**b): pass""", 'body[0].keywords[0]', None, 'arg', {}, r"""**DEL**""", r"""class c(**b): pass""", r"""
 Module .. ROOT 0,0 -> 0,18
   .body[1]
   0] ClassDef .. 0,0 -> 0,18
@@ -18476,7 +18476,7 @@ Module .. ROOT 0,0 -> 0,18
     0] Pass .. 0,14 -> 0,18
 """),
 
-(r"""class c(**b): pass""", 'body[0].keywords[0]', None, 'arg', {'raw': False}, r"""new""", r"""class c(new=b): pass""", r"""
+(r"""class c(**b): pass""", 'body[0].keywords[0]', None, 'arg', {}, r"""new""", r"""class c(new=b): pass""", r"""
 Module .. ROOT 0,0 -> 0,20
   .body[1]
   0] ClassDef .. 0,0 -> 0,20
@@ -18492,7 +18492,7 @@ Module .. ROOT 0,0 -> 0,20
 (r"""class c( a
  =
  b
- ): pass""", 'body[0].keywords[0]', None, 'arg', {'raw': False}, r"""new""", r"""class c( new
+ ): pass""", 'body[0].keywords[0]', None, 'arg', {}, r"""new""", r"""class c( new
  =
  b
  ): pass""", r"""
@@ -18511,7 +18511,7 @@ Module .. ROOT 0,0 -> 3,8
 (r"""class c( a
  =
  b
- ): pass""", 'body[0].keywords[0]', None, 'arg', {'raw': False}, r"""**DEL**""", r"""class c( **b
+ ): pass""", 'body[0].keywords[0]', None, 'arg', {}, r"""**DEL**""", r"""class c( **b
  ): pass""", r"""
 Module .. ROOT 0,0 -> 1,8
   .body[1]
@@ -18525,7 +18525,7 @@ Module .. ROOT 0,0 -> 1,8
 """),
 
 (r"""match a:
- case 1: pass""", 'body[0].cases[0].pattern', None, None, {'raw': False}, r"""a.b""", r"""match a:
+ case 1: pass""", 'body[0].cases[0].pattern', None, None, {}, r"""a.b""", r"""match a:
  case a.b: pass""", r"""
 Module .. ROOT 0,0 -> 1,15
   .body[1]
@@ -18543,7 +18543,7 @@ Module .. ROOT 0,0 -> 1,15
 """),
 
 (r"""match a:
- case 1: pass""", 'body[0].cases[0].pattern', None, None, {'raw': False}, r"""2""", r"""match a:
+ case 1: pass""", 'body[0].cases[0].pattern', None, None, {}, r"""2""", r"""match a:
  case 2: pass""", r"""
 Module .. ROOT 0,0 -> 1,13
   .body[1]
@@ -18558,7 +18558,7 @@ Module .. ROOT 0,0 -> 1,13
 """),
 
 (r"""match a:
- case 1: pass""", 'body[0].cases[0].pattern', None, None, {'raw': False}, r"""2.0""", r"""match a:
+ case 1: pass""", 'body[0].cases[0].pattern', None, None, {}, r"""2.0""", r"""match a:
  case 2.0: pass""", r"""
 Module .. ROOT 0,0 -> 1,15
   .body[1]
@@ -18573,7 +18573,7 @@ Module .. ROOT 0,0 -> 1,15
 """),
 
 (r"""match a:
- case 1: pass""", 'body[0].cases[0].pattern', None, None, {'raw': False}, r"""2j""", r"""match a:
+ case 1: pass""", 'body[0].cases[0].pattern', None, None, {}, r"""2j""", r"""match a:
  case 2j: pass""", r"""
 Module .. ROOT 0,0 -> 1,14
   .body[1]
@@ -18588,7 +18588,7 @@ Module .. ROOT 0,0 -> 1,14
 """),
 
 (r"""match a:
- case 1: pass""", 'body[0].cases[0].pattern', None, None, {'raw': False}, r"""'2'""", r"""match a:
+ case 1: pass""", 'body[0].cases[0].pattern', None, None, {}, r"""'2'""", r"""match a:
  case '2': pass""", r"""
 Module .. ROOT 0,0 -> 1,15
   .body[1]
@@ -18607,7 +18607,7 @@ Module .. ROOT 0,0 -> 1,15
 """),
 
 (r"""match a:
- case 1: pass""", 'body[0].cases[0].pattern', None, None, {'raw': False}, r"""1+2j""", r"""match a:
+ case 1: pass""", 'body[0].cases[0].pattern', None, None, {}, r"""1+2j""", r"""match a:
  case 1+2j: pass""", r"""
 Module .. ROOT 0,0 -> 1,16
   .body[1]
@@ -18625,7 +18625,7 @@ Module .. ROOT 0,0 -> 1,16
 """),
 
 (r"""match a:
- case (1): pass""", 'body[0].cases[0].pattern', None, None, {'raw': False}, r"""2""", r"""match a:
+ case (1): pass""", 'body[0].cases[0].pattern', None, None, {}, r"""2""", r"""match a:
  case (2): pass""", r"""
 Module .. ROOT 0,0 -> 1,15
   .body[1]
@@ -18640,7 +18640,7 @@ Module .. ROOT 0,0 -> 1,15
 """),
 
 (r"""match a:
- case (1): pass""", 'body[0].cases[0].pattern', None, None, {'raw': False}, r"""1+2j""", r"""match a:
+ case (1): pass""", 'body[0].cases[0].pattern', None, None, {}, r"""1+2j""", r"""match a:
  case (1+2j): pass""", r"""
 Module .. ROOT 0,0 -> 1,18
   .body[1]
@@ -18658,7 +18658,7 @@ Module .. ROOT 0,0 -> 1,18
 """),
 
 (r"""match a:
- case (1+2j): pass""", 'body[0].cases[0].pattern', None, None, {'raw': False}, r"""3""", r"""match a:
+ case (1+2j): pass""", 'body[0].cases[0].pattern', None, None, {}, r"""3""", r"""match a:
  case (3): pass""", r"""
 Module .. ROOT 0,0 -> 1,15
   .body[1]
@@ -18672,7 +18672,7 @@ Module .. ROOT 0,0 -> 1,15
       0] Pass .. 1,11 -> 1,15
 """),
 
-(r"""a[b:]""", 'body[0].value.slice', None, 'lower', {'raw': False}, r"""new""", r"""a[new:]""", r"""
+(r"""a[b:]""", 'body[0].value.slice', None, 'lower', {}, r"""new""", r"""a[new:]""", r"""
 Module .. ROOT 0,0 -> 0,7
   .body[1]
   0] Expr .. 0,0 -> 0,7
@@ -18683,7 +18683,7 @@ Module .. ROOT 0,0 -> 0,7
       .ctx Load
 """),
 
-(r"""a[(b):]""", 'body[0].value.slice', None, 'lower', {'raw': False}, r"""new""", r"""a[new:]""", r"""
+(r"""a[(b):]""", 'body[0].value.slice', None, 'lower', {}, r"""new""", r"""a[new:]""", r"""
 Module .. ROOT 0,0 -> 0,7
   .body[1]
   0] Expr .. 0,0 -> 0,7
@@ -18694,7 +18694,7 @@ Module .. ROOT 0,0 -> 0,7
       .ctx Load
 """),
 
-(r"""a[b:]""", 'body[0].value.slice', None, 'lower', {'raw': False}, r"""**DEL**""", r"""a[:]""", r"""
+(r"""a[b:]""", 'body[0].value.slice', None, 'lower', {}, r"""**DEL**""", r"""a[:]""", r"""
 Module .. ROOT 0,0 -> 0,4
   .body[1]
   0] Expr .. 0,0 -> 0,4
@@ -18704,7 +18704,7 @@ Module .. ROOT 0,0 -> 0,4
       .ctx Load
 """),
 
-(r"""a[(b):]""", 'body[0].value.slice', None, 'lower', {'raw': False}, r"""**DEL**""", r"""a[:]""", r"""
+(r"""a[(b):]""", 'body[0].value.slice', None, 'lower', {}, r"""**DEL**""", r"""a[:]""", r"""
 Module .. ROOT 0,0 -> 0,4
   .body[1]
   0] Expr .. 0,0 -> 0,4
@@ -18714,7 +18714,7 @@ Module .. ROOT 0,0 -> 0,4
       .ctx Load
 """),
 
-(r"""a[:]""", 'body[0].value.slice', None, 'lower', {'raw': False}, r"""**DEL**""", r"""a[:]""", r"""
+(r"""a[:]""", 'body[0].value.slice', None, 'lower', {}, r"""**DEL**""", r"""a[:]""", r"""
 Module .. ROOT 0,0 -> 0,4
   .body[1]
   0] Expr .. 0,0 -> 0,4
@@ -18724,7 +18724,7 @@ Module .. ROOT 0,0 -> 0,4
       .ctx Load
 """),
 
-(r"""a[:]""", 'body[0].value.slice', None, 'lower', {'raw': False}, r"""new""", r"""a[new:]""", r"""
+(r"""a[:]""", 'body[0].value.slice', None, 'lower', {}, r"""new""", r"""a[new:]""", r"""
 Module .. ROOT 0,0 -> 0,7
   .body[1]
   0] Expr .. 0,0 -> 0,7
@@ -18735,7 +18735,7 @@ Module .. ROOT 0,0 -> 0,7
       .ctx Load
 """),
 
-(r"""a[::]""", 'body[0].value.slice', None, 'lower', {'raw': False}, r"""new""", r"""a[new::]""", r"""
+(r"""a[::]""", 'body[0].value.slice', None, 'lower', {}, r"""new""", r"""a[new::]""", r"""
 Module .. ROOT 0,0 -> 0,8
   .body[1]
   0] Expr .. 0,0 -> 0,8
@@ -18746,7 +18746,7 @@ Module .. ROOT 0,0 -> 0,8
       .ctx Load
 """),
 
-(r"""a[:(b):]""", 'body[0].value.slice', None, 'lower', {'raw': False}, r"""new""", r"""a[new:(b):]""", r"""
+(r"""a[:(b):]""", 'body[0].value.slice', None, 'lower', {}, r"""new""", r"""a[new:(b):]""", r"""
 Module .. ROOT 0,0 -> 0,11
   .body[1]
   0] Expr .. 0,0 -> 0,11
@@ -18758,7 +18758,7 @@ Module .. ROOT 0,0 -> 0,11
       .ctx Load
 """),
 
-(r"""a[ : ]""", 'body[0].value.slice', None, 'lower', {'raw': False}, r"""new""", r"""a[ new: ]""", r"""
+(r"""a[ : ]""", 'body[0].value.slice', None, 'lower', {}, r"""new""", r"""a[ new: ]""", r"""
 Module .. ROOT 0,0 -> 0,9
   .body[1]
   0] Expr .. 0,0 -> 0,9
@@ -18769,7 +18769,7 @@ Module .. ROOT 0,0 -> 0,9
       .ctx Load
 """),
 
-(r"""a[ b : ]""", 'body[0].value.slice', None, 'lower', {'raw': False}, r"""**DEL**""", r"""a[ : ]""", r"""
+(r"""a[ b : ]""", 'body[0].value.slice', None, 'lower', {}, r"""**DEL**""", r"""a[ : ]""", r"""
 Module .. ROOT 0,0 -> 0,6
   .body[1]
   0] Expr .. 0,0 -> 0,6
@@ -18779,7 +18779,7 @@ Module .. ROOT 0,0 -> 0,6
       .ctx Load
 """),
 
-(r"""a[':':]""", 'body[0].value.slice', None, 'lower', {'raw': False}, r"""new""", r"""a[new:]""", r"""
+(r"""a[':':]""", 'body[0].value.slice', None, 'lower', {}, r"""new""", r"""a[new:]""", r"""
 Module .. ROOT 0,0 -> 0,7
   .body[1]
   0] Expr .. 0,0 -> 0,7
@@ -18790,7 +18790,7 @@ Module .. ROOT 0,0 -> 0,7
       .ctx Load
 """),
 
-(r"""a[':':]""", 'body[0].value.slice', None, 'lower', {'raw': False}, r"""**DEL**""", r"""a[:]""", r"""
+(r"""a[':':]""", 'body[0].value.slice', None, 'lower', {}, r"""**DEL**""", r"""a[:]""", r"""
 Module .. ROOT 0,0 -> 0,4
   .body[1]
   0] Expr .. 0,0 -> 0,4
@@ -18800,7 +18800,7 @@ Module .. ROOT 0,0 -> 0,4
       .ctx Load
 """),
 
-(r"""a[:b]""", 'body[0].value.slice', None, 'upper', {'raw': False}, r"""new""", r"""a[:new]""", r"""
+(r"""a[:b]""", 'body[0].value.slice', None, 'upper', {}, r"""new""", r"""a[:new]""", r"""
 Module .. ROOT 0,0 -> 0,7
   .body[1]
   0] Expr .. 0,0 -> 0,7
@@ -18811,7 +18811,7 @@ Module .. ROOT 0,0 -> 0,7
       .ctx Load
 """),
 
-(r"""a[:(b)]""", 'body[0].value.slice', None, 'upper', {'raw': False}, r"""new""", r"""a[:new]""", r"""
+(r"""a[:(b)]""", 'body[0].value.slice', None, 'upper', {}, r"""new""", r"""a[:new]""", r"""
 Module .. ROOT 0,0 -> 0,7
   .body[1]
   0] Expr .. 0,0 -> 0,7
@@ -18822,7 +18822,7 @@ Module .. ROOT 0,0 -> 0,7
       .ctx Load
 """),
 
-(r"""a[:b]""", 'body[0].value.slice', None, 'upper', {'raw': False}, r"""**DEL**""", r"""a[:]""", r"""
+(r"""a[:b]""", 'body[0].value.slice', None, 'upper', {}, r"""**DEL**""", r"""a[:]""", r"""
 Module .. ROOT 0,0 -> 0,4
   .body[1]
   0] Expr .. 0,0 -> 0,4
@@ -18832,7 +18832,7 @@ Module .. ROOT 0,0 -> 0,4
       .ctx Load
 """),
 
-(r"""a[:(b)]""", 'body[0].value.slice', None, 'upper', {'raw': False}, r"""**DEL**""", r"""a[:]""", r"""
+(r"""a[:(b)]""", 'body[0].value.slice', None, 'upper', {}, r"""**DEL**""", r"""a[:]""", r"""
 Module .. ROOT 0,0 -> 0,4
   .body[1]
   0] Expr .. 0,0 -> 0,4
@@ -18842,7 +18842,7 @@ Module .. ROOT 0,0 -> 0,4
       .ctx Load
 """),
 
-(r"""a[:]""", 'body[0].value.slice', None, 'upper', {'raw': False}, r"""**DEL**""", r"""a[:]""", r"""
+(r"""a[:]""", 'body[0].value.slice', None, 'upper', {}, r"""**DEL**""", r"""a[:]""", r"""
 Module .. ROOT 0,0 -> 0,4
   .body[1]
   0] Expr .. 0,0 -> 0,4
@@ -18852,7 +18852,7 @@ Module .. ROOT 0,0 -> 0,4
       .ctx Load
 """),
 
-(r"""a[:]""", 'body[0].value.slice', None, 'upper', {'raw': False}, r"""new""", r"""a[:new]""", r"""
+(r"""a[:]""", 'body[0].value.slice', None, 'upper', {}, r"""new""", r"""a[:new]""", r"""
 Module .. ROOT 0,0 -> 0,7
   .body[1]
   0] Expr .. 0,0 -> 0,7
@@ -18863,7 +18863,7 @@ Module .. ROOT 0,0 -> 0,7
       .ctx Load
 """),
 
-(r"""a[::]""", 'body[0].value.slice', None, 'upper', {'raw': False}, r"""new""", r"""a[:new:]""", r"""
+(r"""a[::]""", 'body[0].value.slice', None, 'upper', {}, r"""new""", r"""a[:new:]""", r"""
 Module .. ROOT 0,0 -> 0,8
   .body[1]
   0] Expr .. 0,0 -> 0,8
@@ -18874,7 +18874,7 @@ Module .. ROOT 0,0 -> 0,8
       .ctx Load
 """),
 
-(r"""a[ : ]""", 'body[0].value.slice', None, 'upper', {'raw': False}, r"""new""", r"""a[ :new ]""", r"""
+(r"""a[ : ]""", 'body[0].value.slice', None, 'upper', {}, r"""new""", r"""a[ :new ]""", r"""
 Module .. ROOT 0,0 -> 0,9
   .body[1]
   0] Expr .. 0,0 -> 0,9
@@ -18885,7 +18885,7 @@ Module .. ROOT 0,0 -> 0,9
       .ctx Load
 """),
 
-(r"""a[ : b ]""", 'body[0].value.slice', None, 'upper', {'raw': False}, r"""**DEL**""", r"""a[ : ]""", r"""
+(r"""a[ : b ]""", 'body[0].value.slice', None, 'upper', {}, r"""**DEL**""", r"""a[ : ]""", r"""
 Module .. ROOT 0,0 -> 0,6
   .body[1]
   0] Expr .. 0,0 -> 0,6
@@ -18895,7 +18895,7 @@ Module .. ROOT 0,0 -> 0,6
       .ctx Load
 """),
 
-(r"""a[ : : ]""", 'body[0].value.slice', None, 'upper', {'raw': False}, r"""new""", r"""a[ :new: ]""", r"""
+(r"""a[ : : ]""", 'body[0].value.slice', None, 'upper', {}, r"""new""", r"""a[ :new: ]""", r"""
 Module .. ROOT 0,0 -> 0,10
   .body[1]
   0] Expr .. 0,0 -> 0,10
@@ -18906,7 +18906,7 @@ Module .. ROOT 0,0 -> 0,10
       .ctx Load
 """),
 
-(r"""a[ : b : ]""", 'body[0].value.slice', None, 'upper', {'raw': False}, r"""**DEL**""", r"""a[ :: ]""", r"""
+(r"""a[ : b : ]""", 'body[0].value.slice', None, 'upper', {}, r"""**DEL**""", r"""a[ :: ]""", r"""
 Module .. ROOT 0,0 -> 0,7
   .body[1]
   0] Expr .. 0,0 -> 0,7
@@ -18916,7 +18916,7 @@ Module .. ROOT 0,0 -> 0,7
       .ctx Load
 """),
 
-(r"""a[:b:]""", 'body[0].value.slice', None, 'upper', {'raw': False}, r"""new""", r"""a[:new:]""", r"""
+(r"""a[:b:]""", 'body[0].value.slice', None, 'upper', {}, r"""new""", r"""a[:new:]""", r"""
 Module .. ROOT 0,0 -> 0,8
   .body[1]
   0] Expr .. 0,0 -> 0,8
@@ -18927,7 +18927,7 @@ Module .. ROOT 0,0 -> 0,8
       .ctx Load
 """),
 
-(r"""a[:(b):]""", 'body[0].value.slice', None, 'upper', {'raw': False}, r"""new""", r"""a[:new:]""", r"""
+(r"""a[:(b):]""", 'body[0].value.slice', None, 'upper', {}, r"""new""", r"""a[:new:]""", r"""
 Module .. ROOT 0,0 -> 0,8
   .body[1]
   0] Expr .. 0,0 -> 0,8
@@ -18938,7 +18938,7 @@ Module .. ROOT 0,0 -> 0,8
       .ctx Load
 """),
 
-(r"""a[:b:]""", 'body[0].value.slice', None, 'upper', {'raw': False}, r"""**DEL**""", r"""a[::]""", r"""
+(r"""a[:b:]""", 'body[0].value.slice', None, 'upper', {}, r"""**DEL**""", r"""a[::]""", r"""
 Module .. ROOT 0,0 -> 0,5
   .body[1]
   0] Expr .. 0,0 -> 0,5
@@ -18948,7 +18948,7 @@ Module .. ROOT 0,0 -> 0,5
       .ctx Load
 """),
 
-(r"""a[:(b):]""", 'body[0].value.slice', None, 'upper', {'raw': False}, r"""**DEL**""", r"""a[::]""", r"""
+(r"""a[:(b):]""", 'body[0].value.slice', None, 'upper', {}, r"""**DEL**""", r"""a[::]""", r"""
 Module .. ROOT 0,0 -> 0,5
   .body[1]
   0] Expr .. 0,0 -> 0,5
@@ -18958,7 +18958,7 @@ Module .. ROOT 0,0 -> 0,5
       .ctx Load
 """),
 
-(r"""a[:':']""", 'body[0].value.slice', None, 'upper', {'raw': False}, r"""new""", r"""a[:new]""", r"""
+(r"""a[:':']""", 'body[0].value.slice', None, 'upper', {}, r"""new""", r"""a[:new]""", r"""
 Module .. ROOT 0,0 -> 0,7
   .body[1]
   0] Expr .. 0,0 -> 0,7
@@ -18969,7 +18969,7 @@ Module .. ROOT 0,0 -> 0,7
       .ctx Load
 """),
 
-(r"""a[:':']""", 'body[0].value.slice', None, 'upper', {'raw': False}, r"""**DEL**""", r"""a[:]""", r"""
+(r"""a[:':']""", 'body[0].value.slice', None, 'upper', {}, r"""**DEL**""", r"""a[:]""", r"""
 Module .. ROOT 0,0 -> 0,4
   .body[1]
   0] Expr .. 0,0 -> 0,4
@@ -18979,7 +18979,7 @@ Module .. ROOT 0,0 -> 0,4
       .ctx Load
 """),
 
-(r"""a[:':':]""", 'body[0].value.slice', None, 'upper', {'raw': False}, r"""new""", r"""a[:new:]""", r"""
+(r"""a[:':':]""", 'body[0].value.slice', None, 'upper', {}, r"""new""", r"""a[:new:]""", r"""
 Module .. ROOT 0,0 -> 0,8
   .body[1]
   0] Expr .. 0,0 -> 0,8
@@ -18990,7 +18990,7 @@ Module .. ROOT 0,0 -> 0,8
       .ctx Load
 """),
 
-(r"""a[:':':]""", 'body[0].value.slice', None, 'upper', {'raw': False}, r"""**DEL**""", r"""a[::]""", r"""
+(r"""a[:':':]""", 'body[0].value.slice', None, 'upper', {}, r"""**DEL**""", r"""a[::]""", r"""
 Module .. ROOT 0,0 -> 0,5
   .body[1]
   0] Expr .. 0,0 -> 0,5
@@ -19000,7 +19000,7 @@ Module .. ROOT 0,0 -> 0,5
       .ctx Load
 """),
 
-(r"""a[":":':']""", 'body[0].value.slice', None, 'upper', {'raw': False}, r"""new""", r"""a[":":new]""", r"""
+(r"""a[":":':']""", 'body[0].value.slice', None, 'upper', {}, r"""new""", r"""a[":":new]""", r"""
 Module .. ROOT 0,0 -> 0,10
   .body[1]
   0] Expr .. 0,0 -> 0,10
@@ -19012,7 +19012,7 @@ Module .. ROOT 0,0 -> 0,10
       .ctx Load
 """),
 
-(r"""a[":":':']""", 'body[0].value.slice', None, 'upper', {'raw': False}, r"""**DEL**""", r"""a[":":]""", r"""
+(r"""a[":":':']""", 'body[0].value.slice', None, 'upper', {}, r"""**DEL**""", r"""a[":":]""", r"""
 Module .. ROOT 0,0 -> 0,7
   .body[1]
   0] Expr .. 0,0 -> 0,7
@@ -19023,7 +19023,7 @@ Module .. ROOT 0,0 -> 0,7
       .ctx Load
 """),
 
-(r"""a[":":':':]""", 'body[0].value.slice', None, 'upper', {'raw': False}, r"""new""", r"""a[":":new:]""", r"""
+(r"""a[":":':':]""", 'body[0].value.slice', None, 'upper', {}, r"""new""", r"""a[":":new:]""", r"""
 Module .. ROOT 0,0 -> 0,11
   .body[1]
   0] Expr .. 0,0 -> 0,11
@@ -19035,7 +19035,7 @@ Module .. ROOT 0,0 -> 0,11
       .ctx Load
 """),
 
-(r"""a[":":':':]""", 'body[0].value.slice', None, 'upper', {'raw': False}, r"""**DEL**""", r"""a[":"::]""", r"""
+(r"""a[":":':':]""", 'body[0].value.slice', None, 'upper', {}, r"""**DEL**""", r"""a[":"::]""", r"""
 Module .. ROOT 0,0 -> 0,8
   .body[1]
   0] Expr .. 0,0 -> 0,8
@@ -19046,7 +19046,7 @@ Module .. ROOT 0,0 -> 0,8
       .ctx Load
 """),
 
-(r"""a[::b]""", 'body[0].value.slice', None, 'step', {'raw': False}, r"""new""", r"""a[::new]""", r"""
+(r"""a[::b]""", 'body[0].value.slice', None, 'step', {}, r"""new""", r"""a[::new]""", r"""
 Module .. ROOT 0,0 -> 0,8
   .body[1]
   0] Expr .. 0,0 -> 0,8
@@ -19057,7 +19057,7 @@ Module .. ROOT 0,0 -> 0,8
       .ctx Load
 """),
 
-(r"""a[::(b)]""", 'body[0].value.slice', None, 'step', {'raw': False}, r"""new""", r"""a[::new]""", r"""
+(r"""a[::(b)]""", 'body[0].value.slice', None, 'step', {}, r"""new""", r"""a[::new]""", r"""
 Module .. ROOT 0,0 -> 0,8
   .body[1]
   0] Expr .. 0,0 -> 0,8
@@ -19068,7 +19068,7 @@ Module .. ROOT 0,0 -> 0,8
       .ctx Load
 """),
 
-(r"""a[::b]""", 'body[0].value.slice', None, 'step', {'raw': False}, r"""**DEL**""", r"""a[::]""", r"""
+(r"""a[::b]""", 'body[0].value.slice', None, 'step', {}, r"""**DEL**""", r"""a[::]""", r"""
 Module .. ROOT 0,0 -> 0,5
   .body[1]
   0] Expr .. 0,0 -> 0,5
@@ -19078,7 +19078,7 @@ Module .. ROOT 0,0 -> 0,5
       .ctx Load
 """),
 
-(r"""a[::(b)]""", 'body[0].value.slice', None, 'step', {'raw': False}, r"""**DEL**""", r"""a[::]""", r"""
+(r"""a[::(b)]""", 'body[0].value.slice', None, 'step', {}, r"""**DEL**""", r"""a[::]""", r"""
 Module .. ROOT 0,0 -> 0,5
   .body[1]
   0] Expr .. 0,0 -> 0,5
@@ -19088,7 +19088,7 @@ Module .. ROOT 0,0 -> 0,5
       .ctx Load
 """),
 
-(r"""a[::]""", 'body[0].value.slice', None, 'step', {'raw': False}, r"""**DEL**""", r"""a[::]""", r"""
+(r"""a[::]""", 'body[0].value.slice', None, 'step', {}, r"""**DEL**""", r"""a[::]""", r"""
 Module .. ROOT 0,0 -> 0,5
   .body[1]
   0] Expr .. 0,0 -> 0,5
@@ -19098,7 +19098,7 @@ Module .. ROOT 0,0 -> 0,5
       .ctx Load
 """),
 
-(r"""a[::]""", 'body[0].value.slice', None, 'step', {'raw': False}, r"""new""", r"""a[::new]""", r"""
+(r"""a[::]""", 'body[0].value.slice', None, 'step', {}, r"""new""", r"""a[::new]""", r"""
 Module .. ROOT 0,0 -> 0,8
   .body[1]
   0] Expr .. 0,0 -> 0,8
@@ -19109,7 +19109,7 @@ Module .. ROOT 0,0 -> 0,8
       .ctx Load
 """),
 
-(r"""a[:]""", 'body[0].value.slice', None, 'step', {'raw': False}, r"""new""", r"""a[::new]""", r"""
+(r"""a[:]""", 'body[0].value.slice', None, 'step', {}, r"""new""", r"""a[::new]""", r"""
 Module .. ROOT 0,0 -> 0,8
   .body[1]
   0] Expr .. 0,0 -> 0,8
@@ -19120,7 +19120,7 @@ Module .. ROOT 0,0 -> 0,8
       .ctx Load
 """),
 
-(r"""a[ :: ]""", 'body[0].value.slice', None, 'step', {'raw': False}, r"""new""", r"""a[ ::new ]""", r"""
+(r"""a[ :: ]""", 'body[0].value.slice', None, 'step', {}, r"""new""", r"""a[ ::new ]""", r"""
 Module .. ROOT 0,0 -> 0,10
   .body[1]
   0] Expr .. 0,0 -> 0,10
@@ -19131,7 +19131,7 @@ Module .. ROOT 0,0 -> 0,10
       .ctx Load
 """),
 
-(r"""a[ : ]""", 'body[0].value.slice', None, 'step', {'raw': False}, r"""new""", r"""a[ ::new ]""", r"""
+(r"""a[ : ]""", 'body[0].value.slice', None, 'step', {}, r"""new""", r"""a[ ::new ]""", r"""
 Module .. ROOT 0,0 -> 0,10
   .body[1]
   0] Expr .. 0,0 -> 0,10
@@ -19142,7 +19142,7 @@ Module .. ROOT 0,0 -> 0,10
       .ctx Load
 """),
 
-(r"""a[ :: b ]""", 'body[0].value.slice', None, 'step', {'raw': False}, r"""**DEL**""", r"""a[ :: ]""", r"""
+(r"""a[ :: b ]""", 'body[0].value.slice', None, 'step', {}, r"""**DEL**""", r"""a[ :: ]""", r"""
 Module .. ROOT 0,0 -> 0,7
   .body[1]
   0] Expr .. 0,0 -> 0,7
@@ -19152,7 +19152,7 @@ Module .. ROOT 0,0 -> 0,7
       .ctx Load
 """),
 
-(r"""a[ : : ]""", 'body[0].value.slice', None, 'step', {'raw': False}, r"""new""", r"""a[ : :new ]""", r"""
+(r"""a[ : : ]""", 'body[0].value.slice', None, 'step', {}, r"""new""", r"""a[ : :new ]""", r"""
 Module .. ROOT 0,0 -> 0,11
   .body[1]
   0] Expr .. 0,0 -> 0,11
@@ -19163,7 +19163,7 @@ Module .. ROOT 0,0 -> 0,11
       .ctx Load
 """),
 
-(r"""a[ : b : ]""", 'body[0].value.slice', None, 'step', {'raw': False}, r"""**DEL**""", r"""a[ : b : ]""", r"""
+(r"""a[ : b : ]""", 'body[0].value.slice', None, 'step', {}, r"""**DEL**""", r"""a[ : b : ]""", r"""
 Module .. ROOT 0,0 -> 0,10
   .body[1]
   0] Expr .. 0,0 -> 0,10
@@ -19174,7 +19174,7 @@ Module .. ROOT 0,0 -> 0,10
       .ctx Load
 """),
 
-(r"""a[:b]""", 'body[0].value.slice', None, 'step', {'raw': False}, r"""new""", r"""a[:b:new]""", r"""
+(r"""a[:b]""", 'body[0].value.slice', None, 'step', {}, r"""new""", r"""a[:b:new]""", r"""
 Module .. ROOT 0,0 -> 0,9
   .body[1]
   0] Expr .. 0,0 -> 0,9
@@ -19186,7 +19186,7 @@ Module .. ROOT 0,0 -> 0,9
       .ctx Load
 """),
 
-(r"""a[:(b)]""", 'body[0].value.slice', None, 'step', {'raw': False}, r"""new""", r"""a[:(b):new]""", r"""
+(r"""a[:(b)]""", 'body[0].value.slice', None, 'step', {}, r"""new""", r"""a[:(b):new]""", r"""
 Module .. ROOT 0,0 -> 0,11
   .body[1]
   0] Expr .. 0,0 -> 0,11
@@ -19198,7 +19198,7 @@ Module .. ROOT 0,0 -> 0,11
       .ctx Load
 """),
 
-(r"""a[:b]""", 'body[0].value.slice', None, 'step', {'raw': False}, r"""**DEL**""", r"""a[:b]""", r"""
+(r"""a[:b]""", 'body[0].value.slice', None, 'step', {}, r"""**DEL**""", r"""a[:b]""", r"""
 Module .. ROOT 0,0 -> 0,5
   .body[1]
   0] Expr .. 0,0 -> 0,5
@@ -19209,7 +19209,7 @@ Module .. ROOT 0,0 -> 0,5
       .ctx Load
 """),
 
-(r"""a[:(b)]""", 'body[0].value.slice', None, 'step', {'raw': False}, r"""**DEL**""", r"""a[:(b)]""", r"""
+(r"""a[:(b)]""", 'body[0].value.slice', None, 'step', {}, r"""**DEL**""", r"""a[:(b)]""", r"""
 Module .. ROOT 0,0 -> 0,7
   .body[1]
   0] Expr .. 0,0 -> 0,7
@@ -19220,7 +19220,7 @@ Module .. ROOT 0,0 -> 0,7
       .ctx Load
 """),
 
-(r"""a[:':']""", 'body[0].value.slice', None, 'step', {'raw': False}, r"""new""", r"""a[:':':new]""", r"""
+(r"""a[:':']""", 'body[0].value.slice', None, 'step', {}, r"""new""", r"""a[:':':new]""", r"""
 Module .. ROOT 0,0 -> 0,11
   .body[1]
   0] Expr .. 0,0 -> 0,11
@@ -19232,7 +19232,7 @@ Module .. ROOT 0,0 -> 0,11
       .ctx Load
 """),
 
-(r"""a[:':']""", 'body[0].value.slice', None, 'step', {'raw': False}, r"""**DEL**""", r"""a[:':']""", r"""
+(r"""a[:':']""", 'body[0].value.slice', None, 'step', {}, r"""**DEL**""", r"""a[:':']""", r"""
 Module .. ROOT 0,0 -> 0,7
   .body[1]
   0] Expr .. 0,0 -> 0,7
@@ -19243,7 +19243,7 @@ Module .. ROOT 0,0 -> 0,7
       .ctx Load
 """),
 
-(r"""a[:':':]""", 'body[0].value.slice', None, 'step', {'raw': False}, r"""new""", r"""a[:':':new]""", r"""
+(r"""a[:':':]""", 'body[0].value.slice', None, 'step', {}, r"""new""", r"""a[:':':new]""", r"""
 Module .. ROOT 0,0 -> 0,11
   .body[1]
   0] Expr .. 0,0 -> 0,11
@@ -19255,7 +19255,7 @@ Module .. ROOT 0,0 -> 0,11
       .ctx Load
 """),
 
-(r"""a[:':':]""", 'body[0].value.slice', None, 'step', {'raw': False}, r"""**DEL**""", r"""a[:':':]""", r"""
+(r"""a[:':':]""", 'body[0].value.slice', None, 'step', {}, r"""**DEL**""", r"""a[:':':]""", r"""
 Module .. ROOT 0,0 -> 0,8
   .body[1]
   0] Expr .. 0,0 -> 0,8
@@ -19266,7 +19266,7 @@ Module .. ROOT 0,0 -> 0,8
       .ctx Load
 """),
 
-(r"""a[::':']""", 'body[0].value.slice', None, 'step', {'raw': False}, r"""new""", r"""a[::new]""", r"""
+(r"""a[::':']""", 'body[0].value.slice', None, 'step', {}, r"""new""", r"""a[::new]""", r"""
 Module .. ROOT 0,0 -> 0,8
   .body[1]
   0] Expr .. 0,0 -> 0,8
@@ -19277,7 +19277,7 @@ Module .. ROOT 0,0 -> 0,8
       .ctx Load
 """),
 
-(r"""a[::':']""", 'body[0].value.slice', None, 'step', {'raw': False}, r"""**DEL**""", r"""a[::]""", r"""
+(r"""a[::':']""", 'body[0].value.slice', None, 'step', {}, r"""**DEL**""", r"""a[::]""", r"""
 Module .. ROOT 0,0 -> 0,5
   .body[1]
   0] Expr .. 0,0 -> 0,5
@@ -19287,7 +19287,7 @@ Module .. ROOT 0,0 -> 0,5
       .ctx Load
 """),
 
-(r"""a[":":':']""", 'body[0].value.slice', None, 'step', {'raw': False}, r"""new""", r"""a[":":':':new]""", r"""
+(r"""a[":":':']""", 'body[0].value.slice', None, 'step', {}, r"""new""", r"""a[":":':':new]""", r"""
 Module .. ROOT 0,0 -> 0,14
   .body[1]
   0] Expr .. 0,0 -> 0,14
@@ -19300,7 +19300,7 @@ Module .. ROOT 0,0 -> 0,14
       .ctx Load
 """),
 
-(r"""a[":":':']""", 'body[0].value.slice', None, 'step', {'raw': False}, r"""**DEL**""", r"""a[":":':']""", r"""
+(r"""a[":":':']""", 'body[0].value.slice', None, 'step', {}, r"""**DEL**""", r"""a[":":':']""", r"""
 Module .. ROOT 0,0 -> 0,10
   .body[1]
   0] Expr .. 0,0 -> 0,10
@@ -19312,7 +19312,7 @@ Module .. ROOT 0,0 -> 0,10
       .ctx Load
 """),
 
-(r"""a[":":':':]""", 'body[0].value.slice', None, 'step', {'raw': False}, r"""new""", r"""a[":":':':new]""", r"""
+(r"""a[":":':':]""", 'body[0].value.slice', None, 'step', {}, r"""new""", r"""a[":":':':new]""", r"""
 Module .. ROOT 0,0 -> 0,14
   .body[1]
   0] Expr .. 0,0 -> 0,14
@@ -19325,7 +19325,7 @@ Module .. ROOT 0,0 -> 0,14
       .ctx Load
 """),
 
-(r"""a[":":':':]""", 'body[0].value.slice', None, 'step', {'raw': False}, r"""**DEL**""", r"""a[":":':':]""", r"""
+(r"""a[":":':':]""", 'body[0].value.slice', None, 'step', {}, r"""**DEL**""", r"""a[":":':':]""", r"""
 Module .. ROOT 0,0 -> 0,11
   .body[1]
   0] Expr .. 0,0 -> 0,11
@@ -19337,7 +19337,7 @@ Module .. ROOT 0,0 -> 0,11
       .ctx Load
 """),
 
-(r"""a[":"::':']""", 'body[0].value.slice', None, 'step', {'raw': False}, r"""new""", r"""a[":"::new]""", r"""
+(r"""a[":"::':']""", 'body[0].value.slice', None, 'step', {}, r"""new""", r"""a[":"::new]""", r"""
 Module .. ROOT 0,0 -> 0,11
   .body[1]
   0] Expr .. 0,0 -> 0,11
@@ -19349,7 +19349,7 @@ Module .. ROOT 0,0 -> 0,11
       .ctx Load
 """),
 
-(r"""a[":"::':']""", 'body[0].value.slice', None, 'step', {'raw': False}, r"""**DEL**""", r"""a[":"::]""", r"""
+(r"""a[":"::':']""", 'body[0].value.slice', None, 'step', {}, r"""**DEL**""", r"""a[":"::]""", r"""
 Module .. ROOT 0,0 -> 0,8
   .body[1]
   0] Expr .. 0,0 -> 0,8
@@ -19360,83 +19360,83 @@ Module .. ROOT 0,0 -> 0,8
       .ctx Load
 """),
 
-(r"""...""", 'body[0].value', None, None, {'raw': False}, r"""**DEL**""", r"""**ValueError('cannot delete Constant.value')**""", r"""
+(r"""...""", 'body[0].value', None, None, {}, r"""**DEL**""", r"""**ValueError('cannot delete Constant.value')**""", r"""
 """),
 
 (r"""...""", 'body[0].value', None, None, {'raw': False}, r"""new""", r"""**NodeError('expecting a Constant for Constant.value, got Name')**""", r"""
 """),
 
-(r"""...""", 'body[0].value', None, None, {'raw': False}, r"""...""", r"""...""", r"""
+(r"""...""", 'body[0].value', None, None, {}, r"""...""", r"""...""", r"""
 Module .. ROOT 0,0 -> 0,3
   .body[1]
   0] Expr .. 0,0 -> 0,3
     .value Constant Ellipsis .. 0,0 -> 0,3
 """),
 
-(r"""...""", 'body[0].value', None, None, {'raw': False}, r"""1""", r"""1""", r"""
+(r"""...""", 'body[0].value', None, None, {}, r"""1""", r"""1""", r"""
 Module .. ROOT 0,0 -> 0,1
   .body[1]
   0] Expr .. 0,0 -> 0,1
     .value Constant 1 .. 0,0 -> 0,1
 """),
 
-(r"""...""", 'body[0].value', None, None, {'raw': False}, r"""1.0""", r"""1.0""", r"""
+(r"""...""", 'body[0].value', None, None, {}, r"""1.0""", r"""1.0""", r"""
 Module .. ROOT 0,0 -> 0,3
   .body[1]
   0] Expr .. 0,0 -> 0,3
     .value Constant 1.0 .. 0,0 -> 0,3
 """),
 
-(r"""...""", 'body[0].value', None, None, {'raw': False}, r"""1j""", r"""1j""", r"""
+(r"""...""", 'body[0].value', None, None, {}, r"""1j""", r"""1j""", r"""
 Module .. ROOT 0,0 -> 0,2
   .body[1]
   0] Expr .. 0,0 -> 0,2
     .value Constant 1j .. 0,0 -> 0,2
 """),
 
-(r"""...""", 'body[0].value', None, None, {'raw': False}, r"""'str'""", r"""'str'""", r"""
+(r"""...""", 'body[0].value', None, None, {}, r"""'str'""", r"""'str'""", r"""
 Module .. ROOT 0,0 -> 0,5
   .body[1]
   0] Expr .. 0,0 -> 0,5
     .value Constant 'str' .. 0,0 -> 0,5
 """),
 
-(r"""...""", 'body[0].value', None, None, {'raw': False}, r"""b'bytes'""", r"""b'bytes'""", r"""
+(r"""...""", 'body[0].value', None, None, {}, r"""b'bytes'""", r"""b'bytes'""", r"""
 Module .. ROOT 0,0 -> 0,8
   .body[1]
   0] Expr .. 0,0 -> 0,8
     .value Constant b'bytes' .. 0,0 -> 0,8
 """),
 
-(r"""...""", 'body[0].value', None, None, {'raw': False}, r"""True""", r"""True""", r"""
+(r"""...""", 'body[0].value', None, None, {}, r"""True""", r"""True""", r"""
 Module .. ROOT 0,0 -> 0,4
   .body[1]
   0] Expr .. 0,0 -> 0,4
     .value Constant True .. 0,0 -> 0,4
 """),
 
-(r"""...""", 'body[0].value', None, None, {'raw': False}, r"""False""", r"""False""", r"""
+(r"""...""", 'body[0].value', None, None, {}, r"""False""", r"""False""", r"""
 Module .. ROOT 0,0 -> 0,5
   .body[1]
   0] Expr .. 0,0 -> 0,5
     .value Constant False .. 0,0 -> 0,5
 """),
 
-(r"""...""", 'body[0].value', None, None, {'raw': False}, r"""None""", r"""None""", r"""
+(r"""...""", 'body[0].value', None, None, {}, r"""None""", r"""None""", r"""
 Module .. ROOT 0,0 -> 0,4
   .body[1]
   0] Expr .. 0,0 -> 0,4
     .value Constant None .. 0,0 -> 0,4
 """),
 
-(r"""None""", 'body[0].value', None, None, {'raw': False}, r"""...""", r"""...""", r"""
+(r"""None""", 'body[0].value', None, None, {}, r"""...""", r"""...""", r"""
 Module .. ROOT 0,0 -> 0,3
   .body[1]
   0] Expr .. 0,0 -> 0,3
     .value Constant Ellipsis .. 0,0 -> 0,3
 """),
 
-(r"""a.b""", 'body[0].value', None, 'attr', {'raw': False}, r"""new""", r"""a.new""", r"""
+(r"""a.b""", 'body[0].value', None, 'attr', {}, r"""new""", r"""a.new""", r"""
 Module .. ROOT 0,0 -> 0,5
   .body[1]
   0] Expr .. 0,0 -> 0,5
@@ -19446,7 +19446,7 @@ Module .. ROOT 0,0 -> 0,5
       .ctx Load
 """),
 
-(r"""(a).b""", 'body[0].value', None, 'attr', {'raw': False}, r"""new""", r"""(a).new""", r"""
+(r"""(a).b""", 'body[0].value', None, 'attr', {}, r"""new""", r"""(a).new""", r"""
 Module .. ROOT 0,0 -> 0,7
   .body[1]
   0] Expr .. 0,0 -> 0,7
@@ -19456,7 +19456,7 @@ Module .. ROOT 0,0 -> 0,7
       .ctx Load
 """),
 
-(r"""(a) . b""", 'body[0].value', None, 'attr', {'raw': False}, r"""new""", r"""(a) . new""", r"""
+(r"""(a) . b""", 'body[0].value', None, 'attr', {}, r"""new""", r"""(a) . new""", r"""
 Module .. ROOT 0,0 -> 0,9
   .body[1]
   0] Expr .. 0,0 -> 0,9
@@ -19466,21 +19466,21 @@ Module .. ROOT 0,0 -> 0,9
       .ctx Load
 """),
 
-(r"""a.b""", 'body[0].value', None, 'attr', {'raw': False}, r"""**DEL**""", r"""**ValueError('cannot delete Attribute.attr')**""", r"""
+(r"""a.b""", 'body[0].value', None, 'attr', {}, r"""**DEL**""", r"""**ValueError('cannot delete Attribute.attr')**""", r"""
 """),
 
-(r"""a""", 'body[0].value', None, None, {'raw': False}, r"""new""", r"""new""", r"""
+(r"""a""", 'body[0].value', None, None, {}, r"""new""", r"""new""", r"""
 Module .. ROOT 0,0 -> 0,3
   .body[1]
   0] Expr .. 0,0 -> 0,3
     .value Name 'new' Load .. 0,0 -> 0,3
 """),
 
-(r"""a""", 'body[0].value', None, None, {'raw': False}, r"""**DEL**""", r"""**ValueError('cannot delete Name.id')**""", r"""
+(r"""a""", 'body[0].value', None, None, {}, r"""**DEL**""", r"""**ValueError('cannot delete Name.id')**""", r"""
 """),
 
 (r"""try: pass
-except e: pass""", 'body[0].handlers[0]', None, 'type', {'raw': False}, r"""new""", r"""try: pass
+except e: pass""", 'body[0].handlers[0]', None, 'type', {}, r"""new""", r"""try: pass
 except new: pass""", r"""
 Module .. ROOT 0,0 -> 1,16
   .body[1]
@@ -19495,7 +19495,7 @@ Module .. ROOT 0,0 -> 1,16
 """),
 
 (r"""try: pass
-except (e): pass""", 'body[0].handlers[0]', None, 'type', {'raw': False}, r"""new""", r"""try: pass
+except (e): pass""", 'body[0].handlers[0]', None, 'type', {}, r"""new""", r"""try: pass
 except new: pass""", r"""
 Module .. ROOT 0,0 -> 1,16
   .body[1]
@@ -19510,7 +19510,7 @@ Module .. ROOT 0,0 -> 1,16
 """),
 
 (r"""try: pass
-except e: pass""", 'body[0].handlers[0]', None, 'type', {'raw': False}, r"""**DEL**""", r"""try: pass
+except e: pass""", 'body[0].handlers[0]', None, 'type', {}, r"""**DEL**""", r"""try: pass
 except: pass""", r"""
 Module .. ROOT 0,0 -> 1,12
   .body[1]
@@ -19524,7 +19524,7 @@ Module .. ROOT 0,0 -> 1,12
 """),
 
 (r"""try: pass
-except (e): pass""", 'body[0].handlers[0]', None, 'type', {'raw': False}, r"""**DEL**""", r"""try: pass
+except (e): pass""", 'body[0].handlers[0]', None, 'type', {}, r"""**DEL**""", r"""try: pass
 except: pass""", r"""
 Module .. ROOT 0,0 -> 1,12
   .body[1]
@@ -19538,11 +19538,11 @@ Module .. ROOT 0,0 -> 1,12
 """),
 
 (r"""try: pass
-except e as n: pass""", 'body[0].handlers[0]', None, 'type', {'raw': False}, r"""**DEL**""", r"""**ValueError('cannot delete ExceptHandler.type in this state')**""", r"""
+except e as n: pass""", 'body[0].handlers[0]', None, 'type', {}, r"""**DEL**""", r"""**ValueError('cannot delete ExceptHandler.type in this state')**""", r"""
 """),
 
 (r"""try: pass
-except: pass""", 'body[0].handlers[0]', None, 'type', {'raw': False}, r"""**DEL**""", r"""try: pass
+except: pass""", 'body[0].handlers[0]', None, 'type', {}, r"""**DEL**""", r"""try: pass
 except: pass""", r"""
 Module .. ROOT 0,0 -> 1,12
   .body[1]
@@ -19556,7 +19556,7 @@ Module .. ROOT 0,0 -> 1,12
 """),
 
 (r"""try: pass
-except: pass""", 'body[0].handlers[0]', None, 'type', {'raw': False}, r"""new""", r"""try: pass
+except: pass""", 'body[0].handlers[0]', None, 'type', {}, r"""new""", r"""try: pass
 except new: pass""", r"""
 Module .. ROOT 0,0 -> 1,16
   .body[1]
@@ -19571,7 +19571,7 @@ Module .. ROOT 0,0 -> 1,16
 """),
 
 (r"""try: pass
-except e as n: pass""", 'body[0].handlers[0]', None, 'type', {'raw': False}, r"""new""", r"""try: pass
+except e as n: pass""", 'body[0].handlers[0]', None, 'type', {}, r"""new""", r"""try: pass
 except new as n: pass""", r"""
 Module .. ROOT 0,0 -> 1,21
   .body[1]
@@ -19587,7 +19587,7 @@ Module .. ROOT 0,0 -> 1,21
 """),
 
 (r"""try: pass
-except (e) as n: pass""", 'body[0].handlers[0]', None, 'type', {'raw': False}, r"""new""", r"""try: pass
+except (e) as n: pass""", 'body[0].handlers[0]', None, 'type', {}, r"""new""", r"""try: pass
 except new as n: pass""", r"""
 Module .. ROOT 0,0 -> 1,21
   .body[1]
@@ -19603,7 +19603,7 @@ Module .. ROOT 0,0 -> 1,21
 """),
 
 (r"""try: pass
-except e as n: pass""", 'body[0].handlers[0]', None, 'name', {'raw': False}, r"""new""", r"""try: pass
+except e as n: pass""", 'body[0].handlers[0]', None, 'name', {}, r"""new""", r"""try: pass
 except e as new: pass""", r"""
 Module .. ROOT 0,0 -> 1,21
   .body[1]
@@ -19619,7 +19619,7 @@ Module .. ROOT 0,0 -> 1,21
 """),
 
 (r"""try: pass
-except (e) as a: pass""", 'body[0].handlers[0]', None, 'name', {'raw': False}, r"""new""", r"""try: pass
+except (e) as a: pass""", 'body[0].handlers[0]', None, 'name', {}, r"""new""", r"""try: pass
 except (e) as new: pass""", r"""
 Module .. ROOT 0,0 -> 1,23
   .body[1]
@@ -19635,7 +19635,7 @@ Module .. ROOT 0,0 -> 1,23
 """),
 
 (r"""try: pass
-except e as n: pass""", 'body[0].handlers[0]', None, 'name', {'raw': False}, r"""**DEL**""", r"""try: pass
+except e as n: pass""", 'body[0].handlers[0]', None, 'name', {}, r"""**DEL**""", r"""try: pass
 except e: pass""", r"""
 Module .. ROOT 0,0 -> 1,14
   .body[1]
@@ -19650,7 +19650,7 @@ Module .. ROOT 0,0 -> 1,14
 """),
 
 (r"""try: pass
-except (e) as n: pass""", 'body[0].handlers[0]', None, 'name', {'raw': False}, r"""**DEL**""", r"""try: pass
+except (e) as n: pass""", 'body[0].handlers[0]', None, 'name', {}, r"""**DEL**""", r"""try: pass
 except (e): pass""", r"""
 Module .. ROOT 0,0 -> 1,16
   .body[1]
@@ -19665,7 +19665,7 @@ Module .. ROOT 0,0 -> 1,16
 """),
 
 (r"""try: pass
-except e: pass""", 'body[0].handlers[0]', None, 'name', {'raw': False}, r"""**DEL**""", r"""try: pass
+except e: pass""", 'body[0].handlers[0]', None, 'name', {}, r"""**DEL**""", r"""try: pass
 except e: pass""", r"""
 Module .. ROOT 0,0 -> 1,14
   .body[1]
@@ -19680,7 +19680,7 @@ Module .. ROOT 0,0 -> 1,14
 """),
 
 (r"""try: pass
-except (e): pass""", 'body[0].handlers[0]', None, 'name', {'raw': False}, r"""**DEL**""", r"""try: pass
+except (e): pass""", 'body[0].handlers[0]', None, 'name', {}, r"""**DEL**""", r"""try: pass
 except (e): pass""", r"""
 Module .. ROOT 0,0 -> 1,16
   .body[1]
@@ -19695,7 +19695,7 @@ Module .. ROOT 0,0 -> 1,16
 """),
 
 (r"""try: pass
-except e: pass""", 'body[0].handlers[0]', None, 'name', {'raw': False}, r"""new""", r"""try: pass
+except e: pass""", 'body[0].handlers[0]', None, 'name', {}, r"""new""", r"""try: pass
 except e as new: pass""", r"""
 Module .. ROOT 0,0 -> 1,21
   .body[1]
@@ -19731,10 +19731,10 @@ Module .. ROOT 0,0 -> 1,26
 """),
 
 (r"""try: pass
-except: pass""", 'body[0].handlers[0]', None, 'name', {'raw': False}, r"""new""", r"""**ValueError('cannot create ExceptHandler.name in this state')**""", r"""
+except: pass""", 'body[0].handlers[0]', None, 'name', {}, r"""new""", r"""**ValueError('cannot create ExceptHandler.name in this state')**""", r"""
 """),
 
-(r"""from a import *""", 'body[0]', None, 'module', {'raw': False}, r"""new""", r"""from new import *""", r"""
+(r"""from a import *""", 'body[0]', None, 'module', {}, r"""new""", r"""from new import *""", r"""
 Module .. ROOT 0,0 -> 0,17
   .body[1]
   0] ImportFrom .. 0,0 -> 0,17
@@ -19745,7 +19745,7 @@ Module .. ROOT 0,0 -> 0,17
     .level 0
 """),
 
-(r"""from a import *""", 'body[0]', None, 'module', {'raw': False}, r"""x.y""", r"""from x.y import *""", r"""
+(r"""from a import *""", 'body[0]', None, 'module', {}, r"""x.y""", r"""from x.y import *""", r"""
 Module .. ROOT 0,0 -> 0,17
   .body[1]
   0] ImportFrom .. 0,0 -> 0,17
@@ -19756,10 +19756,10 @@ Module .. ROOT 0,0 -> 0,17
     .level 0
 """),
 
-(r"""from a import *""", 'body[0]', None, 'module', {'raw': False}, r"""**DEL**""", r"""**ValueError('cannot delete ImportFrom.module in this state')**""", r"""
+(r"""from a import *""", 'body[0]', None, 'module', {}, r"""**DEL**""", r"""**ValueError('cannot delete ImportFrom.module in this state')**""", r"""
 """),
 
-(r"""from .a import *""", 'body[0]', None, 'module', {'raw': False}, r"""new""", r"""from .new import *""", r"""
+(r"""from .a import *""", 'body[0]', None, 'module', {}, r"""new""", r"""from .new import *""", r"""
 Module .. ROOT 0,0 -> 0,18
   .body[1]
   0] ImportFrom .. 0,0 -> 0,18
@@ -19770,7 +19770,7 @@ Module .. ROOT 0,0 -> 0,18
     .level 1
 """),
 
-(r"""from .a import *""", 'body[0]', None, 'module', {'raw': False}, r"""x.y""", r"""from .x.y import *""", r"""
+(r"""from .a import *""", 'body[0]', None, 'module', {}, r"""x.y""", r"""from .x.y import *""", r"""
 Module .. ROOT 0,0 -> 0,18
   .body[1]
   0] ImportFrom .. 0,0 -> 0,18
@@ -19781,7 +19781,7 @@ Module .. ROOT 0,0 -> 0,18
     .level 1
 """),
 
-(r"""from .a import *""", 'body[0]', None, 'module', {'raw': False}, r"""**DEL**""", r"""from . import *""", r"""
+(r"""from .a import *""", 'body[0]', None, 'module', {}, r"""**DEL**""", r"""from . import *""", r"""
 Module .. ROOT 0,0 -> 0,15
   .body[1]
   0] ImportFrom .. 0,0 -> 0,15
@@ -19791,7 +19791,7 @@ Module .. ROOT 0,0 -> 0,15
     .level 1
 """),
 
-(r"""from . a import *""", 'body[0]', None, 'module', {'raw': False}, r"""new""", r"""from . new import *""", r"""
+(r"""from . a import *""", 'body[0]', None, 'module', {}, r"""new""", r"""from . new import *""", r"""
 Module .. ROOT 0,0 -> 0,19
   .body[1]
   0] ImportFrom .. 0,0 -> 0,19
@@ -19802,7 +19802,7 @@ Module .. ROOT 0,0 -> 0,19
     .level 1
 """),
 
-(r"""from . a import *""", 'body[0]', None, 'module', {'raw': False}, r"""x.y""", r"""from . x.y import *""", r"""
+(r"""from . a import *""", 'body[0]', None, 'module', {}, r"""x.y""", r"""from . x.y import *""", r"""
 Module .. ROOT 0,0 -> 0,19
   .body[1]
   0] ImportFrom .. 0,0 -> 0,19
@@ -19813,7 +19813,7 @@ Module .. ROOT 0,0 -> 0,19
     .level 1
 """),
 
-(r"""from . a import *""", 'body[0]', None, 'module', {'raw': False}, r"""**DEL**""", r"""from .  import *""", r"""
+(r"""from . a import *""", 'body[0]', None, 'module', {}, r"""**DEL**""", r"""from .  import *""", r"""
 Module .. ROOT 0,0 -> 0,16
   .body[1]
   0] ImportFrom .. 0,0 -> 0,16
@@ -19823,7 +19823,7 @@ Module .. ROOT 0,0 -> 0,16
     .level 1
 """),
 
-(r"""from . import *""", 'body[0]', None, 'module', {'raw': False}, r"""new""", r"""from .new import *""", r"""
+(r"""from . import *""", 'body[0]', None, 'module', {}, r"""new""", r"""from .new import *""", r"""
 Module .. ROOT 0,0 -> 0,18
   .body[1]
   0] ImportFrom .. 0,0 -> 0,18
@@ -19836,7 +19836,7 @@ Module .. ROOT 0,0 -> 0,18
 
 (r"""from . \
  .\
-a import *""", 'body[0]', None, 'module', {'raw': False}, r"""new""", r"""from . \
+a import *""", 'body[0]', None, 'module', {}, r"""new""", r"""from . \
  .\
 new import *""", r"""
 Module .. ROOT 0,0 -> 2,12
@@ -19851,7 +19851,7 @@ Module .. ROOT 0,0 -> 2,12
 
 (r"""from . \
 .\
-  a import *""", 'body[0]', None, 'module', {'raw': False}, r"""**DEL**""", r"""from . \
+  a import *""", 'body[0]', None, 'module', {}, r"""**DEL**""", r"""from . \
 .\
    import *""", r"""
 Module .. ROOT 0,0 -> 2,11
@@ -19865,7 +19865,7 @@ Module .. ROOT 0,0 -> 2,11
 
 (r"""from . \
  . \
- import *""", 'body[0]', None, 'module', {'raw': False}, r"""new""", r"""from . \
+ import *""", 'body[0]', None, 'module', {}, r"""new""", r"""from . \
  .new \
  import *""", r"""
 Module .. ROOT 0,0 -> 2,9
@@ -19878,10 +19878,10 @@ Module .. ROOT 0,0 -> 2,9
     .level 2
 """),
 
-(r"""from a.b import c""", 'body[0]', None, 'module', {'raw': False}, r"""**DEL**""", r"""**ValueError('cannot delete ImportFrom.module in this state')**""", r"""
+(r"""from a.b import c""", 'body[0]', None, 'module', {}, r"""**DEL**""", r"""**ValueError('cannot delete ImportFrom.module in this state')**""", r"""
 """),
 
-(r"""from a.b import c""", 'body[0]', None, 'module', {'raw': False}, r"""new""", r"""from new import c""", r"""
+(r"""from a.b import c""", 'body[0]', None, 'module', {}, r"""new""", r"""from new import c""", r"""
 Module .. ROOT 0,0 -> 0,17
   .body[1]
   0] ImportFrom .. 0,0 -> 0,17
@@ -19892,7 +19892,7 @@ Module .. ROOT 0,0 -> 0,17
     .level 0
 """),
 
-(r"""from a.b import c""", 'body[0]', None, 'module', {'raw': False}, r"""x.y""", r"""from x.y import c""", r"""
+(r"""from a.b import c""", 'body[0]', None, 'module', {}, r"""x.y""", r"""from x.y import c""", r"""
 Module .. ROOT 0,0 -> 0,17
   .body[1]
   0] ImportFrom .. 0,0 -> 0,17
@@ -19903,7 +19903,7 @@ Module .. ROOT 0,0 -> 0,17
     .level 0
 """),
 
-(r"""from .a.b import c""", 'body[0]', None, 'module', {'raw': False}, r"""**DEL**""", r"""from . import c""", r"""
+(r"""from .a.b import c""", 'body[0]', None, 'module', {}, r"""**DEL**""", r"""from . import c""", r"""
 Module .. ROOT 0,0 -> 0,15
   .body[1]
   0] ImportFrom .. 0,0 -> 0,15
@@ -19913,7 +19913,7 @@ Module .. ROOT 0,0 -> 0,15
     .level 1
 """),
 
-(r"""from .a.b import c""", 'body[0]', None, 'module', {'raw': False}, r"""new""", r"""from .new import c""", r"""
+(r"""from .a.b import c""", 'body[0]', None, 'module', {}, r"""new""", r"""from .new import c""", r"""
 Module .. ROOT 0,0 -> 0,18
   .body[1]
   0] ImportFrom .. 0,0 -> 0,18
@@ -19924,7 +19924,7 @@ Module .. ROOT 0,0 -> 0,18
     .level 1
 """),
 
-(r"""from .a.b import c""", 'body[0]', None, 'module', {'raw': False}, r"""x.y""", r"""from .x.y import c""", r"""
+(r"""from .a.b import c""", 'body[0]', None, 'module', {}, r"""x.y""", r"""from .x.y import c""", r"""
 Module .. ROOT 0,0 -> 0,18
   .body[1]
   0] ImportFrom .. 0,0 -> 0,18
@@ -19935,7 +19935,7 @@ Module .. ROOT 0,0 -> 0,18
     .level 1
 """),
 
-(r"""from ..a.b import c""", 'body[0]', None, 'module', {'raw': False}, r"""**DEL**""", r"""from .. import c""", r"""
+(r"""from ..a.b import c""", 'body[0]', None, 'module', {}, r"""**DEL**""", r"""from .. import c""", r"""
 Module .. ROOT 0,0 -> 0,16
   .body[1]
   0] ImportFrom .. 0,0 -> 0,16
@@ -19945,7 +19945,7 @@ Module .. ROOT 0,0 -> 0,16
     .level 2
 """),
 
-(r"""from ..a.b import c""", 'body[0]', None, 'module', {'raw': False}, r"""new""", r"""from ..new import c""", r"""
+(r"""from ..a.b import c""", 'body[0]', None, 'module', {}, r"""new""", r"""from ..new import c""", r"""
 Module .. ROOT 0,0 -> 0,19
   .body[1]
   0] ImportFrom .. 0,0 -> 0,19
@@ -19956,7 +19956,7 @@ Module .. ROOT 0,0 -> 0,19
     .level 2
 """),
 
-(r"""from ..a.b import c""", 'body[0]', None, 'module', {'raw': False}, r"""x.y""", r"""from ..x.y import c""", r"""
+(r"""from ..a.b import c""", 'body[0]', None, 'module', {}, r"""x.y""", r"""from ..x.y import c""", r"""
 Module .. ROOT 0,0 -> 0,19
   .body[1]
   0] ImportFrom .. 0,0 -> 0,19
@@ -19967,7 +19967,7 @@ Module .. ROOT 0,0 -> 0,19
     .level 2
 """),
 
-(r"""import a as b""", 'body[0].names[0]', None, 'asname', {'raw': False}, r"""new""", r"""import a as new""", r"""
+(r"""import a as b""", 'body[0].names[0]', None, 'asname', {}, r"""new""", r"""import a as new""", r"""
 Module .. ROOT 0,0 -> 0,15
   .body[1]
   0] Import .. 0,0 -> 0,15
@@ -19978,7 +19978,7 @@ Module .. ROOT 0,0 -> 0,15
         'new'
 """),
 
-(r"""import a as b""", 'body[0].names[0]', None, 'asname', {'raw': False}, r"""**DEL**""", r"""import a""", r"""
+(r"""import a as b""", 'body[0].names[0]', None, 'asname', {}, r"""**DEL**""", r"""import a""", r"""
 Module .. ROOT 0,0 -> 0,8
   .body[1]
   0] Import .. 0,0 -> 0,8
@@ -19987,7 +19987,7 @@ Module .. ROOT 0,0 -> 0,8
       .name 'a'
 """),
 
-(r"""import a""", 'body[0].names[0]', None, 'asname', {'raw': False}, r"""new""", r"""import a as new""", r"""
+(r"""import a""", 'body[0].names[0]', None, 'asname', {}, r"""new""", r"""import a as new""", r"""
 Module .. ROOT 0,0 -> 0,15
   .body[1]
   0] Import .. 0,0 -> 0,15
@@ -19998,7 +19998,7 @@ Module .. ROOT 0,0 -> 0,15
         'new'
 """),
 
-(r"""import a""", 'body[0].names[0]', None, 'asname', {'raw': False}, r"""**DEL**""", r"""import a""", r"""
+(r"""import a""", 'body[0].names[0]', None, 'asname', {}, r"""**DEL**""", r"""import a""", r"""
 Module .. ROOT 0,0 -> 0,8
   .body[1]
   0] Import .. 0,0 -> 0,8
@@ -20007,7 +20007,7 @@ Module .. ROOT 0,0 -> 0,8
       .name 'a'
 """),
 
-(r"""import a as b, c""", 'body[0].names[0]', None, 'asname', {'raw': False}, r"""new""", r"""import a as new, c""", r"""
+(r"""import a as b, c""", 'body[0].names[0]', None, 'asname', {}, r"""new""", r"""import a as new, c""", r"""
 Module .. ROOT 0,0 -> 0,18
   .body[1]
   0] Import .. 0,0 -> 0,18
@@ -20020,7 +20020,7 @@ Module .. ROOT 0,0 -> 0,18
       .name 'c'
 """),
 
-(r"""import a as b, c""", 'body[0].names[0]', None, 'asname', {'raw': False}, r"""**DEL**""", r"""import a, c""", r"""
+(r"""import a as b, c""", 'body[0].names[0]', None, 'asname', {}, r"""**DEL**""", r"""import a, c""", r"""
 Module .. ROOT 0,0 -> 0,11
   .body[1]
   0] Import .. 0,0 -> 0,11
@@ -20031,7 +20031,7 @@ Module .. ROOT 0,0 -> 0,11
       .name 'c'
 """),
 
-(r"""import a, c""", 'body[0].names[0]', None, 'asname', {'raw': False}, r"""new""", r"""import a as new, c""", r"""
+(r"""import a, c""", 'body[0].names[0]', None, 'asname', {}, r"""new""", r"""import a as new, c""", r"""
 Module .. ROOT 0,0 -> 0,18
   .body[1]
   0] Import .. 0,0 -> 0,18
@@ -20044,7 +20044,7 @@ Module .. ROOT 0,0 -> 0,18
       .name 'c'
 """),
 
-(r"""import a, c""", 'body[0].names[0]', None, 'asname', {'raw': False}, r"""**DEL**""", r"""import a, c""", r"""
+(r"""import a, c""", 'body[0].names[0]', None, 'asname', {}, r"""**DEL**""", r"""import a, c""", r"""
 Module .. ROOT 0,0 -> 0,11
   .body[1]
   0] Import .. 0,0 -> 0,11
@@ -20055,7 +20055,7 @@ Module .. ROOT 0,0 -> 0,11
       .name 'c'
 """),
 
-(r"""import c, a as b""", 'body[0].names[1]', None, 'asname', {'raw': False}, r"""new""", r"""import c, a as new""", r"""
+(r"""import c, a as b""", 'body[0].names[1]', None, 'asname', {}, r"""new""", r"""import c, a as new""", r"""
 Module .. ROOT 0,0 -> 0,18
   .body[1]
   0] Import .. 0,0 -> 0,18
@@ -20068,7 +20068,7 @@ Module .. ROOT 0,0 -> 0,18
         'new'
 """),
 
-(r"""import c, a as b""", 'body[0].names[1]', None, 'asname', {'raw': False}, r"""**DEL**""", r"""import c, a""", r"""
+(r"""import c, a as b""", 'body[0].names[1]', None, 'asname', {}, r"""**DEL**""", r"""import c, a""", r"""
 Module .. ROOT 0,0 -> 0,11
   .body[1]
   0] Import .. 0,0 -> 0,11
@@ -20079,7 +20079,7 @@ Module .. ROOT 0,0 -> 0,11
       .name 'a'
 """),
 
-(r"""import c, a""", 'body[0].names[1]', None, 'asname', {'raw': False}, r"""new""", r"""import c, a as new""", r"""
+(r"""import c, a""", 'body[0].names[1]', None, 'asname', {}, r"""new""", r"""import c, a as new""", r"""
 Module .. ROOT 0,0 -> 0,18
   .body[1]
   0] Import .. 0,0 -> 0,18
@@ -20092,7 +20092,7 @@ Module .. ROOT 0,0 -> 0,18
         'new'
 """),
 
-(r"""import c, a""", 'body[0].names[1]', None, 'asname', {'raw': False}, r"""**DEL**""", r"""import c, a""", r"""
+(r"""import c, a""", 'body[0].names[1]', None, 'asname', {}, r"""**DEL**""", r"""import c, a""", r"""
 Module .. ROOT 0,0 -> 0,11
   .body[1]
   0] Import .. 0,0 -> 0,11
@@ -20103,7 +20103,7 @@ Module .. ROOT 0,0 -> 0,11
       .name 'a'
 """),
 
-(r"""from z import (a as b)""", 'body[0].names[0]', None, 'asname', {'raw': False}, r"""new""", r"""from z import (a as new)""", r"""
+(r"""from z import (a as b)""", 'body[0].names[0]', None, 'asname', {}, r"""new""", r"""from z import (a as new)""", r"""
 Module .. ROOT 0,0 -> 0,24
   .body[1]
   0] ImportFrom .. 0,0 -> 0,24
@@ -20116,7 +20116,7 @@ Module .. ROOT 0,0 -> 0,24
     .level 0
 """),
 
-(r"""from z import (a as b)""", 'body[0].names[0]', None, 'asname', {'raw': False}, r"""**DEL**""", r"""from z import (a)""", r"""
+(r"""from z import (a as b)""", 'body[0].names[0]', None, 'asname', {}, r"""**DEL**""", r"""from z import (a)""", r"""
 Module .. ROOT 0,0 -> 0,17
   .body[1]
   0] ImportFrom .. 0,0 -> 0,17
@@ -20127,7 +20127,7 @@ Module .. ROOT 0,0 -> 0,17
     .level 0
 """),
 
-(r"""from z import (a)""", 'body[0].names[0]', None, 'asname', {'raw': False}, r"""new""", r"""from z import (a as new)""", r"""
+(r"""from z import (a)""", 'body[0].names[0]', None, 'asname', {}, r"""new""", r"""from z import (a as new)""", r"""
 Module .. ROOT 0,0 -> 0,24
   .body[1]
   0] ImportFrom .. 0,0 -> 0,24
@@ -20140,7 +20140,7 @@ Module .. ROOT 0,0 -> 0,24
     .level 0
 """),
 
-(r"""from z import (a)""", 'body[0].names[0]', None, 'asname', {'raw': False}, r"""**DEL**""", r"""from z import (a)""", r"""
+(r"""from z import (a)""", 'body[0].names[0]', None, 'asname', {}, r"""**DEL**""", r"""from z import (a)""", r"""
 Module .. ROOT 0,0 -> 0,17
   .body[1]
   0] ImportFrom .. 0,0 -> 0,17
@@ -20151,7 +20151,7 @@ Module .. ROOT 0,0 -> 0,17
     .level 0
 """),
 
-(r"""from z import (a as b, c)""", 'body[0].names[0]', None, 'asname', {'raw': False}, r"""new""", r"""from z import (a as new, c)""", r"""
+(r"""from z import (a as b, c)""", 'body[0].names[0]', None, 'asname', {}, r"""new""", r"""from z import (a as new, c)""", r"""
 Module .. ROOT 0,0 -> 0,27
   .body[1]
   0] ImportFrom .. 0,0 -> 0,27
@@ -20166,7 +20166,7 @@ Module .. ROOT 0,0 -> 0,27
     .level 0
 """),
 
-(r"""from z import (a as b, c)""", 'body[0].names[0]', None, 'asname', {'raw': False}, r"""**DEL**""", r"""from z import (a, c)""", r"""
+(r"""from z import (a as b, c)""", 'body[0].names[0]', None, 'asname', {}, r"""**DEL**""", r"""from z import (a, c)""", r"""
 Module .. ROOT 0,0 -> 0,20
   .body[1]
   0] ImportFrom .. 0,0 -> 0,20
@@ -20179,7 +20179,7 @@ Module .. ROOT 0,0 -> 0,20
     .level 0
 """),
 
-(r"""from z import (a, c)""", 'body[0].names[0]', None, 'asname', {'raw': False}, r"""new""", r"""from z import (a as new, c)""", r"""
+(r"""from z import (a, c)""", 'body[0].names[0]', None, 'asname', {}, r"""new""", r"""from z import (a as new, c)""", r"""
 Module .. ROOT 0,0 -> 0,27
   .body[1]
   0] ImportFrom .. 0,0 -> 0,27
@@ -20194,7 +20194,7 @@ Module .. ROOT 0,0 -> 0,27
     .level 0
 """),
 
-(r"""from z import (a, c)""", 'body[0].names[0]', None, 'asname', {'raw': False}, r"""**DEL**""", r"""from z import (a, c)""", r"""
+(r"""from z import (a, c)""", 'body[0].names[0]', None, 'asname', {}, r"""**DEL**""", r"""from z import (a, c)""", r"""
 Module .. ROOT 0,0 -> 0,20
   .body[1]
   0] ImportFrom .. 0,0 -> 0,20
@@ -20207,7 +20207,7 @@ Module .. ROOT 0,0 -> 0,20
     .level 0
 """),
 
-(r"""from z import (c, b as a)""", 'body[0].names[1]', None, 'asname', {'raw': False}, r"""new""", r"""from z import (c, b as new)""", r"""
+(r"""from z import (c, b as a)""", 'body[0].names[1]', None, 'asname', {}, r"""new""", r"""from z import (c, b as new)""", r"""
 Module .. ROOT 0,0 -> 0,27
   .body[1]
   0] ImportFrom .. 0,0 -> 0,27
@@ -20222,7 +20222,7 @@ Module .. ROOT 0,0 -> 0,27
     .level 0
 """),
 
-(r"""from z import (c, a as b)""", 'body[0].names[1]', None, 'asname', {'raw': False}, r"""**DEL**""", r"""from z import (c, a)""", r"""
+(r"""from z import (c, a as b)""", 'body[0].names[1]', None, 'asname', {}, r"""**DEL**""", r"""from z import (c, a)""", r"""
 Module .. ROOT 0,0 -> 0,20
   .body[1]
   0] ImportFrom .. 0,0 -> 0,20
@@ -20235,7 +20235,7 @@ Module .. ROOT 0,0 -> 0,20
     .level 0
 """),
 
-(r"""from z import (c, a)""", 'body[0].names[1]', None, 'asname', {'raw': False}, r"""new""", r"""from z import (c, a as new)""", r"""
+(r"""from z import (c, a)""", 'body[0].names[1]', None, 'asname', {}, r"""new""", r"""from z import (c, a as new)""", r"""
 Module .. ROOT 0,0 -> 0,27
   .body[1]
   0] ImportFrom .. 0,0 -> 0,27
@@ -20250,7 +20250,7 @@ Module .. ROOT 0,0 -> 0,27
     .level 0
 """),
 
-(r"""from z import (c, a)""", 'body[0].names[1]', None, 'asname', {'raw': False}, r"""**DEL**""", r"""from z import (c, a)""", r"""
+(r"""from z import (c, a)""", 'body[0].names[1]', None, 'asname', {}, r"""**DEL**""", r"""from z import (c, a)""", r"""
 Module .. ROOT 0,0 -> 0,20
   .body[1]
   0] ImportFrom .. 0,0 -> 0,20
@@ -20264,7 +20264,7 @@ Module .. ROOT 0,0 -> 0,20
 """),
 
 (r"""match a:
- case None: pass""", 'body[0].cases[0].pattern', None, None, {'raw': False}, r"""True""", r"""match a:
+ case None: pass""", 'body[0].cases[0].pattern', None, None, {}, r"""True""", r"""match a:
  case True: pass""", r"""
 Module .. ROOT 0,0 -> 1,16
   .body[1]
@@ -20279,7 +20279,7 @@ Module .. ROOT 0,0 -> 1,16
 """),
 
 (r"""match a:
- case None: pass""", 'body[0].cases[0].pattern', None, None, {'raw': False}, r"""False""", r"""match a:
+ case None: pass""", 'body[0].cases[0].pattern', None, None, {}, r"""False""", r"""match a:
  case False: pass""", r"""
 Module .. ROOT 0,0 -> 1,17
   .body[1]
@@ -20294,7 +20294,7 @@ Module .. ROOT 0,0 -> 1,17
 """),
 
 (r"""match a:
- case None: pass""", 'body[0].cases[0].pattern', None, None, {'raw': False}, r"""None""", r"""match a:
+ case None: pass""", 'body[0].cases[0].pattern', None, None, {}, r"""None""", r"""match a:
  case None: pass""", r"""
 Module .. ROOT 0,0 -> 1,16
   .body[1]
@@ -20312,11 +20312,11 @@ Module .. ROOT 0,0 -> 1,16
 """),
 
 (r"""match a:
- case None: pass""", 'body[0].cases[0].pattern', None, None, {'raw': False}, r"""**DEL**""", r"""**ValueError('cannot delete MatchSingleton.value')**""", r"""
+ case None: pass""", 'body[0].cases[0].pattern', None, None, {}, r"""**DEL**""", r"""**ValueError('cannot delete MatchSingleton.value')**""", r"""
 """),
 
 (r"""match a:
- case 1 as a: pass""", 'body[0].cases[0].pattern', None, 'name', {'raw': False}, r"""new""", r"""match a:
+ case 1 as a: pass""", 'body[0].cases[0].pattern', None, 'name', {}, r"""new""", r"""match a:
  case 1 as new: pass""", r"""
 Module .. ROOT 0,0 -> 1,20
   .body[1]
@@ -20333,7 +20333,7 @@ Module .. ROOT 0,0 -> 1,20
 """),
 
 (r"""match a:
- case (1) as a: pass""", 'body[0].cases[0].pattern', None, 'name', {'raw': False}, r"""new""", r"""match a:
+ case (1) as a: pass""", 'body[0].cases[0].pattern', None, 'name', {}, r"""new""", r"""match a:
  case (1) as new: pass""", r"""
 Module .. ROOT 0,0 -> 1,22
   .body[1]
@@ -20350,7 +20350,7 @@ Module .. ROOT 0,0 -> 1,22
 """),
 
 (r"""match a:
- case (1 as a): pass""", 'body[0].cases[0].pattern', None, 'name', {'raw': False}, r"""new""", r"""match a:
+ case (1 as a): pass""", 'body[0].cases[0].pattern', None, 'name', {}, r"""new""", r"""match a:
  case (1 as new): pass""", r"""
 Module .. ROOT 0,0 -> 1,22
   .body[1]
@@ -20367,7 +20367,7 @@ Module .. ROOT 0,0 -> 1,22
 """),
 
 (r"""match a:
- case 1 | 2 as a: pass""", 'body[0].cases[0].pattern', None, 'name', {'raw': False}, r"""new""", r"""match a:
+ case 1 | 2 as a: pass""", 'body[0].cases[0].pattern', None, 'name', {}, r"""new""", r"""match a:
  case 1 | 2 as new: pass""", r"""
 Module .. ROOT 0,0 -> 1,24
   .body[1]
@@ -20388,7 +20388,7 @@ Module .. ROOT 0,0 -> 1,24
 """),
 
 (r"""match a:
- case 1 | (2 as a): pass""", 'body[0].cases[0].pattern.patterns[1]', None, 'name', {'raw': False}, r"""new""", r"""match a:
+ case 1 | (2 as a): pass""", 'body[0].cases[0].pattern.patterns[1]', None, 'name', {}, r"""new""", r"""match a:
  case 1 | (2 as new): pass""", r"""
 Module .. ROOT 0,0 -> 1,26
   .body[1]
@@ -20409,7 +20409,7 @@ Module .. ROOT 0,0 -> 1,26
 """),
 
 (r"""match a:
- case (1 | 2 as a): pass""", 'body[0].cases[0].pattern', None, 'name', {'raw': False}, r"""new""", r"""match a:
+ case (1 | 2 as a): pass""", 'body[0].cases[0].pattern', None, 'name', {}, r"""new""", r"""match a:
  case (1 | 2 as new): pass""", r"""
 Module .. ROOT 0,0 -> 1,26
   .body[1]
@@ -20430,7 +20430,7 @@ Module .. ROOT 0,0 -> 1,26
 """),
 
 (r"""match a:
- case (1 | (2 as a)): pass""", 'body[0].cases[0].pattern.patterns[1]', None, 'name', {'raw': False}, r"""new""", r"""match a:
+ case (1 | (2 as a)): pass""", 'body[0].cases[0].pattern.patterns[1]', None, 'name', {}, r"""new""", r"""match a:
  case (1 | (2 as new)): pass""", r"""
 Module .. ROOT 0,0 -> 1,28
   .body[1]
@@ -20451,7 +20451,7 @@ Module .. ROOT 0,0 -> 1,28
 """),
 
 (r"""match a:
- case (1 as a) | 2: pass""", 'body[0].cases[0].pattern.patterns[0]', None, 'name', {'raw': False}, r"""new""", r"""match a:
+ case (1 as a) | 2: pass""", 'body[0].cases[0].pattern.patterns[0]', None, 'name', {}, r"""new""", r"""match a:
  case (1 as new) | 2: pass""", r"""
 Module .. ROOT 0,0 -> 1,26
   .body[1]
@@ -20472,7 +20472,7 @@ Module .. ROOT 0,0 -> 1,26
 """),
 
 (r"""match a:
- case ((1 as a) | 2): pass""", 'body[0].cases[0].pattern.patterns[0]', None, 'name', {'raw': False}, r"""new""", r"""match a:
+ case ((1 as a) | 2): pass""", 'body[0].cases[0].pattern.patterns[0]', None, 'name', {}, r"""new""", r"""match a:
  case ((1 as new) | 2): pass""", r"""
 Module .. ROOT 0,0 -> 1,28
   .body[1]
@@ -20493,15 +20493,15 @@ Module .. ROOT 0,0 -> 1,28
 """),
 
 (r"""match a:
- case 1 as a: pass""", 'body[0].cases[0].pattern', None, 'name', {'raw': False}, r"""_""", r"""**ValueError("cannot change MatchAs with pattern into wildcard '_'")**""", r"""
+ case 1 as a: pass""", 'body[0].cases[0].pattern', None, 'name', {}, r"""_""", r"""**ValueError("cannot change MatchAs with pattern into wildcard '_'")**""", r"""
 """),
 
 (r"""match a:
- case 1 as a: pass""", 'body[0].cases[0].pattern', None, 'name', {'raw': False}, r"""**DEL**""", r"""**ValueError("cannot change MatchAs with pattern into wildcard '_'")**""", r"""
+ case 1 as a: pass""", 'body[0].cases[0].pattern', None, 'name', {}, r"""**DEL**""", r"""**ValueError("cannot change MatchAs with pattern into wildcard '_'")**""", r"""
 """),
 
 (r"""match a:
- case a: pass""", 'body[0].cases[0].pattern', None, 'name', {'raw': False}, r"""new""", r"""match a:
+ case a: pass""", 'body[0].cases[0].pattern', None, 'name', {}, r"""new""", r"""match a:
  case new: pass""", r"""
 Module .. ROOT 0,0 -> 1,15
   .body[1]
@@ -20516,7 +20516,7 @@ Module .. ROOT 0,0 -> 1,15
 """),
 
 (r"""match a:
- case a: pass""", 'body[0].cases[0].pattern', None, 'name', {'raw': False}, r"""_""", r"""match a:
+ case a: pass""", 'body[0].cases[0].pattern', None, 'name', {}, r"""_""", r"""match a:
  case _: pass""", r"""
 Module .. ROOT 0,0 -> 1,13
   .body[1]
@@ -20544,7 +20544,7 @@ Module .. ROOT 0,0 -> 1,13
 """),
 
 (r"""match a:
- case _: pass""", 'body[0].cases[0].pattern', None, 'name', {'raw': False}, r"""new""", r"""match a:
+ case _: pass""", 'body[0].cases[0].pattern', None, 'name', {}, r"""new""", r"""match a:
  case new: pass""", r"""
 Module .. ROOT 0,0 -> 1,15
   .body[1]
@@ -20559,7 +20559,7 @@ Module .. ROOT 0,0 -> 1,15
 """),
 
 (r"""match a:
- case _: pass""", 'body[0].cases[0].pattern', None, 'name', {'raw': False}, r"""_""", r"""match a:
+ case _: pass""", 'body[0].cases[0].pattern', None, 'name', {}, r"""_""", r"""match a:
  case _: pass""", r"""
 Module .. ROOT 0,0 -> 1,13
   .body[1]
@@ -20623,7 +20623,7 @@ Module .. ROOT 0,0 -> 1,21
 """),
 
 (r"""match a:
- case 1 | (_): pass""", 'body[0].cases[0].pattern.patterns[1]', None, 'name', {'raw': False}, r"""new""", r"""match a:
+ case 1 | (_): pass""", 'body[0].cases[0].pattern.patterns[1]', None, 'name', {}, r"""new""", r"""match a:
  case 1 | (new): pass""", r"""
 Module .. ROOT 0,0 -> 1,21
   .body[1]
@@ -20642,7 +20642,7 @@ Module .. ROOT 0,0 -> 1,21
 """),
 
 (r"""match a:
- case (1 | (_)): pass""", 'body[0].cases[0].pattern.patterns[1]', None, 'name', {'raw': False}, r"""new""", r"""match a:
+ case (1 | (_)): pass""", 'body[0].cases[0].pattern.patterns[1]', None, 'name', {}, r"""new""", r"""match a:
  case (1 | (new)): pass""", r"""
 Module .. ROOT 0,0 -> 1,23
   .body[1]
@@ -20661,7 +20661,7 @@ Module .. ROOT 0,0 -> 1,23
 """),
 
 (r"""match a:
- case 1, *b: pass""", 'body[0].cases[0].pattern.patterns[1]', None, 'name', {'raw': False}, r"""new""", r"""match a:
+ case 1, *b: pass""", 'body[0].cases[0].pattern.patterns[1]', None, 'name', {}, r"""new""", r"""match a:
  case 1, *new: pass""", r"""
 Module .. ROOT 0,0 -> 1,19
   .body[1]
@@ -20680,7 +20680,7 @@ Module .. ROOT 0,0 -> 1,19
 """),
 
 (r"""match a:
- case 1, *b: pass""", 'body[0].cases[0].pattern.patterns[1]', None, 'name', {'raw': False}, r"""_""", r"""match a:
+ case 1, *b: pass""", 'body[0].cases[0].pattern.patterns[1]', None, 'name', {}, r"""_""", r"""match a:
  case 1, *_: pass""", r"""
 Module .. ROOT 0,0 -> 1,17
   .body[1]
@@ -20716,7 +20716,7 @@ Module .. ROOT 0,0 -> 1,17
 """),
 
 (r"""match a:
- case (1, *b): pass""", 'body[0].cases[0].pattern.patterns[1]', None, 'name', {'raw': False}, r"""new""", r"""match a:
+ case (1, *b): pass""", 'body[0].cases[0].pattern.patterns[1]', None, 'name', {}, r"""new""", r"""match a:
  case (1, *new): pass""", r"""
 Module .. ROOT 0,0 -> 1,21
   .body[1]
@@ -20735,7 +20735,7 @@ Module .. ROOT 0,0 -> 1,21
 """),
 
 (r"""match a:
- case (1, *b): pass""", 'body[0].cases[0].pattern.patterns[1]', None, 'name', {'raw': False}, r"""_""", r"""match a:
+ case (1, *b): pass""", 'body[0].cases[0].pattern.patterns[1]', None, 'name', {}, r"""_""", r"""match a:
  case (1, *_): pass""", r"""
 Module .. ROOT 0,0 -> 1,19
   .body[1]
@@ -20771,7 +20771,7 @@ Module .. ROOT 0,0 -> 1,19
 """),
 
 (r"""match a:
- case *b,: pass""", 'body[0].cases[0].pattern.patterns[0]', None, 'name', {'raw': False}, r"""new""", r"""match a:
+ case *b,: pass""", 'body[0].cases[0].pattern.patterns[0]', None, 'name', {}, r"""new""", r"""match a:
  case *new,: pass""", r"""
 Module .. ROOT 0,0 -> 1,17
   .body[1]
@@ -20788,7 +20788,7 @@ Module .. ROOT 0,0 -> 1,17
 """),
 
 (r"""match a:
- case *b,: pass""", 'body[0].cases[0].pattern.patterns[0]', None, 'name', {'raw': False}, r"""_""", r"""match a:
+ case *b,: pass""", 'body[0].cases[0].pattern.patterns[0]', None, 'name', {}, r"""_""", r"""match a:
  case *_,: pass""", r"""
 Module .. ROOT 0,0 -> 1,15
   .body[1]
@@ -20820,7 +20820,7 @@ Module .. ROOT 0,0 -> 1,15
 """),
 
 (r"""match a:
- case *_,: pass""", 'body[0].cases[0].pattern.patterns[0]', None, 'name', {'raw': False}, r"""new""", r"""match a:
+ case *_,: pass""", 'body[0].cases[0].pattern.patterns[0]', None, 'name', {}, r"""new""", r"""match a:
  case *new,: pass""", r"""
 Module .. ROOT 0,0 -> 1,17
   .body[1]
@@ -20837,7 +20837,7 @@ Module .. ROOT 0,0 -> 1,17
 """),
 
 (r"""match a:
- case *_,: pass""", 'body[0].cases[0].pattern.patterns[0]', None, 'name', {'raw': False}, r"""_""", r"""match a:
+ case *_,: pass""", 'body[0].cases[0].pattern.patterns[0]', None, 'name', {}, r"""_""", r"""match a:
  case *_,: pass""", r"""
 Module .. ROOT 0,0 -> 1,15
   .body[1]
@@ -20869,7 +20869,7 @@ Module .. ROOT 0,0 -> 1,15
 """),
 
 (r"""match a:
- case {}: pass""", 'body[0].cases[0].pattern', None, 'rest', {'raw': False}, r"""new""", r"""match a:
+ case {}: pass""", 'body[0].cases[0].pattern', None, 'rest', {}, r"""new""", r"""match a:
  case {**new}: pass""", r"""
 Module .. ROOT 0,0 -> 1,19
   .body[1]
@@ -20884,7 +20884,7 @@ Module .. ROOT 0,0 -> 1,19
 """),
 
 (r"""match a:
- case {1: a}: pass""", 'body[0].cases[0].pattern', None, 'rest', {'raw': False}, r"""new""", r"""match a:
+ case {1: a}: pass""", 'body[0].cases[0].pattern', None, 'rest', {}, r"""new""", r"""match a:
  case {1: a, **new}: pass""", r"""
 Module .. ROOT 0,0 -> 1,25
   .body[1]
@@ -20904,7 +20904,7 @@ Module .. ROOT 0,0 -> 1,25
 """),
 
 (r"""match a:
- case {1: a, }: pass""", 'body[0].cases[0].pattern', None, 'rest', {'raw': False}, r"""new""", r"""match a:
+ case {1: a, }: pass""", 'body[0].cases[0].pattern', None, 'rest', {}, r"""new""", r"""match a:
  case {1: a, **new}: pass""", r"""
 Module .. ROOT 0,0 -> 1,25
   .body[1]
@@ -20924,7 +20924,7 @@ Module .. ROOT 0,0 -> 1,25
 """),
 
 (r"""match a:
- case {**b}: pass""", 'body[0].cases[0].pattern', None, 'rest', {'raw': False}, r"""new""", r"""match a:
+ case {**b}: pass""", 'body[0].cases[0].pattern', None, 'rest', {}, r"""new""", r"""match a:
  case {**new}: pass""", r"""
 Module .. ROOT 0,0 -> 1,19
   .body[1]
@@ -20939,7 +20939,7 @@ Module .. ROOT 0,0 -> 1,19
 """),
 
 (r"""match a:
- case {1: a, **b}: pass""", 'body[0].cases[0].pattern', None, 'rest', {'raw': False}, r"""new""", r"""match a:
+ case {1: a, **b}: pass""", 'body[0].cases[0].pattern', None, 'rest', {}, r"""new""", r"""match a:
  case {1: a, **new}: pass""", r"""
 Module .. ROOT 0,0 -> 1,25
   .body[1]
@@ -20959,7 +20959,7 @@ Module .. ROOT 0,0 -> 1,25
 """),
 
 (r"""match a:
- case {1: a,  ** b }: pass""", 'body[0].cases[0].pattern', None, 'rest', {'raw': False}, r"""new""", r"""match a:
+ case {1: a,  ** b }: pass""", 'body[0].cases[0].pattern', None, 'rest', {}, r"""new""", r"""match a:
  case {1: a,  ** new }: pass""", r"""
 Module .. ROOT 0,0 -> 1,28
   .body[1]
@@ -20979,7 +20979,7 @@ Module .. ROOT 0,0 -> 1,28
 """),
 
 (r"""match a:
- case {**b}: pass""", 'body[0].cases[0].pattern', None, 'rest', {'raw': False}, r"""**DEL**""", r"""match a:
+ case {**b}: pass""", 'body[0].cases[0].pattern', None, 'rest', {}, r"""**DEL**""", r"""match a:
  case {}: pass""", r"""
 Module .. ROOT 0,0 -> 1,14
   .body[1]
@@ -20993,7 +20993,7 @@ Module .. ROOT 0,0 -> 1,14
 """),
 
 (r"""match a:
- case {1: a, **b}: pass""", 'body[0].cases[0].pattern', None, 'rest', {'raw': False}, r"""**DEL**""", r"""match a:
+ case {1: a, **b}: pass""", 'body[0].cases[0].pattern', None, 'rest', {}, r"""**DEL**""", r"""match a:
  case {1: a}: pass""", r"""
 Module .. ROOT 0,0 -> 1,18
   .body[1]
@@ -21012,7 +21012,7 @@ Module .. ROOT 0,0 -> 1,18
 """),
 
 (r"""match a:
- case {1: a,  ** b }: pass""", 'body[0].cases[0].pattern', None, 'rest', {'raw': False}, r"""**DEL**""", r"""match a:
+ case {1: a,  ** b }: pass""", 'body[0].cases[0].pattern', None, 'rest', {}, r"""**DEL**""", r"""match a:
  case {1: a}: pass""", r"""
 Module .. ROOT 0,0 -> 1,18
   .body[1]
@@ -21031,7 +21031,7 @@ Module .. ROOT 0,0 -> 1,18
 """),
 
 (r"""match a:
- case cls(a=b): pass""", 'body[0].cases[0].pattern', 0, 'kwd_attrs', {'raw': False}, r"""new""", r"""match a:
+ case cls(a=b): pass""", 'body[0].cases[0].pattern', 0, 'kwd_attrs', {}, r"""new""", r"""match a:
  case cls(new=b): pass""", r"""
 Module .. ROOT 0,0 -> 1,22
   .body[1]
@@ -21051,15 +21051,15 @@ Module .. ROOT 0,0 -> 1,22
 """),
 
 (r"""match a:
- case cls(a=b): pass""", 'body[0].cases[0].pattern', 0, 'kwd_attrs', {'raw': False}, r"""**DEL**""", r"""**ValueError('cannot delete MatchClass.kwd_attrs[0]')**""", r"""
+ case cls(a=b): pass""", 'body[0].cases[0].pattern', 0, 'kwd_attrs', {}, r"""**DEL**""", r"""**ValueError('cannot delete MatchClass.kwd_attrs[0]')**""", r"""
 """),
 
 (r"""match a:
- case cls(a=b): pass""", 'body[0].cases[0].pattern', 0, 'kwd_attrs', {'raw': False}, r"""1""", r"""**NodeError("expecting identifier, got '1'")**""", r"""
+ case cls(a=b): pass""", 'body[0].cases[0].pattern', 0, 'kwd_attrs', {}, r"""1""", r"""**NodeError("expecting identifier, got '1'")**""", r"""
 """),
 
 (r"""match a:
- case cls(a=b, c=d): pass""", 'body[0].cases[0].pattern', 1, 'kwd_attrs', {'raw': False}, r"""new""", r"""match a:
+ case cls(a=b, c=d): pass""", 'body[0].cases[0].pattern', 1, 'kwd_attrs', {}, r"""new""", r"""match a:
  case cls(a=b, new=d): pass""", r"""
 Module .. ROOT 0,0 -> 1,27
   .body[1]
@@ -21082,7 +21082,7 @@ Module .. ROOT 0,0 -> 1,27
 """),
 
 (r"""match a:
- case cls(a=(b), c=d): pass""", 'body[0].cases[0].pattern', 1, 'kwd_attrs', {'raw': False}, r"""new""", r"""match a:
+ case cls(a=(b), c=d): pass""", 'body[0].cases[0].pattern', 1, 'kwd_attrs', {}, r"""new""", r"""match a:
  case cls(a=(b), new=d): pass""", r"""
 Module .. ROOT 0,0 -> 1,29
   .body[1]
@@ -21105,7 +21105,7 @@ Module .. ROOT 0,0 -> 1,29
 """),
 
 (r"""match a:
- case cls( a = ( b ) , c=d): pass""", 'body[0].cases[0].pattern', 0, 'kwd_attrs', {'raw': False}, r"""new""", r"""match a:
+ case cls( a = ( b ) , c=d): pass""", 'body[0].cases[0].pattern', 0, 'kwd_attrs', {}, r"""new""", r"""match a:
  case cls( new = ( b ) , c=d): pass""", r"""
 Module .. ROOT 0,0 -> 1,35
   .body[1]
@@ -21128,7 +21128,7 @@ Module .. ROOT 0,0 -> 1,35
 """),
 
 (r"""match a:
- case cls(a=(b),  c = d): pass""", 'body[0].cases[0].pattern', 1, 'kwd_attrs', {'raw': False}, r"""new""", r"""match a:
+ case cls(a=(b),  c = d): pass""", 'body[0].cases[0].pattern', 1, 'kwd_attrs', {}, r"""new""", r"""match a:
  case cls(a=(b),  new = d): pass""", r"""
 Module .. ROOT 0,0 -> 1,32
   .body[1]
@@ -21150,10 +21150,10 @@ Module .. ROOT 0,0 -> 1,32
       0] Pass .. 1,28 -> 1,32
 """),
 
-(r"""del a, (b), c""", 'body[0]', 0, None, {'raw': False}, r"""**DEL**""", r"""**ValueError('cannot put slice to Delete.targets')**""", r"""
+(r"""del a, (b), c""", 'body[0]', 0, None, {}, r"""**DEL**""", r"""**ValueError('cannot put slice to Delete.targets')**""", r"""
 """),
 
-(r"""del a, (b), c""", 'body[0]', 0, None, {'raw': False}, r"""new""", r"""del new, (b), c""", r"""
+(r"""del a, (b), c""", 'body[0]', 0, None, {}, r"""new""", r"""del new, (b), c""", r"""
 Module .. ROOT 0,0 -> 0,15
   .body[1]
   0] Delete .. 0,0 -> 0,15
@@ -21163,7 +21163,7 @@ Module .. ROOT 0,0 -> 0,15
     2] Name 'c' Del .. 0,14 -> 0,15
 """),
 
-(r"""del a, (b), c""", 'body[0]', 1, None, {'raw': False}, r"""new""", r"""del a, new, c""", r"""
+(r"""del a, (b), c""", 'body[0]', 1, None, {}, r"""new""", r"""del a, new, c""", r"""
 Module .. ROOT 0,0 -> 0,13
   .body[1]
   0] Delete .. 0,0 -> 0,13
@@ -21173,7 +21173,7 @@ Module .. ROOT 0,0 -> 0,13
     2] Name 'c' Del .. 0,12 -> 0,13
 """),
 
-(r"""del a, (b), c""", 'body[0]', 2, None, {'raw': False}, r"""new""", r"""del a, (b), new""", r"""
+(r"""del a, (b), c""", 'body[0]', 2, None, {}, r"""new""", r"""del a, (b), new""", r"""
 Module .. ROOT 0,0 -> 0,15
   .body[1]
   0] Delete .. 0,0 -> 0,15
@@ -21183,7 +21183,7 @@ Module .. ROOT 0,0 -> 0,15
     2] Name 'new' Del .. 0,12 -> 0,15
 """),
 
-(r"""del a, (b), c""", 'body[0]', -1, None, {'raw': False}, r"""new""", r"""del a, (b), new""", r"""
+(r"""del a, (b), c""", 'body[0]', -1, None, {}, r"""new""", r"""del a, (b), new""", r"""
 Module .. ROOT 0,0 -> 0,15
   .body[1]
   0] Delete .. 0,0 -> 0,15
@@ -21207,16 +21207,16 @@ Module .. ROOT 0,0 -> 0,18
       .ctx Del
 """),
 
-(r"""del a, (b), c""", 'body[0]', -1, None, {'raw': False}, r"""f()""", r"""**NodeError('expecting one of (Name, Attribute, Subscript, Tuple, List) for Delete.targets[-1], got Call')**""", r"""
+(r"""del a, (b), c""", 'body[0]', -1, None, {}, r"""f()""", r"""**NodeError('expecting one of (Name, Attribute, Subscript, Tuple, List) for Delete.targets[-1], got Call')**""", r"""
 """),
 
-(r"""del a, (b), c""", 'body[0]', -4, None, {'raw': False}, r"""new""", r"""**IndexError('index out of range')**""", r"""
+(r"""del a, (b), c""", 'body[0]', -4, None, {}, r"""new""", r"""**IndexError('index out of range')**""", r"""
 """),
 
-(r"""a = (b, c) = d = z""", 'body[0]', 0, 'targets', {'raw': False}, r"""**DEL**""", r"""**ValueError('cannot put slice to Assign.targets')**""", r"""
+(r"""a = (b, c) = d = z""", 'body[0]', 0, 'targets', {}, r"""**DEL**""", r"""**ValueError('cannot put slice to Assign.targets')**""", r"""
 """),
 
-(r"""a = (b, c) = d = z""", 'body[0]', 0, 'targets', {'raw': False}, r"""new""", r"""new = (b, c) = d = z""", r"""
+(r"""a = (b, c) = d = z""", 'body[0]', 0, 'targets', {}, r"""new""", r"""new = (b, c) = d = z""", r"""
 Module .. ROOT 0,0 -> 0,20
   .body[1]
   0] Assign .. 0,0 -> 0,20
@@ -21231,7 +21231,7 @@ Module .. ROOT 0,0 -> 0,20
     .value Name 'z' Load .. 0,19 -> 0,20
 """),
 
-(r"""a = (b, c) = d = z""", 'body[0]', 1, 'targets', {'raw': False}, r"""new""", r"""a = new = d = z""", r"""
+(r"""a = (b, c) = d = z""", 'body[0]', 1, 'targets', {}, r"""new""", r"""a = new = d = z""", r"""
 Module .. ROOT 0,0 -> 0,15
   .body[1]
   0] Assign .. 0,0 -> 0,15
@@ -21242,7 +21242,7 @@ Module .. ROOT 0,0 -> 0,15
     .value Name 'z' Load .. 0,14 -> 0,15
 """),
 
-(r"""a = (b, c) = d = z""", 'body[0]', 2, 'targets', {'raw': False}, r"""new""", r"""a = (b, c) = new = z""", r"""
+(r"""a = (b, c) = d = z""", 'body[0]', 2, 'targets', {}, r"""new""", r"""a = (b, c) = new = z""", r"""
 Module .. ROOT 0,0 -> 0,20
   .body[1]
   0] Assign .. 0,0 -> 0,20
@@ -21257,7 +21257,7 @@ Module .. ROOT 0,0 -> 0,20
     .value Name 'z' Load .. 0,19 -> 0,20
 """),
 
-(r"""a = (b, c) = d = z""", 'body[0]', -1, 'targets', {'raw': False}, r"""new""", r"""a = (b, c) = new = z""", r"""
+(r"""a = (b, c) = d = z""", 'body[0]', -1, 'targets', {}, r"""new""", r"""a = (b, c) = new = z""", r"""
 Module .. ROOT 0,0 -> 0,20
   .body[1]
   0] Assign .. 0,0 -> 0,20
@@ -21272,7 +21272,7 @@ Module .. ROOT 0,0 -> 0,20
     .value Name 'z' Load .. 0,19 -> 0,20
 """),
 
-(r"""a = (b, c) = d = z""", 'body[0]', -1, 'targets', {'raw': False}, r"""x, y""", r"""a = (b, c) = x, y = z""", r"""
+(r"""a = (b, c) = d = z""", 'body[0]', -1, 'targets', {}, r"""x, y""", r"""a = (b, c) = x, y = z""", r"""
 Module .. ROOT 0,0 -> 0,21
   .body[1]
   0] Assign .. 0,0 -> 0,21
@@ -21291,20 +21291,20 @@ Module .. ROOT 0,0 -> 0,21
     .value Name 'z' Load .. 0,20 -> 0,21
 """),
 
-(r"""del a, (b, c), d""", 'body[0]', -1, 'targets', {'raw': False}, r"""f()""", r"""**NodeError('expecting one of (Name, Attribute, Subscript, Tuple, List) for Delete.targets[-1], got Call')**""", r"""
+(r"""del a, (b, c), d""", 'body[0]', -1, 'targets', {}, r"""f()""", r"""**NodeError('expecting one of (Name, Attribute, Subscript, Tuple, List) for Delete.targets[-1], got Call')**""", r"""
 """),
 
-(r"""del a, (b, c), d""", 'body[0]', -4, 'targets', {'raw': False}, r"""new""", r"""**IndexError('index out of range')**""", r"""
-"""),
-
-(r"""@a
-@(b)
-def c(): pass""", 'body[0]', 0, 'decorator_list', {'raw': False}, r"""**DEL**""", r"""**ValueError('cannot put slice to FunctionDef.decorator_list')**""", r"""
+(r"""del a, (b, c), d""", 'body[0]', -4, 'targets', {}, r"""new""", r"""**IndexError('index out of range')**""", r"""
 """),
 
 (r"""@a
 @(b)
-def c(): pass""", 'body[0]', 0, 'decorator_list', {'raw': False}, r"""new""", r"""@new
+def c(): pass""", 'body[0]', 0, 'decorator_list', {}, r"""**DEL**""", r"""**ValueError('cannot put slice to FunctionDef.decorator_list')**""", r"""
+"""),
+
+(r"""@a
+@(b)
+def c(): pass""", 'body[0]', 0, 'decorator_list', {}, r"""new""", r"""@new
 @(b)
 def c(): pass""", r"""
 Module .. ROOT 0,0 -> 2,13
@@ -21320,7 +21320,7 @@ Module .. ROOT 0,0 -> 2,13
 
 (r"""@a
 @(b)
-def c(): pass""", 'body[0]', 1, 'decorator_list', {'raw': False}, r"""new""", r"""@a
+def c(): pass""", 'body[0]', 1, 'decorator_list', {}, r"""new""", r"""@a
 @new
 def c(): pass""", r"""
 Module .. ROOT 0,0 -> 2,13
@@ -21336,7 +21336,7 @@ Module .. ROOT 0,0 -> 2,13
 
 (r"""@a
 @(b)
-def c(): pass""", 'body[0]', -1, 'decorator_list', {'raw': False}, r"""new""", r"""@a
+def c(): pass""", 'body[0]', -1, 'decorator_list', {}, r"""new""", r"""@a
 @new
 def c(): pass""", r"""
 Module .. ROOT 0,0 -> 2,13
@@ -21352,7 +21352,7 @@ Module .. ROOT 0,0 -> 2,13
 
 (r"""@a
 @(b)
-def c(): pass""", 'body[0]', -2, 'decorator_list', {'raw': False}, r"""f()""", r"""@f()
+def c(): pass""", 'body[0]', -2, 'decorator_list', {}, r"""f()""", r"""@f()
 @(b)
 def c(): pass""", r"""
 Module .. ROOT 0,0 -> 2,13
@@ -21369,17 +21369,17 @@ Module .. ROOT 0,0 -> 2,13
 
 (r"""@a
 @(b)
-def c(): pass""", 'body[0]', -4, 'decorator_list', {'raw': False}, r"""new""", r"""**IndexError('index out of range')**""", r"""
+def c(): pass""", 'body[0]', -4, 'decorator_list', {}, r"""new""", r"""**IndexError('index out of range')**""", r"""
 """),
 
 (r"""@a
 @(b)
-async def c(): pass""", 'body[0]', 0, 'decorator_list', {'raw': False}, r"""**DEL**""", r"""**ValueError('cannot put slice to AsyncFunctionDef.decorator_list')**""", r"""
+async def c(): pass""", 'body[0]', 0, 'decorator_list', {}, r"""**DEL**""", r"""**ValueError('cannot put slice to AsyncFunctionDef.decorator_list')**""", r"""
 """),
 
 (r"""@a
 @(b)
-async def c(): pass""", 'body[0]', 0, 'decorator_list', {'raw': False}, r"""new""", r"""@new
+async def c(): pass""", 'body[0]', 0, 'decorator_list', {}, r"""new""", r"""@new
 @(b)
 async def c(): pass""", r"""
 Module .. ROOT 0,0 -> 2,19
@@ -21395,7 +21395,7 @@ Module .. ROOT 0,0 -> 2,19
 
 (r"""@a
 @(b)
-async def c(): pass""", 'body[0]', 1, 'decorator_list', {'raw': False}, r"""new""", r"""@a
+async def c(): pass""", 'body[0]', 1, 'decorator_list', {}, r"""new""", r"""@a
 @new
 async def c(): pass""", r"""
 Module .. ROOT 0,0 -> 2,19
@@ -21411,7 +21411,7 @@ Module .. ROOT 0,0 -> 2,19
 
 (r"""@a
 @(b)
-async def c(): pass""", 'body[0]', -1, 'decorator_list', {'raw': False}, r"""new""", r"""@a
+async def c(): pass""", 'body[0]', -1, 'decorator_list', {}, r"""new""", r"""@a
 @new
 async def c(): pass""", r"""
 Module .. ROOT 0,0 -> 2,19
@@ -21427,7 +21427,7 @@ Module .. ROOT 0,0 -> 2,19
 
 (r"""@a
 @(b)
-async def c(): pass""", 'body[0]', -2, 'decorator_list', {'raw': False}, r"""f()""", r"""@f()
+async def c(): pass""", 'body[0]', -2, 'decorator_list', {}, r"""f()""", r"""@f()
 @(b)
 async def c(): pass""", r"""
 Module .. ROOT 0,0 -> 2,19
@@ -21444,17 +21444,17 @@ Module .. ROOT 0,0 -> 2,19
 
 (r"""@a
 @(b)
-async def c(): pass""", 'body[0]', -4, 'decorator_list', {'raw': False}, r"""new""", r"""**IndexError('index out of range')**""", r"""
+async def c(): pass""", 'body[0]', -4, 'decorator_list', {}, r"""new""", r"""**IndexError('index out of range')**""", r"""
 """),
 
 (r"""@a
 @(b)
-class c: pass""", 'body[0]', 0, 'decorator_list', {'raw': False}, r"""**DEL**""", r"""**ValueError('cannot put slice to ClassDef.decorator_list')**""", r"""
+class c: pass""", 'body[0]', 0, 'decorator_list', {}, r"""**DEL**""", r"""**ValueError('cannot put slice to ClassDef.decorator_list')**""", r"""
 """),
 
 (r"""@a
 @(b)
-class c: pass""", 'body[0]', 0, 'decorator_list', {'raw': False}, r"""new""", r"""@new
+class c: pass""", 'body[0]', 0, 'decorator_list', {}, r"""new""", r"""@new
 @(b)
 class c: pass""", r"""
 Module .. ROOT 0,0 -> 2,13
@@ -21470,7 +21470,7 @@ Module .. ROOT 0,0 -> 2,13
 
 (r"""@a
 @(b)
-class c: pass""", 'body[0]', 1, 'decorator_list', {'raw': False}, r"""new""", r"""@a
+class c: pass""", 'body[0]', 1, 'decorator_list', {}, r"""new""", r"""@a
 @new
 class c: pass""", r"""
 Module .. ROOT 0,0 -> 2,13
@@ -21486,7 +21486,7 @@ Module .. ROOT 0,0 -> 2,13
 
 (r"""@a
 @(b)
-class c: pass""", 'body[0]', -1, 'decorator_list', {'raw': False}, r"""new""", r"""@a
+class c: pass""", 'body[0]', -1, 'decorator_list', {}, r"""new""", r"""@a
 @new
 class c: pass""", r"""
 Module .. ROOT 0,0 -> 2,13
@@ -21502,7 +21502,7 @@ Module .. ROOT 0,0 -> 2,13
 
 (r"""@a
 @(b)
-class c: pass""", 'body[0]', -2, 'decorator_list', {'raw': False}, r"""f()""", r"""@f()
+class c: pass""", 'body[0]', -2, 'decorator_list', {}, r"""f()""", r"""@f()
 @(b)
 class c: pass""", r"""
 Module .. ROOT 0,0 -> 2,13
@@ -21519,13 +21519,13 @@ Module .. ROOT 0,0 -> 2,13
 
 (r"""@a
 @(b)
-class c: pass""", 'body[0]', -4, 'decorator_list', {'raw': False}, r"""new""", r"""**IndexError('index out of range')**""", r"""
+class c: pass""", 'body[0]', -4, 'decorator_list', {}, r"""new""", r"""**IndexError('index out of range')**""", r"""
 """),
 
-(r"""class c(a, (b)): pass""", 'body[0]', 0, 'bases', {'raw': False}, r"""**DEL**""", r"""**ValueError('cannot put slice to ClassDef.bases')**""", r"""
+(r"""class c(a, (b)): pass""", 'body[0]', 0, 'bases', {}, r"""**DEL**""", r"""**ValueError('cannot put slice to ClassDef.bases')**""", r"""
 """),
 
-(r"""class c(a, (b)): pass""", 'body[0]', 0, 'bases', {'raw': False}, r"""new""", r"""class c(new, (b)): pass""", r"""
+(r"""class c(a, (b)): pass""", 'body[0]', 0, 'bases', {}, r"""new""", r"""class c(new, (b)): pass""", r"""
 Module .. ROOT 0,0 -> 0,23
   .body[1]
   0] ClassDef .. 0,0 -> 0,23
@@ -21537,7 +21537,7 @@ Module .. ROOT 0,0 -> 0,23
     0] Pass .. 0,19 -> 0,23
 """),
 
-(r"""class c(a, (b)): pass""", 'body[0]', 1, 'bases', {'raw': False}, r"""new""", r"""class c(a, new): pass""", r"""
+(r"""class c(a, (b)): pass""", 'body[0]', 1, 'bases', {}, r"""new""", r"""class c(a, new): pass""", r"""
 Module .. ROOT 0,0 -> 0,21
   .body[1]
   0] ClassDef .. 0,0 -> 0,21
@@ -21549,7 +21549,7 @@ Module .. ROOT 0,0 -> 0,21
     0] Pass .. 0,17 -> 0,21
 """),
 
-(r"""class c(a, (b)): pass""", 'body[0]', -1, 'bases', {'raw': False}, r"""new""", r"""class c(a, new): pass""", r"""
+(r"""class c(a, (b)): pass""", 'body[0]', -1, 'bases', {}, r"""new""", r"""class c(a, new): pass""", r"""
 Module .. ROOT 0,0 -> 0,21
   .body[1]
   0] ClassDef .. 0,0 -> 0,21
@@ -21561,7 +21561,7 @@ Module .. ROOT 0,0 -> 0,21
     0] Pass .. 0,17 -> 0,21
 """),
 
-(r"""class c(a, (b)): pass""", 'body[0]', -2, 'bases', {'raw': False}, r"""f()""", r"""class c(f(), (b)): pass""", r"""
+(r"""class c(a, (b)): pass""", 'body[0]', -2, 'bases', {}, r"""f()""", r"""class c(f(), (b)): pass""", r"""
 Module .. ROOT 0,0 -> 0,23
   .body[1]
   0] ClassDef .. 0,0 -> 0,23
@@ -21574,13 +21574,13 @@ Module .. ROOT 0,0 -> 0,23
     0] Pass .. 0,19 -> 0,23
 """),
 
-(r"""class c(a, (b)): pass""", 'body[0]', -4, 'bases', {'raw': False}, r"""new""", r"""**IndexError('index out of range')**""", r"""
+(r"""class c(a, (b)): pass""", 'body[0]', -4, 'bases', {}, r"""new""", r"""**IndexError('index out of range')**""", r"""
 """),
 
 (r"""class c(a): pass""", 'body[0]', 0, 'bases', {'raw': False}, r"""**DEL**""", r"""**ValueError('cannot put slice to ClassDef.bases')**""", r"""
 """),
 
-(r"""class c(a): pass""", 'body[0]', 0, 'bases', {'raw': False}, r"""new""", r"""class c(new): pass""", r"""
+(r"""class c(a): pass""", 'body[0]', 0, 'bases', {}, r"""new""", r"""class c(new): pass""", r"""
 Module .. ROOT 0,0 -> 0,18
   .body[1]
   0] ClassDef .. 0,0 -> 0,18
@@ -21591,7 +21591,7 @@ Module .. ROOT 0,0 -> 0,18
     0] Pass .. 0,14 -> 0,18
 """),
 
-(r"""class c(a,): pass""", 'body[0]', 0, 'bases', {'raw': False}, r"""new""", r"""class c(new,): pass""", r"""
+(r"""class c(a,): pass""", 'body[0]', 0, 'bases', {}, r"""new""", r"""class c(new,): pass""", r"""
 Module .. ROOT 0,0 -> 0,19
   .body[1]
   0] ClassDef .. 0,0 -> 0,19
@@ -21605,7 +21605,7 @@ Module .. ROOT 0,0 -> 0,19
 (r"""class c((a)): pass""", 'body[0]', 0, 'bases', {'raw': False}, r"""**DEL**""", r"""**ValueError('cannot put slice to ClassDef.bases')**""", r"""
 """),
 
-(r"""class c((a)): pass""", 'body[0]', 0, 'bases', {'raw': False}, r"""new""", r"""class c(new): pass""", r"""
+(r"""class c((a)): pass""", 'body[0]', 0, 'bases', {}, r"""new""", r"""class c(new): pass""", r"""
 Module .. ROOT 0,0 -> 0,18
   .body[1]
   0] ClassDef .. 0,0 -> 0,18
@@ -21616,7 +21616,7 @@ Module .. ROOT 0,0 -> 0,18
     0] Pass .. 0,14 -> 0,18
 """),
 
-(r"""class c((a),): pass""", 'body[0]', 0, 'bases', {'raw': False}, r"""new""", r"""class c(new,): pass""", r"""
+(r"""class c((a),): pass""", 'body[0]', 0, 'bases', {}, r"""new""", r"""class c(new,): pass""", r"""
 Module .. ROOT 0,0 -> 0,19
   .body[1]
   0] ClassDef .. 0,0 -> 0,19
@@ -21630,7 +21630,7 @@ Module .. ROOT 0,0 -> 0,19
 (r"""a and (b) and c""", 'body[0].value', 0, None, {'raw': False}, r"""**DEL**""", r"""**ValueError('cannot put slice to BoolOp.values')**""", r"""
 """),
 
-(r"""a and (b) and c""", 'body[0].value', 0, None, {'raw': False}, r"""new""", r"""new and (b) and c""", r"""
+(r"""a and (b) and c""", 'body[0].value', 0, None, {}, r"""new""", r"""new and (b) and c""", r"""
 Module .. ROOT 0,0 -> 0,17
   .body[1]
   0] Expr .. 0,0 -> 0,17
@@ -21642,7 +21642,7 @@ Module .. ROOT 0,0 -> 0,17
       2] Name 'c' Load .. 0,16 -> 0,17
 """),
 
-(r"""a and (b) and c""", 'body[0].value', 1, None, {'raw': False}, r"""new""", r"""a and new and c""", r"""
+(r"""a and (b) and c""", 'body[0].value', 1, None, {}, r"""new""", r"""a and new and c""", r"""
 Module .. ROOT 0,0 -> 0,15
   .body[1]
   0] Expr .. 0,0 -> 0,15
@@ -21654,7 +21654,7 @@ Module .. ROOT 0,0 -> 0,15
       2] Name 'c' Load .. 0,14 -> 0,15
 """),
 
-(r"""a and (b) and c""", 'body[0].value', -1, None, {'raw': False}, r"""new""", r"""a and (b) and new""", r"""
+(r"""a and (b) and c""", 'body[0].value', -1, None, {}, r"""new""", r"""a and (b) and new""", r"""
 Module .. ROOT 0,0 -> 0,17
   .body[1]
   0] Expr .. 0,0 -> 0,17
@@ -21666,7 +21666,7 @@ Module .. ROOT 0,0 -> 0,17
       2] Name 'new' Load .. 0,14 -> 0,17
 """),
 
-(r"""a and (b) and c""", 'body[0].value', -2, None, {'raw': False}, r"""f()""", r"""a and f() and c""", r"""
+(r"""a and (b) and c""", 'body[0].value', -2, None, {}, r"""f()""", r"""a and f() and c""", r"""
 Module .. ROOT 0,0 -> 0,15
   .body[1]
   0] Expr .. 0,0 -> 0,15
@@ -21679,13 +21679,13 @@ Module .. ROOT 0,0 -> 0,15
       2] Name 'c' Load .. 0,14 -> 0,15
 """),
 
-(r"""a and (b) and c""", 'body[0].value', -4, None, {'raw': False}, r"""new""", r"""**IndexError('index out of range')**""", r"""
+(r"""a and (b) and c""", 'body[0].value', -4, None, {}, r"""new""", r"""**IndexError('index out of range')**""", r"""
 """),
 
-(r"""[i for i in j if a if (b)]""", 'body[0].value.generators[0]', 0, 'ifs', {'raw': False}, r"""**DEL**""", r"""**ValueError('cannot put slice to comprehension.ifs')**""", r"""
+(r"""[i for i in j if a if (b)]""", 'body[0].value.generators[0]', 0, 'ifs', {}, r"""**DEL**""", r"""**ValueError('cannot put slice to comprehension.ifs')**""", r"""
 """),
 
-(r"""[i for i in j if a if (b)]""", 'body[0].value.generators[0]', 0, 'ifs', {'raw': False}, r"""new""", r"""[i for i in j if new if (b)]""", r"""
+(r"""[i for i in j if a if (b)]""", 'body[0].value.generators[0]', 0, 'ifs', {}, r"""new""", r"""[i for i in j if new if (b)]""", r"""
 Module .. ROOT 0,0 -> 0,28
   .body[1]
   0] Expr .. 0,0 -> 0,28
@@ -21701,7 +21701,7 @@ Module .. ROOT 0,0 -> 0,28
         .is_async 0
 """),
 
-(r"""[i for i in j if a if (b)]""", 'body[0].value.generators[0]', 1, 'ifs', {'raw': False}, r"""new""", r"""[i for i in j if a if new]""", r"""
+(r"""[i for i in j if a if (b)]""", 'body[0].value.generators[0]', 1, 'ifs', {}, r"""new""", r"""[i for i in j if a if new]""", r"""
 Module .. ROOT 0,0 -> 0,26
   .body[1]
   0] Expr .. 0,0 -> 0,26
@@ -21717,7 +21717,7 @@ Module .. ROOT 0,0 -> 0,26
         .is_async 0
 """),
 
-(r"""[i for i in j if a if (b)]""", 'body[0].value.generators[0]', -1, 'ifs', {'raw': False}, r"""new""", r"""[i for i in j if a if new]""", r"""
+(r"""[i for i in j if a if (b)]""", 'body[0].value.generators[0]', -1, 'ifs', {}, r"""new""", r"""[i for i in j if a if new]""", r"""
 Module .. ROOT 0,0 -> 0,26
   .body[1]
   0] Expr .. 0,0 -> 0,26
@@ -21733,7 +21733,7 @@ Module .. ROOT 0,0 -> 0,26
         .is_async 0
 """),
 
-(r"""[i for i in j if a if (b)]""", 'body[0].value.generators[0]', -2, 'ifs', {'raw': False}, r"""f()""", r"""[i for i in j if f() if (b)]""", r"""
+(r"""[i for i in j if a if (b)]""", 'body[0].value.generators[0]', -2, 'ifs', {}, r"""f()""", r"""[i for i in j if f() if (b)]""", r"""
 Module .. ROOT 0,0 -> 0,28
   .body[1]
   0] Expr .. 0,0 -> 0,28
@@ -21750,13 +21750,13 @@ Module .. ROOT 0,0 -> 0,28
         .is_async 0
 """),
 
-(r"""[i for i in j if a if (b)]""", 'body[0].value.generators[0]', -4, 'ifs', {'raw': False}, r"""new""", r"""**IndexError('index out of range')**""", r"""
+(r"""[i for i in j if a if (b)]""", 'body[0].value.generators[0]', -4, 'ifs', {}, r"""new""", r"""**IndexError('index out of range')**""", r"""
 """),
 
-(r"""call(a, (b))""", 'body[0].value', 0, None, {'raw': False}, r"""**DEL**""", r"""**ValueError('cannot put slice to Call.args')**""", r"""
+(r"""call(a, (b))""", 'body[0].value', 0, None, {}, r"""**DEL**""", r"""**ValueError('cannot put slice to Call.args')**""", r"""
 """),
 
-(r"""call(a, (b))""", 'body[0].value', 0, None, {'raw': False}, r"""new""", r"""call(new, (b))""", r"""
+(r"""call(a, (b))""", 'body[0].value', 0, None, {}, r"""new""", r"""call(new, (b))""", r"""
 Module .. ROOT 0,0 -> 0,14
   .body[1]
   0] Expr .. 0,0 -> 0,14
@@ -21767,7 +21767,7 @@ Module .. ROOT 0,0 -> 0,14
       1] Name 'b' Load .. 0,11 -> 0,12
 """),
 
-(r"""call(a, (b))""", 'body[0].value', 1, None, {'raw': False}, r"""new""", r"""call(a, new)""", r"""
+(r"""call(a, (b))""", 'body[0].value', 1, None, {}, r"""new""", r"""call(a, new)""", r"""
 Module .. ROOT 0,0 -> 0,12
   .body[1]
   0] Expr .. 0,0 -> 0,12
@@ -21778,7 +21778,7 @@ Module .. ROOT 0,0 -> 0,12
       1] Name 'new' Load .. 0,8 -> 0,11
 """),
 
-(r"""call(a, (b))""", 'body[0].value', -1, None, {'raw': False}, r"""new""", r"""call(a, new)""", r"""
+(r"""call(a, (b))""", 'body[0].value', -1, None, {}, r"""new""", r"""call(a, new)""", r"""
 Module .. ROOT 0,0 -> 0,12
   .body[1]
   0] Expr .. 0,0 -> 0,12
@@ -21789,7 +21789,7 @@ Module .. ROOT 0,0 -> 0,12
       1] Name 'new' Load .. 0,8 -> 0,11
 """),
 
-(r"""call(a, (b))""", 'body[0].value', -2, None, {'raw': False}, r"""f()""", r"""call(f(), (b))""", r"""
+(r"""call(a, (b))""", 'body[0].value', -2, None, {}, r"""f()""", r"""call(f(), (b))""", r"""
 Module .. ROOT 0,0 -> 0,14
   .body[1]
   0] Expr .. 0,0 -> 0,14
@@ -21801,10 +21801,10 @@ Module .. ROOT 0,0 -> 0,14
       1] Name 'b' Load .. 0,11 -> 0,12
 """),
 
-(r"""call(a, (b))""", 'body[0].value', -4, None, {'raw': False}, r"""new""", r"""**IndexError('index out of range')**""", r"""
+(r"""call(a, (b))""", 'body[0].value', -4, None, {}, r"""new""", r"""**IndexError('index out of range')**""", r"""
 """),
 
-(r"""call(i for i in j)""", 'body[0].value', 0, None, {'raw': False}, r"""new""", r"""call(new)""", r"""
+(r"""call(i for i in j)""", 'body[0].value', 0, None, {}, r"""new""", r"""call(new)""", r"""
 Module .. ROOT 0,0 -> 0,9
   .body[1]
   0] Expr .. 0,0 -> 0,9
@@ -21814,7 +21814,7 @@ Module .. ROOT 0,0 -> 0,9
       0] Name 'new' Load .. 0,5 -> 0,8
 """),
 
-(r"""call((i for i in j))""", 'body[0].value', 0, None, {'raw': False}, r"""new""", r"""call(new)""", r"""
+(r"""call((i for i in j))""", 'body[0].value', 0, None, {}, r"""new""", r"""call(new)""", r"""
 Module .. ROOT 0,0 -> 0,9
   .body[1]
   0] Expr .. 0,0 -> 0,9
@@ -21824,7 +21824,7 @@ Module .. ROOT 0,0 -> 0,9
       0] Name 'new' Load .. 0,5 -> 0,8
 """),
 
-(r"""call(i for i in j)""", 'body[0].value', 0, None, {'raw': False}, r"""(a for a in b)""", r"""call((a for a in b))""", r"""
+(r"""call(i for i in j)""", 'body[0].value', 0, None, {}, r"""(a for a in b)""", r"""call((a for a in b))""", r"""
 Module .. ROOT 0,0 -> 0,20
   .body[1]
   0] Expr .. 0,0 -> 0,20
@@ -21840,7 +21840,7 @@ Module .. ROOT 0,0 -> 0,20
           .is_async 0
 """),
 
-(r"""call((i for i in j))""", 'body[0].value', 0, None, {'raw': False}, r"""(a for a in b)""", r"""call((a for a in b))""", r"""
+(r"""call((i for i in j))""", 'body[0].value', 0, None, {}, r"""(a for a in b)""", r"""call((a for a in b))""", r"""
 Module .. ROOT 0,0 -> 0,20
   .body[1]
   0] Expr .. 0,0 -> 0,20
@@ -21857,11 +21857,11 @@ Module .. ROOT 0,0 -> 0,20
 """),
 
 (r"""match a:
- case 1 as b, (2): pass""", 'body[0].cases[0].pattern', 0, None, {'raw': False}, r"""**DEL**""", r"""**ValueError('cannot put slice to MatchSequence.patterns')**""", r"""
+ case 1 as b, (2): pass""", 'body[0].cases[0].pattern', 0, None, {}, r"""**DEL**""", r"""**ValueError('cannot put slice to MatchSequence.patterns')**""", r"""
 """),
 
 (r"""match a:
- case 1 as b, (2): pass""", 'body[0].cases[0].pattern', 0, None, {'raw': False}, r"""new""", r"""match a:
+ case 1 as b, (2): pass""", 'body[0].cases[0].pattern', 0, None, {}, r"""new""", r"""match a:
  case new, (2): pass""", r"""
 Module .. ROOT 0,0 -> 1,20
   .body[1]
@@ -21880,7 +21880,7 @@ Module .. ROOT 0,0 -> 1,20
 """),
 
 (r"""match a:
- case 1 as b, (2): pass""", 'body[0].cases[0].pattern', 1, None, {'raw': False}, r"""new""", r"""match a:
+ case 1 as b, (2): pass""", 'body[0].cases[0].pattern', 1, None, {}, r"""new""", r"""match a:
  case 1 as b, new: pass""", r"""
 Module .. ROOT 0,0 -> 1,23
   .body[1]
@@ -21901,7 +21901,7 @@ Module .. ROOT 0,0 -> 1,23
 """),
 
 (r"""match a:
- case 1 as b, (2): pass""", 'body[0].cases[0].pattern', -1, None, {'raw': False}, r"""{1: c, **d}""", r"""match a:
+ case 1 as b, (2): pass""", 'body[0].cases[0].pattern', -1, None, {}, r"""{1: c, **d}""", r"""match a:
  case 1 as b, {1: c, **d}: pass""", r"""
 Module .. ROOT 0,0 -> 1,31
   .body[1]
@@ -21927,7 +21927,7 @@ Module .. ROOT 0,0 -> 1,31
 """),
 
 (r"""match a:
- case 1 as b, (2): pass""", 'body[0].cases[0].pattern', -2, None, {'raw': False}, r"""f(c=d)""", r"""match a:
+ case 1 as b, (2): pass""", 'body[0].cases[0].pattern', -2, None, {}, r"""f(c=d)""", r"""match a:
  case f(c=d), (2): pass""", r"""
 Module .. ROOT 0,0 -> 1,23
   .body[1]
@@ -21951,15 +21951,15 @@ Module .. ROOT 0,0 -> 1,23
 """),
 
 (r"""match a:
- case 1 as b, (2): pass""", 'body[0].cases[0].pattern', -4, None, {'raw': False}, r"""new""", r"""**IndexError('index out of range')**""", r"""
+ case 1 as b, (2): pass""", 'body[0].cases[0].pattern', -4, None, {}, r"""new""", r"""**IndexError('index out of range')**""", r"""
 """),
 
 (r"""match a:
- case {1: a, 2: (b), **rest}: pass""", 'body[0].cases[0].pattern', 0, 'patterns', {'raw': False}, r"""**DEL**""", r"""**ValueError('cannot put slice to MatchMapping.patterns')**""", r"""
+ case {1: a, 2: (b), **rest}: pass""", 'body[0].cases[0].pattern', 0, 'patterns', {}, r"""**DEL**""", r"""**ValueError('cannot put slice to MatchMapping.patterns')**""", r"""
 """),
 
 (r"""match a:
- case {1: a, 2: (b), **rest}: pass""", 'body[0].cases[0].pattern', 0, 'patterns', {'raw': False}, r"""new""", r"""match a:
+ case {1: a, 2: (b), **rest}: pass""", 'body[0].cases[0].pattern', 0, 'patterns', {}, r"""new""", r"""match a:
  case {1: new, 2: (b), **rest}: pass""", r"""
 Module .. ROOT 0,0 -> 1,36
   .body[1]
@@ -21982,7 +21982,7 @@ Module .. ROOT 0,0 -> 1,36
 """),
 
 (r"""match a:
- case {1: a, 2: (b), **rest}: pass""", 'body[0].cases[0].pattern', 1, 'patterns', {'raw': False}, r"""new""", r"""match a:
+ case {1: a, 2: (b), **rest}: pass""", 'body[0].cases[0].pattern', 1, 'patterns', {}, r"""new""", r"""match a:
  case {1: a, 2: new, **rest}: pass""", r"""
 Module .. ROOT 0,0 -> 1,34
   .body[1]
@@ -22005,7 +22005,7 @@ Module .. ROOT 0,0 -> 1,34
 """),
 
 (r"""match a:
- case {1: a, 2: (b), **rest}: pass""", 'body[0].cases[0].pattern', -1, 'patterns', {'raw': False}, r"""{1: c, **d}""", r"""match a:
+ case {1: a, 2: (b), **rest}: pass""", 'body[0].cases[0].pattern', -1, 'patterns', {}, r"""{1: c, **d}""", r"""match a:
  case {1: a, 2: {1: c, **d}, **rest}: pass""", r"""
 Module .. ROOT 0,0 -> 1,42
   .body[1]
@@ -22033,7 +22033,7 @@ Module .. ROOT 0,0 -> 1,42
 """),
 
 (r"""match a:
- case {1: a, 2: (b), **rest}: pass""", 'body[0].cases[0].pattern', -2, 'patterns', {'raw': False}, r"""f(c=d)""", r"""match a:
+ case {1: a, 2: (b), **rest}: pass""", 'body[0].cases[0].pattern', -2, 'patterns', {}, r"""f(c=d)""", r"""match a:
  case {1: f(c=d), 2: (b), **rest}: pass""", r"""
 Module .. ROOT 0,0 -> 1,39
   .body[1]
@@ -22061,15 +22061,15 @@ Module .. ROOT 0,0 -> 1,39
 """),
 
 (r"""match a:
- case {1: a, 2: (b), **rest}: pass""", 'body[0].cases[0].pattern', -4, 'patterns', {'raw': False}, r"""new""", r"""**IndexError('index out of range')**""", r"""
+ case {1: a, 2: (b), **rest}: pass""", 'body[0].cases[0].pattern', -4, 'patterns', {}, r"""new""", r"""**IndexError('index out of range')**""", r"""
 """),
 
 (r"""match a:
- case c(a, (b)): pass""", 'body[0].cases[0].pattern', 0, 'patterns', {'raw': False}, r"""**DEL**""", r"""**ValueError('cannot put slice to MatchClass.patterns')**""", r"""
+ case c(a, (b)): pass""", 'body[0].cases[0].pattern', 0, 'patterns', {}, r"""**DEL**""", r"""**ValueError('cannot put slice to MatchClass.patterns')**""", r"""
 """),
 
 (r"""match a:
- case c(a, (b)): pass""", 'body[0].cases[0].pattern', 0, 'patterns', {'raw': False}, r"""new""", r"""match a:
+ case c(a, (b)): pass""", 'body[0].cases[0].pattern', 0, 'patterns', {}, r"""new""", r"""match a:
  case c(new, (b)): pass""", r"""
 Module .. ROOT 0,0 -> 1,23
   .body[1]
@@ -22089,7 +22089,7 @@ Module .. ROOT 0,0 -> 1,23
 """),
 
 (r"""match a:
- case c(a, (b)): pass""", 'body[0].cases[0].pattern', 1, 'patterns', {'raw': False}, r"""new""", r"""match a:
+ case c(a, (b)): pass""", 'body[0].cases[0].pattern', 1, 'patterns', {}, r"""new""", r"""match a:
  case c(a, new): pass""", r"""
 Module .. ROOT 0,0 -> 1,21
   .body[1]
@@ -22109,7 +22109,7 @@ Module .. ROOT 0,0 -> 1,21
 """),
 
 (r"""match a:
- case c(a, (b)): pass""", 'body[0].cases[0].pattern', -1, 'patterns', {'raw': False}, r"""{1: c, **d}""", r"""match a:
+ case c(a, (b)): pass""", 'body[0].cases[0].pattern', -1, 'patterns', {}, r"""{1: c, **d}""", r"""match a:
  case c(a, {1: c, **d}): pass""", r"""
 Module .. ROOT 0,0 -> 1,29
   .body[1]
@@ -22134,7 +22134,7 @@ Module .. ROOT 0,0 -> 1,29
 """),
 
 (r"""match a:
- case c(a, (b)): pass""", 'body[0].cases[0].pattern', -2, 'patterns', {'raw': False}, r"""f(c=d)""", r"""match a:
+ case c(a, (b)): pass""", 'body[0].cases[0].pattern', -2, 'patterns', {}, r"""f(c=d)""", r"""match a:
  case c(f(c=d), (b)): pass""", r"""
 Module .. ROOT 0,0 -> 1,26
   .body[1]
@@ -22159,15 +22159,15 @@ Module .. ROOT 0,0 -> 1,26
 """),
 
 (r"""match a:
- case c(a, (b)): pass""", 'body[0].cases[0].pattern', -4, 'patterns', {'raw': False}, r"""new""", r"""**IndexError('index out of range')**""", r"""
+ case c(a, (b)): pass""", 'body[0].cases[0].pattern', -4, 'patterns', {}, r"""new""", r"""**IndexError('index out of range')**""", r"""
 """),
 
 (r"""match a:
- case c(a={1: c}, b=(d())): pass""", 'body[0].cases[0].pattern', 0, 'kwd_patterns', {'raw': False}, r"""**DEL**""", r"""**ValueError('cannot delete MatchClass.kwd_patterns[0]')**""", r"""
+ case c(a={1: c}, b=(d())): pass""", 'body[0].cases[0].pattern', 0, 'kwd_patterns', {}, r"""**DEL**""", r"""**ValueError('cannot delete MatchClass.kwd_patterns[0]')**""", r"""
 """),
 
 (r"""match a:
- case c(a={1: c}, b=(d())): pass""", 'body[0].cases[0].pattern', 0, 'kwd_patterns', {'raw': False}, r"""new""", r"""match a:
+ case c(a={1: c}, b=(d())): pass""", 'body[0].cases[0].pattern', 0, 'kwd_patterns', {}, r"""new""", r"""match a:
  case c(a=new, b=(d())): pass""", r"""
 Module .. ROOT 0,0 -> 1,29
   .body[1]
@@ -22190,7 +22190,7 @@ Module .. ROOT 0,0 -> 1,29
 """),
 
 (r"""match a:
- case c(a={1: c}, b=(d())): pass""", 'body[0].cases[0].pattern', 1, 'kwd_patterns', {'raw': False}, r"""new""", r"""match a:
+ case c(a={1: c}, b=(d())): pass""", 'body[0].cases[0].pattern', 1, 'kwd_patterns', {}, r"""new""", r"""match a:
  case c(a={1: c}, b=new): pass""", r"""
 Module .. ROOT 0,0 -> 1,30
   .body[1]
@@ -22217,7 +22217,7 @@ Module .. ROOT 0,0 -> 1,30
 """),
 
 (r"""match a:
- case c(a={1: c}, b=(d())): pass""", 'body[0].cases[0].pattern', -1, 'kwd_patterns', {'raw': False}, r"""{1: c, **d}""", r"""match a:
+ case c(a={1: c}, b=(d())): pass""", 'body[0].cases[0].pattern', -1, 'kwd_patterns', {}, r"""{1: c, **d}""", r"""match a:
  case c(a={1: c}, b={1: c, **d}): pass""", r"""
 Module .. ROOT 0,0 -> 1,38
   .body[1]
@@ -22249,7 +22249,7 @@ Module .. ROOT 0,0 -> 1,38
 """),
 
 (r"""match a:
- case c(a={1: c}, b=(d())): pass""", 'body[0].cases[0].pattern', -2, 'kwd_patterns', {'raw': False}, r"""f(c=d)""", r"""match a:
+ case c(a={1: c}, b=(d())): pass""", 'body[0].cases[0].pattern', -2, 'kwd_patterns', {}, r"""f(c=d)""", r"""match a:
  case c(a=f(c=d), b=(d())): pass""", r"""
 Module .. ROOT 0,0 -> 1,32
   .body[1]
@@ -22277,15 +22277,15 @@ Module .. ROOT 0,0 -> 1,32
 """),
 
 (r"""match a:
- case c(a={1: c}, b=(d())): pass""", 'body[0].cases[0].pattern', -4, 'kwd_patterns', {'raw': False}, r"""new""", r"""**IndexError('index out of range')**""", r"""
+ case c(a={1: c}, b=(d())): pass""", 'body[0].cases[0].pattern', -4, 'kwd_patterns', {}, r"""new""", r"""**IndexError('index out of range')**""", r"""
 """),
 
 (r"""match a:
- case {1: c} | (d()): pass""", 'body[0].cases[0].pattern', 0, None, {'raw': False}, r"""**DEL**""", r"""**ValueError('cannot put slice to MatchOr.patterns')**""", r"""
+ case {1: c} | (d()): pass""", 'body[0].cases[0].pattern', 0, None, {}, r"""**DEL**""", r"""**ValueError('cannot put slice to MatchOr.patterns')**""", r"""
 """),
 
 (r"""match a:
- case {1: c} | (d()): pass""", 'body[0].cases[0].pattern', 0, None, {'raw': False}, r"""new""", r"""match a:
+ case {1: c} | (d()): pass""", 'body[0].cases[0].pattern', 0, None, {}, r"""new""", r"""match a:
  case new | (d()): pass""", r"""
 Module .. ROOT 0,0 -> 1,23
   .body[1]
@@ -22304,7 +22304,7 @@ Module .. ROOT 0,0 -> 1,23
 """),
 
 (r"""match a:
- case {1: c} | (d()): pass""", 'body[0].cases[0].pattern', 1, None, {'raw': False}, r"""new""", r"""match a:
+ case {1: c} | (d()): pass""", 'body[0].cases[0].pattern', 1, None, {}, r"""new""", r"""match a:
  case {1: c} | new: pass""", r"""
 Module .. ROOT 0,0 -> 1,24
   .body[1]
@@ -22327,7 +22327,7 @@ Module .. ROOT 0,0 -> 1,24
 """),
 
 (r"""match a:
- case {1: c} | (d()): pass""", 'body[0].cases[0].pattern', -1, None, {'raw': False}, r"""{1: c, **d}""", r"""match a:
+ case {1: c} | (d()): pass""", 'body[0].cases[0].pattern', -1, None, {}, r"""{1: c, **d}""", r"""match a:
  case {1: c} | {1: c, **d}: pass""", r"""
 Module .. ROOT 0,0 -> 1,32
   .body[1]
@@ -22355,7 +22355,7 @@ Module .. ROOT 0,0 -> 1,32
 """),
 
 (r"""match a:
- case {1: c} | (d()): pass""", 'body[0].cases[0].pattern', -2, None, {'raw': False}, r"""f(c=d)""", r"""match a:
+ case {1: c} | (d()): pass""", 'body[0].cases[0].pattern', -2, None, {}, r"""f(c=d)""", r"""match a:
  case f(c=d) | (d()): pass""", r"""
 Module .. ROOT 0,0 -> 1,26
   .body[1]
@@ -22379,15 +22379,15 @@ Module .. ROOT 0,0 -> 1,26
 """),
 
 (r"""match a:
- case {1: c} | (d()): pass""", 'body[0].cases[0].pattern', -4, None, {'raw': False}, r"""new""", r"""**IndexError('index out of range')**""", r"""
+ case {1: c} | (d()): pass""", 'body[0].cases[0].pattern', -4, None, {}, r"""new""", r"""**IndexError('index out of range')**""", r"""
 """),
 
 (r"""match a:
- case {1: c} | (d()): pass""", 'body[0].cases[0]', None, 'pattern', {'raw': False}, r"""**DEL**""", r"""**ValueError('cannot delete match_case.pattern')**""", r"""
+ case {1: c} | (d()): pass""", 'body[0].cases[0]', None, 'pattern', {}, r"""**DEL**""", r"""**ValueError('cannot delete match_case.pattern')**""", r"""
 """),
 
 (r"""match a:
- case c(a={1: c}, b=(d())): pass""", 'body[0].cases[0]', None, 'pattern', {'raw': False}, r"""new""", r"""match a:
+ case c(a={1: c}, b=(d())): pass""", 'body[0].cases[0]', None, 'pattern', {}, r"""new""", r"""match a:
  case new: pass""", r"""
 Module .. ROOT 0,0 -> 1,15
   .body[1]
@@ -22402,7 +22402,7 @@ Module .. ROOT 0,0 -> 1,15
 """),
 
 (r"""match a:
- case c(a, (b)): pass""", 'body[0].cases[0]', None, 'pattern', {'raw': False}, r"""new""", r"""match a:
+ case c(a, (b)): pass""", 'body[0].cases[0]', None, 'pattern', {}, r"""new""", r"""match a:
  case new: pass""", r"""
 Module .. ROOT 0,0 -> 1,15
   .body[1]
@@ -22417,7 +22417,7 @@ Module .. ROOT 0,0 -> 1,15
 """),
 
 (r"""match a:
- case {1: a, 2: (b), **rest}: pass""", 'body[0].cases[0]', None, 'pattern', {'raw': False}, r"""{1: c, **d}""", r"""match a:
+ case {1: a, 2: (b), **rest}: pass""", 'body[0].cases[0]', None, 'pattern', {}, r"""{1: c, **d}""", r"""match a:
  case {1: c, **d}: pass""", r"""
 Module .. ROOT 0,0 -> 1,23
   .body[1]
@@ -22437,7 +22437,7 @@ Module .. ROOT 0,0 -> 1,23
 """),
 
 (r"""match a:
- case 1 as b, (2): pass""", 'body[0].cases[0]', None, 'pattern', {'raw': False}, r"""f(c=d)""", r"""match a:
+ case 1 as b, (2): pass""", 'body[0].cases[0]', None, 'pattern', {}, r"""f(c=d)""", r"""match a:
  case f(c=d): pass""", r"""
 Module .. ROOT 0,0 -> 1,18
   .body[1]
@@ -22457,11 +22457,11 @@ Module .. ROOT 0,0 -> 1,18
 """),
 
 (r"""match a:
- case {1: c} | (d()): pass""", 'body[0].cases[0]', 0, 'pattern', {'raw': False}, r"""new""", r"""**IndexError('match_case.pattern does not take an index')**""", r"""
+ case {1: c} | (d()): pass""", 'body[0].cases[0]', 0, 'pattern', {}, r"""new""", r"""**IndexError('match_case.pattern does not take an index')**""", r"""
 """),
 
 (r"""match a:
- case 1 as b: pass""", 'body[0].cases[0].pattern', None, None, {'raw': False}, r"""c.d""", r"""match a:
+ case 1 as b: pass""", 'body[0].cases[0].pattern', None, None, {}, r"""c.d""", r"""match a:
  case c.d as b: pass""", r"""
 Module .. ROOT 0,0 -> 1,20
   .body[1]
@@ -22481,7 +22481,7 @@ Module .. ROOT 0,0 -> 1,20
 """),
 
 (r"""match a:
- case (1) as b: pass""", 'body[0].cases[0].pattern', None, None, {'raw': False}, r"""c.d""", r"""match a:
+ case (1) as b: pass""", 'body[0].cases[0].pattern', None, None, {}, r"""c.d""", r"""match a:
  case c.d as b: pass""", r"""
 Module .. ROOT 0,0 -> 1,20
   .body[1]
@@ -22501,7 +22501,7 @@ Module .. ROOT 0,0 -> 1,20
 """),
 
 (r"""match a:
- case ((1) as b): pass""", 'body[0].cases[0].pattern', None, None, {'raw': False}, r"""c.d""", r"""match a:
+ case ((1) as b): pass""", 'body[0].cases[0].pattern', None, None, {}, r"""c.d""", r"""match a:
  case (c.d as b): pass""", r"""
 Module .. ROOT 0,0 -> 1,22
   .body[1]
@@ -22521,7 +22521,7 @@ Module .. ROOT 0,0 -> 1,22
 """),
 
 (r"""match a:
- case 1 as b: pass""", 'body[0].cases[0].pattern', None, None, {'raw': False}, r"""**DEL**""", r"""match a:
+ case 1 as b: pass""", 'body[0].cases[0].pattern', None, None, {}, r"""**DEL**""", r"""match a:
  case b: pass""", r"""
 Module .. ROOT 0,0 -> 1,13
   .body[1]
@@ -22536,7 +22536,7 @@ Module .. ROOT 0,0 -> 1,13
 """),
 
 (r"""match a:
- case (1) as b: pass""", 'body[0].cases[0].pattern', None, None, {'raw': False}, r"""**DEL**""", r"""match a:
+ case (1) as b: pass""", 'body[0].cases[0].pattern', None, None, {}, r"""**DEL**""", r"""match a:
  case b: pass""", r"""
 Module .. ROOT 0,0 -> 1,13
   .body[1]
@@ -22551,7 +22551,7 @@ Module .. ROOT 0,0 -> 1,13
 """),
 
 (r"""match a:
- case ((1) as b): pass""", 'body[0].cases[0].pattern', None, None, {'raw': False}, r"""**DEL**""", r"""match a:
+ case ((1) as b): pass""", 'body[0].cases[0].pattern', None, None, {}, r"""**DEL**""", r"""match a:
  case (b): pass""", r"""
 Module .. ROOT 0,0 -> 1,15
   .body[1]
@@ -22566,7 +22566,7 @@ Module .. ROOT 0,0 -> 1,15
 """),
 
 (r"""match a:
- case b: pass""", 'body[0].cases[0].pattern', None, None, {'raw': False}, r"""**DEL**""", r"""match a:
+ case b: pass""", 'body[0].cases[0].pattern', None, None, {}, r"""**DEL**""", r"""match a:
  case b: pass""", r"""
 Module .. ROOT 0,0 -> 1,13
   .body[1]
@@ -22581,13 +22581,13 @@ Module .. ROOT 0,0 -> 1,13
 """),
 
 (r"""match a:
- case _: pass""", 'body[0].cases[0].pattern', None, None, {'raw': False}, r"""c.d""", r"""**ValueError('cannot create MatchAs.pattern in this state')**""", r"""
+ case _: pass""", 'body[0].cases[0].pattern', None, None, {}, r"""c.d""", r"""**ValueError('cannot create MatchAs.pattern in this state')**""", r"""
 """),
 
-(r"""def f[T: int, U: (str)](): pass""", 'body[0]', 0, 'type_params', {'raw': False, '_ver': 12}, r"""**DEL**""", r"""**ValueError('cannot put slice to FunctionDef.type_params')**""", r"""
+(r"""def f[T: int, U: (str)](): pass""", 'body[0]', 0, 'type_params', {'_ver': 12}, r"""**DEL**""", r"""**ValueError('cannot put slice to FunctionDef.type_params')**""", r"""
 """),
 
-(r"""def f[T: int, U: (str)](): pass""", 'body[0]', 0, 'type_params', {'raw': False, '_ver': 12}, r"""V: list[int]""", r"""def f[V: list[int], U: (str)](): pass""", r"""
+(r"""def f[T: int, U: (str)](): pass""", 'body[0]', 0, 'type_params', {'_ver': 12}, r"""V: list[int]""", r"""def f[V: list[int], U: (str)](): pass""", r"""
 Module .. ROOT 0,0 -> 0,37
   .body[1]
   0] FunctionDef .. 0,0 -> 0,37
@@ -22606,7 +22606,7 @@ Module .. ROOT 0,0 -> 0,37
       .bound Name 'str' Load .. 0,24 -> 0,27
 """),
 
-(r"""def f[T: int, U: (str)](): pass""", 'body[0]', 1, 'type_params', {'raw': False, '_ver': 12}, r"""V: list[int]""", r"""def f[T: int, V: list[int]](): pass""", r"""
+(r"""def f[T: int, U: (str)](): pass""", 'body[0]', 1, 'type_params', {'_ver': 12}, r"""V: list[int]""", r"""def f[T: int, V: list[int]](): pass""", r"""
 Module .. ROOT 0,0 -> 0,35
   .body[1]
   0] FunctionDef .. 0,0 -> 0,35
@@ -22625,7 +22625,7 @@ Module .. ROOT 0,0 -> 0,35
         .ctx Load
 """),
 
-(r"""def f[T: int, U: (str)](): pass""", 'body[0]', -1, 'type_params', {'raw': False, '_ver': 12}, r"""V: list[int]""", r"""def f[T: int, V: list[int]](): pass""", r"""
+(r"""def f[T: int, U: (str)](): pass""", 'body[0]', -1, 'type_params', {'_ver': 12}, r"""V: list[int]""", r"""def f[T: int, V: list[int]](): pass""", r"""
 Module .. ROOT 0,0 -> 0,35
   .body[1]
   0] FunctionDef .. 0,0 -> 0,35
@@ -22644,7 +22644,7 @@ Module .. ROOT 0,0 -> 0,35
         .ctx Load
 """),
 
-(r"""def f[T: int, U: (str)](): pass""", 'body[0]', -2, 'type_params', {'raw': False, '_ver': 12}, r"""V: list[int]""", r"""def f[V: list[int], U: (str)](): pass""", r"""
+(r"""def f[T: int, U: (str)](): pass""", 'body[0]', -2, 'type_params', {'_ver': 12}, r"""V: list[int]""", r"""def f[V: list[int], U: (str)](): pass""", r"""
 Module .. ROOT 0,0 -> 0,37
   .body[1]
   0] FunctionDef .. 0,0 -> 0,37
@@ -22663,13 +22663,13 @@ Module .. ROOT 0,0 -> 0,37
       .bound Name 'str' Load .. 0,24 -> 0,27
 """),
 
-(r"""def f[T: int, U: (str)](): pass""", 'body[0]', -4, 'type_params', {'raw': False, '_ver': 12}, r"""V: list[int]""", r"""**IndexError('index out of range')**""", r"""
+(r"""def f[T: int, U: (str)](): pass""", 'body[0]', -4, 'type_params', {'_ver': 12}, r"""V: list[int]""", r"""**IndexError('index out of range')**""", r"""
 """),
 
-(r"""async def f[T: int, U: (str)](): pass""", 'body[0]', 0, 'type_params', {'raw': False, '_ver': 12}, r"""**DEL**""", r"""**ValueError('cannot put slice to AsyncFunctionDef.type_params')**""", r"""
+(r"""async def f[T: int, U: (str)](): pass""", 'body[0]', 0, 'type_params', {'_ver': 12}, r"""**DEL**""", r"""**ValueError('cannot put slice to AsyncFunctionDef.type_params')**""", r"""
 """),
 
-(r"""async def f[T: int, U: (str)](): pass""", 'body[0]', 0, 'type_params', {'raw': False, '_ver': 12}, r"""V: list[int]""", r"""async def f[V: list[int], U: (str)](): pass""", r"""
+(r"""async def f[T: int, U: (str)](): pass""", 'body[0]', 0, 'type_params', {'_ver': 12}, r"""V: list[int]""", r"""async def f[V: list[int], U: (str)](): pass""", r"""
 Module .. ROOT 0,0 -> 0,43
   .body[1]
   0] AsyncFunctionDef .. 0,0 -> 0,43
@@ -22688,7 +22688,7 @@ Module .. ROOT 0,0 -> 0,43
       .bound Name 'str' Load .. 0,30 -> 0,33
 """),
 
-(r"""async def f[T: int, U: (str)](): pass""", 'body[0]', 1, 'type_params', {'raw': False, '_ver': 12}, r"""V: list[int]""", r"""async def f[T: int, V: list[int]](): pass""", r"""
+(r"""async def f[T: int, U: (str)](): pass""", 'body[0]', 1, 'type_params', {'_ver': 12}, r"""V: list[int]""", r"""async def f[T: int, V: list[int]](): pass""", r"""
 Module .. ROOT 0,0 -> 0,41
   .body[1]
   0] AsyncFunctionDef .. 0,0 -> 0,41
@@ -22707,7 +22707,7 @@ Module .. ROOT 0,0 -> 0,41
         .ctx Load
 """),
 
-(r"""async def f[T: int, U: (str)](): pass""", 'body[0]', -1, 'type_params', {'raw': False, '_ver': 12}, r"""V: list[int]""", r"""async def f[T: int, V: list[int]](): pass""", r"""
+(r"""async def f[T: int, U: (str)](): pass""", 'body[0]', -1, 'type_params', {'_ver': 12}, r"""V: list[int]""", r"""async def f[T: int, V: list[int]](): pass""", r"""
 Module .. ROOT 0,0 -> 0,41
   .body[1]
   0] AsyncFunctionDef .. 0,0 -> 0,41
@@ -22726,7 +22726,7 @@ Module .. ROOT 0,0 -> 0,41
         .ctx Load
 """),
 
-(r"""async def f[T: int, U: (str)](): pass""", 'body[0]', -2, 'type_params', {'raw': False, '_ver': 12}, r"""V: list[int]""", r"""async def f[V: list[int], U: (str)](): pass""", r"""
+(r"""async def f[T: int, U: (str)](): pass""", 'body[0]', -2, 'type_params', {'_ver': 12}, r"""V: list[int]""", r"""async def f[V: list[int], U: (str)](): pass""", r"""
 Module .. ROOT 0,0 -> 0,43
   .body[1]
   0] AsyncFunctionDef .. 0,0 -> 0,43
@@ -22745,13 +22745,13 @@ Module .. ROOT 0,0 -> 0,43
       .bound Name 'str' Load .. 0,30 -> 0,33
 """),
 
-(r"""async def f[T: int, U: (str)](): pass""", 'body[0]', -4, 'type_params', {'raw': False, '_ver': 12}, r"""V: list[int]""", r"""**IndexError('index out of range')**""", r"""
+(r"""async def f[T: int, U: (str)](): pass""", 'body[0]', -4, 'type_params', {'_ver': 12}, r"""V: list[int]""", r"""**IndexError('index out of range')**""", r"""
 """),
 
-(r"""class c[T: int, U: (str)]: pass""", 'body[0]', 0, 'type_params', {'raw': False, '_ver': 12}, r"""**DEL**""", r"""**ValueError('cannot put slice to ClassDef.type_params')**""", r"""
+(r"""class c[T: int, U: (str)]: pass""", 'body[0]', 0, 'type_params', {'_ver': 12}, r"""**DEL**""", r"""**ValueError('cannot put slice to ClassDef.type_params')**""", r"""
 """),
 
-(r"""class c[T: int, U: (str)]: pass""", 'body[0]', 0, 'type_params', {'raw': False, '_ver': 12}, r"""V: list[int]""", r"""class c[V: list[int], U: (str)]: pass""", r"""
+(r"""class c[T: int, U: (str)]: pass""", 'body[0]', 0, 'type_params', {'_ver': 12}, r"""V: list[int]""", r"""class c[V: list[int], U: (str)]: pass""", r"""
 Module .. ROOT 0,0 -> 0,37
   .body[1]
   0] ClassDef .. 0,0 -> 0,37
@@ -22770,7 +22770,7 @@ Module .. ROOT 0,0 -> 0,37
       .bound Name 'str' Load .. 0,26 -> 0,29
 """),
 
-(r"""class c[T: int, U: (str)]: pass""", 'body[0]', 1, 'type_params', {'raw': False, '_ver': 12}, r"""V: list[int]""", r"""class c[T: int, V: list[int]]: pass""", r"""
+(r"""class c[T: int, U: (str)]: pass""", 'body[0]', 1, 'type_params', {'_ver': 12}, r"""V: list[int]""", r"""class c[T: int, V: list[int]]: pass""", r"""
 Module .. ROOT 0,0 -> 0,35
   .body[1]
   0] ClassDef .. 0,0 -> 0,35
@@ -22789,7 +22789,7 @@ Module .. ROOT 0,0 -> 0,35
         .ctx Load
 """),
 
-(r"""class c[T: int, U: (str)]: pass""", 'body[0]', -1, 'type_params', {'raw': False, '_ver': 12}, r"""V: list[int]""", r"""class c[T: int, V: list[int]]: pass""", r"""
+(r"""class c[T: int, U: (str)]: pass""", 'body[0]', -1, 'type_params', {'_ver': 12}, r"""V: list[int]""", r"""class c[T: int, V: list[int]]: pass""", r"""
 Module .. ROOT 0,0 -> 0,35
   .body[1]
   0] ClassDef .. 0,0 -> 0,35
@@ -22808,7 +22808,7 @@ Module .. ROOT 0,0 -> 0,35
         .ctx Load
 """),
 
-(r"""class c[T: int, U: (str)]: pass""", 'body[0]', -2, 'type_params', {'raw': False, '_ver': 12}, r"""V: list[int]""", r"""class c[V: list[int], U: (str)]: pass""", r"""
+(r"""class c[T: int, U: (str)]: pass""", 'body[0]', -2, 'type_params', {'_ver': 12}, r"""V: list[int]""", r"""class c[V: list[int], U: (str)]: pass""", r"""
 Module .. ROOT 0,0 -> 0,37
   .body[1]
   0] ClassDef .. 0,0 -> 0,37
@@ -22827,13 +22827,13 @@ Module .. ROOT 0,0 -> 0,37
       .bound Name 'str' Load .. 0,26 -> 0,29
 """),
 
-(r"""class c[T: int, U: (str)]: pass""", 'body[0]', -4, 'type_params', {'raw': False, '_ver': 12}, r"""V: list[int]""", r"""**IndexError('index out of range')**""", r"""
+(r"""class c[T: int, U: (str)]: pass""", 'body[0]', -4, 'type_params', {'_ver': 12}, r"""V: list[int]""", r"""**IndexError('index out of range')**""", r"""
 """),
 
-(r"""type t[T: int, U: (str)] = ...""", 'body[0]', 0, 'type_params', {'raw': False, '_ver': 12}, r"""**DEL**""", r"""**ValueError('cannot put slice to TypeAlias.type_params')**""", r"""
+(r"""type t[T: int, U: (str)] = ...""", 'body[0]', 0, 'type_params', {'_ver': 12}, r"""**DEL**""", r"""**ValueError('cannot put slice to TypeAlias.type_params')**""", r"""
 """),
 
-(r"""type t[T: int, U: (str)] = ...""", 'body[0]', 0, 'type_params', {'raw': False, '_ver': 12}, r"""V: list[int]""", r"""type t[V: list[int], U: (str)] = ...""", r"""
+(r"""type t[T: int, U: (str)] = ...""", 'body[0]', 0, 'type_params', {'_ver': 12}, r"""V: list[int]""", r"""type t[V: list[int], U: (str)] = ...""", r"""
 Module .. ROOT 0,0 -> 0,36
   .body[1]
   0] TypeAlias .. 0,0 -> 0,36
@@ -22851,7 +22851,7 @@ Module .. ROOT 0,0 -> 0,36
     .value Constant Ellipsis .. 0,33 -> 0,36
 """),
 
-(r"""type t[T: int, U: (str)] = ...""", 'body[0]', 1, 'type_params', {'raw': False, '_ver': 12}, r"""V: list[int]""", r"""type t[T: int, V: list[int]] = ...""", r"""
+(r"""type t[T: int, U: (str)] = ...""", 'body[0]', 1, 'type_params', {'_ver': 12}, r"""V: list[int]""", r"""type t[T: int, V: list[int]] = ...""", r"""
 Module .. ROOT 0,0 -> 0,34
   .body[1]
   0] TypeAlias .. 0,0 -> 0,34
@@ -22869,7 +22869,7 @@ Module .. ROOT 0,0 -> 0,34
     .value Constant Ellipsis .. 0,31 -> 0,34
 """),
 
-(r"""type t[T: int, U: (str)] = ...""", 'body[0]', -1, 'type_params', {'raw': False, '_ver': 12}, r"""V: list[int]""", r"""type t[T: int, V: list[int]] = ...""", r"""
+(r"""type t[T: int, U: (str)] = ...""", 'body[0]', -1, 'type_params', {'_ver': 12}, r"""V: list[int]""", r"""type t[T: int, V: list[int]] = ...""", r"""
 Module .. ROOT 0,0 -> 0,34
   .body[1]
   0] TypeAlias .. 0,0 -> 0,34
@@ -22887,7 +22887,7 @@ Module .. ROOT 0,0 -> 0,34
     .value Constant Ellipsis .. 0,31 -> 0,34
 """),
 
-(r"""type t[T: int, U: (str)] = ...""", 'body[0]', -2, 'type_params', {'raw': False, '_ver': 12}, r"""V: list[int]""", r"""type t[V: list[int], U: (str)] = ...""", r"""
+(r"""type t[T: int, U: (str)] = ...""", 'body[0]', -2, 'type_params', {'_ver': 12}, r"""V: list[int]""", r"""type t[V: list[int], U: (str)] = ...""", r"""
 Module .. ROOT 0,0 -> 0,36
   .body[1]
   0] TypeAlias .. 0,0 -> 0,36
@@ -22905,13 +22905,13 @@ Module .. ROOT 0,0 -> 0,36
     .value Constant Ellipsis .. 0,33 -> 0,36
 """),
 
-(r"""type t[T: int, U: (str)] = ...""", 'body[0]', -4, 'type_params', {'raw': False, '_ver': 12}, r"""V: list[int]""", r"""**IndexError('index out of range')**""", r"""
+(r"""type t[T: int, U: (str)] = ...""", 'body[0]', -4, 'type_params', {'_ver': 12}, r"""V: list[int]""", r"""**IndexError('index out of range')**""", r"""
 """),
 
 (r"""[i for j in k async for (i) in j]""", 'body[0].value', 0, 'generators', {'raw': False}, r"""**DEL**""", r"""**ValueError('cannot put slice to ListComp.generators')**""", r"""
 """),
 
-(r"""[i for j in k async for (i) in j]""", 'body[0].value', 0, 'generators', {'raw': False}, r"""async for a in b""", r"""[i async for a in b async for (i) in j]""", r"""
+(r"""[i for j in k async for (i) in j]""", 'body[0].value', 0, 'generators', {}, r"""async for a in b""", r"""[i async for a in b async for (i) in j]""", r"""
 Module .. ROOT 0,0 -> 0,39
   .body[1]
   0] Expr .. 0,0 -> 0,39
@@ -22928,7 +22928,7 @@ Module .. ROOT 0,0 -> 0,39
         .is_async 1
 """),
 
-(r"""[i for j in k async for (i) in j]""", 'body[0].value', 1, 'generators', {'raw': False}, r"""async for a in b""", r"""[i for j in k async for a in b]""", r"""
+(r"""[i for j in k async for (i) in j]""", 'body[0].value', 1, 'generators', {}, r"""async for a in b""", r"""[i for j in k async for a in b]""", r"""
 Module .. ROOT 0,0 -> 0,31
   .body[1]
   0] Expr .. 0,0 -> 0,31
@@ -22945,7 +22945,7 @@ Module .. ROOT 0,0 -> 0,31
         .is_async 1
 """),
 
-(r"""[i for j in k async for (i) in j]""", 'body[0].value', -1, 'generators', {'raw': False}, r"""async for a in b""", r"""[i for j in k async for a in b]""", r"""
+(r"""[i for j in k async for (i) in j]""", 'body[0].value', -1, 'generators', {}, r"""async for a in b""", r"""[i for j in k async for a in b]""", r"""
 Module .. ROOT 0,0 -> 0,31
   .body[1]
   0] Expr .. 0,0 -> 0,31
@@ -22962,7 +22962,7 @@ Module .. ROOT 0,0 -> 0,31
         .is_async 1
 """),
 
-(r"""[i for j in k async for (i) in j]""", 'body[0].value', -2, 'generators', {'raw': False}, r"""async for a in b""", r"""[i async for a in b async for (i) in j]""", r"""
+(r"""[i for j in k async for (i) in j]""", 'body[0].value', -2, 'generators', {}, r"""async for a in b""", r"""[i async for a in b async for (i) in j]""", r"""
 Module .. ROOT 0,0 -> 0,39
   .body[1]
   0] Expr .. 0,0 -> 0,39
@@ -22979,13 +22979,13 @@ Module .. ROOT 0,0 -> 0,39
         .is_async 1
 """),
 
-(r"""[i for j in k async for (i) in j]""", 'body[0].value', -4, 'generators', {'raw': False}, r"""async for a in b""", r"""**IndexError('index out of range')**""", r"""
+(r"""[i for j in k async for (i) in j]""", 'body[0].value', -4, 'generators', {}, r"""async for a in b""", r"""**IndexError('index out of range')**""", r"""
 """),
 
 (r"""{i for j in k async for (i) in j}""", 'body[0].value', 0, 'generators', {'raw': False}, r"""**DEL**""", r"""**ValueError('cannot put slice to SetComp.generators')**""", r"""
 """),
 
-(r"""{i for j in k async for (i) in j}""", 'body[0].value', 0, 'generators', {'raw': False}, r"""async for a in b""", r"""{i async for a in b async for (i) in j}""", r"""
+(r"""{i for j in k async for (i) in j}""", 'body[0].value', 0, 'generators', {}, r"""async for a in b""", r"""{i async for a in b async for (i) in j}""", r"""
 Module .. ROOT 0,0 -> 0,39
   .body[1]
   0] Expr .. 0,0 -> 0,39
@@ -23002,7 +23002,7 @@ Module .. ROOT 0,0 -> 0,39
         .is_async 1
 """),
 
-(r"""{i for j in k async for (i) in j}""", 'body[0].value', 1, 'generators', {'raw': False}, r"""async for a in b""", r"""{i for j in k async for a in b}""", r"""
+(r"""{i for j in k async for (i) in j}""", 'body[0].value', 1, 'generators', {}, r"""async for a in b""", r"""{i for j in k async for a in b}""", r"""
 Module .. ROOT 0,0 -> 0,31
   .body[1]
   0] Expr .. 0,0 -> 0,31
@@ -23019,7 +23019,7 @@ Module .. ROOT 0,0 -> 0,31
         .is_async 1
 """),
 
-(r"""{i for j in k async for (i) in j}""", 'body[0].value', -1, 'generators', {'raw': False}, r"""async for a in b""", r"""{i for j in k async for a in b}""", r"""
+(r"""{i for j in k async for (i) in j}""", 'body[0].value', -1, 'generators', {}, r"""async for a in b""", r"""{i for j in k async for a in b}""", r"""
 Module .. ROOT 0,0 -> 0,31
   .body[1]
   0] Expr .. 0,0 -> 0,31
@@ -23036,7 +23036,7 @@ Module .. ROOT 0,0 -> 0,31
         .is_async 1
 """),
 
-(r"""{i for j in k async for (i) in j}""", 'body[0].value', -2, 'generators', {'raw': False}, r"""async for a in b""", r"""{i async for a in b async for (i) in j}""", r"""
+(r"""{i for j in k async for (i) in j}""", 'body[0].value', -2, 'generators', {}, r"""async for a in b""", r"""{i async for a in b async for (i) in j}""", r"""
 Module .. ROOT 0,0 -> 0,39
   .body[1]
   0] Expr .. 0,0 -> 0,39
@@ -23053,13 +23053,13 @@ Module .. ROOT 0,0 -> 0,39
         .is_async 1
 """),
 
-(r"""{i for j in k async for (i) in j}""", 'body[0].value', -4, 'generators', {'raw': False}, r"""async for a in b""", r"""**IndexError('index out of range')**""", r"""
+(r"""{i for j in k async for (i) in j}""", 'body[0].value', -4, 'generators', {}, r"""async for a in b""", r"""**IndexError('index out of range')**""", r"""
 """),
 
 (r"""{i: i for j in k async for (i) in j}""", 'body[0].value', 0, 'generators', {'raw': False}, r"""**DEL**""", r"""**ValueError('cannot put slice to DictComp.generators')**""", r"""
 """),
 
-(r"""{i: i for j in k async for (i) in j}""", 'body[0].value', 0, 'generators', {'raw': False}, r"""async for a in b""", r"""{i: i async for a in b async for (i) in j}""", r"""
+(r"""{i: i for j in k async for (i) in j}""", 'body[0].value', 0, 'generators', {}, r"""async for a in b""", r"""{i: i async for a in b async for (i) in j}""", r"""
 Module .. ROOT 0,0 -> 0,42
   .body[1]
   0] Expr .. 0,0 -> 0,42
@@ -23077,7 +23077,7 @@ Module .. ROOT 0,0 -> 0,42
         .is_async 1
 """),
 
-(r"""{i: i for j in k async for (i) in j}""", 'body[0].value', 1, 'generators', {'raw': False}, r"""async for a in b""", r"""{i: i for j in k async for a in b}""", r"""
+(r"""{i: i for j in k async for (i) in j}""", 'body[0].value', 1, 'generators', {}, r"""async for a in b""", r"""{i: i for j in k async for a in b}""", r"""
 Module .. ROOT 0,0 -> 0,34
   .body[1]
   0] Expr .. 0,0 -> 0,34
@@ -23095,7 +23095,7 @@ Module .. ROOT 0,0 -> 0,34
         .is_async 1
 """),
 
-(r"""{i: i for j in k async for (i) in j}""", 'body[0].value', -1, 'generators', {'raw': False}, r"""async for a in b""", r"""{i: i for j in k async for a in b}""", r"""
+(r"""{i: i for j in k async for (i) in j}""", 'body[0].value', -1, 'generators', {}, r"""async for a in b""", r"""{i: i for j in k async for a in b}""", r"""
 Module .. ROOT 0,0 -> 0,34
   .body[1]
   0] Expr .. 0,0 -> 0,34
@@ -23113,7 +23113,7 @@ Module .. ROOT 0,0 -> 0,34
         .is_async 1
 """),
 
-(r"""{i: i for j in k async for (i) in j}""", 'body[0].value', -2, 'generators', {'raw': False}, r"""async for a in b""", r"""{i: i async for a in b async for (i) in j}""", r"""
+(r"""{i: i for j in k async for (i) in j}""", 'body[0].value', -2, 'generators', {}, r"""async for a in b""", r"""{i: i async for a in b async for (i) in j}""", r"""
 Module .. ROOT 0,0 -> 0,42
   .body[1]
   0] Expr .. 0,0 -> 0,42
@@ -23131,13 +23131,13 @@ Module .. ROOT 0,0 -> 0,42
         .is_async 1
 """),
 
-(r"""{i: i for j in k async for (i) in j}""", 'body[0].value', -4, 'generators', {'raw': False}, r"""async for a in b""", r"""**IndexError('index out of range')**""", r"""
+(r"""{i: i for j in k async for (i) in j}""", 'body[0].value', -4, 'generators', {}, r"""async for a in b""", r"""**IndexError('index out of range')**""", r"""
 """),
 
 (r"""(i for j in k async for (i) in j)""", 'body[0].value', 0, 'generators', {'raw': False}, r"""**DEL**""", r"""**ValueError('cannot put slice to GeneratorExp.generators')**""", r"""
 """),
 
-(r"""(i for j in k async for (i) in j)""", 'body[0].value', 0, 'generators', {'raw': False}, r"""async for a in b""", r"""(i async for a in b async for (i) in j)""", r"""
+(r"""(i for j in k async for (i) in j)""", 'body[0].value', 0, 'generators', {}, r"""async for a in b""", r"""(i async for a in b async for (i) in j)""", r"""
 Module .. ROOT 0,0 -> 0,39
   .body[1]
   0] Expr .. 0,0 -> 0,39
@@ -23154,7 +23154,7 @@ Module .. ROOT 0,0 -> 0,39
         .is_async 1
 """),
 
-(r"""(i for j in k async for (i) in j)""", 'body[0].value', 1, 'generators', {'raw': False}, r"""async for a in b""", r"""(i for j in k async for a in b)""", r"""
+(r"""(i for j in k async for (i) in j)""", 'body[0].value', 1, 'generators', {}, r"""async for a in b""", r"""(i for j in k async for a in b)""", r"""
 Module .. ROOT 0,0 -> 0,31
   .body[1]
   0] Expr .. 0,0 -> 0,31
@@ -23171,7 +23171,7 @@ Module .. ROOT 0,0 -> 0,31
         .is_async 1
 """),
 
-(r"""(i for j in k async for (i) in j)""", 'body[0].value', -1, 'generators', {'raw': False}, r"""async for a in b""", r"""(i for j in k async for a in b)""", r"""
+(r"""(i for j in k async for (i) in j)""", 'body[0].value', -1, 'generators', {}, r"""async for a in b""", r"""(i for j in k async for a in b)""", r"""
 Module .. ROOT 0,0 -> 0,31
   .body[1]
   0] Expr .. 0,0 -> 0,31
@@ -23188,7 +23188,7 @@ Module .. ROOT 0,0 -> 0,31
         .is_async 1
 """),
 
-(r"""(i for j in k async for (i) in j)""", 'body[0].value', -2, 'generators', {'raw': False}, r"""async for a in b""", r"""(i async for a in b async for (i) in j)""", r"""
+(r"""(i for j in k async for (i) in j)""", 'body[0].value', -2, 'generators', {}, r"""async for a in b""", r"""(i async for a in b async for (i) in j)""", r"""
 Module .. ROOT 0,0 -> 0,39
   .body[1]
   0] Expr .. 0,0 -> 0,39
@@ -23205,13 +23205,13 @@ Module .. ROOT 0,0 -> 0,39
         .is_async 1
 """),
 
-(r"""(i for j in k async for (i) in j)""", 'body[0].value', -4, 'generators', {'raw': False}, r"""async for a in b""", r"""**IndexError('index out of range')**""", r"""
+(r"""(i for j in k async for (i) in j)""", 'body[0].value', -4, 'generators', {}, r"""async for a in b""", r"""**IndexError('index out of range')**""", r"""
 """),
 
-(r"""def f(a: int = 1, b: (str)='', /): pass""", 'body[0].args', 0, 'posonlyargs', {'raw': False}, r"""**DEL**""", r"""**ValueError('cannot put slice to arguments.posonlyargs')**""", r"""
+(r"""def f(a: int = 1, b: (str)='', /): pass""", 'body[0].args', 0, 'posonlyargs', {}, r"""**DEL**""", r"""**ValueError('cannot put slice to arguments.posonlyargs')**""", r"""
 """),
 
-(r"""def f(a: int = 1, b: (str)='', /): pass""", 'body[0].args', 0, 'posonlyargs', {'raw': False}, r"""new""", r"""def f(new = 1, b: (str)='', /): pass""", r"""
+(r"""def f(a: int = 1, b: (str)='', /): pass""", 'body[0].args', 0, 'posonlyargs', {}, r"""new""", r"""def f(new = 1, b: (str)='', /): pass""", r"""
 Module .. ROOT 0,0 -> 0,36
   .body[1]
   0] FunctionDef .. 0,0 -> 0,36
@@ -23230,7 +23230,7 @@ Module .. ROOT 0,0 -> 0,36
     0] Pass .. 0,32 -> 0,36
 """),
 
-(r"""def f(a: int = 1, b: (str)='', /): pass""", 'body[0].args', 1, 'posonlyargs', {'raw': False}, r"""new""", r"""def f(a: int = 1, new='', /): pass""", r"""
+(r"""def f(a: int = 1, b: (str)='', /): pass""", 'body[0].args', 1, 'posonlyargs', {}, r"""new""", r"""def f(a: int = 1, new='', /): pass""", r"""
 Module .. ROOT 0,0 -> 0,34
   .body[1]
   0] FunctionDef .. 0,0 -> 0,34
@@ -23249,7 +23249,7 @@ Module .. ROOT 0,0 -> 0,34
     0] Pass .. 0,30 -> 0,34
 """),
 
-(r"""def f(a: int = 1, b: (str)='', /): pass""", 'body[0].args', -1, 'posonlyargs', {'raw': False}, r"""new""", r"""def f(a: int = 1, new='', /): pass""", r"""
+(r"""def f(a: int = 1, b: (str)='', /): pass""", 'body[0].args', -1, 'posonlyargs', {}, r"""new""", r"""def f(a: int = 1, new='', /): pass""", r"""
 Module .. ROOT 0,0 -> 0,34
   .body[1]
   0] FunctionDef .. 0,0 -> 0,34
@@ -23268,7 +23268,7 @@ Module .. ROOT 0,0 -> 0,34
     0] Pass .. 0,30 -> 0,34
 """),
 
-(r"""def f(a: int = 1, b: (str)='', /): pass""", 'body[0].args', -2, 'posonlyargs', {'raw': False}, r"""new""", r"""def f(new = 1, b: (str)='', /): pass""", r"""
+(r"""def f(a: int = 1, b: (str)='', /): pass""", 'body[0].args', -2, 'posonlyargs', {}, r"""new""", r"""def f(new = 1, b: (str)='', /): pass""", r"""
 Module .. ROOT 0,0 -> 0,36
   .body[1]
   0] FunctionDef .. 0,0 -> 0,36
@@ -23287,13 +23287,13 @@ Module .. ROOT 0,0 -> 0,36
     0] Pass .. 0,32 -> 0,36
 """),
 
-(r"""def f(a: int = 1, b: (str)='', /): pass""", 'body[0].args', -4, 'posonlyargs', {'raw': False}, r"""new""", r"""**IndexError('index out of range')**""", r"""
+(r"""def f(a: int = 1, b: (str)='', /): pass""", 'body[0].args', -4, 'posonlyargs', {}, r"""new""", r"""**IndexError('index out of range')**""", r"""
 """),
 
-(r"""def f(a: int = 1, b: (str)=''): pass""", 'body[0].args', 0, 'args', {'raw': False}, r"""**DEL**""", r"""**ValueError('cannot put slice to arguments.args')**""", r"""
+(r"""def f(a: int = 1, b: (str)=''): pass""", 'body[0].args', 0, 'args', {}, r"""**DEL**""", r"""**ValueError('cannot put slice to arguments.args')**""", r"""
 """),
 
-(r"""def f(a: int = 1, b: (str)=''): pass""", 'body[0].args', 0, 'args', {'raw': False}, r"""new""", r"""def f(new = 1, b: (str)=''): pass""", r"""
+(r"""def f(a: int = 1, b: (str)=''): pass""", 'body[0].args', 0, 'args', {}, r"""new""", r"""def f(new = 1, b: (str)=''): pass""", r"""
 Module .. ROOT 0,0 -> 0,33
   .body[1]
   0] FunctionDef .. 0,0 -> 0,33
@@ -23312,7 +23312,7 @@ Module .. ROOT 0,0 -> 0,33
     0] Pass .. 0,29 -> 0,33
 """),
 
-(r"""def f(a: int = 1, b: (str)=''): pass""", 'body[0].args', 1, 'args', {'raw': False}, r"""new""", r"""def f(a: int = 1, new=''): pass""", r"""
+(r"""def f(a: int = 1, b: (str)=''): pass""", 'body[0].args', 1, 'args', {}, r"""new""", r"""def f(a: int = 1, new=''): pass""", r"""
 Module .. ROOT 0,0 -> 0,31
   .body[1]
   0] FunctionDef .. 0,0 -> 0,31
@@ -23331,7 +23331,7 @@ Module .. ROOT 0,0 -> 0,31
     0] Pass .. 0,27 -> 0,31
 """),
 
-(r"""def f(a: int = 1, b: (str)=''): pass""", 'body[0].args', -1, 'args', {'raw': False}, r"""new""", r"""def f(a: int = 1, new=''): pass""", r"""
+(r"""def f(a: int = 1, b: (str)=''): pass""", 'body[0].args', -1, 'args', {}, r"""new""", r"""def f(a: int = 1, new=''): pass""", r"""
 Module .. ROOT 0,0 -> 0,31
   .body[1]
   0] FunctionDef .. 0,0 -> 0,31
@@ -23350,7 +23350,7 @@ Module .. ROOT 0,0 -> 0,31
     0] Pass .. 0,27 -> 0,31
 """),
 
-(r"""def f(a: int = 1, b: (str)=''): pass""", 'body[0].args', -2, 'args', {'raw': False}, r"""new""", r"""def f(new = 1, b: (str)=''): pass""", r"""
+(r"""def f(a: int = 1, b: (str)=''): pass""", 'body[0].args', -2, 'args', {}, r"""new""", r"""def f(new = 1, b: (str)=''): pass""", r"""
 Module .. ROOT 0,0 -> 0,33
   .body[1]
   0] FunctionDef .. 0,0 -> 0,33
@@ -23369,13 +23369,13 @@ Module .. ROOT 0,0 -> 0,33
     0] Pass .. 0,29 -> 0,33
 """),
 
-(r"""def f(a: int = 1, b: (str)=''): pass""", 'body[0].args', -4, 'args', {'raw': False}, r"""new""", r"""**IndexError('index out of range')**""", r"""
+(r"""def f(a: int = 1, b: (str)=''): pass""", 'body[0].args', -4, 'args', {}, r"""new""", r"""**IndexError('index out of range')**""", r"""
 """),
 
-(r"""def f(*, a: int = 1, b: (str)=''): pass""", 'body[0].args', 0, 'kwonlyargs', {'raw': False}, r"""**DEL**""", r"""**ValueError('cannot put slice to arguments.kwonlyargs')**""", r"""
+(r"""def f(*, a: int = 1, b: (str)=''): pass""", 'body[0].args', 0, 'kwonlyargs', {}, r"""**DEL**""", r"""**ValueError('cannot put slice to arguments.kwonlyargs')**""", r"""
 """),
 
-(r"""def f(*, a: int = 1, b: (str)=''): pass""", 'body[0].args', 0, 'kwonlyargs', {'raw': False}, r"""new""", r"""def f(*, new = 1, b: (str)=''): pass""", r"""
+(r"""def f(*, a: int = 1, b: (str)=''): pass""", 'body[0].args', 0, 'kwonlyargs', {}, r"""new""", r"""def f(*, new = 1, b: (str)=''): pass""", r"""
 Module .. ROOT 0,0 -> 0,36
   .body[1]
   0] FunctionDef .. 0,0 -> 0,36
@@ -23394,7 +23394,7 @@ Module .. ROOT 0,0 -> 0,36
     0] Pass .. 0,32 -> 0,36
 """),
 
-(r"""def f(*, a: int = 1, b: (str)=''): pass""", 'body[0].args', 1, 'kwonlyargs', {'raw': False}, r"""new""", r"""def f(*, a: int = 1, new=''): pass""", r"""
+(r"""def f(*, a: int = 1, b: (str)=''): pass""", 'body[0].args', 1, 'kwonlyargs', {}, r"""new""", r"""def f(*, a: int = 1, new=''): pass""", r"""
 Module .. ROOT 0,0 -> 0,34
   .body[1]
   0] FunctionDef .. 0,0 -> 0,34
@@ -23413,7 +23413,7 @@ Module .. ROOT 0,0 -> 0,34
     0] Pass .. 0,30 -> 0,34
 """),
 
-(r"""def f(*, a: int = 1, b: (str)=''): pass""", 'body[0].args', -1, 'kwonlyargs', {'raw': False}, r"""new""", r"""def f(*, a: int = 1, new=''): pass""", r"""
+(r"""def f(*, a: int = 1, b: (str)=''): pass""", 'body[0].args', -1, 'kwonlyargs', {}, r"""new""", r"""def f(*, a: int = 1, new=''): pass""", r"""
 Module .. ROOT 0,0 -> 0,34
   .body[1]
   0] FunctionDef .. 0,0 -> 0,34
@@ -23432,7 +23432,7 @@ Module .. ROOT 0,0 -> 0,34
     0] Pass .. 0,30 -> 0,34
 """),
 
-(r"""def f(*, a: int = 1, b: (str)=''): pass""", 'body[0].args', -2, 'kwonlyargs', {'raw': False}, r"""new""", r"""def f(*, new = 1, b: (str)=''): pass""", r"""
+(r"""def f(*, a: int = 1, b: (str)=''): pass""", 'body[0].args', -2, 'kwonlyargs', {}, r"""new""", r"""def f(*, new = 1, b: (str)=''): pass""", r"""
 Module .. ROOT 0,0 -> 0,36
   .body[1]
   0] FunctionDef .. 0,0 -> 0,36
@@ -23451,13 +23451,13 @@ Module .. ROOT 0,0 -> 0,36
     0] Pass .. 0,32 -> 0,36
 """),
 
-(r"""def f(*, a: int = 1, b: (str)=''): pass""", 'body[0].args', -4, 'kwonlyargs', {'raw': False}, r"""new""", r"""**IndexError('index out of range')**""", r"""
+(r"""def f(*, a: int = 1, b: (str)=''): pass""", 'body[0].args', -4, 'kwonlyargs', {}, r"""new""", r"""**IndexError('index out of range')**""", r"""
 """),
 
-(r"""class c(a=1, b = (2)): pass""", 'body[0]', 0, 'keywords', {'raw': False}, r"""**DEL**""", r"""**ValueError('cannot put slice to ClassDef.keywords')**""", r"""
+(r"""class c(a=1, b = (2)): pass""", 'body[0]', 0, 'keywords', {}, r"""**DEL**""", r"""**ValueError('cannot put slice to ClassDef.keywords')**""", r"""
 """),
 
-(r"""class c(a=1, b = (2)): pass""", 'body[0]', 0, 'keywords', {'raw': False}, r"""new=(3)""", r"""class c(new=(3), b = (2)): pass""", r"""
+(r"""class c(a=1, b = (2)): pass""", 'body[0]', 0, 'keywords', {}, r"""new=(3)""", r"""class c(new=(3), b = (2)): pass""", r"""
 Module .. ROOT 0,0 -> 0,31
   .body[1]
   0] ClassDef .. 0,0 -> 0,31
@@ -23473,7 +23473,7 @@ Module .. ROOT 0,0 -> 0,31
     0] Pass .. 0,27 -> 0,31
 """),
 
-(r"""class c(a=1, b = (2)): pass""", 'body[0]', 1, 'keywords', {'raw': False}, r"""new=(3)""", r"""class c(a=1, new=(3)): pass""", r"""
+(r"""class c(a=1, b = (2)): pass""", 'body[0]', 1, 'keywords', {}, r"""new=(3)""", r"""class c(a=1, new=(3)): pass""", r"""
 Module .. ROOT 0,0 -> 0,27
   .body[1]
   0] ClassDef .. 0,0 -> 0,27
@@ -23489,7 +23489,7 @@ Module .. ROOT 0,0 -> 0,27
     0] Pass .. 0,23 -> 0,27
 """),
 
-(r"""class c(a=1, b = (2)): pass""", 'body[0]', -1, 'keywords', {'raw': False}, r"""new=(3)""", r"""class c(a=1, new=(3)): pass""", r"""
+(r"""class c(a=1, b = (2)): pass""", 'body[0]', -1, 'keywords', {}, r"""new=(3)""", r"""class c(a=1, new=(3)): pass""", r"""
 Module .. ROOT 0,0 -> 0,27
   .body[1]
   0] ClassDef .. 0,0 -> 0,27
@@ -23505,7 +23505,7 @@ Module .. ROOT 0,0 -> 0,27
     0] Pass .. 0,23 -> 0,27
 """),
 
-(r"""class c(a=1, b = (2)): pass""", 'body[0]', -2, 'keywords', {'raw': False}, r"""new=(3)""", r"""class c(new=(3), b = (2)): pass""", r"""
+(r"""class c(a=1, b = (2)): pass""", 'body[0]', -2, 'keywords', {}, r"""new=(3)""", r"""class c(new=(3), b = (2)): pass""", r"""
 Module .. ROOT 0,0 -> 0,31
   .body[1]
   0] ClassDef .. 0,0 -> 0,31
@@ -23521,13 +23521,13 @@ Module .. ROOT 0,0 -> 0,31
     0] Pass .. 0,27 -> 0,31
 """),
 
-(r"""class c(a=1, b = (2)): pass""", 'body[0]', -4, 'keywords', {'raw': False}, r"""new=(3)""", r"""**IndexError('index out of range')**""", r"""
+(r"""class c(a=1, b = (2)): pass""", 'body[0]', -4, 'keywords', {}, r"""new=(3)""", r"""**IndexError('index out of range')**""", r"""
 """),
 
-(r"""call(a=1, b = (2))""", 'body[0].value', 0, 'keywords', {'raw': False}, r"""**DEL**""", r"""**ValueError('cannot put slice to Call.keywords')**""", r"""
+(r"""call(a=1, b = (2))""", 'body[0].value', 0, 'keywords', {}, r"""**DEL**""", r"""**ValueError('cannot put slice to Call.keywords')**""", r"""
 """),
 
-(r"""call(a=1, b = (2))""", 'body[0].value', 0, 'keywords', {'raw': False}, r"""new=(3)""", r"""call(new=(3), b = (2))""", r"""
+(r"""call(a=1, b = (2))""", 'body[0].value', 0, 'keywords', {}, r"""new=(3)""", r"""call(new=(3), b = (2))""", r"""
 Module .. ROOT 0,0 -> 0,22
   .body[1]
   0] Expr .. 0,0 -> 0,22
@@ -23542,7 +23542,7 @@ Module .. ROOT 0,0 -> 0,22
         .value Constant 2 .. 0,19 -> 0,20
 """),
 
-(r"""call(a=1, b = (2))""", 'body[0].value', 1, 'keywords', {'raw': False}, r"""new=(3)""", r"""call(a=1, new=(3))""", r"""
+(r"""call(a=1, b = (2))""", 'body[0].value', 1, 'keywords', {}, r"""new=(3)""", r"""call(a=1, new=(3))""", r"""
 Module .. ROOT 0,0 -> 0,18
   .body[1]
   0] Expr .. 0,0 -> 0,18
@@ -23557,7 +23557,7 @@ Module .. ROOT 0,0 -> 0,18
         .value Constant 3 .. 0,15 -> 0,16
 """),
 
-(r"""call(a=1, b = (2))""", 'body[0].value', -1, 'keywords', {'raw': False}, r"""new=(3)""", r"""call(a=1, new=(3))""", r"""
+(r"""call(a=1, b = (2))""", 'body[0].value', -1, 'keywords', {}, r"""new=(3)""", r"""call(a=1, new=(3))""", r"""
 Module .. ROOT 0,0 -> 0,18
   .body[1]
   0] Expr .. 0,0 -> 0,18
@@ -23572,7 +23572,7 @@ Module .. ROOT 0,0 -> 0,18
         .value Constant 3 .. 0,15 -> 0,16
 """),
 
-(r"""call(a=1, b = (2))""", 'body[0].value', -2, 'keywords', {'raw': False}, r"""new=(3)""", r"""call(new=(3), b = (2))""", r"""
+(r"""call(a=1, b = (2))""", 'body[0].value', -2, 'keywords', {}, r"""new=(3)""", r"""call(new=(3), b = (2))""", r"""
 Module .. ROOT 0,0 -> 0,22
   .body[1]
   0] Expr .. 0,0 -> 0,22
@@ -23587,13 +23587,13 @@ Module .. ROOT 0,0 -> 0,22
         .value Constant 2 .. 0,19 -> 0,20
 """),
 
-(r"""call(a=1, b = (2))""", 'body[0].value', -4, 'keywords', {'raw': False}, r"""new=(3)""", r"""**IndexError('index out of range')**""", r"""
+(r"""call(a=1, b = (2))""", 'body[0].value', -4, 'keywords', {}, r"""new=(3)""", r"""**IndexError('index out of range')**""", r"""
 """),
 
-(r"""with (a as b, (f()) as d): pass""", 'body[0]', 0, 'items', {'raw': False}, r"""**DEL**""", r"""**ValueError('cannot put slice to With.items')**""", r"""
+(r"""with (a as b, (f()) as d): pass""", 'body[0]', 0, 'items', {}, r"""**DEL**""", r"""**ValueError('cannot put slice to With.items')**""", r"""
 """),
 
-(r"""with (a as b, (f()) as d): pass""", 'body[0]', 0, 'items', {'raw': False}, r"""g() as new""", r"""with (g() as new, (f()) as d): pass""", r"""
+(r"""with (a as b, (f()) as d): pass""", 'body[0]', 0, 'items', {}, r"""g() as new""", r"""with (g() as new, (f()) as d): pass""", r"""
 Module .. ROOT 0,0 -> 0,35
   .body[1]
   0] With .. 0,0 -> 0,35
@@ -23610,7 +23610,7 @@ Module .. ROOT 0,0 -> 0,35
     0] Pass .. 0,31 -> 0,35
 """),
 
-(r"""with (a as b, (f()) as d): pass""", 'body[0]', 1, 'items', {'raw': False}, r"""g() as new""", r"""with (a as b, g() as new): pass""", r"""
+(r"""with (a as b, (f()) as d): pass""", 'body[0]', 1, 'items', {}, r"""g() as new""", r"""with (a as b, g() as new): pass""", r"""
 Module .. ROOT 0,0 -> 0,31
   .body[1]
   0] With .. 0,0 -> 0,31
@@ -23626,7 +23626,7 @@ Module .. ROOT 0,0 -> 0,31
     0] Pass .. 0,27 -> 0,31
 """),
 
-(r"""with (a as b, (f()) as d): pass""", 'body[0]', -1, 'items', {'raw': False}, r"""g() as new""", r"""with (a as b, g() as new): pass""", r"""
+(r"""with (a as b, (f()) as d): pass""", 'body[0]', -1, 'items', {}, r"""g() as new""", r"""with (a as b, g() as new): pass""", r"""
 Module .. ROOT 0,0 -> 0,31
   .body[1]
   0] With .. 0,0 -> 0,31
@@ -23642,7 +23642,7 @@ Module .. ROOT 0,0 -> 0,31
     0] Pass .. 0,27 -> 0,31
 """),
 
-(r"""with (a as b, (f()) as d): pass""", 'body[0]', -2, 'items', {'raw': False}, r"""g() as new""", r"""with (g() as new, (f()) as d): pass""", r"""
+(r"""with (a as b, (f()) as d): pass""", 'body[0]', -2, 'items', {}, r"""g() as new""", r"""with (g() as new, (f()) as d): pass""", r"""
 Module .. ROOT 0,0 -> 0,35
   .body[1]
   0] With .. 0,0 -> 0,35
@@ -23659,13 +23659,13 @@ Module .. ROOT 0,0 -> 0,35
     0] Pass .. 0,31 -> 0,35
 """),
 
-(r"""with (a as b, (f()) as d): pass""", 'body[0]', -4, 'items', {'raw': False}, r"""g() as new""", r"""**IndexError('index out of range')**""", r"""
+(r"""with (a as b, (f()) as d): pass""", 'body[0]', -4, 'items', {}, r"""g() as new""", r"""**IndexError('index out of range')**""", r"""
 """),
 
-(r"""async with (a as b, (f()) as d): pass""", 'body[0]', 0, 'items', {'raw': False}, r"""**DEL**""", r"""**ValueError('cannot put slice to AsyncWith.items')**""", r"""
+(r"""async with (a as b, (f()) as d): pass""", 'body[0]', 0, 'items', {}, r"""**DEL**""", r"""**ValueError('cannot put slice to AsyncWith.items')**""", r"""
 """),
 
-(r"""async with (a as b, (f()) as d): pass""", 'body[0]', 0, 'items', {'raw': False}, r"""g() as new""", r"""async with (g() as new, (f()) as d): pass""", r"""
+(r"""async with (a as b, (f()) as d): pass""", 'body[0]', 0, 'items', {}, r"""g() as new""", r"""async with (g() as new, (f()) as d): pass""", r"""
 Module .. ROOT 0,0 -> 0,41
   .body[1]
   0] AsyncWith .. 0,0 -> 0,41
@@ -23682,7 +23682,7 @@ Module .. ROOT 0,0 -> 0,41
     0] Pass .. 0,37 -> 0,41
 """),
 
-(r"""async with (a as b, (f()) as d): pass""", 'body[0]', 1, 'items', {'raw': False}, r"""g() as new""", r"""async with (a as b, g() as new): pass""", r"""
+(r"""async with (a as b, (f()) as d): pass""", 'body[0]', 1, 'items', {}, r"""g() as new""", r"""async with (a as b, g() as new): pass""", r"""
 Module .. ROOT 0,0 -> 0,37
   .body[1]
   0] AsyncWith .. 0,0 -> 0,37
@@ -23698,7 +23698,7 @@ Module .. ROOT 0,0 -> 0,37
     0] Pass .. 0,33 -> 0,37
 """),
 
-(r"""async with (a as b, (f()) as d): pass""", 'body[0]', -1, 'items', {'raw': False}, r"""g() as new""", r"""async with (a as b, g() as new): pass""", r"""
+(r"""async with (a as b, (f()) as d): pass""", 'body[0]', -1, 'items', {}, r"""g() as new""", r"""async with (a as b, g() as new): pass""", r"""
 Module .. ROOT 0,0 -> 0,37
   .body[1]
   0] AsyncWith .. 0,0 -> 0,37
@@ -23714,7 +23714,7 @@ Module .. ROOT 0,0 -> 0,37
     0] Pass .. 0,33 -> 0,37
 """),
 
-(r"""async with (a as b, (f()) as d): pass""", 'body[0]', -2, 'items', {'raw': False}, r"""g() as new""", r"""async with (g() as new, (f()) as d): pass""", r"""
+(r"""async with (a as b, (f()) as d): pass""", 'body[0]', -2, 'items', {}, r"""g() as new""", r"""async with (g() as new, (f()) as d): pass""", r"""
 Module .. ROOT 0,0 -> 0,41
   .body[1]
   0] AsyncWith .. 0,0 -> 0,41
@@ -23731,13 +23731,13 @@ Module .. ROOT 0,0 -> 0,41
     0] Pass .. 0,37 -> 0,41
 """),
 
-(r"""async with (a as b, (f()) as d): pass""", 'body[0]', -4, 'items', {'raw': False}, r"""g() as new""", r"""**IndexError('index out of range')**""", r"""
+(r"""async with (a as b, (f()) as d): pass""", 'body[0]', -4, 'items', {}, r"""g() as new""", r"""**IndexError('index out of range')**""", r"""
 """),
 
-(r"""import a, c.d as e""", 'body[0]', 0, 'names', {'raw': False}, r"""**DEL**""", r"""**ValueError('cannot put slice to Import.names')**""", r"""
+(r"""import a, c.d as e""", 'body[0]', 0, 'names', {}, r"""**DEL**""", r"""**ValueError('cannot put slice to Import.names')**""", r"""
 """),
 
-(r"""import a, c.d as e""", 'body[0]', 0, 'names', {'raw': False}, r"""f as g""", r"""import f as g, c.d as e""", r"""
+(r"""import a, c.d as e""", 'body[0]', 0, 'names', {}, r"""f as g""", r"""import f as g, c.d as e""", r"""
 Module .. ROOT 0,0 -> 0,23
   .body[1]
   0] Import .. 0,0 -> 0,23
@@ -23752,7 +23752,7 @@ Module .. ROOT 0,0 -> 0,23
         'e'
 """),
 
-(r"""import a, c.d as e""", 'body[0]', 1, 'names', {'raw': False}, r"""f as g""", r"""import a, f as g""", r"""
+(r"""import a, c.d as e""", 'body[0]', 1, 'names', {}, r"""f as g""", r"""import a, f as g""", r"""
 Module .. ROOT 0,0 -> 0,16
   .body[1]
   0] Import .. 0,0 -> 0,16
@@ -23765,7 +23765,7 @@ Module .. ROOT 0,0 -> 0,16
         'g'
 """),
 
-(r"""import a, c.d as e""", 'body[0]', -1, 'names', {'raw': False}, r"""f as g""", r"""import a, f as g""", r"""
+(r"""import a, c.d as e""", 'body[0]', -1, 'names', {}, r"""f as g""", r"""import a, f as g""", r"""
 Module .. ROOT 0,0 -> 0,16
   .body[1]
   0] Import .. 0,0 -> 0,16
@@ -23778,7 +23778,7 @@ Module .. ROOT 0,0 -> 0,16
         'g'
 """),
 
-(r"""import a, c.d as e""", 'body[0]', -2, 'names', {'raw': False}, r"""f as g""", r"""import f as g, c.d as e""", r"""
+(r"""import a, c.d as e""", 'body[0]', -2, 'names', {}, r"""f as g""", r"""import f as g, c.d as e""", r"""
 Module .. ROOT 0,0 -> 0,23
   .body[1]
   0] Import .. 0,0 -> 0,23
@@ -23793,10 +23793,10 @@ Module .. ROOT 0,0 -> 0,23
         'e'
 """),
 
-(r"""import a, c.d as e""", 'body[0]', -4, 'names', {'raw': False}, r"""f as g""", r"""**IndexError('index out of range')**""", r"""
+(r"""import a, c.d as e""", 'body[0]', -4, 'names', {}, r"""f as g""", r"""**IndexError('index out of range')**""", r"""
 """),
 
-(r"""import a, c.d as e""", 'body[0]', 0, 'names', {'raw': False}, r"""x.y as z""", r"""import x.y as z, c.d as e""", r"""
+(r"""import a, c.d as e""", 'body[0]', 0, 'names', {}, r"""x.y as z""", r"""import x.y as z, c.d as e""", r"""
 Module .. ROOT 0,0 -> 0,25
   .body[1]
   0] Import .. 0,0 -> 0,25
@@ -23811,10 +23811,10 @@ Module .. ROOT 0,0 -> 0,25
         'e'
 """),
 
-(r"""from z import (a, c as d)""", 'body[0]', 0, 'names', {'raw': False}, r"""**DEL**""", r"""**ValueError('cannot put slice to ImportFrom.names')**""", r"""
+(r"""from z import (a, c as d)""", 'body[0]', 0, 'names', {}, r"""**DEL**""", r"""**ValueError('cannot put slice to ImportFrom.names')**""", r"""
 """),
 
-(r"""from z import (a, c as d)""", 'body[0]', 0, 'names', {'raw': False}, r"""f as g""", r"""from z import (f as g, c as d)""", r"""
+(r"""from z import (a, c as d)""", 'body[0]', 0, 'names', {}, r"""f as g""", r"""from z import (f as g, c as d)""", r"""
 Module .. ROOT 0,0 -> 0,30
   .body[1]
   0] ImportFrom .. 0,0 -> 0,30
@@ -23831,7 +23831,7 @@ Module .. ROOT 0,0 -> 0,30
     .level 0
 """),
 
-(r"""from z import (a, c as d)""", 'body[0]', 1, 'names', {'raw': False}, r"""f as g""", r"""from z import (a, f as g)""", r"""
+(r"""from z import (a, c as d)""", 'body[0]', 1, 'names', {}, r"""f as g""", r"""from z import (a, f as g)""", r"""
 Module .. ROOT 0,0 -> 0,25
   .body[1]
   0] ImportFrom .. 0,0 -> 0,25
@@ -23846,7 +23846,7 @@ Module .. ROOT 0,0 -> 0,25
     .level 0
 """),
 
-(r"""from z import (a, c as d)""", 'body[0]', -1, 'names', {'raw': False}, r"""f as g""", r"""from z import (a, f as g)""", r"""
+(r"""from z import (a, c as d)""", 'body[0]', -1, 'names', {}, r"""f as g""", r"""from z import (a, f as g)""", r"""
 Module .. ROOT 0,0 -> 0,25
   .body[1]
   0] ImportFrom .. 0,0 -> 0,25
@@ -23861,7 +23861,7 @@ Module .. ROOT 0,0 -> 0,25
     .level 0
 """),
 
-(r"""from z import (a, c as d)""", 'body[0]', -2, 'names', {'raw': False}, r"""f as g""", r"""from z import (f as g, c as d)""", r"""
+(r"""from z import (a, c as d)""", 'body[0]', -2, 'names', {}, r"""f as g""", r"""from z import (f as g, c as d)""", r"""
 Module .. ROOT 0,0 -> 0,30
   .body[1]
   0] ImportFrom .. 0,0 -> 0,30
@@ -23878,13 +23878,13 @@ Module .. ROOT 0,0 -> 0,30
     .level 0
 """),
 
-(r"""from z import (a, c as d)""", 'body[0]', -4, 'names', {'raw': False}, r"""f as g""", r"""**IndexError('index out of range')**""", r"""
+(r"""from z import (a, c as d)""", 'body[0]', -4, 'names', {}, r"""f as g""", r"""**IndexError('index out of range')**""", r"""
 """),
 
-(r"""a[b:c:d]""", 'body[0].value', None, 'slice', {'raw': False}, r"""**DEL**""", r"""**ValueError('cannot delete Subscript.slice')**""", r"""
+(r"""a[b:c:d]""", 'body[0].value', None, 'slice', {}, r"""**DEL**""", r"""**ValueError('cannot delete Subscript.slice')**""", r"""
 """),
 
-(r"""a[b:c:d]""", 'body[0].value', None, 'slice', {'raw': False}, r"""e, f""", r"""a[e, f]""", r"""
+(r"""a[b:c:d]""", 'body[0].value', None, 'slice', {}, r"""e, f""", r"""a[e, f]""", r"""
 Module .. ROOT 0,0 -> 0,7
   .body[1]
   0] Expr .. 0,0 -> 0,7
@@ -23898,7 +23898,7 @@ Module .. ROOT 0,0 -> 0,7
       .ctx Load
 """),
 
-(r"""a[b,c,d]""", 'body[0].value', None, 'slice', {'raw': False}, r"""g""", r"""a[g]""", r"""
+(r"""a[b,c,d]""", 'body[0].value', None, 'slice', {}, r"""g""", r"""a[g]""", r"""
 Module .. ROOT 0,0 -> 0,4
   .body[1]
   0] Expr .. 0,0 -> 0,4
@@ -23908,10 +23908,10 @@ Module .. ROOT 0,0 -> 0,4
       .ctx Load
 """),
 
-(r"""a[b:c:d]""", 'body[0].value', 0, 'slice', {'raw': False}, r"""h""", r"""**IndexError('Subscript.slice does not take an index')**""", r"""
+(r"""a[b:c:d]""", 'body[0].value', 0, 'slice', {}, r"""h""", r"""**IndexError('Subscript.slice does not take an index')**""", r"""
 """),
 
-(r"""a[b]""", 'body[0].value', None, 'slice', {'raw': False}, r"""h:i:j""", r"""a[h:i:j]""", r"""
+(r"""a[b]""", 'body[0].value', None, 'slice', {}, r"""h:i:j""", r"""a[h:i:j]""", r"""
 Module .. ROOT 0,0 -> 0,8
   .body[1]
   0] Expr .. 0,0 -> 0,8
@@ -23924,10 +23924,10 @@ Module .. ROOT 0,0 -> 0,8
       .ctx Load
 """),
 
-(r"""global a, b""", 'body[0]', 0, 'names', {'raw': False}, r"""**DEL**""", r"""**ValueError('cannot put slice to Global.names')**""", r"""
+(r"""global a, b""", 'body[0]', 0, 'names', {}, r"""**DEL**""", r"""**ValueError('cannot put slice to Global.names')**""", r"""
 """),
 
-(r"""global a, b""", 'body[0]', 0, 'names', {'raw': False}, r"""new""", r"""global new, b""", r"""
+(r"""global a, b""", 'body[0]', 0, 'names', {}, r"""new""", r"""global new, b""", r"""
 Module .. ROOT 0,0 -> 0,13
   .body[1]
   0] Global .. 0,0 -> 0,13
@@ -23936,7 +23936,7 @@ Module .. ROOT 0,0 -> 0,13
     1] 'b'
 """),
 
-(r"""global a, b""", 'body[0]', 1, 'names', {'raw': False}, r"""new""", r"""global a, new""", r"""
+(r"""global a, b""", 'body[0]', 1, 'names', {}, r"""new""", r"""global a, new""", r"""
 Module .. ROOT 0,0 -> 0,13
   .body[1]
   0] Global .. 0,0 -> 0,13
@@ -23945,7 +23945,7 @@ Module .. ROOT 0,0 -> 0,13
     1] 'new'
 """),
 
-(r"""global a, b""", 'body[0]', -1, 'names', {'raw': False}, r"""new""", r"""global a, new""", r"""
+(r"""global a, b""", 'body[0]', -1, 'names', {}, r"""new""", r"""global a, new""", r"""
 Module .. ROOT 0,0 -> 0,13
   .body[1]
   0] Global .. 0,0 -> 0,13
@@ -23957,7 +23957,7 @@ Module .. ROOT 0,0 -> 0,13
 (r"""global \
 a \
 ,\
-b""", 'body[0]', -2, 'names', {'raw': False}, r"""new""", r"""global \
+b""", 'body[0]', -2, 'names', {}, r"""new""", r"""global \
 new \
 ,\
 b""", r"""
@@ -23969,13 +23969,13 @@ Module .. ROOT 0,0 -> 3,1
     1] 'b'
 """),
 
-(r"""global a, b""", 'body[0]', -4, 'names', {'raw': False}, r"""new""", r"""**IndexError('index out of range')**""", r"""
+(r"""global a, b""", 'body[0]', -4, 'names', {}, r"""new""", r"""**IndexError('index out of range')**""", r"""
 """),
 
-(r"""nonlocal a, b""", 'body[0]', 0, 'names', {'raw': False}, r"""**DEL**""", r"""**ValueError('cannot put slice to Nonlocal.names')**""", r"""
+(r"""nonlocal a, b""", 'body[0]', 0, 'names', {}, r"""**DEL**""", r"""**ValueError('cannot put slice to Nonlocal.names')**""", r"""
 """),
 
-(r"""nonlocal a, b""", 'body[0]', 0, 'names', {'raw': False}, r"""new""", r"""nonlocal new, b""", r"""
+(r"""nonlocal a, b""", 'body[0]', 0, 'names', {}, r"""new""", r"""nonlocal new, b""", r"""
 Module .. ROOT 0,0 -> 0,15
   .body[1]
   0] Nonlocal .. 0,0 -> 0,15
@@ -23984,7 +23984,7 @@ Module .. ROOT 0,0 -> 0,15
     1] 'b'
 """),
 
-(r"""nonlocal a, b""", 'body[0]', 1, 'names', {'raw': False}, r"""new""", r"""nonlocal a, new""", r"""
+(r"""nonlocal a, b""", 'body[0]', 1, 'names', {}, r"""new""", r"""nonlocal a, new""", r"""
 Module .. ROOT 0,0 -> 0,15
   .body[1]
   0] Nonlocal .. 0,0 -> 0,15
@@ -23993,7 +23993,7 @@ Module .. ROOT 0,0 -> 0,15
     1] 'new'
 """),
 
-(r"""nonlocal a, b""", 'body[0]', -1, 'names', {'raw': False}, r"""new""", r"""nonlocal a, new""", r"""
+(r"""nonlocal a, b""", 'body[0]', -1, 'names', {}, r"""new""", r"""nonlocal a, new""", r"""
 Module .. ROOT 0,0 -> 0,15
   .body[1]
   0] Nonlocal .. 0,0 -> 0,15
@@ -24005,7 +24005,7 @@ Module .. ROOT 0,0 -> 0,15
 (r"""nonlocal \
 a \
 ,\
-b""", 'body[0]', -2, 'names', {'raw': False}, r"""new""", r"""nonlocal \
+b""", 'body[0]', -2, 'names', {}, r"""new""", r"""nonlocal \
 new \
 ,\
 b""", r"""
@@ -24017,10 +24017,10 @@ Module .. ROOT 0,0 -> 3,1
     1] 'b'
 """),
 
-(r"""nonlocal a, b""", 'body[0]', -4, 'names', {'raw': False}, r"""new""", r"""**IndexError('index out of range')**""", r"""
+(r"""nonlocal a, b""", 'body[0]', -4, 'names', {}, r"""new""", r"""**IndexError('index out of range')**""", r"""
 """),
 
-(r"""def f(a=1): pass""", 'body[0]', None, 'args', {'raw': False}, r"""**DEL**""", r"""def f(): pass""", r"""
+(r"""def f(a=1): pass""", 'body[0]', None, 'args', {}, r"""**DEL**""", r"""def f(): pass""", r"""
 Module .. ROOT 0,0 -> 0,13
   .body[1]
   0] FunctionDef .. 0,0 -> 0,13
@@ -24029,7 +24029,7 @@ Module .. ROOT 0,0 -> 0,13
     0] Pass .. 0,9 -> 0,13
 """),
 
-(r"""def f(a=1): pass""", 'body[0]', None, 'args', {'raw': False}, r"""a: list[str], /, b: int = 1, *c, d=100, **e""", r"""def f(a: list[str], /, b: int = 1, *c, d=100, **e): pass""", r"""
+(r"""def f(a=1): pass""", 'body[0]', None, 'args', {}, r"""a: list[str], /, b: int = 1, *c, d=100, **e""", r"""def f(a: list[str], /, b: int = 1, *c, d=100, **e): pass""", r"""
 Module .. ROOT 0,0 -> 0,56
   .body[1]
   0] FunctionDef .. 0,0 -> 0,56
@@ -24061,7 +24061,7 @@ Module .. ROOT 0,0 -> 0,56
     0] Pass .. 0,52 -> 0,56
 """),
 
-(r"""def f(): pass""", 'body[0]', None, 'args', {'raw': False}, r"""a: list[str], /, b: int = 1, *c, d=100, **e""", r"""def f(a: list[str], /, b: int = 1, *c, d=100, **e): pass""", r"""
+(r"""def f(): pass""", 'body[0]', None, 'args', {}, r"""a: list[str], /, b: int = 1, *c, d=100, **e""", r"""def f(a: list[str], /, b: int = 1, *c, d=100, **e): pass""", r"""
 Module .. ROOT 0,0 -> 0,56
   .body[1]
   0] FunctionDef .. 0,0 -> 0,56
@@ -24095,7 +24095,7 @@ Module .. ROOT 0,0 -> 0,56
 
 (r"""def f(\
 \
-): pass""", 'body[0]', None, 'args', {'raw': False}, r"""a: list[str], /, b: int = 1, *c, d=100, **e""", r"""def f(a: list[str], /, b: int = 1, *c, d=100, **e): pass""", r"""
+): pass""", 'body[0]', None, 'args', {}, r"""a: list[str], /, b: int = 1, *c, d=100, **e""", r"""def f(a: list[str], /, b: int = 1, *c, d=100, **e): pass""", r"""
 Module .. ROOT 0,0 -> 0,56
   .body[1]
   0] FunctionDef .. 0,0 -> 0,56
@@ -24127,10 +24127,10 @@ Module .. ROOT 0,0 -> 0,56
     0] Pass .. 0,52 -> 0,56
 """),
 
-(r"""def f(a=1): pass""", 'body[0]', 0, 'args', {'raw': False}, r"""a: list[str], /, b: int = 1, *c, d=100, **e""", r"""**IndexError('FunctionDef.args does not take an index')**""", r"""
+(r"""def f(a=1): pass""", 'body[0]', 0, 'args', {}, r"""a: list[str], /, b: int = 1, *c, d=100, **e""", r"""**IndexError('FunctionDef.args does not take an index')**""", r"""
 """),
 
-(r"""def f(a=1): pass""", 'body[0]', None, 'args', {'raw': False}, r"""""", r"""def f(): pass""", r"""
+(r"""def f(a=1): pass""", 'body[0]', None, 'args', {}, r"""""", r"""def f(): pass""", r"""
 Module .. ROOT 0,0 -> 0,13
   .body[1]
   0] FunctionDef .. 0,0 -> 0,13
@@ -24139,7 +24139,7 @@ Module .. ROOT 0,0 -> 0,13
     0] Pass .. 0,9 -> 0,13
 """),
 
-(r"""async def f(a=1): pass""", 'body[0]', None, 'args', {'raw': False}, r"""**DEL**""", r"""async def f(): pass""", r"""
+(r"""async def f(a=1): pass""", 'body[0]', None, 'args', {}, r"""**DEL**""", r"""async def f(): pass""", r"""
 Module .. ROOT 0,0 -> 0,19
   .body[1]
   0] AsyncFunctionDef .. 0,0 -> 0,19
@@ -24148,7 +24148,7 @@ Module .. ROOT 0,0 -> 0,19
     0] Pass .. 0,15 -> 0,19
 """),
 
-(r"""async def f(a=1): pass""", 'body[0]', None, 'args', {'raw': False}, r"""a: list[str], /, b: int = 1, *c, d=100, **e""", r"""async def f(a: list[str], /, b: int = 1, *c, d=100, **e): pass""", r"""
+(r"""async def f(a=1): pass""", 'body[0]', None, 'args', {}, r"""a: list[str], /, b: int = 1, *c, d=100, **e""", r"""async def f(a: list[str], /, b: int = 1, *c, d=100, **e): pass""", r"""
 Module .. ROOT 0,0 -> 0,62
   .body[1]
   0] AsyncFunctionDef .. 0,0 -> 0,62
@@ -24180,7 +24180,7 @@ Module .. ROOT 0,0 -> 0,62
     0] Pass .. 0,58 -> 0,62
 """),
 
-(r"""async def f(): pass""", 'body[0]', None, 'args', {'raw': False}, r"""a: list[str], /, b: int = 1, *c, d=100, **e""", r"""async def f(a: list[str], /, b: int = 1, *c, d=100, **e): pass""", r"""
+(r"""async def f(): pass""", 'body[0]', None, 'args', {}, r"""a: list[str], /, b: int = 1, *c, d=100, **e""", r"""async def f(a: list[str], /, b: int = 1, *c, d=100, **e): pass""", r"""
 Module .. ROOT 0,0 -> 0,62
   .body[1]
   0] AsyncFunctionDef .. 0,0 -> 0,62
@@ -24214,7 +24214,7 @@ Module .. ROOT 0,0 -> 0,62
 
 (r"""async def f(\
 \
-): pass""", 'body[0]', None, 'args', {'raw': False}, r"""a: list[str], /, b: int = 1, *c, d=100, **e""", r"""async def f(a: list[str], /, b: int = 1, *c, d=100, **e): pass""", r"""
+): pass""", 'body[0]', None, 'args', {}, r"""a: list[str], /, b: int = 1, *c, d=100, **e""", r"""async def f(a: list[str], /, b: int = 1, *c, d=100, **e): pass""", r"""
 Module .. ROOT 0,0 -> 0,62
   .body[1]
   0] AsyncFunctionDef .. 0,0 -> 0,62
@@ -24246,10 +24246,10 @@ Module .. ROOT 0,0 -> 0,62
     0] Pass .. 0,58 -> 0,62
 """),
 
-(r"""async def f(a=1): pass""", 'body[0]', 0, 'args', {'raw': False}, r"""a: list[str], /, b: int = 1, *c, d=100, **e""", r"""**IndexError('AsyncFunctionDef.args does not take an index')**""", r"""
+(r"""async def f(a=1): pass""", 'body[0]', 0, 'args', {}, r"""a: list[str], /, b: int = 1, *c, d=100, **e""", r"""**IndexError('AsyncFunctionDef.args does not take an index')**""", r"""
 """),
 
-(r"""async def f(a=1): pass""", 'body[0]', None, 'args', {'raw': False}, r"""""", r"""async def f(): pass""", r"""
+(r"""async def f(a=1): pass""", 'body[0]', None, 'args', {}, r"""""", r"""async def f(): pass""", r"""
 Module .. ROOT 0,0 -> 0,19
   .body[1]
   0] AsyncFunctionDef .. 0,0 -> 0,19
@@ -24258,7 +24258,7 @@ Module .. ROOT 0,0 -> 0,19
     0] Pass .. 0,15 -> 0,19
 """),
 
-(r"""lambda a=1: None""", 'body[0].value', None, 'args', {'raw': False}, r"""**DEL**""", r"""lambda: None""", r"""
+(r"""lambda a=1: None""", 'body[0].value', None, 'args', {}, r"""**DEL**""", r"""lambda: None""", r"""
 Module .. ROOT 0,0 -> 0,12
   .body[1]
   0] Expr .. 0,0 -> 0,12
@@ -24266,10 +24266,10 @@ Module .. ROOT 0,0 -> 0,12
       .body Constant None .. 0,8 -> 0,12
 """),
 
-(r"""lambda a=1: None""", 'body[0].value', None, 'args', {'raw': False}, r"""a: list[str], /, b: int = 1, *c, d=100, **e""", r"""**SyntaxError**""", r"""
+(r"""lambda a=1: None""", 'body[0].value', None, 'args', {}, r"""a: list[str], /, b: int = 1, *c, d=100, **e""", r"""**SyntaxError**""", r"""
 """),
 
-(r"""lambda a=1: None""", 'body[0].value', None, 'args', {'raw': False}, r"""a, /, b=1, *c, d=100, **e""", r"""lambda a, /, b=1, *c, d=100, **e: None""", r"""
+(r"""lambda a=1: None""", 'body[0].value', None, 'args', {}, r"""a, /, b=1, *c, d=100, **e""", r"""lambda a, /, b=1, *c, d=100, **e: None""", r"""
 Module .. ROOT 0,0 -> 0,38
   .body[1]
   0] Expr .. 0,0 -> 0,38
@@ -24295,7 +24295,7 @@ Module .. ROOT 0,0 -> 0,38
       .body Constant None .. 0,34 -> 0,38
 """),
 
-(r"""lambda: None""", 'body[0].value', None, 'args', {'raw': False}, r"""a, /, b=1, *c, d=100, **e""", r"""lambda a, /, b=1, *c, d=100, **e: None""", r"""
+(r"""lambda: None""", 'body[0].value', None, 'args', {}, r"""a, /, b=1, *c, d=100, **e""", r"""lambda a, /, b=1, *c, d=100, **e: None""", r"""
 Module .. ROOT 0,0 -> 0,38
   .body[1]
   0] Expr .. 0,0 -> 0,38
@@ -24323,7 +24323,7 @@ Module .. ROOT 0,0 -> 0,38
 
 (r"""lambda\
 \
-: None""", 'body[0].value', None, 'args', {'raw': False}, r"""a, /, b=1, *c, d=100, **e""", r"""lambda a, /, b=1, *c, d=100, **e: None""", r"""
+: None""", 'body[0].value', None, 'args', {}, r"""a, /, b=1, *c, d=100, **e""", r"""lambda a, /, b=1, *c, d=100, **e: None""", r"""
 Module .. ROOT 0,0 -> 0,38
   .body[1]
   0] Expr .. 0,0 -> 0,38
@@ -24349,10 +24349,10 @@ Module .. ROOT 0,0 -> 0,38
       .body Constant None .. 0,34 -> 0,38
 """),
 
-(r"""lambda a=1: None""", 'body[0].value', 0, 'args', {'raw': False}, r"""a, /, b=1, *c, d=100, **e""", r"""**IndexError('Lambda.args does not take an index')**""", r"""
+(r"""lambda a=1: None""", 'body[0].value', 0, 'args', {}, r"""a, /, b=1, *c, d=100, **e""", r"""**IndexError('Lambda.args does not take an index')**""", r"""
 """),
 
-(r"""lambda a=1: None""", 'body[0].value', None, 'args', {'raw': False}, r"""""", r"""lambda: None""", r"""
+(r"""lambda a=1: None""", 'body[0].value', None, 'args', {}, r"""""", r"""lambda: None""", r"""
 Module .. ROOT 0,0 -> 0,12
   .body[1]
   0] Expr .. 0,0 -> 0,12
@@ -24371,7 +24371,7 @@ Module .. ROOT 0,0 -> 0,6
       1] Name 'b' Load .. 0,5 -> 0,6
 """),
 
-(r"""a and b""", 'body[0].value', None, 'op', {'raw': False}, r"""+""", r"""**NodeError("expecting boolop, got '+'")**""", r"""
+(r"""a and b""", 'body[0].value', None, 'op', {}, r"""+""", r"""**NodeError("expecting boolop, got '+'")**""", r"""
 """),
 
 (r"""a and b and c""", 'body[0].value', None, 'op', {'raw': False}, r"""or""", r"""a or b or c""", r"""
@@ -24422,7 +24422,7 @@ Module .. ROOT 0,0 -> 4,2
       2] Name 'c' Load .. 4,1 -> 4,2
 """),
 
-(r"""def f(): pass""", 'body[0].args', None, 'vararg', {'raw': False}, r"""**DEL**""", r"""def f(): pass""", r"""
+(r"""def f(): pass""", 'body[0].args', None, 'vararg', {}, r"""**DEL**""", r"""def f(): pass""", r"""
 Module .. ROOT 0,0 -> 0,13
   .body[1]
   0] FunctionDef .. 0,0 -> 0,13
@@ -24431,7 +24431,7 @@ Module .. ROOT 0,0 -> 0,13
     0] Pass .. 0,9 -> 0,13
 """),
 
-(r"""def f(*b): pass""", 'body[0].args', None, 'vararg', {'raw': False}, r"""**DEL**""", r"""def f(): pass""", r"""
+(r"""def f(*b): pass""", 'body[0].args', None, 'vararg', {}, r"""**DEL**""", r"""def f(): pass""", r"""
 Module .. ROOT 0,0 -> 0,13
   .body[1]
   0] FunctionDef .. 0,0 -> 0,13
@@ -24440,7 +24440,7 @@ Module .. ROOT 0,0 -> 0,13
     0] Pass .. 0,9 -> 0,13
 """),
 
-(r"""def f(*b): pass""", 'body[0].args', None, 'vararg', {'raw': False}, r"""new""", r"""def f(*new): pass""", r"""
+(r"""def f(*b): pass""", 'body[0].args', None, 'vararg', {}, r"""new""", r"""def f(*new): pass""", r"""
 Module .. ROOT 0,0 -> 0,17
   .body[1]
   0] FunctionDef .. 0,0 -> 0,17
@@ -24452,7 +24452,7 @@ Module .. ROOT 0,0 -> 0,17
     0] Pass .. 0,13 -> 0,17
 """),
 
-(r"""def f(a=(1), *b): pass""", 'body[0].args', None, 'vararg', {'raw': False}, r"""**DEL**""", r"""def f(a=(1)): pass""", r"""
+(r"""def f(a=(1), *b): pass""", 'body[0].args', None, 'vararg', {}, r"""**DEL**""", r"""def f(a=(1)): pass""", r"""
 Module .. ROOT 0,0 -> 0,18
   .body[1]
   0] FunctionDef .. 0,0 -> 0,18
@@ -24467,7 +24467,7 @@ Module .. ROOT 0,0 -> 0,18
     0] Pass .. 0,14 -> 0,18
 """),
 
-(r"""def f(a=(1), *b): pass""", 'body[0].args', None, 'vararg', {'raw': False}, r"""new""", r"""def f(a=(1), *new): pass""", r"""
+(r"""def f(a=(1), *b): pass""", 'body[0].args', None, 'vararg', {}, r"""new""", r"""def f(a=(1), *new): pass""", r"""
 Module .. ROOT 0,0 -> 0,24
   .body[1]
   0] FunctionDef .. 0,0 -> 0,24
@@ -24484,7 +24484,7 @@ Module .. ROOT 0,0 -> 0,24
     0] Pass .. 0,20 -> 0,24
 """),
 
-(r"""def f(a=(1), /, *b): pass""", 'body[0].args', None, 'vararg', {'raw': False}, r"""**DEL**""", r"""def f(a=(1), /): pass""", r"""
+(r"""def f(a=(1), /, *b): pass""", 'body[0].args', None, 'vararg', {}, r"""**DEL**""", r"""def f(a=(1), /): pass""", r"""
 Module .. ROOT 0,0 -> 0,21
   .body[1]
   0] FunctionDef .. 0,0 -> 0,21
@@ -24501,7 +24501,7 @@ Module .. ROOT 0,0 -> 0,21
 
 (r"""def f(a=(1), * \
  b \
- ): pass""", 'body[0].args', None, 'vararg', {'raw': False}, r"""**DEL**""", r"""def f(a=(1) \
+ ): pass""", 'body[0].args', None, 'vararg', {}, r"""**DEL**""", r"""def f(a=(1) \
  ): pass""", r"""
 Module .. ROOT 0,0 -> 1,8
   .body[1]
@@ -24517,7 +24517,7 @@ Module .. ROOT 0,0 -> 1,8
     0] Pass .. 1,4 -> 1,8
 """),
 
-(r"""def f(*b, c=(1)): pass""", 'body[0].args', None, 'vararg', {'raw': False}, r"""**DEL**""", r"""def f(*, c=(1)): pass""", r"""
+(r"""def f(*b, c=(1)): pass""", 'body[0].args', None, 'vararg', {}, r"""**DEL**""", r"""def f(*, c=(1)): pass""", r"""
 Module .. ROOT 0,0 -> 0,21
   .body[1]
   0] FunctionDef .. 0,0 -> 0,21
@@ -24532,7 +24532,7 @@ Module .. ROOT 0,0 -> 0,21
     0] Pass .. 0,17 -> 0,21
 """),
 
-(r"""def f(*b, c=(1)): pass""", 'body[0].args', None, 'vararg', {'raw': False}, r"""new""", r"""def f(*new, c=(1)): pass""", r"""
+(r"""def f(*b, c=(1)): pass""", 'body[0].args', None, 'vararg', {}, r"""new""", r"""def f(*new, c=(1)): pass""", r"""
 Module .. ROOT 0,0 -> 0,24
   .body[1]
   0] FunctionDef .. 0,0 -> 0,24
@@ -24549,7 +24549,7 @@ Module .. ROOT 0,0 -> 0,24
     0] Pass .. 0,20 -> 0,24
 """),
 
-(r"""def f(*b, ** c): pass""", 'body[0].args', None, 'vararg', {'raw': False}, r"""**DEL**""", r"""def f(** c): pass""", r"""
+(r"""def f(*b, ** c): pass""", 'body[0].args', None, 'vararg', {}, r"""**DEL**""", r"""def f(** c): pass""", r"""
 Module .. ROOT 0,0 -> 0,17
   .body[1]
   0] FunctionDef .. 0,0 -> 0,17
@@ -24563,7 +24563,7 @@ Module .. ROOT 0,0 -> 0,17
 
 (r"""def f(*\
 b\
-, c=(1)): pass""", 'body[0].args', None, 'vararg', {'raw': False}, r"""**DEL**""", r"""def f(*, c=(1)): pass""", r"""
+, c=(1)): pass""", 'body[0].args', None, 'vararg', {}, r"""**DEL**""", r"""def f(*, c=(1)): pass""", r"""
 Module .. ROOT 0,0 -> 0,21
   .body[1]
   0] FunctionDef .. 0,0 -> 0,21
@@ -24578,7 +24578,7 @@ Module .. ROOT 0,0 -> 0,21
     0] Pass .. 0,17 -> 0,21
 """),
 
-(r"""def f(a, *b, c=(1)): pass""", 'body[0].args', None, 'vararg', {'raw': False}, r"""new""", r"""def f(a, *new, c=(1)): pass""", r"""
+(r"""def f(a, *b, c=(1)): pass""", 'body[0].args', None, 'vararg', {}, r"""new""", r"""def f(a, *new, c=(1)): pass""", r"""
 Module .. ROOT 0,0 -> 0,27
   .body[1]
   0] FunctionDef .. 0,0 -> 0,27
@@ -24598,7 +24598,7 @@ Module .. ROOT 0,0 -> 0,27
     0] Pass .. 0,23 -> 0,27
 """),
 
-(r"""def f(a, *b, ** c): pass""", 'body[0].args', None, 'vararg', {'raw': False}, r"""**DEL**""", r"""def f(a, ** c): pass""", r"""
+(r"""def f(a, *b, ** c): pass""", 'body[0].args', None, 'vararg', {}, r"""**DEL**""", r"""def f(a, ** c): pass""", r"""
 Module .. ROOT 0,0 -> 0,20
   .body[1]
   0] FunctionDef .. 0,0 -> 0,20
@@ -24613,7 +24613,7 @@ Module .. ROOT 0,0 -> 0,20
     0] Pass .. 0,16 -> 0,20
 """),
 
-(r"""def f(a, /, *b, c=(1)): pass""", 'body[0].args', None, 'vararg', {'raw': False}, r"""new""", r"""def f(a, /, *new, c=(1)): pass""", r"""
+(r"""def f(a, /, *b, c=(1)): pass""", 'body[0].args', None, 'vararg', {}, r"""new""", r"""def f(a, /, *new, c=(1)): pass""", r"""
 Module .. ROOT 0,0 -> 0,30
   .body[1]
   0] FunctionDef .. 0,0 -> 0,30
@@ -24633,7 +24633,7 @@ Module .. ROOT 0,0 -> 0,30
     0] Pass .. 0,26 -> 0,30
 """),
 
-(r"""def f(a, /, *b, c=(1)): pass""", 'body[0].args', None, 'vararg', {'raw': False}, r"""**DEL**""", r"""def f(a, /, *, c=(1)): pass""", r"""
+(r"""def f(a, /, *b, c=(1)): pass""", 'body[0].args', None, 'vararg', {}, r"""**DEL**""", r"""def f(a, /, *, c=(1)): pass""", r"""
 Module .. ROOT 0,0 -> 0,27
   .body[1]
   0] FunctionDef .. 0,0 -> 0,27
@@ -24651,7 +24651,7 @@ Module .. ROOT 0,0 -> 0,27
     0] Pass .. 0,23 -> 0,27
 """),
 
-(r"""def f(a, /, *b, ** c): pass""", 'body[0].args', None, 'vararg', {'raw': False}, r"""**DEL**""", r"""def f(a, /, ** c): pass""", r"""
+(r"""def f(a, /, *b, ** c): pass""", 'body[0].args', None, 'vararg', {}, r"""**DEL**""", r"""def f(a, /, ** c): pass""", r"""
 Module .. ROOT 0,0 -> 0,23
   .body[1]
   0] FunctionDef .. 0,0 -> 0,23
@@ -24666,7 +24666,7 @@ Module .. ROOT 0,0 -> 0,23
     0] Pass .. 0,19 -> 0,23
 """),
 
-(r"""lambda: None""", 'body[0].value.args', None, 'vararg', {'raw': False}, r"""**DEL**""", r"""lambda: None""", r"""
+(r"""lambda: None""", 'body[0].value.args', None, 'vararg', {}, r"""**DEL**""", r"""lambda: None""", r"""
 Module .. ROOT 0,0 -> 0,12
   .body[1]
   0] Expr .. 0,0 -> 0,12
@@ -24674,7 +24674,7 @@ Module .. ROOT 0,0 -> 0,12
       .body Constant None .. 0,8 -> 0,12
 """),
 
-(r"""lambda *b: None""", 'body[0].value.args', None, 'vararg', {'raw': False}, r"""**DEL**""", r"""lambda: None""", r"""
+(r"""lambda *b: None""", 'body[0].value.args', None, 'vararg', {}, r"""**DEL**""", r"""lambda: None""", r"""
 Module .. ROOT 0,0 -> 0,12
   .body[1]
   0] Expr .. 0,0 -> 0,12
@@ -24682,7 +24682,7 @@ Module .. ROOT 0,0 -> 0,12
       .body Constant None .. 0,8 -> 0,12
 """),
 
-(r"""lambda *b: None""", 'body[0].value.args', None, 'vararg', {'raw': False}, r"""new""", r"""lambda *new: None""", r"""
+(r"""lambda *b: None""", 'body[0].value.args', None, 'vararg', {}, r"""new""", r"""lambda *new: None""", r"""
 Module .. ROOT 0,0 -> 0,17
   .body[1]
   0] Expr .. 0,0 -> 0,17
@@ -24693,7 +24693,7 @@ Module .. ROOT 0,0 -> 0,17
       .body Constant None .. 0,13 -> 0,17
 """),
 
-(r"""lambda a=(1), *b: None""", 'body[0].value.args', None, 'vararg', {'raw': False}, r"""**DEL**""", r"""lambda a=(1): None""", r"""
+(r"""lambda a=(1), *b: None""", 'body[0].value.args', None, 'vararg', {}, r"""**DEL**""", r"""lambda a=(1): None""", r"""
 Module .. ROOT 0,0 -> 0,18
   .body[1]
   0] Expr .. 0,0 -> 0,18
@@ -24707,7 +24707,7 @@ Module .. ROOT 0,0 -> 0,18
       .body Constant None .. 0,14 -> 0,18
 """),
 
-(r"""lambda a=(1), *b: None""", 'body[0].value.args', None, 'vararg', {'raw': False}, r"""new""", r"""lambda a=(1), *new: None""", r"""
+(r"""lambda a=(1), *b: None""", 'body[0].value.args', None, 'vararg', {}, r"""new""", r"""lambda a=(1), *new: None""", r"""
 Module .. ROOT 0,0 -> 0,24
   .body[1]
   0] Expr .. 0,0 -> 0,24
@@ -24723,7 +24723,7 @@ Module .. ROOT 0,0 -> 0,24
       .body Constant None .. 0,20 -> 0,24
 """),
 
-(r"""lambda a=(1), /, *b: None""", 'body[0].value.args', None, 'vararg', {'raw': False}, r"""**DEL**""", r"""lambda a=(1), /: None""", r"""
+(r"""lambda a=(1), /, *b: None""", 'body[0].value.args', None, 'vararg', {}, r"""**DEL**""", r"""lambda a=(1), /: None""", r"""
 Module .. ROOT 0,0 -> 0,21
   .body[1]
   0] Expr .. 0,0 -> 0,21
@@ -24739,7 +24739,7 @@ Module .. ROOT 0,0 -> 0,21
 
 (r"""lambda a=(1), * \
  b \
- : None""", 'body[0].value.args', None, 'vararg', {'raw': False}, r"""**DEL**""", r"""lambda a=(1) \
+ : None""", 'body[0].value.args', None, 'vararg', {}, r"""**DEL**""", r"""lambda a=(1) \
  : None""", r"""
 Module .. ROOT 0,0 -> 1,7
   .body[1]
@@ -24754,7 +24754,7 @@ Module .. ROOT 0,0 -> 1,7
       .body Constant None .. 1,3 -> 1,7
 """),
 
-(r"""lambda *b, c=(1): None""", 'body[0].value.args', None, 'vararg', {'raw': False}, r"""**DEL**""", r"""lambda *, c=(1): None""", r"""
+(r"""lambda *b, c=(1): None""", 'body[0].value.args', None, 'vararg', {}, r"""**DEL**""", r"""lambda *, c=(1): None""", r"""
 Module .. ROOT 0,0 -> 0,21
   .body[1]
   0] Expr .. 0,0 -> 0,21
@@ -24768,7 +24768,7 @@ Module .. ROOT 0,0 -> 0,21
       .body Constant None .. 0,17 -> 0,21
 """),
 
-(r"""lambda *b, ** c: None""", 'body[0].value.args', None, 'vararg', {'raw': False}, r"""**DEL**""", r"""lambda ** c: None""", r"""
+(r"""lambda *b, ** c: None""", 'body[0].value.args', None, 'vararg', {}, r"""**DEL**""", r"""lambda ** c: None""", r"""
 Module .. ROOT 0,0 -> 0,17
   .body[1]
   0] Expr .. 0,0 -> 0,17
@@ -24779,7 +24779,7 @@ Module .. ROOT 0,0 -> 0,17
       .body Constant None .. 0,13 -> 0,17
 """),
 
-(r"""lambda *b, c=(1): None""", 'body[0].value.args', None, 'vararg', {'raw': False}, r"""new""", r"""lambda *new, c=(1): None""", r"""
+(r"""lambda *b, c=(1): None""", 'body[0].value.args', None, 'vararg', {}, r"""new""", r"""lambda *new, c=(1): None""", r"""
 Module .. ROOT 0,0 -> 0,24
   .body[1]
   0] Expr .. 0,0 -> 0,24
@@ -24797,7 +24797,7 @@ Module .. ROOT 0,0 -> 0,24
 
 (r"""lambda *\
 b\
-, c=(1): None""", 'body[0].value.args', None, 'vararg', {'raw': False}, r"""**DEL**""", r"""lambda *, c=(1): None""", r"""
+, c=(1): None""", 'body[0].value.args', None, 'vararg', {}, r"""**DEL**""", r"""lambda *, c=(1): None""", r"""
 Module .. ROOT 0,0 -> 0,21
   .body[1]
   0] Expr .. 0,0 -> 0,21
@@ -24811,7 +24811,7 @@ Module .. ROOT 0,0 -> 0,21
       .body Constant None .. 0,17 -> 0,21
 """),
 
-(r"""lambda a, *b, ** c: None""", 'body[0].value.args', None, 'vararg', {'raw': False}, r"""**DEL**""", r"""lambda a, ** c: None""", r"""
+(r"""lambda a, *b, ** c: None""", 'body[0].value.args', None, 'vararg', {}, r"""**DEL**""", r"""lambda a, ** c: None""", r"""
 Module .. ROOT 0,0 -> 0,20
   .body[1]
   0] Expr .. 0,0 -> 0,20
@@ -24825,7 +24825,7 @@ Module .. ROOT 0,0 -> 0,20
       .body Constant None .. 0,16 -> 0,20
 """),
 
-(r"""lambda a, *b, c=(1): None""", 'body[0].value.args', None, 'vararg', {'raw': False}, r"""new""", r"""lambda a, *new, c=(1): None""", r"""
+(r"""lambda a, *b, c=(1): None""", 'body[0].value.args', None, 'vararg', {}, r"""new""", r"""lambda a, *new, c=(1): None""", r"""
 Module .. ROOT 0,0 -> 0,27
   .body[1]
   0] Expr .. 0,0 -> 0,27
@@ -24844,7 +24844,7 @@ Module .. ROOT 0,0 -> 0,27
       .body Constant None .. 0,23 -> 0,27
 """),
 
-(r"""lambda a, /, *b, ** c: None""", 'body[0].value.args', None, 'vararg', {'raw': False}, r"""**DEL**""", r"""lambda a, /, ** c: None""", r"""
+(r"""lambda a, /, *b, ** c: None""", 'body[0].value.args', None, 'vararg', {}, r"""**DEL**""", r"""lambda a, /, ** c: None""", r"""
 Module .. ROOT 0,0 -> 0,23
   .body[1]
   0] Expr .. 0,0 -> 0,23
@@ -24858,7 +24858,7 @@ Module .. ROOT 0,0 -> 0,23
       .body Constant None .. 0,19 -> 0,23
 """),
 
-(r"""lambda a, /, *b, c=(2), ** d: None""", 'body[0].value.args', None, 'vararg', {'raw': False}, r"""**DEL**""", r"""lambda a, /, *, c=(2), ** d: None""", r"""
+(r"""lambda a, /, *b, c=(2), ** d: None""", 'body[0].value.args', None, 'vararg', {}, r"""**DEL**""", r"""lambda a, /, *, c=(2), ** d: None""", r"""
 Module .. ROOT 0,0 -> 0,33
   .body[1]
   0] Expr .. 0,0 -> 0,33
@@ -24877,7 +24877,7 @@ Module .. ROOT 0,0 -> 0,33
       .body Constant None .. 0,29 -> 0,33
 """),
 
-(r"""lambda a, /, *b, c=(1): None""", 'body[0].value.args', None, 'vararg', {'raw': False}, r"""new""", r"""lambda a, /, *new, c=(1): None""", r"""
+(r"""lambda a, /, *b, c=(1): None""", 'body[0].value.args', None, 'vararg', {}, r"""new""", r"""lambda a, /, *new, c=(1): None""", r"""
 Module .. ROOT 0,0 -> 0,30
   .body[1]
   0] Expr .. 0,0 -> 0,30
@@ -24896,7 +24896,7 @@ Module .. ROOT 0,0 -> 0,30
       .body Constant None .. 0,26 -> 0,30
 """),
 
-(r"""lambda a, /, *b, c=(1): None""", 'body[0].value.args', None, 'vararg', {'raw': False}, r"""**DEL**""", r"""lambda a, /, *, c=(1): None""", r"""
+(r"""lambda a, /, *b, c=(1): None""", 'body[0].value.args', None, 'vararg', {}, r"""**DEL**""", r"""lambda a, /, *, c=(1): None""", r"""
 Module .. ROOT 0,0 -> 0,27
   .body[1]
   0] Expr .. 0,0 -> 0,27
@@ -24913,7 +24913,7 @@ Module .. ROOT 0,0 -> 0,27
       .body Constant None .. 0,23 -> 0,27
 """),
 
-(r"""def f(*, c=(1)): pass""", 'body[0].args', None, 'vararg', {'raw': False}, r"""new""", r"""def f(*new, c=(1)): pass""", r"""
+(r"""def f(*, c=(1)): pass""", 'body[0].args', None, 'vararg', {}, r"""new""", r"""def f(*new, c=(1)): pass""", r"""
 Module .. ROOT 0,0 -> 0,24
   .body[1]
   0] FunctionDef .. 0,0 -> 0,24
@@ -24930,7 +24930,7 @@ Module .. ROOT 0,0 -> 0,24
     0] Pass .. 0,20 -> 0,24
 """),
 
-(r"""def f(**d): pass""", 'body[0].args', None, 'vararg', {'raw': False}, r"""new""", r"""def f(*new, **d): pass""", r"""
+(r"""def f(**d): pass""", 'body[0].args', None, 'vararg', {}, r"""new""", r"""def f(*new, **d): pass""", r"""
 Module .. ROOT 0,0 -> 0,22
   .body[1]
   0] FunctionDef .. 0,0 -> 0,22
@@ -24944,7 +24944,7 @@ Module .. ROOT 0,0 -> 0,22
     0] Pass .. 0,18 -> 0,22
 """),
 
-(r"""def f(b=(2), **d): pass""", 'body[0].args', None, 'vararg', {'raw': False}, r"""new""", r"""def f(b=(2), *new, **d): pass""", r"""
+(r"""def f(b=(2), **d): pass""", 'body[0].args', None, 'vararg', {}, r"""new""", r"""def f(b=(2), *new, **d): pass""", r"""
 Module .. ROOT 0,0 -> 0,29
   .body[1]
   0] FunctionDef .. 0,0 -> 0,29
@@ -24963,7 +24963,7 @@ Module .. ROOT 0,0 -> 0,29
     0] Pass .. 0,25 -> 0,29
 """),
 
-(r"""def f(b=(2)): pass""", 'body[0].args', None, 'vararg', {'raw': False}, r"""new""", r"""def f(b=(2), *new): pass""", r"""
+(r"""def f(b=(2)): pass""", 'body[0].args', None, 'vararg', {}, r"""new""", r"""def f(b=(2), *new): pass""", r"""
 Module .. ROOT 0,0 -> 0,24
   .body[1]
   0] FunctionDef .. 0,0 -> 0,24
@@ -24980,7 +24980,7 @@ Module .. ROOT 0,0 -> 0,24
     0] Pass .. 0,20 -> 0,24
 """),
 
-(r"""def f(b=(2),): pass""", 'body[0].args', None, 'vararg', {'raw': False}, r"""new""", r"""def f(b=(2), *new,): pass""", r"""
+(r"""def f(b=(2),): pass""", 'body[0].args', None, 'vararg', {}, r"""new""", r"""def f(b=(2), *new,): pass""", r"""
 Module .. ROOT 0,0 -> 0,25
   .body[1]
   0] FunctionDef .. 0,0 -> 0,25
@@ -24997,7 +24997,7 @@ Module .. ROOT 0,0 -> 0,25
     0] Pass .. 0,21 -> 0,25
 """),
 
-(r"""def f(b): pass""", 'body[0].args', None, 'vararg', {'raw': False}, r"""new""", r"""def f(b, *new): pass""", r"""
+(r"""def f(b): pass""", 'body[0].args', None, 'vararg', {}, r"""new""", r"""def f(b, *new): pass""", r"""
 Module .. ROOT 0,0 -> 0,20
   .body[1]
   0] FunctionDef .. 0,0 -> 0,20
@@ -25012,7 +25012,7 @@ Module .. ROOT 0,0 -> 0,20
     0] Pass .. 0,16 -> 0,20
 """),
 
-(r"""def f(a=(3), /): pass""", 'body[0].args', None, 'vararg', {'raw': False}, r"""new""", r"""def f(a=(3), /, *new): pass""", r"""
+(r"""def f(a=(3), /): pass""", 'body[0].args', None, 'vararg', {}, r"""new""", r"""def f(a=(3), /, *new): pass""", r"""
 Module .. ROOT 0,0 -> 0,27
   .body[1]
   0] FunctionDef .. 0,0 -> 0,27
@@ -25029,7 +25029,7 @@ Module .. ROOT 0,0 -> 0,27
     0] Pass .. 0,23 -> 0,27
 """),
 
-(r"""def f(a, /): pass""", 'body[0].args', None, 'vararg', {'raw': False}, r"""new""", r"""def f(a, /, *new): pass""", r"""
+(r"""def f(a, /): pass""", 'body[0].args', None, 'vararg', {}, r"""new""", r"""def f(a, /, *new): pass""", r"""
 Module .. ROOT 0,0 -> 0,23
   .body[1]
   0] FunctionDef .. 0,0 -> 0,23
@@ -25044,7 +25044,7 @@ Module .. ROOT 0,0 -> 0,23
     0] Pass .. 0,19 -> 0,23
 """),
 
-(r"""def f(): pass""", 'body[0].args', None, 'vararg', {'raw': False}, r"""new""", r"""def f(*new): pass""", r"""
+(r"""def f(): pass""", 'body[0].args', None, 'vararg', {}, r"""new""", r"""def f(*new): pass""", r"""
 Module .. ROOT 0,0 -> 0,17
   .body[1]
   0] FunctionDef .. 0,0 -> 0,17
@@ -25056,7 +25056,7 @@ Module .. ROOT 0,0 -> 0,17
     0] Pass .. 0,13 -> 0,17
 """),
 
-(r"""def f(b=(2), *, c=(1)): pass""", 'body[0].args', None, 'vararg', {'raw': False}, r"""new""", r"""def f(b=(2), *new, c=(1)): pass""", r"""
+(r"""def f(b=(2), *, c=(1)): pass""", 'body[0].args', None, 'vararg', {}, r"""new""", r"""def f(b=(2), *new, c=(1)): pass""", r"""
 Module .. ROOT 0,0 -> 0,31
   .body[1]
   0] FunctionDef .. 0,0 -> 0,31
@@ -25078,7 +25078,7 @@ Module .. ROOT 0,0 -> 0,31
     0] Pass .. 0,27 -> 0,31
 """),
 
-(r"""def f(a=(1), /, *, c=(1)): pass""", 'body[0].args', None, 'vararg', {'raw': False}, r"""new""", r"""def f(a=(1), /, *new, c=(1)): pass""", r"""
+(r"""def f(a=(1), /, *, c=(1)): pass""", 'body[0].args', None, 'vararg', {}, r"""new""", r"""def f(a=(1), /, *new, c=(1)): pass""", r"""
 Module .. ROOT 0,0 -> 0,34
   .body[1]
   0] FunctionDef .. 0,0 -> 0,34
@@ -25100,7 +25100,7 @@ Module .. ROOT 0,0 -> 0,34
     0] Pass .. 0,30 -> 0,34
 """),
 
-(r"""lambda *, c=(1): None""", 'body[0].value.args', None, 'vararg', {'raw': False}, r"""new""", r"""lambda *new, c=(1): None""", r"""
+(r"""lambda *, c=(1): None""", 'body[0].value.args', None, 'vararg', {}, r"""new""", r"""lambda *new, c=(1): None""", r"""
 Module .. ROOT 0,0 -> 0,24
   .body[1]
   0] Expr .. 0,0 -> 0,24
@@ -25116,7 +25116,7 @@ Module .. ROOT 0,0 -> 0,24
       .body Constant None .. 0,20 -> 0,24
 """),
 
-(r"""lambda **d: None""", 'body[0].value.args', None, 'vararg', {'raw': False}, r"""new""", r"""lambda *new, **d: None""", r"""
+(r"""lambda **d: None""", 'body[0].value.args', None, 'vararg', {}, r"""new""", r"""lambda *new, **d: None""", r"""
 Module .. ROOT 0,0 -> 0,22
   .body[1]
   0] Expr .. 0,0 -> 0,22
@@ -25129,7 +25129,7 @@ Module .. ROOT 0,0 -> 0,22
       .body Constant None .. 0,18 -> 0,22
 """),
 
-(r"""lambda b=(2), **d: None""", 'body[0].value.args', None, 'vararg', {'raw': False}, r"""new""", r"""lambda b=(2), *new, **d: None""", r"""
+(r"""lambda b=(2), **d: None""", 'body[0].value.args', None, 'vararg', {}, r"""new""", r"""lambda b=(2), *new, **d: None""", r"""
 Module .. ROOT 0,0 -> 0,29
   .body[1]
   0] Expr .. 0,0 -> 0,29
@@ -25147,7 +25147,7 @@ Module .. ROOT 0,0 -> 0,29
       .body Constant None .. 0,25 -> 0,29
 """),
 
-(r"""lambda b=(2): None""", 'body[0].value.args', None, 'vararg', {'raw': False}, r"""new""", r"""lambda b=(2), *new: None""", r"""
+(r"""lambda b=(2): None""", 'body[0].value.args', None, 'vararg', {}, r"""new""", r"""lambda b=(2), *new: None""", r"""
 Module .. ROOT 0,0 -> 0,24
   .body[1]
   0] Expr .. 0,0 -> 0,24
@@ -25163,7 +25163,7 @@ Module .. ROOT 0,0 -> 0,24
       .body Constant None .. 0,20 -> 0,24
 """),
 
-(r"""lambda b=(2),: None""", 'body[0].value.args', None, 'vararg', {'raw': False}, r"""new""", r"""lambda b=(2), *new,: None""", r"""
+(r"""lambda b=(2),: None""", 'body[0].value.args', None, 'vararg', {}, r"""new""", r"""lambda b=(2), *new,: None""", r"""
 Module .. ROOT 0,0 -> 0,25
   .body[1]
   0] Expr .. 0,0 -> 0,25
@@ -25179,7 +25179,7 @@ Module .. ROOT 0,0 -> 0,25
       .body Constant None .. 0,21 -> 0,25
 """),
 
-(r"""lambda b: None""", 'body[0].value.args', None, 'vararg', {'raw': False}, r"""new""", r"""lambda b, *new: None""", r"""
+(r"""lambda b: None""", 'body[0].value.args', None, 'vararg', {}, r"""new""", r"""lambda b, *new: None""", r"""
 Module .. ROOT 0,0 -> 0,20
   .body[1]
   0] Expr .. 0,0 -> 0,20
@@ -25193,7 +25193,7 @@ Module .. ROOT 0,0 -> 0,20
       .body Constant None .. 0,16 -> 0,20
 """),
 
-(r"""lambda a=(2), /: None""", 'body[0].value.args', None, 'vararg', {'raw': False}, r"""new""", r"""lambda a=(2), /, *new: None""", r"""
+(r"""lambda a=(2), /: None""", 'body[0].value.args', None, 'vararg', {}, r"""new""", r"""lambda a=(2), /, *new: None""", r"""
 Module .. ROOT 0,0 -> 0,27
   .body[1]
   0] Expr .. 0,0 -> 0,27
@@ -25209,7 +25209,7 @@ Module .. ROOT 0,0 -> 0,27
       .body Constant None .. 0,23 -> 0,27
 """),
 
-(r"""lambda a, /: None""", 'body[0].value.args', None, 'vararg', {'raw': False}, r"""new""", r"""lambda a, /, *new: None""", r"""
+(r"""lambda a, /: None""", 'body[0].value.args', None, 'vararg', {}, r"""new""", r"""lambda a, /, *new: None""", r"""
 Module .. ROOT 0,0 -> 0,23
   .body[1]
   0] Expr .. 0,0 -> 0,23
@@ -25223,7 +25223,7 @@ Module .. ROOT 0,0 -> 0,23
       .body Constant None .. 0,19 -> 0,23
 """),
 
-(r"""lambda a, /: None""", 'body[0].value.args', None, 'vararg', {'raw': False}, r"""new""", r"""lambda a, /, *new: None""", r"""
+(r"""lambda a, /: None""", 'body[0].value.args', None, 'vararg', {}, r"""new""", r"""lambda a, /, *new: None""", r"""
 Module .. ROOT 0,0 -> 0,23
   .body[1]
   0] Expr .. 0,0 -> 0,23
@@ -25237,7 +25237,7 @@ Module .. ROOT 0,0 -> 0,23
       .body Constant None .. 0,19 -> 0,23
 """),
 
-(r"""lambda b=(2), *, c=(1): None""", 'body[0].value.args', None, 'vararg', {'raw': False}, r"""new""", r"""lambda b=(2), *new, c=(1): None""", r"""
+(r"""lambda b=(2), *, c=(1): None""", 'body[0].value.args', None, 'vararg', {}, r"""new""", r"""lambda b=(2), *new, c=(1): None""", r"""
 Module .. ROOT 0,0 -> 0,31
   .body[1]
   0] Expr .. 0,0 -> 0,31
@@ -25258,7 +25258,7 @@ Module .. ROOT 0,0 -> 0,31
       .body Constant None .. 0,27 -> 0,31
 """),
 
-(r"""lambda a=(1), /, *, c=(1): None""", 'body[0].value.args', None, 'vararg', {'raw': False}, r"""new""", r"""lambda a=(1), /, *new, c=(1): None""", r"""
+(r"""lambda a=(1), /, *, c=(1): None""", 'body[0].value.args', None, 'vararg', {}, r"""new""", r"""lambda a=(1), /, *new, c=(1): None""", r"""
 Module .. ROOT 0,0 -> 0,34
   .body[1]
   0] Expr .. 0,0 -> 0,34
@@ -25279,7 +25279,7 @@ Module .. ROOT 0,0 -> 0,34
       .body Constant None .. 0,30 -> 0,34
 """),
 
-(r"""def f(**e): pass""", 'body[0].args', None, 'kwarg', {'raw': False}, r"""**DEL**""", r"""def f(): pass""", r"""
+(r"""def f(**e): pass""", 'body[0].args', None, 'kwarg', {}, r"""**DEL**""", r"""def f(): pass""", r"""
 Module .. ROOT 0,0 -> 0,13
   .body[1]
   0] FunctionDef .. 0,0 -> 0,13
@@ -25288,7 +25288,7 @@ Module .. ROOT 0,0 -> 0,13
     0] Pass .. 0,9 -> 0,13
 """),
 
-(r"""def f(**e): pass""", 'body[0].args', None, 'kwarg', {'raw': False}, r"""new""", r"""def f(**new): pass""", r"""
+(r"""def f(**e): pass""", 'body[0].args', None, 'kwarg', {}, r"""new""", r"""def f(**new): pass""", r"""
 Module .. ROOT 0,0 -> 0,18
   .body[1]
   0] FunctionDef .. 0,0 -> 0,18
@@ -25300,7 +25300,7 @@ Module .. ROOT 0,0 -> 0,18
     0] Pass .. 0,14 -> 0,18
 """),
 
-(r"""def f(d=(1), **e): pass""", 'body[0].args', None, 'kwarg', {'raw': False}, r"""**DEL**""", r"""def f(d=(1)): pass""", r"""
+(r"""def f(d=(1), **e): pass""", 'body[0].args', None, 'kwarg', {}, r"""**DEL**""", r"""def f(d=(1)): pass""", r"""
 Module .. ROOT 0,0 -> 0,18
   .body[1]
   0] FunctionDef .. 0,0 -> 0,18
@@ -25315,7 +25315,7 @@ Module .. ROOT 0,0 -> 0,18
     0] Pass .. 0,14 -> 0,18
 """),
 
-(r"""def f(d=(1), **e): pass""", 'body[0].args', None, 'kwarg', {'raw': False}, r"""new""", r"""def f(d=(1), **new): pass""", r"""
+(r"""def f(d=(1), **e): pass""", 'body[0].args', None, 'kwarg', {}, r"""new""", r"""def f(d=(1), **new): pass""", r"""
 Module .. ROOT 0,0 -> 0,25
   .body[1]
   0] FunctionDef .. 0,0 -> 0,25
@@ -25332,7 +25332,7 @@ Module .. ROOT 0,0 -> 0,25
     0] Pass .. 0,21 -> 0,25
 """),
 
-(r"""def f(*c, **e): pass""", 'body[0].args', None, 'kwarg', {'raw': False}, r"""**DEL**""", r"""def f(*c): pass""", r"""
+(r"""def f(*c, **e): pass""", 'body[0].args', None, 'kwarg', {}, r"""**DEL**""", r"""def f(*c): pass""", r"""
 Module .. ROOT 0,0 -> 0,15
   .body[1]
   0] FunctionDef .. 0,0 -> 0,15
@@ -25344,7 +25344,7 @@ Module .. ROOT 0,0 -> 0,15
     0] Pass .. 0,11 -> 0,15
 """),
 
-(r"""def f(*c, **e): pass""", 'body[0].args', None, 'kwarg', {'raw': False}, r"""new""", r"""def f(*c, **new): pass""", r"""
+(r"""def f(*c, **e): pass""", 'body[0].args', None, 'kwarg', {}, r"""new""", r"""def f(*c, **new): pass""", r"""
 Module .. ROOT 0,0 -> 0,22
   .body[1]
   0] FunctionDef .. 0,0 -> 0,22
@@ -25358,7 +25358,7 @@ Module .. ROOT 0,0 -> 0,22
     0] Pass .. 0,18 -> 0,22
 """),
 
-(r"""def f(a, /, **e): pass""", 'body[0].args', None, 'kwarg', {'raw': False}, r"""**DEL**""", r"""def f(a, /): pass""", r"""
+(r"""def f(a, /, **e): pass""", 'body[0].args', None, 'kwarg', {}, r"""**DEL**""", r"""def f(a, /): pass""", r"""
 Module .. ROOT 0,0 -> 0,17
   .body[1]
   0] FunctionDef .. 0,0 -> 0,17
@@ -25371,7 +25371,7 @@ Module .. ROOT 0,0 -> 0,17
     0] Pass .. 0,13 -> 0,17
 """),
 
-(r"""def f(a=(2), /, **e): pass""", 'body[0].args', None, 'kwarg', {'raw': False}, r"""**DEL**""", r"""def f(a=(2), /): pass""", r"""
+(r"""def f(a=(2), /, **e): pass""", 'body[0].args', None, 'kwarg', {}, r"""**DEL**""", r"""def f(a=(2), /): pass""", r"""
 Module .. ROOT 0,0 -> 0,21
   .body[1]
   0] FunctionDef .. 0,0 -> 0,21
@@ -25386,7 +25386,7 @@ Module .. ROOT 0,0 -> 0,21
     0] Pass .. 0,17 -> 0,21
 """),
 
-(r"""def f(a: int, /, **e): pass""", 'body[0].args', None, 'kwarg', {'raw': False}, r"""**DEL**""", r"""def f(a: int, /): pass""", r"""
+(r"""def f(a: int, /, **e): pass""", 'body[0].args', None, 'kwarg', {}, r"""**DEL**""", r"""def f(a: int, /): pass""", r"""
 Module .. ROOT 0,0 -> 0,22
   .body[1]
   0] FunctionDef .. 0,0 -> 0,22
@@ -25400,7 +25400,7 @@ Module .. ROOT 0,0 -> 0,22
     0] Pass .. 0,18 -> 0,22
 """),
 
-(r"""def f(a, /, **e): pass""", 'body[0].args', None, 'kwarg', {'raw': False}, r"""new""", r"""def f(a, /, **new): pass""", r"""
+(r"""def f(a, /, **e): pass""", 'body[0].args', None, 'kwarg', {}, r"""new""", r"""def f(a, /, **new): pass""", r"""
 Module .. ROOT 0,0 -> 0,24
   .body[1]
   0] FunctionDef .. 0,0 -> 0,24
@@ -25415,7 +25415,7 @@ Module .. ROOT 0,0 -> 0,24
     0] Pass .. 0,20 -> 0,24
 """),
 
-(r"""lambda **e: None""", 'body[0].value.args', None, 'kwarg', {'raw': False}, r"""**DEL**""", r"""lambda: None""", r"""
+(r"""lambda **e: None""", 'body[0].value.args', None, 'kwarg', {}, r"""**DEL**""", r"""lambda: None""", r"""
 Module .. ROOT 0,0 -> 0,12
   .body[1]
   0] Expr .. 0,0 -> 0,12
@@ -25423,7 +25423,7 @@ Module .. ROOT 0,0 -> 0,12
       .body Constant None .. 0,8 -> 0,12
 """),
 
-(r"""lambda **e: None""", 'body[0].value.args', None, 'kwarg', {'raw': False}, r"""new""", r"""lambda **new: None""", r"""
+(r"""lambda **e: None""", 'body[0].value.args', None, 'kwarg', {}, r"""new""", r"""lambda **new: None""", r"""
 Module .. ROOT 0,0 -> 0,18
   .body[1]
   0] Expr .. 0,0 -> 0,18
@@ -25434,7 +25434,7 @@ Module .. ROOT 0,0 -> 0,18
       .body Constant None .. 0,14 -> 0,18
 """),
 
-(r"""lambda d=(1), **e: None""", 'body[0].value.args', None, 'kwarg', {'raw': False}, r"""**DEL**""", r"""lambda d=(1): None""", r"""
+(r"""lambda d=(1), **e: None""", 'body[0].value.args', None, 'kwarg', {}, r"""**DEL**""", r"""lambda d=(1): None""", r"""
 Module .. ROOT 0,0 -> 0,18
   .body[1]
   0] Expr .. 0,0 -> 0,18
@@ -25448,7 +25448,7 @@ Module .. ROOT 0,0 -> 0,18
       .body Constant None .. 0,14 -> 0,18
 """),
 
-(r"""lambda d=(1), **e: None""", 'body[0].value.args', None, 'kwarg', {'raw': False}, r"""new""", r"""lambda d=(1), **new: None""", r"""
+(r"""lambda d=(1), **e: None""", 'body[0].value.args', None, 'kwarg', {}, r"""new""", r"""lambda d=(1), **new: None""", r"""
 Module .. ROOT 0,0 -> 0,25
   .body[1]
   0] Expr .. 0,0 -> 0,25
@@ -25464,7 +25464,7 @@ Module .. ROOT 0,0 -> 0,25
       .body Constant None .. 0,21 -> 0,25
 """),
 
-(r"""lambda *c, **e: None""", 'body[0].value.args', None, 'kwarg', {'raw': False}, r"""**DEL**""", r"""lambda *c: None""", r"""
+(r"""lambda *c, **e: None""", 'body[0].value.args', None, 'kwarg', {}, r"""**DEL**""", r"""lambda *c: None""", r"""
 Module .. ROOT 0,0 -> 0,15
   .body[1]
   0] Expr .. 0,0 -> 0,15
@@ -25475,7 +25475,7 @@ Module .. ROOT 0,0 -> 0,15
       .body Constant None .. 0,11 -> 0,15
 """),
 
-(r"""lambda *c, **e: None""", 'body[0].value.args', None, 'kwarg', {'raw': False}, r"""new""", r"""lambda *c, **new: None""", r"""
+(r"""lambda *c, **e: None""", 'body[0].value.args', None, 'kwarg', {}, r"""new""", r"""lambda *c, **new: None""", r"""
 Module .. ROOT 0,0 -> 0,22
   .body[1]
   0] Expr .. 0,0 -> 0,22
@@ -25488,7 +25488,7 @@ Module .. ROOT 0,0 -> 0,22
       .body Constant None .. 0,18 -> 0,22
 """),
 
-(r"""lambda a, /, **e: None""", 'body[0].value.args', None, 'kwarg', {'raw': False}, r"""**DEL**""", r"""lambda a, /: None""", r"""
+(r"""lambda a, /, **e: None""", 'body[0].value.args', None, 'kwarg', {}, r"""**DEL**""", r"""lambda a, /: None""", r"""
 Module .. ROOT 0,0 -> 0,17
   .body[1]
   0] Expr .. 0,0 -> 0,17
@@ -25500,7 +25500,7 @@ Module .. ROOT 0,0 -> 0,17
       .body Constant None .. 0,13 -> 0,17
 """),
 
-(r"""lambda a=(2), /, **e: None""", 'body[0].value.args', None, 'kwarg', {'raw': False}, r"""**DEL**""", r"""lambda a=(2), /: None""", r"""
+(r"""lambda a=(2), /, **e: None""", 'body[0].value.args', None, 'kwarg', {}, r"""**DEL**""", r"""lambda a=(2), /: None""", r"""
 Module .. ROOT 0,0 -> 0,21
   .body[1]
   0] Expr .. 0,0 -> 0,21
@@ -25514,7 +25514,7 @@ Module .. ROOT 0,0 -> 0,21
       .body Constant None .. 0,17 -> 0,21
 """),
 
-(r"""lambda a, /, **e: None""", 'body[0].value.args', None, 'kwarg', {'raw': False}, r"""new""", r"""lambda a, /, **new: None""", r"""
+(r"""lambda a, /, **e: None""", 'body[0].value.args', None, 'kwarg', {}, r"""new""", r"""lambda a, /, **new: None""", r"""
 Module .. ROOT 0,0 -> 0,24
   .body[1]
   0] Expr .. 0,0 -> 0,24
@@ -25528,7 +25528,7 @@ Module .. ROOT 0,0 -> 0,24
       .body Constant None .. 0,20 -> 0,24
 """),
 
-(r"""def f(): pass""", 'body[0].args', None, 'kwarg', {'raw': False}, r"""new""", r"""def f(**new): pass""", r"""
+(r"""def f(): pass""", 'body[0].args', None, 'kwarg', {}, r"""new""", r"""def f(**new): pass""", r"""
 Module .. ROOT 0,0 -> 0,18
   .body[1]
   0] FunctionDef .. 0,0 -> 0,18
@@ -25540,7 +25540,7 @@ Module .. ROOT 0,0 -> 0,18
     0] Pass .. 0,14 -> 0,18
 """),
 
-(r"""def f(c=(1)): pass""", 'body[0].args', None, 'kwarg', {'raw': False}, r"""new""", r"""def f(c=(1), **new): pass""", r"""
+(r"""def f(c=(1)): pass""", 'body[0].args', None, 'kwarg', {}, r"""new""", r"""def f(c=(1), **new): pass""", r"""
 Module .. ROOT 0,0 -> 0,25
   .body[1]
   0] FunctionDef .. 0,0 -> 0,25
@@ -25557,7 +25557,7 @@ Module .. ROOT 0,0 -> 0,25
     0] Pass .. 0,21 -> 0,25
 """),
 
-(r"""def f(c=(1),): pass""", 'body[0].args', None, 'kwarg', {'raw': False}, r"""new""", r"""def f(c=(1), **new): pass""", r"""
+(r"""def f(c=(1),): pass""", 'body[0].args', None, 'kwarg', {}, r"""new""", r"""def f(c=(1), **new): pass""", r"""
 Module .. ROOT 0,0 -> 0,25
   .body[1]
   0] FunctionDef .. 0,0 -> 0,25
@@ -25574,7 +25574,7 @@ Module .. ROOT 0,0 -> 0,25
     0] Pass .. 0,21 -> 0,25
 """),
 
-(r"""def f(a=(1), /): pass""", 'body[0].args', None, 'kwarg', {'raw': False}, r"""new""", r"""def f(a=(1), /, **new): pass""", r"""
+(r"""def f(a=(1), /): pass""", 'body[0].args', None, 'kwarg', {}, r"""new""", r"""def f(a=(1), /, **new): pass""", r"""
 Module .. ROOT 0,0 -> 0,28
   .body[1]
   0] FunctionDef .. 0,0 -> 0,28
@@ -25591,7 +25591,7 @@ Module .. ROOT 0,0 -> 0,28
     0] Pass .. 0,24 -> 0,28
 """),
 
-(r"""def f(a: int, /): pass""", 'body[0].args', None, 'kwarg', {'raw': False}, r"""new""", r"""def f(a: int, /, **new): pass""", r"""
+(r"""def f(a: int, /): pass""", 'body[0].args', None, 'kwarg', {}, r"""new""", r"""def f(a: int, /, **new): pass""", r"""
 Module .. ROOT 0,0 -> 0,29
   .body[1]
   0] FunctionDef .. 0,0 -> 0,29
@@ -25607,7 +25607,7 @@ Module .. ROOT 0,0 -> 0,29
     0] Pass .. 0,25 -> 0,29
 """),
 
-(r"""def f(a, /): pass""", 'body[0].args', None, 'kwarg', {'raw': False}, r"""new""", r"""def f(a, /, **new): pass""", r"""
+(r"""def f(a, /): pass""", 'body[0].args', None, 'kwarg', {}, r"""new""", r"""def f(a, /, **new): pass""", r"""
 Module .. ROOT 0,0 -> 0,24
   .body[1]
   0] FunctionDef .. 0,0 -> 0,24
@@ -25622,7 +25622,7 @@ Module .. ROOT 0,0 -> 0,24
     0] Pass .. 0,20 -> 0,24
 """),
 
-(r"""def f(a, /, ): pass""", 'body[0].args', None, 'kwarg', {'raw': False}, r"""new""", r"""def f(a, /, **new ): pass""", r"""
+(r"""def f(a, /, ): pass""", 'body[0].args', None, 'kwarg', {}, r"""new""", r"""def f(a, /, **new ): pass""", r"""
 Module .. ROOT 0,0 -> 0,25
   .body[1]
   0] FunctionDef .. 0,0 -> 0,25
@@ -25637,7 +25637,7 @@ Module .. ROOT 0,0 -> 0,25
     0] Pass .. 0,21 -> 0,25
 """),
 
-(r"""lambda: None""", 'body[0].value.args', None, 'kwarg', {'raw': False}, r"""new""", r"""lambda **new: None""", r"""
+(r"""lambda: None""", 'body[0].value.args', None, 'kwarg', {}, r"""new""", r"""lambda **new: None""", r"""
 Module .. ROOT 0,0 -> 0,18
   .body[1]
   0] Expr .. 0,0 -> 0,18
@@ -25648,7 +25648,7 @@ Module .. ROOT 0,0 -> 0,18
       .body Constant None .. 0,14 -> 0,18
 """),
 
-(r"""lambda c=(1): None""", 'body[0].value.args', None, 'kwarg', {'raw': False}, r"""new""", r"""lambda c=(1), **new: None""", r"""
+(r"""lambda c=(1): None""", 'body[0].value.args', None, 'kwarg', {}, r"""new""", r"""lambda c=(1), **new: None""", r"""
 Module .. ROOT 0,0 -> 0,25
   .body[1]
   0] Expr .. 0,0 -> 0,25
@@ -25664,7 +25664,7 @@ Module .. ROOT 0,0 -> 0,25
       .body Constant None .. 0,21 -> 0,25
 """),
 
-(r"""lambda c=(1),: None""", 'body[0].value.args', None, 'kwarg', {'raw': False}, r"""new""", r"""lambda c=(1), **new: None""", r"""
+(r"""lambda c=(1),: None""", 'body[0].value.args', None, 'kwarg', {}, r"""new""", r"""lambda c=(1), **new: None""", r"""
 Module .. ROOT 0,0 -> 0,25
   .body[1]
   0] Expr .. 0,0 -> 0,25
@@ -25680,7 +25680,7 @@ Module .. ROOT 0,0 -> 0,25
       .body Constant None .. 0,21 -> 0,25
 """),
 
-(r"""lambda a=(1), /: None""", 'body[0].value.args', None, 'kwarg', {'raw': False}, r"""new""", r"""lambda a=(1), /, **new: None""", r"""
+(r"""lambda a=(1), /: None""", 'body[0].value.args', None, 'kwarg', {}, r"""new""", r"""lambda a=(1), /, **new: None""", r"""
 Module .. ROOT 0,0 -> 0,28
   .body[1]
   0] Expr .. 0,0 -> 0,28
@@ -25696,7 +25696,7 @@ Module .. ROOT 0,0 -> 0,28
       .body Constant None .. 0,24 -> 0,28
 """),
 
-(r"""lambda a, /: None""", 'body[0].value.args', None, 'kwarg', {'raw': False}, r"""new""", r"""lambda a, /, **new: None""", r"""
+(r"""lambda a, /: None""", 'body[0].value.args', None, 'kwarg', {}, r"""new""", r"""lambda a, /, **new: None""", r"""
 Module .. ROOT 0,0 -> 0,24
   .body[1]
   0] Expr .. 0,0 -> 0,24
@@ -25710,7 +25710,7 @@ Module .. ROOT 0,0 -> 0,24
       .body Constant None .. 0,20 -> 0,24
 """),
 
-(r"""lambda a, /, : None""", 'body[0].value.args', None, 'kwarg', {'raw': False}, r"""new""", r"""lambda a, /, **new : None""", r"""
+(r"""lambda a, /, : None""", 'body[0].value.args', None, 'kwarg', {}, r"""new""", r"""lambda a, /, **new : None""", r"""
 Module .. ROOT 0,0 -> 0,25
   .body[1]
   0] Expr .. 0,0 -> 0,25
@@ -25724,7 +25724,7 @@ Module .. ROOT 0,0 -> 0,25
       .body Constant None .. 0,21 -> 0,25
 """),
 
-(r"""f'{-0.:.1f}'""", 'body[0].value.values[0].value', None, 'operand', {'raw': False, '_ver': 12}, r"""0.0""", r"""f'{-0.0:.1f}'""", r"""
+(r"""f'{-0.:.1f}'""", 'body[0].value.values[0].value', None, 'operand', {'_ver': 12}, r"""0.0""", r"""f'{-0.0:.1f}'""", r"""
 Module .. ROOT 0,0 -> 0,13
   .body[1]
   0] Expr .. 0,0 -> 0,13
@@ -35781,6 +35781,11 @@ class cls:
             f = (eval(f't.{attr}', {'t': t}) if attr else t).f
 
             try:
+                if options.get('raw') is True:
+                    continue
+
+                options = {**options, 'raw': False}
+
                 try:
                     f.put(None if src == '**DEL**' else src, idx, field=field, **options)
 
@@ -35805,6 +35810,56 @@ class cls:
                     continue
 
                 self.assertEqual(tdump, put_dump.strip().split('\n'))
+
+            except Exception:
+                print(i, attr, idx, field, src, options)
+                print('---')
+                print(repr(dst))
+                print('...')
+                print(src)
+                print('...')
+                print(put_src)
+
+                raise
+
+    def test_put_one_raw(self):
+        ver = sys.version_info[1]
+
+        for i, (dst, attr, idx, field, options, src, put_src, put_dump) in enumerate(PUT_ONE_DATA):
+            if options.get('_ver', 0) > ver:
+                continue
+
+            t = parse(dst)
+            f = (eval(f't.{attr}', {'t': t}) if attr else t).f
+
+            try:
+                if options.get('raw') is False:
+                    continue
+
+                options = {**options, 'raw': True}
+
+                try:
+                    f.put(None if src == '**DEL**' else src, idx, field=field, **options)
+
+                except Exception as exc:
+                    if not put_dump.strip() and put_src.startswith('**') and put_src.endswith('**'):
+                        continue  # assume raw errors in line with non-raw, just different actual error
+                    else:
+                        raise
+
+                else:
+                    tdst  = f.root.src
+                    tdump = f.root.dump(out=list, compact=True)
+
+                    if options.get('_verify', True):
+                        f.root.verify(raise_=True)
+
+                self.assertEqual(tdst.rstrip(), put_src.rstrip())
+
+                if (vd := options.get('_verdump')) and sys.version_info[:2] < (3, vd):
+                    continue
+
+                # self.assertEqual(tdump, put_dump.strip().split('\n'))  # don't compare this because of the trailing newline difference
 
             except Exception:
                 print(i, attr, idx, field, src, options)
@@ -36840,47 +36895,6 @@ finally:
 
         f = parse('a = b').body[0].f
         self.assertRaises(ValueError, f.value.replace, 'c', to=f.targets[0], raw=True)
-
-    # def test_precedence_replace_raw_fst(self):
-    #     truths = iter(PRECEDENCE_DATA)
-
-    #     for dst, *attrs in PRECEDENCE_DST_STMTS + PRECEDENCE_DST_EXPRS + PRECEDENCE_SRC_EXPRS:
-    #         for src, *_ in PRECEDENCE_SRC_EXPRS:
-    #             for attr in attrs:
-    #                 d = dst.copy(fix=False)
-    #                 s = src.body[0].value.copy(fix=False)
-    #                 f = eval(f'd.{attr}' if isinstance(d.a, stmt) else f'd.body[0].value.{attr}', {'d': d})
-    #                 t = next(truths)
-
-    #                 try:
-    #                     f.replace(s, fix=False, raw=True)
-    #                 except SyntaxError:
-    #                     continue
-    #                 else:
-    #                     self.assertEqual(t, f.root.src)
-
-    # def test_precedence_replace_raw_ast(self):
-    #     truths    = iter(PRECEDENCE_DATA)
-    #     is_low_py = sys.version_info[:2] < (3, 11)
-
-    #     for dst, *attrs in PRECEDENCE_DST_STMTS + PRECEDENCE_DST_EXPRS + PRECEDENCE_SRC_EXPRS:
-    #         for src, *_ in PRECEDENCE_SRC_EXPRS:
-    #             for attr in attrs:
-    #                 d = dst.copy(fix=False)
-    #                 s = src.body[0].value.copy(fix=False).a
-    #                 t = next(truths)
-
-    #                 if is_low_py and isinstance(s, Lambda):  # because unparses as 'lambda : ...'
-    #                     continue
-
-    #                 f = eval(f'd.{attr}' if isinstance(d.a, stmt) else f'd.body[0].value.{attr}', {'d': d})
-
-    #                 try:
-    #                     f.replace(s, fix=False, raw=True)
-    #                 except SyntaxError:
-    #                     continue
-    #                 else:
-    #                     self.assertEqual(t, f.root.src)
 
     def test_empty_set_slice(self):
         # f = parse('set()').body[0].value.f
