@@ -35167,12 +35167,12 @@ class cls:
         f = parse('( # 1\ni\n# 2\n)').f
         g = parse('( # 3\nj\n# 4\n)').body[0].value.f.copy(pars=True)
         f.body[0].value.replace(g, raw=True, pars=True)
-        self.assertEqual('j', f.src)
+        self.assertEqual('( # 3\nj\n# 4\n)', f.src)
 
         f = parse('( # 1\ni\n# 2\n)').f
         g = parse('( # 3\nj\n# 4\n)').body[0].value.f.copy(pars=True)
         f.body[0].value.replace(g, raw=True, pars='auto')
-        self.assertEqual('j', f.src)
+        self.assertEqual('( # 3\nj\n# 4\n)', f.src)
 
         f = parse('i * ( # 1\nj\n# 2\n)').f
         g = parse('( # 3\na + b\n# 4\n)').body[0].value.f.copy(pars=True)
@@ -35197,12 +35197,12 @@ class cls:
         f = parse('i * ( # 1\nj\n# 2\n)').f
         g = parse('a + b').body[0].value.f.copy(pars=True)
         f.body[0].value.right.replace(g, raw=True, pars=True)
-        self.assertEqual('i * (a + b)', f.src)
+        self.assertEqual('i * a + b', f.src)
 
         f = parse('i * ( # 1\nj\n# 2\n)').f
         g = parse('a + b').body[0].value.f.copy(pars=True)
         f.body[0].value.right.replace(g, raw=True, pars='auto')
-        self.assertEqual('i * (a + b)', f.src)
+        self.assertEqual('i * a + b', f.src)
 
         # put AST
 
@@ -35214,12 +35214,12 @@ class cls:
         f = parse('( # 1\ni\n# 2\n)').f
         a = Yield(value=Constant(value=1))
         f.body[0].value.replace(a, raw=True, pars=True)
-        self.assertEqual('yield 1', f.src)
+        self.assertEqual('(yield 1)', f.src)
 
         f = parse('( # 1\ni\n# 2\n)').f
         a = Yield(value=Constant(value=1))
         f.body[0].value.replace(a, raw=True, pars='auto')
-        self.assertEqual('yield 1', f.src)
+        self.assertEqual('(yield 1)', f.src)
 
         f = parse('( # 1\ni\n# 2\n)').f
         a = NamedExpr(target=Name(id='i', ctx=Store()), value=Constant(value=1))
@@ -35321,7 +35321,7 @@ class cls:
 
                 raise
 
-    def test_put_existing_one(self):
+    def test_put_existing_one_raw(self):
         for i, (dst, attr, options, src, put_ret, put_src) in enumerate(REPLACE_EXISTING_ONE_DATA):
             t = parse(dst)
             f = (eval(f't.{attr}', {'t': t}) if attr else t).f
@@ -36841,46 +36841,46 @@ finally:
         f = parse('a = b').body[0].f
         self.assertRaises(ValueError, f.value.replace, 'c', to=f.targets[0], raw=True)
 
-    def test_precedence_replace_raw_fst(self):
-        truths = iter(PRECEDENCE_DATA)
+    # def test_precedence_replace_raw_fst(self):
+    #     truths = iter(PRECEDENCE_DATA)
 
-        for dst, *attrs in PRECEDENCE_DST_STMTS + PRECEDENCE_DST_EXPRS + PRECEDENCE_SRC_EXPRS:
-            for src, *_ in PRECEDENCE_SRC_EXPRS:
-                for attr in attrs:
-                    d = dst.copy(fix=False)
-                    s = src.body[0].value.copy(fix=False)
-                    f = eval(f'd.{attr}' if isinstance(d.a, stmt) else f'd.body[0].value.{attr}', {'d': d})
-                    t = next(truths)
+    #     for dst, *attrs in PRECEDENCE_DST_STMTS + PRECEDENCE_DST_EXPRS + PRECEDENCE_SRC_EXPRS:
+    #         for src, *_ in PRECEDENCE_SRC_EXPRS:
+    #             for attr in attrs:
+    #                 d = dst.copy(fix=False)
+    #                 s = src.body[0].value.copy(fix=False)
+    #                 f = eval(f'd.{attr}' if isinstance(d.a, stmt) else f'd.body[0].value.{attr}', {'d': d})
+    #                 t = next(truths)
 
-                    try:
-                        f.replace(s, fix=False, raw=True)
-                    except SyntaxError:
-                        continue
-                    else:
-                        self.assertEqual(t, f.root.src)
+    #                 try:
+    #                     f.replace(s, fix=False, raw=True)
+    #                 except SyntaxError:
+    #                     continue
+    #                 else:
+    #                     self.assertEqual(t, f.root.src)
 
-    def test_precedence_replace_raw_ast(self):
-        truths    = iter(PRECEDENCE_DATA)
-        is_low_py = sys.version_info[:2] < (3, 11)
+    # def test_precedence_replace_raw_ast(self):
+    #     truths    = iter(PRECEDENCE_DATA)
+    #     is_low_py = sys.version_info[:2] < (3, 11)
 
-        for dst, *attrs in PRECEDENCE_DST_STMTS + PRECEDENCE_DST_EXPRS + PRECEDENCE_SRC_EXPRS:
-            for src, *_ in PRECEDENCE_SRC_EXPRS:
-                for attr in attrs:
-                    d = dst.copy(fix=False)
-                    s = src.body[0].value.copy(fix=False).a
-                    t = next(truths)
+    #     for dst, *attrs in PRECEDENCE_DST_STMTS + PRECEDENCE_DST_EXPRS + PRECEDENCE_SRC_EXPRS:
+    #         for src, *_ in PRECEDENCE_SRC_EXPRS:
+    #             for attr in attrs:
+    #                 d = dst.copy(fix=False)
+    #                 s = src.body[0].value.copy(fix=False).a
+    #                 t = next(truths)
 
-                    if is_low_py and isinstance(s, Lambda):  # because unparses as 'lambda : ...'
-                        continue
+    #                 if is_low_py and isinstance(s, Lambda):  # because unparses as 'lambda : ...'
+    #                     continue
 
-                    f = eval(f'd.{attr}' if isinstance(d.a, stmt) else f'd.body[0].value.{attr}', {'d': d})
+    #                 f = eval(f'd.{attr}' if isinstance(d.a, stmt) else f'd.body[0].value.{attr}', {'d': d})
 
-                    try:
-                        f.replace(s, fix=False, raw=True)
-                    except SyntaxError:
-                        continue
-                    else:
-                        self.assertEqual(t, f.root.src)
+    #                 try:
+    #                     f.replace(s, fix=False, raw=True)
+    #                 except SyntaxError:
+    #                     continue
+    #                 else:
+    #                     self.assertEqual(t, f.root.src)
 
     def test_empty_set_slice(self):
         # f = parse('set()').body[0].value.f

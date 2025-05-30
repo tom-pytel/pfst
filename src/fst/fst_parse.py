@@ -71,8 +71,8 @@ def _code_as(code: Code, ast_type: type[AST], parse_params: dict, parse: Callabl
         if not isinstance(code, ast_type):
             raise NodeError(f'expecting {ast_type.__name__}, got {code.__class__.__name__}')
 
-        code  = ast_unparse(code)[1:-1] if not tup_pars and isinstance(code, Tuple) and code.elts else ast_unparse(code)
-        code  = code.strip()  # comprehension unparses with leading space
+        code  = (ast_unparse(code)[1:-1] if not tup_pars and isinstance(code, Tuple) and code.elts else
+                 _unparse_ast(code))
         lines = code.split('\n')
 
     elif isinstance(code, list):
@@ -85,6 +85,12 @@ def _code_as(code: Code, ast_type: type[AST], parse_params: dict, parse: Callabl
 
 _GLOBALS = globals() | {'_GLOBALS': None}
 # ----------------------------------------------------------------------------------------------------------------------
+
+@staticmethod
+def _unparse_ast(ast: AST) -> AST:
+    """AST unparse that handles misc case of comprehension starting with a single space."""
+
+    return ast_unparse(ast).lstrip() if isinstance(ast, comprehension) else ast_unparse(ast)
 
 @staticmethod
 def _parse_stmts(src: str, parse_params: dict = {}) -> AST:

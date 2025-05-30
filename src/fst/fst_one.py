@@ -2,6 +2,7 @@
 
 import re
 from ast import *
+from itertools import takewhile
 from types import FunctionType
 from typing import Any, Callable, NamedTuple, Optional, Union
 
@@ -110,7 +111,7 @@ def _validate_put(self: 'FST', code: Code | None, idx: int | None, field: str, c
 
         _fixup_one_index(len(child), idx)
 
-        child = child[idx]
+        child = child[idx]  # this will always be a required child, variable size lists will have been passed on to slice processing before getting here
 
     elif idx is not None:
         raise IndexError(f'{self.a.__class__.__name__}.{field} does not take an index')
@@ -625,6 +626,134 @@ def _put_one_MatchAs_name(self: 'FST', code: Code | None, idx: int | None, field
 
 # ......................................................................................................................
 
+def _put_one_raw(self: 'FST', code: Code | None, idx: int | None, field: str, child: AST | list[AST],
+                 static: onestatic | None, **options) -> Optional['FST']:
+
+    ast = self.a
+    to  = options.get('to')
+
+    if not field:  # special case field
+        if (is_dict := (cls := ast.__class__) is Dict) or cls is MatchMapping:
+            static = _PUT_ONE_HANDLERS[(cls, 'keys')][-1]
+            child  = ast.keys
+            field  = 'keys'
+            idx    = _fixup_one_index(len(child), idx)
+
+            if not to:
+                to = self.values[idx] if is_dict else self.patterns[idx]
+
+        elif cls is Compare:
+            idx, field, child = _params_Compare_None(self, idx)
+        else:
+            raise ValueError(f'cannot put single element to combined field of {ast.__class__.__name__}')
+
+    child  = _validate_put(self, code, idx, field, child, options, can_del=True)
+    childf = child.f if isinstance(child, AST) else None
+    pars   = bool(FST.get_option('pars', options))
+
+    if to is childf:
+        to = None
+
+    # code to appropriate lines
+
+    if is_del := code is None:
+        code     = ''
+        is_empty = False
+
+    else:
+        if isinstance(code, str):
+            code = code.split('\n')
+        elif isinstance(code, AST):
+            code = FST._unparse_ast(code).split('\n')
+
+        elif isinstance(code, FST):
+            if not code.is_root:
+                raise ValueError('expecting root node')
+
+            code = code._lines
+
+        is_empty = not _next_src(code, 0, 0, len(code) - 1, 0x7fffffffffffffff)  # if only comments and line continuations then is functionally empty
+
+    is_del_or_empty = is_del or is_empty
+
+    # from location and prefix
+
+    info = static and (getinfo := static.getinfo) and getinfo(self, static, idx, field)
+    loc  = None
+
+    if info:
+        if is_del_or_empty:
+            loc = info.loc_insdel or info.loc_ident
+
+            if is_del and info.delstr and not to:  # pure delete, plop in the delstr just to be nice :)
+                code = info.delstr
+
+        else:
+            loc = info.loc_ident
+
+            if child is None:  # pure insert, add the prefix, also the suffix if there is no 'to'
+                if info.prefix:
+                    code[0] = info.prefix + code[0]
+                if info.suffix and not to:
+                    code[-1] = code[-1] + info.suffix
+
+    if loc is None:
+        if childf:
+            loc = childf.pars(shared=False, pars=pars)
+
+            if (loc and not pars and childf.is_solo_call_arg_genexp() and  # if loc includes `arguments` parentheses shared with solo GeneratorExp call arg then need to leave those in place
+                (non_shared_loc := childf.pars(shared=False)) > loc
+            ):
+                loc = non_shared_loc
+
+        if loc is None and info and not is_del_or_empty:  # identifier
+            loc = info.loc_insdel
+
+    if not loc:
+        raise ValueError('cannot determine location to put to')
+
+    # to location, suffix and appropriate parent
+
+    if not to:
+        parent = self
+        to_loc = loc
+
+    else:
+        if not (to_parent := to.parent):
+            raise ValueError("'to' node cannot be root")
+
+        if (root := self.root) is not to.root:
+            raise ValueError("'to' node not part of same tree")
+
+        to_loc = None
+
+        if is_del_or_empty:  # if deleting then see if there is a prescribed delete location
+            to_field, to_idx = to.pfield
+            to_static        = _PUT_ONE_HANDLERS.get((to_parent.a.__class__, to_field), (None, None))[-1]
+
+            if to_static and (to_info := (getinfo := to_static.getinfo) and getinfo(self, to_static, to_idx, to_field)):
+                to_loc = to_info.loc_insdel
+
+        if to_loc is None:
+            if not (to_loc := to.pars(shared=False, pars=pars)):
+                raise ValueError(f"'to' node must have a location")
+
+            if not pars and to.is_solo_call_arg_genexp() and (non_shared_loc := to.pars(shared=False)) > to_loc:
+                to_loc = non_shared_loc
+
+        if to_loc[:2] < loc[:2]:
+            raise ValueError(f"'to' node must follow self")
+
+        self_path = root.child_path(self)  # technically should be root.child_path(childf)[:-1] but child may be identifier so get path directly to self which is parent and doesn't need the [:-1]
+        to_path   = root.child_path(to)[:-1]
+        path      = list(p for p, _ in takewhile(lambda st: st[0] == st[1], zip(self_path, to_path)))
+        parent    = root.child_from_path(path)
+
+    # do it
+
+    return parent._reparse_raw_loc(code, loc.ln, loc.col, to_loc.end_ln, to_loc.end_col)
+
+
 def _put_one(self: 'FST', code: Code | None, idx: int | None, field: str, **options) -> Optional['FST']:
     """Put new, replace or delete a node (or limited non-node) to a field of `self`.
 
@@ -652,7 +781,7 @@ def _put_one(self: 'FST', code: Code | None, idx: int | None, field: str, **opti
 
             if not handlers:
                 raise NodeError(f"cannot {'delete' if code is None else 'replace'} {ast.__class__.__name__}"
-                                f"{f'.{field}' if field else ' combined field'}")
+                                f"{f'.{field}' if field else ' combined fields'}")
 
             else:
                 handler, _, static = handlers
@@ -671,42 +800,47 @@ def _put_one(self: 'FST', code: Code | None, idx: int | None, field: str, **opti
             if ret_or_delegate is not None:  # delegate operation to slice?
                 return ret_or_delegate()
 
+
+
     # TODO: redo raw starting below
 
 
-    if isinstance(child, list):
-        child = child[idx]
+    # if isinstance(child, list):
+    #     child = child[idx]
 
-    # special raw cases, TODO: move into dedicated _put_raw or do via _PUT_ONE_RAW_HANDLERS
+    # # special raw cases, TODO: move into dedicated _put_raw or do via _PUT_ONE_RAW_HANDLERS
 
-    is_dict = isinstance(ast, Dict)
+    # is_dict = isinstance(ast, Dict)
 
-    if not field:  # maybe putting to special case field?
-        if is_dict or isinstance(ast, MatchMapping):
-            key = key.f if (key := ast.keys[idx]) else self._dict_key_or_mock_loc(key, ast.values[idx].f)
-            end = (ast.values if is_dict else ast.patterns)[idx].f
+    # if not field:  # maybe putting to special case field?
+    #     if is_dict or isinstance(ast, MatchMapping):
+    #         key = key.f if (key := ast.keys[idx]) else self._dict_key_or_mock_loc(key, ast.values[idx].f)
+    #         end = (ast.values if is_dict else ast.patterns)[idx].f
 
-            self._reparse_raw_loc(code, key.ln, key.col, end.end_ln, end.end_col)
+    #         self._reparse_raw_loc(code, key.ln, key.col, end.end_ln, end.end_col)
 
-            return self.repath()
+    #         return self.repath()
 
-        if isinstance(ast, Compare):
-            idx   = _fixup_one_index(len(ast.comparators) + 1, idx)  # need to do this because of compound body including 'left'
-            child = ast.comparators[idx - 1] if idx else ast.left
+    #     if isinstance(ast, Compare):
+    #         idx   = _fixup_one_index(len(ast.comparators) + 1, idx)  # need to do this because of compound body including 'left'
+    #         child = ast.comparators[idx - 1] if idx else ast.left
 
-    if is_dict and field == 'keys' and (keys := ast.keys)[idx] is None:  # '{**d}' with key=None
-        start_loc = self._dict_key_or_mock_loc(keys[idx], ast.values[idx].f)
+    # if is_dict and field == 'keys' and (keys := ast.keys)[idx] is None:  # '{**d}' with key=None
+    #     start_loc = self._dict_key_or_mock_loc(keys[idx], ast.values[idx].f)
 
-        ln, col, end_ln, end_col = start_loc.loc
+    #     ln, col, end_ln, end_col = start_loc.loc
 
-        self.put_src([': '], ln, col, end_ln, end_col)
-        self._reparse_raw_loc(code, ln, col, ln, col)
+    #     self.put_src([': '], ln, col, end_ln, end_col)
+    #     self._reparse_raw_loc(code, ln, col, ln, col)
 
-        return self.repath()
+    #     return self.repath()
 
-    ret = child.f._reparse_raw_node(code, **options)
+    # ret = child.f._reparse_raw_node(code, **options)
 
-    return None if code is None else ret
+    # return None if code is None else ret
+
+
+    return _put_one_raw(self, code, idx, field, child, handlers and handlers[-1], **options)
 
 
 # ......................................................................................................................
@@ -785,8 +919,7 @@ def _one_info_Return_value(self: 'FST', static: onestatic, idx: int | None, fiel
     return oneinfo(' ', fstloc((loc := self.loc).ln, loc.col + 6, loc.end_ln, loc.end_col))
 
 def _one_info_AnnAssign_value(self: 'FST', static: onestatic, idx: int | None, field: str) -> oneinfo:
-    return oneinfo(' = ',
-                   fstloc((loc := self.a.annotation.f.pars()).end_ln, loc.end_col, self.end_ln, self.end_col))
+    return oneinfo(' = ', fstloc((loc := self.a.annotation.f.pars()).end_ln, loc.end_col, self.end_ln, self.end_col))
 
 def _one_info_Raise_exc(self: 'FST', static: onestatic, idx: int | None, field: str) -> oneinfo:
     if self.a.cause:

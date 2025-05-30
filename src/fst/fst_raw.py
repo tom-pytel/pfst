@@ -1,7 +1,6 @@
 """Raw reparse FST methods."""
 
 from ast import *
-from ast import unparse as ast_unparse
 from itertools import takewhile
 from typing import Literal, Optional
 
@@ -239,16 +238,16 @@ def _reparse_raw_loc(self: 'FST', code: Code | None, ln: int, col: int, end_ln: 
         not `None` then will attempt a `find_loc(..., exact)` if could not find candidate node with `find_in_loc()`.
     """
 
-    if isinstance(code, str):
-        new_lines = code.split('\n')
-    elif isinstance(code, list):
+    if isinstance(code, list):
         new_lines = code
+    elif isinstance(code, str):
+        new_lines = code.split('\n')
     elif isinstance(code, AST):
-        new_lines = ast_unparse(code).split('\n')
+        new_lines = FST._unparse_ast(code).split('\n')
     elif code is None:
         new_lines = [bistr('')]
     elif not code.is_root:  # isinstance(code, FST)
-        raise ValueError('expecting root FST')
+        raise ValueError('expecting root node')
     else:
         new_lines = code._lines
 
@@ -300,9 +299,9 @@ def _reparse_raw_node(self: 'FST', code: Code | None, to: Optional['FST'] = None
                     if pars and isinstance(code, PARENTHESIZABLE):
                         if not (is_atom_ := is_atom(code, tuple_as_atom=None)):
                             if precedence_require_parens(code, parent.a, *self.pfield):
-                                code = ast_unparse(code) if is_atom_ is None else f'({ast_unparse(code)})'
+                                code = FST._unparse_ast(code) if is_atom_ is None else f'({FST._unparse_ast(code)})'
                             elif is_atom_ is None:  # strip `unparse()` parens
-                                code = ast_unparse(code)[1:-1]
+                                code = FST._unparse_ast(code)[1:-1]
 
                 elif isinstance(code, FST):
                     a = reduce_ast(code.a, NodeError)
@@ -335,9 +334,9 @@ def _reparse_raw_node(self: 'FST', code: Code | None, to: Optional['FST'] = None
         #     elif isinstance(code, AST):
         #         if not (is_atom_ := is_atom(code, tuple_as_atom=None)):
         #             if precedence_require_parens(code, parent.a, *self.pfield):
-        #                 code = ast_unparse(code) if is_atom_ is None else f'({ast_unparse(code)})'
+        #                 code = FST._unparse_ast(code) if is_atom_ is None else f'({FST._unparse_ast(code)})'
         #             elif is_atom_ is None:  # strip `unparse()` parens
-        #                 code = ast_unparse(code)[1:-1]
+        #                 code = FST._unparse_ast(code)[1:-1]
 
         if (pars or not self.is_solo_call_arg_genexp() or  # if original loc included `arguments` parentheses shared with solo GeneratorExp call arg then need to leave those in place
             (to_loc := self.pars(shared=False))[:2] <= loc[:2]
@@ -375,13 +374,13 @@ def _reparse_raw_slice(self: 'FST', code: Code | None, start: int | Literal['end
 
             else:
                 if isinstance(ast, Tuple):  # strip delimiters because we want CONTENTS of slice for raw put, not the slice object itself
-                    code = ast_unparse(ast)[1 : (-2 if len(ast.elts) == 1 else -1)]  # also remove singleton Tuple trailing comma
+                    code = FST._unparse_ast(ast)[1 : (-2 if len(ast.elts) == 1 else -1)]  # also remove singleton Tuple trailing comma
                 elif isinstance(ast, (List, Dict, Set, MatchSequence, MatchMapping)):
-                    code = ast_unparse(ast)[1 : -1]
+                    code = FST._unparse_ast(ast)[1 : -1]
 
     elif isinstance(code, FST):
         if not code.is_root:
-            raise ValueError('expecting root FST')
+            raise ValueError('expecting root node')
 
         try:
             ast = _coerce_ast(code.a, 'exprish')
