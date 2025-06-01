@@ -18,7 +18,7 @@ from .fst_parse import (
     _code_as_expr, _code_as_slice, _code_as_expr_slice_tuple, _code_as_expr_call_arg,
     _code_as_boolop, _code_as_operator, _code_as_operator_aug, _code_as_unaryop, _code_as_cmpop,
     _code_as_pattern, _code_as_comprehension, _code_as_arguments,
-    _code_as_arguments_lambda, _code_as_arg, _code_as_keyword, _code_as_alias_maybe_star, _code_as_alias_dotted,
+    _code_as_arguments_lambda, _code_as_arg, _code_as_keyword, _code_as_alias_star, _code_as_alias_dotted,
     _code_as_withitem, _code_as_type_param, _code_as_identifier, _code_as_identifier_dotted, _code_as_identifier_alias,
 )
 
@@ -636,7 +636,7 @@ def _put_one_raw(self: 'FST', code: Code | None, idx: int | None, field: str, ch
         if isinstance(code, str):
             code = code.split('\n')
         elif isinstance(code, AST):
-            code = FST._unparse_ast(code).split('\n')
+            code = FST._unparse(code).split('\n')
 
         elif isinstance(code, FST):
             if not code.is_root:
@@ -648,7 +648,7 @@ def _put_one_raw(self: 'FST', code: Code | None, idx: int | None, field: str, ch
 
     is_del_or_empty = is_del or is_empty
 
-    # from location and prefix
+    # from location, prefix and maybe suffix and delstr
 
     info = static and (getinfo := static.getinfo) and getinfo(self, static, idx, field)
     loc  = None
@@ -695,7 +695,7 @@ def _put_one_raw(self: 'FST', code: Code | None, idx: int | None, field: str, ch
     if not loc:
         raise ValueError('cannot determine location to put to')
 
-    # to location, suffix and appropriate parent
+    # to location (if different) and appropriate parent
 
     if not to:
         parent = self
@@ -717,7 +717,7 @@ def _put_one_raw(self: 'FST', code: Code | None, idx: int | None, field: str, ch
             if to_static and (to_info := (getinfo := to_static.getinfo) and getinfo(self, to_static, to_idx, to_field)):
                 to_loc = to_info.loc_insdel
 
-        if to_loc is None:
+        if to_loc is None:  # empty arguments get special handling
             if not (to_loc := to.pars(shared=False, pars=pars)):
                 if isinstance(to.a, arguments):
                     to_loc = to._loc_arguments_empty()
@@ -1392,7 +1392,7 @@ _PUT_ONE_HANDLERS = {
     (Assert, 'msg'):                      (False, _put_one_exprish_optional, onestatic(_one_info_Assert_msg, _restrict_default)), # expr?
     (Import, 'names'):                    (True,  _put_one_exprish_required, onestatic(_one_info_exprish_required, _restrict_default, code_as=_code_as_alias_dotted)), # alias*
     (ImportFrom, 'module'):               (False, _put_one_identifier_optional, onestatic(_one_info_ImportFrom_module, _restrict_default, code_as=_code_as_identifier_dotted)), # identifier? (dotted)
-    (ImportFrom, 'names'):                (True,  _put_one_exprish_required, onestatic(_one_info_exprish_required, _restrict_default, code_as=_code_as_alias_maybe_star)), # alias*
+    (ImportFrom, 'names'):                (True,  _put_one_exprish_required, onestatic(_one_info_exprish_required, _restrict_default, code_as=_code_as_alias_star)), # alias*
     (Global, 'names'):                    (True,  _put_one_identifier_required, _onestatic_Global_Nonlocal_names), # identifier*
     (Nonlocal, 'names'):                  (True,  _put_one_identifier_required, _onestatic_Global_Nonlocal_names), # identifier*
     (Expr, 'value'):                      (False, _put_one_exprish_required, _onestatic_expr_required), # expr
@@ -1478,7 +1478,7 @@ _PUT_ONE_HANDLERS = {
     (MatchValue, 'value'):                (False, _put_one_MatchValue_value, onestatic(_one_info_exprish_required, is_valid_MatchValue_value)), # expr
     (MatchSingleton, 'value'):            (False, _put_one_constant, onestatic(_one_info_constant, is_valid_MatchSingleton_value)), # constant
     (MatchSequence, 'patterns'):          (True,  _put_one_exprish_required, _onestatic_pattern_required), # pattern*
-    (MatchMapping, 'keys'):               (False, _put_one_exprish_required, onestatic(_one_info_exprish_required, is_valid_MatchMapping_key)), # expr*  Ops for `-1` or `2+3j`, TODO: XXX are there any others allowed?
+    (MatchMapping, 'keys'):               (False, _put_one_exprish_required, onestatic(_one_info_exprish_required, is_valid_MatchMapping_key)), # expr*  Ops for `-1` or `2+3j`
     (MatchMapping, 'patterns'):           (True,  _put_one_exprish_required, _onestatic_pattern_required), # pattern*
     (MatchMapping, 'rest'):               (False, _put_one_identifier_optional, onestatic(_one_info_MatchMapping_rest, _restrict_default, code_as=_code_as_identifier)), # identifier?
     (MatchMapping, ''):                   (True,  None, None), # expr*

@@ -3,7 +3,7 @@
 import re
 from ast import *
 from ast import parse as ast_parse, unparse as ast_unparse
-from typing import Callable
+from typing import Callable, Literal
 
 from .astutil import *
 from .astutil import TryStar, type_param
@@ -72,7 +72,7 @@ def _code_as(code: Code, ast_type: type[AST], parse_params: dict, parse: Callabl
             raise NodeError(f'expecting {ast_type.__name__}, got {code.__class__.__name__}')
 
         code  = (ast_unparse(code)[1:-1] if not tup_pars and isinstance(code, Tuple) and code.elts else
-                 _unparse_ast(code))
+                 _unparse(code))
         lines = code.split('\n')
 
     elif isinstance(code, list):
@@ -87,10 +87,68 @@ _GLOBALS = globals() | {'_GLOBALS': None}
 # ----------------------------------------------------------------------------------------------------------------------
 
 @staticmethod
-def _unparse_ast(ast: AST) -> AST:
-    """AST unparse that handles misc case of comprehension starting with a single space."""
+def _unparse(ast: AST) -> AST:
+    """AST unparse that handles misc case of comprehension starting with a single space by stripping it."""
 
     return ast_unparse(ast).lstrip() if isinstance(ast, comprehension) else ast_unparse(ast)
+
+
+@staticmethod
+def _parse(src: str, mode: str | type[AST] | None = None, parse_params: dict = {}) -> AST:
+    """Parse any source to an AST, including things which normal `ast.parse()` doesn't handle like individual
+    `comprehension`s. Can be given a target type to parse or else will try to various parse methods until it finds one
+    that succeeds (if any).
+
+    **Parameters**:
+    - `src`: The source to parse.
+    - `mode`: Either one of the standard `ast.parse()` modes `exec`, `eval` or `single` to parse to that type of module
+        or one of our specific strings like `'stmtishs'` or an actual `AST` type to parse to. If the mode is provided
+        and cannot parse to the specified target then an error is raised and no other parse types are tried.
+        Options are:
+        - `'exec'`: Parse to an `Module`.
+        - `'eval'`: Parse to an `Expression`.
+        - `'single'`: Parse to an `Interactive`.
+        - `'stmtishs'`: Parse as zero or more of either `stmt`, `ExceptHandler` or `match_case` returned in a `Module`.
+        - `'stmtish'`: Parse as a single `stmt`, `ExceptHandler` or `match_case` returned as itself.
+        - `'stmts'`: Same as `exec`, zero or more `stmt`s returned in a `Module`.
+        - `'stmt'`: Parse a single `stmt` returned as itself.
+        - `'ExceptHandlers'`: Parse zero or more `ExceptHandler`s returned in a `Module`.
+        - `'ExceptHandler'`: Parse as a single `ExceptHandler` returned as itself.
+        - `'match_cases'`: Parse zero or more `match_case`s returned in a `Module`.
+        - `'match_case'`: Parse a single `match_case` returned as itself.
+        - `'expr'`: Parse a single `expr` returned as itself. This is differentiated from the following three modes by
+            the handling of slices and starred expressions. In this mode `a:b` and `*not v` are syntax errors.
+        - `'expr_slice'`: Same as `expr` except that in this mode `a:b` parses to a `Slice` and `*not v` parses to
+            a single element tuple containing a starred expression `(*(not v),)`.
+        - `'expr_slice_tupelt'`: Same as `expr` except that in this mode `a:b` parses to a `Slice` and `*not v` parses
+            to a starred expression `*(not v)`.
+        - `'expr_callarg'`: Same as `expr` except that in this mode `a:b` is a syntax error and `*not v` parses to a
+            starred expression `*(not v)`.
+        - `'comprehension'`: Parse a single `comprehension` returned as itself.
+        - `'arguments'`: Parse as `arguments` for a `FunctionDef` or `AsyncFunctionDef` returned as itself. In this mode
+            type annotations are allowed for the arguments.
+        - `'arguments_lambda'`: Parse as `arguments` for a `Lambda` returned as itself. In this mode type annotations
+            are not allowed for the arguments.
+        - `'arg'`: Parse as a single `arg` returned as itself.
+        - `'keyword'`: Parse as a single `keyword` returned as itself.
+        - `'alias'`: Parse as a single `alias` returned as itself. Either starred or dotted versions are accepted.
+        - `'alias_star'`: Parse as a single `alias` returned as itself, with dotted version being a syntax error.
+        - `'alias_dotted'`: Parse as a single `alias` returned as itself, with starred version being a syntax error.
+        - `'withitem'`: Parse as a single `withitem` returned as itself.
+        - `'pattern'`: Parse as a a single `pattern` returned as itself.
+        - `'type_param'`: Parse as a single `type_param` returned as itself, either `TypeVar`, `ParamSpec` or
+            `TypeVarTuple`.
+        - `type[AST]`: If an `AST` type is passed then will attempt to parse to this type. This can be used to narrow
+            the scope of desired return, for example `Constant` will parse expression but fail if the expression is not
+            a `Constant`. These overlap with the string specifiers to an extent but not all of them. For example `AST`
+            type `ast.expr` is the same as passign `'expr'` but there is not `AST` type which will specify one of the
+            other expr parse modes. Likewise `Module`, `Expression` and `Interactive` specify identical behavior to
+            `'exec'`, `'eval'` and '`single'`,
+
+    - `parse_params`: Dictionary of optional parse parameters to pass to `ast.parse()`, can contain `filename`,
+        `type_comments` and `feature_version`.
+    """
+
 
 @staticmethod
 def _parse_stmts(src: str, parse_params: dict = {}) -> AST:
@@ -204,8 +262,21 @@ def _parse_keyword(src: str, parse_params: dict = {}) -> AST:
 
 
 @staticmethod
-def _parse_alias_maybe_star(src: str, parse_params: dict = {}) -> AST:
-    """Parse to an `ast.alias` or raise `SyntaxError`, e.g. "name as alias"."""
+def _parse_alias(src: str, parse_params: dict = {}) -> AST:
+    """Parse to an `ast.alias` or raise `SyntaxError`, allowing star or dotted notation, e.g. "name as alias"."""
+
+    if '*' in src:
+        try:
+            return _parse_alias_star(src, parse_params)
+        except SyntaxError:
+            pass
+
+    return _parse_alias_dotted(src, parse_params)
+
+
+@staticmethod
+def _parse_alias_star(src: str, parse_params: dict = {}) -> AST:
+    """Parse to an `ast.alias`, allowing star, or raise `SyntaxError`."""
 
     return _offset_linenos(ast_parse(f'from . import \\\n{src}', **parse_params).body[0].names[0], -1)
 
@@ -517,10 +588,17 @@ def _code_as_keyword(code: Code, parse_params: dict = {}) -> 'FST':
 
 
 @staticmethod
-def _code_as_alias_maybe_star(code: Code, parse_params: dict = {}) -> 'FST':
+def _code_as_alias(code: Code, parse_params: dict = {}) -> 'FST':
+    """Convert `code` to a alias `FST` if possible, star or dotted."""
+
+    return _code_as(code, alias, parse_params, _parse_alias)
+
+
+@staticmethod
+def _code_as_alias_star(code: Code, parse_params: dict = {}) -> 'FST':
     """Convert `code` to a alias `FST` if possible, possibly star as in `alias` for `FromImport.names`."""
 
-    return _code_as(code, alias, parse_params, _parse_alias_maybe_star)
+    return _code_as(code, alias, parse_params, _parse_alias_star)
 
 
 @staticmethod
@@ -631,7 +709,7 @@ def _code_as_identifier_dotted(code: Code, parse_params: dict = {}) -> str:
 
 
 @staticmethod
-def _code_as_identifier_maybe_star(code: Code, parse_params: dict = {}) -> str:
+def _code_as_identifier_star(code: Code, parse_params: dict = {}) -> str:
     """Convert `Code` to valid identifier string or star '*' if possible (for ImportFrom names)."""
 
     if isinstance(code, FST):
@@ -645,7 +723,7 @@ def _code_as_identifier_maybe_star(code: Code, parse_params: dict = {}) -> str:
     elif isinstance(code, list):
         code = '\n'.join(code)
 
-    if not is_valid_identifier_maybe_star(code):
+    if not is_valid_identifier_star(code):
         raise NodeError(f"expecting identifier or '*', got {_shortstr(code)!r}")
 
     return code

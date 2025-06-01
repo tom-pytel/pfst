@@ -19,7 +19,7 @@ __all__ = [
     're_identifier', 're_identifier_only', 're_identifier_dotted', 're_identifier_dotted_only',
     're_identifier_or_star', 're_identifier_or_star_only', 're_identifier_alias', 're_identifier_alias_only',
     'bistr', 'constant',
-    'is_valid_identifier', 'is_valid_identifier_dotted', 'is_valid_identifier_maybe_star', 'is_valid_identifier_alias',
+    'is_valid_identifier', 'is_valid_identifier_dotted', 'is_valid_identifier_star', 'is_valid_identifier_alias',
     'is_valid_MatchSingleton_value', 'is_valid_MatchValue_value', 'is_valid_MatchMapping_key',
     'reduce_ast', 'get_field', 'set_field', 'has_type_comments', 'is_parsable', 'get_parse_mode',
     'WalkFail', 'walk2', 'compare_asts', 'copy_attributes', 'copy_ast', 'set_ctx',
@@ -359,7 +359,7 @@ def is_valid_identifier_dotted(s: str) -> bool:
     return (re_identifier_dotted_only.match(s) or False) and not keyword_iskeyword(s)
 
 
-def is_valid_identifier_maybe_star(s: str) -> bool:
+def is_valid_identifier_star(s: str) -> bool:
     """Check if `s` is a valid python identifier or a star '*'."""
 
     return (re_identifier_or_star_only.match(s) or False) and not keyword_iskeyword(s)

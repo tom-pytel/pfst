@@ -576,7 +576,7 @@ class FST:
         - `FST`: The augmented tree with `.f` attributes added to each `AST` node for `FST` access.
         """
 
-        src   = FST._unparse_ast(ast)
+        src   = FST._unparse(ast)
         lines = src.split('\n')
 
 
@@ -2140,7 +2140,8 @@ class FST:
     )
 
     from .fst_parse import (
-        _unparse_ast,
+        _unparse,
+        _parse,
         _parse_stmts,
         _parse_expr,
         _parse_slice,
@@ -2152,7 +2153,8 @@ class FST:
         _parse_arguments_lambda,
         _parse_arg,
         _parse_keyword,
-        _parse_alias_maybe_star,
+        _parse_alias,
+        _parse_alias_star,
         _parse_alias_dotted,
         _parse_withitem,
         _parse_match_cases,
@@ -2174,7 +2176,8 @@ class FST:
         _code_as_arguments_lambda,
         _code_as_arg,
         _code_as_keyword,
-        _code_as_alias_maybe_star,
+        _code_as_alias,
+        _code_as_alias_star,
         _code_as_alias_dotted,
         _code_as_withitem,
         _code_as_match_cases,
@@ -2182,7 +2185,7 @@ class FST:
         _code_as_type_param,
         _code_as_identifier,
         _code_as_identifier_dotted,
-        _code_as_identifier_maybe_star,
+        _code_as_identifier_star,
         _code_as_identifier_alias,
         _code_as_stmtishs,
     )

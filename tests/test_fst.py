@@ -32325,8 +32325,11 @@ match a:
             (FST._code_as_arg, 'body[0].args.args[0]', 'def f(a: str = "test"): pass'),
             (FST._code_as_keyword, 'body[0].keywords[0]', 'class cls(meta=something): pass'),
             (FST._code_as_keyword, 'body[0].value.keywords[0]', 'call(key = word)'),
-            (FST._code_as_alias_maybe_star, 'body[0].names[0]', 'from a import b'),
-            (FST._code_as_alias_maybe_star, 'body[0].names[0]', 'from a import *'),
+            (FST._code_as_alias, 'body[0].names[0]', 'from a import b'),
+            (FST._code_as_alias, 'body[0].names[0]', 'from a import *'),
+            (FST._code_as_alias, 'body[0].names[0]', 'import a.b'),
+            (FST._code_as_alias_star, 'body[0].names[0]', 'from a import b'),
+            (FST._code_as_alias_star, 'body[0].names[0]', 'from a import *'),
             (FST._code_as_alias_dotted, 'body[0].names[0]', 'import a'),
             (FST._code_as_alias_dotted, 'body[0].names[0]', 'import a.b'),
             (FST._code_as_withitem, 'body[0].items[0]', 'with a: pass'),
@@ -32388,9 +32391,9 @@ match a:
 
         f = FST('from a import *').body[0].names[0].copy()
 
-        self.assertEqual('*', FST._code_as_identifier_maybe_star(f.copy()))
-        self.assertEqual('*', FST._code_as_identifier_maybe_star(f.a))
-        self.assertEqual('*', FST._code_as_identifier_maybe_star(f.src))
+        self.assertEqual('*', FST._code_as_identifier_star(f.copy()))
+        self.assertEqual('*', FST._code_as_identifier_star(f.a))
+        self.assertEqual('*', FST._code_as_identifier_star(f.src))
 
         self.assertEqual('*', FST._code_as_identifier_alias(f.copy()))
         self.assertEqual('*', FST._code_as_identifier_alias(f.a))
@@ -32547,8 +32550,8 @@ match a:
             (FST._code_as_arg, 'a: str'),
             (FST._code_as_keyword, 'meta=something'),
             (FST._code_as_keyword, 'key = word'),
-            (FST._code_as_alias_maybe_star, 'b'),
-            (FST._code_as_alias_maybe_star, '*'),
+            (FST._code_as_alias_star, 'b'),
+            (FST._code_as_alias_star, '*'),
             (FST._code_as_alias_dotted, 'a'),
             (FST._code_as_alias_dotted, 'a.b'),
             (FST._code_as_withitem, 'a'),

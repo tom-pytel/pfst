@@ -243,7 +243,7 @@ def _reparse_raw_loc(self: 'FST', code: Code | None, ln: int, col: int, end_ln: 
     elif isinstance(code, str):
         new_lines = code.split('\n')
     elif isinstance(code, AST):
-        new_lines = FST._unparse_ast(code).split('\n')
+        new_lines = FST._unparse(code).split('\n')
     elif code is None:
         new_lines = [bistr('')]
     elif not code.is_root:  # isinstance(code, FST)
@@ -287,9 +287,9 @@ def _reparse_raw_slice(self: 'FST', code: Code | None, start: int | Literal['end
 
             else:
                 if isinstance(ast, Tuple):  # strip delimiters because we want CONTENTS of slice for raw put, not the slice object itself
-                    code = FST._unparse_ast(ast)[1 : (-2 if len(ast.elts) == 1 else -1)]  # also remove singleton Tuple trailing comma
+                    code = FST._unparse(ast)[1 : (-2 if len(ast.elts) == 1 else -1)]  # also remove singleton Tuple trailing comma
                 elif isinstance(ast, (List, Dict, Set, MatchSequence, MatchMapping)):
-                    code = FST._unparse_ast(ast)[1 : -1]
+                    code = FST._unparse(ast)[1 : -1]
 
     elif isinstance(code, FST):
         if not code.is_root:
