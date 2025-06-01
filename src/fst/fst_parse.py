@@ -151,11 +151,148 @@ def _parse(src: str, mode: str | type[AST] | None = None, parse_params: dict = {
     """
 
 
+
+
 @staticmethod
-def _parse_stmts(src: str, parse_params: dict = {}) -> AST:
+def _parse_Module(src: str, parse_params: dict = {}) -> AST:
+    """Parse `Module`, ast.parse(mode='exec')'."""
+
+    return ast_parse(src, mode='exec', **parse_params)
+
+
+@staticmethod
+def _parse_Expression(src: str, parse_params: dict = {}) -> AST:
+    """Parse `Expression`, `ast.parse(mode='eval')."""
+
+    return ast_parse(src, mode='eval', **parse_params)
+
+
+@staticmethod
+def _parse_Interactive(src: str, parse_params: dict = {}) -> AST:
+    """Parse `Interactive`."""
+
+    return ast_parse(src, mode='single', **parse_params)
+
+
+@staticmethod
+def _parse_stmtishs(src: str, parse_params: dict = {}) -> AST:
+    """???"""
+
+    pass
+
+
+@staticmethod
+def _parse_stmtish(src: str, parse_params: dict = {}) -> AST:
+    """???"""
+
+    pass
+
+
+@staticmethod
+def _parse_stmts(src: str, parse_params: dict = {}) -> AST:  # same as _parse_Module() but I want the IDE context coloring
     """Parse one or more `stmt`s and return them in a `Module` `body` (just `ast.parse()` basically)."""
 
     return ast_parse(src, **parse_params)
+
+
+@staticmethod
+def _parse_stmt(src: str, parse_params: dict = {}) -> AST:
+    """Parse exactly one `stmt` and return as itself or raise `SyntaxError`."""
+
+    mod = _parse_stmts(src, parse_params)
+
+    if len(body := mod.body) != 1:
+        raise SyntaxError('expecting exactly one stmt')
+
+    return body[0]
+
+
+@staticmethod
+def _parse_ExceptHandlers(src: str, parse_params: dict = {}) -> AST:
+    """Parse zero or more `ExceptHandler`s and return them in a `Module` `body` or raise `SyntaxError`."""
+
+    try:
+        ast = ast_parse(f'try: pass\n{src}\nfinally: pass', **parse_params).body[0]
+
+    except SyntaxError as e:
+        try:
+            ast_parse(f'try: pass\n{src}', **parse_params).body[0]  # just reparse without our finally block to confirm if that was the error
+        except SyntaxError:
+            pass
+        else:
+            raise SyntaxError("not expecting 'finally' block") from None
+
+        raise
+
+    if ast.orelse:
+        raise SyntaxError("not expecting 'else' block")
+
+    return Module(body=_offset_linenos(ast, -1).handlers, type_ignores=[])
+
+
+@staticmethod
+def _parse_ExceptHandler(src: str, parse_params: dict = {}) -> AST:
+    """Parse exactly one `ExceptHandler` and return as itself or raise `SyntaxError`."""
+
+    mod = _parse_ExceptHandlers(src, parse_params)
+
+    if len(body := mod.body) != 1:
+        raise SyntaxError('expecting exactly one ExceptHandler')
+
+    return body[0]
+
+
+@staticmethod
+def _parse_match_cases(src: str, parse_params: dict = {}) -> AST:
+    """Parse zero or more `match_case`s and return them in a `Module` `body` or raise `SyntaxError`."""
+
+    lines = [bistr('match x:'), bistr(' case None: pass')] + [bistr(' ' + l) for l in src.split('\n')]
+    ast   = ast_parse('\n'.join(lines), **parse_params).body[0]
+    fst   = FST(ast, lines, parse_params=parse_params, lcopy=False)
+    lns   = fst.get_indentable_lns(2, docstr=False)
+
+    if len(lns) != len(lines) - 2:  # if there are multiline strings then we need to dedent them and reparse, because of f-strings, TODO: optimize out second reparse if no f-strings
+        strlns = set(range(2, len(lines)))
+
+        strlns.difference_update(lns)
+
+        for ln in strlns:
+            lines[ln] = bistr(lines[ln][1:])
+
+        ast = ast_parse('\n'.join(lines), **parse_params).body[0]
+        fst = FST(ast, lines, parse_params=parse_params, lcopy=False)
+
+    lns_ = set()
+
+    for ln in lns:
+        lines[ln] = bistr(lines[ln][1:])
+
+        lns_.add(ln - 1)
+
+    for a in walk(ast):
+        if (end_col_offset := getattr(a, 'end_col_offset', None)) is not None:
+            a.lineno     = lineno     = a.lineno - 2
+            a.end_lineno = end_lineno = a.end_lineno - 2
+
+            if lineno in lns_:
+                a.col_offset -= 1
+
+            if end_lineno in lns_:
+                a.end_col_offset = end_col_offset - 1
+
+    return Module(body=ast.cases[1:], type_ignores=[])
+
+
+@staticmethod
+def _parse_match_case(src: str, parse_params: dict = {}) -> AST:
+    """Parse exactly one `match_case` and return as itself or raise `SyntaxError`."""
+
+    mod = _parse_match_cases(src, parse_params)
+
+    if len(body := mod.body) != 1:
+        raise SyntaxError('expecting exactly one match_case')
+
+    return body[0]
 
 
 @staticmethod
@@ -216,18 +353,6 @@ def _parse_comprehension(src: str, parse_params: dict = {}) -> AST:
     """Parse to an `ast.comprehension` or raise `SyntaxError`, e.g. "async for i in something() if i"."""
 
     return _offset_linenos(ast_parse(f'[_ \n{src}]', **parse_params).body[0].value.generators[0], -1)
-
-
-@staticmethod
-def _parse_ExceptHandlers(src: str, parse_params: dict = {}) -> AST:
-    """Parse one or more `ExceptHandler`s and return them in a `Module` `body` or raise `SyntaxError`."""
-
-    ast = ast_parse(f'try: pass\n{src}', **parse_params).body[0]
-
-    if ast.orelse or ast.finalbody:
-        raise SyntaxError("not expecting 'else' or 'finally' blocks")
-
-    return Module(body=_offset_linenos(ast, -1).handlers, type_ignores=[])
 
 
 @staticmethod
@@ -296,43 +421,6 @@ def _parse_withitem(src: str, parse_params: dict = {}) -> AST:
     """Parse to an `ast.withitem` or raise `SyntaxError`, e.g. "something() as var"."""
 
     return _offset_linenos(ast_parse(f'with (\n{src}): pass', **parse_params).body[0].items[0], -1)
-
-
-@staticmethod
-def _parse_match_cases(src: str, parse_params: dict = {}) -> AST:
-    """Parse one or more `match_case`s and return them in a `Module` `body` or raise `SyntaxError`."""
-
-    lines = [bistr('match x:')] + [bistr(' ' + l) for l in src.split('\n')]
-    ast   = ast_parse('\n'.join(lines), **parse_params)
-    fst   = FST(ast, lines, parse_params=parse_params, lcopy=False)
-    lns   = fst.get_indentable_lns(docstr=False)
-
-    if len(lns) != len(lines):  # if there are multiline strings then we need to dedent them and reparse, because of f-strings, TODO: optimize out second reparse if no f-strings
-        strlns = set(range(len(lines)))
-
-        strlns.difference_update(lns)
-
-        for ln in strlns:
-            lines[ln] = bistr(lines[ln][1:])
-
-        ast = ast_parse('\n'.join(lines), **parse_params)
-        fst = FST(ast, lines, parse_params=parse_params, lcopy=False)
-
-    for ln in lns:
-        lines[ln] = bistr(lines[ln][1:])
-
-    for a in walk(ast):
-        if (end_col_offset := getattr(a, 'end_col_offset', None)) is not None:
-            a.lineno     = lineno     = a.lineno - 1
-            a.end_lineno = end_lineno = a.end_lineno - 1
-
-            if lineno in lns:
-                a.col_offset -= 1
-
-            if end_lineno in lns:
-                a.end_col_offset = end_col_offset - 1
-
-    return Module(body=ast.body[0].cases, type_ignores=[])
 
 
 @staticmethod

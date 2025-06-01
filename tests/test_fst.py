@@ -32249,6 +32249,8 @@ except Exception:
 
         self.assertRaises(ValueError, f._code_as_ExceptHandlers, f.body[0].handlers[0])
 
+        self.assertEqual(0, len(FST._code_as_ExceptHandlers('').body))  # make sure we can parse zero ExceptHandlers
+
         # match_cases
 
         f = FST(r'''
@@ -32292,6 +32294,8 @@ match a:
         self.assertTrue(compare_asts(h.body[0].a, g1.a, locs=False, raise_=True))
 
         self.assertRaises(ValueError, f._code_as_match_cases, f.body[0].cases[0])
+
+        self.assertEqual(0, len(FST._code_as_match_cases('').body))  # make sure we can parse zero match_cases
 
         # boolop
 
