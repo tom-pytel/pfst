@@ -99,11 +99,17 @@ def _parse(src: str, mode: str | type[AST] | None = None, parse_params: dict = {
     `comprehension`s. Can be given a target type to parse or else will try to various parse methods until it finds one
     that succeeds (if any).
 
+    WARNING! Does not guarantee `src` can be plugged directly into a node of the type it is being parsed for without
+    parentheses (especially for `Tuple`s).
+
     **Parameters**:
     - `src`: The source to parse.
     - `mode`: Either one of the standard `ast.parse()` modes `exec`, `eval` or `single` to parse to that type of module
         or one of our specific strings like `'stmtishs'` or an actual `AST` type to parse to. If the mode is provided
-        and cannot parse to the specified target then an error is raised and no other parse types are tried.
+        and cannot parse to the specified target then an error is raised and no other parse types are tried. If is
+        `None` then will attempt various parse types and return the first one that succeeds. In case of a single
+        expression, will return that over an `Expr` or a `Module` containing a single `Expr`. `mode=None` will never
+        return an `Expression` or `Interactive`.
         Options are:
         - `'exec'`: Parse to an `Module`. Same as passing `Module` type.
         - `'eval'`: Parse to an `Expression`. Same as passing `Expression` type.
@@ -123,7 +129,7 @@ def _parse(src: str, mode: str | type[AST] | None = None, parse_params: dict = {
             a single element tuple containing a starred expression `(*(not v),)`.
         - `'expr_slice_tupelt'`: Same as `expr` except that in this mode `a:b` parses to a `Slice` and `*not v` parses
             to a starred expression `*(not v)`.
-        - `'expr_callarg'`: Same as `expr` except that in this mode `a:b` is a syntax error and `*not v` parses to a
+        - `'expr_call_arg'`: Same as `expr` except that in this mode `a:b` is a syntax error and `*not v` parses to a
             starred expression `*(not v)`.
         - `'comprehension'`: Parse a single `comprehension` returned as itself. Same as passing `comprehension` type.
         - `'arguments'`: Parse as `arguments` for a `FunctionDef` or `AsyncFunctionDef` returned as itself. In this mode
@@ -143,21 +149,30 @@ def _parse(src: str, mode: str | type[AST] | None = None, parse_params: dict = {
         - `type[AST]`: If an `AST` type is passed then will attempt to parse to this type. This can be used to narrow
             the scope of desired return, for example `Constant` will parse expression but fail if the expression is not
             a `Constant`. These overlap with the string specifiers to an extent but not all of them. For example `AST`
-            type `ast.expr` is the same as passign `'expr'` but there is not `AST` type which will specify one of the
-            other expr parse modes. Likewise `Module`, `'exec'` and `'stmts'` all specify the same thing.
+            type `ast.expr` is the same as passing `'expr'` but there is not `AST` type which will specify one of the
+            other expr parse modes like `'expr_slice'`. Likewise `Module`, `'exec'` and `'stmts'` all specify the same
+            parse mode.
 
     - `parse_params`: Dictionary of optional parse parameters to pass to `ast.parse()`, can contain `filename`,
         `type_comments` and `feature_version`.
     """
 
+    if parse := _PARSE_MODE_FUNCS.get(mode):
+        return parse(src, parse_params)
 
+    if not issubclass(mode, AST):
+        raise ValueError(f'invalid parse mode {mode!r}')
 
+    mode_ = mode
 
+    while (mode_ := mode_.__bases__[0]) is not AST:
+        if parse := _PARSE_MODE_FUNCS.get(mode_):
+            if isinstance(ast := parse(src, parse_params), mode):
+                return ast
 
+            raise ValueError(f'could not parse to {mode.__name__}, got {ast.__class__.__name__}')
 
-
-
-
+    raise ValueError(f'cannot parse to {mode.__name__}')
 
 
 @staticmethod
@@ -402,9 +417,26 @@ def _parse_arg(src: str, parse_params: dict = {}) -> AST:
     """Parse to an `ast.arg` or raise `SyntaxError`, e.g. "var: list[int]"."""
 
     try:
-        ast = ast_parse(f'def f(\n{src}): pass', **parse_params).body[0].args.args[0]
+        args = ast_parse(f'def f(\n{src}): pass', **parse_params).body[0].args
+
     except SyntaxError:  # may be '*vararg: *starred'
-        ast = ast_parse(f'def f(*\n{src}): pass', **parse_params).body[0].args.vararg
+        args = ast_parse(f'def f(*\n{src}): pass', **parse_params).body[0].args
+
+        if args.posonlyargs or args.args or args.kwonlyargs or args.defaults or args.kw_defaults or args.kwarg:
+            ast = None
+        else:
+            ast = args.vararg
+
+    else:
+        if (args.posonlyargs or args.vararg or args.kwonlyargs or args.defaults or args.kw_defaults or args.kwarg or
+            len(args := args.args) != 1
+        ):
+            ast = None
+        else:
+            ast = args[0]
+
+    if ast is None:
+        raise NodeError('expecting single argument without default')
 
     return _offset_linenos(ast, -1)
 
@@ -413,7 +445,12 @@ def _parse_arg(src: str, parse_params: dict = {}) -> AST:
 def _parse_keyword(src: str, parse_params: dict = {}) -> AST:
     """Parse to an `ast.keyword` or raise `SyntaxError`, e.g. "var=val"."""
 
-    return _offset_linenos(ast_parse(f'f(\n{src})', **parse_params).body[0].value.keywords[0], -1)
+    keywords = ast_parse(f'f(\n{src})', **parse_params).body[0].value.keywords
+
+    if len(keywords) != 1:
+        raise NodeError('expecting single keyword')
+
+    return _offset_linenos(keywords[0], -1)
 
 
 @staticmethod
@@ -434,21 +471,36 @@ def _parse_alias_dotted(src: str, parse_params: dict = {}) -> AST:
     """Parse to an `ast.alias`, allowing dotted notation (not all aliases are created equal), or raise `SyntaxError`,
     e.g. "name as alias"."""
 
-    return _offset_linenos(ast_parse(f'import \\\n{src}', **parse_params).body[0].names[0], -1)
+    names = ast_parse(f'import \\\n{src}', **parse_params).body[0].names
+
+    if len(names) != 1:
+        raise NodeError('expecting single name')
+
+    return _offset_linenos(names[0], -1)
 
 
 @staticmethod
 def _parse_alias_star(src: str, parse_params: dict = {}) -> AST:
     """Parse to an `ast.alias`, allowing star, or raise `SyntaxError`."""
 
-    return _offset_linenos(ast_parse(f'from . import \\\n{src}', **parse_params).body[0].names[0], -1)
+    names = ast_parse(f'from . import \\\n{src}', **parse_params).body[0].names
+
+    if len(names) != 1:
+        raise NodeError('expecting single name')
+
+    return _offset_linenos(names[0], -1)
 
 
 @staticmethod
 def _parse_withitem(src: str, parse_params: dict = {}) -> AST:
     """Parse to an `ast.withitem` or raise `SyntaxError`, e.g. "something() as var"."""
 
-    return _offset_linenos(ast_parse(f'with (\n{src}): pass', **parse_params).body[0].items[0], -1)
+    items = ast_parse(f'with (\n{src}): pass', **parse_params).body[0].items
+
+    if len(items) != 1:
+        raise NodeError('expecting single withitem ')
+
+    return _offset_linenos(items[0], -1)
 
 
 @staticmethod
@@ -941,5 +993,50 @@ def _code_as_identifier_alias(code: Code, parse_params: dict = {}) -> str:
 
 # ----------------------------------------------------------------------------------------------------------------------
 __all_private__ = [n for n in globals() if n not in _GLOBALS]
+
+_PARSE_MODE_FUNCS = {
+    'exec':              _parse_Module,
+    'eval':              _parse_Expression,
+    'single':            _parse_Interactive,
+    'stmtishs':          _parse_stmtishs,
+    'stmtish':           _parse_stmtish,
+    'stmts':             _parse_stmts,
+    'stmt':              _parse_stmt,
+    'ExceptHandlers':    _parse_ExceptHandlers,
+    'ExceptHandler':     _parse_ExceptHandler,
+    'match_cases':       _parse_match_cases,
+    'match_case':        _parse_match_case,
+    'expr':              _parse_expr,
+    'expr_slice':        _parse_expr_slice,
+    'expr_slice_tupelt': _parse_expr_slice_tupelt,
+    'expr_call_arg':     _parse_expr_call_arg,
+    'comprehension':     _parse_comprehension,
+    'arguments':         _parse_arguments,
+    'arguments_lambda':  _parse_arguments_lambda,
+    'arg':               _parse_arg,
+    'keyword':           _parse_keyword,
+    'alias':             _parse_alias,
+    'alias_dotted':      _parse_alias_dotted,
+    'alias_star':        _parse_alias_star,
+    'withitem':          _parse_withitem,
+    'pattern':           _parse_pattern,
+    'type_param':        _parse_type_param,
+    mod:                 _parse_Module,
+    Module:              _parse_Module,
+    Expression:          _parse_Expression,
+    Interactive:         _parse_Interactive,
+    stmt:                _parse_stmt,
+    ExceptHandler:       _parse_ExceptHandler,
+    match_case:          _parse_match_case,
+    expr:                _parse_expr,
+    comprehension:       _parse_comprehension,
+    arguments:           _parse_arguments,
+    arg:                 _parse_arg,
+    keyword:             _parse_keyword,
+    alias:               _parse_alias,
+    withitem:            _parse_withitem,
+    pattern:             _parse_pattern,
+    type_param:          _parse_type_param,
+}
 
 from .fst import FST  # this imports a fake FST which is replaced in globals() when fst.py finishes loading

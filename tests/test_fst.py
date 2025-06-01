@@ -9,7 +9,7 @@ from random import randint, seed, shuffle
 
 from fst import *
 from fst import fst
-from fst.astutil import TemplateStr
+from fst.astutil import TemplateStr, type_param, TypeVar, ParamSpec, TypeVarTuple
 fst_ = fst
 
 PYFNMS = sum((
@@ -29563,98 +29563,6 @@ def f():
         self.assertEqual((1, 0, 1, 4), f.loc)
         self.assertEqual(f.src, '# pre\n(i,)\n# post')
 
-    def test_parenthesize(self):
-        # grouping
-
-        f = parse('[i]').f
-        f.body[0].value.elts[0].parethesize()
-        self.assertEqual('[(i)]', f.src)
-        self.assertEqual((0, 0, 0, 5), f.loc)
-        self.assertEqual((0, 0, 0, 5), f.body[0].loc)
-        self.assertEqual((0, 0, 0, 5), f.body[0].value.loc)
-        self.assertEqual((0, 2, 0, 3), f.body[0].value.elts[0].loc)
-
-        f = parse('a + b').f
-        f.body[0].value.left.parethesize()
-        f.body[0].value.right.parethesize()
-        self.assertEqual('(a) + (b)', f.src)
-        self.assertEqual((0, 0, 0, 9), f.loc)
-        self.assertEqual((0, 0, 0, 9), f.body[0].loc)
-        self.assertEqual((0, 0, 0, 9), f.body[0].value.loc)
-        self.assertEqual((0, 1, 0, 2), f.body[0].value.left.loc)
-        self.assertEqual((0, 4, 0, 5), f.body[0].value.op.loc)
-        self.assertEqual((0, 7, 0, 8), f.body[0].value.right.loc)
-
-        f = parse('a + b').f
-        f.body[0].value.right.parethesize()
-        f.body[0].value.left.parethesize()
-        self.assertEqual('(a) + (b)', f.src)
-        self.assertEqual((0, 0, 0, 9), f.loc)
-        self.assertEqual((0, 0, 0, 9), f.body[0].loc)
-        self.assertEqual((0, 0, 0, 9), f.body[0].value.loc)
-        self.assertEqual((0, 1, 0, 2), f.body[0].value.left.loc)
-        self.assertEqual((0, 4, 0, 5), f.body[0].value.op.loc)
-        self.assertEqual((0, 7, 0, 8), f.body[0].value.right.loc)
-        f.body[0].value.parethesize()
-        self.assertEqual('((a) + (b))', f.src)
-        f.body[0].value.left.parethesize()
-        self.assertEqual('(((a)) + (b))', f.src)
-        f.body[0].value.right.parethesize()
-        self.assertEqual('(((a)) + ((b)))', f.src)
-
-        f = parse('call(i for i in j)').f
-        f.body[0].value.args[0].parethesize()
-        self.assertEqual(f.src, 'call((i for i in j))')
-        f.body[0].value.args[0].parethesize()
-        self.assertEqual(f.src, 'call(((i for i in j)))')
-
-        f = parse('i').body[0].value.f.copy()
-        f.put_src('\n# post', 0, 1, 0, 1, False)
-        f.put_src('# pre\n', 0, 0, 0, 0, False)
-        f.parethesize(whole=True)
-        self.assertEqual((1, 0, 1, 1), f.loc)
-        self.assertEqual(f.root.src, '(# pre\ni\n# post)')
-
-        f = parse('i').body[0].value.f.copy()
-        f.put_src('\n# post', 0, 1, 0, 1, False)
-        f.put_src('# pre\n', 0, 0, 0, 0, False)
-        f.parethesize(whole=False)
-        self.assertEqual((1, 1, 1, 2), f.loc)
-        self.assertEqual(f.root.src, '# pre\n(i)\n# post')
-
-        # tuple
-
-        f = parse('i,').f
-        f.body[0].value.parenthesize()
-        self.assertEqual('(i,)', f.src)
-        self.assertEqual((0, 0, 0, 4), f.loc)
-        self.assertEqual((0, 0, 0, 4), f.body[0].loc)
-        self.assertEqual((0, 0, 0, 4), f.body[0].value.loc)
-        self.assertEqual((0, 1, 0, 2), f.body[0].value.elts[0].loc)
-
-        f = parse('a, b').f
-        f.body[0].value.parenthesize()
-        self.assertEqual('(a, b)', f.src)
-        self.assertEqual((0, 0, 0, 6), f.loc)
-        self.assertEqual((0, 0, 0, 6), f.body[0].loc)
-        self.assertEqual((0, 0, 0, 6), f.body[0].value.loc)
-        self.assertEqual((0, 1, 0, 2), f.body[0].value.elts[0].loc)
-        self.assertEqual((0, 4, 0, 5), f.body[0].value.elts[1].loc)
-
-        f = parse('i,').body[0].value.f.copy()
-        f.put_src('\n# post', 0, 2, 0, 2, False)
-        f.put_src('# pre\n', 0, 0, 0, 0, False)
-        f.parenthesize(whole=True)
-        self.assertEqual((0, 0, 2, 7), f.loc)
-        self.assertEqual(f.src, '(# pre\ni,\n# post)')
-
-        f = parse('i,').body[0].value.f.copy()
-        f.put_src('\n# post', 0, 2, 0, 2, False)
-        f.put_src('# pre\n', 0, 0, 0, 0, False)
-        f.parenthesize(whole=False)
-        self.assertEqual((1, 0, 1, 4), f.loc)
-        self.assertEqual(f.src, '# pre\n(i,)\n# post')
-
     def test__unparenthesize_grouping(self):
         f = parse('a').f
         f.body[0].value._unparenthesize_grouping(share=False)
@@ -29849,6 +29757,488 @@ def f():
         f.body[0].target._unparenthesize_tuple()
         self.assertEqual('for a,in b: pass', f.src)
         f.verify()
+
+    def test__maybe_fix(self):
+        f = FST.fromsrc('if 1:\n a\nelif 2:\n b')
+        fc = f.a.body[0].orelse[0].f.copy()
+        self.assertEqual(fc.lines[0], 'if 2:')
+        fc.verify(raise_=True)
+
+        f = FST.fromsrc('(1 +\n2)')
+        fc = f.a.body[0].value.f.copy(pars=False)
+        self.assertEqual(fc.src, '1 +\n2')
+        fc._maybe_fix(pars=True)
+        self.assertEqual(fc.src, '(1 +\n2)')
+        fc.verify(raise_=True)
+
+        f = FST.fromsrc('i = 1')
+        self.assertIs(f.a.body[0].targets[0].ctx.__class__, Store)
+        fc = f.a.body[0].targets[0].f.copy()
+        self.assertIs(fc.a.ctx.__class__, Load)
+        fc.verify(raise_=True)
+
+        f = FST.fromsrc('if 1: pass\nelif 2: pass').a.body[0].orelse[0].f.copy(fix=False)
+        self.assertEqual('if 2: pass', f.src)
+
+        f = FST.fromsrc('i, j = 1, 2').a.body[0].targets[0].f.copy(pars=False)
+        self.assertEqual('i, j', f.src)
+        fc._maybe_fix(pars=True)
+        self.assertEqual('i, j', f.src)  # because doesn't NEED them
+
+        f = FST.fromsrc('match w := x,:\n case 0: pass').a.body[0].subject.f.copy(pars=False)
+        self.assertEqual('w := x,', f.src)
+        f._maybe_fix(pars=True)
+        self.assertEqual('(w := x,)', f.src)
+
+        f = FST.fromsrc('yield a1, a2')
+        fc = f.a.body[0].value.f.copy(pars=False)
+        self.assertEqual('yield a1, a2', fc.src)
+        fc._maybe_fix(pars=True)
+        self.assertEqual('yield a1, a2', fc.src)
+
+        f = FST.fromsrc('yield from a')
+        fc = f.a.body[0].value.f.copy(fix=False)
+        self.assertEqual('yield from a', fc.src)
+        fc._maybe_fix(pars=True)
+        self.assertEqual('yield from a', fc.src)
+
+        f = FST.fromsrc("""[
+"Bad value substitution: option {!r} in section {!r} contains "
+               "an interpolation key {!r} which is not a valid option name. "
+               "Raw value: {!r}".format
+]""".strip())
+        fc = f.a.body[0].value.elts[0].f.copy(pars=False)
+        self.assertEqual("""
+"Bad value substitution: option {!r} in section {!r} contains "
+               "an interpolation key {!r} which is not a valid option name. "
+               "Raw value: {!r}".format""".strip(), fc.src)
+        fc._maybe_fix(pars=True)
+        self.assertEqual("""
+("Bad value substitution: option {!r} in section {!r} contains "
+               "an interpolation key {!r} which is not a valid option name. "
+               "Raw value: {!r}".format)""".strip(), fc.src)
+
+        f = FST.fromsrc("""
+((is_seq := isinstance(a, (Tuple, List))) or (is_starred := isinstance(a, Starred)) or
+            isinstance(a, (Name, Subscript, Attribute)))
+        """.strip())
+        fc = f.a.body[0].value.f.copy(pars=False)
+        self.assertEqual("""
+(is_seq := isinstance(a, (Tuple, List))) or (is_starred := isinstance(a, Starred)) or
+            isinstance(a, (Name, Subscript, Attribute))""".strip(), fc.src)
+        fc._maybe_fix(pars=True)
+        self.assertEqual("""
+((is_seq := isinstance(a, (Tuple, List))) or (is_starred := isinstance(a, Starred)) or
+            isinstance(a, (Name, Subscript, Attribute)))""".strip(), fc.src)
+
+        if sys.version_info[:2] >= (3, 12):
+            fc = FST.fromsrc('tuple[*tuple[int, ...]]').a.body[0].value.slice.f.copy(pars=False)
+            self.assertEqual('*tuple[int, ...]', fc.src)
+            fc._maybe_fix(pars=True)
+            self.assertEqual('*tuple[int, ...],', fc.src)
+
+    def test__parse(self):
+        tests = [
+            ('exec',              FST._parse_Module,            Module,         'i: int = 1'),
+            ('eval',              FST._parse_Expression,        Expression,     'None'),
+            ('single',            FST._parse_Interactive,       Interactive,    'i: int = 1'),
+
+            ('stmtishs',          FST._parse_stmtishs,          Module,         'i: int = 1\nj'),
+            ('stmtishs',          FST._parse_stmtishs,          Module,         'except Exception: pass\nexcept: pass'),
+            ('stmtishs',          FST._parse_stmtishs,          Module,         'case None: pass\ncase 1: pass'),
+            ('stmtish',           FST._parse_stmtish,           AnnAssign,      'i: int = 1'),
+            ('stmtish',           FST._parse_stmtish,           ExceptHandler,  'except: pass'),
+            ('stmtish',           FST._parse_stmtish,           match_case,     'case None: pass'),
+            ('stmtish',           FST._parse_stmtish,           SyntaxError,    'i: int = 1\nj'),
+
+            ('stmts',             FST._parse_stmts,             Module,         'i: int = 1\nj'),
+            ('stmts',             FST._parse_stmts,             SyntaxError,    'except Exception: pass\nexcept: pass'),
+            ('stmt',              FST._parse_stmt,              AnnAssign,      'i: int = 1'),
+            ('stmt',              FST._parse_stmt,              Expr,           'j'),
+            ('stmt',              FST._parse_stmt,              SyntaxError,    'i: int = 1\nj'),
+            ('stmt',              FST._parse_stmt,              SyntaxError,    'except: pass'),
+
+            ('ExceptHandlers',    FST._parse_ExceptHandlers,    Module,         'except Exception: pass\nexcept: pass'),
+            ('ExceptHandlers',    FST._parse_ExceptHandlers,    SyntaxError,    'i: int = 1\nj'),
+            ('ExceptHandler',     FST._parse_ExceptHandler,     ExceptHandler,  'except: pass'),
+            ('ExceptHandler',     FST._parse_ExceptHandler,     SyntaxError,    'except Exception: pass\nexcept: pass'),
+            ('ExceptHandler',     FST._parse_ExceptHandler,     SyntaxError,    'i: int = 1'),
+
+            ('match_cases',       FST._parse_match_cases,       Module,         'case None: pass\ncase 1: pass'),
+            ('match_cases',       FST._parse_match_cases,       SyntaxError,    'i: int = 1'),
+            ('match_case',        FST._parse_match_case,        match_case,     'case None: pass'),
+            ('match_case',        FST._parse_match_case,        SyntaxError,    'case None: pass\ncase 1: pass'),
+            ('match_case',        FST._parse_match_case,        SyntaxError,    'i: int = 1'),
+
+            ('expr',              FST._parse_expr,              Name,           'j'),
+            ('expr',              FST._parse_expr,              Starred,        '*s'),
+            ('expr',              FST._parse_expr,              SyntaxError,    '*not s'),
+            ('expr',              FST._parse_expr,              NodeError,      'a:b'),
+            ('expr',              FST._parse_expr,              SyntaxError,    'a:b:c'),
+
+            ('expr_slice',        FST._parse_expr_slice,        Name,           'j'),
+            ('expr_slice',        FST._parse_expr_slice,        Slice,          'a:b'),
+            ('expr_slice',        FST._parse_expr_slice,        Tuple,          'j, k'),
+
+            ('expr_slice_tupelt', FST._parse_expr_slice_tupelt, Name,           'j'),
+            ('expr_slice_tupelt', FST._parse_expr_slice_tupelt, Slice,          'a:b'),
+            ('expr_slice_tupelt', FST._parse_expr_slice_tupelt, Starred,        '*s'),
+            ('expr_slice_tupelt', FST._parse_expr_slice_tupelt, Tuple,          'j, k'),
+
+            ('expr_call_arg',     FST._parse_expr_call_arg,     Name,           'j'),
+            ('expr_call_arg',     FST._parse_expr_call_arg,     Starred,        '*s'),
+            ('expr_call_arg',     FST._parse_expr_call_arg,     Starred,        '*not s'),
+            ('expr_call_arg',     FST._parse_expr_call_arg,     Tuple,          'j, k'),
+            ('expr_call_arg',     FST._parse_expr_call_arg,     NodeError,      'i=1'),
+            ('expr_call_arg',     FST._parse_expr_call_arg,     NodeError,      'a:b'),
+            ('expr_call_arg',     FST._parse_expr_call_arg,     SyntaxError,    'a:b:c'),
+
+            ('comprehension',     FST._parse_comprehension,     comprehension,  'for u in v'),
+            ('comprehension',     FST._parse_comprehension,     comprehension,  'for u in v if w'),
+
+            ('arguments',         FST._parse_arguments,         arguments,      ''),
+            ('arguments',         FST._parse_arguments,         arguments,      'a: list[str], /, b: int = 1, *c, d=100, **e'),
+
+            ('arguments_lambda',  FST._parse_arguments_lambda,  arguments,      ''),
+            ('arguments_lambda',  FST._parse_arguments_lambda,  arguments,      'a, /, b, *c, d=100, **e'),
+            ('arguments_lambda',  FST._parse_arguments_lambda,  SyntaxError,    'a: list[str], /, b: int = 1, *c, d=100, **e'),
+
+            ('arg',               FST._parse_arg,               arg,            'a: b'),
+            ('arg',               FST._parse_arg,               NodeError,      'a: b = c'),
+            ('arg',               FST._parse_arg,               NodeError,      'a, b'),
+            ('arg',               FST._parse_arg,               NodeError,      'a, /'),
+            ('arg',               FST._parse_arg,               NodeError,      '*, a'),
+            ('arg',               FST._parse_arg,               NodeError,      '*a'),
+            ('arg',               FST._parse_arg,               NodeError,      '**a'),
+
+            ('keyword',           FST._parse_keyword,           keyword,        'a=1'),
+            ('keyword',           FST._parse_keyword,           keyword,        '**a'),
+            ('keyword',           FST._parse_keyword,           NodeError,      '1'),
+            ('keyword',           FST._parse_keyword,           NodeError,      'a'),
+            ('keyword',           FST._parse_keyword,           NodeError,      'a=1, b=2'),
+
+            ('alias',             FST._parse_alias,             alias,          'a'),
+            ('alias',             FST._parse_alias,             alias,          'a.b'),
+            ('alias',             FST._parse_alias,             alias,          '*'),
+            ('alias',             FST._parse_alias,             NodeError,      'a, b'),
+            ('alias',             FST._parse_alias,             alias,          'a as c'),
+            ('alias',             FST._parse_alias,             alias,          'a.b as c'),
+            ('alias',             FST._parse_alias,             SyntaxError,    '* as c'),
+
+            ('alias_dotted',      FST._parse_alias_dotted,      alias,          'a'),
+            ('alias_dotted',      FST._parse_alias_dotted,      alias,          'a.b'),
+            ('alias_dotted',      FST._parse_alias_dotted,      SyntaxError,    '*'),
+            ('alias_dotted',      FST._parse_alias_dotted,      NodeError,      'a, b'),
+            ('alias_dotted',      FST._parse_alias_dotted,      alias,          'a as c'),
+            ('alias_dotted',      FST._parse_alias_dotted,      alias,          'a.b as c'),
+            ('alias_dotted',      FST._parse_alias_dotted,      SyntaxError,    '* as c'),
+
+            ('alias_star',        FST._parse_alias_star,        alias,          'a'),
+            ('alias_star',        FST._parse_alias_star,        SyntaxError,    'a.b'),
+            ('alias_star',        FST._parse_alias_star,        alias,          '*'),
+            ('alias_star',        FST._parse_alias_star,        NodeError,      'a, b'),
+            ('alias_star',        FST._parse_alias_star,        alias,          'a as c'),
+            ('alias_star',        FST._parse_alias_star,        SyntaxError,    'a.b as c'),
+            ('alias_star',        FST._parse_alias_star,        SyntaxError,    '* as c'),
+
+            ('withitem',          FST._parse_withitem,          withitem,       'a'),
+            ('withitem',          FST._parse_withitem,          NodeError,      'a, b'),
+            ('withitem',          FST._parse_withitem,          withitem,       '(a, b)'),
+            ('withitem',          FST._parse_withitem,          withitem,       'a as b'),
+            ('withitem',          FST._parse_withitem,          NodeError,      'a as b, x as y'),
+            ('withitem',          FST._parse_withitem,          withitem,       '(a)'),
+            ('withitem',          FST._parse_withitem,          SyntaxError,    '(a as b)'),
+            ('withitem',          FST._parse_withitem,          SyntaxError,    '(a as b, x as y)'),
+
+            ('pattern',           FST._parse_pattern,           MatchValue,     '42'),
+            ('pattern',           FST._parse_pattern,           MatchSingleton, 'None'),
+            ('pattern',           FST._parse_pattern,           MatchSequence,  '[a, *_]'),
+            ('pattern',           FST._parse_pattern,           MatchSequence,  '[]'),
+            ('pattern',           FST._parse_pattern,           MatchMapping,   '{"key": _}'),
+            ('pattern',           FST._parse_pattern,           MatchMapping,   '{}'),
+            ('pattern',           FST._parse_pattern,           MatchClass,     'SomeClass()'),
+            ('pattern',           FST._parse_pattern,           MatchClass,     'SomeClass(attr=val)'),
+            ('pattern',           FST._parse_pattern,           MatchAs,        'as_var'),
+            ('pattern',           FST._parse_pattern,           MatchAs,        '1 as as_var'),
+            ('pattern',           FST._parse_pattern,           MatchOr,        '1 | 2 | 3'),
+            ('pattern',           FST._parse_pattern,           MatchAs,        '_'),
+
+            (mod,                 FST._parse_Module,            Module,         'j'),
+            (Module,              FST._parse_Module,            Module,         'j'),
+            (Expression,          FST._parse_Expression,        Expression,     'None'),
+            (Interactive,         FST._parse_Interactive,       Interactive,    'j'),
+
+            (stmt,                FST._parse_stmt,              AnnAssign,      'i: int = 1'),
+            (stmt,                FST._parse_stmt,              Expr,           'j'),
+            (stmt,                FST._parse_stmt,              SyntaxError,    'i: int = 1\nj'),
+            (stmt,                FST._parse_stmt,              SyntaxError,    'except: pass'),
+            (AnnAssign,           FST._parse_stmt,              AnnAssign,      'i: int = 1'),
+            (Expr,                FST._parse_stmt,              Expr,           'j'),
+
+            (ExceptHandler,       FST._parse_ExceptHandler,     ExceptHandler,  'except: pass'),
+            (ExceptHandler,       FST._parse_ExceptHandler,     SyntaxError,    'except Exception: pass\nexcept: pass'),
+            (ExceptHandler,       FST._parse_ExceptHandler,     SyntaxError,    'i: int = 1'),
+
+            (match_case,          FST._parse_match_case,        match_case,     'case None: pass'),
+            (match_case,          FST._parse_match_case,        SyntaxError,    'case None: pass\ncase 1: pass'),
+            (match_case,          FST._parse_match_case,        SyntaxError,    'i: int = 1'),
+
+            (expr,                FST._parse_expr,              Name,           'j'),
+            (expr,                FST._parse_expr,              Starred,        '*s'),
+            (expr,                FST._parse_expr,              SyntaxError,    '*not s'),
+            (expr,                FST._parse_expr,              NodeError,      'a:b'),
+            (expr,                FST._parse_expr,              SyntaxError,    'a:b:c'),
+            (Name,                FST._parse_expr,              Name,           'j'),
+            (Starred,             FST._parse_expr,              Starred,        '*s'),
+
+            (comprehension,       FST._parse_comprehension,     comprehension,  'for u in v'),
+            (comprehension,       FST._parse_comprehension,     comprehension,  'for u in v if w'),
+
+            (arguments,           FST._parse_arguments,         arguments,      ''),
+            (arguments,           FST._parse_arguments,         arguments,      'a: list[str], /, b: int = 1, *c, d=100, **e'),
+            (arguments,           FST._parse_arguments_lambda,  arguments,      'a, /, b, *c, d=100, **e'),
+
+            (arg,                 FST._parse_arg,               arg,            'a: b'),
+            (arg,                 FST._parse_arg,               NodeError,      'a: b = c'),
+            (arg,                 FST._parse_arg,               NodeError,      'a, b'),
+            (arg,                 FST._parse_arg,               NodeError,      'a, /'),
+            (arg,                 FST._parse_arg,               NodeError,      '*, a'),
+            (arg,                 FST._parse_arg,               NodeError,      '*a'),
+            (arg,                 FST._parse_arg,               NodeError,      '**a'),
+
+            (keyword,             FST._parse_keyword,           keyword,        'a=1'),
+            (keyword,             FST._parse_keyword,           keyword,        '**a'),
+            (keyword,             FST._parse_keyword,           NodeError,      '1'),
+            (keyword,             FST._parse_keyword,           NodeError,      'a'),
+            (keyword,             FST._parse_keyword,           NodeError,      'a=1, b=2'),
+
+            (alias,               FST._parse_alias,             alias,          'a'),
+            (alias,               FST._parse_alias,             alias,          'a.b'),
+            (alias,               FST._parse_alias,             alias,          '*'),
+            (alias,               FST._parse_alias,             NodeError,      'a, b'),
+            (alias,               FST._parse_alias,             alias,          'a as c'),
+            (alias,               FST._parse_alias,             alias,          'a.b as c'),
+            (alias,               FST._parse_alias,             SyntaxError,    '* as c'),
+
+            (withitem,            FST._parse_withitem,          withitem,       'a'),
+            (withitem,            FST._parse_withitem,          NodeError,      'a, b'),
+            (withitem,            FST._parse_withitem,          withitem,       '(a, b)'),
+            (withitem,            FST._parse_withitem,          withitem,       'a as b'),
+            (withitem,            FST._parse_withitem,          NodeError,      'a as b, x as y'),
+            (withitem,            FST._parse_withitem,          withitem,       '(a)'),
+            (withitem,            FST._parse_withitem,          SyntaxError,    '(a as b)'),
+            (withitem,            FST._parse_withitem,          SyntaxError,    '(a as b, x as y)'),
+
+            (pattern,             FST._parse_pattern,           MatchValue,     '42'),
+            (pattern,             FST._parse_pattern,           MatchSingleton, 'None'),
+            (pattern,             FST._parse_pattern,           MatchSequence,  '[a, *_]'),
+            (pattern,             FST._parse_pattern,           MatchSequence,  '[]'),
+            (pattern,             FST._parse_pattern,           MatchMapping,   '{"key": _}'),
+            (pattern,             FST._parse_pattern,           MatchMapping,   '{}'),
+            (pattern,             FST._parse_pattern,           MatchClass,     'SomeClass()'),
+            (pattern,             FST._parse_pattern,           MatchClass,     'SomeClass(attr=val)'),
+            (pattern,             FST._parse_pattern,           MatchAs,        'as_var'),
+            (pattern,             FST._parse_pattern,           MatchAs,        '1 as as_var'),
+            (pattern,             FST._parse_pattern,           MatchOr,        '1 | 2 | 3'),
+            (pattern,             FST._parse_pattern,           MatchAs,        '_'),
+            (MatchValue,          FST._parse_pattern,           MatchValue,     '42'),
+            (MatchSingleton,      FST._parse_pattern,           MatchSingleton, 'None'),
+            (MatchSequence,       FST._parse_pattern,           MatchSequence,  '[a, *_]'),
+            (MatchSequence,       FST._parse_pattern,           MatchSequence,  '[]'),
+            (MatchMapping,        FST._parse_pattern,           MatchMapping,   '{"key": _}'),
+            (MatchMapping,        FST._parse_pattern,           MatchMapping,   '{}'),
+            (MatchClass,          FST._parse_pattern,           MatchClass,     'SomeClass()'),
+            (MatchClass,          FST._parse_pattern,           MatchClass,     'SomeClass(attr=val)'),
+            (MatchAs,             FST._parse_pattern,           MatchAs,        'as_var'),
+            (MatchAs,             FST._parse_pattern,           MatchAs,        '1 as as_var'),
+            (MatchOr,             FST._parse_pattern,           MatchOr,        '1 | 2 | 3'),
+            (MatchAs,             FST._parse_pattern,           MatchAs,        '_'),
+        ]
+
+        if sys.version_info[:2] >= (3, 11):
+            tests.extend([
+            ('ExceptHandler',     FST._parse_ExceptHandler,     ExceptHandler,  'except* Exception: pass'),
+
+            ('expr_slice',        FST._parse_expr_slice,        Tuple,          '*s'),
+            ('expr_slice',        FST._parse_expr_slice,        Tuple,          '*not s'),
+            ('expr_slice_tupelt', FST._parse_expr_slice_tupelt, Starred,        '*not s'),
+
+            (ExceptHandler,       FST._parse_ExceptHandler,     ExceptHandler,  'except* Exception: pass'),
+            ])
+
+        if sys.version_info[:2] >= (3, 12):
+            tests.extend([
+            ('type_param',        FST._parse_type_param,        TypeVar,        'a: int = int'),
+            ('type_param',        FST._parse_type_param,        ParamSpec,      '**a = {T: int, U: str}'),
+            ('type_param',        FST._parse_type_param,        TypeVarTuple,   '*a = (int, str)'),
+
+            (type_param,          FST._parse_type_param,        TypeVar,        'a: int = int'),
+            (TypeVar,             FST._parse_type_param,        TypeVar,        'a: int = int'),
+            (type_param,          FST._parse_type_param,        ParamSpec,      '**a = {T: int, U: str}'),
+            (ParamSpec,           FST._parse_type_param,        ParamSpec,      '**a = {T: int, U: str}'),
+            (type_param,          FST._parse_type_param,        TypeVarTuple,   '*a = (int, str)'),
+            (TypeVarTuple,        FST._parse_type_param,        TypeVarTuple,   '*a = (int, str)'),
+            ])
+
+        for mode, func, res, src in tests:
+            try:
+                try:
+                    ast = FST._parse(src, mode)
+
+                except (SyntaxError, NodeError) as exc:
+                    if res is not exc.__class__:
+                        raise
+
+                else:
+                    if issubclass(res, Exception):
+                        raise RuntimeError(f'expected {res.__name__}')
+
+                    ref = func(src)
+
+                    self.assertEqual(ast.__class__, res)
+                    self.assertTrue(compare_asts(ast, ref, locs=True))
+
+            except Exception:
+                print()
+                print(mode, src, res, func)
+
+                raise
+
+    def test___new__(self):
+        f = FST()
+        self.assertEqual('', f.src)
+        self.assertIsInstance(f.a, Module)
+        self.assertEqual([], f.a.body)
+
+        f = FST(mode='single')
+        self.assertEqual('', f.src)
+        self.assertIsInstance(f.a, Interactive)
+        self.assertEqual([], f.a.body)
+
+        f = FST(mode='eval')
+        self.assertEqual('', f.src)
+        self.assertIsInstance(f.a, Expression)
+        self.assertIsInstance(f.a.body, expr)
+
+        f = FST('i = 1')
+        self.assertEqual('i = 1', f.src)
+        self.assertIsInstance(f.a, Module)
+        self.assertIsInstance(f.a.body[0], Assign)
+
+        f = FST('i = 1', mode='single')
+        self.assertEqual('i = 1', f.src)
+        self.assertIsInstance(f.a, Interactive)
+        self.assertIsInstance(f.a.body[0], Assign)
+
+        f = FST('i', mode='eval')
+        self.assertEqual('i', f.src)
+        self.assertIsInstance(f.a, Expression)
+        self.assertIsInstance(f.a.body, Name)
+
+        v = sys.version_info[:2]
+        f = FST.fromsrc('i', filename='fnm', type_comments=True, feature_version=v)
+
+        g = FST('j', from_=f)
+        self.assertEqual('fnm', g.parse_params['filename'])
+        self.assertIs(True, g.parse_params['type_comments'])
+        self.assertEqual(v, g.parse_params['feature_version'])
+
+        g = FST('j', from_=f, filename='blah', type_comments=False, feature_version=None)
+        self.assertEqual('blah', g.parse_params['filename'])
+        self.assertIs(False, g.parse_params['type_comments'])
+        self.assertIs(None, g.parse_params['feature_version'])
+
+    def test_parenthesize(self):
+        # grouping
+
+        f = parse('[i]').f
+        f.body[0].value.elts[0].parethesize()
+        self.assertEqual('[(i)]', f.src)
+        self.assertEqual((0, 0, 0, 5), f.loc)
+        self.assertEqual((0, 0, 0, 5), f.body[0].loc)
+        self.assertEqual((0, 0, 0, 5), f.body[0].value.loc)
+        self.assertEqual((0, 2, 0, 3), f.body[0].value.elts[0].loc)
+
+        f = parse('a + b').f
+        f.body[0].value.left.parethesize()
+        f.body[0].value.right.parethesize()
+        self.assertEqual('(a) + (b)', f.src)
+        self.assertEqual((0, 0, 0, 9), f.loc)
+        self.assertEqual((0, 0, 0, 9), f.body[0].loc)
+        self.assertEqual((0, 0, 0, 9), f.body[0].value.loc)
+        self.assertEqual((0, 1, 0, 2), f.body[0].value.left.loc)
+        self.assertEqual((0, 4, 0, 5), f.body[0].value.op.loc)
+        self.assertEqual((0, 7, 0, 8), f.body[0].value.right.loc)
+
+        f = parse('a + b').f
+        f.body[0].value.right.parethesize()
+        f.body[0].value.left.parethesize()
+        self.assertEqual('(a) + (b)', f.src)
+        self.assertEqual((0, 0, 0, 9), f.loc)
+        self.assertEqual((0, 0, 0, 9), f.body[0].loc)
+        self.assertEqual((0, 0, 0, 9), f.body[0].value.loc)
+        self.assertEqual((0, 1, 0, 2), f.body[0].value.left.loc)
+        self.assertEqual((0, 4, 0, 5), f.body[0].value.op.loc)
+        self.assertEqual((0, 7, 0, 8), f.body[0].value.right.loc)
+        f.body[0].value.parethesize()
+        self.assertEqual('((a) + (b))', f.src)
+        f.body[0].value.left.parethesize()
+        self.assertEqual('(((a)) + (b))', f.src)
+        f.body[0].value.right.parethesize()
+        self.assertEqual('(((a)) + ((b)))', f.src)
+
+        f = parse('call(i for i in j)').f
+        f.body[0].value.args[0].parethesize()
+        self.assertEqual(f.src, 'call((i for i in j))')
+        f.body[0].value.args[0].parethesize()
+        self.assertEqual(f.src, 'call(((i for i in j)))')
+
+        f = parse('i').body[0].value.f.copy()
+        f.put_src('\n# post', 0, 1, 0, 1, False)
+        f.put_src('# pre\n', 0, 0, 0, 0, False)
+        f.parethesize(whole=True)
+        self.assertEqual((1, 0, 1, 1), f.loc)
+        self.assertEqual(f.root.src, '(# pre\ni\n# post)')
+
+        f = parse('i').body[0].value.f.copy()
+        f.put_src('\n# post', 0, 1, 0, 1, False)
+        f.put_src('# pre\n', 0, 0, 0, 0, False)
+        f.parethesize(whole=False)
+        self.assertEqual((1, 1, 1, 2), f.loc)
+        self.assertEqual(f.root.src, '# pre\n(i)\n# post')
+
+        # tuple
+
+        f = parse('i,').f
+        f.body[0].value.parenthesize()
+        self.assertEqual('(i,)', f.src)
+        self.assertEqual((0, 0, 0, 4), f.loc)
+        self.assertEqual((0, 0, 0, 4), f.body[0].loc)
+        self.assertEqual((0, 0, 0, 4), f.body[0].value.loc)
+        self.assertEqual((0, 1, 0, 2), f.body[0].value.elts[0].loc)
+
+        f = parse('a, b').f
+        f.body[0].value.parenthesize()
+        self.assertEqual('(a, b)', f.src)
+        self.assertEqual((0, 0, 0, 6), f.loc)
+        self.assertEqual((0, 0, 0, 6), f.body[0].loc)
+        self.assertEqual((0, 0, 0, 6), f.body[0].value.loc)
+        self.assertEqual((0, 1, 0, 2), f.body[0].value.elts[0].loc)
+        self.assertEqual((0, 4, 0, 5), f.body[0].value.elts[1].loc)
+
+        f = parse('i,').body[0].value.f.copy()
+        f.put_src('\n# post', 0, 2, 0, 2, False)
+        f.put_src('# pre\n', 0, 0, 0, 0, False)
+        f.parenthesize(whole=True)
+        self.assertEqual((0, 0, 2, 7), f.loc)
+        self.assertEqual(f.src, '(# pre\ni,\n# post)')
+
+        f = parse('i,').body[0].value.f.copy()
+        f.put_src('\n# post', 0, 2, 0, 2, False)
+        f.put_src('# pre\n', 0, 0, 0, 0, False)
+        f.parenthesize(whole=False)
+        self.assertEqual((1, 0, 1, 4), f.loc)
+        self.assertEqual(f.src, '# pre\n(i,)\n# post')
 
     def test_unparenthesize(self):
         # grouping
@@ -30047,129 +30437,6 @@ def f():
         f.body[0].target.unparenthesize()
         self.assertEqual('for a,in b: pass', f.src)
         f.verify()
-
-    def test__maybe_fix(self):
-        f = FST.fromsrc('if 1:\n a\nelif 2:\n b')
-        fc = f.a.body[0].orelse[0].f.copy()
-        self.assertEqual(fc.lines[0], 'if 2:')
-        fc.verify(raise_=True)
-
-        f = FST.fromsrc('(1 +\n2)')
-        fc = f.a.body[0].value.f.copy(pars=False)
-        self.assertEqual(fc.src, '1 +\n2')
-        fc._maybe_fix(pars=True)
-        self.assertEqual(fc.src, '(1 +\n2)')
-        fc.verify(raise_=True)
-
-        f = FST.fromsrc('i = 1')
-        self.assertIs(f.a.body[0].targets[0].ctx.__class__, Store)
-        fc = f.a.body[0].targets[0].f.copy()
-        self.assertIs(fc.a.ctx.__class__, Load)
-        fc.verify(raise_=True)
-
-        f = FST.fromsrc('if 1: pass\nelif 2: pass').a.body[0].orelse[0].f.copy(fix=False)
-        self.assertEqual('if 2: pass', f.src)
-
-        f = FST.fromsrc('i, j = 1, 2').a.body[0].targets[0].f.copy(pars=False)
-        self.assertEqual('i, j', f.src)
-        fc._maybe_fix(pars=True)
-        self.assertEqual('i, j', f.src)  # because doesn't NEED them
-
-        f = FST.fromsrc('match w := x,:\n case 0: pass').a.body[0].subject.f.copy(pars=False)
-        self.assertEqual('w := x,', f.src)
-        f._maybe_fix(pars=True)
-        self.assertEqual('(w := x,)', f.src)
-
-        f = FST.fromsrc('yield a1, a2')
-        fc = f.a.body[0].value.f.copy(pars=False)
-        self.assertEqual('yield a1, a2', fc.src)
-        fc._maybe_fix(pars=True)
-        self.assertEqual('yield a1, a2', fc.src)
-
-        f = FST.fromsrc('yield from a')
-        fc = f.a.body[0].value.f.copy(fix=False)
-        self.assertEqual('yield from a', fc.src)
-        fc._maybe_fix(pars=True)
-        self.assertEqual('yield from a', fc.src)
-
-        f = FST.fromsrc("""[
-"Bad value substitution: option {!r} in section {!r} contains "
-               "an interpolation key {!r} which is not a valid option name. "
-               "Raw value: {!r}".format
-]""".strip())
-        fc = f.a.body[0].value.elts[0].f.copy(pars=False)
-        self.assertEqual("""
-"Bad value substitution: option {!r} in section {!r} contains "
-               "an interpolation key {!r} which is not a valid option name. "
-               "Raw value: {!r}".format""".strip(), fc.src)
-        fc._maybe_fix(pars=True)
-        self.assertEqual("""
-("Bad value substitution: option {!r} in section {!r} contains "
-               "an interpolation key {!r} which is not a valid option name. "
-               "Raw value: {!r}".format)""".strip(), fc.src)
-
-        f = FST.fromsrc("""
-((is_seq := isinstance(a, (Tuple, List))) or (is_starred := isinstance(a, Starred)) or
-            isinstance(a, (Name, Subscript, Attribute)))
-        """.strip())
-        fc = f.a.body[0].value.f.copy(pars=False)
-        self.assertEqual("""
-(is_seq := isinstance(a, (Tuple, List))) or (is_starred := isinstance(a, Starred)) or
-            isinstance(a, (Name, Subscript, Attribute))""".strip(), fc.src)
-        fc._maybe_fix(pars=True)
-        self.assertEqual("""
-((is_seq := isinstance(a, (Tuple, List))) or (is_starred := isinstance(a, Starred)) or
-            isinstance(a, (Name, Subscript, Attribute)))""".strip(), fc.src)
-
-        if sys.version_info[:2] >= (3, 12):
-            fc = FST.fromsrc('tuple[*tuple[int, ...]]').a.body[0].value.slice.f.copy(pars=False)
-            self.assertEqual('*tuple[int, ...]', fc.src)
-            fc._maybe_fix(pars=True)
-            self.assertEqual('*tuple[int, ...],', fc.src)
-
-    def test___new__(self):
-        f = FST()
-        self.assertEqual('', f.src)
-        self.assertIsInstance(f.a, Module)
-        self.assertEqual([], f.a.body)
-
-        f = FST(mode='single')
-        self.assertEqual('', f.src)
-        self.assertIsInstance(f.a, Interactive)
-        self.assertEqual([], f.a.body)
-
-        f = FST(mode='eval')
-        self.assertEqual('', f.src)
-        self.assertIsInstance(f.a, Expression)
-        self.assertIsInstance(f.a.body, expr)
-
-        f = FST('i = 1')
-        self.assertEqual('i = 1', f.src)
-        self.assertIsInstance(f.a, Module)
-        self.assertIsInstance(f.a.body[0], Assign)
-
-        f = FST('i = 1', mode='single')
-        self.assertEqual('i = 1', f.src)
-        self.assertIsInstance(f.a, Interactive)
-        self.assertIsInstance(f.a.body[0], Assign)
-
-        f = FST('i', mode='eval')
-        self.assertEqual('i', f.src)
-        self.assertIsInstance(f.a, Expression)
-        self.assertIsInstance(f.a.body, Name)
-
-        v = sys.version_info[:2]
-        f = FST.fromsrc('i', filename='fnm', type_comments=True, feature_version=v)
-
-        g = FST('j', from_=f)
-        self.assertEqual('fnm', g.parse_params['filename'])
-        self.assertIs(True, g.parse_params['type_comments'])
-        self.assertEqual(v, g.parse_params['feature_version'])
-
-        g = FST('j', from_=f, filename='blah', type_comments=False, feature_version=None)
-        self.assertEqual('blah', g.parse_params['filename'])
-        self.assertIs(False, g.parse_params['type_comments'])
-        self.assertIs(None, g.parse_params['feature_version'])
 
     def test_infer_indent(self):
         self.assertEqual('    ', FST.fromsrc('def f(): pass').indent)
