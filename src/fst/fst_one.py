@@ -15,10 +15,10 @@ from .shared import (
 )
 
 from .fst_parse import (
-    _code_as_expr, _code_as_slice, _code_as_expr_slice_tuple, _code_as_expr_call_arg,
+    _code_as_expr, _code_as_expr_slice, _code_as_expr_slice_tupelt, _code_as_expr_call_arg,
     _code_as_boolop, _code_as_operator, _code_as_operator_aug, _code_as_unaryop, _code_as_cmpop,
     _code_as_pattern, _code_as_comprehension, _code_as_arguments,
-    _code_as_arguments_lambda, _code_as_arg, _code_as_keyword, _code_as_alias_star, _code_as_alias_dotted,
+    _code_as_arguments_lambda, _code_as_arg, _code_as_keyword, _code_as_alias_dotted, _code_as_alias_star,
     _code_as_withitem, _code_as_type_param, _code_as_identifier, _code_as_identifier_dotted, _code_as_identifier_alias,
 )
 
@@ -1443,11 +1443,11 @@ _PUT_ONE_HANDLERS = {
     (Attribute, 'value'):                 (False, _put_one_exprish_required, _onestatic_expr_required), # expr
     (Attribute, 'attr'):                  (False, _put_one_identifier_required, onestatic(_one_info_Attribute_attr, _restrict_default, code_as=_code_as_identifier)), # identifier
     (Subscript, 'value'):                 (False, _put_one_exprish_required, _onestatic_expr_required), # expr
-    (Subscript, 'slice'):                 (False, _put_one_exprish_required, onestatic(_one_info_exprish_required, _restrict_fstr_values, code_as=_code_as_slice)), # expr
+    (Subscript, 'slice'):                 (False, _put_one_exprish_required, onestatic(_one_info_exprish_required, _restrict_fstr_values, code_as=_code_as_expr_slice)), # expr
     (Starred, 'value'):                   (False, _put_one_exprish_required, _onestatic_expr_required), # expr
     (Name, 'id'):                         (False, _put_one_identifier_required, _onestatic_identifier_required), # identifier
     (List, 'elts'):                       (True,  _put_one_exprish_required, _onestatic_expr_required), # expr*
-    (Tuple, 'elts'):                      (True,  _put_one_exprish_required, onestatic(_one_info_exprish_required, _restrict_fstr_values, code_as=_code_as_expr_slice_tuple)), # expr*  - special handling because Tuples can contain Slices in a .slice field
+    (Tuple, 'elts'):                      (True,  _put_one_exprish_required, onestatic(_one_info_exprish_required, _restrict_fstr_values, code_as=_code_as_expr_slice_tupelt)), # expr*  - special handling because Tuples can contain Slices in a .slice field
     (Slice, 'lower'):                     (False, _put_one_exprish_optional, _onestatic_Slice_lower), # expr?
     (Slice, 'upper'):                     (False, _put_one_exprish_optional, _onestatic_Slice_upper), # expr?
     (Slice, 'step'):                      (False, _put_one_exprish_optional, _onestatic_Slice_step), # expr?
