@@ -153,6 +153,13 @@ def _parse(src: str, mode: str | type[AST] | None = None, parse_params: dict = {
 
 
 
+
+
+
+
+
+
+
 @staticmethod
 def _parse_Module(src: str, parse_params: dict = {}) -> AST:
     """Parse `Module`, ast.parse(mode='exec')'."""
@@ -176,16 +183,33 @@ def _parse_Interactive(src: str, parse_params: dict = {}) -> AST:
 
 @staticmethod
 def _parse_stmtishs(src: str, parse_params: dict = {}) -> AST:
-    """???"""
+    """Parse zero or more `stmt`s, 'ExceptHander's or 'match_case's and return them in a `Module` `body`."""
 
-    pass
+    lines = src.split('\n')
+
+    if firstsrc := _next_src(lines, 0, 0, len(lines) - 1, len(lines[-1])):
+        if _re_except.match(firstsrc.src):
+            return _parse_ExceptHandlers(src, parse_params)
+
+        if _re_case.match(lines[firstsrc.ln], firstsrc.col):  # need full line because firstsrc.src is cut off at first space
+            try:
+                return _parse_match_cases(src, parse_params)
+            except SyntaxError:  # 'case' is not a protected keyword, the regex checks most cases but not all possible so fall back to parse stmts
+                pass
+
+    return _parse_stmts(src, parse_params)
 
 
 @staticmethod
 def _parse_stmtish(src: str, parse_params: dict = {}) -> AST:
-    """???"""
+    """Parse exactly one `stmt`, `ExceptHandler` or `match_case` and return as itself or raise `SyntaxError`."""
 
-    pass
+    mod = _parse_stmtishs(src, parse_params)
+
+    if len(body := mod.body) != 1:
+        raise SyntaxError('expecting exactly one stmt, ExceptHandler or match_case')
+
+    return body[0]
 
 
 @staticmethod
@@ -216,11 +240,15 @@ def _parse_ExceptHandlers(src: str, parse_params: dict = {}) -> AST:
 
     except SyntaxError as e:
         try:
-            ast_parse(f'try: pass\n{src}', **parse_params).body[0]  # just reparse without our finally block to confirm if that was the error
+            ast = ast_parse(f'try: pass\n{src}', **parse_params)  # just reparse without our finally block to confirm if that was the error
         except SyntaxError:
             pass
+
         else:
-            raise SyntaxError("not expecting 'finally' block") from None
+            if len(ast.body) == 1:
+                raise SyntaxError("not expecting 'finally' block") from None
+            else:
+                raise SyntaxError('expecting only exception handlers`')
 
         raise
 
@@ -445,6 +473,77 @@ def _parse_type_param(src: str, parse_params: dict = {}) -> AST:
 # ......................................................................................................................
 
 @staticmethod
+def _code_as_stmtishs(code: Code, parse_params: dict = {}, *, is_trystar: bool = False) -> 'FST':
+    """Convert `code` to zero or more `stmtish`s and return in the `body` of a `Module` `FST` if possible. If source
+    is passed then will check for presence of `except` or `case` at start to determine if are `ExceptHandler`s or
+    `match_case`s or `stmt`s."""
+
+    if is_fst := isinstance(code, FST):
+        ast = code.a
+    elif isinstance(code, AST):
+        ast = code
+
+    else:
+        if isinstance(code, list):
+            code = '\n'.join(lines := code)
+        else:  # str
+            lines = code.split('\n')
+
+        if firstsrc := _next_src(lines, 0, 0, len(lines) - 1, len(lines[-1])):
+            if _re_except.match(firstsrc.src):
+                return _code_as_ExceptHandlers(code, parse_params)
+
+            if _re_case.match(lines[firstsrc.ln], firstsrc.col):  # need full line because firstsrc.src is cut off at first space
+                try:
+                    return _code_as_match_cases(code, parse_params)
+                except SyntaxError:  # 'case' is not a protected keyword, the regex checks most cases but not all possible so fall back to parse stmts
+                    pass
+
+        return _code_as_stmts(code, parse_params)
+
+    if isinstance(ast, (stmt, expr, Expression)):
+        return _code_as_stmts(code, parse_params)
+    if isinstance(ast, ExceptHandler):
+        return _code_as_ExceptHandlers(code, parse_params, is_trystar=is_trystar)
+    if isinstance(ast, match_case):
+        return _code_as_match_cases(code, parse_params)
+
+    if not (is_mod := isinstance(ast, Module)) and not isinstance(ast, Interactive):
+        raise NodeError(f'expecting zero or more stmts, ExceptHandlers or match_cases, got '
+                        f'{ast.__class__.__name__}')
+
+    if body := ast.body:
+        if isinstance(b0 := body[0], stmt):
+            code_type = stmt
+        elif isinstance(b0, ExceptHandler):
+            code_type = ExceptHandler
+        elif isinstance(b0, match_case):
+            code_type = match_case
+        else:
+            code_type = None
+
+        if not code_type or not all(isinstance(a, code_type) for a in body):
+            raise NodeError(f'expecting zero or more stmts, ExceptHandlers or match_cases, got '
+                            f'[{_shortstr(", ".join(a.__class__.__name__ for a in body))}]')
+
+    if is_fst:
+        if is_mod:
+            return code
+
+        return FST(Module(body=body, type_ignores=[]), code._lines, from_=code, lcopy=False)
+
+    if not body:
+        return FST(Module(body=[], type_ignores=[]), [bistr('')], parse_params=parse_params, lcopy=False)
+
+    if code_type is stmt:
+        return _code_as_stmts(code, parse_params)
+    if code_type is ExceptHandler:
+        return _code_as_ExceptHandlers(code, parse_params, is_trystar=is_trystar)
+
+    return _code_as_match_cases(code, parse_params)
+
+
+@staticmethod
 def _code_as_stmts(code: Code, parse_params: dict = {}) -> 'FST':
     """Convert `code` to zero or more `stmt`s and return in the `body` of a `Module` `FST` if possible."""
 
@@ -493,6 +592,89 @@ def _code_as_stmts(code: Code, parse_params: dict = {}) -> 'FST':
         lines = code.split('\n')
 
     return FST(_parse_stmts(code, parse_params), lines, parse_params=parse_params)
+
+
+@staticmethod
+def _code_as_ExceptHandlers(code: Code, parse_params: dict = {}, *, is_trystar: bool = False) -> 'FST':
+    """Convert `code` to zero or more `ExceptHandler`s and return in the `body` of a `Module` `FST` if possible.
+
+    **Parameters:**
+    - `is_trystar`: Hint used when unparsing an `AST` `code` to get the correct `except` or `except*` source.
+    """
+
+    if isinstance(code, FST):
+        if not code.is_root:
+            raise ValueError('expecting root node')
+
+        codea = code.a
+
+        if isinstance(codea, ExceptHandler):
+            return FST(Module(body=[codea], type_ignores=[]), code._lines, from_=code, lcopy=False)
+
+        if isinstance(codea, Module):
+            if all(isinstance(a, ExceptHandler) for a in codea.body):
+                return code
+
+            raise NodeError(f'expecting zero or more ExceptHandlers, got '
+                            f'[{_shortstr(", ".join(a.__class__.__name__ for a in codea.body))}]')
+
+        raise NodeError(f'expecting zero or more ExceptHandlers, got {codea.__class__.__name__}')
+
+    if isinstance(code, AST):
+        if not isinstance(code, ExceptHandler):
+            raise NodeError(f'expecting zero or more ExceptHandlers, got {code.__class__.__name__}')
+
+        if is_trystar:
+            code = unparse(TryStar(body=[Pass()], handlers=[code], orelse=[], finalbody=[]))
+            code = code[code.index('except'):]
+        else:
+            code = ast_unparse(code)
+
+        lines = code.split('\n')
+
+    elif isinstance(code, list):
+        code = '\n'.join(lines := code)
+    else:  # str
+        lines = code.split('\n')
+
+    return FST(_parse_ExceptHandlers(code, parse_params), lines, parse_params=parse_params)
+
+
+@staticmethod
+def _code_as_match_cases(code: Code, parse_params: dict = {}) -> 'FST':
+    """Convert `code` to zero or more `match_case`s and return in the `body` of a `Module` `FST` if possible."""
+
+    if isinstance(code, FST):
+        if not code.is_root:
+            raise ValueError('expecting root node')
+
+        codea = code.a
+
+        if isinstance(codea, match_case):
+            return FST(Module(body=[codea], type_ignores=[]), code._lines, from_=code, lcopy=False)
+
+        if isinstance(codea, Module):
+            if all(isinstance(a, match_case) for a in codea.body):
+                return code
+
+            raise NodeError(f'expecting zero or more match_cases, got '
+                            f'[{_shortstr(", ".join(a.__class__.__name__ for a in codea.body))}]')
+
+        raise NodeError(f'expecting zero or more match_cases, got {codea.__class__.__name__}')
+
+    if isinstance(code, AST):
+        if not isinstance(code, match_case):
+            raise NodeError(f'expecting zero or more match_cases, got {code.__class__.__name__}')
+
+        code  = ast_unparse(code)
+        lines = code.split('\n')
+
+    elif isinstance(code, list):
+        code = '\n'.join(lines := code)
+    else:  # str
+        lines = code.split('\n')
+
+    return FST(_parse_match_cases(code, parse_params), lines, parse_params=parse_params)
 
 
 @staticmethod
@@ -604,52 +786,6 @@ def _code_as_comprehension(code: Code, parse_params: dict = {}) -> 'FST':
 
 
 @staticmethod
-def _code_as_ExceptHandlers(code: Code, parse_params: dict = {}, *, is_trystar: bool = False) -> 'FST':
-    """Convert `code` to zero or more `ExceptHandler`s and return in the `body` of a `Module` `FST` if possible.
-
-    **Parameters:**
-    - `is_trystar`: Hint used when unparsing an `AST` `code` to get the correct `except` or `except*` source.
-    """
-
-    if isinstance(code, FST):
-        if not code.is_root:
-            raise ValueError('expecting root node')
-
-        codea = code.a
-
-        if isinstance(codea, ExceptHandler):
-            return FST(Module(body=[codea], type_ignores=[]), code._lines, from_=code, lcopy=False)
-
-        if isinstance(codea, Module):
-            if all(isinstance(a, ExceptHandler) for a in codea.body):
-                return code
-
-            raise NodeError(f'expecting zero or more ExceptHandlers, got '
-                            f'[{_shortstr(", ".join(a.__class__.__name__ for a in codea.body))}]')
-
-        raise NodeError(f'expecting zero or more ExceptHandlers, got {codea.__class__.__name__}')
-
-    if isinstance(code, AST):
-        if not isinstance(code, ExceptHandler):
-            raise NodeError(f'expecting zero or more ExceptHandlers, got {code.__class__.__name__}')
-
-        if is_trystar:
-            code = unparse(TryStar(body=[Pass()], handlers=[code], orelse=[], finalbody=[]))
-            code = code[code.index('except'):]
-        else:
-            code = ast_unparse(code)
-
-        lines = code.split('\n')
-
-    elif isinstance(code, list):
-        code = '\n'.join(lines := code)
-    else:  # str
-        lines = code.split('\n')
-
-    return FST(_parse_ExceptHandlers(code, parse_params), lines, parse_params=parse_params)
-
-
-@staticmethod
 def _code_as_arguments(code: Code, parse_params: dict = {}) -> 'FST':
     """Convert `code` to a arguments `FST` if possible."""
 
@@ -703,43 +839,6 @@ def _code_as_withitem(code: Code, parse_params: dict = {}) -> 'FST':
     """Convert `code` to a withitem `FST` if possible."""
 
     return _code_as(code, withitem, parse_params, _parse_withitem)
-
-
-@staticmethod
-def _code_as_match_cases(code: Code, parse_params: dict = {}) -> 'FST':
-    """Convert `code` to zero or more `match_case`s and return in the `body` of a `Module` `FST` if possible."""
-
-    if isinstance(code, FST):
-        if not code.is_root:
-            raise ValueError('expecting root node')
-
-        codea = code.a
-
-        if isinstance(codea, match_case):
-            return FST(Module(body=[codea], type_ignores=[]), code._lines, from_=code, lcopy=False)
-
-        if isinstance(codea, Module):
-            if all(isinstance(a, match_case) for a in codea.body):
-                return code
-
-            raise NodeError(f'expecting zero or more match_cases, got '
-                            f'[{_shortstr(", ".join(a.__class__.__name__ for a in codea.body))}]')
-
-        raise NodeError(f'expecting zero or more match_cases, got {codea.__class__.__name__}')
-
-    if isinstance(code, AST):
-        if not isinstance(code, match_case):
-            raise NodeError(f'expecting zero or more match_cases, got {code.__class__.__name__}')
-
-        code  = ast_unparse(code)
-        lines = code.split('\n')
-
-    elif isinstance(code, list):
-        code = '\n'.join(lines := code)
-    else:  # str
-        lines = code.split('\n')
-
-    return FST(_parse_match_cases(code, parse_params), lines, parse_params=parse_params)
 
 
 @staticmethod
@@ -838,77 +937,6 @@ def _code_as_identifier_alias(code: Code, parse_params: dict = {}) -> str:
         raise NodeError(f"expecting dotted identifier or '*', got {_shortstr(code)!r}")
 
     return code
-
-
-@staticmethod
-def _code_as_stmtishs(code: Code, parse_params: dict = {}, *, is_trystar: bool = False) -> 'FST':
-    """Convert `code` to zero or more `stmtish`s and return in the `body` of a `Module` `FST` if possible. If source
-    is passed then will check for presence of `except` or `case` at start to determine if are `ExceptHandler`s or
-    `match_case`s or `stmt`s."""
-
-    if is_fst := isinstance(code, FST):
-        ast = code.a
-    elif isinstance(code, AST):
-        ast = code
-
-    else:
-        if isinstance(code, list):
-            code = '\n'.join(lines := code)
-        else:  # str
-            lines = code.split('\n')
-
-        if firstsrc := _next_src(lines, 0, 0, len(lines) - 1, len(lines[-1])):
-            if _re_except.match(firstsrc.src):
-                return _code_as_ExceptHandlers(code, parse_params)
-
-            if _re_case.match(lines[firstsrc.ln], firstsrc.col):  # need full line because firstsrc.src is cut off at first space
-                try:
-                    return _code_as_match_cases(code, parse_params)
-                except SyntaxError:  # 'case' is not a protected keyword, the regex checks most cases but not all possible so fall back to parse stmts
-                    pass
-
-        return _code_as_stmts(code, parse_params)
-
-    if isinstance(ast, (stmt, expr, Expression)):
-        return _code_as_stmts(code, parse_params)
-    if isinstance(ast, ExceptHandler):
-        return _code_as_ExceptHandlers(code, parse_params, is_trystar=is_trystar)
-    if isinstance(ast, match_case):
-        return _code_as_match_cases(code, parse_params)
-
-    if not (is_mod := isinstance(ast, Module)) and not isinstance(ast, Interactive):
-        raise NodeError(f'expecting zero or more stmts, ExceptHandlers or match_cases, got '
-                        f'{ast.__class__.__name__}')
-
-    if body := ast.body:
-        if isinstance(b0 := body[0], stmt):
-            code_type = stmt
-        elif isinstance(b0, ExceptHandler):
-            code_type = ExceptHandler
-        elif isinstance(b0, match_case):
-            code_type = match_case
-        else:
-            code_type = None
-
-        if not code_type or not all(isinstance(a, code_type) for a in body):
-            raise NodeError(f'expecting zero or more stmts, ExceptHandlers or match_cases, got '
-                            f'[{_shortstr(", ".join(a.__class__.__name__ for a in body))}]')
-
-    if is_fst:
-        if is_mod:
-            return code
-
-        return FST(Module(body=body, type_ignores=[]), code._lines, from_=code, lcopy=False)
-
-    if not body:
-        return FST(Module(body=[], type_ignores=[]), [bistr('')], parse_params=parse_params, lcopy=False)
-
-    if code_type is stmt:
-        return _code_as_stmts(code, parse_params)
-    if code_type is ExceptHandler:
-        return _code_as_ExceptHandlers(code, parse_params, is_trystar=is_trystar)
-
-    return _code_as_match_cases(code, parse_params)
 
 
 # ----------------------------------------------------------------------------------------------------------------------

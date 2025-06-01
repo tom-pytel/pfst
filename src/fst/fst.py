@@ -2158,7 +2158,6 @@ class FST:
         _parse_expr_slice_tupelt,
         _parse_expr_call_arg,
         _parse_comprehension,
-        _parse_ExceptHandlers,
         _parse_arguments,
         _parse_arguments_lambda,
         _parse_arg,
@@ -2167,10 +2166,12 @@ class FST:
         _parse_alias_dotted,
         _parse_alias_star,
         _parse_withitem,
-        _parse_match_cases,
         _parse_pattern,
         _parse_type_param,
+        _code_as_stmtishs,
         _code_as_stmts,
+        _code_as_ExceptHandlers,
+        _code_as_match_cases,
         _code_as_expr,
         _code_as_expr_slice,
         _code_as_expr_slice_tupelt,
@@ -2195,7 +2196,6 @@ class FST:
         _code_as_identifier_dotted,
         _code_as_identifier_star,
         _code_as_identifier_alias,
-        _code_as_stmtishs,
     )
 
     from .fst_raw import (
