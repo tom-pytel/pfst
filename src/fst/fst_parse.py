@@ -33,13 +33,17 @@ def _code_as_op(code: Code, ast_type: type[AST], parse_params: dict, opstr2cls: 
         if not code.is_root:
             raise ValueError('expecting root node')
 
-        if not isinstance(code.a, ast_type):
-            raise NodeError(f'expecting {ast_type.__name__}, got {code.a.__class__.__name__}')
+        codea = code.a
 
-        if not (loc := code.loc):
-            raise NodeError(f'{ast_type.__name__} FST does not have a location')
+        if not isinstance(codea, ast_type):
+            raise NodeError(f'expecting {ast_type.__name__}, got {codea.__class__.__name__}')
 
-        if (src := code.get_src(*loc)) != (expected := opcls2str[code.a.__class__]):
+        code = code._sanitize()
+
+        if (src := code.src) != (expected := opcls2str[codea.__class__]):
+            # if isinstance(codea, (NotIn, IsNot)):  # super-stupid case, someone did 'is\nnot' or something like this
+            #     pass
+
             raise NodeError(f'expecting {expected!r}, got {_shortstr(src)!r}')
 
         return code
@@ -413,7 +417,7 @@ def _parse_arguments(src: str, parse_params: dict = {}) -> AST:
 def _parse_arguments_lambda(src: str, parse_params: dict = {}) -> AST:
     """Parse to an `ast.arguments` for a `Lambda` or raise `SyntaxError`, e.g. "a, /, b, *c, d=100, **e"."""
 
-    return _offset_linenos(ast_parse(f'lambda \\\n{src}: None', **parse_params).body[0].value.args, -1)
+    return _offset_linenos(ast_parse(f'(lambda \n{src}: None)', **parse_params).body[0].value.args, -1)
 
 
 @staticmethod
@@ -517,7 +521,7 @@ def _parse_pattern(src: str, parse_params: dict = {}) -> AST:
 
     try:
         ast = ast_parse(f'match _:\n case \\\n{src}: pass', **parse_params).body[0].cases[0].pattern
-    except SyntaxError:  # in case of lone MatchStar, and we can't just do MatchSequence first because would mess up location of naked MatchSequence
+    except SyntaxError:  # in case of lone MatchStar, and we can't just do MatchSequence first because would mess up location of naked MatchSequence, also handles newlines in patterns where they can be
         ast = ast_parse(f'match _:\n case [\\\n{src}]: pass', **parse_params).body[0].cases[0].pattern.patterns[0]
 
     return _offset_linenos(ast, -2)
@@ -1019,6 +1023,7 @@ _PARSE_MODE_FUNCS = {
     'expr_slice':        _parse_expr_slice,
     'expr_slice_tupelt': _parse_expr_slice_tupelt,
     'expr_call_arg':     _parse_expr_call_arg,
+
     'comprehension':     _parse_comprehension,
     'arguments':         _parse_arguments,
     'arguments_lambda':  _parse_arguments_lambda,
@@ -1039,6 +1044,7 @@ _PARSE_MODE_FUNCS = {
     match_case:          _parse_match_case,
     expr:                _parse_expr,
     Slice:               _parse_expr_slice,
+
     comprehension:       _parse_comprehension,
     arguments:           _parse_arguments,
     arg:                 _parse_arg,

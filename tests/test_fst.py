@@ -28425,6 +28425,7 @@ PARSE_TESTS = [
 
     ('arguments_lambda',  FST._parse_arguments_lambda,  arguments,      ''),
     ('arguments_lambda',  FST._parse_arguments_lambda,  arguments,      'a, /, b, *c, d=100, **e'),
+    ('arguments_lambda',  FST._parse_arguments_lambda,  arguments,      'a,\n/,\nb,\n*c,\nd=100,\n**e'),
     ('arguments_lambda',  FST._parse_arguments_lambda,  SyntaxError,    'a: list[str], /, b: int = 1, *c, d=100, **e'),
 
     ('arg',               FST._parse_arg,               arg,            'a: b'),
