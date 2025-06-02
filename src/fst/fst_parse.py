@@ -225,12 +225,12 @@ def _parse_stmtishs(src: str, parse_params: dict = {}) -> AST:
 
 @staticmethod
 def _parse_stmtish(src: str, parse_params: dict = {}) -> AST:
-    """Parse exactly one `stmt`, `ExceptHandler` or `match_case` and return as itself or raise `SyntaxError`."""
+    """Parse exactly one `stmt`, `ExceptHandler` or `match_case` and return as itself."""
 
     mod = _parse_stmtishs(src, parse_params)
 
     if len(body := mod.body) != 1:
-        raise NodeError('expecting exactly one stmt, ExceptHandler or match_case')
+        raise NodeError('expecting single stmt, ExceptHandler or match_case')
 
     return body[0]
 
@@ -244,19 +244,19 @@ def _parse_stmts(src: str, parse_params: dict = {}) -> AST:  # same as _parse_Mo
 
 @staticmethod
 def _parse_stmt(src: str, parse_params: dict = {}) -> AST:
-    """Parse exactly one `stmt` and return as itself or raise `SyntaxError`."""
+    """Parse exactly one `stmt` and return as itself."""
 
     mod = _parse_stmts(src, parse_params)
 
     if len(body := mod.body) != 1:
-        raise NodeError('expecting exactly one stmt')
+        raise NodeError('expecting single stmt')
 
     return body[0]
 
 
 @staticmethod
 def _parse_ExceptHandlers(src: str, parse_params: dict = {}) -> AST:
-    """Parse zero or more `ExceptHandler`s and return them in a `Module` `body` or raise `SyntaxError`."""
+    """Parse zero or more `ExceptHandler`s and return them in a `Module` `body`."""
 
     try:
         ast = ast_parse(f'try: pass\n{src}\nfinally: pass', **parse_params).body[0]
@@ -283,19 +283,19 @@ def _parse_ExceptHandlers(src: str, parse_params: dict = {}) -> AST:
 
 @staticmethod
 def _parse_ExceptHandler(src: str, parse_params: dict = {}) -> AST:
-    """Parse exactly one `ExceptHandler` and return as itself or raise `SyntaxError`."""
+    """Parse exactly one `ExceptHandler` and return as itself."""
 
     mod = _parse_ExceptHandlers(src, parse_params)
 
     if len(body := mod.body) != 1:
-        raise NodeError('expecting exactly one ExceptHandler')
+        raise NodeError('expecting single ExceptHandler')
 
     return body[0]
 
 
 @staticmethod
 def _parse_match_cases(src: str, parse_params: dict = {}) -> AST:
-    """Parse zero or more `match_case`s and return them in a `Module` `body` or raise `SyntaxError`."""
+    """Parse zero or more `match_case`s and return them in a `Module` `body`."""
 
     lines = [bistr('match x:'), bistr(' case None: pass')] + [bistr(' ' + l) for l in src.split('\n')]
     ast   = ast_parse('\n'.join(lines), **parse_params).body[0]
@@ -336,19 +336,19 @@ def _parse_match_cases(src: str, parse_params: dict = {}) -> AST:
 
 @staticmethod
 def _parse_match_case(src: str, parse_params: dict = {}) -> AST:
-    """Parse exactly one `match_case` and return as itself or raise `SyntaxError`."""
+    """Parse exactly one `match_case` and return as itself."""
 
     mod = _parse_match_cases(src, parse_params)
 
     if len(body := mod.body) != 1:
-        raise NodeError('expecting exactly one match_case')
+        raise NodeError('expecting single match_case')
 
     return body[0]
 
 
 @staticmethod
 def _parse_expr(src: str, parse_params: dict = {}) -> AST:
-    """Parse to an `ast.expr` or raise `SyntaxError`."""
+    """Parse to an `ast.expr`."""
 
     body = ast_parse(src, **parse_params).body
 
@@ -362,18 +362,18 @@ def _parse_expr(src: str, parse_params: dict = {}) -> AST:
 
 @staticmethod
 def _parse_expr_slice(src: str, parse_params: dict = {}) -> AST:
-    """Parse to an `ast.Slice` or anything else that can go into `Subscript.slice` (`expr`) or raise `SyntaxError`, e.g.
-    "start:stop:step" or "name" or even "a:b, c:d:e, g". Using this, naked `Starred` expressions parse to single element
-    `Tuple` with the `Starred` as the only element."""
+    """Parse to an `ast.Slice` or anything else that can go into `Subscript.slice` (`expr`), e.g. "start:stop:step" or
+    "name" or even "a:b, c:d:e, g". Using this, naked `Starred` expressions parse to single element `Tuple` with the
+    `Starred` as the only element."""
 
     return _offset_linenos(ast_parse(f'a[\n{src}]', **parse_params).body[0].value.slice, -1)
 
 
 @staticmethod
 def _parse_expr_slice_tupelt(src: str, parse_params: dict = {}) -> AST:
-    """Parse to an `ast.expr` or `ast.Slice` or raise `SyntaxError`. This exists because otherwise a naked `Starred`
-    expression parses to an implicit single element `Tuple` and the caller of this function does not want that behavior.
-    Using this, naked `Starred` expressions parse to just the `Starred` and not a `Tuple` like in `_parse_expr_slice()`.
+    """Parse to an `ast.expr` or `ast.Slice`. This exists because otherwise a naked `Starred` expression parses to an
+    implicit single element `Tuple` and the caller of this function does not want that behavior. Using this, naked
+    `Starred` expressions parse to just the `Starred` and not a `Tuple` like in `_parse_expr_slice()`.
     """
 
     try:
@@ -400,29 +400,105 @@ def _parse_expr_call_arg(src: str, parse_params: dict = {}) -> AST:
 
 
 @staticmethod
+def _parse_boolop(src: str, parse_params: dict = {}) -> AST:
+    """Parse to an `ast.boolop`."""
+
+    ast = ast_parse(f'(a\n{src} b)', **parse_params).body[0].value
+
+    if not isinstance(ast, BoolOp):
+        raise NodeError(f'expecting boolop, got {_shortstr(src)!r}')
+
+    return ast.op.__class__()  # parse() returns the same identical object for all instances of the same operator
+
+
+@staticmethod
+def _parse_operator(src: str, parse_params: dict = {}) -> AST:
+    """Parse to an `ast.boolop`."""
+
+    if '=' in src:
+        try:
+            return _parse_operator_aug(src, parse_params)
+        except NodeError:  # maybe the '=' was in a comment, yes I know, a comment in an operator, people do strange things
+            pass
+
+    return _parse_operator_bin(src, parse_params)
+
+
+@staticmethod
+def _parse_operator_bin(src: str, parse_params: dict = {}) -> AST:
+    """Parse to an `ast.operator` in the context of a `BinOp`."""
+
+    ast = ast_parse(f'(a\n{src} b)', **parse_params).body[0].value
+
+    if not isinstance(ast, BinOp):
+        raise NodeError(f'expecting operator, got {_shortstr(src)!r}')
+
+    return ast.op.__class__()  # parse() returns the same identical object for all instances of the same operator
+
+
+@staticmethod
+def _parse_operator_aug(src: str, parse_params: dict = {}) -> AST:
+    """Parse to an augmented `ast.operator` in the context of a `AugAssign`."""
+
+    ast = ast_parse(f'a \\\n{src} b', **parse_params).body[0]
+
+    if not isinstance(ast, AugAssign):
+        raise NodeError(f'expecting augmented operator, got {_shortstr(src)!r}')
+
+    return ast.op.__class__()  # parse() returns the same identical object for all instances of the same operator
+
+
+@staticmethod
+def _parse_unaryop(src: str, parse_params: dict = {}) -> AST:
+    """Parse to an `ast.unaryop`."""
+
+    ast = ast_parse(f'(\n{src}b)', **parse_params).body[0].value
+
+    if not isinstance(ast, UnaryOp):
+        raise NodeError(f'expecting unaryop, got {_shortstr(src)!r}')
+
+    return ast.op.__class__()  # parse() returns the same identical object for all instances of the same operator
+
+
+@staticmethod
+def _parse_cmpop(src: str, parse_params: dict = {}) -> AST:
+    """Parse to an `ast.cmpop`."""
+
+    ast = ast_parse(f'(a\n{src} b)', **parse_params).body[0].value
+
+    if not isinstance(ast, Compare):
+        raise NodeError(f'expecting cmpop, got {_shortstr(src)!r}')
+
+    if len(ops := ast.ops) != 1:
+        raise NodeError('expecting single cmpop')
+
+    return ops[0].__class__()  # parse() returns the same identical object for all instances of the same operator
+
+
+@staticmethod
 def _parse_comprehension(src: str, parse_params: dict = {}) -> AST:
-    """Parse to an `ast.comprehension` or raise `SyntaxError`, e.g. "async for i in something() if i"."""
+    """Parse to an `ast.comprehension`, e.g. "async for i in something() if i"."""
 
     return _offset_linenos(ast_parse(f'[_ \n{src}]', **parse_params).body[0].value.generators[0], -1)
 
 
 @staticmethod
 def _parse_arguments(src: str, parse_params: dict = {}) -> AST:
-    """Parse to an `ast.arguments` or raise `SyntaxError`, e.g. "a: list[str], /, b: int = 1, *c, d=100, **e"."""
+    """Parse to an `ast.arguments`, e.g. "a: list[str], /, b: int = 1, *c, d=100, **e"."""
 
     return _offset_linenos(ast_parse(f'def f(\n{src}): pass', **parse_params).body[0].args, -1)
 
 
 @staticmethod
 def _parse_arguments_lambda(src: str, parse_params: dict = {}) -> AST:
-    """Parse to an `ast.arguments` for a `Lambda` or raise `SyntaxError`, e.g. "a, /, b, *c, d=100, **e"."""
+    """Parse to an `ast.arguments` for a `Lambda`, e.g. "a, /, b, *c, d=100, **e"."""
 
     return _offset_linenos(ast_parse(f'(lambda \n{src}: None)', **parse_params).body[0].value.args, -1)
 
 
 @staticmethod
 def _parse_arg(src: str, parse_params: dict = {}) -> AST:
-    """Parse to an `ast.arg` or raise `SyntaxError`, e.g. "var: list[int]"."""
+    """Parse to an `ast.arg`, e.g. "var: list[int]"."""
 
     try:
         args = ast_parse(f'def f(\n{src}): pass', **parse_params).body[0].args
@@ -451,7 +527,7 @@ def _parse_arg(src: str, parse_params: dict = {}) -> AST:
 
 @staticmethod
 def _parse_keyword(src: str, parse_params: dict = {}) -> AST:
-    """Parse to an `ast.keyword` or raise `SyntaxError`, e.g. "var=val"."""
+    """Parse to an `ast.keyword`, e.g. "var=val"."""
 
     keywords = ast_parse(f'f(\n{src})', **parse_params).body[0].value.keywords
 
@@ -463,7 +539,7 @@ def _parse_keyword(src: str, parse_params: dict = {}) -> AST:
 
 @staticmethod
 def _parse_alias(src: str, parse_params: dict = {}) -> AST:
-    """Parse to an `ast.alias` or raise `SyntaxError`, allowing star or dotted notation, e.g. "name as alias"."""
+    """Parse to an `ast.alias`, allowing star or dotted notation, e.g. "name as alias"."""
 
     if '*' in src:
         try:
@@ -476,7 +552,7 @@ def _parse_alias(src: str, parse_params: dict = {}) -> AST:
 
 @staticmethod
 def _parse_alias_dotted(src: str, parse_params: dict = {}) -> AST:
-    """Parse to an `ast.alias`, allowing dotted notation (not all aliases are created equal), or raise `SyntaxError`,
+    """Parse to an `ast.alias`, allowing dotted notation (not all aliases are created equal),,
     e.g. "name as alias"."""
 
     names = ast_parse(f'import \\\n{src}', **parse_params).body[0].names
@@ -489,7 +565,7 @@ def _parse_alias_dotted(src: str, parse_params: dict = {}) -> AST:
 
 @staticmethod
 def _parse_alias_star(src: str, parse_params: dict = {}) -> AST:
-    """Parse to an `ast.alias`, allowing star, or raise `SyntaxError`."""
+    """Parse to an `ast.alias`, allowing star,."""
 
     names = ast_parse(f'from . import \\\n{src}', **parse_params).body[0].names
 
@@ -501,7 +577,7 @@ def _parse_alias_star(src: str, parse_params: dict = {}) -> AST:
 
 @staticmethod
 def _parse_withitem(src: str, parse_params: dict = {}) -> AST:
-    """Parse to an `ast.withitem` or raise `SyntaxError`, e.g. "something() as var"."""
+    """Parse to an `ast.withitem`, e.g. "something() as var"."""
 
     items = ast_parse(f'with (\n{src}): pass', **parse_params).body[0].items
 
@@ -517,7 +593,7 @@ def _parse_withitem(src: str, parse_params: dict = {}) -> AST:
 
 @staticmethod
 def _parse_pattern(src: str, parse_params: dict = {}) -> AST:
-    """Parse to an `ast.pattern` or raise `SyntaxError`, e.g. "{a.b: i, **rest}"."""
+    """Parse to an `ast.pattern`, e.g. "{a.b: i, **rest}"."""
 
     try:
         ast = ast_parse(f'match _:\n case \\\n{src}: pass', **parse_params).body[0].cases[0].pattern
@@ -529,7 +605,7 @@ def _parse_pattern(src: str, parse_params: dict = {}) -> AST:
 
 @staticmethod
 def _parse_type_param(src: str, parse_params: dict = {}) -> AST:
-    """Parse to an `ast.type_param` or raise `SyntaxError`, e.g. "t: Base = Subclass"."""
+    """Parse to an `ast.type_param`, e.g. "t: Base = Subclass"."""
 
     return _offset_linenos(ast_parse(f'type t[\n{src}] = None', **parse_params).body[0].type_params[0], -1)
 
@@ -1023,7 +1099,12 @@ _PARSE_MODE_FUNCS = {
     'expr_slice':        _parse_expr_slice,
     'expr_slice_tupelt': _parse_expr_slice_tupelt,
     'expr_call_arg':     _parse_expr_call_arg,
-
+    'boolop':            _parse_boolop,
+    'operator':          _parse_operator,
+    'operator_bin':      _parse_operator_bin,
+    'operator_aug':      _parse_operator_aug,
+    'unaryop':           _parse_unaryop,
+    'cmpop':             _parse_cmpop,
     'comprehension':     _parse_comprehension,
     'arguments':         _parse_arguments,
     'arguments_lambda':  _parse_arguments_lambda,
@@ -1044,7 +1125,10 @@ _PARSE_MODE_FUNCS = {
     match_case:          _parse_match_case,
     expr:                _parse_expr,
     Slice:               _parse_expr_slice,
-
+    boolop:              _parse_boolop,
+    operator:            _parse_operator,
+    unaryop:             _parse_unaryop,
+    cmpop:               _parse_cmpop,
     comprehension:       _parse_comprehension,
     arguments:           _parse_arguments,
     arg:                 _parse_arg,

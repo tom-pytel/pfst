@@ -28417,6 +28417,22 @@ PARSE_TESTS = [
     ('expr_call_arg',     FST._parse_expr_call_arg,     NodeError,      'a:b'),
     ('expr_call_arg',     FST._parse_expr_call_arg,     SyntaxError,    'a:b:c'),
 
+    ('boolop',            FST._parse_boolop,            And,            'and'),
+    ('boolop',            FST._parse_boolop,            NodeError,      '*'),
+    ('operator',          FST._parse_operator,          Mult,           '*'),
+    ('operator',          FST._parse_operator,          Mult,           '*='),
+    ('operator',          FST._parse_operator,          NodeError,      'and'),
+    ('operator_bin',      FST._parse_operator_bin,      Mult,           '*'),
+    ('operator_bin',      FST._parse_operator_bin,      SyntaxError,    '*='),
+    ('operator_aug',      FST._parse_operator_aug,      NodeError,      '*'),
+    ('operator_aug',      FST._parse_operator_aug,      Mult,           '*='),
+    ('unaryop',           FST._parse_unaryop,           UAdd,           '+'),
+    ('unaryop',           FST._parse_unaryop,           NodeError,      'and'),
+    ('cmpop',             FST._parse_cmpop,             GtE,            '>='),
+    ('cmpop',             FST._parse_cmpop,             IsNot,          'is\nnot'),
+    ('cmpop',             FST._parse_cmpop,             NodeError,      '>= a >='),
+    ('cmpop',             FST._parse_cmpop,             NodeError,      'and'),
+
     ('comprehension',     FST._parse_comprehension,     comprehension,  'for u in v'),
     ('comprehension',     FST._parse_comprehension,     comprehension,  'for u in v if w'),
 
@@ -28518,6 +28534,18 @@ PARSE_TESTS = [
     (Starred,             FST._parse_expr,              Starred,        '*s'),
 
     (Slice,               FST._parse_expr_slice,        Slice,          'a:b'),
+
+    (boolop,              FST._parse_boolop,            And,            'and'),
+    (boolop,              FST._parse_boolop,            NodeError,      '*'),
+    (operator,            FST._parse_operator,          Mult,           '*'),
+    (operator,            FST._parse_operator,          Mult,           '*='),
+    (operator,            FST._parse_operator,          NodeError,      'and'),
+    (unaryop,             FST._parse_unaryop,           UAdd,           '+'),
+    (unaryop,             FST._parse_unaryop,           NodeError,      'and'),
+    (cmpop,               FST._parse_cmpop,             GtE,            '>='),
+    (cmpop,               FST._parse_cmpop,             IsNot,          'is\nnot'),
+    (cmpop,               FST._parse_cmpop,             NodeError,      '>= a >='),
+    (cmpop,               FST._parse_cmpop,             NodeError,      'and'),
 
     (comprehension,       FST._parse_comprehension,     comprehension,  'for u in v'),
     (comprehension,       FST._parse_comprehension,     comprehension,  'for u in v if w'),
@@ -28848,8 +28876,13 @@ def regen_put_one():
         f = (eval(f't.{attr}', {'t': t}) if attr else t).f
 
         try:
+            if options.get('raw') is True:
+                continue
+
+            options_ = {**options, 'raw': False}
+
             try:
-                f.put(None if src == '**DEL**' else src, idx, field=field, **options)
+                f.put(None if src == '**DEL**' else src, idx, field=field, **options_)
 
             except Exception as exc:
                 tdst  = '**SyntaxError**' if isinstance(exc, SyntaxError) else f'**{exc!r}**'
@@ -30167,7 +30200,8 @@ def f():
 
                 if not issubclass(res, Exception):  # test reparse
                     test = 'reparse'
-                    ast2 = FST._parse(ast_.unparse(ast), mode)
+                    unp  = ast_.unparse(ast) or src  # 'or src' because unparse of operators gives nothing
+                    ast2 = FST._parse(unp, mode)
 
                     compare_asts(ast, ast2, raise_=True)
 
@@ -35912,6 +35946,7 @@ class cls:
                 s     = f.get_slice(start, stop, cut=True, **options)
                 tsrc  = t.f.src
                 ssrc  = s.src
+                t.f.touch()
                 tdump = t.f.dump(out=list, compact=True)
                 sdump = s.dump(out=list, compact=True)
 
@@ -35928,6 +35963,12 @@ class cls:
                 print(src_cut)
                 print('...')
                 print(slice_copy)
+
+                print('='*80)
+                print('\n'.join(tdump))
+                print('-'*80)
+                print('\n'.join(src_dump.strip().split('\n')))
+                print('.'*80)
 
                 raise
 
