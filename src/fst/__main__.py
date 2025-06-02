@@ -30,8 +30,10 @@ def main():
     if args.infile == '-':
         name = '<stdin>'
         source = sys.stdin.buffer.read()
+
     else:
         name = args.infile
+
         with open(args.infile, 'rb') as infile:
             source = infile.read()
 

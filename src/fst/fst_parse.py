@@ -25,8 +25,8 @@ def _offset_linenos(ast: AST, delta: int) -> AST:
     return ast
 
 
-def _code_as_op(code: Code, ast_type: type[AST], parse_params: dict, opstr2cls: dict[str, type[AST]],
-                opcls2str: dict[type[AST], str] = OPCLS2STR) -> 'FST':
+def _code_as_op(code: Code, ast_type: type[AST], parse_params: dict, parse: Callable[['FST', Code], 'FST'],
+                opstr2cls: dict[str, type[AST]], opcls2str: dict[type[AST], str] = OPCLS2STR) -> 'FST':
     """Convert `code` to an operation `FST` if possible."""
 
     if isinstance(code, FST):
@@ -41,8 +41,9 @@ def _code_as_op(code: Code, ast_type: type[AST], parse_params: dict, opstr2cls: 
         code = code._sanitize()
 
         if (src := code.src) != (expected := opcls2str[codea.__class__]):
-            # if isinstance(codea, (NotIn, IsNot)):  # super-stupid case, someone did 'is\nnot' or something like this
-            #     pass
+            if isinstance(codea, (NotIn, IsNot)):  # super-stupid case, someone did 'is # comment \n not' or something like this?
+                if _parse_cmpop(src).__class__ is codea:  # parses to same thing so just return the canonical str for the op, otherwise it gets complicated
+                    return FST(codea, [bistr(expected)], from_=code, lcopy=False)
 
             raise NodeError(f'expecting {expected!r}, got {_shortstr(src)!r}')
 
@@ -57,10 +58,15 @@ def _code_as_op(code: Code, ast_type: type[AST], parse_params: dict, opstr2cls: 
     if isinstance(code, list):
         code = '\n'.join(code)
 
-    if not (cls := opstr2cls.get(code := code.strip())):
-        raise NodeError(f'expecting {ast_type.__name__}, got {_shortstr(code)!r}')
+    lines = (code := code.strip()).split('\n')
 
-    return FST(cls(), code.split('\n'), parse_params=parse_params)
+    if cls := opstr2cls.get(code):
+        return FST(cls(), lines, parse_params=parse_params)
+
+    try:
+        return FST(parse(code, parse_params), lines, parse_params=parse_params)  # fall back to actually trying to parse the thing
+    except (SyntaxError, NodeError):
+        raise NodeError(f'expecting {ast_type.__name__}, got {_shortstr(code)!r}') from None
 
 
 def _code_as(code: Code, ast_type: type[AST], parse_params: dict, parse: Callable[['FST', Code], 'FST'], *,
@@ -887,35 +893,35 @@ def _code_as_expr_call_arg(code: Code, parse_params: dict = {}, orslice: bool = 
 def _code_as_boolop(code: Code, parse_params: dict = {}) -> 'FST':
     """Convert `code` to a `boolop` `FST` if possible."""
 
-    return _code_as_op(code, boolop, parse_params, OPSTR2CLS_BOOL)
+    return _code_as_op(code, boolop, parse_params, _parse_boolop, OPSTR2CLS_BOOL)
 
 
 @staticmethod
 def _code_as_operator(code: Code, parse_params: dict = {}) -> 'FST':
     """Convert `code` to a `operator` `FST` if possible."""
 
-    return _code_as_op(code, operator, parse_params, OPSTR2CLS_BIN)
+    return _code_as_op(code, operator, parse_params, _parse_operator_bin, OPSTR2CLS_BIN)
 
 
 @staticmethod
 def _code_as_operator_aug(code: Code, parse_params: dict = {}) -> 'FST':
     """Convert `code` to an augmented `operator` `FST` if possible, e.g. "+="."""
 
-    return _code_as_op(code, operator, parse_params, OPSTR2CLS_AUG, OPCLS2STR_AUG)
+    return _code_as_op(code, operator, parse_params, _parse_operator_aug, OPSTR2CLS_AUG, OPCLS2STR_AUG)
 
 
 @staticmethod
 def _code_as_unaryop(code: Code, parse_params: dict = {}) -> 'FST':
     """Convert `code` to a `unaryop` `FST` if possible."""
 
-    return _code_as_op(code, unaryop, parse_params, OPSTR2CLS_UNARY)
+    return _code_as_op(code, unaryop, parse_params, _parse_unaryop, OPSTR2CLS_UNARY)
 
 
 @staticmethod
 def _code_as_cmpop(code: Code, parse_params: dict = {}) -> 'FST':
     """Convert `code` to a `cmpop` `FST` if possible."""
 
-    return _code_as_op(code, cmpop, parse_params, OPSTR2CLS_CMP)
+    return _code_as_op(code, cmpop, parse_params, _parse_cmpop, OPSTR2CLS_CMP)
 
 
 @staticmethod

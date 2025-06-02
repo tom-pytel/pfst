@@ -541,7 +541,7 @@ class FST:
         """
 
         if isinstance(src, bytes):
-            lines = (src := src.decode())
+            lines = (src := src.decode()).split('\n')
         elif isinstance(src, str):
             lines = src.split('\n')
         else:
