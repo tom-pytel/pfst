@@ -119,54 +119,8 @@ def _parse(src: str, mode: Mode = 'any', parse_params: dict = {}) -> AST:
     - `src`: The source to parse.
     - `mode`: Either one of the standard `ast.parse()` modes `exec`, `eval` or `single` to parse to that type of module
         or one of our specific strings like `'stmtishs'` or an actual `AST` type to parse to. If the mode is provided
-        and cannot parse to the specified target then an error is raised and no other parse types are tried.
-        Options are:
-        - `'exec'`: Parse to an `Module`. Same as passing `Module` type.
-        - `'eval'`: Parse to an `Expression`. Same as passing `Expression` type.
-        - `'single'`: Parse to an `Interactive`. Same as passing `Interactive` type.
-        - `'stmtishs'`: Parse as zero or more of either `stmt`, `ExceptHandler` or `match_case` returned in a `Module`.
-        - `'stmtish'`: Parse as a single `stmt`, `ExceptHandler` or `match_case` returned as itself.
-        - `'stmts'`: Parse zero or more `stmt`s returned in a `Module`. Same as passing `Module` type or `'exec'`.
-        - `'stmt'`: Parse a single `stmt` returned as itself. Same as passign `stmt` type.
-        - `'ExceptHandlers'`: Parse zero or more `ExceptHandler`s returned in a `Module`.
-        - `'ExceptHandler'`: Parse as a single `ExceptHandler` returned as itself. Same as passing `ExceptHandler` type.
-        - `'match_cases'`: Parse zero or more `match_case`s returned in a `Module`.
-        - `'match_case'`: Parse a single `match_case` returned as itself. Same as passing `match_case` type.
-        - `'expr'`: Parse a single `expr` returned as itself. This is differentiated from the following three modes by
-            the handling of slices and starred expressions. In this mode `a:b` and `*not v` are syntax errors. Same as
-            passing `expr` type.
-        - `'expr_slice'`: Same as `expr` except that in this mode `a:b` parses to a `Slice` and `*not v` parses to
-            a single element tuple containing a starred expression `(*(not v),)`.
-        - `'expr_slice_tupelt'`: Same as `expr` except that in this mode `a:b` parses to a `Slice` and `*not v` parses
-            to a starred expression `*(not v)`.
-        - `'expr_call_arg'`: Same as `expr` except that in this mode `a:b` is a syntax error and `*not v` parses to a
-            starred expression `*(not v)`.
-        - `'comprehension'`: Parse a single `comprehension` returned as itself. Same as passing `comprehension` type.
-        - `'arguments'`: Parse as `arguments` for a `FunctionDef` or `AsyncFunctionDef` returned as itself. In this mode
-            type annotations are allowed for the arguments. Same as passing `arguments` type.
-        - `'arguments_lambda'`: Parse as `arguments` for a `Lambda` returned as itself. In this mode type annotations
-            are not allowed for the arguments.
-        - `'arg'`: Parse as a single `arg` returned as itself. Same as passing `arg` type.
-        - `'keyword'`: Parse as a single `keyword` returned as itself. Same as passing `keyword` type.
-        - `'alias'`: Parse as a single `alias` returned as itself. Either starred or dotted versions are accepted. Same
-            as passing `alias` type.
-        - `'alias_dotted'`: Parse as a single `alias` returned as itself, with starred version being a syntax error.
-        - `'alias_star'`: Parse as a single `alias` returned as itself, with dotted version being a syntax error.
-        - `'withitem'`: Parse as a single `withitem` returned as itself. Same as passing `withitem` type.
-        - `'pattern'`: Parse as a a single `pattern` returned as itself. Same as passing `pattern` type.
-        - `'type_param'`: Parse as a single `type_param` returned as itself, either `TypeVar`, `ParamSpec` or
-            `TypeVarTuple`. Same as passing `type_param` type.
-        - `type[AST]`: If an `AST` type is passed then will attempt to parse to this type. This can be used to narrow
-            the scope of desired return, for example `Constant` will parse expression but fail if the expression is not
-            a `Constant`. These overlap with the string specifiers to an extent but not all of them. For example `AST`
-            type `ast.expr` is the same as passing `'expr'` but there is not `AST` type which will specify one of the
-            other expr parse modes like `'expr_slice'`. Likewise `Module`, `'exec'` and `'stmts'` all specify the same
-            parse mode.
-        - `any`: Attempt parse `stmtishs`. If only one element then return the element itself instead of the `Module`.
-            If that element is an `Expr` then return the expression instead of the statement. If nothing present then
-            return empty `Module`. Doesn't attempt any of the other parse modes because the syntax is overlapping and
-            too similar. Will never return an `Expression` or `Interactive`.
-
+        and cannot parse to the specified target then an error is raised and no other parse types are tried. See
+        `fst.shared.Mode`.
     - `parse_params`: Dictionary of optional parse parameters to pass to `ast.parse()`, can contain `filename`,
         `type_comments` and `feature_version`.
     """
@@ -1003,7 +957,7 @@ def _code_as_type_param(code: Code, parse_params: dict = {}) -> 'FST':
 
 @staticmethod
 def _code_as_identifier(code: Code, parse_params: dict = {}) -> str:
-    """Convert `Code` to valid identifier string if possible."""
+    """Convert `code` to valid identifier string if possible."""
 
     if isinstance(code, FST):
         if not code.is_root:
@@ -1024,7 +978,7 @@ def _code_as_identifier(code: Code, parse_params: dict = {}) -> str:
 
 @staticmethod
 def _code_as_identifier_dotted(code: Code, parse_params: dict = {}) -> str:
-    """Convert `Code` to valid dotted identifier string if possible (for Import module)."""
+    """Convert `code` to valid dotted identifier string if possible (for Import module)."""
 
     if isinstance(code, FST):
         if not code.is_root:
@@ -1045,7 +999,7 @@ def _code_as_identifier_dotted(code: Code, parse_params: dict = {}) -> str:
 
 @staticmethod
 def _code_as_identifier_star(code: Code, parse_params: dict = {}) -> str:
-    """Convert `Code` to valid identifier string or star '*' if possible (for ImportFrom names)."""
+    """Convert `code` to valid identifier string or star '*' if possible (for ImportFrom names)."""
 
     if isinstance(code, FST):
         if not code.is_root:
@@ -1066,7 +1020,7 @@ def _code_as_identifier_star(code: Code, parse_params: dict = {}) -> str:
 
 @staticmethod
 def _code_as_identifier_alias(code: Code, parse_params: dict = {}) -> str:
-    """Convert `Code` to valid dotted identifier string or star '*' if possible (for any alias)."""
+    """Convert `code` to valid dotted identifier string or star '*' if possible (for any alias)."""
 
     if isinstance(code, FST):
         if not code.is_root:

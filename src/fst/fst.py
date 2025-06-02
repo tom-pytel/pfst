@@ -1,5 +1,4 @@
-class FST:
-    """Temporary standin for circular import of real `FST` class."""
+FST = None  # temporary standin for circular import of real `FST` class
 
 import ast as ast_
 from ast import *
@@ -81,7 +80,7 @@ def unparse(ast_obj) -> str:
 
 
 class FST:
-    """Preserve AST formatting information and easy manipulation."""
+    """Class which maintains structure and source code for an AST tree and allows format-preserving operations."""
 
     a:            AST              ; """The actual `AST` node."""
     parent:       Optional['FST']  ; """Parent `FST` node, `None` in root node."""
@@ -100,7 +99,7 @@ class FST:
     @property
     def lines(self) -> list[str] | None:
         """Whole lines which contain this node, may also contain parts of enclosing nodes. If gotten at root then the
-        entire source is returned, regardless of whether the actual top level node location includes it or not."""
+        entire source is returned, which may extend beyond the location of the top level node."""
 
         if self.is_root:
             return self._lines
@@ -130,19 +129,19 @@ class FST:
 
     @property
     def is_mod(self) -> bool:
-        """Is a `mod` node."""
+        """Is a `mod`."""
 
         return isinstance(self.a, mod)
 
     @property
     def is_stmtish(self) -> bool:
-        """Is a `stmt`, `ExceptHandler` or `match_case` node."""
+        """Is a `stmt`, `ExceptHandler` or `match_case`."""
 
         return isinstance(self.a, STMTISH)
 
     @property
     def is_stmtish_or_mod(self) -> bool:
-        """Is a `stmt`, `ExceptHandler`, `match_case` or `mod` node."""
+        """Is a `stmt`, `ExceptHandler`, `match_case` or `mod`."""
 
         return isinstance(self.a, STMTISH_OR_MOD)
 
@@ -154,7 +153,7 @@ class FST:
 
     @property
     def is_stmt_or_mod(self) -> bool:
-        """Is a `stmt` or `mod` node."""
+        """Is a `stmt` or `mod`."""
 
         return isinstance(self.a, (stmt, mod))
 
@@ -223,7 +222,8 @@ class FST:
     def loc(self) -> fstloc | None:
         """Zero based character indexed location of node (may not be entire location if node has decorators). Not all
         nodes have locations (like `expr_context`). Other nodes which normally don't have locations like `arguments` or
-        most operators have this location calculated from their children or source."""
+        most operators have this location calculated from their children or source. NOTE: Empty arguments do not have
+        a location."""
 
         try:
             return self._cache['loc']
@@ -376,13 +376,27 @@ class FST:
         return child
 
     def __new__(cls,
-                ast_or_src: AST | str | bytes | list[str] | None = None,
+                ast_or_src: AST | str | bytes | list[str] | None,
                 parent_or_lines_or_mode: Union['FST', list[str], Mode, None] = None,
                 pfield: astfield | None = None,
                 /, **kwargs):
-        """Create a new individual `FST` node or full tree. There are three ways to create an `FST` directly:
+        """Create a new individual `FST` node or full tree. The main way to use this constructor is as a shortcut for
+        `FST.fromsrc()` or `FST.fromast()`, the usage is:
 
-        TODO: document
+        **`FST(ast_or_src: AST | str | bytes | list[str] | None, mode: Mode | None = None)`**
+
+        This will create an `FST` from either an `AST` or source code in the form of a string, list of lines or encoded
+        bytes. The first parameter can be `None` instead of an `AST` or source to indicate a blank new module of one of
+        the three types `'exec'`, `'eval'` or `'single'`. Otherwise if there is an `AST` or `source` then `mode`
+        specifies how it will be parsed / reparsed and it can take one of the following values:
+
+        **Parameters:**
+        - `ast_or_src`: Source code, an `AST` node or `None`.
+        - `mode`: See `fst.shared.Mode`. If this is `None` then if `ast_or_src` is an `AST` the mode used is `'any'`,
+            Otherwise if the `ast_or_src` is actual source code then `mode` defaults to the type of the `AST`. And if
+            `ast_or_src` is `None` then `mode` must be provided and be one of `'exec'`, `'eval'` or `'single'`.
+
+        The other forms of this function are meant for internal use and their parameters are below:
 
         **Parameters:**
         - `ast_or_src`: `AST` node for `FST` or source code in the form of a `str`, encoded `bytes` or a list of lines.
@@ -595,7 +609,8 @@ class FST:
 
     @staticmethod
     def get_option(option: str, options: dict[str, Any] = {}) -> Any:
-        """Get option from options dict or default if option not in dict or is `None` there.
+        """Get option from options dict or default if option not in dict or is `None` there. For a list of options used
+        see `set_option`.
 
         **Parameters:**
         - `option`: Name of option to get.
@@ -642,22 +657,25 @@ class FST:
                 - `1`: One empty line in all scopes.
                 - `None`: Use default.
             - `pars`: How parentheses are handled, can be `False`, `True` or `'auto'`. This is for individual puts, for
-                slices parentheses are always unchanged.
+                slices parentheses are always unchanged. Raw puts generally do not have parentheses added or removed
+                automatically, except from the destination node if putting to a node instead of a pure location.
                 - `False`: Parentheses are not MODIFIED, doesn't mean remove all parentheses. Not copied with nodes or
                     removed on put from source or destination.
                 - `True`: Parentheses are copied with nodes, added to copies if needed and not present, removed from
-                    destination on put if not needed there (but not source). For raw put this only applies to `AST` or
-                    `FST` nodes passed since those allow enough information for deciding parenthesization.
+                    destination on put if not needed there (but not source).
                 - `'auto'`: Same as `True` except they are not returned with a copy and possibly removed from source
                     on put if not needed (removed from destination first if needed and present on both).
                 - `None`: Use default.
-            - `elif_`: `True` or `False`, if putting a single `If` statement to an `orelse` field of a parent `If` statement then
-                put it as an `elif`. `None` means use default.
             - `raw`: How to attempt at raw source operations. This may result in more nodes changed than just the targeted
                 one(s).
                 - `False`: Do not do raw source operations.
                 - `True`: Only do raw source operations.
                 - `'auto'`: Only do raw source operations if the normal operation fails in a way that raw might not.
+                - `None`: Use default.
+            - `elif_`: How to handle lone `If` statements as the only statements in an `If` statement `orelse` field.
+                - `True`: If putting a single `If` statement to an `orelse` field of a parent `If` statement then
+                    put it as an `elif`.
+                - `False`: Always put as a standalone `If` statement.
                 - `None`: Use default.
 
         **Returns:**
