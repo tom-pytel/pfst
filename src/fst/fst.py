@@ -15,7 +15,7 @@ from .shared import (
     STMTISH, STMTISH_OR_MOD, BLOCK, BLOCK_OR_MOD, SCOPE, SCOPE_OR_MOD, NAMED_SCOPE,
     NAMED_SCOPE_OR_MOD, ANONYMOUS_SCOPE, PARENTHESIZABLE, HAS_DOCSTRING,
     re_empty_line_start, re_empty_line, re_line_continuation, re_line_end_cont_or_comment,
-    Code,
+    Code, Mode,
     _next_pars, _prev_pars,
     _params_offset, _fixup_field_body, _multiline_str_continuation_lns, _multiline_fstr_continuation_lns,
 )
@@ -375,22 +375,26 @@ class FST:
 
         return child
 
-    def __new__(cls, ast_or_src: AST | str | bytes | list[str] | None = None,
-                parent_or_lines: Union['FST', list[str], None] = None, pfield: astfield | None = None, **kwargs):
-        """Create a new individual `FST` node or full tree from `AST` with `lines` or create from just an `AST` or just
-        source.
+    def __new__(cls,
+                ast_or_src: AST | str | bytes | list[str] | None = None,
+                parent_or_lines_or_mode: Union['FST', list[str], Mode, None] = None,
+                pfield: astfield | None = None,
+                /, **kwargs):
+        """Create a new individual `FST` node or full tree. There are three ways to create an `FST` directly:
+
+        TODO: document
 
         **Parameters:**
         - `ast_or_src`: `AST` node for `FST` or source code in the form of a `str`, encoded `bytes` or a list of lines.
             If an `AST` then will be processed differently depending on if creating child node, top level node or using
-            this as a shortcut.
-        - `parent_or_lines`: Parent node for this child node or lines for a root node creating a new tree. If `pfield`
-            is none and this as well then the call is a shortcut to create a full tree from an `AST` node or source
-            provided in `ast_or_src`.
+            this as a shortcut for a full `fromsrc()` or `fromast()`.
+        - `parent_or_lines_or_mode`: Parent node for this child node or lines for a root node creating a new tree. If
+            `pfield` is `None` and this is a shortcut to create a full tree from an `AST` node or source provided in
+            `ast_or_src`.
         - `pfield`: `astfield` indication position in parent of this node. If provided then creating a simple child node
-            and it is created with the `self.parent_or_lines` node as parent and `self.pfield` set to passed params. If
-            `None` then it means the creation of a full new `FST` tree and this is the root node with `parent_or_lines`
-            providing the source.
+            and it is created with the `self.parent` set to `parent_or_lines_or_mode` node and `self.pfield` set to
+            this. If `None` then it means the creation of a full new `FST` tree and this is the root node with
+            `parent_or_lines_or_mode` providing the source.
         - `kwargs`: Contextual parameters:
             - `from_`: If this is provided then it must be an `FST` node from which this node is being created. This
                 allows to copy parse parameters and already determined default indentation.
@@ -398,24 +402,25 @@ class FST:
                 used for any `AST` reparse done on this tree. Only valid when creating a root node.
             - `indent`: Indentation string to use as default indentation. If not provided and not gotten from `from_`
                 then indentation will be inferred from source. Only valid when creating a root node.
-            - `filename`, `mode`, `type_comments` and `feature_version`: If creating from an `AST` or source only then
-                these are the parameteres passed to the respective `.new()`, `.fromsrc()` or `.fromast()` functions.
-                Only valid when `parent_or_lines` and `pfield` are `None`.
+            - `filename`, `type_comments` and `feature_version`: If creating from an `AST` or source only then these are
+                the parameteres passed to the respective `.new()`, `.fromsrc()` or `.fromast()` functions. Only valid
+                when `parent_or_lines_or_mode` and `pfield` are `None`.
         """
 
-        if pfield is None and parent_or_lines is None:  # top level shortcut
-            params = {k: v for k in ('filename', 'mode', 'type_comments', 'feature_version')
+        if pfield is None and not isinstance(parent_or_lines_or_mode, list):  # top level shortcut
+            params = {k: v for k in ('filename', 'type_comments', 'feature_version')
                       if (v := kwargs.get(k, k)) is not k}  # k used as sentinel
 
             if from_ := kwargs.get('from_'): # copy parse params from source tree
                 params = {**from_.root.parse_params, **params}
 
             if ast_or_src is None:
-                return FST.new(**params)
+                return FST.new(mode='exec' if parent_or_lines_or_mode is None else parent_or_lines_or_mode, **params)
             if isinstance(ast_or_src, AST):
-                return FST.fromast(ast_or_src, **params)
+                return FST.fromast(ast_or_src, mode=parent_or_lines_or_mode, **params)
 
-            return FST.fromsrc(ast_or_src, **params)
+            return FST.fromsrc(ast_or_src, mode='any' if parent_or_lines_or_mode is None else parent_or_lines_or_mode,
+                               **params)
 
         # creating actual node
 
@@ -429,8 +434,8 @@ class FST:
         self._cache = {}
 
         if pfield is not None:
-            self.parent = parent_or_lines
-            self.root   = parent_or_lines.root
+            self.parent = parent_or_lines_or_mode
+            self.root   = parent_or_lines_or_mode.root
 
             return self
 
@@ -438,7 +443,8 @@ class FST:
 
         self.parent = None
         self.root   = self
-        self._lines = [bistr(s) for s in parent_or_lines] if kwargs.get('lcopy', True) else parent_or_lines
+        self._lines = ([bistr(s) for s in parent_or_lines_or_mode] if kwargs.get('lcopy', True) else
+                       parent_or_lines_or_mode)
 
         if from_ := kwargs.get('from_'):  # copy params from source tree
             from_root         = from_.root
@@ -458,7 +464,7 @@ class FST:
         if self.indent == '?':  # infer indentation from source, just use first indentation found for performance, don't try to find most common or anything like that
             for a in ast_or_src.body:
                 if isinstance(a, (FunctionDef, AsyncFunctionDef, ClassDef, With, AsyncWith, ExceptHandler,
-                                    match_case)):  # we check ExceptHandler and match_case because they may be supported as standalone parsed elements eventually
+                                  match_case)):  # we check ExceptHandler and match_case because they may be supported as standalone parsed elements eventually
                     indent = a.body[0].f.get_indent()
 
                 elif isinstance(a, (For, AsyncFor, While, If)):
@@ -497,7 +503,7 @@ class FST:
 
         **Parameters:**
         - `filename`: `ast.parse()` parameter.
-        - `mode`: `ast.parse()` parameter.
+        - `mode`: `ast.parse()` parameter, can only be `'exec'`, `'eval'` or `'single'` here.
         - `type_comments`: `ast.parse()` parameter.
         - `feature_version`: `ast.parse()` parameter.
 
@@ -514,21 +520,19 @@ class FST:
         elif mode == 'single':
             ast = Interactive(body=[])
         else:
-            raise ValueError(f"invalid mode '{mode}'")
+            raise ValueError(f"invalid mode '{mode}' for blank FST")
 
-        return FST(ast, [''], parse_params=parse_params)
+        return FST(ast, [bistr('')], parse_params=parse_params, lcopy=False)
 
     @staticmethod
-    def fromsrc(src: str | bytes | list[str], filename: str = '<unknown>',
-                mode: Literal['exec', 'eval', 'single'] = 'exec', *,
+    def fromsrc(src: str | bytes | list[str], filename: str = '<unknown>', mode: Mode = 'exec', *,
                 type_comments: bool = False, feature_version: tuple[int, int] | None = None) -> 'FST':
         """Parse and create a new `FST` tree from source, preserving the original source and locations.
 
         **Parameters:**
-        - `source`: The source to parse as a single `str`, `bytes` or list of individual line strings (without
-            newlines).
+        - `src`: The source to parse as a single `str`, `bytes` or list of individual line strings (without newlines).
         - `filename`: `ast.parse()` parameter.
-        - `mode`: `ast.parse()` parameter.
+        - `mode`: Parse mode, extended `ast.parse()` parameter, see `FST()`.
         - `type_comments`: `ast.parse()` parameter.
         - `feature_version`: `ast.parse()` parameter.
 
@@ -537,75 +541,57 @@ class FST:
         """
 
         if isinstance(src, bytes):
-            src = src.decode()
-
-        if isinstance(src, str):
+            lines = (src := src.decode())
+        elif isinstance(src, str):
             lines = src.split('\n')
-
         else:
             lines = src
             src   = '\n'.join(lines)
 
         parse_params = dict(filename=filename, type_comments=type_comments, feature_version=feature_version)
-        ast          = ast_parse(src, mode=mode, **parse_params)
+        ast          = FST._parse(src, mode, parse_params)
 
-        return FST(ast, lines, parse_params=parse_params)  # not just convert to bistr but to make a copy at the same time
+        return FST(ast, lines, parse_params=parse_params)
 
     @staticmethod
-    def fromast(ast: AST, filename: str = '<unknown>', mode: Literal['exec', 'eval', 'single'] | None = None, *,
-                type_comments: bool | None = False, feature_version=None,
-                calc_loc: bool | Literal['copy'] = True) -> 'FST':
-        """Add `FST` to existing `AST` tree, optionally copying positions from reparsed `AST` (default) or whole `AST`
-        for new `FST`.
-
-        WARNING! Do not set `calc_loc` to `False` unless you parsed the `AST` from a previous output of `ast.unparse()`,
-        otherwise there will almost certainly be problems!
+    def fromast(ast: AST, filename: str = '<unknown>', mode: Mode | Literal[False] | None = None, *,
+                type_comments: bool | None = False, feature_version=None) -> 'FST':
+        """Unparse and reparse an AST for new `FST` (the reparse is necessary to make sure locations are correct).
 
         **Parameters:**
         - `ast`: The root `AST` node.
         - `filename`: `ast.parse()` parameter.
-        - `mode`: `ast.parse()` parameter. Can be `exec`, `eval, `single` or `None`, in which case the appropriate mode
-            is determined from the structure of the tree itself.
+        - `mode`: Parse mode, extended `ast.parse()` parameter, see `FST()`. Two special values are added:
+            - `None`: This will attempt to reparse to the same node type as was passed in. This is the default and all
+                other values should be considered overrides for special cases.
+            - `False`: This will skip the reparse and just `ast.unparse()` the `AST` to generate source for the `FST`.
+                Use this only if you are absolutely certain that the `AST` unparsed source will correspond with the
+                locations already present in the `AST`. This is almost never the case unless the `AST` was
+                `ast.parse()`d from an explicitly `ast.unparse()`d `AST`.
         - `type_comments`: `ast.parse()` parameter.
         - `feature_version`: `ast.parse()` parameter.
-        - `calc_loc`: Get actual node positions by unparsing then parsing again. Use when you are not certain node
-            positions are correct or even present. Updates original `AST` unless set to "copy", in which case a copied
-            `AST` is used. Set to `False` when you know positions are correct and want to use given `AST`
 
         **Returns:**
         - `FST`: The augmented tree with `.f` attributes added to each `AST` node for `FST` access.
         """
 
-        src   = FST._unparse(ast)
-        lines = src.split('\n')
-
-
-        # TODO: unparenthesize unnecessarily parenthesized expressions (NamedExpr, Yield, YieldFrom)?
-
-
         if type_comments is None:
             type_comments = has_type_comments(ast)
 
         parse_params = dict(filename=filename, type_comments=type_comments, feature_version=feature_version)
+        src          = FST._unparse(ast)
+        lines        = src.split('\n')
 
-        if calc_loc:
-            astp = ast_parse(src, **parse_params)
-            cls  = ast.__class__
+        if mode is not False:
+            org = ast
+            ast = FST._parse(src, ast.__class__ if mode is None else mode, parse_params)
 
-            if not (astp.__class__ is cls or (len(astp.body) == 1 and (astp := astp.body[0]).__class__ is cls) or
-                    (isinstance(astp, Expr) and (astp := astp.value).__class__ is cls)):
-                raise RuntimeError('could not reproduce ast')
-
-            if calc_loc == 'copy':
-                if not compare_asts(astp, ast, type_comments=type_comments, raise_=False):
-                    raise RuntimeError('could not reparse ast identically')
-
-                ast = astp
-
-            elif not copy_attributes(astp, ast, compare=True, type_comments=type_comments, raise_=False):
+            try:
+                compare_asts(ast, org, type_comments=type_comments, raise_=True)
+            except WalkFail:
                 raise RuntimeError('could not reparse ast identically')
 
-        return FST(ast, lines, parse_params=parse_params)
+        return FST(ast, lines, parse_params=parse_params, indent='    ')
 
     @staticmethod
     def get_option(option: str, options: dict[str, Any] = {}) -> Any:

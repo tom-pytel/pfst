@@ -9,7 +9,7 @@ from .astutil import *
 from .astutil import TryStar, type_param
 
 from .shared import (
-    Code, NodeError, _next_src, _shortstr
+    Code, Mode, NodeError, _next_src, _shortstr
 )
 
 _re_except = re.compile(r'except\b')
@@ -94,7 +94,7 @@ def _unparse(ast: AST) -> AST:
 
 
 @staticmethod
-def _parse(src: str, mode: str | type[AST] | None = None, parse_params: dict = {}) -> AST:
+def _parse(src: str, mode: Mode = 'any', parse_params: dict = {}) -> AST:
     """Parse any source to an AST, including things which normal `ast.parse()` doesn't handle like individual
     `comprehension`s. Can be given a target type to parse or else will try to various parse methods until it finds one
     that succeeds (if any).
@@ -149,7 +149,7 @@ def _parse(src: str, mode: str | type[AST] | None = None, parse_params: dict = {
             type `ast.expr` is the same as passing `'expr'` but there is not `AST` type which will specify one of the
             other expr parse modes like `'expr_slice'`. Likewise `Module`, `'exec'` and `'stmts'` all specify the same
             parse mode.
-        - `None`: Attempt parse `stmtishs`. If only one element then return the element itself instead of the `Module`.
+        - `any`: Attempt parse `stmtishs`. If only one element then return the element itself instead of the `Module`.
             If that element is an `Expr` then return the expression instead of the statement. If nothing present then
             return empty `Module`. Doesn't attempt any of the other parse modes because the syntax is overlapping and
             too similar. Will never return an `Expression` or `Interactive`.
@@ -1000,6 +1000,7 @@ def _code_as_identifier_alias(code: Code, parse_params: dict = {}) -> str:
 __all_private__ = [n for n in globals() if n not in _GLOBALS]
 
 _PARSE_MODE_FUNCS = {
+    'any':               lambda src, parse_params: reduce_ast(_parse_stmtishs(src, parse_params), True),
     'exec':              _parse_Module,
     'eval':              _parse_Expression,
     'single':            _parse_Interactive,
@@ -1043,7 +1044,6 @@ _PARSE_MODE_FUNCS = {
     withitem:            _parse_withitem,
     pattern:             _parse_pattern,
     type_param:          _parse_type_param,
-    None:                lambda src, parse_params: reduce_ast(_parse_stmtishs(src, parse_params), True),
 }
 
 from .fst import FST  # this imports a fake FST which is replaced in globals() when fst.py finishes loading

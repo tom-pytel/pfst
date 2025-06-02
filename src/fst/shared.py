@@ -93,7 +93,36 @@ _AST_DEFAULT_BODY_FIELD  = {cls: field for field, classes in [
 _GLOBALS = globals() | {'_GLOBALS': None}
 # ----------------------------------------------------------------------------------------------------------------------
 
-Code = Union['FST', AST, list[str], str]
+Code = Union['FST', AST, list[str], str]  ; """Code types accepted for put to `FST`."""
+Mode = Union[type[AST], Literal[
+    'any',
+    'exec',
+    'eval',
+    'single',
+    'stmtishs',
+    'stmtish',
+    'stmts',
+    'stmt',
+    'ExceptHandlers',
+    'ExceptHandler',
+    'match_cases',
+    'match_case',
+    'expr',
+    'expr_slice',
+    'expr_slice_tupelt',
+    'expr_call_arg',
+    'comprehension',
+    'arguments',
+    'arguments_lambda',
+    'arg',
+    'keyword',
+    'alias',
+    'alias_dotted',
+    'alias_star',
+    'withitem',
+    'pattern',
+    'type_param',
+]]  ; """Parse modes."""
 
 
 class NodeError(ValueError):
