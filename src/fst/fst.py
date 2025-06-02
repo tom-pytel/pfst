@@ -247,10 +247,10 @@ class FST:
                 loc = self._loc_withitem()
             elif isinstance(ast, match_case):
                 loc = self._loc_match_case()
+            elif isinstance(ast, (boolop, operator, unaryop, cmpop)):
+                loc = self._loc_operator()
             elif not self.parent:
                 loc = fstloc(0, 0, len(ls := self._lines) - 1, len(ls[-1]))
-            elif isinstance(ast, (operator, unaryop, cmpop)):
-                loc = self._loc_operator()
             else:
                 loc = None
 

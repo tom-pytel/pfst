@@ -3,7 +3,7 @@
 import re
 from ast import *
 from ast import parse as ast_parse, unparse as ast_unparse
-from typing import Callable, Literal
+from typing import Callable
 
 from .astutil import *
 from .astutil import TryStar, type_param
@@ -26,7 +26,7 @@ def _offset_linenos(ast: AST, delta: int) -> AST:
 
 
 def _code_as_op(code: Code, ast_type: type[AST], parse_params: dict, opstr2cls: dict[str, type[AST]],
-                 opcls2str: dict[type[AST], str] = OPCLS2STR) -> 'FST':
+                opcls2str: dict[type[AST], str] = OPCLS2STR) -> 'FST':
     """Convert `code` to an operation `FST` if possible."""
 
     if isinstance(code, FST):
@@ -36,7 +36,10 @@ def _code_as_op(code: Code, ast_type: type[AST], parse_params: dict, opstr2cls: 
         if not isinstance(code.a, ast_type):
             raise NodeError(f'expecting {ast_type.__name__}, got {code.a.__class__.__name__}')
 
-        if (src := code.get_src(*code.loc)) != (expected := opcls2str[code.a.__class__]):
+        if not (loc := code.loc):
+            raise NodeError(f'{ast_type.__name__} FST does not have a location')
+
+        if (src := code.get_src(*loc)) != (expected := opcls2str[code.a.__class__]):
             raise NodeError(f'expecting {expected!r}, got {_shortstr(src)!r}')
 
         return code

@@ -346,17 +346,38 @@ def _loc_block_header_end(self: 'FST', ret_bound: bool = False) -> fstloc | tupl
 
 
 def _loc_operator(self: 'FST') -> fstloc | None:
-    """Get location of `operator`, `unaryop` or `cmpop` from source if possible. `boolop` is not done at all because
-    a single operator can be in multiple location in a `BoolOp` and we want to be consistent."""
+    """Get location of `operator`, `unaryop` or `cmpop` from source if possible. `boolop` has no location if it has a
+    parent because in this case it can be in multiple location in a `BoolOp` and we want to be consistent."""
 
     # assert isinstance(self.s, (operator, unaryop, cmpop))
 
     ast = self.a
 
-    if not (parent := self.parent) or not (op := OPCLS2STR.get(ast.__class__)):
+    if not (op := OPCLS2STR.get(ast.__class__)):
         return None
 
-    lines   = self.root._lines
+    lines = self.root._lines
+
+    if not (parent := self.parent):  # standalone
+        ln, col, src = _next_src(lines, 0, 0, len(lines) - 1, 0x7fffffffffffffff)  # must be there
+
+        if not isinstance(ast, (NotIn, IsNot)):  # simple one element operator means we are done
+            assert src == op or (isinstance(ast, operator) and src == op + '=')
+
+            return fstloc(ln, col, ln, col + len(src))
+
+        op, op2 = op.split(' ')
+
+        assert src == op
+
+        end_ln, end_col, src = _next_src(lines, ln, col + len(op), len(lines) - 1, 0x7fffffffffffffff)  # must be there
+
+        assert src == op2
+
+        return fstloc(ln, col, end_ln, end_col + len(op2))
+
+    # has a parent
+
     parenta = parent.a
 
     if isinstance(parenta, UnaryOp):
