@@ -29849,25 +29849,27 @@ def f():
             ('stmtish',           FST._parse_stmtish,           AnnAssign,      'i: int = 1'),
             ('stmtish',           FST._parse_stmtish,           ExceptHandler,  'except: pass'),
             ('stmtish',           FST._parse_stmtish,           match_case,     'case None: pass'),
-            ('stmtish',           FST._parse_stmtish,           SyntaxError,    'i: int = 1\nj'),
+            ('stmtish',           FST._parse_stmtish,           NodeError,      'i: int = 1\nj'),
 
             ('stmts',             FST._parse_stmts,             Module,         'i: int = 1\nj'),
             ('stmts',             FST._parse_stmts,             SyntaxError,    'except Exception: pass\nexcept: pass'),
             ('stmt',              FST._parse_stmt,              AnnAssign,      'i: int = 1'),
             ('stmt',              FST._parse_stmt,              Expr,           'j'),
-            ('stmt',              FST._parse_stmt,              SyntaxError,    'i: int = 1\nj'),
+            ('stmt',              FST._parse_stmt,              NodeError,      'i: int = 1\nj'),
             ('stmt',              FST._parse_stmt,              SyntaxError,    'except: pass'),
 
             ('ExceptHandlers',    FST._parse_ExceptHandlers,    Module,         'except Exception: pass\nexcept: pass'),
+            ('ExceptHandlers',    FST._parse_ExceptHandlers,    NodeError,      'except Exception: pass\nexcept: pass\nelse: pass'),
+            ('ExceptHandlers',    FST._parse_ExceptHandlers,    NodeError,      'except Exception: pass\nexcept: pass\nfinally: pass'),
             ('ExceptHandlers',    FST._parse_ExceptHandlers,    SyntaxError,    'i: int = 1\nj'),
             ('ExceptHandler',     FST._parse_ExceptHandler,     ExceptHandler,  'except: pass'),
-            ('ExceptHandler',     FST._parse_ExceptHandler,     SyntaxError,    'except Exception: pass\nexcept: pass'),
+            ('ExceptHandler',     FST._parse_ExceptHandler,     NodeError,      'except Exception: pass\nexcept: pass'),
             ('ExceptHandler',     FST._parse_ExceptHandler,     SyntaxError,    'i: int = 1'),
 
             ('match_cases',       FST._parse_match_cases,       Module,         'case None: pass\ncase 1: pass'),
             ('match_cases',       FST._parse_match_cases,       SyntaxError,    'i: int = 1'),
             ('match_case',        FST._parse_match_case,        match_case,     'case None: pass'),
-            ('match_case',        FST._parse_match_case,        SyntaxError,    'case None: pass\ncase 1: pass'),
+            ('match_case',        FST._parse_match_case,        NodeError,      'case None: pass\ncase 1: pass'),
             ('match_case',        FST._parse_match_case,        SyntaxError,    'i: int = 1'),
 
             ('expr',              FST._parse_expr,              Name,           'j'),
@@ -29942,9 +29944,10 @@ def f():
             ('alias_star',        FST._parse_alias_star,        SyntaxError,    '* as c'),
 
             ('withitem',          FST._parse_withitem,          withitem,       'a'),
-            ('withitem',          FST._parse_withitem,          NodeError,      'a, b'),
+            ('withitem',          FST._parse_withitem,          withitem,       'a, b'),
             ('withitem',          FST._parse_withitem,          withitem,       '(a, b)'),
             ('withitem',          FST._parse_withitem,          withitem,       'a as b'),
+            ('withitem',          FST._parse_withitem,          NodeError,      'a, b as c'),
             ('withitem',          FST._parse_withitem,          NodeError,      'a as b, x as y'),
             ('withitem',          FST._parse_withitem,          withitem,       '(a)'),
             ('withitem',          FST._parse_withitem,          SyntaxError,    '(a as b)'),
@@ -29970,17 +29973,17 @@ def f():
 
             (stmt,                FST._parse_stmt,              AnnAssign,      'i: int = 1'),
             (stmt,                FST._parse_stmt,              Expr,           'j'),
-            (stmt,                FST._parse_stmt,              SyntaxError,    'i: int = 1\nj'),
+            (stmt,                FST._parse_stmt,              NodeError,      'i: int = 1\nj'),
             (stmt,                FST._parse_stmt,              SyntaxError,    'except: pass'),
             (AnnAssign,           FST._parse_stmt,              AnnAssign,      'i: int = 1'),
             (Expr,                FST._parse_stmt,              Expr,           'j'),
 
             (ExceptHandler,       FST._parse_ExceptHandler,     ExceptHandler,  'except: pass'),
-            (ExceptHandler,       FST._parse_ExceptHandler,     SyntaxError,    'except Exception: pass\nexcept: pass'),
+            (ExceptHandler,       FST._parse_ExceptHandler,     NodeError,      'except Exception: pass\nexcept: pass'),
             (ExceptHandler,       FST._parse_ExceptHandler,     SyntaxError,    'i: int = 1'),
 
             (match_case,          FST._parse_match_case,        match_case,     'case None: pass'),
-            (match_case,          FST._parse_match_case,        SyntaxError,    'case None: pass\ncase 1: pass'),
+            (match_case,          FST._parse_match_case,        NodeError,      'case None: pass\ncase 1: pass'),
             (match_case,          FST._parse_match_case,        SyntaxError,    'i: int = 1'),
 
             (expr,                FST._parse_expr,              Name,           'j'),
@@ -29990,6 +29993,8 @@ def f():
             (expr,                FST._parse_expr,              SyntaxError,    'a:b:c'),
             (Name,                FST._parse_expr,              Name,           'j'),
             (Starred,             FST._parse_expr,              Starred,        '*s'),
+
+            (Slice,               FST._parse_expr_slice,        Slice,          'a:b'),
 
             (comprehension,       FST._parse_comprehension,     comprehension,  'for u in v'),
             (comprehension,       FST._parse_comprehension,     comprehension,  'for u in v if w'),
@@ -30021,7 +30026,7 @@ def f():
             (alias,               FST._parse_alias,             SyntaxError,    '* as c'),
 
             (withitem,            FST._parse_withitem,          withitem,       'a'),
-            (withitem,            FST._parse_withitem,          NodeError,      'a, b'),
+            (withitem,            FST._parse_withitem,          withitem,       'a, b'),
             (withitem,            FST._parse_withitem,          withitem,       '(a, b)'),
             (withitem,            FST._parse_withitem,          withitem,       'a as b'),
             (withitem,            FST._parse_withitem,          NodeError,      'a as b, x as y'),
@@ -30053,31 +30058,49 @@ def f():
             (MatchAs,             FST._parse_pattern,           MatchAs,        '1 as as_var'),
             (MatchOr,             FST._parse_pattern,           MatchOr,        '1 | 2 | 3'),
             (MatchAs,             FST._parse_pattern,           MatchAs,        '_'),
+
+            (None,                FST._parse_stmtishs,          Module,         'i: int = 1\nj'),
+            (None,                FST._parse_stmtishs,          Module,         'except Exception: pass\nexcept: pass'),
+            (None,                FST._parse_stmtishs,          Module,         'case None: pass\ncase 1: pass'),
+            (None,                FST._parse_stmtish,           AnnAssign,      'i: int = 1'),
+            (None,                FST._parse_stmtish,           ExceptHandler,  'except: pass'),
+            (None,                FST._parse_stmtish,           match_case,     'case None: pass'),
+            (None,                FST._parse_stmts,             Module,         'i: int = 1\nj'),
+            (None,                FST._parse_stmt,              AnnAssign,      'i: int = 1'),
+            (None,                FST._parse_ExceptHandlers,    Module,         'except Exception: pass\nexcept: pass'),
+            (None,                FST._parse_ExceptHandler,     ExceptHandler,  'except: pass'),
+            (None,                FST._parse_match_cases,       Module,         'case None: pass\ncase 1: pass'),
+            (None,                FST._parse_match_case,        match_case,     'case None: pass'),
+            (None,                FST._parse_expr,              Name,           'j'),
+            (None,                FST._parse_expr,              Starred,        '*s'),
+            (None,                FST._parse_expr,              SyntaxError,    '*not s'),
+            (None,                FST._parse_stmt,              AnnAssign,      'a:b'),
+            (None,                FST._parse_expr,              SyntaxError,    'a:b:c'),
         ]
 
         if sys.version_info[:2] >= (3, 11):
             tests.extend([
-            ('ExceptHandler',     FST._parse_ExceptHandler,     ExceptHandler,  'except* Exception: pass'),
+                ('ExceptHandler',     FST._parse_ExceptHandler,     ExceptHandler,  'except* Exception: pass'),
 
-            ('expr_slice',        FST._parse_expr_slice,        Tuple,          '*s'),
-            ('expr_slice',        FST._parse_expr_slice,        Tuple,          '*not s'),
-            ('expr_slice_tupelt', FST._parse_expr_slice_tupelt, Starred,        '*not s'),
+                ('expr_slice',        FST._parse_expr_slice,        Tuple,          '*s'),
+                ('expr_slice',        FST._parse_expr_slice,        Tuple,          '*not s'),
+                ('expr_slice_tupelt', FST._parse_expr_slice_tupelt, Starred,        '*not s'),
 
-            (ExceptHandler,       FST._parse_ExceptHandler,     ExceptHandler,  'except* Exception: pass'),
+                (ExceptHandler,       FST._parse_ExceptHandler,     ExceptHandler,  'except* Exception: pass'),
             ])
 
         if sys.version_info[:2] >= (3, 12):
             tests.extend([
-            ('type_param',        FST._parse_type_param,        TypeVar,        'a: int = int'),
-            ('type_param',        FST._parse_type_param,        ParamSpec,      '**a = {T: int, U: str}'),
-            ('type_param',        FST._parse_type_param,        TypeVarTuple,   '*a = (int, str)'),
+                ('type_param',        FST._parse_type_param,        TypeVar,        'a: int = int'),
+                ('type_param',        FST._parse_type_param,        ParamSpec,      '**a = {T: int, U: str}'),
+                ('type_param',        FST._parse_type_param,        TypeVarTuple,   '*a = (int, str)'),
 
-            (type_param,          FST._parse_type_param,        TypeVar,        'a: int = int'),
-            (TypeVar,             FST._parse_type_param,        TypeVar,        'a: int = int'),
-            (type_param,          FST._parse_type_param,        ParamSpec,      '**a = {T: int, U: str}'),
-            (ParamSpec,           FST._parse_type_param,        ParamSpec,      '**a = {T: int, U: str}'),
-            (type_param,          FST._parse_type_param,        TypeVarTuple,   '*a = (int, str)'),
-            (TypeVarTuple,        FST._parse_type_param,        TypeVarTuple,   '*a = (int, str)'),
+                (type_param,          FST._parse_type_param,        TypeVar,        'a: int = int'),
+                (TypeVar,             FST._parse_type_param,        TypeVar,        'a: int = int'),
+                (type_param,          FST._parse_type_param,        ParamSpec,      '**a = {T: int, U: str}'),
+                (ParamSpec,           FST._parse_type_param,        ParamSpec,      '**a = {T: int, U: str}'),
+                (type_param,          FST._parse_type_param,        TypeVarTuple,   '*a = (int, str)'),
+                (TypeVarTuple,        FST._parse_type_param,        TypeVarTuple,   '*a = (int, str)'),
             ])
 
         for mode, func, res, src in tests:

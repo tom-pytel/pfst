@@ -21,8 +21,9 @@ It works by adding `FST` nodes to existing `AST` nodes as an `.f` attribute whic
 ## Todo
 
 * Reconcile AST nodes modified not using FST machinery.
+* Individual sequence slice non-raw paths.
+* Redo comment handling, where to put wrt comments, interface for modifying just those.
 * Redo sequence slices for same comment behavior as statements.
-  * Implement individual sequence slice non-raw paths.
-* Clean up comment handling, where to put wrt comments, interface for modifying just those.
+* Support put/get/parse JoinedStr/FormattedValue and TemplateStr/Interpolation.
 
 Trivia: The "F" in FST stands for "Fun".

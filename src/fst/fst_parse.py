@@ -106,10 +106,7 @@ def _parse(src: str, mode: str | type[AST] | None = None, parse_params: dict = {
     - `src`: The source to parse.
     - `mode`: Either one of the standard `ast.parse()` modes `exec`, `eval` or `single` to parse to that type of module
         or one of our specific strings like `'stmtishs'` or an actual `AST` type to parse to. If the mode is provided
-        and cannot parse to the specified target then an error is raised and no other parse types are tried. If is
-        `None` then will attempt various parse types and return the first one that succeeds. In case of a single
-        expression, will return that over an `Expr` or a `Module` containing a single `Expr`. `mode=None` will never
-        return an `Expression` or `Interactive`.
+        and cannot parse to the specified target then an error is raised and no other parse types are tried.
         Options are:
         - `'exec'`: Parse to an `Module`. Same as passing `Module` type.
         - `'eval'`: Parse to an `Expression`. Same as passing `Expression` type.
@@ -152,6 +149,10 @@ def _parse(src: str, mode: str | type[AST] | None = None, parse_params: dict = {
             type `ast.expr` is the same as passing `'expr'` but there is not `AST` type which will specify one of the
             other expr parse modes like `'expr_slice'`. Likewise `Module`, `'exec'` and `'stmts'` all specify the same
             parse mode.
+        - `None`: Attempt parse `stmtishs`. If only one element then return the element itself instead of the `Module`.
+            If that element is an `Expr` then return the expression instead of the statement. If nothing present then
+            return empty `Module`. Doesn't attempt any of the other parse modes because the syntax is overlapping and
+            too similar. Will never return an `Expression` or `Interactive`.
 
     - `parse_params`: Dictionary of optional parse parameters to pass to `ast.parse()`, can contain `filename`,
         `type_comments` and `feature_version`.
@@ -222,7 +223,7 @@ def _parse_stmtish(src: str, parse_params: dict = {}) -> AST:
     mod = _parse_stmtishs(src, parse_params)
 
     if len(body := mod.body) != 1:
-        raise SyntaxError('expecting exactly one stmt, ExceptHandler or match_case')
+        raise NodeError('expecting exactly one stmt, ExceptHandler or match_case')
 
     return body[0]
 
@@ -241,7 +242,7 @@ def _parse_stmt(src: str, parse_params: dict = {}) -> AST:
     mod = _parse_stmts(src, parse_params)
 
     if len(body := mod.body) != 1:
-        raise SyntaxError('expecting exactly one stmt')
+        raise NodeError('expecting exactly one stmt')
 
     return body[0]
 
@@ -261,14 +262,14 @@ def _parse_ExceptHandlers(src: str, parse_params: dict = {}) -> AST:
 
         else:
             if len(ast.body) == 1:
-                raise SyntaxError("not expecting 'finally' block") from None
+                raise NodeError("not expecting 'finally' block") from None
             else:
-                raise SyntaxError('expecting only exception handlers`')
+                raise NodeError('expecting only exception handlers`')
 
         raise
 
     if ast.orelse:
-        raise SyntaxError("not expecting 'else' block")
+        raise NodeError("not expecting 'else' block")
 
     return Module(body=_offset_linenos(ast, -1).handlers, type_ignores=[])
 
@@ -280,7 +281,7 @@ def _parse_ExceptHandler(src: str, parse_params: dict = {}) -> AST:
     mod = _parse_ExceptHandlers(src, parse_params)
 
     if len(body := mod.body) != 1:
-        raise SyntaxError('expecting exactly one ExceptHandler')
+        raise NodeError('expecting exactly one ExceptHandler')
 
     return body[0]
 
@@ -333,7 +334,7 @@ def _parse_match_case(src: str, parse_params: dict = {}) -> AST:
     mod = _parse_match_cases(src, parse_params)
 
     if len(body := mod.body) != 1:
-        raise SyntaxError('expecting exactly one match_case')
+        raise NodeError('expecting exactly one match_case')
 
     return body[0]
 
@@ -498,7 +499,11 @@ def _parse_withitem(src: str, parse_params: dict = {}) -> AST:
     items = ast_parse(f'with (\n{src}): pass', **parse_params).body[0].items
 
     if len(items) != 1:
-        raise NodeError('expecting single withitem ')
+        if all(not i.optional_vars for i in items):  # may be unparenthesized Tuple
+            items = ast_parse(f'with ((\n{src})): pass', **parse_params).body[0].items
+
+        if len(items) != 1:
+            raise NodeError('expecting single withitem')
 
     return _offset_linenos(items[0], -1)
 
@@ -1029,6 +1034,7 @@ _PARSE_MODE_FUNCS = {
     ExceptHandler:       _parse_ExceptHandler,
     match_case:          _parse_match_case,
     expr:                _parse_expr,
+    Slice:               _parse_expr_slice,
     comprehension:       _parse_comprehension,
     arguments:           _parse_arguments,
     arg:                 _parse_arg,
@@ -1037,6 +1043,7 @@ _PARSE_MODE_FUNCS = {
     withitem:            _parse_withitem,
     pattern:             _parse_pattern,
     type_param:          _parse_type_param,
+    None:                lambda src, parse_params: reduce_ast(_parse_stmtishs(src, parse_params), True),
 }
 
 from .fst import FST  # this imports a fake FST which is replaced in globals() when fst.py finishes loading
