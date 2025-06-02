@@ -897,7 +897,7 @@ def _code_as_boolop(code: Code, parse_params: dict = {}) -> 'FST':
 
 
 @staticmethod
-def _code_as_operator(code: Code, parse_params: dict = {}) -> 'FST':
+def _code_as_operator_bin(code: Code, parse_params: dict = {}) -> 'FST':
     """Convert `code` to a `operator` `FST` if possible."""
 
     return _code_as_op(code, operator, parse_params, _parse_operator_bin, OPSTR2CLS_BIN)

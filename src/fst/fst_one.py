@@ -16,7 +16,7 @@ from .shared import (
 
 from .fst_parse import (
     _code_as_expr, _code_as_expr_slice, _code_as_expr_slice_tupelt, _code_as_expr_call_arg,
-    _code_as_boolop, _code_as_operator, _code_as_operator_aug, _code_as_unaryop, _code_as_cmpop,
+    _code_as_boolop, _code_as_operator_bin, _code_as_operator_aug, _code_as_unaryop, _code_as_cmpop,
     _code_as_pattern, _code_as_comprehension, _code_as_arguments,
     _code_as_arguments_lambda, _code_as_arg, _code_as_keyword, _code_as_alias_dotted, _code_as_alias_star,
     _code_as_withitem, _code_as_type_param, _code_as_identifier, _code_as_identifier_dotted, _code_as_identifier_alias,
@@ -1401,7 +1401,7 @@ _PUT_ONE_HANDLERS = {
     (NamedExpr, 'target'):                (False, _put_one_exprish_required, _onestatic_target_Name), # expr
     (NamedExpr, 'value'):                 (False, _put_one_exprish_required, _onestatic_expr_required), # expr
     (BinOp, 'left'):                      (False, _put_one_exprish_required, _onestatic_expr_required), # expr
-    (BinOp, 'op'):                        (False, _put_one_op, onestatic(None, code_as=_code_as_operator)), # operator
+    (BinOp, 'op'):                        (False, _put_one_op, onestatic(None, code_as=_code_as_operator_bin)), # operator
     (BinOp, 'right'):                     (False, _put_one_exprish_required, _onestatic_expr_required), # expr
     (UnaryOp, 'op'):                      (False, _put_one_op, onestatic(None, code_as=_code_as_unaryop)), # unaryop
     (UnaryOp, 'operand'):                 (False, _put_one_exprish_required, _onestatic_expr_required), # expr

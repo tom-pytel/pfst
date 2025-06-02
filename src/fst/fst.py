@@ -2169,7 +2169,7 @@ class FST:
         _code_as_expr_slice_tupelt,
         _code_as_expr_call_arg,
         _code_as_boolop,
-        _code_as_operator,
+        _code_as_operator_bin,
         _code_as_operator_aug,
         _code_as_unaryop,
         _code_as_cmpop,
