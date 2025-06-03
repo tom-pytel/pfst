@@ -28624,6 +28624,20 @@ if sys.version_info[:2] >= (3, 11):
 
 if sys.version_info[:2] >= (3, 12):
     PARSE_TESTS.extend([
+        ('type_param',        FST._parse_type_param,        TypeVar,        'a: int'),
+        ('type_param',        FST._parse_type_param,        ParamSpec,      '**a'),
+        ('type_param',        FST._parse_type_param,        TypeVarTuple,   '*a'),
+
+        (type_param,          FST._parse_type_param,        TypeVar,        'a: int'),
+        (TypeVar,             FST._parse_type_param,        TypeVar,        'a: int'),
+        (type_param,          FST._parse_type_param,        ParamSpec,      '**a'),
+        (ParamSpec,           FST._parse_type_param,        ParamSpec,      '**a'),
+        (type_param,          FST._parse_type_param,        TypeVarTuple,   '*a'),
+        (TypeVarTuple,        FST._parse_type_param,        TypeVarTuple,   '*a'),
+    ])
+
+if sys.version_info[:2] >= (3, 13):
+    PARSE_TESTS.extend([
         ('type_param',        FST._parse_type_param,        TypeVar,        'a: int = int'),
         ('type_param',        FST._parse_type_param,        ParamSpec,      '**a = {T: int, U: str}'),
         ('type_param',        FST._parse_type_param,        TypeVarTuple,   '*a = (int, str)'),
@@ -28635,7 +28649,6 @@ if sys.version_info[:2] >= (3, 12):
         (type_param,          FST._parse_type_param,        TypeVarTuple,   '*a = (int, str)'),
         (TypeVarTuple,        FST._parse_type_param,        TypeVarTuple,   '*a = (int, str)'),
     ])
-
 
 
 def read(fnm):
@@ -30613,7 +30626,7 @@ def f():
         self.assertEqual('  ', FST.fromsrc('try: pass\nexcept:\n  pass\nelse: pass\nfinally: pass').indent)
         self.assertEqual('  ', FST.fromsrc('try:\n  pass\nexcept: pass\nelse: pass\nfinally: pass').indent)
 
-        if sys.version_info[:2] >= (3, 11):
+        if sys.version_info[:2] >= (3, 12):
             self.assertEqual('  ', FST.fromsrc('try:\n  pass\nexcept* Exception: pass').indent)
             self.assertEqual('  ', FST.fromsrc('try: pass\nexcept* Exception:\n  pass').indent)
             self.assertEqual('  ', FST.fromsrc('try: pass\nexcept* Exception: pass\nelse:\n  pass').indent)
@@ -36666,13 +36679,11 @@ if 1:
         f = parse('a = b').body[0].f
         self.assertRaises(ValueError, f.value.replace, 'c', to=f.targets[0], raw=False)
 
-        # generally reject FormattedValue and Slice
+        # reject Slice putting to expr
 
-        # f = parse('a = b').body[0].f
-        # s = parse('s[a:b]').body[0].value.slice.f.copy()
-        # v = parse('f"{a}"').body[0].value.values[0].f.copy()  # .src will be wrong on py < 3.12 but we only care about the AST
-        # self.assertRaises(NodeError, f.put, s, field='value', raw=False)
-        # self.assertRaises(NodeError, f.put, v, field='value', raw=False)
+        f = parse('a = b').body[0].f
+        s = parse('s[a:b]').body[0].value.slice.f.copy()
+        self.assertRaises(NodeError, f.put, s, field='value', raw=False)
 
         # slice in tuple
 
@@ -36715,7 +36726,7 @@ if 1:
         f.body[0].targets[0].put(g.a, 1, raw=False)
         self.assertEqual('a, *b = c', f.src)
 
-        if sys.version_info[:2] >= (3, 11):
+        if sys.version_info[:2] >= (3, 12):
             # except vs. except*
 
             f = FST('try:\n    pass\nexcept Exception:\n    pass', 'exec').body[0].handlers[0].copy()
