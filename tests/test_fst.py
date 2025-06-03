@@ -14308,7 +14308,7 @@ Module .. ROOT 0,0 -> 4,0
 if 1: pass
 elif 2:
     pass
-""", 'body[0]', 0, 1, 'orelse', {}, r"""if 3: break""", r"""
+""", 'body[0]', 0, 1, 'orelse', {'elif_': False}, r"""if 3: break""", r"""
 if 1: pass
 else:
     if 3: break
@@ -14397,7 +14397,7 @@ class cls:
     if 1: pass
     elif 2:
         pass
-""", 'body[0].body[0]', 0, 1, 'orelse', {}, r"""if 3: break""", r"""
+""", 'body[0].body[0]', 0, 1, 'orelse', {'elif_': False}, r"""if 3: break""", r"""
 class cls:
     if 1: pass
     else:
@@ -14475,7 +14475,7 @@ Module .. ROOT 0,0 -> 4,0
 if 1: pass
 elif 2:
     pass
-""", 'body[0]', 0, 1, 'orelse', {}, r"""if 3: break
+""", 'body[0]', 0, 1, 'orelse', {'elif_': False}, r"""if 3: break
 else:
     continue""", r"""
 if 1: pass
@@ -14530,7 +14530,7 @@ Module .. ROOT 0,0 -> 5,0
 if 1: pass
 elif 2:
     pass
-""", 'body[0].orelse[0]', 0, 0, 'orelse', {}, r"""if 3: break
+""", 'body[0].orelse[0]', 0, 0, 'orelse', {'elif_': False}, r"""if 3: break
 else:
     continue""", r"""
 if 1: pass
@@ -14600,7 +14600,7 @@ class cls:
     if 1: pass
     elif 2:
         pass
-""", 'body[0].body[0]', 0, 1, 'orelse', {}, r"""if 3: break
+""", 'body[0].body[0]', 0, 1, 'orelse', {'elif_': False}, r"""if 3: break
 else:
     continue""", r"""
 class cls:
@@ -14665,7 +14665,7 @@ class cls:
     if 1: pass
     elif 2:
         pass
-""", 'body[0].body[0].orelse[0]', 0, 0, 'orelse', {}, r"""if 3: break
+""", 'body[0].body[0].orelse[0]', 0, 0, 'orelse', {'elif_': False}, r"""if 3: break
 else:
     continue""", r"""
 class cls:

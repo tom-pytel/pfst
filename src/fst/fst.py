@@ -36,7 +36,7 @@ _OPTIONS = {
     'postspace': False,   # True | False | int
     'pep8space': True,    # True | False | 1
     'pars':      'auto',  # True | False | 'auto'
-    'elif_':     False,   # True | False
+    'elif_':     True,    # True | False
     'raw':       'auto',  # True | False | 'auto'
 }
 
