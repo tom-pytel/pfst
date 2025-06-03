@@ -1225,14 +1225,12 @@ class FST:
                     return False
 
         elif parent:
-            if isinstance(ast, (JoinedStr, TemplateStr)):  # formatspec '.1f' type strings without quote delimiters
-                if self.pfield.name == 'format_spec' and isinstance(parent.a, (FormattedValue, Interpolation)):
+            if isinstance(ast, JoinedStr):  # TemplateStr doesn't go into a .format_spec, '.1f' type strings without quote delimiters
+                if self.pfield.name == 'format_spec':  # isinstance(parent.a, (FormattedValue, Interpolation)):
                     return False
 
             elif isinstance(ast, Constant):  # string parts of f-string without quote delimiters
-                if (self.pfield.name == 'values' and isinstance(parent.a, (JoinedStr, TemplateStr)) and
-                    isinstance(ast.value, str)
-                ):
+                if self.pfield.name == 'values' and isinstance(parent.a, (JoinedStr, TemplateStr)):  # isinstance(ast.value, str)
                     return False
 
         return True

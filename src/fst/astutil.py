@@ -492,7 +492,7 @@ def is_parsable(ast: AST) -> bool:
         return False
 
     if isinstance(ast, (
-        ExceptHandler, Slice, FormattedValue, Starred, TypeIgnore,
+        ExceptHandler, Slice, FormattedValue, Starred, TypeIgnore,  # Starred because its inconsistent
         expr_context, unaryop, boolop, operator, cmpop,
         alias, arguments, comprehension, withitem, match_case, pattern, type_ignore,
         arg, keyword,

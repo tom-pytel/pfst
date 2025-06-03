@@ -1,6 +1,7 @@
 """Get and put single node."""
 
 import re
+import sys
 from ast import *
 from itertools import takewhile
 from types import FunctionType
@@ -54,6 +55,7 @@ def _validate_get(self: 'FST', idx: int | None, field: str) -> AST | None:
 
     return child, idx
 
+
 # ......................................................................................................................
 
 def _get_one_default(self: 'FST', idx: int | None, field: str, cut: bool, **options) -> Optional['FST'] | str:
@@ -75,10 +77,12 @@ def _get_one_stmtish(self: 'FST', idx: int | None, field: str, cut: bool, **opti
 
     return self._get_slice_stmtish(idx, idx + 1, field, cut=cut, one=True, **options)
 
+
 def _get_one_identifier(self: 'FST', idx: int | None, field: str, cut: bool, **options) -> Optional['FST'] | str:
     child, _ = _validate_get(self, idx, field)
 
     return child
+
 
 def _get_one_arguments(self: 'FST', idx: int | None, field: str, cut: bool, **options) -> Optional['FST'] | str:
     if not self.a.args.f._is_arguments_empty():
@@ -88,29 +92,67 @@ def _get_one_arguments(self: 'FST', idx: int | None, field: str, cut: bool, **op
 
     return FST(arguments(), [''], from_=self)
 
+
 def _get_one_BoolOp_op(self: 'FST', idx: int | None, field: str, cut: bool, **options) -> Optional['FST'] | str:
     child, _ = _validate_get(self, idx, field)
 
     return FST(And(), ['and'], from_=self) if isinstance(child, And) else FST(Or(), ['or'], from_=self)  # just create new ones because they can be in multiple places
+
 
 def _get_one_Compare_combined(self: 'FST', idx: int | None, field: str, cut: bool, **options) -> Optional['FST'] | str:
     idx, _, child = _params_Compare_combined(self, idx)
 
     return child.f if idx is None else child[idx].f
 
+
 def _get_one_Constant_value(self: 'FST', idx: int | None, field: str, cut: bool, **options) -> Optional['FST'] | str:
     _validate_get(self, idx, field)
 
     return self.copy()  # constant value just returns Cosntant itself
 
-def _get_one_MatchSingleton_value(self: 'FST', idx: int | None, field: str, cut: bool, **options) -> Optional['FST'] | str:
+
+def _get_one_MatchSingleton_value(self: 'FST', idx: int | None, field: str, cut: bool, **option,
+                                  ) -> Optional['FST'] | str:
     child, _ = _validate_get(self, idx, field)
 
     return FST(Constant(value=child, lineno=1, col_offset=0, end_lineno=1, end_col_offset=5 if child is False else 4),
                [str(child)], from_=self)
 
+
 def _get_one_invalid_combined(self: 'FST', idx: int | None, field: str, cut: bool, **options) -> Optional['FST'] | str:
     raise ValueError(f'cannot get single element from combined field of {self.a.__class__.__name__}')
+
+
+if sys.version_info[:2] < (3, 12):
+    def _get_one_format_spec(self: 'FST', idx: int | None, field: str, cut: bool, **options) -> Optional['FST'] | str:
+        raise NotImplementedError('this is only implemented on python version 3.12 and above')
+
+
+    def _get_one_JoinedStr_TemplateStr_values(self: 'FST', idx: int | None, field: str, cut: bool, **options,
+                                              ) -> Optional['FST'] | str:
+        raise NotImplementedError('this is only implemented on python version 3.12 and above')
+
+
+else:
+    def _get_one_format_spec(self: 'FST', idx: int | None, field: str, cut: bool, **options) -> Optional['FST'] | str:
+        child, _ = _validate_get(self, idx, field)
+        childf   = child.f
+        ret      = childf._make_fst_and_dedent(childf, copy_ast(child), childf.loc, "f", "'", docstr=options.get('docstr'))
+        ls[0]    = bistr("f'" + (ls := ret._lines)[0][2:])
+
+        reta                 = ret.a
+        reta.col_offset      = 0
+        reta.end_col_offset += 1
+
+        ret._touch()
+
+        return ret
+
+
+    def _get_one_JoinedStr_TemplateStr_values(self: 'FST', idx: int | None, field: str, cut: bool, **options,
+                                              ) -> Optional['FST'] | str:
+        raise NotImplementedError('this is only implemented on python version 3.12 and above')
+
 
 # ......................................................................................................................
 
@@ -249,11 +291,11 @@ _GET_ONE_HANDLERS = {
     (Call, 'args'):                       _get_one_default, # expr*
     (Call, 'keywords'):                   _get_one_default, # keyword*
     (FormattedValue, 'value'):            _get_one_default, # expr
-    # (FormattedValue, 'format_spec'):      _get_one_default, # expr?
+    (FormattedValue, 'format_spec'):      _get_one_format_spec, # expr?  - no location on py < 3.12
     (Interpolation, 'value'):             _get_one_default, # expr
-    # (Interpolation, 'format_spec'):       _get_one_default, # expr?
-    # (JoinedStr, 'values'):                _get_one_default, # expr*  - ??? no location on py < 3.12
-    # (TemplateStr, 'values'):              _get_one_default, # expr*  - ??? no location on py < 3.12
+    (Interpolation, 'format_spec'):       _get_one_format_spec, # expr?  - no location on py < 3.12
+    # (JoinedStr, 'values'):                _get_one_JoinedStr_TemplateStr_values, # expr*  - no location on py < 3.12
+    # (TemplateStr, 'values'):              _get_one_JoinedStr_TemplateStr_values, # expr*  - no location on py < 3.12
     (Constant, 'value'):                  _get_one_Constant_value, # constant
     (Attribute, 'value'):                 _get_one_default, # expr
     (Attribute, 'attr'):                  _get_one_identifier, # identifier

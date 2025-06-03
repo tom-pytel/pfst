@@ -36125,6 +36125,50 @@ class cls:
             self.assertEqual(g.loc, f.loc)
             compare_asts(g.a, f.a, locs=True, raise_=True)
 
+        # format_spec
+
+        if sys.version_info[:2] >= (3, 12):
+            f = FST('if 1:\n    f"{a!r\n : {\'0.5f<12\'} }"').body[0].value.values[0].get('format_spec')
+            self.assertEqual("f' {'0.5f<12'} '", f.src)
+            f.verify()
+
+            f = FST('f"{a!r\n : {\'0.5f<12\'} }"').values[0].get('format_spec')
+            self.assertEqual("f' {'0.5f<12'} '", f.src)
+            f.verify()
+
+            f = FST('f"{a!r\n : 0.5f<12 }"').values[0].get('format_spec')
+            self.assertEqual("f' 0.5f<12 '", f.src)
+            f.verify()
+
+            f = FST('f"{a!r : 0.5f<12 }"').values[0].get('format_spec')
+            self.assertEqual("f' 0.5f<12 '", f.src)
+            f.verify()
+
+            f = FST('f"{a!r:0.5f<12}"').values[0].get('format_spec')
+            self.assertEqual("f'0.5f<12'", f.src)
+            f.verify()
+
+        if sys.version_info[:2] >= (3, 14):
+            f = FST('if 1:\n    t"{a!r\n : {\'0.5f<12\'} }"').body[0].value.values[0].get('format_spec')
+            self.assertEqual("f' {'0.5f<12'} '", f.src)
+            f.verify()
+
+            f = FST('t"{a!r\n : {\'0.5f<12\'} }"').values[0].get('format_spec')
+            self.assertEqual("f' {'0.5f<12'} '", f.src)
+            f.verify()
+
+            f = FST('t"{a!r\n : 0.5f<12 }"').values[0].get('format_spec')
+            self.assertEqual("f' 0.5f<12 '", f.src)
+            f.verify()
+
+            f = FST('t"{a!r : 0.5f<12 }"').values[0].get('format_spec')
+            self.assertEqual("f' 0.5f<12 '", f.src)
+            f.verify()
+
+            f = FST('t"{a!r:0.5f<12}"').values[0].get('format_spec')
+            self.assertEqual("f'0.5f<12'", f.src)
+            f.verify()
+
     def test_put_slice_seq_del(self):
         for i, (src, elt, start, stop, options, src_cut, slice_copy, src_dump, slice_dump) in enumerate(GET_SLICE_SEQ_DATA):
             t = parse(src)
