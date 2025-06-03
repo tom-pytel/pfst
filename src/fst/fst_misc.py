@@ -2,13 +2,14 @@
 
 import re
 from ast import *
-from typing import Any, Callable, Literal, Optional, Union
+from math import log10
+from typing import Callable, Literal, Optional, Union
 
 from .astutil import *
 from .astutil import Interpolation
 
 from .shared import (
-    astfield, fstloc,
+    astfield, fstloc, nspace,
     BLOCK,
     HAS_DOCSTRING,
     _next_src, _prev_src, _next_find, _prev_find, _next_pars, _prev_pars,
@@ -28,6 +29,24 @@ def _make_tree_fst(ast: AST, parent: 'FST', pfield: astfield) -> 'FST':
             pfield.set(parent.a, ast := ast.__class__())
 
     return FST(ast, parent, pfield)
+
+
+def _out_lines(fst: 'FST', linefunc: Callable, ln: int, col: int, end_ln: int, end_col: int, eol: str = ''):
+    width = int(log10(len(fst.root._lines) - 1 or 1)) + 1
+    lines = fst.get_src(ln, col, end_ln, end_col, True)
+
+    if (l := lines[-1][:end_col]).endswith(' '):
+        l += '<'
+
+    lines[-1] = l
+
+    if (l := lines[0]).startswith(' ') and col:
+        lines[0]  = f'{" " * (col - 1)}>{l}'
+    else:
+        lines[0]  = ' ' * col + l
+
+    for i, l in zip(range(ln, end_ln + 1), lines):
+        linefunc(f'{i:<{width}}: {l}{eol}')
 
 
 _GLOBALS = globals() | {'_GLOBALS': None}
@@ -93,39 +112,53 @@ def _repr_tail(self: 'FST') -> str:
     return f'{tail} {loc[0]},{loc[1]} -> {loc[2]},{loc[3]}' if loc else tail
 
 
-def _dump(self: 'FST', full: bool = False, indent: int = 2, cind: str = '', prefix: str = '',
-          linefunc: Callable = print, compact: bool = False, eol: str = ''):
-    tail = self._repr_tail()
-    sind = ' ' * indent
+def _dump(self: 'FST', st: nspace, cind: str = '', prefix: str = ''):
     ast  = self.a
+    tail = self._repr_tail()
+    sind = ' ' * st.indent
 
-    if compact:
+    if not st.src:  # nop
+        pass
+
+    elif isinstance(ast, stmt):  # src = 'line' or 'node'
+        if loc := self.bloc:
+            if isinstance(ast, BLOCK):
+                _out_lines(self, st.linefunc, loc.ln, loc.col, *self._loc_block_header_end(), st.eol)
+            else:
+                _out_lines(self, st.linefunc, *loc, st.eol)
+
+    elif (st.src == 'node' and not isinstance(ast, mod) and (not (parent := self.parent) or
+                                                             not isinstance(parent.a, Expr))):
+        if loc := self.loc:
+            _out_lines(self, st.linefunc, *loc, st.eol)
+
+    if st.compact:
         if isinstance(ast, Name):
-            linefunc(f'{cind}{prefix}Name {ast.id!r} {ast.ctx.__class__.__qualname__}{" .." * bool(tail)}{tail}'
-                        f'{eol}')
+            st.linefunc(f'{cind}{prefix}Name {ast.id!r} {ast.ctx.__class__.__qualname__}{" .." * bool(tail)}{tail}'
+                        f'{st.eol}')
 
             return
 
         if isinstance(ast, Constant):
             if ast.kind is None:
-                linefunc(f'{cind}{prefix}Constant {ast.value!r}{" .." * bool(tail)}{tail}{eol}')
+                st.linefunc(f'{cind}{prefix}Constant {ast.value!r}{" .." * bool(tail)}{tail}{st.eol}')
             else:
-                linefunc(f'{cind}{prefix}Constant {ast.value!r} {ast.kind}{" .." * bool(tail)}{tail}{eol}')
+                st.linefunc(f'{cind}{prefix}Constant {ast.value!r} {ast.kind}{" .." * bool(tail)}{tail}{st.eol}')
 
             return
 
-    linefunc(f'{cind}{prefix}{ast.__class__.__qualname__}{" .." * bool(tail)}{tail}{eol}')
+    st.linefunc(f'{cind}{prefix}{ast.__class__.__qualname__}{" .." * bool(tail)}{tail}{st.eol}')
 
     for name, child in iter_fields(ast):
         is_list = isinstance(child, list)
 
-        if compact:
-            if child is None and not full:
+        if st.compact:
+            if child is None and not st.full:
                 continue
 
             if name == 'ctx':
-                linefunc(f'{sind}{cind}.{name} {child.__class__.__qualname__ if isinstance(child, AST) else child}'
-                            f'{eol}')
+                st.linefunc(f'{sind}{cind}.{name} '
+                            f'{child.__class__.__qualname__ if isinstance(child, AST) else child}{st.eol}')
 
                 continue
 
@@ -140,35 +173,35 @@ def _dump(self: 'FST', full: bool = False, indent: int = 2, cind: str = '', pref
                             ('body', 'orelse'))
             ):
                 if isinstance(child, AST):
-                    child.f._dump(full, indent, cind + sind, f'.{name} ', linefunc, compact, eol)
+                    child.f._dump(st, cind + sind, f'.{name} ')
                 else:
-                    linefunc(f'{sind}{cind}.{name} {child!r}{eol}')
+                    st.linefunc(f'{sind}{cind}.{name} {child!r}{st.eol}')
 
                 continue
 
             if name == 'args' and isinstance(child, arguments):
                 if child.posonlyargs or child.args or child.vararg or child.kwonlyargs or child.kwarg:
-                    child.f._dump(full, indent, cind + sind, '.args ', linefunc, compact, eol)
+                    child.f._dump(st, cind + sind, '.args ')
 
                     continue
 
-                elif not full:
+                elif not st.full:
                     continue
 
-        if full or (child != []):
-            linefunc(f'{sind}{cind}.{name}{f"[{len(child)}]" if is_list else ""}{eol}')
+        if st.full or (child != []):
+            st.linefunc(f'{sind}{cind}.{name}{f"[{len(child)}]" if is_list else ""}{st.eol}')
 
         if is_list:
             for i, ast in enumerate(child):
                 if isinstance(ast, AST):
-                    ast.f._dump(full, indent, cind + sind, f'{i}] ', linefunc, compact, eol)
+                    ast.f._dump(st, cind + sind, f'{i}] ')
                 else:
-                    linefunc(f'{sind}{cind}{i}] {ast!r}{eol}')
+                    st.linefunc(f'{sind}{cind}{i}] {ast!r}{st.eol}')
 
         elif isinstance(child, AST):
-            child.f._dump(full, indent, cind + sind * 2, '', linefunc, compact, eol)
+            child.f._dump(st, cind + sind * 2)
         else:
-            linefunc(f'{sind}{sind}{cind}{child!r}{eol}')
+            st.linefunc(f'{sind}{sind}{cind}{child!r}{st.eol}')
 
 
 def _make_fst_tree(self: 'FST', stack: list['FST'] | None = None):

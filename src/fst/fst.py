@@ -10,7 +10,7 @@ from .astutil import *
 from .astutil import TypeAlias, TryStar, TemplateStr, Interpolation, type_param
 
 from .shared import (
-    astfield, fstloc, mock,
+    astfield, fstloc, nspace,
     STMTISH, STMTISH_OR_MOD, BLOCK, BLOCK_OR_MOD, SCOPE, SCOPE_OR_MOD, NAMED_SCOPE,
     NAMED_SCOPE_OR_MOD, ANONYMOUS_SCOPE, PARENTHESIZABLE, HAS_DOCSTRING,
     re_empty_line_start, re_empty_line, re_line_continuation, re_line_end_cont_or_comment,
@@ -699,20 +699,28 @@ class FST:
 
         return ret
 
-    def dump(self, compact: bool = False, full: bool = False, *, indent: int = 2, out: Callable | TextIO = print,
-             eol: str | None = None) -> str | list[str] | None:
+    def dump(self, compact: bool | str = False, full: bool = False, src: str | Literal['line', 'node'] | None = None,
+             *, indent: int = 2, out: Callable | TextIO = print, eol: str | None = None) -> str | list[str] | None:
         """Dump a representation of the tree to stdout or return as a list of lines.
 
         **Parameters:**
         - `compact`: If `True` then the dump is compacted a bit by listing `Name` and `Constant` nodes on a single
-            line.
+            line. Can also be a string for shortcut specification of flags by first letter: 'c' means compact, 'f' means
+            full, 'l' means `src='line'` and 'n' means `src='node'`.
         - `full`: If `True` then will list all fields in nodes including empty ones, otherwise will exclude most empty
             fields.
+        - `src`: `line` means output statement source lines, `node` means output all node source lines and `None` does
+            not output any source.
         - `indent`: The average airspeed of an unladen swallow.
         - `out`: `print` means print to stdout, `list` returns a list of lines and `str` returns a whole string.
             Otherwise a `Callable[[str], None]` which is called for each line of output individually.
         - `eol`: What to put at the end of each text line, `None` means newline for `TextIO` out and nothing for other.
         """
+
+        if isinstance(compact, str):
+            src     = 'node' if 'n' in (compact := compact.lower()) else 'line' if 'l' in compact else None
+            full    = 'f' in compact
+            compact = 'c' in compact
 
         if isinstance(out, TextIOBase):
             out = out.write
@@ -723,14 +731,19 @@ class FST:
         elif eol is None:
             eol = ''
 
-        if out in (str, list):
-            lines = []
+        st = nspace(full=full, compact=compact, indent=indent, eol=eol, src=src)
 
-            self._dump(full, indent, linefunc=lines.append, compact=compact, eol=eol)
+        if out in (str, list):
+            lines       = []
+            st.linefunc = lines.append
+
+            self._dump(st)
 
             return lines if out is list else '\n'.join(lines)
 
-        return self._dump(full, indent, linefunc=out, compact=compact, eol=eol)
+        st.linefunc = out
+
+        return self._dump(st)
 
     def verify(self, raise_: bool = True) -> Optional['FST']:  # -> Self | None:
         """Sanity check, reparse source and make sure parsed tree matches currently stored tree (locations and
@@ -1361,11 +1374,11 @@ class FST:
         lines   = self.root._lines
 
         if isinstance(ast, Call):
-            children = [ast.func, mock(f=mock(loc=self._loc_Call_pars(), is_enclosed=lambda: True))]
+            children = [ast.func, nspace(f=nspace(loc=self._loc_Call_pars(), is_enclosed=lambda: True))]
         elif isinstance(ast, Subscript):
-            children = [ast.value, mock(f=mock(loc=self._loc_Subscript_brackets(), is_enclosed=lambda: True))]
+            children = [ast.value, nspace(f=nspace(loc=self._loc_Subscript_brackets(), is_enclosed=lambda: True))]
         elif isinstance(ast, MatchClass):
-            children = [ast.cls, mock(f=mock(loc=self._loc_MatchClass_pars(), is_enclosed=lambda: True))]
+            children = [ast.cls, nspace(f=nspace(loc=self._loc_MatchClass_pars(), is_enclosed=lambda: True))]
         else:  # we don't check always-enclosed statement fields here because statements will never get here
             children = syntax_ordered_children(ast)
 
@@ -1408,7 +1421,7 @@ class FST:
 
         if field:
             if field != 'ctx':  # so that the `ctx` of a List is not considered enclosed
-                self = mock(parent=self, pfield=astfield(field))
+                self = nspace(parent=self, pfield=astfield(field))
 
         elif isinstance(self.a, expr_context):  # so that the `ctx` of a List is not considered enclosed
             if not (self := self.parent):
