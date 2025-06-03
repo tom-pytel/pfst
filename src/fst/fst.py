@@ -2129,6 +2129,7 @@ class FST:
         _maybe_fix_set,
         _maybe_fix_elif,
         _maybe_fix,
+        _is_arguments_empty,
         _is_parenthesized_ImportFrom_names,
         _is_parenthesized_With_items,
         _is_parenthesized_seq,

@@ -25,7 +25,7 @@ from .fst_parse import (
 _re_merged_alnum = re.compile(r'\w\w')
 
 
-def _params_Compare_None(self: 'FST', idx: int | None) -> tuple[int, str, AST | list[AST]]:
+def _params_Compare_combined(self: 'FST', idx: int | None) -> tuple[int, str, AST | list[AST]]:
     ast         = self.a
     comparators = ast.comparators
     idx         = _fixup_one_index(len(comparators) + 1, idx)
@@ -36,42 +36,96 @@ def _params_Compare_None(self: 'FST', idx: int | None) -> tuple[int, str, AST | 
 # ----------------------------------------------------------------------------------------------------------------------
 # get
 
+def _validate_get(self: 'FST', idx: int | None, field: str) -> AST | None:
+    """Check that `idx` was passed (or not) as needed."""
+
+    child = getattr(self.a, field)
+
+    if isinstance(child, list):
+        if idx is None:
+            raise IndexError(f'{self.a.__class__.__name__}.{field} needs an index')
+
+        _fixup_one_index(len(child), idx)
+
+        child = child[idx]
+
+    elif idx is not None:
+        raise IndexError(f'{self.a.__class__.__name__}.{field} does not take an index')
+
+    return child, idx
+
+# ......................................................................................................................
+
+def _get_one_default(self: 'FST', idx: int | None, field: str, cut: bool, **options) -> Optional['FST'] | str:
+    child, idx = _validate_get(self, idx, field)
+    childf     = child.f
+    loc        = childf.pars(pars=self.get_option('pars', options) is True)
+
+    if not loc:
+        raise ValueError('cannot copy node which does not have a location')
+
+    ret = childf._make_fst_and_dedent(childf, copy_ast(child), loc, docstr=options.get('docstr'))
+
+    ret._maybe_fix(self.get_option('pars', options))
+
+    return ret
+
+def _get_one_stmtish(self: 'FST', idx: int | None, field: str, cut: bool, **options) -> Optional['FST'] | str:
+    _, idx = _validate_get(self, idx, field)
+
+    return self._get_slice_stmtish(idx, idx + 1, field, cut=cut, one=True, **options)
+
+def _get_one_identifier(self: 'FST', idx: int | None, field: str, cut: bool, **options) -> Optional['FST'] | str:
+    child, _ = _validate_get(self, idx, field)
+
+    return child
+
+def _get_one_arguments(self: 'FST', idx: int | None, field: str, cut: bool, **options) -> Optional['FST'] | str:
+    if not self.a.args.f._is_arguments_empty():
+        return _get_one_default(self, idx, field, cut, **options)
+
+    _validate_get(self, idx, field)
+
+    return FST(arguments(), [''], from_=self)
+
+def _get_one_BoolOp_op(self: 'FST', idx: int | None, field: str, cut: bool, **options) -> Optional['FST'] | str:
+    child, _ = _validate_get(self, idx, field)
+
+    return FST(And(), ['and'], from_=self) if isinstance(child, And) else FST(Or(), ['or'], from_=self)  # just create new ones because they can be in multiple places
+
+def _get_one_Compare_combined(self: 'FST', idx: int | None, field: str, cut: bool, **options) -> Optional['FST'] | str:
+    idx, _, child = _params_Compare_combined(self, idx)
+
+    return child.f if idx is None else child[idx].f
+
+def _get_one_Constant_value(self: 'FST', idx: int | None, field: str, cut: bool, **options) -> Optional['FST'] | str:
+    _validate_get(self, idx, field)
+
+    return self.copy()  # constant value just returns Cosntant itself
+
+def _get_one_MatchSingleton_value(self: 'FST', idx: int | None, field: str, cut: bool, **options) -> Optional['FST'] | str:
+    child, _ = _validate_get(self, idx, field)
+
+    return FST(Constant(value=child, lineno=1, col_offset=0, end_lineno=1, end_col_offset=5 if child is False else 4),
+               [str(child)], from_=self)
+
+def _get_one_invalid_combined(self: 'FST', idx: int | None, field: str, cut: bool, **options) -> Optional['FST'] | str:
+    raise ValueError(f'cannot get single element from combined field of {self.a.__class__.__name__}')
+
+# ......................................................................................................................
+
 def _get_one(self: 'FST', idx: int | None, field: str, cut: bool, **options) -> Optional['FST'] | str:
     """Copy or cut (if possible) a node or non-node from a field of `self`."""
 
     ast = self.a
 
-    if field:
-        child = getattr(ast, field)
+    if not (handler := _GET_ONE_HANDLERS.get((ast.__class__, field))):
+        raise NodeError(f"cannot get from {ast.__class__.__name__}{f'.{field}' if field else ''}")
 
-        if isinstance(child, list):
-            idx = _fixup_one_index(len(child), idx)
-        elif idx is not None:
-            raise IndexError(f'{child.__class__.__name__}.{field} does not take an index')
+    ret = handler(self, idx, field, cut, **options)
 
-    elif not isinstance(ast, Compare):
-        raise ValueError(f'cannot get single element from combined field of {ast.__class__.__name__}')
-    else:
-        idx, field, child = _params_Compare_None(self, idx)
-
-    childa = child if idx is None else child[idx]
-
-    if isinstance(childa, STMTISH):
-        return self._get_slice_stmtish(idx, idx + 1, field, cut=cut, one=True, **options)
-
-    if not isinstance(childa, AST):  # empty None field or identifier or some other constant
-        ret = childa
-
-    else:
-        childf = childa.f
-        loc    = childf.pars(pars=self.get_option('pars', options) is True)
-
-        if not loc:
-            raise ValueError('cannot copy node which does not have a location')
-
-        ret = childf._make_fst_and_dedent(childf, copy_ast(childa), loc, docstr=options.get('docstr'))
-
-        ret._maybe_fix(self.get_option('pars', options))
+    if handler is _get_one_stmtish:  # this one does its own cut (because of evil semicolons)
+        return ret
 
     if cut:
         options['raw'] = False
@@ -81,6 +135,219 @@ def _get_one(self: 'FST', idx: int | None, field: str, cut: bool, **options) -> 
 
     return ret
 
+
+# ......................................................................................................................
+
+_GET_ONE_HANDLERS = {
+    (Module, 'body'):                     _get_one_stmtish, # stmt*
+    (Interactive, 'body'):                _get_one_stmtish, # stmt*
+    (Expression, 'body'):                 _get_one_default, # expr
+    (FunctionDef, 'decorator_list'):      _get_one_default, # expr*
+    (FunctionDef, 'name'):                _get_one_identifier, # identifier
+    (FunctionDef, 'type_params'):         _get_one_default, # type_param*
+    (FunctionDef, 'args'):                _get_one_arguments, # arguments
+    (FunctionDef, 'returns'):             _get_one_default, # expr?
+    (FunctionDef, 'body'):                _get_one_stmtish, # stmt*
+    (AsyncFunctionDef, 'decorator_list'): _get_one_default, # expr*
+    (AsyncFunctionDef, 'name'):           _get_one_identifier, # identifier
+    (AsyncFunctionDef, 'type_params'):    _get_one_default, # type_param*
+    (AsyncFunctionDef, 'args'):           _get_one_arguments, # arguments
+    (AsyncFunctionDef, 'returns'):        _get_one_default, # expr?
+    (AsyncFunctionDef, 'body'):           _get_one_stmtish, # stmt*
+    (ClassDef, 'decorator_list'):         _get_one_default, # expr*
+    (ClassDef, 'name'):                   _get_one_identifier, # identifier
+    (ClassDef, 'type_params'):            _get_one_default, # type_param*
+    (ClassDef, 'bases'):                  _get_one_default, # expr*
+    (ClassDef, 'keywords'):               _get_one_default, # keyword*
+    (ClassDef, 'body'):                   _get_one_stmtish, # stmt*
+    (Return, 'value'):                    _get_one_default, # expr?
+    (Delete, 'targets'):                  _get_one_default, # expr*
+    (Assign, 'targets'):                  _get_one_default, # expr*
+    (Assign, 'value'):                    _get_one_default, # expr
+    (TypeAlias, 'name'):                  _get_one_default, # expr
+    (TypeAlias, 'type_params'):           _get_one_default, # type_param*
+    (TypeAlias, 'value'):                 _get_one_default, # expr
+    (AugAssign, 'target'):                _get_one_default, # expr
+    (AugAssign, 'op'):                    _get_one_default, # operator
+    (AugAssign, 'value'):                 _get_one_default, # expr
+    (AnnAssign, 'target'):                _get_one_default, # expr
+    (AnnAssign, 'annotation'):            _get_one_default, # expr
+    (AnnAssign, 'value'):                 _get_one_default, # expr?
+    (For, 'target'):                      _get_one_default, # expr
+    (For, 'iter'):                        _get_one_default, # expr
+    (For, 'body'):                        _get_one_stmtish, # stmt*
+    (For, 'orelse'):                      _get_one_stmtish, # stmt*
+    (AsyncFor, 'target'):                 _get_one_default, # expr
+    (AsyncFor, 'iter'):                   _get_one_default, # expr
+    (AsyncFor, 'body'):                   _get_one_stmtish, # stmt*
+    (AsyncFor, 'orelse'):                 _get_one_stmtish, # stmt*
+    (While, 'test'):                      _get_one_default, # expr
+    (While, 'body'):                      _get_one_stmtish, # stmt*
+    (While, 'orelse'):                    _get_one_stmtish, # stmt*
+    (If, 'test'):                         _get_one_default, # expr
+    (If, 'body'):                         _get_one_stmtish, # stmt*
+    (If, 'orelse'):                       _get_one_stmtish, # stmt*
+    (With, 'items'):                      _get_one_default, # withitem*
+    (With, 'body'):                       _get_one_stmtish, # stmt*
+    (AsyncWith, 'items'):                 _get_one_default, # withitem*
+    (AsyncWith, 'body'):                  _get_one_stmtish, # stmt*
+    (Match, 'subject'):                   _get_one_default, # expr
+    (Match, 'cases'):                     _get_one_stmtish, # match_case*
+    (Raise, 'exc'):                       _get_one_default, # expr?
+    (Raise, 'cause'):                     _get_one_default, # expr?
+    (Try, 'body'):                        _get_one_stmtish, # stmt*
+    (Try, 'handlers'):                    _get_one_stmtish, # excepthandler*
+    (Try, 'orelse'):                      _get_one_stmtish, # stmt*
+    (Try, 'finalbody'):                   _get_one_stmtish, # stmt*
+    (TryStar, 'body'):                    _get_one_stmtish, # stmt*
+    (TryStar, 'handlers'):                _get_one_stmtish, # excepthandler*
+    (TryStar, 'orelse'):                  _get_one_stmtish, # stmt*
+    (TryStar, 'finalbody'):               _get_one_stmtish, # stmt*
+    (Assert, 'test'):                     _get_one_default, # expr
+    (Assert, 'msg'):                      _get_one_default, # expr?
+    (Import, 'names'):                    _get_one_default, # alias*
+    (ImportFrom, 'module'):               _get_one_identifier, # identifier? (dotted)
+    (ImportFrom, 'names'):                _get_one_default, # alias*
+    (Global, 'names'):                    _get_one_identifier, # identifier*
+    (Nonlocal, 'names'):                  _get_one_identifier, # identifier*
+    (Expr, 'value'):                      _get_one_default, # expr
+    (BoolOp, 'op'):                       _get_one_BoolOp_op, # boolop
+    (BoolOp, 'values'):                   _get_one_default, # expr*
+    (NamedExpr, 'target'):                _get_one_default, # expr
+    (NamedExpr, 'value'):                 _get_one_default, # expr
+    (BinOp, 'left'):                      _get_one_default, # expr
+    (BinOp, 'op'):                        _get_one_default, # operator
+    (BinOp, 'right'):                     _get_one_default, # expr
+    (UnaryOp, 'op'):                      _get_one_default, # unaryop
+    (UnaryOp, 'operand'):                 _get_one_default, # expr
+    (Lambda, 'args'):                     _get_one_arguments, # arguments
+    (Lambda, 'body'):                     _get_one_default, # expr
+    (IfExp, 'body'):                      _get_one_default, # expr
+    (IfExp, 'test'):                      _get_one_default, # expr
+    (IfExp, 'orelse'):                    _get_one_default, # expr
+    (Dict, 'keys'):                       _get_one_default, # expr*
+    (Dict, 'values'):                     _get_one_default, # expr*
+    (Dict, ''):                           _get_one_invalid_combined, # expr*
+    (Set, 'elts'):                        _get_one_default, # expr*
+    (ListComp, 'elt'):                    _get_one_default, # expr
+    (ListComp, 'generators'):             _get_one_default, # comprehension*
+    (SetComp, 'elt'):                     _get_one_default, # expr
+    (SetComp, 'generators'):              _get_one_default, # comprehension*
+    (DictComp, 'key'):                    _get_one_default, # expr
+    (DictComp, 'value'):                  _get_one_default, # expr
+    (DictComp, 'generators'):             _get_one_default, # comprehension*
+    (GeneratorExp, 'elt'):                _get_one_default, # expr
+    (GeneratorExp, 'generators'):         _get_one_default, # comprehension*
+    (Await, 'value'):                     _get_one_default, # expr
+    (Yield, 'value'):                     _get_one_default, # expr?
+    (YieldFrom, 'value'):                 _get_one_default, # expr
+    (Compare, 'left'):                    _get_one_default, # expr
+    (Compare, 'ops'):                     _get_one_default, # cmpop*
+    (Compare, 'comparators'):             _get_one_default, # expr*
+    (Compare, ''):                        _get_one_Compare_combined, # expr*
+    (Call, 'func'):                       _get_one_default, # expr
+    (Call, 'args'):                       _get_one_default, # expr*
+    (Call, 'keywords'):                   _get_one_default, # keyword*
+    (FormattedValue, 'value'):            _get_one_default, # expr
+    # (FormattedValue, 'format_spec'):      _get_one_default, # expr?
+    (Interpolation, 'value'):             _get_one_default, # expr
+    # (Interpolation, 'format_spec'):       _get_one_default, # expr?
+    # (JoinedStr, 'values'):                _get_one_default, # expr*  - ??? no location on py < 3.12
+    # (TemplateStr, 'values'):              _get_one_default, # expr*  - ??? no location on py < 3.12
+    (Constant, 'value'):                  _get_one_Constant_value, # constant
+    (Attribute, 'value'):                 _get_one_default, # expr
+    (Attribute, 'attr'):                  _get_one_identifier, # identifier
+    (Subscript, 'value'):                 _get_one_default, # expr
+    (Subscript, 'slice'):                 _get_one_default, # expr
+    (Starred, 'value'):                   _get_one_default, # expr
+    (Name, 'id'):                         _get_one_identifier, # identifier
+    (List, 'elts'):                       _get_one_default, # expr*
+    (Tuple, 'elts'):                      _get_one_default, # expr*
+    (Slice, 'lower'):                     _get_one_default, # expr?
+    (Slice, 'upper'):                     _get_one_default, # expr?
+    (Slice, 'step'):                      _get_one_default, # expr?
+    (comprehension, 'target'):            _get_one_default, # expr
+    (comprehension, 'iter'):              _get_one_default, # expr
+    (comprehension, 'ifs'):               _get_one_default, # expr*
+    (ExceptHandler, 'type'):              _get_one_default, # expr?
+    (ExceptHandler, 'name'):              _get_one_identifier, # identifier?
+    (ExceptHandler, 'body'):              _get_one_stmtish, # stmt*
+    (arguments, 'posonlyargs'):           _get_one_default, # arg*
+    (arguments, 'args'):                  _get_one_default, # arg*
+    (arguments, 'defaults'):              _get_one_default, # expr*
+    (arguments, 'vararg'):                _get_one_default, # arg?
+    (arguments, 'kwonlyargs'):            _get_one_default, # arg*
+    (arguments, 'kw_defaults'):           _get_one_default, # expr*
+    (arguments, 'kwarg'):                 _get_one_default, # arg?
+    (arg, 'arg'):                         _get_one_identifier, # identifier
+    (arg, 'annotation'):                  _get_one_default, # expr?
+    (keyword, 'arg'):                     _get_one_identifier, # identifier?
+    (keyword, 'value'):                   _get_one_default, # expr
+    (alias, 'name'):                      _get_one_identifier, # identifier
+    (alias, 'asname'):                    _get_one_identifier, # identifier?
+    (withitem, 'context_expr'):           _get_one_default, # expr
+    (withitem, 'optional_vars'):          _get_one_default, # expr?
+    (match_case, 'pattern'):              _get_one_default, # pattern
+    (match_case, 'guard'):                _get_one_default, # expr?
+    (match_case, 'body'):                 _get_one_stmtish, # stmt*
+    (MatchValue, 'value'):                _get_one_default, # expr
+    (MatchSingleton, 'value'):            _get_one_MatchSingleton_value, # constant
+    (MatchSequence, 'patterns'):          _get_one_default, # pattern*
+    (MatchMapping, 'keys'):               _get_one_default, # expr*
+    (MatchMapping, 'patterns'):           _get_one_default, # pattern*
+    (MatchMapping, 'rest'):               _get_one_identifier, # identifier?
+    (MatchMapping, ''):                   _get_one_invalid_combined, # expr*
+    (MatchClass, 'cls'):                  _get_one_default, # expr
+    (MatchClass, 'patterns'):             _get_one_default, # pattern*
+    (MatchClass, 'kwd_attrs'):            _get_one_identifier, # identifier*
+    (MatchClass, 'kwd_patterns'):         _get_one_default, # pattern*
+    (MatchStar, 'name'):                  _get_one_identifier, # identifier?
+    (MatchAs, 'pattern'):                 _get_one_default, # pattern?
+    (MatchAs, 'name'):                    _get_one_identifier, # identifier?
+    (MatchOr, 'patterns'):                _get_one_default, # pattern*
+    (TypeVar, 'name'):                    _get_one_identifier, # identifier
+    (TypeVar, 'bound'):                   _get_one_default, # expr?
+    (TypeVar, 'default_value'):           _get_one_default, # expr?
+    (ParamSpec, 'name'):                  _get_one_identifier, # identifier
+    (ParamSpec, 'default_value'):         _get_one_default, # expr?
+    (TypeVarTuple, 'name'):               _get_one_identifier, # identifier
+    (TypeVarTuple, 'default_value'):      _get_one_default, # expr?
+
+
+    # NOT DONE:
+    # =========
+
+    # (Module, 'type_ignores'):             (), # type_ignore*
+
+    # (FunctionType, 'argtypes'):           (), # expr*
+    # (FunctionType, 'returns'):            (), # expr
+
+    # (FunctionDef, 'type_comment'):        (), # string?
+    # (AsyncFunctionDef, 'type_comment'):   (), # string?
+    # (Assign, 'type_comment'):             (), # string?
+    # (For, 'type_comment'):                (), # string?
+    # (AsyncFor, 'type_comment'):           (), # string?
+    # (With, 'type_comment'):               (), # string?
+    # (AsyncWith, 'type_comment'):          (), # string?
+    # (arg, 'type_comment'):                (), # string?
+
+    # (Attribute, 'ctx'):                   (), # expr_context
+    # (Subscript, 'ctx'):                   (), # expr_context
+    # (Starred, 'ctx'):                     (), # expr_context
+    # (Name, 'ctx'):                        (), # expr_context
+    # (List, 'ctx'):                        (), # expr_context
+    # (Tuple, 'ctx'):                       (), # expr_context
+
+    # (AnnAssign, 'simple'):                (), # int
+    # (ImportFrom, 'level'):                (), # int?
+    # (FormattedValue, 'conversion'):       (), # int
+    # (Interpolation, 'constant'):          (), # str
+    # (Interpolation, 'conversion'):        (), # int
+    # (Constant, 'kind'):                   (), # string?
+    # (comprehension, 'is_async'):          (), # int
+    # (TypeIgnore, 'lineno'):               (), # int
+    # (TypeIgnore, 'tag'):                  (), # string
+}
 
 # ----------------------------------------------------------------------------------------------------------------------
 # put
@@ -102,8 +369,7 @@ class oneinfo(NamedTuple):
 
 def _validate_put(self: 'FST', code: Code | None, idx: int | None, field: str, child: list[AST] | AST | None,
                   options: dict[str, Any], *, can_del: bool = False) -> AST | None:
-    """Check that `idx` was passed (or not) as needed and that not deleting if not possible and that `to` raw parameter
-    is not present."""
+    """Check that `idx` was passed (or not) as needed and that not deleting if not possible."""
 
     if isinstance(child, list):
         if idx is None:
@@ -394,11 +660,11 @@ def _put_one_FunctionDef_arguments(self: 'FST', code: Code | None, idx: int | No
                                      **options)
 
 
-def _put_one_Compare_None(self: 'FST', code: Code | None, idx: int | None, field: str, child: None,
+def _put_one_Compare_combined(self: 'FST', code: Code | None, idx: int | None, field: str, child: None,
                           static: onestatic, **options) -> 'FST':
     """Put to combined [Compare.left, Compare.comparators] using this total indexing."""
 
-    idx, field, child = _params_Compare_None(self, idx)
+    idx, field, child = _params_Compare_combined(self, idx)
 
     return _put_one_exprish_required(self, code, idx, field, child, static, **options)
 
@@ -604,7 +870,7 @@ def _put_one_raw(self: 'FST', code: Code | None, idx: int | None, field: str, ch
                 to = self.values[idx] if is_dict else self.patterns[idx]
 
         elif cls is Compare:
-            idx, field, child = _params_Compare_None(self, idx)
+            idx, field, child = _params_Compare_combined(self, idx)
         else:
             raise ValueError(f'cannot put single element to combined field of {ast.__class__.__name__}')
 
@@ -1311,8 +1577,6 @@ def _one_info_TypeVarTuple_name(self: 'FST', static: onestatic, idx: int | None,
     return _one_info_identifier_required(self, static, idx, field, '*')
 
 
-# TODO: finish these
-
 _PUT_ONE_HANDLERS = {
     (Module, 'body'):                     (True,  None, None), # stmt*  - all stmtishs have sliceable True and handler None to force always use slice operation (because of evil semicolons handled there)
     (Interactive, 'body'):                (True,  None, None), # stmt*
@@ -1419,7 +1683,7 @@ _PUT_ONE_HANDLERS = {
     (Compare, 'left'):                    (False, _put_one_exprish_required, _onestatic_expr_required), # expr
     (Compare, 'ops'):                     (False, _put_one_op, onestatic(None, code_as=_code_as_cmpop)), # cmpop*
     (Compare, 'comparators'):             (False, _put_one_exprish_required, _onestatic_expr_required), # expr*
-    (Compare, ''):                        (False, _put_one_Compare_None, _onestatic_expr_required), # expr*
+    (Compare, ''):                        (False, _put_one_Compare_combined, _onestatic_expr_required), # expr*
     (Call, 'func'):                       (False, _put_one_exprish_required, _onestatic_expr_required), # expr
     (Call, 'args'):                       (True,  _put_one_exprish_required, onestatic(_one_info_exprish_required, _restrict_default, code_as=_code_as_expr_call_arg)), # expr*
     (Call, 'keywords'):                   (True,  _put_one_exprish_required, _onestatic_keyword_required), # keyword*
@@ -1492,36 +1756,36 @@ _PUT_ONE_HANDLERS = {
     # NOT DONE:
     # =========
 
-    # (Module, 'type_ignores'):             (_put_one_default, None), # type_ignore*
+    # (Module, 'type_ignores'):             (), # type_ignore*
 
-    # (FunctionType, 'argtypes'):           (_put_one_default, None), # expr*
-    # (FunctionType, 'returns'):            (_put_one_default, None), # expr
+    # (FunctionType, 'argtypes'):           (), # expr*
+    # (FunctionType, 'returns'):            (), # expr
 
-    # (FunctionDef, 'type_comment'):        (_put_one_default, None), # string?
-    # (AsyncFunctionDef, 'type_comment'):   (_put_one_default, None), # string?
-    # (Assign, 'type_comment'):             (_put_one_default, None), # string?
-    # (For, 'type_comment'):                (_put_one_default, None), # string?
-    # (AsyncFor, 'type_comment'):           (_put_one_default, None), # string?
-    # (With, 'type_comment'):               (_put_one_default, None), # string?
-    # (AsyncWith, 'type_comment'):          (_put_one_default, None), # string?
-    # (arg, 'type_comment'):                (_put_one_default, None), # string?
+    # (FunctionDef, 'type_comment'):        (), # string?
+    # (AsyncFunctionDef, 'type_comment'):   (), # string?
+    # (Assign, 'type_comment'):             (), # string?
+    # (For, 'type_comment'):                (), # string?
+    # (AsyncFor, 'type_comment'):           (), # string?
+    # (With, 'type_comment'):               (), # string?
+    # (AsyncWith, 'type_comment'):          (), # string?
+    # (arg, 'type_comment'):                (), # string?
 
-    # (Attribute, 'ctx'):                   (_put_one_default, None), # expr_context
-    # (Subscript, 'ctx'):                   (_put_one_default, None), # expr_context
-    # (Starred, 'ctx'):                     (_put_one_default, None), # expr_context
-    # (Name, 'ctx'):                        (_put_one_default, None), # expr_context
-    # (List, 'ctx'):                        (_put_one_default, None), # expr_context
-    # (Tuple, 'ctx'):                       (_put_one_default, None), # expr_context
+    # (Attribute, 'ctx'):                   (), # expr_context
+    # (Subscript, 'ctx'):                   (), # expr_context
+    # (Starred, 'ctx'):                     (), # expr_context
+    # (Name, 'ctx'):                        (), # expr_context
+    # (List, 'ctx'):                        (), # expr_context
+    # (Tuple, 'ctx'):                       (), # expr_context
 
-    # (AnnAssign, 'simple'):                (_put_one_default, None), # int
-    # (ImportFrom, 'level'):                (_put_one_default, None), # int?
-    # (FormattedValue, 'conversion'):       (_put_one_default, None), # int
-    # (Interpolation, 'constant'):          (_put_one_default, None), # str
-    # (Interpolation, 'conversion'):        (_put_one_default, None), # int
-    # (Constant, 'kind'):                   (_put_one_default, None), # string?
-    # (comprehension, 'is_async'):          (_put_one_default, None), # int
-    # (TypeIgnore, 'lineno'):               (_put_one_default, None), # int
-    # (TypeIgnore, 'tag'):                  (_put_one_default, None), # string
+    # (AnnAssign, 'simple'):                (), # int
+    # (ImportFrom, 'level'):                (), # int?
+    # (FormattedValue, 'conversion'):       (), # int
+    # (Interpolation, 'constant'):          (), # str
+    # (Interpolation, 'conversion'):        (), # int
+    # (Constant, 'kind'):                   (), # string?
+    # (comprehension, 'is_async'):          (), # int
+    # (TypeIgnore, 'lineno'):               (), # int
+    # (TypeIgnore, 'tag'):                  (), # string
 }
 
 # ----------------------------------------------------------------------------------------------------------------------

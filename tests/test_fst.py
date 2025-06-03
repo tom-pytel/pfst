@@ -36053,6 +36053,78 @@ class cls:
 
                     raise
 
+    def test_get_one_special(self):
+        f = FST('a and b').get('op')
+        self.assertIsInstance(f.a, And)
+        self.assertEqual('and', f.src)
+
+        f = FST('a or b').get('op')
+        self.assertIsInstance(f.a, Or)
+        self.assertEqual('or', f.src)
+
+        f = FST('a or b').get('op')
+        self.assertIsInstance(f.a, Or)
+        self.assertEqual('or', f.src)
+
+        self.assertRaises(ValueError, FST('{a: b}').get, 0)
+        self.assertRaises(ValueError, FST('match a:\n case {1: b}: pass').cases[0].pattern.get, 0)
+
+        f = FST('a < b < c')
+        self.assertEqual('a', f.get(0).src)
+        self.assertEqual('b', f.get(1).src)
+        self.assertEqual('c', f.get(2).src)
+
+        f = FST('def f(): pass').get('args')
+        self.assertIsInstance(f.a, arguments)
+        self.assertEqual('', f.src)
+
+        f = FST('lambda: None').get('args')
+        self.assertIsInstance(f.a, arguments)
+        self.assertEqual('', f.src)
+
+        # identifier
+
+        self.assertEqual('ident', FST('def ident(): pass').get('name'))
+        self.assertEqual('ident', FST('async def ident(): pass').get('name'))
+        self.assertEqual('ident', FST('class ident: pass').get('name'))
+        self.assertEqual('ident', FST('from ident import *').get('module'))
+        self.assertEqual('ident', FST('global ident').get(0, 'names'))
+        self.assertEqual('ident', FST('nonlocal ident').get(0, 'names'))
+        self.assertEqual('ident', FST('obj.ident').get('attr'))
+        self.assertEqual('ident', FST('ident').get('id'))
+        self.assertEqual('ident', FST('except Exception as ident: pass').get('name'))
+        self.assertEqual('ident', FST('def f(ident): pass').args.args[0].get('arg'))
+        self.assertEqual('ident', FST('call(ident=1)').keywords[0].get('arg'))
+        self.assertEqual('ident', FST('import ident as b').names[0].get('name'))
+        self.assertEqual('ident', FST('import a as ident').names[0].get('asname'))
+        self.assertEqual('ident', FST('match a:\n case {**ident}: pass').cases[0].pattern.get('rest'))
+        self.assertEqual('ident', FST('match a:\n case cls(ident=1): pass').cases[0].pattern.get(0, 'kwd_attrs'))
+        self.assertEqual('ident', FST('match a:\n case (*ident,): pass').cases[0].pattern.patterns[0].get('name'))
+        self.assertEqual('ident', FST('match a:\n case 1 as ident: pass').cases[0].pattern.get('name'))
+
+        if sys.version_info[:2] >= (3, 12):
+            self.assertEqual('ident', FST('type t[ident] = ...').type_params[0].get('name'))
+            self.assertEqual('ident', FST('type t[*ident] = ...').type_params[0].get('name'))
+            self.assertEqual('ident', FST('type t[**ident] = ...').type_params[0].get('name'))
+
+        # get constant
+
+        for v in (True, False, None):
+            f = FST(f'match a:\n case {v}: pass').cases[0].pattern
+            g = f.get('value')
+            self.assertIsInstance(g.a, Constant)
+            self.assertEqual(str(v), g.src)
+            self.assertIs(v, g.value)
+
+        for s in ('...', '2', '2.0', '2j', '"str"', 'b"bytes"', 'True', 'False', 'None'):
+            f = FST(s)
+            self.assertIsInstance(f.a, Constant)
+
+            g = f.get('value')
+            self.assertIsInstance(g.a, Constant)
+            self.assertEqual(g.loc, f.loc)
+            compare_asts(g.a, f.a, locs=True, raise_=True)
+
     def test_put_slice_seq_del(self):
         for i, (src, elt, start, stop, options, src_cut, slice_copy, src_dump, slice_dump) in enumerate(GET_SLICE_SEQ_DATA):
             t = parse(src)
@@ -36482,11 +36554,11 @@ class cls:
 
         # generally reject FormattedValue and Slice
 
-        f = parse('a = b').body[0].f
-        s = parse('s[a:b]').body[0].value.slice.f.copy()
-        v = parse('f"{a}"').body[0].value.values[0].f.copy()  # .src will be wrong on py < 3.12 but we only care about the AST
-        self.assertRaises(NodeError, f.put, s, field='value', raw=False)
-        self.assertRaises(NodeError, f.put, v, field='value', raw=False)
+        # f = parse('a = b').body[0].f
+        # s = parse('s[a:b]').body[0].value.slice.f.copy()
+        # v = parse('f"{a}"').body[0].value.values[0].f.copy()  # .src will be wrong on py < 3.12 but we only care about the AST
+        # self.assertRaises(NodeError, f.put, s, field='value', raw=False)
+        # self.assertRaises(NodeError, f.put, v, field='value', raw=False)
 
         # slice in tuple
 

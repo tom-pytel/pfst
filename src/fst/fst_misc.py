@@ -920,6 +920,14 @@ def _maybe_fix(self: 'FST', pars: bool = True):
                 self._parenthesize_grouping()
 
 
+def _is_arguments_empty(self: 'FST') -> bool:
+    """Is this `arguments` node empty?"""
+
+    # assert isinstance(self.a, arguments)
+
+    return not ((a := self.a).posonlyargs or a.args or a.vararg or a.kwonlyargs or a.kwarg)
+
+
 def _is_parenthesized_ImportFrom_names(self: 'FST') -> bool:
     # assert isinstance(self.a, ImportFrom)
 
