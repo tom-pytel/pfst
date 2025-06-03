@@ -30177,6 +30177,21 @@ def f():
             fc._maybe_fix(pars=True)
             self.assertEqual('*tuple[int, ...],', fc.src)
 
+    def test__unparse(self):
+        self.assertEqual('for i in j', FST._unparse(FST('[i for i in j]').generators[0].a))
+
+        for op in (Add, Sub, Mult, Div, Mod, Pow, LShift, RShift, BitOr, BitXor, BitAnd, FloorDiv, And, Or):
+            self.assertIs(OPCLS2STR[op], FST._unparse(FST(f'a {OPCLS2STR[op]} b').op.a))
+
+        for op in (Add, Sub, Mult, Div, Mod, Pow, LShift, RShift, BitOr, BitXor, BitAnd, FloorDiv):
+            self.assertIs(OPCLS2STR[op], FST._unparse(FST(f'a {OPCLS2STR[op]}= b').op.a))
+
+        for op in (Invert, Not, UAdd, USub):
+            self.assertIs(OPCLS2STR[op], FST._unparse(FST(f'{OPCLS2STR[op]} a').op.a))
+
+        for op in (Eq, NotEq, Lt, LtE, Gt, GtE, Is, IsNot, In, NotIn):
+            self.assertIs(OPCLS2STR[op], FST._unparse(FST(f'a {OPCLS2STR[op]} b').ops[0].a))
+
     def test__parse(self):
         for mode, func, res, src in PARSE_TESTS:
             try:
@@ -36673,6 +36688,36 @@ a
             f = FST('t"{a}"', 'exec').body[0].value.copy()
             f.values[0].put('b')
             self.assertEqual('b', f.a.values[0].str)
+
+        # put constant
+
+        f = FST('match a:\n case None: pass').cases[0].pattern
+        self.assertIsInstance((g := FST('True')).a, Constant)
+        f.put(g, 'value', raw=False)
+        self.assertEqual('True', g.src)
+        self.assertIs(True, g.value)
+
+        self.assertIsInstance((g := FST('False')).a, Constant)
+        f.put(g, 'value', raw=False)
+        self.assertEqual('False', g.src)
+        self.assertIs(False, g.value)
+
+        self.assertIsInstance((g := FST('None')).a, Constant)
+        f.put(g, 'value', raw=False)
+        self.assertEqual('None', g.src)
+        self.assertIs(None, g.value)
+
+        self.assertIsInstance((h := FST('None')).a, Constant)
+
+        for s in ('...', '2', '2.0', '2j', '"str"', 'b"bytes"', 'True', 'False', 'None'):
+            self.assertIsInstance((g := FST(s)).a, Constant)
+
+            if g.a.value not in (True, False, None):
+                self.assertRaises(NodeError, f.put, g, 'value', raw=False)
+
+            h.put(g, 'value', raw=False)
+            self.assertEqual(s, g.src)
+            self.assertEqual(h.value, g.value)
 
     def test_put_one_pars(self):
         f = FST('a = b', 'exec').body[0]

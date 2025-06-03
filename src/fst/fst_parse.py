@@ -103,7 +103,13 @@ _GLOBALS = globals() | {'_GLOBALS': None}
 def _unparse(ast: AST) -> AST:
     """AST unparse that handles misc case of comprehension starting with a single space by stripping it."""
 
-    return ast_unparse(ast).lstrip() if isinstance(ast, comprehension) else ast_unparse(ast)
+    if isinstance(ast, comprehension):  # strip prefix space from this
+        return ast_unparse(ast).lstrip()
+
+    if src := OPCLS2STR.get(ast.__class__):  # operators don't unparse to anything in ast
+        return src
+
+    return ast_unparse(ast)
 
 
 @staticmethod

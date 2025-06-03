@@ -36,7 +36,7 @@ def _params_Compare_None(self: 'FST', idx: int | None) -> tuple[int, str, AST | 
 # ----------------------------------------------------------------------------------------------------------------------
 # get
 
-def _get_one(self: 'FST', idx: int | None, field: str, cut: bool, **options) -> Optional['FST'] | constant:
+def _get_one(self: 'FST', idx: int | None, field: str, cut: bool, **options) -> Optional['FST'] | str:
     """Copy or cut (if possible) a node or non-node from a field of `self`."""
 
     ast = self.a

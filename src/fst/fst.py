@@ -802,7 +802,7 @@ class FST:
         return parent._put_one(code, (pf := self.pfield).idx, pf.name, **options)
 
     def get(self, start: int | Literal['end'] | None = None, stop: int | None | Literal[False] = False,
-            field: str | None = None, *, cut: bool = False, **options) -> Optional['FST'] | constant:
+            field: str | None = None, *, cut: bool = False, **options) -> Optional['FST'] | str:
         """Copy or cut an individual child node or a slice of child nodes from `self`."""
 
         ast                = self.a
