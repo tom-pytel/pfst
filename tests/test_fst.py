@@ -30951,7 +30951,7 @@ def f(a, /, b, *c, d, **e):
 
         for f in fst.walk(self_=False):
             if f.pfield.name in ('body', 'orelse'):
-                f.replace(str(i := i + 1))
+                f.replace(str(i := i + 1), raw=False)
 
         self.assertEqual(fst.src, 'if 1:\n 1\n 2\n 3\nelse:\n 4\n 5')
 
@@ -30960,7 +30960,7 @@ def f(a, /, b, *c, d, **e):
 
         for f in fst.walk(self_=False):
             if f.pfield.name == 'elts':
-                f.replace(str(i := i + 1))
+                f.replace(str(i := i + 1), raw=False)
 
         self.assertEqual(fst.src, '[1, 2, 3]')
 
@@ -35531,13 +35531,13 @@ class cls:
         g = f.generators[1].replace(None, raw=True, pars=False)
         f = f.repath()
         self.assertEqual(f.src, '[a for c in d  for a in b]')
-        # self.assertIsNone(g)
-        self.assertEqual(g.src, '[a for c in d  for a in b]')
+        self.assertIsNone(g)
+        # self.assertEqual(g.src, '[a for c in d  for a in b]')
         g = f.generators[1].replace(None, raw=True, pars=False)
         f = f.repath()
         self.assertEqual(f.src, '[a for c in d  ]')
-        # self.assertIsNone(g)
-        self.assertEqual(g.src, '[a for c in d  ]')
+        self.assertIsNone(g)
+        # self.assertEqual(g.src, '[a for c in d  ]')
 
         f = parse('f(i for i in j)').body[0].value.args[0].f
         g = f.replace('a', raw=True, pars=False)

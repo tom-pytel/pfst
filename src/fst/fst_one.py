@@ -203,17 +203,6 @@ def _put_one_op(self: 'FST', code: Code | None, idx: int | None, field: str,
     return childf
 
 
-def _put_one_stmtish(self: 'FST', code: Code | None, idx: int | None, field: str, child: list[AST], static: None,
-                     **options) -> Optional['FST']:
-    """Put or delete a single statementish node to a list of them (body, orelse, handlers, finalbody or cases)."""
-
-    idx = _fixup_one_index(len(child), idx)
-
-    self._put_slice_stmtish(code, idx, idx + 1, field, True, **options)
-
-    return None if code is None else getattr(self.a, field)[idx].f
-
-
 # ......................................................................................................................
 # exprish (expr, pattern, comprehension, etc...)
 
@@ -759,10 +748,11 @@ def _put_one(self: 'FST', code: Code | None, idx: int | None, field: str, **opti
 
     sliceable, handler, static = _PUT_ONE_HANDLERS.get((ast.__class__, field), (False, None, None))
 
-    if sliceable and code is None and not to:  # if deleting from a sliceable field without a 'to' parameter then delegate to slice operation
-        idx = _fixup_one_index(len(child if field else ast.keys), idx)  # field will be '' only for Dict and MatchMapping which both have keys, Compare is not considered sliceable for single element deletions
+    if sliceable and (not handler or (code is None and not to)):  # if deleting from a sliceable field without a 'to' parameter then delegate to slice operation, also all statementishs
+        idx      = _fixup_one_index(len(child if field else ast.keys), idx)  # field will be '' only for Dict and MatchMapping which both have keys, Compare is not considered sliceable for single element deletions
+        new_self = self._put_slice(code, idx, idx + 1, field, True, **options)
 
-        return self._put_slice(code, idx, idx + 1, field, True, **options)
+        return None if code is None or not field else getattr(new_self.a, field)[idx].f  # guaranteed to be there if code is not None because was just replacement
 
     if raw is not True:
         try:
@@ -776,7 +766,7 @@ def _put_one(self: 'FST', code: Code | None, idx: int | None, field: str, **opti
 
             else:
                 modified = self._modifying(field)
-                ret      = handler(self, code, idx, field, child, static, modified=modified, **options)
+                ret      = handler(self, code, idx, field, child, static, **options)
 
                 modified()
 
@@ -1324,27 +1314,27 @@ def _one_info_TypeVarTuple_name(self: 'FST', static: onestatic, idx: int | None,
 # TODO: finish these
 
 _PUT_ONE_HANDLERS = {
-    (Module, 'body'):                     (False, _put_one_stmtish, None), # stmt*
-    (Interactive, 'body'):                (False, _put_one_stmtish, None), # stmt*
+    (Module, 'body'):                     (True,  None, None), # stmt*  - all stmtishs have sliceable True and handler None to force always use slice operation (because of evil semicolons handled there)
+    (Interactive, 'body'):                (True,  None, None), # stmt*
     (Expression, 'body'):                 (False, _put_one_exprish_required, _onestatic_expr_required), # expr
     (FunctionDef, 'decorator_list'):      (True,  _put_one_exprish_required, _onestatic_expr_required), # expr*
     (FunctionDef, 'name'):                (False, _put_one_identifier_required, _onestatic_FunctionDef_name), # identifier
     (FunctionDef, 'type_params'):         (True,  _put_one_exprish_required, _onestatic_type_param_required), # type_param*
     (FunctionDef, 'args'):                (False, _put_one_FunctionDef_arguments, _onestatic_arguments_required), # arguments
     (FunctionDef, 'returns'):             (False, _put_one_exprish_optional, _onestatic_FunctionDef_returns), # expr?
-    (FunctionDef, 'body'):                (False, _put_one_stmtish, None), # stmt*
+    (FunctionDef, 'body'):                (True,  None, None), # stmt*
     (AsyncFunctionDef, 'decorator_list'): (True,  _put_one_exprish_required, _onestatic_expr_required), # expr*
     (AsyncFunctionDef, 'name'):           (False, _put_one_identifier_required, _onestatic_FunctionDef_name), # identifier
     (AsyncFunctionDef, 'type_params'):    (True,  _put_one_exprish_required, _onestatic_type_param_required), # type_param*
     (AsyncFunctionDef, 'args'):           (False, _put_one_FunctionDef_arguments, _onestatic_arguments_required), # arguments
     (AsyncFunctionDef, 'returns'):        (False, _put_one_exprish_optional, _onestatic_FunctionDef_returns), # expr?
-    (AsyncFunctionDef, 'body'):           (False, _put_one_stmtish, None), # stmt*
+    (AsyncFunctionDef, 'body'):           (True,  None, None), # stmt*
     (ClassDef, 'decorator_list'):         (True,  _put_one_exprish_required, _onestatic_expr_required), # expr*
     (ClassDef, 'name'):                   (False, _put_one_identifier_required, onestatic(_one_info_ClassDef_name, _restrict_default, code_as=_code_as_identifier)), # identifier
     (ClassDef, 'type_params'):            (True,  _put_one_exprish_required, _onestatic_type_param_required), # type_param*
     (ClassDef, 'bases'):                  (True,  _put_one_exprish_required, _onestatic_expr_required), # expr*
     (ClassDef, 'keywords'):               (True,  _put_one_exprish_required, _onestatic_keyword_required), # keyword*
-    (ClassDef, 'body'):                   (False, _put_one_stmtish, None), # stmt*
+    (ClassDef, 'body'):                   (True,  None, None), # stmt*
     (Return, 'value'):                    (False, _put_one_exprish_optional, onestatic(_one_info_Return_value, _restrict_default)), # expr?
     (Delete, 'targets'):                  (True,  _put_one_exprish_required, _onestatic_target), # expr*
     (Assign, 'targets'):                  (True,  _put_one_exprish_required, _onestatic_target), # expr*
@@ -1360,34 +1350,34 @@ _PUT_ONE_HANDLERS = {
     (AnnAssign, 'value'):                 (False, _put_one_exprish_optional, onestatic(_one_info_AnnAssign_value, _restrict_default)), # expr?
     (For, 'target'):                      (False, _put_one_exprish_required, _onestatic_target), # expr
     (For, 'iter'):                        (False, _put_one_exprish_required, _onestatic_expr_required), # expr
-    (For, 'body'):                        (False, _put_one_stmtish, None), # stmt*
-    (For, 'orelse'):                      (False, _put_one_stmtish, None), # stmt*
+    (For, 'body'):                        (True,  None, None), # stmt*
+    (For, 'orelse'):                      (True,  None, None), # stmt*
     (AsyncFor, 'target'):                 (False, _put_one_exprish_required, _onestatic_target), # expr
     (AsyncFor, 'iter'):                   (False, _put_one_exprish_required, _onestatic_expr_required), # expr
-    (AsyncFor, 'body'):                   (False, _put_one_stmtish, None), # stmt*
-    (AsyncFor, 'orelse'):                 (False, _put_one_stmtish, None), # stmt*
+    (AsyncFor, 'body'):                   (True,  None, None), # stmt*
+    (AsyncFor, 'orelse'):                 (True,  None, None), # stmt*
     (While, 'test'):                      (False, _put_one_exprish_required, _onestatic_expr_required), # expr
-    (While, 'body'):                      (False, _put_one_stmtish, None), # stmt*
-    (While, 'orelse'):                    (False, _put_one_stmtish, None), # stmt*
+    (While, 'body'):                      (True,  None, None), # stmt*
+    (While, 'orelse'):                    (True,  None, None), # stmt*
     (If, 'test'):                         (False, _put_one_exprish_required, _onestatic_expr_required), # expr
-    (If, 'body'):                         (False, _put_one_stmtish, None), # stmt*
-    (If, 'orelse'):                       (False, _put_one_stmtish, None), # stmt*
+    (If, 'body'):                         (True,  None, None), # stmt*
+    (If, 'orelse'):                       (True,  None, None), # stmt*
     (With, 'items'):                      (True,  _put_one_exprish_required, _onestatic_withitem_required), # withitem*
-    (With, 'body'):                       (False, _put_one_stmtish, None), # stmt*
+    (With, 'body'):                       (True,  None, None), # stmt*
     (AsyncWith, 'items'):                 (True,  _put_one_exprish_required, _onestatic_withitem_required), # withitem*
-    (AsyncWith, 'body'):                  (False, _put_one_stmtish, None), # stmt*
+    (AsyncWith, 'body'):                  (True,  None, None), # stmt*
     (Match, 'subject'):                   (False, _put_one_exprish_required, _onestatic_expr_required), # expr
-    (Match, 'cases'):                     (False, _put_one_stmtish, None), # match_case*
+    (Match, 'cases'):                     (True,  None, None), # match_case*
     (Raise, 'exc'):                       (False, _put_one_exprish_optional, onestatic(_one_info_Raise_exc, _restrict_default)), # expr?
     (Raise, 'cause'):                     (False, _put_one_exprish_optional, onestatic(_one_info_Raise_cause, _restrict_default)), # expr?
-    (Try, 'body'):                        (False, _put_one_stmtish, None), # stmt*
-    (Try, 'handlers'):                    (False, _put_one_stmtish, None), # excepthandler*
-    (Try, 'orelse'):                      (False, _put_one_stmtish, None), # stmt*
-    (Try, 'finalbody'):                   (False, _put_one_stmtish, None), # stmt*
-    (TryStar, 'body'):                    (False, _put_one_stmtish, None), # stmt*
-    (TryStar, 'handlers'):                (False, _put_one_stmtish, None), # excepthandler*
-    (TryStar, 'orelse'):                  (False, _put_one_stmtish, None), # stmt*
-    (TryStar, 'finalbody'):               (False, _put_one_stmtish, None), # stmt*
+    (Try, 'body'):                        (True,  None, None), # stmt*
+    (Try, 'handlers'):                    (True,  None, None), # excepthandler*
+    (Try, 'orelse'):                      (True,  None, None), # stmt*
+    (Try, 'finalbody'):                   (True,  None, None), # stmt*
+    (TryStar, 'body'):                    (True,  None, None), # stmt*
+    (TryStar, 'handlers'):                (True,  None, None), # excepthandler*
+    (TryStar, 'orelse'):                  (True,  None, None), # stmt*
+    (TryStar, 'finalbody'):               (True,  None, None), # stmt*
     (Assert, 'test'):                     (False, _put_one_exprish_required, _onestatic_expr_required), # expr
     (Assert, 'msg'):                      (False, _put_one_exprish_optional, onestatic(_one_info_Assert_msg, _restrict_default)), # expr?
     (Import, 'names'):                    (True,  _put_one_exprish_required, onestatic(_one_info_exprish_required, _restrict_default, code_as=_code_as_alias_dotted)), # alias*
@@ -1437,8 +1427,8 @@ _PUT_ONE_HANDLERS = {
     # (FormattedValue, 'format_spec'):      (False, _put_one_default, None), # expr?
     (Interpolation, 'value'):             (False, _put_one_exprish_required, _onestatic_expr_required), # expr
     # (Interpolation, 'format_spec'):       (False, _put_one_default, None), # expr?
-    # (JoinedStr, 'values'):                (False, _put_one_default, None), # expr*  - ??? no location on py < 3.12
-    # (TemplateStr, 'values'):              (False, _put_one_default, None), # expr*  - ??? no location on py < 3.12
+    # (JoinedStr, 'values'):                (True, _put_one_default, None), # expr*  - ??? no location on py < 3.12
+    # (TemplateStr, 'values'):              (True, _put_one_default, None), # expr*  - ??? no location on py < 3.12
     (Constant, 'value'):                  (False, _put_one_constant, onestatic(_one_info_constant, Constant)), # constant
     (Attribute, 'value'):                 (False, _put_one_exprish_required, _onestatic_expr_required), # expr
     (Attribute, 'attr'):                  (False, _put_one_identifier_required, onestatic(_one_info_Attribute_attr, _restrict_default, code_as=_code_as_identifier)), # identifier
@@ -1456,7 +1446,7 @@ _PUT_ONE_HANDLERS = {
     (comprehension, 'ifs'):               (True,  _put_one_exprish_required, _onestatic_expr_required), # expr*
     (ExceptHandler, 'type'):              (False, _put_one_exprish_optional, onestatic(_one_info_ExceptHandler_type, _restrict_default)), # expr?
     (ExceptHandler, 'name'):              (False, _put_one_ExceptHandler_name, onestatic(_one_info_ExceptHandler_name, _restrict_default, code_as=_code_as_identifier)), # identifier?
-    (ExceptHandler, 'body'):              (False, _put_one_stmtish, None), # stmt*
+    (ExceptHandler, 'body'):              (True,  None, None), # stmt*
     (arguments, 'posonlyargs'):           (True,  _put_one_exprish_required, _onestatic_arg_required), # arg*
     (arguments, 'args'):                  (True,  _put_one_exprish_required, _onestatic_arg_required), # arg*
     (arguments, 'defaults'):              (False, _put_one_exprish_required, _onestatic_expr_required), # expr*
@@ -1474,7 +1464,7 @@ _PUT_ONE_HANDLERS = {
     (withitem, 'optional_vars'):          (False, _put_one_withitem_optional_vars, onestatic(_one_info_withitem_optional_vars, (Name, Tuple, List, Attribute, Subscript), ctx=Store)), # expr?
     (match_case, 'pattern'):              (False, _put_one_exprish_required, _onestatic_pattern_required), # pattern
     (match_case, 'guard'):                (False, _put_one_exprish_optional, onestatic(_one_info_match_case_guard, _restrict_default)), # expr?
-    (match_case, 'body'):                 (False, _put_one_stmtish, None), # stmt*
+    (match_case, 'body'):                 (True,  None, None), # stmt*
     (MatchValue, 'value'):                (False, _put_one_MatchValue_value, onestatic(_one_info_exprish_required, is_valid_MatchValue_value)), # expr
     (MatchSingleton, 'value'):            (False, _put_one_constant, onestatic(_one_info_constant, is_valid_MatchSingleton_value)), # constant
     (MatchSequence, 'patterns'):          (True,  _put_one_exprish_required, _onestatic_pattern_required), # pattern*
