@@ -137,7 +137,8 @@ else:
     def _get_one_format_spec(self: 'FST', idx: int | None, field: str, cut: bool, **options) -> Optional['FST'] | str:
         child, _ = _validate_get(self, idx, field)
         childf   = child.f
-        ret      = childf._make_fst_and_dedent(childf, copy_ast(child), childf.loc, "f", "'", docstr=options.get('docstr'))
+        ret      = childf._make_fst_and_dedent(childf, copy_ast(child), childf.loc, "f", "'",
+                                               docstr=options.get('docstr'))
         ls[0]    = bistr("f'" + (ls := ret._lines)[0][2:])
 
         reta                 = ret.a
@@ -151,7 +152,38 @@ else:
 
     def _get_one_JoinedStr_TemplateStr_values(self: 'FST', idx: int | None, field: str, cut: bool, **options,
                                               ) -> Optional['FST'] | str:
-        raise NotImplementedError('this is only implemented on python version 3.12 and above')
+        child, _      = _validate_get(self, idx, field)
+        childf        = child.f
+
+        ln, col, _, _ = self.loc
+        lines         = self.root._lines
+        l             = lines[ln]
+        prefix        = l[col : col + (4 if l.startswith('"""', col + 1) or l.startswith("'''", col + 1) else 2)]
+
+        if isinstance(child, Constant):
+            ret             = childf._make_fst_and_dedent('', copy_ast(child), childf.loc, prefix[1:])
+            reta            = ret.a
+            reta.col_offset = 0
+
+            ret._touch()
+
+            if indent := childf.get_indent():
+                ret.dedent_lns(indent, skip=1, docstr=options.get('docstr'))
+
+        else:
+            assert isinstance(child, (FormattedValue, Interpolation))
+
+            typ     = 'f' if isinstance(child, FormattedValue) else 't'
+            prefix  = typ + prefix[1:]
+            fmt     = childf._make_fst_and_dedent(childf, copy_ast(child), childf.loc, prefix, prefix[1:],
+                                                  docstr=options.get('docstr'))
+            lprefix = len(prefix)
+            ret     = FST((JoinedStr if typ == 'f' else TemplateStr)
+                          (values=[fmt.a], lineno=fmt.lineno, col_offset=fmt.col_offset - lprefix,
+                           end_lineno=fmt.end_lineno, end_col_offset=fmt.end_col_offset + lprefix - 1),
+                          fmt._lines, from_=self, lcopy=False)
+
+        return ret
 
 
 # ......................................................................................................................
@@ -294,8 +326,8 @@ _GET_ONE_HANDLERS = {
     (FormattedValue, 'format_spec'):      _get_one_format_spec, # expr?  - no location on py < 3.12
     (Interpolation, 'value'):             _get_one_default, # expr
     (Interpolation, 'format_spec'):       _get_one_format_spec, # expr?  - no location on py < 3.12
-    # (JoinedStr, 'values'):                _get_one_JoinedStr_TemplateStr_values, # expr*  - no location on py < 3.12
-    # (TemplateStr, 'values'):              _get_one_JoinedStr_TemplateStr_values, # expr*  - no location on py < 3.12
+    (JoinedStr, 'values'):                _get_one_JoinedStr_TemplateStr_values, # expr*  - no location on py < 3.12
+    (TemplateStr, 'values'):              _get_one_JoinedStr_TemplateStr_values, # expr*  - no location on py < 3.12
     (Constant, 'value'):                  _get_one_Constant_value, # constant
     (Attribute, 'value'):                 _get_one_default, # expr
     (Attribute, 'attr'):                  _get_one_identifier, # identifier

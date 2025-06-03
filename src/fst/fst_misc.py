@@ -1214,7 +1214,8 @@ def _make_fst_and_dedent(self: 'FST', indent: Union['FST', str], ast: AST, copy_
     if prefix:
         fst_lines[0] = bistr(prefix + fst_lines[0])
 
-    fst.dedent_lns(indent, skip=bool(copy_loc.col), docstr=docstr)  # if copy location starts at column 0 then we apply dedent to it as well (preceding comment or something)
+    if indent:
+        fst.dedent_lns(indent, skip=bool(copy_loc.col), docstr=docstr)  # if copy location starts at column 0 then we apply dedent to it as well (preceding comment or something)
 
     if put_loc:
         self.put_src(put_lines, *put_loc, True)  # True because we may have an unparenthesized tuple that shrinks to a span length of 0

@@ -1,4 +1,7 @@
+from typing import get_args
+
 from .fst import parse
+from .shared import Mode
 
 
 def main():
@@ -9,13 +12,11 @@ def main():
 
     parser.add_argument('infile', nargs='?', default='-',
                         help='the file to parse; defaults to stdin')
-    parser.add_argument('-m', '--mode', default='exec',
-                        choices=('exec', 'single', 'eval', 'func_type'),
+    parser.add_argument('-m', '--mode', default='any',
+                        choices=get_args(get_args(Mode)[1]),
                         help='specify what kind of code must be parsed')
-    parser.add_argument('--no-type-comments', default=True, action='store_false',
-                        help="don't add information about type comments")
-    parser.add_argument('-a', '--include-attributes', action='store_true',
-                        help='attributes always included, here for compatibility')
+    parser.add_argument('--type-comments', default=False, action='store_true',
+                        help="add information about type comments")
     parser.add_argument('-i', '--indent', type=int, default=2,
                         help='indentation of nodes (number of spaces)')
     parser.add_argument('--no-verify', default=True, action='store_false',
@@ -37,9 +38,9 @@ def main():
         with open(args.infile, 'rb') as infile:
             source = infile.read()
 
-    ast = parse(source, name, args.mode, type_comments=args.no_type_comments)
+    ast = parse(source, name, args.mode, type_comments=args.type_comments)
 
-    if args.no_verify:
+    if args.no_verify and args.mode in ('any', 'exec', 'eval', 'single', 'stmt', 'expr'):
         ast.f.verify(raise_=True)
 
     ast.f.dump(compact=args.compact, full=args.full, indent=args.indent)

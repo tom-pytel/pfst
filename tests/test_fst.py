@@ -36148,6 +36148,41 @@ class cls:
             self.assertEqual("f'0.5f<12'", f.src)
             f.verify()
 
+            f = FST(r'''
+f'\
+{a:0.5f<12}a' "b" \
+ "c" \
+f"{d : {"0.5f<12"} }"
+                '''.strip())
+            g = f.get(1, 'values')
+            self.assertEqual(r''''a' "b" \
+ "c"''', g.src)
+            g.verify()
+            g = f.get(0, 'values')
+            self.assertEqual("f'{a:0.5f<12}'", g.src)
+            g.verify()
+            g = f.get(2, 'values')
+            self.assertEqual("""f'{d : {"0.5f<12"} }'""", g.src)
+            g.verify()
+
+            f = FST(r'''
+if 1:
+    f'\
+    {a:0.5f<12}a' "b" \
+     "c" \
+    f"{d : {"0.5f<12"} }"
+                '''.strip())
+            g = f.body[0].value.get(2, 'values')
+            self.assertEqual(r''''a' "b" \
+ "c"''', g.src)
+            g.verify()
+            g = f.body[0].value.get(1, 'values')
+            self.assertEqual("f'{a:0.5f<12}'", g.src)
+            g.verify()
+            g = f.body[0].value.get(3, 'values')
+            self.assertEqual("""f'{d : {"0.5f<12"} }'""", g.src)
+            g.verify()
+
         if sys.version_info[:2] >= (3, 14):
             f = FST('if 1:\n    t"{a!r\n : {\'0.5f<12\'} }"').body[0].value.values[0].get('format_spec')
             self.assertEqual("f' {'0.5f<12'} '", f.src)
@@ -36168,6 +36203,41 @@ class cls:
             f = FST('t"{a!r:0.5f<12}"').values[0].get('format_spec')
             self.assertEqual("f'0.5f<12'", f.src)
             f.verify()
+
+            f = FST(r'''
+t'\
+{a:0.5f<12}a' "b" \
+ "c" \
+f"{d : {"0.5f<12"} }"
+                '''.strip())
+            g = f.get(1, 'values')
+            self.assertEqual(r''''a' "b" \
+ "c"''', g.src)
+            g.verify()
+            g = f.get(0, 'values')
+            self.assertEqual("t'{a:0.5f<12}'", g.src)
+            g.verify()
+            g = f.get(2, 'values')
+            self.assertEqual("""f'{d : {"0.5f<12"} }'""", g.src)
+            g.verify()
+
+            f = FST(r'''
+if 1:
+    t'\
+    {a:0.5f<12}a' "b" \
+     "c" \
+    f"{d : {"0.5f<12"} }"
+                '''.strip())
+            g = f.body[0].value.get(2, 'values')
+            self.assertEqual(r''''a' "b" \
+ "c"''', g.src)
+            g.verify()
+            g = f.body[0].value.get(1, 'values')
+            self.assertEqual("t'{a:0.5f<12}'", g.src)
+            g.verify()
+            g = f.body[0].value.get(3, 'values')
+            self.assertEqual("""f'{d : {"0.5f<12"} }'""", g.src)
+            g.verify()
 
     def test_put_slice_seq_del(self):
         for i, (src, elt, start, stop, options, src_cut, slice_copy, src_dump, slice_dump) in enumerate(GET_SLICE_SEQ_DATA):
