@@ -36171,8 +36171,7 @@ f'\
 f"{d : {"0.5f<12"} }"
                 '''.strip())
             g = f.get(1, 'values')
-            self.assertEqual(r''''a' "b" \
- "c"''', g.src)
+            self.assertEqual("'abc'", g.src)
             g.verify()
             g = f.get(0, 'values')
             self.assertEqual("f'{a:0.5f<12}'", g.src)
@@ -36189,8 +36188,7 @@ if 1:
     f"{d : {"0.5f<12"} }"
                 '''.strip())
             g = f.body[0].value.get(2, 'values')
-            self.assertEqual(r''''a' "b" \
- "c"''', g.src)
+            self.assertEqual("'abc'", g.src)
             g.verify()
             g = f.body[0].value.get(1, 'values')
             self.assertEqual("f'{a:0.5f<12}'", g.src)
@@ -36232,8 +36230,7 @@ t'\
 f"{d : {"0.5f<12"} }"
                 '''.strip())
             g = f.get(1, 'values')
-            self.assertEqual(r''''a' "b" \
- "c"''', g.src)
+            self.assertEqual("'abc'", g.src)
             g.verify()
             g = f.get(0, 'values')
             self.assertEqual("t'{a:0.5f<12}'", g.src)
@@ -36250,8 +36247,7 @@ if 1:
     f"{d : {"0.5f<12"} }"
                 '''.strip())
             g = f.body[0].value.get(2, 'values')
-            self.assertEqual(r''''a' "b" \
- "c"''', g.src)
+            self.assertEqual("'abc'", g.src)
             g.verify()
             g = f.body[0].value.get(1, 'values')
             self.assertEqual("t'{a:0.5f<12}'", g.src)
@@ -36261,7 +36257,20 @@ if 1:
             g.verify()
 
             f = FST("f'a{b:<3}'")
-            self.assertEqual("'a'", f.get(0).src)
+            self.assertEqual("'a'", (g := f.get(0)).src)
+            g.verify()
+
+            f = FST('f"{a}" \'b\' "c" \'d\'')
+            self.assertEqual("'bcd'", (g := f.get(1)).src)
+            g.verify()
+
+            f = FST('f"{a}" \'b\' f"{c}"')
+            self.assertEqual("'b'", (g := f.get(1)).src)
+            g.verify()
+
+            f = FST('f"abc"')
+            self.assertEqual("'abc'", (g := f.get(0)).src)
+            g.verify()
 
     def test_put_slice_seq_del(self):
         for i, (src, elt, start, stop, options, src_cut, slice_copy, src_dump, slice_dump) in enumerate(GET_SLICE_SEQ_DATA):

@@ -178,25 +178,29 @@ else:
         prefix        = l[col : col + (4 if l.startswith('"""', col + 1) or l.startswith("'''", col + 1) else 2)]
 
         if isinstance(child, Constant):
-            loc    = childf.loc
-            prefix = prefix [1:]
-            suffix = ''
+            ret = FST(copy_ast(child), Constant)  # this is because of implicit string madness
 
-            if idx < len(self.a.values) - 1:  # this is ugly, but so are f-strings, its in case of stupidity like: f"{a}b" "c" 'ddd'
-                try:
-                    literal_eval(f'{prefix}{self.get_src(*loc)}')
-                except SyntaxError:
-                    suffix = prefix
+            # TODO: maybe pick this up again to return source-accurate string if possible?
 
-            ret                  = childf._make_fst_and_dedent('', copy_ast(child), loc, prefix, suffix)
-            reta                 = ret.a
-            reta.col_offset      = 0
-            reta.end_col_offset += len(suffix)
+            # loc    = childf.loc
+            # prefix = prefix [1:]
+            # suffix = ''
 
-            ret._touch()
+            # if idx < len(self.a.values) - 1:  # this is ugly, but so are f-strings, its in case of stupidity like: f"{a}b" "c" 'ddd'
+            #     try:
+            #         literal_eval(f'{prefix}{self.get_src(*loc)}')
+            #     except SyntaxError:
+            #         suffix = prefix
 
-            if indent := childf.get_indent():
-                ret.dedent_lns(indent, skip=1, docstr=options.get('docstr'))
+            # ret                  = childf._make_fst_and_dedent('', copy_ast(child), loc, prefix, suffix)
+            # reta                 = ret.a
+            # reta.col_offset      = 0
+            # reta.end_col_offset += len(suffix)
+
+            # ret._touch()
+
+            # if indent := childf.get_indent():
+            #     ret.dedent_lns(indent, skip=1, docstr=options.get('docstr'))
 
         else:
             assert isinstance(child, (FormattedValue, Interpolation))
