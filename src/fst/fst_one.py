@@ -5,10 +5,10 @@ import sys
 from ast import *
 from itertools import takewhile
 from types import FunctionType
-from typing import Any, Callable, NamedTuple, Optional, Union
+from typing import Callable, NamedTuple, Optional, Union
 
 from .astutil import *
-from .astutil import TypeAlias, TryStar, type_param, TypeVar, ParamSpec, TypeVarTuple, TemplateStr, Interpolation
+from .astutil import TypeAlias, TryStar, TypeVar, ParamSpec, TypeVarTuple, TemplateStr, Interpolation
 
 from .shared import (
     STMTISH, Code, NodeError, astfield, fstloc,
@@ -178,9 +178,20 @@ else:
         prefix        = l[col : col + (4 if l.startswith('"""', col + 1) or l.startswith("'''", col + 1) else 2)]
 
         if isinstance(child, Constant):
-            ret             = childf._make_fst_and_dedent('', copy_ast(child), childf.loc, prefix[1:])
-            reta            = ret.a
-            reta.col_offset = 0
+            loc    = childf.loc
+            prefix = prefix [1:]
+            suffix = ''
+
+            if idx < len(self.a.values) - 1:  # this is ugly, but so are f-strings, its in case of stupidity like: f"{a}b" "c" 'ddd'
+                try:
+                    literal_eval(f'{prefix}{self.get_src(*loc)}')
+                except SyntaxError:
+                    suffix = prefix
+
+            ret                  = childf._make_fst_and_dedent('', copy_ast(child), loc, prefix, suffix)
+            reta                 = ret.a
+            reta.col_offset      = 0
+            reta.end_col_offset += len(suffix)
 
             ret._touch()
 

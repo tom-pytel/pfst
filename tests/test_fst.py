@@ -34457,46 +34457,6 @@ def func():
 
                 a.f.parent.put_slice(None, idx, idx + 1, field)
 
-    def test_get_one_special(self):
-        f = FST('a = b', 'exec').body[0]
-        self.assertRaises(ValueError, f.targets[0].get, 'ctx')  # cannot copy node which does not have a location
-        self.assertRaises(ValueError, f.value.get, 'ctx')
-
-        f = FST('{a: b}', 'exec').body[0].value
-        self.assertRaises(ValueError, f.get, 0)  # cannot get single element from combined field of Dict
-
-        f = FST('match a:\n case {1: b}: pass', 'exec').body[0].cases[0].pattern
-        self.assertRaises(ValueError, f.get, 0)  # cannot get single element from combined field of MatchMapping
-
-        f = FST('a < b < c', 'exec').body[0].value
-        self.assertEqual('a', f.get(0).src)
-        self.assertEqual('b', f.get(1).src)
-        self.assertEqual('c', f.get(2).src)
-        self.assertEqual('a', f.get('left').src)
-        self.assertEqual('b', f.get(0, 'comparators').src)
-        self.assertEqual('c', f.get(1, 'comparators').src)
-
-        f = FST('def func() -> int: pass', 'exec').body[0]  # identifier
-        self.assertEqual('func', f.get('name'))
-        self.assertRaises(ValueError, f.get, 'name', cut=True)  # cannot delete FunctionDef.name
-        self.assertEqual('int', f.get('returns', cut=True).src)
-        self.assertEqual('def func(): pass', f.src)
-
-        f = FST('from .a import *', 'exec').body[0]
-        self.assertEqual('a', f.get('module', cut=True))
-        self.assertEqual('from . import *', f.src)
-
-        f = FST('from a import *', 'exec').body[0]
-        self.assertRaises(ValueError, f.get, 'module', cut=True)
-
-        f = FST('import a as b', 'exec').body[0]
-        self.assertEqual('b', f.names[0].get('asname', cut=True))
-        self.assertEqual('import a', f.src)
-
-        f = FST('match a:\n case {**a}: pass', 'exec').body[0]
-        self.assertEqual('a', f.cases[0].pattern.get('rest', cut=True))
-        self.assertEqual('match a:\n case {}: pass', f.src)
-
     def test_insert_into_empty_block(self):
         a = parse('''
 if 1:
@@ -36064,6 +36024,47 @@ class cls:
                     raise
 
     def test_get_one_special(self):
+        f = FST('a = b', 'exec').body[0]
+        self.assertRaises(ValueError, f.targets[0].get, 'ctx')  # cannot copy node which does not have a location
+        self.assertRaises(ValueError, f.value.get, 'ctx')
+
+        f = FST('{a: b}', 'exec').body[0].value
+        self.assertRaises(ValueError, f.get, 0)  # cannot get single element from combined field of Dict
+
+        f = FST('match a:\n case {1: b}: pass', 'exec').body[0].cases[0].pattern
+        self.assertRaises(ValueError, f.get, 0)  # cannot get single element from combined field of MatchMapping
+
+        f = FST('a < b < c', 'exec').body[0].value
+        self.assertEqual('a', f.get(0).src)
+        self.assertEqual('b', f.get(1).src)
+        self.assertEqual('c', f.get(2).src)
+        self.assertEqual('a', f.get('left').src)
+        self.assertEqual('b', f.get(0, 'comparators').src)
+        self.assertEqual('c', f.get(1, 'comparators').src)
+
+        f = FST('def func() -> int: pass', 'exec').body[0]  # identifier
+        self.assertEqual('func', f.get('name'))
+        self.assertRaises(ValueError, f.get, 'name', cut=True)  # cannot delete FunctionDef.name
+        self.assertEqual('int', f.get('returns', cut=True).src)
+        self.assertEqual('def func(): pass', f.src)
+
+        f = FST('from .a import *', 'exec').body[0]
+        self.assertEqual('a', f.get('module', cut=True))
+        self.assertEqual('from . import *', f.src)
+
+        f = FST('from a import *', 'exec').body[0]
+        self.assertRaises(ValueError, f.get, 'module', cut=True)
+
+        f = FST('import a as b', 'exec').body[0]
+        self.assertEqual('b', f.names[0].get('asname', cut=True))
+        self.assertEqual('import a', f.src)
+
+        f = FST('match a:\n case {**a}: pass', 'exec').body[0]
+        self.assertEqual('a', f.cases[0].pattern.get('rest', cut=True))
+        self.assertEqual('match a:\n case {}: pass', f.src)
+
+        # other
+
         f = FST('a and b').get('op')
         self.assertIsInstance(f.a, And)
         self.assertEqual('and', f.src)
@@ -36258,6 +36259,9 @@ if 1:
             g = f.body[0].value.get(3, 'values')
             self.assertEqual("""f'{d : {"0.5f<12"} }'""", g.src)
             g.verify()
+
+            f = FST("f'a{b:<3}'")
+            self.assertEqual("'a'", f.get(0).src)
 
     def test_put_slice_seq_del(self):
         for i, (src, elt, start, stop, options, src_cut, slice_copy, src_dump, slice_dump) in enumerate(GET_SLICE_SEQ_DATA):

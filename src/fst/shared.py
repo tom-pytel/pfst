@@ -6,7 +6,7 @@ from math import log10
 from typing import Any, Literal, NamedTuple, TypeAlias, Union
 
 from .astutil import *
-from .astutil import TypeAlias, TryStar, type_param, Interpolation
+from .astutil import TypeAlias, TryStar, TemplateStr, type_param, Interpolation
 
 __all__ = ['Code', 'Mode', 'NodeError', 'astfield', 'fstloc']
 
@@ -63,7 +63,7 @@ _AST_DEFAULT_BODY_FIELD  = {cls: field for field, classes in [
     ('type_params',  (TypeAlias,)),
     ('names',        (Import, ImportFrom)),
     ('ifs',          (comprehension,)),
-    ('values',       (BoolOp,)),
+    ('values',       (BoolOp, JoinedStr, TemplateStr)),
     ('generators',   (ListComp, SetComp, DictComp, GeneratorExp)),
     ('args',         (Call,)),  # potential conflict of default body with put to empty 'set()'
 
