@@ -15148,15 +15148,6 @@ Module .. ROOT 0,0 -> 0,13
     0] Pass .. 0,9 -> 0,13
 """),
 
-(r"""def f(a): pass""", 'body[0].args', 0, 1, 'args', {'raw': True}, r"""**DEL**""", r"""def f(): pass""", r"""
-Module .. ROOT 0,0 -> 0,13
-  .body[1]
-  0] FunctionDef .. 0,0 -> 0,13
-    .name 'f'
-    .body[1]
-    0] Pass .. 0,9 -> 0,13
-"""),
-
 (r"""f(a)""", 'body[0].value', 0, 1, 'args', {'raw': True}, r"""(i for i in range(5))""", r"""f((i for i in range(5)))""", r"""
 Module .. ROOT 0,0 -> 0,24
   .body[1]
@@ -21627,7 +21618,7 @@ Module .. ROOT 0,0 -> 0,19
     0] Pass .. 0,15 -> 0,19
 """),
 
-(r"""a and (b) and c""", 'body[0].value', 0, None, {'raw': False}, r"""**DEL**""", r"""**ValueError('cannot put slice to BoolOp.values')**""", r"""
+(r"""a and (b) and c""", 'body[0].value', 0, None, {'raw': False}, r"""**DEL**""", r"""**NodeError('not implemented yet')**""", r"""
 """),
 
 (r"""a and (b) and c""", 'body[0].value', 0, None, {}, r"""new""", r"""new and (b) and c""", r"""
@@ -21682,7 +21673,7 @@ Module .. ROOT 0,0 -> 0,15
 (r"""a and (b) and c""", 'body[0].value', -4, None, {}, r"""new""", r"""**IndexError('index out of range')**""", r"""
 """),
 
-(r"""[i for i in j if a if (b)]""", 'body[0].value.generators[0]', 0, 'ifs', {'raw': False}, r"""**DEL**""", r"""**ValueError('cannot put slice to comprehension.ifs')**""", r"""
+(r"""[i for i in j if a if (b)]""", 'body[0].value.generators[0]', 0, 'ifs', {'raw': False}, r"""**DEL**""", r"""**NodeError('not implemented yet')**""", r"""
 """),
 
 (r"""[i for i in j if a if (b)]""", 'body[0].value.generators[0]', 0, 'ifs', {}, r"""new""", r"""[i for i in j if new if (b)]""", r"""
@@ -21753,7 +21744,7 @@ Module .. ROOT 0,0 -> 0,28
 (r"""[i for i in j if a if (b)]""", 'body[0].value.generators[0]', -4, 'ifs', {}, r"""new""", r"""**IndexError('index out of range')**""", r"""
 """),
 
-(r"""call(a, (b))""", 'body[0].value', 0, None, {}, r"""**DEL**""", r"""**ValueError('cannot put slice to Call.args')**""", r"""
+(r"""call(a, (b))""", 'body[0].value', 0, None, {}, r"""**DEL**""", r"""**NodeError('not implemented yet')**""", r"""
 """),
 
 (r"""call(a, (b))""", 'body[0].value', 0, None, {}, r"""new""", r"""call(new, (b))""", r"""
@@ -21857,7 +21848,7 @@ Module .. ROOT 0,0 -> 0,20
 """),
 
 (r"""match a:
- case 1 as b, (2): pass""", 'body[0].cases[0].pattern', 0, None, {}, r"""**DEL**""", r"""**ValueError('cannot put slice to MatchSequence.patterns')**""", r"""
+ case 1 as b, (2): pass""", 'body[0].cases[0].pattern', 0, None, {}, r"""**DEL**""", r"""**NodeError('not implemented yet')**""", r"""
 """),
 
 (r"""match a:
@@ -21955,7 +21946,7 @@ Module .. ROOT 0,0 -> 1,23
 """),
 
 (r"""match a:
- case {1: a, 2: (b), **rest}: pass""", 'body[0].cases[0].pattern', 0, 'patterns', {}, r"""**DEL**""", r"""**ValueError('cannot put slice to MatchMapping.patterns')**""", r"""
+ case {1: a, 2: (b), **rest}: pass""", 'body[0].cases[0].pattern', 0, 'patterns', {}, r"""**DEL**""", r"""**NodeError('not implemented yet')**""", r"""
 """),
 
 (r"""match a:
@@ -22065,7 +22056,7 @@ Module .. ROOT 0,0 -> 1,39
 """),
 
 (r"""match a:
- case c(a, (b)): pass""", 'body[0].cases[0].pattern', 0, 'patterns', {}, r"""**DEL**""", r"""**ValueError('cannot put slice to MatchClass.patterns')**""", r"""
+ case c(a, (b)): pass""", 'body[0].cases[0].pattern', 0, 'patterns', {}, r"""**DEL**""", r"""**NodeError('not implemented yet')**""", r"""
 """),
 
 (r"""match a:
@@ -22281,7 +22272,7 @@ Module .. ROOT 0,0 -> 1,32
 """),
 
 (r"""match a:
- case {1: c} | (d()): pass""", 'body[0].cases[0].pattern', 0, None, {}, r"""**DEL**""", r"""**ValueError('cannot put slice to MatchOr.patterns')**""", r"""
+ case {1: c} | (d()): pass""", 'body[0].cases[0].pattern', 0, None, {}, r"""**DEL**""", r"""**NodeError('not implemented yet')**""", r"""
 """),
 
 (r"""match a:
@@ -22908,7 +22899,7 @@ Module .. ROOT 0,0 -> 0,36
 (r"""type t[T: int, U: (str)] = ...""", 'body[0]', -4, 'type_params', {'_ver': 12}, r"""V: list[int]""", r"""**IndexError('index out of range')**""", r"""
 """),
 
-(r"""[i for j in k async for (i) in j]""", 'body[0].value', 0, 'generators', {'raw': False}, r"""**DEL**""", r"""**ValueError('cannot put slice to ListComp.generators')**""", r"""
+(r"""[i for j in k async for (i) in j]""", 'body[0].value', 0, 'generators', {'raw': False}, r"""**DEL**""", r"""**NodeError('not implemented yet')**""", r"""
 """),
 
 (r"""[i for j in k async for (i) in j]""", 'body[0].value', 0, 'generators', {}, r"""async for a in b""", r"""[i async for a in b async for (i) in j]""", r"""
@@ -22982,7 +22973,7 @@ Module .. ROOT 0,0 -> 0,39
 (r"""[i for j in k async for (i) in j]""", 'body[0].value', -4, 'generators', {}, r"""async for a in b""", r"""**IndexError('index out of range')**""", r"""
 """),
 
-(r"""{i for j in k async for (i) in j}""", 'body[0].value', 0, 'generators', {'raw': False}, r"""**DEL**""", r"""**ValueError('cannot put slice to SetComp.generators')**""", r"""
+(r"""{i for j in k async for (i) in j}""", 'body[0].value', 0, 'generators', {'raw': False}, r"""**DEL**""", r"""**NodeError('not implemented yet')**""", r"""
 """),
 
 (r"""{i for j in k async for (i) in j}""", 'body[0].value', 0, 'generators', {}, r"""async for a in b""", r"""{i async for a in b async for (i) in j}""", r"""
@@ -23056,7 +23047,7 @@ Module .. ROOT 0,0 -> 0,39
 (r"""{i for j in k async for (i) in j}""", 'body[0].value', -4, 'generators', {}, r"""async for a in b""", r"""**IndexError('index out of range')**""", r"""
 """),
 
-(r"""{i: i for j in k async for (i) in j}""", 'body[0].value', 0, 'generators', {'raw': False}, r"""**DEL**""", r"""**ValueError('cannot put slice to DictComp.generators')**""", r"""
+(r"""{i: i for j in k async for (i) in j}""", 'body[0].value', 0, 'generators', {'raw': False}, r"""**DEL**""", r"""**NodeError('not implemented yet')**""", r"""
 """),
 
 (r"""{i: i for j in k async for (i) in j}""", 'body[0].value', 0, 'generators', {}, r"""async for a in b""", r"""{i: i async for a in b async for (i) in j}""", r"""
@@ -23134,7 +23125,7 @@ Module .. ROOT 0,0 -> 0,42
 (r"""{i: i for j in k async for (i) in j}""", 'body[0].value', -4, 'generators', {}, r"""async for a in b""", r"""**IndexError('index out of range')**""", r"""
 """),
 
-(r"""(i for j in k async for (i) in j)""", 'body[0].value', 0, 'generators', {'raw': False}, r"""**DEL**""", r"""**ValueError('cannot put slice to GeneratorExp.generators')**""", r"""
+(r"""(i for j in k async for (i) in j)""", 'body[0].value', 0, 'generators', {'raw': False}, r"""**DEL**""", r"""**NodeError('not implemented yet')**""", r"""
 """),
 
 (r"""(i for j in k async for (i) in j)""", 'body[0].value', 0, 'generators', {}, r"""async for a in b""", r"""(i async for a in b async for (i) in j)""", r"""
@@ -23524,7 +23515,7 @@ Module .. ROOT 0,0 -> 0,31
 (r"""class c(a=1, b = (2)): pass""", 'body[0]', -4, 'keywords', {}, r"""new=(3)""", r"""**IndexError('index out of range')**""", r"""
 """),
 
-(r"""call(a=1, b = (2))""", 'body[0].value', 0, 'keywords', {}, r"""**DEL**""", r"""**ValueError('cannot put slice to Call.keywords')**""", r"""
+(r"""call(a=1, b = (2))""", 'body[0].value', 0, 'keywords', {}, r"""**DEL**""", r"""**NodeError('not implemented yet')**""", r"""
 """),
 
 (r"""call(a=1, b = (2))""", 'body[0].value', 0, 'keywords', {}, r"""new=(3)""", r"""call(new=(3), b = (2))""", r"""
@@ -28858,12 +28849,18 @@ def regen_put_slice():
         t = parse(dst)
         f = (eval(f't.{attr}', {'t': t}) if attr else t).f
 
-        f.put_slice(None if src == '**DEL**' else src, start, stop, field, **options)
+        try:
+            f.put_slice(None if src == '**DEL**' else src, start, stop, field, **options)
 
-        tdst  = t.f.src
-        tdump = t.f.dump(out=list, compact=True)
+        except NotImplementedError as exc:
+            tdst  = f'**{exc!r}**'
+            tdump = ''
 
-        t.f.verify(raise_=True)
+        else:
+            tdst  = t.f.src
+            tdump = t.f.dump(out=list, compact=True)
+
+            t.f.verify(raise_=True)
 
         newlines.extend(f'''(r"""{dst}""", {attr!r}, {start}, {stop}, {field!r}, {options!r}, r"""{src}""", r"""{tdst}""", r"""'''.split('\n'))
         newlines.extend(tdump)
@@ -35556,16 +35553,16 @@ class cls:
         f = f.repath()
         self.assertEqual(f.src, '[a for c in d for x in y for a in b]')
         self.assertEqual(g.src, 'for x in y')
-        g = f.generators[1].replace(None, raw=True, pars=False)
-        f = f.repath()
-        self.assertEqual(f.src, '[a for c in d  for a in b]')
-        self.assertIsNone(g)
-        # self.assertEqual(g.src, '[a for c in d  for a in b]')
-        g = f.generators[1].replace(None, raw=True, pars=False)
-        f = f.repath()
-        self.assertEqual(f.src, '[a for c in d  ]')
-        self.assertIsNone(g)
-        # self.assertEqual(g.src, '[a for c in d  ]')
+        # g = f.generators[1].replace(None, raw=True, pars=False)
+        # f = f.repath()
+        # self.assertEqual(f.src, '[a for c in d  for a in b]')
+        # self.assertIsNone(g)
+        # # self.assertEqual(g.src, '[a for c in d  for a in b]')
+        # g = f.generators[1].replace(None, raw=True, pars=False)
+        # f = f.repath()
+        # self.assertEqual(f.src, '[a for c in d  ]')
+        # self.assertIsNone(g)
+        # # self.assertEqual(g.src, '[a for c in d  ]')
 
         f = parse('f(i for i in j)').body[0].value.args[0].f
         g = f.replace('a', raw=True, pars=False)
@@ -35783,14 +35780,14 @@ class cls:
         self.assertIsNot(g, f)
         self.assertEqual(g.src, '[a for c in d for x in y for a in b]')
         f = g
-        g = f.put_slice(None, 1, 2, raw=True)
-        self.assertIsNot(g, f)
-        self.assertEqual(g.src, '[a for c in d  for a in b]')
-        f = g
-        g = f.put_slice(None, 1, 2, raw=True)
-        self.assertIsNot(g, f)
-        self.assertEqual(g.src, '[a for c in d  ]')
-        f = g
+        # g = f.put_slice(None, 1, 2, raw=True)
+        # self.assertIsNot(g, f)
+        # self.assertEqual(g.src, '[a for c in d  for a in b]')
+        # f = g
+        # g = f.put_slice(None, 1, 2, raw=True)
+        # self.assertIsNot(g, f)
+        # self.assertEqual(g.src, '[a for c in d  ]')
+        # f = g
 
         self.assertEqual('(a, x, y, c)', parse('(a, b, c)').body[0].value.f.put_slice('x, y', 1, 2, raw=True).root.src)
         self.assertEqual('[a, x, y, c]', parse('[a, b, c]').body[0].value.f.put_slice('x, y', 1, 2, raw=True).root.src)
@@ -37526,13 +37523,6 @@ finally:
 
                 f.put_raw(None if src == '**DEL**' else src, *loc, **options)
 
-                # ffrom, fto = f._raw_slice_from_to(start, stop, field)
-
-                # if not (ffrom.is_FST and fto.is_FST):
-                #     continue
-
-                # ffrom.replace(None if src == '**DEL**' else src, to=fto, **options)  # raw=True is in `options`
-
                 tdst  = f.root.src
                 tdump = f.root.dump(out=list, compact=True)
 
@@ -37567,14 +37557,14 @@ finally:
         self.assertIsNot(g, f)
         self.assertEqual(g.src, '[a for c in d for x in y for a in b]')
         f = g
-        g = f.put(None, 1, raw=True)
-        self.assertIsNot(g, f)
-        self.assertEqual(g.src, '[a for c in d  for a in b]')
-        f = g
-        g = f.put(None, 1, raw=True)
-        self.assertIsNot(g, f)
-        self.assertEqual(g.src, '[a for c in d  ]')
-        f = g
+        # g = f.put(None, 1, raw=True)
+        # self.assertIsNot(g, f)
+        # self.assertEqual(g.src, '[a for c in d  for a in b]')
+        # f = g
+        # g = f.put(None, 1, raw=True)
+        # self.assertIsNot(g, f)
+        # self.assertEqual(g.src, '[a for c in d  ]')
+        # f = g
 
         f = parse('try:pass\nfinally: pass').body[0].f
         g = f.put('break', 0, raw=True)

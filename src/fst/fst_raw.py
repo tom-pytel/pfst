@@ -278,6 +278,9 @@ def _reparse_raw_slice(self: 'FST', code: Code | None, start: int | Literal['end
                        *, one: bool = False, **options) -> 'FST':  # -> Self
     """Put a raw slice of child nodes to `self`."""
 
+    if code is None:
+        raise NotImplementedError('raw slice delete not implemented yet')
+
     if isinstance(code, AST):
         if not one:
             try:

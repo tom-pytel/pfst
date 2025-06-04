@@ -1,9 +1,10 @@
 """Misc lower level FST methods."""
 
 from ast import *
-from typing import Callable, Literal, Optional
+from typing import Literal
 
 from .astutil import *
+from .astutil import TypeAlias, TemplateStr
 
 from .shared import (
     STMTISH_OR_STMTMOD, STMTISH_FIELDS, Code, NodeError,
@@ -83,10 +84,49 @@ def _put_slice(self: 'FST', code: Code | None, start: int | Literal['end'] | Non
             # TODO: more individual specialized slice puts
 
 
+            elif (ast.__class__, field) in [
+                (FunctionDef, 'decorator_list'),      # expr*
+                (AsyncFunctionDef, 'decorator_list'), # expr*
+                (ClassDef, 'decorator_list'),         # expr*
+                (ClassDef, 'bases'),                  # expr*
+                (Delete, 'targets'),                  # expr*
+                (Assign, 'targets'),                  # expr*
+                (BoolOp, 'values'),                   # expr*
+                (Call, 'args'),                       # expr*
+                (comprehension, 'ifs'),               # expr*
 
+                (ListComp, 'generators'),             # comprehension*
+                (SetComp, 'generators'),              # comprehension*
+                (DictComp, 'generators'),             # comprehension*
+                (GeneratorExp, 'generators'),         # comprehension*
 
+                (ClassDef, 'keywords'),               # keyword*
+                (Call, 'keywords'),                   # keyword*
 
+                (Import, 'names'),                    # alias*
+                (ImportFrom, 'names'),                # alias*
 
+                (With, 'items'),                      # withitem*
+                (AsyncWith, 'items'),                 # withitem*
+
+                (MatchSequence, 'patterns'),          # pattern*
+                (MatchMapping, 'patterns'),           # pattern*
+                (MatchClass, 'patterns'),             # pattern*
+                (MatchOr, 'patterns'),                # pattern*
+
+                (FunctionDef, 'type_params'),         # type_param*
+                (AsyncFunctionDef, 'type_params'),    # type_param*
+                (ClassDef, 'type_params'),            # type_param*
+                (TypeAlias, 'type_params'),           # type_param*
+
+                (Global, 'names'),                    # identifier*
+                (Nonlocal, 'names'),                  # identifier*
+
+                (JoinedStr, 'values'),                # expr*
+                (TemplateStr, 'values'),              # expr*
+
+            ]:
+                raise NodeError('not implemented yet')
 
         except (SyntaxError, NodeError):
             if not raw:
