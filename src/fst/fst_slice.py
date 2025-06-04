@@ -52,26 +52,20 @@ def _put_slice(self: 'FST', code: Code | None, start: int | Literal['end'] | Non
         try:
             if isinstance(ast, STMTISH_OR_STMTMOD):
                 if field in STMTISH_FIELDS:
-                    modified = self._modifying(field)
-
-                    self._put_slice_stmtish(code, start, stop, field, one, **options)
-                    modified()
+                    with self._modifying(field):
+                        self._put_slice_stmtish(code, start, stop, field, one, **options)
 
                     return self
 
             elif isinstance(ast, (Tuple, List, Set)):
-                modified = self._modifying(field)
-
-                self._put_slice_tuple_list_or_set(code, start, stop, field, one, **options)
-                modified()
+                with self._modifying(field):
+                    self._put_slice_tuple_list_or_set(code, start, stop, field, one, **options)
 
                 return self
 
             elif isinstance(ast, Dict):
-                modified = self._modifying(field)
-
-                self._put_slice_dict(code, start, stop, field, one, **options)
-                modified()
+                with self._modifying(field):
+                    self._put_slice_dict(code, start, stop, field, one, **options)
 
                 return self
 

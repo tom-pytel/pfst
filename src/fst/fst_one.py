@@ -1134,10 +1134,8 @@ def _put_one(self: 'FST', code: Code | None, idx: int | None, field: str, **opti
                                 f"{f'.{field}' if field else ' combined fields'}")
 
             else:
-                modified = self._modifying(field)
-                ret      = handler(self, code, idx, field, child, static, **options)
-
-                modified()
+                with self._modifying(field):
+                    ret = handler(self, code, idx, field, child, static, **options)
 
                 return ret
 

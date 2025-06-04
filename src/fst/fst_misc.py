@@ -52,6 +52,77 @@ def _out_lines(fst: 'FST', linefunc: Callable, ln: int, col: int, end_ln: int, e
 _GLOBALS = globals() | {'_GLOBALS': None}
 # ----------------------------------------------------------------------------------------------------------------------
 
+class _Modifying:
+    def __init__(self, fst: 'FST', field: str | Literal[False] = False):
+        """Call before modifying `FST` node (even just source) to mark possible data for updates after modification.
+        This function just collects information when it enters so is safe to call without ever calling exit. Can be used
+        as a context manager or can just call `.enter()` and `.exit()` manually.
+
+        **Parameters:**
+        - `fst`: Parent of or actual node being modified, depending on value of `field` (because actual child may be
+            being created and may not exist yet).
+        - `field`: Name of field being modified or `False` to indicate that `self` is the child, in which case the
+            parent and field will be gotten from `self`.
+        """
+
+        # TODO: update f/t-string f"{val=}" preceding string constants for updated value with '=', evil thing
+
+        if field is False:
+            pfield = fst.pfield
+
+            if fst := fst.parent:
+                field = pfield.name
+
+        self.fst   = fst if fst and isinstance(fst.a, expr) else False
+        self.field = field
+
+    def __enter__(self):
+        return self.enter()
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        if exc_type is None:
+            self.done()
+
+        return False
+
+    def enter(self):
+        return self
+
+    def done(self, fst: Optional['FST'] | Literal[False] = False):
+        """Call after modifying `FST` node to apply any needed changes to parents.
+
+        Currently only updates `TemplateStr.str` but is meant to evetually update `JoinedStr`/`TemplateStr` `f'{v=}'`
+        style self-documenting string `Constants`.
+
+        **Parameters:**
+        - `fst`: Parent node of modified field AFTER modification (may have changed or not exist anymore). Or can be
+            special value `False` to indicate that original `fst` was definitely not changed. In order to use this
+            mechanism the class must be used explicitly and not as a context manager.
+        """
+
+        if fst is False:
+            if not (fst := self.fst):
+                return
+
+        elif fst is not self.fst:  # if parent of field changed then entire statement was reparsed and we have nothing to do
+            return
+
+        field = self.field
+
+        while isinstance(a := fst.a, expr):
+            if field == 'value' and isinstance(a, Interpolation):
+                ln, col, _, _         = fst.loc
+                _, _, end_ln, end_col = a.value.f.pars()
+                a.str                 = fst.get_src(ln, col + 1, end_ln, end_col)
+
+            field = fst.pfield
+
+            if not (fst := fst.parent):
+                break
+
+            field = field.name
+
+
 @staticmethod
 def _new_empty_module(*, from_: Optional['FST'] = None) -> 'FST':
     return FST(Module(body=[], type_ignores=[]), [''], from_=from_)
@@ -1256,9 +1327,10 @@ def _make_fst_and_dedent(self: 'FST', indent: Union['FST', str], ast: AST, copy_
     return fst
 
 
-def _modifying(self: 'FST', field: str | Literal[False] = False) -> Callable[[Optional['FST']], None]:
+def _modifying(self: 'FST', field: str | Literal[False] = False) -> _Modifying:
     """Call before modifying `FST` node (even just source) to mark possible data for updates after modification. This
-    function just collects information so is safe to call without ever calling the return value.
+    function just collects information so is safe to call without ever calling `.done()` method of the return value. In
+    fact, this method is not called if the return is used as a context manager and is exited with an exception.
 
     **Parameters:**
     - `self`: Parent of or actual node being modified, depending on value of `field` (because actual child may be being
@@ -1267,55 +1339,11 @@ def _modifying(self: 'FST', field: str | Literal[False] = False) -> Callable[[Op
         and field will be gotten from `self`.
 
     **Returns:**
-    - `Callable` Should be called after successful modification. If no modification done or error occurred then does not
-        need to be called, nothing bad happens.
+    - `_Modifying`: Can be used as a context manager or `.enter()`ed manually, in which case `.done()` should be called
+        on success, and nothing if no modification was performed.
     """
 
-    # TODO: update f/t-string f"{val=}" preceding string constants for updated value with '=', evil thing
-
-    if field is False:
-        field = self.pfield
-
-        if not (self := self.parent):
-            return lambda new_self=None: None
-
-        field = field.name
-
-    if not isinstance(self.a, expr):
-        return lambda new_self=None: None
-
-    def modified(new_self: Optional['FST'] | Literal[False] = False):
-        """Call after modifying `FST` node to apply any needed changes to parents.
-
-        Currently only updates `TemplateStr.str` but is meant to evetually update `JoinedStr`/`TemplateStr` `f'{v=}'`
-        style self-documenting string `Constants`.
-
-        **Parameters:**
-        - `new_self`: Parent node of modified field AFTER modification (may have changed or not exist anymore). Or can
-            be special value `False` to indicate that `self` was definitely not changed, this is just a convenience.
-        """
-
-        if new_self is False:
-            new_self = self
-        elif new_self is not self:  # if parent of field changed then entire statement was reparsed and we have nothing to do
-            return
-
-        field_ = field
-
-        while isinstance(a := new_self.a, expr):
-            if field_ == 'value' and isinstance(a, Interpolation):
-                ln, col, _, _         = new_self.loc
-                _, _, end_ln, end_col = a.value.f.pars()
-                a.str                 = new_self.get_src(ln, col + 1, end_ln, end_col)
-
-            field_ = new_self.pfield
-
-            if not (new_self := new_self.parent):
-                break
-
-            field_ = field_.name
-
-    return modified
+    return _Modifying(self, field)
 
 
 # ----------------------------------------------------------------------------------------------------------------------

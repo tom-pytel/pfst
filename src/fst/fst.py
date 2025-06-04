@@ -2053,21 +2053,16 @@ class FST:
             if not force:
                 return False
 
-            modified = self._modifying()
-
-            self._parenthesize_grouping(whole)
-            modified()
+            with self._modifying():
+                self._parenthesize_grouping(whole)
 
             return True
 
-        modified = self._modifying()
-
-        if isinstance(self.a, Tuple):
-            self._parenthesize_tuple(whole)
-        else:
-            self._parenthesize_grouping(whole)
-
-        modified()
+        with self._modifying():
+            if isinstance(self.a, Tuple):
+                self._parenthesize_tuple(whole)
+            else:
+                self._parenthesize_grouping(whole)
 
         return True
 
@@ -2087,13 +2082,11 @@ class FST:
         if not self.is_atom():
             return False
 
-        modified = self._modifying()
-        ret      = self._unparenthesize_grouping(share)
+        with self._modifying():
+            ret = self._unparenthesize_grouping(share)
 
-        if tuple_ and isinstance(self.a, Tuple):
-            ret = self._unparenthesize_tuple() or ret
-
-        modified()
+            if tuple_ and isinstance(self.a, Tuple):
+                ret = self._unparenthesize_tuple() or ret
 
         return ret
 
