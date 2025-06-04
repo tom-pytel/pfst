@@ -125,6 +125,10 @@ def _get_one_invalid_combined(self: 'FST', idx: int | None, field: str, cut: boo
 
 
 if sys.version_info[:2] < (3, 12):
+    def _get_one_conversion(self: 'FST', idx: int | None, field: str, cut: bool, **options) -> Optional['FST'] | str:
+        raise NotImplementedError('this is only implemented on python version 3.12 and above')
+
+
     def _get_one_format_spec(self: 'FST', idx: int | None, field: str, cut: bool, **options) -> Optional['FST'] | str:
         raise NotImplementedError('this is only implemented on python version 3.12 and above')
 
@@ -135,6 +139,18 @@ if sys.version_info[:2] < (3, 12):
 
 
 else:
+    def _get_one_conversion(self: 'FST', idx: int | None, field: str, cut: bool, **options) -> Optional['FST'] | str:
+        child, _ = _validate_get(self, idx, field)
+
+        if child == -1:
+            return None
+
+        conv = chr(child)
+
+        return FST(Constant(value=conv, lineno=1, col_offset=0, end_lineno=1, end_col_offset=3), [bistr(f"'{conv}'")],
+                   from_=self, lcopy=False)
+
+
     def _get_one_format_spec(self: 'FST', idx: int | None, field: str, cut: bool, **options) -> Optional['FST'] | str:
         child, _ = _validate_get(self, idx, field)
         childf   = child.f
@@ -324,8 +340,10 @@ _GET_ONE_HANDLERS = {
     (Call, 'args'):                       _get_one_default, # expr*
     (Call, 'keywords'):                   _get_one_default, # keyword*
     (FormattedValue, 'value'):            _get_one_default, # expr
+    (FormattedValue, 'conversion'):       _get_one_conversion, # int
     (FormattedValue, 'format_spec'):      _get_one_format_spec, # expr?  - no location on py < 3.12
     (Interpolation, 'value'):             _get_one_default, # expr
+    (Interpolation, 'conversion'):        _get_one_conversion, # int
     (Interpolation, 'format_spec'):       _get_one_format_spec, # expr?  - no location on py < 3.12
     (JoinedStr, 'values'):                _get_one_JoinedStr_TemplateStr_values, # expr*  - no location on py < 3.12
     (TemplateStr, 'values'):              _get_one_JoinedStr_TemplateStr_values, # expr*  - no location on py < 3.12
@@ -415,9 +433,7 @@ _GET_ONE_HANDLERS = {
 
     # (AnnAssign, 'simple'):                (), # int
     # (ImportFrom, 'level'):                (), # int?
-    # (FormattedValue, 'conversion'):       (), # int
     # (Interpolation, 'constant'):          (), # str
-    # (Interpolation, 'conversion'):        (), # int
     # (Constant, 'kind'):                   (), # string?
     # (comprehension, 'is_async'):          (), # int
     # (TypeIgnore, 'lineno'):               (), # int
@@ -542,6 +558,18 @@ def _put_one_op(self: 'FST', code: Code | None, idx: int | None, field: str,
     childf._set_ast(code.a)
 
     return childf
+
+
+if sys.version_info[:2] < (3, 12):
+    def _put_one_NOT_IMPLEMENTED_YET(self: 'FST', code: Code | None, idx: int | None, field: str, child: constant,
+                                     static: onestatic, **options) -> 'FST':
+        raise NotImplementedError('this will only be implemented on python version 3.12 and above')
+
+
+else:
+    def _put_one_NOT_IMPLEMENTED_YET(self: 'FST', code: Code | None, idx: int | None, field: str, child: constant,
+                                     static: onestatic, **options) -> 'FST':
+        raise NodeError('this is not implemented yet')
 
 
 # ......................................................................................................................
@@ -993,7 +1021,7 @@ def _put_one_raw(self: 'FST', code: Code | None, idx: int | None, field: str, ch
         else:
             loc = info.loc_ident
 
-            if child is None:  # pure insert, add the prefix, also the suffix if there is no 'to'
+            if child is None or (field == 'conversion' and child == -1):  # pure insert, add the prefix, also the suffix if there is no 'to'
                 if info.prefix:
                     code[0] = info.prefix + code[0]
                 if info.suffix and not to:
@@ -1036,7 +1064,7 @@ def _put_one_raw(self: 'FST', code: Code | None, idx: int | None, field: str, ch
             raise ValueError("'to' node cannot be root")
 
         if (root := self.root) is not to.root:
-            raise ValueError("'to' node not part of same tree")
+            raise ValueError("'to' must be part of same tree")
 
         to_loc = None
 
@@ -1651,6 +1679,39 @@ def _one_info_TypeVarTuple_default_value(self: 'FST', static: onestatic, idx: in
 def _one_info_TypeVarTuple_name(self: 'FST', static: onestatic, idx: int | None, field: str) -> oneinfo:
     return _one_info_identifier_required(self, static, idx, field, '*')
 
+if sys.version_info[:2] < (3, 12):
+    def _one_info_format_spec(self: 'FST', static: onestatic, idx: int | None, field: str) -> oneinfo:
+        raise NotImplementedError('this is only implemented on python version 3.12 and above')
+
+    def _one_info_conversion(self: 'FST', static: onestatic, idx: int | None, field: str) -> oneinfo:
+        raise NotImplementedError('this is only implemented on python version 3.12 and above')
+
+else:
+    def _one_info_format_spec(self: 'FST', static: onestatic, idx: int | None, field: str) -> oneinfo:
+        if fspec := self.a.format_spec:
+            return oneinfo(':', fspec.f.loc)
+
+        _, _, end_ln, end_col  = self.loc
+        end_col               -= 1
+
+        return oneinfo(':', fstloc(end_ln, end_col, end_ln, end_col))
+
+    def _one_info_conversion(self: 'FST', static: onestatic, idx: int | None, field: str) -> oneinfo:
+        if fspec := (a := self.a).format_spec:
+            end_ln, end_col, _, _ = fspec.f.loc
+        else:
+            _, _, end_ln, end_col  = self.loc
+            end_col               -= 1
+
+        if (conv := a.conversion) == -1:
+            return oneinfo('!', fstloc(end_ln, end_col, end_ln, end_col))
+
+        _, _, ln, col = a.value.f.loc
+
+        ln, col = _prev_find(self.root._lines, ln, col, end_ln, end_col, '!')  # must be there
+
+        return oneinfo('', fstloc(ln, col, end_ln, end_col))
+
 
 _PUT_ONE_HANDLERS = {
     (Module, 'body'):                     (True,  None, None), # stmt*  - all stmtishs have sliceable True and handler None to force always use slice operation (because of evil semicolons handled there)
@@ -1763,11 +1824,13 @@ _PUT_ONE_HANDLERS = {
     (Call, 'args'):                       (True,  _put_one_exprish_required, onestatic(_one_info_exprish_required, _restrict_default, code_as=_code_as_expr_call_arg)), # expr*
     (Call, 'keywords'):                   (True,  _put_one_exprish_required, _onestatic_keyword_required), # keyword*
     (FormattedValue, 'value'):            (False, _put_one_exprish_required, _onestatic_expr_required), # expr
-    # (FormattedValue, 'format_spec'):      (False, _put_one_default, None), # expr?
+    (FormattedValue, 'conversion'):       (False, _put_one_NOT_IMPLEMENTED_YET, onestatic(_one_info_conversion, Constant)), # int  # onestatic only here for info for raw put, Constant must be str
+    (FormattedValue, 'format_spec'):      (False, _put_one_NOT_IMPLEMENTED_YET, onestatic(_one_info_format_spec, JoinedStr)), # expr?  # onestatic only here for info for raw put
     (Interpolation, 'value'):             (False, _put_one_exprish_required, _onestatic_expr_required), # expr
-    # (Interpolation, 'format_spec'):       (False, _put_one_default, None), # expr?
-    # (JoinedStr, 'values'):                (True, _put_one_default, None), # expr*  - ??? no location on py < 3.12
-    # (TemplateStr, 'values'):              (True, _put_one_default, None), # expr*  - ??? no location on py < 3.12
+    (Interpolation, 'conversion'):        (False, _put_one_NOT_IMPLEMENTED_YET, onestatic(_one_info_conversion, Constant)), # int  # onestatic only here for info for raw put, Constant must be str
+    (Interpolation, 'format_spec'):       (False, _put_one_NOT_IMPLEMENTED_YET, onestatic(_one_info_format_spec, JoinedStr)), # expr?  # onestatic only here for info for raw put
+    (JoinedStr, 'values'):                (True, _put_one_NOT_IMPLEMENTED_YET, None), # expr*
+    (TemplateStr, 'values'):              (True, _put_one_NOT_IMPLEMENTED_YET, None), # expr*
     (Constant, 'value'):                  (False, _put_one_constant, onestatic(_one_info_constant, Constant)), # constant
     (Attribute, 'value'):                 (False, _put_one_exprish_required, _onestatic_expr_required), # expr
     (Attribute, 'attr'):                  (False, _put_one_identifier_required, onestatic(_one_info_Attribute_attr, _restrict_default, code_as=_code_as_identifier)), # identifier
@@ -1854,9 +1917,7 @@ _PUT_ONE_HANDLERS = {
 
     # (AnnAssign, 'simple'):                (), # int
     # (ImportFrom, 'level'):                (), # int?
-    # (FormattedValue, 'conversion'):       (), # int
     # (Interpolation, 'constant'):          (), # str
-    # (Interpolation, 'conversion'):        (), # int
     # (Constant, 'kind'):                   (), # string?
     # (comprehension, 'is_async'):          (), # int
     # (TypeIgnore, 'lineno'):               (), # int

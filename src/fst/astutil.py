@@ -204,7 +204,7 @@ FIELDS = dict([
     (YieldFrom,          (('value', 'expr'),)),
     (Compare,            (('left', 'expr'), ('ops', 'cmpop*'), ('comparators', 'expr*'))),
     (Call,               (('func', 'expr'), ('args', 'expr*'), ('keywords', 'keyword*'))),
-    (FormattedValue,     (('value', 'expr'), ('format_spec', 'expr?'), ('conversion', 'int'))),
+    (FormattedValue,     (('value', 'expr'), ('conversion', 'int'), ('format_spec', 'expr?'))),
     (Interpolation,      (('value', 'expr'), ('constant', 'str'), ('conversion', 'int'), ('format_spec', 'expr?'))),
     (JoinedStr,          (('values', 'expr*'),)),
     (TemplateStr,        (('values', 'expr*'),)),
