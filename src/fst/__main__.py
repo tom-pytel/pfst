@@ -15,16 +15,20 @@ def main():
     parser.add_argument('-m', '--mode', default='any',
                         choices=get_args(get_args(Mode)[1]),
                         help='specify what kind of code must be parsed')
+    parser.add_argument('-c', '--compact', default=False, action='store_true',
+                        help="compact view")
+    parser.add_argument('-f', '--full', default=False, action='store_true',
+                        help="show full tree including empty nodes")
+    parser.add_argument('-s', '--stmt', default=False, action='store_true',
+                        help="show statmenent source lines")
+    parser.add_argument('-a', '--all', default=False, action='store_true',
+                        help="show all node source lines")
     parser.add_argument('--type-comments', default=False, action='store_true',
                         help="add information about type comments")
     parser.add_argument('-i', '--indent', type=int, default=2,
                         help='indentation of nodes (number of spaces)')
     parser.add_argument('--no-verify', default=True, action='store_false',
                         help="don't verify parsed AST")
-    parser.add_argument('-f', '--full', default=False, action='store_true',
-                        help="show full tree including empty nodes")
-    parser.add_argument('-c', '--compact', default=False, action='store_true',
-                        help="compact view")
 
     args = parser.parse_args()
 
@@ -43,7 +47,9 @@ def main():
     if args.no_verify and args.mode in ('any', 'exec', 'eval', 'single', 'stmt', 'expr'):
         ast.f.verify(raise_=True)
 
-    ast.f.dump(compact=args.compact, full=args.full, indent=args.indent)
+    src = 'all' if args.all else 'stmt' if args.stmt else None
+
+    ast.f.dump(compact=args.compact, full=args.full, src=src, indent=args.indent)
 
 
 if __name__ == '__main__':

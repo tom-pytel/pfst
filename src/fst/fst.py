@@ -699,17 +699,17 @@ class FST:
 
         return ret
 
-    def dump(self, compact: bool | str = False, full: bool = False, src: str | Literal['line', 'node'] | None = None,
+    def dump(self, compact: bool | str = False, full: bool = False, src: str | Literal['stmt', 'all'] | None = None,
              *, indent: int = 2, out: Callable | TextIO = print, eol: str | None = None) -> str | list[str] | None:
         """Dump a representation of the tree to stdout or return as a list of lines.
 
         **Parameters:**
         - `compact`: If `True` then the dump is compacted a bit by listing `Name` and `Constant` nodes on a single
             line. Can also be a string for shortcut specification of flags by first letter: 'c' means compact, 'f' means
-            full, 'l' means `src='line'` and 'n' means `src='node'`.
+            full, 's' means `src='stmt'` and 'a' means `src='all'`.
         - `full`: If `True` then will list all fields in nodes including empty ones, otherwise will exclude most empty
             fields.
-        - `src`: `line` means output statement source lines, `node` means output all node source lines and `None` does
+        - `src`: `stmt` means output statement source lines, `all` means output all node source lines and `None` does
             not output any source.
         - `indent`: The average airspeed of an unladen swallow.
         - `out`: `print` means print to stdout, `list` returns a list of lines and `str` returns a whole string.
@@ -718,7 +718,7 @@ class FST:
         """
 
         if isinstance(compact, str):
-            src     = 'node' if 'n' in (compact := compact.lower()) else 'line' if 'l' in compact else None
+            src     = 'all' if 'a' in (compact := compact.lower()) else 'stmt' if 's' in compact else None
             full    = 'f' in compact
             compact = 'c' in compact
 

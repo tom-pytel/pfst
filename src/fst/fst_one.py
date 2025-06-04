@@ -72,6 +72,7 @@ def _get_one_default(self: 'FST', idx: int | None, field: str, cut: bool, **opti
 
     return ret
 
+
 def _get_one_stmtish(self: 'FST', idx: int | None, field: str, cut: bool, **options) -> Optional['FST'] | str:
     _, idx = _validate_get(self, idx, field)
 
@@ -441,8 +442,8 @@ class oneinfo(NamedTuple):
     delstr:      str           = ''    # or '**'
 
 
-def _validate_put(self: 'FST', code: Code | None, idx: int | None, field: str, child: list[AST] | AST | None,
-                  options: dict[str, Any], *, can_del: bool = False) -> AST | None:
+def _validate_put(self: 'FST', code: Code | None, idx: int | None, field: str, child: list[AST] | AST | None, *,
+                  can_del: bool = False) -> AST | None:
     """Check that `idx` was passed (or not) as needed and that not deleting if not possible."""
 
     if isinstance(child, list):
@@ -489,7 +490,7 @@ def _put_one_constant(self: 'FST', code: Code | None, idx: int | None, field: st
                       **options) -> 'FST':
     """Put a single constant value, only Constant and MatchSingleton (and only exists because of the second one)."""
 
-    child   = _validate_put(self, code, idx, field, child, options)
+    child   = _validate_put(self, code, idx, field, child)
     put_fst = _code_as_expr(code, self.root.parse_params)
     put_ast = put_fst.a
 
@@ -505,7 +506,7 @@ def _put_one_BoolOp_op(self: 'FST', code: Code | None, idx: int | None, field: s
                        **options) -> 'FST':
     """Put BoolOp op to potentially multiple places."""
 
-    child  = _validate_put(self, code, idx, field, child, options)
+    child  = _validate_put(self, code, idx, field, child)
     code   = _code_as_boolop(code, self.root.parse_params)
     childf = child.f
     src    = 'and' if isinstance(codea := code.a, And) else 'or'
@@ -531,7 +532,7 @@ def _put_one_op(self: 'FST', code: Code | None, idx: int | None, field: str,
                 static: None, **options) -> 'FST':
     """Put a single operation, with or without '=' for AugAssign."""
 
-    child  = _validate_put(self, code, idx, field, child, options)
+    child  = _validate_put(self, code, idx, field, child)
     code   = static.code_as(code, self.root.parse_params)
     childf = child.f
 
@@ -670,7 +671,7 @@ def _put_one_exprish_required(self: 'FST', code: Code | None, idx: int | None, f
     """Put a single required expression. Can be standalone or as part of sequence."""
 
     if validate:
-        child = _validate_put(self, code, idx, field, child, options)
+        child = _validate_put(self, code, idx, field, child)
 
         if not child:
             raise ValueError(f'cannot replace nonexistent {self.a.__class__.__name__}.{field}' +
@@ -689,7 +690,7 @@ def _put_one_exprish_optional(self: 'FST', code: Code | None, idx: int | None, f
                               static: onestatic, **options) -> Optional['FST']:
     """Put new, replace or delete an optional expression."""
 
-    child = _validate_put(self, code, idx, field, child, options, can_del=True)
+    child = _validate_put(self, code, idx, field, child, can_del=True)
 
     if code is None:
         if child is None:  # delete nonexistent node, noop
@@ -750,7 +751,7 @@ def _put_one_Lambda_arguments(self: 'FST', code: Code | None, idx: int | None, f
     if code is None:
         code = ''
 
-    child  = _validate_put(self, code, idx, field, child, options)  # we want to do it in same order as all other puts
+    child  = _validate_put(self, code, idx, field, child)  # we want to do it in same order as all other puts
     code   = static.code_as(code, self.root.parse_params)  # and we coerce here just so we can check if is empty args being put to set the prefix correctly
     prefix = ' ' if code.loc else ''  # if arguments has .loc then it is not empty
     target = self._loc_lambda_args_entire()
@@ -811,7 +812,7 @@ def _put_one_identifier_required(self: 'FST', code: Code | None, idx: int | None
                                  static: onestatic, **options) -> str:
     """Put a single required identifier."""
 
-    _validate_put(self, code, idx, field, child, options)
+    _validate_put(self, code, idx, field, child)
 
     code = static.code_as(code, self.root.parse_params)
     info = static.getinfo(self, static, idx, field)
@@ -826,7 +827,7 @@ def _put_one_identifier_optional(self: 'FST', code: Code | None, idx: int | None
                                  static: onestatic, **options) -> str | None:
     """Put new, replace or delete an optional identifier."""
 
-    child = _validate_put(self, code, idx, field, child, options, can_del=True)
+    child = _validate_put(self, code, idx, field, child, can_del=True)
 
     if code is None and child is None:  # delete nonexistent identifier, noop
         return None
@@ -948,7 +949,7 @@ def _put_one_raw(self: 'FST', code: Code | None, idx: int | None, field: str, ch
         else:
             raise ValueError(f'cannot put single element to combined field of {ast.__class__.__name__}')
 
-    child  = _validate_put(self, code, idx, field, child, options, can_del=True)
+    child  = _validate_put(self, code, idx, field, child, can_del=True)
     childf = child.f if isinstance(child, AST) else None
     pars   = bool(FST.get_option('pars', options))
 

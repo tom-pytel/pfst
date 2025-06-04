@@ -127,8 +127,8 @@ def _dump(self: 'FST', st: nspace, cind: str = '', prefix: str = ''):
             else:
                 _out_lines(self, st.linefunc, *loc, st.eol)
 
-    elif (st.src == 'node' and not isinstance(ast, mod) and (not (parent := self.parent) or
-                                                             not isinstance(parent.a, Expr))):
+    elif (st.src == 'all' and not isinstance(ast, mod) and (not (parent := self.parent) or
+                                                            not isinstance(parent.a, Expr))):
         if loc := self.loc:
             _out_lines(self, st.linefunc, *loc, st.eol)
 
