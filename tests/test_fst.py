@@ -36143,6 +36143,7 @@ class cls:
             self.assertEqual("'a'", FST('f"{a!a}"').values[0].get('conversion').src)
             self.assertEqual("'r'", FST('f"{a!r}"').values[0].get('conversion').src)
             self.assertEqual("'s'", FST('f"{a!s}"').values[0].get('conversion').src)
+            self.assertEqual("'r'", FST('f"{a=}"').values[1].get('conversion').src)
 
             f = FST('if 1:\n    f"{a!r\n : {\'0.5f<12\'} }"').body[0].value.values[0].get('format_spec')
             self.assertEqual("f' {'0.5f<12'} '", f.src)
@@ -36202,6 +36203,7 @@ if 1:
             self.assertEqual("'a'", FST('t"{a!a}"').values[0].get('conversion').src)
             self.assertEqual("'r'", FST('t"{a!r}"').values[0].get('conversion').src)
             self.assertEqual("'s'", FST('t"{a!s}"').values[0].get('conversion').src)
+            self.assertEqual("'r'", FST('t"{a=}"').values[1].get('conversion').src)
 
             f = FST('if 1:\n    t"{a!r\n : {\'0.5f<12\'} }"').body[0].value.values[0].get('format_spec')
             self.assertEqual("f' {'0.5f<12'} '", f.src)
@@ -36991,6 +36993,29 @@ a
             self.assertEqual('f"{z}"', f.src)
             f.verify()
 
+            f = FST('f"{a=}"', stmt)
+
+            f.value.values[1].put('r', 'conversion', raw=True)
+            self.assertEqual('f"{a=!r}"', f.src)
+            f.verify()
+
+            f.value.values[1].put(None, 'conversion', raw=True)
+            self.assertEqual('f"{a=}"', f.src)
+            f.verify()
+
+            f.value.values[1].put('0.5f<8', 'format_spec', raw=True)
+            f.value.values[1].put('r', 'conversion', raw=True)
+            self.assertEqual('f"{a=!r:0.5f<8}"', f.src)
+            f.verify()
+
+            f.value.values[1].put(None, 'conversion', raw=True)
+            self.assertEqual('f"{a=:0.5f<8}"', f.src)
+            f.verify()
+
+            f.value.values[1].put(None, 'format_spec', raw=True)
+            self.assertEqual('f"{a=}"', f.src)
+            f.verify()
+
         if sys.version_info[:2] >= (3, 14):
             self.assertRaises(NodeError, FST('t"{a}"').values[0].put, '"s"', 'conversion', raw=False)  # not implemented yet
             self.assertRaises(NodeError, FST('t"{a}"').values[0].put, 'f"0.5f"', 'format_spec', raw=False)  # not implemented yet
@@ -37042,6 +37067,29 @@ a
 
             f.value.put('{z}', 0, 'values', raw=True)
             self.assertEqual('t"{z}"', f.src)
+            f.verify()
+
+            f = FST('t"{a=}"', stmt)
+
+            f.value.values[1].put('r', 'conversion', raw=True)
+            self.assertEqual('t"{a=!r}"', f.src)
+            f.verify()
+
+            f.value.values[1].put(None, 'conversion', raw=True)
+            self.assertEqual('t"{a=}"', f.src)
+            f.verify()
+
+            f.value.values[1].put('0.5f<8', 'format_spec', raw=True)
+            f.value.values[1].put('r', 'conversion', raw=True)
+            self.assertEqual('t"{a=!r:0.5f<8}"', f.src)
+            f.verify()
+
+            f.value.values[1].put(None, 'conversion', raw=True)
+            self.assertEqual('t"{a=:0.5f<8}"', f.src)
+            f.verify()
+
+            f.value.values[1].put(None, 'format_spec', raw=True)
+            self.assertEqual('t"{a=}"', f.src)
             f.verify()
 
     def test_put_one_pars(self):

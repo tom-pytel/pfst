@@ -1036,11 +1036,14 @@ def _put_one_raw(self: 'FST', code: Code | None, idx: int | None, field: str, ch
         else:
             loc = info.loc_ident
 
-            if child is None or (field == 'conversion' and child == -1):  # pure insert, add the prefix, also the suffix if there is no 'to'
+            if child is None:  # pure insert, add the prefix, also the suffix if there is no 'to'
                 if info.prefix:
                     code[0] = info.prefix + code[0]
                 if info.suffix and not to:
                     code[-1] = code[-1] + info.suffix
+
+            elif field == 'conversion':  # another special case because f-string conversion may be implicit due to '=', the prefix is put conditionally in this case in the info() function
+                code[0] = info.prefix + code[0]
 
     if loc is None:
         if childf:
@@ -1716,12 +1719,15 @@ else:
             _, _, end_ln, end_col  = self.loc
             end_col               -= 1
 
-        if (conv := a.conversion) == -1:
+        if a.conversion == -1:
             return oneinfo('!', fstloc(end_ln, end_col, end_ln, end_col))
 
         _, _, ln, col = a.value.f.loc
 
-        ln, col = _prev_find(self.root._lines, ln, col, end_ln, end_col, '!')  # must be there
+        if not (prev := _prev_find(self.root._lines, ln, col, end_ln, end_col, '!')):  # may not be there if conversion is implicit due to =
+            return oneinfo('!', fstloc(end_ln, end_col, end_ln, end_col))
+
+        ln, col = prev
 
         return oneinfo('', fstloc(ln, col, end_ln, end_col))
 
