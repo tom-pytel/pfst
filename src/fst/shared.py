@@ -5,6 +5,11 @@ from ast import *
 from math import log10
 from typing import Any, Literal, NamedTuple, TypeAlias, Union
 
+try:
+    from typing import Self
+except ImportError:
+    Self = 'FST'
+
 from .astutil import *
 from .astutil import TypeAlias, TryStar, TemplateStr, type_param, Interpolation
 

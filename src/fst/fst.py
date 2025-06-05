@@ -717,13 +717,13 @@ class FST:
         """Dump a representation of the tree to stdout or return as a list of lines.
 
         **Parameters:**
-        - `compact`: If `True` then the dump is compacted a bit by listing `Name` and `Constant` nodes on a single
-            line. Can also be a string for shortcut specification of flags by first letter: 'c' means compact, 'f' means
-            full, 's' means `src='stmt'` and 'a' means `src='all'`.
+        - `compact`: If `True` then the dump is compacted a bit. Can also be a string for shortcut specification of
+            flags by first letter: `'c'` means compact, `'f'` means full, `'s'` means `src='stmt'` and `'a'` means
+            `src='all'`, so `'cfs'` would be a compact full dump showing statement source lines.
         - `full`: If `True` then will list all fields in nodes including empty ones, otherwise will exclude most empty
             fields.
-        - `src`: `stmt` means output statement source lines, `all` means output all node source lines and `None` does
-            not output any source.
+        - `src`: `stmt` means output statement source lines, `all` means output source for each individual and node and
+            `None` does not output any source.
         - `indent`: The average airspeed of an unladen swallow.
         - `out`: `print` means print to stdout, `list` returns a list of lines and `str` returns a whole string.
             Otherwise a `Callable[[str], None]` which is called for each line of output individually.
@@ -802,7 +802,11 @@ class FST:
     # High level
 
     def copy(self, **options) -> 'FST':
-        """Copy an individual node to a top level tree, dedenting and fixing as necessary."""
+        """Copy this node to a new top-level tree, dedenting and fixing as necessary.
+
+        **Parameters:**
+        - `options`: See `set_option`.
+        """
 
         if not (parent := self.parent):
             return FST(copy_ast(self.a), self._lines[:], from_=self, lcopy=False)
@@ -810,7 +814,12 @@ class FST:
         return parent._get_one((pf := self.pfield).idx, pf.name, False, **options)
 
     def cut(self, **options) -> 'FST':
-        """Cut out an individual node to a top level tree (if possible), dedenting and fixing as necessary."""
+        """Cut out this node to a new top-level tree (if possible), dedenting and fixing as necessary. Cannot cut root
+        node.
+
+        **Parameters:**
+        - `options`: See `set_option`.
+        """
 
         if not (parent := self.parent):
             raise ValueError('cannot cut root node')
@@ -818,14 +827,30 @@ class FST:
         return parent._get_one((pf := self.pfield).idx, pf.name, True, **options)
 
     def replace(self, code: Code | None, **options) -> Optional['FST']:  # -> Self (replaced) or None if deleted
-        """Replace or delete (`code=None`) an individual node. Returns the new node for `self`, not the old replaced
-        node, or `None` if was deleted or raw replaced and old node disappeared.
+        """Replace or delete (if `code=None`, if possible) this node. Returns the new node for `self`, not the old
+        replaced node, or `None` if was deleted or raw replaced and the old node disappeared. Cannot replace root node.
+
+        **Parameters:**
+        - `code`: `FST`, `AST` or source `str` or `list[str]` to put at this location. `None` to delete this node.
+        - `options`: See `set_option`.
         """
 
         if not (parent := self.parent):
-            raise ValueError('cannot replace root node')
+            raise ValueError(f'cannot {"delete" if code is None else "replace"} root node')
 
         return parent._put_one(code, (pf := self.pfield).idx, pf.name, **options)
+
+    def remove(self, **options):
+        """Delete this node if possible, equivalent to `replace(None, ...)`. Cannot delete root node.
+
+        **Parameters:**
+        - `options`: See `set_option`.
+        """
+
+        if not (parent := self.parent):
+            raise ValueError(f'cannot delete root node')
+
+        return parent._put_one(None, (pf := self.pfield).idx, pf.name, **options)
 
     def get(self, start: int | Literal['end'] | None = None, stop: int | None | Literal[False] = False,
             field: str | None = None, *, cut: bool = False, **options) -> Optional['FST'] | str:
