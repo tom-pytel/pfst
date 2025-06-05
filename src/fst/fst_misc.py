@@ -7,7 +7,7 @@ from math import log10
 from typing import Callable, Literal, Optional, Union
 
 from .astutil import *
-from .astutil import Interpolation, TemplateStr
+from .astutil import Interpolation
 
 from .shared import (
     astfield, fstloc, nspace,
@@ -15,7 +15,6 @@ from .shared import (
     HAS_DOCSTRING,
     re_line_end_cont_or_comment,
     _next_src, _prev_src, _next_find, _prev_find, _next_pars, _prev_pars,
-    _multiline_str_continuation_lns, _multiline_fstr_continuation_lns
 )
 
 _PY_VERSION = sys.version_info[:2]
@@ -173,6 +172,7 @@ else:
                     c.end_lineno     = end_ln + 1
                     c.end_col_offset = lines[end_ln].c2b(end_col)
 
+
 @staticmethod
 def _new_empty_module(*, from_: Optional['FST'] = None) -> 'FST':
     return FST(Module(body=[], type_ignores=[]), [''], from_=from_)
@@ -230,7 +230,7 @@ def _repr_tail(self: 'FST') -> str:
 
     tail = ' ROOT' if self.is_root else ''
 
-    return f'{tail} {loc[0]},{loc[1]} -> {loc[2]},{loc[3]}' if loc else tail
+    return f'{tail} {loc[0]},{loc[1]}..{loc[2]},{loc[3]}' if loc else tail
 
 
 def _dump(self: 'FST', st: nspace, cind: str = '', prefix: str = ''):
@@ -255,20 +255,20 @@ def _dump(self: 'FST', st: nspace, cind: str = '', prefix: str = ''):
 
     if st.compact:
         if isinstance(ast, Name):
-            st.linefunc(f'{cind}{prefix}Name {ast.id!r} {ast.ctx.__class__.__qualname__}{" .." * bool(tail)}{tail}'
+            st.linefunc(f'{cind}{prefix}Name {ast.id!r} {ast.ctx.__class__.__qualname__}{" -" * bool(tail)}{tail}'
                         f'{st.eol}')
 
             return
 
         if isinstance(ast, Constant):
             if ast.kind is None:
-                st.linefunc(f'{cind}{prefix}Constant {ast.value!r}{" .." * bool(tail)}{tail}{st.eol}')
+                st.linefunc(f'{cind}{prefix}Constant {ast.value!r}{" -" * bool(tail)}{tail}{st.eol}')
             else:
-                st.linefunc(f'{cind}{prefix}Constant {ast.value!r} {ast.kind}{" .." * bool(tail)}{tail}{st.eol}')
+                st.linefunc(f'{cind}{prefix}Constant {ast.value!r} {ast.kind}{" -" * bool(tail)}{tail}{st.eol}')
 
             return
 
-    st.linefunc(f'{cind}{prefix}{ast.__class__.__qualname__}{" .." * bool(tail)}{tail}{st.eol}')
+    st.linefunc(f'{cind}{prefix}{ast.__class__.__qualname__}{" -" * bool(tail)}{tail}{st.eol}')
 
     for name, child in iter_fields(ast):
         is_list = isinstance(child, list)
@@ -1401,7 +1401,6 @@ if _PY_VERSION < (3, 12):
         """Dummy because py < 3.12 doesn't have f-string location information."""
 
         return None
-
 
 else:
     def _get_fmtval_interp_strs(self: 'FST') -> tuple[str | None, str | None, int, int] | None:
