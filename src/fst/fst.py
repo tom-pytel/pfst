@@ -3,6 +3,7 @@ FST = None  # temporary standin for circular import of real `FST` class
 import ast as ast_
 from ast import *
 from ast import parse as ast_parse, unparse as ast_unparse
+from contextlib import contextmanager
 from io import TextIOBase
 from typing import Any, Callable, Literal, Optional, TextIO, Union
 
@@ -339,7 +340,7 @@ class FST:
         return (loc := self.loc) and self.root._lines[loc[2]].c2b(loc[3])
 
     # ------------------------------------------------------------------------------------------------------------------
-    # Management functions
+    # Management
 
     def __repr__(self) -> str:
         tail = self._repr_tail()
@@ -699,8 +700,20 @@ class FST:
 
         return ret
 
-    def dump(self, compact: bool | str = False, full: bool = False, src: str | Literal['stmt', 'all'] | None = None,
-             *, indent: int = 2, out: Callable | TextIO = print, eol: str | None = None) -> str | list[str] | None:
+    @staticmethod
+    @contextmanager
+    def option(**options):
+        """Temporarily set options."""
+
+        old_options = FST.set_option(**options)
+
+        try:
+            yield old_options
+        finally:
+            FST.set_option(**old_options)
+
+    def dump(self, compact: bool | str = False, full: bool = False, src: Literal['stmt', 'all'] | None = None, *,
+             indent: int = 2, out: Callable | TextIO = print, eol: str | None = None) -> str | list[str] | None:
         """Dump a representation of the tree to stdout or return as a list of lines.
 
         **Parameters:**
@@ -1001,6 +1014,133 @@ class FST:
 
         return ret
 
+    def pars(self, ret_count: bool = False, *, shared: bool = True, pars: bool = True,
+             ) -> fstloc | tuple[fstloc | None, int] | None:
+        """Return the location of enclosing grouping parentheses if present. Will balance parentheses if `self` is an
+        element of a tuple and not return the parentheses of the tuple. Likwise will not return the parentheses of an
+        enclosing `arguments` parent or class bases list. Only works on (and makes sense for) `expr` or `pattern` nodes,
+        otherwise returns `self.bloc`. Also handles special case of a single generator expression argument to a function
+        sharing parameters with the call arguments.
+
+        **Parameters:**
+        - `ret_count`: `True` means return the number of parentheses along with the location, otherwise just the
+            location.
+        - `shared`: If `True` then will include parentheses of a single call argument generator expression if they are
+            shared with the call arguments enclosing parentheses, return -1 ret_count in this case. If `False` then Does
+            not return these, and thus not a full valid `GeneratorExp` location. Is not checked at all if `pars=False`.
+        - `pars`: `True` means return parentheses if present and `self.bloc` otherwise, `False` always `self.bloc`. This
+            parameter exists purely for convenience.
+
+        **Returns:**
+        - `fstloc | None`: Location of enclosing parentheses if present else `self.bloc` (which can be `None`). If you
+            don't need an exact ret_count of parentheses and just need to know if there are or not then the return can
+            be checked if `fst.pars() is fst.bloc`. If there are no parentheses then `.bloc` is guaranteed to be
+            returned identically. This can also be used to check for negative ret_count in the case of `shared=False`
+            via `fst.pars() > fst.bloc`.
+        - `(fstloc, ret_count)`: Location of enclosing parentheses or `self.bloc` and number of nested parenthesess
+            found (if requested with `ret_count`). `ret_count` can be -1 in the case of a `GeneratorExp` sharing
+            parentheses with `Call` `arguments` if it is the only argument, but only if these parentheses are explicitly
+            excluded with `shared=False`.
+        """
+
+        if not pars or not isinstance(self.a, PARENTHESIZABLE):  # pars around all `alias`es or `withitem`s are considered part of the parent even if there is only one of those elements which looks parenthesized
+            return (self.bloc, 0) if ret_count else self.bloc
+
+        key = 'parsS' if shared else 'parsN'
+
+        try:
+            cached = self._cache[key]
+        except KeyError:
+            pass
+        else:
+            return cached if ret_count else cached[0]
+
+        rpars = _next_pars(self.root._lines, *self.bloc[2:], *self._next_bound())
+
+        if (lrpars := len(rpars)) == 1:  # no pars on right
+            if not shared and self.is_solo_call_arg_genexp():
+                ln, col, end_ln, end_col = self.bloc
+                locncount                = (fstloc(ln, col + 1, end_ln, end_col - 1), -1)
+
+            else:
+                locncount = (self.bloc, 0)
+
+            self._cache[key] = locncount
+
+            return locncount if ret_count else locncount[0]
+
+        lpars = _prev_pars(self.root._lines, *self._prev_bound(), *self.bloc[:2])
+
+        if (llpars := len(lpars)) == 1:  # no pars on left
+            locncount = self._cache[key] = (self.bloc, 0)
+
+            return locncount if ret_count else self.bloc
+
+        if llpars <= lrpars and (self.is_solo_call_arg() or self.is_solo_class_base() or self.is_solo_matchcls_pat()):
+            llpars -= 1
+
+        if llpars != lrpars:  # unbalanced pars so we know we can safely use the lower count
+            loc = fstloc(*lpars[npars], *rpars[npars]) if (npars := min(llpars, lrpars) - 1) else self.bloc
+        else:
+            loc = fstloc(*lpars[npars], *rpars[npars]) if (npars := llpars - 1) else self.bloc
+
+        locncount = self._cache[key] = (loc, npars)
+
+        return locncount if ret_count else loc
+
+    def parenthesize(self, *, force: bool = False, whole: bool = True) -> bool:
+        """Parenthesize node if it MAY need it. Will not parenthesize atoms which are always enclosed like `List` unless
+        `force=True`. Will add parentheses to unparenthesized `Tuple` adjusting the node location.
+
+        **Parameters:**
+        - `force`: If `True` then will add another layer of parentheses regardless if any already present.
+        - `whole`: If at root then parenthesize whole source instead of just node.
+
+        **Returns:**
+        - `bool`: Whether parentheses added or not.
+        """
+
+        if self.is_atom(enclosed=True):
+            if not force:
+                return False
+
+            with self._modifying():
+                self._parenthesize_grouping(whole)
+
+            return True
+
+        with self._modifying():
+            if isinstance(self.a, Tuple):
+                self._parenthesize_tuple(whole)
+            else:
+                self._parenthesize_grouping(whole)
+
+        return True
+
+    def unparenthesize(self, *, tuple_: bool = False, share: bool = True) -> bool:
+        """Remove all parentheses from node if present. Normally removes just grouping parentheses but can also remove
+        tuple parentheses if `tuple_=True`.
+
+        **Parameters:**
+        - `tuple_`: If `True` then will remove parentheses from a parenthesized `Tuple`, otherwise only removes grouping
+            parentheses if present.
+        - `share`: Whether to allow merge of parentheses into share single call argument generator expression or not.
+
+        **Returns:**
+        - `bool`: Whether parentheses were removed or not.
+        """
+
+        if not self.is_atom():
+            return False
+
+        with self._modifying():
+            ret = self._unparenthesize_grouping(share)
+
+            if tuple_ and isinstance(self.a, Tuple):
+                ret = self._unparenthesize_tuple() or ret
+
+        return ret
+
     # ------------------------------------------------------------------------------------------------------------------
     # Structure stuff
 
@@ -1221,6 +1361,93 @@ class FST:
 
     # ------------------------------------------------------------------------------------------------------------------
     # Low level queries
+
+    def get_indent(self) -> str:
+        """Determine proper indentation of node at `stmt` (or other similar) level at or above `self`. Even if it is a
+        continuation or on same line as block statement. If indentation is impossible to determine because is solo
+        statement on same line as parent block then the current tree default indentation is added to the parent block
+        indentation and returned.
+
+        **Returns:**
+        - `str`: Entire indentation string for the block this node lives in (not just a single level).
+        """
+
+        while (parent := self.parent) and not isinstance(self.a, STMTISH):
+            self = parent
+
+        root   = self.root
+        lines  = root._lines
+        indent = ''
+
+        while parent:
+            f             = getattr(parent.a, self.pfield.name)[0].f
+            ln, col, _, _ = f.loc
+            prev          = f.prev(True)  # there may not be one ("try" at start of module)
+            prev_end_ln   = prev.end_ln if prev else -2  # -2 so it never hits it
+            good_line     = ''
+
+            while ln > prev_end_ln and re_empty_line.match(line_start := lines[ln], 0, col):
+                end_col = 0 if (preceding_ln := ln - 1) != prev_end_ln else prev.end_col
+
+                if not ln or not re_line_continuation.match((l := lines[preceding_ln]), end_col):
+                    return (line_start[:col] if col else good_line) + indent
+
+                if col:  # we do this to skip backslashes at the start of line as those are just a noop
+                    good_line = line_start[:col]
+
+                ln  = preceding_ln
+                col = len(l) - 1  # was line continuation so last char is '\' and rest should be empty
+
+            indent += root.indent
+            self    = parent
+            parent  = self.parent
+
+        return indent
+
+    def get_indentable_lns(self, skip: int = 0, *, docstr: bool | Literal['strict'] | None = None) -> set[int]:
+        """Get set of indentable lines within this node.
+
+        **Parameters:**
+        - `skip`: The number of lines to skip from the start of this node. Useful for skipping the first line for edit
+            operations (since the first line is normally joined to an existing line on add or copied directly from start
+            on cut).
+        - `docstr`: How to treat multiline string docstring lines. `False` means not indentable, `True` means all `Expr`
+            multiline strings are indentable (as they serve no coding purpose). `'strict'` means only multiline strings
+            in expected docstring positions are indentable. `None` means use default.
+
+        **Returns:**
+        - `set[int]`: Set of line numbers (zero based) which are sytactically indentable.
+        """
+
+        if docstr is None:
+            docstr = self.get_option('docstr')
+
+        strict = docstr == 'strict'
+        lines  = self.root._lines
+        lns    = set(range(skip, len(lines))) if self.is_root else set(range(self.bln + skip, self.bend_ln + 1))
+
+        while (parent := self.parent) and not isinstance(self.a, STMTISH):
+            self = parent
+
+        for f in (walking := self.walk(False)):  # find multiline strings and exclude their unindentable lines
+            if f.bend_ln == f.bln:  # everything on one line, don't need to recurse
+                walking.send(False)
+
+            elif isinstance(a := f.a, Constant):
+                if (  # isinstance(f.a.value, (str, bytes)) is a given if bend_ln != bln
+                    not docstr or
+                    not ((parent := f.parent) and isinstance(parent.a, Expr) and
+                         (not strict or ((pparent := parent.parent) and parent.pfield == ('body', 0) and
+                                         isinstance(pparent.a, HAS_DOCSTRING)
+                )))):
+                    lns.difference_update(_multiline_str_continuation_lns(lines, *f.loc))
+
+            elif isinstance(a, (JoinedStr, TemplateStr)):
+                lns.difference_update(_multiline_fstr_continuation_lns(lines, *f.loc))
+
+                walking.send(False)  # skip everything inside regardless, because it is evil
+
+        return lns
 
     def is_parsable(self) -> bool:
         """Really means the AST is `ast.unparse()`able and then re`ast.parse()`able which will get it to this top level
@@ -1565,167 +1792,6 @@ class FST:
         return ((parent := self.parent) and self.pfield.name == 'patterns' and
                 isinstance(parenta := parent.a, MatchClass) and not parenta.kwd_patterns and len(parenta.patterns) == 1)
 
-    def get_indent(self) -> str:
-        """Determine proper indentation of node at `stmt` (or other similar) level at or above `self`. Even if it is a
-        continuation or on same line as block statement. If indentation is impossible to determine because is solo
-        statement on same line as parent block and cannot get from other block fields then the current tree default
-        indentation is added to the parent block indentation and returned.
-
-        **Returns:**
-        - `str`: Entire indentation string for the block this node lives in (not just a single level).
-        """
-
-        while (parent := self.parent) and not isinstance(self.a, STMTISH):
-            self = parent
-
-        root   = self.root
-        lines  = root._lines
-        indent = ''
-
-        while parent:
-            f             = getattr(parent.a, self.pfield.name)[0].f
-            ln, col, _, _ = f.loc
-            prev          = f.prev(True)  # there may not be one ("try" at start of module)
-            prev_end_ln   = prev.end_ln if prev else -2  # -2 so it never hits it
-            good_line     = ''
-
-            while ln > prev_end_ln and re_empty_line.match(line_start := lines[ln], 0, col):
-                end_col = 0 if (preceding_ln := ln - 1) != prev_end_ln else prev.end_col
-
-                if not ln or not re_line_continuation.match((l := lines[preceding_ln]), end_col):
-                    return (line_start[:col] if col else good_line) + indent
-
-                if col:  # we do this to skip backslashes at the start of line as those are just a noop
-                    good_line = line_start[:col]
-
-                ln  = preceding_ln
-                col = len(l) - 1  # was line continuation so last char is '\' and rest should be empty
-
-            indent += root.indent
-            self    = parent
-            parent  = self.parent
-
-        return indent
-
-    def get_indentable_lns(self, skip: int = 0, *, docstr: bool | Literal['strict'] | None = None) -> set[int]:
-        """Get set of indentable lines within this node.
-
-        **Parameters:**
-        - `skip`: The number of lines to skip from the start of this node. Useful for skipping the first line for edit
-            operations (since the first line is normally joined to an existing line on add or copied directly from start
-            on cut).
-        - `docstr`: How to treat multiline string docstring lines. `False` means not indentable, `True` means all `Expr`
-            multiline strings are indentable (as they serve no coding purpose). `'strict'` means only multiline strings
-            in expected docstring positions are indentable. `None` means use default.
-
-        **Returns:**
-        - `set[int]`: Set of line numbers (zero based) which are sytactically indentable.
-        """
-
-        if docstr is None:
-            docstr = self.get_option('docstr')
-
-        strict = docstr == 'strict'
-        lines  = self.root._lines
-        lns    = set(range(skip, len(lines))) if self.is_root else set(range(self.bln + skip, self.bend_ln + 1))
-
-        while (parent := self.parent) and not isinstance(self.a, STMTISH):
-            self = parent
-
-        for f in (walking := self.walk(False)):  # find multiline strings and exclude their unindentable lines
-            if f.bend_ln == f.bln:  # everything on one line, don't need to recurse
-                walking.send(False)
-
-            elif isinstance(a := f.a, Constant):
-                if (  # isinstance(f.a.value, (str, bytes)) is a given if bend_ln != bln
-                    not docstr or
-                    not ((parent := f.parent) and isinstance(parent.a, Expr) and
-                         (not strict or ((pparent := parent.parent) and parent.pfield == ('body', 0) and
-                                         isinstance(pparent.a, HAS_DOCSTRING)
-                )))):
-                    lns.difference_update(_multiline_str_continuation_lns(lines, *f.loc))
-
-            elif isinstance(a, (JoinedStr, TemplateStr)):
-                lns.difference_update(_multiline_fstr_continuation_lns(lines, *f.loc))
-
-                walking.send(False)  # skip everything inside regardless, because it is evil
-
-        return lns
-
-    def pars(self, ret_count: bool = False, *, shared: bool = True, pars: bool = True,
-             ) -> fstloc | tuple[fstloc | None, int] | None:
-        """Return the location of enclosing grouping parentheses if present. Will balance parentheses if `self` is an
-        element of a tuple and not return the parentheses of the tuple. Likwise will not return the parentheses of an
-        enclosing `arguments` parent or class bases list. Only works on (and makes sense for) `expr` or `pattern` nodes,
-        otherwise returns `self.bloc`. Also handles special case of a single generator expression argument to a function
-        sharing parameters with the call arguments.
-
-        **Parameters:**
-        - `ret_count`: `True` means return the number of parentheses along with the location, otherwise just the
-            location.
-        - `shared`: If `True` then will include parentheses of a single call argument generator expression if they are
-            shared with the call arguments enclosing parentheses, return -1 ret_count in this case. If `False` then Does
-            not return these, and thus not a full valid `GeneratorExp` location. Is not checked at all if `pars=False`.
-        - `pars`: `True` means return parentheses if present and `self.bloc` otherwise, `False` always `self.bloc`. This
-            parameter exists purely for convenience.
-
-        **Returns:**
-        - `fstloc | None`: Location of enclosing parentheses if present else `self.bloc` (which can be `None`). If you
-            don't need an exact ret_count of parentheses and just need to know if there are or not then the return can
-            be checked if `fst.pars() is fst.bloc`. If there are no parentheses then `.bloc` is guaranteed to be
-            returned identically. This can also be used to check for negative ret_count in the case of `shared=False`
-            via `fst.pars() > fst.bloc`.
-        - `(fstloc, ret_count)`: Location of enclosing parentheses or `self.bloc` and number of nested parenthesess
-            found (if requested with `ret_count`). `ret_count` can be -1 in the case of a `GeneratorExp` sharing
-            parentheses with `Call` `arguments` if it is the only argument, but only if these parentheses are explicitly
-            excluded with `shared=False`.
-        """
-
-        if not pars or not isinstance(self.a, PARENTHESIZABLE):  # pars around all `alias`es or `withitem`s are considered part of the parent even if there is only one of those elements which looks parenthesized
-            return (self.bloc, 0) if ret_count else self.bloc
-
-        key = 'parsS' if shared else 'parsN'
-
-        try:
-            cached = self._cache[key]
-        except KeyError:
-            pass
-        else:
-            return cached if ret_count else cached[0]
-
-        rpars = _next_pars(self.root._lines, *self.bloc[2:], *self._next_bound())
-
-        if (lrpars := len(rpars)) == 1:  # no pars on right
-            if not shared and self.is_solo_call_arg_genexp():
-                ln, col, end_ln, end_col = self.bloc
-                locncount                = (fstloc(ln, col + 1, end_ln, end_col - 1), -1)
-
-            else:
-                locncount = (self.bloc, 0)
-
-            self._cache[key] = locncount
-
-            return locncount if ret_count else locncount[0]
-
-        lpars = _prev_pars(self.root._lines, *self._prev_bound(), *self.bloc[:2])
-
-        if (llpars := len(lpars)) == 1:  # no pars on left
-            locncount = self._cache[key] = (self.bloc, 0)
-
-            return locncount if ret_count else self.bloc
-
-        if llpars <= lrpars and (self.is_solo_call_arg() or self.is_solo_class_base() or self.is_solo_matchcls_pat()):
-            llpars -= 1
-
-        if llpars != lrpars:  # unbalanced pars so we know we can safely use the lower count
-            loc = fstloc(*lpars[npars], *rpars[npars]) if (npars := min(llpars, lrpars) - 1) else self.bloc
-        else:
-            loc = fstloc(*lpars[npars], *rpars[npars]) if (npars := llpars - 1) else self.bloc
-
-        locncount = self._cache[key] = (loc, npars)
-
-        return locncount if ret_count else loc
-
     # ------------------------------------------------------------------------------------------------------------------
     # Low level modifications
 
@@ -2037,59 +2103,6 @@ class FST:
 
         return lns
 
-    def parenthesize(self, *, force: bool = False, whole: bool = True) -> bool:
-        """Parenthesize node if it MAY need it. Will not parenthesize atoms which are always enclosed like `List` unless
-        `force=True`. Will add parentheses to unparenthesized `Tuple` adjusting the node location.
-
-        **Parameters:**
-        - `force`: If `True` then will add another layer of parentheses regardless if any already present.
-        - `whole`: If at root then parenthesize whole source instead of just node.
-
-        **Returns:**
-        - `bool`: Whether parentheses added or not.
-        """
-
-        if self.is_atom(enclosed=True):
-            if not force:
-                return False
-
-            with self._modifying():
-                self._parenthesize_grouping(whole)
-
-            return True
-
-        with self._modifying():
-            if isinstance(self.a, Tuple):
-                self._parenthesize_tuple(whole)
-            else:
-                self._parenthesize_grouping(whole)
-
-        return True
-
-    def unparenthesize(self, *, tuple_: bool = False, share: bool = True) -> bool:
-        """Remove all parentheses from node if present. Normally removes just grouping parentheses but can also remove
-        tuple parentheses if `tuple_=True`.
-
-        **Parameters:**
-        - `tuple_`: If `True` then will remove parentheses from a parenthesized `Tuple`, otherwise only removes grouping
-            parentheses if present.
-        - `share`: Whether to allow merge of parentheses into share single call argument generator expression or not.
-
-        **Returns:**
-        - `bool`: Whether parentheses were removed or not.
-        """
-
-        if not self.is_atom():
-            return False
-
-        with self._modifying():
-            ret = self._unparenthesize_grouping(share)
-
-            if tuple_ and isinstance(self.a, Tuple):
-                ret = self._unparenthesize_tuple() or ret
-
-        return ret
-
     # ------------------------------------------------------------------------------------------------------------------
     # Private and other misc stuff
 
@@ -2146,6 +2159,7 @@ class FST:
         _reparse_docstrings,
         _make_fst_and_dedent,
         _modifying,
+        _get_fmtval_interp_strs,
     )
 
     from .fst_parse import (

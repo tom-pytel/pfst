@@ -1,21 +1,28 @@
 """Misc lower level FST methods."""
 
 import re
+import sys
 from ast import *
 from math import log10
 from typing import Callable, Literal, Optional, Union
 
 from .astutil import *
-from .astutil import Interpolation
+from .astutil import Interpolation, TemplateStr
 
 from .shared import (
     astfield, fstloc, nspace,
     BLOCK,
     HAS_DOCSTRING,
+    re_line_end_cont_or_comment,
     _next_src, _prev_src, _next_find, _prev_find, _next_pars, _prev_pars,
+    _multiline_str_continuation_lns, _multiline_fstr_continuation_lns
 )
 
+_PY_VERSION = sys.version_info[:2]
+
 _astfieldctx = astfield('ctx')
+
+_re_fval_expr_equals = re.compile(r'(?:\s*(?:#.*|\\)\n)*\s*=\s*(?:(?:#.*|\\)\n\s*)*')  # format string expression tail '=' indicating self-documentation
 
 _re_par_open_alnums  = re.compile(r'\w[(]\w')
 _re_par_close_alnums = re.compile(r'\w[)]\w')
@@ -52,76 +59,119 @@ def _out_lines(fst: 'FST', linefunc: Callable, ln: int, col: int, end_ln: int, e
 _GLOBALS = globals() | {'_GLOBALS': None}
 # ----------------------------------------------------------------------------------------------------------------------
 
-class _Modifying:
-    def __init__(self, fst: 'FST', field: str | Literal[False] = False):
-        """Call before modifying `FST` node (even just source) to mark possible data for updates after modification.
-        This function just collects information when it enters so is safe to call without ever calling exit. Can be used
-        as a context manager or can just call `.enter()` and `.exit()` manually.
+if _PY_VERSION < (3, 12):
+    class _Modifying:
+        def __init__(self, fst: 'FST', field: str | Literal[False] = False):
+            """Dummy because py < 3.12 doesn't have f-string location information."""
 
-        **Parameters:**
-        - `fst`: Parent of or actual node being modified, depending on value of `field` (because actual child may be
-            being created and may not exist yet).
-        - `field`: Name of field being modified or `False` to indicate that `self` is the child, in which case the
-            parent and field will be gotten from `self`.
-        """
+        def __enter__(self):
+            return self
 
-        # TODO: update f/t-string f"{val=}" preceding string constants for updated value with '=', evil thing
+        def __exit__(self, exc_type, exc_val, exc_tb):
+            return False
 
-        if field is False:
-            pfield = fst.pfield
+        def enter(self):
+            return self
 
-            if fst := fst.parent:
-                field = pfield.name
+        def done(self, fst: Optional['FST'] | Literal[False] = False):
+            pass
 
-        self.fst   = fst if fst and isinstance(fst.a, expr) else False
-        self.field = field
+else:
+    class _Modifying:
+        def __init__(self, fst: 'FST', field: str | Literal[False] = False):
+            """Call before modifying `FST` node (even just source) to mark possible data for updates after modification.
+            This function just collects information when it enters so is safe to call without ever explicitly exiting.
+            Can be used as a context manager or can just call `.enter()` and `.done()` manually.
 
-    def __enter__(self):
-        return self.enter()
+            It is assumed that neither the `fst` node passed in or its parents will not be changed, otherwise this must
+            be used manually and not as a context manager and the changed node must be passed into the `.done()` method
+            on success. In this case currently nothing is done as it is assumed the changes are due to raw reparse which
+            goes up to the statement level.
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        if exc_type is None:
-            self.done()
+            **Parameters:**
+            - `fst`: Parent of or actual node being modified, depending on value of `field` (because actual child may be
+                being created and may not exist yet).
+            - `field`: Name of field being modified or `False` to indicate that `self` is the child, in which case the
+                parent and field will be gotten from `self`.
+            """
 
-        return False
+            # TODO: update f/t-string f"{val=}" preceding string constants for updated value with '=', evil thing
 
-    def enter(self):
-        return self
+            if field is False:
+                pfield = fst.pfield
 
-    def done(self, fst: Optional['FST'] | Literal[False] = False):
-        """Call after modifying `FST` node to apply any needed changes to parents.
+                if fst := fst.parent:
+                    field = pfield.name
 
-        Currently only updates `TemplateStr.str` but is meant to evetually update `JoinedStr`/`TemplateStr` `f'{v=}'`
-        style self-documenting string `Constants`.
+            self.fst   = fst if fst and isinstance(fst.a, expr) else False
+            self.field = field
+            self.data  = data = []  # [(FormattedValue or Interpolation FST, len(dbg_str) or None, bool do val_str), ...]
 
-        **Parameters:**
-        - `fst`: Parent node of modified field AFTER modification (may have changed or not exist anymore). Or can be
-            special value `False` to indicate that original `fst` was definitely not changed. In order to use this
-            mechanism the class must be used explicitly and not as a context manager.
-        """
+            if self.fst:
+                while isinstance(fst.a, expr):
+                    parent = fst.parent
+                    pfield = fst.pfield
 
-        if fst is False:
-            if not (fst := self.fst):
+                    if field == 'value' and (strs := fst._get_fmtval_interp_strs()):
+                        dbg_str, val_str, end_ln, end_col = strs
+
+                        if (dbg_str is None or not parent or not (idx := pfield.idx) or
+                            not isinstance(prev := parent.a.values[idx - 1], Constant) or
+                            not isinstance(v := prev.value, str) or not v.endswith(dbg_str) or
+                            (prevf := prev.f).end_col != end_col or prevf.end_ln != end_ln
+                        ):
+                            if val_str is not None:
+                                data.append((fst, None, True))
+
+                        else:
+                            data.append((fst, len(dbg_str), bool(val_str)))
+
+                    if not parent:
+                        break
+
+                    field = pfield.name
+                    fst   = parent
+
+        def __enter__(self):
+            return self.enter()
+
+        def __exit__(self, exc_type, exc_val, exc_tb):
+            if exc_type is None:
+                self.done()
+
+            return False
+
+        def enter(self):
+            return self
+
+        def done(self, fst: Optional['FST'] | Literal[False] = False):
+            """Call after modifying `FST` node to apply any needed changes to parents.
+
+            **Parameters:**
+            - `fst`: Parent node of modified field AFTER modification (may have changed or not exist anymore). Or can be
+                special value `False` to indicate that original `fst` was definitely not changed. In order to use this
+                mechanism the class must be used explicitly and not as a context manager.
+            """
+
+            if fst is False:
+                if not (fst := self.fst):
+                    return
+
+            elif fst is not self.fst:  # if parent of field changed then entire statement was reparsed and we have nothing to do
                 return
 
-        elif fst is not self.fst:  # if parent of field changed then entire statement was reparsed and we have nothing to do
-            return
+            for fst, len_old_dbg_str, do_val_str in self.data:
+                dbg_str, val_str, end_ln, end_col = fst._get_fmtval_interp_strs()
 
-        field = self.field
+                if do_val_str:
+                    fst.a.str = val_str
 
-        while isinstance(a := fst.a, expr):
-            if field == 'value' and isinstance(a, Interpolation):
-                ln, col, _, _         = fst.loc
-                _, _, end_ln, end_col = a.value.f.pars()
-                a.str                 = fst.get_src(ln, col + 1, end_ln, end_col)
-
-            field = fst.pfield
-
-            if not (fst := fst.parent):
-                break
-
-            field = field.name
-
+                if len_old_dbg_str is not None:
+                    lines            = fst.root._lines
+                    c                = fst.parent.a.values[fst.pfield.idx - 1]
+                    c.value          = c.value[:-len_old_dbg_str] + dbg_str
+                    c.end_lineno     = end_ln + 1
+                    c.end_col_offset = lines[end_ln].c2b(end_col)
 
 @staticmethod
 def _new_empty_module(*, from_: Optional['FST'] = None) -> 'FST':
@@ -1344,6 +1394,121 @@ def _modifying(self: 'FST', field: str | Literal[False] = False) -> _Modifying:
     """
 
     return _Modifying(self, field)
+
+
+if _PY_VERSION < (3, 12):
+    def _get_fmtval_interp_strs(self: 'FST') -> tuple[str, str, int, int] | None:
+        """Dummy because py < 3.12 doesn't have f-string location information."""
+
+        return None
+
+
+else:
+    def _get_fmtval_interp_strs(self: 'FST') -> tuple[str | None, str | None, int, int] | None:
+        """Get debug and value strings and location for a `FormattedValue` or `Interpolation` IF THEY ARE PRESENT.
+        Meaning that if the `.value` ends with an appropriate `'='` character for debug and the value str if is
+        `Interpolation`. This does not check for the presence or equivalence of the actual preceding `Constant` string.
+        The returned strings are stripped of comments just like the python parser does.
+
+        **Returns:**
+        - `None`: If not a valid debug `FormattedValue` or `Interpolation`.
+        - `(debug str, value str, end_ln, end_col)`: A tuple including the full string which includes the `'='`
+            character (if applicable, else `None`), a string which only includes the value expression (if Interpolation,
+            else `None`) and the end line and column numbers of the whole thing which will correspond to what the
+            preceding Constant should have for its end line and column in the case of debug string present.
+        """
+
+        ast = self.a
+
+        if not (get_val := isinstance(ast, Interpolation)):
+            if not isinstance(ast, FormattedValue):
+                return None
+
+        lines                        = self.root._lines
+        sln, scol, send_ln, send_col = self.loc
+        _, _, vend_ln, vend_col      = ast.value.f.pars()
+
+        if fspec := ast.format_spec:
+            end_ln, end_col, _, _ = fspec.f.loc
+        else:
+            end_ln  = send_ln
+            end_col = send_col - 1
+
+        if ast.conversion != -1:
+            if prev := _prev_find(lines, vend_ln, vend_col, end_ln, end_col, '!'):
+                end_ln, end_col = prev
+
+        src     = self.get_src(vend_ln, vend_col, end_ln, end_col)  # source from end of parenthesized value to end of FormattedValue or start of conversion or format_spec
+        get_dbg = src and (m := _re_fval_expr_equals.match(src)) and m.end() == len(src)
+
+        if not get_dbg and not get_val:
+            return None
+
+
+        # THIS IS WHAT I ASSUME SHOULD BE CORRECT
+
+        # lns  = set()
+        # ends = {}
+
+        # for f in (walking := val.walk(False)):  # find multiline continuation line numbers
+        #     fln, _, fend_ln, fend_col = f.loc
+        #     ends[fend_ln]             = max(fend_col, ends.get(fend_ln, 0))
+
+        #     if fend_ln == fln:  # everything on one line, don't need to recurse
+        #         walking.send(False)
+
+        #     elif isinstance(a := f.a, Constant):  # isinstance(f.a.value, (str, bytes)) is a given if bend_ln != bln
+        #         lns.update(_multiline_str_continuation_lns(lines, *f.loc))
+
+        #     elif isinstance(a, (JoinedStr, TemplateStr)):
+        #         lns.update(_multiline_fstr_continuation_lns(lines, *f.loc))
+
+        #         walking.send(False)  # skip everything inside regardless, because it is evil
+
+        #         for a in walk(f.a):  # we walk ourselves to get end-of-expression locations for lines
+        #             if loc := a.f.loc:
+        #                 _, _, fend_ln, fend_col = loc
+        #                 ends[fend_ln]           = max(fend_col, ends.get(fend_ln, 0))
+
+
+        # off   = sln + 1
+        # lns   = {v - off for v in lns}  # these are line numbers where comments are not possible because next line is a string continuation
+        # lines = self.get_src(sln, scol + 1, end_ln, end_col, True)
+
+        # for i, l in enumerate(lines):
+        #     if (i not in lns and (m := re_line_end_cont_or_comment.match(l, ends.get(i + sln, 0))) and
+        #         (g := m.group(1)) and g.startswith('#')
+        #     ):  # line ends in comment, nuke it
+        #         lines[i] = l[:m.start(1)]
+
+
+        # THIS IS WHAT PYTHON 3.12+ DOES
+
+        lines = self.get_src(sln, scol + 1, end_ln, end_col, True)
+
+        for i, l in enumerate(lines):
+            if (m := re_line_end_cont_or_comment.match(l)) and (g := m.group(1)) and g.startswith('#'):  # line ends in comment, nuke it
+                lines[i] = l[:m.start(1)]
+
+        # END OF BUGGIENESS
+
+
+        dbg_str = '\n'.join(lines) if get_dbg else None
+
+        if not get_val:
+            val_str = None
+
+        else:
+            if not (vend_ln := vend_ln - sln):
+                vend_col -= scol + 1
+
+            del lines[vend_ln + 1:]
+
+            lines[vend_ln] = lines[vend_ln][:vend_col]
+
+            val_str = '\n'.join(lines).rstrip()
+
+        return dbg_str, val_str, end_ln, end_col
 
 
 # ----------------------------------------------------------------------------------------------------------------------

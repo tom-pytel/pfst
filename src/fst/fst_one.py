@@ -1714,7 +1714,7 @@ else:
 
     def _one_info_conversion(self: 'FST', static: onestatic, idx: int | None, field: str) -> oneinfo:
         if fspec := (a := self.a).format_spec:
-            end_ln, end_col, _, _ = fspec.f.loc
+            end_ln, end_col, _, _  = fspec.f.loc
         else:
             _, _, end_ln, end_col  = self.loc
             end_col               -= 1

@@ -12,6 +12,8 @@ from fst import fst
 from fst.astutil import TemplateStr, type_param, TypeVar, ParamSpec, TypeVarTuple
 fst_ = fst
 
+_PY_VERSION = sys.version_info[:2]
+
 PYFNMS = sum((
     [os.path.join(path, fnm) for path, _, fnms in os.walk(top) for fnm in fnms if fnm.endswith('.py')]
     for top in ('src', 'tests')),
@@ -28602,7 +28604,7 @@ PARSE_TESTS = [
     (MatchAs,             FST._parse_pattern,           MatchAs,        '_'),
 ]
 
-if sys.version_info[:2] >= (3, 11):
+if _PY_VERSION >= (3, 11):
     PARSE_TESTS.extend([
         ('ExceptHandler',     FST._parse_ExceptHandler,     ExceptHandler,  'except* Exception: pass'),
 
@@ -28613,7 +28615,7 @@ if sys.version_info[:2] >= (3, 11):
         (ExceptHandler,       FST._parse_ExceptHandler,     ExceptHandler,  'except* Exception: pass'),
     ])
 
-if sys.version_info[:2] >= (3, 12):
+if _PY_VERSION >= (3, 12):
     PARSE_TESTS.extend([
         ('type_param',        FST._parse_type_param,        TypeVar,        'a: int'),
         ('type_param',        FST._parse_type_param,        ParamSpec,      '**a'),
@@ -28627,7 +28629,7 @@ if sys.version_info[:2] >= (3, 12):
         (TypeVarTuple,        FST._parse_type_param,        TypeVarTuple,   '*a'),
     ])
 
-if sys.version_info[:2] >= (3, 13):
+if _PY_VERSION >= (3, 13):
     PARSE_TESTS.extend([
         ('type_param',        FST._parse_type_param,        TypeVar,        'a: int = int'),
         ('type_param',        FST._parse_type_param,        ParamSpec,      '**a = {T: int, U: str}'),
@@ -29058,7 +29060,7 @@ class TestFST(unittest.TestCase):
         self.assertEqual((1, 34), parse('try: pass\nexcept (Exception, BaseException): pass\nelse: pass\nfinally: pass').body[0].handlers[0].f._loc_block_header_end())
         self.assertEqual((1, 39), parse('try: pass\nexcept (Exception, BaseException) as e: pass\nelse: pass\nfinally: pass').body[0].handlers[0].f._loc_block_header_end())
 
-        if sys.version_info[:2] >= (3, 12):
+        if _PY_VERSION >= (3, 12):
             self.assertEqual((0, 4),  parse('try: pass\nexcept* Exception: pass\nelse: pass\nfinally: pass').body[0].f._loc_block_header_end())
             self.assertEqual((1, 18), parse('try: pass\nexcept* Exception: pass\nelse: pass\nfinally: pass').body[0].handlers[0].f._loc_block_header_end())
             self.assertEqual((1, 35), parse('try: pass\nexcept* (Exception, BaseException): pass\nelse: pass\nfinally: pass').body[0].handlers[0].f._loc_block_header_end())
@@ -29519,7 +29521,7 @@ y"
     def test__multiline_tstr_continuation_lns(self):
         from fst.shared import _multiline_fstr_continuation_lns as mscl
 
-        if sys.version_info[:2] >= (3, 14):
+        if _PY_VERSION >= (3, 14):
             self.assertEqual([], mscl(ls := r'''
 t'a'
                 '''.strip().split('\n'), 0, 0, len(ls) - 1, len(ls[-1])))
@@ -30181,7 +30183,7 @@ def f():
 ((is_seq := isinstance(a, (Tuple, List))) or (is_starred := isinstance(a, Starred)) or
             isinstance(a, (Name, Subscript, Attribute)))""".strip(), fc.src)
 
-        if sys.version_info[:2] >= (3, 12):
+        if _PY_VERSION >= (3, 12):
             fc = FST.fromsrc('tuple[*tuple[int, ...]]').a.body[0].value.slice.f.copy(pars=False)
             self.assertEqual('*tuple[int, ...]', fc.src)
             fc._maybe_fix(pars=True)
@@ -30267,7 +30269,7 @@ def f():
         self.assertIsInstance(f.a, Expression)
         self.assertIsInstance(f.a.body, Name)
 
-        v = sys.version_info[:2]
+        v = _PY_VERSION
         f = FST.fromsrc('i', mode='exec', filename='fnm', type_comments=True, feature_version=v)
 
         g = FST('j', 'exec', from_=f)
@@ -30623,7 +30625,7 @@ def f():
         self.assertEqual('  ', FST.fromsrc('try: pass\nexcept:\n  pass\nelse: pass\nfinally: pass').indent)
         self.assertEqual('  ', FST.fromsrc('try:\n  pass\nexcept: pass\nelse: pass\nfinally: pass').indent)
 
-        if sys.version_info[:2] >= (3, 12):
+        if _PY_VERSION >= (3, 12):
             self.assertEqual('  ', FST.fromsrc('try:\n  pass\nexcept* Exception: pass').indent)
             self.assertEqual('  ', FST.fromsrc('try: pass\nexcept* Exception:\n  pass').indent)
             self.assertEqual('  ', FST.fromsrc('try: pass\nexcept* Exception: pass\nelse:\n  pass').indent)
@@ -31019,7 +31021,7 @@ def f(a, /, b, *c, d, **e):
         self.assertIs((f := fst.prev_child(f, False)), a.op.f)
         self.assertIs((f := fst.prev_child(f, False)), None)
 
-        if sys.version_info[:2] >= (3, 12):
+        if _PY_VERSION >= (3, 12):
             fst = parse('@deco\ndef f[T, U](a, /, b: int, *, c: int = 2) -> str: pass').body[0].f
             a = fst.a
             f = None
@@ -31350,7 +31352,7 @@ with a as b, c as d:
         self.assertTrue(FST('(f(\na\n,\nb\n=\n1))', 'exec').body[0].value.copy(fix=False, pars=False).is_enclosed())
         self.assertTrue(FST('(f(\na\n,\nb\n=\n"()"))', 'exec').body[0].value.copy(fix=False, pars=False).is_enclosed())
 
-        if sys.version_info[:2] >= (3, 12):
+        if _PY_VERSION >= (3, 12):
             self.assertTrue(FST(r'''
 (f"a{(1,
 
@@ -31449,7 +31451,7 @@ e")
         self.assertFalse(FST('with (b\n as c): pass', 'exec').body[0].items[0].copy(fix=False, pars=False).is_enclosed())
         self.assertTrue(FST('with (b\\\n as c): pass', 'exec').body[0].items[0].copy(fix=False, pars=False).is_enclosed())
 
-        if sys.version_info[:2] >= (3, 14):
+        if _PY_VERSION >= (3, 14):
             self.assertTrue(FST(r'''
 (t"a{(1,
 
@@ -31491,7 +31493,7 @@ y")
         self.assertTrue(FST('a, [i,\nj], c', 'exec').body[0].value.copy(fix=False, pars=False).is_enclosed())
         self.assertTrue(FST('a, b[\ni:j:k\n], c', 'exec').body[0].value.copy(fix=False, pars=False).is_enclosed())
 
-        if sys.version_info[:2] >= (3, 12):
+        if _PY_VERSION >= (3, 12):
             self.assertTrue(FST('a, f"{(1,\n2)}", c', 'exec').body[0].value.copy(fix=False, pars=False).is_enclosed())
 
     def test_is_enclosed_in_parents(self):
@@ -31651,7 +31653,7 @@ y")
         self.assertFalse(FST('match a:\n case 1 | 2: pass', 'exec').body[0].cases[0].pattern.copy(pars=True).patterns[0].is_enclosed_in_parents())
         self.assertTrue(FST('match a:\n case (1 | 2): pass', 'exec').body[0].cases[0].pattern.copy(pars=True).patterns[0].is_enclosed_in_parents())
 
-        if sys.version_info[:2] >= (3, 12):
+        if _PY_VERSION >= (3, 12):
             self.assertTrue(FST('def f[T]() -> int: pass', 'exec').body[0].type_params[0].is_enclosed_in_parents())
             self.assertTrue(FST('async def f[T]() -> int: pass', 'exec').body[0].type_params[0].is_enclosed_in_parents())
             self.assertTrue(FST('class c[T]: pass', 'exec').body[0].type_params[0].is_enclosed_in_parents())
@@ -31666,7 +31668,7 @@ y")
             self.assertFalse(FST('type t[*T] = v', 'exec').body[0].type_params[0].copy().is_enclosed_in_parents())
             self.assertFalse(FST('type t[**T] = v', 'exec').body[0].type_params[0].copy().is_enclosed_in_parents())
 
-        if sys.version_info[:2] >= (3, 14):
+        if _PY_VERSION >= (3, 14):
             self.assertTrue(FST('t"1{2}"', 'exec').body[0].value.values[0].is_enclosed_in_parents())
             self.assertTrue(FST('t"1{2}"', 'exec').body[0].value.values[1].value.is_enclosed_in_parents())
 
@@ -31828,7 +31830,7 @@ y")
         self.assertFalse(FST('match a:\n case 1 | 2: pass', 'exec').body[0].cases[0].pattern.copy(pars=True).is_enclosed_in_parents('patterns'))
         self.assertTrue(FST('match a:\n case (1 | 2): pass', 'exec').body[0].cases[0].pattern.copy(pars=True).is_enclosed_in_parents('patterns'))
 
-        if sys.version_info[:2] >= (3, 12):
+        if _PY_VERSION >= (3, 12):
             self.assertTrue(FST('def f[T]() -> int: pass', 'exec').body[0].is_enclosed_in_parents('type_params'))
             self.assertTrue(FST('async def f[T]() -> int: pass', 'exec').body[0].is_enclosed_in_parents('type_params'))
             self.assertTrue(FST('class c[T]: pass', 'exec').body[0].is_enclosed_in_parents('type_params'))
@@ -31843,7 +31845,7 @@ y")
             self.assertFalse(FST('type t[*T] = v', 'exec').body[0].type_params[0].copy().is_enclosed_in_parents())
             self.assertFalse(FST('type t[**T] = v', 'exec').body[0].type_params[0].copy().is_enclosed_in_parents())
 
-        if sys.version_info[:2] >= (3, 14):
+        if _PY_VERSION >= (3, 14):
             self.assertTrue(FST('t"1{2}"', 'exec').body[0].value.is_enclosed_in_parents('values'))
             self.assertTrue(FST('t"1{2}"', 'exec').body[0].value.values[1].is_enclosed_in_parents('value'))
 
@@ -32405,7 +32407,7 @@ f"distutils.command.sdist.check_metadata is deprecated, \\
         self.assertTrue(f.parenthesize(force=True))
         self.assertEqual('(# comment\ni = 1)', f.src)
 
-        if sys.version_info[:2] >= (3, 14):  # make sure parent Interpolation.str gets modified
+        if _PY_VERSION >= (3, 14):  # make sure parent Interpolation.str gets modified
             f = FST('t"{a}"', 'exec').body[0].value.copy()
             f.values[0].value.parenthesize(force=True)
             self.assertEqual('t"{(a)}"', f.src)
@@ -32443,7 +32445,7 @@ f"distutils.command.sdist.check_metadata is deprecated, \\
         self.assertTrue(f.unparenthesize(tuple_=True))
         self.assertEqual('1,', f.src)
 
-        if sys.version_info[:2] >= (3, 14):  # make sure parent Interpolation.str gets modified
+        if _PY_VERSION >= (3, 14):  # make sure parent Interpolation.str gets modified
             f = FST('t"{(a)}"', 'exec').body[0].value.copy()
             f.values[0].value.unparenthesize()
             self.assertEqual('t"{a}"', f.src)
@@ -32765,7 +32767,7 @@ match a:
             (FST._code_as_pattern, 'body[0].cases[0].pattern', 'match x:\n case _: pass'),
         ]
 
-        if sys.version_info[:2] >= (3, 12):
+        if _PY_VERSION >= (3, 12):
             CODE_ASES.extend([
                 (FST._code_as_type_param, 'body[0].type_params[0]', 'type t[T: int] = ...'),
                 (FST._code_as_type_param, 'body[0].type_params[0]', 'class c[T: int]: pass'),
@@ -32985,7 +32987,7 @@ match a:
             (FST._code_as_pattern, '_'),
         ]
 
-        if sys.version_info[:2] >= (3, 12):
+        if _PY_VERSION >= (3, 12):
             CODE_ASES.extend([
                 (FST._code_as_type_param, 'T: int'),
             ])
@@ -33323,7 +33325,7 @@ i # post
         self.assertEqual('i', a.body[0].value.f.copy(precomms=False, postcomms=False).src)
         self.assertEqual('( i )', a.body[0].value.f.copy(precomms=False, postcomms=False, pars=True).src)
 
-        if sys.version_info[:2] >= (3, 12):
+        if _PY_VERSION >= (3, 12):
             f = FST.fromsrc('a[*b]').a.body[0].value.slice.f.copy(fix=True)
             self.assertEqual('*b,', f.src)
 
@@ -36113,7 +36115,7 @@ class cls:
         self.assertEqual('ident', FST('match a:\n case (*ident,): pass').cases[0].pattern.patterns[0].get('name'))
         self.assertEqual('ident', FST('match a:\n case 1 as ident: pass').cases[0].pattern.get('name'))
 
-        if sys.version_info[:2] >= (3, 12):
+        if _PY_VERSION >= (3, 12):
             self.assertEqual('ident', FST('type t[ident] = ...').type_params[0].get('name'))
             self.assertEqual('ident', FST('type t[*ident] = ...').type_params[0].get('name'))
             self.assertEqual('ident', FST('type t[**ident] = ...').type_params[0].get('name'))
@@ -36138,7 +36140,7 @@ class cls:
 
         # FormattedValue/Interpolation conversion and format_spec, JoinedStr/TemplateStr values
 
-        if sys.version_info[:2] >= (3, 12):
+        if _PY_VERSION >= (3, 12):
             self.assertIsNone(None, FST('f"{a}"').values[0].get('conversion'))
             self.assertEqual("'a'", FST('f"{a!a}"').values[0].get('conversion').src)
             self.assertEqual("'r'", FST('f"{a!r}"').values[0].get('conversion').src)
@@ -36198,7 +36200,7 @@ if 1:
             self.assertEqual("""f'{d : {"0.5f<12"} }'""", g.src)
             g.verify()
 
-        if sys.version_info[:2] >= (3, 14):
+        if _PY_VERSION >= (3, 14):
             self.assertIsNone(None, FST('t"{a}"').values[0].get('conversion'))
             self.assertEqual("'a'", FST('t"{a!a}"').values[0].get('conversion').src)
             self.assertEqual("'r'", FST('t"{a!r}"').values[0].get('conversion').src)
@@ -36404,7 +36406,7 @@ if 1:
                 raise
 
     def test_put_slice_special(self):
-        if sys.version_info[:2] >= (3, 14):  # make sure parent Interpolation.str gets modified
+        if _PY_VERSION >= (3, 14):  # make sure parent Interpolation.str gets modified
             f = FST('t"{(1, 2)}"', 'exec').body[0].value.copy()
             f.values[0].value.put_slice("()")
             self.assertEqual('()', f.values[0].value.src)
@@ -36416,8 +36418,7 @@ if 1:
             self.assertEqual('()', f.values[0].str)
 
     def test_put_one(self):
-        ver = sys.version_info[1]
-
+        ver = _PY_VERSION[1]
         for i, (dst, attr, idx, field, options, src, put_src, put_dump) in enumerate(PUT_ONE_DATA):
             if options.get('_ver', 0) > ver:
                 continue
@@ -36451,7 +36452,7 @@ if 1:
 
                 self.assertEqual(tdst, put_src)
 
-                if (vd := options.get('_verdump')) and sys.version_info[:2] < (3, vd):
+                if (vd := options.get('_verdump')) and _PY_VERSION < (3, vd):
                     continue
 
                 self.assertEqual(tdump, put_dump.strip().split('\n'))
@@ -36468,8 +36469,7 @@ if 1:
                 raise
 
     def test_put_one_raw(self):
-        ver = sys.version_info[1]
-
+        ver = _PY_VERSION[1]
         for i, (dst, attr, idx, field, options, src, put_src, put_dump) in enumerate(PUT_ONE_DATA):
             if options.get('_ver', 0) > ver:
                 continue
@@ -36501,7 +36501,7 @@ if 1:
 
                 self.assertEqual(tdst.rstrip(), put_src.rstrip())
 
-                if (vd := options.get('_verdump')) and sys.version_info[:2] < (3, vd):
+                if (vd := options.get('_verdump')) and _PY_VERSION < (3, vd):
                     continue
 
                 # self.assertEqual(tdump, put_dump.strip().split('\n'))  # don't compare this because of the trailing newline difference
@@ -36748,7 +36748,7 @@ if 1:
         f.body[0].targets[0].put(g.a, 1, raw=False)
         self.assertEqual('a, *b = c', f.src)
 
-        if sys.version_info[:2] >= (3, 12):
+        if _PY_VERSION >= (3, 12):
             # except vs. except*
 
             f = FST('try:\n    pass\nexcept Exception:\n    pass', 'exec').body[0].handlers[0].copy()
@@ -36884,7 +36884,7 @@ except* (TypeError, ExceptionGroup):
         self.assertEqual('with (a): pass', f.src)
         f.verify()
 
-        if sys.version_info[:2] >= (3, 14):
+        if _PY_VERSION >= (3, 14):
             # make sure TemplateStr.str gets modified
 
             f = FST('''
@@ -36940,7 +36940,7 @@ a
 
         # FormattedValue/Interpolation conversion and format_spec, JoinedStr/TemplateStr values
 
-        if sys.version_info[:2] >= (3, 12):
+        if _PY_VERSION >= (3, 12):
             self.assertRaises(NodeError, FST('f"{a}"').values[0].put, '"s"', 'conversion', raw=False)  # not implemented yet
             self.assertRaises(NodeError, FST('f"{a}"').values[0].put, 'f"0.5f"', 'format_spec', raw=False)  # not implemented yet
             self.assertRaises(NodeError, FST('f"{a}"').put, '"s"', 0, 'values', raw=False)  # not implemented yet
@@ -37016,7 +37016,7 @@ a
             self.assertEqual('f"{a=}"', f.src)
             f.verify()
 
-        if sys.version_info[:2] >= (3, 14):
+        if _PY_VERSION >= (3, 14):
             self.assertRaises(NodeError, FST('t"{a}"').values[0].put, '"s"', 'conversion', raw=False)  # not implemented yet
             self.assertRaises(NodeError, FST('t"{a}"').values[0].put, 'f"0.5f"', 'format_spec', raw=False)  # not implemented yet
             self.assertRaises(NodeError, FST('t"{a}"').put, '"s"', 0, 'values', raw=False)  # not implemented yet
@@ -37716,6 +37716,61 @@ finally:
         f = parse('a = b').body[0].f
         self.assertRaises(ValueError, f.value.replace, 'c', to=f.targets[0], raw=True)
 
+    def test_modify_parent_fmtvals_and_interpolations(self):
+        if _PY_VERSION >= (3, 12):
+            f = FST('f"{a=}"')
+            f.values[-1].value.replace('b')
+            self.assertEqual('b=', f.values[0].value)
+            f.verify()
+
+            f = FST('f"c{a=}"')
+            f.values[-1].value.replace('b')
+            self.assertEqual('cb=', f.values[0].value)
+            f.verify()
+
+            f = FST('''f"""c
+{
+# 1
+a
+# 2
+=
+# 3
+!r:0.5f<5}"""''')
+            f.values[-1].value.replace('b')
+            self.assertEqual('c\n\n\nb\n\n=\n\n', f.values[0].value)
+            f.verify()
+
+            f = FST('''f"""c
+{
+# 1
+f'd{f"e{f=!s:0.1f<1}"=}'
+# 2
+=
+# 3
+!r:0.5f<5}"""''')
+            f.values[-1].value.values[-1].value.values[-1].value.replace('z')
+            self.assertEqual('ez=', f.values[-1].value.values[-1].value.values[0].value)
+            self.assertEqual('df"e{z=!s:0.1f<1}"=', f.values[-1].value.values[0].value)
+            self.assertEqual('c\n\n\nf\'d{f"e{z=!s:0.1f<1}"=}\'\n\n=\n\n', f.values[0].value)
+            f.verify()
+
+        if _PY_VERSION >= (3, 14):
+            f = FST('''t"""c
+{
+# 1
+f'd{t"e{f=!s:0.1f<1}"=}'
+# 2
+=
+# 3
+!r:0.5f<5}"""''')
+            f.values[-1].value.values[-1].value.values[-1].value.replace('z')
+            self.assertEqual('ez=', f.values[-1].value.values[-1].value.values[0].value)
+            self.assertEqual('z', f.values[-1].value.values[-1].value.values[-1].str)
+            self.assertEqual('dt"e{z=!s:0.1f<1}"=', f.values[-1].value.values[0].value)
+            self.assertEqual('c\n\n\nf\'d{t"e{z=!s:0.1f<1}"=}\'\n\n=\n\n', f.values[0].value)
+            self.assertEqual('\n\nf\'d{t"e{z=!s:0.1f<1}"=}\'', f.values[-1].str)
+            f.verify()
+
     def test_empty_set_slice(self):
         # f = parse('set()').body[0].value.f
         # self.assertEqual('{*()}', f.get_slice(0, 0, cut=True).src)
@@ -38286,7 +38341,7 @@ match a:
         self.assertTrue(f.is_stmtish_or_mod)
         self.assertTrue(f.is_mod)
 
-    def test_set_options(self):
+    def test_options(self):
         new = dict(
             docstr    = 'test_docstr',
             precomms  = 'test_precomms',
@@ -38305,6 +38360,24 @@ match a:
 
         self.assertEqual(newset, new)
         self.assertEqual(oldset, old)
+
+        with FST.option(**new) as opts:
+            self.assertEqual(opts, old)
+            self.assertEqual(new, FST.set_option(**new))
+
+        self.assertEqual(old, FST.set_option(**old))
+
+        try:
+            with FST.option(**new) as opts:
+                self.assertEqual(opts, old)
+                self.assertEqual(new, FST.set_option(**new))
+
+                raise NodeError
+
+        except NodeError:
+            pass
+
+        self.assertEqual(old, FST.set_option(**old))
 
 
 if __name__ == '__main__':
@@ -38327,7 +38400,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     if any(getattr(args, n) for n in dir(args) if n.startswith('regen_')):
-        if sys.version_info[:2] < (3, 12):
+        if _PY_VERSION < (3, 12):
             raise RuntimeError('cannot regenerate on python version < 3.12')
 
     if args.regen_pars or args.regen_all:
