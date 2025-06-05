@@ -104,7 +104,7 @@ def _reparse_raw(self: 'FST', new_lines: list[str], ln: int, col: int, end_ln: i
 
     copy_root = FST(Pass(), copy_lines, lcopy=False)  # we don't need the ASTs here, just the lines
 
-    copy_root.put_src(new_lines, ln, col, end_ln, end_col)
+    copy_root._put_src(new_lines, ln, col, end_ln, end_col)
 
     root      = self.root
     copy_root = FST.fromsrc(copy_root.src, mode=get_parse_mode(root.a) or 'exec', **root.parse_params)
@@ -119,7 +119,7 @@ def _reparse_raw(self: 'FST', new_lines: list[str], ln: int, col: int, end_ln: i
         if not copy:
             raise RuntimeError(f'could not find node after raw reparse')
 
-        root.put_src(new_lines, ln, col, end_ln, end_col, True, self if set_ast else None)  # we do this again in our own tree to offset our nodes which aren't being moved over from the modified copy, can exclude self if setting ast because it overrides self locations
+        root._put_src(new_lines, ln, col, end_ln, end_col, True, self if set_ast else None)  # we do this again in our own tree to offset our nodes which aren't being moved over from the modified copy, can exclude self if setting ast because it overrides self locations
 
         copy.pfield.set(copy.parent.a, None)  # remove from copy tree so that copy_root unmake doesn't zero out new node
         copy_root._unmake_fst_tree()
@@ -322,15 +322,15 @@ def _reparse_raw_slice(self: 'FST', code: Code | None, start: int | Literal['end
                         (is_par_tup is None and isinstance(ast, MatchSequence) and
                             not fst._is_parenthesized_seq('patterns'))
                 ):
-                    code.put_src(None, end_ln := code.end_ln, (end_col := code.end_col) - 1, end_ln, end_col, True)  # strip enclosing delimiters
-                    code.put_src(None, ln := code.ln, col := code.col, ln, col + 1, False)
+                    code._put_src(None, end_ln := code.end_ln, (end_col := code.end_col) - 1, end_ln, end_col, True)  # strip enclosing delimiters
+                    code._put_src(None, ln := code.ln, col := code.col, ln, col + 1, False)
 
                 if elts := ast.values if is_dict else ast.patterns if is_match else ast.elts:
                     if comma := _next_find(code.root._lines, (l := elts[-1].f.loc).end_ln, l.end_col, code.end_ln,
                                             code.end_col, ','):  # strip trailing comma
                         ln, col = comma
 
-                        code.put_src(None, ln, col, ln, col + 1, False)
+                        code._put_src(None, ln, col, ln, col + 1, False)
 
     self._reparse_raw_loc(code, *_raw_slice_loc(self, start, stop, field))
 

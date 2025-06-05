@@ -78,13 +78,13 @@ def _put_slice_seq_and_indent(self: 'FST', put_fst: Optional['FST'], seq_loc: fs
 
     if put_col == self_col and put_ln == self_ln:  # unenclosed sequence
         self._offset(
-            *root.put_src(put_lines, put_ln, put_col, put_end_ln, put_end_col, not fpost, False, self),
+            *root._put_src(put_lines, put_ln, put_col, put_end_ln, put_end_col, not fpost, False, self),
             True, True, self_=False)
 
     elif fpost:
-        root.put_src(put_lines, put_ln, put_col, put_end_ln, put_end_col, False)
+        root._put_src(put_lines, put_ln, put_col, put_end_ln, put_end_col, False)
     else:
-        root.put_src(put_lines, put_ln, put_col, put_end_ln, put_end_col, True, True, self)  # because of insertion at end and unparenthesized tuple
+        root._put_src(put_lines, put_ln, put_col, put_end_ln, put_end_col, True, True, self)  # because of insertion at end and unparenthesized tuple
 
 
 _GLOBALS = globals() | {'_GLOBALS': None}
@@ -406,14 +406,14 @@ def _put_slice_tuple_list_or_set(self: 'FST', code: Code | None, start: int | Li
 #     old_src = self.get_src(ln, col, end_ln, end_col, True)
 #     old_ast = self._set_ast(empty.a)
 
-#     self.put_src(empty._lines, ln, col, end_ln, end_col, True, True, self, offset_excluded=False)
+#     self._put_src(empty._lines, ln, col, end_ln, end_col, True, True, self, offset_excluded=False)
 
 #     try:
 #         self._put_slice_tuple_list_or_set(code, start, stop, field, one, **options)
 
 #     finally:
 #         if not self.a.elts:
-#             self.put_src(old_src, *self.loc, True)  # restore previous empty set representation
+#             self._put_src(old_src, *self.loc, True)  # restore previous empty set representation
 #             self._set_ast(old_ast)
 
 
@@ -695,7 +695,7 @@ def _put_slice_stmtish(self: 'FST', code: Code | None, start: int | Literal['end
             _src_edit.get_slice_stmt(self, field, True, block_loc, ffirst, flast, fpre, fpost, **options))
 
         if put_loc:
-            self.put_src(put_lines, *put_loc, True)
+            self._put_src(put_lines, *put_loc, True)
 
         self._unmake_fst_tree(body[start : stop])
 
@@ -708,7 +708,7 @@ def _put_slice_stmtish(self: 'FST', code: Code | None, start: int | Literal['end
                                             ffirst, flast, fpre, fpost, **options)
 
         put_fst._offset(0, 0, put_loc.ln, 0 if put_fst.bln or put_fst.bcol else lines[put_loc.ln].c2b(put_loc.col))
-        self.put_src(put_fst.lines, *put_loc, False)
+        self._put_src(put_fst.lines, *put_loc, False)
         self._unmake_fst_tree(body[start : stop])
         put_fst._unmake_fst_parents(True)
 

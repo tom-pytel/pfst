@@ -14,7 +14,7 @@ fst_ = fst
 
 from data_put_one import PUT_ONE_DATA
 from data_other import (PARS_DATA, COPY_DATA, GET_SLICE_SEQ_DATA, GET_SLICE_STMT_DATA, GET_SLICE_STMT_NOVERIFY_DATA,
-                        PUT_SLICE_SEQ_DATA, PUT_SLICE_STMT_DATA, PUT_SLICE_DATA, PUT_RAW_DATA, PRECEDENCE_DATA,
+                        PUT_SLICE_SEQ_DATA, PUT_SLICE_STMT_DATA, PUT_SLICE_DATA, PUT_SRC_DATA, PRECEDENCE_DATA,
                         REPLACE_EXISTING_ONE_DATA)
 
 _PY_VERSION = sys.version_info[:2]
@@ -700,15 +700,15 @@ def regen_put_one():
         lines = f.write('\n'.join(lines))
 
 
-def regen_put_raw():
+def regen_put_src():
     newlines = []
 
-    for i, (dst, attr, (ln, col, end_ln, end_col), options, src, put_ret, put_src, put_dump) in enumerate(PUT_RAW_DATA):
+    for i, (dst, attr, (ln, col, end_ln, end_col), options, src, put_ret, put_src, put_dump) in enumerate(PUT_SRC_DATA):
         t = parse(dst)
         f = (eval(f't.{attr}', {'t': t}) if attr else t).f
 
         try:
-            g = f.put_raw(None if src == '**DEL**' else src, ln, col, end_ln, end_col, **options) or f.root
+            g = f.put_src(None if src == '**DEL**' else src, ln, col, end_ln, end_col, **options) or f.root
 
             tdst  = f.root.src
             tdump = f.root.dump(out=list, compact=True)
@@ -735,8 +735,8 @@ def regen_put_raw():
     with open(fnm) as f:
         lines = f.read().split('\n')
 
-    start = lines.index('PUT_RAW_DATA = [')
-    stop  = lines.index(']  # END OF PUT_RAW_DATA')
+    start = lines.index('PUT_SRC_DATA = [')
+    stop  = lines.index(']  # END OF PUT_SRC_DATA')
 
     lines[start + 1 : stop] = newlines
 
@@ -1640,15 +1640,15 @@ def f():
         self.assertEqual(f.src, 'call(((i for i in j)))')
 
         f = parse('i').body[0].value.f.copy()
-        f.put_src('\n# post', 0, 1, 0, 1, False)
-        f.put_src('# pre\n', 0, 0, 0, 0, False)
+        f._put_src('\n# post', 0, 1, 0, 1, False)
+        f._put_src('# pre\n', 0, 0, 0, 0, False)
         f._parenthesize_grouping(whole=True)
         self.assertEqual((1, 0, 1, 1), f.loc)
         self.assertEqual(f.root.src, '(# pre\ni\n# post)')
 
         f = parse('i').body[0].value.f.copy()
-        f.put_src('\n# post', 0, 1, 0, 1, False)
-        f.put_src('# pre\n', 0, 0, 0, 0, False)
+        f._put_src('\n# post', 0, 1, 0, 1, False)
+        f._put_src('# pre\n', 0, 0, 0, 0, False)
         f._parenthesize_grouping(whole=False)
         self.assertEqual((1, 1, 1, 2), f.loc)
         self.assertEqual(f.root.src, '# pre\n(i)\n# post')
@@ -1672,15 +1672,15 @@ def f():
         self.assertEqual((0, 4, 0, 5), f.body[0].value.elts[1].loc)
 
         f = parse('i,').body[0].value.f.copy()
-        f.put_src('\n# post', 0, 2, 0, 2, False)
-        f.put_src('# pre\n', 0, 0, 0, 0, False)
+        f._put_src('\n# post', 0, 2, 0, 2, False)
+        f._put_src('# pre\n', 0, 0, 0, 0, False)
         f._parenthesize_tuple(whole=True)
         self.assertEqual((0, 0, 2, 7), f.loc)
         self.assertEqual(f.src, '(# pre\ni,\n# post)')
 
         f = parse('i,').body[0].value.f.copy()
-        f.put_src('\n# post', 0, 2, 0, 2, False)
-        f.put_src('# pre\n', 0, 0, 0, 0, False)
+        f._put_src('\n# post', 0, 2, 0, 2, False)
+        f._put_src('# pre\n', 0, 0, 0, 0, False)
         f._parenthesize_tuple(whole=False)
         self.assertEqual((1, 0, 1, 4), f.loc)
         self.assertEqual(f.src, '# pre\n(i,)\n# post')
@@ -2124,15 +2124,15 @@ def f():
         self.assertEqual(f.src, 'call(((i for i in j)))')
 
         f = parse('i').body[0].value.f.copy()
-        f.put_src('\n# post', 0, 1, 0, 1, False)
-        f.put_src('# pre\n', 0, 0, 0, 0, False)
+        f._put_src('\n# post', 0, 1, 0, 1, False)
+        f._put_src('# pre\n', 0, 0, 0, 0, False)
         f.parethesize(whole=True)
         self.assertEqual((1, 0, 1, 1), f.loc)
         self.assertEqual(f.root.src, '(# pre\ni\n# post)')
 
         f = parse('i').body[0].value.f.copy()
-        f.put_src('\n# post', 0, 1, 0, 1, False)
-        f.put_src('# pre\n', 0, 0, 0, 0, False)
+        f._put_src('\n# post', 0, 1, 0, 1, False)
+        f._put_src('# pre\n', 0, 0, 0, 0, False)
         f.parethesize(whole=False)
         self.assertEqual((1, 1, 1, 2), f.loc)
         self.assertEqual(f.root.src, '# pre\n(i)\n# post')
@@ -2157,15 +2157,15 @@ def f():
         self.assertEqual((0, 4, 0, 5), f.body[0].value.elts[1].loc)
 
         f = parse('i,').body[0].value.f.copy()
-        f.put_src('\n# post', 0, 2, 0, 2, False)
-        f.put_src('# pre\n', 0, 0, 0, 0, False)
+        f._put_src('\n# post', 0, 2, 0, 2, False)
+        f._put_src('# pre\n', 0, 0, 0, 0, False)
         f.parenthesize(whole=True)
         self.assertEqual((0, 0, 2, 7), f.loc)
         self.assertEqual(f.src, '(# pre\ni,\n# post)')
 
         f = parse('i,').body[0].value.f.copy()
-        f.put_src('\n# post', 0, 2, 0, 2, False)
-        f.put_src('# pre\n', 0, 0, 0, 0, False)
+        f._put_src('\n# post', 0, 2, 0, 2, False)
+        f._put_src('# pre\n', 0, 0, 0, 0, False)
         f.parenthesize(whole=False)
         self.assertEqual((1, 0, 1, 4), f.loc)
         self.assertEqual(f.src, '# pre\n(i,)\n# post')
@@ -4170,7 +4170,7 @@ f"distutils.command.sdist.check_metadata is deprecated, \\
         self.assertFalse(parse('{}').body[0].value.f.copy().parenthesize())
 
         f = parse('i = 1').body[0].f.copy()
-        f.put_src(['# comment', ''], 0, 0, 0, 0)
+        f._put_src(['# comment', ''], 0, 0, 0, 0)
         self.assertFalse(f.parenthesize())
         self.assertEqual('# comment\ni = 1', f.src)
         self.assertTrue(f.parenthesize(force=True))
@@ -4773,23 +4773,23 @@ match a:
                 if code_as is FST._code_as_expr:
                     self.assertEqual(src, code_as(srcp[1:-1]).src)
 
-    def test_put_src(self):
+    def test__put_src(self):
         f = FST(Load(), [''])
-        f.put_src('test', 0, 0, 0, 0)
+        f._put_src('test', 0, 0, 0, 0)
         self.assertEqual(f.lines, ['test'])
-        f.put_src('test', 0, 0, 0, 0)
+        f._put_src('test', 0, 0, 0, 0)
         self.assertEqual(f.lines, ['testtest'])
-        f.put_src('tost', 0, 0, 0, 8)
+        f._put_src('tost', 0, 0, 0, 8)
         self.assertEqual(f.lines, ['tost'])
-        f.put_src('a\nb\nc', 0, 2, 0, 2)
+        f._put_src('a\nb\nc', 0, 2, 0, 2)
         self.assertEqual(f.lines, ['toa', 'b', 'cst'])
-        f.put_src('', 0, 3, 2, 1)
+        f._put_src('', 0, 3, 2, 1)
         self.assertEqual(f.lines, ['toast'])
-        f.put_src('a\nb\nc\nd', 0, 0, 0, 5)
+        f._put_src('a\nb\nc\nd', 0, 0, 0, 5)
         self.assertEqual(f.lines, ['a', 'b', 'c', 'd'])
-        f.put_src('efg\nhij', 1, 0, 2, 1)
+        f._put_src('efg\nhij', 1, 0, 2, 1)
         self.assertEqual(f.lines, ['a', 'efg', 'hij', 'd'])
-        f.put_src('***', 1, 2, 2, 1)
+        f._put_src('***', 1, 2, 2, 1)
         self.assertEqual(f.lines, ['a', 'ef***ij', 'd'])
 
     def test_pars(self):
@@ -8505,8 +8505,8 @@ if 1:
 
         f = FST('a = b', 'exec')
         g = FST('c', 'exec').body[0].value.copy()
-        g.put_src(' # line\n# post', 0, 1, 0, 1, False)
-        g.put_src('# pre\n', 0, 0, 0, 0, False)
+        g._put_src(' # line\n# post', 0, 1, 0, 1, False)
+        g._put_src('# pre\n', 0, 0, 0, 0, False)
         f.body[0].put(g, 'value', pars=False)
         self.assertEqual('a = c', f.src)
 
@@ -9218,12 +9218,12 @@ a
         self.assertEqual('i + x * y', f.root.src)
 
     def test_put_raw(self):
-        for i, (dst, attr, (ln, col, end_ln, end_col), options, src, put_ret, put_src, put_dump) in enumerate(PUT_RAW_DATA):
+        for i, (dst, attr, (ln, col, end_ln, end_col), options, src, put_ret, put_src, put_dump) in enumerate(PUT_SRC_DATA):
             t = parse(dst)
             f = (eval(f't.{attr}', {'t': t}) if attr else t).f
 
             try:
-                g = f.put_raw(None if src == '**DEL**' else src, ln, col, end_ln, end_col, **options) or f.root
+                g = f.put_src(None if src == '**DEL**' else src, ln, col, end_ln, end_col, **options) or f.root
 
                 tdst  = f.root.src
                 tdump = f.root.dump(out=list, compact=True)
@@ -9321,7 +9321,7 @@ finally:
                 end_col   = randint(col if end_ln == ln else 0, len(lines[end_ln]))
                 put_lines = master.get_src(ln, col, end_ln, end_col, True)
 
-                copy.put_raw(put_lines, ln, col, end_ln, end_col)
+                copy.put_src(put_lines, ln, col, end_ln, end_col)
                 copy.verify()
 
                 compare_asts(master.a, copy.a, locs=True, raise_=True)
@@ -9351,7 +9351,7 @@ finally:
                 field, _ = _fixup_field_body(f.a, field)
                 loc      = _raw_slice_loc(f, start, stop, field)
 
-                f.put_raw(None if src == '**DEL**' else src, *loc, **options)
+                f.put_src(None if src == '**DEL**' else src, *loc, **options)
 
                 tdst  = f.root.src
                 tdump = f.root.dump(out=list, compact=True)

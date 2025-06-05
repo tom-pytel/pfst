@@ -17,7 +17,7 @@ from .shared import (
     re_empty_line, re_line_continuation, re_line_end_cont_or_comment,
     Code, Mode,
     _next_pars, _prev_pars,
-    _params_offset, _fixup_field_body, _multiline_str_continuation_lns, _multiline_fstr_continuation_lns,
+    _fixup_field_body, _multiline_str_continuation_lns, _multiline_fstr_continuation_lns,
 )
 
 __all__ = [
@@ -913,20 +913,6 @@ class FST:
 
         return self._put_slice(code, start, stop, field_, one, **options)
 
-    def put_raw(self, code: Code | None, ln: int, col: int, end_ln: int, end_col: int, *,
-                exact: bool | None = True, **options) -> Optional['FST']:
-        """Put raw code and reparse. Can call on any node in tree for same effect.
-
-        **Returns:**
-        - `FST | None`: FIRST highest level node contained entirely within replacement source location (there may be
-            others following), or `None` if no such candidate and `exact=None`. If no candidate and `exact` is `True`
-            or `False` then will attempt to return a node which encloses the location using `find_loc(..., exact)`.
-        """
-
-        parent = self.root.find_loc(ln, col, end_ln, end_col, False) or self.root
-
-        return parent._reparse_raw_loc(code, ln, col, end_ln, end_col, exact)
-
     def get_src(self, ln: int, col: int, end_ln: int, end_col: int, as_lines: bool = False) -> str | list[str]:
         """Get source at location, without dedenting or any other modification, Returned as a string or individual
         lines. The first and last lines are cropped to start `col` and `end_col`. Can call on any node in tree for same
@@ -947,72 +933,19 @@ class FST:
                     if end_ln == ln else
                     '\n'.join([ls[ln][col:]] + ls[ln + 1 : end_ln] + [ls[end_ln][:end_col]]))
 
-    def put_src(self, src: str | list[str] | None, ln: int, col: int, end_ln: int, end_col: int,
-                tail: bool | None = ..., head: bool | None = True, exclude: Optional['FST'] = None, *,
-                offset_excluded: bool = True) -> tuple[int, int, int, int] | None:
-        """Put or delete new source to currently stored source, optionally offsetting all nodes for the change. Must
-        specify `tail` as `True`, `False` or `None` to enable offset of nodes according to source put. `...` ellipsis
-        value is used as sentinel for `tail` to mean don't offset. Otherwise `tail` and params which followed are passed
-        to `self._offset()` with calculated offset location and deltas.
+    def put_src(self, code: Code | None, ln: int, col: int, end_ln: int, end_col: int, *,
+                exact: bool | None = True, **options) -> Optional['FST']:
+        """Put source and reparse. Can call on any node in tree for same effect.
 
         **Returns:**
-        - `(ln: int, col: int, dln: int, dcol_offset: int) | None`: If `tail` was not `...` then the calculated
-            `offset()` parameters are returned for any potential followup offsetting. The `col` parameter in this case
-            is returned as a byte offset so that `offset()` doesn't attempt to calculate it from already modified
-            source."""
+        - `FST | None`: FIRST highest level node contained entirely within replacement source location (there may be
+            others following), or `None` if no such candidate and `exact=None`. If no candidate and `exact` is `True`
+            or `False` then will attempt to return a node which encloses the location using `find_loc(..., exact)`.
+        """
 
-        ret = None
-        ls  = self.root._lines
+        parent = self.root.find_loc(ln, col, end_ln, end_col, False) or self.root
 
-        if is_del := src is None:
-            lines = [bistr('')]
-        elif isinstance(src, str):
-            lines = [bistr(s) for s in src.split('\n')]
-        elif not isinstance(src[0], bistr):  # lines is list[str]
-            lines = [bistr(s) for s in src]
-        else:
-            lines = src
-
-        if tail is not ...:  # possibly offset nodes
-            ret = _params_offset(ls, lines, ln, col, end_ln, end_col)
-
-            self.root._offset(*ret, tail, head, exclude, offset_excluded=offset_excluded)
-
-        if is_del:  # delete lines
-            if end_ln == ln:
-                ls[ln] = bistr((l := ls[ln])[:col] + l[end_col:])
-
-            else:
-                ls[end_ln] = bistr(ls[ln][:col] + ls[end_ln][end_col:])
-
-                del ls[ln : end_ln]
-
-        else:  # put lines
-            dln = end_ln - ln
-
-            if (nnew_ln := len(lines)) <= 1:
-                s = lines[0] if nnew_ln else ''
-
-                if not dln:  # replace single line with single or no line
-                    ls[ln] = bistr(f'{(l := ls[ln])[:col]}{s}{l[end_col:]}')
-
-                else:  # replace multiple lines with single or no line
-                    ls[ln] = bistr(f'{ls[ln][:col]}{s}{ls[end_ln][end_col:]}')
-
-                    del ls[ln + 1 : end_ln + 1]
-
-            elif not dln:  # replace single line with multiple lines
-                lend                 = bistr(lines[-1] + (l := ls[ln])[end_col:])
-                ls[ln]               = bistr(l[:col] + lines[0])
-                ls[ln + 1 : ln + 1]  = lines[1:]
-                ls[ln + nnew_ln - 1] = lend
-
-            else:  # replace multiple lines with multiple lines
-                ls[ln]              = bistr(ls[ln][:col] + lines[0])
-                ls[end_ln]          = bistr(lines[-1] + ls[end_ln][end_col:])
-                ls[ln + 1 : end_ln] = lines[1:-1]
-
-        return ret
+        return parent._reparse_raw_loc(code, ln, col, end_ln, end_col, exact)
 
     def pars(self, ret_count: bool = False, *, shared: bool = True, pars: bool = True,
              ) -> fstloc | tuple[fstloc | None, int] | None:
@@ -1850,6 +1783,7 @@ class FST:
         _get_fmtval_interp_strs,
         _modifying,
         _touchall,
+        _put_src,
         _offset,
         _offset_lns,
         _indent_lns,

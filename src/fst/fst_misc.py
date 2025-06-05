@@ -15,6 +15,7 @@ from .shared import (
     HAS_DOCSTRING,
     re_empty_line_start, re_line_end_cont_or_comment,
     _next_src, _prev_src, _next_find, _prev_find, _next_pars, _prev_pars,
+    _params_offset,
 )
 
 _PY_VERSION = sys.version_info[:2]
@@ -1040,7 +1041,7 @@ def _maybe_fix_tuple(self: 'FST', is_parenthesized: bool | None = None):
     elif not is_parenthesized:  # if is unparenthesized tuple and empty left then need to add parentheses
         ln, col, end_ln, end_col = self.loc
 
-        self.put_src(['()'], ln, col, end_ln, end_col, True, False)  # WARNING! `tail=True` may not be safe if another preceding non-containing node ends EXACTLY where the unparenthesized tuple starts, but haven't found a case where this can happen
+        self._put_src(['()'], ln, col, end_ln, end_col, True, False)  # WARNING! `tail=True` may not be safe if another preceding non-containing node ends EXACTLY where the unparenthesized tuple starts, but haven't found a case where this can happen
 
 
 def _maybe_fix_set(self: 'FST'):
@@ -1049,7 +1050,7 @@ def _maybe_fix_set(self: 'FST'):
     if not self.a.elts:
         ln, col, end_ln, end_col = self.loc
 
-        self.put_src(['{*()}'], ln, col, end_ln, end_col, True)
+        self._put_src(['{*()}'], ln, col, end_ln, end_col, True)
         self._set_ast(self._new_empty_set(True, (a := self.a).lineno, a.col_offset))
 
 
@@ -1060,7 +1061,7 @@ def _maybe_fix_elif(self: 'FST'):
     lines         = self.root._lines
 
     if lines[ln].startswith('elif', col):
-        self.put_src(None, ln, col, ln, col + 2, False)
+        self._put_src(None, ln, col, ln, col + 2, False)
 
 
 def _maybe_fix(self: 'FST', pars: bool = True):
@@ -1151,8 +1152,8 @@ def _parenthesize_grouping(self: 'FST', whole: bool = True):
 
     ln, col, end_ln, end_col = self.whole_loc if whole and self.is_root else self.loc
 
-    self.put_src([')'], end_ln, end_col, end_ln, end_col, True, True, self, offset_excluded=False)
-    self._offset(*self.put_src(['('], ln, col, ln, col, False, False, self, offset_excluded=False))
+    self._put_src([')'], end_ln, end_col, end_ln, end_col, True, True, self, offset_excluded=False)
+    self._offset(*self._put_src(['('], ln, col, ln, col, False, False, self, offset_excluded=False))
 
 
 def _parenthesize_tuple(self: 'FST', whole: bool = True):
@@ -1168,14 +1169,14 @@ def _parenthesize_tuple(self: 'FST', whole: bool = True):
 
     ln, col, end_ln, end_col = self.whole_loc if whole and self.is_root else self.loc
 
-    self.put_src([')'], end_ln, end_col, end_ln, end_col, True, False, self)
+    self._put_src([')'], end_ln, end_col, end_ln, end_col, True, False, self)
 
     lines            = self.root._lines
     a                = self.a
     a.end_lineno     = end_ln + 1  # yes this can change
     a.end_col_offset = lines[end_ln].c2b(end_col + 1)  # can't count on this being set by put_src() because end of `whole` could be past end of tuple
 
-    self._offset(*self.put_src(['('], ln, col, ln, col, False, False, self), self_=False)
+    self._offset(*self._put_src(['('], ln, col, ln, col, False, False, self), self_=False)
 
     a.lineno     = ln + 1
     a.col_offset = lines[ln].c2b(col)  # ditto on the `whole` thing
@@ -1210,8 +1211,8 @@ def _unparenthesize_grouping(self: 'FST', share: bool = True) -> bool:
         pend_ln, pend_col        = _next_find(lines, pend_ln, pend_col, len(lines) - 1, len(lines[-1]), ')')  # ditto
         pend_col                += 1
 
-        self.put_src(None, end_ln, end_col, pend_ln, pend_col, True, self)
-        self.put_src(None, pln, pcol, ln, col, False)
+        self._put_src(None, end_ln, end_col, pend_ln, pend_col, True, self)
+        self._put_src(None, pln, pcol, ln, col, False)
 
     else:  # in all other case we need to make sure par is not separating us from an alphanumeric on either side, and if so then just replace that par with a space
         lines = self.root._lines
@@ -1219,12 +1220,12 @@ def _unparenthesize_grouping(self: 'FST', share: bool = True) -> bool:
         if pend_col >= 2 and _re_par_close_alnums.match(l := lines[pend_ln], pend_col - 2):
             lines[pend_ln] = bistr(l[:pend_col - 1] + ' ' + l[pend_col:])
         else:
-            self.put_src(None, end_ln, end_col, pend_ln, pend_col, True, self)
+            self._put_src(None, end_ln, end_col, pend_ln, pend_col, True, self)
 
         if pcol and _re_par_open_alnums.match(l := lines[pln], pcol - 1):
             lines[pln] = bistr(l[:pcol] + ' ' + l[pcol + 1:])
         else:
-            self.put_src(None, pln, pcol, ln, col, False)
+            self._put_src(None, pln, pcol, ln, col, False)
 
     return True
 
@@ -1254,15 +1255,15 @@ def _unparenthesize_tuple(self: 'FST') -> bool:
 
     else:  # when no trailing comma need to make sure par is not separating us from an alphanumeric on either side, and if so then insert a space at the end before deleting the right par
         if end_col >= 2 and _re_par_close_alnums.match(lines[end_ln], end_col - 2):
-            self.put_src(' ', end_ln, end_col, end_ln, end_col, False, self)
+            self._put_src(' ', end_ln, end_col, end_ln, end_col, False, self)
 
     head_alnums = col and _re_par_open_alnums.match(lines[ln], col - 1)  # if open has alnumns on both sides then insert space there too
 
-    self.put_src(None, en_end_ln, en_end_col, end_ln, end_col, True, self)
-    self.put_src(None, ln, col, (e0 := elts[0].f).ln, e0.col, False)
+    self._put_src(None, en_end_ln, en_end_col, end_ln, end_col, True, self)
+    self._put_src(None, ln, col, (e0 := elts[0].f).ln, e0.col, False)
 
     if head_alnums:  # but put after delete par to keep locations same
-        self.put_src(' ', ln, col, ln, col, False)
+        self._put_src(' ', ln, col, ln, col, False)
 
     return True
 
@@ -1298,7 +1299,7 @@ def _normalize_block(self: 'FST', field: str = 'body', *, indent: str | None = N
 
     ln, col = colon
 
-    self.put_src(['', indent], ln, col + 1, b0_ln, b0_col, False)
+    self._put_src(['', indent], ln, col + 1, b0_ln, b0_col, False)
 
 
 def _elif_to_else_if(self: 'FST'):
@@ -1315,8 +1316,8 @@ def _elif_to_else_if(self: 'FST'):
 
     ln, col, _, _ = self.loc
 
-    self.put_src(['if'], ln, col, ln, col + 4, False)
-    self.put_src([indent + 'else:', indent + self.root.indent], ln, 0, ln, col, False)
+    self._put_src(['if'], ln, col, ln, col + 4, False)
+    self._put_src([indent + 'else:', indent + self.root.indent], ln, 0, ln, col, False)
 
 
 def _reparse_docstrings(self: 'FST', docstr: bool | Literal['strict'] | None = None):
@@ -1371,7 +1372,7 @@ def _make_fst_and_dedent(self: 'FST', indent: Union['FST', str], ast: AST, copy_
         fst._dedent_lns(indent, skip=bool(copy_loc.col), docstr=docstr)  # if copy location starts at column 0 then we apply dedent to it as well (preceding comment or something)
 
     if put_loc:
-        self.put_src(put_lines, *put_loc, True)  # True because we may have an unparenthesized tuple that shrinks to a span length of 0
+        self._put_src(put_lines, *put_loc, True)  # True because we may have an unparenthesized tuple that shrinks to a span length of 0
 
     return fst
 
@@ -1531,6 +1532,74 @@ def _touchall(self: 'FST', parents: bool = False, self_: bool = True, children: 
             parent._touch()
 
     return self
+
+
+def _put_src(self, src: str | list[str] | None, ln: int, col: int, end_ln: int, end_col: int,
+             tail: bool | None = ..., head: bool | None = True, exclude: Optional['FST'] = None, *,
+             offset_excluded: bool = True) -> tuple[int, int, int, int] | None:
+    """Put or delete new source to currently stored source, optionally offsetting all nodes for the change. Must
+    specify `tail` as `True`, `False` or `None` to enable offset of nodes according to source put. `...` ellipsis
+    value is used as sentinel for `tail` to mean don't offset. Otherwise `tail` and params which followed are passed
+    to `self._offset()` with calculated offset location and deltas.
+
+    **Returns:**
+    - `(ln: int, col: int, dln: int, dcol_offset: int) | None`: If `tail` was not `...` then the calculated
+        `offset()` parameters are returned for any potential followup offsetting. The `col` parameter in this case
+        is returned as a byte offset so that `offset()` doesn't attempt to calculate it from already modified
+        source."""
+
+    ret = None
+    ls  = self.root._lines
+
+    if is_del := src is None:
+        lines = [bistr('')]
+    elif isinstance(src, str):
+        lines = [bistr(s) for s in src.split('\n')]
+    elif not isinstance(src[0], bistr):  # lines is list[str]
+        lines = [bistr(s) for s in src]
+    else:
+        lines = src
+
+    if tail is not ...:  # possibly offset nodes
+        ret = _params_offset(ls, lines, ln, col, end_ln, end_col)
+
+        self.root._offset(*ret, tail, head, exclude, offset_excluded=offset_excluded)
+
+    if is_del:  # delete lines
+        if end_ln == ln:
+            ls[ln] = bistr((l := ls[ln])[:col] + l[end_col:])
+
+        else:
+            ls[end_ln] = bistr(ls[ln][:col] + ls[end_ln][end_col:])
+
+            del ls[ln : end_ln]
+
+    else:  # put lines
+        dln = end_ln - ln
+
+        if (nnew_ln := len(lines)) <= 1:
+            s = lines[0] if nnew_ln else ''
+
+            if not dln:  # replace single line with single or no line
+                ls[ln] = bistr(f'{(l := ls[ln])[:col]}{s}{l[end_col:]}')
+
+            else:  # replace multiple lines with single or no line
+                ls[ln] = bistr(f'{ls[ln][:col]}{s}{ls[end_ln][end_col:]}')
+
+                del ls[ln + 1 : end_ln + 1]
+
+        elif not dln:  # replace single line with multiple lines
+            lend                 = bistr(lines[-1] + (l := ls[ln])[end_col:])
+            ls[ln]               = bistr(l[:col] + lines[0])
+            ls[ln + 1 : ln + 1]  = lines[1:]
+            ls[ln + nnew_ln - 1] = lend
+
+        else:  # replace multiple lines with multiple lines
+            ls[ln]              = bistr(ls[ln][:col] + lines[0])
+            ls[end_ln]          = bistr(lines[-1] + ls[end_ln][end_col:])
+            ls[ln + 1 : end_ln] = lines[1:-1]
+
+    return ret
 
 
 def _offset(self: 'FST', ln: int, col: int, dln: int, dcol_offset: int,

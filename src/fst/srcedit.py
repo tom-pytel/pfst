@@ -417,7 +417,7 @@ class SrcEdit:
 
         if not put_lines[0]:
             if re_empty_line.match(l := lines[put_ln], 0, put_col):  # strip leading newline from `put_fst` if location being put already has one - NOTE: could also check re_empty_line.match(put_lines[0]) instead of just put_lines[0]
-                put_fst.put_src(None, 0, 0, 1, re_empty_line_start.match(put_lines[1]).end(), False)
+                put_fst._put_src(None, 0, 0, 1, re_empty_line_start.match(put_lines[1]).end(), False)
 
             elif (new_del_col := re_line_trailing_space.match(l,
                                                               bound.col if put_ln == bound.ln else 0,
@@ -427,19 +427,19 @@ class SrcEdit:
         if not put_lines[-1] and not re_empty_line.match(lines[(end_ln := del_loc.end_ln)], del_loc.end_col,  # add indentation to trailing newline in `put_fst` if there is stuff on the starting line of `put_loc` past the start point
             seq_loc.end_col if seq_loc.end_ln == end_ln else 0x7fffffffffffffff
         ):
-            put_fst.put_src([re_empty_line_start.match(lines[put_ln]).group()], ln := put_fst.end_ln, 0, ln, 0,
+            put_fst._put_src([re_empty_line_start.match(lines[put_ln]).group()], ln := put_fst.end_ln, 0, ln, 0,
                                True, put_fst)
 
         if fpre:
             if (not (code := _next_src(lines, fpre.end_ln, fpre.end_col, del_loc.ln, del_loc.col)) or
                 not code.src.startswith(',')
             ):
-                put_fst.put_src([', ' if put_lines[0] else ','], 0, 0, 0, 0, False)
+                put_fst._put_src([', ' if put_lines[0] else ','], 0, 0, 0, 0, False)
 
         if fpost:
             if not put_fst._maybe_add_comma(plast.end_ln, plast.end_col, False, True):
                 if put_lines[-1].endswith(',', -1):  # slice being put ends on comma without a space, add one
-                    put_fst.put_src([' '], ln := put_fst.end_ln, col := put_fst.end_col, ln, col, True, put_fst)
+                    put_fst._put_src([' '], ln := put_fst.end_ln, col := put_fst.end_col, ln, col, True, put_fst)
 
         return del_loc
 
@@ -784,7 +784,7 @@ class SrcEdit:
                 postpend += not postpend
 
         if prepend:
-            put_fst.put_src([''] * prepend, 0, 0, 0, 0, False)
+            put_fst._put_src([''] * prepend, 0, 0, 0, 0, False)
 
         if postpend:
             put_lines.extend([bistr('')] * postpend)
@@ -940,12 +940,12 @@ class SrcEdit:
                 if is_elif:
                     ln, col, end_ln, end_col = put_body[0].f.bloc
 
-                    put_fst.put_src(['elif'], ln, col, ln, col + 2, False)  # replace 'if' with 'elif'
+                    put_fst._put_src(['elif'], ln, col, ln, col + 2, False)  # replace 'if' with 'elif'
 
                 elif is_orelse:  # need to create these because they not there if body empty
-                    put_fst.put_src([opener_indent + 'else:', ''], 0, 0, 0, 0, False)
+                    put_fst._put_src([opener_indent + 'else:', ''], 0, 0, 0, 0, False)
                 elif field == 'finalbody':
-                    put_fst.put_src([opener_indent + 'finally:', ''], 0, 0, 0, 0, False)
+                    put_fst._put_src([opener_indent + 'finally:', ''], 0, 0, 0, 0, False)
 
                 ln, col, end_ln, end_col = block_loc
 
@@ -989,13 +989,13 @@ class SrcEdit:
                 del_else_and_fin         = True
                 indent                   = opener_indent
 
-                put_fst.put_src(['elif'], ln, col, ln, col + 2, False)  # replace 'if' with 'elif'
+                put_fst._put_src(['elif'], ln, col, ln, col + 2, False)  # replace 'if' with 'elif'
 
             elif is_old_elif:
                 indent = None
 
                 put_fst._indent_lns(block_indent, skip=0, docstr=docstr)
-                put_fst.put_src([opener_indent + 'else:', ''], 0, 0, 0, 0, False)
+                put_fst._put_src([opener_indent + 'else:', ''], 0, 0, 0, 0, False)
 
         if indent is not None:
             put_fst._indent_lns(indent, skip=0, docstr=docstr)

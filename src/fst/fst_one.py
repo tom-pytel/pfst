@@ -526,7 +526,7 @@ def _put_one_constant(self: 'FST', code: Code | None, idx: int | None, field: st
     put_ast = put_fst.a
 
     _validate_put_ast(self, put_ast, idx, field, static)
-    self.put_src(put_fst.get_src(*put_fst.loc, True), *self.loc, True)  # we want pure constant, no parens or spaces or comments or anything
+    self._put_src(put_fst.get_src(*put_fst.loc, True), *self.loc, True)  # we want pure constant, no parens or spaces or comments or anything
 
     self.a.value = put_ast.value
 
@@ -551,7 +551,7 @@ def _put_one_BoolOp_op(self: 'FST', code: Code | None, idx: int | None, field: s
         _, _, ln, col = value.f.pars()
         ln, col       = _next_find(lines, ln, col, end_ln, end_col, tgt)  # must be there
 
-        self.put_src(src, ln, col, ln, col + ltgt, False)
+        self._put_src(src, ln, col, ln, col + ltgt, False)
 
     childf._set_ast(codea)
 
@@ -569,7 +569,7 @@ def _put_one_op(self: 'FST', code: Code | None, idx: int | None, field: str,
 
     ln, col, end_ln, end_col = childf.loc
 
-    self.put_src(code._lines, ln, col, end_ln, end_col, False)
+    self._put_src(code._lines, ln, col, end_ln, end_col, False)
     childf._set_ast(code.a)
 
     return childf
@@ -673,7 +673,7 @@ def _make_exprish_fst(self: 'FST', code: Code | None, idx: int | None, field: st
     # do it
 
     if prefix:
-        put_fst.put_src([prefix], 0, 0, 0, 0, True)
+        put_fst._put_src([prefix], 0, 0, 0, 0, True)
 
     if suffix:
         ls[-1] = bistr((ls := put_fst._lines)[-1] + suffix)  # don't need to offset anything so just tack onto the end
@@ -683,7 +683,7 @@ def _make_exprish_fst(self: 'FST', code: Code | None, idx: int | None, field: st
 
     dcol_offset    = self.root._lines[ln].c2b(col)
     end_col_offset = lines[end_ln].c2b(end_col)
-    params_offset  = self.put_src(put_fst._lines, ln, col, end_ln, end_col, True, False, exclude=self)
+    params_offset  = self._put_src(put_fst._lines, ln, col, end_ln, end_col, True, False, exclude=self)
 
     self._offset(*params_offset, exclude=target, self_=False)  # excluding an fstloc instead of FST is harmless, will not exclude anything
     put_fst._offset(0, 0, ln, dcol_offset)
@@ -749,7 +749,7 @@ def _put_one_exprish_optional(self: 'FST', code: Code | None, idx: int | None, f
         if not loc:
             raise ValueError(f'cannot delete {self.a.__class__.__name__}.{field} in this state')
 
-        self.put_src(info.delstr or None, *loc, True)
+        self._put_src(info.delstr or None, *loc, True)
         set_field(self.a, None, field, idx)
         child.f._unmake_fst_tree()
 
@@ -860,7 +860,7 @@ def _put_one_identifier_required(self: 'FST', code: Code | None, idx: int | None
     code = static.code_as(code, self.root.parse_params)
     info = static.getinfo(self, static, idx, field)
 
-    self.put_src(code, *info.loc_ident, True)
+    self._put_src(code, *info.loc_ident, True)
     set_field(self.a, code, field, idx)
 
     return code
@@ -882,7 +882,7 @@ def _put_one_identifier_optional(self: 'FST', code: Code | None, idx: int | None
         if not loc:
             raise ValueError(f'cannot delete {self.a.__class__.__name__}.{field} in this state')
 
-        self.put_src(info.delstr or None, *loc, True)
+        self._put_src(info.delstr or None, *loc, True)
         set_field(self.a, None, field, idx)
 
         return None
@@ -890,14 +890,14 @@ def _put_one_identifier_optional(self: 'FST', code: Code | None, idx: int | None
     code = static.code_as(code, self.root.parse_params)
 
     if child is not None:  # replace existing identifier
-        self.put_src(code, *info.loc_ident, True)
+        self._put_src(code, *info.loc_ident, True)
         set_field(self.a, code, field, idx)
 
     else: # put new identifier
         if not loc:
             raise ValueError(f'cannot create {self.a.__class__.__name__}.{field} in this state')
 
-        params_offset = self.put_src(info.prefix + code + info.suffix, *loc, True, exclude=self)
+        params_offset = self._put_src(info.prefix + code + info.suffix, *loc, True, exclude=self)
 
         self._offset(*params_offset, self_=False)
         set_field(self.a, code, field, idx)
