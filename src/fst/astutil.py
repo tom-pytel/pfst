@@ -289,7 +289,7 @@ OPSTR2CLS_UNARY = {
     'not':    Not,
     '+':      UAdd,
     '-':      USub,
-}
+}  ; """String to `unaryop` unary operator `AST` class mapping, e.g. `'+': ast.UAdd`."""
 
 OPSTR2CLS_BIN = {
     '+':      Add,
@@ -305,7 +305,7 @@ OPSTR2CLS_BIN = {
     '&':      BitAnd,
     '//':     FloorDiv,
     '**':     Pow,
-}
+}  ; """String (non-augmented) to `operator` binary operator `AST` class mapping, e.g. `'+': ast.Add`."""
 
 OPSTR2CLS_CMP = {
     '==':     Eq,
@@ -318,12 +318,12 @@ OPSTR2CLS_CMP = {
     'is not': IsNot,
     'in':     In,
     'not in': NotIn,
-}
+}  ; "String to `cmpop` compare operator `AST` class mapping, e.g. `'==': ast.Eq`."""
 
 OPSTR2CLS_BOOL = {
     'and':    And,
     'or':     Or,
-}
+}  ; "String to `boolop` boolean operator `AST` class mapping, e.g. `'and': ast.And`."""
 
 OPSTR2CLS_AUG = {
     '+=':     Add,
@@ -339,12 +339,12 @@ OPSTR2CLS_AUG = {
     '&=':     BitAnd,
     '//=':    FloorDiv,
     '**=':    Pow,
-}  ; """Mapping of operator string with '=' suffix to binary operator AST class for AugAssign, e.g. '+=': `ast.Add`."""
+}  ; """String (augmented) to `operator` binary operator `AST` class mapping, e.g. `'+=': ast.Add`."""
 
-OPSTR2CLS     = {**OPSTR2CLS_UNARY, **OPSTR2CLS_BIN, **OPSTR2CLS_CMP, **OPSTR2CLS_BOOL}  ; """Mapping of operator string to operator AST class, e.g. '+': `ast.Add`. Unary '-' and '+' are overridden by the binary versions."""
-OPSTR2CLSWAUG = {**OPSTR2CLS, **OPSTR2CLS}  ; """Mapping of all operator strings to operator AST class including AugAssign operators."""
-OPCLS2STR     = {v: k for d in (OPSTR2CLS_UNARY, OPSTR2CLS_BIN, OPSTR2CLS_CMP, OPSTR2CLS_BOOL) for k, v in d.items()}  ; "Mapping of operator AST class to operator string, e.g. `ast.Add`: '+'."
-OPCLS2STR_AUG = {v: k for k, v in OPSTR2CLS_AUG.items()}  ; "Mapping of operator AST class to operator string mapping to augmented operator strings, e.g. `ast.Add`: '+='."
+OPSTR2CLS     = {**OPSTR2CLS_UNARY, **OPSTR2CLS_BIN, **OPSTR2CLS_CMP, **OPSTR2CLS_BOOL}                                ; """Mapping of operator string to operator `AST` class, e.g. `'+': ast.Add`. Unary `'-'` and `'+'` are overridden by the binary versions."""
+OPSTR2CLSWAUG = {**OPSTR2CLS, **OPSTR2CLS}                                                                             ; """Mapping of all operator strings to operator `AST` class including AugAssign operators."""
+OPCLS2STR     = {v: k for d in (OPSTR2CLS_UNARY, OPSTR2CLS_BIN, OPSTR2CLS_CMP, OPSTR2CLS_BOOL) for k, v in d.items()}  ; """Mapping of operator `AST` class to operator string, e.g. `ast.Add: '+'`."""
+OPCLS2STR_AUG = {v: k for k, v in OPSTR2CLS_AUG.items()}                                                               ; """Mapping of operator `AST` class to operator string mapping to augmented operator strings, e.g. `ast.Add: '+='`."""
 
 
 def is_valid_identifier(s: str) -> bool:
@@ -372,10 +372,14 @@ def is_valid_identifier_alias(s: str) -> bool:
 
 
 def is_valid_MatchSingleton_value(ast: AST) -> bool:
+    """Check if `ast` is a valid `Constant` node for a `MatchSingleton.value` field."""
+
     return isinstance(ast, Constant) and ast.value in (True, False, None)
 
 
 def is_valid_MatchValue_value(ast: AST) -> bool:
+    """Check if `ast` is a valid node for a `MatchValue.value` field."""
+
     if isinstance(ast, Attribute):
         return True
 
@@ -405,6 +409,8 @@ def is_valid_MatchValue_value(ast: AST) -> bool:
 
 
 def is_valid_MatchMapping_key(ast: AST) -> bool:
+    """Check if `ast` is a valid node for a `MatchMapping.keys` field."""
+
     if isinstance(ast, Attribute):
         return True
 
@@ -434,12 +440,12 @@ def is_valid_MatchMapping_key(ast: AST) -> bool:
 
 
 def reduce_ast(ast: AST, multi_mod: bool | type[Exception] = False, reduce_Expr: bool = True) -> AST | None:
-    """Reduce a `mod` / `Expr` wrapped expression or single statement if possible, otherwise return original `AST`, None
-    or raise.
+    """Reduce a `mod` / `Expr` wrapped expression or single statement if possible, otherwise return original `AST`,
+    `None` or raise.
 
     **Parameters:**
     - `ast`: `AST` to reduce.
-    - `multi_mod`: If `ast` is a `mod` with multiple statements then:
+    - `multi_mod`: If `ast` is a `mod` with not exactly one statements then:
         - `True`: Return it.
         - `False`: Return `None`.
         - `type[Exception]`: If an exception class is passed then will `raise multi_mod(error)`.
@@ -466,10 +472,14 @@ def reduce_ast(ast: AST, multi_mod: bool | type[Exception] = False, reduce_Expr:
 
 
 def get_field(parent: AST, name: str, idx: int | None = None) -> AST:
+    """Get child node at field `name` in the given `parent` optionally at the given index `idx`."""
+
     return getattr(parent, name) if idx is None else getattr(parent, name)[idx]
 
 
 def set_field(parent: AST, child: Any, name: str, idx: int | None = None):
+    """Set child node at field `name` in the given `parent` optionally at the given index `idx` to `child`."""
+
     if idx is None:
         setattr(parent, name, child)
     else:
@@ -477,6 +487,8 @@ def set_field(parent: AST, child: Any, name: str, idx: int | None = None):
 
 
 def has_type_comments(ast: AST) -> bool:
+    """Does it has type comments?"""
+
     for n in walk(ast):
         if getattr(n, 'type_comments', None) is not None:
             return True
@@ -485,7 +497,7 @@ def has_type_comments(ast: AST) -> bool:
 
 
 def is_parsable(ast: AST) -> bool:
-    """Really means the AST is `unparse()`able and then re`parse()`able which will get it to this top level AST node
+    """Really means if the AST is `unparse()`able and then re`parse()`able which will get it to this top level AST node
     surrounded by the appropriate `ast.mod`. The source may change a bit though, parentheses, 'if' <-> 'elif'."""
 
     if not isinstance(ast, AST):
@@ -505,6 +517,8 @@ def is_parsable(ast: AST) -> bool:
 
 
 def get_parse_mode(ast: AST) -> Literal['exec', 'eval', 'single']:
+    """Return the original `mode` string that is used to parse to this `mod`."""
+
     if isinstance(ast, (stmt, Module)):
         return 'exec'
     if isinstance(ast, (expr, Expression)):
@@ -516,12 +530,28 @@ def get_parse_mode(ast: AST) -> Literal['exec', 'eval', 'single']:
 
 
 class WalkFail(Exception):
-    """Raised in `walk2()`, `compare_asts()` and `copy_attributes()` on match failure."""
+    """Raised in `walk2()`, `compare_asts()` and `copy_attributes()` on compare failure."""
 
 def walk2(ast1: AST, ast2: AST, cb_primitive: Callable[[Any, Any, str, int], bool] | None = None, *, ctx: bool = True,
           recurse: bool = True, skip1: set | frozenset | None = None, skip2: set | frozenset | None = None,
           ) -> Iterator[tuple[AST, AST]]:
-    """Walk two asts simultaneously ensuring they have the same structure."""
+    """Walk two asts simultaneously comparing along the way to ensure they have the same structure.
+
+    **Parameters:**
+    - `ast1`: First `AST` tree (redundant) to walk.
+    - `ast2`: Third `AST` tree to walk.
+    - `cb_primitive`: A function to call to compare primitive nodes which is called with the values of the nodes from
+        tree1 and tree2 and the name and index of the field. It should return whether the values compare equal or not,
+        or just `True` if they are being ignored for example.
+    - `ctx`: Whether to compare `ctx` fields or not.
+    - `recurse`: Whether recurse into children or not. With this as `False` it just becomes a compare of two individual
+        `AST` nodes.
+    - `skip1`: List of nodes in the first tree to skip, will skip the corresponding node in the second tree.
+    - `skip2`: List of nodes in the second tree to skip, will skip the corresponding node in the first tree.
+
+    **Returns:**
+    - `Iterator`
+    """
 
     if ast1.__class__ is not ast2.__class__:
         raise WalkFail(f"top level nodes differ in '{ast1.__class__.__qualname__}' vs. '{ast1.__class__.__qualname__}'")
@@ -602,7 +632,20 @@ _compare_primitive_type_comments_func = (
 def compare_asts(ast1: AST, ast2: AST, *, locs: bool = False, type_comments: bool = False, ctx: bool = True,
                  recurse: bool = True, skip1: set | frozenset | None = None, skip2: set | frozenset | None = None,
                  raise_: bool = False) -> bool:
-    """Compare two trees including possibly locations and type comments."""
+    """Compare two trees including possibly locations and type comments using `walk2()`.
+
+    **Parameters:**
+    - `ast1`: First `AST` tree (redundant) to compare.
+    - `ast2`: Third `AST` tree to compare.
+    - `locs`: Whether to compare location attributes or not (`lineno`, `col_offset`, etc...).
+    - `type_comments`: Whether to compare type comments or not.
+    - `skip1`: List of nodes in the first tree to skip comparing, will skip the corresponding node in the second tree.
+    - `skip2`: List of nodes in the second tree to skip comparing, will skip the corresponding node in the first tree.
+    - `raise_`: Whether to raise `WalkFail` on compare fail or just return `False`.
+
+    **Returns:**
+    - `bool`: Indicating if the two trees compare equal under given parameters (if return on error allowed by `raise_`).
+    """
 
     cb_primitive = _compare_primitive_type_comments_func[bool(type_comments)]
 
@@ -630,7 +673,21 @@ def compare_asts(ast1: AST, ast2: AST, *, locs: bool = False, type_comments: boo
 def copy_attributes(src: AST, dst: AST, *, compare: bool = True, type_comments: bool = False,
                     recurse: bool = True, skip1: set | frozenset | None = None, skip2: set | frozenset | None = None,
                     raise_: bool = True) -> bool:
-    """Copy attributes from one tree to another checking structure equality in the process."""
+    """Copy attributes from one tree to another using `walk2()` to walk them both simultaneously and this checking
+    structure equality in the process. By "attributes" we mean everything specified in `src._attributes`.
+
+    **Parameters:**
+    - `src`: Source `AST` tree to copy attributes from.
+    - `dst`: Destination `AST` tree to copy attributes to.
+    - `recurse`: Whether recurse into children or not. With this as `False` it just becomes a copy of attributes from one
+        `AST` node to another.
+    - `skip1`: List of nodes in the source tree to skip.
+    - `skip2`: List of nodes in the destination tree to skip.
+    - `raise_`: Whether to raise `WalkFail` on compare fail or just return `False`.
+
+    **Returns:**
+    - `bool`: Indicating if the two trees compare equal during the walk (if return on error allowed by `raise_`).
+    """
 
     cb_primitive = _compare_primitive_type_comments_func[bool(type_comments)] if compare else lambda p1, p2, n, i: True
 
@@ -652,7 +709,7 @@ def copy_attributes(src: AST, dst: AST, *, compare: bool = True, type_comments: 
 
 
 def copy_ast(ast: AST | None) -> AST:
-    """Copy a tree."""
+    """Copy a whole tree."""
 
     if ast is None:
         return None
@@ -680,7 +737,19 @@ def copy_ast(ast: AST | None) -> AST:
 
 def set_ctx(ast_or_stack: AST | list[AST], ctx: type[expr_context], *, doit=True,
             ) -> bool:
-    """`doit=False` used to query if any context-modifiable `ctx` present."""
+    """Set all `ctx` fields in this node and any children which may participate in an assignment (`Tuple`, `List`,
+    `Starred`, `Subscript`, `Attribute`, `Name`) to the passed `ctx` type.
+
+    **Parameters:**
+    - `ast_or_stack`: Single `AST` (will be recursed) or list of `AST` nodes (each one will also be recursed) to
+        process.
+    - `ctx`: The `exprt_context` `AST` type to set.
+    - `doit`: Whether to actually carry out the assignments or just analyze and return whethere there are candidate
+        locations for assignment. `doit=False` used to query if any context-modifiable `ctx` present.
+
+    **Returns:**
+    - `bool`: Whether any modifications were made or can be made (if `doit=False`).
+    """
 
     change = False
     stack  = [ast_or_stack] if isinstance(ast_or_stack, AST) else ast_or_stack
@@ -704,6 +773,18 @@ def set_ctx(ast_or_stack: AST | list[AST], ctx: type[expr_context], *, doit=True
 
 
 def get_func_class_or_ass_by_name(asts: Iterable[AST], name: str, ass: bool = True) -> AST | None:
+    """Walk through an `Iterable` of `AST` nodes looking for the first `FunctionDef`, `AsyncFunctionDef`, `ClassDef` or
+    optionally `Assign` or `AnnAssign` which has a `name` or `target` or any `targets` field matching `name`.
+
+    **Parameters:**
+    - `asts`: `Iterable` of `AST`s to search through, e.g. a `body` list.
+    - `name`: Name to look for.
+    - `ass`: A domesticated donkey: a sturdy, short-haired animal used as a beast of burden.
+
+    **Returns:**
+    - `AST` node if found matching, else `None`
+    """
+
     for a in asts:
         if isinstance(a, (FunctionDef, AsyncFunctionDef, ClassDef)):
             if a.name == name:
@@ -865,14 +946,16 @@ _SYNTAX_ORDERED_CHILDREN = {
 }
 
 def syntax_ordered_children(ast: AST) -> list:
-    """Returned `list` may contain `None` values."""
+    """Get list of all `AST` children in syntax order. This will include individual fields and aggregate fields like
+    `body` all smushed up together into a single flat list. The list may contain `None` values for example from a `Dict`
+    `keys` field which has `**` elements."""
 
     return _SYNTAX_ORDERED_CHILDREN.get(ast.__class__, _syntax_ordered_children_default)(ast)
 
 
 def last_block_header_child(ast: AST) -> AST | None:
-    """Return last `AST` node in the block open before the ':'. `ast` must be a valid block statement. Returns `None`
-    for things like `Try` and empty `ExceptHandler` nodes or other block nodes which might have normally present fields missing."""
+    """Return last `AST` node in the block header before the ':'. Returns `None` for non-block nodes and things like
+    `Try` and empty  `ExceptHandler` nodes or other block nodes which might have normally present fields missing."""
 
     if not isinstance(ast, (FunctionDef, AsyncFunctionDef, ClassDef, For, AsyncFor, While, If, With, AsyncWith, Match,
                             ExceptHandler, match_case)):  # Try, TryStar open blocks but don't have children
@@ -894,9 +977,10 @@ def last_block_header_child(ast: AST) -> AST | None:
 
 def is_atom(ast: AST, *, unparse_pars_as_atom: bool | None = None, tuple_as_atom: bool | None = True,
             matchseq_as_atom: bool | None = True) -> bool | None:
-    """Whether `ast` is enclosed in some kind of delimiters '()', '[]', '{}' when `unparse()`d or otherwise atomic like
-    `Name`, `Constant`, etc... Node types where this doesn't normally apply like `stmt` will return `True`. `Tuple` and
-    `MatchSequence` which can otherwise be ambiguous will return `True` as they `unparse()` with delimiters.
+    """Whether `ast` is enclosed in some kind of delimiters `'()'`, `'[]'`, `'{}'` when `unparse()`d or otherwise atomic
+    like `Name`, `Constant`, etc... Node types where this doesn't normally apply like `stmt` will return `True`. `Tuple`
+    and `MatchSequence` which can otherwise be ambiguous will normally return `True` as they `unparse()` with
+    delimiters, but can be overridden.
 
     **Parameters:**
     - `ast`: Self-explanatory.
@@ -1135,15 +1219,21 @@ _PRECEDENCE_NODE_FIELDS = {  # default is _Precedence.TEST
 
 def precedence_require_parens_by_type(child_type: type[AST], parent_type: type[AST], field: str,
                                       **flags: dict[str, bool]) -> bool:
-    """Returns whether parentheses are required for the child for the given parent / child structure or not. Both parent
-    and child `BoolOp`, `BinOp` and `UnaryOp` types should be passed as the type of the 'op' field.
+    """Returns whether parentheses are required for the child for the given parent / child combination or not. Both
+    parent and child `BoolOp`, `BinOp` and `UnaryOp` types should be passed as the type of the `op` field.
 
     **Parameters**:
-    - `flags`: Special case flags, assumed `False` if not passed as `True`:
+    - `child_type`: Type of the child `AST` node or of its `op` field if it is a `BoolOp`, `BinOp` or `UnaryOp`.
+    - `parent_type`: Type of the parent `AST` node or of its `op` field if it is a `BoolOp`, `BinOp` or `UnaryOp`.
+    - `field`: The name of the field in the parent where the child resides.
+    - `flags`: Special case flags, individual flags assumed `False` if not passed as `True`:
         - `dict_key_None`: Parent is `Dict` and the corresponding key is `None`, leading to `**value`. Only has effect
-            if 'field' is `'value'`, otherwise no effect.
+            if `field` is `'value'`, otherwise no effect.
         - `matchas_pat_None`: Child is `MatchAs` and the `pattern` is `None` (just a name).
-        - `attr_val_int`: Parent is `Attribute` and child is a `Constant` integer.
+        - `attr_val_int`: Parent is `Attribute` and child `value` is a `Constant` integer.
+
+    **Returns:**
+    - `bool`: Whether parentheses are needed around the child for correct parsing or not.
     """
 
     child_precedence  = _PRECEDENCE_NODES.get(child_type, _Precedence.ATOM)
@@ -1185,7 +1275,19 @@ def precedence_require_parens_by_type(child_type: type[AST], parent_type: type[A
     return child_precedence < parent_precedence
 
 def precedence_require_parens(child: AST, parent: AST, field: str, idx: int | None = None) -> bool:
-    """Returns whether parentheses are required for the child for the given parent / child structure or not."""
+    """Returns whether parentheses are required for the given parent / child combination or not. Unlike
+    `precedence_require_parens_by_type()`, this takes the actual node instances and figures out the respective types
+    and flags.
+
+    **Parameters**:
+    - `child`: Child `AST` node.
+    - `parent`: Parent `AST` node.
+    - `field`: The name of the field in the parent where the child resides.
+    - `idx`: The optional index of the child in the parent field, or `None` if does not apply.
+
+    **Returns:**
+    - `bool`: Whether parentheses are needed around the child for correct parsing or not.
+    """
 
     flags       = {}
     child_type  = (child.op.__class__
