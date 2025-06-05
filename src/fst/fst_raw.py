@@ -126,7 +126,7 @@ def _reparse_raw(self: 'FST', new_lines: list[str], ln: int, col: int, end_ln: i
 
     if set_ast:
         self._set_ast(copy.a)
-        self.touch(True)
+        self._touchall(True)
 
     return copy
 
@@ -220,7 +220,7 @@ def _reparse_raw_stmtish(self: 'FST', new_lines: list[str], ln: int, col: int, e
             setattr(copya, field, body)
 
     stmtish._set_ast(copya)
-    stmtish.touch(True)
+    stmtish._touchall(True)
 
     return True
 

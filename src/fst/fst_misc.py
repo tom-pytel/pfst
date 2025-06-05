@@ -13,7 +13,7 @@ from .shared import (
     astfield, fstloc, nspace,
     BLOCK,
     HAS_DOCSTRING,
-    re_line_end_cont_or_comment,
+    re_empty_line_start, re_line_end_cont_or_comment,
     _next_src, _prev_src, _next_find, _prev_find, _next_pars, _prev_pars,
 )
 
@@ -58,7 +58,103 @@ def _out_lines(fst: 'FST', linefunc: Callable, ln: int, col: int, end_ln: int, e
 _GLOBALS = globals() | {'_GLOBALS': None}
 # ----------------------------------------------------------------------------------------------------------------------
 
-if _PY_VERSION < (3, 12):
+class _Modifying:
+    def __init__(self, fst: 'FST', field: str | Literal[False] = False):
+        """Call before modifying `FST` node (even just source) to mark possible data for updates after modification.
+        This function just collects information when it enters so is safe to call without ever explicitly exiting.
+        Can be used as a context manager or can just call `.enter()` and `.done()` manually.
+
+        It is assumed that neither the `fst` node passed in or its parents will not be changed, otherwise this must
+        be used manually and not as a context manager and the changed node must be passed into the `.done()` method
+        on success. In this case currently nothing is done as it is assumed the changes are due to raw reparse which
+        goes up to the statement level.
+
+        **Parameters:**
+        - `fst`: Parent of or actual node being modified, depending on value of `field` (because actual child may be
+            being created and may not exist yet).
+        - `field`: Name of field being modified or `False` to indicate that `self` is the child, in which case the
+            parent and field will be gotten from `self`.
+        """
+
+        # TODO: update f/t-string f"{val=}" preceding string constants for updated value with '=', evil thing
+
+        if field is False:
+            pfield = fst.pfield
+
+            if fst := fst.parent:
+                field = pfield.name
+
+        self.fst   = fst if fst and isinstance(fst.a, expr) else False
+        self.field = field
+        self.data  = data = []  # [(FormattedValue or Interpolation FST, len(dbg_str) or None, bool do val_str), ...]
+
+        if self.fst:
+            while isinstance(fst.a, expr):
+                parent = fst.parent
+                pfield = fst.pfield
+
+                if field == 'value' and (strs := fst._get_fmtval_interp_strs()):
+                    dbg_str, val_str, end_ln, end_col = strs
+
+                    if (dbg_str is None or not parent or not (idx := pfield.idx) or
+                        not isinstance(prev := parent.a.values[idx - 1], Constant) or
+                        not isinstance(v := prev.value, str) or not v.endswith(dbg_str) or
+                        (prevf := prev.f).end_col != end_col or prevf.end_ln != end_ln
+                    ):
+                        if val_str is not None:
+                            data.append((fst, None, True))
+
+                    else:
+                        data.append((fst, len(dbg_str), bool(val_str)))
+
+                if not parent:
+                    break
+
+                field = pfield.name
+                fst   = parent
+
+    def __enter__(self):
+        return self.enter()
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        if exc_type is None:
+            self.done()
+
+        return False
+
+    def enter(self):
+        return self
+
+    def done(self, fst: Optional['FST'] | Literal[False] = False):
+        """Call after modifying `FST` node to apply any needed changes to parents.
+
+        **Parameters:**
+        - `fst`: Parent node of modified field AFTER modification (may have changed or not exist anymore). Or can be
+            special value `False` to indicate that original `fst` was definitely not changed. In order to use this
+            mechanism the class must be used explicitly and not as a context manager.
+        """
+
+        if fst is False:
+            if not (fst := self.fst):
+                return
+
+        elif fst is not self.fst:  # if parent of field changed then entire statement was reparsed and we have nothing to do
+            return
+
+        for fst, len_old_dbg_str, do_val_str in self.data:
+            dbg_str, val_str, end_ln, end_col = fst._get_fmtval_interp_strs()
+
+            if do_val_str:
+                fst.a.str = val_str
+
+            if len_old_dbg_str is not None:
+                lines            = fst.root._lines
+                c                = fst.parent.a.values[fst.pfield.idx - 1]
+                c.value          = c.value[:-len_old_dbg_str] + dbg_str
+                c.end_lineno     = end_ln + 1
+                c.end_col_offset = lines[end_ln].c2b(end_col)
+
+if _PY_VERSION < (3, 12):  # override _Modifying if py too low
     class _Modifying:
         def __init__(self, fst: 'FST', field: str | Literal[False] = False):
             """Dummy because py < 3.12 doesn't have f-string location information."""
@@ -74,103 +170,6 @@ if _PY_VERSION < (3, 12):
 
         def done(self, fst: Optional['FST'] | Literal[False] = False):
             pass
-
-else:
-    class _Modifying:
-        def __init__(self, fst: 'FST', field: str | Literal[False] = False):
-            """Call before modifying `FST` node (even just source) to mark possible data for updates after modification.
-            This function just collects information when it enters so is safe to call without ever explicitly exiting.
-            Can be used as a context manager or can just call `.enter()` and `.done()` manually.
-
-            It is assumed that neither the `fst` node passed in or its parents will not be changed, otherwise this must
-            be used manually and not as a context manager and the changed node must be passed into the `.done()` method
-            on success. In this case currently nothing is done as it is assumed the changes are due to raw reparse which
-            goes up to the statement level.
-
-            **Parameters:**
-            - `fst`: Parent of or actual node being modified, depending on value of `field` (because actual child may be
-                being created and may not exist yet).
-            - `field`: Name of field being modified or `False` to indicate that `self` is the child, in which case the
-                parent and field will be gotten from `self`.
-            """
-
-            # TODO: update f/t-string f"{val=}" preceding string constants for updated value with '=', evil thing
-
-            if field is False:
-                pfield = fst.pfield
-
-                if fst := fst.parent:
-                    field = pfield.name
-
-            self.fst   = fst if fst and isinstance(fst.a, expr) else False
-            self.field = field
-            self.data  = data = []  # [(FormattedValue or Interpolation FST, len(dbg_str) or None, bool do val_str), ...]
-
-            if self.fst:
-                while isinstance(fst.a, expr):
-                    parent = fst.parent
-                    pfield = fst.pfield
-
-                    if field == 'value' and (strs := fst._get_fmtval_interp_strs()):
-                        dbg_str, val_str, end_ln, end_col = strs
-
-                        if (dbg_str is None or not parent or not (idx := pfield.idx) or
-                            not isinstance(prev := parent.a.values[idx - 1], Constant) or
-                            not isinstance(v := prev.value, str) or not v.endswith(dbg_str) or
-                            (prevf := prev.f).end_col != end_col or prevf.end_ln != end_ln
-                        ):
-                            if val_str is not None:
-                                data.append((fst, None, True))
-
-                        else:
-                            data.append((fst, len(dbg_str), bool(val_str)))
-
-                    if not parent:
-                        break
-
-                    field = pfield.name
-                    fst   = parent
-
-        def __enter__(self):
-            return self.enter()
-
-        def __exit__(self, exc_type, exc_val, exc_tb):
-            if exc_type is None:
-                self.done()
-
-            return False
-
-        def enter(self):
-            return self
-
-        def done(self, fst: Optional['FST'] | Literal[False] = False):
-            """Call after modifying `FST` node to apply any needed changes to parents.
-
-            **Parameters:**
-            - `fst`: Parent node of modified field AFTER modification (may have changed or not exist anymore). Or can be
-                special value `False` to indicate that original `fst` was definitely not changed. In order to use this
-                mechanism the class must be used explicitly and not as a context manager.
-            """
-
-            if fst is False:
-                if not (fst := self.fst):
-                    return
-
-            elif fst is not self.fst:  # if parent of field changed then entire statement was reparsed and we have nothing to do
-                return
-
-            for fst, len_old_dbg_str, do_val_str in self.data:
-                dbg_str, val_str, end_ln, end_col = fst._get_fmtval_interp_strs()
-
-                if do_val_str:
-                    fst.a.str = val_str
-
-                if len_old_dbg_str is not None:
-                    lines            = fst.root._lines
-                    c                = fst.parent.a.values[fst.pfield.idx - 1]
-                    c.value          = c.value[:-len_old_dbg_str] + dbg_str
-                    c.end_lineno     = end_ln + 1
-                    c.end_col_offset = lines[end_ln].c2b(end_col)
 
 
 @staticmethod
@@ -226,7 +225,7 @@ def _repr_tail(self: 'FST') -> str:
     except Exception:  # maybe in middle of operation changing locations and lines
         loc = '????'
 
-    self.touch(False, True, True)  # for debugging because we may have cached locs which would not have otherwise been cached during execution
+    self._touchall(False, True, True)  # for debugging because we may have cached locs which would not have otherwise been cached during execution
 
     tail = ' ROOT' if self.is_root else ''
 
@@ -804,6 +803,74 @@ def _loc_MatchClass_pars(self: 'FST') -> fstloc:
     return fstloc(ln, col, end_ln, end_col)
 
 
+def _is_arguments_empty(self: 'FST') -> bool:
+    """Is this `arguments` node empty?"""
+
+    # assert isinstance(self.a, arguments)
+
+    return not ((a := self.a).posonlyargs or a.args or a.vararg or a.kwonlyargs or a.kwarg)
+
+
+def _is_parenthesized_ImportFrom_names(self: 'FST') -> bool:
+    # assert isinstance(self.a, ImportFrom)
+
+    ln, col, _, _         = self.loc
+    end_ln, end_col, _, _ = self.a.names[0].f.loc
+
+    return _prev_src(self.root._lines, ln, col, end_ln, end_col).src.endswith('(')  # something is there for sure
+
+
+def _is_parenthesized_With_items(self: 'FST') -> bool:
+    # assert isinstance(self.a, (With, AsyncWith))
+
+    ln, col, _, _         = self.loc
+    end_ln, end_col, _, _ = self.a.items[0].f.loc  # will include any pars in child so don't need to depar
+
+    return _prev_src(self.root._lines, ln, col, end_ln, end_col).src.endswith('(')  # something is there for sure
+
+
+def _is_parenthesized_seq(self: 'FST', field: str = 'elts', lpar: str = '(', rpar: str = ')') -> bool:
+    """Whether `self` is a parenthesized sequence of `field` or not. Makes sure the entire node is surrounded by a
+    balanced pair of `lpar` and `rpar`. Functions as `is_parenthesized_tuple()` if already know is a Tuple. Other use is
+    for `MatchSequence`, whether parenthesized or bracketed."""
+
+    self_ln, self_col, self_end_ln, self_end_col = self.loc
+
+    lines = self.root._lines
+
+    if not lines[self_end_ln].startswith(rpar, self_end_col - 1):
+        return False
+
+    if not (asts := getattr(self.a, field)):
+        return True  # return True if no children because assume '()' in this case
+
+    if not lines[self_ln].startswith(lpar, self_col):
+        return False
+
+    f0_ln, f0_col, f0_end_ln, f0_end_col = asts[0].f.loc
+
+    if f0_col == self_col and f0_ln == self_ln:
+        return False
+
+    _, _, fn_end_ln, fn_end_col = asts[-1].f.loc
+
+    if fn_end_col == self_end_col and fn_end_ln == self_end_ln:
+        return False
+
+    # dagnabit! have to count parens
+
+    self_end_col -= 1  # because for sure there is a comma between end of first element and end of tuple, so at worst we exclude either the tuple closing paren or a comma
+
+    nparens = len(_next_pars(lines, self_ln, self_col, self_end_ln, self_end_col, lpar)) - 1  # yes, we use _next_pars() to count opening parens because we know conditions allow it
+
+    if not nparens:
+        return False
+
+    nparens -= len(_next_pars(lines, f0_end_ln, f0_end_col, self_end_ln, self_end_col, rpar)) - 1
+
+    return nparens > 0  # don't want to fiddle with checking if f0 is a parenthesized tuple
+
+
 def _dict_key_or_mock_loc(self: 'FST', key: AST | None, value: 'FST') -> Union['FST', fstloc]:
     """Return same dictionary key `FST` if exists, otherwise return a location for the preceding '**' code."""
 
@@ -822,38 +889,6 @@ def _dict_key_or_mock_loc(self: 'FST', key: AST | None, value: 'FST') -> Union['
     ln, col = _prev_find(self.root._lines, ln, col, value.ln, value.col, '**')  # '**' must be there
 
     return fstloc(ln, col, ln, col + 2)
-
-
-def _touch(self: 'FST') -> 'FST':  # -> Self
-    """AST node was modified, clear out any cached info for this node only."""
-
-    self._cache.clear()
-
-    return self
-
-
-def _sanitize(self: 'FST') -> 'FST':  # -> Self
-    """Quick check to make sure that nodes which are not `stmt`, `ExceptHandler`, `match_case` or `mod` don't have any
-    extra junk in the source and that the parenthesized location matches the whole location of the source. If not then
-    fix by removing the junk."""
-
-    if not self.is_root:
-        raise ValueError('can only be called on root node')
-
-    if not (loc := self.pars()) or loc == self.whole_loc:
-        return self
-
-    ln, col, end_ln, end_col = loc
-    lines                    = self._lines
-
-    self.offset(ln, col, -ln, -lines[ln].c2b(col))
-
-    lines[end_ln] = bistr(lines[end_ln][:end_col])
-    lines[ln]     = bistr(lines[ln][col:])
-
-    del lines[end_ln + 1:], lines[:ln]
-
-    return self
 
 
 def _set_end_pos(self: 'FST', end_lineno: int, end_col_offset: int, self_: bool = True):  # because of trailing non-AST junk in last statements
@@ -960,12 +995,12 @@ def _maybe_add_comma(self: 'FST', ln: int, col: int, offset: bool, space: bool,
     lines[ln] = bistr(f'{(l := lines[ln])[:col]}{comma}{l[col:]}')
 
     if offset:
-        root.offset(ln, col, 0, len(comma), True, exclude=self)
+        root._offset(ln, col, 0, len(comma), True, exclude=self)
 
     elif ln == end_ln:
         self.a.end_col_offset += len(comma)
 
-        self.touch(True)
+        self._touchall(True)
 
     return True
 
@@ -1074,72 +1109,36 @@ def _maybe_fix(self: 'FST', pars: bool = True):
                 self._parenthesize_grouping()
 
 
-def _is_arguments_empty(self: 'FST') -> bool:
-    """Is this `arguments` node empty?"""
+def _touch(self: 'FST') -> 'FST':  # -> Self
+    """AST node was modified, clear out any cached info for this node only."""
 
-    # assert isinstance(self.a, arguments)
+    self._cache.clear()
 
-    return not ((a := self.a).posonlyargs or a.args or a.vararg or a.kwonlyargs or a.kwarg)
-
-
-def _is_parenthesized_ImportFrom_names(self: 'FST') -> bool:
-    # assert isinstance(self.a, ImportFrom)
-
-    ln, col, _, _         = self.loc
-    end_ln, end_col, _, _ = self.a.names[0].f.loc
-
-    return _prev_src(self.root._lines, ln, col, end_ln, end_col).src.endswith('(')  # something is there for sure
+    return self
 
 
-def _is_parenthesized_With_items(self: 'FST') -> bool:
-    # assert isinstance(self.a, (With, AsyncWith))
+def _sanitize(self: 'FST') -> 'FST':  # -> Self
+    """Quick check to make sure that nodes which are not `stmt`, `ExceptHandler`, `match_case` or `mod` don't have any
+    extra junk in the source and that the parenthesized location matches the whole location of the source. If not then
+    fix by removing the junk."""
 
-    ln, col, _, _         = self.loc
-    end_ln, end_col, _, _ = self.a.items[0].f.loc  # will include any pars in child so don't need to depar
+    if not self.is_root:
+        raise ValueError('can only be called on root node')
 
-    return _prev_src(self.root._lines, ln, col, end_ln, end_col).src.endswith('(')  # something is there for sure
+    if not (loc := self.pars()) or loc == self.whole_loc:
+        return self
 
+    ln, col, end_ln, end_col = loc
+    lines                    = self._lines
 
-def _is_parenthesized_seq(self: 'FST', field: str = 'elts', lpar: str = '(', rpar: str = ')') -> bool:
-    """Whether `self` is a parenthesized sequence of `field` or not. Makes sure the entire node is surrounded by a
-    balanced pair of `lpar` and `rpar`. Functions as `is_parenthesized_tuple()` if already know is a Tuple. Other use is
-    for `MatchSequence`, whether parenthesized or bracketed."""
+    self._offset(ln, col, -ln, -lines[ln].c2b(col))
 
-    self_ln, self_col, self_end_ln, self_end_col = self.loc
+    lines[end_ln] = bistr(lines[end_ln][:end_col])
+    lines[ln]     = bistr(lines[ln][col:])
 
-    lines = self.root._lines
+    del lines[end_ln + 1:], lines[:ln]
 
-    if not lines[self_end_ln].startswith(rpar, self_end_col - 1):
-        return False
-
-    if not (asts := getattr(self.a, field)):
-        return True  # return True if no children because assume '()' in this case
-
-    if not lines[self_ln].startswith(lpar, self_col):
-        return False
-
-    f0_ln, f0_col, f0_end_ln, f0_end_col = asts[0].f.loc
-
-    if f0_col == self_col and f0_ln == self_ln:
-        return False
-
-    _, _, fn_end_ln, fn_end_col = asts[-1].f.loc
-
-    if fn_end_col == self_end_col and fn_end_ln == self_end_ln:
-        return False
-
-    # dagnabit! have to count parens
-
-    self_end_col -= 1  # because for sure there is a comma between end of first element and end of tuple, so at worst we exclude either the tuple closing paren or a comma
-
-    nparens = len(_next_pars(lines, self_ln, self_col, self_end_ln, self_end_col, lpar)) - 1  # yes, we use _next_pars() to count opening parens because we know conditions allow it
-
-    if not nparens:
-        return False
-
-    nparens -= len(_next_pars(lines, f0_end_ln, f0_end_col, self_end_ln, self_end_col, rpar)) - 1
-
-    return nparens > 0  # don't want to fiddle with checking if f0 is a parenthesized tuple
+    return self
 
 
 def _parenthesize_grouping(self: 'FST', whole: bool = True):
@@ -1153,7 +1152,7 @@ def _parenthesize_grouping(self: 'FST', whole: bool = True):
     ln, col, end_ln, end_col = self.whole_loc if whole and self.is_root else self.loc
 
     self.put_src([')'], end_ln, end_col, end_ln, end_col, True, True, self, offset_excluded=False)
-    self.offset(*self.put_src(['('], ln, col, ln, col, False, False, self, offset_excluded=False))
+    self._offset(*self.put_src(['('], ln, col, ln, col, False, False, self, offset_excluded=False))
 
 
 def _parenthesize_tuple(self: 'FST', whole: bool = True):
@@ -1176,7 +1175,7 @@ def _parenthesize_tuple(self: 'FST', whole: bool = True):
     a.end_lineno     = end_ln + 1  # yes this can change
     a.end_col_offset = lines[end_ln].c2b(end_col + 1)  # can't count on this being set by put_src() because end of `whole` could be past end of tuple
 
-    self.offset(*self.put_src(['('], ln, col, ln, col, False, False, self), self_=False)
+    self._offset(*self.put_src(['('], ln, col, ln, col, False, False, self), self_=False)
 
     a.lineno     = ln + 1
     a.col_offset = lines[ln].c2b(col)  # ditto on the `whole` thing
@@ -1309,7 +1308,7 @@ def _elif_to_else_if(self: 'FST'):
 
     indent = self.get_indent()
 
-    self.indent_lns(skip=0)
+    self._indent_lns(skip=0)
 
     if not self.next():  # last child?
         self._set_end_pos((a := self.a).end_lineno, a.end_col_offset, False)
@@ -1358,7 +1357,7 @@ def _make_fst_and_dedent(self: 'FST', indent: Union['FST', str], ast: AST, copy_
     lines = self.root._lines
     fst   = FST(ast, lines, from_=self, lcopy=False)  # we use original lines for nodes offset calc before putting new lines
 
-    fst.offset(copy_loc.ln, copy_loc.col, -copy_loc.ln, len(prefix.encode()) - lines[copy_loc.ln].c2b(copy_loc.col))
+    fst._offset(copy_loc.ln, copy_loc.col, -copy_loc.ln, len(prefix.encode()) - lines[copy_loc.ln].c2b(copy_loc.col))
 
     fst._lines = fst_lines = self.get_src(*copy_loc, True)
 
@@ -1369,12 +1368,125 @@ def _make_fst_and_dedent(self: 'FST', indent: Union['FST', str], ast: AST, copy_
         fst_lines[0] = bistr(prefix + fst_lines[0])
 
     if indent:
-        fst.dedent_lns(indent, skip=bool(copy_loc.col), docstr=docstr)  # if copy location starts at column 0 then we apply dedent to it as well (preceding comment or something)
+        fst._dedent_lns(indent, skip=bool(copy_loc.col), docstr=docstr)  # if copy location starts at column 0 then we apply dedent to it as well (preceding comment or something)
 
     if put_loc:
         self.put_src(put_lines, *put_loc, True)  # True because we may have an unparenthesized tuple that shrinks to a span length of 0
 
     return fst
+
+
+def _get_fmtval_interp_strs(self: 'FST') -> tuple[str | None, str | None, int, int] | None:
+    """Get debug and value strings and location for a `FormattedValue` or `Interpolation` IF THEY ARE PRESENT.
+    Meaning that if the `.value` ends with an appropriate `'='` character for debug and the value str if is
+    `Interpolation`. This does not check for the presence or equivalence of the actual preceding `Constant` string.
+    The returned strings are stripped of comments just like the python parser does.
+
+    **Returns:**
+    - `None`: If not a valid debug `FormattedValue` or `Interpolation`.
+    - `(debug str, value str, end_ln, end_col)`: A tuple including the full string which includes the `'='`
+        character (if applicable, else `None`), a string which only includes the value expression (if Interpolation,
+        else `None`) and the end line and column numbers of the whole thing which will correspond to what the
+        preceding Constant should have for its end line and column in the case of debug string present.
+    """
+
+    ast = self.a
+
+    if not (get_val := isinstance(ast, Interpolation)):
+        if not isinstance(ast, FormattedValue):
+            return None
+
+    lines                        = self.root._lines
+    sln, scol, send_ln, send_col = self.loc
+    _, _, vend_ln, vend_col      = ast.value.f.pars()
+
+    if fspec := ast.format_spec:
+        end_ln, end_col, _, _ = fspec.f.loc
+    else:
+        end_ln  = send_ln
+        end_col = send_col - 1
+
+    if ast.conversion != -1:
+        if prev := _prev_find(lines, vend_ln, vend_col, end_ln, end_col, '!'):
+            end_ln, end_col = prev
+
+    src     = self.get_src(vend_ln, vend_col, end_ln, end_col)  # source from end of parenthesized value to end of FormattedValue or start of conversion or format_spec
+    get_dbg = src and (m := _re_fval_expr_equals.match(src)) and m.end() == len(src)
+
+    if not get_dbg and not get_val:
+        return None
+
+
+    # THIS IS WHAT I ASSUME SHOULD BE CORRECT
+
+    # lns  = set()
+    # ends = {}
+
+    # for f in (walking := val.walk(False)):  # find multiline continuation line numbers
+    #     fln, _, fend_ln, fend_col = f.loc
+    #     ends[fend_ln]             = max(fend_col, ends.get(fend_ln, 0))
+
+    #     if fend_ln == fln:  # everything on one line, don't need to recurse
+    #         walking.send(False)
+
+    #     elif isinstance(a := f.a, Constant):  # isinstance(f.a.value, (str, bytes)) is a given if bend_ln != bln
+    #         lns.update(_multiline_str_continuation_lns(lines, *f.loc))
+
+    #     elif isinstance(a, (JoinedStr, TemplateStr)):
+    #         lns.update(_multiline_fstr_continuation_lns(lines, *f.loc))
+
+    #         walking.send(False)  # skip everything inside regardless, because it is evil
+
+    #         for a in walk(f.a):  # we walk ourselves to get end-of-expression locations for lines
+    #             if loc := a.f.loc:
+    #                 _, _, fend_ln, fend_col = loc
+    #                 ends[fend_ln]           = max(fend_col, ends.get(fend_ln, 0))
+
+
+    # off   = sln + 1
+    # lns   = {v - off for v in lns}  # these are line numbers where comments are not possible because next line is a string continuation
+    # lines = self.get_src(sln, scol + 1, end_ln, end_col, True)
+
+    # for i, l in enumerate(lines):
+    #     if (i not in lns and (m := re_line_end_cont_or_comment.match(l, ends.get(i + sln, 0))) and
+    #         (g := m.group(1)) and g.startswith('#')
+    #     ):  # line ends in comment, nuke it
+    #         lines[i] = l[:m.start(1)]
+
+
+    # THIS IS WHAT PYTHON 3.12+ DOES
+
+    lines = self.get_src(sln, scol + 1, end_ln, end_col, True)
+
+    for i, l in enumerate(lines):
+        if (m := re_line_end_cont_or_comment.match(l)) and (g := m.group(1)) and g.startswith('#'):  # line ends in comment, nuke it
+            lines[i] = l[:m.start(1)]
+
+    # END OF BUGGIENESS
+
+
+    dbg_str = '\n'.join(lines) if get_dbg else None
+
+    if not get_val:
+        val_str = None
+
+    else:
+        if not (vend_ln := vend_ln - sln):
+            vend_col -= scol + 1
+
+        del lines[vend_ln + 1:]
+
+        lines[vend_ln] = lines[vend_ln][:vend_col]
+
+        val_str = '\n'.join(lines).rstrip()
+
+    return dbg_str, val_str, end_ln, end_col
+
+if _PY_VERSION < (3, 12):  # override _get_fmtval_interp_strs if py too low
+    def _get_fmtval_interp_strs(self: 'FST') -> tuple[str, str, int, int] | None:
+        """Dummy because py < 3.12 doesn't have f-string location information."""
+
+        return None
 
 
 def _modifying(self: 'FST', field: str | Literal[False] = False) -> _Modifying:
@@ -1396,118 +1508,317 @@ def _modifying(self: 'FST', field: str | Literal[False] = False) -> _Modifying:
     return _Modifying(self, field)
 
 
-if _PY_VERSION < (3, 12):
-    def _get_fmtval_interp_strs(self: 'FST') -> tuple[str, str, int, int] | None:
-        """Dummy because py < 3.12 doesn't have f-string location information."""
+def _touchall(self: 'FST', parents: bool = False, self_: bool = True, children: bool = False) -> 'FST':  # -> Self
+    """Touch self, parents and children, optionally. Flushes location cache so that changes to AST locations will
+    get picked up."""
 
-        return None
+    if children:
+        stack = [self.a] if self_ else list(iter_child_nodes(self.a))
 
-else:
-    def _get_fmtval_interp_strs(self: 'FST') -> tuple[str | None, str | None, int, int] | None:
-        """Get debug and value strings and location for a `FormattedValue` or `Interpolation` IF THEY ARE PRESENT.
-        Meaning that if the `.value` ends with an appropriate `'='` character for debug and the value str if is
-        `Interpolation`. This does not check for the presence or equivalence of the actual preceding `Constant` string.
-        The returned strings are stripped of comments just like the python parser does.
+        while stack:
+            child = stack.pop()
 
-        **Returns:**
-        - `None`: If not a valid debug `FormattedValue` or `Interpolation`.
-        - `(debug str, value str, end_ln, end_col)`: A tuple including the full string which includes the `'='`
-            character (if applicable, else `None`), a string which only includes the value expression (if Interpolation,
-            else `None`) and the end line and column numbers of the whole thing which will correspond to what the
-            preceding Constant should have for its end line and column in the case of debug string present.
-        """
+            child.f._touch()
+            stack.extend(iter_child_nodes(child))
 
-        ast = self.a
+    elif self_:
+        self._touch()
 
-        if not (get_val := isinstance(ast, Interpolation)):
-            if not isinstance(ast, FormattedValue):
-                return None
+    if parents:
+        parent = self
 
-        lines                        = self.root._lines
-        sln, scol, send_ln, send_col = self.loc
-        _, _, vend_ln, vend_col      = ast.value.f.pars()
+        while parent := parent.parent:
+            parent._touch()
 
-        if fspec := ast.format_spec:
-            end_ln, end_col, _, _ = fspec.f.loc
+    return self
+
+
+def _offset(self: 'FST', ln: int, col: int, dln: int, dcol_offset: int,
+            tail: bool | None = False, head: bool | None = True, exclude: Optional['FST'] = None, *,
+            offset_excluded: bool = True, self_: bool = True,
+            ) -> 'FST':  # -> Self
+    """Offset `AST` node positions in the tree on or after (ln, col) by (delta line, col_offset) (column byte
+    offset).
+
+    This only offsets the positions in the `AST` nodes, doesn't change any text, so make sure that is correct before
+    getting any `FST` locations from affected nodes otherwise they will be wrong.
+
+    Other nodes outside this tree might need offsetting so use only on root unless special circumstances.
+
+    If offsetting a zero-length node (which can result from deleting elements of an unparenthesized tuple), both the
+    start and end location will be moved according to `tail` and `head` rules if exactly at offset point, see
+    "Behavior" below.
+
+    **Parameters:**
+    - `ln`: Line of offset point (0 based).
+    - `col`: Column of offset point (char index if positive). If this is negative then is treated as a byte offset
+        in the line so that the source is not used for calculations (which could be wrong if the source was already
+        changed).
+    - `dln`: Number of lines to offset everything on or after offset point, can be 0.
+    - `dcol_offset`: Column offset to apply to everything ON the offset point line `ln` (in bytes). Columns not on
+        line `ln` will not be changed.
+    - `tail`: Whether to offset end endpoint if it FALLS EXACTLY AT (ln, col) or not. If `False` then tail will not
+        be moved backward if at same location as head and can stop head from moving forward past it if at same
+        location. If `None` then can be moved forward with head if head at same location.
+    - `head`: Whether to offset start endpoint if it FALLS EXACTLY AT (ln, col) or not. If `False` then head will
+        not be moved forward if at same location as tail and can stop tail from moving backward past it if at same
+        location. If `None` then can be moved backward with tail if tail at same location.
+    - `exclude`: `FST` node to stop recursion at and not go into its children (recursion in siblings will not be
+        affected).
+    - `offset_excluded`: Whether to apply offset to `exclude`d node or not.
+    - `self_`: Whether to offset self or not (will recurse into children regardless unless is `self` is `exclude`).
+
+    **Behavior:**
+    ```
+    start offset here
+            V
+        |===|
+            |---|
+            |        <- special zero length span which doesn't normally exist
+    0123456789ABC
+
+    +2, tail=False      -2, tail=False      +2, tail=None       -2, tail=False
+        head=True           head=True           head=True           head=None
+            V                   V                   V                   V
+        |===|               |===|               |===|               |===|
+            |---|           |---|                   |---|             |-|
+            |                 |.|                     |                 |
+    0123456789ABC       0123456789ABC       0123456789ABC       0123456789ABC
+
+    +2, tail=True       -2, tail=True       +2, tail=None       -2, tail=True
+        head=True           head=True           head=False          head=None
+            V                   V                   V                   V
+        |=====|             |=|                 |===|               |=|
+            |---|           |---|                 |-----|             |-|
+            |               |                     |                 |
+    0123456789ABC       0123456789ABC       0123456789ABC       0123456789ABC
+
+    +2, tail=False      -2, tail=False      +2, tail=None       -2, tail=None
+        head=False          head=False          head=None           head=None
+            V                   V                   V                   V
+        |===|               |===|               |===|               |===|
+            |-----|             |-|                 |-----|             |-|
+            |                   |                   |                   |
+    0123456789ABC       0123456789ABC       0123456789ABC       0123456789ABC
+
+    +2, tail=True       -2, tail=True
+        head=False          head=False
+            V                   V
+        |=====|             |=|
+            |-----|             |-|
+            |.|                 |
+    0123456789ABC       0123456789ABC
+    ```
+    """
+
+    if self_:
+        stack = [self.a]
+    elif self is exclude:
+        return
+    else:
+        stack = list(iter_child_nodes(self.a))
+
+    lno  = ln + 1
+    colo = (-col if col <= 0 else  # yes, -0 to not look up 0
+            (l := ls[ln]).c2b(min(col, len(l))) if ln < len(ls := self.root._lines) else 0x7fffffffffffffff)
+    fwd  = dln > 0 or (not dln and dcol_offset >= 0)
+
+    while stack:
+        a = stack.pop()
+        f = a.f
+
+        if f is not exclude:
+            children = iter_child_nodes(a)
+        elif offset_excluded:
+            children = ()
         else:
-            end_ln  = send_ln
-            end_col = send_col - 1
+            continue
 
-        if ast.conversion != -1:
-            if prev := _prev_find(lines, vend_ln, vend_col, end_ln, end_col, '!'):
-                end_ln, end_col = prev
+        f._touch()
 
-        src     = self.get_src(vend_ln, vend_col, end_ln, end_col)  # source from end of parenthesized value to end of FormattedValue or start of conversion or format_spec
-        get_dbg = src and (m := _re_fval_expr_equals.match(src)) and m.end() == len(src)
+        if (fend_colo := getattr(a, 'end_col_offset', None)) is not None:
+            flno  = a.lineno
+            fcolo = a.col_offset
 
-        if not get_dbg and not get_val:
-            return None
+            if (fend_lno := a.end_lineno) < lno:
+                continue  # no need to walk into something which ends before offset point
+            elif fend_lno > lno:
+                a.end_lineno = fend_lno + dln
+            elif fend_colo < colo:
+                continue
 
+            elif (fend_colo > colo or
+                    (tail and (fwd or head is not False or fcolo != fend_colo or flno != fend_lno)) or  # at (ln, col), moving tail allowed and not blocked by head?
+                    (tail is None and head and fwd and fcolo == fend_colo and flno == fend_lno)):  # allowed to be and being moved by head?
+                a.end_lineno     = fend_lno + dln
+                a.end_col_offset = fend_colo + dcol_offset
 
-        # THIS IS WHAT I ASSUME SHOULD BE CORRECT
+            if flno > lno:
+                if not dln and (not (decos := getattr(a, 'decorator_list', None)) or decos[0].lineno > lno):
+                    continue  # no need to walk into something past offset point if line change is 0, don't need to touch either could not have been changed above
 
-        # lns  = set()
-        # ends = {}
+                a.lineno = flno + dln
 
-        # for f in (walking := val.walk(False)):  # find multiline continuation line numbers
-        #     fln, _, fend_ln, fend_col = f.loc
-        #     ends[fend_ln]             = max(fend_col, ends.get(fend_ln, 0))
+            elif (flno == lno and (fcolo > colo or (fcolo == colo and (
+                    (head and (not fwd or tail is not False or fcolo != fend_colo or flno != fend_lno)) or  # at (ln, col), moving head allowed and not blocked by tail?
+                    (head is None and tail and not fwd and fcolo == fend_colo and flno == fend_lno))))):  # allowed to be and being moved by tail?
+                a.lineno     = flno + dln
+                a.col_offset = fcolo + dcol_offset
 
-        #     if fend_ln == fln:  # everything on one line, don't need to recurse
-        #         walking.send(False)
+        stack.extend(children)
 
-        #     elif isinstance(a := f.a, Constant):  # isinstance(f.a.value, (str, bytes)) is a given if bend_ln != bln
-        #         lns.update(_multiline_str_continuation_lns(lines, *f.loc))
+    self._touchall(True, False)
 
-        #     elif isinstance(a, (JoinedStr, TemplateStr)):
-        #         lns.update(_multiline_fstr_continuation_lns(lines, *f.loc))
-
-        #         walking.send(False)  # skip everything inside regardless, because it is evil
-
-        #         for a in walk(f.a):  # we walk ourselves to get end-of-expression locations for lines
-        #             if loc := a.f.loc:
-        #                 _, _, fend_ln, fend_col = loc
-        #                 ends[fend_ln]           = max(fend_col, ends.get(fend_ln, 0))
-
-
-        # off   = sln + 1
-        # lns   = {v - off for v in lns}  # these are line numbers where comments are not possible because next line is a string continuation
-        # lines = self.get_src(sln, scol + 1, end_ln, end_col, True)
-
-        # for i, l in enumerate(lines):
-        #     if (i not in lns and (m := re_line_end_cont_or_comment.match(l, ends.get(i + sln, 0))) and
-        #         (g := m.group(1)) and g.startswith('#')
-        #     ):  # line ends in comment, nuke it
-        #         lines[i] = l[:m.start(1)]
+    return self
 
 
-        # THIS IS WHAT PYTHON 3.12+ DOES
+def _offset_lns(self: 'FST', lns: set[int] | dict[int, int], dcol_offset: int | None = None):
+    """Offset ast column byte offsets in `lns` by `dcol_offset` if present, otherwise `lns` must be a dict with an
+    individual `dcol_offset` per line. Only modifies `AST`, not lines. Does not modify parent locations but
+    `touch()`es parents."""
 
-        lines = self.get_src(sln, scol + 1, end_ln, end_col, True)
+    if dcol_offset is None:  # lns is dict[int, int]
+        for a in walk(self.a):
+            if (end_col_offset := getattr(a, 'end_col_offset', None)) is not None:
+                if dcol_offset := lns.get(a.lineno - 1):
+                    a.col_offset += dcol_offset
 
-        for i, l in enumerate(lines):
-            if (m := re_line_end_cont_or_comment.match(l)) and (g := m.group(1)) and g.startswith('#'):  # line ends in comment, nuke it
-                lines[i] = l[:m.start(1)]
+                if dcol_offset := lns.get(a.end_lineno - 1):
+                    a.end_col_offset = end_col_offset + dcol_offset
 
-        # END OF BUGGIENESS
+            a.f._touch()
+
+        self._touchall(True, False)
+
+    elif dcol_offset:  # lns is set[int] OR dict[int, int] (overriding with a single dcol_offset)
+        for a in walk(self.a):
+            if (end_col_offset := getattr(a, 'end_col_offset', None)) is not None:
+                if a.lineno - 1 in lns:
+                    a.col_offset += dcol_offset
+
+                if a.end_lineno - 1 in lns:
+                    a.end_col_offset = end_col_offset + dcol_offset
+
+            a.f._touch()
+
+        self._touchall(True, False)
 
 
-        dbg_str = '\n'.join(lines) if get_dbg else None
+def _indent_lns(self: 'FST', indent: str | None = None, lns: set[int] | None = None, *,
+                skip: int = 1, docstr: bool | Literal['strict'] | None = None) -> set[int]:
+    """Indent all indentable lines specified in `lns` with `indent` and adjust node locations accordingly.
 
-        if not get_val:
-            val_str = None
+    WARNING! This does not offset parent nodes.
 
-        else:
-            if not (vend_ln := vend_ln - sln):
-                vend_col -= scol + 1
+    **Parameters:**
+    - `indent`: The indentation string to prefix to each indentable line.
+    - `lns`: A `set` of lines to apply identation to. If `None` then will be gotten from
+        `get_indentable_lns(skip=skip)`.
+    - `skip`: If not providing `lns` then this value is passed to `get_indentable_lns()`.
+    - `docstr`: How to treat multiline string docstring lines. `False` means not indentable, `True` means all `Expr`
+        multiline strings are indentable (as they serve no coding purpose). `'strict'` means only multiline strings
+        in expected docstring positions are indentable. `None` means use default.
 
-            del lines[vend_ln + 1:]
+    **Returns:**
+    - `set[int]`: `lns` passed in or otherwise set of line numbers (zero based) which are sytactically indentable.
+    """
 
-            lines[vend_ln] = lines[vend_ln][:vend_col]
+    root = self.root
 
-            val_str = '\n'.join(lines).rstrip()
+    if indent is None:
+        indent = root.indent
+    if docstr is None:
+        docstr = self.get_option('docstr')
 
-        return dbg_str, val_str, end_ln, end_col
+    if not ((lns := self.get_indentable_lns(skip, docstr=docstr)) if lns is None else lns) or not indent:
+        return lns
+
+    self._offset_lns(lns, len(indent.encode()))
+
+    lines = root._lines
+
+    for ln in lns:
+        if l := lines[ln]:  # only indent non-empty lines
+            lines[ln] = bistr(indent + l)
+
+    self._reparse_docstrings(docstr)
+
+    return lns
+
+
+def _dedent_lns(self: 'FST', indent: str | None = None, lns: set[int] | None = None, *,
+                skip: int = 1, docstr: bool | Literal['strict'] | None = None) -> set[int]:
+    """Dedent all indentable lines specified in `lns` by removing `indent` prefix and adjust node locations
+    accordingly. If cannot dedent entire amount, will dedent as much as possible.
+
+    WARNING! This does not offset parent nodes.
+
+    **Parameters:**
+    - `indent`: The indentation string to remove from the beginning of each indentable line (if possible).
+    - `lns`: A `set` of lines to apply dedentation to. If `None` then will be gotten from
+        `get_indentable_lns(skip=skip)`.
+    - `docstr`: How to treat multiline string docstring lines. `False` means not indentable, `True` means all `Expr`
+        multiline strings are indentable (as they serve no coding purpose). `'strict'` means only multiline strings
+        in expected docstring positions are indentable. `None` means use default.
+    - `skip`: If not providing `lns` then this value is passed to `get_indentable_lns()`.
+
+    **Returns:**
+    - `set[int]`: `lns` passed in or otherwise set of line numbers (zero based) which are sytactically indentable.
+    """
+
+    root = self.root
+
+    if indent is None:
+        indent = root.indent
+    if docstr is None:
+        docstr = self.get_option('docstr')
+
+    if not ((lns := self.get_indentable_lns(skip, docstr=docstr)) if lns is None else lns) or not indent:
+        return lns
+
+    lines        = root._lines
+    lindent      = len(indent)
+    dcol_offsets = None
+    newlines     = []
+
+    def dedent(l, lindent):
+        if dcol_offsets is not None:
+            dcol_offsets[ln] = -lindent
+
+        return bistr(l[lindent:])
+
+    lns_seq = list(lns)
+
+    for ln in lns_seq:
+        if l := lines[ln]:  # only dedent non-empty lines
+            if l.startswith(indent) or (lempty_start := re_empty_line_start.match(l).end()) >= lindent:
+                l = dedent(l, lindent)
+
+            else:
+                if not dcol_offsets:
+                    dcol_offsets = {}
+
+                    for ln2 in lns_seq:
+                        if ln2 is ln:
+                            break
+
+                        dcol_offsets[ln2] = -lindent
+
+                l = dedent(l, lempty_start)
+
+        newlines.append(l)
+
+    for ln, l in zip(lns_seq, newlines):
+        lines[ln] = l
+
+    if dcol_offsets:
+        self._offset_lns(dcol_offsets)
+    else:
+        self._offset_lns(lns, -lindent)
+
+    self._reparse_docstrings(docstr)
+
+    return lns
 
 
 # ----------------------------------------------------------------------------------------------------------------------

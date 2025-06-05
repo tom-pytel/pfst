@@ -63,7 +63,7 @@ def _put_slice_seq_and_indent(self: 'FST', put_fst: Optional['FST'], seq_loc: fs
 
         indent = self.get_indent()
 
-        put_fst.indent_lns(indent, docstr=docstr)
+        put_fst._indent_lns(indent, docstr=docstr)
 
         put_ln, put_col, put_end_ln, put_end_col = (
             _src_edit.put_slice_seq(self, put_fst, indent, seq_loc, ffirst, flast, fpre, fpost, pfirst, plast))
@@ -72,12 +72,12 @@ def _put_slice_seq_and_indent(self: 'FST', put_fst: Optional['FST'], seq_loc: fs
         put_lines       = put_fst._lines
         fst_dcol_offset = lines[put_ln].c2b(put_col)
 
-        put_fst.offset(0, 0, put_ln, fst_dcol_offset)
+        put_fst._offset(0, 0, put_ln, fst_dcol_offset)
 
     self_ln, self_col, _, _ = self.loc
 
     if put_col == self_col and put_ln == self_ln:  # unenclosed sequence
-        self.offset(
+        self._offset(
             *root.put_src(put_lines, put_ln, put_col, put_end_ln, put_end_col, not fpost, False, self),
             True, True, self_=False)
 
@@ -352,7 +352,7 @@ def _put_slice_tuple_list_or_set(self: 'FST', code: Code | None, start: int | Li
         elif not is_tuple:
             put_ast.end_col_offset -= 1  # strip enclosing curlies or brackets from source set or list
 
-            put_fst.offset(0, 1, 0, -1)
+            put_fst._offset(0, 1, 0, -1)
 
             assert put_lines[0].startswith('[{'[is_set])
             assert put_lines[-1].endswith(']}'[is_set])
@@ -363,7 +363,7 @@ def _put_slice_tuple_list_or_set(self: 'FST', code: Code | None, start: int | Li
         elif put_fst._is_parenthesized_seq():
             put_ast.end_col_offset -= 1  # strip enclosing parentheses from source tuple
 
-            put_fst.offset(0, 1, 0, -1)
+            put_fst._offset(0, 1, 0, -1)
 
             put_lines[-1] = bistr(put_lines[-1][:-1])
             put_lines[0]  = bistr(put_lines[0][1:])
@@ -467,7 +467,7 @@ def _put_slice_dict(self: 'FST', code: Code | None, start: int | Literal['end'] 
         put_lines               = put_fst._lines
         put_ast.end_col_offset -= 1  # strip enclosing curlies from source dict
 
-        put_fst.offset(0, 1, 0, -1)
+        put_fst._offset(0, 1, 0, -1)
 
         assert put_lines[0].startswith('{')
         assert put_lines[-1].endswith('}')
@@ -707,7 +707,7 @@ def _put_slice_stmtish(self: 'FST', code: Code | None, start: int | Literal['end
         put_loc = _src_edit.put_slice_stmt(self, put_fst, field, block_loc, opener_indent, block_indent,
                                             ffirst, flast, fpre, fpost, **options)
 
-        put_fst.offset(0, 0, put_loc.ln, 0 if put_fst.bln or put_fst.bcol else lines[put_loc.ln].c2b(put_loc.col))
+        put_fst._offset(0, 0, put_loc.ln, 0 if put_fst.bln or put_fst.bcol else lines[put_loc.ln].c2b(put_loc.col))
         self.put_src(put_fst.lines, *put_loc, False)
         self._unmake_fst_tree(body[start : stop])
         put_fst._unmake_fst_parents(True)

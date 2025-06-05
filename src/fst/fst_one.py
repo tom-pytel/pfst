@@ -200,7 +200,7 @@ else:
             # ret._touch()
 
             # if indent := childf.get_indent():
-            #     ret.dedent_lns(indent, skip=1, docstr=options.get('docstr'))
+            #     ret._dedent_lns(indent, skip=1, docstr=options.get('docstr'))
 
         else:
             assert isinstance(child, (FormattedValue, Interpolation))
@@ -678,15 +678,15 @@ def _make_exprish_fst(self: 'FST', code: Code | None, idx: int | None, field: st
     if suffix:
         ls[-1] = bistr((ls := put_fst._lines)[-1] + suffix)  # don't need to offset anything so just tack onto the end
 
-    put_fst.indent_lns(self.get_indent(), docstr=options.get('docstr'))
+    put_fst._indent_lns(self.get_indent(), docstr=options.get('docstr'))
 
 
     dcol_offset    = self.root._lines[ln].c2b(col)
     end_col_offset = lines[end_ln].c2b(end_col)
     params_offset  = self.put_src(put_fst._lines, ln, col, end_ln, end_col, True, False, exclude=self)
 
-    self.offset(*params_offset, exclude=target, self_=False)  # excluding an fstloc instead of FST is harmless, will not exclude anything
-    put_fst.offset(0, 0, ln, dcol_offset)
+    self._offset(*params_offset, exclude=target, self_=False)  # excluding an fstloc instead of FST is harmless, will not exclude anything
+    put_fst._offset(0, 0, ln, dcol_offset)
     set_ctx(put_ast, ctx)
 
     # possibly fix FormattedValue and Interpolation .format_spec location if present above self - because can follow IMMEDIATELY after modified value (which doesn't normally happen in py syntax) and thus would not have their start offset due to head=False in put_src() above
@@ -899,7 +899,7 @@ def _put_one_identifier_optional(self: 'FST', code: Code | None, idx: int | None
 
         params_offset = self.put_src(info.prefix + code + info.suffix, *loc, True, exclude=self)
 
-        self.offset(*params_offset, self_=False)
+        self._offset(*params_offset, self_=False)
         set_field(self.a, code, field, idx)
 
     return code

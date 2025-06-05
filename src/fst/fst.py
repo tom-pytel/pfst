@@ -14,7 +14,7 @@ from .shared import (
     astfield, fstloc, nspace,
     STMTISH, STMTISH_OR_MOD, BLOCK, BLOCK_OR_MOD, SCOPE, SCOPE_OR_MOD, NAMED_SCOPE,
     NAMED_SCOPE_OR_MOD, ANONYMOUS_SCOPE, PARENTHESIZABLE, HAS_DOCSTRING,
-    re_empty_line_start, re_empty_line, re_line_continuation, re_line_end_cont_or_comment,
+    re_empty_line, re_line_continuation, re_line_end_cont_or_comment,
     Code, Mode,
     _next_pars, _prev_pars,
     _params_offset, _fixup_field_body, _multiline_str_continuation_lns, _multiline_fstr_continuation_lns,
@@ -799,7 +799,7 @@ class FST:
         return self
 
     # ------------------------------------------------------------------------------------------------------------------
-    # High level operations
+    # High level
 
     def copy(self, **options) -> 'FST':
         """Copy an individual node to a top level tree, dedenting and fixing as necessary."""
@@ -953,7 +953,7 @@ class FST:
         """Put or delete new source to currently stored source, optionally offsetting all nodes for the change. Must
         specify `tail` as `True`, `False` or `None` to enable offset of nodes according to source put. `...` ellipsis
         value is used as sentinel for `tail` to mean don't offset. Otherwise `tail` and params which followed are passed
-        to `self.offset()` with calculated offset location and deltas.
+        to `self._offset()` with calculated offset location and deltas.
 
         **Returns:**
         - `(ln: int, col: int, dln: int, dcol_offset: int) | None`: If `tail` was not `...` then the calculated
@@ -976,7 +976,7 @@ class FST:
         if tail is not ...:  # possibly offset nodes
             ret = _params_offset(ls, lines, ln, col, end_ln, end_col)
 
-            self.root.offset(*ret, tail, head, exclude, offset_excluded=offset_excluded)
+            self.root._offset(*ret, tail, head, exclude, offset_excluded=offset_excluded)
 
         if is_del:  # delete lines
             if end_ln == ln:
@@ -1360,7 +1360,7 @@ class FST:
                 return None
 
     # ------------------------------------------------------------------------------------------------------------------
-    # Low level queries
+    # Low level
 
     def get_indent(self) -> str:
         """Determine proper indentation of node at `stmt` (or other similar) level at or above `self`. Even if it is a
@@ -1793,317 +1793,6 @@ class FST:
                 isinstance(parenta := parent.a, MatchClass) and not parenta.kwd_patterns and len(parenta.patterns) == 1)
 
     # ------------------------------------------------------------------------------------------------------------------
-    # Low level modifications
-
-    def touch(self, parents: bool = False, self_: bool = True, children: bool = False) -> 'FST':  # -> Self
-        """Touch self, parents and children, optionally. Flushes location cache so that changes to AST locations will
-        get picked up."""
-
-        if children:
-            stack = [self.a] if self_ else list(iter_child_nodes(self.a))
-
-            while stack:
-                child = stack.pop()
-
-                child.f._touch()
-                stack.extend(iter_child_nodes(child))
-
-        elif self_:
-            self._touch()
-
-        if parents:
-            parent = self
-
-            while parent := parent.parent:
-                parent._touch()
-
-        return self
-
-    def offset(self, ln: int, col: int, dln: int, dcol_offset: int,
-               tail: bool | None = False, head: bool | None = True, exclude: Optional['FST'] = None, *,
-               offset_excluded: bool = True, self_: bool = True,
-               ) -> 'FST':  # -> Self
-        """Offset `AST` node positions in the tree on or after (ln, col) by (delta line, col_offset) (column byte
-        offset).
-
-        This only offsets the positions in the `AST` nodes, doesn't change any text, so make sure that is correct before
-        getting any `FST` locations from affected nodes otherwise they will be wrong.
-
-        Other nodes outside this tree might need offsetting so use only on root unless special circumstances.
-
-        If offsetting a zero-length node (which can result from deleting elements of an unparenthesized tuple), both the
-        start and end location will be moved according to `tail` and `head` rules if exactly at offset point, see
-        "Behavior" below.
-
-        **Parameters:**
-        - `ln`: Line of offset point (0 based).
-        - `col`: Column of offset point (char index if positive). If this is negative then is treated as a byte offset
-            in the line so that the source is not used for calculations (which could be wrong if the source was already
-            changed).
-        - `dln`: Number of lines to offset everything on or after offset point, can be 0.
-        - `dcol_offset`: Column offset to apply to everything ON the offset point line `ln` (in bytes). Columns not on
-            line `ln` will not be changed.
-        - `tail`: Whether to offset end endpoint if it FALLS EXACTLY AT (ln, col) or not. If `False` then tail will not
-            be moved backward if at same location as head and can stop head from moving forward past it if at same
-            location. If `None` then can be moved forward with head if head at same location.
-        - `head`: Whether to offset start endpoint if it FALLS EXACTLY AT (ln, col) or not. If `False` then head will
-            not be moved forward if at same location as tail and can stop tail from moving backward past it if at same
-            location. If `None` then can be moved backward with tail if tail at same location.
-        - `exclude`: `FST` node to stop recursion at and not go into its children (recursion in siblings will not be
-            affected).
-        - `offset_excluded`: Whether to apply offset to `exclude`d node or not.
-        - `self_`: Whether to offset self or not (will recurse into children regardless unless is `self` is `exclude`).
-
-        **Behavior:**
-        ```
-        start offset here
-              V
-          |===|
-              |---|
-              |        <- special zero length span which doesn't normally exist
-        0123456789ABC
-
-        +2, tail=False      -2, tail=False      +2, tail=None       -2, tail=False
-            head=True           head=True           head=True           head=None
-              V                   V                   V                   V
-          |===|               |===|               |===|               |===|
-                |---|           |---|                   |---|             |-|
-              |                 |.|                     |                 |
-        0123456789ABC       0123456789ABC       0123456789ABC       0123456789ABC
-
-        +2, tail=True       -2, tail=True       +2, tail=None       -2, tail=True
-            head=True           head=True           head=False          head=None
-              V                   V                   V                   V
-          |=====|             |=|                 |===|               |=|
-                |---|           |---|                 |-----|             |-|
-                |               |                     |                 |
-        0123456789ABC       0123456789ABC       0123456789ABC       0123456789ABC
-
-        +2, tail=False      -2, tail=False      +2, tail=None       -2, tail=None
-            head=False          head=False          head=None           head=None
-              V                   V                   V                   V
-          |===|               |===|               |===|               |===|
-              |-----|             |-|                 |-----|             |-|
-              |                   |                   |                   |
-        0123456789ABC       0123456789ABC       0123456789ABC       0123456789ABC
-
-        +2, tail=True       -2, tail=True
-            head=False          head=False
-              V                   V
-          |=====|             |=|
-              |-----|             |-|
-              |.|                 |
-        0123456789ABC       0123456789ABC
-        ```
-        """
-
-        if self_:
-            stack = [self.a]
-        elif self is exclude:
-            return
-        else:
-            stack = list(iter_child_nodes(self.a))
-
-        lno  = ln + 1
-        colo = (-col if col <= 0 else  # yes, -0 to not look up 0
-                (l := ls[ln]).c2b(min(col, len(l))) if ln < len(ls := self.root._lines) else 0x7fffffffffffffff)
-        fwd  = dln > 0 or (not dln and dcol_offset >= 0)
-
-        while stack:
-            a = stack.pop()
-            f = a.f
-
-            if f is not exclude:
-                children = iter_child_nodes(a)
-            elif offset_excluded:
-                children = ()
-            else:
-                continue
-
-            f._touch()
-
-            if (fend_colo := getattr(a, 'end_col_offset', None)) is not None:
-                flno  = a.lineno
-                fcolo = a.col_offset
-
-                if (fend_lno := a.end_lineno) < lno:
-                    continue  # no need to walk into something which ends before offset point
-                elif fend_lno > lno:
-                    a.end_lineno = fend_lno + dln
-                elif fend_colo < colo:
-                    continue
-
-                elif (fend_colo > colo or
-                      (tail and (fwd or head is not False or fcolo != fend_colo or flno != fend_lno)) or  # at (ln, col), moving tail allowed and not blocked by head?
-                      (tail is None and head and fwd and fcolo == fend_colo and flno == fend_lno)):  # allowed to be and being moved by head?
-                    a.end_lineno     = fend_lno + dln
-                    a.end_col_offset = fend_colo + dcol_offset
-
-                if flno > lno:
-                    if not dln and (not (decos := getattr(a, 'decorator_list', None)) or decos[0].lineno > lno):
-                        continue  # no need to walk into something past offset point if line change is 0, don't need to touch either could not have been changed above
-
-                    a.lineno = flno + dln
-
-                elif (flno == lno and (fcolo > colo or (fcolo == colo and (
-                      (head and (not fwd or tail is not False or fcolo != fend_colo or flno != fend_lno)) or  # at (ln, col), moving head allowed and not blocked by tail?
-                      (head is None and tail and not fwd and fcolo == fend_colo and flno == fend_lno))))):  # allowed to be and being moved by tail?
-                    a.lineno     = flno + dln
-                    a.col_offset = fcolo + dcol_offset
-
-            stack.extend(children)
-
-        self.touch(True, False)
-
-        return self
-
-    def offset_lns(self, lns: set[int] | dict[int, int], dcol_offset: int | None = None):
-        """Offset ast column byte offsets in `lns` by `dcol_offset` if present, otherwise `lns` must be a dict with an
-        individual `dcol_offset` per line. Only modifies `AST`, not lines. Does not modify parent locations but
-        `touch()`es parents."""
-
-        if dcol_offset is None:  # lns is dict[int, int]
-            for a in walk(self.a):
-                if (end_col_offset := getattr(a, 'end_col_offset', None)) is not None:
-                    if dcol_offset := lns.get(a.lineno - 1):
-                        a.col_offset += dcol_offset
-
-                    if dcol_offset := lns.get(a.end_lineno - 1):
-                        a.end_col_offset = end_col_offset + dcol_offset
-
-                a.f._touch()
-
-            self.touch(True, False)
-
-        elif dcol_offset:  # lns is set[int] OR dict[int, int] (overriding with a single dcol_offset)
-            for a in walk(self.a):
-                if (end_col_offset := getattr(a, 'end_col_offset', None)) is not None:
-                    if a.lineno - 1 in lns:
-                        a.col_offset += dcol_offset
-
-                    if a.end_lineno - 1 in lns:
-                        a.end_col_offset = end_col_offset + dcol_offset
-
-                a.f._touch()
-
-            self.touch(True, False)
-
-    def indent_lns(self, indent: str | None = None, lns: set[int] | None = None, *,
-                   skip: int = 1, docstr: bool | Literal['strict'] | None = None) -> set[int]:
-        """Indent all indentable lines specified in `lns` with `indent` and adjust node locations accordingly.
-
-        WARNING! This does not offset parent nodes.
-
-        **Parameters:**
-        - `indent`: The indentation string to prefix to each indentable line.
-        - `lns`: A `set` of lines to apply identation to. If `None` then will be gotten from
-            `get_indentable_lns(skip=skip)`.
-        - `skip`: If not providing `lns` then this value is passed to `get_indentable_lns()`.
-        - `docstr`: How to treat multiline string docstring lines. `False` means not indentable, `True` means all `Expr`
-            multiline strings are indentable (as they serve no coding purpose). `'strict'` means only multiline strings
-            in expected docstring positions are indentable. `None` means use default.
-
-        **Returns:**
-        - `set[int]`: `lns` passed in or otherwise set of line numbers (zero based) which are sytactically indentable.
-        """
-
-        root = self.root
-
-        if indent is None:
-            indent = root.indent
-        if docstr is None:
-            docstr = self.get_option('docstr')
-
-        if not ((lns := self.get_indentable_lns(skip, docstr=docstr)) if lns is None else lns) or not indent:
-            return lns
-
-        self.offset_lns(lns, len(indent.encode()))
-
-        lines = root._lines
-
-        for ln in lns:
-            if l := lines[ln]:  # only indent non-empty lines
-                lines[ln] = bistr(indent + l)
-
-        self._reparse_docstrings(docstr)
-
-        return lns
-
-    def dedent_lns(self, indent: str | None = None, lns: set[int] | None = None, *,
-                   skip: int = 1, docstr: bool | Literal['strict'] | None = None) -> set[int]:
-        """Dedent all indentable lines specified in `lns` by removing `indent` prefix and adjust node locations
-        accordingly. If cannot dedent entire amount, will dedent as much as possible.
-
-        WARNING! This does not offset parent nodes.
-
-        **Parameters:**
-        - `indent`: The indentation string to remove from the beginning of each indentable line (if possible).
-        - `lns`: A `set` of lines to apply dedentation to. If `None` then will be gotten from
-            `get_indentable_lns(skip=skip)`.
-        - `docstr`: How to treat multiline string docstring lines. `False` means not indentable, `True` means all `Expr`
-            multiline strings are indentable (as they serve no coding purpose). `'strict'` means only multiline strings
-            in expected docstring positions are indentable. `None` means use default.
-        - `skip`: If not providing `lns` then this value is passed to `get_indentable_lns()`.
-
-        **Returns:**
-        - `set[int]`: `lns` passed in or otherwise set of line numbers (zero based) which are sytactically indentable.
-        """
-
-        root = self.root
-
-        if indent is None:
-            indent = root.indent
-        if docstr is None:
-            docstr = self.get_option('docstr')
-
-        if not ((lns := self.get_indentable_lns(skip, docstr=docstr)) if lns is None else lns) or not indent:
-            return lns
-
-        lines        = root._lines
-        lindent      = len(indent)
-        dcol_offsets = None
-        newlines     = []
-
-        def dedent(l, lindent):
-            if dcol_offsets is not None:
-                dcol_offsets[ln] = -lindent
-
-            return bistr(l[lindent:])
-
-        lns_seq = list(lns)
-
-        for ln in lns_seq:
-            if l := lines[ln]:  # only dedent non-empty lines
-                if l.startswith(indent) or (lempty_start := re_empty_line_start.match(l).end()) >= lindent:
-                    l = dedent(l, lindent)
-
-                else:
-                    if not dcol_offsets:
-                        dcol_offsets = {}
-
-                        for ln2 in lns_seq:
-                            if ln2 is ln:
-                                break
-
-                            dcol_offsets[ln2] = -lindent
-
-                    l = dedent(l, lempty_start)
-
-            newlines.append(l)
-
-        for ln, l in zip(lns_seq, newlines):
-            lines[ln] = l
-
-        if dcol_offsets:
-            self.offset_lns(dcol_offsets)
-        else:
-            self.offset_lns(lns, -lindent)
-
-        self._reparse_docstrings(docstr)
-
-        return lns
-
-    # ------------------------------------------------------------------------------------------------------------------
     # Private and other misc stuff
 
     from .fst_misc import (
@@ -2135,9 +1824,11 @@ class FST:
         _loc_Call_pars,
         _loc_Subscript_brackets,
         _loc_MatchClass_pars,
+        _is_arguments_empty,
+        _is_parenthesized_ImportFrom_names,
+        _is_parenthesized_With_items,
+        _is_parenthesized_seq,
         _dict_key_or_mock_loc,
-        _touch,
-        _sanitize,
         _set_end_pos,
         _set_block_end_from_last_child,
         _maybe_add_comma,
@@ -2146,10 +1837,8 @@ class FST:
         _maybe_fix_set,
         _maybe_fix_elif,
         _maybe_fix,
-        _is_arguments_empty,
-        _is_parenthesized_ImportFrom_names,
-        _is_parenthesized_With_items,
-        _is_parenthesized_seq,
+        _touch,
+        _sanitize,
         _parenthesize_grouping,
         _parenthesize_tuple,
         _unparenthesize_grouping,
@@ -2158,8 +1847,13 @@ class FST:
         _elif_to_else_if,
         _reparse_docstrings,
         _make_fst_and_dedent,
-        _modifying,
         _get_fmtval_interp_strs,
+        _modifying,
+        _touchall,
+        _offset,
+        _offset_lns,
+        _indent_lns,
+        _dedent_lns,
     )
 
     from .fst_parse import (

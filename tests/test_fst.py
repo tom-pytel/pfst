@@ -3817,7 +3817,7 @@ f"distutils.command.sdist.check_metadata is deprecated, \\
         self.assertEqual({0}, f.get_indentable_lns(docstr=True))  # because f-strings cannot be docstrings
         self.assertEqual({0}, f.get_indentable_lns(docstr=False))
 
-    def test_touch(self):
+    def test__touchall(self):
         a = parse('i = [1]').body[0]
         self.assertEqual(7, a.f.end_col)
         self.assertEqual(7, a.value.f.end_col)
@@ -3831,26 +3831,26 @@ f"distutils.command.sdist.check_metadata is deprecated, \\
         self.assertEqual(7, a.value.f.end_col)
         self.assertEqual(6, a.value.elts[0].f.end_col)
 
-        a.value.f.touch()
+        a.value.f._touchall()
         self.assertEqual(7, a.f.end_col)
         self.assertEqual(8, a.value.f.end_col)
         self.assertEqual(6, a.value.elts[0].f.end_col)
 
-        a.value.f.touch(parents=True)
+        a.value.f._touchall(parents=True)
         self.assertEqual(8, a.f.end_col)
         self.assertEqual(8, a.value.f.end_col)
         self.assertEqual(6, a.value.elts[0].f.end_col)
 
-        a.value.f.touch(children=True)
+        a.value.f._touchall(children=True)
         self.assertEqual(8, a.f.end_col)
         self.assertEqual(8, a.value.f.end_col)
         self.assertEqual(7, a.value.elts[0].f.end_col)
 
-    def test_offset(self):
+    def test__offset(self):
         src = 'i = 1\nj = 2\nk = 3'
 
         ast = parse(src)
-        ast.f.offset(1, 4, 0, 1)
+        ast.f._offset(1, 4, 0, 1)
         self.assertEqual((1, 4, 1, 5), ((n := ast.body[0].value).lineno, n.col_offset, n.end_lineno, n.end_col_offset))
         self.assertEqual((2, 0, 2, 6), ((n := ast.body[1]).lineno, n.col_offset, n.end_lineno, n.end_col_offset))
         self.assertEqual((2, 0, 2, 1), ((n := ast.body[1].targets[0]).lineno, n.col_offset, n.end_lineno, n.end_col_offset))
@@ -3859,7 +3859,7 @@ f"distutils.command.sdist.check_metadata is deprecated, \\
         self.assertEqual((3, 4, 3, 5), ((n := ast.body[2].value).lineno, n.col_offset, n.end_lineno, n.end_col_offset))
 
         ast = parse(src)
-        ast.f.offset(1, 4, 0, 1, exclude=ast.body[1].f)
+        ast.f._offset(1, 4, 0, 1, exclude=ast.body[1].f)
         self.assertEqual((1, 4, 1, 5), ((n := ast.body[0].value).lineno, n.col_offset, n.end_lineno, n.end_col_offset))
         self.assertEqual((2, 0, 2, 6), ((n := ast.body[1]).lineno, n.col_offset, n.end_lineno, n.end_col_offset))
         self.assertEqual((2, 0, 2, 1), ((n := ast.body[1].targets[0]).lineno, n.col_offset, n.end_lineno, n.end_col_offset))
@@ -3868,7 +3868,7 @@ f"distutils.command.sdist.check_metadata is deprecated, \\
         self.assertEqual((3, 4, 3, 5), ((n := ast.body[2].value).lineno, n.col_offset, n.end_lineno, n.end_col_offset))
 
         ast = parse(src)
-        ast.f.offset(1, 4, 0, 1, exclude=ast.body[1].f, offset_excluded=False)
+        ast.f._offset(1, 4, 0, 1, exclude=ast.body[1].f, offset_excluded=False)
         self.assertEqual((1, 4, 1, 5), ((n := ast.body[0].value).lineno, n.col_offset, n.end_lineno, n.end_col_offset))
         self.assertEqual((2, 0, 2, 5), ((n := ast.body[1]).lineno, n.col_offset, n.end_lineno, n.end_col_offset))
         self.assertEqual((2, 0, 2, 1), ((n := ast.body[1].targets[0]).lineno, n.col_offset, n.end_lineno, n.end_col_offset))
@@ -3877,7 +3877,7 @@ f"distutils.command.sdist.check_metadata is deprecated, \\
         self.assertEqual((3, 4, 3, 5), ((n := ast.body[2].value).lineno, n.col_offset, n.end_lineno, n.end_col_offset))
 
         ast = parse(src)
-        ast.f.offset(1, 5, 0, 1)
+        ast.f._offset(1, 5, 0, 1)
         self.assertEqual((1, 4, 1, 5), ((n := ast.body[0].value).lineno, n.col_offset, n.end_lineno, n.end_col_offset))
         self.assertEqual((2, 0, 2, 5), ((n := ast.body[1]).lineno, n.col_offset, n.end_lineno, n.end_col_offset))
         self.assertEqual((2, 0, 2, 1), ((n := ast.body[1].targets[0]).lineno, n.col_offset, n.end_lineno, n.end_col_offset))
@@ -3886,7 +3886,7 @@ f"distutils.command.sdist.check_metadata is deprecated, \\
         self.assertEqual((3, 4, 3, 5), ((n := ast.body[2].value).lineno, n.col_offset, n.end_lineno, n.end_col_offset))
 
         ast = parse(src)
-        ast.f.offset(1, 5, 0, 1, True)
+        ast.f._offset(1, 5, 0, 1, True)
         self.assertEqual((1, 4, 1, 5), ((n := ast.body[0].value).lineno, n.col_offset, n.end_lineno, n.end_col_offset))
         self.assertEqual((2, 0, 2, 6), ((n := ast.body[1]).lineno, n.col_offset, n.end_lineno, n.end_col_offset))
         self.assertEqual((2, 0, 2, 1), ((n := ast.body[1].targets[0]).lineno, n.col_offset, n.end_lineno, n.end_col_offset))
@@ -3895,7 +3895,7 @@ f"distutils.command.sdist.check_metadata is deprecated, \\
         self.assertEqual((3, 4, 3, 5), ((n := ast.body[2].value).lineno, n.col_offset, n.end_lineno, n.end_col_offset))
 
         ast = parse(src)
-        ast.f.offset(1, 4, 1, -1)
+        ast.f._offset(1, 4, 1, -1)
         self.assertEqual((1, 4, 1, 5), ((n := ast.body[0].value).lineno, n.col_offset, n.end_lineno, n.end_col_offset))
         self.assertEqual((2, 0, 3, 4), ((n := ast.body[1]).lineno, n.col_offset, n.end_lineno, n.end_col_offset))
         self.assertEqual((2, 0, 2, 1), ((n := ast.body[1].targets[0]).lineno, n.col_offset, n.end_lineno, n.end_col_offset))
@@ -3904,7 +3904,7 @@ f"distutils.command.sdist.check_metadata is deprecated, \\
         self.assertEqual((4, 4, 4, 5), ((n := ast.body[2].value).lineno, n.col_offset, n.end_lineno, n.end_col_offset))
 
         ast = parse(src)
-        ast.f.offset(1, 5, 1, -1)
+        ast.f._offset(1, 5, 1, -1)
         self.assertEqual((1, 4, 1, 5), ((n := ast.body[0].value).lineno, n.col_offset, n.end_lineno, n.end_col_offset))
         self.assertEqual((2, 0, 2, 5), ((n := ast.body[1]).lineno, n.col_offset, n.end_lineno, n.end_col_offset))
         self.assertEqual((2, 0, 2, 1), ((n := ast.body[1].targets[0]).lineno, n.col_offset, n.end_lineno, n.end_col_offset))
@@ -3913,7 +3913,7 @@ f"distutils.command.sdist.check_metadata is deprecated, \\
         self.assertEqual((4, 4, 4, 5), ((n := ast.body[2].value).lineno, n.col_offset, n.end_lineno, n.end_col_offset))
 
         ast = parse(src)
-        ast.f.offset(1, 5, 1, -1, True)
+        ast.f._offset(1, 5, 1, -1, True)
         self.assertEqual((1, 4, 1, 5), ((n := ast.body[0].value).lineno, n.col_offset, n.end_lineno, n.end_col_offset))
         self.assertEqual((2, 0, 3, 4), ((n := ast.body[1]).lineno, n.col_offset, n.end_lineno, n.end_col_offset))
         self.assertEqual((2, 0, 2, 1), ((n := ast.body[1].targets[0]).lineno, n.col_offset, n.end_lineno, n.end_col_offset))
@@ -3944,95 +3944,95 @@ f"distutils.command.sdist.check_metadata is deprecated, \\
             return m
 
         m = get()
-        m.f.offset(0, 6, 0, 2, False, True)
+        m.f._offset(0, 6, 0, 2, False, True)
         self.assertEqual((0, 2, 0, 6), m.body[0].f.loc)
         self.assertEqual((0, 8, 0, 12), m.body[1].f.loc)
         self.assertEqual((0, 6, 0, 6), m.body[2].f.loc)
 
         m = get()
-        m.f.offset(0, 6, 0, 2, True, True)
+        m.f._offset(0, 6, 0, 2, True, True)
         self.assertEqual((0, 2, 0, 8), m.body[0].f.loc)
         self.assertEqual((0, 8, 0, 12), m.body[1].f.loc)
         self.assertEqual((0, 8, 0, 8), m.body[2].f.loc)
 
         m = get()
-        m.f.offset(0, 6, 0, 2, False, False)
+        m.f._offset(0, 6, 0, 2, False, False)
         self.assertEqual((0, 2, 0, 6), m.body[0].f.loc)
         self.assertEqual((0, 6, 0, 12), m.body[1].f.loc)
         self.assertEqual((0, 6, 0, 6), m.body[2].f.loc)
 
         m = get()
-        m.f.offset(0, 6, 0, 2, True, False)
+        m.f._offset(0, 6, 0, 2, True, False)
         self.assertEqual((0, 2, 0, 8), m.body[0].f.loc)
         self.assertEqual((0, 6, 0, 12), m.body[1].f.loc)
         self.assertEqual((0, 6, 0, 8), m.body[2].f.loc)
 
         m = get()
-        m.f.offset(0, 6, 0, -2, False, True)
+        m.f._offset(0, 6, 0, -2, False, True)
         self.assertEqual((0, 2, 0, 6), m.body[0].f.loc)
         self.assertEqual((0, 4, 0, 8), m.body[1].f.loc)
         self.assertEqual((0, 4, 0, 6), m.body[2].f.loc)
 
         m = get()
-        m.f.offset(0, 6, 0, -2, True, True)
+        m.f._offset(0, 6, 0, -2, True, True)
         self.assertEqual((0, 2, 0, 4), m.body[0].f.loc)
         self.assertEqual((0, 4, 0, 8), m.body[1].f.loc)
         self.assertEqual((0, 4, 0, 4), m.body[2].f.loc)
 
         m = get()
-        m.f.offset(0, 6, 0, -2, False, False)
+        m.f._offset(0, 6, 0, -2, False, False)
         self.assertEqual((0, 2, 0, 6), m.body[0].f.loc)
         self.assertEqual((0, 6, 0, 8), m.body[1].f.loc)
         self.assertEqual((0, 6, 0, 6), m.body[2].f.loc)
 
         m = get()
-        m.f.offset(0, 6, 0, -2, True, False)
+        m.f._offset(0, 6, 0, -2, True, False)
         self.assertEqual((0, 2, 0, 4), m.body[0].f.loc)
         self.assertEqual((0, 6, 0, 8), m.body[1].f.loc)
         self.assertEqual((0, 6, 0, 6), m.body[2].f.loc)
 
         m = get()
-        m.f.offset(0, 6, 0, 2, None, True)
+        m.f._offset(0, 6, 0, 2, None, True)
         self.assertEqual((0, 2, 0, 6), m.body[0].f.loc)
         self.assertEqual((0, 8, 0, 12), m.body[1].f.loc)
         self.assertEqual((0, 8, 0, 8), m.body[2].f.loc)
 
         m = get()
-        m.f.offset(0, 6, 0, 2, None, False)
+        m.f._offset(0, 6, 0, 2, None, False)
         self.assertEqual((0, 2, 0, 6), m.body[0].f.loc)
         self.assertEqual((0, 6, 0, 12), m.body[1].f.loc)
         self.assertEqual((0, 6, 0, 6), m.body[2].f.loc)
 
         m = get()
-        m.f.offset(0, 6, 0, 2, None, None)
+        m.f._offset(0, 6, 0, 2, None, None)
         self.assertEqual((0, 2, 0, 6), m.body[0].f.loc)
         self.assertEqual((0, 6, 0, 12), m.body[1].f.loc)
         self.assertEqual((0, 6, 0, 6), m.body[2].f.loc)
 
         m = get()
-        m.f.offset(0, 6, 0, -2, False, None)
+        m.f._offset(0, 6, 0, -2, False, None)
         self.assertEqual((0, 2, 0, 6), m.body[0].f.loc)
         self.assertEqual((0, 6, 0, 8), m.body[1].f.loc)
         self.assertEqual((0, 6, 0, 6), m.body[2].f.loc)
 
         m = get()
-        m.f.offset(0, 6, 0, -2, True, None)
+        m.f._offset(0, 6, 0, -2, True, None)
         self.assertEqual((0, 2, 0, 4), m.body[0].f.loc)
         self.assertEqual((0, 6, 0, 8), m.body[1].f.loc)
         self.assertEqual((0, 4, 0, 4), m.body[2].f.loc)
 
         m = get()
-        m.f.offset(0, 6, 0, -2, None, None)
+        m.f._offset(0, 6, 0, -2, None, None)
         self.assertEqual((0, 2, 0, 6), m.body[0].f.loc)
         self.assertEqual((0, 6, 0, 8), m.body[1].f.loc)
         self.assertEqual((0, 6, 0, 6), m.body[2].f.loc)
 
-    def test_offset_cols(self):
+    def test__offset_lns(self):
         src = 'class cls:\n if True:\n  i = """\nj\n"""\n  k = 3\n else:\n  j = 2'
 
         ast = parse(src)
         lns = ast.f.get_indentable_lns(1)
-        ast.f.offset_lns(lns, 1)
+        ast.f._offset_lns(lns, 1)
         self.assertEqual({1, 2, 5, 6, 7}, lns)
         self.assertEqual((0, 0, 7, 7), ast.f.loc)
         self.assertEqual((0, 0, 7, 8), ast.body[0].f.loc)
@@ -4050,7 +4050,7 @@ f"distutils.command.sdist.check_metadata is deprecated, \\
 
         ast = parse(src)
         lns = ast.body[0].body[0].f.get_indentable_lns(1)
-        ast.body[0].body[0].f.offset_lns(lns, 1)
+        ast.body[0].body[0].f._offset_lns(lns, 1)
         self.assertEqual({2, 5, 6, 7}, lns)
         self.assertEqual((1, 1, 7, 8), ast.body[0].body[0].f.loc)
         self.assertEqual((1, 4, 1, 8), ast.body[0].body[0].test.f.loc)
@@ -4066,18 +4066,17 @@ f"distutils.command.sdist.check_metadata is deprecated, \\
 
         ast = parse(src)
         lns = ast.body[0].body[0].body[0].f.get_indentable_lns(1)
-        ast.body[0].body[0].body[0].f.offset_lns(lns, 1)
+        ast.body[0].body[0].body[0].f._offset_lns(lns, 1)
         self.assertEqual(set(), lns)
         self.assertEqual((2, 2, 4, 3), ast.body[0].body[0].body[0].f.loc)
         self.assertEqual((2, 2, 2, 3), ast.body[0].body[0].body[0].targets[0].f.loc)
         self.assertEqual((2, 6, 4, 3), ast.body[0].body[0].body[0].value.f.loc)
 
-    def test_offset_cols_mapped(self):
         src = 'i = 1\nj = 2\nk = 3\nl = \\\n4'
         ast = parse(src)
         off = {0: 0, 1: 1, 2: 2, 3: 3, 4: 4}
 
-        ast.f.offset_lns(off)
+        ast.f._offset_lns(off)
         self.assertEqual((0, 0, 4, 1), ast.f.loc)
         self.assertEqual((0, 0, 0, 5), ast.body[0].f.loc)
         self.assertEqual((0, 0, 0, 1), ast.body[0].targets[0].f.loc)
@@ -4092,68 +4091,68 @@ f"distutils.command.sdist.check_metadata is deprecated, \\
         self.assertEqual((3, 3, 3, 4), ast.body[3].targets[0].f.loc)
         self.assertEqual((4, 4, 4, 5), ast.body[3].value.f.loc)
 
-    def test_indent_lns(self):
+    def test__indent_lns(self):
         src = 'class cls:\n if True:\n  i = """\nj\n"""\n  k = 3\n else:\n  j \\\n=\\\n 2'
 
         ast = parse(src)
-        lns = ast.f.indent_lns('  ')
+        lns = ast.f._indent_lns('  ')
         self.assertEqual({1, 2, 5, 6, 7, 8, 9}, lns)
         self.assertEqual('class cls:\n   if True:\n    i = """\nj\n"""\n    k = 3\n   else:\n    j \\\n  =\\\n   2', ast.f.src)
 
         ast = parse(src)
-        lns = ast.body[0].body[0].f.indent_lns('  ')
+        lns = ast.body[0].body[0].f._indent_lns('  ')
         self.assertEqual({2, 5, 6, 7, 8, 9}, lns)
         self.assertEqual('class cls:\n if True:\n    i = """\nj\n"""\n    k = 3\n   else:\n    j \\\n  =\\\n   2', ast.f.src)
 
         ast = parse(src)
-        lns = ast.body[0].body[0].body[0].f.indent_lns('  ')
+        lns = ast.body[0].body[0].body[0].f._indent_lns('  ')
         self.assertEqual(set(), lns)
         self.assertEqual('class cls:\n if True:\n  i = """\nj\n"""\n  k = 3\n else:\n  j \\\n=\\\n 2', ast.f.src)
 
         ast = parse(src)
-        lns = ast.body[0].body[0].orelse[0].f.indent_lns('  ')
+        lns = ast.body[0].body[0].orelse[0].f._indent_lns('  ')
         self.assertEqual({8, 9}, lns)
         self.assertEqual('class cls:\n if True:\n  i = """\nj\n"""\n  k = 3\n else:\n  j \\\n  =\\\n   2', ast.f.src)
 
         src = '@decorator\nclass cls:\n pass'
 
         ast = parse(src)
-        lns = ast.f.indent_lns('  ')
+        lns = ast.f._indent_lns('  ')
         self.assertEqual({1, 2}, lns)
         self.assertEqual('@decorator\n  class cls:\n   pass', ast.f.src)
 
-    def test_dedent_lns(self):
+    def test__dedent_lns(self):
         src = 'class cls:\n if True:\n  i = """\nj\n"""\n  k = 3\n else:\n  j \\\n=\\\n 2'
 
         ast = parse(src)
-        lns = ast.f.dedent_lns(' ')
+        lns = ast.f._dedent_lns(' ')
         self.assertEqual({1, 2, 5, 6, 7, 8, 9}, lns)
         self.assertEqual('class cls:\nif True:\n i = """\nj\n"""\n k = 3\nelse:\n j \\\n=\\\n2', ast.f.src)
 
         ast = parse(src)
-        lns = ast.body[0].body[0].f.dedent_lns(' ')
+        lns = ast.body[0].body[0].f._dedent_lns(' ')
         self.assertEqual({2, 5, 6, 7, 8, 9}, lns)
         self.assertEqual('class cls:\n if True:\n i = """\nj\n"""\n k = 3\nelse:\n j \\\n=\\\n2', ast.f.src)
 
         ast = parse(src)
-        lns = ast.body[0].body[0].body[0].f.dedent_lns(' ')
+        lns = ast.body[0].body[0].body[0].f._dedent_lns(' ')
         self.assertEqual(set(), lns)
         self.assertEqual('class cls:\n if True:\n  i = """\nj\n"""\n  k = 3\n else:\n  j \\\n=\\\n 2', ast.f.src)
 
         ast = parse(src)
-        lns = ast.body[0].body[0].orelse[0].f.dedent_lns(' ')
+        lns = ast.body[0].body[0].orelse[0].f._dedent_lns(' ')
         self.assertEqual({8, 9}, lns)
         self.assertEqual('class cls:\n if True:\n  i = """\nj\n"""\n  k = 3\n else:\n  j \\\n=\\\n2', ast.f.src)
 
         src = '@decorator\nclass cls:\n pass'
 
         ast = parse(src)
-        lns = ast.body[0].body[0].f.dedent_lns(' ')
+        lns = ast.body[0].body[0].f._dedent_lns(' ')
         self.assertEqual(set(), lns)
         self.assertEqual('@decorator\nclass cls:\n pass', ast.f.src)
 
         # ast = parse(src)
-        # lns = ast.body[0].body[0].f.dedent_lns(' ', skip=0)
+        # lns = ast.body[0].body[0].f._dedent_lns(' ', skip=0)
         # self.assertEqual({2}, lns)
         # self.assertEqual('@decorator\nclass cls:\npass', ast.f.src)
 
@@ -7703,7 +7702,7 @@ class cls:
                 s     = f.get_slice(start, stop, cut=True, **options)
                 tsrc  = t.f.src
                 ssrc  = s.src
-                t.f.touch()
+                t.f._touchall()
                 tdump = t.f.dump(out=list, compact=True)
                 sdump = s.dump(out=list, compact=True)
 

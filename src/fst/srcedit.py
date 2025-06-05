@@ -863,7 +863,7 @@ class SrcEdit:
             is_elif = (not fpre and not fpost and is_orelse and opt_elif and len(b := put_body) == 1 and
                        isinstance(b[0], If) and isinstance(fst.a, If))
 
-            put_fst.indent_lns(opener_indent if is_handler or is_elif else block_indent, skip=0, docstr=docstr)
+            put_fst._indent_lns(opener_indent if is_handler or is_elif else block_indent, skip=0, docstr=docstr)
 
             if fpre:  # with preceding statement, maybe trailing statement
                 ln, col, end_ln, end_col = block_loc
@@ -994,11 +994,11 @@ class SrcEdit:
             elif is_old_elif:
                 indent = None
 
-                put_fst.indent_lns(block_indent, skip=0, docstr=docstr)
+                put_fst._indent_lns(block_indent, skip=0, docstr=docstr)
                 put_fst.put_src([opener_indent + 'else:', ''], 0, 0, 0, 0, False)
 
         if indent is not None:
-            put_fst.indent_lns(indent, skip=0, docstr=docstr)
+            put_fst._indent_lns(indent, skip=0, docstr=docstr)
 
         copy_loc, put_loc, del_lines, bound, pre_comms, post_comms, pre_semi, post_semi, block_start = (
             self.get_slice_stmt(fst, field, True, block_loc, ffirst, flast, fpre, fpost,
