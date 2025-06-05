@@ -643,7 +643,7 @@ def _make_exprish_fst(self: 'FST', code: Code | None, idx: int | None, field: st
                         del_tgt_pars = True
 
             elif need_pars(True):
-                put_fst.parenthesize()  # could be parenthesizing grouping or a tuple
+                put_fst.par()  # could be parenthesizing grouping or a tuple
 
     # figure out put target location
 

@@ -1021,7 +1021,7 @@ class FST:
 
         return locncount if ret_count else loc
 
-    def parenthesize(self, *, force: bool = False, whole: bool = True) -> bool:
+    def par(self, force: bool = False, *, whole: bool = True) -> bool:
         """Parenthesize node if it MAY need it. Will not parenthesize atoms which are always enclosed like `List` unless
         `force=True`. Will add parentheses to unparenthesized `Tuple` adjusting the node location.
 
@@ -1050,7 +1050,7 @@ class FST:
 
         return True
 
-    def unparenthesize(self, *, tuple_: bool = False, share: bool = True) -> bool:
+    def unpar(self, tuple_: bool = False, *, share: bool = True) -> bool:
         """Remove all parentheses from node if present. Normally removes just grouping parentheses but can also remove
         tuple parentheses if `tuple_=True`.
 
@@ -1408,7 +1408,7 @@ class FST:
 
         return True
 
-    def is_atom(self, *, pars: bool = True, enclosed: bool = False) -> bool | Literal['pars']:
+    def is_atom(self, pars: bool = True, *, enclosed: bool = False) -> bool | Literal['pars']:
         """Whether `self` is innately atomic precedence-wise like `Name`, `Constant`, `List`, etc... Or otherwise
         optionally enclosed in parentheses so that it functions as a parsable atom and cannot be split up by precedence
         rules when reparsed.
@@ -1470,7 +1470,7 @@ class FST:
 
         return 'pars' if pars and self.pars(True)[1] else False
 
-    def is_enclosed(self, *, pars: bool = True) -> bool | Literal['pars']:
+    def is_enclosed(self, pars: bool = True) -> bool | Literal['pars']:
         """Whether `self` lives on a single line or is otherwise enclosed in some kind of delimiters '()', '[]', '{}' or
         entirely terminated with line continuations so that it can be parsed without error due to being spread across
         multiple lines. This does not mean it can't have other errors, such as a `Slice` outside of `Subscript.slice`.
