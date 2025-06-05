@@ -142,13 +142,13 @@ Mode = Union[type[AST], Literal[
     If that element is an `Expr` then return the expression instead of the statement. If nothing present then
     return empty `Module`. Doesn't attempt any of the other parse modes because the syntax is overlapping and
     too similar. Will never return an `Expression` or `Interactive`.
-- `'exec'`: Parse to an `Module`. Same as passing `Module` type.
+- `'exec'`: Parse to a `Module`. Same as passing `Module` type.
 - `'eval'`: Parse to an `Expression`. Same as passing `Expression` type.
 - `'single'`: Parse to an `Interactive`. Same as passing `Interactive` type.
 - `'stmtishs'`: Parse as zero or more of either `stmt`, `ExceptHandler` or `match_case` returned in a `Module`.
 - `'stmtish'`: Parse as a single `stmt`, `ExceptHandler` or `match_case` returned as itself.
 - `'stmts'`: Parse zero or more `stmt`s returned in a `Module`. Same as passing `Module` type or `'exec'`.
-- `'stmt'`: Parse a single `stmt` returned as itself. Same as passign `stmt` type.
+- `'stmt'`: Parse a single `stmt` returned as itself. Same as passing `stmt` type.
 - `'ExceptHandlers'`: Parse zero or more `ExceptHandler`s returned in a `Module`.
 - `'ExceptHandler'`: Parse as a single `ExceptHandler` returned as itself. Same as passing `ExceptHandler` type.
 - `'match_cases'`: Parse zero or more `match_case`s returned in a `Module`.
@@ -156,12 +156,12 @@ Mode = Union[type[AST], Literal[
 - `'expr'`: "expression", parse a single `expr` returned as itself. This is differentiated from the following three
     modes by the handling of slices and starred expressions. In this mode `a:b` and `*not v` are syntax errors. Same as
     passing `expr` type.
-- `'slice'`: "slice expression", same as `expr` except that in this mode `a:b` parses to a `Slice` and `*not v` parses
+- `'slice'`: "slice expression", same as `'expr'` except that in this mode `a:b` parses to a `Slice` and `*not v` parses
     to a single element tuple containing a starred expression `(*(not v),)`.
-- `'sliceelt'`: "slice tuple element expression", same as `expr` except that in this mode `a:b` parses to a `Slice` and
+- `'sliceelt'`: "slice tuple element expression", same as `'expr'` except that in this mode `a:b` parses to a `Slice`
+    and `*not v` parses to a starred expression `*(not v)`.
+- `'callarg'`: "call argument expression", same as `'expr'` except that in this mode `a:b` is a syntax error and
     `*not v` parses to a starred expression `*(not v)`.
-- `'callarg'`: "call argument expression", same as `expr` except that in this mode `a:b` is a syntax error and `*not v`
-    parses to a starred expression `*(not v)`.
 - `'boolop'`: Parse to a `boolop` operator.
 - `'operator'`: Parse to an `operator` operator, either normal binary `'*'` or augmented `'*='`.
 - `'binop'`: Parse to an `operator` only binary `'*'`, `'+'`, `'>>'`, etc...
@@ -193,14 +193,15 @@ Mode = Union[type[AST], Literal[
 
 
 class NodeError(ValueError):
-    """Exception used when a raw reparse is possible."""
-
-    pass
+    """General error having to do with nodes being of the correct type or syntax. Used and caught when a raw reparse is
+    possible to pass on to the reparse if allowed."""
 
 
 class astfield(NamedTuple):
-    name: str
-    idx:  int | None = None
+    """Name and optional index indicating a field location in an `AST` (or `FST`) node."""
+
+    name: str                ; """The actual field name, a la "body", "value", "orelse", etc..."""
+    idx:  int | None = None  ; """The index if the field is a list, else `None`."""
 
     def get(self, parent: AST) -> Any:
         """Get child node at this field in the given `parent`."""
@@ -208,7 +209,8 @@ class astfield(NamedTuple):
         return getattr(parent, self.name) if self.idx is None else getattr(parent, self.name)[self.idx]
 
     def get_no_raise(self, parent: AST) -> Any:
-        """Get child node at this field in the given `parent`. Return `False` if not found instead of raising."""
+        """Get child node at this field in the given `parent`. Return `False` if not found instead of raising
+        `AttributError` or `IndexError`."""
 
         return (
             getattr(parent, self.name, False) if (idx := self.idx) is None else
@@ -229,8 +231,8 @@ class fstloc(NamedTuple):
 
     ln:      int  ; """Start line number."""
     col:     int  ; """Start column."""
-    end_ln:  int  ; """End line number."""
-    end_col: int  ; """End column."""
+    end_ln:  int  ; """End line number (inclusive)."""
+    end_col: int  ; """End column (exclusive)."""
 
     bln      = property(lambda self: self.ln)       ; """Alias for `ln`."""  # for convenience
     bcol     = property(lambda self: self.col)      ; """Alias for `col`."""
@@ -238,7 +240,6 @@ class fstloc(NamedTuple):
     bend_col = property(lambda self: self.end_col)  ; """Alias for `end_col`."""
     loc      = property(lambda self: self)          ; """To be able to use as `FST.loc`."""
     bloc     = loc                                  ; """Alias for `loc`."""
-    wbloc    = loc
 
     is_FST   = False                                ; """@private"""  # for quick checks vs. `FST`
 
