@@ -539,7 +539,7 @@ def walk2(ast1: AST, ast2: AST, cb_primitive: Callable[[Any, Any, str, int], boo
 
     **Parameters:**
     - `ast1`: First `AST` tree (redundant) to walk.
-    - `ast2`: Third `AST` tree to walk.
+    - `ast2`: Second `AST` tree to walk.
     - `cb_primitive`: A function to call to compare primitive nodes which is called with the values of the nodes from
         tree1 and tree2 and the name and index of the field. It should return whether the values compare equal or not,
         or just `True` if they are being ignored for example.
@@ -636,7 +636,7 @@ def compare_asts(ast1: AST, ast2: AST, *, locs: bool = False, type_comments: boo
 
     **Parameters:**
     - `ast1`: First `AST` tree (redundant) to compare.
-    - `ast2`: Third `AST` tree to compare.
+    - `ast2`: Second `AST` tree to compare.
     - `locs`: Whether to compare location attributes or not (`lineno`, `col_offset`, etc...).
     - `type_comments`: Whether to compare type comments or not.
     - `skip1`: List of nodes in the first tree to skip comparing, will skip the corresponding node in the second tree.

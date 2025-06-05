@@ -1,3 +1,6 @@
+"""Main FST module. Contains the `FST` class as well as drop-in replacement `parse()` and `unparse()` functions for
+their respective `ast` module counterparts."""
+
 FST = None  # temporary standin for circular import of real `FST` class
 
 import ast as ast_
@@ -15,7 +18,7 @@ from .shared import (
     STMTISH, STMTISH_OR_MOD, BLOCK, BLOCK_OR_MOD, SCOPE, SCOPE_OR_MOD, NAMED_SCOPE,
     NAMED_SCOPE_OR_MOD, ANONYMOUS_SCOPE, PARENTHESIZABLE, HAS_DOCSTRING,
     re_empty_line, re_line_continuation, re_line_end_cont_or_comment,
-    Code, Mode,
+    Self, Code, Mode,
     _next_pars, _prev_pars,
     _fixup_field_body, _multiline_str_continuation_lns, _multiline_fstr_continuation_lns,
 )
@@ -66,9 +69,10 @@ def parse(source, filename='<unknown>', mode='exec', *, type_comments=False, fea
 
 
 def unparse(ast_obj) -> str:
-    """Returns the formatted source that is kept for this tree. Drop-in replacement for `ast.unparse()`."""
+    """Returns the formatted source that is kept for this tree. Drop-in replacement for `ast.unparse()` If there is no
+    `FST` information in the `AST` tree then just executes `ast.unparse()`."""
 
-    if (f := getattr(ast_obj, 'f', None)) and isinstance(f, FST) and f.loc:
+    if (f := getattr(ast_obj, 'f', None)) and isinstance(f, FST):
         if f.is_root:
             return f.src
 
@@ -81,7 +85,9 @@ def unparse(ast_obj) -> str:
 
 
 class FST:
-    """Class which maintains structure and source code for an AST tree and allows format-preserving operations."""
+    """Class which maintains structure and formatted source code for an `AST` tree. An instance of this class is added
+    to each `AST` node in a tree. It provides format-preserving operations as well as ability to navigate the tree in
+    any direction."""
 
     a:            AST              ; """The actual `AST` node."""
     parent:       Optional['FST']  ; """Parent `FST` node, `None` in root node."""
@@ -111,7 +117,7 @@ class FST:
 
     @property
     def src(self) -> str | None:
-        """Source code of this node clipped out of as a single string, without any dedentation will have indentation as
+        """Source code of this node clipped out of as a single string, without any dedentation. Will have indentation as
         it appears in the top level source if multiple lines. If gotten at root then the entire source is returned,
         regardless of whether the actual top level node location includes it or not."""
 
@@ -223,8 +229,8 @@ class FST:
     def loc(self) -> fstloc | None:
         """Zero based character indexed location of node (may not be entire location if node has decorators). Not all
         nodes have locations (like `expr_context`). Other nodes which normally don't have locations like `arguments` or
-        most operators have this location calculated from their children or source. NOTE: Empty arguments do not have
-        a location."""
+        most operators have this location calculated from their children or source. NOTE: Empty arguments do NOT have
+        a location even thout the `AST` exists."""
 
         try:
             return self._cache['loc']
@@ -378,13 +384,13 @@ class FST:
 
     def __new__(cls,
                 ast_or_src: AST | str | bytes | list[str] | None,
-                parent_or_lines_or_mode: Union['FST', list[str], Mode, None] = None,
+                mode_or_lines_or_parent: Union['FST', list[str], Mode, None] = None,
                 pfield: astfield | None = None,
                 /, **kwargs):
         """Create a new individual `FST` node or full tree. The main way to use this constructor is as a shortcut for
         `FST.fromsrc()` or `FST.fromast()`, the usage is:
 
-        **`FST(ast_or_src: AST | str | bytes | list[str] | None, mode: Mode | None = None)`**
+        **`FST(ast_or_src, mode=None)`**
 
         This will create an `FST` from either an `AST` or source code in the form of a string, list of lines or encoded
         bytes. The first parameter can be `None` instead of an `AST` or source to indicate a blank new module of one of
@@ -403,13 +409,13 @@ class FST:
         - `ast_or_src`: `AST` node for `FST` or source code in the form of a `str`, encoded `bytes` or a list of lines.
             If an `AST` then will be processed differently depending on if creating child node, top level node or using
             this as a shortcut for a full `fromsrc()` or `fromast()`.
-        - `parent_or_lines_or_mode`: Parent node for this child node or lines for a root node creating a new tree. If
+        - `mode_or_lines_or_parent`: Parent node for this child node or lines for a root node creating a new tree. If
             `pfield` is `None` and this is a shortcut to create a full tree from an `AST` node or source provided in
             `ast_or_src`.
         - `pfield`: `astfield` indication position in parent of this node. If provided then creating a simple child node
-            and it is created with the `self.parent` set to `parent_or_lines_or_mode` node and `self.pfield` set to
+            and it is created with the `self.parent` set to `mode_or_lines_or_parent` node and `self.pfield` set to
             this. If `None` then it means the creation of a full new `FST` tree and this is the root node with
-            `parent_or_lines_or_mode` providing the source.
+            `mode_or_lines_or_parent` providing the source.
         - `kwargs`: Contextual parameters:
             - `from_`: If this is provided then it must be an `FST` node from which this node is being created. This
                 allows to copy parse parameters and already determined default indentation.
@@ -419,10 +425,10 @@ class FST:
                 then indentation will be inferred from source. Only valid when creating a root node.
             - `filename`, `type_comments` and `feature_version`: If creating from an `AST` or source only then these are
                 the parameteres passed to the respective `.new()`, `.fromsrc()` or `.fromast()` functions. Only valid
-                when `parent_or_lines_or_mode` and `pfield` are `None`.
+                when `mode_or_lines_or_parent` and `pfield` are `None`.
         """
 
-        if pfield is None and not isinstance(parent_or_lines_or_mode, list):  # top level shortcut
+        if pfield is None and not isinstance(mode_or_lines_or_parent, list):  # top level shortcut
             params = {k: v for k in ('filename', 'type_comments', 'feature_version')
                       if (v := kwargs.get(k, k)) is not k}  # k used as sentinel
 
@@ -430,11 +436,11 @@ class FST:
                 params = {**from_.root.parse_params, **params}
 
             if ast_or_src is None:
-                return FST.new(mode='exec' if parent_or_lines_or_mode is None else parent_or_lines_or_mode, **params)
+                return FST.new(mode='exec' if mode_or_lines_or_parent is None else mode_or_lines_or_parent, **params)
             if isinstance(ast_or_src, AST):
-                return FST.fromast(ast_or_src, mode=parent_or_lines_or_mode, **params)
+                return FST.fromast(ast_or_src, mode=mode_or_lines_or_parent, **params)
 
-            return FST.fromsrc(ast_or_src, mode='any' if parent_or_lines_or_mode is None else parent_or_lines_or_mode,
+            return FST.fromsrc(ast_or_src, mode='any' if mode_or_lines_or_parent is None else mode_or_lines_or_parent,
                                **params)
 
         # creating actual node
@@ -449,8 +455,8 @@ class FST:
         self._cache = {}
 
         if pfield is not None:
-            self.parent = parent_or_lines_or_mode
-            self.root   = parent_or_lines_or_mode.root
+            self.parent = mode_or_lines_or_parent
+            self.root   = mode_or_lines_or_parent.root
 
             return self
 
@@ -458,8 +464,8 @@ class FST:
 
         self.parent = None
         self.root   = self
-        self._lines = ([bistr(s) for s in parent_or_lines_or_mode] if kwargs.get('lcopy', True) else
-                       parent_or_lines_or_mode)
+        self._lines = ([bistr(s) for s in mode_or_lines_or_parent] if kwargs.get('lcopy', True) else
+                       mode_or_lines_or_parent)
 
         if from_ := kwargs.get('from_'):  # copy params from source tree
             from_root         = from_.root
@@ -571,12 +577,12 @@ class FST:
     @staticmethod
     def fromast(ast: AST, filename: str = '<unknown>', mode: Mode | Literal[False] | None = None, *,
                 type_comments: bool | None = False, feature_version=None) -> 'FST':
-        """Unparse and reparse an AST for new `FST` (the reparse is necessary to make sure locations are correct).
+        """Unparse and reparse an `AST` for new `FST` (the reparse is necessary to make sure locations are correct).
 
         **Parameters:**
         - `ast`: The root `AST` node.
         - `filename`: `ast.parse()` parameter.
-        - `mode`: Parse mode, extended `ast.parse()` parameter, see `FST()`. Two special values are added:
+        - `mode`: Parse mode, extended `ast.parse()` parameter, see `fst.shared.Mode`. Two special values are added:
             - `None`: This will attempt to reparse to the same node type as was passed in. This is the default and all
                 other values should be considered overrides for special cases.
             - `False`: This will skip the reparse and just `ast.unparse()` the `AST` to generate source for the `FST`.
@@ -610,22 +616,23 @@ class FST:
 
     @staticmethod
     def get_option(option: str, options: dict[str, Any] = {}) -> Any:
-        """Get option from options dict or default if option not in dict or is `None` there. For a list of options used
-        see `set_option`.
+        """Get option from `options` dict or global default if option not in dict or is `None` there. For a list of
+        options used see `set_option`.
 
         **Parameters:**
         - `option`: Name of option to get.
         - `options`: Dictionary which may or may not contain the requested option.
 
         **Returns:**
-        - `Any`: Default option of if not found in `options` or is `None` there, otherwise the value from `options`.
+        - `Any`: Global default option of if not found in `options` or is `None` there, otherwise the value from the
+            passed `options` dict.
         """
 
         return _OPTIONS.get(option) if (o := options.get(option)) is None else o
 
     @staticmethod
     def set_option(**options) -> dict[str, Any]:
-        """Set defaults for `options` parameters.
+        """Set global defaults for `options` parameters.
 
         **Parameters:**
         - `options`: Key / values of parameters to set. These can also be passed to various methods and override the
@@ -659,7 +666,7 @@ class FST:
                 - `None`: Use default.
             - `pars`: How parentheses are handled, can be `False`, `True` or `'auto'`. This is for individual puts, for
                 slices parentheses are always unchanged. Raw puts generally do not have parentheses added or removed
-                automatically, except from the destination node if putting to a node instead of a pure location.
+                automatically, except removed from the destination node if putting to a node instead of a pure location.
                 - `False`: Parentheses are not MODIFIED, doesn't mean remove all parentheses. Not copied with nodes or
                     removed on put from source or destination.
                 - `True`: Parentheses are copied with nodes, added to copies if needed and not present, removed from
@@ -703,7 +710,25 @@ class FST:
     @staticmethod
     @contextmanager
     def option(**options):
-        """Temporarily set options."""
+        """Context manager to temporarily set gloval options defaults for a group of operations.
+
+        **Parameters:**
+        - `options`: Key / values of options to set temporarily, see `set_option`.
+
+        **Example:**
+        ```py
+        >>> print(FST.get_option('raw'))
+        ...
+        ... with FST.option(raw=False):
+        ...     print(FST.get_option('raw'))
+        ...
+        ... print(FST.get_option('raw'))
+        ...
+        auto
+        False
+        auto
+        ```
+        """
 
         old_options = FST.set_option(**options)
 
@@ -714,7 +739,8 @@ class FST:
 
     def dump(self, compact: bool | str = False, full: bool = False, src: Literal['stmt', 'all'] | None = None, *,
              indent: int = 2, out: Callable | TextIO = print, eol: str | None = None) -> str | list[str] | None:
-        """Dump a representation of the tree to stdout or return as a list of lines.
+        """Dump a representation of the tree to stdout or other `TextIO` or return as a str or list of lines, or call
+        a provided function once with each line of the output.
 
         **Parameters:**
         - `compact`: If `True` then the dump is compacted a bit. Can also be a string for shortcut specification of
@@ -722,11 +748,12 @@ class FST:
             `src='all'`, so `'cfs'` would be a compact full dump showing statement source lines.
         - `full`: If `True` then will list all fields in nodes including empty ones, otherwise will exclude most empty
             fields.
-        - `src`: `stmt` means output statement source lines, `all` means output source for each individual and node and
-            `None` does not output any source.
+        - `src`: `'stmt'` means output statement source lines, `'all'` means output source for each individual and node
+            and `None` does not output any source.
         - `indent`: The average airspeed of an unladen swallow.
         - `out`: `print` means print to stdout, `list` returns a list of lines and `str` returns a whole string.
-            Otherwise a `Callable[[str], None]` which is called for each line of output individually.
+            `TextIO` will cann the `write` method for each line of output. Otherwise a `Callable[[str], None]` which is
+            called for each line of output individually.
         - `eol`: What to put at the end of each text line, `None` means newline for `TextIO` out and nothing for other.
         """
 
@@ -806,6 +833,15 @@ class FST:
 
         **Parameters:**
         - `options`: See `set_option`.
+
+        **Returns:**
+        - `FST`: Copied node.
+
+        **Example:**
+        ```py
+        >>> FST('[0, 1, 2, 3]').elts[1].copy().src
+        '1'
+        ```
         """
 
         if not (parent := self.parent):
@@ -819,6 +855,17 @@ class FST:
 
         **Parameters:**
         - `options`: See `set_option`.
+
+        **Returns:**
+        - `FST`: Cut node.
+
+        **Example:**
+        ```py
+        >>> (f := FST('[0, 1, 2, 3]')).elts[1].cut().src
+        '1'
+        >>> f.src
+        '[0, 2, 3]'
+        ```
         """
 
         if not (parent := self.parent):
@@ -833,6 +880,15 @@ class FST:
         **Parameters:**
         - `code`: `FST`, `AST` or source `str` or `list[str]` to put at this location. `None` to delete this node.
         - `options`: See `set_option`.
+
+        **Returns:**
+        - `FST | None`: Returns the new node if successfully replaced or `None` if deleted.
+
+        **Example:**
+        ```py
+        >>> FST('[0, 1, 2, 3]').elts[1].replace('4').root.src
+        '[0, 4, 2, 3]'
+        ```
         """
 
         if not (parent := self.parent):
@@ -845,6 +901,12 @@ class FST:
 
         **Parameters:**
         - `options`: See `set_option`.
+
+        **Example:**
+        ```py
+        >>> (f := FST('[0, 1, 2, 3]')).elts[1].remove(); f.src
+        '[0, 2, 3]'
+        ```
         """
 
         if not (parent := self.parent):
@@ -852,27 +914,81 @@ class FST:
 
         return parent._put_one(None, (pf := self.pfield).idx, pf.name, **options)
 
-    def get(self, start: int | Literal['end'] | None = None, stop: int | None | Literal[False] = False,
-            field: str | None = None, *, cut: bool = False, **options) -> Optional['FST'] | str:
-        """Copy or cut an individual child node or a slice of child nodes from `self`."""
 
-        ast                = self.a
-        start, stop, field = _swizzle_getput_params(start, stop, field, False)
-        field_, body       = _fixup_field_body(ast, field, False)
+    def get(self, idx: int | Literal['end'] | None = None, stop: int | None | Literal[False] = False,
+            field: str | None = None, *, cut: bool = False, **options) -> Optional['FST'] | str:
+        """Copy or cut an individual child node or a slice of child nodes from `self` if possible. This function can do
+        everything that `get_slice()` can.
+
+        **Parameters:**
+        - `idx`: The index of the child node to get if the field being gotten from contains multiple elements or the
+            start of the slice to get if getting a slice (by specifying `stop`). If the field being gotten from is
+            an individual element then this should be `None`. If `stop` is specified and getting a slice then a `None`
+            here means copy from the start of the list.
+        - `stop`: The end index (exclusive) of the child node to get to if getting a slice from a field that contains
+            multiple elements. This should be one past the last element to get (like python list indexing). If this is
+            `False` then it indicates that a single element is being requested and not a slice. If this is `None` then
+            it indicates a slice operation to the end of the list (like python `a[start:]`).
+        - `field`: The name of the field to get the element from, which can be an individual element like a `value` or
+            a list like `body`. If this is `None` then the default field for the node type is used. Most node types have
+            a common-sense default field, e.g. `body` for all block statements, `value` for things like `Return` and
+            `Yield`. `Dict`, `MatchMapping` and `Compare` nodes have special-case handling for a `None` field.
+        - `cut`: Whether to cut out the child node (if possible) or not (just copy).
+        - `options`: See `set_option`.
+
+        **SPECIAL:** The `field` value can be passed positionally in either the `idx` or `stop` parameter. If passed in
+        `idx` then the field is assumed individual and if passed in `stop` then it is a list and an individual element
+        is being gotten from `idx` and not a slice.
+
+        **Returns:**
+        - `FST`: Node gotten.
+
+        **Example:**
+        ```py
+        >>> FST('[0, 1, 2, 3]').get(1).src
+        '1'
+        >>> FST('[0, 1, 2, 3]').get(1, 3).src
+        '[1, 2]'
+        >>> (f := FST('[0, 1, 2, 3]')).get(1, 3, cut=True).src
+        '[1, 2]'
+        >>> f.src
+        '[0, 3]'
+        >>> FST('[0, 1, 2, 3]').get(None, 3).src
+        '[0, 1, 2]'
+        >>> FST('[0, 1, 2, 3]').get(-3, None).src
+        '[1, 2, 3]'
+        >>> FST('if 1: i = 1\\nelse: j = 2').get(0).src
+        'i = 1'
+        >>> FST('if 1: i = 1\\nelse: j = 2').get('orelse').src
+        'j = 2'
+        >>> FST('if 1: i = 1\\nelse: j = 2; k = 3').get(1, 'orelse').src
+        'k = 3'
+        >>> FST('if 1: i = 1\\nelse: j = 2; k = 3; l = 4; m = 5').get(1, 3, 'orelse').src
+        'k = 3; l = 4'
+        >>> FST('return 1').get().src  # default field is 'value'
+        '1'
+        >>> FST('[0, 1, 2, 3]').get().src  # default field is 'elts', which is a list, so slice copy is made
+        '[0, 1, 2, 3]'
+        ```
+        """
+
+        ast              = self.a
+        idx, stop, field = _swizzle_getput_params(idx, stop, field, False)
+        field_, body     = _fixup_field_body(ast, field, False)
 
         if isinstance(body, list):
             if stop is not False:
-                return self._get_slice(start, stop, field_, cut, **options)
-            if start is None:
+                return self._get_slice(idx, stop, field_, cut, **options)
+            if idx is None:
                 return self._get_slice(None, None, field_, cut, **options)
 
-            if start == 'end':
+            if idx == 'end':
                 raise IndexError(f"cannot get() non-slice from index 'end'")
 
-        elif stop is not False or start is not None:
+        elif stop is not False or idx is not None:
             raise IndexError(f'{ast.__class__.__name__}{f".{field_}" if field_ else ""} does not take an index')
 
-        return self._get_one(start, field_, cut, **options)
+        return self._get_one(idx, field_, cut, **options)
 
     def put(self, code: Code | None, start: int | Literal['end'] | None = None,
             stop: int | None | Literal[False] = False, field: str | None = None, *,

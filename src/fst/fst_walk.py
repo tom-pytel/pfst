@@ -857,6 +857,12 @@ def walk(self: 'FST', with_loc: bool | Literal['all', 'own'] = False, *, self_: 
     those in the given direction, recursing into each child's children before continuing with siblings. Walking
     backwards will not generate the same sequence as `list(walk())[::-1]` due to this behavior.
 
+    The walk is relatively efficient but if all you need to do is just walk ALL the `AST` children without any bells or
+    whistles then `ast.walk()` will be a bit faster.
+
+    It is safe to modify the nodes (or previous nodes) as they are being walked as long as those modifications don't
+    touch the parent or following nodes. This means normal `.replace()` is fine as long as `raw=False`.
+
     **Parameters:**
     - `with_loc`: Return nodes depending on if they have a location or not.
         - `False`: All nodes with or without location.
@@ -1026,7 +1032,7 @@ def walk(self: 'FST', with_loc: bool | Literal['all', 'own'] = False, *, self_: 
 
                     for f in gen:  # all NamedExpr assignments below are visible here, yeah, its ugly
                         if (a := f.a) is comp_first_iter or (f.pfield.name == 'target' and isinstance(a, Name) and
-                                                                isinstance(f.parent.a, NamedExpr)):
+                                                             isinstance(f.parent.a, NamedExpr)):
                             subrecurse = recurse
 
                             while (sent := (yield f)) is not None:
