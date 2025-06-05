@@ -1,15 +1,13 @@
 """Raw reparse FST methods."""
 
 from ast import *
-from itertools import takewhile
 from typing import Literal, Optional
 
 from .astutil import *
 from .astutil import TryStar
 
 from .shared import (
-    NodeError, astfield, fstloc,
-    PARENTHESIZABLE,
+    astfield, fstloc,
     STMTISH_FIELDS,
     Code,
     _next_find, _prev_find,

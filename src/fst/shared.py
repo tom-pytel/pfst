@@ -114,9 +114,15 @@ Mode = Union[type[AST], Literal[
     'match_cases',
     'match_case',
     'expr',
-    'expr_slice',
-    'expr_slice_tupelt',
-    'expr_call_arg',
+    'slice',
+    'sliceelt',
+    'callarg',
+    'boolop',
+    'operator',
+    'binop',
+    'augop',
+    'unaryop',
+    'cmpop',
     'comprehension',
     'arguments',
     'arguments_lambda',
@@ -147,15 +153,21 @@ Mode = Union[type[AST], Literal[
 - `'ExceptHandler'`: Parse as a single `ExceptHandler` returned as itself. Same as passing `ExceptHandler` type.
 - `'match_cases'`: Parse zero or more `match_case`s returned in a `Module`.
 - `'match_case'`: Parse a single `match_case` returned as itself. Same as passing `match_case` type.
-- `'expr'`: Parse a single `expr` returned as itself. This is differentiated from the following three modes by
-    the handling of slices and starred expressions. In this mode `a:b` and `*not v` are syntax errors. Same as
+- `'expr'`: "expression", parse a single `expr` returned as itself. This is differentiated from the following three
+    modes by the handling of slices and starred expressions. In this mode `a:b` and `*not v` are syntax errors. Same as
     passing `expr` type.
-- `'expr_slice'`: Same as `expr` except that in this mode `a:b` parses to a `Slice` and `*not v` parses to
-    a single element tuple containing a starred expression `(*(not v),)`.
-- `'expr_slice_tupelt'`: Same as `expr` except that in this mode `a:b` parses to a `Slice` and `*not v` parses
-    to a starred expression `*(not v)`.
-- `'expr_call_arg'`: Same as `expr` except that in this mode `a:b` is a syntax error and `*not v` parses to a
-    starred expression `*(not v)`.
+- `'slice'`: "slice expression", same as `expr` except that in this mode `a:b` parses to a `Slice` and `*not v` parses
+    to a single element tuple containing a starred expression `(*(not v),)`.
+- `'sliceelt'`: "slice tuple element expression", same as `expr` except that in this mode `a:b` parses to a `Slice` and
+    `*not v` parses to a starred expression `*(not v)`.
+- `'callarg'`: "call argument expression", same as `expr` except that in this mode `a:b` is a syntax error and `*not v`
+    parses to a starred expression `*(not v)`.
+- `'boolop'`: Parse to a `boolop` operator.
+- `'operator'`: Parse to an `operator` operator, either normal binary `'*'` or augmented `'*='`.
+- `'binop'`: Parse to an `operator` only binary `'*'`, `'+'`, `'>>'`, etc...
+- `'augop'`: Parse to an `operator` only augmented `'*='`, `'+='`, `'>>='`, etc...
+- `'unaryop'`: Parse to a `unaryop` operator.
+- `'cmpop'`: Parse to a `cmpop` compare operator.
 - `'comprehension'`: Parse a single `comprehension` returned as itself. Same as passing `comprehension` type.
 - `'arguments'`: Parse as `arguments` for a `FunctionDef` or `AsyncFunctionDef` returned as itself. In this mode
     type annotations are allowed for the arguments. Same as passing `arguments` type.
@@ -175,7 +187,7 @@ Mode = Union[type[AST], Literal[
     the scope of desired return, for example `Constant` will parse as an expression but fail if the expression
     is not a `Constant`. These overlap with the string specifiers to an extent but not all of them. For example
     `AST` type `ast.expr` is the same as passing `'expr'` but there is not `AST` type which will specify one of
-    the other expr parse modes like `'expr_slice'`. Likewise `Module`, `'exec'` and `'stmts'` all specify the
+    the other expr parse modes like `'slice'`. Likewise `Module`, `'exec'` and `'stmts'` all specify the
     same parse mode.
 """
 

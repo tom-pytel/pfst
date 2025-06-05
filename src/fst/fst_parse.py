@@ -327,7 +327,7 @@ def _parse_expr(src: str, parse_params: dict = {}) -> AST:
 
 
 @staticmethod
-def _parse_expr_slice(src: str, parse_params: dict = {}) -> AST:
+def _parse_slice(src: str, parse_params: dict = {}) -> AST:
     """Parse to an `ast.Slice` or anything else that can go into `Subscript.slice` (`expr`), e.g. "start:stop:step" or
     "name" or even "a:b, c:d:e, g". Using this, naked `Starred` expressions parse to single element `Tuple` with the
     `Starred` as the only element."""
@@ -336,14 +336,14 @@ def _parse_expr_slice(src: str, parse_params: dict = {}) -> AST:
 
 
 @staticmethod
-def _parse_expr_slice_tupelt(src: str, parse_params: dict = {}) -> AST:
+def _parse_sliceelt(src: str, parse_params: dict = {}) -> AST:
     """Parse to an `ast.expr` or `ast.Slice`. This exists because otherwise a naked `Starred` expression parses to an
     implicit single element `Tuple` and the caller of this function does not want that behavior. Using this, naked
-    `Starred` expressions parse to just the `Starred` and not a `Tuple` like in `_parse_expr_slice()`.
+    `Starred` expressions parse to just the `Starred` and not a `Tuple` like in `_parse_slice()`.
     """
 
     try:
-        ast = _parse_expr_slice(src, parse_params)
+        ast = _parse_slice(src, parse_params)
     except SyntaxError:  # in case of lone naked Starred in slice in py < 3.11
         return _parse_expr(src, parse_params)
 
@@ -356,7 +356,7 @@ def _parse_expr_slice_tupelt(src: str, parse_params: dict = {}) -> AST:
 
 
 @staticmethod
-def _parse_expr_call_arg(src: str, parse_params: dict = {}) -> AST:
+def _parse_callarg(src: str, parse_params: dict = {}) -> AST:
     """Parse to an `expr` or in the context of a `Call.args` which treats `Starred` differently."""
 
     try:
@@ -383,15 +383,15 @@ def _parse_operator(src: str, parse_params: dict = {}) -> AST:
 
     if '=' in src:
         try:
-            return _parse_operator_aug(src, parse_params)
+            return _parse_augop(src, parse_params)
         except NodeError:  # maybe the '=' was in a comment, yes I know, a comment in an operator, people do strange things
             pass
 
-    return _parse_operator_bin(src, parse_params)
+    return _parse_binop(src, parse_params)
 
 
 @staticmethod
-def _parse_operator_bin(src: str, parse_params: dict = {}) -> AST:
+def _parse_binop(src: str, parse_params: dict = {}) -> AST:
     """Parse to an `ast.operator` in the context of a `BinOp`."""
 
     ast = ast_parse(f'(a\n{src} b)', **parse_params).body[0].value
@@ -403,7 +403,7 @@ def _parse_operator_bin(src: str, parse_params: dict = {}) -> AST:
 
 
 @staticmethod
-def _parse_operator_aug(src: str, parse_params: dict = {}) -> AST:
+def _parse_augop(src: str, parse_params: dict = {}) -> AST:
     """Parse to an augmented `ast.operator` in the context of a `AugAssign`."""
 
     ast = ast_parse(f'a \\\n{src} b', **parse_params).body[0]
@@ -790,7 +790,7 @@ def _code_as_expr(code: Code, parse_params: dict = {}, parse: Callable[[Code, di
     **Parameters:**
     - `orslice`: If `True` then will try to get `expr` or `Slice`. Useful for parsing elements of `Tuple`s which could
         be used inside a `Subscript.slice`. Do not use for parsing `Subscript.slice` field itself because that behaves
-        different with respect to naked `Starred` elements, for that use `_code_as_expr_slice`.
+        different with respect to naked `Starred` elements, for that use `_code_as_slice`.
     """
 
     if isinstance(code, FST):
@@ -799,7 +799,7 @@ def _code_as_expr(code: Code, parse_params: dict = {}, parse: Callable[[Code, di
 
         if not isinstance(ast := reduce_ast(codea := code.a, NodeError), expr):
             raise NodeError('expecting ' +
-                ("slice " if parse is _parse_expr_slice_tupelt else "call arg " if parse is _parse_expr_call_arg else "") +
+                ("slice " if parse is _parse_sliceelt else "call arg " if parse is _parse_callarg else "") +
                 f'expression, got {ast.__class__.__name__}')
 
         if ast is codea:
@@ -812,7 +812,7 @@ def _code_as_expr(code: Code, parse_params: dict = {}, parse: Callable[[Code, di
     if isinstance(code, AST):
         if not isinstance(code, expr):
             raise NodeError('expecting ' +
-                ("slice " if parse is _parse_expr_slice_tupelt else "call arg " if parse is _parse_expr_call_arg else "") +
+                ("slice " if parse is _parse_sliceelt else "call arg " if parse is _parse_callarg else "") +
                 f'expression, got {code.__class__.__name__}')
 
         code  = ast_unparse(code)
@@ -827,26 +827,26 @@ def _code_as_expr(code: Code, parse_params: dict = {}, parse: Callable[[Code, di
 
 
 @staticmethod
-def _code_as_expr_slice(code: Code, parse_params: dict = {}) -> 'FST':
+def _code_as_slice(code: Code, parse_params: dict = {}) -> 'FST':
     """Convert `code` to a Slice `FST` if possible (or anthing else that can serve in `Subscript.slice`, like any old
     generic `expr`)."""
 
-    return _code_as(code, expr, parse_params, _parse_expr_slice, tup_pars=False)
+    return _code_as(code, expr, parse_params, _parse_slice, tup_pars=False)
 
 
 @staticmethod
-def _code_as_expr_slice_tupelt(code: Code, parse_params: dict = {}, orslice: bool = False) -> 'FST':
+def _code_as_sliceelt(code: Code, parse_params: dict = {}, orslice: bool = False) -> 'FST':
     """Convert `code` to an `expr` or `Slice` `FST` if possible. This exists because of the behavior of naked `Starred`
     expressions in a `Subscript` `slice` field."""
 
-    return _code_as_expr(code, parse_params, _parse_expr_slice_tupelt)
+    return _code_as_expr(code, parse_params, _parse_sliceelt)
 
 
 @staticmethod
-def _code_as_expr_call_arg(code: Code, parse_params: dict = {}, orslice: bool = False) -> 'FST':
+def _code_as_callarg(code: Code, parse_params: dict = {}, orslice: bool = False) -> 'FST':
     """Convert `code` to an `expr` in the context of a `Call.args` which has special parse rules for `Starred`."""
 
-    return _code_as_expr(code, parse_params, _parse_expr_call_arg)
+    return _code_as_expr(code, parse_params, _parse_callarg)
 
 
 @staticmethod
@@ -857,17 +857,17 @@ def _code_as_boolop(code: Code, parse_params: dict = {}) -> 'FST':
 
 
 @staticmethod
-def _code_as_operator_bin(code: Code, parse_params: dict = {}) -> 'FST':
+def _code_as_binop(code: Code, parse_params: dict = {}) -> 'FST':
     """Convert `code` to a `operator` `FST` if possible."""
 
-    return _code_as_op(code, operator, parse_params, _parse_operator_bin, OPSTR2CLS_BIN)
+    return _code_as_op(code, operator, parse_params, _parse_binop, OPSTR2CLS_BIN)
 
 
 @staticmethod
-def _code_as_operator_aug(code: Code, parse_params: dict = {}) -> 'FST':
+def _code_as_augop(code: Code, parse_params: dict = {}) -> 'FST':
     """Convert `code` to an augmented `operator` `FST` if possible, e.g. "+="."""
 
-    return _code_as_op(code, operator, parse_params, _parse_operator_aug, OPSTR2CLS_AUG, OPCLS2STR_AUG)
+    return _code_as_op(code, operator, parse_params, _parse_augop, OPSTR2CLS_AUG, OPCLS2STR_AUG)
 
 
 @staticmethod
@@ -1062,13 +1062,13 @@ _PARSE_MODE_FUNCS = {
     'match_cases':       _parse_match_cases,
     'match_case':        _parse_match_case,
     'expr':              _parse_expr,
-    'expr_slice':        _parse_expr_slice,
-    'expr_slice_tupelt': _parse_expr_slice_tupelt,
-    'expr_call_arg':     _parse_expr_call_arg,
+    'slice':             _parse_slice,
+    'sliceelt':          _parse_sliceelt,
+    'callarg':           _parse_callarg,
     'boolop':            _parse_boolop,
     'operator':          _parse_operator,
-    'operator_bin':      _parse_operator_bin,
-    'operator_aug':      _parse_operator_aug,
+    'binop':             _parse_binop,
+    'augop':             _parse_augop,
     'unaryop':           _parse_unaryop,
     'cmpop':             _parse_cmpop,
     'comprehension':     _parse_comprehension,
@@ -1090,7 +1090,7 @@ _PARSE_MODE_FUNCS = {
     ExceptHandler:       _parse_ExceptHandler,
     match_case:          _parse_match_case,
     expr:                _parse_expr,
-    Slice:               _parse_expr_slice,
+    Slice:               _parse_slice,
     boolop:              _parse_boolop,
     operator:            _parse_operator,
     unaryop:             _parse_unaryop,

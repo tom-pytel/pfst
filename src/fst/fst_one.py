@@ -16,8 +16,8 @@ from .shared import (
 )
 
 from .fst_parse import (
-    _code_as_expr, _code_as_expr_slice, _code_as_expr_slice_tupelt, _code_as_expr_call_arg,
-    _code_as_boolop, _code_as_operator_bin, _code_as_operator_aug, _code_as_unaryop, _code_as_cmpop,
+    _code_as_expr, _code_as_slice, _code_as_sliceelt, _code_as_callarg,
+    _code_as_boolop, _code_as_binop, _code_as_augop, _code_as_unaryop, _code_as_cmpop,
     _code_as_pattern, _code_as_comprehension, _code_as_arguments,
     _code_as_arguments_lambda, _code_as_arg, _code_as_keyword, _code_as_alias_dotted, _code_as_alias_star,
     _code_as_withitem, _code_as_type_param, _code_as_identifier, _code_as_identifier_dotted, _code_as_identifier_alias,
@@ -1762,7 +1762,7 @@ _PUT_ONE_HANDLERS = {
     (TypeAlias, 'type_params'):           (True,  _put_one_exprish_required, _onestatic_type_param_required), # type_param*
     (TypeAlias, 'value'):                 (False, _put_one_exprish_required, _onestatic_expr_required), # expr
     (AugAssign, 'target'):                (False, _put_one_exprish_required, _onestatic_target_single), # expr
-    (AugAssign, 'op'):                    (False, _put_one_op, onestatic(None, code_as=_code_as_operator_aug)), # operator
+    (AugAssign, 'op'):                    (False, _put_one_op, onestatic(None, code_as=_code_as_augop)), # operator
     (AugAssign, 'value'):                 (False, _put_one_exprish_required, _onestatic_expr_required), # expr
     (AnnAssign, 'target'):                (False, _put_one_exprish_required, _onestatic_target_single), # expr
     (AnnAssign, 'annotation'):            (False, _put_one_exprish_required, onestatic(_one_info_exprish_required, _restrict_default)), # expr  - exclude [Lambda, Yield, YieldFrom, Await, NamedExpr]?
@@ -1810,7 +1810,7 @@ _PUT_ONE_HANDLERS = {
     (NamedExpr, 'target'):                (False, _put_one_exprish_required, _onestatic_target_Name), # expr
     (NamedExpr, 'value'):                 (False, _put_one_exprish_required, _onestatic_expr_required), # expr
     (BinOp, 'left'):                      (False, _put_one_exprish_required, _onestatic_expr_required), # expr
-    (BinOp, 'op'):                        (False, _put_one_op, onestatic(None, code_as=_code_as_operator_bin)), # operator
+    (BinOp, 'op'):                        (False, _put_one_op, onestatic(None, code_as=_code_as_binop)), # operator
     (BinOp, 'right'):                     (False, _put_one_exprish_required, _onestatic_expr_required), # expr
     (UnaryOp, 'op'):                      (False, _put_one_op, onestatic(None, code_as=_code_as_unaryop)), # unaryop
     (UnaryOp, 'operand'):                 (False, _put_one_exprish_required, _onestatic_expr_required), # expr
@@ -1840,7 +1840,7 @@ _PUT_ONE_HANDLERS = {
     (Compare, 'comparators'):             (False, _put_one_exprish_required, _onestatic_expr_required), # expr*
     (Compare, ''):                        (False, _put_one_Compare_combined, _onestatic_expr_required), # expr*
     (Call, 'func'):                       (False, _put_one_exprish_required, _onestatic_expr_required), # expr
-    (Call, 'args'):                       (True,  _put_one_exprish_required, onestatic(_one_info_exprish_required, _restrict_default, code_as=_code_as_expr_call_arg)), # expr*
+    (Call, 'args'):                       (True,  _put_one_exprish_required, onestatic(_one_info_exprish_required, _restrict_default, code_as=_code_as_callarg)), # expr*
     (Call, 'keywords'):                   (True,  _put_one_exprish_required, _onestatic_keyword_required), # keyword*
     (FormattedValue, 'value'):            (False, _put_one_exprish_required, _onestatic_expr_required), # expr
     (FormattedValue, 'conversion'):       (False, _put_one_NOT_IMPLEMENTED_YET, onestatic(_one_info_conversion, Constant)), # int  # onestatic only here for info for raw put, Constant must be str
@@ -1854,11 +1854,11 @@ _PUT_ONE_HANDLERS = {
     (Attribute, 'value'):                 (False, _put_one_exprish_required, _onestatic_expr_required), # expr
     (Attribute, 'attr'):                  (False, _put_one_identifier_required, onestatic(_one_info_Attribute_attr, _restrict_default, code_as=_code_as_identifier)), # identifier
     (Subscript, 'value'):                 (False, _put_one_exprish_required, _onestatic_expr_required), # expr
-    (Subscript, 'slice'):                 (False, _put_one_exprish_required, onestatic(_one_info_exprish_required, _restrict_fstr_values, code_as=_code_as_expr_slice)), # expr
+    (Subscript, 'slice'):                 (False, _put_one_exprish_required, onestatic(_one_info_exprish_required, _restrict_fstr_values, code_as=_code_as_slice)), # expr
     (Starred, 'value'):                   (False, _put_one_exprish_required, _onestatic_expr_required), # expr
     (Name, 'id'):                         (False, _put_one_identifier_required, _onestatic_identifier_required), # identifier
     (List, 'elts'):                       (True,  _put_one_exprish_required, _onestatic_expr_required), # expr*
-    (Tuple, 'elts'):                      (True,  _put_one_exprish_required, onestatic(_one_info_exprish_required, _restrict_fstr_values, code_as=_code_as_expr_slice_tupelt)), # expr*  - special handling because Tuples can contain Slices in a .slice field
+    (Tuple, 'elts'):                      (True,  _put_one_exprish_required, onestatic(_one_info_exprish_required, _restrict_fstr_values, code_as=_code_as_sliceelt)), # expr*  - special handling because Tuples can contain Slices in a .slice field
     (Slice, 'lower'):                     (False, _put_one_exprish_optional, _onestatic_Slice_lower), # expr?
     (Slice, 'upper'):                     (False, _put_one_exprish_optional, _onestatic_Slice_upper), # expr?
     (Slice, 'step'):                      (False, _put_one_exprish_optional, _onestatic_Slice_step), # expr?

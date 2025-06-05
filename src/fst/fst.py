@@ -1242,7 +1242,8 @@ class FST:
         """Recalculate `self` from path from root. Useful if `self` has been replaced by another node by some operation.
 
         **Returns:**
-        - `FST`: Possibly `self` or the node which took our place at our position from `root`."""
+        - `FST`: Possibly `self` or the node which took our place at our relative position from `root`.
+        """
 
         return (root := self.root).child_from_path(root.child_path(self))
 
@@ -1830,13 +1831,13 @@ class FST:
         _parse_match_cases,
         _parse_match_case,
         _parse_expr,
-        _parse_expr_slice,
-        _parse_expr_slice_tupelt,
-        _parse_expr_call_arg,
+        _parse_slice,
+        _parse_sliceelt,
+        _parse_callarg,
         _parse_boolop,
         _parse_operator,
-        _parse_operator_bin,
-        _parse_operator_aug,
+        _parse_binop,
+        _parse_augop,
         _parse_unaryop,
         _parse_cmpop,
         _parse_comprehension,
@@ -1855,12 +1856,12 @@ class FST:
         _code_as_ExceptHandlers,
         _code_as_match_cases,
         _code_as_expr,
-        _code_as_expr_slice,
-        _code_as_expr_slice_tupelt,
-        _code_as_expr_call_arg,
+        _code_as_slice,
+        _code_as_sliceelt,
+        _code_as_callarg,
         _code_as_boolop,
-        _code_as_operator_bin,
-        _code_as_operator_aug,
+        _code_as_binop,
+        _code_as_augop,
         _code_as_unaryop,
         _code_as_cmpop,
         _code_as_comprehension,
