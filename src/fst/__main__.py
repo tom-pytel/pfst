@@ -44,8 +44,9 @@ def main():
 
     ast = parse(source, name, args.mode, type_comments=args.type_comments)
 
-    if args.no_verify and args.mode in ('exec', 'eval', 'single', 'stmt', 'expr'):
-        ast.f.verify(raise_=True)
+    # if args.no_verify and args.mode in ('exec', 'eval', 'single', 'stmt', 'expr'):
+    #     ast.f.verify(raise_=True)
+    ast.f.verify(raise_=True)
 
     src = 'all' if args.all else 'stmt' if args.stmt else None
 

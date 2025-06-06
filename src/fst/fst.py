@@ -14,7 +14,7 @@ from .astutil import *
 from .astutil import TypeAlias, TryStar, TemplateStr, Interpolation, type_param
 
 from .shared import (
-    NodeError, astfield, fstloc, nspace,
+    NodeError, astfield, fstloc, fstlocns, nspace,
     STMTISH, STMTISH_OR_MOD, BLOCK, BLOCK_OR_MOD, SCOPE, SCOPE_OR_MOD, NAMED_SCOPE,
     NAMED_SCOPE_OR_MOD, ANONYMOUS_SCOPE, PARENTHESIZABLE, HAS_DOCSTRING,
     re_empty_line, re_line_continuation, re_line_end_cont_or_comment,
@@ -1095,37 +1095,39 @@ class FST:
 
         return parent._reparse_raw(code, ln, col, end_ln, end_col, exact)
 
-    def pars(self, ret_count: bool = False, *, shared: bool = True, pars: bool = True,
-             ) -> fstloc | tuple[fstloc | None, int] | None:
-        """Return the location of enclosing grouping parentheses if present. Will balance parentheses if `self` is an
+    def pars(self, ret_full: bool = False, *, shared: bool = True, pars: bool = True,
+             ) -> fstlocns | tuple[fstlocns | None, int] | None:
+        """Return the location of enclosing GROUPING parentheses if present. Will balance parentheses if `self` is an
         element of a tuple and not return the parentheses of the tuple. Likwise will not return the parentheses of an
         enclosing `arguments` parent or class bases list. Only works on (and makes sense for) `expr` or `pattern` nodes,
-        otherwise returns `self.bloc`. Also handles special case of a single generator expression argument to a function
-        sharing parameters with the call arguments.
+        otherwise returns `self.bloc` and count of 0. Also handles special case of a single generator expression
+        argument to a function sharing parameters with the call arguments, in which case a count of -1 may be returned.
 
         **Parameters:**
-        - `ret_count`: `True` means return the number of parentheses along with the location, otherwise just the
-            location.
+        - `ret_full`: `True` means return the number of parentheses along with the location in a tuple. Otherwise just
+            the location, which if is not `None` will have the number of parentheses in an attribute `.n`. This exists
+            because of the possibility of a `bloc` being `None`.
         - `shared`: If `True` then will include parentheses of a single call argument generator expression if they are
-            shared with the call arguments enclosing parentheses, return -1 ret_count in this case. If `False` then Does
+            shared with the call arguments enclosing parentheses, return -1 count in this case. If `False` then does
             not return these, and thus not a full valid `GeneratorExp` location. Is not checked at all if `pars=False`.
         - `pars`: `True` means return parentheses if present and `self.bloc` otherwise, `False` always `self.bloc`. This
             parameter exists purely for convenience.
 
         **Returns:**
-        - `fstloc | None`: Location of enclosing parentheses if present else `self.bloc` (which can be `None`). If you
-            don't need an exact ret_count of parentheses and just need to know if there are or not then the return can
-            be checked if `fst.pars() is fst.bloc`. If there are no parentheses then `.bloc` is guaranteed to be
-            returned identically. This can also be used to check for negative ret_count in the case of `shared=False`
-            via `fst.pars() > fst.bloc`.
-        - `(fstloc, ret_count)`: Location of enclosing parentheses or `self.bloc` and number of nested parenthesess
-            found (if requested with `ret_count`). `ret_count` can be -1 in the case of a `GeneratorExp` sharing
-            parentheses with `Call` `arguments` if it is the only argument, but only if these parentheses are explicitly
-            excluded with `shared=False`.
+        - `fstlocns | None`: Location of enclosing parentheses if present else `self.bloc` (which can be `None`). Negative
+            parentheses count (from shared parens solo call arg generator expression) can also be checked in the case of
+            `shared=False` via `fst.pars() > fst.bloc`. If only loc is returned, it will be an `fstlocns` which will
+            still have the count of parentheses in an attribute `.n`.
+        - `(fstlocns, count)`: Location of enclosing parentheses or `self.bloc` or `None` and number of nested
+            parentheses found (if requested with `ret_full`). `ret_full` can be -1 in the case of a `GeneratorExp`
+            sharing parentheses with `Call` `arguments` if it is the only argument, but only if these parentheses are
+            explicitly excluded with `shared=False`.
         """
 
-        if not pars or not isinstance(self.a, PARENTHESIZABLE):  # pars around all `alias`es or `withitem`s are considered part of the parent even if there is only one of those elements which looks parenthesized
-            return (self.bloc, 0) if ret_count else self.bloc
+        if not pars:
+            locn = None if (l := self.bloc) is None else fstlocns(l[0], l[1], l[2], l[3], n=0)
+
+            return (locn, 0) if ret_full else locn
 
         key = 'parsS' if shared else 'parsN'
 
@@ -1134,42 +1136,49 @@ class FST:
         except KeyError:
             pass
         else:
-            return cached if ret_count else cached[0]
+            return cached if ret_full else cached[0]
 
-        rpars = _next_pars(self.root._lines, *self.bloc[2:], *self._next_bound())
+        if not isinstance(self.a, PARENTHESIZABLE):  # pars around all `alias`es or `withitem`s are considered part of the parent even if there is only one of those elements which looks parenthesized
+            locn             = None if (l := self.bloc) is None else fstlocns(l[0], l[1], l[2], l[3], n=0)
+            self._cache[key] = full = (locn, 0)
+
+            return full if ret_full else locn
+
+        ln, col, end_ln, end_col = self.bloc
+
+        rpars = _next_pars(self.root._lines, end_ln, end_col, *self._next_bound())
 
         if (lrpars := len(rpars)) == 1:  # no pars on right
             if not shared and self.is_solo_call_arg_genexp():
-                ln, col, end_ln, end_col = self.bloc
-                locncount                = (fstloc(ln, col + 1, end_ln, end_col - 1), -1)
-
+                locn = fstlocns(ln, col + 1, end_ln, end_col - 1, n=-1)
             else:
-                locncount = (self.bloc, 0)
+                locn = fstlocns(ln, col, end_ln, end_col, n=0)
 
-            self._cache[key] = locncount
+            self._cache[key] = full = (locn, locn.n)
 
-            return locncount if ret_count else locncount[0]
+            return full if ret_full else locn
 
-        lpars = _prev_pars(self.root._lines, *self._prev_bound(), *self.bloc[:2])
+        lpars = _prev_pars(self.root._lines, *self._prev_bound(), ln, col)
 
         if (llpars := len(lpars)) == 1:  # no pars on left
-            locncount = self._cache[key] = (self.bloc, 0)
+            locn             = fstlocns(ln, col, end_ln, end_col, n=0)
+            self._cache[key] = full = (locn, 0)
 
-            return locncount if ret_count else self.bloc
+            return full if ret_full else locn
 
         if llpars <= lrpars and (self.is_solo_call_arg() or self.is_solo_class_base() or self.is_solo_matchcls_pat()):
             llpars -= 1
 
         if llpars != lrpars:  # unbalanced pars so we know we can safely use the lower count
-            loc = fstloc(*lpars[npars], *rpars[npars]) if (npars := min(llpars, lrpars) - 1) else self.bloc
+            locn = fstlocns(*lpars[npars := min(llpars, lrpars) - 1], *rpars[npars], n=npars)
         else:
-            loc = fstloc(*lpars[npars], *rpars[npars]) if (npars := llpars - 1) else self.bloc
+            locn = fstlocns(*lpars[npars := llpars - 1], *rpars[npars], n=npars)
 
-        locncount = self._cache[key] = (loc, npars)
+        self._cache[key] = full = (locn, locn.n)
 
-        return locncount if ret_count else loc
+        return full if ret_full else locn
 
-    def par(self, force: bool = False, *, whole: bool = True) -> bool:
+    def par(self, force: bool = False, *, whole: bool = True) -> Self:
         """Parenthesize node if it MAY need it. Will not parenthesize atoms which are always enclosed like `List` unless
         `force=True`. Will add parentheses to unparenthesized `Tuple` adjusting the node location.
 
@@ -1178,17 +1187,17 @@ class FST:
         - `whole`: If at root then parenthesize whole source instead of just node.
 
         **Returns:**
-        - `bool`: Whether parentheses added or not.
+        - `self`
         """
 
         if self.is_atom(enclosed=True):
             if not force:
-                return False
+                return self  # False
 
             with self._modifying():
                 self._parenthesize_grouping(whole)
 
-            return True
+            return self  # True
 
         with self._modifying():
             if isinstance(self.a, Tuple):
@@ -1196,9 +1205,9 @@ class FST:
             else:
                 self._parenthesize_grouping(whole)
 
-        return True
+        return self  # True
 
-    def unpar(self, tuple_: bool = False, *, share: bool = True) -> bool:
+    def unpar(self, tuple_: bool = False, *, share: bool = True) -> Self:
         """Remove all parentheses from node if present. Normally removes just grouping parentheses but can also remove
         tuple parentheses if `tuple_=True`.
 
@@ -1208,19 +1217,19 @@ class FST:
         - `share`: Whether to allow merge of parentheses into share single call argument generator expression or not.
 
         **Returns:**
-        - `bool`: Whether parentheses were removed or not.
+        - `self`
         """
 
         if not self.is_atom():
-            return False
+            return self  # False
 
         with self._modifying():
-            ret = self._unparenthesize_grouping(share)
+            self._unparenthesize_grouping(share)  # ret =
 
             if tuple_ and isinstance(self.a, Tuple):
-                ret = self._unparenthesize_tuple() or ret
+                self._unparenthesize_tuple()  # ret = self._unparenthesize_tuple() or ret
 
-        return ret
+        return self  # ret
 
     # ------------------------------------------------------------------------------------------------------------------
     # Structure stuff
@@ -1557,7 +1566,7 @@ class FST:
 
         return True
 
-    def is_atom(self, pars: bool = True, *, enclosed: bool = False) -> bool | Literal['pars']:
+    def is_atom(self, *, pars: bool = True, enclosed: bool = False) -> bool | Literal['pars']:
         """Whether `self` is innately atomic precedence-wise like `Name`, `Constant`, `List`, etc... Or otherwise
         optionally enclosed in parentheses so that it functions as a parsable atom and cannot be split up by precedence
         rules when reparsed.
@@ -1619,7 +1628,7 @@ class FST:
 
         return 'pars' if pars and self.pars(True)[1] else False
 
-    def is_enclosed(self, pars: bool = True) -> bool | Literal['pars']:
+    def is_enclosed(self, *, pars: bool = True) -> bool | Literal['pars']:
         """Whether `self` lives on a single line or is otherwise enclosed in some kind of delimiters '()', '[]', '{}' or
         entirely terminated with line continuations so that it can be parsed without error due to being spread across
         multiple lines. This does not mean it can't have other errors, such as a `Slice` outside of `Subscript.slice`.

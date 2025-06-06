@@ -251,6 +251,18 @@ class fstloc(NamedTuple):
     is_FST   = False                                ; """@private"""  # for quick checks vs. `FST`
 
 
+class fstlocns(fstloc):
+    """Version of `fstloc` with a namespace, used for `pars().count`."""
+
+    def __new__(cls, ln: int, col: int, end_ln: int, end_col: int, **kwargs):
+        self = fstloc.__new__(cls, ln, col, end_ln, end_col)
+
+        for name, value in kwargs.items():
+            setattr(self, name, value)
+
+        return self
+
+
 class srcwpos(NamedTuple):
     ln:  int
     col: int

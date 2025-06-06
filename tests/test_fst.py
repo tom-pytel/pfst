@@ -3908,22 +3908,27 @@ f"distutils.command.sdist.check_metadata is deprecated, \\
 
     def test_par(self):
         f = parse('1,').body[0].value.f.copy()
-        self.assertTrue(f.par())
+        f.par()  # self.assertTrue(f.par())
         self.assertEqual('(1,)', f.src)
-        self.assertFalse(f.par())
-        self.assertTrue(f.par(force=True))
+        f.par()  # self.assertFalse(f.par())
+        self.assertEqual('(1,)', f.src)
+        f.par(force=True)  # self.assertTrue(f.par(force=True))
         self.assertEqual('((1,))', f.src)
-        self.assertFalse(f.par())
+        f.par()  # self.assertFalse(f.par())
+        self.assertEqual('((1,))', f.src)
 
-        self.assertFalse(parse('()').body[0].value.f.copy().par())
-        self.assertFalse(parse('[]').body[0].value.f.copy().par())
-        self.assertFalse(parse('{}').body[0].value.f.copy().par())
+        # self.assertFalse(parse('()').body[0].value.f.copy().par())
+        # self.assertFalse(parse('[]').body[0].value.f.copy().par())
+        # self.assertFalse(parse('{}').body[0].value.f.copy().par())
+        self.assertEqual('()', parse('()').body[0].value.f.copy().par().src)
+        self.assertEqual('[]', parse('[]').body[0].value.f.copy().par().src)
+        self.assertEqual('{}', parse('{}').body[0].value.f.copy().par().src)
 
         f = parse('i = 1').body[0].f.copy()
         f._put_src(['# comment', ''], 0, 0, 0, 0)
-        self.assertFalse(f.par())
+        f.par()  # self.assertFalse(f.par())
         self.assertEqual('# comment\ni = 1', f.src)
-        self.assertTrue(f.par(force=True))
+        f.par(force=True)  # self.assertTrue(f.par(force=True))
         self.assertEqual('(# comment\ni = 1)', f.src)
 
         if _PY_VERSION >= (3, 14):  # make sure parent Interpolation.str gets modified
@@ -4036,23 +4041,28 @@ f"distutils.command.sdist.check_metadata is deprecated, \\
     def test_unpar(self):
         f = parse('((1,))').body[0].value.f.copy(pars=True)
         self.assertEqual('((1,))', f.src)
-        self.assertTrue(f.unpar())
+        f.unpar()  # self.assertTrue()
         self.assertEqual('(1,)', f.src)
-        self.assertFalse(f.unpar())
-        self.assertTrue(f.unpar(tuple_=True))
+        f.unpar()  # self.assertFalse()
+        self.assertEqual('(1,)', f.src)
+        f.unpar(tuple_=True)  # self.assertTrue()
         self.assertEqual('1,', f.src)
-        self.assertFalse(f.unpar())
+        f.unpar()  # self.assertFalse()
 
-        self.assertFalse(parse('()').body[0].value.f.copy().unpar())
-        self.assertFalse(parse('[]').body[0].value.f.copy().unpar())
-        self.assertFalse(parse('{}').body[0].value.f.copy().unpar())
+        # self.assertFalse(parse('()').body[0].value.f.copy().unpar())
+        # self.assertFalse(parse('[]').body[0].value.f.copy().unpar())
+        # self.assertFalse(parse('{}').body[0].value.f.copy().unpar())
+        self.assertEqual('()', parse('()').body[0].value.f.copy().unpar().src)
+        self.assertEqual('[]', parse('[]').body[0].value.f.copy().unpar().src)
+        self.assertEqual('{}', parse('{}').body[0].value.f.copy().unpar().src)
 
         f = parse('( # pre1\n( # pre2\n1,\n # post1\n) # post2\n)').body[0].value.f.copy(pars=True)
         self.assertEqual('( # pre1\n( # pre2\n1,\n # post1\n) # post2\n)', f.src)
-        self.assertTrue(f.unpar())
+        f.unpar()  # self.assertTrue()
         self.assertEqual('( # pre2\n1,\n # post1\n)', f.src)
-        self.assertFalse(f.unpar())
-        self.assertTrue(f.unpar(tuple_=True))
+        f.unpar()  # self.assertFalse()
+        self.assertEqual('( # pre2\n1,\n # post1\n)', f.src)
+        f.unpar(tuple_=True)  # self.assertTrue()
         self.assertEqual('1,', f.src)
 
         if _PY_VERSION >= (3, 14):  # make sure parent Interpolation.str gets modified
@@ -4935,21 +4945,22 @@ match a:
         f.args[0].generators[0].iter.put('256', 0, field='args', raw=False)
         self.assertEqual('bytes((x ^ 0x5C) for x in range(256))', f.root.src)
 
-    def test_pars_is_bloc_when_no_pars(self):
-        self.assertIsNot((f := FST('(a)', 'exec').body[0].value).pars(), f.bloc)
-        self.assertIs((f := FST('(a, b)', 'exec').body[0].value.elts[0]).pars(), f.bloc)
-        self.assertIs((f := FST('(a, b)', 'exec').body[0].value.elts[1]).pars(), f.bloc)
-        self.assertIsNot((f := FST('((a), b)', 'exec').body[0].value.elts[0]).pars(), f.bloc)
-        self.assertIsNot((f := FST('(a, (b))', 'exec').body[0].value.elts[1]).pars(), f.bloc)
+    def test_pars_n(self):
+        self.assertEqual(1, FST('(a)', 'exec').body[0].value.pars().n)
+        self.assertEqual(0, FST('(a, b)', 'exec').body[0].value.elts[0].pars().n)
+        self.assertEqual(0, FST('(a, b)', 'exec').body[0].value.elts[1].pars().n)
+        self.assertEqual(1, FST('((a), b)', 'exec').body[0].value.elts[0].pars().n)
+        self.assertEqual(1, FST('(a, (b))', 'exec').body[0].value.elts[1].pars().n)
 
-        self.assertIs((f := FST('(a, b)', 'exec').body[0].value).pars(), f.bloc)
-        self.assertIsNot((f := FST('((a, b))', 'exec').body[0].value).pars(), f.bloc)
+        self.assertEqual(0, FST('(a, b)', 'exec').body[0].value.pars().n)
+        self.assertEqual(1, FST('((a, b))', 'exec').body[0].value.pars().n)
 
-        self.assertIs((f := FST('f(i for i in j)', 'exec').body[0].value.args[0]).pars(), f.bloc)
-        self.assertIsNot((f := FST('f(i for i in j)', 'exec').body[0].value.args[0]).pars(shared=False), f.bloc)
+        self.assertEqual(0, FST('f(i for i in j)', 'exec').body[0].value.args[0].pars().n)
+        self.assertEqual(-1, FST('f(i for i in j)', 'exec').body[0].value.args[0].pars(shared=False).n)
         self.assertTrue((f := FST('f(i for i in j)', 'exec').body[0].value.args[0]).pars(shared=False) > f.bloc)
-        self.assertIs((f := FST('f((i for i in j))', 'exec').body[0].value.args[0]).pars(shared=False), f.bloc)
-        self.assertIsNot((f := FST('f(((i for i in j)))', 'exec').body[0].value.args[0]).pars(shared=False), f.bloc)
+        self.assertEqual(0, FST('f((i for i in j))', 'exec').body[0].value.args[0].pars(shared=False).n)
+        self.assertTrue((f := FST('f((i for i in j))', 'exec').body[0].value.args[0]).pars(shared=False) == f.bloc)
+        self.assertEqual(1, FST('f(((i for i in j)))', 'exec').body[0].value.args[0].pars(shared=False).n)
         self.assertTrue((f := FST('f(((i for i in j)))', 'exec').body[0].value.args[0]).pars(shared=False) < f.bloc)
 
     def test_copy_pars(self):
@@ -9540,6 +9551,12 @@ finally:
         f.iter.args[0].replace('99', to=f.iter.args[-1], raw=True)
         self.assertEqual('for i in range(99) if i', f.src)
         self.assertIsInstance(f.a, comprehension)
+        f.verify()
+
+        f = FST('1 * 1', 'all')
+        f.left.replace('+', to=f.right, raw=True)
+        self.assertEqual('+', f.src)
+        self.assertIsInstance(f.a, Add)
         f.verify()
 
     def test_modify_parent_fmtvals_and_interpolations(self):
