@@ -729,7 +729,7 @@ class FST:
         **Parameters:**
         - `options`: Key / values of options to set temporarily, see `get_options()`.
 
-        **Example:**
+        **Examples:**
         ```py
         >>> print(FST.get_option('raw'))
         ...
@@ -846,7 +846,7 @@ class FST:
         **Returns:**
         - `FST`: Copied node.
 
-        **Example:**
+        **Examples:**
         ```py
         >>> FST('[0, 1, 2, 3]').elts[1].copy().src
         '1'
@@ -868,7 +868,7 @@ class FST:
         **Returns:**
         - `FST`: Cut node.
 
-        **Example:**
+        **Examples:**
         ```py
         >>> (f := FST('[0, 1, 2, 3]')).elts[1].cut().src
         '1'
@@ -896,7 +896,7 @@ class FST:
         **Returns:**
         - `FST | None`: Returns the new node if successfully replaced or `None` if deleted.
 
-        **Example:**
+        **Examples:**
         ```py
         >>> FST('[0, 1, 2, 3]').elts[1].replace('4').root.src
         '[0, 4, 2, 3]'
@@ -918,7 +918,7 @@ class FST:
         **Parameters:**
         - `options`: See `get_options()`.
 
-        **Example:**
+        **Examples:**
         ```py
         >>> (f := FST('[0, 1, 2, 3]')).elts[1].remove(); f.src
         '[0, 2, 3]'
@@ -940,7 +940,7 @@ class FST:
             start of the slice to get if getting a slice (by specifying `stop`). If the field being gotten from is
             an individual element then this should be `None`. If `stop` is specified and getting a slice then a `None`
             here means copy from the start of the list.
-        - `stop`: The end index (exclusive) of the child node to get to if getting a slice from a field that contains
+        - `stop`: The end index (exclusive) of the child node to get if getting a slice from a field that contains
             multiple elements. This should be one past the last element to get (like python list indexing). If this is
             `False` then it indicates that a single element is being requested and not a slice. If this is `None` then
             it indicates a slice operation to the end of the list (like python `a[start:]`).
@@ -958,7 +958,7 @@ class FST:
         **Returns:**
         - `FST`: Node gotten.
 
-        **Example:**
+        **Examples:**
         ```py
         >>> FST('[0, 1, 2, 3]').get(1).src
         '1'
@@ -1010,9 +1010,10 @@ class FST:
         """Put an individual node or a slice of nodes to `self` if possible. This function can do everything that
         `put_slice()` can. The node is passed as an existing top-level `FST`, `AST`, string or list of string lines. If
         passed as an `FST` or `AST` then it should be considered "consumed" after this function returns and is no logner
-        valid, even on failuer.
+        valid, even on failure.
 
         **Parameters:**
+        - `code`: The node to put as an `FST` (must be root node), `AST`, a string or list of line strings.
         - `idx`: The index of the field node to put to if the field being put to contains multiple elements or the start
             of the slice to put if putting a slice (by specifying `stop`). If the field being put to is an individual
             element then this should be `None`. If `stop` is specified and putting a slice then a `None` here means put
@@ -1038,9 +1039,9 @@ class FST:
         is being gotten from `idx` and not a slice.
 
         **Returns:**
-        - `self`.
+        - `self`
 
-        **Example:**
+        **Examples:**
         ```py
         >>> FST('[0, 1, 2, 3]').put('4', 1).src
         '[0, 4, 2, 3]'
@@ -1096,7 +1097,46 @@ class FST:
 
     def get_slice(self, start: int | Literal['end'] | None = None, stop: int | None = None, field: str | None = None, *,
                   cut: bool = False, **options) -> 'FST':
-        """Get a slice of child nodes from `self`."""
+        """Copy or cut a slice of child nodes from `self` if possible.
+
+        **Parameters:**
+        - `start`: The start of the slice to get, or `None` for the beginning of the entire range.
+        - `stop`: The end index (exclusive) of the slice to get. This should be one past the last element to get (like
+            python list indexing). If this is `None` then it indicates a slice operation to the end of the list (like
+            python `a[start:]`).
+        - `field`: The name of the field to get the elements from, which can be an individual element like a `value` or
+            a list like `body`. If this is `None` then the default field for the node type is used. Most node types
+            have a common-sense default field, e.g. `body` for all block statements, `elts` for things like `List` and
+            `Tuple`. `MatchMapping` and `Compare` nodes have special-case handling for a `None` field.
+        - `cut`: Whether to cut out the slice or not (just copy).
+        - `options`: See `get_options()`.
+
+        **Note:** The `field` value can be passed positionally in either the `start` or `stop` parameter. If passed in
+        `start` then the slice is assumed to be the entire range, and if passed in `stop` then the slice goes from
+        `start` to the end of the range.
+
+        **Returns:**
+        - `FST`: Slice node of nodes gotten.
+
+        **Examples:**
+        ```py
+        >>> FST('[0, 1, 2, 3]').get_slice(1).src
+        '[1, 2, 3]'
+        >>> FST('[0, 1, 2, 3]').get_slice(None, -1).src
+        '[0, 1, 2]'
+        >>> (f := FST('[0, 1, 2, 3]')).get_slice(1, 3, cut=True).src
+        '[1, 2]'
+        >>> f.src
+        '[0, 3]'
+        >>> f = FST('if 1: i = 1\nelse: j = 2; k = 3; l = 4; m = 5')
+        >>> s = f.get_slice(1, 3, 'orelse', cut=True)
+        >>> print(f.src)
+        if 1: i = 1
+        else: j = 2; m = 5
+        >>> print(s.src)
+        k = 3; l = 4
+        ```
+        """
 
         ast                = self.a
         start, stop, field = _swizzle_getput_params(start, stop, field, None)
@@ -1109,12 +1149,58 @@ class FST:
 
     def put_slice(self, code: Code | None, start: int | Literal['end'] | None = None, stop: int | None = None,
                   field: str | None = None, *, one: bool = False, **options) -> 'FST':  # -> Self
-        """Put an a slice of child nodes to `self`.
+        """Put a slice of nodes to `self` if possible.  The node is passed as an existing top-level `FST`, `AST`, string
+        or list of string lines. If passed as an `FST` or `AST` then it should be considered "consumed" after this
+        function returns and is no logner valid, even on failure.
 
-        If the `code` being put is an `AST` or `FST` then it is consumed and should not be considered valid after this
-        call whether it succeeds or fails.
+        **Parameters:**
+        - `code`: The slice to put as an `FST` (must be root node), `AST`, a string or list of line strings.
+        - `start`: The start of the slice to put, or `None` for the beginning of the entire range.
+        - `stop`: The end index (exclusive) of the slice. This should be one past the last element to put (like python
+            list indexing). If this is `None` then it indicates a slice operation to the end of the list (like python
+            `a[start:]`).
+        - `field`: The name of the field to put the elements to. If this is `None` then the default field for the node
+            type is used. Most node types have a common-sense default field, e.g. `body` for all block statements,
+            `elts` for things like `List` and `Tuple`. `MatchMapping` and `Compare` nodes have special-case handling for
+            a `None` field.
+        - `options`: See `get_options()`.
 
-        Can reparse.
+        **Note:** The `field` value can be passed positionally in either the `start` or `stop` parameter. If passed in
+        `start` then the slice is assumed to be the entire range, and if passed in `stop` then the slice goes from
+        `start` to the end of the range.
+
+        **Returns:**
+        - `self`
+
+        **Examples:**
+        ```py
+        >>> FST('[0, 1, 2, 3]').put('4', 1).src
+        '[0, 4, 2, 3]'
+        >>> FST('[0, 1, 2, 3]').put('4, 5', 1, 3).src
+        '[0, (4, 5), 3]'
+        >>> FST('[0, 1, 2, 3]').put('4, 5', 1, 3, one=False).src
+        '[0, 4, 5, 3]'
+        >>> FST('[0, 1, 2, 3]').put('4, 5', None, 3).src
+        '[(4, 5), 3]'
+        >>> (f := FST('[0, 1, 2, 3]')).put('4, 5', -3, None, one=False).src
+        '[0, 4, 5]'
+        >>> print(FST('if 1: i = 1\nelse: j = 2').put('z = -1', 0).src)
+        if 1:
+            z = -1
+        else: j = 2
+        >>> print(FST('if 1: i = 1\nelse: j = 2').put('z = -1', 0, 'orelse').src)
+        if 1: i = 1
+        else:
+            z = -1
+        >>> print(FST('if 1: i = 1\nelse: j = 2').put('z = -1\ny = -2\nx = -3', 'orelse', one=False).src)
+        if 1: i = 1
+        else:
+            z = -1
+            y = -2
+            x = -3
+        >>> print((f := FST('if 1: i = 1\nelse: j = 2')).put('z = -1', 0, raw=True, to=f.orelse[0]).root.src)
+        if 1: z = -1
+        ```
         """
 
         ast                = self.a
@@ -1127,12 +1213,30 @@ class FST:
         return self._put_slice(code, start, stop, field_, one, **options)
 
     def get_src(self, ln: int, col: int, end_ln: int, end_col: int, as_lines: bool = False) -> str | list[str]:
-        """Get source at location, without dedenting or any other modification, Returned as a string or individual
-        lines. The first and last lines are cropped to start `col` and `end_col`. Can call on any node in tree for same
-        effect.
+        """Get source at location, without dedenting or any other modification, returned as a string or individual
+        lines. The first and last lines are cropped to start `col` and `end_col`.
+
+        Can call on any node in tree for same effect.
+
+        **Parameters:**
+        - `ln`: Start line of span to get (0 based).
+        - `col`: Start column (character) on start line.
+        - `end_ln`: End line of span to get (0 based, inclusive).
+        - `end_col`: End column (character, exclusive`) on end line.
+        - `as_lines`: If `False` then source is returned as a single string with embedded newlines. If `True` then
+            source is returned as a list of line strings (without newlines).
 
         **Returns:**
-        - `str | list[str]`: A single string or a list of lines if `as_lines=True`.
+        - `str | list[str]`: A single string or a list of lines if `as_lines=True`. If lines then there are no trailing
+            newlines in the individual line strings.
+
+        **Examples:**
+        ```py
+        >>> FST('if 1:\n  i = 2').get_src(0, 3, 1, 5)
+        '1:\n  i ='
+        >>> FST('if 1:\n  i = 2').get_src(0, 3, 1, 5, as_lines=True)
+        ['1:', '  i =']
+        ```
         """
 
         ls = self.root._lines
@@ -1147,13 +1251,36 @@ class FST:
                     '\n'.join([ls[ln][col:]] + ls[ln + 1 : end_ln] + [ls[end_ln][:end_col]]))
 
     def put_src(self, code: Code | None, ln: int, col: int, end_ln: int, end_col: int, *,
-                exact: bool | None = True, **options) -> Optional['FST']:
-        """Put source and reparse. Can call on any node in tree for same effect.
+                exact: bool | None = True) -> Optional['FST']:
+        """Put source and reparse. There are no rules on what is put, it is simply put and parse is attempted. If the
+        `code` is passed as an `FST` or `AST` then it is unparsed to a string and that string is put into the location
+        to attempt reparse. If passed as a string or lines then that is put directly.
+
+        After put and successful reparse, the location of the put is examined and an appropriate node is returned which
+        fits best for a node which may have been added or replaced. It is possible that `None` is returned if no good
+        candidate is found (since this can be used to delete or merge nodes).
+
+        Can call on any node in tree for same effect.
+
+        **Parameters:**
+        - `code`: The code to put as an `FST` (must be root node), `AST`, a string or list of line strings.
+        - `ln`: Start line of span to put (0 based).
+        - `col`: Start column (character) on start line.
+        - `end_ln`: End line of span to put (0 based, inclusive).
+        - `end_col`: End column (character, exclusive`) on end line.
+        - `exact`: This specifies how the node check after a successful reparse is done. `True` means allow return of
+            node which matches location exactly. Otherwise if `False`, the location must be inside the node but cannot
+            be touching BOTH ends of the node. This basically determines whether you can get the exact node of the
+            location or its parent. If passed as `None` then the check is even more restricted.
 
         **Returns:**
         - `FST | None`: FIRST highest level node contained entirely within replacement source location (there may be
             others following), or `None` if no such candidate and `exact=None`. If no candidate and `exact` is `True`
             or `False` then will attempt to return a node which encloses the location using `find_loc(..., exact)`.
+
+        **Examples:**
+        ```py
+        ```
         """
 
         parent = self.root.find_loc(ln, col, end_ln, end_col, False) or self.root
@@ -1166,7 +1293,8 @@ class FST:
         element of a tuple and not return the parentheses of the tuple. Likwise will not return the parentheses of an
         enclosing `arguments` parent or class bases list. Only works on (and makes sense for) `expr` or `pattern` nodes,
         otherwise returns `self.bloc` and count of 0. Also handles special case of a single generator expression
-        argument to a function sharing parameters with the call arguments, in which case a count of -1 may be returned.
+        argument to a function sharing parameters with the call arguments, in which case a count of -1 may be returned
+        if this case is enabled with `shared=False`.
 
         **Parameters:**
         - `ret_full`: `True` means return the number of parentheses along with the location in a tuple. Otherwise just
@@ -1245,11 +1373,11 @@ class FST:
 
     def par(self, force: bool = False, *, whole: bool = True) -> Self:
         """Parenthesize node if it MAY need it. Will not parenthesize atoms which are always enclosed like `List` unless
-        `force=True`. Will add parentheses to unparenthesized `Tuple` adjusting the node location.
+        `force=True`. Will add parentheses to unparenthesized `Tuple`, adjusting the node location.
 
         **Parameters:**
         - `force`: If `True` then will add another layer of parentheses regardless if any already present.
-        - `whole`: If at root then parenthesize whole source instead of just node.
+        - `whole`: If at root then parenthesize whole source instead of just node, if `False` then only node.
 
         **Returns:**
         - `self`

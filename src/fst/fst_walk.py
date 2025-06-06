@@ -880,7 +880,7 @@ def walk(self: 'FST', with_loc: bool | Literal['all', 'own'] = False, *, self_: 
     - `back`: If `True` then walk every node in reverse syntactic order. This is not the same as a full forwards
         walk reversed due to recursion (parents are still returned before children, only in reverse sibling order).
 
-    **Example:**
+    **Examples:**
     ```py
     for node in (walking := target.walk()):
         ...

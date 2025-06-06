@@ -19,7 +19,7 @@ class fstlist:
 
     This object is meant to be, and is normally created automatically by accessing `AST` list fields on an `FST` node.
 
-    **Example:**
+    **Examples:**
     ```py
     >>> f = FST('[0, 1, 2, 3]')
     >>> f
@@ -128,7 +128,7 @@ class fstlist:
         **Returns:**
         - `FST`: Copied slice.
 
-        **Example:**
+        **Examples:**
         ```py
         >>> FST('[0, 1, 2, 3]').elts[1:3].copy().src
         '[1, 2]'
@@ -147,7 +147,7 @@ class fstlist:
         **Returns:**
         - `FST`: Cut slice.
 
-        **Example:**
+        **Examples:**
         ```py
         >>> (f := FST('[0, 1, 2, 3]')).elts[1:3].cut().src
         '[1, 2]'
@@ -173,7 +173,7 @@ class fstlist:
             a slice replacement (type must be compatible).
         - `options`: See `get_options()`.
 
-        **Example:**
+        **Examples:**
         ```py
         >>> FST('[0, 1, 2, 3]').elts[1:3].replace('(4, 5)').fst.src
         '[0, (4, 5), 3]'
@@ -199,7 +199,7 @@ class fstlist:
         **Returns:**
         - `self`
 
-        **Example:**
+        **Examples:**
         ```py
         >>> FST('[0, 1, 2, 3]').elts[1:3].remove().fst.src
         '[0, 3]'
@@ -227,7 +227,7 @@ class fstlist:
             (type must be compatible).
         - `options`: See `get_options()`.
 
-        **Example:**
+        **Examples:**
         ```py
         >>> FST('[0, 1, 2, 3]').elts.insert('(4, 5)', 1).fst.src
         '[0, (4, 5), 1, 2, 3]'
@@ -261,7 +261,7 @@ class fstlist:
         - `code`: `FST`, `AST` or source `str` or `list[str]` to append.
         - `options`: See `get_options()`.
 
-        **Example:**
+        **Examples:**
         ```py
         >>> FST('[0, 1, 2, 3]').elts.append('(4, 5)').fst.src
         '[0, 1, 2, 3, (4, 5)]'
@@ -286,7 +286,7 @@ class fstlist:
         - `code`: `FST`, `AST` or source `str` or `list[str]` slice to extend.
         - `options`: See `get_options()`.
 
-        **Example:**
+        **Examples:**
         ```py
         >>> FST('[0, 1, 2, 3]').elts.extend('(4, 5)').fst.src
         '[0, 1, 2, 3, 4, 5]'
@@ -313,7 +313,7 @@ class fstlist:
         - `code`: `FST`, `AST` or source `str` or `list[str]` to preappend.
         - `options`: See `get_options()`.
 
-        **Example:**
+        **Examples:**
         ```py
         >>> FST('[0, 1, 2, 3]').elts.prepend('(4, 5)').fst.src
         '[(4, 5), 0, 1, 2, 3]'
@@ -338,7 +338,7 @@ class fstlist:
         - `code`: `FST`, `AST` or source `str` or `list[str]` to extend at the start.
         - `options`: See `get_options()`.
 
-        **Example:**
+        **Examples:**
         ```py
         >>> FST('[0, 1, 2, 3]').elts.prextend('(4, 5)').fst.src
         '[4, 5, 0, 1, 2, 3]'
