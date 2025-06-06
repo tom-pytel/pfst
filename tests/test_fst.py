@@ -2037,12 +2037,24 @@ def f():
                     self.assertEqual(ast.__class__, res)
                     self.assertTrue(compare_asts(ast, ref, locs=True))
 
-                if not issubclass(res, Exception):  # test reparse
-                    test = 'reparse'
-                    unp  = ast_.unparse(ast) or src  # 'or src' because unparse of operators gives nothing
-                    ast2 = FST._parse(unp, mode)
+                if issubclass(res, Exception):
+                    continue
 
-                    compare_asts(ast, ast2, raise_=True)
+                # test reparse
+
+                test = 'reparse'
+                unp  = ((s := ast_.unparse(ast)) and s.lstrip()) or src  # 'lstrip' because comprehension has leading space, 'or src' because unparse of operators gives nothing
+                ast2 = FST._parse(unp, mode)
+
+                compare_asts(ast, ast2, raise_=True)
+
+                # test IndentationError
+
+                if src.strip():  # won't get IndentationError on empty arguments
+                    src = ' ' + src
+
+                    self.assertRaises(IndentationError, FST._parse, src, mode)
+                    self.assertRaises(IndentationError, func, src)
 
             except Exception:
                 print()
@@ -2345,6 +2357,16 @@ def f():
                 fst = FST(src, mode)
 
                 fst.verify(mode)
+
+                if isinstance(a := fst.a, Expression):
+                    a = a.body
+                elif isinstance(a, (Module, Interactive)):
+                    a = a.body[0]
+
+                if end_col_offset := getattr(a, 'end_col_offset', None):
+                    a.end_col_offset = end_col_offset + 1
+
+                    self.assertFalse(fst.verify(mode, raise_=False))
 
             except Exception:
                 print()

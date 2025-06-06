@@ -823,7 +823,7 @@ class FST:
         try:
             astp = FST._parse(self.src, mode or ast.__class__, parse_params=parse_params)
 
-        except (NodeError, SyntaxError):
+        except (SyntaxError, NodeError):
             if raise_:
                 raise
 

@@ -36,8 +36,10 @@ def _reparse_raw_base(self: 'FST', new_lines: list[str], ln: int, col: int, end_
 
     try:
         copy_root = FST.fromsrc(copy_root.src, mode or 'exec', **root.parse_params)
+    except IndentationError:
+        raise
 
-    except (NodeError, SyntaxError):
+    except (SyntaxError, NodeError):
         if mode is None or path:  # if there is a path then we expect the top level node to parse to the same thing successfully, if it does not then it is a genuine error
             raise
 

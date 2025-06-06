@@ -3,7 +3,7 @@
 import re
 from ast import *
 from ast import parse as ast_parse, unparse as ast_unparse
-from typing import Callable
+from typing import Any, Callable
 
 from .astutil import *
 from .astutil import TryStar, type_param
@@ -12,8 +12,16 @@ from .shared import (
     Code, Mode, NodeError, _next_src, _shortstr
 )
 
-_re_except = re.compile(r'except\b')
-_re_case   = re.compile(r'case\b\s*(?:[*\\\w({[\'"-]|\.\d)')
+_re_except    = re.compile(r'except\b')
+_re_case      = re.compile(r'case\b\s*(?:[*\\\w({[\'"-]|\.\d)')
+_re_first_src = re.compile(r'^[^\S\n]*(?:[^\s\\#]|(?<!^)\\)', re.M)
+
+
+def _validate_indent(src: str, ret: Any = None) -> Any:
+    if (m := _re_first_src.search(src)) and len(m.group(0)) > 1:
+        raise IndentationError('unexpected indent')
+
+    return ret
 
 
 def _offset_linenos(ast: AST, delta: int) -> AST:
@@ -65,12 +73,14 @@ def _code_as_op(code: Code, ast_type: type[AST], parse_params: dict, parse: Call
 
     try:
         return FST(parse(code, parse_params), lines, parse_params=parse_params)  # fall back to actually trying to parse the thing
+    except IndentationError:
+        raise
     except (SyntaxError, NodeError):
         raise NodeError(f'expecting {ast_type.__name__}, got {_shortstr(code)!r}') from None
 
 
 def _code_as(code: Code, ast_type: type[AST], parse_params: dict, parse: Callable[['FST', Code], 'FST'], *,
-             tup_pars: bool = True) -> 'FST':
+             strip_tup_pars: bool = False) -> 'FST':
     if isinstance(code, FST):
         if not code.is_root:
             raise ValueError('expecting root node')
@@ -84,7 +94,7 @@ def _code_as(code: Code, ast_type: type[AST], parse_params: dict, parse: Callabl
         if not isinstance(code, ast_type):
             raise NodeError(f'expecting {ast_type.__name__}, got {code.__class__.__name__}')
 
-        code  = (ast_unparse(code)[1:-1] if not tup_pars and isinstance(code, Tuple) and code.elts else
+        code  = (ast_unparse(code)[1:-1] if strip_tup_pars and isinstance(code, Tuple) and code.elts else
                  _unparse(code))
         lines = code.split('\n')
 
@@ -156,7 +166,9 @@ def _parse_all(src: str, parse_params: dict = {}) -> AST:
     for parse in _parse_all_funcs:
         try:
             return parse(src, parse_params)
-        except (NodeError, SyntaxError):
+        except IndentationError:
+            raise
+        except (SyntaxError, NodeError):
             pass
 
     raise NodeError('failed to parse in any mode')
@@ -203,6 +215,8 @@ def _parse_stmtishs(src: str, parse_params: dict = {}) -> AST:
         if _re_case.match(lines[firstsrc.ln], firstsrc.col):  # need full line because firstsrc.src is cut off at first space
             try:
                 return _parse_match_cases(src, parse_params)
+            except IndentationError:
+                raise
             except SyntaxError:  # 'case' is not a protected keyword, the regex checks most cases but not all possible so fall back to parse stmts
                 pass
 
@@ -246,8 +260,17 @@ def _parse_ExceptHandlers(src: str, parse_params: dict = {}) -> AST:
 
     try:
         ast = ast_parse(f'try: pass\n{src}\nfinally: pass', **parse_params).body[0]
+    except IndentationError:
+        raise
 
-    except SyntaxError as e:
+    except SyntaxError:
+        lines = src.split('\n')  # ugly way to check for IndentationError, TODO: do this clean and quicker with a regex
+
+        if ((firstsrc := _next_src(lines, 0, 0, len(lines) - 1, len(lines[-1]))) and
+            firstsrc.col and _re_except.match(firstsrc.src)
+        ):
+            raise IndentationError('unexpected indent') from None
+
         try:
             ast = ast_parse(f'try: pass\n{src}', **parse_params)  # just reparse without our finally block to confirm if that was the error
         except SyntaxError:
@@ -257,7 +280,7 @@ def _parse_ExceptHandlers(src: str, parse_params: dict = {}) -> AST:
             if len(ast.body) == 1:
                 raise NodeError("not expecting 'finally' block") from None
             else:
-                raise NodeError('expecting only exception handlers`')
+                raise NodeError('expecting only exception handlers`') from None
 
         raise
 
@@ -352,7 +375,9 @@ def _parse_slice(src: str, parse_params: dict = {}) -> AST:
     "name" or even "a:b, c:d:e, g". Using this, naked `Starred` expressions parse to single element `Tuple` with the
     `Starred` as the only element."""
 
-    return _offset_linenos(ast_parse(f'a[\n{src}]', **parse_params).body[0].value.slice, -1)
+    ast = ast_parse(f'a[\n{src}]', **parse_params).body[0].value.slice
+
+    return _offset_linenos(_validate_indent(src, ast), -1)
 
 
 @staticmethod
@@ -364,6 +389,8 @@ def _parse_sliceelt(src: str, parse_params: dict = {}) -> AST:
 
     try:
         ast = _parse_slice(src, parse_params)
+    except IndentationError:
+        raise
     except SyntaxError:  # in case of lone naked Starred in slice in py < 3.11
         return _parse_expr(src, parse_params)
 
@@ -381,8 +408,14 @@ def _parse_callarg(src: str, parse_params: dict = {}) -> AST:
 
     try:
         return _parse_expr(src, parse_params)
+    except IndentationError:
+        raise
     except SyntaxError:  # stuff like '*[] or []'
-        return _offset_linenos(ast_parse(f'f(\n{src})', **parse_params).body[0].value.args[0], -1)
+        pass
+
+    ast = ast_parse(f'f(\n{src})', **parse_params).body[0].value.args[0]
+
+    return _offset_linenos(_validate_indent(src, ast), -1)
 
 
 @staticmethod
@@ -394,7 +427,7 @@ def _parse_boolop(src: str, parse_params: dict = {}) -> AST:
     if not isinstance(ast, BoolOp):
         raise NodeError(f'expecting boolop, got {_shortstr(src)!r}')
 
-    return ast.op.__class__()  # parse() returns the same identical object for all instances of the same operator
+    return _validate_indent(src, ast.op.__class__())  # parse() returns the same identical object for all instances of the same operator
 
 
 @staticmethod
@@ -419,7 +452,7 @@ def _parse_binop(src: str, parse_params: dict = {}) -> AST:
     if not isinstance(ast, BinOp):
         raise NodeError(f'expecting operator, got {_shortstr(src)!r}')
 
-    return ast.op.__class__()  # parse() returns the same identical object for all instances of the same operator
+    return _validate_indent(src, ast.op.__class__())  # parse() returns the same identical object for all instances of the same operator
 
 
 @staticmethod
@@ -431,7 +464,7 @@ def _parse_augop(src: str, parse_params: dict = {}) -> AST:
     if not isinstance(ast, AugAssign):
         raise NodeError(f'expecting augmented operator, got {_shortstr(src)!r}')
 
-    return ast.op.__class__()  # parse() returns the same identical object for all instances of the same operator
+    return _validate_indent(src, ast.op.__class__())  # parse() returns the same identical object for all instances of the same operator
 
 
 @staticmethod
@@ -443,7 +476,7 @@ def _parse_unaryop(src: str, parse_params: dict = {}) -> AST:
     if not isinstance(ast, UnaryOp):
         raise NodeError(f'expecting unaryop, got {_shortstr(src)!r}')
 
-    return ast.op.__class__()  # parse() returns the same identical object for all instances of the same operator
+    return _validate_indent(src, ast.op.__class__())  # parse() returns the same identical object for all instances of the same operator
 
 
 @staticmethod
@@ -458,28 +491,34 @@ def _parse_cmpop(src: str, parse_params: dict = {}) -> AST:
     if len(ops := ast.ops) != 1:
         raise NodeError('expecting single cmpop')
 
-    return ops[0].__class__()  # parse() returns the same identical object for all instances of the same operator
+    return _validate_indent(src, ops[0].__class__())  # parse() returns the same identical object for all instances of the same operator
 
 
 @staticmethod
 def _parse_comprehension(src: str, parse_params: dict = {}) -> AST:
     """Parse to an `ast.comprehension`, e.g. "async for i in something() if i"."""
 
-    return _offset_linenos(ast_parse(f'[_ \n{src}]', **parse_params).body[0].value.generators[0], -1)
+    ast = ast_parse(f'[_ \n{src}]', **parse_params).body[0].value.generators[0]
+
+    return _offset_linenos(_validate_indent(src, ast), -1)
 
 
 @staticmethod
 def _parse_arguments(src: str, parse_params: dict = {}) -> AST:
     """Parse to an `ast.arguments`, e.g. "a: list[str], /, b: int = 1, *c, d=100, **e"."""
 
-    return _offset_linenos(ast_parse(f'def f(\n{src}): pass', **parse_params).body[0].args, -1)
+    ast = ast_parse(f'def f(\n{src}): pass', **parse_params).body[0].args
+
+    return _offset_linenos(_validate_indent(src, ast), -1)
 
 
 @staticmethod
 def _parse_arguments_lambda(src: str, parse_params: dict = {}) -> AST:
     """Parse to an `ast.arguments` for a `Lambda`, e.g. "a, /, b, *c, d=100, **e"."""
 
-    return _offset_linenos(ast_parse(f'(lambda \n{src}: None)', **parse_params).body[0].value.args, -1)
+    ast = ast_parse(f'(lambda \n{src}: None)', **parse_params).body[0].value.args
+
+    return _offset_linenos(_validate_indent(src, ast), -1)
 
 
 @staticmethod
@@ -488,6 +527,8 @@ def _parse_arg(src: str, parse_params: dict = {}) -> AST:
 
     try:
         args = ast_parse(f'def f(\n{src}): pass', **parse_params).body[0].args
+    except IndentationError:
+        raise
 
     except SyntaxError:  # may be '*vararg: *starred'
         args = ast_parse(f'def f(*\n{src}): pass', **parse_params).body[0].args
@@ -508,7 +549,7 @@ def _parse_arg(src: str, parse_params: dict = {}) -> AST:
     if ast is None:
         raise NodeError('expecting single argument without default')
 
-    return _offset_linenos(ast, -1)
+    return _offset_linenos(_validate_indent(src, ast), -1)
 
 
 @staticmethod
@@ -520,7 +561,7 @@ def _parse_keyword(src: str, parse_params: dict = {}) -> AST:
     if len(keywords) != 1:
         raise NodeError('expecting single keyword')
 
-    return _offset_linenos(keywords[0], -1)
+    return _offset_linenos(_validate_indent(src, keywords[0]), -1)
 
 
 @staticmethod
@@ -530,6 +571,8 @@ def _parse_alias(src: str, parse_params: dict = {}) -> AST:
     if '*' in src:
         try:
             return _parse_alias_star(src, parse_params)
+        except IndentationError:
+            raise
         except SyntaxError:
             pass
 
@@ -546,7 +589,7 @@ def _parse_alias_dotted(src: str, parse_params: dict = {}) -> AST:
     if len(names) != 1:
         raise NodeError('expecting single name')
 
-    return _offset_linenos(names[0], -1)
+    return _offset_linenos(_validate_indent(src, names[0]), -1)
 
 
 @staticmethod
@@ -558,7 +601,7 @@ def _parse_alias_star(src: str, parse_params: dict = {}) -> AST:
     if len(names) != 1:
         raise NodeError('expecting single name')
 
-    return _offset_linenos(names[0], -1)
+    return _offset_linenos(_validate_indent(src, names[0]), -1)
 
 
 @staticmethod
@@ -574,7 +617,7 @@ def _parse_withitem(src: str, parse_params: dict = {}) -> AST:
         if len(items) != 1:
             raise NodeError('expecting single withitem')
 
-    return _offset_linenos(items[0], -1)
+    return _offset_linenos(_validate_indent(src, items[0]), -1)
 
 
 @staticmethod
@@ -583,17 +626,21 @@ def _parse_pattern(src: str, parse_params: dict = {}) -> AST:
 
     try:
         ast = ast_parse(f'match _:\n case \\\n{src}: pass', **parse_params).body[0].cases[0].pattern
+    except IndentationError:
+        raise
     except SyntaxError:  # in case of lone MatchStar, and we can't just do MatchSequence first because would mess up location of naked MatchSequence, also handles newlines in patterns where they can be
         ast = ast_parse(f'match _:\n case [\\\n{src}]: pass', **parse_params).body[0].cases[0].pattern.patterns[0]
 
-    return _offset_linenos(ast, -2)
+    return _offset_linenos(_validate_indent(src, ast), -2)
 
 
 @staticmethod
 def _parse_type_param(src: str, parse_params: dict = {}) -> AST:
     """Parse to an `ast.type_param`, e.g. "t: Base = Subclass"."""
 
-    return _offset_linenos(ast_parse(f'type t[\n{src}] = None', **parse_params).body[0].type_params[0], -1)
+    ast = ast_parse(f'type t[\n{src}] = None', **parse_params).body[0].type_params[0]
+
+    return _offset_linenos(_validate_indent(src, ast), -1)
 
 
 # ......................................................................................................................
@@ -622,6 +669,8 @@ def _code_as_stmtishs(code: Code, parse_params: dict = {}, *, is_trystar: bool =
             if _re_case.match(lines[firstsrc.ln], firstsrc.col):  # need full line because firstsrc.src is cut off at first space
                 try:
                     return _code_as_match_cases(code, parse_params)
+                except IndentationError:
+                    raise
                 except SyntaxError:  # 'case' is not a protected keyword, the regex checks most cases but not all possible so fall back to parse stmts
                     pass
 
@@ -851,7 +900,7 @@ def _code_as_slice(code: Code, parse_params: dict = {}) -> 'FST':
     """Convert `code` to a Slice `FST` if possible (or anthing else that can serve in `Subscript.slice`, like any old
     generic `expr`)."""
 
-    return _code_as(code, expr, parse_params, _parse_slice, tup_pars=False)
+    return _code_as(code, expr, parse_params, _parse_slice, strip_tup_pars=True)
 
 
 @staticmethod
