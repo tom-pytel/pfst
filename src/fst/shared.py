@@ -101,8 +101,8 @@ _GLOBALS = globals() | {'_GLOBALS': None}
 Code = Union['FST', AST, list[str], str]  ; """Code types accepted for put to `FST`."""
 
 Mode = Union[type[AST], Literal[
-    'any',
     'all',
+    'most',
     'exec',
     'eval',
     'single',
@@ -139,12 +139,15 @@ Mode = Union[type[AST], Literal[
 
 """Parse modes:
 
-- `'any'`: Attempt parse `stmtishs`. If only one element then return the element itself instead of the `Module`.
-    If that element is an `Expr` then return the expression instead of the statement. If nothing present then
-    return empty `Module`. Doesn't attempt any of the other parse modes to keep things quick, if you want exhaustive
-    attempts the mode is `'all'`. Will never return an `Expression` or `Interactive`.
 - `'all'`: Check all possible parse modes (from most likely to least). There is syntax overlap so certain types will
-    never be returned, for example `TypeVar` is always shadowed by `AnnAssign`. Will never return an `Expression` or
+    never be returned, for example `TypeVar` is always shadowed by `AnnAssign`. Since this attempts many parses before
+    failing it is slower to do so than other modes, though the most likely success is just as fast. Will never return an
+    `Expression` or `Interactive`.
+- `'most'`: Attempt parse `stmtishs`. If only one element then return the element itself instead of the `Module`.
+    If that element is an `Expr` then return the expression instead of the statement. If nothing present then
+    return empty `Module`. Doesn't attempt any of the other parse modes to keep things quick, though will parse anything
+    that can be parsed natively by `ast.parse()` (plus `ExpressionHandler` and `match_case`). If you want exhaustive
+    attempts that will parse any `AST` source node the mode for that is `'all'`. Will never return an `Expression` or
     `Interactive`.
 - `'exec'`: Parse to a `Module`. Same as passing `Module` type.
 - `'eval'`: Parse to an `Expression`. Same as passing `Expression` type.

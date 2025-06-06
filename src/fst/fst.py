@@ -400,8 +400,8 @@ class FST:
 
         **Parameters:**
         - `ast_or_src`: Source code, an `AST` node or `None`.
-        - `mode`: See `fst.shared.Mode`. If this is `None` then if `ast_or_src` is an `AST` the mode used is `'any'`,
-            Otherwise if the `ast_or_src` is actual source code then `mode` defaults to the type of the `AST`. And if
+        - `mode`: See `fst.shared.Mode`. If this is `None` then if `ast_or_src` is an `AST` the mode defaults to the
+            type of the `AST`. Otherwise if the `ast_or_src` is actual source code then `mode` used is `'all'`. And if
             `ast_or_src` is `None` then `mode` must be provided and be one of `'exec'`, `'eval'` or `'single'`.
 
         The other forms of this function are meant for internal use and their parameters are below:
@@ -441,7 +441,7 @@ class FST:
             if isinstance(ast_or_src, AST):
                 return FST.fromast(ast_or_src, mode_or_lines_or_parent, **params)
 
-            return FST.fromsrc(ast_or_src, 'any' if mode_or_lines_or_parent is None else mode_or_lines_or_parent,
+            return FST.fromsrc(ast_or_src, 'all' if mode_or_lines_or_parent is None else mode_or_lines_or_parent,
                                **params)
 
         # creating actual node
@@ -889,6 +889,10 @@ class FST:
         ```py
         >>> FST('[0, 1, 2, 3]').elts[1].replace('4').root.src
         '[0, 4, 2, 3]'
+        >>> f = FST('def f(a, /, b, *c, **d) -> int: pass')
+        >>> f.args.posonlyargs[0].replace(')', to=f.returns, raw=True)  # some raw reparsing
+        >>> f.src
+        'def f(): pass'
         ```
         """
 
@@ -1937,7 +1941,7 @@ class FST:
         _unparse,
         _parse,
         _parse_all,
-        _parse_any,
+        _parse_most,
         _parse_Module,
         _parse_Expression,
         _parse_Interactive,
