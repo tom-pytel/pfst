@@ -937,14 +937,14 @@ class FST:
             multiple elements. This should be one past the last element to get (like python list indexing). If this is
             `False` then it indicates that a single element is being requested and not a slice. If this is `None` then
             it indicates a slice operation to the end of the list (like python `a[start:]`).
-        - `field`: The name of the field to get the element from, which can be an individual element like a `value` or
-            a list like `body`. If this is `None` then the default field for the node type is used. Most node types have
-            a common-sense default field, e.g. `body` for all block statements, `value` for things like `Return` and
-            `Yield`. `Dict`, `MatchMapping` and `Compare` nodes have special-case handling for a `None` field.
+        - `field`: The name of the field to get the element(s) from, which can be an individual element like a `value`
+            or a list like `body`. If this is `None` then the default field for the node type is used. Most node types
+            have a common-sense default field, e.g. `body` for all block statements, `value` for things like `Return`
+            and `Yield`. `Dict`, `MatchMapping` and `Compare` nodes have special-case handling for a `None` field.
         - `cut`: Whether to cut out the child node (if possible) or not (just copy).
         - `options`: See `set_option`.
 
-        **SPECIAL:** The `field` value can be passed positionally in either the `idx` or `stop` parameter. If passed in
+        **Note:** The `field` value can be passed positionally in either the `idx` or `stop` parameter. If passed in
         `idx` then the field is assumed individual and if passed in `stop` then it is a list and an individual element
         is being gotten from `idx` and not a slice.
 
@@ -998,35 +998,89 @@ class FST:
 
         return self._get_one(idx, field_, cut, **options)
 
-    def put(self, code: Code | None, start: int | Literal['end'] | None = None,
-            stop: int | None | Literal[False] = False, field: str | None = None, *,
-            one: bool = True, **options) -> 'FST':  # -> Self
-        """Put an individual child node or a slice of child nodes to `self`.
+    def put(self, code: Code | None, idx: int | Literal['end'] | None = None, stop: int | None | Literal[False] = False,
+            field: str | None = None, *, one: bool = True, **options) -> Self:
+        """Put an individual node or a slice of nodes to `self` if possible. This function can do everything that
+        `put_slice()` can. The node is passed as an existing top-level `FST`, `AST`, string or list of string lines. If
+        passed as an `FST` or `AST` then it should be considered "consumed" after this function returns and is no logner
+        valid, even on failuer.
 
-        WARNING! If the `code` being put is an `AST` or `FST` then it is consumed and should be considered invalid after
-        this call, whether it succeeds or fails.
+        **Parameters:**
+        - `idx`: The index of the field node to put to if the field being put to contains multiple elements or the start
+            of the slice to put if putting a slice (by specifying `stop`). If the field being put to is an individual
+            element then this should be `None`. If `stop` is specified and putting a slice then a `None` here means put
+            starting from the beginning of the list.
+        - `stop`: The end index (exclusive) of the field node to put to if putting a slice to a field that contains
+            multiple elements. This should be one past the last element to put (like python list indexing). If this is
+            `False` then it indicates that a single element is being put and not a slice. If this is `None` then it
+            indicates a slice operation to the end of the list (like python `a[start:]`).
+        - `field`: The name of the field to put the element(s) to, which can be an individual element like a `value` or
+            a list like `body`. If this is `None` then the default field for the node type is used. Most node types have
+            a common-sense default field, e.g. `body` for all block statements, `value` for things like `Return` and
+            `Yield`. `Dict`, `MatchMapping` and `Compare` nodes have special-case handling for a `None` field.
+        - `one`: Only has meaning if putting a slice, and in this case `True` specifies that the source should be  put
+            as a single element to the range specified even if it is a valid slice. `False` indicates a true slice
+            operation replacing the range with the slice passed, which must in this case be a compatible slice type.
+        - `options`: See `set_option`.
+
+        **Note:** The `field` value can be passed positionally in either the `idx` or `stop` parameter. If passed in
+        `idx` then the field is assumed individual and if passed in `stop` then it is a list and an individual element
+        is being gotten from `idx` and not a slice.
+
+        **Returns:**
+        - `self`.
+
+        **Example:**
+        ```py
+        >>> FST('[0, 1, 2, 3]').put('4', 1).src
+        '[0, 4, 2, 3]'
+        >>> FST('[0, 1, 2, 3]').put('4, 5', 1, 3).src
+        '[0, (4, 5), 3]'
+        >>> FST('[0, 1, 2, 3]').put('4, 5', 1, 3, one=False).src
+        '[0, 4, 5, 3]'
+        >>> FST('[0, 1, 2, 3]').put('4, 5', None, 3).src
+        '[(4, 5), 3]'
+        >>> (f := FST('[0, 1, 2, 3]')).put('4, 5', -3, None, one=False).src
+        '[0, 4, 5]'
+        >>> print(FST('if 1: i = 1\nelse: j = 2').put('z = -1', 0).src)
+        if 1:
+            z = -1
+        else: j = 2
+        >>> print(FST('if 1: i = 1\nelse: j = 2').put('z = -1', 0, 'orelse').src)
+        if 1: i = 1
+        else:
+            z = -1
+        >>> print(FST('if 1: i = 1\nelse: j = 2').put('z = -1\ny = -2\nx = -3', 'orelse', one=False).src)
+        if 1: i = 1
+        else:
+            z = -1
+            y = -2
+            x = -3
+        >>> print((f := FST('if 1: i = 1\nelse: j = 2')).put('z = -1', 0, raw=True, to=f.orelse[0]).root.src)
+        if 1: z = -1
+        ```
         """
 
-        ast                = self.a
-        start, stop, field = _swizzle_getput_params(start, stop, field, False)
-        field_, body       = _fixup_field_body(ast, field, False)
+        ast              = self.a
+        idx, stop, field = _swizzle_getput_params(idx, stop, field, False)
+        field_, body     = _fixup_field_body(ast, field, False)
 
         if isinstance(body, list):
             if stop is not False:
-                return self._put_slice(code, start, stop, field_, one, **options)
-            if start is None:
+                return self._put_slice(code, idx, stop, field_, one, **options)
+            if idx is None:
                 return self._put_slice(code, None, None, field_, one, **options)
 
-            if start == 'end':
+            if idx == 'end':
                 raise IndexError(f"cannot put() non-slice to index 'end'")
 
-        elif stop is not False or start is not None:
+        elif stop is not False or idx is not None:
             raise IndexError(f'{ast.__class__.__name__}{f".{field_}" if field_ else ""} does not take an index')
 
         if not one:
             raise ValueError(f"cannot use 'one=False' in non-slice put()")
 
-        self._put_one(code, start, field_, **options)
+        self._put_one(code, idx, field_, **options)
 
         return self.repath()
 

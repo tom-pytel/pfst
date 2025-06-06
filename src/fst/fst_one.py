@@ -1135,7 +1135,7 @@ def _put_one(self: 'FST', code: Code | None, idx: int | None, field: str, **opti
 
     sliceable, handler, static = _PUT_ONE_HANDLERS.get((ast.__class__, field), (False, None, None))
 
-    if sliceable and (not handler or (code is None and not to)):  # if deleting from a sliceable field without a 'to' parameter then delegate to slice operation, also all statementishs
+    if sliceable and (not handler or code is None) and not to:  # if deleting from a sliceable field without a 'to' parameter then delegate to slice operation, also all statementishs and combined mapping fields
         idx      = _fixup_one_index(len(child if field else ast.keys), idx)  # field will be '' only for Dict and MatchMapping which both have keys, Compare is not considered sliceable for single element deletions
         new_self = self._put_slice(code, idx, idx + 1, field, True, **options)
 

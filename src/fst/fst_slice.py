@@ -124,7 +124,7 @@ def _raw_slice_loc(self: 'FST', start: int | Literal['end'] | None, stop: int | 
         stop        -= 1
 
         return fstloc(*(comparators[start - 1] if start else ast.left).f.pars()[:2],
-                        *(comparators[stop - 1] if stop else ast.left).f.pars()[2:])
+                      *(comparators[stop - 1] if stop else ast.left).f.pars()[2:])
 
     if isinstance(ast, MatchMapping):
         if field:
@@ -227,6 +227,9 @@ def _put_slice(self: 'FST', code: Code | None, start: int | Literal['end'] | Non
 
     ast = self.a
     raw = FST.get_option('raw', options)
+
+    if options.get('to') is not None:
+        raise ValueError(f"cannot put slice with 'to'")
 
     if raw is not True:
         try:
