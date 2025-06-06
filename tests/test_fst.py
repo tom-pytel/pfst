@@ -9438,7 +9438,7 @@ finally:
                 field, _ = _fixup_field_body(f.a, field)
                 loc      = _raw_slice_loc(f, start, stop, field)
 
-                f.put_src(None if src == '**DEL**' else src, *loc, **options)
+                f.put_src(None if src == '**DEL**' else src, *loc)
 
                 tdst  = f.root.src
                 tdump = f.root.dump(out=list, compact=True)

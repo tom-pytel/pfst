@@ -1373,7 +1373,8 @@ class FST:
 
     def par(self, force: bool = False, *, whole: bool = True) -> Self:
         """Parenthesize node if it MAY need it. Will not parenthesize atoms which are always enclosed like `List` unless
-        `force=True`. Will add parentheses to unparenthesized `Tuple`, adjusting the node location.
+        `force=True`. Will add parentheses to unparenthesized `Tuple` and brackets to unbracketed `MatchSequence`
+        adjusting the node location.
 
         **Parameters:**
         - `force`: If `True` then will add another layer of parentheses regardless if any already present.
@@ -1395,6 +1396,8 @@ class FST:
         with self._modifying():
             if isinstance(self.a, Tuple):
                 self._parenthesize_tuple(whole)
+            elif isinstance(self.a, MatchSequence):
+                self._parenthesize_tuple(whole, '[]')
             else:
                 self._parenthesize_grouping(whole)
 

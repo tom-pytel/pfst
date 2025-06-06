@@ -1156,10 +1156,10 @@ def _parenthesize_grouping(self: 'FST', whole: bool = True):
     self._offset(*self._put_src(['('], ln, col, ln, col, False, False, self, offset_excluded=False))
 
 
-def _parenthesize_tuple(self: 'FST', whole: bool = True):
-    """Parenthesize an unparenthesized tuple, adjusting tuple location for added parentheses.
+def _parenthesize_tuple(self: 'FST', whole: bool = True, pars: str = '()'):
+    """Parenthesize an unparenthesized `Tuple` or `MatchSequence`, adjusting tuple location for added parentheses.
 
-    WARNING! No checks are done so don't call on anything other than an unparenthesized Tuple!
+    WARNING! No checks are done so don't call on anything other than an unparenthesized Tuple or MatchSequence!
 
     **Parameters:**
     - `whole`: If at root then parenthesize whole source instead of just node.
@@ -1169,14 +1169,14 @@ def _parenthesize_tuple(self: 'FST', whole: bool = True):
 
     ln, col, end_ln, end_col = self.whole_loc if whole and self.is_root else self.loc
 
-    self._put_src([')'], end_ln, end_col, end_ln, end_col, True, False, self)
+    self._put_src([pars[1]], end_ln, end_col, end_ln, end_col, True, False, self)
 
     lines            = self.root._lines
     a                = self.a
     a.end_lineno     = end_ln + 1  # yes this can change
     a.end_col_offset = lines[end_ln].c2b(end_col + 1)  # can't count on this being set by put_src() because end of `whole` could be past end of tuple
 
-    self._offset(*self._put_src(['('], ln, col, ln, col, False, False, self), self_=False)
+    self._offset(*self._put_src([pars[0]], ln, col, ln, col, False, False, self), self_=False)
 
     a.lineno     = ln + 1
     a.col_offset = lines[ln].c2b(col)  # ditto on the `whole` thing
@@ -1231,8 +1231,8 @@ def _unparenthesize_grouping(self: 'FST', share: bool = True) -> bool:
 
 
 def _unparenthesize_tuple(self: 'FST') -> bool:
-    """Unparenthesize a parenthesized tuple, adjusting tuple location for removed parentheses. Will not
-    unparenthesize an empty tuple. Removes everything between the parentheses and the actual tuple.
+    """Unparenthesize a parenthesized `Tuple`, adjusting tuple location for removed parentheses. Will not unparenthesize
+    an empty tuple. Removes everything between the parentheses and the actual tuple.
 
     WARNING! No checks are done so don't call on anything other than a parenthesized Tuple!
 
@@ -1418,7 +1418,7 @@ def _get_fmtval_interp_strs(self: 'FST') -> tuple[str | None, str | None, int, i
         return None
 
 
-    # THIS IS WHAT I ASSUME SHOULD BE CORRECT
+    # CORRECT VERSION
 
     # lns  = set()
     # ends = {}
@@ -1455,7 +1455,7 @@ def _get_fmtval_interp_strs(self: 'FST') -> tuple[str | None, str | None, int, i
     #         lines[i] = l[:m.start(1)]
 
 
-    # THIS IS WHAT PYTHON 3.12+ DOES
+    # BUGGY VERSION
 
     lines = self.get_src(sln, scol + 1, end_ln, end_col, True)
 
