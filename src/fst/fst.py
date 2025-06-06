@@ -65,7 +65,8 @@ def parse(source, filename='<unknown>', mode='exec', *, type_comments=False, fea
     parameters, see `ast.parse()`. Returned `AST` tree has added `.f` attribute at each node which accesses the parallel
     `FST` tree."""
 
-    return FST.fromsrc(source, filename, mode, type_comments=type_comments, feature_version=feature_version, **kwargs).a
+    return FST.fromsrc(source, mode, filename=filename, type_comments=type_comments, feature_version=feature_version,
+                       **kwargs).a
 
 
 def unparse(ast_obj) -> str:
@@ -436,11 +437,11 @@ class FST:
                 params = {**from_.root.parse_params, **params}
 
             if ast_or_src is None:
-                return FST.new(mode='exec' if mode_or_lines_or_parent is None else mode_or_lines_or_parent, **params)
+                return FST.new('exec' if mode_or_lines_or_parent is None else mode_or_lines_or_parent, **params)
             if isinstance(ast_or_src, AST):
-                return FST.fromast(ast_or_src, mode=mode_or_lines_or_parent, **params)
+                return FST.fromast(ast_or_src, mode_or_lines_or_parent, **params)
 
-            return FST.fromsrc(ast_or_src, mode='any' if mode_or_lines_or_parent is None else mode_or_lines_or_parent,
+            return FST.fromsrc(ast_or_src, 'any' if mode_or_lines_or_parent is None else mode_or_lines_or_parent,
                                **params)
 
         # creating actual node
@@ -518,7 +519,7 @@ class FST:
         return self
 
     @staticmethod
-    def new(filename: str = '<unknown>', mode: Literal['exec', 'eval', 'single'] = 'exec', *,
+    def new(mode: Literal['exec', 'eval', 'single'] = 'exec', *, filename: str = '<unknown>',
             type_comments: bool = False, feature_version: tuple[int, int] | None = None) -> 'FST':
         """Create a new empty `FST` tree with the top level node dictated by the `mode` parameter.
 
@@ -546,7 +547,7 @@ class FST:
         return FST(ast, [bistr('')], parse_params=parse_params, lcopy=False)
 
     @staticmethod
-    def fromsrc(src: str | bytes | list[str], filename: str = '<unknown>', mode: Mode = 'exec', *,
+    def fromsrc(src: str | bytes | list[str], mode: Mode = 'exec', *, filename: str = '<unknown>',
                 type_comments: bool = False, feature_version: tuple[int, int] | None = None) -> 'FST':
         """Parse and create a new `FST` tree from source, preserving the original source and locations.
 
@@ -575,7 +576,7 @@ class FST:
         return FST(ast, lines, parse_params=parse_params)
 
     @staticmethod
-    def fromast(ast: AST, filename: str = '<unknown>', mode: Mode | Literal[False] | None = None, *,
+    def fromast(ast: AST, mode: Mode | Literal[False] | None = None, *, filename: str = '<unknown>',
                 type_comments: bool | None = False, feature_version=None) -> 'FST':
         """Unparse and reparse an `AST` for new `FST` (the reparse is necessary to make sure locations are correct).
 

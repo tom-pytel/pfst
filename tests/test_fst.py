@@ -2040,7 +2040,7 @@ def f():
         self.assertIsInstance(f.a.body, Name)
 
         v = _PY_VERSION
-        f = FST.fromsrc('i', mode='exec', filename='fnm', type_comments=True, feature_version=v)
+        f = FST.fromsrc('i', 'exec', filename='fnm', type_comments=True, feature_version=v)
 
         g = FST('j', 'exec', from_=f)
         self.assertEqual('fnm', g.parse_params['filename'])

@@ -105,7 +105,7 @@ def _reparse_raw(self: 'FST', new_lines: list[str], ln: int, col: int, end_ln: i
     copy_root._put_src(new_lines, ln, col, end_ln, end_col)
 
     root      = self.root
-    copy_root = FST.fromsrc(copy_root.src, mode=get_parse_mode(root.a) or 'exec', **root.parse_params)
+    copy_root = FST.fromsrc(copy_root.src, get_parse_mode(root.a) or 'exec', **root.parse_params)
 
     if path == 'root':
         self._lines = copy_root._lines
