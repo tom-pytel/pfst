@@ -171,7 +171,7 @@ class fstlist:
         - `code`: `FST`, `AST` or source `str` or `list[str]` to put. `None` to delete this slice.
         - `one`: If `True` then will replace the range of this slice with a single item. Otherwise `False` will attempt
             a slice replacement (type must be compatible).
-        - `options`: See `set_option`.
+        - `options`: See `get_options()`.
 
         **Example:**
         ```py
@@ -194,7 +194,7 @@ class fstlist:
         """Delete this slice, equivalent to `replace(None, ...)`
 
         **Parameters:**
-        - `options`: See `set_option`.
+        - `options`: See `get_options()`.
 
         **Returns:**
         - `self`
@@ -225,7 +225,7 @@ class fstlist:
         - `idx`: Index to insert BEFORE. Can be `'end'` to indicate add at end of slice.
         - `one`: If `True` then will insert `code` as a single item. Otherwise `False` will attempt a slice insertion
             (type must be compatible).
-        - `options`: See `set_option`.
+        - `options`: See `get_options()`.
 
         **Example:**
         ```py
@@ -259,7 +259,7 @@ class fstlist:
 
         **Parameters:**
         - `code`: `FST`, `AST` or source `str` or `list[str]` to append.
-        - `options`: See `set_option`.
+        - `options`: See `get_options()`.
 
         **Example:**
         ```py
@@ -284,7 +284,7 @@ class fstlist:
 
         **Parameters:**
         - `code`: `FST`, `AST` or source `str` or `list[str]` slice to extend.
-        - `options`: See `set_option`.
+        - `options`: See `get_options()`.
 
         **Example:**
         ```py
@@ -311,7 +311,7 @@ class fstlist:
 
         **Parameters:**
         - `code`: `FST`, `AST` or source `str` or `list[str]` to preappend.
-        - `options`: See `set_option`.
+        - `options`: See `get_options()`.
 
         **Example:**
         ```py
@@ -336,7 +336,7 @@ class fstlist:
 
         **Parameters:**
         - `code`: `FST`, `AST` or source `str` or `list[str]` to extend at the start.
-        - `options`: See `set_option`.
+        - `options`: See `get_options()`.
 
         **Example:**
         ```py

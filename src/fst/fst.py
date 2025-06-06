@@ -618,7 +618,57 @@ class FST:
 
     @staticmethod
     def get_options() -> dict[str, Any]:
-        """Get a dictionary of all options.
+        """Get a dictionary of all options. These are the same `options` that can be passed to operations and this
+        function returns their global defaults which are used when those options are not passed to operations or if they
+        are passed with a value of `None`.
+
+        **Options:**
+        - `pars`: How parentheses are handled, can be `False`, `True` or `'auto'`. This is for individual puts, for
+            slices parentheses are always unchanged. Raw puts generally do not have parentheses added or removed
+            automatically, except removed from the destination node if putting to a node instead of a pure location.
+            - `False`: Parentheses are not MODIFIED, doesn't mean remove all parentheses. Not copied with nodes or
+                removed on put from source or destination.
+            - `True`: Parentheses are copied with nodes, added to copies if needed and not present, removed from
+                destination on put if not needed there (but not source).
+            - `'auto'`: Same as `True` except they are not returned with a copy and possibly removed from source
+                on put if not needed (removed from destination first if needed and present on both).
+        - `raw`: How to attempt at raw source operations. This may result in more nodes changed than just the targeted
+            one(s).
+            - `False`: Do not do raw source operations.
+            - `True`: Only do raw source operations.
+            - `'auto'`: Only do raw source operations if the normal operation fails in a way that raw might not.
+        - `elif_`: How to handle lone `If` statements as the only statements in an `If` statement `orelse` field.
+            - `True`: If putting a single `If` statement to an `orelse` field of a parent `If` statement then
+                put it as an `elif`.
+            - `False`: Always put as a standalone `If` statement.
+        - `docstr`: Which docstrings are indentable / dedentable.
+            - `False`: None.
+            - `True`: All `Expr` multiline strings (as they serve no coding purpose).
+            - `'strict'`: Only multiline strings in expected docstring positions (functions and classes).
+        - `empty_set`: Empty set source during a slice put (considered to have no elements).
+            - False: Nothing is considered an empty set and an empty set slice put is only possible using a non-set
+                type of empty sequence (tuple or list).
+            - True: `set()` call and `{*()}`, `{*[]}` and `{*{}}` starred sequences are considered empty.
+            - `seq`: Only starred sequences `{*()}`, `{*[]}` and `{*{}}` are considered empty.
+            - `call`: Only `set()` call is considered empty.
+        - `precomms`: Preceding comments.
+            - `False`: No preceding comments.
+            - `True`: Single contiguous comment block immediately preceding position.
+            - `'all'`: Comment blocks (possibly separated by empty lines) preceding position.
+        - `postcomms`: Trailing comments.
+            - `False`: No trailing comments.
+            - `True`: Only comment trailing on line of position, nothing past that on its own lines.
+            - `'block'`: Single contiguous comment block following position.
+            - `'all'`: Comment blocks (possibly separated by empty lines) following position.
+        - `prespace`: Preceding empty lines (max of this and `pep8space` used).
+            - `False`: No empty lines.
+            - `True`: All empty lines.
+            - `int`: A maximum number of empty lines.
+        - `postspace`: Same as `prespace` except for trailing empty lines.
+        - `pep8space`: Preceding and trailing empty lines for function and class definitions.
+            - `False`: No empty lines.
+            - `True`: Two empty lines at module scope and one empty line in other scopes.
+            - `1`: One empty line in all scopes.
 
         **Returns:**
         - `{option: value, ...}`: Dictionary of all global default options.
@@ -629,10 +679,10 @@ class FST:
     @staticmethod
     def get_option(option: str, options: dict[str, Any] = {}) -> Any:
         """Get a single option from `options` dict or global default if option not in dict or is `None` there. For a
-        list of options used see `set_option`.
+        list of options used see `get_options()`.
 
         **Parameters:**
-        - `option`: Name of option to get.
+        - `option`: Name of option to get, see `get_options()`.
         - `options`: Dictionary which may or may not contain the requested option.
 
         **Returns:**
@@ -647,54 +697,8 @@ class FST:
         """Set global defaults for `options` parameters.
 
         **Parameters:**
-        - `options`: Key / values of parameters to set. These can also be passed to various methods and override the
-            defaults set here.
-            - `pars`: How parentheses are handled, can be `False`, `True` or `'auto'`. This is for individual puts, for
-                slices parentheses are always unchanged. Raw puts generally do not have parentheses added or removed
-                automatically, except removed from the destination node if putting to a node instead of a pure location.
-                - `False`: Parentheses are not MODIFIED, doesn't mean remove all parentheses. Not copied with nodes or
-                    removed on put from source or destination.
-                - `True`: Parentheses are copied with nodes, added to copies if needed and not present, removed from
-                    destination on put if not needed there (but not source).
-                - `'auto'`: Same as `True` except they are not returned with a copy and possibly removed from source
-                    on put if not needed (removed from destination first if needed and present on both).
-            - `raw`: How to attempt at raw source operations. This may result in more nodes changed than just the targeted
-                one(s).
-                - `False`: Do not do raw source operations.
-                - `True`: Only do raw source operations.
-                - `'auto'`: Only do raw source operations if the normal operation fails in a way that raw might not.
-            - `elif_`: How to handle lone `If` statements as the only statements in an `If` statement `orelse` field.
-                - `True`: If putting a single `If` statement to an `orelse` field of a parent `If` statement then
-                    put it as an `elif`.
-                - `False`: Always put as a standalone `If` statement.
-            - `docstr`: Which docstrings are indentable / dedentable.
-                - `False`: None.
-                - `True`: All `Expr` multiline strings (as they serve no coding purpose).
-                - `'strict'`: Only multiline strings in expected docstring positions (functions and classes).
-            - `empty_set`: Empty set source during a slice put (considered to have no elements).
-                - False: Nothing is considered an empty set and an empty set slice put is only possible using a non-set
-                    type of empty sequence (tuple or list).
-                - True: `set()` call and `{*()}`, `{*[]}` and `{*{}}` starred sequences are considered empty.
-                - `seq`: Only starred sequences `{*()}`, `{*[]}` and `{*{}}` are considered empty.
-                - `call`: Only `set()` call is considered empty.
-            - `precomms`: Preceding comments.
-                - `False`: No preceding comments.
-                - `True`: Single contiguous comment block immediately preceding position.
-                - `'all'`: Comment blocks (possibly separated by empty lines) preceding position.
-            - `postcomms`: Trailing comments.
-                - `False`: No trailing comments.
-                - `True`: Only comment trailing on line of position, nothing past that on its own lines.
-                - `'block'`: Single contiguous comment block following position.
-                - `'all'`: Comment blocks (possibly separated by empty lines) following position.
-            - `prespace`: Preceding empty lines (max of this and `pep8space` used).
-                - `False`: No empty lines.
-                - `True`: All empty lines.
-                - `int`: A maximum number of empty lines.
-            - `postspace`: Same as `prespace` except for trailing empty lines.
-            - `pep8space`: Preceding and trailing empty lines for function and class definitions.
-                - `False`: No empty lines.
-                - `True`: Two empty lines at module scope and one empty line in other scopes.
-                - `1`: One empty line in all scopes.
+        - `options`: Key / values of parameters to set. These can also be passed to various methods to override the
+            defaults set here for those individual operations, see `get_options()`.
 
         **Returns:**
         - `options`: `dict` of previous values of changed parameters, reset with `set_option(**options)`.
@@ -723,7 +727,7 @@ class FST:
         """Context manager to temporarily set gloval options defaults for a group of operations.
 
         **Parameters:**
-        - `options`: Key / values of options to set temporarily, see `set_option`.
+        - `options`: Key / values of options to set temporarily, see `get_options()`.
 
         **Example:**
         ```py
@@ -837,7 +841,7 @@ class FST:
         """Copy this node to a new top-level tree, dedenting and fixing as necessary.
 
         **Parameters:**
-        - `options`: See `set_option`.
+        - `options`: See `get_options()`.
 
         **Returns:**
         - `FST`: Copied node.
@@ -859,7 +863,7 @@ class FST:
         node.
 
         **Parameters:**
-        - `options`: See `set_option`.
+        - `options`: See `get_options()`.
 
         **Returns:**
         - `FST`: Cut node.
@@ -884,7 +888,10 @@ class FST:
 
         **Parameters:**
         - `code`: `FST`, `AST` or source `str` or `list[str]` to put at this location. `None` to delete this node.
-        - `options`: See `set_option`.
+        - `options`: See `get_options()`.
+            - `to`: Special option which only applies when putting in `raw` mode (either through `True` or `'auto'`).
+                Instead of replacing just this node, will replace the entire span from this node to the node specified
+                in `to` with the `code` passed.
 
         **Returns:**
         - `FST | None`: Returns the new node if successfully replaced or `None` if deleted.
@@ -909,7 +916,7 @@ class FST:
         """Delete this node if possible, equivalent to `replace(None, ...)`. Cannot delete root node.
 
         **Parameters:**
-        - `options`: See `set_option`.
+        - `options`: See `get_options()`.
 
         **Example:**
         ```py
@@ -942,7 +949,7 @@ class FST:
             have a common-sense default field, e.g. `body` for all block statements, `value` for things like `Return`
             and `Yield`. `Dict`, `MatchMapping` and `Compare` nodes have special-case handling for a `None` field.
         - `cut`: Whether to cut out the child node (if possible) or not (just copy).
-        - `options`: See `set_option`.
+        - `options`: See `get_options()`.
 
         **Note:** The `field` value can be passed positionally in either the `idx` or `stop` parameter. If passed in
         `idx` then the field is assumed individual and if passed in `stop` then it is a list and an individual element
@@ -1021,7 +1028,10 @@ class FST:
         - `one`: Only has meaning if putting a slice, and in this case `True` specifies that the source should be  put
             as a single element to the range specified even if it is a valid slice. `False` indicates a true slice
             operation replacing the range with the slice passed, which must in this case be a compatible slice type.
-        - `options`: See `set_option`.
+        - `options`: See `get_options()`.
+            - `to`: Special option which only applies when putting in `raw` mode (either through `True` or `'auto'`) and
+                when putting a single value and not a slice. Instead of replacing just the target node, will replace the
+                entire span from the target node to the node specified in `to` with the `code` passed.
 
         **Note:** The `field` value can be passed positionally in either the `idx` or `stop` parameter. If passed in
         `idx` then the field is assumed individual and if passed in `stop` then it is a list and an individual element
