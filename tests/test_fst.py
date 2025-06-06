@@ -8235,6 +8235,27 @@ if 1:
             self.assertEqual('()', f.values[0].value.src)
             self.assertEqual('()', f.values[0].str)
 
+    def test_put_slice_empty_set(self):
+        self.assertEqual('[]', FST('[1, 2]').put_slice('set()', raw=False, empty_set=True).src)
+        self.assertEqual('[]', FST('[1, 2]').put_slice('{*()}', raw=False, empty_set=True).src)
+        self.assertEqual('[]', FST('[1, 2]').put_slice('{*[]}', raw=False, empty_set=True).src)
+        self.assertEqual('[]', FST('[1, 2]').put_slice('{*{}}', raw=False, empty_set=True).src)
+
+        self.assertRaises(ValueError, FST('[1, 2]').put_slice, 'set()', raw=False, empty_set='seq')
+        self.assertEqual('[]', FST('[1, 2]').put_slice('{*()}', raw=False, empty_set='seq').src)
+        self.assertEqual('[]', FST('[1, 2]').put_slice('{*[]}', raw=False, empty_set='seq').src)
+        self.assertEqual('[]', FST('[1, 2]').put_slice('{*{}}', raw=False, empty_set='seq').src)
+
+        self.assertEqual('[]', FST('[1, 2]').put_slice('set()', raw=False, empty_set='call').src)
+        self.assertEqual('[*()]', FST('[1, 2]').put_slice('{*()}', raw=False, empty_set='call').src)
+        self.assertEqual('[*[]]', FST('[1, 2]').put_slice('{*[]}', raw=False, empty_set='call').src)
+        self.assertEqual('[*{}]', FST('[1, 2]').put_slice('{*{}}', raw=False, empty_set='call').src)
+
+        self.assertRaises(ValueError, FST('[1, 2]').put_slice, 'set()', raw=False, empty_set=False)
+        self.assertEqual('[*()]', FST('[1, 2]').put_slice('{*()}', raw=False, empty_set=False).src)
+        self.assertEqual('[*[]]', FST('[1, 2]').put_slice('{*[]}', raw=False, empty_set=False).src)
+        self.assertEqual('[*{}]', FST('[1, 2]').put_slice('{*{}}', raw=False, empty_set=False).src)
+
     def test_put_one(self):
         ver = _PY_VERSION[1]
         for i, (dst, attr, idx, field, options, src, put_src, put_dump) in enumerate(PUT_ONE_DATA):

@@ -302,8 +302,11 @@ def _put_slice_tuple_list_or_set(self: 'FST', code: Code | None, start: int | Li
             is_tuple = is_set = False  # that's right, an `ast.Set` with `is_set=False` because in this case all we need is the `elts` container (without `ctx`)
 
         else:
-            if put_fst.is_empty_set_call() or put_fst.is_empty_set_seq():
-                put_fst = self._new_empty_set_curlies(from_=self)
+            if empty_set := self.get_option('empty_set', options):
+                if ((put_fst.is_empty_set_seq() or put_fst.is_empty_set_call()) if empty_set is True else
+                    put_fst.is_empty_set_seq() if empty_set == 'seq' else put_fst.is_empty_set_call()  # else 'call'
+                ):
+                    put_fst = self._new_empty_set_curlies(from_=self)
 
             put_ast  = put_fst.a
             is_tuple = isinstance(put_ast, Tuple)

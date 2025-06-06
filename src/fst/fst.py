@@ -33,15 +33,16 @@ _DEFAULT_PARSE_PARAMS = dict(filename='<unknown>', type_comments=False, feature_
 _DEFAULT_INDENT       = '    '
 
 _OPTIONS = {
+    'pars':      'auto',  # True | False | 'auto'
+    'elif_':     True,    # True | False
+    'raw':       'auto',  # True | False | 'auto'
     'docstr':    True,    # True | False | 'strict'
+    'empty_set': True,    # True | False | 'seq' | 'call'
     'precomms':  True,    # True | False | 'all'
     'postcomms': True,    # True | False | 'all' | 'block'
     'prespace':  False,   # True | False | int
     'postspace': False,   # True | False | int
     'pep8space': True,    # True | False | 1
-    'pars':      'auto',  # True | False | 'auto'
-    'elif_':     True,    # True | False
-    'raw':       'auto',  # True | False | 'auto'
 }
 
 
@@ -638,33 +639,6 @@ class FST:
         **Parameters:**
         - `options`: Key / values of parameters to set. These can also be passed to various methods and override the
             defaults set here.
-            - `docstr`: Which docstrings are indentable / dedentable.
-                - `False`: None.
-                - `True`: All `Expr` multiline strings (as they serve no coding purpose).
-                - `'strict'`: Only multiline strings in expected docstring positions (functions and classes).
-                - `None`: Use default.
-            - `precomms`: Preceding comments.
-                - `False`: No preceding comments.
-                - `True`: Single contiguous comment block immediately preceding position.
-                - `'all'`: Comment blocks (possibly separated by empty lines) preceding position.
-                - `None`: Use default.
-            - `postcomms`: Trailing comments.
-                - `False`: No trailing comments.
-                - `True`: Only comment trailing on line of position, nothing past that on its own lines.
-                - `'block'`: Single contiguous comment block following position.
-                - `'all'`: Comment blocks (possibly separated by empty lines) following position.
-                - `None`: Use default.
-            - `prespace`: Preceding empty lines (max of this and `pep8space` used).
-                - `False`: No empty lines.
-                - `True`: All empty lines.
-                - `int`: A maximum number of empty lines.
-                - `None`: Use default.
-            - `postspace`: Same as `prespace` except for trailing empty lines.
-            - `pep8space`: Preceding and trailing empty lines for function and class definitions.
-                - `False`: No empty lines.
-                - `True`: Two empty lines at module scope and one empty line in other scopes.
-                - `1`: One empty line in all scopes.
-                - `None`: Use default.
             - `pars`: How parentheses are handled, can be `False`, `True` or `'auto'`. This is for individual puts, for
                 slices parentheses are always unchanged. Raw puts generally do not have parentheses added or removed
                 automatically, except removed from the destination node if putting to a node instead of a pure location.
@@ -674,18 +648,43 @@ class FST:
                     destination on put if not needed there (but not source).
                 - `'auto'`: Same as `True` except they are not returned with a copy and possibly removed from source
                     on put if not needed (removed from destination first if needed and present on both).
-                - `None`: Use default.
             - `raw`: How to attempt at raw source operations. This may result in more nodes changed than just the targeted
                 one(s).
                 - `False`: Do not do raw source operations.
                 - `True`: Only do raw source operations.
                 - `'auto'`: Only do raw source operations if the normal operation fails in a way that raw might not.
-                - `None`: Use default.
             - `elif_`: How to handle lone `If` statements as the only statements in an `If` statement `orelse` field.
                 - `True`: If putting a single `If` statement to an `orelse` field of a parent `If` statement then
                     put it as an `elif`.
                 - `False`: Always put as a standalone `If` statement.
-                - `None`: Use default.
+            - `docstr`: Which docstrings are indentable / dedentable.
+                - `False`: None.
+                - `True`: All `Expr` multiline strings (as they serve no coding purpose).
+                - `'strict'`: Only multiline strings in expected docstring positions (functions and classes).
+            - `empty_set`: Empty set source during a slice put (considered to have no elements).
+                - False: Nothing is considered an empty set and an empty set slice put is only possible using a non-set
+                    type of empty sequence (tuple or list).
+                - True: `set()` call and `{*()}`, `{*[]}` and `{*{}}` starred sequences are considered empty.
+                - `seq`: Only starred sequences `{*()}`, `{*[]}` and `{*{}}` are considered empty.
+                - `call`: Only `set()` call is considered empty.
+            - `precomms`: Preceding comments.
+                - `False`: No preceding comments.
+                - `True`: Single contiguous comment block immediately preceding position.
+                - `'all'`: Comment blocks (possibly separated by empty lines) preceding position.
+            - `postcomms`: Trailing comments.
+                - `False`: No trailing comments.
+                - `True`: Only comment trailing on line of position, nothing past that on its own lines.
+                - `'block'`: Single contiguous comment block following position.
+                - `'all'`: Comment blocks (possibly separated by empty lines) following position.
+            - `prespace`: Preceding empty lines (max of this and `pep8space` used).
+                - `False`: No empty lines.
+                - `True`: All empty lines.
+                - `int`: A maximum number of empty lines.
+            - `postspace`: Same as `prespace` except for trailing empty lines.
+            - `pep8space`: Preceding and trailing empty lines for function and class definitions.
+                - `False`: No empty lines.
+                - `True`: Two empty lines at module scope and one empty line in other scopes.
+                - `1`: One empty line in all scopes.
 
         **Returns:**
         - `options`: `dict` of previous values of changed parameters, reset with `set_option(**options)`.

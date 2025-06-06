@@ -37,6 +37,52 @@ def _get_slice(self: 'FST', start: int | Literal['end'] | None, stop: int | None
     # TODO: more individual specialized slice gets
 
 
+
+    elif (ast.__class__, field) in [
+        (FunctionDef, 'decorator_list'),      # expr*
+        (AsyncFunctionDef, 'decorator_list'), # expr*
+        (ClassDef, 'decorator_list'),         # expr*
+        (ClassDef, 'bases'),                  # expr*
+        (Delete, 'targets'),                  # expr*
+        (Assign, 'targets'),                  # expr*
+        (BoolOp, 'values'),                   # expr*
+        (Call, 'args'),                       # expr*
+        (comprehension, 'ifs'),               # expr*
+
+        (ListComp, 'generators'),             # comprehension*
+        (SetComp, 'generators'),              # comprehension*
+        (DictComp, 'generators'),             # comprehension*
+        (GeneratorExp, 'generators'),         # comprehension*
+
+        (ClassDef, 'keywords'),               # keyword*
+        (Call, 'keywords'),                   # keyword*
+
+        (Import, 'names'),                    # alias*
+        (ImportFrom, 'names'),                # alias*
+
+        (With, 'items'),                      # withitem*
+        (AsyncWith, 'items'),                 # withitem*
+
+        (MatchSequence, 'patterns'),          # pattern*
+        (MatchMapping, 'patterns'),           # pattern*
+        (MatchClass, 'patterns'),             # pattern*
+        (MatchOr, 'patterns'),                # pattern*
+
+        (FunctionDef, 'type_params'),         # type_param*
+        (AsyncFunctionDef, 'type_params'),    # type_param*
+        (ClassDef, 'type_params'),            # type_param*
+        (TypeAlias, 'type_params'),           # type_param*
+
+        (Global, 'names'),                    # identifier*
+        (Nonlocal, 'names'),                  # identifier*
+
+        (JoinedStr, 'values'),                # expr*
+        (TemplateStr, 'values'),              # expr*
+
+    ]:
+        raise NotImplementedError('not implemented yet')
+
+
     raise ValueError(f"cannot get slice from {ast.__class__.__name__}.{field}")
 
 
