@@ -9215,7 +9215,7 @@ a
         f.put(g, field='right', pars='auto')
         self.assertEqual('i + x * y', f.root.src)
 
-    def test_put_raw(self):
+    def test_put_src(self):
         for i, (dst, attr, (ln, col, end_ln, end_col), options, src, put_ret, put_src, put_dump) in enumerate(PUT_SRC_DATA):
             t = parse(dst)
             f = (eval(f't.{attr}', {'t': t}) if attr else t).f
@@ -9243,7 +9243,7 @@ a
 
                 raise
 
-    def test_put_raw_random_same(self):
+    def test_put_src_random_same(self):
         seed(rndseed := randint(0, 0x7fffffff))
 
         try:
@@ -9334,7 +9334,7 @@ finally:
 
             raise
 
-    def test_put_raw_from_put_slice_data(self):
+    def test_put_src_from_put_slice_data(self):
         from fst.shared import _fixup_field_body
         from fst.fst_raw import _raw_slice_loc
 
@@ -9482,6 +9482,25 @@ finally:
 
         f = parse('a = b').body[0].f
         self.assertRaises(ValueError, f.value.replace, 'c', to=f.targets[0], raw=True)
+
+    def test_raw_non_mod_stmt_root(self):
+        f = FST('call(a, *b, **c)')
+        f.args[0].replace('d', to=f.keywords[-1], raw=True)
+        self.assertEqual('call(d)', f.src)
+        self.assertIsInstance(f.a, Call)
+        f.verify()
+
+        f = FST('1, 2')
+        f.elts[0].replace('d', to=f.elts[-1], raw=True)
+        self.assertEqual('d', f.src)
+        self.assertIsInstance(f.a, Name)
+        f.verify()
+
+        f = FST('for i in range(-5, 5) if i', 'all')
+        f.iter.args[0].replace('99', to=f.iter.args[-1], raw=True)
+        self.assertEqual('for i in range(99) if i', f.src)
+        self.assertIsInstance(f.a, comprehension)
+        # f.verify()
 
     def test_modify_parent_fmtvals_and_interpolations(self):
         if _PY_VERSION >= (3, 12):

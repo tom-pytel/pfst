@@ -1936,6 +1936,8 @@ class FST:
     from .fst_parse import (
         _unparse,
         _parse,
+        _parse_all,
+        _parse_any,
         _parse_Module,
         _parse_Expression,
         _parse_Interactive,

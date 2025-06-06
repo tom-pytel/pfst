@@ -519,9 +519,9 @@ def is_parsable(ast: AST) -> bool:
 def get_parse_mode(ast: AST) -> Literal['exec', 'eval', 'single']:
     """Return the original `mode` string that is used to parse to this `mod`."""
 
-    if isinstance(ast, (stmt, Module)):
+    if isinstance(ast, Module):
         return 'exec'
-    if isinstance(ast, (expr, Expression)):
+    if isinstance(ast, Expression):
         return 'eval'
     if isinstance(ast, Interactive):
         return 'single'

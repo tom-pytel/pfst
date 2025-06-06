@@ -7,9 +7,9 @@ from .astutil import *
 from .astutil import TryStar
 
 from .shared import (
-    astfield, fstloc,
+    NodeError, astfield, fstloc,
     STMTISH_FIELDS,
-    Code,
+    Code, Mode,
     _next_find, _prev_find,
     _fixup_slice_indices, _coerce_ast,
 )
@@ -96,18 +96,28 @@ def _raw_slice_loc(self: 'FST', start: int | Literal['end'] | None, stop: int | 
 _GLOBALS = globals() | {'_GLOBALS': None}
 # ----------------------------------------------------------------------------------------------------------------------
 
-def _reparse_raw(self: 'FST', new_lines: list[str], ln: int, col: int, end_ln: int, end_col: int,
-                 copy_lines: list[str], path: list[astfield] | str, set_ast: bool = True) -> 'FST':
-    """Actually do the reparse."""
+def _reparse_raw(self: 'FST', new_lines: list[str], ln: int, col: int, end_ln: int, end_col: int, copy_lines: list[str],
+                 path: list[astfield] | str | None, set_ast: bool = True, mode: Mode | None = None) -> 'FST':
+    """Actually do the reparse. If `mode` is `None` then will just try a normal `'exec'` parse and fail if that fails.
+    Otherwise it will try this mode first, then all other parse modes as it is assumed to be a non-top level
+    statementish thing being reparsed."""
 
     copy_root = FST(Pass(), copy_lines, lcopy=False)  # we don't need the ASTs here, just the lines
 
     copy_root._put_src(new_lines, ln, col, end_ln, end_col)
 
-    root      = self.root
-    copy_root = FST.fromsrc(copy_root.src, get_parse_mode(root.a) or 'exec', **root.parse_params)
+    root = self.root
 
-    if path == 'root':
+    try:
+        copy_root = FST.fromsrc(copy_root.src, mode or 'exec', **root.parse_params)
+
+    except (NodeError, SyntaxError):
+        if mode is None or path:  # if there is a path then we expect the top level node to parse to the same thing successfully, if it does not then it is a genuine error
+            raise
+
+        copy_root = FST.fromsrc(copy_root.src, 'all', **root.parse_params)  # root, everything could have changed, try to full reparse
+
+    if not path:  # root
         self._lines = copy_root._lines
         copy        = copy_root
 
@@ -249,13 +259,14 @@ def _reparse_raw_loc(self: 'FST', code: Code | None, ln: int, col: int, end_ln: 
     else:
         new_lines = code._lines
 
-    if not self._reparse_raw_stmtish(new_lines, ln, col, end_ln, end_col):  # attempt to reparse only statement (or even only block header), if fails then no statement found above
-        assert self.root.is_mod  # TODO: allow with non-mod root
+    root = self.root
 
-        root = self.root
+    if not self._reparse_raw_stmtish(new_lines, ln, col, end_ln, end_col):  # attempt to reparse only statement (or even only block header), if fails then no statement found above
+        if (mode := root.a.__class__) is not Slice and (base := mode.__bases__[0]) not in (AST, mod, excepthandler):  # first generalize a bit
+            mode = base
 
         self._reparse_raw(new_lines, ln, col, end_ln, end_col, root._lines[:],  # fallback to reparse all source
-                          'root' if self is root else root.child_path(self))
+                          None if self is root else root.child_path(self), True, mode)
 
     if code is None:
         return None
@@ -268,8 +279,8 @@ def _reparse_raw_loc(self: 'FST', code: Code | None, ln: int, col: int, end_ln: 
         end_ln  = ln + len(new_lines) - 1
         end_col = len(new_lines[-1])
 
-    return (self.root.find_in_loc(ln, col, end_ln, end_col) or  # `self.root` instead of `self` because some changes may propagate farther up the tree, like 'elif' -> 'else'
-            (self.root.find_loc(ln, col, end_ln, end_col, exact) if exact is not None else None))
+    return (root.find_in_loc(ln, col, end_ln, end_col) or  # `root` instead of `self` because some changes may propagate farther up the tree, like 'elif' -> 'else'
+            (root.find_loc(ln, col, end_ln, end_col, exact) if exact is not None else None))
 
 
 def _reparse_raw_slice(self: 'FST', code: Code | None, start: int | Literal['end'] | None, stop: int | None, field: str,

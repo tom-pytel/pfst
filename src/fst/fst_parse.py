@@ -113,7 +113,7 @@ def _unparse(ast: AST) -> AST:
 
 
 @staticmethod
-def _parse(src: str, mode: Mode = 'any', parse_params: dict = {}) -> AST:
+def _parse(src: str, mode: Mode = 'all', parse_params: dict = {}) -> AST:
     """Parse any source to an AST, including things which normal `ast.parse()` doesn't handle like individual
     `comprehension`s. Can be given a target type to parse or else will try to various parse methods until it finds one
     that succeeds (if any).
@@ -134,7 +134,7 @@ def _parse(src: str, mode: Mode = 'any', parse_params: dict = {}) -> AST:
     if parse := _PARSE_MODE_FUNCS.get(mode):
         return parse(src, parse_params)
 
-    if not issubclass(mode, AST):
+    if not isinstance(mode, type) or not issubclass(mode, AST):
         raise ValueError(f'invalid parse mode {mode!r}')
 
     mode_ = mode
@@ -147,6 +147,26 @@ def _parse(src: str, mode: Mode = 'any', parse_params: dict = {}) -> AST:
             raise ValueError(f'could not parse to {mode.__name__}, got {ast.__class__.__name__}')
 
     raise ValueError(f'cannot parse to {mode.__name__}')
+
+
+@staticmethod
+def _parse_all(src: str, parse_params: dict = {}) -> AST:
+    """Attempt all parse modes in order from most common / probable to least."""
+
+    for parse in _parse_all_funcs:
+        try:
+            return parse(src, parse_params)
+        except (NodeError, SyntaxError):
+            pass
+
+    raise NodeError('failed to parse in any mode')
+
+
+@staticmethod
+def _parse_any(src: str, parse_params: dict = {}) -> AST:
+    """Attempt to parse `stmtishs` and then reduce to a single statement or expressing if possible."""
+
+    return reduce_ast(_parse_stmtishs(src, parse_params), True)
 
 
 @staticmethod
@@ -1048,8 +1068,25 @@ def _code_as_identifier_alias(code: Code, parse_params: dict = {}) -> str:
 # ----------------------------------------------------------------------------------------------------------------------
 __all_private__ = [n for n in globals() if n not in _GLOBALS]
 
+_parse_all_funcs = [
+    _parse_any,
+    _parse_pattern,
+    _parse_arguments,
+    _parse_arguments_lambda,
+    _parse_sliceelt,
+    _parse_callarg,
+    _parse_comprehension,
+    _parse_withitem,
+    _parse_alias_star,
+    _parse_operator,
+    _parse_cmpop,
+    _parse_boolop,
+    _parse_unaryop,
+]
+
 _PARSE_MODE_FUNCS = {
-    'any':               lambda src, parse_params: reduce_ast(_parse_stmtishs(src, parse_params), True),
+    'any':               _parse_any,
+    'all':               _parse_all,
     'exec':              _parse_Module,
     'eval':              _parse_Expression,
     'single':            _parse_Interactive,

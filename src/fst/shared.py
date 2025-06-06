@@ -102,6 +102,7 @@ Code = Union['FST', AST, list[str], str]  ; """Code types accepted for put to `F
 
 Mode = Union[type[AST], Literal[
     'any',
+    'all',
     'exec',
     'eval',
     'single',
@@ -140,8 +141,11 @@ Mode = Union[type[AST], Literal[
 
 - `'any'`: Attempt parse `stmtishs`. If only one element then return the element itself instead of the `Module`.
     If that element is an `Expr` then return the expression instead of the statement. If nothing present then
-    return empty `Module`. Doesn't attempt any of the other parse modes because the syntax is overlapping and
-    too similar. Will never return an `Expression` or `Interactive`.
+    return empty `Module`. Doesn't attempt any of the other parse modes to keep things quick, if you want exhaustive
+    attempts the mode is `'all'`. Will never return an `Expression` or `Interactive`.
+- `'all'`: Check all possible parse modes (from most likely to least). There is syntax overlap so certain types will
+    never be returned, for example `TypeVar` is always shadowed by `AnnAssign`. Will never return an `Expression` or
+    `Interactive`.
 - `'exec'`: Parse to a `Module`. Same as passing `Module` type.
 - `'eval'`: Parse to an `Expression`. Same as passing `Expression` type.
 - `'single'`: Parse to an `Interactive`. Same as passing `Interactive` type.
