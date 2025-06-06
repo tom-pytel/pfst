@@ -7,7 +7,8 @@ from .astutil import *
 from .astutil import TypeAlias, TemplateStr
 
 from .shared import (
-    STMTISH_OR_STMTMOD, STMTISH_FIELDS, Code, NodeError,
+    STMTISH_OR_STMTMOD, STMTISH_FIELDS, Code, NodeError, fstloc,
+    _prev_find, _next_find, _fixup_slice_indices, _coerce_ast,
 )
 
 
@@ -40,6 +41,139 @@ def _get_slice(self: 'FST', start: int | Literal['end'] | None, stop: int | None
 
 
 # ----------------------------------------------------------------------------------------------------------------------
+
+def _raw_slice_loc(self: 'FST', start: int | Literal['end'] | None, stop: int | None, field: str) -> fstloc:
+    """Get location of a raw slice. Sepcial cases for decorators, comprehension ifs and other weird nodes."""
+
+    def fixup_slice_index_for_raw(len_, start, stop):
+        start, stop = _fixup_slice_indices(len_, start, stop)
+
+        if stop == start:
+            raise ValueError(f"invalid slice for raw operation")
+
+        return start, stop
+
+    ast = self.a
+
+    if isinstance(ast, Dict):
+        if field:
+            raise ValueError(f"cannot specify a field '{field}' to assign slice to a Dict")
+
+        keys        = ast.keys
+        values      = ast.values
+        start, stop = fixup_slice_index_for_raw(len(keys), start, stop)
+        start_loc   = self._dict_key_or_mock_loc(keys[start], values[start].f)
+
+        if start_loc.is_FST:
+            start_loc = start_loc.pars()
+
+        return fstloc(start_loc.ln, start_loc.col, *values[stop - 1].f.pars()[2:])
+
+    if isinstance(ast, Compare):
+        if field:
+            raise ValueError(f"cannot specify a field '{field}' to assign slice to a Compare")
+
+        comparators  = ast.comparators  # virtual combined body of [Compare.left] + Compare.comparators
+        start, stop  = fixup_slice_index_for_raw(len(comparators) + 1, start, stop)
+        stop        -= 1
+
+        return fstloc(*(comparators[start - 1] if start else ast.left).f.pars()[:2],
+                        *(comparators[stop - 1] if stop else ast.left).f.pars()[2:])
+
+    if isinstance(ast, MatchMapping):
+        if field:
+            raise ValueError(f"cannot specify a field '{field}' to assign slice to a MatchMapping")
+
+        keys        = ast.keys
+        start, stop = fixup_slice_index_for_raw(len(keys), start, stop)
+
+        return fstloc(*keys[start].f.loc[:2], *ast.patterns[stop - 1].f.pars()[2:])
+
+    if isinstance(ast, comprehension):
+        ifs         = ast.ifs
+        start, stop = fixup_slice_index_for_raw(len(ifs), start, stop)
+        ffirst      = ifs[start].f
+        start_pos   = _prev_find(self.root._lines, *ffirst._prev_bound(), ffirst.ln, ffirst.col, 'if')
+
+        return fstloc(*start_pos, *ifs[stop - 1].f.pars()[2:])
+
+    if field == 'decorator_list':
+        decos       = ast.decorator_list
+        start, stop = fixup_slice_index_for_raw(len(decos), start, stop)
+        ffirst      = decos[start].f
+        start_pos   = _prev_find(self.root._lines, 0, 0, ffirst.ln, ffirst.col, '@')  # we can use '0, 0' because we know "@" starts on a newline
+
+        return fstloc(*start_pos, *decos[stop - 1].f.pars()[2:])
+
+    body        = getattr(ast, field)  # field must be valid by here
+    start, stop = fixup_slice_index_for_raw(len(body), start, stop)
+
+    return fstloc(*body[start].f.pars(shared=False)[:2],
+                  *body[stop - 1].f.pars(shared=False)[2:])
+
+
+def _put_slice_raw(self: 'FST', code: Code | None, start: int | Literal['end'] | None, stop: int | None, field: str,
+                       *, one: bool = False, **options) -> 'FST':  # -> Self
+    """Put a raw slice of child nodes to `self`."""
+
+    if code is None:
+        raise NotImplementedError('raw slice delete not implemented yet')
+
+    if isinstance(code, AST):
+        if not one:
+            try:
+                ast = _coerce_ast(code, 'exprish')
+            except Exception:
+                pass
+
+            else:
+                if isinstance(ast, Tuple):  # strip delimiters because we want CONTENTS of slice for raw put, not the slice object itself
+                    code = FST._unparse(ast)[1 : (-2 if len(ast.elts) == 1 else -1)]  # also remove singleton Tuple trailing comma
+                elif isinstance(ast, (List, Dict, Set, MatchSequence, MatchMapping)):
+                    code = FST._unparse(ast)[1 : -1]
+
+    elif isinstance(code, FST):
+        if not code.is_root:
+            raise ValueError('expecting root node')
+
+        try:
+            ast = _coerce_ast(code.a, 'exprish')
+        except Exception:
+            pass
+
+        else:
+            fst = ast.f
+
+            if one:
+                if (is_par_tup := fst.is_parenthesized_tuple()) is None:  # only need to parenthesize this, others are already enclosed
+                    if isinstance(ast, MatchSequence) and not fst._is_parenthesized_seq('patterns'):
+                        fst._parenthesize_grouping()
+
+                elif is_par_tup is False:
+                    fst._parenthesize_tuple()
+
+            elif ((is_dict := isinstance(ast, Dict)) or
+                    (is_match := isinstance(ast, (MatchSequence, MatchMapping))) or
+                    isinstance(ast, (Tuple, List, Set))
+            ):
+                if not ((is_par_tup := fst.is_parenthesized_tuple()) is False or  # don't strip nonexistent delimiters if is unparenthesized Tuple or MatchSequence
+                        (is_par_tup is None and isinstance(ast, MatchSequence) and
+                            not fst._is_parenthesized_seq('patterns'))
+                ):
+                    code._put_src(None, end_ln := code.end_ln, (end_col := code.end_col) - 1, end_ln, end_col, True)  # strip enclosing delimiters
+                    code._put_src(None, ln := code.ln, col := code.col, ln, col + 1, False)
+
+                if elts := ast.values if is_dict else ast.patterns if is_match else ast.elts:
+                    if comma := _next_find(code.root._lines, (l := elts[-1].f.loc).end_ln, l.end_col, code.end_ln,
+                                            code.end_col, ','):  # strip trailing comma
+                        ln, col = comma
+
+                        code._put_src(None, ln, col, ln, col + 1, False)
+
+    self._reparse_raw(code, *_raw_slice_loc(self, start, stop, field))
+
+    return self.repath()
+
 
 def _put_slice(self: 'FST', code: Code | None, start: int | Literal['end'] | None, stop: int | None, field: str,
                one: bool = False, **options) -> 'FST':  # -> Self
@@ -130,7 +264,7 @@ def _put_slice(self: 'FST', code: Code | None, start: int | Literal['end'] | Non
             if not raw:
                 raise ValueError(f"cannot put slice to {ast.__class__.__name__}.{field}")
 
-    return self._reparse_raw_slice(code, start, stop, field, one=one, **options)
+    return _put_slice_raw(self, code, start, stop, field, one=one, **options)
 
 
 # ----------------------------------------------------------------------------------------------------------------------

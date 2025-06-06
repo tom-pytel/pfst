@@ -1113,7 +1113,7 @@ def _put_one_raw(self: 'FST', code: Code | None, idx: int | None, field: str, ch
 
     # do it
 
-    return parent._reparse_raw_loc(code, loc.ln, loc.col, to_loc.end_ln, to_loc.end_col)
+    return parent._reparse_raw(code, loc.ln, loc.col, to_loc.end_ln, to_loc.end_col)
 
 
 def _put_one(self: 'FST', code: Code | None, idx: int | None, field: str, **options) -> Optional['FST']:

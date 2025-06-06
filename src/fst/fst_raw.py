@@ -7,11 +7,9 @@ from .astutil import *
 from .astutil import TryStar
 
 from .shared import (
-    NodeError, astfield, fstloc,
+    NodeError, astfield,
     STMTISH_FIELDS,
     Code, Mode,
-    _next_find, _prev_find,
-    _fixup_slice_indices, _coerce_ast,
 )
 
 _PATH_BODY          = [astfield('body', 0)]
@@ -23,81 +21,9 @@ _PATH_BODY2HANDLERS = [astfield('body', 0), astfield('body', 0), astfield('handl
 _PATH_BODYCASES     = [astfield('body', 0), astfield('cases', 0)]
 
 
-def _raw_slice_loc(self: 'FST', start: int | Literal['end'] | None, stop: int | None, field: str) -> fstloc:
-    """Get location of a raw slice. Sepcial cases for decorators, comprehension ifs and other weird nodes."""
-
-    def fixup_slice_index_for_raw(len_, start, stop):
-        start, stop = _fixup_slice_indices(len_, start, stop)
-
-        if stop == start:
-            raise ValueError(f"invalid slice for raw operation")
-
-        return start, stop
-
-    ast = self.a
-
-    if isinstance(ast, Dict):
-        if field:
-            raise ValueError(f"cannot specify a field '{field}' to assign slice to a Dict")
-
-        keys        = ast.keys
-        values      = ast.values
-        start, stop = fixup_slice_index_for_raw(len(keys), start, stop)
-        start_loc   = self._dict_key_or_mock_loc(keys[start], values[start].f)
-
-        if start_loc.is_FST:
-            start_loc = start_loc.pars()
-
-        return fstloc(start_loc.ln, start_loc.col, *values[stop - 1].f.pars()[2:])
-
-    if isinstance(ast, Compare):
-        if field:
-            raise ValueError(f"cannot specify a field '{field}' to assign slice to a Compare")
-
-        comparators  = ast.comparators  # virtual combined body of [Compare.left] + Compare.comparators
-        start, stop  = fixup_slice_index_for_raw(len(comparators) + 1, start, stop)
-        stop        -= 1
-
-        return fstloc(*(comparators[start - 1] if start else ast.left).f.pars()[:2],
-                        *(comparators[stop - 1] if stop else ast.left).f.pars()[2:])
-
-    if isinstance(ast, MatchMapping):
-        if field:
-            raise ValueError(f"cannot specify a field '{field}' to assign slice to a MatchMapping")
-
-        keys        = ast.keys
-        start, stop = fixup_slice_index_for_raw(len(keys), start, stop)
-
-        return fstloc(*keys[start].f.loc[:2], *ast.patterns[stop - 1].f.pars()[2:])
-
-    if isinstance(ast, comprehension):
-        ifs         = ast.ifs
-        start, stop = fixup_slice_index_for_raw(len(ifs), start, stop)
-        ffirst      = ifs[start].f
-        start_pos   = _prev_find(self.root._lines, *ffirst._prev_bound(), ffirst.ln, ffirst.col, 'if')
-
-        return fstloc(*start_pos, *ifs[stop - 1].f.pars()[2:])
-
-    if field == 'decorator_list':
-        decos       = ast.decorator_list
-        start, stop = fixup_slice_index_for_raw(len(decos), start, stop)
-        ffirst      = decos[start].f
-        start_pos   = _prev_find(self.root._lines, 0, 0, ffirst.ln, ffirst.col, '@')  # we can use '0, 0' because we know "@" starts on a newline
-
-        return fstloc(*start_pos, *decos[stop - 1].f.pars()[2:])
-
-    body        = getattr(ast, field)  # field must be valid by here
-    start, stop = fixup_slice_index_for_raw(len(body), start, stop)
-
-    return fstloc(*body[start].f.pars(shared=False)[:2],
-                  *body[stop - 1].f.pars(shared=False)[2:])
-
-
-_GLOBALS = globals() | {'_GLOBALS': None}
-# ----------------------------------------------------------------------------------------------------------------------
-
-def _reparse_raw(self: 'FST', new_lines: list[str], ln: int, col: int, end_ln: int, end_col: int, copy_lines: list[str],
-                 path: list[astfield] | str | None, set_ast: bool = True, mode: Mode | None = None) -> 'FST':
+def _reparse_raw_base(self: 'FST', new_lines: list[str], ln: int, col: int, end_ln: int, end_col: int,
+                      copy_lines: list[str], path: list[astfield] | str | None, set_ast: bool = True,
+                      mode: Mode | None = None) -> 'FST':
     """Actually do the reparse. If `mode` is `None` then will just try a normal `'exec'` parse and fail if that fails.
     Otherwise it will try this mode first, then all other parse modes as it is assumed to be a non-top level
     statementish thing being reparsed."""
@@ -199,7 +125,7 @@ def _reparse_raw_stmtish(self: 'FST', new_lines: list[str], ln: int, col: int, e
     if not in_blkopen:  # non-block statement or modifications not limited to block header part
         copy_lines[pend_ln] = bistr(copy_lines[pend_ln][:pend_col])
 
-        stmtish._reparse_raw(new_lines, ln, col, end_ln, end_col, copy_lines, path)
+        _reparse_raw_base(stmtish, new_lines, ln, col, end_ln, end_col, copy_lines, path)
 
         return True
 
@@ -216,7 +142,7 @@ def _reparse_raw_stmtish(self: 'FST', new_lines: list[str], ln: int, col: int, e
         if isinstance(stmtisha, (Try, TryStar)):  # this one is just silly, nothing to put there, but we cover it
             copy_lines.append(bistr(indent + 'finally: pass'))
 
-    copy  = stmtish._reparse_raw(new_lines, ln, col, end_ln, end_col, copy_lines, path, False)
+    copy  = _reparse_raw_base(stmtish, new_lines, ln, col, end_ln, end_col, copy_lines, path, False)
     copya = copy.a
 
     if not isinstance(stmtisha, match_case):  # match_case doesn't have AST location
@@ -233,8 +159,10 @@ def _reparse_raw_stmtish(self: 'FST', new_lines: list[str], ln: int, col: int, e
     return True
 
 
-def _reparse_raw_loc(self: 'FST', code: Code | None, ln: int, col: int, end_ln: int, end_col: int,
-                     exact: bool | None = None) -> Optional['FST']:
+# ----------------------------------------------------------------------------------------------------------------------
+
+def _reparse_raw(self: 'FST', code: Code | None, ln: int, col: int, end_ln: int, end_col: int,
+                 exact: bool | None = None) -> Optional['FST']:
     """Reparse this node which entirely contatins the span which is to be replaced with `code` source. `self` must
     be a node which entirely contains the location and is guaranteed not to be deleted. `self` and some of its
     parents going up may be replaced (root node `FST` will never change, the `AST` it points to may though). Not
@@ -261,11 +189,11 @@ def _reparse_raw_loc(self: 'FST', code: Code | None, ln: int, col: int, end_ln: 
 
     root = self.root
 
-    if not self._reparse_raw_stmtish(new_lines, ln, col, end_ln, end_col):  # attempt to reparse only statement (or even only block header), if fails then no statement found above
+    if not _reparse_raw_stmtish(self, new_lines, ln, col, end_ln, end_col):  # attempt to reparse only statement (or even only block header), if fails then no statement found above
         if (mode := root.a.__class__) is not Slice and (base := mode.__bases__[0]) not in (AST, mod, excepthandler):  # first generalize a bit
             mode = base
 
-        self._reparse_raw(new_lines, ln, col, end_ln, end_col, root._lines[:],  # fallback to reparse all source
+        _reparse_raw_base(self, new_lines, ln, col, end_ln, end_col, root._lines[:],  # fallback to reparse all source
                           None if self is root else root.child_path(self), True, mode)
 
     if code is None:
@@ -283,70 +211,7 @@ def _reparse_raw_loc(self: 'FST', code: Code | None, ln: int, col: int, end_ln: 
             (root.find_loc(ln, col, end_ln, end_col, exact) if exact is not None else None))
 
 
-def _reparse_raw_slice(self: 'FST', code: Code | None, start: int | Literal['end'] | None, stop: int | None, field: str,
-                       *, one: bool = False, **options) -> 'FST':  # -> Self
-    """Put a raw slice of child nodes to `self`."""
-
-    if code is None:
-        raise NotImplementedError('raw slice delete not implemented yet')
-
-    if isinstance(code, AST):
-        if not one:
-            try:
-                ast = _coerce_ast(code, 'exprish')
-            except Exception:
-                pass
-
-            else:
-                if isinstance(ast, Tuple):  # strip delimiters because we want CONTENTS of slice for raw put, not the slice object itself
-                    code = FST._unparse(ast)[1 : (-2 if len(ast.elts) == 1 else -1)]  # also remove singleton Tuple trailing comma
-                elif isinstance(ast, (List, Dict, Set, MatchSequence, MatchMapping)):
-                    code = FST._unparse(ast)[1 : -1]
-
-    elif isinstance(code, FST):
-        if not code.is_root:
-            raise ValueError('expecting root node')
-
-        try:
-            ast = _coerce_ast(code.a, 'exprish')
-        except Exception:
-            pass
-
-        else:
-            fst = ast.f
-
-            if one:
-                if (is_par_tup := fst.is_parenthesized_tuple()) is None:  # only need to parenthesize this, others are already enclosed
-                    if isinstance(ast, MatchSequence) and not fst._is_parenthesized_seq('patterns'):
-                        fst._parenthesize_grouping()
-
-                elif is_par_tup is False:
-                    fst._parenthesize_tuple()
-
-            elif ((is_dict := isinstance(ast, Dict)) or
-                    (is_match := isinstance(ast, (MatchSequence, MatchMapping))) or
-                    isinstance(ast, (Tuple, List, Set))
-            ):
-                if not ((is_par_tup := fst.is_parenthesized_tuple()) is False or  # don't strip nonexistent delimiters if is unparenthesized Tuple or MatchSequence
-                        (is_par_tup is None and isinstance(ast, MatchSequence) and
-                            not fst._is_parenthesized_seq('patterns'))
-                ):
-                    code._put_src(None, end_ln := code.end_ln, (end_col := code.end_col) - 1, end_ln, end_col, True)  # strip enclosing delimiters
-                    code._put_src(None, ln := code.ln, col := code.col, ln, col + 1, False)
-
-                if elts := ast.values if is_dict else ast.patterns if is_match else ast.elts:
-                    if comma := _next_find(code.root._lines, (l := elts[-1].f.loc).end_ln, l.end_col, code.end_ln,
-                                            code.end_col, ','):  # strip trailing comma
-                        ln, col = comma
-
-                        code._put_src(None, ln, col, ln, col + 1, False)
-
-    self._reparse_raw_loc(code, *_raw_slice_loc(self, start, stop, field))
-
-    return self.repath()
-
-
 # ----------------------------------------------------------------------------------------------------------------------
-__all_private__ = [n for n in globals() if n not in _GLOBALS]
+__all_private__ = ['_reparse_raw']
 
 from .fst import FST  # this imports a fake FST which is replaced in globals() when fst.py finishes loading

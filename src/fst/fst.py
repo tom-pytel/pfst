@@ -1091,7 +1091,7 @@ class FST:
 
         parent = self.root.find_loc(ln, col, end_ln, end_col, False) or self.root
 
-        return parent._reparse_raw_loc(code, ln, col, end_ln, end_col, exact)
+        return parent._reparse_raw(code, ln, col, end_ln, end_col, exact)
 
     def pars(self, ret_count: bool = False, *, shared: bool = True, pars: bool = True,
              ) -> fstloc | tuple[fstloc | None, int] | None:
@@ -2006,9 +2006,6 @@ class FST:
 
     from .fst_raw import (
         _reparse_raw,
-        _reparse_raw_stmtish,
-        _reparse_raw_loc,
-        _reparse_raw_slice,
     )
 
     from .fst_slice_old import (
