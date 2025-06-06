@@ -100,7 +100,7 @@ PARSE_TESTS = [
     ('all',               FST._parse_match_case,        match_case,     'case None: pass'),
     ('all',               FST._parse_expr,              Name,           'j'),
     ('all',               FST._parse_expr,              Starred,        '*s'),
-    ('all',               FST._parse_all,               Starred,        '*not s'),
+    ('all',               FST._parse_all,               Starred,        '*not a'),
     ('all',               FST._parse_stmt,              AnnAssign,      'a:b'),
     ('all',               FST._parse_all,               Slice,          'a:b:c'),
     ('all',               FST._parse_all,               MatchAs,        '1 as a'),
@@ -129,7 +129,7 @@ PARSE_TESTS = [
     ('most',              FST._parse_match_case,        match_case,     'case None: pass'),
     ('most',              FST._parse_expr,              Name,           'j'),
     ('most',              FST._parse_expr,              Starred,        '*s'),
-    ('most',              FST._parse_all,               SyntaxError,    '*not s'),
+    ('most',              FST._parse_all,               SyntaxError,    '*not a'),
     ('most',              FST._parse_stmt,              AnnAssign,      'a:b'),
     ('most',              FST._parse_all,               SyntaxError,    'a:b:c'),
     ('most',              FST._parse_all,               SyntaxError,    '1 as a'),
@@ -154,6 +154,8 @@ PARSE_TESTS = [
     ('stmtish',           FST._parse_stmtish,           AnnAssign,      'i: int = 1'),
     ('stmtish',           FST._parse_stmtish,           ExceptHandler,  'except: pass'),
     ('stmtish',           FST._parse_stmtish,           match_case,     'case None: pass'),
+    ('stmtish',           FST._parse_stmtishs,          NodeError,      'except Exception: pass\nexcept: pass'),
+    ('stmtish',           FST._parse_stmtishs,          NodeError,      'case None: pass\ncase 1: pass'),
     ('stmtish',           FST._parse_stmtish,           NodeError,      'i: int = 1\nj'),
 
     ('stmts',             FST._parse_stmts,             Module,         'i: int = 1\nj'),
@@ -179,13 +181,13 @@ PARSE_TESTS = [
 
     ('expr',              FST._parse_expr,              Name,           'j'),
     ('expr',              FST._parse_expr,              Starred,        '*s'),
-    ('expr',              FST._parse_expr,              SyntaxError,    '*not s'),
+    ('expr',              FST._parse_expr,              SyntaxError,    '*not a'),
     ('expr',              FST._parse_expr,              NodeError,      'a:b'),
     ('expr',              FST._parse_expr,              SyntaxError,    'a:b:c'),
 
-    ('slice',             FST._parse_slice,        Name,           'j'),
-    ('slice',             FST._parse_slice,        Slice,          'a:b'),
-    ('slice',             FST._parse_slice,        Tuple,          'j, k'),
+    ('slice',             FST._parse_slice,             Name,           'j'),
+    ('slice',             FST._parse_slice,             Slice,          'a:b'),
+    ('slice',             FST._parse_slice,             Tuple,          'j, k'),
 
     ('sliceelt',          FST._parse_sliceelt,          Name,           'j'),
     ('sliceelt',          FST._parse_sliceelt,          Slice,          'a:b'),
@@ -194,7 +196,7 @@ PARSE_TESTS = [
 
     ('callarg',           FST._parse_callarg,           Name,           'j'),
     ('callarg',           FST._parse_callarg,           Starred,        '*s'),
-    ('callarg',           FST._parse_callarg,           Starred,        '*not s'),
+    ('callarg',           FST._parse_callarg,           Starred,        '*not a'),
     ('callarg',           FST._parse_callarg,           Tuple,          'j, k'),
     ('callarg',           FST._parse_callarg,           NodeError,      'i=1'),
     ('callarg',           FST._parse_callarg,           NodeError,      'a:b'),
@@ -310,7 +312,7 @@ PARSE_TESTS = [
 
     (expr,                FST._parse_expr,              Name,           'j'),
     (expr,                FST._parse_expr,              Starred,        '*s'),
-    (expr,                FST._parse_expr,              SyntaxError,    '*not s'),
+    (expr,                FST._parse_expr,              SyntaxError,    '*not a'),
     (expr,                FST._parse_expr,              NodeError,      'a:b'),
     (expr,                FST._parse_expr,              SyntaxError,    'a:b:c'),
     (Name,                FST._parse_expr,              Name,           'j'),
@@ -399,8 +401,8 @@ if _PY_VERSION >= (3, 11):
         ('ExceptHandler',     FST._parse_ExceptHandler,     ExceptHandler,  'except* Exception: pass'),
 
         ('slice',             FST._parse_slice,             Tuple,          '*s'),
-        ('slice',             FST._parse_slice,             Tuple,          '*not s'),
-        ('sliceelt',          FST._parse_sliceelt,          Starred,        '*not s'),
+        ('slice',             FST._parse_slice,             Tuple,          '*not a'),
+        ('sliceelt',          FST._parse_sliceelt,          Starred,        '*not a'),
 
         (ExceptHandler,       FST._parse_ExceptHandler,     ExceptHandler,  'except* Exception: pass'),
     ])
@@ -2334,6 +2336,21 @@ def f():
 
         self.assertRaises(WalkFail, ast.f.verify, raise_=True)
         self.assertEqual(None, ast.f.verify(raise_=False))
+
+        for mode, func, res, src in PARSE_TESTS:
+            try:
+                if issubclass(res, Exception):
+                    continue
+
+                fst = FST(src, mode)
+
+                fst.verify(mode)
+
+            except Exception:
+                print()
+                print(mode, src, res, func)
+
+                raise
 
     def test_walk(self):
         a = parse("""

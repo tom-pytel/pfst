@@ -617,17 +617,27 @@ class FST:
         return FST(ast, lines, parse_params=parse_params, indent='    ')
 
     @staticmethod
+    def get_options() -> dict[str, Any]:
+        """Get a dictionary of all options.
+
+        **Returns:**
+        - `{option: value, ...}`: Dictionary of all global default options.
+        """
+
+        return _OPTIONS.copy()
+
+    @staticmethod
     def get_option(option: str, options: dict[str, Any] = {}) -> Any:
-        """Get option from `options` dict or global default if option not in dict or is `None` there. For a list of
-        options used see `set_option`.
+        """Get a single option from `options` dict or global default if option not in dict or is `None` there. For a
+        list of options used see `set_option`.
 
         **Parameters:**
         - `option`: Name of option to get.
         - `options`: Dictionary which may or may not contain the requested option.
 
         **Returns:**
-        - `Any`: Global default option of if not found in `options` or is `None` there, otherwise the value from the
-            passed `options` dict.
+        - `Any`: The `option` value from the passed `options` dict, if passed and not `None` there, else the global
+            default value for `option`.
         """
 
         return _OPTIONS.get(option) if (o := options.get(option)) is None else o
@@ -790,8 +800,10 @@ class FST:
         everything).
 
         **Parameters:**
-        - `mode`: If `None` then try to reparse to exactly the same node as is currently. Otherwise override parse mode
-            with this.
+        - `mode`: Parse mode to use, otherwise if `None` then use the top level AST node type for the mode. Depending on
+            how this is set will determine whether the verification is checking if is parsable by python (`'exec'` for
+            example), or if the node itself is just in a valid state (where `None` is good). But some nodes may require
+            a mode to be specified in order to survive a check, a tuple with slices in the elements for example.
         - `raise_`: Whether to raise an exception on verify failed or return `None`.
 
         **Returns:**
@@ -812,15 +824,6 @@ class FST:
                 raise
 
             return None
-
-        cls = ast.__class__
-
-        if not (astp.__class__ is cls or (len(astp.body) == 1 and (astp := astp.body[0]).__class__ is cls) or
-                (isinstance(astp, Expr) and (astp := astp.value).__class__ is cls)):
-            if raise_:
-                raise ValueError('verify failed reparse')
-            else:
-                return None
 
         if not compare_asts(astp, ast, locs=True, type_comments=parse_params['type_comments'], raise_=raise_):
             return None
@@ -919,7 +922,6 @@ class FST:
             raise ValueError(f'cannot delete root node')
 
         return parent._put_one(None, (pf := self.pfield).idx, pf.name, **options)
-
 
     def get(self, idx: int | Literal['end'] | None = None, stop: int | None | Literal[False] = False,
             field: str | None = None, *, cut: bool = False, **options) -> Optional['FST'] | str:
