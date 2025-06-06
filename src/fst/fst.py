@@ -14,7 +14,7 @@ from .astutil import *
 from .astutil import TypeAlias, TryStar, TemplateStr, Interpolation, type_param
 
 from .shared import (
-    astfield, fstloc, nspace,
+    NodeError, astfield, fstloc, nspace,
     STMTISH, STMTISH_OR_MOD, BLOCK, BLOCK_OR_MOD, SCOPE, SCOPE_OR_MOD, NAMED_SCOPE,
     NAMED_SCOPE_OR_MOD, ANONYMOUS_SCOPE, PARENTHESIZABLE, HAS_DOCSTRING,
     re_empty_line, re_line_continuation, re_line_end_cont_or_comment,
@@ -786,11 +786,13 @@ class FST:
 
         return self._dump(st)
 
-    def verify(self, raise_: bool = True) -> Optional['FST']:  # -> Self | None:
+    def verify(self, mode: Mode | None = None, raise_: bool = True) -> Optional['FST']:  # -> Self | None:
         """Sanity check, reparse source and make sure parsed tree matches currently stored tree (locations and
         everything).
 
         **Parameters:**
+        - `mode`: If `None` then try to reparse to exactly the same node as is currently. Otherwise override parse mode
+            with this.
         - `raise_`: Whether to raise an exception on verify failed or return `None`.
 
         **Returns:**
@@ -804,9 +806,9 @@ class FST:
         parse_params = self.parse_params
 
         try:
-            astp = ast_parse(self.src, **parse_params)
+            astp = FST._parse(self.src, mode or ast.__class__, parse_params=parse_params)
 
-        except SyntaxError:
+        except (NodeError, SyntaxError):
             if raise_:
                 raise
 

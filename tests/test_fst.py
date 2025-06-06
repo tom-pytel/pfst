@@ -9540,7 +9540,7 @@ finally:
         f.iter.args[0].replace('99', to=f.iter.args[-1], raw=True)
         self.assertEqual('for i in range(99) if i', f.src)
         self.assertIsInstance(f.a, comprehension)
-        # f.verify()
+        f.verify()
 
     def test_modify_parent_fmtvals_and_interpolations(self):
         if _PY_VERSION >= (3, 12):
