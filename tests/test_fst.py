@@ -9997,7 +9997,7 @@ i ; \\
         self.assertIs(fxyz, f.find_in_loc(0, 5, 0, 10))
         self.assertIs(None, f.find_in_loc(0, 5, 0, 6))
 
-    def test_fstlist(self):
+    def test_fstview(self):
         self.assertEqual('a', parse('if 1: a').f.body[0].body[0].src)
         self.assertEqual('b', parse('if 1: a\nelse: b').f.body[0].orelse[0].src)
         self.assertEqual('a\nb\nc', parse('a\nb\nc').f.body.copy().src)
@@ -10205,10 +10205,10 @@ class cls:
     def prefunc(): pass
     def postfunc(): pass
             '''.strip())
-        self.assertIsInstance(a.f.body, fstlist)
-        self.assertIsInstance(a.body[0].f.body, fstlist)
+        self.assertIsInstance(a.f.body, fstview)
+        self.assertIsInstance(a.body[0].f.body, fstview)
         a.body[0].f.body.cut()
-        self.assertIsInstance(a.body[0].f.body, fstlist)
+        self.assertIsInstance(a.body[0].f.body, fstview)
 
         a = parse('a\nb\nc\nd\ne')
         p = a.f.body[1:4]

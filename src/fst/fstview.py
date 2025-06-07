@@ -6,7 +6,7 @@ from .astutil import *
 from .shared import Self, Code, _fixup_one_index, _fixup_slice_indices
 
 
-class fstlist:
+class fstview:
     """View for a list of `AST` nodes in a body, or any other field which is a list of values (not necessarily `AST`
     nodes), of an `FST` node.
 
@@ -14,10 +14,10 @@ class fstlist:
     `Globals.names`. Is only meant for short term convenience use as operations on the target `FST` node which are not
     effectuated through this view may invalidate the `start` and `stop` positions and even the `fst` stored here if they
     change the size of the list of nodes or reparse. Especially raw operations which reparse entire statements and can
-    easily invalidate an `fstlist` even if performed directly on it.
+    easily invalidate an `fstview` even if performed directly on it.
 
     Nodes can be gotten or put via indexing. Nodes which are gotten are not automatically copied, if a copy is desired
-    then do `fstlist[start:stop].copy()`. Slice assignments also work but will always assign a slice to the range. If
+    then do `fstview[start:stop].copy()`. Slice assignments also work but will always assign a slice to the range. If
     you want to assign an individual item then use the `replace(..., one=True)` method.
 
     This object is meant to be, and is normally created automatically by accessing `AST` list fields on an `FST` node.
@@ -75,7 +75,7 @@ class fstlist:
         bounds of this view. This is just an access, not a cut or a copy, so if you want a copy you must explicitly do
         `.copy()` on the returned value.
 
-        Note that `fstlist` can also hold references to non-AST lists of items, so keep this in mind when dealing with
+        Note that `fstview` can also hold references to non-AST lists of items, so keep this in mind when dealing with
         return values which may be `None` or may not be `FST` nodes.
 
         **Parameters:**
@@ -84,7 +84,7 @@ class fstlist:
             statements, error otherwise). This is just a convenience and will probably change / expand in the future.
 
         **Returns:**
-        - `FST | fstlist`: Either a single `FST` node if accessing a single item or a new `fstlist` view according to
+        - `FST | fstview`: Either a single `FST` node if accessing a single item or a new `fstview` view according to
             the slice passed.
 
         **Examples:**
@@ -123,13 +123,13 @@ class fstlist:
 
         idx_start, idx_stop = _fixup_slice_indices(self.stop - (start := self.start), idx.start, idx.stop)
 
-        return fstlist(self.fst, self.field, start + idx_start, start + idx_stop)
+        return fstview(self.fst, self.field, start + idx_start, start + idx_stop)
 
     def __setitem__(self, idx: int | slice, code: Code | None):
         """Set a single item or a slice view in this slice view. All indices (including negative) are relative to the
         bounds of this view. This is not just with a set, it is a full `FST` operation.
 
-        Note that `fstlist` can also hold references to non-AST lists of items, so keep this in mind when assigning
+        Note that `fstview` can also hold references to non-AST lists of items, so keep this in mind when assigning
         values.
 
         **WARNING!** Currently, for non-AST views, individual value assignment works but slices do not yet.
@@ -173,7 +173,7 @@ class fstlist:
         """Delete a single item or a slice from this slice view. All indices (including negative) are relative to the
         bounds of this view.
 
-        Note that `fstlist` can also hold references to non-AST lists of items, so keep this in mind when assigning
+        Note that `fstview` can also hold references to non-AST lists of items, so keep this in mind when assigning
         values.
 
         **WARNING!** Currently, for non-AST views, deletion is not supported
@@ -450,6 +450,6 @@ class fstlist:
 
 
 # ----------------------------------------------------------------------------------------------------------------------
-__all__ = ['fstlist']
+__all__ = ['fstview']
 
 from .fst import FST  # this imports a fake FST which is replaced in globals() when fst.py finishes loading

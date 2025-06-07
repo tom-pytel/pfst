@@ -103,7 +103,7 @@ class FST:
     _lines:       list[bistr]
 
     # class attributes
-    is_FST:       bool = True      ; """@private"""  # for quick checks vs. `fstloc` or `fstlist`
+    is_FST:       bool = True      ; """@private"""  # for quick checks vs. `fstloc` or `fstview`
 
     @property
     def lines(self) -> list[str] | None:
@@ -378,7 +378,7 @@ class FST:
 
     def __getattr__(self, name) -> Any:
         if isinstance(child := getattr(self.a, name), list):
-            return fstlist(self, name, 0, len(child))
+            return fstview(self, name, 0, len(child))
         elif isinstance(child, AST):
             return child.f
 
@@ -2698,7 +2698,7 @@ class FST:
                            "you're accessing an FST node")
 
 
-from .fstlist import fstlist
+from .fstview import fstview
 
 from . import fst_misc, fst_one, fst_parse, fst_raw, fst_slice_old, fst_slice, fst_walk, srcedit
 
