@@ -629,8 +629,22 @@ def _parse_pattern(src: str, parse_params: dict = {}) -> AST:
         ast = ast_parse(f'match _:\n case \\\n{src}: pass', **parse_params).body[0].cases[0].pattern
     except IndentationError:
         raise
-    except SyntaxError:  # in case of lone MatchStar, and we can't just do MatchSequence first because would mess up location of naked MatchSequence, also handles newlines in patterns where they can be
-        ast = ast_parse(f'match _:\n case [\\\n{src}]: pass', **parse_params).body[0].cases[0].pattern.patterns[0]
+
+    except SyntaxError:  # first in case needs to be enclosed
+        try:
+            ast = ast_parse(f'match _:\n case (\\\n{src}): pass', **parse_params).body[0].cases[0].pattern
+        except SyntaxError:  # now just the case of a lone MatchStar
+            ast = ast_parse(f'match _:\n case [\\\n{src}]: pass', **parse_params).body[0].cases[0].pattern.patterns[0]
+
+        else:
+            if ast.lineno < 3 and isinstance(ast, MatchSequence):
+                if not (patterns := ast.patterns):
+                    raise SyntaxError('empty pattern')
+
+                ast.lineno         = 3  # remove our delimiters from location
+                ast.col_offset     = 0
+                ast.end_lineno     = (p_1 := patterns[-1]).end_lineno
+                ast.end_col_offset = p_1.end_col_offset
 
     return _offset_linenos(_validate_indent(src, ast), -2)
 

@@ -289,6 +289,8 @@ PARSE_TESTS = [
     ('pattern',           FST._parse_pattern,           MatchAs,        '1 as as_var'),
     ('pattern',           FST._parse_pattern,           MatchOr,        '1 | 2 | 3'),
     ('pattern',           FST._parse_pattern,           MatchAs,        '_'),
+    ('pattern',           FST._parse_pattern,           MatchStar,      '*a'),
+    ('pattern',           FST._parse_pattern,           SyntaxError,    ''),
 
     (mod,                 FST._parse_Module,            Module,         'j'),
     (Module,              FST._parse_Module,            Module,         'j'),
@@ -382,6 +384,9 @@ PARSE_TESTS = [
     (pattern,             FST._parse_pattern,           MatchAs,        '1 as as_var'),
     (pattern,             FST._parse_pattern,           MatchOr,        '1 | 2 | 3'),
     (pattern,             FST._parse_pattern,           MatchAs,        '_'),
+    (pattern,             FST._parse_pattern,           MatchStar,      '*a'),
+    (pattern,             FST._parse_pattern,           SyntaxError,    ''),
+
     (MatchValue,          FST._parse_pattern,           MatchValue,     '42'),
     (MatchSingleton,      FST._parse_pattern,           MatchSingleton, 'None'),
     (MatchSequence,       FST._parse_pattern,           MatchSequence,  '[a, *_]'),
@@ -394,6 +399,7 @@ PARSE_TESTS = [
     (MatchAs,             FST._parse_pattern,           MatchAs,        '1 as as_var'),
     (MatchOr,             FST._parse_pattern,           MatchOr,        '1 | 2 | 3'),
     (MatchAs,             FST._parse_pattern,           MatchAs,        '_'),
+    (MatchStar,           FST._parse_pattern,           MatchStar,      '*a'),
 ]
 
 if _PY_VERSION >= (3, 11):
@@ -2112,7 +2118,7 @@ def f():
                 if issubclass(res, Exception):
                     continue
 
-                # test reparse
+                # reparse
 
                 test = 'reparse'
                 unp  = ((s := ast_.unparse(ast)) and s.lstrip()) or src  # 'lstrip' because comprehension has leading space, 'or src' because unparse of operators gives nothing
@@ -2120,7 +2126,16 @@ def f():
 
                 compare_asts(ast, ast2, raise_=True)
 
-                # test IndentationError
+                # trailing newline
+
+                if src != '*=':  # we know augassign fails due this case being syntactically impossible
+                    test = 'newline'
+                    srcn = src + '\n'
+                    ast  = FST._parse(srcn, mode)
+
+                # IndentationError
+
+                test = 'indent'
 
                 if src.strip():  # won't get IndentationError on empty arguments
                     src = ' ' + src
