@@ -1053,21 +1053,21 @@ class FST:
         '[(4, 5), 3]'
         >>> (f := FST('[0, 1, 2, 3]')).put('4, 5', -3, None, one=False).src
         '[0, 4, 5]'
-        >>> print(FST('if 1: i = 1\nelse: j = 2').put('z = -1', 0).src)
+        >>> print(FST('if 1: i = 1\\nelse: j = 2').put('z = -1', 0).src)
         if 1:
             z = -1
         else: j = 2
-        >>> print(FST('if 1: i = 1\nelse: j = 2').put('z = -1', 0, 'orelse').src)
+        >>> print(FST('if 1: i = 1\\nelse: j = 2').put('z = -1', 0, 'orelse').src)
         if 1: i = 1
         else:
             z = -1
-        >>> print(FST('if 1: i = 1\nelse: j = 2').put('z = -1\ny = -2\nx = -3', 'orelse', one=False).src)
+        >>> print(FST('if 1: i = 1\\nelse: j = 2').put('z = -1\\ny = -2\\nx = -3', 'orelse', one=False).src)
         if 1: i = 1
         else:
             z = -1
             y = -2
             x = -3
-        >>> print((f := FST('if 1: i = 1\nelse: j = 2')).put('z = -1', 0, raw=True, to=f.orelse[0]).root.src)
+        >>> print((f := FST('if 1: i = 1\\nelse: j = 2')).put('z = -1', 0, raw=True, to=f.orelse[0]).root.src)
         if 1: z = -1
         ```
         """
@@ -1128,7 +1128,7 @@ class FST:
         '[1, 2]'
         >>> f.src
         '[0, 3]'
-        >>> f = FST('if 1: i = 1\nelse: j = 2; k = 3; l = 4; m = 5')
+        >>> f = FST('if 1: i = 1\\nelse: j = 2; k = 3; l = 4; m = 5')
         >>> s = f.get_slice(1, 3, 'orelse', cut=True)
         >>> print(f.src)
         if 1: i = 1
@@ -1148,7 +1148,7 @@ class FST:
         return self._get_slice(start, stop, field_, cut, **options)
 
     def put_slice(self, code: Code | None, start: int | Literal['end'] | None = None, stop: int | None = None,
-                  field: str | None = None, *, one: bool = False, **options) -> 'FST':  # -> Self
+                  field: str | None = None, *, one: bool = False, **options) -> Self:  # -> Self
         """Put a slice of nodes to `self` if possible.  The node is passed as an existing top-level `FST`, `AST`, string
         or list of string lines. If passed as an `FST` or `AST` then it should be considered "consumed" after this
         function returns and is no logner valid, even on failure.
@@ -1184,21 +1184,21 @@ class FST:
         '[(4, 5), 3]'
         >>> (f := FST('[0, 1, 2, 3]')).put('4, 5', -3, None, one=False).src
         '[0, 4, 5]'
-        >>> print(FST('if 1: i = 1\nelse: j = 2').put('z = -1', 0).src)
+        >>> print(FST('if 1: i = 1\\nelse: j = 2').put('z = -1', 0).src)
         if 1:
             z = -1
         else: j = 2
-        >>> print(FST('if 1: i = 1\nelse: j = 2').put('z = -1', 0, 'orelse').src)
+        >>> print(FST('if 1: i = 1\\nelse: j = 2').put('z = -1', 0, 'orelse').src)
         if 1: i = 1
         else:
             z = -1
-        >>> print(FST('if 1: i = 1\nelse: j = 2').put('z = -1\ny = -2\nx = -3', 'orelse', one=False).src)
+        >>> print(FST('if 1: i = 1\\nelse: j = 2').put('z = -1\\ny = -2\\nx = -3', 'orelse', one=False).src)
         if 1: i = 1
         else:
             z = -1
             y = -2
             x = -3
-        >>> print((f := FST('if 1: i = 1\nelse: j = 2')).put('z = -1', 0, raw=True, to=f.orelse[0]).root.src)
+        >>> print((f := FST('if 1: i = 1\\nelse: j = 2')).put('z = -1', 0, raw=True, to=f.orelse[0]).root.src)
         if 1: z = -1
         ```
         """
@@ -1216,13 +1216,13 @@ class FST:
         """Get source at location, without dedenting or any other modification, returned as a string or individual
         lines. The first and last lines are cropped to start `col` and `end_col`.
 
-        Can call on any node in tree for same effect.
+        Can call on any node in tree to access source for the whole tree.
 
         **Parameters:**
         - `ln`: Start line of span to get (0 based).
         - `col`: Start column (character) on start line.
         - `end_ln`: End line of span to get (0 based, inclusive).
-        - `end_col`: End column (character, exclusive`) on end line.
+        - `end_col`: End column (character, exclusive) on end line.
         - `as_lines`: If `False` then source is returned as a single string with embedded newlines. If `True` then
             source is returned as a list of line strings (without newlines).
 
@@ -1232,10 +1232,12 @@ class FST:
 
         **Examples:**
         ```py
-        >>> FST('if 1:\n  i = 2').get_src(0, 3, 1, 5)
-        '1:\n  i ='
-        >>> FST('if 1:\n  i = 2').get_src(0, 3, 1, 5, as_lines=True)
+        >>> FST('if 1:\\n  i = 2').get_src(0, 3, 1, 5)
+        '1:\\n  i ='
+        >>> FST('if 1:\\n  i = 2').get_src(0, 3, 1, 5, as_lines=True)
         ['1:', '  i =']
+        >>> (f := FST('if 1:\\n  i = 2')).get_src(*f.body[0].bloc)
+        'i = 2'
         ```
         """
 
@@ -1253,21 +1255,30 @@ class FST:
     def put_src(self, code: Code | None, ln: int, col: int, end_ln: int, end_col: int, *,
                 exact: bool | None = True) -> Optional['FST']:
         """Put source and reparse. There are no rules on what is put, it is simply put and parse is attempted. If the
-        `code` is passed as an `FST` or `AST` then it is unparsed to a string and that string is put into the location
-        to attempt reparse. If passed as a string or lines then that is put directly.
+        `code` is passed as an `AST` then it is unparsed to a string and that string is put into the location. If `FST`
+        then the exact source of the `FST` is put. If passed as a string or lines then that is put directly.
 
-        After put and successful reparse, the location of the put is examined and an appropriate node is returned which
+        The reparse that is triggered is of at least a statement level node or a statement block header, and can be
+        multiple statements if the location spans those or even statements outside of the location if the reparse
+        affects things like `elif`. `FST` nodes in the region of the put or even outside of it can become invalid. The
+        only `FST` node guaranteed not to change is the root node.
+
+        When putting source raw by location like this there are no modifications made to the source or destination. No
+        parenthesization, prefixes or suffixes or indentation, the source is just put and parsed so you are responsible
+        for the correct indentation and precedence.
+
+        After put and successful reparse the location of the put is examined and an appropriate node is returned which
         fits best for a node which may have been added or replaced. It is possible that `None` is returned if no good
         candidate is found (since this can be used to delete or merge nodes).
 
-        Can call on any node in tree for same effect.
+        Can call on any node in tree to modify source for the whole tree.
 
         **Parameters:**
         - `code`: The code to put as an `FST` (must be root node), `AST`, a string or list of line strings.
         - `ln`: Start line of span to put (0 based).
         - `col`: Start column (character) on start line.
         - `end_ln`: End line of span to put (0 based, inclusive).
-        - `end_col`: End column (character, exclusive`) on end line.
+        - `end_col`: End column (character, exclusive) on end line.
         - `exact`: This specifies how the node check after a successful reparse is done. `True` means allow return of
             node which matches location exactly. Otherwise if `False`, the location must be inside the node but cannot
             be touching BOTH ends of the node. This basically determines whether you can get the exact node of the
@@ -1280,6 +1291,36 @@ class FST:
 
         **Examples:**
         ```py
+        >>> FST('i = 1').put_src('2', 0, 4, 0, 5).root.src
+        'i = 2'
+        >>> FST('i = 1').put_src('+= 3', 0, 2, 0, 5).root.src
+        'i += 3'
+        >>> FST('{a: b, c: d, e: f}').put_src('**', 0, 7, 0, 10).root.src
+        '{a: b, **d, e: f}'
+        >>> f = FST('i = 1')
+        >>> g = f.targets[0]
+        >>> print(g.a)
+        Name(id='i', ctx=Store())
+        >>> f.put_src('4', 0, 4, 0, 5).src
+        '4'
+        >>> print(g.a)
+        None
+        >>> print(f.targets[0].a)
+        Name(id='i', ctx=Store())
+        >>> f = FST('if a:\\n  i = 2\\nelif b:\\n  j = 3')
+        >>> print(f.src)
+        if a:
+          i = 2
+        elif b:
+          j = 3
+        >>> f.put_src('else:\\n  if b:\\n    k = 4', *f.orelse[0].loc[:2], *f.loc[2:])
+        <If 3,2..4,9>
+        >>> print(f.src)
+        if a:
+          i = 2
+        else:
+          if b:
+            k = 4
         ```
         """
 
@@ -1288,7 +1329,7 @@ class FST:
         return parent._reparse_raw(code, ln, col, end_ln, end_col, exact)
 
     def pars(self, ret_full: bool = False, *, shared: bool = True, pars: bool = True,
-             ) -> fstlocns | tuple[fstlocns | None, int] | None:
+             ) -> fstloc | tuple[fstloc | None, int] | None:
         """Return the location of enclosing GROUPING parentheses if present. Will balance parentheses if `self` is an
         element of a tuple and not return the parentheses of the tuple. Likwise will not return the parentheses of an
         enclosing `arguments` parent or class bases list. Only works on (and makes sense for) `expr` or `pattern` nodes,
@@ -1301,17 +1342,18 @@ class FST:
             the location, which if is not `None` will have the number of parentheses in an attribute `.n`. This exists
             because of the possibility of a `bloc` being `None`.
         - `shared`: If `True` then will include parentheses of a single call argument generator expression if they are
-            shared with the call arguments enclosing parentheses, return -1 count in this case. If `False` then does
-            not return these, and thus not a full valid `GeneratorExp` location. Is not checked at all if `pars=False`.
+            shared with the call arguments enclosing parentheses with a count of 0. If `False` then does not return
+            these and returns a count of -1, and thus the location is not a full valid `GeneratorExp` location. Is not
+            checked at all if `pars=False`.
         - `pars`: `True` means return parentheses if present and `self.bloc` otherwise, `False` always `self.bloc`. This
             parameter exists purely for convenience.
 
         **Returns:**
-        - `fstlocns | None`: Location of enclosing parentheses if present else `self.bloc` (which can be `None`). Negative
+        - `fstloc | None`: Location of enclosing parentheses if present else `self.bloc` (which can be `None`). Negative
             parentheses count (from shared parens solo call arg generator expression) can also be checked in the case of
-            `shared=False` via `fst.pars() > fst.bloc`. If only loc is returned, it will be an `fstlocns` which will
+            `shared=False` via `fst.pars() > fst.bloc`. If only loc is returned, it will be an `fstloc` which will
             still have the count of parentheses in an attribute `.n`.
-        - `(fstlocns, count)`: Location of enclosing parentheses or `self.bloc` or `None` and number of nested
+        - `(fstloc, count)`: Location of enclosing parentheses or `self.bloc` or `None` and number of nested
             parentheses found (if requested with `ret_full`). `ret_full` can be -1 in the case of a `GeneratorExp`
             sharing parentheses with `Call` `arguments` if it is the only argument, but only if these parentheses are
             explicitly excluded with `shared=False`.
@@ -1444,8 +1486,27 @@ class FST:
     )
 
     def parent_stmt(self, self_: bool = False, mod: bool = True) -> Optional['FST']:
-        """The first parent which is a `stmt` or `mod` node (if any). If `self_` is `True` then will check `self` first,
-        otherwise only checks parents."""
+        """The first parent which is a `stmt` or optionally `mod` node (if any). If `self_` is `True` then will check
+        `self` first (possibly returning `self`), otherwise only checks parents.
+
+        **Parameters:**
+        - `self_`: Whether to include `self` in the search, if so and `self` matches criteria then it is returned.
+        - `mod`: Whether to return `mod` nodes if found.
+
+        **Examples:**
+        ```py
+        >>> FST('if 1: i = 1', 'exec').body[0].body[0].value.parent_stmt()
+        <Assign 0,6..0,11>
+        >>> FST('if 1: i = 1', 'exec').body[0].body[0].parent_stmt()
+        <If 0,0..0,11>
+        >>> FST('if 1: i = 1', 'exec').body[0].parent_stmt()
+        <Module ROOT 0,0..0,11>
+        >>> print(FST('if 1: i = 1', 'exec').body[0].parent_stmt(mod=False))
+        None
+        >>> FST('if 1: i = 1', 'exec').body[0].parent_stmt(self_=True)
+        <If 0,0..0,11>
+        ```
+        """
 
         types = (stmt, ast_.mod) if mod else stmt
 
@@ -1458,8 +1519,23 @@ class FST:
         return self
 
     def parent_stmtish(self, self_: bool = False, mod: bool = True) -> Optional['FST']:
-        """The first parent which is a `stmt`, `ExceptHandler`, `match_case` or `mod` node (if any). If `self_` is
-        `True` then will check `self` first, otherwise only checks parents."""
+        """The first parent which is a `stmt`, `ExceptHandler`, `match_case` or optionally `mod` node (if any). If
+        `self_` is `True` then will check `self` first, otherwise only checks parents.
+
+        **Examples:**
+        ```py
+        >>> FST('try: pass\\nexcept: pass', 'exec').body[0].handlers[0].body[0].parent_stmtish()
+        <ExceptHandler 1,0..1,12>
+        >>> FST('try: pass\\nexcept: pass', 'exec').body[0].handlers[0].parent_stmtish()
+        <Try 0,0..1,12>
+        >>> FST('try: pass\\nexcept: pass', 'exec').body[0].parent_stmtish()
+        <Module ROOT 0,0..1,12>
+        >>> FST('match a:\\n  case 1: pass').cases[0].body[0].parent_stmtish()
+        <match_case 1,2..1,14>
+        >>> FST('match a:\\n  case 1: pass').cases[0].pattern.parent_stmtish()
+        <match_case 1,2..1,14>
+        ```
+        """
 
         types = STMTISH_OR_MOD if mod else STMTISH
 
@@ -1474,8 +1550,17 @@ class FST:
     def parent_block(self, self_: bool = False, mod: bool = True) -> Optional['FST']:
         """The first parent which opens a block that `self` lives in (if any). Types include `FunctionDef`,
         `AsyncFunctionDef`, `ClassDef`, `For`, `AsyncFor`, `While`, `If`, `With`, `AsyncWith`, `Match`, `Try`,
-        `TryStar`, `ExceptHandler`, `match_case` or `mod`. If `self_` is `True` then will check `self` first, otherwise
-        only checks parents."""
+        `TryStar`, `ExceptHandler`, `match_case` or optionally `mod` node (if any). If `self_` is `True` then will check
+        `self` first, otherwise only checks parents.
+
+        **Examples:**
+        ```py
+        >>> FST('if 1: i = 1', 'exec').body[0].body[0].value.parent_block()
+        <If 0,0..0,11>
+        >>> FST('if 1: i = 1', 'exec').body[0].parent_block()
+        <Module ROOT 0,0..0,11>
+        ```
+        """
 
         types = BLOCK_OR_MOD if mod else BLOCK
 
@@ -1489,8 +1574,21 @@ class FST:
 
     def parent_scope(self, self_: bool = False, mod: bool = True) -> Optional['FST']:
         """The first parent which opens a scope that `self` lives in (if any). Types include `FunctionDef`,
-        `AsyncFunctionDef`, `ClassDef`, `Lambda`, `ListComp`, `SetComp`, `DictComp`, `GeneratorExp` or `mod`. If `self_`
-        is `True` then will check `self` first, otherwise only checks parents."""
+        `AsyncFunctionDef`, `ClassDef`, `Lambda`, `ListComp`, `SetComp`, `DictComp`, `GeneratorExp` or optionally `mod`
+        node (if any). If `self_` is `True` then will check `self` first, otherwise only checks parents.
+
+        **Examples:**
+        ```py
+        >>> FST('if 1: i = 1', 'exec').body[0].body[0].value.parent_scope()
+        <Module ROOT 0,0..0,11>
+        >>> FST('def f():\\n  if 1: i = 1', 'exec').body[0].body[0].body[0].value.parent_scope()
+        <FunctionDef 0,0..1,13>
+        >>> FST('lambda: None', 'exec').body[0].value.body.parent_scope()
+        <Lambda ROOT 0,0..0,12>
+        >>> FST('[i for i in j]', 'exec').body[0].value.elt.parent_scope()
+        <ListComp ROOT 0,0..0,14>
+        ```
+        """
 
         types = SCOPE_OR_MOD if mod else SCOPE
 
@@ -1504,8 +1602,21 @@ class FST:
 
     def parent_named_scope(self, self_: bool = False, mod: bool = True) -> Optional['FST']:
         """The first parent which opens a named scope that `self` lives in (if any). Types include `FunctionDef`,
-        `AsyncFunctionDef`, `ClassDef` or `mod`. If `self_` is `True` then will check `self` first, otherwise only
-        checks parents."""
+        `AsyncFunctionDef`, `ClassDef` or optionally `mod` node (if any). If `self_` is `True` then will check `self`
+        first, otherwise only checks parents.
+
+        **Examples:**
+        ```py
+        >>> FST('if 1: i = 1', 'exec').body[0].body[0].value.parent_named_scope()
+        <Module ROOT 0,0..0,11>
+        >>> FST('def f():\\n  if 1: i = 1', 'exec').body[0].body[0].body[0].value.parent_named_scope()
+        <FunctionDef 0,0..1,13>
+        >>> FST('def f(): lambda: None', 'exec').body[0].body[0].value.body.parent_named_scope()
+        <FunctionDef 0,0..0,21>
+        >>> FST('class cls: [i for i in j]', 'exec').body[0].body[0].value.elt.parent_named_scope()
+        <ClassDef 0,0..0,25>
+        ```
+        """
 
         types = NAMED_SCOPE_OR_MOD if mod else NAMED_SCOPE
 
@@ -1518,16 +1629,28 @@ class FST:
         return self
 
     def child_path(self, child: 'FST', as_str: bool = False) -> list[astfield] | str:
-        """Get path to `child` node from `self` which can later be used on a copy of this tree to get to the same
+        """Get path to `child` node from `self` which can later be used on a copy of this tree to get to the  same
         relative child node.
 
         **Parameters:**
-        - `child`: Child node to get path to.
-        - `as_str`: If `True` will return the path as a python-ish string, else a list of `astfield`s which can be used
-            more directly.
+        - `child`: Child node to get path to, can be `self` in which case an empty path is returned.
+        - `as_str`: If `True` will return the path as a python-ish string suitable for attribute access, else a list of
+            `astfield`s which can be used more directly.
 
         **Returns:**
         - `list[astfield] | str`: Path to child if exists, otherwise raises.
+
+        **Examples:**
+        ```py
+        >>> (f := FST('[i for i in j]', 'exec')).child_path(f.body[0].value.elt)
+        [astfield('body', 0), astfield('value'), astfield('elt')]
+        >>> (f := FST('[i for i in j]', 'exec')).child_path(f.body[0].value.elt, as_str=True)
+        'body[0].value.elt'
+        >>> (f := FST('i')).child_path(f)
+        []
+        >>> (f := FST('i')).child_path(f, as_str=True)
+        ''
+        ```
         """
 
         path = []
@@ -1543,8 +1666,10 @@ class FST:
         return path if not as_str else '.'.join(af.name if (i := af.idx) is None else f'{af.name}[{i}]' for af in path)
 
     def child_from_path(self, path: list[astfield] | str, last_valid: bool = False) -> Union['FST', Literal[False]]:
-        """Get child node specified by `path` if it exists. If succeeds then the child node is not guaranteed to be the
-        same type as was originally used to get the path, just the path is valid.
+        """Get child node specified by `path` if it exists. If succeeds then it doesn't mean that the child node is
+        guaranteed to be the same or even same type as was originally used to get the path, just that the path is valid.
+        For example after deleting an element from a list the item at the former element's location will be the previous
+        next element.
 
         **Parameters:**
         - `path`: Path to child as a list of `astfield`s or string.
@@ -1553,11 +1678,27 @@ class FST:
         **Returns:**
         - `FST`: Child node if path is valid, otherwise `False` if path invalid. `False` and not `None` because `None`
             can be in a field that can hold an `AST` but `False` can not.
+
+        **Examples:**
+        ```py
+        >>> f.child_from_path((f := FST('[i for i in j]', 'exec')).child_path(f.body[0].value.elt)).src
+        'i'
+        >>> f.child_from_path((f := FST('[i for i in j]', 'exec')).child_path(f.body[0].value.elt, True)).src
+        'i'
+        >>> FST('[0, 1, 2, 3]', 'exec').child_from_path('body[0].value.elts[4]')
+        False
+        >>> FST('[0, 1, 2, 3]', 'exec').child_from_path('body[0].value.elts[4]', last_valid=True).src
+        '[0, 1, 2, 3]'
+        >>> (f := FST('i')).child_from_path([]) is f
+        True
+        >>> (f := FST('i')).child_from_path('') is f
+        True
+        ```
         """
 
         if isinstance(path, str):
             path = [astfield(p[:i], int(p[i + 1 : -1])) if (i := p.find('[')) != -1 else astfield(p)
-                    for p in path.split('.')]
+                    for p in path.split('.')] if path else []
 
         for p in path:
             if (next := p.get_no_raise(self)) is False:
@@ -1569,21 +1710,68 @@ class FST:
 
     def repath(self) -> 'FST':
         """Recalculate `self` from path from root. Useful if `self` has been replaced by another node by some operation.
+        When nodes are deleted the corresponding `FST.a` and `AST.f` attributes are set to `None`. The `root`, `parent`
+        and `pfield` attributes are left so that things like this can work. Useful when a node has been deleted but you
+        want to know where it was and what may be there now.
 
         **Returns:**
         - `FST`: Possibly `self` or the node which took our place at our relative position from `root`.
+
+        **Examples:**
+        ```py
+        >>> f = FST('[0, 1, 2, 3]')
+        >>> g = f.elts[1]
+        >>> print(g.a, g.root)
+        Constant(value=1, kind=None) <List ROOT 0,0..0,12>
+        >>> f.put('x', 1, raw=True)  # raw forces reparse at List
+        <List ROOT 0,0..0,12>
+        >>> print(g.a, g.root)
+        None <List ROOT 0,0..0,12>
+        >>> g = g.repath()
+        >>> print(g.a, g.root)
+        Name(id='x', ctx=Load()) <List ROOT 0,0..0,12>
+        ```
         """
 
         return (root := self.root).child_from_path(root.child_path(self))
 
     def find_loc(self, ln: int, col: int, end_ln: int, end_col: int, exact: bool = True) -> Optional['FST']:
-        """Find lowest level node which entirely contains location (starting search at `self`).
+        """Find the lowest level node which entirely contains location (starting search at `self`).
 
         **Parameters:**
+        - `ln`: Start line of location to search for (0 based).
+        - `col`: Start column (character) on start line.
+        - `end_ln`: End line of location to search for (0 based, inclusive).
+        - `end_col`: End column (character, inclusive with `FST.end_col`, exclusive with `FST.col`) on end line.
         - `exact`: Whether to allow return of exact location match with node or not. `True` means allow return of node
             which matches location exactly. Otherwise the location must be inside the node but cannot be touching BOTH
             ends of the node. This basically determines whether you can get the exact node of the location or its
             parent.
+
+        **Returns:**
+        - `FST | None`: Node which entirely contains location, either exactly or not, or `None` if no such node.
+
+        **Examples:**
+        ```py
+        >>> FST('i = val', 'exec').find_loc(0, 6, 0, 7)
+        <Name 0,4..0,7>
+        >>> FST('i = val', 'exec').find_loc(0, 4, 0, 7)
+        <Name 0,4..0,7>
+        >>> FST('i = val', 'exec').find_loc(0, 4, 0, 7, exact=False)
+        <Assign 0,0..0,7>
+        >>> FST('i = val', 'exec').find_loc(0, 5, 0, 7, exact=False)
+        <Name 0,4..0,7>
+        >>> FST('i = val', 'exec').find_loc(0, 4, 0, 6, exact=False)
+        <Name 0,4..0,7>
+        >>> FST('i = val', 'exec').find_loc(0, 3, 0, 7)
+        <Assign 0,0..0,7>
+        >>> FST('i = val', 'exec').find_loc(0, 3, 0, 7, exact=False)
+        <Assign 0,0..0,7>
+        >>> print(FST('i = val', 'exec').find_loc(0, 0, 0, 7, exact=False))
+        None
+        >>> FST('i = val\\n', 'exec').find_loc(0, 0, 0, 7, exact=False)
+        <Module ROOT 0,0..1,0>
+        ```
         """
 
         fln, fcol, fend_ln, fend_col = self.loc
@@ -1620,8 +1808,30 @@ class FST:
                 return self
 
     def find_in_loc(self, ln: int, col: int, end_ln: int, end_col: int) -> Optional['FST']:
-        """Find highest level first node which is contained entirely in location (inclusive, starting search at
-        `self`)."""
+        """Find the first highest level node which is contained entirely in location (inclusive, starting search at
+        `self`).
+
+        **Parameters:**
+        - `ln`: Start line of location to search (0 based).
+        - `col`: Start column (character) on start line.
+        - `end_ln`: End line of location to search (0 based, inclusive).
+        - `end_col`: End column (character, inclusive with `FST.end_col`, exclusive with `FST.col`) on end line.
+
+        **Returns:**
+        - `FST | None`: First node which is entirely contained in the location or `None` if no such node.
+
+        **Examples:**
+        ```py
+        >>> FST('i = val', 'exec').find_in_loc(0, 0, 0, 7)
+        <Module ROOT 0,0..0,7>
+        >>> FST('i = val', 'exec').find_in_loc(0, 1, 0, 7)
+        <Name 0,4..0,7>
+        >>> FST('i = val', 'exec').find_in_loc(0, 4, 0, 7)
+        <Name 0,4..0,7>
+        >>> print(FST('i = val', 'exec').find_in_loc(0, 5, 0, 7))
+        None
+        ```
+        """
 
         fln, fcol, fend_ln, fend_col = self.loc
 

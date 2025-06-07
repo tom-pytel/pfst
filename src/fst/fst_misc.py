@@ -1891,6 +1891,6 @@ def _dedent_lns(self: 'FST', indent: str | None = None, lns: set[int] | None = N
 
 
 # ----------------------------------------------------------------------------------------------------------------------
-__all_private__ = [n for n in globals() if n not in _GLOBALS]
+__all_private__ = [n for n in globals() if n not in _GLOBALS]  # used by make_docs.py
 
 from .fst import FST  # this imports a fake FST which is replaced in globals() when fst.py finishes loading

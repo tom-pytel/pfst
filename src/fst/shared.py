@@ -210,6 +210,9 @@ class astfield(NamedTuple):
     name: str                ; """The actual field name, a la "body", "value", "orelse", etc..."""
     idx:  int | None = None  ; """The index if the field is a list, else `None`."""
 
+    def __repr__(self) -> str:
+        return f'astfield({self.name!r})' if (idx := self.idx) is None else f'astfield({self.name!r}, {idx})'
+
     def get(self, parent: AST) -> Any:
         """Get child node at this field in the given `parent`."""
 
@@ -250,9 +253,21 @@ class fstloc(NamedTuple):
 
     is_FST   = False                                ; """@private"""  # for quick checks vs. `FST`
 
+    def __repr__(self) -> str:
+        ln, col, end_ln, end_col = self
+
+        return f'fstloc({ln}, {col}, {end_ln}, {end_col})'
+
 
 class fstlocns(fstloc):
     """Version of `fstloc` with a namespace, used for `pars().count`."""
+
+    def __repr__(self) -> str:
+        ln, col, end_ln, end_col = self
+        ns                       = ', '.join(f'{n}={v}' for n, v in self.__dict__.items())
+
+        return (f'fstlocns({ln}, {col}, {end_ln}, {end_col}, {ns})' if ns else
+                f'fstlocns({ln}, {col}, {end_ln}, {end_col})')
 
     def __new__(cls, ln: int, col: int, end_ln: int, end_col: int, **kwargs):
         self = fstloc.__new__(cls, ln, col, end_ln, end_col)
@@ -811,4 +826,4 @@ def _multiline_fstr_continuation_lns(lines: list[str], ln: int, col: int, end_ln
 
 
 # ----------------------------------------------------------------------------------------------------------------------
-__all_private__ = [n for n in globals() if n not in _GLOBALS]
+__all_private__ = [n for n in globals() if n not in _GLOBALS]  # used by make_docs.py

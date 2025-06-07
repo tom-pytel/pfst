@@ -1117,7 +1117,7 @@ def _code_as_identifier_alias(code: Code, parse_params: dict = {}) -> str:
 
 
 # ----------------------------------------------------------------------------------------------------------------------
-__all_private__ = [n for n in globals() if n not in _GLOBALS]
+__all_private__ = [n for n in globals() if n not in _GLOBALS]  # used by make_docs.py
 
 _parse_all_funcs = [
     _parse_most,

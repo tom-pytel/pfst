@@ -214,6 +214,6 @@ def _reparse_raw(self: 'FST', code: Code | None, ln: int, col: int, end_ln: int,
 
 
 # ----------------------------------------------------------------------------------------------------------------------
-__all_private__ = ['_reparse_raw']
+__all_private__ = ['_reparse_raw']  # used by make_docs.py
 
 from .fst import FST  # this imports a fake FST which is replaced in globals() when fst.py finishes loading
