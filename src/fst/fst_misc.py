@@ -1069,7 +1069,7 @@ def _maybe_fix(self: 'FST', pars: bool = True):
     the operation). If cannot fix or ast is not parsable by itself then ast will be unchanged. Is meant to be a quick
     fix after a cut or copy operation, not full check, for that use `verify()`.
 
-    WARNING! Only call on root node!
+    **WARNING!** Only call on root node!
     """
 
     # assert self.is_root
@@ -1159,7 +1159,7 @@ def _parenthesize_grouping(self: 'FST', whole: bool = True):
 def _parenthesize_tuple(self: 'FST', whole: bool = True, pars: str = '()'):
     """Parenthesize an unparenthesized `Tuple` or `MatchSequence`, adjusting tuple location for added parentheses.
 
-    WARNING! No checks are done so don't call on anything other than an unparenthesized Tuple or MatchSequence!
+    **WARNING!** No checks are done so don't call on anything other than an unparenthesized Tuple or MatchSequence!
 
     **Parameters:**
     - `whole`: If at root then parenthesize whole source instead of just node.
@@ -1234,7 +1234,7 @@ def _unparenthesize_tuple(self: 'FST') -> bool:
     """Unparenthesize a parenthesized `Tuple`, adjusting tuple location for removed parentheses. Will not unparenthesize
     an empty tuple. Removes everything between the parentheses and the actual tuple.
 
-    WARNING! No checks are done so don't call on anything other than a parenthesized Tuple!
+    **WARNING!** No checks are done so don't call on anything other than a parenthesized Tuple!
 
     **Returns:**
     - `bool`: Whether parentheses were removed or not (they may not be for an empty tuple).
@@ -1777,7 +1777,7 @@ def _indent_lns(self: 'FST', indent: str | None = None, lns: set[int] | None = N
                 skip: int = 1, docstr: bool | Literal['strict'] | None = None) -> set[int]:
     """Indent all indentable lines specified in `lns` with `indent` and adjust node locations accordingly.
 
-    WARNING! This does not offset parent nodes.
+    **WARNING!** This does not offset parent nodes.
 
     **Parameters:**
     - `indent`: The indentation string to prefix to each indentable line.
@@ -1820,7 +1820,7 @@ def _dedent_lns(self: 'FST', indent: str | None = None, lns: set[int] | None = N
     """Dedent all indentable lines specified in `lns` by removing `indent` prefix and adjust node locations
     accordingly. If cannot dedent entire amount, will dedent as much as possible.
 
-    WARNING! This does not offset parent nodes.
+    **WARNING!** This does not offset parent nodes.
 
     **Parameters:**
     - `indent`: The indentation string to remove from the beginning of each indentable line (if possible).

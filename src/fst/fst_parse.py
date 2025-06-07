@@ -128,7 +128,7 @@ def _parse(src: str, mode: Mode = 'all', parse_params: dict = {}) -> AST:
     `comprehension`s. Can be given a target type to parse or else will try to various parse methods until it finds one
     that succeeds (if any).
 
-    WARNING! Does not guarantee `src` can be plugged directly into a node of the type it is being parsed for without
+    **WARNING!** Does not guarantee `src` can be plugged directly into a node of the type it is being parsed for without
     parentheses (especially for `Tuple`s).
 
     **Parameters**:

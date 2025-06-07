@@ -1384,7 +1384,7 @@ class FST:
         - `self`
         """
 
-        if self.is_atom(enclosed=True):
+        if self.is_atom(always_enclosed=True):
             if not force:
                 return self  # False
 
@@ -1658,6 +1658,26 @@ class FST:
 
         **Returns:**
         - `str`: Entire indentation string for the block this node lives in (not just a single level).
+
+        **Examples:**
+        ```py
+        >>> FST('i = 1').get_indent()
+        ''
+        >>> FST('if 1:\\n  i = 1').body[0].get_indent()
+        '  '
+        >>> FST('if 1: i = 1').body[0].get_indent()
+        '    '
+        >>> FST('if 1: i = 1; j = 2').body[1].get_indent()
+        '    '
+        >>> FST('if 1:\\n  i = 1\\n  j = 2').body[1].get_indent()
+        '  '
+        >>> FST('if 2:\\n    if 1:\\n      i = 1\\n      j = 2').body[0].body[1].get_indent()
+        '      '
+        >>> FST('if 1:\\n\\\\\\n  i = 1').body[0].get_indent()
+        '  '
+        >>> FST('if 1:\\n \\\\\\n  i = 1').body[0].get_indent()
+        ' '
+        ```
         """
 
         while (parent := self.parent) and not isinstance(self.a, STMTISH):
@@ -1705,6 +1725,22 @@ class FST:
 
         **Returns:**
         - `set[int]`: Set of line numbers (zero based) which are sytactically indentable.
+
+        **Examples:**
+        ```py
+        >>> FST('def f():\\n    i = 1\\n    j = 2').get_indentable_lns()
+        {0, 1, 2}
+        >>> FST('def f():\\n  '''docstr'''\\n  i = 1\\n  j = 2').get_indentable_lns()
+        {0, 1, 2, 3}
+        >>> FST('def f():\\n  '''doc\\nstr'''\\n  i = 1\\n  j = 2').get_indentable_lns()
+        {0, 1, 2, 3, 4}
+        >>> FST('def f():\\n  '''doc\\nstr'''\\n  i = 1\\n  j = 2').get_indentable_lns(skip=2)
+        {2, 3, 4}
+        >>> FST('def f():\\n  '''doc\\nstr'''\\n  i = 1\\n  j = 2').get_indentable_lns(docstr=False)
+        {0, 1, 3, 4}
+        >>> FST('def f():\\n  '''doc\\nstr'''\\n  s = '''multi\\nline\\nstring'''\\n  i = 1').get_indentable_lns()
+        {0, 1, 2, 3, 6}
+        ```
         """
 
         if docstr is None:
@@ -1739,7 +1775,30 @@ class FST:
 
     def is_parsable(self) -> bool:
         """Really means the AST is `ast.unparse()`able and then re`ast.parse()`able which will get it to this top level
-        AST node (surrounded by an `ast.mod`). The source may change a bit though, parentheses, 'if' <-> 'elif'."""
+        AST node (surrounded by an `ast.mod`). The source may change a bit though, parentheses, `if` <-> `elif`.
+
+        **Examples:**
+        ```py
+        >>> FST('i').is_parsable()
+        True
+        >>> FST('a[b]').slice.is_parsable()
+        True
+        >>> FST('a[b:c]').slice.is_parsable()
+        False
+        >>> FST('f"{a!r:<8}"').values[0].is_parsable()
+        False
+        >>> FST('f"{a!r:<8}"').values[0].value.is_parsable()
+        True
+        >>> FST('f"{a!r:<8}"').values[0].format_spec.is_parsable()
+        False
+        >>> FST('try: pass\\nexcept: pass').body[0].is_parsable()
+        True
+        >>> FST('try: pass\\nexcept: pass').handlers[0].is_parsable()
+        False
+        >>> FST('try: pass\\nexcept: pass').handlers[0].body[0].is_parsable()
+        True
+        ```
+        """
 
         if not is_parsable(self.a) or not self.loc:
             return False
@@ -1763,27 +1822,48 @@ class FST:
 
         return True
 
-    def is_atom(self, *, pars: bool = True, enclosed: bool = False) -> bool | Literal['pars']:
+    def is_atom(self, *, pars: bool = True, always_enclosed: bool = False) -> bool | Literal['pars']:
         """Whether `self` is innately atomic precedence-wise like `Name`, `Constant`, `List`, etc... Or otherwise
         optionally enclosed in parentheses so that it functions as a parsable atom and cannot be split up by precedence
         rules when reparsed.
 
-        Node types where this doesn't normally apply like `stmt` or 'alias' return `True`. This does not guarantee
+        Node types where this doesn't normally apply like `stmt` or `alias` return `True`. This does not guarantee
         parsability as an otherwise atomic node could be spread across multiple lines without line continuations or
         grouping parentheses, see `is_enclosed()` for that. Though if this function returns `'pars'` then `self` is
         enclosed due to the grouping parentheses.
 
         **Parameters:**
         - `pars`: Whether to check for grouping parentheses or not for node types which are not innately atomic
-            (`NamedExpr`, `BinOp`, `Yield`, etc...). If `True` then '(a + b)' is considered atomic, if `False` then it
+            (`NamedExpr`, `BinOp`, `Yield`, etc...). If `True` then `(a + b)` is considered atomic, if `False` then it
             is not.
-        - `enclosed': If `True` then will only consider nodes atomic which are definitely enclosed like `List` or
-            parenthesized tuple. Nodes which may be split up across multiple lines like `Call` or `Attribute` will not
-            be considered atomic and will return `False` unless `pars=True` and grouping parentheses present.
+        - `always_enclosed`: If `True` then will only consider nodes atomic which are always enclosed like `List` or
+            parenthesized `Tuple`. Nodes which may be split up across multiple lines like `Call` or `Attribute` will not
+            be considered atomic and will return `False` unless `pars=True` and grouping parentheses present, in which
+            case `'pars'` is returned.
 
         **Returns:**
         - `True` if node is atomic and no combination in the source will make it parse to a different node. `'pars'` if
             is atomic due to enclosing grouping parentheses and would not be otherwise. `False` means not atomic.
+
+        **Examples:**
+        ```py
+        >>> FST('a').is_atom()
+        True
+        >>> FST('a + b').is_atom()
+        False
+        >>> FST('(a + b)').is_atom()
+        'pars'
+        >>> FST('(a + b)').is_atom(pars=False)
+        False
+        >>> FST('a.b').is_atom()
+        True
+        >>> FST('a.b').is_atom(always_enclosed=True)  # because of "a\\n.b"
+        False
+        >>> FST('(a.b)').is_atom(always_enclosed=True)
+        'pars'
+        >>> FST('[]').is_atom(always_enclosed=True)  # because List is always enclosed
+        True
+        ```
         """
 
         ast = self.a
@@ -1794,7 +1874,7 @@ class FST:
                             stmt, match_case, mod, TypeIgnore)):
             return True
 
-        if not enclosed:
+        if not always_enclosed:
             if isinstance(ast, (Call, JoinedStr, TemplateStr, Constant, Attribute, Subscript,
                                 MatchClass, MatchStar,
                                 cmpop, comprehension, arguments,
@@ -1810,7 +1890,7 @@ class FST:
 
         elif isinstance(ast, withitem):  # isn't atom on its own and can't be parenthesized directly but if only has context_expr then take on value of that if starts and ends on same lines
             return (not ast.optional_vars and self.loc[::2] == (ce := ast.context_expr.f).pars()[::2] and
-                    ce.is_atom(pars=pars, enclosed=enclosed))
+                    ce.is_atom(pars=pars, always_enclosed=always_enclosed))
 
         elif isinstance(ast, cmpop):
             return not isinstance(ast, (IsNot, NotIn))  # could be spread across multiple lines
@@ -1826,15 +1906,15 @@ class FST:
         return 'pars' if pars and self.pars(True)[1] else False
 
     def is_enclosed(self, *, pars: bool = True) -> bool | Literal['pars']:
-        """Whether `self` lives on a single line or is otherwise enclosed in some kind of delimiters '()', '[]', '{}' or
+        """Whether `self` lives on a single line or is otherwise enclosed in some kind of delimiters `()`, `[]`, `{}` or
         entirely terminated with line continuations so that it can be parsed without error due to being spread across
         multiple lines. This does not mean it can't have other errors, such as a `Slice` outside of `Subscript.slice`.
 
         Node types where this doesn't normally apply like `stmt`, `ExceptHandler`, `boolop`, `expr_context`, etc...
         return `True`. Node types that are not enclosed but which are never used without being enclosed by a parent like
         `Slice`, `keyword` or `type_param` will also return `True`. Other node types which cannot be enclosed
-        individually and do not have line continuations but would need a parent to enclose them like `arguments` or the
-        `cmpop`s `is not` or `not in` will return `False` if not on a single line or not parenthesized.
+        individually and are not on a single line or not parenthesized and do not have line continuations but would need
+        a parent to enclose them like `arguments` or the `cmpop`s `is not` or `not in` will return `False`.
 
         This function does NOT check whether `self` is enclosed by some parent up the tree if it is not enclosed itself,
         for that see `is_enclosed_in_parents()`.
@@ -1846,6 +1926,32 @@ class FST:
         **Returns:**
         - `True` if node is enclosed. `'pars'` if is enclosed by grouping parentheses and would not be otherwise.
             `False` means not enclosed and should be parenthesized or put into an enclosed parent for successful parse.
+
+        **Examples:**
+        ```py
+        >>> FST('a').is_enclosed()
+        True
+        >>> FST('a + \\\\n b').is_enclosed()
+        True
+        >>> FST('(a + \\n b)').is_enclosed()
+        'pars'
+        >>> FST('(a + \\n b)').unpar().src
+        'a + \\n b'
+        >>> FST('(a + \\n b)').unpar().is_enclosed()
+        False
+        >>> FST('[a + \\n b]').elts[0].is_enclosed()
+        False
+        >>> FST('[a + \\n b]').elts[0].is_enclosed_in_parents()
+        True
+        >>> FST('def f(a, b): pass').args.is_enclosed()
+        True
+        >>> FST('def f(a,\\n b): pass').args.is_enclosed()
+        False
+        >>> FST('(a is not b)').ops[0].is_enclosed()
+        True
+        >>> FST('(a is \\n not b)').ops[0].is_enclosed()
+        False
+        ```
         """
 
         ast = self.a
@@ -1920,18 +2026,44 @@ class FST:
         """Whether `self` is enclosed by some parent up the tree. This is different from `is_enclosed()` as it does not
         check for line continuations or anyting like that, just enclosing delimiters like from `Call` or `arguments`
         parentheses, `List` brackets, `FormattedValue`, parent grouping parentheses, etc... Statements do not generally
-        enclose except for a few parts of things like `FunctionDef` `args` or `type_params`, `ClassDef` `bases`, etc...
+        enclose except for a few parts of things like `FunctionDef.args` or `type_params`, `ClassDef.bases`, etc...
 
         **Parameters:**
         - `field`: This is meant to allow check for nonexistent child which would go into this field of `self`. If this
             is not `None` then `self` is considered the first parent with an imaginary child being checked at `field`.
 
-        WARNING! This will not pick up parentheses which belong to `self` and the rules for this can be confusing. E.g.
-        In 'with (a): pass` the parentheses belong to the variable `a` while `with (a as b): pass` they belong to the
+        **WARNING!** This will not pick up parentheses which belong to `self` and the rules for this can be confusing. E.g.
+        in `with (x): pass` the parentheses belong to the variable `x` while `with (x as y): pass` they belong to the
         `with` because `alias`es cannot be parenthesized.
 
         Will pick up parentheses which belong to `self` if `field` is passed because in that case `self` is considered
         the first parent and we are really considering the node which would live at `field`, whether it exists or not.
+
+        **Examples:**
+        ```py
+        >>> FST('1 + 2').left.is_enclosed_in_parents()
+        False
+        >>> FST('(1 + 2)').left.is_enclosed_in_parents()
+        True
+        >>> FST('(1 + 2)').is_enclosed_in_parents()
+        False
+        >>> FST('[1 + 2]').elts[0].left.is_enclosed_in_parents()
+        True
+        >>> FST('[1 + 2]').elts[0].is_enclosed_in_parents()
+        True
+        >>> FST('f(1)').args[0].is_enclosed_in_parents()
+        True
+        >>> FST('f"{1}"').values[0].value.is_enclosed_in_parents()
+        True
+        >>> FST('[]').is_enclosed_in_parents()
+        False
+        >>> FST('[]').is_enclosed_in_parents(field='elts')
+        True
+        >>> FST('with (x): pass').items[0].is_enclosed_in_parents()
+        False
+        >>> FST('with (x as y): pass').items[0].is_enclosed_in_parents()
+        True
+        ```
         """
 
         if field:
@@ -2000,17 +2132,39 @@ class FST:
 
         **Returns:**
         - `True` if is parenthesized `Tuple`, `False` if is unparenthesized `Tuple`, `None` if is not `Tuple` at all.
+
+        **Examples:**
+        ```py
+        >>> FST('1, 2').is_parenthesized_tuple()
+        False
+        >>> FST('(1, 2)').is_parenthesized_tuple()
+        True
+        >>> print(FST('1').is_parenthesized_tuple())
+        None
+        ```
         """
 
         return self._is_parenthesized_seq() if isinstance(self.a, Tuple) else None
 
     def is_enclosed_matchseq(self) -> bool | None:
-        """Whether `self` is an enclosed `MatchSequence` or not, or not a `MatchSequence` at all (can be pars '()' or
-        brackets '[]').
+        """Whether `self` is an enclosed `MatchSequence` or not, or not a `MatchSequence` at all (can be pars `()` or
+        brackets `[]`).
 
         **Returns:**
         - `True` if is enclosed `MatchSequence`, `False` if is unparenthesized `MatchSequence`, `None` if is not
             `MatchSequence` at all.
+
+        **Examples:**
+        ```py
+        >>> FST('match a:\\n  case 1, 2: pass').cases[0].pattern.is_enclosed_matchseq()
+        False
+        >>> FST('match a:\\n  case [1, 2]: pass').cases[0].pattern.is_enclosed_matchseq()
+        True
+        >>> FST('match a:\\n  case (1, 2): pass').cases[0].pattern.is_enclosed_matchseq()
+        True
+        >>> print(FST('match a:\\n  case 1: pass').cases[0].pattern.is_enclosed_matchseq())
+        None
+        ```
         """
 
         if not isinstance(self.a, MatchSequence):
@@ -2027,13 +2181,38 @@ class FST:
         return False
 
     def is_empty_set_call(self) -> bool:
-        """Whether `self` is an empty `set()` call."""
+        """Whether `self` is an empty `set()` call.
+
+        **Examples:**
+        ```py
+        >>> FST('{1}').is_empty_set_call()
+        False
+        >>> FST('set()').is_empty_set_call()
+        True
+        >>> FST('frozenset()').is_empty_set_call()
+        False
+        >>> FST('{*()}').is_empty_set_call()
+        False
+        ```
+        """
 
         return (isinstance(ast := self.a, Call) and not ast.args and not ast.keywords and
                 isinstance(func := ast.func, Name) and func.id == 'set' and isinstance(func.ctx, Load))
 
     def is_empty_set_seq(self) -> bool:
-        """Whether `self` is an empty `Set` from an empty sequence, recognized are `{*()}`, `{*[]}` and `{*{}}`."""
+        """Whether `self` is an empty `Set` from an empty `Starred` `Constant` sequence, recognized are `{*()}`, `{*[]}`
+        and `{*{}}`.
+
+        **Examples:**
+        ```py
+        >>> FST('{1}').is_empty_set_seq()
+        False
+        >>> FST('{*()}').is_empty_set_seq()
+        True
+        >>> FST('set()').is_empty_set_seq()
+        False
+        ```
+        """
 
         return (isinstance(ast := self.a, Set) and len(elts := ast.elts) == 1 and isinstance(e0 := elts[0], Starred) and
                 ((isinstance(v := e0.value, (Tuple, List)) and not v.elts) or (isinstance(v, Dict) and not v.keys)))
@@ -2042,19 +2221,58 @@ class FST:
         """Whether `self` is an `elif` or not, or not an `If` at all.
 
         **Returns:**
-        - `True` if is 'elif' `If`, `False` if is normal `If`, `None` if is not `If` at all.
+        - `True` if is `elif` `If`, `False` if is normal `If`, `None` if is not `If` at all.
+
+        **Examples:**
+        ```py
+        >>> FST('if 1: pass\\nelif 2: pass').orelse[0].is_elif()
+        True
+        >>> FST('if 1: pass\\nelse:\\n  if 2: pass').orelse[0].is_elif()
+        False
+        >>> print(FST('if 1: pass\\nelse:\\n  i = 2').orelse[0].is_elif())
+        None
+        ```
         """
 
         return self.root._lines[(loc := self.loc).ln].startswith('elif', loc.col) if isinstance(self.a, If) else None
 
-    def is_solo_class_base(self) -> bool:
-        """Whether `self` is a solo `ClassDef` base in list without any keywords."""
+    def is_solo_class_base(self) -> bool | None:
+        """Whether `self` is a solo `ClassDef` base in list without any keywords, or not a class base at all.
 
-        return ((parent := self.parent) and self.pfield.name == 'bases' and len((parenta := parent.a).bases) == 1 and
-                not parenta.keywords)
+        **Returns:**
+        - `True` if is solo class base, `False` if is class base, but not solo and `None` if is not class base at all.
+
+        **Examples:**
+        ```py
+        >>> FST('class cls(b1): pass').bases[0].is_solo_class_base()
+        True
+        >>> FST('class cls(b1, b2): pass').bases[0].is_solo_class_base()
+        False
+        >>> FST('class cls(b1, meta=m): pass').bases[0].is_solo_class_base()
+        False
+        >>> print(FST('class cls(b1, meta=m): pass').keywords[0].is_solo_class_base())
+        None
+        ```
+        """
+
+        if not (parent := self.parent) or self.pfield.name != 'bases':
+            return None
+
+        return len((parenta := parent.a).bases) == 1 and not parenta.keywords
 
     def is_solo_call_arg(self) -> bool:
-        """Whether `self` is a solo `Call` non-keyword argument."""
+        """Whether `self` is a solo `Call` non-keyword argument.
+
+        **Examples:**
+        ```py
+        >>> FST('call(a)').args[0].is_solo_call_arg()
+        True
+        >>> FST('call(a, b)').args[0].is_solo_call_arg()
+        False
+        >>> FST('call(i for i in range(3))').args[0].is_solo_call_arg()
+        True
+        ```
+        """
 
         return ((parent := self.parent) and self.pfield.name == 'args' and isinstance(parenta := parent.a, Call) and
                 not parenta.keywords and len(parenta.args) == 1)
@@ -2062,14 +2280,36 @@ class FST:
     def is_solo_call_arg_genexp(self) -> bool:
         """Whether `self` is the dreaded solo call non-keyword argument generator expression in `sum(i for i in a)`.
         This function doesn't say if it shares its parentheses or not, so it could still be `sum((i for i in a))` or
-        even `sum(((i for i in a)))`."""
+        even `sum(((i for i in a)))`. To differentiate that see `pars(shared=False)`.
+
+        **Examples:**
+        ```py
+        >>> FST('call(i for i in range(3))').args[0].is_solo_call_arg_genexp()
+        True
+        >>> FST('call((i for i in range(3)))').args[0].is_solo_call_arg_genexp()
+        True
+        >>> FST('call((i for i in range(3)), b)').args[0].is_solo_call_arg_genexp()
+        False
+        >>> FST('call(a)').args[0].is_solo_call_arg_genexp()
+        False
+        ```
+        """
 
         return ((parent := self.parent) and self.pfield.name == 'args' and isinstance(self.a, GeneratorExp) and
                 isinstance(parenta := parent.a, Call) and not parenta.keywords and len(parenta.args) == 1)
 
     def is_solo_matchcls_pat(self) -> bool:
         """Whether `self` is a solo `MatchClass` non-keyword pattern. The solo `Constant` held by a `MatchValue`
-        qualifies as `True` for this check if the `MatchValue` does."""
+        qualifies as `True` for this check if the `MatchValue` does.
+
+        **Examples:**
+        ```py
+        >>> FST('match a:\\n  case cls(a): pass').cases[0].pattern.patterns[0].is_solo_matchcls_pat()
+        True
+        >>> FST('match a:\\n  case cls(a, b): pass').cases[0].pattern.patterns[0].is_solo_matchcls_pat()
+        False
+        ```
+        """
 
         if not (parent := self.parent):
             return False
