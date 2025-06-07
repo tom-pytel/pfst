@@ -1,4 +1,4 @@
-"""Misc lower level FST methods."""
+"""Lower level FST methods (most of them not so misc but core)."""
 
 import re
 from ast import *
@@ -12,9 +12,9 @@ from .shared import (
     Code, Mode, NodeError, _next_src, _shortstr
 )
 
+_re_first_src = re.compile(r'^[^\S\n]*(?:[^\s\\#]|(?<!^)\\)', re.M)
 _re_except    = re.compile(r'except\b')
 _re_case      = re.compile(r'case\b\s*(?:[*\\\w({[\'"-]|\.\d)')
-_re_first_src = re.compile(r'^[^\S\n]*(?:[^\s\\#]|(?<!^)\\)', re.M)
 
 
 def _validate_indent(src: str, ret: Any = None) -> Any:
@@ -206,13 +206,14 @@ def _parse_Interactive(src: str, parse_params: dict = {}) -> AST:
 def _parse_stmtishs(src: str, parse_params: dict = {}) -> AST:
     """Parse zero or more `stmt`s, 'ExceptHander's or 'match_case's and return them in a `Module` `body`."""
 
-    lines = src.split('\n')
+    if firstsrc := _re_first_src.search(src):
+        if (col := len(firstsrc.group(0)) - 1):
+            raise IndentationError('unexpected indent')
 
-    if firstsrc := _next_src(lines, 0, 0, len(lines) - 1, len(lines[-1])):
-        if _re_except.match(firstsrc.src):
+        if _re_except.match(src, col):
             return _parse_ExceptHandlers(src, parse_params)
 
-        if _re_case.match(lines[firstsrc.ln], firstsrc.col):  # need full line because firstsrc.src is cut off at first space
+        if _re_case.match(src, col):
             try:
                 return _parse_match_cases(src, parse_params)
             except IndentationError:
@@ -658,15 +659,16 @@ def _code_as_stmtishs(code: Code, parse_params: dict = {}, *, is_trystar: bool =
 
     else:
         if isinstance(code, list):
-            code = '\n'.join(lines := code)
-        else:  # str
-            lines = code.split('\n')
+            code = '\n'.join(code)
 
-        if firstsrc := _next_src(lines, 0, 0, len(lines) - 1, len(lines[-1])):
-            if _re_except.match(firstsrc.src):
+        if firstsrc := _re_first_src.search(code):
+            if (col := len(firstsrc.group(0)) - 1):
+                raise IndentationError('unexpected indent')
+
+            if _re_except.match(code, col):
                 return _code_as_ExceptHandlers(code, parse_params)
 
-            if _re_case.match(lines[firstsrc.ln], firstsrc.col):  # need full line because firstsrc.src is cut off at first space
+            if _re_case.match(code, col):
                 try:
                     return _code_as_match_cases(code, parse_params)
                 except IndentationError:
