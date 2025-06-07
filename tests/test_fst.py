@@ -1695,9 +1695,11 @@ def f():
         self.assertEqual((1, 1, 1, 2), f.loc)
         self.assertEqual(f.root.src, '# pre\n(i)\n# post')
 
-    def test__parenthesize_tuple(self):
+    def test__parenthesize_node(self):
+        # Tuple
+
         f = parse('i,').f
-        f.body[0].value._parenthesize_tuple()
+        f.body[0].value._parenthesize_node()
         self.assertEqual('(i,)', f.src)
         self.assertEqual((0, 0, 0, 4), f.loc)
         self.assertEqual((0, 0, 0, 4), f.body[0].loc)
@@ -1705,7 +1707,7 @@ def f():
         self.assertEqual((0, 1, 0, 2), f.body[0].value.elts[0].loc)
 
         f = parse('a, b').f
-        f.body[0].value._parenthesize_tuple()
+        f.body[0].value._parenthesize_node()
         self.assertEqual('(a, b)', f.src)
         self.assertEqual((0, 0, 0, 6), f.loc)
         self.assertEqual((0, 0, 0, 6), f.body[0].loc)
@@ -1716,16 +1718,45 @@ def f():
         f = parse('i,').body[0].value.f.copy()
         f._put_src('\n# post', 0, 2, 0, 2, False)
         f._put_src('# pre\n', 0, 0, 0, 0, False)
-        f._parenthesize_tuple(whole=True)
+        f._parenthesize_node(whole=True)
         self.assertEqual((0, 0, 2, 7), f.loc)
         self.assertEqual(f.src, '(# pre\ni,\n# post)')
 
         f = parse('i,').body[0].value.f.copy()
         f._put_src('\n# post', 0, 2, 0, 2, False)
         f._put_src('# pre\n', 0, 0, 0, 0, False)
-        f._parenthesize_tuple(whole=False)
+        f._parenthesize_node(whole=False)
         self.assertEqual((1, 0, 1, 4), f.loc)
         self.assertEqual(f.src, '# pre\n(i,)\n# post')
+
+        # MatchSequence
+
+        f = FST('i,', pattern)
+        f._parenthesize_node(pars='[]')
+        self.assertEqual('[i,]', f.src)
+        self.assertEqual((0, 0, 0, 4), f.loc)
+        self.assertEqual((0, 1, 0, 2), f.patterns[0].loc)
+
+        f = FST('a, b', pattern)
+        f._parenthesize_node(pars='[]')
+        self.assertEqual('[a, b]', f.src)
+        self.assertEqual((0, 0, 0, 6), f.loc)
+        self.assertEqual((0, 1, 0, 2), f.patterns[0].loc)
+        self.assertEqual((0, 4, 0, 5), f.patterns[1].loc)
+
+        f = FST('i,', pattern)
+        f._put_src('\n# post', 0, 2, 0, 2, False)
+        f._put_src('# pre\n', 0, 0, 0, 0, False)
+        f._parenthesize_node(whole=True, pars='[]')
+        self.assertEqual((0, 0, 2, 7), f.loc)
+        self.assertEqual(f.src, '[# pre\ni,\n# post]')
+
+        f = FST('i,', pattern)
+        f._put_src('\n# post', 0, 2, 0, 2, False)
+        f._put_src('# pre\n', 0, 0, 0, 0, False)
+        f._parenthesize_node(whole=False, pars='[]')
+        self.assertEqual((1, 0, 1, 4), f.loc)
+        self.assertEqual(f.src, '# pre\n[i,]\n# post')
 
     def test__unparenthesize_grouping(self):
         f = parse('a').f
@@ -1860,16 +1891,18 @@ def f():
         f.body[0].test._unparenthesize_grouping(share=False)
         self.assertEqual('assert{test}', f.src)
 
-    def test__unparenthesize_tuple(self):
+    def test__unparenthesize_node(self):
+        # Tuple
+
         f = parse('()').f
-        f.body[0].value._unparenthesize_tuple()
+        f.body[0].value._unparenthesize_node()
         self.assertEqual('()', f.src)
         self.assertEqual((0, 0, 0, 2), f.loc)
         self.assertEqual((0, 0, 0, 2), f.body[0].loc)
         self.assertEqual((0, 0, 0, 2), f.body[0].value.loc)
 
         f = parse('(i,)').f
-        f.body[0].value._unparenthesize_tuple()
+        f.body[0].value._unparenthesize_node()
         self.assertEqual('i,', f.src)
         self.assertEqual((0, 0, 0, 2), f.loc)
         self.assertEqual((0, 0, 0, 2), f.body[0].loc)
@@ -1877,7 +1910,7 @@ def f():
         self.assertEqual((0, 0, 0, 1), f.body[0].value.elts[0].loc)
 
         f = parse('(a, b)').f
-        f.body[0].value._unparenthesize_tuple()
+        f.body[0].value._unparenthesize_node()
         self.assertEqual('a, b', f.src)
         self.assertEqual((0, 0, 0, 4), f.loc)
         self.assertEqual((0, 0, 0, 4), f.body[0].loc)
@@ -1886,7 +1919,7 @@ def f():
         self.assertEqual((0, 3, 0, 4), f.body[0].value.elts[1].loc)
 
         f = parse('( # pre\ni,\n# post\n)').f
-        f.body[0].value._unparenthesize_tuple()
+        f.body[0].value._unparenthesize_node()
         self.assertEqual('i,', f.src)
         self.assertEqual((0, 0, 0, 2), f.loc)
         self.assertEqual((0, 0, 0, 2), f.body[0].loc)
@@ -1894,33 +1927,72 @@ def f():
         self.assertEqual((0, 0, 0, 1), f.body[0].value.elts[0].loc)
 
         f = parse('( # pre\ni,\n# post\n)').body[0].value.f.copy()
-        f._unparenthesize_tuple()
+        f._unparenthesize_node()
         self.assertEqual('i,', f.src)
         self.assertEqual((0, 0, 0, 2), f.loc)
         self.assertEqual((0, 0, 0, 1), f.elts[0].loc)
 
+        # MatchSequence
+
+        f = FST('()', pattern)
+        f._unparenthesize_node('patterns')
+        self.assertEqual('()', f.src)
+        self.assertEqual((0, 0, 0, 2), f.loc)
+
+        f = FST('[i,]', pattern)
+        f._unparenthesize_node('patterns')
+        self.assertEqual('i,', f.src)
+        self.assertEqual((0, 0, 0, 2), f.loc)
+        self.assertEqual((0, 0, 0, 1), f.patterns[0].loc)
+
+        f = FST('(a, b)', pattern)
+        f._unparenthesize_node('patterns')
+        self.assertEqual('a, b', f.src)
+        self.assertEqual((0, 0, 0, 4), f.loc)
+        self.assertEqual((0, 0, 0, 1), f.patterns[0].loc)
+        self.assertEqual((0, 3, 0, 4), f.patterns[1].loc)
+
+        f = FST('[ # pre\ni,\n# post\n]', pattern)
+        f._unparenthesize_node('patterns')
+        self.assertEqual('i,', f.src)
+        self.assertEqual((0, 0, 0, 2), f.loc)
+        self.assertEqual((0, 0, 0, 1), f.patterns[0].loc)
+
+        f = FST('( # pre\ni,\n# post\n)', pattern)
+        f._unparenthesize_node('patterns')
+        self.assertEqual('i,', f.src)
+        self.assertEqual((0, 0, 0, 1), f.patterns[0].loc)
+
         # replace with space where directly touching other text
 
         f = FST('[a for a in b if(a,b)if(a,)if(a,b)]', 'exec')
-        f.body[0].value.generators[0].ifs[0]._unparenthesize_tuple()
-        f.body[0].value.generators[0].ifs[1]._unparenthesize_tuple()
-        f.body[0].value.generators[0].ifs[2]._unparenthesize_tuple()
+        f.body[0].value.generators[0].ifs[0]._unparenthesize_node()
+        f.body[0].value.generators[0].ifs[1]._unparenthesize_node()
+        f.body[0].value.generators[0].ifs[2]._unparenthesize_node()
         self.assertEqual('[a for a in b if a,b if a,if a,b]', f.src)
-        f.body[0].value.generators[0].ifs[0]._parenthesize_tuple()  # so that it will verify
-        f.body[0].value.generators[0].ifs[1]._parenthesize_tuple()
-        f.body[0].value.generators[0].ifs[2]._parenthesize_tuple()
+        f.body[0].value.generators[0].ifs[0]._parenthesize_node()  # so that it will verify
+        f.body[0].value.generators[0].ifs[1]._parenthesize_node()
+        f.body[0].value.generators[0].ifs[2]._parenthesize_node()
         self.assertEqual('[a for a in b if (a,b) if (a,)if (a,b)]', f.src)
         f.verify()
 
         f = FST('for(a,b)in b: pass', 'exec')
-        f.body[0].target._unparenthesize_tuple()
+        f.body[0].target._unparenthesize_node()
         self.assertEqual('for a,b in b: pass', f.src)
         f.verify()
 
         f = FST('for(a,)in b: pass', 'exec')
-        f.body[0].target._unparenthesize_tuple()
+        f.body[0].target._unparenthesize_node()
         self.assertEqual('for a,in b: pass', f.src)
         f.verify()
+
+        f = FST('case[1,2]as c: pass')
+        f.pattern.pattern._unparenthesize_node('patterns')
+        self.assertEqual('case 1,2 as c: pass', f.src)
+
+        f = FST('case(1,2)as c: pass')
+        f.pattern.pattern._unparenthesize_node('patterns')
+        self.assertEqual('case 1,2 as c: pass', f.src)
 
     def test__maybe_fix(self):
         f = FST.fromsrc('if 1:\n a\nelif 2:\n b')
@@ -4044,7 +4116,7 @@ f"distutils.command.sdist.check_metadata is deprecated, \\
         self.assertEqual((1, 1, 1, 2), f.loc)
         self.assertEqual(f.root.src, '# pre\n(i)\n# post')
 
-        # tuple
+        # Tuple
 
         f = parse('i,').f
         f.body[0].value.par()
@@ -4077,6 +4149,35 @@ f"distutils.command.sdist.check_metadata is deprecated, \\
         self.assertEqual((1, 0, 1, 4), f.loc)
         self.assertEqual(f.src, '# pre\n(i,)\n# post')
 
+        # MatchSequence
+
+        f = FST('i,', pattern)
+        f.par()
+        self.assertEqual('[i,]', f.src)
+        self.assertEqual((0, 0, 0, 4), f.loc)
+        self.assertEqual((0, 1, 0, 2), f.patterns[0].loc)
+
+        f = FST('a, b', pattern)
+        f.par()
+        self.assertEqual('[a, b]', f.src)
+        self.assertEqual((0, 0, 0, 6), f.loc)
+        self.assertEqual((0, 1, 0, 2), f.patterns[0].loc)
+        self.assertEqual((0, 4, 0, 5), f.patterns[1].loc)
+
+        f = FST('i,', pattern)
+        f._put_src('\n# post', 0, 2, 0, 2, False)
+        f._put_src('# pre\n', 0, 0, 0, 0, False)
+        f.par(whole=True)
+        self.assertEqual((0, 0, 2, 7), f.loc)
+        self.assertEqual(f.src, '[# pre\ni,\n# post]')
+
+        f = FST('i,', pattern)
+        f._put_src('\n# post', 0, 2, 0, 2, False)
+        f._put_src('# pre\n', 0, 0, 0, 0, False)
+        f.par(whole=False)
+        self.assertEqual((1, 0, 1, 4), f.loc)
+        self.assertEqual(f.src, '# pre\n[i,]\n# post')
+
     def test_unpar(self):
         f = parse('((1,))').body[0].value.f.copy(pars=True)
         self.assertEqual('((1,))', f.src)
@@ -4084,7 +4185,7 @@ f"distutils.command.sdist.check_metadata is deprecated, \\
         self.assertEqual('(1,)', f.src)
         f.unpar()  # self.assertFalse()
         self.assertEqual('(1,)', f.src)
-        f.unpar(tuple_=True)  # self.assertTrue()
+        f.unpar(node=True)  # self.assertTrue()
         self.assertEqual('1,', f.src)
         f.unpar()  # self.assertFalse()
 
@@ -4101,7 +4202,7 @@ f"distutils.command.sdist.check_metadata is deprecated, \\
         self.assertEqual('( # pre2\n1,\n # post1\n)', f.src)
         f.unpar()  # self.assertFalse()
         self.assertEqual('( # pre2\n1,\n # post1\n)', f.src)
-        f.unpar(tuple_=True)  # self.assertTrue()
+        f.unpar(node=True)  # self.assertTrue()
         self.assertEqual('1,', f.src)
 
         if _PY_VERSION >= (3, 14):  # make sure parent Interpolation.str gets modified
@@ -4116,7 +4217,7 @@ f"distutils.command.sdist.check_metadata is deprecated, \\
             self.assertEqual('(a,)', f.values[0].str)
 
             f = FST('t"{((a,))}"', 'exec').body[0].value.copy()
-            f.values[0].value.unpar(tuple_=True)
+            f.values[0].value.unpar(node=True)
             self.assertEqual('t"{a,}"', f.src)
             self.assertEqual('a,', f.values[0].str)
 
@@ -4264,7 +4365,7 @@ f"distutils.command.sdist.check_metadata is deprecated, \\
         self.assertEqual((0, 0, 0, 2), f.body[0].value.loc)
 
         f = parse('(i,)').f
-        f.body[0].value.unpar(tuple_=True)
+        f.body[0].value.unpar(node=True)
         self.assertEqual('i,', f.src)
         self.assertEqual((0, 0, 0, 2), f.loc)
         self.assertEqual((0, 0, 0, 2), f.body[0].loc)
@@ -4272,7 +4373,7 @@ f"distutils.command.sdist.check_metadata is deprecated, \\
         self.assertEqual((0, 0, 0, 1), f.body[0].value.elts[0].loc)
 
         f = parse('(a, b)').f
-        f.body[0].value.unpar(tuple_=True)
+        f.body[0].value.unpar(node=True)
         self.assertEqual('a, b', f.src)
         self.assertEqual((0, 0, 0, 4), f.loc)
         self.assertEqual((0, 0, 0, 4), f.body[0].loc)
@@ -4281,7 +4382,7 @@ f"distutils.command.sdist.check_metadata is deprecated, \\
         self.assertEqual((0, 3, 0, 4), f.body[0].value.elts[1].loc)
 
         f = parse('( # pre\ni,\n# post\n)').f
-        f.body[0].value.unpar(tuple_=True)
+        f.body[0].value.unpar(node=True)
         self.assertEqual('i,', f.src)
         self.assertEqual((0, 0, 0, 2), f.loc)
         self.assertEqual((0, 0, 0, 2), f.body[0].loc)
@@ -4289,7 +4390,7 @@ f"distutils.command.sdist.check_metadata is deprecated, \\
         self.assertEqual((0, 0, 0, 1), f.body[0].value.elts[0].loc)
 
         f = parse('( # pre\ni,\n# post\n)').body[0].value.f.copy()
-        f.unpar(tuple_=True)
+        f.unpar(node=True)
         self.assertEqual('i,', f.src)
         self.assertEqual((0, 0, 0, 2), f.loc)
         self.assertEqual((0, 0, 0, 1), f.elts[0].loc)
@@ -4297,9 +4398,9 @@ f"distutils.command.sdist.check_metadata is deprecated, \\
         # replace with space where directly touching other text
 
         f = FST('[a for a in b if(a,b)if(a,)if(a,b)]', 'exec')
-        f.body[0].value.generators[0].ifs[0].unpar(tuple_=True)
-        f.body[0].value.generators[0].ifs[1].unpar(tuple_=True)
-        f.body[0].value.generators[0].ifs[2].unpar(tuple_=True)
+        f.body[0].value.generators[0].ifs[0].unpar(node=True)
+        f.body[0].value.generators[0].ifs[1].unpar(node=True)
+        f.body[0].value.generators[0].ifs[2].unpar(node=True)
         self.assertEqual('[a for a in b if a,b if a,if a,b]', f.src)
         f.body[0].value.generators[0].ifs[0].par()  # so that it will verify
         f.body[0].value.generators[0].ifs[1].par()
@@ -4308,12 +4409,12 @@ f"distutils.command.sdist.check_metadata is deprecated, \\
         f.verify()
 
         f = FST('for(a,b)in b: pass', 'exec')
-        f.body[0].target.unpar(tuple_=True)
+        f.body[0].target.unpar(node=True)
         self.assertEqual('for a,b in b: pass', f.src)
         f.verify()
 
         f = FST('for(a,)in b: pass', 'exec')
-        f.body[0].target.unpar(tuple_=True)
+        f.body[0].target.unpar(node=True)
         self.assertEqual('for a,in b: pass', f.src)
         f.verify()
 
@@ -9004,7 +9105,7 @@ a
         f = FST('a = b', 'exec').body[0]
         g = FST('(i,\nj)', 'exec').body[0].value.copy(pars=False)
         self.assertEqual('(i,\nj)', g.src)
-        g.unpar(tuple_=True)
+        g.unpar(node=True)
         self.assertEqual('i,\nj', g.src)
         f.put(g.copy(), field='value', raw=False, pars=False)
         self.assertEqual(f.src, 'a = i,\nj')

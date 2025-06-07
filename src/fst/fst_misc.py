@@ -22,10 +22,12 @@ _PY_VERSION = sys.version_info[:2]
 
 _astfieldctx = astfield('ctx')
 
-_re_fval_expr_equals = re.compile(r'(?:\s*(?:#.*|\\)\n)*\s*=\s*(?:(?:#.*|\\)\n\s*)*')  # format string expression tail '=' indicating self-documentation
+_re_fval_expr_equals   = re.compile(r'(?:\s*(?:#.*|\\)\n)*\s*=\s*(?:(?:#.*|\\)\n\s*)*')  # format string expression tail '=' indicating self-documentation
 
-_re_par_open_alnums  = re.compile(r'\w[(]\w')
-_re_par_close_alnums = re.compile(r'\w[)]\w')
+_re_par_open_alnums    = re.compile(r'\w[(]\w')
+_re_par_close_alnums   = re.compile(r'\w[)]\w')
+_re_delim_open_alnums  = re.compile(r'\w[([]\w')
+_re_delim_close_alnums = re.compile(r'\w[)\]]\w')
 
 
 def _make_tree_fst(ast: AST, parent: 'FST', pfield: astfield) -> 'FST':
@@ -1036,7 +1038,7 @@ def _maybe_fix_tuple(self: 'FST', is_parenthesized: bool | None = None):
         ln, _, end_ln, _ = self.loc
 
         if not is_parenthesized and end_ln != ln:  # `not self.is_atom` instead of `end_ln != ln``:  <-- TODO: this, also maybe double check for line continuations (aesthetic thing)?
-            self._parenthesize_tuple()
+            self._parenthesize_node()
 
     elif not is_parenthesized:  # if is unparenthesized tuple and empty left then need to add parentheses
         ln, col, end_ln, end_col = self.loc
@@ -1105,7 +1107,7 @@ def _maybe_fix(self: 'FST', pars: bool = True):
 
         if need_paren:
             if is_tuple:
-                self._parenthesize_tuple()
+                self._parenthesize_node()
             else:
                 self._parenthesize_grouping()
 
@@ -1156,10 +1158,11 @@ def _parenthesize_grouping(self: 'FST', whole: bool = True):
     self._offset(*self._put_src(['('], ln, col, ln, col, False, False, self, offset_excluded=False))
 
 
-def _parenthesize_tuple(self: 'FST', whole: bool = True, pars: str = '()'):
-    """Parenthesize an unparenthesized `Tuple` or `MatchSequence`, adjusting tuple location for added parentheses.
+def _parenthesize_node(self: 'FST', whole: bool = True, pars: str = '()'):
+    """Parenthesize (delimit) a node (`Tuple` or `MatchSequence`, but could be others) with appropriate delimiters which
+    are passed in and extend the range of the node to include those delimiters.
 
-    **WARNING!** No checks are done so don't call on anything other than an unparenthesized Tuple or MatchSequence!
+    **WARNING!** No checks are done so make sure to call where it is appropriate!
 
     **Parameters:**
     - `whole`: If at root then parenthesize whole source instead of just node.
@@ -1230,19 +1233,21 @@ def _unparenthesize_grouping(self: 'FST', share: bool = True) -> bool:
     return True
 
 
-def _unparenthesize_tuple(self: 'FST') -> bool:
-    """Unparenthesize a parenthesized `Tuple`, adjusting tuple location for removed parentheses. Will not unparenthesize
-    an empty tuple. Removes everything between the parentheses and the actual tuple.
+def _unparenthesize_node(self: 'FST', field: str = 'elts') -> bool:
+    """Unparenthesize a parenthesized `Tuple` or `MatchSequence` or unbracketize the latter if is that, shrinking node
+    location for the removed delimiters. Will not unparenthesize an empty `Tuple` or `MatchSequence`. Removes everything
+    between the parentheses and the actual tuple, e.g. `(  1, 2  # yay \\n)` -> `1, 2`.
 
-    **WARNING!** No checks are done so don't call on anything other than a parenthesized Tuple!
+    **WARNING!** No checks are done so make sure to call where it is appropriate! Does not check to see if node is
+    properly paren/bracketized so make sure of this before calling!
 
     **Returns:**
-    - `bool`: Whether parentheses were removed or not (they may not be for an empty tuple).
+    - `bool`: Whether parentheses (or brackets) were removed or not (they may not be for an empty tuple).
     """
 
     # assert isinstance(self.a, Tuple)
 
-    if not (elts := self.a.elts):
+    if not (elts := getattr(self.a, field, None)):
         return False
 
     ln, col, end_ln, end_col = self.loc
@@ -1254,10 +1259,10 @@ def _unparenthesize_tuple(self: 'FST') -> bool:
         en_end_col            += 1
 
     else:  # when no trailing comma need to make sure par is not separating us from an alphanumeric on either side, and if so then insert a space at the end before deleting the right par
-        if end_col >= 2 and _re_par_close_alnums.match(lines[end_ln], end_col - 2):
+        if end_col >= 2 and _re_delim_close_alnums.match(lines[end_ln], end_col - 2):
             self._put_src(' ', end_ln, end_col, end_ln, end_col, False, self)
 
-    head_alnums = col and _re_par_open_alnums.match(lines[ln], col - 1)  # if open has alnumns on both sides then insert space there too
+    head_alnums = col and _re_delim_open_alnums.match(lines[ln], col - 1)  # if open has alnumns on both sides then insert space there too
 
     self._put_src(None, en_end_ln, en_end_col, end_ln, end_col, True, self)
     self._put_src(None, ln, col, (e0 := elts[0].f).ln, e0.col, False)

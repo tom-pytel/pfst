@@ -294,7 +294,7 @@ def _put_slice_tuple_list_or_set(self: 'FST', code: Code | None, start: int | Li
 
         if one:
             if put_fst.is_parenthesized_tuple() is False:  # don't put unparenthesized tuple source as one into sequence, it would merge into the sequence
-                put_fst._parenthesize_tuple()
+                put_fst._parenthesize_node()
 
             ls       = put_fst._lines
             put_ast  = Set(elts=[put_fst.a], lineno=1, col_offset=0, end_lineno=len(ls), end_col_offset=ls[-1].lenbytes)

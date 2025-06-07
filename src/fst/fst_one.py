@@ -912,7 +912,7 @@ def _put_one_ExceptHandler_name(self: 'FST', code: Code | None, idx: int | None,
     ret = _put_one_identifier_optional(self, code, idx, field, child, static, **options)
 
     if ret and (typef := self.a.type.f).is_parenthesized_tuple() is False:
-        typef._parenthesize_tuple()
+        typef._parenthesize_node()
 
     return ret
 

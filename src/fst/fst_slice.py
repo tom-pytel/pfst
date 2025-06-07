@@ -196,7 +196,7 @@ def _put_slice_raw(self: 'FST', code: Code | None, start: int | Literal['end'] |
                         fst._parenthesize_grouping()
 
                 elif is_par_tup is False:
-                    fst._parenthesize_tuple()
+                    fst._parenthesize_node()
 
             elif ((is_dict := isinstance(ast, Dict)) or
                     (is_match := isinstance(ast, (MatchSequence, MatchMapping))) or

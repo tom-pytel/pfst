@@ -1437,21 +1437,21 @@ class FST:
 
         with self._modifying():
             if isinstance(self.a, Tuple):
-                self._parenthesize_tuple(whole)
+                self._parenthesize_node(whole)
             elif isinstance(self.a, MatchSequence):
-                self._parenthesize_tuple(whole, '[]')
+                self._parenthesize_node(whole, '[]')
             else:
                 self._parenthesize_grouping(whole)
 
         return self  # True
 
-    def unpar(self, tuple_: bool = False, *, share: bool = True) -> Self:
+    def unpar(self, node: bool = False, *, share: bool = True) -> Self:
         """Remove all parentheses from node if present. Normally removes just grouping parentheses but can also remove
-        tuple parentheses if `tuple_=True`.
+        `Tuple` parentheses and `MatchSequence` parentheses or brackets if `node=True`.
 
         **Parameters:**
-        - `tuple_`: If `True` then will remove parentheses from a parenthesized `Tuple`, otherwise only removes grouping
-            parentheses if present.
+        - `node`: If `True` then will remove parentheses from a parenthesized `Tuple` and parentheses/brackets from
+            parenthesized/bracketed `MatchSequence`, otherwise only removes grouping parentheses if present.
         - `share`: Whether to allow merge of parentheses into share single call argument generator expression or not.
 
         **Returns:**
@@ -1464,8 +1464,11 @@ class FST:
         with self._modifying():
             self._unparenthesize_grouping(share)  # ret =
 
-            if tuple_ and isinstance(self.a, Tuple):
-                self._unparenthesize_tuple()  # ret = self._unparenthesize_tuple() or ret
+            if node:
+                if isinstance(self.a, Tuple):
+                    self._unparenthesize_node()  # ret = self._unparenthesize_node() or ret
+                elif isinstance(self.a, MatchSequence):
+                    self._unparenthesize_node('patterns')  # ret = self._unparenthesize_node() or ret
 
         return self  # ret
 
@@ -2578,9 +2581,9 @@ class FST:
         _touch,
         _sanitize,
         _parenthesize_grouping,
-        _parenthesize_tuple,
+        _parenthesize_node,
         _unparenthesize_grouping,
-        _unparenthesize_tuple,
+        _unparenthesize_node,
         _normalize_block,
         _elif_to_else_if,
         _reparse_docstrings,
