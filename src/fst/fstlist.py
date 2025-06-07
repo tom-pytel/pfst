@@ -7,15 +7,18 @@ from .shared import Self, Code, _fixup_one_index, _fixup_slice_indices
 
 
 class fstlist:
-    """View for a list of `AST` nodes in a body, or any other field which is a list of `AST` nodes, of an `FST` node.
-    This object acts as a list of corresponding `FST` nodes. Is only meant for short term convenience use as operations
-    on the target `FST` node which are not effectuated through this view may invalidate the `start` and `stop` positions
-    and even the `fst` stored here if they change the size of the list of nodes or reparse. Especially raw operations
-    which reparse entire statements and can easily invalidate an `fstlist` even if performed directly on it.
+    """View for a list of `AST` nodes in a body, or any other field which is a list of values (not necessarily `AST`
+    nodes), of an `FST` node.
+
+    This object acts as a list of corresponding `FST` nodes if applicable, otherwise strings for example for a list of
+    `Globals.names`. Is only meant for short term convenience use as operations on the target `FST` node which are not
+    effectuated through this view may invalidate the `start` and `stop` positions and even the `fst` stored here if they
+    change the size of the list of nodes or reparse. Especially raw operations which reparse entire statements and can
+    easily invalidate an `fstlist` even if performed directly on it.
 
     Nodes can be gotten or put via indexing. Nodes which are gotten are not automatically copied, if a copy is desired
     then do `fstlist[start:stop].copy()`. Slice assignments also work but will always assign a slice to the range. If
-    you want to assign an individual item then use the `replace()` method.
+    you want to assign an individual item then use the `replace(..., one=True)` method.
 
     This object is meant to be, and is normally created automatically by accessing `AST` list fields on an `FST` node.
 
@@ -68,14 +71,49 @@ class fstlist:
         return self.stop - self.start
 
     def __getitem__(self, idx: int | slice | str) -> Any:
+        """Get a single item or a slice view from this slice view. All indices (including negative) are relative to the
+        bounds of this view. This is just an access, not a cut or a copy, so if you want a copy you must explicitly do
+        `.copy()` on the returned value.
+
+        Note that `fstlist` can also hold references to non-AST lists of items, so keep this in mind when dealing with
+        return values which may be `None` or may not be `FST` nodes.
+
+        **Parameters:**
+        - `idx`: The index or `slice` where to get the element(s) from. If is a single string then this it will return
+            the first function, class or variable assignment to the name matching this string (if is a list of
+            statements, error otherwise). This is just a convenience and will probably change / expand in the future.
+
+        **Returns:**
+        - `FST | fstlist`: Either a single `FST` node if accessing a single item or a new `fstlist` view according to
+            the slice passed.
+
+        **Examples:**
+        ```py
+        >>> FST('[0, 1, 2, 3]').elts[1].src
+        '1'
+        >>> FST('[0, 1, 2, 3]').elts[:3]
+        <<List ROOT 0,0..0,12>.elts[0:3] [<Constant 0,1..0,2>, <Constant 0,4..0,5>, <Constant 0,7..0,8>]>
+        >>> FST('[0, 1, 2, 3]').elts[:3].copy().src
+        '[0, 1, 2]'
+        >>> FST('[0, 1, 2, 3]').elts[-3:]
+        <<List ROOT 0,0..0,12>.elts[1:4] [<Constant 0,4..0,5>, <Constant 0,7..0,8>, <Constant 0,10..0,11>]>
+        >>> FST('def fun(): pass\\nclass cls: pass\\nvar = val').body['cls']
+        <ClassDef 1,0..1,15>
+        >>> FST('global a, b, c').names
+        <<Global ROOT 0,0..0,14>.names[0:3] ['a', 'b', 'c']>
+        >>> FST('global a, b, c').names[1]
+        'b'
+        ```
+        @public
+        """
+
         if isinstance(idx, int):
             idx = _fixup_one_index(self.stop - (start := self.start), idx)
 
             return a.f if isinstance(a := getattr(self.fst.a, self.field)[start + idx], AST) else a
 
         if isinstance(idx, str):
-            if not (a := get_func_class_or_ass_by_name(getattr(self.fst.a, self.field)[self.start : self.stop],
-                                                       idx, False)):
+            if not (a := get_func_class_or_ass_by_name(getattr(self.fst.a, self.field)[self.start : self.stop], idx)):
                 raise IndexError(f"function or class '{idx}' not found")
 
             return a.f
@@ -88,6 +126,36 @@ class fstlist:
         return fstlist(self.fst, self.field, start + idx_start, start + idx_stop)
 
     def __setitem__(self, idx: int | slice, code: Code | None):
+        """Set a single item or a slice view in this slice view. All indices (including negative) are relative to the
+        bounds of this view. This is not just with a set, it is a full `FST` operation.
+
+        Note that `fstlist` can also hold references to non-AST lists of items, so keep this in mind when assigning
+        values.
+
+        **WARNING!** Currently, for non-AST views, individual value assignment works but slices do not yet.
+
+        **Parameters:**
+        - `idx`: The index or `slice` where to put the element(s).
+
+        **Examples:**
+        ```py
+        >>> (f := FST('[0, 1, 2, 3]')).elts[1] = '4'; f.src
+        '[0, 4, 2, 3]'
+        >>> (f := FST('[0, 1, 2, 3]')).elts[:3] = '5'; f.src
+        '[5, 3]'
+        >>> (f := FST('[0, 1, 2, 3]')).elts[-3:] = '6'; f.src
+        '[0, 6]'
+        >>> (f := FST('[0, 1, 2, 3]')).elts[:] = '7, 8'; f.src
+        '[7, 8]'
+        >>>
+        >>> f = FST('[0, 1, 2, 3]')
+        >>> f.elts[2:2] = f.elts[1:3].copy()
+        >>> f.src
+        '[0, 1, 1, 2, 2, 3]'
+        ```
+        @public
+        """
+
         if isinstance(idx, int):
             idx = _fixup_one_index(self.stop - (start := self.start), idx)
 
@@ -102,6 +170,31 @@ class fstlist:
             self.fst.put_slice(code, start + idx_start, start + idx_stop, self.field)
 
     def __delitem__(self, idx: int | slice):
+        """Delete a single item or a slice from this slice view. All indices (including negative) are relative to the
+        bounds of this view.
+
+        Note that `fstlist` can also hold references to non-AST lists of items, so keep this in mind when assigning
+        values.
+
+        **WARNING!** Currently, for non-AST views, deletion is not supported
+
+        **Parameters:**
+        - `idx`: The index or `slice` to delete.
+
+        **Examples:**
+        ```py
+        >>> del (f := FST('[0, 1, 2, 3]')).elts[1]; f.src
+        '[0, 2, 3]'
+        >>> del (f := FST('[0, 1, 2, 3]')).elts[:3]; f.src
+        '[3]'
+        >>> del (f := FST('[0, 1, 2, 3]')).elts[-3:]; f.src
+        '[0]'
+        >>> del (f := FST('[0, 1, 2, 3]')).elts[:]; f.src
+        '[]'
+        ```
+        @public
+        """
+
         if isinstance(idx, int):
             idx = _fixup_one_index((stop := self.stop) - (start := self.start), idx)
 
@@ -123,7 +216,7 @@ class fstlist:
         """Copy this slice to a new top-level tree, dedenting and fixing as necessary.
 
         **Parameters:**
-        - `options`: See `fst.fst.FST.set_option`.
+        - `options`: See `fst.fst.FST.get_options()`.
 
         **Returns:**
         - `FST`: Copied slice.
@@ -142,7 +235,7 @@ class fstlist:
         node.
 
         **Parameters:**
-        - `options`: See `fst.fst.FST.set_option`.
+        - `options`: See `fst.fst.FST.get_options()`.
 
         **Returns:**
         - `FST`: Cut slice.
@@ -171,7 +264,7 @@ class fstlist:
         - `code`: `FST`, `AST` or source `str` or `list[str]` to put. `None` to delete this slice.
         - `one`: If `True` then will replace the range of this slice with a single item. Otherwise `False` will attempt
             a slice replacement (type must be compatible).
-        - `options`: See `get_options()`.
+        - `options`: See `fst.fst.FST.get_options()`.
 
         **Examples:**
         ```py
@@ -194,7 +287,7 @@ class fstlist:
         """Delete this slice, equivalent to `replace(None, ...)`
 
         **Parameters:**
-        - `options`: See `get_options()`.
+        - `options`: See `fst.fst.FST.get_options()`.
 
         **Returns:**
         - `self`
@@ -225,7 +318,7 @@ class fstlist:
         - `idx`: Index to insert BEFORE. Can be `'end'` to indicate add at end of slice.
         - `one`: If `True` then will insert `code` as a single item. Otherwise `False` will attempt a slice insertion
             (type must be compatible).
-        - `options`: See `get_options()`.
+        - `options`: See `fst.fst.FST.get_options()`.
 
         **Examples:**
         ```py
@@ -251,7 +344,7 @@ class fstlist:
 
         return self
 
-    def append(self, code: Code, **options) -> 'FST':  # -> Self
+    def append(self, code: Code, **options) -> Self:
         """Append `code` as a single element to the end of this slice.
 
         **Returns:**
@@ -259,7 +352,7 @@ class fstlist:
 
         **Parameters:**
         - `code`: `FST`, `AST` or source `str` or `list[str]` to append.
-        - `options`: See `get_options()`.
+        - `options`: See `fst.fst.FST.get_options()`.
 
         **Examples:**
         ```py
@@ -276,7 +369,7 @@ class fstlist:
 
         return self
 
-    def extend(self, code: Code, **options) -> 'FST':  # -> Self
+    def extend(self, code: Code, **options) -> Self:
         """Extend this slice with the slice in `code` (type must be compatible).
 
         **Returns:**
@@ -284,7 +377,7 @@ class fstlist:
 
         **Parameters:**
         - `code`: `FST`, `AST` or source `str` or `list[str]` slice to extend.
-        - `options`: See `get_options()`.
+        - `options`: See `fst.fst.FST.get_options()`.
 
         **Examples:**
         ```py
@@ -303,7 +396,7 @@ class fstlist:
 
         return self
 
-    def prepend(self, code: Code, **options) -> 'FST':  # -> Self
+    def prepend(self, code: Code, **options) -> Self:
         """prepend `code` as a single element to the beginning of this slice.
 
         **Returns:**
@@ -311,7 +404,7 @@ class fstlist:
 
         **Parameters:**
         - `code`: `FST`, `AST` or source `str` or `list[str]` to preappend.
-        - `options`: See `get_options()`.
+        - `options`: See `fst.fst.FST.get_options()`.
 
         **Examples:**
         ```py
@@ -328,7 +421,7 @@ class fstlist:
 
         return self
 
-    def prextend(self, code: Code, **options) -> 'FST':  # -> Self
+    def prextend(self, code: Code, **options) -> Self:
         """Extend the beginning of this slice with the slice in `code` (type must be compatible).
 
         **Returns:**
@@ -336,7 +429,7 @@ class fstlist:
 
         **Parameters:**
         - `code`: `FST`, `AST` or source `str` or `list[str]` to extend at the start.
-        - `options`: See `get_options()`.
+        - `options`: See `fst.fst.FST.get_options()`.
 
         **Examples:**
         ```py
