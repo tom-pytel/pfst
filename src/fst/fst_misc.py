@@ -444,20 +444,20 @@ def _prev_bound(self: 'FST', with_loc: bool | Literal['all', 'own'] = 'all') -> 
 
 
 def _next_bound_step(self: 'FST', with_loc: bool | Literal['all', 'own', 'allown'] = 'all') -> tuple[int, int]:
-    """Get a next bound for search before any following ASTs for this object using `next_step()`. This is safe to call
+    """Get a next bound for search before any following ASTs for this object using `step_fwd()`. This is safe to call
     for nodes that live inside nodes without their own locations if `with_loc='allown'`."""
 
-    if next := self.next_step(with_loc, recurse_self=False):
+    if next := self.step_fwd(with_loc, recurse_self=False):
         return next.bloc[:2]
 
     return len(ls := self.root._lines) - 1, len(ls[-1])
 
 
 def _prev_bound_step(self: 'FST', with_loc: bool | Literal['all', 'own', 'allown'] = 'all') -> tuple[int, int]:
-    """Get a prev bound for search after any previous ASTs for this object using `prev_step()`. This is safe to call for
+    """Get a prev bound for search after any previous ASTs for this object using `step_back()`. This is safe to call for
     nodes that live inside nodes without their own locations if `with_loc='allown'`."""
 
-    if prev := self.prev_step(with_loc, recurse_self=False):
+    if prev := self.step_back(with_loc, recurse_self=False):
         return prev.bloc[2:]
 
     return 0, 0
@@ -577,7 +577,7 @@ def _loc_comprehension(self: 'FST') -> fstloc:
     last  = ifs[-1].f if (ifs := ast.ifs) else ast.iter.f  # self.last_child(), could be .iter or last .ifs
     lines = self.root._lines
 
-    if prev := self.prev_step('allown', recurse_self=False):  # 'allown' so it doesn't recurse into calling `.loc`
+    if prev := self.step_back('allown', recurse_self=False):  # 'allown' so it doesn't recurse into calling `.loc`
         _, _, ln, col = prev.loc
     else:
         ln = col = 0

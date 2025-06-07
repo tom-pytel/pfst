@@ -651,24 +651,24 @@ class FST:
             - True: `set()` call and `{*()}`, `{*[]}` and `{*{}}` starred sequences are considered empty.
             - `seq`: Only starred sequences `{*()}`, `{*[]}` and `{*{}}` are considered empty.
             - `call`: Only `set()` call is considered empty.
-        - `precomms`: Preceding comments.
-            - `False`: No preceding comments.
-            - `True`: Single contiguous comment block immediately preceding position.
-            - `'all'`: Comment blocks (possibly separated by empty lines) preceding position.
-        - `postcomms`: Trailing comments.
-            - `False`: No trailing comments.
-            - `True`: Only comment trailing on line of position, nothing past that on its own lines.
-            - `'block'`: Single contiguous comment block following position.
-            - `'all'`: Comment blocks (possibly separated by empty lines) following position.
-        - `prespace`: Preceding empty lines (max of this and `pep8space` used).
-            - `False`: No empty lines.
-            - `True`: All empty lines.
-            - `int`: A maximum number of empty lines.
-        - `postspace`: Same as `prespace` except for trailing empty lines.
         - `pep8space`: Preceding and trailing empty lines for function and class definitions.
             - `False`: No empty lines.
             - `True`: Two empty lines at module scope and one empty line in other scopes.
             - `1`: One empty line in all scopes.
+        - `precomms`: Preceding comments.  - WILL CHANGE IN FUTURE VERSIONS!
+            - `False`: No preceding comments.
+            - `True`: Single contiguous comment block immediately preceding position.
+            - `'all'`: Comment blocks (possibly separated by empty lines) preceding position.
+        - `postcomms`: Trailing comments.  - WILL CHANGE IN FUTURE VERSIONS!
+            - `False`: No trailing comments.
+            - `True`: Only comment trailing on line of position, nothing past that on its own lines.
+            - `'block'`: Single contiguous comment block following position.
+            - `'all'`: Comment blocks (possibly separated by empty lines) following position.
+        - `prespace`: Preceding empty lines (max of this and `pep8space` used).  - WILL CHANGE IN FUTURE VERSIONS!
+            - `False`: No empty lines.
+            - `True`: All empty lines.
+            - `int`: A maximum number of empty lines.
+        - `postspace`: Same as `prespace` except for trailing empty lines.  - WILL CHANGE IN FUTURE VERSIONS!
 
         **Returns:**
         - `{option: value, ...}`: Dictionary of all global default options.
@@ -1435,10 +1435,11 @@ class FST:
         prev,
         first_child,
         last_child,
+        last_header_child,
         next_child,
         prev_child,
-        next_step,
-        prev_step,
+        step_fwd,
+        step_back,
         walk,
     )
 
@@ -2060,8 +2061,8 @@ class FST:
 
     def is_solo_call_arg_genexp(self) -> bool:
         """Whether `self` is the dreaded solo call non-keyword argument generator expression in `sum(i for i in a)`.
-        This function doesn't say it shares its parentheses or not, so could still be `sum((i for i in a))` or even
-        `sum(((i for i in a)))`."""
+        This function doesn't say if it shares its parentheses or not, so it could still be `sum((i for i in a))` or
+        even `sum(((i for i in a)))`."""
 
         return ((parent := self.parent) and self.pfield.name == 'args' and isinstance(self.a, GeneratorExp) and
                 isinstance(parenta := parent.a, Call) and not parenta.keywords and len(parenta.args) == 1)

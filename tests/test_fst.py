@@ -2810,35 +2810,35 @@ def f(a, /, b, *c, d, **e):
             fst = FST.fromsrc(src.strip())
 
             f, l = fst, []
-            while f := f.next_step(True): l.append(f)
+            while f := f.step_fwd(True): l.append(f)
             self.assertEqual(l, list(fst.walk(True, self_=False)))
 
             f, l = fst, []
-            while f := f.next_step(False): l.append(f)
+            while f := f.step_fwd(False): l.append(f)
             self.assertEqual(l, list(fst.walk(False, self_=False)))
 
             f, l = fst, []
-            while f := f.next_step('own'): l.append(f)
+            while f := f.step_fwd('own'): l.append(f)
             self.assertEqual(l, list(fst.walk('own', self_=False)))
 
             f, l = fst, []
-            while f := f.next_step('allown'): l.append(f)
+            while f := f.step_fwd('allown'): l.append(f)
             self.assertEqual(l, [g for g in fst.walk(True, self_=False) if g.has_own_loc])
 
             f, l = fst, []
-            while f := f.prev_step(True): l.append(f)
+            while f := f.step_back(True): l.append(f)
             self.assertEqual(l, list(fst.walk(True, self_=False, back=True)))
 
             f, l = fst, []
-            while f := f.prev_step(False): l.append(f)
+            while f := f.step_back(False): l.append(f)
             self.assertEqual(l, list(fst.walk(False, self_=False, back=True)))
 
             f, l = fst, []
-            while f := f.prev_step('own'): l.append(f)
+            while f := f.step_back('own'): l.append(f)
             self.assertEqual(l, list(fst.walk('own', self_=False, back=True)))
 
             f, l = fst, []
-            while f := f.prev_step('allown'): l.append(f)
+            while f := f.step_back('allown'): l.append(f)
             self.assertEqual(l, [g for g in fst.walk(True, self_=False, back=True) if g.has_own_loc])
 
         test('''

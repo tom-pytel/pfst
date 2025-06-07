@@ -79,15 +79,27 @@ def next(self: 'FST', with_loc: bool | Literal['all', 'own'] = True) -> Optional
     """Get next sibling in syntactic order, only within parent.
 
     **Parameters:**
-    - `with_loc`: Return nodes depending on if they have a location or not.
+    - `with_loc`: Return nodes depending on their location information.
         - `False`: All nodes with or without location.
-        - `True`: Only nodes with `AST` locations returned but also larger computed location nodes like `comprehension`,
-            `withitem`, `match_case` and `arguments` (but only if there actually are arguments present).
-        - `'all'`: Same as `True` but also operators (excluding `and` and `or`) with calculated locations.
-        - `'own'`: Only nodes with own location (does not recurse into non-own nodes).
+        - `True`: Only nodes which have implicit `AST` locations and also larger computed location nodes like
+            `comprehension`, `withitem`, `match_case` and `arguments` (the last one only if there are actually arguments
+            present).
+        - `'all'`: Same as `True` but also operators with calculated locations (excluding `and` and `or` since they do
+            not always have a well defined location).
+        - `'own'`: Only nodes with their own implicit `AST` locations, same as `True` but excludes those larger nodes
+            with calculated locations.
 
     **Returns:**
     - `None` if last valid sibling in parent, otherwise next node.
+
+    **Examples:**
+    ```py
+    >>> f = FST('[[1, 2], [3, 4]]')
+    >>> f.elts[0].next().src
+    '[3, 4]'
+    >>> print(f.elts[1].next())
+    None
+    ```
     """
 
     if not (parent := self.parent):
@@ -372,15 +384,27 @@ def prev(self: 'FST', with_loc: bool | Literal['all', 'own'] = True) -> Optional
     """Get previous sibling in syntactic order, only within parent.
 
     **Parameters:**
-    - `with_loc`: Return nodes depending on if they have a location or not.
+    - `with_loc`: Return nodes depending on their location information.
         - `False`: All nodes with or without location.
-        - `True`: Only nodes with `AST` locations returned but also larger computed location nodes like `comprehension`,
-            `withitem`, `match_case` and `arguments` (but only if there actually are arguments present).
-        - `'all'`: Same as `True` but also operators (excluding `and` and `or`) with calculated locations.
-        - `'own'`: Only nodes with own location (does not recurse into non-own nodes).
+        - `True`: Only nodes which have implicit `AST` locations and also larger computed location nodes like
+            `comprehension`, `withitem`, `match_case` and `arguments` (the last one only if there are actually arguments
+            present).
+        - `'all'`: Same as `True` but also operators with calculated locations (excluding `and` and `or` since they do
+            not always have a well defined location).
+        - `'own'`: Only nodes with their own implicit `AST` locations, same as `True` but excludes those larger nodes
+            with calculated locations.
 
     **Returns:**
     - `None` if first valid sibling in parent, otherwise previous node.
+
+    **Examples:**
+    ```py
+    >>> f = FST('[[1, 2], [3, 4]]')
+    >>> f.elts[1].prev().src
+    '[1, 2]'
+    >>> print(f.elts[0].prev())
+    None
+    ```
     """
 
     if not (parent := self.parent):
@@ -666,15 +690,29 @@ def first_child(self: 'FST', with_loc: bool | Literal['all', 'own'] = True) -> O
     """Get first valid child in syntactic order.
 
     **Parameters:**
-    - `with_loc`: Return nodes depending on if they have a location or not.
+    - `with_loc`: Return nodes depending on their location information.
         - `False`: All nodes with or without location.
-        - `True`: Only nodes with `AST` locations returned but also larger computed location nodes like `comprehension`,
-            `withitem`, `match_case` and `arguments` (but only if there actually are arguments present).
-        - `'all'`: Same as `True` but also operators (excluding `and` and `or`) with calculated locations.
-        - `'own'`: Only nodes with own location (does not recurse into non-own nodes).
+        - `True`: Only nodes which have implicit `AST` locations and also larger computed location nodes like
+            `comprehension`, `withitem`, `match_case` and `arguments` (the last one only if there are actually arguments
+            present).
+        - `'all'`: Same as `True` but also operators with calculated locations (excluding `and` and `or` since they do
+            not always have a well defined location).
+        - `'own'`: Only nodes with their own implicit `AST` locations, same as `True` but excludes those larger nodes
+            with calculated locations.
 
     **Returns:**
     - `None` if no valid children, otherwise first valid child.
+
+    **Examples:**
+    ```py
+    >>> f = FST('def f(a: list[str], /, reject: int, *c, d=100, **e): pass')
+    >>> f.first_child().src
+    'a: list[str], /, reject: int, *c, d=100, **e'
+    >>> f.args.first_child().src
+    'a: list[str]'
+    >>> f.args.first_child().first_child().src
+    'list[str]'
+    ```
     """
 
     for name in AST_FIELDS[(a := self.a).__class__]:
@@ -696,15 +734,27 @@ def last_child(self: 'FST', with_loc: bool | Literal['all', 'own'] = True) -> Op
     """Get last valid child in syntactic order.
 
     **Parameters:**
-    - `with_loc`: Return nodes depending on if they have a location or not.
+    - `with_loc`: Return nodes depending on their location information.
         - `False`: All nodes with or without location.
-        - `True`: Only nodes with `AST` locations returned but also larger computed location nodes like `comprehension`,
-            `withitem`, `match_case` and `arguments` (but only if there actually are arguments present).
-        - `'all'`: Same as `True` but also operators (excluding `and` and `or`) with calculated locations.
-        - `'own'`: Only nodes with own location (does not recurse into non-own nodes).
+        - `True`: Only nodes which have implicit `AST` locations and also larger computed location nodes like
+            `comprehension`, `withitem`, `match_case` and `arguments` (the last one only if there are actually arguments
+            present).
+        - `'all'`: Same as `True` but also operators with calculated locations (excluding `and` and `or` since they do
+            not always have a well defined location).
+        - `'own'`: Only nodes with their own implicit `AST` locations, same as `True` but excludes those larger nodes
+            with calculated locations.
 
     **Returns:**
     - `None` if no valid children, otherwise last valid child.
+
+    **Examples:**
+    ```py
+    >>> f = FST('def f(a: list[str], /, reject: int, *c, d=100, **e): pass')
+    >>> f.last_child().src
+    'pass'
+    >>> f.args.last_child().src
+    'e'
+    ```
     """
 
     if (isinstance(a := self.a, Call)) and a.args and (keywords := a.keywords) and isinstance(a.args[-1], Starred):  # super-special case Call with args and keywords and a Starred, it could be anywhere in there, including after last keyword, defer to prev() logic
@@ -729,22 +779,86 @@ def last_child(self: 'FST', with_loc: bool | Literal['all', 'own'] = True) -> Op
     return None
 
 
+def last_header_child(self: 'FST', with_loc: bool | Literal['all', 'own'] = True) -> Optional['FST']:
+    """Get last valid child in syntactic order in a block header (before the `:`), e.g. the `something` in
+    `if something: pass`.
+
+    **Parameters:**
+    - `with_loc`: Return nodes depending on their location information.
+        - `False`: All nodes with or without location.
+        - `True`: Only nodes which have implicit `AST` locations and also larger computed location nodes like
+            `comprehension`, `withitem`, `match_case` and `arguments` (the last one only if there are actually arguments
+            present).
+        - `'all'`: Same as `True` but also operators with calculated locations (excluding `and` and `or` since they do
+            not always have a well defined location).
+        - `'own'`: Only nodes with their own implicit `AST` locations, same as `True` but excludes those larger nodes
+            with calculated locations.
+
+    **Returns:**
+    - `None` if no valid children or if `self` is not a block statement, otherwise last valid child in the block header.
+
+    **Examples:**
+    ```py
+    >>> FST('if something:\\n    i = 2\\n    i = 3').last_header_child().src
+    'something'
+    >>> FST('try: pass\\nexcept Exception as exc: pass').handlers[0].last_header_child().src
+    'Exception'
+    >>> FST('with a, b: pass').last_header_child().src
+    'b'
+    >>> print(FST('try: pass\\nfinally: pass').last_header_child())
+    None
+    >>> print(FST('i = 1').last_header_child())
+    None
+    ```
+    """
+
+    if not (child := last_block_header_child(self.a)):
+        return None
+
+    if _with_loc(f := child.f, with_loc):
+        return f
+
+    return self.prev_child(f, with_loc)
+
+
 def next_child(self: 'FST', from_child: Optional['FST'], with_loc: bool | Literal['all', 'own'] = True
                ) -> Optional['FST']:
-    """Get next child in syntactic order. Meant for simple iteration. This is a slower way to iterate, `walk()` is
-    faster.
+    """Get the next child in syntactic order, meant for simple iteration.
+
+    This is a slower way to iterate vs. `walk()`, but will work correctly if ANYTHING in the tree is modified during the
+    walk as long as the replaced node and its parent is used for the following call.
 
     **Parameters:**
     - `from_child`: Child node we are coming from which may or may not have location.
-    - `with_loc`: Return nodes depending on if they have a location or not.
+    - `with_loc`: Return nodes depending on their location information.
         - `False`: All nodes with or without location.
-        - `True`: Only nodes with `AST` locations returned but also larger computed location nodes like `comprehension`,
-            `withitem`, `match_case` and `arguments` (but only if there actually are arguments present).
-        - `'all'`: Same as `True` but also operators (excluding `and` and `or`) with calculated locations.
-        - `'own'`: Only nodes with own location (does not recurse into non-own nodes).
+        - `True`: Only nodes which have implicit `AST` locations and also larger computed location nodes like
+            `comprehension`, `withitem`, `match_case` and `arguments` (the last one only if there are actually arguments
+            present).
+        - `'all'`: Same as `True` but also operators with calculated locations (excluding `and` and `or` since they do
+            not always have a well defined location).
+        - `'own'`: Only nodes with their own implicit `AST` locations, same as `True` but excludes those larger nodes
+            with calculated locations.
 
     **Returns:**
     - `None` if last valid child in `self`, otherwise next child node.
+
+    **Examples:**
+    ```py
+    >>> f = FST('[[1, 2], [3, 4]]')
+    >>> f.next_child(f.elts[0]).src
+    '[3, 4]'
+    >>> print(f.next_child(f.elts[1]))
+    None
+    >>> f = FST('[this, is_, reparsed, each, step, and_, still, walks, ok]')
+    >>> n = None
+    >>> while n := f.next_child(n):
+    ...     if isinstance(n.a, Name):
+    ...         n = n.replace(n.id[::-1], raw=True)  # raw here reparses all nodes
+    ...
+    >>> f.src
+    '[siht, _si, desraper, hcae, pets, _dna, llits, sklaw, ko]'
+    ```
     """
 
     return self.first_child(with_loc) if from_child is None else from_child.next(with_loc)
@@ -752,42 +866,94 @@ def next_child(self: 'FST', from_child: Optional['FST'], with_loc: bool | Litera
 
 def prev_child(self: 'FST', from_child: Optional['FST'], with_loc: bool | Literal['all', 'own'] = True
                ) -> Optional['FST']:
-    """Get previous child in syntactic order. Meant for simple iteration. This is a slower way to iterate, `walk()`
-    is faster.
+    """Get the previous child in syntactic order, meant for simple iteration.
+
+    This is a slower way to iterate vs. `walk()`, but will work correctly if ANYTHING in the tree is modified during the
+    walk as long as the replaced node and its parent is used for the following call.
 
     **Parameters:**
     - `from_child`: Child node we are coming from which may or may not have location.
-    - `with_loc`: Return nodes depending on if they have a location or not.
+    - `with_loc`: Return nodes depending on their location information.
         - `False`: All nodes with or without location.
-        - `True`: Only nodes with `AST` locations returned but also larger computed location nodes like `comprehension`,
-            `withitem`, `match_case` and `arguments` (but only if there actually are arguments present).
-        - `'all'`: Same as `True` but also operators (excluding `and` and `or`) with calculated locations.
-        - `'own'`: Only nodes with own location (does not recurse into non-own nodes).
+        - `True`: Only nodes which have implicit `AST` locations and also larger computed location nodes like
+            `comprehension`, `withitem`, `match_case` and `arguments` (the last one only if there are actually arguments
+            present).
+        - `'all'`: Same as `True` but also operators with calculated locations (excluding `and` and `or` since they do
+            not always have a well defined location).
+        - `'own'`: Only nodes with their own implicit `AST` locations, same as `True` but excludes those larger nodes
+            with calculated locations.
 
     **Returns:**
     - `None` if first valid child in `self`, otherwise previous child node.
+
+    **Examples:**
+    ```py
+    >>> f = FST('[[1, 2], [3, 4]]')
+    >>> f.prev_child(f.elts[1]).src
+    '[1, 2]'
+    >>> print(f.prev_child(f.elts[0]))
+    None
+    >>> f = FST('[this, is_, reparsed, each, step, and_, still, walks, ok]')
+    >>> n = None
+    >>> while n := f.prev_child(n):
+    ...     if isinstance(n.a, Name):
+    ...         n = n.replace(n.id[::-1], raw=True)  # raw here reparses all nodes
+    ...
+    >>> f.src
+    '[siht, _si, desraper, hcae, pets, _dna, llits, sklaw, ko]'
+    ```
     """
 
     return self.last_child(with_loc) if from_child is None else from_child.prev(with_loc)
 
 
-def next_step(self: 'FST', with_loc: bool | Literal['all', 'own', 'allown'] = True, *,
-              recurse_self: bool = True) -> Optional['FST']:
-    """Get next node in syntactic order over entire tree. Will walk up parents and down children to get the next
-    node, returning `None` only when we are at the end of the whole thing.
+def step_fwd(self: 'FST', with_loc: bool | Literal['all', 'own', 'allown'] = True, *, recurse_self: bool = True,
+             ) -> Optional['FST']:
+    """Step forward in the tree in syntactic order, as if `walk()`ing forward. Will walk up parents and down children to
+    get the next node, returning `None` only when we are at the end of the whole thing.
 
     **Parameters:**
-    - `with_loc`: Return nodes depending on if they have a location or not.
+    - `with_loc`: Return nodes depending on their location information.
         - `False`: All nodes with or without location.
-        - `True`: Only nodes with `AST` locations returned but also larger computed location nodes like `comprehension`,
-            `withitem`, `match_case` and `arguments` (but only if there actually are arguments present).
-        - `'all'`: Same as `True` but also operators (excluding `and` and `or`) with calculated locations.
-        - `'own'`: Only nodes with own location (does not recurse into non-own nodes).
-        - `'allown'` Same as `'own'` but recurse into nodes with non-own locations.
-    - `recurse_self`: Whether to allow recursion into `self` to return children or move directly to next nodes.
+        - `True`: Only nodes which have implicit `AST` locations and also larger computed location nodes like
+            `comprehension`, `withitem`, `match_case` and `arguments` (the last one only if there are actually arguments
+            present).
+        - `'all'`: Same as `True` but also operators with calculated locations (excluding `and` and `or` since they do
+            not always have a well defined location).
+        - `'own'`: Only nodes with their own implicit `AST` locations, same as `True` but excludes those larger nodes
+            with calculated locations.
+        - `'allown'` Same as `'own'` but recurse into nodes with non-own locations (even though those nodes are not
+            returned). This is only really meant for internal use to safely call from `.loc` location calculation.
+    - `recurse_self`: Whether to allow recursion into `self` to return children or move directly to next nodes of `self`
+        on start.
 
     **Returns:**
     - `None` if last valid node in tree, otherwise next node in order.
+
+    **Examples:**
+    ```py
+    >>> f = FST('[[1, 2], [3, 4]]')
+    >>> f.elts[0].src
+    '[1, 2]'
+    >>> f.elts[0].step_fwd().src
+    '1'
+    >>> f.elts[0].step_fwd(recurse_self=False).src
+    '[3, 4]'
+    >>> f.elts[0].elts[1].src
+    '2'
+    >>> f.elts[0].elts[1].step_fwd().src
+    '[3, 4]'
+    >>> f = FST('[this, [is_, [reparsed, each], step, and_, still], walks, ok]')
+    >>> n = f.elts[0]
+    >>> while True:
+    ...     if isinstance(n.a, Name):
+    ...         n = n.replace(n.id[::-1], raw=True)  # raw here reparses all nodes
+    ...     if not (n := n.step_fwd()):
+    ...         break
+    ...
+    >>> f.src
+    '[siht, [_si, [desraper, hcae], pets, _dna, llits], sklaw, ko]'
+    ```
     """
 
     if allown := with_loc == 'allown':
@@ -809,23 +975,53 @@ def next_step(self: 'FST', with_loc: bool | Literal['all', 'own', 'allown'] = Tr
     return fst
 
 
-def prev_step(self: 'FST', with_loc: bool | Literal['all', 'own', 'allown'] = True, *,
-              recurse_self: bool = True) -> Optional['FST']:
-    """Get prev node in syntactic order over entire tree. Will walk up parents and down children to get the next
-    node, returning `None` only when we are at the beginning of the whole thing.
+def step_back(self: 'FST', with_loc: bool | Literal['all', 'own', 'allown'] = True, *, recurse_self: bool = True,
+              ) -> Optional['FST']:
+    """Step backward in the tree in syntactic order, as if `walk()`ing backward. Will walk up parents and down children
+    to get the next node, returning `None` only when we are at the beginning of the whole thing.
 
     **Parameters:**
-    - `with_loc`: Return nodes depending on if they have a location or not.
+    - `with_loc`: Return nodes depending on their location information.
         - `False`: All nodes with or without location.
-        - `True`: Only nodes with `AST` locations returned but also larger computed location nodes like `comprehension`,
-            `withitem`, `match_case` and `arguments` (but only if there actually are arguments present).
-        - `'all'`: Same as `True` but also operators (excluding `and` and `or`) with calculated locations.
-        - `'own'`: Only nodes with own location (does not recurse into non-own nodes).
-        - `'allown'` Same as `'own'` but recurse into nodes with non-own locations.
-    - `recurse_self`: Whether to allow recursion into `self` to return children or move directly to prev nodes.
+        - `True`: Only nodes which have implicit `AST` locations and also larger computed location nodes like
+            `comprehension`, `withitem`, `match_case` and `arguments` (the last one only if there are actually arguments
+            present).
+        - `'all'`: Same as `True` but also operators with calculated locations (excluding `and` and `or` since they do
+            not always have a well defined location).
+        - `'own'`: Only nodes with their own implicit `AST` locations, same as `True` but excludes those larger nodes
+            with calculated locations.
+        - `'allown'` Same as `'own'` but recurse into nodes with non-own locations (even though those nodes are not
+            returned). This is only really meant for internal use to safely call from `.loc` location calculation.
+    - `recurse_self`: Whether to allow recursion into `self` to return children or move directly to previous nodes of
+        `self` on start.
 
     **Returns:**
-    - `None` if first valid node in tree, otherwise prev node in order.
+    - `None` if first valid node in tree, otherwise previous node in order.
+
+    **Examples:**
+    ```py
+    >>> f = FST('[[1, 2], [3, 4]]')
+    >>> f.elts[1].src
+    '[3, 4]'
+    >>> f.elts[1].step_back().src
+    '4'
+    >>> f.elts[1].step_back(recurse_self=False).src
+    '[1, 2]'
+    >>> f.elts[1].elts[0].src
+    '3'
+    >>> f.elts[1].elts[0].step_back().src
+    '[1, 2]'
+    >>> f = FST('[this, [is_, [reparsed, each], step, and_, still], walks, ok]')
+    >>> n = f.elts[-1]
+    >>> while True:
+    ...     if isinstance(n.a, Name):
+    ...         n = n.replace(n.id[::-1], raw=True)  # raw here reparses all nodes
+    ...     if not (n := n.step_back()):
+    ...         break
+    ...
+    >>> f.src
+    '[siht, [_si, [desraper, hcae], pets, _dna, llits], sklaw, ko]'
+    ```
     """
 
     if allown := with_loc == 'allown':
@@ -847,32 +1043,35 @@ def prev_step(self: 'FST', with_loc: bool | Literal['all', 'own', 'allown'] = Tr
     return fst
 
 
-def walk(self: 'FST', with_loc: bool | Literal['all', 'own'] = False, *, self_: bool = True,
-         recurse: bool = True, scope: bool = False, back: bool = False) -> Generator['FST', bool, None]:
-    """Walk self and descendants in syntactic order, `send(False)` to skip recursion into child. `send(True)` to
-    allow recursion into child if called with `recurse=False` or `scope=True` would otherwise disallow it. Can send
-    multiple times, last value sent takes effect.
+def walk(self: 'FST', with_loc: bool | Literal['all', 'own'] = False, *, self_: bool = True, recurse: bool = True,
+         scope: bool = False, back: bool = False) -> Generator['FST', bool, None]:
+    """Walk `self` and descendants in syntactic order. When walking, you can `send(False)` to the generator to skip
+    recursion into the current child. `send(True)` to allow recursion into child if called with `recurse=False` or
+    `scope=True` would otherwise disallow it. Can send multiple times, last value sent takes effect.
 
-    The walk is defined forwards or backwards in that it returns a parent then recurses into the children and walks
+    The walk is defined forwards or backwards in that it returns a parent, then recurses into the children and walks
     those in the given direction, recursing into each child's children before continuing with siblings. Walking
     backwards will not generate the same sequence as `list(walk())[::-1]` due to this behavior.
-
-    The walk is relatively efficient but if all you need to do is just walk ALL the `AST` children without any bells or
-    whistles then `ast.walk()` will be a bit faster.
 
     It is safe to modify the nodes (or previous nodes) as they are being walked as long as those modifications don't
     touch the parent or following nodes. This means normal `.replace()` is fine as long as `raw=False`.
 
+    The walk is relatively efficient but if all you need to do is just walk ALL the `AST` children without any bells or
+    whistles then `ast.walk()` will be a bit faster.
+
     **Parameters:**
-    - `with_loc`: Return nodes depending on if they have a location or not.
+    - `with_loc`: Return nodes depending on their location information.
         - `False`: All nodes with or without location.
-        - `True`: Only nodes with `AST` locations returned but also larger computed location nodes like `comprehension`,
-            `withitem`, `match_case` and `arguments` (but only if there actually are arguments present).
-        - `'all'`: Same as `True` but also operators (excluding `and` and `or`) with calculated locations.
-        - `'own'`: Only nodes with own location (does not recurse into non-own nodes).
-    - `self_`: If `True` then self will be returned first with the possibility to skip children with `send()`.
-    - `recurse`: Whether to recurse into children by default, `send()` for a given node will always override this.
-        Will always attempt first level of children unless walking self and `False` is sent first.
+        - `True`: Only nodes which have implicit `AST` locations and also larger computed location nodes like
+            `comprehension`, `withitem`, `match_case` and `arguments` (the last one only if there are actually arguments
+            present).
+        - `'all'`: Same as `True` but also operators with calculated locations (excluding `and` and `or` since they do
+            not always have a well defined location).
+        - `'own'`: Only nodes with their own implicit `AST` locations, same as `True` but excludes those larger nodes
+            with calculated locations.
+    - `self_`: If `True` then self will be returned first with the possibility to skip children with `send(False)`,
+        otherwise will start directly with children.
+    - `recurse`: Whether to recurse into children by default, `send(True)` for a given node will always override this.
     - `scope`: If `True` then will walk only within the scope of `self`. Meaning if called on a `FunctionDef` then
         will only walk children which are within the function scope. Will yield children which have with their own
         scopes, and the parts of them which are visible in this scope (like default argument values), but will not
@@ -882,10 +1081,24 @@ def walk(self: 'FST', with_loc: bool | Literal['all', 'own'] = False, *, self_: 
 
     **Examples:**
     ```py
-    for node in (walking := target.walk()):
-        ...
-        if i_dont_like_the_node:
-            walking.send(False)  # skip walking this node's children, don't use return value from send() here
+    >>> f = FST('def f(a: list[str], /, reject: int, *c, d=100, **e): pass')
+    >>> for g in (gen := f.walk(with_loc=True)):
+    ...     if isinstance(g.a, ast.arg) and g.a.arg == 'reject':
+    ...         _ = gen.send(False)
+    ...     else:
+    ...         print(f'{g!r:<30}{g.src}')
+    ...
+    <FunctionDef ROOT 0,0..0,57>  def f(a: list[str], /, reject: int, *c, d=100, **e): pass
+    <arguments 0,6..0,50>         a: list[str], /, reject: int, *c, d=100, **e
+    <arg 0,6..0,18>               a: list[str]
+    <Subscript 0,9..0,18>         list[str]
+    <Name 0,9..0,13>              list
+    <Name 0,14..0,17>             str
+    <arg 0,37..0,38>              c
+    <arg 0,40..0,41>              d
+    <Constant 0,42..0,45>         100
+    <arg 0,49..0,50>              e
+    <Pass 0,53..0,57>             pass
     ```
     """
 
