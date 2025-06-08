@@ -212,7 +212,7 @@ PARSE_TESTS = [
     ('augop',             FST._parse_augop,             NodeError,      '*'),
     ('augop',             FST._parse_augop,             Mult,           '*='),
     ('unaryop',           FST._parse_unaryop,           UAdd,           '+'),
-    ('unaryop',           FST._parse_unaryop,           NodeError,      'and'),
+    ('unaryop',           FST._parse_unaryop,           SyntaxError,    'and'),
     ('cmpop',             FST._parse_cmpop,             GtE,            '>='),
     ('cmpop',             FST._parse_cmpop,             IsNot,          'is\nnot'),
     ('cmpop',             FST._parse_cmpop,             NodeError,      '>= a >='),
@@ -320,6 +320,8 @@ PARSE_TESTS = [
     (Name,                FST._parse_expr,              Name,           'j'),
     (Starred,             FST._parse_expr,              Starred,        '*s'),
 
+    (Starred,             FST._parse_callarg,           Starred,        '*not a'),
+
     (Slice,               FST._parse_slice,             Slice,          'a:b'),
 
     (boolop,              FST._parse_boolop,            And,            'and'),
@@ -328,7 +330,7 @@ PARSE_TESTS = [
     (operator,            FST._parse_operator,          Mult,           '*='),
     (operator,            FST._parse_operator,          NodeError,      'and'),
     (unaryop,             FST._parse_unaryop,           UAdd,           '+'),
-    (unaryop,             FST._parse_unaryop,           NodeError,      'and'),
+    (unaryop,             FST._parse_unaryop,           SyntaxError,    'and'),
     (cmpop,               FST._parse_cmpop,             GtE,            '>='),
     (cmpop,               FST._parse_cmpop,             IsNot,          'is\nnot'),
     (cmpop,               FST._parse_cmpop,             NodeError,      '>= a >='),
@@ -336,6 +338,7 @@ PARSE_TESTS = [
 
     (comprehension,       FST._parse_comprehension,     comprehension,  'for u in v'),
     (comprehension,       FST._parse_comprehension,     comprehension,  'for u in v if w'),
+    (comprehension,       FST._parse_comprehension,     NodeError,      '()'),
 
     (arguments,           FST._parse_arguments,         arguments,      ''),
     (arguments,           FST._parse_arguments,         arguments,      'a: list[str], /, b: int = 1, *c, d=100, **e'),

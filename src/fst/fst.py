@@ -11,7 +11,7 @@ from io import TextIOBase
 from typing import Any, Callable, Literal, Optional, TextIO, Union
 
 from .astutil import *
-from .astutil import TypeAlias, TryStar, TemplateStr, Interpolation, type_param
+from .astutil import TypeAlias, TryStar, TemplateStr, Interpolation, type_param, TypeVar, ParamSpec, TypeVarTuple
 
 from .shared import (
     NodeError, astfield, fstloc, fstlocns, nspace,
@@ -2116,8 +2116,8 @@ class FST:
         return lns
 
     def is_parsable(self) -> bool:
-        """Really means the AST is `ast.unparse()`able and then re`ast.parse()`able which will get it to this top level
-        AST node (surrounded by an `ast.mod`). The source may change a bit though, parentheses, `if` <-> `elif`.
+        """Whether the source for this node is parsable by `FST` or not (if properly dedented for top level). Different
+        from `astutil.is_parsable` in that `FST` can parse more things, but can be limited by not `unparse()`ing first.
 
         **Examples:**
         ```py
@@ -2142,18 +2142,19 @@ class FST:
         ```
         """
 
-        if not is_parsable(self.a) or not self.loc:
+        if not self.loc:
             return False
 
-        ast    = self.a
-        parent = self.parent
+        ast = self.a
+
+        if isinstance(ast, (expr_context, TypeIgnore, FormattedValue, Interpolation)):
+            return False
 
         if isinstance(ast, Tuple):  # tuple of slices used in indexing (like numpy)
-            for e in ast.elts:
-                if isinstance(e, Slice):
-                    return False
+            if any(isinstance(e, Slice) for e in ast.elts):
+                return False
 
-        elif parent:
+        elif parent := self.parent:
             if isinstance(ast, JoinedStr):  # TemplateStr doesn't go into a .format_spec, '.1f' type strings without quote delimiters
                 if self.pfield.name == 'format_spec':  # isinstance(parent.a, (FormattedValue, Interpolation)):
                     return False
@@ -2337,23 +2338,26 @@ class FST:
         lines   = self.root._lines
 
         if isinstance(ast, Call):
-            children = [ast.func, nspace(f=nspace(loc=self._loc_Call_pars(), is_enclosed=lambda: True))]
+            children = [ast.func,
+                        nspace(f=nspace(pars=lambda: self._loc_Call_pars(), is_enclosed=lambda **kw: True))]
         elif isinstance(ast, Subscript):
-            children = [ast.value, nspace(f=nspace(loc=self._loc_Subscript_brackets(), is_enclosed=lambda: True))]
+            children = [ast.value,
+                        nspace(f=nspace(pars=lambda: self._loc_Subscript_brackets(), is_enclosed=lambda **kw: True))]
         elif isinstance(ast, MatchClass):
-            children = [ast.cls, nspace(f=nspace(loc=self._loc_MatchClass_pars(), is_enclosed=lambda: True))]
+            children = [ast.cls,
+                        nspace(f=nspace(pars=lambda: self._loc_MatchClass_pars(), is_enclosed=lambda **kw: True))]
         else:  # we don't check always-enclosed statement fields here because statements will never get here
             children = syntax_ordered_children(ast)
 
         for child in children:
-            if not child or not (loc := (childf := child.f).loc) or (child_end_ln := loc.end_ln) == last_ln:
+            if not child or not (loc := (childf := child.f).pars()) or (child_end_ln := loc.end_ln) == last_ln:
                 continue
 
             for ln in range(last_ln, loc.ln):
                 if re_line_end_cont_or_comment.match(lines[ln]).group(1) != '\\':
                     return False
 
-            if not childf.is_enclosed():
+            if not getattr(loc, 'n', 0) and not childf.is_enclosed(pars=False):
                 return False
 
             last_ln = child_end_ln

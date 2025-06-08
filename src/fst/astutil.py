@@ -498,20 +498,24 @@ def has_type_comments(ast: AST) -> bool:
 
 def is_parsable(ast: AST) -> bool:
     """Really means if the AST is `unparse()`able and then re`parse()`able which will get it to this top level AST node
-    surrounded by the appropriate `ast.mod`. The source may change a bit though, parentheses, 'if' <-> 'elif'."""
+    surrounded by the appropriate `ast.mod`"""
 
     if not isinstance(ast, AST):
         return False
 
     if isinstance(ast, (
-        ExceptHandler, Slice, FormattedValue, Starred, TypeIgnore,  # Starred because its inconsistent
-        expr_context, unaryop, boolop, operator, cmpop,
+        expr_context, TypeIgnore, FormattedValue, Interpolation,  # Starred is inconsistent as source but should always unparse to something parsable
+        ExceptHandler, Slice,
+        unaryop, boolop, operator, cmpop,
         alias, arguments, comprehension, withitem, match_case, pattern, type_ignore,
         arg, keyword,
         TypeVar, ParamSpec, TypeVarTuple,  # py 3.12+
-        Interpolation,  # py 3.14+
     )):
         return False
+
+    if isinstance(ast, Tuple):  # tuple of slices used in indexing (like numpy)
+        if any(isinstance(e, Slice) for e in ast.elts):
+            return False
 
     return True
 

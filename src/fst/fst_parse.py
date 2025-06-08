@@ -472,7 +472,8 @@ def _parse_augop(src: str, parse_params: dict = {}) -> AST:
 def _parse_unaryop(src: str, parse_params: dict = {}) -> AST:
     """Parse to an `ast.unaryop`."""
 
-    ast = ast_parse(f'(\n{src}b)', **parse_params).body[0].value
+    # ast = ast_parse(f'(\n{src} b)', **parse_params).body[0].value
+    ast = ast_parse(f'(\n{src} b)', **parse_params).body[0].value
 
     if not isinstance(ast, UnaryOp):
         raise NodeError(f'expecting unaryop, got {_shortstr(src)!r}')
@@ -499,9 +500,12 @@ def _parse_cmpop(src: str, parse_params: dict = {}) -> AST:
 def _parse_comprehension(src: str, parse_params: dict = {}) -> AST:
     """Parse to an `ast.comprehension`, e.g. "async for i in something() if i"."""
 
-    ast = ast_parse(f'[_ \n{src}]', **parse_params).body[0].value.generators[0]
+    ast = ast_parse(f'[_ \n{src}]', **parse_params).body[0].value
 
-    return _offset_linenos(_validate_indent(src, ast), -1)
+    if not isinstance(ast, ListComp):
+        raise NodeError('expecting comprehension')
+
+    return _offset_linenos(_validate_indent(src, ast.generators[0]), -1)
 
 
 @staticmethod
@@ -1191,6 +1195,7 @@ _PARSE_MODE_FUNCS = {
     ExceptHandler:       _parse_ExceptHandler,
     match_case:          _parse_match_case,
     expr:                _parse_expr,
+    Starred:             _parse_callarg,
     Slice:               _parse_slice,
     boolop:              _parse_boolop,
     operator:            _parse_operator,
