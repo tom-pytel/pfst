@@ -64,7 +64,36 @@ def _swizzle_getput_params(start: int | Literal['end'] | None, stop: int | None 
 def parse(source, filename='<unknown>', mode='exec', *, type_comments=False, feature_version=None, **kwargs) -> AST:
     """Executes `ast.parse()` and then adds `FST` nodes to the parsed tree. Drop-in replacement for `ast.parse()`. For
     parameters, see `ast.parse()`. Returned `AST` tree has added `.f` attribute at each node which accesses the parallel
-    `FST` tree."""
+    `FST` tree.
+
+    **Parameters:**
+
+
+    **Returns:**
+    - `AST`: Tree with an `FST` `.f` attribute added to each `AST` node.
+
+    **Examples:**
+    ```py
+    >>> import ast, fst
+    >>> a = fst.parse('if 1:\n  i = 2')
+    >>> a
+    <ast.Module object at 0x7f3aef128fd0>
+    >>> a.f  # FST node
+    <Module ROOT 0,0..1,7>
+    >>> ast.dump(a)
+    "Module(body=[If(test=Constant(value=1), body=[Assign(targets=[Name(id='i', ctx=Store())], value=Constant(value=2))], orelse=[])], type_ignores=[])"
+    >>> a.f.dump()
+    Module - ROOT 0,0..1,7
+      .body[1]
+      0] If - 0,0..1,7
+        .test Constant 1 - 0,3..0,4
+        .body[1]
+        0] Assign - 1,2..1,7
+          .targets[1]
+          0] Name 'i' Store - 1,2..1,3
+          .value Constant 2 - 1,6..1,7
+    ```
+    """
 
     return FST.fromsrc(source, mode, filename=filename, type_comments=type_comments, feature_version=feature_version,
                        **kwargs).a
@@ -72,7 +101,36 @@ def parse(source, filename='<unknown>', mode='exec', *, type_comments=False, fea
 
 def unparse(ast_obj) -> str:
     """Returns the formatted source that is kept for this tree. Drop-in replacement for `ast.unparse()` If there is no
-    `FST` information in the `AST` tree then just executes `ast.unparse()`."""
+    `FST` information in the `AST` tree then just executes `ast.unparse()`.
+
+    **Parameters:**
+
+    **Returns:**
+
+    **Examples:**
+    ```py
+    >>> import ast, fst
+    >>> a = fst.parse('''
+    ... if 1: i = 1  # same line
+    ... else:
+    ...   j=2 # comment
+    ... '''.strip())
+    >>> print(ast.unparse(a))
+    if 1:
+        i = 1
+    else:
+        j = 2
+    >>> print(fst.unparse(a))
+    if 1: i = 1  # same line
+    else:
+      j=2 # comment
+    >>> a = ast.parse('i = 1')
+    >>> ast.unparse(a)
+    'i = 1'
+    >>> fst.unparse(a)  # also unparses regular AST
+    'i = 1'
+    ```
+    """
 
     if (f := getattr(ast_obj, 'f', None)) and isinstance(f, FST):
         if f.is_root:
@@ -751,30 +809,101 @@ class FST:
         finally:
             FST.set_option(**old_options)
 
-    def dump(self, compact: bool | str = False, full: bool = False, src: Literal['stmt', 'all'] | None = None, *,
+    def dump(self, src: Literal['stmt', 'all'] | None = None, full: bool = False, expand: bool | str = False, *,
              indent: int = 2, out: Callable | TextIO = print, eol: str | None = None) -> str | list[str] | None:
         """Dump a representation of the tree to stdout or other `TextIO` or return as a str or list of lines, or call
         a provided function once with each line of the output.
 
         **Parameters:**
-        - `compact`: If `True` then the dump is compacted a bit. Can also be a string for shortcut specification of
-            flags by first letter: `'c'` means compact, `'f'` means full, `'s'` means `src='stmt'` and `'a'` means
-            `src='all'`, so `'cfs'` would be a compact full dump showing statement source lines.
+        - `src`: `'stmt'` means output statement source lines, `'all'` means output source for each individual and node
+            and `None` does not output any source. Can also be a string for shortcut specification of source and flags
+            by first letter: `'s'` means `src='stmt'`, `'a'` means `src='all'`, `'f'` means `full=True` and `'e'` means
+            `expand=True`, so `'sfe'` would be a full expanded dump showing statement source lines.. All case
+            insensitive.
         - `full`: If `True` then will list all fields in nodes including empty ones, otherwise will exclude most empty
             fields.
-        - `src`: `'stmt'` means output statement source lines, `'all'` means output source for each individual and node
-            and `None` does not output any source.
+        - `expand`: If `True` then the output is a nice compact concise representation. If `False` then it is ugly and
+            wasteful.
         - `indent`: The average airspeed of an unladen swallow.
         - `out`: `print` means print to stdout, `list` returns a list of lines and `str` returns a whole string.
             `TextIO` will cann the `write` method for each line of output. Otherwise a `Callable[[str], None]` which is
             called for each line of output individually.
         - `eol`: What to put at the end of each text line, `None` means newline for `TextIO` out and nothing for other.
+
+        **Returns:**
+        - `str | list[str]` if those were requested with `out=str` or `out=list` else `None` and the output is send one
+            line at a time to `linefunc`, which by default is `print`.
+
+        **Examples:**
+        >>> f = FST('''
+        ... if 1:
+        ...     call(a[i], **b)
+        ... '''.strip())
+        >>> f.dump()
+        If - ROOT 0,0..1,19
+          .test Constant 1 - 0,3..0,4
+          .body[1]
+          0] Expr - 1,4..1,19
+            .value Call - 1,4..1,19
+              .func Name 'call' Load - 1,4..1,8
+              .args[1]
+              0] Subscript - 1,9..1,13
+                .value Name 'a' Load - 1,9..1,10
+                .slice Name 'i' Load - 1,11..1,12
+                .ctx Load
+              .keywords[1]
+              0] keyword - 1,15..1,18
+                .value Name 'b' Load - 1,17..1,18
+        >>> f.dump(src='all', indent=4)
+        0: if 1:
+        If - ROOT 0,0..1,19
+        0:    1
+            .test Constant 1 - 0,3..0,4
+            .body[1]
+        1:     call(a[i], **b)
+            0] Expr - 1,4..1,19
+                .value Call - 1,4..1,19
+        1:     call
+                    .func Name 'call' Load - 1,4..1,8
+                    .args[1]
+        1:          a[i]
+                    0] Subscript - 1,9..1,13
+        1:          a
+                        .value Name 'a' Load - 1,9..1,10
+        1:            i
+                        .slice Name 'i' Load - 1,11..1,12
+                        .ctx Load
+                    .keywords[1]
+        1:                **b
+                    0] keyword - 1,15..1,18
+        1:                  b
+                        .value Name 'b' Load - 1,17..1,18
+        >>> f.dump(out=str)[:80]
+        'If - ROOT 0,0..1,19\n  .test Constant 1 - 0,3..0,4\n  .body[1]\n  0] Expr - 1,4..1,'
+        >>> for l in f.dump(1, out=list):
+        ...     print(repr(l))
+        ...
+        'If - ROOT 0,0..1,19'
+        '  .test Constant 1 - 0,3..0,4'
+        '  .body[1]'
+        '  0] Expr - 1,4..1,19'
+        '    .value Call - 1,4..1,19'
+        "      .func Name 'call' Load - 1,4..1,8"
+        '      .args[1]'
+        '      0] Subscript - 1,9..1,13'
+        "        .value Name 'a' Load - 1,9..1,10"
+        "        .slice Name 'i' Load - 1,11..1,12"
+        '        .ctx Load'
+        '      .keywords[1]'
+        '      0] keyword - 1,15..1,18'
+        "        .value Name 'b' Load - 1,17..1,18"
         """
 
-        if isinstance(compact, str):
-            src     = 'all' if 'a' in (compact := compact.lower()) else 'stmt' if 's' in compact else None
-            full    = 'f' in compact
-            compact = 'c' in compact
+        if isinstance(src, str):
+            if (src := src.lower()) not in ('stmt', 'all'):
+                full   = 'f' in src
+                expand = 'e' in src
+                src    = 'all' if 'a' in src else 'stmt' if 's' in src else None
 
         if isinstance(out, TextIOBase):
             out = out.write
@@ -785,7 +914,7 @@ class FST:
         elif eol is None:
             eol = ''
 
-        st = nspace(full=full, compact=compact, indent=indent, eol=eol, src=src)
+        st = nspace(src=src, full=full, expand=expand, indent=indent, eol=eol)
 
         if out in (str, list):
             lines       = []

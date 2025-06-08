@@ -50,7 +50,7 @@ def main():
 
     src = 'all' if args.all else 'stmt' if args.stmt else None
 
-    ast.f.dump(compact=args.compact, full=args.full, src=src, indent=args.indent)
+    ast.f.dump(src=src, full=args.full, compact=args.compact, indent=args.indent)
 
 
 if __name__ == '__main__':

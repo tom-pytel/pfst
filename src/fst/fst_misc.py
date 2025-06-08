@@ -255,7 +255,7 @@ def _dump(self: 'FST', st: nspace, cind: str = '', prefix: str = ''):
         if loc := self.loc:
             _out_lines(self, st.linefunc, *loc, st.eol)
 
-    if st.compact:
+    if not st.expand:
         if isinstance(ast, Name):
             st.linefunc(f'{cind}{prefix}Name {ast.id!r} {ast.ctx.__class__.__qualname__}{" -" * bool(tail)}{tail}'
                         f'{st.eol}')
@@ -275,7 +275,7 @@ def _dump(self: 'FST', st: nspace, cind: str = '', prefix: str = ''):
     for name, child in iter_fields(ast):
         is_list = isinstance(child, list)
 
-        if st.compact:
+        if not st.expand:
             if child is None and not st.full:
                 continue
 

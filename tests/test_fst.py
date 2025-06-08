@@ -485,7 +485,7 @@ def regen_copy_data():
         f     = eval(f't.{elt}', {'t': t}).f
         s     = f.copy(fix=True)
         ssrc  = s.src
-        sdump = s.dump(out=list, compact=True)
+        sdump = s.dump(out=list)
 
         assert not ssrc.startswith('\n') or ssrc.endswith('\n')
 
@@ -525,8 +525,8 @@ def regen_get_slice_seq():
             s     = f.get_slice(start, stop, cut=True, **options)
             tsrc  = t.f.src
             ssrc  = s.src
-            tdump = t.f.dump(out=list, compact=True)
-            sdump = s.dump(out=list, compact=True)
+            tdump = t.f.dump(out=list)
+            sdump = s.dump(out=list)
 
             assert not tsrc.startswith('\n') or tsrc.endswith('\n')
             assert not ssrc.startswith('\n') or ssrc.endswith('\n')
@@ -566,8 +566,8 @@ def regen_get_slice_stmt():
             s     = f.get_slice(start, stop, field, cut=True, **options)
             tsrc  = t.f.src
             ssrc  = s.src
-            tdump = t.f.dump(out=list, compact=True)
-            sdump = s.dump(out=list, compact=True)
+            tdump = t.f.dump(out=list)
+            sdump = s.dump(out=list)
 
             if verify:
                 t.f.verify(raise_=True)
@@ -598,7 +598,7 @@ def regen_put_slice_seq():
         f.put_slice(None if src == '**DEL**' else src, start, stop)
 
         tdst  = t.f.src
-        tdump = t.f.dump(out=list, compact=True)
+        tdump = t.f.dump(out=list)
 
         assert not tdst.startswith('\n') or tdst.endswith('\n')
 
@@ -632,7 +632,7 @@ def regen_put_slice_stmt():
         f.put_slice(None if src == '**DEL**' else src, start, stop, field, **options)
 
         tdst  = t.f.src
-        tdump = t.f.dump(out=list, compact=True)
+        tdump = t.f.dump(out=list)
 
         t.f.verify(raise_=True)
 
@@ -670,7 +670,7 @@ def regen_put_slice():
 
         else:
             tdst  = t.f.src
-            tdump = t.f.dump(out=list, compact=True)
+            tdump = t.f.dump(out=list)
 
             t.f.verify(raise_=True)
 
@@ -714,7 +714,7 @@ def regen_put_one():
 
             else:
                 tdst  = f.root.src
-                tdump = f.root.dump(out=list, compact=True)
+                tdump = f.root.dump(out=list)
 
                 if options.get('_verify', True):
                     f.root.verify(raise_=True)
@@ -759,7 +759,7 @@ def regen_put_src():
             g = f.put_src(None if src == '**DEL**' else src, ln, col, end_ln, end_col, **options) or f.root
 
             tdst  = f.root.src
-            tdump = f.root.dump(out=list, compact=True)
+            tdump = f.root.dump(out=list)
 
             f.root.verify(raise_=True)
 
@@ -5321,7 +5321,7 @@ i # post
             f     = eval(f't.{elt}', {'t': t}).f
             s     = f.copy(fix=True)
             ssrc  = s.src
-            sdump = s.dump(out=list, compact=True)
+            sdump = s.dump(out=list)
 
             try:
                 self.assertEqual(ssrc, slice_copy.strip())
@@ -7882,7 +7882,7 @@ class cls:
                 s     = f.get_slice(start, stop, cut=False, **options)
                 tsrc  = t.f.src
                 ssrc  = s.src
-                sdump = s.dump(out=list, compact=True)
+                sdump = s.dump(out=list)
 
                 self.assertEqual(tsrc, src.strip())
                 self.assertEqual(ssrc, slice_copy.strip())
@@ -7907,8 +7907,8 @@ class cls:
                 tsrc  = t.f.src
                 ssrc  = s.src
                 t.f._touchall()
-                tdump = t.f.dump(out=list, compact=True)
-                sdump = s.dump(out=list, compact=True)
+                tdump = t.f.dump(out=list)
+                sdump = s.dump(out=list)
 
                 self.assertEqual(tsrc, src_cut.strip())
                 self.assertEqual(ssrc, slice_copy.strip())
@@ -7944,7 +7944,7 @@ class cls:
                     s     = f.get_slice(start, stop, field, cut=False, **options)
                     tsrc  = t.f.src
                     ssrc  = s.src
-                    sdump = s.dump(out=list, compact=True)
+                    sdump = s.dump(out=list)
 
                     if verify:
                         t.f.verify(raise_=True)
@@ -7975,8 +7975,8 @@ class cls:
                     s     = f.get_slice(start, stop, field, cut=True, **options)
                     tsrc  = t.f.src
                     ssrc  = s.src
-                    tdump = t.f.dump(out=list, compact=True)
-                    sdump = s.dump(out=list, compact=True)
+                    tdump = t.f.dump(out=list)
+                    sdump = s.dump(out=list)
 
                     if verify:
                         t.f.verify(raise_=True)
@@ -8258,7 +8258,7 @@ if 1:
                 f.put_slice(None, start, stop, **options)
 
                 tdst  = t.f.src
-                tdump = t.f.dump(out=list, compact=True)
+                tdump = t.f.dump(out=list)
 
                 self.assertEqual(tdst, src_cut.strip())
                 self.assertEqual(tdump, src_dump.strip().split('\n'))
@@ -8279,7 +8279,7 @@ if 1:
                 f.put_slice(None if src == '**DEL**' else src, start, stop)
 
                 tdst  = t.f.src
-                tdump = t.f.dump(out=list, compact=True)
+                tdump = t.f.dump(out=list)
 
                 self.assertEqual(tdst, put_src.strip())
                 self.assertEqual(tdump, put_dump.strip().split('\n'))
@@ -8307,7 +8307,7 @@ if 1:
                     f.put_slice(None, start, stop, field, **options)
 
                     tsrc  = t.f.src
-                    tdump = t.f.dump(out=list, compact=True)
+                    tdump = t.f.dump(out=list)
 
                     if verify:
                         t.f.verify(raise_=True)
@@ -8333,7 +8333,7 @@ if 1:
                 f.put_slice(None if src == '**DEL**' else src, start, stop, field, **options)
 
                 tdst  = t.f.src
-                tdump = t.f.dump(out=list, compact=True)
+                tdump = t.f.dump(out=list)
 
                 t.f.verify(raise_=True)
 
@@ -8360,7 +8360,7 @@ if 1:
                 f.put_slice(None if src == '**DEL**' else src, start, stop, field, **options)
 
                 tdst  = t.f.src
-                tdump = t.f.dump(out=list, compact=True)
+                tdump = t.f.dump(out=list)
 
                 t.f.verify(raise_=True)
 
@@ -8439,7 +8439,7 @@ if 1:
 
                 else:
                     tdst  = f.root.src
-                    tdump = f.root.dump(out=list, compact=True)
+                    tdump = f.root.dump(out=list)
 
                     if options.get('_verify', True):
                         f.root.verify(raise_=True)
@@ -8488,7 +8488,7 @@ if 1:
 
                 else:
                     tdst  = f.root.src
-                    tdump = f.root.dump(out=list, compact=True)
+                    tdump = f.root.dump(out=list)
 
                     if options.get('_verify', True):
                         f.root.verify(raise_=True)
@@ -9451,7 +9451,7 @@ a
                 g = f.put_src(None if src == '**DEL**' else src, ln, col, end_ln, end_col, **options) or f.root
 
                 tdst  = f.root.src
-                tdump = f.root.dump(out=list, compact=True)
+                tdump = f.root.dump(out=list)
 
                 f.root.verify(raise_=True)
 
@@ -9579,7 +9579,7 @@ finally:
                 f.put_src(None if src == '**DEL**' else src, *loc)
 
                 tdst  = f.root.src
-                tdump = f.root.dump(out=list, compact=True)
+                tdump = f.root.dump(out=list)
 
                 f.root.verify(raise_=True)
 
