@@ -23,6 +23,8 @@ from .fst_parse import (
     _code_as_withitem, _code_as_type_param, _code_as_identifier, _code_as_identifier_dotted, _code_as_identifier_alias,
 )
 
+_PY_VERSION = sys.version_info[:2]
+
 _re_merged_alnum = re.compile(r'\w\w')
 
 
@@ -125,6 +127,23 @@ def _get_one_invalid_combined(self: 'FST', idx: int | None, field: str, cut: boo
 
 
 if sys.version_info[:2] < (3, 12):
+    def _get_one_FormattedValue_value(self: 'FST', idx: int | None, field: str, cut: bool, **options,
+                                                    ) -> Optional['FST'] | str:
+        """Correct for py < 3.12 returning value unparenthesized tuple with `FormattedValue` curlies as delimiters."""
+
+        ret = _get_one_default(self, idx, field, cut, **options)
+
+        if isinstance(ret.a, Tuple):
+            ln, col, end_ln, end_col = ret.loc
+            lines                    = ret.lines
+
+            if lines[ln].startswith('{', col) and (l := lines[end_ln]).endswith('}', 0, end_col):  # if curlies then replace them with parentheses
+                lines[end_ln] = bistr(f'{l[:end_col - 1]}){l[end_col:]}')
+                lines[ln]     = bistr(f'{(l := lines[ln])[:col]}({l[col + 1:]}')
+
+        return ret
+
+
     def _get_one_conversion(self: 'FST', idx: int | None, field: str, cut: bool, **options) -> Optional['FST'] | str:
         raise NotImplementedError('this is only implemented on python version 3.12 and above')
 
@@ -354,7 +373,7 @@ _GET_ONE_HANDLERS = {
     (Call, 'func'):                       _get_one_default, # expr
     (Call, 'args'):                       _get_one_default, # expr*
     (Call, 'keywords'):                   _get_one_default, # keyword*
-    (FormattedValue, 'value'):            _get_one_default, # expr
+    (FormattedValue, 'value'):            _get_one_default if _PY_VERSION >= (3, 12) else _get_one_FormattedValue_value, # expr
     (FormattedValue, 'conversion'):       _get_one_conversion, # int
     (FormattedValue, 'format_spec'):      _get_one_format_spec, # expr?  - no location on py < 3.12
     (Interpolation, 'value'):             _get_one_default, # expr

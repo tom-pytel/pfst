@@ -8310,6 +8310,12 @@ if 1:
             self.assertEqual("'abc'", (g := f.get(0)).src)
             g.verify()
 
+        if _PY_VERSION < (3, 12):
+            self.assertEqual('(a,)', FST('f"{a,}"').values[0].get().src)
+            self.assertEqual('(a, b)', FST('f"{a, b}"').values[0].get().src)
+            self.assertEqual('( a, b )', FST('f"{ a, b }"').values[0].get().src)
+            self.assertEqual('(a, b)', FST('f"{ (a, b) }"').values[0].get().src)
+
     def test_put_slice_seq_del(self):
         for i, (src, elt, start, stop, options, src_cut, slice_copy, src_dump, slice_dump) in enumerate(GET_SLICE_SEQ_DATA):
             t = parse(src)
