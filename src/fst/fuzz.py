@@ -250,8 +250,12 @@ class ReputOne(Fuzzy):
 
                 delete = self.DELETE and handler in (_put_one_exprish_optional, _put_one_Dict_keys,
                                                         _put_one_withitem_optional_vars)
+                if self.debug:
+                    print('...', g, idx, field, g.parent, g.src)
+                    f.parent.dump(True); print(f.parent.src); print()
 
                 if delete:
+
                     put = 'del'
 
                     try:
@@ -271,39 +275,13 @@ class ReputOne(Fuzzy):
                 shuffle(puts)
 
                 for put, func in puts:
+                    if self.debug:
+                        print(f'   ', f.parent.src)
+
                     func()
 
                     if self.verify:
                         fst.verify()
-
-                # put = 'fst'
-
-                # f.parent.put(g, idx, field=field, raw=False)
-
-                # if self.verify:
-                #     fst.verify()
-
-                # # if delete:
-                # #     try: f.parent.put(None, idx, field=field, raw=False)
-                # #     except Exception: pass
-
-                # put = 'ast'
-
-                # f.parent.put(ast, idx, field=field, raw=False)
-
-                # if self.verify:
-                #     fst.verify()
-
-                # # if delete:
-                # #     try: f.parent.put(None, idx, field=field, raw=False)
-                # #     except Exception: pass
-
-                # put = 'src'
-
-                # f.parent.put(src, idx, field=field, raw=False)
-
-                # if self.verify:
-                #     fst.verify()
 
             except:
                 print('-'*80)
@@ -318,6 +296,9 @@ class ReputOne(Fuzzy):
 
         sys.stdout.write('\n')
 
+        if self.verbose:
+            print(fst.src)
+
         if not self.verify:
             fst.verify()
 
@@ -328,16 +309,24 @@ class ReputOne(Fuzzy):
                         a.value = ''
 
                     elif isinstance(pa, (JoinedStr, TemplateStr)):  # also zero out these Constants in JoinedStr if they are debug strings because different source for same effective expression will cause compare to fail
-                        if ((idx := f.pfield.idx + 1) < len(pa.values) and
-                            isinstance(na := pa.values[idx], (FormattedValue, Interpolation)) and
-                            (strs := na.f._get_fmtval_interp_strs()) and strs[0]
-                        ):
-                            a.value = ''
+                        # if ((idx := f.pfield.idx + 1) < len(pa.values) and
+                        #     isinstance(na := pa.values[idx], (FormattedValue, Interpolation)) and
+                        #     (strs := na.f._get_fmtval_interp_strs()) and strs[0]
+                        # ):
+                        #     a.value = ''
+                        a.value = ''  # just don't compare, pain-in-the-ass because of AST JoinedStrs unparsing without needef information
 
-        compare_asts(fst.a, backup.a, raise_=True)
+        try:
+            compare_asts(fst.a, backup.a, raise_=True)
 
-        if self.verbose:
-            print(fst.src)
+        except Exception as exc:
+            if self.debug:
+                try:
+                    fst.dump()
+                except Exception:
+                    pass
+
+            raise
 
 
 FUZZIES = {o.name: o for o in globals().values() if isinstance(o, type) and o is not Fuzzy and issubclass(o, Fuzzy)}
@@ -355,7 +344,7 @@ def main():
                         help='which fuzzies to run')
     parser.add_argument('-b', '--batch', type=int, default=None,
                         help='batch size')
-    parser.add_argument('-g', '--debug', type=int, default=None,
+    parser.add_argument('-g', '--debug', default=False, action='store_true',
                         help='print debug info')
     parser.add_argument('-l', '--loop', type=int, default=None,
                         help='number of times to loop')
