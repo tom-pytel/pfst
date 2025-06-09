@@ -1545,7 +1545,7 @@ class FST:
     def par(self, force: bool = False, *, whole: bool = True) -> Self:
         """Parenthesize node if it MAY need it. Will not parenthesize atoms which are always enclosed like `List` unless
         `force=True`. Will add parentheses to unparenthesized `Tuple` and brackets to unbracketed `MatchSequence`
-        adjusting the node location.
+        adjusting the node location. If dealing with a `Starred` then the parentheses are applied to the child value.
 
         **Parameters:**
         - `force`: If `True` then will add another layer of parentheses regardless if any already present.
@@ -1576,7 +1576,8 @@ class FST:
 
     def unpar(self, node: bool = False, *, share: bool = True) -> Self:
         """Remove all parentheses from node if present. Normally removes just grouping parentheses but can also remove
-        `Tuple` parentheses and `MatchSequence` parentheses or brackets if `node=True`.
+        `Tuple` parentheses and `MatchSequence` parentheses or brackets if `node=True`. If dealing with a `Starred` then
+        the parentheses are checked in and removed from the child value.
 
         **Parameters:**
         - `node`: If `True` then will remove parentheses from a parenthesized `Tuple` and parentheses/brackets from
@@ -1587,7 +1588,7 @@ class FST:
         - `self`
         """
 
-        if not self.is_atom():
+        if not (self.a.value.f if isinstance(self.a, Starred) else self).is_atom():
             return self  # False
 
         with self._modifying():

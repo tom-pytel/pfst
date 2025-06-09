@@ -11,7 +11,7 @@ from .astutil import *
 from .astutil import TypeAlias, TryStar, TypeVar, ParamSpec, TypeVarTuple, TemplateStr, Interpolation
 
 from .shared import (
-    STMTISH, Code, NodeError, astfield, fstloc,
+    Code, NodeError, astfield, fstloc,
     _next_src, _prev_src, _next_find, _prev_find, _next_find_re, _prev_pars, _fixup_one_index,
 )
 
@@ -604,13 +604,20 @@ def _make_exprish_fst(self: 'FST', code: Code | None, idx: int | None, field: st
     # figure out parentheses
 
     pars         = FST.get_option('pars', options)
+    put_is_star  = isinstance(put_ast, Starred)
     tgt_is_FST   = target.is_FST
     del_tgt_pars = False
 
     def need_pars(adding: bool) -> bool:
         if not put_fst.is_atom(pars=False):
-             if precedence_require_parens(put_ast, self.a, field, idx):
-                 return True
+            if not put_is_star:
+                if precedence_require_parens(put_ast, self.a, field, idx):
+                    return True
+
+            else:  # Starred gets checked against its child value in the context of being a call arg or not
+                if precedence_require_parens(put_ast.value, put_ast, 'value',
+                                             star_call_arg=field == 'args' and isinstance(self.a, Call)):
+                    return True
 
         elif (tgt_is_FST and field == 'value' and isinstance(put_ast, Constant) and isinstance(put_ast.value, int) and  # veeery special case "3.__abs__()" -> "(3).__abs__()"
               (tgt_parent := target.parent) and isinstance(tgt_parent.a, Attribute)):
@@ -622,7 +629,7 @@ def _make_exprish_fst(self: 'FST', code: Code | None, idx: int | None, field: st
         return False
 
     if pars:
-        if put_fst.pars(True)[1]:  # src has grouping pars
+        if (put_ast.value.f if put_is_star else put_fst).pars(True)[1]:  # src has grouping pars, or src.value if src is Starred
             del_tgt_pars = True
 
             if pars == 'auto':

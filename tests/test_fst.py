@@ -1715,6 +1715,7 @@ def f():
         f = FST('*\na')
         f._parenthesize_grouping()
         self.assertEqual('*(\na)', f.src)
+        f.verify()
 
         f = FST('*\na')
         f._parenthesize_grouping(star_child=False)
@@ -1924,6 +1925,7 @@ def f():
         self.assertEqual('*(\na)', f.src)
         f._unparenthesize_grouping()
         self.assertEqual('*a', f.src)
+        f.verify()
 
         f = FST('*\na')
         f._parenthesize_grouping(star_child=False)
@@ -1932,6 +1934,7 @@ def f():
         self.assertEqual('(*\na)', f.src)
         f._unparenthesize_grouping(star_child=False)
         self.assertEqual('*\na', f.src)
+        f.verify()
 
     def test__unparenthesize_node(self):
         # Tuple
@@ -4229,6 +4232,13 @@ f"distutils.command.sdist.check_metadata is deprecated, \\
         self.assertEqual((1, 0, 1, 4), f.loc)
         self.assertEqual(f.src, '# pre\n[i,]\n# post')
 
+        # special rules for Starred
+
+        f = FST('*\na')
+        f.par()
+        self.assertEqual('*(\na)', f.src)
+        f.verify()
+
     def test_unpar(self):
         f = parse('((1,))').body[0].value.f.copy(pars=True)
         self.assertEqual('((1,))', f.src)
@@ -4468,6 +4478,20 @@ f"distutils.command.sdist.check_metadata is deprecated, \\
         f.body[0].target.unpar(node=True)
         self.assertEqual('for a,in b: pass', f.src)
         f.verify()
+
+        # special rules for Starred
+
+        f = FST('*(\na)')
+        self.assertEqual('*(\na)', f.src)
+        f.unpar()
+        self.assertEqual('*a', f.src)
+        f.verify()
+
+        f = FST('*\na')
+        f._parenthesize_grouping(star_child=False)
+        self.assertEqual('(*\na)', f.src)
+        f.unpar()
+        self.assertEqual('(*\na)', f.src)
 
     def test_dedent_multiline_strings(self):
         f = parse('''
@@ -9122,6 +9146,29 @@ a
             f.value.values[1].put(None, 'format_spec', raw=True)
             self.assertEqual('t"{a=}"', f.src)
             f.verify()
+
+        # Starred has different behavior as a call arg
+
+        f = FST('call(a)')
+        g = FST('*(b or c)')
+        f.put(g, 0, 'args')
+        self.assertEqual('call(*b or c)', f.src)
+        f.verify()
+
+        g = FST('*(b if c else d)')
+        f.put(g, 0, 'args')
+        self.assertEqual('call(*b if c else d)', f.src)
+        f.verify()
+
+        g = FST('*(yield)')
+        f.put(g, 0, 'args')
+        self.assertEqual('call(*(yield))', f.src)
+        f.verify()
+
+        g = FST('*(b := c)')
+        f.put(g, 0, 'args')
+        self.assertEqual('call(*(b := c))', f.src)
+        f.verify()
 
     def test_put_one_pars(self):
         f = FST('a = b', 'exec').body[0]

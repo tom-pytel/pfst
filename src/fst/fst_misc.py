@@ -1151,7 +1151,8 @@ def _parenthesize_grouping(self: 'FST', whole: bool = True, *, star_child: bool 
     **Parameters:**
     - `whole`: If at root then parenthesize whole source instead of just node.
     - `star_child`: `Starred` expressions cannot be parenthesized, so when this is `True` the parentheses are applied to
-        the `value` child and the opening par is put right after the `*` to resolve any enclosure issues.
+        the `value` child and the opening par is put right after the `*` to resolve any enclosure issues. This overrides
+        `whole` for the opening par.
     """
 
     ln, col, end_ln, end_col = self.whole_loc if whole and self.is_root else self.loc
@@ -1159,6 +1160,7 @@ def _parenthesize_grouping(self: 'FST', whole: bool = True, *, star_child: bool 
     if isinstance(self.a, Starred) and star_child:
         ln, col, _, _  = self.loc
         col           += 1
+        self           = self.a.value.f
 
     self._put_src([')'], end_ln, end_col, end_ln, end_col, True, True, self, offset_excluded=False)
     self._offset(*self._put_src(['('], ln, col, ln, col, False, False, self, offset_excluded=False))

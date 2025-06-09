@@ -13,7 +13,7 @@ install:  ## Install locally from current directory
 
 .PHONY: test
 test:  ## Run basic unit tests
-	python -m unittest discover --verbose -s tests
+	python -m unittest discover --verbose tests
 
 
 .PHONY: docs

@@ -1174,7 +1174,7 @@ _PRECEDENCE_NODE_FIELDS = {  # default is _Precedence.TEST
     (Attribute, 'value'):      False,                    # Constant integers require parentheses
     (Subscript, 'value'):      _Precedence.ATOM,
     (Subscript, 'slice'):      False,                    # unparenthesized tuples put to slice don't need parens
-    (Starred, 'value'):        _Precedence.EXPR,
+    (Starred, 'value'):        False,                    # different precedence when Starred is a call argument
 
     (Invert, 'operand'):       _Precedence.FACTOR,
     (Not, 'operand'):          _Precedence.NOT,
@@ -1235,6 +1235,7 @@ def precedence_require_parens_by_type(child_type: type[AST], parent_type: type[A
             if `field` is `'value'`, otherwise no effect.
         - `matchas_pat_None`: Child is `MatchAs` and the `pattern` is `None` (just a name).
         - `attr_val_int`: Parent is `Attribute` and child `value` is a `Constant` integer.
+        - `star_call_arg`: Parent is `Starred` and it is a `Call` `args` argument, differnt rules for child parentheses.
 
     **Returns:**
     - `bool`: Whether parentheses are needed around the child for correct parsing or not.
@@ -1273,12 +1274,16 @@ def precedence_require_parens_by_type(child_type: type[AST], parent_type: type[A
 
             parent_precedence = _Precedence.OR
 
+        elif parent_type is Starred:
+            parent_precedence = _Precedence.TEST if flags.get('star_call_arg') else _Precedence.EXPR
+
         else:
             assert False, "type of 'op' should be passed"
 
     return child_precedence < parent_precedence
 
-def precedence_require_parens(child: AST, parent: AST, field: str, idx: int | None = None) -> bool:
+def precedence_require_parens(child: AST, parent: AST, field: str, idx: int | None = None, **flags: dict[str, bool],
+                              ) -> bool:
     """Returns whether parentheses are required for the given parent / child combination or not. Unlike
     `precedence_require_parens_by_type()`, this takes the actual node instances and figures out the respective types
     and flags.
@@ -1288,12 +1293,12 @@ def precedence_require_parens(child: AST, parent: AST, field: str, idx: int | No
     - `parent`: Parent `AST` node.
     - `field`: The name of the field in the parent where the child resides.
     - `idx`: The optional index of the child in the parent field, or `None` if does not apply.
+    - `flags`: Used to passed in some flags that cannot be determined here, like `star_call_arg`.
 
     **Returns:**
     - `bool`: Whether parentheses are needed around the child for correct parsing or not.
     """
 
-    flags       = {}
     child_type  = (child.op.__class__
                    if (child_cls := child.__class__) in (BoolOp, BinOp, UnaryOp) else child_cls)
     parent_type = (parent.op.__class__
