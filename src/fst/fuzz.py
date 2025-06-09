@@ -12,7 +12,9 @@ from .astutil import *
 from .astutil import TemplateStr, Interpolation
 from .fst import FST, NodeError
 
-PROGRAM = 'python -m fst.fuzz'
+PROGRAM     = 'python -m fst.fuzz'
+_PY_VERSION = sys.version_info[:2]
+_PYLT12     = _PY_VERSION < (3, 12)
 
 
 def find_pys(path) -> list[str]:
@@ -125,6 +127,84 @@ class VerifyCopy(Fuzzy):
                     g.dump('stmt')
 
                 raise
+
+
+class SynOrder(Fuzzy):
+    name = 'syn_order'
+
+    def fuzz_one(self, fst, fnm) -> bool:
+        bln, bcol = 0, 0
+
+        for f in (gen := fst.walk(True)):
+            if _PYLT12 and isinstance(f.a, JoinedStr):  # these have no location info in py <3.12
+                gen.send(False)
+
+                continue
+
+            try:
+                if not isinstance(f.a, (FormattedValue, Interpolation)):  # preceding '=' debug strings may start after these
+                    assert f.bln > bln or (f.bln == bln and f.bcol >= bcol)
+
+                l2   = list(f.walk(True, self_=False, recurse=False))
+                l, c = [], None
+
+                while c := f.next_child(c, True):
+                    l.append(c)
+
+                try:
+                    assert l == l2
+
+                except Exception:
+                    print(l)
+                    print(l2)
+
+                    raise
+
+                l3   = l2[::-1]
+                l, c = [], None
+
+                while c := f.prev_child(c, True):
+                    l.append(c)
+
+                try:
+                    assert l == l3
+
+                except Exception:
+                    print(l)
+                    print(l3)
+
+                    raise
+
+                l4 = list(f.walk(True, self_=False, recurse=False, back=True))
+
+                # print('l3:', l3)
+                # print('l4:', l4)
+
+                assert l3 == l4
+
+                if isinstance(f.a, (FunctionDef, AsyncFunctionDef, ClassDef, Lambda, ListComp, SetComp, DictComp, GeneratorExp)):
+                    l5 = list(f.walk(True, self_=False, recurse=False, scope=True))
+                    l6 = list(f.walk(True, self_=False, recurse=False, scope=True, back=True))
+
+                    # for g in l5: print(g)
+                    # print('...')
+                    # for g in l6: print(g)
+
+                    assert l5 == l6[::-1]
+
+            except Exception:
+                print(f'... {bln}, {bcol} ... {f.bln}, {f.bcol} ... {f.pfield} ... {f.parent}')
+
+                f.parent.dump()
+
+                while f:
+                    print(f)
+
+                    f = f.parent
+
+                raise
+
+            bln, bcol = f.bln, f.bcol
 
 
 class ReputSrc(Fuzzy):
