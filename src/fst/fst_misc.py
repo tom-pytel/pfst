@@ -1066,7 +1066,7 @@ def _maybe_fix_elif(self: 'FST'):
         self._put_src(None, ln, col, ln, col + 2, False)
 
 
-def _maybe_fix(self: 'FST', pars: bool = True):
+def _maybe_fix_copy(self: 'FST', pars: bool = True):
     """Maybe fix source and `ctx` values for cut or copied nodes (to make subtrees parsable if the source is not after
     the operation). If cannot fix or ast is not parsable by itself then ast will be unchanged. Is meant to be a quick
     fix after a cut or copy operation, not full check, for that use `verify()`.
@@ -1144,15 +1144,21 @@ def _sanitize(self: 'FST') -> 'FST':  # -> Self
     return self
 
 
-def _parenthesize_grouping(self: 'FST', whole: bool = True):
+def _parenthesize_grouping(self: 'FST', whole: bool = True, *, star_child: bool = True):
     """Parenthesize anything with non-node grouping parentheses. Just adds text parens around node adjusting parent
     locations but not the node itself.
 
     **Parameters:**
     - `whole`: If at root then parenthesize whole source instead of just node.
+    - `star_child`: `Starred` expressions cannot be parenthesized, so when this is `True` the parentheses are applied to
+        the `value` child and the opening par is put right after the `*` to resolve any enclosure issues.
     """
 
     ln, col, end_ln, end_col = self.whole_loc if whole and self.is_root else self.loc
+
+    if isinstance(self.a, Starred) and star_child:
+        ln, col, _, _  = self.loc
+        col           += 1
 
     self._put_src([')'], end_ln, end_col, end_ln, end_col, True, True, self, offset_excluded=False)
     self._offset(*self._put_src(['('], ln, col, ln, col, False, False, self, offset_excluded=False))
@@ -1185,16 +1191,21 @@ def _parenthesize_node(self: 'FST', whole: bool = True, pars: str = '()'):
     a.col_offset = lines[ln].c2b(col)  # ditto on the `whole` thing
 
 
-def _unparenthesize_grouping(self: 'FST', share: bool = True) -> bool:
+def _unparenthesize_grouping(self: 'FST', share: bool = True, *, star_child: bool = True) -> bool:
     """Remove grouping parentheses from anything if present. Just remove text parens around node and everything between
     them and node adjusting parent locations but not the node itself.
 
     **Parameters:**
     - `share`: Whether to allow merge of parentheses into share single call argument generator expression or not.
+    - `star_child`: `Starred` expressions cannot be parenthesized, so when this is `True` the parentheses are removed
+        from the `value` child.
 
     **Returns:**
     - `bool`: Whether parentheses were removed or not (only removed if present to begin with and removable).
     """
+
+    if isinstance(self.a, Starred) and star_child:
+        self = self.value
 
     pars_loc, npars = self.pars(True)
 

@@ -2710,7 +2710,7 @@ class FST:
         _maybe_fix_tuple,
         _maybe_fix_set,
         _maybe_fix_elif,
-        _maybe_fix,
+        _maybe_fix_copy,
         _touch,
         _sanitize,
         _parenthesize_grouping,
