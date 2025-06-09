@@ -653,23 +653,26 @@ _compare_primitive_type_comments_func = (
 
 def compare_asts(ast1: AST, ast2: AST, *, locs: bool = False, type_comments: bool = False, ctx: bool = True,
                  recurse: bool = True, skip1: set | frozenset | None = None, skip2: set | frozenset | None = None,
-                 raise_: bool = False) -> bool:
+                 cb_primitive: Callable[[Any, Any, str, int], bool] | None = None, raise_: bool = False) -> bool:
     """Compare two trees including possibly locations and type comments using `walk2()`.
 
     **Parameters:**
     - `ast1`: First `AST` tree (redundant) to compare.
     - `ast2`: Second `AST` tree to compare.
     - `locs`: Whether to compare location attributes or not (`lineno`, `col_offset`, etc...).
-    - `type_comments`: Whether to compare type comments or not.
+    - `type_comments`: Whether to compare type comments or not. Ignored if `cb_primitive` provided.
     - `skip1`: List of nodes in the first tree to skip comparing, will skip the corresponding node in the second tree.
     - `skip2`: List of nodes in the second tree to skip comparing, will skip the corresponding node in the first tree.
+    - `cb_primitive`: Callback for comparing primitives. Is called with `cb_primitive(val1, val2, field, idx)` and
+        should return `True` if the two primitives compare same or not. Used to make certain fields always compare same.
     - `raise_`: Whether to raise `WalkFail` on compare fail or just return `False`.
 
     **Returns:**
     - `bool`: Indicating if the two trees compare equal under given parameters (if return on error allowed by `raise_`).
     """
 
-    cb_primitive = _compare_primitive_type_comments_func[bool(type_comments)]
+    if cb_primitive is None:
+        cb_primitive = _compare_primitive_type_comments_func[bool(type_comments)]
 
     try:
         for n1, n2 in walk2(ast1, ast2, cb_primitive, ctx=ctx, recurse=recurse, skip1=skip1, skip2=skip2):

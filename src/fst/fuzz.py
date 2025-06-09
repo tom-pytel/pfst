@@ -1,10 +1,12 @@
+"""Fuzzers, mostly mean for debugging `fst` itself."""
+
 import argparse
 import os
 import sys
 import sysconfig
 from ast import *
 from itertools import repeat
-from random import randint, seed, shuffle
+from random import choice, randint, seed, shuffle
 from types import NoneType
 from typing import Any, Generator
 
@@ -15,6 +17,7 @@ from .fst import FST, NodeError
 PROGRAM     = 'python -m fst.fuzz'
 _PY_VERSION = sys.version_info[:2]
 _PYLT12     = _PY_VERSION < (3, 12)
+_PYLT14     = _PY_VERSION < (3, 14)
 
 
 def find_pys(path) -> list[str]:
@@ -226,7 +229,7 @@ class ReputSrc(Fuzzy):
                 put_lines = fst.get_src(ln, col, end_ln, end_col, True)
 
                 if not (count % 10):
-                    s = f'{count, ln, col, end_ln, end_col}'
+                    # s = f'{count, ln, col, end_ln, end_col}'
 
                     # sys.stdout.write('\x08' * 40 + s.ljust(40))
                     sys.stdout.write('.')
@@ -363,7 +366,7 @@ class ReputOne(Fuzzy):
                     if self.verify:
                         fst.verify()
 
-            except:
+            except Exception:
                 print('-'*80)
                 print(sig, put, fst.child_path(f, True), idx, field, f.parent)
                 print(f)
@@ -397,7 +400,9 @@ class ReputOne(Fuzzy):
                         a.value = ''  # just don't compare, pain-in-the-ass because of AST JoinedStrs unparsing without needef information
 
         try:
-            compare_asts(fst.a, backup.a, raise_=True)
+            compare_asts(fst.a, backup.a,
+                         cb_primitive=(lambda p1, p2, n, i: n in ('kind', 'type_comment') or (p1.__class__ is p2.__class__ and p1 == p2)),
+                         raise_=True)
 
         except Exception as exc:
             if self.debug:
@@ -407,6 +412,146 @@ class ReputOne(Fuzzy):
                     pass
 
             raise
+
+
+class PutOneExprish(Fuzzy):
+    name    = 'put_one_exprish'
+    forever = True
+
+    exprs   = [
+        'a or b',
+        'a\nor\nb',
+        'a := b',
+        'a\n:=\nb',
+        'a | b',
+        'a\n|\nb',
+        'a ** b',
+        'a\n**\nb',
+        'not a',
+        'not\na',
+        '~a',
+        '~\na',
+        'lambda: None',
+        'lambda:\nNone',
+        'a if b else c',
+        'a\nif\nb\nelse\nc',
+        '{a: b}',
+        '{a:\nb}',
+        '{a}',
+        '{a,\nb}',
+        '[a for a in b]',
+        '[a\nfor\na\nin\nb]',
+        '{a for a in b}',
+        '{a\nfor\na\nin\nb}',
+        '{a: c for a, c in b}',
+        '{a: c\nfor\na, c\nin\nb}',
+        '(a for a in b)',
+        '(a\nfor\na\nin\nb)',
+        'await a',
+        'await\na',
+        'yield',
+        'yield a',
+        'yield\na',
+        'yield from a',
+        'yield\nfrom\na',
+        'a < b',
+        'a\n<\nb',
+        'f(a)',
+        'f\n(\na\n)',
+        "f'{a}'",
+        'f"{a}"',
+        "f'''{a}'''",
+        'f"""{a}"""',
+        '...',
+        'None',
+        'True',
+        'False',
+        '1',
+        '1.0',
+        '1j',
+        "'a'",
+        '"a"',
+        "'''a'''",
+        '"""a"""',
+        "b'a'",
+        'b"a"',
+        "b'''a'''",
+        'b"""a"""',
+        'a.b',
+        'a\n.\nb',
+        'a[b]',
+        'a\n[\nb\n]',
+        '*a',
+        '*\na',
+        '[a, b]',
+        '[\na\n,\nb\n]',
+        '(a, b)',
+        '(\na\n,\nb\n)',
+        'a,',
+        'a\n,',
+        'a, b',
+        'a\n,\nb',
+    ]
+
+    if not _PYLT14:
+        exprs.extend([
+            "t'{a}'",
+            't"{a}"',
+            "t'''{a}'''",
+            't"""{a}"""',
+        ])
+
+    exprs = [FST(e, 'expr') for e in exprs]
+
+    def fuzz_one(self, fst, fnm) -> bool:
+        # exprs = [f for f in fst.walk(True) if isinstance(f.a, expr) and getattr(f.a, 'ctx', None).__class__ is Load and f.is_parsable()]
+        count = 0
+        exprs = []
+
+        for f in fst.walk(True):
+            if isinstance(f.a, expr):
+                if getattr(f.a, 'ctx', None).__class__ is Load and not isinstance(f.parent.a, pattern) and f.is_parsable():
+                    exprs.append(f)
+
+        try:
+            for e in reversed(exprs):
+                if not ((count := count + 1) % 100):
+                    sys.stdout.write('.')
+                    sys.stdout.flush()
+
+                org  = choice(self.exprs)
+                code = org.copy()
+
+                match randint(0, 2):
+                    case 0:
+                        put  = 'fst'
+                    case 1:
+                        put  = 'ast'
+                        code = code.a
+                    case 2:
+                        put  = 'src'
+                        code = code.src
+
+                try:
+                    e.replace(code, raw=False)
+
+                except Exception:
+                    print('\n-', put, '-'*74)
+                    print((p := e.parent_stmtish()).src)
+                    print('.'*80)
+                    p.dump()
+                    print('.'*80)
+                    print(e.src)
+                    print('.'*80)
+                    org.dump()
+                    print('.'*80)
+                    print(org.src)
+
+                    raise
+
+
+        finally:
+            sys.stdout.write('\n')
 
 
 FUZZIES = {o.name: o for o in globals().values() if isinstance(o, type) and o is not Fuzzy and issubclass(o, Fuzzy)}
@@ -456,6 +601,8 @@ def main():
             print(f'Running: {f.name}')
 
             if not f.fuzz():
+                print(f'{f.name} has finished and will not be run again.')
+
                 fuzzies.remove(f)
 
         if not fuzzies:

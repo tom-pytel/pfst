@@ -417,7 +417,13 @@ def _parse_slice(src: str, parse_params: dict = {}) -> AST:
     "name" or even "a:b, c:d:e, g". Using this, naked `Starred` expressions parse to single element `Tuple` with the
     `Starred` as the only element."""
 
-    ast = ast_parse(f'a[\n{src}]', **parse_params).body[0].value.slice
+    try:
+        ast = ast_parse(f'a[\n{src}]', **parse_params).body[0].value.slice
+
+    except SyntaxError:  # maybe 'yield'
+        ast = ast_parse(f'a[(\n{src})]', **parse_params).body[0].value.slice
+
+        assert not isinstance(ast, Tuple)
 
     return _offset_linenos(_validate_indent(src, ast), -1)
 
