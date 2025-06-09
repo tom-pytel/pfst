@@ -32,6 +32,8 @@ def find_pys(path) -> list[str]:
 
 class Fuzzy:
     syspyfnms = None
+    name      = 'Fuzzy'
+    forever   = False
 
     def __init__(self, args: dict[str, Any]):
         self.args    = args
@@ -43,7 +45,7 @@ class Fuzzy:
         self.verbose = args.get('verbose')
         self.verify  = args.get('verify')
 
-        if paths := args['PATH']:
+        if paths := args.get('PATH'):
             fnms = sum((find_pys(path) for path in paths), start=[])
 
         elif Fuzzy.syspyfnms is None:
@@ -77,90 +79,106 @@ class Fuzzy:
 
     def fuzz(self) -> bool:
         for fnm, fst in self.iter_pys():
-            fst.dump()
+            seed((rnd_seed := randint(0, 2**32-1)) if (rnd_seed := self.seed) is None else rnd_seed)
 
-        return False
+            try:
+                self.fuzz_one(fst, fnm)
+
+            except Exception:
+                print('-'*80)
+                print('Random seed was:', rnd_seed)
+
+                raise
+
+        return self.forever
+
+
+    def fuzz_one(self, fst: FST, fnm: str):
+        pass
 
 
 class VerifyCopy(Fuzzy):
     name = 'verify_copy'
 
-    def fuzz(self) -> bool:
-        for fnm, fst in self.iter_pys():
-            for f in fst.walk('all'):
-                if not f.is_parsable():  # because .verify() needs to parse
-                    continue
+    def fuzz_one(self, fst, fnm) -> bool:
+        for f in fst.walk('all'):
+            if not f.is_parsable():  # because .verify() needs to parse
+                continue
 
-                g = None
+            g = None
 
-                try:
-                    g = f.copy()
+            try:
+                g = f.copy()
 
-                    g.verify()
+                g.verify()
 
-                except Exception:
-                    print('src:', '-'*75)
-                    print(f.src)
+            except Exception:
+                print('src:', '-'*75)
+                print(f.src)
+                print('.'*80)
+                f.dump('stmt')
+
+                if g:
+                    print('cpy:', '-'*75)
+                    print(g.src)
                     print('.'*80)
-                    f.dump('stmt')
+                    g.dump('stmt')
 
-                    if g:
-                        print('cpy:', '-'*75)
-                        print(g.src)
-                        print('.'*80)
-                        g.dump('stmt')
-
-                    raise
+                raise
 
 
 class ReputSrc(Fuzzy):
-    name = 'reput_src'
+    name    = 'reput_src'
+    forever = True
 
-    def fuzz(self) -> bool:
-        for fnm, fst in self.iter_pys():
-            lines = fst._lines
+    def fuzz_one(self, fst, fnm) -> bool:
+        lines = fst._lines
 
-            seed(rnd_seed := randint(0, 2**32-1))
+        seed(rnd_seed := randint(0, 2**32-1))
 
-            try:
-                for count in range(self.batch or 1000):
-                    copy      = fst.copy()
-                    ln        = randint(0, len(lines) - 1)
-                    col       = randint(0, len(lines[ln]))
-                    end_ln    = randint(ln, len(lines) - 1)
-                    end_col   = randint(col if end_ln == ln else 0, len(lines[end_ln]))
-                    put_lines = fst.get_src(ln, col, end_ln, end_col, True)
+        try:
+            for count in range(self.batch or 1000):
+                copy      = fst.copy()
+                ln        = randint(0, len(lines) - 1)
+                col       = randint(0, len(lines[ln]))
+                end_ln    = randint(ln, len(lines) - 1)
+                end_col   = randint(col if end_ln == ln else 0, len(lines[end_ln]))
+                put_lines = fst.get_src(ln, col, end_ln, end_col, True)
 
-                    if not (count % 10):
-                        s = f'{count, ln, col, end_ln, end_col}'
+                if not (count % 10):
+                    s = f'{count, ln, col, end_ln, end_col}'
 
-                        # sys.stdout.write('\x08' * 40 + s.ljust(40))
-                        sys.stdout.write('.')
-                        sys.stdout.flush()
+                    # sys.stdout.write('\x08' * 40 + s.ljust(40))
+                    sys.stdout.write('.')
+                    sys.stdout.flush()
 
-                    try:
-                        copy.put_src(put_lines, ln, col, end_ln, end_col)
-                        copy.verify()
+                try:
+                    copy.put_src(put_lines, ln, col, end_ln, end_col)
+                    copy.verify()
 
-                        compare_asts(fst.a, copy.a, locs=True, raise_=True)
+                    compare_asts(fst.a, copy.a, locs=True, raise_=True)
 
-                        assert copy.src == fst.src
+                    assert copy.src == fst.src
 
-                    except:
-                        print('\nRandom seed was:', rnd_seed)
-                        print(count, ln, col, end_ln, end_col)
-                        print('-'*80)
-                        print(put_lines)
-                        # print('.'*80)
-                        # print(copy.src)
+                except:
+                    print('\nRandom seed was:', rnd_seed)
+                    print(count, ln, col, end_ln, end_col)
+                    print('-'*80)
+                    print(put_lines)
+                    # print('.'*80)
+                    # print(copy.src)
 
-                        raise
+                    raise
 
-            finally:
-                print()
+        finally:
+            print()
 
-        return True
 
+from fst.fst_one import (
+    _PUT_ONE_HANDLERS, _put_one_exprish_optional, _put_one_identifier_optional,
+    _put_one_Dict_keys, _put_one_withitem_optional_vars,
+    _put_one_ExceptHandler_name, _put_one_keyword_arg, _put_one_NOT_IMPLEMENTED_YET,
+)
 
 class ReputOne(Fuzzy):
     name = 'reput_one'
@@ -169,168 +187,172 @@ class ReputOne(Fuzzy):
     VERIFY     = False  #True  #
     VERIFY_DEL = True
 
-    def fuzz(self) -> bool:
-        from fst.fst_one import (
-            _PUT_ONE_HANDLERS, _put_one_exprish_optional, _put_one_identifier_optional,
-            _put_one_Dict_keys, _put_one_withitem_optional_vars,
-            _put_one_ExceptHandler_name, _put_one_keyword_arg, _put_one_NOT_IMPLEMENTED_YET,
-        )
+    def fuzz_one(self, fst, fnm) -> bool:
+        backup = fst.copy()
+        count  = 0
 
-        for fnm, fst in self.iter_pys():
-            backup  = fst.copy()
-            count   = 0
+        for f in fst.walk(True, self_=False):
 
-            seed(rnd_seed := randint(0, 2**32-1))
-            # seed(643622660)
+            assert f.a is not None
 
-            for f in fst.walk(True, self_=False):
+            sig = (f.parent.a.__class__, f.pfield.name)
 
-                assert f.a is not None
+            if sig not in _PUT_ONE_HANDLERS or sig in ((Constant, 'value'), (MatchSingleton, 'value')):
+                continue
 
-                sig = (f.parent.a.__class__, f.pfield.name)
+            if (handler := _PUT_ONE_HANDLERS.get(sig, [None])[1]) is _put_one_NOT_IMPLEMENTED_YET:
+                continue
 
-                if sig not in _PUT_ONE_HANDLERS or sig in ((Constant, 'value'), (MatchSingleton, 'value')):
-                    continue
+            try:
+                field, idx = f.pfield
 
-                if (handler := _PUT_ONE_HANDLERS.get(sig, [None])[1]) is _put_one_NOT_IMPLEMENTED_YET:
-                    continue
+                put = None
+                g   = None
+                g   = f.copy()
+                ast = copy_ast(g.a)
+                src = g.src
+                put = 'ident'
 
-                try:
-                    field, idx = f.pfield
-
-                    put = None
-                    g   = None
-                    g   = f.copy()
-                    ast = copy_ast(g.a)
-                    src = g.src
-                    put = 'ident'
-
-                    if not (count := count + 1) % 100:
-                        sys.stdout.write('.'); sys.stdout.flush()
+                if not (count := count + 1) % 100:
+                    sys.stdout.write('.'); sys.stdout.flush()
 
 
-                    # IDENTIFIERS
+                # IDENTIFIERS
 
-                    for subfield in ('name', 'module', 'names', 'attr', 'id', 'arg', 'rest', 'kwd_attrs'):  # check identifiers
-                        changed = False
+                for subfield in ('name', 'module', 'names', 'attr', 'id', 'arg', 'rest', 'kwd_attrs'):  # check identifiers
+                    changed = False
 
-                        if (child := getattr(f.a, subfield, False)) is not False:
-                            delete  = self.DELETE and _PUT_ONE_HANDLERS.get((f.a.__class__, subfield), [None])[1] in (
-                                _put_one_identifier_optional, _put_one_ExceptHandler_name, _put_one_keyword_arg)
-                            changed = True
-                            subs    = list(enumerate(child)) if isinstance(child, list) else [(None, child)]
+                    if (child := getattr(f.a, subfield, False)) is not False:
+                        delete  = self.DELETE and _PUT_ONE_HANDLERS.get((f.a.__class__, subfield), [None])[1] in (
+                            _put_one_identifier_optional, _put_one_ExceptHandler_name, _put_one_keyword_arg)
+                        changed = True
+                        subs    = list(enumerate(child)) if isinstance(child, list) else [(None, child)]
 
-                            for i, child in subs:
-                                if isinstance(child, (str, NoneType)):
-                                    if delete:
-                                        try:
-                                            f.put(None, i, field=subfield, raw=False)
-                                        except Exception as e:
-                                            if 'in this state' not in str(e):
-                                                raise
+                        for i, child in subs:
+                            if isinstance(child, (str, NoneType)):
+                                if delete:
+                                    try:
+                                        f.put(None, i, field=subfield, raw=False)
+                                    except Exception as e:
+                                        if 'in this state' not in str(e):
+                                            raise
 
-                                        if self.verify:
-                                            fst.verify()
+                                    if self.verify:
+                                        fst.verify()
 
-                                    f.put(child, i, field=subfield, raw=False)
+                                f.put(child, i, field=subfield, raw=False)
 
-                    if changed:
-                        fst.verify()
+                if changed:
+                    fst.verify()
 
 
-                    # NODES
+                # NODES
 
-                    delete = self.DELETE and handler in (_put_one_exprish_optional, _put_one_Dict_keys,
-                                                         _put_one_withitem_optional_vars)
+                delete = self.DELETE and handler in (_put_one_exprish_optional, _put_one_Dict_keys,
+                                                        _put_one_withitem_optional_vars)
 
-                    if delete:
-                        put = 'del'
+                if delete:
+                    put = 'del'
 
-                        try:
-                            f.parent.put(None, idx, field=field, raw=False)
-                        except Exception as e:
-                            if not str(e).endswith('in this state'): raise
-
-                        if self.verify:
-                            fst.verify()
-
-                    put = 'fst'
-
-                    f.parent.put(g, idx, field=field, raw=False)
+                    try:
+                        f.parent.put(None, idx, field=field, raw=False)
+                    except Exception as e:
+                        if not str(e).endswith('in this state'): raise
 
                     if self.verify:
                         fst.verify()
 
-                    # if delete:
-                    #     try: f.parent.put(None, idx, field=field, raw=False)
-                    #     except Exception: pass
+                puts = [
+                    ('fst', lambda: f.parent.put(g, idx, field=field, raw=False)),
+                    ('ast', lambda: f.parent.put(ast, idx, field=field, raw=False)),
+                    ('src', lambda: f.parent.put(src, idx, field=field, raw=False)),
+                ]
 
-                    put = 'ast'
+                shuffle(puts)
 
-                    f.parent.put(ast, idx, field=field, raw=False)
-
-                    if self.verify:
-                        fst.verify()
-
-                    # if delete:
-                    #     try: f.parent.put(None, idx, field=field, raw=False)
-                    #     except Exception: pass
-
-                    put = 'src'
-
-                    f.parent.put(src, idx, field=field, raw=False)
+                for put, func in puts:
+                    func()
 
                     if self.verify:
                         fst.verify()
 
-                except:
-                    print('\nRandom seed was:', rnd_seed)
-                    print(sig, put, fst.child_path(f, True), idx, field, f.parent)
-                    print(f)
-                    print(f.src)
-                    print(g)
-                    print(g.src)
+                # put = 'fst'
 
-                    raise
+                # f.parent.put(g, idx, field=field, raw=False)
+
+                # if self.verify:
+                #     fst.verify()
+
+                # # if delete:
+                # #     try: f.parent.put(None, idx, field=field, raw=False)
+                # #     except Exception: pass
+
+                # put = 'ast'
+
+                # f.parent.put(ast, idx, field=field, raw=False)
+
+                # if self.verify:
+                #     fst.verify()
+
+                # # if delete:
+                # #     try: f.parent.put(None, idx, field=field, raw=False)
+                # #     except Exception: pass
+
+                # put = 'src'
+
+                # f.parent.put(src, idx, field=field, raw=False)
+
+                # if self.verify:
+                #     fst.verify()
+
+            except:
+                print('-'*80)
+                print(sig, put, fst.child_path(f, True), idx, field, f.parent)
+                print(f)
+                print(f.src)
+                print(g)
+                print(g.src)
+
+                raise
 
 
-            sys.stdout.write('\n')
+        sys.stdout.write('\n')
 
-            if not self.verify:
-                fst.verify()
+        if not self.verify:
+            fst.verify()
 
-            for ast in (fst.a, backup.a):
-                for a in walk(ast):
-                    if isinstance(a, Constant) and isinstance(a.value, str) and (p := (f := a.f).parent):
-                        if isinstance(pa := p.a, Expr):  # zero out docstrings because indentation may have changed for docstrings which do not respect their own indentation level
+        for ast in (fst.a, backup.a):
+            for a in walk(ast):
+                if isinstance(a, Constant) and isinstance(a.value, str) and (p := (f := a.f).parent):
+                    if isinstance(pa := p.a, Expr):  # zero out docstrings because indentation may have changed for docstrings which do not respect their own indentation level
+                        a.value = ''
+
+                    elif isinstance(pa, (JoinedStr, TemplateStr)):  # also zero out these Constants in JoinedStr if they are debug strings because different source for same effective expression will cause compare to fail
+                        if ((idx := f.pfield.idx + 1) < len(pa.values) and
+                            isinstance(na := pa.values[idx], (FormattedValue, Interpolation)) and
+                            (strs := na.f._get_fmtval_interp_strs()) and strs[0]
+                        ):
                             a.value = ''
 
-                        elif isinstance(pa, (JoinedStr, TemplateStr)):  # also zero out these Constants in JoinedStr if they are debug strings because different source for same effective expression will cause compare to fail
-                            if ((idx := f.pfield.idx + 1) < len(pa.values) and
-                                isinstance(na := pa.values[idx], (FormattedValue, Interpolation)) and
-                                (strs := na.f._get_fmtval_interp_strs()) and strs[0]
-                            ):
-                                a.value = ''
+        compare_asts(fst.a, backup.a, raise_=True)
 
-            compare_asts(fst.a, backup.a, raise_=True)
-
-            if self.verbose:
-                print(fst.src)
+        if self.verbose:
+            print(fst.src)
 
 
-FUZZERS = {o.name: o for o in globals().values() if isinstance(o, type) and o is not Fuzzy and issubclass(o, Fuzzy)}
+FUZZIES = {o.name: o for o in globals().values() if isinstance(o, type) and o is not Fuzzy and issubclass(o, Fuzzy)}
 
 
 def main():
     parser = argparse.ArgumentParser(
         prog=PROGRAM,
-        description=f'Available fuzzers: {", ".join(FUZZERS)}'
+        description=f'Available fuzzies: {", ".join(FUZZIES)}'
     )
 
     parser.add_argument('PATH', nargs='*',
                         help='path of file or directory of files to use')
     parser.add_argument('-f', '--fuzz', action='append', default=[],
-                        help='which fuzzers to run')
+                        help='which fuzzies to run')
     parser.add_argument('-b', '--batch', type=int, default=None,
                         help='batch size')
     parser.add_argument('-g', '--debug', type=int, default=None,
@@ -347,27 +369,27 @@ def main():
                         help='verify after everything (slower)')
 
     args = parser.parse_args()
-    fuzz = dict.fromkeys(sum((f.replace(',', ' ').split() for f in args.fuzz), start=[]) if args.fuzz else FUZZERS)
+    fuzz = dict.fromkeys(sum((f.replace(',', ' ').split() for f in args.fuzz), start=[]) if args.fuzz else FUZZIES)
 
     print(args)
 
-    if any((fuzzer := f) not in FUZZERS for f in fuzz):
-        raise ValueError(f'invalid fuzzer: {fuzzer}')
+    if any((fuzzy := f) not in FUZZIES for f in fuzz):
+        raise ValueError(f'invalid fuzzy: {fuzzy}')
 
-    fuzzers = []
+    fuzzies = []
     args    = vars(args)
 
     for f in fuzz:
-        fuzzers.append(FUZZERS[f](args))
+        fuzzies.append(FUZZIES[f](args))
 
     for _ in range(l) if (l := args['loop']) else repeat(None):
-        for f in fuzzers[:]:
+        for f in fuzzies[:]:
             print(f'Running: {f.name}')
 
             if not f.fuzz():
-                fuzzers.remove(f)
+                fuzzies.remove(f)
 
-        if not fuzzers:
+        if not fuzzies:
             print('Done...')
 
             break
