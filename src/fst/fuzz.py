@@ -566,6 +566,9 @@ class PutOneExprish(Fuzzy):
                 try:
                     e.replace(code, raw=False)
 
+                    if self.verify:
+                        fst.verify()
+
                 except Exception:
                     print('\n-', put, '-'*74)
                     print((p := e.parent_stmtish()).src)
@@ -603,6 +606,9 @@ class PutOneExprish(Fuzzy):
                 try:
                     e.replace(code, raw=False)
 
+                    if self.verify:
+                        fst.verify()
+
                 except Exception:
                     print('\n-', put, '-'*74)
                     print((p := e.parent_stmtish()).src)
@@ -618,6 +624,9 @@ class PutOneExprish(Fuzzy):
                     print(org.src)
 
                     raise
+
+            if self.verify:
+                fst.verify()
 
         finally:
             sys.stdout.write('\n')
