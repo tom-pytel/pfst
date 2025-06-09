@@ -9182,9 +9182,10 @@ a
         f.put('1', 'value', raw=False)
         self.assertEqual('(1).b', f.src)
 
-        f = FST('f"a{b}"')
-        f.values[1].put('{1}', 'value', raw=False)
-        f.verify()
+        if _PY_VERSION >= (3, 12):
+            f = FST('f"a{b}"')
+            f.values[1].put('{1}', 'value', raw=False)
+            f.verify()
 
         f = FST('f(o=o, *s)')
         self.assertRaises(ValueError, f.put, 'a', 0, 'args')

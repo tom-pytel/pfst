@@ -652,9 +652,9 @@ def main():
                         help='print debug info')
     parser.add_argument('-l', '--loop', type=int, default=None,
                         help='number of times to loop')
-    parser.add_argument('-d', '--seed', type=int, default=None,
+    parser.add_argument('-s', '--seed', type=int, default=None,
                         help='random seed (set per file)')
-    parser.add_argument('-s', '--shuffle', default=False, action='store_true',
+    parser.add_argument('-u', '--shuffle', default=False, action='store_true',
                         help='shuffle files on each loop')
     parser.add_argument('-v', '--verbose', default=False, action='store_true',
                         help='verbose output')

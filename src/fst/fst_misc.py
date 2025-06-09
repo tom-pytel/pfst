@@ -106,6 +106,8 @@ class _Modifying:
                     ):
                         if val_str is not None:
                             data.append((fst, None, True))
+                        elif not data:  # first one always gets put because needs to do other stuff
+                            data.append((fst, None, False))
 
                     else:
                         data.append((fst, len(dbg_str), bool(val_str)))
@@ -144,18 +146,34 @@ class _Modifying:
         elif fst is not self.fst:  # if parent of field changed then entire statement was reparsed and we have nothing to do
             return
 
-        for fst, len_old_dbg_str, do_val_str in self.data:
-            dbg_str, val_str, end_ln, end_col = fst._get_fmtval_interp_strs()
+        if data := self.data:
+            first = data[0]
 
-            if do_val_str:
-                fst.a.str = val_str
+            for strs in data:
+                fst, len_old_dbg_str, do_val_str  = strs
 
-            if len_old_dbg_str is not None:
-                lines            = fst.root._lines
-                c                = fst.parent.a.values[fst.pfield.idx - 1]
-                c.value          = c.value[:-len_old_dbg_str] + dbg_str
-                c.end_lineno     = end_ln + 1
-                c.end_col_offset = lines[end_ln].c2b(end_col)
+                if strs is first:  # on first one check to make sure no double '{{', and if so then fix: f'{{a}}' -> f'{ {a}}'
+                    ln, col, _, _ = fst.value.loc
+                    fix_const     = ((parent := fst.parent) and (idx := fst.pfield.idx) and   # parent should exist here but just in case, whether we need to reset start of debug string or not
+                        (f := parent.a.values[idx - 1].f).col == col and f.ln == ln)
+
+                    if fst.root.lines[ln].startswith('{', col):
+                        fst._put_src([' '], ln, col, ln, col, False)
+
+                        if fix_const:
+                            f.a.col_offset -= 1
+
+                dbg_str, val_str, end_ln, end_col = fst._get_fmtval_interp_strs()
+
+                if do_val_str:
+                    fst.a.str = val_str
+
+                if len_old_dbg_str is not None:
+                    lines            = fst.root._lines
+                    c                = fst.parent.a.values[fst.pfield.idx - 1]
+                    c.value          = c.value[:-len_old_dbg_str] + dbg_str
+                    c.end_lineno     = end_ln + 1
+                    c.end_col_offset = lines[end_ln].c2b(end_col)
 
 if _PY_VERSION < (3, 12):  # override _Modifying if py too low
     class _Modifying:
@@ -1433,7 +1451,7 @@ def _get_fmtval_interp_strs(self: 'FST') -> tuple[str | None, str | None, int, i
     get_dbg = src and (m := _re_fval_expr_equals.match(src)) and m.end() == len(src)
 
     if not get_dbg and not get_val:
-        return None
+        return None, None, 0, 0
 
 
     # CORRECT VERSION
