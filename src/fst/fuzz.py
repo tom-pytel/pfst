@@ -6,6 +6,7 @@ import sys
 import sysconfig
 from ast import *
 from itertools import repeat
+from math import log10
 from random import choice, randint, seed, shuffle
 from types import NoneType
 from typing import Any, Generator
@@ -62,23 +63,26 @@ class Fuzzy:
         self.fnms = fnms
 
     def iter_pys(self) -> Generator[tuple[str, FST], None, None]:
-        fnms = self.fnms
+        fnms  = self.fnms
+        width = int(log10(len(fnms) - 1 or 1)) + 1
 
         if self.args['shuffle']:
             fnms = fnms[:]
 
             shuffle(fnms)
 
-        for fnm in fnms:
+        for i, fnm in enumerate(fnms):
+            head = f'{i:<{width}}: {fnm}'
+
             try:
                 with open(fnm) as f:
                     fst = FST.fromsrc(f.read())
 
             except (NodeError, SyntaxError, UnicodeDecodeError) as exc:
-                print(f'{fnm} - read/parse fail: **{exc.__class__.__name__}**')
+                print(f'{head} - read/parse fail: **{exc.__class__.__name__}**')
 
             else:
-                print(fnm)
+                print(head)
 
                 yield fnm, fst
 
@@ -96,7 +100,6 @@ class Fuzzy:
                 raise
 
         return self.forever
-
 
     def fuzz_one(self, fst: FST, fnm: str):
         pass
@@ -503,15 +506,38 @@ class PutOneExprish(Fuzzy):
 
     exprs = [FST(e, 'expr') for e in exprs]
 
+    pats = [
+        '42',
+        'None',
+        '[a, *b]',
+        '[\na\n,\n*\nb\n]',
+        'a, *b',
+        '\na\n,\n*\nb\n',
+        '{"key": _}',
+        '{\n"key"\n:\n_\n}',
+        'SomeClass(attr=val)',
+        'SomeClass\n(\nattr\n=\nval\n)',
+        'as_var',
+        '1 as as_var',
+        '1\nas\nas_var',
+        '1 | 2',
+        '1\n|\n2',
+    ]
+
+    pats = [FST(e, 'pattern') for e in pats]
+
     def fuzz_one(self, fst, fnm) -> bool:
-        # exprs = [f for f in fst.walk(True) if isinstance(f.a, expr) and getattr(f.a, 'ctx', None).__class__ is Load and f.is_parsable()]
         count = 0
         exprs = []
+        pats  = []
 
         for f in fst.walk(True):
-            if isinstance(f.a, expr):
-                if getattr(f.a, 'ctx', None).__class__ is Load and not isinstance(f.parent.a, pattern) and f.is_parsable():
+            if isinstance(a := f.a, expr):
+                if getattr(a, 'ctx', None).__class__ is Load and not isinstance(f.parent.a, pattern) and f.is_parsable():
                     exprs.append(f)
+
+            elif isinstance(a, pattern):
+                pats.append(f)
 
         try:
             for e in reversed(exprs):
@@ -519,7 +545,12 @@ class PutOneExprish(Fuzzy):
                     sys.stdout.write('.')
                     sys.stdout.flush()
 
-                org  = choice(self.exprs)
+                while True:
+                    org = choice(self.exprs)
+
+                    if not (_PYLT12 and isinstance(org.a, Starred) and e.pfield.name == 'slice'):  # because py <3.12 can't have naked Starred in .slice
+                        break
+
                 code = org.copy()
 
                 match randint(0, 2):
@@ -540,15 +571,53 @@ class PutOneExprish(Fuzzy):
                     print((p := e.parent_stmtish()).src)
                     print('.'*80)
                     p.dump()
-                    print('.'*80)
+                    print('-'*80)
                     print(e.src)
                     print('.'*80)
+                    print(e.dump())
+                    print('-'*80)
                     org.dump()
                     print('.'*80)
                     print(org.src)
 
                     raise
 
+            for e in reversed(pats):
+                if not ((count := count + 1) % 100):
+                    sys.stdout.write('.')
+                    sys.stdout.flush()
+
+                org  = choice(self.pats)
+                code = org.copy()
+
+                match randint(0, 2):
+                    case 0:
+                        put  = 'fst'
+                    case 1:
+                        put  = 'ast'
+                        code = code.a
+                    case 2:
+                        put  = 'src'
+                        code = code.src
+
+                try:
+                    e.replace(code, raw=False)
+
+                except Exception:
+                    print('\n-', put, '-'*74)
+                    print((p := e.parent_stmtish()).src)
+                    print('.'*80)
+                    p.dump()
+                    print('-'*80)
+                    print(e.src)
+                    print('.'*80)
+                    print(e.dump())
+                    print('-'*80)
+                    org.dump()
+                    print('.'*80)
+                    print(org.src)
+
+                    raise
 
         finally:
             sys.stdout.write('\n')

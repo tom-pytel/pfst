@@ -2518,7 +2518,7 @@ class FST:
             return None
 
         ln, col, _, _ = self.loc
-        lpar          = self.root._lines[ln][col]
+        lpar          = self.root._lines[ln][col : col + 1]  # could be empty line or end of line
 
         if lpar == '(':
             return self._is_parenthesized_seq('patterns')
