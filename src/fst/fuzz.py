@@ -5,6 +5,7 @@ import sysconfig
 from ast import *
 from itertools import repeat
 from random import randint, seed, shuffle
+from types import NoneType
 from typing import Any, Generator
 
 from .astutil import *
@@ -32,7 +33,8 @@ class Fuzzy:
     syspyfnms = None
 
     def __init__(self, args: dict[str, Any]):
-        self.args = args
+        self.args   = args
+        self.verify = args['verify']
 
         if paths := args['PATH']:
             fnms = sum((find_pys(path) for path in paths), start=[])
@@ -151,6 +153,153 @@ class ReputSrc(Fuzzy):
                 print()
 
         return True
+
+
+class ReputOne(Fuzzy):
+    name = 'reput_one'
+
+    DELETE     = True  #False  #
+    VERIFY     = False  #True  #
+    VERIFY_DEL = True
+
+    def fuzz(self) -> bool:
+        from fst.fst_one import (
+            _PUT_ONE_HANDLERS, _put_one_exprish_optional, _put_one_identifier_optional,
+            _put_one_Dict_keys, _put_one_withitem_optional_vars,
+            _put_one_ExceptHandler_name, _put_one_keyword_arg, _put_one_NOT_IMPLEMENTED_YET,
+        )
+
+        for fnm, fst in self.iter_pys():
+            backup  = fst.copy()
+            lines   = fst._lines
+            prevloc = (0, 0, 0, 0)
+            count   = 0
+
+            seed(rnd_seed := randint(0, 2**32-1))
+            # seed(643622660)
+
+            # for p in [fst.child_path(f) for f in fst.walk(True, self_=False)]:
+            #     f = fst.child_from_path(p)
+            for f in fst.walk(True, self_=False):
+
+                assert f.a is not None
+
+                sig = (f.parent.a.__class__, f.pfield.name)
+
+                if sig not in _PUT_ONE_HANDLERS or sig in ((Constant, 'value'), (MatchSingleton, 'value')):
+                    continue
+
+                if (handler := _PUT_ONE_HANDLERS.get(sig, [None])[1]) is _put_one_NOT_IMPLEMENTED_YET:
+                    continue
+
+                try:
+                    field, idx = f.pfield
+
+                    put = None
+                    g   = None
+                    g   = f.copy()
+                    ast = copy_ast(g.a)
+                    src = g.src
+                    put = 'ident'
+
+                    if not (count := count + 1) % 100:
+                        sys.stdout.write('.'); sys.stdout.flush()
+
+                    # sys.stdout.write('\x08' * 32 + f'{tuple(f.loc)}'.ljust(32)); sys.stdout.flush()
+                    # if f.loc[0] < prevloc[0]: print('<', tuple(prevloc))
+                    # prevloc = f.loc
+
+
+                    # IDENTIFIERS
+
+                    for subfield in ('name', 'module', 'names', 'attr', 'id', 'arg', 'rest', 'kwd_attrs'):  # check identifiers
+                        changed = False
+
+                        if (child := getattr(f.a, subfield, False)) is not False:
+                            delete  = self.DELETE and _PUT_ONE_HANDLERS.get((f.a.__class__, subfield), [None])[1] in (
+                                _put_one_identifier_optional, _put_one_ExceptHandler_name, _put_one_keyword_arg)
+                            changed = True
+                            subs    = list(enumerate(child)) if isinstance(child, list) else [(None, child)]
+
+                            for i, child in subs:
+                                if isinstance(child, (str, NoneType)):
+                                    if delete:
+                                        try: f.put(None, i, field=subfield, raw=False)
+                                        except Exception as e:
+                                            if 'in this state' not in str(e): raise
+                                        if self.verify: fst.verify()
+                                        # elif VERIFY_DEL: fst.verify()
+
+                                    f.put(child, i, field=subfield, raw=False)
+
+                    if changed:
+                        fst.verify()
+
+
+                    # NODES
+
+                    delete = self.DELETE and handler in (_put_one_exprish_optional, _put_one_Dict_keys,
+                                                         _put_one_withitem_optional_vars)
+
+                    # if not delete: continue
+
+                    # print('...', g, g.src)
+                    # f.parent.dump(True); print(f.parent.src); print()
+
+                    if delete:
+                        put = 'del'
+                        try: f.parent.put(None, idx, field=field, raw=False)
+                        except Exception as e:
+                            if not str(e).endswith('in this state'): raise
+                        # f.parent.dump(True); print(f.parent.src); print()
+                        if self.verify: fst.verify()
+                        # elif VERIFY_DEL: fst.verify()
+
+                    put = 'fst'
+                    f.parent.put(g, idx, field=field, raw=False)
+                    # f.parent.dump(True); print(f.parent.src); print()
+                    if self.verify: fst.verify()
+
+                    # if delete:
+                    #     try: f.parent.put(None, idx, field=field, raw=False)
+                    #     except Exception: pass
+
+                    put = 'ast'
+                    f.parent.put(ast, idx, field=field, raw=False)
+                    # f.parent.dump(True); print(f.parent.src); print()
+                    if self.verify: fst.verify()
+
+                    # if delete:
+                    #     try: f.parent.put(None, idx, field=field, raw=False)
+                    #     except Exception: pass
+
+                    put = 'src'
+                    f.parent.put(src, idx, field=field, raw=False)
+                    # f.parent.dump(True); print(f.parent.src); print()
+                    if self.verify: fst.verify()
+
+                except:
+                    print('\nRandom seed was:', rnd_seed)
+                    print(sig, put, fst.child_path(f, True), idx, field, f.parent)
+                    print(f)
+                    print(f.src)
+                    print(g)
+                    print(g.src)
+
+                    raise
+
+
+            sys.stdout.write('\n')
+
+            fst.verify()
+
+            for ast in (fst.a, backup.a):  # zero out docstrings because indentation may have changed for docstrings which do not respect their own indentation level
+                for a in walk(ast):
+                    if isinstance(a, Constant) and isinstance(a.value, str) and (p := (f := a.f).parent) and isinstance(p.a, Expr):
+                        a.value = ''
+            compare_asts(fst.a, backup.a, raise_=True)
+
+            print(fst.src)
 
 
 FUZZERS = {o.name: o for o in globals().values() if isinstance(o, type) and o is not Fuzzy and issubclass(o, Fuzzy)}

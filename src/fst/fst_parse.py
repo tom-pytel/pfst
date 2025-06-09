@@ -207,13 +207,13 @@ def _parse_stmtishs(src: str, parse_params: dict = {}) -> AST:
     """Parse zero or more `stmt`s, 'ExceptHander's or 'match_case's and return them in a `Module` `body`."""
 
     if firstsrc := _re_first_src.search(src):
-        if (col := len(firstsrc.group(0)) - 1):
+        if len(firstsrc.group(0)) - 1:
             raise IndentationError('unexpected indent')
 
-        if _re_except.match(src, col):
+        if _re_except.match(src, start := firstsrc.start()):
             return _parse_ExceptHandlers(src, parse_params)
 
-        if _re_case.match(src, col):
+        if _re_case.match(src, start):
             try:
                 return _parse_match_cases(src, parse_params)
             except IndentationError:
@@ -724,13 +724,13 @@ def _code_as_stmtishs(code: Code, parse_params: dict = {}, *, is_trystar: bool =
             code = '\n'.join(code)
 
         if firstsrc := _re_first_src.search(code):
-            if (col := len(firstsrc.group(0)) - 1):
+            if len(firstsrc.group(0)) - 1:
                 raise IndentationError('unexpected indent')
 
-            if _re_except.match(code, col):
+            if _re_except.match(code, start := firstsrc.start()):
                 return _code_as_ExceptHandlers(code, parse_params)
 
-            if _re_case.match(code, col):
+            if _re_case.match(code, start):
                 try:
                     return _code_as_match_cases(code, parse_params)
                 except IndentationError:
