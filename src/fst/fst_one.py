@@ -819,6 +819,21 @@ def _put_one_ClassDef_bases(self: 'FST', code: Code | None, idx: int | None, fie
     return _put_one_exprish_required(self, code, idx, field, child, static, False, **options)
 
 
+def _put_one_Lambda_arguments(self: 'FST', code: Code | None, idx: int | None, field: str, child: AST,
+                              static: onestatic, **options) -> 'FST':
+    """Put Lambda.arguments. Does not have location if there are no arguments."""
+
+    if code is None:
+        code = ''
+
+    child  = _validate_put(self, code, idx, field, child)  # we want to do it in same order as all other puts
+    code   = static.code_as(code, self.root.parse_params)  # and we coerce here just so we can check if is empty args being put to set the prefix correctly
+    prefix = ' ' if code.loc else ''  # if arguments has .loc then it is not empty
+    target = self._loc_lambda_args_entire()
+
+    return _put_one_exprish_required(self, code, idx, field, child, static, False, target, prefix, **options)
+
+
 def _put_one_Compare_combined(self: 'FST', code: Code | None, idx: int | None, field: str, child: None,
                               static: onestatic, **options) -> 'FST':
     """Put to combined [Compare.left, Compare.comparators] using this total indexing."""
@@ -843,19 +858,28 @@ def _put_one_Call_args(self: 'FST', code: Code | None, idx: int | None, field: s
     return _put_one_exprish_required(self, code, idx, field, child, static, False, **options)
 
 
-def _put_one_Lambda_arguments(self: 'FST', code: Code | None, idx: int | None, field: str, child: AST,
-                              static: onestatic, **options) -> 'FST':
-    """Put Lambda.arguments. Does not have location if there are no arguments."""
+def _put_one_Attribute_Subscript_value(self: 'FST', code: Code | None, idx: int | None, field: str, child: None,
+                                       static: onestatic, **options) -> 'FST':
+    """If this gets parenthesized in an AnnAssign then the whole AnnAssign target needs to be parenthesized."""
 
-    if code is None:
-        code = ''
+    ret = _put_one_exprish_required(self, code, idx, field, child, static, **options)
 
-    child  = _validate_put(self, code, idx, field, child)  # we want to do it in same order as all other puts
-    code   = static.code_as(code, self.root.parse_params)  # and we coerce here just so we can check if is empty args being put to set the prefix correctly
-    prefix = ' ' if code.loc else ''  # if arguments has .loc then it is not empty
-    target = self._loc_lambda_args_entire()
+    if ret.pars().n:
+        f = ret
 
-    return _put_one_exprish_required(self, code, idx, field, child, static, False, target, prefix, **options)
+        while (parent := f.parent) and f.pfield.name in ('value', 'target'):
+            if isinstance(a := parent.a, AnnAssign):
+                if not parent.pars().n:
+                    f._parenthesize_grouping()
+
+                break
+
+            if not isinstance(a, (Attribute, Subscript)):
+                break
+
+            f = parent
+
+    return ret
 
 
 def _put_one_Dict_keys(self: 'FST', code: Code | None, idx: int | None, field: str, child: AST,
@@ -1923,9 +1947,9 @@ _PUT_ONE_HANDLERS = {
     (JoinedStr, 'values'):                (True, _put_one_NOT_IMPLEMENTED_YET, None), # expr*
     (TemplateStr, 'values'):              (True, _put_one_NOT_IMPLEMENTED_YET, None), # expr*
     (Constant, 'value'):                  (False, _put_one_constant, onestatic(_one_info_constant, Constant)), # constant
-    (Attribute, 'value'):                 (False, _put_one_exprish_required, _onestatic_expr_required), # expr
+    (Attribute, 'value'):                 (False, _put_one_Attribute_Subscript_value, _onestatic_expr_required), # expr
     (Attribute, 'attr'):                  (False, _put_one_identifier_required, onestatic(_one_info_Attribute_attr, _restrict_default, code_as=_code_as_identifier)), # identifier
-    (Subscript, 'value'):                 (False, _put_one_exprish_required, _onestatic_expr_required), # expr
+    (Subscript, 'value'):                 (False, _put_one_Attribute_Subscript_value, _onestatic_expr_required), # expr
     (Subscript, 'slice'):                 (False, _put_one_exprish_required, onestatic(_one_info_exprish_required, _restrict_fstr_values, code_as=_code_as_slice)), # expr
     (Starred, 'value'):                   (False, _put_one_exprish_required, _onestatic_expr_required), # expr
     (Name, 'id'):                         (False, _put_one_identifier_required, _onestatic_identifier_required), # identifier

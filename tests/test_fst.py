@@ -9185,6 +9185,17 @@ a
         if _PY_VERSION >= (3, 12):
             f = FST('f"a{b}"')
             f.values[1].put('{1}', 'value', raw=False)
+            self.assertEqual('f"a{ {1}}"', f.src)
+            f.verify()
+
+            f = FST('f"{b=}"')
+            f.values[1].put('{1}', 'value', raw=False)
+            self.assertEqual('f"{ {1}=}"', f.src)
+            f.verify()
+
+            f = FST('f"a{b=}"')
+            f.values[1].put('{1}', 'value', raw=False)
+            self.assertEqual('f"a{ {1}=}"', f.src)
             f.verify()
 
         f = FST('f(o=o, *s)')
@@ -9202,6 +9213,21 @@ a
         f = FST('with a: pass')
         f.items[0].put('b\n,', 'context_expr')
         self.assertEqual('with ((b\n,)): pass', f.src)
+        f.verify()
+
+        f = FST('a.b: int')
+        f.target.value.replace('(c.d)', pars=True)
+        self.assertEqual('((c.d).b): int', f.src)
+        f.verify()
+
+        f = FST('a[b]: int')
+        f.target.value.replace('(c[d])', pars=True)
+        self.assertEqual('((c[d])[b]): int', f.src)
+        f.verify()
+
+        f = FST('a.b[c].d[e]: int')
+        f.target.value.value.value.value.replace('(f[g])', pars=True)
+        self.assertEqual('((f[g]).b[c].d[e]): int', f.src)
         f.verify()
 
     def test_put_one_pars(self):
