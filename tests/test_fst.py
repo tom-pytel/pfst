@@ -9186,6 +9186,16 @@ a
         f.values[1].put('{1}', 'value', raw=False)
         f.verify()
 
+        f = FST('f(o=o, *s)')
+        self.assertRaises(ValueError, f.put, 'a', 0, 'args')
+        f.put('*a', 0, 'args')
+        self.assertEqual('f(o=o, *a)', f.src)
+
+        f = FST('class cls(o=o, *s): pass')
+        self.assertRaises(ValueError, f.put, 'a', 0, 'bases')
+        f.put('*a', 0, 'bases')
+        self.assertEqual('class cls(o=o, *a): pass', f.src)
+
     def test_put_one_pars(self):
         f = FST('a = b', 'exec').body[0]
         g = FST('(i := j)', 'exec').body[0].value.copy(pars=False)

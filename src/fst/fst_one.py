@@ -804,13 +804,43 @@ def _put_one_FunctionDef_arguments(self: 'FST', code: Code | None, idx: int | No
                                      **options)
 
 
+def _put_one_ClassDef_bases(self: 'FST', code: Code | None, idx: int | None, field: str, child: None, static: onestatic,
+                            **options) -> 'FST':
+    """Can't replace Starred base with non-Starred base after keywords."""
+
+    child = _validate_put(self, code, idx, field, child)  # we want to do it in same order as all other puts
+    code  = static.code_as(code, self.root.parse_params)
+
+    if (isinstance(child, Starred) and not isinstance(code.a, Starred) and (keywords := self.a.keywords) and
+        child.f.loc > keywords[0].f.loc
+    ):
+        raise ValueError(f'cannot replace Starred ClassDef.bases[{idx}] with non-Starred base in this state (after keywords)')
+
+    return _put_one_exprish_required(self, code, idx, field, child, static, False, **options)
+
+
 def _put_one_Compare_combined(self: 'FST', code: Code | None, idx: int | None, field: str, child: None,
-                          static: onestatic, **options) -> 'FST':
+                              static: onestatic, **options) -> 'FST':
     """Put to combined [Compare.left, Compare.comparators] using this total indexing."""
 
     idx, field, child = _params_Compare_combined(self, idx)
 
     return _put_one_exprish_required(self, code, idx, field, child, static, **options)
+
+
+def _put_one_Call_args(self: 'FST', code: Code | None, idx: int | None, field: str, child: None, static: onestatic,
+                       **options) -> 'FST':
+    """Can't replace Starred arg with non-Starred arg after keywords."""
+
+    child = _validate_put(self, code, idx, field, child)  # we want to do it in same order as all other puts
+    code  = static.code_as(code, self.root.parse_params)
+
+    if (isinstance(child, Starred) and not isinstance(code.a, Starred) and (keywords := self.a.keywords) and
+        child.f.loc > keywords[0].f.loc
+    ):
+        raise ValueError(f'cannot replace Starred Call.args[{idx}] with non-Starred arg in this state (after keywords)')
+
+    return _put_one_exprish_required(self, code, idx, field, child, static, False, **options)
 
 
 def _put_one_FormattedValue_Interpolation_value(self: 'FST', code: Code | None, idx: int | None, field: str, child: None,
@@ -1791,7 +1821,7 @@ _PUT_ONE_HANDLERS = {
     (ClassDef, 'decorator_list'):         (True,  _put_one_exprish_required, _onestatic_expr_required), # expr*
     (ClassDef, 'name'):                   (False, _put_one_identifier_required, onestatic(_one_info_ClassDef_name, _restrict_default, code_as=_code_as_identifier)), # identifier
     (ClassDef, 'type_params'):            (True,  _put_one_exprish_required, _onestatic_type_param_required), # type_param*
-    (ClassDef, 'bases'):                  (True,  _put_one_exprish_required, _onestatic_expr_required), # expr*
+    (ClassDef, 'bases'):                  (True,  _put_one_ClassDef_bases, _onestatic_expr_required), # expr*
     (ClassDef, 'keywords'):               (True,  _put_one_exprish_required, _onestatic_keyword_required), # keyword*
     (ClassDef, 'body'):                   (True,  None, None), # stmt*
     (Return, 'value'):                    (False, _put_one_exprish_optional, onestatic(_one_info_Return_value, _restrict_default)), # expr?
@@ -1880,7 +1910,7 @@ _PUT_ONE_HANDLERS = {
     (Compare, 'comparators'):             (False, _put_one_exprish_required, _onestatic_expr_required), # expr*
     (Compare, ''):                        (False, _put_one_Compare_combined, _onestatic_expr_required), # expr*
     (Call, 'func'):                       (False, _put_one_exprish_required, _onestatic_expr_required), # expr
-    (Call, 'args'):                       (True,  _put_one_exprish_required, onestatic(_one_info_exprish_required, _restrict_default, code_as=_code_as_callarg)), # expr*
+    (Call, 'args'):                       (True,  _put_one_Call_args, onestatic(_one_info_exprish_required, _restrict_default, code_as=_code_as_callarg)), # expr*
     (Call, 'keywords'):                   (True,  _put_one_exprish_required, _onestatic_keyword_required), # keyword*
     (FormattedValue, 'value'):            (False, _put_one_FormattedValue_Interpolation_value, _onestatic_expr_required), # expr
     (FormattedValue, 'conversion'):       (False, _put_one_NOT_IMPLEMENTED_YET, onestatic(_one_info_conversion, Constant)), # int  # onestatic only here for info for raw put, Constant must be str

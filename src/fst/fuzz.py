@@ -319,6 +319,7 @@ class ReputOne(Fuzzy):
                                 if delete:
                                     try:
                                         f.put(None, i, field=subfield, raw=False)
+
                                     except Exception as e:
                                         if 'in this state' not in str(e):
                                             raise
@@ -534,7 +535,6 @@ class PutOneExprish(Fuzzy):
         for f in fst.walk(True):
             if isinstance(a := f.a, expr):
                 if getattr(a, 'ctx', None).__class__ is Load and not isinstance(f.parent.a, pattern) and f.is_parsable():
-                    # not isinstance(a, Starred) and   # don't mess with Starred because its just too inconsistemt
                     exprs.append(f)
 
             elif isinstance(a, pattern):
@@ -570,21 +570,22 @@ class PutOneExprish(Fuzzy):
                     if self.verify:
                         fst.verify()
 
-                except Exception:
-                    print('\n-', put, '-'*74)
-                    print((p := e.parent_stmtish()).src)
-                    print('.'*80)
-                    p.dump()
-                    print('-'*80)
-                    print(e.src)
-                    print('.'*80)
-                    print(e.dump())
-                    print('-'*80)
-                    org.dump()
-                    print('.'*80)
-                    print(org.src)
+                except Exception as exc:
+                    if 'in this state' not in str(exc):  # started with because of Starred Call.args being replaced after keywords
+                        print('\n-', put, '-'*74)
+                        print((p := e.parent_stmtish()).src)
+                        print('.'*80)
+                        p.dump()
+                        print('-'*80)
+                        print(e.src)
+                        print('.'*80)
+                        print(e.dump())
+                        print('-'*80)
+                        org.dump()
+                        print('.'*80)
+                        print(org.src)
 
-                    raise
+                        raise
 
             for e in reversed(pats):
                 if not ((count := count + 1) % 100):
