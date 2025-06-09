@@ -9,6 +9,7 @@ from types import NoneType
 from typing import Any, Generator
 
 from .astutil import *
+from .astutil import TemplateStr, Interpolation
 from .fst import FST, NodeError
 
 PROGRAM = 'python -m fst.fuzz'
@@ -33,8 +34,14 @@ class Fuzzy:
     syspyfnms = None
 
     def __init__(self, args: dict[str, Any]):
-        self.args   = args
-        self.verify = args['verify']
+        self.args    = args
+        self.batch   = args.get('batch')
+        self.debug   = args.get('debug')
+        self.loop    = args.get('loop')
+        self.seed    = args.get('seed')
+        self.shuffle = args.get('shuffle')
+        self.verbose = args.get('verbose')
+        self.verify  = args.get('verify')
 
         if paths := args['PATH']:
             fnms = sum((find_pys(path) for path in paths), start=[])
@@ -116,7 +123,7 @@ class ReputSrc(Fuzzy):
             seed(rnd_seed := randint(0, 2**32-1))
 
             try:
-                for count in range(self.args.get('batch') or 1000):
+                for count in range(self.batch or 1000):
                     copy      = fst.copy()
                     ln        = randint(0, len(lines) - 1)
                     col       = randint(0, len(lines[ln]))
@@ -171,15 +178,11 @@ class ReputOne(Fuzzy):
 
         for fnm, fst in self.iter_pys():
             backup  = fst.copy()
-            lines   = fst._lines
-            prevloc = (0, 0, 0, 0)
             count   = 0
 
             seed(rnd_seed := randint(0, 2**32-1))
             # seed(643622660)
 
-            # for p in [fst.child_path(f) for f in fst.walk(True, self_=False)]:
-            #     f = fst.child_from_path(p)
             for f in fst.walk(True, self_=False):
 
                 assert f.a is not None
@@ -205,10 +208,6 @@ class ReputOne(Fuzzy):
                     if not (count := count + 1) % 100:
                         sys.stdout.write('.'); sys.stdout.flush()
 
-                    # sys.stdout.write('\x08' * 32 + f'{tuple(f.loc)}'.ljust(32)); sys.stdout.flush()
-                    # if f.loc[0] < prevloc[0]: print('<', tuple(prevloc))
-                    # prevloc = f.loc
-
 
                     # IDENTIFIERS
 
@@ -224,11 +223,14 @@ class ReputOne(Fuzzy):
                             for i, child in subs:
                                 if isinstance(child, (str, NoneType)):
                                     if delete:
-                                        try: f.put(None, i, field=subfield, raw=False)
+                                        try:
+                                            f.put(None, i, field=subfield, raw=False)
                                         except Exception as e:
-                                            if 'in this state' not in str(e): raise
-                                        if self.verify: fst.verify()
-                                        # elif VERIFY_DEL: fst.verify()
+                                            if 'in this state' not in str(e):
+                                                raise
+
+                                        if self.verify:
+                                            fst.verify()
 
                                     f.put(child, i, field=subfield, raw=False)
 
@@ -241,42 +243,45 @@ class ReputOne(Fuzzy):
                     delete = self.DELETE and handler in (_put_one_exprish_optional, _put_one_Dict_keys,
                                                          _put_one_withitem_optional_vars)
 
-                    # if not delete: continue
-
-                    # print('...', g, g.src)
-                    # f.parent.dump(True); print(f.parent.src); print()
-
                     if delete:
                         put = 'del'
-                        try: f.parent.put(None, idx, field=field, raw=False)
+
+                        try:
+                            f.parent.put(None, idx, field=field, raw=False)
                         except Exception as e:
                             if not str(e).endswith('in this state'): raise
-                        # f.parent.dump(True); print(f.parent.src); print()
-                        if self.verify: fst.verify()
-                        # elif VERIFY_DEL: fst.verify()
+
+                        if self.verify:
+                            fst.verify()
 
                     put = 'fst'
+
                     f.parent.put(g, idx, field=field, raw=False)
-                    # f.parent.dump(True); print(f.parent.src); print()
-                    if self.verify: fst.verify()
+
+                    if self.verify:
+                        fst.verify()
 
                     # if delete:
                     #     try: f.parent.put(None, idx, field=field, raw=False)
                     #     except Exception: pass
 
                     put = 'ast'
+
                     f.parent.put(ast, idx, field=field, raw=False)
-                    # f.parent.dump(True); print(f.parent.src); print()
-                    if self.verify: fst.verify()
+
+                    if self.verify:
+                        fst.verify()
 
                     # if delete:
                     #     try: f.parent.put(None, idx, field=field, raw=False)
                     #     except Exception: pass
 
                     put = 'src'
+
                     f.parent.put(src, idx, field=field, raw=False)
-                    # f.parent.dump(True); print(f.parent.src); print()
-                    if self.verify: fst.verify()
+
+                    if self.verify:
+                        fst.verify()
 
                 except:
                     print('\nRandom seed was:', rnd_seed)
@@ -291,15 +296,26 @@ class ReputOne(Fuzzy):
 
             sys.stdout.write('\n')
 
-            fst.verify()
+            if not self.verify:
+                fst.verify()
 
-            for ast in (fst.a, backup.a):  # zero out docstrings because indentation may have changed for docstrings which do not respect their own indentation level
+            for ast in (fst.a, backup.a):
                 for a in walk(ast):
-                    if isinstance(a, Constant) and isinstance(a.value, str) and (p := (f := a.f).parent) and isinstance(p.a, Expr):
-                        a.value = ''
+                    if isinstance(a, Constant) and isinstance(a.value, str) and (p := (f := a.f).parent):
+                        if isinstance(pa := p.a, Expr):  # zero out docstrings because indentation may have changed for docstrings which do not respect their own indentation level
+                            a.value = ''
+
+                        elif isinstance(pa, (JoinedStr, TemplateStr)):  # also zero out these Constants in JoinedStr if they are debug strings because different source for same effective expression will cause compare to fail
+                            if ((idx := f.pfield.idx + 1) < len(pa.values) and
+                                isinstance(na := pa.values[idx], (FormattedValue, Interpolation)) and
+                                (strs := na.f._get_fmtval_interp_strs()) and strs[0]
+                            ):
+                                a.value = ''
+
             compare_asts(fst.a, backup.a, raise_=True)
 
-            print(fst.src)
+            if self.verbose:
+                print(fst.src)
 
 
 FUZZERS = {o.name: o for o in globals().values() if isinstance(o, type) and o is not Fuzzy and issubclass(o, Fuzzy)}
@@ -315,13 +331,19 @@ def main():
                         help='path of file or directory of files to use')
     parser.add_argument('-f', '--fuzz', action='append', default=[],
                         help='which fuzzers to run')
-    parser.add_argument('-s', '--shuffle', default=False, action='store_true',
-                        help='shuffle files on each loop')
-    parser.add_argument('-l', '--loop', type=int, default=None,
-                        help='number of times to loop')
     parser.add_argument('-b', '--batch', type=int, default=None,
                         help='batch size')
-    parser.add_argument('-v', '--verify', default=False, action='store_true',
+    parser.add_argument('-g', '--debug', type=int, default=None,
+                        help='print debug info')
+    parser.add_argument('-l', '--loop', type=int, default=None,
+                        help='number of times to loop')
+    parser.add_argument('-d', '--seed', type=int, default=None,
+                        help='random seed (set per file)')
+    parser.add_argument('-s', '--shuffle', default=False, action='store_true',
+                        help='shuffle files on each loop')
+    parser.add_argument('-v', '--verbose', default=False, action='store_true',
+                        help='verbose output')
+    parser.add_argument('-y', '--verify', default=False, action='store_true',
                         help='verify after everything (slower)')
 
     args = parser.parse_args()
@@ -339,14 +361,13 @@ def main():
         fuzzers.append(FUZZERS[f](args))
 
     for _ in range(l) if (l := args['loop']) else repeat(None):
-        still_going = 0
-
-        for f in fuzzers:
+        for f in fuzzers[:]:
             print(f'Running: {f.name}')
 
-            still_going += bool(f.fuzz())
+            if not f.fuzz():
+                fuzzers.remove(f)
 
-        if not still_going:
+        if not fuzzers:
             print('Done...')
 
             break

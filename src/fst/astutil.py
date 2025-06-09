@@ -136,14 +136,14 @@ class bistr(str):
 
 constant = EllipsisType | int | float | complex | str | bytes | bool | None
 
-re_identifier              = re.compile(r'[^\d\W]\w*')
-re_identifier_only         = re.compile(r'^[^\d\W]\w*$')
-re_identifier_dotted       = re.compile(r'[^\d\W]\w*(?:\.[^\d\W]\w*)*')
-re_identifier_dotted_only  = re.compile(r'^[^\d\W]\w*(?:\.[^\d\W]\w*)*$')
-re_identifier_or_star      = re.compile(r'(?:\*|[^\d\W]\w*)')
-re_identifier_or_star_only = re.compile(r'^(?:\*|[^\d\W]\w*)$')
-re_identifier_alias        = re.compile(r'(?:\*|[^\d\W]\w*(?:\.[^\d\W]\w*)*)')
-re_identifier_alias_only   = re.compile(r'^(?:\*|[^\d\W]\w*(?:\.[^\d\W]\w*)*)$')
+re_identifier              = re.compile(r'[^\d\W][\w\uFE00-\uFE0F\U000E0100-\U000E01EF]*')
+re_identifier_only         = re.compile(r'^[^\d\W][\w\uFE00-\uFE0F\U000E0100-\U000E01EF]*$')
+re_identifier_dotted       = re.compile(r'[^\d\W][\w\uFE00-\uFE0F\U000E0100-\U000E01EF]*(?:\.[^\d\W][\w\uFE00-\uFE0F\U000E0100-\U000E01EF]*)*')
+re_identifier_dotted_only  = re.compile(r'^[^\d\W][\w\uFE00-\uFE0F\U000E0100-\U000E01EF]*(?:\.[^\d\W][\w\uFE00-\uFE0F\U000E0100-\U000E01EF]*)*$')
+re_identifier_or_star      = re.compile(r'(?:\*|[^\d\W][\w\uFE00-\uFE0F\U000E0100-\U000E01EF]*)')
+re_identifier_or_star_only = re.compile(r'^(?:\*|[^\d\W][\w\uFE00-\uFE0F\U000E0100-\U000E01EF]*)$')
+re_identifier_alias        = re.compile(r'(?:\*|[^\d\W][\w\uFE00-\uFE0F\U000E0100-\U000E01EF]*(?:\.[^\d\W][\w\uFE00-\uFE0F\U000E0100-\U000E01EF]*)*)')
+re_identifier_alias_only   = re.compile(r'^(?:\*|[^\d\W][\w\uFE00-\uFE0F\U000E0100-\U000E01EF]*(?:\.[^\d\W][\w\uFE00-\uFE0F\U000E0100-\U000E01EF]*)*)$')
 
 # Mostly in syntax order except a few special cases:
 #   BoolOp        - multiple simultaneous locations possible for single `op`
