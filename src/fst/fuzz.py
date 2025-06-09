@@ -484,8 +484,8 @@ class PutOneExprish(Fuzzy):
         'a\n.\nb',
         'a[b]',
         'a\n[\nb\n]',
-        '*a',
-        '*\na',
+        # '*a',
+        # '*\na',
         '[a, b]',
         '[\na\n,\nb\n]',
         '(a, b)',
@@ -534,6 +534,7 @@ class PutOneExprish(Fuzzy):
         for f in fst.walk(True):
             if isinstance(a := f.a, expr):
                 if getattr(a, 'ctx', None).__class__ is Load and not isinstance(f.parent.a, pattern) and f.is_parsable():
+                    # not isinstance(a, Starred) and   # don't mess with Starred because its just too inconsistemt
                     exprs.append(f)
 
             elif isinstance(a, pattern):
@@ -625,8 +626,7 @@ class PutOneExprish(Fuzzy):
 
                     raise
 
-            if self.verify:
-                fst.verify()
+            fst.verify()
 
         finally:
             sys.stdout.write('\n')

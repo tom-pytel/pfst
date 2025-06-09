@@ -813,6 +813,20 @@ def _put_one_Compare_combined(self: 'FST', code: Code | None, idx: int | None, f
     return _put_one_exprish_required(self, code, idx, field, child, static, **options)
 
 
+def _put_one_FormattedValue_Interpolation_value(self: 'FST', code: Code | None, idx: int | None, field: str, child: None,
+                          static: onestatic, **options) -> 'FST':
+    """If starts with '{' then need to inject space."""
+
+    ret = _put_one_exprish_required(self, code, idx, field, child, static, **options)
+
+    ln, col, _, _ = ret.loc
+
+    if self.root.lines[ln].startswith('{', col):  # f'{{a}}' needs a fix -> f'{ {a}}'
+        self._put_src([' '], ln, col, ln, col, False)
+
+    return ret
+
+
 def _put_one_Lambda_arguments(self: 'FST', code: Code | None, idx: int | None, field: str, child: AST,
                               static: onestatic, **options) -> 'FST':
     """Put Lambda.arguments. Does not have location if there are no arguments."""
@@ -1868,10 +1882,10 @@ _PUT_ONE_HANDLERS = {
     (Call, 'func'):                       (False, _put_one_exprish_required, _onestatic_expr_required), # expr
     (Call, 'args'):                       (True,  _put_one_exprish_required, onestatic(_one_info_exprish_required, _restrict_default, code_as=_code_as_callarg)), # expr*
     (Call, 'keywords'):                   (True,  _put_one_exprish_required, _onestatic_keyword_required), # keyword*
-    (FormattedValue, 'value'):            (False, _put_one_exprish_required, _onestatic_expr_required), # expr
+    (FormattedValue, 'value'):            (False, _put_one_FormattedValue_Interpolation_value, _onestatic_expr_required), # expr
     (FormattedValue, 'conversion'):       (False, _put_one_NOT_IMPLEMENTED_YET, onestatic(_one_info_conversion, Constant)), # int  # onestatic only here for info for raw put, Constant must be str
     (FormattedValue, 'format_spec'):      (False, _put_one_NOT_IMPLEMENTED_YET, onestatic(_one_info_format_spec, JoinedStr)), # expr?  # onestatic only here for info for raw put
-    (Interpolation, 'value'):             (False, _put_one_exprish_required, _onestatic_expr_required), # expr
+    (Interpolation, 'value'):             (False, _put_one_FormattedValue_Interpolation_value, _onestatic_expr_required), # expr
     (Interpolation, 'conversion'):        (False, _put_one_NOT_IMPLEMENTED_YET, onestatic(_one_info_conversion, Constant)), # int  # onestatic only here for info for raw put, Constant must be str
     (Interpolation, 'format_spec'):       (False, _put_one_NOT_IMPLEMENTED_YET, onestatic(_one_info_format_spec, JoinedStr)), # expr?  # onestatic only here for info for raw put
     (JoinedStr, 'values'):                (True, _put_one_NOT_IMPLEMENTED_YET, None), # expr*

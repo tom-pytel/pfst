@@ -9176,6 +9176,16 @@ a
         self.assertEqual('call(*(b := c))', f.src)
         f.verify()
 
+        # More misc stuff
+
+        f = FST('a.b')
+        f.put('1', 'value', raw=False)
+        self.assertEqual('(1).b', f.src)
+
+        f = FST('f"a{b}"')
+        f.values[1].put('{1}', 'value', raw=False)
+        f.verify()
+
     def test_put_one_pars(self):
         f = FST('a = b', 'exec').body[0]
         g = FST('(i := j)', 'exec').body[0].value.copy(pars=False)
