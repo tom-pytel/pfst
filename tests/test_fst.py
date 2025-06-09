@@ -9190,11 +9190,18 @@ a
         self.assertRaises(ValueError, f.put, 'a', 0, 'args')
         f.put('*a', 0, 'args')
         self.assertEqual('f(o=o, *a)', f.src)
+        f.verify()
 
         f = FST('class cls(o=o, *s): pass')
         self.assertRaises(ValueError, f.put, 'a', 0, 'bases')
         f.put('*a', 0, 'bases')
         self.assertEqual('class cls(o=o, *a): pass', f.src)
+        f.verify()
+
+        f = FST('with a: pass')
+        f.items[0].put('b\n,', 'context_expr')
+        self.assertEqual('with ((b\n,)): pass', f.src)
+        f.verify()
 
     def test_put_one_pars(self):
         f = FST('a = b', 'exec').body[0]
@@ -10523,7 +10530,7 @@ if __name__ == '__main__':
     parser.add_argument('--regen-put-slice-stmt', default=False, action='store_true', help="regenerate put slice statement test data")
     parser.add_argument('--regen-put-slice', default=False, action='store_true', help="regenerate put slice test data")
     parser.add_argument('--regen-put-one', default=False, action='store_true', help="regenerate put one test data")
-    parser.add_argument('--regen-put-raw', default=False, action='store_true', help="regenerate put raw test data")
+    parser.add_argument('--regen-put-src', default=False, action='store_true', help="regenerate put src test data")
     parser.add_argument('--regen-precedence', default=False, action='store_true', help="regenerate precedence test data")
 
     args = parser.parse_args()
@@ -10564,9 +10571,9 @@ if __name__ == '__main__':
         print('Regenerating put one test data...')
         regen_put_one()
 
-    if args.regen_put_raw or args.regen_all:
+    if args.regen_put_src or args.regen_all:
         print('Regenerating put raw test data...')
-        regen_put_raw()
+        regen_put_src()
 
     if args.regen_precedence or args.regen_all:
         print('Regenerating precedence test data...')

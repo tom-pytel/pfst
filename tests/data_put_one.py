@@ -829,6 +829,21 @@ Module - ROOT 0,0..0,22
     0] Pass - 0,18..0,22
 """),
 
+(r"""with i: pass""", 'body[0].items[0]', None, None, {'raw': False}, r"""a, b""", r"""with ((a, b)): pass""", r"""
+Module - ROOT 0,0..0,19
+  .body[1]
+  0] With - 0,0..0,19
+    .items[1]
+    0] withitem - 0,5..0,13
+      .context_expr Tuple - 0,6..0,12
+        .elts[2]
+        0] Name 'a' Load - 0,7..0,8
+        1] Name 'b' Load - 0,10..0,11
+        .ctx Load
+    .body[1]
+    0] Pass - 0,15..0,19
+"""),
+
 (r"""def oldname(): pass""", 'body[0]', None, 'name', {}, r"""**DEL**""", r"""**ValueError('cannot delete FunctionDef.name')**""", r"""
 """),
 
