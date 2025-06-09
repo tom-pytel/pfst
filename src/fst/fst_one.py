@@ -645,6 +645,26 @@ def _make_exprish_fst(self: 'FST', code: Code | None, idx: int | None, field: st
         if not self.is_enclosed_in_parents(field) and not put_fst.is_enclosed(pars=adding):
             return True
 
+        if isinstance(put_ast, Lambda):  # Lambda inside FormattedValue/Interpolation needs pars
+            s = self
+            f = field
+
+            while isinstance(a := s.a, expr):
+                if isinstance(a, (FormattedValue, Interpolation)):
+                    if f == 'value':
+                        return True
+
+                    break
+
+                if s.is_atom(pars=True, always_enclosed=True):
+                    break
+
+                if not (f := s.pfield):
+                    break
+
+                s = s.parent
+                f = f.name
+
         return False
 
     if pars:

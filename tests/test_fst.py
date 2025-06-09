@@ -9230,6 +9230,11 @@ a
         self.assertEqual('((f[g]).b[c].d[e]): int', f.src)
         f.verify()
 
+        f = FST('f"{a if b else c}"')
+        f.values[0].value.orelse.replace('lambda: None', raw=False)
+        self.assertEqual('f"{a if b else (lambda: None)}"', f.src)
+        f.verify()
+
     def test_put_one_pars(self):
         f = FST('a = b', 'exec').body[0]
         g = FST('(i := j)', 'exec').body[0].value.copy(pars=False)
