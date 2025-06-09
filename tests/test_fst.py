@@ -181,8 +181,11 @@ PARSE_TESTS = [
 
     ('expr',              FST._parse_expr,              Name,           'j'),
     ('expr',              FST._parse_expr,              Starred,        '*s'),
+    ('expr',              FST._parse_expr,              Starred,        '*\ns'),
+    ('expr',              FST._parse_expr,              Tuple,          '*\ns,'),
+    ('expr',              FST._parse_expr,              Tuple,          '1\n,\n2\n,'),
     ('expr',              FST._parse_expr,              SyntaxError,    '*not a'),
-    ('expr',              FST._parse_expr,              NodeError,      'a:b'),
+    ('expr',              FST._parse_expr,              SyntaxError,    'a:b'),
     ('expr',              FST._parse_expr,              SyntaxError,    'a:b:c'),
 
     ('slice',             FST._parse_slice,             Name,           'j'),
@@ -199,7 +202,7 @@ PARSE_TESTS = [
     ('callarg',           FST._parse_callarg,           Starred,        '*not a'),
     ('callarg',           FST._parse_callarg,           Tuple,          'j, k'),
     ('callarg',           FST._parse_callarg,           NodeError,      'i=1'),
-    ('callarg',           FST._parse_callarg,           NodeError,      'a:b'),
+    ('callarg',           FST._parse_callarg,           SyntaxError,    'a:b'),
     ('callarg',           FST._parse_callarg,           SyntaxError,    'a:b:c'),
 
     ('boolop',            FST._parse_boolop,            And,            'and'),
@@ -314,8 +317,11 @@ PARSE_TESTS = [
 
     (expr,                FST._parse_expr,              Name,           'j'),
     (expr,                FST._parse_expr,              Starred,        '*s'),
+    (expr,                FST._parse_expr,              Starred,        '*\ns'),
+    (expr,                FST._parse_expr,              Tuple,          '*\ns,'),
+    (expr,                FST._parse_expr,              Tuple,          '1\n,\n2\n,'),
     (expr,                FST._parse_expr,              SyntaxError,    '*not a'),
-    (expr,                FST._parse_expr,              NodeError,      'a:b'),
+    (expr,                FST._parse_expr,              SyntaxError,    'a:b'),
     (expr,                FST._parse_expr,              SyntaxError,    'a:b:c'),
     (Name,                FST._parse_expr,              Name,           'j'),
     (Starred,             FST._parse_expr,              Starred,        '*s'),
@@ -4595,7 +4601,7 @@ call(a)
         self.assertRaises(ValueError, f._code_as_expr, FST('i = 1', 'exec').body[0])
         self.assertRaises(NodeError, f._code_as_expr, FST('i = 1', 'exec').body[0].copy())
         self.assertRaises(NodeError, f._code_as_expr, f.body[0].a)
-        self.assertRaises(NodeError, f._code_as_expr, 'pass')
+        self.assertRaises(SyntaxError, f._code_as_expr, 'pass')
 
         # ExceptHandlers
 
@@ -5315,6 +5321,7 @@ i # post
             for a in walk(ast):
                 if a.f.is_parsable():
                     f = a.f.copy(fix=True)
+
                     f.verify(raise_=True)
 
     def test_copy(self):
@@ -8519,7 +8526,7 @@ if 1:
         self.assertIsInstance(f.a.body, expr)
         f.put('j', raw=False)
         self.assertEqual('j', f.src)
-        self.assertRaises(NodeError, f.put, 'k = 1', raw=False)
+        self.assertRaises(SyntaxError, f.put, 'k = 1', raw=False)
         self.assertRaises(IndexError, f.put, 'k', 1, raw=False)
 
         g = parse('yield 1').body[0].value.f.copy(fix=False)

@@ -12,7 +12,7 @@ from .shared import (
     Code, Mode, NodeError, _next_src, _shortstr
 )
 
-_re_first_src = re.compile(r'^[^\S\n]*(?:[^\s\\#]|(?<!^)\\)', re.M)
+_re_first_src = re.compile(r'^[^\S\n]*(?:[^\s\\#]|(?<!^)\\)', re.M)  # or first \ not on start of line
 _re_except    = re.compile(r'except\b')
 _re_case      = re.compile(r'case\b\s*(?:[*\\\w({[\'"-]|\.\d)')
 
@@ -360,14 +360,55 @@ def _parse_match_case(src: str, parse_params: dict = {}) -> AST:
 def _parse_expr(src: str, parse_params: dict = {}) -> AST:
     """Parse to an `ast.expr`."""
 
-    body = ast_parse(src, **parse_params).body
+    # body = ast_parse(src, **parse_params).body
 
-    if len(body) != 1:
-        raise NodeError('expecting single expression')
-    elif not isinstance(ast := body[0], Expr):
-        raise NodeError(f'expecting expression, got {ast.__class__.__name__}')
+    # if len(body) != 1:
+    #     raise NodeError('expecting single expression')
+    # elif not isinstance(ast := body[0], Expr):
+    #     raise NodeError(f'expecting expression, got {ast.__class__.__name__}')
 
-    return ast.value
+    # return ast.value
+
+    try:
+        ast = ast_parse(src, **parse_params).body
+    except SyntaxError:
+        pass
+    else:
+        if len(ast) == 1 and isinstance(ast := ast[0], Expr):  # if parsed to single expression then done
+            return ast.value
+
+    try:
+        ast = ast_parse(f'(\n{src})', **parse_params).body[0].value  # has newlines
+    except SyntaxError:
+        ast = ast_parse(f'(\n{src},)', **parse_params).body[0].value.elts[0]  # Starred expression with newlines
+
+        assert isinstance(ast, Starred)
+
+    else:
+        if isinstance(ast, Tuple) and ast.lineno == 1:  # tuple with newlines included grouping pars which are not in source, fix
+            if not (elts := ast.elts):
+                raise NodeError('expecting expression')
+
+            # we have to do some work to find a possible comma
+
+            ast.lineno     = (e0 := elts[0]).lineno
+            ast.col_offset = e0.col_offset
+            lines          = src.split('\n')
+            end_ln         = (e_1 := elts[-1]).end_lineno - 2  # -2 because of extra line introduced in parse
+            end_col        = bistr(lines[end_ln]).b2c(e_1.end_col_offset)
+
+            if (not (code := _next_src(lines, end_ln, end_col, ast.end_lineno - 2, 0x7fffffffffffffff)) or  # if nothing following then last element is ast end
+                not code.src.startswith(',')  # if no comma then last element is ast end
+            ):
+                ast.end_lineno     = e_1.end_lineno
+                ast.end_col_offset = e_1.end_col_offset
+
+            else:
+                end_ln, end_col, _ = code
+                ast.end_lineno     = end_ln + 2
+                ast.end_col_offset = len(lines[end_ln][:end_col + 1].encode())
+
+    return _offset_linenos(_validate_indent(src, ast), -1)
 
 
 @staticmethod
@@ -411,12 +452,15 @@ def _parse_callarg(src: str, parse_params: dict = {}) -> AST:
         return _parse_expr(src, parse_params)
     except IndentationError:
         raise
-    except SyntaxError:  # stuff like '*[] or []'
+    except (NodeError, SyntaxError):  # stuff like '*[] or []'
         pass
 
-    ast = ast_parse(f'f(\n{src})', **parse_params).body[0].value.args[0]
+    args = ast_parse(f'f(\n{src})', **parse_params).body[0].value.args
 
-    return _offset_linenos(_validate_indent(src, ast), -1)
+    if len(args) != 1:
+        raise NodeError('expecting call argument expression')
+
+    return _offset_linenos(_validate_indent(src, args[0]), -1)
 
 
 @staticmethod
@@ -1139,6 +1183,7 @@ __all_private__ = [n for n in globals() if n not in _GLOBALS]  # used by make_do
 
 _parse_all_funcs = [
     _parse_most,
+    _parse_expr,     # explicitly this because _parse_most won't catch unparenthesized expressions with newlines
     _parse_pattern,
     _parse_arguments,
     _parse_arguments_lambda,

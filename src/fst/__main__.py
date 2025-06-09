@@ -15,10 +15,10 @@ def main():
     parser.add_argument('-m', '--mode', default='all',
                         choices=get_args(get_args(Mode)[1]),
                         help='specify what kind of code must be parsed')
-    parser.add_argument('-c', '--compact', default=False, action='store_true',
-                        help="compact view")
     parser.add_argument('-f', '--full', default=False, action='store_true',
                         help="show full tree including empty nodes")
+    parser.add_argument('-e', '--expand', default=False, action='store_true',
+                        help="expanded view")
     parser.add_argument('-s', '--stmt', default=False, action='store_true',
                         help="show statmenent source lines")
     parser.add_argument('-a', '--all', default=False, action='store_true',
@@ -50,7 +50,7 @@ def main():
 
     src = 'all' if args.all else 'stmt' if args.stmt else None
 
-    ast.f.dump(src=src, full=args.full, compact=args.compact, indent=args.indent)
+    ast.f.dump(src=src, full=args.full, expand=args.expand, indent=args.indent)
 
 
 if __name__ == '__main__':

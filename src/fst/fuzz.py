@@ -4,10 +4,10 @@ import sys
 import sysconfig
 from ast import *
 from itertools import repeat
-from random import shuffle
+from random import randint, seed, shuffle
 from typing import Any, Generator
 
-from .astutil import TemplateStr, Interpolation
+from .astutil import *
 from .fst import FST, NodeError
 
 PROGRAM = 'python -m fst.fuzz'
@@ -104,6 +104,55 @@ class VerifyCopy(Fuzzy):
                     raise
 
 
+class ReputSrc(Fuzzy):
+    name = 'reput_src'
+
+    def fuzz(self) -> bool:
+        for fnm, fst in self.iter_pys():
+            lines = fst._lines
+
+            seed(rnd_seed := randint(0, 2**32-1))
+
+            try:
+                for count in range(self.args.get('batch') or 1000):
+                    copy      = fst.copy()
+                    ln        = randint(0, len(lines) - 1)
+                    col       = randint(0, len(lines[ln]))
+                    end_ln    = randint(ln, len(lines) - 1)
+                    end_col   = randint(col if end_ln == ln else 0, len(lines[end_ln]))
+                    put_lines = fst.get_src(ln, col, end_ln, end_col, True)
+
+                    if not (count % 10):
+                        s = f'{count, ln, col, end_ln, end_col}'
+
+                        # sys.stdout.write('\x08' * 40 + s.ljust(40))
+                        sys.stdout.write('.')
+                        sys.stdout.flush()
+
+                    try:
+                        copy.put_src(put_lines, ln, col, end_ln, end_col)
+                        copy.verify()
+
+                        compare_asts(fst.a, copy.a, locs=True, raise_=True)
+
+                        assert copy.src == fst.src
+
+                    except:
+                        print('\nRandom seed was:', rnd_seed)
+                        print(count, ln, col, end_ln, end_col)
+                        print('-'*80)
+                        print(put_lines)
+                        # print('.'*80)
+                        # print(copy.src)
+
+                        raise
+
+            finally:
+                print()
+
+        return True
+
+
 FUZZERS = {o.name: o for o in globals().values() if isinstance(o, type) and o is not Fuzzy and issubclass(o, Fuzzy)}
 
 
@@ -128,6 +177,8 @@ def main():
 
     args = parser.parse_args()
     fuzz = dict.fromkeys(sum((f.replace(',', ' ').split() for f in args.fuzz), start=[]) if args.fuzz else FUZZERS)
+
+    print(args)
 
     if any((fuzzer := f) not in FUZZERS for f in fuzz):
         raise ValueError(f'invalid fuzzer: {fuzzer}')
