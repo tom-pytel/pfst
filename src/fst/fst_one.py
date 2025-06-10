@@ -946,7 +946,7 @@ def _put_one_Call_args(self: 'FST', code: Code | None, idx: int | None, field: s
 def _put_one_Attribute_value(self: 'FST', code: Code | None, idx: int | None, field: str, child: None,
                              static: onestatic, **options) -> 'FST':
     """If this gets parenthesized in an `AnnAssign` then the whole `AnnAssign` target needs to be parenthesized. Also
-    need to make sure only `Name` or `Attribute` is put to one of these in `pattern` expression."""
+    need to make sure only unparenthesized `Name` or `Attribute` is put to one of these in `pattern` expression."""
 
     child     = _validate_put(self, code, idx, field, child)  # we want to do it in same order as all other puts
     code      = static.code_as(code, self.root.parse_params)
@@ -960,8 +960,8 @@ def _put_one_Attribute_value(self: 'FST', code: Code | None, idx: int | None, fi
             break
 
         if isinstance(parenta, pattern):
-            if isinstance(parenta, MatchClass) and code.end_ln != code.ln:
-                raise NodeError(f'cannot put multiline {above.a.__class__.__name__} to MatchClass pattern expression')
+            if code.end_ln != code.ln and not above.is_enclosed_in_parents():
+                raise NodeError(f'cannot put multiline {above.a.__class__.__name__} to uneclosed pattern expression')
 
             _validate_pattern_expr(code)
 

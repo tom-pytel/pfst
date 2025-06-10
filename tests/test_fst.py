@@ -9396,6 +9396,11 @@ a
         self.assertRaises(NodeError, f.pattern.value.replace, 'None', raw=False)
         f.verify()
 
+        f = FST('case {1: a.b}: pass')
+        f.pattern.patterns[0].value.value.replace(FST('x\n  .\n  y', expr), raw=False)
+        self.assertEqual('case {1: x\n  .\n  y.b}: pass', f.src)
+        f.verify()
+
     def test_put_one_pars(self):
         f = FST('a = b', 'exec').body[0]
         g = FST('(i := j)', 'exec').body[0].value.copy(pars=False)
