@@ -611,11 +611,11 @@ else:
 
 def _make_exprish_fst(self: 'FST', code: Code | None, idx: int | None, field: str, static: onestatic,
                       target: Union['FST', fstloc], ctx: type[expr_context], prefix: str  = '', suffix: str = '',
-                      **options) -> 'FST':
+                      validated: int = 0, **options) -> 'FST':
     """Make an expression `FST` from `Code` for a field/idx containing an existing node creating a new one. Takes care
     of parenthesizing, indenting and offsetting."""
 
-    put_fst = static.code_as(code, self.root.parse_params)
+    put_fst = static.code_as(code, self.root.parse_params) if validated < 2 else code
     put_ast = put_fst.a
 
     _validate_put_ast(self, put_ast, idx, field, static)
@@ -755,11 +755,11 @@ def _make_exprish_fst(self: 'FST', code: Code | None, idx: int | None, field: st
 
 
 def _put_one_exprish_required(self: 'FST', code: Code | None, idx: int | None, field: str,
-                              child: list[AST] | AST | None, static: onestatic, validate: bool = True,
+                              child: list[AST] | AST | None, static: onestatic, validated: int = 0,
                               target: fstloc | None = None, prefix: str = '', **options) -> 'FST':
     """Put a single required expression. Can be standalone or as part of sequence."""
 
-    if validate:
+    if not validated:
         child = _validate_put(self, code, idx, field, child)
 
         if not child:
@@ -768,7 +768,7 @@ def _put_one_exprish_required(self: 'FST', code: Code | None, idx: int | None, f
 
     childf  = child.f
     ctx     = ((ctx := getattr(child, 'ctx', None)) and ctx.__class__) or Load
-    put_fst = _make_exprish_fst(self, code, idx, field, static, target or childf, ctx, prefix, **options)
+    put_fst = _make_exprish_fst(self, code, idx, field, static, target or childf, ctx, prefix, '', validated, **options)
 
     childf._set_ast(put_fst.a)
 
@@ -786,7 +786,7 @@ def _put_one_exprish_optional(self: 'FST', code: Code | None, idx: int | None, f
             return None
 
     elif child:  # replace existing node
-        return _put_one_exprish_required(self, code, idx, field, child, static, False, **options)
+        return _put_one_exprish_required(self, code, idx, field, child, static, 1, **options)
 
     info = static.getinfo(self, static, idx, field)
     loc  = info.loc_insdel
@@ -819,8 +819,8 @@ def _put_one_FunctionDef_arguments(self: 'FST', code: Code | None, idx: int | No
                                    static: onestatic, **options) -> 'FST':
     """Put FunctionDef.arguments. Does not have location if there are no arguments."""
 
-    return _put_one_exprish_required(self, code or '', idx, field, child, static, True,
-                                     None if (args := self.a.args.f).loc else args._loc_arguments_empty(),
+    return _put_one_exprish_required(self, code or '', idx, field, child, static,
+                                     target=None if (args := self.a.args.f).loc else args._loc_arguments_empty(),
                                      **options)
 
 
@@ -836,7 +836,7 @@ def _put_one_ClassDef_bases(self: 'FST', code: Code | None, idx: int | None, fie
     ):
         raise ValueError(f'cannot replace Starred ClassDef.bases[{idx}] with non-Starred base in this state (after keywords)')
 
-    return _put_one_exprish_required(self, code, idx, field, child, static, False, **options)
+    return _put_one_exprish_required(self, code, idx, field, child, static, 2, **options)
 
 
 def _put_one_Lambda_arguments(self: 'FST', code: Code | None, idx: int | None, field: str, child: AST,
@@ -851,7 +851,7 @@ def _put_one_Lambda_arguments(self: 'FST', code: Code | None, idx: int | None, f
     prefix = ' ' if code.loc else ''  # if arguments has .loc then it is not empty
     target = self._loc_lambda_args_entire()
 
-    return _put_one_exprish_required(self, code, idx, field, child, static, False, target, prefix, **options)
+    return _put_one_exprish_required(self, code, idx, field, child, static, 1, target, prefix, **options)
 
 
 def _put_one_Compare_combined(self: 'FST', code: Code | None, idx: int | None, field: str, child: None,
@@ -875,7 +875,7 @@ def _put_one_Call_args(self: 'FST', code: Code | None, idx: int | None, field: s
     ):
         raise ValueError(f'cannot replace Starred Call.args[{idx}] with non-Starred arg in this state (after keywords)')
 
-    return _put_one_exprish_required(self, code, idx, field, child, static, False, **options)
+    return _put_one_exprish_required(self, code, idx, field, child, static, 2, **options)
 
 
 def _put_one_Attribute_Subscript_value(self: 'FST', code: Code | None, idx: int | None, field: str, child: None,
