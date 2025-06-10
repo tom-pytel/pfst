@@ -1651,6 +1651,30 @@ class FST:
 
         return self
 
+    def parent_non_expr(self, self_: bool = False) -> Optional['FST']:
+        """The first parent which is not an `expr`. If `self_` is `True` then will check `self` first (possibly
+        returning `self`), otherwise only checks parents.
+
+        **Parameters:**
+        - `self_`: Whether to include `self` in the search, if so and `self` matches criteria then it is returned.
+
+        **Examples:**
+        ```py
+        >>> FST('if 1: i = 1 + a[b]').body[0].value.right.value.parent_non_expr()
+        <Assign 0,6..0,17>
+        >>> FST('match a:\n case {a.b.c: 1}: pass').cases[0].pattern.keys[0].value.value.parent_non_expr()
+        <MatchMapping 1,6..1,16>
+        ```
+        """
+
+        if self_ and not isinstance(self.a, expr):
+            return self
+
+        while (self := self.parent) and isinstance(self.a, expr):
+            pass
+
+        return self
+
     def parent_stmtish(self, self_: bool = False, mod: bool = True) -> Optional['FST']:
         """The first parent which is a `stmt`, `ExceptHandler`, `match_case` or optionally `mod` node (if any). If
         `self_` is `True` then will check `self` first, otherwise only checks parents.

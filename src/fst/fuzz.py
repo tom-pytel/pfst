@@ -534,8 +534,16 @@ class PutOneExprish(Fuzzy):
 
         for f in fst.walk(True):
             if isinstance(a := f.a, expr):
-                if getattr(a, 'ctx', None).__class__ is Load and not isinstance(f.parent.a, pattern) and f.is_parsable():
-                    exprs.append(f)
+                if getattr(a, 'ctx', None).__class__ is not Load:
+                    continue
+
+                if isinstance(f.parent_non_expr().a, pattern):  # TODO: should probably handle all these cases
+                    continue
+
+                if not f.is_parsable():
+                    continue
+
+                exprs.append(f)
 
             elif isinstance(a, pattern):
                 pats.append(f)
