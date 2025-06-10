@@ -9401,6 +9401,15 @@ a
         self.assertEqual('case {1: x\n  .\n  y.b}: pass', f.src)
         f.verify()
 
+        # Tuple Slice behavior
+
+        self.assertEqual('x:y:z, b', FST('a, b').elts[0].replace('x:y:z', raw=False).root.src)
+        self.assertRaises(SyntaxError, FST('(a, b)').elts[0].replace, 'x:y:z', raw=False)
+        self.assertEqual('s[x:y:z, b]', FST('s[a, b]').slice.elts[0].replace('x:y:z', raw=False).root.src)
+        self.assertRaises(SyntaxError, FST('s[(a, b)]').slice.elts[0].replace, 'x:y:z', raw=False)
+        self.assertRaises(SyntaxError, FST('i = a, b').value.elts[0].replace, 'x:y:z', raw=False)
+        self.assertRaises(SyntaxError, FST('i = (a, b)').value.elts[0].replace, 'x:y:z', raw=False)
+
     def test_put_one_pars(self):
         f = FST('a = b', 'exec').body[0]
         g = FST('(i := j)', 'exec').body[0].value.copy(pars=False)

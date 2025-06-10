@@ -1002,6 +1002,16 @@ def _put_one_Subscript_value(self: 'FST', code: Code | None, idx: int | None, fi
     return ret
 
 
+def _put_one_Tuple_elts(self: 'FST', code: Code | None, idx: int | None, field: str, child: None,
+                             static: onestatic, **options) -> 'FST':
+    """If not an unparenthesized top level or slice tuple then disallow Slices."""
+
+    if ((pf := self.pfield) and pf.name != 'slice') or self._is_parenthesized_seq():
+        static = _onestatic_Tuple_elts  # default static allows slices
+
+    return _put_one_exprish_required(self, code, idx, field, child, static, **options)
+
+
 def _put_one_Dict_keys(self: 'FST', code: Code | None, idx: int | None, field: str, child: AST,
                        static: onestatic, **options) -> 'FST':
     """Put optional dict key and if deleted parenthesize the value if needed."""
@@ -1411,9 +1421,9 @@ def _put_one(self: 'FST', code: Code | None, idx: int | None, field: str, **opti
 # ......................................................................................................................
 # field info
 
-_restrict_default     = [FormattedValue, Interpolation, Slice]
-_restrict_fstr_values = [FormattedValue, Interpolation]
-_oneinfo_default      = oneinfo()
+_restrict_default = [FormattedValue, Interpolation, Slice]
+_restrict_fmtval  = [FormattedValue, Interpolation]
+_oneinfo_default  = oneinfo()
 
 def _one_info_constant(self: 'FST', static: onestatic, idx: int | None, field: str) -> oneinfo:  # only Constant and MatchSingleton
     return oneinfo('', None, self.loc)
@@ -1433,6 +1443,7 @@ _onestatic_type_param_required       = onestatic(_one_info_exprish_required, _re
 _onestatic_target_Name               = onestatic(_one_info_exprish_required, Name, ctx=Store)
 _onestatic_target_single             = onestatic(_one_info_exprish_required, (Name, Attribute, Subscript), ctx=Store)
 _onestatic_target                    = onestatic(_one_info_exprish_required, (Name, Attribute, Subscript, Tuple, List), ctx=Store)
+_onestatic_Tuple_elts                = onestatic(_one_info_exprish_required, [FormattedValue, Interpolation, Slice])
 
 def _one_info_identifier_required(self: 'FST', static: onestatic, idx: int | None, field: str,  # required, cannot delete or put new
                                   prefix: str | None = None) -> oneinfo:
@@ -2098,11 +2109,11 @@ _PUT_ONE_HANDLERS = {
     (Attribute, 'value'):                 (False, _put_one_Attribute_value, _onestatic_expr_required), # expr
     (Attribute, 'attr'):                  (False, _put_one_identifier_required, onestatic(_one_info_Attribute_attr, _restrict_default, code_as=_code_as_identifier)), # identifier
     (Subscript, 'value'):                 (False, _put_one_Subscript_value, _onestatic_expr_required), # expr
-    (Subscript, 'slice'):                 (False, _put_one_exprish_required, onestatic(_one_info_exprish_required, _restrict_fstr_values, code_as=_code_as_slice)), # expr
+    (Subscript, 'slice'):                 (False, _put_one_exprish_required, onestatic(_one_info_exprish_required, _restrict_fmtval, code_as=_code_as_slice)), # expr
     (Starred, 'value'):                   (False, _put_one_exprish_required, _onestatic_expr_required), # expr
     (Name, 'id'):                         (False, _put_one_identifier_required, _onestatic_identifier_required), # identifier
     (List, 'elts'):                       (True,  _put_one_exprish_required, _onestatic_expr_required), # expr*
-    (Tuple, 'elts'):                      (True,  _put_one_exprish_required, onestatic(_one_info_exprish_required, _restrict_fstr_values, code_as=_code_as_sliceelt)), # expr*  - special handling because Tuples can contain Slices in a .slice field
+    (Tuple, 'elts'):                      (True,  _put_one_Tuple_elts, onestatic(_one_info_exprish_required, _restrict_fmtval, code_as=_code_as_sliceelt)), # expr*  - special handling because Tuples can contain Slices in an unparenthesized .slice field
     (Slice, 'lower'):                     (False, _put_one_exprish_optional, _onestatic_Slice_lower), # expr?
     (Slice, 'upper'):                     (False, _put_one_exprish_optional, _onestatic_Slice_upper), # expr?
     (Slice, 'step'):                      (False, _put_one_exprish_optional, _onestatic_Slice_step), # expr?
