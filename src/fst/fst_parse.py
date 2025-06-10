@@ -360,15 +360,6 @@ def _parse_match_case(src: str, parse_params: dict = {}) -> AST:
 def _parse_expr(src: str, parse_params: dict = {}) -> AST:
     """Parse to an `ast.expr`."""
 
-    # body = ast_parse(src, **parse_params).body
-
-    # if len(body) != 1:
-    #     raise NodeError('expecting single expression')
-    # elif not isinstance(ast := body[0], Expr):
-    #     raise NodeError(f'expecting expression, got {ast.__class__.__name__}')
-
-    # return ast.value
-
     try:
         ast = ast_parse(src, **parse_params).body
     except SyntaxError:
@@ -387,7 +378,7 @@ def _parse_expr(src: str, parse_params: dict = {}) -> AST:
     else:
         if isinstance(ast, Tuple) and ast.lineno == 1:  # tuple with newlines included grouping pars which are not in source, fix
             if not (elts := ast.elts):
-                raise NodeError('expecting expression')
+                raise SyntaxError('expecting expression')
 
             # we have to do some work to find a possible comma
 
@@ -464,7 +455,7 @@ def _parse_callarg(src: str, parse_params: dict = {}) -> AST:
     args = ast_parse(f'f(\n{src})', **parse_params).body[0].value.args
 
     if len(args) != 1:
-        raise NodeError('expecting call argument expression')
+        raise NodeError('expecting single call argument expression')
 
     return _offset_linenos(_validate_indent(src, args[0]), -1)
 

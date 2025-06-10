@@ -9469,18 +9469,21 @@ a
         # annoying solo MatchValue
 
         f = FST('match a:\n case (1): pass', 'exec')
-        f.body[0].cases[0].pattern.put('(2)', pars='auto')
-        self.assertEqual('match a:\n case ((2)): pass', f.src)
+        # f.body[0].cases[0].pattern.put('(2)', pars='auto', raw=False)
+        # self.assertEqual('match a:\n case ((2)): pass', f.src)
+        self.assertRaises(NodeError, f.body[0].cases[0].pattern.put, '(2)', pars='auto', raw=False)
         f.verify()
 
         f = FST('match a:\n case (1): pass', 'exec')
-        f.body[0].cases[0].pattern.put('(2)', pars=True)
-        self.assertEqual('match a:\n case ((2)): pass', f.src)
+        self.assertRaises(NodeError, f.body[0].cases[0].pattern.put, '(2)', pars=True, raw=False)
+        # f.body[0].cases[0].pattern.put('(2)', pars=True, raw=False)
+        # self.assertEqual('match a:\n case ((2)): pass', f.src)
         f.verify()
 
         f = FST('match a:\n case (1): pass', 'exec')
-        f.body[0].cases[0].pattern.put('(2)', pars=False)
-        self.assertEqual('match a:\n case ((2)): pass', f.src)
+        self.assertRaises(NodeError, f.body[0].cases[0].pattern.put, '(2)', pars=False, raw=False)
+        # f.body[0].cases[0].pattern.put('(2)', pars=False, raw=False)
+        # self.assertEqual('match a:\n case ((2)): pass', f.src)
         f.verify()
 
         f = FST('match a:\n case (1): pass', 'exec')
@@ -9528,9 +9531,10 @@ a
         self.assertEqual('with (\na\n): pass', f.src)
 
         f = FST('match a:\n case (1): pass', 'exec')
-        f.body[0].cases[0].pattern.put('(2)')
-        self.assertEqual('match a:\n case ((2)): pass', f.src)
-        f.body[0].cases[0].pattern.put('(3)', pars=True)
+        self.assertRaises(NodeError, f.body[0].cases[0].pattern.put, '(2)', raw=False)
+        # f.body[0].cases[0].pattern.put('(2)', raw=False)
+        # self.assertEqual('match a:\n case ((2)): pass', f.src)
+        # f.body[0].cases[0].pattern.put('(3)', pars=True)
 
     def test_put_one_pars_need_matrix(self):
         # pars=True, needed for precedence, needed for parse, present in dst, present in src

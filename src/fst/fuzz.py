@@ -601,9 +601,10 @@ class PutOneExpr(Fuzzy):
                 except Exception as exc:
                     msg = str(exc)
 
-                    ignorable = isinstance(exc, NodeError) and (
-                        'in this state' not in msg or
-                        'pattern expression' in msg
+                    ignorable = isinstance(exc, (NodeError, ValueError)) and (
+                        'in this state' in msg or
+                        'pattern expression' in msg or
+                        'invalid value for MatchValue.value' in msg
                         # (msg.startswith('cannot put ') and (msg.endswith(' to MatchMapping.keys') or msg.endswith(' to MatchValue.value')))
                     )
 
