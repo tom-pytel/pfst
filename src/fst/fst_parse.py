@@ -386,7 +386,8 @@ def _parse_expr(src: str, parse_params: dict = {}) -> AST:
             ast.col_offset = e0.col_offset
             lines          = src.split('\n')
             end_ln         = (e_1 := elts[-1]).end_lineno - 2  # -2 because of extra line introduced in parse
-            end_col        = bistr(lines[end_ln]).b2c(e_1.end_col_offset)
+            # end_col        = bistr(lines[end_ln]).b2c(e_1.end_col_offset)
+            end_col        = len(lines[end_ln].encode()[:e_1.end_col_offset].decode())
 
             if (not (code := _next_src(lines, end_ln, end_col, ast.end_lineno - 2, 0x7fffffffffffffff)) or  # if nothing following then last element is ast end
                 not code.src.startswith(',')  # if no comma then last element is ast end

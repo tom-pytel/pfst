@@ -24,6 +24,7 @@ from .fst_parse import (
 )
 
 _PY_VERSION = sys.version_info[:2]
+_PYLT12     = _PY_VERSION < (3, 12)
 
 _re_merged_alnum = re.compile(r'\w\w')
 
@@ -126,7 +127,7 @@ def _get_one_invalid_combined(self: 'FST', idx: int | None, field: str, cut: boo
     raise ValueError(f'cannot get single element from combined field of {self.a.__class__.__name__}')
 
 
-if _PY_VERSION < (3, 12):
+if _PYLT12:
     def _get_one_FormattedValue_value(self: 'FST', idx: int | None, field: str, cut: bool, **options,
                                                     ) -> Optional['FST'] | str:
         """Correct for py < 3.12 returning value unparenthesized tuple with `FormattedValue` curlies as delimiters."""
@@ -373,7 +374,7 @@ _GET_ONE_HANDLERS = {
     (Call, 'func'):                       _get_one_default, # expr
     (Call, 'args'):                       _get_one_default, # expr*
     (Call, 'keywords'):                   _get_one_default, # keyword*
-    (FormattedValue, 'value'):            _get_one_default if _PY_VERSION >= (3, 12) else _get_one_FormattedValue_value, # expr
+    (FormattedValue, 'value'):            _get_one_default if not _PYLT12 else _get_one_FormattedValue_value, # expr
     (FormattedValue, 'conversion'):       _get_one_conversion, # int
     (FormattedValue, 'format_spec'):      _get_one_format_spec, # expr?  - no location on py < 3.12
     (Interpolation, 'value'):             _get_one_default, # expr
@@ -657,7 +658,7 @@ def _put_one_op(self: 'FST', code: Code | None, idx: int | None, field: str,
     return childf
 
 
-if _PY_VERSION < (3, 12):
+if _PYLT12:
     def _put_one_NOT_IMPLEMENTED_YET(self: 'FST', code: Code | None, idx: int | None, field: str, child: constant,
                                      static: onestatic, **options) -> 'FST':
         raise NotImplementedError('this will only be implemented on python version 3.12 and above')
@@ -1007,7 +1008,7 @@ def _put_one_Tuple_elts(self: 'FST', code: Code | None, idx: int | None, field: 
     """If not an unparenthesized top level or slice tuple then disallow Slices."""
 
     if ((pf := self.pfield) and pf.name != 'slice') or self._is_parenthesized_seq():
-        static = _onestatic_Tuple_elts  # default static allows slices
+        static = _onestatic_expr_required_starred  # default static allows slices
 
     return _put_one_exprish_required(self, code, idx, field, child, static, **options)
 
@@ -1100,6 +1101,44 @@ def _put_one_pattern(self: 'FST', code: Code | None, idx: int | None, field: str
         code._parenthesize_node(pars='[]')
 
     return _put_one_exprish_required(self, code, idx, field, child, static, 2, **options)
+
+
+# if _PYLT12:
+#     # from .shared import re_any_str_or_fstr_start
+
+#     def _put_one_FormattedValue_value(self: 'FST', code: Code | None, idx: int | None, field: str, child: AST,
+#                                       static: onestatic, **options) -> 'FST':
+#         """Need to fluff about with quotes."""
+
+#         raise NodeError('this is only implemented on python version 3.12 and above')
+
+#         # child = _validate_put(self, code, idx, field, child)  # we want to do it in same order as all other puts
+#         # code  = static.code_as(code, self.root.parse_params)
+
+#         # if ((is_jstr := isinstance(codea := code.a, JoinedStr)) or
+#         #     (isinstance(codea, Constant) and ((is_str := isinstance(v := codea.value, str)) or isinstance(v, bytes))) # or
+#         #     # code.end_ln != code.ln
+#         # ):
+#         #     raise NodeError('this is only implemented on python version 3.12 and above in this state')
+
+#         #     # lines  = self.root._lines
+#         #     # quotes = []
+#         #     # parent = self
+
+#         #     # while (parent := parent.parent) and isinstance(parenta := parent.a, expr):
+#         #     #     if isinstance(parenta, JoinedStr):
+#         #     #         ln, col, _, _ = parent.loc
+
+#         #     #         quotes.append(re_any_str_or_fstr_start.match(lines[ln], col).group(1))
+
+#         #     # for q in ("'", '"', '"""', "'''"):
+#         #     #     if q not in quotes:
+#         #     #         break
+
+#         #     # else:
+#         #     #     raise RuntimeError('cannot add any more nexted strings to these f-strings')
+
+#         # return _put_one_exprish_required(self, code, idx, field, child, static, 2, **options)
 
 
 # ......................................................................................................................
@@ -1421,9 +1460,11 @@ def _put_one(self: 'FST', code: Code | None, idx: int | None, field: str, **opti
 # ......................................................................................................................
 # field info
 
-_restrict_default = [FormattedValue, Interpolation, Slice]
-_restrict_fmtval  = [FormattedValue, Interpolation]
-_oneinfo_default  = oneinfo()
+_restrict_default        = [FormattedValue, Interpolation, Slice, Starred]
+_restrict_fmtval_slice   = [FormattedValue, Interpolation, Slice]
+_restrict_fmtval_starred = [FormattedValue, Interpolation, Starred]
+_restrict_fmtval         = [FormattedValue, Interpolation]
+_oneinfo_default         = oneinfo()
 
 def _one_info_constant(self: 'FST', static: onestatic, idx: int | None, field: str) -> oneinfo:  # only Constant and MatchSingleton
     return oneinfo('', None, self.loc)
@@ -1432,6 +1473,7 @@ def _one_info_exprish_required(self: 'FST', static: onestatic, idx: int | None, 
     return _oneinfo_default
 
 _onestatic_expr_required             = onestatic(_one_info_exprish_required, _restrict_default)
+_onestatic_expr_required_starred     = onestatic(_one_info_exprish_required, _restrict_fmtval_slice)
 _onestatic_comprehension_required    = onestatic(_one_info_exprish_required, _restrict_default, code_as=_code_as_comprehension)
 _onestatic_arguments_required        = onestatic(_one_info_exprish_required, _restrict_default, code_as=_code_as_arguments)
 _onestatic_arguments_lambda_required = onestatic(_one_info_exprish_required, _restrict_default, code_as=_code_as_arguments_lambda)
@@ -1443,7 +1485,6 @@ _onestatic_type_param_required       = onestatic(_one_info_exprish_required, _re
 _onestatic_target_Name               = onestatic(_one_info_exprish_required, Name, ctx=Store)
 _onestatic_target_single             = onestatic(_one_info_exprish_required, (Name, Attribute, Subscript), ctx=Store)
 _onestatic_target                    = onestatic(_one_info_exprish_required, (Name, Attribute, Subscript, Tuple, List), ctx=Store)
-_onestatic_Tuple_elts                = onestatic(_one_info_exprish_required, [FormattedValue, Interpolation, Slice])
 
 def _one_info_identifier_required(self: 'FST', static: onestatic, idx: int | None, field: str,  # required, cannot delete or put new
                                   prefix: str | None = None) -> oneinfo:
@@ -1950,7 +1991,7 @@ def _one_info_TypeVarTuple_default_value(self: 'FST', static: onestatic, idx: in
 def _one_info_TypeVarTuple_name(self: 'FST', static: onestatic, idx: int | None, field: str) -> oneinfo:
     return _one_info_identifier_required(self, static, idx, field, '*')
 
-if _PY_VERSION < (3, 12):
+if _PYLT12:
     def _one_info_format_spec(self: 'FST', static: onestatic, idx: int | None, field: str) -> oneinfo:
         raise NotImplementedError('this is only implemented on python version 3.12 and above')
 
@@ -2006,7 +2047,7 @@ _PUT_ONE_HANDLERS = {
     (ClassDef, 'decorator_list'):         (True,  _put_one_exprish_required, _onestatic_expr_required), # expr*
     (ClassDef, 'name'):                   (False, _put_one_identifier_required, onestatic(_one_info_ClassDef_name, _restrict_default, code_as=_code_as_identifier)), # identifier
     (ClassDef, 'type_params'):            (True,  _put_one_exprish_required, _onestatic_type_param_required), # type_param*
-    (ClassDef, 'bases'):                  (True,  _put_one_ClassDef_bases, _onestatic_expr_required), # expr*
+    (ClassDef, 'bases'):                  (True,  _put_one_ClassDef_bases, _onestatic_expr_required_starred), # expr*
     (ClassDef, 'keywords'):               (True,  _put_one_exprish_required, _onestatic_keyword_required), # keyword*
     (ClassDef, 'body'):                   (True,  None, None), # stmt*
     (Return, 'value'):                    (False, _put_one_exprish_optional, onestatic(_one_info_Return_value, _restrict_default)), # expr?
@@ -2077,7 +2118,7 @@ _PUT_ONE_HANDLERS = {
     (Dict, 'keys'):                       (False, _put_one_Dict_keys, onestatic(_one_info_Dict_key, _restrict_default)), # expr*
     (Dict, 'values'):                     (False, _put_one_exprish_required, _onestatic_expr_required), # expr*
     (Dict, ''):                           (True,  None, None), # expr*
-    (Set, 'elts'):                        (True,  _put_one_exprish_required, _onestatic_expr_required), # expr*
+    (Set, 'elts'):                        (True,  _put_one_exprish_required, _onestatic_expr_required_starred), # expr*
     (ListComp, 'elt'):                    (False, _put_one_exprish_required, _onestatic_expr_required), # expr
     (ListComp, 'generators'):             (True,  _put_one_exprish_required, _onestatic_comprehension_required), # comprehension*
     (SetComp, 'elt'):                     (False, _put_one_exprish_required, _onestatic_expr_required), # expr
@@ -2095,9 +2136,9 @@ _PUT_ONE_HANDLERS = {
     (Compare, 'comparators'):             (False, _put_one_exprish_required, _onestatic_expr_required), # expr*
     (Compare, ''):                        (False, _put_one_Compare_combined, _onestatic_expr_required), # expr*
     (Call, 'func'):                       (False, _put_one_exprish_required, _onestatic_expr_required), # expr
-    (Call, 'args'):                       (True,  _put_one_Call_args, onestatic(_one_info_exprish_required, _restrict_default, code_as=_code_as_callarg)), # expr*
+    (Call, 'args'):                       (True,  _put_one_Call_args, onestatic(_one_info_exprish_required, _restrict_fmtval_slice, code_as=_code_as_callarg)), # expr*
     (Call, 'keywords'):                   (True,  _put_one_exprish_required, _onestatic_keyword_required), # keyword*
-    (FormattedValue, 'value'):            (False, _put_one_exprish_required, _onestatic_expr_required), # expr
+    (FormattedValue, 'value'):            (False, _put_one_exprish_required, _onestatic_expr_required), # expr  # THIS IS PREVENTED in _Modifying on py <3.12!
     (FormattedValue, 'conversion'):       (False, _put_one_NOT_IMPLEMENTED_YET, onestatic(_one_info_conversion, Constant)), # int  # onestatic only here for info for raw put, Constant must be str
     (FormattedValue, 'format_spec'):      (False, _put_one_NOT_IMPLEMENTED_YET, onestatic(_one_info_format_spec, JoinedStr)), # expr?  # onestatic only here for info for raw put
     (Interpolation, 'value'):             (False, _put_one_exprish_required, _onestatic_expr_required), # expr
@@ -2109,10 +2150,10 @@ _PUT_ONE_HANDLERS = {
     (Attribute, 'value'):                 (False, _put_one_Attribute_value, _onestatic_expr_required), # expr
     (Attribute, 'attr'):                  (False, _put_one_identifier_required, onestatic(_one_info_Attribute_attr, _restrict_default, code_as=_code_as_identifier)), # identifier
     (Subscript, 'value'):                 (False, _put_one_Subscript_value, _onestatic_expr_required), # expr
-    (Subscript, 'slice'):                 (False, _put_one_exprish_required, onestatic(_one_info_exprish_required, _restrict_fmtval, code_as=_code_as_slice)), # expr
+    (Subscript, 'slice'):                 (False, _put_one_exprish_required, onestatic(_one_info_exprish_required, _restrict_fmtval_starred, code_as=_code_as_slice)), # expr
     (Starred, 'value'):                   (False, _put_one_exprish_required, _onestatic_expr_required), # expr
     (Name, 'id'):                         (False, _put_one_identifier_required, _onestatic_identifier_required), # identifier
-    (List, 'elts'):                       (True,  _put_one_exprish_required, _onestatic_expr_required), # expr*
+    (List, 'elts'):                       (True,  _put_one_exprish_required, _onestatic_expr_required_starred), # expr*
     (Tuple, 'elts'):                      (True,  _put_one_Tuple_elts, onestatic(_one_info_exprish_required, _restrict_fmtval, code_as=_code_as_sliceelt)), # expr*  - special handling because Tuples can contain Slices in an unparenthesized .slice field
     (Slice, 'lower'):                     (False, _put_one_exprish_optional, _onestatic_Slice_lower), # expr?
     (Slice, 'upper'):                     (False, _put_one_exprish_optional, _onestatic_Slice_upper), # expr?

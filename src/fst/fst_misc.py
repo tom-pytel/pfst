@@ -10,7 +10,7 @@ from .astutil import *
 from .astutil import Interpolation
 
 from .shared import (
-    astfield, fstloc, nspace,
+    NodeError, astfield, fstloc, nspace,
     BLOCK,
     HAS_DOCSTRING,
     re_empty_line_start, re_line_end_cont_or_comment,
@@ -61,124 +61,132 @@ def _out_lines(fst: 'FST', linefunc: Callable, ln: int, col: int, end_ln: int, e
 _GLOBALS = globals() | {'_GLOBALS': None}
 # ----------------------------------------------------------------------------------------------------------------------
 
-class _Modifying:
-    def __init__(self, fst: 'FST', field: str | Literal[False] = False):
-        """Call before modifying `FST` node (even just source) to mark possible data for updates after modification.
-        This function just collects information when it enters so is safe to call without ever explicitly exiting.
-        Can be used as a context manager or can just call `.enter()` and `.done()` manually.
-
-        It is assumed that neither the `fst` node passed in or its parents will not be changed, otherwise this must
-        be used manually and not as a context manager and the changed node must be passed into the `.done()` method
-        on success. In this case currently nothing is done as it is assumed the changes are due to raw reparse which
-        goes up to the statement level.
-
-        **Parameters:**
-        - `fst`: Parent of or actual node being modified, depending on value of `field` (because actual child may be
-            being created and may not exist yet).
-        - `field`: Name of field being modified or `False` to indicate that `self` is the child, in which case the
-            parent and field will be gotten from `self`.
-        """
-
-        # TODO: update f/t-string f"{val=}" preceding string constants for updated value with '=', evil thing
-
-        if field is False:
-            pfield = fst.pfield
-
-            if fst := fst.parent:
-                field = pfield.name
-
-        self.fst   = fst if fst and isinstance(fst.a, expr) else False
-        self.field = field
-        self.data  = data = []  # [(FormattedValue or Interpolation FST, len(dbg_str) or None, bool do val_str), ...]
-
-        if self.fst:
-            while isinstance(fst.a, expr):
-                parent = fst.parent
-                pfield = fst.pfield
-
-                if field == 'value' and (strs := fst._get_fmtval_interp_strs()):
-                    dbg_str, val_str, end_ln, end_col = strs
-
-                    if (dbg_str is None or not parent or not (idx := pfield.idx) or
-                        not isinstance(prev := parent.a.values[idx - 1], Constant) or
-                        not isinstance(v := prev.value, str) or not v.endswith(dbg_str) or
-                        (prevf := prev.f).end_col != end_col or prevf.end_ln != end_ln
-                    ):
-                        if val_str is not None:
-                            data.append((fst, None, True))
-                        elif not data:  # first one always gets put because needs to do other stuff
-                            data.append((fst, None, False))
-
-                    else:
-                        data.append((fst, len(dbg_str), bool(val_str)))
-
-                if not parent:
-                    break
-
-                field = pfield.name
-                fst   = parent
-
-    def __enter__(self):
-        return self.enter()
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        if exc_type is None:
-            self.done()
-
-        return False
-
-    def enter(self):
-        return self
-
-    def done(self, fst: Optional['FST'] | Literal[False] = False):
-        """Call after modifying `FST` node to apply any needed changes to parents.
-
-        **Parameters:**
-        - `fst`: Parent node of modified field AFTER modification (may have changed or not exist anymore). Or can be
-            special value `False` to indicate that original `fst` was definitely not changed. In order to use this
-            mechanism the class must be used explicitly and not as a context manager.
-        """
-
-        if fst is False:
-            if not (fst := self.fst):
-                return
-
-        elif fst is not self.fst:  # if parent of field changed then entire statement was reparsed and we have nothing to do
-            return
-
-        if data := self.data:
-            first = data[0]
-
-            for strs in data:
-                fst, len_old_dbg_str, do_val_str  = strs
-
-                if strs is first:  # on first one check to make sure no double '{{', and if so then fix: f'{{a}}' -> f'{ {a}}'
-                    ln, col, _, _ = fst.value.loc
-                    fix_const     = ((parent := fst.parent) and (idx := fst.pfield.idx) and   # parent should exist here but just in case, whether we need to reset start of debug string or not
-                        (f := parent.a.values[idx - 1].f).col == col and f.ln == ln)
-
-                    if fst.root.lines[ln].startswith('{', col):
-                        fst._put_src([' '], ln, col, ln, col, False)
-
-                        if fix_const:
-                            f.a.col_offset -= 1
-
-                dbg_str, val_str, end_ln, end_col = fst._get_fmtval_interp_strs()
-
-                if do_val_str:
-                    fst.a.str = val_str
-
-                if len_old_dbg_str is not None:
-                    lines            = fst.root._lines
-                    c                = fst.parent.a.values[fst.pfield.idx - 1]
-                    c.value          = c.value[:-len_old_dbg_str] + dbg_str
-                    c.end_lineno     = end_ln + 1
-                    c.end_col_offset = lines[end_ln].c2b(end_col)
-
-if _PY_VERSION < (3, 12):  # override _Modifying if py too low
+if _PY_VERSION >= (3, 12):
     class _Modifying:
         def __init__(self, fst: 'FST', field: str | Literal[False] = False):
-            """Dummy because py < 3.12 doesn't have f-string location information."""
+            """Call before modifying `FST` node (even just source) to mark possible data for updates after modification.
+            This function just collects information when it enters so is safe to call without ever explicitly exiting.
+            Can be used as a context manager or can just call `.enter()` and `.done()` manually.
+
+            It is assumed that neither the `fst` node passed in or its parents will not be changed, otherwise this must
+            be used manually and not as a context manager and the changed node must be passed into the `.done()` method
+            on success. In this case currently nothing is done as it is assumed the changes are due to raw reparse which
+            goes up to the statement level.
+
+            **Parameters:**
+            - `fst`: Parent of or actual node being modified, depending on value of `field` (because actual child may be
+                being created and may not exist yet).
+            - `field`: Name of field being modified or `False` to indicate that `self` is the child, in which case the
+                parent and field will be gotten from `self`.
+            """
+
+            # TODO: update f/t-string f"{val=}" preceding string constants for updated value with '=', evil thing
+
+            if field is False:
+                pfield = fst.pfield
+
+                if fst := fst.parent:
+                    field = pfield.name
+
+            self.fst   = fst if fst and isinstance(fst.a, expr) else False
+            self.field = field
+            self.data  = data = []  # [(FormattedValue or Interpolation FST, len(dbg_str) or None, bool do val_str), ...]
+
+            if self.fst:
+                while isinstance(fst.a, expr):
+                    parent = fst.parent
+                    pfield = fst.pfield
+
+                    if field == 'value' and (strs := fst._get_fmtval_interp_strs()):
+                        dbg_str, val_str, end_ln, end_col = strs
+
+                        if (dbg_str is None or not parent or not (idx := pfield.idx) or
+                            not isinstance(prev := parent.a.values[idx - 1], Constant) or
+                            not isinstance(v := prev.value, str) or not v.endswith(dbg_str) or
+                            (prevf := prev.f).end_col != end_col or prevf.end_ln != end_ln
+                        ):
+                            if val_str is not None:
+                                data.append((fst, None, True))
+                            elif not data:  # first one always gets put because needs to do other stuff
+                                data.append((fst, None, False))
+
+                        else:
+                            data.append((fst, len(dbg_str), bool(val_str)))
+
+                    if not parent:
+                        break
+
+                    field = pfield.name
+                    fst   = parent
+
+        def __enter__(self):
+            return self.enter()
+
+        def __exit__(self, exc_type, exc_val, exc_tb):
+            if exc_type is None:
+                self.done()
+
+            return False
+
+        def enter(self):
+            return self
+
+        def done(self, fst: Optional['FST'] | Literal[False] = False):
+            """Call after modifying `FST` node to apply any needed changes to parents.
+
+            **Parameters:**
+            - `fst`: Parent node of modified field AFTER modification (may have changed or not exist anymore). Or can be
+                special value `False` to indicate that original `fst` was definitely not changed. In order to use this
+                mechanism the class must be used explicitly and not as a context manager.
+            """
+
+            if fst is False:
+                if not (fst := self.fst):
+                    return
+
+            elif fst is not self.fst:  # if parent of field changed then entire statement was reparsed and we have nothing to do
+                return
+
+            if data := self.data:
+                first = data[0]
+
+                for strs in data:
+                    fst, len_old_dbg_str, do_val_str  = strs
+
+                    if strs is first:  # on first one check to make sure no double '{{', and if so then fix: f'{{a}}' -> f'{ {a}}'
+                        ln, col, _, _ = fst.a.value.f.loc
+                        fix_const     = ((parent := fst.parent) and (idx := fst.pfield.idx) and   # parent should exist here but just in case, whether we need to reset start of debug string or not
+                            (f := parent.a.values[idx - 1].f).col == col and f.ln == ln)
+
+                        if fst.root.lines[ln].startswith('{', col):
+                            fst._put_src([' '], ln, col, ln, col, False)
+
+                            if fix_const:
+                                f.a.col_offset -= 1
+
+                    dbg_str, val_str, end_ln, end_col = fst._get_fmtval_interp_strs()
+
+                    if do_val_str:
+                        fst.a.str = val_str
+
+                    if len_old_dbg_str is not None:
+                        lines            = fst.root._lines
+                        c                = fst.parent.a.values[fst.pfield.idx - 1]
+                        c.value          = c.value[:-len_old_dbg_str] + dbg_str
+                        c.end_lineno     = end_ln + 1
+                        c.end_col_offset = lines[end_ln].c2b(end_col)
+
+else: # override _Modifying if py too low
+    class _Modifying:
+        """Stripped down version which just does stuff that can be done on py < 3.12."""
+
+        def __init__(self, fst: 'FST', field: str | Literal[False] = False):
+            while not isinstance(a := fst.a, (stmt, pattern, match_case, ExceptHandler)):
+                if isinstance(a, JoinedStr):
+                    raise NodeError('this is not implemented on python < 3.12')
+
+                if not (fst := fst.parent):
+                    break
 
         def __enter__(self):
             return self
@@ -191,6 +199,54 @@ if _PY_VERSION < (3, 12):  # override _Modifying if py too low
 
         def done(self, fst: Optional['FST'] | Literal[False] = False):
             pass
+
+        # def __init__(self, fst: 'FST', field: str | Literal[False] = False):
+        #     if field is False:
+        #         pfield = fst.pfield
+
+        #         if fst := fst.parent:
+        #             field = pfield.name
+
+        #     self.fst   = fst if fst and isinstance(fst.a, expr) else False
+        #     self.field = field
+
+        # def __enter__(self):
+        #     return self.enter()
+
+        # def __exit__(self, exc_type, exc_val, exc_tb):
+        #     if exc_type is None:
+        #         self.done()
+
+        #     return False
+
+        # def enter(self):
+        #     return self
+
+        # def done(self, fst: Optional['FST'] | Literal[False] = False):
+        #     if fst is False:
+        #         if not (fst := self.fst):
+        #             return
+
+        #     elif fst is not self.fst:  # if parent of field changed then entire statement was reparsed and we have nothing to do
+        #         return
+
+        #     field = self.field
+
+        #     while isinstance(a := fst.a, expr):
+        #         if isinstance(a, FormattedValue):
+        #             if field == 'value':
+        #                 ln, col, _, _ = (value := a.value).f.loc
+
+        #                 if fst.root.lines[ln].startswith('{', col) and not isinstance(value, Tuple):  # because f'{1,2}' starts tuple at the curly
+        #                     fst._put_src([' '], ln, col, ln, col, False)
+
+        #             break
+
+        #         if not (parent := fst.parent):
+        #             break
+
+        #         field = fst.pfield.name
+        #         fst   = parent
 
 
 @staticmethod

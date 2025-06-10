@@ -16,38 +16,39 @@ from .astutil import TypeAlias, TryStar, TemplateStr, type_param, Interpolation
 __all__ = ['Code', 'Mode', 'NodeError', 'astfield', 'fstloc']
 
 
-EXPRISH                 = (expr, arg, alias, withitem, pattern, type_param)
-STMTISH                 = (stmt, ExceptHandler, match_case)  # always in lists, cannot be inside multilines
-STMTISH_OR_MOD          = STMTISH + (mod,)
-STMTISH_OR_STMTMOD      = STMTISH + (Module, Interactive)
-BLOCK                   = (FunctionDef, AsyncFunctionDef, ClassDef, For, AsyncFor, While, If, With, AsyncWith, Match,
-                           Try, TryStar, ExceptHandler, match_case)
-BLOCK_OR_MOD            = BLOCK + (mod,)
-SCOPE                   = (FunctionDef, AsyncFunctionDef, ClassDef, Lambda, ListComp, SetComp, DictComp, GeneratorExp)
-SCOPE_OR_MOD            = SCOPE + (mod,)
-NAMED_SCOPE             = (FunctionDef, AsyncFunctionDef, ClassDef)
-NAMED_SCOPE_OR_MOD      = NAMED_SCOPE + (mod,)
-ANONYMOUS_SCOPE         = (Lambda, ListComp, SetComp, DictComp, GeneratorExp)
+EXPRISH                  = (expr, arg, alias, withitem, pattern, type_param)
+STMTISH                  = (stmt, ExceptHandler, match_case)  # always in lists, cannot be inside multilines
+STMTISH_OR_MOD           = STMTISH + (mod,)
+STMTISH_OR_STMTMOD       = STMTISH + (Module, Interactive)
+BLOCK                    = (FunctionDef, AsyncFunctionDef, ClassDef, For, AsyncFor, While, If, With, AsyncWith, Match,
+                            Try, TryStar, ExceptHandler, match_case)
+BLOCK_OR_MOD             = BLOCK + (mod,)
+SCOPE                    = (FunctionDef, AsyncFunctionDef, ClassDef, Lambda, ListComp, SetComp, DictComp, GeneratorExp)
+SCOPE_OR_MOD             = SCOPE + (mod,)
+NAMED_SCOPE              = (FunctionDef, AsyncFunctionDef, ClassDef)
+NAMED_SCOPE_OR_MOD       = NAMED_SCOPE + (mod,)
+ANONYMOUS_SCOPE          = (Lambda, ListComp, SetComp, DictComp, GeneratorExp)
 
-PARENTHESIZABLE         = (expr, pattern)
-HAS_DOCSTRING           = NAMED_SCOPE_OR_MOD
+PARENTHESIZABLE          = (expr, pattern)
+HAS_DOCSTRING            = NAMED_SCOPE_OR_MOD
 
-STMTISH_FIELDS          = frozenset(('body', 'orelse', 'finalbody', 'handlers', 'cases'))
+STMTISH_FIELDS           = frozenset(('body', 'orelse', 'finalbody', 'handlers', 'cases'))
 
-re_empty_line_start     = re.compile(r'[ \t]*')     # start of completely empty or space-filled line (from start pos, start of line indentation)
-re_empty_line           = re.compile(r'[ \t]*$')    # completely empty or space-filled line (from start pos, start of line indentation)
-re_comment_line_start   = re.compile(r'[ \t]*#')    # empty line preceding a comment
-re_line_continuation    = re.compile(r'[^#]*\\$')   # line continuation with backslash not following a comment start '#' (from start pos, assumed no asts contained in line)
-re_line_trailing_space  = re.compile(r'.*?(\s*)$')  # location of trailing whitespace at the end of a line
+re_empty_line_start      = re.compile(r'[ \t]*')     # start of completely empty or space-filled line (from start pos, start of line indentation)
+re_empty_line            = re.compile(r'[ \t]*$')    # completely empty or space-filled line (from start pos, start of line indentation)
+re_comment_line_start    = re.compile(r'[ \t]*#')    # empty line preceding a comment
+re_line_continuation     = re.compile(r'[^#]*\\$')   # line continuation with backslash not following a comment start '#' (from start pos, assumed no asts contained in line)
+re_line_trailing_space   = re.compile(r'.*?(\s*)$')  # location of trailing whitespace at the end of a line
 
-re_oneline_str          = re.compile(r'(?:b|r|rb|br|u|)  (?:  \'(?:\\.|[^\\\'])*?\'  |  "(?:\\.|[^\\"])*?"  )',   # I f'])*?\'ng hate these!
+re_oneline_str           = re.compile(r'(?:b|r|rb|br|u|)  (?:  \'(?:\\.|[^\\\'])*?\'  |  "(?:\\.|[^\\"])*?"  )',   # I f'])*?\'ng hate these!
                                      re.VERBOSE | re.IGNORECASE)
-re_contline_str_start   = re.compile(r'(?:b|r|rb|br|u|)  (\'|")', re.VERBOSE | re.IGNORECASE)
-re_contline_str_end_sq  = re.compile(r'(?:\\.|[^\\\'])*?  \'', re.VERBOSE)
-re_contline_str_end_dq  = re.compile(r'(?:\\.|[^\\"])*?  "', re.VERBOSE)
-re_multiline_str_start  = re.compile(r'(?:b|r|rb|br|u|)  (\'\'\'|""")', re.VERBOSE | re.IGNORECASE)
-re_multiline_str_end_sq = re.compile(r'(?:\\.|[^\\])*?  \'\'\'', re.VERBOSE)
-re_multiline_str_end_dq = re.compile(r'(?:\\.|[^\\])*?  """', re.VERBOSE)
+re_contline_str_start    = re.compile(r'(?:b|r|rb|br|u|)  (\'|")', re.VERBOSE | re.IGNORECASE)
+re_contline_str_end_sq   = re.compile(r'(?:\\.|[^\\\'])*?  \'', re.VERBOSE)
+re_contline_str_end_dq   = re.compile(r'(?:\\.|[^\\"])*?  "', re.VERBOSE)
+re_multiline_str_start   = re.compile(r'(?:b|r|rb|br|u|)  (\'\'\'|""")', re.VERBOSE | re.IGNORECASE)
+re_multiline_str_end_sq  = re.compile(r'(?:\\.|[^\\])*?  \'\'\'', re.VERBOSE)
+re_multiline_str_end_dq  = re.compile(r'(?:\\.|[^\\])*?  """', re.VERBOSE)
+re_any_str_or_fstr_start = re.compile(r'(?:b|r|rb|br|u|f|t|)  (\'\'\'|\'|"""|")', re.VERBOSE | re.IGNORECASE)
 
 re_empty_line_cont_or_comment   = re.compile(r'[ \t]*(\\|#.*)?$')        # empty line or line continuation or a pure comment line
 re_line_end_cont_or_comment     = re.compile(r'.*?(\\|#.*)?$')           # line end line continuation or a comment

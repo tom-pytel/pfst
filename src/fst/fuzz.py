@@ -485,8 +485,8 @@ class PutOneExpr(Fuzzy):
         'a\n.\nb',
         'a[b]',
         'a\n[\nb\n]',
-        # '*a',
-        # '*\na',
+        '*a',
+        '*\na',
         '[a, b]',
         '[\na\n,\nb\n]',
         '(a, b)',
@@ -537,7 +537,7 @@ class PutOneExpr(Fuzzy):
         '\nb"""\na\n"""\n',
         '\na\n.\nb\n',
         '\na\n[\nb\n]\n',
-        # '\n*\na\n',
+        '\n*\na\n',
         '\n[\na\n,\nb\n]\n',
         '\n(\na\n,\nb\n)\n',
         '\na\n,\n',
@@ -555,8 +555,9 @@ class PutOneExpr(Fuzzy):
     exprs = [FST(e, 'expr') for e in exprs]
 
     def fuzz_one(self, fst, fnm) -> bool:
-        count = 0
-        exprs = []
+        count       = 0
+        dst_exprs   = []
+        extra_exprs = []
 
         for f in fst.walk(True):
             if isinstance(a := f.a, expr):
@@ -566,31 +567,27 @@ class PutOneExpr(Fuzzy):
                 if not f.is_parsable():
                     continue
 
-                exprs.append(f)
+                dst_exprs.append(f)
+                extra_exprs.append(f.copy())
 
         try:
-            for e in reversed(exprs):
+            for e in reversed(dst_exprs):
                 if not ((count := count + 1) % 100):
                     sys.stdout.write('.')
                     sys.stdout.flush()
 
-                while True:
-                    org = choice(self.exprs)
-
-                    if not (_PYLT12 and isinstance(org.a, Starred) and e.pfield.name == 'slice'):  # because py <3.12 can't have naked Starred in .slice
-                        break
-
-                code = org.copy()
+                org = choice(choice([self.exprs, extra_exprs]))
 
                 match randint(0, 2):
                     case 0:
                         put  = 'fst'
+                        code = org.copy()
                     case 1:
                         put  = 'ast'
-                        code = code.a
+                        code = copy_ast(org.a)
                     case 2:
                         put  = 'src'
-                        code = code.src
+                        code = org.src
 
                 try:
                     e.replace(code, raw=False)
@@ -602,11 +599,17 @@ class PutOneExpr(Fuzzy):
                     msg = str(exc)
 
                     ignorable = isinstance(exc, (NodeError, ValueError)) and (
+                        msg.endswith('cannot be Starred') or
+                        'this is not implemented on python < 3.12' in msg or
+                        # 'this is only implemented on python version 3.12 and above' in msg or
+                        'not implemented' in msg or
                         'in this state' in msg or
                         'pattern expression' in msg or
                         'invalid value for MatchValue.value' in msg
                         # (msg.startswith('cannot put ') and (msg.endswith(' to MatchMapping.keys') or msg.endswith(' to MatchValue.value')))
                     )
+
+                    if not ignorable and isinstance(exc, SyntaxError) and msg.startswith('cannot use starred expression here'): ignorable = True  # TEMPORARY!!!
 
                     if not ignorable:  # started with because of Starred Call.args being replaced after keywords
                         print('\n-', put, '-'*74)
@@ -628,6 +631,9 @@ class PutOneExpr(Fuzzy):
 
         finally:
             sys.stdout.write('\n')
+
+        if self.verbose:
+            print(fst.src)
 
 
 class PutOnePat(Fuzzy):

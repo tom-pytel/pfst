@@ -4,6 +4,7 @@ their respective `ast` module counterparts."""
 FST = None  # temporary standin for circular import of real `FST` class
 
 import ast as ast_
+import sys
 from ast import *
 from ast import parse as ast_parse, unparse as ast_unparse
 from contextlib import contextmanager
@@ -26,6 +27,9 @@ from .shared import (
 __all__ = [
     'parse', 'unparse', 'FST',
 ]
+
+_PY_VERSION = sys.version_info[:2]
+_PYLT12     = _PY_VERSION < (3, 12)
 
 _REPR_SRC_LINES = 0  # for debugging
 
@@ -2449,9 +2453,12 @@ class FST:
             parenta = parent.a
 
             if isinstance(parenta, (List, Dict, Set, ListComp, SetComp, DictComp, GeneratorExp,
-                                    FormattedValue, Interpolation, JoinedStr, TemplateStr,
+                                    FormattedValue, Interpolation, TemplateStr, JoinedStr,
                                     MatchMapping)):
                 return True
+
+            # if not _PYLT12 and isinstance(parenta, JoinedStr):
+            #     return True
 
             if isinstance(parenta, (FunctionDef, AsyncFunctionDef)):
                 return self.pfield.name in ('type_params', 'args')

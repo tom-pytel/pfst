@@ -9410,6 +9410,15 @@ a
         self.assertRaises(SyntaxError, FST('i = a, b').value.elts[0].replace, 'x:y:z', raw=False)
         self.assertRaises(SyntaxError, FST('i = (a, b)').value.elts[0].replace, 'x:y:z', raw=False)
 
+        # Starred where allowed
+
+        self.assertEqual('*x, b', FST('a, b').elts[0].replace('*x', raw=False).root.src)
+        self.assertEqual('(*x, b)', FST('(a, b)').elts[0].replace('*x', raw=False).root.src)
+        self.assertEqual('[*x, b]', FST('[a, b]').elts[0].replace('*x', raw=False).root.src)
+        self.assertEqual('{*x, b}', FST('{a, b}').elts[0].replace('*x', raw=False).root.src)
+        self.assertEqual('class cls(*x): pass', FST('class cls(a): pass').bases[0].replace('*x', raw=False).root.src)
+        self.assertEqual('call(*x)', FST('call(a)').args[0].replace('*x', raw=False).root.src)
+
     def test_put_one_pars(self):
         f = FST('a = b', 'exec').body[0]
         g = FST('(i := j)', 'exec').body[0].value.copy(pars=False)
