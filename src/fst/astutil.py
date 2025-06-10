@@ -377,11 +377,14 @@ def is_valid_MatchSingleton_value(ast: AST) -> bool:
     return isinstance(ast, Constant) and ast.value in (True, False, None)
 
 
-def is_valid_MatchValue_value(ast: AST) -> bool:
+def is_valid_MatchValue_value(ast: AST, consts: tuple[type[constant]] = (str, bytes, int, float, complex)) -> bool:
     """Check if `ast` is a valid node for a `MatchValue.value` field."""
 
     if isinstance(ast, Attribute):
-        return True
+        while isinstance(ast := ast.value, Attribute):
+            pass
+
+        return isinstance(ast, Name)
 
     if isinstance(ast, UnaryOp):
         if not isinstance(ast.op, USub):
@@ -390,7 +393,7 @@ def is_valid_MatchValue_value(ast: AST) -> bool:
         ast = ast.operand
 
     if isinstance(ast, Constant):
-        return isinstance(ast.value, (str, bytes, int, float, complex))
+        return ast.value.__class__ in consts  # because bool is int
 
     if isinstance(ast, BinOp):
         if isinstance(ast.op, (Add, Sub)) and isinstance(r := ast.right, Constant) and isinstance(r.value, complex):
@@ -411,35 +414,37 @@ def is_valid_MatchValue_value(ast: AST) -> bool:
 def is_valid_MatchMapping_key(ast: AST) -> bool:
     """Check if `ast` is a valid node for a `MatchMapping.keys` field."""
 
-    if isinstance(ast, Attribute):
-        while isinstance(ast := ast.value, Attribute):
-            pass
+    return is_valid_MatchValue_value(ast, (str, bytes, int, float, complex, bool, NoneType))
 
-        return isinstance(ast, Name)
+    # if isinstance(ast, Attribute):
+    #     while isinstance(ast := ast.value, Attribute):
+    #         pass
 
-    if isinstance(ast, UnaryOp):
-        if not isinstance(ast.op, USub):
-            return False
+    #     return isinstance(ast, Name)
 
-        ast = ast.operand
+    # if isinstance(ast, UnaryOp):
+    #     if not isinstance(ast.op, USub):
+    #         return False
 
-    if isinstance(ast, Constant):
-        return isinstance(ast.value, (str, bytes, int, float, complex, bool, NoneType))
+    #     ast = ast.operand
 
-    if isinstance(ast, BinOp):
-        if isinstance(ast.op, (Add, Sub)) and isinstance(r := ast.right, Constant) and isinstance(r.value, complex):
-            l = ast.left
+    # if isinstance(ast, Constant):
+    #     return isinstance(ast.value, (str, bytes, int, float, complex, bool, NoneType))
 
-            if isinstance(l, UnaryOp):
-                if not isinstance(l.op, USub):
-                    return False
+    # if isinstance(ast, BinOp):
+    #     if isinstance(ast.op, (Add, Sub)) and isinstance(r := ast.right, Constant) and isinstance(r.value, complex):
+    #         l = ast.left
 
-                l = l.operand
+    #         if isinstance(l, UnaryOp):
+    #             if not isinstance(l.op, USub):
+    #                 return False
 
-            if isinstance(l, Constant) and isinstance(l.value, (int, float)):
-                return True
+    #             l = l.operand
 
-    return False
+    #         if isinstance(l, Constant) and isinstance(l.value, (int, float)):
+    #             return True
+
+    # return False
 
 
 def reduce_ast(ast: AST, multi_mod: bool | type[Exception] = False, reduce_Expr: bool = True) -> AST | None:

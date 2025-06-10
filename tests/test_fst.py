@@ -9316,8 +9316,38 @@ a
         self.assertRaises(NodeError, f.pattern.keys[0].put, 'a[b].b', raw=False)
         self.assertRaises(NodeError, f.pattern.keys[0].put, '(a)', raw=False)
         self.assertRaises(NodeError, f.pattern.keys[0].put, '(a).b', raw=False)
+        self.assertRaises(NodeError, f.pattern.keys[0].replace, '(a).b', raw=False)
         f.pattern.keys[0].put('x.y.z', raw=False)
         self.assertEqual('case {x.y.z.b: 1}: pass', f.src)
+        f.pattern.keys[0].replace('x.y.z', raw=False)
+        self.assertEqual('case {x.y.z: 1}: pass', f.src)
+        f.verify()
+
+        f = FST('case a.b: pass')
+        self.assertRaises(NodeError, f.pattern.value.put, 'f().b', raw=False)
+        self.assertRaises(NodeError, f.pattern.value.put, '(1+2).b', raw=False)
+        self.assertRaises(NodeError, f.pattern.value.put, 'a[b].b', raw=False)
+        self.assertRaises(NodeError, f.pattern.value.put, '(a)', raw=False)
+        self.assertRaises(NodeError, f.pattern.value.put, '(a).b', raw=False)
+        self.assertRaises(NodeError, f.pattern.value.replace, '(a).b', raw=False)
+        f.pattern.value.put('x.y.z', raw=False)
+        self.assertEqual('case x.y.z.b: pass', f.src)
+        f.pattern.value.replace('x.y.z', raw=False)
+        self.assertEqual('case x.y.z: pass', f.src)
+        f.verify()
+
+        f = FST('case a.b(): pass')
+        self.assertRaises(NodeError, f.pattern.cls.put, 'f().b', raw=False)
+        self.assertRaises(NodeError, f.pattern.cls.put, '(1+2).b', raw=False)
+        self.assertRaises(NodeError, f.pattern.cls.put, 'a[b].b', raw=False)
+        self.assertRaises(NodeError, f.pattern.cls.put, '(a)', raw=False)
+        self.assertRaises(NodeError, f.pattern.cls.put, '(a).b', raw=False)
+        self.assertRaises(NodeError, f.pattern.cls.put, 'a\n.\nb', raw=False)
+        self.assertRaises(NodeError, f.pattern.cls.replace, '(a).b', raw=False)
+        f.pattern.cls.put('x.y.z', raw=False)
+        self.assertEqual('case x.y.z.b(): pass', f.src)
+        f.pattern.cls.replace('x.y.z', raw=False)
+        self.assertEqual('case x.y.z(): pass', f.src)
         f.verify()
 
         f = FST('case a, b: pass')
@@ -9358,6 +9388,12 @@ a
         f = FST('case (a | b): pass')
         f.pattern.replace(FST('x, *y', pattern), raw=False)
         self.assertEqual('case [x, *y]: pass', f.src)
+        f.verify()
+
+        f = FST('case 1: pass')
+        self.assertRaises(NodeError, f.pattern.value.replace, 'True', raw=False)
+        self.assertRaises(NodeError, f.pattern.value.replace, 'False', raw=False)
+        self.assertRaises(NodeError, f.pattern.value.replace, 'None', raw=False)
         f.verify()
 
     def test_put_one_pars(self):
@@ -9429,7 +9465,7 @@ a
 
         f = FST('match a:\n case (1): pass', 'exec')
         f.body[0].cases[0].pattern.put('(2)', pars='auto')
-        self.assertEqual('match a:\n case (2): pass', f.src)
+        self.assertEqual('match a:\n case ((2)): pass', f.src)
         f.verify()
 
         f = FST('match a:\n case (1): pass', 'exec')
@@ -9488,7 +9524,7 @@ a
 
         f = FST('match a:\n case (1): pass', 'exec')
         f.body[0].cases[0].pattern.put('(2)')
-        self.assertEqual('match a:\n case (2): pass', f.src)
+        self.assertEqual('match a:\n case ((2)): pass', f.src)
         f.body[0].cases[0].pattern.put('(3)', pars=True)
 
     def test_put_one_pars_need_matrix(self):

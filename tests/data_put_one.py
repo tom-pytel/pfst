@@ -1162,7 +1162,7 @@ Module - ROOT 0,0..0,11
 """),
 
 (r"""match a:
- case c(): pass""", 'body[0].cases[0].pattern', None, 'cls', {'raw': False}, r"""new, to""", r"""**NodeError('expecting one of (Name, Attribute) for MatchClass.cls, got Tuple')**""", r"""
+ case c(): pass""", 'body[0].cases[0].pattern', None, 'cls', {'raw': False}, r"""new, to""", r"""**NodeError('cannot put Tuple to pattern expression')**""", r"""
 """),
 
 (r"""match a:

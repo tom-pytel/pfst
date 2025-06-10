@@ -521,7 +521,7 @@ def _validate_put_ast(self: 'FST', put_ast: AST, idx: int | None, field: str, st
                                 f'cannot be {put_ast.__class__.__name__}')
 
         elif isinstance(restrict, FunctionType):
-            if not restrict(put_ast):
+            if not restrict(put_ast):  # not "restrict" meaning is inverted here, really means "not allow"
                 raise NodeError(f'invalid value for {self.a.__class__.__name__}.{field}' +
                                 ('' if idx is None else f'[{idx}]'))
 
@@ -531,6 +531,55 @@ def _validate_put_ast(self: 'FST', put_ast: AST, idx: int | None, field: str, st
                               f'expecting one of ({", ".join(c.__name__ for c in restrict)}) for '
                               f'{self.a.__class__.__name__}.{field}{"" if idx is None else f"[{idx}]"}') +
                              f', got {put_ast.__class__.__name__}')
+
+
+def _validate_pattern_expr(self: 'FST'):
+    while True:
+        if self.pars().n:
+            raise NodeError(f'cannot put parenthesized {self.a.__class__.__name__} to pattern expression')
+
+        if isinstance(a := self.a, Name):
+            break
+
+        if not isinstance(a, Attribute):
+            raise NodeError(f'cannot put {self.a.__class__.__name__} to pattern expression')
+
+        self = a.value.f
+
+
+def _is_valid_MatchClass_cls(ast: AST) -> bool:
+    if (f := ast.f).end_ln != f.ln:
+        raise NodeError(f'cannot put multiline {ast.__class__.__name__} to MatchClass pattern expression')
+
+    _validate_pattern_expr(ast.f)
+
+    return True
+
+
+def _is_valid_MatchValue_value(ast: AST) -> bool:
+    if not is_valid_MatchValue_value(ast):
+        return False
+
+    # if (f := ast.f).end_ln != f.ln:
+    #     raise NodeError(f'cannot put multiline {ast.__class__.__name__} to pattern expression')
+
+    if any((bad := f).pars().n for f in ast.f.walk(True)):
+        raise NodeError(f'cannot put parenthesized {bad.a.__class__.__name__} to pattern expression')
+
+    return True
+
+
+def _is_valid_MatchMapping_key(ast: AST) -> bool:
+    if not is_valid_MatchMapping_key(ast):
+        return False
+
+    # if (f := ast.f).end_ln != f.ln:
+    #     raise NodeError(f'cannot put multiline {ast.__class__.__name__} to pattern expression')
+
+    if any((bad := f).pars().n for f in ast.f.walk(True)):
+        raise NodeError(f'cannot put parenthesized {bad.a.__class__.__name__} to pattern expression')
+
+    return True
 
 
 def _maybe_par_above(above: 'FST', below: 'FST'):
@@ -897,33 +946,24 @@ def _put_one_Call_args(self: 'FST', code: Code | None, idx: int | None, field: s
 def _put_one_Attribute_value(self: 'FST', code: Code | None, idx: int | None, field: str, child: None,
                              static: onestatic, **options) -> 'FST':
     """If this gets parenthesized in an `AnnAssign` then the whole `AnnAssign` target needs to be parenthesized. Also
-    need to make sure only name is put to one of these in a `MatchMapping.keys`."""
+    need to make sure only `Name` or `Attribute` is put to one of these in `pattern` expression."""
 
     child     = _validate_put(self, code, idx, field, child)  # we want to do it in same order as all other puts
     code      = static.code_as(code, self.root.parse_params)
     is_annass = False
     above     = child.f
 
-    while (parent := above.parent) and above.pfield.name in ('value', 'target', 'keys'):
+    while (parent := above.parent) and (pfname := above.pfield.name) in ('value', 'target', 'keys', 'cls'):
         if isinstance(parenta := parent.a, AnnAssign):
             is_annass = True
 
             break
 
-        if isinstance(parenta, MatchMapping):
-            ast = code.a
+        if isinstance(parenta, pattern):
+            if isinstance(parenta, MatchClass) and code.end_ln != code.ln:
+                raise NodeError(f'cannot put multiline {above.a.__class__.__name__} to MatchClass pattern expression')
 
-            while True:
-                if ast.f.pars().n:
-                    raise NodeError(f'cannot put parenthesized {ast.__class__.__name__} to MatchMapping key')
-
-                if isinstance(ast, Name):
-                    break
-
-                if isinstance(ast, Attribute):
-                    ast = ast.value
-                else:
-                    raise NodeError(f'cannot put {ast.__class__.__name__} to MatchMapping key')
+            _validate_pattern_expr(code)
 
             break
 
@@ -2090,14 +2130,14 @@ _PUT_ONE_HANDLERS = {
     (match_case, 'pattern'):              (False, _put_one_pattern, _onestatic_pattern_required), # pattern
     (match_case, 'guard'):                (False, _put_one_exprish_optional, onestatic(_one_info_match_case_guard, _restrict_default)), # expr?
     (match_case, 'body'):                 (True,  None, None), # stmt*
-    (MatchValue, 'value'):                (False, _put_one_MatchValue_value, onestatic(_one_info_exprish_required, is_valid_MatchValue_value)), # expr
+    (MatchValue, 'value'):                (False, _put_one_MatchValue_value, onestatic(_one_info_exprish_required, _is_valid_MatchValue_value)), # expr
     (MatchSingleton, 'value'):            (False, _put_one_constant, onestatic(_one_info_constant, is_valid_MatchSingleton_value)), # constant
     (MatchSequence, 'patterns'):          (True,  _put_one_pattern, _onestatic_pattern_required), # pattern*
-    (MatchMapping, 'keys'):               (False, _put_one_exprish_required, onestatic(_one_info_exprish_required, is_valid_MatchMapping_key)), # expr*  Ops for `-1` or `2+3j`
+    (MatchMapping, 'keys'):               (False, _put_one_exprish_required, onestatic(_one_info_exprish_required, _is_valid_MatchMapping_key)), # expr*  Ops for `-1` or `2+3j`
     (MatchMapping, 'patterns'):           (True,  _put_one_pattern, _onestatic_pattern_required), # pattern*
     (MatchMapping, 'rest'):               (False, _put_one_identifier_optional, onestatic(_one_info_MatchMapping_rest, _restrict_default, code_as=_code_as_identifier)), # identifier?
     (MatchMapping, ''):                   (True,  None, None), # expr*
-    (MatchClass, 'cls'):                  (False, _put_one_exprish_required, onestatic(_one_info_exprish_required, (Name, Attribute))), # expr
+    (MatchClass, 'cls'):                  (False, _put_one_exprish_required, onestatic(_one_info_exprish_required, _is_valid_MatchClass_cls)), # expr
     (MatchClass, 'patterns'):             (True,  _put_one_pattern, _onestatic_pattern_required), # pattern*
     (MatchClass, 'kwd_attrs'):            (False, _put_one_identifier_required, onestatic(_one_info_MatchClass_kwd_attrs, _restrict_default, code_as=_code_as_identifier)), # identifier*
     (MatchClass, 'kwd_patterns'):         (False, _put_one_pattern, _onestatic_pattern_required), # pattern*

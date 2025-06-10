@@ -516,9 +516,6 @@ class PutOneExpr(Fuzzy):
                 if getattr(a, 'ctx', None).__class__ is not Load:
                     continue
 
-                if isinstance(f.parent_non_expr().a, pattern):  # TODO: should probably handle all these cases
-                    continue
-
                 if not f.is_parsable():
                     continue
 
@@ -559,7 +556,8 @@ class PutOneExpr(Fuzzy):
 
                     ignorable = isinstance(exc, NodeError) and (
                         'in this state' not in msg or
-                        (msg.startswith('cannot put ') and msg.endswith(' to MatchMapping key'))
+                        'pattern expression' in msg
+                        # (msg.startswith('cannot put ') and (msg.endswith(' to MatchMapping.keys') or msg.endswith(' to MatchValue.value')))
                     )
 
                     if not ignorable:  # started with because of Starred Call.args being replaced after keywords
