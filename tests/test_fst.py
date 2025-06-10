@@ -295,6 +295,63 @@ PARSE_TESTS = [
     ('pattern',           FST._parse_pattern,           MatchStar,      '*a'),
     ('pattern',           FST._parse_pattern,           SyntaxError,    ''),
 
+    ('expr',              FST._parse_expr,              BoolOp,         '\na\nor\nb\n'),
+    ('expr',              FST._parse_expr,              NamedExpr,      '\na\n:=\nb\n'),
+    ('expr',              FST._parse_expr,              BinOp,          '\na\n|\nb\n'),
+    ('expr',              FST._parse_expr,              BinOp,          '\na\n**\nb\n'),
+    ('expr',              FST._parse_expr,              UnaryOp,        '\nnot\na\n'),
+    ('expr',              FST._parse_expr,              UnaryOp,        '\n~\na\n'),
+    ('expr',              FST._parse_expr,              Lambda,         '\nlambda\n:\nNone\n'),
+    ('expr',              FST._parse_expr,              IfExp,          '\na\nif\nb\nelse\nc\n'),
+    ('expr',              FST._parse_expr,              Dict,           '\n{\na\n:\nb\n}\n'),
+    ('expr',              FST._parse_expr,              Set,            '\n{\na\n,\nb\n}\n'),
+    ('expr',              FST._parse_expr,              ListComp,       '\n[\na\nfor\na\nin\nb\n]\n'),
+    ('expr',              FST._parse_expr,              SetComp,        '\n{\na\nfor\na\nin\nb\n}\n'),
+    ('expr',              FST._parse_expr,              DictComp,       '\n{\na\n:\nc\nfor\na\n,\nc\nin\nb\n}\n'),
+    ('expr',              FST._parse_expr,              GeneratorExp,   '\n(\na\nfor\na\nin\nb\n)\n'),
+    ('expr',              FST._parse_expr,              Await,          '\nawait\na\n'),
+    ('expr',              FST._parse_expr,              Yield,          '\nyield\n'),
+    ('expr',              FST._parse_expr,              Yield,          '\nyield\na\n'),
+    ('expr',              FST._parse_expr,              YieldFrom,      '\nyield\nfrom\na\n'),
+    ('expr',              FST._parse_expr,              Compare,        '\na\n<\nb\n'),
+    ('expr',              FST._parse_expr,              Call,           '\nf\n(\na\n)\n'),
+    ('expr',              FST._parse_expr,              JoinedStr,      "\nf'{a}'\n"),
+    ('expr',              FST._parse_expr,              JoinedStr,      '\nf"{a}"\n'),
+    ('expr',              FST._parse_expr,              JoinedStr,      "\nf'''\n{\na\n}\n'''\n"),
+    ('expr',              FST._parse_expr,              JoinedStr,      '\nf"""\n{\na\n}\n"""\n'),
+    ('expr',              FST._parse_expr,              Constant,       '\n...\n'),
+    ('expr',              FST._parse_expr,              Constant,       '\nNone\n'),
+    ('expr',              FST._parse_expr,              Constant,       '\nTrue\n'),
+    ('expr',              FST._parse_expr,              Constant,       '\nFalse\n'),
+    ('expr',              FST._parse_expr,              Constant,       '\n1\n'),
+    ('expr',              FST._parse_expr,              Constant,       '\n1.0\n'),
+    ('expr',              FST._parse_expr,              Constant,       '\n1j\n'),
+    ('expr',              FST._parse_expr,              Constant,       "\n'a'\n"),
+    ('expr',              FST._parse_expr,              Constant,       '\n"a"\n'),
+    ('expr',              FST._parse_expr,              Constant,       "\n'''\na\n'''\n"),
+    ('expr',              FST._parse_expr,              Constant,       '\n"""\na\n"""\n'),
+    ('expr',              FST._parse_expr,              Constant,       "\nb'a'\n"),
+    ('expr',              FST._parse_expr,              Constant,       '\nb"a"\n'),
+    ('expr',              FST._parse_expr,              Constant,       "\nb'''\na\n'''\n"),
+    ('expr',              FST._parse_expr,              Constant,       '\nb"""\na\n"""\n'),
+    ('expr',              FST._parse_expr,              Attribute,      '\na\n.\nb\n'),
+    ('expr',              FST._parse_expr,              Subscript,      '\na\n[\nb\n]\n'),
+    ('expr',              FST._parse_expr,              Starred,        '\n*\na\n'),
+    ('expr',              FST._parse_expr,              List,           '\n[\na\n,\nb\n]\n'),
+    ('expr',              FST._parse_expr,              Tuple,          '\n(\na\n,\nb\n)\n'),
+    ('expr',              FST._parse_expr,              Tuple,          '\na\n,\n'),
+    ('expr',              FST._parse_expr,              Tuple,          '\na\n,\nb\n'),
+
+    ('pattern',           FST._parse_pattern,           MatchValue,     '\n42\n'),
+    ('pattern',           FST._parse_pattern,           MatchSingleton, '\nNone\n'),
+    ('pattern',           FST._parse_pattern,           MatchSequence,  '\n[\na\n,\n*\nb\n]\n'),
+    ('pattern',           FST._parse_pattern,           MatchSequence,  '\n\na\n,\n*\nb\n\n'),
+    ('pattern',           FST._parse_pattern,           MatchMapping,   '\n{\n"key"\n:\n_\n}\n'),
+    ('pattern',           FST._parse_pattern,           MatchClass,     '\nSomeClass\n(\nattr\n=\nval\n)\n'),
+    ('pattern',           FST._parse_pattern,           MatchAs,        '\nas_var\n'),
+    ('pattern',           FST._parse_pattern,           MatchAs,        '\n1\nas\nas_var\n'),
+    ('pattern',           FST._parse_pattern,           MatchOr,        '\n1\n|\n2\n'),
+
     (mod,                 FST._parse_Module,            Module,         'j'),
     (Module,              FST._parse_Module,            Module,         'j'),
     (Expression,          FST._parse_Expression,        Expression,     'None'),
@@ -2176,7 +2233,7 @@ def f():
 
                 test = 'indent'
 
-                if src.strip():  # won't get IndentationError on empty arguments
+                if not src.startswith('\n') and src.strip():  # won't get IndentationError on stuff that starts with newlines or empty arguments
                     src = ' ' + src
 
                     self.assertRaises(IndentationError, FST._parse, src, mode)
@@ -2249,6 +2306,7 @@ def f():
 
                     ref = func(src)
 
+                    self.assertEqual(src, fst.src)
                     self.assertEqual(fst.a.__class__, res)
                     self.assertTrue(compare_asts(fst.a, ref, locs=True))
 
