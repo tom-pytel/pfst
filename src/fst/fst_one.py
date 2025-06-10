@@ -790,17 +790,18 @@ def _put_one_exprish_required(self: 'FST', code: Code | None, idx: int | None, f
 
 
 def _put_one_exprish_optional(self: 'FST', code: Code | None, idx: int | None, field: str, child: AST,
-                              static: onestatic, **options) -> Optional['FST']:
+                              static: onestatic, validated: int = 0, **options) -> Optional['FST']:
     """Put new, replace or delete an optional expression."""
 
-    child = _validate_put(self, code, idx, field, child, can_del=True)
+    if not validated:
+        child = _validate_put(self, code, idx, field, child, can_del=True)
 
     if code is None:
         if child is None:  # delete nonexistent node, noop
             return None
 
     elif child:  # replace existing node
-        return _put_one_exprish_required(self, code, idx, field, child, static, 1, **options)
+        return _put_one_exprish_required(self, code, idx, field, child, static, max(1, validated), **options)
 
     info = static.getinfo(self, static, idx, field)
     loc  = info.loc_insdel
@@ -820,7 +821,8 @@ def _put_one_exprish_optional(self: 'FST', code: Code | None, idx: int | None, f
     if not loc:
         raise ValueError(f'cannot create {self.a.__class__.__name__}.{field} in this state')
 
-    put_fst = _make_exprish_fst(self, code, idx, field, static, loc, static.ctx, info.prefix, info.suffix, **options)
+    put_fst = _make_exprish_fst(self, code, idx, field, static, loc, static.ctx, info.prefix, info.suffix,
+                                max(1, validated), **options)
     put_fst = FST(put_fst.a, self, astfield(field, idx))
 
     self._make_fst_tree([put_fst])
@@ -1020,6 +1022,34 @@ def _put_one_MatchValue_value(self: 'FST', code: Code | None, idx: int | None, f
     a.end_col_offset = v.end_col_offset
 
     return ret
+
+
+def _put_one_MatchAs_pattern(self: 'FST', code: Code | None, idx: int | None, field: str, child: AST,
+                             static: onestatic, **options) -> 'FST':
+    """Enclose unenclosed MatchSequences being put here, if any."""
+
+    child = _validate_put(self, code, idx, field, child, can_del=True)  # we want to do it in same order as all other puts
+
+    if code is not None:
+        code = static.code_as(code, self.root.parse_params)
+
+        if code.is_enclosed_matchseq() is False:
+            code._parenthesize_node(pars='[]')
+
+    return _put_one_exprish_optional(self, code, idx, field, child, static, 2, **options)
+
+
+def _put_one_pattern(self: 'FST', code: Code | None, idx: int | None, field: str, child: AST, static: onestatic,
+                      **options) -> 'FST':
+    """Enclose unenclosed MatchSequences being put here."""
+
+    child = _validate_put(self, code, idx, field, child)  # we want to do it in same order as all other puts
+    code  = static.code_as(code, self.root.parse_params)
+
+    if code.is_enclosed_matchseq() is False:
+        code._parenthesize_node(pars='[]')
+
+    return _put_one_exprish_required(self, code, idx, field, child, static, 2, **options)
 
 
 # ......................................................................................................................
@@ -2057,24 +2087,24 @@ _PUT_ONE_HANDLERS = {
     (alias, 'asname'):                    (False, _put_one_identifier_optional, onestatic(_one_info_alias_asname, _restrict_default, code_as=_code_as_identifier)), # identifier?
     (withitem, 'context_expr'):           (False, _put_one_withitem_context_expr, _onestatic_expr_required), # expr
     (withitem, 'optional_vars'):          (False, _put_one_withitem_optional_vars, onestatic(_one_info_withitem_optional_vars, (Name, Tuple, List, Attribute, Subscript), ctx=Store)), # expr?
-    (match_case, 'pattern'):              (False, _put_one_exprish_required, _onestatic_pattern_required), # pattern
+    (match_case, 'pattern'):              (False, _put_one_pattern, _onestatic_pattern_required), # pattern
     (match_case, 'guard'):                (False, _put_one_exprish_optional, onestatic(_one_info_match_case_guard, _restrict_default)), # expr?
     (match_case, 'body'):                 (True,  None, None), # stmt*
     (MatchValue, 'value'):                (False, _put_one_MatchValue_value, onestatic(_one_info_exprish_required, is_valid_MatchValue_value)), # expr
     (MatchSingleton, 'value'):            (False, _put_one_constant, onestatic(_one_info_constant, is_valid_MatchSingleton_value)), # constant
-    (MatchSequence, 'patterns'):          (True,  _put_one_exprish_required, _onestatic_pattern_required), # pattern*
+    (MatchSequence, 'patterns'):          (True,  _put_one_pattern, _onestatic_pattern_required), # pattern*
     (MatchMapping, 'keys'):               (False, _put_one_exprish_required, onestatic(_one_info_exprish_required, is_valid_MatchMapping_key)), # expr*  Ops for `-1` or `2+3j`
-    (MatchMapping, 'patterns'):           (True,  _put_one_exprish_required, _onestatic_pattern_required), # pattern*
+    (MatchMapping, 'patterns'):           (True,  _put_one_pattern, _onestatic_pattern_required), # pattern*
     (MatchMapping, 'rest'):               (False, _put_one_identifier_optional, onestatic(_one_info_MatchMapping_rest, _restrict_default, code_as=_code_as_identifier)), # identifier?
     (MatchMapping, ''):                   (True,  None, None), # expr*
     (MatchClass, 'cls'):                  (False, _put_one_exprish_required, onestatic(_one_info_exprish_required, (Name, Attribute))), # expr
-    (MatchClass, 'patterns'):             (True,  _put_one_exprish_required, _onestatic_pattern_required), # pattern*
+    (MatchClass, 'patterns'):             (True,  _put_one_pattern, _onestatic_pattern_required), # pattern*
     (MatchClass, 'kwd_attrs'):            (False, _put_one_identifier_required, onestatic(_one_info_MatchClass_kwd_attrs, _restrict_default, code_as=_code_as_identifier)), # identifier*
-    (MatchClass, 'kwd_patterns'):         (False, _put_one_exprish_required, _onestatic_pattern_required), # pattern*
+    (MatchClass, 'kwd_patterns'):         (False, _put_one_pattern, _onestatic_pattern_required), # pattern*
     (MatchStar, 'name'):                  (False, _put_one_MatchStar_name, onestatic(_one_info_MatchStar_name, _restrict_default, code_as=_code_as_identifier)), # identifier?
-    (MatchAs, 'pattern'):                 (False, _put_one_exprish_optional, onestatic(_one_info_MatchAs_pattern, _restrict_default, code_as=_code_as_pattern)), # pattern?
+    (MatchAs, 'pattern'):                 (False, _put_one_MatchAs_pattern, onestatic(_one_info_MatchAs_pattern, _restrict_default, code_as=_code_as_pattern)), # pattern?
     (MatchAs, 'name'):                    (False, _put_one_MatchAs_name, onestatic(_one_info_MatchAs_name, _restrict_default, code_as=_code_as_identifier)), # identifier?
-    (MatchOr, 'patterns'):                (True,  _put_one_exprish_required, _onestatic_pattern_required), # pattern*
+    (MatchOr, 'patterns'):                (True,  _put_one_pattern, _onestatic_pattern_required), # pattern*
     (TypeVar, 'name'):                    (False, _put_one_identifier_required, _onestatic_identifier_required), # identifier
     (TypeVar, 'bound'):                   (False, _put_one_exprish_optional, onestatic(_one_info_TypeVar_bound, _restrict_default)), # expr?
     (TypeVar, 'default_value'):           (False, _put_one_exprish_optional, onestatic(_one_info_TypeVar_default_value, _restrict_default)), # expr?

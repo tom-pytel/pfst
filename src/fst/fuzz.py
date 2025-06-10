@@ -418,8 +418,8 @@ class ReputOne(Fuzzy):
             raise
 
 
-class PutOneExprish(Fuzzy):
-    name    = 'put_one_exprish'
+class PutOneExpr(Fuzzy):
+    name    = 'put_one_expr'
     forever = True
 
     exprs   = [
@@ -507,30 +507,9 @@ class PutOneExprish(Fuzzy):
 
     exprs = [FST(e, 'expr') for e in exprs]
 
-    pats = [
-        '42',
-        'None',
-        '[a, *b]',
-        '[\na\n,\n*\nb\n]',
-        'a, *b',
-        '\na\n,\n*\nb\n',
-        '{"key": _}',
-        '{\n"key"\n:\n_\n}',
-        'SomeClass(attr=val)',
-        'SomeClass\n(\nattr\n=\nval\n)',
-        'as_var',
-        '1 as as_var',
-        '1\nas\nas_var',
-        '1 | 2',
-        '1\n|\n2',
-    ]
-
-    pats = [FST(e, 'pattern') for e in pats]
-
     def fuzz_one(self, fst, fnm) -> bool:
         count = 0
         exprs = []
-        pats  = []
 
         for f in fst.walk(True):
             if isinstance(a := f.a, expr):
@@ -544,9 +523,6 @@ class PutOneExprish(Fuzzy):
                     continue
 
                 exprs.append(f)
-
-            elif isinstance(a, pattern):
-                pats.append(f)
 
         try:
             for e in reversed(exprs):
@@ -602,6 +578,45 @@ class PutOneExprish(Fuzzy):
 
                         raise
 
+            fst.verify()
+
+        finally:
+            sys.stdout.write('\n')
+
+
+class PutOnePat(Fuzzy):
+    name    = 'put_one_pat'
+    forever = True
+
+    pats = [
+        '42',
+        'None',
+        '[a, *b]',
+        '[\na\n,\n*\nb\n]',
+        'a, *b',
+        '\na\n,\n*\nb\n',
+        '{"key": _}',
+        '{\n"key"\n:\n_\n}',
+        'SomeClass(attr=val)',
+        'SomeClass\n(\nattr\n=\nval\n)',
+        'as_var',
+        '1 as as_var',
+        '1\nas\nas_var',
+        '1 | 2',
+        '1\n|\n2',
+    ]
+
+    pats = [FST(e, 'pattern') for e in pats]
+
+    def fuzz_one(self, fst, fnm) -> bool:
+        count = 0
+        pats  = []
+
+        for f in fst.walk(True):
+            if isinstance(f.a, pattern):
+                pats.append(f)
+
+        try:
             for e in reversed(pats):
                 if not ((count := count + 1) % 100):
                     sys.stdout.write('.')

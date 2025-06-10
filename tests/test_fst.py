@@ -8917,12 +8917,12 @@ except* (TypeError, ExceptionGroup):
 
         f = FST('match x: \n case 1: pass', 'exec')
         f.body[0].cases[0].put('*x, 1,', 'pattern', raw=False)
-        self.assertEqual('match x: \n case *x, 1,: pass', f.src)
+        self.assertEqual('match x: \n case [*x, 1,]: pass', f.src)
         f.verify()
 
         f = FST('match x: \n case 1: pass', 'exec')
         f.body[0].cases[0].put('1, *x,', 'pattern', raw=False)
-        self.assertEqual('match x: \n case 1, *x,: pass', f.src)
+        self.assertEqual('match x: \n case [1, *x,]: pass', f.src)
         f.verify()
 
         # special Call.args but not otherwise
@@ -9308,6 +9308,8 @@ a
         self.assertEqual('f"{a if b else (lambda: None)}"', f.src)
         f.verify()
 
+        # more patterns
+
         f = FST('case {a.b: 1}: pass')
         self.assertRaises(NodeError, f.pattern.keys[0].put, 'f().b', raw=False)
         self.assertRaises(NodeError, f.pattern.keys[0].put, '(1+2).b', raw=False)
@@ -9316,6 +9318,46 @@ a
         self.assertRaises(NodeError, f.pattern.keys[0].put, '(a).b', raw=False)
         f.pattern.keys[0].put('x.y.z', raw=False)
         self.assertEqual('case {x.y.z.b: 1}: pass', f.src)
+        f.verify()
+
+        f = FST('case a, b: pass')
+        f.pattern.patterns[0].replace(FST('x, *y', pattern), raw=False)
+        self.assertEqual('case [x, *y], b: pass', f.src)
+        f.verify()
+
+        f = FST('case [a, b]: pass')
+        f.pattern.patterns[0].replace(FST('x, *y', pattern), raw=False)
+        self.assertEqual('case [[x, *y], b]: pass', f.src)
+        f.verify()
+
+        f = FST('case cls(a): pass')
+        f.pattern.patterns[0].replace(FST('x, *y', pattern), raw=False)
+        self.assertEqual('case cls([x, *y]): pass', f.src)
+        f.verify()
+
+        f = FST('case cls(a=b): pass')
+        f.pattern.kwd_patterns[0].replace(FST('x, *y', pattern), raw=False)
+        self.assertEqual('case cls(a=[x, *y]): pass', f.src)
+        f.verify()
+
+        f = FST('case a | b: pass')
+        f.pattern.patterns[0].replace(FST('x, *y', pattern), raw=False)
+        self.assertEqual('case [x, *y] | b: pass', f.src)
+        f.verify()
+
+        f = FST('case {1: b}: pass')
+        f.pattern.patterns[0].replace(FST('x, *y', pattern), raw=False)
+        self.assertEqual('case {1: [x, *y]}: pass', f.src)
+        f.verify()
+
+        f = FST('case a as b: pass')
+        f.pattern.pattern.replace(FST('x, *y', pattern), raw=False)
+        self.assertEqual('case [x, *y] as b: pass', f.src)
+        f.verify()
+
+        f = FST('case (a | b): pass')
+        f.pattern.replace(FST('x, *y', pattern), raw=False)
+        self.assertEqual('case [x, *y]: pass', f.src)
         f.verify()
 
     def test_put_one_pars(self):
