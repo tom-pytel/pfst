@@ -412,7 +412,10 @@ def is_valid_MatchMapping_key(ast: AST) -> bool:
     """Check if `ast` is a valid node for a `MatchMapping.keys` field."""
 
     if isinstance(ast, Attribute):
-        return True
+        while isinstance(ast := ast.value, Attribute):
+            pass
+
+        return isinstance(ast, Name)
 
     if isinstance(ast, UnaryOp):
         if not isinstance(ast.op, USub):

@@ -9278,9 +9278,19 @@ a
         self.assertEqual('((c.d).b): int', f.src)
         f.verify()
 
+        f = FST('a.b: int')
+        f.target.value.replace('(c).d', pars=True)
+        self.assertEqual('((c).d.b): int', f.src)
+        f.verify()
+
         f = FST('a[b]: int')
         f.target.value.replace('(c[d])', pars=True)
         self.assertEqual('((c[d])[b]): int', f.src)
+        f.verify()
+
+        f = FST('a[b]: int')
+        f.target.value.replace('(c)[d]', pars=True)
+        self.assertEqual('((c)[d][b]): int', f.src)
         f.verify()
 
         f = FST('a.b[c].d[e]: int')
@@ -9288,9 +9298,24 @@ a
         self.assertEqual('((f[g]).b[c].d[e]): int', f.src)
         f.verify()
 
+        f = FST('a.b[c].d[e]: int')
+        f.target.value.value.value.value.replace('(f)[g].h[i]', pars=True)
+        self.assertEqual('((f)[g].h[i].b[c].d[e]): int', f.src)
+        f.verify()
+
         f = FST('f"{a if b else c}"')
         f.values[0].value.orelse.replace('lambda: None', raw=False)
         self.assertEqual('f"{a if b else (lambda: None)}"', f.src)
+        f.verify()
+
+        f = FST('case {a.b: 1}: pass')
+        self.assertRaises(NodeError, f.pattern.keys[0].put, 'f().b', raw=False)
+        self.assertRaises(NodeError, f.pattern.keys[0].put, '(1+2).b', raw=False)
+        self.assertRaises(NodeError, f.pattern.keys[0].put, 'a[b].b', raw=False)
+        self.assertRaises(NodeError, f.pattern.keys[0].put, '(a)', raw=False)
+        self.assertRaises(NodeError, f.pattern.keys[0].put, '(a).b', raw=False)
+        f.pattern.keys[0].put('x.y.z', raw=False)
+        self.assertEqual('case {x.y.z.b: 1}: pass', f.src)
         f.verify()
 
     def test_put_one_pars(self):

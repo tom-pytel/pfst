@@ -571,7 +571,14 @@ class PutOneExprish(Fuzzy):
                         fst.verify()
 
                 except Exception as exc:
-                    if 'in this state' not in str(exc):  # started with because of Starred Call.args being replaced after keywords
+                    msg = str(exc)
+
+                    ignorable = isinstance(exc, NodeError) and (
+                        'in this state' not in msg or
+                        (msg.startswith('cannot put ') and msg.endswith(' to MatchMapping key'))
+                    )
+
+                    if not ignorable:  # started with because of Starred Call.args being replaced after keywords
                         print('\n-', put, '-'*74)
                         print((p := e.parent_stmtish()).src)
                         print('.'*80)

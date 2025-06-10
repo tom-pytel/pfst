@@ -126,7 +126,7 @@ def _get_one_invalid_combined(self: 'FST', idx: int | None, field: str, cut: boo
     raise ValueError(f'cannot get single element from combined field of {self.a.__class__.__name__}')
 
 
-if sys.version_info[:2] < (3, 12):
+if _PY_VERSION < (3, 12):
     def _get_one_FormattedValue_value(self: 'FST', idx: int | None, field: str, cut: bool, **options,
                                                     ) -> Optional['FST'] | str:
         """Correct for py < 3.12 returning value unparenthesized tuple with `FormattedValue` curlies as delimiters."""
@@ -533,6 +533,20 @@ def _validate_put_ast(self: 'FST', put_ast: AST, idx: int | None, field: str, st
                              f', got {put_ast.__class__.__name__}')
 
 
+def _maybe_par_above(above: 'FST', below: 'FST'):
+    while isinstance(a := below.a, (Attribute, Subscript)):
+        if below.pars().n:
+            above._parenthesize_grouping()
+
+            break
+
+        below = a.value.f
+
+    else:
+        if isinstance(a, Name) and below.pars().n:
+            above._parenthesize_grouping()
+
+
 # ......................................................................................................................
 # other
 
@@ -594,7 +608,7 @@ def _put_one_op(self: 'FST', code: Code | None, idx: int | None, field: str,
     return childf
 
 
-if sys.version_info[:2] < (3, 12):
+if _PY_VERSION < (3, 12):
     def _put_one_NOT_IMPLEMENTED_YET(self: 'FST', code: Code | None, idx: int | None, field: str, child: constant,
                                      static: onestatic, **options) -> 'FST':
         raise NotImplementedError('this will only be implemented on python version 3.12 and above')
@@ -878,26 +892,70 @@ def _put_one_Call_args(self: 'FST', code: Code | None, idx: int | None, field: s
     return _put_one_exprish_required(self, code, idx, field, child, static, 2, **options)
 
 
-def _put_one_Attribute_Subscript_value(self: 'FST', code: Code | None, idx: int | None, field: str, child: None,
-                                       static: onestatic, **options) -> 'FST':
+def _put_one_Attribute_value(self: 'FST', code: Code | None, idx: int | None, field: str, child: None,
+                             static: onestatic, **options) -> 'FST':
+    """If this gets parenthesized in an `AnnAssign` then the whole `AnnAssign` target needs to be parenthesized. Also
+    need to make sure only name is put to one of these in a `MatchMapping.keys`."""
+
+    child     = _validate_put(self, code, idx, field, child)  # we want to do it in same order as all other puts
+    code      = static.code_as(code, self.root.parse_params)
+    is_annass = False
+    above     = child.f
+
+    while (parent := above.parent) and above.pfield.name in ('value', 'target', 'keys'):
+        if isinstance(parenta := parent.a, AnnAssign):
+            is_annass = True
+
+            break
+
+        if isinstance(parenta, MatchMapping):
+            ast = code.a
+
+            while True:
+                if ast.f.pars().n:
+                    raise NodeError(f'cannot put parenthesized {ast.__class__.__name__} to MatchMapping key')
+
+                if isinstance(ast, Name):
+                    break
+
+                if isinstance(ast, Attribute):
+                    ast = ast.value
+                else:
+                    raise NodeError(f'cannot put {ast.__class__.__name__} to MatchMapping key')
+
+            break
+
+        if not isinstance(parenta, (Attribute, Subscript)):  # we need to walk up both of these for the AnnAssign, won't be Subscripts in a MatchMapping.keys
+            break
+
+        above = parent
+
+    ret = _put_one_exprish_required(self, code, idx, field, child, static, validated=2, **options)
+
+    if is_annass and not above.pars().n:
+        _maybe_par_above(above, ret)
+
+    return ret
+
+
+def _put_one_Subscript_value(self: 'FST', code: Code | None, idx: int | None, field: str, child: None,
+                             static: onestatic, **options) -> 'FST':
     """If this gets parenthesized in an AnnAssign then the whole AnnAssign target needs to be parenthesized."""
 
-    ret = _put_one_exprish_required(self, code, idx, field, child, static, **options)
+    ret   = _put_one_exprish_required(self, code, idx, field, child, static, **options)
+    above = ret
 
-    if ret.pars().n:
-        f = ret
+    while (parent := above.parent) and above.pfield.name in ('value', 'target'):
+        if isinstance(parenta := parent.a, AnnAssign):
+            if not above.pars().n:
+                _maybe_par_above(above, ret)
 
-        while (parent := f.parent) and f.pfield.name in ('value', 'target'):
-            if isinstance(a := parent.a, AnnAssign):
-                if not parent.pars().n:
-                    f._parenthesize_grouping()
+            break
 
-                break
+        if not isinstance(parenta, (Attribute, Subscript)):
+            break
 
-            if not isinstance(a, (Attribute, Subscript)):
-                break
-
-            f = parent
+        above = parent
 
     return ret
 
@@ -1811,7 +1869,7 @@ def _one_info_TypeVarTuple_default_value(self: 'FST', static: onestatic, idx: in
 def _one_info_TypeVarTuple_name(self: 'FST', static: onestatic, idx: int | None, field: str) -> oneinfo:
     return _one_info_identifier_required(self, static, idx, field, '*')
 
-if sys.version_info[:2] < (3, 12):
+if _PY_VERSION < (3, 12):
     def _one_info_format_spec(self: 'FST', static: onestatic, idx: int | None, field: str) -> oneinfo:
         raise NotImplementedError('this is only implemented on python version 3.12 and above')
 
@@ -1964,12 +2022,12 @@ _PUT_ONE_HANDLERS = {
     (Interpolation, 'value'):             (False, _put_one_exprish_required, _onestatic_expr_required), # expr
     (Interpolation, 'conversion'):        (False, _put_one_NOT_IMPLEMENTED_YET, onestatic(_one_info_conversion, Constant)), # int  # onestatic only here for info for raw put, Constant must be str
     (Interpolation, 'format_spec'):       (False, _put_one_NOT_IMPLEMENTED_YET, onestatic(_one_info_format_spec, JoinedStr)), # expr?  # onestatic only here for info for raw put
-    (JoinedStr, 'values'):                (True, _put_one_NOT_IMPLEMENTED_YET, None), # expr*
-    (TemplateStr, 'values'):              (True, _put_one_NOT_IMPLEMENTED_YET, None), # expr*
+    (JoinedStr, 'values'):                (True,  _put_one_NOT_IMPLEMENTED_YET, None), # expr*
+    (TemplateStr, 'values'):              (True,  _put_one_NOT_IMPLEMENTED_YET, None), # expr*
     (Constant, 'value'):                  (False, _put_one_constant, onestatic(_one_info_constant, Constant)), # constant
-    (Attribute, 'value'):                 (False, _put_one_Attribute_Subscript_value, _onestatic_expr_required), # expr
+    (Attribute, 'value'):                 (False, _put_one_Attribute_value, _onestatic_expr_required), # expr
     (Attribute, 'attr'):                  (False, _put_one_identifier_required, onestatic(_one_info_Attribute_attr, _restrict_default, code_as=_code_as_identifier)), # identifier
-    (Subscript, 'value'):                 (False, _put_one_Attribute_Subscript_value, _onestatic_expr_required), # expr
+    (Subscript, 'value'):                 (False, _put_one_Subscript_value, _onestatic_expr_required), # expr
     (Subscript, 'slice'):                 (False, _put_one_exprish_required, onestatic(_one_info_exprish_required, _restrict_fstr_values, code_as=_code_as_slice)), # expr
     (Starred, 'value'):                   (False, _put_one_exprish_required, _onestatic_expr_required), # expr
     (Name, 'id'):                         (False, _put_one_identifier_required, _onestatic_identifier_required), # identifier
