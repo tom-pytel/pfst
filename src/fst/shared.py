@@ -29,7 +29,6 @@ NAMED_SCOPE              = (FunctionDef, AsyncFunctionDef, ClassDef)
 NAMED_SCOPE_OR_MOD       = NAMED_SCOPE + (mod,)
 ANONYMOUS_SCOPE          = (Lambda, ListComp, SetComp, DictComp, GeneratorExp)
 
-PARENTHESIZABLE          = (expr, pattern)
 HAS_DOCSTRING            = NAMED_SCOPE_OR_MOD
 
 STMTISH_FIELDS           = frozenset(('body', 'orelse', 'finalbody', 'handlers', 'cases'))
@@ -194,9 +193,10 @@ Mode = Union[type[AST], Literal[
 - `type[AST]`: If an `AST` type is passed then will attempt to parse to this type. This can be used to narrow
     the scope of desired return, for example `Constant` will parse as an expression but fail if the expression
     is not a `Constant`. These overlap with the string specifiers to an extent but not all of them. For example
-    `AST` type `ast.expr` is the same as passing `'expr'` but there is not `AST` type which will specify one of
-    the other expr parse modes like `'slice'`. Likewise `Module`, `'exec'` and `'stmts'` all specify the
-    same parse mode.
+    `AST` type `ast.expr` is the same as passing `'expr'`. Not all string specified modes are can be matched, for
+    example `'arguments_lambda'`. Likewise `Module`, `'exec'` and `'stmts'` all specify the same parse mode. `Tuple`
+    parse allows parsing `Slice`s in the `Tuple`.
+
 """
 
 

@@ -18,6 +18,7 @@ from data_other import (PARS_DATA, COPY_DATA, GET_SLICE_SEQ_DATA, GET_SLICE_STMT
                         REPLACE_EXISTING_ONE_DATA)
 
 _PY_VERSION = sys.version_info[:2]
+_PYLT12     = _PY_VERSION < (3, 12)
 
 PYFNMS = sum((
     [os.path.join(path, fnm) for path, _, fnms in os.walk(top) for fnm in fnms if fnm.endswith('.py')]
@@ -2257,7 +2258,7 @@ def f():
         self.assertEqual([], f.a.body)
 
         f = FST(None, 'eval')
-        self.assertEqual('', f.src)
+        self.assertEqual('None', f.src)
         self.assertIsInstance(f.a, Expression)
         self.assertIsInstance(f.a.body, expr)
 
@@ -4296,6 +4297,21 @@ f"distutils.command.sdist.check_metadata is deprecated, \\
         f.par()
         self.assertEqual('*(\na)', f.src)
         f.verify()
+
+        # unparenthesizable
+
+        self.assertEqual('a:b:c', FST('a:b:c').par().src)
+        self.assertEqual('for i in j', FST('for i in j').par().src)
+        self.assertEqual('a: int, b=2', FST('a: int, b=2').par().src)
+        self.assertEqual('a: int', FST('a: int', arg).par().src)
+        self.assertEqual('key="word"', FST('key="word"', keyword).par().src)
+        self.assertEqual('a as b', FST('a as b', alias).par().src)
+        self.assertEqual('a as b', FST('a as b', withitem).par().src)
+
+        if not _PYLT12:
+            self.assertEqual('t = int', FST('t = int', type_param).par().src)
+            self.assertEqual('*t = (int,)', FST('*t = (int,)', type_param).par().src)
+            self.assertEqual('**t = {T: int}', FST('**t = {T: int}', type_param).par().src)
 
     def test_unpar(self):
         f = parse('((1,))').body[0].value.f.copy(pars=True)

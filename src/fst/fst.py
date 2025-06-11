@@ -16,7 +16,7 @@ from .astutil import TypeAlias, TryStar, TemplateStr, Interpolation, type_param
 from .shared import (
     NodeError, astfield, fstloc, fstlocns, nspace,
     STMTISH, STMTISH_OR_MOD, BLOCK, BLOCK_OR_MOD, SCOPE, SCOPE_OR_MOD, NAMED_SCOPE,
-    NAMED_SCOPE_OR_MOD, ANONYMOUS_SCOPE, PARENTHESIZABLE, HAS_DOCSTRING,
+    NAMED_SCOPE_OR_MOD, ANONYMOUS_SCOPE, HAS_DOCSTRING,
     re_empty_line, re_line_continuation, re_line_end_cont_or_comment,
     Self, Code, Mode,
     _next_pars, _prev_pars,
@@ -972,11 +972,11 @@ class FST:
         call a provided function once with each line of the output.
 
         **Parameters:**
-        - `src`: `'stmt'` means output statement source lines, `'all'` means output source for each individual and node
-            and `None` does not output any source. Can also be a string for shortcut specification of source and flags
-            by first letter: `'s'` means `src='stmt'`, `'a'` means `src='all'`, `'f'` means `full=True` and `'e'` means
-            `expand=True`, so `'sfe'` would be a full expanded dump showing statement source lines.. All case
-            insensitive.
+        - `src`: `'stmt'` means output statement source lines (including `ExceptHandler` and `match_case`), `'all'`
+            means output source for each individual and node and `None` does not output any source. Can also be a string
+            for shortcut specification of source and flags by first letter: `'s'` means `src='stmt'`, `'a'` means
+            `src='all'`, `'f'` means `full=True` and `'e'` means `expand=True`, so `'sfe'` would be a full expanded dump
+            showing statement source lines.
         - `full`: If `True` then will list all fields in nodes including empty ones, otherwise will exclude most empty
             fields.
         - `expand`: If `True` then the output is a nice compact representation. If `False` then it is ugly and wasteful.
@@ -1057,6 +1057,9 @@ class FST:
 
         if isinstance(src, str):
             if (src := src.lower()) not in ('stmt', 'all'):
+                if src.replace('f', '').replace('e', '').replace('a', '').replace('s', ''):
+                    raise ValueError("invalid character(s) in 'src' string")
+
                 full   = 'f' in src
                 expand = 'e' in src
                 src    = 'all' if 'a' in src else 'stmt' if 's' in src else None
@@ -1698,7 +1701,7 @@ class FST:
         else:
             return cached if ret_full else cached[0]
 
-        if not isinstance(self.a, PARENTHESIZABLE):  # pars around all `alias`es or `withitem`s are considered part of the parent even if there is only one of those elements which looks parenthesized
+        if not self.is_parenthesizable():  # pars around all `alias`es or `withitem`s are considered part of the parent even if there is only one of those elements which looks parenthesized
             locn             = None if (l := self.bloc) is None else fstlocns(l[0], l[1], l[2], l[3], n=0)
             self._cache[key] = full = (locn, 0)
 
@@ -1739,9 +1742,10 @@ class FST:
         return full if ret_full else locn
 
     def par(self, force: bool = False, *, whole: bool = True) -> Self:
-        """Parenthesize node if it MAY need it. Will not parenthesize atoms which are always enclosed like `List` unless
-        `force=True`. Will add parentheses to unparenthesized `Tuple` and brackets to unbracketed `MatchSequence`
-        adjusting the node location. If dealing with a `Starred` then the parentheses are applied to the child value.
+        """Parenthesize node if it MAY need it. Will not parenthesize atoms which are always enclosed like `List`, or
+        nodes which are not `is_parenthesizable()`, unless `force=True`. Will add parentheses to unparenthesized `Tuple`
+        and brackets to unbracketed `MatchSequence` adjusting the node location. If dealing with a `Starred` then the
+        parentheses are applied to the child value.
 
         **Parameters:**
         - `force`: If `True` then will add another layer of parentheses regardless if any already present.
@@ -1773,7 +1777,7 @@ class FST:
         ```
         """
 
-        if self.is_atom(always_enclosed=True):
+        if self.is_atom(always_enclosed=True) or not self.is_parenthesizable():
             if not force:
                 return self  # False
 
@@ -2405,6 +2409,9 @@ class FST:
         different from `astutil.is_parsable` because that one indicates what is parsable by the python `ast` module,
         while `FST` can parse more things.
 
+        **Returns:**
+        - `bool`: Whether is parsable by `FST` from a string or not.
+
         **Examples:**
         ```py
         >>> from fst.astutil import is_parsable
@@ -2455,6 +2462,44 @@ class FST:
                     return False
 
         return True
+
+    def is_parenthesizable(self) -> bool:
+        """Whether `self` is parenthesizable with grouping parentheses or now. Essentially all `expr`s and `pattern`s
+        except for `Slice`.
+
+        **Returns:**
+        - `bool`: Whether is syntactically legal to add grouping parentheses or not. Can always be forced.
+
+        **Examples:**
+        ```py
+        >>> FST('i + j').is_parenthesizable()  # expr
+        True
+        >>> FST('{a.b: c, **d}', 'pattern').is_parenthesizable()
+        True
+        >>> FST('a:b:c').is_parenthesizable()  # Slice
+        False
+        >>> FST('for i in j').is_parenthesizable()  # comprehension
+        False
+        >>> FST('a: int, b=2').is_parenthesizable()  # arguments
+        False
+        >>> FST('a: int', 'arg').is_parenthesizable()
+        False
+        >>> FST('key="word"', 'keyword').is_parenthesizable()
+        False
+        >>> FST('a as b', 'alias').is_parenthesizable()
+        False
+        >>> FST('a as b', 'withitem').is_parenthesizable()
+        False
+        >>> FST('t = int', 'type_param').is_parenthesizable()
+        False
+        >>> FST('*t = (int,)', 'type_param').is_parenthesizable()
+        False
+        >>> FST('**t = {T: int}', 'type_param').is_parenthesizable()
+        False
+        ```
+        """
+
+        return not isinstance(a, Slice) if isinstance(a := self.a, expr) else isinstance(a, pattern)
 
     def is_atom(self, *, pars: bool = True, always_enclosed: bool = False) -> bool | Literal['pars']:
         """Whether `self` is innately atomic precedence-wise like `Name`, `Constant`, `List`, etc... Or otherwise

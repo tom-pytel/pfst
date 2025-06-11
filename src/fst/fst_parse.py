@@ -1264,7 +1264,7 @@ _PARSE_MODE_FUNCS = {
     match_case:          _parse_match_case,
     expr:                _parse_expr,
     Starred:             _parse_callarg,   # because could have form '*a or b' and we want to parse any form of Starred here
-    Tuple:               _parse_sliceelt,  # because could have slice in it
+    Tuple:               _parse_sliceelt,  # because could have slice in it and ditto on any form here
     Slice:               _parse_slice,     # because otherwise would be _parse_expr which doesn't do slice by default
     boolop:              _parse_boolop,
     operator:            _parse_operator,

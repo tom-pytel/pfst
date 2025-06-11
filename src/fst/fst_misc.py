@@ -264,7 +264,7 @@ def _dump(self: 'FST', st: nspace, cind: str = '', prefix: str = ''):
     if not st.src:  # nop
         pass
 
-    elif isinstance(ast, stmt):  # src = 'line' or 'node'
+    elif isinstance(ast, (stmt, ExceptHandler, match_case)):  # src = 'line' or 'node'
         if loc := self.bloc:
             if isinstance(ast, BLOCK):
                 _out_lines(self, st.linefunc, loc.ln, loc.col, *self._loc_block_header_end(), st.eol)
