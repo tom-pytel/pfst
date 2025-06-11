@@ -9303,10 +9303,11 @@ a
         self.assertEqual('((f)[g].h[i].b[c].d[e]): int', f.src)
         f.verify()
 
-        f = FST('f"{a if b else c}"')
-        f.values[0].value.orelse.replace('lambda: None', raw=False)
-        self.assertEqual('f"{a if b else (lambda: None)}"', f.src)
-        f.verify()
+        if _PY_VERSION >= (3, 12):
+            f = FST('f"{a if b else c}"')
+            f.values[0].value.orelse.replace('lambda: None', raw=False)
+            self.assertEqual('f"{a if b else (lambda: None)}"', f.src)
+            f.verify()
 
         # more patterns
 

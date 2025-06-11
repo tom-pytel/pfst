@@ -620,7 +620,7 @@ Module - ROOT 0,0..0,17
         .ctx Load
 """),
 
-(r"""f'{i}'""", 'body[0].value.values[0]', None, None, {'raw': False, '_verdump': 12}, r"""a, b""", r"""f'{(a, b)}'""", r"""
+(r"""f'{i}'""", 'body[0].value.values[0]', None, None, {'raw': False, '_ver': 12}, r"""a, b""", r"""f'{(a, b)}'""", r"""
 Module - ROOT 0,0..0,11
   .body[1]
   0] Expr - 0,0..0,11

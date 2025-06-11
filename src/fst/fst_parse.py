@@ -1,6 +1,7 @@
 """Lower level FST methods (most of them not so misc but core)."""
 
 import re
+import sys
 from ast import *
 from ast import parse as ast_parse, unparse as ast_unparse
 from typing import Any, Callable
@@ -15,6 +16,9 @@ from .shared import (
 _re_first_src = re.compile(r'^[^\S\n]*(?:[^\s\\#]|(?<!^)\\)', re.M)  # or first \ not on start of line
 _re_except    = re.compile(r'except\b')
 _re_case      = re.compile(r'case\b\s*(?:[*\\\w({[\'"-]|\.\d)')
+
+_PY_VERSION = sys.version_info[:2]
+_PYLT11     = _PY_VERSION < (3, 11)
 
 
 def _validate_indent(src: str, ret: Any = None) -> Any:
@@ -412,10 +416,11 @@ def _parse_slice(src: str, parse_params: dict = {}) -> AST:
     try:
         ast = ast_parse(f'a[\n{src}]', **parse_params).body[0].value.slice
 
-    except SyntaxError:  # maybe 'yield'
+    except SyntaxError:  # maybe 'yield', also could be unparenthesized 'tuple' containing 'Starred' on py 3.10
         ast = ast_parse(f'a[(\n{src})]', **parse_params).body[0].value.slice
 
-        assert not isinstance(ast, Tuple)
+        if isinstance(ast, Tuple):  # only py 3.10
+            raise SyntaxError('cannot have unparenthesized tuple containing Starred in slice')
 
     return _offset_linenos(_validate_indent(src, ast), -1)
 
@@ -962,7 +967,12 @@ def _code_as_slice(code: Code, parse_params: dict = {}) -> 'FST':
     """Convert `code` to a Slice `FST` if possible (or anthing else that can serve in `Subscript.slice`, like any old
     generic `expr`)."""
 
-    return _code_as(code, expr, parse_params, _parse_slice, strip_tup_pars=True)
+    ret = _code_as(code, expr, parse_params, _parse_slice, strip_tup_pars=not _PYLT11)
+
+    if isinstance(code, AST) and not isinstance(ret.a, code.__class__):  # because could reparse Starred into a single element Tuple with Starred
+        raise NodeError(f'cannot reparse {code.__class__.__name__} in slice as {code.__class__.__name__}')
+
+    return ret
 
 
 @staticmethod

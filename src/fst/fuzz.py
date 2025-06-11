@@ -607,17 +607,22 @@ class PutOneExpr(Fuzzy):
                         'in this state' in msg or
                         'pattern expression' in msg or
                         'invalid value for MatchValue.value' in msg or
-                        'invalid value for MatchMapping.keys' in msg
+                        'invalid value for MatchMapping.keys' in msg or
+                        'cannot reparse Starred in slice as Starred' in msg
                         # (msg.startswith('cannot put ') and (msg.endswith(' to MatchMapping.keys') or msg.endswith(' to MatchValue.value')))
                     )
 
-                    if not ignorable and isinstance(exc, SyntaxError) and put == 'src':  # Starred stuff like "*a or b" coming from original code
-                        try:
-                            FST._parse_callarg(code)
-                        except SyntaxError:
-                            pass
-                        else:
+                    if not ignorable and isinstance(exc, SyntaxError):
+                        if msg.startswith('cannot use starred expression here'):
                             ignorable = True
+
+                        elif put == 'src':  # Starred stuff like "*a or b" coming from original code
+                            try:
+                                FST._parse_callarg(code)
+                            except SyntaxError:
+                                pass
+                            else:
+                                ignorable = True
 
                     # if not ignorable and isinstance(exc, SyntaxError) and msg.startswith('cannot use starred expression here'): ignorable = True  # TEMPORARY!!!
 

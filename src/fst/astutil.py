@@ -1322,7 +1322,7 @@ def precedence_require_parens(child: AST, parent: AST, field: str, idx: int | No
     - `parent`: Parent `AST` node.
     - `field`: The name of the field in the parent where the child resides.
     - `idx`: The optional index of the child in the parent field, or `None` if does not apply.
-    - `flags`: Used to passed in some flags that cannot be determined here, like `star_call_arg`.
+    - `flags`: Used to passed in some flags that cannot be determined here, specifically `star_call_arg`.
 
     **Returns:**
     - `bool`: Whether parentheses are needed around the child for correct parsing or not.
