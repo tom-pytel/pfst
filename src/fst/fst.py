@@ -4,15 +4,14 @@ their respective `ast` module counterparts."""
 FST = None  # temporary standin for circular import of real `FST` class
 
 import ast as ast_
-import sys
 from ast import *
-from ast import parse as ast_parse, unparse as ast_unparse
+from ast import unparse as ast_unparse
 from contextlib import contextmanager
 from io import TextIOBase
 from typing import Any, Callable, Literal, Optional, TextIO, Union
 
 from .astutil import *
-from .astutil import TypeAlias, TryStar, TemplateStr, Interpolation, type_param, TypeVar, ParamSpec, TypeVarTuple
+from .astutil import TypeAlias, TryStar, TemplateStr, Interpolation, type_param
 
 from .shared import (
     NodeError, astfield, fstloc, fstlocns, nspace,
@@ -27,9 +26,6 @@ from .shared import (
 __all__ = [
     'parse', 'unparse', 'FST',
 ]
-
-_PY_VERSION = sys.version_info[:2]
-_PYLT12     = _PY_VERSION < (3, 12)
 
 _REPR_SRC_LINES = 0  # for debugging
 
@@ -79,7 +75,7 @@ def parse(source, filename='<unknown>', mode='exec', *, type_comments=False, fea
     **Examples:**
     ```py
     >>> import ast, fst
-    >>> a = fst.parse('if 1:\n  i = 2')
+    >>> a = fst.parse('if 1:\\n  i = 2')
     >>> a
     <ast.Module object at 0x7f3aef128fd0>
     >>> a.f  # FST node
@@ -277,10 +273,11 @@ class FST:
         return isinstance(self.a, ANONYMOUS_SCOPE)
 
     @property
-    def whole_loc(self) -> fstloc:
-        """Whole source location, from 0,0 to end of source. Works from any node (not just root)."""
+    def has_slice(self) -> bool:
+        """Whether self is a `Slice` or a `Tuple` which directly contains any `Slice`."""
 
-        return fstloc(0, 0, len(ls := self._lines) - 1, len(ls[-1]))
+        return isinstance(a := self.a, Slice) or (isinstance(a, Tuple) and
+                                                  any(isinstance(e, Slice) for e in a.elts))
 
     @property
     def has_own_loc(self) -> bool:
@@ -288,6 +285,12 @@ class FST:
         Otherwise `False` if no `loc` or `loc` is calculated."""
 
         return hasattr(self.a, 'end_col_offset')
+
+    @property
+    def whole_loc(self) -> fstloc:
+        """Whole source location, from 0,0 to end of source. Works from any node (not just root)."""
+
+        return fstloc(0, 0, len(ls := self._lines) - 1, len(ls[-1]))
 
     @property
     def loc(self) -> fstloc | None:
@@ -439,10 +442,31 @@ class FST:
         return head + '\n???'
 
     def __getattr__(self, name) -> Any:
+        """Attempt to get attribute which which does not exist in the `self` directly from corresponding `AST` node. If
+        present there and is another `AST` then return that `AST` node's corresponding `FST` node. If is a list of `AST`
+        nodes then return an `fstview` of that list which accesses the respective `AST` nodes' `FST` nodes. If is
+        something else like pirimitive constant value then return that directly.
+
+        **Examples:**
+        ```py
+        >>> FST('var = 123').value
+        <Constant 0,6..0,9>
+        >>> FST('var = 123').value.value
+        123
+        >>> FST('var = 123').targets
+        <<Assign ROOT 0,0..0,9>.targets[0:1] [<Name 0,0..0,3>]>
+        >>> FST('var = 123').targets[0]
+        <Name 0,0..0,3>
+        >>> FST('var = 123').targets[0].id
+        'var'
+        ```
+        @public
+        """
+
         if isinstance(child := getattr(self.a, name), list):
             return fstview(self, name, 0, len(child))
         elif isinstance(child, AST):
-            return child.f
+            return getattr(child, 'f', None)
 
         return child
 
@@ -587,27 +611,48 @@ class FST:
         """Create a new empty `FST` tree with the top level node dictated by the `mode` parameter.
 
         **Parameters:**
-        - `filename`: `ast.parse()` parameter.
         - `mode`: `ast.parse()` parameter, can only be `'exec'`, `'eval'` or `'single'` here.
+        - `filename`: `ast.parse()` parameter.
         - `type_comments`: `ast.parse()` parameter.
         - `feature_version`: `ast.parse()` parameter.
 
         **Returns:**
         - `FST`: The new empty top level `FST` node.
+
+        **Examples:**
+        ```py
+        >>> FST.new()
+        <Module ROOT 0,0..0,0>
+        >>> FST.new(mode='single')
+        <Interactive ROOT 0,0..0,0>
+        >>> FST.new(mode='eval')
+        <Expression ROOT 0,0..0,4>
+        >>> _.dump()
+        Expression - ROOT 0,0..0,4
+        .body Constant None - 0,0..0,4
+        >>> _.src
+        'None'
+        ```
         """
 
         parse_params = dict(filename=filename, type_comments=type_comments, feature_version=feature_version)
 
         if mode == 'exec':
             ast = Module(body=[], type_ignores=[])
+            src = ''
+
         elif mode == 'eval':
             ast = Expression(body=Constant(value=None, lineno=1, col_offset=0, end_lineno=1, end_col_offset=4))
+            src = 'None'
+
         elif mode == 'single':
             ast = Interactive(body=[])
+            src = ''
+
         else:
             raise ValueError(f"invalid mode '{mode}' for blank FST")
 
-        return FST(ast, [bistr('')], parse_params=parse_params, lcopy=False)
+        return FST(ast, [bistr(src)], parse_params=parse_params, lcopy=False)
 
     @staticmethod
     def fromsrc(src: str | bytes | list[str], mode: Mode = 'exec', *, filename: str = '<unknown>',
@@ -616,13 +661,45 @@ class FST:
 
         **Parameters:**
         - `src`: The source to parse as a single `str`, `bytes` or list of individual line strings (without newlines).
+        - `mode`: Parse mode, extended `ast.parse()` parameter, See `fst.shared.Mode`.
         - `filename`: `ast.parse()` parameter.
-        - `mode`: Parse mode, extended `ast.parse()` parameter, see `FST()`.
         - `type_comments`: `ast.parse()` parameter.
         - `feature_version`: `ast.parse()` parameter.
 
         **Returns:**
         - `FST`: The parsed tree with `.f` attributes added to each `AST` node for `FST` access.
+
+        **Examples:**
+        ```py
+        >>> FST.fromsrc('var').dump()
+        Module - ROOT 0,0..0,3
+          .body[1]
+          0] Expr - 0,0..0,3
+            .value Name 'var' Load - 0,0..0,3
+        >>> FST.fromsrc('var', mode='stmt').dump()
+        Expr - ROOT 0,0..0,3
+          .value Name 'var' Load - 0,0..0,3
+        >>> FST.fromsrc('var', mode='expr').dump()
+        Name 'var' Load - ROOT 0,0..0,3
+        >>> FST.fromsrc('except: pass', 'stmtish')
+        <ExceptHandler ROOT 0,0..0,12>
+        >>> FST.fromsrc('except Exception: pass', 'stmtish').dump()
+        ExceptHandler - ROOT 0,0..0,22
+          .type Name 'Exception' Load - 0,7..0,16
+          .body[1]
+          0] Pass - 0,18..0,22
+        >>> FST.fromsrc('case f(a=1): pass', 'match_case').dump()
+        match_case - ROOT 0,0..0,17
+          .pattern MatchClass - 0,5..0,11
+            .cls Name 'f' Load - 0,5..0,6
+            .kwd_attrs[1]
+            0] 'a'
+            .kwd_patterns[1]
+            0] MatchValue - 0,9..0,10
+            .value Constant 1 - 0,9..0,10
+          .body[1]
+          0] Pass - 0,13..0,17
+        ```
         """
 
         if isinstance(src, bytes):
@@ -658,6 +735,35 @@ class FST:
 
         **Returns:**
         - `FST`: The augmented tree with `.f` attributes added to each `AST` node for `FST` access.
+
+        **Examples:**
+        ```py
+        >>> FST.fromast(Assign(targets=[Name(id='var', ctx=Store())], value=Constant(value=123))).dump('stmt')
+        0: var = 123
+        Assign - ROOT 0,0..0,9
+          .targets[1]
+          0] Name 'var' Store - 0,0..0,3
+          .value Constant 123 - 0,6..0,9
+        >>> FST.fromast(ast.parse('if 1:\n    j = 5')).dump('stmt')
+        Module - ROOT 0,0..1,9
+          .body[1]
+        0: if 1:
+          0] If - 0,0..1,9
+            .test Constant 1 - 0,3..0,4
+            .body[1]
+        1:     j = 5
+            0] Assign - 1,4..1,9
+              .targets[1]
+              0] Name 'j' Store - 1,4..1,5
+              .value Constant 5 - 1,8..1,9
+        >>> FST.fromast(Slice(lower=Constant(value=1), step=Name(id='step'))).dump('all')
+        0: 1::step
+        Slice - ROOT 0,0..0,7
+        0: 1
+          .lower Constant 1 - 0,0..0,1
+        0:    step
+          .step Name 'step' Load - 0,3..0,7
+        ```
         """
 
         if type_comments is None:
@@ -750,6 +856,16 @@ class FST:
         **Returns:**
         - `Any`: The `option` value from the passed `options` dict, if passed and not `None` there, else the global
             default value for `option`.
+
+        **Examples:**
+        ```py
+        >>> FST.get_option('pars')
+        'auto'
+        >>> FST.get_option('pars', {'pars': True})
+        True
+        >>> FST.get_option('pars', {'pars': None})
+        'auto'
+        ```
         """
 
         return _OPTIONS.get(option) if (o := options.get(option)) is None else o
@@ -774,6 +890,22 @@ class FST:
         Remove unneeded pars from destination on put:              no       yes       yes
         Remove unneeded pars from source on put:                   no        no       yes
         Add pars needed for parse/precedence to source on put:     no       yes       yes
+        ```
+
+        **Examples:**
+        ```py
+        >>> FST.get_option('pars')
+        'auto'
+        >>> FST.set_option(pars=False)
+        {'pars': 'auto'}
+        >>> FST.get_option('pars')
+        False
+        >>> FST.set_option(**{'pars': 'auto'})
+        {'pars': False}
+        >>> FST.get_option('pars')
+        'auto'
+        >>> FST.set_option(pars=True, raw=True, docstr=False)
+        {'pars': 'auto', 'raw': 'auto', 'docstr': True}
         ```
         """
 
@@ -932,19 +1064,29 @@ class FST:
 
         return self._dump(st)
 
-    def verify(self, mode: Mode | None = None, raise_: bool = True) -> Optional['FST']:  # -> Self | None:
+    def verify(self, mode: Mode | None = None, raise_: bool = True) -> Optional[Self]:  # -> Self | None:
         """Sanity check, reparse source and make sure parsed tree matches currently stored tree (locations and
         everything).
 
         **Parameters:**
         - `mode`: Parse mode to use, otherwise if `None` then use the top level AST node type for the mode. Depending on
             how this is set will determine whether the verification is checking if is parsable by python (`'exec'` for
-            example), or if the node itself is just in a valid state (where `None` is good). But some nodes may require
-            a mode to be specified in order to survive a check, a tuple with slices in the elements for example.
+            example), or if the node itself is just in a valid state (where `None` is good). See `fst.shared.Mode`.
         - `raise_`: Whether to raise an exception on verify failed or return `None`.
 
         **Returns:**
         - `None` on failure to verify (if not `raise_`), otherwise `self`.
+
+        **Examples:**
+        ```py
+        >>> FST('var = 123').verify()
+        <Assign ROOT 0,0..0,9>
+        >>> FST('a:b:c').verify()
+        <Slice ROOT 0,0..0,5>
+        >>> FST('a:b:c').verify('exec')  # this raises SyntaxError because a standalone Slice is not parsable noramllu
+        ...
+        SyntaxError: invalid syntax
+        ```
         """
 
         if not self.is_root:
@@ -2179,10 +2321,6 @@ class FST:
         if isinstance(ast, (expr_context, TypeIgnore, FormattedValue, Interpolation)):
             return False
 
-        if isinstance(ast, Tuple):  # tuple of slices used in indexing (like numpy)
-            if any(isinstance(e, Slice) for e in ast.elts):
-                return False
-
         elif parent := self.parent:
             if isinstance(ast, JoinedStr):  # TemplateStr doesn't go into a .format_spec, '.1f' type strings without quote delimiters
                 if self.pfield.name == 'format_spec':  # isinstance(parent.a, (FormattedValue, Interpolation)):
@@ -2453,12 +2591,9 @@ class FST:
             parenta = parent.a
 
             if isinstance(parenta, (List, Dict, Set, ListComp, SetComp, DictComp, GeneratorExp,
-                                    FormattedValue, Interpolation, TemplateStr, JoinedStr,
+                                    FormattedValue, Interpolation, JoinedStr, TemplateStr,
                                     MatchMapping)):
                 return True
-
-            # if not _PYLT12 and isinstance(parenta, JoinedStr):
-            #     return True
 
             if isinstance(parenta, (FunctionDef, AsyncFunctionDef)):
                 return self.pfield.name in ('type_params', 'args')

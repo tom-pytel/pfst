@@ -569,9 +569,8 @@ class PutOneExpr(Fuzzy):
 
                 dst_exprs.append(f)
 
-
-                # TODO: exclude Slice or Tuple which has Slice
-                extra_exprs.append(f.copy())
+                if not f.has_slice:
+                    extra_exprs.append(f.copy())
 
         try:
             for e in reversed(dst_exprs):

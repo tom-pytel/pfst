@@ -416,36 +416,6 @@ def is_valid_MatchMapping_key(ast: AST) -> bool:
 
     return is_valid_MatchValue_value(ast, (str, bytes, int, float, complex, bool, NoneType))
 
-    # if isinstance(ast, Attribute):
-    #     while isinstance(ast := ast.value, Attribute):
-    #         pass
-
-    #     return isinstance(ast, Name)
-
-    # if isinstance(ast, UnaryOp):
-    #     if not isinstance(ast.op, USub):
-    #         return False
-
-    #     ast = ast.operand
-
-    # if isinstance(ast, Constant):
-    #     return isinstance(ast.value, (str, bytes, int, float, complex, bool, NoneType))
-
-    # if isinstance(ast, BinOp):
-    #     if isinstance(ast.op, (Add, Sub)) and isinstance(r := ast.right, Constant) and isinstance(r.value, complex):
-    #         l = ast.left
-
-    #         if isinstance(l, UnaryOp):
-    #             if not isinstance(l.op, USub):
-    #                 return False
-
-    #             l = l.operand
-
-    #         if isinstance(l, Constant) and isinstance(l.value, (int, float)):
-    #             return True
-
-    # return False
-
 
 def reduce_ast(ast: AST, multi_mod: bool | type[Exception] = False, reduce_Expr: bool = True) -> AST | None:
     """Reduce a `mod` / `Expr` wrapped expression or single statement if possible, otherwise return original `AST`,

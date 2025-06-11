@@ -3,7 +3,7 @@
 import re
 import sys
 from ast import *
-from ast import parse as ast_parse, unparse as ast_unparse
+from ast import parse as ast_parse, unparse as ast_unparse, fix_missing_locations as ast_fix_missing_locations
 from typing import Any, Callable
 
 from .astutil import *
@@ -19,6 +19,19 @@ _re_case      = re.compile(r'case\b\s*(?:[*\\\w({[\'"-]|\.\d)')
 
 _PY_VERSION = sys.version_info[:2]
 _PYLT11     = _PY_VERSION < (3, 11)
+
+
+def _fixing_unparse(ast: AST) -> str:
+    try:
+        return ast_unparse(ast)
+
+    except AttributeError as exc:
+        if not str(exc).endswith("has no attribute 'lineno'"):
+            raise
+
+    ast_fix_missing_locations(ast)
+
+    return ast_unparse(ast)
 
 
 def _validate_indent(src: str, ret: Any = None) -> Any:
@@ -98,7 +111,7 @@ def _code_as(code: Code, ast_type: type[AST], parse_params: dict, parse: Callabl
         if not isinstance(code, ast_type):
             raise NodeError(f'expecting {ast_type.__name__}, got {code.__class__.__name__}')
 
-        code  = (ast_unparse(code)[1:-1] if strip_tup_pars and isinstance(code, Tuple) and code.elts else
+        code  = (_fixing_unparse(code)[1:-1] if strip_tup_pars and isinstance(code, Tuple) and code.elts else
                  _unparse(code))
         lines = code.split('\n')
 
@@ -118,12 +131,12 @@ def _unparse(ast: AST) -> AST:
     """AST unparse that handles misc case of comprehension starting with a single space by stripping it."""
 
     if isinstance(ast, comprehension):  # strip prefix space from this
-        return ast_unparse(ast).lstrip()
+        return _fixing_unparse(ast).lstrip()
 
     if src := OPCLS2STR.get(ast.__class__):  # operators don't unparse to anything in ast
         return src
 
-    return ast_unparse(ast)
+    return _fixing_unparse(ast)
 
 
 @staticmethod
@@ -825,7 +838,7 @@ def _code_as_stmts(code: Code, parse_params: dict = {}) -> 'FST':
         if not isinstance(code, (stmt, expr, Module, Interactive, Expression)):  # all these can be coerced into stmts
             raise NodeError(f'expecting zero or more stmts, got {code.__class__.__name__}')
 
-        code  = ast_unparse(code)
+        code  = _fixing_unparse(code)
         lines = code.split('\n')
 
     elif isinstance(code, list):
@@ -870,7 +883,7 @@ def _code_as_ExceptHandlers(code: Code, parse_params: dict = {}, *, is_trystar: 
             code = unparse(TryStar(body=[Pass()], handlers=[code], orelse=[], finalbody=[]))
             code = code[code.index('except'):]
         else:
-            code = ast_unparse(code)
+            code = _fixing_unparse(code)
 
         lines = code.split('\n')
 
@@ -908,7 +921,7 @@ def _code_as_match_cases(code: Code, parse_params: dict = {}) -> 'FST':
         if not isinstance(code, match_case):
             raise NodeError(f'expecting zero or more match_cases, got {code.__class__.__name__}')
 
-        code  = ast_unparse(code)
+        code  = _fixing_unparse(code)
         lines = code.split('\n')
 
     elif isinstance(code, list):
@@ -951,7 +964,7 @@ def _code_as_expr(code: Code, parse_params: dict = {}, parse: Callable[[Code, di
                 ("slice " if parse is _parse_sliceelt else "call arg " if parse is _parse_callarg else "") +
                 f'expression, got {code.__class__.__name__}')
 
-        code  = ast_unparse(code)
+        code  = _fixing_unparse(code)
         lines = code.split('\n')
 
     elif isinstance(code, list):
@@ -967,7 +980,9 @@ def _code_as_slice(code: Code, parse_params: dict = {}) -> 'FST':
     """Convert `code` to a Slice `FST` if possible (or anthing else that can serve in `Subscript.slice`, like any old
     generic `expr`)."""
 
-    ret = _code_as(code, expr, parse_params, _parse_slice, strip_tup_pars=not _PYLT11)
+    strip_tup_pars = not _PYLT11 or (isinstance(code, Tuple) and any(isinstance(e, Slice) for e in code.elts))
+
+    ret = _code_as(code, expr, parse_params, _parse_slice, strip_tup_pars=strip_tup_pars)
 
     if isinstance(code, AST) and not isinstance(ret.a, code.__class__):  # because could reparse Starred into a single element Tuple with Starred
         raise NodeError(f'cannot reparse {code.__class__.__name__} in slice as {code.__class__.__name__}')
@@ -1113,7 +1128,7 @@ def _code_as_identifier(code: Code, parse_params: dict = {}) -> str:
         code = code.src
 
     elif isinstance(code, AST):
-        code = ast_unparse(code)
+        code = _fixing_unparse(code)
     elif isinstance(code, list):
         code = '\n'.join(code)
 
@@ -1134,7 +1149,7 @@ def _code_as_identifier_dotted(code: Code, parse_params: dict = {}) -> str:
         code = code.src
 
     elif isinstance(code, AST):
-        code = ast_unparse(code)
+        code = _fixing_unparse(code)
     elif isinstance(code, list):
         code = '\n'.join(code)
 
@@ -1155,7 +1170,7 @@ def _code_as_identifier_star(code: Code, parse_params: dict = {}) -> str:
         code = code.src
 
     elif isinstance(code, AST):
-        code = ast_unparse(code)
+        code = _fixing_unparse(code)
     elif isinstance(code, list):
         code = '\n'.join(code)
 
@@ -1176,7 +1191,7 @@ def _code_as_identifier_alias(code: Code, parse_params: dict = {}) -> str:
         code = code.src
 
     elif isinstance(code, AST):
-        code = ast_unparse(code)
+        code = _fixing_unparse(code)
     elif isinstance(code, list):
         code = '\n'.join(code)
 
