@@ -76,7 +76,7 @@ def _with_loc(fst: 'FST', with_loc: bool | Literal['all', 'own'] = True) -> bool
 # ----------------------------------------------------------------------------------------------------------------------
 
 def next(self: 'FST', with_loc: bool | Literal['all', 'own'] = True) -> Optional['FST']:  # TODO: refactor
-    """Get next sibling in syntactic order, only within parent.
+    """Get next sibling of `self` in syntactic order, only within parent.
 
     **Parameters:**
     - `with_loc`: Return nodes depending on their location information.
@@ -381,7 +381,7 @@ def next(self: 'FST', with_loc: bool | Literal['all', 'own'] = True) -> Optional
 
 
 def prev(self: 'FST', with_loc: bool | Literal['all', 'own'] = True) -> Optional['FST']:  # TODO: refactor
-    """Get previous sibling in syntactic order, only within parent.
+    """Get previous sibling of `self` in syntactic order, only within parent.
 
     **Parameters:**
     - `with_loc`: Return nodes depending on their location information.
@@ -1073,9 +1073,9 @@ def walk(self: 'FST', with_loc: bool | Literal['all', 'own'] = False, *, self_: 
         otherwise will start directly with children.
     - `recurse`: Whether to recurse into children by default, `send(True)` for a given node will always override this.
     - `scope`: If `True` then will walk only within the scope of `self`. Meaning if called on a `FunctionDef` then
-        will only walk children which are within the function scope. Will yield children which have with their own
-        scopes, and the parts of them which are visible in this scope (like default argument values), but will not
-        recurse into them unless `send(True)` is done for that child.
+        will only walk children which are within the function scope. Will yield children which have their own scopes,
+        and the parts of them which are visible in this scope (like default argument values), but will not recurse into
+        them unless `send(True)` is done for that child.
     - `back`: If `True` then walk every node in reverse syntactic order. This is not the same as a full forwards
         walk reversed due to recursion (parents are still returned before children, only in reverse sibling order).
 
@@ -1099,6 +1099,39 @@ def walk(self: 'FST', with_loc: bool | Literal['all', 'own'] = False, *, self_: 
     <Constant 0,42..0,45>         100
     <arg 0,49..0,50>              e
     <Pass 0,53..0,57>             pass
+    >>> f = FST('''
+    ... def f():
+    ...     def g(arg=1) -> int:
+    ...         pass
+    ...     val = [i for i in iterator]
+    ... '''.strip())
+    >>> for g in f.walk(True, scope=True):
+    ...     print(f'{g!r:<30}{g.src!r}')
+    ...
+    <FunctionDef ROOT 0,0..3,31>  'def f():\\n    def g(arg=1) -> int:\\n        pass\\n    val = [i for i in iterator]'
+    <FunctionDef 1,4..2,12>       'def g(arg=1) -> int:\\n        pass'
+    <Constant 1,14..1,15>         '1'
+    <Assign 3,4..3,31>            'val = [i for i in iterator]'
+    <Name 3,4..3,7>               'val'
+    <ListComp 3,10..3,31>         '[i for i in iterator]'
+    <Name 3,22..3,30>             'iterator'
+    >>> for g in f.walk(True, back=True):
+    ...     print(f'{g!r:<30}{g.src!r}')
+    ...
+    <FunctionDef ROOT 0,0..3,31>  'def f():\\n    def g(arg=1) -> int:\\n        pass\\n    val = [i for i in iterator]'
+    <Assign 3,4..3,31>            'val = [i for i in iterator]'
+    <ListComp 3,10..3,31>         '[i for i in iterator]'
+    <comprehension 3,13..3,30>    'for i in iterator'
+    <Name 3,22..3,30>             'iterator'
+    <Name 3,17..3,18>             'i'
+    <Name 3,11..3,12>             'i'
+    <Name 3,4..3,7>               'val'
+    <FunctionDef 1,4..2,12>       'def g(arg=1) -> int:\\n        pass'
+    <Pass 2,8..2,12>              'pass'
+    <Name 1,20..1,23>             'int'
+    <arguments 1,10..1,15>        'arg=1'
+    <Constant 1,14..1,15>         '1'
+    <arg 1,10..1,13>              'arg'
     ```
     """
 

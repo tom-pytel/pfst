@@ -34,15 +34,15 @@ _DEFAULT_INDENT       = '    '
 
 _OPTIONS = {
     'pars':      'auto',  # True | False | 'auto'
-    'elif_':     True,    # True | False
     'raw':       'auto',  # True | False | 'auto'
+    'elif_':     True,    # True | False
     'docstr':    True,    # True | False | 'strict'
     'empty_set': True,    # True | False | 'seq' | 'call'
+    'pep8space': True,    # True | False | 1
     'precomms':  True,    # True | False | 'all'
     'postcomms': True,    # True | False | 'all' | 'block'
     'prespace':  False,   # True | False | int
     'postspace': False,   # True | False | int
-    'pep8space': True,    # True | False | 1
 }
 
 
@@ -67,7 +67,11 @@ def parse(source, filename='<unknown>', mode='exec', *, type_comments=False, fea
     `FST` tree.
 
     **Parameters:**
-
+    - `source`: The python source to parse.
+    - `filename`: `ast.parse()` parameter.
+    - `mode`: Parse mode, extended `ast.parse()` parameter, See `fst.shared.Mode`.
+    - `type_comments`: `ast.parse()` parameter.
+    - `feature_version`: `ast.parse()` parameter.
 
     **Returns:**
     - `AST`: Tree with an `FST` `.f` attribute added to each `AST` node.
@@ -80,8 +84,16 @@ def parse(source, filename='<unknown>', mode='exec', *, type_comments=False, fea
     <ast.Module object at 0x7f3aef128fd0>
     >>> a.f  # FST node
     <Module ROOT 0,0..1,7>
-    >>> ast.dump(a)
-    "Module(body=[If(test=Constant(value=1), body=[Assign(targets=[Name(id='i', ctx=Store())], value=Constant(value=2))], orelse=[])], type_ignores=[])"
+    >>> print(ast.dump(a, indent=2))
+    Module(
+      body=[
+        If(
+          test=Constant(value=1),
+          body=[
+            Assign(
+              targets=[
+                Name(id='i', ctx=Store())],
+              value=Constant(value=2))])])
     >>> a.f.dump()
     Module - ROOT 0,0..1,7
       .body[1]
@@ -104,8 +116,10 @@ def unparse(ast_obj) -> str:
     `FST` information in the `AST` tree then just executes `ast.unparse()`.
 
     **Parameters:**
+    - `ast_obj`: The `AST` to unparse.
 
     **Returns:**
+    - `str`: The unparsed source code, formatted if it came from `FST`.
 
     **Examples:**
     ```py
@@ -166,7 +180,8 @@ class FST:
     @property
     def lines(self) -> list[str] | None:
         """Whole lines which contain this node, may also contain parts of enclosing nodes. If gotten at root then the
-        entire source is returned, which may extend beyond the location of the top level node."""
+        entire source is returned, which may extend beyond the location of the top level node (mostly for statements
+        which may have leading / trailing comments or empty lines)."""
 
         if self.is_root:
             return self._lines
@@ -297,7 +312,7 @@ class FST:
         """Zero based character indexed location of node (may not be entire location if node has decorators). Not all
         nodes have locations (like `expr_context`). Other nodes which normally don't have locations like `arguments` or
         most operators have this location calculated from their children or source. NOTE: Empty arguments do NOT have
-        a location even thout the `AST` exists."""
+        a location even though the `AST` exists."""
 
         try:
             return self._cache['loc']
@@ -442,7 +457,7 @@ class FST:
         return head + '\n???'
 
     def __getattr__(self, name) -> Any:
-        """Attempt to get attribute which which does not exist in the `self` directly from corresponding `AST` node. If
+        """Attempt to get attribute which which does not exist in `self` directly from corresponding `AST` node. If
         present there and is another `AST` then return that `AST` node's corresponding `FST` node. If is a list of `AST`
         nodes then return an `fstview` of that list which accesses the respective `AST` nodes' `FST` nodes. If is
         something else like pirimitive constant value then return that directly.
@@ -483,7 +498,7 @@ class FST:
         This will create an `FST` from either an `AST` or source code in the form of a string, list of lines or encoded
         bytes. The first parameter can be `None` instead of an `AST` or source to indicate a blank new module of one of
         the three types `'exec'`, `'eval'` or `'single'`. Otherwise if there is an `AST` or `source` then `mode`
-        specifies how it will be parsed / reparsed and it can take one of the following values:
+        specifies how it will be parsed / reparsed and it can take any of the values from `fst.shared.Mode`.
 
         **Parameters:**
         - `ast_or_src`: Source code, an `AST` node or `None`.
@@ -681,14 +696,12 @@ class FST:
           .value Name 'var' Load - 0,0..0,3
         >>> FST.fromsrc('var', mode='expr').dump()
         Name 'var' Load - ROOT 0,0..0,3
-        >>> FST.fromsrc('except: pass', 'stmtish')
-        <ExceptHandler ROOT 0,0..0,12>
         >>> FST.fromsrc('except Exception: pass', 'stmtish').dump()
         ExceptHandler - ROOT 0,0..0,22
           .type Name 'Exception' Load - 0,7..0,16
           .body[1]
           0] Pass - 0,18..0,22
-        >>> FST.fromsrc('case f(a=1): pass', 'match_case').dump()
+        >>> FST.fromsrc('case f(a=1): pass', 'stmtish').dump()
         match_case - ROOT 0,0..0,17
           .pattern MatchClass - 0,5..0,11
             .cls Name 'f' Load - 0,5..0,6
@@ -722,7 +735,6 @@ class FST:
 
         **Parameters:**
         - `ast`: The root `AST` node.
-        - `filename`: `ast.parse()` parameter.
         - `mode`: Parse mode, extended `ast.parse()` parameter, see `fst.shared.Mode`. Two special values are added:
             - `None`: This will attempt to reparse to the same node type as was passed in. This is the default and all
                 other values should be considered overrides for special cases.
@@ -730,6 +742,7 @@ class FST:
                 Use this only if you are absolutely certain that the `AST` unparsed source will correspond with the
                 locations already present in the `AST`. This is almost never the case unless the `AST` was
                 `ast.parse()`d from an explicitly `ast.unparse()`d `AST`.
+        - `filename`: `ast.parse()` parameter.
         - `type_comments`: `ast.parse()` parameter.
         - `feature_version`: `ast.parse()` parameter.
 
@@ -744,7 +757,7 @@ class FST:
           .targets[1]
           0] Name 'var' Store - 0,0..0,3
           .value Constant 123 - 0,6..0,9
-        >>> FST.fromast(ast.parse('if 1:\n    j = 5')).dump('stmt')
+        >>> FST.fromast(ast.parse('if 1:\\n    j = 5')).dump('stmt')
         Module - ROOT 0,0..1,9
           .body[1]
         0: if 1:
@@ -790,6 +803,9 @@ class FST:
         function returns their global defaults which are used when those options are not passed to operations or if they
         are passed with a value of `None`.
 
+        When these options are missing or `None` in a call to an operation, then the default option as specified here is
+        used.
+
         **Options:**
         - `pars`: How parentheses are handled, can be `False`, `True` or `'auto'`. This is for individual puts, for
             slices parentheses are always unchanged. Raw puts generally do not have parentheses added or removed
@@ -800,8 +816,7 @@ class FST:
                 destination on put if not needed there (but not source).
             - `'auto'`: Same as `True` except they are not returned with a copy and possibly removed from source
                 on put if not needed (removed from destination first if needed and present on both).
-        - `raw`: How to attempt at raw source operations. This may result in more nodes changed than just the targeted
-            one(s).
+        - `raw`: When to do raw source operations. This may result in more nodes changed than just the targeted one(s).
             - `False`: Do not do raw source operations.
             - `True`: Only do raw source operations.
             - `'auto'`: Only do raw source operations if the normal operation fails in a way that raw might not.
@@ -814,11 +829,11 @@ class FST:
             - `True`: All `Expr` multiline strings (as they serve no coding purpose).
             - `'strict'`: Only multiline strings in expected docstring positions (functions and classes).
         - `empty_set`: Empty set source during a slice put (considered to have no elements).
-            - False: Nothing is considered an empty set and an empty set slice put is only possible using a non-set
+            - `False`: Nothing is considered an empty set and an empty set slice put is only possible using a non-set
                 type of empty sequence (tuple or list).
-            - True: `set()` call and `{*()}`, `{*[]}` and `{*{}}` starred sequences are considered empty.
-            - `seq`: Only starred sequences `{*()}`, `{*[]}` and `{*{}}` are considered empty.
-            - `call`: Only `set()` call is considered empty.
+            - `True`: `set()` call and `{*()}`, `{*[]}` and `{*{}}` starred sequences are considered empty.
+            - `'seq'`: Only starred sequences `{*()}`, `{*[]}` and `{*{}}` are considered empty.
+            - `'call'`: Only `set()` call is considered empty.
         - `pep8space`: Preceding and trailing empty lines for function and class definitions.
             - `False`: No empty lines.
             - `True`: Two empty lines at module scope and one empty line in other scopes.
@@ -838,8 +853,25 @@ class FST:
             - `int`: A maximum number of empty lines.
         - `postspace`: Same as `prespace` except for trailing empty lines.  - WILL CHANGE IN FUTURE VERSIONS!
 
+        **Notes:**
+        `pars` behavior:
+        ```
+                                                                  False      True    'auto'
+        Copy pars from source on copy / cut:                         no       yes        no
+        Add pars needed for parsability to copy:                     no       yes       yes
+        Remove unneeded pars from destination on put:                no       yes       yes
+        Remove unneeded pars from source on put:                     no        no       yes
+        Add pars needed for parse / precedence to source on put:     no       yes       yes
+        ```
+
         **Returns:**
         - `{option: value, ...}`: Dictionary of all global default options.
+
+        **Examples:**
+        ```py
+        >>> FST.get_options()
+        {'pars': 'auto', 'raw': 'auto', 'elif_': True, 'docstr': True, 'empty_set': True, 'pep8space': True, 'precomms': True, 'postcomms': True, 'prespace': False, 'postspace': False}
+        ```
         """
 
         return _OPTIONS.copy()
@@ -875,22 +907,11 @@ class FST:
         """Set global defaults for `options` parameters.
 
         **Parameters:**
-        - `options`: Key / values of parameters to set. These can also be passed to various methods to override the
+        - `options`: Names / values of parameters to set. These can also be passed to various methods to override the
             defaults set here for those individual operations, see `get_options()`.
 
         **Returns:**
         - `options`: `dict` of previous values of changed parameters, reset with `set_option(**options)`.
-
-        **Notes:**
-        `pars` behavior:
-        ```
-                                                                False      True    'auto'
-        Copy pars from source on copy/cut:                         no       yes        no
-        Add pars needed for parsability to copy:                   no       yes       yes
-        Remove unneeded pars from destination on put:              no       yes       yes
-        Remove unneeded pars from source on put:                   no        no       yes
-        Add pars needed for parse/precedence to source on put:     no       yes       yes
-        ```
 
         **Examples:**
         ```py
@@ -918,10 +939,10 @@ class FST:
     @staticmethod
     @contextmanager
     def option(**options):
-        """Context manager to temporarily set gloval options defaults for a group of operations.
+        """Context manager to temporarily set global options defaults for a group of operations.
 
         **Parameters:**
-        - `options`: Key / values of options to set temporarily, see `get_options()`.
+        - `options`: Names / values of options to set temporarily, see `get_options()`.
 
         **Examples:**
         ```py
@@ -945,10 +966,10 @@ class FST:
         finally:
             FST.set_option(**old_options)
 
-    def dump(self, src: Literal['stmt', 'all'] | None = None, full: bool = False, expand: bool | str = False, *,
+    def dump(self, src: Literal['stmt', 'all'] | None = None, full: bool = False, expand: bool = False, *,
              indent: int = 2, out: Callable | TextIO = print, eol: str | None = None) -> str | list[str] | None:
-        """Dump a representation of the tree to stdout or other `TextIO` or return as a str or list of lines, or call
-        a provided function once with each line of the output.
+        """Dump a representation of the tree to stdout or other `TextIO` or return as a `str` or `list` of lines, or
+        call a provided function once with each line of the output.
 
         **Parameters:**
         - `src`: `'stmt'` means output statement source lines, `'all'` means output source for each individual and node
@@ -958,9 +979,8 @@ class FST:
             insensitive.
         - `full`: If `True` then will list all fields in nodes including empty ones, otherwise will exclude most empty
             fields.
-        - `expand`: If `True` then the output is a nice compact concise representation. If `False` then it is ugly and
-            wasteful.
-        - `indent`: The average airspeed of an unladen swallow.
+        - `expand`: If `True` then the output is a nice compact representation. If `False` then it is ugly and wasteful.
+        - `indent`: The average airspeed of an unladen swallow (European).
         - `out`: `print` means print to stdout, `list` returns a list of lines and `str` returns a whole string.
             `TextIO` will cann the `write` method for each line of output. Otherwise a `Callable[[str], None]` which is
             called for each line of output individually.
@@ -1015,7 +1035,7 @@ class FST:
         1:                  b
                         .value Name 'b' Load - 1,17..1,18
         >>> f.dump(out=str)[:80]
-        'If - ROOT 0,0..1,19\n  .test Constant 1 - 0,3..0,4\n  .body[1]\n  0] Expr - 1,4..1,'
+        'If - ROOT 0,0..1,19\\n  .test Constant 1 - 0,3..0,4\\n  .body[1]\\n  0] Expr - 1,4..1,'
         >>> for l in f.dump(1, out=list):
         ...     print(repr(l))
         ...
@@ -1164,7 +1184,7 @@ class FST:
         **Parameters:**
         - `code`: `FST`, `AST` or source `str` or `list[str]` to put at this location. `None` to delete this node.
         - `options`: See `get_options()`.
-            - `to`: Special option which only applies when putting in `raw` mode (either through `True` or `'auto'`).
+            - `to`: Special option which only applies replacing in `raw` mode (either through `True` or `'auto'`).
                 Instead of replacing just this node, will replace the entire span from this node to the node specified
                 in `to` with the `code` passed.
 
@@ -1237,8 +1257,10 @@ class FST:
         ```py
         >>> FST('[0, 1, 2, 3]').get(1).src
         '1'
-        >>> FST('[0, 1, 2, 3]').get(1, 3).src
+        >>> (f := FST('[0, 1, 2, 3]')).get(1, 3).src
         '[1, 2]'
+        >>> f.src
+        '[0, 1, 2, 3]'
         >>> (f := FST('[0, 1, 2, 3]')).get(1, 3, cut=True).src
         '[1, 2]'
         >>> f.src
@@ -1305,9 +1327,9 @@ class FST:
             as a single element to the range specified even if it is a valid slice. `False` indicates a true slice
             operation replacing the range with the slice passed, which must in this case be a compatible slice type.
         - `options`: See `get_options()`.
-            - `to`: Special option which only applies when putting in `raw` mode (either through `True` or `'auto'`) and
-                when putting a single value and not a slice. Instead of replacing just the target node, will replace the
-                entire span from the target node to the node specified in `to` with the `code` passed.
+            - `to`: Special option which only applies when putting a single element in `raw` mode (either through `True`
+                or `'auto'`). Instead of replacing just the target node, will replace the entire span from the target
+                node to the node specified in `to` with the `code` passed.
 
         **Note:** The `field` value can be passed positionally in either the `idx` or `stop` parameter. If passed in
         `idx` then the field is assumed individual and if passed in `stop` then it is a list and an individual element
@@ -1536,11 +1558,11 @@ class FST:
         The reparse that is triggered is of at least a statement level node or a statement block header, and can be
         multiple statements if the location spans those or even statements outside of the location if the reparse
         affects things like `elif`. `FST` nodes in the region of the put or even outside of it can become invalid. The
-        only `FST` node guaranteed not to change is the root node.
+        only `FST` node guaranteed not to change is the root node (identity, the `AST` it holds can change).
 
-        When putting source raw by location like this there are no modifications made to the source or destination. No
-        parenthesization, prefixes or suffixes or indentation, the source is just put and parsed so you are responsible
-        for the correct indentation and precedence.
+        When putting source raw by location like this there are no automatic modifications made to the source or
+        destination. No parenthesization, prefixes or suffixes or indentation, the source is just put and parsed so you
+        are responsible for the correct indentation and precedence.
 
         After put and successful reparse the location of the put is examined and an appropriate node is returned which
         fits best for a node which may have been added or replaced. It is possible that `None` is returned if no good
@@ -1612,6 +1634,8 @@ class FST:
         argument to a function sharing parameters with the call arguments, in which case a count of -1 may be returned
         if this case is enabled with `shared=False`.
 
+        This function is cached so feel free to call as often as is needed.
+
         **Parameters:**
         - `ret_full`: `True` means return the number of parentheses along with the location in a tuple. Otherwise just
             the location, which if is not `None` will have the number of parentheses in an attribute `.n`. This exists
@@ -1632,6 +1656,32 @@ class FST:
             parentheses found (if requested with `ret_full`). `ret_full` can be -1 in the case of a `GeneratorExp`
             sharing parentheses with `Call` `arguments` if it is the only argument, but only if these parentheses are
             explicitly excluded with `shared=False`.
+
+        **Examples:**
+        ```py
+        >>> FST('i').pars()
+        fstlocns(0, 0, 0, 1, n=0)
+        >>> FST('(i)').pars()
+        fstlocns(0, 0, 0, 3, n=1)
+        >>> FST('((i))').pars()
+        fstlocns(0, 0, 0, 5, n=2)
+        >>> FST('(1, 2)').pars()  # tuple pars are not considered grouping pars
+        fstlocns(0, 0, 0, 6, n=0)
+        >>> FST('((1, 2))').pars()
+        fstlocns(0, 0, 0, 8, n=1)
+        >>> FST('call(a)').args[0].pars()  # any node, not just root
+        fstlocns(0, 5, 0, 6, n=0)
+        >>> FST('call((a))').args[0].pars()
+        fstlocns(0, 5, 0, 8, n=1)
+        >>> FST('call(i for i in j)').args[0].pars()
+        fstlocns(0, 4, 0, 18, n=0)
+        >>> FST('call(i for i in j)').args[0].pars(shared=False)  # exclude shared with call
+        fstlocns(0, 5, 0, 17, n=-1)
+        >>> FST('call((i for i in j))').args[0].pars(shared=False)
+        fstlocns(0, 5, 0, 19, n=0)
+        >>> FST('lambda: None').args.pars(ret_full=True)  # lambda args has no location because no args
+        (None, 0)
+        ```
         """
 
         if not pars:
@@ -1699,6 +1749,28 @@ class FST:
 
         **Returns:**
         - `self`
+
+        **Examples:**
+        ```py
+        >>> FST('a + b').par().src
+        '(a + b)'
+        >>> FST('(a + b)').par().src  # already parenthesized, so nothing done
+        '(a + b)'
+        >>> FST('(a + b)').par(force=True).src  # force it
+        '((a + b))'
+        >>> FST('1, 2').par().src  # parenthesize tuple
+        '(1, 2)'
+        >>> FST('i').par().src  # an atom doesn't need parentheses
+        'i'
+        >>> FST('i').par(force=True).src  # so must be forced
+        '(i)'
+        >>> FST('1, 2', 'pattern').par().src  # parethesize MatchSequence puts brackets like ast.unparse()
+        '[1, 2]'
+        >>> FST('*a or b').par().src  # par() a Starred parenthesizes its child
+        '*(a or b)'
+        >>> FST('call(i = 1 + 2)').keywords[0].value.par().root.src  # any node, not just root
+        'call(i = (1 + 2))'
+        ```
         """
 
         if self.is_atom(always_enclosed=True):
@@ -1726,12 +1798,42 @@ class FST:
         the parentheses are checked in and removed from the child value.
 
         **Parameters:**
-        - `node`: If `True` then will remove parentheses from a parenthesized `Tuple` and parentheses/brackets from
-            parenthesized/bracketed `MatchSequence`, otherwise only removes grouping parentheses if present.
+        - `node`: If `True` then will remove parentheses from a parenthesized `Tuple` and parentheses / brackets from
+            parenthesized / bracketed `MatchSequence`, otherwise only removes grouping parentheses if present.
         - `share`: Whether to allow merge of parentheses into share single call argument generator expression or not.
 
         **Returns:**
         - `self`
+
+        **Examples:**
+        ```py
+        >>> FST('a + b').unpar().src  # nothing done if no pars
+        'a + b'
+        >>> FST('(a + b)').unpar().src
+        'a + b'
+        >>> FST('((a + b))').unpar().src  # removes all
+        'a + b'
+        >>> FST('(1, 2)').unpar().src  # but not from tuple
+        '(1, 2)'
+        >>> FST('(1, 2)').unpar(node=True).src  # unless explicitly specified
+        '1, 2'
+        >>> FST('(((1, 2)))').unpar().src
+        '(1, 2)'
+        >>> FST('(((1, 2)))').unpar(node=True).src
+        '1, 2'
+        >>> FST('[1, 2]', 'pattern').unpar().src
+        '[1, 2]'
+        >>> FST('[1, 2]', 'pattern').unpar(node=True).src
+        '1, 2'
+        >>> FST('*(a or b)').unpar().src  # unpar() a Starred unparenthesizes its child
+        '*a or b'
+        >>> FST('call(i = (1 + 2))').keywords[0].value.unpar().root.src  # any node, not just root
+        'call(i = 1 + 2)'
+        >>> FST('call(((i for i in j)))').args[0].unpar().root.src  # by default allows sharing
+        'call(i for i in j)'
+        >>> FST('call(((i for i in j)))').args[0].unpar(share=False).root.src  # unless told not to
+        'call((i for i in j))'
+        ```
         """
 
         if not (self.a.value.f if isinstance(self.a, Starred) else self).is_atom():
@@ -1793,30 +1895,6 @@ class FST:
             return self
 
         while (self := self.parent) and not isinstance(self.a, types):
-            pass
-
-        return self
-
-    def parent_non_expr(self, self_: bool = False) -> Optional['FST']:
-        """The first parent which is not an `expr`. If `self_` is `True` then will check `self` first (possibly
-        returning `self`), otherwise only checks parents.
-
-        **Parameters:**
-        - `self_`: Whether to include `self` in the search, if so and `self` matches criteria then it is returned.
-
-        **Examples:**
-        ```py
-        >>> FST('if 1: i = 1 + a[b]').body[0].value.right.value.parent_non_expr()
-        <Assign 0,6..0,17>
-        >>> FST('match a:\n case {a.b.c: 1}: pass').cases[0].pattern.keys[0].value.value.parent_non_expr()
-        <MatchMapping 1,6..1,16>
-        ```
-        """
-
-        if self_ and not isinstance(self.a, expr):
-            return self
-
-        while (self := self.parent) and isinstance(self.a, expr):
             pass
 
         return self
@@ -1927,6 +2005,42 @@ class FST:
             return self
 
         while (self := self.parent) and not isinstance(self.a, types):
+            pass
+
+        return self
+
+    def parent_non_expr(self, self_: bool = False, strict: bool = False) -> Optional['FST']:
+        """The first parent which is not an `expr`. If `self_` is `True` then will check `self` first (possibly
+        returning `self`), otherwise only checks parents.
+
+        **Parameters:**
+        - `self_`: Whether to include `self` in the search, if so and `self` matches criteria then it is returned.
+        - `strict`: `False` means consider `comprehension`, `arguments`, `arg` and `keyword` nodes as `expr` for the
+            sake of the walk up since these nodes can have other `expr` parents. `True` means only `expr` nodes, which
+            means you could get an `arg` or `comprehension` node for example which still has `expr` parents. Also
+            `expr_context`, `boolop`, `operator`, `unaruop` and `cmpop` are included if `strict=False` but this only
+            makes sense if `self_=True` and you are calling this function on one of those.
+
+        **Examples:**
+        ```py
+        >>> FST('if 1: i = 1 + a[b]').body[0].value.right.value.parent_non_expr()
+        <Assign 0,6..0,17>
+        >>> FST('match a:\\n case {a.b.c: 1}: pass').cases[0].pattern.keys[0].value.value.parent_non_expr()
+        <MatchMapping 1,6..1,16>
+        >>> FST('var = call(a, b=1)').value.keywords[0].value.parent_non_expr()
+        <Assign ROOT 0,0..0,18>
+        >>> FST('var = call(a, b=1)').value.keywords[0].value.parent_non_expr(strict=True)
+        <keyword 0,14..0,17>
+        ```
+        """
+
+        types = expr if strict else (expr, comprehension, arguments, arg, keyword, expr_context, boolop, operator,
+                                     unaryop, cmpop)
+
+        if self_ and not isinstance(self.a, types):
+            return self
+
+        while (self := self.parent) and isinstance(self.a, types):
             pass
 
         return self
@@ -2287,16 +2401,20 @@ class FST:
         return lns
 
     def is_parsable(self) -> bool:
-        """Whether the source for this node is parsable by `FST` or not (if properly dedented for top level). Different
-        from `astutil.is_parsable` in that `FST` can parse more things, but can be limited by not `unparse()`ing first.
+        """Whether the source for this node is parsable by `FST` or not (if properly dedented for top level). This is
+        different from `astutil.is_parsable` because that one indicates what is parsable by the python `ast` module,
+        while `FST` can parse more things.
 
         **Examples:**
         ```py
+        >>> from fst.astutil import is_parsable
         >>> FST('i').is_parsable()
         True
         >>> FST('a[b]').slice.is_parsable()
         True
         >>> FST('a[b:c]').slice.is_parsable()
+        True
+        >>> is_parsable(FST('a[b:c]').slice.a)
         False
         >>> FST('f"{a!r:<8}"').values[0].is_parsable()
         False
@@ -2307,9 +2425,15 @@ class FST:
         >>> FST('try: pass\\nexcept: pass').body[0].is_parsable()
         True
         >>> FST('try: pass\\nexcept: pass').handlers[0].is_parsable()
+        True
+        >>> is_parsable(FST('try: pass\\nexcept: pass').handlers[0].a)
         False
         >>> FST('try: pass\\nexcept: pass').handlers[0].body[0].is_parsable()
         True
+        >>> FST('match a:\\n  case 1: pass').cases[0].is_parsable()
+        True
+        >>> is_parsable(FST('match a:\\n  case 1: pass').cases[0].a)
+        False
         ```
         """
 
@@ -2346,10 +2470,10 @@ class FST:
         - `pars`: Whether to check for grouping parentheses or not for node types which are not innately atomic
             (`NamedExpr`, `BinOp`, `Yield`, etc...). If `True` then `(a + b)` is considered atomic, if `False` then it
             is not.
-        - `always_enclosed`: If `True` then will only consider nodes atomic which are always enclosed like `List` or
-            parenthesized `Tuple`. Nodes which may be split up across multiple lines like `Call` or `Attribute` will not
-            be considered atomic and will return `False` unless `pars=True` and grouping parentheses present, in which
-            case `'pars'` is returned.
+        - `always_enclosed`: If `True` then will only consider nodes innately atomic which are always enclosed like
+            `List` or parenthesized `Tuple`. Nodes which may be split up across multiple lines like `Call` or
+            `Attribute` will not be considered atomic and will return `False` unless `pars=True` and grouping
+            parentheses present, in which case `'pars'` is returned.
 
         **Returns:**
         - `True` if node is atomic and no combination in the source will make it parse to a different node. `'pars'` if
@@ -2441,13 +2565,11 @@ class FST:
         ```py
         >>> FST('a').is_enclosed()
         True
-        >>> FST('a + \\\\n b').is_enclosed()
+        >>> FST('a + \\\\n b').is_enclosed()  # because of the line continuation
         True
         >>> FST('(a + \\n b)').is_enclosed()
         'pars'
-        >>> FST('(a + \\n b)').unpar().src
-        'a + \\n b'
-        >>> FST('(a + \\n b)').unpar().is_enclosed()
+        >>> FST('a + \\n b').is_enclosed()
         False
         >>> FST('[a + \\n b]').elts[0].is_enclosed()
         False
@@ -2455,8 +2577,10 @@ class FST:
         True
         >>> FST('def f(a, b): pass').args.is_enclosed()
         True
-        >>> FST('def f(a,\\n b): pass').args.is_enclosed()
+        >>> FST('def f(a,\\n b): pass').args.is_enclosed()  # because the parentheses belong to the FunctionDef
         False
+        >>> FST('def f(a,\\n b): pass').args.is_enclosed_in_parents()
+        True
         >>> FST('(a is not b)').ops[0].is_enclosed()
         True
         >>> FST('(a is \\n not b)').ops[0].is_enclosed()
@@ -2537,9 +2661,10 @@ class FST:
 
     def is_enclosed_in_parents(self, field: str | None = None) -> bool:
         """Whether `self` is enclosed by some parent up the tree. This is different from `is_enclosed()` as it does not
-        check for line continuations or anyting like that, just enclosing delimiters like from `Call` or `arguments`
-        parentheses, `List` brackets, `FormattedValue`, parent grouping parentheses, etc... Statements do not generally
-        enclose except for a few parts of things like `FunctionDef.args` or `type_params`, `ClassDef.bases`, etc...
+        check for line continuations or anyting like that, just enclosing delimiters like from `Call` or `FunctionDef`
+        arguments parentheses, `List` brackets, `FormattedValue`, parent grouping parentheses, etc... Statements do not
+        generally enclose except for a few parts of things like `FunctionDef.args` or `type_params`, `ClassDef.bases`,
+        etc...
 
         **Parameters:**
         - `field`: This is meant to allow check for nonexistent child which would go into this field of `self`. If this
@@ -2558,7 +2683,7 @@ class FST:
         False
         >>> FST('(1 + 2)').left.is_enclosed_in_parents()
         True
-        >>> FST('(1 + 2)').is_enclosed_in_parents()
+        >>> FST('(1 + 2)').is_enclosed_in_parents()  # because owns the parentheses
         False
         >>> FST('[1 + 2]').elts[0].left.is_enclosed_in_parents()
         True
