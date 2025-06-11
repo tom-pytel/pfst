@@ -568,6 +568,9 @@ class PutOneExpr(Fuzzy):
                     continue
 
                 dst_exprs.append(f)
+
+
+                # TODO: exclude Slice or Tuple which has Slice
                 extra_exprs.append(f.copy())
 
         try:
@@ -600,30 +603,37 @@ class PutOneExpr(Fuzzy):
 
                     ignorable = isinstance(exc, (NodeError, ValueError)) and (
                         msg.endswith('cannot be Starred') or
-                        'this is not implemented on python < 3.12' in msg or
-                        # 'this is only implemented on python version 3.12 and above' in msg or
                         'not implemented' in msg or
                         'in this state' in msg or
                         'pattern expression' in msg or
-                        'invalid value for MatchValue.value' in msg
+                        'invalid value for MatchValue.value' in msg or
+                        'invalid value for MatchMapping.keys' in msg
                         # (msg.startswith('cannot put ') and (msg.endswith(' to MatchMapping.keys') or msg.endswith(' to MatchValue.value')))
                     )
 
-                    if not ignorable and isinstance(exc, SyntaxError) and msg.startswith('cannot use starred expression here'): ignorable = True  # TEMPORARY!!!
+                    if not ignorable and isinstance(exc, SyntaxError) and put == 'src':  # Starred stuff like "*a or b" coming from original code
+                        try:
+                            FST._parse_callarg(code)
+                        except SyntaxError:
+                            pass
+                        else:
+                            ignorable = True
+
+                    # if not ignorable and isinstance(exc, SyntaxError) and msg.startswith('cannot use starred expression here'): ignorable = True  # TEMPORARY!!!
 
                     if not ignorable:  # started with because of Starred Call.args being replaced after keywords
-                        print('\n-', put, '-'*74)
+                        print('\n-', put, '--- parent', '-'*63)
                         print((p := e.parent_stmtish()).src)
                         print('.'*80)
                         p.dump()
-                        print('-'*80)
+                        print('- target', '-'*71)
                         print(e.src)
                         print('.'*80)
                         print(e.dump())
-                        print('-'*80)
-                        org.dump()
-                        print('.'*80)
+                        print('- replacement', '-'*66)
                         print(org.src)
+                        print('.'*80)
+                        org.dump()
 
                         raise
 

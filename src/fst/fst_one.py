@@ -146,16 +146,16 @@ if _PYLT12:
 
 
     def _get_one_conversion(self: 'FST', idx: int | None, field: str, cut: bool, **options) -> Optional['FST'] | str:
-        raise NotImplementedError('this is only implemented on python version 3.12 and above')
+        raise NotImplementedError('get FormattedValue.conversion not implemented on python < 3.12')
 
 
     def _get_one_format_spec(self: 'FST', idx: int | None, field: str, cut: bool, **options) -> Optional['FST'] | str:
-        raise NotImplementedError('this is only implemented on python version 3.12 and above')
+        raise NotImplementedError('get FormattedValue.format_spec not implemented on python < 3.12')
 
 
     def _get_one_JoinedStr_TemplateStr_values(self: 'FST', idx: int | None, field: str, cut: bool, **options,
                                               ) -> Optional['FST'] | str:
-        raise NotImplementedError('this is only implemented on python version 3.12 and above')
+        raise NotImplementedError('get JoinedStr.values not implemented on python < 3.12')
 
 
 else:
@@ -1103,44 +1103,6 @@ def _put_one_pattern(self: 'FST', code: Code | None, idx: int | None, field: str
     return _put_one_exprish_required(self, code, idx, field, child, static, 2, **options)
 
 
-# if _PYLT12:
-#     # from .shared import re_any_str_or_fstr_start
-
-#     def _put_one_FormattedValue_value(self: 'FST', code: Code | None, idx: int | None, field: str, child: AST,
-#                                       static: onestatic, **options) -> 'FST':
-#         """Need to fluff about with quotes."""
-
-#         raise NodeError('this is only implemented on python version 3.12 and above')
-
-#         # child = _validate_put(self, code, idx, field, child)  # we want to do it in same order as all other puts
-#         # code  = static.code_as(code, self.root.parse_params)
-
-#         # if ((is_jstr := isinstance(codea := code.a, JoinedStr)) or
-#         #     (isinstance(codea, Constant) and ((is_str := isinstance(v := codea.value, str)) or isinstance(v, bytes))) # or
-#         #     # code.end_ln != code.ln
-#         # ):
-#         #     raise NodeError('this is only implemented on python version 3.12 and above in this state')
-
-#         #     # lines  = self.root._lines
-#         #     # quotes = []
-#         #     # parent = self
-
-#         #     # while (parent := parent.parent) and isinstance(parenta := parent.a, expr):
-#         #     #     if isinstance(parenta, JoinedStr):
-#         #     #         ln, col, _, _ = parent.loc
-
-#         #     #         quotes.append(re_any_str_or_fstr_start.match(lines[ln], col).group(1))
-
-#         #     # for q in ("'", '"', '"""', "'''"):
-#         #     #     if q not in quotes:
-#         #     #         break
-
-#         #     # else:
-#         #     #     raise RuntimeError('cannot add any more nexted strings to these f-strings')
-
-#         # return _put_one_exprish_required(self, code, idx, field, child, static, 2, **options)
-
-
 # ......................................................................................................................
 # identifier
 
@@ -1445,6 +1407,16 @@ def _put_one(self: 'FST', code: Code | None, idx: int | None, field: str, **opti
                                 f"{f'.{field}' if field else ' combined fields'}")
 
             else:
+                if _PYLT12:  # don't allow modification if inside an f-string because before 3.12 they were very fragile
+                    f = child.f if isinstance(child, AST) else self
+
+                    while not isinstance(a := f.a, (stmt, pattern, match_case, ExceptHandler)):
+                        if isinstance(a, JoinedStr):
+                            raise NodeError('put inside JoinedStr not implemented on python < 3.12')
+
+                        if not (f := f.parent):
+                            break
+
                 with self._modifying(field):
                     ret = handler(self, code, idx, field, child, static, **options)
 
@@ -2138,7 +2110,7 @@ _PUT_ONE_HANDLERS = {
     (Call, 'func'):                       (False, _put_one_exprish_required, _onestatic_expr_required), # expr
     (Call, 'args'):                       (True,  _put_one_Call_args, onestatic(_one_info_exprish_required, _restrict_fmtval_slice, code_as=_code_as_callarg)), # expr*
     (Call, 'keywords'):                   (True,  _put_one_exprish_required, _onestatic_keyword_required), # keyword*
-    (FormattedValue, 'value'):            (False, _put_one_exprish_required, _onestatic_expr_required), # expr  # THIS IS PREVENTED in _Modifying on py <3.12!
+    (FormattedValue, 'value'):            (False, _put_one_exprish_required, _onestatic_expr_required), # expr
     (FormattedValue, 'conversion'):       (False, _put_one_NOT_IMPLEMENTED_YET, onestatic(_one_info_conversion, Constant)), # int  # onestatic only here for info for raw put, Constant must be str
     (FormattedValue, 'format_spec'):      (False, _put_one_NOT_IMPLEMENTED_YET, onestatic(_one_info_format_spec, JoinedStr)), # expr?  # onestatic only here for info for raw put
     (Interpolation, 'value'):             (False, _put_one_exprish_required, _onestatic_expr_required), # expr

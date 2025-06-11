@@ -10,7 +10,7 @@ from .astutil import *
 from .astutil import Interpolation
 
 from .shared import (
-    NodeError, astfield, fstloc, nspace,
+    astfield, fstloc, nspace,
     BLOCK,
     HAS_DOCSTRING,
     re_empty_line_start, re_line_end_cont_or_comment,
@@ -178,15 +178,10 @@ if _PY_VERSION >= (3, 12):
 
 else: # override _Modifying if py too low
     class _Modifying:
-        """Stripped down version which just does stuff that can be done on py < 3.12."""
+        """Dummy because py < 3.12 doesn't have f-string location information."""
 
         def __init__(self, fst: 'FST', field: str | Literal[False] = False):
-            while not isinstance(a := fst.a, (stmt, pattern, match_case, ExceptHandler)):
-                if isinstance(a, JoinedStr):
-                    raise NodeError('this is not implemented on python < 3.12')
-
-                if not (fst := fst.parent):
-                    break
+            pass
 
         def __enter__(self):
             return self
@@ -199,54 +194,6 @@ else: # override _Modifying if py too low
 
         def done(self, fst: Optional['FST'] | Literal[False] = False):
             pass
-
-        # def __init__(self, fst: 'FST', field: str | Literal[False] = False):
-        #     if field is False:
-        #         pfield = fst.pfield
-
-        #         if fst := fst.parent:
-        #             field = pfield.name
-
-        #     self.fst   = fst if fst and isinstance(fst.a, expr) else False
-        #     self.field = field
-
-        # def __enter__(self):
-        #     return self.enter()
-
-        # def __exit__(self, exc_type, exc_val, exc_tb):
-        #     if exc_type is None:
-        #         self.done()
-
-        #     return False
-
-        # def enter(self):
-        #     return self
-
-        # def done(self, fst: Optional['FST'] | Literal[False] = False):
-        #     if fst is False:
-        #         if not (fst := self.fst):
-        #             return
-
-        #     elif fst is not self.fst:  # if parent of field changed then entire statement was reparsed and we have nothing to do
-        #         return
-
-        #     field = self.field
-
-        #     while isinstance(a := fst.a, expr):
-        #         if isinstance(a, FormattedValue):
-        #             if field == 'value':
-        #                 ln, col, _, _ = (value := a.value).f.loc
-
-        #                 if fst.root.lines[ln].startswith('{', col) and not isinstance(value, Tuple):  # because f'{1,2}' starts tuple at the curly
-        #                     fst._put_src([' '], ln, col, ln, col, False)
-
-        #             break
-
-        #         if not (parent := fst.parent):
-        #             break
-
-        #         field = fst.pfield.name
-        #         fst   = parent
 
 
 @staticmethod

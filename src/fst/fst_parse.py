@@ -1238,8 +1238,9 @@ _PARSE_MODE_FUNCS = {
     ExceptHandler:       _parse_ExceptHandler,
     match_case:          _parse_match_case,
     expr:                _parse_expr,
-    Starred:             _parse_callarg,
-    Slice:               _parse_slice,
+    Starred:             _parse_callarg,   # because could have form '*a or b' and we want to parse any form of Starred here
+    Tuple:               _parse_sliceelt,  # because could have slice in it
+    Slice:               _parse_slice,     # because otherwise would be _parse_expr which doesn't do slice by default
     boolop:              _parse_boolop,
     operator:            _parse_operator,
     unaryop:             _parse_unaryop,
