@@ -223,7 +223,7 @@ class ReputSrc(Fuzzy):
         seed(rnd_seed := randint(0, 2**32-1))
 
         try:
-            for count in range(self.batch or 1000):
+            for count in range(self.batch or 200):
                 copy      = fst.copy()
                 ln        = randint(0, len(lines) - 1)
                 col       = randint(0, len(lines[ln]))

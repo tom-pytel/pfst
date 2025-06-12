@@ -398,12 +398,12 @@ def _unmake_fst_parents(self: 'FST', self_: bool = False):
         self.a.f = self.a = None
 
 
-def _set_ast(self: 'FST', ast: AST, in_fst_tree: bool = False, unmake: bool = True) -> AST:
+def _set_ast(self: 'FST', ast: AST, valid_fst: bool = False, unmake: bool = True) -> AST:
     """Set `.a` AST node for this `FST` node and `_make_fst_tree` for `self`, also set ast node in parent AST node.
     Optionally `_unmake_fst_tree()` for with old `.a` node first. Returns old `.a` node.
 
     **Parameters:**
-    - `in_fst_tree`: Indicates that the `AST` node is a part of a valid `FST` tree already so that less processing needs
+    - `valid_fst`: Indicates that the `AST` node is a part of a valid `FST` tree already so that less processing needs
         to be done to integrate it into `self`.
     - `unmake`: Whether to unmake the FST tree being replaced or not. Should really always unmake.
     """
@@ -419,7 +419,7 @@ def _set_ast(self: 'FST', ast: AST, in_fst_tree: bool = False, unmake: bool = Tr
     self.a = ast
     ast.f  = self
 
-    if not in_fst_tree:
+    if not valid_fst:
         self._make_fst_tree()
 
     else:

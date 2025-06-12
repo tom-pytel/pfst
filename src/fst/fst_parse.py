@@ -5,6 +5,7 @@ import sys
 from ast import *
 from ast import parse as ast_parse, unparse as ast_unparse, fix_missing_locations as ast_fix_missing_locations
 from typing import Any, Callable
+from unicodedata import normalize
 
 from .astutil import *
 from .astutil import TryStar, type_param
@@ -1174,7 +1175,7 @@ def _code_as_identifier(code: Code, parse_params: dict = {}) -> str:
     if not is_valid_identifier(code):
         raise NodeError(f'expecting identifier, got {_shortstr(code)!r}')
 
-    return code
+    return normalize('NFKC', code)
 
 
 @staticmethod
@@ -1195,7 +1196,7 @@ def _code_as_identifier_dotted(code: Code, parse_params: dict = {}) -> str:
     if not is_valid_identifier_dotted(code):
         raise NodeError(f'expecting dotted identifier, got {_shortstr(code)!r}')
 
-    return code
+    return normalize('NFKC', code)
 
 
 @staticmethod
@@ -1216,7 +1217,7 @@ def _code_as_identifier_star(code: Code, parse_params: dict = {}) -> str:
     if not is_valid_identifier_star(code):
         raise NodeError(f"expecting identifier or '*', got {_shortstr(code)!r}")
 
-    return code
+    return normalize('NFKC', code)
 
 
 @staticmethod
@@ -1237,7 +1238,7 @@ def _code_as_identifier_alias(code: Code, parse_params: dict = {}) -> str:
     if not is_valid_identifier_alias(code):
         raise NodeError(f"expecting dotted identifier or '*', got {_shortstr(code)!r}")
 
-    return code
+    return normalize('NFKC', code)
 
 
 # ----------------------------------------------------------------------------------------------------------------------
