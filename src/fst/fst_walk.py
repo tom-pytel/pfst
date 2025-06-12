@@ -909,8 +909,9 @@ def prev_child(self: 'FST', from_child: Optional['FST'], with_loc: bool | Litera
 
 def step_fwd(self: 'FST', with_loc: bool | Literal['all', 'own', 'allown'] = True, *, recurse_self: bool = True,
              ) -> Optional['FST']:
-    """Step forward in the tree in syntactic order, as if `walk()`ing forward. Will walk up parents and down children to
-    get the next node, returning `None` only when we are at the end of the whole thing.
+    """Step forward in the tree in syntactic order, as if `walk()`ing forward, NOT the inverse of `step_back()`. Will
+    walk up parents and down children to get the next node, returning `None` only when we are at the end of the whole
+    thing.
 
     **Parameters:**
     - `with_loc`: Return nodes depending on their location information.
@@ -977,8 +978,9 @@ def step_fwd(self: 'FST', with_loc: bool | Literal['all', 'own', 'allown'] = Tru
 
 def step_back(self: 'FST', with_loc: bool | Literal['all', 'own', 'allown'] = True, *, recurse_self: bool = True,
               ) -> Optional['FST']:
-    """Step backward in the tree in syntactic order, as if `walk()`ing backward. Will walk up parents and down children
-    to get the next node, returning `None` only when we are at the beginning of the whole thing.
+    """Step backward in the tree in syntactic order, as if `walk()`ing backward, NOT the inverse of `step_fwd()`. Will
+    walk up parents and down children to get the next node, returning `None` only when we are at the beginning of the
+    whole thing.
 
     **Parameters:**
     - `with_loc`: Return nodes depending on their location information.

@@ -1,9 +1,9 @@
 from ast import *
 from builtins import slice
-from typing import Any, Literal
+from typing import Any, Literal, Optional
 
 from .astutil import *
-from .shared import Self, Code, _fixup_one_index, _fixup_slice_indices
+from .shared import Code, _fixup_one_index, _fixup_slice_indices
 
 
 class fstview:
@@ -254,7 +254,7 @@ class fstview:
 
         return f
 
-    def replace(self, code: Code | None, one: bool = True, **options) -> Self:
+    def replace(self, code: Code | None, one: bool = True, **options) -> Optional['FST']:  # -> Self or reparsed Self or could disappear due to raw
         """Replace or delete (if `code=None`) this slice.
 
         **Returns:**
@@ -283,7 +283,7 @@ class fstview:
 
         return self
 
-    def remove(self, **options) -> Self:
+    def remove(self, **options) -> Optional['FST']:  # -> Self or reparsed Self or could disappear due to raw
         """Delete this slice, equivalent to `replace(None, ...)`
 
         **Parameters:**
@@ -307,7 +307,7 @@ class fstview:
 
         return self
 
-    def insert(self, code: Code, idx: int | Literal['end'] = 0, one: bool = True, **options) -> Self:
+    def insert(self, code: Code, idx: int | Literal['end'] = 0, one: bool = True, **options) -> Optional['FST']:  # -> Self or reparsed Self or could disappear due to raw
         """Insert into this slice at a specific index.
 
         **Returns:**
@@ -344,7 +344,7 @@ class fstview:
 
         return self
 
-    def append(self, code: Code, **options) -> Self:
+    def append(self, code: Code, **options) -> Optional['FST']:  # -> Self or reparsed Self or could disappear due to raw
         """Append `code` as a single element to the end of this slice.
 
         **Returns:**
@@ -369,7 +369,7 @@ class fstview:
 
         return self
 
-    def extend(self, code: Code, **options) -> Self:
+    def extend(self, code: Code, **options) -> Optional['FST']:  # -> Self or reparsed Self or could disappear due to raw
         """Extend this slice with the slice in `code` (type must be compatible).
 
         **Returns:**
@@ -396,7 +396,7 @@ class fstview:
 
         return self
 
-    def prepend(self, code: Code, **options) -> Self:
+    def prepend(self, code: Code, **options) -> Optional['FST']:  # -> Self or reparsed Self or could disappear due to raw
         """prepend `code` as a single element to the beginning of this slice.
 
         **Returns:**
@@ -421,7 +421,7 @@ class fstview:
 
         return self
 
-    def prextend(self, code: Code, **options) -> Self:
+    def prextend(self, code: Code, **options) -> Optional['FST']:  # -> Self or reparsed Self or could disappear due to raw
         """Extend the beginning of this slice with the slice in `code` (type must be compatible).
 
         **Returns:**

@@ -1087,7 +1087,7 @@ class FST:
 
         return self._dump(st)
 
-    def verify(self, mode: Mode | None = None, raise_: bool = True) -> Optional[Self]:  # -> Self | None:
+    def verify(self, mode: Mode | None = None, raise_: bool = True) -> Optional[Self]:
         """Sanity check, reparse source and make sure parsed tree matches currently stored tree (locations and
         everything).
 
@@ -1180,7 +1180,7 @@ class FST:
 
         return parent._get_one((pf := self.pfield).idx, pf.name, True, **options)
 
-    def replace(self, code: Code | None, **options) -> Optional['FST']:  # -> Self (replaced) or None if deleted
+    def replace(self, code: Code | None, **options) -> Optional['FST']:  # -> replaced Self or None if deleted
         """Replace or delete (if `code=None`, if possible) this node. Returns the new node for `self`, not the old
         replaced node, or `None` if was deleted or raw replaced and the old node disappeared. Cannot replace root node.
 
@@ -1448,7 +1448,7 @@ class FST:
         return self._get_slice(start, stop, field_, cut, **options)
 
     def put_slice(self, code: Code | None, start: int | Literal['end'] | None = None, stop: int | None = None,
-                  field: str | None = None, *, one: bool = False, **options) -> Self:  # -> Self
+                  field: str | None = None, *, one: bool = False, **options) -> Self:
         """Put a slice of nodes to `self` if possible.  The node is passed as an existing top-level `FST`, `AST`, string
         or list of string lines. If passed as an `FST` or `AST` then it should be considered "consumed" after this
         function returns and is no logner valid, even on failure.

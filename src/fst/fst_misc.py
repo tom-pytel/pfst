@@ -10,7 +10,7 @@ from .astutil import *
 from .astutil import Interpolation
 
 from .shared import (
-    astfield, fstloc, nspace,
+    Self, astfield, fstloc, nspace,
     BLOCK,
     HAS_DOCSTRING,
     re_empty_line_start, re_line_end_cont_or_comment,
@@ -1141,7 +1141,7 @@ def _maybe_fix_copy(self: 'FST', pars: bool = True):
                 self._parenthesize_grouping()
 
 
-def _touch(self: 'FST') -> 'FST':  # -> Self
+def _touch(self: 'FST') -> Self:
     """AST node was modified, clear out any cached info for this node only."""
 
     self._cache.clear()
@@ -1149,7 +1149,7 @@ def _touch(self: 'FST') -> 'FST':  # -> Self
     return self
 
 
-def _sanitize(self: 'FST') -> 'FST':  # -> Self
+def _sanitize(self: 'FST') -> Self:
     """Quick check to make sure that nodes which are not `stmt`, `ExceptHandler`, `match_case` or `mod` don't have any
     extra junk in the source and that the parenthesized location matches the whole location of the source. If not then
     fix by removing the junk."""
@@ -1558,7 +1558,7 @@ def _modifying(self: 'FST', field: str | Literal[False] = False, raw: bool = Fal
     return _Modifying(self, field, raw)
 
 
-def _touchall(self: 'FST', parents: bool = False, self_: bool = True, children: bool = False) -> 'FST':  # -> Self
+def _touchall(self: 'FST', parents: bool = False, self_: bool = True, children: bool = False) -> Self:
     """Touch self, parents and children, optionally. Flushes location cache so that changes to AST locations will
     get picked up."""
 
@@ -1654,7 +1654,7 @@ def _put_src(self, src: str | list[str] | None, ln: int, col: int, end_ln: int, 
 def _offset(self: 'FST', ln: int, col: int, dln: int, dcol_offset: int,
             tail: bool | None = False, head: bool | None = True, exclude: Optional['FST'] = None, *,
             offset_excluded: bool = True, self_: bool = True,
-            ) -> 'FST':  # -> Self
+            ) -> Self:
     """Offset `AST` node positions in the tree on or after (ln, col) by (delta line, col_offset) (column byte
     offset).
 

@@ -1371,7 +1371,7 @@ def _put_one_raw(self: 'FST', code: Code | None, idx: int | None, field: str, ch
     return parent._reparse_raw(code, loc.ln, loc.col, to_loc.end_ln, to_loc.end_col)
 
 
-def _put_one(self: 'FST', code: Code | None, idx: int | None, field: str, **options) -> Optional['FST']:
+def _put_one(self: 'FST', code: Code | None, idx: int | None, field: str, **options) -> Optional['FST']:  # -> Self or reparsed Self or could disappear due to raw
     """Put new, replace or delete a node (or limited non-node) to a field of `self`.
 
     **Parameters:**

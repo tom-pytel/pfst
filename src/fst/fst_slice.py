@@ -1,13 +1,13 @@
-"""Misc lower level FST methods."""
+"""Get and put slice."""
 
 from ast import *
-from typing import Literal
+from typing import Literal, Optional
 
 from .astutil import *
 from .astutil import TypeAlias, TemplateStr
 
 from .shared import (
-    STMTISH_OR_STMTMOD, STMTISH_FIELDS, Code, NodeError, fstloc,
+    Self, STMTISH_OR_STMTMOD, STMTISH_FIELDS, Code, NodeError, fstloc,
     _prev_find, _next_find, _fixup_slice_indices, _coerce_ast,
 )
 
@@ -159,7 +159,7 @@ def _raw_slice_loc(self: 'FST', start: int | Literal['end'] | None, stop: int | 
 
 
 def _put_slice_raw(self: 'FST', code: Code | None, start: int | Literal['end'] | None, stop: int | None, field: str,
-                       *, one: bool = False, **options) -> 'FST':  # -> Self
+                   *, one: bool = False, **options) -> Optional['FST']:  # -> Self or reparsed Self
     """Put a raw slice of child nodes to `self`."""
 
     if code is None:
@@ -222,7 +222,7 @@ def _put_slice_raw(self: 'FST', code: Code | None, start: int | Literal['end'] |
 
 
 def _put_slice(self: 'FST', code: Code | None, start: int | Literal['end'] | None, stop: int | None, field: str,
-               one: bool = False, **options) -> 'FST':  # -> Self
+               one: bool = False, **options) -> Optional['FST']:  # -> Self or reparsed Self or could disappear due to raw
     """Put an a slice of child nodes to `self`."""
 
     ast = self.a
