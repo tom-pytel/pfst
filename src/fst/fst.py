@@ -1333,8 +1333,8 @@ class FST:
             field: str | None = None, *, one: bool = True, **options) -> Self:
         """Put an individual node or a slice of nodes to `self` if possible. This function can do everything that
         `put_slice()` can. The node is passed as an existing top-level `FST`, `AST`, string or list of string lines. If
-        passed as an `FST` or `AST` then it should be considered "consumed" after this function returns and is no logner
-        valid, even on failure.
+        passed as an `FST` then it should be considered "consumed" after this function returns and is no logner valid,
+        even on failure. `AST` is copied.
 
         **Parameters:**
         - `code`: The node to put as an `FST` (must be root node), `AST`, a string or list of line strings.
@@ -1474,8 +1474,8 @@ class FST:
     def put_slice(self, code: Code | None, start: int | Literal['end'] | None = None, stop: int | None = None,
                   field: str | None = None, *, one: bool = False, **options) -> Self:
         """Put a slice of nodes to `self` if possible.  The node is passed as an existing top-level `FST`, `AST`, string
-        or list of string lines. If passed as an `FST` or `AST` then it should be considered "consumed" after this
-        function returns and is no logner valid, even on failure.
+        or list of string lines. If passed as an `FST` then it should be considered "consumed" after this function
+        returns and is no logner valid, even on failure. `AST` is copied.
 
         **Parameters:**
         - `code`: The slice to put as an `FST` (must be root node), `AST`, a string or list of line strings.

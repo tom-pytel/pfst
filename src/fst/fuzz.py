@@ -785,7 +785,7 @@ def main():
     parser.add_argument('-g', '--debug', default=False, action='store_true',
                         help='print debug info')
     parser.add_argument('-l', '--loop', type=int, default=None,
-                        help='number of times to loop')
+                        help='number of times to loop, default forever')
     parser.add_argument('-s', '--seed', type=int, default=None,
                         help='random seed (set per file)')
     parser.add_argument('-u', '--shuffle', default=False, action='store_true',

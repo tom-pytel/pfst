@@ -5116,6 +5116,33 @@ match a:
                 if code_as is FST._code_as_expr:
                     self.assertEqual(src, code_as(srcp[1:-1]).src)
 
+    def test_code_as_from_ast(self):
+        for mode, func, res, src in PARSE_TESTS:
+            if issubclass(res, Exception):
+                continue
+
+            ast = None
+
+            try:
+                ast  = FST._parse(src, mode)
+                astc = copy_ast(ast)
+                fst  = FST._code_as_all(ast)
+
+                for a in walk(ast):
+                    self.assertIs(False, getattr(a, 'f', False))
+
+                self.assertIsNot(fst.a, ast)
+
+                compare_asts(ast, fst.a, locs=False, raise_=True)
+                compare_asts(ast, astc, locs=True, raise_=True)
+
+            except Exception:
+                print()
+                print(mode, src, res, func)
+                print(ast)
+
+                raise
+
     def test__put_src(self):
         f = FST(Load(), [''])
         f._put_src('test', 0, 0, 0, 0)

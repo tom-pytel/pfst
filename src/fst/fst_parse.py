@@ -141,7 +141,7 @@ def _unparse(ast: AST) -> str:
 
 @staticmethod
 def _parse(src: str, mode: Mode = 'all', parse_params: dict = {}) -> AST:
-    """Parse any source to an AST, including things which normal `ast.parse()` doesn't handle like individual
+    """Parse any source to an AST, including things which normal `ast.parse()` doesn't handle, like individual
     `comprehension`s. Can be given a target type to parse or else will try to various parse methods until it finds one
     that succeeds (if any).
 
@@ -180,7 +180,7 @@ def _parse(src: str, mode: Mode = 'all', parse_params: dict = {}) -> AST:
 def _parse_all(src: str, parse_params: dict = {}) -> AST:
     """Attempt all parse modes in order from most common / probable to least."""
 
-    for parse in _parse_all_funcs:
+    for parse in _PARSE_ALL_FUNCS:
         try:
             return parse(src, parse_params)
         except IndentationError:
@@ -348,6 +348,8 @@ def _parse_match_cases(src: str, parse_params: dict = {}) -> AST:
         lns_.add(ln - 1)
 
     for a in walk(ast):
+        del a.f  # remove all trace of FST
+
         if (end_col_offset := getattr(a, 'end_col_offset', None)) is not None:
             a.lineno     = lineno     = a.lineno - 2
             a.end_lineno = end_lineno = a.end_lineno - 2
@@ -735,9 +737,10 @@ def _code_as_all(code: Code, parse_params: dict = {}) -> 'FST':  # TODO: allow '
         return code
 
     if isinstance(code, AST):
-        if (mode := code.__class__) is Module:
-            return _code_as_stmtishs(code, parse_params)
+        # if (mode := code.__class__) is Module:  # override _parse_Module because that wouldn't handle slices stmtishs
+        #     mode = 'stmtishs'
 
+        mode  = code.__class__
         code  = _unparse(code)
         lines = code.split('\n')
 
@@ -1240,7 +1243,7 @@ def _code_as_identifier_alias(code: Code, parse_params: dict = {}) -> str:
 # ----------------------------------------------------------------------------------------------------------------------
 __all_private__ = [n for n in globals() if n not in _GLOBALS]  # used by make_docs.py
 
-_parse_all_funcs = [
+_PARSE_ALL_FUNCS = [
     _parse_most,
     _parse_expr,     # explicitly this because _parse_most won't catch unparenthesized expressions with newlines
     _parse_pattern,
@@ -1291,8 +1294,8 @@ _PARSE_MODE_FUNCS = {
     'withitem':          _parse_withitem,
     'pattern':           _parse_pattern,
     'type_param':        _parse_type_param,
-    mod:                 _parse_Module,
-    Module:              _parse_Module,
+    mod:                 _parse_Module,    # parsing with an AST type doesn't mean it will be parsable by ast module
+    Module:              _parse_stmtishs,  # _parse_Module,
     Expression:          _parse_Expression,
     Interactive:         _parse_Interactive,
     stmt:                _parse_stmt,
