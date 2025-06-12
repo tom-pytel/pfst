@@ -370,15 +370,41 @@ class ReputOne(Fuzzy):
                     if self.verify:
                         fst.verify()
 
-            except Exception:
-                print('-'*80)
-                print(sig, put, fst.child_path(f, True), idx, field, f.parent)
-                print(f)
-                print(f.src)
-                print(g)
-                print(g.src)
+            except Exception as exc:
+                msg = str(exc)
 
-                raise
+                ignorable = isinstance(exc, (NodeError, ValueError)) and (
+                    msg.endswith('cannot be Starred') or
+                    'not implemented' in msg or
+                    'in this state' in msg or
+                    'pattern expression' in msg or
+                    'invalid value for MatchValue.value' in msg or
+                    'invalid value for MatchMapping.keys' in msg or
+                    'cannot reparse Starred in slice as Starred' in msg
+                    # (msg.startswith('cannot put ') and (msg.endswith(' to MatchMapping.keys') or msg.endswith(' to MatchValue.value')))
+                )
+
+                if not ignorable and isinstance(exc, SyntaxError):
+                    if msg.startswith('cannot use starred expression here'):
+                        ignorable = True
+
+                    elif put == 'src':  # Starred stuff like "*a or b" coming from original code
+                        try:
+                            FST._parse_callarg(code)
+                        except SyntaxError:
+                            pass
+                        else:
+                            ignorable = True
+
+                if not ignorable:
+                    print('-'*80)
+                    print(sig, put, fst.child_path(f, True), idx, field, f.parent)
+                    print(f)
+                    print(f.src)
+                    print(g)
+                    print(g.src)
+
+                    raise
 
 
         sys.stdout.write('\n')

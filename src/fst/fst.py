@@ -1133,6 +1133,17 @@ class FST:
         return self
 
     # ------------------------------------------------------------------------------------------------------------------
+    # Reconcile
+
+    def mark(self): pass  # placeholder for make_docs.py
+    def reconcile(self): pass
+
+    from .fst_one_reconcile import (
+        mark,
+        reconcile,
+    )
+
+    # ------------------------------------------------------------------------------------------------------------------
     # High level
 
     def copy(self, **options) -> 'FST':
@@ -1151,10 +1162,11 @@ class FST:
         ```
         """
 
-        if not (parent := self.parent):
-            return FST(copy_ast(self.a), self._lines[:], from_=self, lcopy=False)
+        if parent := self.parent:
+            return parent._get_one((pf := self.pfield).idx, pf.name, False, **options)
 
-        return parent._get_one((pf := self.pfield).idx, pf.name, False, **options)
+        return FST(copy_ast(self.a), self._lines[:], from_=self, lcopy=False)
+
 
     def cut(self, **options) -> 'FST':
         """Cut out this node to a new top-level tree (if possible), dedenting and fixing as necessary. Cannot cut root
@@ -1175,10 +1187,10 @@ class FST:
         ```
         """
 
-        if not (parent := self.parent):
-            raise ValueError('cannot cut root node')
+        if parent := self.parent:
+            return parent._get_one((pf := self.pfield).idx, pf.name, True, **options)
 
-        return parent._get_one((pf := self.pfield).idx, pf.name, True, **options)
+        raise ValueError('cannot cut root node')
 
     def replace(self, code: Code | None, **options) -> Optional['FST']:  # -> replaced Self or None if deleted
         """Replace or delete (if `code=None`, if possible) this node. Returns the new node for `self`, not the old
@@ -1205,10 +1217,10 @@ class FST:
         ```
         """
 
-        if not (parent := self.parent):
-            raise ValueError(f'cannot {"delete" if code is None else "replace"} root node')
+        if parent := self.parent:
+            return parent._put_one(code, (pf := self.pfield).idx, pf.name, **options)
 
-        return parent._put_one(code, (pf := self.pfield).idx, pf.name, **options)
+        raise ValueError(f'cannot {"delete" if code is None else "replace"} root node')
 
     def remove(self, **options):
         """Delete this node if possible, equivalent to `replace(None, ...)`. Cannot delete root node.
@@ -1223,10 +1235,10 @@ class FST:
         ```
         """
 
-        if not (parent := self.parent):
-            raise ValueError(f'cannot delete root node')
+        if parent := self.parent:
+            return parent._put_one(None, (pf := self.pfield).idx, pf.name, **options)
 
-        return parent._put_one(None, (pf := self.pfield).idx, pf.name, **options)
+        raise ValueError(f'cannot delete root node')
 
     def get(self, idx: int | Literal['end'] | None = None, stop: int | None | Literal[False] = False,
             field: str | None = None, *, cut: bool = False, **options) -> Optional['FST'] | str:
@@ -1745,7 +1757,7 @@ class FST:
         """Parenthesize node if it MAY need it. Will not parenthesize atoms which are always enclosed like `List`, or
         nodes which are not `is_parenthesizable()`, unless `force=True`. Will add parentheses to unparenthesized `Tuple`
         and brackets to unbracketed `MatchSequence` adjusting the node location. If dealing with a `Starred` then the
-        parentheses are applied to the child value.
+        parentheses are applied to the child.
 
         **Parameters:**
         - `force`: If `True` then will add another layer of parentheses regardless if any already present.
@@ -1799,7 +1811,7 @@ class FST:
     def unpar(self, node: bool = False, *, share: bool = True) -> Self:
         """Remove all parentheses from node if present. Normally removes just grouping parentheses but can also remove
         `Tuple` parentheses and `MatchSequence` parentheses or brackets if `node=True`. If dealing with a `Starred` then
-        the parentheses are checked in and removed from the child value.
+        the parentheses are checked in and removed from the child.
 
         **Parameters:**
         - `node`: If `True` then will remove parentheses from a parenthesized `Tuple` and parentheses / brackets from
@@ -1856,6 +1868,17 @@ class FST:
 
     # ------------------------------------------------------------------------------------------------------------------
     # Structure stuff
+
+    def next(self): pass  # placeholder for make_docs.py
+    def prev(self): pass
+    def first_child(self): pass
+    def last_child(self): pass
+    def last_header_child(self): pass
+    def next_child(self): pass
+    def prev_child(self): pass
+    def step_fwd(self): pass
+    def step_back(self): pass
+    def walk(self): pass
 
     from .fst_walk import (
         next,
@@ -3164,8 +3187,8 @@ class FST:
     def f(self):
         """@private"""
 
-        raise RuntimeError("you probably think you're accessing an AST node, but you're not, "
-                           "you're accessing an FST node")
+        raise RuntimeError(f"you probably think you're accessing an AST node '.f', but you're not, "
+                           f"you're accessing an FST {self}.f'")
 
 
 from .fstview import fstview

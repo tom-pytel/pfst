@@ -19,6 +19,7 @@ from data_other import (PARS_DATA, COPY_DATA, GET_SLICE_SEQ_DATA, GET_SLICE_STMT
 
 _PY_VERSION = sys.version_info[:2]
 _PYLT12     = _PY_VERSION < (3, 12)
+_PYLT13     = _PY_VERSION < (3, 13)
 
 PYFNMS = sum((
     [os.path.join(path, fnm) for path, _, fnms in os.walk(top) for fnm in fnms if fnm.endswith('.py')]
@@ -4308,10 +4309,15 @@ f"distutils.command.sdist.check_metadata is deprecated, \\
         self.assertEqual('a as b', FST('a as b', alias).par().src)
         self.assertEqual('a as b', FST('a as b', withitem).par().src)
 
-        if not _PYLT12:
-            self.assertEqual('t = int', FST('t = int', type_param).par().src)
+        if not _PYLT13:
+            self.assertEqual('t: int = int', FST('t: int = int', type_param).par().src)
             self.assertEqual('*t = (int,)', FST('*t = (int,)', type_param).par().src)
             self.assertEqual('**t = {T: int}', FST('**t = {T: int}', type_param).par().src)
+
+        elif not _PYLT12:
+            self.assertEqual('t: int', FST('t: int', type_param).par().src)
+            self.assertEqual('*t', FST('*t', type_param).par().src)
+            self.assertEqual('**t', FST('**t', type_param).par().src)
 
     def test_unpar(self):
         f = parse('((1,))').body[0].value.f.copy(pars=True)
