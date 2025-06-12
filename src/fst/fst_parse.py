@@ -735,7 +735,9 @@ def _code_as_all(code: Code, parse_params: dict = {}) -> 'FST':  # TODO: allow '
         return code
 
     if isinstance(code, AST):
-        mode  = code.__class__
+        if (mode := code.__class__) is Module:
+            return _code_as_stmtishs(code, parse_params)
+
         code  = _unparse(code)
         lines = code.split('\n')
 
@@ -906,14 +908,18 @@ def _code_as_ExceptHandlers(code: Code, parse_params: dict = {}, *, is_trystar: 
         raise NodeError(f'expecting zero or more ExceptHandlers, got {codea.__class__.__name__}')
 
     if isinstance(code, AST):
-        if not isinstance(code, ExceptHandler):
-            raise NodeError(f'expecting zero or more ExceptHandlers, got {code.__class__.__name__}')
-
-        if is_trystar:
-            code = unparse(TryStar(body=[Pass()], handlers=[code], orelse=[], finalbody=[]))
-            code = code[code.index('except'):]
-        else:
+        if isinstance(code, Module):  # may be slice of ExceptHandlers
             code = _fixing_unparse(code)
+
+        else:
+            if not isinstance(code, ExceptHandler):
+                raise NodeError(f'expecting zero or more ExceptHandlers, got {code.__class__.__name__}')
+
+            if is_trystar:
+                code = unparse(TryStar(body=[Pass()], handlers=[code], orelse=[], finalbody=[]))
+                code = code[code.index('except'):]
+            else:
+                code = _fixing_unparse(code)
 
         lines = code.split('\n')
 
@@ -948,7 +954,7 @@ def _code_as_match_cases(code: Code, parse_params: dict = {}) -> 'FST':
         raise NodeError(f'expecting zero or more match_cases, got {codea.__class__.__name__}')
 
     if isinstance(code, AST):
-        if not isinstance(code, match_case):
+        if not isinstance(code, (match_case, Module)):
             raise NodeError(f'expecting zero or more match_cases, got {code.__class__.__name__}')
 
         code  = _fixing_unparse(code)

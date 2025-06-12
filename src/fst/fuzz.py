@@ -380,7 +380,8 @@ class ReputOne(Fuzzy):
                     'pattern expression' in msg or
                     'invalid value for MatchValue.value' in msg or
                     'invalid value for MatchMapping.keys' in msg or
-                    'cannot reparse Starred in slice as Starred' in msg
+                    'cannot reparse Starred in slice as Starred' in msg or
+                    'expecting identifier, got' in msg
                     # (msg.startswith('cannot put ') and (msg.endswith(' to MatchMapping.keys') or msg.endswith(' to MatchValue.value')))
                 )
 
@@ -633,7 +634,8 @@ class PutOneExpr(Fuzzy):
                         'pattern expression' in msg or
                         'invalid value for MatchValue.value' in msg or
                         'invalid value for MatchMapping.keys' in msg or
-                        'cannot reparse Starred in slice as Starred' in msg
+                        'cannot reparse Starred in slice as Starred' in msg or
+                        'expecting identifier, got' in msg
                         # (msg.startswith('cannot put ') and (msg.endswith(' to MatchMapping.keys') or msg.endswith(' to MatchValue.value')))
                     )
 
@@ -811,10 +813,16 @@ def main():
         for f in fuzzies[:]:
             print(f'Running: {f.name}')
 
-            if not f.fuzz():
-                print(f'{f.name} has finished and will not be run again.')
+            try:
+                if not f.fuzz():
+                    print(f'{f.name} has finished and will not be run again.')
 
-                fuzzies.remove(f)
+                    fuzzies.remove(f)
+
+            except Exception:
+                print(f'Was running: {f.name}')
+
+                raise
 
         if not fuzzies:
             print('Done...')
