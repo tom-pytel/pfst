@@ -127,7 +127,7 @@ _GLOBALS = globals() | {'_GLOBALS': None}
 # ----------------------------------------------------------------------------------------------------------------------
 
 @staticmethod
-def _unparse(ast: AST) -> AST:
+def _unparse(ast: AST) -> str:
     """AST unparse that handles misc case of comprehension starting with a single space by stripping it."""
 
     if isinstance(ast, comprehension):  # strip prefix space from this
@@ -725,13 +725,43 @@ def _parse_type_param(src: str, parse_params: dict = {}) -> AST:
 # ......................................................................................................................
 
 @staticmethod
+def _code_as_all(code: Code, parse_params: dict = {}) -> 'FST':  # TODO: allow 'is_trystar'?
+    """Convert `code` to any parsable `FST` if possible. If `FST` passed then it is returned as itself."""
+
+    if isinstance(code, FST):
+        if not code.is_root:
+            raise ValueError('expecting root node')
+
+        return code
+
+    if isinstance(code, AST):
+        mode  = code.__class__
+        code  = _unparse(code)
+        lines = code.split('\n')
+
+    else:
+        mode = 'all'
+
+        if isinstance(code, list):
+            code = '\n'.join(lines := code)
+        else:  # str
+            lines = code.split('\n')
+
+    return FST(_parse(code, mode), lines, parse_params=parse_params)
+
+
+@staticmethod
 def _code_as_stmtishs(code: Code, parse_params: dict = {}, *, is_trystar: bool = False) -> 'FST':
     """Convert `code` to zero or more `stmtish`s and return in the `body` of a `Module` `FST` if possible. If source
     is passed then will check for presence of `except` or `case` at start to determine if are `ExceptHandler`s or
     `match_case`s or `stmt`s."""
 
     if is_fst := isinstance(code, FST):
+        if not code.is_root:
+            raise ValueError('expecting root node')
+
         ast = code.a
+
     elif isinstance(code, AST):
         ast = code
 

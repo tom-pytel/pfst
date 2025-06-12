@@ -1194,7 +1194,9 @@ class FST:
 
     def replace(self, code: Code | None, **options) -> Optional['FST']:  # -> replaced Self or None if deleted
         """Replace or delete (if `code=None`, if possible) this node. Returns the new node for `self`, not the old
-        replaced node, or `None` if was deleted or raw replaced and the old node disappeared. Cannot replace root node.
+        replaced node, or `None` if was deleted or raw replaced and the old node disappeared. Cannot delete root node.
+        CAN replace root node, in which case the accessing `FST` node remains the same but the top-level `AST` and
+        source change.
 
         **Parameters:**
         - `code`: `FST`, `AST` or source `str` or `list[str]` to put at this location. `None` to delete this node.
@@ -1220,7 +1222,17 @@ class FST:
         if parent := self.parent:
             return parent._put_one(code, (pf := self.pfield).idx, pf.name, **options)
 
-        raise ValueError(f'cannot {"delete" if code is None else "replace"} root node')
+        if code is None:
+            raise ValueError('cannot delete root node')
+        if options.get('to'):
+            raise ValueError("cannot replace root node using a 'to' parameter")
+
+        code        = self._code_as_all(code, self.parse_params)
+        self._lines = code._lines
+
+        self._set_ast(code.a)
+
+        return self
 
     def remove(self, **options):
         """Delete this node if possible, equivalent to `replace(None, ...)`. Cannot delete root node.
@@ -3128,6 +3140,7 @@ class FST:
         _parse_withitem,
         _parse_pattern,
         _parse_type_param,
+        _code_as_all,
         _code_as_stmtishs,
         _code_as_stmts,
         _code_as_ExceptHandlers,

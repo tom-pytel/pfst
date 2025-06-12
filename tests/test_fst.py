@@ -7792,6 +7792,19 @@ class cls:
 
                 raise
 
+    def test_replace_root(self):
+        f = FST('i = 1')
+        g = f.value
+        a = g.a
+        h = f.replace('j = 2')
+        self.assertIs(h, f)
+        self.assertIs(f.root, f)
+        self.assertIsNone(g.a)
+        self.assertIsNone(a.f)
+        self.assertEqual('j = 2', f.src)
+
+        self.assertRaises(ValueError, f.replace, None)
+
     def test_put_existing_one(self):
         for i, (dst, attr, options, src, put_ret, put_src) in enumerate(REPLACE_EXISTING_ONE_DATA):
             t = parse(dst)
