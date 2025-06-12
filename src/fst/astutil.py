@@ -136,7 +136,7 @@ class bistr(str):
 
 constant = EllipsisType | int | float | complex | str | bytes | bool | None
 
-re_identifier              = re.compile(r'[^\d\W][\w\uFE00-\uFE0F\U000E0100-\U000E01EF]*')
+re_identifier              = re.compile(r'[^\d\W][\w\uFE00-\uFE0F\U000E0100-\U000E01EF]*')  # some other weird unicode crap accepted by python but no, just no
 re_identifier_only         = re.compile(r'^[^\d\W][\w\uFE00-\uFE0F\U000E0100-\U000E01EF]*$')
 re_identifier_dotted       = re.compile(r'[^\d\W][\w\uFE00-\uFE0F\U000E0100-\U000E01EF]*(?:\.[^\d\W][\w\uFE00-\uFE0F\U000E0100-\U000E01EF]*)*')
 re_identifier_dotted_only  = re.compile(r'^[^\d\W][\w\uFE00-\uFE0F\U000E0100-\U000E01EF]*(?:\.[^\d\W][\w\uFE00-\uFE0F\U000E0100-\U000E01EF]*)*$')

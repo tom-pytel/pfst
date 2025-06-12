@@ -1230,7 +1230,7 @@ class FST:
         code        = self._code_as_all(code, self.parse_params)
         self._lines = code._lines
 
-        self._set_ast(code.a)
+        self._set_ast(code.a, True)
 
         return self
 

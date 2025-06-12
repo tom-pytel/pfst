@@ -19,8 +19,7 @@ def _reconcile(self_root: 'FST', selfa: AST, markf: 'FST') -> list[Callable]:
 
         # TODO: maybe there are valid FSTs below which can be copied with source
 
-        if not markf.is_root:
-            return [lambda: markf.replace(selfa)]
+        return [lambda: markf.replace(selfa)]
 
 
 
