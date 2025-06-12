@@ -313,7 +313,8 @@ def _put_slice(self: 'FST', code: Code | None, start: int | Literal['end'] | Non
             if not raw:
                 raise ValueError(f"cannot put slice to {ast.__class__.__name__}.{field}")
 
-    return _put_slice_raw(self, code, start, stop, field, one=one, **options)
+    with self._modifying(field, True):
+        return _put_slice_raw(self, code, start, stop, field, one=one, **options)
 
 
 # ----------------------------------------------------------------------------------------------------------------------

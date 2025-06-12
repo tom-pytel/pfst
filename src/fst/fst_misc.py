@@ -63,7 +63,7 @@ _GLOBALS = globals() | {'_GLOBALS': None}
 
 if _PY_VERSION >= (3, 12):
     class _Modifying:
-        def __init__(self, fst: 'FST', field: str | Literal[False] = False):
+        def __init__(self, fst: 'FST', field: str | Literal[False] = False, raw: bool = False):
             """Call before modifying `FST` node (even just source) to mark possible data for updates after modification.
             This function just collects information when it enters so is safe to call without ever explicitly exiting.
             Can be used as a context manager or can just call `.enter()` and `.done()` manually.
@@ -78,9 +78,15 @@ if _PY_VERSION >= (3, 12):
                 being created and may not exist yet).
             - `field`: Name of field being modified or `False` to indicate that `self` is the child, in which case the
                 parent and field will be gotten from `self`.
+            - `raw`: Whether this is going to be a raw modification or not.
             """
 
             # TODO: update f/t-string f"{val=}" preceding string constants for updated value with '=', evil thing
+
+            if raw:
+                self.fst = False
+
+                return
 
             if field is False:
                 pfield = fst.pfield
@@ -88,11 +94,12 @@ if _PY_VERSION >= (3, 12):
                 if fst := fst.parent:
                     field = pfield.name
 
-            self.fst   = fst if fst and isinstance(fst.a, expr) else False
-            self.field = field
-            self.data  = data = []  # [(FormattedValue or Interpolation FST, len(dbg_str) or None, bool do val_str), ...]
+            self.fst = fst if fst and isinstance(fst.a, expr) else False
 
             if self.fst:
+                self.field = field
+                self.data  = data = []  # [(FormattedValue or Interpolation FST, len(dbg_str) or None, bool do val_str), ...]
+
                 while isinstance(fst.a, expr):
                     parent = fst.parent
                     pfield = fst.pfield
@@ -136,8 +143,9 @@ if _PY_VERSION >= (3, 12):
 
             **Parameters:**
             - `fst`: Parent node of modified field AFTER modification (may have changed or not exist anymore). Or can be
-                special value `False` to indicate that original `fst` was definitely not changed. In order to use this
-                mechanism the class must be used explicitly and not as a context manager.
+                special value `False` to indicate that original `fst` was definitely not replaced, with replaced
+                referring to the actual `FST` node that might be replaced in a raw reparse, not whether the content
+                itself was modified. This is meant for special case use outside of the context manager.
             """
 
             if fst is False:
@@ -180,7 +188,7 @@ else: # override _Modifying if py too low
     class _Modifying:
         """Dummy because py < 3.12 doesn't have f-string location information."""
 
-        def __init__(self, fst: 'FST', field: str | Literal[False] = False):
+        def __init__(self, fst: 'FST', field: str | Literal[False] = False, raw: bool = False):
             pass
 
         def __enter__(self):
@@ -1529,23 +1537,25 @@ if _PY_VERSION < (3, 12):  # override _get_fmtval_interp_strs if py too low
         return None
 
 
-def _modifying(self: 'FST', field: str | Literal[False] = False) -> _Modifying:
+def _modifying(self: 'FST', field: str | Literal[False] = False, raw: bool = False) -> _Modifying:
     """Call before modifying `FST` node (even just source) to mark possible data for updates after modification. This
-    function just collects information so is safe to call without ever calling `.done()` method of the return value. In
-    fact, this method is not called if the return is used as a context manager and is exited with an exception.
+    function just collects information so is safe to call without ever calling `.done()` method of the return value in
+    case of failure, though it should be called on success. In fact, this method is not called if the return is used as
+    a context manager and is exited with an exception.
 
     **Parameters:**
     - `self`: Parent of or actual node being modified, depending on value of `field` (because actual child may be being
         created and may not exist yet).
     - `field`: Name of field being modified or `False` to indicate that `self` is the child, in which case the parent
         and field will be gotten from `self`.
+    - `raw`: Whether this is going to be a raw modification or not.
 
     **Returns:**
     - `_Modifying`: Can be used as a context manager or `.enter()`ed manually, in which case `.done()` should be called
         on success, and nothing if no modification was performed.
     """
 
-    return _Modifying(self, field)
+    return _Modifying(self, field, raw)
 
 
 def _touchall(self: 'FST', parents: bool = False, self_: bool = True, children: bool = False) -> 'FST':  # -> Self

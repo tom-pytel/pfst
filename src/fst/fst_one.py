@@ -1426,7 +1426,8 @@ def _put_one(self: 'FST', code: Code | None, idx: int | None, field: str, **opti
             if not raw:
                 raise
 
-    return _put_one_raw(self, code, idx, field, child, static, **options)
+    with self._modifying(field, True):
+        return _put_one_raw(self, code, idx, field, child, static, **options)
 
 
 # ......................................................................................................................
