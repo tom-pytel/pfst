@@ -10815,6 +10815,20 @@ match a:
 
         self.assertEqual(old, FST.set_option(**old))
 
+    def test_reconcile(self):
+        m = (o := FST('i = 1')).mark()
+
+        o.a.value = Name(id='test')
+        f = o.reconcile(m)
+        self.assertEqual('i = test', f.src)
+        f.verify()
+
+        o.a.targets[0].id = 'blah'
+        f = o.reconcile(m)
+        self.assertEqual('blah = test', f.src)
+        f.verify()
+
+
 
 if __name__ == '__main__':
     import argparse

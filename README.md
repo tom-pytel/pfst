@@ -18,28 +18,48 @@ It works by adding `FST` nodes to existing `AST` nodes as an `.f` attribute whic
 
 
 
+## TODO=
+
+* Reconcile.
+
+* Put one to `FormattedValue` / `Interpolation` `conversion` and `format_spec`, `JoinedStr` / `TemplateStr` `values`.
+
+* Prescribed (non-raw) get / put slice from / to:
+  * `FunctionDef.decorator_list`
+  * `AsyncFunctionDef.decorator_list`
+  * `ClassDef.decorator_list`
+  * `ClassDef.bases`
+  * `Delete.targets`
+  * `Assign.targets`
+  * `BoolOp.values`
+  * `Call.args`
+  * `comprehension.ifs`
+  * `ListComp.generators`
+  * `SetComp.generators`
+  * `DictComp.generators`
+  * `GeneratorExp.generators`
+  * `ClassDef.keywords`
+  * `Call.keywords`
+  * `Import.names`
+  * `ImportFrom.names`
+  * `With.items`
+  * `AsyncWith.items`
+  * `MatchSequence.patterns`
+  * `MatchMapping.patterns`
+  * `MatchClass.patterns`
+  * `MatchOr.patterns`
+  * `FunctionDef.type_params`
+  * `AsyncFunctionDef.type_params`
+  * `ClassDef.type_params`
+  * `TypeAlias.type_params`
+  * `Global.names`
+  * `Nonlocal.names`
+  * `JoinedStr.values`
+  * `TemplateStr.values`
+
+* Redo comment handling, where to `put()` wrt comments, interface for modifying just those.
 
 
+## Trivia
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-## Todo
-
-* Reconcile AST nodes modified not using FST machinery.
-* Individual sequence slice non-raw paths.
-* Redo comment handling, where to put wrt comments, interface for modifying just those.
-* Redo sequence slices for same comment behavior as statements.
-* Support prescribed put/parse JoinedStr/FormattedValue and TemplateStr/Interpolation.
-
-Trivia: The "F" in FST stands for "Fun".
+The "F" in FST stands for "Fun".

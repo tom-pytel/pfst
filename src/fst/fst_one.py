@@ -2208,7 +2208,7 @@ _PUT_ONE_HANDLERS = {
 
     # (AnnAssign, 'simple'):                (), # int
     # (ImportFrom, 'level'):                (), # int?
-    # (Interpolation, 'constant'):          (), # str
+    # (Interpolation, 'constant'):          (), # str                     <-- DO THIS!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     # (Constant, 'kind'):                   (), # string?
     # (comprehension, 'is_async'):          (), # int
     # (TypeIgnore, 'lineno'):               (), # int

@@ -1,36 +1,96 @@
 """Reconcile."""
 
 from ast import *
-from typing import Any, Callable
+from typing import Optional
 
 from .astutil import *
+from .shared import NodeError, astfield
 
 
-def _reconcile(self_root: 'FST', selfa: AST, markf: 'FST') -> list[Callable]:
-    """Reconcile pair of nodes.
+class _Reconcile:
+    def __init__(self, work: 'FST', mark: 'FST'):
+        self.work = work
+        self.mark = mark
+        self.out  = mark.copy()
 
-    Path from root to `selfa` must match path from root to `markf`.
+    def from_original_fst(self, node: AST, marka: AST, outf: 'FST', parent: Optional['FST'] = None,
+                          pfield: astfield | None = None, path: list[astfield] = []):
+        work_root     = self.work
+        mark_root     = self.mark
+        pfname, pfidx = pfield if pfield else (None, None)
 
-    **Returns:**
-    - `fixes`: List of `Callable`s to apply changes if not equal, empty list to indicate trees match.
-    """
+        if not (nodef := getattr(node, 'f', None)):  # if no '.f' then definitely doesn't match
+            assert not isinstance(node, FunctionType)  # juuust in case
 
-    if not (self := getattr(selfa, 'f', None)):  # if no '.f' then definitely doesn't match
+            if pfname == 'ctx':
+                assert isinstance(node, expr_context)
 
-        # TODO: maybe there are valid FSTs below which can be copied with source
+                # TODO: this? why???
 
-        return [lambda: markf.replace(selfa)]
+            else:
+                outf.replace(node)
+
+
+            # TODO: recurse and maybe find things we have source for
+
+
+            return
+
+        if nodef.parent is not parent or nodef.pfield != pfield:  # different parent of pfield, was moved around in the tree or is FST from somewhere else
+            if nodef.root is not work_root:  # from different tree?
+                outf.replace(nodef.copy())  # we trust that it is part of a valid tree, if not its the user's fault
+
+                return  # we don't recurse because it came from unknown tree so if it had AST nodes replaced then we are in undefined territory (if even got here without exception)
+
+            outf.replace(mark_root.child_from_path(work_root.child_path(nodef)).copy)
+
+
+            # TODO: recurse
+
+
+            raise NotImplementedError
+
+        # part of original tree, we assume it matches mark
+
+        outa = outf.a
+
+        try:
+            for field, child in iter_fields(node):
+                if isinstance(child, AST):
+                    child_pfield = astfield(field)
+
+                    self.from_original_fst(child, child_pfield.get(marka), child_pfield.get(outa).f,
+                                           nodef, child_pfield, path + [child_pfield])
+
+                elif not isinstance(child, list):  # primitive
+                    if child != getattr(marka, field):
+                        if isinstance(node, (Constant, MatchSingleton)):
+                            child = repr(child)
+
+                        outf.put(child, field)
+
+                else:  # slice
+                    for i, c in enumerate(child):
+                        c_pfield = astfield(field, i)
+
+                        self.from_original_fst(c, c_pfield.get(marka), c_pfield.get(outa).f,
+                                               nodef, c_pfield, path + [c_pfield])
 
 
 
+                    # TODO: slices
 
-    self  = self.f
-    marka = mark.a
 
-    if selfa.__class__ is not marka.__class__:
-        pass
+                    # raise NotImplementedError
 
-    pass
+        except (NodeError, SyntaxError, NotImplementedError):
+
+
+            # TODO: replace whole node because something below couldn't be replaced individually
+
+
+            raise NotImplementedError
+
 
 
 # ----------------------------------------------------------------------------------------------------------------------
@@ -55,9 +115,7 @@ def reconcile(self: 'FST', mark: 'FST') -> 'FST':
     as possible and maybe continue operating in `FST` land.
 
     **Parameters:**
-    - `mark`: A previously marked snapshot of `self`. This object should be considered consumed on success or failure
-        and not used again. If you want to have multiple of the same marked snapshot for multiple attempts, either
-        `mark()` multiple times or `mark()` the marked snapshot which will give a copy with the correct information.
+    - `mark`: A previously marked snapshot of `self`. This object is not consumed on use, success or failure.
 
     **Returns:**
     - `FST`: A new valid reconciled `FST` if possible.
@@ -66,9 +124,11 @@ def reconcile(self: 'FST', mark: 'FST') -> 'FST':
     if not self.is_root:
         raise ValueError('can only reconcile root nodes')
 
-    _reconcile(self, self.a, mark)
+    rec = _Reconcile(self, mark)
 
-    return self
+    rec.from_original_fst(self.a, mark.a, rec.out)
+
+    return rec.out
 
 
 # ----------------------------------------------------------------------------------------------------------------------

@@ -2115,6 +2115,9 @@ class FST:
         ```
         """
 
+        if child.root is not self.root:
+            raise ValueError('child is not part of same tree')
+
         path = []
 
         while child is not self:
