@@ -26,7 +26,7 @@ class _Reconcile:
                 assert isinstance(node, expr_context)
                 assert parent  # because really, an expr_context at the top level???
 
-                setattr(parent.a, 'ctx', FST(node.__class__(), parent, pfield).a)
+                setattr(parent.a, 'ctx', FST(node.__class__(), parent, pfield).a)  # __class__() because could be shared instance from ast.parse()
 
             else:
                 outf.replace(node)

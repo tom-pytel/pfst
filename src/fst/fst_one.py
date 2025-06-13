@@ -86,6 +86,12 @@ def _get_one_stmtish(self: 'FST', idx: int | None, field: str, cut: bool, **opti
     return self._get_slice_stmtish(idx, idx + 1, field, cut=cut, one=True, **options)
 
 
+def _get_one_ctx(self: 'FST', idx: int | None, field: str, cut: bool, **options) -> _GetOneRet:
+    child, _ = _validate_get(self, idx, field)
+
+    return FST(child.__class__(), [bistr('')], from_=self, lcopy=False)
+
+
 def _get_one_identifier(self: 'FST', idx: int | None, field: str, cut: bool, **options) -> _GetOneRet:
     child, _ = _validate_get(self, idx, field)
 
@@ -383,12 +389,18 @@ _GET_ONE_HANDLERS = {
     (Constant, 'kind'):                   _get_one_constant, # string?
     (Attribute, 'value'):                 _get_one_default, # expr
     (Attribute, 'attr'):                  _get_one_identifier, # identifier
+    (Attribute, 'ctx'):                   _get_one_ctx, # expr_context
     (Subscript, 'value'):                 _get_one_default, # expr
     (Subscript, 'slice'):                 _get_one_default, # expr
+    (Subscript, 'ctx'):                   _get_one_ctx, # expr_context
     (Starred, 'value'):                   _get_one_default, # expr
+    (Starred, 'ctx'):                     _get_one_ctx, # expr_context
     (Name, 'id'):                         _get_one_identifier, # identifier
+    (Name, 'ctx'):                        _get_one_ctx, # expr_context
     (List, 'elts'):                       _get_one_default, # expr*
+    (List, 'ctx'):                        _get_one_ctx, # expr_context
     (Tuple, 'elts'):                      _get_one_default, # expr*
+    (Tuple, 'ctx'):                       _get_one_ctx, # expr_context
     (Slice, 'lower'):                     _get_one_default, # expr?
     (Slice, 'upper'):                     _get_one_default, # expr?
     (Slice, 'step'):                      _get_one_default, # expr?
@@ -459,13 +471,6 @@ _GET_ONE_HANDLERS = {
     # (With, 'type_comment'):               (), # string?
     # (AsyncWith, 'type_comment'):          (), # string?
     # (arg, 'type_comment'):                (), # string?
-
-    # (Attribute, 'ctx'):                   (), # expr_context
-    # (Subscript, 'ctx'):                   (), # expr_context
-    # (Starred, 'ctx'):                     (), # expr_context
-    # (Name, 'ctx'):                        (), # expr_context
-    # (List, 'ctx'):                        (), # expr_context
-    # (Tuple, 'ctx'):                       (), # expr_context
 }
 
 # ----------------------------------------------------------------------------------------------------------------------

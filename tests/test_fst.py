@@ -8205,10 +8205,46 @@ class cls:
         if _PY_VERSION >= (3, 14):
             self.assertEqual('blah', FST('t"{blah}"').values[0].get('str'))
 
+    def test_get_one_ctx(self):
+        self.assertIsInstance(a := FST('a.b').get('ctx').a, Load)
+        a.f.verify()
+        self.assertIsInstance(a := FST('a.b = 1').targets[0].get('ctx').a, Store)
+        a.f.verify()
+        self.assertIsInstance(a := FST('del a.b').targets[0].get('ctx').a, Del)
+        a.f.verify()
+        self.assertIsInstance(a := FST('a[b]').get('ctx').a, Load)
+        a.f.verify()
+        self.assertIsInstance(a := FST('a[b] = 1').targets[0].get('ctx').a, Store)
+        a.f.verify()
+        self.assertIsInstance(a := FST('del a[b]').targets[0].get('ctx').a, Del)
+        a.f.verify()
+        self.assertIsInstance(a := FST('*a,').elts[0].get('ctx').a, Load)
+        a.f.verify()
+        self.assertIsInstance(a := FST('*a, = 1').targets[0].elts[0].get('ctx').a, Store)
+        a.f.verify()
+        self.assertIsInstance(a := FST('a').get('ctx').a, Load)
+        a.f.verify()
+        self.assertIsInstance(a := FST('a = 1').targets[0].get('ctx').a, Store)
+        a.f.verify()
+        self.assertIsInstance(a := FST('del a').targets[0].get('ctx').a, Del)
+        a.f.verify()
+        self.assertIsInstance(a := FST('[a.b]').get('ctx').a, Load)
+        a.f.verify()
+        self.assertIsInstance(a := FST('[a.b] = 1').targets[0].get('ctx').a, Store)
+        a.f.verify()
+        self.assertIsInstance(a := FST('del [a.b]').targets[0].get('ctx').a, Del)
+        a.f.verify()
+        self.assertIsInstance(a := FST('(a.b,)').get('ctx').a, Load)
+        a.f.verify()
+        self.assertIsInstance(a := FST('(a.b,) = 1').targets[0].get('ctx').a, Store)
+        a.f.verify()
+        self.assertIsInstance(a := FST('del (a.b,)').targets[0].get('ctx').a, Del)
+        a.f.verify()
+
     def test_get_one_special(self):
         f = FST('a = b', 'exec').body[0]
-        self.assertRaises(ValueError, f.targets[0].get, 'ctx')  # cannot copy node which does not have a location
-        self.assertRaises(ValueError, f.value.get, 'ctx')
+        self.assertIsInstance(f.targets[0].get('ctx').a, Store)
+        self.assertIsInstance(f.value.get('ctx').a, Load)
 
         f = FST('{a: b}', 'exec').body[0].value
         self.assertRaises(ValueError, f.get, 0)  # cannot get single element from combined field of Dict

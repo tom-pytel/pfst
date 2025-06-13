@@ -1352,6 +1352,9 @@ _PARSE_MODE_FUNCS = {
     withitem:            _parse_withitem,
     pattern:             _parse_pattern,
     type_param:          _parse_type_param,
+    Load:                lambda src, parse_params = {}: Load(),  # HACKS for verify() and other similar stuff
+    Store:               lambda src, parse_params = {}: Store(),
+    Del:                 lambda src, parse_params = {}: Del(),
 }
 
 from .fst import FST  # this imports a fake FST which is replaced in globals() when fst.py finishes loading
