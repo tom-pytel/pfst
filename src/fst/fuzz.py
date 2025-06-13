@@ -338,11 +338,10 @@ class ReputOne(Fuzzy):
                 delete = self.DELETE and handler in (_put_one_exprish_optional, _put_one_Dict_keys,
                                                         _put_one_withitem_optional_vars)
                 if self.debug:
-                    print('...', g, idx, field, g.parent, g.src)
+                    print(f'... {g=}, {idx=}, {field=}, {g.parent=}, {delete=}, {g.src=}')
                     f.parent.dump(True); print(f.parent.src); print()
 
                 if delete:
-
                     put = 'del'
 
                     try:
@@ -363,9 +362,15 @@ class ReputOne(Fuzzy):
 
                 for put, func in puts:
                     if self.debug:
-                        print(f'   ', f.parent.src)
+                        print(f'   {f.parent.src=}')
 
-                    func()
+                    try:
+                        func()
+                    except Exception as exc:
+                        if self.debug:
+                            print(f'    {exc=}')
+
+                        raise
 
                     if self.verify:
                         fst.verify()
@@ -391,7 +396,7 @@ class ReputOne(Fuzzy):
 
                     elif put == 'src':  # Starred stuff like "*a or b" coming from original code
                         try:
-                            FST._parse_callarg(code)
+                            FST._parse_callarg(src)
                         except SyntaxError:
                             pass
                         else:
