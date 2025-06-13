@@ -1535,8 +1535,9 @@ def _one_info_identifier_required(self: 'FST', static: onestatic, idx: int | Non
 _onestatic_identifier_required = onestatic(_one_info_identifier_required, _restrict_default, code_as=_code_as_identifier)
 
 def _one_info_identifier_alias(self: 'FST', static: onestatic, idx: int | None, field: str) -> oneinfo:  # required, cannot delete or put new
-    ln, col, _, end_col = self.loc
-    end_col             = re_identifier_alias.match(self.root._lines[ln], col, end_col).end()  # must be there
+    ln, col, end_ln, end_col = self.loc
+    end_col                  = re_identifier_alias.match(self.root._lines[ln], col,
+                                                         end_col if end_ln == ln else 0x7fffffffffffffff).end()  # must be there
 
     return oneinfo('', None, fstloc(ln, col, ln, end_col))
 

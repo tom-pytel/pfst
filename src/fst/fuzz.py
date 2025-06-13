@@ -338,7 +338,7 @@ class ReputOne(Fuzzy):
                 delete = self.DELETE and handler in (_put_one_exprish_optional, _put_one_Dict_keys,
                                                         _put_one_withitem_optional_vars)
                 if self.debug:
-                    print(f'... {g=}, {idx=}, {field=}, {g.parent=}, {delete=}, {g.src=}')
+                    print(f'\n... ... {g=}, {idx=}, {field=}, {g.parent=}, {delete=}, {g.src=}')
                     f.parent.dump(True); print(f.parent.src); print()
 
                 if delete:
@@ -362,10 +362,11 @@ class ReputOne(Fuzzy):
 
                 for put, func in puts:
                     if self.debug:
-                        print(f'   {f.parent.src=}')
+                        print(f'    {put} - {f.parent.src=}')
 
                     try:
                         func()
+
                     except Exception as exc:
                         if self.debug:
                             print(f'    {exc=}')
@@ -405,10 +406,12 @@ class ReputOne(Fuzzy):
                 if not ignorable:
                     print('-'*80)
                     print(sig, put, fst.child_path(f, True), idx, field, f.parent)
-                    print(f)
-                    print(f.src)
-                    print(g)
-                    print(g.src)
+                    print(f'{f=}')
+                    print(f'{f.src=}')
+                    print(f'{g=}')
+                    print(f'{g.src=}')
+                    print(f'{ast=}')
+                    print(f'{src=}')
 
                     raise
 
