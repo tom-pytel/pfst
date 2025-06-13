@@ -8192,6 +8192,16 @@ class cls:
             c = f.get('value')
             self.assertIs(c, f.a.value)
 
+        self.assertEqual(1, FST('i: int', AnnAssign).get('simple'))
+        self.assertEqual(0, FST('(i): int', AnnAssign).get('simple'))
+        self.assertEqual(0, FST('from a import *', ImportFrom).get('level'))
+        self.assertEqual(1, FST('from .a import *', ImportFrom).get('level'))
+        self.assertEqual(2, FST('from ..a import *', ImportFrom).get('level'))
+        self.assertIs(None, FST('"a"', Constant).get('kind'))
+        self.assertEqual('u', FST('u"a"', Constant).get('kind'))
+        self.assertEqual(0, FST('for i in j', comprehension).get('is_async'))
+        self.assertEqual(1, FST('async for i in j', comprehension).get('is_async'))
+
         if _PY_VERSION >= (3, 14):
             self.assertEqual('blah', FST('t"{blah}"').values[0].get('str'))
 
@@ -10835,6 +10845,8 @@ match a:
         self.assertEqual(old, FST.set_option(**old))
 
     def test_reconcile(self):
+        # basic replacements
+
         m = (o := FST('i = 1')).mark()
 
         o.a.value = Name(id='test')
@@ -10845,6 +10857,59 @@ match a:
         o.a.targets[0].id = 'blah'
         f = o.reconcile(m)
         self.assertEqual('blah = test', f.src)
+        f.verify()
+
+        o.a.value = copy_ast(o.a.targets[0])
+        f = o.reconcile(m)
+        self.assertEqual('blah = blah', f.src)
+        f.verify()
+
+        o.a.value.ctx = Load()
+        o.a.targets[0].ctx = Store()
+        f = o.reconcile(m)
+        self.assertEqual('blah = blah', f.src)
+        f.verify()
+
+        # error causing parent replacement
+
+        m = (o := FST("f'{a}'")).mark()
+
+        o.a.values[0].conversion = 97
+        f = o.reconcile(m)
+        self.assertEqual("f'{a!a}'", f.src)
+        f.verify()
+
+        o.a.values[0].conversion = 115
+        f = o.reconcile(m)
+        self.assertEqual("f'{a!s}'", f.src)
+        f.verify()
+
+        o.a.values[0].conversion = 114
+        f = o.reconcile(m)
+        self.assertEqual("f'{a!r}'", f.src)
+        f.verify()
+
+        o.a.values[0].conversion = -1
+        f = o.reconcile(m)
+        self.assertEqual("f'{a}'", f.src)
+        f.verify()
+
+        # AST from same tree moved around
+
+        m = (o := FST('i = a')).mark()
+
+        o.a.value = Starred(value=o.a.value)
+        f = o.reconcile(m)
+        self.assertEqual('i = *a', f.src)
+        f.verify()
+
+        # FST from another tree
+
+        m = (o := FST('i = 1')).mark()
+
+        o.a.value = FST('(x,\n # comment\ny)').a
+        f = o.reconcile(m)
+        self.assertEqual('i = (x,\n # comment\ny)', f.src)
         f.verify()
 
 

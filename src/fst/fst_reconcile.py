@@ -24,8 +24,9 @@ class _Reconcile:
 
             if pfname == 'ctx':
                 assert isinstance(node, expr_context)
+                assert parent  # because really, an expr_context at the top level???
 
-                # TODO: this? why???
+                setattr(parent.a, 'ctx', FST(node.__class__(), parent, pfield).a)
 
             else:
                 outf.replace(node)
@@ -42,7 +43,7 @@ class _Reconcile:
 
                 return  # we don't recurse because it came from unknown tree so if it had AST nodes replaced then we are in undefined territory (if even got here without exception)
 
-            outf.replace(mark_root.child_from_path(work_root.child_path(nodef)).copy)
+            outf.replace(mark_root.child_from_path(work_root.child_path(nodef)).copy())
 
 
             # TODO: recurse
@@ -63,7 +64,7 @@ class _Reconcile:
                                            nodef, child_pfield, path + [child_pfield])
 
                 elif not isinstance(child, list):  # primitive
-                    if child != getattr(marka, field):
+                    if field != 'str' and child != getattr(marka, field):
                         outf.put(child, field)
 
                 else:  # slice
@@ -81,13 +82,7 @@ class _Reconcile:
                     # raise NotImplementedError
 
         except (NodeError, SyntaxError, NotImplementedError):
-
-
-            # TODO: replace whole node because something below couldn't be replaced individually
-
-
-            raise NotImplementedError
-
+            outf.replace(node)  # something failed below, so try replace whole ast
 
 
 # ----------------------------------------------------------------------------------------------------------------------
@@ -123,7 +118,8 @@ def reconcile(self: 'FST', mark: 'FST') -> 'FST':
 
     rec = _Reconcile(self, mark)
 
-    rec.from_original_fst(self.a, mark.a, rec.out)
+    with self.option(raw=False):
+        rec.from_original_fst(self.a, mark.a, rec.out)
 
     return rec.out
 

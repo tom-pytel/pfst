@@ -293,6 +293,7 @@ _GET_ONE_HANDLERS = {
     (AnnAssign, 'target'):                _get_one_default, # expr
     (AnnAssign, 'annotation'):            _get_one_default, # expr
     (AnnAssign, 'value'):                 _get_one_default, # expr?
+    (AnnAssign, 'simple'):                _get_one_constant, # int
     (For, 'target'):                      _get_one_default, # expr
     (For, 'iter'):                        _get_one_default, # expr
     (For, 'body'):                        _get_one_stmtish, # stmt*
@@ -328,6 +329,7 @@ _GET_ONE_HANDLERS = {
     (Import, 'names'):                    _get_one_default, # alias*
     (ImportFrom, 'module'):               _get_one_identifier, # identifier? (dotted)
     (ImportFrom, 'names'):                _get_one_default, # alias*
+    (ImportFrom, 'level'):                _get_one_constant, # int?
     (Global, 'names'):                    _get_one_identifier, # identifier*
     (Nonlocal, 'names'):                  _get_one_identifier, # identifier*
     (Expr, 'value'):                      _get_one_default, # expr
@@ -378,6 +380,7 @@ _GET_ONE_HANDLERS = {
     (JoinedStr, 'values'):                _get_one_JoinedStr_TemplateStr_values, # expr*  - no location on py < 3.12
     (TemplateStr, 'values'):              _get_one_JoinedStr_TemplateStr_values, # expr*  - no location on py < 3.12
     (Constant, 'value'):                  _get_one_constant, # constant
+    (Constant, 'kind'):                   _get_one_constant, # string?
     (Attribute, 'value'):                 _get_one_default, # expr
     (Attribute, 'attr'):                  _get_one_identifier, # identifier
     (Subscript, 'value'):                 _get_one_default, # expr
@@ -392,6 +395,7 @@ _GET_ONE_HANDLERS = {
     (comprehension, 'target'):            _get_one_default, # expr
     (comprehension, 'iter'):              _get_one_default, # expr
     (comprehension, 'ifs'):               _get_one_default, # expr*
+    (comprehension, 'is_async'):          _get_one_constant, # int
     (ExceptHandler, 'type'):              _get_one_default, # expr?
     (ExceptHandler, 'name'):              _get_one_identifier, # identifier?
     (ExceptHandler, 'body'):              _get_one_stmtish, # stmt*
@@ -462,14 +466,6 @@ _GET_ONE_HANDLERS = {
     # (Name, 'ctx'):                        (), # expr_context
     # (List, 'ctx'):                        (), # expr_context
     # (Tuple, 'ctx'):                       (), # expr_context
-
-    # MAYBE DO:
-    # =========
-
-    # (AnnAssign, 'simple'):                (), # int
-    # (ImportFrom, 'level'):                (), # int?
-    # (Constant, 'kind'):                   (), # string?
-    # (comprehension, 'is_async'):          (), # int
 }
 
 # ----------------------------------------------------------------------------------------------------------------------

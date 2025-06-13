@@ -295,7 +295,7 @@ def _dump(self: 'FST', st: nspace, cind: str = '', prefix: str = ''):
             if ast.kind is None:
                 st.linefunc(f'{cind}{prefix}Constant {ast.value!r}{" -" * bool(tail)}{tail}{st.eol}')
             else:
-                st.linefunc(f'{cind}{prefix}Constant {ast.value!r} {ast.kind}{" -" * bool(tail)}{tail}{st.eol}')
+                st.linefunc(f'{cind}{prefix}Constant {ast.value!r} kind={ast.kind!r}{" -" * bool(tail)}{tail}{st.eol}')
 
             return
 

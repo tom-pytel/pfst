@@ -1138,7 +1138,7 @@ class FST:
     def mark(self): pass  # placeholder for make_docs.py
     def reconcile(self): pass
 
-    from .fst_one_reconcile import (
+    from .fst_reconcile import (
         mark,
         reconcile,
     )
@@ -3223,7 +3223,7 @@ class FST:
 
 from .fstview import fstview
 
-from . import fst_misc, fst_one, fst_parse, fst_raw, fst_slice_old, fst_slice, fst_walk, srcedit
+from . import fst_misc, fst_one, fst_parse, fst_raw, fst_slice_old, fst_slice, fst_walk, fst_reconcile, srcedit
 
 fst_misc.FST = fst_one.FST = fst_parse.FST = fst_raw.FST = fst_slice_old.FST = fst_slice.FST = fst_walk.FST = \
-    srcedit.FST = FST
+    fst_reconcile.FST = srcedit.FST = FST
