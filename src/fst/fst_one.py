@@ -663,6 +663,24 @@ def _put_one_op(self: 'FST', code: _PutOneCode, idx: int | None, field: str,
     return childf
 
 
+def _put_one_ctx(self: 'FST', code: _PutOneCode, idx: int | None, field: str,
+                 child: type[boolop] | type[operator] | type[unaryop] | type[cmpop],
+                 static: None, **options) -> 'FST':
+    """This only exists to absorb the put and validate that it is the only value it can be."""
+
+    child = _validate_put(self, code, idx, field, child)
+
+    if isinstance(code, FST):
+        code = code.a
+    elif not isinstance(code, AST):
+        raise ValueError(f'expecting expr_context, got {code.__class__.__name__}')
+
+    if code.__class__ is not child.__class__:
+        raise ValueError(f'invalid expr_context, can only be {child.__class__.__name__}')
+
+    return child.f
+
+
 if _PYLT12:
     def _put_one_NOT_IMPLEMENTED_YET(self: 'FST', code: _PutOneCode, idx: int | None, field: str, child: constant,
                                      static: onestatic, **options) -> 'FST':
@@ -1466,6 +1484,7 @@ _onestatic_type_param_required       = onestatic(_one_info_exprish_required, _re
 _onestatic_target_Name               = onestatic(_one_info_exprish_required, Name, ctx=Store)
 _onestatic_target_single             = onestatic(_one_info_exprish_required, (Name, Attribute, Subscript), ctx=Store)
 _onestatic_target                    = onestatic(_one_info_exprish_required, (Name, Attribute, Subscript, Tuple, List), ctx=Store)
+_onestatic_ctx                       = onestatic(None, expr_context)
 
 def _one_info_identifier_required(self: 'FST', static: onestatic, idx: int | None, field: str,  # required, cannot delete or put new
                                   prefix: str | None = None) -> oneinfo:
@@ -2131,12 +2150,18 @@ _PUT_ONE_HANDLERS = {
     (Constant, 'value'):                  (False, _put_one_constant, onestatic(_one_info_constant, constant)), # constant
     (Attribute, 'value'):                 (False, _put_one_Attribute_value, _onestatic_expr_required), # expr
     (Attribute, 'attr'):                  (False, _put_one_identifier_required, onestatic(_one_info_Attribute_attr, _restrict_default, code_as=_code_as_identifier)), # identifier
+    (Attribute, 'ctx'):                   (False, _put_one_ctx, _onestatic_ctx), # expr_context
     (Subscript, 'value'):                 (False, _put_one_Subscript_value, _onestatic_expr_required), # expr
     (Subscript, 'slice'):                 (False, _put_one_exprish_required, onestatic(_one_info_exprish_required, _restrict_fmtval_starred, code_as=_code_as_slice)), # expr
+    (Subscript, 'ctx'):                   (False, _put_one_ctx, _onestatic_ctx), # expr_context
     (Starred, 'value'):                   (False, _put_one_exprish_required, _onestatic_expr_required), # expr
+    (Starred, 'ctx'):                     (False, _put_one_ctx, _onestatic_ctx), # expr_context
     (Name, 'id'):                         (False, _put_one_identifier_required, _onestatic_identifier_required), # identifier
+    (Name, 'ctx'):                        (False, _put_one_ctx, _onestatic_ctx), # expr_context
     (List, 'elts'):                       (True,  _put_one_exprish_required, _onestatic_expr_required_starred), # expr*
+    (List, 'ctx'):                        (False, _put_one_ctx, _onestatic_ctx), # expr_context
     (Tuple, 'elts'):                      (True,  _put_one_Tuple_elts, onestatic(_one_info_exprish_required, _restrict_fmtval, code_as=_code_as_sliceelt)), # expr*  - special handling because Tuples can contain Slices in an unparenthesized .slice field
+    (Tuple, 'ctx'):                       (False, _put_one_ctx, _onestatic_ctx), # expr_context
     (Slice, 'lower'):                     (False, _put_one_exprish_optional, _onestatic_Slice_lower), # expr?
     (Slice, 'upper'):                     (False, _put_one_exprish_optional, _onestatic_Slice_upper), # expr?
     (Slice, 'step'):                      (False, _put_one_exprish_optional, _onestatic_Slice_step), # expr?
@@ -2206,13 +2231,6 @@ _PUT_ONE_HANDLERS = {
     # (With, 'type_comment'):               (), # string?
     # (AsyncWith, 'type_comment'):          (), # string?
     # (arg, 'type_comment'):                (), # string?
-
-    # (Attribute, 'ctx'):                   (), # expr_context
-    # (Subscript, 'ctx'):                   (), # expr_context
-    # (Starred, 'ctx'):                     (), # expr_context
-    # (Name, 'ctx'):                        (), # expr_context
-    # (List, 'ctx'):                        (), # expr_context
-    # (Tuple, 'ctx'):                       (), # expr_context
 
     # MAYBE DO:
     # =========
