@@ -1253,7 +1253,7 @@ class FST:
         raise ValueError(f'cannot delete root node')
 
     def get(self, idx: int | Literal['end'] | None = None, stop: int | None | Literal[False] = False,
-            field: str | None = None, *, cut: bool = False, **options) -> Optional['FST'] | str:
+            field: str | None = None, *, cut: bool = False, **options) -> Optional['FST'] | str | constant:
         """Copy or cut an individual child node or a slice of child nodes from `self` if possible. This function can do
         everything that `get_slice()` can.
 
@@ -1278,7 +1278,9 @@ class FST:
         is being gotten from `idx` and not a slice.
 
         **Returns:**
-        - `FST`: Node gotten.
+        - `FST`: When getting an actual node (most situations).
+        - `str`: When getting am identifier, like from `Name.id`.
+        - `constant`: When getting a constant (`fst.astutil.constant`), like from `MatchSingleton.value`.
 
         **Examples:**
         ```py
@@ -1329,15 +1331,19 @@ class FST:
 
         return self._get_one(idx, field_, cut, **options)
 
-    def put(self, code: Code | None, idx: int | Literal['end'] | None = None, stop: int | None | Literal[False] = False,
-            field: str | None = None, *, one: bool = True, **options) -> Self:
+    def put(self, code: Code | str | constant | None, idx: int | Literal['end'] | None = None,
+            stop: int | None | Literal[False] = False, field: str | None = None, *, one: bool = True, **options,
+            ) -> Self:
         """Put an individual node or a slice of nodes to `self` if possible. This function can do everything that
         `put_slice()` can. The node is passed as an existing top-level `FST`, `AST`, string or list of string lines. If
         passed as an `FST` then it should be considered "consumed" after this function returns and is no logner valid,
         even on failure. `AST` is copied.
 
         **Parameters:**
-        - `code`: The node to put as an `FST` (must be root node), `AST`, a string or list of line strings.
+        - `code`: The node to put as an `FST` (must be root node), `AST`, a string or list of line strings. If putting
+            to an identifier field then this should be a string and it will be taken literally (no parsing). If putting
+            to a constant likew `MatchSingleton.value` or `Constant.value` then this should be an appropriate primitive
+            constant value.
         - `idx`: The index of the field node to put to if the field being put to contains multiple elements or the start
             of the slice to put if putting a slice (by specifying `stop`). If the field being put to is an individual
             element then this should be `None`. If `stop` is specified and putting a slice then a `None` here means put
@@ -3179,6 +3185,7 @@ class FST:
         _code_as_identifier_dotted,
         _code_as_identifier_star,
         _code_as_identifier_alias,
+        _code_as_constant,
     )
 
     from .fst_raw import (

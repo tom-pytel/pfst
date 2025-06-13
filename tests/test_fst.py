@@ -8179,6 +8179,22 @@ class cls:
 
                     raise
 
+    def test_get_one_constant(self):
+        for v in (True, False, None):
+            f = FST(f'match a:\n case {v}: pass').cases[0].pattern
+            c = f.get('value')
+            self.assertIs(c, v)
+
+        for s in ('...', '2', '2.0', '2j', '"str"', 'b"bytes"', 'True', 'False', 'None'):
+            f = FST(s)
+            self.assertIsInstance(f.a, Constant)
+
+            c = f.get('value')
+            self.assertIs(c, f.a.value)
+
+        if _PY_VERSION >= (3, 14):
+            self.assertEqual('blah', FST('t"{blah}"').values[0].get('str'))
+
     def test_get_one_special(self):
         f = FST('a = b', 'exec').body[0]
         self.assertRaises(ValueError, f.targets[0].get, 'ctx')  # cannot copy node which does not have a location
@@ -8273,24 +8289,6 @@ class cls:
             self.assertEqual('ident', FST('type t[ident] = ...').type_params[0].get('name'))
             self.assertEqual('ident', FST('type t[*ident] = ...').type_params[0].get('name'))
             self.assertEqual('ident', FST('type t[**ident] = ...').type_params[0].get('name'))
-
-        # get constant
-
-        for v in (True, False, None):
-            f = FST(f'match a:\n case {v}: pass').cases[0].pattern
-            g = f.get('value')
-            self.assertIsInstance(g.a, Constant)
-            self.assertEqual(str(v), g.src)
-            self.assertIs(v, g.value)
-
-        for s in ('...', '2', '2.0', '2j', '"str"', 'b"bytes"', 'True', 'False', 'None'):
-            f = FST(s)
-            self.assertIsInstance(f.a, Constant)
-
-            g = f.get('value')
-            self.assertIsInstance(g.a, Constant)
-            self.assertEqual(g.loc, f.loc)
-            compare_asts(g.a, f.a, locs=True, raise_=True)
 
         # FormattedValue/Interpolation conversion and format_spec, JoinedStr/TemplateStr values
 
@@ -8697,6 +8695,27 @@ if 1:
                 print(put_src)
 
                 raise
+
+    def test_put_one_constant(self):
+        f = FST('None', Constant)
+
+        for value in (..., 1, 1.0, 1j, 'str', b'bytes', True, False, None):
+            self.assertIs(f, f.put(value))
+            self.assertEqual(repr(value), f.src)
+            self.assertIs(value, f.a.value)
+
+        f = FST('case None: pass')
+
+        for value in (True, False, None):
+            self.assertIs(f.pattern, f.pattern.put(value))
+            self.assertEqual(f'case {value}: pass', f.src)
+            self.assertIs(f.pattern.value, value)
+
+        # if _PY_VERSION >= (3, 14):
+        #     f = FST('t"{blah}"')
+
+        #     self.assertEqual(f.values[0], f.values[0].put('blah', 'str'))
+        #     self.assertEqual('blah', f.values[0].str)
 
     def test_put_one_special(self):
         f = parse('i', mode='eval').f

@@ -1249,6 +1249,32 @@ def _code_as_identifier_alias(code: Code, parse_params: dict = {}) -> str:
     return normalize('NFKC', code)
 
 
+@staticmethod
+def _code_as_constant(code: constant, parse_params: dict = {}) -> constant:
+    """Convert `code` to valid constant if possible. If `code` is a `str` then it is treated as the constant value and
+    not as the python representation of the constant. The only `FST` or `AST` accepted is a `Constant`, whose `value` is
+    returned."""
+
+    if isinstance(code, FST):
+        if not code.is_root:
+            raise ValueError('expecting root node')
+
+        code = code.a
+
+    if isinstance(code, AST):
+        if not isinstance(code, Constant):
+            raise NodeError('expecting constant')
+
+        code = code.value
+
+    elif isinstance(code, list):
+        code = '\n'.join(code)
+    elif not isinstance(code, constant):
+        raise NodeError('expecting constant')
+
+    return code
+
+
 # ----------------------------------------------------------------------------------------------------------------------
 __all_private__ = [n for n in globals() if n not in _GLOBALS]  # used by make_docs.py
 

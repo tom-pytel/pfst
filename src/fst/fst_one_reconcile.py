@@ -64,9 +64,6 @@ class _Reconcile:
 
                 elif not isinstance(child, list):  # primitive
                     if child != getattr(marka, field):
-                        if isinstance(node, (Constant, MatchSingleton)):
-                            child = repr(child)
-
                         outf.put(child, field)
 
                 else:  # slice
