@@ -9497,35 +9497,63 @@ a
         self.assertEqual('with ((b\n,)): pass', f.src)
         f.verify()
 
+        f = FST('a: int = x.y')
+        f.value.value.replace('(c.d)', pars=True)
+        self.assertEqual('a: int = (c.d).y', f.src)
+        self.assertEqual(1, f.a.simple)
+        f.verify()
+
         f = FST('a.b: int')
         f.target.value.replace('(c.d)', pars=True)
         self.assertEqual('((c.d).b): int', f.src)
+        self.assertEqual(0, f.a.simple)
         f.verify()
 
         f = FST('a.b: int')
         f.target.value.replace('(c).d', pars=True)
         self.assertEqual('((c).d.b): int', f.src)
+        self.assertEqual(0, f.a.simple)
         f.verify()
 
         f = FST('a[b]: int')
         f.target.value.replace('(c[d])', pars=True)
         self.assertEqual('((c[d])[b]): int', f.src)
+        self.assertEqual(0, f.a.simple)
         f.verify()
 
         f = FST('a[b]: int')
         f.target.value.replace('(c)[d]', pars=True)
         self.assertEqual('((c)[d][b]): int', f.src)
+        self.assertEqual(0, f.a.simple)
         f.verify()
 
         f = FST('a.b[c].d[e]: int')
         f.target.value.value.value.value.replace('(f[g])', pars=True)
         self.assertEqual('((f[g]).b[c].d[e]): int', f.src)
+        self.assertEqual(0, f.a.simple)
         f.verify()
 
         f = FST('a.b[c].d[e]: int')
         f.target.value.value.value.value.replace('(f)[g].h[i]', pars=True)
         self.assertEqual('((f)[g].h[i].b[c].d[e]): int', f.src)
+        self.assertEqual(0, f.a.simple)
         f.verify()
+
+        f = FST('a.b: int')
+        f.put(0, 'simple')
+        self.assertEqual('a.b: int', f.src)
+        self.assertEqual(0, f.a.simple)
+        f.verify()
+        self.assertRaises(ValueError, f.put, 1, 'simple')
+
+        f = FST('a: int')
+        f.put(0, 'simple')
+        self.assertEqual('(a): int', f.src)
+        self.assertEqual(0, f.a.simple)
+        f.verify()
+        f.put(1, 'simple')
+        self.assertEqual('a: int', f.src)
+        self.assertEqual(1, f.a.simple)
 
         if _PY_VERSION >= (3, 12):
             f = FST('f"{a if b else c}"')

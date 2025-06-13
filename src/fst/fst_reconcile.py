@@ -57,6 +57,9 @@ class _Reconcile:
 
         try:
             for field, child in iter_fields(node):
+                if field in ('ctx', 'str'):  # redundant or
+                    continue
+
                 if isinstance(child, AST):
                     child_pfield = astfield(field)
 
@@ -64,7 +67,7 @@ class _Reconcile:
                                            nodef, child_pfield, path + [child_pfield])
 
                 elif not isinstance(child, list):  # primitive
-                    if field != 'str' and child != getattr(marka, field):
+                    if child != getattr(marka, field):
                         outf.put(child, field)
 
                 else:  # slice

@@ -8,6 +8,8 @@ It works by adding `FST` nodes to existing `AST` nodes as an `.f` attribute whic
 
 `pfst` does not do any parsing of its own but rather relies on the builtin Python parser and unparser so it stays 100% compliant. This means you get perfect parsing but also that it is limited to the syntax of the running Python version, but many options exist for running any specific verion of Python.
 
+`pfst` does basic validation but will not prevent you from burning yourself if you really want to.
+
 # Examples
 
 ```py
