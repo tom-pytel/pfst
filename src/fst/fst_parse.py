@@ -51,6 +51,26 @@ def _offset_linenos(ast: AST, delta: int) -> AST:
     return ast
 
 
+def _fix_unparenthesized_tuple_parsed_parenthesized(src: str, ast: AST):
+    elts           = ast.elts
+    ast.lineno     = (e0 := elts[0]).lineno
+    ast.col_offset = e0.col_offset
+    lines          = src.split('\n')
+    end_ln         = (e_1 := elts[-1]).end_lineno - 2  # -2 because of extra line introduced in parse
+    end_col        = len(lines[end_ln].encode()[:e_1.end_col_offset].decode())  # bistr(lines[end_ln]).b2c(e_1.end_col_offset)
+
+    if (not (code := _next_src(lines, end_ln, end_col, ast.end_lineno - 2, 0x7fffffffffffffff)) or  # if nothing following then last element is ast end
+        not code.src.startswith(',')  # if no comma then last element is ast end
+    ):
+        ast.end_lineno     = e_1.end_lineno
+        ast.end_col_offset = e_1.end_col_offset
+
+    else:
+        end_ln, end_col, _ = code
+        ast.end_lineno     = end_ln + 2
+        ast.end_col_offset = len(lines[end_ln][:end_col + 1].encode())
+
+
 def _code_as_op(code: Code, ast_type: type[AST], parse_params: dict, parse: Callable[['FST', Code], 'FST'],
                 opstr2cls: dict[str, type[AST]], opcls2str: dict[type[AST], str] = OPCLS2STR) -> 'FST':
     """Convert `code` to an operation `FST` if possible."""
@@ -397,28 +417,10 @@ def _parse_expr(src: str, parse_params: dict = {}) -> AST:
 
     else:
         if isinstance(ast, Tuple) and ast.lineno == 1:  # tuple with newlines included grouping pars which are not in source, fix
-            if not (elts := ast.elts):
+            if not ast.elts:
                 raise SyntaxError('expecting expression')
 
-            # we have to do some work to find a possible comma
-
-            ast.lineno     = (e0 := elts[0]).lineno
-            ast.col_offset = e0.col_offset
-            lines          = src.split('\n')
-            end_ln         = (e_1 := elts[-1]).end_lineno - 2  # -2 because of extra line introduced in parse
-            # end_col        = bistr(lines[end_ln]).b2c(e_1.end_col_offset)
-            end_col        = len(lines[end_ln].encode()[:e_1.end_col_offset].decode())
-
-            if (not (code := _next_src(lines, end_ln, end_col, ast.end_lineno - 2, 0x7fffffffffffffff)) or  # if nothing following then last element is ast end
-                not code.src.startswith(',')  # if no comma then last element is ast end
-            ):
-                ast.end_lineno     = e_1.end_lineno
-                ast.end_col_offset = e_1.end_col_offset
-
-            else:
-                end_ln, end_col, _ = code
-                ast.end_lineno     = end_ln + 2
-                ast.end_col_offset = len(lines[end_ln][:end_col + 1].encode())
+            _fix_unparenthesized_tuple_parsed_parenthesized(src, ast)  # we have to do some work to find a possible comma
 
     return _offset_linenos(_validate_indent(src, ast), -1)
 
@@ -678,12 +680,18 @@ def _parse_withitem(src: str, parse_params: dict = {}) -> AST:
 
     items = ast_parse(f'with (\n{src}): pass', **parse_params).body[0].items
 
-    if len(items) != 1:
-        if all(not i.optional_vars for i in items):  # may be unparenthesized Tuple
+    if len(items) != 1:  # unparenthesized Tuple
+        if all(not i.optional_vars for i in items):
             items = ast_parse(f'with ((\n{src})): pass', **parse_params).body[0].items
 
         if len(items) != 1:
             raise NodeError('expecting single withitem')
+
+        ast = items[0].context_expr
+
+        assert isinstance(ast, Tuple)
+
+        _fix_unparenthesized_tuple_parsed_parenthesized(src, ast)
 
     return _offset_linenos(_validate_indent(src, items[0]), -1)
 

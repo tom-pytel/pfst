@@ -1771,6 +1771,9 @@ class FST:
         and brackets to unbracketed `MatchSequence` adjusting the node location. If dealing with a `Starred` then the
         parentheses are applied to the child.
 
+        **WARNING!** This function doesn't do any validation. So if you parenthesize something that shouldn't be
+        parenthesized, and you wind up poking an eye out, that's on you.
+
         **Parameters:**
         - `force`: If `True` then will add another layer of parentheses regardless if any already present.
         - `whole`: If at root then parenthesize whole source instead of just node, if `False` then only node.
@@ -1824,6 +1827,9 @@ class FST:
         """Remove all parentheses from node if present. Normally removes just grouping parentheses but can also remove
         `Tuple` parentheses and `MatchSequence` parentheses or brackets if `node=True`. If dealing with a `Starred` then
         the parentheses are checked in and removed from the child.
+
+        **WARNING!** This function doesn't do any validation. So if you unparenthesize something that shouldn't be
+        unparenthesized, and you wind up poking an eye out, that's on you.
 
         **Parameters:**
         - `node`: If `True` then will remove parentheses from a parenthesized `Tuple` and parentheses / brackets from
@@ -3082,6 +3088,7 @@ class FST:
         _maybe_fix_tuple,
         _maybe_fix_set,
         _maybe_fix_elif,
+        _maybe_fix_with_items,
         _maybe_fix_copy,
         _touch,
         _sanitize,

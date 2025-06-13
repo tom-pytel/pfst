@@ -1107,6 +1107,22 @@ def _maybe_fix_elif(self: 'FST'):
         self._put_src(None, ln, col, ln, col + 2, False)
 
 
+def _maybe_fix_with_items(self: 'FST'):
+    """If `Tuple` only element in `items` then add appropriate parentheses."""
+
+    # assert isinstance(self.a, (With, AsyncWith))
+
+    if (len(items := self.items) == 1 and
+        not (i0a := items[0].a).optional_vars and
+        (is_par := (cef := i0a.context_expr.f).is_parenthesized_tuple()) is not None
+    ):
+        if not is_par:
+            cef._parenthesize_node()
+
+        if len(_prev_pars(self.root.lines, self.ln, self.col, cef.ln, cef.col)) == 1:  # no pars between start of `with` and start of tuple?
+            cef._parenthesize_grouping()  # these will wind up belonging to outer With
+
+
 def _maybe_fix_copy(self: 'FST', pars: bool = True):
     """Maybe fix source and `ctx` values for cut or copied nodes (to make subtrees parsable if the source is not after
     the operation). If cannot fix or ast is not parsable by itself then ast will be unchanged. Is meant to be a quick

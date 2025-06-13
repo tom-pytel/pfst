@@ -905,6 +905,15 @@ def _put_one_ClassDef_bases(self: 'FST', code: Code | None, idx: int | None, fie
     return _put_one_exprish_required(self, code, idx, field, child, static, 2, **options)
 
 
+def _put_one_with_items(self: 'FST', code: Code | None, idx: int | None, field: str, child: None, static: onestatic,
+                        **options) -> 'FST':
+    ret = _put_one_exprish_required(self, code, idx, field, child, static, **options)
+
+    self._maybe_fix_with_items()
+
+    return ret
+
+
 def _put_one_Lambda_arguments(self: 'FST', code: Code | None, idx: int | None, field: str, child: AST,
                               static: onestatic, **options) -> 'FST':
     """Put Lambda.arguments. Does not have location if there are no arguments."""
@@ -1034,11 +1043,8 @@ def _put_one_withitem_context_expr(self: 'FST', code: Code | None, idx: int | No
 
     ret = _put_one_exprish_optional(self, code, idx, field, child, static, **options)
 
-    if ((parent := self.parent) and isinstance(parenta := parent.a, (With, AsyncWith)) and len(parenta.items) == 1 and
-        not (a := self.a).optional_vars and isinstance((ce := a.context_expr), Tuple) and
-        len(_prev_pars(self.root.lines, parent.ln, parent.col, (cef := ce.f).ln, cef.col)) == 1  # no pars between start of `with` and start of tuple? (which will be parenthesized due to precedence rules)
-    ):
-        cef._parenthesize_grouping()
+    if (parent := self.parent) and isinstance(parent.a, (With, AsyncWith)):
+        parent._maybe_fix_with_items()
 
     return ret
 
@@ -1050,11 +1056,8 @@ def _put_one_withitem_optional_vars(self: 'FST', code: Code | None, idx: int | N
 
     ret = _put_one_exprish_optional(self, code, idx, field, child, static, **options)
 
-    if (code is None and (parent := self.parent) and isinstance(parenta := parent.a, (With, AsyncWith)) and
-        len(parenta.items) == 1 and (f := self.a.context_expr.f).is_parenthesized_tuple() and
-        len(_prev_pars(self.root.lines, parent.ln, parent.col, f.ln, f.col)) == 1  # no pars between start of `with` and start of parenthesized tuple?
-    ):
-        f._parenthesize_grouping()
+    if (parent := self.parent) and isinstance(parent.a, (With, AsyncWith)):
+        parent._maybe_fix_with_items()
 
     return ret
 
@@ -2050,7 +2053,7 @@ _PUT_ONE_HANDLERS = {
     (If, 'test'):                         (False, _put_one_exprish_required, _onestatic_expr_required), # expr
     (If, 'body'):                         (True,  None, None), # stmt*
     (If, 'orelse'):                       (True,  None, None), # stmt*
-    (With, 'items'):                      (True,  _put_one_exprish_required, _onestatic_withitem_required), # withitem*
+    (With, 'items'):                      (True,  _put_one_with_items, _onestatic_withitem_required), # withitem*
     (With, 'body'):                       (True,  None, None), # stmt*
     (AsyncWith, 'items'):                 (True,  _put_one_exprish_required, _onestatic_withitem_required), # withitem*
     (AsyncWith, 'body'):                  (True,  None, None), # stmt*

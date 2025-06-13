@@ -9482,6 +9482,23 @@ a
         self.assertEqual('class cls(*x): pass', FST('class cls(a): pass').bases[0].replace('*x', raw=False).root.src)
         self.assertEqual('call(*x)', FST('call(a)').args[0].replace('*x', raw=False).root.src)
 
+        # lone With.items tuple
+
+        self.assertEqual('with ((x, y)): pass', (f := FST('with a: pass').items[0].replace('x, y', raw=False).root).src)
+        f.verify()
+
+        self.assertEqual('with ((x, y)): pass', (f := FST('with a: pass').items[0].replace('(x, y)', raw=False).root).src)
+        f.verify()
+
+        self.assertEqual('with ((x, y)): pass', (f := FST('with a: pass').items[0].replace(FST('x, y', withitem), raw=False).root).src)
+        f.verify()
+
+        self.assertEqual('with ((x, y)): pass', (f := FST('with a: pass').items[0].replace(FST('(x, y)', withitem), raw=False).root).src)
+        f.verify()
+
+        self.assertEqual('with ((x, y)): pass', (f := FST('with a: pass').items[0].replace(FST('(x, y)', withitem).a, raw=False).root).src)
+        f.verify()
+
     def test_put_one_pars(self):
         f = FST('a = b', 'exec').body[0]
         g = FST('(i := j)', 'exec').body[0].value.copy(pars=False)
