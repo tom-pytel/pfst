@@ -1090,6 +1090,19 @@ def _put_one_Dict_keys(self: 'FST', code: _PutOneCode, idx: int | None, field: s
     return ret
 
 
+def _put_one_arg_annotation(self: 'FST', code: _PutOneCode, idx: int | None, field: str, child: AST,
+                            static: onestatic, **options) -> 'FST':
+    """Allow Starred in vararg arg annotation in py 3.11+."""
+
+    if not self.parent or self.pfield.name == 'vararg':
+        static = onestatic(_one_info_arg_annotation, _restrict_fmtval_slice)
+
+    return _put_one_exprish_optional(self, code, idx, field, child, static, **options)
+
+if _PY_VERSION < (3, 11):
+    _put_one_arg_annotation = _put_one_exprish_optional
+
+
 def _put_one_withitem_context_expr(self: 'FST', code: _PutOneCode, idx: int | None, field: str, child: str,
                                    static: onestatic, **options) -> str:
     """If put a single context_expr `Tuple` with no optional_vars then need to add grouping parentheses if not present
@@ -2212,7 +2225,7 @@ _PUT_ONE_HANDLERS = {
     (arguments, 'kw_defaults'):           (False, _put_one_exprish_optional, onestatic(_one_info_arguments_kw_defaults, _restrict_default)), # expr*
     (arguments, 'kwarg'):                 (False, _put_one_exprish_optional, onestatic(_one_info_arguments_kwarg, _restrict_default, code_as=_code_as_arg)), # arg?
     (arg, 'arg'):                         (False, _put_one_identifier_required, _onestatic_identifier_required), # identifier
-    (arg, 'annotation'):                  (False, _put_one_exprish_optional, onestatic(_one_info_arg_annotation, _restrict_fmtval_slice)), # expr?  - exclude [Lambda, Yield, YieldFrom, Await, NamedExpr]?
+    (arg, 'annotation'):                  (False, _put_one_arg_annotation, onestatic(_one_info_arg_annotation, _restrict_default)), # expr?  - exclude [Lambda, Yield, YieldFrom, Await, NamedExpr]?
     (keyword, 'arg'):                     (False, _put_one_keyword_arg, onestatic(_one_info_keyword_arg, _restrict_default, code_as=_code_as_identifier)), # identifier?
     (keyword, 'value'):                   (False, _put_one_exprish_required, _onestatic_expr_required), # expr
     (alias, 'name'):                      (False, _put_one_identifier_required, onestatic(_one_info_identifier_alias, _restrict_default, code_as=_code_as_identifier_alias)), # identifier  - alias star or dotted not valid for all uses but being general here (and lazy, don't feel like checking parent)

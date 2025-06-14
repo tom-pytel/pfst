@@ -24,7 +24,7 @@ class _Reconcile:
 
             if pfname == 'ctx':
                 assert isinstance(node, expr_context)
-                assert parent  # because really, an expr_context at the top level???
+                assert parent  # failing this should be impossible
 
                 setattr(parent.a, 'ctx', FST(node.__class__(), parent, pfield).a)  # __class__() because could be shared instance from ast.parse()
 
@@ -57,7 +57,7 @@ class _Reconcile:
 
         try:
             for field, child in iter_fields(node):
-                if field in ('ctx', 'str'):  # redundant or
+                if field in ('ctx', 'str'):  # redundant or contradictory
                     continue
 
                 if isinstance(child, AST):

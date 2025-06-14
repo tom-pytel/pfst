@@ -9689,6 +9689,15 @@ a
         self.assertEqual('with ((x, y)): pass', (f := FST('with a: pass').items[0].replace(FST('(x, y)', withitem).a, raw=False).root).src)
         f.verify()
 
+        # starred annotation in FunctionDef
+
+        self.assertRaises(NodeError, FST('def f(a): pass').args.args[0].put, '*ann', 'annotation', raw=False)
+
+        if _PY_VERSION < (3, 11):
+            self.assertRaises(NodeError, FST('def f(*a): pass').args.vararg.put, '*ann', 'annotation', raw=False)
+        else:
+            self.assertEqual('def f(*a: *ann): pass', FST('def f(*a): pass').args.vararg.put('*ann', 'annotation', raw=False).root.src)
+
     def test_put_one_pars(self):
         f = FST('a = b', 'exec').body[0]
         g = FST('(i := j)', 'exec').body[0].value.copy(pars=False)
@@ -11072,6 +11081,9 @@ match a:
         f = o.reconcile(m)
         self.assertEqual('i = (x,\n # comment\ny)', f.src)
         f.verify()
+
+
+
 
 
 
