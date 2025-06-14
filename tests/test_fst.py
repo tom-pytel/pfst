@@ -11067,7 +11067,6 @@ match a:
         # AST from same tree moved around
 
         m = (o := FST('i = a')).mark()
-
         o.a.value = Starred(value=o.a.value)
         f = o.reconcile(m)
         self.assertEqual('i = *a', f.src)
@@ -11076,10 +11075,51 @@ match a:
         # FST from another tree
 
         m = (o := FST('i = 1')).mark()
-
         o.a.value = FST('(x,\n # comment\ny)').a
         f = o.reconcile(m)
         self.assertEqual('i = (x,\n # comment\ny)', f.src)
+        f.verify()
+
+        # delete one from non-slice
+
+        m = (o := FST('def f() -> int: pass')).mark()
+        o.a.returns = None
+        f = o.reconcile(m)
+        self.assertEqual('def f(): pass', f.src)
+        f.verify()
+
+        # add nonexistent node from pure AST
+
+        m = (o := FST('def f(): int')).mark()
+        o.a.returns = Name(id='str')
+        f = o.reconcile(m)
+        self.assertEqual('def f() -> str: int', f.src)
+        f.verify()
+
+        # add nonexistent node from same tree
+
+        m = (o := FST('def f(): int')).mark()
+        o.a.returns = o.a.body[0].value
+        f = o.reconcile(m)
+        self.assertEqual('def f() -> int: int', f.src)
+        f.verify()
+
+        # replace root from same tree
+
+        m = (o := FST('def f(): int')).mark()
+        o.a = o.a.body[0].value
+        f = o.reconcile(m)
+        self.assertIsInstance(f.a, Name)
+        self.assertEqual('int', f.src)
+        f.verify()
+
+        # replace root from pure AST
+
+        m = (o := FST('def f(): int')).mark()
+        o.a = Name(id='hello')
+        f = o.reconcile(m)
+        self.assertIsInstance(f.a, Name)
+        self.assertEqual('hello', f.src)
         f.verify()
 
 

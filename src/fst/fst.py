@@ -1371,6 +1371,11 @@ class FST:
         passed as an `FST` then it should be considered "consumed" after this function returns and is no logner valid,
         even on failure. `AST` is copied.
 
+        **WARNING!** The original `self` node may be invalidated during the operation if using raw mode (either
+        specifically or as a fallback), so make sure to swap it out for the return value of this function if you will
+        keep using the variable you called this method on. It will be changed accordingly in the tree, just the
+        immediate variable.
+
         **Parameters:**
         - `code`: The node to put as an `FST` (must be root node), `AST`, a string or list of line strings. If putting
             to an identifier field then this should be a string and it will be taken literally (no parsing). If putting
@@ -1514,6 +1519,11 @@ class FST:
         """Put a slice of nodes to `self` if possible.  The node is passed as an existing top-level `FST`, `AST`, string
         or list of string lines. If passed as an `FST` then it should be considered "consumed" after this function
         returns and is no logner valid, even on failure. `AST` is copied.
+
+        **WARNING!** The original `self` node may be invalidated during the operation if using raw mode (either
+        specifically or as a fallback), so make sure to swap it out for the return value of this function if you will
+        keep using the variable you called this method on. It will be changed accordingly in the tree, just the
+        immediate variable.
 
         **Parameters:**
         - `code`: The slice to put as an `FST` (must be root node), `AST`, a string or list of line strings.

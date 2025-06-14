@@ -8,38 +8,54 @@ from .shared import NodeError, astfield
 
 
 class _Reconcile:
+    """The strategy is to make a copy of the original tree and then mutate it node by node according to the changes
+    made."""
+
+    work: 'FST'  ; """The `FST` tree that was operated on and will have `AST` replacements."""
+    mark: 'FST'  ; """The marked `FST` tree to use as reference."""
+    out:  'FST'  ; """The output `FST` tree to build up and return."""
+
     def __init__(self, work: 'FST', mark: 'FST'):
         self.work = work
         self.mark = mark
         self.out  = mark.copy()
 
-    def on_path(self, node: AST, marka: AST, outf: 'FST', parent: Optional['FST'] = None,
-                pfield: astfield | None = None, path: list[astfield] = []):
+    def from_fst(self, node: AST, out_parent: Optional['FST'] = None, parent: Optional['FST'] = None,
+                 pfield: astfield | None = None):
         work_root     = self.work
         mark_root     = self.mark
         pfname, pfidx = pfield if pfield else (None, None)
 
-        if not (nodef := getattr(node, 'f', None)) or nodef.root is not work_root:  # pure AST from off path if no '.f', or FST from different tree (in which case we can not trust it at all and attempting FST operations could leave our tree in an undefined state)
-            if nodef:
-                outf.replace(nodef.copy())  # we trust that it is part of a valid tree, if not its the user's fault
+        if not (nodef := getattr(node, 'f', None)) or nodef.root is not work_root:  # pure AST if no '.f' or FST from different tree
+            if nodef:  # FST from different tree, need to verify it before using
+                try:
+                    nodef.verify(reparse=False)  # light verification should be enough
 
-                return  # we don't recurse because it came from unknown tree so if it had AST nodes replaced then we are in undefined territory (if even got here without exception)
+                    copy = nodef.copy()  # another chance for error if invalid
 
+                except Exception:
+                    pass  # verification failed, fall through to pure AST
 
-                # TODO: the above but with checks
+                else:  # we trust that it is valid by here, if not then its the user's fault
+                    if out_parent:
+                        out_parent.put(copy, pfidx, False, pfname)
+                    else:  # because can replace AST at root node which has parent=None
+                        self.out.replace(copy)  # replace root FST doens't change the FST, just its contents
 
+                    return  # no recurse because we wouldn't be at this point if it wasn't a valid full FST without AST replacements
 
-
-            # assert not isinstance(node, FunctionType)  # juuust in case
+            # pure AST
 
             if pfname == 'ctx':
                 assert isinstance(node, expr_context)
-                assert parent  # failing this should be impossible
 
                 setattr(parent.a, 'ctx', FST(node.__class__(), parent, pfield).a)  # __class__() because could be shared instance from ast.parse()
 
             else:
-                outf.replace(node)
+                if out_parent:
+                    out_parent = out_parent.put(node, pfidx, False, pfname)
+                else:
+                    self.out.replace(node)
 
 
             # TODO: recurse and maybe find things we have source for
@@ -47,18 +63,21 @@ class _Reconcile:
 
             return
 
-        if nodef.parent is not parent or nodef.pfield != pfield:  # FST from off path, different parent of pfield, was moved around in the tree
-            outf.replace(mark_root.child_from_path(work_root.child_path(nodef)).copy())  # copy from known good copy of tree
+        # FST node from original tree
 
+        markf = mark_root.child_from_path(work_root.child_path(nodef))
+        marka = markf.a
 
-            # TODO: recurse
+        if nodef.parent is not parent or nodef.pfield != pfield:  # FST from off path, different parent or pfield, was moved around in the tree
+            copy = markf.copy()  # copy from known good copy of tree
 
+            if out_parent:
+                out_parent = out_parent.put(copy, pfidx, False, pfname)
+            else:
+                self.out.replace(copy)
 
-            raise NotImplementedError
-
-        # FST matching path
-
-        outa = outf.a
+        outa = pfield.get(out_parent.a) if out_parent else self.out.a
+        outf = outa.f
 
         try:
             for field, child in iter_fields(node):
@@ -68,29 +87,30 @@ class _Reconcile:
                 if isinstance(child, AST):
                     child_pfield = astfield(field)
 
-                    self.on_path(child, child_pfield.get(marka), child_pfield.get(outa).f,
-                                           nodef, child_pfield, path + [child_pfield])
+                    self.from_fst(child, outf, nodef, child_pfield)
 
-                elif not isinstance(child, list):  # primitive
+                elif not isinstance(child, list):  # primitive, or None to delete possibly AST child
                     if child != getattr(marka, field):
-                        outf.put(child, field)
+                        outf.put(child, field=field)
 
                 else:  # slice
                     for i, c in enumerate(child):
                         c_pfield = astfield(field, i)
 
-                        self.on_path(c, c_pfield.get(marka), c_pfield.get(outa).f,
-                                               nodef, c_pfield, path + [c_pfield])
+                        self.from_fst(c, outf, nodef, c_pfield)
 
 
 
-                    # TODO: slices
+                    # TODO: slices PROPERLY!!!
 
 
                     # raise NotImplementedError
 
-        except (NodeError, SyntaxError, NotImplementedError):
-            outf.replace(node)  # something failed below, so try replace whole ast
+        except (NodeError, SyntaxError, ValueError, NotImplementedError):  # something failed below, so try replace whole ast
+            if outf:
+                outf.replace(node)
+            else:
+                parent.put(node, pfidx, field=pfname)
 
 
 # ----------------------------------------------------------------------------------------------------------------------
@@ -127,7 +147,7 @@ def reconcile(self: 'FST', mark: 'FST') -> 'FST':
     rec = _Reconcile(self, mark)
 
     with self.option(raw=False):
-        rec.on_path(self.a, mark.a, rec.out)
+        rec.from_fst(self.a)
 
     return rec.out
 

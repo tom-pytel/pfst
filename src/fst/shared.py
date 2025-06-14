@@ -219,13 +219,14 @@ class astfield(NamedTuple):
 
         return getattr(parent, self.name) if self.idx is None else getattr(parent, self.name)[self.idx]
 
-    def get_no_raise(self, parent: AST) -> Any:
-        """Get child node at this field in the given `parent`. Return `False` if not found instead of raising
-        `AttributError` or `IndexError`."""
+    def get_no_raise(self, parent: AST, default: Any = False) -> Any:
+        """Get child node at this field in the given `parent`. Return `default` if not found instead of raising
+        `AttributError` or `IndexError`, `False` works well because not normally found locations where `AST` nodes can
+         reside in `AST` trees."""
 
         return (
-            getattr(parent, self.name, False) if (idx := self.idx) is None else
-            False if (body := getattr(parent, self.name, False)) is False or idx >= len(body) else
+            getattr(parent, self.name, default) if (idx := self.idx) is None else
+            default if (body := getattr(parent, self.name, False)) is False or idx >= len(body) else
             body[idx])
 
     def set(self, parent: AST, child: AST):
