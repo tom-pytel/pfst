@@ -13,14 +13,24 @@ class _Reconcile:
         self.mark = mark
         self.out  = mark.copy()
 
-    def from_original_fst(self, node: AST, marka: AST, outf: 'FST', parent: Optional['FST'] = None,
-                          pfield: astfield | None = None, path: list[astfield] = []):
+    def on_path(self, node: AST, marka: AST, outf: 'FST', parent: Optional['FST'] = None,
+                pfield: astfield | None = None, path: list[astfield] = []):
         work_root     = self.work
         mark_root     = self.mark
         pfname, pfidx = pfield if pfield else (None, None)
 
-        if not (nodef := getattr(node, 'f', None)):  # if no '.f' then definitely doesn't match
-            assert not isinstance(node, FunctionType)  # juuust in case
+        if not (nodef := getattr(node, 'f', None)) or nodef.root is not work_root:  # pure AST from off path if no '.f', or FST from different tree (in which case we can not trust it at all and attempting FST operations could leave our tree in an undefined state)
+            if nodef:
+                outf.replace(nodef.copy())  # we trust that it is part of a valid tree, if not its the user's fault
+
+                return  # we don't recurse because it came from unknown tree so if it had AST nodes replaced then we are in undefined territory (if even got here without exception)
+
+
+                # TODO: the above but with checks
+
+
+
+            # assert not isinstance(node, FunctionType)  # juuust in case
 
             if pfname == 'ctx':
                 assert isinstance(node, expr_context)
@@ -37,13 +47,8 @@ class _Reconcile:
 
             return
 
-        if nodef.parent is not parent or nodef.pfield != pfield:  # different parent of pfield, was moved around in the tree or is FST from somewhere else
-            if nodef.root is not work_root:  # from different tree?
-                outf.replace(nodef.copy())  # we trust that it is part of a valid tree, if not its the user's fault
-
-                return  # we don't recurse because it came from unknown tree so if it had AST nodes replaced then we are in undefined territory (if even got here without exception)
-
-            outf.replace(mark_root.child_from_path(work_root.child_path(nodef)).copy())
+        if nodef.parent is not parent or nodef.pfield != pfield:  # FST from off path, different parent of pfield, was moved around in the tree
+            outf.replace(mark_root.child_from_path(work_root.child_path(nodef)).copy())  # copy from known good copy of tree
 
 
             # TODO: recurse
@@ -51,7 +56,7 @@ class _Reconcile:
 
             raise NotImplementedError
 
-        # part of original tree, we assume it matches mark
+        # FST matching path
 
         outa = outf.a
 
@@ -63,7 +68,7 @@ class _Reconcile:
                 if isinstance(child, AST):
                     child_pfield = astfield(field)
 
-                    self.from_original_fst(child, child_pfield.get(marka), child_pfield.get(outa).f,
+                    self.on_path(child, child_pfield.get(marka), child_pfield.get(outa).f,
                                            nodef, child_pfield, path + [child_pfield])
 
                 elif not isinstance(child, list):  # primitive
@@ -74,7 +79,7 @@ class _Reconcile:
                     for i, c in enumerate(child):
                         c_pfield = astfield(field, i)
 
-                        self.from_original_fst(c, c_pfield.get(marka), c_pfield.get(outa).f,
+                        self.on_path(c, c_pfield.get(marka), c_pfield.get(outa).f,
                                                nodef, c_pfield, path + [c_pfield])
 
 
@@ -122,7 +127,7 @@ def reconcile(self: 'FST', mark: 'FST') -> 'FST':
     rec = _Reconcile(self, mark)
 
     with self.option(raw=False):
-        rec.from_original_fst(self.a, mark.a, rec.out)
+        rec.on_path(self.a, mark.a, rec.out)
 
     return rec.out
 

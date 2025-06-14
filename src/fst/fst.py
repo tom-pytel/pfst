@@ -1087,14 +1087,18 @@ class FST:
 
         return self._dump(st)
 
-    def verify(self, mode: Mode | None = None, raise_: bool = True) -> Optional[Self]:
-        """Sanity check, reparse source and make sure parsed tree matches currently stored tree (locations and
-        everything).
+    def verify(self, mode: Mode | None = None, reparse: bool = True, *, raise_: bool = True) -> Optional[Self]:
+        """Sanity check. Walk the tree and make sure all `AST`s have corresponding `FST` nodes with valid parent / child
+        links, then (optionally) reparse source and make sure parsed tree matches currently stored tree (locations and
+        everything). The reparse can only be carried out on root nodes but the link validation can be done on any level.
 
         **Parameters:**
         - `mode`: Parse mode to use, otherwise if `None` then use the top level AST node type for the mode. Depending on
             how this is set will determine whether the verification is checking if is parsable by python (`'exec'` for
             example), or if the node itself is just in a valid state (where `None` is good). See `fst.shared.Mode`.
+        - `reparse`: Whether to reparse the source and compare ASTs (including location). Otherwise the check is limited
+            to a structure check that all children have `FST` nodes which are all liked correctly to their parents.
+            `reparse=True` only allowed on root node.
         - `raise_`: Whether to raise an exception on verify failed or return `None`.
 
         **Returns:**
@@ -1112,10 +1116,38 @@ class FST:
         ```
         """
 
-        if not self.is_root:
-            raise RuntimeError('can only be called on root node')
+        # validate tree links
 
-        ast          = self.a
+        ast   = self.a
+        stack = [(ast, self.parent, self.pfield)]  # [(AST, parent FST, pfield), ...]
+
+        while stack:
+            a, parent, pfield = stack.pop()
+
+            if not (f := getattr(a, 'f', None)) or f.parent is not parent or f.pfield != pfield:
+                path   = self.child_path(parent) + [pfield] if a is not ast else []
+                path   = '.'.join(af.name if (i := af.idx) is None else f'{af.name}[{i}]' for af in path)
+                reason = ', no AST.f node' if not f else ', bad parent' if f.parent is not parent else ', bad pfield'
+
+                if raise_:
+                    raise WalkFail(f'invalid child {a.__class__.__name__} at {path if path else "self"}{reason}')
+                else:
+                    return None
+
+            for field, child in iter_fields(a):
+                if isinstance(child, AST):
+                    stack.append((child, f, astfield(field)))
+                elif isinstance(child, list):
+                    stack.extend((c, f, astfield(field, i)) for i, c in enumerate(child) if isinstance(c, AST))
+
+        if not reparse:
+            return self
+
+        # reparse
+
+        if not self.is_root:
+            raise RuntimeError('verify with reparse can only be called on root node')
+
         parse_params = self.parse_params
 
         try:
