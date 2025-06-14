@@ -8,8 +8,8 @@ from .shared import NodeError, astfield
 
 
 class _Reconcile:
-    """The strategy is to make a copy of the original tree and then mutate it node by node according to the changes
-    made."""
+    """The strategy is to make a copy of the original tree (mark) and then mutate it node by node according to the
+    changes detected between the working tree and the marked reference tree."""
 
     work: 'FST'  ; """The `FST` tree that was operated on and will have `AST` replacements."""
     mark: 'FST'  ; """The marked `FST` tree to use as reference."""
@@ -20,97 +20,136 @@ class _Reconcile:
         self.mark = mark
         self.out  = mark.copy()
 
-    def from_fst(self, node: AST, out_parent: Optional['FST'] = None, parent: Optional['FST'] = None,
+    def recurse_ast(self, node: AST, nodef: Optional['FST'], outa: AST):
+        outf = outa.f
+
+        for field, child in iter_fields(node):
+            if field in ('ctx', 'str'):  # redundant or possibly contradictory
+                continue
+
+            if isinstance(child, AST):  # AST, but out may not have anything at this position
+                self.from_ast(child, outf, nodef, astfield(field))
+
+            elif isinstance(child, list):
+                for i, c in enumerate(child):
+                    self.from_ast(c, outf, nodef, astfield(field, i))
+
+    def recurse_fst(self, node: AST, outa: AST):
+        outf  = outa.f
+        nodef = node.f
+
+        for field, child in iter_fields(node):
+            if field in ('ctx', 'str'):  # redundant or possibly contradictory
+                continue
+
+            if isinstance(child, AST):  # AST, but out may not have anything at this position
+                self.from_fst(child, outf, nodef, astfield(field))
+
+            elif not isinstance(child, list):  # primitive, or None to delete possibly AST child
+                if child != getattr(outa, field):
+                    outf.put(child, field=field)
+
+            else:  # slice
+
+
+                # TODO: initial special stuff to move around blocks of slice if possible
+
+
+                if len(child) != len(getattr(outa, field)):
+                    raise NotImplementedError(f'different length slice field {field!r}')
+
+                for i, c in enumerate(child):
+                    self.from_fst(c, outf, nodef, astfield(field, i))
+
+
+                # TODO: slices PROPERLY!!!
+
+
+
+
+    def from_ast(self, node: AST, out_parent: Optional['FST'] = None, parent: Optional['FST'] = None,
                  pfield: astfield | None = None):
+        """Coming from an unknown AST node."""
+
         work_root     = self.work
-        mark_root     = self.mark
         pfname, pfidx = pfield if pfield else (None, None)
 
         if not (nodef := getattr(node, 'f', None)) or nodef.root is not work_root:  # pure AST if no '.f' or FST from different tree
             if nodef:  # FST from different tree, need to verify it before using
                 try:
-                    nodef.verify(reparse=False)  # light verification should be enough
-
-                    copy = nodef.copy()  # another chance for error if invalid
-
+                    copy = nodef.verify(reparse=False).copy()  # light verification should be enough
                 except Exception:
-                    pass  # verification failed, fall through to pure AST
+                    pass  # we don't put here because this node was already included in a pure AST put above, we simply failed to add formatting
 
                 else:  # we trust that it is valid by here, if not then its the user's fault
-                    if out_parent:
-                        out_parent.put(copy, pfidx, False, pfname)
-                    else:  # because can replace AST at root node which has parent=None
-                        self.out.replace(copy)  # replace root FST doens't change the FST, just its contents
+                    out_parent.put(copy, pfidx, False, pfname)
 
                     return  # no recurse because we wouldn't be at this point if it wasn't a valid full FST without AST replacements
 
             # pure AST
 
-            if pfname == 'ctx':
-                assert isinstance(node, expr_context)
-
-                setattr(parent.a, 'ctx', FST(node.__class__(), parent, pfield).a)  # __class__() because could be shared instance from ast.parse()
-
-            else:
-                if out_parent:
-                    out_parent = out_parent.put(node, pfidx, False, pfname)
-                else:
-                    self.out.replace(node)
-
-
-            # TODO: recurse and maybe find things we have source for
-
+            self.recurse_ast(node, nodef, pfield.get(out_parent.a))
 
             return
 
         # FST node from original tree
 
-        markf = mark_root.child_from_path(work_root.child_path(nodef))
-        marka = markf.a
-
-        if nodef.parent is not parent or nodef.pfield != pfield:  # FST from off path, different parent or pfield, was moved around in the tree
-            copy = markf.copy()  # copy from known good copy of tree
-
-            if out_parent:
-                out_parent = out_parent.put(copy, pfidx, False, pfname)
-            else:
-                self.out.replace(copy)
-
-        outa = pfield.get(out_parent.a) if out_parent else self.out.a
-        outf = outa.f
+        copy       = self.mark.child_from_path(work_root.child_path(nodef)).copy()
+        out_parent = out_parent.put(copy, pfidx, False, pfname)  # copy from known good copy of tree
+        outa       = pfield.get(out_parent.a)
 
         try:
-            for field, child in iter_fields(node):
-                if field in ('ctx', 'str'):  # redundant or contradictory
-                    continue
+            self.recurse_fst(node, outa)
+        except (NodeError, SyntaxError, ValueError, NotImplementedError):  # something failed below, so replace whole AST
+            out_parent.put(node, pfidx, False, pfname)  # copy from known good copy of tree
 
-                if isinstance(child, AST):
-                    child_pfield = astfield(field)
+    def from_fst(self, node: AST, out_parent: Optional['FST'] = None, parent: Optional['FST'] = None,
+                 pfield: astfield | None = None):
+        """Coming from a known FST node."""
 
-                    self.from_fst(child, outf, nodef, child_pfield)
+        def replace(code):
+            nonlocal out_parent
 
-                elif not isinstance(child, list):  # primitive, or None to delete possibly AST child
-                    if child != getattr(marka, field):
-                        outf.put(child, field=field)
+            if out_parent:
+                out_parent = out_parent.put(code, pfidx, False, pfname)
+            else:  # because can replace AST at root node which has out_parent=None
+                self.out.replace(code)
 
-                else:  # slice
-                    for i, c in enumerate(child):
-                        c_pfield = astfield(field, i)
+        work_root     = self.work
+        pfname, pfidx = pfield if pfield else (None, None)
 
-                        self.from_fst(c, outf, nodef, c_pfield)
+        if not (nodef := getattr(node, 'f', None)) or nodef.root is not work_root:  # pure AST if no '.f' or FST from different tree
+            if nodef:  # FST from different tree, need to verify it before using
+                try:
+                    copy = nodef.verify(reparse=False).copy()  # light verification should be enough
+                except Exception:
+                    pass  # verification failed, fall through to pure AST
 
+                else:  # we trust that it is valid by here, if not then its the user's fault
+                    replace(copy)
 
+                    return  # no recurse because we wouldn't be at this point if it wasn't a valid full FST without AST replacements
 
-                    # TODO: slices PROPERLY!!!
+            # pure AST
 
+            replace(node)
 
-                    # raise NotImplementedError
+            self.recurse_ast(node, nodef, pfield.get(out_parent.a) if out_parent else self.out.a)
 
-        except (NodeError, SyntaxError, ValueError, NotImplementedError):  # something failed below, so try replace whole ast
-            if outf:
-                outf.replace(node)
-            else:
-                parent.put(node, pfidx, field=pfname)
+            return
+
+        # FST node from original tree
+
+        if nodef.parent is not parent or nodef.pfield != pfield:  # FST from off path, different parent and / or pfield, was moved around in the tree
+            replace(self.mark.child_from_path(work_root.child_path(nodef)).copy())  # copy from known good copy of tree
+
+        outa = pfield.get(out_parent.a) if out_parent else self.out.a
+
+        try:
+            self.recurse_fst(node, outa)
+        except (NodeError, SyntaxError, ValueError, NotImplementedError):  # something failed below, so replace whole AST
+            replace(node)
+
 
 
 # ----------------------------------------------------------------------------------------------------------------------

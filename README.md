@@ -1,14 +1,8 @@
 # Overview
 
-This module exists in order to facilitate quick and easy editing of Python source while preserving formatting. It deals automatically with all the silly nonsense like indentation, parentheses, commas, comments, docstrings, semicolons, line continuations, precedence, decorator @ signs, else vs. elif and lots and lots of niche special cases. It is meant to be a high level way of modifying some code while maintaining the rest of the file unchanged.
+This module exists in order to facilitate quick and easy editing of Python source while preserving formatting. It deals automatically with all the silly nonsense like indentation, parentheses, commas, comments, docstrings, semicolons, line continuations, precedence, decorator @ signs, else vs. elif and lots and lots of Python syntax's niche special cases.
 
-`pfst` provides its own comprehensive format-preserving operations for AST trees, but also allows the AST tree to be changed by anything else outside of its control and can then automatically reconcile the changes with what it knows to preserve formatting where possible.
-
-It works by adding `FST` nodes to existing `AST` nodes as an `.f` attribute which keep extra structure information, the original source, and provides the interface to the source-preserving operations.  The fact that it just extends existing `AST` nodes means that the AST tree can be used as normal anywhere that AST is used, and later `unparsed()` with formatting preserved where it can be. The degree to which formatting is preserved depends on how many operations are executed natively through FST mechanisms and how well FST reconcile works for operations which are not.
-
-`pfst` does not do any parsing of its own but rather relies on the builtin Python parser and unparser so it stays 100% compliant. This means you get perfect parsing but also that it is limited to the syntax of the running Python version, but many options exist for running any specific verion of Python.
-
-`pfst` does basic validation but will not prevent you from burning yourself if you really want to.
+`pfst` provides its own comprehensive format-preserving operations for AST trees, but also allows the AST tree to be changed by anything else outside of its control and can then automatically reconcile the changes with what it knows to preserve formatting where possible. It works by adding `FST` nodes to existing `AST` nodes as an `.f` attribute which keep extra structure information, the original source, and provides the interface to the source-preserving operations. The fact that it just extends existing `AST` nodes means that the `AST` tree can be used as normal anywhere that `AST` is used, and later `unparse()`d with formatting preserved where it can be. The degree to which formatting is preserved depends on how many operations are executed natively through `pfst` mechanisms and how well `FST.reconcile()` works for operations which are not.
 
 # Examples
 
@@ -19,8 +13,12 @@ It works by adding `FST` nodes to existing `AST` nodes as an `.f` attribute whic
 
 
 
+# More detail
 
-## TODO=
+`pfst` does not do any parsing of its own but rather relies on the builtin Python parser and unparser so it stays 100% compliant. This means you get perfect parsing but also that it is limited to the syntax of the running Python version, but many options exist for running any specific verion of Python. `pfst` does basic validation but will not prevent you from burning yourself if you really want to. For example, it won't let you add a `Slice` to a `Tuple` which is not at the top level or already in a `Subscript.slice` field, but you can take a `Tuple` with a `Slice` in it already and put it somewhere else where it doesn't belong.
+
+
+## TODO
 
 * Reconcile.
 

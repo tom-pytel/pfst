@@ -11064,6 +11064,15 @@ match a:
         self.assertEqual("f'{a}'", f.src)
         f.verify()
 
+        # misc change ctx
+
+        m = (o := FST('i')).mark()
+        o.a.ctx = Load()
+        f = o.reconcile(m)
+        self.assertEqual('i', f.src)
+        self.assertIsInstance(f.a.ctx.f, FST)
+        f.verify()
+
         # AST from same tree moved around
 
         m = (o := FST('i = a')).mark()
@@ -11113,6 +11122,15 @@ match a:
         self.assertEqual('int', f.src)
         f.verify()
 
+        # replace root from different tree
+
+        m = (o := FST('def f(): int')).mark()
+        o.a = FST('call()').a
+        f = o.reconcile(m)
+        self.assertIsInstance(f.a, Call)
+        self.assertEqual('call()', f.src)
+        f.verify()
+
         # replace root from pure AST
 
         m = (o := FST('def f(): int')).mark()
@@ -11122,9 +11140,39 @@ match a:
         self.assertEqual('hello', f.src)
         f.verify()
 
+        # simple slice replace
 
+        m = (o := FST('[\n1,  # one\n2,  # two\n3   # three\n]')).mark()
+        o.a.elts[0] = Constant(value=-1)
+        o.a.elts[1] = Constant(value=-2)
+        o.a.elts[2] = Constant(value=-3)
+        f = o.reconcile(m)
+        self.assertEqual('[\n-1,  # one\n-2,  # two\n-3   # three\n]', f.src)
+        f.verify()
 
+        # 2 level pure AST
 
+        m = (o := FST('i = 1')).mark()
+        o.a.value = List(elts=[Name(id='a')])
+        f = o.reconcile(m)
+        self.assertEqual('i = [a]', f.src)
+        f.verify()
+
+        # level 1 pure AST, level 2 from another tree
+
+        m = (o := FST('i = 1')).mark()
+        o.a.value = List(elts=[FST('(a, # yay!\n)').a])
+        f = o.reconcile(m)
+        self.assertEqual('i = [(a, # yay!\n)]', f.src)
+        f.verify()
+
+        # level 1 pure AST, level 2 from same tree
+
+        m = (o := FST('i = (a, # yay!\n)')).mark()
+        o.a.value = List(elts=[o.value.a])
+        f = o.reconcile(m)
+        self.assertEqual('i = [(a, # yay!\n)]', f.src)
+        f.verify()
 
 
 if __name__ == '__main__':
