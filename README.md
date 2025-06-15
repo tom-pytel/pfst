@@ -20,6 +20,8 @@ This module exists in order to facilitate quick and easy editing of Python sourc
 
 ## TODO
 
+This package is not finished but functional enough that it may be useful. Once full slice support is done for everything should improve much, especially `reconcile()`.
+
 * Reconcile.
 
 * Put one to `FormattedValue` / `Interpolation` `conversion` and `format_spec`, `JoinedStr` / `TemplateStr` `values`.

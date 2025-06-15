@@ -604,7 +604,7 @@ class PutOneExpr(Fuzzy):
 
                 dst_exprs.append(f)
 
-                if not f.has_slice:
+                if not f.has_slice():
                     extra_exprs.append(f.copy())
 
         try:

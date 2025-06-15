@@ -288,13 +288,6 @@ class FST:
         return isinstance(self.a, ANONYMOUS_SCOPE)
 
     @property
-    def has_slice(self) -> bool:
-        """Whether self is a `Slice` or a `Tuple` which directly contains any `Slice`."""
-
-        return isinstance(a := self.a, Slice) or (isinstance(a, Tuple) and
-                                                  any(isinstance(e, Slice) for e in a.elts))
-
-    @property
     def has_own_loc(self) -> bool:
         """`True` when the node has its own location which comes directly from AST `lineno` and other location fields.
         Otherwise `False` if no `loc` or `loc` is calculated."""
@@ -1125,14 +1118,14 @@ class FST:
             a, parent, pfield = stack.pop()
 
             if not (f := getattr(a, 'f', None)) or f.parent is not parent or f.pfield != pfield:
+                if not raise_:
+                    return None
+
                 path   = self.child_path(parent) + [pfield] if a is not ast else []
                 path   = '.'.join(af.name if (i := af.idx) is None else f'{af.name}[{i}]' for af in path)
                 reason = ', no AST.f node' if not f else ', bad parent' if f.parent is not parent else ', bad pfield'
 
-                if raise_:
-                    raise WalkFail(f'invalid child {a.__class__.__name__} at {path if path else "self"}{reason}')
-                else:
-                    return None
+                raise WalkFail(f'invalid child {a.__class__.__name__} at {path if path else "self"}{reason}')
 
             for field, child in iter_fields(a):
                 if isinstance(child, AST):
@@ -1198,7 +1191,6 @@ class FST:
             return parent._get_one((pf := self.pfield).idx, pf.name, False, **options)
 
         return FST(copy_ast(self.a), self._lines[:], from_=self, lcopy=False)
-
 
     def cut(self, **options) -> 'FST':
         """Cut out this node to a new top-level tree (if possible), dedenting and fixing as necessary. Cannot cut root
@@ -3095,6 +3087,23 @@ class FST:
         return ((parent := self.parent) and self.pfield.name == 'patterns' and
                 isinstance(parenta := parent.a, MatchClass) and not parenta.kwd_patterns and len(parenta.patterns) == 1)
 
+    def has_slice(self) -> bool:
+        """Whether self is a `Slice` or a `Tuple` which directly contains any `Slice` (parse mode `'sliceelt'`).
+
+        **Examples:**
+        ```py
+        >>> FST('a:b:c', 'slice').has_slice()
+        True
+        >>> FST('a:b:c, d:e', 'slice').has_slice()
+        True
+        >>> FST('a').has_slice()
+        False
+        ```
+        """
+
+        return isinstance(a := self.a, Slice) or (isinstance(a, Tuple) and
+                                                  any(isinstance(e, Slice) for e in a.elts))
+
     # ------------------------------------------------------------------------------------------------------------------
     # Private and other misc stuff
 
@@ -3246,6 +3255,7 @@ class FST:
     )
 
     from .fst_slice import (
+        _is_slice_compatible,
         _get_slice,
         _put_slice,
     )

@@ -6498,7 +6498,7 @@ Module - ROOT 0,0..1,23
 """),
 
 (r"""match a:
- case {1: a, 2: (b), **rest}: pass""", 'body[0].cases[0].pattern', 0, 'patterns', {}, r"""**DEL**""", r"""**NodeError('not implemented yet')**""", r"""
+ case {1: a, 2: (b), **rest}: pass""", 'body[0].cases[0].pattern', 0, 'patterns', {}, r"""**DEL**""", r"""**ValueError('cannot delete MatchMapping.patterns[0]')**""", r"""
 """),
 
 (r"""match a:
@@ -7751,7 +7751,7 @@ Module - ROOT 0,0..0,39
 (r"""(i for j in k async for (i) in j)""", 'body[0].value', -4, 'generators', {}, r"""async for a in b""", r"""**IndexError('index out of range')**""", r"""
 """),
 
-(r"""def f(a: int = 1, b: (str)='', /): pass""", 'body[0].args', 0, 'posonlyargs', {}, r"""**DEL**""", r"""**ValueError('cannot put slice to arguments.posonlyargs')**""", r"""
+(r"""def f(a: int = 1, b: (str)='', /): pass""", 'body[0].args', 0, 'posonlyargs', {}, r"""**DEL**""", r"""**ValueError('cannot delete arguments.posonlyargs[0]')**""", r"""
 """),
 
 (r"""def f(a: int = 1, b: (str)='', /): pass""", 'body[0].args', 0, 'posonlyargs', {}, r"""new""", r"""def f(new = 1, b: (str)='', /): pass""", r"""
@@ -7833,7 +7833,7 @@ Module - ROOT 0,0..0,36
 (r"""def f(a: int = 1, b: (str)='', /): pass""", 'body[0].args', -4, 'posonlyargs', {}, r"""new""", r"""**IndexError('index out of range')**""", r"""
 """),
 
-(r"""def f(a: int = 1, b: (str)=''): pass""", 'body[0].args', 0, 'args', {}, r"""**DEL**""", r"""**ValueError('cannot put slice to arguments.args')**""", r"""
+(r"""def f(a: int = 1, b: (str)=''): pass""", 'body[0].args', 0, 'args', {}, r"""**DEL**""", r"""**ValueError('cannot delete arguments.args[0]')**""", r"""
 """),
 
 (r"""def f(a: int = 1, b: (str)=''): pass""", 'body[0].args', 0, 'args', {}, r"""new""", r"""def f(new = 1, b: (str)=''): pass""", r"""
@@ -7915,7 +7915,7 @@ Module - ROOT 0,0..0,33
 (r"""def f(a: int = 1, b: (str)=''): pass""", 'body[0].args', -4, 'args', {}, r"""new""", r"""**IndexError('index out of range')**""", r"""
 """),
 
-(r"""def f(*, a: int = 1, b: (str)=''): pass""", 'body[0].args', 0, 'kwonlyargs', {}, r"""**DEL**""", r"""**ValueError('cannot put slice to arguments.kwonlyargs')**""", r"""
+(r"""def f(*, a: int = 1, b: (str)=''): pass""", 'body[0].args', 0, 'kwonlyargs', {}, r"""**DEL**""", r"""**ValueError('cannot delete arguments.kwonlyargs[0]')**""", r"""
 """),
 
 (r"""def f(*, a: int = 1, b: (str)=''): pass""", 'body[0].args', 0, 'kwonlyargs', {}, r"""new""", r"""def f(*, new = 1, b: (str)=''): pass""", r"""

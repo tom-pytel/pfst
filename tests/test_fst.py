@@ -11174,6 +11174,85 @@ match a:
         self.assertEqual('i = [(a, # yay!\n)]', f.src)
         f.verify()
 
+        # slice, don't do first because src is at end and don't do second because dst is at end
+
+        m = (o := FST('[1, 2]')).mark()
+        a = o.a.elts[0]
+        o.a.elts[0] = o.a.elts[1]
+        o.a.elts[1] = a
+        f = o.reconcile(m)
+        self.assertEqual('[2, 1]', f.src)
+        f.verify()
+
+        # slice, delete tail
+
+        m = (o := FST('[1, 2, 3, 4]')).mark()
+        del o.a.elts[2:]
+        f = o.reconcile(m)
+        self.assertEqual('[1, 2]', f.src)
+        f.verify()
+
+        m = (o := FST('[1, 2, 3, 4]')).mark()
+        del o.a.elts[:]
+        f = o.reconcile(m)
+        self.assertEqual('[]', f.src)
+        f.verify()
+
+        # slice, swap two from same tree
+
+        m = (o := FST('[1, 2, 3, 4]')).mark()
+        e0 = o.a.elts[0]
+        e1 = o.a.elts[1]
+        o.a.elts[0] = o.a.elts[2]
+        o.a.elts[1] = o.a.elts[3]
+        o.a.elts[2] = e0
+        o.a.elts[3] = e1
+        f = o.reconcile(m)
+        self.assertEqual('[3, 4, 1, 2]', f.src)
+        f.verify()
+
+        # slice, extend from same tree
+
+        m = (o := FST('[1, 2, 3]')).mark()
+        o.a.elts.extend(o.a.elts[:2])
+        f = o.reconcile(m)
+        self.assertEqual('[1, 2, 3, 1, 2]', f.src)
+        f.verify()
+
+        # slice, extend from different tree
+
+        m = (o := FST('[1, 2, 3]')).mark()
+        o.a.elts.extend(FST('[4, 5]').a.elts)
+        f = o.reconcile(m)
+        self.assertEqual('[1, 2, 3, 4, 5]', f.src)
+        f.verify()
+
+        # slice, extend from pure ASTs
+
+        m = (o := FST('[1, 2, 3]')).mark()
+        o.a.elts.extend([Name(id='x'), Name(id='y')])
+        f = o.reconcile(m)
+        self.assertEqual('[1, 2, 3, x, y]', f.src)
+        f.verify()
+
+        m = (o := FST('i = 1\nj = 2\nk = 3')).mark()
+        o.a.body.append(Assign(targets=[Name(id='x')], value=Constant(value=4)))
+        o.a.body.append(Assign(targets=[Name(id='y')], value=Constant(value=5)))
+        f = o.reconcile(m)
+        self.assertEqual('i = 1\nj = 2\nk = 3\nx = 4\ny = 5\n', f.src)
+        f.verify()
+
+        # other
+
+        m = (o := FST('if 1:\n  i = 1\n  j = 2\n  k = 3\nelse:\n  a = 4\n  b = 5\n  c = 6')).mark()
+        body = o.a.body[:]
+        o.a.body[:] = o.a.orelse[1:]
+        o.a.orelse = body * 2
+        f = o.reconcile(m)
+        self.assertEqual('if 1:\n  b = 5\n  c = 6\nelse:\n  i = 1\n  j = 2\n  k = 3\n  i = 1\n  j = 2\n  k = 3\n', f.src)
+        f.verify()
+
+
 
 if __name__ == '__main__':
     import argparse

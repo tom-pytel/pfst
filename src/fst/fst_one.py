@@ -2180,7 +2180,7 @@ _PUT_ONE_HANDLERS = {
     (Compare, 'left'):                    (False, _put_one_exprish_required, _onestatic_expr_required), # expr
     (Compare, 'ops'):                     (False, _put_one_op, onestatic(None, code_as=_code_as_cmpop)), # cmpop*
     (Compare, 'comparators'):             (False, _put_one_exprish_required, _onestatic_expr_required), # expr*
-    (Compare, ''):                        (False, _put_one_Compare_combined, _onestatic_expr_required), # expr*
+    (Compare, ''):                        (True,  _put_one_Compare_combined, _onestatic_expr_required), # expr*
     (Call, 'func'):                       (False, _put_one_exprish_required, _onestatic_expr_required), # expr
     (Call, 'args'):                       (True,  _put_one_Call_args, onestatic(_one_info_exprish_required, _restrict_fmtval_slice, code_as=_code_as_callarg)), # expr*
     (Call, 'keywords'):                   (True,  _put_one_exprish_required, _onestatic_keyword_required), # keyword*
@@ -2217,11 +2217,11 @@ _PUT_ONE_HANDLERS = {
     (ExceptHandler, 'type'):              (False, _put_one_exprish_optional, onestatic(_one_info_ExceptHandler_type, _restrict_default)), # expr?
     (ExceptHandler, 'name'):              (False, _put_one_ExceptHandler_name, onestatic(_one_info_ExceptHandler_name, _restrict_default, code_as=_code_as_identifier)), # identifier?
     (ExceptHandler, 'body'):              (True,  None, None), # stmt*
-    (arguments, 'posonlyargs'):           (True,  _put_one_exprish_required, _onestatic_arg_required), # arg*
-    (arguments, 'args'):                  (True,  _put_one_exprish_required, _onestatic_arg_required), # arg*
+    (arguments, 'posonlyargs'):           (False, _put_one_exprish_required, _onestatic_arg_required), # arg*
+    (arguments, 'args'):                  (False, _put_one_exprish_required, _onestatic_arg_required), # arg*
     (arguments, 'defaults'):              (False, _put_one_exprish_required, _onestatic_expr_required), # expr*
     (arguments, 'vararg'):                (False, _put_one_exprish_optional, onestatic(_one_info_arguments_vararg, _restrict_default, code_as=_code_as_arg)), # arg?
-    (arguments, 'kwonlyargs'):            (True,  _put_one_exprish_required, _onestatic_arg_required), # arg*
+    (arguments, 'kwonlyargs'):            (False, _put_one_exprish_required, _onestatic_arg_required), # arg*
     (arguments, 'kw_defaults'):           (False, _put_one_exprish_optional, onestatic(_one_info_arguments_kw_defaults, _restrict_default)), # expr*
     (arguments, 'kwarg'):                 (False, _put_one_exprish_optional, onestatic(_one_info_arguments_kwarg, _restrict_default, code_as=_code_as_arg)), # arg?
     (arg, 'arg'):                         (False, _put_one_identifier_required, _onestatic_identifier_required), # identifier
@@ -2239,7 +2239,7 @@ _PUT_ONE_HANDLERS = {
     (MatchSingleton, 'value'):            (False, _put_one_constant, onestatic(None, (bool, NoneType))), # constant
     (MatchSequence, 'patterns'):          (True,  _put_one_pattern, _onestatic_pattern_required), # pattern*
     (MatchMapping, 'keys'):               (False, _put_one_exprish_required, onestatic(_one_info_exprish_required, _is_valid_MatchMapping_key)), # expr*  Ops for `-1` or `2+3j`
-    (MatchMapping, 'patterns'):           (True,  _put_one_pattern, _onestatic_pattern_required), # pattern*
+    (MatchMapping, 'patterns'):           (False, _put_one_pattern, _onestatic_pattern_required), # pattern*
     (MatchMapping, 'rest'):               (False, _put_one_identifier_optional, onestatic(_one_info_MatchMapping_rest, _restrict_default, code_as=_code_as_identifier)), # identifier?
     (MatchMapping, ''):                   (True,  None, None), # expr*
     (MatchClass, 'cls'):                  (False, _put_one_exprish_required, onestatic(_one_info_exprish_required, _is_valid_MatchClass_cls)), # expr

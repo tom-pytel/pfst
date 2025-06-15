@@ -4,12 +4,87 @@ from ast import *
 from typing import Literal, Optional
 
 from .astutil import *
-from .astutil import TypeAlias, TemplateStr
+from .astutil import TypeAlias, TryStar, TemplateStr
 
 from .shared import (
     Self, STMTISH_OR_STMTMOD, STMTISH_FIELDS, Code, NodeError, fstloc,
     _prev_find, _next_find, _fixup_slice_indices, _coerce_ast,
 )
+
+
+# ----------------------------------------------------------------------------------------------------------------------
+
+@staticmethod
+def _is_slice_compatible(sig1: tuple[type[AST], str], sig2: tuple[type[AST], str]) -> bool:  # sig = (AST type, field)
+    """Whether slices are compatible between these type / fields."""
+
+    return ((v := _SLICE_COMAPTIBILITY.get(sig1)) == _SLICE_COMAPTIBILITY.get(sig2) and
+            v is not None)
+
+
+_SLICE_COMAPTIBILITY = {
+    (Module, 'body'):                     'stmt*',
+    (Interactive, 'body'):                'stmt*',
+    # (FunctionDef, 'decorator_list'):      'expr*',
+    # (FunctionDef, 'type_params'):         'type_param*',
+    (FunctionDef, 'body'):                'stmt*',
+    # (AsyncFunctionDef, 'decorator_list'): 'expr*',
+    # (AsyncFunctionDef, 'type_params'):    'type_param*',
+    (AsyncFunctionDef, 'body'):           'stmt*',
+    # (ClassDef, 'decorator_list'):         'expr*',
+    # (ClassDef, 'type_params'):            'type_param*',
+    # (ClassDef, 'bases'):                  'expr*',
+    # (ClassDef, 'keywords'):               'keyword*',
+    (ClassDef, 'body'):                   'stmt*',
+    # (Delete, 'targets'):                  'expr*',
+    # (Assign, 'targets'):                  'expr*',
+    # (TypeAlias, 'type_params'):           'type_param*',
+    (For, 'body'):                        'stmt*',
+    (For, 'orelse'):                      'stmt*',
+    (AsyncFor, 'body'):                   'stmt*',
+    (AsyncFor, 'orelse'):                 'stmt*',
+    (While, 'body'):                      'stmt*',
+    (While, 'orelse'):                    'stmt*',
+    (If, 'body'):                         'stmt*',
+    (If, 'orelse'):                       'stmt*',
+    # (With, 'items'):                      'withitem*',
+    (With, 'body'):                       'stmt*',
+    # (AsyncWith, 'items'):                 'withitem*',
+    (AsyncWith, 'body'):                  'stmt*',
+    (Match, 'cases'):                     'match_case*',
+    (Try, 'body'):                        'stmt*',
+    (Try, 'handlers'):                    'excepthandler*',
+    (Try, 'orelse'):                      'stmt*',
+    (Try, 'finalbody'):                   'stmt*',
+    (TryStar, 'body'):                    'stmt*',
+    (TryStar, 'handlers'):                'excepthandlerstar*',
+    (TryStar, 'orelse'):                  'stmt*',
+    (TryStar, 'finalbody'):               'stmt*',
+    # (Import, 'names'):                    'alias*',
+    # (ImportFrom, 'names'):                'alias*',
+    # (Global, 'names'):                    'identifier*',
+    # (Nonlocal, 'names'):                  'identifier*',
+    # (BoolOp, 'values'):                   'expr*',
+    # (Dict, ''):                           'expr*',
+    (Set, 'elts'):                        'expr*',
+    # (ListComp, 'generators'):             'comprehension*',
+    # (SetComp, 'generators'):              'comprehension*',
+    # (DictComp, 'generators'):             'comprehension*',
+    # (GeneratorExp, 'generators'):         'comprehension*',
+    # (Compare, ''):                        'expr*',
+    # (Call, 'args'):                       'expr*',
+    # (Call, 'keywords'):                   'keyword*',
+    # (JoinedStr, 'values'):                'expr*',
+    # (TemplateStr, 'values'):              'expr*',
+    (List, 'elts'):                       'expr*',
+    (Tuple, 'elts'):                      'expr*',
+    # (comprehension, 'ifs'):               'expr*',
+    (ExceptHandler, 'body'):              'stmt*',
+    (match_case, 'body'):                 'stmt*',
+    # (MatchSequence, 'patterns'):          'pattern*',
+    # (MatchMapping, ''):                   'expr*',
+    # (MatchOr, 'patterns'):                'pattern*',
+}
 
 
 # ----------------------------------------------------------------------------------------------------------------------
