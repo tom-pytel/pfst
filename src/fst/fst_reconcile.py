@@ -29,8 +29,8 @@ class _Reconcile:
         else:  # because can replace AST at root node which has out_parent=None
             self.out.replace(code, raw=False)
 
-    def recurse_slice_fst(self, node: AST, outf: Optional['FST'], field: str, body: list[AST]):
-        nodef     = node.f
+    def recurse_slice(self, node: AST, outf: Optional['FST'], field: str, body: list[AST]):
+        nodef     = getattr(node, 'f', False)  # this determines if it came from an in-tree FST or a pure AST
         outa      = outf.a
         outa_body = getattr(outa, field)
         work_root = self.work
@@ -66,7 +66,7 @@ class _Reconcile:
                         for i in range(start, end):
                             body[i].f.verify(reparse=False)
 
-                        slice = child_parent.get_slice(child_idx, child_idx + end - start, field)
+                        slice = child_parent.get_slice(child_idx, child_idx - start + end, field)
 
                     except Exception:  # verification failed, need to do one AST at a time
                         pass
@@ -80,88 +80,24 @@ class _Reconcile:
 
                 else:
                     mark_parent = self.mark.child_from_path(self.work.child_path(child_parent))
-                    slice       = mark_parent.get_slice(child_idx, child_idx + end - start, field)
+                    slice       = mark_parent.get_slice(child_idx, child_idx - start + end, field)
 
                     outf.put_slice(slice, start, end, field)
 
-            len_outa_body = len(outa_body)  # get each time because could have been modified by put_slice
+            len_outa_body = len(outa_body)  # get each time because could have been modified by put_slice, will not change if coming from AST
 
             for i in range(start, end):
                 n = body[i]  # this is safe to use in 'put_slice()' then 'recurse()' without duplicating because ASTs are not consumed
 
-                if i >= len_outa_body:  # if past end then we need to slice insert AST before recursing into it
+                if i >= len_outa_body:  # if past end then we need to slice insert AST before recursing into it, doesn't happen if coming from AST
                     outf.put_slice(n, i, i, field, one=True)  # put one
 
-                self.recurse(n, astfield(field, i), outf, nodef)
+                self.recurse(n, astfield(field, i), outf, nodef)  # nodef set accordingly regardless of if coming from FST or AST
 
             start = end
 
-        if start < len(outa_body):  # delete tail in output
+        if start < len(outa_body):  # delete tail in output, doesn't happen if coming from AST
             outf.put(None, start, None, field)
-
-
-
-
-
-    def recurse_slice_ast(self, node: AST, outf: Optional['FST'], field: str, body: list[AST]):
-        # outa      = outf.a
-        # outa_body = getattr(outa, field)
-        work_root = self.work
-        len_body  = len(body)
-        start     = 0
-        node_sig  = (node.__class__, field)
-
-        while start < len_body:
-            if (not (childf := getattr(body[start], 'f', None)) or                                                        # or child doesn't have FST
-                not (child_parent := childf.parent) or                                                                    # or no parent
-                (child_idx := (child_pfield := childf.pfield).idx) is None or                                             # or no index (not part of a sliceable list)
-                (
-                    not FST._is_slice_compatible(node_sig, (child_parent.a.__class__, child_field := child_pfield.name))  # child slice is not compatible
-                )
-            ):                                                                                                            # then can't possibly slice, or it doesn't make sense to
-                end = start + 1
-
-            else:  # slice operation, even if its just one element because slice copies more formatting and comments
-                child_off_idx = child_idx - start
-
-                for end in range(start + 1, len_body):  # get length of contiguous slice
-                    if (not (f := getattr(body[end], 'f', None)) or f.parent is not child_parent or  # if is not following element then done
-                        f.pfield != (child_field, child_off_idx + end)
-                    ):
-                        break
-                else:
-                    end = len_body
-
-                if childf.root is not work_root:  # from different tree, need to verify first
-                    try:
-                        for i in range(start, end):
-                            body[i].f.verify(reparse=False)
-
-                        slice = child_parent.get_slice(child_idx, child_idx + end - start, field)
-
-                    except Exception:  # verification failed, need to do one AST at a time
-                        pass
-
-                    else:  # no recurse because we wouldn't be at this point if it wasn't a valid full FST without AST replacements, couldn't anyway as we don't know anything about that tree
-                        outf.put_slice(slice, start, end, field)
-
-                        start = end
-
-                        continue
-
-                else:
-                    mark_parent = self.mark.child_from_path(self.work.child_path(child_parent))
-                    slice       = mark_parent.get_slice(child_idx, child_idx + end - start, field)
-
-                    outf.put_slice(slice, start, end, field)
-
-            for i in range(start, end):  # don't need to slice insert here because we know size will be same between work and out
-                self.recurse(body[i], astfield(field, i), outf, False)
-
-            start = end
-
-
-
 
     def recurse(self, node: AST, pfield: astfield | None = None,
                 out_parent: Optional['FST'] = None, node_parent: Optional['FST'] | Literal[False] = None):
@@ -219,7 +155,7 @@ class _Reconcile:
 
                 elif isinstance(child, list):
                     if field in ('body', 'orelse', 'handlers', 'finalbody', 'cases', 'elts'):
-                        self.recurse_slice_ast(node, outf, field, child)
+                        self.recurse_slice(node, outf, field, child)
 
                         continue
 
@@ -259,7 +195,7 @@ class _Reconcile:
 
                 else:  # slice
                     if field in ('body', 'orelse', 'handlers', 'finalbody', 'cases', 'elts'):
-                        self.recurse_slice_fst(node, outf, field, child)
+                        self.recurse_slice(node, outf, field, child)
 
                         continue
 
