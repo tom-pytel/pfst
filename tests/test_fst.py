@@ -11176,12 +11176,12 @@ match a:
 
         # slice, don't do first because src is at end and don't do second because dst is at end
 
-        m = (o := FST('[1, 2]')).mark()
+        m = (o := FST('[\n1, # 1\n2, # 2\n]')).mark()
         a = o.a.elts[0]
         o.a.elts[0] = o.a.elts[1]
         o.a.elts[1] = a
         f = o.reconcile(m)
-        self.assertEqual('[2, 1]', f.src)
+        self.assertEqual('[\n2, # 2\n1, # 1\n]', f.src)
         f.verify()
 
         # slice, delete tail
@@ -11242,7 +11242,13 @@ match a:
         self.assertEqual('i = 1\nj = 2\nk = 3\nx = 4\ny = 5\n', f.src)
         f.verify()
 
-        # other
+        # other recurse slice FST
+
+        m = (o := FST('[1]')).mark()
+        o.a.elts.extend(FST('[2,#2\n3,#3\n4,#4\n]').a.elts)
+        f = o.reconcile(m)
+        self.assertEqual('[1, 2,#2\n3,#3\n4,#4\n]', f.src)
+        f.verify()
 
         m = (o := FST('if 1:\n  i = 1\n  j = 2\n  k = 3\nelse:\n  a = 4\n  b = 5\n  c = 6')).mark()
         body = o.a.body[:]
@@ -11251,6 +11257,28 @@ match a:
         f = o.reconcile(m)
         self.assertEqual('if 1:\n  b = 5\n  c = 6\nelse:\n  i = 1\n  j = 2\n  k = 3\n  i = 1\n  j = 2\n  k = 3\n', f.src)
         f.verify()
+
+        # recurse slice in pure AST that has FSTs
+
+        m = (o := FST('[\n1, # 1\n2, # 2\n]')).mark()
+        o.a = List(elts=[o.a.elts[1], o.a.elts[0]])
+        f = o.reconcile(m)
+        self.assertEqual('[\n2, # 2\n1, # 1\n]', f.src)
+        f.verify()
+
+        m = (o := FST('[1,\n# 1and2\n2, 3,\n# 3and4\n4]')).mark()
+        o.a = List(elts=[o.a.elts[2], o.a.elts[3], o.a.elts[0], o.a.elts[1]])
+        f = o.reconcile(m)
+        self.assertEqual('[3,\n# 3and4\n4, 1,\n# 1and2\n2]', f.src)
+        f.verify()
+
+        m = (o := FST('[1,#1\n]')).mark()
+        o.a = List(elts=[o.a.elts[0]])
+        o.a.elts.extend(FST('[2,#2\n3,#3\n4,#4\n]').a.elts)
+        f = o.reconcile(m)
+        self.assertEqual('[1,#1\n2,#2\n3,#3\n4,#4\n]', f.src)
+        f.verify()
+
 
 
 

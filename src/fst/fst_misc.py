@@ -1587,7 +1587,7 @@ def _modifying(self: 'FST', field: str | Literal[False] = False, raw: bool = Fal
 
 
 def _touchall(self: 'FST', parents: bool = False, self_: bool = True, children: bool = False) -> Self:
-    """Touch self, parents and children, optionally. Flushes location cache so that changes to AST locations will
+    """Touch self, parents and children, optionally. Flushes location cache so that changes to `AST` locations will
     get picked up."""
 
     if children:
