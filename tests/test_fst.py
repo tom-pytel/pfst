@@ -11271,6 +11271,24 @@ match a:
         self.assertEqual('def f(*, a, b=2): pass', f.src)
         f.verify()
 
+        m = (o := FST('{1: a, **b}', MatchMapping)).mark()
+        o.a.rest = None
+        f = o.reconcile(m)
+        self.assertEqual('{1: a}', f.src)
+        f.verify()
+
+        m = (o := FST('{1: a, **b}', MatchMapping)).mark()
+        o.a.rest = 'rest'
+        f = o.reconcile(m)
+        self.assertEqual('{1: a, **rest}', f.src)
+        f.verify()
+
+        m = (o := FST('{1: a}', MatchMapping)).mark()
+        o.a.rest = 'rest'
+        f = o.reconcile(m)
+        self.assertEqual('{1: a, **rest}', f.src)
+        f.verify()
+
         # recurse slice in pure AST that has FSTs
 
         m = (o := FST('[\n1, # 1\n2, # 2\n]')).mark()
@@ -11302,6 +11320,39 @@ match a:
         o.a.args = arguments(kwonlyargs=o.a.args.kwonlyargs, kw_defaults=[None, o.a.args.kw_defaults[1]], posonlyargs=[], args=[], defaults=[])
         f = o.reconcile(m)
         self.assertEqual('def f(*, a, b=2): pass', f.src)
+        f.verify()
+
+        m = (o := FST('{1: a, **b}', MatchMapping)).mark()
+        o.a = MatchMapping(keys=[o.a.keys[0]], patterns=[o.a.patterns[0]], rest=None)
+        f = o.reconcile(m)
+        self.assertEqual('{1: a}', f.src)
+        f.verify()
+
+        m = (o := FST('{1: a, **b}', MatchMapping)).mark()
+        o.a = MatchMapping(keys=[o.a.keys[0]], patterns=[o.a.patterns[0]], rest='rest')
+        f = o.reconcile(m)
+        self.assertEqual('{1: a, **rest}', f.src)
+        f.verify()
+
+        m = (o := FST('{1: a}', MatchMapping)).mark()
+        o.a = MatchMapping(keys=[o.a.keys[0]], patterns=[o.a.patterns[0]], rest='rest')
+        f = o.reconcile(m)
+        self.assertEqual('{1: a, **rest}', f.src)
+        f.verify()
+
+        # Dict
+
+        m = (o := FST('{a: b}')).mark()
+        o.a.keys[0] = Name(id='x')
+        o.a.values[0] = Name(id='y')
+        f = o.reconcile(m)
+        self.assertEqual('{x: y}', f.src)
+        f.verify()
+
+        m = (o := FST('{a: b}')).mark()
+        o.a.keys[0] = None
+        f = o.reconcile(m)
+        self.assertEqual('{**b}', f.src)
         f.verify()
 
 

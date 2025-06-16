@@ -29,6 +29,86 @@ class _Reconcile:
         else:  # because can replace AST at root node which has out_parent=None
             self.out.replace(code, raw=False)
 
+    def recurse_slice_dict(self, node: AST, outf: Optional['FST']):
+        """Recurse into a combined slice of a Dict's keys and values using slice operations to copy over formatting
+        where possible (if not already there). Can be recursing an in-tree FST parent or a pure AST parent."""
+
+        keys     = node.keys
+        values   = node.values
+        len_body = len(keys)
+
+        if len(values) != len_body:
+            raise RuntimeError(f'Dict.keys length ({len_body}) != Dict.values length ({len(values)})')
+
+        nodef     = getattr(node, 'f', False)  # this determines if it came from an in-tree FST or a pure AST
+        outa      = outf.a
+        outa_body = getattr(outa, 'keys')
+        work_root = self.work
+        start     = 0
+
+        while start < len_body:
+            if (not (valf := getattr(vala := values[start], 'f', None)) or     # if value doesn't have FST, we check value first because key could be None
+                not (val_parent := valf.parent) or                             # or no value parent
+                (val_idx := (val_pfield := valf.pfield).idx) is None or (      # or no value index
+                    val_idx == start                                           # or value is at the correct location
+                    if val_pfield.name == 'vals' and val_parent is nodef else  # if is from same field and our own val, else
+                    not isinstance(vala, expr)                                 # or value slice is not compatible
+            )):                                                                # then can't possibly slice, or it doesn't make sense to
+                end = start + 1
+
+            # else:  # slice operation, even if its just one element because slice copies more formatting and comments
+            #     child_off_idx = child_idx - start
+
+            #     for end in range(start + 1, len_body):  # get length of contiguous slice
+            #         if (not (f := getattr(body[end], 'f', None)) or f.parent is not child_parent or  # if is not following element then done
+            #             f.pfield != (child_field, child_off_idx + end)
+            #         ):
+            #             break
+            #     else:
+            #         end = len_body
+
+            #     if childf.root is not work_root:  # from different tree, need to verify first
+            #         try:
+            #             for i in range(start, end):
+            #                 body[i].f.verify(reparse=False)
+
+            #             slice = child_parent.get_slice(child_idx, child_idx - start + end, field)
+
+            #         except Exception:  # verification failed, need to do one AST at a time
+            #             pass
+
+            #         else:  # no recurse because we wouldn't be at this point if it wasn't a valid full FST without AST replacements, couldn't anyway as we don't know anything about that tree
+            #             outf.put_slice(slice, start, end, field)
+
+            #             start = end
+
+            #             continue
+
+            #     else:
+            #         mark_parent = self.mark.child_from_path(self.work.child_path(child_parent))
+            #         slice       = mark_parent.get_slice(child_idx, child_idx - start + end, field)
+
+            #         outf.put_slice(slice, start, end, field)
+
+            end = start + 1
+
+            len_outa_body = len(outa_body)  # get each time because could have been modified by put_slice, will not change if coming from AST
+
+            for i in range(start, end):
+                k = keys[i]  # these are safe to use in 'put_slice()' then 'recurse()' without duplicating because ASTs are not consumed
+                v = values[i]
+
+                if i >= len_outa_body:  # if past end then we need to slice insert AST before recursing into it, doesn't happen if coming from AST
+                    outf.put_slice(Dict(keys=[k], values=[v]), i, i, None)
+
+                self.recurse_node(k, astfield('keys', i), outf, nodef)    # is fine, in fact needed, to call even if k is None
+                self.recurse_node(v, astfield('values', i), outf, nodef)  # nodef set accordingly regardless of if coming from FST or AST
+
+            start = end
+
+        if start < len(outa_body):  # delete tail in output, doesn't happen if coming from AST
+            outf.put_slice(None, start, None, None)
+
     def recurse_slice(self, node: AST, outf: Optional['FST'], field: str, body: list[AST]):
         """Recurse into a slice of children using slice operations to copy over formatting where possible (if not
         already there). Can be recursing an in-tree FST parent or a pure AST parent."""
@@ -44,13 +124,11 @@ class _Reconcile:
         while start < len_body:
             if (not (childf := getattr(body[start], 'f', None)) or                                   # if child doesn't have FST
                 not (child_parent := childf.parent) or                                               # or no parent
-                (child_idx := (child_pfield := childf.pfield).idx) is None or                        # or no index (not part of a sliceable list)
-                (
+                (child_idx := (child_pfield := childf.pfield).idx) is None or (                      # or no index (not part of a sliceable list)
                     child_idx == start                                                               # or child is at the correct location
                     if (child_field := child_pfield.name) == field and child_parent is nodef else    # if is from same field and our own child, else
                     not FST._is_slice_compatible(node_sig, (child_parent.a.__class__, child_field))  # or child slice is not compatible
-                )
-            ):                                                                                       # then can't possibly slice, or it doesn't make sense to
+            )):                                                                                      # then can't possibly slice, or it doesn't make sense to
                 end = start + 1
 
             else:  # slice operation, even if its just one element because slice copies more formatting and comments
@@ -100,7 +178,7 @@ class _Reconcile:
             start = end
 
         if start < len(outa_body):  # delete tail in output, doesn't happen if coming from AST
-            outf.put(None, start, None, field)
+            outf.put_slice(None, start, None, field)
 
     def recurse_children(self, node: AST, outa: AST):
         """Recurse into children of a node."""
@@ -113,6 +191,8 @@ class _Reconcile:
                 continue
 
             if isinstance(child, AST):  # AST, but out may not have anything at this position
+                # TODO: Compare special case, catch it at '.left' and do slice processing
+
                 self.recurse_node(child, astfield(field), outf, nodef)
 
             elif not isinstance(child, list):  # primitive, or None to delete possibly AST child
@@ -125,8 +205,18 @@ class _Reconcile:
 
                     continue
 
+                if field == 'keys':
+                    if isinstance(node, Dict):
+                        self.recurse_slice_dict(node, outf)
 
-                # TODO: Dict special case slices
+                        break  # so that 'values' doesn't get processed
+
+                    else:
+                        assert isinstance(node, MatchMapping)
+
+                        # TODO: this special case
+
+
                 # TODO: rest of slices when they are done
 
 
@@ -184,7 +274,7 @@ class _Reconcile:
 
             outa = pfield.get(out_parent.a) if out_parent else self.out.a
 
-            if outa:  # could just have put None
+            if outa:  # could be None
                 self.recurse_children(node, outa)
 
             return
@@ -226,7 +316,7 @@ def reconcile(self: 'FST', mark: 'FST') -> 'FST':
     as possible and maybe continue operating in `FST` land.
 
     **WARNING!** Just because this function completes successfully does NOT mean the output is syntactically correct,
-    e.g., set the last keyword argument default to `None` in a `FunctionDef` when there are preceding defaults set
+    e.g. set the last keyword argument default to `None` in a `FunctionDef` when there are preceding defaults set -
     `args.kw_defaults[-1]=None`. In order to make sure the result is valid you should run `verify()` on the output.
 
     **Parameters:**

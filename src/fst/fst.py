@@ -786,7 +786,7 @@ class FST:
             try:
                 compare_asts(ast, org, type_comments=type_comments, raise_=True)
             except WalkFail:
-                raise RuntimeError('could not reparse ast identically')
+                raise ValueError('could not reparse ast identically')
 
         return FST(ast, lines, parse_params=parse_params, indent='    ')
 
@@ -1139,7 +1139,7 @@ class FST:
         # reparse
 
         if not self.is_root:
-            raise RuntimeError('verify with reparse can only be called on root node')
+            raise ValueError('verify with reparse can only be called on root node')
 
         parse_params = self.parse_params
 
