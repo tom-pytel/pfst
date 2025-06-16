@@ -11355,6 +11355,32 @@ match a:
         self.assertEqual('{**b}', f.src)
         f.verify()
 
+        m = (o := FST('{a : b, c : d}')).mark()
+        a = o.a
+        a.keys.append(Name(id='x'))
+        a.values.append(Name(id='y'))
+        a.keys.extend(a.keys[:2])
+        a.values.extend(a.values[:2])
+        b = FST('{s : t, u : v}').a
+        a.keys.extend(b.keys)
+        a.values.extend(b.values)
+        f = o.reconcile(m)
+        self.assertEqual('{a : b, c : d, x: y, a : b, c : d, s : t, u : v}', f.src)
+        f.verify()
+
+        m = (o := FST('{a : b, c : d}')).mark()
+        a = o.a
+        a.keys.append(Name(id='x'))
+        a.values.append(Name(id='y'))
+        a.keys.extend(a.keys[:2])
+        a.values.extend(a.values[:2])
+        b = FST('{s : t, u : v}').a
+        a.keys.extend(b.keys)
+        a.values.extend(b.values)
+        o.a = Dict(keys=o.a.keys, values=o.a.values)
+        f = o.reconcile(m)
+        self.assertEqual('{a : b, c : d, x: y, a : b, c : d, s : t, u : v}', f.src)
+        f.verify()
 
 
 if __name__ == '__main__':

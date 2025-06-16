@@ -42,57 +42,82 @@ class _Reconcile:
 
         nodef     = getattr(node, 'f', False)  # this determines if it came from an in-tree FST or a pure AST
         outa      = outf.a
-        outa_body = getattr(outa, 'keys')
+        outa_keys = getattr(outa, 'keys')
         work_root = self.work
         start     = 0
 
         while start < len_body:
-            if (not (valf := getattr(vala := values[start], 'f', None)) or     # if value doesn't have FST, we check value first because key could be None
-                not (val_parent := valf.parent) or                             # or no value parent
-                (val_idx := (val_pfield := valf.pfield).idx) is None or (      # or no value index
-                    val_idx == start                                           # or value is at the correct location
-                    if val_pfield.name == 'vals' and val_parent is nodef else  # if is from same field and our own val, else
-                    not isinstance(vala, expr)                                 # or value slice is not compatible
-            )):                                                                # then can't possibly slice, or it doesn't make sense to
+            if (not (valf := getattr(values[start], 'f', None)) or       # if value doesn't have FST
+                not (child_parent := valf.parent) or                     # or no value parent
+                (val_pfield := valf.pfield).name != 'values' or          # or value field is not 'values'
+                (
+                    val_pfield.idx == start                              # or (value is at the correct location
+                    if child_parent is nodef else                        # if is our own child, else
+                    not isinstance(child_parent.a, Dict)                 # value parent is not Dict)
+                ) or
+                (
+                    child_parent.a.keys[val_pfield.idx] is not None      # or (key associated with value is not None
+                    if (keya := keys[start]) is None else                # if our key is None, else
+                    (
+                        not (keyf := getattr(keya, 'f', None)) or        # if key doesn't have FST
+                        keyf.parent is not child_parent or               # or key parent is not same as value parent
+                        keyf.pfield != ('keys', val_pfield.idx)          # or key field is not 'keys' or key idx != value idx
+                    )
+                )
+            ):
                 end = start + 1
 
-            # else:  # slice operation, even if its just one element because slice copies more formatting and comments
-            #     child_off_idx = child_idx - start
+            else:  # slice operation, even if its just one element because slice copies more formatting and comments
+                child_parent_keys = child_parent.a.keys
+                child_idx         = val_pfield.idx
+                child_off_idx     = child_idx - start
 
-            #     for end in range(start + 1, len_body):  # get length of contiguous slice
-            #         if (not (f := getattr(body[end], 'f', None)) or f.parent is not child_parent or  # if is not following element then done
-            #             f.pfield != (child_field, child_off_idx + end)
-            #         ):
-            #             break
-            #     else:
-            #         end = len_body
+                for end in range(start + 1, len_body):  # get length of contiguous slice
+                    if (not (f := getattr(values[end], 'f', None)) or
+                        f.parent is not child_parent or
+                        f.pfield != ('values', i := child_off_idx + end) or
+                        (
+                            child_parent_keys[i] is not None  # child_parent_keys and keys COULD be the same, but not guaranteed
+                            if (a := keys[end]) is None else
+                            (
+                                not (f := getattr(a, 'f', None)) or
+                                f.parent is not child_parent or
+                                f.pfield != ('keys', i)
+                            )
+                        )
+                    ):  # if is not following element then done
+                        break
 
-            #     if childf.root is not work_root:  # from different tree, need to verify first
-            #         try:
-            #             for i in range(start, end):
-            #                 body[i].f.verify(reparse=False)
+                else:
+                    end = len_body
 
-            #             slice = child_parent.get_slice(child_idx, child_idx - start + end, field)
+                if valf.root is not work_root:  # from different tree, need to verify first
+                    try:
+                        for i in range(start, end):
+                            if key := keys[i]:
+                                key.f.verify(reparse=False)
 
-            #         except Exception:  # verification failed, need to do one AST at a time
-            #             pass
+                            values[i].f.verify(reparse=False)
 
-            #         else:  # no recurse because we wouldn't be at this point if it wasn't a valid full FST without AST replacements, couldn't anyway as we don't know anything about that tree
-            #             outf.put_slice(slice, start, end, field)
+                        slice = child_parent.get_slice(child_idx, child_idx - start + end, None)
 
-            #             start = end
+                    except Exception:  # verification failed, need to do one AST at a time
+                        pass
 
-            #             continue
+                    else:  # no recurse because we wouldn't be at this point if it wasn't a valid full FST without AST replacements, couldn't anyway as we don't know anything about that tree
+                        outf.put_slice(slice, start, end, None)
 
-            #     else:
-            #         mark_parent = self.mark.child_from_path(self.work.child_path(child_parent))
-            #         slice       = mark_parent.get_slice(child_idx, child_idx - start + end, field)
+                        start = end
 
-            #         outf.put_slice(slice, start, end, field)
+                        continue
 
-            end = start + 1
+                else:
+                    mark_parent = self.mark.child_from_path(self.work.child_path(child_parent))
+                    slice       = mark_parent.get_slice(child_idx, child_idx - start + end, None)
 
-            len_outa_body = len(outa_body)  # get each time because could have been modified by put_slice, will not change if coming from AST
+                    outf.put_slice(slice, start, end, None)
+
+            len_outa_body = len(outa_keys)  # get each time because could have been modified by put_slice, will not change if coming from AST
 
             for i in range(start, end):
                 k = keys[i]  # these are safe to use in 'put_slice()' then 'recurse()' without duplicating because ASTs are not consumed
@@ -101,12 +126,16 @@ class _Reconcile:
                 if i >= len_outa_body:  # if past end then we need to slice insert AST before recursing into it, doesn't happen if coming from AST
                     outf.put_slice(Dict(keys=[k], values=[v]), i, i, None)
 
-                self.recurse_node(k, astfield('keys', i), outf, nodef)    # is fine, in fact needed, to call even if k is None
+                if k:
+                    self.recurse_node(k, astfield('keys', i), outf, nodef)
+                elif outa_keys[i] is not None:
+                    outf.put(None, i, False, 'keys')
+
                 self.recurse_node(v, astfield('values', i), outf, nodef)  # nodef set accordingly regardless of if coming from FST or AST
 
             start = end
 
-        if start < len(outa_body):  # delete tail in output, doesn't happen if coming from AST
+        if start < len(outa_keys):  # delete tail in output, doesn't happen if coming from AST
             outf.put_slice(None, start, None, None)
 
     def recurse_slice(self, node: AST, outf: Optional['FST'], field: str, body: list[AST]):
@@ -124,21 +153,25 @@ class _Reconcile:
         while start < len_body:
             if (not (childf := getattr(body[start], 'f', None)) or                                   # if child doesn't have FST
                 not (child_parent := childf.parent) or                                               # or no parent
-                (child_idx := (child_pfield := childf.pfield).idx) is None or (                      # or no index (not part of a sliceable list)
-                    child_idx == start                                                               # or child is at the correct location
+                (child_idx := (child_pfield := childf.pfield).idx) is None or                        # or no index (not part of a sliceable list)
+                (
+                    child_idx == start                                                               # or (child is at the correct location
                     if (child_field := child_pfield.name) == field and child_parent is nodef else    # if is from same field and our own child, else
-                    not FST._is_slice_compatible(node_sig, (child_parent.a.__class__, child_field))  # or child slice is not compatible
-            )):                                                                                      # then can't possibly slice, or it doesn't make sense to
+                    not FST._is_slice_compatible(node_sig, (child_parent.a.__class__, child_field))  # child slice is not compatible)
+                )
+            ):                                                                                      # then can't possibly slice, or it doesn't make sense to
                 end = start + 1
 
             else:  # slice operation, even if its just one element because slice copies more formatting and comments
                 child_off_idx = child_idx - start
 
                 for end in range(start + 1, len_body):  # get length of contiguous slice
-                    if (not (f := getattr(body[end], 'f', None)) or f.parent is not child_parent or  # if is not following element then done
+                    if (not (f := getattr(body[end], 'f', None)) or
+                        f.parent is not child_parent or
                         f.pfield != (child_field, child_off_idx + end)
-                    ):
+                    ):  # if is not following element then done
                         break
+
                 else:
                     end = len_body
 
@@ -147,7 +180,7 @@ class _Reconcile:
                         for i in range(start, end):
                             body[i].f.verify(reparse=False)
 
-                        slice = child_parent.get_slice(child_idx, child_idx - start + end, field)
+                        slice = child_parent.get_slice(child_idx, child_off_idx + end, field)
 
                     except Exception:  # verification failed, need to do one AST at a time
                         pass
@@ -161,7 +194,7 @@ class _Reconcile:
 
                 else:
                     mark_parent = self.mark.child_from_path(self.work.child_path(child_parent))
-                    slice       = mark_parent.get_slice(child_idx, child_idx - start + end, field)
+                    slice       = mark_parent.get_slice(child_idx, child_off_idx + end, field)
 
                     outf.put_slice(slice, start, end, field)
 
