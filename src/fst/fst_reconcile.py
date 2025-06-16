@@ -30,6 +30,9 @@ class _Reconcile:
             self.out.replace(code, raw=False)
 
     def recurse_slice(self, node: AST, outf: Optional['FST'], field: str, body: list[AST]):
+        """Recurse into a slice of children using slice operations to copy over formatting where possible (if not
+        already there). Can be recursing an in-tree FST parent or a pure AST parent."""
+
         nodef     = getattr(node, 'f', False)  # this determines if it came from an in-tree FST or a pure AST
         outa      = outf.a
         outa_body = getattr(outa, field)
@@ -92,17 +95,53 @@ class _Reconcile:
                 if i >= len_outa_body:  # if past end then we need to slice insert AST before recursing into it, doesn't happen if coming from AST
                     outf.put_slice(n, i, i, field, one=True)  # put one
 
-                self.recurse(n, astfield(field, i), outf, nodef)  # nodef set accordingly regardless of if coming from FST or AST
+                self.recurse_node(n, astfield(field, i), outf, nodef)  # nodef set accordingly regardless of if coming from FST or AST
 
             start = end
 
         if start < len(outa_body):  # delete tail in output, doesn't happen if coming from AST
             outf.put(None, start, None, field)
 
-    def recurse(self, node: AST, pfield: astfield | None = None,
-                out_parent: Optional['FST'] = None, node_parent: Optional['FST'] | Literal[False] = None):
-        """Recurse from either an in-tree known `FST` node or from a pure `AST` put above. The two situations are
-        slightly different in the following ways:
+    def recurse_children(self, node: AST, outa: AST):
+        """Recurse into children of a node."""
+
+        nodef = getattr(node, 'f', False)  # this determines if it came from an in-tree FST or a pure AST
+        outf  = outa.f
+
+        for field, child in iter_fields(node):
+            if field in ('ctx', 'str'):  # redundant or possibly contradictory
+                continue
+
+            if isinstance(child, AST):  # AST, but out may not have anything at this position
+                self.recurse_node(child, astfield(field), outf, nodef)
+
+            elif not isinstance(child, list):  # primitive, or None to delete possibly AST child
+                if nodef is not False and child != getattr(outa, field):  # this SHOULDN'T happen if coming from pure AST but could if there was a contradictory value set by the user, so in case of pure AST we don't do this at all because was set correctly on our own put of the AST somewhere above
+                    outf.put(child, field=field, raw=False)
+
+            else:  # slice
+                if field in ('body', 'orelse', 'handlers', 'finalbody', 'cases', 'elts'):
+                    self.recurse_slice(node, outf, field, child)
+
+                    continue
+
+
+                # TODO: Dict special case slices
+                # TODO: rest of slices when they are done
+
+
+                # slice fallback, one by one but only if sizes are same
+
+                if len(child) != len(getattr(outa, field)):  # this will never happen if coming from pure AST
+                    raise NotImplementedError(f'different length slice fields {field!r}')
+
+                for i, c in enumerate(child):
+                    self.recurse_node(c, astfield(field, i), outf, nodef)
+
+    def recurse_node(self, node: AST, pfield: astfield | None = None,
+                     out_parent: Optional['FST'] = None, node_parent: Optional['FST'] | Literal[False] = None):
+        """Recurse from either an in-tree known `FST` node or from a pure `AST` put somewhere above. The two situations
+        are slightly different in the following ways:
 
         - From in-tree `FST` means the source and nodes that is in the out tree is the same as the original parent in-tree
         `FST` and when encountering other in-tree `FST` nodes which have the same child path as the original tree with
@@ -144,31 +183,9 @@ class _Reconcile:
                 self.put_node(node, out_parent, pfield)
 
             outa = pfield.get(out_parent.a) if out_parent else self.out.a
-            outf = outa.f
 
-            for field, child in iter_fields(node):
-                if field in ('ctx', 'str'):  # redundant or possibly contradictory
-                    continue
+            self.recurse_children(node, outa)
 
-                if isinstance(child, AST):  # AST, but out may not have anything at this position
-                    self.recurse(child, astfield(field), outf, False)
-
-                elif isinstance(child, list):
-                    if field in ('body', 'orelse', 'handlers', 'finalbody', 'cases', 'elts'):
-                        self.recurse_slice(node, outf, field, child)
-
-                        continue
-
-
-
-                    # TODO: Dict special case slices
-                    # TODO: rest of slices when they are done
-
-
-                    # slice fallback, one by one, sizes guaranteed same
-
-                    for i, c in enumerate(child):  # they are guaranteed to all be in the out tree since the AST was put either directly above here (in source) or in some pure AST parent above (in tree)
-                        self.recurse(c, astfield(field, i), outf, False)
             return
 
         # FST node from original tree, recurse
@@ -179,39 +196,9 @@ class _Reconcile:
             self.put_node(copy, out_parent, pfield)  # copy from known good copy of tree
 
         outa = pfield.get(out_parent.a) if out_parent else self.out.a
-        outf = outa.f
 
         try:
-            for field, child in iter_fields(node):
-                if field in ('ctx', 'str'):  # redundant or possibly contradictory
-                    continue
-
-                if isinstance(child, AST):  # AST, but out may not have anything at this position
-                    self.recurse(child, astfield(field), outf, nodef)
-
-                elif not isinstance(child, list):  # primitive, or None to delete possibly AST child
-                    if child != getattr(outa, field):
-                        outf.put(child, field=field, raw=False)
-
-                else:  # slice
-                    if field in ('body', 'orelse', 'handlers', 'finalbody', 'cases', 'elts'):
-                        self.recurse_slice(node, outf, field, child)
-
-                        continue
-
-
-                    # TODO: Dict special case slices
-                    # TODO: rest of slices when they are done
-
-
-                    # slice fallback, one by one but only if sizes are same
-
-                    if len(child) != len(getattr(outa, field)):
-                        raise NotImplementedError(f'different length slice fields {field!r}')
-
-                    for i, c in enumerate(child):
-                        self.recurse(c, astfield(field, i), outf, nodef)
-
+            self.recurse_children(node, outa)
         except (NodeError, SyntaxError, ValueError, NotImplementedError):  # something failed below, so replace whole AST
             self.put_node(node, out_parent, pfield)
 
@@ -249,7 +236,7 @@ def reconcile(self: 'FST', mark: 'FST') -> 'FST':
 
     rec = _Reconcile(self, mark)
 
-    rec.recurse(self.a)
+    rec.recurse_node(self.a)
 
     return rec.out
 
