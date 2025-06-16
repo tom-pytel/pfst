@@ -559,31 +559,32 @@ def walk2(ast1: AST, ast2: AST, cb_primitive: Callable[[Any, Any, str, int], boo
         fields2 = list(iter_fields(a2))
 
         if len(fields1) != len(fields2):
-            raise WalkFail(f"number of fields differ in '{a1.__class__.__qualname__}'")
+            raise WalkFail(f"number of fields differ in {a1.__class__.__qualname__}")
 
         for (name1, child1), (name2, child2) in zip(fields1, fields2):
             if name1 != name2:
-                raise WalkFail(f"field names differ in '{a1.__class__.__qualname__}', '{name1}' vs. '{name2}'")
+                raise WalkFail(f"field names differ in {a1.__class__.__qualname__}, '{name1}' vs. '{name2}'")
 
             if (is_ast := isinstance(child1, AST)) or isinstance(child1, list) or isinstance(child2, (AST, list)):
                 if child1.__class__ is not child2.__class__:
                     if not ctx and is_ast and isinstance(child1, expr_context) and isinstance(child2, expr_context):
                         continue
 
-                    loc = (f"{(getattr(child1, 'lineno', '?'), getattr(child1, 'col_offset', '?'), getattr(child1, 'end_lineno', '?'), getattr(child1, 'end_col_offset', '?'))} vs. "
-                           f"{(getattr(child2, 'lineno', '?'), getattr(child2, 'col_offset', '?'), getattr(child2, 'end_lineno', '?'), getattr(child2, 'end_col_offset', '?'))}")
+                    locs = (f"{(getattr(child1, 'lineno', '?'), getattr(child1, 'col_offset', '?'), getattr(child1, 'end_lineno', '?'), getattr(child1, 'end_col_offset', '?'))} / "
+                            f"{(getattr(child2, 'lineno', '?'), getattr(child2, 'col_offset', '?'), getattr(child2, 'end_lineno', '?'), getattr(child2, 'end_col_offset', '?'))}")
 
-                    raise WalkFail(f"child classes differ at .{name1} in '{a1.__class__.__qualname__}', "
-                                   f"'{child1.__class__.__qualname__}' vs. '{child2.__class__.__qualname__}' at {loc}")
+                    raise WalkFail(f"child classes differ in {a1.__class__.__qualname__}.{name1}, "
+                                   f"{child1.__class__.__qualname__} vs. {child2.__class__.__qualname__}, locs {locs}")
 
                 if is_ast:
                     stack.append((child1, child2))
 
                 elif len(child1) != len(child2):
-                    loc = (f"{(getattr(a1, 'lineno', '?'), getattr(a1, 'col_offset', '?'), getattr(a1, 'end_lineno', '?'), getattr(a1, 'end_col_offset', '?'))} vs. "
-                           f"{(getattr(a2, 'lineno', '?'), getattr(a2, 'col_offset', '?'), getattr(a2, 'end_lineno', '?'), getattr(a2, 'end_col_offset', '?'))}")
+                    locs = (f"{(getattr(a1, 'lineno', '?'), getattr(a1, 'col_offset', '?'), getattr(a1, 'end_lineno', '?'), getattr(a1, 'end_col_offset', '?'))} / "
+                            f"{(getattr(a2, 'lineno', '?'), getattr(a2, 'col_offset', '?'), getattr(a2, 'end_lineno', '?'), getattr(a2, 'end_col_offset', '?'))}")
 
-                    raise WalkFail(f"child list lengths differ at .{name1} in '{a1.__class__.__qualname__}' at {loc}")
+                    raise WalkFail(f"child list lengths differ in {a1.__class__.__qualname__}.{name1}, "
+                                   f"{len(child1)} vs. {len(child2)}, locs {locs}")
 
                 else:
                     for i, (c1, c2) in enumerate(zip(child1, child2)):
@@ -594,32 +595,35 @@ def walk2(ast1: AST, ast2: AST, cb_primitive: Callable[[Any, Any, str, int], boo
                             continue
 
                         if is_ast1 != is_ast2:
-                            loc = (f"{(getattr(c1, 'lineno', '?'), getattr(c1, 'col_offset', '?'), getattr(c1, 'end_lineno', '?'), getattr(c1, 'end_col_offset', '?'))} vs. "
-                                   f"{(getattr(c2, 'lineno', '?'), getattr(c2, 'col_offset', '?'), getattr(c2, 'end_lineno', '?'), getattr(c2, 'end_col_offset', '?'))}")
+                            locs = (f"{(getattr(c1, 'lineno', '?'), getattr(c1, 'col_offset', '?'), getattr(c1, 'end_lineno', '?'), getattr(c1, 'end_col_offset', '?'))} / "
+                                    f"{(getattr(c2, 'lineno', '?'), getattr(c2, 'col_offset', '?'), getattr(c2, 'end_lineno', '?'), getattr(c2, 'end_col_offset', '?'))}")
 
-                            raise WalkFail(f"child elements differ at .{name1}[{i}] in '{a1.__class__.__qualname__}' at {loc}")
+                            raise WalkFail(f"child elements differ in {a1.__class__.__qualname__}.{name1}[{i}], "
+                                           f"{c1.__class__.__qualname__} vs. {c2.__class__.__qualname__}, locs {locs}")
 
                         if is_ast1:
                             if c1.__class__ is not c2.__class__:
-                                loc = (f"{(getattr(c1, 'lineno', '?'), getattr(c1, 'col_offset', '?'), getattr(c1, 'end_lineno', '?'), getattr(c1, 'end_col_offset', '?'))} vs. "
-                                       f"{(getattr(c2, 'lineno', '?'), getattr(c2, 'col_offset', '?'), getattr(c2, 'end_lineno', '?'), getattr(c2, 'end_col_offset', '?'))}")
+                                locs = (f"{(getattr(c1, 'lineno', '?'), getattr(c1, 'col_offset', '?'), getattr(c1, 'end_lineno', '?'), getattr(c1, 'end_col_offset', '?'))} / "
+                                        f"{(getattr(c2, 'lineno', '?'), getattr(c2, 'col_offset', '?'), getattr(c2, 'end_lineno', '?'), getattr(c2, 'end_col_offset', '?'))}")
 
-                                raise WalkFail(f"child element classes differ at .{name1}[{i}] in '{a1.__class__.__qualname__}', "
-                                               f"'{c1.__class__.__qualname__}' vs. '{c2.__class__.__qualname__}' at {loc}")
+                                raise WalkFail(f"child element classes differ in {a1.__class__.__qualname__}.{name1}[{i}], "
+                                               f"{c1.__class__.__qualname__} vs. {c2.__class__.__qualname__}, locs {locs}")
 
                             stack.append((c1, c2))
 
                         elif cb_primitive and cb_primitive(c1, c2, name1, i) is False:
-                            loc = (f"{(getattr(a1, 'lineno', '?'), getattr(a1, 'col_offset', '?'), getattr(a1, 'end_lineno', '?'), getattr(a1, 'end_col_offset', '?'))} vs. "
-                                   f"{(getattr(a2, 'lineno', '?'), getattr(a2, 'col_offset', '?'), getattr(a2, 'end_lineno', '?'), getattr(a2, 'end_col_offset', '?'))}")
+                            locs = (f"{(getattr(a1, 'lineno', '?'), getattr(a1, 'col_offset', '?'), getattr(a1, 'end_lineno', '?'), getattr(a1, 'end_col_offset', '?'))} / "
+                                    f"{(getattr(a2, 'lineno', '?'), getattr(a2, 'col_offset', '?'), getattr(a2, 'end_lineno', '?'), getattr(a2, 'end_col_offset', '?'))}")
 
-                            raise WalkFail(f"primitives differ at .{name1}[{i}] in '{a1.__class__.__qualname__}', {c1!r} vs. {c2!r} at {loc}")
+                            raise WalkFail(f"primitives differ in {a1.__class__.__qualname__}.{name1}[{i}], "
+                                           f"{c1!r} vs. {c2!r}, locs {locs}")
 
             elif cb_primitive and cb_primitive(child1, child2, name1, None) is False:
-                loc = (f"{(getattr(a1, 'lineno', '?'), getattr(a1, 'col_offset', '?'), getattr(a1, 'end_lineno', '?'), getattr(a1, 'end_col_offset', '?'))} vs. "
-                       f"{(getattr(a2, 'lineno', '?'), getattr(a2, 'col_offset', '?'), getattr(a2, 'end_lineno', '?'), getattr(a2, 'end_col_offset', '?'))}")
+                locs = (f"{(getattr(a1, 'lineno', '?'), getattr(a1, 'col_offset', '?'), getattr(a1, 'end_lineno', '?'), getattr(a1, 'end_col_offset', '?'))} / "
+                        f"{(getattr(a2, 'lineno', '?'), getattr(a2, 'col_offset', '?'), getattr(a2, 'end_lineno', '?'), getattr(a2, 'end_col_offset', '?'))}")
 
-                raise WalkFail(f"primitives differ at .{name1} in '{a1.__class__.__qualname__}', {child1!r} vs. {child2!r} at {loc}")
+                raise WalkFail(f"primitives differ in {a1.__class__.__qualname__}.{name1}, "
+                               f"{child1!r} vs. {child2!r}, locs {locs}")
 
         stack = next_stack
 
