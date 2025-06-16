@@ -11250,12 +11250,25 @@ match a:
         self.assertEqual('[1, 2,#2\n3,#3\n4,#4\n]', f.src)
         f.verify()
 
+        m = (o := FST('{a: b, **c}')).mark()
+        o.a.keys[1] = o.a.keys[0]
+        o.a.keys[0] = None
+        f = o.reconcile(m)
+        self.assertEqual('{**b, a: c}', f.src)
+        f.verify()
+
         m = (o := FST('if 1:\n  i = 1\n  j = 2\n  k = 3\nelse:\n  a = 4\n  b = 5\n  c = 6')).mark()
         body = o.a.body[:]
         o.a.body[:] = o.a.orelse[1:]
         o.a.orelse = body * 2
         f = o.reconcile(m)
         self.assertEqual('if 1:\n  b = 5\n  c = 6\nelse:\n  i = 1\n  j = 2\n  k = 3\n  i = 1\n  j = 2\n  k = 3\n', f.src)
+        f.verify()
+
+        m = (o := FST('def f(*, a=1, b=2): pass')).mark()
+        o.a.args.kw_defaults[0] = None
+        f = o.reconcile(m)
+        self.assertEqual('def f(*, a, b=2): pass', f.src)
         f.verify()
 
         # recurse slice in pure AST that has FSTs
@@ -11279,6 +11292,17 @@ match a:
         self.assertEqual('[1,#1\n2,#2\n3,#3\n4,#4\n]', f.src)
         f.verify()
 
+        m = (o := FST('{a: b, **c}')).mark()
+        o.a = Dict(keys=[None, o.a.keys[0]], values=[o.a.values[0], o.a.values[1]])
+        f = o.reconcile(m)
+        self.assertEqual('{**b, a: c}', f.src)
+        f.verify()
+
+        m = (o := FST('def f(*, a=1, b=2): pass')).mark()
+        o.a.args = arguments(kwonlyargs=o.a.args.kwonlyargs, kw_defaults=[None, o.a.args.kw_defaults[1]], posonlyargs=[], args=[], defaults=[])
+        f = o.reconcile(m)
+        self.assertEqual('def f(*, a, b=2): pass', f.src)
+        f.verify()
 
 
 
