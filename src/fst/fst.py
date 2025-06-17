@@ -188,8 +188,10 @@ class FST:
             return self._lines
         elif loc := self.bloc:
             return self.root._lines[loc.ln : loc.end_ln + 1]
+        elif isinstance(a := self.a, arguments):  # arguments with no loc are empty arguments
+            return ['']
         else:
-            return None
+            return [s] if (s := OPCLS2STR.get(a.__class__, None)) else None  # for boolop only really, otherwise None
 
     @property
     def src(self) -> str | None:
@@ -201,8 +203,10 @@ class FST:
             return '\n'.join(self._lines)
         elif loc := self.bloc:
             return self.get_src(*loc)
+        elif isinstance(a := self.a, arguments):  # arguments with no loc are empty arguments
+            return ''
         else:
-            return None
+            return OPCLS2STR.get(a.__class__, None)  # for boolop only really, otherwise None
 
     @property
     def is_root(self) -> bool:

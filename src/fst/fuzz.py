@@ -59,6 +59,7 @@ def ignorable_exc(exc: Exception, putsrc: str | Literal[False] | None = None):
             # "Maybe you meant '==' instead of '='" in msg or
             # "Maybe you meant '==' or ':=' instead of '='"
             "Maybe you meant '==' " in msg or
+            ' for augmented assignment' in msg or
             msg.startswith('positional argument follows keyword argument') or
             msg.startswith('cannot use starred expression here') or
             # msg.startswith('cannot assign to literal') or

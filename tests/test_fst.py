@@ -2434,10 +2434,10 @@ def f():
         self.assertEqual('for ( j ) in range(6) if ( j )', parse('[ ( i ) for ( i ) in range(5) if ( i ) for ( j ) in range(6) if ( j ) ]').body[0].value.generators[1].f.src)
         self.assertEqual('for ( j ) in range(6) if ( j )', parse('( ( i ) for ( i ) in range(5) if ( i ) for ( j ) in range(6) if ( j ) )').body[0].value.generators[1].f.src)
 
-        self.assertEqual(None, parse('def f(): pass').body[0].args.f.src)
+        self.assertEqual('', parse('def f(): pass').body[0].args.f.src)
         self.assertEqual('a', parse('def f(a): pass').body[0].args.f.src)
         self.assertEqual('a', parse('def f( a ): pass').body[0].args.f.src)
-        self.assertEqual(None, parse('lambda: None').body[0].value.args.f.src)
+        self.assertEqual('', parse('lambda: None').body[0].value.args.f.src)
         self.assertEqual('a = ( 1 )', parse('lambda a = ( 1 ) : None').body[0].value.args.f.src)
         self.assertEqual('*, z, a, b = 2', parse('lambda *, z, a, b = 2: None').body[0].value.args.f.src)
         self.assertEqual('*, z, a, b = 2', parse('lambda *, z, a, b = 2 : None').body[0].value.args.f.src)
@@ -11058,6 +11058,12 @@ match a:
             pass
 
         self.assertEqual(old, FST.set_option(**old))
+
+    def test_misc(self):
+        self.assertEqual('and', FST('a and b').op.src)
+        self.assertEqual('or', FST('a or b').op.src)
+        self.assertEqual(['and'], FST('a and b').op.lines)
+        self.assertEqual(['or'], FST('a or b').op.lines)
 
     def test_reconcile(self):
         # basic replacements
