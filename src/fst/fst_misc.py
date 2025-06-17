@@ -63,15 +63,21 @@ _GLOBALS = globals() | {'_GLOBALS': None}
 
 if _PY_VERSION >= (3, 12):
     class _Modifying:
+        root: 'FST'                 # for updating _serial
+        fst:   Union['FST', False]  # False indicates nothing to update on done()
+        field: astfield
+        data:  list
+
         def __init__(self, fst: 'FST', field: str | Literal[False] = False, raw: bool = False):
             """Call before modifying `FST` node (even just source) to mark possible data for updates after modification.
             This function just collects information when it enters so is safe to call without ever explicitly exiting.
-            Can be used as a context manager or can just call `.enter()` and `.done()` manually.
+            Though it should be called on a successful modification because it increments the modification cound
+            `_serial`. Can be used as a context manager or can just call `.enter()` and `.done()` manually.
 
             It is assumed that neither the `fst` node passed in or its parents will not be changed, otherwise this must
             be used manually and not as a context manager and the changed node must be passed into the `.done()` method
-            on success. In this case currently nothing is done as it is assumed the changes are due to raw reparse which
-            goes up to the statement level.
+            on success. In this case currently no parents are updated as it is assumed the changes are due to raw
+            reparse which goes up to the statement level and would thus include any modifications this class would make.
 
             **Parameters:**
             - `fst`: Parent of or actual node being modified, depending on value of `field` (because actual child may be
@@ -81,7 +87,7 @@ if _PY_VERSION >= (3, 12):
             - `raw`: Whether this is going to be a raw modification or not.
             """
 
-            # TODO: update f/t-string f"{val=}" preceding string constants for updated value with '=', evil thing
+            self.root = fst.root
 
             if raw:
                 self.fst = False
@@ -133,8 +139,6 @@ if _PY_VERSION >= (3, 12):
             if exc_type is None:
                 self.done()
 
-            return False
-
         def enter(self):
             return self
 
@@ -147,6 +151,8 @@ if _PY_VERSION >= (3, 12):
                 referring to the actual `FST` node that might be replaced in a raw reparse, not whether the content
                 itself was modified. This is meant for special case use outside of the context manager.
             """
+
+            self.root._serial += 1
 
             if fst is False:
                 if not (fst := self.fst):
@@ -189,19 +195,20 @@ else: # override _Modifying if py too low
         """Dummy because py < 3.12 doesn't have f-string location information."""
 
         def __init__(self, fst: 'FST', field: str | Literal[False] = False, raw: bool = False):
-            pass
+            self.root = fst.root
 
         def __enter__(self):
-            return self
+            return self.enter()
 
         def __exit__(self, exc_type, exc_val, exc_tb):
-            return False
+            if exc_type is None:
+                self.done()
 
         def enter(self):
             return self
 
         def done(self, fst: Optional['FST'] | Literal[False] = False):
-            pass
+            self.root._serial += 1
 
 
 @staticmethod

@@ -340,8 +340,10 @@ def mark(self: 'FST') -> 'FST':
     if not self.is_root:
         raise ValueError('can only mark root nodes')
 
-    return self.copy()
+    mark         = self.copy()
+    mark._serial = self._serial
 
+    return mark
 
 def reconcile(self: 'FST', mark: 'FST') -> 'FST':
     """Reconcile `self` with a previously marked version and return a new valid `FST` tree. This is meant for allowing
@@ -361,6 +363,9 @@ def reconcile(self: 'FST', mark: 'FST') -> 'FST':
 
     if not self.is_root:
         raise ValueError('can only reconcile root nodes')
+
+    if self._serial != mark._serial:
+        raise RuntimeError('modification detected after mark(), not reconcilable')
 
     rec = _Reconcile(self, mark)
 

@@ -173,6 +173,7 @@ class FST:
     parse_params: dict[str, Any]   ; """The parameters to use for any `ast.parse()` that needs to be done (filename, type_comments, feature_version), root node only."""
     indent:       str              ; """The default single level of block indentation string for this tree when not available from context, root node only."""
     _lines:       list[bistr]
+    _serial:      int
 
     # class attributes
     is_FST:       bool = True      ; """@private"""  # for quick checks vs. `fstloc` or `fstview`
@@ -546,9 +547,10 @@ class FST:
         else:
             self = ast_or_src.f = object.__new__(cls)
 
-        self.a      = ast_or_src  # we don't assume `self.a` is `ast_or_src` if `.f` exists
-        self.pfield = pfield
-        self._cache = {}
+        self.a       = ast_or_src  # we don't assume `self.a` is `ast_or_src` if `.f` exists
+        self.pfield  = pfield
+        self._cache  = {}
+        self._serial = 0
 
         if pfield is not None:
             self.parent = mode_or_lines_or_parent
