@@ -56,12 +56,16 @@ def ignorable_exc(exc: Exception, putsrc: str | Literal[False] | None = None):
         if (
             # msg.startswith('cannot assign to literal here') or
             # msg.startswith('cannot assign to expression here') or
-            "Maybe you meant '==' instead of '='" in msg or
+            # "Maybe you meant '==' instead of '='" in msg or
+            # "Maybe you meant '==' or ':=' instead of '='"
+            "Maybe you meant '==' " in msg or
             msg.startswith('positional argument follows keyword argument') or
-            msg.startswith('cannot assign to literal') or
             msg.startswith('cannot use starred expression here') or
-            msg.startswith('cannot assign to function call') or
-            msg.startswith('cannot assign to expression') or
+            # msg.startswith('cannot assign to literal') or
+            # msg.startswith('cannot assign to function call') or
+            # msg.startswith('cannot assign to expression') or
+            # msg.startswith('cannot assign to None') or
+            msg.startswith('cannot assign to ') or
             (msg.startswith('future feature') and 'is not defined' in msg)
         ):
             ignorable = True
@@ -95,6 +99,19 @@ def astcat(fst: FST) -> type[AST]:  # ast category (replacement compatibility)
         return slice
 
     return astbase(a.__class__)
+
+
+def valid_replace(fst: FST, with_: FST | None) -> bool:
+    stmt_ = fst.parent_stmt()
+    path  = stmt_.child_path(fst)
+    stmt_ = stmt_.copy()
+
+    try:
+        stmt_.child_from_path(path).replace(with_.copy() if with_ else with_).verify()
+    except Exception:
+        return False
+
+    return True
 
 
 class FSTParts:
@@ -852,7 +869,7 @@ class Reconcile(Fuzzy):
     forever = True
 
     def fuzz_one(self, fst, fnm) -> bool:
-        backup = fst.copy()
+        master = fst.copy()
 
         try:
             for count in range(self.batch or 200):
@@ -862,25 +879,30 @@ class Reconcile(Fuzzy):
                     if not (count % 10):
                         sys.stdout.write('.'); sys.stdout.flush()
 
-                    fst   = backup.copy()
+                    fst   = master.copy()
                     mark  = fst.mark()
-                    parts = FSTParts(fst)
-
+                    parts = FSTParts(fst, exclude= (expr_context, mod, FormattedValue, Interpolation, alias, boolop,
+                                                    operator, unaryop))
                     tgt, cat = parts.getrnd()
 
                     if not tgt:
                         break
 
-                    # parts.remove(tgt)
+                    if isinstance((tgt_parent := tgt.parent).a,
+                                  (FormattedValue, Interpolation, JoinedStr, TemplateStr)):  # not supported yet
+                        continue
 
                     repl, _ = parts.getrnd(cat)
 
                     if not repl:
-                        # parts.add(tgt)
-
                         continue
 
-                    # parts.remove(repl)
+                    # if not valid_replace(tgt, repl):
+                    #     print(f'Not valid: {tgt.src} <- {repl.src}')
+
+                    #     continue
+
+                    # print(f'Valid: {tgt.src} <- {repl.src}')
 
                     if (repltype := choice(('fstin', 'fstout', 'ast'))) == 'ast':
                         a = copy_ast(repl.a)
@@ -900,8 +922,8 @@ class Reconcile(Fuzzy):
                         a = repl.a
 
                     if self.debug:
-                        tgt_path = tgt.root.child_path(tgt, True)
-                        repl_path = repl.root.child_path(repl, True)
+                        tgt_path    = tgt.root.child_path(tgt, True)
+                        repl_path   = repl.root.child_path(repl, True)
                         tgt_parent  = tgt.parent.copy()
                         repl_parent = repl.parent.copy()
 
@@ -909,9 +931,11 @@ class Reconcile(Fuzzy):
 
                     fst = fst.reconcile(mark)
 
-                    fst.verify()
-                    # try: fst.verify()
-                    # except Exception: print(fst.src); raise
+                    if not self.verbose:
+                        fst.verify()
+                    else:
+                        try: fst.verify()
+                        except Exception: print(fst.src); raise
 
                 except Exception as exc:
                     if not ignorable_exc(exc):
@@ -927,7 +951,7 @@ class Reconcile(Fuzzy):
 
                         raise
 
-                    fst = backup.copy()
+                    fst = master.copy()  # because not sure about state
 
         finally:
             print()

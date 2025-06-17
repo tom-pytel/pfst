@@ -945,6 +945,17 @@ def _put_one_ClassDef_bases(self: 'FST', code: _PutOneCode, idx: int | None, fie
     return _put_one_exprish_required(self, code, idx, field, child, static, 2, **options)
 
 
+def _put_one_AnnAssign_target(self: 'FST', code: _PutOneCode, idx: int | None, field: str, child: int, static: onestatic,
+                              **options) -> 'FST':
+    """Update simple according to what was put."""
+
+    ret = _put_one_exprish_required(self, code, idx, field, child, static, **options)
+
+    self.a.simple = 1 if isinstance(ret.a, Name) and not ret.pars().n else 0
+
+    return ret
+
+
 def _put_one_AnnAssign_simple(self: 'FST', code: _PutOneCode, idx: int | None, field: str, child: int, static: onestatic,
                               **options) -> 'FST':
     """Parenthesize or unparenthesize `AnnAssign.value` according to this, overkill, definitely overkill."""
@@ -2119,7 +2130,7 @@ _PUT_ONE_HANDLERS = {
     (AugAssign, 'target'):                (False, _put_one_exprish_required, _onestatic_target_single), # expr
     (AugAssign, 'op'):                    (False, _put_one_op, onestatic(None, code_as=_code_as_augop)), # operator
     (AugAssign, 'value'):                 (False, _put_one_exprish_required, _onestatic_expr_required), # expr
-    (AnnAssign, 'target'):                (False, _put_one_exprish_required, _onestatic_target_single), # expr
+    (AnnAssign, 'target'):                (False, _put_one_AnnAssign_target, _onestatic_target_single), # expr
     (AnnAssign, 'annotation'):            (False, _put_one_exprish_required, onestatic(_one_info_exprish_required, _restrict_default)), # expr  - exclude [Lambda, Yield, YieldFrom, Await, NamedExpr]?
     (AnnAssign, 'value'):                 (False, _put_one_exprish_optional, onestatic(_one_info_AnnAssign_value, _restrict_default)), # expr?
     (AnnAssign, 'simple'):                (False, _put_one_AnnAssign_simple, onestatic(None, int)), # int

@@ -9735,6 +9735,14 @@ a
         self.assertEqual('a not in b', f.src)
         f.verify()
 
+        # update AnnAssign.simple
+
+        f = FST('a.b: int')
+        self.assertEqual(f.a.simple, 0)
+        f.target.replace('c')
+        self.assertEqual(f.a.simple, 1)
+        f.verify()
+
     def test_put_one_pars(self):
         f = FST('a = b', 'exec').body[0]
         g = FST('(i := j)', 'exec').body[0].value.copy(pars=False)
