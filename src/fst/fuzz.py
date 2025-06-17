@@ -38,6 +38,9 @@ def find_pys(path) -> list[str]:
 
 
 def ignorable_exc(exc: Exception, putsrc: str | Literal[False] | None = None):
+    if isinstance(exc, NotImplementedError):
+        return True
+
     msg = str(exc)
 
     ignorable = isinstance(exc, (NodeError, ValueError)) and (
@@ -62,6 +65,10 @@ def ignorable_exc(exc: Exception, putsrc: str | Literal[False] | None = None):
             ' for augmented assignment' in msg or
             msg.startswith('positional argument follows keyword argument') or
             msg.startswith('cannot use starred expression here') or
+            msg.startswith('illegal target for annotation') or
+            # msg.startswith('cannot delete literal') or
+            # msg.startswith('cannot delete function call') or
+            msg.startswith('cannot delete ') or
             # msg.startswith('cannot assign to literal') or
             # msg.startswith('cannot assign to function call') or
             # msg.startswith('cannot assign to expression') or
@@ -108,7 +115,7 @@ def valid_replace(fst: FST, with_: FST | None) -> bool:
     stmt_ = stmt_.copy()
 
     try:
-        stmt_.child_from_path(path).replace(with_.copy() if with_ else with_).verify()
+        stmt_.child_from_path(path).replace(with_.copy() if with_ else with_).root.verify()
     except Exception:
         return False
 
@@ -865,8 +872,8 @@ class PutOnePat(Fuzzy):
             sys.stdout.write('\n')
 
 
-class Reconcile(Fuzzy):
-    name    = 'reconcile'
+class Reconcile1(Fuzzy):
+    name    = 'reconcile1'
     forever = True
 
     def fuzz_one(self, fst, fnm) -> bool:
@@ -898,12 +905,28 @@ class Reconcile(Fuzzy):
                     if not repl:
                         continue
 
+                    tgta , tgt_parenta  = tgt.a,  tgt.parent.a
+                    repla, repl_parenta = repl.a, repl.parent.a
+
+                    if isinstance(tgta, Slice) and not isinstance(repla, Slice):
+                        continue
+
+                    if (isinstance(tgta, arguments) and isinstance(tgt_parenta, Lambda) and
+                        not isinstance(repl_parenta, Lambda)
+                    ):
+                        continue
+
+                    if (isinstance(tgta, arg) and isinstance(tgt_parenta, arguments) and
+                        isinstance(tgt.parent.parent.a, Lambda) and repla.annotation
+                    ):
+                        continue
+
                     # if not valid_replace(tgt, repl):
-                    #     print(f'Not valid: {tgt.src} <- {repl.src}')
-
+                    #     if self.verbose:
+                    #         print(f'Not valid: {tgt.src} <- {repl.src}')
                     #     continue
-
-                    # print(f'Valid: {tgt.src} <- {repl.src}')
+                    # if self.verbose:
+                    #     print(f'Valid: {tgt.src} <- {repl.src}')
 
                     if (repltype := choice(('fstin', 'fstout', 'ast'))) == 'ast':
                         a = copy_ast(repl.a)
@@ -943,10 +966,14 @@ class Reconcile(Fuzzy):
                         print(f'\n{repltype = }')
                         print(f'{tgt.src = }')
                         print(f'{repl.src = }')
+                        print(f'{type(tgt.a) = }')
+                        print(f'{type(repl.a) = }')
 
                         if self.debug:
                             print(f'{tgt_path = }')
                             print(f'{repl_path = }')
+                            print(f'{type(tgt_parent.a) = }')
+                            print(f'{type(repl_parent.a) = }')
                             print(f'{tgt_parent.src = }')
                             print(f'{repl_parent.src = }')
 

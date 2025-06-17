@@ -108,7 +108,7 @@ def _get_one_arguments(self: 'FST', idx: int | None, field: str, cut: bool, **op
 
     _validate_get(self, idx, field)
 
-    return FST(arguments(), [''], from_=self)
+    return FST(arguments(posonlyargs=[], args=[], kwonlyargs=[], kw_defaults=[], defaults=[]), [''], from_=self)
 
 
 def _get_one_BoolOp_op(self: 'FST', idx: int | None, field: str, cut: bool, **options) -> _GetOneRet:
