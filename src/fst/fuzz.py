@@ -900,8 +900,8 @@ class Reconcile(Fuzzy):
                         a = repl.a
 
                     if self.debug:
-                        # tgt_grandparent  = tgt.parent.parent.copy()
-                        # repl_grandparent = repl.parent.parent.copy()
+                        tgt_path = tgt.root.child_path(tgt, True)
+                        repl_path = repl.root.child_path(repl, True)
                         tgt_parent  = tgt.parent.copy()
                         repl_parent = repl.parent.copy()
 
@@ -910,6 +910,8 @@ class Reconcile(Fuzzy):
                     fst = fst.reconcile(mark)
 
                     fst.verify()
+                    # try: fst.verify()
+                    # except Exception: print(fst.src); raise
 
                 except Exception as exc:
                     if not ignorable_exc(exc):
@@ -918,10 +920,8 @@ class Reconcile(Fuzzy):
                         print(f'{repl.src = }')
 
                         if self.debug:
-                            # print('tgt_grandparent.src')
-                            # print(tgt_grandparent.src)
-                            # print('repl_grandparent.src')
-                            # print(repl_grandparent.src)
+                            print(f'{tgt_path = }')
+                            print(f'{repl_path = }')
                             print(f'{tgt_parent.src = }')
                             print(f'{repl_parent.src = }')
 

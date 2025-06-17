@@ -180,7 +180,7 @@ class _Reconcile:
                         for i in range(start, end):
                             body[i].f.verify(reparse=False)
 
-                        slice = child_parent.get_slice(child_idx, child_off_idx + end, field)
+                        slice = child_parent.get_slice(child_idx, child_off_idx + end, child_field)
 
                     except Exception:  # verification failed, need to do one AST at a time
                         pass
@@ -194,7 +194,7 @@ class _Reconcile:
 
                 else:
                     mark_parent = self.mark.child_from_path(self.work.child_path(child_parent))
-                    slice       = mark_parent.get_slice(child_idx, child_off_idx + end, field)
+                    slice       = mark_parent.get_slice(child_idx, child_off_idx + end, child_field)
 
                     outf.put_slice(slice, start, end, field)
 
@@ -363,6 +363,8 @@ def reconcile(self: 'FST', mark: 'FST') -> 'FST':
     **Returns:**
     - `FST`: A new valid reconciled `FST` if possible.
     """
+
+    # TODO: allow multiple maked trees to participate?
 
     if not self.is_root:
         raise ValueError('can only reconcile root nodes')
