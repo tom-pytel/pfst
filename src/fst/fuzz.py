@@ -57,8 +57,11 @@ def ignorable_exc(exc: Exception, putsrc: str | Literal[False] | None = None):
             # msg.startswith('cannot assign to literal here') or
             # msg.startswith('cannot assign to expression here') or
             "Maybe you meant '==' instead of '='" in msg or
-
+            msg.startswith('positional argument follows keyword argument') or
+            msg.startswith('cannot assign to literal') or
             msg.startswith('cannot use starred expression here') or
+            msg.startswith('cannot assign to function call') or
+            msg.startswith('cannot assign to expression') or
             (msg.startswith('future feature') and 'is not defined' in msg)
         ):
             ignorable = True
@@ -101,7 +104,7 @@ class FSTParts:
     parts: dict  # {type[AST]: [FST, ...], ...}
 
     def __init__(self, fst: FST, exclude: type[AST] | tuple[type[AST]] =
-                 (expr_context, mod, FormattedValue, Interpolation, boolop, operator, unaryop)):
+                 (expr_context, mod, FormattedValue, Interpolation, alias, boolop, operator, unaryop)):
         cats  = {}                 # {FST: type[AST], ...}
         parts = defaultdict(list)  # {type[AST]: [FST, ...], ...}
 
@@ -118,7 +121,7 @@ class FSTParts:
         self.parts   = dict(parts)
         self.exclude = exclude
 
-    def remove(self, fst: FST):
+    def remove_all(self, fst: FST):
         exclude = self.exclude
         parts   = self.parts
         cats    = self.cats
@@ -130,7 +133,7 @@ class FSTParts:
 
                     parts[c].remove(f)
 
-    def add(self, fst: FST):  # or put back removed
+    def add_all(self, fst: FST):  # or put back removed
         exclude = self.exclude
         parts   = self.parts
         cats    = self.cats
@@ -859,6 +862,7 @@ class Reconcile(Fuzzy):
                     if not (count % 10):
                         sys.stdout.write('.'); sys.stdout.flush()
 
+                    fst   = backup.copy()
                     mark  = fst.mark()
                     parts = FSTParts(fst)
 
@@ -896,6 +900,8 @@ class Reconcile(Fuzzy):
                         a = repl.a
 
                     if self.debug:
+                        # tgt_grandparent  = tgt.parent.parent.copy()
+                        # repl_grandparent = repl.parent.parent.copy()
                         tgt_parent  = tgt.parent.copy()
                         repl_parent = repl.parent.copy()
 
@@ -912,6 +918,10 @@ class Reconcile(Fuzzy):
                         print(f'{repl.src = }')
 
                         if self.debug:
+                            # print('tgt_grandparent.src')
+                            # print(tgt_grandparent.src)
+                            # print('repl_grandparent.src')
+                            # print(repl_grandparent.src)
                             print(f'{tgt_parent.src = }')
                             print(f'{repl_parent.src = }')
 
@@ -992,4 +1002,5 @@ def main():
 
 
 if __name__ == '__main__':
+    print('...', sys.argv)
     main()

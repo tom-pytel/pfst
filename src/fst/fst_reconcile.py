@@ -249,6 +249,9 @@ class _Reconcile:
 
                         # TODO: this special case
 
+                if field == 'kwd_attrs' or (field == 'names' and isinstance(node, (Global, Nonlocal))):  # list of identifier names
+                    continue
+
 
                 # TODO: rest of slices when they are done
 
