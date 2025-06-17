@@ -9698,6 +9698,43 @@ a
         else:
             self.assertEqual('def f(*a: *ann): pass', FST('def f(*a): pass').args.vararg.put('*ann', 'annotation', raw=False).root.src)
 
+        # make sure alphanumeric operators get the spaces they need
+
+        f = FST('1 or-1')
+        f.values[1].op.replace('not')
+        self.assertEqual('1 or not 1', f.src)
+        f.verify()
+
+        f = FST('a<b')
+        f.ops[0].replace('is')
+        self.assertEqual('a is b', f.src)
+        f.verify()
+
+        f = FST('a<b')
+        f.ops[0].replace('is not')
+        self.assertEqual('a is not b', f.src)
+        f.verify()
+
+        f = FST('a<b')
+        f.ops[0].replace('in')
+        self.assertEqual('a in b', f.src)
+        f.verify()
+
+        f = FST('a<b')
+        f.ops[0].replace('not in')
+        self.assertEqual('a not in b', f.src)
+        f.verify()
+
+        f = FST('not a')
+        f.op.replace('not')
+        self.assertEqual('not a', f.src)
+        f.verify()
+
+        f = FST('a not in b')
+        f.ops[0].replace('not in')
+        self.assertEqual('a not in b', f.src)
+        f.verify()
+
     def test_put_one_pars(self):
         f = FST('a = b', 'exec').body[0]
         g = FST('(i := j)', 'exec').body[0].value.copy(pars=False)

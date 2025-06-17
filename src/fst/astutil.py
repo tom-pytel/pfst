@@ -16,6 +16,7 @@ __all__ = [
     'FIELDS', 'AST_FIELDS',
     'OPSTR2CLS_UNARY', 'OPSTR2CLS_BIN', 'OPSTR2CLS_CMP', 'OPSTR2CLS_BOOL', 'OPSTR2CLS_AUG',
     'OPSTR2CLS', 'OPSTR2CLSWAUG', 'OPCLS2STR', 'OPCLS2STR_AUG',
+    're_alnum', 're_two_alnum',
     're_identifier', 're_identifier_only', 're_identifier_dotted', 're_identifier_dotted_only',
     're_identifier_or_star', 're_identifier_or_star_only', 're_identifier_alias', 're_identifier_alias_only',
     'bistr', 'constant',
@@ -135,6 +136,9 @@ class bistr(str):
 
 
 constant = EllipsisType | int | float | complex | str | bytes | bool | None
+
+re_alnum                   = re.compile(r'[\w\uFE00-\uFE0F\U000E0100-\U000E01EF]')
+re_two_alnum               = re.compile(r'[\w\uFE00-\uFE0F\U000E0100-\U000E01EF][\w\uFE00-\uFE0F\U000E0100-\U000E01EF]')
 
 re_identifier              = re.compile(r'[^\d\W][\w\uFE00-\uFE0F\U000E0100-\U000E01EF]*')  # some other weird unicode crap accepted by python but no, just no
 re_identifier_only         = re.compile(r'^[^\d\W][\w\uFE00-\uFE0F\U000E0100-\U000E01EF]*$')

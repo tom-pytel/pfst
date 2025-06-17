@@ -100,7 +100,8 @@ class FSTParts:
     cats: dict   # {FST: type[AST], ...}
     parts: dict  # {type[AST]: [FST, ...], ...}
 
-    def __init__(self, fst: FST, exclude: type[AST] | tuple[type[AST]] = (expr_context, mod)):
+    def __init__(self, fst: FST, exclude: type[AST] | tuple[type[AST]] =
+                 (expr_context, mod, FormattedValue, Interpolation, boolop, operator, unaryop)):
         cats  = {}                 # {FST: type[AST], ...}
         parts = defaultdict(list)  # {type[AST]: [FST, ...], ...}
 
@@ -895,8 +896,8 @@ class Reconcile(Fuzzy):
                         a = repl.a
 
                     if self.debug:
-                        tgt_pre  = tgt.parent.copy()
-                        repl_pre = repl.parent.copy()
+                        tgt_parent  = tgt.parent.copy()
+                        repl_parent = repl.parent.copy()
 
                     tgt.pfield.set(tgt.parent.a, a)
 
@@ -907,10 +908,12 @@ class Reconcile(Fuzzy):
                 except Exception as exc:
                     if not ignorable_exc(exc):
                         print(f'\n{repltype = }')
+                        print(f'{tgt.src = }')
+                        print(f'{repl.src = }')
 
                         if self.debug:
-                            print(tgt_pre.src)
-                            print(repl_pre.src)
+                            print(f'{tgt_parent.src = }')
+                            print(f'{repl_parent.src = }')
 
                         raise
 

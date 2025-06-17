@@ -30,8 +30,6 @@ _PYLT12     = _PY_VERSION < (3, 12)
 _GetOneRet       = Optional['FST'] | str | constant
 _PutOneCode      = Code | str | constant | None
 
-_re_merged_alnum = re.compile(r'\w\w')
-
 
 def _params_Compare_combined(self: 'FST', idx: int | None) -> tuple[int, str, AST | list[AST]]:
     ast         = self.a
@@ -654,14 +652,30 @@ def _put_one_op(self: 'FST', code: _PutOneCode, idx: int | None, field: str,
                 static: None, **options) -> 'FST':
     """Put a single operation, with or without '=' for AugAssign."""
 
-    child  = _validate_put(self, code, idx, field, child)
-    code   = static.code_as(code, self.root.parse_params)
-    childf = child.f
+    child      = _validate_put(self, code, idx, field, child)
+    code       = static.code_as(code, self.root.parse_params)
+    childf     = child.f
+    code_lines = code._lines
 
     ln, col, end_ln, end_col = childf.loc
 
-    self._put_src(code._lines, ln, col, end_ln, end_col, False)
-    childf._set_ast(code.a)
+    if is_alnum := isinstance(codea := code.a, (Not, Is, IsNot, In, NotIn)):  # alphanumneric operators may need spaces added
+        cln, ccol, cend_ln, cend_col = code.loc
+        lines                        = self.root._lines
+
+        if (cend_ln, cend_col) == code.whole_loc[2:] and re_alnum.match(lines[end_ln], end_col):  # insert space at end of operator?
+            code._put_src([' '], cend_ln, cend_col, cend_ln, cend_col, False)
+
+        if not cln and not ccol and col and re_alnum.match(lines[ln], col - 1):  # insert space at start of operator?
+            code._put_src([' '], 0, 0, 0, 0, False)
+        else:
+            is_alnum = False
+
+    self._put_src(code_lines, ln, col, end_ln, end_col, False)
+    childf._set_ast(codea)
+
+    if is_alnum and isinstance(a := self.a, UnaryOp):  # the beginning of this will not have been offset correctly if a leading space was added to the Not operator
+        a.col_offset += 1
 
     return childf
 
@@ -800,10 +814,10 @@ def _make_exprish_fst(self: 'FST', code: _PutOneCode, idx: int | None, field: st
     lines     = self.root._lines
     put_lines = put_fst._lines
 
-    if col and _re_merged_alnum.match(lines[ln][col - 1] + (prefix or put_lines[0][:1])):  # if start would merge then prepend prefix with space
+    if col and re_two_alnum.match(lines[ln][col - 1] + (prefix or put_lines[0][:1])):  # if start would merge then prepend prefix with space
         prefix = ' ' + prefix
 
-    if end_col < len(l := lines[end_ln]) and _re_merged_alnum.match((suffix or put_lines[-1])[-1:] + l[end_col]):  # if end would merge then append space to suffix
+    if end_col < len(l := lines[end_ln]) and re_two_alnum.match((suffix or put_lines[-1])[-1:] + l[end_col]):  # if end would merge then append space to suffix
         suffix = suffix + ' '
 
     # do it
