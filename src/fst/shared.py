@@ -16,7 +16,8 @@ from .astutil import TypeAlias, TryStar, TemplateStr, type_param, Interpolation
 __all__ = ['Code', 'Mode', 'NodeError', 'astfield', 'fstloc']
 
 
-EXPRISH                  = (expr, arg, alias, withitem, pattern, type_param)
+EXPRISH                  = (expr, comprehension, arguments, arg, keyword)  # can be in expression chain (have expressions above)
+EXPRISH_ALL              = EXPRISH + (expr_context, boolop, operator, unaryop, cmpop)
 STMTISH                  = (stmt, ExceptHandler, match_case)  # always in lists, cannot be inside multilines
 STMTISH_OR_MOD           = STMTISH + (mod,)
 STMTISH_OR_STMTMOD       = STMTISH + (Module, Interactive)
@@ -724,7 +725,8 @@ def _coerce_ast(ast, coerce: Literal['expr', 'exprish', 'mod'] | None = None) ->
 
             ast = ast.value
 
-        if not isinstance(ast, expr if (is_expr := coerce == 'expr') else EXPRISH):
+        if not isinstance(ast, expr if (is_expr := coerce == 'expr') else
+                          (expr, arg, alias, withitem, pattern, type_param)):
             raise NodeError('expecting expression' if is_expr else 'expecting expressionish node')
 
         return ast

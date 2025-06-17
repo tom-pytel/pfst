@@ -15,7 +15,7 @@ from .astutil import TypeAlias, TryStar, TemplateStr, Interpolation, type_param
 
 from .shared import (
     NodeError, astfield, fstloc, fstlocns, nspace,
-    STMTISH, STMTISH_OR_MOD, BLOCK, BLOCK_OR_MOD, SCOPE, SCOPE_OR_MOD, NAMED_SCOPE,
+    EXPRISH_ALL, STMTISH, STMTISH_OR_MOD, BLOCK, BLOCK_OR_MOD, SCOPE, SCOPE_OR_MOD, NAMED_SCOPE,
     NAMED_SCOPE_OR_MOD, ANONYMOUS_SCOPE, HAS_DOCSTRING,
     re_empty_line, re_line_continuation, re_line_end_cont_or_comment,
     Self, Code, Mode,
@@ -2125,8 +2125,7 @@ class FST:
         ```
         """
 
-        types = expr if strict else (expr, comprehension, arguments, arg, keyword, expr_context, boolop, operator,
-                                     unaryop, cmpop)
+        types = expr if strict else EXPRISH_ALL  # ops because of maybe self_
 
         if self_ and not isinstance(self.a, types):
             return self

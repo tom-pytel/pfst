@@ -11,8 +11,7 @@ from .astutil import Interpolation
 
 from .shared import (
     Self, astfield, fstloc, nspace,
-    BLOCK,
-    HAS_DOCSTRING,
+    EXPRISH, BLOCK, HAS_DOCSTRING,
     re_empty_line_start, re_line_end_cont_or_comment,
     _next_src, _prev_src, _next_find, _prev_find, _next_pars, _prev_pars,
     _params_offset,
@@ -106,7 +105,7 @@ if _PY_VERSION >= (3, 12):
                 self.field = field
                 self.data  = data = []  # [(FormattedValue or Interpolation FST, len(dbg_str) or None, bool do val_str), ...]
 
-                while isinstance(fst.a, expr):
+                while isinstance(fst.a, EXPRISH):
                     parent = fst.parent
                     pfield = fst.pfield
 
@@ -160,6 +159,10 @@ if _PY_VERSION >= (3, 12):
 
             elif fst is not self.fst:  # if parent of field changed then entire statement was reparsed and we have nothing to do
                 return
+
+
+            # TODO: 'for in' check
+
 
             if data := self.data:
                 first = data[0]
@@ -279,7 +282,7 @@ def _dump(self: 'FST', st: nspace, cind: str = '', prefix: str = ''):
     if not st.src:  # nop
         pass
 
-    elif isinstance(ast, (stmt, ExceptHandler, match_case)):  # src = 'line' or 'node'
+    elif isinstance(ast, (stmt, ExceptHandler, match_case)):  # src = 'stmt' or 'all'
         if loc := self.bloc:
             if isinstance(ast, BLOCK):
                 _out_lines(self, st.linefunc, loc.ln, loc.col, *self._loc_block_header_end(), st.eol)

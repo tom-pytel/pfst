@@ -105,7 +105,7 @@ class _Reconcile:
                         pass
 
                     else:  # no recurse because we wouldn't be at this point if it wasn't a valid full FST without AST replacements, couldn't anyway as we don't know anything about that tree
-                        outf.put_slice(slice, start, end, None)
+                        outf.put_slice(slice, start, end, None, raw=False)
 
                         start = end
 
@@ -115,7 +115,7 @@ class _Reconcile:
                     mark_parent = self.mark.child_from_path(self.work.child_path(child_parent))
                     slice       = mark_parent.get_slice(child_idx, child_idx - start + end, None)
 
-                    outf.put_slice(slice, start, end, None)
+                    outf.put_slice(slice, start, end, None, raw=False)
 
             len_outa_body = len(outa_keys)  # get each time because could have been modified by put_slice, will not change if coming from AST
 
@@ -124,19 +124,19 @@ class _Reconcile:
                 v = values[i]
 
                 if i >= len_outa_body:  # if past end then we need to slice insert AST before recursing into it, doesn't happen if coming from AST
-                    outf.put_slice(Dict(keys=[k], values=[v]), i, i, None)
+                    outf.put_slice(Dict(keys=[k], values=[v]), i, i, None, raw=False)
 
                 if k:
                     self.recurse_node(k, astfield('keys', i), outf, nodef)
                 elif outa_keys[i] is not None:
-                    outf.put(None, i, False, 'keys')
+                    outf.put(None, i, False, 'keys', raw=False)
 
                 self.recurse_node(v, astfield('values', i), outf, nodef)  # nodef set accordingly regardless of if coming from FST or AST
 
             start = end
 
         if start < len(outa_keys):  # delete tail in output, doesn't happen if coming from AST
-            outf.put_slice(None, start, None, None)
+            outf.put_slice(None, start, None, None, raw=False)
 
     def recurse_slice(self, node: AST, outf: Optional['FST'], field: str, body: list[AST]):
         """Recurse into a slice of children using slice operations to copy over formatting where possible (if not
@@ -186,7 +186,7 @@ class _Reconcile:
                         pass
 
                     else:  # no recurse because we wouldn't be at this point if it wasn't a valid full FST without AST replacements, couldn't anyway as we don't know anything about that tree
-                        outf.put_slice(slice, start, end, field)
+                        outf.put_slice(slice, start, end, field, raw=False)
 
                         start = end
 
@@ -196,7 +196,7 @@ class _Reconcile:
                     mark_parent = self.mark.child_from_path(self.work.child_path(child_parent))
                     slice       = mark_parent.get_slice(child_idx, child_off_idx + end, child_field)
 
-                    outf.put_slice(slice, start, end, field)
+                    outf.put_slice(slice, start, end, field, raw=False)
 
             len_outa_body = len(outa_body)  # get each time because could have been modified by put_slice, will not change if coming from AST
 
@@ -204,14 +204,14 @@ class _Reconcile:
                 n = body[i]  # this is safe to use in 'put_slice()' then 'recurse()' without duplicating because ASTs are not consumed
 
                 if i >= len_outa_body:  # if past end then we need to slice insert AST before recursing into it, doesn't happen if coming from AST
-                    outf.put_slice(n, i, i, field, one=True)  # put one
+                    outf.put_slice(n, i, i, field, one=True, raw=False)  # put one
 
                 self.recurse_node(n, astfield(field, i), outf, nodef)  # nodef set accordingly regardless of if coming from FST or AST
 
             start = end
 
         if start < len(outa_body):  # delete tail in output, doesn't happen if coming from AST
-            outf.put_slice(None, start, None, field)
+            outf.put_slice(None, start, None, field, raw=False)
 
     def recurse_children(self, node: AST, outa: AST):
         """Recurse into children of a node."""

@@ -115,7 +115,7 @@ def valid_replace(fst: FST, with_: FST | None) -> bool:
     stmt_ = stmt_.copy()
 
     try:
-        stmt_.child_from_path(path).replace(with_.copy() if with_ else with_).root.verify()
+        stmt_.child_from_path(path).replace(with_.copy() if with_ else with_, raw=False).root.verify()
     except Exception:
         return False
 
@@ -887,9 +887,9 @@ class Reconcile1(Fuzzy):
                     if not (count % 10):
                         sys.stdout.write('.'); sys.stdout.flush()
 
-                    fst   = master.copy()
+                    # fst   = master.copy()
                     mark  = fst.mark()
-                    parts = FSTParts(fst, exclude= (expr_context, mod, FormattedValue, Interpolation, alias, boolop,
+                    parts = FSTParts(fst, exclude= (expr_context, mod, FormattedValue, Interpolation, boolop,
                                                     operator, unaryop))
                     tgt, cat = parts.getrnd()
 
@@ -905,28 +905,30 @@ class Reconcile1(Fuzzy):
                     if not repl:
                         continue
 
-                    tgta , tgt_parenta  = tgt.a,  tgt.parent.a
-                    repla, repl_parenta = repl.a, repl.parent.a
 
-                    if isinstance(tgta, Slice) and not isinstance(repla, Slice):
-                        continue
+                    # tgta , tgt_parenta  = tgt.a,  tgt.parent.a
+                    # repla, repl_parenta = repl.a, repl.parent.a
 
-                    if (isinstance(tgta, arguments) and isinstance(tgt_parenta, Lambda) and
-                        not isinstance(repl_parenta, Lambda)
-                    ):
-                        continue
-
-                    if (isinstance(tgta, arg) and isinstance(tgt_parenta, arguments) and
-                        isinstance(tgt.parent.parent.a, Lambda) and repla.annotation
-                    ):
-                        continue
-
-                    # if not valid_replace(tgt, repl):
-                    #     if self.verbose:
-                    #         print(f'Not valid: {tgt.src} <- {repl.src}')
+                    # if isinstance(tgta, Slice) and not isinstance(repla, Slice):
                     #     continue
-                    # if self.verbose:
-                    #     print(f'Valid: {tgt.src} <- {repl.src}')
+
+                    # if (isinstance(tgta, arguments) and isinstance(tgt_parenta, Lambda) and
+                    #     not isinstance(repl_parenta, Lambda)
+                    # ):
+                    #     continue
+
+                    # if (isinstance(tgta, arg) and isinstance(tgt_parenta, arguments) and
+                    #     isinstance(tgt.parent.parent.a, Lambda) and repla.annotation
+                    # ):
+                    #     continue
+
+                    if not valid_replace(tgt, repl):
+                        if self.verbose:
+                            print(f'Not valid: {tgt.src} <- {repl.src}')
+                        continue
+                    if self.verbose:
+                        print(f'Valid: {tgt.src} <- {repl.src}')
+
 
                     if (repltype := choice(('fstin', 'fstout', 'ast'))) == 'ast':
                         a = copy_ast(repl.a)
