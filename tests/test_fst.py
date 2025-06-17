@@ -11015,12 +11015,6 @@ match a:
         self.assertEqual(old, FST.set_option(**old))
 
     def test_reconcile(self):
-        # make sure modifications are detedted
-
-        m = (o := FST('i = 1')).mark()
-        o.value.par(True)
-        self.assertRaises(RuntimeError, o.reconcile, m)
-
         # basic replacements
 
         m = (o := FST('i = 1')).mark()
@@ -11387,6 +11381,12 @@ match a:
         f = o.reconcile(m)
         self.assertEqual('{a : b, c : d, x: y, a : b, c : d, s : t, u : v}', f.src)
         f.verify()
+
+        # make sure modifications are detected
+
+        m = (o := FST('i = 1')).mark()
+        o.value.par(True)
+        self.assertRaises(RuntimeError, o.reconcile, m)
 
 
 if __name__ == '__main__':

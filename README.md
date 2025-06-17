@@ -15,7 +15,11 @@ This module exists in order to facilitate quick and easy editing of Python sourc
 
 # More detail
 
-`pfst` does not do any parsing of its own but rather relies on the builtin Python parser and unparser so it stays 100% compliant. This means you get perfect parsing but also that it is limited to the syntax of the running Python version, but many options exist for running any specific verion of Python. `pfst` does basic validation but will not prevent you from burning yourself if you really want to. For example, it won't let you add a `Slice` to a `Tuple` which is not at the top level or already in a `Subscript.slice` field, but you can take a `Tuple` with a `Slice` in it already and put it somewhere else where it doesn't belong.
+`pfst` was writtend and tested on Python versions 3.10 through 3.14.
+
+`pfst` does not do any parsing of its own but rather relies on the builtin Python parser and unparser so it stays 100% compliant. This means you get perfect parsing but also that it is limited to the syntax of the running Python version, but many options exist for running any specific verion of Python. `pfst` does use standard Python parsing to parse things that can not normally be parsed, like individual exception handerls or match cases by wrapping them in corresponding code then pulling out and adjusting the locations of the parsed `AST`s.
+
+`pfst` does basic validation but will not prevent you from poking an eye out if you really want to. For example, it won't let you add a `Slice` to a `Tuple` which is not at the top level or already in a `Subscript.slice` field, but you can take a `Tuple` with a `Slice` in it already and put it somewhere else where it doesn't belong.
 
 
 ## TODO

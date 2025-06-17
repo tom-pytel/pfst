@@ -5,11 +5,12 @@ import os
 import sys
 import sysconfig
 from ast import *
+from collections import defaultdict
 from itertools import repeat
 from math import log10
 from random import choice, randint, seed, shuffle
 from types import NoneType
-from typing import Any, Generator
+from typing import Any, Generator, Literal
 
 from .astutil import *
 from .astutil import TemplateStr, Interpolation
@@ -34,6 +35,125 @@ def find_pys(path) -> list[str]:
         return fnms
 
     raise ValueError(f'unknown thing: {path}')
+
+
+def ignorable_exc(exc: Exception, putsrc: str | Literal[False] | None = None):
+    msg = str(exc)
+
+    ignorable = isinstance(exc, (NodeError, ValueError)) and (
+        msg.endswith('cannot be Starred') or
+        'not implemented' in msg or
+        'in this state' in msg or
+        'pattern expression' in msg or
+        'invalid value for MatchValue.value' in msg or
+        'invalid value for MatchMapping.keys' in msg or
+        'cannot reparse Starred in slice as Starred' in msg or
+        'expecting identifier, got' in msg
+        # (msg.startswith('cannot put ') and (msg.endswith(' to MatchMapping.keys') or msg.endswith(' to MatchValue.value')))
+    )
+
+    if not ignorable and isinstance(exc, SyntaxError):
+        if (
+            # msg.startswith('cannot assign to literal here') or
+            # msg.startswith('cannot assign to expression here') or
+            "Maybe you meant '==' instead of '='" in msg or
+
+            msg.startswith('cannot use starred expression here') or
+            (msg.startswith('future feature') and 'is not defined' in msg)
+        ):
+            ignorable = True
+
+        elif putsrc:  # Starred stuff like "*a or b" coming from original code
+            try:
+                FST._parse_callarg(putsrc)
+            except SyntaxError:
+                pass
+            else:
+                ignorable = True
+
+    return ignorable
+
+
+def astbase(cls: type[AST]) -> type[AST]:  # ast base class just above AST
+    while (c := cls.__bases__[0]) is not AST:
+        cls = c
+
+    return cls
+
+
+def astcat(fst: FST) -> type[AST]:  # ast category (replacement compatibility)
+    a = fst.a
+
+    if isinstance(a, ExceptHandler):
+        return ExceptHandler if isinstance(fst.parent, Try) else excepthandler  # Try vs. TryStar
+    if isinstance(a, (match_case, Starred)):
+        return a.__class__
+    if fst.has_slice():
+        return slice
+
+    return astbase(a.__class__)
+
+
+class FSTParts:
+    """Build and manipulate index into individual FST node interchangeable type groups."""
+
+    cats: dict   # {FST: type[AST], ...}
+    parts: dict  # {type[AST]: [FST, ...], ...}
+
+    def __init__(self, fst: FST, exclude: type[AST] | tuple[type[AST]] = (expr_context, mod)):
+        cats  = {}                 # {FST: type[AST], ...}
+        parts = defaultdict(list)  # {type[AST]: [FST, ...], ...}
+
+        for a in walk(fst.a):
+            if isinstance(a, exclude):
+                continue
+
+            f   = a.f
+            cat = cats[f] = astcat(f)
+
+            parts[cat].append(f)
+
+        self.cats    = cats
+        self.parts   = dict(parts)
+        self.exclude = exclude
+
+    def remove(self, fst: FST):
+        exclude = self.exclude
+        parts   = self.parts
+        cats    = self.cats
+
+        for a in walk(fst.a):
+            if not isinstance(a, exclude):
+                if c := cats.get(f := a.f):
+                    del cats[f]
+
+                    parts[c].remove(f)
+
+    def add(self, fst: FST):  # or put back removed
+        exclude = self.exclude
+        parts   = self.parts
+        cats    = self.cats
+
+        for a in walk(fst.a):
+            if not isinstance(a, exclude):
+                f       = a.f
+                cats[f] = cat = astcat(f)
+
+                parts[cat].append(f)
+
+    def getrnd(self, cat: type[AST] | list[type[AST]] | None = None) -> tuple[FST | None, type[AST] | None]:
+        if cat is None:
+            cat = [c for c, fs in self.parts.items() if fs]
+        else:
+            cat = [cat] if isinstance(cat, type) else cat[:]
+
+        while cat:
+            if p := self.parts.get(c := cat[i := randint(0, len(cat) - 1)]):
+                return choice(p), c
+
+            del cat[i]
+
+        return None, None
 
 
 class Fuzzy:
@@ -104,6 +224,8 @@ class Fuzzy:
     def fuzz_one(self, fst: FST, fnm: str):
         pass
 
+
+# ----------------------------------------------------------------------------------------------------------------------
 
 class VerifyCopy(Fuzzy):
     name = 'verify_copy'
@@ -220,7 +342,7 @@ class ReputSrc(Fuzzy):
     def fuzz_one(self, fst, fnm) -> bool:
         lines = fst._lines
 
-        seed(rnd_seed := randint(0, 2**32-1))
+        # seed(rnd_seed := randint(0, 2**32-1))
 
         try:
             for count in range(self.batch or 200):
@@ -247,7 +369,8 @@ class ReputSrc(Fuzzy):
                     assert copy.src == fst.src
 
                 except:
-                    print('\nRandom seed was:', rnd_seed)
+                    # print('\nRandom seed was:', rnd_seed)
+                    print()
                     print(count, ln, col, end_ln, end_col)
                     print('-'*80)
                     print(put_lines)
@@ -263,8 +386,7 @@ class ReputSrc(Fuzzy):
 from fst.fst_one import (
     _PUT_ONE_HANDLERS, _put_one_exprish_optional, _put_one_identifier_optional,
     _put_one_Dict_keys, _put_one_withitem_optional_vars,
-    _put_one_ExceptHandler_name, _put_one_keyword_arg, _put_one_NOT_IMPLEMENTED_YET,
-)
+    _put_one_ExceptHandler_name, _put_one_keyword_arg, _put_one_NOT_IMPLEMENTED_YET,)
 
 class ReputOne(Fuzzy):
     name = 'reput_one'
@@ -377,33 +499,7 @@ class ReputOne(Fuzzy):
                         fst.verify()
 
             except Exception as exc:
-                msg = str(exc)
-
-                ignorable = isinstance(exc, (NodeError, ValueError)) and (
-                    msg.endswith('cannot be Starred') or
-                    'not implemented' in msg or
-                    'in this state' in msg or
-                    'pattern expression' in msg or
-                    'invalid value for MatchValue.value' in msg or
-                    'invalid value for MatchMapping.keys' in msg or
-                    'cannot reparse Starred in slice as Starred' in msg or
-                    'expecting identifier, got' in msg
-                    # (msg.startswith('cannot put ') and (msg.endswith(' to MatchMapping.keys') or msg.endswith(' to MatchValue.value')))
-                )
-
-                if not ignorable and isinstance(exc, SyntaxError):
-                    if msg.startswith('cannot use starred expression here'):
-                        ignorable = True
-
-                    elif put == 'src':  # Starred stuff like "*a or b" coming from original code
-                        try:
-                            FST._parse_callarg(src)
-                        except SyntaxError:
-                            pass
-                        else:
-                            ignorable = True
-
-                if not ignorable:
+                if not ignorable_exc(exc, put == 'src' and src):
                     print('-'*80)
                     print(sig, put, fst.child_path(f, True), idx, field, f.parent)
                     print(f'{f=}')
@@ -436,7 +532,7 @@ class ReputOne(Fuzzy):
                         #     (strs := na.f._get_fmtval_interp_strs()) and strs[0]
                         # ):
                         #     a.value = ''
-                        a.value = ''  # just don't compare, pain-in-the-ass because of AST JoinedStrs unparsing without needef information
+                        a.value = ''  # just don't compare, pain-in-the-ass because of AST JoinedStrs unparsing without needed information
 
         try:
             compare_asts(fst.a, backup.a,
@@ -633,35 +729,7 @@ class PutOneExpr(Fuzzy):
                         fst.verify()
 
                 except Exception as exc:
-                    msg = str(exc)
-
-                    ignorable = isinstance(exc, (NodeError, ValueError)) and (
-                        msg.endswith('cannot be Starred') or
-                        'not implemented' in msg or
-                        'in this state' in msg or
-                        'pattern expression' in msg or
-                        'invalid value for MatchValue.value' in msg or
-                        'invalid value for MatchMapping.keys' in msg or
-                        'cannot reparse Starred in slice as Starred' in msg or
-                        'expecting identifier, got' in msg
-                        # (msg.startswith('cannot put ') and (msg.endswith(' to MatchMapping.keys') or msg.endswith(' to MatchValue.value')))
-                    )
-
-                    if not ignorable and isinstance(exc, SyntaxError):
-                        if msg.startswith('cannot use starred expression here'):
-                            ignorable = True
-
-                        elif put == 'src':  # Starred stuff like "*a or b" coming from original code
-                            try:
-                                FST._parse_callarg(code)
-                            except SyntaxError:
-                                pass
-                            else:
-                                ignorable = True
-
-                    # if not ignorable and isinstance(exc, SyntaxError) and msg.startswith('cannot use starred expression here'): ignorable = True  # TEMPORARY!!!
-
-                    if not ignorable:  # started with because of Starred Call.args being replaced after keywords
+                    if not ignorable_exc(exc, put == 'src' and code):
                         print('\n-', put, '--- parent', '-'*63)
                         print((p := e.parent_stmtish()).src)
                         print('.'*80)
@@ -774,6 +842,88 @@ class PutOnePat(Fuzzy):
         finally:
             sys.stdout.write('\n')
 
+
+class Reconcile(Fuzzy):
+    name    = 'reconcile'
+    forever = True
+
+    def fuzz_one(self, fst, fnm) -> bool:
+        backup = fst.copy()
+
+        try:
+            for count in range(self.batch or 200):
+                repltype = None
+
+                try:
+                    if not (count % 10):
+                        sys.stdout.write('.'); sys.stdout.flush()
+
+                    mark  = fst.mark()
+                    parts = FSTParts(fst)
+
+                    tgt, cat = parts.getrnd()
+
+                    if not tgt:
+                        break
+
+                    # parts.remove(tgt)
+
+                    repl, _ = parts.getrnd(cat)
+
+                    if not repl:
+                        # parts.add(tgt)
+
+                        continue
+
+                    # parts.remove(repl)
+
+                    if (repltype := choice(('fstin', 'fstout', 'ast'))) == 'ast':
+                        a = copy_ast(repl.a)
+                    elif repltype == 'fstout':
+                        a = repl.copy().a
+
+                    else:  # repltype == 'fstin'
+                        f = tgt
+
+                        while f := f.parent:  # make sure parent is not put into child in this mode
+                            if f is repl:
+                                break
+
+                        if f:
+                            continue
+
+                        a = repl.a
+
+                    if self.debug:
+                        tgt_pre  = tgt.parent.copy()
+                        repl_pre = repl.parent.copy()
+
+                    tgt.pfield.set(tgt.parent.a, a)
+
+                    fst = fst.reconcile(mark)
+
+                    fst.verify()
+
+                except Exception as exc:
+                    if not ignorable_exc(exc):
+                        print(f'\n{repltype = }')
+
+                        if self.debug:
+                            print(tgt_pre.src)
+                            print(repl_pre.src)
+
+                        raise
+
+                    fst = backup.copy()
+
+        finally:
+            print()
+
+        if self.verbose:
+            print(fst.src)
+
+
+# ----------------------------------------------------------------------------------------------------------------------
 
 FUZZIES = {o.name: o for o in globals().values() if isinstance(o, type) and o is not Fuzzy and issubclass(o, Fuzzy)}
 
