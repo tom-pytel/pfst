@@ -80,8 +80,8 @@ def parse(source, filename='<unknown>', mode='exec', *, type_comments=False, fea
     ```py
     >>> import ast, fst
     >>> a = fst.parse('if 1:\\n  i = 2')
-    >>> a
-    <ast.Module object at 0x7f3aef128fd0>
+    >>> type(a)
+    <class 'ast.Module'>
     >>> a.f  # FST node
     <Module ROOT 0,0..1,7>
     >>> print(ast.dump(a, indent=2))
@@ -643,7 +643,7 @@ class FST:
         <Expression ROOT 0,0..0,4>
         >>> _.dump()
         Expression - ROOT 0,0..0,4
-        .body Constant None - 0,0..0,4
+          .body Constant None - 0,0..0,4
         >>> _.src
         'None'
         ```
@@ -708,7 +708,7 @@ class FST:
             0] 'a'
             .kwd_patterns[1]
             0] MatchValue - 0,9..0,10
-            .value Constant 1 - 0,9..0,10
+              .value Constant 1 - 0,9..0,10
           .body[1]
           0] Pass - 0,13..0,17
         ```
@@ -750,6 +750,7 @@ class FST:
 
         **Examples:**
         ```py
+        >>> import ast
         >>> FST.fromast(Assign(targets=[Name(id='var', ctx=Store())], value=Constant(value=123))).dump('stmt')
         0: var = 123
         Assign - ROOT 0,0..0,9
@@ -946,14 +947,12 @@ class FST:
         **Examples:**
         ```py
         >>> print(FST.get_option('raw'))
-        ...
-        ... with FST.option(raw=False):
+        auto
+        >>> with FST.option(raw=False):
         ...     print(FST.get_option('raw'))
         ...
-        ... print(FST.get_option('raw'))
-        ...
-        auto
         False
+        >>> print(FST.get_option('raw'))
         auto
         ```
         """
@@ -1035,12 +1034,14 @@ class FST:
                         .value Name 'b' Load - 1,17..1,18
         >>> f.dump(out=str)[:80]
         'If - ROOT 0,0..1,19\\n  .test Constant 1 - 0,3..0,4\\n  .body[1]\\n  0] Expr - 1,4..1,'
-        >>> for l in f.dump(1, out=list):
+        >>> for l in f.dump('stmt', out=list):
         ...     print(repr(l))
         ...
+        '0: if 1:'
         'If - ROOT 0,0..1,19'
         '  .test Constant 1 - 0,3..0,4'
         '  .body[1]'
+        '1:     call(a[i], **b)'
         '  0] Expr - 1,4..1,19'
         '    .value Call - 1,4..1,19'
         "      .func Name 'call' Load - 1,4..1,8"
@@ -1109,9 +1110,8 @@ class FST:
         <Assign ROOT 0,0..0,9>
         >>> FST('a:b:c').verify()
         <Slice ROOT 0,0..0,5>
-        >>> FST('a:b:c').verify('exec')  # this raises SyntaxError because a standalone Slice is not parsable noramllu
-        ...
-        SyntaxError: invalid syntax
+        >>> not FST('a:b:c').verify('exec', raise_=False)  # None indicates failure to verify
+        True
         ```
         """
 
@@ -1422,11 +1422,11 @@ class FST:
         if 1:
             z = -1
         else: j = 2
-        >>> print(FST('if 1: i = 1\\nelse: j = 2').put('z = -1', 0, 'orelse').src)
+        >>> print(FST('if 1: i = 1\\nelse: j = 2').put('z = -1', 0, 'orelse').src.rstrip())
         if 1: i = 1
         else:
             z = -1
-        >>> print(FST('if 1: i = 1\\nelse: j = 2').put('z = -1\\ny = -2\\nx = -3', 'orelse', one=False).src)
+        >>> print(FST('if 1: i = 1\\nelse: j = 2').put('z = -1\\ny = -2\\nx = -3', 'orelse', one=False).src.rstrip())
         if 1: i = 1
         else:
             z = -1
@@ -1558,11 +1558,11 @@ class FST:
         if 1:
             z = -1
         else: j = 2
-        >>> print(FST('if 1: i = 1\\nelse: j = 2').put('z = -1', 0, 'orelse').src)
+        >>> print(FST('if 1: i = 1\\nelse: j = 2').put('z = -1', 0, 'orelse').src.rstrip())
         if 1: i = 1
         else:
             z = -1
-        >>> print(FST('if 1: i = 1\\nelse: j = 2').put('z = -1\\ny = -2\\nx = -3', 'orelse', one=False).src)
+        >>> print(FST('if 1: i = 1\\nelse: j = 2').put('z = -1\\ny = -2\\nx = -3', 'orelse', one=False).src.rstrip())
         if 1: i = 1
         else:
             z = -1
@@ -2056,9 +2056,9 @@ class FST:
         >>> FST('def f():\\n  if 1: i = 1', 'exec').body[0].body[0].body[0].value.parent_scope()
         <FunctionDef 0,0..1,13>
         >>> FST('lambda: None', 'exec').body[0].value.body.parent_scope()
-        <Lambda ROOT 0,0..0,12>
+        <Lambda 0,0..0,12>
         >>> FST('[i for i in j]', 'exec').body[0].value.elt.parent_scope()
-        <ListComp ROOT 0,0..0,14>
+        <ListComp 0,0..0,14>
         ```
         """
 
@@ -2115,7 +2115,7 @@ class FST:
         **Examples:**
         ```py
         >>> FST('if 1: i = 1 + a[b]').body[0].value.right.value.parent_non_expr()
-        <Assign 0,6..0,17>
+        <Assign 0,6..0,18>
         >>> FST('match a:\\n case {a.b.c: 1}: pass').cases[0].pattern.keys[0].value.value.parent_non_expr()
         <MatchMapping 1,6..1,16>
         >>> FST('var = call(a, b=1)').value.keywords[0].value.parent_non_expr()
@@ -2191,9 +2191,10 @@ class FST:
 
         **Examples:**
         ```py
-        >>> f.child_from_path((f := FST('[i for i in j]', 'exec')).child_path(f.body[0].value.elt)).src
+        >>> f = FST('[i for i in j]', 'exec')
+        >>> f.child_from_path(f.child_path(f.body[0].value.elt)).src
         'i'
-        >>> f.child_from_path((f := FST('[i for i in j]', 'exec')).child_path(f.body[0].value.elt, True)).src
+        >>> f.child_from_path(f.child_path(f.body[0].value.elt, True)).src
         'i'
         >>> FST('[0, 1, 2, 3]', 'exec').child_from_path('body[0].value.elts[4]')
         False
