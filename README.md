@@ -148,37 +148,21 @@ This package is not finished but functional enough that it can be useful. Once f
 * Put one to `FormattedValue` / `Interpolation` `conversion` and `format_spec`, `JoinedStr` / `TemplateStr` `values`.
 
 * Prescribed (non-raw) get / put slice from / to:
-  * `FunctionDef.decorator_list`
-  * `AsyncFunctionDef.decorator_list`
-  * `ClassDef.decorator_list`
+  * `FunctionDef` / `AsyncFunctionDef` / `ClassDef.decorator_list`
   * `ClassDef.bases`
-  * `Delete.targets`
-  * `Assign.targets`
+  * `Delete` / `Assign.targets`
   * `BoolOp.values`
   * `Call.args`
   * `comprehension.ifs`
-  * `ListComp.generators`
-  * `SetComp.generators`
-  * `DictComp.generators`
-  * `GeneratorExp.generators`
-  * `ClassDef.keywords`
-  * `Call.keywords`
-  * `Import.names`
-  * `ImportFrom.names`
-  * `With.items`
-  * `AsyncWith.items`
-  * `MatchSequence.patterns`
-  * `MatchMapping.patterns`
-  * `MatchClass.patterns`
-  * `MatchOr.patterns`
-  * `FunctionDef.type_params`
-  * `AsyncFunctionDef.type_params`
-  * `ClassDef.type_params`
-  * `TypeAlias.type_params`
-  * `Global.names`
-  * `Nonlocal.names`
-  * `JoinedStr.values`
-  * `TemplateStr.values`
+  * `ListComp` / `SetComp` / `DictComp` / `GeneratorExp.generators`
+  * `ClassDef` / `Call.keywords`
+  * `Import` / `ImportFrom.names`
+  * `With` / `AsyncWith.items`
+  * `MatchMapping.keys` / `.patterns`
+  * `MatchSequence` / `MatchClass` / `MatchOr.patterns`
+  * `FunctionDef` / `AsyncFunctionDef` / `ClassDef` / `TypeAlias.type_params`
+  * `Global.names` / `Nonlocal.names`
+  * `JoinedStr` / `TemplateStr.values`
 
 * Redo comment handling, where to `put()` wrt comments, interface for modifying just those.
 

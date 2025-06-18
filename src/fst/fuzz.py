@@ -13,7 +13,7 @@ from types import NoneType
 from typing import Any, Generator, Literal
 
 from .astutil import *
-from .astutil import TemplateStr, Interpolation
+from .astutil import TypeAlias, TemplateStr, Interpolation
 from .fst import FST, NodeError
 
 PROGRAM     = 'python -m fst.fuzz'
@@ -924,8 +924,34 @@ class Reconcile1(Fuzzy):
                     ):
                         continue
 
-                    if not isinstance(getattr(tgta, 'ctx', Load()), Load):  # don't replace targets because lots of incompatibilities
-                        continue
+                    if not isinstance(ctx := getattr(tgta, 'ctx', Load()), Load):  # don't replace targets because lots of incompatibilities
+                        if isinstance(ctx, Del) or not getattr(repla, 'ctx', None):
+                            continue
+
+                        allowed = None
+                        f       = tgt
+
+                        while f := f.parent:
+                            if isinstance(a := f.a, (Delete, Assign, For, AsyncFor, comprehension)):
+                                allowed = (Name, Attribute, Subscript)#, Tuple, List)
+
+                                break
+
+                            if isinstance(a, (AugAssign, AnnAssign)):
+                                allowed = (Name, Attribute, Subscript)
+
+                                break
+
+                            if isinstance(a, (TypeAlias, NamedExpr)):
+                                allowed = Name
+
+                                break
+
+                            if not isinstance(a, expr):  # EXPRISH?
+                                break
+
+                        if not allowed or not isinstance(repla, allowed):
+                            continue
 
                     # if not valid_replace(tgt, repl):
                     #     if self.verbose:

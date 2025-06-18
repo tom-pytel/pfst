@@ -2,6 +2,9 @@
 requires = ["setuptools>=42", "wheel"]
 build-backend = "setuptools.build_meta"
 
+[project.urls]
+Github = "https://github.com/tom-pytel/pfst"
+
 [project]
 name = "pfst"
 description = "Format-preserving high level AST editing for Python 3.10+."
@@ -24,10 +27,6 @@ classifiers = [
   "Topic :: Software Development",
   "Topic :: Software Development :: Libraries",
 ]
-
-[project.urls]
-Github = "https://github.com/tom-pytel/pfst"
-PyPI = "https://
 
 dependencies = [
 ]

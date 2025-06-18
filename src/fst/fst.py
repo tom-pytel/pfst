@@ -1087,7 +1087,8 @@ class FST:
 
         return self._dump(st)
 
-    def verify(self, mode: Mode | None = None, reparse: bool = True, *, raise_: bool = True) -> Optional[Self]:
+    def verify(self, mode: Mode | None = None, reparse: bool = True, *, locs: bool = True, raise_: bool = True,
+               ) -> Optional[Self]:
         """Sanity check. Walk the tree and make sure all `AST`s have corresponding `FST` nodes with valid parent / child
         links, then (optionally) reparse source and make sure parsed tree matches currently stored tree (locations and
         everything). The reparse can only be carried out on root nodes but the link validation can be done on any level.
@@ -1099,6 +1100,7 @@ class FST:
         - `reparse`: Whether to reparse the source and compare ASTs (including location). Otherwise the check is limited
             to a structure check that all children have `FST` nodes which are all liked correctly to their parents.
             `reparse=True` only allowed on root node.
+        - `locs`: Whether to compare locations after reparse or not.
         - `raise_`: Whether to raise an exception on verify failed or return `None`.
 
         **Returns:**
@@ -1110,7 +1112,7 @@ class FST:
         <Assign ROOT 0,0..0,9>
         >>> FST('a:b:c').verify()
         <Slice ROOT 0,0..0,5>
-        >>> not FST('a:b:c').verify('exec', raise_=False)  # None indicates failure to verify
+        >>> FST('a:b:c').verify('exec', raise_=False) is None  # None indicates failure to verify
         True
         ```
         """
@@ -1158,7 +1160,8 @@ class FST:
 
             return None
 
-        if not compare_asts(astp, ast, locs=True, type_comments=parse_params['type_comments'], raise_=raise_):
+        if not compare_asts(astp, ast, locs=locs, type_comments=parse_params.get('type_comments', False),
+                            raise_=raise_):
             return None
 
         return self

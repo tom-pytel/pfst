@@ -342,7 +342,8 @@ class _Reconcile:
 
 def mark(self: 'FST') -> 'FST':
     """Return something marking the current state of this `FST` tree. Used to `reconcile()` later for non-FST operation
-    changes made (changing `AST` nodes directly).
+    changes made (changing `AST` nodes directly). Currently is just a copy of the original tree, but may change in the
+    future.
 
     **Returns:**
     - `FST`: A marked copy of `self` with any necessary information added for a future `reconcile()`. You can `mark()`
@@ -359,11 +360,11 @@ def mark(self: 'FST') -> 'FST':
 def reconcile(self: 'FST', mark: 'FST') -> 'FST':
     """Reconcile `self` with a previously marked version and return a new valid `FST` tree. This is meant for allowing
     non-FST modifications to an `FST` tree and later converting it to a valid `FST` tree to preserve as much formatting
-    as possible and maybe continue operating in `FST` land.
+    as possible and maybe continue operating in `FST` land. Only `AST` nodes from the original tree carry formatting
+    information, so the more of those are replaced the more formatting is lost.
 
-    **WARNING!** Just because this function completes successfully does NOT mean the output is syntactically correct,
-    e.g. set the last keyword argument default to `None` in a `FunctionDef` when there are preceding defaults set -
-    `args.kw_defaults[-1]=None`. In order to make sure the result is valid you should run `verify()` on the output.
+    **WARNING!** Just like an `ast.unparse()`, the fact that this function completes successfully does NOT mean the
+    output is syntactically correct. In order to make sure the result is valid you should run `verify()` on the output.
 
     **Parameters:**
     - `mark`: A previously marked snapshot of `self`. This object is not consumed on use, success or failure.
