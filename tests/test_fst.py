@@ -2397,6 +2397,12 @@ def f():
         self.assertIsNone(h.a)
         self.assertIsNone(g.a)
 
+    def test_src(self):
+        self.assertEqual('and', FST('a and b').op.src)
+        self.assertEqual('or', FST('a or b').op.src)
+        self.assertEqual(['and'], FST('a and b').op.lines)
+        self.assertEqual(['or'], FST('a or b').op.lines)
+
     def test_loc(self):
         self.assertEqual((0, 6, 0, 9), parse('def f(i=1): pass').body[0].args.f.loc)  # arguments
         self.assertEqual((0, 5, 0, 8), parse('with f(): pass').body[0].items[0].f.loc)  # withitem
@@ -4131,447 +4137,24 @@ f"distutils.command.sdist.check_metadata is deprecated, \\
         # self.assertEqual({2}, lns)
         # self.assertEqual('@decorator\nclass cls:\npass', ast.f.src)
 
-    def test_par(self):
-        f = parse('1,').body[0].value.f.copy()
-        f.par()  # self.assertTrue(f.par())
-        self.assertEqual('(1,)', f.src)
-        f.par()  # self.assertFalse(f.par())
-        self.assertEqual('(1,)', f.src)
-        f.par(force=True)  # self.assertTrue(f.par(force=True))
-        self.assertEqual('((1,))', f.src)
-        f.par()  # self.assertFalse(f.par())
-        self.assertEqual('((1,))', f.src)
-
-        # self.assertFalse(parse('()').body[0].value.f.copy().par())
-        # self.assertFalse(parse('[]').body[0].value.f.copy().par())
-        # self.assertFalse(parse('{}').body[0].value.f.copy().par())
-        self.assertEqual('()', parse('()').body[0].value.f.copy().par().src)
-        self.assertEqual('[]', parse('[]').body[0].value.f.copy().par().src)
-        self.assertEqual('{}', parse('{}').body[0].value.f.copy().par().src)
-
-        f = parse('i = 1').body[0].f.copy()
-        f._put_src(['# comment', ''], 0, 0, 0, 0)
-        f.par()  # self.assertFalse(f.par())
-        self.assertEqual('# comment\ni = 1', f.src)
-        f.par(force=True)  # self.assertTrue(f.par(force=True))
-        self.assertEqual('(# comment\ni = 1)', f.src)
-
-        if _PY_VERSION >= (3, 14):  # make sure parent Interpolation.str gets modified
-            f = FST('t"{a}"', 'exec').body[0].value.copy()
-            f.values[0].value.par(force=True)
-            self.assertEqual('t"{(a)}"', f.src)
-            self.assertEqual('(a)', f.values[0].str)
-
-            f = FST('t"{a,}"', 'exec').body[0].value.copy()
-            f.values[0].value.par(force=True)
-            self.assertEqual('t"{(a,)}"', f.src)
-            self.assertEqual('(a,)', f.values[0].str)
-
-            f = FST('t"{a+b}"', 'exec').body[0].value.copy()
-            f.values[0].value.par()
-            self.assertEqual('t"{(a+b)}"', f.src)
-            self.assertEqual('(a+b)', f.values[0].str)
-
-        # grouping
-
-        f = parse('[i]').f
-        f.body[0].value.elts[0].par(force=True)
-        self.assertEqual('[(i)]', f.src)
-        self.assertEqual((0, 0, 0, 5), f.loc)
-        self.assertEqual((0, 0, 0, 5), f.body[0].loc)
-        self.assertEqual((0, 0, 0, 5), f.body[0].value.loc)
-        self.assertEqual((0, 2, 0, 3), f.body[0].value.elts[0].loc)
-
-        f = parse('a + b').f
-        f.body[0].value.left.par(force=True)
-        f.body[0].value.right.par(force=True)
-        self.assertEqual('(a) + (b)', f.src)
-        self.assertEqual((0, 0, 0, 9), f.loc)
-        self.assertEqual((0, 0, 0, 9), f.body[0].loc)
-        self.assertEqual((0, 0, 0, 9), f.body[0].value.loc)
-        self.assertEqual((0, 1, 0, 2), f.body[0].value.left.loc)
-        self.assertEqual((0, 4, 0, 5), f.body[0].value.op.loc)
-        self.assertEqual((0, 7, 0, 8), f.body[0].value.right.loc)
-
-        f = parse('a + b').f
-        f.body[0].value.right.par(force=True)
-        f.body[0].value.left.par(force=True)
-        self.assertEqual('(a) + (b)', f.src)
-        self.assertEqual((0, 0, 0, 9), f.loc)
-        self.assertEqual((0, 0, 0, 9), f.body[0].loc)
-        self.assertEqual((0, 0, 0, 9), f.body[0].value.loc)
-        self.assertEqual((0, 1, 0, 2), f.body[0].value.left.loc)
-        self.assertEqual((0, 4, 0, 5), f.body[0].value.op.loc)
-        self.assertEqual((0, 7, 0, 8), f.body[0].value.right.loc)
-        f.body[0].value.par(force=True)
-        self.assertEqual('((a) + (b))', f.src)
-        f.body[0].value.left.par(force=True)
-        self.assertEqual('(((a)) + (b))', f.src)
-        f.body[0].value.right.par(force=True)
-        self.assertEqual('(((a)) + ((b)))', f.src)
-
-        f = parse('call(i for i in j)').f
-        f.body[0].value.args[0].par(force=True)
-        self.assertEqual(f.src, 'call((i for i in j))')
-        f.body[0].value.args[0].par(force=True)
-        self.assertEqual(f.src, 'call(((i for i in j)))')
-
-        f = parse('i').body[0].value.f.copy()
-        f._put_src('\n# post', 0, 1, 0, 1, False)
-        f._put_src('# pre\n', 0, 0, 0, 0, False)
-        f.par(True, whole=True)
-        self.assertEqual((1, 0, 1, 1), f.loc)
-        self.assertEqual(f.root.src, '(# pre\ni\n# post)')
-
-        f = parse('i').body[0].value.f.copy()
-        f._put_src('\n# post', 0, 1, 0, 1, False)
-        f._put_src('# pre\n', 0, 0, 0, 0, False)
-        f.par(True, whole=False)
-        self.assertEqual((1, 1, 1, 2), f.loc)
-        self.assertEqual(f.root.src, '# pre\n(i)\n# post')
-
-        # Tuple
-
-        f = parse('i,').f
-        f.body[0].value.par()
-        self.assertEqual('(i,)', f.src)
-        self.assertEqual((0, 0, 0, 4), f.loc)
-        self.assertEqual((0, 0, 0, 4), f.body[0].loc)
-        self.assertEqual((0, 0, 0, 4), f.body[0].value.loc)
-        self.assertEqual((0, 1, 0, 2), f.body[0].value.elts[0].loc)
-
-        f = parse('a, b').f
-        f.body[0].value.par()
-        self.assertEqual('(a, b)', f.src)
-        self.assertEqual((0, 0, 0, 6), f.loc)
-        self.assertEqual((0, 0, 0, 6), f.body[0].loc)
-        self.assertEqual((0, 0, 0, 6), f.body[0].value.loc)
-        self.assertEqual((0, 1, 0, 2), f.body[0].value.elts[0].loc)
-        self.assertEqual((0, 4, 0, 5), f.body[0].value.elts[1].loc)
-
-        f = parse('i,').body[0].value.f.copy()
-        f._put_src('\n# post', 0, 2, 0, 2, False)
-        f._put_src('# pre\n', 0, 0, 0, 0, False)
-        f.par(whole=True)
-        self.assertEqual((0, 0, 2, 7), f.loc)
-        self.assertEqual(f.src, '(# pre\ni,\n# post)')
-
-        f = parse('i,').body[0].value.f.copy()
-        f._put_src('\n# post', 0, 2, 0, 2, False)
-        f._put_src('# pre\n', 0, 0, 0, 0, False)
-        f.par(whole=False)
-        self.assertEqual((1, 0, 1, 4), f.loc)
-        self.assertEqual(f.src, '# pre\n(i,)\n# post')
-
-        # MatchSequence
-
-        f = FST('i,', pattern)
-        f.par()
-        self.assertEqual('[i,]', f.src)
-        self.assertEqual((0, 0, 0, 4), f.loc)
-        self.assertEqual((0, 1, 0, 2), f.patterns[0].loc)
-
-        f = FST('a, b', pattern)
-        f.par()
-        self.assertEqual('[a, b]', f.src)
-        self.assertEqual((0, 0, 0, 6), f.loc)
-        self.assertEqual((0, 1, 0, 2), f.patterns[0].loc)
-        self.assertEqual((0, 4, 0, 5), f.patterns[1].loc)
-
-        f = FST('i,', pattern)
-        f._put_src('\n# post', 0, 2, 0, 2, False)
-        f._put_src('# pre\n', 0, 0, 0, 0, False)
-        f.par(whole=True)
-        self.assertEqual((0, 0, 2, 7), f.loc)
-        self.assertEqual(f.src, '[# pre\ni,\n# post]')
-
-        f = FST('i,', pattern)
-        f._put_src('\n# post', 0, 2, 0, 2, False)
-        f._put_src('# pre\n', 0, 0, 0, 0, False)
-        f.par(whole=False)
-        self.assertEqual((1, 0, 1, 4), f.loc)
-        self.assertEqual(f.src, '# pre\n[i,]\n# post')
-
-        # special rules for Starred
-
-        f = FST('*\na')
-        f.par()
-        self.assertEqual('*(\na)', f.src)
-        f.verify()
-
-        # unparenthesizable
-
-        self.assertEqual('a:b:c', FST('a:b:c').par().src)
-        self.assertEqual('for i in j', FST('for i in j').par().src)
-        self.assertEqual('a: int, b=2', FST('a: int, b=2').par().src)
-        self.assertEqual('a: int', FST('a: int', arg).par().src)
-        self.assertEqual('key="word"', FST('key="word"', keyword).par().src)
-        self.assertEqual('a as b', FST('a as b', alias).par().src)
-        self.assertEqual('a as b', FST('a as b', withitem).par().src)
-
-        if not _PYLT13:
-            self.assertEqual('t: int = int', FST('t: int = int', type_param).par().src)
-            self.assertEqual('*t = (int,)', FST('*t = (int,)', type_param).par().src)
-            self.assertEqual('**t = {T: int}', FST('**t = {T: int}', type_param).par().src)
-
-        elif not _PYLT12:
-            self.assertEqual('t: int', FST('t: int', type_param).par().src)
-            self.assertEqual('*t', FST('*t', type_param).par().src)
-            self.assertEqual('**t', FST('**t', type_param).par().src)
-
-    def test_unpar(self):
-        f = parse('((1,))').body[0].value.f.copy(pars=True)
-        self.assertEqual('((1,))', f.src)
-        f.unpar()  # self.assertTrue()
-        self.assertEqual('(1,)', f.src)
-        f.unpar()  # self.assertFalse()
-        self.assertEqual('(1,)', f.src)
-        f.unpar(node=True)  # self.assertTrue()
-        self.assertEqual('1,', f.src)
-        f.unpar()  # self.assertFalse()
-
-        # self.assertFalse(parse('()').body[0].value.f.copy().unpar())
-        # self.assertFalse(parse('[]').body[0].value.f.copy().unpar())
-        # self.assertFalse(parse('{}').body[0].value.f.copy().unpar())
-        self.assertEqual('()', parse('()').body[0].value.f.copy().unpar().src)
-        self.assertEqual('[]', parse('[]').body[0].value.f.copy().unpar().src)
-        self.assertEqual('{}', parse('{}').body[0].value.f.copy().unpar().src)
-
-        f = parse('( # pre1\n( # pre2\n1,\n # post1\n) # post2\n)').body[0].value.f.copy(pars=True)
-        self.assertEqual('( # pre1\n( # pre2\n1,\n # post1\n) # post2\n)', f.src)
-        f.unpar()  # self.assertTrue()
-        self.assertEqual('( # pre2\n1,\n # post1\n)', f.src)
-        f.unpar()  # self.assertFalse()
-        self.assertEqual('( # pre2\n1,\n # post1\n)', f.src)
-        f.unpar(node=True)  # self.assertTrue()
-        self.assertEqual('1,', f.src)
-
-        if _PY_VERSION >= (3, 14):  # make sure parent Interpolation.str gets modified
-            f = FST('t"{(a)}"', 'exec').body[0].value.copy()
-            f.values[0].value.unpar()
-            self.assertEqual('t"{a}"', f.src)
-            self.assertEqual('a', f.values[0].str)
-
-            f = FST('t"{((a,))}"', 'exec').body[0].value.copy()
-            f.values[0].value.unpar()
-            self.assertEqual('t"{(a,)}"', f.src)
-            self.assertEqual('(a,)', f.values[0].str)
-
-            f = FST('t"{((a,))}"', 'exec').body[0].value.copy()
-            f.values[0].value.unpar(node=True)
-            self.assertEqual('t"{a,}"', f.src)
-            self.assertEqual('a,', f.values[0].str)
-
-        # grouping
-
-        f = parse('a').f
-        f.body[0].value.unpar(share=False)
-        self.assertEqual('a', f.src)
-        self.assertEqual((0, 0, 0, 1), f.loc)
-        self.assertEqual((0, 0, 0, 1), f.body[0].loc)
-        self.assertEqual((0, 0, 0, 1), f.body[0].value.loc)
-
-        f = parse('(a)').f
-        f.body[0].value.unpar(share=False)
-        self.assertEqual('a', f.src)
-        self.assertEqual((0, 0, 0, 1), f.loc)
-        self.assertEqual((0, 0, 0, 1), f.body[0].loc)
-        self.assertEqual((0, 0, 0, 1), f.body[0].value.loc)
-
-        f = parse('((a))').f
-        f.body[0].value.unpar(share=False)
-        self.assertEqual('a', f.src)
-        self.assertEqual((0, 0, 0, 1), f.loc)
-        self.assertEqual((0, 0, 0, 1), f.body[0].loc)
-        self.assertEqual((0, 0, 0, 1), f.body[0].value.loc)
-
-        f = parse('(\n ( (a) )  \n)').f
-        f.body[0].value.unpar(share=False)
-        self.assertEqual('a', f.src)
-        self.assertEqual((0, 0, 0, 1), f.loc)
-        self.assertEqual((0, 0, 0, 1), f.body[0].loc)
-        self.assertEqual((0, 0, 0, 1), f.body[0].value.loc)
-
-        f = parse('((i,))').f
-        f.body[0].value.unpar(share=False)
-        self.assertEqual('(i,)', f.src)
-        self.assertEqual((0, 0, 0, 4), f.loc)
-        self.assertEqual((0, 0, 0, 4), f.body[0].loc)
-        self.assertEqual((0, 0, 0, 4), f.body[0].value.loc)
-        self.assertEqual((0, 1, 0, 2), f.body[0].value.elts[0].loc)
-
-        f = parse('(\n ( (i,) ) \n)').f
-        f.body[0].value.unpar(share=False)
-        self.assertEqual('(i,)', f.src)
-        self.assertEqual((0, 0, 0, 4), f.loc)
-        self.assertEqual((0, 0, 0, 4), f.body[0].loc)
-        self.assertEqual((0, 0, 0, 4), f.body[0].value.loc)
-        self.assertEqual((0, 1, 0, 2), f.body[0].value.elts[0].loc)
-
-        f = parse('call((((i for i in j))))').f
-        f.body[0].value.args[0].unpar(share=False)
-        self.assertEqual(f.src, 'call((i for i in j))')
-        self.assertEqual((0, 0, 0, 20), f.loc)
-        self.assertEqual((0, 0, 0, 20), f.body[0].loc)
-        self.assertEqual((0, 0, 0, 20), f.body[0].value.loc)
-        self.assertEqual((0, 0, 0, 4), f.body[0].value.func.loc)
-        self.assertEqual((0, 5, 0, 19), f.body[0].value.args[0].loc)
-
-        f = parse('call((((i for i in j))))').f
-        f.body[0].value.args[0].unpar(share=True)
-        self.assertEqual(f.src, 'call(i for i in j)')
-        self.assertEqual((0, 0, 0, 18), f.loc)
-        self.assertEqual((0, 0, 0, 18), f.body[0].loc)
-        self.assertEqual((0, 0, 0, 18), f.body[0].value.loc)
-        self.assertEqual((0, 0, 0, 4), f.body[0].value.func.loc)
-        self.assertEqual((0, 4, 0, 18), f.body[0].value.args[0].loc)
-
-        f = parse('call( ( ( (i for i in j) ) ) )').f
-        f.body[0].value.args[0].unpar(share=True)
-        self.assertEqual(f.src, 'call(i for i in j)')
-        self.assertEqual((0, 0, 0, 18), f.loc)
-        self.assertEqual((0, 0, 0, 18), f.body[0].loc)
-        self.assertEqual((0, 0, 0, 18), f.body[0].value.loc)
-        self.assertEqual((0, 0, 0, 4), f.body[0].value.func.loc)
-        self.assertEqual((0, 4, 0, 18), f.body[0].value.args[0].loc)
-
-        f = parse('call((((i for i in j))),)').f
-        f.body[0].value.args[0].unpar(share=True)
-        self.assertEqual(f.src, 'call(i for i in j)')
-        self.assertEqual((0, 0, 0, 18), f.loc)
-        self.assertEqual((0, 0, 0, 18), f.body[0].loc)
-        self.assertEqual((0, 0, 0, 18), f.body[0].value.loc)
-        self.assertEqual((0, 0, 0, 4), f.body[0].value.func.loc)
-        self.assertEqual((0, 4, 0, 18), f.body[0].value.args[0].loc)
-
-        f = parse('call((((i for i in j))),)').f
-        f.body[0].value.args[0].unpar(share=False)
-        self.assertEqual(f.src, 'call((i for i in j),)')
-        self.assertEqual((0, 0, 0, 21), f.loc)
-        self.assertEqual((0, 0, 0, 21), f.body[0].loc)
-        self.assertEqual((0, 0, 0, 21), f.body[0].value.loc)
-        self.assertEqual((0, 0, 0, 4), f.body[0].value.func.loc)
-        self.assertEqual((0, 5, 0, 19), f.body[0].value.args[0].loc)
-
-        f = parse('( # pre\ni\n# post\n)').f
-        f.body[0].value.unpar(share=False)
-        self.assertEqual('i', f.src)
-        self.assertEqual((0, 0, 0, 1), f.loc)
-        self.assertEqual((0, 0, 0, 1), f.body[0].loc)
-        self.assertEqual((0, 0, 0, 1), f.body[0].value.loc)
-
-        f = parse('( # pre\ni\n# post\n)').body[0].value.f.copy(pars=True)
-        f.unpar(share=False)
-        self.assertEqual('i', f.src)
-        self.assertEqual((0, 0, 0, 1), f.loc)
-
-        f = parse('( # pre\n(i,)\n# post\n)').f
-        f.body[0].value.unpar(share=False)
-        self.assertEqual('(i,)', f.src)
-        self.assertEqual((0, 0, 0, 4), f.loc)
-        self.assertEqual((0, 0, 0, 4), f.body[0].loc)
-        self.assertEqual((0, 0, 0, 4), f.body[0].value.loc)
-
-        f = parse('( # pre\n(i)\n# post\n)').body[0].value.f.copy(pars=True)
-        f.unpar(share=False)
-        self.assertEqual('i', f.src)
-        self.assertEqual((0, 0, 0, 1), f.loc)
-
-        # replace with space where directly touching other text
-
-        f = FST('[a for a in b if(a)if(a)]', 'exec')
-        f.body[0].value.generators[0].ifs[0].unpar(share=False)
-        f.body[0].value.generators[0].ifs[1].unpar(share=False)
-        self.assertEqual('[a for a in b if a if a]', f.src)
-
-        f = FST('for(a)in b: pass', 'exec')
-        f.body[0].target.unpar(share=False)
-        self.assertEqual('for a in b: pass', f.src)
-
-        f = FST('assert(test)', 'exec')
-        f.body[0].test.unpar(share=False)
-        self.assertEqual('assert test', f.src)
-
-        f = FST('assert({test})', 'exec')
-        f.body[0].test.unpar(share=False)
-        self.assertEqual('assert{test}', f.src)
-
-        # tuple
-
-        f = parse('()').f
-        f.body[0].value.unpar()
-        self.assertEqual('()', f.src)
-        self.assertEqual((0, 0, 0, 2), f.loc)
-        self.assertEqual((0, 0, 0, 2), f.body[0].loc)
-        self.assertEqual((0, 0, 0, 2), f.body[0].value.loc)
-
-        f = parse('(i,)').f
-        f.body[0].value.unpar(node=True)
-        self.assertEqual('i,', f.src)
-        self.assertEqual((0, 0, 0, 2), f.loc)
-        self.assertEqual((0, 0, 0, 2), f.body[0].loc)
-        self.assertEqual((0, 0, 0, 2), f.body[0].value.loc)
-        self.assertEqual((0, 0, 0, 1), f.body[0].value.elts[0].loc)
-
-        f = parse('(a, b)').f
-        f.body[0].value.unpar(node=True)
-        self.assertEqual('a, b', f.src)
-        self.assertEqual((0, 0, 0, 4), f.loc)
-        self.assertEqual((0, 0, 0, 4), f.body[0].loc)
-        self.assertEqual((0, 0, 0, 4), f.body[0].value.loc)
-        self.assertEqual((0, 0, 0, 1), f.body[0].value.elts[0].loc)
-        self.assertEqual((0, 3, 0, 4), f.body[0].value.elts[1].loc)
-
-        f = parse('( # pre\ni,\n# post\n)').f
-        f.body[0].value.unpar(node=True)
-        self.assertEqual('i,', f.src)
-        self.assertEqual((0, 0, 0, 2), f.loc)
-        self.assertEqual((0, 0, 0, 2), f.body[0].loc)
-        self.assertEqual((0, 0, 0, 2), f.body[0].value.loc)
-        self.assertEqual((0, 0, 0, 1), f.body[0].value.elts[0].loc)
-
-        f = parse('( # pre\ni,\n# post\n)').body[0].value.f.copy()
-        f.unpar(node=True)
-        self.assertEqual('i,', f.src)
-        self.assertEqual((0, 0, 0, 2), f.loc)
-        self.assertEqual((0, 0, 0, 1), f.elts[0].loc)
-
-        # replace with space where directly touching other text
-
-        f = FST('[a for a in b if(a,b)if(a,)if(a,b)]', 'exec')
-        f.body[0].value.generators[0].ifs[0].unpar(node=True)
-        f.body[0].value.generators[0].ifs[1].unpar(node=True)
-        f.body[0].value.generators[0].ifs[2].unpar(node=True)
-        self.assertEqual('[a for a in b if a,b if a,if a,b]', f.src)
-        f.body[0].value.generators[0].ifs[0].par()  # so that it will verify
-        f.body[0].value.generators[0].ifs[1].par()
-        f.body[0].value.generators[0].ifs[2].par()
-        self.assertEqual('[a for a in b if (a,b) if (a,)if (a,b)]', f.src)
-        f.verify()
-
-        f = FST('for(a,b)in b: pass', 'exec')
-        f.body[0].target.unpar(node=True)
-        self.assertEqual('for a,b in b: pass', f.src)
-        f.verify()
-
-        f = FST('for(a,)in b: pass', 'exec')
-        f.body[0].target.unpar(node=True)
-        self.assertEqual('for a,in b: pass', f.src)
-        f.verify()
-
-        # special rules for Starred
-
-        f = FST('*(\na)')
-        self.assertEqual('*(\na)', f.src)
-        f.unpar()
-        self.assertEqual('*a', f.src)
-        f.verify()
-
-        f = FST('*\na')
-        f._parenthesize_grouping(star_child=False)
-        self.assertEqual('(*\na)', f.src)
-        f.unpar()
-        self.assertEqual('(*\na)', f.src)
+    def test__put_src(self):
+        f = FST(Load(), [''])
+        f._put_src('test', 0, 0, 0, 0)
+        self.assertEqual(f.lines, ['test'])
+        f._put_src('test', 0, 0, 0, 0)
+        self.assertEqual(f.lines, ['testtest'])
+        f._put_src('tost', 0, 0, 0, 8)
+        self.assertEqual(f.lines, ['tost'])
+        f._put_src('a\nb\nc', 0, 2, 0, 2)
+        self.assertEqual(f.lines, ['toa', 'b', 'cst'])
+        f._put_src('', 0, 3, 2, 1)
+        self.assertEqual(f.lines, ['toast'])
+        f._put_src('a\nb\nc\nd', 0, 0, 0, 5)
+        self.assertEqual(f.lines, ['a', 'b', 'c', 'd'])
+        f._put_src('efg\nhij', 1, 0, 2, 1)
+        self.assertEqual(f.lines, ['a', 'efg', 'hij', 'd'])
+        f._put_src('***', 1, 2, 2, 1)
+        self.assertEqual(f.lines, ['a', 'ef***ij', 'd'])
 
     def test_dedent_multiline_strings(self):
         f = parse('''
@@ -5143,24 +4726,453 @@ match a:
 
                 raise
 
-    def test__put_src(self):
-        f = FST(Load(), [''])
-        f._put_src('test', 0, 0, 0, 0)
-        self.assertEqual(f.lines, ['test'])
-        f._put_src('test', 0, 0, 0, 0)
-        self.assertEqual(f.lines, ['testtest'])
-        f._put_src('tost', 0, 0, 0, 8)
-        self.assertEqual(f.lines, ['tost'])
-        f._put_src('a\nb\nc', 0, 2, 0, 2)
-        self.assertEqual(f.lines, ['toa', 'b', 'cst'])
-        f._put_src('', 0, 3, 2, 1)
-        self.assertEqual(f.lines, ['toast'])
-        f._put_src('a\nb\nc\nd', 0, 0, 0, 5)
-        self.assertEqual(f.lines, ['a', 'b', 'c', 'd'])
-        f._put_src('efg\nhij', 1, 0, 2, 1)
-        self.assertEqual(f.lines, ['a', 'efg', 'hij', 'd'])
-        f._put_src('***', 1, 2, 2, 1)
-        self.assertEqual(f.lines, ['a', 'ef***ij', 'd'])
+    def test_par(self):
+        f = parse('1,').body[0].value.f.copy()
+        f.par()  # self.assertTrue(f.par())
+        self.assertEqual('(1,)', f.src)
+        f.par()  # self.assertFalse(f.par())
+        self.assertEqual('(1,)', f.src)
+        f.par(force=True)  # self.assertTrue(f.par(force=True))
+        self.assertEqual('((1,))', f.src)
+        f.par()  # self.assertFalse(f.par())
+        self.assertEqual('((1,))', f.src)
+
+        # self.assertFalse(parse('()').body[0].value.f.copy().par())
+        # self.assertFalse(parse('[]').body[0].value.f.copy().par())
+        # self.assertFalse(parse('{}').body[0].value.f.copy().par())
+        self.assertEqual('()', parse('()').body[0].value.f.copy().par().src)
+        self.assertEqual('[]', parse('[]').body[0].value.f.copy().par().src)
+        self.assertEqual('{}', parse('{}').body[0].value.f.copy().par().src)
+
+        f = parse('i = 1').body[0].f.copy()
+        f._put_src(['# comment', ''], 0, 0, 0, 0)
+        f.par()  # self.assertFalse(f.par())
+        self.assertEqual('# comment\ni = 1', f.src)
+        f.par(force=True)  # self.assertTrue(f.par(force=True))
+        self.assertEqual('(# comment\ni = 1)', f.src)
+
+        if _PY_VERSION >= (3, 14):  # make sure parent Interpolation.str gets modified
+            f = FST('t"{a}"', 'exec').body[0].value.copy()
+            f.values[0].value.par(force=True)
+            self.assertEqual('t"{(a)}"', f.src)
+            self.assertEqual('(a)', f.values[0].str)
+
+            f = FST('t"{a,}"', 'exec').body[0].value.copy()
+            f.values[0].value.par(force=True)
+            self.assertEqual('t"{(a,)}"', f.src)
+            self.assertEqual('(a,)', f.values[0].str)
+
+            f = FST('t"{a+b}"', 'exec').body[0].value.copy()
+            f.values[0].value.par()
+            self.assertEqual('t"{(a+b)}"', f.src)
+            self.assertEqual('(a+b)', f.values[0].str)
+
+        # grouping
+
+        f = parse('[i]').f
+        f.body[0].value.elts[0].par(force=True)
+        self.assertEqual('[(i)]', f.src)
+        self.assertEqual((0, 0, 0, 5), f.loc)
+        self.assertEqual((0, 0, 0, 5), f.body[0].loc)
+        self.assertEqual((0, 0, 0, 5), f.body[0].value.loc)
+        self.assertEqual((0, 2, 0, 3), f.body[0].value.elts[0].loc)
+
+        f = parse('a + b').f
+        f.body[0].value.left.par(force=True)
+        f.body[0].value.right.par(force=True)
+        self.assertEqual('(a) + (b)', f.src)
+        self.assertEqual((0, 0, 0, 9), f.loc)
+        self.assertEqual((0, 0, 0, 9), f.body[0].loc)
+        self.assertEqual((0, 0, 0, 9), f.body[0].value.loc)
+        self.assertEqual((0, 1, 0, 2), f.body[0].value.left.loc)
+        self.assertEqual((0, 4, 0, 5), f.body[0].value.op.loc)
+        self.assertEqual((0, 7, 0, 8), f.body[0].value.right.loc)
+
+        f = parse('a + b').f
+        f.body[0].value.right.par(force=True)
+        f.body[0].value.left.par(force=True)
+        self.assertEqual('(a) + (b)', f.src)
+        self.assertEqual((0, 0, 0, 9), f.loc)
+        self.assertEqual((0, 0, 0, 9), f.body[0].loc)
+        self.assertEqual((0, 0, 0, 9), f.body[0].value.loc)
+        self.assertEqual((0, 1, 0, 2), f.body[0].value.left.loc)
+        self.assertEqual((0, 4, 0, 5), f.body[0].value.op.loc)
+        self.assertEqual((0, 7, 0, 8), f.body[0].value.right.loc)
+        f.body[0].value.par(force=True)
+        self.assertEqual('((a) + (b))', f.src)
+        f.body[0].value.left.par(force=True)
+        self.assertEqual('(((a)) + (b))', f.src)
+        f.body[0].value.right.par(force=True)
+        self.assertEqual('(((a)) + ((b)))', f.src)
+
+        f = parse('call(i for i in j)').f
+        f.body[0].value.args[0].par(force=True)
+        self.assertEqual(f.src, 'call((i for i in j))')
+        f.body[0].value.args[0].par(force=True)
+        self.assertEqual(f.src, 'call(((i for i in j)))')
+
+        f = parse('i').body[0].value.f.copy()
+        f._put_src('\n# post', 0, 1, 0, 1, False)
+        f._put_src('# pre\n', 0, 0, 0, 0, False)
+        f.par(True, whole=True)
+        self.assertEqual((1, 0, 1, 1), f.loc)
+        self.assertEqual(f.root.src, '(# pre\ni\n# post)')
+
+        f = parse('i').body[0].value.f.copy()
+        f._put_src('\n# post', 0, 1, 0, 1, False)
+        f._put_src('# pre\n', 0, 0, 0, 0, False)
+        f.par(True, whole=False)
+        self.assertEqual((1, 1, 1, 2), f.loc)
+        self.assertEqual(f.root.src, '# pre\n(i)\n# post')
+
+        # Tuple
+
+        f = parse('i,').f
+        f.body[0].value.par()
+        self.assertEqual('(i,)', f.src)
+        self.assertEqual((0, 0, 0, 4), f.loc)
+        self.assertEqual((0, 0, 0, 4), f.body[0].loc)
+        self.assertEqual((0, 0, 0, 4), f.body[0].value.loc)
+        self.assertEqual((0, 1, 0, 2), f.body[0].value.elts[0].loc)
+
+        f = parse('a, b').f
+        f.body[0].value.par()
+        self.assertEqual('(a, b)', f.src)
+        self.assertEqual((0, 0, 0, 6), f.loc)
+        self.assertEqual((0, 0, 0, 6), f.body[0].loc)
+        self.assertEqual((0, 0, 0, 6), f.body[0].value.loc)
+        self.assertEqual((0, 1, 0, 2), f.body[0].value.elts[0].loc)
+        self.assertEqual((0, 4, 0, 5), f.body[0].value.elts[1].loc)
+
+        f = parse('i,').body[0].value.f.copy()
+        f._put_src('\n# post', 0, 2, 0, 2, False)
+        f._put_src('# pre\n', 0, 0, 0, 0, False)
+        f.par(whole=True)
+        self.assertEqual((0, 0, 2, 7), f.loc)
+        self.assertEqual(f.src, '(# pre\ni,\n# post)')
+
+        f = parse('i,').body[0].value.f.copy()
+        f._put_src('\n# post', 0, 2, 0, 2, False)
+        f._put_src('# pre\n', 0, 0, 0, 0, False)
+        f.par(whole=False)
+        self.assertEqual((1, 0, 1, 4), f.loc)
+        self.assertEqual(f.src, '# pre\n(i,)\n# post')
+
+        # MatchSequence
+
+        f = FST('i,', pattern)
+        f.par()
+        self.assertEqual('[i,]', f.src)
+        self.assertEqual((0, 0, 0, 4), f.loc)
+        self.assertEqual((0, 1, 0, 2), f.patterns[0].loc)
+
+        f = FST('a, b', pattern)
+        f.par()
+        self.assertEqual('[a, b]', f.src)
+        self.assertEqual((0, 0, 0, 6), f.loc)
+        self.assertEqual((0, 1, 0, 2), f.patterns[0].loc)
+        self.assertEqual((0, 4, 0, 5), f.patterns[1].loc)
+
+        f = FST('i,', pattern)
+        f._put_src('\n# post', 0, 2, 0, 2, False)
+        f._put_src('# pre\n', 0, 0, 0, 0, False)
+        f.par(whole=True)
+        self.assertEqual((0, 0, 2, 7), f.loc)
+        self.assertEqual(f.src, '[# pre\ni,\n# post]')
+
+        f = FST('i,', pattern)
+        f._put_src('\n# post', 0, 2, 0, 2, False)
+        f._put_src('# pre\n', 0, 0, 0, 0, False)
+        f.par(whole=False)
+        self.assertEqual((1, 0, 1, 4), f.loc)
+        self.assertEqual(f.src, '# pre\n[i,]\n# post')
+
+        # special rules for Starred
+
+        f = FST('*\na')
+        f.par()
+        self.assertEqual('*(\na)', f.src)
+        f.verify()
+
+        # unparenthesizable
+
+        self.assertEqual('a:b:c', FST('a:b:c').par().src)
+        self.assertEqual('for i in j', FST('for i in j').par().src)
+        self.assertEqual('a: int, b=2', FST('a: int, b=2').par().src)
+        self.assertEqual('a: int', FST('a: int', arg).par().src)
+        self.assertEqual('key="word"', FST('key="word"', keyword).par().src)
+        self.assertEqual('a as b', FST('a as b', alias).par().src)
+        self.assertEqual('a as b', FST('a as b', withitem).par().src)
+
+        if not _PYLT13:
+            self.assertEqual('t: int = int', FST('t: int = int', type_param).par().src)
+            self.assertEqual('*t = (int,)', FST('*t = (int,)', type_param).par().src)
+            self.assertEqual('**t = {T: int}', FST('**t = {T: int}', type_param).par().src)
+
+        elif not _PYLT12:
+            self.assertEqual('t: int', FST('t: int', type_param).par().src)
+            self.assertEqual('*t', FST('*t', type_param).par().src)
+            self.assertEqual('**t', FST('**t', type_param).par().src)
+
+    def test_unpar(self):
+        f = parse('((1,))').body[0].value.f.copy(pars=True)
+        self.assertEqual('((1,))', f.src)
+        f.unpar()  # self.assertTrue()
+        self.assertEqual('(1,)', f.src)
+        f.unpar()  # self.assertFalse()
+        self.assertEqual('(1,)', f.src)
+        f.unpar(node=True)  # self.assertTrue()
+        self.assertEqual('1,', f.src)
+        f.unpar()  # self.assertFalse()
+
+        # self.assertFalse(parse('()').body[0].value.f.copy().unpar())
+        # self.assertFalse(parse('[]').body[0].value.f.copy().unpar())
+        # self.assertFalse(parse('{}').body[0].value.f.copy().unpar())
+        self.assertEqual('()', parse('()').body[0].value.f.copy().unpar().src)
+        self.assertEqual('[]', parse('[]').body[0].value.f.copy().unpar().src)
+        self.assertEqual('{}', parse('{}').body[0].value.f.copy().unpar().src)
+
+        f = parse('( # pre1\n( # pre2\n1,\n # post1\n) # post2\n)').body[0].value.f.copy(pars=True)
+        self.assertEqual('( # pre1\n( # pre2\n1,\n # post1\n) # post2\n)', f.src)
+        f.unpar()  # self.assertTrue()
+        self.assertEqual('( # pre2\n1,\n # post1\n)', f.src)
+        f.unpar()  # self.assertFalse()
+        self.assertEqual('( # pre2\n1,\n # post1\n)', f.src)
+        f.unpar(node=True)  # self.assertTrue()
+        self.assertEqual('1,', f.src)
+
+        if _PY_VERSION >= (3, 14):  # make sure parent Interpolation.str gets modified
+            f = FST('t"{(a)}"', 'exec').body[0].value.copy()
+            f.values[0].value.unpar()
+            self.assertEqual('t"{a}"', f.src)
+            self.assertEqual('a', f.values[0].str)
+
+            f = FST('t"{((a,))}"', 'exec').body[0].value.copy()
+            f.values[0].value.unpar()
+            self.assertEqual('t"{(a,)}"', f.src)
+            self.assertEqual('(a,)', f.values[0].str)
+
+            f = FST('t"{((a,))}"', 'exec').body[0].value.copy()
+            f.values[0].value.unpar(node=True)
+            self.assertEqual('t"{a,}"', f.src)
+            self.assertEqual('a,', f.values[0].str)
+
+        # f = FST('a:b:c', 'slice')  # no way to do this currenly, would need unpar(force) which would need lots of code just for this stupid unnatural case
+        # f.par(True)
+        # self.assertEqual('(a:b:c)', f.src)
+        # f.unpar()
+        # self.assertEqual('a:b:c', f.src)
+
+        # grouping
+
+        f = parse('a').f
+        f.body[0].value.unpar(share=False)
+        self.assertEqual('a', f.src)
+        self.assertEqual((0, 0, 0, 1), f.loc)
+        self.assertEqual((0, 0, 0, 1), f.body[0].loc)
+        self.assertEqual((0, 0, 0, 1), f.body[0].value.loc)
+
+        f = parse('(a)').f
+        f.body[0].value.unpar(share=False)
+        self.assertEqual('a', f.src)
+        self.assertEqual((0, 0, 0, 1), f.loc)
+        self.assertEqual((0, 0, 0, 1), f.body[0].loc)
+        self.assertEqual((0, 0, 0, 1), f.body[0].value.loc)
+
+        f = parse('((a))').f
+        f.body[0].value.unpar(share=False)
+        self.assertEqual('a', f.src)
+        self.assertEqual((0, 0, 0, 1), f.loc)
+        self.assertEqual((0, 0, 0, 1), f.body[0].loc)
+        self.assertEqual((0, 0, 0, 1), f.body[0].value.loc)
+
+        f = parse('(\n ( (a) )  \n)').f
+        f.body[0].value.unpar(share=False)
+        self.assertEqual('a', f.src)
+        self.assertEqual((0, 0, 0, 1), f.loc)
+        self.assertEqual((0, 0, 0, 1), f.body[0].loc)
+        self.assertEqual((0, 0, 0, 1), f.body[0].value.loc)
+
+        f = parse('((i,))').f
+        f.body[0].value.unpar(share=False)
+        self.assertEqual('(i,)', f.src)
+        self.assertEqual((0, 0, 0, 4), f.loc)
+        self.assertEqual((0, 0, 0, 4), f.body[0].loc)
+        self.assertEqual((0, 0, 0, 4), f.body[0].value.loc)
+        self.assertEqual((0, 1, 0, 2), f.body[0].value.elts[0].loc)
+
+        f = parse('(\n ( (i,) ) \n)').f
+        f.body[0].value.unpar(share=False)
+        self.assertEqual('(i,)', f.src)
+        self.assertEqual((0, 0, 0, 4), f.loc)
+        self.assertEqual((0, 0, 0, 4), f.body[0].loc)
+        self.assertEqual((0, 0, 0, 4), f.body[0].value.loc)
+        self.assertEqual((0, 1, 0, 2), f.body[0].value.elts[0].loc)
+
+        f = parse('call((((i for i in j))))').f
+        f.body[0].value.args[0].unpar(share=False)
+        self.assertEqual(f.src, 'call((i for i in j))')
+        self.assertEqual((0, 0, 0, 20), f.loc)
+        self.assertEqual((0, 0, 0, 20), f.body[0].loc)
+        self.assertEqual((0, 0, 0, 20), f.body[0].value.loc)
+        self.assertEqual((0, 0, 0, 4), f.body[0].value.func.loc)
+        self.assertEqual((0, 5, 0, 19), f.body[0].value.args[0].loc)
+
+        f = parse('call((((i for i in j))))').f
+        f.body[0].value.args[0].unpar(share=True)
+        self.assertEqual(f.src, 'call(i for i in j)')
+        self.assertEqual((0, 0, 0, 18), f.loc)
+        self.assertEqual((0, 0, 0, 18), f.body[0].loc)
+        self.assertEqual((0, 0, 0, 18), f.body[0].value.loc)
+        self.assertEqual((0, 0, 0, 4), f.body[0].value.func.loc)
+        self.assertEqual((0, 4, 0, 18), f.body[0].value.args[0].loc)
+
+        f = parse('call( ( ( (i for i in j) ) ) )').f
+        f.body[0].value.args[0].unpar(share=True)
+        self.assertEqual(f.src, 'call(i for i in j)')
+        self.assertEqual((0, 0, 0, 18), f.loc)
+        self.assertEqual((0, 0, 0, 18), f.body[0].loc)
+        self.assertEqual((0, 0, 0, 18), f.body[0].value.loc)
+        self.assertEqual((0, 0, 0, 4), f.body[0].value.func.loc)
+        self.assertEqual((0, 4, 0, 18), f.body[0].value.args[0].loc)
+
+        f = parse('call((((i for i in j))),)').f
+        f.body[0].value.args[0].unpar(share=True)
+        self.assertEqual(f.src, 'call(i for i in j)')
+        self.assertEqual((0, 0, 0, 18), f.loc)
+        self.assertEqual((0, 0, 0, 18), f.body[0].loc)
+        self.assertEqual((0, 0, 0, 18), f.body[0].value.loc)
+        self.assertEqual((0, 0, 0, 4), f.body[0].value.func.loc)
+        self.assertEqual((0, 4, 0, 18), f.body[0].value.args[0].loc)
+
+        f = parse('call((((i for i in j))),)').f
+        f.body[0].value.args[0].unpar(share=False)
+        self.assertEqual(f.src, 'call((i for i in j),)')
+        self.assertEqual((0, 0, 0, 21), f.loc)
+        self.assertEqual((0, 0, 0, 21), f.body[0].loc)
+        self.assertEqual((0, 0, 0, 21), f.body[0].value.loc)
+        self.assertEqual((0, 0, 0, 4), f.body[0].value.func.loc)
+        self.assertEqual((0, 5, 0, 19), f.body[0].value.args[0].loc)
+
+        f = parse('( # pre\ni\n# post\n)').f
+        f.body[0].value.unpar(share=False)
+        self.assertEqual('i', f.src)
+        self.assertEqual((0, 0, 0, 1), f.loc)
+        self.assertEqual((0, 0, 0, 1), f.body[0].loc)
+        self.assertEqual((0, 0, 0, 1), f.body[0].value.loc)
+
+        f = parse('( # pre\ni\n# post\n)').body[0].value.f.copy(pars=True)
+        f.unpar(share=False)
+        self.assertEqual('i', f.src)
+        self.assertEqual((0, 0, 0, 1), f.loc)
+
+        f = parse('( # pre\n(i,)\n# post\n)').f
+        f.body[0].value.unpar(share=False)
+        self.assertEqual('(i,)', f.src)
+        self.assertEqual((0, 0, 0, 4), f.loc)
+        self.assertEqual((0, 0, 0, 4), f.body[0].loc)
+        self.assertEqual((0, 0, 0, 4), f.body[0].value.loc)
+
+        f = parse('( # pre\n(i)\n# post\n)').body[0].value.f.copy(pars=True)
+        f.unpar(share=False)
+        self.assertEqual('i', f.src)
+        self.assertEqual((0, 0, 0, 1), f.loc)
+
+        # replace with space where directly touching other text
+
+        f = FST('[a for a in b if(a)if(a)]', 'exec')
+        f.body[0].value.generators[0].ifs[0].unpar(share=False)
+        f.body[0].value.generators[0].ifs[1].unpar(share=False)
+        self.assertEqual('[a for a in b if a if a]', f.src)
+
+        f = FST('for(a)in b: pass', 'exec')
+        f.body[0].target.unpar(share=False)
+        self.assertEqual('for a in b: pass', f.src)
+
+        f = FST('assert(test)', 'exec')
+        f.body[0].test.unpar(share=False)
+        self.assertEqual('assert test', f.src)
+
+        f = FST('assert({test})', 'exec')
+        f.body[0].test.unpar(share=False)
+        self.assertEqual('assert{test}', f.src)
+
+        # tuple
+
+        f = parse('()').f
+        f.body[0].value.unpar()
+        self.assertEqual('()', f.src)
+        self.assertEqual((0, 0, 0, 2), f.loc)
+        self.assertEqual((0, 0, 0, 2), f.body[0].loc)
+        self.assertEqual((0, 0, 0, 2), f.body[0].value.loc)
+
+        f = parse('(i,)').f
+        f.body[0].value.unpar(node=True)
+        self.assertEqual('i,', f.src)
+        self.assertEqual((0, 0, 0, 2), f.loc)
+        self.assertEqual((0, 0, 0, 2), f.body[0].loc)
+        self.assertEqual((0, 0, 0, 2), f.body[0].value.loc)
+        self.assertEqual((0, 0, 0, 1), f.body[0].value.elts[0].loc)
+
+        f = parse('(a, b)').f
+        f.body[0].value.unpar(node=True)
+        self.assertEqual('a, b', f.src)
+        self.assertEqual((0, 0, 0, 4), f.loc)
+        self.assertEqual((0, 0, 0, 4), f.body[0].loc)
+        self.assertEqual((0, 0, 0, 4), f.body[0].value.loc)
+        self.assertEqual((0, 0, 0, 1), f.body[0].value.elts[0].loc)
+        self.assertEqual((0, 3, 0, 4), f.body[0].value.elts[1].loc)
+
+        f = parse('( # pre\ni,\n# post\n)').f
+        f.body[0].value.unpar(node=True)
+        self.assertEqual('i,', f.src)
+        self.assertEqual((0, 0, 0, 2), f.loc)
+        self.assertEqual((0, 0, 0, 2), f.body[0].loc)
+        self.assertEqual((0, 0, 0, 2), f.body[0].value.loc)
+        self.assertEqual((0, 0, 0, 1), f.body[0].value.elts[0].loc)
+
+        f = parse('( # pre\ni,\n# post\n)').body[0].value.f.copy()
+        f.unpar(node=True)
+        self.assertEqual('i,', f.src)
+        self.assertEqual((0, 0, 0, 2), f.loc)
+        self.assertEqual((0, 0, 0, 1), f.elts[0].loc)
+
+        # replace with space where directly touching other text
+
+        f = FST('[a for a in b if(a,b)if(a,)if(a,b)]', 'exec')
+        f.body[0].value.generators[0].ifs[0].unpar(node=True)
+        f.body[0].value.generators[0].ifs[1].unpar(node=True)
+        f.body[0].value.generators[0].ifs[2].unpar(node=True)
+        self.assertEqual('[a for a in b if a,b if a,if a,b]', f.src)
+        f.body[0].value.generators[0].ifs[0].par()  # so that it will verify
+        f.body[0].value.generators[0].ifs[1].par()
+        f.body[0].value.generators[0].ifs[2].par()
+        self.assertEqual('[a for a in b if (a,b) if (a,)if (a,b)]', f.src)
+        f.verify()
+
+        f = FST('for(a,b)in b: pass', 'exec')
+        f.body[0].target.unpar(node=True)
+        self.assertEqual('for a,b in b: pass', f.src)
+        f.verify()
+
+        f = FST('for(a,)in b: pass', 'exec')
+        f.body[0].target.unpar(node=True)
+        self.assertEqual('for a,in b: pass', f.src)
+        f.verify()
+
+        # special rules for Starred
+
+        f = FST('*(\na)')
+        self.assertEqual('*(\na)', f.src)
+        f.unpar()
+        self.assertEqual('*a', f.src)
+        f.verify()
+
+        f = FST('*\na')
+        f._parenthesize_grouping(star_child=False)
+        self.assertEqual('(*\na)', f.src)
+        f.unpar()
+        self.assertEqual('(*\na)', f.src)
 
     def test_pars(self):
         for src, elt, slice_copy in PARS_DATA:
@@ -11058,12 +11070,6 @@ match a:
             pass
 
         self.assertEqual(old, FST.set_option(**old))
-
-    def test_misc(self):
-        self.assertEqual('and', FST('a and b').op.src)
-        self.assertEqual('or', FST('a or b').op.src)
-        self.assertEqual(['and'], FST('a and b').op.lines)
-        self.assertEqual(['or'], FST('a or b').op.lines)
 
     def test_reconcile(self):
         # basic replacements

@@ -1817,8 +1817,8 @@ class FST:
         and brackets to unbracketed `MatchSequence` adjusting the node location. If dealing with a `Starred` then the
         parentheses are applied to the child.
 
-        **WARNING!** This function doesn't do any validation. So if you parenthesize something that shouldn't be
-        parenthesized, and you wind up poking an eye out, that's on you.
+        **WARNING!** This function doesn't do any higher level syntactic validation. So if you parenthesize something
+        that shouldn't be parenthesized, and you wind up poking an eye out, that's on you.
 
         **Parameters:**
         - `force`: If `True` then will add another layer of parentheses regardless if any already present.
@@ -1874,8 +1874,8 @@ class FST:
         `Tuple` parentheses and `MatchSequence` parentheses or brackets if `node=True`. If dealing with a `Starred` then
         the parentheses are checked in and removed from the child.
 
-        **WARNING!** This function doesn't do any validation. So if you unparenthesize something that shouldn't be
-        unparenthesized, and you wind up poking an eye out, that's on you.
+        **WARNING!** This function doesn't do any higher level syntactic validation. So if you unparenthesize something
+        that shouldn't be unparenthesized, and you wind up poking an eye out, that's on you.
 
         **Parameters:**
         - `node`: If `True` then will remove parentheses from a parenthesized `Tuple` and parentheses / brackets from
@@ -1916,19 +1916,36 @@ class FST:
         ```
         """
 
-        if not (self.a.value.f if isinstance(self.a, Starred) else self).is_atom():
-            return self  # False
+        if isinstance(a := self.a, Starred):
+            if (value := a.value.f).pars().n:
+                with self._modifying():
+                    value._unparenthesize_grouping(share)
 
-        with self._modifying():
-            self._unparenthesize_grouping(share)  # ret =
+            return self
 
-            if node:
-                if isinstance(self.a, Tuple):
-                    self._unparenthesize_node()  # ret = self._unparenthesize_node() or ret
-                elif isinstance(self.a, MatchSequence):
-                    self._unparenthesize_node('patterns')  # ret = self._unparenthesize_node() or ret
+        modifying = None
+
+        if self.pars().n:
+            modifying = self._modifying().enter()
+
+            self._unparenthesize_grouping(share)
+
+        if node:
+            if isinstance(self.a, Tuple):
+                modifying = modifying or self._modifying().enter()
+
+                self._unparenthesize_node()  # ret = self._unparenthesize_node() or ret
+
+            elif isinstance(self.a, MatchSequence):
+                modifying = modifying or self._modifying().enter()
+
+                self._unparenthesize_node('patterns')  # ret = self._unparenthesize_node() or ret
+
+        if modifying:
+            modifying.done()
 
         return self  # ret
+
 
     # ------------------------------------------------------------------------------------------------------------------
     # Structure stuff
