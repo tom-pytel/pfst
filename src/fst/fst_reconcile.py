@@ -252,8 +252,14 @@ class _Reconcile:
 
                         # TODO: this special case
 
-                if field == 'kwd_attrs' or (field == 'names' and isinstance(node, (Global, Nonlocal))):  # list of identifier names
+                if field == 'names' and isinstance(node, (Global, Nonlocal)):  # list of identifier names
+                    self.recurse_slice(node, outf, field, child)
+
                     continue
+
+
+                # if field == 'kwd_attrs':
+                #     continue
 
 
                 # TODO: rest of slices when they are done

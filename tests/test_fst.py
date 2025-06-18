@@ -20,6 +20,7 @@ from data_other import (PARS_DATA, COPY_DATA, GET_SLICE_SEQ_DATA, GET_SLICE_STMT
 _PY_VERSION = sys.version_info[:2]
 _PYLT12     = _PY_VERSION < (3, 12)
 _PYLT13     = _PY_VERSION < (3, 13)
+_PYLT14     = _PY_VERSION < (3, 14)
 
 PYFNMS = sum((
     [os.path.join(path, fnm) for path, _, fnms in os.walk(top) for fnm in fnms if fnm.endswith('.py')]
@@ -11491,6 +11492,292 @@ if 1:
         m = (o := FST('i = 1')).mark()
         o.value.par(True)
         self.assertRaises(RuntimeError, o.reconcile, m)
+
+    def test_reconcile_slices(self):
+        m = (o := FST('a # a\nb # b\nc # c', 'exec')).mark()
+        o.a.body[0] = o.a.body[1]
+        o.a.body[1] = o.a.body[2]
+        f = o.reconcile(m)
+        self.assertEqual('b # b\nc # c\nc # c', f.src)
+        f.verify()
+
+        m = (o := FST('{\na, # a\nb, # b\nc, # c\n}', 'exec')).mark()
+        o.a.body[0].value.elts[0] = o.a.body[0].value.elts[1]
+        o.a.body[0].value.elts[1] = o.a.body[0].value.elts[2]
+        f = o.reconcile(m)
+        self.assertEqual('{\nb, # b\nc, # c\nc, # c\n}', f.src)
+        f.verify()
+
+        m = (o := FST('[\na, # a\nb, # b\nc, # c\n]', 'exec')).mark()
+        o.a.body[0].value.elts[0] = o.a.body[0].value.elts[1]
+        o.a.body[0].value.elts[1] = o.a.body[0].value.elts[2]
+        f = o.reconcile(m)
+        self.assertEqual('[\nb, # b\nc, # c\nc, # c\n]', f.src)
+        f.verify()
+
+        m = (o := FST('(\na, # a\nb, # b\nc, # c\n)', 'exec')).mark()
+        o.a.body[0].value.elts[0] = o.a.body[0].value.elts[1]
+        o.a.body[0].value.elts[1] = o.a.body[0].value.elts[2]
+        f = o.reconcile(m)
+        self.assertEqual('(\nb, # b\nc, # c\nc, # c\n)', f.src)
+        f.verify()
+
+        m = (o := FST('{\na:a, # a\nb:b, # b\nc:c, # c\n}', 'exec')).mark()
+        o.a.body[0].value.keys[0] = o.a.body[0].value.keys[1]
+        o.a.body[0].value.values[0] = o.a.body[0].value.values[1]
+        o.a.body[0].value.keys[1] = o.a.body[0].value.keys[2]
+        o.a.body[0].value.values[1] = o.a.body[0].value.values[2]
+        f = o.reconcile(m)
+        self.assertEqual('{\nb:b, # b\nc:c, # c\nc:c, # c\n}', f.src)
+        f.verify()
+
+        m = (o := FST('@a # a\n@b # b\n@c # c\ndef f(): pass', 'exec')).mark()
+        o.a.body[0].decorator_list[0] = o.a.body[0].decorator_list[1]
+        o.a.body[0].decorator_list[1] = o.a.body[0].decorator_list[2]
+        f = o.reconcile(m)
+        self.assertEqual('@b # a\n@c # b\n@c # c\ndef f(): pass', f.src)
+        f.verify()
+
+        m = (o := FST('@a # a\n@b # b\n@c # c\nasync def f(): pass', 'exec')).mark()
+        o.a.body[0].decorator_list[0] = o.a.body[0].decorator_list[1]
+        o.a.body[0].decorator_list[1] = o.a.body[0].decorator_list[2]
+        f = o.reconcile(m)
+        self.assertEqual('@b # a\n@c # b\n@c # c\nasync def f(): pass', f.src)
+        f.verify()
+
+        m = (o := FST('@a # a\n@b # b\n@c # c\nclass cls: pass', 'exec')).mark()
+        o.a.body[0].decorator_list[0] = o.a.body[0].decorator_list[1]
+        o.a.body[0].decorator_list[1] = o.a.body[0].decorator_list[2]
+        f = o.reconcile(m)
+        self.assertEqual('@b # a\n@c # b\n@c # c\nclass cls: pass', f.src)
+        f.verify()
+
+        m = (o := FST('class cls(a,b,c): pass', 'exec')).mark()
+        o.a.body[0].bases[0] = o.a.body[0].bases[1]
+        o.a.body[0].bases[1] = o.a.body[0].bases[2]
+        f = o.reconcile(m)
+        self.assertEqual('class cls(b,c,c): pass', f.src)
+        f.verify()
+
+        m = (o := FST('del a,b,c', 'exec')).mark()
+        o.a.body[0].targets[0] = o.a.body[0].targets[1]
+        o.a.body[0].targets[1] = o.a.body[0].targets[2]
+        f = o.reconcile(m)
+        self.assertEqual('del b,c,c', f.src)
+        f.verify()
+
+        m = (o := FST('a=b=c = d', 'exec')).mark()
+        o.a.body[0].targets[0] = o.a.body[0].targets[1]
+        o.a.body[0].targets[1] = o.a.body[0].targets[2]
+        f = o.reconcile(m)
+        self.assertEqual('b=c=c = d', f.src)
+        f.verify()
+
+        m = (o := FST('a  or  b  or  c', 'exec')).mark()
+        o.a.body[0].value.values[0] = o.a.body[0].value.values[1]
+        o.a.body[0].value.values[1] = o.a.body[0].value.values[2]
+        f = o.reconcile(m)
+        self.assertEqual('b  or  c  or  c', f.src)
+        f.verify()
+
+        m = (o := FST('call(a,b,c)', 'exec')).mark()
+        o.a.body[0].value.args[0] = o.a.body[0].value.args[1]
+        o.a.body[0].value.args[1] = o.a.body[0].value.args[2]
+        f = o.reconcile(m)
+        self.assertEqual('call(b,c,c)', f.src)
+        f.verify()
+
+        m = (o := FST('[i for i in j if a if b if c]', 'exec')).mark()
+        o.a.body[0].value.generators[0].ifs[0] = o.a.body[0].value.generators[0].ifs[1]
+        o.a.body[0].value.generators[0].ifs[1] = o.a.body[0].value.generators[0].ifs[2]
+        f = o.reconcile(m)
+        self.assertEqual('[i for i in j if b if c if c]', f.src)
+        f.verify()
+
+        m = (o := FST('[i for k in l if k for j in k if j for i in j if i]', 'exec')).mark()
+        o.a.body[0].value.generators[0] = o.a.body[0].value.generators[1]
+        o.a.body[0].value.generators[1] = o.a.body[0].value.generators[2]
+        f = o.reconcile(m)
+        self.assertEqual('[i for j in k if j for i in j if i for i in j if i]', f.src)
+        f.verify()
+
+        m = (o := FST('{i for k in l if k for j in k if j for i in j if i}', 'exec')).mark()
+        o.a.body[0].value.generators[0] = o.a.body[0].value.generators[1]
+        o.a.body[0].value.generators[1] = o.a.body[0].value.generators[2]
+        f = o.reconcile(m)
+        self.assertEqual('{i for j in k if j for i in j if i for i in j if i}', f.src)
+        f.verify()
+
+        m = (o := FST('{i: i for k in l if k for j in k if j for i in j if i}', 'exec')).mark()
+        o.a.body[0].value.generators[0] = o.a.body[0].value.generators[1]
+        o.a.body[0].value.generators[1] = o.a.body[0].value.generators[2]
+        f = o.reconcile(m)
+        self.assertEqual('{i: i for j in k if j for i in j if i for i in j if i}', f.src)
+        f.verify()
+
+        m = (o := FST('(i for k in l if k for j in k if j for i in j if i)', 'exec')).mark()
+        o.a.body[0].value.generators[0] = o.a.body[0].value.generators[1]
+        o.a.body[0].value.generators[1] = o.a.body[0].value.generators[2]
+        f = o.reconcile(m)
+        self.assertEqual('(i for j in k if j for i in j if i for i in j if i)', f.src)
+        f.verify()
+
+        m = (o := FST('class cls(a=1,b=2,c=3): pass', 'exec')).mark()
+        o.a.body[0].keywords[0] = o.a.body[0].keywords[1]
+        o.a.body[0].keywords[1] = o.a.body[0].keywords[2]
+        f = o.reconcile(m)
+        self.assertEqual('class cls(b=2,c=3,c=3): pass', f.src)
+        f.verify()
+
+        m = (o := FST('call(a=1,b=2,c=3)', 'exec')).mark()
+        o.a.body[0].value.keywords[0] = o.a.body[0].value.keywords[1]
+        o.a.body[0].value.keywords[1] = o.a.body[0].value.keywords[2]
+        f = o.reconcile(m)
+        self.assertEqual('call(b=2,c=3,c=3)', f.src)
+        f.verify()
+
+        m = (o := FST('import a,b,c', 'exec')).mark()
+        o.a.body[0].names[0] = o.a.body[0].names[1]
+        o.a.body[0].names[1] = o.a.body[0].names[2]
+        f = o.reconcile(m)
+        self.assertEqual('import b,c,c', f.src)
+        f.verify()
+
+        m = (o := FST('from z import a,b,c', 'exec')).mark()
+        o.a.body[0].names[0] = o.a.body[0].names[1]
+        o.a.body[0].names[1] = o.a.body[0].names[2]
+        f = o.reconcile(m)
+        self.assertEqual('from z import b,c,c', f.src)
+        f.verify()
+
+        m = (o := FST('with a  as  a, b  as  b, c  as  c: pass', 'exec')).mark()
+        o.a.body[0].items[0] = o.a.body[0].items[1]
+        o.a.body[0].items[1] = o.a.body[0].items[2]
+        f = o.reconcile(m)
+        self.assertEqual('with b  as  b, c  as  c, c  as  c: pass', f.src)
+        f.verify()
+
+        m = (o := FST('async with a  as  a, b  as  b, c  as  c: pass', 'exec')).mark()
+        o.a.body[0].items[0] = o.a.body[0].items[1]
+        o.a.body[0].items[1] = o.a.body[0].items[2]
+        f = o.reconcile(m)
+        self.assertEqual('async with b  as  b, c  as  c, c  as  c: pass', f.src)
+        f.verify()
+
+        m = (o := FST('case [a,b,c]: pass', 'match_case')).mark()
+        o.a.pattern.patterns[0] = o.a.pattern.patterns[1]
+        o.a.pattern.patterns[1] = o.a.pattern.patterns[2]
+        f = o.reconcile(m)
+        self.assertEqual('case [b,c,c]: pass', f.src)
+        f.verify()
+
+        m = (o := FST('case {1:a,2:b,3:c}: pass', 'match_case')).mark()
+        o.a.pattern.keys[0] = o.a.pattern.keys[1]
+        o.a.pattern.patterns[0] = o.a.pattern.patterns[1]
+        o.a.pattern.keys[1] = o.a.pattern.keys[2]
+        o.a.pattern.patterns[1] = o.a.pattern.patterns[2]
+        f = o.reconcile(m)
+        self.assertEqual('case {2:b,3:c,3:c}: pass', f.src)
+        f.verify()
+
+        m = (o := FST('case cls(a,b,c): pass', 'match_case')).mark()
+        o.a.pattern.patterns[0] = o.a.pattern.patterns[1]
+        o.a.pattern.patterns[1] = o.a.pattern.patterns[2]
+        f = o.reconcile(m)
+        self.assertEqual('case cls(b,c,c): pass', f.src)
+        f.verify()
+
+        m = (o := FST('case a|b|c: pass', 'match_case')).mark()
+        o.a.pattern.patterns[0] = o.a.pattern.patterns[1]
+        o.a.pattern.patterns[1] = o.a.pattern.patterns[2]
+        f = o.reconcile(m)
+        self.assertEqual('case b|c|c: pass', f.src)
+        f.verify()
+
+        m = (o := FST('global a,b,c', 'exec')).mark()
+        o.a.body[0].names[0] = o.a.body[0].names[1]
+        o.a.body[0].names[1] = o.a.body[0].names[2]
+        f = o.reconcile(m)
+        self.assertEqual('global b,c,c', f.src)
+        f.verify()
+
+        m = (o := FST('nonlocal a,b,c', 'exec')).mark()
+        o.a.body[0].names[0] = o.a.body[0].names[1]
+        o.a.body[0].names[1] = o.a.body[0].names[2]
+        f = o.reconcile(m)
+        self.assertEqual('nonlocal b,c,c', f.src)
+        f.verify()
+
+        m = (o := FST("f'a{a}b{b}c{c}'", 'exec')).mark()
+        o.a.body[0].value.values[0] = o.a.body[0].value.values[2]
+        o.a.body[0].value.values[1] = o.a.body[0].value.values[3]
+        o.a.body[0].value.values[2] = o.a.body[0].value.values[4]
+        o.a.body[0].value.values[3] = o.a.body[0].value.values[5]
+        f = o.reconcile(m)
+        self.assertEqual("f'b{b}c{c}c{c}'", f.src.rstrip())
+        f.verify()
+
+        if not _PYLT12:
+            m = (o := FST('def f[T,U,V](): pass', 'exec')).mark()
+            o.a.body[0].type_params[0] = o.a.body[0].type_params[1]
+            o.a.body[0].type_params[1] = o.a.body[0].type_params[2]
+            f = o.reconcile(m)
+            self.assertEqual('def f[U,V,V](): pass', f.src)
+            f.verify()
+
+            m = (o := FST('async def f[T,U,V](): pass', 'exec')).mark()
+            o.a.body[0].type_params[0] = o.a.body[0].type_params[1]
+            o.a.body[0].type_params[1] = o.a.body[0].type_params[2]
+            f = o.reconcile(m)
+            self.assertEqual('async def f[U,V,V](): pass', f.src)
+            f.verify()
+
+            m = (o := FST('class cls[T,U,V]: pass', 'exec')).mark()
+            o.a.body[0].type_params[0] = o.a.body[0].type_params[1]
+            o.a.body[0].type_params[1] = o.a.body[0].type_params[2]
+            f = o.reconcile(m)
+            self.assertEqual('class cls[U,V,V]: pass', f.src)
+            f.verify()
+
+            m = (o := FST('type t[T,U,V] = ...', 'exec')).mark()
+            o.a.body[0].type_params[0] = o.a.body[0].type_params[1]
+            o.a.body[0].type_params[1] = o.a.body[0].type_params[2]
+            f = o.reconcile(m)
+            self.assertEqual('type t[U,V,V] = ...', f.src)
+            f.verify()
+
+        if not _PYLT14:
+            m = (o := FST("t'a{a}b{b}c{c}'", 'exec')).mark()
+            o.a.body[0].value.values[0] = o.a.body[0].value.values[2]
+            o.a.body[0].value.values[1] = o.a.body[0].value.values[3]
+            o.a.body[0].value.values[2] = o.a.body[0].value.values[4]
+            o.a.body[0].value.values[3] = o.a.body[0].value.values[5]
+            f = o.reconcile(m)
+            self.assertEqual("t'b{b}c{c}c{c}'", f.src)
+            f.verify()
+
+        # non-slice lists
+
+        m = (o := FST('def f(a=1,b=2,/,c=3,d=4,*,e=5,f=6): pass', 'exec')).mark()
+        o.a.body[0].args.posonlyargs[0] = o.a.body[0].args.posonlyargs[1]
+        o.a.body[0].args.defaults[0] = o.a.body[0].args.defaults[1]
+        o.a.body[0].args.args[0] = o.a.body[0].args.args[1]
+        o.a.body[0].args.defaults[2] = o.a.body[0].args.defaults[3]
+        o.a.body[0].args.kwonlyargs[0] = o.a.body[0].args.kwonlyargs[1]
+        o.a.body[0].args.kw_defaults[0] = o.a.body[0].args.kw_defaults[1]
+        f = o.reconcile(m)
+        self.assertEqual('def f(b=2,b=2,/,d=4,d=4,*,f=6,f=6): pass', f.src)
+        f.verify()
+
+        m = (o := FST('case cls(a=1,b=2,c=3): pass', 'match_case')).mark()
+        o.a.pattern.kwd_attrs[0] = o.a.pattern.kwd_attrs[1]
+        o.a.pattern.kwd_patterns[0] = o.a.pattern.kwd_patterns[1]
+        o.a.pattern.kwd_attrs[1] = o.a.pattern.kwd_attrs[2]
+        o.a.pattern.kwd_patterns[1] = o.a.pattern.kwd_patterns[2]
+        f = o.reconcile(m)
+        self.assertEqual('case cls(b=2,c=3,c=3): pass', f.src)
+        f.verify()
+
 
 if __name__ == '__main__':
     import argparse
