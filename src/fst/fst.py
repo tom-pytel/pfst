@@ -8,7 +8,7 @@ from ast import *
 from ast import unparse as ast_unparse
 from contextlib import contextmanager
 from io import TextIOBase
-from typing import Any, Callable, Literal, Optional, TextIO, Union
+from typing import Any, Callable, Generator, Literal, Optional, TextIO, Union
 
 from .astutil import *
 from .astutil import TypeAlias, TryStar, TemplateStr, Interpolation, type_param
@@ -1975,6 +1975,28 @@ class FST:
         step_back,
         walk,
     )
+
+    def parents(self, self_: bool = False) -> Generator['FST', None, None]:
+        """Generator which yields parents all the way up to root. If `self_` is `True` then yield `self` first,
+        otherwise only checks parents.
+
+        **Parameters:**
+        - `self_`: Whether to yield `self` first.
+
+        **Examples:**
+        ```py
+        >>> list(FST('i = (f(), g())', 'exec').body[0].value.elts[0].parents())
+        [<Tuple 0,4..0,14>, <Assign 0,0..0,14>, <Module ROOT 0,0..0,14>]
+        >>> list(FST('i = (f(), g())', 'exec').body[0].value.elts[0].parents(self_=True))
+        [<Call 0,5..0,8>, <Tuple 0,4..0,14>, <Assign 0,0..0,14>, <Module ROOT 0,0..0,14>]
+        ```
+        """
+
+        if self_:
+            yield self
+
+        while self := self.parent:
+            yield self
 
     def parent_stmt(self, self_: bool = False, mod: bool = True) -> Optional['FST']:
         """The first parent which is a `stmt` or optionally `mod` node (if any). If `self_` is `True` then will check

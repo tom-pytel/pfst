@@ -911,6 +911,10 @@ class Reconcile1(Fuzzy):
                     tgta , tgt_parenta  = tgt.a,  tgt.parent.a
                     repla, repl_parenta = repl.a, repl.parent.a
 
+                    if _PYLT12:
+                        if any(isinstance(f.a, (JoinedStr, TemplateStr)) for f in tgt.parents()):
+                            continue
+
                     if isinstance(tgta, Slice) and not isinstance(repla, Slice):
                         continue
 
