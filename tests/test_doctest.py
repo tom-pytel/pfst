@@ -15,7 +15,7 @@ def cleanup_docstrs(obj, exclude: set[str] = set()):
 
             if doc := getattr(o, '__doc__', None):
                 try:
-                    doc       = '' if name in exclude else doc.replace('```', '')#.replace(r'\\n', '\n')
+                    doc       = '' if name in exclude else doc.replace('```', '')
                     o.__doc__ = doc
 
                 except Exception:

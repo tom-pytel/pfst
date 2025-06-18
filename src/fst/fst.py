@@ -62,7 +62,7 @@ def _swizzle_getput_params(start: int | Literal['end'] | None, stop: int | None 
 # ----------------------------------------------------------------------------------------------------------------------
 
 def parse(source, filename='<unknown>', mode='exec', *, type_comments=False, feature_version=None, **kwargs) -> AST:
-    """Executes `ast.parse()` and then adds `FST` nodes to the parsed tree. Drop-in replacement for `ast.parse()`. For
+    r"""Executes `ast.parse()` and then adds `FST` nodes to the parsed tree. Drop-in replacement for `ast.parse()`. For
     parameters, see `ast.parse()`. Returned `AST` tree has added `.f` attribute at each node which accesses the parallel
     `FST` tree.
 
@@ -79,7 +79,7 @@ def parse(source, filename='<unknown>', mode='exec', *, type_comments=False, fea
     **Examples:**
     ```py
     >>> import ast, fst
-    >>> a = fst.parse('if 1:\\n  i = 2')
+    >>> a = fst.parse('if 1:\n  i = 2')
     >>> type(a)
     <class 'ast.Module'>
     >>> a.f  # FST node
@@ -730,7 +730,7 @@ class FST:
     @staticmethod
     def fromast(ast: AST, mode: Mode | Literal[False] | None = None, *, filename: str = '<unknown>',
                 type_comments: bool | None = False, feature_version=None) -> 'FST':
-        """Unparse and reparse an `AST` for new `FST` (the reparse is necessary to make sure locations are correct).
+        r"""Unparse and reparse an `AST` for new `FST` (the reparse is necessary to make sure locations are correct).
 
         **Parameters:**
         - `ast`: The root `AST` node.
@@ -757,7 +757,7 @@ class FST:
           .targets[1]
           0] Name 'var' Store - 0,0..0,3
           .value Constant 123 - 0,6..0,9
-        >>> FST.fromast(ast.parse('if 1:\\n    j = 5')).dump('stmt')
+        >>> FST.fromast(ast.parse('if 1:\n    j = 5')).dump('stmt')
         Module - ROOT 0,0..1,9
           .body[1]
         0: if 1:
@@ -966,7 +966,7 @@ class FST:
 
     def dump(self, src: Literal['stmt', 'all'] | None = None, full: bool = False, expand: bool = False, *,
              indent: int = 2, out: Callable | TextIO = print, eol: str | None = None) -> str | list[str] | None:
-        """Dump a representation of the tree to stdout or other `TextIO` or return as a `str` or `list` of lines, or
+        r"""Dump a representation of the tree to stdout or other `TextIO` or return as a `str` or `list` of lines, or
         call a provided function once with each line of the output.
 
         **Parameters:**
@@ -1033,7 +1033,7 @@ class FST:
         1:                  b
                         .value Name 'b' Load - 1,17..1,18
         >>> f.dump(out=str)[:80]
-        'If - ROOT 0,0..1,19\\n  .test Constant 1 - 0,3..0,4\\n  .body[1]\\n  0] Expr - 1,4..1,'
+        'If - ROOT 0,0..1,19\n  .test Constant 1 - 0,3..0,4\n  .body[1]\n  0] Expr - 1,4..1,'
         >>> for l in f.dump('stmt', out=list):
         ...     print(repr(l))
         ...
@@ -1287,7 +1287,7 @@ class FST:
 
     def get(self, idx: int | Literal['end'] | None = None, stop: int | None | Literal[False] = False,
             field: str | None = None, *, cut: bool = False, **options) -> Optional['FST'] | str | constant:
-        """Copy or cut an individual child node or a slice of child nodes from `self` if possible. This function can do
+        r"""Copy or cut an individual child node or a slice of child nodes from `self` if possible. This function can do
         everything that `get_slice()` can.
 
         **Parameters:**
@@ -1331,13 +1331,13 @@ class FST:
         '[0, 1, 2]'
         >>> FST('[0, 1, 2, 3]').get(-3, None).src
         '[1, 2, 3]'
-        >>> FST('if 1: i = 1\\nelse: j = 2').get(0).src
+        >>> FST('if 1: i = 1\nelse: j = 2').get(0).src
         'i = 1'
-        >>> FST('if 1: i = 1\\nelse: j = 2').get('orelse').src
+        >>> FST('if 1: i = 1\nelse: j = 2').get('orelse').src
         'j = 2'
-        >>> FST('if 1: i = 1\\nelse: j = 2; k = 3').get(1, 'orelse').src
+        >>> FST('if 1: i = 1\nelse: j = 2; k = 3').get(1, 'orelse').src
         'k = 3'
-        >>> FST('if 1: i = 1\\nelse: j = 2; k = 3; l = 4; m = 5').get(1, 3, 'orelse').src
+        >>> FST('if 1: i = 1\nelse: j = 2; k = 3; l = 4; m = 5').get(1, 3, 'orelse').src
         'k = 3; l = 4'
         >>> FST('return 1').get().src  # default field is 'value'
         '1'
@@ -1367,7 +1367,7 @@ class FST:
     def put(self, code: Code | str | constant | None, idx: int | Literal['end'] | None = None,
             stop: int | None | Literal[False] = False, field: str | None = None, *, one: bool = True, **options,
             ) -> Self:
-        """Put an individual node or a slice of nodes to `self` if possible. This function can do everything that
+        r"""Put an individual node or a slice of nodes to `self` if possible. This function can do everything that
         `put_slice()` can. The node is passed as an existing top-level `FST`, `AST`, string or list of string lines. If
         passed as an `FST` then it should be considered "consumed" after this function returns and is no logner valid,
         even on failure. `AST` is copied.
@@ -1421,21 +1421,21 @@ class FST:
         '[(4, 5), 3]'
         >>> (f := FST('[0, 1, 2, 3]')).put('4, 5', -3, None, one=False).src
         '[0, 4, 5]'
-        >>> print(FST('if 1: i = 1\\nelse: j = 2').put('z = -1', 0).src)
+        >>> print(FST('if 1: i = 1\nelse: j = 2').put('z = -1', 0).src)
         if 1:
             z = -1
         else: j = 2
-        >>> print(FST('if 1: i = 1\\nelse: j = 2').put('z = -1', 0, 'orelse').src.rstrip())
+        >>> print(FST('if 1: i = 1\nelse: j = 2').put('z = -1', 0, 'orelse').src.rstrip())
         if 1: i = 1
         else:
             z = -1
-        >>> print(FST('if 1: i = 1\\nelse: j = 2').put('z = -1\\ny = -2\\nx = -3', 'orelse', one=False).src.rstrip())
+        >>> print(FST('if 1: i = 1\nelse: j = 2').put('z = -1\ny = -2\nx = -3', 'orelse', one=False).src.rstrip())
         if 1: i = 1
         else:
             z = -1
             y = -2
             x = -3
-        >>> print((f := FST('if 1: i = 1\\nelse: j = 2')).put('z = -1', 0, raw=True, to=f.orelse[0]).root.src)
+        >>> print((f := FST('if 1: i = 1\nelse: j = 2')).put('z = -1', 0, raw=True, to=f.orelse[0]).root.src)
         if 1: z = -1
         ```
         """
@@ -1465,7 +1465,7 @@ class FST:
 
     def get_slice(self, start: int | Literal['end'] | None = None, stop: int | None = None, field: str | None = None, *,
                   cut: bool = False, **options) -> 'FST':
-        """Copy or cut a slice of child nodes from `self` if possible.
+        r"""Copy or cut a slice of child nodes from `self` if possible.
 
         **Parameters:**
         - `start`: The start of the slice to get, or `None` for the beginning of the entire range.
@@ -1496,7 +1496,7 @@ class FST:
         '[1, 2]'
         >>> f.src
         '[0, 3]'
-        >>> f = FST('if 1: i = 1\\nelse: j = 2; k = 3; l = 4; m = 5')
+        >>> f = FST('if 1: i = 1\nelse: j = 2; k = 3; l = 4; m = 5')
         >>> s = f.get_slice(1, 3, 'orelse', cut=True)
         >>> print(f.src)
         if 1: i = 1
@@ -1517,7 +1517,7 @@ class FST:
 
     def put_slice(self, code: Code | None, start: int | Literal['end'] | None = None, stop: int | None = None,
                   field: str | None = None, *, one: bool = False, **options) -> Self:
-        """Put a slice of nodes to `self` if possible.  The node is passed as an existing top-level `FST`, `AST`, string
+        r"""Put a slice of nodes to `self` if possible.  The node is passed as an existing top-level `FST`, `AST`, string
         or list of string lines. If passed as an `FST` then it should be considered "consumed" after this function
         returns and is no logner valid, even on failure. `AST` is copied.
 
@@ -1557,21 +1557,21 @@ class FST:
         '[(4, 5), 3]'
         >>> (f := FST('[0, 1, 2, 3]')).put('4, 5', -3, None, one=False).src
         '[0, 4, 5]'
-        >>> print(FST('if 1: i = 1\\nelse: j = 2').put('z = -1', 0).src)
+        >>> print(FST('if 1: i = 1\nelse: j = 2').put('z = -1', 0).src)
         if 1:
             z = -1
         else: j = 2
-        >>> print(FST('if 1: i = 1\\nelse: j = 2').put('z = -1', 0, 'orelse').src.rstrip())
+        >>> print(FST('if 1: i = 1\nelse: j = 2').put('z = -1', 0, 'orelse').src.rstrip())
         if 1: i = 1
         else:
             z = -1
-        >>> print(FST('if 1: i = 1\\nelse: j = 2').put('z = -1\\ny = -2\\nx = -3', 'orelse', one=False).src.rstrip())
+        >>> print(FST('if 1: i = 1\nelse: j = 2').put('z = -1\ny = -2\nx = -3', 'orelse', one=False).src.rstrip())
         if 1: i = 1
         else:
             z = -1
             y = -2
             x = -3
-        >>> print((f := FST('if 1: i = 1\\nelse: j = 2')).put('z = -1', 0, raw=True, to=f.orelse[0]).root.src)
+        >>> print((f := FST('if 1: i = 1\nelse: j = 2')).put('z = -1', 0, raw=True, to=f.orelse[0]).root.src)
         if 1: z = -1
         ```
         """
@@ -1586,7 +1586,7 @@ class FST:
         return self._put_slice(code, start, stop, field_, one, **options)
 
     def get_src(self, ln: int, col: int, end_ln: int, end_col: int, as_lines: bool = False) -> str | list[str]:
-        """Get source at location, without dedenting or any other modification, returned as a string or individual
+        r"""Get source at location, without dedenting or any other modification, returned as a string or individual
         lines. The first and last lines are cropped to start `col` and `end_col`.
 
         Can call on any node in tree to access source for the whole tree.
@@ -1605,11 +1605,11 @@ class FST:
 
         **Examples:**
         ```py
-        >>> FST('if 1:\\n  i = 2').get_src(0, 3, 1, 5)
-        '1:\\n  i ='
-        >>> FST('if 1:\\n  i = 2').get_src(0, 3, 1, 5, as_lines=True)
+        >>> FST('if 1:\n  i = 2').get_src(0, 3, 1, 5)
+        '1:\n  i ='
+        >>> FST('if 1:\n  i = 2').get_src(0, 3, 1, 5, as_lines=True)
         ['1:', '  i =']
-        >>> (f := FST('if 1:\\n  i = 2')).get_src(*f.body[0].bloc)
+        >>> (f := FST('if 1:\n  i = 2')).get_src(*f.body[0].bloc)
         'i = 2'
         ```
         """
@@ -1627,7 +1627,7 @@ class FST:
 
     def put_src(self, code: Code | None, ln: int, col: int, end_ln: int, end_col: int, *,
                 exact: bool | None = True) -> Optional['FST']:
-        """Put source and reparse. There are no rules on what is put, it is simply put and parse is attempted. If the
+        r"""Put source and reparse. There are no rules on what is put, it is simply put and parse is attempted. If the
         `code` is passed as an `AST` then it is unparsed to a string and that string is put into the location. If `FST`
         then the exact source of the `FST` is put. If passed as a string or lines then that is put directly.
 
@@ -1680,13 +1680,13 @@ class FST:
         None
         >>> print(type(f.targets[0].a))
         <class 'ast.Name'>
-        >>> f = FST('if a:\\n  i = 2\\nelif b:\\n  j = 3')
+        >>> f = FST('if a:\n  i = 2\nelif b:\n  j = 3')
         >>> print(f.src)
         if a:
           i = 2
         elif b:
           j = 3
-        >>> f.put_src('else:\\n  if b:\\n    k = 4', *f.orelse[0].loc[:2], *f.loc[2:])
+        >>> f.put_src('else:\n  if b:\n    k = 4', *f.orelse[0].loc[:2], *f.loc[2:])
         <If 3,2..4,9>
         >>> print(f.src)
         if a:
@@ -2031,20 +2031,20 @@ class FST:
         return self
 
     def parent_stmtish(self, self_: bool = False, mod: bool = True) -> Optional['FST']:
-        """The first parent which is a `stmt`, `ExceptHandler`, `match_case` or optionally `mod` node (if any). If
+        r"""The first parent which is a `stmt`, `ExceptHandler`, `match_case` or optionally `mod` node (if any). If
         `self_` is `True` then will check `self` first, otherwise only checks parents.
 
         **Examples:**
         ```py
-        >>> FST('try: pass\\nexcept: pass', 'exec').body[0].handlers[0].body[0].parent_stmtish()
+        >>> FST('try: pass\nexcept: pass', 'exec').body[0].handlers[0].body[0].parent_stmtish()
         <ExceptHandler 1,0..1,12>
-        >>> FST('try: pass\\nexcept: pass', 'exec').body[0].handlers[0].parent_stmtish()
+        >>> FST('try: pass\nexcept: pass', 'exec').body[0].handlers[0].parent_stmtish()
         <Try 0,0..1,12>
-        >>> FST('try: pass\\nexcept: pass', 'exec').body[0].parent_stmtish()
+        >>> FST('try: pass\nexcept: pass', 'exec').body[0].parent_stmtish()
         <Module ROOT 0,0..1,12>
-        >>> FST('match a:\\n  case 1: pass').cases[0].body[0].parent_stmtish()
+        >>> FST('match a:\n  case 1: pass').cases[0].body[0].parent_stmtish()
         <match_case 1,2..1,14>
-        >>> FST('match a:\\n  case 1: pass').cases[0].pattern.parent_stmtish()
+        >>> FST('match a:\n  case 1: pass').cases[0].pattern.parent_stmtish()
         <match_case 1,2..1,14>
         ```
         """
@@ -2085,7 +2085,7 @@ class FST:
         return self
 
     def parent_scope(self, self_: bool = False, mod: bool = True) -> Optional['FST']:
-        """The first parent which opens a scope that `self` lives in (if any). Types include `FunctionDef`,
+        r"""The first parent which opens a scope that `self` lives in (if any). Types include `FunctionDef`,
         `AsyncFunctionDef`, `ClassDef`, `Lambda`, `ListComp`, `SetComp`, `DictComp`, `GeneratorExp` or optionally `mod`
         node (if any). If `self_` is `True` then will check `self` first, otherwise only checks parents.
 
@@ -2093,7 +2093,7 @@ class FST:
         ```py
         >>> FST('if 1: i = 1', 'exec').body[0].body[0].value.parent_scope()
         <Module ROOT 0,0..0,11>
-        >>> FST('def f():\\n  if 1: i = 1', 'exec').body[0].body[0].body[0].value.parent_scope()
+        >>> FST('def f():\n  if 1: i = 1', 'exec').body[0].body[0].body[0].value.parent_scope()
         <FunctionDef 0,0..1,13>
         >>> FST('lambda: None', 'exec').body[0].value.body.parent_scope()
         <Lambda 0,0..0,12>
@@ -2113,7 +2113,7 @@ class FST:
         return self
 
     def parent_named_scope(self, self_: bool = False, mod: bool = True) -> Optional['FST']:
-        """The first parent which opens a named scope that `self` lives in (if any). Types include `FunctionDef`,
+        r"""The first parent which opens a named scope that `self` lives in (if any). Types include `FunctionDef`,
         `AsyncFunctionDef`, `ClassDef` or optionally `mod` node (if any). If `self_` is `True` then will check `self`
         first, otherwise only checks parents.
 
@@ -2121,7 +2121,7 @@ class FST:
         ```py
         >>> FST('if 1: i = 1', 'exec').body[0].body[0].value.parent_named_scope()
         <Module ROOT 0,0..0,11>
-        >>> FST('def f():\\n  if 1: i = 1', 'exec').body[0].body[0].body[0].value.parent_named_scope()
+        >>> FST('def f():\n  if 1: i = 1', 'exec').body[0].body[0].body[0].value.parent_named_scope()
         <FunctionDef 0,0..1,13>
         >>> FST('def f(): lambda: None', 'exec').body[0].body[0].value.body.parent_named_scope()
         <FunctionDef 0,0..0,21>
@@ -2141,7 +2141,7 @@ class FST:
         return self
 
     def parent_non_expr(self, self_: bool = False, strict: bool = False) -> Optional['FST']:
-        """The first parent which is not an `expr`. If `self_` is `True` then will check `self` first (possibly
+        r"""The first parent which is not an `expr`. If `self_` is `True` then will check `self` first (possibly
         returning `self`), otherwise only checks parents.
 
         **Parameters:**
@@ -2156,7 +2156,7 @@ class FST:
         ```py
         >>> FST('if 1: i = 1 + a[b]').body[0].value.right.value.parent_non_expr()
         <Assign 0,6..0,18>
-        >>> FST('match a:\\n case {a.b.c: 1}: pass').cases[0].pattern.keys[0].value.value.parent_non_expr()
+        >>> FST('match a:\n case {a.b.c: 1}: pass').cases[0].pattern.keys[0].value.value.parent_non_expr()
         <MatchMapping 1,6..1,16>
         >>> FST('var = call(a, b=1)').value.keywords[0].value.parent_non_expr()
         <Assign ROOT 0,0..0,18>
@@ -2287,7 +2287,7 @@ class FST:
         return (root := self.root).child_from_path(root.child_path(self))
 
     def find_loc(self, ln: int, col: int, end_ln: int, end_col: int, exact: bool = True) -> Optional['FST']:
-        """Find the lowest level node which entirely contains location (starting search at `self`).
+        r"""Find the lowest level node which entirely contains location (starting search at `self`).
 
         **Parameters:**
         - `ln`: Start line of location to search for (0 based).
@@ -2320,7 +2320,7 @@ class FST:
         <Assign 0,0..0,7>
         >>> print(FST('i = val', 'exec').find_loc(0, 0, 0, 7, exact=False))
         None
-        >>> FST('i = val\\n', 'exec').find_loc(0, 0, 0, 7, exact=False)
+        >>> FST('i = val\n', 'exec').find_loc(0, 0, 0, 7, exact=False)
         <Module ROOT 0,0..1,0>
         ```
         """
@@ -2412,7 +2412,7 @@ class FST:
     # Low level
 
     def get_indent(self) -> str:
-        """Determine proper indentation of node at `stmt` (or other similar) level at or above `self`. Even if it is a
+        r"""Determine proper indentation of node at `stmt` (or other similar) level at or above `self`. Even if it is a
         continuation or on same line as block statement. If indentation is impossible to determine because is solo
         statement on same line as parent block then the current tree default indentation is added to the parent block
         indentation and returned.
@@ -2424,19 +2424,19 @@ class FST:
         ```py
         >>> FST('i = 1').get_indent()
         ''
-        >>> FST('if 1:\\n  i = 1').body[0].get_indent()
+        >>> FST('if 1:\n  i = 1').body[0].get_indent()
         '  '
         >>> FST('if 1: i = 1').body[0].get_indent()
         '    '
         >>> FST('if 1: i = 1; j = 2').body[1].get_indent()
         '    '
-        >>> FST('if 1:\\n  i = 1\\n  j = 2').body[1].get_indent()
+        >>> FST('if 1:\n  i = 1\n  j = 2').body[1].get_indent()
         '  '
-        >>> FST('if 2:\\n    if 1:\\n      i = 1\\n      j = 2').body[0].body[1].get_indent()
+        >>> FST('if 2:\n    if 1:\n      i = 1\n      j = 2').body[0].body[1].get_indent()
         '      '
-        >>> FST('if 1:\\n\\\\\\n  i = 1').body[0].get_indent()
+        >>> FST('if 1:\n\\\n  i = 1').body[0].get_indent()
         '  '
-        >>> FST('if 1:\\n \\\\\\n  i = 1').body[0].get_indent()
+        >>> FST('if 1:\n \\\n  i = 1').body[0].get_indent()
         ' '
         ```
         """
@@ -2535,7 +2535,7 @@ class FST:
         return lns
 
     def is_parsable(self) -> bool:
-        """Whether the source for this node is parsable by `FST` or not (if properly dedented for top level). This is
+        r"""Whether the source for this node is parsable by `FST` or not (if properly dedented for top level). This is
         different from `astutil.is_parsable` because that one indicates what is parsable by the python `ast` module,
         while `FST` can parse more things.
 
@@ -2544,7 +2544,7 @@ class FST:
 
         **Examples:**
         ```py
-        >>> from fst.astutil import is_parsable
+        >>> from fst import astutil
         >>> FST('i').is_parsable()
         True
         >>> FST('a[b]').slice.is_parsable()
@@ -2559,17 +2559,17 @@ class FST:
         True
         >>> FST('f"{a!r:<8}"').values[0].format_spec.is_parsable()
         False
-        >>> FST('try: pass\\nexcept: pass').body[0].is_parsable()
+        >>> FST('try: pass\nexcept: pass').body[0].is_parsable()
         True
-        >>> FST('try: pass\\nexcept: pass').handlers[0].is_parsable()
+        >>> FST('try: pass\nexcept: pass').handlers[0].is_parsable()
         True
-        >>> is_parsable(FST('try: pass\\nexcept: pass').handlers[0].a)
+        >>> astutil.is_parsable(FST('try: pass\nexcept: pass').handlers[0].a)
         False
-        >>> FST('try: pass\\nexcept: pass').handlers[0].body[0].is_parsable()
+        >>> FST('try: pass\nexcept: pass').handlers[0].body[0].is_parsable()
         True
-        >>> FST('match a:\\n  case 1: pass').cases[0].is_parsable()
+        >>> FST('match a:\n  case 1: pass').cases[0].is_parsable()
         True
-        >>> is_parsable(FST('match a:\\n  case 1: pass').cases[0].a)
+        >>> is_parsable(FST('match a:\n  case 1: pass').cases[0].a)
         False
         ```
         """
@@ -2626,7 +2626,7 @@ class FST:
         return not isinstance(a, Slice) if isinstance(a := self.a, expr) else isinstance(a, pattern)
 
     def is_atom(self, *, pars: bool = True, always_enclosed: bool = False) -> bool | Literal['pars']:
-        """Whether `self` is innately atomic precedence-wise like `Name`, `Constant`, `List`, etc... Or otherwise
+        r"""Whether `self` is innately atomic precedence-wise like `Name`, `Constant`, `List`, etc... Or otherwise
         optionally enclosed in parentheses so that it functions as a parsable atom and cannot be split up by precedence
         rules when reparsed.
 
@@ -2660,7 +2660,7 @@ class FST:
         False
         >>> FST('a.b').is_atom()
         True
-        >>> FST('a.b').is_atom(always_enclosed=True)  # because of "a\\n.b"
+        >>> FST('a.b').is_atom(always_enclosed=True)  # because of "a\n.b"
         False
         >>> FST('(a.b)').is_atom(always_enclosed=True)
         'pars'
@@ -2954,7 +2954,7 @@ class FST:
         return self._is_parenthesized_seq() if isinstance(self.a, Tuple) else None
 
     def is_enclosed_matchseq(self) -> bool | None:
-        """Whether `self` is an enclosed `MatchSequence` or not, or not a `MatchSequence` at all (can be pars `()` or
+        r"""Whether `self` is an enclosed `MatchSequence` or not, or not a `MatchSequence` at all (can be pars `()` or
         brackets `[]`).
 
         **Returns:**
@@ -2963,13 +2963,13 @@ class FST:
 
         **Examples:**
         ```py
-        >>> FST('match a:\\n  case 1, 2: pass').cases[0].pattern.is_enclosed_matchseq()
+        >>> FST('match a:\n  case 1, 2: pass').cases[0].pattern.is_enclosed_matchseq()
         False
-        >>> FST('match a:\\n  case [1, 2]: pass').cases[0].pattern.is_enclosed_matchseq()
+        >>> FST('match a:\n  case [1, 2]: pass').cases[0].pattern.is_enclosed_matchseq()
         True
-        >>> FST('match a:\\n  case (1, 2): pass').cases[0].pattern.is_enclosed_matchseq()
+        >>> FST('match a:\n  case (1, 2): pass').cases[0].pattern.is_enclosed_matchseq()
         True
-        >>> print(FST('match a:\\n  case 1: pass').cases[0].pattern.is_enclosed_matchseq())
+        >>> print(FST('match a:\n  case 1: pass').cases[0].pattern.is_enclosed_matchseq())
         None
         ```
         """
@@ -3025,18 +3025,18 @@ class FST:
                 ((isinstance(v := e0.value, (Tuple, List)) and not v.elts) or (isinstance(v, Dict) and not v.keys)))
 
     def is_elif(self) -> bool | None:
-        """Whether `self` is an `elif` or not, or not an `If` at all.
+        r"""Whether `self` is an `elif` or not, or not an `If` at all.
 
         **Returns:**
         - `True` if is `elif` `If`, `False` if is normal `If`, `None` if is not `If` at all.
 
         **Examples:**
         ```py
-        >>> FST('if 1: pass\\nelif 2: pass').orelse[0].is_elif()
+        >>> FST('if 1: pass\nelif 2: pass').orelse[0].is_elif()
         True
-        >>> FST('if 1: pass\\nelse:\\n  if 2: pass').orelse[0].is_elif()
+        >>> FST('if 1: pass\nelse:\n  if 2: pass').orelse[0].is_elif()
         False
-        >>> print(FST('if 1: pass\\nelse:\\n  i = 2').orelse[0].is_elif())
+        >>> print(FST('if 1: pass\nelse:\n  i = 2').orelse[0].is_elif())
         None
         ```
         """
@@ -3106,14 +3106,14 @@ class FST:
                 isinstance(parenta := parent.a, Call) and not parenta.keywords and len(parenta.args) == 1)
 
     def is_solo_matchcls_pat(self) -> bool:
-        """Whether `self` is a solo `MatchClass` non-keyword pattern. The solo `Constant` held by a `MatchValue`
+        r"""Whether `self` is a solo `MatchClass` non-keyword pattern. The solo `Constant` held by a `MatchValue`
         qualifies as `True` for this check if the `MatchValue` does.
 
         **Examples:**
         ```py
-        >>> FST('match a:\\n  case cls(a): pass').cases[0].pattern.patterns[0].is_solo_matchcls_pat()
+        >>> FST('match a:\n  case cls(a): pass').cases[0].pattern.patterns[0].is_solo_matchcls_pat()
         True
-        >>> FST('match a:\\n  case cls(a, b): pass').cases[0].pattern.patterns[0].is_solo_matchcls_pat()
+        >>> FST('match a:\n  case cls(a, b): pass').cases[0].pattern.patterns[0].is_solo_matchcls_pat()
         False
         ```
         """
@@ -3128,15 +3128,15 @@ class FST:
                 isinstance(parenta := parent.a, MatchClass) and not parenta.kwd_patterns and len(parenta.patterns) == 1)
 
     def has_slice(self) -> bool:
-        """Whether self is a `Slice` or a `Tuple` which directly contains any `Slice` (parse mode `'sliceelt'`).
+        """Whether self is a `Slice` or a `Tuple` which directly contains any `Slice`.
 
         **Examples:**
         ```py
         >>> FST('a:b:c', 'slice').has_slice()
         True
-        >>> FST('a:b:c, d:e', 'slice').has_slice()
+        >>> FST('1, d:e', 'slice').has_slice()  # Tuple contains at least one Slices
         True
-        >>> FST('a').has_slice()
+        >>> FST('a[b]').slice.has_slice()  # b is in the .slice field but is not a Slice or Slice Tuple
         False
         ```
         """

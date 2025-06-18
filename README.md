@@ -1,6 +1,6 @@
 # Overview
 
-This module exists in order to facilitate quick and easy editing of Python source while preserving formatting. It automatically deals with all the silly nonsense like indentation, parentheses, commas, comments, docstrings, semicolons, line continuations, precedence, decorator @ signs, else vs. elif and lots and lots of the niche special cases of Python syntax.
+This module exists in order to facilitate quick and easy editing of Python source while preserving formatting. It automatically deals with all the silly nonsense like indentation, parentheses, commas, comments, docstrings, semicolons, line continuations, precedence, else vs. elif and lots and lots of the niche special cases of Python syntax.
 
 `pfst` provides its own format-preserving operations for AST trees, but also allows the AST tree to be changed by anything else outside of its control and can then reconcile the changes with what it knows to preserve formatting where possible. It works by adding FST nodes to existing AST nodes as an `.f` attribute which keep extra structure information, the original source, and provides the interface to the source-preserving operations.
 
@@ -99,13 +99,15 @@ call()  # something else
 k = 3  # three
 ```
 
-Edit AST while preserving format:
+Edit AST tree directly while preserving format:
 
 ```py
 >>> from ast import *
 >>> m = a.f.mark()
->>> a.body.append(Assign(targets=[Name(id='var')], value=Constant(value=6)))
+
 >>> a.body[0].orelse[0].value = Set(elts=[Name(id='x')])
+>>> a.body.append(Assign(targets=[Name(id='var')], value=Constant(value=6)))
+
 >>> f = a.f.reconcile(m)
 >>> print(f.src)
 if 1: pass  # comment
@@ -113,15 +115,6 @@ else:
     i = {x}  # one
     call()  # something else
     k = 3  # three
-var = 6
-
->>> print(ast.unparse(f.a))
-if 1:
-    pass
-else:
-    i = {x}
-    call()
-    k = 3
 var = 6
 ```
 

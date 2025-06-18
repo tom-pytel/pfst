@@ -780,7 +780,7 @@ def last_child(self: 'FST', with_loc: bool | Literal['all', 'own'] = True) -> Op
 
 
 def last_header_child(self: 'FST', with_loc: bool | Literal['all', 'own'] = True) -> Optional['FST']:
-    """Get last valid child in syntactic order in a block header (before the `:`), e.g. the `something` in
+    r"""Get last valid child in syntactic order in a block header (before the `:`), e.g. the `something` in
     `if something: pass`.
 
     **Parameters:**
@@ -799,13 +799,13 @@ def last_header_child(self: 'FST', with_loc: bool | Literal['all', 'own'] = True
 
     **Examples:**
     ```py
-    >>> FST('if something:\\n    i = 2\\n    i = 3').last_header_child().src
+    >>> FST('if something:\n    i = 2\n    i = 3').last_header_child().src
     'something'
-    >>> FST('try: pass\\nexcept Exception as exc: pass').handlers[0].last_header_child().src
+    >>> FST('try: pass\nexcept Exception as exc: pass').handlers[0].last_header_child().src
     'Exception'
     >>> FST('with a, b: pass').last_header_child().src
     'b'
-    >>> print(FST('try: pass\\nfinally: pass').last_header_child())
+    >>> print(FST('try: pass\nfinally: pass').last_header_child())
     None
     >>> print(FST('i = 1').last_header_child())
     None
@@ -1047,7 +1047,7 @@ def step_back(self: 'FST', with_loc: bool | Literal['all', 'own', 'allown'] = Tr
 
 def walk(self: 'FST', with_loc: bool | Literal['all', 'own'] = False, *, self_: bool = True, recurse: bool = True,
          scope: bool = False, back: bool = False) -> Generator['FST', bool, None]:
-    """Walk `self` and descendants in syntactic order. When walking, you can `send(False)` to the generator to skip
+    r"""Walk `self` and descendants in syntactic order. When walking, you can `send(False)` to the generator to skip
     recursion into the current child. `send(True)` to allow recursion into child if called with `recurse=False` or
     `scope=True` would otherwise disallow it. Can send multiple times, last value sent takes effect.
 
@@ -1110,8 +1110,8 @@ def walk(self: 'FST', with_loc: bool | Literal['all', 'own'] = False, *, self_: 
     >>> for g in f.walk(True, scope=True):
     ...     print(f'{g!r:<30}{g.src!r}')
     ...
-    <FunctionDef ROOT 0,0..3,31>  'def f():\\n    def g(arg=1) -> int:\\n        pass\\n    val = [i for i in iterator]'
-    <FunctionDef 1,4..2,12>       'def g(arg=1) -> int:\\n        pass'
+    <FunctionDef ROOT 0,0..3,31>  'def f():\n    def g(arg=1) -> int:\n        pass\n    val = [i for i in iterator]'
+    <FunctionDef 1,4..2,12>       'def g(arg=1) -> int:\n        pass'
     <Constant 1,14..1,15>         '1'
     <Assign 3,4..3,31>            'val = [i for i in iterator]'
     <Name 3,4..3,7>               'val'
@@ -1120,7 +1120,7 @@ def walk(self: 'FST', with_loc: bool | Literal['all', 'own'] = False, *, self_: 
     >>> for g in f.walk(True, back=True):
     ...     print(f'{g!r:<30}{g.src!r}')
     ...
-    <FunctionDef ROOT 0,0..3,31>  'def f():\\n    def g(arg=1) -> int:\\n        pass\\n    val = [i for i in iterator]'
+    <FunctionDef ROOT 0,0..3,31>  'def f():\n    def g(arg=1) -> int:\n        pass\n    val = [i for i in iterator]'
     <Assign 3,4..3,31>            'val = [i for i in iterator]'
     <ListComp 3,10..3,31>         '[i for i in iterator]'
     <comprehension 3,13..3,30>    'for i in iterator'
@@ -1128,7 +1128,7 @@ def walk(self: 'FST', with_loc: bool | Literal['all', 'own'] = False, *, self_: 
     <Name 3,17..3,18>             'i'
     <Name 3,11..3,12>             'i'
     <Name 3,4..3,7>               'val'
-    <FunctionDef 1,4..2,12>       'def g(arg=1) -> int:\\n        pass'
+    <FunctionDef 1,4..2,12>       'def g(arg=1) -> int:\n        pass'
     <Pass 2,8..2,12>              'pass'
     <Name 1,20..1,23>             'int'
     <arguments 1,10..1,15>        'arg=1'

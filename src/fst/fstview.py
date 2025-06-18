@@ -73,7 +73,7 @@ class fstview:
         return self.stop - self.start
 
     def __getitem__(self, idx: int | slice | str) -> Any:
-        """Get a single item or a slice view from this slice view. All indices (including negative) are relative to the
+        r"""Get a single item or a slice view from this slice view. All indices (including negative) are relative to the
         bounds of this view. This is just an access, not a cut or a copy, so if you want a copy you must explicitly do
         `.copy()` on the returned value.
 
@@ -99,7 +99,7 @@ class fstview:
         '[0, 1, 2]'
         >>> FST('[0, 1, 2, 3]').elts[-3:]
         <<List ROOT 0,0..0,12>.elts[1:4] [<Constant 0,4..0,5>, <Constant 0,7..0,8>, <Constant 0,10..0,11>]>
-        >>> FST('def fun(): pass\\nclass cls: pass\\nvar = val').body['cls']
+        >>> FST('def fun(): pass\nclass cls: pass\nvar = val').body['cls']
         <ClassDef 1,0..1,15>
         >>> FST('global a, b, c').names
         <<Global ROOT 0,0..0,14>.names[0:3] ['a', 'b', 'c']>
