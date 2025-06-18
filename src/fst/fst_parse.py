@@ -220,6 +220,13 @@ def _parse_most(src: str, parse_params: dict = {}) -> AST:
 
 
 @staticmethod
+def _parse_valid(src: str, parse_params: dict = {}) -> AST:
+    """Attempt to parse valid parsable statements and then reduce to a single statement or expressing if possible."""
+
+    return reduce_ast(ast_parse(src, **parse_params), True)
+
+
+@staticmethod
 def _parse_Module(src: str, parse_params: dict = {}) -> AST:
     """Parse `Module`, ast.parse(mode='exec')'."""
 
@@ -398,7 +405,8 @@ def _parse_match_case(src: str, parse_params: dict = {}) -> AST:
 
 @staticmethod
 def _parse_expr(src: str, parse_params: dict = {}) -> AST:
-    """Parse to an `ast.expr`."""
+    """Parse to an `ast.expr`, but only things which are normally valid in an `expr` location, no `Slices` or `Starred`
+    expressions only valid as a `Call` arg."""
 
     try:
         ast = ast_parse(src, **parse_params).body
@@ -1283,7 +1291,7 @@ __all_private__ = [n for n in globals() if n not in _GLOBALS]  # used by make_do
 
 _PARSE_ALL_FUNCS = [
     _parse_most,
-    _parse_expr,     # explicitly this because _parse_most won't catch unparenthesized expressions with newlines
+    _parse_expr,     # explicitly this because _parse_valid won't catch unparenthesized expressions with newlines
     _parse_pattern,
     _parse_arguments,
     _parse_arguments_lambda,
@@ -1300,6 +1308,7 @@ _PARSE_ALL_FUNCS = [
 _PARSE_MODE_FUNCS = {
     'all':               _parse_all,
     'most':              _parse_most,
+    'valid':             _parse_valid,
     'exec':              _parse_Module,
     'eval':              _parse_Expression,
     'single':            _parse_Interactive,

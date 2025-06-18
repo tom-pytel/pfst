@@ -889,7 +889,7 @@ class Reconcile1(Fuzzy):
 
                     # fst   = master.copy()
                     mark  = fst.mark()
-                    parts = FSTParts(fst, exclude= (expr_context, mod, FormattedValue, Interpolation, boolop,
+                    parts = FSTParts(fst, exclude= (expr_context, mod, FormattedValue, Interpolation, alias, boolop,
                                                     operator, unaryop))
                     tgt, cat = parts.getrnd()
 
@@ -906,28 +906,28 @@ class Reconcile1(Fuzzy):
                         continue
 
 
-                    # tgta , tgt_parenta  = tgt.a,  tgt.parent.a
-                    # repla, repl_parenta = repl.a, repl.parent.a
+                    tgta , tgt_parenta  = tgt.a,  tgt.parent.a
+                    repla, repl_parenta = repl.a, repl.parent.a
 
-                    # if isinstance(tgta, Slice) and not isinstance(repla, Slice):
-                    #     continue
-
-                    # if (isinstance(tgta, arguments) and isinstance(tgt_parenta, Lambda) and
-                    #     not isinstance(repl_parenta, Lambda)
-                    # ):
-                    #     continue
-
-                    # if (isinstance(tgta, arg) and isinstance(tgt_parenta, arguments) and
-                    #     isinstance(tgt.parent.parent.a, Lambda) and repla.annotation
-                    # ):
-                    #     continue
-
-                    if not valid_replace(tgt, repl):
-                        if self.verbose:
-                            print(f'Not valid: {tgt.src} <- {repl.src}')
+                    if isinstance(tgta, Slice) and not isinstance(repla, Slice):
                         continue
-                    if self.verbose:
-                        print(f'Valid: {tgt.src} <- {repl.src}')
+
+                    if (isinstance(tgta, arguments) and isinstance(tgt_parenta, Lambda) and
+                        not isinstance(repl_parenta, Lambda)
+                    ):
+                        continue
+
+                    if (isinstance(tgta, arg) and isinstance(tgt_parenta, arguments) and
+                        isinstance(tgt.parent.parent.a, Lambda) and repla.annotation
+                    ):
+                        continue
+
+                    # if not valid_replace(tgt, repl):
+                    #     if self.verbose:
+                    #         print(f'Not valid: {tgt.src} <- {repl.src}')
+                    #     continue
+                    # if self.verbose:
+                    #     print(f'Valid: {tgt.src} <- {repl.src}')
 
 
                     if (repltype := choice(('fstin', 'fstout', 'ast'))) == 'ast':

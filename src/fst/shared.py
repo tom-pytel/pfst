@@ -104,6 +104,7 @@ Code = Union['FST', AST, list[str], str]  ; """Code types accepted for put to `F
 Mode = Union[type[AST], Literal[
     'all',
     'most',
+    'valid',
     'exec',
     'eval',
     'single',
@@ -144,13 +145,18 @@ Mode = Union[type[AST], Literal[
     never be returned, for example `TypeVar` is always shadowed by `AnnAssign`. Since this attempts many parses before
     failing it is slower to do so than other modes, though the most likely success is just as fast. Will never return an
     `Expression` or `Interactive`.
-- `'most'`: Attempt parse `stmtishs`. If only one element then return the element itself instead of the `Module`.
-    If that element is an `Expr` then return the expression instead of the statement. If nothing present then
-    return empty `Module`. Doesn't attempt any of the other parse modes to keep things quick, though will parse anything
-    that can be parsed natively by `ast.parse()` (plus `ExpressionHandler` and `match_case`). If you want exhaustive
-    attempts that will parse any `AST` source node the mode for that is `'all'`. Will never return an `Expression` or
-    `Interactive`.
-- `'exec'`: Parse to a `Module`. Same as passing `Module` type.
+- `'most'`: This is mostly meant for use as the first step when parsing `'all'`. Attempt parse `stmtishs`. If only one
+    element then return the element itself instead of the `Module`. If that element is an `Expr` then return the
+    expression instead of the statement. If nothing present then return empty `Module`. Doesn't attempt any of the other
+    parse modes to keep things quick, though will parse anything that can be parsed natively by `ast.parse()` (plus
+    `ExpressionHandler` and `match_case`). If you want exhaustive attempts that will parse any `AST` source node the
+    mode for that is `'all'`. Will never return an `Expression` or `Interactive`.
+- `'valid'`: Attempt parse valid parsable code. If only one statement then return the statement itself instead of the
+    `Module`. If that statement is an `Expr` then return the expression instead of the statement. If nothing present
+    then return empty `Module`. Doesn't attempt any of the other parse modes which would not normally be parsable by
+    python, just anything that can be parsed natively by `ast.parse()`.
+- `'exec'`: Parse to a `Module`. Mostly same as passing `Module` type except that also parses anything that `FST` puts
+    into `Module`s, like slices of normally unparsable stuff.
 - `'eval'`: Parse to an `Expression`. Same as passing `Expression` type.
 - `'single'`: Parse to an `Interactive`. Same as passing `Interactive` type.
 - `'stmtishs'`: Parse as zero or more of either `stmt`, `ExceptHandler` or `match_case` returned in a `Module`.

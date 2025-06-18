@@ -3192,6 +3192,7 @@ class FST:
         _parse,
         _parse_all,
         _parse_most,
+        _parse_valid,
         _parse_Module,
         _parse_Expression,
         _parse_Interactive,
