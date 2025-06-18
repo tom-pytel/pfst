@@ -8002,7 +8002,7 @@ class cls:
         self.assertRaises(SyntaxError, parse('{a: a, b: b, c: c}').body[0].value.f.put_slice, ast_.parse('{x: x, y: y,}'), 1, 2, one=True, raw=True)
 
     def test_put_special_fields(self):
-        old_options = FST.set_option(pars=False, raw=True)
+        old_options = FST.set_options(pars=False, raw=True)
 
         self.assertEqual('{a: b, **c, e: f}', parse('{a: b, **d, e: f}').body[0].value.f.put('c', 1, field='values').root.src)
         self.assertEqual('{a: b, c: d, e: f}', parse('{a: b, **d, e: f}').body[0].value.f.put('c', 1, field='keys').root.src)
@@ -8064,7 +8064,7 @@ class cls:
         self.assertEqual('{a: b, e: f}', FST('{a: b, c: d, e: f}', 'exec').body[0].value.put(None, 1, raw='auto').root.src)
         self.assertEqual('{a: b, e: f}', FST('{a: b, c: d, e: f}', 'exec').body[0].value.put(None, 1, raw=False).root.src)
 
-        FST.set_option(**old_options)
+        FST.set_options(**old_options)
 
     def test_get_slice_seq_copy(self):
         for src, elt, start, stop, options, src_cut, slice_copy, src_dump, slice_dump in GET_SLICE_SEQ_DATA:
@@ -11046,30 +11046,30 @@ match a:
             raw       = 'test_raw',
         )
 
-        old    = FST.set_option(**new)
-        newset = FST.set_option(**old)
-        oldset = FST.set_option(**old)
+        old    = FST.set_options(**new)
+        newset = FST.set_options(**old)
+        oldset = FST.set_options(**old)
 
         self.assertEqual(newset, new)
         self.assertEqual(oldset, old)
 
-        with FST.option(**new) as opts:
+        with FST.options(**new) as opts:
             self.assertEqual(opts, old)
-            self.assertEqual(new, FST.set_option(**new))
+            self.assertEqual(new, FST.set_options(**new))
 
-        self.assertEqual(old, FST.set_option(**old))
+        self.assertEqual(old, FST.set_options(**old))
 
         try:
-            with FST.option(**new) as opts:
+            with FST.options(**new) as opts:
                 self.assertEqual(opts, old)
-                self.assertEqual(new, FST.set_option(**new))
+                self.assertEqual(new, FST.set_options(**new))
 
                 raise NodeError
 
         except NodeError:
             pass
 
-        self.assertEqual(old, FST.set_option(**old))
+        self.assertEqual(old, FST.set_options(**old))
 
     def test_reconcile(self):
         # basic replacements

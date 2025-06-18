@@ -35,7 +35,7 @@ class TestDocTest(unittest.TestCase):
             self.assertEqual(0, results.failed)
 
         finally:
-            fst.FST.set_option(**options)
+            fst.FST.set_options(**options)
 
     # def test_fstview(self):
     #     fstview = sys.modules['fst.fstview']

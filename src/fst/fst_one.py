@@ -1475,7 +1475,7 @@ def _put_one(self: 'FST', code: _PutOneCode, idx: int | None, field: str, **opti
         slice operations.
     - `idx`: The index in the body list of the field to put, or `None` if is a standalone node.
     - `field`: The `AST` field to modify.
-    - `options`: See `FST.set_option`.
+    - `options`: See `FST.get_options`.
     """
 
     ast   = self.a

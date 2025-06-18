@@ -799,7 +799,7 @@ class FST:
 
     @staticmethod
     def get_options() -> dict[str, Any]:
-        """Get a dictionary of all options. These are the same `options` that can be passed to operations and this
+        """Get a dictionary of ALL options. These are the same `options` that can be passed to operations and this
         function returns their global defaults which are used when those options are not passed to operations or if they
         are passed with a value of `None`.
 
@@ -903,7 +903,7 @@ class FST:
         return _OPTIONS.get(option) if (o := options.get(option)) is None else o
 
     @staticmethod
-    def set_option(**options) -> dict[str, Any]:
+    def set_options(**options) -> dict[str, Any]:
         """Set global defaults for `options` parameters.
 
         **Parameters:**
@@ -911,21 +911,21 @@ class FST:
             defaults set here for those individual operations, see `get_options()`.
 
         **Returns:**
-        - `options`: `dict` of previous values of changed parameters, reset with `set_option(**options)`.
+        - `options`: `dict` of previous values of changed parameters, reset with `set_options(**options)`.
 
         **Examples:**
         ```py
         >>> FST.get_option('pars')
         'auto'
-        >>> FST.set_option(pars=False)
+        >>> FST.set_options(pars=False)
         {'pars': 'auto'}
         >>> FST.get_option('pars')
         False
-        >>> FST.set_option(**{'pars': 'auto'})
+        >>> FST.set_options(**{'pars': 'auto'})
         {'pars': False}
         >>> FST.get_option('pars')
         'auto'
-        >>> FST.set_option(pars=True, raw=True, docstr=False)
+        >>> FST.set_options(pars=True, raw=True, docstr=False)
         {'pars': 'auto', 'raw': 'auto', 'docstr': True}
         ```
         """
@@ -938,7 +938,7 @@ class FST:
 
     @staticmethod
     @contextmanager
-    def option(**options):
+    def options(**options):
         """Context manager to temporarily set global options defaults for a group of operations.
 
         **Parameters:**
@@ -948,7 +948,7 @@ class FST:
         ```py
         >>> print(FST.get_option('raw'))
         auto
-        >>> with FST.option(raw=False):
+        >>> with FST.options(raw=False):
         ...     print(FST.get_option('raw'))
         ...
         False
@@ -957,12 +957,12 @@ class FST:
         ```
         """
 
-        old_options = FST.set_option(**options)
+        old_options = FST.set_options(**options)
 
         try:
             yield old_options
         finally:
-            FST.set_option(**old_options)
+            FST.set_options(**old_options)
 
     def dump(self, src: Literal['stmt', 'all'] | None = None, full: bool = False, expand: bool = False, *,
              indent: int = 2, out: Callable | TextIO = print, eol: str | None = None) -> str | list[str] | None:
