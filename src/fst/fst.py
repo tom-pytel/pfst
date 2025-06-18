@@ -1977,8 +1977,7 @@ class FST:
     )
 
     def parents(self, self_: bool = False) -> Generator['FST', None, None]:
-        """Generator which yields parents all the way up to root. If `self_` is `True` then yield `self` first,
-        otherwise only checks parents.
+        """Generator which yields parents all the way up to root. If `self_` is `True` then will yield `self` first.
 
         **Parameters:**
         - `self_`: Whether to yield `self` first.
@@ -2475,7 +2474,7 @@ class FST:
         return indent
 
     def get_indentable_lns(self, skip: int = 0, *, docstr: bool | Literal['strict'] | None = None) -> set[int]:
-        """Get set of indentable lines within this node.
+        r"""Get set of indentable lines within this node.
 
         **Parameters:**
         - `skip`: The number of lines to skip from the start of this node. Useful for skipping the first line for edit
@@ -2490,17 +2489,17 @@ class FST:
 
         **Examples:**
         ```py
-        >>> FST('def f():\\n    i = 1\\n    j = 2').get_indentable_lns()
+        >>> FST("def f():\n    i = 1\n    j = 2").get_indentable_lns()
         {0, 1, 2}
-        >>> FST('def f():\\n  '''docstr'''\\n  i = 1\\n  j = 2').get_indentable_lns()
+        >>> FST("def f():\n  '''docstr'''\n  i = 1\n  j = 2").get_indentable_lns()
         {0, 1, 2, 3}
-        >>> FST('def f():\\n  '''doc\\nstr'''\\n  i = 1\\n  j = 2').get_indentable_lns()
+        >>> FST("def f():\n  '''doc\nstr'''\n  i = 1\n  j = 2").get_indentable_lns()
         {0, 1, 2, 3, 4}
-        >>> FST('def f():\\n  '''doc\\nstr'''\\n  i = 1\\n  j = 2').get_indentable_lns(skip=2)
+        >>> FST("def f():\n  '''doc\nstr'''\n  i = 1\n  j = 2").get_indentable_lns(skip=2)
         {2, 3, 4}
-        >>> FST('def f():\\n  '''doc\\nstr'''\\n  i = 1\\n  j = 2').get_indentable_lns(docstr=False)
+        >>> FST("def f():\n  '''doc\nstr'''\n  i = 1\n  j = 2").get_indentable_lns(docstr=False)
         {0, 1, 3, 4}
-        >>> FST('def f():\\n  '''doc\\nstr'''\\n  s = '''multi\\nline\\nstring'''\\n  i = 1').get_indentable_lns()
+        >>> FST("def f():\n  '''doc\nstr'''\n  s = '''multi\nline\nstring'''\n  i = 1").get_indentable_lns()
         {0, 1, 2, 3, 6}
         ```
         """
@@ -2710,7 +2709,7 @@ class FST:
         return 'pars' if pars and self.pars(True)[1] else False
 
     def is_enclosed(self, *, pars: bool = True) -> bool | Literal['pars']:
-        """Whether `self` lives on a single line or is otherwise enclosed in some kind of delimiters `()`, `[]`, `{}` or
+        r"""Whether `self` lives on a single line or is otherwise enclosed in some kind of delimiters `()`, `[]`, `{}` or
         entirely terminated with line continuations so that it can be parsed without error due to being spread across
         multiple lines. This does not mean it can't have other errors, such as a `Slice` outside of `Subscript.slice`.
 
@@ -2735,25 +2734,25 @@ class FST:
         ```py
         >>> FST('a').is_enclosed()
         True
-        >>> FST('a + \\\\n b').is_enclosed()  # because of the line continuation
+        >>> FST('a + \\\n b').is_enclosed()  # because of the line continuation
         True
-        >>> FST('(a + \\n b)').is_enclosed()
+        >>> FST('(a + \n b)').is_enclosed()
         'pars'
-        >>> FST('a + \\n b').is_enclosed()
+        >>> FST('a + \n b').is_enclosed()
         False
-        >>> FST('[a + \\n b]').elts[0].is_enclosed()
+        >>> FST('[a + \n b]').elts[0].is_enclosed()
         False
-        >>> FST('[a + \\n b]').elts[0].is_enclosed_in_parents()
+        >>> FST('[a + \n b]').elts[0].is_enclosed_in_parents()
         True
         >>> FST('def f(a, b): pass').args.is_enclosed()
         True
-        >>> FST('def f(a,\\n b): pass').args.is_enclosed()  # because the parentheses belong to the FunctionDef
+        >>> FST('def f(a,\n b): pass').args.is_enclosed()  # because the parentheses belong to the FunctionDef
         False
-        >>> FST('def f(a,\\n b): pass').args.is_enclosed_in_parents()
+        >>> FST('def f(a,\n b): pass').args.is_enclosed_in_parents()
         True
         >>> FST('(a is not b)').ops[0].is_enclosed()
         True
-        >>> FST('(a is \\n not b)').ops[0].is_enclosed()
+        >>> FST('(a is \n not b)').ops[0].is_enclosed()
         False
         ```
         """

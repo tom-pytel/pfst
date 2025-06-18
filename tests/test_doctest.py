@@ -29,8 +29,9 @@ class TestDocTest(unittest.TestCase):
         options = fst.FST.get_options()
 
         try:
-            cleanup_docstrs(fst.fst, {'get_indentable_lns', 'is_enclosed', 'parse'})  # just exclude these for now, backslashes, parse because of change to ast.dump() in later py versions
+            cleanup_docstrs(fst.fst, {'parse'})  # exclude parse because of change in ast.dump() behavior between py 3.12 and 3.13
             self.assertEqual(0, doctest.testmod(fst.fst).failed)
+
         finally:
             fst.FST.set_options(**options)
 
