@@ -225,6 +225,7 @@ PARSE_TESTS = [
 
     ('comprehension',     FST._parse_comprehension,     comprehension,  'for u in v'),
     ('comprehension',     FST._parse_comprehension,     comprehension,  'for u in v if w'),
+    ('comprehension',     FST._parse_comprehension,     NodeError,      'for u in v for s in t'),
 
     ('arguments',         FST._parse_arguments,         arguments,      ''),
     ('arguments',         FST._parse_arguments,         arguments,      'a: list[str], /, b: int = 1, *c, d=100, **e'),

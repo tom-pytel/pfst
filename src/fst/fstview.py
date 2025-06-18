@@ -59,6 +59,8 @@ class fstview:
     is_FST = False  ; """@private"""  # for quick checks vs. `FST`
 
     def __init__(self, fst: 'FST', field: str, start: int, stop: int):
+        """@private"""
+
         self.fst   = fst
         self.field = field
         self.start = start

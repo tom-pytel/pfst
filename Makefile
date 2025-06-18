@@ -23,7 +23,7 @@ test:  ## Run basic unit tests
 .PHONY: docs
 docs:  ## Compile documentation
 	python make_docs.py fst.fst fst.fstview fst.shared fst.astutil
-# pdoc -o docs -d markdown fst.fst fst.fstview fst.shared fst.astutil
+	# pdoc -o docs -d markdown fst.fst fst.fstview fst.shared fst.astutil
 
 
 .PHONY: all-docs
@@ -43,7 +43,7 @@ check-version:  ## Check if VERSION has already been released/tagged
 
 
 .PHONY: publish
-publish:  ## Tag git commit with VERSION and push to start docker build and publish
+publish:  ## Tag git commit with VERSION and push
 	@$(check-tag)
 	git tag v${VERSION}
 	git push origin v${VERSION}

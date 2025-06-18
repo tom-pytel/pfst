@@ -570,7 +570,10 @@ def _parse_comprehension(src: str, parse_params: dict = {}) -> AST:
     if not isinstance(ast, ListComp):
         raise NodeError('expecting comprehension')
 
-    return _offset_linenos(_validate_indent(src, ast.generators[0]), -1)
+    if len(gens := ast.generators) != 1:
+        raise NodeError('expecting single comprehension')
+
+    return _offset_linenos(_validate_indent(src, gens[0]), -1)
 
 
 @staticmethod
