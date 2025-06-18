@@ -1,24 +1,28 @@
 [build-system]
-requires = ["setuptools", "setuptools-scm"]
+requires = ["setuptools>=42", "wheel"]
 build-backend = "setuptools.build_meta"
 
 
 [project]
 name = "pfst"
-description = "A fun AST processing library"
+description = "format-preserving AST editing"
 authors = [{name = "Tomasz Pytel", email = "tompytel@gmail.com"}]
-license = { text = "MIT" }
+license = "MIT"
 readme = "README.md"
 requires-python = ">=3.10"
 dynamic = ["version"]
 
 classifiers = [
+  "Development Status :: 3 - Alpha",
   "Programming Language :: Python :: 3",
   "Programming Language :: Python :: 3.10",
   "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
   "Programming Language :: Python :: 3.13",
   "Programming Language :: Python :: 3.14",
+  "Topic :: Software Development",
+  "Topic :: Software Development :: Code Generators",
+  "Topic :: Software Development :: Libraries",
 ]
 
 dependencies = [
@@ -27,6 +31,9 @@ dependencies = [
 [project.optional-dependencies]
 
 dev = [
+  "build",
+  "setuptools",
+  "wheel",
   "pdoc==15.0.1",
 ]
 
@@ -36,6 +43,3 @@ where = ["src"]
 
 [tool.setuptools.dynamic]
 version = { file = "VERSION" }
-
-[tool.distutils.bdist_wheel]
-python-tag = "py3"

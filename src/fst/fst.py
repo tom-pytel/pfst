@@ -3292,9 +3292,9 @@ class FST:
 
 from .fstview import fstview
 
-from . import fst_misc, fst_one, fst_parse, fst_raw, fst_slice_old, fst_slice, fst_walk, fst_reconcile, srcedit
+from . import fst_misc, fst_one, fst_parse, fst_raw, fst_slice_old, fst_slice, fst_walk, fst_reconcile, srcedit_old
 
 # we do this because they imported FST directly from .fst and got the placeholder at the top of this file so now we need to put the real one into their globals
 
 fst_misc.FST = fst_one.FST = fst_parse.FST = fst_raw.FST = fst_slice_old.FST = fst_slice.FST = fst_walk.FST = \
-    fst_reconcile.FST = srcedit.FST = FST
+    fst_reconcile.FST = srcedit_old.FST = FST

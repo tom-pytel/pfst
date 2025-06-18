@@ -13,7 +13,7 @@ from .shared import (
     _fixup_slice_indices
 )
 
-from .srcedit import _src_edit
+from .srcedit_old import _src_edit
 
 
 def _get_slice_seq_and_dedent(self: 'FST', get_ast: AST, cut: bool, seq_loc: fstloc,
