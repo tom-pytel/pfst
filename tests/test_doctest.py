@@ -30,11 +30,7 @@ class TestDocTest(unittest.TestCase):
 
         try:
             cleanup_docstrs(fst.fst, {'get_indentable_lns', 'is_enclosed', 'parse'})  # just exclude these for now, backslashes, parse because of change to ast.dump() in later py versions
-
-            results = doctest.testmod(fst.fst)
-
-            self.assertEqual(0, results.failed)
-
+            self.assertEqual(0, doctest.testmod(fst.fst).failed)
         finally:
             fst.FST.set_options(**options)
 
@@ -42,10 +38,7 @@ class TestDocTest(unittest.TestCase):
         fstview = sys.modules['fst.fstview']
 
         cleanup_docstrs(fstview)
-
-        results = doctest.testmod(fstview)
-
-        self.assertEqual(0, results.failed)
+        self.assertEqual(0, doctest.testmod(fstview).failed)
 
 
 if __name__ == '__main__':

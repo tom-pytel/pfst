@@ -22,6 +22,20 @@ _PY_VERSION = sys.version_info[:2]
 _PYLT11     = _PY_VERSION < (3, 11)
 
 
+def _ast_parse1(src: str, parse_params: dict = {}):
+    if len(body := ast_parse(src, **parse_params).body) != 1:
+        raise SyntaxError(f'expecting single element')
+
+    return body[0]
+
+
+def _ast_parse1_case(src: str, parse_params: dict = {}):
+    if len(body := ast_parse(src, **parse_params).body) != 1 or len(cases := body[0].cases) != 1:
+        raise SyntaxError(f'expecting single element')
+
+    return cases[0]
+
+
 def _fixing_unparse(ast: AST) -> str:
     try:
         return ast_unparse(ast)
@@ -305,7 +319,7 @@ def _parse_ExceptHandlers(src: str, parse_params: dict = {}) -> AST:
     """Parse zero or more `ExceptHandler`s and return them in a `Module` `body`."""
 
     try:
-        ast = ast_parse(f'try: pass\n{src}\nfinally: pass', **parse_params).body[0]
+        ast = _ast_parse1(f'try: pass\n{src}\nfinally: pass', parse_params)
     except IndentationError:
         raise
 
@@ -353,7 +367,7 @@ def _parse_match_cases(src: str, parse_params: dict = {}) -> AST:
     """Parse zero or more `match_case`s and return them in a `Module` `body`."""
 
     lines = [bistr('match x:'), bistr(' case None: pass')] + [bistr(' ' + l) for l in src.split('\n')]
-    ast   = ast_parse('\n'.join(lines), **parse_params).body[0]
+    ast   = _ast_parse1('\n'.join(lines), parse_params)
     fst   = FST(ast, lines, parse_params=parse_params, lcopy=False)
     lns   = fst.get_indentable_lns(2, docstr=False)
 
@@ -365,7 +379,7 @@ def _parse_match_cases(src: str, parse_params: dict = {}) -> AST:
         for ln in strlns:
             lines[ln] = bistr(lines[ln][1:])
 
-        ast = ast_parse('\n'.join(lines), **parse_params).body[0]
+        ast = _ast_parse1('\n'.join(lines), parse_params)
         fst = FST(ast, lines, parse_params=parse_params, lcopy=False)
 
     lns_ = set()
@@ -409,19 +423,21 @@ def _parse_expr(src: str, parse_params: dict = {}) -> AST:
     expressions only valid as a `Call` arg."""
 
     try:
-        ast = ast_parse(src, **parse_params).body
+        body = ast_parse(src, **parse_params).body
     except SyntaxError:
         pass
     else:
-        if len(ast) == 1 and isinstance(ast := ast[0], Expr):  # if parsed to single expression then done
+        if len(body) == 1 and isinstance(ast := body[0], Expr):  # if parsed to single expression then done
             return ast.value
 
     try:
-        ast = ast_parse(f'(\n{src})', **parse_params).body[0].value  # has newlines
-    except SyntaxError:
-        ast = ast_parse(f'(\n{src},)', **parse_params).body[0].value.elts[0]  # Starred expression with newlines
+        ast = _ast_parse1(f'(\n{src})', parse_params).value  # has newlines
 
-        assert isinstance(ast, Starred)
+    except SyntaxError:
+        elts = _ast_parse1(f'(\n{src},)', parse_params).value.elts  # Starred expression with newlines
+        ast  = elts[0]
+
+        assert isinstance(ast, Starred) and len(elts) == 1
 
     else:
         if isinstance(ast, Tuple) and ast.lineno == 1:  # tuple with newlines included grouping pars which are not in source, fix
@@ -440,10 +456,10 @@ def _parse_slice(src: str, parse_params: dict = {}) -> AST:
     `Starred` as the only element."""
 
     try:
-        ast = ast_parse(f'a[\n{src}]', **parse_params).body[0].value.slice
+        ast = _ast_parse1(f'a[\n{src}]', parse_params).value.slice
 
     except SyntaxError:  # maybe 'yield', also could be unparenthesized 'tuple' containing 'Starred' on py 3.10
-        ast = ast_parse(f'a[(\n{src})]', **parse_params).body[0].value.slice
+        ast = _ast_parse1(f'a[(\n{src})]', parse_params).value.slice
 
         if isinstance(ast, Tuple):  # only py 3.10
             raise SyntaxError('cannot have unparenthesized tuple containing Starred in slice')
@@ -484,7 +500,7 @@ def _parse_callarg(src: str, parse_params: dict = {}) -> AST:
     except (NodeError, SyntaxError):  # stuff like '*[] or []'
         pass
 
-    args = ast_parse(f'f(\n{src})', **parse_params).body[0].value.args
+    args = _ast_parse1(f'f(\n{src})', parse_params).value.args
 
     if len(args) != 1:
         raise NodeError('expecting single call argument expression')
@@ -496,7 +512,7 @@ def _parse_callarg(src: str, parse_params: dict = {}) -> AST:
 def _parse_boolop(src: str, parse_params: dict = {}) -> AST:
     """Parse to an `ast.boolop`."""
 
-    ast = ast_parse(f'(a\n{src} b)', **parse_params).body[0].value
+    ast = _ast_parse1(f'(a\n{src} b)', parse_params).value
 
     if not isinstance(ast, BoolOp):
         raise NodeError(f'expecting boolop, got {_shortstr(src)!r}')
@@ -521,7 +537,7 @@ def _parse_operator(src: str, parse_params: dict = {}) -> AST:
 def _parse_binop(src: str, parse_params: dict = {}) -> AST:
     """Parse to an `ast.operator` in the context of a `BinOp`."""
 
-    ast = ast_parse(f'(a\n{src} b)', **parse_params).body[0].value
+    ast = _ast_parse1(f'(a\n{src} b)', parse_params).value
 
     if not isinstance(ast, BinOp):
         raise NodeError(f'expecting operator, got {_shortstr(src)!r}')
@@ -533,7 +549,7 @@ def _parse_binop(src: str, parse_params: dict = {}) -> AST:
 def _parse_augop(src: str, parse_params: dict = {}) -> AST:
     """Parse to an augmented `ast.operator` in the context of a `AugAssign`."""
 
-    ast = ast_parse(f'a \\\n{src} b', **parse_params).body[0]
+    ast = _ast_parse1(f'a \\\n{src} b', parse_params)
 
     if not isinstance(ast, AugAssign):
         raise NodeError(f'expecting augmented operator, got {_shortstr(src)!r}')
@@ -545,8 +561,7 @@ def _parse_augop(src: str, parse_params: dict = {}) -> AST:
 def _parse_unaryop(src: str, parse_params: dict = {}) -> AST:
     """Parse to an `ast.unaryop`."""
 
-    # ast = ast_parse(f'(\n{src} b)', **parse_params).body[0].value
-    ast = ast_parse(f'(\n{src} b)', **parse_params).body[0].value
+    ast = _ast_parse1(f'(\n{src} b)', parse_params).value
 
     if not isinstance(ast, UnaryOp):
         raise NodeError(f'expecting unaryop, got {_shortstr(src)!r}')
@@ -558,7 +573,7 @@ def _parse_unaryop(src: str, parse_params: dict = {}) -> AST:
 def _parse_cmpop(src: str, parse_params: dict = {}) -> AST:
     """Parse to an `ast.cmpop`."""
 
-    ast = ast_parse(f'(a\n{src} b)', **parse_params).body[0].value
+    ast = _ast_parse1(f'(a\n{src} b)', parse_params).value
 
     if not isinstance(ast, Compare):
         raise NodeError(f'expecting cmpop, got {_shortstr(src)!r}')
@@ -573,7 +588,7 @@ def _parse_cmpop(src: str, parse_params: dict = {}) -> AST:
 def _parse_comprehension(src: str, parse_params: dict = {}) -> AST:
     """Parse to an `ast.comprehension`, e.g. "async for i in something() if i"."""
 
-    ast = ast_parse(f'[_ \n{src}]', **parse_params).body[0].value
+    ast = _ast_parse1(f'[_ \n{src}]', parse_params).value
 
     if not isinstance(ast, ListComp):
         raise NodeError('expecting comprehension')
@@ -588,7 +603,7 @@ def _parse_comprehension(src: str, parse_params: dict = {}) -> AST:
 def _parse_arguments(src: str, parse_params: dict = {}) -> AST:
     """Parse to an `ast.arguments`, e.g. "a: list[str], /, b: int = 1, *c, d=100, **e"."""
 
-    ast = ast_parse(f'def f(\n{src}): pass', **parse_params).body[0].args
+    ast = _ast_parse1(f'def f(\n{src}): pass', parse_params).args
 
     return _offset_linenos(_validate_indent(src, ast), -1)
 
@@ -597,7 +612,7 @@ def _parse_arguments(src: str, parse_params: dict = {}) -> AST:
 def _parse_arguments_lambda(src: str, parse_params: dict = {}) -> AST:
     """Parse to an `ast.arguments` for a `Lambda`, e.g. "a, /, b, *c, d=100, **e"."""
 
-    ast = ast_parse(f'(lambda \n{src}: None)', **parse_params).body[0].value.args
+    ast = _ast_parse1(f'(lambda \n{src}: None)', parse_params).value.args
 
     return _offset_linenos(_validate_indent(src, ast), -1)
 
@@ -607,12 +622,12 @@ def _parse_arg(src: str, parse_params: dict = {}) -> AST:
     """Parse to an `ast.arg`, e.g. "var: list[int]"."""
 
     try:
-        args = ast_parse(f'def f(\n{src}): pass', **parse_params).body[0].args
+        args = _ast_parse1(f'def f(\n{src}): pass', parse_params).args
     except IndentationError:
         raise
 
     except SyntaxError:  # may be '*vararg: *starred'
-        args = ast_parse(f'def f(*\n{src}): pass', **parse_params).body[0].args
+        args = _ast_parse1(f'def f(*\n{src}): pass', parse_params).args
 
         if args.posonlyargs or args.args or args.kwonlyargs or args.defaults or args.kw_defaults or args.kwarg:
             ast = None
@@ -637,7 +652,7 @@ def _parse_arg(src: str, parse_params: dict = {}) -> AST:
 def _parse_keyword(src: str, parse_params: dict = {}) -> AST:
     """Parse to an `ast.keyword`, e.g. "var=val"."""
 
-    keywords = ast_parse(f'f(\n{src})', **parse_params).body[0].value.keywords
+    keywords = _ast_parse1(f'f(\n{src})', parse_params).value.keywords
 
     if len(keywords) != 1:
         raise NodeError('expecting single keyword')
@@ -665,7 +680,7 @@ def _parse_alias_dotted(src: str, parse_params: dict = {}) -> AST:
     """Parse to an `ast.alias`, allowing dotted notation (not all aliases are created equal),,
     e.g. "name as alias"."""
 
-    names = ast_parse(f'import \\\n{src}', **parse_params).body[0].names
+    names = _ast_parse1(f'import \\\n{src}', parse_params).names
 
     if len(names) != 1:
         raise NodeError('expecting single name')
@@ -677,7 +692,7 @@ def _parse_alias_dotted(src: str, parse_params: dict = {}) -> AST:
 def _parse_alias_star(src: str, parse_params: dict = {}) -> AST:
     """Parse to an `ast.alias`, allowing star,."""
 
-    names = ast_parse(f'from . import \\\n{src}', **parse_params).body[0].names
+    names = _ast_parse1(f'from . import \\\n{src}', parse_params).names
 
     if len(names) != 1:
         raise NodeError('expecting single name')
@@ -689,11 +704,11 @@ def _parse_alias_star(src: str, parse_params: dict = {}) -> AST:
 def _parse_withitem(src: str, parse_params: dict = {}) -> AST:
     """Parse to an `ast.withitem`, e.g. "something() as var"."""
 
-    items = ast_parse(f'with (\n{src}): pass', **parse_params).body[0].items
+    items = _ast_parse1(f'with (\n{src}): pass', parse_params).items
 
     if len(items) != 1:  # unparenthesized Tuple
         if all(not i.optional_vars for i in items):
-            items = ast_parse(f'with ((\n{src})): pass', **parse_params).body[0].items
+            items = _ast_parse1(f'with ((\n{src})): pass', parse_params).items
 
         if len(items) != 1:
             raise NodeError('expecting single withitem')
@@ -712,15 +727,21 @@ def _parse_pattern(src: str, parse_params: dict = {}) -> AST:
     """Parse to an `ast.pattern`, e.g. "{a.b: i, **rest}"."""
 
     try:
-        ast = ast_parse(f'match _:\n case \\\n{src}: pass', **parse_params).body[0].cases[0].pattern
+        ast = _ast_parse1_case(f'match _:\n case \\\n{src}: pass', parse_params).pattern
     except IndentationError:
         raise
 
     except SyntaxError:  # first in case needs to be enclosed
         try:
-            ast = ast_parse(f'match _:\n case (\\\n{src}): pass', **parse_params).body[0].cases[0].pattern
+            ast = _ast_parse1_case(f'match _:\n case (\\\n{src}): pass', parse_params).pattern
+
         except SyntaxError:  # now just the case of a lone MatchStar
-            ast = ast_parse(f'match _:\n case [\\\n{src}]: pass', **parse_params).body[0].cases[0].pattern.patterns[0]
+            patterns = _ast_parse1_case(f'match _:\n case [\\\n{src}]: pass', parse_params).pattern.patterns
+
+            if len(patterns) != 1:
+                raise NodeError('expecting single pattern')
+
+            ast = patterns[0]
 
         else:
             if ast.lineno < 3 and isinstance(ast, MatchSequence):
@@ -739,9 +760,12 @@ def _parse_pattern(src: str, parse_params: dict = {}) -> AST:
 def _parse_type_param(src: str, parse_params: dict = {}) -> AST:
     """Parse to an `ast.type_param`, e.g. "t: Base = Subclass"."""
 
-    ast = ast_parse(f'type t[\n{src}] = None', **parse_params).body[0].type_params[0]
+    type_params = _ast_parse1(f'type t[\n{src}] = None', parse_params).type_params
 
-    return _offset_linenos(_validate_indent(src, ast), -1)
+    if len(type_params) != 1:
+        raise NodeError('expecting single type_param')
+
+    return _offset_linenos(_validate_indent(src, type_params[0]), -1)
 
 
 # ......................................................................................................................

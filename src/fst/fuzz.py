@@ -922,6 +922,9 @@ class Reconcile1(Fuzzy):
                     ):
                         continue
 
+                    if not isinstance(getattr(tgta, 'ctx', Load()), Load):  # don't replace targets because lots of incompatibilities
+                        continue
+
                     # if not valid_replace(tgt, repl):
                     #     if self.verbose:
                     #         print(f'Not valid: {tgt.src} <- {repl.src}')

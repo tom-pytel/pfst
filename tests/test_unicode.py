@@ -11,6 +11,8 @@ IDENTIFIERS = [
     '蟒',
     'x󠄀',           # variation selector
     '𝔘𝔫𝔦𝔠𝔬𝔡𝔢',      # normalization
+    'абвгд',
+    'Źdźbło',
     'العربية',    # Arabic
     '中文',        # Chinese
     'кириллица',  # Cyrillic
