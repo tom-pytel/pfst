@@ -216,6 +216,9 @@ class _Reconcile:
     def recurse_children(self, node: AST, outa: AST):
         """Recurse into children of a node."""
 
+        if not isinstance(outa, AST):  # could be None or a Constant.value
+            return
+
         nodef = getattr(node, 'f', False)  # this determines if it came from an in-tree FST or a pure AST
         outf  = outa.f
 
@@ -310,8 +313,7 @@ class _Reconcile:
 
             outa = pfield.get(out_parent.a) if out_parent else self.out.a
 
-            if outa:  # could be None
-                self.recurse_children(node, outa)
+            self.recurse_children(node, outa)
 
             return
 

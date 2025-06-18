@@ -2,18 +2,18 @@
 requires = ["setuptools>=42", "wheel"]
 build-backend = "setuptools.build_meta"
 
-
 [project]
 name = "pfst"
-description = "format-preserving AST editing"
-keywords = "ast fst edit refactor"
-authors = [{name = "Tomasz Pytel", email = "tompytel@gmail.com"}]
-license = "MIT"
+description = "Format-preserving high level AST editing for Python 3.10+."
+keywords = ["ast", "fst", "edit", "refactor"]
 readme = "README.md"
+license = { file = "LICENSE" }
+authors = [{name = "Tomasz Pytel", email = "tompytel@gmail.com"}]
 requires-python = ">=3.10"
 dynamic = ["version"]
 
 classifiers = [
+  "License :: OSI Approved :: MIT License",
   "Development Status :: 3 - Alpha",
   "Programming Language :: Python :: 3",
   "Programming Language :: Python :: 3.10",
@@ -22,9 +22,12 @@ classifiers = [
   "Programming Language :: Python :: 3.13",
   "Programming Language :: Python :: 3.14",
   "Topic :: Software Development",
-  "Topic :: Software Development :: Code Generators",
   "Topic :: Software Development :: Libraries",
 ]
+
+[project.urls]
+Github = "https://github.com/tom-pytel/pfst"
+PyPI = "https://
 
 dependencies = [
 ]

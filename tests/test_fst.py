@@ -11469,12 +11469,28 @@ match a:
         self.assertEqual('{a : b, c : d, x: y, a : b, c : d, s : t, u : v}', f.src)
         f.verify()
 
+        # misc
+
+        if not _PYLT12:
+            m = (o := FST(r'''
+if 1:
+    "a\n"
+    f"{f()}"
+                '''.strip(), 'exec')).mark()
+            o.a.body[0].body[1].value.values[0].value.func = o.a.body[0].body[0]
+            f = o.reconcile(m)
+            self.assertEqual(r'''
+if 1:
+    "a\n"
+    f"{"a\n"()}"
+                '''.strip(), f.src)
+            f.verify()
+
         # make sure modifications are detected
 
         m = (o := FST('i = 1')).mark()
         o.value.par(True)
         self.assertRaises(RuntimeError, o.reconcile, m)
-
 
 if __name__ == '__main__':
     import argparse

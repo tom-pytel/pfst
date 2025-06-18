@@ -873,6 +873,8 @@ class PutOnePat(Fuzzy):
 
 
 class Reconcile1(Fuzzy):
+    """This is mostly testing put and syntax, not so much the reconcile."""
+
     name    = 'reconcile1'
     forever = True
 
@@ -887,7 +889,7 @@ class Reconcile1(Fuzzy):
                     if not (count % 10):
                         sys.stdout.write('.'); sys.stdout.flush()
 
-                    # fst   = master.copy()
+                    fst   = master.copy()
                     mark  = fst.mark()
                     parts = FSTParts(fst, exclude= (expr_context, mod, FormattedValue, Interpolation, alias, boolop,
                                                     operator, unaryop))
@@ -960,15 +962,16 @@ class Reconcile1(Fuzzy):
 
                     fst = fst.reconcile(mark)
 
-                    if not self.verbose:
-                        fst.verify()
-                    else:
-                        try: fst.verify()
-                        except Exception: print(fst.src); raise
+                    fst.verify()
 
                 except Exception as exc:
                     if not ignorable_exc(exc):
-                        print(f'\n{repltype = }')
+                        print()
+
+                        if self.verbose:
+                            print(fst.src)
+
+                        print(f'{repltype = }')
                         print(f'{tgt.src = }')
                         print(f'{repl.src = }')
                         print(f'{type(tgt.a) = }')
