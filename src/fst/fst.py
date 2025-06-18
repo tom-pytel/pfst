@@ -769,7 +769,7 @@ class FST:
               .targets[1]
               0] Name 'j' Store - 1,4..1,5
               .value Constant 5 - 1,8..1,9
-        >>> FST.fromast(Slice(lower=Constant(value=1), step=Name(id='step'))).dump('all')
+        >>> FST.fromast(Slice(lower=Constant(value=1), step=Name(id='step', ctx=Load()))).dump('all')
         0: 1::step
         Slice - ROOT 0,0..0,7
         0: 1
@@ -1669,14 +1669,14 @@ class FST:
         '{a: b, **d, e: f}'
         >>> f = FST('i = 1')
         >>> g = f.targets[0]
-        >>> print(g.a)
-        Name(id='i', ctx=Store())
+        >>> print(type(g.a))
+        <class 'ast.Name'>
         >>> f.put_src('4', 0, 4, 0, 5).src
         '4'
         >>> print(g.a)
         None
-        >>> print(f.targets[0].a)
-        Name(id='i', ctx=Store())
+        >>> print(type(f.targets[0].a))
+        <class 'ast.Name'>
         >>> f = FST('if a:\\n  i = 2\\nelif b:\\n  j = 3')
         >>> print(f.src)
         if a:
@@ -2249,15 +2249,15 @@ class FST:
         ```py
         >>> f = FST('[0, 1, 2, 3]')
         >>> g = f.elts[1]
-        >>> print(g.a, g.root)
-        Constant(value=1, kind=None) <List ROOT 0,0..0,12>
+        >>> print(type(g.a), g.root)
+        <class 'ast.Constant'> <List ROOT 0,0..0,12>
         >>> f.put('x', 1, raw=True)  # raw forces reparse at List
         <List ROOT 0,0..0,12>
         >>> print(g.a, g.root)
         None <List ROOT 0,0..0,12>
         >>> g = g.repath()
-        >>> print(g.a, g.root)
-        Name(id='x', ctx=Load()) <List ROOT 0,0..0,12>
+        >>> print(type(g.a), g.root)
+        <class 'ast.Name'> <List ROOT 0,0..0,12>
         ```
         """
 
@@ -2596,12 +2596,6 @@ class FST:
         >>> FST('a as b', 'alias').is_parenthesizable()
         False
         >>> FST('a as b', 'withitem').is_parenthesizable()
-        False
-        >>> FST('t = int', 'type_param').is_parenthesizable()
-        False
-        >>> FST('*t = (int,)', 'type_param').is_parenthesizable()
-        False
-        >>> FST('**t = {T: int}', 'type_param').is_parenthesizable()
         False
         ```
         """

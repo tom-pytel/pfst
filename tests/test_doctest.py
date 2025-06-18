@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import doctest
+import sys
 import unittest
 from types import FunctionType
 
@@ -28,7 +29,7 @@ class TestDocTest(unittest.TestCase):
         options = fst.FST.get_options()
 
         try:
-            cleanup_docstrs(fst.fst, {'get_indentable_lns', 'is_enclosed'})  # just exclude these for now, backslashes
+            cleanup_docstrs(fst.fst, {'get_indentable_lns', 'is_enclosed', 'parse'})  # just exclude these for now, backslashes, parse because of change to ast.dump() in later py versions
 
             results = doctest.testmod(fst.fst)
 
@@ -37,14 +38,14 @@ class TestDocTest(unittest.TestCase):
         finally:
             fst.FST.set_options(**options)
 
-    # def test_fstview(self):
-    #     fstview = sys.modules['fst.fstview']
+    def test_fstview(self):
+        fstview = sys.modules['fst.fstview']
 
-    #     cleanup_docstrs(fstview)
+        cleanup_docstrs(fstview)
 
-    #     results = doctest.testmod(fstview)
+        results = doctest.testmod(fstview)
 
-    #     self.assertEqual(0, results.failed)
+        self.assertEqual(0, results.failed)
 
 
 if __name__ == '__main__':
