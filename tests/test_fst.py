@@ -9700,11 +9700,11 @@ a
         # Tuple Slice behavior
 
         self.assertEqual('x:y:z, b', FST('a, b').elts[0].replace('x:y:z', raw=False).root.src)
-        self.assertRaises(SyntaxError, FST('(a, b)').elts[0].replace, 'x:y:z', raw=False)
+        self.assertRaises(NodeError, FST('(a, b)').elts[0].replace, 'x:y:z', raw=False)
         self.assertEqual('s[x:y:z, b]', FST('s[a, b]').slice.elts[0].replace('x:y:z', raw=False).root.src)
-        self.assertRaises(SyntaxError, FST('s[(a, b)]').slice.elts[0].replace, 'x:y:z', raw=False)
-        self.assertRaises(SyntaxError, FST('i = a, b').value.elts[0].replace, 'x:y:z', raw=False)
-        self.assertRaises(SyntaxError, FST('i = (a, b)').value.elts[0].replace, 'x:y:z', raw=False)
+        self.assertRaises(NodeError, FST('s[(a, b)]').slice.elts[0].replace, 'x:y:z', raw=False)
+        self.assertRaises(NodeError, FST('i = a, b').value.elts[0].replace, 'x:y:z', raw=False)
+        self.assertRaises(NodeError, FST('i = (a, b)').value.elts[0].replace, 'x:y:z', raw=False)
 
         # Starred where allowed
 

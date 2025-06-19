@@ -947,6 +947,8 @@ def _put_one_ClassDef_bases(self: 'FST', code: _PutOneCode, idx: int | None, fie
 
 def _put_one_ClassDef_keywords(self: 'FST', code: _PutOneCode, idx: int | None, field: str, child: AST, static: onestatic,
                                **options) -> 'FST':
+    """Don't allow put of `**keyword` before `*arg`."""
+
     child = _validate_put(self, code, idx, field, child)  # we want to do it in same order as all other puts
     code  = static.code_as(code, self.root.parse_params)
 
@@ -1044,6 +1046,8 @@ def _put_one_Call_args(self: 'FST', code: _PutOneCode, idx: int | None, field: s
 
 def _put_one_Call_keywords(self: 'FST', code: _PutOneCode, idx: int | None, field: str, child: AST, static: onestatic,
                            **options) -> 'FST':
+    """Don't allow put of `**keyword` before `*arg`."""
+
     child = _validate_put(self, code, idx, field, child)  # we want to do it in same order as all other puts
     code  = static.code_as(code, self.root.parse_params)
 
@@ -1113,14 +1117,36 @@ def _put_one_Subscript_value(self: 'FST', code: _PutOneCode, idx: int | None, fi
     return ret
 
 
+def _put_one_List_elts(self: 'FST', code: _PutOneCode, idx: int | None, field: str, child: list[AST],
+                       static: onestatic, **options) -> 'FST':
+    """Disallow non-targetable expressions in targets."""
+
+    child = _validate_put(self, code, idx, field, child)  # we want to do it in same order as all other puts
+    code  = static.code_as(code, self.root.parse_params)
+
+    if not isinstance(self.a.ctx, Load):  # only allow possible expression targets into an expression target
+        if not hasattr(code.a, 'ctx'):
+            raise ValueError(f"cannot put non-targetable expression to List.elts[{idx}] in this state (target)")
+
+    return _put_one_exprish_required(self, code, idx, field, child, static, 2, **options)
+
+
 def _put_one_Tuple_elts(self: 'FST', code: _PutOneCode, idx: int | None, field: str, child: list[AST],
                         static: onestatic, **options) -> 'FST':
-    """If not an unparenthesized top level or slice tuple then disallow Slices."""
+    """Disallow non-targetable expressions in targets. If not an unparenthesized top level or slice tuple then disallow
+    Slices."""
+
+    child = _validate_put(self, code, idx, field, child)  # we want to do it in same order as all other puts
+    code  = static.code_as(code, self.root.parse_params)
 
     if ((pf := self.pfield) and pf.name != 'slice') or self._is_parenthesized_seq():
         static = _onestatic_expr_required_starred  # default static allows slices
 
-    return _put_one_exprish_required(self, code, idx, field, child, static, **options)
+    if not isinstance(self.a.ctx, Load):  # only allow possible expression targets into an expression target
+        if not hasattr(code.a, 'ctx'):
+            raise ValueError(f"cannot put non-targetable expression to Tuple.elts[{idx}] in this state (target)")
+
+    return _put_one_exprish_required(self, code, idx, field, child, static, 2, **options)
 
 
 def _put_one_Dict_keys(self: 'FST', code: _PutOneCode, idx: int | None, field: str, child: AST,
@@ -2251,7 +2277,7 @@ _PUT_ONE_HANDLERS = {
     (Starred, 'ctx'):                     (False, _put_one_ctx, _onestatic_ctx), # expr_context
     (Name, 'id'):                         (False, _put_one_identifier_required, _onestatic_identifier_required), # identifier
     (Name, 'ctx'):                        (False, _put_one_ctx, _onestatic_ctx), # expr_context
-    (List, 'elts'):                       (True,  _put_one_exprish_required, _onestatic_expr_required_starred), # expr*
+    (List, 'elts'):                       (True,  _put_one_List_elts, _onestatic_expr_required_starred), # expr*
     (List, 'ctx'):                        (False, _put_one_ctx, _onestatic_ctx), # expr_context
     (Tuple, 'elts'):                      (True,  _put_one_Tuple_elts, onestatic(_one_info_exprish_required, _restrict_fmtval, code_as=_code_as_sliceelt)), # expr*  - special handling because Tuples can contain Slices in an unparenthesized .slice field
     (Tuple, 'ctx'):                       (False, _put_one_ctx, _onestatic_ctx), # expr_context
