@@ -9820,6 +9820,24 @@ c, # c
         self.assertRaises(NodeError, a.a.names[0].f.replace, b.names[0].copy(), raw=False)
         self.assertRaises(NodeError, b.a.names[0].f.replace, a.names[0].copy(), raw=False)
 
+        # replacing implicit starred tuple
+
+        f = FST(['a[(*b,)]'])
+        f.slice.elts[0].replace('c.d')
+        self.assertEqual('a[(c.d,)]', f.src)
+        f.verify()
+
+        if not _PYLT12:
+            f = FST(['a[*b,]'])
+            f.slice.elts[0].replace('c.d')
+            self.assertEqual('a[c.d,]', f.src)
+            f.verify()
+
+            f = FST(['a[*b]'])
+            f.slice.elts[0].replace('c.d')
+            self.assertEqual('a[c.d,]', f.src)
+            f.verify()
+
     def test_put_one_op_pars(self):
         # boolop
 

@@ -1060,7 +1060,7 @@ def _maybe_add_comma(self: 'FST', ln: int, col: int, offset: bool, space: bool,
     return True
 
 
-def _maybe_add_singleton_tuple_comma(self: 'FST', offset: bool):
+def _maybe_add_singleton_tuple_comma(self: 'FST', offset: bool = True):
     """Maybe add comma to tuple if is singleton and comma not already there, parenthesization not checked or taken
     into account. `self.a` must be a `Tuple`.
 

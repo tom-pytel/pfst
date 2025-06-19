@@ -980,6 +980,7 @@ class Reconcile1(Fuzzy):
                     fst   = master.copy()
                     mark  = fst.mark()
                     parts = FSTParts(fst, exclude=(expr_context, mod, FormattedValue, Interpolation))
+
                     tgt, cat = parts.getrnd()
 
                     if not tgt:
@@ -1049,7 +1050,7 @@ class Reconcile1(Fuzzy):
 
                         raise
 
-                    fst = master.copy()  # because not sure about state
+                    # fst = master.copy()  # because not sure about state
 
         finally:
             print()
@@ -1075,9 +1076,9 @@ class ReconcileMulti(Fuzzy):
                     if not (count % 10):
                         sys.stdout.write('.'); sys.stdout.flush()
 
-                    fst   = master.copy()
-                    mark  = fst.mark()
-                    parts = FSTParts(fst, exclude=(expr_context, mod, FormattedValue, Interpolation, alias))
+                    fst      = master.copy()
+                    mark     = fst.mark()
+                    parts    = FSTParts(fst, exclude=(expr_context, mod, FormattedValue, Interpolation))
                     tgt, cat = parts.getrnd()
 
                     if not tgt:
@@ -1131,23 +1132,8 @@ class ReconcileMulti(Fuzzy):
                         if self.verbose:
                             print(fst.src)
 
-                        print(f'{repltype = }')
-                        print(f'{tgt.src = }')
-                        print(f'{repl.src = }')
-                        print(f'{type(tgt.a) = }')
-                        print(f'{type(repl.a) = }')
-
-                        if self.debug:
-                            print(f'{tgt_path = }')
-                            print(f'{repl_path = }')
-                            print(f'{type(tgt_parent.a) = }')
-                            print(f'{type(repl_parent.a) = }')
-                            print(f'{tgt_parent.src = }')
-                            print(f'{repl_parent.src = }')
 
                         raise
-
-                    fst = master.copy()  # because not sure about state
 
         finally:
             print()

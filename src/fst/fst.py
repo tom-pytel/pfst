@@ -1169,7 +1169,7 @@ class FST:
     # ------------------------------------------------------------------------------------------------------------------
     # Reconcile
 
-    def mark(self): pass  # placeholder for pydoc
+    def mark(self): pass  # placeholder for pydoc, otherwise it puts these at the end of the class
     def reconcile(self): pass
 
     from .fst_reconcile import (
@@ -1952,7 +1952,7 @@ class FST:
     # ------------------------------------------------------------------------------------------------------------------
     # Structure stuff
 
-    def next(self): pass  # placeholder for pydoc
+    def next(self): pass  # placeholder for pydoc, otherwise it puts these at the end of the class
     def prev(self): pass
     def first_child(self): pass
     def last_child(self): pass

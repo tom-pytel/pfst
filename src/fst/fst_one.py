@@ -682,25 +682,25 @@ def _put_one_op(self: 'FST', code: _PutOneCode, idx: int | None, field: str,
     self._put_src(code_lines, ln, col, end_ln, end_col, False)
     childf._set_ast(codea)
 
-    a = self.a
+    ast = self.a
 
     if is_alnum:
-        if isinstance(a, UnaryOp):  # the beginning of this will not have been offset correctly if a leading space was added to the Not operator
-            a.col_offset += 1
+        if isinstance(ast, UnaryOp):  # the beginning of this will not have been offset correctly if a leading space was added to the Not operator
+            ast.col_offset += 1
 
-    elif (is_bin := isinstance(a, BinOp)) or isinstance(a, UnaryOp):  # parenthesize if precedence requires according to new operator
-        if (parent := self.parent) and precedence_require_parens(a, parent.a, *self.pfield) and not self.pars().n:
+    elif (is_bin := isinstance(ast, BinOp)) or isinstance(ast, UnaryOp):  # parenthesize if precedence requires according to new operator
+        if (parent := self.parent) and precedence_require_parens(ast, parent.a, *self.pfield) and not self.pars().n:
             self._parenthesize_grouping()
 
         if not is_bin:
-            if precedence_require_parens(operand := a.operand, a, 'operand') and not (f := operand.f).pars().n:
+            if precedence_require_parens(operand := ast.operand, ast, 'operand') and not (f := operand.f).pars().n:
                 f._parenthesize_grouping()
 
         else:
-            if precedence_require_parens(left := a.left, a, 'left') and not (f := left.f).pars().n:
+            if precedence_require_parens(left := ast.left, ast, 'left') and not (f := left.f).pars().n:
                 f._parenthesize_grouping()
 
-            if precedence_require_parens(right := a.right, a, 'right') and not (f := right.f).pars().n:
+            if precedence_require_parens(right := ast.right, ast, 'right') and not (f := right.f).pars().n:
                 f._parenthesize_grouping()
 
     return childf
@@ -1163,18 +1163,27 @@ def _put_one_Tuple_elts(self: 'FST', code: _PutOneCode, idx: int | None, field: 
     """Disallow non-targetable expressions in targets. If not an unparenthesized top level or slice tuple then disallow
     Slices."""
 
+    ast   = self.a
     child = _validate_put(self, code, idx, field, child)  # we want to do it in same order as all other puts
     code  = static.code_as(code, self.root.parse_params)
 
     if ((pf := self.pfield) and pf.name != 'slice') or self._is_parenthesized_seq():
         static = _onestatic_expr_required_starred  # default static allows slices
 
-    if not isinstance(self.a.ctx, Load):  # only allow possible expression targets into an expression target
+    if not isinstance(ast.ctx, Load):  # only allow possible expression targets into an expression target
         if not hasattr(code.a, 'ctx'):
             raise ValueError(f"cannot put non-targetable expression to Tuple.elts[{idx}] "
                              "in this state (target expression)")
 
-    return _put_one_exprish_required(self, code, idx, field, child, static, 2, **options)
+    is_starred_in_slice = (len(elts := ast.elts) == 1 and isinstance(elts[0], Starred) and
+                           (pf := self.pfield) and pf.name == 'slice')  # because of replacing the Starred in 'a[*i_am_really_a_tuple]'
+
+    ret = _put_one_exprish_required(self, code, idx, field, child, static, 2, **options)
+
+    if is_starred_in_slice:
+        self._maybe_add_singleton_tuple_comma()
+
+    return ret
 
 
 def _put_one_Dict_keys(self: 'FST', code: _PutOneCode, idx: int | None, field: str, child: AST,

@@ -227,7 +227,10 @@ class _Reconcile:
                 continue
 
             if isinstance(child, AST):  # AST, but out may not have anything at this position
-                # TODO: Compare special case, catch it at '.left' and do slice processing
+
+
+                # TODO: `Compare` special case, catch it at '.left' and do slice processing
+
 
                 self.recurse_node(child, astfield(field), outf, nodef)
 
@@ -236,7 +239,9 @@ class _Reconcile:
                     outf.put(child, field=field, raw=False)
 
             else:  # slice
-                if field in ('body', 'orelse', 'handlers', 'finalbody', 'cases', 'elts'):
+                if (field in ('body', 'orelse', 'handlers', 'finalbody', 'cases', 'elts') or
+                    field == 'names' and isinstance(node, (Global, Nonlocal))  # list of identifier names
+                ):
                     self.recurse_slice(node, outf, field, child)
 
                     continue
@@ -252,10 +257,12 @@ class _Reconcile:
 
                         # TODO: this special case
 
-                if field == 'names' and isinstance(node, (Global, Nonlocal)):  # list of identifier names
-                    self.recurse_slice(node, outf, field, child)
 
-                    continue
+
+                # if field == 'names' and isinstance(node, (Global, Nonlocal)):
+                #     self.recurse_slice(node, outf, field, child)
+
+                #     continue
 
 
                 # if field == 'kwd_attrs':
