@@ -9786,6 +9786,34 @@ a
         self.assertEqual(f.a.simple, 1)
         f.verify()
 
+        if not _PYLT12:
+            # gh-135148 behavior, should verify regardless of if bug is present or not
+
+            f = FST('f"{a=}"')
+            f.values[1].value.replace('''(
+a, # a
+b, # b
+c, # c
+)''', raw=False)
+            f.verify()
+
+            f = FST('f"{a=}"')
+            f.values[1].value.replace('''
+a, # a
+b, # b
+c, # c
+''', raw=False)
+            f.verify()
+
+            f = FST('f"{a=}"')
+            f.values[1].value.replace('''"""
+a, # a
+b, # b
+c, # c
+"""''', raw=False)
+            f.verify()
+
+
     def test_put_one_pars(self):
         f = FST('a = b', 'exec').body[0]
         g = FST('(i := j)', 'exec').body[0].value.copy(pars=False)

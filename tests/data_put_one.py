@@ -10326,16 +10326,16 @@ Module - ROOT 0,0..0,13
           0] Constant '.1f' - 0,8..0,11
 """),
 
-(r"""(a, b) = c""", 'body[0].targets[0]', 0, 'elts', {}, r"""i in j""", r"""**ValueError('cannot put non-targetable expression to Tuple.elts[0] in this state (target)')**""", r"""
+(r"""(a, b) = c""", 'body[0].targets[0]', 0, 'elts', {}, r"""i in j""", r"""**ValueError('cannot put non-targetable expression to Tuple.elts[0] in this state (target expression)')**""", r"""
 """),
 
-(r"""[a, b] = c""", 'body[0].targets[0]', 0, 'elts', {}, r"""i in j""", r"""**ValueError('cannot put non-targetable expression to List.elts[0] in this state (target)')**""", r"""
+(r"""[a, b] = c""", 'body[0].targets[0]', 0, 'elts', {}, r"""i in j""", r"""**ValueError('cannot put non-targetable expression to List.elts[0] in this state (target expression)')**""", r"""
 """),
 
-(r"""del (a, b)""", 'body[0].targets[0]', 0, 'elts', {}, r"""i in j""", r"""**ValueError('cannot put non-targetable expression to Tuple.elts[0] in this state (target)')**""", r"""
+(r"""del (a, b)""", 'body[0].targets[0]', 0, 'elts', {}, r"""i in j""", r"""**ValueError('cannot put non-targetable expression to Tuple.elts[0] in this state (target expression)')**""", r"""
 """),
 
-(r"""del [a, b]""", 'body[0].targets[0]', 0, 'elts', {}, r"""i in j""", r"""**ValueError('cannot put non-targetable expression to List.elts[0] in this state (target)')**""", r"""
+(r"""del [a, b]""", 'body[0].targets[0]', 0, 'elts', {}, r"""i in j""", r"""**ValueError('cannot put non-targetable expression to List.elts[0] in this state (target expression)')**""", r"""
 """),
 
 ]  # END OF PUT_ONE_DATA

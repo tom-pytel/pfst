@@ -1126,7 +1126,8 @@ def _put_one_List_elts(self: 'FST', code: _PutOneCode, idx: int | None, field: s
 
     if not isinstance(self.a.ctx, Load):  # only allow possible expression targets into an expression target
         if not hasattr(code.a, 'ctx'):
-            raise ValueError(f"cannot put non-targetable expression to List.elts[{idx}] in this state (target)")
+            raise ValueError(f"cannot put non-targetable expression to List.elts[{idx}] "
+                             "in this state (target expression)")
 
     return _put_one_exprish_required(self, code, idx, field, child, static, 2, **options)
 
@@ -1144,7 +1145,8 @@ def _put_one_Tuple_elts(self: 'FST', code: _PutOneCode, idx: int | None, field: 
 
     if not isinstance(self.a.ctx, Load):  # only allow possible expression targets into an expression target
         if not hasattr(code.a, 'ctx'):
-            raise ValueError(f"cannot put non-targetable expression to Tuple.elts[{idx}] in this state (target)")
+            raise ValueError(f"cannot put non-targetable expression to Tuple.elts[{idx}] "
+                             "in this state (target expression)")
 
     return _put_one_exprish_required(self, code, idx, field, child, static, 2, **options)
 

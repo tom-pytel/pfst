@@ -7,17 +7,18 @@ from math import log10
 from typing import Callable, Literal, Optional, Union
 
 from .astutil import *
-from .astutil import Interpolation
+from .astutil import Interpolation, TemplateStr
 
 from .shared import (
     Self, astfield, fstloc, nspace,
     EXPRISH, BLOCK, HAS_DOCSTRING,
     re_empty_line_start, re_line_end_cont_or_comment,
     _next_src, _prev_src, _next_find, _prev_find, _next_pars, _prev_pars,
-    _params_offset,
+    _params_offset, _multiline_str_continuation_lns, _multiline_fstr_continuation_lns,
 )
 
-_PY_VERSION = sys.version_info[:2]
+_PY_VERSION           = sys.version_info[:2]
+_HAS_FSTR_COMMENT_BUG = f'{"a#b"=}' != '"a#b"=\'a#b\''
 
 _astfieldctx = astfield('ctx')
 
@@ -109,7 +110,7 @@ if _PY_VERSION >= (3, 12):
                     parent = fst.parent
                     pfield = fst.pfield
 
-                    if field == 'value' and (strs := fst._get_fmtval_interp_strs()):
+                    if field == 'value' and (strs := fst._get_fmtval_interp_strs()):  # this will never proc for py < 3.12
                         dbg_str, val_str, end_ln, end_col = strs
 
                         if (dbg_str is None or not parent or not (idx := pfield.idx) or
@@ -1502,54 +1503,52 @@ def _get_fmtval_interp_strs(self: 'FST') -> tuple[str | None, str | None, int, i
     if not get_dbg and not get_val:
         return None, None, 0, 0
 
+    if _HAS_FSTR_COMMENT_BUG:  # '#' characters inside strings erroneously removed as if they were comments
+        lines = self.get_src(sln, scol + 1, end_ln, end_col, True)
 
-    # CORRECT VERSION
+        for i, l in enumerate(lines):
+            if (m := re_line_end_cont_or_comment.match(l)) and (g := m.group(1)) and g.startswith('#'):  # line ends in comment, nuke it
+                lines[i] = l[:m.start(1)]
 
-    # lns  = set()
-    # ends = {}
+    else:
+        lns  = set()
+        ends = {}  # the starting column of where to search for comment '#', past end of any expression on given line
 
-    # for f in (walking := val.walk(False)):  # find multiline continuation line numbers
-    #     fln, _, fend_ln, fend_col = f.loc
-    #     ends[fend_ln]             = max(fend_col, ends.get(fend_ln, 0))
+        for f in (walking := ast.value.f.walk(True)):  # find multiline continuation line numbers
+            fln, _, fend_ln, fend_col = f.loc
+            ends[fend_ln]             = max(fend_col, ends.get(fend_ln, 0))
 
-    #     if fend_ln == fln:  # everything on one line, don't need to recurse
-    #         walking.send(False)
+            if fend_ln == fln:  # everything on one line, don't need to recurse
+                walking.send(False)
 
-    #     elif isinstance(a := f.a, Constant):  # isinstance(f.a.value, (str, bytes)) is a given if bend_ln != bln
-    #         lns.update(_multiline_str_continuation_lns(lines, *f.loc))
+            elif isinstance(a := f.a, Constant):  # isinstance(f.a.value, (str, bytes)) is a given if bend_ln != bln
+                lns.update(_multiline_str_continuation_lns(lines, *f.loc))
 
-    #     elif isinstance(a, (JoinedStr, TemplateStr)):
-    #         lns.update(_multiline_fstr_continuation_lns(lines, *f.loc))
+            elif isinstance(a, (JoinedStr, TemplateStr)):
+                lns.update(_multiline_fstr_continuation_lns(lines, *f.loc))
 
-    #         walking.send(False)  # skip everything inside regardless, because it is evil
+                walking.send(False)  # skip everything inside regardless, because it is evil
 
-    #         for a in walk(f.a):  # we walk ourselves to get end-of-expression locations for lines
-    #             if loc := a.f.loc:
-    #                 _, _, fend_ln, fend_col = loc
-    #                 ends[fend_ln]           = max(fend_col, ends.get(fend_ln, 0))
+                for a in walk(f.a):  # we walk ourselves to get end-of-expression locations for lines
+                    if loc := a.f.loc:
+                        _, _, fend_ln, fend_col = loc
+                        ends[fend_ln]           = max(fend_col, ends.get(fend_ln, 0))
 
+        off   = sln + 1
+        lns   = {v - off for v in lns}  # these are line numbers where comments are not possible because next line is a string continuation
+        lines = self.get_src(sln, scol + 1, end_ln, end_col, True)
 
-    # off   = sln + 1
-    # lns   = {v - off for v in lns}  # these are line numbers where comments are not possible because next line is a string continuation
-    # lines = self.get_src(sln, scol + 1, end_ln, end_col, True)
+        for i, l in enumerate(lines):
+            if i not in lns:
+                c = ends.get(i + sln, 0)
 
-    # for i, l in enumerate(lines):
-    #     if (i not in lns and (m := re_line_end_cont_or_comment.match(l, ends.get(i + sln, 0))) and
-    #         (g := m.group(1)) and g.startswith('#')
-    #     ):  # line ends in comment, nuke it
-    #         lines[i] = l[:m.start(1)]
+                if not i:  # if first line then need to remove offset of first value from first line of expression
+                    c -= scol + 1
 
+                if (m := re_line_end_cont_or_comment.match(l, c)) and (g := m.group(1)) and g.startswith('#'):  # line ends in comment, nuke it
+                    lines[i] = l[:m.start(1)]
 
-    # BUGGY VERSION
-
-    lines = self.get_src(sln, scol + 1, end_ln, end_col, True)
-
-    for i, l in enumerate(lines):
-        if (m := re_line_end_cont_or_comment.match(l)) and (g := m.group(1)) and g.startswith('#'):  # line ends in comment, nuke it
-            lines[i] = l[:m.start(1)]
-
-    # END OF BUGGIENESS
-
+        print()
 
     dbg_str = '\n'.join(lines) if get_dbg else None
 
