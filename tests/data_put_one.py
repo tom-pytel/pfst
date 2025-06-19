@@ -3195,6 +3195,28 @@ Module - ROOT 0,0..1,8
     0] Pass - 1,4..1,8
 """),
 
+(r"""class c(a=1, *b, c=2): pass""", 'body[0]', 1, 'keywords', {}, r"""**new""", r"""class c(a=1, *b, **new): pass""", r"""
+Module - ROOT 0,0..0,29
+  .body[1]
+  0] ClassDef - 0,0..0,29
+    .name 'c'
+    .bases[1]
+    0] Starred - 0,13..0,15
+      .value Name 'b' Load - 0,14..0,15
+      .ctx Load
+    .keywords[2]
+    0] keyword - 0,8..0,11
+      .arg 'a'
+      .value Constant 1 - 0,10..0,11
+    1] keyword - 0,17..0,22
+      .value Name 'new' Load - 0,19..0,22
+    .body[1]
+    0] Pass - 0,25..0,29
+"""),
+
+(r"""class c(a=1, *b, c=2): pass""", 'body[0]', 0, 'keywords', {}, r"""**new""", r"""**ValueError("cannot put '**' ClassDef.keywords[0] in this state (non-keywords follow)")**""", r"""
+"""),
+
 (r"""match a:
  case 1: pass""", 'body[0].cases[0].pattern', None, None, {}, r"""a.b""", r"""match a:
  case a.b: pass""", r"""
@@ -8131,6 +8153,27 @@ Module - ROOT 0,0..0,22
 """),
 
 (r"""call(a=1, b = (2))""", 'body[0].value', -4, 'keywords', {}, r"""new=(3)""", r"""**IndexError('index out of range')**""", r"""
+"""),
+
+(r"""call(a=1, *b, c=1)""", 'body[0].value', 1, 'keywords', {}, r"""**new""", r"""call(a=1, *b, **new)""", r"""
+Module - ROOT 0,0..0,20
+  .body[1]
+  0] Expr - 0,0..0,20
+    .value Call - 0,0..0,20
+      .func Name 'call' Load - 0,0..0,4
+      .args[1]
+      0] Starred - 0,10..0,12
+        .value Name 'b' Load - 0,11..0,12
+        .ctx Load
+      .keywords[2]
+      0] keyword - 0,5..0,8
+        .arg 'a'
+        .value Constant 1 - 0,7..0,8
+      1] keyword - 0,14..0,19
+        .value Name 'new' Load - 0,16..0,19
+"""),
+
+(r"""call(a=1, *b, c=1)""", 'body[0].value', 0, 'keywords', {}, r"""**new""", r"""**ValueError("cannot put '**' Call.keywords[0] in this state (non-keywords follow)")**""", r"""
 """),
 
 (r"""with (a as b, (f()) as d): pass""", 'body[0]', 0, 'items', {}, r"""**DEL**""", r"""**ValueError('cannot put slice to With.items')**""", r"""

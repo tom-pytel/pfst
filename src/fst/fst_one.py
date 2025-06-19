@@ -945,6 +945,17 @@ def _put_one_ClassDef_bases(self: 'FST', code: _PutOneCode, idx: int | None, fie
     return _put_one_exprish_required(self, code, idx, field, child, static, 2, **options)
 
 
+def _put_one_ClassDef_keywords(self: 'FST', code: _PutOneCode, idx: int | None, field: str, child: AST, static: onestatic,
+                               **options) -> 'FST':
+    child = _validate_put(self, code, idx, field, child)  # we want to do it in same order as all other puts
+    code  = static.code_as(code, self.root.parse_params)
+
+    if code.a.arg is None and (bases := self.a.bases) and bases[-1].f.loc > self.keywords[idx].loc:
+        raise ValueError(f"cannot put '**' ClassDef.keywords[{idx}] in this state (non-keywords follow)")
+
+    return _put_one_exprish_required(self, code, idx, field, child, static, 2, **options)
+
+
 def _put_one_AnnAssign_target(self: 'FST', code: _PutOneCode, idx: int | None, field: str, child: int, static: onestatic,
                               **options) -> 'FST':
     """Update simple according to what was put."""
@@ -1027,6 +1038,17 @@ def _put_one_Call_args(self: 'FST', code: _PutOneCode, idx: int | None, field: s
         child.f.loc > keywords[0].f.loc
     ):
         raise ValueError(f'cannot replace Starred Call.args[{idx}] with non-Starred arg in this state (after keywords)')
+
+    return _put_one_exprish_required(self, code, idx, field, child, static, 2, **options)
+
+
+def _put_one_Call_keywords(self: 'FST', code: _PutOneCode, idx: int | None, field: str, child: AST, static: onestatic,
+                           **options) -> 'FST':
+    child = _validate_put(self, code, idx, field, child)  # we want to do it in same order as all other puts
+    code  = static.code_as(code, self.root.parse_params)
+
+    if code.a.arg is None and (args := self.a.args) and args[-1].f.loc > self.keywords[idx].loc:
+        raise ValueError(f"cannot put '**' Call.keywords[{idx}] in this state (non-keywords follow)")
 
     return _put_one_exprish_required(self, code, idx, field, child, static, 2, **options)
 
@@ -1125,7 +1147,7 @@ def _put_one_arg_annotation(self: 'FST', code: _PutOneCode, idx: int | None, fie
     return _put_one_exprish_optional(self, code, idx, field, child, static, **options)
 
 if _PY_VERSION < (3, 11):
-    _put_one_arg_annotation = _put_one_exprish_optional
+    _put_one_arg_annotation = _put_one_exprish_optional  # this leaves the _restrict_default in the static which disallows Starred
 
 
 def _put_one_withitem_context_expr(self: 'FST', code: _PutOneCode, idx: int | None, field: str, child: str,
@@ -2118,7 +2140,7 @@ _PUT_ONE_HANDLERS = {
     (ClassDef, 'name'):                   (False, _put_one_identifier_required, onestatic(_one_info_ClassDef_name, _restrict_default, code_as=_code_as_identifier)), # identifier
     (ClassDef, 'type_params'):            (True,  _put_one_exprish_required, _onestatic_type_param_required), # type_param*
     (ClassDef, 'bases'):                  (True,  _put_one_ClassDef_bases, _onestatic_expr_required_starred), # expr*
-    (ClassDef, 'keywords'):               (True,  _put_one_exprish_required, _onestatic_keyword_required), # keyword*
+    (ClassDef, 'keywords'):               (True,  _put_one_ClassDef_keywords, _onestatic_keyword_required), # keyword*
     (ClassDef, 'body'):                   (True,  None, None), # stmt*
     (Return, 'value'):                    (False, _put_one_exprish_optional, onestatic(_one_info_Return_value, _restrict_default)), # expr?
     (Delete, 'targets'):                  (True,  _put_one_exprish_required, _onestatic_target), # expr*
@@ -2208,7 +2230,7 @@ _PUT_ONE_HANDLERS = {
     (Compare, ''):                        (True,  _put_one_Compare_combined, _onestatic_expr_required), # expr*
     (Call, 'func'):                       (False, _put_one_exprish_required, _onestatic_expr_required), # expr
     (Call, 'args'):                       (True,  _put_one_Call_args, onestatic(_one_info_exprish_required, _restrict_fmtval_slice, code_as=_code_as_callarg)), # expr*
-    (Call, 'keywords'):                   (True,  _put_one_exprish_required, _onestatic_keyword_required), # keyword*
+    (Call, 'keywords'):                   (True,  _put_one_Call_keywords, _onestatic_keyword_required), # keyword*
     (FormattedValue, 'value'):            (False, _put_one_exprish_required, _onestatic_expr_required), # expr
     (FormattedValue, 'conversion'):       (False, _put_one_NOT_IMPLEMENTED_YET, onestatic(_one_info_conversion, Constant)), # int  # onestatic only here for info for raw put, Constant must be str
     (FormattedValue, 'format_spec'):      (False, _put_one_NOT_IMPLEMENTED_YET, onestatic(_one_info_format_spec, JoinedStr)), # expr?  # onestatic only here for info for raw put
