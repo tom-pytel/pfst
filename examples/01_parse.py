@@ -201,7 +201,7 @@ FST.fromsrc('i = 1').dump()
 
 # Except that `fromsrc()` defaults to `mode='exec'` instead of minimal node.
 
-FST.fromsrc('i = 1', 'valid').dump()
+FST.fromsrc('i = 1', 'min').dump()
 
 # Assign - ROOT 0,0..0,5
 #   .targets[1]

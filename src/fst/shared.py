@@ -104,7 +104,7 @@ Code = Union['FST', AST, list[str], str]  ; """Code types accepted for put to `F
 Mode = Union[type[AST], Literal[
     'all',
     'most',
-    'valid',
+    'min',
     'exec',
     'eval',
     'single',
@@ -151,8 +151,8 @@ Mode = Union[type[AST], Literal[
     parse modes to keep things quick, though will parse anything that can be parsed natively by `ast.parse()` (plus
     `ExpressionHandler` and `match_case`). If you want exhaustive attempts that will parse any `AST` source node the
     mode for that is `'all'`. Will never return an `Expression` or `Interactive`.
-- `'valid'`: Attempt parse valid parsable code. If only one statement then return the statement itself instead of the
-    `Module`. If that statement is an `Expr` then return the expression instead of the statement. If nothing present
+- `'min'`: Attempt parse minumum valid parsable code. If only one statement then return the statement itself instead of
+    the `Module`. If that statement is an `Expr` then return the expression instead of the statement. If nothing present
     then return empty `Module`. Doesn't attempt any of the other parse modes which would not normally be parsable by
     python, just anything that can be parsed natively by `ast.parse()`.
 - `'exec'`: Parse to a `Module`. Mostly same as passing `Module` type except that also parses anything that `FST` puts

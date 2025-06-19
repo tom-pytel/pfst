@@ -234,7 +234,7 @@ def _parse_most(src: str, parse_params: dict = {}) -> AST:
 
 
 @staticmethod
-def _parse_valid(src: str, parse_params: dict = {}) -> AST:
+def _parse_min(src: str, parse_params: dict = {}) -> AST:
     """Attempt to parse valid parsable statements and then reduce to a single statement or expressing if possible."""
 
     return reduce_ast(ast_parse(src, **parse_params), True)
@@ -1328,7 +1328,7 @@ __all_private__ = [n for n in globals() if n not in _GLOBALS]  # used by make_do
 
 _PARSE_ALL_FUNCS = [
     _parse_most,
-    _parse_expr,     # explicitly this because _parse_valid won't catch unparenthesized expressions with newlines
+    _parse_expr,     # explicitly this because _parse_most won't catch unparenthesized expressions with newlines
     _parse_pattern,
     _parse_arguments,
     _parse_arguments_lambda,
@@ -1345,7 +1345,7 @@ _PARSE_ALL_FUNCS = [
 _PARSE_MODE_FUNCS = {
     'all':               _parse_all,
     'most':              _parse_most,
-    'valid':             _parse_valid,
+    'min':               _parse_min,
     'exec':              _parse_Module,
     'eval':              _parse_Expression,
     'single':            _parse_Interactive,
