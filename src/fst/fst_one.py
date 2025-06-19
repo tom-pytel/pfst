@@ -650,7 +650,7 @@ def _put_one_BoolOp_op(self: 'FST', code: _PutOneCode, idx: int | None, field: s
 def _put_one_op(self: 'FST', code: _PutOneCode, idx: int | None, field: str,
                 child: type[boolop] | type[operator] | type[unaryop] | type[cmpop],
                 static: None, **options) -> 'FST':
-    """Put a single operation, with or without '=' for AugAssign."""
+    """Put a single operator, with or without '=' for AugAssign."""
 
     child      = _validate_put(self, code, idx, field, child)
     code       = static.code_as(code, self.root.parse_params)
@@ -674,8 +674,26 @@ def _put_one_op(self: 'FST', code: _PutOneCode, idx: int | None, field: str,
     self._put_src(code_lines, ln, col, end_ln, end_col, False)
     childf._set_ast(codea)
 
-    if is_alnum and isinstance(a := self.a, UnaryOp):  # the beginning of this will not have been offset correctly if a leading space was added to the Not operator
-        a.col_offset += 1
+    a = self.a
+
+    if is_alnum:
+        if isinstance(a, UnaryOp):  # the beginning of this will not have been offset correctly if a leading space was added to the Not operator
+            a.col_offset += 1
+
+    elif (is_bin := isinstance(a, BinOp)) or isinstance(a, UnaryOp):  # parenthesize if precedence requires according to new operator
+        if (parent := self.parent) and precedence_require_parens(a, parent.a, *self.pfield) and not self.pars().n:
+            self._parenthesize_grouping()
+
+        if not is_bin:
+            if precedence_require_parens(operand := a.operand, a, 'operand') and not (f := operand.f).pars().n:
+                f._parenthesize_grouping()
+
+        else:
+            if precedence_require_parens(left := a.left, a, 'left') and not (f := left.f).pars().n:
+                f._parenthesize_grouping()
+
+            if precedence_require_parens(right := a.right, a, 'right') and not (f := right.f).pars().n:
+                f._parenthesize_grouping()
 
     return childf
 

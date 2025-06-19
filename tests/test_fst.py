@@ -9813,6 +9813,57 @@ c, # c
 """''', raw=False)
             f.verify()
 
+    def test_put_one_op_pars(self):
+        f = FST('a * b + c')
+        f.left.op.replace(BitOr())
+        self.assertEqual('(a | b) + c', f.src)
+        f.verify()
+
+        f = FST('(a * b) + c')
+        f.left.op.replace(BitOr())
+        self.assertEqual('(a | b) + c', f.src)
+        f.verify()
+
+        f = FST('a + b | c + d')
+        f.op.replace(Mult())
+        self.assertEqual('(a + b) * (c + d)', f.src)
+        f.verify()
+
+        f = FST('(a + b) | (c + d)')
+        f.op.replace(Mult())
+        self.assertEqual('(a + b) * (c + d)', f.src)
+        f.verify()
+
+        f = FST('--a')
+        f.op.replace(Not())
+        self.assertEqual('not-a', f.src)
+        f.verify()
+
+        f = FST('--a')
+        f.operand.op.replace(Not())
+        self.assertEqual('-(not a)', f.src)
+        f.verify()
+
+        f = FST('-(-a)')
+        f.operand.op.replace(Not())
+        self.assertEqual('-(not a)', f.src)
+        f.verify()
+
+        f = FST('not not a')
+        f.op.replace(USub())
+        self.assertEqual('- (not a)', f.src)
+        f.verify()
+
+        f = FST('not (not a)')
+        f.op.replace(USub())
+        self.assertEqual('- (not a)', f.src)
+        f.verify()
+
+        f = FST('not not a')
+        f.operand.op.replace(USub())
+        self.assertEqual('not - a', f.src)
+        f.verify()
+
     def test_put_one_pars(self):
         f = FST('a = b', 'exec').body[0]
         g = FST('(i := j)', 'exec').body[0].value.copy(pars=False)

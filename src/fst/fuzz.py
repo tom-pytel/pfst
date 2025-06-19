@@ -967,8 +967,7 @@ class Reconcile1(Fuzzy):
 
                     fst   = master.copy()
                     mark  = fst.mark()
-                    parts = FSTParts(fst, exclude=(expr_context, mod, FormattedValue, Interpolation, alias, boolop,
-                                                   operator, unaryop))
+                    parts = FSTParts(fst, exclude=(expr_context, mod, FormattedValue, Interpolation, alias))
                     tgt, cat = parts.getrnd()
 
                     if not tgt:
