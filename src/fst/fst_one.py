@@ -644,6 +644,14 @@ def _put_one_BoolOp_op(self: 'FST', code: _PutOneCode, idx: int | None, field: s
 
     childf._set_ast(codea)
 
+    if src != tgt:  # if replacing with different boolop then need to parenthesize self if parent is BoolOp or children if they are BoolOps to keep structure regardless of precedence
+        if (parent := self.parent) and isinstance(parent.a, BoolOp) and not self.pars().n:
+            self._parenthesize_grouping()
+
+        for a in self.a.values:
+            if isinstance(a, BoolOp) and not (f := a.f).pars().n:
+                f._parenthesize_grouping()
+
     return childf
 
 

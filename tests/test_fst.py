@@ -9814,6 +9814,50 @@ c, # c
             f.verify()
 
     def test_put_one_op_pars(self):
+        # boolop
+
+        f = FST('a or b and c')
+        f.op.replace(And())
+        self.assertEqual('a and (b and c)', f.src)
+        f.verify()
+
+        f = FST('a or (b and c)')
+        f.op.replace(And())
+        self.assertEqual('a and (b and c)', f.src)
+        f.verify()
+
+        f = FST('a or b and c')
+        f.values[1].op.replace(Or())
+        self.assertEqual('a or (b or c)', f.src)
+        f.verify()
+
+        f = FST('a or (b and c)')
+        f.values[1].op.replace(Or())
+        self.assertEqual('a or (b or c)', f.src)
+        f.verify()
+
+        f = FST('a and b or c')
+        f.op.replace(And())
+        self.assertEqual('(a and b) and c', f.src)
+        f.verify()
+
+        f = FST('(a and b) or c')
+        f.op.replace(And())
+        self.assertEqual('(a and b) and c', f.src)
+        f.verify()
+
+        f = FST('a and b or c')
+        f.values[0].op.replace(Or())
+        self.assertEqual('(a or b) or c', f.src)
+        f.verify()
+
+        f = FST('(a and b) or c')
+        f.values[0].op.replace(Or())
+        self.assertEqual('(a or b) or c', f.src)
+        f.verify()
+
+        # operator
+
         f = FST('a * b + c')
         f.left.op.replace(BitOr())
         self.assertEqual('(a | b) + c', f.src)
