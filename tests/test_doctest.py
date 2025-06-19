@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 
 import doctest
+import importlib
+import os
 import sys
 import unittest
 from types import FunctionType
@@ -8,7 +10,7 @@ from types import FunctionType
 import fst
 
 
-def cleanup_docstrs(obj, exclude: set[str] = set()):
+def cleanup_docstrs_recurse(obj, exclude: set[str] = set()):
     for name, o in obj.__dict__.items():
         if isinstance(o, (FunctionType, type, staticmethod, classmethod)):
             o = getattr(obj, name)
@@ -21,7 +23,14 @@ def cleanup_docstrs(obj, exclude: set[str] = set()):
                 except Exception:
                     pass
                 else:
-                    cleanup_docstrs(o, exclude)
+                    cleanup_docstrs_recurse(o, exclude)
+
+
+def cleanup_docstrs(obj, exclude: set[str] = set()):
+    if doc := getattr(obj, '__doc__', None):  # at the module level
+        obj.__doc__ = doc.replace('```', '')
+
+    cleanup_docstrs_recurse(obj, exclude)
 
 
 class TestDocTest(unittest.TestCase):
@@ -29,7 +38,7 @@ class TestDocTest(unittest.TestCase):
         options = fst.FST.get_options()
 
         try:
-            cleanup_docstrs(fst.fst, {'parse'})  # exclude parse because of change in ast.dump() behavior between py 3.12 and 3.13
+            cleanup_docstrs(fst.fst)
             self.assertEqual(0, doctest.testmod(fst.fst).failed)
 
         finally:
@@ -40,6 +49,19 @@ class TestDocTest(unittest.TestCase):
 
         cleanup_docstrs(fstview)
         self.assertEqual(0, doctest.testmod(fstview).failed)
+
+    def test_examples(self):
+        sys.path.insert(0, '')
+
+        try:
+            for example in sorted(e for e in os.listdir('examples') if e.endswith('.py') and not e.startswith('__')):
+                mod = importlib.import_module(f'examples.{example[:-3]}')
+
+                cleanup_docstrs(mod)
+                self.assertEqual(0, doctest.testmod(mod).failed)
+
+        finally:
+            del sys.path[0]
 
 
 if __name__ == '__main__':

@@ -10,13 +10,13 @@ name = "pfst"
 description = "Format-preserving high level AST editing for Python 3.10+."
 keywords = ["ast", "fst", "edit", "refactor"]
 readme = "README.md"
-license = { file = "LICENSE" }
+license = "MIT"
+license-files = ["LICENSE"]
 authors = [{name = "Tomasz Pytel", email = "tompytel@gmail.com"}]
 requires-python = ">=3.10"
 dynamic = ["version"]
 
 classifiers = [
-  "License :: OSI Approved :: MIT License",
   "Development Status :: 3 - Alpha",
   "Programming Language :: Python :: 3",
   "Programming Language :: Python :: 3.10",
@@ -43,6 +43,7 @@ dev = [
 
 [tool.setuptools.packages.find]
 where = ["src"]
+exclude = ["examples"]
 
 [tool.setuptools.dynamic]
 version = { file = "VERSION" }

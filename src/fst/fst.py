@@ -3,9 +3,9 @@ their respective `ast` module counterparts."""
 
 FST = None  # temporary standin for circular import of real `FST` class
 
-import ast as ast_
+import sys
 from ast import *
-from ast import unparse as ast_unparse
+from ast import dump as ast_dump, unparse as ast_unparse, mod as ast_mod
 from contextlib import contextmanager
 from io import TextIOBase
 from typing import Any, Callable, Generator, Literal, Optional, TextIO, Union
@@ -24,8 +24,11 @@ from .shared import (
 )
 
 __all__ = [
-    'parse', 'unparse', 'FST',
+    'parse', 'unparse', 'dump', 'FST',
 ]
+
+_PY_VERSION = sys.version_info[:2]
+_PYLT13     = _PY_VERSION < (3, 13)
 
 _REPR_SRC_LINES = 0  # for debugging
 
@@ -84,7 +87,7 @@ def parse(source, filename='<unknown>', mode='exec', *, type_comments=False, fea
     <class 'ast.Module'>
     >>> a.f  # FST node
     <Module ROOT 0,0..1,7>
-    >>> print(ast.dump(a, indent=2))
+    >>> print(fst.dump(a, indent=2))
     Module(
       body=[
         If(
@@ -93,7 +96,9 @@ def parse(source, filename='<unknown>', mode='exec', *, type_comments=False, fea
             Assign(
               targets=[
                 Name(id='i', ctx=Store())],
-              value=Constant(value=2))])])
+              value=Constant(value=2))],
+          orelse=[])],
+      type_ignores=[])
     >>> a.f.dump()
     Module - ROOT 0,0..1,7
       .body[1]
@@ -156,6 +161,17 @@ def unparse(ast_obj) -> str:
             pass
 
     return ast_unparse(ast_obj)
+
+
+def dump(node, annotate_fields=True, include_attributes=False, *, indent=None, show_empty=True):
+    """This function is a convenience function and only exists to make python version 3.13 and above `ast.dump()` output
+    compatible on a default call with previous python versions (importand for doctests). All arguments correspond to
+    their respective `ast.dump()` arguments and `show_empty` is provided to be eaten on python versions below 3.13."""
+
+    if _PYLT13:
+        return ast_dump(node, annotate_fields, include_attributes, indent=indent)
+    else:
+        return ast_dump(node, annotate_fields, include_attributes, indent=indent, show_empty=show_empty)
 
 
 class FST:
@@ -2023,7 +2039,7 @@ class FST:
         ```
         """
 
-        types = (stmt, ast_.mod) if mod else stmt
+        types = (stmt, ast_mod) if mod else stmt
 
         if self_ and isinstance(self.a, types):
             return self

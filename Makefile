@@ -22,13 +22,13 @@ test:  ## Run basic unit tests
 
 .PHONY: docs
 docs:  ## Compile documentation
-	python make_docs.py fst.fst fst.fstview fst.shared fst.astutil
+	python make_docs.py fst.fst fst.fstview fst.shared fst.astutil examples
 	# pdoc -o docs -d markdown fst.fst fst.fstview fst.shared fst.astutil
 
 
 .PHONY: all-docs
 all-docs:  ## Compile all documentation, including private functions, for dev
-	python make_docs.py --private fst.fst fst.fstview fst.shared fst.astutil fst.fst_parse fst.fst_raw fst.fst_slice_old fst.fst_slice fst.fst_one fst.fst_reconcile fst.fst_walk fst.fst_misc fst.srcedit
+	python make_docs.py --private fst.fst fst.fstview fst.shared fst.astutil fst.fst_parse fst.fst_raw fst.fst_slice_old fst.fst_slice fst.fst_one fst.fst_reconcile fst.fst_walk fst.fst_misc fst.srcedit_old examples
 
 
 .PHONY: clean
