@@ -1169,14 +1169,24 @@ def _code_as_alias(code: Code, parse_params: dict = {}) -> 'FST':
 def _code_as_alias_dotted(code: Code, parse_params: dict = {}) -> 'FST':
     """Convert `code` to a alias `FST` if possible, dotted as in `alias` for `Import.names`."""
 
-    return _code_as(code, alias, parse_params, _parse_alias_dotted)
+    ret = _code_as(code, alias, parse_params, _parse_alias_dotted)
+
+    if '*' in ret.a.name:
+        raise NodeError("'*' not allowed in this alias")
+
+    return ret
 
 
 @staticmethod
 def _code_as_alias_star(code: Code, parse_params: dict = {}) -> 'FST':
     """Convert `code` to a alias `FST` if possible, possibly star as in `alias` for `FromImport.names`."""
 
-    return _code_as(code, alias, parse_params, _parse_alias_star)
+    ret = _code_as(code, alias, parse_params, _parse_alias_star)
+
+    if '.' in ret.a.name:
+        raise NodeError("'.' not allowed in this alias")
+
+    return ret
 
 
 @staticmethod

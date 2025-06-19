@@ -51,7 +51,8 @@ def ignorable_exc(exc: Exception, putsrc: str | Literal[False] | None = None):
         'invalid value for MatchValue.value' in msg or
         'invalid value for MatchMapping.keys' in msg or
         'cannot reparse Starred in slice as Starred' in msg or
-        'expecting identifier, got' in msg
+        'expecting identifier, got' in msg or
+        'not allowed in this alias' in msg
         # (msg.startswith('cannot put ') and (msg.endswith(' to MatchMapping.keys') or msg.endswith(' to MatchValue.value')))
     )
 
@@ -218,6 +219,17 @@ def can_replace(tgt: FST, repl: FST) -> bool:  # assuming ASTCat has already bee
 
     if isinstance(tgta, Slice) and not isinstance(repla, Slice):
         return False
+
+    if isinstance(tgta, alias):
+        if isinstance(tgt_parenta, Import):
+            if '*' in repla.name:
+                return False
+
+        if isinstance(tgt_parenta, ImportFrom):
+            if '.' in repla.name:
+                return False
+            if '*' in repla.name and len(tgt_parenta.names) > 1:
+                return False
 
     if (isinstance(tgta, arguments) and isinstance(tgt_parenta, Lambda) and
         not isinstance(repl_parenta, Lambda)
@@ -967,7 +979,7 @@ class Reconcile1(Fuzzy):
 
                     fst   = master.copy()
                     mark  = fst.mark()
-                    parts = FSTParts(fst, exclude=(expr_context, mod, FormattedValue, Interpolation, alias))
+                    parts = FSTParts(fst, exclude=(expr_context, mod, FormattedValue, Interpolation))
                     tgt, cat = parts.getrnd()
 
                     if not tgt:
@@ -1065,8 +1077,7 @@ class ReconcileMulti(Fuzzy):
 
                     fst   = master.copy()
                     mark  = fst.mark()
-                    parts = FSTParts(fst, exclude=(expr_context, mod, FormattedValue, Interpolation, alias, boolop,
-                                                   operator, unaryop))
+                    parts = FSTParts(fst, exclude=(expr_context, mod, FormattedValue, Interpolation, alias))
                     tgt, cat = parts.getrnd()
 
                     if not tgt:

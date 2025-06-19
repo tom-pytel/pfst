@@ -9813,6 +9813,13 @@ c, # c
 """''', raw=False)
             f.verify()
 
+        # incorrect alias FST not allowed
+
+        a = FST('import a.b')
+        b = FST('from c import *')
+        self.assertRaises(NodeError, a.a.names[0].f.replace, b.names[0].copy(), raw=False)
+        self.assertRaises(NodeError, b.a.names[0].f.replace, a.names[0].copy(), raw=False)
+
     def test_put_one_op_pars(self):
         # boolop
 
