@@ -729,7 +729,7 @@ class FST:
 
     @staticmethod
     def fromast(ast: AST, mode: Mode | Literal[False] | None = None, *, filename: str = '<unknown>',
-                type_comments: bool | None = False, feature_version=None) -> 'FST':
+                type_comments: bool | None = False, feature_version=None, ctx: bool = False) -> 'FST':
         r"""Unparse and reparse an `AST` for new `FST` (the reparse is necessary to make sure locations are correct).
 
         **Parameters:**
@@ -744,6 +744,8 @@ class FST:
         - `filename`: `ast.parse()` parameter.
         - `type_comments`: `ast.parse()` parameter.
         - `feature_version`: `ast.parse()` parameter.
+        - `ctx`: Whether to make sure that the `ctx` field of the reparsed `AST` matches or not. `False` for
+            convenience, `True` if you're feeling pedantic.
 
         **Returns:**
         - `FST`: The augmented tree with `.f` attributes added to each `AST` node for `FST` access.
@@ -751,7 +753,7 @@ class FST:
         **Examples:**
         ```py
         >>> import ast
-        >>> FST.fromast(Assign(targets=[Name(id='var', ctx=Store())], value=Constant(value=123))).dump('stmt')
+        >>> FST.fromast(Assign(targets=[Name(id='var')], value=Constant(value=123))).dump('stmt')
         0: var = 123
         Assign - ROOT 0,0..0,9
           .targets[1]
@@ -769,7 +771,7 @@ class FST:
               .targets[1]
               0] Name 'j' Store - 1,4..1,5
               .value Constant 5 - 1,8..1,9
-        >>> FST.fromast(Slice(lower=Constant(value=1), step=Name(id='step', ctx=Load()))).dump('all')
+        >>> FST.fromast(Slice(lower=Constant(value=1), step=Name(id='step'))).dump('all')
         0: 1::step
         Slice - ROOT 0,0..0,7
         0: 1
@@ -791,7 +793,7 @@ class FST:
             ast = FST._parse(src, ast.__class__ if mode is None else mode, parse_params)
 
             try:
-                compare_asts(ast, org, type_comments=type_comments, raise_=True)
+                compare_asts(ast, org, type_comments=type_comments, ctx=ctx, raise_=True)
             except WalkFail:
                 raise ValueError('could not reparse ast identically')
 
@@ -985,8 +987,9 @@ class FST:
         - `eol`: What to put at the end of each text line, `None` means newline for `TextIO` out and nothing for other.
 
         **Returns:**
-        - `str | list[str]` if those were requested with `out=str` or `out=list` else `None` and the output is send one
+        - `str | list[str]`: If those were requested with `out=str` or `out=list` else `None` and the output is send one
             line at a time to `linefunc`, which by default is `print`.
+        - `None`: Otherwise.
 
         **Examples:**
         >>> f = FST('''

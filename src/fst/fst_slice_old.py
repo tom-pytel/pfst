@@ -563,7 +563,7 @@ def _put_slice_stmtish(self: 'FST', code: Code | None, start: int | Literal['end
         flast  = body[stop - 1].f
 
         block_loc = fstloc(*(fpre.bloc[2:] if fpre else ffirst._prev_bound_step()),
-                            *(fpost.bloc[:2] if fpost else flast._next_bound_step()))
+                           *(fpost.bloc[:2] if fpost else flast._next_bound_step()))
 
         is_last_child = not fpost and not flast.next()
 
@@ -708,7 +708,7 @@ def _put_slice_stmtish(self: 'FST', code: Code | None, start: int | Literal['end
 
     else:
         put_loc = _src_edit.put_slice_stmt(self, put_fst, field, block_loc, opener_indent, block_indent,
-                                            ffirst, flast, fpre, fpost, **options)
+                                           ffirst, flast, fpre, fpost, **options)
 
         put_fst._offset(0, 0, put_loc.ln, 0 if put_fst.bln or put_fst.bcol else lines[put_loc.ln].c2b(put_loc.col))
         self._put_src(put_fst.lines, *put_loc, False)

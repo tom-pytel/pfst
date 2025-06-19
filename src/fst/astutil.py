@@ -559,8 +559,12 @@ def walk2(ast1: AST, ast2: AST, cb_primitive: Callable[[Any, Any, str, int], boo
 
         yield a1, a2
 
-        fields1 = list(iter_fields(a1))
-        fields2 = list(iter_fields(a2))
+        if ctx or not (hasattr(a1, 'ctx') or hasattr(a2, 'ctx')):
+            fields1 = list(iter_fields(a1))
+            fields2 = list(iter_fields(a2))
+        else:
+            fields1 = list((n, c) for n, c in iter_fields(a1) if n != 'ctx')
+            fields2 = list((n, c) for n, c in iter_fields(a2) if n != 'ctx')
 
         if len(fields1) != len(fields2):
             raise WalkFail(f"number of fields differ in {a1.__class__.__qualname__}")
@@ -571,8 +575,8 @@ def walk2(ast1: AST, ast2: AST, cb_primitive: Callable[[Any, Any, str, int], boo
 
             if (is_ast := isinstance(child1, AST)) or isinstance(child1, list) or isinstance(child2, (AST, list)):
                 if child1.__class__ is not child2.__class__:
-                    if not ctx and is_ast and isinstance(child1, expr_context) and isinstance(child2, expr_context):
-                        continue
+                    # if not ctx and is_ast and isinstance(child1, expr_context) and isinstance(child2, expr_context):
+                    #     continue
 
                     locs = (f"{(getattr(child1, 'lineno', '?'), getattr(child1, 'col_offset', '?'), getattr(child1, 'end_lineno', '?'), getattr(child1, 'end_col_offset', '?'))} / "
                             f"{(getattr(child2, 'lineno', '?'), getattr(child2, 'col_offset', '?'), getattr(child2, 'end_lineno', '?'), getattr(child2, 'end_col_offset', '?'))}")

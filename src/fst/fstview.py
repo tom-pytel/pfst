@@ -51,12 +51,18 @@ class fstview:
     ```
     """
 
-    fst:   'FST'  ; """`FST` node parent of this list."""
+    fst:   'FST'  ; """`FST` node this view belongs to."""
     field: str    ; """The target field of `AST` node being referenced."""
     start: int    ; """Start position within the target field list of this view."""
     stop:  int    ; """One past the last element within the target field list of this view."""
 
     is_FST = False  ; """@private"""  # for quick checks vs. `FST`
+
+    @property
+    def root(self) -> 'FST':
+        """Root node of the `FST` node this view belongs to."""
+
+        return self.fst.root
 
     def __init__(self, fst: 'FST', field: str, start: int, stop: int):
         """@private"""

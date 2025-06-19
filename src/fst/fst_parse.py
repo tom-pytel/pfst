@@ -258,6 +258,9 @@ def _parse_Expression(src: str, parse_params: dict = {}) -> AST:
 def _parse_Interactive(src: str, parse_params: dict = {}) -> AST:
     """Parse `Interactive`."""
 
+    if not src.endswith('\n'):  # because otherwise error maybe
+        src = src + '\n'
+
     return ast_parse(src, mode='single', **parse_params)
 
 

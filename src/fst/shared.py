@@ -201,9 +201,9 @@ Mode = Union[type[AST], Literal[
     the scope of desired return, for example `Constant` will parse as an expression but fail if the expression
     is not a `Constant`. These overlap with the string specifiers to an extent but not all of them. For example
     `AST` type `ast.expr` is the same as passing `'expr'`. Not all string specified modes are can be matched, for
-    example `'arguments_lambda'`. Likewise `Module`, `'exec'` and `'stmts'` all specify the same parse mode. `Tuple`
-    parse allows parsing `Slice`s in the `Tuple`.
-
+    example `'arguments_lambda'`. Likewise `'exec'` and `'stmts'` specify the same parse mode, but not the same as
+    `Module` since that is used as a general purpose slice container. `Tuple` parse also allows parsing `Slice`s in the
+    `Tuple`.
 """
 
 

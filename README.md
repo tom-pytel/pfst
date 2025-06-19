@@ -61,7 +61,7 @@ call()  # something else
 k = 3  # three
 ```
 
-Reconcile - edit AST tree directly while preserving format:
+Reconcile, edit AST tree directly while preserving formatting:
 
 ```py
 >>> m = a.f.mark()

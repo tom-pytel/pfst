@@ -960,10 +960,10 @@ class PutOnePat(Fuzzy):
             sys.stdout.write('\n')
 
 
-class Reconcile1(Fuzzy):
+class ReconcileOne(Fuzzy):
     """This is mostly testing put and syntax, not so much the reconcile."""
 
-    name    = 'reconcile1'
+    name    = 'reconcile_one'
     forever = True
 
     def fuzz_one(self, fst, fnm) -> bool:
@@ -1076,50 +1076,13 @@ class ReconcileMulti(Fuzzy):
                     if not (count % 10):
                         sys.stdout.write('.'); sys.stdout.flush()
 
-                    fst      = master.copy()
-                    mark     = fst.mark()
-                    parts    = FSTParts(fst, exclude=(expr_context, mod, FormattedValue, Interpolation))
-                    tgt, cat = parts.getrnd()
+                    fst   = master.copy()
+                    mark  = fst.mark()
+                    parts = FSTParts(fst, exclude=(expr_context, mod, FormattedValue, Interpolation))
 
-                    if not tgt:
-                        break
 
-                    if isinstance((tgt_parent := tgt.parent).a,
-                                  (FormattedValue, Interpolation, JoinedStr, TemplateStr)):  # not supported yet
-                        continue
 
-                    repl, _ = parts.getrnd(astcat_allowed_replacements(cat))
 
-                    if not repl:
-                        continue
-
-                    if not can_replace(tgt, repl):
-                        continue
-
-                    if (repltype := choice(('fstin', 'fstout', 'ast'))) == 'ast':
-                        a = copy_ast(repl.a)
-                    elif repltype == 'fstout':
-                        a = repl.copy().a
-
-                    else:  # repltype == 'fstin'
-                        f = tgt
-
-                        while f := f.parent:  # make sure parent is not put into child in this mode
-                            if f is repl:
-                                break
-
-                        if f:
-                            continue
-
-                        a = repl.a
-
-                    if self.debug:
-                        tgt_path    = tgt.root.child_path(tgt, True)
-                        repl_path   = repl.root.child_path(repl, True)
-                        tgt_parent  = tgt.parent.copy()
-                        repl_parent = repl.parent.copy()
-
-                    tgt.pfield.set(tgt.parent.a, a)
 
                     fst = fst.reconcile(mark)
 
@@ -1131,7 +1094,6 @@ class ReconcileMulti(Fuzzy):
 
                         if self.verbose:
                             print(fst.src)
-
 
                         raise
 
