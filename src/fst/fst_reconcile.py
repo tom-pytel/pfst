@@ -379,7 +379,7 @@ def reconcile(self: 'FST', mark: 'FST') -> 'FST':
         raise ValueError('can only reconcile root nodes')
 
     if self._serial != mark._serial:
-        raise RuntimeError('modification detected after mark(), not reconcilable')
+        raise RuntimeError('modification detected after mark(), irreconcilable')
 
     rec = _Reconcile(self, mark)
 

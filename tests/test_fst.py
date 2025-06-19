@@ -9813,7 +9813,6 @@ c, # c
 """''', raw=False)
             f.verify()
 
-
     def test_put_one_pars(self):
         f = FST('a = b', 'exec').body[0]
         g = FST('(i := j)', 'exec').body[0].value.copy(pars=False)
@@ -11496,6 +11495,141 @@ match a:
         o.a = Dict(keys=o.a.keys, values=o.a.values)
         f = o.reconcile(m)
         self.assertEqual('{a : b, c : d, x: y, a : b, c : d, s : t, u : v}', f.src)
+        f.verify()
+
+        # operators
+
+        o = FST('a or b or c')
+        m = o.mark()
+        o.a.op = And()
+        f = o.reconcile(m)
+        self.assertEqual('a and b and c', f.src)
+        f.verify()
+
+        o = FST('a or b or c')
+        m = o.mark()
+        o.a.op = FST(And()).a
+        f = o.reconcile(m)
+        self.assertEqual('a and b and c', f.src)
+        f.verify()
+
+        o = FST('a or b or c\nd and e')
+        m = o.mark()
+        o.a.body[0].value.op = o.a.body[1].value.op
+        f = o.reconcile(m)
+        self.assertEqual('a and b and c\nd and e', f.src)
+        f.verify()
+
+        o = FST('a + b')
+        m = o.mark()
+        o.a.op = Mult()
+        f = o.reconcile(m)
+        self.assertEqual('a * b', f.src)
+        f.verify()
+
+        o = FST('a + b')
+        m = o.mark()
+        o.a.op = FST(Mult()).a
+        f = o.reconcile(m)
+        self.assertEqual('a * b', f.src)
+        f.verify()
+
+        o = FST('a + b')
+        m = o.mark()
+        o.a.op = FST('*=').a
+        f = o.reconcile(m)
+        self.assertEqual('a * b', f.src)
+        f.verify()
+
+        o = FST('a + b\nc * d')
+        m = o.mark()
+        o.a.body[0].value.op = o.a.body[1].value.op
+        f = o.reconcile(m)
+        self.assertEqual('a * b\nc * d', f.src)
+        f.verify()
+
+        o = FST('a + b\nc *= d')
+        m = o.mark()
+        o.a.body[0].value.op = o.a.body[1].op
+        f = o.reconcile(m)
+        self.assertEqual('a * b\nc *= d', f.src)
+        f.verify()
+
+        o = FST('a += b')
+        m = o.mark()
+        o.a.op = Mult()
+        f = o.reconcile(m)
+        self.assertEqual('a *= b', f.src)
+        f.verify()
+
+        o = FST('a += b')
+        m = o.mark()
+        o.a.op = FST(Mult()).a
+        f = o.reconcile(m)
+        self.assertEqual('a *= b', f.src)
+        f.verify()
+
+        o = FST('a += b')
+        m = o.mark()
+        o.a.op = FST('*=').a
+        f = o.reconcile(m)
+        self.assertEqual('a *= b', f.src)
+        f.verify()
+
+        o = FST('a += b\nc *= d')
+        m = o.mark()
+        o.a.body[0].op = o.a.body[1].op
+        f = o.reconcile(m)
+        self.assertEqual('a *= b\nc *= d', f.src)
+        f.verify()
+
+        o = FST('a += b\nc * d')
+        m = o.mark()
+        o.a.body[0].op = o.a.body[1].value.op
+        f = o.reconcile(m)
+        self.assertEqual('a *= b\nc * d', f.src)
+        f.verify()
+
+        o = FST('-a')
+        m = o.mark()
+        o.a.op = Not()
+        f = o.reconcile(m)
+        self.assertEqual('not a', f.src)
+        f.verify()
+
+        o = FST('-a')
+        m = o.mark()
+        o.a.op = FST(Not()).a
+        f = o.reconcile(m)
+        self.assertEqual('not a', f.src)
+        f.verify()
+
+        o = FST('-a\nnot b')
+        m = o.mark()
+        o.a.body[0].value.op = o.a.body[1].value.op
+        f = o.reconcile(m)
+        self.assertEqual('not a\nnot b', f.src)
+        f.verify()
+
+        o = FST('a<b')
+        m = o.mark()
+        o.a.ops[0] = IsNot()
+        f = o.reconcile(m)
+        self.assertEqual('a is not b', f.src)
+        f.verify()
+
+        o = FST('a<b')
+        m = o.mark()
+        o.a.ops[0] = FST(IsNot()).a
+        f = o.reconcile(m)
+        self.assertEqual('a is not b', f.src)
+        f.verify()
+
+        o = FST('a<b\nc is not d')
+        m = o.mark()
+        o.a.body[0].value.ops[0] = o.a.body[1].value.ops[0]
+        f = o.reconcile(m)
+        self.assertEqual('a is not b\nc is not d', f.src)
         f.verify()
 
         # misc

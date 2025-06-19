@@ -967,8 +967,107 @@ class Reconcile1(Fuzzy):
 
                     fst   = master.copy()
                     mark  = fst.mark()
-                    parts = FSTParts(fst, exclude= (expr_context, mod, FormattedValue, Interpolation, alias, boolop,
-                                                    operator, unaryop))
+                    parts = FSTParts(fst, exclude=(expr_context, mod, FormattedValue, Interpolation, alias, boolop,
+                                                   operator, unaryop))
+                    tgt, cat = parts.getrnd()
+
+                    if not tgt:
+                        break
+
+                    if isinstance((tgt_parent := tgt.parent).a,
+                                  (FormattedValue, Interpolation, JoinedStr, TemplateStr)):  # not supported yet
+                        continue
+
+                    repl, _ = parts.getrnd(astcat_allowed_replacements(cat))
+
+                    if not repl:
+                        continue
+
+                    if not can_replace(tgt, repl):
+                        continue
+
+                    if (repltype := choice(('fstin', 'fstout', 'ast'))) == 'ast':
+                        a = copy_ast(repl.a)
+                    elif repltype == 'fstout':
+                        a = repl.copy().a
+
+                    else:  # repltype == 'fstin'
+                        f = tgt
+
+                        while f := f.parent:  # make sure parent is not put into child in this mode
+                            if f is repl:
+                                break
+
+                        if f:
+                            continue
+
+                        a = repl.a
+
+                    if self.debug:
+                        tgt_path    = tgt.root.child_path(tgt, True)
+                        repl_path   = repl.root.child_path(repl, True)
+                        tgt_parent  = tgt.parent.copy()
+                        repl_parent = repl.parent.copy()
+
+                    tgt.pfield.set(tgt.parent.a, a)
+
+                    fst = fst.reconcile(mark)
+
+                    fst.verify()
+
+                except Exception as exc:
+                    if not ignorable_exc(exc):
+                        print()
+
+                        if self.verbose:
+                            print(fst.src)
+
+                        print(f'{repltype = }')
+                        print(f'{tgt.src = }')
+                        print(f'{repl.src = }')
+                        print(f'{type(tgt.a) = }')
+                        print(f'{type(repl.a) = }')
+
+                        if self.debug:
+                            print(f'{tgt_path = }')
+                            print(f'{repl_path = }')
+                            print(f'{type(tgt_parent.a) = }')
+                            print(f'{type(repl_parent.a) = }')
+                            print(f'{tgt_parent.src = }')
+                            print(f'{repl_parent.src = }')
+
+                        raise
+
+                    fst = master.copy()  # because not sure about state
+
+        finally:
+            print()
+
+        if self.verbose:
+            print(fst.src)
+
+
+class ReconcileMulti(Fuzzy):
+    """This changes as many things as possible, so really testing reconcile."""
+
+    name    = 'reconcile_multi'
+    forever = True
+
+    def fuzz_one(self, fst, fnm) -> bool:
+        master = fst.copy()
+
+        try:
+            for count in range(self.batch or 200):
+                repltype = None
+
+                try:
+                    if not (count % 10):
+                        sys.stdout.write('.'); sys.stdout.flush()
+
+                    fst   = master.copy()
+                    mark  = fst.mark()
+                    parts = FSTParts(fst, exclude=(expr_context, mod, FormattedValue, Interpolation, alias, boolop,
+                                                   operator, unaryop))
                     tgt, cat = parts.getrnd()
 
                     if not tgt:
@@ -1063,9 +1162,9 @@ def main():
     parser.add_argument('-f', '--fuzz', action='append', default=[],
                         help='which fuzzies to run')
     parser.add_argument('-b', '--batch', type=int, default=None,
-                        help='batch size')
+                        help='batch size override')
     parser.add_argument('-g', '--debug', default=False, action='store_true',
-                        help='print debug info')
+                        help='debug mode, print info, do more debug stuff')
     parser.add_argument('-l', '--loop', type=int, default=None,
                         help='number of times to loop, default forever')
     parser.add_argument('-s', '--seed', type=int, default=None,
@@ -1073,9 +1172,9 @@ def main():
     parser.add_argument('-u', '--shuffle', default=False, action='store_true',
                         help='shuffle files on each loop')
     parser.add_argument('-v', '--verbose', default=False, action='store_true',
-                        help='verbose output')
+                        help='verbose output, where applicable')
     parser.add_argument('-y', '--verify', default=False, action='store_true',
-                        help='verify after everything (slower)')
+                        help='do more verifies, usually after everything (slower)')
 
     args = parser.parse_args()
     fuzz = dict.fromkeys(sum((f.replace(',', ' ').split() for f in args.fuzz), start=[]) if args.fuzz else FUZZIES)
