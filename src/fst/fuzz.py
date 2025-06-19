@@ -10,7 +10,7 @@ from itertools import repeat
 from math import log10
 from random import choice, randint, seed, shuffle
 from types import NoneType
-from typing import Any, Generator, Literal
+from typing import Any, Generator, Iterable, Literal
 
 from .astutil import *
 from .astutil import TypeAlias, TemplateStr, Interpolation
@@ -96,42 +96,41 @@ def astbase(cls: type[AST]) -> type[AST]:  # ast base class just above AST
     return cls
 
 
-def astcat(fst: FST) -> type[AST]:  # ast category (replacement compatibility)
+ASTCat = type[AST]  # mod, stmt, expr, Slice, slice, expr_context, boolop, operator, unaryop, cmpop, comprehension, excepthandler, ExceptHandler, arguments, arg, keyword, alias, withitem, match_case, pattern
+
+def astcat(fst: FST) -> ASTCat:  # ast category (replacement compatibility)
     a = fst.a
 
     if isinstance(a, ExceptHandler):
-        return ExceptHandler if isinstance(fst.parent, Try) else excepthandler  # Try vs. TryStar
-    if isinstance(a, (match_case, Starred)):
+        return ExceptHandler if isinstance(fst.parent.a, Try) else excepthandler  # Try vs. TryStar
+    if isinstance(a, (Starred, Slice)):
         return a.__class__
     if fst.has_slice():
-        return slice
+        return slice  # Tuple containing Slice
 
     return astbase(a.__class__)
 
 
-def valid_replace(fst: FST, with_: FST | None) -> bool:
-    stmt_ = fst.parent_stmt()
-    path  = stmt_.child_path(fst)
-    stmt_ = stmt_.copy()
+ASTCAT_ALLOWED_REPLACEMENTS = {  # general, not specific cases
+    Starred: (Starred, expr),
+    Slice:   (Slice, expr),
+    slice:   (slice, Slice, expr),
+}
 
-    try:
-        stmt_.child_from_path(path).replace(with_.copy() if with_ else with_, raw=False).root.verify()
-    except Exception:
-        return False
-
-    return True
+def astcat_allowed_replacements(cat: ASTCat) -> ASTCat | tuple[ASTCat]:
+    return ASTCAT_ALLOWED_REPLACEMENTS.get(cat, cat)
 
 
 class FSTParts:
     """Build and manipulate index into individual FST node interchangeable type groups."""
 
-    cats: dict   # {FST: type[AST], ...}
-    parts: dict  # {type[AST]: [FST, ...], ...}
+    cats: dict   # {FST: ASTCat, ...}
+    parts: dict  # {ASTCat: [FST, ...], ...}
 
     def __init__(self, fst: FST, exclude: type[AST] | tuple[type[AST]] =
                  (expr_context, mod, FormattedValue, Interpolation, alias, boolop, operator, unaryop)):
-        cats  = {}                 # {FST: type[AST], ...}
-        parts = defaultdict(list)  # {type[AST]: [FST, ...], ...}
+        cats  = {}                 # {FST: ASTCat, ...}
+        parts = defaultdict(list)  # {ASTCat: [FST, ...], ...}
 
         for a in walk(fst.a):
             if isinstance(a, exclude):
@@ -170,11 +169,11 @@ class FSTParts:
 
                 parts[cat].append(f)
 
-    def getrnd(self, cat: type[AST] | list[type[AST]] | None = None) -> tuple[FST | None, type[AST] | None]:
+    def getrnd(self, cat: ASTCat | Iterable[ASTCat] | None = None) -> tuple[FST | None, ASTCat | None]:
         if cat is None:
             cat = [c for c, fs in self.parts.items() if fs]
         else:
-            cat = [cat] if isinstance(cat, type) else cat[:]
+            cat = [cat] if isinstance(cat, type) else list(cat)
 
         while cat:
             if p := self.parts.get(c := cat[i := randint(0, len(cat) - 1)]):
@@ -183,6 +182,83 @@ class FSTParts:
             del cat[i]
 
         return None, None
+
+
+# def test_replace(fst: FST, with_: FST | None) -> bool:
+#     stmt_ = fst.parent_stmt()
+#     path  = stmt_.child_path(fst)
+#     stmt_ = stmt_.copy()
+
+#     try:
+#         stmt_.child_from_path(path).replace(with_.copy() if with_ else with_, raw=False).root.verify()
+#     except Exception:
+#         return False
+
+#     return True
+
+
+# def can_replace(tgt: FST, repl: FST) -> bool:
+#     if not test_replace(tgt, repl):
+#         # print(f'Not valid: {tgt.src} <- {repl.src}')
+
+#         return False
+
+#     # print(f'Valid: {tgt.src} <- {repl.src}')
+
+#     return True
+
+
+def can_replace(tgt: FST, repl: FST) -> bool:  # assuming ASTCat has already been checked and only testing allowed category
+    tgta , tgt_parenta  = tgt.a,  tgt.parent.a
+    repla, repl_parenta = repl.a, repl.parent.a
+
+    if _PYLT12:
+        if any(isinstance(f.a, (JoinedStr, TemplateStr)) for f in tgt.parents()):
+            return False
+
+    if isinstance(tgta, Slice) and not isinstance(repla, Slice):
+        return False
+
+    if (isinstance(tgta, arguments) and isinstance(tgt_parenta, Lambda) and
+        not isinstance(repl_parenta, Lambda)
+    ):
+        return False
+
+    if (isinstance(tgta, arg) and isinstance(tgt_parenta, arguments) and
+        isinstance(tgt.parent.parent.a, Lambda) and repla.annotation
+    ):
+        return False
+
+    if not isinstance(ctx := getattr(tgta, 'ctx', Load()), Load):
+        if isinstance(ctx, Del) or not getattr(repla, 'ctx', None):
+            return False
+
+        allowed = None
+        f       = tgt
+
+        while f := f.parent:
+            if isinstance(a := f.a, (Delete, Assign, For, AsyncFor, comprehension)):
+                allowed = (Name, Attribute, Subscript)#, Tuple, List)
+
+                break
+
+            if isinstance(a, (AugAssign, AnnAssign)):
+                allowed = (Name, Attribute, Subscript)
+
+                break
+
+            if isinstance(a, (TypeAlias, NamedExpr)):
+                allowed = Name
+
+                break
+
+            if not isinstance(a, expr):  # EXPRISH?
+                break
+
+        if not allowed or not isinstance(repla, allowed):
+            return False
+
+    return True
 
 
 class Fuzzy:
@@ -902,68 +978,13 @@ class Reconcile1(Fuzzy):
                                   (FormattedValue, Interpolation, JoinedStr, TemplateStr)):  # not supported yet
                         continue
 
-                    repl, _ = parts.getrnd(cat)
+                    repl, _ = parts.getrnd(astcat_allowed_replacements(cat))
 
                     if not repl:
                         continue
 
-
-                    tgta , tgt_parenta  = tgt.a,  tgt.parent.a
-                    repla, repl_parenta = repl.a, repl.parent.a
-
-                    if _PYLT12:
-                        if any(isinstance(f.a, (JoinedStr, TemplateStr)) for f in tgt.parents()):
-                            continue
-
-                    if isinstance(tgta, Slice) and not isinstance(repla, Slice):
+                    if not can_replace(tgt, repl):
                         continue
-
-                    if (isinstance(tgta, arguments) and isinstance(tgt_parenta, Lambda) and
-                        not isinstance(repl_parenta, Lambda)
-                    ):
-                        continue
-
-                    if (isinstance(tgta, arg) and isinstance(tgt_parenta, arguments) and
-                        isinstance(tgt.parent.parent.a, Lambda) and repla.annotation
-                    ):
-                        continue
-
-                    if not isinstance(ctx := getattr(tgta, 'ctx', Load()), Load):  # don't replace targets because lots of incompatibilities
-                        if isinstance(ctx, Del) or not getattr(repla, 'ctx', None):
-                            continue
-
-                        allowed = None
-                        f       = tgt
-
-                        while f := f.parent:
-                            if isinstance(a := f.a, (Delete, Assign, For, AsyncFor, comprehension)):
-                                allowed = (Name, Attribute, Subscript)#, Tuple, List)
-
-                                break
-
-                            if isinstance(a, (AugAssign, AnnAssign)):
-                                allowed = (Name, Attribute, Subscript)
-
-                                break
-
-                            if isinstance(a, (TypeAlias, NamedExpr)):
-                                allowed = Name
-
-                                break
-
-                            if not isinstance(a, expr):  # EXPRISH?
-                                break
-
-                        if not allowed or not isinstance(repla, allowed):
-                            continue
-
-                    # if not valid_replace(tgt, repl):
-                    #     if self.verbose:
-                    #         print(f'Not valid: {tgt.src} <- {repl.src}')
-                    #     continue
-                    # if self.verbose:
-                    #     print(f'Valid: {tgt.src} <- {repl.src}')
-
 
                     if (repltype := choice(('fstin', 'fstout', 'ast'))) == 'ast':
                         a = copy_ast(repl.a)
