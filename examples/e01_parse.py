@@ -9,6 +9,7 @@ Drop-in `ast.parse()` replacement gives normal `AST`.
 
 ```py
 >>> a = fst.parse('if 1: i = 2  # comment')
+
 >>> print(fst.dump(a, indent=2))
 Module(
   body=[
@@ -38,7 +39,7 @@ Module - ROOT 0,0..0,22
       .value Constant 2 - 0,10..0,11
 ```
 
-Every `AST` node in the tree has one.
+Every `AST` node in the tree gets an `.f` pointing to its own `FST` node.
 
 ```py
 >>> a.body[0].body[0].f.dump()
@@ -46,6 +47,13 @@ Assign - 0,6..0,11
   .targets[1]
   0] Name 'i' Store - 0,6..0,7
   .value Constant 2 - 0,10..0,11
+```
+
+Correspondingly, every `FST` node has an `.a` attribute which points to the `AST` node.
+
+```py
+>>> a.f.a is a
+True
 ```
 
 Drop-in `ast.unparse()` replacement outputs with formatting.
@@ -158,8 +166,7 @@ Have you ever dreamed of being able to parse the `+` operator? Well now you can!
 There are some special modes, like `'callarg'`, which allow parsing some things
 which are not normally parsable in their normal context. The below is not
 normally parsable in an expression context as it is special syntax for `Call`
-vararg arguments. For a full list of parse modes see the documentation for
-`fst.shared.Mode`.
+vararg arguments. For a full list of parse modes see `fst.shared.Mode`.
 
 ```py
 >>> FST('*a or b', 'callarg').dump()
@@ -224,10 +231,10 @@ Slice - ROOT 0,0..0,5
   .step Name 'c' Load - 0,4..0,5
 ```
 
-Finally, a note on the `.src` attribute. This gives the full valid source only if accessed at the root node. If accessed
-at any node below, it will return the UNINDENTED source for the location of the node, except for the first line which
-will be completely unindented. If you want full correctly unindented source for nodes which are not root, you should
-`copy()` that node and get the source of that. E.g.
+A note on the `.src` attribute, it gives the full valid source only if accessed at the root node. If accessed at any
+node below, it will return the UNINDENTED source for the location of the node, except for the first line which will be
+completely unindented. If you want full correctly unindented source for nodes which are not root, you should `copy()`
+that node and get the source of that. E.g.
 
 ```py
 >>> f = FST('''
@@ -235,17 +242,46 @@ will be completely unindented. If you want full correctly unindented source for 
 ...     if a:
 ...         print(a)
 ... '''.strip())
+
 >>> print(f.body[0])
 <If 1,4..2,16>
+
 >>> print(f.src)
 def f(a):
     if a:
         print(a)
+
 >>> print(f.body[0].src)
 if a:
         print(a)
+
 >>> print(f.body[0].copy().src)
 if a:
     print(a)
 ```
+
+The `FST.dump()` method can be useful in visualizing the source along with the actual nodes it corresponds to.
+
+```py
+>>> f.dump('stmt')
+0: def f(a):
+FunctionDef - ROOT 0,0..2,16
+  .name 'f'
+  .args arguments - 0,6..0,7
+    .args[1]
+    0] arg - 0,6..0,7
+      .arg 'a'
+  .body[1]
+1:     if a:
+  0] If - 1,4..2,16
+    .test Name 'a' Load - 1,7..1,8
+    .body[1]
+2:         print(a)
+    0] Expr - 2,8..2,16
+      .value Call - 2,8..2,16
+        .func Name 'print' Load - 2,8..2,13
+        .args[1]
+        0] Name 'a' Load - 2,14..2,15
+```
+
 """

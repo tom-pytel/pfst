@@ -165,8 +165,8 @@ def unparse(ast_obj) -> str:
 
 def dump(node, annotate_fields=True, include_attributes=False, *, indent=None, show_empty=True):
     """This function is a convenience function and only exists to make python version 3.13 and above `ast.dump()` output
-    compatible on a default call with previous python versions (importand for doctests). All arguments correspond to
-    their respective `ast.dump()` arguments and `show_empty` is provided to be eaten on python versions below 3.13."""
+    compatible on a default call with previous python versions (important for doctests). All arguments correspond to
+    their respective `ast.dump()` arguments and `show_empty` is eaten on python versions below 3.13."""
 
     if _PYLT13:
         return ast_dump(node, annotate_fields, include_attributes, indent=indent)
@@ -319,7 +319,7 @@ class FST:
     def whole_loc(self) -> fstloc:
         """Whole source location, from 0,0 to end of source. Works from any node (not just root)."""
 
-        return fstloc(0, 0, len(ls := self._lines) - 1, len(ls[-1]))
+        return fstloc(0, 0, len(ls := self.root._lines) - 1, len(ls[-1]))
 
     @property
     def loc(self) -> fstloc | None:
@@ -368,8 +368,9 @@ class FST:
 
     @property
     def bloc(self) -> fstloc | None:
-        """Entire location of node, including any preceding decorators. Not all nodes have locations but any node which
-        has a `.loc` will have a `.bloc`."""
+        """Bounding location of node, including any preceding decorators. Not all nodes have locations but any node
+        which has a `loc` will have a `bloc`. Will be same as `loc` for all nodes except those that have decorators, in
+        which case it will start at the first decorator."""
 
         try:
             return self._cache['bloc']
@@ -409,7 +410,8 @@ class FST:
 
     @property
     def bln(self) -> int:  # bounding location including @decorators
-        """Line number of the first line of this node or the first decorator if present (0 based)."""
+        """Line number of the first line of this node or the first decorator if present (0 based). The corresponding
+        `bcol`, `bend_ln` and `bend_col` are just aliases for the normal values."""
 
         return (l := self.bloc) and l[0]
 
@@ -517,8 +519,9 @@ class FST:
         **Parameters:**
         - `ast_or_src`: Source code, an `AST` node or `None`.
         - `mode`: See `fst.shared.Mode`. If this is `None` then if `ast_or_src` is an `AST` the mode defaults to the
-            type of the `AST`. Otherwise if the `ast_or_src` is actual source code then `mode` used is `'all'`. And if
-            `ast_or_src` is `None` then `mode` must be provided and be one of `'exec'`, `'eval'` or `'single'`.
+            type of the `AST`. Otherwise if the `ast_or_src` is actual source code then `mode` used is `'all'` to allow
+            parsing anything. And if `ast_or_src` is `None` then `mode` must be provided and be one of `'exec'`,
+            `'eval'` or `'single'`.
 
         The other forms of this function are meant for internal use and their parameters are below:
 
