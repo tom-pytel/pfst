@@ -227,6 +227,7 @@ def can_replace(tgt: FST, repl: FST) -> bool:  # assuming ASTCat has already bee
     repla, repl_parenta = repl.a, repl.parent.a
     tgta , tgt_parenta  = tgt.a,  tgt.parent.a
     tgt_field, _        = tgt.pfield
+    repl_field, _       = repl.pfield
 
     if _PYLT12:
         if any(isinstance(f.a, (JoinedStr, TemplateStr)) for f in tgt.parents()):
@@ -255,6 +256,9 @@ def can_replace(tgt: FST, repl: FST) -> bool:  # assuming ASTCat has already bee
             return False
 
     if isinstance(tgta, pattern) and isinstance(repla, MatchStar) and not isinstance(tgt_parenta, MatchSequence):
+        return False
+
+    if repl_field == 'vararg' and repla.annotation and tgt_field != 'vararg':  # because could have Starred annotation headed for a non-vararg field
         return False
 
     if isinstance(tgta, Slice) and not isinstance(repla, Slice):
@@ -1103,7 +1107,8 @@ class ReconcileMulti(Fuzzy):
     """This changes as many things as possible, so really testing reconcile."""
 
     name    = 'reconcile_multi'
-    forever = True # False # True  # DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG!
+    forever = True
+    forever = False  # DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG!
 
     LEVEL_CHANCE = [1/4, 1/3, 1/2]
 
@@ -1116,25 +1121,35 @@ class ReconcileMulti(Fuzzy):
         ast          = fst.a
 
         for f in fst.walk(True, self_=False, recurse=False):
-            if isinstance(f.a, exclude):  # (JoinedStr, TemplateStr, FormattedValue, Interpolation)):
+            if isinstance(f.a, exclude):
                 continue
 
-            if random() > level_chance:
-                self.walk_fst(f, next_level)
+            if random() < level_chance:
+                cat          = astcat(f)
+                allowed_cats = astcat_allowed_replacements(cat)
+                repltype     = choice(('fstin', 'fstout', 'ast'))
 
-                continue
+                if repltype == 'fstout':
+                    repl, _ = self.master_parts.getrnd(allowed_cats)
 
-            cat          = astcat(f)
-            allowed_cats = astcat_allowed_replacements(cat)
-            repltype     = choice(('fstin', 'fstout', 'ast'))
+                    if repl and can_replace(f, repl):
+                        f.pfield.set(ast, repl.copy().a)
 
-            if repltype == 'fstout':
-                repl, _ = self.master_parts.getrnd(allowed_cats)
+                        continue
 
-                if repl and can_replace(f, repl):
-                    f.pfield.set(ast, repl.copy().a)
+                elif repltype == 'ast':
+                    repl, _ = self.master_parts.getrnd(allowed_cats)
 
-                continue
+                    if repl and can_replace(f, repl):
+                        f.pfield.set(ast, a := copy_ast(repl.a))
+
+                        # self.walk_ast(a, next_level)
+
+                        continue
+
+
+
+
 
             self.walk_fst(f, next_level)
 
@@ -1175,7 +1190,7 @@ class ReconcileMulti(Fuzzy):
 
                         raise
 
-                # break  # DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG!
+                break  # DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG!
 
         finally:
             print()
