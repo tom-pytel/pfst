@@ -642,6 +642,9 @@ class SrcEdit:
         pep8space = FST.get_option('pep8space', options)
 
         if pep8space:
+            if not 0 <= pep8space <= 1:
+                raise ValueError(f"'pep8space' must be True, False or 1, not {pep8space}")
+
             pep8space = 2 if pep8space is True and (p := fst.parent_scope(True)) and isinstance(p.a, mod) else 1
 
             if fpre and isinstance(ffirst.a, NAMED_SCOPE) and (fpre.pfield.idx or
@@ -721,6 +724,9 @@ class SrcEdit:
         put_body  = put_fst.a.body
         put_col   = put_loc.col
         pep8space = FST.get_option('pep8space', options)
+
+        if not 0 <= pep8space <= 1:
+            raise ValueError(f"'pep8space' must be True, False or 1, not {pep8space}")
 
         if is_pep8 := bool(put_body) and pep8space:  # no pep8 checks if only text being put (no AST body)
             pep8space = 2 if pep8space is True and (p := fst.parent_scope(True)) and isinstance(p.a, mod) else 1

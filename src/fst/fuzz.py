@@ -1008,10 +1008,10 @@ class PutOnePat(Fuzzy):
             sys.stdout.write('\n')
 
 
-class ReconcileOne(Fuzzy):
+class Reconcile1(Fuzzy):
     """This is mostly testing put and syntax, not so much the reconcile."""
 
-    name    = 'reconcile_one'
+    name    = 'reconcile1'
     forever = True
 
     def fuzz_one(self, fst, fnm) -> bool:
@@ -1107,10 +1107,10 @@ class ReconcileOne(Fuzzy):
             print(fst.src)
 
 
-class ReconcileMulti(Fuzzy):
+class Reconcile(Fuzzy):
     """This changes as many things as possible, so really testing reconcile."""
 
-    name    = 'reconcile_multi'
+    name    = 'reconcile'
     forever = True
     # forever = False  # DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG!
 
@@ -1133,27 +1133,32 @@ class ReconcileMulti(Fuzzy):
                 allowed_cats = astcat_allowed_replacements(cat)
                 repltype     = choice(('fstin', 'fstout', 'ast'))
 
-                if repltype == 'fstout':
-                    repl, _ = self.master_parts.getrnd(allowed_cats)
+                # if repltype == 'fstout':
+                #     repl, _ = self.master_parts.getrnd(allowed_cats)
 
-                    if repl and can_replace(f, repl):
-                        f.pfield.set(ast, repl.copy().a)
+                #     if repl and can_replace(f, repl):
+                #         f.pfield.set(ast, repl.copy().a)
 
-                        continue
+                #         continue
 
-                elif repltype == 'ast':
-                    repl, _ = self.master_parts.getrnd(allowed_cats)
+                # elif repltype == 'ast':
+                #     repl, _ = self.master_parts.getrnd(allowed_cats)
 
-                    if repl and can_replace(f, repl):
-                        f.pfield.set(ast, a := copy_ast(repl.a))
+                #     if repl and can_replace(f, repl):
+                #         f.pfield.set(ast, a := copy_ast(repl.a))
 
-                        # self.walk_ast(a, next_level)
+                #         # self.walk_ast(a, next_level)
 
-                        continue
+                #         continue
 
-                elif repltype == 'fstin':
-                    pass
+                # elif repltype == 'fstin':
+                if repltype == 'fstin':
+                    repl, _ = self.parts.getrnd(allowed_cats)
 
+                    if (repl and can_replace(f, repl) and
+                        not f.root.child_path(f, as_str=True).startswith(repl.root.child_path(repl, as_str=True))
+                    ):
+                        f.pfield.set(ast, repl.a)
 
             self.walk_fst(f, next_level)
 
@@ -1181,7 +1186,8 @@ class ReconcileMulti(Fuzzy):
 
                     self.walk_fst(fst)
 
-                    fst = fst.reconcile(mark)
+                    with fst.options(docstr=False):
+                        fst = fst.reconcile(mark)
 
                     fst.verify()
 

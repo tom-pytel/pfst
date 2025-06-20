@@ -1087,10 +1087,55 @@ def _maybe_fix_tuple(self: 'FST', is_parenthesized: bool | None = None):
     if ast.elts:
         self._maybe_add_singleton_tuple_comma(True)
 
-        ln, _, end_ln, _ = self.loc
+        lines                    = self.root._lines
+        ln, col, end_ln, end_col = self.loc
 
-        if not is_parenthesized and end_ln != ln:  # `not self.is_atom` instead of `end_ln != ln``:  <-- TODO: this, also maybe double check for line continuations (aesthetic thing)?
-            self._parenthesize_node()
+        if not is_parenthesized:
+            enclosed = None
+
+            if end_ln != ln and not self.is_enclosed(pars=False) and not (enclosed := self.is_enclosed_in_parents()):  # could have line continuations
+                self._parenthesize_node()
+
+            else:
+                eln, ecol, _, _ = (elts := ast.elts)[0].f.pars()
+
+                if ecol != col or eln != ln:  # to be super safe we enforce that an unparenthesized tuple must start at the first element
+                    self._put_src(None, ln, col, eln, ecol, False)
+
+                    ln, col, end_ln, end_col = self.loc
+
+                _, _, eend_ln, eend_col = elts[-1].f.loc
+
+                if comma := _next_find(lines, eend_ln, eend_col, end_ln, end_col, ','):  # could be closing grouping pars before comma
+                    eend_ln, eend_col  = comma
+                    eend_col          += 1
+
+                if end_col != eend_col or end_ln != eend_ln:  # need to update end position because it had some whitespace after which will not be enclosed by parentheses
+                    # self._put_src(None, eend_ln, eend_col, end_ln, end_col, True)  # be safe, nuke everything after last element since we won't have parentheses or parent to delimit it
+
+                    if not (enclosed or self.is_enclosed_in_parents()):
+                        self._put_src(None, eend_ln, eend_col, end_ln, end_col, True)  # be safe, nuke everything after last element since we won't have parentheses or parent to delimit it
+
+                    else:  # enclosed in parents so we can leave crap at the end
+                        a                  = self.a
+                        cur_end_lineno     = a.end_lineno
+                        cur_end_col_offset = a.end_col_offset
+                        end_lineno         = a.end_lineno     = eend_ln + 1
+                        end_col_offset     = a.end_col_offset = lines[eend_ln].c2b(eend_col)
+
+                        self._touch()
+
+                        while ((self := self.parent) and getattr(a := self.a, 'end_col_offset', -1) == cur_end_col_offset and  # update parents, only as long as they end exactly where we end
+                            a.end_lineno == cur_end_lineno
+                        ):
+                            a.end_lineno     = end_lineno
+                            a.end_col_offset = end_col_offset
+
+                            self._touch()
+
+                        else:
+                            if self:
+                                self._touchall(True)
 
     elif not is_parenthesized:  # if is unparenthesized tuple and empty left then need to add parentheses
         ln, col, end_ln, end_col = self.loc

@@ -691,22 +691,29 @@ def regen_get_slice_stmt():
 def regen_put_slice_seq():
     newlines = []
 
-    for dst, elt, start, stop, src, put_src, put_dump in PUT_SLICE_SEQ_DATA:
-        t = parse(dst)
-        f = eval(f't.{elt}', {'t': t}).f
+    try:
+        for dst, elt, start, stop, src, put_src, put_dump in PUT_SLICE_SEQ_DATA:
+            t = parse(dst)
+            f = eval(f't.{elt}', {'t': t}).f
 
-        f.put_slice(None if src == '**DEL**' else src, start, stop)
+            f.put_slice(None if src == '**DEL**' else src, start, stop)
 
-        tdst  = t.f.src
-        tdump = t.f.dump(out=list)
+            tdst  = t.f.src
+            tdump = t.f.dump(out=list)
 
-        assert not tdst.startswith('\n') or tdst.endswith('\n')
+            assert not tdst.startswith('\n') or tdst.endswith('\n')
 
-        t.f.verify(raise_=True)
+            t.f.verify(raise_=True)
 
-        newlines.extend(f'''(r"""{dst}""", {elt!r}, {start}, {stop}, r"""{src}""", r"""\n{tdst}\n""", r"""'''.split('\n'))
-        newlines.extend(tdump)
-        newlines.append('"""),\n')
+            newlines.extend(f'''(r"""{dst}""", {elt!r}, {start}, {stop}, r"""{src}""", r"""\n{tdst}\n""", r"""'''.split('\n'))
+            newlines.extend(tdump)
+            newlines.append('"""),\n')
+
+    except Exception:
+        print(dst, elt, start, stop, src, put_src)
+        print(t.f.src)
+
+        raise
 
     fnm = os.path.join(os.path.dirname(sys.argv[0]), 'data_other.py')
 
@@ -9865,6 +9872,48 @@ c, # c
             self.assertRaises(NodeError, f.args.args[0].replace, f.args.vararg.copy(), raw=False)
             self.assertRaises(NodeError, f.args.kwonlyargs[0].replace, f.args.vararg.copy(), raw=False)
 
+        # more unparenthesized tuple schenanigans
+
+        f = FST('a[:, b]')
+        f.slice.put_slice('[\n"foo"\n]', 1, 2, 'elts')
+        self.assertEqual('a[:,\n"foo"\n]', f.src)
+
+        f = FST('a = b, c')
+        f.value.put_slice('[\n"foo"\n]', 1, 2, 'elts')
+        self.assertEqual('a = (b,\n"foo"\n)', f.src)
+
+        f = FST('a = b, c')
+        f.value.put_slice('["foo"   ]', 1, 2, 'elts')
+        self.assertEqual('a = b, "foo"', f.src)
+
+        f = FST('for a, b in c: pass')
+        f.target.put_slice('[\nz\n]', 1, 2, 'elts')
+        self.assertEqual('for (a,\nz\n) in c: pass', f.src)
+
+        f = FST('for a, b in c: pass')
+        f.target.put_slice('[z   ]', 1, 2, 'elts')
+        self.assertEqual('for a, z in c: pass', f.src)
+
+        f = FST('a[:, b]')
+        f.slice.put_slice('["foo"\\\n]', 1, 2, 'elts')
+        self.assertEqual('a[:, "foo"\\\n]', f.src)
+
+        f = FST('a = b, c')
+        f.value.put_slice('["foo"\\\n ]', 1, 2, 'elts')  # TODO: without that last space at end of file we get unexpected EOF, way too niche for now
+        self.assertEqual('a = b, "foo"', f.src)
+
+        f = FST('for a, b in c: pass')
+        f.target.put_slice('[z\\\n]', 1, 2, 'elts')
+        self.assertEqual('for a, z in c: pass', f.src)
+
+        f = FST('a,')
+        f.put_slice('[ {z} ]', 0, 1)
+        self.assertEqual('{z},', f.src)
+
+        f = FST('a[:, b]')
+        f.slice.put_slice('[ {z} ]', 0, 1)
+        self.assertEqual('a[{z}, b]', f.src)
+
     def test_put_one_op_pars(self):
         # boolop
 
@@ -10750,17 +10799,17 @@ i ; \\
 
         a = parse('1, \\\n2, \\\n3')
         s = a.body[0].value.f.get_slice(0, 1, cut=True)
-        self.assertEqual(a.f.src, '(2, \\\n3)')
+        self.assertEqual(a.f.src, '2, \\\n3')
         self.assertEqual(s.src, '(1, \\\n)')
 
         a = parse('1, \\\n2, \\\n3')
         s = a.body[0].value.f.get_slice(1, 2, cut=True)
-        self.assertEqual(a.f.src, '(1, \\\n3)')
+        self.assertEqual(a.f.src, '1, \\\n3')
         self.assertEqual(s.src, '(\n2, \\\n)')
 
         a = parse('1, \\\n2, \\\n3')
         s = a.body[0].value.f.get_slice(2, 3, cut=True)
-        self.assertEqual(a.f.src, '(1, \\\n2, \\\n)')
+        self.assertEqual(a.f.src, '1, \\\n2,')
         self.assertEqual(s.src, '(\n3,)')
 
         a = parse('1, \\\n2, \\\n3')
@@ -10770,7 +10819,7 @@ i ; \\
 
         a = parse('1, \\\n2, \\\n3')
         s = a.body[0].value.f.get_slice(1, 3, cut=True)
-        self.assertEqual(a.f.src, '(1, \\\n)')
+        self.assertEqual(a.f.src, '1,')
         self.assertEqual(s.src, '(\n2, \\\n3)')
 
         a = parse('1, \\\n2, \\\n3')
@@ -10780,43 +10829,43 @@ i ; \\
 
         a = parse('1, \\\n2, \\\n3')
         a.body[0].value.f.put_slice('(a, \\\n)', 0, 0)
-        self.assertEqual(a.f.src, '(a, \\\n1, \\\n2, \\\n3)')
+        self.assertEqual(a.f.src, 'a, \\\n1, \\\n2, \\\n3')
 
         a = parse('1, \\\n2, \\\n3')
         a.body[0].value.f.put_slice('(a, \\\n)', 1, 1)
-        self.assertEqual(a.f.src, '(1, \\\na, \\\n2, \\\n3)')
+        self.assertEqual(a.f.src, '1, \\\na, \\\n2, \\\n3')
 
         a = parse('1, \\\n2, \\\n3')
         a.body[0].value.f.put_slice('(a, \\\n)', 2, 2)
-        self.assertEqual(a.f.src, '(1, \\\n2, \\\na, \\\n3)')
+        self.assertEqual(a.f.src, '1, \\\n2, \\\na, \\\n3')
 
         a = parse('1, \\\n2, \\\n3')
         a.body[0].value.f.put_slice('(a, \\\n)', 3, 3)
-        self.assertEqual(a.f.src, '(1, \\\n2, \\\n3, a, \\\n)')
+        self.assertEqual(a.f.src, '1, \\\n2, \\\n3, a,')
 
         a = parse('1, \\\n2, \\\n3')
         a.body[0].value.f.put_slice('(a, \\\n)', 0, 1)
-        self.assertEqual(a.f.src, '(a, \\\n2, \\\n3)')
+        self.assertEqual(a.f.src, 'a, \\\n2, \\\n3')
 
         a = parse('1, \\\n2, \\\n3')
         a.body[0].value.f.put_slice('(a, \\\n)', 1, 2)
-        self.assertEqual(a.f.src, '(1, \\\na, \\\n3)')
+        self.assertEqual(a.f.src, '1, \\\na, \\\n3')
 
         a = parse('1, \\\n2, \\\n3')
         a.body[0].value.f.put_slice('(a, \\\n)', 2, 3)
-        self.assertEqual(a.f.src, '(1, \\\n2, \\\na, \\\n)')
+        self.assertEqual(a.f.src, '1, \\\n2, \\\na,')
 
         a = parse('1, \\\n2, \\\n3')
         a.body[0].value.f.put_slice('(a, \\\n)', 0, 2)
-        self.assertEqual(a.f.src, '(a, \\\n3)')
+        self.assertEqual(a.f.src, 'a, \\\n3')
 
         a = parse('1, \\\n2, \\\n3')
         a.body[0].value.f.put_slice('(a, \\\n)', 1, 3)
-        self.assertEqual(a.f.src, '(1, \\\na, \\\n)')
+        self.assertEqual(a.f.src, '1, \\\na,')
 
         a = parse('1, \\\n2, \\\n3')
         a.body[0].value.f.put_slice('(a, \\\n)', 0, 3)
-        self.assertEqual(a.f.src, '(a, \\\n)')
+        self.assertEqual(a.f.src, 'a,')
 
     def test_unparenthesized_tuple_put_as_one(self):
         f = parse('(1, 2, 3)').body[0].value.f

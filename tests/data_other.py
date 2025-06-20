@@ -7001,23 +7001,23 @@ Module - ROOT 0,0..0,14
 
 (r"""stat_list,""", 'body[0].value', 0, 1, r"""[ {-1: "stdname",
                    2: "cumulative"}[field[0]] ]""", r"""
-( {-1: "stdname",
-                   2: "cumulative"}[field[0]], )
+{-1: "stdname",
+                   2: "cumulative"}[field[0]],
 """, r"""
-Module - ROOT 0,0..1,48
+Module - ROOT 0,0..1,46
   .body[1]
-  0] Expr - 0,0..1,48
-    .value Tuple - 0,0..1,48
+  0] Expr - 0,0..1,46
+    .value Tuple - 0,0..1,46
       .elts[1]
-      0] Subscript - 0,2..1,45
-        .value Dict - 0,2..1,35
+      0] Subscript - 0,0..1,45
+        .value Dict - 0,0..1,35
           .keys[2]
-          0] UnaryOp - 0,3..0,5
-            .op USub - 0,3..0,4
-            .operand Constant 1 - 0,4..0,5
+          0] UnaryOp - 0,1..0,3
+            .op USub - 0,1..0,2
+            .operand Constant 1 - 0,2..0,3
           1] Constant 2 - 1,19..1,20
           .values[2]
-          0] Constant 'stdname' - 0,7..0,16
+          0] Constant 'stdname' - 0,5..0,14
           1] Constant 'cumulative' - 1,22..1,34
         .slice Subscript - 1,36..1,44
           .value Name 'field' Load - 1,36..1,41
