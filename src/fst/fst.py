@@ -894,7 +894,7 @@ class FST:
             - `int`: A maximum number of empty lines.
         - `postspace`: Same as `prespace` except for trailing empty lines.  - WILL CHANGE IN FUTURE VERSIONS!
 
-        **Notes:**
+        **Note:**
         `pars` behavior:
         ```
                                                                   False      True    'auto'

@@ -8677,6 +8677,11 @@ if 1:
             self.assertEqual('()', f.values[0].value.src)
             self.assertEqual('()', f.values[0].str)
 
+        f = FST('a, b = c')
+        f.targets[0].put_slice('{z}', 1, 2)
+        self.assertEqual('a, z = c', f.src)
+        f.verify()
+
     def test_put_slice_empty_set(self):
         self.assertEqual('[]', FST('[1, 2]').put_slice('set()', raw=False, empty_set=True).src)
         self.assertEqual('[]', FST('[1, 2]').put_slice('{*()}', raw=False, empty_set=True).src)

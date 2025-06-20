@@ -387,8 +387,8 @@ def _put_slice_tuple_list_or_set(self: 'FST', code: Code | None, start: int | Li
         put_len = len(put_ast.elts)
         stack   = [FST(elts[i], self, astfield('elts', i)) for i in range(start, start + put_len)]
 
-        if stack and not is_set:
-            set_ctx([f.a for f in stack], Load if is_self_set else ast.ctx.__class__)
+        if stack and not is_self_set:
+            set_ctx([f.a for f in stack], ast.ctx.__class__)
 
         self._make_fst_tree(stack)
 
