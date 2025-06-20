@@ -11,7 +11,7 @@ from .astutil import Interpolation, TemplateStr
 
 from .shared import (
     Self, astfield, fstloc, nspace,
-    EXPRISH, BLOCK, HAS_DOCSTRING,
+    EXPRISH, STMTISH, BLOCK, HAS_DOCSTRING,
     re_empty_line_start, re_line_end_cont_or_comment,
     _next_src, _prev_src, _next_find, _prev_find, _next_pars, _prev_pars,
     _params_offset, _multiline_str_continuation_lns, _multiline_fstr_continuation_lns,
@@ -1619,6 +1619,73 @@ if _PY_VERSION < (3, 12):  # override _get_fmtval_interp_strs if py too low
         return None
 
 
+def _get_indentable_lns(self, skip: int = 0, *, docstr: bool | Literal['strict'] | None = None) -> set[int]:
+    r"""Get set of indentable lines within this node.
+
+    **Parameters:**
+    - `skip`: The number of lines to skip from the start of this node. Useful for skipping the first line for edit
+        operations (since the first line is normally joined to an existing line on add or copied directly from start
+        on cut).
+    - `docstr`: How to treat multiline string docstring lines. `False` means not indentable, `True` means all `Expr`
+        multiline strings are indentable (as they serve no coding purpose). `'strict'` means only multiline strings
+        in expected docstring positions are indentable. `None` means use default.
+
+    **Returns:**
+    - `set[int]`: Set of line numbers (zero based) which are sytactically indentable.
+
+    **Examples:**
+    ```py
+    >>> FST("def f():\n    i = 1\n    j = 2")._get_indentable_lns()
+    {0, 1, 2}
+
+    >>> FST("def f():\n  '''docstr'''\n  i = 1\n  j = 2")._get_indentable_lns()
+    {0, 1, 2, 3}
+
+    >>> FST("def f():\n  '''doc\nstr'''\n  i = 1\n  j = 2")._get_indentable_lns()
+    {0, 1, 2, 3, 4}
+
+    >>> FST("def f():\n  '''doc\nstr'''\n  i = 1\n  j = 2")._get_indentable_lns(skip=2)
+    {2, 3, 4}
+
+    >>> FST("def f():\n  '''doc\nstr'''\n  i = 1\n  j = 2")._get_indentable_lns(docstr=False)
+    {0, 1, 3, 4}
+
+    >>> FST("def f():\n  '''doc\nstr'''\n  s = '''multi\nline\nstring'''\n  i = 1")._get_indentable_lns()
+    {0, 1, 2, 3, 6}
+    ```
+    """
+
+    if docstr is None:
+        docstr = self.get_option('docstr')
+
+    strict = docstr == 'strict'
+    lines  = self.root._lines
+    lns    = set(range(skip, len(lines))) if self.is_root else set(range(self.bln + skip, self.bend_ln + 1))
+
+    while (parent := self.parent) and not isinstance(self.a, STMTISH):
+        self = parent
+
+    for f in (walking := self.walk(False)):  # find multiline strings and exclude their unindentable lines
+        if f.bend_ln == f.bln:  # everything on one line, don't need to recurse
+            walking.send(False)
+
+        elif isinstance(a := f.a, Constant):
+            if (  # isinstance(f.a.value, (str, bytes)) is a given if bend_ln != bln
+                not docstr or
+                not ((parent := f.parent) and isinstance(parent.a, Expr) and
+                        (not strict or ((pparent := parent.parent) and parent.pfield == ('body', 0) and
+                                        isinstance(pparent.a, HAS_DOCSTRING)
+            )))):
+                lns.difference_update(_multiline_str_continuation_lns(lines, *f.loc))
+
+        elif isinstance(a, (JoinedStr, TemplateStr)):
+            lns.difference_update(_multiline_fstr_continuation_lns(lines, *f.loc))
+
+            walking.send(False)  # skip everything inside regardless, because it is evil
+
+    return lns
+
+
 def _modifying(self: 'FST', field: str | Literal[False] = False, raw: bool = False) -> _Modifying:
     """Call before modifying `FST` node (even just source) to mark possible data for updates after modification. This
     function just collects information so is safe to call without ever calling `.done()` method of the return value in
@@ -1913,8 +1980,8 @@ def _indent_lns(self: 'FST', indent: str | None = None, lns: set[int] | None = N
     **Parameters:**
     - `indent`: The indentation string to prefix to each indentable line.
     - `lns`: A `set` of lines to apply identation to. If `None` then will be gotten from
-        `get_indentable_lns(skip=skip)`.
-    - `skip`: If not providing `lns` then this value is passed to `get_indentable_lns()`.
+        `_get_indentable_lns(skip=skip)`.
+    - `skip`: If not providing `lns` then this value is passed to `_get_indentable_lns()`.
     - `docstr`: How to treat multiline string docstring lines. `False` means not indentable, `True` means all `Expr`
         multiline strings are indentable (as they serve no coding purpose). `'strict'` means only multiline strings
         in expected docstring positions are indentable. `None` means use default.
@@ -1930,7 +1997,7 @@ def _indent_lns(self: 'FST', indent: str | None = None, lns: set[int] | None = N
     if docstr is None:
         docstr = self.get_option('docstr')
 
-    if not ((lns := self.get_indentable_lns(skip, docstr=docstr)) if lns is None else lns) or not indent:
+    if not ((lns := self._get_indentable_lns(skip, docstr=docstr)) if lns is None else lns) or not indent:
         return lns
 
     self._offset_lns(lns, len(indent.encode()))
@@ -1956,11 +2023,11 @@ def _dedent_lns(self: 'FST', indent: str | None = None, lns: set[int] | None = N
     **Parameters:**
     - `indent`: The indentation string to remove from the beginning of each indentable line (if possible).
     - `lns`: A `set` of lines to apply dedentation to. If `None` then will be gotten from
-        `get_indentable_lns(skip=skip)`.
+        `_get_indentable_lns(skip=skip)`.
     - `docstr`: How to treat multiline string docstring lines. `False` means not indentable, `True` means all `Expr`
         multiline strings are indentable (as they serve no coding purpose). `'strict'` means only multiline strings
         in expected docstring positions are indentable. `None` means use default.
-    - `skip`: If not providing `lns` then this value is passed to `get_indentable_lns()`.
+    - `skip`: If not providing `lns` then this value is passed to `_get_indentable_lns()`.
 
     **Returns:**
     - `set[int]`: `lns` passed in or otherwise set of line numbers (zero based) which are sytactically indentable.
@@ -1973,7 +2040,7 @@ def _dedent_lns(self: 'FST', indent: str | None = None, lns: set[int] | None = N
     if docstr is None:
         docstr = self.get_option('docstr')
 
-    if not ((lns := self.get_indentable_lns(skip, docstr=docstr)) if lns is None else lns) or not indent:
+    if not ((lns := self._get_indentable_lns(skip, docstr=docstr)) if lns is None else lns) or not indent:
         return lns
 
     lines        = root._lines

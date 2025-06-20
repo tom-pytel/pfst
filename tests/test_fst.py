@@ -3780,12 +3780,12 @@ y")
         self.assertEqual('          ', parse('if 2:\n     if 1:\\\n\\\n\\\n  \\\n\\\n\\\n  \\\n\\\n   \\\n\\\n i').body[0].body[0].body[0].f.get_indent())  # indentation inferred otherwise would be '         '
         self.assertEqual('      ', parse('if 2:\n     if 1:\n\\\n      \\\n  \\\n\\\n\\\n  \\\n\\\n   \\\n\\\n i').body[0].body[0].body[0].f.get_indent())
 
-    def test_get_indentable_lns(self):
+    def test__get_indentable_lns(self):
         src = 'class cls:\n if True:\n  i = """\nj\n"""\n  k = "... \\\n2"\n else:\n  j \\\n=\\\n 2'
         ast = parse(src)
 
-        self.assertEqual({1, 2, 5, 7, 8, 9, 10}, ast.f.get_indentable_lns(1))
-        self.assertEqual({0, 1, 2, 5, 7, 8, 9, 10}, ast.f.get_indentable_lns(0))
+        self.assertEqual({1, 2, 5, 7, 8, 9, 10}, ast.f._get_indentable_lns(1))
+        self.assertEqual({0, 1, 2, 5, 7, 8, 9, 10}, ast.f._get_indentable_lns(0))
 
         f = FST.fromsrc('''
 def _splitext(p, sep, altsep, extsep):
@@ -3797,8 +3797,8 @@ def _splitext(p, sep, altsep, extsep):
 
     sepIndex = p.rfind(sep)
             '''.strip())
-        self.assertEqual({0, 1, 2, 3, 4, 5, 6, 7}, f.get_indentable_lns(docstr=True))
-        self.assertEqual({0, 1, 5, 6, 7}, f.get_indentable_lns(docstr=False))
+        self.assertEqual({0, 1, 2, 3, 4, 5, 6, 7}, f._get_indentable_lns(docstr=True))
+        self.assertEqual({0, 1, 5, 6, 7}, f._get_indentable_lns(docstr=False))
 
         f = FST.fromsrc(r'''
 _CookiePattern = re.compile(r"""
@@ -3820,22 +3820,22 @@ _CookiePattern = re.compile(r"""
     (\s+|;|$)                      # Ending either at space, semicolon, or EOS.
     """, re.ASCII | re.VERBOSE)    # re.ASCII may be removed if safe.
             '''.strip())
-        self.assertEqual({0}, f.get_indentable_lns(docstr=True))
-        self.assertEqual({0}, f.get_indentable_lns(docstr=False))
+        self.assertEqual({0}, f._get_indentable_lns(docstr=True))
+        self.assertEqual({0}, f._get_indentable_lns(docstr=False))
 
         f = FST.fromsrc('''
 "distutils.command.sdist.check_metadata is deprecated, \\
         use the check command instead"
             '''.strip())
-        self.assertEqual({0, 1}, f.get_indentable_lns(docstr=True))
-        self.assertEqual({0}, f.get_indentable_lns(docstr=False))
+        self.assertEqual({0, 1}, f._get_indentable_lns(docstr=True))
+        self.assertEqual({0}, f._get_indentable_lns(docstr=False))
 
         f = FST.fromsrc('''
 f"distutils.command.sdist.check_metadata is deprecated, \\
         use the check command instead"
             '''.strip())
-        self.assertEqual({0}, f.get_indentable_lns(docstr=True))  # because f-strings cannot be docstrings
-        self.assertEqual({0}, f.get_indentable_lns(docstr=False))
+        self.assertEqual({0}, f._get_indentable_lns(docstr=True))  # because f-strings cannot be docstrings
+        self.assertEqual({0}, f._get_indentable_lns(docstr=False))
 
     def test__touchall(self):
         a = parse('i = [1]').body[0]
@@ -4051,7 +4051,7 @@ f"distutils.command.sdist.check_metadata is deprecated, \\
         src = 'class cls:\n if True:\n  i = """\nj\n"""\n  k = 3\n else:\n  j = 2'
 
         ast = parse(src)
-        lns = ast.f.get_indentable_lns(1)
+        lns = ast.f._get_indentable_lns(1)
         ast.f._offset_lns(lns, 1)
         self.assertEqual({1, 2, 5, 6, 7}, lns)
         self.assertEqual((0, 0, 7, 7), ast.f.loc)
@@ -4069,7 +4069,7 @@ f"distutils.command.sdist.check_metadata is deprecated, \\
         self.assertEqual((7, 7, 7, 8), ast.body[0].body[0].orelse[0].value.f.loc)
 
         ast = parse(src)
-        lns = ast.body[0].body[0].f.get_indentable_lns(1)
+        lns = ast.body[0].body[0].f._get_indentable_lns(1)
         ast.body[0].body[0].f._offset_lns(lns, 1)
         self.assertEqual({2, 5, 6, 7}, lns)
         self.assertEqual((1, 1, 7, 8), ast.body[0].body[0].f.loc)
@@ -4085,7 +4085,7 @@ f"distutils.command.sdist.check_metadata is deprecated, \\
         self.assertEqual((7, 7, 7, 8), ast.body[0].body[0].orelse[0].value.f.loc)
 
         ast = parse(src)
-        lns = ast.body[0].body[0].body[0].f.get_indentable_lns(1)
+        lns = ast.body[0].body[0].body[0].f._get_indentable_lns(1)
         ast.body[0].body[0].body[0].f._offset_lns(lns, 1)
         self.assertEqual(set(), lns)
         self.assertEqual((2, 2, 4, 3), ast.body[0].body[0].body[0].f.loc)

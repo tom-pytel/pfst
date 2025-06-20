@@ -16,7 +16,7 @@ from .astutil import TypeAlias, TryStar, TemplateStr, Interpolation, type_param
 from .shared import (
     NodeError, astfield, fstloc, fstlocns, nspace,
     EXPRISH_ALL, STMTISH, STMTISH_OR_MOD, BLOCK, BLOCK_OR_MOD, SCOPE, SCOPE_OR_MOD, NAMED_SCOPE,
-    NAMED_SCOPE_OR_MOD, ANONYMOUS_SCOPE, HAS_DOCSTRING,
+    NAMED_SCOPE_OR_MOD, ANONYMOUS_SCOPE,
     re_empty_line, re_line_continuation, re_line_end_cont_or_comment,
     Self, Code, Mode,
     _next_pars, _prev_pars,
@@ -2652,72 +2652,6 @@ class FST:
 
         return indent
 
-    def get_indentable_lns(self, skip: int = 0, *, docstr: bool | Literal['strict'] | None = None) -> set[int]:
-        r"""Get set of indentable lines within this node.
-
-        **Parameters:**
-        - `skip`: The number of lines to skip from the start of this node. Useful for skipping the first line for edit
-            operations (since the first line is normally joined to an existing line on add or copied directly from start
-            on cut).
-        - `docstr`: How to treat multiline string docstring lines. `False` means not indentable, `True` means all `Expr`
-            multiline strings are indentable (as they serve no coding purpose). `'strict'` means only multiline strings
-            in expected docstring positions are indentable. `None` means use default.
-
-        **Returns:**
-        - `set[int]`: Set of line numbers (zero based) which are sytactically indentable.
-
-        **Examples:**
-        ```py
-        >>> FST("def f():\n    i = 1\n    j = 2").get_indentable_lns()
-        {0, 1, 2}
-
-        >>> FST("def f():\n  '''docstr'''\n  i = 1\n  j = 2").get_indentable_lns()
-        {0, 1, 2, 3}
-
-        >>> FST("def f():\n  '''doc\nstr'''\n  i = 1\n  j = 2").get_indentable_lns()
-        {0, 1, 2, 3, 4}
-
-        >>> FST("def f():\n  '''doc\nstr'''\n  i = 1\n  j = 2").get_indentable_lns(skip=2)
-        {2, 3, 4}
-
-        >>> FST("def f():\n  '''doc\nstr'''\n  i = 1\n  j = 2").get_indentable_lns(docstr=False)
-        {0, 1, 3, 4}
-
-        >>> FST("def f():\n  '''doc\nstr'''\n  s = '''multi\nline\nstring'''\n  i = 1").get_indentable_lns()
-        {0, 1, 2, 3, 6}
-        ```
-        """
-
-        if docstr is None:
-            docstr = self.get_option('docstr')
-
-        strict = docstr == 'strict'
-        lines  = self.root._lines
-        lns    = set(range(skip, len(lines))) if self.is_root else set(range(self.bln + skip, self.bend_ln + 1))
-
-        while (parent := self.parent) and not isinstance(self.a, STMTISH):
-            self = parent
-
-        for f in (walking := self.walk(False)):  # find multiline strings and exclude their unindentable lines
-            if f.bend_ln == f.bln:  # everything on one line, don't need to recurse
-                walking.send(False)
-
-            elif isinstance(a := f.a, Constant):
-                if (  # isinstance(f.a.value, (str, bytes)) is a given if bend_ln != bln
-                    not docstr or
-                    not ((parent := f.parent) and isinstance(parent.a, Expr) and
-                         (not strict or ((pparent := parent.parent) and parent.pfield == ('body', 0) and
-                                         isinstance(pparent.a, HAS_DOCSTRING)
-                )))):
-                    lns.difference_update(_multiline_str_continuation_lns(lines, *f.loc))
-
-            elif isinstance(a, (JoinedStr, TemplateStr)):
-                lns.difference_update(_multiline_fstr_continuation_lns(lines, *f.loc))
-
-                walking.send(False)  # skip everything inside regardless, because it is evil
-
-        return lns
-
     def is_parsable(self) -> bool:
         r"""Whether the source for this node is parsable by `FST` or not (if properly dedented for top level). This is
         different from `astutil.is_parsable` because that one indicates what is parsable by the python `ast` module,
@@ -3455,6 +3389,7 @@ class FST:
         _reparse_docstrings,
         _make_fst_and_dedent,
         _get_fmtval_interp_strs,
+        _get_indentable_lns,
         _modifying,
         _touchall,
         _put_src,

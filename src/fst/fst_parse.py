@@ -372,7 +372,7 @@ def _parse_match_cases(src: str, parse_params: dict = {}) -> AST:
     lines = [bistr('match x:'), bistr(' case None: pass')] + [bistr(' ' + l) for l in src.split('\n')]
     ast   = _ast_parse1('\n'.join(lines), parse_params)
     fst   = FST(ast, lines, parse_params=parse_params, lcopy=False)
-    lns   = fst.get_indentable_lns(2, docstr=False)
+    lns   = fst._get_indentable_lns(2, docstr=False)
 
     if len(lns) != len(lines) - 2:  # if there are multiline strings then we need to dedent them and reparse, because of f-strings, TODO: optimize out second reparse if no f-strings
         strlns = set(range(2, len(lines)))
