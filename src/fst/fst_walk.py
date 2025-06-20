@@ -97,6 +97,7 @@ def next(self: 'FST', with_loc: bool | Literal['all', 'own'] = True) -> Optional
     >>> f = FST('[[1, 2], [3, 4]]')
     >>> f.elts[0].next().src
     '[3, 4]'
+
     >>> print(f.elts[1].next())
     None
     ```
@@ -402,6 +403,7 @@ def prev(self: 'FST', with_loc: bool | Literal['all', 'own'] = True) -> Optional
     >>> f = FST('[[1, 2], [3, 4]]')
     >>> f.elts[1].prev().src
     '[1, 2]'
+
     >>> print(f.elts[0].prev())
     None
     ```
@@ -708,8 +710,10 @@ def first_child(self: 'FST', with_loc: bool | Literal['all', 'own'] = True) -> O
     >>> f = FST('def f(a: list[str], /, reject: int, *c, d=100, **e): pass')
     >>> f.first_child().src
     'a: list[str], /, reject: int, *c, d=100, **e'
+
     >>> f.args.first_child().src
     'a: list[str]'
+
     >>> f.args.first_child().first_child().src
     'list[str]'
     ```
@@ -752,6 +756,7 @@ def last_child(self: 'FST', with_loc: bool | Literal['all', 'own'] = True) -> Op
     >>> f = FST('def f(a: list[str], /, reject: int, *c, d=100, **e): pass')
     >>> f.last_child().src
     'pass'
+
     >>> f.args.last_child().src
     'e'
     ```
@@ -801,12 +806,16 @@ def last_header_child(self: 'FST', with_loc: bool | Literal['all', 'own'] = True
     ```py
     >>> FST('if something:\n    i = 2\n    i = 3').last_header_child().src
     'something'
+
     >>> FST('try: pass\nexcept Exception as exc: pass').handlers[0].last_header_child().src
     'Exception'
+
     >>> FST('with a, b: pass').last_header_child().src
     'b'
+
     >>> print(FST('try: pass\nfinally: pass').last_header_child())
     None
+
     >>> print(FST('i = 1').last_header_child())
     None
     ```
@@ -848,14 +857,15 @@ def next_child(self: 'FST', from_child: Optional['FST'], with_loc: bool | Litera
     >>> f = FST('[[1, 2], [3, 4]]')
     >>> f.next_child(f.elts[0]).src
     '[3, 4]'
+
     >>> print(f.next_child(f.elts[1]))
     None
+
     >>> f = FST('[this, is_, reparsed, each, step, and_, still, walks, ok]')
     >>> n = None
     >>> while n := f.next_child(n):
     ...     if isinstance(n.a, Name):
     ...         n = n.replace(n.id[::-1], raw=True)  # raw here reparses all nodes
-    ...
     >>> f.src
     '[siht, _si, desraper, hcae, pets, _dna, llits, sklaw, ko]'
     ```
@@ -891,14 +901,15 @@ def prev_child(self: 'FST', from_child: Optional['FST'], with_loc: bool | Litera
     >>> f = FST('[[1, 2], [3, 4]]')
     >>> f.prev_child(f.elts[1]).src
     '[1, 2]'
+
     >>> print(f.prev_child(f.elts[0]))
     None
+
     >>> f = FST('[this, is_, reparsed, each, step, and_, still, walks, ok]')
     >>> n = None
     >>> while n := f.prev_child(n):
     ...     if isinstance(n.a, Name):
     ...         n = n.replace(n.id[::-1], raw=True)  # raw here reparses all nodes
-    ...
     >>> f.src
     '[siht, _si, desraper, hcae, pets, _dna, llits, sklaw, ko]'
     ```
@@ -936,14 +947,19 @@ def step_fwd(self: 'FST', with_loc: bool | Literal['all', 'own', 'allown'] = Tru
     >>> f = FST('[[1, 2], [3, 4]]')
     >>> f.elts[0].src
     '[1, 2]'
+
     >>> f.elts[0].step_fwd().src
     '1'
+
     >>> f.elts[0].step_fwd(recurse_self=False).src
     '[3, 4]'
+
     >>> f.elts[0].elts[1].src
     '2'
+
     >>> f.elts[0].elts[1].step_fwd().src
     '[3, 4]'
+
     >>> f = FST('[this, [is_, [reparsed, each], step, and_, still], walks, ok]')
     >>> n = f.elts[0]
     >>> while True:
@@ -951,7 +967,6 @@ def step_fwd(self: 'FST', with_loc: bool | Literal['all', 'own', 'allown'] = Tru
     ...         n = n.replace(n.id[::-1], raw=True)  # raw here reparses all nodes
     ...     if not (n := n.step_fwd()):
     ...         break
-    ...
     >>> f.src
     '[siht, [_si, [desraper, hcae], pets, _dna, llits], sklaw, ko]'
     ```
@@ -1005,14 +1020,19 @@ def step_back(self: 'FST', with_loc: bool | Literal['all', 'own', 'allown'] = Tr
     >>> f = FST('[[1, 2], [3, 4]]')
     >>> f.elts[1].src
     '[3, 4]'
+
     >>> f.elts[1].step_back().src
     '4'
+
     >>> f.elts[1].step_back(recurse_self=False).src
     '[1, 2]'
+
     >>> f.elts[1].elts[0].src
     '3'
+
     >>> f.elts[1].elts[0].step_back().src
     '[1, 2]'
+
     >>> f = FST('[this, [is_, [reparsed, each], step, and_, still], walks, ok]')
     >>> n = f.elts[-1]
     >>> while True:
@@ -1020,7 +1040,6 @@ def step_back(self: 'FST', with_loc: bool | Literal['all', 'own', 'allown'] = Tr
     ...         n = n.replace(n.id[::-1], raw=True)  # raw here reparses all nodes
     ...     if not (n := n.step_back()):
     ...         break
-    ...
     >>> f.src
     '[siht, [_si, [desraper, hcae], pets, _dna, llits], sklaw, ko]'
     ```
@@ -1089,7 +1108,6 @@ def walk(self: 'FST', with_loc: bool | Literal['all', 'own'] = False, *, self_: 
     ...         _ = gen.send(False)
     ...     else:
     ...         print(f'{g!r:<30}{g.src}')
-    ...
     <FunctionDef ROOT 0,0..0,57>  def f(a: list[str], /, reject: int, *c, d=100, **e): pass
     <arguments 0,6..0,50>         a: list[str], /, reject: int, *c, d=100, **e
     <arg 0,6..0,18>               a: list[str]
@@ -1101,6 +1119,7 @@ def walk(self: 'FST', with_loc: bool | Literal['all', 'own'] = False, *, self_: 
     <Constant 0,42..0,45>         100
     <arg 0,49..0,50>              e
     <Pass 0,53..0,57>             pass
+
     >>> f = FST('''
     ... def f():
     ...     def g(arg=1) -> int:
@@ -1109,7 +1128,6 @@ def walk(self: 'FST', with_loc: bool | Literal['all', 'own'] = False, *, self_: 
     ... '''.strip())
     >>> for g in f.walk(True, scope=True):
     ...     print(f'{g!r:<30}{g.src!r}')
-    ...
     <FunctionDef ROOT 0,0..3,31>  'def f():\n    def g(arg=1) -> int:\n        pass\n    val = [i for i in iterator]'
     <FunctionDef 1,4..2,12>       'def g(arg=1) -> int:\n        pass'
     <Constant 1,14..1,15>         '1'
@@ -1117,9 +1135,9 @@ def walk(self: 'FST', with_loc: bool | Literal['all', 'own'] = False, *, self_: 
     <Name 3,4..3,7>               'val'
     <ListComp 3,10..3,31>         '[i for i in iterator]'
     <Name 3,22..3,30>             'iterator'
+
     >>> for g in f.walk(True, back=True):
     ...     print(f'{g!r:<30}{g.src!r}')
-    ...
     <FunctionDef ROOT 0,0..3,31>  'def f():\n    def g(arg=1) -> int:\n        pass\n    val = [i for i in iterator]'
     <Assign 3,4..3,31>            'val = [i for i in iterator]'
     <ListComp 3,10..3,31>         '[i for i in iterator]'

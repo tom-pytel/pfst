@@ -85,8 +85,10 @@ def parse(source, filename='<unknown>', mode='exec', *, type_comments=False, fea
     >>> a = fst.parse('if 1:\n  i = 2')
     >>> type(a)
     <class 'ast.Module'>
+
     >>> a.f  # FST node
     <Module ROOT 0,0..1,7>
+
     >>> print(fst.dump(a, indent=2))
     Module(
       body=[
@@ -99,6 +101,7 @@ def parse(source, filename='<unknown>', mode='exec', *, type_comments=False, fea
               value=Constant(value=2))],
           orelse=[])],
       type_ignores=[])
+
     >>> a.f.dump()
     Module - ROOT 0,0..1,7
       .body[1]
@@ -139,13 +142,16 @@ def unparse(ast_obj) -> str:
         i = 1
     else:
         j = 2
+
     >>> print(fst.unparse(a))
     if 1: i = 1  # same line
     else:
       j=2 # comment
+
     >>> a = ast.parse('i = 1')
     >>> ast.unparse(a)
     'i = 1'
+
     >>> fst.unparse(a)  # also unparses regular AST
     'i = 1'
     ```
@@ -482,12 +488,16 @@ class FST:
         ```py
         >>> FST('var = 123').value
         <Constant 0,6..0,9>
+
         >>> FST('var = 123').value.value
         123
+
         >>> FST('var = 123').targets
         <<Assign ROOT 0,0..0,9>.targets[0:1] [<Name 0,0..0,3>]>
+
         >>> FST('var = 123').targets[0]
         <Name 0,0..0,3>
+
         >>> FST('var = 123').targets[0].id
         'var'
         ```
@@ -656,13 +666,17 @@ class FST:
         ```py
         >>> FST.new()
         <Module ROOT 0,0..0,0>
+
         >>> FST.new(mode='single')
         <Interactive ROOT 0,0..0,0>
+
         >>> FST.new(mode='eval')
         <Expression ROOT 0,0..0,4>
+
         >>> _.dump()
         Expression - ROOT 0,0..0,4
           .body Constant None - 0,0..0,4
+
         >>> _.src
         'None'
         ```
@@ -709,16 +723,20 @@ class FST:
           .body[1]
           0] Expr - 0,0..0,3
             .value Name 'var' Load - 0,0..0,3
+
         >>> FST.fromsrc('var', mode='stmt').dump()
         Expr - ROOT 0,0..0,3
           .value Name 'var' Load - 0,0..0,3
+
         >>> FST.fromsrc('var', mode='expr').dump()
         Name 'var' Load - ROOT 0,0..0,3
+
         >>> FST.fromsrc('except Exception: pass', 'stmtish').dump()
         ExceptHandler - ROOT 0,0..0,22
           .type Name 'Exception' Load - 0,7..0,16
           .body[1]
           0] Pass - 0,18..0,22
+
         >>> FST.fromsrc('case f(a=1): pass', 'stmtish').dump()
         match_case - ROOT 0,0..0,17
           .pattern MatchClass - 0,5..0,11
@@ -778,6 +796,7 @@ class FST:
           .targets[1]
           0] Name 'var' Store - 0,0..0,3
           .value Constant 123 - 0,6..0,9
+
         >>> FST.fromast(ast.parse('if 1:\n    j = 5')).dump('stmt')
         Module - ROOT 0,0..1,9
           .body[1]
@@ -790,6 +809,7 @@ class FST:
               .targets[1]
               0] Name 'j' Store - 1,4..1,5
               .value Constant 5 - 1,8..1,9
+
         >>> FST.fromast(Slice(lower=Constant(value=1), step=Name(id='step'))).dump('all')
         0: 1::step
         Slice - ROOT 0,0..0,7
@@ -914,8 +934,10 @@ class FST:
         ```py
         >>> FST.get_option('pars')
         'auto'
+
         >>> FST.get_option('pars', {'pars': True})
         True
+
         >>> FST.get_option('pars', {'pars': None})
         'auto'
         ```
@@ -938,14 +960,19 @@ class FST:
         ```py
         >>> FST.get_option('pars')
         'auto'
+
         >>> FST.set_options(pars=False)
         {'pars': 'auto'}
+
         >>> FST.get_option('pars')
         False
+
         >>> FST.set_options(**{'pars': 'auto'})
         {'pars': False}
+
         >>> FST.get_option('pars')
         'auto'
+
         >>> FST.set_options(pars=True, raw=True, docstr=False)
         {'pars': 'auto', 'raw': 'auto', 'docstr': True}
         ```
@@ -969,10 +996,11 @@ class FST:
         ```py
         >>> print(FST.get_option('raw'))
         auto
+
         >>> with FST.options(raw=False):
         ...     print(FST.get_option('raw'))
-        ...
         False
+
         >>> print(FST.get_option('raw'))
         auto
         ```
@@ -1015,6 +1043,7 @@ class FST:
         ... if 1:
         ...     call(a[i], **b)
         ... '''.strip())
+
         >>> f.dump()
         If - ROOT 0,0..1,19
           .test Constant 1 - 0,3..0,4
@@ -1030,6 +1059,7 @@ class FST:
               .keywords[1]
               0] keyword - 1,15..1,18
                 .value Name 'b' Load - 1,17..1,18
+
         >>> f.dump(src='all', indent=4)
         0: if 1:
         If - ROOT 0,0..1,19
@@ -1054,11 +1084,12 @@ class FST:
                     0] keyword - 1,15..1,18
         1:                  b
                         .value Name 'b' Load - 1,17..1,18
-        >>> f.dump(out=str)[:80]
-        'If - ROOT 0,0..1,19\n  .test Constant 1 - 0,3..0,4\n  .body[1]\n  0] Expr - 1,4..1,'
+
+        >>> f.dump(out=str)[:64]
+        'If - ROOT 0,0..1,19\n  .test Constant 1 - 0,3..0,4\n  .body[1]\n  0'
+
         >>> for l in f.dump('stmt', out=list):
         ...     print(repr(l))
-        ...
         '0: if 1:'
         'If - ROOT 0,0..1,19'
         '  .test Constant 1 - 0,3..0,4'
@@ -1132,8 +1163,10 @@ class FST:
         ```py
         >>> FST('var = 123').verify()
         <Assign ROOT 0,0..0,9>
+
         >>> FST('a:b:c').verify()
         <Slice ROOT 0,0..0,5>
+
         >>> FST('a:b:c').verify('exec', raise_=False) is None  # None indicates failure to verify
         True
         ```
@@ -1237,6 +1270,7 @@ class FST:
         ```py
         >>> (f := FST('[0, 1, 2, 3]')).elts[1].cut().src
         '1'
+
         >>> f.src
         '[0, 2, 3]'
         ```
@@ -1267,8 +1301,9 @@ class FST:
         ```py
         >>> FST('[0, 1, 2, 3]').elts[1].replace('4').root.src
         '[0, 4, 2, 3]'
+
         >>> f = FST('def f(a, /, b, *c, **d) -> int: pass')
-        >>> f.args.posonlyargs[0].replace(')', to=f.returns, raw=True)  # some raw reparsing
+        >>> f.args.posonlyargs[0].replace(')', to=f.returns, raw=True)  # raw reparse
         >>> f.src
         'def f(): pass'
         ```
@@ -1341,29 +1376,41 @@ class FST:
         ```py
         >>> FST('[0, 1, 2, 3]').get(1).src
         '1'
+
         >>> (f := FST('[0, 1, 2, 3]')).get(1, 3).src
         '[1, 2]'
+
         >>> f.src
         '[0, 1, 2, 3]'
+
         >>> (f := FST('[0, 1, 2, 3]')).get(1, 3, cut=True).src
         '[1, 2]'
+
         >>> f.src
         '[0, 3]'
+
         >>> FST('[0, 1, 2, 3]').get(None, 3).src
         '[0, 1, 2]'
+
         >>> FST('[0, 1, 2, 3]').get(-3, None).src
         '[1, 2, 3]'
+
         >>> FST('if 1: i = 1\nelse: j = 2').get(0).src
         'i = 1'
+
         >>> FST('if 1: i = 1\nelse: j = 2').get('orelse').src
         'j = 2'
+
         >>> FST('if 1: i = 1\nelse: j = 2; k = 3').get(1, 'orelse').src
         'k = 3'
+
         >>> FST('if 1: i = 1\nelse: j = 2; k = 3; l = 4; m = 5').get(1, 3, 'orelse').src
         'k = 3; l = 4'
+
         >>> FST('return 1').get().src  # default field is 'value'
         '1'
-        >>> FST('[0, 1, 2, 3]').get().src  # default field is 'elts', which is a list, so slice copy is made
+
+        >>> FST('[0, 1, 2, 3]').get().src  # 'elts' slice copy is made
         '[0, 1, 2, 3]'
         ```
         """
@@ -1396,8 +1443,8 @@ class FST:
 
         **WARNING!** The original `self` node may be invalidated during the operation if using raw mode (either
         specifically or as a fallback), so make sure to swap it out for the return value of this function if you will
-        keep using the variable you called this method on. It will be changed accordingly in the tree, just the
-        immediate variable.
+        keep using the variable you called this method on. It will be changed accordingly in the tree but any other
+        outside references to the node may become invalid.
 
         **Parameters:**
         - `code`: The node to put as an `FST` (must be root node), `AST`, a string or list of line strings. If putting
@@ -1435,28 +1482,36 @@ class FST:
         ```py
         >>> FST('[0, 1, 2, 3]').put('4', 1).src
         '[0, 4, 2, 3]'
+
         >>> FST('[0, 1, 2, 3]').put('4, 5', 1, 3).src
         '[0, (4, 5), 3]'
+
         >>> FST('[0, 1, 2, 3]').put('4, 5', 1, 3, one=False).src
         '[0, 4, 5, 3]'
+
         >>> FST('[0, 1, 2, 3]').put('4, 5', None, 3).src
         '[(4, 5), 3]'
+
         >>> (f := FST('[0, 1, 2, 3]')).put('4, 5', -3, None, one=False).src
         '[0, 4, 5]'
+
         >>> print(FST('if 1: i = 1\nelse: j = 2').put('z = -1', 0).src)
         if 1:
             z = -1
         else: j = 2
+
         >>> print(FST('if 1: i = 1\nelse: j = 2').put('z = -1', 0, 'orelse').src.rstrip())
         if 1: i = 1
         else:
             z = -1
+
         >>> print(FST('if 1: i = 1\nelse: j = 2').put('z = -1\ny = -2\nx = -3', 'orelse', one=False).src.rstrip())
         if 1: i = 1
         else:
             z = -1
             y = -2
             x = -3
+
         >>> print((f := FST('if 1: i = 1\nelse: j = 2')).put('z = -1', 0, raw=True, to=f.orelse[0]).root.src)
         if 1: z = -1
         ```
@@ -1512,17 +1567,22 @@ class FST:
         ```py
         >>> FST('[0, 1, 2, 3]').get_slice(1).src
         '[1, 2, 3]'
+
         >>> FST('[0, 1, 2, 3]').get_slice(None, -1).src
         '[0, 1, 2]'
+
         >>> (f := FST('[0, 1, 2, 3]')).get_slice(1, 3, cut=True).src
         '[1, 2]'
+
         >>> f.src
         '[0, 3]'
+
         >>> f = FST('if 1: i = 1\nelse: j = 2; k = 3; l = 4; m = 5')
         >>> s = f.get_slice(1, 3, 'orelse', cut=True)
         >>> print(f.src)
         if 1: i = 1
         else: j = 2; m = 5
+
         >>> print(s.src)
         k = 3; l = 4
         ```
@@ -1545,8 +1605,8 @@ class FST:
 
         **WARNING!** The original `self` node may be invalidated during the operation if using raw mode (either
         specifically or as a fallback), so make sure to swap it out for the return value of this function if you will
-        keep using the variable you called this method on. It will be changed accordingly in the tree, just the
-        immediate variable.
+        keep using the variable you called this method on. It will be changed accordingly in the tree but any other
+        outside references to the node may become invalid.
 
         **Parameters:**
         - `code`: The slice to put as an `FST` (must be root node), `AST`, a string or list of line strings.
@@ -1571,28 +1631,36 @@ class FST:
         ```py
         >>> FST('[0, 1, 2, 3]').put('4', 1).src
         '[0, 4, 2, 3]'
+
         >>> FST('[0, 1, 2, 3]').put('4, 5', 1, 3).src
         '[0, (4, 5), 3]'
+
         >>> FST('[0, 1, 2, 3]').put('4, 5', 1, 3, one=False).src
         '[0, 4, 5, 3]'
+
         >>> FST('[0, 1, 2, 3]').put('4, 5', None, 3).src
         '[(4, 5), 3]'
+
         >>> (f := FST('[0, 1, 2, 3]')).put('4, 5', -3, None, one=False).src
         '[0, 4, 5]'
+
         >>> print(FST('if 1: i = 1\nelse: j = 2').put('z = -1', 0).src)
         if 1:
             z = -1
         else: j = 2
+
         >>> print(FST('if 1: i = 1\nelse: j = 2').put('z = -1', 0, 'orelse').src.rstrip())
         if 1: i = 1
         else:
             z = -1
+
         >>> print(FST('if 1: i = 1\nelse: j = 2').put('z = -1\ny = -2\nx = -3', 'orelse', one=False).src.rstrip())
         if 1: i = 1
         else:
             z = -1
             y = -2
             x = -3
+
         >>> print((f := FST('if 1: i = 1\nelse: j = 2')).put('z = -1', 0, raw=True, to=f.orelse[0]).root.src)
         if 1: z = -1
         ```
@@ -1629,8 +1697,10 @@ class FST:
         ```py
         >>> FST('if 1:\n  i = 2').get_src(0, 3, 1, 5)
         '1:\n  i ='
+
         >>> FST('if 1:\n  i = 2').get_src(0, 3, 1, 5, as_lines=True)
         ['1:', '  i =']
+
         >>> (f := FST('if 1:\n  i = 2')).get_src(*f.body[0].bloc)
         'i = 2'
         ```
@@ -1688,28 +1758,37 @@ class FST:
         ```py
         >>> FST('i = 1').put_src('2', 0, 4, 0, 5).root.src
         'i = 2'
+
         >>> FST('i = 1').put_src('+= 3', 0, 2, 0, 5).root.src
         'i += 3'
+
         >>> FST('{a: b, c: d, e: f}').put_src('**', 0, 7, 0, 10).root.src
         '{a: b, **d, e: f}'
+
         >>> f = FST('i = 1')
         >>> g = f.targets[0]
         >>> print(type(g.a))
         <class 'ast.Name'>
+
         >>> f.put_src('4', 0, 4, 0, 5).src
         '4'
+
         >>> print(g.a)
         None
+
         >>> print(type(f.targets[0].a))
         <class 'ast.Name'>
+
         >>> f = FST('if a:\n  i = 2\nelif b:\n  j = 3')
         >>> print(f.src)
         if a:
           i = 2
         elif b:
           j = 3
+
         >>> f.put_src('else:\n  if b:\n    k = 4', *f.orelse[0].loc[:2], *f.loc[2:])
         <If 3,2..4,9>
+
         >>> print(f.src)
         if a:
           i = 2
@@ -1759,24 +1838,34 @@ class FST:
         ```py
         >>> FST('i').pars()
         fstlocns(0, 0, 0, 1, n=0)
+
         >>> FST('(i)').pars()
         fstlocns(0, 0, 0, 3, n=1)
+
         >>> FST('((i))').pars()
         fstlocns(0, 0, 0, 5, n=2)
+
         >>> FST('(1, 2)').pars()  # tuple pars are not considered grouping pars
         fstlocns(0, 0, 0, 6, n=0)
+
         >>> FST('((1, 2))').pars()
         fstlocns(0, 0, 0, 8, n=1)
+
         >>> FST('call(a)').args[0].pars()  # any node, not just root
         fstlocns(0, 5, 0, 6, n=0)
+
         >>> FST('call((a))').args[0].pars()
         fstlocns(0, 5, 0, 8, n=1)
+
         >>> FST('call(i for i in j)').args[0].pars()
         fstlocns(0, 4, 0, 18, n=0)
+
         >>> FST('call(i for i in j)').args[0].pars(shared=False)  # exclude shared with call
         fstlocns(0, 5, 0, 17, n=-1)
+
         >>> FST('call((i for i in j))').args[0].pars(shared=False)
         fstlocns(0, 5, 0, 19, n=0)
+
         >>> FST('lambda: None').args.pars(ret_full=True)  # lambda args has no location because no args
         (None, 0)
         ```
@@ -1856,20 +1945,28 @@ class FST:
         ```py
         >>> FST('a + b').par().src
         '(a + b)'
+
         >>> FST('(a + b)').par().src  # already parenthesized, so nothing done
         '(a + b)'
+
         >>> FST('(a + b)').par(force=True).src  # force it
         '((a + b))'
+
         >>> FST('1, 2').par().src  # parenthesize tuple
         '(1, 2)'
+
         >>> FST('i').par().src  # an atom doesn't need parentheses
         'i'
+
         >>> FST('i').par(force=True).src  # so must be forced
         '(i)'
+
         >>> FST('1, 2', 'pattern').par().src  # parethesize MatchSequence puts brackets like ast.unparse()
         '[1, 2]'
+
         >>> FST('*a or b').par().src  # par() a Starred parenthesizes its child
         '*(a or b)'
+
         >>> FST('call(i = 1 + 2)').keywords[0].value.par().root.src  # any node, not just root
         'call(i = (1 + 2))'
         ```
@@ -1914,28 +2011,40 @@ class FST:
         ```py
         >>> FST('a + b').unpar().src  # nothing done if no pars
         'a + b'
+
         >>> FST('(a + b)').unpar().src
         'a + b'
+
         >>> FST('((a + b))').unpar().src  # removes all
         'a + b'
+
         >>> FST('(1, 2)').unpar().src  # but not from tuple
         '(1, 2)'
+
         >>> FST('(1, 2)').unpar(node=True).src  # unless explicitly specified
         '1, 2'
+
         >>> FST('(((1, 2)))').unpar().src
         '(1, 2)'
+
         >>> FST('(((1, 2)))').unpar(node=True).src
         '1, 2'
+
         >>> FST('[1, 2]', 'pattern').unpar().src
         '[1, 2]'
+
         >>> FST('[1, 2]', 'pattern').unpar(node=True).src
         '1, 2'
+
         >>> FST('*(a or b)').unpar().src  # unpar() a Starred unparenthesizes its child
         '*a or b'
+
         >>> FST('call(i = (1 + 2))').keywords[0].value.unpar().root.src  # any node, not just root
         'call(i = 1 + 2)'
+
         >>> FST('call(((i for i in j)))').args[0].unpar().root.src  # by default allows sharing
         'call(i for i in j)'
+
         >>> FST('call(((i for i in j)))').args[0].unpar(share=False).root.src  # unless told not to
         'call((i for i in j))'
         ```
@@ -2008,6 +2117,7 @@ class FST:
         ```py
         >>> list(FST('i = (f(), g())', 'exec').body[0].value.elts[0].parents())
         [<Tuple 0,4..0,14>, <Assign 0,0..0,14>, <Module ROOT 0,0..0,14>]
+
         >>> list(FST('i = (f(), g())', 'exec').body[0].value.elts[0].parents(self_=True))
         [<Call 0,5..0,8>, <Tuple 0,4..0,14>, <Assign 0,0..0,14>, <Module ROOT 0,0..0,14>]
         ```
@@ -2031,12 +2141,16 @@ class FST:
         ```py
         >>> FST('if 1: i = 1', 'exec').body[0].body[0].value.parent_stmt()
         <Assign 0,6..0,11>
+
         >>> FST('if 1: i = 1', 'exec').body[0].body[0].parent_stmt()
         <If 0,0..0,11>
+
         >>> FST('if 1: i = 1', 'exec').body[0].parent_stmt()
         <Module ROOT 0,0..0,11>
+
         >>> print(FST('if 1: i = 1', 'exec').body[0].parent_stmt(mod=False))
         None
+
         >>> FST('if 1: i = 1', 'exec').body[0].parent_stmt(self_=True)
         <If 0,0..0,11>
         ```
@@ -2060,12 +2174,16 @@ class FST:
         ```py
         >>> FST('try: pass\nexcept: pass', 'exec').body[0].handlers[0].body[0].parent_stmtish()
         <ExceptHandler 1,0..1,12>
+
         >>> FST('try: pass\nexcept: pass', 'exec').body[0].handlers[0].parent_stmtish()
         <Try 0,0..1,12>
+
         >>> FST('try: pass\nexcept: pass', 'exec').body[0].parent_stmtish()
         <Module ROOT 0,0..1,12>
+
         >>> FST('match a:\n  case 1: pass').cases[0].body[0].parent_stmtish()
         <match_case 1,2..1,14>
+
         >>> FST('match a:\n  case 1: pass').cases[0].pattern.parent_stmtish()
         <match_case 1,2..1,14>
         ```
@@ -2091,6 +2209,7 @@ class FST:
         ```py
         >>> FST('if 1: i = 1', 'exec').body[0].body[0].value.parent_block()
         <If 0,0..0,11>
+
         >>> FST('if 1: i = 1', 'exec').body[0].parent_block()
         <Module ROOT 0,0..0,11>
         ```
@@ -2115,10 +2234,13 @@ class FST:
         ```py
         >>> FST('if 1: i = 1', 'exec').body[0].body[0].value.parent_scope()
         <Module ROOT 0,0..0,11>
+
         >>> FST('def f():\n  if 1: i = 1', 'exec').body[0].body[0].body[0].value.parent_scope()
         <FunctionDef 0,0..1,13>
+
         >>> FST('lambda: None', 'exec').body[0].value.body.parent_scope()
         <Lambda 0,0..0,12>
+
         >>> FST('[i for i in j]', 'exec').body[0].value.elt.parent_scope()
         <ListComp 0,0..0,14>
         ```
@@ -2143,10 +2265,13 @@ class FST:
         ```py
         >>> FST('if 1: i = 1', 'exec').body[0].body[0].value.parent_named_scope()
         <Module ROOT 0,0..0,11>
+
         >>> FST('def f():\n  if 1: i = 1', 'exec').body[0].body[0].body[0].value.parent_named_scope()
         <FunctionDef 0,0..1,13>
+
         >>> FST('def f(): lambda: None', 'exec').body[0].body[0].value.body.parent_named_scope()
         <FunctionDef 0,0..0,21>
+
         >>> FST('class cls: [i for i in j]', 'exec').body[0].body[0].value.elt.parent_named_scope()
         <ClassDef 0,0..0,25>
         ```
@@ -2178,10 +2303,13 @@ class FST:
         ```py
         >>> FST('if 1: i = 1 + a[b]').body[0].value.right.value.parent_non_expr()
         <Assign 0,6..0,18>
+
         >>> FST('match a:\n case {a.b.c: 1}: pass').cases[0].pattern.keys[0].value.value.parent_non_expr()
         <MatchMapping 1,6..1,16>
+
         >>> FST('var = call(a, b=1)').value.keywords[0].value.parent_non_expr()
         <Assign ROOT 0,0..0,18>
+
         >>> FST('var = call(a, b=1)').value.keywords[0].value.parent_non_expr(strict=True)
         <keyword 0,14..0,17>
         ```
@@ -2213,10 +2341,13 @@ class FST:
         ```py
         >>> (f := FST('[i for i in j]', 'exec')).child_path(f.body[0].value.elt)
         [astfield('body', 0), astfield('value'), astfield('elt')]
+
         >>> (f := FST('[i for i in j]', 'exec')).child_path(f.body[0].value.elt, as_str=True)
         'body[0].value.elt'
+
         >>> (f := FST('i')).child_path(f)
         []
+
         >>> (f := FST('i')).child_path(f, as_str=True)
         ''
         ```
@@ -2256,14 +2387,19 @@ class FST:
         >>> f = FST('[i for i in j]', 'exec')
         >>> f.child_from_path(f.child_path(f.body[0].value.elt)).src
         'i'
+
         >>> f.child_from_path(f.child_path(f.body[0].value.elt, True)).src
         'i'
+
         >>> FST('[0, 1, 2, 3]', 'exec').child_from_path('body[0].value.elts[4]')
         False
+
         >>> FST('[0, 1, 2, 3]', 'exec').child_from_path('body[0].value.elts[4]', last_valid=True).src
         '[0, 1, 2, 3]'
+
         >>> (f := FST('i')).child_from_path([]) is f
         True
+
         >>> (f := FST('i')).child_from_path('') is f
         True
         ```
@@ -2296,10 +2432,13 @@ class FST:
         >>> g = f.elts[1]
         >>> print(type(g.a), g.root)
         <class 'ast.Constant'> <List ROOT 0,0..0,12>
+
         >>> f.put('x', 1, raw=True)  # raw forces reparse at List
         <List ROOT 0,0..0,12>
+
         >>> print(g.a, g.root)
         None <List ROOT 0,0..0,12>
+
         >>> g = g.repath()
         >>> print(type(g.a), g.root)
         <class 'ast.Name'> <List ROOT 0,0..0,12>
@@ -2328,20 +2467,28 @@ class FST:
         ```py
         >>> FST('i = val', 'exec').find_loc(0, 6, 0, 7)
         <Name 0,4..0,7>
+
         >>> FST('i = val', 'exec').find_loc(0, 4, 0, 7)
         <Name 0,4..0,7>
+
         >>> FST('i = val', 'exec').find_loc(0, 4, 0, 7, exact=False)
         <Assign 0,0..0,7>
+
         >>> FST('i = val', 'exec').find_loc(0, 5, 0, 7, exact=False)
         <Name 0,4..0,7>
+
         >>> FST('i = val', 'exec').find_loc(0, 4, 0, 6, exact=False)
         <Name 0,4..0,7>
+
         >>> FST('i = val', 'exec').find_loc(0, 3, 0, 7)
         <Assign 0,0..0,7>
+
         >>> FST('i = val', 'exec').find_loc(0, 3, 0, 7, exact=False)
         <Assign 0,0..0,7>
+
         >>> print(FST('i = val', 'exec').find_loc(0, 0, 0, 7, exact=False))
         None
+
         >>> FST('i = val\n', 'exec').find_loc(0, 0, 0, 7, exact=False)
         <Module ROOT 0,0..1,0>
         ```
@@ -2397,10 +2544,13 @@ class FST:
         ```py
         >>> FST('i = val', 'exec').find_in_loc(0, 0, 0, 7)
         <Module ROOT 0,0..0,7>
+
         >>> FST('i = val', 'exec').find_in_loc(0, 1, 0, 7)
         <Name 0,4..0,7>
+
         >>> FST('i = val', 'exec').find_in_loc(0, 4, 0, 7)
         <Name 0,4..0,7>
+
         >>> print(FST('i = val', 'exec').find_in_loc(0, 5, 0, 7))
         None
         ```
@@ -2446,18 +2596,25 @@ class FST:
         ```py
         >>> FST('i = 1').get_indent()
         ''
+
         >>> FST('if 1:\n  i = 1').body[0].get_indent()
         '  '
+
         >>> FST('if 1: i = 1').body[0].get_indent()
         '    '
+
         >>> FST('if 1: i = 1; j = 2').body[1].get_indent()
         '    '
+
         >>> FST('if 1:\n  i = 1\n  j = 2').body[1].get_indent()
         '  '
+
         >>> FST('if 2:\n    if 1:\n      i = 1\n      j = 2').body[0].body[1].get_indent()
         '      '
+
         >>> FST('if 1:\n\\\n  i = 1').body[0].get_indent()
         '  '
+
         >>> FST('if 1:\n \\\n  i = 1').body[0].get_indent()
         ' '
         ```
@@ -2513,14 +2670,19 @@ class FST:
         ```py
         >>> FST("def f():\n    i = 1\n    j = 2").get_indentable_lns()
         {0, 1, 2}
+
         >>> FST("def f():\n  '''docstr'''\n  i = 1\n  j = 2").get_indentable_lns()
         {0, 1, 2, 3}
+
         >>> FST("def f():\n  '''doc\nstr'''\n  i = 1\n  j = 2").get_indentable_lns()
         {0, 1, 2, 3, 4}
+
         >>> FST("def f():\n  '''doc\nstr'''\n  i = 1\n  j = 2").get_indentable_lns(skip=2)
         {2, 3, 4}
+
         >>> FST("def f():\n  '''doc\nstr'''\n  i = 1\n  j = 2").get_indentable_lns(docstr=False)
         {0, 1, 3, 4}
+
         >>> FST("def f():\n  '''doc\nstr'''\n  s = '''multi\nline\nstring'''\n  i = 1").get_indentable_lns()
         {0, 1, 2, 3, 6}
         ```
@@ -2569,28 +2731,40 @@ class FST:
         >>> from fst import astutil
         >>> FST('i').is_parsable()
         True
+
         >>> FST('a[b]').slice.is_parsable()
         True
+
         >>> FST('a[b:c]').slice.is_parsable()
         True
+
         >>> is_parsable(FST('a[b:c]').slice.a)
         False
+
         >>> FST('f"{a!r:<8}"').values[0].is_parsable()
         False
+
         >>> FST('f"{a!r:<8}"').values[0].value.is_parsable()
         True
+
         >>> FST('f"{a!r:<8}"').values[0].format_spec.is_parsable()
         False
+
         >>> FST('try: pass\nexcept: pass').body[0].is_parsable()
         True
+
         >>> FST('try: pass\nexcept: pass').handlers[0].is_parsable()
         True
+
         >>> astutil.is_parsable(FST('try: pass\nexcept: pass').handlers[0].a)
         False
+
         >>> FST('try: pass\nexcept: pass').handlers[0].body[0].is_parsable()
         True
+
         >>> FST('match a:\n  case 1: pass').cases[0].is_parsable()
         True
+
         >>> is_parsable(FST('match a:\n  case 1: pass').cases[0].a)
         False
         ```
@@ -2626,20 +2800,28 @@ class FST:
         ```py
         >>> FST('i + j').is_parenthesizable()  # expr
         True
+
         >>> FST('{a.b: c, **d}', 'pattern').is_parenthesizable()
         True
+
         >>> FST('a:b:c').is_parenthesizable()  # Slice
         False
+
         >>> FST('for i in j').is_parenthesizable()  # comprehension
         False
+
         >>> FST('a: int, b=2').is_parenthesizable()  # arguments
         False
+
         >>> FST('a: int', 'arg').is_parenthesizable()
         False
+
         >>> FST('key="word"', 'keyword').is_parenthesizable()
         False
+
         >>> FST('a as b', 'alias').is_parenthesizable()
         False
+
         >>> FST('a as b', 'withitem').is_parenthesizable()
         False
         ```
@@ -2674,18 +2856,25 @@ class FST:
         ```py
         >>> FST('a').is_atom()
         True
+
         >>> FST('a + b').is_atom()
         False
+
         >>> FST('(a + b)').is_atom()
         'pars'
+
         >>> FST('(a + b)').is_atom(pars=False)
         False
+
         >>> FST('a.b').is_atom()
         True
+
         >>> FST('a.b').is_atom(always_enclosed=True)  # because of "a\n.b"
         False
+
         >>> FST('(a.b)').is_atom(always_enclosed=True)
         'pars'
+
         >>> FST('[]').is_atom(always_enclosed=True)  # because List is always enclosed
         True
         ```
@@ -2756,24 +2945,34 @@ class FST:
         ```py
         >>> FST('a').is_enclosed()
         True
+
         >>> FST('a + \\\n b').is_enclosed()  # because of the line continuation
         True
+
         >>> FST('(a + \n b)').is_enclosed()
         'pars'
+
         >>> FST('a + \n b').is_enclosed()
         False
+
         >>> FST('[a + \n b]').elts[0].is_enclosed()
         False
+
         >>> FST('[a + \n b]').elts[0].is_enclosed_in_parents()
         True
+
         >>> FST('def f(a, b): pass').args.is_enclosed()
         True
+
         >>> FST('def f(a,\n b): pass').args.is_enclosed()  # because the parentheses belong to the FunctionDef
         False
+
         >>> FST('def f(a,\n b): pass').args.is_enclosed_in_parents()
         True
+
         >>> FST('(a is not b)').ops[0].is_enclosed()
         True
+
         >>> FST('(a is \n not b)').ops[0].is_enclosed()
         False
         ```
@@ -2872,24 +3071,34 @@ class FST:
         ```py
         >>> FST('1 + 2').left.is_enclosed_in_parents()
         False
+
         >>> FST('(1 + 2)').left.is_enclosed_in_parents()
         True
+
         >>> FST('(1 + 2)').is_enclosed_in_parents()  # because owns the parentheses
         False
+
         >>> FST('[1 + 2]').elts[0].left.is_enclosed_in_parents()
         True
+
         >>> FST('[1 + 2]').elts[0].is_enclosed_in_parents()
         True
+
         >>> FST('f(1)').args[0].is_enclosed_in_parents()
         True
+
         >>> FST('f"{1}"').values[0].value.is_enclosed_in_parents()
         True
+
         >>> FST('[]').is_enclosed_in_parents()
         False
+
         >>> FST('[]').is_enclosed_in_parents(field='elts')
         True
+
         >>> FST('with (x): pass').items[0].is_enclosed_in_parents()
         False
+
         >>> FST('with (x as y): pass').items[0].is_enclosed_in_parents()
         True
         ```
@@ -2966,8 +3175,10 @@ class FST:
         ```py
         >>> FST('1, 2').is_parenthesized_tuple()
         False
+
         >>> FST('(1, 2)').is_parenthesized_tuple()
         True
+
         >>> print(FST('1').is_parenthesized_tuple())
         None
         ```
@@ -2987,10 +3198,13 @@ class FST:
         ```py
         >>> FST('match a:\n  case 1, 2: pass').cases[0].pattern.is_enclosed_matchseq()
         False
+
         >>> FST('match a:\n  case [1, 2]: pass').cases[0].pattern.is_enclosed_matchseq()
         True
+
         >>> FST('match a:\n  case (1, 2): pass').cases[0].pattern.is_enclosed_matchseq()
         True
+
         >>> print(FST('match a:\n  case 1: pass').cases[0].pattern.is_enclosed_matchseq())
         None
         ```
@@ -3016,10 +3230,13 @@ class FST:
         ```py
         >>> FST('{1}').is_empty_set_call()
         False
+
         >>> FST('set()').is_empty_set_call()
         True
+
         >>> FST('frozenset()').is_empty_set_call()
         False
+
         >>> FST('{*()}').is_empty_set_call()
         False
         ```
@@ -3036,8 +3253,10 @@ class FST:
         ```py
         >>> FST('{1}').is_empty_set_seq()
         False
+
         >>> FST('{*()}').is_empty_set_seq()
         True
+
         >>> FST('set()').is_empty_set_seq()
         False
         ```
@@ -3056,8 +3275,10 @@ class FST:
         ```py
         >>> FST('if 1: pass\nelif 2: pass').orelse[0].is_elif()
         True
+
         >>> FST('if 1: pass\nelse:\n  if 2: pass').orelse[0].is_elif()
         False
+
         >>> print(FST('if 1: pass\nelse:\n  i = 2').orelse[0].is_elif())
         None
         ```
@@ -3075,10 +3296,13 @@ class FST:
         ```py
         >>> FST('class cls(b1): pass').bases[0].is_solo_class_base()
         True
+
         >>> FST('class cls(b1, b2): pass').bases[0].is_solo_class_base()
         False
+
         >>> FST('class cls(b1, meta=m): pass').bases[0].is_solo_class_base()
         False
+
         >>> print(FST('class cls(b1, meta=m): pass').keywords[0].is_solo_class_base())
         None
         ```
@@ -3096,8 +3320,10 @@ class FST:
         ```py
         >>> FST('call(a)').args[0].is_solo_call_arg()
         True
+
         >>> FST('call(a, b)').args[0].is_solo_call_arg()
         False
+
         >>> FST('call(i for i in range(3))').args[0].is_solo_call_arg()
         True
         ```
@@ -3115,10 +3341,13 @@ class FST:
         ```py
         >>> FST('call(i for i in range(3))').args[0].is_solo_call_arg_genexp()
         True
+
         >>> FST('call((i for i in range(3)))').args[0].is_solo_call_arg_genexp()
         True
+
         >>> FST('call((i for i in range(3)), b)').args[0].is_solo_call_arg_genexp()
         False
+
         >>> FST('call(a)').args[0].is_solo_call_arg_genexp()
         False
         ```
@@ -3135,6 +3364,7 @@ class FST:
         ```py
         >>> FST('match a:\n  case cls(a): pass').cases[0].pattern.patterns[0].is_solo_matchcls_pat()
         True
+
         >>> FST('match a:\n  case cls(a, b): pass').cases[0].pattern.patterns[0].is_solo_matchcls_pat()
         False
         ```
@@ -3156,8 +3386,10 @@ class FST:
         ```py
         >>> FST('a:b:c', 'slice').has_slice()
         True
+
         >>> FST('1, d:e', 'slice').has_slice()  # Tuple contains at least one Slices
         True
+
         >>> FST('a[b]').slice.has_slice()  # b is in the .slice field but is not a Slice or Slice Tuple
         False
         ```

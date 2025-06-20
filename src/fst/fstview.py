@@ -27,24 +27,33 @@ class fstview:
     >>> f = FST('[0, 1, 2, 3]')
     >>> f
     <List ROOT 0,0..0,12>
+
     >>> f.elts
     <<List ROOT 0,0..0,12>.elts[0:4] [<Constant 0,1..0,2>, <Constant 0,4..0,5>, <Constant 0,7..0,8>, <Constant 0,10..0,11>]>
+
     >>> f.elts[1]
     <Constant 0,4..0,5>
+
     >>> f.elts[1].src
     '1'
+
     >>> f.elts[1:3]
     <<List ROOT 0,0..0,12>.elts[1:3] [<Constant 0,4..0,5>, <Constant 0,7..0,8>]>
+
     >>> f.elts[1:3].copy()
     <List ROOT 0,0..0,6>
+
     >>> _.src
     '[1, 2]'
+
     >>> f.elts[1:3] = '[4]'
     >>> f.src
     '[0, 4, 3]'
+
     >>> del f.elts[1:]
     >>> f.src
     '[0]'
+
     >>> f.elts[0] = '*star'
     >>> f.src
     '[*star]'
@@ -99,16 +108,22 @@ class fstview:
         ```py
         >>> FST('[0, 1, 2, 3]').elts[1].src
         '1'
+
         >>> FST('[0, 1, 2, 3]').elts[:3]
         <<List ROOT 0,0..0,12>.elts[0:3] [<Constant 0,1..0,2>, <Constant 0,4..0,5>, <Constant 0,7..0,8>]>
+
         >>> FST('[0, 1, 2, 3]').elts[:3].copy().src
         '[0, 1, 2]'
+
         >>> FST('[0, 1, 2, 3]').elts[-3:]
         <<List ROOT 0,0..0,12>.elts[1:4] [<Constant 0,4..0,5>, <Constant 0,7..0,8>, <Constant 0,10..0,11>]>
+
         >>> FST('def fun(): pass\nclass cls: pass\nvar = val').body['cls']
         <ClassDef 1,0..1,15>
+
         >>> FST('global a, b, c').names
         <<Global ROOT 0,0..0,14>.names[0:3] ['a', 'b', 'c']>
+
         >>> FST('global a, b, c').names[1]
         'b'
         ```
@@ -149,13 +164,16 @@ class fstview:
         ```py
         >>> (f := FST('[0, 1, 2, 3]')).elts[1] = '4'; f.src
         '[0, 4, 2, 3]'
+
         >>> (f := FST('[0, 1, 2, 3]')).elts[:3] = '5'; f.src
         '[5, 3]'
+
         >>> (f := FST('[0, 1, 2, 3]')).elts[-3:] = '6'; f.src
         '[0, 6]'
+
         >>> (f := FST('[0, 1, 2, 3]')).elts[:] = '7, 8'; f.src
         '[7, 8]'
-        >>>
+
         >>> f = FST('[0, 1, 2, 3]')
         >>> f.elts[2:2] = f.elts[1:3].copy()
         >>> f.src
@@ -193,10 +211,13 @@ class fstview:
         ```py
         >>> del (f := FST('[0, 1, 2, 3]')).elts[1]; f.src
         '[0, 2, 3]'
+
         >>> del (f := FST('[0, 1, 2, 3]')).elts[:3]; f.src
         '[3]'
+
         >>> del (f := FST('[0, 1, 2, 3]')).elts[-3:]; f.src
         '[0]'
+
         >>> del (f := FST('[0, 1, 2, 3]')).elts[:]; f.src
         '[]'
         ```
@@ -418,6 +439,7 @@ class fstview:
         ```py
         >>> FST('[0, 1, 2, 3]').elts.prepend('(4, 5)').fst.src
         '[(4, 5), 0, 1, 2, 3]'
+
         >>> FST('[0, 1, 2, 3]').elts[1:3].prepend('*star').fst.src
         '[0, *star, 1, 2, 3]'
         ```
@@ -443,6 +465,7 @@ class fstview:
         ```py
         >>> FST('[0, 1, 2, 3]').elts.prextend('(4, 5)').fst.src
         '[4, 5, 0, 1, 2, 3]'
+
         >>> FST('[0, 1, 2, 3]').elts[1:3].prextend('(4, 5)').fst.src
         '[0, 4, 5, 1, 2, 3]'
         ```
