@@ -18,6 +18,7 @@ from .fst import FST, NodeError
 
 PROGRAM     = 'python -m fst.fuzz'
 _PY_VERSION = sys.version_info[:2]
+_PYLT11     = _PY_VERSION < (3, 11)
 _PYLT12     = _PY_VERSION < (3, 12)
 _PYLT14     = _PY_VERSION < (3, 14)
 
@@ -225,7 +226,7 @@ def test_replace(fst: FST, with_: FST | None) -> bool:
 
 def can_replace(tgt: FST, repl: FST) -> bool:  # assuming ASTCat has already been checked and only testing allowed category
     repla, repl_parenta = repl.a, repl.parent.a
-    tgta , tgt_parenta  = tgt.a,  tgt.parent.a
+    tgta,  tgt_parenta  = tgt.a,  tgt.parent.a
     tgt_field, _        = tgt.pfield
     repl_field, _       = repl.pfield
 
@@ -264,6 +265,10 @@ def can_replace(tgt: FST, repl: FST) -> bool:  # assuming ASTCat has already bee
 
     if repl_field == 'vararg' and isinstance(repla.annotation, Starred) and tgt_field != 'vararg':  # because could have Starred annotation headed for a non-vararg field
         return False
+
+    if _PYLT11:
+        if isinstance(tgt_parenta, Tuple) and isinstance(repla, Starred) and tgt.parent.pfield == ('slice', None):
+            return False
 
     if isinstance(tgta, Slice) and not isinstance(repla, Slice):
         return False

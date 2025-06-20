@@ -25,6 +25,7 @@ from .fst_parse import (
 )
 
 _PY_VERSION = sys.version_info[:2]
+_PYLT11     = _PY_VERSION < (3, 11)
 _PYLT12     = _PY_VERSION < (3, 12)
 
 _GetOneRet       = Optional['FST'] | str | constant
@@ -1143,6 +1144,22 @@ def _put_one_Subscript_value(self: 'FST', code: _PutOneCode, idx: int | None, fi
     return ret
 
 
+def _put_one_Subscript_slice(self: 'FST', code: _PutOneCode, idx: int | None, field: str, child: AST,  # py < 3.11
+                             static: onestatic, **options) -> 'FST':
+    """Don't allow put unparenthesized tuple containing Starred."""
+
+    child = _validate_put(self, code, idx, field, child)  # we want to do it in same order as all other puts
+    code  = static.code_as(code, self.root.parse_params)
+
+    if code.is_parenthesized_tuple() is False and any(isinstance(a, Starred) for a in code.a.elts):
+        raise NodeError('cannot have unparenthesized tuple containing Starred in slice')
+
+    return _put_one_exprish_required(self, code, idx, field, child, static, 2, **options)
+
+if not _PYLT11:
+    _put_one_Subscript_slice = _put_one_exprish_required
+
+
 def _put_one_List_elts(self: 'FST', code: _PutOneCode, idx: int | None, field: str, child: list[AST],
                        static: onestatic, **options) -> 'FST':
     """Disallow non-targetable expressions in targets."""
@@ -1174,6 +1191,10 @@ def _put_one_Tuple_elts(self: 'FST', code: _PutOneCode, idx: int | None, field: 
         if not hasattr(code.a, 'ctx'):
             raise ValueError(f"cannot put non-targetable expression to Tuple.elts[{idx}] "
                              "in this state (target expression)")
+
+    if _PYLT11:
+        if isinstance(code.a, Starred) and pf == ('slice', None):
+            raise NodeError('cannot put Starred to a slice Tuple.elts')
 
     is_starred_in_slice = (len(elts := ast.elts) == 1 and isinstance(elts[0], Starred) and
                            (pf := self.pfield) and pf.name == 'slice')  # because of replacing the Starred in 'a[*i_am_really_a_tuple]'
@@ -1213,7 +1234,7 @@ def _put_one_arg(self: 'FST', code: _PutOneCode, idx: int | None, field: str, ch
     return _put_one_exprish_required(self, code, idx, field, child, static, 2, **options)
 
 
-def _put_one_arg_annotation(self: 'FST', code: _PutOneCode, idx: int | None, field: str, child: AST,
+def _put_one_arg_annotation(self: 'FST', code: _PutOneCode, idx: int | None, field: str, child: AST,  # py >= 3.11
                             static: onestatic, **options) -> 'FST':
     """Allow Starred in vararg arg annotation in py 3.11+."""
 
@@ -1222,7 +1243,7 @@ def _put_one_arg_annotation(self: 'FST', code: _PutOneCode, idx: int | None, fie
 
     return _put_one_exprish_optional(self, code, idx, field, child, static, **options)
 
-if _PY_VERSION < (3, 11):
+if _PYLT11:
     _put_one_arg_annotation = _put_one_exprish_optional  # this leaves the _restrict_default in the static which disallows Starred
 
 
@@ -2328,7 +2349,7 @@ _PUT_ONE_HANDLERS = {
     (Attribute, 'attr'):                  (False, _put_one_identifier_required, onestatic(_one_info_Attribute_attr, _restrict_default, code_as=_code_as_identifier)), # identifier
     (Attribute, 'ctx'):                   (False, _put_one_ctx, _onestatic_ctx), # expr_context
     (Subscript, 'value'):                 (False, _put_one_Subscript_value, _onestatic_expr_required), # expr
-    (Subscript, 'slice'):                 (False, _put_one_exprish_required, onestatic(_one_info_exprish_required, _restrict_fmtval_starred, code_as=_code_as_slice)), # expr
+    (Subscript, 'slice'):                 (False, _put_one_Subscript_slice, onestatic(_one_info_exprish_required, _restrict_fmtval_starred, code_as=_code_as_slice)), # expr
     (Subscript, 'ctx'):                   (False, _put_one_ctx, _onestatic_ctx), # expr_context
     (Starred, 'value'):                   (False, _put_one_exprish_required, _onestatic_expr_required), # expr
     (Starred, 'ctx'):                     (False, _put_one_ctx, _onestatic_ctx), # expr_context

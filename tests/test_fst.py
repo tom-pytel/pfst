@@ -9869,6 +9869,16 @@ c, # c
             self.assertEqual('a[c.d,]', f.src)
             f.verify()
 
+        # no Starred in unparenthesized slice Tuple
+
+        if _PYLT11:
+            f = FST('a: b[c, d]')
+            self.assertRaises(NodeError, f.annotation.slice.elts[1].replace, '*s', raw=False)
+
+            f = FST('a: b[c, d]')
+            g = FST('for a, *s in b: pass').target.copy()
+            self.assertRaises(NodeError, f.annotation.slice.replace, g, raw=False)
+
         # don't allow vararg with starred annotation into normal args
 
         if not _PYLT11:
