@@ -1,7 +1,7 @@
 """Reconcile."""
 
 from ast import *
-from typing import Literal, Optional, Union
+from typing import Any, Literal, Optional, Union
 
 from .astutil import *
 from .shared import NodeError, astfield
@@ -14,20 +14,25 @@ class _Reconcile:
     """The strategy is to make a copy of the original tree (mark) and then mutate it node by node according to the
     changes detected between the working tree and the marked reference tree."""
 
-    work: 'FST'  ; """The `FST` tree that was operated on and will have `AST` replacements."""
-    mark: 'FST'  ; """The marked `FST` tree to use as reference."""
-    out:  'FST'  ; """The output `FST` tree to build up and return."""
+    options: dict   ; """The options to use for the put operations."""
+    work:    'FST'  ; """The `FST` tree that was operated on and will have `AST` replacements."""
+    mark:    'FST'  ; """The marked `FST` tree to use as reference."""
+    out:     'FST'  ; """The output `FST` tree to build up and return."""
 
-    def __init__(self, work: 'FST', mark: 'FST'):
-        self.work = work
-        self.mark = mark
-        self.out  = mark.copy()
+    def __init__(self, work: 'FST', mark: 'FST', options: dict[str, Any] = {}):
+        if 'raw' in options:
+            raise ValueError("cannot use reconcile with 'raw' option")
+
+        self.options = options
+        self.work    = work
+        self.mark    = mark
+        self.out     = mark.copy()
 
     def put_node(self, code: Union['FST', AST], out_parent: Optional['FST'] = None, pfield: astfield | None = None):
         if out_parent:
-            out_parent.put(code, pfield.idx, False, pfield.name, raw=False)
+            out_parent.put(code, pfield.idx, False, pfield.name, raw=False, **self.options)
         else:  # because can replace AST at root node which has out_parent=None
-            self.out.replace(code, raw=False)
+            self.out.replace(code, raw=False, **self.options)
 
     def recurse_slice_dict(self, node: AST, outf: Optional['FST']):
         """Recurse into a combined slice of a Dict's keys and values using slice operations to copy over formatting
@@ -105,7 +110,7 @@ class _Reconcile:
                         pass
 
                     else:  # no recurse because we wouldn't be at this point if it wasn't a valid full FST without AST replacements, couldn't anyway as we don't know anything about that tree
-                        outf.put_slice(slice, start, end, None, raw=False)
+                        outf.put_slice(slice, start, end, None, raw=False, **self.options)
 
                         start = end
 
@@ -115,7 +120,7 @@ class _Reconcile:
                     mark_parent = self.mark.child_from_path(self.work.child_path(child_parent))
                     slice       = mark_parent.get_slice(child_idx, child_idx - start + end, None)
 
-                    outf.put_slice(slice, start, end, None, raw=False)
+                    outf.put_slice(slice, start, end, None, raw=False, **self.options)
 
             len_outa_body = len(outa_keys)  # get each time because could have been modified by put_slice, will not change if coming from AST
 
@@ -124,19 +129,19 @@ class _Reconcile:
                 v = values[i]
 
                 if i >= len_outa_body:  # if past end then we need to slice insert AST before recursing into it, doesn't happen if coming from AST
-                    outf.put_slice(Dict(keys=[k], values=[v]), i, i, None, raw=False)
+                    outf.put_slice(Dict(keys=[k], values=[v]), i, i, None, raw=False, **self.options)
 
                 if k:
                     self.recurse_node(k, astfield('keys', i), outf, nodef)
                 elif outa_keys[i] is not None:
-                    outf.put(None, i, False, 'keys', raw=False)
+                    outf.put(None, i, False, 'keys', raw=False, **self.options)
 
                 self.recurse_node(v, astfield('values', i), outf, nodef)  # nodef set accordingly regardless of if coming from FST or AST
 
             start = end
 
         if start < len(outa_keys):  # delete tail in output, doesn't happen if coming from AST
-            outf.put_slice(None, start, None, None, raw=False)
+            outf.put_slice(None, start, None, None, raw=False, **self.options)
 
     def recurse_slice(self, node: AST, outf: Optional['FST'], field: str, body: list[AST]):
         """Recurse into a slice of children using slice operations to copy over formatting where possible (if not
@@ -186,7 +191,7 @@ class _Reconcile:
                         pass
 
                     else:  # no recurse because we wouldn't be at this point if it wasn't a valid full FST without AST replacements, couldn't anyway as we don't know anything about that tree
-                        outf.put_slice(slice, start, end, field, raw=False)
+                        outf.put_slice(slice, start, end, field, raw=False, **self.options)
 
                         start = end
 
@@ -196,7 +201,7 @@ class _Reconcile:
                     mark_parent = self.mark.child_from_path(self.work.child_path(child_parent))
                     slice       = mark_parent.get_slice(child_idx, child_off_idx + end, child_field)
 
-                    outf.put_slice(slice, start, end, field, raw=False)
+                    outf.put_slice(slice, start, end, field, raw=False, **self.options)
 
             len_outa_body = len(outa_body)  # get each time because could have been modified by put_slice, will not change if coming from AST
 
@@ -204,14 +209,14 @@ class _Reconcile:
                 n = body[i]  # this is safe to use in 'put_slice()' then 'recurse()' without duplicating because ASTs are not consumed
 
                 if i >= len_outa_body:  # if past end then we need to slice insert AST before recursing into it, doesn't happen if coming from AST
-                    outf.put_slice(n, i, i, field, one=True, raw=False)  # put one
+                    outf.put_slice(n, i, i, field, one=True, raw=False, **self.options)  # put one
 
                 self.recurse_node(n, astfield(field, i), outf, nodef)  # nodef set accordingly regardless of if coming from FST or AST
 
             start = end
 
         if start < len(outa_body):  # delete tail in output, doesn't happen if coming from AST
-            outf.put_slice(None, start, None, field, raw=False)
+            outf.put_slice(None, start, None, field, raw=False, **self.options)
 
     def recurse_children(self, node: AST, outa: AST):
         """Recurse into children of a node."""
@@ -236,7 +241,7 @@ class _Reconcile:
 
             elif not isinstance(child, list):  # primitive, or None to delete possibly AST child
                 if nodef is not False and child != getattr(outa, field):  # this SHOULDN'T happen if coming from pure AST but could if there was a contradictory value set by the user, so in case of pure AST we don't do this at all because was set correctly on our own put of the AST somewhere above
-                    outf.put(child, field=field, raw=False)
+                    outf.put(child, field=field, raw=False, **self.options)
 
             else:  # slice
                 if (field in ('body', 'orelse', 'handlers', 'finalbody', 'cases', 'elts') or
@@ -348,13 +353,13 @@ class _Reconcile:
 # ----------------------------------------------------------------------------------------------------------------------
 
 def mark(self: 'FST') -> 'FST':
-    """Return something marking the current state of this `FST` tree. Used to `reconcile()` later for non-FST operation
-    changes made (changing `AST` nodes directly). Currently is just a copy of the original tree, but may change in the
+    """Return an object marking the current state of this `FST` tree. Used to `reconcile()` later for non-FST operation
+    changes made (changing `AST` nodes directly). Currently is just a copy of the original tree but may change in the
     future.
 
     **Returns:**
-    - `FST`: A marked copy of `self` with any necessary information added for a future `reconcile()`. You can `mark()`
-        this marked `FST` to get a usable copy."""
+    - `FST`: A marked copy of `self` with any necessary information added for a later `reconcile()`.
+    """
 
     if not self.is_root:
         raise ValueError('can only mark root nodes')
@@ -364,20 +369,71 @@ def mark(self: 'FST') -> 'FST':
 
     return mark
 
-def reconcile(self: 'FST', mark: 'FST') -> 'FST':
+def reconcile(self: 'FST', mark: 'FST', **options) -> 'FST':
     """Reconcile `self` with a previously marked version and return a new valid `FST` tree. This is meant for allowing
     non-FST modifications to an `FST` tree and later converting it to a valid `FST` tree to preserve as much formatting
     as possible and maybe continue operating in `FST` land. Only `AST` nodes from the original tree carry formatting
     information, so the more of those are replaced the more formatting is lost.
 
     **WARNING!** Just like an `ast.unparse()`, the fact that this function completes successfully does NOT mean the
-    output is syntactically correct. In order to make sure the result is valid you should run `verify()` on the output.
+    output is syntactically correct if you put weird nodes where they don't belong, maybe accidentally. In order to make
+    sure the result is valid you should run `verify()` on the output.
 
     **Parameters:**
     - `mark`: A previously marked snapshot of `self`. This object is not consumed on use, success or failure.
+    - `options`: See `get_options()`.
 
     **Returns:**
     - `FST`: A new valid reconciled `FST` if possible.
+
+    **Examples:**
+    ```py
+    >>> f = FST('''
+    ... @decorator  # something
+    ... def function(a: int, b=2)->int:  # blah
+    ...     return a+b  # return this
+    ...
+    ... def other_function(a, b):
+    ...     return a - b  # return that
+    ... '''.strip())
+
+    >>> m = f.mark()
+
+    >>> f.a.body[0].returns = Name('float')  # pure AST
+    >>> f.a.body[0].args.args[0].annotation = Name('float')
+    >>> f.a.body[0].decorator_list[0] = FST('call_decorator(1, 2, 3)').a
+    >>> f.a.body[1].name = 'last_function'  # can change non-AST
+    >>> f.a.body[1].body[0] = f.a.body[0].body[0]  # AST from same FST tree (preserves formatting)
+    >>> other = FST('def first_function(a, b): return a * b  # yay!')
+    >>> f.a.body.insert(0, other.a)  # AST from other FST tree (preserves formatting)
+
+    >>> f = f.reconcile(m, pep8space=1)
+    >>> for l in f.lines: print(repr(l))  # we show this way because of doctest
+    'def first_function(a, b): return a * b  # yay!'
+    ''
+    '@call_decorator(1, 2, 3)  # something'
+    'def function(a: float, b=2)->float:  # blah'
+    '    return a+b  # return this'
+    ''
+    'def last_function(a, b):'
+    '    return a+b  # return this'
+    ''
+
+    >>> m = f.mark()
+    >>> body = f.a.body[1].body
+    >>> f.a.body[1] = FST('def f(): pass').a
+    >>> f.a.body[1].body = body
+    >>> f = f.reconcile(m, pep8space=1)
+    >>> for l in f.lines: print(repr(l))
+    'def first_function(a, b): return a * b  # yay!'
+    ''
+    'def f():'
+    '    return a+b  # return this'
+    ''
+    'def last_function(a, b):'
+    '    return a+b  # return this'
+    ''
+    ```
     """
 
     # TODO: allow multiple maked trees to participate?
@@ -388,7 +444,7 @@ def reconcile(self: 'FST', mark: 'FST') -> 'FST':
     if self._serial != mark._serial:
         raise RuntimeError('modification detected after mark(), irreconcilable')
 
-    rec = _Reconcile(self, mark)
+    rec = _Reconcile(self, mark, options)
 
     rec.recurse_node(self.a)
 

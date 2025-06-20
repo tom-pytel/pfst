@@ -273,6 +273,7 @@ class fstview:
         ```py
         >>> (f := FST('[0, 1, 2, 3]')).elts[1:3].cut().src
         '[1, 2]'
+
         >>> f.src
         '[0, 3]'
         ```
@@ -299,6 +300,7 @@ class fstview:
         ```py
         >>> FST('[0, 1, 2, 3]').elts[1:3].replace('(4, 5)').fst.src
         '[0, (4, 5), 3]'
+
         >>> FST('[0, 1, 2, 3]').elts[1:3].replace('(4, 5)', one=False).fst.src
         '[0, 4, 5, 3]'
         ```
@@ -353,10 +355,13 @@ class fstview:
         ```py
         >>> FST('[0, 1, 2, 3]').elts.insert('(4, 5)', 1).fst.src
         '[0, (4, 5), 1, 2, 3]'
+
         >>> FST('[0, 1, 2, 3]').elts.insert('(4, 5)', 'end', one=False).fst.src
         '[0, 1, 2, 3, 4, 5]'
+
         >>> FST('[0, 1, 2, 3]').elts.insert('(4, 5)', 4, one=False).fst.src  # same as 'end' but 'end' is always 'end'
         '[0, 1, 2, 3, 4, 5]'
+
         >>> FST('[0, 1, 2, 3]').elts[1:3].insert('*star').fst.src
         '[0, *star, 1, 2, 3]'
         ```
@@ -387,6 +392,7 @@ class fstview:
         ```py
         >>> FST('[0, 1, 2, 3]').elts.append('(4, 5)').fst.src
         '[0, 1, 2, 3, (4, 5)]'
+
         >>> FST('[0, 1, 2, 3]').elts[1:3].append('*star').fst.src
         '[0, 1, 2, *star, 3]'
         ```
@@ -412,6 +418,7 @@ class fstview:
         ```py
         >>> FST('[0, 1, 2, 3]').elts.extend('(4, 5)').fst.src
         '[0, 1, 2, 3, 4, 5]'
+
         >>> FST('[0, 1, 2, 3]').elts[1:3].extend('(4, 5)').fst.src
         '[0, 1, 2, 4, 5, 3]'
         ```

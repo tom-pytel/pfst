@@ -38,8 +38,10 @@ class TestDocTest(unittest.TestCase):
         options = fst.FST.get_options()
 
         try:
-            cleanup_docstrs(fst.fst)
-            self.assertEqual(0, doctest.testmod(fst.fst).failed)
+            for mod in (fst.fst, fst.fst_reconcile, fst.fst_walk):
+                cleanup_docstrs(mod)
+
+                self.assertEqual(0, doctest.testmod(mod).failed)
 
         finally:
             fst.FST.set_options(**options)
@@ -58,6 +60,7 @@ class TestDocTest(unittest.TestCase):
                 mod = importlib.import_module(f'examples.{example[:-3]}')
 
                 cleanup_docstrs(mod)
+
                 self.assertEqual(0, doctest.testmod(mod).failed)
 
         finally:

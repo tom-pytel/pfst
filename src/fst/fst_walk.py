@@ -1102,6 +1102,7 @@ def walk(self: 'FST', with_loc: bool | Literal['all', 'own'] = False, *, self_: 
 
     **Examples:**
     ```py
+    >>> import ast
     >>> f = FST('def f(a: list[str], /, reject: int, *c, d=100, **e): pass')
     >>> for g in (gen := f.walk(with_loc=True)):
     ...     if isinstance(g.a, ast.arg) and g.a.arg == 'reject':
