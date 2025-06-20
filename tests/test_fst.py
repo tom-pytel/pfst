@@ -18,6 +18,7 @@ from data_other import (PARS_DATA, COPY_DATA, GET_SLICE_SEQ_DATA, GET_SLICE_STMT
                         REPLACE_EXISTING_ONE_DATA)
 
 _PY_VERSION = sys.version_info[:2]
+_PYLT11     = _PY_VERSION < (3, 11)
 _PYLT12     = _PY_VERSION < (3, 12)
 _PYLT13     = _PY_VERSION < (3, 13)
 _PYLT14     = _PY_VERSION < (3, 14)
@@ -9841,20 +9842,28 @@ c, # c
         # replacing implicit starred tuple
 
         f = FST(['a[(*b,)]'])
-        f.slice.elts[0].replace('c.d')
+        f.slice.elts[0].replace('c.d', raw=False)
         self.assertEqual('a[(c.d,)]', f.src)
         f.verify()
 
         if not _PYLT12:
             f = FST(['a[*b,]'])
-            f.slice.elts[0].replace('c.d')
+            f.slice.elts[0].replace('c.d', raw=False)
             self.assertEqual('a[c.d,]', f.src)
             f.verify()
 
             f = FST(['a[*b]'])
-            f.slice.elts[0].replace('c.d')
+            f.slice.elts[0].replace('c.d', raw=False)
             self.assertEqual('a[c.d,]', f.src)
             f.verify()
+
+        # don't allow vararg with starred annotation into normal args
+
+        if not _PYLT11:
+            f = FST('def f(a, /, b, *v: *s, c): pass')
+            self.assertRaises(NodeError, f.args.posonlyargs[0].replace, f.args.vararg.copy(), raw=False)
+            self.assertRaises(NodeError, f.args.args[0].replace, f.args.vararg.copy(), raw=False)
+            self.assertRaises(NodeError, f.args.kwonlyargs[0].replace, f.args.vararg.copy(), raw=False)
 
     def test_put_one_op_pars(self):
         # boolop

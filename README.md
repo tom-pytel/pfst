@@ -103,7 +103,7 @@ This package is not finished but functional enough that it can be useful.
   * `Global.names` / `Nonlocal.names`
   * `JoinedStr` / `TemplateStr.values`
 
-* Improve comment handling and get/put specification and get rid of anoying trailing newlines with statements, they were originally intentional but are too ugly.
+* Improve comment handling and get/put specification and get rid of ugly trailing newlines.
 
 * Lots of other stuff...
 

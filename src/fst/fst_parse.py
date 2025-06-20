@@ -1336,6 +1336,7 @@ _PARSE_ALL_FUNCS = [
     _parse_callarg,
     _parse_comprehension,
     _parse_withitem,
+    _parse_arg,      # because of 'vararg: *starred'
     _parse_operator,
     _parse_cmpop,
     _parse_boolop,

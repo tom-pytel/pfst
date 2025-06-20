@@ -244,6 +244,10 @@ def can_replace(tgt: FST, repl: FST) -> bool:  # assuming ASTCat has already bee
             return False
 
     if isinstance(tgta, expr) and any(isinstance(f.a, pattern) for f in tgt.parents()):
+        if tgt_field == 'value':
+            if not is_valid_MatchValue_value(repla):
+                return False
+
         if tgt_field == 'cls':
             if not isinstance(repla, Name):
                 return False
@@ -258,7 +262,7 @@ def can_replace(tgt: FST, repl: FST) -> bool:  # assuming ASTCat has already bee
     if isinstance(tgta, pattern) and isinstance(repla, MatchStar) and not isinstance(tgt_parenta, MatchSequence):
         return False
 
-    if repl_field == 'vararg' and repla.annotation and tgt_field != 'vararg':  # because could have Starred annotation headed for a non-vararg field
+    if repl_field == 'vararg' and isinstance(repla.annotation, Starred) and tgt_field != 'vararg':  # because could have Starred annotation headed for a non-vararg field
         return False
 
     if isinstance(tgta, Slice) and not isinstance(repla, Slice):
@@ -1108,7 +1112,7 @@ class ReconcileMulti(Fuzzy):
 
     name    = 'reconcile_multi'
     forever = True
-    forever = False  # DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG!
+    # forever = False  # DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG!
 
     LEVEL_CHANCE = [1/4, 1/3, 1/2]
 
@@ -1147,8 +1151,8 @@ class ReconcileMulti(Fuzzy):
 
                         continue
 
-
-
+                elif repltype == 'fstin':
+                    pass
 
 
             self.walk_fst(f, next_level)
@@ -1165,9 +1169,9 @@ class ReconcileMulti(Fuzzy):
         master = fst.copy()
 
         try:
-            for count in range(self.batch or 200):
+            for count in range(self.batch or 100):
                 try:
-                    if not (count % 10):
+                    if not (count % 5):
                         sys.stdout.write('.'); sys.stdout.flush()
 
                     self.parts = self.master_parts.copy()
@@ -1190,7 +1194,7 @@ class ReconcileMulti(Fuzzy):
 
                         raise
 
-                break  # DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG!
+                # break  # DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG!
 
         finally:
             print()

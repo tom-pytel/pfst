@@ -1200,6 +1200,19 @@ def _put_one_Dict_keys(self: 'FST', code: _PutOneCode, idx: int | None, field: s
     return ret
 
 
+def _put_one_arg(self: 'FST', code: _PutOneCode, idx: int | None, field: str, child: AST, static: onestatic, **options,
+                 ) -> 'FST':
+    """Don't allow arg with Starred annotation into non-vararg args."""
+
+    child = _validate_put(self, code, idx, field, child)  # we want to do it in same order as all other puts
+    code  = static.code_as(code, self.root.parse_params)
+
+    if isinstance(code.a.annotation, Starred):
+        raise NodeError(f'cannot put arg with Starred annotation to {self.a.__class__.__name__}.{field}')
+
+    return _put_one_exprish_required(self, code, idx, field, child, static, 2, **options)
+
+
 def _put_one_arg_annotation(self: 'FST', code: _PutOneCode, idx: int | None, field: str, child: AST,
                             static: onestatic, **options) -> 'FST':
     """Allow Starred in vararg arg annotation in py 3.11+."""
@@ -2334,11 +2347,11 @@ _PUT_ONE_HANDLERS = {
     (ExceptHandler, 'type'):              (False, _put_one_exprish_optional, onestatic(_one_info_ExceptHandler_type, _restrict_default)), # expr?
     (ExceptHandler, 'name'):              (False, _put_one_ExceptHandler_name, onestatic(_one_info_ExceptHandler_name, _restrict_default, code_as=_code_as_identifier)), # identifier?
     (ExceptHandler, 'body'):              (True,  None, None), # stmt*
-    (arguments, 'posonlyargs'):           (False, _put_one_exprish_required, _onestatic_arg_required), # arg*
-    (arguments, 'args'):                  (False, _put_one_exprish_required, _onestatic_arg_required), # arg*
+    (arguments, 'posonlyargs'):           (False, _put_one_arg, _onestatic_arg_required), # arg*
+    (arguments, 'args'):                  (False, _put_one_arg, _onestatic_arg_required), # arg*
     (arguments, 'defaults'):              (False, _put_one_exprish_required, _onestatic_expr_required), # expr*
     (arguments, 'vararg'):                (False, _put_one_exprish_optional, onestatic(_one_info_arguments_vararg, _restrict_default, code_as=_code_as_arg)), # arg?
-    (arguments, 'kwonlyargs'):            (False, _put_one_exprish_required, _onestatic_arg_required), # arg*
+    (arguments, 'kwonlyargs'):            (False, _put_one_arg, _onestatic_arg_required), # arg*
     (arguments, 'kw_defaults'):           (False, _put_one_exprish_optional, onestatic(_one_info_arguments_kw_defaults, _restrict_default)), # expr*
     (arguments, 'kwarg'):                 (False, _put_one_exprish_optional, onestatic(_one_info_arguments_kwarg, _restrict_default, code_as=_code_as_arg)), # arg?
     (arg, 'arg'):                         (False, _put_one_identifier_required, _onestatic_identifier_required), # identifier
