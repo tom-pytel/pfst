@@ -806,7 +806,7 @@ def _make_exprish_fst(self: 'FST', code: _PutOneCode, idx: int | None, field: st
                     put_fst._unparenthesize_grouping()
 
         else:  # src does not have grouping pars
-            if ((tgt_has_pars := tgt_is_FST and target.pars(True, shared=False)[1]) and
+            if ((tgt_has_pars := tgt_is_FST and target.pars(True)[1]) and
                 put_fst.is_parenthesized_tuple() is False
             ):
                 del_tgt_pars = True

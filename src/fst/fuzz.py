@@ -8,7 +8,7 @@ from ast import *
 from collections import defaultdict
 from itertools import repeat
 from math import log10
-from random import choice, randint, seed, shuffle
+from random import choice, randint, random, seed, shuffle
 from types import NoneType
 from typing import Any, Generator, Iterable, Literal
 
@@ -128,10 +128,19 @@ class FSTParts:
     cats: dict   # {FST: ASTCat, ...}
     parts: dict  # {ASTCat: [FST, ...], ...}
 
-    def __init__(self, fst: FST, exclude: type[AST] | tuple[type[AST]] =
-                 (expr_context, mod, FormattedValue, Interpolation, alias, boolop, operator, unaryop)):
+    def __init__(self, fst: FST, exclude: type[AST] | tuple[type[AST]] | None = None):
+        if isinstance(fst, FSTParts):
+            self.cats    = fst.cats.copy()
+            self.parts   = {c: fs.copy() for c, fs in fst.parts.items()}
+            self.exclude = fst.exclude if exclude is None else exclude
+
+            return
+
         cats  = {}                 # {FST: ASTCat, ...}
         parts = defaultdict(list)  # {ASTCat: [FST, ...], ...}
+
+        if exclude is None:
+            exclude = (expr_context, mod, FormattedValue, Interpolation)
 
         for a in walk(fst.a):
             if isinstance(a, exclude):
@@ -145,6 +154,22 @@ class FSTParts:
         self.cats    = cats
         self.parts   = dict(parts)
         self.exclude = exclude
+
+    def copy(self) -> 'FSTParts':
+        return FSTParts(self)
+
+    def remove(self, fst: FST):
+        if not isinstance(fst.a, self.exclude):
+            if c := (cats := self.cats).get(fst):
+                del cats[fst]
+
+                self.parts[c].remove(fst)
+
+    def add(self, fst: FST):  # or put back removed
+        if not isinstance(fst.a, self.exclude):
+            self.cats[fst] = cat = astcat(fst)
+
+            self.parts[cat].append(fst)
 
     def remove_all(self, fst: FST):
         exclude = self.exclude
@@ -185,28 +210,17 @@ class FSTParts:
         return None, None
 
 
-# def test_replace(fst: FST, with_: FST | None) -> bool:
-#     stmt_ = fst.parent_stmt()
-#     path  = stmt_.child_path(fst)
-#     stmt_ = stmt_.copy()
+def test_replace(fst: FST, with_: FST | None) -> bool:
+    stmt_ = fst.parent_stmt()
+    path  = stmt_.child_path(fst)
+    stmt_ = stmt_.copy()
 
-#     try:
-#         stmt_.child_from_path(path).replace(with_.copy() if with_ else with_, raw=False).root.verify()
-#     except Exception:
-#         return False
+    try:
+        stmt_.child_from_path(path).replace(with_.copy() if with_ else with_, raw=False).root.verify()
+    except Exception:
+        return False
 
-#     return True
-
-
-# def can_replace(tgt: FST, repl: FST) -> bool:
-#     if not test_replace(tgt, repl):
-#         # print(f'Not valid: {tgt.src} <- {repl.src}')
-
-#         return False
-
-#     # print(f'Valid: {tgt.src} <- {repl.src}')
-
-#     return True
+    return True
 
 
 def can_replace(tgt: FST, repl: FST) -> bool:  # assuming ASTCat has already been checked and only testing allowed category
@@ -215,6 +229,16 @@ def can_replace(tgt: FST, repl: FST) -> bool:  # assuming ASTCat has already bee
 
     if _PYLT12:
         if any(isinstance(f.a, (JoinedStr, TemplateStr)) for f in tgt.parents()):
+            return False
+
+        if isinstance(repl_parenta, (JoinedStr, TemplateStr, FormattedValue, Interpolation)):
+            return False
+
+    else:
+        if isinstance(tgt_parenta, (JoinedStr, TemplateStr)):
+            return False
+
+        if isinstance(tgt_parenta, (FormattedValue, Interpolation)) and tgt.pfield.name != 'value':
             return False
 
     if isinstance(tgta, Slice) and not isinstance(repla, Slice):
@@ -1063,26 +1087,64 @@ class ReconcileMulti(Fuzzy):
     """This changes as many things as possible, so really testing reconcile."""
 
     name    = 'reconcile_multi'
-    forever = True
+    forever = True # False # True  # DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG!
+
+    LEVEL_CHANCE = [1/4, 1/3, 1/2]
+
+    def walk_fst(self, fst: FST, level: int = 0):
+        """Walk in-tree FST and replace random nodes."""
+
+        next_level   = level + 1
+        level_chance = self.LEVEL_CHANCE[min(len(self.LEVEL_CHANCE) - 1, level)]
+        exclude      = self.master_parts.exclude
+        ast          = fst.a
+
+        for f in fst.walk(True, self_=False, recurse=False):
+            if isinstance(f.a, exclude):  # (JoinedStr, TemplateStr, FormattedValue, Interpolation)):
+                continue
+
+            if random() > level_chance:
+                self.walk_fst(f, next_level)
+
+                continue
+
+            cat          = astcat(f)
+            allowed_cats = astcat_allowed_replacements(cat)
+            repltype     = choice(('fstin', 'fstout', 'ast'))
+
+            if repltype == 'fstout':
+                repl, _ = self.master_parts.getrnd(allowed_cats)
+
+                if repl and can_replace(f, repl):
+                    f.pfield.set(ast, repl.copy().a)
+
+                continue
+
+            self.walk_fst(f, next_level)
+
+
+
+
+
+
 
     def fuzz_one(self, fst, fnm) -> bool:
+        self.master_parts = FSTParts(fst)
+
         master = fst.copy()
 
         try:
             for count in range(self.batch or 200):
-                repltype = None
-
                 try:
                     if not (count % 10):
                         sys.stdout.write('.'); sys.stdout.flush()
 
-                    fst   = master.copy()
-                    mark  = fst.mark()
-                    parts = FSTParts(fst, exclude=(expr_context, mod, FormattedValue, Interpolation))
+                    self.parts = self.master_parts.copy()
 
+                    fst  = master.copy()
+                    mark = fst.mark()
 
-
-
+                    self.walk_fst(fst)
 
                     fst = fst.reconcile(mark)
 
@@ -1096,6 +1158,8 @@ class ReconcileMulti(Fuzzy):
                             print(fst.src)
 
                         raise
+
+                # break  # DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG!
 
         finally:
             print()

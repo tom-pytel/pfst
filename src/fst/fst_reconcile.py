@@ -377,7 +377,8 @@ def reconcile(self: 'FST', mark: 'FST', **options) -> 'FST':
 
     **WARNING!** Just like an `ast.unparse()`, the fact that this function completes successfully does NOT mean the
     output is syntactically correct if you put weird nodes where they don't belong, maybe accidentally. In order to make
-    sure the result is valid you should run `verify()` on the output.
+    sure the result is valid (syntactically) you should run `verify()` on the output. This still won't guarantee you
+    have actual valid code, `def f(x, x): pass` parses ok but will cause an error if you try to compile it.
 
     **Parameters:**
     - `mark`: A previously marked snapshot of `self`. This object is not consumed on use, success or failure.
