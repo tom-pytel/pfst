@@ -1,4 +1,4 @@
-"""This module explains parsing and unparsing and the various ways to convert source and `AST` nodes to `FST` and back.
+r"""This module explains parsing and unparsing and the various ways to convert source and `AST` nodes to `FST` and back.
 
 First import this, it includes an import of the `ast` module since it is useful to have it handy.
 ```py
@@ -222,5 +222,30 @@ Slice - ROOT 0,0..0,5
   .lower Name 'a' Load - 0,0..0,1
   .upper Name 'b' Load - 0,2..0,3
   .step Name 'c' Load - 0,4..0,5
+```
+
+Finally, a note on the `.src` attribute. This gives the full valid source only if accessed at the root node. If accessed
+at any node below, it will return the UNINDENTED source for the location of the node, except for the first line which
+will be completely unindented. If you want full correctly unindented source for nodes which are not root, you should
+`copy()` that node and get the source of that. E.g.
+
+```py
+>>> f = FST('''
+... def f(a):
+...     if a:
+...         print(a)
+... '''.strip())
+>>> print(f.body[0])
+<If 1,4..2,16>
+>>> print(f.src)
+def f(a):
+    if a:
+        print(a)
+>>> print(f.body[0].src)
+if a:
+        print(a)
+>>> print(f.body[0].copy().src)
+if a:
+    print(a)
 ```
 """
