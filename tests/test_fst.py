@@ -9697,6 +9697,24 @@ a
         self.assertEqual('case {1: x\n  .\n  y.b}: pass', f.src)
         f.verify()
 
+        f = FST('case 1: pass')
+        self.assertRaises(NodeError, f.pattern.replace, '*s', raw=False)
+
+        f = FST('case 0 as z: pass')
+        self.assertRaises(NodeError, f.pattern.pattern.replace, '*s', raw=False)
+
+        f = FST('case {0: z}: pass')
+        self.assertRaises(NodeError, f.pattern.patterns[0].replace, '*s', raw=False)
+
+        f = FST('case cls(a): pass')
+        self.assertRaises(NodeError, f.pattern.patterns[0].replace, '*s', raw=False)
+
+        f = FST('case cls(a=1): pass')
+        self.assertRaises(NodeError, f.pattern.kwd_patterns[0].replace, '*s', raw=False)
+
+        f = FST('case a | b: pass')
+        self.assertRaises(NodeError, f.pattern.patterns[0].replace, '*s', raw=False)
+
         # Tuple Slice behavior
 
         self.assertEqual('x:y:z, b', FST('a, b').elts[0].replace('x:y:z', raw=False).root.src)

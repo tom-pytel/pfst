@@ -224,8 +224,9 @@ def test_replace(fst: FST, with_: FST | None) -> bool:
 
 
 def can_replace(tgt: FST, repl: FST) -> bool:  # assuming ASTCat has already been checked and only testing allowed category
-    tgta , tgt_parenta  = tgt.a,  tgt.parent.a
     repla, repl_parenta = repl.a, repl.parent.a
+    tgta , tgt_parenta  = tgt.a,  tgt.parent.a
+    tgt_field, _        = tgt.pfield
 
     if _PYLT12:
         if any(isinstance(f.a, (JoinedStr, TemplateStr)) for f in tgt.parents()):
@@ -238,8 +239,23 @@ def can_replace(tgt: FST, repl: FST) -> bool:  # assuming ASTCat has already bee
         if isinstance(tgt_parenta, (JoinedStr, TemplateStr)):
             return False
 
-        if isinstance(tgt_parenta, (FormattedValue, Interpolation)) and tgt.pfield.name != 'value':
+        if isinstance(tgt_parenta, (FormattedValue, Interpolation)) and tgt_field != 'value':
             return False
+
+    if isinstance(tgta, expr) and any(isinstance(f.a, pattern) for f in tgt.parents()):
+        if tgt_field == 'cls':
+            if not isinstance(repla, Name):
+                return False
+
+        elif isinstance(tgta, (Name, Attribute)):
+            if not isinstance(repla, (Name, Attribute)):
+                return False
+
+        elif not is_valid_MatchValue_value(repla):
+            return False
+
+    if isinstance(tgta, pattern) and isinstance(repla, MatchStar) and not isinstance(tgt_parenta, MatchSequence):
+        return False
 
     if isinstance(tgta, Slice) and not isinstance(repla, Slice):
         return False

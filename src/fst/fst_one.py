@@ -1264,6 +1264,9 @@ def _put_one_MatchAs_pattern(self: 'FST', code: _PutOneCode, idx: int | None, fi
     if code is not None:
         code = static.code_as(code, self.root.parse_params)
 
+        if isinstance(code.a, MatchStar):
+            raise NodeError(f'cannot put a MatchStar to MatchAs.pattern')
+
         if code.is_enclosed_matchseq() is False:
             code._parenthesize_node(pars='[]')
 
@@ -1277,7 +1280,11 @@ def _put_one_pattern(self: 'FST', code: _PutOneCode, idx: int | None, field: str
     child = _validate_put(self, code, idx, field, child)  # we want to do it in same order as all other puts
     code  = static.code_as(code, self.root.parse_params)
 
-    if code.is_enclosed_matchseq() is False:
+    if isinstance(code.a, MatchStar):
+        if not isinstance(self.a, MatchSequence):
+            raise NodeError(f'cannot put a MatchStar to {self.a.__class__.__name__}.{field}')
+
+    elif code.is_enclosed_matchseq() is False:
         code._parenthesize_node(pars='[]')
 
     return _put_one_exprish_required(self, code, idx, field, child, static, 2, **options)
