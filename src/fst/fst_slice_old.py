@@ -293,8 +293,10 @@ def _put_slice_tuple_list_or_set(self: 'FST', code: Code | None, start: int | Li
         put_fst = self._code_as_expr(code, self.root.parse_params)
 
         if one:
-            if put_fst.is_parenthesized_tuple() is False:  # don't put unparenthesized tuple source as one into sequence, it would merge into the sequence
+            if (b := put_fst.is_parenthesized_tuple()) is False:  # don't put unparenthesized tuple source as one into sequence, it would merge into the sequence
                 put_fst._parenthesize_node()
+            elif b is None and precedence_require_parens(put_fst.a, self.a, 'elts', 0) and not put_fst.pars().n:
+                put_fst._parenthesize_grouping()
 
             ls       = put_fst._lines
             put_ast  = Set(elts=[put_fst.a], lineno=1, col_offset=0, end_lineno=len(ls), end_col_offset=ls[-1].lenbytes)
