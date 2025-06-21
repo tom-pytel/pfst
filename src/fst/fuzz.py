@@ -1,4 +1,4 @@
-"""Ugly, hacky fuzzers, mostly mean for debugging `fst` itself."""
+"""Ugly, super-hacky fuzzers, mostly meant for debugging `fst` itself."""
 
 import argparse
 import os
@@ -14,6 +14,7 @@ from typing import Any, Generator, Iterable, Literal
 
 from .astutil import *
 from .astutil import TypeAlias, TemplateStr, Interpolation
+from .shared import astfield
 from .fst import FST, NodeError
 
 PROGRAM     = 'python -m fst.fuzz'
@@ -100,7 +101,17 @@ def astbase(cls: type[AST]) -> type[AST]:  # ast base class just above AST
 
 ASTCat = type[AST]  # mod, stmt, expr, Slice, slice, expr_context, boolop, operator, unaryop, cmpop, comprehension, excepthandler, ExceptHandler, arguments, arg, keyword, alias, withitem, match_case, pattern
 
-def astcat(fst: FST) -> ASTCat:  # ast category (replacement compatibility)
+def astcat(ast: AST, parent: AST) -> ASTCat:  # ast category (replacement compatibility)
+    if isinstance(ast, ExceptHandler):
+        return ExceptHandler if isinstance(parent, Try) else excepthandler  # Try vs. TryStar
+    if isinstance(ast, (Starred, Slice)):
+        return ast.__class__
+    if isinstance(ast, Slice) or (isinstance(ast, Tuple) and any(isinstance(e, Slice) for e in ast.elts)):
+        return slice  # Tuple containing Slice
+
+    return astbase(ast.__class__)
+
+def fstcat(fst: FST) -> ASTCat:  # ast category (replacement compatibility)
     a = fst.a
 
     if isinstance(a, ExceptHandler):
@@ -148,7 +159,7 @@ class FSTParts:
                 continue
 
             f   = a.f
-            cat = cats[f] = astcat(f)
+            cat = cats[f] = fstcat(f)
 
             parts[cat].append(f)
 
@@ -168,7 +179,7 @@ class FSTParts:
 
     def add(self, fst: FST):  # or put back removed
         if not isinstance(fst.a, self.exclude):
-            self.cats[fst] = cat = astcat(fst)
+            self.cats[fst] = cat = fstcat(fst)
 
             self.parts[cat].append(fst)
 
@@ -178,8 +189,8 @@ class FSTParts:
         cats    = self.cats
 
         for a in walk(fst.a):
-            if not isinstance(a, exclude):
-                if c := cats.get(f := a.f):
+            if not isinstance(a, exclude) and (f := getattr(a, 'f', None)):
+                if (c := cats.get(f)) and f in cats:
                     del cats[f]
 
                     parts[c].remove(f)
@@ -192,7 +203,7 @@ class FSTParts:
         for a in walk(fst.a):
             if not isinstance(a, exclude):
                 f       = a.f
-                cats[f] = cat = astcat(f)
+                cats[f] = cat = fstcat(f)
 
                 parts[cat].append(f)
 
@@ -225,110 +236,222 @@ def test_replace(fst: FST, with_: FST | None) -> bool:
 
 
 def can_replace(tgt: FST, repl: FST) -> bool:  # assuming ASTCat has already been checked and only testing allowed category
-    repla, repl_parenta = repl.a, repl.parent.a
-    tgta,  tgt_parenta  = tgt.a,  tgt.parent.a
-    tgt_field, _        = tgt.pfield
-    repl_field, _       = repl.pfield
+    try:
+        repla, repl_parenta = repl.a, repl.parent.a
+        tgta,  tgt_parenta  = tgt.a,  tgt.parent.a
+        tgt_field, _        = tgt.pfield
+        repl_field, _       = repl.pfield
 
-    if _PYLT12:
-        if any(isinstance(f.a, (JoinedStr, TemplateStr)) for f in tgt.parents()):
-            return False
-
-        if isinstance(repl_parenta, (JoinedStr, TemplateStr, FormattedValue, Interpolation)):
-            return False
-
-    else:
-        if isinstance(tgt_parenta, (JoinedStr, TemplateStr)):
-            return False
-
-        if isinstance(tgt_parenta, (FormattedValue, Interpolation)) and tgt_field != 'value':
-            return False
-
-    if isinstance(tgta, expr) and any(isinstance(f.a, pattern) for f in tgt.parents()):
-        if tgt_field == 'value':
-            if not is_valid_MatchValue_value(repla):
+        if _PYLT12:
+            if any(isinstance(f.a, (JoinedStr, TemplateStr)) for f in tgt.parents()):
                 return False
 
-        if tgt_field == 'cls':
-            if not isinstance(repla, Name):
+            if isinstance(repl_parenta, (JoinedStr, TemplateStr, FormattedValue, Interpolation)):
                 return False
 
-        elif isinstance(tgta, (Name, Attribute)):
-            if not isinstance(repla, (Name, Attribute)):
+        else:
+            if isinstance(tgt_parenta, (JoinedStr, TemplateStr)):
                 return False
 
-        elif not is_valid_MatchValue_value(repla):
+            if isinstance(tgt_parenta, (FormattedValue, Interpolation)) and tgt_field != 'value':
+                return False
+
+        if isinstance(tgta, expr) and any(isinstance(f.a, pattern) for f in tgt.parents()):
+            if tgt_field == 'value':
+                if not is_valid_MatchValue_value(repla):
+                    return False
+
+            if tgt_field == 'cls':
+                if not isinstance(repla, Name):
+                    return False
+
+            elif isinstance(tgta, (Name, Attribute)):
+                if not isinstance(repla, (Name, Attribute)):
+                    return False
+
+            elif not is_valid_MatchValue_value(repla):
+                return False
+
+        if isinstance(tgta, pattern) and isinstance(repla, MatchStar) and not isinstance(tgt_parenta, MatchSequence):
             return False
 
-    if isinstance(tgta, pattern) and isinstance(repla, MatchStar) and not isinstance(tgt_parenta, MatchSequence):
+        if tgt.parent_pattern():
+            if tgt_field in ('left', 'right', 'operand', 'op'):  # just don't bother
+                return False
+
+            if tgt_field == 'keys' and isinstance(repla, Name):
+                return False
+
+        if repl_field == 'vararg' and isinstance(repla.annotation, Starred) and tgt_field != 'vararg':  # because could have Starred annotation headed for a non-vararg field
+            return False
+
+        if _PYLT11:
+            if isinstance(tgt_parenta, Tuple) and isinstance(repla, Starred) and tgt.parent.pfield == ('slice', None):
+                return False
+
+        if isinstance(tgta, Slice) and not isinstance(repla, Slice):
+            return False
+
+        if isinstance(tgta, alias):
+            if isinstance(tgt_parenta, Import):
+                if '*' in repla.name:
+                    return False
+
+            if isinstance(tgt_parenta, ImportFrom):
+                if '.' in repla.name:
+                    return False
+                if '*' in repla.name and len(tgt_parenta.names) > 1:
+                    return False
+
+        if (isinstance(tgta, arguments) and isinstance(tgt_parenta, Lambda) and
+            not isinstance(repl_parenta, Lambda)
+        ):
+            return False
+
+        if (isinstance(tgta, arg) and isinstance(tgt_parenta, arguments) and
+            isinstance(tgt.parent.parent.a, Lambda) and repla.annotation
+        ):
+            return False
+
+        if not isinstance(ctx := getattr(tgta, 'ctx', Load()), Load):
+            if isinstance(ctx, Del) or not getattr(repla, 'ctx', None):
+                return False
+
+            allowed = None
+            f       = tgt
+
+            while f := f.parent:
+                if isinstance(a := f.a, (Delete, Assign, For, AsyncFor, comprehension)):
+                    allowed = (Name, Attribute, Subscript)#, Tuple, List)
+
+                    break
+
+                if isinstance(a, (AugAssign, AnnAssign)):
+                    allowed = (Name, Attribute, Subscript)
+
+                    break
+
+                if isinstance(a, (TypeAlias, NamedExpr)):
+                    allowed = Name
+
+                    break
+
+                if not isinstance(a, expr):  # EXPRISH?
+                    break
+
+            if not allowed or not isinstance(repla, allowed):
+                return False
+
+    except Exception:
         return False
 
-    if tgt.parent_pattern():
-        if tgt_field in ('left', 'right', 'operand', 'op'):  # just don't bother
-            return False
+    return True
 
-        if tgt_field == 'keys' and isinstance(repla, Name):
-            return False
 
-    if repl_field == 'vararg' and isinstance(repla.annotation, Starred) and tgt_field != 'vararg':  # because could have Starred annotation headed for a non-vararg field
-        return False
+def can_replace_ast(tgta: AST, tgt_parenta: AST, tgt_field: str, repla: AST, repl_parenta: AST, repl_field: str) -> bool:  # the best we can do for pure AST
+    try:
+        if _PYLT12:
+            # if any(isinstance(f.a, (JoinedStr, TemplateStr)) for f in tgt.parents()):
+            #     return False
 
-    if _PYLT11:
-        if isinstance(tgt_parenta, Tuple) and isinstance(repla, Starred) and tgt.parent.pfield == ('slice', None):
-            return False
-
-    if isinstance(tgta, Slice) and not isinstance(repla, Slice):
-        return False
-
-    if isinstance(tgta, alias):
-        if isinstance(tgt_parenta, Import):
-            if '*' in repla.name:
+            if isinstance(repl_parenta, (JoinedStr, TemplateStr, FormattedValue, Interpolation)):
                 return False
 
-        if isinstance(tgt_parenta, ImportFrom):
-            if '.' in repla.name:
-                return False
-            if '*' in repla.name and len(tgt_parenta.names) > 1:
+        else:
+            if isinstance(tgt_parenta, (JoinedStr, TemplateStr)):
                 return False
 
-    if (isinstance(tgta, arguments) and isinstance(tgt_parenta, Lambda) and
-        not isinstance(repl_parenta, Lambda)
-    ):
-        return False
+            if isinstance(tgt_parenta, (FormattedValue, Interpolation)) and tgt_field != 'value':
+                return False
 
-    if (isinstance(tgta, arg) and isinstance(tgt_parenta, arguments) and
-        isinstance(tgt.parent.parent.a, Lambda) and repla.annotation
-    ):
-        return False
+        # if isinstance(tgta, expr) and any(isinstance(f.a, pattern) for f in tgt.parents()):
+        #     if tgt_field == 'value':
+        #         if not is_valid_MatchValue_value(repla):
+        #             return False
 
-    if not isinstance(ctx := getattr(tgta, 'ctx', Load()), Load):
-        if isinstance(ctx, Del) or not getattr(repla, 'ctx', None):
+        #     if tgt_field == 'cls':
+        #         if not isinstance(repla, Name):
+        #             return False
+
+        #     elif isinstance(tgta, (Name, Attribute)):
+        #         if not isinstance(repla, (Name, Attribute)):
+        #             return False
+
+        #     elif not is_valid_MatchValue_value(repla):
+        #         return False
+
+        if isinstance(tgta, pattern) and isinstance(repla, MatchStar) and not isinstance(tgt_parenta, MatchSequence):
             return False
 
-        allowed = None
-        f       = tgt
+        # if tgt.parent_pattern():
+        #     if tgt_field in ('left', 'right', 'operand', 'op'):  # just don't bother
+        #         return False
 
-        while f := f.parent:
-            if isinstance(a := f.a, (Delete, Assign, For, AsyncFor, comprehension)):
-                allowed = (Name, Attribute, Subscript)#, Tuple, List)
+        #     if tgt_field == 'keys' and isinstance(repla, Name):
+        #         return False
 
-                break
-
-            if isinstance(a, (AugAssign, AnnAssign)):
-                allowed = (Name, Attribute, Subscript)
-
-                break
-
-            if isinstance(a, (TypeAlias, NamedExpr)):
-                allowed = Name
-
-                break
-
-            if not isinstance(a, expr):  # EXPRISH?
-                break
-
-        if not allowed or not isinstance(repla, allowed):
+        if repl_field == 'vararg' and isinstance(repla.annotation, Starred) and tgt_field != 'vararg':  # because could have Starred annotation headed for a non-vararg field
             return False
+
+        # if _PYLT11:
+        #     if isinstance(tgt_parenta, Tuple) and isinstance(repla, Starred) and tgt.parent.pfield == ('slice', None):
+        #         return False
+
+        if isinstance(tgta, Slice) and not isinstance(repla, Slice):
+            return False
+
+        if isinstance(tgta, alias):
+            if isinstance(tgt_parenta, Import):
+                if '*' in repla.name:
+                    return False
+
+            if isinstance(tgt_parenta, ImportFrom):
+                if '.' in repla.name:
+                    return False
+                if '*' in repla.name and len(tgt_parenta.names) > 1:
+                    return False
+
+        if (isinstance(tgta, arguments) and isinstance(tgt_parenta, Lambda) and
+            not isinstance(repl_parenta, Lambda)
+        ):
+            return False
+
+        # if (isinstance(tgta, arg) and isinstance(tgt_parenta, arguments) and
+        #     isinstance(tgt.parent.parent.a, Lambda) and repla.annotation
+        # ):
+        #     return False
+
+        # if not isinstance(ctx := getattr(tgta, 'ctx', Load()), Load):
+        #     if isinstance(ctx, Del) or not getattr(repla, 'ctx', None):
+        #         return False
+
+        #     allowed = None
+        #     f       = tgt
+
+        #     while f := f.parent:
+        #         if isinstance(a := f.a, (Delete, Assign, For, AsyncFor, comprehension)):
+        #             allowed = (Name, Attribute, Subscript)#, Tuple, List)
+
+        #             break
+
+        #         if isinstance(a, (AugAssign, AnnAssign)):
+        #             allowed = (Name, Attribute, Subscript)
+
+        #             break
+
+        #         if isinstance(a, (TypeAlias, NamedExpr)):
+        #             allowed = Name
+
+        #             break
+
+        #         if not isinstance(a, expr):  # EXPRISH?
+        #             break
+
+        #     if not allowed or not isinstance(repla, allowed):
+        #         return False
+
+    except Exception:
+        return False
 
     return True
 
@@ -1027,173 +1150,185 @@ class PutOnePat(Fuzzy):
             sys.stdout.write('\n')
 
 
-class Reconcile1(Fuzzy):
-    """This is mostly testing put and syntax, not so much the reconcile."""
-
-    name    = 'reconcile1'
-    forever = True
-
-    def fuzz_one(self, fst, fnm) -> bool:
-        master = fst.copy()
-
-        try:
-            for count in range(self.batch or 200):
-                repltype = None
-
-                try:
-                    if not (count % 10):
-                        sys.stdout.write('.'); sys.stdout.flush()
-
-                    fst   = master.copy()
-                    mark  = fst.mark()
-                    parts = FSTParts(fst, exclude=(expr_context, mod, FormattedValue, Interpolation))
-
-                    tgt, cat = parts.getrnd()
-
-                    if not tgt:
-                        break
-
-                    if isinstance((tgt_parent := tgt.parent).a,
-                                  (FormattedValue, Interpolation, JoinedStr, TemplateStr)):  # not supported yet
-                        continue
-
-                    repl, _ = parts.getrnd(astcat_allowed_replacements(cat))
-
-                    if not repl:
-                        continue
-
-                    if not can_replace(tgt, repl):
-                        continue
-
-                    if (repltype := choice(('fstin', 'fstout', 'ast'))) == 'ast':
-                        a = copy_ast(repl.a)
-                    elif repltype == 'fstout':
-                        a = repl.copy().a
-
-                    else:  # repltype == 'fstin'
-                        f = tgt
-
-                        while f := f.parent:  # make sure parent is not put into child in this mode
-                            if f is repl:
-                                break
-
-                        if f:
-                            continue
-
-                        a = repl.a
-
-                    if self.debug:
-                        tgt_path    = tgt.root.child_path(tgt, True)
-                        repl_path   = repl.root.child_path(repl, True)
-                        tgt_parent  = tgt.parent.copy()
-                        repl_parent = repl.parent.copy()
-
-                    tgt.pfield.set(tgt.parent.a, a)
-
-                    fst = fst.reconcile(mark)
-
-                    fst.verify()
-
-                except Exception as exc:
-                    if not ignorable_exc(exc):
-                        print()
-
-                        if self.verbose:
-                            print(fst.src)
-
-                        print(f'{repltype = }')
-                        print(f'{tgt.src = }')
-                        print(f'{repl.src = }')
-                        print(f'{type(tgt.a) = }')
-                        print(f'{type(repl.a) = }')
-
-                        if self.debug:
-                            print(f'{tgt_path = }')
-                            print(f'{repl_path = }')
-                            print(f'{type(tgt_parent.a) = }')
-                            print(f'{type(repl_parent.a) = }')
-                            print(f'{tgt_parent.src = }')
-                            print(f'{repl_parent.src = }')
-
-                        raise
-
-                    # fst = master.copy()  # because not sure about state
-
-        finally:
-            print()
-
-        if self.verbose:
-            print(fst.src)
-
-
 class Reconcile(Fuzzy):
     """This changes as many things as possible, so really testing reconcile."""
 
     name    = 'reconcile'
     forever = True
-    # forever = False  # DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG!
+    # forever = False  # DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG!
 
     LEVEL_CHANCE = [1/4, 1/3, 1/2]
 
-    def walk_fst(self, fst: FST, level: int = 0):
+    def walk_ast(self, ast: AST, level: int = 0, parents: list[AST] = []):
+        """Walk pure AST and replace random nodes."""
+
+        next_level   = level + 1
+        level_chance = self.LEVEL_CHANCE[min(len(self.LEVEL_CHANCE) - 1, level)]
+        exclude      = self.master_parts.exclude
+        parents      = parents + [ast]
+
+        for field, child in iter_fields(ast):
+            if isinstance(child, AST):
+                child = [(None, child)]
+            elif isinstance(child, list):
+                child = list(enumerate(child))
+            else:
+                continue
+
+            for idx, a in child:
+                if isinstance(a, exclude) or not isinstance(a, AST):
+                    continue
+
+                if random() < level_chance:
+                    cat          = astcat(a, ast)
+                    allowed_cats = astcat_allowed_replacements(cat)
+                    repltype     = choice(('fstin', 'fstout', 'ast'))
+
+                    if repltype == 'fstout':
+                        repl, _ = self.master_parts.getrnd(allowed_cats)
+
+                        if repl and can_replace_ast(a, ast, field, repl.a, repl.parent.a, repl.pfield.name):
+                            astfield(field, idx).set(ast, a := copy_ast(a))
+
+                            continue
+
+                    # if repltype == 'ast':
+                    elif repltype == 'ast':
+                        repl, _ = self.master_parts.getrnd(allowed_cats)
+
+                        if repl and can_replace_ast(a, ast, field, repl.a, repl.parent.a, repl.pfield.name):
+                            astfield(field, idx).set(ast, a := copy_ast(a))
+
+                    # # if repltype == 'fstin':
+                    # elif repltype == 'fstin':
+                    #     repl, _ = self.parts.getrnd(allowed_cats)
+
+                    #     if (repl and can_replace_ast(a, ast, field, repl.a, repl.parent.a, repl.pfield.name) and
+                    #         # not last_fst.root.child_path(last_fst, as_str=True).startswith(repl.root.child_path(repl, as_str=True))
+                    #         repl.a not in parents
+                    #     ):
+                    #         self.parts.remove_all(repl)
+                    #         astfield(field, idx).set(ast, repl.a)
+
+                    #         # print('...', repl.root.child_path(repl, True))
+
+                    #         repl.DO_NOT_ENTER = True
+
+                    #         self.walk_fst(repl, next_level, parents)
+
+                    #         continue
+
+                self.walk_ast(a, next_level, parents)
+
+    def walk_fst(self, fst: FST, level: int = 0, parents: list[AST] = []):
         """Walk in-tree FST and replace random nodes."""
 
         next_level   = level + 1
         level_chance = self.LEVEL_CHANCE[min(len(self.LEVEL_CHANCE) - 1, level)]
         exclude      = self.master_parts.exclude
         ast          = fst.a
+        parents      = parents + [ast]
 
-        for f in fst.walk(True, self_=False, recurse=False):
+        for f in fst.walk(self_=False, recurse=False):
             if isinstance(f.a, exclude):
                 continue
 
             if random() < level_chance:
-                cat          = astcat(f)
+                cat          = fstcat(f)
                 allowed_cats = astcat_allowed_replacements(cat)
                 repltype     = choice(('fstin', 'fstout', 'ast'))
 
-                # if repltype == 'fstout':
-                #     repl, _ = self.master_parts.getrnd(allowed_cats)
+                if repltype == 'fstout':
+                    repl, _ = self.master_parts.getrnd(allowed_cats)
 
-                #     if repl and can_replace(f, repl):
-                #         f.pfield.set(ast, repl.copy().a)
+                    if repl and can_replace(f, repl):
+                        f.pfield.set(ast, repl.copy().a)
 
-                #         continue
+                        continue
 
-                # elif repltype == 'ast':
-                #     repl, _ = self.master_parts.getrnd(allowed_cats)
+                # if repltype == 'ast':
+                elif repltype == 'ast':
+                    repl, _ = self.master_parts.getrnd(allowed_cats)
 
-                #     if repl and can_replace(f, repl):
-                #         f.pfield.set(ast, a := copy_ast(repl.a))
+                    if repl and can_replace(f, repl):
+                        f.pfield.set(ast, a := copy_ast(repl.a))
 
-                #         # self.walk_ast(a, next_level)
+                        if self.debug:
+                            self.walk_ast(a, next_level, parents)
 
-                #         continue
+                        continue
 
-                if repltype == 'fstin':
-                # elif repltype == 'fstin':
+                # if repltype == 'fstin':
+                elif repltype == 'fstin':
                     repl, _ = self.parts.getrnd(allowed_cats)
 
                     if (repl and can_replace(f, repl) and
-                        not f.root.child_path(f, as_str=True).startswith(repl.root.child_path(repl, as_str=True))
+                    #    not f.root.child_path(f, as_str=True).startswith(repl.root.child_path(repl, as_str=True))
+                        repl.a not in parents
                     ):
+                        self.parts.remove_all(repl)
                         f.pfield.set(ast, repl.a)
 
-            self.walk_fst(f, next_level)
+            if not getattr(f, 'DO_NOT_ENTER', False):
+                self.walk_fst(f, next_level, parents)
 
+    # def walk_fst(self, fst: FST, level: int = 0):
+    #     """Walk in-tree FST and replace random nodes."""
 
+    #     next_level   = level + 1
+    #     level_chance = self.LEVEL_CHANCE[min(len(self.LEVEL_CHANCE) - 1, level)]
+    #     exclude      = self.master_parts.exclude
+    #     ast          = fst.a
 
+    #     for f in fst.walk(True, self_=False, recurse=False):
+    #         if isinstance(f.a, exclude):
+    #             continue
 
+    #         if random() < level_chance:
+    #             cat          = fstcat(f)
+    #             allowed_cats = astcat_allowed_replacements(cat)
+    #             repltype     = choice(('fstin', 'fstout', 'ast'))
 
+    #             if repltype == 'fstout':
+    #                 repl, _ = self.master_parts.getrnd(allowed_cats)
 
+    #                 if repl and can_replace(f, repl):
+    #                     f.pfield.set(ast, repl.copy().a)
+
+    #                     continue
+
+    #             elif repltype == 'ast':
+    #                 repl, _ = self.master_parts.getrnd(allowed_cats)
+
+    #                 if repl and can_replace(f, repl):
+    #                     f.pfield.set(ast, a := copy_ast(repl.a))
+
+    #                     # self.walk_ast(a, next_level)
+
+    #                     continue
+
+    #             # if repltype == 'fstin':
+    #             elif repltype == 'fstin':
+    #                 repl, _ = self.parts.getrnd(allowed_cats)
+
+    #                 if (repl and can_replace(f, repl) and
+    #                     not f.root.child_path(f, as_str=True).startswith(repl.root.child_path(repl, as_str=True))
+    #                 ):
+    #                     f.pfield.set(ast, repl.a)
+
+    #         self.walk_fst(f, next_level)
 
     def fuzz_one(self, fst, fnm) -> bool:
-        self.master_parts = FSTParts(fst)
+        # self.master_parts = FSTParts(fst)
+        # master            = fst.copy()
 
-        master = fst.copy()
+        real_master = fst.copy()
 
         try:
             for count in range(self.batch or 100):
+                self.master_parts = FSTParts(real_master)
+                master            = real_master.copy()
+
                 if count:
                     self.reseed()  # allow first one to be with specified seed, otherwise reseed to have seed to this round to be able to get back to it quicker
 
@@ -1203,15 +1338,21 @@ class Reconcile(Fuzzy):
 
                     self.parts = self.master_parts.copy()
 
-                    fst  = master.copy()
-                    mark = fst.mark()
+                    fst        = master.copy()
+                    # self.parts = FSTParts(fst)
+                    mark       = fst.mark()
 
                     self.walk_fst(fst)
 
                     with fst.options(docstr=False):
                         fst = fst.reconcile(mark)
 
-                    fst.verify()
+                    try:
+                        fst.verify()
+
+                    except SyntaxError:
+                        if not self.debug:
+                            raise
 
                 except Exception as exc:
                     if not ignorable_exc(exc):

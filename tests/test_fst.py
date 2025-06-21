@@ -11906,6 +11906,26 @@ if 1:
                 '''.strip(), f.src)
             f.verify()
 
+        a = (o := FST('[\n[\n[\n[\n[\n[\n[\n[\nx,#0\n0\n],#1\n1\n],#2\n2\n],#3\n3\n],#4\n4\n],#5\n5\n],#6\n6\n],#7\n7\n]')).a
+        m = o.mark()
+        a.elts[0] = List(elts=[a.elts[0].elts[0]])
+        a.elts[0].elts[0].elts[0] = List(elts=[a.elts[0].elts[0].elts[0].elts[0]])
+        a.elts[0].elts[0].elts[0].elts[0].elts[0] = List(elts=[a.elts[0].elts[0].elts[0].elts[0].elts[0].elts[0]])
+        a.elts[0].elts[0].elts[0].elts[0].elts[0].elts[0].elts[0] = List(elts=[a.elts[0].elts[0].elts[0].elts[0].elts[0].elts[0].elts[0].elts[0]])
+        f = o.reconcile(m)
+        self.assertEqual('[\n[\n[\n[\n[\n[\n[\n[\nx,#0\n],#1\n1\n],#2\n],#3\n3\n],#4\n],#5\n5\n],#6\n],#7\n7\n]', f.src)
+        f.verify()
+
+        a = (o := FST('[\n[\n[\n[\n[\n[\n[\n[\nx,#0\n0\n],#1\n1\n],#2\n2\n],#3\n3\n],#4\n4\n],#5\n5\n],#6\n6\n],#7\n7\n]')).a
+        m = o.mark()
+        o.a = List(elts=[a.elts[0]])
+        a.elts[0].elts[0] = List(elts=[a.elts[0].elts[0].elts[0]])
+        a.elts[0].elts[0].elts[0].elts[0] = List(elts=[a.elts[0].elts[0].elts[0].elts[0].elts[0]])
+        a.elts[0].elts[0].elts[0].elts[0].elts[0].elts[0] = List(elts=[a.elts[0].elts[0].elts[0].elts[0].elts[0].elts[0].elts[0]])
+        f = o.reconcile(m)
+        self.assertEqual('[\n[\n[\n[\n[\n[\n[\n[\nx,#0\n0\n],#1\n],#2\n2\n],#3\n],#4\n4\n],#5\n],#6\n6\n],#7\n]', f.src)
+        f.verify()
+
         # make sure modifications are detected
 
         m = (o := FST('i = 1')).mark()
