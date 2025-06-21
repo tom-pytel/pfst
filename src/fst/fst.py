@@ -2325,6 +2325,38 @@ class FST:
 
         return self
 
+    def parent_pattern(self, self_: bool = False) -> Optional['FST']:
+        r"""The first parent which is a `pattern`. If `self_` is `True` then will check `self` first (possibly returning
+        `self`), otherwise only checks parents.
+
+        **Parameters:**
+        - `self_`: Whether to include `self` in the search, if so and `self` matches criteria then it is returned.
+
+        **Examples:**
+        ```py
+        >>> FST('case 1+1j: pass').pattern.value.left.parent_pattern().src
+        '1+1j'
+
+        >>> FST('case 1 | {a.b: c}: pass').pattern.patterns[1].patterns[0].parent_pattern(self_=True)
+        <MatchAs 0,15..0,16>
+
+        >>> FST('case 1 | {a.b: c}: pass').pattern.patterns[1].patterns[0].parent_pattern()
+        <MatchMapping 0,9..0,17>
+
+        >>> FST('case 1 | {a.b: c}: pass').pattern.patterns[1].patterns[0].parent_pattern().parent_pattern()
+        <MatchOr 0,5..0,17>
+        ```
+        """
+
+        if self_ and isinstance(self.a, pattern):
+            return self
+
+        while (self := self.parent) and not isinstance(a := self.a, pattern):
+            if isinstance(a, (match_case, stmt)):
+                return None
+
+        return self
+
     def child_path(self, child: 'FST', as_str: bool = False) -> list[astfield] | str:
         """Get path to `child` node from `self` which can later be used on a copy of this tree to get to the  same
         relative child node.

@@ -661,14 +661,22 @@ def _put_one_op(self: 'FST', code: _PutOneCode, idx: int | None, field: str,
                 static: None, **options) -> 'FST':
     """Put a single operator, with or without '=' for AugAssign."""
 
-    child      = _validate_put(self, code, idx, field, child)
-    code       = static.code_as(code, self.root.parse_params)
-    childf     = child.f
-    code_lines = code._lines
+    child  = _validate_put(self, code, idx, field, child)
+    code   = static.code_as(code, self.root.parse_params)
+    codea  = code.a
+    childf = child.f
+
+    if self.parent_pattern():  # if we are in a pattern then replacements are restricted
+        if isinstance(child, USub):  # indicates we are in UnaryOp
+            if not isinstance(codea, USub):
+                raise NodeError("cannot put anything other than '-' to a pattern UnaryOp.op")
+
+        elif not isinstance(codea, (Add, Sub)):  # otherwise MUST be BinOp
+            raise NodeError("cannot put anything other than '+' or '-' to a pattern BinOp.op")
 
     ln, col, end_ln, end_col = childf.loc
 
-    if is_alnum := isinstance(codea := code.a, (Not, Is, IsNot, In, NotIn)):  # alphanumneric operators may need spaces added
+    if is_alnum := isinstance(codea, (Not, Is, IsNot, In, NotIn)):  # alphanumneric operators may need spaces added
         cln, ccol, cend_ln, cend_col = code.loc
         lines                        = self.root._lines
 
@@ -680,7 +688,7 @@ def _put_one_op(self: 'FST', code: _PutOneCode, idx: int | None, field: str,
         else:
             is_alnum = False
 
-    self._put_src(code_lines, ln, col, end_ln, end_col, False)
+    self._put_src(code._lines, ln, col, end_ln, end_col, False)
     childf._set_ast(codea)
 
     ast = self.a
