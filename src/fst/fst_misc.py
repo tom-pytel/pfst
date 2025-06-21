@@ -1104,7 +1104,7 @@ def _maybe_fix_tuple(self: 'FST', is_parenthesized: bool | None = None):
 
                     ln, col, end_ln, end_col = self.loc
 
-                _, _, eend_ln, eend_col = elts[-1].f.loc
+                _, _, eend_ln, eend_col = elts[-1].f.pars()
 
                 if comma := _next_find(lines, eend_ln, eend_col, end_ln, end_col, ','):  # could be closing grouping pars before comma
                     eend_ln, eend_col  = comma
