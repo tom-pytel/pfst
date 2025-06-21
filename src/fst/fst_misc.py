@@ -1084,20 +1084,22 @@ def _maybe_fix_tuple(self: 'FST', is_parenthesized: bool | None = None):
     if is_parenthesized is None:
         is_parenthesized = self._is_parenthesized_seq()
 
-    if ast.elts:
+    if elts := ast.elts:
         self._maybe_add_singleton_tuple_comma(True)
 
         lines                    = self.root._lines
         ln, col, end_ln, end_col = self.loc
 
         if not is_parenthesized:
-            enclosed = None
+            encpar = None
 
-            if end_ln != ln and not self.is_enclosed(pars=False) and not (enclosed := self.is_enclosed_in_parents()):  # could have line continuations
+            if ((end_ln != ln and not self.is_enclosed(pars=False) and not (encpar := self.is_enclosed_in_parents())) or  # could have line continuations
+                (any(isinstance(e, NamedExpr) and not e.f.pars().n for e in elts))  # yeah, this is fine in parenthesized tuples but not in naked ones
+            ):
                 self._parenthesize_node()
 
             else:
-                eln, ecol, _, _ = (elts := ast.elts)[0].f.pars()
+                eln, ecol, _, _ = elts[0].f.pars()
 
                 if ecol != col or eln != ln:  # to be super safe we enforce that an unparenthesized tuple must start at the first element
                     self._put_src(None, ln, col, eln, ecol, False)
@@ -1113,7 +1115,7 @@ def _maybe_fix_tuple(self: 'FST', is_parenthesized: bool | None = None):
                 if end_col != eend_col or end_ln != eend_ln:  # need to update end position because it had some whitespace after which will not be enclosed by parentheses
                     # self._put_src(None, eend_ln, eend_col, end_ln, end_col, True)  # be safe, nuke everything after last element since we won't have parentheses or parent to delimit it
 
-                    if not (enclosed or self.is_enclosed_in_parents()):
+                    if not (encpar or self.is_enclosed_in_parents()):
                         self._put_src(None, eend_ln, eend_col, end_ln, end_col, True)  # be safe, nuke everything after last element since we won't have parentheses or parent to delimit it
 
                     else:  # enclosed in parents so we can leave crap at the end

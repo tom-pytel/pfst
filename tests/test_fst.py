@@ -902,30 +902,6 @@ def regen_put_src():
 def regen_precedence_data():
     newlines = []
 
-    # for dst, *attrs in PRECEDENCE_DST_STMTS + PRECEDENCE_DST_EXPRS + PRECEDENCE_SRC_EXPRS:
-    #     for src, *_ in PRECEDENCE_SRC_EXPRS:
-    #         for attr in attrs:
-    #             d      = copy_ast(dst)
-    #             s      = copy_ast(src)
-    #             fields = attr.split('.')
-    #             fdfull = fields[-1]
-    #             p      = eval(f'd.{pattr}', {'d': d}) if (pattr := '.'.join(fields[:-1])) else d
-
-    #             exec(f'p.{fdfull} = s', {'p': p, 'fdfull': fdfull, 's': s})
-
-    #             truth = ast_.unparse(d)
-
-    #             if dst == 'x, y':  # SPECIAL CASE!!! because unparse adds enclosing parentheses
-    #                 truth = truth[1:-1]
-
-    #             newlines.append(f'    {truth!r},')
-
-    #             # fd = fdfull.split('[')[0]
-    #             # ch = s.op.__class__ if (sac := s.__class__) in (BoolOp, BinOp, UnaryOp) else sac
-    #             # pr = p.op.__class__ if (fpa := p.__class__) in (BoolOp, BinOp, UnaryOp) else fpa
-    #             # dk = fpa is Dict and p.keys[0] is None
-    #             # print(f"{'NY'[precedence_require_parens(ch, pr, fd, dict_key_or_matchas_pat_is_None=dk)]} -", ast_.unparse(d))
-
     for dst, *attrs in PRECEDENCE_DST_STMTS + PRECEDENCE_DST_EXPRS + PRECEDENCE_SRC_EXPRS:
         for src, *_ in PRECEDENCE_SRC_EXPRS:
             for attr in attrs:
@@ -8692,7 +8668,10 @@ if 1:
         self.assertEqual('a, b = c, (e := f)', f.src)
         f.verify()
 
-
+        f = FST('a, b')
+        f.put_slice('end := self.Label(),', 1, 2, raw=False)
+        self.assertEqual('(a, end := self.Label(),)', f.src)
+        f.verify()
 
     def test_put_slice_empty_set(self):
         self.assertEqual('[]', FST('[1, 2]').put_slice('set()', raw=False, empty_set=True).src)

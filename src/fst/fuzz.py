@@ -1156,8 +1156,8 @@ class Reconcile(Fuzzy):
 
                 #         continue
 
-                # elif repltype == 'fstin':
                 if repltype == 'fstin':
+                # elif repltype == 'fstin':
                     repl, _ = self.parts.getrnd(allowed_cats)
 
                     if (repl and can_replace(f, repl) and
