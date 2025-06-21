@@ -9719,11 +9719,60 @@ a
         f = FST('case a | b: pass')
         self.assertRaises(NodeError, f.pattern.patterns[0].replace, '*s', raw=False)
 
+        # pattern BinOp and UnaryOp
+
+        f = FST('case -1: pass')
+        self.assertRaises(NodeError, f.pattern.value.op.replace, '+', raw=False)
+
         f = FST('case 1 + 1j: pass')
         self.assertRaises(NodeError, f.pattern.value.op.replace, '*', raw=False)
 
         f = FST('case -1: pass')
-        self.assertRaises(NodeError, f.pattern.value.op.replace, '+', raw=False)
+        f.pattern.value.operand.replace('2', raw=False)
+        self.assertEqual('case -2: pass', f.src)
+
+        f = FST('case -1: pass')
+        f.pattern.value.operand.replace('1j', raw=False)
+        self.assertEqual('case -1j: pass', f.src)
+
+        f = FST('case -1: pass')
+        self.assertRaises(NodeError, f.pattern.value.operand.replace, 'a', raw=False)
+
+        f = FST('case -1: pass')
+        self.assertRaises(NodeError, f.pattern.value.operand.replace, '"a"', raw=False)
+
+        f = FST('case 1 + 1j: pass')
+        f.pattern.value.right.replace('2j', raw=False)
+        self.assertEqual('case 1 + 2j: pass', f.src)
+
+        f = FST('case 1 + 1j: pass')
+        self.assertRaises(NodeError, f.pattern.value.right.replace, '-2j', raw=False)
+
+        f = FST('case 1 + 1j: pass')
+        self.assertRaises(NodeError, f.pattern.value.right.replace, 'a', raw=False)
+
+        f = FST('case 1 + 1j: pass')
+        self.assertRaises(NodeError, f.pattern.value.right.replace, '"a"', raw=False)
+
+        f = FST('case 1 + 1j: pass')
+        f.pattern.value.left.replace('2', raw=False)
+        self.assertEqual('case 2 + 1j: pass', f.src)
+
+        f = FST('case 1 + 1j: pass')
+        f.pattern.value.left.replace('-2', raw=False)
+        self.assertEqual('case -2 + 1j: pass', f.src)
+
+        f = FST('case 1 + 1j: pass')
+        self.assertRaises(NodeError, f.pattern.value.left.replace, '2j', raw=False)
+
+        f = FST('case 1 + 1j: pass')
+        self.assertRaises(NodeError, f.pattern.value.left.replace, '+2', raw=False)
+
+        f = FST('case 1 + 1j: pass')
+        self.assertRaises(NodeError, f.pattern.value.left.replace, 'a', raw=False)
+
+        f = FST('case 1 + 1j: pass')
+        self.assertRaises(NodeError, f.pattern.value.left.replace, '"a"', raw=False)
 
         # Tuple Slice behavior
 

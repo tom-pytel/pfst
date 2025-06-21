@@ -659,7 +659,7 @@ def _put_one_BoolOp_op(self: 'FST', code: _PutOneCode, idx: int | None, field: s
 def _put_one_op(self: 'FST', code: _PutOneCode, idx: int | None, field: str,
                 child: type[boolop] | type[operator] | type[unaryop] | type[cmpop],
                 static: None, **options) -> 'FST':
-    """Put a single operator, with or without '=' for AugAssign."""
+    """Put a single operator, with or without '=' for AugAssign, lots of rules to check."""
 
     child  = _validate_put(self, code, idx, field, child)
     code   = static.code_as(code, self.root.parse_params)
@@ -1029,6 +1029,46 @@ def _put_one_AnnAssign_simple(self: 'FST', code: _PutOneCode, idx: int | None, f
     self.a.simple = value
 
     return self  # cannot return primitive
+
+
+def _put_one_BinOp_left_right(self: 'FST', code: _PutOneCode, idx: int | None, field: str, child: list[AST],
+                              static: onestatic, **options) -> 'FST':
+    """Disallow invalid constant changes in patterns."""
+
+    child = _validate_put(self, code, idx, field, child)  # we want to do it in same order as all other puts
+    code  = static.code_as(code, self.root.parse_params)
+
+    if self.parent_pattern():
+        if field == 'right':
+            if not isinstance(codea := code.a, Constant) or not isinstance(codea.value, complex):
+                raise NodeError('can only put imaginary Constant to a pattern BinOp.right')
+
+        else:  # field == 'left'
+            if isinstance(codea := code.a, UnaryOp):
+                if isinstance(codea.op, USub):
+                    codea = codea.operand
+
+            if not isinstance(codea, Constant) or not isinstance(codea.value, (int, float)):
+                raise NodeError('can only put real Constant to a pattern BinOp.left')
+
+    return _put_one_exprish_required(self, code, idx, field, child, static, 2, **options)
+
+
+def _put_one_UnaryOp_operand(self: 'FST', code: _PutOneCode, idx: int | None, field: str, child: list[AST],
+                             static: onestatic, **options) -> 'FST':
+    """Disallow invalid constant changes in patterns."""
+
+    child = _validate_put(self, code, idx, field, child)  # we want to do it in same order as all other puts
+    code  = static.code_as(code, self.root.parse_params)
+
+    if self.parent_pattern():
+        if not isinstance(codea := code.a, Constant):
+            raise NodeError('can only put Constant to a pattern UnaryOp.operand')
+
+        if not isinstance(codea.value, (int, float) if isinstance(self.parent.a, BinOp) else (int, float, complex)):
+            raise NodeError('invalid Constant for pattern UnaryOp.operand')
+
+    return _put_one_exprish_required(self, code, idx, field, child, static, 2, **options)
 
 
 def _put_one_with_items(self: 'FST', code: _PutOneCode, idx: int | None, field: str, child: AST, static: onestatic,
@@ -2310,11 +2350,11 @@ _PUT_ONE_HANDLERS = {
     (BoolOp, 'values'):                   (True,  _put_one_exprish_required, _onestatic_expr_required), # expr*
     (NamedExpr, 'target'):                (False, _put_one_exprish_required, _onestatic_target_Name), # expr
     (NamedExpr, 'value'):                 (False, _put_one_exprish_required, _onestatic_expr_required), # expr
-    (BinOp, 'left'):                      (False, _put_one_exprish_required, _onestatic_expr_required), # expr
+    (BinOp, 'left'):                      (False, _put_one_BinOp_left_right, _onestatic_expr_required), # expr
     (BinOp, 'op'):                        (False, _put_one_op, onestatic(None, code_as=_code_as_binop)), # operator
-    (BinOp, 'right'):                     (False, _put_one_exprish_required, _onestatic_expr_required), # expr
+    (BinOp, 'right'):                     (False, _put_one_BinOp_left_right, _onestatic_expr_required), # expr
     (UnaryOp, 'op'):                      (False, _put_one_op, onestatic(None, code_as=_code_as_unaryop)), # unaryop
-    (UnaryOp, 'operand'):                 (False, _put_one_exprish_required, _onestatic_expr_required), # expr
+    (UnaryOp, 'operand'):                 (False, _put_one_UnaryOp_operand, _onestatic_expr_required), # expr
     (Lambda, 'args'):                     (False, _put_one_Lambda_arguments, _onestatic_arguments_lambda_required), # arguments
     (Lambda, 'body'):                     (False, _put_one_exprish_required, _onestatic_expr_required), # expr
     (IfExp, 'body'):                      (False, _put_one_exprish_required, _onestatic_expr_required), # expr

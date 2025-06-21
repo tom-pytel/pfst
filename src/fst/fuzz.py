@@ -1,4 +1,4 @@
-"""Fuzzers, mostly mean for debugging `fst` itself."""
+"""Ugly, hacky fuzzers, mostly mean for debugging `fst` itself."""
 
 import argparse
 import os
@@ -263,6 +263,13 @@ def can_replace(tgt: FST, repl: FST) -> bool:  # assuming ASTCat has already bee
     if isinstance(tgta, pattern) and isinstance(repla, MatchStar) and not isinstance(tgt_parenta, MatchSequence):
         return False
 
+    if tgt.parent_pattern():
+        if tgt_field in ('left', 'right', 'operand', 'op'):  # just don't bother
+            return False
+
+        if tgt_field == 'keys' and isinstance(repla, Name):
+            return False
+
     if repl_field == 'vararg' and isinstance(repla.annotation, Starred) and tgt_field != 'vararg':  # because could have Starred annotation headed for a non-vararg field
         return False
 
@@ -376,16 +383,23 @@ class Fuzzy:
 
                 yield fnm, fst
 
+    def reseed(self):
+        self.rnd_seed = randint(0, 2**32-1)
+
+        seed(self.rnd_seed)
+
     def fuzz(self) -> bool:
         for fnm, fst in self.iter_pys():
-            seed((rnd_seed := randint(0, 2**32-1)) if (rnd_seed := self.seed) is None else rnd_seed)
+            self.rnd_seed = randint(0, 2**32-1) if self.seed is None else self.seed
+
+            seed(self.rnd_seed)
 
             try:
                 self.fuzz_one(fst, fnm)
 
             except Exception:
                 print('-'*80)
-                print('Random seed was:', rnd_seed)
+                print('Random seed was:', self.rnd_seed)
 
                 raise
 
@@ -1180,6 +1194,9 @@ class Reconcile(Fuzzy):
 
         try:
             for count in range(self.batch or 100):
+                if count:
+                    self.reseed()  # allow first one to be with specified seed, otherwise reseed to have seed to this round to be able to get back to it quicker
+
                 try:
                     if not (count % 5):
                         sys.stdout.write('.'); sys.stdout.flush()
