@@ -2480,7 +2480,8 @@ class FST:
         return (root := self.root).child_from_path(root.child_path(self))
 
     def find_loc(self, ln: int, col: int, end_ln: int, end_col: int, exact: bool = True) -> Optional['FST']:
-        r"""Find the lowest level node which entirely contains location (starting search at `self`).
+        r"""Find the lowest level node which entirely contains location (starting search at `self`). To reiterate, the
+        search will only find nodes at self or below, no parents.
 
         **Parameters:**
         - `ln`: Start line of location to search for (0 based).
@@ -2561,7 +2562,7 @@ class FST:
 
     def find_in_loc(self, ln: int, col: int, end_ln: int, end_col: int) -> Optional['FST']:
         """Find the first highest level node which is contained entirely in location (inclusive, starting search at
-        `self`).
+        `self`). To reiterate, the search will only find nodes at self or below, no parents.
 
         **Parameters:**
         - `ln`: Start line of location to search (0 based).

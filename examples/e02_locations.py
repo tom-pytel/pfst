@@ -1,4 +1,4 @@
-r"""This module explains how FST handles locations in the source code.
+r"""How FST handles node locations in the source code.
 
 First import this, it includes an import of the `ast` module since it is useful to have it handy.
 ```py
@@ -77,7 +77,7 @@ False
 The only `AST` nodes which don't get locations like this are empty `arguments` nodes since that could allow zero-length
 locations which are a pain to deal with, `boolop` nodes because a single `AST` may correspond to multiple locations
 in the expression and `expr_context` nodes which don't have parsable source. Other nodes like `comprehension`,
-`withitem`, `match_case` and other operators all get locations:
+`withitem`, `match_case` and other operators all get locations.
 
 ```py
 >>> FST('[i for i in j]').generators[0].loc
@@ -150,7 +150,7 @@ False
 True
 ```
 
-And finally, the location of the entire source (accessible from any node in the tree):
+The location of the entire source (accessible from any node in the tree), always starts at (0, 0) and ends at the end of the source code.
 
 ```py
 >>> f.whole_loc
@@ -160,4 +160,37 @@ fstloc(0, 0, 0, 14)
 fstloc(0, 0, 0, 14)
 ```
 
+You can search for a node by location. This is done by either searching for a node in a given location or searching for
+a node which contains a location.
+
+```py
+>>> f = FST('''
+... if a < b:
+...     print(a)
+... '''.strip())
+
+>>> # find node matching or in this location
+>>> f.find_in_loc(0, 3, 0, 8).src
+'a < b'
+
+>>> # doesn't have to be exact, this function returns whole first node found in location
+>>> f.find_in_loc(0, 1, 1, 6).src
+'a < b'
+
+>>> # returns only entire nodes in location
+>>> f.find_in_loc(0, 4, 0, 6).src
+'<'
+
+>>> # or you can search for a node entirely CONTAINING THE LOCATION
+>>> f.find_loc(0, 4, 0, 6).src
+'a < b'
+
+>>> # will return nodes matching the location EXACTLY by default
+>>> f.find_loc(0, 3, 0, 8).src
+'a < b'
+
+>>> # but that can be disabled
+>>> f.find_loc(0, 3, 0, 8, exact=False).src
+'if a < b:\n    print(a)'
+```
 """

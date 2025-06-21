@@ -1380,7 +1380,7 @@ class ReconcileSame(Fuzzy):
 
     def walk_ast(self, ast: AST, fst: FST):
         for f in fst.walk(self_=False, recurse=False):  # will have same nodes as ast
-            if isinstance(a := f.a, (expr_context, mod, FormattedValue, Interpolation)):
+            if isinstance(a := f.a, (expr_context, mod)):#, FormattedValue, Interpolation)):
                 continue
 
             if random() < 0.1:
@@ -1389,14 +1389,14 @@ class ReconcileSame(Fuzzy):
             else:
                 f.pfield.set(ast, a)
 
-                if not isinstance(a, (JoinedStr, TemplateStr)):
+                if 1:#not isinstance(a, (JoinedStr, TemplateStr)):
                     self.walk_fst(f)
 
     def walk_fst(self, fst: FST):
         ast = fst.a
 
         for f in fst.walk(self_=False, recurse=False):
-            if isinstance(a := f.a, (expr_context, mod, FormattedValue, Interpolation)):
+            if isinstance(a := f.a, (expr_context, mod)):#, FormattedValue, Interpolation)):
                 continue
 
             if random() < 0.1:
@@ -1405,7 +1405,7 @@ class ReconcileSame(Fuzzy):
             else:
                 f.pfield.set(ast, a := copy_ast(a))
 
-                if not isinstance(a, (JoinedStr, TemplateStr)):
+                if 1:#not isinstance(a, (JoinedStr, TemplateStr)):
                     self.walk_ast(a, f)
 
     def fuzz_one(self, fst, fnm) -> bool:

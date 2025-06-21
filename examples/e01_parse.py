@@ -1,4 +1,4 @@
-r"""This module explains parsing and unparsing and the various ways to convert source and `AST` nodes to `FST` and back.
+r"""Parsing and unparsing and the various ways to convert source and `AST` nodes to `FST` and back.
 
 First import this, it includes an import of the `ast` module since it is useful to have it handy.
 ```py
@@ -54,6 +54,22 @@ Correspondingly, every `FST` node has an `.a` attribute which points to the `AST
 ```py
 >>> a.f.a is a
 True
+```
+
+The tree can be traversed downwards either though the `AST` nodes or the `FST` nodes using `AST` field names.
+
+```py
+>>> a.body[0].body[0].f
+<Assign 0,6..0,11>
+
+>>> a.f.body[0].body[0]
+<Assign 0,6..0,11>
+
+>>> type(a.body[0].body[0])
+<class 'ast.Assign'>
+
+>>> type(a.f.body[0].body[0].a)
+<class 'ast.Assign'>
 ```
 
 Drop-in `ast.unparse()` replacement outputs with formatting.
