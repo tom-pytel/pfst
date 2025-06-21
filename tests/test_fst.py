@@ -11926,6 +11926,14 @@ if 1:
         self.assertEqual('[\n[\n[\n[\n[\n[\n[\n[\nx,#0\n0\n],#1\n],#2\n2\n],#3\n],#4\n4\n],#5\n],#6\n6\n],#7\n]', f.src)
         f.verify()
 
+        a = (o := FST('f(#0\ng(#1\nh(#2\ni(#3\n))))')).a
+        m = o.mark()
+        a.args[0] = Call(func=Name('g'), args=[a.args[0].args[0]], keywords=[])
+        a.args[0].args[0].args[0] = Call(func=Name('i'), args=[], keywords=[])
+        f = o.reconcile(m)
+        self.assertEqual('f(#0\ng(h(#2\ni())))', f.src)
+        f.verify()
+
         # make sure modifications are detected
 
         m = (o := FST('i = 1')).mark()
