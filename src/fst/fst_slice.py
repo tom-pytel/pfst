@@ -378,9 +378,9 @@ def _put_slice(self: 'FST', code: Code | None, start: int | Literal['end'] | Non
                 (TemplateStr, 'values'),              # expr*
 
             ]:
-                raise NodeError('not implemented yet')
+                raise NotImplementedError("not implemented yet, try with option raw='auto'")
 
-        except (SyntaxError, NodeError):
+        except (NodeError, SyntaxError, NotImplementedError):
             if not raw:
                 raise
 

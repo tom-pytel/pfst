@@ -6192,7 +6192,7 @@ Module - ROOT 0,0..0,19
     0] Pass - 0,15..0,19
 """),
 
-(r"""a and (b) and c""", 'body[0].value', 0, None, {'raw': False}, r"""**DEL**""", r"""**NodeError('not implemented yet')**""", r"""
+(r"""a and (b) and c""", 'body[0].value', 0, None, {'raw': False}, r"""**DEL**""", r"""**NotImplementedError("not implemented yet, try with option raw='auto'")**""", r"""
 """),
 
 (r"""a and (b) and c""", 'body[0].value', 0, None, {}, r"""new""", r"""new and (b) and c""", r"""
@@ -6247,7 +6247,7 @@ Module - ROOT 0,0..0,15
 (r"""a and (b) and c""", 'body[0].value', -4, None, {}, r"""new""", r"""**IndexError('index out of range')**""", r"""
 """),
 
-(r"""[i for i in j if a if (b)]""", 'body[0].value.generators[0]', 0, 'ifs', {'raw': False}, r"""**DEL**""", r"""**NodeError('not implemented yet')**""", r"""
+(r"""[i for i in j if a if (b)]""", 'body[0].value.generators[0]', 0, 'ifs', {'raw': False}, r"""**DEL**""", r"""**NotImplementedError("not implemented yet, try with option raw='auto'")**""", r"""
 """),
 
 (r"""[i for i in j if a if (b)]""", 'body[0].value.generators[0]', 0, 'ifs', {}, r"""new""", r"""[i for i in j if new if (b)]""", r"""
@@ -6318,7 +6318,7 @@ Module - ROOT 0,0..0,28
 (r"""[i for i in j if a if (b)]""", 'body[0].value.generators[0]', -4, 'ifs', {}, r"""new""", r"""**IndexError('index out of range')**""", r"""
 """),
 
-(r"""call(a, (b))""", 'body[0].value', 0, None, {}, r"""**DEL**""", r"""**NodeError('not implemented yet')**""", r"""
+(r"""call(a, (b))""", 'body[0].value', 0, None, {}, r"""**DEL**""", r"""**NotImplementedError("not implemented yet, try with option raw='auto'")**""", r"""
 """),
 
 (r"""call(a, (b))""", 'body[0].value', 0, None, {}, r"""new""", r"""call(new, (b))""", r"""
@@ -6422,7 +6422,7 @@ Module - ROOT 0,0..0,20
 """),
 
 (r"""match a:
- case 1 as b, (2): pass""", 'body[0].cases[0].pattern', 0, None, {}, r"""**DEL**""", r"""**NodeError('not implemented yet')**""", r"""
+ case 1 as b, (2): pass""", 'body[0].cases[0].pattern', 0, None, {}, r"""**DEL**""", r"""**NotImplementedError("not implemented yet, try with option raw='auto'")**""", r"""
 """),
 
 (r"""match a:
@@ -6630,7 +6630,7 @@ Module - ROOT 0,0..1,39
 """),
 
 (r"""match a:
- case c(a, (b)): pass""", 'body[0].cases[0].pattern', 0, 'patterns', {}, r"""**DEL**""", r"""**NodeError('not implemented yet')**""", r"""
+ case c(a, (b)): pass""", 'body[0].cases[0].pattern', 0, 'patterns', {}, r"""**DEL**""", r"""**NotImplementedError("not implemented yet, try with option raw='auto'")**""", r"""
 """),
 
 (r"""match a:
@@ -6846,7 +6846,7 @@ Module - ROOT 0,0..1,32
 """),
 
 (r"""match a:
- case {1: c} | (d()): pass""", 'body[0].cases[0].pattern', 0, None, {}, r"""**DEL**""", r"""**NodeError('not implemented yet')**""", r"""
+ case {1: c} | (d()): pass""", 'body[0].cases[0].pattern', 0, None, {}, r"""**DEL**""", r"""**NotImplementedError("not implemented yet, try with option raw='auto'")**""", r"""
 """),
 
 (r"""match a:
@@ -7473,7 +7473,7 @@ Module - ROOT 0,0..0,36
 (r"""type t[T: int, U: (str)] = ...""", 'body[0]', -4, 'type_params', {'_ver': 12}, r"""V: list[int]""", r"""**IndexError('index out of range')**""", r"""
 """),
 
-(r"""[i for j in k async for (i) in j]""", 'body[0].value', 0, 'generators', {'raw': False}, r"""**DEL**""", r"""**NodeError('not implemented yet')**""", r"""
+(r"""[i for j in k async for (i) in j]""", 'body[0].value', 0, 'generators', {'raw': False}, r"""**DEL**""", r"""**NotImplementedError("not implemented yet, try with option raw='auto'")**""", r"""
 """),
 
 (r"""[i for j in k async for (i) in j]""", 'body[0].value', 0, 'generators', {}, r"""async for a in b""", r"""[i async for a in b async for (i) in j]""", r"""
@@ -7547,7 +7547,7 @@ Module - ROOT 0,0..0,39
 (r"""[i for j in k async for (i) in j]""", 'body[0].value', -4, 'generators', {}, r"""async for a in b""", r"""**IndexError('index out of range')**""", r"""
 """),
 
-(r"""{i for j in k async for (i) in j}""", 'body[0].value', 0, 'generators', {'raw': False}, r"""**DEL**""", r"""**NodeError('not implemented yet')**""", r"""
+(r"""{i for j in k async for (i) in j}""", 'body[0].value', 0, 'generators', {'raw': False}, r"""**DEL**""", r"""**NotImplementedError("not implemented yet, try with option raw='auto'")**""", r"""
 """),
 
 (r"""{i for j in k async for (i) in j}""", 'body[0].value', 0, 'generators', {}, r"""async for a in b""", r"""{i async for a in b async for (i) in j}""", r"""
@@ -7621,7 +7621,7 @@ Module - ROOT 0,0..0,39
 (r"""{i for j in k async for (i) in j}""", 'body[0].value', -4, 'generators', {}, r"""async for a in b""", r"""**IndexError('index out of range')**""", r"""
 """),
 
-(r"""{i: i for j in k async for (i) in j}""", 'body[0].value', 0, 'generators', {'raw': False}, r"""**DEL**""", r"""**NodeError('not implemented yet')**""", r"""
+(r"""{i: i for j in k async for (i) in j}""", 'body[0].value', 0, 'generators', {'raw': False}, r"""**DEL**""", r"""**NotImplementedError("not implemented yet, try with option raw='auto'")**""", r"""
 """),
 
 (r"""{i: i for j in k async for (i) in j}""", 'body[0].value', 0, 'generators', {}, r"""async for a in b""", r"""{i: i async for a in b async for (i) in j}""", r"""
@@ -7699,7 +7699,7 @@ Module - ROOT 0,0..0,42
 (r"""{i: i for j in k async for (i) in j}""", 'body[0].value', -4, 'generators', {}, r"""async for a in b""", r"""**IndexError('index out of range')**""", r"""
 """),
 
-(r"""(i for j in k async for (i) in j)""", 'body[0].value', 0, 'generators', {'raw': False}, r"""**DEL**""", r"""**NodeError('not implemented yet')**""", r"""
+(r"""(i for j in k async for (i) in j)""", 'body[0].value', 0, 'generators', {'raw': False}, r"""**DEL**""", r"""**NotImplementedError("not implemented yet, try with option raw='auto'")**""", r"""
 """),
 
 (r"""(i for j in k async for (i) in j)""", 'body[0].value', 0, 'generators', {}, r"""async for a in b""", r"""(i async for a in b async for (i) in j)""", r"""
@@ -8089,7 +8089,7 @@ Module - ROOT 0,0..0,31
 (r"""class c(a=1, b = (2)): pass""", 'body[0]', -4, 'keywords', {}, r"""new=(3)""", r"""**IndexError('index out of range')**""", r"""
 """),
 
-(r"""call(a=1, b = (2))""", 'body[0].value', 0, 'keywords', {}, r"""**DEL**""", r"""**NodeError('not implemented yet')**""", r"""
+(r"""call(a=1, b = (2))""", 'body[0].value', 0, 'keywords', {}, r"""**DEL**""", r"""**NotImplementedError("not implemented yet, try with option raw='auto'")**""", r"""
 """),
 
 (r"""call(a=1, b = (2))""", 'body[0].value', 0, 'keywords', {}, r"""new=(3)""", r"""call(new=(3), b = (2))""", r"""

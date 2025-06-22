@@ -37,7 +37,7 @@ _DEFAULT_INDENT       = '    '
 
 _OPTIONS = {
     'pars':      'auto',  # True | False | 'auto'
-    'raw':       'auto',  # True | False | 'auto'
+    'raw':       False,   # True | False | 'auto'
     'elif_':     True,    # True | False
     'docstr':    True,    # True | False | 'strict'
     'empty_set': True,    # True | False | 'seq' | 'call'
@@ -895,7 +895,7 @@ class FST:
         - `postspace`: Same as `prespace` except for trailing empty lines.  - WILL CHANGE IN FUTURE VERSIONS!
 
         **Note:**
-        `pars` behavior:
+        `pars` behavior (see Examples for more):
         ```
                                                                   False      True    'auto'
         Copy pars from source on copy / cut:                         no       yes        no
@@ -910,8 +910,18 @@ class FST:
 
         **Examples:**
         ```py
-        >>> FST.get_options()
-        {'pars': 'auto', 'raw': 'auto', 'elif_': True, 'docstr': True, 'empty_set': True, 'pep8space': True, 'precomms': True, 'postcomms': True, 'prespace': False, 'postspace': False}
+        >>> from pprint import pp
+        >>> pp(FST.get_options())
+        {'pars': 'auto',
+         'raw': False,
+         'elif_': True,
+         'docstr': True,
+         'empty_set': True,
+         'pep8space': True,
+         'precomms': True,
+         'postcomms': True,
+         'prespace': False,
+         'postspace': False}
         ```
         """
 
@@ -974,7 +984,7 @@ class FST:
         'auto'
 
         >>> FST.set_options(pars=True, raw=True, docstr=False)
-        {'pars': 'auto', 'raw': 'auto', 'docstr': True}
+        {'pars': 'auto', 'raw': False, 'docstr': True}
         ```
         """
 
@@ -994,14 +1004,14 @@ class FST:
 
         **Examples:**
         ```py
-        >>> print(FST.get_option('raw'))
+        >>> print(FST.get_option('pars'))
         auto
 
-        >>> with FST.options(raw=False):
-        ...     print(FST.get_option('raw'))
+        >>> with FST.options(pars=False):
+        ...     print(FST.get_option('pars'))
         False
 
-        >>> print(FST.get_option('raw'))
+        >>> print(FST.get_option('pars'))
         auto
         ```
         """

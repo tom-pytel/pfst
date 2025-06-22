@@ -63,15 +63,15 @@ Every `FST` node also has a reference directly to the root of the tree.
 The linkage to children is just via the existing `AST` fields.
 
 ```py
->>> f.a.elts[0]
-Name(id='x', ctx=Load())
+>>> type(f.a.elts[0])
+<class 'ast.Name'>
 
 >>> # which if accessed through the `FST` node will return the corresponding `FST` node
 >>> f.elts[0]
 <Name 0,1..0,2>
 
->>> f.elts[0].a
-Name(id='x', ctx=Load())
+>>> type(f.elts[0].a)
+<class 'ast.Name'>
 ```
 
 You can access each `FST` node's previous and next siblings directly.

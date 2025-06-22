@@ -1691,7 +1691,7 @@ def _put_one(self: 'FST', code: _PutOneCode, idx: int | None, field: str, **opti
 
                 return ret
 
-        except (SyntaxError, NodeError):
+        except (NodeError, SyntaxError, NotImplementedError):
             if not raw:
                 raise
 
