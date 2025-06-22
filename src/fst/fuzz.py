@@ -219,7 +219,8 @@ def ignorable_exc(exc: Exception, putsrc: str | Literal[False] | None = None):
         'cannot reparse Starred in slice as Starred' in msg or
         'expecting identifier, got' in msg or
         'not allowed in this alias' in msg or
-        msg == 'cannot put star alias to ImportFrom.names containing multiple aliases'
+        msg == 'cannot put star alias to ImportFrom.names containing multiple aliases' or
+        msg == 'cannot have unparenthesized tuple containing Starred in slice'
         # (msg.startswith('cannot put ') and (msg.endswith(' to MatchMapping.keys') or msg.endswith(' to MatchValue.value')))
     )
 

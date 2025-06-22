@@ -1820,7 +1820,8 @@ class FST:
 
         Only normally works on (and makes sense for) `expr` or `pattern` nodes, otherwise returns `self.bloc` and count
         of 0. Also handles special case of a single generator expression argument to a function sharing parameters with
-        the call arguments, in which case a count of -1 may be returned if this case is enabled with `shared=False`.
+        the call arguments, in which case a count of -1 and the location of the `GeneratorExp` without its enclosing
+        parentheses may be returned, if this is enabled with `shared=False`.
 
         This function is cached so feel free to call as often as is needed.
 
@@ -3344,7 +3345,7 @@ class FST:
                 isinstance(parenta := parent.a, MatchClass) and not parenta.kwd_patterns and len(parenta.patterns) == 1)
 
     def is_aug_op(self) -> bool | None:
-        """Whether `self` is an augmented `operator`, or not an `operator` at all.
+        """Whether `self` is an augmented `operator` or not, or not an `operator` at all.
 
         **Returns:**
         - `True` if is augmented `operator`, `False` if non-augmented `operator` and `None` if is not `operator` at all.

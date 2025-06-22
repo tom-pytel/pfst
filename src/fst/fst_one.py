@@ -741,7 +741,7 @@ def _put_one_BoolOp_op(self: 'FST', code: _PutOneCode, idx: int | None, field: s
 
     _, _, end_ln, end_col = self.loc
 
-    for value in self.a.values[:-1]:
+    for value in self.a.values[-2::-1]:  # reverse direction so that we don't need to refresh end_col
         _, _, ln, col = value.f.pars()
         ln, col       = _next_find(lines, ln, col, end_ln, end_col, tgt)  # must be there
 
