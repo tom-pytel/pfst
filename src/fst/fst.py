@@ -1812,37 +1812,29 @@ class FST:
 
         return parent._reparse_raw(code, ln, col, end_ln, end_col, exact)
 
-    def pars(self, ret_full: bool = False, *, shared: bool = True, pars: bool = True,
-             ) -> fstloc | tuple[fstloc | None, int] | None:
+    def pars(self, shared: bool | None = True) -> fstloc | None:
         """Return the location of enclosing GROUPING parentheses if present. Will balance parentheses if `self` is an
-        element of a tuple and not return the parentheses of the tuple. Likwise will not return the parentheses of an
-        enclosing `arguments` parent or class bases list. Only works on (and makes sense for) `expr` or `pattern` nodes,
-        otherwise returns `self.bloc` and count of 0. Also handles special case of a single generator expression
-        argument to a function sharing parameters with the call arguments, in which case a count of -1 may be returned
-        if this case is enabled with `shared=False`.
+        element of a tuple and not return the parentheses of the tuple. Likwise will not normally return the parentheses
+        of an enclosing `arguments` parent or class bases list (unless `shared=None`, but that is mostly for internal
+        use).
+
+        Only normally works on (and makes sense for) `expr` or `pattern` nodes, otherwise returns `self.bloc` and count
+        of 0. Also handles special case of a single generator expression argument to a function sharing parameters with
+        the call arguments, in which case a count of -1 may be returned if this case is enabled with `shared=False`.
 
         This function is cached so feel free to call as often as is needed.
 
         **Parameters:**
-        - `ret_full`: `True` means return the number of parentheses along with the location in a tuple. Otherwise just
-            the location, which if is not `None` will have the number of parentheses in an attribute `.n`. This exists
-            because of the possibility of a `bloc` being `None`.
         - `shared`: If `True` then will include parentheses of a single call argument generator expression if they are
             shared with the call arguments enclosing parentheses with a count of 0. If `False` then does not return
-            these and returns a count of -1, and thus the location is not a full valid `GeneratorExp` location. Is not
-            checked at all if `pars=False`.
-        - `pars`: `True` means return parentheses if present and `self.bloc` otherwise, `False` always `self.bloc`. This
-            parameter exists purely for convenience.
+            these and returns a count of -1, and thus the location is not a full valid `GeneratorExp` location. If
+            `None` then returns ANY directly enclosing parentheses, whether they belong to this node or not.
 
         **Returns:**
         - `fstloc | None`: Location of enclosing parentheses if present else `self.bloc` (which can be `None`). Negative
             parentheses count (from shared parens solo call arg generator expression) can also be checked in the case of
             `shared=False` via `fst.pars() > fst.bloc`. If only loc is returned, it will be an `fstloc` which will
             still have the count of parentheses in an attribute `.n`.
-        - `(fstloc, count)`: Location of enclosing parentheses or `self.bloc` or `None` and number of nested
-            parentheses found (if requested with `ret_full`). `ret_full` can be -1 in the case of a `GeneratorExp`
-            sharing parentheses with `Call` `arguments` if it is the only argument, but only if these parentheses are
-            explicitly excluded with `shared=False`.
 
         **Examples:**
         ```py
@@ -1875,31 +1867,22 @@ class FST:
 
         >>> FST('call((i for i in j))').args[0].pars(shared=False)
         fstlocns(0, 5, 0, 19, n=0)
-
-        >>> FST('lambda: None').args.pars(ret_full=True)  # lambda args has no location because no args
-        (None, 0)
         ```
         """
 
-        if not pars:
-            locn = None if (l := self.bloc) is None else fstlocns(l[0], l[1], l[2], l[3], n=0)
-
-            return (locn, 0) if ret_full else locn
-
-        key = 'parsS' if shared else 'parsN'
+        key = f'pars_{shared}'
 
         try:
             cached = self._cache[key]
         except KeyError:
             pass
         else:
-            return cached if ret_full else cached[0]
+            return cached
 
-        if not self.is_parenthesizable():  # pars around all `alias`es or `withitem`s are considered part of the parent even if there is only one of those elements which looks parenthesized
-            locn             = None if (l := self.bloc) is None else fstlocns(l[0], l[1], l[2], l[3], n=0)
-            self._cache[key] = full = (locn, 0)
+        if not self.is_parenthesizable() and shared is not None:
+            self._cache[key] = locn = None if (l := self.bloc) is None else fstlocns(l[0], l[1], l[2], l[3], n=0)
 
-            return full if ret_full else locn
+            return locn
 
         ln, col, end_ln, end_col = self.bloc
 
@@ -1911,19 +1894,20 @@ class FST:
             else:
                 locn = fstlocns(ln, col, end_ln, end_col, n=0)
 
-            self._cache[key] = full = (locn, locn.n)
+            self._cache[key] = locn
 
-            return full if ret_full else locn
+            return locn
 
         lpars = _prev_pars(self.root._lines, *self._prev_bound(), ln, col)
 
         if (llpars := len(lpars)) == 1:  # no pars on left
-            locn             = fstlocns(ln, col, end_ln, end_col, n=0)
-            self._cache[key] = full = (locn, 0)
+            self._cache[key] = locn = fstlocns(ln, col, end_ln, end_col, n=0)
 
-            return full if ret_full else locn
+            return locn
 
-        if llpars <= lrpars and (self.is_solo_call_arg() or self.is_solo_class_base() or self.is_solo_matchcls_pat()):
+        if (llpars <= lrpars and shared is not None and
+            (self.is_solo_call_arg() or self.is_solo_class_base() or self.is_solo_matchcls_pat())
+        ):
             llpars -= 1
 
         if llpars != lrpars:  # unbalanced pars so we know we can safely use the lower count
@@ -1931,9 +1915,9 @@ class FST:
         else:
             locn = fstlocns(*lpars[npars := llpars - 1], *rpars[npars], n=npars)
 
-        self._cache[key] = full = (locn, locn.n)
+        self._cache[key] = locn
 
-        return full if ret_full else locn
+        return locn
 
     def par(self, force: bool = False, *, whole: bool = True) -> Self:
         """Parenthesize node if it MAY need it. Will not parenthesize atoms which are always enclosed like `List`, or
@@ -2012,7 +1996,8 @@ class FST:
         **Parameters:**
         - `node`: If `True` then will remove parentheses from a parenthesized `Tuple` and parentheses / brackets from
             parenthesized / bracketed `MatchSequence`, otherwise only removes grouping parentheses if present.
-        - `share`: Whether to allow merge of parentheses into share single call argument generator expression or not.
+        - `share`: Whether to allow merge of parentheses of single call argument generator expression with `Call`
+            parentheses or not.
 
         **Returns:**
         - `self`
@@ -2894,7 +2879,7 @@ class FST:
 
         assert isinstance(ast, (expr, pattern))
 
-        return 'pars' if pars and self.pars(True)[1] else False
+        return 'pars' if pars and self.pars().n else False
 
     def is_enclosed(self, *, pars: bool = True) -> bool | Literal['pars']:
         r"""Whether `self` lives on a single line or is otherwise enclosed in some kind of delimiters `()`, `[]`, `{}` or
@@ -2972,7 +2957,7 @@ class FST:
         if end_ln == ln:
             return True
 
-        if pars and self.pars(True)[1]:
+        if pars and self.pars().n:
             return 'pars'
 
         if isinstance(ast, Constant):
@@ -3135,7 +3120,7 @@ class FST:
                 if ret:
                     return True
 
-            if parent.pars(True)[1]:
+            if getattr(parent.pars(), 'n', 0):  # could be empty args which has None for a loc
                 return True
 
             self = parent

@@ -5251,14 +5251,14 @@ match a:
         self.assertEqual((0, 2, 0, 18), parse('f(((i for i in j)))').body[0].value.args[0].f.pars(shared=False))
 
         f = parse('((1), ( (2) ))').body[0].value.f
-        self.assertEqual(1, f.elts[0].pars(True)[1])
-        self.assertEqual(2, f.elts[1].pars(True)[1])
-        self.assertEqual(0, f.pars(True)[1])
+        self.assertEqual(1, f.elts[0].pars().n)
+        self.assertEqual(2, f.elts[1].pars().n)
+        self.assertEqual(0, f.pars().n)
 
-        self.assertEqual(1, parse('call(((i for i in j)))').body[0].value.args[0].f.pars(True)[1])
-        self.assertEqual(0, parse('call((i for i in j))').body[0].value.args[0].f.pars(True)[1])
-        self.assertEqual(0, parse('call(i for i in j)').body[0].value.args[0].f.pars(True)[1])
-        self.assertEqual(-1, parse('call(i for i in j)').body[0].value.args[0].f.pars(True, shared=False)[1])
+        self.assertEqual(1, parse('call(((i for i in j)))').body[0].value.args[0].f.pars().n)
+        self.assertEqual(0, parse('call((i for i in j))').body[0].value.args[0].f.pars().n)
+        self.assertEqual(0, parse('call(i for i in j)').body[0].value.args[0].f.pars().n)
+        self.assertEqual(-1, parse('call(i for i in j)').body[0].value.args[0].f.pars(shared=False).n)
 
         self.assertEqual((0, 8, 0, 9), parse('class c(b): pass').body[0].bases[0].f.pars())
         self.assertEqual((0, 8, 0, 9), parse('class c(b,): pass').body[0].bases[0].f.pars())
@@ -5293,6 +5293,30 @@ match a:
         f = parse('bytes((x ^ 0x5C) for x in range(256))').body[0].value.f
         f.args[0].generators[0].iter.put('256', 0, field='args', raw=False)
         self.assertEqual('bytes((x ^ 0x5C) for x in range(256))', f.root.src)
+
+        # unowned pars
+
+        f = FST('a:b:c')
+        f.par(True)
+        self.assertEqual((0, 1, 0, 6), f.pars())
+        self.assertEqual((0, 0, 0, 7), f.pars(None))
+
+        f = FST('f(a)')
+        self.assertEqual((0, 2, 0, 3), f.args[0].pars())
+        self.assertEqual((0, 1, 0, 4), f.args[0].pars(None))
+
+        f = FST('class c(a): pass')
+        self.assertEqual((0, 8, 0, 9), f.bases[0].pars())
+        self.assertEqual((0, 7, 0, 10), f.bases[0].pars(None))
+
+        f = FST('case f(a): pass')
+        self.assertEqual((0, 7, 0, 8), f.pattern.patterns[0].pars())
+        self.assertEqual((0, 6, 0, 9), f.pattern.patterns[0].pars(None))
+
+        f = FST('from a import (b)')
+        self.assertEqual((0, 15, 0, 16), f.names[0].pars())
+        self.assertEqual((0, 14, 0, 17), f.names[0].pars(None))
+
 
     def test_pars_n(self):
         self.assertEqual(1, FST('(a)', 'exec').body[0].value.pars().n)

@@ -176,7 +176,7 @@ if _PY_VERSION >= (3, 12):
                         fix_const     = ((parent := fst.parent) and (idx := fst.pfield.idx) and   # parent should exist here but just in case, whether we need to reset start of debug string or not
                             (f := parent.a.values[idx - 1].f).col == col and f.ln == ln)
 
-                        if fst.root.lines[ln].startswith('{', col):
+                        if fst.root._lines[ln].startswith('{', col):
                             fst._put_src([' '], ln, col, ln, col, False)
 
                             if fix_const:
@@ -1177,7 +1177,7 @@ def _maybe_fix_with_items(self: 'FST'):
         if not is_par:
             cef._parenthesize_node()
 
-        if len(_prev_pars(self.root.lines, self.ln, self.col, cef.ln, cef.col)) == 1:  # no pars between start of `with` and start of tuple?
+        if len(_prev_pars(self.root._lines, self.ln, self.col, cef.ln, cef.col)) == 1:  # no pars between start of `with` and start of tuple?
             cef._parenthesize_grouping()  # these will wind up belonging to outer With
 
 
@@ -1209,7 +1209,7 @@ def _maybe_fix_copy(self: 'FST', pars: bool = True):
         if is_tuple := isinstance(ast, Tuple):
             if self._is_parenthesized_seq():
                 need_paren = False
-            elif any(isinstance(e, NamedExpr) and not e.f.pars(True)[1] for e in ast.elts):  # unparenthesized walrus in naked tuple?
+            elif any(isinstance(e, NamedExpr) and not e.f.pars().n for e in ast.elts):  # unparenthesized walrus in naked tuple?
                 need_paren = True
 
             self._maybe_add_singleton_tuple_comma(False)  # this exists because of copy lone Starred out of a Subscript.slice
@@ -1324,12 +1324,12 @@ def _unparenthesize_grouping(self: 'FST', share: bool = True, *, star_child: boo
     if isinstance(self.a, Starred) and star_child:
         self = self.value
 
-    pars_loc, npars = self.pars(True)
+    pars_loc = self.pars()
 
     if share:
         share = self.is_solo_call_arg_genexp()
 
-    if not npars and not share:
+    if not getattr(pars_loc, 'n', 0) and not share:
         return False
 
     ln , col,  end_ln,  end_col  = self.bloc

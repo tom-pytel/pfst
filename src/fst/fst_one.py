@@ -67,7 +67,7 @@ def _validate_get(self: 'FST', idx: int | None, field: str) -> AST | None:
 def _get_one_default(self: 'FST', idx: int | None, field: str, cut: bool, **options) -> _GetOneRet:
     child, idx = _validate_get(self, idx, field)
     childf     = child.f
-    loc        = childf.pars(pars=self.get_option('pars', options) is True)
+    loc        = childf.pars() if self.get_option('pars', options) is True else childf.bloc
 
     if not loc:
         raise ValueError('cannot copy node which does not have a location')
@@ -623,39 +623,6 @@ def _put_one_constant(self: 'FST', code: _PutOneCode, idx: int | None, field: st
     return self  # this breaks the rule of returning the child node since it is just a primitive
 
 
-def _put_one_BoolOp_op(self: 'FST', code: _PutOneCode, idx: int | None, field: str, child: type[boolop], static: None,
-                       **options) -> 'FST':
-    """Put BoolOp op to potentially multiple places."""
-
-    child  = _validate_put(self, code, idx, field, child)
-    code   = _code_as_boolop(code, self.root.parse_params)
-    childf = child.f
-    src    = 'and' if isinstance(codea := code.a, And) else 'or'
-    tgt    = 'and' if isinstance(child, And) else 'or'
-    ltgt   = len(tgt)
-    lines  = self.root._lines
-
-    _, _, end_ln, end_col = self.loc
-
-    for value in self.a.values[:-1]:
-        _, _, ln, col = value.f.pars()
-        ln, col       = _next_find(lines, ln, col, end_ln, end_col, tgt)  # must be there
-
-        self._put_src(src, ln, col, ln, col + ltgt, False)
-
-    childf._set_ast(codea)
-
-    if src != tgt:  # if replacing with different boolop then need to parenthesize self if parent is BoolOp or children if they are BoolOps to keep structure regardless of precedence
-        if (parent := self.parent) and isinstance(parent.a, BoolOp) and not self.pars().n:
-            self._parenthesize_grouping()
-
-        for a in self.a.values:
-            if isinstance(a, BoolOp) and not (f := a.f).pars().n:
-                f._parenthesize_grouping()
-
-    return childf
-
-
 def _put_one_op(self: 'FST', code: _PutOneCode, idx: int | None, field: str,
                 child: type[boolop] | type[operator] | type[unaryop] | type[cmpop],
                 static: None, **options) -> 'FST':
@@ -733,6 +700,66 @@ def _put_one_ctx(self: 'FST', code: _PutOneCode, idx: int | None, field: str,
     return child.f
 
 
+def _put_one_AnnAssign_simple(self: 'FST', code: _PutOneCode, idx: int | None, field: str, child: int, static: onestatic,
+                              **options) -> 'FST':
+    """Parenthesize or unparenthesize `AnnAssign.value` according to this, overkill, definitely overkill."""
+
+    ast   = self.a
+    child = _validate_put(self, code, idx, field, child)
+    value = _code_as_constant(code, self.root.parse_params)
+
+    if value.__class__ is not int or not 0 <= value <= 1:
+        raise ValueError('expection 0 or 1')
+
+    is_name = isinstance(target := ast.target, Name)
+
+    if value:
+        if not is_name:
+            raise ValueError('cannot make simple')
+
+        target.f._unparenthesize_grouping()
+
+    elif is_name and not target.f.pars().n:
+        target.f._parenthesize_grouping()
+
+    self.a.simple = value
+
+    return self  # cannot return primitive
+
+
+def _put_one_BoolOp_op(self: 'FST', code: _PutOneCode, idx: int | None, field: str, child: type[boolop], static: None,
+                       **options) -> 'FST':
+    """Put BoolOp op to potentially multiple places."""
+
+    child  = _validate_put(self, code, idx, field, child)
+    code   = _code_as_boolop(code, self.root.parse_params)
+    childf = child.f
+    src    = 'and' if isinstance(codea := code.a, And) else 'or'
+    tgt    = 'and' if isinstance(child, And) else 'or'
+    ltgt   = len(tgt)
+    lines  = self.root._lines
+
+    _, _, end_ln, end_col = self.loc
+
+    for value in self.a.values[:-1]:
+        _, _, ln, col = value.f.pars()
+        ln, col       = _next_find(lines, ln, col, end_ln, end_col, tgt)  # must be there
+
+        self._put_src(src, ln, col, ln, col + ltgt, False)
+
+    childf._set_ast(codea)
+
+    if src != tgt:  # if replacing with different boolop then need to parenthesize self if parent is BoolOp or children if they are BoolOps to keep structure regardless of precedence
+        if (parent := self.parent) and isinstance(parent.a, BoolOp) and not self.pars().n:
+            self._parenthesize_grouping()
+
+        for a in self.a.values:
+            if isinstance(a, BoolOp) and not (f := a.f).pars().n:
+                f._parenthesize_grouping()
+
+    return childf
+
+
 if _PYLT12:
     def _put_one_NOT_IMPLEMENTED_YET(self: 'FST', code: _PutOneCode, idx: int | None, field: str, child: constant,
                                      static: onestatic, **options) -> 'FST':
@@ -807,7 +834,7 @@ def _make_exprish_fst(self: 'FST', code: _PutOneCode, idx: int | None, field: st
         return False
 
     if pars:
-        if (put_ast.value.f if put_is_star else put_fst).pars(True)[1]:  # src has grouping pars, or src.value if src is Starred
+        if getattr((put_ast.value.f if put_is_star else put_fst).pars(), 'n', 0):  # src has grouping pars, or src.value if src is Starred
             del_tgt_pars = True
 
             if pars == 'auto':
@@ -815,7 +842,7 @@ def _make_exprish_fst(self: 'FST', code: _PutOneCode, idx: int | None, field: st
                     put_fst._unparenthesize_grouping()
 
         else:  # src does not have grouping pars
-            if ((tgt_has_pars := tgt_is_FST and target.pars(True)[1]) and
+            if ((tgt_has_pars := tgt_is_FST and getattr(target.pars(), 'n', 0)) and
                 put_fst.is_parenthesized_tuple() is False
             ):
                 del_tgt_pars = True
@@ -836,10 +863,10 @@ def _make_exprish_fst(self: 'FST', code: _PutOneCode, idx: int | None, field: st
         ln, col, end_ln, end_col = target
 
     else:
-        loc = target.pars(shared=False, pars=del_tgt_pars)
+        loc = target.pars(False) if del_tgt_pars else target.loc
 
         if not del_tgt_pars and target.is_solo_call_arg_genexp():  # need to check this otherwise might eat Call args pars
-            if (loc2 := target.pars(shared=False)) > loc:
+            if (loc2 := target.pars(False)) > loc:
                 loc = loc2
 
         ln, col, end_ln, end_col = loc
@@ -864,7 +891,6 @@ def _make_exprish_fst(self: 'FST', code: _PutOneCode, idx: int | None, field: st
         ls[-1] = bistr((ls := put_fst._lines)[-1] + suffix)  # don't need to offset anything so just tack onto the end
 
     put_fst._indent_lns(self.get_indent(), docstr=options.get('docstr'))
-
 
     dcol_offset    = self.root._lines[ln].c2b(col)
     end_col_offset = lines[end_ln].c2b(end_col)
@@ -1004,31 +1030,28 @@ def _put_one_AnnAssign_target(self: 'FST', code: _PutOneCode, idx: int | None, f
     return ret
 
 
-def _put_one_AnnAssign_simple(self: 'FST', code: _PutOneCode, idx: int | None, field: str, child: int, static: onestatic,
-                              **options) -> 'FST':
-    """Parenthesize or unparenthesize `AnnAssign.value` according to this, overkill, definitely overkill."""
+def _put_one_ImportFrom_names(self: 'FST', code: _PutOneCode, idx: int | None, field: str, child: list[AST],
+                              static: onestatic, **options) -> 'FST':
+    """Disallow put star to list of multiple names and unparenthesize if star was put to single name."""
 
-    ast   = self.a
-    child = _validate_put(self, code, idx, field, child)
-    value = _code_as_constant(code, self.root.parse_params)
+    child = _validate_put(self, code, idx, field, child)  # we want to do it in same order as all other puts
+    code  = static.code_as(code, self.root.parse_params)
 
-    if value.__class__ is not int or not 0 <= value <= 1:
-        raise ValueError('expection 0 or 1')
+    if is_star := ('*' in code.a.name):
+        if len(self.a.names) != 1:
+            raise NodeError('cannot put star alias to ImportFrom.names containing multiple aliases')
 
-    is_name = isinstance(target := ast.target, Name)
+    ret = _put_one_exprish_required(self, code, idx, field, child, static, 2, **options)
 
-    if value:
-        if not is_name:
-            raise ValueError('cannot make simple')
+    # if is_star:  # try to remove parentheses
+    #     lines = self.root._lines
 
-        target.f._unparenthesize_grouping()
+    #     # if lpar := _prev_find()
 
-    elif is_name and not target.f.pars().n:
-        target.f._parenthesize_grouping()
 
-    self.a.simple = value
 
-    return self  # cannot return primitive
+
+    return ret
 
 
 def _put_one_BinOp_left_right(self: 'FST', code: _PutOneCode, idx: int | None, field: str, child: list[AST],
@@ -1582,10 +1605,10 @@ def _put_one_raw(self: 'FST', code: _PutOneCode, idx: int | None, field: str, ch
                     loc = self._loc_lambda_args_entire()
 
             else:
-                loc = childf.pars(shared=False, pars=pars)
+                loc = childf.pars(False) if pars else childf.bloc
 
                 if (loc and not pars and childf.is_solo_call_arg_genexp() and  # if loc includes `arguments` parentheses shared with solo GeneratorExp call arg then need to leave those in place
-                    (non_shared_loc := childf.pars(shared=False)) > loc
+                    (non_shared_loc := childf.pars(False)) > loc
                 ):
                     loc = non_shared_loc
 
@@ -1618,13 +1641,13 @@ def _put_one_raw(self: 'FST', code: _PutOneCode, idx: int | None, field: str, ch
                 to_loc = to_info.loc_insdel
 
         if to_loc is None:  # empty arguments get special handling
-            if not (to_loc := to.pars(shared=False, pars=pars)):
+            if not (to_loc := to.pars(False) if pars else to.bloc):
                 if isinstance(to.a, arguments):
                     to_loc = to._loc_arguments_empty()
                 else:
                     raise ValueError(f"'to' node must have a location")
 
-            if not pars and to.is_solo_call_arg_genexp() and (non_shared_loc := to.pars(shared=False)) > to_loc:
+            if not pars and to.is_solo_call_arg_genexp() and (non_shared_loc := to.pars(False)) > to_loc:
                 to_loc = non_shared_loc
 
         if to_loc[:2] < loc[:2]:
@@ -1913,7 +1936,7 @@ def _one_info_ExceptHandler_type(self: 'FST', static: onestatic, idx: int | None
     ln, col, _, _ = self.loc
     col           = col + 6  # 'except'
 
-    if star := _next_src(self.root.lines, ln, col, end_ln, end_col):  # 'except*'?
+    if star := _next_src(self.root._lines, ln, col, end_ln, end_col):  # 'except*'?
         if star.src.startswith('*'):
             return _oneinfo_default  # can not del type from except* and can not insert because can never not exist
 
@@ -2342,7 +2365,7 @@ _PUT_ONE_HANDLERS = {
     (Assert, 'msg'):                      (False, _put_one_exprish_optional, onestatic(_one_info_Assert_msg, _restrict_default)), # expr?
     (Import, 'names'):                    (True,  _put_one_exprish_required, onestatic(_one_info_exprish_required, _restrict_default, code_as=_code_as_alias_dotted)), # alias*
     (ImportFrom, 'module'):               (False, _put_one_identifier_optional, onestatic(_one_info_ImportFrom_module, _restrict_default, code_as=_code_as_identifier_dotted)), # identifier? (dotted)
-    (ImportFrom, 'names'):                (True,  _put_one_exprish_required, onestatic(_one_info_exprish_required, _restrict_default, code_as=_code_as_alias_star)), # alias*
+    (ImportFrom, 'names'):                (True,  _put_one_ImportFrom_names, onestatic(_one_info_exprish_required, _restrict_default, code_as=_code_as_alias_star)), # alias*
     (Global, 'names'):                    (True,  _put_one_identifier_required, _onestatic_Global_Nonlocal_names), # identifier*
     (Nonlocal, 'names'):                  (True,  _put_one_identifier_required, _onestatic_Global_Nonlocal_names), # identifier*
     (Expr, 'value'):                      (False, _put_one_exprish_required, _onestatic_expr_required), # expr
