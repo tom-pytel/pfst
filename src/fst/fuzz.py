@@ -18,10 +18,174 @@ from .shared import astfield
 from .fst import FST, NodeError
 
 PROGRAM     = 'python -m fst.fuzz'
+
 _PY_VERSION = sys.version_info[:2]
 _PYLT11     = _PY_VERSION < (3, 11)
 _PYLT12     = _PY_VERSION < (3, 12)
 _PYLT14     = _PY_VERSION < (3, 14)
+
+EXPRS = [
+    'a or b',
+    'a\nor\nb',
+    'a := b',
+    'a\n:=\nb',
+    'a | b',
+    'a\n|\nb',
+    'a ** b',
+    'a\n**\nb',
+    'not a',
+    'not\na',
+    '~a',
+    '~\na',
+    'lambda: None',
+    'lambda:\nNone',
+    'a if b else c',
+    'a\nif\nb\nelse\nc',
+    '{a: b}',
+    '{a:\nb}',
+    '{a}',
+    '{a,\nb}',
+    '[a for a in b]',
+    '[a\nfor\na\nin\nb]',
+    '{a for a in b}',
+    '{a\nfor\na\nin\nb}',
+    '{a: c for a, c in b}',
+    '{a: c\nfor\na, c\nin\nb}',
+    '(a for a in b)',
+    '(a\nfor\na\nin\nb)',
+    'await a',
+    'await\na',
+    'yield',
+    'yield a',
+    'yield\na',
+    'yield from a',
+    'yield\nfrom\na',
+    'a < b',
+    'a\n<\nb',
+    'f(a)',
+    'f\n(\na\n)',
+    "f'{a}'",
+    'f"{a}"',
+    "f'''{a}'''",
+    'f"""{a}"""',
+    '...',
+    'None',
+    'True',
+    'False',
+    '1',
+    '1.0',
+    '1j',
+    "'a'",
+    '"a"',
+    "'''a'''",
+    '"""a"""',
+    "b'a'",
+    'b"a"',
+    "b'''a'''",
+    'b"""a"""',
+    'a.b',
+    'a\n.\nb',
+    'a[b]',
+    'a\n[\nb\n]',
+    '*a',
+    '*\na',
+    '[a, b]',
+    '[\na\n,\nb\n]',
+    '(a, b)',
+    '(\na\n,\nb\n)',
+    'a,',
+    'a\n,',
+    'a, b',
+    'a\n,\nb',
+
+    '\na\nor\nb\n',
+    '\na\n:=\nb\n',
+    '\na\n|\nb\n',
+    '\na\n**\nb\n',
+    '\nnot\na\n',
+    '\n~\na\n',
+    '\nlambda\n:\nNone\n',
+    '\na\nif\nb\nelse\nc\n',
+    '\n{\na\n:\nb\n}\n',
+    '\n{\na\n,\nb\n}\n',
+    '\n[\na\nfor\na\nin\nb\n]\n',
+    '\n{\na\nfor\na\nin\nb\n}\n',
+    '\n{\na\n:\nc\nfor\na\n,\nc\nin\nb\n}\n',
+    '\n(\na\nfor\na\nin\nb\n)\n',
+    '\nawait\na\n',
+    '\nyield\n',
+    '\nyield\na\n',
+    '\nyield\nfrom\na\n',
+    '\na\n<\nb\n',
+    '\nf\n(\na\n)\n',
+    "\nf'{a}'\n",
+    '\nf"{a}"\n',
+    "\nf'''\n{\na\n}\n'''\n",
+    '\nf"""\n{\na\n}\n"""\n',
+    '\n...\n',
+    '\nNone\n',
+    '\nTrue\n',
+    '\nFalse\n',
+    '\n1\n',
+    '\n1.0\n',
+    '\n1j\n',
+    "\n'a'\n",
+    '\n"a"\n',
+    "\n'''\na\n'''\n",
+    '\n"""\na\n"""\n',
+    "\nb'a'\n",
+    '\nb"a"\n',
+    "\nb'''\na\n'''\n",
+    '\nb"""\na\n"""\n',
+    '\na\n.\nb\n',
+    '\na\n[\nb\n]\n',
+    '\n*\na\n',
+    '\n[\na\n,\nb\n]\n',
+    '\n(\na\n,\nb\n)\n',
+    '\na\n,\n',
+    '\na\n,\nb\n',
+]
+
+if not _PYLT14:
+    EXPRS.extend([
+        "t'{a}'",
+        't"{a}"',
+        "t'''{a}'''",
+        't"""{a}"""',
+    ])
+
+EXPRS = [FST(e, 'expr') for e in EXPRS]
+
+PATS = [
+    '42',
+    'None',
+    '[a, *b]',
+    '[\na\n,\n*\nb\n]',
+    'a, *b',
+    '\na\n,\n*\nb\n',
+    '{"key": _}',
+    '{\n"key"\n:\n_\n}',
+    'SomeClass(attr=val)',
+    'SomeClass\n(\nattr\n=\nval\n)',
+    'as_var',
+    '1 as as_var',
+    '1\nas\nas_var',
+    '1 | 2',
+    '1\n|\n2',
+
+    '\n42\n',
+    '\nNone\n',
+    '\n[\na\n,\n*\nb\n]\n',
+    '\n\na\n,\n*\nb\n\n',
+    '\n{\n"key"\n:\n_\n}\n',
+    '\nSomeClass\n(\nattr\n=\nval\n)\n',
+    '\nas_var\n',
+    '\n1\nas\nas_var\n',
+    '\n1\n|\n2\n',
+]
+
+PATS = [FST(e, 'pattern') for e in PATS]
+
 
 
 def find_pys(path) -> list[str]:
@@ -54,7 +218,8 @@ def ignorable_exc(exc: Exception, putsrc: str | Literal[False] | None = None):
         'invalid value for MatchMapping.keys' in msg or
         'cannot reparse Starred in slice as Starred' in msg or
         'expecting identifier, got' in msg or
-        'not allowed in this alias' in msg
+        'not allowed in this alias' in msg or
+        msg == 'cannot put star alias to ImportFrom.names containing multiple aliases'
         # (msg.startswith('cannot put ') and (msg.endswith(' to MatchMapping.keys') or msg.endswith(' to MatchValue.value')))
     )
 
@@ -181,7 +346,10 @@ class FSTParts:
         if not isinstance(fst.a, self.exclude):
             self.cats[fst] = cat = fstcat(fst)
 
-            self.parts[cat].append(fst)
+            if not (fs := self.parts.get(cat)):
+                fs = self.parts[cat] = []
+
+            fs.append(fst)
 
     def remove_all(self, fst: FST):
         exclude = self.exclude
@@ -205,7 +373,10 @@ class FSTParts:
                 f       = a.f
                 cats[f] = cat = fstcat(f)
 
-                parts[cat].append(f)
+                if not (fs := parts.get(cat)):
+                    fs = parts[cat] = []
+
+                fs.append(f)
 
     def getrnd(self, cat: ASTCat | Iterable[ASTCat] | None = None) -> tuple[FST | None, ASTCat | None]:
         if cat is None:
@@ -341,6 +512,9 @@ def can_replace(tgt: FST, repl: FST) -> bool:  # assuming ASTCat has already bee
 
             if not allowed or not isinstance(repla, allowed):
                 return False
+
+        if isinstance(tgta, operator) and isinstance(repla, operator) and tgt.is_aug_op() ^ repl.is_aug_op():
+            return False
 
     except Exception:
         return False
@@ -856,199 +1030,118 @@ class ReputOne(Fuzzy):
             raise
 
 
-class PutOneExpr(Fuzzy):
-    name    = 'put_one_expr'
+class PutOne(Fuzzy):
+    """Test as much _put_one() as possible, deletions, identifiers, etc..."""
+
+    name    = 'put_one'
     forever = True
 
-    exprs   = [
-        'a or b',
-        'a\nor\nb',
-        'a := b',
-        'a\n:=\nb',
-        'a | b',
-        'a\n|\nb',
-        'a ** b',
-        'a\n**\nb',
-        'not a',
-        'not\na',
-        '~a',
-        '~\na',
-        'lambda: None',
-        'lambda:\nNone',
-        'a if b else c',
-        'a\nif\nb\nelse\nc',
-        '{a: b}',
-        '{a:\nb}',
-        '{a}',
-        '{a,\nb}',
-        '[a for a in b]',
-        '[a\nfor\na\nin\nb]',
-        '{a for a in b}',
-        '{a\nfor\na\nin\nb}',
-        '{a: c for a, c in b}',
-        '{a: c\nfor\na, c\nin\nb}',
-        '(a for a in b)',
-        '(a\nfor\na\nin\nb)',
-        'await a',
-        'await\na',
-        'yield',
-        'yield a',
-        'yield\na',
-        'yield from a',
-        'yield\nfrom\na',
-        'a < b',
-        'a\n<\nb',
-        'f(a)',
-        'f\n(\na\n)',
-        "f'{a}'",
-        'f"{a}"',
-        "f'''{a}'''",
-        'f"""{a}"""',
-        '...',
-        'None',
-        'True',
-        'False',
-        '1',
-        '1.0',
-        '1j',
-        "'a'",
-        '"a"',
-        "'''a'''",
-        '"""a"""',
-        "b'a'",
-        'b"a"',
-        "b'''a'''",
-        'b"""a"""',
-        'a.b',
-        'a\n.\nb',
-        'a[b]',
-        'a\n[\nb\n]',
-        '*a',
-        '*\na',
-        '[a, b]',
-        '[\na\n,\nb\n]',
-        '(a, b)',
-        '(\na\n,\nb\n)',
-        'a,',
-        'a\n,',
-        'a, b',
-        'a\n,\nb',
-
-        '\na\nor\nb\n',
-        '\na\n:=\nb\n',
-        '\na\n|\nb\n',
-        '\na\n**\nb\n',
-        '\nnot\na\n',
-        '\n~\na\n',
-        '\nlambda\n:\nNone\n',
-        '\na\nif\nb\nelse\nc\n',
-        '\n{\na\n:\nb\n}\n',
-        '\n{\na\n,\nb\n}\n',
-        '\n[\na\nfor\na\nin\nb\n]\n',
-        '\n{\na\nfor\na\nin\nb\n}\n',
-        '\n{\na\n:\nc\nfor\na\n,\nc\nin\nb\n}\n',
-        '\n(\na\nfor\na\nin\nb\n)\n',
-        '\nawait\na\n',
-        '\nyield\n',
-        '\nyield\na\n',
-        '\nyield\nfrom\na\n',
-        '\na\n<\nb\n',
-        '\nf\n(\na\n)\n',
-        "\nf'{a}'\n",
-        '\nf"{a}"\n',
-        "\nf'''\n{\na\n}\n'''\n",
-        '\nf"""\n{\na\n}\n"""\n',
-        '\n...\n',
-        '\nNone\n',
-        '\nTrue\n',
-        '\nFalse\n',
-        '\n1\n',
-        '\n1.0\n',
-        '\n1j\n',
-        "\n'a'\n",
-        '\n"a"\n',
-        "\n'''\na\n'''\n",
-        '\n"""\na\n"""\n',
-        "\nb'a'\n",
-        '\nb"a"\n',
-        "\nb'''\na\n'''\n",
-        '\nb"""\na\n"""\n',
-        '\na\n.\nb\n',
-        '\na\n[\nb\n]\n',
-        '\n*\na\n',
-        '\n[\na\n,\nb\n]\n',
-        '\n(\na\n,\nb\n)\n',
-        '\na\n,\n',
-        '\na\n,\nb\n',
-    ]
-
-    if not _PYLT14:
-        exprs.extend([
-            "t'{a}'",
-            't"{a}"',
-            "t'''{a}'''",
-            't"""{a}"""',
-        ])
-
-    exprs = [FST(e, 'expr') for e in exprs]
-
     def fuzz_one(self, fst, fnm) -> bool:
-        count       = 0
-        dst_exprs   = []
-        extra_exprs = []
+        count     = 0
+        parts     = FSTParts(fst.copy())
+        dst_nodes = []
 
-        for f in fst.walk(True):
-            if isinstance(a := f.a, expr):
-                if getattr(a, 'ctx', None).__class__ is not Load:
-                    continue
+        for expr in EXPRS:
+            parts.add_all(expr.copy())
 
-                if not f.is_parsable():
-                    continue
+        for pat in PATS:
+            parts.add_all(pat.copy())
 
-                dst_exprs.append(f)
+        for f in fst.walk():
+            if isinstance(f.a, (expr_context, mod)):#, FormattedValue, Interpolation)):
+                continue
 
-                if not f.has_slice():
-                    extra_exprs.append(f.copy())
+            dst_nodes.append(f)
 
         try:
-            for e in reversed(dst_exprs):
+            for f in reversed(dst_nodes):
                 if not ((count := count + 1) % 100):
                     sys.stdout.write('.')
                     sys.stdout.flush()
 
-                org = choice(choice([self.exprs, extra_exprs]))
+                # IDENTIFIER CHILDREN
 
-                match randint(0, 2):
-                    case 0:
-                        put  = 'fst'
-                        code = org.copy()
-                    case 1:
-                        put  = 'ast'
-                        code = copy_ast(org.a)
-                    case 2:
-                        put  = 'src'
-                        code = org.src
+                for subfield in ('name', 'module', 'names', 'attr', 'id', 'arg', 'rest', 'kwd_attrs'):  # check identifiers
+                    changed = False
+
+                    if (child := getattr(f.a, subfield, False)) is not False:
+                        changed = True
+                        subs    = list(enumerate(child)) if isinstance(child, list) else [(None, child)]
+
+                        for i, child in subs:
+                            if isinstance(child, (str, NoneType)):
+                                try:
+                                    f.put(None, i, field=subfield, raw=False)
+
+                                except Exception as e:
+                                    msg = str(e)
+
+                                    if (not msg.startswith('cannot delete') and
+                                        not msg.startswith('cannot put slice to') and
+                                        msg != "cannot change MatchAs with pattern into wildcard '_'" and
+                                        'not implemented' not in msg
+                                    ):  # 'in this state' not in str(e):
+                                        raise
+
+                                else:
+                                    if self.verify:
+                                        fst.verify()
+
+                            try:
+                                f.put(child, i, field=subfield, raw=False)
+
+                            except Exception as e:
+                                msg = str(e)
+
+                                if 'not implemented' not in msg:
+                                    raise
+
+                if changed and self.debug:
+                    fst.verify()
+
+                # NODE
+
+                cat          = fstcat(f)
+                allowed_cats = astcat_allowed_replacements(cat)
+                repl, _      = parts.getrnd(allowed_cats)
+                parent       = f.parent
+                field, idx   = f.pfield
+
+                if not can_replace(f, repl):
+                    continue
+
+                if random() < 0.5 and not _PUT_ONE_HANDLERS.get((parent.a.__class__, field), [True])[0]:
+                    try:
+                        parent.put(None, idx, False, field, raw=False)
+
+                    except Exception as e:
+                        msg = str(e)
+
+                        if not msg.startswith('cannot delete') and 'not implemented' not in msg:# and not msg.startswith('cannot put slice to'):
+                            raise
+
+                match put := choice(('fst', 'ast', 'src')):
+                    case 'fst':
+                        code = repl.copy()
+                    case 'ast':
+                        code = copy_ast(repl.a)
+                    case 'src':
+                        code = repl.copy().src  # dedent, fix 'elif'
 
                 try:
-                    e.replace(code, raw=False)
+                    # print('...', f, f.src)
+                    # print('   ', repl, repl.src, code, put)
+                    # f.replace(code, raw=False)
+                    parent.put(code, idx, False, field, raw=False)
 
                     if self.verify:
                         fst.verify()
 
                 except Exception as exc:
+                    # if not ignorable_exc(exc) and not (put == 'src' and isinstance(exc, SyntaxError)):
                     if not ignorable_exc(exc, put == 'src' and code):
-                        print('\n-', put, '--- parent', '-'*63)
-                        print((p := e.parent_stmtish()).src)
-                        print('.'*80)
-                        p.dump()
-                        print('- target', '-'*71)
-                        print(e.src)
-                        print('.'*80)
-                        print(e.dump())
-                        print('- replacement', '-'*66)
-                        print(org.src)
-                        print('.'*80)
-                        org.dump()
+                        if self.verbose:
+                            print(fst.src)
 
                         raise
 
@@ -1059,95 +1152,6 @@ class PutOneExpr(Fuzzy):
 
         if self.verbose:
             print(fst.src)
-
-
-class PutOnePat(Fuzzy):
-    name    = 'put_one_pat'
-    forever = True
-
-    pats = [
-        '42',
-        'None',
-        '[a, *b]',
-        '[\na\n,\n*\nb\n]',
-        'a, *b',
-        '\na\n,\n*\nb\n',
-        '{"key": _}',
-        '{\n"key"\n:\n_\n}',
-        'SomeClass(attr=val)',
-        'SomeClass\n(\nattr\n=\nval\n)',
-        'as_var',
-        '1 as as_var',
-        '1\nas\nas_var',
-        '1 | 2',
-        '1\n|\n2',
-
-        '\n42\n',
-        '\nNone\n',
-        '\n[\na\n,\n*\nb\n]\n',
-        '\n\na\n,\n*\nb\n\n',
-        '\n{\n"key"\n:\n_\n}\n',
-        '\nSomeClass\n(\nattr\n=\nval\n)\n',
-        '\nas_var\n',
-        '\n1\nas\nas_var\n',
-        '\n1\n|\n2\n',
-    ]
-
-    pats = [FST(e, 'pattern') for e in pats]
-
-    def fuzz_one(self, fst, fnm) -> bool:
-        count = 0
-        pats  = []
-
-        for f in fst.walk(True):
-            if isinstance(f.a, pattern):
-                pats.append(f)
-
-        try:
-            for e in reversed(pats):
-                if not ((count := count + 1) % 100):
-                    sys.stdout.write('.')
-                    sys.stdout.flush()
-
-                org  = choice(self.pats)
-                code = org.copy()
-
-                match randint(0, 2):
-                    case 0:
-                        put  = 'fst'
-                    case 1:
-                        put  = 'ast'
-                        code = code.a
-                    case 2:
-                        put  = 'src'
-                        code = code.src
-
-                try:
-                    e.replace(code, raw=False)
-
-                    if self.verify:
-                        fst.verify()
-
-                except Exception:
-                    print('\n-', put, '-'*74)
-                    print((p := e.parent_stmtish()).src)
-                    print('.'*80)
-                    p.dump()
-                    print('-'*80)
-                    print(e.src)
-                    print('.'*80)
-                    print(e.dump())
-                    print('-'*80)
-                    org.dump()
-                    print('.'*80)
-                    print(org.src)
-
-                    raise
-
-            fst.verify()
-
-        finally:
-            sys.stdout.write('\n')
 
 
 class ReconcileRnd(Fuzzy):

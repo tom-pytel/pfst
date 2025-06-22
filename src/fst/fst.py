@@ -3343,6 +3343,27 @@ class FST:
         return ((parent := self.parent) and self.pfield.name == 'patterns' and
                 isinstance(parenta := parent.a, MatchClass) and not parenta.kwd_patterns and len(parenta.patterns) == 1)
 
+    def is_aug_op(self) -> bool | None:
+        """Whether `self` is an augmented `operator`, or not an `operator` at all.
+
+        **Returns:**
+        - `True` if is augmented `operator`, `False` if non-augmented `operator` and `None` if is not `operator` at all.
+
+        **Examples:**
+        ```py
+        >>> FST('+').is_aug_op()
+        False
+
+        >>> FST('+=').is_aug_op()
+        True
+
+        >>> repr(FST('~').is_aug_op())
+        'None'
+        ```
+        """
+
+        return None if not isinstance(self.a, operator) else self.get_src(*self.loc) in OPSTR2CLS_AUG
+
     def has_slice(self) -> bool:
         """Whether self is a `Slice` or a `Tuple` which directly contains any `Slice`.
 

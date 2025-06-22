@@ -1753,7 +1753,7 @@ def _one_info_identifier_required(self: 'FST', static: onestatic, idx: int | Non
     lines                    = self.root._lines
 
     if not prefix:
-        end_col = re_identifier.match(lines[ln], col, end_col).end()  # must be there
+        end_col = re_identifier.match(lines[ln], col, end_col if end_ln == ln else 0x7fffffffffffffff).end()  # must be there
 
     else:
         ln, col      = _next_find(lines, ln, col, end_ln, end_col, prefix, lcont=None)  # must be there, have to search because could be preceded by something (like 'async')
