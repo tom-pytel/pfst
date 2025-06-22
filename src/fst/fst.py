@@ -1986,10 +1986,10 @@ class FST:
 
         return self  # True
 
-    def unpar(self, node: bool = False, *, share: bool | None = True) -> Self:
+    def unpar(self, node: bool = False, *, shared: bool | None = True) -> Self:
         """Remove all parentheses from node if present. Normally removes just grouping parentheses but can also remove
         `Tuple` parentheses and `MatchSequence` parentheses or brackets if `node=True`. If dealing with a `Starred` then
-        the parentheses are checked in and removed from the child. If `share=None` then will also remove parentheses
+        the parentheses are checked in and removed from the child. If `shared=None` then will also remove parentheses
         which do not belong to this node but enclose it directly.
 
         **WARNING!** This function doesn't do any higher level syntactic validation. So if you unparenthesize something
@@ -1998,7 +1998,7 @@ class FST:
         **Parameters:**
         - `node`: If `True` then will remove parentheses from a parenthesized `Tuple` and parentheses / brackets from
             parenthesized / bracketed `MatchSequence`, otherwise only removes grouping parentheses if present.
-        - `share`: Whether to allow merge of parentheses of single call argument generator expression with `Call`
+        - `shared`: Whether to allow merge of parentheses of single call argument generator expression with `Call`
             parentheses or not. If `None` then will attempt to unparenthesize any enclosing parentheses, whether they
             belong to this node or not (meant for internal use).
 
@@ -2043,7 +2043,7 @@ class FST:
         >>> FST('call(((i for i in j)))').args[0].unpar().root.src  # by default allows sharing
         'call(i for i in j)'
 
-        >>> FST('call(((i for i in j)))').args[0].unpar(share=False).root.src  # unless told not to
+        >>> FST('call(((i for i in j)))').args[0].unpar(shared=False).root.src  # unless told not to
         'call((i for i in j))'
         ```
         """
@@ -2051,16 +2051,16 @@ class FST:
         if isinstance(a := self.a, Starred):
             if (value := a.value.f).pars().n:
                 with self._modifying():
-                    value._unparenthesize_grouping(share)
+                    value._unparenthesize_grouping(shared)
 
             return self
 
         modifying = None
 
-        if self.pars(None if share is None else True).n:
+        if self.pars(None if shared is None else True).n:
             modifying = self._modifying().enter()
 
-            self._unparenthesize_grouping(share)
+            self._unparenthesize_grouping(shared)
 
         if node:
             if isinstance(self.a, Tuple):

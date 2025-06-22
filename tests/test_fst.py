@@ -1860,35 +1860,35 @@ def f():
 
     def test__unparenthesize_grouping(self):
         f = parse('a').f
-        f.body[0].value._unparenthesize_grouping(share=False)
+        f.body[0].value._unparenthesize_grouping(shared=False)
         self.assertEqual('a', f.src)
         self.assertEqual((0, 0, 0, 1), f.loc)
         self.assertEqual((0, 0, 0, 1), f.body[0].loc)
         self.assertEqual((0, 0, 0, 1), f.body[0].value.loc)
 
         f = parse('(a)').f
-        f.body[0].value._unparenthesize_grouping(share=False)
+        f.body[0].value._unparenthesize_grouping(shared=False)
         self.assertEqual('a', f.src)
         self.assertEqual((0, 0, 0, 1), f.loc)
         self.assertEqual((0, 0, 0, 1), f.body[0].loc)
         self.assertEqual((0, 0, 0, 1), f.body[0].value.loc)
 
         f = parse('((a))').f
-        f.body[0].value._unparenthesize_grouping(share=False)
+        f.body[0].value._unparenthesize_grouping(shared=False)
         self.assertEqual('a', f.src)
         self.assertEqual((0, 0, 0, 1), f.loc)
         self.assertEqual((0, 0, 0, 1), f.body[0].loc)
         self.assertEqual((0, 0, 0, 1), f.body[0].value.loc)
 
         f = parse('(\n ( (a) )  \n)').f
-        f.body[0].value._unparenthesize_grouping(share=False)
+        f.body[0].value._unparenthesize_grouping(shared=False)
         self.assertEqual('a', f.src)
         self.assertEqual((0, 0, 0, 1), f.loc)
         self.assertEqual((0, 0, 0, 1), f.body[0].loc)
         self.assertEqual((0, 0, 0, 1), f.body[0].value.loc)
 
         f = parse('((i,))').f
-        f.body[0].value._unparenthesize_grouping(share=False)
+        f.body[0].value._unparenthesize_grouping(shared=False)
         self.assertEqual('(i,)', f.src)
         self.assertEqual((0, 0, 0, 4), f.loc)
         self.assertEqual((0, 0, 0, 4), f.body[0].loc)
@@ -1896,7 +1896,7 @@ def f():
         self.assertEqual((0, 1, 0, 2), f.body[0].value.elts[0].loc)
 
         f = parse('(\n ( (i,) ) \n)').f
-        f.body[0].value._unparenthesize_grouping(share=False)
+        f.body[0].value._unparenthesize_grouping(shared=False)
         self.assertEqual('(i,)', f.src)
         self.assertEqual((0, 0, 0, 4), f.loc)
         self.assertEqual((0, 0, 0, 4), f.body[0].loc)
@@ -1904,7 +1904,7 @@ def f():
         self.assertEqual((0, 1, 0, 2), f.body[0].value.elts[0].loc)
 
         f = parse('call((((i for i in j))))').f
-        f.body[0].value.args[0]._unparenthesize_grouping(share=False)
+        f.body[0].value.args[0]._unparenthesize_grouping(shared=False)
         self.assertEqual(f.src, 'call((i for i in j))')
         self.assertEqual((0, 0, 0, 20), f.loc)
         self.assertEqual((0, 0, 0, 20), f.body[0].loc)
@@ -1913,7 +1913,7 @@ def f():
         self.assertEqual((0, 5, 0, 19), f.body[0].value.args[0].loc)
 
         f = parse('call((((i for i in j))))').f
-        f.body[0].value.args[0]._unparenthesize_grouping(share=True)
+        f.body[0].value.args[0]._unparenthesize_grouping(shared=True)
         self.assertEqual(f.src, 'call(i for i in j)')
         self.assertEqual((0, 0, 0, 18), f.loc)
         self.assertEqual((0, 0, 0, 18), f.body[0].loc)
@@ -1922,7 +1922,7 @@ def f():
         self.assertEqual((0, 4, 0, 18), f.body[0].value.args[0].loc)
 
         f = parse('call( ( ( (i for i in j) ) ) )').f
-        f.body[0].value.args[0]._unparenthesize_grouping(share=True)
+        f.body[0].value.args[0]._unparenthesize_grouping(shared=True)
         self.assertEqual(f.src, 'call(i for i in j)')
         self.assertEqual((0, 0, 0, 18), f.loc)
         self.assertEqual((0, 0, 0, 18), f.body[0].loc)
@@ -1931,7 +1931,7 @@ def f():
         self.assertEqual((0, 4, 0, 18), f.body[0].value.args[0].loc)
 
         f = parse('call((((i for i in j))),)').f
-        f.body[0].value.args[0]._unparenthesize_grouping(share=True)
+        f.body[0].value.args[0]._unparenthesize_grouping(shared=True)
         self.assertEqual(f.src, 'call(i for i in j)')
         self.assertEqual((0, 0, 0, 18), f.loc)
         self.assertEqual((0, 0, 0, 18), f.body[0].loc)
@@ -1940,7 +1940,7 @@ def f():
         self.assertEqual((0, 4, 0, 18), f.body[0].value.args[0].loc)
 
         f = parse('call((((i for i in j))),)').f
-        f.body[0].value.args[0]._unparenthesize_grouping(share=False)
+        f.body[0].value.args[0]._unparenthesize_grouping(shared=False)
         self.assertEqual(f.src, 'call((i for i in j),)')
         self.assertEqual((0, 0, 0, 21), f.loc)
         self.assertEqual((0, 0, 0, 21), f.body[0].loc)
@@ -1949,46 +1949,46 @@ def f():
         self.assertEqual((0, 5, 0, 19), f.body[0].value.args[0].loc)
 
         f = parse('( # pre\ni\n# post\n)').f
-        f.body[0].value._unparenthesize_grouping(share=False)
+        f.body[0].value._unparenthesize_grouping(shared=False)
         self.assertEqual('i', f.src)
         self.assertEqual((0, 0, 0, 1), f.loc)
         self.assertEqual((0, 0, 0, 1), f.body[0].loc)
         self.assertEqual((0, 0, 0, 1), f.body[0].value.loc)
 
         f = parse('( # pre\ni\n# post\n)').body[0].value.f.copy(pars=True)
-        f._unparenthesize_grouping(share=False)
+        f._unparenthesize_grouping(shared=False)
         self.assertEqual('i', f.src)
         self.assertEqual((0, 0, 0, 1), f.loc)
 
         f = parse('( # pre\n(i,)\n# post\n)').f
-        f.body[0].value._unparenthesize_grouping(share=False)
+        f.body[0].value._unparenthesize_grouping(shared=False)
         self.assertEqual('(i,)', f.src)
         self.assertEqual((0, 0, 0, 4), f.loc)
         self.assertEqual((0, 0, 0, 4), f.body[0].loc)
         self.assertEqual((0, 0, 0, 4), f.body[0].value.loc)
 
         f = parse('( # pre\n(i)\n# post\n)').body[0].value.f.copy(pars=True)
-        f._unparenthesize_grouping(share=False)
+        f._unparenthesize_grouping(shared=False)
         self.assertEqual('i', f.src)
         self.assertEqual((0, 0, 0, 1), f.loc)
 
         # replace with space where directly touching other text
 
         f = FST('[a for a in b if(a)if(a)]', 'exec')
-        f.body[0].value.generators[0].ifs[0]._unparenthesize_grouping(share=False)
-        f.body[0].value.generators[0].ifs[1]._unparenthesize_grouping(share=False)
+        f.body[0].value.generators[0].ifs[0]._unparenthesize_grouping(shared=False)
+        f.body[0].value.generators[0].ifs[1]._unparenthesize_grouping(shared=False)
         self.assertEqual('[a for a in b if a if a]', f.src)
 
         f = FST('for(a)in b: pass', 'exec')
-        f.body[0].target._unparenthesize_grouping(share=False)
+        f.body[0].target._unparenthesize_grouping(shared=False)
         self.assertEqual('for a in b: pass', f.src)
 
         f = FST('assert(test)', 'exec')
-        f.body[0].test._unparenthesize_grouping(share=False)
+        f.body[0].test._unparenthesize_grouping(shared=False)
         self.assertEqual('assert test', f.src)
 
         f = FST('assert({test})', 'exec')
-        f.body[0].test._unparenthesize_grouping(share=False)
+        f.body[0].test._unparenthesize_grouping(shared=False)
         self.assertEqual('assert{test}', f.src)
 
         # special rules for Starred
@@ -4981,35 +4981,35 @@ match a:
         # grouping
 
         f = parse('a').f
-        f.body[0].value.unpar(share=False)
+        f.body[0].value.unpar(shared=False)
         self.assertEqual('a', f.src)
         self.assertEqual((0, 0, 0, 1), f.loc)
         self.assertEqual((0, 0, 0, 1), f.body[0].loc)
         self.assertEqual((0, 0, 0, 1), f.body[0].value.loc)
 
         f = parse('(a)').f
-        f.body[0].value.unpar(share=False)
+        f.body[0].value.unpar(shared=False)
         self.assertEqual('a', f.src)
         self.assertEqual((0, 0, 0, 1), f.loc)
         self.assertEqual((0, 0, 0, 1), f.body[0].loc)
         self.assertEqual((0, 0, 0, 1), f.body[0].value.loc)
 
         f = parse('((a))').f
-        f.body[0].value.unpar(share=False)
+        f.body[0].value.unpar(shared=False)
         self.assertEqual('a', f.src)
         self.assertEqual((0, 0, 0, 1), f.loc)
         self.assertEqual((0, 0, 0, 1), f.body[0].loc)
         self.assertEqual((0, 0, 0, 1), f.body[0].value.loc)
 
         f = parse('(\n ( (a) )  \n)').f
-        f.body[0].value.unpar(share=False)
+        f.body[0].value.unpar(shared=False)
         self.assertEqual('a', f.src)
         self.assertEqual((0, 0, 0, 1), f.loc)
         self.assertEqual((0, 0, 0, 1), f.body[0].loc)
         self.assertEqual((0, 0, 0, 1), f.body[0].value.loc)
 
         f = parse('((i,))').f
-        f.body[0].value.unpar(share=False)
+        f.body[0].value.unpar(shared=False)
         self.assertEqual('(i,)', f.src)
         self.assertEqual((0, 0, 0, 4), f.loc)
         self.assertEqual((0, 0, 0, 4), f.body[0].loc)
@@ -5017,7 +5017,7 @@ match a:
         self.assertEqual((0, 1, 0, 2), f.body[0].value.elts[0].loc)
 
         f = parse('(\n ( (i,) ) \n)').f
-        f.body[0].value.unpar(share=False)
+        f.body[0].value.unpar(shared=False)
         self.assertEqual('(i,)', f.src)
         self.assertEqual((0, 0, 0, 4), f.loc)
         self.assertEqual((0, 0, 0, 4), f.body[0].loc)
@@ -5025,7 +5025,7 @@ match a:
         self.assertEqual((0, 1, 0, 2), f.body[0].value.elts[0].loc)
 
         f = parse('call((((i for i in j))))').f
-        f.body[0].value.args[0].unpar(share=False)
+        f.body[0].value.args[0].unpar(shared=False)
         self.assertEqual(f.src, 'call((i for i in j))')
         self.assertEqual((0, 0, 0, 20), f.loc)
         self.assertEqual((0, 0, 0, 20), f.body[0].loc)
@@ -5034,7 +5034,7 @@ match a:
         self.assertEqual((0, 5, 0, 19), f.body[0].value.args[0].loc)
 
         f = parse('call((((i for i in j))))').f
-        f.body[0].value.args[0].unpar(share=True)
+        f.body[0].value.args[0].unpar(shared=True)
         self.assertEqual(f.src, 'call(i for i in j)')
         self.assertEqual((0, 0, 0, 18), f.loc)
         self.assertEqual((0, 0, 0, 18), f.body[0].loc)
@@ -5043,7 +5043,7 @@ match a:
         self.assertEqual((0, 4, 0, 18), f.body[0].value.args[0].loc)
 
         f = parse('call( ( ( (i for i in j) ) ) )').f
-        f.body[0].value.args[0].unpar(share=True)
+        f.body[0].value.args[0].unpar(shared=True)
         self.assertEqual(f.src, 'call(i for i in j)')
         self.assertEqual((0, 0, 0, 18), f.loc)
         self.assertEqual((0, 0, 0, 18), f.body[0].loc)
@@ -5052,7 +5052,7 @@ match a:
         self.assertEqual((0, 4, 0, 18), f.body[0].value.args[0].loc)
 
         f = parse('call((((i for i in j))),)').f
-        f.body[0].value.args[0].unpar(share=True)
+        f.body[0].value.args[0].unpar(shared=True)
         self.assertEqual(f.src, 'call(i for i in j)')
         self.assertEqual((0, 0, 0, 18), f.loc)
         self.assertEqual((0, 0, 0, 18), f.body[0].loc)
@@ -5061,7 +5061,7 @@ match a:
         self.assertEqual((0, 4, 0, 18), f.body[0].value.args[0].loc)
 
         f = parse('call((((i for i in j))),)').f
-        f.body[0].value.args[0].unpar(share=False)
+        f.body[0].value.args[0].unpar(shared=False)
         self.assertEqual(f.src, 'call((i for i in j),)')
         self.assertEqual((0, 0, 0, 21), f.loc)
         self.assertEqual((0, 0, 0, 21), f.body[0].loc)
@@ -5070,46 +5070,46 @@ match a:
         self.assertEqual((0, 5, 0, 19), f.body[0].value.args[0].loc)
 
         f = parse('( # pre\ni\n# post\n)').f
-        f.body[0].value.unpar(share=False)
+        f.body[0].value.unpar(shared=False)
         self.assertEqual('i', f.src)
         self.assertEqual((0, 0, 0, 1), f.loc)
         self.assertEqual((0, 0, 0, 1), f.body[0].loc)
         self.assertEqual((0, 0, 0, 1), f.body[0].value.loc)
 
         f = parse('( # pre\ni\n# post\n)').body[0].value.f.copy(pars=True)
-        f.unpar(share=False)
+        f.unpar(shared=False)
         self.assertEqual('i', f.src)
         self.assertEqual((0, 0, 0, 1), f.loc)
 
         f = parse('( # pre\n(i,)\n# post\n)').f
-        f.body[0].value.unpar(share=False)
+        f.body[0].value.unpar(shared=False)
         self.assertEqual('(i,)', f.src)
         self.assertEqual((0, 0, 0, 4), f.loc)
         self.assertEqual((0, 0, 0, 4), f.body[0].loc)
         self.assertEqual((0, 0, 0, 4), f.body[0].value.loc)
 
         f = parse('( # pre\n(i)\n# post\n)').body[0].value.f.copy(pars=True)
-        f.unpar(share=False)
+        f.unpar(shared=False)
         self.assertEqual('i', f.src)
         self.assertEqual((0, 0, 0, 1), f.loc)
 
         # replace with space where directly touching other text
 
         f = FST('[a for a in b if(a)if(a)]', 'exec')
-        f.body[0].value.generators[0].ifs[0].unpar(share=False)
-        f.body[0].value.generators[0].ifs[1].unpar(share=False)
+        f.body[0].value.generators[0].ifs[0].unpar(shared=False)
+        f.body[0].value.generators[0].ifs[1].unpar(shared=False)
         self.assertEqual('[a for a in b if a if a]', f.src)
 
         f = FST('for(a)in b: pass', 'exec')
-        f.body[0].target.unpar(share=False)
+        f.body[0].target.unpar(shared=False)
         self.assertEqual('for a in b: pass', f.src)
 
         f = FST('assert(test)', 'exec')
-        f.body[0].test.unpar(share=False)
+        f.body[0].test.unpar(shared=False)
         self.assertEqual('assert test', f.src)
 
         f = FST('assert({test})', 'exec')
-        f.body[0].test.unpar(share=False)
+        f.body[0].test.unpar(shared=False)
         self.assertEqual('assert{test}', f.src)
 
         # tuple
@@ -5194,23 +5194,23 @@ match a:
         f = FST('a:b:c')
         f.par(True)
         self.assertEqual('(a:b:c)', f.src)
-        f.unpar(share=None)
+        f.unpar(shared=None)
         self.assertEqual('a:b:c', f.src)
 
         f = FST('f(a)')
-        f.args[0].unpar(share=None)
+        f.args[0].unpar(shared=None)
         self.assertEqual('f a', f.src)
 
         f = FST('class c(a): pass')
-        f.bases[0].unpar(share=None)
+        f.bases[0].unpar(shared=None)
         self.assertEqual('class c a: pass', f.src)
 
         f = FST('case c(a): pass')
-        f.pattern.patterns[0].unpar(share=None)
+        f.pattern.patterns[0].unpar(shared=None)
         self.assertEqual('case c a: pass', f.src)
 
         f = FST('from a import (b)')
-        f.names[0].unpar(share=None)
+        f.names[0].unpar(shared=None)
         self.assertEqual('from a import b', f.src)
 
     def test_pars(self):

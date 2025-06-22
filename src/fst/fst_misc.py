@@ -1308,12 +1308,12 @@ def _parenthesize_node(self: 'FST', whole: bool = True, pars: str = '()'):
     a.col_offset = lines[ln].c2b(col)  # ditto on the `whole` thing
 
 
-def _unparenthesize_grouping(self: 'FST', share: bool | None = True, *, star_child: bool = True) -> bool:
+def _unparenthesize_grouping(self: 'FST', shared: bool | None = True, *, star_child: bool = True) -> bool:
     """Remove grouping parentheses from anything if present. Just remove text parens around node and everything between
     them and node adjusting parent locations but not the node itself.
 
     **Parameters:**
-    - `share`: Whether to allow merge of parentheses into share single call argument generator expression or not. If
+    - `shared`: Whether to allow merge of parentheses into shared single call argument generator expression or not. If
         `None` then will attempt to unparenthesize any enclosing parentheses, whether they belong to this node or not
         (meant for internal use).
     - `star_child`: `Starred` expressions cannot be parenthesized, so when this is `True` the parentheses are removed
@@ -1326,18 +1326,18 @@ def _unparenthesize_grouping(self: 'FST', share: bool | None = True, *, star_chi
     if isinstance(self.a, Starred) and star_child:
         self = self.value
 
-    pars_loc = self.pars(None if share is None else True)
+    pars_loc = self.pars(None if shared is None else True)
 
-    if share:
-        share = self.is_solo_call_arg_genexp()
+    if shared:
+        shared = self.is_solo_call_arg_genexp()
 
-    if not getattr(pars_loc, 'n', 0) and not share:
+    if not getattr(pars_loc, 'n', 0) and not shared:
         return False
 
     ln , col,  end_ln,  end_col  = self.bloc
     pln, pcol, pend_ln, pend_col = pars_loc
 
-    if share:  # special case merge solo argument GeneratorExp parentheses with call argument parens
+    if shared:  # special case merge solo argument GeneratorExp parentheses with call argument parens
         lines                    = self.root._lines
         _, _, cend_ln, cend_col  = self.parent.func.loc
         pln, pcol                = _prev_find(lines, cend_ln, cend_col, pln, pcol, '(')  # it must be there
