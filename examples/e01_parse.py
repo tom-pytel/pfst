@@ -1,9 +1,12 @@
-r"""Parsing and unparsing and the various ways to convert source and `AST` nodes to `FST` and back.
+r"""
+# Parse and unparse from source or `AST`
 
 First import this, it includes an import of the `ast` module since it is useful to have it handy.
 ```py
 >>> from fst import *
 ```
+
+## Parse
 
 Drop-in `ast.parse()` replacement gives normal `AST`.
 
@@ -39,7 +42,9 @@ Module - ROOT 0,0..0,22
       .value Constant 2 - 0,10..0,11
 ```
 
-Every `AST` node in the tree gets an `.f` pointing to its own `FST` node.
+## Basic structure
+
+Now or some needed structure information. Every `AST` node in the tree gets an `.f` pointing to its own `FST` node.
 
 ```py
 >>> a.body[0].body[0].f.dump()
@@ -72,6 +77,8 @@ The tree can be traversed downwards either though the `AST` nodes or the `FST` n
 <class 'ast.Assign'>
 ```
 
+## Unparse
+
 Drop-in `ast.unparse()` replacement outputs with formatting.
 
 ```py
@@ -85,6 +92,8 @@ You can also just access the source.
 >>> print(a.f.src)
 if 1: i = 2  # comment
 ```
+
+## Simpler parse
 
 Simpler way to parse, gives the same thing.
 
@@ -195,6 +204,8 @@ Starred - ROOT 0,0..0,7
   .ctx Load
 ```
 
+## From `AST` nodes
+
 You can also pass `AST` nodes, which are then unparsed and reparsed (because
 otherwise we couldn't trust the location information in them). When used like
 this, the `AST` nodes are not consumed.
@@ -213,6 +224,8 @@ Slice - ROOT 0,0..0,5
   .upper Name 'b' Load - 0,2..0,3
   .step Name 'c' Load - 0,4..0,5
 ```
+
+## Underlying functions
 
 The `FST(...)` syntax used in the above examples is just a shortcut for the functions `FST.fromsrc()` and
 `FST.fromast()`.
@@ -247,6 +260,8 @@ Slice - ROOT 0,0..0,5
   .step Name 'c' Load - 0,4..0,5
 ```
 
+## Source
+
 A note on the `.src` attribute, it gives the full valid source only if accessed at the root node. If accessed at any
 node below, it will return the UNINDENTED source for the location of the node, except for the first line which will be
 completely unindented. If you want full correctly unindented source for nodes which are not root, you should `copy()`
@@ -279,7 +294,7 @@ if a:
 The `FST.dump()` method can be useful in visualizing the source along with the actual nodes it corresponds to.
 
 ```py
->>> f.dump('stmt')
+>>> f.dump(src='stmt')
 0: def f(a):
 FunctionDef - ROOT 0,0..2,16
   .name 'f'

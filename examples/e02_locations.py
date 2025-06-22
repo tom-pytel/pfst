@@ -1,9 +1,12 @@
-r"""How FST handles node locations in the source code.
+r"""
+# Node locations in the source code
 
 First import this, it includes an import of the `ast` module since it is useful to have it handy.
 ```py
 >>> from fst import *
 ```
+
+## `loc` and `bloc`
 
 Almost all `FST` nodes have a location attribute pointing to where they exist in the source code.
 
@@ -115,6 +118,8 @@ fstloc(0, 0, 2, 16)
 (0, 0, 2, 16)
 ```
 
+## Line and column coordinates
+
 `FST` node locations differ from `AST` node locations in that the line numbers start at 0 instead of 1 and the column
 offsets are in characters and not bytes.
 
@@ -159,6 +164,8 @@ fstloc(0, 0, 0, 14)
 >>> f.iter.whole_loc
 fstloc(0, 0, 0, 14)
 ```
+
+## Search by location
 
 You can search for a node by location. This is done by either searching for a node in a given location or searching for
 a node which contains a location.

@@ -1,0 +1,297 @@
+r"""
+# Accessing and copying nodes
+
+First import this, it includes an import of the `ast` module since it is useful to have it handy.
+```py
+>>> from fst import *
+```
+
+## `copy()` and `cut()`
+
+If just you access nodes directly you get the node as it lives in the parent tree, without source dedenting (except for the first line) or isolation.
+
+```py
+>>> f = FST('''
+... if i:
+...     if j:
+...         k = 1
+...     else:
+...         k = 0
+... '''.strip())
+
+>>> g = f.body[0]
+
+>>> print(g.src)
+if j:
+        k = 1
+    else:
+        k = 0
+```
+
+This node is not a root node and can't be put to a tree.
+
+```py
+>>> g.is_root
+False
+
+>>> try:
+...     f.body.append(g)
+... except Exception as exc:
+...     print('Exception:', exc)
+Exception: expecting root node
+```
+
+In order to get this node standalone you need to `copy()` it.
+
+```py
+>>> g = f.body[0].copy()
+
+>>> print(g.src)
+if j:
+    k = 1
+else:
+    k = 0
+>>> g.is_root
+True
+
+>>> f.body.append(g)
+<<If ROOT 0,0..8,13>.body[0:2] [<If 1,4..4,13>, <If 5,4..8,13>]>
+
+>>> print(f.src.rstrip())  # ignore the rstrip, its for prettification purposes
+if i:
+    if j:
+        k = 1
+    else:
+        k = 0
+    if j:
+        k = 1
+    else:
+        k = 0
+```
+
+A copied node is its own standalone FST tree and can be gotten from and put to and otherwise used like any other FST tree. It does not have to be valid parsable code, any node is supported as the root of a tree and only root `FST` nodes can be put into other FST trees.
+
+You can also cut nodes out, which will remove them from the tree.
+
+```py
+>>> g = f.body[0].cut()
+
+>>> print(f.src.rstrip())
+if i:
+    if j:
+        k = 1
+    else:
+        k = 0
+```
+
+When dealing with statements you can temporarily cut out the last statement in a body, but make sure to put something back as soon as possible because most operations will fail with a tree in this state.
+
+```py
+>>> g = f.body[0].body[0].cut()
+
+>>> print(f.src.rstrip())
+if i:
+    if j:
+    else:
+        k = 0
+
+>>> f.body[0].body.append(g)
+<<If 1,4..4,13>.body[0:1] [<Assign 2,8..2,13>]>
+
+>>> print(f.src.rstrip())
+if i:
+    if j:
+        k = 1
+    else:
+        k = 0
+```
+
+Cutting out an optional body field like an `orelse`, `finalbody` or `handlers` (if there is a `finalbody`) will leave the tree in a valid state.
+
+```py
+>>> f = FST('''
+... if i:
+...     j = 1
+... else:
+...     k = 2
+... '''.strip())
+
+>>> print(f.src)
+if i:
+    j = 1
+else:
+    k = 2
+
+>>> f.orelse[0].cut()
+<Assign ROOT 0,0..0,5>
+
+>>> print(f.src.rstrip())
+if i:
+    j = 1
+```
+
+You can copy a root node but you cannot cut one.
+
+```py
+>>> f.copy()
+<If ROOT 0,0..1,9>
+
+>>> try:
+...     f.cut()
+... except Exception as exc:
+...     print('Exception:', exc)
+Exception: cannot cut root node
+```
+
+## `get()` and `get_slice()`
+
+`copy()` and `cut()` are basically shortcuts to `get()` (except in the case of a root node copy). The `get()` function essentially does a `copy()` except from the point of view of the parent node. So the following two are equivalent.
+
+```py
+>>> print(FST('i = 123').value.copy().src)
+123
+
+>>> print(FST('i = 123').get('value').src)
+123
+```
+
+`get()` can also function as a `cut()`.
+
+```py
+>>> f = FST('[1, 2, 3]')
+
+>>> f.get(1, cut=True).src
+'2'
+
+>>> print(f.src)
+[1, 3]
+```
+
+You can specify which field to `get()` from.
+
+```py
+>>> f = FST('''
+... if 1:
+...     i = 1
+... else:
+...     j = 2
+...     k = 3
+...     l = 4
+... '''.strip())
+
+>>> print(f.get(0, 'orelse').src)
+j = 2
+
+>>> print(f.get(0, 'body').src)
+i = 1
+
+>>> print(f.get(0).src)  # 'body' is the default field
+i = 1
+```
+
+If you pass two indices then `get()` returns a slice using `get_slice()`. `get()` can do everything that `get_slice()` can do.
+
+```py
+>>> print(f.get(1, 3, 'orelse').src)
+k = 3
+l = 4
+```
+
+Which gets us to `get_slice()`, which ONLY gets slices.
+
+```py
+>>> print(f.get_slice(1, 3, 'orelse').src)
+k = 3
+l = 4
+```
+
+It can only get individual elements as slices, unlike `get()` which can get them as the element itself.
+
+```py
+>>> print(FST('[1, 2, 3]').get_slice(1, 2).src)
+[2]
+
+>>> print(FST('[1, 2, 3]').get(1).src)
+2
+```
+
+Both `get()` and `get_slice()` can specify slice beginning and end points as `None`, which specifies from beginning of the body or to the end of it.
+
+```py
+>>> print(FST('[1, 2, 3]').get_slice(1, None).src)
+[2, 3]
+
+>>> print(FST('[1, 2, 3]').get(None, 2).src)
+[1, 2]
+```
+
+Many nodes have a specific common-sense default field, like `value` for a `Return`.
+
+```py
+>>> print(FST('return 123').get().src)
+123
+```
+
+The node type `Dict` cannot have normal slices taken as it doesn't have a contiguous single-element list but rather combinations of multiple field lists. For this nodes, leaving the default field of `None` gives special slicing behavior which slices across the multiple fields and gives a new `Dict`.
+
+```py
+>>> print(FST('{1:2, 3:4, 5:6}').get_slice(1, 3).src)
+{3:4, 5:6}
+```
+
+TODO: `MatchMapping` and `Compare` will also support special slicing behavior but slice operations for them are not implemented yet (other than raw).
+
+## `get_src()`
+
+This just gets source code from a given location. It doesn't matter what node of a tree this is called on, it always gets from the root source and will always return the same results.
+
+```py
+>>> f = FST('''
+... if 1:
+...     i = 1
+... else:
+...     j = 2
+...     k = 3
+...     l = 4
+... '''.strip())
+
+>>> print(f.get_src(0, 0, 2, 3))
+if 1:
+    i = 1
+els
+
+>>> print(f.orelse[2].value.get_src(0, 0, 2, 3))
+if 1:
+    i = 1
+els
+```
+
+As you can see the location doesn't have to start or stop on a node boundary, but you can get node source this way as an alternative to `f.src`.
+
+```py
+>>> print(f.get_src(*f.orelse[1].loc))
+k = 3
+```
+
+This can actually come in handy in the case of a root node as root node `.src` is always the entire source code assigned to that tree, regardless of where the top node actually exists.
+
+```py
+>>> f = FST('''
+... # blah
+... happy = little = node
+... # blah blah
+... '''.strip())
+
+>>> f
+<Assign ROOT 1,0..1,21>
+
+>>> print(f.src)
+# blah
+happy = little = node
+# blah blah
+
+>>> print(f.get_src(*f.loc))
+happy = little = node
+```
+
+"""

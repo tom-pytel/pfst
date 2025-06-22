@@ -1,9 +1,12 @@
-r"""FST tree structure and node linking and traversal.
+r"""
+# Tree structure and node traversal
 
 First import this, it includes an import of the `ast` module since it is useful to have it handy.
 ```py
 >>> from fst import *
 ```
+
+## Links
 
 For an FST parsed `AST` tree, each node will have its own `FST` node. The `FST` nodes contain the tree structure missing
 in the `AST` nodes, specifically a reference to the parent `FST` node and the field and index of this node in the
@@ -74,6 +77,8 @@ The linkage to children is just via the existing `AST` fields.
 <class 'ast.Name'>
 ```
 
+## Siblings
+
 You can access each `FST` node's previous and next siblings directly.
 
 ```py
@@ -94,6 +99,8 @@ You can access each `FST` node's previous and next siblings directly.
 >>> repr(f.elts[0].prev())
 'None'
 ```
+
+## Children
 
 You can access a node's children and iterate over them.
 
@@ -126,10 +133,13 @@ You can get the last child in a block node header.
 'here'
 ```
 
-There is an explicit `walk()` function with a few options:
+## Walk
+
+There is an explicit `walk()` function with a few options.
 
 ```py
 >>> f = FST('[[1, 2], [3, 4]]')
+
 >>> for g in f.walk():
 ...     print(g.src, g)
 [[1, 2], [3, 4]] <List ROOT 0,0..0,16>
@@ -225,13 +235,13 @@ You can interact with the generator during the walk to decide whether to recurse
 <Pass 3,4..3,8>
 ```
 
-If you use the `recurse=False` option to the `walk()` function then recursion is normally limited to the first level of children. You can override this by sending to the generator.
+If you use the `recurse=False` option of the `walk()` function then recursion is normally limited to the first level of children. You can override this by sending to the generator.
 
 ```py
 >>> for g in (gen := f.walk(True, recurse=False)):
 ...     print(g)
 ...     if isinstance(g.a, FunctionDef) and g.a.name == 'f':
-...         _ = gen.send(True)  # ignore the '_', it shuts up return in stdout
+...         _ = gen.send(True)
 <Module ROOT 0,0..3,8>
 <FunctionDef 0,0..1,9>
 <Assign 1,4..1,9>
@@ -246,12 +256,40 @@ Or you can decide NOT to recurse into children.
 >>> for g in (gen := f.walk(True)):
 ...     print(g)
 ...     if isinstance(g.a, FunctionDef) and g.a.name == 'f':
-...         _ = gen.send(False)  # ignore the '_', it shuts up return in stdout
+...         _ = gen.send(False)
 <Module ROOT 0,0..3,8>
 <FunctionDef 0,0..1,9>
 <FunctionDef 2,0..3,8>
 <Pass 3,4..3,8>
 ```
+
+When you `walk()` nodes, you can modify the node being walked as long as the change is limited to the node and its children and not any parents or sibling nodes. Any modifications to child nodes will be walked as if they had always been there. This is not safe to do if using "raw" operations (explained elsewhere).
+
+```py
+>>> f = FST('[[1, 2], [3, 4], name]')
+
+>>> for g in f.walk(True):
+...     print(g.src)
+...     if isinstance(g.a, Constant) and g.a.value & 1:
+...         _ = g.replace('x')
+...     elif isinstance(g.a, Name):
+...         _ = g.replace('[5, 6]')
+[[1, 2], [3, 4], name]
+[1, 2]
+1
+2
+[3, 4]
+3
+4
+name
+5
+6
+
+>>> print(f.src)
+[[x, 2], [x, 4], [x, 6]]
+```
+
+## Step
 
 Unlike the `next` and `prev` functions, the `step` functions allow walking forward or backward and going up and down parents and children automatically. Notice the order is parents before children regardless of if going forward or back, so the two functions are not inverses unlike the `next` / `prev` functions.
 
@@ -281,10 +319,13 @@ Unlike the `next` and `prev` functions, the `step` functions allow walking forwa
 1
 ```
 
+## Paths
+
 You can get a path from any given node to any of its children.
 
 ```py
 >>> f = FST('i = [a * (b + c)]')
+
 >>> f.dump()
 Assign - ROOT 0,0..0,17
   .targets[1]

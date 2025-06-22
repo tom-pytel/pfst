@@ -549,7 +549,7 @@ def _put_slice_stmtish(self: 'FST', code: Code | None, start: int | Literal['end
         opener_indent = self.get_indent()
 
         if not body:
-            block_indent = opener_indent if self.is_root else opener_indent + root.indent
+            block_indent = opener_indent if isinstance(self.a, mod) else opener_indent + root.indent
         elif not (b0 := body[0]).f.is_elif():
             block_indent = b0.f.get_indent()
         elif (bb := b0.body) or (bb := b0.orelse):
