@@ -10,11 +10,11 @@
 
 `examples.e05_put`: Modifying nodes
 
-`examples.e06_slices`: ???
+`examples.e06_raw`: Raw reparse operations
 
-`examples.e07_parentheses`: ???
+`examples.e07_views`: ???
 
-`examples.e08_raw`: ???
+`examples.e08_parentheses`: ???
 
 `examples.e09_reconcile`: ???
 

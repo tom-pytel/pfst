@@ -1,7 +1,7 @@
 r"""
 # Parse and unparse from source or `AST`
 
-First import this, it includes an import of the `ast` module since it is useful to have it handy.
+To be able to execute the examples, import this.
 ```py
 >>> from fst import *
 ```

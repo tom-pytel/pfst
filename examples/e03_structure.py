@@ -1,7 +1,7 @@
 r"""
 # Tree structure and node traversal
 
-First import this, it includes an import of the `ast` module since it is useful to have it handy.
+To be able to execute the examples, import this.
 ```py
 >>> from fst import *
 ```
@@ -14,6 +14,7 @@ parent.
 
 ```py
 >>> f = FST('i = 1')
+
 >>> f.dump()
 Assign - ROOT 0,0..0,5
   .targets[1]
@@ -40,6 +41,7 @@ For indexed fields the index is present in `pfield`.
 
 ```py
 >>> f = FST('[x]')
+
 >>> f.elts[0]
 <Name 0,1..0,2>
 
@@ -82,18 +84,19 @@ The linkage to children is just via the existing `AST` fields.
 You can access each `FST` node's previous and next siblings directly.
 
 ```py
->>> f = FST('[[1, 2, 3], [4, 5, 6]]')
->>> f.elts[0].src
-'[1, 2, 3]'
+>>> f = FST('[[1, 2], [3, 4], [5, 6]]')
 
->>> f.elts[0].next().src
-'[4, 5, 6]'
+>>> f.elts[1].src
+'[3, 4]'
+
+>>> f.elts[1].next().src
+'[5, 6]'
 
 >>> f.elts[1].prev().src
-'[1, 2, 3]'
+'[1, 2]'
 
 >>> # if there is no next or previous sibling, None is returned
->>> repr(f.elts[1].next())
+>>> repr(f.elts[2].next())
 'None'
 
 >>> repr(f.elts[0].prev())
@@ -105,6 +108,8 @@ You can access each `FST` node's previous and next siblings directly.
 You can access a node's children and iterate over them.
 
 ```py
+>>> f = FST('[[1, 2, 3], [4, 5, 6]]')
+
 >>> f.elts[0].first_child().src
 '1'
 
@@ -131,6 +136,9 @@ You can get the last child in a block node header.
 ```py
 >>> FST('if here: pass').last_header_child().src
 'here'
+
+>>> FST('if here: pass').last_child().src
+'pass'
 ```
 
 ## Walk
@@ -291,7 +299,7 @@ name
 
 ## Step
 
-Unlike the `next` and `prev` functions, the `step` functions allow walking forward or backward and going up and down parents and children automatically. Notice the order is parents before children regardless of if going forward or back, so the two functions are not inverses unlike the `next` / `prev` functions.
+Unlike the `next` and `prev` functions, the `step` functions allow walking forward or backward and going up and down parents and children automatically. Notice the order is parents before children regardless of if going forward or back, so the two functions are not inverses unlike the `next` / `prev` functions. You can walk the entire tree just stepping forward or back one node at a time.
 
 ```py
 >>> f = FST('[[1, 2], [3, 4]]')
@@ -344,7 +352,7 @@ Assign - ROOT 0,0..0,17
 >>> f.child_path(f.value.elts[0].right.left)
 [astfield('value'), astfield('elts', 0), astfield('right'), astfield('left')]
 
->>> # or for the humans
+>>> # for the humans
 >>> f.child_path(f.value.elts[0].right.left, as_str=True)
 'value.elts[0].right.left'
 ```

@@ -1,7 +1,7 @@
 r"""
 # Node locations in the source code
 
-First import this, it includes an import of the `ast` module since it is useful to have it handy.
+To be able to execute the examples, import this.
 ```py
 >>> from fst import *
 ```
@@ -132,7 +132,7 @@ fstloc(0, 0, 0, 5)
 (1, 0, 1, 10)
 ```
 
-`FST` nodes also provide the same `lineno` ... `end_col_offset` attributes as `AST` nodes and returns the locations in
+`FST` nodes also provide the same `lineno` ... `end_col_offset` attributes as `AST` nodes and return the locations in
 `AST` coordinates (1 based line, column byte offsets) as a convenience for all nodes, providing these to `AST` nodes
 which don't normally have them.
 
@@ -167,8 +167,7 @@ fstloc(0, 0, 0, 14)
 
 ## Search by location
 
-You can search for a node by location. This is done by either searching for a node in a given location or searching for
-a node which contains a location.
+You can search for a node by location. This is done by either searching for a node in a given location.
 
 ```py
 >>> f = FST('''
@@ -187,7 +186,11 @@ a node which contains a location.
 >>> # returns only entire nodes in location
 >>> f.find_in_loc(0, 4, 0, 6).src
 '<'
+```
 
+Or searching for a node which contains a location.
+
+```py
 >>> # or you can search for a node entirely CONTAINING THE LOCATION
 >>> f.find_loc(0, 4, 0, 6).src
 'a < b'
