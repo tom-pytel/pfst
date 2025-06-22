@@ -5189,6 +5189,30 @@ match a:
         f.unpar()
         self.assertEqual('(*\na)', f.src)
 
+        # unowned pars
+
+        f = FST('a:b:c')
+        f.par(True)
+        self.assertEqual('(a:b:c)', f.src)
+        f.unpar(share=None)
+        self.assertEqual('a:b:c', f.src)
+
+        f = FST('f(a)')
+        f.args[0].unpar(share=None)
+        self.assertEqual('f a', f.src)
+
+        f = FST('class c(a): pass')
+        f.bases[0].unpar(share=None)
+        self.assertEqual('class c a: pass', f.src)
+
+        f = FST('case c(a): pass')
+        f.pattern.patterns[0].unpar(share=None)
+        self.assertEqual('case c a: pass', f.src)
+
+        f = FST('from a import (b)')
+        f.names[0].unpar(share=None)
+        self.assertEqual('from a import b', f.src)
+
     def test_pars(self):
         for src, elt, slice_copy in PARS_DATA:
             src  = src.strip()
@@ -5316,7 +5340,6 @@ match a:
         f = FST('from a import (b)')
         self.assertEqual((0, 15, 0, 16), f.names[0].pars())
         self.assertEqual((0, 14, 0, 17), f.names[0].pars(None))
-
 
     def test_pars_n(self):
         self.assertEqual(1, FST('(a)', 'exec').body[0].value.pars().n)
@@ -9998,6 +10021,15 @@ c, # c
         f = FST('a[:, b]')
         f.slice.put_slice('[ {z} ]', 0, 1)
         self.assertEqual('a[{z}, b]', f.src)
+
+        # star to ImportFrom.names
+
+        f = FST('from a import b, c')
+        self.assertRaises(NodeError, f.put, FST('*', alias), 0, 'names')
+
+        f = FST('from a import (b)')
+        f.put(FST('*', alias), 0, 'names')
+        self.assertEqual('from a import *', f.src)
 
     def test_put_one_op_pars(self):
         # boolop

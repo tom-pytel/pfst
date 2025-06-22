@@ -1985,10 +1985,11 @@ class FST:
 
         return self  # True
 
-    def unpar(self, node: bool = False, *, share: bool = True) -> Self:
+    def unpar(self, node: bool = False, *, share: bool | None = True) -> Self:
         """Remove all parentheses from node if present. Normally removes just grouping parentheses but can also remove
         `Tuple` parentheses and `MatchSequence` parentheses or brackets if `node=True`. If dealing with a `Starred` then
-        the parentheses are checked in and removed from the child.
+        the parentheses are checked in and removed from the child. If `share=None` then will also remove parentheses
+        which do not belong to this node but enclose it directly.
 
         **WARNING!** This function doesn't do any higher level syntactic validation. So if you unparenthesize something
         that shouldn't be unparenthesized, and you wind up poking an eye out, that's on you.
@@ -1997,7 +1998,8 @@ class FST:
         - `node`: If `True` then will remove parentheses from a parenthesized `Tuple` and parentheses / brackets from
             parenthesized / bracketed `MatchSequence`, otherwise only removes grouping parentheses if present.
         - `share`: Whether to allow merge of parentheses of single call argument generator expression with `Call`
-            parentheses or not.
+            parentheses or not. If `None` then will attempt to unparenthesize any enclosing parentheses, whether they
+            belong to this node or not (meant for internal use).
 
         **Returns:**
         - `self`
@@ -2054,7 +2056,7 @@ class FST:
 
         modifying = None
 
-        if self.pars().n:
+        if self.pars(None if share is None else True).n:
             modifying = self._modifying().enter()
 
             self._unparenthesize_grouping(share)

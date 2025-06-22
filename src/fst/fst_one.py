@@ -1043,13 +1043,8 @@ def _put_one_ImportFrom_names(self: 'FST', code: _PutOneCode, idx: int | None, f
 
     ret = _put_one_exprish_required(self, code, idx, field, child, static, 2, **options)
 
-    # if is_star:  # try to remove parentheses
-    #     lines = self.root._lines
-
-    #     # if lpar := _prev_find()
-
-
-
+    if is_star:  # try to remove parentheses if there
+        self.a.names[0].f.unpar(share=None)
 
     return ret
 
