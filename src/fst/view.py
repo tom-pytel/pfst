@@ -18,7 +18,18 @@ class fstview:
 
     Nodes can be gotten or put via indexing. Nodes which are gotten are not automatically copied, if a copy is desired
     then do `fstview[start:stop].copy()`. Slice assignments also work but will always assign a slice to the range. If
-    you want to assign an individual item then use the `replace(..., one=True)` method.
+    you want to assign an individual item then use the `replace(..., one=True)`.
+
+    WARNING! Keep in mind that operations on NODES instead of through the VIEW will not update the VIEW.
+
+    ```py
+    >>> view = FST('[1, 2, 3]').elts
+
+    >>> view[1].remove()  # operation on node
+
+    >>> view  # notice the size of the view is 3 but there are only two elements
+    <<List ROOT 0,0..0,6>.elts[0:3] [<Constant 0,1..0,2>, <Constant 0,4..0,5>]>
+    ```
 
     This object is meant to be, and is normally created automatically by accessing `AST` list fields on an `FST` node.
 
@@ -186,17 +197,23 @@ class fstview:
         """
 
         if isinstance(idx, int):
-            idx = _fixup_one_index(self.stop - (start := self.start), idx)
+            idx        = _fixup_one_index(self.stop - (start := self.start), idx)
+            len_before = len(asts := getattr(self.fst.a, self.field))
 
             self.fst.put(code, start + idx, field=self.field)
+
+            self.stop += len(asts) - len_before
 
         elif idx.step is not None:
             raise IndexError('step slicing not supported')
 
         else:
             idx_start, idx_stop = _fixup_slice_indices(self.stop - (start := self.start), idx.start, idx.stop)
+            len_before          = len(asts := getattr(self.fst.a, self.field))
 
             self.fst.put_slice(code, start + idx_start, start + idx_stop, self.field)
+
+            self.stop += len(asts) - len_before
 
     def __delitem__(self, idx: int | slice):
         """Delete a single item or a slice from this slice view. All indices (including negative) are relative to the

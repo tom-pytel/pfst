@@ -11270,6 +11270,16 @@ class cls:
         self.assertEqual('f', f[0].src)
         self.assertIsNone(g.a)
 
+        c = FST('a\nb').body
+        c[0] = None
+        self.assertEqual('b', c.fst.src)
+        self.assertEqual(1, c.stop)
+
+        c = FST.new().body
+        c[0:0] = 'a\nb'
+        self.assertEqual('a\nb\n', c.fst.src)
+        self.assertEqual(2, c.stop)
+
     def test_is_node_type_properties_and_parents(self):
         fst = parse('''
 match a:
