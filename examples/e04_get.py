@@ -250,6 +250,64 @@ behavior which slices across the multiple fields and gives a new `Dict`.
 {3:4, 5:6}
 ```
 
+Slices being gotten or put are implemented using common sense containers, like for sequences using the same type of
+sequence or for a dictionary returning / expecting a `Dict`. When there is not possible pure container for a slice of
+elements, like `ExceptHandler` or `match_case`, then they are put directly into a `Module` body field. This is not a
+valid `AST` object of course, but works for moving stuff around.
+
+```py
+>>> f = FST('''
+... try:
+...     pass
+... except ValueError:
+...     i = 1
+... except RuntimeError:
+...     j = 2
+... '''.strip())
+
+>>> s = f.get_slice(0, 2, 'handlers')
+
+>>> print(s.src)
+except ValueError:
+    i = 1
+except RuntimeError:
+    j = 2
+
+>>> s.dump()
+Module - ROOT 0,0..3,9
+  .body[2]
+  0] ExceptHandler - 0,0..1,9
+    .type Name 'ValueError' Load - 0,7..0,17
+    .body[1]
+    0] Assign - 1,4..1,9
+      .targets[1]
+      0] Name 'i' Store - 1,4..1,5
+      .value Constant 1 - 1,8..1,9
+  1] ExceptHandler - 2,0..3,9
+    .type Name 'RuntimeError' Load - 2,7..2,19
+    .body[1]
+    0] Assign - 3,4..3,9
+      .targets[1]
+      0] Name 'j' Store - 3,4..3,5
+      .value Constant 2 - 3,8..3,9
+```
+
+Slices from compatible containers can be put to each other.
+
+```py
+>>> s = FST('[1, 2, 3, 4]').get_slice(1, None)
+
+>>> print(s.src)
+[2, 3, 4]
+
+>>> print(FST('{a, b, c, d}').put_slice(s, 1, 3).root.src)
+{a, 2, 3, 4, d}
+```
+
+TODO: Prescribed slice operations are implemented for all `stmt` containers, `Tuple`, `List`, `Set`, `Dict`, exception
+handler bodies containing `ExceptHandler` and match statement cases containing `match_case`. All other slice operations
+must currently be carried out using raw operations which, are not as robust.
+
 TODO: `MatchMapping` and `Compare` will also support special slicing behavior but slice operations for them are not
 implemented yet (other than raw).
 

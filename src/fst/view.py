@@ -16,11 +16,13 @@ class fstview:
     change the size of the list of nodes or reparse. Especially raw operations which reparse entire statements and can
     easily invalidate an `fstview` even if performed directly on it.
 
-    Nodes can be gotten or put via indexing. Nodes which are gotten are not automatically copied, if a copy is desired
-    then do `fstview[start:stop].copy()`. Slice assignments also work but will always assign a slice to the range. If
-    you want to assign an individual item then use the `replace(..., one=True)`.
+    Nodes can be gotten or put via indexing. Nodes which are accessed through indexing (normal or slice) are not
+    automatically copied, if a copy is desired then do `fstview[start:stop].copy()`. Slice assignments also work but
+    will always assign a slice to the range. If you want to assign an individual item to this range or a subrange then
+    use `replace(..., one=True)`.
 
-    WARNING! Keep in mind that operations on NODES instead of through the VIEW will not update the VIEW.
+    **WARNING!** Keep in mind that operations on NODES or even CHILD VIEWS instead of on THIS VIEW will not update this
+    view. Do not hold on to views, use them and discard.
 
     ```py
     >>> view = FST('[1, 2, 3]').elts
@@ -29,6 +31,13 @@ class fstview:
 
     >>> view  # notice the size of the view is 3 but there are only two elements
     <<List ROOT 0,0..0,6>.elts[0:3] [<Constant 0,1..0,2>, <Constant 0,4..0,5>]>
+
+    >>> view = FST('[1, 2, 3]').elts
+
+    >>> view[1:].cut()  # not an operation on this view but a child view
+
+    >>> view  # WRONG again
+    <<List ROOT 0,0..0,3>.elts[0:3] [<Constant 0,1..0,2>]>
     ```
 
     This object is meant to be, and is normally created automatically by accessing `AST` list fields on an `FST` node.
@@ -379,7 +388,8 @@ class fstview:
         >>> FST('[0, 1, 2, 3]').elts.insert('(4, 5)', 'end', one=False).fst.src
         '[0, 1, 2, 3, 4, 5]'
 
-        >>> FST('[0, 1, 2, 3]').elts.insert('(4, 5)', 4, one=False).fst.src  # same as 'end' but 'end' is always 'end'
+        >>> # same as 'end' but 'end' is always 'end'
+        >>> FST('[0, 1, 2, 3]').elts.insert('(4, 5)', 4, one=False).fst.src
         '[0, 1, 2, 3, 4, 5]'
 
         >>> FST('[0, 1, 2, 3]').elts[1:3].insert('*star').fst.src

@@ -13,6 +13,8 @@ When modifying a node, you specify what to replace the node `AST` with. You can 
 modification succeeds or not. `AST` nodes are not consumed as they are unparsed and then reparsed in order to make sure
 their locations are correct. Source code in the form of a string or a list of lines is also not consumed.
 
+TODO: Fix trailing newlines, will also remove need for `rstrip()` in other parts of this documentation.
+
 ```py
 >>> # the trailing newline is annoying and will eventually be fixed
 >>> FST.new().body.append('i = 1').root.src

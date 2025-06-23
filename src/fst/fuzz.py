@@ -15,7 +15,7 @@ from typing import Any, Generator, Iterable, Literal
 from .astutil import *
 from .astutil import TypeAlias, TemplateStr, Interpolation
 from .misc import astfield
-from .fst import FST, NodeError
+from .fst import FST, NodeError, fstview
 
 PROGRAM     = 'python -m fst.fuzz'
 
@@ -697,6 +697,7 @@ class Fuzzy:
 
             except Exception:
                 print('-'*80)
+                print('File was:', fnm)
                 print('Random seed was:', self.rnd_seed)
 
                 raise
@@ -1429,34 +1430,66 @@ class ReconcileSame(Fuzzy):
                 print(fst.src)
 
 
-class Stmtishs(Fuzzy):
-    """Test moving around stmtishs, fstview, stmtish FST identity stability and unmarking deleted FSTs."""
+class Stmtish(Fuzzy):
+    """Test moving around stmtishs, empty bodies, fstview, stmtish FST identity stability and unmarking deleted FSTs."""
 
-    name    = 'stmtishs'
+    name    = 'stmtish'
     forever = True
+
+    @staticmethod
+    def do_move(stmtish: FST, stmtish_container: fstview, dst_container: fstview):
+        if random() < 0.5:  # single element stmtish to container
+            s = stmtish.cut()
+
+            if len(dst_container):
+                r = choice(dst_container).replace(s)
+            else:
+                r = dst_container.append(s)[0]
+
+            assert s is stmtish
+            assert r is stmtish
+
+        else:  # slice stmtish to dst_container
+            if random() < 0.5 or not dst_container:
+                to_start = to_stop = randint(0, len(dst_container))
+            else:
+                to_start = randint(0, len(dst_container) - 1)
+                to_stop  = randint(to_start + 1, len(dst_container))
+
+            from_start = randint(0, len(stmtish_container) - 1)
+            from_stop  = randint(from_start + 1, len(stmtish_container))
+            fs         = stmtish_container[from_start : from_stop]
+            org_fsts   = list(fs)
+            cut        = fs.cut()
+
+            assert all(f is g for f, g in zip(cut.body, org_fsts))
+
+            dst_container[to_start : to_stop] = cut
+
+            assert all(f is g for f, g in zip(dst_container[to_start : to_start + (from_stop - from_start)], org_fsts))
 
     def fuzz_one(self, fst, fnm) -> bool:
         containers = {
-            stmt:          FST('i', 'exec').body,
-            ExceptHandler: FST('try: pass\nexcept Exception: pass\nfinally: pass').handlers,
+            stmt:          FST.new().body,
+            ExceptHandler: FST('try: pass\nfinally: pass').handlers,
             match_case:    FST('match _:\n  case _: pass').cases,
         }
+
+        del containers[match_case][0]
 
         if not _PYLT11:
             containers[excepthandler] = c = FST('try: pass\nexcept* Exception: pass').handlers
 
+            del c[0]
+
         # containers = {
-        #     stmt:          FST.new().body,
-        #     ExceptHandler: FST('try: pass\nfinally: pass').handlers,
+        #     stmt:          FST('i', 'exec').body,
+        #     ExceptHandler: FST('try: pass\nexcept Exception: pass\nfinally: pass').handlers,
         #     match_case:    FST('match _:\n  case _: pass').cases,
         # }
 
-        # del containers[match_case][0]
-
         # if not _PYLT11:
         #     containers[excepthandler] = c = FST('try: pass\nexcept* Exception: pass').handlers
-
-        #     del c[0]
 
         stmtishs = []
 
@@ -1470,7 +1503,7 @@ class Stmtishs(Fuzzy):
         try:
             for count in range(self.batch or 1000):
                 try:
-                    if not (count % 10):
+                    if not (count % 20):
                         sys.stdout.write('.'); sys.stdout.flush()
 
                     for _ in range(10):
@@ -1483,7 +1516,8 @@ class Stmtishs(Fuzzy):
                         else:
                             raise RuntimeError('this should not happen')
 
-                        container = containers[fstcat(stmtish)]
+                        container = containers[cat := fstcat(stmtish)]
+                        container = containers[cat] = getattr(container.fst, container.field)  # remake the container because its size can be wrong
 
                         if any(p is container.fst for p in stmtish.parents()):
                             continue
@@ -1493,45 +1527,20 @@ class Stmtishs(Fuzzy):
                     else:
                         continue
 
-                    stmtish_parent    = stmtish.parent
-                    stmtish_pfield    = stmtish.pfield
-                    stmtish_container = getattr(stmtish_parent, stmtish_pfield.name)
+                    stmtish_container = getattr(stmtish.parent, stmtish.pfield.name)
 
                     # from source to temporary container
 
-                    if container and random() < 0.5:  # single element stmtish to container
-                        s = stmtish.cut()
-                        c = choice(container)
-                        r = c.replace(stmtish)
+                    self.do_move(stmtish, stmtish_container, container)
 
-                        assert s is stmtish
-                        assert r is stmtish
+                    # refresh containers because of node operations
 
-                    else:  # slice stmtish to container
-                        from_start = randint(0, len(stmtish_container) - 1)
-                        from_stop  = randint(from_start + 1, len(stmtish_container))
-                        to_start   = randint(0, len(container) - 1)
-                        to_stop    = randint(to_start + 1, len(container))
-                        fs         = stmtish_container[from_start : from_stop]
-                        org_fsts   = list(fs)
-                        cut        = fs.cut()
-
-                        assert all(f is g for f, g in zip(cut.body, org_fsts))
-
-                        container[to_start : to_stop] = cut
-
-                        assert all(f is g for f, g in zip(container[to_start : to_stop], org_fsts))
+                    stmtish_container = getattr(stmtish_container.fst, stmtish_container.field)
+                    container         = getattr(container.fst, container.field)
 
                     # from temporary container to source
 
-                    c = choice(container)
-                    f = c.copy() if len(container) < 2 else c.cut()
-
-                    stmtish_container.append(f)
-
-
-
-
+                    self.do_move(choice(container), container, stmtish_container)
 
                     if self.verify:
                         fst.verify()
