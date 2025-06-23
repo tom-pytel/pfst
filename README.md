@@ -1,6 +1,6 @@
 # Overview
 
-This module exists in order to facilitate quick and easy editing of Python source while preserving formatting. It automatically deals with all the silly nonsense like indentation, parentheses, commas, comments, docstrings, semicolons, line continuations, precedence, else vs. elif, etc... And especially the many, many, many niche special cases of Python syntax.
+This module exists in order to facilitate quick and easy editing of Python source while preserving formatting. It automatically deals with all the silly nonsense like indentation, parentheses, commas, comments, docstrings, semicolons, line continuations, precedence, else vs. elif, etc... And especially the many, many niche special cases of Python syntax.
 
 `pfst` provides its own format-preserving operations for `AST` trees, but also allows the `AST` tree to be changed by anything else outside of its control and can then reconcile the changes with what it knows to preserve formatting where possible. It works by adding `FST` nodes to existing `AST` nodes as an `.f` attribute which keep extra structure information, the original source, and provide the interface to the format-preserving operations.
 
@@ -10,13 +10,17 @@ API documentation and examples are in the `docs/` directory.
 
 # Install
 
-From Github, clone then:
-
-    pip install -e .[dev]
-
 From PyPI:
 
     pip install pfst
+
+From GitHub using pip:
+
+    pip install git+https://github.com/tom-pytel/pfst.git
+
+From GitHub, cloning for development:
+
+    pip install -e .[dev]  # "make install" does this
 
 # Examples
 

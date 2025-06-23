@@ -176,7 +176,8 @@ Or without the uninteresting `ctx` fields.
 4
 ```
 
-Notice the order of recursion, parents then children going forward. You can also go backward (though it is still parents before children).
+Notice the order of recursion, parents then children going forward. You can also go backward (though it is still parents
+before children).
 
 ```py
 >>> for g in f.walk(True, back=True):
@@ -230,7 +231,8 @@ You can limit the walk to a scope.
 <FunctionDef 2,0..3,8>
 ```
 
-You can interact with the generator during the walk to decide whether to recurse into the children or not. For example if the walk is restricted to a scope you can decide to recurse into a specific child.
+You can interact with the generator during the walk to decide whether to recurse into the children or not. For example
+if the walk is restricted to a scope you can decide to recurse into a specific child.
 
 ```py
 >>> for g in (gen := f.walk(True, scope=True)):
@@ -243,7 +245,8 @@ You can interact with the generator during the walk to decide whether to recurse
 <Pass 3,4..3,8>
 ```
 
-If you use the `recurse=False` option of the `walk()` function then recursion is normally limited to the first level of children. You can override this by sending to the generator.
+If you use the `recurse=False` option of the `walk()` function then recursion is normally limited to the first level of
+children. You can override this by sending to the generator.
 
 ```py
 >>> for g in (gen := f.walk(True, recurse=False)):
@@ -271,7 +274,9 @@ Or you can decide NOT to recurse into children.
 <Pass 3,4..3,8>
 ```
 
-When you `walk()` nodes, you can modify the node being walked as long as the change is limited to the node and its children and not any parents or sibling nodes. Any modifications to child nodes will be walked as if they had always been there. This is not safe to do if using "raw" operations (explained elsewhere).
+When you `walk()` nodes, you can modify the node being walked as long as the change is limited to the node and its
+children and not any parents or sibling nodes. Any modifications to child nodes will be walked as if they had always
+been there. This is not safe to do if using "raw" operations (explained elsewhere).
 
 ```py
 >>> f = FST('[[1, 2], [3, 4], name]')
@@ -299,7 +304,10 @@ name
 
 ## Step
 
-Unlike the `next` and `prev` functions, the `step` functions allow walking forward or backward and going up and down parents and children automatically. Notice the order is parents before children regardless of if going forward or back, so the two functions are not inverses unlike the `next` / `prev` functions. You can walk the entire tree just stepping forward or back one node at a time.
+Unlike the `next` and `prev` functions, the `step` functions allow walking forward or backward and going up and down
+parents and children automatically. Notice the order is parents before children regardless of if going forward or back,
+so the two functions are not inverses unlike the `next` / `prev` functions. You can walk the entire tree just stepping
+forward or back one node at a time.
 
 ```py
 >>> f = FST('[[1, 2], [3, 4]]')
@@ -357,7 +365,8 @@ Assign - ROOT 0,0..0,17
 'value.elts[0].right.left'
 ```
 
-You can then get the child by this path, either the `astfield` one or the string one. Useful for getting the same relative child in a copy of a tree.
+You can then get the child by this path, either the `astfield` one or the string one. Useful for getting the same
+relative child in a copy of a tree.
 
 ```py
 >>> g = f.copy()

@@ -188,10 +188,9 @@ Have you ever dreamed of being able to parse the `+` operator? Well now you can!
 <Add ROOT 0,0..0,1>
 ```
 
-There are some special modes, like `'callarg'`, which allow parsing some things
-which are not normally parsable in their normal context. The below is not
-normally parsable in an expression context as it is special syntax for `Call`
-vararg arguments. For a full list of parse modes see `fst.shared.Mode`.
+There are some special modes, like `'callarg'`, which allow parsing some things which are not normally parsable in their
+usual context. The below is not normally parsable in an expression context as it is special syntax for `Call` vararg
+arguments. For a full list of parse modes see `fst.shared.Mode`.
 
 ```py
 >>> FST('*a or b', 'callarg').dump()
@@ -206,9 +205,8 @@ Starred - ROOT 0,0..0,7
 
 ## From `AST` nodes
 
-You can also pass `AST` nodes, which are then unparsed and reparsed (because
-otherwise we couldn't trust the location information in them). When used like
-this, the `AST` nodes are not consumed.
+You can also pass `AST` nodes, which are then unparsed and reparsed (because otherwise we couldn't trust the location
+information in them). When used like this, the `AST` nodes are not consumed.
 
 ```py
 >>> print(FST(Assign(targets=[Name(id='x')], value=Constant(value=1))).src)

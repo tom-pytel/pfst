@@ -78,9 +78,9 @@ False
 ```
 
 The only `AST` nodes which don't get locations like this are empty `arguments` nodes since that could allow zero-length
-locations which are a pain to deal with, `boolop` nodes because a single `AST` may correspond to multiple locations
-in the expression and `expr_context` nodes which don't have parsable source. Other nodes like `comprehension`,
-`withitem`, `match_case` and other operators all get locations.
+locations which are a pain to deal with, `boolop` nodes because a single `AST` may correspond to multiple locations in
+the expression and `expr_context` nodes which don't have parsable source. Other nodes like `comprehension`, `withitem`,
+`match_case` and other operators all get locations.
 
 ```py
 >>> FST('[i for i in j]').generators[0].loc
@@ -155,7 +155,8 @@ False
 True
 ```
 
-The location of the entire source (accessible from any node in the tree), always starts at (0, 0) and ends at the end of the source code.
+The location of the entire source (accessible from any node in the tree), always starts at (0, 0) and ends at the end of
+the source code.
 
 ```py
 >>> f.whole_loc

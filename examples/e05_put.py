@@ -8,13 +8,12 @@ To be able to execute the examples, import this.
 
 ## `Code` for modifying
 
-When modifying a node, you specify what to replace the node `AST` with. You can pass this as either source code, an `AST` node or an `FST` root node. If an `FST` node is used then it should be considered consumed on use, whether the modification succeeds or not. `AST` nodes are not consumed as they are unparsed and then reparsed in order to make sure their locations are correct. Source code in the form of a string or a list of lines is also not consumed.
+When modifying a node, you specify what to replace the node `AST` with. You can pass this as either source code, an
+`AST` node or an `FST` root node. If an `FST` node is used then it should be considered consumed on use, whether the
+modification succeeds or not. `AST` nodes are not consumed as they are unparsed and then reparsed in order to make sure
+their locations are correct. Source code in the form of a string or a list of lines is also not consumed.
 
 ```py
->>> from fst.shared import Code
->>> Code
-ForwardRef('FST') | ast.AST | list[str] | str
-
 >>> # the trailing newline is annoying and will eventually be fixed
 >>> FST.new().body.append('i = 1').root.src
 'i = 1\n'
@@ -31,7 +30,9 @@ ForwardRef('FST') | ast.AST | list[str] | str
 
 ## `replace()` and `remove()`
 
-`remove()` does what it says. Basically the same as `cut()` except that it doesn't return anything. Doesn't do the processing needed for the copy before removing the node, its just a shortcut for `put(None)`. Just like `cut()`, you cannot `remove()` the root node obviously.
+`remove()` does what it says. Basically the same as `cut()` except that it doesn't return anything. Doesn't do the
+processing needed for the copy before removing the node, its just a shortcut for `put(None)`. Just like `cut()`, you
+cannot `remove()` the root node obviously.
 
 ```py
 >>> f = FST('[1, 2, 3]')
@@ -54,7 +55,9 @@ i = 1
 k = 3
 ```
 
-`replace(code)` is just a `put(code)` executed in the parent normally. Except at the root node level where it allows you to replace the root node `AST` without changing the top level `FST` so that it remains valid wherever you reference the tree through the root node.
+`replace(code)` is just a `put(code)` executed in the parent normally. Except at the root node level where it allows you
+to replace the root node `AST` without changing the top level `FST` so that it remains valid wherever you reference the
+tree through the root node.
 
 ```py
 >>> f = FST('[1, 2, 3]')
@@ -78,10 +81,13 @@ k = 3
 [(j := 3), a(), blah()]
 ```
 
-The `replace()` function returns the new replaced node, as the actual `FST` node (regardless of the contents) can be different from the original `FST` at this location under some circumstances (raw put). Except for the root `FST` node, which is the only one guarenteed to never change under any circumstances.
+The `replace()` function returns the new replaced node, as the actual `FST` node (regardless of the contents) can be
+different from the original `FST` at this location under some circumstances (raw put). Except for the root `FST` node,
+which is the only one guarenteed to never change under any circumstances.
 
 ```py
 >>> f = FST('i = 1')
+
 >>> g = f.value
 
 >>> g.replace('2') is g
@@ -97,7 +103,33 @@ False
 i = 3
 ```
 
-It is possible that with a raw operation a node disappears entirely and there is no new node at its previous location. In this case, `None` is returned as the new node.
+Non-raw replace operations take into account precedence and parsability and parenthesize as needed by default.
+
+```py
+>>> f = FST('i * j')
+
+>>> f.right.replace('x + y')
+<BinOp 0,5..0,10>
+
+>>> print(f.src)
+i * (x + y)
+```
+
+This can be turned off, in which case it can lead to invalid source code which does not match the tree structure.
+
+```py
+>>> f.left.replace('a + b', pars=False)
+<BinOp 0,0..0,5>
+
+>>> print(f.src)
+a + b * (x + y)
+
+>>> bool(f.verify(raise_=False))
+False
+```
+
+It is possible that with a raw operation a node disappears entirely and there is no new node at its previous location.
+In this case, `None` is returned as the new node.
 
 ```py
 >>> f = FST('"a" + "b"')
@@ -117,7 +149,10 @@ Constant 'ab' - ROOT 0,0..1,4
 
 ## `put()` and `put_slice()`
 
-Just like with `copy()` and `cut()`, `put()` is the undelying function used by `replace()` and `remove()`. `put()` can replace a node or delete it if `None` is passed as the replacement. It cannot put anything to a root node as it requires a parent to operate on a node, so if you want to replace a root node you must use `replace()`. The parameters are similar to the `get()` function except that the first parameter is always the `Code` to put or `None`.
+Just like with `copy()` and `cut()`, `put()` is the undelying function used by `replace()` and `remove()`. `put()` can
+replace a node or delete it if `None` is passed as the replacement. It cannot put anything to a root node as it requires
+a parent to operate on a node, so if you want to replace a root node you must use `replace()`. The parameters are
+similar to the `get()` function except that the first parameter is always the `Code` to put or `None`.
 
 ```py
 >>> f = FST('[1, 2, 3]')
@@ -129,7 +164,8 @@ Just like with `copy()` and `cut()`, `put()` is the undelying function used by `
 [1, x, 3]
 ```
 
-Just like `get()`, `put()` can operate on single elements or slices. It can do everything that `put_slice()` can do, but not vice versa.
+Just like `get()`, `put()` can operate on single elements or slices. It can do everything that `put_slice()` can do, but
+not vice versa.
 
 ```py
 >>> f.put('y', 1, 3)
@@ -139,7 +175,8 @@ Just like `get()`, `put()` can operate on single elements or slices. It can do e
 [1, y]
 ```
 
-Notice how it replaced two elements with a single one. This is because the normal mode of `put()` is to put as a single element, not as a slice. You can specify slice operation via the `one` parameter, which is normally `True` for `put()`.
+Notice how it replaced two elements with a single one. This is because the normal mode of `put()` is to put as a single
+element, not as a slice. You can specify slice operation via the `one` parameter, which is normally `True` for `put()`.
 
 ```py
 >>> f.put('[a, b, c]', 1, None)
@@ -165,7 +202,8 @@ Putting `None` deletes and it can delete multiple elements.
 [1, c]
 ```
 
-Either `put()` or `put_slice()` can be used to insert by setting the `start` and `stop` locations to the same thing, possibly at the start, end or between other elements.
+Either `put()` or `put_slice()` can be used to insert by setting the `start` and `stop` locations to the same thing,
+possibly at the start, end or between other elements.
 
 ```py
 >>> f.put('[x]', 1, 1, one=False)
@@ -212,7 +250,9 @@ else:
     k = 3
 ```
 
-`put()` and `put_slice()` return the object on which they were called (the parent of the put) for the same reason that `replace()` returns the new node. Normally the object will be unchanged, but with raw operations it can change and in order to continue operating on the same element in the tree you need the new `FST` node.
+`put()` and `put_slice()` return the object on which they were called (the parent of the put) for the same reason that
+`replace()` returns the new node. Normally the object will be unchanged, but with raw operations it can change and in
+order to continue operating on the same element in the tree you need the new `FST` node.
 
 ```py
 >>> f = FST('i = [1, 2, 3]')
@@ -236,11 +276,20 @@ i = [1, x, y]
 
 ## `put_src()`
 
-Unlike `get_src()` which is a very simple function, `put_src()` doesn't just put text to the source code and leave it at that. `put_src()` attempts to reparse the part of the source code which is modified in order to update the node tree for the given changes. It uses the same raw reparse mechanism to do its job as raw node operations, but unlike those, which may modify the source put a little bit depending on circumstances, `put_src()` puts the source exactly as you specify it.
+Unlike `get_src()` which is a very simple function, `put_src()` doesn't just put text to the source code and leave it at
+that. `put_src()` attempts to reparse the part of the source code which is modified in order to update the node tree for
+the given changes. It uses the same raw reparse mechanism to do its job as raw node operations, but unlike those, which
+may modify the source put a little bit depending on circumstances, `put_src()` puts the source exactly as you specify
+it.
 
-If the changes are not valid then neither the tree nor the source is actually changed. FST attempts to minimize the amount of code which is reparsed and the minimum elemenent that can be reparsed is a single statement or block statement header. Though multiple statements or even entire blocks may be reparsed if the changes span those blocks. Whatever is reparsed will have its `FST` nodes changed, except the root node.
+If the changes are not valid then neither the tree nor the source is actually changed. FST attempts to minimize the
+amount of code which is reparsed and the minimum elemenent that can be reparsed is a single statement or block statement
+header. Though multiple statements or even entire blocks may be reparsed if the changes span those blocks. Whatever is
+reparsed will have its `FST` nodes changed, except the root node.
 
-The actual location for the reparse is not restricted in any way. It doesn't have to fall on node bondaries and can extend over the entire source code if need be. Like `get_src()`, it doesn't matter what node of the tree this function is called on, the domain is always over the entire tree.
+The actual location for the reparse is not restricted in any way. It doesn't have to fall on node bondaries and can
+extend over the entire source code if need be. Like `get_src()`, it doesn't matter what node of the tree this function
+is called on, the domain is always over the entire tree.
 
 ```py
 >>> f = FST('''
@@ -265,7 +314,11 @@ if a <= x:
         t()
 ```
 
-The `put_src()` function returns a node which it finds in the location that was put to. By default it attempts to find the first node which fits entirely in the location and returns that. If there is no such a candidate then it attempts to find a node which entirely contains the location using the `find_loc()` function and the `exact` parameter passed in, which is `True` by default. If `exact=None` and no node is found inside the location then `find_loc()` is not used and `None` is returned.
+The `put_src()` function returns a node which it finds in the location that was put to. By default it attempts to find
+the first node which fits entirely in the location and returns that. If there is no such a candidate then it attempts
+to find a node which entirely contains the location using the `find_loc()` function and the `exact` parameter passed in,
+which is `True` by default. If `exact=None` and no node is found inside the location then `find_loc()` is not used and
+`None` is returned.
 
 ```py
 >>> f.put_src(' >', 0, 4, 0, 6).src
@@ -299,7 +352,8 @@ if a == x:
         t()
 ```
 
-As stated above, the source you pass in is not modified in any way, including indentation, so you must make sure everything is correct with respect to this and parentheses and everything else.
+As stated above, the source you pass in is not modified in any way, including indentation, so you must make sure
+everything is correct with respect to this and parentheses and everything else.
 
 ```py
 >>> f.put_src('''

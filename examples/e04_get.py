@@ -8,7 +8,8 @@ To be able to execute the examples, import this.
 
 ## `copy()` and `cut()`
 
-If just you access nodes directly you get the node as it lives in the parent tree, without source dedenting (except for the first line) or isolation.
+If just you access nodes directly you get the node as it lives in the parent tree, without source dedenting (except for
+the first line) or isolation.
 
 ```py
 >>> f = FST('''
@@ -69,7 +70,9 @@ if i:
         k = 0
 ```
 
-A copied node is its own standalone FST tree and can be gotten from and put to and otherwise used like any other FST tree. It does not have to be valid parsable code, any node is supported as the root of a tree and only root `FST` nodes can be put into other FST trees.
+A copied node is its own standalone FST tree and can be gotten from and put to and otherwise used like any other FST
+tree. It does not have to be valid parsable code, any node is supported as the root of a tree and only root `FST` nodes
+can be put into other FST trees.
 
 You can also cut nodes out, which will remove them from the tree.
 
@@ -84,7 +87,8 @@ if i:
         k = 0
 ```
 
-When dealing with statements you can temporarily cut out the last statement in a body, but make sure to put something back as soon as possible because most operations will fail with a tree in this state.
+When dealing with statements you can temporarily cut out the last statement in a body, but make sure to put something
+back as soon as possible because most operations will fail with a tree in this state.
 
 ```py
 >>> g = f.body[0].body[0].cut()
@@ -106,7 +110,8 @@ if i:
         k = 0
 ```
 
-Cutting out an optional body field like an `orelse`, `finalbody` or `handlers` (if there is a `finalbody`) will leave the tree in a valid state.
+Cutting out an optional body field like an `orelse`, `finalbody` or `handlers` (if there is a `finalbody`) will leave
+the tree in a valid state.
 
 ```py
 >>> f = FST('''
@@ -145,7 +150,8 @@ Exception: cannot cut root node
 
 ## `get()` and `get_slice()`
 
-`copy()` and `cut()` are basically shortcuts to `get()` (except in the case of a root node copy). The `get()` function essentially does a `copy()` except from the point of view of the parent node. So the following two are equivalent.
+`copy()` and `cut()` are basically shortcuts to `get()` (except in the case of a root node copy). The `get()` function
+essentially does a `copy()` except from the point of view of the parent node. So the following two are equivalent.
 
 ```py
 >>> print(FST('i = 123').value.copy().src)
@@ -189,7 +195,8 @@ i = 1
 i = 1
 ```
 
-If you pass two indices then `get()` returns a slice using `get_slice()`. `get()` can do everything that `get_slice()` can do.
+If you pass two indices then `get()` returns a slice using `get_slice()`. `get()` can do everything that `get_slice()`
+can do.
 
 ```py
 >>> print(f.get(1, 3, 'orelse').src)
@@ -215,7 +222,8 @@ It can only get individual elements as slices, unlike `get()` which can get them
 2
 ```
 
-Both `get()` and `get_slice()` can specify slice beginning and end points as `None`, which specifies from beginning of the body or to the end of it.
+Both `get()` and `get_slice()` can specify slice beginning and end points as `None`, which specifies from beginning of
+the body or to the end of it.
 
 ```py
 >>> print(FST('[1, 2, 3]').get_slice(1, None).src)
@@ -232,18 +240,22 @@ Many nodes have a specific common-sense default field, like `value` for a `Retur
 123
 ```
 
-The node type `Dict` cannot have normal slices taken as it doesn't have a contiguous single-element list but rather combinations of multiple field lists. For this nodes, leaving the default field of `None` gives special slicing behavior which slices across the multiple fields and gives a new `Dict`.
+The node type `Dict` cannot have normal slices taken as it doesn't have a contiguous single-element list but rather
+combinations of multiple field lists. For this nodes, leaving the default field of `None` gives special slicing
+behavior which slices across the multiple fields and gives a new `Dict`.
 
 ```py
 >>> print(FST('{1:2, 3:4, 5:6}').get_slice(1, 3).src)
 {3:4, 5:6}
 ```
 
-TODO: `MatchMapping` and `Compare` will also support special slicing behavior but slice operations for them are not implemented yet (other than raw).
+TODO: `MatchMapping` and `Compare` will also support special slicing behavior but slice operations for them are not
+implemented yet (other than raw).
 
 ## `get_src()`
 
-This just gets source code from a given location. It doesn't matter what node of a tree this is called on, it always gets from the root source and will always return the same results.
+This just gets source code from a given location. It doesn't matter what node of a tree this is called on, it always
+gets from the root source and will always return the same results.
 
 ```py
 >>> f = FST('''
@@ -266,14 +278,16 @@ if 1:
 els
 ```
 
-As you can see the location doesn't have to start or stop on a node boundary, but you can get node source this way as an alternative to `f.src`.
+As you can see the location doesn't have to start or stop on a node boundary, but you can get node source this way as an
+alternative to `f.src`.
 
 ```py
 >>> print(f.get_src(*f.orelse[1].loc))
 k = 3
 ```
 
-This can actually come in handy in the case of a root node as root node `.src` is always the entire source code assigned to that tree, regardless of where the top node actually exists.
+This can actually come in handy in the case of a root node as root node `.src` is always the entire source code assigned
+to that tree, regardless of where the top node actually exists.
 
 ```py
 >>> f = FST('''
