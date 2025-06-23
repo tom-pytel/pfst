@@ -300,6 +300,9 @@ def _put_slice(self: 'FST', code: Code | None, start: int | Literal['end'] | Non
                one: bool = False, **options) -> Optional['FST']:  # -> Self or reparsed Self or could disappear due to raw
     """Put an a slice of child nodes to `self`."""
 
+    if code is self.root:  # don't allow own root to be put to self
+        raise NodeError('circular put detected')
+
     ast = self.a
     raw = FST.get_option('raw', options)
 

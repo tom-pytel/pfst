@@ -10650,6 +10650,13 @@ finally:
         self.assertEqual('[*y]', parse('[*n]').body[0].value.elts[0].f.put('y').root.src)  # Starred
         self.assertEqual('match a:\n case "y": pass', parse('match a:\n case "n": pass').body[0].cases[0].pattern.f.put('"y"').root.src)  # MatchValue
 
+    def test_put_disallow_ouroboros(self):
+        f = FST('i := j')
+        self.assertRaises(NodeError, f.value.replace, f)
+
+        f = FST('[1, 2]')
+        self.assertRaises(NodeError, f.elts.append, f)
+
     def test_raw_special(self):
         f = parse('[a for c in d for b in c for a in b]').body[0].value.f
         g = f.put('for x in y', 1, raw=True)

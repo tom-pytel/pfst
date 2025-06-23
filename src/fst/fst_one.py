@@ -892,7 +892,7 @@ def _make_exprish_fst(self: 'FST', code: _PutOneCode, idx: int | None, field: st
 
     put_fst._indent_lns(self.get_indent(), docstr=options.get('docstr'))
 
-    dcol_offset    = self.root._lines[ln].c2b(col)
+    dcol_offset    = lines[ln].c2b(col)
     end_col_offset = lines[end_ln].c2b(end_col)
     params_offset  = self._put_src(put_fst._lines, ln, col, end_ln, end_col, True, False, exclude=self)
 
@@ -1669,6 +1669,9 @@ def _put_one(self: 'FST', code: _PutOneCode, idx: int | None, field: str, **opti
     - `field`: The `AST` field to modify.
     - `options`: See `FST.get_options`.
     """
+
+    if code is self.root:  # don't allow own root to be put to self
+        raise NodeError('circular put detected')
 
     ast   = self.a
     child = getattr(self.a, field) if field else None
