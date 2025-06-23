@@ -4,7 +4,7 @@ from ast import *
 from typing import Optional, Union
 
 from .astutil import bistr
-from .shared import (
+from .misc import (
     fstloc,
     NAMED_SCOPE,
     re_empty_line_start, re_empty_line, re_comment_line_start, re_line_trailing_space,

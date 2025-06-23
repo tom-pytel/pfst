@@ -1,4 +1,4 @@
-"""Lowest level shared data and functions."""
+"""Low level common data and functions that are not part of the FST class."""
 
 import re
 from ast import *
@@ -208,8 +208,7 @@ Mode = Union[Literal[
 
 
 class NodeError(ValueError):
-    """General error having to do with nodes being of the correct type or syntax. Used and caught when a raw reparse is
-    possible to pass on to the reparse if allowed."""
+    """General FST node error. Used and caught when a raw reparse is possible to pass on to the reparse if allowed."""
 
 
 class astfield(NamedTuple):
@@ -269,7 +268,7 @@ class fstloc(NamedTuple):
 
 
 class fstlocns(fstloc):
-    """Version of `fstloc` with a namespace, used for `pars().count`."""
+    """Version of `fstloc` with a namespace, used for `pars().n`."""
 
     def __repr__(self) -> str:
         ln, col, end_ln, end_col = self
@@ -294,6 +293,8 @@ class srcwpos(NamedTuple):
 
 
 class nspace:
+    """Simple namespace class used for several things."""
+
     def __init__(self, **kwargs):
         for name, value in kwargs.items():
             setattr(self, name, value)

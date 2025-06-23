@@ -6,7 +6,7 @@ from typing import Literal, Optional
 from .astutil import *
 from .astutil import TryStar
 
-from .shared import (
+from .misc import (
     NodeError, astfield,
     STMTISH_FIELDS,
     Code, Mode,

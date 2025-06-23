@@ -13,7 +13,7 @@ from typing import Any, Callable, Generator, Literal, Optional, TextIO, Union
 from .astutil import *
 from .astutil import TypeAlias, TryStar, TemplateStr, Interpolation, type_param
 
-from .shared import (
+from .misc import (
     NodeError, astfield, fstloc, fstlocns, nspace,
     EXPRISH_ALL, STMTISH, STMTISH_OR_MOD, BLOCK, BLOCK_OR_MOD, SCOPE, SCOPE_OR_MOD, NAMED_SCOPE,
     NAMED_SCOPE_OR_MOD, ANONYMOUS_SCOPE,
@@ -72,7 +72,7 @@ def parse(source, filename='<unknown>', mode='exec', *, type_comments=False, fea
     **Parameters:**
     - `source`: The python source to parse.
     - `filename`: `ast.parse()` parameter.
-    - `mode`: Parse mode, extended `ast.parse()` parameter, See `fst.shared.Mode`.
+    - `mode`: Parse mode, extended `ast.parse()` parameter, See `fst.misc.Mode`.
     - `type_comments`: `ast.parse()` parameter.
     - `feature_version`: `ast.parse()` parameter.
 
@@ -524,11 +524,11 @@ class FST:
         This will create an `FST` from either an `AST` or source code in the form of a string, list of lines or encoded
         bytes. The first parameter can be `None` instead of an `AST` or source to indicate a blank new module of one of
         the three types `'exec'`, `'eval'` or `'single'`. Otherwise if there is an `AST` or `source` then `mode`
-        specifies how it will be parsed / reparsed and it can take any of the values from `fst.shared.Mode`.
+        specifies how it will be parsed / reparsed and it can take any of the values from `fst.misc.Mode`.
 
         **Parameters:**
         - `ast_or_src`: Source code, an `AST` node or `None`.
-        - `mode`: See `fst.shared.Mode`. If this is `None` then if `ast_or_src` is an `AST` the mode defaults to the
+        - `mode`: See `fst.misc.Mode`. If this is `None` then if `ast_or_src` is an `AST` the mode defaults to the
             type of the `AST`. Otherwise if the `ast_or_src` is actual source code then `mode` used is `'all'` to allow
             parsing anything. And if `ast_or_src` is `None` then `mode` must be provided and be one of `'exec'`,
             `'eval'` or `'single'`.
@@ -708,7 +708,7 @@ class FST:
 
         **Parameters:**
         - `src`: The source to parse as a single `str`, `bytes` or list of individual line strings (without newlines).
-        - `mode`: Parse mode, extended `ast.parse()` parameter, See `fst.shared.Mode`.
+        - `mode`: Parse mode, extended `ast.parse()` parameter, See `fst.misc.Mode`.
         - `filename`: `ast.parse()` parameter.
         - `type_comments`: `ast.parse()` parameter.
         - `feature_version`: `ast.parse()` parameter.
@@ -771,7 +771,7 @@ class FST:
 
         **Parameters:**
         - `ast`: The root `AST` node.
-        - `mode`: Parse mode, extended `ast.parse()` parameter, see `fst.shared.Mode`. Two special values are added:
+        - `mode`: Parse mode, extended `ast.parse()` parameter, see `fst.misc.Mode`. Two special values are added:
             - `None`: This will attempt to reparse to the same node type as was passed in. This is the default and all
                 other values should be considered overrides for special cases.
             - `False`: This will skip the reparse and just `ast.unparse()` the `AST` to generate source for the `FST`.
@@ -1159,7 +1159,7 @@ class FST:
         **Parameters:**
         - `mode`: Parse mode to use, otherwise if `None` then use the top level AST node type for the mode. Depending on
             how this is set will determine whether the verification is checking if is parsable by python (`'exec'` for
-            example), or if the node itself is just in a valid state (where `None` is good). See `fst.shared.Mode`.
+            example), or if the node itself is just in a valid state (where `None` is good). See `fst.misc.Mode`.
         - `reparse`: Whether to reparse the source and compare ASTs (including location). Otherwise the check is limited
             to a structure check that all children have `FST` nodes which are all liked correctly to their parents.
             `reparse=True` only allowed on root node.
@@ -3555,7 +3555,7 @@ class FST:
                            f"you're accessing an FST {self}.f'")
 
 
-from .fstview import fstview
+from .view import fstview
 
 from . import fst_misc, fst_one, fst_parse, fst_raw, fst_slice_old, fst_slice, fst_walk, fst_reconcile, srcedit_old
 

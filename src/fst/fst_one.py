@@ -10,7 +10,7 @@ from typing import Callable, NamedTuple, Optional, Union
 from .astutil import *
 from .astutil import TypeAlias, TryStar, TypeVar, ParamSpec, TypeVarTuple, TemplateStr, Interpolation
 
-from .shared import (
+from .misc import (
     Code, NodeError, astfield, fstloc,
     _next_src, _prev_src, _next_find, _prev_find, _next_find_re, _prev_pars, _fixup_one_index,
 )

@@ -5,7 +5,7 @@ from typing import Generator, Literal, Optional
 
 from .astutil import *
 
-from .shared import astfield
+from .misc import astfield
 
 _AST_FIELDS_NEXT: dict[tuple[type[AST], str], str | None] = dict(sum((  # next field name from AST class and current field name
     [] if not fields else

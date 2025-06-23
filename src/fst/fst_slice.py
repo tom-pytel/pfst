@@ -6,7 +6,7 @@ from typing import Literal, Optional
 from .astutil import *
 from .astutil import TypeAlias, TryStar, TemplateStr
 
-from .shared import (
+from .misc import (
     Self, STMTISH_OR_STMTMOD, STMTISH_FIELDS, Code, NodeError, fstloc,
     _prev_find, _next_find, _fixup_slice_indices, _coerce_ast,
 )

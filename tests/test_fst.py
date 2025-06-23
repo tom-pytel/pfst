@@ -982,7 +982,7 @@ two  # fake comment start""", **b
         self.assertEqual((1, 19, 1, 21), a.f._dict_key_or_mock_loc(a.keys[1], a.values[1].f))
 
     def test__next_prev_src(self):
-        from fst.shared import _next_src, _prev_src
+        from fst.misc import _next_src, _prev_src
 
         lines = '''
   # pre
@@ -1092,7 +1092,7 @@ k \\
         self.assertEqual((0, 0, '('), _prev_src(['(\\', ''], 0, 0, 1, 0, True, None))
 
     def test__next_prev_find(self):
-        from fst.shared import _next_find, _prev_find
+        from fst.misc import _next_find, _prev_find
 
         lines = '''
   ; \\
@@ -1140,7 +1140,7 @@ k \\
         self.assertEqual(None, _next_find(lines, 3, 0, 6, 0, '# word', True, comment=True, lcont=True))
 
     def test__next_find_re(self):
-        from fst.shared import _next_find_re
+        from fst.misc import _next_find_re
 
         lines = '''
   \\
@@ -1170,7 +1170,7 @@ b # word
         self.assertEqual(None, _next_find_re(lines, 4, 0, 6, 0, pat, True, comment=True, lcont=True))
 
     def test__multiline_str_continuation_lns(self):
-        from fst.shared import _multiline_str_continuation_lns as mscl
+        from fst.misc import _multiline_str_continuation_lns as mscl
 
         self.assertEqual([], mscl(ls := r'''
 'a'
@@ -1291,7 +1291,7 @@ e"
             '''.strip().split('\n'), 0, 0, len(ls) - 1, len(ls[-1])))
 
     def test__multiline_fstr_continuation_lns(self):
-        from fst.shared import _multiline_fstr_continuation_lns as mscl
+        from fst.misc import _multiline_fstr_continuation_lns as mscl
 
         self.assertEqual([], mscl(ls := r'''
 f'a'
@@ -1420,7 +1420,7 @@ y"
             '''.strip().split('\n'), 0, 0, len(ls) - 1, len(ls[-1])))
 
     def test__multiline_tstr_continuation_lns(self):
-        from fst.shared import _multiline_fstr_continuation_lns as mscl
+        from fst.misc import _multiline_fstr_continuation_lns as mscl
 
         if _PY_VERSION >= (3, 14):
             self.assertEqual([], mscl(ls := r'''
@@ -10606,7 +10606,7 @@ finally:
             raise
 
     def test_put_src_from_put_slice_data(self):
-        from fst.shared import _fixup_field_body
+        from fst.misc import _fixup_field_body
         from fst.fst_slice import _raw_slice_loc
 
         for i, (dst, attr, start, stop, field, options, src, put_src, put_dump) in enumerate(PUT_SLICE_DATA):

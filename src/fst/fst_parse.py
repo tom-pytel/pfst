@@ -10,7 +10,7 @@ from unicodedata import normalize
 from .astutil import *
 from .astutil import TryStar, type_param
 
-from .shared import (
+from .misc import (
     Code, Mode, NodeError, _next_src, _shortstr
 )
 
@@ -188,7 +188,7 @@ def _parse(src: str, mode: Mode = 'all', parse_params: dict = {}) -> AST:
     - `mode`: Either one of the standard `ast.parse()` modes `exec`, `eval` or `single` to parse to that type of module
         or one of our specific strings like `'stmtishs'` or an actual `AST` type to parse to. If the mode is provided
         and cannot parse to the specified target then an error is raised and no other parse types are tried. See
-        `fst.shared.Mode`.
+        `fst.misc.Mode`.
     - `parse_params`: Dictionary of optional parse parameters to pass to `ast.parse()`, can contain `filename`,
         `type_comments` and `feature_version`.
     """

@@ -3,7 +3,7 @@ from builtins import slice
 from typing import Any, Literal, Optional
 
 from .astutil import *
-from .shared import Code, _fixup_one_index, _fixup_slice_indices
+from .misc import Code, _fixup_one_index, _fixup_slice_indices
 
 
 class fstview:

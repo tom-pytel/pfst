@@ -47,10 +47,10 @@ class TestDocTest(unittest.TestCase):
             fst.FST.set_options(**options)
 
     def test_fstview(self):
-        fstview = sys.modules['fst.fstview']
+        view = sys.modules['fst.view']
 
-        cleanup_docstrs(fstview)
-        self.assertEqual(0, doctest.testmod(fstview).failed)
+        cleanup_docstrs(view)
+        self.assertEqual(0, doctest.testmod(view).failed)
 
     def test_examples(self):
         sys.path.insert(0, '')

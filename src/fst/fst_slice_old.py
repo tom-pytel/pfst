@@ -6,7 +6,7 @@ from typing import Literal, Optional, Union
 from .astutil import *
 from .astutil import TryStar
 
-from .shared import (
+from .misc import (
     astfield, fstloc,
     Code, NodeError,
     _next_find, _prev_find,

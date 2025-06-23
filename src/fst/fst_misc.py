@@ -9,7 +9,7 @@ from typing import Callable, Literal, Optional, Union
 from .astutil import *
 from .astutil import Interpolation, TemplateStr
 
-from .shared import (
+from .misc import (
     Self, astfield, fstloc, nspace,
     EXPRISH, STMTISH, BLOCK, HAS_DOCSTRING,
     re_empty_line_start, re_line_end_cont_or_comment,

@@ -4,7 +4,7 @@ from ast import *
 from typing import Any, Literal, Optional, Union
 
 from .astutil import *
-from .shared import NodeError, astfield
+from .misc import NodeError, astfield
 
 
 _GLOBALS = globals() | {'_GLOBALS': None}

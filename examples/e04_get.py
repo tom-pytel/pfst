@@ -74,7 +74,8 @@ A copied node is its own standalone FST tree and can be gotten from and put to a
 tree. It does not have to be valid parsable code, any node is supported as the root of a tree and only root `FST` nodes
 can be put into other FST trees.
 
-You can also cut nodes out, which will remove them from the tree.
+You can also cut nodes out, which will remove them from the tree. Important, the `FST` node returned by `cut()` may be,
+but will not necessarily be the same `FST` node that was in the tree!
 
 ```py
 >>> g = f.body[0].cut()

@@ -14,7 +14,7 @@ from typing import Any, Generator, Iterable, Literal
 
 from .astutil import *
 from .astutil import TypeAlias, TemplateStr, Interpolation
-from .shared import astfield
+from .misc import astfield
 from .fst import FST, NodeError
 
 PROGRAM     = 'python -m fst.fuzz'
@@ -1425,6 +1425,118 @@ class ReconcileSame(Fuzzy):
             fst.verify()
 
         finally:
+            if self.verbose:
+                print(fst.src)
+
+
+class Stmtishs(Fuzzy):
+    """Test moving around stmtishs, fstview, stmtish FST identity stability and unmarking deleted FSTs."""
+
+    name    = 'stmtishs'
+    forever = True
+
+    def fuzz_one(self, fst, fnm) -> bool:
+        # containers = {
+        #     stmt:          FST.new().body,
+        #     ExceptHandler: FST('try: pass\nfinally: pass').handlers,
+        #     match_case:    FST('match _:\n  case _: pass').cases,
+        # }
+
+        # del containers[match_case][0]
+
+        # if not _PYLT11:
+        #     containers[excepthandler] = c = FST('try: pass\nexcept* Exception: pass').handlers
+
+        #     del c[0]
+
+
+
+        containers = {
+            stmt:          FST('i', 'exec').body,
+            ExceptHandler: FST('try: pass\nexcept Exception: pass\nfinally: pass').handlers,
+            match_case:    FST('match _:\n  case _: pass').cases,
+        }
+
+        if not _PYLT11:
+            containers[excepthandler] = c = FST('try: pass\nexcept* Exception: pass').handlers
+
+
+
+
+        stmtishs = []
+
+        for f in fst.walk(True):
+            if fstcat(f) in containers:
+                stmtishs.append(f)
+
+        if not stmtishs:
+            return
+
+        try:
+            for count in range(self.batch or 1000):
+                try:
+                    if not (count % 10):
+                        sys.stdout.write('.'); sys.stdout.flush()
+
+                    while stmtishs:
+                        if (stmtish := stmtishs[i := randint(0, len(stmtishs) - 1)]).a is None:
+                            del stmtishs[i]
+                        else:
+                            break
+
+                    else:
+                        raise RuntimeError('this should not happen')
+
+                    container = containers[fstcat(stmtish)]
+
+                    if any(p is container.fst for p in stmtish.parents()):
+                        continue
+
+                    stmtish_parent = stmtish.parent
+                    stmtish_pfield = stmtish.pfield
+
+                    # from source to temporary container
+
+                    if container and random() < 10.5:  # single element stmtish to container
+                        s = stmtish.cut()
+                        c = choice(container)
+                        r = c.replace(stmtish)
+
+                        assert s is stmtish
+                        assert r is stmtish
+
+                    else:  # slice stmtish to container
+                        pass
+
+
+
+                    # from temporary container to source
+
+                    c = choice(container)
+                    f = c.copy() if len(container) < 2 else c.cut()
+
+                    getattr(stmtish_parent, stmtish_pfield.name).append(f)
+
+
+
+
+
+                    if self.verify:
+                        fst.verify()
+
+                except Exception:
+                    print()
+
+                    if self.verbose:
+                        print(fst.src)
+
+                    raise
+
+            fst.verify()
+
+        finally:
+            print()
+
             if self.verbose:
                 print(fst.src)
 
