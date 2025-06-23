@@ -1436,6 +1436,15 @@ class Stmtishs(Fuzzy):
     forever = True
 
     def fuzz_one(self, fst, fnm) -> bool:
+        containers = {
+            stmt:          FST('i', 'exec').body,
+            ExceptHandler: FST('try: pass\nexcept Exception: pass\nfinally: pass').handlers,
+            match_case:    FST('match _:\n  case _: pass').cases,
+        }
+
+        if not _PYLT11:
+            containers[excepthandler] = c = FST('try: pass\nexcept* Exception: pass').handlers
+
         # containers = {
         #     stmt:          FST.new().body,
         #     ExceptHandler: FST('try: pass\nfinally: pass').handlers,
@@ -1448,20 +1457,6 @@ class Stmtishs(Fuzzy):
         #     containers[excepthandler] = c = FST('try: pass\nexcept* Exception: pass').handlers
 
         #     del c[0]
-
-
-
-        containers = {
-            stmt:          FST('i', 'exec').body,
-            ExceptHandler: FST('try: pass\nexcept Exception: pass\nfinally: pass').handlers,
-            match_case:    FST('match _:\n  case _: pass').cases,
-        }
-
-        if not _PYLT11:
-            containers[excepthandler] = c = FST('try: pass\nexcept* Exception: pass').handlers
-
-
-
 
         stmtishs = []
 
@@ -1478,26 +1473,33 @@ class Stmtishs(Fuzzy):
                     if not (count % 10):
                         sys.stdout.write('.'); sys.stdout.flush()
 
-                    while stmtishs:
-                        if (stmtish := stmtishs[i := randint(0, len(stmtishs) - 1)]).a is None:
-                            del stmtishs[i]
+                    for _ in range(10):
+                        while stmtishs:
+                            if (stmtish := stmtishs[i := randint(0, len(stmtishs) - 1)]).a is None:  # if removed completely then forget about it
+                                del stmtishs[i]
+                            else:
+                                break
+
                         else:
-                            break
+                            raise RuntimeError('this should not happen')
+
+                        container = containers[fstcat(stmtish)]
+
+                        if any(p is container.fst for p in stmtish.parents()):
+                            continue
+
+                        break
 
                     else:
-                        raise RuntimeError('this should not happen')
-
-                    container = containers[fstcat(stmtish)]
-
-                    if any(p is container.fst for p in stmtish.parents()):
                         continue
 
-                    stmtish_parent = stmtish.parent
-                    stmtish_pfield = stmtish.pfield
+                    stmtish_parent    = stmtish.parent
+                    stmtish_pfield    = stmtish.pfield
+                    stmtish_container = getattr(stmtish_parent, stmtish_pfield.name)
 
                     # from source to temporary container
 
-                    if container and random() < 10.5:  # single element stmtish to container
+                    if container and random() < 0.5:  # single element stmtish to container
                         s = stmtish.cut()
                         c = choice(container)
                         r = c.replace(stmtish)
@@ -1506,16 +1508,26 @@ class Stmtishs(Fuzzy):
                         assert r is stmtish
 
                     else:  # slice stmtish to container
-                        pass
+                        from_start = randint(0, len(stmtish_container) - 1)
+                        from_stop  = randint(from_start + 1, len(stmtish_container))
+                        to_start   = randint(0, len(container) - 1)
+                        to_stop    = randint(to_start + 1, len(container))
+                        fs         = stmtish_container[from_start : from_stop]
+                        org_fsts   = list(fs)
+                        cut        = fs.cut()
 
+                        assert all(f is g for f, g in zip(cut.body, org_fsts))
 
+                        container[to_start : to_stop] = cut
+
+                        assert all(f is g for f, g in zip(container[to_start : to_stop], org_fsts))
 
                     # from temporary container to source
 
                     c = choice(container)
                     f = c.copy() if len(container) < 2 else c.cut()
 
-                    getattr(stmtish_parent, stmtish_pfield.name).append(f)
+                    stmtish_container.append(f)
 
 
 

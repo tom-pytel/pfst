@@ -530,14 +530,16 @@ class SrcEdit:
                 del_loc, put_lines = t
 
             else:
-                put_lines = None
-                ln, col   = copy_loc[:2]
-                del_col   = 0 if ln != block_ln else block_col
+                ln, col = copy_loc[:2]
+                del_col = 0 if ln != block_ln else block_col
 
                 if end_ln == bound_end_ln:
-                    del_loc = fstloc(ln, col if fpost else del_col, bound_end_ln, bound_end_col)
+                    del_loc   = fstloc(ln, col if fpost else del_col, bound_end_ln, bound_end_col)
+                    put_lines = None
+
                 else:
-                    del_loc = fstloc(ln, del_col, end_ln + 1, 0)
+                    del_loc   = fstloc(ln, del_col, end_ln + 1, 0)
+                    put_lines = ['', ''] if del_col else None
 
             return del_loc, put_lines
 

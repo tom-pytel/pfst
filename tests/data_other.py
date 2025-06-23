@@ -3910,6 +3910,38 @@ Module - ROOT 0,0..0,1
     .value Name 'i' Load - 0,0..0,1
 """),
 
+(r"""
+def foo():
+    # verify statements that end with semi-colons
+    x = 1; pass; del x;
+foo()
+""", 'body[0]', 2, 3, None, {}, r"""
+def foo():
+    # verify statements that end with semi-colons
+    x = 1; pass
+foo()
+""", r"""del x""", r"""
+Module - ROOT 0,0..5,0
+  .body[2]
+  0] FunctionDef - 1,0..3,15
+    .name 'foo'
+    .body[2]
+    0] Assign - 3,4..3,9
+      .targets[1]
+      0] Name 'x' Store - 3,4..3,5
+      .value Constant 1 - 3,8..3,9
+    1] Pass - 3,11..3,15
+  1] Expr - 4,0..4,5
+    .value Call - 4,0..4,5
+      .func Name 'foo' Load - 4,0..4,3
+""", r"""
+Module - ROOT 0,0..0,5
+  .body[1]
+  0] Delete - 0,0..0,5
+    .targets[1]
+    0] Name 'x' Del - 0,4..0,5
+"""),
+
 ]  # END OF GET_SLICE_STMT_DATA
 
 GET_SLICE_STMT_NOVERIFY_DATA = [
@@ -4008,8 +4040,9 @@ Module - ROOT 0,0..0,1
 if 1: i ;
 """, 'body[0]', 0, 1, None, {'precomms': True, 'postcomms': True}, r"""
 if 1:
+
 """, r"""i""", r"""
-Module - ROOT 0,0..2,0
+Module - ROOT 0,0..3,0
   .body[1]
   0] If - 1,0..1,5
     .test Constant 1 - 1,3..1,4

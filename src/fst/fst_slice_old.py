@@ -244,7 +244,7 @@ def _get_slice_stmtish(self: 'FST', start: int | Literal['end'] | None, stop: in
     indent = ffirst.get_indent()
 
     block_loc = fstloc(*(fpre.bloc[2:] if fpre else ffirst._prev_bound_step()),
-                        *(fpost.bloc[:2] if fpost else flast._next_bound_step()))
+                       *(fpost.bloc[:2] if fpost else flast._next_bound_step()))
 
     copy_loc, put_loc, put_lines = (
         _src_edit.get_slice_stmt(self, field, cut, block_loc, ffirst, flast, fpre, fpost, **options))

@@ -97,7 +97,9 @@ fstloc(0, 2, 0, 4)
 ```
 
 There is also a `bloc` location attribute, which is equal to the `loc` location in all cases except when there are
-preceding decorators, in which case the location starts at the first decorator.
+preceding decorators, in which case the location starts at the first decorator. There are corresponding `bln`, `bcol`,
+`bend_ln` and `bend_col` attributes, though the last three currently just equal the normal `loc` elements. This may
+change in the future (include trailing comments maybe).
 
 ```py
 >>> print(f.src)
