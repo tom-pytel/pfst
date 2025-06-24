@@ -15344,6 +15344,62 @@ Module - ROOT 0,0..0,4
       0] Name 'a' Load - 0,2..0,3
 """),
 
+(r"""global a, b, c""", 'body[0]', 0, 2, None, {'raw': True}, r"""x""", r"""global x, c""", r"""
+Module - ROOT 0,0..0,11
+  .body[1]
+  0] Global - 0,0..0,11
+    .names[2]
+    0] 'x'
+    1] 'c'
+"""),
+
+(r"""global a, b, c""", 'body[0]', None, None, None, {'raw': True}, r"""x""", r"""global x""", r"""
+Module - ROOT 0,0..0,8
+  .body[1]
+  0] Global - 0,0..0,8
+    .names[1]
+    0] 'x'
+"""),
+
+(r"""global a, b, c""", 'body[0]', 1, 2, None, {'raw': True}, r"""x, y""", r"""global a, x, y, c""", r"""
+Module - ROOT 0,0..0,17
+  .body[1]
+  0] Global - 0,0..0,17
+    .names[4]
+    0] 'a'
+    1] 'x'
+    2] 'y'
+    3] 'c'
+"""),
+
+(r"""nonlocal a, b, c""", 'body[0]', 0, 2, None, {'raw': True}, r"""x""", r"""nonlocal x, c""", r"""
+Module - ROOT 0,0..0,13
+  .body[1]
+  0] Nonlocal - 0,0..0,13
+    .names[2]
+    0] 'x'
+    1] 'c'
+"""),
+
+(r"""nonlocal a, b, c""", 'body[0]', None, None, None, {'raw': True}, r"""x""", r"""nonlocal x""", r"""
+Module - ROOT 0,0..0,10
+  .body[1]
+  0] Nonlocal - 0,0..0,10
+    .names[1]
+    0] 'x'
+"""),
+
+(r"""nonlocal a, b, c""", 'body[0]', 1, 2, None, {'raw': True}, r"""x, y""", r"""nonlocal a, x, y, c""", r"""
+Module - ROOT 0,0..0,19
+  .body[1]
+  0] Nonlocal - 0,0..0,19
+    .names[4]
+    0] 'a'
+    1] 'x'
+    2] 'y'
+    3] 'c'
+"""),
+
 ]  # END OF PUT_SLICE_DATA
 
 PUT_SRC_DATA = [

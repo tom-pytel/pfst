@@ -10,16 +10,17 @@ class fstview:
     """View for a list of `AST` nodes in a body, or any other field which is a list of values (not necessarily `AST`
     nodes), of an `FST` node.
 
-    This object acts as a list of corresponding `FST` nodes if applicable, otherwise strings for example for a list of
-    `Globals.names`. Is only meant for short term convenience use as operations on the target `FST` node which are not
-    effectuated through this view may invalidate the `start` and `stop` positions and even the `fst` stored here if they
-    change the size of the list of nodes or reparse. Especially raw operations which reparse entire statements and can
-    easily invalidate an `fstview` even if performed directly on it.
+    This object acts as a list of corresponding `FST` nodes if applicable or otherwise strings (for example for a list
+    of `Global.names`). It is only meant for short term convenience along the lines of `fst.body.append(...)`. Outside
+    of this use, operations on the target `FST` node of the view which are not effectuated through the view may
+    invalidate the `start`  and `stop` positions and even the `fst` stored in the view if they change the size of the
+    list of nodes or reparse. Especially raw operations which reparse entire statements and can easily invalidate an
+    `fstview` even if performed directly on it.
 
     Nodes can be gotten or put via indexing. Nodes which are accessed through indexing (normal or slice) are not
-    automatically copied, if a copy is desired then do `fstview[start:stop].copy()`. Slice assignments also work but
+    automatically copied, if a copy is desired then do `fst.body[start:stop].copy()`. Slice assignments also work but
     will always assign a slice to the range. If you want to assign an individual item to this range or a subrange then
-    use `replace(..., one=True)`.
+    use `fst.body[start:stop].replace(..., one=True)`.
 
     **WARNING!** Keep in mind that operations on NODES or even CHILD VIEWS instead of on THIS VIEW will not update this
     view. Do not hold on to views, use them and discard.
@@ -35,6 +36,7 @@ class fstview:
     >>> view = FST('[1, 2, 3]').elts
 
     >>> view[1:].cut()  # not an operation on this view but a child view
+    <List ROOT 0,0..0,6>
 
     >>> view  # WRONG again
     <<List ROOT 0,0..0,3>.elts[0:3] [<Constant 0,1..0,2>]>

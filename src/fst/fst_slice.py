@@ -218,6 +218,12 @@ def _raw_slice_loc(self: 'FST', start: int | Literal['end'] | None, stop: int | 
 
         return fstloc(*start_pos, *ifs[stop - 1].f.pars()[2:])
 
+    if isinstance(ast, (Global, Nonlocal)):
+        start, stop         = fixup_slice_index_for_raw(len(ast.names), start, stop)
+        start_loc, stop_loc = self._loc_Global_Nonlocal_names(start, stop - 1)
+
+        return fstloc(start_loc.ln, start_loc.col, stop_loc.end_ln, stop_loc.end_col)
+
     if field == 'decorator_list':
         decos       = ast.decorator_list
         start, stop = fixup_slice_index_for_raw(len(decos), start, stop)
@@ -339,7 +345,7 @@ def _put_slice(self: 'FST', code: Code | None, start: int | Literal['end'] | Non
             # TODO: more individual specialized slice puts
 
 
-            elif (ast.__class__, field) in [
+            if (ast.__class__, field) in [
                 (FunctionDef, 'decorator_list'),      # expr*
                 (AsyncFunctionDef, 'decorator_list'), # expr*
                 (ClassDef, 'decorator_list'),         # expr*

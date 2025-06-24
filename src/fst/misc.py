@@ -67,7 +67,7 @@ _AST_DEFAULT_BODY_FIELD  = {cls: field for field, classes in [
     ('patterns',     (MatchSequence, MatchOr)),
     ('targets',      (Delete,)),  # , Assign)),
     ('type_params',  (TypeAlias,)),
-    ('names',        (Import, ImportFrom)),
+    ('names',        (Import, ImportFrom, Global, Nonlocal)),
     ('ifs',          (comprehension,)),
     ('values',       (BoolOp, JoinedStr, TemplateStr)),
     ('generators',   (ListComp, SetComp, DictComp, GeneratorExp)),

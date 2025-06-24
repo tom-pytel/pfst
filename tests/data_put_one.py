@@ -5715,7 +5715,7 @@ Module - ROOT 0,0..1,32
       0] Pass - 1,28..1,32
 """),
 
-(r"""del a, (b), c""", 'body[0]', 0, None, {}, r"""**DEL**""", r"""**ValueError('cannot put slice to Delete.targets')**""", r"""
+(r"""del a, (b), c""", 'body[0]', 0, None, {}, r"""**DEL**""", r"""**NotImplementedError("not implemented yet, try with option raw='auto'")**""", r"""
 """),
 
 (r"""del a, (b), c""", 'body[0]', 0, None, {}, r"""new""", r"""del new, (b), c""", r"""
@@ -5778,7 +5778,7 @@ Module - ROOT 0,0..0,18
 (r"""del a, (b), c""", 'body[0]', -4, None, {}, r"""new""", r"""**IndexError('index out of range')**""", r"""
 """),
 
-(r"""a = (b, c) = d = z""", 'body[0]', 0, 'targets', {}, r"""**DEL**""", r"""**ValueError('cannot put slice to Assign.targets')**""", r"""
+(r"""a = (b, c) = d = z""", 'body[0]', 0, 'targets', {}, r"""**DEL**""", r"""**NotImplementedError("not implemented yet, try with option raw='auto'")**""", r"""
 """),
 
 (r"""a = (b, c) = d = z""", 'body[0]', 0, 'targets', {}, r"""new""", r"""new = (b, c) = d = z""", r"""
@@ -5864,7 +5864,7 @@ Module - ROOT 0,0..0,21
 
 (r"""@a
 @(b)
-def c(): pass""", 'body[0]', 0, 'decorator_list', {'raw': False}, r"""**DEL**""", r"""**ValueError('cannot put slice to FunctionDef.decorator_list')**""", r"""
+def c(): pass""", 'body[0]', 0, 'decorator_list', {'raw': False}, r"""**DEL**""", r"""**NotImplementedError("not implemented yet, try with option raw='auto'")**""", r"""
 """),
 
 (r"""@a
@@ -5939,7 +5939,7 @@ def c(): pass""", 'body[0]', -4, 'decorator_list', {}, r"""new""", r"""**IndexEr
 
 (r"""@a
 @(b)
-async def c(): pass""", 'body[0]', 0, 'decorator_list', {'raw': False}, r"""**DEL**""", r"""**ValueError('cannot put slice to AsyncFunctionDef.decorator_list')**""", r"""
+async def c(): pass""", 'body[0]', 0, 'decorator_list', {'raw': False}, r"""**DEL**""", r"""**NotImplementedError("not implemented yet, try with option raw='auto'")**""", r"""
 """),
 
 (r"""@a
@@ -6014,7 +6014,7 @@ async def c(): pass""", 'body[0]', -4, 'decorator_list', {}, r"""new""", r"""**I
 
 (r"""@a
 @(b)
-class c: pass""", 'body[0]', 0, 'decorator_list', {'raw': False}, r"""**DEL**""", r"""**ValueError('cannot put slice to ClassDef.decorator_list')**""", r"""
+class c: pass""", 'body[0]', 0, 'decorator_list', {'raw': False}, r"""**DEL**""", r"""**NotImplementedError("not implemented yet, try with option raw='auto'")**""", r"""
 """),
 
 (r"""@a
@@ -6087,7 +6087,7 @@ Module - ROOT 0,0..2,13
 class c: pass""", 'body[0]', -4, 'decorator_list', {}, r"""new""", r"""**IndexError('index out of range')**""", r"""
 """),
 
-(r"""class c(a, (b)): pass""", 'body[0]', 0, 'bases', {}, r"""**DEL**""", r"""**ValueError('cannot put slice to ClassDef.bases')**""", r"""
+(r"""class c(a, (b)): pass""", 'body[0]', 0, 'bases', {}, r"""**DEL**""", r"""**NotImplementedError("not implemented yet, try with option raw='auto'")**""", r"""
 """),
 
 (r"""class c(a, (b)): pass""", 'body[0]', 0, 'bases', {}, r"""new""", r"""class c(new, (b)): pass""", r"""
@@ -6142,7 +6142,7 @@ Module - ROOT 0,0..0,23
 (r"""class c(a, (b)): pass""", 'body[0]', -4, 'bases', {}, r"""new""", r"""**IndexError('index out of range')**""", r"""
 """),
 
-(r"""class c(a): pass""", 'body[0]', 0, 'bases', {'raw': False}, r"""**DEL**""", r"""**ValueError('cannot put slice to ClassDef.bases')**""", r"""
+(r"""class c(a): pass""", 'body[0]', 0, 'bases', {'raw': False}, r"""**DEL**""", r"""**NotImplementedError("not implemented yet, try with option raw='auto'")**""", r"""
 """),
 
 (r"""class c(a): pass""", 'body[0]', 0, 'bases', {}, r"""new""", r"""class c(new): pass""", r"""
@@ -6167,7 +6167,7 @@ Module - ROOT 0,0..0,19
     0] Pass - 0,15..0,19
 """),
 
-(r"""class c((a)): pass""", 'body[0]', 0, 'bases', {'raw': False}, r"""**DEL**""", r"""**ValueError('cannot put slice to ClassDef.bases')**""", r"""
+(r"""class c((a)): pass""", 'body[0]', 0, 'bases', {'raw': False}, r"""**DEL**""", r"""**NotImplementedError("not implemented yet, try with option raw='auto'")**""", r"""
 """),
 
 (r"""class c((a)): pass""", 'body[0]', 0, 'bases', {}, r"""new""", r"""class c(new): pass""", r"""
@@ -7149,7 +7149,7 @@ Module - ROOT 0,0..1,13
  case _: pass""", 'body[0].cases[0].pattern', None, None, {}, r"""c.d""", r"""**ValueError('cannot create MatchAs.pattern in this state')**""", r"""
 """),
 
-(r"""def f[T: int, U: (str)](): pass""", 'body[0]', 0, 'type_params', {'_ver': 12}, r"""**DEL**""", r"""**ValueError('cannot put slice to FunctionDef.type_params')**""", r"""
+(r"""def f[T: int, U: (str)](): pass""", 'body[0]', 0, 'type_params', {'_ver': 12}, r"""**DEL**""", r"""**NotImplementedError("not implemented yet, try with option raw='auto'")**""", r"""
 """),
 
 (r"""def f[T: int, U: (str)](): pass""", 'body[0]', 0, 'type_params', {'_ver': 12}, r"""V: list[int]""", r"""def f[V: list[int], U: (str)](): pass""", r"""
@@ -7231,7 +7231,7 @@ Module - ROOT 0,0..0,37
 (r"""def f[T: int, U: (str)](): pass""", 'body[0]', -4, 'type_params', {'_ver': 12}, r"""V: list[int]""", r"""**IndexError('index out of range')**""", r"""
 """),
 
-(r"""async def f[T: int, U: (str)](): pass""", 'body[0]', 0, 'type_params', {'_ver': 12}, r"""**DEL**""", r"""**ValueError('cannot put slice to AsyncFunctionDef.type_params')**""", r"""
+(r"""async def f[T: int, U: (str)](): pass""", 'body[0]', 0, 'type_params', {'_ver': 12}, r"""**DEL**""", r"""**NotImplementedError("not implemented yet, try with option raw='auto'")**""", r"""
 """),
 
 (r"""async def f[T: int, U: (str)](): pass""", 'body[0]', 0, 'type_params', {'_ver': 12}, r"""V: list[int]""", r"""async def f[V: list[int], U: (str)](): pass""", r"""
@@ -7313,7 +7313,7 @@ Module - ROOT 0,0..0,43
 (r"""async def f[T: int, U: (str)](): pass""", 'body[0]', -4, 'type_params', {'_ver': 12}, r"""V: list[int]""", r"""**IndexError('index out of range')**""", r"""
 """),
 
-(r"""class c[T: int, U: (str)]: pass""", 'body[0]', 0, 'type_params', {'_ver': 12}, r"""**DEL**""", r"""**ValueError('cannot put slice to ClassDef.type_params')**""", r"""
+(r"""class c[T: int, U: (str)]: pass""", 'body[0]', 0, 'type_params', {'_ver': 12}, r"""**DEL**""", r"""**NotImplementedError("not implemented yet, try with option raw='auto'")**""", r"""
 """),
 
 (r"""class c[T: int, U: (str)]: pass""", 'body[0]', 0, 'type_params', {'_ver': 12}, r"""V: list[int]""", r"""class c[V: list[int], U: (str)]: pass""", r"""
@@ -7395,7 +7395,7 @@ Module - ROOT 0,0..0,37
 (r"""class c[T: int, U: (str)]: pass""", 'body[0]', -4, 'type_params', {'_ver': 12}, r"""V: list[int]""", r"""**IndexError('index out of range')**""", r"""
 """),
 
-(r"""type t[T: int, U: (str)] = ...""", 'body[0]', 0, 'type_params', {'_ver': 12}, r"""**DEL**""", r"""**ValueError('cannot put slice to TypeAlias.type_params')**""", r"""
+(r"""type t[T: int, U: (str)] = ...""", 'body[0]', 0, 'type_params', {'_ver': 12}, r"""**DEL**""", r"""**NotImplementedError("not implemented yet, try with option raw='auto'")**""", r"""
 """),
 
 (r"""type t[T: int, U: (str)] = ...""", 'body[0]', 0, 'type_params', {'_ver': 12}, r"""V: list[int]""", r"""type t[V: list[int], U: (str)] = ...""", r"""
@@ -8019,7 +8019,7 @@ Module - ROOT 0,0..0,36
 (r"""def f(*, a: int = 1, b: (str)=''): pass""", 'body[0].args', -4, 'kwonlyargs', {}, r"""new""", r"""**IndexError('index out of range')**""", r"""
 """),
 
-(r"""class c(a=1, b = (2)): pass""", 'body[0]', 0, 'keywords', {}, r"""**DEL**""", r"""**ValueError('cannot put slice to ClassDef.keywords')**""", r"""
+(r"""class c(a=1, b = (2)): pass""", 'body[0]', 0, 'keywords', {}, r"""**DEL**""", r"""**NotImplementedError("not implemented yet, try with option raw='auto'")**""", r"""
 """),
 
 (r"""class c(a=1, b = (2)): pass""", 'body[0]', 0, 'keywords', {}, r"""new=(3)""", r"""class c(new=(3), b = (2)): pass""", r"""
@@ -8176,7 +8176,7 @@ Module - ROOT 0,0..0,20
 (r"""call(a=1, *b, c=1)""", 'body[0].value', 0, 'keywords', {}, r"""**new""", r"""**ValueError("cannot put '**' Call.keywords[0] in this state (non-keywords follow)")**""", r"""
 """),
 
-(r"""with (a as b, (f()) as d): pass""", 'body[0]', 0, 'items', {}, r"""**DEL**""", r"""**ValueError('cannot put slice to With.items')**""", r"""
+(r"""with (a as b, (f()) as d): pass""", 'body[0]', 0, 'items', {}, r"""**DEL**""", r"""**NotImplementedError("not implemented yet, try with option raw='auto'")**""", r"""
 """),
 
 (r"""with (a as b, (f()) as d): pass""", 'body[0]', 0, 'items', {}, r"""g() as new""", r"""with (g() as new, (f()) as d): pass""", r"""
@@ -8248,7 +8248,7 @@ Module - ROOT 0,0..0,35
 (r"""with (a as b, (f()) as d): pass""", 'body[0]', -4, 'items', {}, r"""g() as new""", r"""**IndexError('index out of range')**""", r"""
 """),
 
-(r"""async with (a as b, (f()) as d): pass""", 'body[0]', 0, 'items', {}, r"""**DEL**""", r"""**ValueError('cannot put slice to AsyncWith.items')**""", r"""
+(r"""async with (a as b, (f()) as d): pass""", 'body[0]', 0, 'items', {}, r"""**DEL**""", r"""**NotImplementedError("not implemented yet, try with option raw='auto'")**""", r"""
 """),
 
 (r"""async with (a as b, (f()) as d): pass""", 'body[0]', 0, 'items', {}, r"""g() as new""", r"""async with (g() as new, (f()) as d): pass""", r"""
@@ -8320,7 +8320,7 @@ Module - ROOT 0,0..0,41
 (r"""async with (a as b, (f()) as d): pass""", 'body[0]', -4, 'items', {}, r"""g() as new""", r"""**IndexError('index out of range')**""", r"""
 """),
 
-(r"""import a, c.d as e""", 'body[0]', 0, 'names', {}, r"""**DEL**""", r"""**ValueError('cannot put slice to Import.names')**""", r"""
+(r"""import a, c.d as e""", 'body[0]', 0, 'names', {}, r"""**DEL**""", r"""**NotImplementedError("not implemented yet, try with option raw='auto'")**""", r"""
 """),
 
 (r"""import a, c.d as e""", 'body[0]', 0, 'names', {}, r"""f as g""", r"""import f as g, c.d as e""", r"""
@@ -8397,7 +8397,7 @@ Module - ROOT 0,0..0,25
         'e'
 """),
 
-(r"""from z import (a, c as d)""", 'body[0]', 0, 'names', {}, r"""**DEL**""", r"""**ValueError('cannot put slice to ImportFrom.names')**""", r"""
+(r"""from z import (a, c as d)""", 'body[0]', 0, 'names', {}, r"""**DEL**""", r"""**NotImplementedError("not implemented yet, try with option raw='auto'")**""", r"""
 """),
 
 (r"""from z import (a, c as d)""", 'body[0]', 0, 'names', {}, r"""f as g""", r"""from z import (f as g, c as d)""", r"""
@@ -8510,7 +8510,7 @@ Module - ROOT 0,0..0,8
       .ctx Load
 """),
 
-(r"""global a, b""", 'body[0]', 0, 'names', {}, r"""**DEL**""", r"""**ValueError('cannot put slice to Global.names')**""", r"""
+(r"""global a, b""", 'body[0]', 0, 'names', {}, r"""**DEL**""", r"""**NotImplementedError("not implemented yet, try with option raw='auto'")**""", r"""
 """),
 
 (r"""global a, b""", 'body[0]', 0, 'names', {}, r"""new""", r"""global new, b""", r"""
@@ -8558,7 +8558,7 @@ Module - ROOT 0,0..3,1
 (r"""global a, b""", 'body[0]', -4, 'names', {}, r"""new""", r"""**IndexError('index out of range')**""", r"""
 """),
 
-(r"""nonlocal a, b""", 'body[0]', 0, 'names', {}, r"""**DEL**""", r"""**ValueError('cannot put slice to Nonlocal.names')**""", r"""
+(r"""nonlocal a, b""", 'body[0]', 0, 'names', {}, r"""**DEL**""", r"""**NotImplementedError("not implemented yet, try with option raw='auto'")**""", r"""
 """),
 
 (r"""nonlocal a, b""", 'body[0]', 0, 'names', {}, r"""new""", r"""nonlocal new, b""", r"""

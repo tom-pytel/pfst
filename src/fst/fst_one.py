@@ -1841,20 +1841,10 @@ def _one_info_ImportFrom_module(self: 'FST', static: onestatic, idx: int | None,
     return oneinfo('', loc := fstloc(ln, col, ln, end_col), loc)
 
 def _one_info_Global_Nonlocal_names(self: 'FST', static: onestatic, idx: int | None, field: str) -> oneinfo:
-    ln, col, end_ln, end_col = self.loc
 
-    col   += 6 if isinstance(self.a, Global) else 8
-    lines  = self.root._lines
-    idx    = idx % len(names := self.names)
+    idx = _fixup_one_index(len(self.a.names), idx)
 
-    while idx:  # skip the commas
-        ln, col  = _next_find(lines, ln, col, end_ln, end_col, ',')  # must be there (idx assumed to be validated)
-        col     += 1
-        idx     -= 1
-
-    ln, col, src = _next_find_re(lines, ln, col, end_ln, end_col, re_identifier)  # must be there
-
-    return oneinfo('', None, fstloc(ln, col, ln, col + len(src)))
+    return oneinfo('', None, self._loc_Global_Nonlocal_names(idx))
 
 _onestatic_Global_Nonlocal_names = onestatic(_one_info_Global_Nonlocal_names, _restrict_default, code_as=_code_as_identifier)
 

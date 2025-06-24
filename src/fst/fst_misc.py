@@ -13,7 +13,7 @@ from .misc import (
     Self, astfield, fstloc, nspace,
     EXPRISH, STMTISH, BLOCK, HAS_DOCSTRING,
     re_empty_line_start, re_line_end_cont_or_comment,
-    _next_src, _prev_src, _next_find, _prev_find, _next_pars, _prev_pars,
+    _next_src, _prev_src, _next_find, _prev_find, _next_pars, _prev_pars, _next_find_re,
     _params_offset, _multiline_str_continuation_lns, _multiline_fstr_continuation_lns,
 )
 
@@ -856,6 +856,42 @@ def _loc_MatchClass_pars(self: 'FST') -> fstloc:
     ln, col               = _next_find(lines, ln, col, end_ln, end_col, '(')  # must be there
 
     return fstloc(ln, col, end_ln, end_col)
+
+
+def _loc_Global_Nonlocal_names(self: 'FST', first: int, last: int | None = None) -> fstloc | tuple[fstloc, fstloc]:
+    """We assume `first` and optionally `last` are in [0..len(names)), no negative or out-of-bounds and `last` follows
+    or equals `first` if present."""
+
+    # assert isinstance(self.a, (Global, Nonlocal))
+
+    ln, col, end_ln, end_col = self.loc
+
+    col   += 6 if isinstance(self.a, Global) else 8
+    lines  = self.root._lines
+    idx    = first
+
+    while idx:  # skip the commas
+        ln, col  = _next_find(lines, ln, col, end_ln, end_col, ',')  # must be there
+        col     += 1
+        idx     -= 1
+
+    ln, col, src = _next_find_re(lines, ln, col, end_ln, end_col, re_identifier)  # must be there
+    first_loc    = fstloc(ln, col, ln, col := col + len(src))
+
+    if last is None:
+        return first_loc
+
+    if not (idx := last - first):
+        return first_loc, first_loc
+
+    while idx:
+        ln, col  = _next_find(lines, ln, col, end_ln, end_col, ',')  # must be there
+        col     += 1
+        idx     -= 1
+
+    ln, col, src = _next_find_re(lines, ln, col, end_ln, end_col, re_identifier)  # must be there
+
+    return first_loc, fstloc(ln, col, ln, col + len(src))
 
 
 def _is_arguments_empty(self: 'FST') -> bool:
