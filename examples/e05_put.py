@@ -204,6 +204,18 @@ Putting `None` deletes and it can delete multiple elements.
 [1, c]
 ```
 
+Slices from compatible containers can be put to each other.
+
+```py
+>>> s = FST('[1, 2, 3, 4]').get_slice(1, None)
+
+>>> print(s.src)
+[2, 3, 4]
+
+>>> print(FST('{a, b, c, d}').put_slice(s, 1, 3).root.src)
+{a, 2, 3, 4, d}
+```
+
 Either `put()` or `put_slice()` can be used to insert by setting the `start` and `stop` locations to the same thing,
 possibly at the start, end or between other elements.
 
@@ -214,11 +226,11 @@ possibly at the start, end or between other elements.
 >>> print(f.src)
 [1, x, c]
 
->>> f.put_slice('[y]', 1, 1)  # doesn't need one=False as its default for put_slice()
+>>> f.put_slice('[y]', 2, 2)  # doesn't need one=False as its default for put_slice()
 <List ROOT 0,0..0,12>
 
 >>> print(f.src)
-[1, y, x, c]
+[1, x, y, c]
 ```
 
 The special `'end'` index allows you to put at the end without knowing how long the field is.
@@ -228,7 +240,7 @@ The special `'end'` index allows you to put at the end without knowing how long 
 <List ROOT 0,0..0,19>
 
 >>> print(f.src)
-[1, y, x, c, 4,5,6]
+[1, x, y, c, 4,5,6]
 ```
 
 Just like with `get()`, a field can be specified.

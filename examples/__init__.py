@@ -12,7 +12,7 @@
 
 `examples.e06_raw`: Raw reparse operations
 
-`examples.e07_views`: ???
+`examples.e07_views`: `FST` slice indexing
 
 `examples.e08_parentheses`: Parentheses handling
 

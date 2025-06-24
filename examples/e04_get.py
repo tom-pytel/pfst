@@ -292,18 +292,6 @@ Module - ROOT 0,0..3,9
       .value Constant 2 - 3,8..3,9
 ```
 
-Slices from compatible containers can be put to each other.
-
-```py
->>> s = FST('[1, 2, 3, 4]').get_slice(1, None)
-
->>> print(s.src)
-[2, 3, 4]
-
->>> print(FST('{a, b, c, d}').put_slice(s, 1, 3).root.src)
-{a, 2, 3, 4, d}
-```
-
 TODO: Prescribed slice operations are implemented for all `stmt` containers, `Tuple`, `List`, `Set`, `Dict`, exception
 handler bodies containing `ExceptHandler` and match statement cases containing `match_case`. All other slice operations
 must currently be carried out using raw operations which, are not as robust.
