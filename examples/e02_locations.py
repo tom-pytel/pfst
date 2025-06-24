@@ -73,8 +73,14 @@ in `FST` nodes, like `arguments` or `operators`.
 >>> hasattr(f.a.args, 'lineno')
 False
 
+>>> f.args.loc
+fstloc(1, 9, 1, 10)
+
 >>> hasattr(f.a.body[0].value.op, 'lineno')
 False
+
+>>> f.body[0].value.op.loc
+fstloc(2, 13, 2, 14)
 ```
 
 The only `AST` nodes which don't get locations like this are empty `arguments` nodes since that could allow zero-length
@@ -89,8 +95,12 @@ fstloc(0, 3, 0, 13)
 >>> FST('with a as b: pass').items[0].loc
 fstloc(0, 5, 0, 11)
 
->>> FST('case a as b: pass').loc
-fstloc(0, 0, 0, 17)
+>>> FST('''
+... match a:
+...    case a as b:
+...        pass
+... '''.strip()).cases[0].loc
+fstloc(1, 3, 2, 11)
 
 >>> FST('a += b').op.loc
 fstloc(0, 2, 0, 4)
@@ -161,11 +171,20 @@ The location of the entire source (accessible from any node in the tree), always
 the source code.
 
 ```py
->>> f.whole_loc
-fstloc(0, 0, 0, 14)
+>>> f = FST('''
+... @decorator
+... def func(x):
+...     return x + 1
+... '''.strip())
 
->>> f.iter.whole_loc
-fstloc(0, 0, 0, 14)
+>>> f.whole_loc
+fstloc(0, 0, 2, 16)
+
+>>> f.body[0].value.op.whole_loc
+fstloc(0, 0, 2, 16)
+
+>>> len(f.lines), len(f.lines[-1])
+(3, 16)
 ```
 
 ## Search by location

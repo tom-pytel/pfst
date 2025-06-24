@@ -155,13 +155,14 @@ Mode = Union[Literal[
     the `Module`. If that statement is an `Expr` then return the expression instead of the statement. If nothing present
     then return empty `Module`. Doesn't attempt any of the other parse modes which would not normally be parsable by
     python, just anything that can be parsed natively by `ast.parse()`.
-- `'exec'`: Parse to a `Module`. Mostly same as passing `Module` type except that also parses anything that `FST` puts
-    into `Module`s, like slices of normally unparsable stuff.
+- `'exec'`: Parse to a `Module`. Mostly same as passing `Module` type except that `Module` also parses anything that
+    `FST` puts into `Module`s, like slices of normally non-parsable stuff.
 - `'eval'`: Parse to an `Expression`. Same as passing `Expression` type.
 - `'single'`: Parse to an `Interactive`. Same as passing `Interactive` type.
 - `'stmtishs'`: Parse as zero or more of either `stmt`, `ExceptHandler` or `match_case` returned in a `Module`.
 - `'stmtish'`: Parse as a single `stmt`, `ExceptHandler` or `match_case` returned as itself.
-- `'stmts'`: Parse zero or more `stmt`s returned in a `Module`. Same as passing `Module` type or `'exec'`.
+- `'stmts'`: Parse zero or more `stmt`s returned in a `Module`. Same as passing `'exec'`, but not `Module` as that can
+    parse `FST` slices.
 - `'stmt'`: Parse a single `stmt` returned as itself. Same as passing `stmt` type.
 - `'ExceptHandlers'`: Parse zero or more `ExceptHandler`s returned in a `Module`.
 - `'ExceptHandler'`: Parse as a single `ExceptHandler` returned as itself. Same as passing `ExceptHandler` type.

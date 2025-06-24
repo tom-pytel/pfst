@@ -14,7 +14,7 @@
 
 `examples.e07_views`: ???
 
-`examples.e08_parentheses`: ???
+`examples.e08_parentheses`: Parentheses handling
 
 `examples.e09_reconcile`: ???
 

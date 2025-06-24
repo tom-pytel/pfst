@@ -3082,7 +3082,7 @@ with a as b, c as d:
 
     def test_is_atom(self):
         self.assertIs(False, parse('1 + 2').body[0].value.f.is_atom())
-        self.assertIs(True, parse('f()').body[0].value.f.is_atom())
+        self.assertEqual('unenclosable', parse('f()').body[0].value.f.is_atom())
         self.assertEqual('pars', parse('(1 + 2)').body[0].value.f.is_atom())
         self.assertIs(False, parse('(1 + 2)').body[0].value.f.is_atom(pars=False))
 

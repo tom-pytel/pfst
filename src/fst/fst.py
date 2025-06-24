@@ -1871,7 +1871,7 @@ class FST:
         ```
         """
 
-        key = f'pars_{shared}'
+        key = f'pars_{None if shared is None else bool(shared)}'
 
         try:
             cached = self._cache[key]
@@ -1967,14 +1967,11 @@ class FST:
         ```
         """
 
-        if self.is_atom(always_enclosed=True) or not self.is_parenthesizable():
-            if not force:
-                return self  # False
-
-            with self._modifying():
-                self._parenthesize_grouping(whole)
-
-            return self  # True
+        if not force:
+            if (not self.is_parenthesizable() or (is_atom := self.is_atom()) in (True, 'pars') or
+                (is_atom and self.is_enclosed())  # 'unenclosable'
+            ):
+                return self
 
         with self._modifying():
             if isinstance(self.a, Tuple):
@@ -1984,20 +1981,20 @@ class FST:
             else:
                 self._parenthesize_grouping(whole)
 
-        return self  # True
+        return self
 
-    def unpar(self, node: bool = False, *, shared: bool | None = True) -> Self:
+    def unpar(self, intrinsic: bool = False, *, shared: bool | None = True) -> Self:
         """Remove all parentheses from node if present. Normally removes just grouping parentheses but can also remove
-        `Tuple` parentheses and `MatchSequence` parentheses or brackets if `node=True`. If dealing with a `Starred` then
-        the parentheses are checked in and removed from the child. If `shared=None` then will also remove parentheses
-        which do not belong to this node but enclose it directly.
+        `Tuple` parentheses and `MatchSequence` parentheses or brackets if `intrinsic=True`. If dealing with a `Starred`
+        then the parentheses are checked in and removed from the child. If `shared=None` then will also remove
+        parentheses which do not belong to this node but enclose it directly.
 
         **WARNING!** This function doesn't do any higher level syntactic validation. So if you unparenthesize something
         that shouldn't be unparenthesized, and you wind up poking an eye out, that's on you.
 
         **Parameters:**
-        - `node`: If `True` then will remove parentheses from a parenthesized `Tuple` and parentheses / brackets from
-            parenthesized / bracketed `MatchSequence`, otherwise only removes grouping parentheses if present.
+        - `intrinsic`: If `True` then will remove parentheses from a parenthesized `Tuple` and parentheses / brackets
+            from parenthesized / bracketed `MatchSequence`, otherwise only removes grouping parentheses if present.
         - `shared`: Whether to allow merge of parentheses of single call argument generator expression with `Call`
             parentheses or not. If `None` then will attempt to unparenthesize any enclosing parentheses, whether they
             belong to this node or not (meant for internal use).
@@ -2019,19 +2016,19 @@ class FST:
         >>> FST('(1, 2)').unpar().src  # but not from tuple
         '(1, 2)'
 
-        >>> FST('(1, 2)').unpar(node=True).src  # unless explicitly specified
+        >>> FST('(1, 2)').unpar(intrinsic=True).src  # unless explicitly specified
         '1, 2'
 
         >>> FST('(((1, 2)))').unpar().src
         '(1, 2)'
 
-        >>> FST('(((1, 2)))').unpar(node=True).src
+        >>> FST('(((1, 2)))').unpar(intrinsic=True).src
         '1, 2'
 
         >>> FST('[1, 2]', 'pattern').unpar().src
         '[1, 2]'
 
-        >>> FST('[1, 2]', 'pattern').unpar(node=True).src
+        >>> FST('[1, 2]', 'pattern').unpar(intrinsic=True).src
         '1, 2'
 
         >>> FST('*(a or b)').unpar().src  # unpar() a Starred unparenthesizes its child
@@ -2062,7 +2059,7 @@ class FST:
 
             self._unparenthesize_grouping(shared)
 
-        if node:
+        if intrinsic:
             if isinstance(self.a, Tuple):
                 modifying = modifying or self._modifying().enter()
 
@@ -2794,15 +2791,18 @@ class FST:
 
         return not isinstance(a, Slice) if isinstance(a := self.a, expr) else isinstance(a, pattern)
 
-    def is_atom(self, *, pars: bool = True, always_enclosed: bool = False) -> bool | Literal['pars']:
+    def is_atom(self, *, pars: bool = True, always_enclosed: bool = False) -> bool | Literal['unenclosable', 'pars']:
         r"""Whether `self` is innately atomic precedence-wise like `Name`, `Constant`, `List`, etc... Or otherwise
         optionally enclosed in parentheses so that it functions as a parsable atom and cannot be split up by precedence
         rules when reparsed.
 
-        Node types where this doesn't normally apply like `stmt` or `alias` return `True`. This does not guarantee
-        parsability as an otherwise atomic node could be spread across multiple lines without line continuations or
-        grouping parentheses, see `is_enclosed()` for that. Though if this function returns `'pars'` then `self` is
-        enclosed due to the grouping parentheses.
+        Node types where this doesn't normally apply like `stmt` or `alias` return `True`.
+
+        Being atomic precedence-wise does not guarantee parsability as an otherwise atomic node could be spread across
+        multiple lines without line continuations or grouping parentheses, in this case `'unenclosable'` is returned (if
+        these nodes are not excluded altogether with `always_enclosed=True`). Also see `is_enclosed()`.
+
+        If this function returns `'pars'` then `self` is enclosed due to the grouping parentheses.
 
         **Parameters:**
         - `pars`: Whether to check for grouping parentheses or not for node types which are not innately atomic
@@ -2814,8 +2814,11 @@ class FST:
             parentheses present, in which case `'pars'` is returned.
 
         **Returns:**
-        - `True` if node is atomic and no combination in the source will make it parse to a different node. `'pars'` if
-            is atomic due to enclosing grouping parentheses and would not be otherwise. `False` means not atomic.
+        - `True`: Is atomic and no combination of changes in the source will make it parse to a different node.
+        - `'unenclosable'`: Is atomic precedence-wise but may be made non-parsable by being spread over multiple lines.
+        - `'pars'`: Is atomic due to enclosing grouping parentheses and would not be otherwise, can not be returned for
+            `'unenclosable'` nodes if `always_enclosed=False`.
+        - `False`: Not atomic.
 
         **Examples:**
         ```py
@@ -2832,7 +2835,7 @@ class FST:
         False
 
         >>> FST('a.b').is_atom()
-        True
+        'unenclosable'
 
         >>> FST('a.b').is_atom(always_enclosed=True)  # because of "a\n.b"
         False
@@ -2854,11 +2857,14 @@ class FST:
             return True
 
         if not always_enclosed:
-            if isinstance(ast, (Call, JoinedStr, TemplateStr, Constant, Attribute, Subscript,
+            if isinstance(ast, Constant):
+                return 'unenclosable' if isinstance(ast.value, (str, bytes)) else True
+
+            elif isinstance(ast, (Call, JoinedStr, TemplateStr, Constant, Attribute, Subscript,
                                 MatchClass, MatchStar,
                                 cmpop, comprehension, arguments,
                                 arg, keyword, alias, withitem, type_param)):
-                return True
+                return 'unenclosable'
 
         elif isinstance(ast, (comprehension, arguments, arg, keyword, alias, type_param)):  # can't be parenthesized
             return False
@@ -2903,8 +2909,9 @@ class FST:
             multiline-safe. Grouping parentheses are different from tuple parentheses which are always checked.
 
         **Returns:**
-        - `True` if node is enclosed. `'pars'` if is enclosed by grouping parentheses and would not be otherwise.
-            `False` means not enclosed and should be parenthesized or put into an enclosed parent for successful parse.
+        - `True`: Mode is enclosed.
+        - `'pars'` Enclosed by grouping parentheses and would not be otherwise.
+        - `False`: Not enclosed and should be parenthesized or put into an enclosed parent for successful parse.
 
         **Examples:**
         ```py
