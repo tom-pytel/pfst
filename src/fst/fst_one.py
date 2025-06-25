@@ -866,34 +866,41 @@ def _make_exprish_fst(self: FST, code: _PutOneCode, idx: int | None, field: str,
 
         ln, col, end_ln, end_col = loc
 
-    # make sure put doesn't merge alphanumerics
+    # do it
 
     lines     = self.root._lines
     put_lines = put_fst._lines
 
-    if col and re_two_alnum.match(lines[ln][col - 1] + (prefix or put_lines[0][:1])):  # if start would merge then prepend prefix with space
-        prefix = ' ' + prefix
-
-    if end_col < len(l := lines[end_ln]) and re_two_alnum.match((suffix or put_lines[-1])[-1:] + l[end_col]):  # if end would merge then append space to suffix
-        suffix = suffix + ' '
-
-    # do it
+    merge_alnum_start = bool(col and re_two_alnum.match(lines[ln][col - 1] + (prefix or put_lines[0][:1])))  # would the start location result in a merged alphanumeric? we do this here because we need to know if to offset put_fst by one more space
+    merge_alnum_end   = bool(end_col < len(l := lines[end_ln]) and re_two_alnum.match((suffix or put_lines[-1])[-1:] + l[end_col]))  # would end location result in merged alphanumeric?
 
     if prefix:
         put_fst._put_src([prefix], 0, 0, 0, 0, True)
 
     if suffix:
-        ls[-1] = bistr((ls := put_fst._lines)[-1] + suffix)  # don't need to offset anything so just tack onto the end
+        put_lines[-1] = bistr(put_lines[-1] + suffix)  # don't need to offset anything so just tack onto the end
 
     put_fst._indent_lns(self.get_indent(), docstr=options.get('docstr'))
 
-    dcol_offset    = lines[ln].c2b(col)
+    dcol_offset    = lines[ln].c2b(col) + merge_alnum_start
     end_col_offset = lines[end_ln].c2b(end_col)
-    params_offset  = self._put_src(put_fst._lines, ln, col, end_ln, end_col, True, False, exclude=self)
+
+    params_offset  = self._put_src(put_lines, ln, col, end_ln, end_col, True, False, exclude=self)
 
     self._offset(*params_offset, exclude=target, self_=False)  # excluding an fstloc instead of FST is harmless, will not exclude anything
     put_fst._offset(0, 0, ln, dcol_offset)
     set_ctx(put_ast, ctx)
+
+    # if put merged alphanumerics at start and / or end then insert spaces
+
+    if merge_alnum_end:  # we do this first because merged alnum at start could change our location
+        send_ln  = ln + (dln := len(put_lines) - 1)
+        send_col = len(put_lines[-1]) if dln else col + len(put_lines[0])
+
+        self._put_src([' '], send_ln, send_col, send_ln, send_col, False)
+
+    if merge_alnum_start:  # we put this after because otherwise would be included in any parents that start at element being put
+        self._put_src([' '], ln, col, ln, col, False)
 
     # possibly fix FormattedValue and Interpolation .format_spec location if present above self - because can follow IMMEDIATELY after modified value (which doesn't normally happen in py syntax) and thus would not have their start offset due to head=False in put_src() above
 

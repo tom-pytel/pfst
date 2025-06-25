@@ -224,8 +224,8 @@ invalidate the view information.
 
 So it is better to let a view go away after using it rather than trying to keep it around.
 
-**Caveat:** Please note that accessing a view on an `FST` is a read-only operation. You can access a view and modify
-it, but you cannot assign directly to a view attribute in an `FST`. E.g. `f.elts[:] = ...` is fine, but `f.elts = ...` will not do what you
-think it should.
+**Caveat:** Note that accessing a view on an `FST` is a read-only operation. You can access a view and modify it, but
+you cannot assign directly to a view attribute in an `FST`. E.g. `f.elts[:] = ...` is fine, but `f.elts = ...` will not
+do what you think it should.
 
 """

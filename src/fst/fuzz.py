@@ -1112,6 +1112,9 @@ class PutOne(Fuzzy):
                 if not can_replace(f, repl):
                     continue
 
+                if self.debug:
+                    debuglines = [str(f)] + f.lines
+
                 if random() < 0.5 and not _PUT_ONE_HANDLERS.get((parent.a.__class__, field), [True])[0]:
                     try:
                         parent.put(None, idx, False, field, raw=False)
@@ -1131,9 +1134,13 @@ class PutOne(Fuzzy):
                         code = repl.copy().src  # dedent, fix 'elif'
 
                 try:
-                    # print('...', f, f.src)
-                    # print('   ', repl, repl.src, code, put)
-                    # f.replace(code, raw=False)
+                    if self.debug:
+                        print(f'... {put=}')
+                        print('\n'.join(debuglines))
+                        print(f'{code=}')
+                        print(f'{repl=}')
+                        print(f'{repl.src=}')
+
                     parent.put(code, idx, False, field, raw=False)
 
                     if self.verify:

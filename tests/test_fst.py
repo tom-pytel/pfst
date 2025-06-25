@@ -9907,6 +9907,41 @@ a
         self.assertEqual('1 is(not 1)', f.src)
         f.verify()
 
+        f = FST('if(a): pass')
+        f.test.replace('b')
+        self.assertEqual('if b: pass', f.src)
+        f.verify()
+
+        f = FST('if\\\n(a): pass')
+        f.test.replace('b')
+        self.assertEqual('if\\\nb: pass', f.src)
+        f.verify()
+
+        f = FST('if(\\\na): pass')
+        f.test.replace('b')
+        self.assertEqual('if b: pass', f.src)
+        f.verify()
+
+        f = FST('if(a\\\n): pass')
+        f.test.replace('b')
+        self.assertEqual('if b: pass', f.src)
+        f.verify()
+
+        f = FST('a if not f()else c')
+        f.test.operand.replace('b')
+        self.assertEqual('a if not b else c', f.src)
+        f.verify()
+
+        f = FST('a if not f(\n)else c')
+        f.test.operand.replace('b')
+        self.assertEqual('a if not b else c', f.src)
+        f.verify()
+
+        f = FST('a if not f()\\\nelse c')
+        f.test.operand.replace('b')
+        self.assertEqual('a if not b\\\nelse c', f.src)
+        f.verify()
+
         # update AnnAssign.simple
 
         f = FST('a.b: int')
