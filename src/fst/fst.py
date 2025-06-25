@@ -10,7 +10,7 @@ from ast import *
 from ast import dump as ast_dump, unparse as ast_unparse, mod as ast_mod
 from contextlib import contextmanager
 from io import TextIOBase
-from typing import Any, Callable, Generator, Literal, TextIO
+from typing import Any, Callable, Generator, Literal, TextIO, Union
 
 from .astutil import *
 from .astutil import TypeAlias, TryStar, TemplateStr, Interpolation, type_param
@@ -1055,6 +1055,7 @@ class FST:
         - `None`: Otherwise.
 
         **Examples:**
+        ```py
         >>> f = FST('''
         ... if 1:
         ...     call(a[i], **b)
@@ -1122,6 +1123,7 @@ class FST:
         '      .keywords[1]'
         '      0] keyword - 1,15..1,18'
         "        .value Name 'b' Load - 1,17..1,18"
+        ```
         """
 
         if isinstance(src, str):
@@ -1157,7 +1159,7 @@ class FST:
         return self._dump(st)
 
     def verify(self, mode: Mode | None = None, reparse: bool = True, *, locs: bool = True, raise_: bool = True,
-               ) -> Self | None:
+               ) -> Union[Self, None]:
         """Sanity check. Walk the tree and make sure all `AST`s have corresponding `FST` nodes with valid parent / child
         links, then (optionally) reparse source and make sure parsed tree matches currently stored tree (locations and
         everything). The reparse can only be carried out on root nodes but the link validation can be done on any level.
@@ -1183,8 +1185,8 @@ class FST:
         >>> FST('a:b:c').verify()
         <Slice ROOT 0,0..0,5>
 
-        >>> FST('a:b:c').verify('exec', raise_=False) is None  # None indicates failure to verify
-        True
+        >>> bool(FST('a:b:c').verify('exec', raise_=False))
+        False
         ```
         """
 
@@ -1521,14 +1523,16 @@ class FST:
         else:
             z = -1
 
-        >>> print(FST('if 1: i = 1\nelse: j = 2').put('z = -1\ny = -2\nx = -3', 'orelse', one=False).src.rstrip())
+        >>> print(FST('if 1: i = 1\nelse: j = 2')
+        ...       .put('z = -1\ny = -2\nx = -3', 'orelse', one=False).src.rstrip())
         if 1: i = 1
         else:
             z = -1
             y = -2
             x = -3
 
-        >>> print((f := FST('if 1: i = 1\nelse: j = 2')).put('z = -1', 0, raw=True, to=f.orelse[0]).root.src)
+        >>> print((f := FST('if 1: i = 1\nelse: j = 2'))
+        ...       .put('z = -1', 0, raw=True, to=f.orelse[0]).root.src)
         if 1: z = -1
         ```
         """
@@ -1670,14 +1674,16 @@ class FST:
         else:
             z = -1
 
-        >>> print(FST('if 1: i = 1\nelse: j = 2').put('z = -1\ny = -2\nx = -3', 'orelse', one=False).src.rstrip())
+        >>> print(FST('if 1: i = 1\nelse: j = 2')
+        ...       .put('z = -1\ny = -2\nx = -3', 'orelse', one=False).src.rstrip())
         if 1: i = 1
         else:
             z = -1
             y = -2
             x = -3
 
-        >>> print((f := FST('if 1: i = 1\nelse: j = 2')).put('z = -1', 0, raw=True, to=f.orelse[0]).root.src)
+        >>> print((f := FST('if 1: i = 1\nelse: j = 2'))
+        ...       .put('z = -1', 0, raw=True, to=f.orelse[0]).root.src)
         if 1: z = -1
         ```
         """
@@ -1869,7 +1875,7 @@ class FST:
         >>> FST('call(i for i in j)').args[0].pars()
         fstlocns(0, 4, 0, 18, n=0)
 
-        >>> FST('call(i for i in j)').args[0].pars(shared=False)  # exclude shared with call
+        >>> FST('call(i for i in j)').args[0].pars(shared=False)  # exclude shared pars
         fstlocns(0, 5, 0, 17, n=-1)
 
         >>> FST('call((i for i in j))').args[0].pars(shared=False)
@@ -1962,13 +1968,14 @@ class FST:
         >>> FST('i').par(force=True).src  # so must be forced
         '(i)'
 
-        >>> FST('1, 2', 'pattern').par().src  # parethesize MatchSequence puts brackets like ast.unparse()
+        >>> # parethesize MatchSequence puts brackets like ast.unparse()
+        >>> FST('1, 2', 'pattern').par().src
         '[1, 2]'
 
         >>> FST('*a or b').par().src  # par() a Starred parenthesizes its child
         '*(a or b)'
 
-        >>> FST('call(i = 1 + 2)').keywords[0].value.par().root.src  # any node, not just root
+        >>> FST('call(i = 1 + 2)').keywords[0].value.par().root.src  # not just root node
         'call(i = (1 + 2))'
         ```
         """
@@ -2040,13 +2047,16 @@ class FST:
         >>> FST('*(a or b)').unpar().src  # unpar() a Starred unparenthesizes its child
         '*a or b'
 
-        >>> FST('call(i = (1 + 2))').keywords[0].value.unpar().root.src  # any node, not just root
+        >>> # not just root node
+        >>> FST('call(i = (1 + 2))').keywords[0].value.unpar().root.src
         'call(i = 1 + 2)'
 
-        >>> FST('call(((i for i in j)))').args[0].unpar().root.src  # by default allows sharing
+        >>> # by default allows sharing
+        >>> FST('call(((i for i in j)))').args[0].unpar().root.src
         'call(i for i in j)'
 
-        >>> FST('call(((i for i in j)))').args[0].unpar(shared=False).root.src  # unless told not to
+        >>> # unless told not to
+        >>> FST('call(((i for i in j)))').args[0].unpar(shared=False).root.src
         'call((i for i in j))'
         ```
         """
@@ -2173,7 +2183,8 @@ class FST:
 
         **Examples:**
         ```py
-        >>> FST('try: pass\nexcept: pass', 'exec').body[0].handlers[0].body[0].parent_stmtish()
+        >>> (FST('try: pass\nexcept: pass', 'exec')
+        ...  .body[0].handlers[0].body[0].parent_stmtish())
         <ExceptHandler 1,0..1,12>
 
         >>> FST('try: pass\nexcept: pass', 'exec').body[0].handlers[0].parent_stmtish()
@@ -2236,7 +2247,8 @@ class FST:
         >>> FST('if 1: i = 1', 'exec').body[0].body[0].value.parent_scope()
         <Module ROOT 0,0..0,11>
 
-        >>> FST('def f():\n  if 1: i = 1', 'exec').body[0].body[0].body[0].value.parent_scope()
+        >>> (FST('def f():\n  if 1: i = 1', 'exec')
+        ...  .body[0].body[0].body[0].value.parent_scope())
         <FunctionDef 0,0..1,13>
 
         >>> FST('lambda: None', 'exec').body[0].value.body.parent_scope()
@@ -2267,13 +2279,16 @@ class FST:
         >>> FST('if 1: i = 1', 'exec').body[0].body[0].value.parent_named_scope()
         <Module ROOT 0,0..0,11>
 
-        >>> FST('def f():\n  if 1: i = 1', 'exec').body[0].body[0].body[0].value.parent_named_scope()
+        >>> (FST('def f():\n  if 1: i = 1', 'exec')
+        ...  .body[0].body[0].body[0].value.parent_named_scope())
         <FunctionDef 0,0..1,13>
 
-        >>> FST('def f(): lambda: None', 'exec').body[0].body[0].value.body.parent_named_scope()
+        >>> (FST('def f(): lambda: None', 'exec')
+        ...  .body[0].body[0].value.body.parent_named_scope())
         <FunctionDef 0,0..0,21>
 
-        >>> FST('class cls: [i for i in j]', 'exec').body[0].body[0].value.elt.parent_named_scope()
+        >>> (FST('class cls: [i for i in j]', 'exec')
+        ...  .body[0].body[0].value.elt.parent_named_scope())
         <ClassDef 0,0..0,25>
         ```
         """
@@ -2305,13 +2320,15 @@ class FST:
         >>> FST('if 1: i = 1 + a[b]').body[0].value.right.value.parent_non_expr()
         <Assign 0,6..0,18>
 
-        >>> FST('match a:\n case {a.b.c: 1}: pass').cases[0].pattern.keys[0].value.value.parent_non_expr()
+        >>> (FST('match a:\n case {a.b.c: 1}: pass')
+        ...  .cases[0].pattern.keys[0].value.value.parent_non_expr())
         <MatchMapping 1,6..1,16>
 
         >>> FST('var = call(a, b=1)').value.keywords[0].value.parent_non_expr()
         <Assign ROOT 0,0..0,18>
 
-        >>> FST('var = call(a, b=1)').value.keywords[0].value.parent_non_expr(strict=True)
+        >>> (FST('var = call(a, b=1)')
+        ...  .value.keywords[0].value.parent_non_expr(strict=True))
         <keyword 0,14..0,17>
         ```
         """
@@ -2338,13 +2355,16 @@ class FST:
         >>> FST('case 1+1j: pass').pattern.value.left.parent_pattern().src
         '1+1j'
 
-        >>> FST('case 1 | {a.b: c}: pass').pattern.patterns[1].patterns[0].parent_pattern(self_=True)
+        >>> (FST('case 1 | {a.b: c}: pass')
+        ...  .pattern.patterns[1].patterns[0].parent_pattern(self_=True))
         <MatchAs 0,15..0,16>
 
-        >>> FST('case 1 | {a.b: c}: pass').pattern.patterns[1].patterns[0].parent_pattern()
+        >>> (FST('case 1 | {a.b: c}: pass')
+        ...  .pattern.patterns[1].patterns[0].parent_pattern())
         <MatchMapping 0,9..0,17>
 
-        >>> FST('case 1 | {a.b: c}: pass').pattern.patterns[1].patterns[0].parent_pattern().parent_pattern()
+        >>> (FST('case 1 | {a.b: c}: pass')
+        ...  .pattern.patterns[1].patterns[0].parent_pattern().parent_pattern())
         <MatchOr 0,5..0,17>
         ```
         """
@@ -2375,7 +2395,8 @@ class FST:
         >>> (f := FST('[i for i in j]', 'exec')).child_path(f.body[0].value.elt)
         [astfield('body', 0), astfield('value'), astfield('elt')]
 
-        >>> (f := FST('[i for i in j]', 'exec')).child_path(f.body[0].value.elt, as_str=True)
+        >>> ((f := FST('[i for i in j]', 'exec'))
+        ...  .child_path(f.body[0].value.elt, as_str=True))
         'body[0].value.elt'
 
         >>> (f := FST('i')).child_path(f)
@@ -2427,7 +2448,8 @@ class FST:
         >>> FST('[0, 1, 2, 3]', 'exec').child_from_path('body[0].value.elts[4]')
         False
 
-        >>> FST('[0, 1, 2, 3]', 'exec').child_from_path('body[0].value.elts[4]', last_valid=True).src
+        >>> (FST('[0, 1, 2, 3]', 'exec')
+        ...  .child_from_path('body[0].value.elts[4]', last_valid=True).src)
         '[0, 1, 2, 3]'
 
         >>> (f := FST('i')).child_from_path([]) is f
@@ -2942,7 +2964,8 @@ class FST:
         >>> FST('def f(a, b): pass').args.is_enclosed()
         True
 
-        >>> FST('def f(a,\n b): pass').args.is_enclosed()  # because the parentheses belong to the FunctionDef
+        >>> # because the parentheses belong to the FunctionDef
+        >>> FST('def f(a,\n b): pass').args.is_enclosed()
         False
 
         >>> FST('def f(a,\n b): pass').args.is_enclosed_in_parents()
@@ -3340,10 +3363,12 @@ class FST:
 
         **Examples:**
         ```py
-        >>> FST('match a:\n  case cls(a): pass').cases[0].pattern.patterns[0].is_solo_matchcls_pat()
+        >>> (FST('match a:\n  case cls(a): pass')
+        ...  .cases[0].pattern.patterns[0].is_solo_matchcls_pat())
         True
 
-        >>> FST('match a:\n  case cls(a, b): pass').cases[0].pattern.patterns[0].is_solo_matchcls_pat()
+        >>> (FST('match a:\n  case cls(a, b): pass')
+        ...  .cases[0].pattern.patterns[0].is_solo_matchcls_pat())
         False
         ```
         """
@@ -3389,7 +3414,8 @@ class FST:
         >>> FST('1, d:e', 'slice').has_slice()  # Tuple contains at least one Slices
         True
 
-        >>> FST('a[b]').slice.has_slice()  # b is in the .slice field but is not a Slice or Slice Tuple
+        >>> # b is in the .slice field but is not a Slice or Slice Tuple
+        >>> FST('a[b]').slice.has_slice()
         False
         ```
         """

@@ -806,14 +806,16 @@ def last_header_child(self: FST, with_loc: bool | Literal['all', 'own'] = True) 
 
     **Examples:**
     ```py
-    >>> FST('if something:\n    i = 2\n    i = 3').last_header_child().src
-    'something'
+    >>> print(FST('if something:\n    i = 2\n    i = 3')
+    ...       .last_header_child().src)
+    something
 
-    >>> FST('try: pass\nexcept Exception as exc: pass').handlers[0].last_header_child().src
-    'Exception'
+    >>> print(FST('try: pass\nexcept Exception as exc: pass').handlers[0]
+    ...       .last_header_child().src)
+    Exception
 
-    >>> FST('with a, b: pass').last_header_child().src
-    'b'
+    >>> print(FST('with a, b: pass').last_header_child().src)
+    b
 
     >>> print(FST('try: pass\nfinally: pass').last_header_child())
     None
@@ -1110,18 +1112,18 @@ def walk(self: FST, with_loc: bool | Literal['all', 'own'] = False, *, self_: bo
     ...     if isinstance(g.a, ast.arg) and g.a.arg == 'reject':
     ...         _ = gen.send(False)
     ...     else:
-    ...         print(f'{g!r:<30}{g.src}')
-    <FunctionDef ROOT 0,0..0,57>  def f(a: list[str], /, reject: int, *c, d=100, **e): pass
-    <arguments 0,6..0,50>         a: list[str], /, reject: int, *c, d=100, **e
-    <arg 0,6..0,18>               a: list[str]
-    <Subscript 0,9..0,18>         list[str]
-    <Name 0,9..0,13>              list
-    <Name 0,14..0,17>             str
-    <arg 0,37..0,38>              c
-    <arg 0,40..0,41>              d
-    <Constant 0,42..0,45>         100
-    <arg 0,49..0,50>              e
-    <Pass 0,53..0,57>             pass
+    ...         print(f'{g!r:<30}{g.src[:50]!r}')
+    <FunctionDef ROOT 0,0..0,57>  'def f(a: list[str], /, reject: int, *c, d=100, **e'
+    <arguments 0,6..0,50>         'a: list[str], /, reject: int, *c, d=100, **e'
+    <arg 0,6..0,18>               'a: list[str]'
+    <Subscript 0,9..0,18>         'list[str]'
+    <Name 0,9..0,13>              'list'
+    <Name 0,14..0,17>             'str'
+    <arg 0,37..0,38>              'c'
+    <arg 0,40..0,41>              'd'
+    <Constant 0,42..0,45>         '100'
+    <arg 0,49..0,50>              'e'
+    <Pass 0,53..0,57>             'pass'
 
     >>> f = FST('''
     ... def f():
@@ -1130,8 +1132,8 @@ def walk(self: FST, with_loc: bool | Literal['all', 'own'] = False, *, self_: bo
     ...     val = [i for i in iterator]
     ... '''.strip())
     >>> for g in f.walk(True, scope=True):
-    ...     print(f'{g!r:<30}{g.src!r}')
-    <FunctionDef ROOT 0,0..3,31>  'def f():\n    def g(arg=1) -> int:\n        pass\n    val = [i for i in iterator]'
+    ...     print(f'{g!r:<30}{g.src[:47]!r}')
+    <FunctionDef ROOT 0,0..3,31>  'def f():\n    def g(arg=1) -> int:\n        pass\n'
     <FunctionDef 1,4..2,12>       'def g(arg=1) -> int:\n        pass'
     <Constant 1,14..1,15>         '1'
     <Assign 3,4..3,31>            'val = [i for i in iterator]'
@@ -1140,8 +1142,8 @@ def walk(self: FST, with_loc: bool | Literal['all', 'own'] = False, *, self_: bo
     <Name 3,22..3,30>             'iterator'
 
     >>> for g in f.walk(True, back=True):
-    ...     print(f'{g!r:<30}{g.src!r}')
-    <FunctionDef ROOT 0,0..3,31>  'def f():\n    def g(arg=1) -> int:\n        pass\n    val = [i for i in iterator]'
+    ...     print(f'{g!r:<30}{g.src[:47]!r}')
+    <FunctionDef ROOT 0,0..3,31>  'def f():\n    def g(arg=1) -> int:\n        pass\n'
     <Assign 3,4..3,31>            'val = [i for i in iterator]'
     <ListComp 3,10..3,31>         '[i for i in iterator]'
     <comprehension 3,13..3,30>    'for i in iterator'

@@ -133,7 +133,7 @@ fstloc(0, 0, 2, 16)
 ## Line and column coordinates
 
 `FST` node locations differ from `AST` node locations in that the line numbers start at 0 instead of 1 and the column
-offsets are in characters and not bytes.
+offsets are in characters and not encoded bytes.
 
 ```py
 >>> f = FST('абвгд')

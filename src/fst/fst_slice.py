@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from ast import *
-from typing import Literal
+from typing import Literal, Union
 
 from .astutil import *
 from .astutil import TypeAlias, TryStar, TemplateStr
@@ -242,7 +242,7 @@ def _raw_slice_loc(self: FST, start: int | Literal['end'] | None, stop: int | No
 
 
 def _put_slice_raw(self: FST, code: Code | None, start: int | Literal['end'] | None, stop: int | None, field: str,
-                   *, one: bool = False, **options) -> Self | None:  # -> Self or reparsed Self
+                   *, one: bool = False, **options) -> Union[Self, None]:  # -> Self or reparsed Self
     """Put a raw slice of child nodes to `self`."""
 
     if code is None:
@@ -305,7 +305,7 @@ def _put_slice_raw(self: FST, code: Code | None, start: int | Literal['end'] | N
 
 
 def _put_slice(self: FST, code: Code | None, start: int | Literal['end'] | None, stop: int | None, field: str,
-               one: bool = False, **options) -> Self | None:  # -> Self or reparsed Self or could disappear due to raw
+               one: bool = False, **options) -> Union[Self, None]:  # -> Self or reparsed Self or could disappear due to raw
     """Put an a slice of child nodes to `self`."""
 
     if code is self.root:  # don't allow own root to be put to self

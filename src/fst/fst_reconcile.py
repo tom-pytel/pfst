@@ -409,13 +409,13 @@ def reconcile(self: FST, mark: FST, **options) -> FST:
     >>> f.a.body[0].args.args[0].annotation = Name('float')
     >>> f.a.body[0].decorator_list[0] = FST('call_decorator(1, 2, 3)').a
     >>> f.a.body[1].name = 'last_function'  # can change non-AST
-    >>> f.a.body[1].body[0] = f.a.body[0].body[0]  # AST from same FST tree (preserves formatting)
+    >>> f.a.body[1].body[0] = f.a.body[0].body[0]  # AST from same FST tree
     >>> other = FST('def first_function(a, b): return a * b  # yay!')
-    >>> f.a.body.insert(0, other.a)  # AST from other FST tree (preserves formatting)
+    >>> f.a.body.insert(0, other.a)  # AST from other FST tree
 
     >>> f = f.reconcile(m, pep8space=1)
 
-    >>> print('\n'.join(l or '.' for l in f.lines))  # we print like this because of doctest
+    >>> print('\n'.join(l or '.' for l in f.lines))  # print this way for doctest
     def first_function(a, b): return a * b  # yay!
     .
     @call_decorator(1, 2, 3)  # something

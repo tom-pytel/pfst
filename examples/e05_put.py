@@ -23,7 +23,8 @@ TODO: Fix trailing newlines, will also remove need for `rstrip()` in other parts
 >>> FST.new().body.append(['i = 1']).root.src
 'i = 1\n'
 
->>> FST.new().body.append(Assign(targets=[Name(id='i')], value=Constant(value=1))).root.src
+>>> FST.new().body.append(Assign(targets=[Name(id='i')],
+...                              value=Constant(value=1))).root.src
 'i = 1\n'
 
 >>> FST.new().body.append(FST('i = 1')).root.src
