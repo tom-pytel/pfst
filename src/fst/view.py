@@ -159,7 +159,7 @@ class fstview:
 
         if isinstance(idx, str):
             if not (a := get_func_class_or_ass_by_name(getattr(self.fst.a, self.field)[self.start : self.stop], idx)):
-                raise IndexError(f"function or class '{idx}' not found")
+                raise IndexError(f"function, class or variable '{idx}' not found")
 
             return a.f
 

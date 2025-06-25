@@ -370,7 +370,7 @@ def mark(self: 'FST') -> 'FST':
     return mark
 
 def reconcile(self: 'FST', mark: 'FST', **options) -> 'FST':
-    """Reconcile `self` with a previously marked version and return a new valid `FST` tree. This is meant for allowing
+    r"""Reconcile `self` with a previously marked version and return a new valid `FST` tree. This is meant for allowing
     non-FST modifications to an `FST` tree and later converting it to a valid `FST` tree to preserve as much formatting
     as possible and maybe continue operating in `FST` land. Only `AST` nodes from the original tree carry formatting
     information, so the more of those are replaced the more formatting is lost.
@@ -412,31 +412,35 @@ def reconcile(self: 'FST', mark: 'FST', **options) -> 'FST':
     >>> f.a.body.insert(0, other.a)  # AST from other FST tree (preserves formatting)
 
     >>> f = f.reconcile(m, pep8space=1)
-    >>> for l in f.lines: print(repr(l))  # we show this way because of doctest
-    'def first_function(a, b): return a * b  # yay!'
-    ''
-    '@call_decorator(1, 2, 3)  # something'
-    'def function(a: float, b=2)->float:  # blah'
-    '    return a+b  # return this'
-    ''
-    'def last_function(a, b):'
-    '    return a+b  # return this'
-    ''
+
+    >>> print('\n'.join(l or '.' for l in f.lines))  # we print like this because of doctest
+    def first_function(a, b): return a * b  # yay!
+    .
+    @call_decorator(1, 2, 3)  # something
+    def function(a: float, b=2)->float:  # blah
+        return a+b  # return this
+    .
+    def last_function(a, b):
+        return a+b  # return this
+    .
 
     >>> m = f.mark()
+
     >>> body = f.a.body[1].body
     >>> f.a.body[1] = FST('def f(): pass').a
     >>> f.a.body[1].body = body
+
     >>> f = f.reconcile(m, pep8space=1)
-    >>> for l in f.lines: print(repr(l))
-    'def first_function(a, b): return a * b  # yay!'
-    ''
-    'def f():'
-    '    return a+b  # return this'
-    ''
-    'def last_function(a, b):'
-    '    return a+b  # return this'
-    ''
+
+    >>> print('\n'.join(l or '.' for l in f.lines))
+    def first_function(a, b): return a * b  # yay!
+    .
+    def f():
+        return a+b  # return this
+    .
+    def last_function(a, b):
+        return a+b  # return this
+    .
     ```
     """
 

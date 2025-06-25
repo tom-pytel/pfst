@@ -113,7 +113,7 @@ def _get_slice(self: 'FST', start: int | Literal['end'] | None, stop: int | None
 
 
 
-    elif (ast.__class__, field) in [
+    if (ast.__class__, field) in [
         (FunctionDef, 'decorator_list'),      # expr*
         (AsyncFunctionDef, 'decorator_list'), # expr*
         (ClassDef, 'decorator_list'),         # expr*
