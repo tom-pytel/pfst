@@ -1256,6 +1256,10 @@ class ReconcileRnd(Fuzzy):
                 elif repltype == 'ast':
                     repl, _ = self.master_parts.getrnd(allowed_cats)
 
+                    # if isinstance(repl.a, Is):  # DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG!
+                    #     print('\n...', f.parent.src)  # DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG!
+                    #     print('\n...', repl.parent.src)  # DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG!
+
                     if repl and can_replace(f, repl):
                         f.pfield.set(ast, a := copy_ast(repl.a))
 

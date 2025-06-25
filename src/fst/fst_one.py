@@ -642,30 +642,14 @@ def _put_one_op(self: FST, code: _PutOneCode, idx: int | None, field: str,
         elif not isinstance(codea, (Add, Sub)):  # otherwise MUST be BinOp
             raise NodeError("cannot put anything other than '+' or '-' to a pattern BinOp.op")
 
-    ln, col, end_ln, end_col = childf.loc
+    is_alnum = isinstance(codea, (Not, Is, IsNot, In, NotIn))  # alphanumneric operators may need spaces added
 
-    if is_alnum := isinstance(codea, (Not, Is, IsNot, In, NotIn)):  # alphanumneric operators may need spaces added
-        cln, ccol, cend_ln, cend_col = code.loc
-        lines                        = self.root._lines
-
-        if (cend_ln, cend_col) == code.whole_loc[2:] and re_alnum.match(lines[end_ln], end_col):  # insert space at end of operator?
-            code._put_src([' '], cend_ln, cend_col, cend_ln, cend_col, False)
-
-        if not cln and not ccol and col and re_alnum.match(lines[ln], col - 1):  # insert space at start of operator?
-            code._put_src([' '], 0, 0, 0, 0, False)
-        else:
-            is_alnum = False
-
-    self._put_src(code._lines, ln, col, end_ln, end_col, False)
+    self._put_src(code._lines, *childf.loc, False)
     childf._set_ast(codea)
 
     ast = self.a
 
-    if is_alnum:
-        if isinstance(ast, UnaryOp):  # the beginning of this will not have been offset correctly if a leading space was added to the Not operator
-            ast.col_offset += 1
-
-    elif (is_bin := isinstance(ast, BinOp)) or isinstance(ast, UnaryOp):  # parenthesize if precedence requires according to new operator
+    if (is_bin := isinstance(ast, BinOp)) or isinstance(ast, UnaryOp):  # parenthesize if precedence requires according to new operator
         if (parent := self.parent) and precedence_require_parens(ast, parent.a, *self.pfield) and not self.pars().n:
             self._parenthesize_grouping()
 
@@ -679,6 +663,16 @@ def _put_one_op(self: FST, code: _PutOneCode, idx: int | None, field: str,
 
             if precedence_require_parens(right := ast.right, ast, 'right') and not (f := right.f).pars().n:
                 f._parenthesize_grouping()
+
+    if is_alnum:  # we do this after parenthesization because it can remove the need for spaces
+        ln, col, end_ln, end_col = get_field(ast, field, idx).f.loc
+        lines                    = self.root._lines
+
+        if re_alnum.match(lines[end_ln], end_col):  # insert space at end of operator?
+            self._put_src([' '], end_ln, end_col, end_ln, end_col, False)
+
+        if col and re_alnum.match(lines[ln], col - 1):  # insert space at start of operator? don't need to offset head because operator doesn't have `col_offset`
+            self._put_src([' '], ln, col, ln, col, False)
 
     return childf
 

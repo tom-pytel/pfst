@@ -9902,6 +9902,11 @@ a
         self.assertEqual('a not in b', f.src)
         f.verify()
 
+        f = FST('1 is-1')  # this one was annoying
+        f.comparators[0].op.replace('not')
+        self.assertEqual('1 is(not 1)', f.src)
+        f.verify()
+
         # update AnnAssign.simple
 
         f = FST('a.b: int')
