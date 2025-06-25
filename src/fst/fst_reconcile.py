@@ -1,7 +1,9 @@
 """Reconcile."""
 
+from __future__ import annotations
+
 from ast import *
-from typing import Any, Literal, Optional, Union
+from typing import Any, Literal
 
 from .astutil import *
 from .misc import NodeError, astfield
@@ -14,12 +16,12 @@ class _Reconcile:
     """The strategy is to make a copy of the original tree (mark) and then mutate it node by node according to the
     changes detected between the working tree and the marked reference tree."""
 
-    options: dict   ; """The options to use for the put operations."""
-    work:    'FST'  ; """The `FST` tree that was operated on and will have `AST` replacements."""
-    mark:    'FST'  ; """The marked `FST` tree to use as reference."""
-    out:     'FST'  ; """The output `FST` tree to build up and return."""
+    options: dict  ; """The options to use for the put operations."""
+    work:    FST   ; """The `FST` tree that was operated on and will have `AST` replacements."""
+    mark:    FST   ; """The marked `FST` tree to use as reference."""
+    out:     FST   ; """The output `FST` tree to build up and return."""
 
-    def __init__(self, work: 'FST', mark: 'FST', options: dict[str, Any] = {}):
+    def __init__(self, work: FST, mark: FST, options: dict[str, Any] = {}):
         if 'raw' in options:
             raise ValueError("cannot use reconcile with 'raw' option")
 
@@ -28,13 +30,13 @@ class _Reconcile:
         self.mark    = mark
         self.out     = mark.copy()
 
-    def put_node(self, code: Union['FST', AST], out_parent: Optional['FST'] = None, pfield: astfield | None = None):
+    def put_node(self, code: FST | AST, out_parent: FST | None = None, pfield: astfield | None = None):
         if out_parent:
             out_parent.put(code, pfield.idx, False, pfield.name, raw=False, **self.options)
         else:  # because can replace AST at root node which has out_parent=None
             self.out.replace(code, raw=False, **self.options)
 
-    def recurse_slice_dict(self, node: AST, outf: Optional['FST']):
+    def recurse_slice_dict(self, node: AST, outf: FST | None):
         """Recurse into a combined slice of a Dict's keys and values using slice operations to copy over formatting
         where possible (if not already there). Can be recursing an in-tree FST parent or a pure AST parent."""
 
@@ -143,7 +145,7 @@ class _Reconcile:
         if start < len(outa_keys):  # delete tail in output, doesn't happen if coming from AST
             outf.put_slice(None, start, None, None, raw=False, **self.options)
 
-    def recurse_slice(self, node: AST, outf: Optional['FST'], field: str, body: list[AST]):
+    def recurse_slice(self, node: AST, outf: FST | None, field: str, body: list[AST]):
         """Recurse into a slice of children using slice operations to copy over formatting where possible (if not
         already there). Can be recursing an in-tree FST parent or a pure AST parent."""
 
@@ -286,7 +288,7 @@ class _Reconcile:
                     self.recurse_node(c, astfield(field, i), outf, nodef)
 
     def recurse_node(self, node: AST, pfield: astfield | None = None,
-                     out_parent: Optional['FST'] = None, node_parent: Optional['FST'] | Literal[False] = None):
+                     out_parent: FST | None = None, node_parent: FST | None | Literal[False] = None):
         """Recurse from either an in-tree known `FST` node or from a pure `AST` put somewhere above. The two situations
         are slightly different in the following ways:
 
@@ -352,7 +354,7 @@ class _Reconcile:
 
 # ----------------------------------------------------------------------------------------------------------------------
 
-def mark(self: 'FST') -> 'FST':
+def mark(self: FST) -> FST:
     """Return an object marking the current state of this `FST` tree. Used to `reconcile()` later for non-FST operation
     changes made (changing `AST` nodes directly). Currently is just a copy of the original tree but may change in the
     future.
@@ -369,7 +371,7 @@ def mark(self: 'FST') -> 'FST':
 
     return mark
 
-def reconcile(self: 'FST', mark: 'FST', **options) -> 'FST':
+def reconcile(self: FST, mark: FST, **options) -> FST:
     r"""Reconcile `self` with a previously marked version and return a new valid `FST` tree. This is meant for allowing
     non-FST modifications to an `FST` tree and later converting it to a valid `FST` tree to preserve as much formatting
     as possible and maybe continue operating in `FST` land. Only `AST` nodes from the original tree carry formatting

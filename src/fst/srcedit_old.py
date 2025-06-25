@@ -1,7 +1,8 @@
-"""Source location editing stuff."""
+"""Old source location editing stuff, needs to be moved into fst_slice."""
+
+from __future__ import annotations
 
 from ast import *
-from typing import Optional, Union
 
 from .astutil import bistr
 from .misc import (
@@ -17,9 +18,9 @@ class SrcEdit:
     """This class controls most source editing behavior."""
 
     def _fixup_expr_seq_bound(self, lines: list[str], seq_loc: fstloc,
-                            fpre: Union['FST', fstloc, None], fpost: Union['FST', fstloc, None],
-                            flast: Union['FST', fstloc, None],
-                            ) -> tuple[fstloc, Union['FST', fstloc, None], Union['FST', fstloc, None]] | None:
+                              fpre: FST | fstloc | None, fpost: FST | fstloc | None,
+                              flast: FST | fstloc | None,
+                              ) -> tuple[fstloc, FST | fstloc | None, FST | fstloc | None] | None:
         """Depending on existence preceding or following expressions and a full sequence location, return a bound
         `fstloc` that represents a search space in the source for commas and parenteses and the like. Will exclude any
         closing parentheses belonging to `fpre` and any opening parenthese belonging to `fpost` from the bound."""
@@ -299,9 +300,9 @@ class SrcEdit:
 
         return (bound_ln, bound_end_col) if bound_ln == bound_end_ln else (bound_ln + 1, 0)
 
-    def get_slice_seq(self, fst: 'FST', cut: bool, seq_loc: fstloc,
-                      ffirst: Union['FST', fstloc], flast: Union['FST', fstloc],
-                      fpre: Union['FST', fstloc, None], fpost: Union['FST', fstloc, None],
+    def get_slice_seq(self, fst: FST, cut: bool, seq_loc: fstloc,
+                      ffirst: FST | fstloc, flast: FST | fstloc,
+                      fpre: FST | fstloc | None, fpost: FST | fstloc | None,
     ) -> tuple[fstloc, fstloc | None, list[str] | None]:  # (copy_loc, del/put_loc, put_lines)
         """Copy or cut from comma delimited sequence.
 
@@ -343,10 +344,10 @@ class SrcEdit:
 
         return copy_loc, del_loc, None
 
-    def put_slice_seq(self, fst: 'FST', put_fst: Optional['FST'], indent: str, seq_loc: fstloc,
-                      ffirst: Union['FST', fstloc, None], flast: Union['FST', fstloc, None],
-                      fpre: Union['FST', fstloc, None], fpost: Union['FST', fstloc, None],
-                      pfirst: Union['FST', fstloc, None], plast: Union['FST', fstloc, None],
+    def put_slice_seq(self, fst: FST, put_fst: FST | None, indent: str, seq_loc: fstloc,
+                      ffirst: FST | fstloc | None, flast: FST | fstloc | None,
+                      fpre: FST | fstloc | None, fpost: FST | fstloc | None,
+                      pfirst: FST | fstloc | None, plast: FST | fstloc | None,
     ) -> fstloc:  # del_loc
         """Put to comma delimited sequence.
 
@@ -443,8 +444,8 @@ class SrcEdit:
 
         return del_loc
 
-    def get_slice_stmt(self, fst: 'FST', field: str, cut: bool, block_loc: fstloc,  # TODO: clean this up
-                       ffirst: 'FST', flast: 'FST', fpre: Optional['FST'], fpost: Optional['FST'], *,
+    def get_slice_stmt(self, fst: FST, field: str, cut: bool, block_loc: fstloc,  # TODO: clean this up
+                       ffirst: FST, flast: FST, fpre: FST | None, fpost: FST | None, *,
                        del_else_and_fin: bool = True, ret_all: bool = False, **options,
     ) -> tuple[fstloc, fstloc | None, list[str] | None]:  # (copy_loc, del/put_loc, put_lines)
         """Copy or cut from block of statements. If cutting all elements from a deletable field like 'orelse' or
@@ -715,8 +716,8 @@ class SrcEdit:
 
         return copy_loc, del_loc, put_lines
 
-    def _format_space(self, fst: 'FST', put_fst: 'FST',
-                      block_loc: fstloc, put_loc: fstloc, fpre: Optional['FST'], fpost: Optional['FST'],
+    def _format_space(self, fst: FST, put_fst: FST,
+                      block_loc: fstloc, put_loc: fstloc, fpre: FST | None, fpost: FST | None,
                       del_lines: list[str] | None, is_ins: bool, **options):
         """Add preceding and trailing newlines as needed. We always insert statements (or blocks of them) as their own
         lines but may also add newlines according to PEP8."""
@@ -804,9 +805,9 @@ class SrcEdit:
 
         put_fst._touch()
 
-    def put_slice_stmt(self, fst: 'FST', put_fst: 'FST', field: str,
+    def put_slice_stmt(self, fst: FST, put_fst: FST, field: str,
                        block_loc: fstloc, opener_indent: str, block_indent: str,
-                       ffirst: 'FST', flast: 'FST', fpre: Optional['FST'], fpost: Optional['FST'], **options,
+                       ffirst: FST, flast: FST, fpre: FST | None, fpost: FST | None, **options,
     ) -> fstloc:  # put_loc
         """Put to block of statements(ish). Calculates put location and modifies `put_fst` as necessary to create proper
         code. The "ish" in statemnents means this can be used to put `ExceptHandler`s to a 'handlers' field or

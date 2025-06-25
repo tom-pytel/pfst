@@ -1,11 +1,12 @@
 """Get and put single node."""
 
-import re
+from __future__ import annotations
+
 import sys
 from ast import *
 from itertools import takewhile
 from types import FunctionType, NoneType
-from typing import Callable, NamedTuple, Optional, Union
+from typing import Callable, NamedTuple, Union
 
 from .astutil import *
 from .astutil import TypeAlias, TryStar, TypeVar, ParamSpec, TypeVarTuple, TemplateStr, Interpolation
@@ -28,11 +29,11 @@ _PY_VERSION = sys.version_info[:2]
 _PYLT11     = _PY_VERSION < (3, 11)
 _PYLT12     = _PY_VERSION < (3, 12)
 
-_GetOneRet       = Optional['FST'] | str | constant
+_GetOneRet       = Union['FST', None, str, constant]
 _PutOneCode      = Code | str | constant | None
 
 
-def _params_Compare_combined(self: 'FST', idx: int | None) -> tuple[int, str, AST | list[AST]]:
+def _params_Compare_combined(self: FST, idx: int | None) -> tuple[int, str, AST | list[AST]]:
     ast         = self.a
     comparators = ast.comparators
     idx         = _fixup_one_index(len(comparators) + 1, idx)
@@ -43,7 +44,7 @@ def _params_Compare_combined(self: 'FST', idx: int | None) -> tuple[int, str, AS
 # ----------------------------------------------------------------------------------------------------------------------
 # get
 
-def _validate_get(self: 'FST', idx: int | None, field: str) -> AST | None:
+def _validate_get(self: FST, idx: int | None, field: str) -> AST | None:
     """Check that `idx` was passed (or not) as needed."""
 
     child = getattr(self.a, field)
@@ -64,7 +65,7 @@ def _validate_get(self: 'FST', idx: int | None, field: str) -> AST | None:
 
 # ......................................................................................................................
 
-def _get_one_default(self: 'FST', idx: int | None, field: str, cut: bool, **options) -> _GetOneRet:
+def _get_one_default(self: FST, idx: int | None, field: str, cut: bool, **options) -> _GetOneRet:
     child, idx = _validate_get(self, idx, field)
     childf     = child.f
     loc        = childf.pars() if self.get_option('pars', options) is True else childf.bloc
@@ -79,31 +80,31 @@ def _get_one_default(self: 'FST', idx: int | None, field: str, cut: bool, **opti
     return ret
 
 
-def _get_one_stmtish(self: 'FST', idx: int | None, field: str, cut: bool, **options) -> _GetOneRet:
+def _get_one_stmtish(self: FST, idx: int | None, field: str, cut: bool, **options) -> _GetOneRet:
     _, idx = _validate_get(self, idx, field)
 
     return self._get_slice_stmtish(idx, idx + 1, field, cut=cut, one=True, **options)
 
 
-def _get_one_ctx(self: 'FST', idx: int | None, field: str, cut: bool, **options) -> _GetOneRet:
+def _get_one_ctx(self: FST, idx: int | None, field: str, cut: bool, **options) -> _GetOneRet:
     child, _ = _validate_get(self, idx, field)
 
     return FST(child.__class__(), [bistr('')], from_=self, lcopy=False)
 
 
-def _get_one_identifier(self: 'FST', idx: int | None, field: str, cut: bool, **options) -> _GetOneRet:
+def _get_one_identifier(self: FST, idx: int | None, field: str, cut: bool, **options) -> _GetOneRet:
     child, _ = _validate_get(self, idx, field)
 
     return child
 
 
-def _get_one_constant(self: 'FST', idx: int | None, field: str, cut: bool, **options) -> _GetOneRet:
+def _get_one_constant(self: FST, idx: int | None, field: str, cut: bool, **options) -> _GetOneRet:
     child, _ = _validate_get(self, idx, field)
 
     return child
 
 
-def _get_one_arguments(self: 'FST', idx: int | None, field: str, cut: bool, **options) -> _GetOneRet:
+def _get_one_arguments(self: FST, idx: int | None, field: str, cut: bool, **options) -> _GetOneRet:
     if not self.a.args.f._is_arguments_empty():
         return _get_one_default(self, idx, field, cut, **options)
 
@@ -112,24 +113,24 @@ def _get_one_arguments(self: 'FST', idx: int | None, field: str, cut: bool, **op
     return FST(arguments(posonlyargs=[], args=[], kwonlyargs=[], kw_defaults=[], defaults=[]), [''], from_=self)
 
 
-def _get_one_BoolOp_op(self: 'FST', idx: int | None, field: str, cut: bool, **options) -> _GetOneRet:
+def _get_one_BoolOp_op(self: FST, idx: int | None, field: str, cut: bool, **options) -> _GetOneRet:
     child, _ = _validate_get(self, idx, field)
 
     return FST(And(), ['and'], from_=self) if isinstance(child, And) else FST(Or(), ['or'], from_=self)  # just create new ones because they can be in multiple places
 
 
-def _get_one_Compare_combined(self: 'FST', idx: int | None, field: str, cut: bool, **options) -> _GetOneRet:
+def _get_one_Compare_combined(self: FST, idx: int | None, field: str, cut: bool, **options) -> _GetOneRet:
     idx, _, child = _params_Compare_combined(self, idx)
 
     return child.f if idx is None else child[idx].f
 
 
-def _get_one_invalid_combined(self: 'FST', idx: int | None, field: str, cut: bool, **options) -> _GetOneRet:
+def _get_one_invalid_combined(self: FST, idx: int | None, field: str, cut: bool, **options) -> _GetOneRet:
     raise ValueError(f'cannot get single element from combined field of {self.a.__class__.__name__}')
 
 
 if _PYLT12:
-    def _get_one_FormattedValue_value(self: 'FST', idx: int | None, field: str, cut: bool, **options) -> _GetOneRet:
+    def _get_one_FormattedValue_value(self: FST, idx: int | None, field: str, cut: bool, **options) -> _GetOneRet:
         """Correct for py < 3.12 returning value unparenthesized tuple with `FormattedValue` curlies as delimiters."""
 
         ret = _get_one_default(self, idx, field, cut, **options)
@@ -145,21 +146,21 @@ if _PYLT12:
         return ret
 
 
-    def _get_one_conversion(self: 'FST', idx: int | None, field: str, cut: bool, **options) -> _GetOneRet:
+    def _get_one_conversion(self: FST, idx: int | None, field: str, cut: bool, **options) -> _GetOneRet:
         raise NotImplementedError('get FormattedValue.conversion not implemented on python < 3.12')
 
 
-    def _get_one_format_spec(self: 'FST', idx: int | None, field: str, cut: bool, **options) -> _GetOneRet:
+    def _get_one_format_spec(self: FST, idx: int | None, field: str, cut: bool, **options) -> _GetOneRet:
         raise NotImplementedError('get FormattedValue.format_spec not implemented on python < 3.12')
 
 
-    def _get_one_JoinedStr_TemplateStr_values(self: 'FST', idx: int | None, field: str, cut: bool, **options,
+    def _get_one_JoinedStr_TemplateStr_values(self: FST, idx: int | None, field: str, cut: bool, **options,
                                               ) -> _GetOneRet:
         raise NotImplementedError('get JoinedStr.values not implemented on python < 3.12')
 
 
 else:
-    def _get_one_conversion(self: 'FST', idx: int | None, field: str, cut: bool, **options) -> _GetOneRet:
+    def _get_one_conversion(self: FST, idx: int | None, field: str, cut: bool, **options) -> _GetOneRet:
         child, _ = _validate_get(self, idx, field)
 
         if child == -1:
@@ -171,7 +172,7 @@ else:
                    from_=self, lcopy=False)
 
 
-    def _get_one_format_spec(self: 'FST', idx: int | None, field: str, cut: bool, **options) -> _GetOneRet:
+    def _get_one_format_spec(self: FST, idx: int | None, field: str, cut: bool, **options) -> _GetOneRet:
         child, _ = _validate_get(self, idx, field)
         childf   = child.f
         ret      = childf._make_fst_and_dedent(childf, copy_ast(child), childf.loc, "f", "'",
@@ -187,7 +188,7 @@ else:
         return ret
 
 
-    def _get_one_JoinedStr_TemplateStr_values(self: 'FST', idx: int | None, field: str, cut: bool, **options) -> _GetOneRet:
+    def _get_one_JoinedStr_TemplateStr_values(self: FST, idx: int | None, field: str, cut: bool, **options) -> _GetOneRet:
         child, _      = _validate_get(self, idx, field)
         childf        = child.f
 
@@ -239,7 +240,7 @@ else:
 
 # ......................................................................................................................
 
-def _get_one(self: 'FST', idx: int | None, field: str, cut: bool, **options) -> _GetOneRet:
+def _get_one(self: FST, idx: int | None, field: str, cut: bool, **options) -> _GetOneRet:
     """Copy or cut (if possible) a node or non-node from a field of `self`."""
 
     ast = self.a
@@ -476,9 +477,9 @@ _GET_ONE_HANDLERS = {
 # put
 
 class onestatic(NamedTuple):
-    getinfo:  Callable[['FST', 'onestatic', int | None, str], 'oneinfo'] | None
+    getinfo:  Callable[[FST, onestatic, int | None, str], oneinfo] | None
     restrict: type[AST] | tuple[type[AST]] | list[type[AST]] | Callable[[AST], bool] | None = None
-    code_as:  Callable[[Code, dict], 'FST']                                                 = _code_as_expr
+    code_as:  Callable[[Code, dict], FST]                                                   = _code_as_expr
     ctx:      type[expr_context]                                                            = Load
 
 
@@ -490,7 +491,7 @@ class oneinfo(NamedTuple):
     delstr:      str           = ''    # or '**'
 
 
-def _validate_put(self: 'FST', code: Code | None, idx: int | None, field: str, child: list[AST] | AST | constant | None,
+def _validate_put(self: FST, code: Code | None, idx: int | None, field: str, child: list[AST] | AST | constant | None,
                   *, can_del: bool = False) -> AST | constant | None:
     """Check that `idx` was passed (or not) as needed and that not deleting if not possible."""
 
@@ -511,7 +512,7 @@ def _validate_put(self: 'FST', code: Code | None, idx: int | None, field: str, c
     return child
 
 
-def _validate_put_ast(self: 'FST', put_ast: AST, idx: int | None, field: str, static: onestatic):
+def _validate_put_ast(self: FST, put_ast: AST, idx: int | None, field: str, static: onestatic):
     if restrict := static.restrict:
         if isinstance(restrict, list):  # list means these types not allowed
             if isinstance(put_ast, tuple(restrict)):
@@ -531,7 +532,7 @@ def _validate_put_ast(self: 'FST', put_ast: AST, idx: int | None, field: str, st
                              f', got {put_ast.__class__.__name__}')
 
 
-def _validate_pattern_expr(self: 'FST'):
+def _validate_pattern_expr(self: FST):
     while True:
         if self.pars().n:
             raise NodeError(f'cannot put parenthesized {self.a.__class__.__name__} to pattern expression')
@@ -580,7 +581,7 @@ def _is_valid_MatchMapping_key(ast: AST) -> bool:
     return True
 
 
-def _maybe_par_above(above: 'FST', below: 'FST') -> bool:
+def _maybe_par_above(above: FST, below: FST) -> bool:
     while isinstance(a := below.a, (Attribute, Subscript)):
         if below.pars().n:
             above._parenthesize_grouping()
@@ -600,8 +601,8 @@ def _maybe_par_above(above: 'FST', below: 'FST') -> bool:
 # ......................................................................................................................
 # other
 
-def _put_one_constant(self: 'FST', code: _PutOneCode, idx: int | None, field: str, child: constant, static: onestatic,
-                      **options) -> 'FST':
+def _put_one_constant(self: FST, code: _PutOneCode, idx: int | None, field: str, child: constant, static: onestatic,
+                      **options) -> FST:
     """Put a single constant value, only Constant and MatchSingleton (and only exists because of the second one)."""
 
     _validate_put(self, code, idx, field, child, can_del=True)  # can_del so that None is accepted
@@ -623,9 +624,9 @@ def _put_one_constant(self: 'FST', code: _PutOneCode, idx: int | None, field: st
     return self  # this breaks the rule of returning the child node since it is just a primitive
 
 
-def _put_one_op(self: 'FST', code: _PutOneCode, idx: int | None, field: str,
+def _put_one_op(self: FST, code: _PutOneCode, idx: int | None, field: str,
                 child: type[boolop] | type[operator] | type[unaryop] | type[cmpop],
-                static: None, **options) -> 'FST':
+                static: None, **options) -> FST:
     """Put a single operator, with or without '=' for AugAssign, lots of rules to check."""
 
     child  = _validate_put(self, code, idx, field, child)
@@ -682,9 +683,9 @@ def _put_one_op(self: 'FST', code: _PutOneCode, idx: int | None, field: str,
     return childf
 
 
-def _put_one_ctx(self: 'FST', code: _PutOneCode, idx: int | None, field: str,
+def _put_one_ctx(self: FST, code: _PutOneCode, idx: int | None, field: str,
                  child: type[boolop] | type[operator] | type[unaryop] | type[cmpop],
-                 static: None, **options) -> 'FST':
+                 static: None, **options) -> FST:
     """This only exists to absorb the put and validate that it is the only value it can be."""
 
     child = _validate_put(self, code, idx, field, child)
@@ -700,8 +701,8 @@ def _put_one_ctx(self: 'FST', code: _PutOneCode, idx: int | None, field: str,
     return child.f
 
 
-def _put_one_AnnAssign_simple(self: 'FST', code: _PutOneCode, idx: int | None, field: str, child: int, static: onestatic,
-                              **options) -> 'FST':
+def _put_one_AnnAssign_simple(self: FST, code: _PutOneCode, idx: int | None, field: str, child: int, static: onestatic,
+                              **options) -> FST:
     """Parenthesize or unparenthesize `AnnAssign.value` according to this, overkill, definitely overkill."""
 
     ast   = self.a
@@ -727,8 +728,8 @@ def _put_one_AnnAssign_simple(self: 'FST', code: _PutOneCode, idx: int | None, f
     return self  # cannot return primitive
 
 
-def _put_one_BoolOp_op(self: 'FST', code: _PutOneCode, idx: int | None, field: str, child: type[boolop], static: None,
-                       **options) -> 'FST':
+def _put_one_BoolOp_op(self: FST, code: _PutOneCode, idx: int | None, field: str, child: type[boolop], static: None,
+                       **options) -> FST:
     """Put BoolOp op to potentially multiple places."""
 
     child  = _validate_put(self, code, idx, field, child)
@@ -761,23 +762,23 @@ def _put_one_BoolOp_op(self: 'FST', code: _PutOneCode, idx: int | None, field: s
 
 
 if _PYLT12:
-    def _put_one_NOT_IMPLEMENTED_YET(self: 'FST', code: _PutOneCode, idx: int | None, field: str, child: constant,
-                                     static: onestatic, **options) -> 'FST':
+    def _put_one_NOT_IMPLEMENTED_YET(self: FST, code: _PutOneCode, idx: int | None, field: str, child: constant,
+                                     static: onestatic, **options) -> FST:
         raise NotImplementedError('this will only be implemented on python version 3.12 and above')
 
 
 else:
-    def _put_one_NOT_IMPLEMENTED_YET(self: 'FST', code: _PutOneCode, idx: int | None, field: str, child: constant,
-                                     static: onestatic, **options) -> 'FST':
+    def _put_one_NOT_IMPLEMENTED_YET(self: FST, code: _PutOneCode, idx: int | None, field: str, child: constant,
+                                     static: onestatic, **options) -> FST:
         raise NodeError('this is not implemented yet')
 
 
 # ......................................................................................................................
 # exprish (expr, pattern, comprehension, etc...)
 
-def _make_exprish_fst(self: 'FST', code: _PutOneCode, idx: int | None, field: str, static: onestatic,
-                      target: Union['FST', fstloc], ctx: type[expr_context], prefix: str  = '', suffix: str = '',
-                      validated: int = 0, **options) -> 'FST':
+def _make_exprish_fst(self: FST, code: _PutOneCode, idx: int | None, field: str, static: onestatic,
+                      target: FST | fstloc, ctx: type[expr_context], prefix: str  = '', suffix: str = '',
+                      validated: int = 0, **options) -> FST:
     """Make an expression `FST` from `Code` for a field/idx containing an existing node creating a new one. Takes care
     of parenthesizing, indenting and offsetting."""
 
@@ -919,9 +920,9 @@ def _make_exprish_fst(self: 'FST', code: _PutOneCode, idx: int | None, field: st
     return put_fst
 
 
-def _put_one_exprish_required(self: 'FST', code: _PutOneCode, idx: int | None, field: str,
+def _put_one_exprish_required(self: FST, code: _PutOneCode, idx: int | None, field: str,
                               child: list[AST] | AST | None, static: onestatic, validated: int = 0,
-                              target: fstloc | None = None, prefix: str = '', **options) -> 'FST':
+                              target: fstloc | None = None, prefix: str = '', **options) -> FST:
     """Put a single required expression. Can be standalone or as part of sequence."""
 
     if not validated:
@@ -940,8 +941,8 @@ def _put_one_exprish_required(self: 'FST', code: _PutOneCode, idx: int | None, f
     return childf
 
 
-def _put_one_exprish_optional(self: 'FST', code: _PutOneCode, idx: int | None, field: str, child: AST,
-                              static: onestatic, validated: int = 0, **options) -> Optional['FST']:
+def _put_one_exprish_optional(self: FST, code: _PutOneCode, idx: int | None, field: str, child: AST,
+                              static: onestatic, validated: int = 0, **options) -> FST | None:
     """Put new, replace or delete an optional expression."""
 
     if not validated:
@@ -982,8 +983,8 @@ def _put_one_exprish_optional(self: 'FST', code: _PutOneCode, idx: int | None, f
     return put_fst
 
 
-def _put_one_FunctionDef_arguments(self: 'FST', code: _PutOneCode, idx: int | None, field: str, child: AST,
-                                   static: onestatic, **options) -> 'FST':
+def _put_one_FunctionDef_arguments(self: FST, code: _PutOneCode, idx: int | None, field: str, child: AST,
+                                   static: onestatic, **options) -> FST:
     """Put FunctionDef.arguments. Does not have location if there are no arguments."""
 
     return _put_one_exprish_required(self, code or '', idx, field, child, static,
@@ -991,8 +992,8 @@ def _put_one_FunctionDef_arguments(self: 'FST', code: _PutOneCode, idx: int | No
                                      **options)
 
 
-def _put_one_ClassDef_bases(self: 'FST', code: _PutOneCode, idx: int | None, field: str, child: AST, static: onestatic,
-                            **options) -> 'FST':
+def _put_one_ClassDef_bases(self: FST, code: _PutOneCode, idx: int | None, field: str, child: AST, static: onestatic,
+                            **options) -> FST:
     """Can't replace Starred base with non-Starred base after keywords."""
 
     child = _validate_put(self, code, idx, field, child)  # we want to do it in same order as all other puts
@@ -1006,8 +1007,8 @@ def _put_one_ClassDef_bases(self: 'FST', code: _PutOneCode, idx: int | None, fie
     return _put_one_exprish_required(self, code, idx, field, child, static, 2, **options)
 
 
-def _put_one_ClassDef_keywords(self: 'FST', code: _PutOneCode, idx: int | None, field: str, child: AST, static: onestatic,
-                               **options) -> 'FST':
+def _put_one_ClassDef_keywords(self: FST, code: _PutOneCode, idx: int | None, field: str, child: AST, static: onestatic,
+                               **options) -> FST:
     """Don't allow put of `**keyword` before `*arg`."""
 
     child = _validate_put(self, code, idx, field, child)  # we want to do it in same order as all other puts
@@ -1019,8 +1020,8 @@ def _put_one_ClassDef_keywords(self: 'FST', code: _PutOneCode, idx: int | None, 
     return _put_one_exprish_required(self, code, idx, field, child, static, 2, **options)
 
 
-def _put_one_AnnAssign_target(self: 'FST', code: _PutOneCode, idx: int | None, field: str, child: int, static: onestatic,
-                              **options) -> 'FST':
+def _put_one_AnnAssign_target(self: FST, code: _PutOneCode, idx: int | None, field: str, child: int, static: onestatic,
+                              **options) -> FST:
     """Update simple according to what was put."""
 
     ret = _put_one_exprish_required(self, code, idx, field, child, static, **options)
@@ -1030,8 +1031,8 @@ def _put_one_AnnAssign_target(self: 'FST', code: _PutOneCode, idx: int | None, f
     return ret
 
 
-def _put_one_ImportFrom_names(self: 'FST', code: _PutOneCode, idx: int | None, field: str, child: list[AST],
-                              static: onestatic, **options) -> 'FST':
+def _put_one_ImportFrom_names(self: FST, code: _PutOneCode, idx: int | None, field: str, child: list[AST],
+                              static: onestatic, **options) -> FST:
     """Disallow put star to list of multiple names and unparenthesize if star was put to single name."""
 
     child = _validate_put(self, code, idx, field, child)  # we want to do it in same order as all other puts
@@ -1049,8 +1050,8 @@ def _put_one_ImportFrom_names(self: 'FST', code: _PutOneCode, idx: int | None, f
     return ret
 
 
-def _put_one_BinOp_left_right(self: 'FST', code: _PutOneCode, idx: int | None, field: str, child: list[AST],
-                              static: onestatic, **options) -> 'FST':
+def _put_one_BinOp_left_right(self: FST, code: _PutOneCode, idx: int | None, field: str, child: list[AST],
+                              static: onestatic, **options) -> FST:
     """Disallow invalid constant changes in patterns."""
 
     child = _validate_put(self, code, idx, field, child)  # we want to do it in same order as all other puts
@@ -1072,8 +1073,8 @@ def _put_one_BinOp_left_right(self: 'FST', code: _PutOneCode, idx: int | None, f
     return _put_one_exprish_required(self, code, idx, field, child, static, 2, **options)
 
 
-def _put_one_UnaryOp_operand(self: 'FST', code: _PutOneCode, idx: int | None, field: str, child: list[AST],
-                             static: onestatic, **options) -> 'FST':
+def _put_one_UnaryOp_operand(self: FST, code: _PutOneCode, idx: int | None, field: str, child: list[AST],
+                             static: onestatic, **options) -> FST:
     """Disallow invalid constant changes in patterns."""
 
     child = _validate_put(self, code, idx, field, child)  # we want to do it in same order as all other puts
@@ -1089,8 +1090,8 @@ def _put_one_UnaryOp_operand(self: 'FST', code: _PutOneCode, idx: int | None, fi
     return _put_one_exprish_required(self, code, idx, field, child, static, 2, **options)
 
 
-def _put_one_with_items(self: 'FST', code: _PutOneCode, idx: int | None, field: str, child: AST, static: onestatic,
-                        **options) -> 'FST':
+def _put_one_with_items(self: FST, code: _PutOneCode, idx: int | None, field: str, child: AST, static: onestatic,
+                        **options) -> FST:
     ret = _put_one_exprish_required(self, code, idx, field, child, static, **options)
 
     self._maybe_fix_with_items()
@@ -1098,8 +1099,8 @@ def _put_one_with_items(self: 'FST', code: _PutOneCode, idx: int | None, field: 
     return ret
 
 
-def _put_one_Lambda_arguments(self: 'FST', code: _PutOneCode, idx: int | None, field: str, child: AST,
-                              static: onestatic, **options) -> 'FST':
+def _put_one_Lambda_arguments(self: FST, code: _PutOneCode, idx: int | None, field: str, child: AST,
+                              static: onestatic, **options) -> FST:
     """Put Lambda.arguments. Does not have location if there are no arguments."""
 
     if code is None:
@@ -1113,8 +1114,8 @@ def _put_one_Lambda_arguments(self: 'FST', code: _PutOneCode, idx: int | None, f
     return _put_one_exprish_required(self, code, idx, field, child, static, 1, target, prefix, **options)
 
 
-def _put_one_Compare_combined(self: 'FST', code: _PutOneCode, idx: int | None, field: str, child: AST,
-                              static: onestatic, **options) -> 'FST':
+def _put_one_Compare_combined(self: FST, code: _PutOneCode, idx: int | None, field: str, child: AST,
+                              static: onestatic, **options) -> FST:
     """Put to combined [Compare.left, Compare.comparators] using this total indexing."""
 
     idx, field, child = _params_Compare_combined(self, idx)
@@ -1122,8 +1123,8 @@ def _put_one_Compare_combined(self: 'FST', code: _PutOneCode, idx: int | None, f
     return _put_one_exprish_required(self, code, idx, field, child, static, **options)
 
 
-def _put_one_Call_args(self: 'FST', code: _PutOneCode, idx: int | None, field: str, child: AST, static: onestatic,
-                       **options) -> 'FST':
+def _put_one_Call_args(self: FST, code: _PutOneCode, idx: int | None, field: str, child: AST, static: onestatic,
+                       **options) -> FST:
     """Can't replace Starred arg with non-Starred arg after keywords."""
 
     child = _validate_put(self, code, idx, field, child)  # we want to do it in same order as all other puts
@@ -1137,8 +1138,8 @@ def _put_one_Call_args(self: 'FST', code: _PutOneCode, idx: int | None, field: s
     return _put_one_exprish_required(self, code, idx, field, child, static, 2, **options)
 
 
-def _put_one_Call_keywords(self: 'FST', code: _PutOneCode, idx: int | None, field: str, child: AST, static: onestatic,
-                           **options) -> 'FST':
+def _put_one_Call_keywords(self: FST, code: _PutOneCode, idx: int | None, field: str, child: AST, static: onestatic,
+                           **options) -> FST:
     """Don't allow put of `**keyword` before `*arg`."""
 
     child = _validate_put(self, code, idx, field, child)  # we want to do it in same order as all other puts
@@ -1150,8 +1151,8 @@ def _put_one_Call_keywords(self: 'FST', code: _PutOneCode, idx: int | None, fiel
     return _put_one_exprish_required(self, code, idx, field, child, static, 2, **options)
 
 
-def _put_one_Attribute_value(self: 'FST', code: _PutOneCode, idx: int | None, field: str, child: AST,
-                             static: onestatic, **options) -> 'FST':
+def _put_one_Attribute_value(self: FST, code: _PutOneCode, idx: int | None, field: str, child: AST,
+                             static: onestatic, **options) -> FST:
     """If this gets parenthesized in an `AnnAssign` then the whole `AnnAssign` target needs to be parenthesized. Also
     need to make sure only unparenthesized `Name` or `Attribute` is put to one of these in `pattern` expression."""
 
@@ -1188,8 +1189,8 @@ def _put_one_Attribute_value(self: 'FST', code: _PutOneCode, idx: int | None, fi
     return ret
 
 
-def _put_one_Subscript_value(self: 'FST', code: _PutOneCode, idx: int | None, field: str, child: AST,
-                             static: onestatic, **options) -> 'FST':
+def _put_one_Subscript_value(self: FST, code: _PutOneCode, idx: int | None, field: str, child: AST,
+                             static: onestatic, **options) -> FST:
     """If this gets parenthesized in an AnnAssign then the whole AnnAssign target needs to be parenthesized."""
 
     ret   = _put_one_exprish_required(self, code, idx, field, child, static, **options)
@@ -1210,8 +1211,8 @@ def _put_one_Subscript_value(self: 'FST', code: _PutOneCode, idx: int | None, fi
     return ret
 
 
-def _put_one_Subscript_slice(self: 'FST', code: _PutOneCode, idx: int | None, field: str, child: AST,  # py < 3.11
-                             static: onestatic, **options) -> 'FST':
+def _put_one_Subscript_slice(self: FST, code: _PutOneCode, idx: int | None, field: str, child: AST,  # py < 3.11
+                             static: onestatic, **options) -> FST:
     """Don't allow put unparenthesized tuple containing Starred."""
 
     child = _validate_put(self, code, idx, field, child)  # we want to do it in same order as all other puts
@@ -1226,8 +1227,8 @@ if not _PYLT11:
     _put_one_Subscript_slice = _put_one_exprish_required
 
 
-def _put_one_List_elts(self: 'FST', code: _PutOneCode, idx: int | None, field: str, child: list[AST],
-                       static: onestatic, **options) -> 'FST':
+def _put_one_List_elts(self: FST, code: _PutOneCode, idx: int | None, field: str, child: list[AST],
+                       static: onestatic, **options) -> FST:
     """Disallow non-targetable expressions in targets."""
 
     child = _validate_put(self, code, idx, field, child)  # we want to do it in same order as all other puts
@@ -1241,8 +1242,8 @@ def _put_one_List_elts(self: 'FST', code: _PutOneCode, idx: int | None, field: s
     return _put_one_exprish_required(self, code, idx, field, child, static, 2, **options)
 
 
-def _put_one_Tuple_elts(self: 'FST', code: _PutOneCode, idx: int | None, field: str, child: list[AST],
-                        static: onestatic, **options) -> 'FST':
+def _put_one_Tuple_elts(self: FST, code: _PutOneCode, idx: int | None, field: str, child: list[AST],
+                        static: onestatic, **options) -> FST:
     """Disallow non-targetable expressions in targets. If not an unparenthesized top level or slice tuple then disallow
     Slices."""
 
@@ -1273,8 +1274,8 @@ def _put_one_Tuple_elts(self: 'FST', code: _PutOneCode, idx: int | None, field: 
     return ret
 
 
-def _put_one_Dict_keys(self: 'FST', code: _PutOneCode, idx: int | None, field: str, child: AST,
-                       static: onestatic, **options) -> 'FST':
+def _put_one_Dict_keys(self: FST, code: _PutOneCode, idx: int | None, field: str, child: AST,
+                       static: onestatic, **options) -> FST:
     """Put optional dict key and if deleted parenthesize the value if needed."""
 
     ret = _put_one_exprish_optional(self, code, idx, field, child, static, **options)
@@ -1287,8 +1288,8 @@ def _put_one_Dict_keys(self: 'FST', code: _PutOneCode, idx: int | None, field: s
     return ret
 
 
-def _put_one_arg(self: 'FST', code: _PutOneCode, idx: int | None, field: str, child: AST, static: onestatic, **options,
-                 ) -> 'FST':
+def _put_one_arg(self: FST, code: _PutOneCode, idx: int | None, field: str, child: AST, static: onestatic, **options,
+                 ) -> FST:
     """Don't allow arg with Starred annotation into non-vararg args."""
 
     child = _validate_put(self, code, idx, field, child)  # we want to do it in same order as all other puts
@@ -1300,8 +1301,8 @@ def _put_one_arg(self: 'FST', code: _PutOneCode, idx: int | None, field: str, ch
     return _put_one_exprish_required(self, code, idx, field, child, static, 2, **options)
 
 
-def _put_one_arg_annotation(self: 'FST', code: _PutOneCode, idx: int | None, field: str, child: AST,  # py >= 3.11
-                            static: onestatic, **options) -> 'FST':
+def _put_one_arg_annotation(self: FST, code: _PutOneCode, idx: int | None, field: str, child: AST,  # py >= 3.11
+                            static: onestatic, **options) -> FST:
     """Allow Starred in vararg arg annotation in py 3.11+."""
 
     if not self.parent or self.pfield.name == 'vararg':
@@ -1313,7 +1314,7 @@ if _PYLT11:
     _put_one_arg_annotation = _put_one_exprish_optional  # this leaves the _restrict_default in the static which disallows Starred
 
 
-def _put_one_withitem_context_expr(self: 'FST', code: _PutOneCode, idx: int | None, field: str, child: str,
+def _put_one_withitem_context_expr(self: FST, code: _PutOneCode, idx: int | None, field: str, child: str,
                                    static: onestatic, **options) -> str:
     """If put a single context_expr `Tuple` with no optional_vars then need to add grouping parentheses if not present
     otherwise the tuple will be reparsed as multiple `withitems` instead of a single `Tuple`."""
@@ -1326,7 +1327,7 @@ def _put_one_withitem_context_expr(self: 'FST', code: _PutOneCode, idx: int | No
     return ret
 
 
-def _put_one_withitem_optional_vars(self: 'FST', code: _PutOneCode, idx: int | None, field: str, child: str,
+def _put_one_withitem_optional_vars(self: FST, code: _PutOneCode, idx: int | None, field: str, child: str,
                                     static: onestatic, **options) -> str:
     """If delete leaves a single parenthesized context_expr `Tuple` then need to parenthesize that, otherwise it can be
     reparsed as multiple `withitems` instead of a single `Tuple`."""
@@ -1339,8 +1340,8 @@ def _put_one_withitem_optional_vars(self: 'FST', code: _PutOneCode, idx: int | N
     return ret
 
 
-def _put_one_MatchValue_value(self: 'FST', code: _PutOneCode, idx: int | None, field: str, child: AST,
-                              static: onestatic, **options) -> 'FST':
+def _put_one_MatchValue_value(self: FST, code: _PutOneCode, idx: int | None, field: str, child: AST,
+                              static: onestatic, **options) -> FST:
     """Put MatchValue.value. Need to do this because a standalone MatchValue does not encompass parenthesized value
     parentheses."""
 
@@ -1355,8 +1356,8 @@ def _put_one_MatchValue_value(self: 'FST', code: _PutOneCode, idx: int | None, f
     return ret
 
 
-def _put_one_MatchAs_pattern(self: 'FST', code: _PutOneCode, idx: int | None, field: str, child: AST,
-                             static: onestatic, **options) -> 'FST':
+def _put_one_MatchAs_pattern(self: FST, code: _PutOneCode, idx: int | None, field: str, child: AST,
+                             static: onestatic, **options) -> FST:
     """Enclose unenclosed MatchSequences being put here, if any."""
 
     child = _validate_put(self, code, idx, field, child, can_del=True)  # we want to do it in same order as all other puts
@@ -1373,8 +1374,8 @@ def _put_one_MatchAs_pattern(self: 'FST', code: _PutOneCode, idx: int | None, fi
     return _put_one_exprish_optional(self, code, idx, field, child, static, 2, **options)
 
 
-def _put_one_pattern(self: 'FST', code: _PutOneCode, idx: int | None, field: str, child: AST, static: onestatic,
-                      **options) -> 'FST':
+def _put_one_pattern(self: FST, code: _PutOneCode, idx: int | None, field: str, child: AST, static: onestatic,
+                      **options) -> FST:
     """Enclose unenclosed MatchSequences being put here."""
 
     child = _validate_put(self, code, idx, field, child)  # we want to do it in same order as all other puts
@@ -1393,7 +1394,7 @@ def _put_one_pattern(self: 'FST', code: _PutOneCode, idx: int | None, field: str
 # ......................................................................................................................
 # identifier
 
-def _put_one_identifier_required(self: 'FST', code: _PutOneCode, idx: int | None, field: str, child: str,
+def _put_one_identifier_required(self: FST, code: _PutOneCode, idx: int | None, field: str, child: str,
                                  static: onestatic, **options) -> str:
     """Put a single required identifier."""
 
@@ -1408,7 +1409,7 @@ def _put_one_identifier_required(self: 'FST', code: _PutOneCode, idx: int | None
     return code
 
 
-def _put_one_identifier_optional(self: 'FST', code: _PutOneCode, idx: int | None, field: str, child: AST,
+def _put_one_identifier_optional(self: FST, code: _PutOneCode, idx: int | None, field: str, child: AST,
                                  static: onestatic, **options) -> _PutOneCode:
     """Put new, replace or delete an optional identifier."""
 
@@ -1447,7 +1448,7 @@ def _put_one_identifier_optional(self: 'FST', code: _PutOneCode, idx: int | None
     return code
 
 
-def _put_one_ExceptHandler_name(self: 'FST', code: _PutOneCode, idx: int | None, field: str, child: str,
+def _put_one_ExceptHandler_name(self: FST, code: _PutOneCode, idx: int | None, field: str, child: str,
                                 static: onestatic, **options) -> str:
     """If adding a name to an ExceptHandler with tuple of exceptions then make sure it is parenthesized."""
 
@@ -1459,7 +1460,7 @@ def _put_one_ExceptHandler_name(self: 'FST', code: _PutOneCode, idx: int | None,
     return ret
 
 
-def _put_one_keyword_arg(self: 'FST', code: _PutOneCode, idx: int | None, field: str, child: str,
+def _put_one_keyword_arg(self: FST, code: _PutOneCode, idx: int | None, field: str, child: str,
                          static: onestatic, **options) -> str:
     """Don't allow delete keyword.arg if non-keywords follow."""
 
@@ -1475,7 +1476,7 @@ def _put_one_keyword_arg(self: 'FST', code: _PutOneCode, idx: int | None, field:
     return _put_one_identifier_optional(self, code, idx, field, child, static, **options)
 
 
-def _put_one_MatchStar_name(self: 'FST', code: _PutOneCode, idx: int | None, field: str, child: str, static: onestatic,
+def _put_one_MatchStar_name(self: FST, code: _PutOneCode, idx: int | None, field: str, child: str, static: onestatic,
                             **options) -> str:
     """Slightly annoying MatchStar.name. '_' really means delete."""
 
@@ -1490,7 +1491,7 @@ def _put_one_MatchStar_name(self: 'FST', code: _PutOneCode, idx: int | None, fie
     return ret
 
 
-def _put_one_MatchAs_name(self: 'FST', code: _PutOneCode, idx: int | None, field: str, child: str, static: onestatic,
+def _put_one_MatchAs_name(self: FST, code: _PutOneCode, idx: int | None, field: str, child: str, static: onestatic,
                           **options) -> str:
     """Very annoying MatchAs.name. '_' really means delete, which can't be done if there is a pattern, and can't be
     assigned to a pattern."""
@@ -1513,8 +1514,8 @@ def _put_one_MatchAs_name(self: 'FST', code: _PutOneCode, idx: int | None, field
 
 # ......................................................................................................................
 
-def _put_one_raw(self: 'FST', code: _PutOneCode, idx: int | None, field: str, child: AST | list[AST],
-                 static: onestatic | None, **options) -> Optional['FST']:
+def _put_one_raw(self: FST, code: _PutOneCode, idx: int | None, field: str, child: AST | list[AST],
+                 static: onestatic | None, **options) -> FST | None:
 
     ast = self.a
     to  = options.get('to')
@@ -1658,7 +1659,7 @@ def _put_one_raw(self: 'FST', code: _PutOneCode, idx: int | None, field: str, ch
     return parent._reparse_raw(code, loc.ln, loc.col, to_loc.end_ln, to_loc.end_col)
 
 
-def _put_one(self: 'FST', code: _PutOneCode, idx: int | None, field: str, **options) -> Optional['FST']:  # -> Self or reparsed Self or could disappear due to raw
+def _put_one(self: FST, code: _PutOneCode, idx: int | None, field: str, **options) -> FST | None:  # -> Self or reparsed Self or could disappear due to raw
     """Put new, replace or delete a node (or limited non-node) to a field of `self`.
 
     **Parameters:**
@@ -1729,10 +1730,10 @@ _restrict_fmtval_starred = [FormattedValue, Interpolation, Starred]
 _restrict_fmtval         = [FormattedValue, Interpolation]
 _oneinfo_default         = oneinfo()
 
-def _one_info_constant(self: 'FST', static: onestatic, idx: int | None, field: str) -> oneinfo:  # only Constant and MatchSingleton
+def _one_info_constant(self: FST, static: onestatic, idx: int | None, field: str) -> oneinfo:  # only Constant and MatchSingleton
     return oneinfo('', None, self.loc)
 
-def _one_info_exprish_required(self: 'FST', static: onestatic, idx: int | None, field: str) -> oneinfo:
+def _one_info_exprish_required(self: FST, static: onestatic, idx: int | None, field: str) -> oneinfo:
     return _oneinfo_default
 
 _onestatic_expr_required             = onestatic(_one_info_exprish_required, _restrict_default)
@@ -1750,7 +1751,7 @@ _onestatic_target_single             = onestatic(_one_info_exprish_required, (Na
 _onestatic_target                    = onestatic(_one_info_exprish_required, (Name, Attribute, Subscript, Tuple, List), ctx=Store)
 _onestatic_ctx                       = onestatic(None, expr_context)
 
-def _one_info_identifier_required(self: 'FST', static: onestatic, idx: int | None, field: str,  # required, cannot delete or put new
+def _one_info_identifier_required(self: FST, static: onestatic, idx: int | None, field: str,  # required, cannot delete or put new
                                   prefix: str | None = None) -> oneinfo:
     ln, col, end_ln, end_col = self.loc
     lines                    = self.root._lines
@@ -1767,19 +1768,19 @@ def _one_info_identifier_required(self: 'FST', static: onestatic, idx: int | Non
 
 _onestatic_identifier_required = onestatic(_one_info_identifier_required, _restrict_default, code_as=_code_as_identifier)
 
-def _one_info_identifier_alias(self: 'FST', static: onestatic, idx: int | None, field: str) -> oneinfo:  # required, cannot delete or put new
+def _one_info_identifier_alias(self: FST, static: onestatic, idx: int | None, field: str) -> oneinfo:  # required, cannot delete or put new
     ln, col, end_ln, end_col = self.loc
     end_col                  = re_identifier_alias.match(self.root._lines[ln], col,
                                                          end_col if end_ln == ln else 0x7fffffffffffffff).end()  # must be there
 
     return oneinfo('', None, fstloc(ln, col, ln, end_col))
 
-def _one_info_FunctionDef_name(self: 'FST', static: onestatic, idx: int | None, field: str) -> oneinfo:
+def _one_info_FunctionDef_name(self: FST, static: onestatic, idx: int | None, field: str) -> oneinfo:
     return _one_info_identifier_required(self, static, idx, field, 'def')
 
 _onestatic_FunctionDef_name = onestatic(_one_info_FunctionDef_name, _restrict_default, code_as=_code_as_identifier)
 
-def _one_info_FunctionDef_returns(self: 'FST', static: onestatic, idx: int | None, field: str) -> oneinfo:
+def _one_info_FunctionDef_returns(self: FST, static: onestatic, idx: int | None, field: str) -> oneinfo:
     ln, col, end_ln, end_col = self._loc_block_header_end(True)
     ret_end_ln               = end_ln
     ret_end_col              = end_col - 1
@@ -1794,16 +1795,16 @@ def _one_info_FunctionDef_returns(self: 'FST', static: onestatic, idx: int | Non
 
 _onestatic_FunctionDef_returns = onestatic(_one_info_FunctionDef_returns, _restrict_default)
 
-def _one_info_ClassDef_name(self: 'FST', static: onestatic, idx: int | None, field: str) -> oneinfo:
+def _one_info_ClassDef_name(self: FST, static: onestatic, idx: int | None, field: str) -> oneinfo:
     return _one_info_identifier_required(self, static, idx, field, 'class')
 
-def _one_info_Return_value(self: 'FST', static: onestatic, idx: int | None, field: str) -> oneinfo:
+def _one_info_Return_value(self: FST, static: onestatic, idx: int | None, field: str) -> oneinfo:
     return oneinfo(' ', fstloc((loc := self.loc).ln, loc.col + 6, loc.end_ln, loc.end_col))
 
-def _one_info_AnnAssign_value(self: 'FST', static: onestatic, idx: int | None, field: str) -> oneinfo:
+def _one_info_AnnAssign_value(self: FST, static: onestatic, idx: int | None, field: str) -> oneinfo:
     return oneinfo(' = ', fstloc((loc := self.a.annotation.f.pars()).end_ln, loc.end_col, self.end_ln, self.end_col))
 
-def _one_info_Raise_exc(self: 'FST', static: onestatic, idx: int | None, field: str) -> oneinfo:
+def _one_info_Raise_exc(self: FST, static: onestatic, idx: int | None, field: str) -> oneinfo:
     if self.a.cause:
         return _oneinfo_default  # can not del (and exists, so can't put new)
 
@@ -1811,7 +1812,7 @@ def _one_info_Raise_exc(self: 'FST', static: onestatic, idx: int | None, field: 
 
     return oneinfo(' ', fstloc(ln, col + 5, end_ln, end_col))
 
-def _one_info_Raise_cause(self: 'FST', static: onestatic, idx: int | None, field: str) -> oneinfo:
+def _one_info_Raise_cause(self: FST, static: onestatic, idx: int | None, field: str) -> oneinfo:
     if not (exc := self.a.exc):
         return _oneinfo_default  # can not put (or del because cause doesn't exist)
 
@@ -1819,10 +1820,10 @@ def _one_info_Raise_cause(self: 'FST', static: onestatic, idx: int | None, field
 
     return oneinfo(' from ', fstloc(ln, col, self.end_ln, self.end_col))
 
-def _one_info_Assert_msg(self: 'FST', static: onestatic, idx: int | None, field: str) -> oneinfo:
+def _one_info_Assert_msg(self: FST, static: onestatic, idx: int | None, field: str) -> oneinfo:
     return oneinfo(', ', fstloc((loc := self.a.test.f.pars()).end_ln, loc.end_col, self.end_ln, self.end_col))
 
-def _one_info_ImportFrom_module(self: 'FST', static: onestatic, idx: int | None, field: str) -> oneinfo:
+def _one_info_ImportFrom_module(self: FST, static: onestatic, idx: int | None, field: str) -> oneinfo:
     ln, col, end_ln, end_col = self.loc
     lines                    = self.root._lines
 
@@ -1840,7 +1841,7 @@ def _one_info_ImportFrom_module(self: 'FST', static: onestatic, idx: int | None,
 
     return oneinfo('', loc := fstloc(ln, col, ln, end_col), loc)
 
-def _one_info_Global_Nonlocal_names(self: 'FST', static: onestatic, idx: int | None, field: str) -> oneinfo:
+def _one_info_Global_Nonlocal_names(self: FST, static: onestatic, idx: int | None, field: str) -> oneinfo:
 
     idx = _fixup_one_index(len(self.a.names), idx)
 
@@ -1848,7 +1849,7 @@ def _one_info_Global_Nonlocal_names(self: 'FST', static: onestatic, idx: int | N
 
 _onestatic_Global_Nonlocal_names = onestatic(_one_info_Global_Nonlocal_names, _restrict_default, code_as=_code_as_identifier)
 
-def _one_info_Dict_key(self: 'FST', static: onestatic, idx: int | None, field: str) -> oneinfo:
+def _one_info_Dict_key(self: FST, static: onestatic, idx: int | None, field: str) -> oneinfo:
     key                   = (a := self.a).keys[idx]
     value                 = a.values[idx].f
     end_ln, end_col, _, _ = value.pars()
@@ -1856,10 +1857,10 @@ def _one_info_Dict_key(self: 'FST', static: onestatic, idx: int | None, field: s
 
     return oneinfo('', fstloc(ln, col, end_ln, end_col), None, ': ', '**')
 
-def _one_info_Yield_value(self: 'FST', static: onestatic, idx: int | None, field: str) -> oneinfo:
+def _one_info_Yield_value(self: FST, static: onestatic, idx: int | None, field: str) -> oneinfo:
     return oneinfo(' ', fstloc((loc := self.loc).ln, loc.col + 5, loc.end_ln, loc.end_col))
 
-def _one_info_Attribute_attr(self: 'FST', static: onestatic, idx: int | None, field: str) -> oneinfo:
+def _one_info_Attribute_attr(self: FST, static: onestatic, idx: int | None, field: str) -> oneinfo:
     _, _, ln, col         = self.a.value.f.loc
     _, _, end_ln, end_col = self.loc
     lines                 = self.root._lines
@@ -1868,7 +1869,7 @@ def _one_info_Attribute_attr(self: 'FST', static: onestatic, idx: int | None, fi
 
     return oneinfo('', None, fstloc(ln, col, ln, col + len(src)))
 
-def _one_info_Slice_lower(self: 'FST', static: onestatic, idx: int | None, field: str) -> oneinfo:
+def _one_info_Slice_lower(self: FST, static: onestatic, idx: int | None, field: str) -> oneinfo:
     ln, col, end_ln, end_col = self.loc
 
     if lower := self.a.lower:
@@ -1880,7 +1881,7 @@ def _one_info_Slice_lower(self: 'FST', static: onestatic, idx: int | None, field
 
 _onestatic_Slice_lower = onestatic(_one_info_Slice_lower, _restrict_default)
 
-def _one_info_Slice_upper(self: 'FST', static: onestatic, idx: int | None, field: str) -> oneinfo:
+def _one_info_Slice_upper(self: FST, static: onestatic, idx: int | None, field: str) -> oneinfo:
     ln                    = (lloc := _one_info_Slice_lower(self, _onestatic_Slice_lower, idx, field).loc_insdel).end_ln
     col                   = lloc.end_col + 1
     _, _, end_ln, end_col = self.loc
@@ -1897,7 +1898,7 @@ def _one_info_Slice_upper(self: 'FST', static: onestatic, idx: int | None, field
 
 _onestatic_Slice_upper = onestatic(_one_info_Slice_upper, _restrict_default)
 
-def _one_info_Slice_step(self: 'FST', static: onestatic, idx: int | None, field: str) -> oneinfo:
+def _one_info_Slice_step(self: FST, static: onestatic, idx: int | None, field: str) -> oneinfo:
     ln  = (uloc := _one_info_Slice_upper(self, _onestatic_Slice_upper, idx, field).loc_insdel).end_ln
     col = uloc.end_col
 
@@ -1911,7 +1912,7 @@ def _one_info_Slice_step(self: 'FST', static: onestatic, idx: int | None, field:
 
 _onestatic_Slice_step = onestatic(_one_info_Slice_step, _restrict_default)
 
-def _one_info_ExceptHandler_type(self: 'FST', static: onestatic, idx: int | None, field: str) -> oneinfo:
+def _one_info_ExceptHandler_type(self: FST, static: onestatic, idx: int | None, field: str) -> oneinfo:
     if (a := self.a).name:
         return _oneinfo_default  # can not del (and exists, so can't put new)
 
@@ -1930,7 +1931,7 @@ def _one_info_ExceptHandler_type(self: 'FST', static: onestatic, idx: int | None
 
     return oneinfo(' ', fstloc(ln, col, end_ln, end_col))
 
-def _one_info_ExceptHandler_name(self: 'FST', static: onestatic, idx: int | None, field: str) -> oneinfo:
+def _one_info_ExceptHandler_name(self: FST, static: onestatic, idx: int | None, field: str) -> oneinfo:
     if not (type_ := (a := self.a).type):
         return _oneinfo_default  # can not put new and does not exist
 
@@ -1949,7 +1950,7 @@ def _one_info_ExceptHandler_name(self: 'FST', static: onestatic, idx: int | None
 
     return oneinfo(' as ', loc_insdel, loc_ident)
 
-def _one_info_arguments_vararg(self: 'FST', static: onestatic, idx: int | None, field: str) -> oneinfo:
+def _one_info_arguments_vararg(self: FST, static: onestatic, idx: int | None, field: str) -> oneinfo:
     if vararg := (a := self.a).vararg:  # delete location
         if next := (varargf := vararg.f).next():
             _, _, end_ln, end_col = varargf.pars()
@@ -2030,7 +2031,7 @@ def _one_info_arguments_vararg(self: 'FST', static: onestatic, idx: int | None, 
 
     return oneinfo(prefix, loc)
 
-def _one_info_arguments_kw_defaults(self: 'FST', static: onestatic, idx: int | None, field: str) -> oneinfo:
+def _one_info_arguments_kw_defaults(self: FST, static: onestatic, idx: int | None, field: str) -> oneinfo:
     if ann := (arg := self.a.kwonlyargs[idx]).annotation:
         _, _, ln, col = ann.f.pars()
         prefix        = ' = '
@@ -2049,7 +2050,7 @@ def _one_info_arguments_kw_defaults(self: 'FST', static: onestatic, idx: int | N
 
     return oneinfo(prefix, fstloc(ln, col, end_ln, end_col))
 
-def _one_info_arguments_kwarg(self: 'FST', static: onestatic, idx: int | None, field: str) -> oneinfo:
+def _one_info_arguments_kwarg(self: FST, static: onestatic, idx: int | None, field: str) -> oneinfo:
     if kwarg := (a := self.a).kwarg:  # delete location
         if not (prev := (kwargf := kwarg.f).prev()):
             if not (parent := self.parent) or not isinstance(parent.a, Lambda):
@@ -2093,17 +2094,17 @@ def _one_info_arguments_kwarg(self: 'FST', static: onestatic, idx: int | None, f
 
     return oneinfo(', **', fstloc(ln, col, end_ln, end_col))
 
-def _one_info_arg_annotation(self: 'FST', static: onestatic, idx: int | None, field: str) -> oneinfo:
+def _one_info_arg_annotation(self: FST, static: onestatic, idx: int | None, field: str) -> oneinfo:
     return oneinfo(': ', fstloc((loc := self.loc).ln, loc.col + len(self.a.arg), self.end_ln, self.end_col))
 
-def _one_info_keyword_arg(self: 'FST', static: onestatic, idx: int | None, field: str) -> oneinfo:
+def _one_info_keyword_arg(self: FST, static: onestatic, idx: int | None, field: str) -> oneinfo:
     end_ln, end_col, _, _ = (a := self.a).value.f.pars()
     ln, col, _, _         = self.loc
     arg_end_col           = col + 2 if a.arg is None else re_identifier.match(self.root._lines[ln], col).end() # must be there
 
     return oneinfo('', fstloc(ln, col, end_ln, end_col), fstloc(ln, col, ln, arg_end_col), '=', '**')
 
-def _one_info_alias_asname(self: 'FST', static: onestatic, idx: int | None, field: str) -> oneinfo:
+def _one_info_alias_asname(self: FST, static: onestatic, idx: int | None, field: str) -> oneinfo:
     ln, col, end_ln, end_col  = self.loc
     loc_insdel                = fstloc(ln, col + len((a := self.a).name), end_ln, end_col)
 
@@ -2118,7 +2119,7 @@ def _one_info_alias_asname(self: 'FST', static: onestatic, idx: int | None, fiel
 
     return oneinfo(' as ', loc_insdel, loc_ident)
 
-def _one_info_withitem_optional_vars(self: 'FST', static: onestatic, idx: int | None, field: str) -> oneinfo:
+def _one_info_withitem_optional_vars(self: FST, static: onestatic, idx: int | None, field: str) -> oneinfo:
     _, _, ln, col = self.a.context_expr.f.pars()
 
     if optional_vars := self.a.optional_vars:
@@ -2129,14 +2130,14 @@ def _one_info_withitem_optional_vars(self: 'FST', static: onestatic, idx: int | 
 
     return oneinfo(' as ', fstloc(ln, col, end_ln, end_col))
 
-def _one_info_match_case_guard(self: 'FST', static: onestatic, idx: int | None, field: str) -> oneinfo:
+def _one_info_match_case_guard(self: FST, static: onestatic, idx: int | None, field: str) -> oneinfo:
     _, _, ln, col          = self.a.pattern.f.pars()
     _, _, end_ln, end_col  = self._loc_block_header_end(True)
     end_col               -= 1
 
     return oneinfo(' if ', fstloc(ln, col, end_ln, end_col))
 
-def _one_info_MatchMapping_rest(self: 'FST', static: onestatic, idx: int | None, field: str) -> oneinfo:
+def _one_info_MatchMapping_rest(self: FST, static: onestatic, idx: int | None, field: str) -> oneinfo:
     ln, col, end_ln, end_col  = self.loc
     end_col                  -= 1
 
@@ -2156,7 +2157,7 @@ def _one_info_MatchMapping_rest(self: 'FST', static: onestatic, idx: int | None,
 
     return oneinfo(prefix, fstloc(ln, col, end_ln, end_col), loc_ident)
 
-def _one_info_MatchClass_kwd_attrs(self: 'FST', static: onestatic, idx: int | None, field: str) -> oneinfo:
+def _one_info_MatchClass_kwd_attrs(self: FST, static: onestatic, idx: int | None, field: str) -> oneinfo:
     ast          = self.a
     lines        = self.root._lines
     kwd_patterns = ast.kwd_patterns
@@ -2175,10 +2176,10 @@ def _one_info_MatchClass_kwd_attrs(self: 'FST', static: onestatic, idx: int | No
 
     return oneinfo('', None, fstloc(ln, col, ln, end_col))
 
-def _one_info_MatchStar_name(self: 'FST', static: onestatic, idx: int | None, field: str) -> oneinfo:
+def _one_info_MatchStar_name(self: FST, static: onestatic, idx: int | None, field: str) -> oneinfo:
     return _one_info_identifier_required(self, static, idx, field, '*')
 
-def _one_info_MatchAs_pattern(self: 'FST', static: onestatic, idx: int | None, field: str) -> oneinfo:
+def _one_info_MatchAs_pattern(self: FST, static: onestatic, idx: int | None, field: str) -> oneinfo:
     if (name := (a := self.a).name) is None:
         return _oneinfo_default  # cannot insert or delete because is wildcard '_'
 
@@ -2193,7 +2194,7 @@ def _one_info_MatchAs_pattern(self: 'FST', static: onestatic, idx: int | None, f
 
     return oneinfo('', fstloc(ln, col, end_ln, end_col))
 
-def _one_info_MatchAs_name(self: 'FST', static: onestatic, idx: int | None, field: str) -> oneinfo:
+def _one_info_MatchAs_name(self: FST, static: onestatic, idx: int | None, field: str) -> oneinfo:
     ln, col, end_ln, end_col = self.loc
 
     if (pattern := (a := self.a).pattern) is None:
@@ -2207,7 +2208,7 @@ def _one_info_MatchAs_name(self: 'FST', static: onestatic, idx: int | None, fiel
 
     return oneinfo(prefix, None, fstloc(ln, col, ln, end_col))
 
-def _one_info_TypeVar_bound(self: 'FST', static: onestatic, idx: int | None, field: str) -> oneinfo:
+def _one_info_TypeVar_bound(self: FST, static: onestatic, idx: int | None, field: str) -> oneinfo:
     ln  = self.ln
     col = self.col + len(self.a.name)
 
@@ -2219,7 +2220,7 @@ def _one_info_TypeVar_bound(self: 'FST', static: onestatic, idx: int | None, fie
 
     return oneinfo(': ', fstloc(ln, col, end_ln, end_col))
 
-def _one_info_TypeVar_default_value(self: 'FST', static: onestatic, idx: int | None, field: str) -> oneinfo:
+def _one_info_TypeVar_default_value(self: FST, static: onestatic, idx: int | None, field: str) -> oneinfo:
     if bound := self.a.bound:
         _, _, ln, col = bound.f.pars()
     else:
@@ -2228,33 +2229,33 @@ def _one_info_TypeVar_default_value(self: 'FST', static: onestatic, idx: int | N
 
     return oneinfo(' = ', fstloc(ln, col, self.end_ln, self.end_col))
 
-def _one_info_ParamSpec_name(self: 'FST', static: onestatic, idx: int | None, field: str) -> oneinfo:
+def _one_info_ParamSpec_name(self: FST, static: onestatic, idx: int | None, field: str) -> oneinfo:
     return _one_info_identifier_required(self, static, idx, field, '**')
 
-def _one_info_ParamSpec_default_value(self: 'FST', static: onestatic, idx: int | None, field: str) -> oneinfo:
+def _one_info_ParamSpec_default_value(self: FST, static: onestatic, idx: int | None, field: str) -> oneinfo:
     ln, col, end_ln, end_col = self.loc
     ln, col, src             = _next_find_re(self.root._lines, ln, col + 2, end_ln, end_col, re_identifier)  # + '**', identifier must be there
 
     return oneinfo(' = ', fstloc(ln, col + len(src), self.end_ln, self.end_col))
 
-def _one_info_TypeVarTuple_default_value(self: 'FST', static: onestatic, idx: int | None, field: str) -> oneinfo:
+def _one_info_TypeVarTuple_default_value(self: FST, static: onestatic, idx: int | None, field: str) -> oneinfo:
     ln, col, end_ln, end_col = self.loc
     ln, col, src             = _next_find_re(self.root._lines, ln, col + 1, end_ln, end_col, re_identifier)  # + '*', identifier must be there
 
     return oneinfo(' = ', fstloc(ln, col + len(src), self.end_ln, self.end_col))
 
-def _one_info_TypeVarTuple_name(self: 'FST', static: onestatic, idx: int | None, field: str) -> oneinfo:
+def _one_info_TypeVarTuple_name(self: FST, static: onestatic, idx: int | None, field: str) -> oneinfo:
     return _one_info_identifier_required(self, static, idx, field, '*')
 
 if _PYLT12:
-    def _one_info_format_spec(self: 'FST', static: onestatic, idx: int | None, field: str) -> oneinfo:
+    def _one_info_format_spec(self: FST, static: onestatic, idx: int | None, field: str) -> oneinfo:
         raise NotImplementedError('this is only implemented on python version 3.12 and above')
 
-    def _one_info_conversion(self: 'FST', static: onestatic, idx: int | None, field: str) -> oneinfo:
+    def _one_info_conversion(self: FST, static: onestatic, idx: int | None, field: str) -> oneinfo:
         raise NotImplementedError('this is only implemented on python version 3.12 and above')
 
 else:
-    def _one_info_format_spec(self: 'FST', static: onestatic, idx: int | None, field: str) -> oneinfo:
+    def _one_info_format_spec(self: FST, static: onestatic, idx: int | None, field: str) -> oneinfo:
         if fspec := self.a.format_spec:
             return oneinfo(':', fspec.f.loc)
 
@@ -2263,7 +2264,7 @@ else:
 
         return oneinfo(':', fstloc(end_ln, end_col, end_ln, end_col))
 
-    def _one_info_conversion(self: 'FST', static: onestatic, idx: int | None, field: str) -> oneinfo:
+    def _one_info_conversion(self: FST, static: onestatic, idx: int | None, field: str) -> oneinfo:
         if fspec := (a := self.a).format_spec:
             end_ln, end_col, _, _  = fspec.f.loc
         else:

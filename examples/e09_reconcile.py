@@ -9,7 +9,7 @@ To be able to execute the examples, import this.
 ## What it does
 
 The idea of the `reconcile()` functionality is not to be able to put `AST` nodes to an `FST` tree under your own
-control, this can easily be done, but rather to allow other code to modify `AST` trees without knowing anything about
+control, this can easily be done. Rather it is to allow other code to modify `AST` trees without knowing anything about
 `FST` and then having `FST` reconcile these changes with what it knows about the tree to preserve formatting where it
 can.
 

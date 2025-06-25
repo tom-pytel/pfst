@@ -1,7 +1,8 @@
 """Raw reparse FST methods."""
 
+from __future__ import annotations
+
 from ast import *
-from typing import Literal, Optional
 
 from .astutil import *
 from .astutil import TryStar
@@ -21,9 +22,9 @@ _PATH_BODY2HANDLERS = [astfield('body', 0), astfield('body', 0), astfield('handl
 _PATH_BODYCASES     = [astfield('body', 0), astfield('cases', 0)]
 
 
-def _reparse_raw_base(self: 'FST', new_lines: list[str], ln: int, col: int, end_ln: int, end_col: int,
+def _reparse_raw_base(self: FST, new_lines: list[str], ln: int, col: int, end_ln: int, end_col: int,
                       copy_lines: list[str], path: list[astfield] | str | None, set_ast: bool = True,
-                      mode: Mode | None = None) -> 'FST':
+                      mode: Mode | None = None) -> FST:
     """Actually do the reparse. If `mode` is `None` then will just try a normal `'exec'` parse and fail if that fails.
     Otherwise it will try this mode first, then all other parse modes as it is assumed to be a non-top level
     statementish thing being reparsed."""
@@ -67,7 +68,7 @@ def _reparse_raw_base(self: 'FST', new_lines: list[str], ln: int, col: int, end_
     return copy
 
 
-def _reparse_raw_stmtish(self: 'FST', new_lines: list[str], ln: int, col: int, end_ln: int, end_col: int) -> bool:
+def _reparse_raw_stmtish(self: FST, new_lines: list[str], ln: int, col: int, end_ln: int, end_col: int) -> bool:
     """Reparse only statementish or block header part of statementish containing changes."""
 
     if not (stmtish := self.parent_stmtish(True, False)):
@@ -163,8 +164,8 @@ def _reparse_raw_stmtish(self: 'FST', new_lines: list[str], ln: int, col: int, e
 
 # ----------------------------------------------------------------------------------------------------------------------
 
-def _reparse_raw(self: 'FST', code: Code | None, ln: int, col: int, end_ln: int, end_col: int,
-                 exact: bool | None = None) -> Optional['FST']:
+def _reparse_raw(self: FST, code: Code | None, ln: int, col: int, end_ln: int, end_col: int,
+                 exact: bool | None = None) -> FST | None:
     """Reparse this node which entirely contatins the span which is to be replaced with `code` source. `self` must
     be a node which entirely contains the location and is guaranteed not to be deleted. `self` and some of its
     parents going up may be replaced (root node `FST` will never change, the `AST` it points to may though). Not

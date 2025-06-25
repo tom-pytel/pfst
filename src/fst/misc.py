@@ -101,7 +101,7 @@ _GLOBALS = globals() | {'_GLOBALS': None}
 
 Code = Union['FST', AST, list[str], str]  ; """Code types accepted for put to `FST`."""
 
-Mode = Union[Literal[
+Mode = Literal[
     'all',
     'most',
     'min',
@@ -137,7 +137,7 @@ Mode = Union[Literal[
     'withitem',
     'pattern',
     'type_param',
-], type[AST]]
+] | type[AST]
 
 """Parse modes:
 

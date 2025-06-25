@@ -1,6 +1,8 @@
 """Main FST module. Contains the `FST` class as well as drop-in replacement `parse()` and `unparse()` functions for
 their respective `ast` module counterparts."""
 
+from __future__ import annotations
+
 FST = None  # temporary standin for circular import of real `FST` class
 
 import sys
@@ -8,7 +10,7 @@ from ast import *
 from ast import dump as ast_dump, unparse as ast_unparse, mod as ast_mod
 from contextlib import contextmanager
 from io import TextIOBase
-from typing import Any, Callable, Generator, Literal, Optional, TextIO, Union
+from typing import Any, Callable, Generator, Literal, TextIO
 
 from .astutil import *
 from .astutil import TypeAlias, TryStar, TemplateStr, Interpolation, type_param
@@ -186,9 +188,9 @@ class FST:
     any direction."""
 
     a:            AST              ; """The actual `AST` node."""
-    parent:       Optional['FST']  ; """Parent `FST` node, `None` in root node."""
+    parent:       FST | None       ; """Parent `FST` node, `None` in root node."""
     pfield:       astfield | None  ; """The `astfield` location of this node in the parent, `None` in root node."""
-    root:         'FST'            ; """The root node of this tree, `self` in root node."""
+    root:         FST              ; """The root node of this tree, `self` in root node."""
     _cache:       dict
 
     # ROOT ONLY
@@ -512,8 +514,8 @@ class FST:
         return child
 
     def __new__(cls,
-                ast_or_src: AST | str | bytes | list[str] | None,
-                mode_or_lines_or_parent: Union['FST', list[str], Mode, None] = None,
+                ast_or_src: AST | str | list[str] | None,
+                mode_or_lines_or_parent: FST | list[str] | Mode | None = None,
                 pfield: astfield | None = None,
                 /, **kwargs):
         """Create a new individual `FST` node or full tree. The main way to use this constructor is as a shortcut for
@@ -521,10 +523,10 @@ class FST:
 
         **`FST(ast_or_src, mode=None)`**
 
-        This will create an `FST` from either an `AST` or source code in the form of a string, list of lines or encoded
-        bytes. The first parameter can be `None` instead of an `AST` or source to indicate a blank new module of one of
-        the three types `'exec'`, `'eval'` or `'single'`. Otherwise if there is an `AST` or `source` then `mode`
-        specifies how it will be parsed / reparsed and it can take any of the values from `fst.misc.Mode`.
+        This will create an `FST` from either an `AST` or source code in the form of a string or list of lines. The
+        first parameter can be `None` instead of an `AST` or source to indicate a blank new module of one of the three
+        types `'exec'`, `'eval'` or `'single'`. Otherwise if there is `source` or an `AST` then `mode` specifies how it
+        will be parsed / reparsed and it can take any of the values from `fst.misc.Mode`.
 
         **Parameters:**
         - `ast_or_src`: Source code, an `AST` node or `None`.
@@ -536,9 +538,9 @@ class FST:
         The other forms of this function are meant for internal use and their parameters are below:
 
         **Parameters:**
-        - `ast_or_src`: `AST` node for `FST` or source code in the form of a `str`, encoded `bytes` or a list of lines.
-            If an `AST` then will be processed differently depending on if creating child node, top level node or using
-            this as a shortcut for a full `fromsrc()` or `fromast()`.
+        - `ast_or_src`: `AST` node for `FST` or source code in the form of a `str` or a list of lines. If an `AST` then
+            will be processed differently depending on if creating child node, top level node or using this as a
+            shortcut for a full `fromsrc()` or `fromast()`.
         - `mode_or_lines_or_parent`: Parent node for this child node or lines for a root node creating a new tree. If
             `pfield` is `None` and this is a shortcut to create a full tree from an `AST` node or source provided in
             `ast_or_src`.
@@ -650,7 +652,7 @@ class FST:
 
     @staticmethod
     def new(mode: Literal['exec', 'eval', 'single'] = 'exec', *, filename: str = '<unknown>',
-            type_comments: bool = False, feature_version: tuple[int, int] | None = None) -> 'FST':
+            type_comments: bool = False, feature_version: tuple[int, int] | None = None) -> FST:
         """Create a new empty `FST` tree with the top level node dictated by the `mode` parameter.
 
         **Parameters:**
@@ -702,12 +704,12 @@ class FST:
         return FST(ast, [bistr(src)], parse_params=parse_params, lcopy=False)
 
     @staticmethod
-    def fromsrc(src: str | bytes | list[str], mode: Mode = 'exec', *, filename: str = '<unknown>',
-                type_comments: bool = False, feature_version: tuple[int, int] | None = None) -> 'FST':
+    def fromsrc(src: str | list[str], mode: Mode = 'exec', *, filename: str = '<unknown>',
+                type_comments: bool = False, feature_version: tuple[int, int] | None = None) -> FST:
         """Parse and create a new `FST` tree from source, preserving the original source and locations.
 
         **Parameters:**
-        - `src`: The source to parse as a single `str`, `bytes` or list of individual line strings (without newlines).
+        - `src`: The source to parse as a single `str` or list of individual line strings (without newlines).
         - `mode`: Parse mode, extended `ast.parse()` parameter, See `fst.misc.Mode`.
         - `filename`: `ast.parse()` parameter.
         - `type_comments`: `ast.parse()` parameter.
@@ -748,12 +750,15 @@ class FST:
               .value Constant 1 - 0,9..0,10
           .body[1]
           0] Pass - 0,13..0,17
+
+        >>> FST.fromsrc('a:b', Slice).dump()
+        Slice - ROOT 0,0..0,3
+          .lower Name 'a' Load - 0,0..0,1
+          .upper Name 'b' Load - 0,2..0,3
         ```
         """
 
-        if isinstance(src, bytes):
-            lines = (src := src.decode()).split('\n')
-        elif isinstance(src, str):
+        if isinstance(src, str):
             lines = src.split('\n')
         else:
             lines = src
@@ -766,7 +771,7 @@ class FST:
 
     @staticmethod
     def fromast(ast: AST, mode: Mode | Literal[False] | None = None, *, filename: str = '<unknown>',
-                type_comments: bool | None = False, feature_version=None, ctx: bool = False) -> 'FST':
+                type_comments: bool | None = False, feature_version=None, ctx: bool = False) -> FST:
         r"""Unparse and reparse an `AST` for new `FST` (the reparse is necessary to make sure locations are correct).
 
         **Parameters:**
@@ -790,7 +795,8 @@ class FST:
         **Examples:**
         ```py
         >>> import ast
-        >>> FST.fromast(Assign(targets=[Name(id='var')], value=Constant(value=123))).dump('stmt')
+        >>> FST.fromast(Assign(targets=[Name(id='var')],
+        ...                    value=Constant(value=123))).dump('stmt')
         0: var = 123
         Assign - ROOT 0,0..0,9
           .targets[1]
@@ -1151,7 +1157,7 @@ class FST:
         return self._dump(st)
 
     def verify(self, mode: Mode | None = None, reparse: bool = True, *, locs: bool = True, raise_: bool = True,
-               ) -> Optional[Self]:
+               ) -> Self | None:
         """Sanity check. Walk the tree and make sure all `AST`s have corresponding `FST` nodes with valid parent / child
         links, then (optionally) reparse source and make sure parsed tree matches currently stored tree (locations and
         everything). The reparse can only be carried out on root nodes but the link validation can be done on any level.
@@ -1245,7 +1251,7 @@ class FST:
     # ------------------------------------------------------------------------------------------------------------------
     # High level
 
-    def copy(self, **options) -> 'FST':
+    def copy(self, **options) -> FST:
         """Copy this node to a new top-level tree, dedenting and fixing as necessary.
 
         **Parameters:**
@@ -1266,7 +1272,7 @@ class FST:
 
         return FST(copy_ast(self.a), self._lines[:], from_=self, lcopy=False)
 
-    def cut(self, **options) -> 'FST':
+    def cut(self, **options) -> FST:
         """Cut out this node to a new top-level tree (if possible), dedenting and fixing as necessary. Cannot cut root
         node.
 
@@ -1291,7 +1297,7 @@ class FST:
 
         raise ValueError('cannot cut root node')
 
-    def replace(self, code: Code | None, **options) -> Optional['FST']:  # -> replaced Self or None if deleted
+    def replace(self, code: Code | None, **options) -> FST | None:  # -> replaced Self or None if deleted
         """Replace or delete (if `code=None`, if possible) this node. Returns the new node for `self`, not the old
         replaced node, or `None` if was deleted or raw replaced and the old node disappeared. Cannot delete root node.
         CAN replace root node, in which case the accessing `FST` node remains the same but the top-level `AST` and
@@ -1353,7 +1359,7 @@ class FST:
         raise ValueError(f'cannot delete root node')
 
     def get(self, idx: int | Literal['end'] | None = None, stop: int | None | Literal[False] = False,
-            field: str | None = None, *, cut: bool = False, **options) -> Optional['FST'] | str | constant:
+            field: str | None = None, *, cut: bool = False, **options) -> FST | None | str | constant:
         r"""Copy or cut an individual child node or a slice of child nodes from `self` if possible. This function can do
         everything that `get_slice()` can.
 
@@ -1551,7 +1557,7 @@ class FST:
         return self.repath()
 
     def get_slice(self, start: int | Literal['end'] | None = None, stop: int | None = None, field: str | None = None, *,
-                  cut: bool = False, **options) -> 'FST':
+                  cut: bool = False, **options) -> FST:
         r"""Copy or cut a slice of child nodes from `self` if possible.
 
         **Parameters:**
@@ -1728,7 +1734,7 @@ class FST:
                     '\n'.join([ls[ln][col:]] + ls[ln + 1 : end_ln] + [ls[end_ln][:end_col]]))
 
     def put_src(self, code: Code | None, ln: int, col: int, end_ln: int, end_col: int, *,
-                exact: bool | None = True) -> Optional['FST']:
+                exact: bool | None = True) -> FST | None:
         r"""Put source and reparse. There are no rules on what is put, it is simply put and parse is attempted. If the
         `code` is passed as an `AST` then it is unparsed to a string and that string is put into the location. If `FST`
         then the exact source of the `FST` is put. If passed as a string or lines then that is put directly.
@@ -2102,7 +2108,7 @@ class FST:
         walk,
     )
 
-    def parents(self, self_: bool = False) -> Generator['FST', None, None]:
+    def parents(self, self_: bool = False) -> Generator[FST, None, None]:
         """Generator which yields parents all the way up to root. If `self_` is `True` then will yield `self` first.
 
         **Parameters:**
@@ -2124,7 +2130,7 @@ class FST:
         while self := self.parent:
             yield self
 
-    def parent_stmt(self, self_: bool = False, mod: bool = True) -> Optional['FST']:
+    def parent_stmt(self, self_: bool = False, mod: bool = True) -> FST | None:
         """The first parent which is a `stmt` or optionally `mod` node (if any). If `self_` is `True` then will check
         `self` first (possibly returning `self`), otherwise only checks parents.
 
@@ -2161,7 +2167,7 @@ class FST:
 
         return self
 
-    def parent_stmtish(self, self_: bool = False, mod: bool = True) -> Optional['FST']:
+    def parent_stmtish(self, self_: bool = False, mod: bool = True) -> FST | None:
         r"""The first parent which is a `stmt`, `ExceptHandler`, `match_case` or optionally `mod` node (if any). If
         `self_` is `True` then will check `self` first, otherwise only checks parents.
 
@@ -2194,7 +2200,7 @@ class FST:
 
         return self
 
-    def parent_block(self, self_: bool = False, mod: bool = True) -> Optional['FST']:
+    def parent_block(self, self_: bool = False, mod: bool = True) -> FST | None:
         """The first parent which opens a block that `self` lives in (if any). Types include `FunctionDef`,
         `AsyncFunctionDef`, `ClassDef`, `For`, `AsyncFor`, `While`, `If`, `With`, `AsyncWith`, `Match`, `Try`,
         `TryStar`, `ExceptHandler`, `match_case` or optionally `mod` node (if any). If `self_` is `True` then will check
@@ -2220,7 +2226,7 @@ class FST:
 
         return self
 
-    def parent_scope(self, self_: bool = False, mod: bool = True) -> Optional['FST']:
+    def parent_scope(self, self_: bool = False, mod: bool = True) -> FST | None:
         r"""The first parent which opens a scope that `self` lives in (if any). Types include `FunctionDef`,
         `AsyncFunctionDef`, `ClassDef`, `Lambda`, `ListComp`, `SetComp`, `DictComp`, `GeneratorExp` or optionally `mod`
         node (if any). If `self_` is `True` then will check `self` first, otherwise only checks parents.
@@ -2251,7 +2257,7 @@ class FST:
 
         return self
 
-    def parent_named_scope(self, self_: bool = False, mod: bool = True) -> Optional['FST']:
+    def parent_named_scope(self, self_: bool = False, mod: bool = True) -> FST | None:
         r"""The first parent which opens a named scope that `self` lives in (if any). Types include `FunctionDef`,
         `AsyncFunctionDef`, `ClassDef` or optionally `mod` node (if any). If `self_` is `True` then will check `self`
         first, otherwise only checks parents.
@@ -2282,7 +2288,7 @@ class FST:
 
         return self
 
-    def parent_non_expr(self, self_: bool = False, strict: bool = False) -> Optional['FST']:
+    def parent_non_expr(self, self_: bool = False, strict: bool = False) -> FST | None:
         r"""The first parent which is not an `expr`. If `self_` is `True` then will check `self` first (possibly
         returning `self`), otherwise only checks parents.
 
@@ -2320,7 +2326,7 @@ class FST:
 
         return self
 
-    def parent_pattern(self, self_: bool = False) -> Optional['FST']:
+    def parent_pattern(self, self_: bool = False) -> FST | None:
         r"""The first parent which is a `pattern`. If `self_` is `True` then will check `self` first (possibly returning
         `self`), otherwise only checks parents.
 
@@ -2352,7 +2358,7 @@ class FST:
 
         return self
 
-    def child_path(self, child: 'FST', as_str: bool = False) -> list[astfield] | str:
+    def child_path(self, child: FST, as_str: bool = False) -> list[astfield] | str:
         """Get path to `child` node from `self` which can later be used on a copy of this tree to get to the  same
         relative child node.
 
@@ -2395,7 +2401,7 @@ class FST:
 
         return path if not as_str else '.'.join(af.name if (i := af.idx) is None else f'{af.name}[{i}]' for af in path)
 
-    def child_from_path(self, path: list[astfield] | str, last_valid: bool = False) -> Union['FST', Literal[False]]:
+    def child_from_path(self, path: list[astfield] | str, last_valid: bool = False) -> FST | Literal[False]:
         """Get child node specified by `path` if it exists. If succeeds then it doesn't mean that the child node is
         guaranteed to be the same or even same type as was originally used to get the path, just that the path is valid.
         For example after deleting an element from a list the item at the former element's location will be the previous
@@ -2444,7 +2450,7 @@ class FST:
 
         return self
 
-    def repath(self) -> 'FST':
+    def repath(self) -> FST:
         """Recalculate `self` from path from root. Useful if `self` has been replaced by another node by some operation.
         When nodes are deleted the corresponding `FST.a` and `AST.f` attributes are set to `None`. The `root`, `parent`
         and `pfield` attributes are left so that things like this can work. Useful when a node has been deleted but you
@@ -2474,7 +2480,7 @@ class FST:
 
         return (root := self.root).child_from_path(root.child_path(self))
 
-    def find_loc(self, ln: int, col: int, end_ln: int, end_col: int, exact: bool = True) -> Optional['FST']:
+    def find_loc(self, ln: int, col: int, end_ln: int, end_col: int, exact: bool = True) -> FST | None:
         r"""Find the lowest level node which entirely contains location (starting search at `self`). To reiterate, the
         search will only find nodes at self or below, no parents.
 
@@ -2555,7 +2561,7 @@ class FST:
             else:
                 return self
 
-    def find_in_loc(self, ln: int, col: int, end_ln: int, end_col: int) -> Optional['FST']:
+    def find_in_loc(self, ln: int, col: int, end_ln: int, end_col: int) -> FST | None:
         """Find the first highest level node which is contained entirely in location (inclusive, starting search at
         `self`). To reiterate, the search will only find nodes at self or below, no parents.
 

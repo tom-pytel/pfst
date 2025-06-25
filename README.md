@@ -4,9 +4,9 @@ This module exists in order to facilitate quick and easy editing of Python sourc
 
 `pfst` provides its own format-preserving operations for `AST` trees, but also allows the `AST` tree to be changed by anything else outside of its control and can then reconcile the changes with what it knows to preserve formatting where possible. It works by adding `FST` nodes to existing `AST` nodes as an `.f` attribute which keep extra structure information, the original source, and provide the interface to the format-preserving operations.
 
-The fact that it just extends existing `AST` nodes means that the `AST` tree can be used (and edited) as normal anywhere that `AST` is used, and later `unparse()` with formatting preserved where it can be. The degree to which formatting is preserved depends on how many operations are executed natively through `pfst` mechanisms and how well `FST.reconcile()` works for operations which are not.
+The fact that it just extends existing `AST` nodes means that the `AST` tree can be used (and edited) as normal anywhere that `AST` is used, and later `unparse()` with formatting preserved where it can be. The degree to which formatting is preserved depends on how many operations are executed natively through `pfst` mechanisms and how well `FST.reconcile()` works for those operations which are not.
 
-API documentation and examples are in the `docs/` directory.
+Documentation, examples and API reference are in the `docs/` directory.
 
 # Install
 
@@ -20,7 +20,7 @@ From GitHub using pip:
 
 From GitHub, cloning for development:
 
-    pip install -e .[dev]  # "make install" does this
+    pip install -e .[dev]
 
 # Examples
 
@@ -30,18 +30,18 @@ Format preserving parse and unparse:
 >>> import fst, ast
 
 >>> a = fst.parse('''
-... if 1: pass  # comment
+... if a: func()  # comment
 ... else:
 ...     i = 1  # one
 ...     j = 2  # two
 ...     k = 3  # three
-... '''.strip())
+... '''.strip())  # drop-in ast.parse() replacement
 
 >>> print(dump(a)[:80])  # normal AST
-Module(body=[If(test=Constant(value=1), body=[Pass()], orelse=[Assign(targets=[N
+Module(body=[If(test=Name(id='a', ctx=Load()), body=[Expr(value=Call(func=Name(i
 
->>> print(fst.unparse(a))  # unparse with formatting
-if 1: pass  # comment
+>>> print(fst.unparse(a))  # drop-in ast.unparse() replacement, with formatting
+if a: func()  # comment
 else:
     i = 1  # one
     j = 2  # two
@@ -52,33 +52,82 @@ Basic operations:
 
 ```py
 >>> print(a.f.body[0].orelse[1].replace('call()  # something else').root.src)
-if 1: pass  # comment
+if a: func()  # comment
 else:
     i = 1  # one
     call()  # something else
     k = 3  # three
 
->>> print(a.f.body[0].orelse[1:].copy().src)
+>>> print((old := a.f.body[0].orelse[1:].copy()).src)
 call()  # something else
 k = 3  # three
+
+>>> a.f.body[0].put('if b:\n    pass  # noop', 'orelse')
+>>> a.f.body[0].orelse[0].orelse[:] = old
+
+>>> print(a.f.src)
+if a: func()  # comment
+elif b:
+    pass  # noop
+else:
+    call()  # something else
+    k = 3  # three
 ```
 
 Reconcile, edit AST outside `pfst` control while preserving formatting:
 
 ```py
+>>> a = fst.parse('''
+... def compute(x, y):
+...     # Compute the weighted sum
+...     result = (
+...         x * 0.6  # x gets 60%
+...         + y * 0.4  # y gets 40%
+...     )
+...
+...     # Apply thresholding
+...     if (
+...         result > 10
+...         # cap high values
+...         and result < 100  # ignore overflow
+...     ):
+...         return result
+...     else:
+...         return 0
+... '''.strip())
+
 >>> m = a.f.mark()
 
->>> a.body[0].orelse[0].value = ast.Set(elts=[ast.Name(id='x')])
-
->>> a.body.append(ast.Assign(targets=[ast.Name(id='var')], value=ast.Constant(value=6)))
+>>> # pure AST manipulation
+>>> a.body[0].body[0].value.left.right = Name(id='scalar1')
+>>> a.body[0].body[0].value.right.right = Name(id='scalar2')
+>>> a.body[0].body[-1].orelse[0] = (
+...     If(test=Compare(left=Name(id='result'),
+...                     ops=[Gt()],
+...                     comparators=[Constant(value=1)]),
+...        body=[f.a.body[0].body[-1].orelse[0]],
+...        orelse=[Return(value=UnaryOp(op=USub(), operand=Constant(value=1)))]
+...     )
+... )
 
 >>> print(a.f.reconcile(m).src)
-if 1: pass  # comment
-else:
-    i = {x}  # one
-    call()  # something else
-    k = 3  # three
-var = 6
+def compute(x, y):
+    # Compute the weighted sum
+    result = (
+        x * scalar1  # x gets 60%
+        + y * scalar2  # y gets 40%
+    )
+    # Apply thresholding
+    if (
+        result > 10
+        # cap high values
+        and result < 100  # ignore overflow
+    ):
+        return result
+    elif result > 1:
+        return 0
+    else:
+        return -1
 ```
 
 For more examples see the documentation in `docs/`, or if you're feeling particularly masochistic have a look at `tests/test_fst.py`.

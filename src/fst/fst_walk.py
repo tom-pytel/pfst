@@ -1,7 +1,9 @@
-"""Next and previous children in syntactic order and walk."""
+"""Siblings, children and walk, all in syntactic order."""
+
+from __future__ import annotations
 
 from ast import *
-from typing import Generator, Literal, Optional
+from typing import Generator, Literal
 
 from .astutil import *
 
@@ -54,7 +56,7 @@ _AST_FIELDS_PREV[(arguments, 'kw_defaults')] = 7
 _AST_FIELDS_PREV[(arguments, 'kwarg')]       = 7
 
 
-def _with_loc(fst: 'FST', with_loc: bool | Literal['all', 'own'] = True) -> bool:
+def _with_loc(fst: FST, with_loc: bool | Literal['all', 'own'] = True) -> bool:
     """Check location condition on node. Safe for low level because doesn't use `.loc` calculation machinery."""
 
     if not with_loc:
@@ -75,7 +77,7 @@ def _with_loc(fst: 'FST', with_loc: bool | Literal['all', 'own'] = True) -> bool
 
 # ----------------------------------------------------------------------------------------------------------------------
 
-def next(self: 'FST', with_loc: bool | Literal['all', 'own'] = True) -> Optional['FST']:  # TODO: refactor
+def next(self: FST, with_loc: bool | Literal['all', 'own'] = True) -> FST | None:  # TODO: refactor
     """Get next sibling of `self` in syntactic order, only within parent.
 
     **Parameters:**
@@ -381,7 +383,7 @@ def next(self: 'FST', with_loc: bool | Literal['all', 'own'] = True) -> Optional
     return None
 
 
-def prev(self: 'FST', with_loc: bool | Literal['all', 'own'] = True) -> Optional['FST']:  # TODO: refactor
+def prev(self: FST, with_loc: bool | Literal['all', 'own'] = True) -> FST | None:  # TODO: refactor
     """Get previous sibling of `self` in syntactic order, only within parent.
 
     **Parameters:**
@@ -688,7 +690,7 @@ def prev(self: 'FST', with_loc: bool | Literal['all', 'own'] = True) -> Optional
     return None
 
 
-def first_child(self: 'FST', with_loc: bool | Literal['all', 'own'] = True) -> Optional['FST']:
+def first_child(self: FST, with_loc: bool | Literal['all', 'own'] = True) -> FST | None:
     """Get first valid child in syntactic order.
 
     **Parameters:**
@@ -734,7 +736,7 @@ def first_child(self: 'FST', with_loc: bool | Literal['all', 'own'] = True) -> O
     return None
 
 
-def last_child(self: 'FST', with_loc: bool | Literal['all', 'own'] = True) -> Optional['FST']:
+def last_child(self: FST, with_loc: bool | Literal['all', 'own'] = True) -> FST | None:
     """Get last valid child in syntactic order.
 
     **Parameters:**
@@ -784,7 +786,7 @@ def last_child(self: 'FST', with_loc: bool | Literal['all', 'own'] = True) -> Op
     return None
 
 
-def last_header_child(self: 'FST', with_loc: bool | Literal['all', 'own'] = True) -> Optional['FST']:
+def last_header_child(self: FST, with_loc: bool | Literal['all', 'own'] = True) -> FST | None:
     r"""Get last valid child in syntactic order in a block header (before the `:`), e.g. the `something` in
     `if something: pass`.
 
@@ -830,8 +832,8 @@ def last_header_child(self: 'FST', with_loc: bool | Literal['all', 'own'] = True
     return self.prev_child(f, with_loc)
 
 
-def next_child(self: 'FST', from_child: Optional['FST'], with_loc: bool | Literal['all', 'own'] = True
-               ) -> Optional['FST']:
+def next_child(self: FST, from_child: FST | None, with_loc: bool | Literal['all', 'own'] = True
+               ) -> FST | None:
     """Get the next child in syntactic order, meant for simple iteration.
 
     This is a slower way to iterate vs. `walk()`, but will work correctly if ANYTHING in the tree is modified during the
@@ -874,8 +876,8 @@ def next_child(self: 'FST', from_child: Optional['FST'], with_loc: bool | Litera
     return self.first_child(with_loc) if from_child is None else from_child.next(with_loc)
 
 
-def prev_child(self: 'FST', from_child: Optional['FST'], with_loc: bool | Literal['all', 'own'] = True
-               ) -> Optional['FST']:
+def prev_child(self: FST, from_child: FST | None, with_loc: bool | Literal['all', 'own'] = True
+               ) -> FST | None:
     """Get the previous child in syntactic order, meant for simple iteration.
 
     This is a slower way to iterate vs. `walk()`, but will work correctly if ANYTHING in the tree is modified during the
@@ -918,8 +920,8 @@ def prev_child(self: 'FST', from_child: Optional['FST'], with_loc: bool | Litera
     return self.last_child(with_loc) if from_child is None else from_child.prev(with_loc)
 
 
-def step_fwd(self: 'FST', with_loc: bool | Literal['all', 'own', 'allown'] = True, *, recurse_self: bool = True,
-             ) -> Optional['FST']:
+def step_fwd(self: FST, with_loc: bool | Literal['all', 'own', 'allown'] = True, *, recurse_self: bool = True,
+             ) -> FST | None:
     """Step forward in the tree in syntactic order, as if `walk()`ing forward, NOT the inverse of `step_back()`. Will
     walk up parents and down children to get the next node, returning `None` only when we are at the end of the whole
     thing.
@@ -991,8 +993,8 @@ def step_fwd(self: 'FST', with_loc: bool | Literal['all', 'own', 'allown'] = Tru
     return fst
 
 
-def step_back(self: 'FST', with_loc: bool | Literal['all', 'own', 'allown'] = True, *, recurse_self: bool = True,
-              ) -> Optional['FST']:
+def step_back(self: FST, with_loc: bool | Literal['all', 'own', 'allown'] = True, *, recurse_self: bool = True,
+              ) -> FST | None:
     """Step backward in the tree in syntactic order, as if `walk()`ing backward, NOT the inverse of `step_fwd()`. Will
     walk up parents and down children to get the next node, returning `None` only when we are at the beginning of the
     whole thing.
@@ -1064,8 +1066,8 @@ def step_back(self: 'FST', with_loc: bool | Literal['all', 'own', 'allown'] = Tr
     return fst
 
 
-def walk(self: 'FST', with_loc: bool | Literal['all', 'own'] = False, *, self_: bool = True, recurse: bool = True,
-         scope: bool = False, back: bool = False) -> Generator['FST', bool, None]:
+def walk(self: FST, with_loc: bool | Literal['all', 'own'] = False, *, self_: bool = True, recurse: bool = True,
+         scope: bool = False, back: bool = False) -> Generator[FST, bool, None]:
     r"""Walk `self` and descendants in syntactic order. When walking, you can `send(False)` to the generator to skip
     recursion into the current child. `send(True)` to allow recursion into child if called with `recurse=False` or
     `scope=True` would otherwise disallow it. Can send multiple times, last value sent takes effect.
