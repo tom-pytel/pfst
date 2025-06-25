@@ -63,7 +63,7 @@ False
 ```
 
 You can add in `AST` nodes from other `FST` trees and they will retain their formatting, though not if you modify those
-`AST`s since the only tree that has reconcile information to be able to do preserve formatting if this is done is the
+`AST`s since the only tree that has reconcile information to be able to preserve formatting if this is done is the
 original tree that was marked, for now.
 
 ```py
@@ -167,6 +167,6 @@ the operation at a higher level node. This does lose formatting as the `put()` i
 node, but at least it makes the operation possible.
 
 This method is not particularly fast when there are a lot of nested changes as it is possible that large chunks of the
-source wind up being put multiple times with minor deviations, but it does a better job at preserving formatting than
+source wind up being put multiple times with minor deviations. But it does a better job at preserving formatting than
 walking bottom-up.
 """

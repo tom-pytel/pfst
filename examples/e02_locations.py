@@ -83,10 +83,14 @@ False
 fstloc(2, 13, 2, 14)
 ```
 
-The only `AST` nodes which don't get locations like this are empty `arguments` nodes since that could allow zero-length
-locations which are a pain to deal with, `boolop` nodes because a single `AST` may correspond to multiple locations in
-the expression and `expr_context` nodes which don't have parsable source. Other nodes like `comprehension`, `withitem`,
-`match_case` and other operators all get locations.
+The only `AST` nodes which don't get locations like this are:
+
+1. Empty `arguments` nodes since that could allow zero-length locations which are a pain to deal with.
+2. `boolop` nodes because a single `AST` may correspond to multiple locations in the expression.
+3. `expr_context` nodes which don't have parsable source.
+
+Other nodes that normally don't have locations like `comprehension`, `withitem`, `match_case` and other operators all
+have locations computed for them by `FST`.
 
 ```py
 >>> FST('[i for i in j]').generators[0].loc
@@ -112,6 +116,12 @@ preceding decorators, in which case the location starts at the first decorator. 
 change in the future (include trailing comments maybe).
 
 ```py
+>>> f = FST('''
+... @decorator
+... def func(x):
+...     return x + 1
+... '''.strip())
+
 >>> print(f.src)
 @decorator
 def func(x):

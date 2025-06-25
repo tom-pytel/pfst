@@ -11,9 +11,9 @@ To be able to execute the examples, import this.
 Drop-in `ast.parse()` replacement gives normal `AST`.
 
 ```py
->>> a = fst.parse('if 1: i = 2  # comment')
+>>> a = parse('if 1: i = 2  # comment')
 
->>> print(fst.dump(a, indent=2))
+>>> print(dump(a, indent=2))
 Module(
   body=[
     If(
@@ -44,7 +44,8 @@ Module - ROOT 0,0..0,22
 
 ## Basic structure
 
-Now or some needed structure information. Every `AST` node in the tree gets an `.f` pointing to its own `FST` node.
+Before anything else, some needed structure information. Every `AST` node in the tree gets an `.f` pointing to its own
+`FST` node.
 
 ```py
 >>> a.body[0].body[0].f.dump()
@@ -70,10 +71,16 @@ The tree can be traversed downwards either though the `AST` nodes or the `FST` n
 >>> a.f.body[0].body[0]
 <Assign 0,6..0,11>
 
+>>> a.body[0].f.body[0]
+<Assign 0,6..0,11>
+
 >>> type(a.body[0].body[0])
 <class 'ast.Assign'>
 
 >>> type(a.f.body[0].body[0].a)
+<class 'ast.Assign'>
+
+>>> type(a.f.body[0].a.body[0])
 <class 'ast.Assign'>
 ```
 
@@ -82,7 +89,7 @@ The tree can be traversed downwards either though the `AST` nodes or the `FST` n
 Drop-in `ast.unparse()` replacement outputs with formatting.
 
 ```py
->>> print(fst.unparse(a))
+>>> print(unparse(a))
 if 1: i = 2  # comment
 ```
 
@@ -95,7 +102,7 @@ if 1: i = 2  # comment
 
 ## Simpler parse
 
-Simpler way to parse, gives the same thing.
+Quicker way to parse which gives the same thing but returns the `FST` node.
 
 ```py
 >>> FST('if 1: i = 2', 'exec').dump()
@@ -270,23 +277,31 @@ that node and get the source of that. E.g.
 ... def f(a):
 ...     if a:
 ...         print(a)
+...     else:
+...         print(-a)
 ... '''.strip())
 
 >>> print(f.body[0])
-<If 1,4..2,16>
+<If 1,4..4,17>
 
 >>> print(f.src)
 def f(a):
     if a:
         print(a)
+    else:
+        print(-a)
 
 >>> print(f.body[0].src)
 if a:
         print(a)
+    else:
+        print(-a)
 
 >>> print(f.body[0].copy().src)
 if a:
     print(a)
+else:
+    print(-a)
 ```
 
 The `FST.dump()` method can be useful in visualizing the source along with the actual nodes it corresponds to.
@@ -294,7 +309,7 @@ The `FST.dump()` method can be useful in visualizing the source along with the a
 ```py
 >>> f.dump(src='stmt')
 0: def f(a):
-FunctionDef - ROOT 0,0..2,16
+FunctionDef - ROOT 0,0..4,17
   .name 'f'
   .args arguments - 0,6..0,7
     .args[1]
@@ -302,7 +317,7 @@ FunctionDef - ROOT 0,0..2,16
       .arg 'a'
   .body[1]
 1:     if a:
-  0] If - 1,4..2,16
+  0] If - 1,4..4,17
     .test Name 'a' Load - 1,7..1,8
     .body[1]
 2:         print(a)
@@ -311,6 +326,15 @@ FunctionDef - ROOT 0,0..2,16
         .func Name 'print' Load - 2,8..2,13
         .args[1]
         0] Name 'a' Load - 2,14..2,15
+    .orelse[1]
+4:         print(-a)
+    0] Expr - 4,8..4,17
+      .value Call - 4,8..4,17
+        .func Name 'print' Load - 4,8..4,13
+        .args[1]
+        0] UnaryOp - 4,14..4,16
+          .op USub - 4,14..4,15
+          .operand Name 'a' Load - 4,15..4,16
 ```
 
 """
