@@ -1190,7 +1190,7 @@ class FST:
         while stack:
             a, parent, pfield = stack.pop()
 
-            if not (f := getattr(a, 'f', None)) or f.parent is not parent or f.pfield != pfield:
+            if not (f := getattr(a, 'f', None)) or f.parent is not parent or f.pfield != pfield or f.a is not a:
                 if not raise_:
                     return None
 

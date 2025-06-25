@@ -3,12 +3,12 @@
 import re
 from ast import *
 from math import log10
-from typing import Any, Literal, NamedTuple, TypeAlias, Union
+from typing import Any, ForwardRef, Literal, NamedTuple, TypeAlias, Union
 
 try:
     from typing import Self
 except ImportError:
-    Self = 'FST'
+    Self = ForwardRef('FST')
 
 from .astutil import *
 from .astutil import TypeAlias, TryStar, TemplateStr, type_param, Interpolation

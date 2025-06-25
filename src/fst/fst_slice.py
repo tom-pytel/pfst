@@ -1,7 +1,9 @@
 """Get and put slice."""
 
+from __future__ import annotations
+
 from ast import *
-from typing import Literal, Optional
+from typing import Literal
 
 from .astutil import *
 from .astutil import TypeAlias, TryStar, TemplateStr
@@ -89,8 +91,8 @@ _SLICE_COMAPTIBILITY = {
 
 # ----------------------------------------------------------------------------------------------------------------------
 
-def _get_slice(self: 'FST', start: int | Literal['end'] | None, stop: int | None, field: str, cut: bool,
-               **options) -> 'FST':
+def _get_slice(self: FST, start: int | Literal['end'] | None, stop: int | None, field: str, cut: bool,
+               **options) -> FST:
     """Get a slice of child nodes from `self`."""
 
     ast = self.a
@@ -163,7 +165,7 @@ def _get_slice(self: 'FST', start: int | Literal['end'] | None, stop: int | None
 
 # ----------------------------------------------------------------------------------------------------------------------
 
-def _raw_slice_loc(self: 'FST', start: int | Literal['end'] | None, stop: int | None, field: str) -> fstloc:
+def _raw_slice_loc(self: FST, start: int | Literal['end'] | None, stop: int | None, field: str) -> fstloc:
     """Get location of a raw slice. Sepcial cases for decorators, comprehension ifs and other weird nodes."""
 
     def fixup_slice_index_for_raw(len_, start, stop):
@@ -239,8 +241,8 @@ def _raw_slice_loc(self: 'FST', start: int | Literal['end'] | None, stop: int | 
                   *body[stop - 1].f.pars(False)[2:])
 
 
-def _put_slice_raw(self: 'FST', code: Code | None, start: int | Literal['end'] | None, stop: int | None, field: str,
-                   *, one: bool = False, **options) -> Optional['FST']:  # -> Self or reparsed Self
+def _put_slice_raw(self: FST, code: Code | None, start: int | Literal['end'] | None, stop: int | None, field: str,
+                   *, one: bool = False, **options) -> Self | None:  # -> Self or reparsed Self
     """Put a raw slice of child nodes to `self`."""
 
     if code is None:
@@ -302,8 +304,8 @@ def _put_slice_raw(self: 'FST', code: Code | None, start: int | Literal['end'] |
     return self.repath()
 
 
-def _put_slice(self: 'FST', code: Code | None, start: int | Literal['end'] | None, stop: int | None, field: str,
-               one: bool = False, **options) -> Optional['FST']:  # -> Self or reparsed Self or could disappear due to raw
+def _put_slice(self: FST, code: Code | None, start: int | Literal['end'] | None, stop: int | None, field: str,
+               one: bool = False, **options) -> Self | None:  # -> Self or reparsed Self or could disappear due to raw
     """Put an a slice of child nodes to `self`."""
 
     if code is self.root:  # don't allow own root to be put to self

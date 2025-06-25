@@ -1,6 +1,8 @@
+from __future__ import annotations
+
 from ast import *
 from builtins import slice
-from typing import Any, Literal, Optional
+from typing import Any, Literal
 
 from .astutil import *
 from .misc import Code, _fixup_one_index, _fixup_slice_indices
@@ -82,20 +84,20 @@ class fstview:
     ```
     """
 
-    fst:   'FST'  ; """`FST` node this view belongs to."""
-    field: str    ; """The target field of `AST` node being referenced."""
-    start: int    ; """Start position within the target field list of this view."""
-    stop:  int    ; """One past the last element within the target field list of this view."""
+    fst:   FST  ; """The target `FST` node this view references."""
+    field: str  ; """The target field this view references."""
+    start: int  ; """Start position within the target field list this view references."""
+    stop:  int  ; """One past the last element within the target field list this view references."""
 
     is_FST = False  ; """@private"""  # for quick checks vs. `FST`
 
     @property
-    def root(self) -> 'FST':
+    def root(self) -> FST:
         """Root node of the `FST` node this view belongs to."""
 
         return self.fst.root
 
-    def __init__(self, fst: 'FST', field: str, start: int, stop: int):
+    def __init__(self, fst: FST, field: str, start: int, stop: int):
         """@private"""
 
         self.fst   = fst
@@ -211,7 +213,7 @@ class fstview:
             idx        = _fixup_one_index(self.stop - (start := self.start), idx)
             len_before = len(asts := getattr(self.fst.a, self.field))
 
-            self.fst.put(code, start + idx, field=self.field)
+            self.fst = self.fst.put(code, start + idx, field=self.field) or self.fst
 
             self.stop += len(asts) - len_before
 
@@ -222,7 +224,7 @@ class fstview:
             idx_start, idx_stop = _fixup_slice_indices(self.stop - (start := self.start), idx.start, idx.stop)
             len_before          = len(asts := getattr(self.fst.a, self.field))
 
-            self.fst.put_slice(code, start + idx_start, start + idx_stop, self.field)
+            self.fst = self.fst.put_slice(code, start + idx_start, start + idx_stop, self.field)
 
             self.stop += len(asts) - len_before
 
@@ -258,7 +260,7 @@ class fstview:
         if isinstance(idx, int):
             idx = _fixup_one_index((stop := self.stop) - (start := self.start), idx)
 
-            self.fst.put_slice(None, start + idx, start + idx + 1, field=self.field)
+            self.fst = self.fst.put_slice(None, start + idx, start + idx + 1, field=self.field)
 
             self.stop = max(start, stop - 1)
 
@@ -268,11 +270,11 @@ class fstview:
         else:
             idx_start, idx_stop = _fixup_slice_indices((stop := self.stop) - (start := self.start), idx.start, idx.stop)
 
-            self.fst.put_slice(None, start + idx_start, start + idx_stop, self.field)
+            self.fst = self.fst.put_slice(None, start + idx_start, start + idx_stop, self.field)
 
             self.stop = max(start, stop - (idx_stop - idx_start))
 
-    def copy(self, **options) -> 'FST':
+    def copy(self, **options) -> FST:
         """Copy this slice to a new top-level tree, dedenting and fixing as necessary.
 
         **Parameters:**
@@ -290,7 +292,7 @@ class fstview:
 
         return self.fst.get_slice(self.start, self.stop, self.field, cut=False, **options)
 
-    def cut(self, **options) -> 'FST':
+    def cut(self, **options) -> FST:
         """Cut out this slice to a new top-level tree (if possible), dedenting and fixing as necessary. Cannot cut root
         node.
 
@@ -315,7 +317,7 @@ class fstview:
 
         return f
 
-    def replace(self, code: Code | None, one: bool = True, **options) -> Optional['FST']:  # -> Self or reparsed Self or could disappear due to raw
+    def replace(self, code: Code | None, one: bool = True, **options) -> fstview | None:  # -> Self or reparsed Self or could disappear due to raw
         """Replace or delete (if `code=None`) this slice.
 
         **Returns:**
@@ -339,13 +341,13 @@ class fstview:
 
         len_before = len(asts := getattr(self.fst.a, self.field))
 
-        self.fst.put_slice(code, self.start, self.stop, self.field, one=one, **options)
+        self.fst = self.fst.put_slice(code, self.start, self.stop, self.field, one=one, **options)
 
         self.stop += len(asts) - len_before
 
         return self
 
-    def remove(self, **options) -> Optional['FST']:  # -> Self or reparsed Self or could disappear due to raw
+    def remove(self, **options) -> fstview | None:  # -> Self or reparsed Self or could disappear due to raw
         """Delete this slice, equivalent to `replace(None, ...)`
 
         **Parameters:**
@@ -363,13 +365,13 @@ class fstview:
 
         len_before = len(asts := getattr(self.fst.a, self.field))
 
-        self.fst.put_slice(None, self.start, self.stop, self.field, one=True, **options)
+        self.fst = self.fst.put_slice(None, self.start, self.stop, self.field, one=True, **options)
 
         self.stop += len(asts) - len_before
 
         return self
 
-    def insert(self, code: Code, idx: int | Literal['end'] = 0, one: bool = True, **options) -> Optional['FST']:  # -> Self or reparsed Self or could disappear due to raw
+    def insert(self, code: Code, idx: int | Literal['end'] = 0, one: bool = True, **options) -> fstview | None:  # -> Self or reparsed Self or could disappear due to raw
         """Insert into this slice at a specific index.
 
         **Returns:**
@@ -404,13 +406,13 @@ class fstview:
                       stop      if idx > (l := (stop := self.stop) - (start := self.start)) else
                       start + (idx if idx >= 0 else max(0, idx + l)))
 
-        self.fst.put_slice(code, idx, idx, self.field, one=one, **options)
+        self.fst = self.fst.put_slice(code, idx, idx, self.field, one=one, **options)
 
         self.stop += len(asts) - len_before
 
         return self
 
-    def append(self, code: Code, **options) -> Optional['FST']:  # -> Self or reparsed Self or could disappear due to raw
+    def append(self, code: Code, **options) -> fstview | None:  # -> Self or reparsed Self or could disappear due to raw
         """Append `code` as a single element to the end of this slice.
 
         **Returns:**
@@ -430,13 +432,13 @@ class fstview:
         ```
         """
 
-        self.fst.put_slice(code, stop := self.stop, stop, self.field, one=True, **options)
+        self.fst = self.fst.put_slice(code, stop := self.stop, stop, self.field, one=True, **options)
 
         self.stop = stop + 1
 
         return self
 
-    def extend(self, code: Code, **options) -> Optional['FST']:  # -> Self or reparsed Self or could disappear due to raw
+    def extend(self, code: Code, **options) -> fstview | None:  # -> Self or reparsed Self or could disappear due to raw
         """Extend this slice with the slice in `code` (type must be compatible).
 
         **Returns:**
@@ -458,13 +460,13 @@ class fstview:
 
         len_before = len(asts := getattr(self.fst.a, self.field))
 
-        self.fst.put_slice(code, stop := self.stop, stop, self.field, one=False, **options)
+        self.fst = self.fst.put_slice(code, stop := self.stop, stop, self.field, one=False, **options)
 
         self.stop = stop + (len(asts) - len_before)
 
         return self
 
-    def prepend(self, code: Code, **options) -> Optional['FST']:  # -> Self or reparsed Self or could disappear due to raw
+    def prepend(self, code: Code, **options) -> fstview | None:  # -> Self or reparsed Self or could disappear due to raw
         """prepend `code` as a single element to the beginning of this slice.
 
         **Returns:**
@@ -484,13 +486,13 @@ class fstview:
         ```
         """
 
-        self.fst.put_slice(code, start := self.start, start, self.field, one=True, **options)
+        self.fst = self.fst.put_slice(code, start := self.start, start, self.field, one=True, **options)
 
         self.stop += 1
 
         return self
 
-    def prextend(self, code: Code, **options) -> Optional['FST']:  # -> Self or reparsed Self or could disappear due to raw
+    def prextend(self, code: Code, **options) -> fstview | None:  # -> Self or reparsed Self or could disappear due to raw
         """Extend the beginning of this slice with the slice in `code` (type must be compatible).
 
         **Returns:**
@@ -512,7 +514,7 @@ class fstview:
 
         len_before = len(asts := getattr(self.fst.a, self.field))
 
-        self.fst.put_slice(code, start := self.start, start, self.field, one=False, **options)
+        self.fst = self.fst.put_slice(code, start := self.start, start, self.field, one=False, **options)
 
         self.stop += len(asts) - len_before
 
