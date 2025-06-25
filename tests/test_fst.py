@@ -10031,6 +10031,18 @@ c, # c
         f.put(FST('*', alias), 0, 'names')
         self.assertEqual('from a import *', f.src)
 
+        f = FST('from a import (b,)')
+        f.put(FST('*', alias), 0, 'names')
+        self.assertEqual('from a import *', f.src)
+
+        f = FST('from a import (\nb\n)')
+        f.put(FST('*', alias), 0, 'names')
+        self.assertEqual('from a import *', f.src)
+
+        f = FST('from a import (\nb,\n)')
+        f.put(FST('*', alias), 0, 'names')
+        self.assertEqual('from a import *', f.src)
+
     def test_put_one_op_pars(self):
         # boolop
 

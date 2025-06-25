@@ -1259,8 +1259,8 @@ class ReconcileRnd(Fuzzy):
                     if repl and can_replace(f, repl):
                         f.pfield.set(ast, a := copy_ast(repl.a))
 
-                        if self.debug:
-                            self.walk_ast(a, next_level, parents)
+                        # if self.debug:
+                        #     self.walk_ast(a, next_level, parents)
 
                         continue
 

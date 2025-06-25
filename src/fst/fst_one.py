@@ -1045,7 +1045,16 @@ def _put_one_ImportFrom_names(self: FST, code: _PutOneCode, idx: int | None, fie
     ret = _put_one_exprish_required(self, code, idx, field, child, static, 2, **options)
 
     if is_star:  # try to remove parentheses if there
-        self.a.names[0].f.unpar(shared=None)
+        _, _, ln, col         = (name := self.a.names[0].f).loc
+        _, _, end_ln, end_col = self.loc
+        lines                 = self.root._lines
+
+        if comma := _next_find(lines, ln, col, end_ln, end_col, ','):  # if there is a trailing comma then remove it
+            ln, col = comma
+
+            self._put_src(None, ln, col, ln, col + 1, True)
+
+        name.unpar(shared=None)
 
     return ret
 
