@@ -5,6 +5,7 @@ from __future__ import annotations
 
 FST = None  # temporary standin for circular import of real `FST` class
 
+import builtins  # because of the unfortunate choice for the name of an Interpolation field, '.str', we have a '.str' property in FST which messes with the type annotations
 import sys
 from ast import *
 from ast import dump as ast_dump, unparse as ast_unparse, mod as ast_mod
@@ -194,8 +195,8 @@ class FST:
     _cache:       dict
 
     # ROOT ONLY
-    parse_params: dict[str, Any]   ; """The parameters to use for any `ast.parse()` that needs to be done (filename, type_comments, feature_version), root node only."""
-    indent:       str              ; """The default single level of block indentation string for this tree when not available from context, root node only."""
+    parse_params: dict[builtins.str, Any]  ; """The parameters to use for any `ast.parse()` that needs to be done (filename, type_comments, feature_version), root node only."""
+    indent:       builtins.str             ; """The default single level of block indentation string for this tree when not available from context, root node only."""
     _lines:       list[bistr]
     _serial:      int
 
@@ -203,7 +204,7 @@ class FST:
     is_FST:       bool = True      ; """@private"""  # for quick checks vs. `fstloc` or `fstview`
 
     @property
-    def lines(self) -> list[str] | None:
+    def lines(self) -> list[builtins.str] | None:
         """Whole lines which contain this node, may also contain parts of enclosing nodes. If gotten at root then the
         entire source is returned, which may extend beyond the location of the top level node (mostly for statements
         which may have leading / trailing comments or empty lines)."""
@@ -218,7 +219,7 @@ class FST:
             return [s] if (s := OPCLS2STR.get(a.__class__, None)) else None  # for boolop only really, otherwise None
 
     @property
-    def src(self) -> str | None:
+    def src(self) -> builtins.str | None:
         """Source code of this node clipped out of as a single string, without any dedentation. Will have indentation as
         it appears in the top level source if multiple lines. If gotten at root then the entire source is returned,
         regardless of whether the actual top level node location includes it or not."""
@@ -454,7 +455,7 @@ class FST:
     # ------------------------------------------------------------------------------------------------------------------
     # Management
 
-    def __repr__(self) -> str:
+    def __repr__(self) -> builtins.str:
         tail = self._repr_tail()
         head = f'<{self.a.__class__.__name__}{tail}>'
 
@@ -480,42 +481,9 @@ class FST:
 
         return head + '\n???'
 
-    def __getattr__(self, name) -> Any:
-        """Attempt to get attribute which which does not exist in `self` directly from corresponding `AST` node. If
-        present there and is another `AST` then return that `AST` node's corresponding `FST` node. If is a list of `AST`
-        nodes then return an `fstview` of that list which accesses the respective `AST` nodes' `FST` nodes. If is
-        something else like pirimitive constant value then return that directly.
-
-        **Examples:**
-        ```py
-        >>> FST('var = 123').value
-        <Constant 0,6..0,9>
-
-        >>> FST('var = 123').value.value
-        123
-
-        >>> FST('var = 123').targets
-        <<Assign ROOT 0,0..0,9>.targets[0:1] [<Name 0,0..0,3>]>
-
-        >>> FST('var = 123').targets[0]
-        <Name 0,0..0,3>
-
-        >>> FST('var = 123').targets[0].id
-        'var'
-        ```
-        @public
-        """
-
-        if isinstance(child := getattr(self.a, name), list):
-            return fstview(self, name, 0, len(child))
-        elif isinstance(child, AST):
-            return getattr(child, 'f', None)
-
-        return child
-
     def __new__(cls,
-                ast_or_src: AST | str | list[str] | None,
-                mode_or_lines_or_parent: FST | list[str] | Mode | None = None,
+                ast_or_src: AST | builtins.str | list[builtins.str] | None,
+                mode_or_lines_or_parent: FST | list[builtins.str] | Mode | None = None,
                 pfield: astfield | None = None,
                 /, **kwargs):
         """Create a new individual `FST` node or full tree. The main way to use this constructor is as a shortcut for
@@ -651,7 +619,7 @@ class FST:
         return self
 
     @staticmethod
-    def new(mode: Literal['exec', 'eval', 'single'] = 'exec', *, filename: str = '<unknown>',
+    def new(mode: Literal['exec', 'eval', 'single'] = 'exec', *, filename: builtins.str = '<unknown>',
             type_comments: bool = False, feature_version: tuple[int, int] | None = None) -> FST:
         """Create a new empty `FST` tree with the top level node dictated by the `mode` parameter.
 
@@ -704,7 +672,7 @@ class FST:
         return FST(ast, [bistr(src)], parse_params=parse_params, lcopy=False)
 
     @staticmethod
-    def fromsrc(src: str | list[str], mode: Mode = 'exec', *, filename: str = '<unknown>',
+    def fromsrc(src: builtins.str | list[builtins.str], mode: Mode = 'exec', *, filename: builtins.str = '<unknown>',
                 type_comments: bool = False, feature_version: tuple[int, int] | None = None) -> FST:
         """Parse and create a new `FST` tree from source, preserving the original source and locations.
 
@@ -770,7 +738,7 @@ class FST:
         return FST(ast, lines, parse_params=parse_params)
 
     @staticmethod
-    def fromast(ast: AST, mode: Mode | Literal[False] | None = None, *, filename: str = '<unknown>',
+    def fromast(ast: AST, mode: Mode | Literal[False] | None = None, *, filename: builtins.str = '<unknown>',
                 type_comments: bool | None = False, feature_version=None, ctx: bool = False) -> FST:
         r"""Unparse and reparse an `AST` for new `FST` (the reparse is necessary to make sure locations are correct).
 
@@ -845,7 +813,7 @@ class FST:
         return FST(ast, lines, parse_params=parse_params, indent='    ')
 
     @staticmethod
-    def get_options() -> dict[str, Any]:
+    def get_options() -> dict[builtins.str, Any]:
         """Get a dictionary of ALL options. These are the same `options` that can be passed to operations and this
         function returns their global defaults which are used when those options are not passed to operations or if they
         are passed with a value of `None`.
@@ -934,7 +902,7 @@ class FST:
         return _OPTIONS.copy()
 
     @staticmethod
-    def get_option(option: str, options: dict[str, Any] = {}) -> Any:
+    def get_option(option: builtins.str, options: dict[builtins.str, Any] = {}) -> Any:
         """Get a single option from `options` dict or global default if option not in dict or is `None` there. For a
         list of options used see `get_options()`.
 
@@ -962,7 +930,7 @@ class FST:
         return _OPTIONS.get(option) if (o := options.get(option)) is None else o
 
     @staticmethod
-    def set_options(**options) -> dict[str, Any]:
+    def set_options(**options) -> dict[builtins.str, Any]:
         """Set global defaults for `options` parameters.
 
         **Parameters:**
@@ -1030,7 +998,8 @@ class FST:
             FST.set_options(**old_options)
 
     def dump(self, src: Literal['stmt', 'all'] | None = None, full: bool = False, expand: bool = False, *,
-             indent: int = 2, out: Callable | TextIO = print, eol: str | None = None) -> str | list[str] | None:
+             indent: int = 2, out: Callable | TextIO = print, eol: builtins.str | None = None,
+             ) -> builtins.str | list[builtins.str] | None:
         r"""Dump a representation of the tree to stdout or other `TextIO` or return as a `str` or `list` of lines, or
         call a provided function once with each line of the output.
 
@@ -1361,7 +1330,7 @@ class FST:
         raise ValueError(f'cannot delete root node')
 
     def get(self, idx: int | Literal['end'] | None = None, stop: int | None | Literal[False] = False,
-            field: str | None = None, *, cut: bool = False, **options) -> FST | None | str | constant:
+            field: builtins.str | None = None, *, cut: bool = False, **options) -> FST | None | builtins.str | constant:
         r"""Copy or cut an individual child node or a slice of child nodes from `self` if possible. This function can do
         everything that `get_slice()` can.
 
@@ -1451,9 +1420,9 @@ class FST:
 
         return self._get_one(idx, field_, cut, **options)
 
-    def put(self, code: Code | str | constant | None, idx: int | Literal['end'] | None = None,
-            stop: int | None | Literal[False] = False, field: str | None = None, *, one: bool = True, **options,
-            ) -> Self:
+    def put(self, code: Code | builtins.str | constant | None, idx: int | Literal['end'] | None = None,
+            stop: int | None | Literal[False] = False, field: builtins.str | None = None, *, one: bool = True,
+            **options) -> Self:
         r"""Put an individual node or a slice of nodes to `self` if possible. This function can do everything that
         `put_slice()` can. The node is passed as an existing top-level `FST`, `AST`, string or list of string lines. If
         passed as an `FST` then it should be considered "consumed" after this function returns and is no logner valid,
@@ -1560,8 +1529,8 @@ class FST:
 
         return self.repath()
 
-    def get_slice(self, start: int | Literal['end'] | None = None, stop: int | None = None, field: str | None = None, *,
-                  cut: bool = False, **options) -> FST:
+    def get_slice(self, start: int | Literal['end'] | None = None, stop: int | None = None,
+                  field: builtins.str | None = None, *, cut: bool = False, **options) -> FST:
         r"""Copy or cut a slice of child nodes from `self` if possible.
 
         **Parameters:**
@@ -1618,7 +1587,7 @@ class FST:
         return self._get_slice(start, stop, field_, cut, **options)
 
     def put_slice(self, code: Code | None, start: int | Literal['end'] | None = None, stop: int | None = None,
-                  field: str | None = None, *, one: bool = False, **options) -> Self:
+                  field: builtins.str | None = None, *, one: bool = False, **options) -> Self:
         r"""Put a slice of nodes to `self` if possible.  The node is passed as an existing top-level `FST`, `AST`, string
         or list of string lines. If passed as an `FST` then it should be considered "consumed" after this function
         returns and is no logner valid, even on failure. `AST` is copied.
@@ -1697,7 +1666,8 @@ class FST:
 
         return self._put_slice(code, start, stop, field_, one, **options)
 
-    def get_src(self, ln: int, col: int, end_ln: int, end_col: int, as_lines: bool = False) -> str | list[str]:
+    def get_src(self, ln: int, col: int, end_ln: int, end_col: int, as_lines: bool = False,
+                ) -> builtins.str | list[builtins.str]:
         r"""Get source at location, without dedenting or any other modification, returned as a string or individual
         lines. The first and last lines are cropped to start `col` and `end_col`.
 
@@ -2378,7 +2348,7 @@ class FST:
 
         return self
 
-    def child_path(self, child: FST, as_str: bool = False) -> list[astfield] | str:
+    def child_path(self, child: FST, as_str: bool = False) -> list[astfield] | builtins.str:
         """Get path to `child` node from `self` which can later be used on a copy of this tree to get to the  same
         relative child node.
 
@@ -2422,7 +2392,7 @@ class FST:
 
         return path if not as_str else '.'.join(af.name if (i := af.idx) is None else f'{af.name}[{i}]' for af in path)
 
-    def child_from_path(self, path: list[astfield] | str, last_valid: bool = False) -> FST | Literal[False]:
+    def child_from_path(self, path: list[astfield] | builtins.str, last_valid: bool = False) -> FST | Literal[False]:
         """Get child node specified by `path` if it exists. If succeeds then it doesn't mean that the child node is
         guaranteed to be the same or even same type as was originally used to get the path, just that the path is valid.
         For example after deleting an element from a list the item at the former element's location will be the previous
@@ -2639,7 +2609,7 @@ class FST:
     # ------------------------------------------------------------------------------------------------------------------
     # Low level
 
-    def get_indent(self) -> str:
+    def get_indent(self) -> builtins.str:
         r"""Determine proper indentation of node at `stmt` (or other similar) level at or above `self`. Even if it is a
         continuation or on same line as block statement. If indentation is impossible to determine because is solo
         statement on same line as parent block then the current tree default indentation is added to the parent block
@@ -3050,7 +3020,7 @@ class FST:
 
         return True
 
-    def is_enclosed_in_parents(self, field: str | None = None) -> bool:
+    def is_enclosed_in_parents(self, field: builtins.str | None = None) -> bool:
         """Whether `self` is enclosed by some parent up the tree. This is different from `is_enclosed()` as it does not
         check for line continuations or anyting like that, just enclosing delimiters like from `Call` or `FunctionDef`
         arguments parentheses, `List` brackets, `FormattedValue`, parent grouping parentheses, etc... Statements do not
@@ -3594,6 +3564,61 @@ class FST:
         raise RuntimeError(f"you probably think you're accessing an AST node '.f', but you're not, "
                            f"you're accessing an FST {self}.f'")
 
+
+# ------------------------------------------------------------------------------------------------------------------
+# Make AST field accessors (MUST follow FST definition)
+
+def _make_AST_field_accessor(field: str, cardinality: Literal[1, 2, 3]) -> property:
+    if cardinality == 1:
+        @property
+        def accessor(self) -> FST | None | constant:
+            """@private"""
+
+            return getattr(child, 'f', None) if isinstance(child := getattr(self.a, field), AST) else child
+
+    elif cardinality == 2:
+        @property
+        def accessor(self) -> fstview:
+            """@private"""
+
+            return fstview(self, field, 0, len(getattr(self.a, field)))
+
+    else:  # cardinality == 3
+        @property
+        def accessor(self) -> fstview | FST | None | constant:
+            """@private"""
+
+            if isinstance(child := getattr(self.a, field), list):
+                return fstview(self, field, 0, len(child))
+            elif isinstance(child, AST):
+                return getattr(child, 'f', None)
+
+            return child
+
+    return accessor
+
+
+def _make_AST_field_accessors():
+    FST_dict    = FST.__dict__
+    cardinality = {}  # {'field': 1 means single element | 2 means list, ...}
+
+    for fields in FIELDS.values():
+        for f, t in fields:
+            if f == 'lineno':
+                continue
+
+            if f in FST_dict:
+                raise RuntimeError(f'AST field name {f!r} already taken in FST class')
+
+            cardinality[f] = cardinality.get(f, 0) | (2 if t.endswith('*') else 1)
+
+    for f, c in cardinality.items():
+        setattr(FST, f, _make_AST_field_accessor(f, c))
+
+
+_make_AST_field_accessors()
+
+# ------------------------------------------------------------------------------------------------------------------
 
 from .view import fstview
 
