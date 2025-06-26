@@ -10693,6 +10693,46 @@ finally:
 
                 raise
 
+    def test_put_src_special(self):
+        # tabs
+
+        src = '''
+if u:
+\tif a:
+\t\tpass
+\telif x:
+\t\tif y:
+\t\t\toutput.append('/')
+\t\tif z:
+\t\t\tpass
+\t\t\t# directory (with paths underneath it). E.g., "foo" matches "foo",
+\t\t\tpass
+            '''.strip()
+        f = FST(src)
+        s = f.get_src(5, 8, 8, 14)
+        f.put_src(s, 5, 8, 8, 14)
+        self.assertEqual(f.src, src)
+        f.verify()
+
+        # comments trailing single global root statement
+
+        src = '''
+if u:
+  if a:
+    pass
+  elif x:
+    if y:
+      output.append('/')
+    if z:
+      pass
+      # directory (with paths underneath it). E.g., "foo" matches "foo",
+            '''.strip()
+        f = FST(src)
+        s = f.get_src(5, 8, 8, 14)
+        f.put_src(s, 5, 8, 8, 14)
+        self.assertEqual(f.src, src)
+        f.verify()
+
     def test_put_default_non_list_field(self):
         self.assertEqual('y', parse('n').body[0].f.put('y').root.src)  # Expr
         self.assertEqual('return y', parse('return n').body[0].f.put('y').root.src)  # Return

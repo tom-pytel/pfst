@@ -83,6 +83,10 @@ def _reparse_raw_stmtish(self: FST, new_lines: list[str], ln: int, col: int, end
     if in_blkopen := (blkopen_end := stmtish._loc_block_header_end()) and (end_ln, end_col) <= blkopen_end:  # block statement with modification limited to block header
         pend_ln, pend_col = blkopen_end
 
+    elif stmtish is root:  # reparse may include trailing comments which would not otherwise be included
+        pend_ln  = len(lines) - 1
+        pend_col = len(lines[-1])
+
     if isinstance(stmtisha, match_case):
         copy_lines = ([bistr('')] * (pln - 1) +
                       [bistr('match a:'), bistr(' ' * pcol + lines[pln][pcol:])] +
@@ -97,13 +101,13 @@ def _reparse_raw_stmtish(self: FST, new_lines: list[str], ln: int, col: int, end
 
         elif pln:
             copy_lines = ([bistr('if 1:')] +
-                            [bistr('')] * (pln - 1) +
-                            [bistr(' ' * pcol + lines[pln][pcol:])] +
-                            lines[pln + 1 : pend_ln + 1])
+                          [bistr('')] * (pln - 1) +
+                          [bistr(f'{indent}{" " * (pcol - len(indent))}{lines[pln][pcol:]}')] +
+                          lines[pln + 1 : pend_ln + 1])
         else:
             copy_lines = ([bistr(f"try:{' ' * (pcol - 4)}{lines[pln][pcol:]}")] +
-                            lines[pln + 1 : pend_ln + 1] +
-                            [bistr('finally: pass')])
+                          lines[pln + 1 : pend_ln + 1] +
+                          [bistr('finally: pass')])
 
         if isinstance(stmtisha, ExceptHandler):
             assert pln > bool(indent)
