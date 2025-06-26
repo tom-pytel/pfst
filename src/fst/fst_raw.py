@@ -89,14 +89,14 @@ def _reparse_raw_stmtish(self: FST, new_lines: list[str], ln: int, col: int, end
 
     if isinstance(stmtisha, match_case):
         copy_lines = ([bistr('')] * (pln - 1) +
-                      [bistr('match a:'), bistr(' ' * pcol + lines[pln][pcol:])] +
-                      lines[pln + 1 : pend_ln + 1])
+                      [bistr('match a:')] +
+                      lines[pln : pend_ln + 1])
         path       = _PATH_BODYCASES
 
     else:
         indent = stmtish.get_indent()
 
-        if not indent:
+        if not pcol:  # not 'not indent' because could be semicolon
             copy_lines = [bistr('')] * pln + lines[pln : pend_ln + 1]
 
         elif pln:
@@ -104,8 +104,12 @@ def _reparse_raw_stmtish(self: FST, new_lines: list[str], ln: int, col: int, end
                           [bistr('')] * (pln - 1) +
                           [bistr(f'{indent}{" " * (pcol - len(indent))}{lines[pln][pcol:]}')] +
                           lines[pln + 1 : pend_ln + 1])
+
+        elif (off := pcol - 4) < 0:
+            raise NotImplementedError('degenerate statement starts at (0,1), (0,2) or (0,3)')
+
         else:
-            copy_lines = ([bistr(f"try:{' ' * (pcol - 4)}{lines[pln][pcol:]}")] +
+            copy_lines = ([bistr(f"try:{' ' * off}{lines[pln][pcol:]}")] +
                           lines[pln + 1 : pend_ln + 1] +
                           [bistr('finally: pass')])
 
@@ -115,7 +119,7 @@ def _reparse_raw_stmtish(self: FST, new_lines: list[str], ln: int, col: int, end
             copy_lines[pln - 1] = bistr(indent + 'try: pass')
             path                = _PATH_BODY2HANDLERS if indent else _PATH_BODYHANDLERS
 
-        elif not indent:
+        elif not pcol:  # not 'not indent' because could be semicolon
             if stmtish.is_elif():
                 copy_lines[0] = bistr('if 2: pass')
                 path          = _PATH_BODYORELSE

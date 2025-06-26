@@ -10720,6 +10720,36 @@ if u:
         self.assertEqual(f.src, src)
         f.verify()
 
+        f = FST('''
+if u:
+\tmatch x:
+\t\tcase 1:
+\t\t\ti = 2
+            '''.strip())
+        f.put_src('2', 2, 7, 2, 8)
+        self.assertEqual(f.src, '''
+if u:
+\tmatch x:
+\t\tcase 2:
+\t\t\ti = 2
+            '''.strip())
+        f.verify()
+
+        f = FST('''
+if u:
+\tmatch x:
+\t\tcase 1:
+\t\t\ti = 2
+            '''.strip())
+        f.put_src('2:\n\t\t\tj', 2, 7, 3, 4)
+        self.assertEqual(f.src, '''
+if u:
+\tmatch x:
+\t\tcase 2:
+\t\t\tj = 2
+            '''.strip())
+        f.verify()
+
         # comments trailing single global root statement
 
         src = '''
@@ -10737,6 +10767,63 @@ if u:
         s = f.get_src(5, 8, 8, 14)
         f.put_src(s, 5, 8, 8, 14)
         self.assertEqual(f.src, src)
+        f.verify()
+
+        # semicoloned statements
+
+        f = FST('\na; b = 1; c')
+        f.put_src(' = 2', 1, 4, 1, 8)
+        self.assertEqual('\na; b = 2; c', f.src)
+        f.verify()
+
+        f = FST('aaa;b = 1; c')
+        f.put_src(' = 2', 0, 5, 0, 9)
+        self.assertEqual('aaa;b = 2; c', f.src)
+        f.verify()
+
+        f = FST('a;b = 1; c')
+        self.assertRaises(NotImplementedError, f.put_src, ' = 2', 0, 3, 0, 7)
+        f.verify()
+
+        f = FST('a; b = 1; c')
+        self.assertRaises(NotImplementedError, f.put_src, ' = 2', 0, 4, 0, 8)
+        f.verify()
+
+        # line continuations
+
+        f = FST('\\\nb = 1')
+        f.put_src(' = 2', 1, 1, 1, 5)
+        self.assertEqual('\\\nb = 2', f.src)
+        f.verify()
+
+        f = FST('if 1:\n \\\nb = 1')
+        f.put_src(' = 2', 2, 1, 2, 5)
+        self.assertEqual('if 1:\n \\\nb = 2', f.src)
+        f.verify()
+
+        f = FST('if 1:\n \\\n b = 1')
+        f.put_src(' = 2', 2, 2, 2, 6)
+        self.assertEqual('if 1:\n \\\n b = 2', f.src)
+        f.verify()
+
+        f = FST('if 1:\n \\\n  b = 1')
+        f.put_src(' = 2', 2, 3, 2, 7)
+        self.assertEqual('if 1:\n \\\n  b = 2', f.src)
+        f.verify()
+
+        f = FST('if 1:\n \\\naa; b = 1')
+        f.put_src(' = 2', 2, 5, 2, 9)
+        self.assertEqual('if 1:\n \\\naa; b = 2', f.src)
+        f.verify()
+
+        f = FST('if 1:\n \\\n a; b = 1')
+        f.put_src(' = 2', 2, 5, 2, 9)
+        self.assertEqual('if 1:\n \\\n a; b = 2', f.src)
+        f.verify()
+
+        f = FST('if 1:\n \\\n  a;b = 1')
+        f.put_src(' = 2', 2, 5, 2, 9)
+        self.assertEqual('if 1:\n \\\n  a;b = 2', f.src)
         f.verify()
 
     def test_put_default_non_list_field(self):
