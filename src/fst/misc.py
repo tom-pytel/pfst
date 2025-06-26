@@ -209,7 +209,7 @@ Mode = Literal[
 
 
 class NodeError(ValueError):
-    """General FST node error. Used and caught when a raw reparse is possible to pass on to the reparse if allowed."""
+    """General FST node error. Used and caught when a raw reparse is possible to fall back to the reparse if allowed."""
 
 
 class astfield(NamedTuple):

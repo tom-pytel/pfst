@@ -6,7 +6,7 @@ To be able to execute the examples, import this.
 >>> from fst import *
 ```
 
-## In individual functions
+## Individual functions
 
 For a full list of global options see `fst.fst.FST.get_options()`.
 

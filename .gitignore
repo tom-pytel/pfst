@@ -176,4 +176,4 @@ cython_debug/
 *.swp
 *.swo
 
-docs/
+/docs/

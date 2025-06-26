@@ -7,22 +7,13 @@ from pdoc import doc
 from pdoc import extract
 from pdoc import render
 
+PRIVATE = ['fst_parse', 'fst_raw', 'fst_slice_old', 'fst_slice', 'fst_one', 'fst_reconcile', 'fst_walk', 'fst_misc',
+           'srcedit_old']
 
-def pdoc(
-    *modules: Path | str,
-    output_directory: Path | None = None,
-) -> str | None:
-    """
-    Render the documentation for a list of modules.
 
-     - If `output_directory` is `None`, returns the rendered documentation
-       for the first module in the list.
-     - If `output_directory` is set, recursively writes the rendered output
-       for all specified modules and their submodules to the target destination.
-
-    Rendering options can be configured by calling `pdoc.render.configure` in advance.
-    """
+def pdoc(*modules: Path | str, output_directory: Path | None = None) -> str | None:
     all_modules: dict[str, doc.Module] = {}
+
     for module_name in extract.walk_specs(modules):
         all_modules[module_name] = doc.Module.from_name(module_name)
 
@@ -38,10 +29,12 @@ def pdoc(
     assert output_directory
 
     index = render.html_index(all_modules)
+
     if index:
         (output_directory / "index.html").write_bytes(index.encode())
 
     search = render.search_index(all_modules)
+
     if search:
         (output_directory / "search.js").write_bytes(search.encode())
 
@@ -53,15 +46,16 @@ if __name__ == "__main__":
     from collections import abc
     from types import FunctionType
     from typing import ForwardRef, Union, Generator, get_args, get_origin
+    import fst
     from fst import FST
 
     parser = argparse.ArgumentParser(prog='python make_docs.py')
 
     parser.add_argument('--private', default=False, action='store_true', help='expose private stuff')
-    parser.add_argument('modules', type=str, default=[], metavar='module', nargs='*', help='modules to process')
+    # parser.add_argument('modules', type=str, default=[], metavar='module', nargs='*', help='modules to process')
 
-    args    = parser.parse_args()
-    modules = args.modules
+    args = parser.parse_args()
+    # modules = args.modules
 
     if not args.private:
         all_funcs = set(v for k, v in FST.__dict__.items() if isinstance(v, FunctionType))
@@ -69,7 +63,7 @@ if __name__ == "__main__":
     else:
         all_funcs = set()
 
-        for mod in modules:  # add contents of __all_private__ to __all__
+        for mod in (f'fst.{mod}' for mod in PRIVATE):  # add contents of __all_private__ to __all__
             mod = importlib.import_module(mod)
 
             if all_private := getattr(mod, '__all_private__', None):
@@ -95,8 +89,6 @@ if __name__ == "__main__":
         if (o := get_origin(t)) not in allT:
             return t
 
-        # print('...', o, t)
-
         args    = list(get_args(t))
         changed = False
 
@@ -105,14 +97,11 @@ if __name__ == "__main__":
                 args[i] = b
                 changed = True
 
-        # print('   ', changed, o[tuple(args)] if changed else t)
-
         return o[tuple(args)] if changed else t
 
     for f in all_funcs:  # change all 'FST' __annotations__ to point to actual FST class
         if anns := getattr(f, '__annotations__'):
             for a, v in anns.items():
-                # print(f, a, v)  # DEBUG!
                 if v in allFST:
                     anns[a] = FST
                 elif (w := fixTyping(v)) is not v:
@@ -133,4 +122,9 @@ if __name__ == "__main__":
         template_directory=None,
     )
 
-    pdoc(*modules, output_directory=Path('docs'))
+    fst.__all__ = ['docs', 'fst', 'view', 'misc', 'astutil']
+
+    if args.private:
+        fst.__all__.extend(PRIVATE)
+
+    pdoc('fst', output_directory=Path('docs'))

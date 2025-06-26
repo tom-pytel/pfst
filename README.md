@@ -6,7 +6,13 @@ This module exists in order to facilitate quick and easy editing of Python sourc
 
 The fact that it just extends existing `AST` nodes means that the `AST` tree can be used (and edited) as normal anywhere that `AST` is used, and later `unparse()` with formatting preserved where it can be. The degree to which formatting is preserved depends on how many operations are executed natively through `pfst` mechanisms and how well `FST.reconcile()` works for those operations which are not.
 
-Documentation, examples and API reference are in the `docs/` directory.
+# Links
+
+- [Repository](https://github.com/tom-pytel/pfst)
+- [Documentation](https://tom-pytel.github.io/pfst/)
+- [PyPI](https://pypi.org/project/pfst/)
+
+Or for any particular commit in the `docs/` directory.
 
 # Install
 

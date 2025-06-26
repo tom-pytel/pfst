@@ -448,7 +448,7 @@ class FST:
 
     @property
     def end_col_offset(self) -> int:  # byte index
-        """AST-style CHARACTER index one past the end of this node (0 based), available for all nodes which have `loc`."""
+        """AST-style BYTE index one past the end of this node (0 based), available for all nodes which have `loc`."""
 
         return (loc := self.loc) and self.root._lines[loc[2]].c2b(loc[3])
 
@@ -1771,14 +1771,24 @@ class FST:
         >>> print(type(f.targets[0].a))
         <class 'ast.Name'>
 
-        >>> f = FST('if a:\n  i = 2\nelif b:\n  j = 3')
+        >>> f = FST('''
+        ... if a:
+        ...   i = 2
+        ... elif b:
+        ...   j = 3
+        ... '''.strip())
+
         >>> print(f.src)
         if a:
           i = 2
         elif b:
           j = 3
 
-        >>> f.put_src('else:\n  if b:\n    k = 4', *f.orelse[0].loc[:2], *f.loc[2:])
+        >>> f.put_src('''
+        ... else:
+        ...   if b:
+        ...     k = 4
+        ... '''.strip(), *f.orelse[0].loc[:2], *f.loc[2:])
         <If 3,2..4,9>
 
         >>> print(f.src)

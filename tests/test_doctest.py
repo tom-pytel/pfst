@@ -1,11 +1,9 @@
 #!/usr/bin/env python
 
 import doctest
-import importlib
-import os
 import sys
 import unittest
-from types import FunctionType
+from types import FunctionType, ModuleType
 
 import fst
 
@@ -46,25 +44,32 @@ class TestDocTest(unittest.TestCase):
         finally:
             fst.FST.set_options(**options)
 
-    def test_fstview(self):
-        view = sys.modules['fst.view']
-
-        cleanup_docstrs(view)
-        self.assertEqual(0, doctest.testmod(view).failed)
-
-    def test_examples(self):
-        sys.path.insert(0, '')
+    def test_view(self):
+        options = fst.FST.get_options()
 
         try:
-            for example in sorted(e for e in os.listdir('examples') if e.endswith('.py') and not e.startswith('__')):
-                mod = importlib.import_module(f'examples.{example[:-3]}')
+            mod = sys.modules['fst.view']
 
+            cleanup_docstrs(mod)
+            self.assertEqual(0, doctest.testmod(mod).failed)
+
+        finally:
+            fst.FST.set_options(**options)
+
+    def test_docs(self):
+        from fst import docs
+
+        mods    = list(sorted((m for m in docs.__dict__.values() if isinstance(m, ModuleType)),
+                              key=lambda m: m.__name__))
+        options = fst.FST.get_options()
+
+        try:
+            for mod in mods:
                 cleanup_docstrs(mod)
-
                 self.assertEqual(0, doctest.testmod(mod).failed)
 
         finally:
-            del sys.path[0]
+            fst.FST.set_options(**options)
 
 
 if __name__ == '__main__':

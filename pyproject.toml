@@ -30,6 +30,7 @@ dependencies = [
 [project.urls]
 Repository = "https://github.com/tom-pytel/pfst"
 Documentation = "https://tom-pytel.github.io/pfst/"
+PyPI = "https://pypi.org/project/pfst/"
 
 [project.optional-dependencies]
 

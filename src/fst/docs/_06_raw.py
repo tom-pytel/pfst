@@ -208,5 +208,5 @@ Parentheses are always removed for raw slice operations because otherwise it get
 [x, y, (c)]
 ```
 
-If you want to avoid all automatic behavior on raw puts, then use `put_src()` directly.
+If you want to avoid all automatic behavior on raw puts, then use `fst.fst.FST.put_src()` directly.
 """
