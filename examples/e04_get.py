@@ -299,6 +299,80 @@ must currently be carried out using raw operations which, are not as robust.
 TODO: `MatchMapping` and `Compare` will also support special slicing behavior but slice operations for them are not
 implemented yet (other than raw).
 
+## Non-AST values
+
+Using `get()` (and eventually `get_slice()`, not implemented yet) you can get non-AST primitive values from nodes. This
+exists mostly to accomondate `MatchSingleton`, as it just has a primitive value instead of an expression (it is also
+set this way, via primitive).
+
+TODO: Implement `get_slice()` on `Global` and `Nonlocal` `names`.
+
+```py
+>>> f = FST('case True: pass')
+
+>>> f.pattern.get('value')
+True
+```
+
+But this also applies to any other `AST` field which is a primitive.
+
+```py
+>>> FST("b'bytes'", Constant).get('value')
+b'bytes'
+
+>>> FST('[i async for i in j]').generators[0].get('is_async')
+1
+
+>>> FST('a.b: int = 1').get('simple')
+0
+```
+
+## By attribute
+
+The `FST` class provides properties that shadow the fields of all possible `AST` classes in order to allow direct access
+to those fields through the `FST` class. When accessing like this, fields which are `AST` nodes have their corresponding
+`FST` node returned and fields which are lists of `AST` nodes return an `fstview` which acts as a list of corresponding
+`FST` nodes. Elements which are primitive values are returned as such.
+
+```py
+>>> f = FST('i, j = [x, 2.5]')
+
+>>> f.targets  # this is an `fstview`
+<<Assign ROOT 0,0..0,15>.targets[0:1] [<Tuple 0,0..0,4>]>
+
+>>> f.targets[0]
+<Tuple 0,0..0,4>
+
+>>> f.value
+<List 0,7..0,15>
+
+>>> f.value.elts
+<<List 0,7..0,15>.elts[0:2] [<Name 0,8..0,9>, <Constant 0,11..0,14>]>
+
+>>> f.value.elts[0]
+<Name 0,8..0,9>
+
+>>> f.value.elts[0].id
+'x'
+
+>>> f.value.elts[1]
+<Constant 0,11..0,14>
+
+>>> f.value.elts[1].value
+2.5
+```
+
+Accessing in this manner does not give a copy but rather the specific element which is in the tree. If you want a
+standalone element that you can put into another tree then you need to make a copy.
+
+```py
+>>> f.value
+<List 0,7..0,15>
+
+>>> f.value.copy()
+<List ROOT 0,0..0,8>
+```
+
 ## `get_src()`
 
 This just gets source code from a given location. It doesn't matter what node of a tree this is called on, it always
@@ -354,5 +428,4 @@ happy = little = node
 >>> print(f.get_src(*f.loc))
 happy = little = node
 ```
-
 """

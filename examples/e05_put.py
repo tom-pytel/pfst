@@ -289,6 +289,66 @@ False
 i = [1, x, y]
 ```
 
+You can put some fields as primitives.
+
+```py
+>>> f = FST('case True: pass')
+
+>>> f.pattern
+<MatchSingleton 0,5..0,9>
+
+>>> f.pattern.put(False)
+<MatchSingleton 0,5..0,10>
+
+>>> print(f.src)
+case False: pass
+
+>>> f = FST('b"bytes"')
+
+>>> f.dump()
+Constant b'bytes' - ROOT 0,0..0,8
+
+>>> f.put(2.5)
+<Constant ROOT 0,0..0,3>
+
+>>> f.dump()
+Constant 2.5 - ROOT 0,0..0,3
+
+>>> print(f.src)
+2.5
+```
+
+## By attribute
+
+Just like with getting, it is possible to assign directly to an `AST` field on an `FST` node and have that assignment
+processed from the point of view of `FST`. This means that you can assign an `FST` node and all the proper source code
+movements and `AST` setting will be done automatically. Under the hood these assignments are just carried out using
+`put()` and  `put_slice()`, so results will be the same between the two methods.
+
+```py
+>>> f = FST('i, j = [x, 2.5]')
+
+>>> f.targets[0].elts[0] = FST('name')
+
+>>> print(f.src)
+name, j = [x, 2.5]
+
+>>> f.targets[0] = Name(id='z')
+
+>>> print(f.src)
+z = [x, 2.5]
+
+>>> f.value.elts[1:2] = 'a, b'  # this is a view operation, but just to give an idea
+
+>>> print(f.src)
+z = [x, a, b]
+
+>>> f.value.elts = 'c, d, e'  # this is an `FST` attribute operation
+
+>>> print(f.src)
+z = [c, d, e]
+```
+
 ## `put_src()`
 
 Unlike `get_src()` which is a very simple function, `put_src()` doesn't just put text to the source code and leave it at
@@ -384,5 +444,4 @@ if a == x:
     elif z != e:
         pass
 ```
-
 """

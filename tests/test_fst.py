@@ -9375,12 +9375,18 @@ a
             self.assertEqual(s, g.src)
             self.assertEqual(h.value, g.value)
 
+        # put other special primitives
+
+        self.assertRaises(NotImplementedError, FST('from . import a').put, 3, 'level', raw=False)  # not implemented yet
+        self.assertRaises(NotImplementedError, FST('"a"').put, '"u"', 'kind', raw=False)  # not implemented yet
+        self.assertRaises(NotImplementedError, FST('[i for i in j]').generators[0].put, 1, 'is_async', raw=False)  # not implemented yet
+
         # FormattedValue/Interpolation conversion and format_spec, JoinedStr/TemplateStr values
 
         if _PY_VERSION >= (3, 12):
-            self.assertRaises(NodeError, FST('f"{a}"').values[0].put, '"s"', 'conversion', raw=False)  # not implemented yet
-            self.assertRaises(NodeError, FST('f"{a}"').values[0].put, 'f"0.5f"', 'format_spec', raw=False)  # not implemented yet
-            self.assertRaises(NodeError, FST('f"{a}"').put, '"s"', 0, 'values', raw=False)  # not implemented yet
+            self.assertRaises(NotImplementedError, FST('f"{a}"').values[0].put, '"s"', 'conversion', raw=False)  # not implemented yet
+            self.assertRaises(NotImplementedError, FST('f"{a}"').values[0].put, 'f"0.5f"', 'format_spec', raw=False)  # not implemented yet
+            self.assertRaises(NotImplementedError, FST('f"{a}"').put, '"s"', 0, 'values', raw=False)  # not implemented yet
 
             f = FST('f"{a}"', stmt)
 
@@ -9454,9 +9460,9 @@ a
             f.verify()
 
         if _PY_VERSION >= (3, 14):
-            self.assertRaises(NodeError, FST('t"{a}"').values[0].put, '"s"', 'conversion', raw=False)  # not implemented yet
-            self.assertRaises(NodeError, FST('t"{a}"').values[0].put, 'f"0.5f"', 'format_spec', raw=False)  # not implemented yet
-            self.assertRaises(NodeError, FST('t"{a}"').put, '"s"', 0, 'values', raw=False)  # not implemented yet
+            self.assertRaises(NotImplementedError, FST('t"{a}"').values[0].put, '"s"', 'conversion', raw=False)  # not implemented yet
+            self.assertRaises(NotImplementedError, FST('t"{a}"').values[0].put, 'f"0.5f"', 'format_spec', raw=False)  # not implemented yet
+            self.assertRaises(NotImplementedError, FST('t"{a}"').put, '"s"', 0, 'values', raw=False)  # not implemented yet
 
             f = FST('t"{a}"', stmt)
 

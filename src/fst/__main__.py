@@ -42,7 +42,7 @@ def main():
         with open(args.infile, 'rb') as infile:
             source = infile.read()
 
-    ast = parse(source, name, args.mode, type_comments=args.type_comments)
+    ast = parse(source.decode(), name, args.mode, type_comments=args.type_comments)
 
     # if args.no_verify and args.mode in ('exec', 'eval', 'single', 'stmt', 'expr'):
     #     ast.f.verify(raise_=True)

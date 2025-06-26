@@ -28,6 +28,7 @@ from .fst_parse import (
 _PY_VERSION = sys.version_info[:2]
 _PYLT11     = _PY_VERSION < (3, 11)
 _PYLT12     = _PY_VERSION < (3, 12)
+_PYLT14     = _PY_VERSION < (3, 14)
 
 _GetOneRet       = Union['FST', None, str, constant]
 _PutOneCode      = Code | str | constant | None
@@ -755,16 +756,27 @@ def _put_one_BoolOp_op(self: FST, code: _PutOneCode, idx: int | None, field: str
     return childf
 
 
+def _put_one_NOT_IMPLEMENTED_YET(self: FST, code: _PutOneCode, idx: int | None, field: str, child: constant,
+                                 static: onestatic, **options) -> FST:
+    raise NotImplementedError('this is not implemented yet')
+
+
 if _PYLT12:
-    def _put_one_NOT_IMPLEMENTED_YET(self: FST, code: _PutOneCode, idx: int | None, field: str, child: constant,
-                                     static: onestatic, **options) -> FST:
+    def _put_one_NOT_IMPLEMENTED_YET_12(self: FST, code: _PutOneCode, idx: int | None, field: str, child: constant,
+                                        static: onestatic, **options) -> FST:
         raise NotImplementedError('this will only be implemented on python version 3.12 and above')
 
+else:
+    _put_one_NOT_IMPLEMENTED_YET_12 = _put_one_NOT_IMPLEMENTED_YET
+
+
+if _PYLT14:
+    def _put_one_NOT_IMPLEMENTED_YET_14(self: FST, code: _PutOneCode, idx: int | None, field: str, child: constant,
+                                        static: onestatic, **options) -> FST:
+        raise NotImplementedError('this will only be implemented on python version 3.14 and above')
 
 else:
-    def _put_one_NOT_IMPLEMENTED_YET(self: FST, code: _PutOneCode, idx: int | None, field: str, child: constant,
-                                     static: onestatic, **options) -> FST:
-        raise NodeError('this is not implemented yet')
+    _put_one_NOT_IMPLEMENTED_YET_14 = _put_one_NOT_IMPLEMENTED_YET
 
 
 # ......................................................................................................................
@@ -2365,6 +2377,7 @@ _PUT_ONE_HANDLERS = {
     (Import, 'names'):                    (True,  _put_one_exprish_required, onestatic(_one_info_exprish_required, _restrict_default, code_as=_code_as_alias_dotted)), # alias*
     (ImportFrom, 'module'):               (False, _put_one_identifier_optional, onestatic(_one_info_ImportFrom_module, _restrict_default, code_as=_code_as_identifier_dotted)), # identifier? (dotted)
     (ImportFrom, 'names'):                (True,  _put_one_ImportFrom_names, onestatic(_one_info_exprish_required, _restrict_default, code_as=_code_as_alias_star)), # alias*
+    (ImportFrom, 'level'):                (False, _put_one_NOT_IMPLEMENTED_YET, None), # int?
     (Global, 'names'):                    (True,  _put_one_identifier_required, _onestatic_Global_Nonlocal_names), # identifier*
     (Nonlocal, 'names'):                  (True,  _put_one_identifier_required, _onestatic_Global_Nonlocal_names), # identifier*
     (Expr, 'value'):                      (False, _put_one_exprish_required, _onestatic_expr_required), # expr
@@ -2406,15 +2419,16 @@ _PUT_ONE_HANDLERS = {
     (Call, 'args'):                       (True,  _put_one_Call_args, onestatic(_one_info_exprish_required, _restrict_fmtval_slice, code_as=_code_as_callarg)), # expr*
     (Call, 'keywords'):                   (True,  _put_one_Call_keywords, _onestatic_keyword_required), # keyword*
     (FormattedValue, 'value'):            (False, _put_one_exprish_required, _onestatic_expr_required), # expr
-    (FormattedValue, 'conversion'):       (False, _put_one_NOT_IMPLEMENTED_YET, onestatic(_one_info_conversion, Constant)), # int  # onestatic only here for info for raw put, Constant must be str
-    (FormattedValue, 'format_spec'):      (False, _put_one_NOT_IMPLEMENTED_YET, onestatic(_one_info_format_spec, JoinedStr)), # expr?  # onestatic only here for info for raw put
+    (FormattedValue, 'conversion'):       (False, _put_one_NOT_IMPLEMENTED_YET_12, onestatic(_one_info_conversion, Constant)), # int  # onestatic only here for info for raw put, Constant must be str
+    (FormattedValue, 'format_spec'):      (False, _put_one_NOT_IMPLEMENTED_YET_12, onestatic(_one_info_format_spec, JoinedStr)), # expr?  # onestatic only here for info for raw put
     (Interpolation, 'value'):             (False, _put_one_exprish_required, _onestatic_expr_required), # expr
-    # (Interpolation, 'str'):               (False, _put_one_constant, onestatic(None, str)), # constant
-    (Interpolation, 'conversion'):        (False, _put_one_NOT_IMPLEMENTED_YET, onestatic(_one_info_conversion, Constant)), # int  # onestatic only here for info for raw put, Constant must be str
-    (Interpolation, 'format_spec'):       (False, _put_one_NOT_IMPLEMENTED_YET, onestatic(_one_info_format_spec, JoinedStr)), # expr?  # onestatic only here for info for raw put
-    (JoinedStr, 'values'):                (True,  _put_one_NOT_IMPLEMENTED_YET, None), # expr*
-    (TemplateStr, 'values'):              (True,  _put_one_NOT_IMPLEMENTED_YET, None), # expr*
+    (Interpolation, 'str'):               (False, _put_one_NOT_IMPLEMENTED_YET_14, onestatic(None, str)), # constant
+    (Interpolation, 'conversion'):        (False, _put_one_NOT_IMPLEMENTED_YET_14, onestatic(_one_info_conversion, Constant)), # int  # onestatic only here for info for raw put, Constant must be str
+    (Interpolation, 'format_spec'):       (False, _put_one_NOT_IMPLEMENTED_YET_14, onestatic(_one_info_format_spec, JoinedStr)), # expr?  # onestatic only here for info for raw put
+    (JoinedStr, 'values'):                (True,  _put_one_NOT_IMPLEMENTED_YET_12, None), # expr*
+    (TemplateStr, 'values'):              (True,  _put_one_NOT_IMPLEMENTED_YET_12, None), # expr*
     (Constant, 'value'):                  (False, _put_one_constant, onestatic(None, constant)), # constant
+    (Constant, 'kind'):                   (False, _put_one_NOT_IMPLEMENTED_YET, None), # string?
     (Attribute, 'value'):                 (False, _put_one_Attribute_value, _onestatic_expr_required), # expr
     (Attribute, 'attr'):                  (False, _put_one_identifier_required, onestatic(_one_info_Attribute_attr, _restrict_default, code_as=_code_as_identifier)), # identifier
     (Attribute, 'ctx'):                   (False, _put_one_ctx, _onestatic_ctx), # expr_context
@@ -2435,6 +2449,7 @@ _PUT_ONE_HANDLERS = {
     (comprehension, 'target'):            (False, _put_one_exprish_required, _onestatic_target), # expr
     (comprehension, 'iter'):              (False, _put_one_exprish_required, _onestatic_expr_required), # expr
     (comprehension, 'ifs'):               (True,  _put_one_exprish_required, _onestatic_expr_required), # expr*
+    (comprehension, 'is_async'):          (False, _put_one_NOT_IMPLEMENTED_YET, None), # int
     (ExceptHandler, 'type'):              (False, _put_one_exprish_optional, onestatic(_one_info_ExceptHandler_type, _restrict_default)), # expr?
     (ExceptHandler, 'name'):              (False, _put_one_ExceptHandler_name, onestatic(_one_info_ExceptHandler_name, _restrict_default, code_as=_code_as_identifier)), # identifier?
     (ExceptHandler, 'body'):              (True,  None, None), # stmt*

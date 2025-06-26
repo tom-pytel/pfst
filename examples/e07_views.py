@@ -122,6 +122,16 @@ If you want to assign the element as a slice, you must use slice indexing.
 [x, y, [a, b], a, b]
 ```
 
+Or assign directly to the field name, replacing the entire slice, but this is not a view operation but rather a property
+setter of the `FST` class itself.
+
+```py
+>>> f.elts = 't, u, v'
+
+>>> print(f.src)
+[t, u, v]
+```
+
 ## Other operations
 
 With the exception if `insert()` (since its a standard pattern) these operations don't take indices but rather are meant
@@ -223,9 +233,4 @@ invalidate the view information.
 ```
 
 So it is better to let a view go away after using it rather than trying to keep it around.
-
-**Caveat:** Note that accessing a view on an `FST` is a read-only operation. You can access a view and modify it, but
-you cannot assign directly to a view attribute in an `FST`. E.g. `f.elts[:] = ...` is fine, but `f.elts = ...` will not
-do what you think it should.
-
 """
