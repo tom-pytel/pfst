@@ -18,5 +18,5 @@
 
 `examples.e09_reconcile`: Edit pure AST while preserving formatting
 
-`examples.e10_misc`: Options, `verify()` and `dump()`
+`examples.e10_options`: Options
 """
