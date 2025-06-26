@@ -240,84 +240,6 @@ class FST:
         return self.parent is None
 
     @property
-    def is_mod(self) -> bool:
-        """Is a `mod`."""
-
-        return isinstance(self.a, mod)
-
-    @property
-    def is_stmtish(self) -> bool:
-        """Is a `stmt`, `ExceptHandler` or `match_case`."""
-
-        return isinstance(self.a, STMTISH)
-
-    @property
-    def is_stmtish_or_mod(self) -> bool:
-        """Is a `stmt`, `ExceptHandler`, `match_case` or `mod`."""
-
-        return isinstance(self.a, STMTISH_OR_MOD)
-
-    @property
-    def is_stmt(self) -> bool:
-        """Is a `stmt`."""
-
-        return isinstance(self.a, stmt)
-
-    @property
-    def is_stmt_or_mod(self) -> bool:
-        """Is a `stmt` or `mod`."""
-
-        return isinstance(self.a, (stmt, mod))
-
-    @property
-    def is_block(self) -> bool:
-        """Is a node which opens a block. Types include `FunctionDef`, `AsyncFunctionDef`, `ClassDef`, `For`,
-        `AsyncFor`, `While`, `If`, `With`, `AsyncWith`, `Match`, `Try`, `TryStar`, `ExceptHandler` or `match_case`."""
-
-        return isinstance(self.a, BLOCK)
-
-    @property
-    def is_block_or_mod(self) -> bool:
-        """Is a node which opens a block. Types include `FunctionDef`, `AsyncFunctionDef`, `ClassDef`, `For`,
-        `AsyncFor`, `While`, `If`, `With`, `AsyncWith`, `Match`, `Try`, `TryStar`, `ExceptHandler`, `match_case` or
-        `mod`."""
-
-        return isinstance(self.a, BLOCK_OR_MOD)
-
-    @property
-    def is_scope(self) -> bool:
-        """Is a node which opens a scope. Types include `FunctionDef`, `AsyncFunctionDef`, `ClassDef`, `Lambda`,
-        `ListComp`, `SetComp`, `DictComp` or `GeneratorExp`."""
-
-        return isinstance(self.a, SCOPE)
-
-    @property
-    def is_scope_or_mod(self) -> bool:
-        """Is a node which opens a scope. Types include `FunctionDef`, `AsyncFunctionDef`, `ClassDef`, `Lambda`,
-        `ListComp`, `SetComp`, `DictComp`, `GeneratorExp` or `mod`."""
-
-        return isinstance(self.a, SCOPE_OR_MOD)
-
-    @property
-    def is_named_scope(self) -> bool:
-        """Is a node which opens a named scope. Types include `FunctionDef`, `AsyncFunctionDef` or `ClassDef`."""
-
-        return isinstance(self.a, NAMED_SCOPE)
-
-    @property
-    def is_named_scope_or_mod(self) -> bool:
-        """Is a node which opens a named scope. Types include `FunctionDef`, `AsyncFunctionDef`, `ClassDef` or `mod`."""
-
-        return isinstance(self.a, NAMED_SCOPE_OR_MOD)
-
-    @property
-    def is_anon_scope(self) -> bool:
-        """Is a node which opens an anonymous scope. Types include `Lambda`, `ListComp`, `SetComp`, `DictComp` or
-        `GeneratorExp`."""
-
-        return isinstance(self.a, ANONYMOUS_SCOPE)
-
-    @property
     def has_own_loc(self) -> bool:
         """`True` when the node has its own location which comes directly from AST `lineno` and other location fields.
         Otherwise `False` if no `loc` or `loc` is calculated."""
@@ -451,6 +373,95 @@ class FST:
         """AST-style BYTE index one past the end of this node (0 based), available for all nodes which have `loc`."""
 
         return (loc := self.loc) and self.root._lines[loc[2]].c2b(loc[3])
+
+    @property
+    def is_mod(self) -> bool:
+        """Is a `mod`."""
+
+        return isinstance(self.a, mod)
+
+    @property
+    def is_stmtish(self) -> bool:
+        """Is a `stmt`, `ExceptHandler` or `match_case`."""
+
+        return isinstance(self.a, STMTISH)
+
+    @property
+    def is_stmt(self) -> bool:
+        """Is a `stmt`."""
+
+        return isinstance(self.a, stmt)
+
+    @property
+    def is_block(self) -> bool:
+        """Is a node which opens a block. Types include `FunctionDef`, `AsyncFunctionDef`, `ClassDef`, `For`,
+        `AsyncFor`, `While`, `If`, `With`, `AsyncWith`, `Match`, `Try`, `TryStar`, `ExceptHandler`, `match_case` or
+        `mod`."""
+
+        return isinstance(self.a, BLOCK_OR_MOD)
+
+    @property
+    def is_scope(self) -> bool:
+        """Is a node which opens a scope. Types include `FunctionDef`, `AsyncFunctionDef`, `ClassDef`, `Lambda`,
+        `ListComp`, `SetComp`, `DictComp`, `GeneratorExp` or `mod`."""
+
+        return isinstance(self.a, SCOPE_OR_MOD)
+
+    @property
+    def is_named_scope(self) -> bool:
+        """Is a node which opens a named scope. Types include `FunctionDef`, `AsyncFunctionDef`, `ClassDef` or `mod`."""
+
+        return isinstance(self.a, NAMED_SCOPE_OR_MOD)
+
+    @property
+    def is_anon_scope(self) -> bool:
+        """Is a node which opens an anonymous scope. Types include `Lambda`, `ListComp`, `SetComp`, `DictComp` or
+        `GeneratorExp`."""
+
+        return isinstance(self.a, ANONYMOUS_SCOPE)
+
+    @property
+    def is_slice(self) -> bool:
+        """Whether self is a `Slice` or a `Tuple` which directly contains any `Slice`.
+
+        **Examples:**
+        ```py
+        >>> FST('a:b:c', 'slice').is_slice
+        True
+
+        >>> FST('1, d:e', 'slice').is_slice  # Tuple contains at least one Slice
+        True
+
+        >>> # b is in the .slice field but is not a Slice or Slice Tuple
+        >>> FST('a[b]').slice.is_slice
+        False
+        ```
+        """
+
+        return isinstance(a := self.a, Slice) or (isinstance(a, Tuple) and
+                                                  any(isinstance(e, Slice) for e in a.elts))
+
+    @property
+    def is_augop(self) -> bool | None:
+        """Whether `self` is an augmented `operator` or not, or not an `operator` at all.
+
+        **Returns:**
+        - `True` if is augmented `operator`, `False` if non-augmented `operator` and `None` if is not `operator` at all.
+
+        **Examples:**
+        ```py
+        >>> FST('+').is_augop
+        False
+
+        >>> FST('+=').is_augop
+        True
+
+        >>> repr(FST('~').is_augop)
+        'None'
+        ```
+        """
+
+        return None if not isinstance(self.a, operator) else self.get_src(*self.loc) in OPSTR2CLS_AUG
 
     # ------------------------------------------------------------------------------------------------------------------
     # Management
@@ -3361,47 +3372,6 @@ class FST:
 
         return ((parent := self.parent) and self.pfield.name == 'patterns' and
                 isinstance(parenta := parent.a, MatchClass) and not parenta.kwd_patterns and len(parenta.patterns) == 1)
-
-    def is_aug_op(self) -> bool | None:
-        """Whether `self` is an augmented `operator` or not, or not an `operator` at all.
-
-        **Returns:**
-        - `True` if is augmented `operator`, `False` if non-augmented `operator` and `None` if is not `operator` at all.
-
-        **Examples:**
-        ```py
-        >>> FST('+').is_aug_op()
-        False
-
-        >>> FST('+=').is_aug_op()
-        True
-
-        >>> repr(FST('~').is_aug_op())
-        'None'
-        ```
-        """
-
-        return None if not isinstance(self.a, operator) else self.get_src(*self.loc) in OPSTR2CLS_AUG
-
-    def has_slice(self) -> bool:
-        """Whether self is a `Slice` or a `Tuple` which directly contains any `Slice`.
-
-        **Examples:**
-        ```py
-        >>> FST('a:b:c', 'slice').has_slice()
-        True
-
-        >>> FST('1, d:e', 'slice').has_slice()  # Tuple contains at least one Slices
-        True
-
-        >>> # b is in the .slice field but is not a Slice or Slice Tuple
-        >>> FST('a[b]').slice.has_slice()
-        False
-        ```
-        """
-
-        return isinstance(a := self.a, Slice) or (isinstance(a, Tuple) and
-                                                  any(isinstance(e, Slice) for e in a.elts))
 
     # ------------------------------------------------------------------------------------------------------------------
     # Private and other misc stuff

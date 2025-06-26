@@ -10,7 +10,7 @@ import fst
 
 def cleanup_docstrs_recurse(obj, exclude: set[str] = set()):
     for name, o in obj.__dict__.items():
-        if isinstance(o, (FunctionType, type, staticmethod, classmethod)):
+        if isinstance(o, (FunctionType, type, staticmethod, classmethod, property)):
             o = getattr(obj, name)
 
             if doc := getattr(o, '__doc__', None):
@@ -20,8 +20,10 @@ def cleanup_docstrs_recurse(obj, exclude: set[str] = set()):
 
                 except Exception:
                     pass
+
                 else:
-                    cleanup_docstrs_recurse(o, exclude)
+                    if not isinstance(o, property):
+                        cleanup_docstrs_recurse(o, exclude)
 
 
 def cleanup_docstrs(obj, exclude: set[str] = set()):

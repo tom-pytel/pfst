@@ -24,7 +24,7 @@ From GitHub using pip:
 
     pip install git+https://github.com/tom-pytel/pfst.git
 
-From GitHub, cloning for development:
+From GitHub after cloning for development:
 
     pip install -e .[dev]
 
@@ -69,7 +69,7 @@ call()  # something else
 k = 3  # three
 
 >>> a.f.body[0].put('if b:\n    pass  # noop', 'orelse')
->>> a.f.body[0].orelse[0].orelse[:] = old
+>>> a.f.body[0].orelse[0].orelse = old
 
 >>> print(a.f.src)
 if a: func()  # comment
@@ -111,7 +111,7 @@ Reconcile, edit AST outside `pfst` control while preserving formatting:
 ...     If(test=Compare(left=Name(id='result'),
 ...                     ops=[Gt()],
 ...                     comparators=[Constant(value=1)]),
-...        body=[f.a.body[0].body[-1].orelse[0]],
+...        body=[a.body[0].body[-1].orelse[0]],
 ...        orelse=[Return(value=UnaryOp(op=USub(), operand=Constant(value=1)))]
 ...     )
 ... )

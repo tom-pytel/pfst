@@ -284,7 +284,7 @@ def fstcat(fst: FST) -> ASTCat:  # ast category (replacement compatibility)
         return ExceptHandler if isinstance(fst.parent.a, Try) else excepthandler  # Try vs. TryStar
     if isinstance(a, (Starred, Slice)):
         return a.__class__
-    if fst.has_slice():
+    if fst.is_slice:
         return slice  # Tuple containing Slice
 
     return astbase(a.__class__)
@@ -514,7 +514,7 @@ def can_replace(tgt: FST, repl: FST) -> bool:  # assuming ASTCat has already bee
             if not allowed or not isinstance(repla, allowed):
                 return False
 
-        if isinstance(tgta, operator) and isinstance(repla, operator) and tgt.is_aug_op() ^ repl.is_aug_op():
+        if isinstance(tgta, operator) and isinstance(repla, operator) and tgt.is_augop ^ repl.is_augop:
             return False
 
     except Exception:

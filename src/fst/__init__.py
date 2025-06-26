@@ -43,7 +43,7 @@ parsed `AST`s. `fst.docs._01_parse`.
 let you add a `Slice` to a `Tuple` which is not at the top level or already in a `Subscript.slice` field, but you can
 take a `Tuple` with a `Slice` in it already and put it somewhere else where it doesn't belong.
 
-Format preserving native operations exist in two flavors (see the documentation how to use either):
+Format preserving native operations exist in two flavors (see the documentation on how to use either):
   * Prescribed put operations which do specific things for each type of node being put, including precedence and syntax
   parenthesization. `fst.docs._05_put`.
   * Raw mode put operations which just put the raw source you want to replace and then attempt to reparse a small part
