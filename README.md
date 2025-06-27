@@ -12,8 +12,6 @@ The fact that it just extends existing `AST` nodes means that the `AST` tree can
 - [Documentation](https://tom-pytel.github.io/pfst/)
 - [PyPI](https://pypi.org/project/pfst/)
 
-Or for any particular commit in the `docs/` directory.
-
 # Install
 
 From PyPI:
@@ -24,7 +22,7 @@ From GitHub using pip:
 
     pip install git+https://github.com/tom-pytel/pfst.git
 
-From GitHub after cloning for development:
+From GitHub, after cloning for development:
 
     pip install -e .[dev]
 
@@ -33,7 +31,7 @@ From GitHub after cloning for development:
 Format preserving parse and unparse:
 
 ```py
->>> import fst, ast
+>>> import fst
 
 >>> a = fst.parse('''
 ... if a: func()  # comment

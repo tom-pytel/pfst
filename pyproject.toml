@@ -5,7 +5,11 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "pfst"
 description = "Format-preserving high level AST editing for Python 3.10+."
-keywords = ["ast", "fst", "edit", "refactor"]
+keywords = [
+  "ast", "python", "python-ast", "code-transform", "refactoring",
+  "syntax-tree", "code-analysis", "format-preserving", "source-editing",
+  "code-rewriting"
+]
 readme = "README.md"
 license = "MIT"
 authors = [{name = "Tomasz Pytel", email = "tompytel@gmail.com"}]
@@ -14,6 +18,7 @@ dynamic = ["version"]
 
 classifiers = [
   "Development Status :: 3 - Alpha",
+  "Intended Audience :: Developers",
   "Programming Language :: Python :: 3",
   "Programming Language :: Python :: 3.10",
   "Programming Language :: Python :: 3.11",
