@@ -10,6 +10,7 @@ from random import randint, seed, shuffle
 from fst import *
 from fst import fst
 from fst.astutil import TemplateStr, type_param, TypeVar, ParamSpec, TypeVarTuple
+from fst.misc import nspace
 fst_ = fst
 
 from data_put_one import PUT_ONE_DATA
@@ -12437,6 +12438,413 @@ if 1:
         f = o.reconcile(m)
         self.assertEqual('case cls(b=2,c=3,c=3): pass', f.src)
         f.verify()
+
+    def test_ast_accessors(self):
+        def test(f, field, put, expect, src=None):
+            got = getattr(f, field)
+
+            if expect is None:
+                self.assertEqual(str(got) if isinstance(got, fstview) else got, src)  # fstview for kwd_attrs
+
+            else:
+                self.assertIsInstance(got, expect)
+
+                if src is not None:
+                    if expect is FST:
+                        self.assertEqual(src, got.src)
+
+                    else:
+                        try:
+                            self.assertEqual(src, got.copy().src)
+                        except NotImplementedError:  # TODO: because not all slices are implemented prescribed
+                            self.assertEqual(src, str(got))
+
+                        except ValueError as exc:
+                            if not str(exc).startswith('cannot get slice from'):
+                                raise
+
+                            self.assertEqual(src, got[0].copy().src)
+
+            try:
+                setattr(f, field, put)
+
+            except NotImplementedError:
+                with FST.options(raw=True):
+                    try:
+                        setattr(f, field, put)
+
+                    except ValueError as exc:
+                        if not str(exc).startswith('cannot specify a field'):
+                            raise
+
+                        getattr(f, field)[0] = put
+
+            except ValueError as exc:
+                if not str(exc).startswith('cannot put slice to'):
+                    raise
+
+                getattr(f, field)[0] = put
+
+            f.verify()
+
+            return f
+
+        self.assertEqual('a\n', test(FST('i\nj', 'exec'), 'body', 'a', fstview, 'i\nj').src)
+        self.assertEqual('a\n', test(FST('i;j', 'single'), 'body', 'a', fstview, 'i;j').src)
+        self.assertEqual('a', test(FST('i', 'eval'), 'body', 'a', FST, 'i').src)
+
+        f = FST('@deco\ndef func(args) -> ret: pass')
+        self.assertEqual('@neco\ndef func(args) -> ret: pass', test(f, 'decorator_list', '@neco', fstview,
+                                                                    '<<FunctionDef ROOT 1,0..1,27>.decorator_list[0:1] [<Name 0,1..0,5>]>').src)
+        self.assertEqual('@neco\ndef new(args) -> ret: pass', test(f, 'name', 'new', None, 'func').src)
+        self.assertEqual('@neco\ndef new(nargs) -> ret: pass', test(f, 'args', 'nargs', FST, 'args').src)
+        self.assertEqual('@neco\ndef new(nargs) -> int: pass', test(f, 'returns', 'int', FST, 'ret').src)
+        self.assertEqual('@neco\ndef new(nargs) -> int:\n    return\n', test(f, 'body', 'return', fstview, 'pass').src)
+
+        f = FST('@deco\nasync def func(args) -> ret: pass')
+        self.assertEqual('@neco\nasync def func(args) -> ret: pass', test(f, 'decorator_list', '@neco', fstview,
+                                                                          '<<AsyncFunctionDef ROOT 1,0..1,33>.decorator_list[0:1] [<Name 0,1..0,5>]>').src)
+        self.assertEqual('@neco\nasync def new(args) -> ret: pass', test(f, 'name', 'new', None, 'func').src)
+        self.assertEqual('@neco\nasync def new(nargs) -> ret: pass', test(f, 'args', 'nargs', FST, 'args').src)
+        self.assertEqual('@neco\nasync def new(nargs) -> int: pass', test(f, 'returns', 'int', FST, 'ret').src)
+        self.assertEqual('@neco\nasync def new(nargs) -> int:\n    return\n', test(f, 'body', 'return', fstview, 'pass').src)
+
+        f = FST('@deco\nclass cls(base, meta=other): pass')
+        self.assertEqual('@neco\nclass cls(base, meta=other): pass', test(f, 'decorator_list', '@neco', fstview,
+                                                                          '<<ClassDef ROOT 1,0..1,33>.decorator_list[0:1] [<Name 0,1..0,5>]>').src)
+        self.assertEqual('@neco\nclass new(base, meta=other): pass', test(f, 'name', 'new', None, 'cls').src)
+        self.assertEqual('@neco\nclass new(bass, meta=other): pass', test(f, 'bases', 'bass', fstview,
+                                                                          '<<ClassDef ROOT 1,0..1,33>.bases[0:1] [<Name 1,10..1,14>]>').src)
+        self.assertEqual('@neco\nclass new(bass, moto=some): pass', test(f, 'keywords', 'moto=some', fstview,
+                                                                         '<<ClassDef ROOT 1,0..1,33>.keywords[0:1] [<keyword 1,16..1,26>]>').src)
+        self.assertEqual('@neco\nclass new(bass, moto=some):\n    return\n', test(f, 'body', 'return', fstview, 'pass').src)
+
+        self.assertEqual('return yup', test(FST('return yes'), 'value', 'yup', FST, 'yes').src)
+
+        self.assertEqual('del zzz', test(FST('del a, b'), 'targets', 'zzz', fstview,
+                                         '<<Delete ROOT 0,0..0,8>.targets[0:2] [<Name 0,4..0,5>, <Name 0,7..0,8>]>').src)
+
+        self.assertEqual('zzz = c', test(FST('a, b = c'), 'targets', 'zzz', fstview,
+                                         '<<Assign ROOT 0,0..0,8>.targets[0:1] [<Tuple 0,0..0,4>]>').src)
+        self.assertEqual('a, b = zzz', test(FST('a, b = c'), 'value', 'zzz', FST, 'c').src)
+
+        f = FST('a += b')
+        self.assertEqual('new += b', test(f, 'target', 'new', FST, 'a').src)
+        self.assertEqual('new >>= b', test(f, 'op', '>>=', FST, '+=').src)
+        self.assertEqual('new >>= zzz', test(f, 'value', 'zzz', FST, 'b').src)
+
+        f = FST('a: int = v')
+        self.assertEqual('new: int = v', test(f, 'target', 'new', FST, 'a').src)
+        self.assertEqual('new: int = zzz', test(f, 'value', 'zzz', FST, 'v').src)
+        self.assertEqual('new: str = zzz', test(f, 'annotation', 'str', FST, 'int').src)
+        self.assertEqual('(new): str = zzz', test(f, 'simple', 0, None, 1).src)
+
+        f = FST('for a, b in c: pass\nelse: pass')
+        self.assertEqual('for new in c: pass\nelse: pass', test(f, 'target', 'new', FST, 'a, b').src)
+        self.assertEqual('for new in zzz: pass\nelse: pass', test(f, 'iter', 'zzz', FST, 'c').src)
+        self.assertEqual('for new in zzz:\n    return\nelse: pass', test(f, 'body', 'return', fstview, 'pass').src)
+        self.assertEqual('for new in zzz:\n    return\nelse:\n    continue\n', test(f, 'orelse', 'continue', fstview, 'pass').src)
+
+        f = FST('async for a, b in c: pass\nelse: pass')
+        self.assertEqual('async for new in c: pass\nelse: pass', test(f, 'target', 'new', FST, 'a, b').src)
+        self.assertEqual('async for new in zzz: pass\nelse: pass', test(f, 'iter', 'zzz', FST, 'c').src)
+        self.assertEqual('async for new in zzz:\n    return\nelse: pass', test(f, 'body', 'return', fstview, 'pass').src)
+        self.assertEqual('async for new in zzz:\n    return\nelse:\n    continue\n', test(f, 'orelse', 'continue', fstview, 'pass').src)
+
+        f = FST('while a: pass\nelse: pass')
+        self.assertEqual('while new: pass\nelse: pass', test(f, 'test', 'new', FST, 'a').src)
+        self.assertEqual('while new:\n    return\nelse: pass', test(f, 'body', 'return', fstview, 'pass').src)
+        self.assertEqual('while new:\n    return\nelse:\n    continue\n', test(f, 'orelse', 'continue', fstview, 'pass').src)
+
+        f = FST('if a: pass\nelse: pass')
+        self.assertEqual('if new: pass\nelse: pass', test(f, 'test', 'new', FST, 'a').src)
+        self.assertEqual('if new:\n    return\nelse: pass', test(f, 'body', 'return', fstview, 'pass').src)
+        self.assertEqual('if new:\n    return\nelse:\n    continue\n', test(f, 'orelse', 'continue', fstview, 'pass').src)
+
+        f = FST('with a as b: pass')
+        self.assertEqual('with old as new: pass', test(f, 'items', 'old as new', fstview,
+                                                       '<<With ROOT 0,0..0,17>.items[0:1] [<withitem 0,5..0,11>]>').src)
+        self.assertEqual('with old as new:\n    return\n', test(f, 'body', 'return', fstview, 'pass').src)
+
+        f = FST('async with a as b: pass')
+        self.assertEqual('async with old as new: pass', test(f, 'items', 'old as new', fstview,
+                                                       '<<AsyncWith ROOT 0,0..0,23>.items[0:1] [<withitem 0,11..0,17>]>').src)
+        self.assertEqual('async with old as new:\n    return\n', test(f, 'body', 'return', fstview, 'pass').src)
+
+        f = FST('match a:\n    case _: pass')
+        self.assertEqual('match new:\n    case _: pass', test(f, 'subject', 'new', FST, 'a').src)
+        self.assertEqual('match new:\n    case 1: return\n', test(f, 'cases', 'case 1: return', fstview, 'case _: pass').src)
+
+        f = FST('raise exc from cause')
+        self.assertEqual('raise e from cause', test(f, 'exc', 'e', FST, 'exc').src)
+        self.assertEqual('raise e from c', test(f, 'cause', 'c', FST, 'cause').src)
+
+        f = FST('try: pass\nexcept: pass\nelse: pass\nfinally: pass')
+        self.assertEqual('try:\n    return\nexcept: pass\nelse: pass\nfinally: pass', test(f, 'body', 'return', fstview, 'pass').src)
+        self.assertEqual('try:\n    return\nexcept Exception as e: continue\nelse: pass\nfinally: pass', test(f, 'handlers', 'except Exception as e: continue', fstview, 'except: pass').src)
+        self.assertEqual('try:\n    return\nexcept Exception as e: continue\nelse:\n    break\nfinally: pass', test(f, 'orelse', 'break', fstview, 'pass').src)
+        self.assertEqual('try:\n    return\nexcept Exception as e: continue\nelse:\n    break\nfinally:\n    f()\n', test(f, 'finalbody', 'f()', fstview, 'pass').src)
+
+        f = FST('assert test, "msg"')
+        self.assertEqual('assert toast, "msg"', test(f, 'test', 'toast', FST, 'test').src)
+        self.assertEqual('assert toast, "sheep"', test(f, 'msg', '"sheep"', FST, '"msg"').src)
+
+        self.assertEqual('import a, b, c', test(FST('import x, y'), 'names', 'a, b, c', fstview,
+                                                '<<Import ROOT 0,0..0,11>.names[0:2] [<alias 0,7..0,8>, <alias 0,10..0,11>]>').src)
+
+        f = FST('from .module import x, y')
+        self.assertEqual('from .new import x, y', test(f, 'module', 'new', None, 'module').src)
+        self.assertEqual('from .new import a, b, c', test(f, 'names', 'a, b, c', fstview,
+                                                          '<<ImportFrom ROOT 0,0..0,21>.names[0:2] [<alias 0,17..0,18>, <alias 0,20..0,21>]>').src)
+
+        self.assertEqual('global a, b, c', test(FST('global x, y'), 'names', 'a, b, c', fstview,
+                                                "<<Global ROOT 0,0..0,11>.names[0:2] ['x', 'y']>").src)
+
+        self.assertEqual('nonlocal a, b, c', test(FST('nonlocal x, y'), 'names', 'a, b, c', fstview,
+                                                  "<<Nonlocal ROOT 0,0..0,13>.names[0:2] ['x', 'y']>").src)
+
+        self.assertEqual('new', test(FST('v', Expr), 'value', 'new', FST, 'v').src)
+
+        f = FST('a and b and c')
+        self.assertEqual('<<BoolOp ROOT 0,0..0,13>.values[0:3] [<Name 0,0..0,1>, <Name 0,6..0,7>, <Name 0,12..0,13>]>', str(f.values))
+        self.assertEqual('a or b or c', test(f, 'op', 'or', FST, 'and').src)
+
+        f = FST('(a := b)')
+        self.assertEqual('(new := b)', test(f, 'target', 'new', FST, 'a').src)
+        self.assertEqual('(new := old)', test(f, 'value', 'old', FST, 'b').src)
+
+        f = FST('a + b')
+        self.assertEqual('new + b', test(f, 'left', 'new', FST, 'a').src)
+        self.assertEqual('new >> b', test(f, 'op', '>>', FST, '+').src)
+        self.assertEqual('new >> newtoo', test(f, 'right', 'newtoo', FST, 'b').src)
+
+        f = FST('-a')
+        self.assertEqual('not a', test(f, 'op', 'not', FST, '-').src)
+        self.assertEqual('not new', test(f, 'operand', 'new', FST, 'a').src)
+
+        f = FST('lambda a: None')
+        self.assertEqual('lambda args: None', test(f, 'args', 'args', FST, 'a').src)
+        self.assertEqual('lambda args: new', test(f, 'body', 'new', FST, 'None').src)
+
+        f = FST('a if b else c')
+        self.assertEqual('new if b else c', test(f, 'body', 'new', FST, 'a').src)
+        self.assertEqual('new if test else c', test(f, 'test', 'test', FST, 'b').src)
+        self.assertEqual('new if test else blah', test(f, 'orelse', 'blah', FST, 'c').src)
+
+        f = FST('{a: b}')
+        self.assertEqual('<<Dict ROOT 0,0..0,6>.keys[0:1] [<Name 0,1..0,2>]>', str(f.keys))
+        self.assertEqual('<<Dict ROOT 0,0..0,6>.values[0:1] [<Name 0,4..0,5>]>', str(f.values))
+
+        self.assertEqual('{a, b, c}', test(FST('{x, y}'), 'elts', '{a, b, c}', fstview, '{x, y}').src)
+
+        f = FST('[i for i in j if i]')
+        self.assertEqual('[new for i in j if i]', test(f, 'elt', 'new', FST, 'i').src)
+        self.assertEqual('[new async for dog in dogs]', test(f, 'generators', 'async for dog in dogs', fstview,
+                                                             '<<ListComp ROOT 0,0..0,21>.generators[0:1] [<comprehension 0,5..0,20>]>').src)
+
+        f = FST('{i for i in j if i}')
+        self.assertEqual('{new for i in j if i}', test(f, 'elt', 'new', FST, 'i').src)
+        self.assertEqual('{new async for dog in dogs}', test(f, 'generators', 'async for dog in dogs', fstview,
+                                                             '<<SetComp ROOT 0,0..0,21>.generators[0:1] [<comprehension 0,5..0,20>]>').src)
+
+        f = FST('{i: i for i in j if i}')
+        self.assertEqual('{new: i for i in j if i}', test(f, 'key', 'new', FST, 'i').src)
+        self.assertEqual('{new: old for i in j if i}', test(f, 'value', 'old', FST, 'i').src)
+        self.assertEqual('{new: old async for dog in dogs}', test(f, 'generators', 'async for dog in dogs', fstview,
+                                                             '<<DictComp ROOT 0,0..0,26>.generators[0:1] [<comprehension 0,10..0,25>]>').src)
+
+        f = FST('(i for i in j if i)')
+        self.assertEqual('(new for i in j if i)', test(f, 'elt', 'new', FST, 'i').src)
+        self.assertEqual('(new async for dog in dogs)', test(f, 'generators', 'async for dog in dogs', fstview,
+                                                             '<<GeneratorExp ROOT 0,0..0,21>.generators[0:1] [<comprehension 0,5..0,20>]>').src)
+
+        self.assertEqual('await yup', test(FST('await yes'), 'value', 'yup', FST, 'yes').src)
+
+        self.assertEqual('yield yup', test(FST('yield yes'), 'value', 'yup', FST, 'yes').src)
+
+        self.assertEqual('yield from yup', test(FST('yield from yes'), 'value', 'yup', FST, 'yes').src)
+
+        f = FST('a < b < c')
+        self.assertEqual('new < b < c', test(f, 'left', 'new', FST, 'a').src)
+        self.assertEqual('<<Compare ROOT 0,0..0,11>.ops[0:2] [<Lt 0,4..0,5>, <Lt 0,8..0,9>]>', str(f.ops))
+        self.assertEqual('<<Compare ROOT 0,0..0,11>.comparators[0:2] [<Name 0,6..0,7>, <Name 0,10..0,11>]>', str(f.comparators))
+
+        f = FST('call(arg, kw=blah)')
+        self.assertEqual('call(a, b, kw=blah)', test(f, 'args', 'a, b', fstview,
+                                                     '<<Call ROOT 0,0..0,18>.args[0:1] [<Name 0,5..0,8>]>').src)
+        self.assertEqual('call(a, b, kw1=bloh, kws=hmm)', test(f, 'keywords', 'kw1=bloh, kws=hmm', fstview,
+                                                               '<<Call ROOT 0,0..0,19>.keywords[0:1] [<keyword 0,11..0,18>]>').src)
+
+        f = FST('u"a"')
+        self.assertEqual('u', f.kind)
+        self.assertEqual("'new'", test(f, 'value', 'new', None, 'a').src)
+        self.assertRaises(NotImplementedError, setattr, f, 'kind', 'u')
+
+        f = FST('a.b')
+        self.assertEqual('new.b', test(f, 'value', 'new', FST, 'a').src)
+        self.assertEqual('new.dog', test(f, 'attr', 'dog', None, 'b').src)
+        self.assertIsInstance(f.ctx.a, Load)
+
+        f = FST('a[b]')
+        self.assertEqual('new[b]', test(f, 'value', 'new', FST, 'a').src)
+        self.assertEqual('new[dog]', test(f, 'slice', 'dog', FST, 'b').src)
+        self.assertIsInstance(f.ctx.a, Load)
+
+        f = FST('*a')
+        self.assertEqual('*new', test(f, 'value', 'new', FST, 'a').src)
+        self.assertIsInstance(f.ctx.a, Load)
+
+        f = FST('name')
+        self.assertEqual('new', test(f, 'id', 'new', None, 'name').src)
+        self.assertIsInstance(f.ctx.a, Load)
+
+        f = FST('[a, b]')
+        self.assertEqual('[x, y, z]', test(f, 'elts', '[x, y, z]', fstview, '[a, b]').src)
+        self.assertIsInstance(f.ctx.a, Load)
+
+        f = FST('(a, b)')
+        self.assertEqual('(x, y, z)', test(f, 'elts', '(x, y, z)', fstview, '(a, b)').src)
+        self.assertIsInstance(f.ctx.a, Load)
+
+        f = FST('a:b:c')
+        self.assertEqual('low:b:c', test(f, 'lower', 'low', FST, 'a').src)
+        self.assertEqual('low:up:c', test(f, 'upper', 'up', FST, 'b').src)
+        self.assertEqual('low:up:st', test(f, 'step', 'st', FST, 'c').src)
+
+        f = FST('for i in j if i')
+        self.assertEqual('for new in j if i', test(f, 'target', 'new', FST, 'i').src)
+        self.assertEqual('for new in blah if i', test(f, 'iter', 'blah', FST, 'j').src)
+        self.assertEqual('for new in blah if new', test(f, 'ifs', 'if new', fstview,
+                                                        '<<comprehension ROOT 0,0..0,20>.ifs[0:1] [<Name 0,19..0,20>]>').src)
+        self.assertRaises(NotImplementedError, setattr, f, 'is_async', 1)
+
+        f = FST('except Exception as exc: pass')
+        self.assertEqual('except ValueError as exc: pass', test(f, 'type', 'ValueError', FST, 'Exception').src)
+        self.assertEqual('except ValueError as blah: pass', test(f, 'name', 'blah', None, 'exc').src)
+        self.assertEqual('except ValueError as blah:\n    return\n', test(f, 'body', 'return', fstview, 'pass').src)
+
+        f = FST('a, /, b=c, *d, e=f, **g')
+        self.assertEqual('new, /, b=c, *d, e=f, **g', test(f, 'posonlyargs', 'new', fstview, 'a').src)
+        self.assertEqual('new, /, blah=c, *d, e=f, **g', test(f, 'args', 'blah', fstview, 'b').src)
+        self.assertEqual('new, /, blah=cat, *d, e=f, **g', test(f, 'defaults', 'cat', fstview, 'c').src)
+        self.assertEqual('new, /, blah=cat, *va, e=f, **g', test(f, 'vararg', 'va', FST, 'd').src)
+        self.assertEqual('new, /, blah=cat, *va, lemur=f, **g', test(f, 'kwonlyargs', 'lemur', fstview, 'e').src)
+        self.assertEqual('new, /, blah=cat, *va, lemur=raisin, **g', test(f, 'kw_defaults', 'raisin', fstview, 'f').src)
+        self.assertEqual('new, /, blah=cat, *va, lemur=raisin, **splat', test(f, 'kwarg', 'splat', FST, 'g').src)
+
+        f = FST('a: int', arg)
+        self.assertEqual('new: int', test(f, 'arg', 'new', None, 'a').src)
+        self.assertEqual('new: list', test(f, 'annotation', 'list', FST, 'int').src)
+
+        f = FST('a=blah', keyword)
+        self.assertEqual('new=blah', test(f, 'arg', 'new', None, 'a').src)
+        self.assertEqual('new=dog', test(f, 'value', 'dog', FST, 'blah').src)
+
+        f = FST('a as b', alias)
+        self.assertEqual('new as b', test(f, 'name', 'new', None, 'a').src)
+        self.assertEqual('new as cat', test(f, 'asname', 'cat', None, 'b').src)
+
+        f = FST('a as b', withitem)
+        self.assertEqual('new as b', test(f, 'context_expr', 'new', FST, 'a').src)
+        self.assertEqual('new as cat', test(f, 'optional_vars', 'cat', FST, 'b').src)
+
+        f = FST('case a if b: pass')
+        self.assertEqual('case new if b: pass', test(f, 'pattern', 'new', FST, 'a').src)
+        self.assertEqual('case new if old: pass', test(f, 'guard', 'old', FST, 'b').src)
+        self.assertEqual('case new if old:\n    return\n', test(f, 'body', 'return', fstview, 'pass').src)
+
+        self.assertEqual('2', test(FST('1', MatchValue), 'value', '2', FST, '1').src)
+
+        self.assertEqual('True', test(FST('False', MatchSingleton), 'value', True, None, False).src)
+
+        self.assertEqual('[a, b, c]', test(FST('[x, y]', MatchSequence), 'patterns', 'a, b, c', fstview,
+                                           '<<MatchSequence ROOT 0,0..0,6>.patterns[0:2] [<MatchAs 0,1..0,2>, <MatchAs 0,4..0,5>]>').src)
+
+        f = FST('{1: a, **b}', MatchMapping)
+        self.assertEqual('{2: a, **b}', test(f, 'keys', '2', fstview, '1').src)
+        self.assertEqual('{2: new, **b}', test(f, 'patterns', 'new', fstview,
+                                               '<<MatchMapping ROOT 0,0..0,11>.patterns[0:1] [<MatchAs 0,4..0,5>]>').src)
+        self.assertEqual('{2: new, **rest}', test(f, 'rest', 'rest', None, 'b').src)
+
+        f = FST('cls(a, b=c)', MatchClass)
+        self.assertEqual('glob(a, b=c)', test(f, 'cls', 'glob', FST, 'cls').src)
+        self.assertEqual('glob(new, b=c)', test(f, 'patterns', 'new', fstview,
+                                               '<<MatchClass ROOT 0,0..0,12>.patterns[0:1] [<MatchAs 0,5..0,6>]>').src)
+        self.assertEqual('glob(new, kw=c)', test(f, 'kwd_attrs', 'kw', None,
+                                                "<<MatchClass ROOT 0,0..0,14>.kwd_attrs[0:1] ['b']>").src)
+        self.assertEqual('glob(new, kw=blah)', test(f, 'kwd_patterns', 'blah', fstview, 'c').src)
+
+        self.assertEqual('*new', test(FST('*star', MatchStar), 'name', 'new', None, 'star').src)
+
+        f = FST('a as b', MatchAs)
+        self.assertEqual('new as b', test(f, 'pattern', 'new', FST, 'a').src)
+        self.assertEqual('new as grog', test(f, 'name', 'grog', None, 'b').src)
+
+        self.assertEqual('1 | 2 | 3', test(FST('a.b | c.d', MatchOr), 'patterns', '1 | 2 | 3', fstview,
+                                           '<<MatchOr ROOT 0,0..0,9>.patterns[0:2] [<MatchValue 0,0..0,3>, <MatchValue 0,6..0,9>]>').src)
+
+        if not _PYLT11:
+            f = FST('try: pass\nexcept* Exception: pass\nelse: pass\nfinally: pass')
+            self.assertEqual('try:\n    return\nexcept* Exception: pass\nelse: pass\nfinally: pass', test(f, 'body', 'return', fstview, 'pass').src)
+            self.assertEqual('try:\n    return\nexcept* Exception as e: continue\nelse: pass\nfinally: pass', test(f, 'handlers', 'except* Exception as e: continue', fstview, 'except* Exception: pass').src)
+            self.assertEqual('try:\n    return\nexcept* Exception as e: continue\nelse:\n    break\nfinally: pass', test(f, 'orelse', 'break', fstview, 'pass').src)
+            self.assertEqual('try:\n    return\nexcept* Exception as e: continue\nelse:\n    break\nfinally:\n    f()\n', test(f, 'finalbody', 'f()', fstview, 'pass').src)
+
+        if not _PYLT12:
+            self.assertEqual('def func[U](): pass', test(FST('def func[T](): pass'), 'type_params', 'U', fstview,
+                                                         '<<FunctionDef ROOT 0,0..0,19>.type_params[0:1] [<TypeVar 0,9..0,10>]>').src)
+
+            self.assertEqual('async def func[U](): pass', test(FST('async def func[T](): pass'), 'type_params', 'U', fstview,
+                                                               '<<AsyncFunctionDef ROOT 0,0..0,25>.type_params[0:1] [<TypeVar 0,15..0,16>]>').src)
+
+            self.assertEqual('class cls[U]: pass', test(FST('class cls[T]: pass'), 'type_params', 'U', fstview,
+                                                        '<<ClassDef ROOT 0,0..0,18>.type_params[0:1] [<TypeVar 0,10..0,11>]>').src)
+
+            f = FST('type t[T] = v')
+            self.assertEqual('type new[T] = v', test(f, 'name', 'new', FST, 't').src)
+            self.assertEqual('type new[U] = v', test(f, 'type_params', 'U', fstview,
+                                                        '<<TypeAlias ROOT 0,0..0,15>.type_params[0:1] [<TypeVar 0,9..0,10>]>').src)
+            self.assertEqual('type new[U] = zzz', test(f, 'value', 'zzz', FST, 'v').src)
+
+            # these are complicated...
+
+            # (FormattedValue, 'value'):            _get_one_FormattedValue_value, # expr
+            # (FormattedValue, 'conversion'):       _get_one_conversion, # int
+            # (FormattedValue, 'format_spec'):      _get_one_format_spec, # expr?  - no location on py < 3.12
+
+            self.assertEqual('f"new"', test(FST('f"{a}"'), 'values', 'new', fstview,
+                                            '<<JoinedStr ROOT 0,0..0,6>.values[0:1] [<FormattedValue 0,2..0,5>]>').src)  # TODO: the result of this put is incorrect because it is not implemented yet
+
+            self.assertEqual('new', test(FST('T', TypeVar), 'name', 'new', None, 'T').src)
+            self.assertEqual('T: str', test(FST('T: int', TypeVar), 'bound', 'str', FST, 'int').src)
+
+            self.assertEqual('*new', test(FST('*T', TypeVarTuple), 'name', 'new', None, 'T').src)
+
+            self.assertEqual('**new', test(FST('**T', ParamSpec), 'name', 'new', None, 'T').src)
+
+        else:
+            pass
+
+            # (FormattedValue, 'value'):            _get_one_FormattedValue_value, # expr
+            # (FormattedValue, 'conversion'):       _get_one_conversion, # int
+            # (FormattedValue, 'format_spec'):      _get_one_format_spec, # expr?  - no location on py < 3.12
+
+            self.assertEqual('new', test(FST('f"{a}"'), 'values', 'new', fstview,
+                                         '<<JoinedStr ROOT 0,0..0,6>.values[0:1] [<FormattedValue 0,0..0,6>]>').src)  # TODO: the result of this put is incorrect because it is not implemented yet, and will probably not be implemented for py < 3.12
+
+        if not _PYLT13:
+            self.assertEqual('T = str', test(FST('T = int', TypeVar), 'default_value', 'str', FST, 'int').src)
+            self.assertEqual('*T = str', test(FST('*T = int', TypeVarTuple), 'default_value', 'str', FST, 'int').src)
+            self.assertEqual('**T = str', test(FST('**T = int', ParamSpec), 'default_value', 'str', FST, 'int').src)
+
+        if not _PYLT14:
+            # (Interpolation, 'value'):             _get_one_default, # expr
+            # (Interpolation, 'str'):               _get_one_constant, # constant
+            # (Interpolation, 'conversion'):        _get_one_conversion, # int
+            # (Interpolation, 'format_spec'):       _get_one_format_spec, # expr?  - no location on py < 3.12
+
+            self.assertEqual('t"new"', test(FST('t"{a}"'), 'values', 'new', fstview,
+                                            '<<TemplateStr ROOT 0,0..0,6>.values[0:1] [<Interpolation 0,2..0,5>]>').src)  # TODO: the result of this put is incorrect because it is not implemented yet
 
 
 if __name__ == '__main__':

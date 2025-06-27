@@ -38,6 +38,7 @@ dev = [
   "build",
   "setuptools",
   "wheel",
+  "twine",
   "pdoc==15.0.1",
 ]
 

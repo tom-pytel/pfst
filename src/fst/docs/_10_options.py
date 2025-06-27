@@ -77,6 +77,14 @@ def f():
     str'''
 ```
 
+```py
+>>> print(FST('{a, b}').put_slice('{*()}', 1, 1, empty_set=False).src)
+{a, *(), b}
+
+>>> print(FST('{a, b}').put_slice('{*()}', 1, 1, empty_set=True).src)
+{a, b}
+```
+
 ## Global defaults
 
 These options can be set globally with the `set_options()` function, which returns the previous value.

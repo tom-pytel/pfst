@@ -542,17 +542,24 @@ class FST:
         if pfield is None and not isinstance(mode_or_lines_or_parent, list):  # top level shortcut
             params = {k: v for k in ('filename', 'type_comments', 'feature_version')
                       if (v := kwargs.get(k, k)) is not k}  # k used as sentinel
+            indent = None
 
             if from_ := kwargs.get('from_'): # copy parse params from source tree
                 params = {**from_.root.parse_params, **params}
+                indent = from_.indent
 
             if ast_or_src is None:
-                return FST.new('exec' if mode_or_lines_or_parent is None else mode_or_lines_or_parent, **params)
-            if isinstance(ast_or_src, AST):
-                return FST.fromast(ast_or_src, mode_or_lines_or_parent, **params)
+                f = FST.new('exec' if mode_or_lines_or_parent is None else mode_or_lines_or_parent, **params)
+            elif isinstance(ast_or_src, AST):
+                f = FST.fromast(ast_or_src, mode_or_lines_or_parent, **params)
+            else:
+                f = FST.fromsrc(ast_or_src, 'all' if mode_or_lines_or_parent is None else mode_or_lines_or_parent,
+                                **params)
 
-            return FST.fromsrc(ast_or_src, 'all' if mode_or_lines_or_parent is None else mode_or_lines_or_parent,
-                               **params)
+            if indent is not None or (indent := kwargs.get('indent')) is not None:
+                f.indent = indent
+
+            return f
 
         # creating actual node
 

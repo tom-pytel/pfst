@@ -161,6 +161,8 @@ if _PYLT12:
 
 
 else:
+    _get_one_FormattedValue_value = _get_one_default
+
     def _get_one_conversion(self: FST, idx: int | None, field: str, cut: bool, **options) -> _GetOneRet:
         child, _ = _validate_get(self, idx, field)
 
@@ -377,7 +379,7 @@ _GET_ONE_HANDLERS = {
     (Call, 'func'):                       _get_one_default, # expr
     (Call, 'args'):                       _get_one_default, # expr*
     (Call, 'keywords'):                   _get_one_default, # keyword*
-    (FormattedValue, 'value'):            _get_one_default if not _PYLT12 else _get_one_FormattedValue_value, # expr
+    (FormattedValue, 'value'):            _get_one_FormattedValue_value, # expr
     (FormattedValue, 'conversion'):       _get_one_conversion, # int
     (FormattedValue, 'format_spec'):      _get_one_format_spec, # expr?  - no location on py < 3.12
     (Interpolation, 'value'):             _get_one_default, # expr
@@ -620,7 +622,11 @@ def _put_one_constant(self: FST, code: _PutOneCode, idx: int | None, field: str,
 
     self._put_src(repr(value), *self.loc, True)
 
-    self.a.value = value
+    ast       = self.a
+    ast.value = value
+
+    if hasattr(ast, 'kind'):  # reset any 'u' kind strings
+        ast.kind = None
 
     return self  # this breaks the rule of returning the child node since it is just a primitive
 

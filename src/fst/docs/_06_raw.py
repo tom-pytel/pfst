@@ -6,6 +6,11 @@ To be able to execute the examples, import this.
 >>> from fst import *
 ```
 
+**Note:** `fst` is eventually intended to run with the global option `raw` set to `'auto'`, but as the prescribed slice
+operations are not all implemented yet it is currently set as `False`. This is because `'auto'` can lead to some raw put
+attempts which can result in some confusing error messages. If you are fine with some weird syntax exceptions then do
+`FST.set_options(raw='auto')` and you should get slice puts succeeding where otherwise they wouldn't.
+
 Raw put operations are different from the standard prescribed operations in that for the most part they do not take into
 account rules like precedence and indentation for the nodes being put and replaced and just try to put the source at the
 location and reparse. They exist because they allow things which are not covered or otherwise impossible with normal

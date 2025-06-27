@@ -59,6 +59,15 @@ There is also a mechanism for allowing outside editing of the `AST` tree and the
 to preserve formatting where possible. This is intended for existing code or third-party libraries which don't know
 anything about `fst` to maybe gain the ability to preserve some existing formatting when editing a tree.
 `fst.docs._09_reconcile`.
+
+# Notes
+
+* `JoinedStr` and `TemplateStr` internal accesses are not quite finished yet. You can get and put `FormattedValue.value`
+a `Interpolation.value` on python >= 3.12 fine, but the other fields may or may not work putting in raw mode as
+prescribed operations are not done yet.
+
+* `fst` is eventually intended to run with the global option `raw` set to `'auto'` but is currently set to `False`. See
+`fst.docs._06_raw` for more details.
 """
 
 import ast

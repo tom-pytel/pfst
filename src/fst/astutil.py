@@ -29,9 +29,11 @@ __all__ = [
 ]
 
 
+if sys.version_info[:2] < (3, 11):  # for isinstance() checks
+    class TryStar(AST): pass
+
 if sys.version_info[:2] < (3, 12):  # for isinstance() checks
     class TypeAlias(AST): pass
-    class TryStar(AST): pass
     class type_param(AST): pass
     class TypeVar(AST): pass
     class ParamSpec(AST): pass
