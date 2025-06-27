@@ -121,6 +121,7 @@ def compute(x, y):
         x * scalar1  # x gets 60%
         + y * scalar2  # y gets 40%
     )
+
     # Apply thresholding
     if (
         result > 10
