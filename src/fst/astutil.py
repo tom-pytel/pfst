@@ -641,7 +641,7 @@ _compare_primitive_type_comments_func = (
     (lambda p1, p2, n, i: p1.__class__ is p2.__class__ and p1 == p2),
 )
 
-def compare_asts(ast1: AST, ast2: AST, *, locs: bool = False, type_comments: bool = False, ctx: bool = True,
+def compare_asts(ast1: AST, ast2: AST, *, locs: bool = False, ctx: bool = True, type_comments: bool = False,
                  recurse: bool = True, skip1: set | frozenset | None = None, skip2: set | frozenset | None = None,
                  cb_primitive: Callable[[Any, Any, str, int], bool] | None = None, raise_: bool = False) -> bool:
     """Compare two trees including possibly locations and type comments using `walk2()`.
@@ -650,6 +650,7 @@ def compare_asts(ast1: AST, ast2: AST, *, locs: bool = False, type_comments: boo
     - `ast1`: First `AST` tree (redundant) to compare.
     - `ast2`: Second `AST` tree to compare.
     - `locs`: Whether to compare location attributes or not (`lineno`, `col_offset`, etc...).
+    - `ctx`: Whether to compare `ctx` nodes or not.
     - `type_comments`: Whether to compare type comments or not. Ignored if `cb_primitive` provided.
     - `skip1`: List of nodes in the first tree to skip comparing, will skip the corresponding node in the second tree.
     - `skip2`: List of nodes in the second tree to skip comparing, will skip the corresponding node in the first tree.

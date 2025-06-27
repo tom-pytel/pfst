@@ -2,9 +2,9 @@
 
 This module exists in order to facilitate quick and easy editing of Python source while preserving formatting. It automatically deals with all the silly nonsense like indentation, parentheses, commas, comments, docstrings, semicolons, line continuations, precedence, else vs. elif, etc... And especially the many, many niche special cases of Python syntax.
 
-`pfst` provides its own format-preserving operations for `AST` trees, but also allows the `AST` tree to be changed by anything else outside of its control and can then reconcile the changes with what it knows to preserve formatting where possible. It works by adding `FST` nodes to existing `AST` nodes as an `.f` attribute which keep extra structure information, the original source, and provide the interface to the format-preserving operations.
+`fst` provides its own format-preserving operations for `AST` trees, but also allows the `AST` tree to be changed by anything else outside of its control and can then reconcile the changes with what it knows to preserve formatting where possible. It works by adding `FST` nodes to existing `AST` nodes as an `.f` attribute which keep extra structure information, the original source, and provide the interface to the format-preserving operations.
 
-The fact that it just extends existing `AST` nodes means that the `AST` tree can be used (and edited) as normal anywhere that `AST` is used, and later `unparse()` with formatting preserved where it can be. The degree to which formatting is preserved depends on how many operations are executed natively through `pfst` mechanisms and how well `FST.reconcile()` works for those operations which are not.
+The fact that it just extends existing `AST` nodes means that the `AST` tree can be used (and edited) as normal anywhere that `AST` is used, and later `unparse()` with formatting preserved where it can be. The degree to which formatting is preserved depends on how many operations are executed natively through `fst` mechanisms and how well `FST.reconcile()` works for those operations which are not.
 
 # Links
 
@@ -80,7 +80,7 @@ else:
     k = 3  # three
 ```
 
-Reconcile, edit AST outside `pfst` control while preserving formatting:
+Reconcile, edit AST outside `fst` control while preserving formatting:
 
 ```py
 >>> a = fst.parse('''
