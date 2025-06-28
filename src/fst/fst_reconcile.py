@@ -230,7 +230,7 @@ class _Reconcile:
         outf  = outa.f
 
         for field, child in iter_fields(node):
-            if field in ('ctx', 'str'):  # redundant or possibly contradictory
+            if field in ('ctx', 'str'):  # redundant or possibly contradictory, TODO: exclude 'level', 'kind', 'is_async'?
                 continue
 
             if isinstance(child, AST):  # AST, but out may not have anything at this position

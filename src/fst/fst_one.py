@@ -713,18 +713,55 @@ def _put_one_AnnAssign_simple(self: FST, code: _PutOneCode, idx: int | None, fie
     if value.__class__ is not int or not 0 <= value <= 1:
         raise ValueError('expection 0 or 1')
 
-    is_name = isinstance(target := ast.target, Name)
+    if value != self.a.simple:
+        is_name = isinstance(target := ast.target, Name)
 
-    if value:
-        if not is_name:
-            raise ValueError('cannot make simple')
+        if value:
+            if not is_name:
+                raise ValueError('cannot make simple')
 
-        target.f._unparenthesize_grouping()
+            target.f._unparenthesize_grouping()
 
-    elif is_name and not target.f.pars().n:
-        target.f._parenthesize_grouping()
+        elif is_name and not target.f.pars().n:
+            target.f._parenthesize_grouping()
 
-    self.a.simple = value
+        self.a.simple = value
+
+    return self  # cannot return primitive
+
+
+def _put_one_ImportFrom_level(self: FST, code: _PutOneCode, idx: int | None, field: str, child: type[boolop],
+                              static: None, **options) -> FST:
+    """Set a comprehension as async or sync."""
+
+    ast   = self.a
+    child = _validate_put(self, code, idx, field, child)
+    value = _code_as_constant(code, self.root.parse_params)
+
+    if value.__class__ is not int or value < 0:
+        raise ValueError(f'expection int >= 0, got {value!r}')
+
+    if value != child:
+        if not value and self.a.module is None:
+            raise ValueError('cannot set ImportFrom.level to 0 in this state (no module present)')
+
+        lines                 = self.root._lines
+        ln, col, _, _         = self.loc
+        end_ln, end_col, _, _ = ast.names[0].f.loc
+        ln, col, _            = _next_src(lines, ln, col + 4, end_ln, end_col)  # must be there, col + 4 is just past 'from'
+        start_ln              = ln
+        start_col             = col
+
+        while dot := _next_find(lines, ln, col, end_ln, end_col, '.'):
+            ln, col  = dot
+            col     += 1
+            child   -= 1
+
+        assert not child
+
+        self._put_src('.' * value, start_ln, start_col, ln, col, False)
+
+        ast.level = value
 
     return self  # cannot return primitive
 
@@ -760,6 +797,62 @@ def _put_one_BoolOp_op(self: FST, code: _PutOneCode, idx: int | None, field: str
                 f._parenthesize_grouping()
 
     return childf
+
+
+def _put_one_Constant_kind(self: FST, code: _PutOneCode, idx: int | None, field: str, child: type[boolop], static: None,
+                           **options) -> FST:
+    """Set a Constant string kind to 'u' or None, this is truly unnecessary."""
+
+    child = _validate_put(self, code, idx, field, child, can_del=True)
+    value = _code_as_constant(code, self.root.parse_params)
+
+    if not isinstance(self.value, str):
+        raise ValueError(f'cannot set kind of non-str Constant')
+
+    ln, col, _, _ = self.loc
+    lines         = self.root.lines
+
+    if value != child:
+        if value is None:
+            if lines[ln].startswith('u', col):
+                self._put_src(None, ln, col, ln, col + 1, False)
+
+        elif value == 'u':
+            if lines[ln][col : col + 1] in '\'"':
+                self._put_src(['u'], ln, col, ln, col, False, False)
+
+        else:
+            raise ValueError(f"expecting 'u' or None, got {value!r}")
+
+        self.a.kind = value
+
+    return self  # cannot return primitive
+
+
+def _put_one_comprehension_is_async(self: FST, code: _PutOneCode, idx: int | None, field: str, child: type[boolop],
+                                    static: None, **options) -> FST:
+    """Set a comprehension as async or sync."""
+
+    child = _validate_put(self, code, idx, field, child)
+    value = _code_as_constant(code, self.root.parse_params)
+
+    if value.__class__ is not int or not 0 <= value <= 1:
+        raise ValueError(f'expection 0 or 1, got {value!r}')
+
+    if value != child:
+        ln, col, end_ln, end_col = self.loc
+
+        if value:
+            self._put_src(['async '], ln, col, ln, col, False, False)
+
+        else:
+            end_ln, end_col = _next_find(self.root._lines, ln, col, end_ln, end_col, 'for')  # must be there
+
+            self._put_src(None, ln, col, end_ln, end_col, False)
+
+        self.a.is_async = value
+
+    return self  # cannot return primitive
 
 
 def _put_one_NOT_IMPLEMENTED_YET(self: FST, code: _PutOneCode, idx: int | None, field: str, child: constant,
@@ -2383,7 +2476,7 @@ _PUT_ONE_HANDLERS = {
     (Import, 'names'):                    (True,  _put_one_exprish_required, onestatic(_one_info_exprish_required, _restrict_default, code_as=_code_as_alias_dotted)), # alias*
     (ImportFrom, 'module'):               (False, _put_one_identifier_optional, onestatic(_one_info_ImportFrom_module, _restrict_default, code_as=_code_as_identifier_dotted)), # identifier? (dotted)
     (ImportFrom, 'names'):                (True,  _put_one_ImportFrom_names, onestatic(_one_info_exprish_required, _restrict_default, code_as=_code_as_alias_star)), # alias*
-    (ImportFrom, 'level'):                (False, _put_one_NOT_IMPLEMENTED_YET, None), # int?
+    (ImportFrom, 'level'):                (False, _put_one_ImportFrom_level, None), # int?
     (Global, 'names'):                    (True,  _put_one_identifier_required, _onestatic_Global_Nonlocal_names), # identifier*
     (Nonlocal, 'names'):                  (True,  _put_one_identifier_required, _onestatic_Global_Nonlocal_names), # identifier*
     (Expr, 'value'):                      (False, _put_one_exprish_required, _onestatic_expr_required), # expr
@@ -2434,7 +2527,7 @@ _PUT_ONE_HANDLERS = {
     (JoinedStr, 'values'):                (True,  _put_one_NOT_IMPLEMENTED_YET_12, None), # expr*
     (TemplateStr, 'values'):              (True,  _put_one_NOT_IMPLEMENTED_YET_12, None), # expr*
     (Constant, 'value'):                  (False, _put_one_constant, onestatic(None, constant)), # constant
-    (Constant, 'kind'):                   (False, _put_one_NOT_IMPLEMENTED_YET, None), # string?
+    (Constant, 'kind'):                   (False, _put_one_Constant_kind, None), # string?
     (Attribute, 'value'):                 (False, _put_one_Attribute_value, _onestatic_expr_required), # expr
     (Attribute, 'attr'):                  (False, _put_one_identifier_required, onestatic(_one_info_Attribute_attr, _restrict_default, code_as=_code_as_identifier)), # identifier
     (Attribute, 'ctx'):                   (False, _put_one_ctx, _onestatic_ctx), # expr_context
@@ -2455,7 +2548,7 @@ _PUT_ONE_HANDLERS = {
     (comprehension, 'target'):            (False, _put_one_exprish_required, _onestatic_target), # expr
     (comprehension, 'iter'):              (False, _put_one_exprish_required, _onestatic_expr_required), # expr
     (comprehension, 'ifs'):               (True,  _put_one_exprish_required, _onestatic_expr_required), # expr*
-    (comprehension, 'is_async'):          (False, _put_one_NOT_IMPLEMENTED_YET, None), # int
+    (comprehension, 'is_async'):          (False, _put_one_comprehension_is_async, None), # int
     (ExceptHandler, 'type'):              (False, _put_one_exprish_optional, onestatic(_one_info_ExceptHandler_type, _restrict_default)), # expr?
     (ExceptHandler, 'name'):              (False, _put_one_ExceptHandler_name, onestatic(_one_info_ExceptHandler_name, _restrict_default, code_as=_code_as_identifier)), # identifier?
     (ExceptHandler, 'body'):              (True,  None, None), # stmt*
@@ -2519,13 +2612,6 @@ _PUT_ONE_HANDLERS = {
     # (With, 'type_comment'):               (), # string?
     # (AsyncWith, 'type_comment'):          (), # string?
     # (arg, 'type_comment'):                (), # string?
-
-    # MAYBE DO:
-    # =========
-
-    # (ImportFrom, 'level'):                (), # int?
-    # (Constant, 'kind'):                   (), # string?
-    # (comprehension, 'is_async'):          (), # int
 }
 
 # ----------------------------------------------------------------------------------------------------------------------

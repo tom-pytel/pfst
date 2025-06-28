@@ -9378,9 +9378,43 @@ a
 
         # put other special primitives
 
-        self.assertRaises(NotImplementedError, FST('from . import a').put, 3, 'level', raw=False)  # not implemented yet
-        self.assertRaises(NotImplementedError, FST('"a"').put, '"u"', 'kind', raw=False)  # not implemented yet
-        self.assertRaises(NotImplementedError, FST('[i for i in j]').generators[0].put, 1, 'is_async', raw=False)  # not implemented yet
+        f = FST('from .\\\n.\\\n.module import a')
+        f.put(0, 'level')
+        self.assertEqual('from module import a', f.src)
+        self.assertEqual(0, f.level)
+        f.verify()
+        f.put(5, 'level')
+        self.assertEqual('from .....module import a', f.src)
+        self.assertEqual(5, f.level)
+        f.verify()
+
+        f = FST('"text"')
+        f.put('u', 'kind')
+        self.assertEqual('u"text"', f.src)
+        self.assertEqual('u', f.kind)
+        f.verify()
+        f.put(None, 'kind')
+        self.assertEqual('"text"', f.src)
+        self.assertEqual(None, f.kind)
+        f.verify()
+
+        f = FST('[i for j in k for i in j]')
+        f.generators[0].put(1, 'is_async')
+        self.assertEqual('[i async for j in k for i in j]', f.src)
+        self.assertEqual(1, f.generators[0].is_async)
+        f.verify()
+        f.generators[1].put(1, 'is_async')
+        self.assertEqual('[i async for j in k async for i in j]', f.src)
+        self.assertEqual(1, f.generators[1].is_async)
+        f.verify()
+        f.generators[0].put(0, 'is_async')
+        self.assertEqual('[i for j in k async for i in j]', f.src)
+        self.assertEqual(0, f.generators[0].is_async)
+        f.verify()
+        f.generators[1].put(0, 'is_async')
+        self.assertEqual('[i for j in k for i in j]', f.src)
+        self.assertEqual(0, f.generators[1].is_async)
+        f.verify()
 
         # FormattedValue/Interpolation conversion and format_spec, JoinedStr/TemplateStr values
 
@@ -12596,6 +12630,7 @@ if 1:
         self.assertEqual('from .new import x, y', test(f, 'module', 'new', None, 'module').src)
         self.assertEqual('from .new import a, b, c', test(f, 'names', 'a, b, c', fstview,
                                                           '<<ImportFrom ROOT 0,0..0,21>.names[0:2] [<alias 0,17..0,18>, <alias 0,20..0,21>]>').src)
+        self.assertEqual('from ...new import a, b, c', test(f, 'level', 3, None, 1).src)
 
         self.assertEqual('global a, b, c', test(FST('global x, y'), 'names', 'a, b, c', fstview,
                                                 "<<Global ROOT 0,0..0,11>.names[0:2] ['x', 'y']>").src)
@@ -12678,7 +12713,7 @@ if 1:
         f = FST('u"a"')
         self.assertEqual('u', f.kind)
         self.assertEqual("'new'", test(f, 'value', 'new', None, 'a').src)
-        self.assertRaises(NotImplementedError, setattr, f, 'kind', 'u')
+        self.assertEqual("u'new'", test(f, 'kind', 'u', None, None).src)
 
         f = FST('a.b')
         self.assertEqual('new.b', test(f, 'value', 'new', FST, 'a').src)
@@ -12716,7 +12751,7 @@ if 1:
         self.assertEqual('for new in blah if i', test(f, 'iter', 'blah', FST, 'j').src)
         self.assertEqual('for new in blah if new', test(f, 'ifs', 'if new', fstview,
                                                         '<<comprehension ROOT 0,0..0,20>.ifs[0:1] [<Name 0,19..0,20>]>').src)
-        self.assertRaises(NotImplementedError, setattr, f, 'is_async', 1)
+        self.assertEqual('async for new in blah if new', test(f, 'is_async', 1, None, 0).src)
 
         f = FST('except Exception as exc: pass')
         self.assertEqual('except ValueError as exc: pass', test(f, 'type', 'ValueError', FST, 'Exception').src)
