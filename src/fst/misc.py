@@ -117,9 +117,9 @@ Mode = Literal[
     'match_cases',
     'match_case',
     'expr',
-    'slice',
-    'sliceelt',
-    'callarg',
+    'expr_slice',
+    'expr_sliceelt',
+    'expr_callarg',
     'boolop',
     'operator',
     'binop',
@@ -171,11 +171,11 @@ Mode = Literal[
 - `'expr'`: "expression", parse a single `expr` returned as itself. This is differentiated from the following three
     modes by the handling of slices and starred expressions. In this mode `a:b` and `*not v` are syntax errors. Same as
     passing `expr` type.
-- `'slice'`: "slice expression", same as `'expr'` except that in this mode `a:b` parses to a `Slice` and `*not v` parses
-    to a single element tuple containing a starred expression `(*(not v),)`.
-- `'sliceelt'`: "slice tuple element expression", same as `'expr'` except that in this mode `a:b` parses to a `Slice`
-    and `*not v` parses to a starred expression `*(not v)`.
-- `'callarg'`: "call argument expression", same as `'expr'` except that in this mode `a:b` is a syntax error and
+- `'expr_slice'`: "slice expression", same as `'expr'` except that in this mode `a:b` parses to a `Slice` and `*not v`
+    parses to a single element tuple containing a starred expression `(*(not v),)`.
+- `'expr_sliceelt'`: "slice tuple element expression", same as `'expr'` except that in this mode `a:b` parses to a
+    `Slice` and `*not v` parses to a starred expression `*(not v)`.
+- `'expr_callarg'`: "call argument expression", same as `'expr'` except that in this mode `a:b` is a syntax error and
     `*not v` parses to a starred expression `*(not v)`.
 - `'boolop'`: Parse to a `boolop` operator.
 - `'operator'`: Parse to an `operator` operator, either normal binary `'*'` or augmented `'*='`.

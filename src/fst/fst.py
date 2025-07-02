@@ -426,10 +426,10 @@ class FST:
 
         **Examples:**
         ```py
-        >>> FST('a:b:c', 'slice').is_slice
+        >>> FST('a:b:c', 'expr_slice').is_slice
         True
 
-        >>> FST('1, d:e', 'slice').is_slice  # Tuple contains at least one Slice
+        >>> FST('1, d:e', 'expr_slice').is_slice  # Tuple contains at least one Slice
         True
 
         >>> # b is in the .slice field but is not a Slice or Slice Tuple
@@ -3467,9 +3467,9 @@ class FST:
         _parse_match_cases,
         _parse_match_case,
         _parse_expr,
-        _parse_slice,
-        _parse_sliceelt,
-        _parse_callarg,
+        _parse_expr_slice,
+        _parse_expr_sliceelt,
+        _parse_expr_callarg,
         _parse_boolop,
         _parse_operator,
         _parse_binop,
@@ -3493,9 +3493,9 @@ class FST:
         _code_as_ExceptHandlers,
         _code_as_match_cases,
         _code_as_expr,
-        _code_as_slice,
-        _code_as_sliceelt,
-        _code_as_callarg,
+        _code_as_expr_slice,
+        _code_as_expr_sliceelt,
+        _code_as_expr_callarg,
         _code_as_boolop,
         _code_as_binop,
         _code_as_augop,

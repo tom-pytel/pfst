@@ -455,7 +455,7 @@ def _parse_expr(src: str, parse_params: dict = {}) -> AST:
 
 
 @staticmethod
-def _parse_slice(src: str, parse_params: dict = {}) -> AST:
+def _parse_expr_slice(src: str, parse_params: dict = {}) -> AST:
     """Parse to an `ast.Slice` or anything else that can go into `Subscript.slice` (`expr`), e.g. "start:stop:step" or
     "name" or even "a:b, c:d:e, g". Using this, naked `Starred` expressions parse to single element `Tuple` with the
     `Starred` as the only element."""
@@ -473,14 +473,14 @@ def _parse_slice(src: str, parse_params: dict = {}) -> AST:
 
 
 @staticmethod
-def _parse_sliceelt(src: str, parse_params: dict = {}) -> AST:
+def _parse_expr_sliceelt(src: str, parse_params: dict = {}) -> AST:
     """Parse to an `ast.expr` or `ast.Slice`. This exists because otherwise a naked `Starred` expression parses to an
     implicit single element `Tuple` and the caller of this function does not want that behavior. Using this, naked
-    `Starred` expressions parse to just the `Starred` and not a `Tuple` like in `_parse_slice()`.
+    `Starred` expressions parse to just the `Starred` and not a `Tuple` like in `_parse_expr_slice()`.
     """
 
     try:
-        ast = _parse_slice(src, parse_params)
+        ast = _parse_expr_slice(src, parse_params)
     except IndentationError:
         raise
     except SyntaxError:  # in case of lone naked Starred in slice in py < 3.11
@@ -495,7 +495,7 @@ def _parse_sliceelt(src: str, parse_params: dict = {}) -> AST:
 
 
 @staticmethod
-def _parse_callarg(src: str, parse_params: dict = {}) -> AST:
+def _parse_expr_callarg(src: str, parse_params: dict = {}) -> AST:
     """Parse to an `expr` or in the context of a `Call.args` which treats `Starred` differently."""
 
     try:
@@ -786,10 +786,10 @@ def _code_as_all(code: Code, parse_params: dict = {}) -> FST:  # TODO: allow 'is
         return code
 
     if isinstance(code, AST):
-        # if (mode := code.__class__) is Module:  # override _parse_Module because that wouldn't handle slices stmtishs
-        #     mode = 'stmtishs'
+        if (mode := code.__class__) is Module:  # override _parse_Module because that wouldn't handle slices stmtishs
+            mode = 'stmtishs'
 
-        mode  = code.__class__
+        # mode  = code.__class__
         code  = _unparse(code)
         lines = code.split('\n')
 
@@ -1027,7 +1027,7 @@ def _code_as_expr(code: Code, parse_params: dict = {}, parse: Callable[[Code, di
     **Parameters:**
     - `orslice`: If `True` then will try to get `expr` or `Slice`. Useful for parsing elements of `Tuple`s which could
         be used inside a `Subscript.slice`. Do not use for parsing `Subscript.slice` field itself because that behaves
-        different with respect to naked `Starred` elements, for that use `_code_as_slice`.
+        different with respect to naked `Starred` elements, for that use `_code_as_expr_slice`.
     """
 
     if isinstance(code, FST):
@@ -1036,7 +1036,7 @@ def _code_as_expr(code: Code, parse_params: dict = {}, parse: Callable[[Code, di
 
         if not isinstance(ast := reduce_ast(codea := code.a, NodeError), expr):
             raise NodeError('expecting ' +
-                ("slice " if parse is _parse_sliceelt else "call arg " if parse is _parse_callarg else "") +
+                ("slice " if parse is _parse_expr_sliceelt else "call arg " if parse is _parse_expr_callarg else "") +
                 f'expression, got {ast.__class__.__name__}')
 
         if ast is codea:
@@ -1049,7 +1049,7 @@ def _code_as_expr(code: Code, parse_params: dict = {}, parse: Callable[[Code, di
     if isinstance(code, AST):
         if not isinstance(code, expr):
             raise NodeError('expecting ' +
-                ("slice " if parse is _parse_sliceelt else "call arg " if parse is _parse_callarg else "") +
+                ("slice " if parse is _parse_expr_sliceelt else "call arg " if parse is _parse_expr_callarg else "") +
                 f'expression, got {code.__class__.__name__}')
 
         code  = _fixing_unparse(code)
@@ -1064,13 +1064,13 @@ def _code_as_expr(code: Code, parse_params: dict = {}, parse: Callable[[Code, di
 
 
 @staticmethod
-def _code_as_slice(code: Code, parse_params: dict = {}) -> FST:
+def _code_as_expr_slice(code: Code, parse_params: dict = {}) -> FST:
     """Convert `code` to a Slice `FST` if possible (or anthing else that can serve in `Subscript.slice`, like any old
     generic `expr`)."""
 
     strip_tup_pars = not _PYLT11 or (isinstance(code, Tuple) and any(isinstance(e, Slice) for e in code.elts))
 
-    ret = _code_as(code, expr, parse_params, _parse_slice, strip_tup_pars=strip_tup_pars)
+    ret = _code_as(code, expr, parse_params, _parse_expr_slice, strip_tup_pars=strip_tup_pars)
 
     if isinstance(code, AST) and not isinstance(ret.a, code.__class__):  # because could reparse Starred into a single element Tuple with Starred
         raise NodeError(f'cannot reparse {code.__class__.__name__} in slice as {code.__class__.__name__}')
@@ -1079,18 +1079,18 @@ def _code_as_slice(code: Code, parse_params: dict = {}) -> FST:
 
 
 @staticmethod
-def _code_as_sliceelt(code: Code, parse_params: dict = {}, orslice: bool = False) -> FST:
+def _code_as_expr_sliceelt(code: Code, parse_params: dict = {}, orslice: bool = False) -> FST:
     """Convert `code` to an `expr` or `Slice` `FST` if possible. This exists because of the behavior of naked `Starred`
     expressions in a `Subscript` `slice` field."""
 
-    return _code_as_expr(code, parse_params, _parse_sliceelt)
+    return _code_as_expr(code, parse_params, _parse_expr_sliceelt)
 
 
 @staticmethod
-def _code_as_callarg(code: Code, parse_params: dict = {}, orslice: bool = False) -> FST:
+def _code_as_expr_callarg(code: Code, parse_params: dict = {}, orslice: bool = False) -> FST:
     """Convert `code` to an `expr` in the context of a `Call.args` which has special parse rules for `Starred`."""
 
-    return _code_as_expr(code, parse_params, _parse_callarg)
+    return _code_as_expr(code, parse_params, _parse_expr_callarg)
 
 
 @staticmethod
@@ -1334,8 +1334,8 @@ _PARSE_ALL_FUNCS = [
     _parse_pattern,
     _parse_arguments,
     _parse_arguments_lambda,
-    _parse_sliceelt,
-    _parse_callarg,
+    _parse_expr_sliceelt,
+    _parse_expr_callarg,
     _parse_comprehension,
     _parse_withitem,
     _parse_arg,      # because of 'vararg: *starred'
@@ -1361,9 +1361,9 @@ _PARSE_MODE_FUNCS = {
     'match_cases':       _parse_match_cases,
     'match_case':        _parse_match_case,
     'expr':              _parse_expr,
-    'slice':             _parse_slice,
-    'sliceelt':          _parse_sliceelt,
-    'callarg':           _parse_callarg,
+    'expr_slice':        _parse_expr_slice,
+    'expr_sliceelt':     _parse_expr_sliceelt,
+    'expr_callarg':      _parse_expr_callarg,
     'boolop':            _parse_boolop,
     'operator':          _parse_operator,
     'binop':             _parse_binop,
@@ -1382,16 +1382,16 @@ _PARSE_MODE_FUNCS = {
     'pattern':           _parse_pattern,
     'type_param':        _parse_type_param,
     mod:                 _parse_Module,    # parsing with an AST type doesn't mean it will be parsable by ast module
-    Module:              _parse_stmtishs,  # _parse_Module,
+    Module:              _parse_Module,
     Expression:          _parse_Expression,
     Interactive:         _parse_Interactive,
     stmt:                _parse_stmt,
     ExceptHandler:       _parse_ExceptHandler,
     match_case:          _parse_match_case,
     expr:                _parse_expr,
-    Starred:             _parse_callarg,   # because could have form '*a or b' and we want to parse any form of Starred here
-    Tuple:               _parse_sliceelt,  # because could have slice in it and ditto on any form here
-    Slice:               _parse_slice,     # because otherwise would be _parse_expr which doesn't do slice by default
+    Starred:             _parse_expr_callarg,   # because could have form '*a or b' and we want to parse any form of Starred here
+    Tuple:               _parse_expr_sliceelt,  # because could have slice in it and ditto on any form here
+    Slice:               _parse_expr_slice,     # because otherwise would be _parse_expr which doesn't do slice by default
     boolop:              _parse_boolop,
     operator:            _parse_operator,
     unaryop:             _parse_unaryop,

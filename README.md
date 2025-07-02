@@ -135,7 +135,8 @@ def compute(x, y):
         return -1
 ```
 
-For more examples see the documentation in `docs/`, or if you're feeling particularly masochistic have a look at `tests/test_fst.py`.
+For more examples see the documentation in `docs/`, or if you're feeling particularly masochistic have a look at the
+`fst` tests in the `tests/` directory.
 
 ## TODO
 

@@ -215,22 +215,22 @@ PARSE_TESTS = [
     ('expr',              FST._parse_expr,              SyntaxError,    'a:b'),
     ('expr',              FST._parse_expr,              SyntaxError,    'a:b:c'),
 
-    ('slice',             FST._parse_slice,             Name,           'j'),
-    ('slice',             FST._parse_slice,             Slice,          'a:b'),
-    ('slice',             FST._parse_slice,             Tuple,          'j, k'),
+    ('expr_slice',        FST._parse_expr_slice,        Name,           'j'),
+    ('expr_slice',        FST._parse_expr_slice,        Slice,          'a:b'),
+    ('expr_slice',        FST._parse_expr_slice,        Tuple,          'j, k'),
 
-    ('sliceelt',          FST._parse_sliceelt,          Name,           'j'),
-    ('sliceelt',          FST._parse_sliceelt,          Slice,          'a:b'),
-    ('sliceelt',          FST._parse_sliceelt,          Starred,        '*s'),
-    ('sliceelt',          FST._parse_sliceelt,          Tuple,          'j, k'),
+    ('expr_sliceelt',     FST._parse_expr_sliceelt,     Name,           'j'),
+    ('expr_sliceelt',     FST._parse_expr_sliceelt,     Slice,          'a:b'),
+    ('expr_sliceelt',     FST._parse_expr_sliceelt,     Starred,        '*s'),
+    ('expr_sliceelt',     FST._parse_expr_sliceelt,     Tuple,          'j, k'),
 
-    ('callarg',           FST._parse_callarg,           Name,           'j'),
-    ('callarg',           FST._parse_callarg,           Starred,        '*s'),
-    ('callarg',           FST._parse_callarg,           Starred,        '*not a'),
-    ('callarg',           FST._parse_callarg,           Tuple,          'j, k'),
-    ('callarg',           FST._parse_callarg,           NodeError,      'i=1'),
-    ('callarg',           FST._parse_callarg,           SyntaxError,    'a:b'),
-    ('callarg',           FST._parse_callarg,           SyntaxError,    'a:b:c'),
+    ('expr_callarg',      FST._parse_expr_callarg,      Name,           'j'),
+    ('expr_callarg',      FST._parse_expr_callarg,      Starred,        '*s'),
+    ('expr_callarg',      FST._parse_expr_callarg,      Starred,        '*not a'),
+    ('expr_callarg',      FST._parse_expr_callarg,      Tuple,          'j, k'),
+    ('expr_callarg',      FST._parse_expr_callarg,      NodeError,      'i=1'),
+    ('expr_callarg',      FST._parse_expr_callarg,      SyntaxError,    'a:b'),
+    ('expr_callarg',      FST._parse_expr_callarg,      SyntaxError,    'a:b:c'),
 
     ('boolop',            FST._parse_boolop,            And,            'and'),
     ('boolop',            FST._parse_boolop,            NodeError,      '*'),
@@ -411,9 +411,9 @@ PARSE_TESTS = [
     (Name,                FST._parse_expr,              Name,           'j'),
     (Starred,             FST._parse_expr,              Starred,        '*s'),
 
-    (Starred,             FST._parse_callarg,           Starred,        '*not a'),
+    (Starred,             FST._parse_expr_callarg,      Starred,        '*not a'),
 
-    (Slice,               FST._parse_slice,             Slice,          'a:b'),
+    (Slice,               FST._parse_expr_slice,        Slice,          'a:b'),
 
     (boolop,              FST._parse_boolop,            And,            'and'),
     (boolop,              FST._parse_boolop,            NodeError,      '*'),
@@ -500,9 +500,9 @@ if _PY_VERSION >= (3, 11):
     PARSE_TESTS.extend([
         ('ExceptHandler',     FST._parse_ExceptHandler,     ExceptHandler,  'except* Exception: pass'),
 
-        ('slice',             FST._parse_slice,             Tuple,          '*s'),
-        ('slice',             FST._parse_slice,             Tuple,          '*not a'),
-        ('sliceelt',          FST._parse_sliceelt,          Starred,        '*not a'),
+        ('expr_slice',        FST._parse_expr_slice,        Tuple,          '*s'),
+        ('expr_slice',        FST._parse_expr_slice,        Tuple,          '*not a'),
+        ('expr_sliceelt',     FST._parse_expr_sliceelt,     Starred,        '*not a'),
 
         (ExceptHandler,       FST._parse_ExceptHandler,     ExceptHandler,  'except* Exception: pass'),
     ])
@@ -4226,9 +4226,9 @@ match a:
         # rest of AST ones
 
         CODE_ASES = [
-            (FST._code_as_slice, 'body[0].value.slice', 'a[1]'),
-            (FST._code_as_slice, 'body[0].value.slice', 'a[b:c:d]'),
-            (FST._code_as_slice, 'body[0].value.slice', 'a[b:c:d, e:f]'),
+            (FST._code_as_expr_slice, 'body[0].value.slice', 'a[1]'),
+            (FST._code_as_expr_slice, 'body[0].value.slice', 'a[b:c:d]'),
+            (FST._code_as_expr_slice, 'body[0].value.slice', 'a[b:c:d, e:f]'),
             (FST._code_as_binop, 'body[0].value.op', 'a + b'),
             (FST._code_as_augop, 'body[0].op', 'a += b'),
             (FST._code_as_unaryop, 'body[0].value.op', '~a'),
@@ -4452,8 +4452,8 @@ match a:
     def test_code_as_sanitize(self):
         CODE_ASES = [
             (FST._code_as_expr, 'f(a)'),
-            (FST._code_as_slice, 'b:c:d'),
-            (FST._code_as_slice, 'b:c:d, e:f'),
+            (FST._code_as_expr_slice, 'b:c:d'),
+            (FST._code_as_expr_slice, 'b:c:d, e:f'),
             (FST._code_as_binop, '+'),
             (FST._code_as_augop, '+='),
             (FST._code_as_unaryop, '~'),
@@ -4519,7 +4519,10 @@ match a:
 
             except Exception:
                 print()
-                print(mode, src, res, func)
+                print(f'{mode=}')
+                print(f'{src=}')
+                print(f'{res=}')
+                print(f'{func=}')
                 print(ast)
 
                 raise
@@ -4755,7 +4758,7 @@ match a:
             self.assertEqual('t"{a,}"', f.src)
             self.assertEqual('a,', f.values[0].str)
 
-        # f = FST('a:b:c', 'slice')  # no way to do this currenly, would need unpar(force) which would need lots of code just for this stupid unnatural case
+        # f = FST('a:b:c', 'expr_slice')  # no way to do this currenly, would need unpar(force) which would need lots of code just for this stupid unnatural case
         # f.par(True)
         # self.assertEqual('(a:b:c)', f.src)
         # f.unpar()

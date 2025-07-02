@@ -272,12 +272,12 @@
 </code></pre>
 </div>
 
-<p>There are some special modes, like <code>'callarg'</code>, which allow parsing some things which are not normally parsable in their
+<p>There are some special modes, like <code>'expr_callarg'</code>, which allow parsing some things which are not normally parsable in their
 usual context. The below is not normally parsable in an expression context as it is special syntax for <code>Call</code> vararg
 arguments. For a full list of parse modes see <code><a href="../misc.html#Mode">fst.misc.Mode</a></code>.</p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;*a or b&#39;</span><span class="p">,</span> <span class="s1">&#39;callarg&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">dump</span><span class="p">()</span>
+<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;*a or b&#39;</span><span class="p">,</span> <span class="s1">&#39;expr_callarg&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">dump</span><span class="p">()</span>
 <span class="n">Starred</span> <span class="o">-</span> <span class="n">ROOT</span> <span class="mi">0</span><span class="p">,</span><span class="mf">0..0</span><span class="p">,</span><span class="mi">7</span>
   <span class="o">.</span><span class="n">value</span> <span class="n">BoolOp</span> <span class="o">-</span> <span class="mi">0</span><span class="p">,</span><span class="mf">1..0</span><span class="p">,</span><span class="mi">7</span>
     <span class="o">.</span><span class="n">op</span> <span class="n">Or</span>
@@ -624,12 +624,12 @@ that node and get the source of that. E.g.</p>
 </span><span id="L-195"><a href="#L-195"><span class="linenos">195</span></a><span class="sd">&lt;Add ROOT 0,0..0,1&gt;</span>
 </span><span id="L-196"><a href="#L-196"><span class="linenos">196</span></a><span class="sd">```</span>
 </span><span id="L-197"><a href="#L-197"><span class="linenos">197</span></a>
-</span><span id="L-198"><a href="#L-198"><span class="linenos">198</span></a><span class="sd">There are some special modes, like `&#39;callarg&#39;`, which allow parsing some things which are not normally parsable in their</span>
+</span><span id="L-198"><a href="#L-198"><span class="linenos">198</span></a><span class="sd">There are some special modes, like `&#39;expr_callarg&#39;`, which allow parsing some things which are not normally parsable in their</span>
 </span><span id="L-199"><a href="#L-199"><span class="linenos">199</span></a><span class="sd">usual context. The below is not normally parsable in an expression context as it is special syntax for `Call` vararg</span>
 </span><span id="L-200"><a href="#L-200"><span class="linenos">200</span></a><span class="sd">arguments. For a full list of parse modes see `fst.misc.Mode`.</span>
 </span><span id="L-201"><a href="#L-201"><span class="linenos">201</span></a>
 </span><span id="L-202"><a href="#L-202"><span class="linenos">202</span></a><span class="sd">```py</span>
-</span><span id="L-203"><a href="#L-203"><span class="linenos">203</span></a><span class="sd">&gt;&gt;&gt; FST(&#39;*a or b&#39;, &#39;callarg&#39;).dump()</span>
+</span><span id="L-203"><a href="#L-203"><span class="linenos">203</span></a><span class="sd">&gt;&gt;&gt; FST(&#39;*a or b&#39;, &#39;expr_callarg&#39;).dump()</span>
 </span><span id="L-204"><a href="#L-204"><span class="linenos">204</span></a><span class="sd">Starred - ROOT 0,0..0,7</span>
 </span><span id="L-205"><a href="#L-205"><span class="linenos">205</span></a><span class="sd">  .value BoolOp - 0,1..0,7</span>
 </span><span id="L-206"><a href="#L-206"><span class="linenos">206</span></a><span class="sd">    .op Or</span>

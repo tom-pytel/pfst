@@ -17,7 +17,7 @@ from .misc import (
 )
 
 from .fst_parse import (
-    _code_as_expr, _code_as_slice, _code_as_sliceelt, _code_as_callarg,
+    _code_as_expr, _code_as_expr_slice, _code_as_expr_sliceelt, _code_as_expr_callarg,
     _code_as_boolop, _code_as_binop, _code_as_augop, _code_as_unaryop, _code_as_cmpop,
     _code_as_pattern, _code_as_comprehension, _code_as_arguments,
     _code_as_arguments_lambda, _code_as_arg, _code_as_keyword, _code_as_alias_dotted, _code_as_alias_star,
@@ -2515,7 +2515,7 @@ _PUT_ONE_HANDLERS = {
     (Compare, 'comparators'):             (False, _put_one_exprish_required, _onestatic_expr_required), # expr*
     (Compare, ''):                        (True,  _put_one_Compare_combined, _onestatic_expr_required), # expr*
     (Call, 'func'):                       (False, _put_one_exprish_required, _onestatic_expr_required), # expr
-    (Call, 'args'):                       (True,  _put_one_Call_args, onestatic(_one_info_exprish_required, _restrict_fmtval_slice, code_as=_code_as_callarg)), # expr*
+    (Call, 'args'):                       (True,  _put_one_Call_args, onestatic(_one_info_exprish_required, _restrict_fmtval_slice, code_as=_code_as_expr_callarg)), # expr*
     (Call, 'keywords'):                   (True,  _put_one_Call_keywords, _onestatic_keyword_required), # keyword*
     (FormattedValue, 'value'):            (False, _put_one_exprish_required, _onestatic_expr_required), # expr
     (FormattedValue, 'conversion'):       (False, _put_one_NOT_IMPLEMENTED_YET_12, onestatic(_one_info_conversion, Constant)), # int  # onestatic only here for info for raw put, Constant must be str
@@ -2532,7 +2532,7 @@ _PUT_ONE_HANDLERS = {
     (Attribute, 'attr'):                  (False, _put_one_identifier_required, onestatic(_one_info_Attribute_attr, _restrict_default, code_as=_code_as_identifier)), # identifier
     (Attribute, 'ctx'):                   (False, _put_one_ctx, _onestatic_ctx), # expr_context
     (Subscript, 'value'):                 (False, _put_one_Subscript_value, _onestatic_expr_required), # expr
-    (Subscript, 'slice'):                 (False, _put_one_Subscript_slice, onestatic(_one_info_exprish_required, _restrict_fmtval_starred, code_as=_code_as_slice)), # expr
+    (Subscript, 'slice'):                 (False, _put_one_Subscript_slice, onestatic(_one_info_exprish_required, _restrict_fmtval_starred, code_as=_code_as_expr_slice)), # expr
     (Subscript, 'ctx'):                   (False, _put_one_ctx, _onestatic_ctx), # expr_context
     (Starred, 'value'):                   (False, _put_one_exprish_required, _onestatic_expr_required), # expr
     (Starred, 'ctx'):                     (False, _put_one_ctx, _onestatic_ctx), # expr_context
@@ -2540,7 +2540,7 @@ _PUT_ONE_HANDLERS = {
     (Name, 'ctx'):                        (False, _put_one_ctx, _onestatic_ctx), # expr_context
     (List, 'elts'):                       (True,  _put_one_List_elts, _onestatic_expr_required_starred), # expr*
     (List, 'ctx'):                        (False, _put_one_ctx, _onestatic_ctx), # expr_context
-    (Tuple, 'elts'):                      (True,  _put_one_Tuple_elts, onestatic(_one_info_exprish_required, _restrict_fmtval, code_as=_code_as_sliceelt)), # expr*  - special handling because Tuples can contain Slices in an unparenthesized .slice field
+    (Tuple, 'elts'):                      (True,  _put_one_Tuple_elts, onestatic(_one_info_exprish_required, _restrict_fmtval, code_as=_code_as_expr_sliceelt)), # expr*  - special handling because Tuples can contain Slices in an unparenthesized .slice field
     (Tuple, 'ctx'):                       (False, _put_one_ctx, _onestatic_ctx), # expr_context
     (Slice, 'lower'):                     (False, _put_one_exprish_optional, _onestatic_Slice_lower), # expr?
     (Slice, 'upper'):                     (False, _put_one_exprish_optional, _onestatic_Slice_upper), # expr?
