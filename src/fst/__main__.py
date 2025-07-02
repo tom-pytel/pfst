@@ -13,7 +13,7 @@ def main():
     parser.add_argument('infile', nargs='?', default='-',
                         help='the file to parse; defaults to stdin')
     parser.add_argument('-m', '--mode', default='all',
-                        choices=get_args(get_args(Mode)[1]),
+                        choices=get_args(get_args(Mode)[0]),
                         help='specify what kind of code must be parsed')
     parser.add_argument('-f', '--full', default=False, action='store_true',
                         help="show full tree including empty nodes")
