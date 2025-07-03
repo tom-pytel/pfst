@@ -1,8 +1,10 @@
-"""Old source location editing stuff, needs to be moved into fst_slice."""
+"""Old source location editing stuff, needs to be reworked and moved into fst_slice."""
 
 from __future__ import annotations
 
 from ast import *
+
+from . import fst
 
 from .astutil import bistr
 from .misc import (
@@ -18,9 +20,9 @@ class SrcEdit:
     """This class controls most source editing behavior."""
 
     def _fixup_expr_seq_bound(self, lines: list[str], seq_loc: fstloc,
-                              fpre: FST | fstloc | None, fpost: FST | fstloc | None,
-                              flast: FST | fstloc | None,
-                              ) -> tuple[fstloc, FST | fstloc | None, FST | fstloc | None] | None:
+                              fpre: fst.FST | fstloc | None, fpost: fst.FST | fstloc | None,
+                              flast: fst.FST | fstloc | None,
+                              ) -> tuple[fstloc, fst.FST | fstloc | None, fst.FST | fstloc | None] | None:
         """Depending on existence preceding or following expressions and a full sequence location, return a bound
         `fstloc` that represents a search space in the source for commas and parenteses and the like. Will exclude any
         closing parentheses belonging to `fpre` and any opening parenthese belonging to `fpost` from the bound."""
@@ -227,7 +229,7 @@ class SrcEdit:
         """
 
         if precomms is None:
-            precomms = FST.get_option('precomms')
+            precomms = fst.FST.get_option('precomms')
         if not precomms:
             return None
 
@@ -266,7 +268,7 @@ class SrcEdit:
         """
 
         if postcomms is None:
-            postcomms = FST.get_option('postcomms')
+            postcomms = fst.FST.get_option('postcomms')
         if not postcomms:
             return None
 
@@ -300,20 +302,20 @@ class SrcEdit:
 
         return (bound_ln, bound_end_col) if bound_ln == bound_end_ln else (bound_ln + 1, 0)
 
-    def get_slice_seq(self, fst: FST, cut: bool, seq_loc: fstloc,
-                      ffirst: FST | fstloc, flast: FST | fstloc,
-                      fpre: FST | fstloc | None, fpost: FST | fstloc | None,
+    def get_slice_seq(self, get_fst: fst.FST, cut: bool, seq_loc: fstloc,
+                      ffirst: fst.FST | fstloc, flast: fst.FST | fstloc,
+                      fpre: fst.FST | fstloc | None, fpost: fst.FST | fstloc | None,
     ) -> tuple[fstloc, fstloc | None, list[str] | None]:  # (copy_loc, del/put_loc, put_lines)
         """Copy or cut from comma delimited sequence.
 
         The `ffirst`, `flast`, `fpre` and `fpost` parameters are only meant to pass location information so you should
-        only count on their respective `.ln`, `.col`, `.end_ln` and `.end_col` being correct (within `fst`).
+        only count on their respective `.ln`, `.col`, `.end_ln` and `.end_col` being correct (within `get_fst`).
 
         **Parameters:**
-        - `fst`: The source `FST` container that is being gotten from. No text has been changed at this point but the
+        - `get_fst`: The source `FST` container that is being gotten from. No text has been changed at this point but the
             respective `AST` nodes may have been removed in case of `cut`.
         - `cut`: If `False` the operation is a copy, `True` means cut.
-        - `seq_loc`: The full location of the sequence in `fst`, excluding parentheses / brackets / curlies.
+        - `seq_loc`: The full location of the sequence in `get_fst`, excluding parentheses / brackets / curlies.
         - `ffirst`: The first `FST` or `fstloc` being gotten.
         - `flast`: The last `FST` or `fstloc` being gotten.
         - `fpre`: The preceding-first `FST` or `fstloc`, not being gotten, may not exist if `ffirst` is first of seq.
@@ -325,7 +327,7 @@ class SrcEdit:
             location and optionally lines to replace the deleted portion (which can only be non-coding source).
         """
 
-        lines = fst.root._lines
+        lines = get_fst.root._lines
 
         if not (bound_pre_post := self._fixup_expr_seq_bound(lines, seq_loc, fpre, fpost, flast)):
             return seq_loc, seq_loc, None
@@ -344,10 +346,10 @@ class SrcEdit:
 
         return copy_loc, del_loc, None
 
-    def put_slice_seq(self, fst: FST, put_fst: FST | None, indent: str, seq_loc: fstloc,
-                      ffirst: FST | fstloc | None, flast: FST | fstloc | None,
-                      fpre: FST | fstloc | None, fpost: FST | fstloc | None,
-                      pfirst: FST | fstloc | None, plast: FST | fstloc | None,
+    def put_slice_seq(self, tgt_fst: fst.FST, put_fst: fst.FST | None, indent: str, seq_loc: fstloc,
+                      ffirst: fst.FST | fstloc | None, flast: fst.FST | fstloc | None,
+                      fpre: fst.FST | fstloc | None, fpost: fst.FST | fstloc | None,
+                      pfirst: fst.FST | fstloc | None, plast: fst.FST | fstloc | None,
     ) -> fstloc:  # del_loc
         """Put to comma delimited sequence.
 
@@ -366,27 +368,27 @@ class SrcEdit:
         assignment to an empty slice.
 
         **Parameters:**
-        - `fst`: The destination `FST` container that is being put to.
+        - `tgt_fst`: The target `FST` container that is being put to.
         - `put_fst`: The sequence which is being put, may be `None` in case of deletion. Already indented, mutate this
             object to change what will be put (both source and `AST` nodes, node locations must be offset if source is
             changed).
         - `indent`: The indent string which was applied to `put_fst`.
-        - `seq_loc`: The full location of the sequence in `fst`, excluding parentheses / brackets / curlies.
-        - `ffirst`: The first destination `FST` or `fstloc` being replaced (if `None` then nothing being replaced).
-        - `flast`: The last destination `FST` or `fstloc` being replaced (if `None` then nothing being replaced).
-        - `fpre`: The preceding-first destination `FST` or `fstloc`, not being replaced, may not exist if `ffirst` is
+        - `seq_loc`: The full location of the sequence in `tgt_fst`, excluding parentheses / brackets / curlies.
+        - `ffirst`: The first target `FST` or `fstloc` being replaced (if `None` then nothing being replaced).
+        - `flast`: The last target `FST` or `fstloc` being replaced (if `None` then nothing being replaced).
+        - `fpre`: The preceding-first target `FST` or `fstloc`, not being replaced, may not exist if `ffirst` is
             first of seq.
-        - `fpost`: The after-last destination `FST` or `fstloc` not being replaced, may not exist if `flast` is last of
+        - `fpost`: The after-last target `FST` or `fstloc` not being replaced, may not exist if `flast` is last of
             seq.
         - `pfirst`: The first source `FST`, else `None` if is assignment from empty sequence or deletion.
         - `plast`: The last source `FST`, else `None` if is assignment from empty sequence or deletion.
 
         **Returns:**
-        - `fstloc`: location where the potentially modified `fst` source should be put, replacing whatever is at the
+        - `fstloc`: location where the potentially modified `tgt_fst` source should be put, replacing whatever is at the
             location currently.
         """
 
-        lines = fst.root._lines
+        lines = tgt_fst.root._lines
 
         if not (bound_pre_post := self._fixup_expr_seq_bound(lines, seq_loc, fpre, fpost, flast)):  # if operating on whole sequence then just use the whole sequence location, if this doesn't return then one of `fpre` or `fpost` exists
             return seq_loc
@@ -394,7 +396,7 @@ class SrcEdit:
         bound, fpre, fpost = bound_pre_post
 
         if not put_fst or not pfirst:  # `pfirst` may be None and `put_fst` not if assigning empty sequence, regardless, pure delete (or assign empty sequence, ALMOST exactly same thing), fflrst/last guaranteed to exist
-            return self._expr_src_edit_locs(fst.root._lines,
+            return self._expr_src_edit_locs(tgt_fst.root._lines,
                                             fstloc(ffirst.ln, ffirst.col, flast.end_ln, flast.end_col),
                                             bound, not fpost)[1]
 
@@ -413,7 +415,7 @@ class SrcEdit:
             put_end_col = put_col = fpre.end_col
 
         put_lines = put_fst._lines
-        del_loc   = self._expr_src_edit_locs(fst.root._lines,
+        del_loc   = self._expr_src_edit_locs(tgt_fst.root._lines,
                                              fstloc(put_ln, put_col, put_end_ln, put_end_col), bound)[1]
 
         if not put_lines[0]:
@@ -444,8 +446,8 @@ class SrcEdit:
 
         return del_loc
 
-    def get_slice_stmt(self, fst: FST, field: str, cut: bool, block_loc: fstloc,  # TODO: clean this up
-                       ffirst: FST, flast: FST, fpre: FST | None, fpost: FST | None, *,
+    def get_slice_stmt(self, get_fst: fst.FST, field: str, cut: bool, block_loc: fstloc,  # TODO: clean this up
+                       ffirst: fst.FST, flast: fst.FST, fpre: fst.FST | None, fpost: fst.FST | None, *,
                        del_else_and_fin: bool = True, ret_all: bool = False, **options,
     ) -> tuple[fstloc, fstloc | None, list[str] | None]:  # (copy_loc, del/put_loc, put_lines)
         """Copy or cut from block of statements. If cutting all elements from a deletable field like 'orelse' or
@@ -454,7 +456,7 @@ class SrcEdit:
         apply different format flags to the copy and delete then copy what you want first then cut with different flags.
 
         **Parameters:**
-        - `fst`: The source `FST` container that is being gotten from. No text has been changed at this point but the
+        - `get_fst`: The source `FST` container that is being gotten from. No text has been changed at this point but the
             respective `AST` nodes may have been removed in case of `cut`.
         - `field`: The name of the field being gotten from, e.g. `'body'`, `'orelse'`, etc...
         - `cut`: If `False` the operation is a copy, `True` means cut.
@@ -476,7 +478,7 @@ class SrcEdit:
         bound_ln, bound_col         = fpre.bloc[2:] if fpre else block_loc[:2]
         bound_end_ln, bound_end_col = fpost.bloc[:2] if fpost else block_loc[2:]
 
-        lines      = fst.root._lines
+        lines      = get_fst.root._lines
         put_lines  = None
         pre_comms  = self.pre_comments(lines, bound_ln, bound_col, ffirst.bln, ffirst.bcol,
                                        options.get('precomms'))
@@ -633,22 +635,22 @@ class SrcEdit:
 
                 del_loc = fstloc(del_ln, 0, del_end_ln, del_end_col)
 
-            elif fst.parent and not del_loc.end_col and del_loc.ln == block_ln:  # avoid deleting trailing newline of only statement just past block open
+            elif get_fst.parent and not del_loc.end_col and del_loc.ln == block_ln:  # avoid deleting trailing newline of only statement just past block open
                 del_ln, del_col, del_end_ln, del_end_col = del_loc
 
                 del_loc = fstloc(del_ln, del_col, (ln := del_end_ln - 1), len(lines[ln]))
 
         # delete preceding and trailing empty lines according to 'pep8' and 'space' format flags
 
-        prespace  = (float('inf') if (o := FST.get_option('prespace', options)) is True else int(o))
-        postspace = (float('inf') if (o := FST.get_option('postspace', options)) is True else int(o))
-        pep8space = FST.get_option('pep8space', options)
+        prespace  = (float('inf') if (o := fst.FST.get_option('prespace', options)) is True else int(o))
+        postspace = (float('inf') if (o := fst.FST.get_option('postspace', options)) is True else int(o))
+        pep8space = fst.FST.get_option('pep8space', options)
 
         if pep8space:
             if not 0 <= pep8space <= 1:
                 raise ValueError(f"'pep8space' must be True, False or 1, not {pep8space}")
 
-            pep8space = 2 if pep8space is True and (p := fst.parent_scope(True)) and isinstance(p.a, mod) else 1
+            pep8space = 2 if pep8space is True and (p := get_fst.parent_scope(True)) and isinstance(p.a, mod) else 1
 
             if fpre and isinstance(ffirst.a, NAMED_SCOPE) and (fpre.pfield.idx or
                                                                not isinstance(a := fpre.a, Expr) or
@@ -716,23 +718,23 @@ class SrcEdit:
 
         return copy_loc, del_loc, put_lines
 
-    def _format_space(self, fst: FST, put_fst: FST,
-                      block_loc: fstloc, put_loc: fstloc, fpre: FST | None, fpost: FST | None,
+    def _format_space(self, tgt_fst: fst.FST, put_fst: fst.FST,
+                      block_loc: fstloc, put_loc: fstloc, fpre: fst.FST | None, fpost: fst.FST | None,
                       del_lines: list[str] | None, is_ins: bool, **options):
         """Add preceding and trailing newlines as needed. We always insert statements (or blocks of them) as their own
         lines but may also add newlines according to PEP8."""
 
-        lines     = fst.root._lines
+        lines     = tgt_fst.root._lines
         put_lines = put_fst._lines
         put_body  = put_fst.a.body
         put_col   = put_loc.col
-        pep8space = FST.get_option('pep8space', options)
+        pep8space = fst.FST.get_option('pep8space', options)
 
         if not 0 <= pep8space <= 1:
             raise ValueError(f"'pep8space' must be True, False or 1, not {pep8space}")
 
         if is_pep8 := bool(put_body) and pep8space:  # no pep8 checks if only text being put (no AST body)
-            pep8space = 2 if pep8space is True and (p := fst.parent_scope(True)) and isinstance(p.a, mod) else 1
+            pep8space = 2 if pep8space is True and (p := tgt_fst.parent_scope(True)) and isinstance(p.a, mod) else 1
 
         prepend = 2 if put_col else 0  # don't put initial empty line if putting on a first AST line at root
 
@@ -757,7 +759,7 @@ class SrcEdit:
                             need = 0
 
                 if (need and not is_ins and put_ns and ln > bound_ln and re_comment_line_start.match(lines[ln]) and
-                    not FST.get_option('precomms', options) and not FST.get_option('prespace', options)
+                    not fst.FST.get_option('precomms', options) and not fst.FST.get_option('prespace', options)
                 ):  # super-duper special case, replacing a named scope (at start) with another named scope, if not removing comments and/or space then don't insert space between preceding comment and put fst (because there was none before the previous named scope)
                     need = 0
 
@@ -805,9 +807,9 @@ class SrcEdit:
 
         put_fst._touch()
 
-    def put_slice_stmt(self, fst: FST, put_fst: FST, field: str,
+    def put_slice_stmt(self, tgt_fst: fst.FST, put_fst: fst.FST, field: str,
                        block_loc: fstloc, opener_indent: str, block_indent: str,
-                       ffirst: FST, flast: FST, fpre: FST | None, fpost: FST | None, **options,
+                       ffirst: fst.FST, flast: fst.FST, fpre: fst.FST | None, fpost: fst.FST | None, **options,
     ) -> fstloc:  # put_loc
         """Put to block of statements(ish). Calculates put location and modifies `put_fst` as necessary to create proper
         code. The "ish" in statemnents means this can be used to put `ExceptHandler`s to a 'handlers' field or
@@ -816,7 +818,7 @@ class SrcEdit:
         If `ffirst` and `flast` are `None` it means that it is a pure insertion and no elements are being removed. In
         this case use `fpre` and `fpost` to determine locations, one of which could be missing if the insertion is at
         the beginning or end of the sequence. If all of these are `None` then this indicates a put to empty block, in
-        which case use `fst`, `field` and/or `block_loc` for location.
+        which case use `tgt_fst`, `field` and/or `block_loc` for location.
 
         The first line of `put_fst` is unindented and should remain so as it is concatenated with the target line at the
         point of insertion. The last line of `put_fst` is likewise prefixed to the line following the deleted location.
@@ -832,7 +834,7 @@ class SrcEdit:
         line).
 
         **Parameters:**
-        - `fst`: The destination `FST` container that is being put to.
+        - `tgt_fst`: The destination `FST` container that is being put to.
         - `put_fst`: The block which is being put. Must be a `Module` with a `body` of one or multiple statmentish
             nodes. Not indented, indent and mutate this object to set what will be put at `put_loc`.
         - `field`: The name of the field being gotten from, e.g. `'body'`, `'orelse'`, etc...
@@ -856,21 +858,21 @@ class SrcEdit:
             destination on replace. `pep8space` also applies on insert.
 
         **Returns:**
-        - `fstloc`: location where the potentially modified `fst` source should be put, replacing whatever is at the
+        - `fstloc`: location where the potentially modified `put_fst` source should be put, replacing whatever is at the
             location currently.
         """
 
-        lines      = fst.root._lines
+        lines      = tgt_fst.root._lines
         put_lines  = put_fst._lines
         put_body   = put_fst.a.body
         is_handler = field == 'handlers'
         is_orelse  = field == 'orelse'
         docstr     = options.get('docstr')
-        opt_elif   = FST.get_option('elif_', options)
+        opt_elif   = fst.FST.get_option('elif_', options)
 
         if not ffirst:  # pure insertion
             is_elif = (not fpre and not fpost and is_orelse and opt_elif and len(b := put_body) == 1 and
-                       isinstance(b[0], If) and isinstance(fst.a, If))
+                       isinstance(b[0], If) and isinstance(tgt_fst.a, If))
 
             put_fst._indent_lns(opener_indent if is_handler or is_elif else block_indent, skip=0, docstr=docstr)
 
@@ -920,7 +922,7 @@ class SrcEdit:
                     put_fst._touch()
 
             elif fpost:  # no preceding statement, only trailing
-                if is_handler or fst.is_root:  # special case, start will be after last statement or just after 'try:' colon or if is mod then there is no colon
+                if is_handler or tgt_fst.is_root:  # special case, start will be after last statement or just after 'try:' colon or if is mod then there is no colon
                     ln, col = block_loc[:2]
 
                 else:
@@ -977,7 +979,7 @@ class SrcEdit:
                 else:
                     put_loc = fstloc(ln, col, ln + 1, 0)
 
-            self._format_space(fst, put_fst, block_loc, put_loc, fpre, fpost, None, True, **options)
+            self._format_space(tgt_fst, put_fst, block_loc, put_loc, fpre, fpost, None, True, **options)
 
             return put_loc
 
@@ -986,10 +988,10 @@ class SrcEdit:
         del_else_and_fin = False
         indent           = opener_indent if is_handler else block_indent
 
-        if not fpre and not fpost and is_orelse and isinstance(fst.a, If):  # possible else <-> elif changes
+        if not fpre and not fpost and is_orelse and isinstance(tgt_fst.a, If):  # possible else <-> elif changes
             put_body    = put_fst.a.body
-            orelse      = fst.a.orelse
-            opt_elif    = FST.get_option('elif_', options)
+            orelse      = tgt_fst.a.orelse
+            opt_elif    = fst.FST.get_option('elif_', options)
             is_old_elif = orelse[0].f.is_elif()
             is_new_elif = opt_elif and len(put_body) == 1 and isinstance(put_body[0], If)
 
@@ -1010,7 +1012,7 @@ class SrcEdit:
             put_fst._indent_lns(indent, skip=0, docstr=docstr)
 
         copy_loc, put_loc, del_lines, bound, pre_comms, post_comms, pre_semi, post_semi, block_start = (
-            self.get_slice_stmt(fst, field, True, block_loc, ffirst, flast, fpre, fpost,
+            self.get_slice_stmt(tgt_fst, field, True, block_loc, ffirst, flast, fpre, fpost,
                                 del_else_and_fin=del_else_and_fin, ret_all=True, **options))
 
         put_ln, put_col, put_end_ln, put_end_col = put_loc
@@ -1040,12 +1042,10 @@ class SrcEdit:
 
         put_loc = fstloc(put_ln, put_col, put_end_ln, put_end_col)
 
-        self._format_space(fst, put_fst, block_loc, put_loc, fpre, fpost, del_lines, False, **options)
+        self._format_space(tgt_fst, put_fst, block_loc, put_loc, fpre, fpost, del_lines, False, **options)
 
         return put_loc
 
 
 # ----------------------------------------------------------------------------------------------------------------------
 _src_edit = SrcEdit()
-
-from .fst import FST  # this imports a fake FST which is replaced in globals() when fst.py finishes loading

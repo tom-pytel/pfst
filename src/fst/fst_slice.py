@@ -1,9 +1,14 @@
-"""Get and put slice."""
+"""Get and put slice.
+
+This module contains functions which are imported as methods in the `FST` class.
+"""
 
 from __future__ import annotations
 
 from ast import *
 from typing import Literal, Union
+
+from . import fst
 
 from .astutil import *
 from .astutil import TypeAlias, TryStar, TemplateStr
@@ -91,8 +96,8 @@ _SLICE_COMAPTIBILITY = {
 
 # ----------------------------------------------------------------------------------------------------------------------
 
-def _get_slice(self: FST, start: int | Literal['end'] | None, stop: int | None, field: str, cut: bool,
-               **options) -> FST:
+def _get_slice(self: fst.FST, start: int | Literal['end'] | None, stop: int | None, field: str, cut: bool,
+               **options) -> fst.FST:
     """Get a slice of child nodes from `self`."""
 
     ast = self.a
@@ -165,7 +170,7 @@ def _get_slice(self: FST, start: int | Literal['end'] | None, stop: int | None, 
 
 # ----------------------------------------------------------------------------------------------------------------------
 
-def _raw_slice_loc(self: FST, start: int | Literal['end'] | None, stop: int | None, field: str) -> fstloc:
+def _raw_slice_loc(self: fst.FST, start: int | Literal['end'] | None, stop: int | None, field: str) -> fstloc:
     """Get location of a raw slice. Sepcial cases for decorators, comprehension ifs and other weird nodes."""
 
     def fixup_slice_index_for_raw(len_, start, stop):
@@ -241,7 +246,7 @@ def _raw_slice_loc(self: FST, start: int | Literal['end'] | None, stop: int | No
                   *body[stop - 1].f.pars(False)[2:])
 
 
-def _put_slice_raw(self: FST, code: Code | None, start: int | Literal['end'] | None, stop: int | None, field: str,
+def _put_slice_raw(self: fst.FST, code: Code | None, start: int | Literal['end'] | None, stop: int | None, field: str,
                    *, one: bool = False, **options) -> Union[Self, None]:  # -> Self or reparsed Self
     """Put a raw slice of child nodes to `self`."""
 
@@ -257,11 +262,11 @@ def _put_slice_raw(self: FST, code: Code | None, start: int | Literal['end'] | N
 
             else:
                 if isinstance(ast, Tuple):  # strip delimiters because we want CONTENTS of slice for raw put, not the slice object itself
-                    code = FST._unparse(ast)[1 : (-2 if len(ast.elts) == 1 else -1)]  # also remove singleton Tuple trailing comma
+                    code = fst.FST._unparse(ast)[1 : (-2 if len(ast.elts) == 1 else -1)]  # also remove singleton Tuple trailing comma
                 elif isinstance(ast, (List, Dict, Set, MatchSequence, MatchMapping)):
-                    code = FST._unparse(ast)[1 : -1]
+                    code = fst.FST._unparse(ast)[1 : -1]
 
-    elif isinstance(code, FST):
+    elif isinstance(code, fst.FST):
         if not code.is_root:
             raise ValueError('expecting root node')
 
@@ -271,23 +276,23 @@ def _put_slice_raw(self: FST, code: Code | None, start: int | Literal['end'] | N
             pass
 
         else:
-            fst = ast.f
+            fst_ = ast.f
 
             if one:
-                if (is_par_tup := fst.is_parenthesized_tuple()) is None:  # only need to parenthesize this, others are already enclosed
-                    if isinstance(ast, MatchSequence) and not fst._is_parenthesized_seq('patterns'):
-                        fst._parenthesize_grouping()
+                if (is_par_tup := fst_.is_parenthesized_tuple()) is None:  # only need to parenthesize this, others are already enclosed
+                    if isinstance(ast, MatchSequence) and not fst_._is_parenthesized_seq('patterns'):
+                        fst_._parenthesize_grouping()
 
                 elif is_par_tup is False:
-                    fst._parenthesize_node()
+                    fst_._parenthesize_node()
 
             elif ((is_dict := isinstance(ast, Dict)) or
-                    (is_match := isinstance(ast, (MatchSequence, MatchMapping))) or
-                    isinstance(ast, (Tuple, List, Set))
+                  (is_match := isinstance(ast, (MatchSequence, MatchMapping))) or
+                  isinstance(ast, (Tuple, List, Set))
             ):
-                if not ((is_par_tup := fst.is_parenthesized_tuple()) is False or  # don't strip nonexistent delimiters if is unparenthesized Tuple or MatchSequence
+                if not ((is_par_tup := fst_.is_parenthesized_tuple()) is False or  # don't strip nonexistent delimiters if is unparenthesized Tuple or MatchSequence
                         (is_par_tup is None and isinstance(ast, MatchSequence) and
-                            not fst._is_parenthesized_seq('patterns'))
+                            not fst_._is_parenthesized_seq('patterns'))
                 ):
                     code._put_src(None, end_ln := code.end_ln, (end_col := code.end_col) - 1, end_ln, end_col, True)  # strip enclosing delimiters
                     code._put_src(None, ln := code.ln, col := code.col, ln, col + 1, False)
@@ -304,7 +309,7 @@ def _put_slice_raw(self: FST, code: Code | None, start: int | Literal['end'] | N
     return self.repath()
 
 
-def _put_slice(self: FST, code: Code | None, start: int | Literal['end'] | None, stop: int | None, field: str,
+def _put_slice(self: fst.FST, code: Code | None, start: int | Literal['end'] | None, stop: int | None, field: str,
                one: bool = False, **options) -> Union[Self, None]:  # -> Self or reparsed Self or could disappear due to raw
     """Put an a slice of child nodes to `self`."""
 
@@ -312,7 +317,7 @@ def _put_slice(self: FST, code: Code | None, start: int | Literal['end'] | None,
         raise NodeError('circular put detected')
 
     ast = self.a
-    raw = FST.get_option('raw', options)
+    raw = fst.FST.get_option('raw', options)
 
     if options.get('to') is not None:
         raise ValueError(f"cannot put slice with 'to'")
@@ -405,5 +410,3 @@ def _put_slice(self: FST, code: Code | None, start: int | Literal['end'] | None,
 
 # ----------------------------------------------------------------------------------------------------------------------
 __all_private__ = ['_get_slice', '_put_slice']  # used by make_docs.py
-
-from .fst import FST  # this imports a fake FST which is replaced in globals() when fst.py finishes loading

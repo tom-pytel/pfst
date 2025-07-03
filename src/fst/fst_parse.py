@@ -1,4 +1,7 @@
-"""Extended AST parse and convert `Code` to `FST`."""
+"""Extended AST parse and convert `Code` to `FST`.
+
+This module contains functions which are imported as methods in the `FST` class.
+"""
 
 from __future__ import annotations
 
@@ -8,6 +11,8 @@ from ast import *
 from ast import parse as ast_parse, unparse as ast_unparse, fix_missing_locations as ast_fix_missing_locations
 from typing import Any, Callable
 from unicodedata import normalize
+
+from . import fst
 
 from .astutil import *
 from .astutil import TryStar, type_param
@@ -87,11 +92,11 @@ def _fix_unparenthesized_tuple_parsed_parenthesized(src: str, ast: AST):
         ast.end_col_offset = len(lines[end_ln][:end_col + 1].encode())
 
 
-def _code_as_op(code: Code, ast_type: type[AST], parse_params: dict, parse: Callable[[FST, Code], FST],
-                opstr2cls: dict[str, type[AST]], opcls2str: dict[type[AST], str] = OPCLS2STR) -> FST:
+def _code_as_op(code: Code, ast_type: type[AST], parse_params: dict, parse: Callable[[fst.FST, Code], fst.FST],
+                opstr2cls: dict[str, type[AST]], opcls2str: dict[type[AST], str] = OPCLS2STR) -> fst.FST:
     """Convert `code` to an operation `FST` if possible."""
 
-    if isinstance(code, FST):
+    if isinstance(code, fst.FST):
         if not code.is_root:
             raise ValueError('expecting root node')
 
@@ -105,7 +110,7 @@ def _code_as_op(code: Code, ast_type: type[AST], parse_params: dict, parse: Call
         if (src := code.src) != (expected := opcls2str[codea.__class__]):
             if isinstance(codea, (NotIn, IsNot)):  # super-stupid case, someone did 'is # comment \n not' or something like this?
                 if _parse_cmpop(src).__class__ is codea:  # parses to same thing so just return the canonical str for the op, otherwise it gets complicated
-                    return FST(codea, [bistr(expected)], from_=code, lcopy=False)
+                    return fst.FST(codea, [bistr(expected)], from_=code, lcopy=False)
 
             raise NodeError(f'expecting {expected!r}, got {_shortstr(src)!r}')
 
@@ -115,7 +120,7 @@ def _code_as_op(code: Code, ast_type: type[AST], parse_params: dict, parse: Call
         if not isinstance(code, ast_type):
             raise NodeError(f'expecting {ast_type.__name__}, got {code.__class__.__name__}')
 
-        return FST(code, [opcls2str[code.__class__]], parse_params=parse_params)
+        return fst.FST(code, [opcls2str[code.__class__]], parse_params=parse_params)
 
     if isinstance(code, list):
         code = '\n'.join(code)
@@ -123,19 +128,19 @@ def _code_as_op(code: Code, ast_type: type[AST], parse_params: dict, parse: Call
     lines = (code := code.strip()).split('\n')
 
     if cls := opstr2cls.get(code):
-        return FST(cls(), lines, parse_params=parse_params)
+        return fst.FST(cls(), lines, parse_params=parse_params)
 
     try:
-        return FST(parse(code, parse_params), lines, parse_params=parse_params)  # fall back to actually trying to parse the thing
+        return fst.FST(parse(code, parse_params), lines, parse_params=parse_params)  # fall back to actually trying to parse the thing
     except IndentationError:
         raise
     except (SyntaxError, NodeError):
         raise NodeError(f'expecting {ast_type.__name__}, got {_shortstr(code)!r}') from None
 
 
-def _code_as(code: Code, ast_type: type[AST], parse_params: dict, parse: Callable[[FST, Code], FST], *,
-             strip_tup_pars: bool = False) -> FST:
-    if isinstance(code, FST):
+def _code_as(code: Code, ast_type: type[AST], parse_params: dict, parse: Callable[[fst.FST, Code], fst.FST], *,
+             strip_tup_pars: bool = False) -> fst.FST:
+    if isinstance(code, fst.FST):
         if not code.is_root:
             raise ValueError('expecting root node')
 
@@ -157,7 +162,7 @@ def _code_as(code: Code, ast_type: type[AST], parse_params: dict, parse: Callabl
     else:  # str
         lines = code.split('\n')
 
-    return FST(parse(code, parse_params), lines, parse_params=parse_params)._sanitize()
+    return fst.FST(parse(code, parse_params), lines, parse_params=parse_params)._sanitize()
 
 
 _GLOBALS = globals() | {'_GLOBALS': None}
@@ -373,8 +378,8 @@ def _parse_match_cases(src: str, parse_params: dict = {}) -> AST:
 
     lines = [bistr('match x:'), bistr(' case None: pass')] + [bistr(' ' + l) for l in src.split('\n')]
     ast   = _ast_parse1('\n'.join(lines), parse_params)
-    fst   = FST(ast, lines, parse_params=parse_params, lcopy=False)
-    lns   = fst._get_indentable_lns(2, docstr=False)
+    fst_  = fst.FST(ast, lines, parse_params=parse_params, lcopy=False)
+    lns   = fst_._get_indentable_lns(2, docstr=False)
 
     if len(lns) != len(lines) - 2:  # if there are multiline strings then we need to dedent them and reparse, because of f-strings, TODO: optimize out second reparse if no f-strings
         strlns = set(range(2, len(lines)))
@@ -384,8 +389,8 @@ def _parse_match_cases(src: str, parse_params: dict = {}) -> AST:
         for ln in strlns:
             lines[ln] = bistr(lines[ln][1:])
 
-        ast = _ast_parse1('\n'.join(lines), parse_params)
-        fst = FST(ast, lines, parse_params=parse_params, lcopy=False)
+        ast  = _ast_parse1('\n'.join(lines), parse_params)
+        fst_ = fst.FST(ast, lines, parse_params=parse_params, lcopy=False)
 
     lns_ = set()
 
@@ -776,10 +781,10 @@ def _parse_type_param(src: str, parse_params: dict = {}) -> AST:
 # ......................................................................................................................
 
 @staticmethod
-def _code_as_all(code: Code, parse_params: dict = {}) -> FST:  # TODO: allow 'is_trystar'?
+def _code_as_all(code: Code, parse_params: dict = {}) -> fst.FST:  # TODO: allow 'is_trystar'?
     """Convert `code` to any parsable `FST` if possible. If `FST` passed then it is returned as itself."""
 
-    if isinstance(code, FST):
+    if isinstance(code, fst.FST):
         if not code.is_root:
             raise ValueError('expecting root node')
 
@@ -801,16 +806,16 @@ def _code_as_all(code: Code, parse_params: dict = {}) -> FST:  # TODO: allow 'is
         else:  # str
             lines = code.split('\n')
 
-    return FST(_parse(code, mode), lines, parse_params=parse_params)
+    return fst.FST(_parse(code, mode), lines, parse_params=parse_params)
 
 
 @staticmethod
-def _code_as_stmtishs(code: Code, parse_params: dict = {}, *, is_trystar: bool = False) -> FST:
+def _code_as_stmtishs(code: Code, parse_params: dict = {}, *, is_trystar: bool = False) -> fst.FST:
     """Convert `code` to zero or more `stmtish`s and return in the `body` of a `Module` `FST` if possible. If source
     is passed then will check for presence of `except` or `case` at start to determine if are `ExceptHandler`s or
     `match_case`s or `stmt`s."""
 
-    if is_fst := isinstance(code, FST):
+    if is_fst := isinstance(code, fst.FST):
         if not code.is_root:
             raise ValueError('expecting root node')
 
@@ -869,10 +874,10 @@ def _code_as_stmtishs(code: Code, parse_params: dict = {}, *, is_trystar: bool =
         if is_mod:
             return code
 
-        return FST(Module(body=body, type_ignores=[]), code._lines, from_=code, lcopy=False)
+        return fst.FST(Module(body=body, type_ignores=[]), code._lines, from_=code, lcopy=False)
 
     if not body:
-        return FST(Module(body=[], type_ignores=[]), [bistr('')], parse_params=parse_params, lcopy=False)
+        return fst.FST(Module(body=[], type_ignores=[]), [bistr('')], parse_params=parse_params, lcopy=False)
 
     if code_type is stmt:
         return _code_as_stmts(code, parse_params)
@@ -883,10 +888,10 @@ def _code_as_stmtishs(code: Code, parse_params: dict = {}, *, is_trystar: bool =
 
 
 @staticmethod
-def _code_as_stmts(code: Code, parse_params: dict = {}) -> FST:
+def _code_as_stmts(code: Code, parse_params: dict = {}) -> fst.FST:
     """Convert `code` to zero or more `stmt`s and return in the `body` of a `Module` `FST` if possible."""
 
-    if isinstance(code, FST):
+    if isinstance(code, fst.FST):
         if not code.is_root:
             raise ValueError('expecting root node')
 
@@ -902,7 +907,7 @@ def _code_as_stmts(code: Code, parse_params: dict = {}) -> FST:
                          end_lineno=codea.end_lineno, end_col_offset=codea.end_col_offset)
 
         if isinstance(codea, stmt):
-            return FST(Module(body=[codea], type_ignores=[]), code._lines, from_=code, lcopy=False)
+            return fst.FST(Module(body=[codea], type_ignores=[]), code._lines, from_=code, lcopy=False)
 
         if isinstance(codea, Module):
             if all(isinstance(a, stmt) for a in codea.body):
@@ -914,7 +919,7 @@ def _code_as_stmts(code: Code, parse_params: dict = {}) -> FST:
         if isinstance(codea, Interactive):
             code._unmake_fst_parents()
 
-            return FST(Module(body=code.body, type_ignores=[]), code._lines, from_=code, lcopy=False)
+            return fst.FST(Module(body=code.body, type_ignores=[]), code._lines, from_=code, lcopy=False)
 
         raise NodeError(f'expecting zero or more stmts, got {codea.__class__.__name__}')
 
@@ -930,25 +935,25 @@ def _code_as_stmts(code: Code, parse_params: dict = {}) -> FST:
     else:  # str
         lines = code.split('\n')
 
-    return FST(_parse_stmts(code, parse_params), lines, parse_params=parse_params)
+    return fst.FST(_parse_stmts(code, parse_params), lines, parse_params=parse_params)
 
 
 @staticmethod
-def _code_as_ExceptHandlers(code: Code, parse_params: dict = {}, *, is_trystar: bool = False) -> FST:
+def _code_as_ExceptHandlers(code: Code, parse_params: dict = {}, *, is_trystar: bool = False) -> fst.FST:
     """Convert `code` to zero or more `ExceptHandler`s and return in the `body` of a `Module` `FST` if possible.
 
     **Parameters:**
     - `is_trystar`: Hint used when unparsing an `AST` `code` to get the correct `except` or `except*` source.
     """
 
-    if isinstance(code, FST):
+    if isinstance(code, fst.FST):
         if not code.is_root:
             raise ValueError('expecting root node')
 
         codea = code.a
 
         if isinstance(codea, ExceptHandler):
-            return FST(Module(body=[codea], type_ignores=[]), code._lines, from_=code, lcopy=False)
+            return fst.FST(Module(body=[codea], type_ignores=[]), code._lines, from_=code, lcopy=False)
 
         if isinstance(codea, Module):
             if all(isinstance(a, ExceptHandler) for a in codea.body):
@@ -980,21 +985,21 @@ def _code_as_ExceptHandlers(code: Code, parse_params: dict = {}, *, is_trystar: 
     else:  # str
         lines = code.split('\n')
 
-    return FST(_parse_ExceptHandlers(code, parse_params), lines, parse_params=parse_params)
+    return fst.FST(_parse_ExceptHandlers(code, parse_params), lines, parse_params=parse_params)
 
 
 @staticmethod
-def _code_as_match_cases(code: Code, parse_params: dict = {}) -> FST:
+def _code_as_match_cases(code: Code, parse_params: dict = {}) -> fst.FST:
     """Convert `code` to zero or more `match_case`s and return in the `body` of a `Module` `FST` if possible."""
 
-    if isinstance(code, FST):
+    if isinstance(code, fst.FST):
         if not code.is_root:
             raise ValueError('expecting root node')
 
         codea = code.a
 
         if isinstance(codea, match_case):
-            return FST(Module(body=[codea], type_ignores=[]), code._lines, from_=code, lcopy=False)
+            return fst.FST(Module(body=[codea], type_ignores=[]), code._lines, from_=code, lcopy=False)
 
         if isinstance(codea, Module):
             if all(isinstance(a, match_case) for a in codea.body):
@@ -1017,11 +1022,11 @@ def _code_as_match_cases(code: Code, parse_params: dict = {}) -> FST:
     else:  # str
         lines = code.split('\n')
 
-    return FST(_parse_match_cases(code, parse_params), lines, parse_params=parse_params)
+    return fst.FST(_parse_match_cases(code, parse_params), lines, parse_params=parse_params)
 
 
 @staticmethod
-def _code_as_expr(code: Code, parse_params: dict = {}, parse: Callable[[Code, dict], FST] = _parse_expr) -> FST:
+def _code_as_expr(code: Code, parse_params: dict = {}, parse: Callable[[Code, dict], fst.FST] = _parse_expr) -> fst.FST:
     """Convert `code` to an `expr` or optionally `Slice` `FST` if possible.
 
     **Parameters:**
@@ -1030,7 +1035,7 @@ def _code_as_expr(code: Code, parse_params: dict = {}, parse: Callable[[Code, di
         different with respect to naked `Starred` elements, for that use `_code_as_expr_slice`.
     """
 
-    if isinstance(code, FST):
+    if isinstance(code, fst.FST):
         if not code.is_root:
             raise ValueError('expecting root node')
 
@@ -1044,7 +1049,7 @@ def _code_as_expr(code: Code, parse_params: dict = {}, parse: Callable[[Code, di
 
         ast.f._unmake_fst_parents()
 
-        return FST(ast, code._lines, from_=code, lcopy=False)._sanitize()
+        return fst.FST(ast, code._lines, from_=code, lcopy=False)._sanitize()
 
     if isinstance(code, AST):
         if not isinstance(code, expr):
@@ -1060,11 +1065,11 @@ def _code_as_expr(code: Code, parse_params: dict = {}, parse: Callable[[Code, di
     else:  # str
         lines = code.split('\n')
 
-    return FST(parse(code, parse_params), lines, parse_params=parse_params)._sanitize()
+    return fst.FST(parse(code, parse_params), lines, parse_params=parse_params)._sanitize()
 
 
 @staticmethod
-def _code_as_expr_slice(code: Code, parse_params: dict = {}) -> FST:
+def _code_as_expr_slice(code: Code, parse_params: dict = {}) -> fst.FST:
     """Convert `code` to a Slice `FST` if possible (or anthing else that can serve in `Subscript.slice`, like any old
     generic `expr`)."""
 
@@ -1079,7 +1084,7 @@ def _code_as_expr_slice(code: Code, parse_params: dict = {}) -> FST:
 
 
 @staticmethod
-def _code_as_expr_sliceelt(code: Code, parse_params: dict = {}, orslice: bool = False) -> FST:
+def _code_as_expr_sliceelt(code: Code, parse_params: dict = {}, orslice: bool = False) -> fst.FST:
     """Convert `code` to an `expr` or `Slice` `FST` if possible. This exists because of the behavior of naked `Starred`
     expressions in a `Subscript` `slice` field."""
 
@@ -1087,91 +1092,91 @@ def _code_as_expr_sliceelt(code: Code, parse_params: dict = {}, orslice: bool = 
 
 
 @staticmethod
-def _code_as_expr_callarg(code: Code, parse_params: dict = {}, orslice: bool = False) -> FST:
+def _code_as_expr_callarg(code: Code, parse_params: dict = {}, orslice: bool = False) -> fst.FST:
     """Convert `code` to an `expr` in the context of a `Call.args` which has special parse rules for `Starred`."""
 
     return _code_as_expr(code, parse_params, _parse_expr_callarg)
 
 
 @staticmethod
-def _code_as_boolop(code: Code, parse_params: dict = {}) -> FST:
+def _code_as_boolop(code: Code, parse_params: dict = {}) -> fst.FST:
     """Convert `code` to a `boolop` `FST` if possible."""
 
     return _code_as_op(code, boolop, parse_params, _parse_boolop, OPSTR2CLS_BOOL)
 
 
 @staticmethod
-def _code_as_binop(code: Code, parse_params: dict = {}) -> FST:
+def _code_as_binop(code: Code, parse_params: dict = {}) -> fst.FST:
     """Convert `code` to a `operator` `FST` if possible."""
 
     return _code_as_op(code, operator, parse_params, _parse_binop, OPSTR2CLS_BIN)
 
 
 @staticmethod
-def _code_as_augop(code: Code, parse_params: dict = {}) -> FST:
+def _code_as_augop(code: Code, parse_params: dict = {}) -> fst.FST:
     """Convert `code` to an augmented `operator` `FST` if possible, e.g. "+="."""
 
     return _code_as_op(code, operator, parse_params, _parse_augop, OPSTR2CLS_AUG, OPCLS2STR_AUG)
 
 
 @staticmethod
-def _code_as_unaryop(code: Code, parse_params: dict = {}) -> FST:
+def _code_as_unaryop(code: Code, parse_params: dict = {}) -> fst.FST:
     """Convert `code` to a `unaryop` `FST` if possible."""
 
     return _code_as_op(code, unaryop, parse_params, _parse_unaryop, OPSTR2CLS_UNARY)
 
 
 @staticmethod
-def _code_as_cmpop(code: Code, parse_params: dict = {}) -> FST:
+def _code_as_cmpop(code: Code, parse_params: dict = {}) -> fst.FST:
     """Convert `code` to a `cmpop` `FST` if possible."""
 
     return _code_as_op(code, cmpop, parse_params, _parse_cmpop, OPSTR2CLS_CMP)
 
 
 @staticmethod
-def _code_as_comprehension(code: Code, parse_params: dict = {}) -> FST:
+def _code_as_comprehension(code: Code, parse_params: dict = {}) -> fst.FST:
     """Convert `code` to a comprehension `FST` if possible."""
 
     return _code_as(code, comprehension, parse_params, _parse_comprehension)
 
 
 @staticmethod
-def _code_as_arguments(code: Code, parse_params: dict = {}) -> FST:
+def _code_as_arguments(code: Code, parse_params: dict = {}) -> fst.FST:
     """Convert `code` to a arguments `FST` if possible."""
 
     return _code_as(code, arguments, parse_params, _parse_arguments)
 
 
 @staticmethod
-def _code_as_arguments_lambda(code: Code, parse_params: dict = {}) -> FST:
+def _code_as_arguments_lambda(code: Code, parse_params: dict = {}) -> fst.FST:
     """Convert `code` to a lambda arguments `FST` if possible (no annotations allowed)."""
 
     return _code_as(code, arguments, parse_params, _parse_arguments_lambda)
 
 
 @staticmethod
-def _code_as_arg(code: Code, parse_params: dict = {}) -> FST:
+def _code_as_arg(code: Code, parse_params: dict = {}) -> fst.FST:
     """Convert `code` to an arg `FST` if possible."""
 
     return _code_as(code, arg, parse_params, _parse_arg)
 
 
 @staticmethod
-def _code_as_keyword(code: Code, parse_params: dict = {}) -> FST:
+def _code_as_keyword(code: Code, parse_params: dict = {}) -> fst.FST:
     """Convert `code` to a keyword `FST` if possible."""
 
     return _code_as(code, keyword, parse_params, _parse_keyword)
 
 
 @staticmethod
-def _code_as_alias(code: Code, parse_params: dict = {}) -> FST:
+def _code_as_alias(code: Code, parse_params: dict = {}) -> fst.FST:
     """Convert `code` to a alias `FST` if possible, star or dotted."""
 
     return _code_as(code, alias, parse_params, _parse_alias)
 
 
 @staticmethod
-def _code_as_alias_dotted(code: Code, parse_params: dict = {}) -> FST:
+def _code_as_alias_dotted(code: Code, parse_params: dict = {}) -> fst.FST:
     """Convert `code` to a alias `FST` if possible, dotted as in `alias` for `Import.names`."""
 
     ret = _code_as(code, alias, parse_params, _parse_alias_dotted)
@@ -1183,7 +1188,7 @@ def _code_as_alias_dotted(code: Code, parse_params: dict = {}) -> FST:
 
 
 @staticmethod
-def _code_as_alias_star(code: Code, parse_params: dict = {}) -> FST:
+def _code_as_alias_star(code: Code, parse_params: dict = {}) -> fst.FST:
     """Convert `code` to a alias `FST` if possible, possibly star as in `alias` for `FromImport.names`."""
 
     ret = _code_as(code, alias, parse_params, _parse_alias_star)
@@ -1195,21 +1200,21 @@ def _code_as_alias_star(code: Code, parse_params: dict = {}) -> FST:
 
 
 @staticmethod
-def _code_as_withitem(code: Code, parse_params: dict = {}) -> FST:
+def _code_as_withitem(code: Code, parse_params: dict = {}) -> fst.FST:
     """Convert `code` to a withitem `FST` if possible."""
 
     return _code_as(code, withitem, parse_params, _parse_withitem)
 
 
 @staticmethod
-def _code_as_pattern(code: Code, parse_params: dict = {}) -> FST:
+def _code_as_pattern(code: Code, parse_params: dict = {}) -> fst.FST:
     """Convert `code` to a pattern `FST` if possible."""
 
     return _code_as(code, pattern, parse_params, _parse_pattern)
 
 
 @staticmethod
-def _code_as_type_param(code: Code, parse_params: dict = {}) -> FST:
+def _code_as_type_param(code: Code, parse_params: dict = {}) -> fst.FST:
     """Convert `code` to a type_param `FST` if possible."""
 
     return _code_as(code, type_param, parse_params, _parse_type_param)
@@ -1219,7 +1224,7 @@ def _code_as_type_param(code: Code, parse_params: dict = {}) -> FST:
 def _code_as_identifier(code: Code, parse_params: dict = {}) -> str:
     """Convert `code` to valid identifier string if possible."""
 
-    if isinstance(code, FST):
+    if isinstance(code, fst.FST):
         if not code.is_root:
             raise ValueError('expecting root node')
 
@@ -1240,7 +1245,7 @@ def _code_as_identifier(code: Code, parse_params: dict = {}) -> str:
 def _code_as_identifier_dotted(code: Code, parse_params: dict = {}) -> str:
     """Convert `code` to valid dotted identifier string if possible (for Import module)."""
 
-    if isinstance(code, FST):
+    if isinstance(code, fst.FST):
         if not code.is_root:
             raise ValueError('expecting root node')
 
@@ -1261,7 +1266,7 @@ def _code_as_identifier_dotted(code: Code, parse_params: dict = {}) -> str:
 def _code_as_identifier_star(code: Code, parse_params: dict = {}) -> str:
     """Convert `code` to valid identifier string or star '*' if possible (for ImportFrom names)."""
 
-    if isinstance(code, FST):
+    if isinstance(code, fst.FST):
         if not code.is_root:
             raise ValueError('expecting root node')
 
@@ -1282,7 +1287,7 @@ def _code_as_identifier_star(code: Code, parse_params: dict = {}) -> str:
 def _code_as_identifier_alias(code: Code, parse_params: dict = {}) -> str:
     """Convert `code` to valid dotted identifier string or star '*' if possible (for any alias)."""
 
-    if isinstance(code, FST):
+    if isinstance(code, fst.FST):
         if not code.is_root:
             raise ValueError('expecting root node')
 
@@ -1305,7 +1310,7 @@ def _code_as_constant(code: constant, parse_params: dict = {}) -> constant:
     not as the python representation of the constant. The only `FST` or `AST` accepted is a `Constant`, whose `value` is
     returned."""
 
-    if isinstance(code, FST):
+    if isinstance(code, fst.FST):
         if not code.is_root:
             raise ValueError('expecting root node')
 
@@ -1408,5 +1413,3 @@ _PARSE_MODE_FUNCS = {
     Store:               lambda src, parse_params = {}: Store(),
     Del:                 lambda src, parse_params = {}: Del(),
 }
-
-from .fst import FST  # this imports a fake FST which is replaced in globals() when fst.py finishes loading

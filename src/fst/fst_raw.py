@@ -1,8 +1,13 @@
-"""Raw reparse FST methods."""
+"""Raw reparse FST methods.
+
+This module contains functions which are imported as methods in the `FST` class.
+"""
 
 from __future__ import annotations
 
 from ast import *
+
+from . import fst
 
 from .astutil import *
 from .astutil import TryStar
@@ -22,21 +27,21 @@ _PATH_BODY2HANDLERS = [astfield('body', 0), astfield('body', 0), astfield('handl
 _PATH_BODYCASES     = [astfield('body', 0), astfield('cases', 0)]
 
 
-def _reparse_raw_base(self: FST, new_lines: list[str], ln: int, col: int, end_ln: int, end_col: int,
+def _reparse_raw_base(self: fst.FST, new_lines: list[str], ln: int, col: int, end_ln: int, end_col: int,
                       copy_lines: list[str], path: list[astfield] | str | None, set_ast: bool = True,
-                      mode: Mode | None = None) -> FST:
+                      mode: Mode | None = None) -> fst.FST:
     """Actually do the reparse. If `mode` is `None` then will just try a normal `'exec'` parse and fail if that fails.
     Otherwise it will try this mode first, then all other parse modes as it is assumed to be a non-top level
     statementish thing being reparsed."""
 
-    copy_root = FST(Pass(), copy_lines, lcopy=False)  # we don't need the ASTs here, just the lines
+    copy_root = fst.FST(Pass(), copy_lines, lcopy=False)  # we don't need the ASTs here, just the lines
 
     copy_root._put_src(new_lines, ln, col, end_ln, end_col)
 
     root = self.root
 
     try:
-        copy_root = FST.fromsrc(copy_root.src, mode or 'exec', **root.parse_params)
+        copy_root = fst.FST.fromsrc(copy_root.src, mode or 'exec', **root.parse_params)
     except IndentationError:
         raise
 
@@ -44,7 +49,7 @@ def _reparse_raw_base(self: FST, new_lines: list[str], ln: int, col: int, end_ln
         if mode is None or path:  # if there is a path then we expect the top level node to parse to the same thing successfully, if it does not then it is a genuine error
             raise
 
-        copy_root = FST.fromsrc(copy_root.src, 'all', **root.parse_params)  # root, everything could have changed, try to full reparse
+        copy_root = fst.FST.fromsrc(copy_root.src, 'all', **root.parse_params)  # root, everything could have changed, try to full reparse
 
     if not path:  # root
         self._lines = copy_root._lines
@@ -68,7 +73,7 @@ def _reparse_raw_base(self: FST, new_lines: list[str], ln: int, col: int, end_ln
     return copy
 
 
-def _reparse_raw_stmtish(self: FST, new_lines: list[str], ln: int, col: int, end_ln: int, end_col: int) -> bool:
+def _reparse_raw_stmtish(self: fst.FST, new_lines: list[str], ln: int, col: int, end_ln: int, end_col: int) -> bool:
     """Reparse only statementish or block header part of statementish containing changes."""
 
     if not (stmtish := self.parent_stmtish(True, False)):
@@ -172,8 +177,8 @@ def _reparse_raw_stmtish(self: FST, new_lines: list[str], ln: int, col: int, end
 
 # ----------------------------------------------------------------------------------------------------------------------
 
-def _reparse_raw(self: FST, code: Code | None, ln: int, col: int, end_ln: int, end_col: int,
-                 exact: bool | None = None) -> FST | None:
+def _reparse_raw(self: fst.FST, code: Code | None, ln: int, col: int, end_ln: int, end_col: int,
+                 exact: bool | None = None) -> fst.FST | None:
     """Reparse this node which entirely contatins the span which is to be replaced with `code` source. `self` must
     be a node which entirely contains the location and is guaranteed not to be deleted. `self` and some of its
     parents going up may be replaced (root node `FST` will never change, the `AST` it points to may though). Not
@@ -190,10 +195,10 @@ def _reparse_raw(self: FST, code: Code | None, ln: int, col: int, end_ln: int, e
     elif isinstance(code, str):
         new_lines = code.split('\n')
     elif isinstance(code, AST):
-        new_lines = FST._unparse(code).split('\n')
+        new_lines = fst.FST._unparse(code).split('\n')
     elif code is None:
         new_lines = [bistr('')]
-    elif not code.is_root:  # isinstance(code, FST)
+    elif not code.is_root:  # isinstance(code, fst.FST)
         raise ValueError('expecting root node')
     else:
         new_lines = code._lines
@@ -224,5 +229,3 @@ def _reparse_raw(self: FST, code: Code | None, ln: int, col: int, end_ln: int, e
 
 # ----------------------------------------------------------------------------------------------------------------------
 __all_private__ = ['_reparse_raw']  # used by make_docs.py
-
-from .fst import FST  # this imports a fake FST which is replaced in globals() when fst.py finishes loading

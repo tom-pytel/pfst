@@ -1,9 +1,14 @@
-"""Old slice FST methods, need to update."""
+"""Old slice FST methods, need to update.
+
+This module contains functions which are imported as methods in the `FST` class.
+"""
 
 from __future__ import annotations
 
 from ast import *
 from typing import Literal
+
+from . import fst
 
 from .astutil import *
 from .astutil import TryStar
@@ -18,10 +23,10 @@ from .misc import (
 from .srcedit_old import _src_edit
 
 
-def _get_slice_seq_and_dedent(self: FST, get_ast: AST, cut: bool, seq_loc: fstloc,
-                              ffirst: FST | fstloc, flast: FST | fstloc,
-                              fpre: FST | fstloc | None, fpost: FST | fstloc | None,
-                              prefix: str, suffix: str) -> FST:
+def _get_slice_seq_and_dedent(self: fst.FST, get_ast: AST, cut: bool, seq_loc: fstloc,
+                              ffirst: fst.FST | fstloc, flast: fst.FST | fstloc,
+                              fpre: fst.FST | fstloc | None, fpost: fst.FST | fstloc | None,
+                              prefix: str, suffix: str) -> fst.FST:
     copy_loc, put_loc, put_lines = _src_edit.get_slice_seq(self, cut, seq_loc, ffirst, flast, fpre, fpost)
 
     copy_ln, copy_col, copy_end_ln, copy_end_col = copy_loc
@@ -45,11 +50,11 @@ def _get_slice_seq_and_dedent(self: FST, get_ast: AST, cut: bool, seq_loc: fstlo
     return get_fst
 
 
-def _put_slice_seq_and_indent(self: FST, put_fst: FST | None, seq_loc: fstloc,
-                              ffirst: FST | fstloc | None, flast: FST | fstloc | None,
-                              fpre: FST | fstloc | None, fpost: FST | fstloc | None,
-                              pfirst: FST | fstloc | None, plast: FST | fstloc | None,
-                              docstr: bool | Literal['strict']) -> FST:
+def _put_slice_seq_and_indent(self: fst.FST, put_fst: fst.FST | None, seq_loc: fstloc,
+                              ffirst: fst.FST | fstloc | None, flast: fst.FST | fstloc | None,
+                              fpre: fst.FST | fstloc | None, fpost: fst.FST | fstloc | None,
+                              pfirst: fst.FST | fstloc | None, plast: fst.FST | fstloc | None,
+                              docstr: bool | Literal['strict']) -> fst.FST:
     root = self.root
 
     if not put_fst:  # delete
@@ -92,8 +97,8 @@ def _put_slice_seq_and_indent(self: FST, put_fst: FST | None, seq_loc: fstloc,
 _GLOBALS = globals() | {'_GLOBALS': None}
 # ----------------------------------------------------------------------------------------------------------------------
 
-def _get_slice_tuple_list_or_set(self: FST, start: int | Literal['end'] | None, stop: int | None, field: str,
-                                 cut: bool, **options) -> FST:
+def _get_slice_tuple_list_or_set(self: fst.FST, start: int | Literal['end'] | None, stop: int | None, field: str,
+                                 cut: bool, **options) -> fst.FST:
     if field != 'elts':
         raise ValueError(f"invalid field '{field}' to slice from a {self.a.__class__.__name__}")
 
@@ -163,20 +168,20 @@ def _get_slice_tuple_list_or_set(self: FST, start: int | Literal['end'] | None, 
 
             assert self.root._lines[seq_loc.end_ln].startswith(')', seq_loc.end_col)
 
-    fst = _get_slice_seq_and_dedent(self, get_ast, cut, seq_loc, ffirst, flast, fpre, fpost, prefix, suffix)
+    fst_ = _get_slice_seq_and_dedent(self, get_ast, cut, seq_loc, ffirst, flast, fpre, fpost, prefix, suffix)
 
     if is_set:
         self._maybe_fix_set()
 
     elif is_tuple:
-        fst._maybe_add_singleton_tuple_comma(False)  # maybe need to add a postfix comma to copied single element tuple if is not already there
+        fst_._maybe_add_singleton_tuple_comma(False)  # maybe need to add a postfix comma to copied single element tuple if is not already there
         self._maybe_fix_tuple(is_paren)
 
-    return fst
+    return fst_
 
 
-# def _get_slice_empty_set(self: FST, start: int | Literal['end'] | None, stop: int | None, field: str,
-#                          cut: bool, **options) -> FST:
+# def _get_slice_empty_set(self: fst.FST, start: int | Literal['end'] | None, stop: int | None, field: str,
+#                          cut: bool, **options) -> fst.FST:
 #     if field is not None and field != 'elts':
 #         raise ValueError(f"invalid field '{field}' to slice from a {self.a.__class__.__name__}")
 
@@ -186,8 +191,8 @@ def _get_slice_tuple_list_or_set(self: FST, start: int | Literal['end'] | None, 
 #     return self._new_empty_set(from_=self)
 
 
-def _get_slice_dict(self: FST, start: int | Literal['end'] | None, stop: int | None, field: str, cut: bool,
-                    **options) -> FST:
+def _get_slice_dict(self: fst.FST, start: int | Literal['end'] | None, stop: int | None, field: str, cut: bool,
+                    **options) -> fst.FST:
     if field:
         raise ValueError(f"cannot specify a field '{field}' to slice from a Dict")
 
@@ -230,8 +235,8 @@ def _get_slice_dict(self: FST, start: int | Literal['end'] | None, stop: int | N
     return _get_slice_seq_and_dedent(self, get_ast, cut, seq_loc, ffirst, flast, fpre, fpost, '{', '}')
 
 
-def _get_slice_stmtish(self: FST, start: int | Literal['end'] | None, stop: int | None, field: str, cut: bool,
-                       one: bool = False, **options) -> FST:
+def _get_slice_stmtish(self: fst.FST, start: int | Literal['end'] | None, stop: int | None, field: str, cut: bool,
+                       one: bool = False, **options) -> fst.FST:
     ast         = self.a
     body        = getattr(ast, field)
     start, stop = _fixup_slice_indices(len(body), start, stop)
@@ -271,7 +276,7 @@ def _get_slice_stmtish(self: FST, start: int | Literal['end'] | None, stop: int 
     else:
         raise ValueError(f'cannot specify `one=True` if getting multiple statements')
 
-    fst = self._make_fst_and_dedent(indent, get_ast, copy_loc, '', '', put_loc, put_lines,
+    fst_ = self._make_fst_and_dedent(indent, get_ast, copy_loc, '', '', put_loc, put_lines,
                                     docstr=options.get('docstr'))
 
     if cut and is_last_child:  # correct for removed last child nodes or last nodes past the block open colon
@@ -280,10 +285,10 @@ def _get_slice_stmtish(self: FST, start: int | Literal['end'] | None, stop: int 
     if len(asts) == 1 and isinstance(a := asts[0], If):
         a.f._maybe_fix_elif()
 
-    return fst
+    return fst_
 
 
-def _put_slice_tuple_list_or_set(self: FST, code: Code | None, start: int | Literal['end'] | None, stop: int | None,
+def _put_slice_tuple_list_or_set(self: fst.FST, code: Code | None, start: int | Literal['end'] | None, stop: int | None,
                                  field: str, one: bool, **options):
     if field != 'elts':
         raise ValueError(f"invalid field '{field}' to assign slice to a {self.a.__class__.__name__}")
@@ -302,7 +307,7 @@ def _put_slice_tuple_list_or_set(self: FST, code: Code | None, start: int | Lite
 
             ls       = put_fst._lines
             put_ast  = Set(elts=[put_fst.a], lineno=1, col_offset=0, end_lineno=len(ls), end_col_offset=ls[-1].lenbytes)
-            put_fst  = FST(put_ast, ls, from_=self, lcopy=False)
+            put_fst  = fst.FST(put_ast, ls, from_=self, lcopy=False)
             is_tuple = is_set = False  # that's right, an `ast.Set` with `is_set=False` because in this case all we need is the `elts` container (without `ctx`)
 
         else:
@@ -389,6 +394,7 @@ def _put_slice_tuple_list_or_set(self: FST, code: Code | None, start: int | Lite
         elts[start : stop] = put_ast.elts
 
         put_len = len(put_ast.elts)
+        FST     = fst.FST
         stack   = [FST(elts[i], self, astfield('elts', i)) for i in range(start, start + put_len)]
 
         if stack and not is_self_set:
@@ -405,7 +411,7 @@ def _put_slice_tuple_list_or_set(self: FST, code: Code | None, start: int | Lite
         self._maybe_fix_set()
 
 
-# def _put_slice_empty_set(self: FST, code: Code | None, start: int | Literal['end'] | None, stop: int | None,
+# def _put_slice_empty_set(self: fst.FST, code: Code | None, start: int | Literal['end'] | None, stop: int | None,
 #                          field: str, one: bool, **options):
 #     ln, col, end_ln, end_col = self.loc
 
@@ -424,7 +430,7 @@ def _put_slice_tuple_list_or_set(self: FST, code: Code | None, start: int | Lite
 #             self._set_ast(old_ast)
 
 
-def _put_slice_dict(self: FST, code: Code | None, start: int | Literal['end'] | None, stop: int | None,
+def _put_slice_dict(self: fst.FST, code: Code | None, start: int | Literal['end'] | None, stop: int | None,
                     field: str, one: bool, **options):
     if field:
         raise ValueError(f"cannot specify a field '{field}' to assign slice to a Dict")
@@ -501,10 +507,10 @@ def _put_slice_dict(self: FST, code: Code | None, start: int | Literal['end'] | 
         for i in range(put_len):
             startplusi = start + i
 
-            stack.append(FST(values[startplusi], self, astfield('values', startplusi)))
+            stack.append(fst.FST(values[startplusi], self, astfield('values', startplusi)))
 
             if key := keys[startplusi]:
-                stack.append(FST(key, self, astfield('keys', startplusi)))
+                stack.append(fst.FST(key, self, astfield('keys', startplusi)))
 
         self._make_fst_tree(stack)
 
@@ -515,7 +521,7 @@ def _put_slice_dict(self: FST, code: Code | None, start: int | Literal['end'] | 
             key.f.pfield = astfield('keys', i)
 
 
-def _put_slice_stmtish(self: FST, code: Code | None, start: int | Literal['end'] | None, stop: int | None,
+def _put_slice_stmtish(self: fst.FST, code: Code | None, start: int | Literal['end'] | None, stop: int | None,
                        field: str, one: bool, **options):
     ast  = self.a
     body = getattr(ast, field)
@@ -722,6 +728,7 @@ def _put_slice_stmtish(self: FST, code: Code | None, start: int | Literal['end']
         body[start : stop] = put_body
 
         put_len = len(put_body)
+        FST     = fst.FST
         stack   = [FST(body[i], self, astfield(field, i)) for i in range(start, start + put_len)]
 
         self._make_fst_tree(stack)
@@ -738,5 +745,3 @@ def _put_slice_stmtish(self: FST, code: Code | None, start: int | Literal['end']
 
 # ----------------------------------------------------------------------------------------------------------------------
 __all_private__ = [n for n in globals() if n not in _GLOBALS]  # used by make_docs.py
-
-from .fst import FST  # this imports a fake FST which is replaced in globals() when fst.py finishes loading

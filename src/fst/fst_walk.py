@@ -1,9 +1,14 @@
-"""Siblings, children and walk, all in syntactic order."""
+"""Siblings, children and walk, all in syntactic order.
+
+This module contains functions which are imported as methods in the `FST` class.
+"""
 
 from __future__ import annotations
 
 from ast import *
 from typing import Generator, Literal
+
+from . import fst
 
 from .astutil import *
 
@@ -56,28 +61,28 @@ _AST_FIELDS_PREV[(arguments, 'kw_defaults')] = 7
 _AST_FIELDS_PREV[(arguments, 'kwarg')]       = 7
 
 
-def _with_loc(fst: FST, with_loc: bool | Literal['all', 'own'] = True) -> bool:
+def _with_loc(fst_: fst.FST, with_loc: bool | Literal['all', 'own'] = True) -> bool:
     """Check location condition on node. Safe for low level because doesn't use `.loc` calculation machinery."""
 
     if not with_loc:
         return True
 
     if with_loc is True:
-        return not (isinstance(a := fst.a, (expr_context, boolop, operator, unaryop, cmpop)) or
+        return not (isinstance(a := fst_.a, (expr_context, boolop, operator, unaryop, cmpop)) or
                     (isinstance(a, arguments) and not a.posonlyargs and not a.args and not a.vararg and
                     not a.kwonlyargs and not a.kwarg))
 
     if with_loc == 'all':
-        return not (isinstance(a := fst.a, (expr_context, boolop)) or
+        return not (isinstance(a := fst_.a, (expr_context, boolop)) or
                     (isinstance(a, arguments) and not a.posonlyargs and not a.args and not a.vararg and
                     not a.kwonlyargs and not a.kwarg))
 
-    return fst.has_own_loc  # with_loc == 'own'
+    return fst_.has_own_loc  # with_loc == 'own'
 
 
 # ----------------------------------------------------------------------------------------------------------------------
 
-def next(self: FST, with_loc: bool | Literal['all', 'own'] = True) -> FST | None:  # TODO: refactor
+def next(self: fst.FST, with_loc: bool | Literal['all', 'own'] = True) -> fst.FST | None:  # TODO: refactor
     """Get next sibling of `self` in syntactic order, only within parent.
 
     **Parameters:**
@@ -96,6 +101,8 @@ def next(self: FST, with_loc: bool | Literal['all', 'own'] = True) -> FST | None
 
     **Examples:**
     ```py
+    >>> from fst import *
+
     >>> f = FST('[[1, 2], [3, 4]]')
     >>> f.elts[0].next().src
     '[3, 4]'
@@ -383,7 +390,7 @@ def next(self: FST, with_loc: bool | Literal['all', 'own'] = True) -> FST | None
     return None
 
 
-def prev(self: FST, with_loc: bool | Literal['all', 'own'] = True) -> FST | None:  # TODO: refactor
+def prev(self: fst.FST, with_loc: bool | Literal['all', 'own'] = True) -> fst.FST | None:  # TODO: refactor
     """Get previous sibling of `self` in syntactic order, only within parent.
 
     **Parameters:**
@@ -402,6 +409,8 @@ def prev(self: FST, with_loc: bool | Literal['all', 'own'] = True) -> FST | None
 
     **Examples:**
     ```py
+    >>> from fst import *
+
     >>> f = FST('[[1, 2], [3, 4]]')
     >>> f.elts[1].prev().src
     '[1, 2]'
@@ -690,7 +699,7 @@ def prev(self: FST, with_loc: bool | Literal['all', 'own'] = True) -> FST | None
     return None
 
 
-def first_child(self: FST, with_loc: bool | Literal['all', 'own'] = True) -> FST | None:
+def first_child(self: fst.FST, with_loc: bool | Literal['all', 'own'] = True) -> fst.FST | None:
     """Get first valid child in syntactic order.
 
     **Parameters:**
@@ -709,6 +718,8 @@ def first_child(self: FST, with_loc: bool | Literal['all', 'own'] = True) -> FST
 
     **Examples:**
     ```py
+    >>> from fst import *
+
     >>> f = FST('def f(a: list[str], /, reject: int, *c, d=100, **e): pass')
     >>> f.first_child().src
     'a: list[str], /, reject: int, *c, d=100, **e'
@@ -731,12 +742,12 @@ def first_child(self: FST, with_loc: bool | Literal['all', 'own'] = True) -> FST
                 if (c := child[0]) and _with_loc(f := c.f, with_loc):
                     return f
 
-                return FST(Pass(), self, astfield(name, 0)).next(with_loc)  # Pass() is a hack just to have a simple AST node
+                return fst.FST(Pass(), self, astfield(name, 0)).next(with_loc)  # Pass() is a hack just to have a simple AST node
 
     return None
 
 
-def last_child(self: FST, with_loc: bool | Literal['all', 'own'] = True) -> FST | None:
+def last_child(self: fst.FST, with_loc: bool | Literal['all', 'own'] = True) -> fst.FST | None:
     """Get last valid child in syntactic order.
 
     **Parameters:**
@@ -755,6 +766,8 @@ def last_child(self: FST, with_loc: bool | Literal['all', 'own'] = True) -> FST 
 
     **Examples:**
     ```py
+    >>> from fst import *
+
     >>> f = FST('def f(a: list[str], /, reject: int, *c, d=100, **e): pass')
     >>> f.last_child().src
     'pass'
@@ -765,11 +778,11 @@ def last_child(self: FST, with_loc: bool | Literal['all', 'own'] = True) -> FST 
     """
 
     if (isinstance(a := self.a, Call)) and a.args and (keywords := a.keywords) and isinstance(a.args[-1], Starred):  # super-special case Call with args and keywords and a Starred, it could be anywhere in there, including after last keyword, defer to prev() logic
-        fst          = FST(f := Pass(), self, astfield('keywords', len(keywords)))
+        fst_         = fst.FST(f := Pass(), self, astfield('keywords', len(keywords)))
         f.lineno     = 0x7fffffffffffffff
         f.col_offset = 0
 
-        return fst.prev(with_loc)
+        return fst_.prev(with_loc)
 
     for name in reversed(AST_FIELDS[(a := self.a).__class__]):
         if (child := getattr(a, name, None)):
@@ -781,12 +794,12 @@ def last_child(self: FST, with_loc: bool | Literal['all', 'own'] = True) -> FST 
                 if (c := child[-1]) and _with_loc(f := c.f, with_loc):
                     return f
 
-                return FST(Pass(), self, astfield(name, len(child) - 1)).prev(with_loc)  # Pass() is a hack just to have a simple AST node
+                return fst.FST(Pass(), self, astfield(name, len(child) - 1)).prev(with_loc)  # Pass() is a hack just to have a simple AST node
 
     return None
 
 
-def last_header_child(self: FST, with_loc: bool | Literal['all', 'own'] = True) -> FST | None:
+def last_header_child(self: fst.FST, with_loc: bool | Literal['all', 'own'] = True) -> fst.FST | None:
     r"""Get last valid child in syntactic order in a block header (before the `:`), e.g. the `something` in
     `if something: pass`.
 
@@ -806,6 +819,8 @@ def last_header_child(self: FST, with_loc: bool | Literal['all', 'own'] = True) 
 
     **Examples:**
     ```py
+    >>> from fst import *
+
     >>> print(FST('if something:\n    i = 2\n    i = 3')
     ...       .last_header_child().src)
     something
@@ -834,8 +849,8 @@ def last_header_child(self: FST, with_loc: bool | Literal['all', 'own'] = True) 
     return self.prev_child(f, with_loc)
 
 
-def next_child(self: FST, from_child: FST | None, with_loc: bool | Literal['all', 'own'] = True
-               ) -> FST | None:
+def next_child(self: fst.FST, from_child: fst.FST | None, with_loc: bool | Literal['all', 'own'] = True
+               ) -> fst.FST | None:
     """Get the next child in syntactic order, meant for simple iteration.
 
     This is a slower way to iterate vs. `walk()`, but will work correctly if ANYTHING in the tree is modified during the
@@ -858,6 +873,8 @@ def next_child(self: FST, from_child: FST | None, with_loc: bool | Literal['all'
 
     **Examples:**
     ```py
+    >>> from fst import *
+
     >>> f = FST('[[1, 2], [3, 4]]')
     >>> f.next_child(f.elts[0]).src
     '[3, 4]'
@@ -878,8 +895,8 @@ def next_child(self: FST, from_child: FST | None, with_loc: bool | Literal['all'
     return self.first_child(with_loc) if from_child is None else from_child.next(with_loc)
 
 
-def prev_child(self: FST, from_child: FST | None, with_loc: bool | Literal['all', 'own'] = True
-               ) -> FST | None:
+def prev_child(self: fst.FST, from_child: fst.FST | None, with_loc: bool | Literal['all', 'own'] = True
+               ) -> fst.FST | None:
     """Get the previous child in syntactic order, meant for simple iteration.
 
     This is a slower way to iterate vs. `walk()`, but will work correctly if ANYTHING in the tree is modified during the
@@ -902,6 +919,8 @@ def prev_child(self: FST, from_child: FST | None, with_loc: bool | Literal['all'
 
     **Examples:**
     ```py
+    >>> from fst import *
+
     >>> f = FST('[[1, 2], [3, 4]]')
     >>> f.prev_child(f.elts[1]).src
     '[1, 2]'
@@ -922,8 +941,8 @@ def prev_child(self: FST, from_child: FST | None, with_loc: bool | Literal['all'
     return self.last_child(with_loc) if from_child is None else from_child.prev(with_loc)
 
 
-def step_fwd(self: FST, with_loc: bool | Literal['all', 'own', 'allown'] = True, *, recurse_self: bool = True,
-             ) -> FST | None:
+def step_fwd(self: fst.FST, with_loc: bool | Literal['all', 'own', 'allown'] = True, *, recurse_self: bool = True,
+             ) -> fst.FST | None:
     """Step forward in the tree in syntactic order, as if `walk()`ing forward, NOT the inverse of `step_back()`. Will
     walk up parents and down children to get the next node, returning `None` only when we are at the end of the whole
     thing.
@@ -948,6 +967,8 @@ def step_fwd(self: FST, with_loc: bool | Literal['all', 'own', 'allown'] = True,
 
     **Examples:**
     ```py
+    >>> from fst import *
+
     >>> f = FST('[[1, 2], [3, 4]]')
     >>> f.elts[0].src
     '[1, 2]'
@@ -980,23 +1001,23 @@ def step_fwd(self: FST, with_loc: bool | Literal['all', 'own', 'allown'] = True,
         with_loc = True
 
     while True:
-        if not recurse_self or not (fst := self.first_child(with_loc)):
+        if not recurse_self or not (fst_ := self.first_child(with_loc)):
             recurse_self = True
 
-            while not (fst := self.next(with_loc)):
+            while not (fst_ := self.next(with_loc)):
                 if not (self := self.parent):
                     return None
 
-        if not allown or fst.has_own_loc:
+        if not allown or fst_.has_own_loc:
             break
 
-        self = fst
+        self = fst_
 
-    return fst
+    return fst_
 
 
-def step_back(self: FST, with_loc: bool | Literal['all', 'own', 'allown'] = True, *, recurse_self: bool = True,
-              ) -> FST | None:
+def step_back(self: fst.FST, with_loc: bool | Literal['all', 'own', 'allown'] = True, *, recurse_self: bool = True,
+              ) -> fst.FST | None:
     """Step backward in the tree in syntactic order, as if `walk()`ing backward, NOT the inverse of `step_fwd()`. Will
     walk up parents and down children to get the next node, returning `None` only when we are at the beginning of the
     whole thing.
@@ -1021,6 +1042,8 @@ def step_back(self: FST, with_loc: bool | Literal['all', 'own', 'allown'] = True
 
     **Examples:**
     ```py
+    >>> from fst import *
+
     >>> f = FST('[[1, 2], [3, 4]]')
     >>> f.elts[1].src
     '[3, 4]'
@@ -1053,23 +1076,23 @@ def step_back(self: FST, with_loc: bool | Literal['all', 'own', 'allown'] = True
         with_loc = True
 
     while True:
-        if not recurse_self or not (fst := self.last_child(with_loc)):
+        if not recurse_self or not (fst_ := self.last_child(with_loc)):
             recurse_self = True
 
-            while not (fst := self.prev(with_loc)):
+            while not (fst_ := self.prev(with_loc)):
                 if not (self := self.parent):
                     return None
 
-        if not allown or fst.has_own_loc:
+        if not allown or fst_.has_own_loc:
             break
 
-        self = fst
+        self = fst_
 
-    return fst
+    return fst_
 
 
-def walk(self: FST, with_loc: bool | Literal['all', 'own'] = False, *, self_: bool = True, recurse: bool = True,
-         scope: bool = False, back: bool = False) -> Generator[FST, bool, None]:
+def walk(self: fst.FST, with_loc: bool | Literal['all', 'own'] = False, *, self_: bool = True, recurse: bool = True,
+         scope: bool = False, back: bool = False) -> Generator[fst.FST, bool, None]:
     r"""Walk `self` and descendants in syntactic order. When walking, you can `send(False)` to the generator to skip
     recursion into the current child. `send(True)` to allow recursion into child if called with `recurse=False` or
     `scope=True` would otherwise disallow it. Can send multiple times, last value sent takes effect.
@@ -1106,7 +1129,9 @@ def walk(self: FST, with_loc: bool | Literal['all', 'own'] = False, *, self_: bo
 
     **Examples:**
     ```py
+    >>> from fst import *
     >>> import ast
+
     >>> f = FST('def f(a: list[str], /, reject: int, *c, d=100, **e): pass')
     >>> for g in (gen := f.walk(with_loc=True)):
     ...     if isinstance(g.a, ast.arg) and g.a.arg == 'reject':
@@ -1244,24 +1269,24 @@ def walk(self: FST, with_loc: bool | Literal['all', 'own'] = False, *, self_: bo
         if not (ast := stack.pop()):
             continue
 
-        fst = ast.f
+        fst_ = ast.f
 
-        if not _with_loc(fst, with_loc):
+        if not _with_loc(fst_, with_loc):
             continue
 
         recurse_ = recurse
 
-        while (sent := (yield fst)) is not None:
+        while (sent := (yield fst_)) is not None:
             recurse_ = 1 if sent else False
 
-        if not fst.a:  # has been changed by the player
-            fst = fst.repath()
+        if not fst_.a:  # has been changed by the player
+            fst_ = fst_.repath()
 
-        ast = fst.a  # could have just modified the ast
+        ast = fst_.a  # could have just modified the ast
 
         if recurse_ is not True:
             if recurse_:  # user did send(True), walk this child unconditionally
-                yield from fst.walk(with_loc, self_=False, back=back)
+                yield from fst_.walk(with_loc, self_=False, back=back)
 
         else:
             if scope:
@@ -1299,7 +1324,7 @@ def walk(self: FST, with_loc: bool | Literal['all', 'own'] = False, *, self_: bo
 
                 elif isinstance(ast, (ListComp, SetComp, DictComp, GeneratorExp)):
                     comp_first_iter = ast.generators[0].iter
-                    gen             = fst.walk(with_loc, self_=False, back=back)
+                    gen             = fst_.walk(with_loc, self_=False, back=back)
 
                     for f in gen:  # all NamedExpr assignments below are visible here, yeah, its ugly
                         if (a := f.a) is comp_first_iter or (f.pfield.name == 'target' and isinstance(a, Name) and
@@ -1338,8 +1363,3 @@ def walk(self: FST, with_loc: bool | Literal['all', 'own'] = False, *, self_: bo
                 children = syntax_ordered_children(ast)
 
                 stack.extend(children if back else children[::-1])
-
-
-# ----------------------------------------------------------------------------------------------------------------------
-
-from .fst import FST  # this imports a fake FST which is replaced in globals() when fst.py finishes loading

@@ -78,34 +78,34 @@ if __name__ == "__main__":
                 else:
                     all_funcs.add(f)
 
-    frFST  = ForwardRef('FST')
-    allFST = {'FST', frFST}
-    allT   = {Union, Generator, abc.Generator}
+    # frFST  = ForwardRef('FST')
+    # allFST = {'FST', frFST}
+    # allT   = {Union, Generator, abc.Generator}
 
-    def fixTyping(t):
-        if t in allFST:
-            return FST
+    # def fixTyping(t):
+    #     if t in allFST:
+    #         return FST
 
-        if (o := get_origin(t)) not in allT:
-            return t
+    #     if (o := get_origin(t)) not in allT:
+    #         return t
 
-        args    = list(get_args(t))
-        changed = False
+    #     args    = list(get_args(t))
+    #     changed = False
 
-        for i, a in enumerate(args):
-            if (b := fixTyping(a)) is not a:
-                args[i] = b
-                changed = True
+    #     for i, a in enumerate(args):
+    #         if (b := fixTyping(a)) is not a:
+    #             args[i] = b
+    #             changed = True
 
-        return o[tuple(args)] if changed else t
+    #     return o[tuple(args)] if changed else t
 
-    for f in all_funcs:  # change all 'FST' __annotations__ to point to actual FST class
-        if anns := getattr(f, '__annotations__'):
-            for a, v in anns.items():
-                if v in allFST:
-                    anns[a] = FST
-                elif (w := fixTyping(v)) is not v:
-                    anns[a] = w
+    # for f in all_funcs:  # change all 'FST' __annotations__ to point to actual FST class
+    #     if anns := getattr(f, '__annotations__'):
+    #         for a, v in anns.items():
+    #             if v in allFST:
+    #                 anns[a] = FST
+    #             elif (w := fixTyping(v)) is not v:
+    #                 anns[a] = w
 
     render.configure(
         docformat='markdown',
