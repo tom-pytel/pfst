@@ -172,7 +172,7 @@ class _Reconcile:
                     if (child_field := child_pfield.name) == field and child_parent is nodef else        # if is from same field and our own child, else
                     not fst.FST._is_slice_compatible(node_sig, (child_parent.a.__class__, child_field))  # child slice is not compatible)
                 )
-            ):                                                                                      # then can't possibly slice, or it doesn't make sense to
+            ):                                                                                           # then can't possibly slice, or it doesn't make sense to
                 end = start + 1
 
             else:  # slice operation, even if its just one element because slice copies more formatting and comments

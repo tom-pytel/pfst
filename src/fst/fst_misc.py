@@ -14,7 +14,7 @@ from typing import Callable, Literal
 from . import fst
 
 from .astutil import *
-from .astutil import Interpolation, TemplateStr
+from .astutil import re_identifier, OPCLS2STR, Interpolation, TemplateStr
 
 from .misc import (
     Self, astfield, fstloc, nspace,

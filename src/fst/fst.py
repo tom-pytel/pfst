@@ -12,7 +12,7 @@ from io import TextIOBase
 from typing import Any, Callable, Generator, Literal, TextIO, Union
 
 from .astutil import *
-from .astutil import TypeAlias, TryStar, TemplateStr, Interpolation, type_param
+from .astutil import FIELDS, OPCLS2STR, OPSTR2CLS_AUG, TypeAlias, TryStar, TemplateStr, Interpolation, type_param
 
 from .misc import (
     NodeError, astfield, fstloc, fstlocns, nspace,

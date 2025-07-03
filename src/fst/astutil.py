@@ -13,12 +13,12 @@ from enum import IntEnum, auto
 from_iterable = chain.from_iterable
 
 __all__ = [
-    'FIELDS', 'AST_FIELDS',
-    'OPSTR2CLS_UNARY', 'OPSTR2CLS_BIN', 'OPSTR2CLS_CMP', 'OPSTR2CLS_BOOL', 'OPSTR2CLS_AUG',
-    'OPSTR2CLS', 'OPSTR2CLSWAUG', 'OPCLS2STR', 'OPCLS2STR_AUG',
-    're_alnum', 're_two_alnum',
-    're_identifier', 're_identifier_only', 're_identifier_dotted', 're_identifier_dotted_only',
-    're_identifier_or_star', 're_identifier_or_star_only', 're_identifier_alias', 're_identifier_alias_only',
+    # 'FIELDS', 'AST_FIELDS',
+    # 'OPSTR2CLS_UNARY', 'OPSTR2CLS_BIN', 'OPSTR2CLS_CMP', 'OPSTR2CLS_BOOL', 'OPSTR2CLS_AUG',
+    # 'OPSTR2CLS', 'OPSTR2CLSWAUG', 'OPCLS2STR', 'OPCLS2STR_AUG',
+    # 're_alnum', 're_two_alnum',
+    # 're_identifier', 're_identifier_only', 're_identifier_dotted', 're_identifier_dotted_only',
+    # 're_identifier_or_star', 're_identifier_or_star_only', 're_identifier_alias', 're_identifier_alias_only',
     'bistr', 'constant',
     'is_valid_identifier', 'is_valid_identifier_dotted', 'is_valid_identifier_star', 'is_valid_identifier_alias',
     'is_valid_MatchSingleton_value', 'is_valid_MatchValue_value', 'is_valid_MatchMapping_key',

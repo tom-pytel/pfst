@@ -10,6 +10,8 @@ try:
 except ImportError:
     Self = ForwardRef('FST')
 
+import fst
+
 from .astutil import *
 from .astutil import TypeAlias, TryStar, TemplateStr, type_param, Interpolation
 
@@ -99,7 +101,7 @@ _AST_DEFAULT_BODY_FIELD  = {cls: field for field, classes in [
 _GLOBALS = globals() | {'_GLOBALS': None}
 # ----------------------------------------------------------------------------------------------------------------------
 
-Code = Union['FST', AST, list[str], str]  ; """Code types accepted for put to `FST`."""
+Code = Union['fst.fst.FST', AST, list[str], str]  ; """Code types accepted for put to `FST`."""
 
 Mode = Literal[
     'all',

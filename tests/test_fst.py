@@ -7,9 +7,11 @@ import unittest
 from ast import parse as ast_parse, unparse as ast_unparse
 
 from fst import *
-from fst.astutil import TemplateStr, type_param, TypeVar, ParamSpec, TypeVarTuple
+from fst.astutil import (
+    OPCLS2STR, TemplateStr, type_param, TypeVar, ParamSpec, TypeVarTuple, WalkFail, copy_ast, compare_asts,
+)
 
-from data_other import (PARS_DATA, COPY_DATA, GET_SLICE_SEQ_DATA, GET_SLICE_STMT_DATA, GET_SLICE_STMT_NOVERIFY_DATA)
+from data_other import PARS_DATA, COPY_DATA, GET_SLICE_SEQ_DATA, GET_SLICE_STMT_DATA, GET_SLICE_STMT_NOVERIFY_DATA
 
 _PY_VERSION = sys.version_info[:2]
 _PYLT11     = _PY_VERSION < (3, 11)

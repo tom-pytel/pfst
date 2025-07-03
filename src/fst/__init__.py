@@ -72,7 +72,6 @@ prescribed operations are not done yet.
 
 import ast
 from ast import *
-from .astutil import *
 from .misc import NodeError, fstloc, astfield
 from .view import fstview
-from .fst import *
+from .fst import parse, unparse, dump, FST

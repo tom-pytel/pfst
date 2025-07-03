@@ -8,6 +8,8 @@ from random import randint, seed, shuffle
 
 from fst import *
 
+from fst.astutil import compare_asts
+
 from data_put_one import PUT_ONE_DATA
 from data_other import (GET_SLICE_SEQ_DATA, GET_SLICE_STMT_DATA, GET_SLICE_STMT_NOVERIFY_DATA,
                         PUT_SLICE_SEQ_DATA, PUT_SLICE_STMT_DATA, PUT_SLICE_DATA, PUT_SRC_DATA,

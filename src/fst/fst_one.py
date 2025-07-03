@@ -14,7 +14,10 @@ from typing import Callable, NamedTuple, Union
 from . import fst
 
 from .astutil import *
-from .astutil import TypeAlias, TryStar, TypeVar, ParamSpec, TypeVarTuple, TemplateStr, Interpolation
+from .astutil import (
+    re_alnum, re_two_alnum, re_identifier, re_identifier_dotted, re_identifier_alias,
+    TypeAlias, TryStar, TypeVar, ParamSpec, TypeVarTuple, TemplateStr, Interpolation,
+)
 
 from .misc import (
     Code, NodeError, astfield, fstloc,
@@ -35,7 +38,7 @@ _PYLT11     = _PY_VERSION < (3, 11)
 _PYLT12     = _PY_VERSION < (3, 12)
 _PYLT14     = _PY_VERSION < (3, 14)
 
-_GetOneRet       = Union['FST', None, str, constant]
+_GetOneRet       = Union['fst.FST', None, str, constant]
 _PutOneCode      = Code | str | constant | None
 
 

@@ -11,6 +11,7 @@ from typing import Generator, Literal
 from . import fst
 
 from .astutil import *
+from .astutil import AST_FIELDS
 
 from .misc import astfield
 

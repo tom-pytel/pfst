@@ -15,7 +15,10 @@ from unicodedata import normalize
 from . import fst
 
 from .astutil import *
-from .astutil import TryStar, type_param
+from .astutil import (
+    OPSTR2CLS_UNARY, OPSTR2CLS_BIN, OPSTR2CLS_CMP, OPSTR2CLS_BOOL, OPSTR2CLS_AUG, OPCLS2STR_AUG, OPCLS2STR,
+    TryStar, type_param,
+)
 
 from .misc import (
     Code, Mode, NodeError, _next_src, _shortstr
