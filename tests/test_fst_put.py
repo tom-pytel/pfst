@@ -2939,6 +2939,9 @@ a
         f = FST('case a | b: pass')
         self.assertRaises(NodeError, f.pattern.patterns[0].replace, '*s', raw=False)
 
+        f = FST('case f(): pass')
+        self.assertRaises(NodeError, f.pattern.cls.replace, '_', raw=False)
+
         # pattern BinOp and UnaryOp
 
         f = FST('case -1: pass')

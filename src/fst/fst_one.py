@@ -543,13 +543,13 @@ def _validate_put_ast(self: fst.FST, put_ast: AST, idx: int | None, field: str, 
                              f', got {put_ast.__class__.__name__}')
 
 
-def _validate_pattern_expr(self: fst.FST):
+def _validate_pattern_attr(self: fst.FST) -> Name:
     while True:
         if self.pars().n:
             raise NodeError(f'cannot put parenthesized {self.a.__class__.__name__} to pattern expression')
 
         if isinstance(a := self.a, Name):
-            break
+            return a
 
         if not isinstance(a, Attribute):
             raise NodeError(f'cannot put {self.a.__class__.__name__} to pattern expression')
@@ -561,7 +561,8 @@ def _is_valid_MatchClass_cls(ast: AST) -> bool:
     if (f := ast.f).end_ln != f.ln:
         raise NodeError(f'cannot put multiline {ast.__class__.__name__} to MatchClass pattern expression')
 
-    _validate_pattern_expr(ast.f)
+    if _validate_pattern_attr(ast.f).id == '_':
+        raise NodeError("cannot start MatchClass.cls with wildcard specifier '_'")
 
     return True
 
@@ -1300,7 +1301,7 @@ def _put_one_Attribute_value(self: fst.FST, code: _PutOneCode, idx: int | None, 
             if code.end_ln != code.ln and not above.is_enclosed_in_parents():
                 raise NodeError(f'cannot put multiline {above.a.__class__.__name__} to uneclosed pattern expression')
 
-            _validate_pattern_expr(code)
+            _validate_pattern_attr(code)
 
             break
 

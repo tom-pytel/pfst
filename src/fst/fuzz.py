@@ -434,7 +434,7 @@ def can_replace(tgt: FST, repl: FST) -> bool:  # assuming ASTCat has already bee
                     return False
 
             if tgt_field == 'cls':
-                if not isinstance(repla, Name):
+                if not isinstance(repla, Name) or repla.id == '_':
                     return False
 
             elif isinstance(tgta, (Name, Attribute)):
