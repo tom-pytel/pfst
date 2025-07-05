@@ -1333,7 +1333,7 @@ type of empty sequence (tuple or list).</li>
 <li><code>'seq'</code>: Only starred sequences <code>{*()}</code>, <code>{*[]}</code> and <code>{*{}}</code> are considered empty.</li>
 <li><code>'call'</code>: Only <code>set()</code> call is considered empty.</li>
 </ul></li>
-<li><code>pars_walrus': Whether to parenthesize copied</code>NamedExpr<code>nodes or not (only if</code>pars<code>is also not</code>False`).
+<li><code>pars_walrus</code>: Whether to parenthesize copied <code>NamedExpr</code> nodes or not (only if <code><a href="#FST.pars">pars</a></code> is also not <code>False</code>).
 <ul>
 <li><code>False</code>: Do not parenthesize cut / copied <code>NamedExpr</code> walrus expressions.</li>
 <li><code>True</code>: Parenthesize cut / copied <code>NamedExpr</code> walrus expressions.</li>
@@ -2634,16 +2634,16 @@ that shouldn't be parenthesized, and you wind up poking an eye out, that's on yo
                                 <div class="attr function">
             
         <span class="def">def</span>
-        <span class="name">unpar</span><span class="signature pdoc-code condensed">(<span class="param"><span class="bp">self</span>, </span><span class="param"><span class="n">intrinsic</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>, </span><span class="param"><span class="o">*</span>, </span><span class="param"><span class="n">shared</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">True</span></span><span class="return-annotation">) -> <span class="n">Self</span>:</span></span>
+        <span class="name">unpar</span><span class="signature pdoc-code condensed">(<span class="param"><span class="bp">self</span>, </span><span class="param"><span class="n">node</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>, </span><span class="param"><span class="o">*</span>, </span><span class="param"><span class="n">shared</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">True</span></span><span class="return-annotation">) -> <span class="n">Self</span>:</span></span>
 
         
     </div>
     <a class="headerlink" href="#FST.unpar"></a>
     
-            <div class="docstring"><p>Remove all parentheses from node if present. Normally removes just grouping parentheses but can also remove
-<code>Tuple</code> parentheses and <code>MatchSequence</code> parentheses or brackets if <code>intrinsic=True</code>. If dealing with a <code>Starred</code>
-then the parentheses are checked in and removed from the child. If <code>shared=None</code> then will also remove
-parentheses which do not belong to this node but enclose it directly.</p>
+            <div class="docstring"><p>Remove all parentheses if present. Normally removes just grouping parentheses but can also remove <code>Tuple</code>
+parentheses and <code>MatchSequence</code> parentheses or brackets intrinsic to the node if <code>node=True</code>. If dealing with a
+<code>Starred</code> then the parentheses are checked in and removed from the child. If <code>shared=None</code> then will also remove
+parentheses which do not belong to this node but enclose it directly, this is mostly for internal use.</p>
 
 <p><strong>WARNING!</strong> This function doesn't do any higher level syntactic validation. So if you unparenthesize something
 that shouldn't be unparenthesized, and you wind up poking an eye out, that's on you.</p>
@@ -2651,8 +2651,9 @@ that shouldn't be unparenthesized, and you wind up poking an eye out, that's on 
 <p><strong>Parameters:</strong></p>
 
 <ul>
-<li><code>intrinsic</code>: If <code>True</code> then will remove parentheses from a parenthesized <code>Tuple</code> and parentheses / brackets
-from parenthesized / bracketed <code>MatchSequence</code>, otherwise only removes grouping parentheses if present.</li>
+<li><code>node</code>: If <code>True</code> then will remove intrinsic parentheses from a parenthesized <code>Tuple</code> and parentheses /
+brackets from parenthesized / bracketed <code>MatchSequence</code>, otherwise only removes grouping parentheses if
+present.</li>
 <li><code>shared</code>: Whether to allow merge of parentheses of single call argument generator expression with <code>Call</code>
 parentheses or not. If <code>None</code> then will attempt to unparenthesize any enclosing parentheses, whether they
 belong to this node or not (meant for internal use).</li>
@@ -2679,19 +2680,19 @@ belong to this node or not (meant for internal use).</li>
 <span class="o">&gt;&gt;&gt;</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;(1, 2)&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">unpar</span><span class="p">()</span><span class="o">.</span><span class="n">src</span>  <span class="c1"># but not from tuple</span>
 <span class="s1">&#39;(1, 2)&#39;</span>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;(1, 2)&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">unpar</span><span class="p">(</span><span class="n">intrinsic</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">src</span>  <span class="c1"># unless explicitly specified</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;(1, 2)&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">unpar</span><span class="p">(</span><span class="n">node</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">src</span>  <span class="c1"># unless explicitly specified</span>
 <span class="s1">&#39;1, 2&#39;</span>
 
 <span class="o">&gt;&gt;&gt;</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;(((1, 2)))&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">unpar</span><span class="p">()</span><span class="o">.</span><span class="n">src</span>
 <span class="s1">&#39;(1, 2)&#39;</span>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;(((1, 2)))&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">unpar</span><span class="p">(</span><span class="n">intrinsic</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">src</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;(((1, 2)))&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">unpar</span><span class="p">(</span><span class="n">node</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">src</span>
 <span class="s1">&#39;1, 2&#39;</span>
 
 <span class="o">&gt;&gt;&gt;</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[1, 2]&#39;</span><span class="p">,</span> <span class="s1">&#39;pattern&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">unpar</span><span class="p">()</span><span class="o">.</span><span class="n">src</span>
 <span class="s1">&#39;[1, 2]&#39;</span>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[1, 2]&#39;</span><span class="p">,</span> <span class="s1">&#39;pattern&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">unpar</span><span class="p">(</span><span class="n">intrinsic</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">src</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[1, 2]&#39;</span><span class="p">,</span> <span class="s1">&#39;pattern&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">unpar</span><span class="p">(</span><span class="n">node</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">src</span>
 <span class="s1">&#39;1, 2&#39;</span>
 
 <span class="o">&gt;&gt;&gt;</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;*(a or b)&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">unpar</span><span class="p">()</span><span class="o">.</span><span class="n">src</span>  <span class="c1"># unpar() a Starred unparenthesizes its child</span>

@@ -3388,7 +3388,7 @@ c, # c
         f = FST('a = b', 'exec').body[0]
         g = FST('(i,\nj)', 'exec').body[0].value.copy(pars=False)
         self.assertEqual('(i,\nj)', g.src)
-        g.unpar(intrinsic=True)
+        g.unpar(node=True)
         self.assertEqual('i,\nj', g.src)
         f.put(g.copy(), field='value', raw=False, pars=False)
         self.assertEqual(f.src, 'a = i,\nj')

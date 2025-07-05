@@ -852,7 +852,7 @@ class FST:
             - `True`: `set()` call and `{*()}`, `{*[]}` and `{*{}}` starred sequences are considered empty.
             - `'seq'`: Only starred sequences `{*()}`, `{*[]}` and `{*{}}` are considered empty.
             - `'call'`: Only `set()` call is considered empty.
-        - `pars_walrus': Whether to parenthesize copied `NamedExpr` nodes or not (only if `pars` is also not `False`).
+        - `pars_walrus`: Whether to parenthesize copied `NamedExpr` nodes or not (only if `pars` is also not `False`).
             - `False`: Do not parenthesize cut / copied `NamedExpr` walrus expressions.
             - `True`: Parenthesize cut / copied `NamedExpr` walrus expressions.
         - `pep8space`: Preceding and trailing empty lines for function and class definitions.
@@ -2082,18 +2082,19 @@ class FST:
 
         return self
 
-    def unpar(self, intrinsic: bool = False, *, shared: bool | None = True) -> Self:
-        """Remove all parentheses from node if present. Normally removes just grouping parentheses but can also remove
-        `Tuple` parentheses and `MatchSequence` parentheses or brackets if `intrinsic=True`. If dealing with a `Starred`
-        then the parentheses are checked in and removed from the child. If `shared=None` then will also remove
-        parentheses which do not belong to this node but enclose it directly.
+    def unpar(self, node: bool = False, *, shared: bool | None = True) -> Self:
+        """Remove all parentheses if present. Normally removes just grouping parentheses but can also remove `Tuple`
+        parentheses and `MatchSequence` parentheses or brackets intrinsic to the node if `node=True`. If dealing with a
+        `Starred` then the parentheses are checked in and removed from the child. If `shared=None` then will also remove
+        parentheses which do not belong to this node but enclose it directly, this is mostly for internal use.
 
         **WARNING!** This function doesn't do any higher level syntactic validation. So if you unparenthesize something
         that shouldn't be unparenthesized, and you wind up poking an eye out, that's on you.
 
         **Parameters:**
-        - `intrinsic`: If `True` then will remove parentheses from a parenthesized `Tuple` and parentheses / brackets
-            from parenthesized / bracketed `MatchSequence`, otherwise only removes grouping parentheses if present.
+        - `node`: If `True` then will remove intrinsic parentheses from a parenthesized `Tuple` and parentheses /
+            brackets from parenthesized / bracketed `MatchSequence`, otherwise only removes grouping parentheses if
+            present.
         - `shared`: Whether to allow merge of parentheses of single call argument generator expression with `Call`
             parentheses or not. If `None` then will attempt to unparenthesize any enclosing parentheses, whether they
             belong to this node or not (meant for internal use).
@@ -2115,19 +2116,19 @@ class FST:
         >>> FST('(1, 2)').unpar().src  # but not from tuple
         '(1, 2)'
 
-        >>> FST('(1, 2)').unpar(intrinsic=True).src  # unless explicitly specified
+        >>> FST('(1, 2)').unpar(node=True).src  # unless explicitly specified
         '1, 2'
 
         >>> FST('(((1, 2)))').unpar().src
         '(1, 2)'
 
-        >>> FST('(((1, 2)))').unpar(intrinsic=True).src
+        >>> FST('(((1, 2)))').unpar(node=True).src
         '1, 2'
 
         >>> FST('[1, 2]', 'pattern').unpar().src
         '[1, 2]'
 
-        >>> FST('[1, 2]', 'pattern').unpar(intrinsic=True).src
+        >>> FST('[1, 2]', 'pattern').unpar(node=True).src
         '1, 2'
 
         >>> FST('*(a or b)').unpar().src  # unpar() a Starred unparenthesizes its child
@@ -2161,7 +2162,7 @@ class FST:
 
             self._unparenthesize_grouping(shared)
 
-        if intrinsic:
+        if node:
             if isinstance(self.a, Tuple):
                 modifying = modifying or self._modifying().enter()
 

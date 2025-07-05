@@ -4724,7 +4724,7 @@ match a:
         self.assertEqual('(1,)', f.src)
         f.unpar()  # self.assertFalse()
         self.assertEqual('(1,)', f.src)
-        f.unpar(intrinsic=True)  # self.assertTrue()
+        f.unpar(node=True)  # self.assertTrue()
         self.assertEqual('1,', f.src)
         f.unpar()  # self.assertFalse()
 
@@ -4741,7 +4741,7 @@ match a:
         self.assertEqual('( # pre2\n1,\n # post1\n)', f.src)
         f.unpar()  # self.assertFalse()
         self.assertEqual('( # pre2\n1,\n # post1\n)', f.src)
-        f.unpar(intrinsic=True)  # self.assertTrue()
+        f.unpar(node=True)  # self.assertTrue()
         self.assertEqual('1,', f.src)
 
         if _PY_VERSION >= (3, 14):  # make sure parent Interpolation.str gets modified
@@ -4756,7 +4756,7 @@ match a:
             self.assertEqual('(a,)', f.values[0].str)
 
             f = FST('t"{((a,))}"', 'exec').body[0].value.copy()
-            f.values[0].value.unpar(intrinsic=True)
+            f.values[0].value.unpar(node=True)
             self.assertEqual('t"{a,}"', f.src)
             self.assertEqual('a,', f.values[0].str)
 
@@ -4910,7 +4910,7 @@ match a:
         self.assertEqual((0, 0, 0, 2), f.body[0].value.loc)
 
         f = parse('(i,)').f
-        f.body[0].value.unpar(intrinsic=True)
+        f.body[0].value.unpar(node=True)
         self.assertEqual('i,', f.src)
         self.assertEqual((0, 0, 0, 2), f.loc)
         self.assertEqual((0, 0, 0, 2), f.body[0].loc)
@@ -4918,7 +4918,7 @@ match a:
         self.assertEqual((0, 0, 0, 1), f.body[0].value.elts[0].loc)
 
         f = parse('(a, b)').f
-        f.body[0].value.unpar(intrinsic=True)
+        f.body[0].value.unpar(node=True)
         self.assertEqual('a, b', f.src)
         self.assertEqual((0, 0, 0, 4), f.loc)
         self.assertEqual((0, 0, 0, 4), f.body[0].loc)
@@ -4927,7 +4927,7 @@ match a:
         self.assertEqual((0, 3, 0, 4), f.body[0].value.elts[1].loc)
 
         f = parse('( # pre\ni,\n# post\n)').f
-        f.body[0].value.unpar(intrinsic=True)
+        f.body[0].value.unpar(node=True)
         self.assertEqual('i,', f.src)
         self.assertEqual((0, 0, 0, 2), f.loc)
         self.assertEqual((0, 0, 0, 2), f.body[0].loc)
@@ -4935,7 +4935,7 @@ match a:
         self.assertEqual((0, 0, 0, 1), f.body[0].value.elts[0].loc)
 
         f = parse('( # pre\ni,\n# post\n)').body[0].value.f.copy()
-        f.unpar(intrinsic=True)
+        f.unpar(node=True)
         self.assertEqual('i,', f.src)
         self.assertEqual((0, 0, 0, 2), f.loc)
         self.assertEqual((0, 0, 0, 1), f.elts[0].loc)
@@ -4943,9 +4943,9 @@ match a:
         # replace with space where directly touching other text
 
         f = FST('[a for a in b if(a,b)if(a,)if(a,b)]', 'exec')
-        f.body[0].value.generators[0].ifs[0].unpar(intrinsic=True)
-        f.body[0].value.generators[0].ifs[1].unpar(intrinsic=True)
-        f.body[0].value.generators[0].ifs[2].unpar(intrinsic=True)
+        f.body[0].value.generators[0].ifs[0].unpar(node=True)
+        f.body[0].value.generators[0].ifs[1].unpar(node=True)
+        f.body[0].value.generators[0].ifs[2].unpar(node=True)
         self.assertEqual('[a for a in b if a,b if a,if a,b]', f.src)
         f.body[0].value.generators[0].ifs[0].par()  # so that it will verify
         f.body[0].value.generators[0].ifs[1].par()
@@ -4954,12 +4954,12 @@ match a:
         f.verify()
 
         f = FST('for(a,b)in b: pass', 'exec')
-        f.body[0].target.unpar(intrinsic=True)
+        f.body[0].target.unpar(node=True)
         self.assertEqual('for a,b in b: pass', f.src)
         f.verify()
 
         f = FST('for(a,)in b: pass', 'exec')
-        f.body[0].target.unpar(intrinsic=True)
+        f.body[0].target.unpar(node=True)
         self.assertEqual('for a,in b: pass', f.src)
         f.verify()
 

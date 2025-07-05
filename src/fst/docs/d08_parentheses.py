@@ -442,19 +442,19 @@ case (a, b): pass
 But can be forced.
 
 ```py
->>> print(FST('(x, y)').unpar(intrinsic=True).src)
+>>> print(FST('(x, y)').unpar(node=True).src)
 x, y
 
->>> print(FST('(((x, y)))').unpar(intrinsic=True).src)
+>>> print(FST('(((x, y)))').unpar(node=True).src)
 x, y
 
->>> print(FST('case [a, b]: pass').pattern.unpar(intrinsic=True).root.src)
+>>> print(FST('case [a, b]: pass').pattern.unpar(node=True).root.src)
 case a, b: pass
 
->>> print(FST('case (([a, b])): pass').pattern.unpar(intrinsic=True).root.src)
+>>> print(FST('case (([a, b])): pass').pattern.unpar(node=True).root.src)
 case a, b: pass
 
->>> print(FST('case (((a, b))): pass').pattern.unpar(intrinsic=True).root.src)
+>>> print(FST('case (((a, b))): pass').pattern.unpar(node=True).root.src)
 case a, b: pass
 ```
 
