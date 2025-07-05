@@ -11,6 +11,8 @@ operations are not all implemented yet it is currently set as `False`. This is b
 attempts which can result in some confusing error messages. If you are fine with some weird syntax exceptions then do
 `FST.set_options(raw='auto')` and you should get slice puts succeeding where otherwise they wouldn't.
 
+## Basics
+
 Raw put operations are different from the standard prescribed operations in that for the most part they do not take into
 account rules like precedence and indentation for the nodes being put and replaced and just try to put the source at the
 location and reparse. They exist because they allow things which are not covered or otherwise impossible with normal
@@ -20,8 +22,6 @@ Raw mode puts can be executed on individual nodes or slices by specifying the op
 used so that the prescribed operation with rules is tried first and if that fails a raw put is attempted as a fallback.
 Raw mode automatic fallback is turned off globally by default as the error messages can be confusing, but if you want
 this turned on for all operations without having to specify anything then do `FST.set_options(raw='auto')`.
-
-## Basics
 
 ```py
 >>> f = FST('{a: b, c: d, e: f}')
