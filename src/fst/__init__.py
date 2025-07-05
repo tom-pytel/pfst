@@ -40,7 +40,7 @@ running any specific verison of Python).
 
 `fst` does use standard Python parsing to parse things that can not normally be parsed, like individual exception
 handlers or match cases, by wrapping them in corresponding code then pulling out and adjusting the locations of the
-parsed `AST`s. `fst.docs._01_parse`.
+parsed `AST`s. `fst.docs.d01_parse`.
 
 `fst` does basic validation but will not prevent you from burning yourself if you really want to. For example, it won't
 let you add a `Slice` to a `Tuple` which is not directly in a `Subscript.slice` field or at the root level of a tree,
@@ -50,15 +50,15 @@ function to make sure you didn't do something silly like this `fst.fst.FST.verif
 Format preserving native operations exist in two flavors (see the documentation on how to use either):
 
 * Prescribed put operations which do specific things for each type of node being put, including precedence and syntax
-parenthesization. `fst.docs._05_put`.
+parenthesization. `fst.docs.d05_put`.
 
 * Raw mode put operations which just put the raw source you want to replace and then attempt to reparse a small part of
-the full source around the changes (at least statement level). `fst.docs._06_raw`, `fst.fst.FST.put_src()`.
+the full source around the changes (at least statement level). `fst.docs.d06_raw`, `fst.fst.FST.put_src()`.
 
 There is also a mechanism for allowing outside editing of the `AST` tree and then reconciling with a marked snapshot
 to preserve formatting where possible. This is intended for existing code or third-party libraries which don't know
 anything about `fst` to maybe gain the ability to preserve some existing formatting when editing a tree.
-`fst.docs._09_reconcile`.
+`fst.docs.d09_reconcile`.
 
 # Notes
 
@@ -67,7 +67,7 @@ a `Interpolation.value` on python >= 3.12 fine, but the other fields may or may 
 prescribed operations are not done yet.
 
 * `fst` is eventually intended to run with the global option `raw` set to `'auto'` but is currently set to `False`. See
-`fst.docs._06_raw` for more details.
+`fst.docs.d06_raw` for more details.
 """
 
 import ast
