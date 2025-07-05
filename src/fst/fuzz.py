@@ -1,4 +1,4 @@
-"""Ugly, super-hacky fuzzers, mostly meant for debugging `fst` itself."""
+"""Ugly, super-hacky standalone runnable module of fuzzers, mostly meant for debugging `fst` itself."""
 
 import argparse
 import os
@@ -1598,6 +1598,8 @@ def main():
                         help='random seed (set per file)')
     parser.add_argument('-u', '--shuffle', default=False, action='store_true',
                         help='shuffle files on each loop')
+    parser.add_argument('-U', '--shuffle-fuzz', default=False, action='store_true',
+                        help='shuffle fuzzies to run')
     parser.add_argument('-v', '--verbose', default=False, action='store_true',
                         help='verbose output, where applicable')
     parser.add_argument('-y', '--verify', default=False, action='store_true',
@@ -1618,6 +1620,9 @@ def main():
         fuzzies.append(FUZZIES[f](args))
 
     for _ in range(l) if (l := args['loop']) else repeat(None):
+        if args['shuffle_fuzz']:
+            shuffle(fuzzies)
+
         for f in fuzzies[:]:
             print(f'Running: {f.name}')
 
