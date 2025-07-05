@@ -118,7 +118,7 @@ if __name__ == "__main__":
         math=False,
         mermaid=False,
         search=True,
-        show_source=True,
+        show_source=False,
         template_directory=None,
     )
 

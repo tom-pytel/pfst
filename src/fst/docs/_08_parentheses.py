@@ -90,24 +90,19 @@ d): pass
 ## Parentheses on get
 
 When getting nodes, parentheses may be copied or not depending on the `pars` setting (normally not copied), and they may
-be added after the cut or copy the new node to make it valid or to conform to how python normally represents such nodes.
+be added after the cut or copy to the new node to make it parsable.
 
 ```py
->>> f = FST('a, b := c, d')
+>>> f = FST('''[a
+... +
+... b]''')
 
->>> g = f.elts[1].copy()
-
->>> print(g.src)
-(b := c)
-```
-
-This behavior again can be turned off with `pars=False`.
-
-```py
->>> g = f.elts[1].copy(pars=False)
+>>> g = f.elts[0].copy()
 
 >>> print(g.src)
-b := c
+(a
++
+b)
 ```
 
 Parentheses are not normally copied (and not added) to expressions which do not need them alone.
@@ -134,6 +129,26 @@ there are no parentheses in the source and it doesn't need parentheses added.
 
 >>> print(g.src)
 a
+```
+
+Named expressions copied out of other expressions which may or may not have parentheses do not normally have those
+parentheses copied or added. Keep this in mind as an unparenthesized named expression is not normally parsable
+standalone by Python.
+
+```py
+>>> f = FST('a, b := c, d')
+
+>>> g = f.elts[1].copy()
+
+>>> print(g.src)
+b := c
+
+>>> f = FST('a = (b := c)')
+
+>>> g = f.value.copy()
+
+>>> print(g.src)
+b := c
 ```
 
 ## `pars` modes
@@ -449,5 +464,23 @@ with (((a))): pass
 ```
 
 Sometimes this behavior can seem unintuitive like the last example above. In that case, `withitem` nodes are not
-parenthesizable in the syntax so that all those grouping parentheses belong to the parent `with`.
+parenthesizable in the syntax so that all those grouping parentheses belong to the parent `with` if attempting to
+unparenthesize a `withitem`. HOWEVER, you can remove the parentheses from the `with (a)` example above if you
+unparenthesize the element INSIDE the `withitem`.
+
+```py
+>>> print(FST('with (a): pass').items[0].context_expr.unpar().root.src)
+with a: pass
+
+>>> print(FST('with (((a))): pass').items[0].context_expr.unpar().root.src)
+with a: pass
+```
+
+This is not an issue as in this case there is a single element and it won't break anything. This will not work if there
+is an optional variable in the `withitem`.
+
+```py
+>>> print(FST('with (a as b): pass').items[0].context_expr.unpar().root.src)
+with (a as b): pass
+```
 """

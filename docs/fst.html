@@ -131,90 +131,9 @@ prescribed operations are not done yet.</p></li>
 </ul>
 </div>
 
-                        <input id="mod-fst-view-source" class="view-source-toggle-state" type="checkbox" aria-hidden="true" tabindex="-1">
-
-                        <label class="view-source-button" for="mod-fst-view-source"><span>View Source</span></label>
-
-                        <div class="pdoc-code codehilite"><pre><span></span><span id="L-1"><a href="#L-1"><span class="linenos"> 1</span></a><span class="sd">&quot;&quot;&quot;</span>
-</span><span id="L-2"><a href="#L-2"><span class="linenos"> 2</span></a><span class="sd"># Overview</span>
-</span><span id="L-3"><a href="#L-3"><span class="linenos"> 3</span></a>
-</span><span id="L-4"><a href="#L-4"><span class="linenos"> 4</span></a><span class="sd">This module exists in order to facilitate quick and easy editing of Python source while preserving formatting. It</span>
-</span><span id="L-5"><a href="#L-5"><span class="linenos"> 5</span></a><span class="sd">automatically deals with all the silly nonsense like indentation, parentheses, commas, comments, docstrings, semicolons,</span>
-</span><span id="L-6"><a href="#L-6"><span class="linenos"> 6</span></a><span class="sd">line continuations, precedence, else vs. elif, etc... And especially the many, many niche special cases of Python</span>
-</span><span id="L-7"><a href="#L-7"><span class="linenos"> 7</span></a><span class="sd">syntax.</span>
-</span><span id="L-8"><a href="#L-8"><span class="linenos"> 8</span></a>
-</span><span id="L-9"><a href="#L-9"><span class="linenos"> 9</span></a><span class="sd">`fst` provides its own format-preserving operations for `AST` trees, but also allows the `AST` tree to be changed by</span>
-</span><span id="L-10"><a href="#L-10"><span class="linenos">10</span></a><span class="sd">anything else outside of its control and can then reconcile the changes with what it knows to preserve formatting where</span>
-</span><span id="L-11"><a href="#L-11"><span class="linenos">11</span></a><span class="sd">possible. It works by adding `FST` nodes to existing `AST` nodes as an `.f` attribute which keep extra structure</span>
-</span><span id="L-12"><a href="#L-12"><span class="linenos">12</span></a><span class="sd">information, the original source, and provide the interface to the format-preserving operations.</span>
-</span><span id="L-13"><a href="#L-13"><span class="linenos">13</span></a>
-</span><span id="L-14"><a href="#L-14"><span class="linenos">14</span></a><span class="sd">The fact that it just extends existing `AST` nodes means that the `AST` tree can be used (and edited) as normal anywhere</span>
-</span><span id="L-15"><a href="#L-15"><span class="linenos">15</span></a><span class="sd">that `AST` is used, and later `unparse()` with formatting preserved where it can be. The degree to which formatting is</span>
-</span><span id="L-16"><a href="#L-16"><span class="linenos">16</span></a><span class="sd">preserved depends on how many operations are executed natively through `fst` mechanisms and how well `FST.reconcile()`</span>
-</span><span id="L-17"><a href="#L-17"><span class="linenos">17</span></a><span class="sd">works for those operations which are not.</span>
-</span><span id="L-18"><a href="#L-18"><span class="linenos">18</span></a>
-</span><span id="L-19"><a href="#L-19"><span class="linenos">19</span></a><span class="sd"># Index</span>
-</span><span id="L-20"><a href="#L-20"><span class="linenos">20</span></a>
-</span><span id="L-21"><a href="#L-21"><span class="linenos">21</span></a><span class="sd">- `fst.docs`: Documentation and examples.</span>
-</span><span id="L-22"><a href="#L-22"><span class="linenos">22</span></a><span class="sd">- `fst.fst`: API reference.</span>
-</span><span id="L-23"><a href="#L-23"><span class="linenos">23</span></a>
-</span><span id="L-24"><a href="#L-24"><span class="linenos">24</span></a><span class="sd"># Links</span>
-</span><span id="L-25"><a href="#L-25"><span class="linenos">25</span></a>
-</span><span id="L-26"><a href="#L-26"><span class="linenos">26</span></a><span class="sd">- [Repository](https://github.com/tom-pytel/pfst)</span>
-</span><span id="L-27"><a href="#L-27"><span class="linenos">27</span></a><span class="sd">- [Documentation](https://tom-pytel.github.io/pfst/)</span>
-</span><span id="L-28"><a href="#L-28"><span class="linenos">28</span></a><span class="sd">- [PyPI](https://pypi.org/project/pfst/)</span>
-</span><span id="L-29"><a href="#L-29"><span class="linenos">29</span></a>
-</span><span id="L-30"><a href="#L-30"><span class="linenos">30</span></a><span class="sd"># Details</span>
-</span><span id="L-31"><a href="#L-31"><span class="linenos">31</span></a>
-</span><span id="L-32"><a href="#L-32"><span class="linenos">32</span></a><span class="sd">`fst` was written and tested on Python versions 3.10 through 3.14.</span>
-</span><span id="L-33"><a href="#L-33"><span class="linenos">33</span></a>
-</span><span id="L-34"><a href="#L-34"><span class="linenos">34</span></a><span class="sd">`fst` works by keeping a copy of the entire source at the root `FST` node of a tree and modifying this source alongside</span>
-</span><span id="L-35"><a href="#L-35"><span class="linenos">35</span></a><span class="sd">the node tree anytime an operation is performed natively.</span>
-</span><span id="L-36"><a href="#L-36"><span class="linenos">36</span></a>
-</span><span id="L-37"><a href="#L-37"><span class="linenos">37</span></a><span class="sd">`fst` does not do any parsing of its own but rather relies on the builtin Python parser and unparser. This means you</span>
-</span><span id="L-38"><a href="#L-38"><span class="linenos">38</span></a><span class="sd">get perfect parsing but also that it is limited to the syntax of the running Python version (many options exist for</span>
-</span><span id="L-39"><a href="#L-39"><span class="linenos">39</span></a><span class="sd">running any specific verison of Python).</span>
-</span><span id="L-40"><a href="#L-40"><span class="linenos">40</span></a>
-</span><span id="L-41"><a href="#L-41"><span class="linenos">41</span></a><span class="sd">`fst` does use standard Python parsing to parse things that can not normally be parsed, like individual exception</span>
-</span><span id="L-42"><a href="#L-42"><span class="linenos">42</span></a><span class="sd">handlers or match cases, by wrapping them in corresponding code then pulling out and adjusting the locations of the</span>
-</span><span id="L-43"><a href="#L-43"><span class="linenos">43</span></a><span class="sd">parsed `AST`s. `fst.docs._01_parse`.</span>
-</span><span id="L-44"><a href="#L-44"><span class="linenos">44</span></a>
-</span><span id="L-45"><a href="#L-45"><span class="linenos">45</span></a><span class="sd">`fst` does basic validation but will not prevent you from burning yourself if you really want to. For example, it won&#39;t</span>
-</span><span id="L-46"><a href="#L-46"><span class="linenos">46</span></a><span class="sd">let you add a `Slice` to a `Tuple` which is not directly in a `Subscript.slice` field or at the root level of a tree,</span>
-</span><span id="L-47"><a href="#L-47"><span class="linenos">47</span></a><span class="sd">but you can take a `Tuple` with a `Slice` in it already and put it somewhere else where it doesn&#39;t belong (there is a</span>
-</span><span id="L-48"><a href="#L-48"><span class="linenos">48</span></a><span class="sd">function to make sure you didn&#39;t do something silly like this `fst.fst.FST.verify()`).</span>
-</span><span id="L-49"><a href="#L-49"><span class="linenos">49</span></a>
-</span><span id="L-50"><a href="#L-50"><span class="linenos">50</span></a><span class="sd">Format preserving native operations exist in two flavors (see the documentation on how to use either):</span>
-</span><span id="L-51"><a href="#L-51"><span class="linenos">51</span></a>
-</span><span id="L-52"><a href="#L-52"><span class="linenos">52</span></a><span class="sd">* Prescribed put operations which do specific things for each type of node being put, including precedence and syntax</span>
-</span><span id="L-53"><a href="#L-53"><span class="linenos">53</span></a><span class="sd">parenthesization. `fst.docs._05_put`.</span>
-</span><span id="L-54"><a href="#L-54"><span class="linenos">54</span></a>
-</span><span id="L-55"><a href="#L-55"><span class="linenos">55</span></a><span class="sd">* Raw mode put operations which just put the raw source you want to replace and then attempt to reparse a small part of</span>
-</span><span id="L-56"><a href="#L-56"><span class="linenos">56</span></a><span class="sd">the full source around the changes (at least statement level). `fst.docs._06_raw`, `fst.fst.FST.put_src()`.</span>
-</span><span id="L-57"><a href="#L-57"><span class="linenos">57</span></a>
-</span><span id="L-58"><a href="#L-58"><span class="linenos">58</span></a><span class="sd">There is also a mechanism for allowing outside editing of the `AST` tree and then reconciling with a marked snapshot</span>
-</span><span id="L-59"><a href="#L-59"><span class="linenos">59</span></a><span class="sd">to preserve formatting where possible. This is intended for existing code or third-party libraries which don&#39;t know</span>
-</span><span id="L-60"><a href="#L-60"><span class="linenos">60</span></a><span class="sd">anything about `fst` to maybe gain the ability to preserve some existing formatting when editing a tree.</span>
-</span><span id="L-61"><a href="#L-61"><span class="linenos">61</span></a><span class="sd">`fst.docs._09_reconcile`.</span>
-</span><span id="L-62"><a href="#L-62"><span class="linenos">62</span></a>
-</span><span id="L-63"><a href="#L-63"><span class="linenos">63</span></a><span class="sd"># Notes</span>
-</span><span id="L-64"><a href="#L-64"><span class="linenos">64</span></a>
-</span><span id="L-65"><a href="#L-65"><span class="linenos">65</span></a><span class="sd">* `JoinedStr` and `TemplateStr` internal accesses are not quite finished yet. You can get and put `FormattedValue.value`</span>
-</span><span id="L-66"><a href="#L-66"><span class="linenos">66</span></a><span class="sd">a `Interpolation.value` on python &gt;= 3.12 fine, but the other fields may or may not work putting in raw mode as</span>
-</span><span id="L-67"><a href="#L-67"><span class="linenos">67</span></a><span class="sd">prescribed operations are not done yet.</span>
-</span><span id="L-68"><a href="#L-68"><span class="linenos">68</span></a>
-</span><span id="L-69"><a href="#L-69"><span class="linenos">69</span></a><span class="sd">* `fst` is eventually intended to run with the global option `raw` set to `&#39;auto&#39;` but is currently set to `False`. See</span>
-</span><span id="L-70"><a href="#L-70"><span class="linenos">70</span></a><span class="sd">`fst.docs._06_raw` for more details.</span>
-</span><span id="L-71"><a href="#L-71"><span class="linenos">71</span></a><span class="sd">&quot;&quot;&quot;</span>
-</span><span id="L-72"><a href="#L-72"><span class="linenos">72</span></a>
-</span><span id="L-73"><a href="#L-73"><span class="linenos">73</span></a><span class="kn">import</span><span class="w"> </span><span class="nn">ast</span>
-</span><span id="L-74"><a href="#L-74"><span class="linenos">74</span></a><span class="kn">from</span><span class="w"> </span><span class="nn">ast</span><span class="w"> </span><span class="kn">import</span> <span class="o">*</span>
-</span><span id="L-75"><a href="#L-75"><span class="linenos">75</span></a><span class="kn">from</span><span class="w"> </span><span class="nn">.misc</span><span class="w"> </span><span class="kn">import</span> <span class="n">NodeError</span><span class="p">,</span> <span class="n">fstloc</span><span class="p">,</span> <span class="n">astfield</span>
-</span><span id="L-76"><a href="#L-76"><span class="linenos">76</span></a><span class="kn">from</span><span class="w"> </span><span class="nn">.view</span><span class="w"> </span><span class="kn">import</span> <span class="n">fstview</span>
-</span><span id="L-77"><a href="#L-77"><span class="linenos">77</span></a><span class="kn">from</span><span class="w"> </span><span class="nn">.fst</span><span class="w"> </span><span class="kn">import</span> <span class="n">parse</span><span class="p">,</span> <span class="n">unparse</span><span class="p">,</span> <span class="n">dump</span><span class="p">,</span> <span class="n">FST</span>
-</span></pre></div>
-
-
+                
+                
+                
             </section>
     </main>
 <script>

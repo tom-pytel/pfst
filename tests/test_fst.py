@@ -5129,6 +5129,11 @@ match a:
         self.assertEqual((0, 15, 0, 16), f.names[0].pars())
         self.assertEqual((0, 14, 0, 17), f.names[0].pars(None))
 
+        # walruses
+
+        self.assertEqual('b := c', FST('a, b := c, d').elts[1].copy().src)
+        self.assertEqual('b := c', FST('a = (b := c)').value.copy().src)
+
     def test_pars_n(self):
         self.assertEqual(1, FST('(a)', 'exec').body[0].value.pars().n)
         self.assertEqual(0, FST('(a, b)', 'exec').body[0].value.elts[0].pars().n)

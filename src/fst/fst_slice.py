@@ -28,71 +28,74 @@ from .misc import (
 
 
 # (N)ormal container, (S)equence container
-# | Separator
-# | |  Delimiters
-# | |  |   Unparse special
-# | |  |   |
-
-# N ,  ()      # (Tuple, 'elts')                         # expr*            -> Tuple                  _parse_expr_sliceelts
-# N ,  []      # (List, 'elts')                          # expr*            -> List                   _parse_expr / restrict seq
-# N ,  {}      # (Set, 'elts')                           # expr*            -> Set                    _parse_expr / restrict seq
-
-# N ,  {}      # (Dict, 'keys':'values')                 # expr:expr*       -> Dict                   _parse_expr / restrict dict
-
-# N ,          # (ClassDef, 'bases'):                    # expr*            -> Tuple                  _parse_expr_callargs
-# N ,          # (Delete, 'targets'):                    # expr*            -> Tuple[target]          _parse_expr / restrict targets
-# N ,          # (Assign, 'targets'):                    # expr*            -> Tuple[target]          _parse_expr / restrict targets
-# N ,          # (Call, 'args'):                         # expr*            -> Tuple[expr_callarg]    _parse_expr_callargs
-
-# N ,  []      # (MatchSequence, 'patterns'):            # pattern*         -> MatchSequence          _parse_pattern / restrict MatchSequence
-# N ,  {}      # (MatchMapping, 'keys':'patterns'):      # expr:pattern*    -> MatchMapping           _parse_pattern / restrict MatchMapping
-
-# N |          # (MatchOr, 'patterns'):                  # pattern*         -> MatchOr                _parse_pattern / restrict MatchOr
-
-
-
-# S ,          # (MatchClass, 'patterns'):               # pattern*         -> Tuple[pattern]         _parse_pattern / restrict MatchSequence
-
-# S ,          # (ClassDef, 'keywords'):                 # keyword*         -> Tuple[keyword]         _parse_keywords
-# S ,          # (Call, 'keywords'):                     # keyword*         -> Tuple[keyword]         _parse_keywords
-
-# S ,          # (FunctionDef, 'type_params'):           # type_param*      -> Tuple[type_param]      _parse_type_params
-# S ,          # (AsyncFunctionDef, 'type_params'):      # type_param*      -> Tuple[type_param]      _parse_type_params
-# S ,          # (ClassDef, 'type_params'):              # type_param*      -> Tuple[type_param]      _parse_type_params
-# S ,          # (TypeAlias, 'type_params'):             # type_param*      -> Tuple[type_param]      _parse_type_params
-
-# S ,          # (With, 'items'):                        # withitem*        -> Tuple[withitem]        _parse_withitems
-# S ,          # (AsyncWith, 'items'):                   # withitem*        -> Tuple[withitem]        _parse_withitems
-
-# S ,          # (Import, 'names'):                      # alias*           -> Tuple[alias]           _parse_aliases_dotted
-# S ,          # (ImportFrom, 'names'):                  # alias*           -> Tuple[alias]           _parse_aliases_star
-
-
-
-# N ,          # (Global, 'names'):                      # identifier*,     -> Tuple[Name]            _parse_expr / restrict Names
-# N ,          # (Nonlocal, 'names'):                    # identifier*,     -> Tuple[Name]            _parse_expr / restrict Names
-
-
-
-#   @      U   # (FunctionDef, 'decorator_list'):        # expr*            -> Tuple[expr]            _parse_decorator_list  - can figure out from '@' first expr prefix
-#   @      U   # (AsyncFunctionDef, 'decorator_list'):   # expr*            -> Tuple[expr]            _parse_decorator_list
-#   @      U   # (ClassDef, 'decorator_list'):           # expr*            -> Tuple[expr]            _parse_decorator_list
-
-#          U   # (ListComp, 'generators'):               # comprehension*   -> Tuple[comprehension]   _parse_comprehensions
-#          U   # (SetComp, 'generators'):                # comprehension*   -> Tuple[comprehension]   _parse_comprehensions
-#          U   # (DictComp, 'generators'):               # comprehension*   -> Tuple[comprehension]   _parse_comprehensions
-#          U   # (GeneratorExp, 'generators'):           # comprehension*   -> Tuple[comprehension]   _parse_comprehensions
-
-#   if     U   # (comprehension, 'ifs'):                 # expr*            -> Tuple[expr]            _parse_comprehension_ifs  - can figure out from 'if' first expr prefix
-
-#   co         # (Compare, 'ops':'comparators'):         # cmpop:expr*      -> expr or Compare        _parse_expr / restrict expr or Compare
-
-#   ao         # (BoolOp, 'values'):                     # expr*            -> BoolOp                 _parse_expr / restrict BoolOp  - interchangeable between and / or
-
-
-
-#              # (JoinedStr, 'values'):                  # expr*
-#              # (TemplateStr, 'values'):                # expr*
+# | Separator (trailing)
+# | |  Prefix (leaading)
+# | |  |  Delimiters
+# | |  |  |   Unparse special
+# | |  |  |   |
+#                                                                            .
+# N ,     ()      (Tuple, 'elts')                         # expr*            -> Tuple                  _parse_expr_sliceelts
+# N ,     []      (List, 'elts')                          # expr*            -> List                   _parse_expr / restrict seq
+# N ,     {}      (Set, 'elts')                           # expr*            -> Set                    _parse_expr / restrict seq
+#                                                                            .
+# N ,     {}      (Dict, 'keys':'values')                 # expr:expr*       -> Dict                   _parse_expr / restrict dict
+#                                                                            .
+# N ,             (ClassDef, 'bases'):                    # expr*            -> Tuple                  _parse_expr_callargs
+# N ,             (Delete, 'targets'):                    # expr*            -> Tuple[target]          _parse_expr / restrict targets
+# N ,             (Assign, 'targets'):                    # expr*            -> Tuple[target]          _parse_expr / restrict targets
+# N ,             (Call, 'args'):                         # expr*            -> Tuple[expr_callarg]    _parse_expr_callargs
+#                                                                            .
+# N ,     []      (MatchSequence, 'patterns'):            # pattern*         -> MatchSequence          _parse_pattern / restrict MatchSequence
+# N ,     {}      (MatchMapping, 'keys':'patterns'):      # expr:pattern*    -> MatchMapping           _parse_pattern / restrict MatchMapping
+#                                                                            .
+# N |             (MatchOr, 'patterns'):                  # pattern*         -> MatchOr                _parse_pattern / restrict MatchOr
+#                                                                            .
+#                                                                            .
+#                                                                            .
+# S ,             (MatchClass, 'patterns'):               # pattern*         -> Tuple[pattern]         _parse_pattern / restrict MatchSequence
+#                                                                            .
+# S ,             (ClassDef, 'keywords'):                 # keyword*         -> Tuple[keyword]         _parse_keywords
+# S ,             (Call, 'keywords'):                     # keyword*         -> Tuple[keyword]         _parse_keywords
+#                                                                            .
+# S ,             (FunctionDef, 'type_params'):           # type_param*      -> Tuple[type_param]      _parse_type_params
+# S ,             (AsyncFunctionDef, 'type_params'):      # type_param*      -> Tuple[type_param]      _parse_type_params
+# S ,             (ClassDef, 'type_params'):              # type_param*      -> Tuple[type_param]      _parse_type_params
+# S ,             (TypeAlias, 'type_params'):             # type_param*      -> Tuple[type_param]      _parse_type_params
+#                                                                            .
+# S ,             (With, 'items'):                        # withitem*        -> Tuple[withitem]        _parse_withitems
+# S ,             (AsyncWith, 'items'):                   # withitem*        -> Tuple[withitem]        _parse_withitems
+#                                                                            .
+# S ,             (Import, 'names'):                      # alias*           -> Tuple[alias]           _parse_aliases_dotted
+# S ,             (ImportFrom, 'names'):                  # alias*           -> Tuple[alias]           _parse_aliases_star
+#                                                                            .
+#                                                                            .
+#                                                                            .
+# N ,             (Global, 'names'):                      # identifier*,     -> Tuple[Name]            _parse_expr / restrict Names
+# N ,             (Nonlocal, 'names'):                    # identifier*,     -> Tuple[Name]            _parse_expr / restrict Names
+#                                                                            .
+#                                                                            .
+#                                                                            .
+# S    @      U   (FunctionDef, 'decorator_list'):        # expr*            -> Tuple[expr]            _parse_decorator_list  - can figure out from '@' first expr prefix
+# S    @      U   (AsyncFunctionDef, 'decorator_list'):   # expr*            -> Tuple[expr]            _parse_decorator_list
+# S    @      U   (ClassDef, 'decorator_list'):           # expr*            -> Tuple[expr]            _parse_decorator_list
+#                                                                            .
+# S           U   (ListComp, 'generators'):               # comprehension*   -> Tuple[comprehension]   _parse_comprehensions
+# S           U   (SetComp, 'generators'):                # comprehension*   -> Tuple[comprehension]   _parse_comprehensions
+# S           U   (DictComp, 'generators'):               # comprehension*   -> Tuple[comprehension]   _parse_comprehensions
+# S           U   (GeneratorExp, 'generators'):           # comprehension*   -> Tuple[comprehension]   _parse_comprehensions
+#                                                                            .
+# S    if     U   (comprehension, 'ifs'):                 # expr*            -> Tuple[expr]            _parse_comprehension_ifs  - can figure out from 'if' first expr prefix
+#                                                                            .
+#                                                                            .
+#                                                                            .
+# N co            (Compare, 'ops':'comparators'):         # cmpop:expr*      -> expr or Compare        _parse_expr / restrict expr or Compare
+#                                                                            .
+# N ao            (BoolOp, 'values'):                     # expr*            -> BoolOp                 _parse_expr / restrict BoolOp  - interchangeable between and / or
+#
+#
+#
+#                 (JoinedStr, 'values'):                  # expr*
+#                 (TemplateStr, 'values'):                # expr*
 
 
 

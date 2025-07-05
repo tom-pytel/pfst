@@ -1257,8 +1257,8 @@ def _maybe_fix_copy(self: fst.FST, pars: bool = True):
 
             self._maybe_add_singleton_tuple_comma(False)  # this exists because of copy lone Starred out of a Subscript.slice
 
-        elif isinstance(ast, NamedExpr):  # naked walrus
-            need_paren = True
+        # elif isinstance(ast, NamedExpr):  # naked walrus
+        #     need_paren = True
 
         if need_paren is None:
             need_paren = not self.is_enclosed()
