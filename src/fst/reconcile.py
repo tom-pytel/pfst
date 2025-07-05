@@ -1,8 +1,5 @@
 """Reconcile edited AST tree with previously marked `FST` to create new `FST` tree with as much formatting preserved as
-possible
-
-This module contains functions which are imported as methods in the `FST` class.
-"""
+possible."""
 
 from __future__ import annotations
 
@@ -14,9 +11,6 @@ from . import fst
 from .astutil import *
 from .misc import NodeError, astfield
 
-
-_GLOBALS = globals() | {'_GLOBALS': None}
-# ----------------------------------------------------------------------------------------------------------------------
 
 class _Reconcile:
     """The strategy is to make a copy of the original tree (mark) and then mutate it node by node according to the
@@ -356,118 +350,3 @@ class _Reconcile:
             self.recurse_children(node, outa)
         except (NodeError, SyntaxError, ValueError, NotImplementedError):  # something failed below, so replace whole AST
             self.put_node(node, out_parent, pfield)
-
-
-# ----------------------------------------------------------------------------------------------------------------------
-
-def mark(self: fst.FST) -> fst.FST:
-    """Return an object marking the current state of this `FST` tree. Used to `reconcile()` later for non-FST operation
-    changes made (changing `AST` nodes directly). Currently is just a copy of the original tree but may change in the
-    future.
-
-    **Returns:**
-    - `FST`: A marked copy of `self` with any necessary information added for a later `reconcile()`.
-    """
-
-    if not self.is_root:
-        raise ValueError('can only mark root nodes')
-
-    mark         = self.copy()
-    mark._serial = self._serial
-
-    return mark
-
-def reconcile(self: fst.FST, mark: fst.FST, **options) -> fst.FST:
-    r"""Reconcile `self` with a previously marked version and return a new valid `FST` tree. This is meant for allowing
-    non-FST modifications to an `FST` tree and later converting it to a valid `FST` tree to preserve as much formatting
-    as possible and maybe continue operating in `FST` land. Only `AST` nodes from the original tree carry formatting
-    information, so the more of those are replaced the more formatting is lost.
-
-    **Note:** When replacing the `AST` nodes, make sure you are replacing the nodes in the parent `AST` fields, not the
-    `.a` attribute in `FST` nodes, that won't do anything.
-
-    **WARNING!** Just like an `ast.unparse()`, the fact that this function completes successfully does NOT mean the
-    output is syntactically correct if you put weird nodes where they don't belong, maybe accidentally. In order to make
-    sure the result is valid (syntactically) you should run `verify()` on the output. This still won't guarantee you
-    have actual valid code, `def f(x, x): pass` parses ok but will cause an error if you try to compile it.
-
-    **Parameters:**
-    - `mark`: A previously marked snapshot of `self`. This object is not consumed on use, success or failure.
-    - `options`: See `get_options()`.
-
-    **Returns:**
-    - `FST`: A new valid reconciled `FST` if possible.
-
-    **Examples:**
-    ```py
-    >>> from fst import *
-
-    >>> f = FST('''
-    ... @decorator  # something
-    ... def function(a: int, b=2)->int:  # blah
-    ...     return a+b  # return this
-    ...
-    ... def other_function(a, b):
-    ...     return a - b  # return that
-    ... '''.strip())
-
-    >>> m = f.mark()
-
-    >>> f.a.body[0].returns = Name('float')  # pure AST
-    >>> f.a.body[0].args.args[0].annotation = Name('float')
-    >>> f.a.body[0].decorator_list[0] = FST('call_decorator(1, 2, 3)').a
-    >>> f.a.body[1].name = 'last_function'  # can change non-AST
-    >>> f.a.body[1].body[0] = f.a.body[0].body[0]  # AST from same FST tree
-    >>> other = FST('def first_function(a, b): return a * b  # yay!')
-    >>> f.a.body.insert(0, other.a)  # AST from other FST tree
-
-    >>> f = f.reconcile(m, pep8space=1)
-
-    >>> print('\n'.join(l or '.' for l in f.lines))  # print this way for doctest
-    def first_function(a, b): return a * b  # yay!
-    .
-    @call_decorator(1, 2, 3)  # something
-    def function(a: float, b=2)->float:  # blah
-        return a+b  # return this
-    .
-    def last_function(a, b):
-        return a+b  # return this
-    .
-
-    >>> m = f.mark()
-
-    >>> body = f.a.body[1].body
-    >>> f.a.body[1] = FST('def f(): pass').a
-    >>> f.a.body[1].body = body
-
-    >>> f = f.reconcile(m, pep8space=1)
-
-    >>> print('\n'.join(l or '.' for l in f.lines))
-    def first_function(a, b): return a * b  # yay!
-    .
-    def f():
-        return a+b  # return this
-    .
-    def last_function(a, b):
-        return a+b  # return this
-    .
-    ```
-    """
-
-    # TODO: allow multiple maked trees to participate?
-
-    if not self.is_root:
-        raise ValueError('can only reconcile root nodes')
-
-    if self._serial != mark._serial:
-        raise RuntimeError('modification detected after mark(), irreconcilable')
-
-    rec = _Reconcile(self, mark, options)
-
-    rec.recurse_node(self.a)
-
-    return rec.out
-
-
-# ----------------------------------------------------------------------------------------------------------------------
-__all_private__ = [n for n in globals() if n not in _GLOBALS]  # used by make_docs.py

@@ -38,7 +38,7 @@ class TestDocTest(unittest.TestCase):
         options = fst.FST.get_options()
 
         try:
-            for mod in (fst.fst, fst.fst_reconcile, fst.fst_walk):
+            for mod in (fst.fst,):
                 cleanup_docstrs(mod)
 
                 self.assertEqual(0, doctest.testmod(mod).failed)
