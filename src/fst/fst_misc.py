@@ -1224,7 +1224,7 @@ def _maybe_fix_with_items(self: fst.FST):
             cef._parenthesize_grouping()  # these will wind up belonging to outer With
 
 
-def _maybe_fix_copy(self: fst.FST, pars: bool = True):
+def _maybe_fix_copy(self: fst.FST, pars: bool = True, pars_walrus: bool = False):
     """Maybe fix source and `ctx` values for cut or copied nodes (to make subtrees parsable if the source is not after
     the operation). If cannot fix or ast is not parsable by itself then ast will be unchanged. Is meant to be a quick
     fix after a cut or copy operation, not full check, for that use `verify()`.
@@ -1257,8 +1257,8 @@ def _maybe_fix_copy(self: fst.FST, pars: bool = True):
 
             self._maybe_add_singleton_tuple_comma(False)  # this exists because of copy lone Starred out of a Subscript.slice
 
-        # elif isinstance(ast, NamedExpr):  # naked walrus
-        #     need_paren = True
+        elif isinstance(ast, NamedExpr):  # naked walrus
+            need_paren = pars_walrus
 
         if need_paren is None:
             need_paren = not self.is_enclosed()

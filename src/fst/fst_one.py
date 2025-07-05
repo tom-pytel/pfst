@@ -84,7 +84,7 @@ def _get_one_default(self: fst.FST, idx: int | None, field: str, cut: bool, **op
 
     ret = childf._make_fst_and_dedent(childf, copy_ast(child), loc, docstr=options.get('docstr'))
 
-    ret._maybe_fix_copy(self.get_option('pars', options))
+    ret._maybe_fix_copy(self.get_option('pars', options), self.get_option('pars_walrus', options))
 
     return ret
 

@@ -142,6 +142,7 @@ Or get all global options.
  'elif_': True,
  'docstr': True,
  'empty_set': True,
+ 'pars_walrus': False,
  'pep8space': True,
  'precomms': True,
  'postcomms': True,

@@ -221,6 +221,18 @@ standalone by Python.</p>
 </code></pre>
 </div>
 
+<p>This can be changed with the <code>pars_walrus</code> option (which also needs <code>pars</code> to not be <code>False</code>).</p>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">f</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;a, b := c, d&#39;</span><span class="p">)</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">g</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">elts</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">pars_walrus</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">g</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="p">(</span><span class="n">b</span> <span class="o">:=</span> <span class="n">c</span><span class="p">)</span>
+</code></pre>
+</div>
+
 <h2 id="pars-modes"><code>pars</code> modes</h2>
 
 <p>The <code>pars</code> option has been mentioned above with two possible values, <code>True</code> and <code>False</code>, but its default value of

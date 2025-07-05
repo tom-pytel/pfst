@@ -151,6 +151,17 @@ b := c
 b := c
 ```
 
+This can be changed with the `pars_walrus` option (which also needs `pars` to not be `False`).
+
+```py
+>>> f = FST('a, b := c, d')
+
+>>> g = f.elts[1].copy(pars_walrus=True)
+
+>>> print(g.src)
+(b := c)
+```
+
 ## `pars` modes
 
 The `pars` option has been mentioned above with two possible values, `True` and `False`, but its default value of

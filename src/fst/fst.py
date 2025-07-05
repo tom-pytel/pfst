@@ -39,16 +39,17 @@ _DEFAULT_PARSE_PARAMS = dict(filename='<unknown>', type_comments=False, feature_
 _DEFAULT_INDENT       = '    '
 
 _OPTIONS = {
-    'pars':      'auto',  # True | False | 'auto'
-    'raw':       False,   # True | False | 'auto'
-    'elif_':     True,    # True | False
-    'docstr':    True,    # True | False | 'strict'
-    'empty_set': True,    # True | False | 'seq' | 'call'
-    'pep8space': True,    # True | False | 1
-    'precomms':  True,    # True | False | 'all'
-    'postcomms': True,    # True | False | 'all' | 'block'
-    'prespace':  False,   # True | False | int
-    'postspace': False,   # True | False | int
+    'pars':        'auto', # True | False | 'auto'
+    'raw':         False,  # True | False | 'auto'
+    'elif_':       True,   # True | False
+    'docstr':      True,   # True | False | 'strict'
+    'empty_set':   True,   # True | False | 'seq' | 'call'
+    'pars_walrus': False,  # True | False
+    'pep8space':   True,   # True | False | 1
+    'precomms':    True,   # True | False | 'all'
+    'postcomms':   True,   # True | False | 'all' | 'block'
+    'prespace':    False,  # True | False | int
+    'postspace':   False,  # True | False | int
 }
 
 
@@ -851,6 +852,9 @@ class FST:
             - `True`: `set()` call and `{*()}`, `{*[]}` and `{*{}}` starred sequences are considered empty.
             - `'seq'`: Only starred sequences `{*()}`, `{*[]}` and `{*{}}` are considered empty.
             - `'call'`: Only `set()` call is considered empty.
+        - `pars_walrus': Whether to parenthesize copied `NamedExpr` nodes or not (only if `pars` is also not `False`).
+            - `False`: Do not parenthesize cut / copied `NamedExpr` walrus expressions.
+            - `True`: Parenthesize cut / copied `NamedExpr` walrus expressions.
         - `pep8space`: Preceding and trailing empty lines for function and class definitions.
             - `False`: No empty lines.
             - `True`: Two empty lines at module scope and one empty line in other scopes.
@@ -893,6 +897,7 @@ class FST:
          'elif_': True,
          'docstr': True,
          'empty_set': True,
+         'pars_walrus': False,
          'pep8space': True,
          'precomms': True,
          'postcomms': True,

@@ -1333,6 +1333,11 @@ type of empty sequence (tuple or list).</li>
 <li><code>'seq'</code>: Only starred sequences <code>{*()}</code>, <code>{*[]}</code> and <code>{*{}}</code> are considered empty.</li>
 <li><code>'call'</code>: Only <code>set()</code> call is considered empty.</li>
 </ul></li>
+<li><code>pars_walrus': Whether to parenthesize copied</code>NamedExpr<code>nodes or not (only if</code>pars<code>is also not</code>False`).
+<ul>
+<li><code>False</code>: Do not parenthesize cut / copied <code>NamedExpr</code> walrus expressions.</li>
+<li><code>True</code>: Parenthesize cut / copied <code>NamedExpr</code> walrus expressions.</li>
+</ul></li>
 <li><code>pep8space</code>: Preceding and trailing empty lines for function and class definitions.
 <ul>
 <li><code>False</code>: No empty lines.</li>
@@ -1388,6 +1393,7 @@ Add pars needed for parse / precedence to source on put:     no       yes       
  <span class="s1">&#39;elif_&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
  <span class="s1">&#39;docstr&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
  <span class="s1">&#39;empty_set&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+ <span class="s1">&#39;pars_walrus&#39;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
  <span class="s1">&#39;pep8space&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
  <span class="s1">&#39;precomms&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
  <span class="s1">&#39;postcomms&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
