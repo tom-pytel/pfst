@@ -499,4 +499,4 @@ def _put_slice(self: fst.FST, code: Code | None, start: int | Literal['end'] | N
 
 
 # ----------------------------------------------------------------------------------------------------------------------
-__all_private__ = ['_get_slice', '_put_slice']  # used by make_docs.py
+__all_private__ = ['_is_slice_compatible', '_get_slice', '_put_slice']  # used by make_docs.py

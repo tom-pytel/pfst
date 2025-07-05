@@ -25,8 +25,8 @@ docs:  ## Compile documentation
 	python make_docs.py
 
 
-.PHONY: all-docs
-all-docs:  ## Compile all documentation, including private functions, for dev
+.PHONY: dev-docs
+dev-docs:  ## Compile all documentation, including private functions, for dev
 	python make_docs.py --private
 
 

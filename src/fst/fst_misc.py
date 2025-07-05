@@ -70,8 +70,8 @@ _GLOBALS = globals() | {'_GLOBALS': None}
 
 if _PY_VERSION >= (3, 12):
     class _Modifying:
-        root:  fst.FST          # for updating _serial
-        fst:   fst.FST | False  # False indicates nothing to update on done()
+        root:  fst.FST                   # for updating _serial
+        fst:   fst.FST | Literal[False]  # False indicates nothing to update on done()
         field: astfield
         data:  list
 
