@@ -708,52 +708,6 @@ def _fixup_slice_indices(len_, start, stop) -> tuple[int, int]:
     return start, stop
 
 
-def _coerce_ast(ast, coerce: Literal['expr', 'exprish', 'mod'] | None = None) -> AST:
-    """Reduce an AST to a simplest representation based on coercion rule.
-
-    **Parameters:**
-    - `coerce`: What kind of coercion to apply (if any):
-        - `'expr'`: Want `ast.expr` if possible. Returns `Expression.body` or `Module|Interactive.body[0].value` or
-            `ast` if is `ast.expr`.
-        - `'exprish'`: Same as `'expr'` but also some other expression-like nodes (for raw).
-        - `'mod'`: Want `ast.Module`, expressions are wrapped in `Expr` and put into this and all other types are put
-            directly into this.
-        - `None`: Will pull expression out of `Expression` and convert `Interactive` to `Module`, otherwise will return
-            node as is.
-
-    **Returns:**
-    - `AST`: Reduced node.
-    """
-
-    if isinstance(ast, Expression):
-        ast = ast.body
-
-    elif coerce in ('expr', 'exprish'):
-        if isinstance(ast, (Module, Interactive)):
-            if len(body := ast.body) != 1 or not isinstance(ast := body[0], Expr):
-                raise NodeError(f'expecting single expression')
-
-            ast = ast.value
-
-        if not isinstance(ast, expr if (is_expr := coerce == 'expr') else
-                          (expr, arg, alias, withitem, pattern, type_param)):
-            raise NodeError('expecting expression' if is_expr else 'expecting expressionish node')
-
-        return ast
-
-    elif isinstance(ast, Interactive):
-        return Module(body=ast.body, type_ignores=[])
-
-    if coerce == 'mod' and not isinstance(ast, Module):
-        if isinstance(ast, expr):
-            ast = Expr(value=ast, lineno=ast.lineno, col_offset=ast.col_offset,
-                       end_lineno=ast.end_lineno, end_col_offset=ast.end_col_offset)
-
-        ast = Module(body=[ast], type_ignores=[])
-
-    return ast
-
-
 def _multiline_str_continuation_lns(lines: list[str], ln: int, col: int, end_ln: int, end_col: int) -> list[int]:
     """Return the line numbers of a potentially multiline string `Constant`. The location passed MUST be from the
     `Constant` `AST` node or calculated to be the same, otherwise this function will fail."""
