@@ -42,9 +42,9 @@ def pdoc(*modules: Path | str, output_directory: Path | None = None) -> str | No
 
 if __name__ == "__main__":
     import argparse
-    from collections import abc
+    # from collections import abc
     from types import FunctionType
-    from typing import ForwardRef, Union, Generator, get_args, get_origin
+    # from typing import ForwardRef, Union, Generator, get_args, get_origin
     import fst
     from fst import FST
 
@@ -55,6 +55,11 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
     # modules = args.modules
+
+    with open('VERSION') as f:
+        version = f.read().strip()
+
+    fst.__doc__ = fst.__doc__.replace('{{VERSION}}', version)
 
     if not args.private:
         all_funcs = set(v for k, v in FST.__dict__.items() if isinstance(v, FunctionType))

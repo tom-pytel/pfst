@@ -1,4 +1,6 @@
 """
+Version: {{VERSION}}
+
 # Overview
 
 This module exists in order to facilitate quick and easy editing of Python source while preserving formatting. It
