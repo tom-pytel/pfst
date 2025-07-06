@@ -24,12 +24,12 @@ from .misc import (
     Code, Mode, NodeError, _next_src, _shortstr
 )
 
+_PY_VERSION = sys.version_info[:2]
+_PYLT11     = _PY_VERSION < (3, 11)
+
 _re_first_src = re.compile(r'^[^\S\n]*(?:[^\s\\#]|(?<!^)\\)', re.M)  # or first \ not on start of line
 _re_except    = re.compile(r'except\b')
 _re_case      = re.compile(r'case\b\s*(?:[*\\\w({[\'"-]|\.\d)')
-
-_PY_VERSION = sys.version_info[:2]
-_PYLT11     = _PY_VERSION < (3, 11)
 
 
 def _ast_parse1(src: str, parse_params: dict = {}):

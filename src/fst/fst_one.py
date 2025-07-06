@@ -20,7 +20,7 @@ from .astutil import (
 )
 
 from .misc import (
-    Code, NodeError, astfield, fstloc,
+    Code, NodeError, astfield, fstloc, pyver,
     _next_src, _prev_src, _next_find, _prev_find, _next_find_re, _fixup_one_index,
 )
 
@@ -36,7 +36,6 @@ from .fst_parse import (
 _PY_VERSION = sys.version_info[:2]
 _PYLT11     = _PY_VERSION < (3, 11)
 _PYLT12     = _PY_VERSION < (3, 12)
-_PYLT14     = _PY_VERSION < (3, 14)
 
 _GetOneRet       = Union['fst.FST', None, str, constant]
 _PutOneCode      = Code | str | constant | None
@@ -138,115 +137,116 @@ def _get_one_invalid_combined(self: fst.FST, idx: int | None, field: str, cut: b
     raise ValueError(f'cannot get single element from combined field of {self.a.__class__.__name__}')
 
 
-if _PYLT12:
-    def _get_one_FormattedValue_value(self: fst.FST, idx: int | None, field: str, cut: bool, **options) -> _GetOneRet:
-        """Correct for py < 3.12 returning value unparenthesized tuple with `FormattedValue` curlies as delimiters."""
+@pyver(lt=12, else_=_get_one_default)
+def _get_one_FormattedValue_value(self: fst.FST, idx: int | None, field: str, cut: bool, **options) -> _GetOneRet:
+    """Correct for py < 3.12 returning value unparenthesized tuple with `FormattedValue` curlies as delimiters."""
 
-        ret = _get_one_default(self, idx, field, cut, **options)
+    ret = _get_one_default(self, idx, field, cut, **options)
 
-        if isinstance(ret.a, Tuple):
-            ln, col, end_ln, end_col = ret.loc
-            lines                    = ret.lines
+    if isinstance(ret.a, Tuple):
+        ln, col, end_ln, end_col = ret.loc
+        lines                    = ret.lines
 
-            if lines[ln].startswith('{', col) and (l := lines[end_ln]).endswith('}', 0, end_col):  # if curlies then replace them with parentheses
-                lines[end_ln] = bistr(f'{l[:end_col - 1]}){l[end_col:]}')
-                lines[ln]     = bistr(f'{(l := lines[ln])[:col]}({l[col + 1:]}')
+        if lines[ln].startswith('{', col) and (l := lines[end_ln]).endswith('}', 0, end_col):  # if curlies then replace them with parentheses
+            lines[end_ln] = bistr(f'{l[:end_col - 1]}){l[end_col:]}')
+            lines[ln]     = bistr(f'{(l := lines[ln])[:col]}({l[col + 1:]}')
 
-        return ret
-
-
-    def _get_one_conversion(self: fst.FST, idx: int | None, field: str, cut: bool, **options) -> _GetOneRet:
-        raise NotImplementedError('get FormattedValue.conversion not implemented on python < 3.12')
+    return ret
 
 
-    def _get_one_format_spec(self: fst.FST, idx: int | None, field: str, cut: bool, **options) -> _GetOneRet:
-        raise NotImplementedError('get FormattedValue.format_spec not implemented on python < 3.12')
+@pyver(lt=12)
+def _get_one_conversion(self: fst.FST, idx: int | None, field: str, cut: bool, **options) -> _GetOneRet:
+    raise NotImplementedError('get FormattedValue.conversion not implemented on python < 3.12')
+
+@pyver(ge=12)
+def _get_one_conversion(self: fst.FST, idx: int | None, field: str, cut: bool, **options) -> _GetOneRet:
+    child, _ = _validate_get(self, idx, field)
+
+    if child == -1:
+        return None
+
+    conv = chr(child)
+
+    return fst.FST(Constant(value=conv, lineno=1, col_offset=0, end_lineno=1, end_col_offset=3), [bistr(f"'{conv}'")],
+                   from_=self, lcopy=False)
 
 
-    def _get_one_JoinedStr_TemplateStr_values(self: fst.FST, idx: int | None, field: str, cut: bool, **options,
-                                              ) -> _GetOneRet:
-        raise NotImplementedError('get JoinedStr.values not implemented on python < 3.12')
+@pyver(lt=12)
+def _get_one_format_spec(self: fst.FST, idx: int | None, field: str, cut: bool, **options) -> _GetOneRet:
+    raise NotImplementedError('get FormattedValue.format_spec not implemented on python < 3.12')
+
+@pyver(ge=12)
+def _get_one_format_spec(self: fst.FST, idx: int | None, field: str, cut: bool, **options) -> _GetOneRet:
+    child, _ = _validate_get(self, idx, field)
+    childf   = child.f
+    ret      = childf._make_fst_and_dedent(childf, copy_ast(child), childf.loc, "f", "'",
+                                            docstr=options.get('docstr'))
+    ls[0]    = bistr("f'" + (ls := ret._lines)[0][2:])
+
+    reta                 = ret.a
+    reta.col_offset      = 0
+    reta.end_col_offset += 1
+
+    ret._touch()
+
+    return ret
 
 
-else:
-    _get_one_FormattedValue_value = _get_one_default
+@pyver(lt=12)
+def _get_one_JoinedStr_TemplateStr_values(self: fst.FST, idx: int | None, field: str, cut: bool, **options,
+                                          ) -> _GetOneRet:
+    raise NotImplementedError('get JoinedStr.values not implemented on python < 3.12')
 
-    def _get_one_conversion(self: fst.FST, idx: int | None, field: str, cut: bool, **options) -> _GetOneRet:
-        child, _ = _validate_get(self, idx, field)
+@pyver(ge=12)
+def _get_one_JoinedStr_TemplateStr_values(self: fst.FST, idx: int | None, field: str, cut: bool, **options,
+                                          ) -> _GetOneRet:
+    child, _      = _validate_get(self, idx, field)
+    childf        = child.f
 
-        if child == -1:
-            return None
+    ln, col, _, _ = self.loc
+    lines         = self.root._lines
+    l             = lines[ln]
+    prefix        = l[col : col + (4 if l.startswith('"""', col + 1) or l.startswith("'''", col + 1) else 2)]
 
-        conv = chr(child)
+    if isinstance(child, Constant):
+        ret = fst.FST(copy_ast(child), Constant)  # this is because of implicit string madness
 
-        return fst.FST(Constant(value=conv, lineno=1, col_offset=0, end_lineno=1, end_col_offset=3), [bistr(f"'{conv}'")],
-                       from_=self, lcopy=False)
+        # TODO: maybe pick this up again to return source-accurate string if possible?
 
+        # loc    = childf.loc
+        # prefix = prefix [1:]
+        # suffix = ''
 
-    def _get_one_format_spec(self: fst.FST, idx: int | None, field: str, cut: bool, **options) -> _GetOneRet:
-        child, _ = _validate_get(self, idx, field)
-        childf   = child.f
-        ret      = childf._make_fst_and_dedent(childf, copy_ast(child), childf.loc, "f", "'",
-                                               docstr=options.get('docstr'))
-        ls[0]    = bistr("f'" + (ls := ret._lines)[0][2:])
+        # if idx < len(self.a.values) - 1:  # this is ugly, but so are f-strings, its in case of stupidity like: f"{a}b" "c" 'ddd'
+        #     try:
+        #         literal_eval(f'{prefix}{self.get_src(*loc)}')
+        #     except SyntaxError:
+        #         suffix = prefix
 
-        reta                 = ret.a
-        reta.col_offset      = 0
-        reta.end_col_offset += 1
+        # ret                  = childf._make_fst_and_dedent('', copy_ast(child), loc, prefix, suffix)
+        # reta                 = ret.a
+        # reta.col_offset      = 0
+        # reta.end_col_offset += len(suffix)
 
-        ret._touch()
+        # ret._touch()
 
-        return ret
+        # if indent := childf.get_indent():
+        #     ret._dedent_lns(indent, skip=1, docstr=options.get('docstr'))
 
+    else:
+        assert isinstance(child, (FormattedValue, Interpolation))
 
-    def _get_one_JoinedStr_TemplateStr_values(self: fst.FST, idx: int | None, field: str, cut: bool, **options) -> _GetOneRet:
-        child, _      = _validate_get(self, idx, field)
-        childf        = child.f
+        typ     = 'f' if isinstance(child, FormattedValue) else 't'
+        prefix  = typ + prefix[1:]
+        fmt     = childf._make_fst_and_dedent(childf, copy_ast(child), childf.loc, prefix, prefix[1:],
+                                                docstr=options.get('docstr'))
+        lprefix = len(prefix)
+        ret     = fst.FST((JoinedStr if typ == 'f' else TemplateStr)
+                            (values=[fmt.a], lineno=fmt.lineno, col_offset=fmt.col_offset - lprefix,
+                            end_lineno=fmt.end_lineno, end_col_offset=fmt.end_col_offset + lprefix - 1),
+                            fmt._lines, from_=self, lcopy=False)
 
-        ln, col, _, _ = self.loc
-        lines         = self.root._lines
-        l             = lines[ln]
-        prefix        = l[col : col + (4 if l.startswith('"""', col + 1) or l.startswith("'''", col + 1) else 2)]
-
-        if isinstance(child, Constant):
-            ret = fst.FST(copy_ast(child), Constant)  # this is because of implicit string madness
-
-            # TODO: maybe pick this up again to return source-accurate string if possible?
-
-            # loc    = childf.loc
-            # prefix = prefix [1:]
-            # suffix = ''
-
-            # if idx < len(self.a.values) - 1:  # this is ugly, but so are f-strings, its in case of stupidity like: f"{a}b" "c" 'ddd'
-            #     try:
-            #         literal_eval(f'{prefix}{self.get_src(*loc)}')
-            #     except SyntaxError:
-            #         suffix = prefix
-
-            # ret                  = childf._make_fst_and_dedent('', copy_ast(child), loc, prefix, suffix)
-            # reta                 = ret.a
-            # reta.col_offset      = 0
-            # reta.end_col_offset += len(suffix)
-
-            # ret._touch()
-
-            # if indent := childf.get_indent():
-            #     ret._dedent_lns(indent, skip=1, docstr=options.get('docstr'))
-
-        else:
-            assert isinstance(child, (FormattedValue, Interpolation))
-
-            typ     = 'f' if isinstance(child, FormattedValue) else 't'
-            prefix  = typ + prefix[1:]
-            fmt     = childf._make_fst_and_dedent(childf, copy_ast(child), childf.loc, prefix, prefix[1:],
-                                                  docstr=options.get('docstr'))
-            lprefix = len(prefix)
-            ret     = fst.FST((JoinedStr if typ == 'f' else TemplateStr)
-                              (values=[fmt.a], lineno=fmt.lineno, col_offset=fmt.col_offset - lprefix,
-                               end_lineno=fmt.end_lineno, end_col_offset=fmt.end_col_offset + lprefix - 1),
-                              fmt._lines, from_=self, lcopy=False)
-
-        return ret
+    return ret
 
 
 # ......................................................................................................................
@@ -869,22 +869,16 @@ def _put_one_NOT_IMPLEMENTED_YET(self: fst.FST, code: _PutOneCode, idx: int | No
     raise NotImplementedError('this is not implemented yet')
 
 
-if _PYLT12:
-    def _put_one_NOT_IMPLEMENTED_YET_12(self: fst.FST, code: _PutOneCode, idx: int | None, field: str, child: constant,
-                                        static: onestatic, **options) -> fst.FST:
-        raise NotImplementedError('this will only be implemented on python version 3.12 and above')
-
-else:
-    _put_one_NOT_IMPLEMENTED_YET_12 = _put_one_NOT_IMPLEMENTED_YET
+@pyver(lt=12, else_=_put_one_NOT_IMPLEMENTED_YET)
+def _put_one_NOT_IMPLEMENTED_YET_12(self: fst.FST, code: _PutOneCode, idx: int | None, field: str, child: constant,
+                                    static: onestatic, **options) -> fst.FST:
+    raise NotImplementedError('this will only be implemented on python version 3.12 and above')
 
 
-if _PYLT14:
-    def _put_one_NOT_IMPLEMENTED_YET_14(self: fst.FST, code: _PutOneCode, idx: int | None, field: str, child: constant,
-                                        static: onestatic, **options) -> fst.FST:
-        raise NotImplementedError('this will only be implemented on python version 3.14 and above')
-
-else:
-    _put_one_NOT_IMPLEMENTED_YET_14 = _put_one_NOT_IMPLEMENTED_YET
+@pyver(lt=14, else_=_put_one_NOT_IMPLEMENTED_YET)
+def _put_one_NOT_IMPLEMENTED_YET_14(self: fst.FST, code: _PutOneCode, idx: int | None, field: str, child: constant,
+                                    static: onestatic, **options) -> fst.FST:
+    raise NotImplementedError('this will only be implemented on python version 3.14 and above')
 
 
 # ......................................................................................................................
@@ -1341,6 +1335,7 @@ def _put_one_Subscript_value(self: fst.FST, code: _PutOneCode, idx: int | None, 
     return ret
 
 
+@pyver(lt=11, else_=_put_one_exprish_required)
 def _put_one_Subscript_slice(self: fst.FST, code: _PutOneCode, idx: int | None, field: str, child: AST,  # py < 3.11
                              static: onestatic, **options) -> fst.FST:
     """Don't allow put unparenthesized tuple containing Starred."""
@@ -1352,9 +1347,6 @@ def _put_one_Subscript_slice(self: fst.FST, code: _PutOneCode, idx: int | None, 
         raise NodeError('cannot have unparenthesized tuple containing Starred in slice')
 
     return _put_one_exprish_required(self, code, idx, field, child, static, 2, **options)
-
-if not _PYLT11:
-    _put_one_Subscript_slice = _put_one_exprish_required
 
 
 def _put_one_List_elts(self: fst.FST, code: _PutOneCode, idx: int | None, field: str, child: list[AST],
@@ -1431,6 +1423,7 @@ def _put_one_arg(self: fst.FST, code: _PutOneCode, idx: int | None, field: str, 
     return _put_one_exprish_required(self, code, idx, field, child, static, 2, **options)
 
 
+@pyver(ge=11, else_=_put_one_exprish_optional)  # _put_one_exprish_optional leaves the _restrict_default in the static which disallows Starred
 def _put_one_arg_annotation(self: fst.FST, code: _PutOneCode, idx: int | None, field: str, child: AST,  # py >= 3.11
                             static: onestatic, **options) -> fst.FST:
     """Allow Starred in vararg arg annotation in py 3.11+."""
@@ -1439,9 +1432,6 @@ def _put_one_arg_annotation(self: fst.FST, code: _PutOneCode, idx: int | None, f
         static = onestatic(_one_info_arg_annotation, _restrict_fmtval_slice)
 
     return _put_one_exprish_optional(self, code, idx, field, child, static, **options)
-
-if _PYLT11:
-    _put_one_arg_annotation = _put_one_exprish_optional  # this leaves the _restrict_default in the static which disallows Starred
 
 
 def _put_one_withitem_context_expr(self: fst.FST, code: _PutOneCode, idx: int | None, field: str, child: str,
@@ -2377,41 +2367,43 @@ def _one_info_TypeVarTuple_default_value(self: fst.FST, static: onestatic, idx: 
 def _one_info_TypeVarTuple_name(self: fst.FST, static: onestatic, idx: int | None, field: str) -> oneinfo:
     return _one_info_identifier_required(self, static, idx, field, '*')
 
-if _PYLT12:
-    def _one_info_format_spec(self: fst.FST, static: onestatic, idx: int | None, field: str) -> oneinfo:
-        raise NotImplementedError('this is only implemented on python version 3.12 and above')
+@pyver(lt=12)
+def _one_info_format_spec(self: fst.FST, static: onestatic, idx: int | None, field: str) -> oneinfo:
+    raise NotImplementedError('this is only implemented on python version 3.12 and above')
 
-    def _one_info_conversion(self: fst.FST, static: onestatic, idx: int | None, field: str) -> oneinfo:
-        raise NotImplementedError('this is only implemented on python version 3.12 and above')
+@pyver(ge=12)
+def _one_info_format_spec(self: fst.FST, static: onestatic, idx: int | None, field: str) -> oneinfo:
+    if fspec := self.a.format_spec:
+        return oneinfo(':', fspec.f.loc)
 
-else:
-    def _one_info_format_spec(self: fst.FST, static: onestatic, idx: int | None, field: str) -> oneinfo:
-        if fspec := self.a.format_spec:
-            return oneinfo(':', fspec.f.loc)
+    _, _, end_ln, end_col  = self.loc
+    end_col               -= 1
 
+    return oneinfo(':', fstloc(end_ln, end_col, end_ln, end_col))
+
+@pyver(lt=12)
+def _one_info_conversion(self: fst.FST, static: onestatic, idx: int | None, field: str) -> oneinfo:
+    raise NotImplementedError('this is only implemented on python version 3.12 and above')
+
+@pyver(ge=12)
+def _one_info_conversion(self: fst.FST, static: onestatic, idx: int | None, field: str) -> oneinfo:
+    if fspec := (a := self.a).format_spec:
+        end_ln, end_col, _, _  = fspec.f.loc
+    else:
         _, _, end_ln, end_col  = self.loc
         end_col               -= 1
 
-        return oneinfo(':', fstloc(end_ln, end_col, end_ln, end_col))
+    if a.conversion == -1:
+        return oneinfo('!', fstloc(end_ln, end_col, end_ln, end_col))
 
-    def _one_info_conversion(self: fst.FST, static: onestatic, idx: int | None, field: str) -> oneinfo:
-        if fspec := (a := self.a).format_spec:
-            end_ln, end_col, _, _  = fspec.f.loc
-        else:
-            _, _, end_ln, end_col  = self.loc
-            end_col               -= 1
+    _, _, ln, col = a.value.f.loc
 
-        if a.conversion == -1:
-            return oneinfo('!', fstloc(end_ln, end_col, end_ln, end_col))
+    if not (prev := _prev_find(self.root._lines, ln, col, end_ln, end_col, '!')):  # may not be there if conversion is implicit due to =
+        return oneinfo('!', fstloc(end_ln, end_col, end_ln, end_col))
 
-        _, _, ln, col = a.value.f.loc
+    ln, col = prev
 
-        if not (prev := _prev_find(self.root._lines, ln, col, end_ln, end_col, '!')):  # may not be there if conversion is implicit due to =
-            return oneinfo('!', fstloc(end_ln, end_col, end_ln, end_col))
-
-        ln, col = prev
-
-        return oneinfo('', fstloc(ln, col, end_ln, end_col))
+    return oneinfo('', fstloc(ln, col, end_ln, end_col))
 
 
 _PUT_ONE_HANDLERS = {

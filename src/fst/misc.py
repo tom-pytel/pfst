@@ -1,19 +1,20 @@
-"""Low level common data and functions that are not part of the FST class."""
+"""Low level common data and functions that are not part of or aware of the FST class."""
 
 import re
+import sys
 from ast import *
 from math import log10
-from typing import Any, ForwardRef, Literal, NamedTuple, TypeAlias, Union
-
-try:
-    from typing import Self
-except ImportError:
-    Self = ForwardRef('FST')
+from typing import Any, Callable, ForwardRef, Literal, NamedTuple, TypeAlias, Union
 
 import fst
 
 from .astutil import *
-from .astutil import TypeAlias, TryStar, TemplateStr, type_param, Interpolation
+from .astutil import TypeAlias, TryStar, TemplateStr, Interpolation
+
+try:
+    from typing import Self
+except ImportError:  # for py 3.10
+    Self = ForwardRef('FST')
 
 __all__ = ['Code', 'Mode', 'NodeError', 'astfield', 'fstloc']
 
@@ -301,6 +302,92 @@ class nspace:
     def __init__(self, **kwargs):
         for name, value in kwargs.items():
             setattr(self, name, value)
+
+
+assert sys.version_info[0] == 3, 'pyver() assumes python major version 3'
+
+_pyver_registry = {}  # {'__module__.__qualname__': [(func, (ge, lt) | unbound +ge | unbound -lt]), ...}
+_pyver          = sys.version_info[1]  # just the minor version
+
+def pyver(func: Callable | None = None, *, ge: int | None = None, lt: int | None = None, else_: Callable | None = None,
+          ) -> Callable:
+    """Decorator to restrict to a range of python versions. If the version of python does not match the parameters
+    passed then will return a previously registered function that does match or `None` if no matching function. Yes we
+    are only comparing minor version, if python goes to major 4 then this will be the least of your incompatibilities.
+
+    **Parameters:**
+    - `func`: The function (or class) being decorated.
+    - `ge`: Minimum allowed version of python for this function. `None` for unbound below `lt`.
+    - `lt`: Maximum NOT allowed version of python for this function (exclusive, LESS THAN THIS). `None` for unbound
+        above `ge`. Both `ge` and `lt` cannot be `None` at the same time.
+    - `else_`: If the current python version does not match the specified `ge` and `lt` then use this function instead
+        of a standin which raises and error.
+    """
+
+    if ge is None and lt is None:
+        raise ValueError("parameters 'ge' and 'lt' cannot both be None at the same time")
+
+    if ge is not None and lt is not None and ge >= lt:
+        raise ValueError(f"invalid 'ge' / 'lt' values, {ge} is not smaller than {lt}")
+
+    def decorator(func: Callable) -> Callable:
+        key = f'{func.__module__}.{func.__qualname__}'
+
+        if ge is None:
+            newver = (func, -lt)
+
+            if _pyver >= lt:
+                func = else_
+
+        elif lt is None:
+            newver = (func, ge)
+
+            if _pyver < ge:
+                func = else_
+
+        else:
+            newver = (func, (ge, lt))
+
+            if not ge <= _pyver < lt:
+                func = else_
+
+        if not (vers := _pyver_registry.get(key)):
+            _pyver_registry[key] = vers = [newver]
+
+        else:
+            for verfunc, ver in vers:
+                if isinstance(ver, tuple):
+                    if (ge is None or ge < ver[1]) and (lt is None or lt > ver[0]):
+                        raise ValueError(f"overlap with previously registered version range [3.{ver[0]}, 3.{ver[1]})")
+
+                    if ver[0] <= _pyver < ver[1]:
+                        func = verfunc
+
+                elif ver < 0:  # unbound less than minus this version
+                    ver = -ver
+
+                    if ge is None or ge < ver:
+                        raise ValueError(f"overlap with previously registered version range < 3.{ver})")
+
+                    if _pyver < ver:
+                        func = verfunc
+
+                else:  # unbound greater than this version
+                    if lt is None or lt > ver:
+                        raise ValueError(f"overlap with previously registered version range >= 3.{ver})")
+
+                    if ver <= _pyver:
+                        func = verfunc
+
+            vers.append(newver)
+
+        if func is None:
+            def func(*args, **kwargs):
+                raise RuntimeError(f'missing version of {key} for this python version 3.{_pyver}')
+
+        return func
+
+    return decorator if func is None else decorator(func)
 
 
 def _shortstr(s: str, maxlen: int = 64) -> str:
@@ -638,8 +725,8 @@ def _prev_pars(lines: list[str], bound_ln: int, bound_col: int, pars_ln: int, pa
 
 def _params_offset(lines: list[bistr], put_lines: list[bistr], ln: int, col: int, end_ln: int, end_col: int,
                    ) -> tuple[int, int, int, int]:
-    """Calculate location and delta parameters for the `offset()` function. The `col` parameter is calculated as a byte
-    offset so that the `offset()` function does not have to access the source at all."""
+    """Calculate location and delta parameters for the `_offset()` function. The `col` parameter is calculated as a byte
+    offset so that the `_offset()` function does not have to access the source at all."""
 
     dfst_ln     = len(put_lines) - 1
     dln         = dfst_ln - (end_ln - ln)
