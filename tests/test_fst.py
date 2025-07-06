@@ -11,13 +11,9 @@ from fst.astutil import (
     OPCLS2STR, TemplateStr, type_param, TypeVar, ParamSpec, TypeVarTuple, WalkFail, copy_ast, compare_asts,
 )
 
-from data_other import PARS_DATA, COPY_DATA, GET_SLICE_SEQ_DATA, GET_SLICE_STMT_DATA, GET_SLICE_STMT_NOVERIFY_DATA
+from fst.misc import PYVER, PYLT11, PYLT12, PYLT13, PYLT14, PYGE11, PYGE12, PYGE13, PYGE14
 
-_PY_VERSION = sys.version_info[:2]
-_PYLT11     = _PY_VERSION < (3, 11)
-_PYLT12     = _PY_VERSION < (3, 12)
-_PYLT13     = _PY_VERSION < (3, 13)
-_PYLT14     = _PY_VERSION < (3, 14)
+from data_other import PARS_DATA, COPY_DATA, GET_SLICE_SEQ_DATA, GET_SLICE_STMT_DATA, GET_SLICE_STMT_NOVERIFY_DATA
 
 PYFNMS = sum((
     [os.path.join(path, fnm) for path, _, fnms in os.walk(top) for fnm in fnms if fnm.endswith('.py')]
@@ -498,7 +494,7 @@ PARSE_TESTS = [
     (MatchStar,           FST._parse_pattern,           MatchStar,      '*a'),
 ]
 
-if _PY_VERSION >= (3, 11):
+if PYGE11:
     PARSE_TESTS.extend([
         ('ExceptHandler',     FST._parse_ExceptHandler,     ExceptHandler,  'except* Exception: pass'),
 
@@ -509,7 +505,7 @@ if _PY_VERSION >= (3, 11):
         (ExceptHandler,       FST._parse_ExceptHandler,     ExceptHandler,  'except* Exception: pass'),
     ])
 
-if _PY_VERSION >= (3, 12):
+if PYGE12:
     PARSE_TESTS.extend([
         ('type_param',        FST._parse_type_param,        TypeVar,        'a: int'),
         ('type_param',        FST._parse_type_param,        ParamSpec,      '**a'),
@@ -523,7 +519,7 @@ if _PY_VERSION >= (3, 12):
         (TypeVarTuple,        FST._parse_type_param,        TypeVarTuple,   '*a'),
     ])
 
-if _PY_VERSION >= (3, 13):
+if PYGE13:
     PARSE_TESTS.extend([
         ('type_param',        FST._parse_type_param,        TypeVar,        'a: int = int'),
         ('type_param',        FST._parse_type_param,        ParamSpec,      '**a = {T: int, U: str}'),
@@ -746,7 +742,7 @@ class TestFST(unittest.TestCase):
         self.assertEqual((1, 34), parse('try: pass\nexcept (Exception, BaseException): pass\nelse: pass\nfinally: pass').body[0].handlers[0].f._loc_block_header_end())
         self.assertEqual((1, 39), parse('try: pass\nexcept (Exception, BaseException) as e: pass\nelse: pass\nfinally: pass').body[0].handlers[0].f._loc_block_header_end())
 
-        if _PY_VERSION >= (3, 12):
+        if PYGE12:
             self.assertEqual((0, 4),  parse('try: pass\nexcept* Exception: pass\nelse: pass\nfinally: pass').body[0].f._loc_block_header_end())
             self.assertEqual((1, 18), parse('try: pass\nexcept* Exception: pass\nelse: pass\nfinally: pass').body[0].handlers[0].f._loc_block_header_end())
             self.assertEqual((1, 35), parse('try: pass\nexcept* (Exception, BaseException): pass\nelse: pass\nfinally: pass').body[0].handlers[0].f._loc_block_header_end())
@@ -1207,7 +1203,7 @@ y"
     def test__multiline_tstr_continuation_lns(self):
         from fst.misc import _multiline_fstr_continuation_lns as mscl
 
-        if _PY_VERSION >= (3, 14):
+        if PYGE14:
             self.assertEqual([], mscl(ls := r'''
 t'a'
                 '''.strip().split('\n'), 0, 0, len(ls) - 1, len(ls[-1])))
@@ -1971,7 +1967,7 @@ def f():
 ((is_seq := isinstance(a, (Tuple, List))) or (is_starred := isinstance(a, Starred)) or
             isinstance(a, (Name, Subscript, Attribute)))""".strip(), fc.src)
 
-        if _PY_VERSION >= (3, 12):
+        if PYGE12:
             fc = FST.fromsrc('tuple[*tuple[int, ...]]').a.body[0].value.slice.f.copy(pars=False)
             self.assertEqual('*tuple[int, ...]', fc.src)
             fc._maybe_fix_copy(pars=True)
@@ -2078,7 +2074,7 @@ def f():
         self.assertIsInstance(f.a, Expression)
         self.assertIsInstance(f.a.body, Name)
 
-        v = _PY_VERSION
+        v = PYVER
         f = FST.fromsrc('i', 'exec', filename='fnm', type_comments=True, feature_version=v)
 
         g = FST('j', 'exec', from_=f)
@@ -2145,7 +2141,7 @@ def f():
         self.assertEqual('  ', FST.fromsrc('try: pass\nexcept:\n  pass\nelse: pass\nfinally: pass').indent)
         self.assertEqual('  ', FST.fromsrc('try:\n  pass\nexcept: pass\nelse: pass\nfinally: pass').indent)
 
-        if _PY_VERSION >= (3, 12):
+        if PYGE12:
             self.assertEqual('  ', FST.fromsrc('try:\n  pass\nexcept* Exception: pass').indent)
             self.assertEqual('  ', FST.fromsrc('try: pass\nexcept* Exception:\n  pass').indent)
             self.assertEqual('  ', FST.fromsrc('try: pass\nexcept* Exception: pass\nelse:\n  pass').indent)
@@ -2572,7 +2568,7 @@ def f(a, /, b, *c, d, **e):
         self.assertIs((f := fst.prev_child(f, False)), a.op.f)
         self.assertIs((f := fst.prev_child(f, False)), None)
 
-        if _PY_VERSION >= (3, 12):
+        if PYGE12:
             fst = parse('@deco\ndef f[T, U](a, /, b: int, *, c: int = 2) -> str: pass').body[0].f
             a = fst.a
             f = None
@@ -2903,7 +2899,7 @@ with a as b, c as d:
         self.assertTrue(FST('(f(\na\n,\nb\n=\n1))', 'exec').body[0].value.copy(pars=False).is_enclosed())
         self.assertTrue(FST('(f(\na\n,\nb\n=\n"()"))', 'exec').body[0].value.copy(pars=False).is_enclosed())
 
-        if _PY_VERSION >= (3, 12):
+        if PYGE12:
             self.assertTrue(FST(r'''
 (f"a{(1,
 
@@ -3002,7 +2998,7 @@ e")
         self.assertFalse(FST('with (b\n as c): pass', 'exec').body[0].items[0].copy(pars=False).is_enclosed())
         self.assertTrue(FST('with (b\\\n as c): pass', 'exec').body[0].items[0].copy(pars=False).is_enclosed())
 
-        if _PY_VERSION >= (3, 14):
+        if PYGE14:
             self.assertTrue(FST(r'''
 (t"a{(1,
 
@@ -3044,7 +3040,7 @@ y")
         self.assertTrue(FST('a, [i,\nj], c', 'exec').body[0].value.copy(pars=False).is_enclosed())
         self.assertTrue(FST('a, b[\ni:j:k\n], c', 'exec').body[0].value.copy(pars=False).is_enclosed())
 
-        if _PY_VERSION >= (3, 12):
+        if PYGE12:
             self.assertTrue(FST('a, f"{(1,\n2)}", c', 'exec').body[0].value.copy(pars=False).is_enclosed())
 
     def test_is_enclosed_in_parents(self):
@@ -3204,7 +3200,7 @@ y")
         self.assertFalse(FST('match a:\n case 1 | 2: pass', 'exec').body[0].cases[0].pattern.copy(pars=True).patterns[0].is_enclosed_in_parents())
         self.assertTrue(FST('match a:\n case (1 | 2): pass', 'exec').body[0].cases[0].pattern.copy(pars=True).patterns[0].is_enclosed_in_parents())
 
-        if _PY_VERSION >= (3, 12):
+        if PYGE12:
             self.assertTrue(FST('def f[T]() -> int: pass', 'exec').body[0].type_params[0].is_enclosed_in_parents())
             self.assertTrue(FST('async def f[T]() -> int: pass', 'exec').body[0].type_params[0].is_enclosed_in_parents())
             self.assertTrue(FST('class c[T]: pass', 'exec').body[0].type_params[0].is_enclosed_in_parents())
@@ -3219,7 +3215,7 @@ y")
             self.assertFalse(FST('type t[*T] = v', 'exec').body[0].type_params[0].copy().is_enclosed_in_parents())
             self.assertFalse(FST('type t[**T] = v', 'exec').body[0].type_params[0].copy().is_enclosed_in_parents())
 
-        if _PY_VERSION >= (3, 14):
+        if PYGE14:
             self.assertTrue(FST('t"1{2}"', 'exec').body[0].value.values[0].is_enclosed_in_parents())
             self.assertTrue(FST('t"1{2}"', 'exec').body[0].value.values[1].value.is_enclosed_in_parents())
 
@@ -3381,7 +3377,7 @@ y")
         self.assertFalse(FST('match a:\n case 1 | 2: pass', 'exec').body[0].cases[0].pattern.copy(pars=True).is_enclosed_in_parents('patterns'))
         self.assertTrue(FST('match a:\n case (1 | 2): pass', 'exec').body[0].cases[0].pattern.copy(pars=True).is_enclosed_in_parents('patterns'))
 
-        if _PY_VERSION >= (3, 12):
+        if PYGE12:
             self.assertTrue(FST('def f[T]() -> int: pass', 'exec').body[0].is_enclosed_in_parents('type_params'))
             self.assertTrue(FST('async def f[T]() -> int: pass', 'exec').body[0].is_enclosed_in_parents('type_params'))
             self.assertTrue(FST('class c[T]: pass', 'exec').body[0].is_enclosed_in_parents('type_params'))
@@ -3396,7 +3392,7 @@ y")
             self.assertFalse(FST('type t[*T] = v', 'exec').body[0].type_params[0].copy().is_enclosed_in_parents())
             self.assertFalse(FST('type t[**T] = v', 'exec').body[0].type_params[0].copy().is_enclosed_in_parents())
 
-        if _PY_VERSION >= (3, 14):
+        if PYGE14:
             self.assertTrue(FST('t"1{2}"', 'exec').body[0].value.is_enclosed_in_parents('values'))
             self.assertTrue(FST('t"1{2}"', 'exec').body[0].value.values[1].is_enclosed_in_parents('value'))
 
@@ -4262,7 +4258,7 @@ match a:
             (FST._code_as_pattern, 'body[0].cases[0].pattern', 'match x:\n case _: pass'),
         ]
 
-        if _PY_VERSION >= (3, 12):
+        if PYGE12:
             CODE_ASES.extend([
                 (FST._code_as_type_param, 'body[0].type_params[0]', 'type t[T: int] = ...'),
                 (FST._code_as_type_param, 'body[0].type_params[0]', 'class c[T: int]: pass'),
@@ -4482,7 +4478,7 @@ match a:
             (FST._code_as_pattern, '_'),
         ]
 
-        if _PY_VERSION >= (3, 12):
+        if PYGE12:
             CODE_ASES.extend([
                 (FST._code_as_type_param, 'T: int'),
             ])
@@ -4554,7 +4550,7 @@ match a:
         f.par(force=True)  # self.assertTrue(f.par(force=True))
         self.assertEqual('(# comment\ni = 1)', f.src)
 
-        if _PY_VERSION >= (3, 14):  # make sure parent Interpolation.str gets modified
+        if PYGE14:  # make sure parent Interpolation.str gets modified
             f = FST('t"{a}"', 'exec').body[0].value.copy()
             f.values[0].value.par(force=True)
             self.assertEqual('t"{(a)}"', f.src)
@@ -4707,12 +4703,12 @@ match a:
         self.assertEqual('a as b', FST('a as b', alias).par().src)
         self.assertEqual('a as b', FST('a as b', withitem).par().src)
 
-        if not _PYLT13:
+        if not PYLT13:
             self.assertEqual('t: int = int', FST('t: int = int', type_param).par().src)
             self.assertEqual('*t = (int,)', FST('*t = (int,)', type_param).par().src)
             self.assertEqual('**t = {T: int}', FST('**t = {T: int}', type_param).par().src)
 
-        elif not _PYLT12:
+        elif not PYLT12:
             self.assertEqual('t: int', FST('t: int', type_param).par().src)
             self.assertEqual('*t', FST('*t', type_param).par().src)
             self.assertEqual('**t', FST('**t', type_param).par().src)
@@ -4744,7 +4740,7 @@ match a:
         f.unpar(node=True)  # self.assertTrue()
         self.assertEqual('1,', f.src)
 
-        if _PY_VERSION >= (3, 14):  # make sure parent Interpolation.str gets modified
+        if PYGE14:  # make sure parent Interpolation.str gets modified
             f = FST('t"{(a)}"', 'exec').body[0].value.copy()
             f.values[0].value.unpar()
             self.assertEqual('t"{a}"', f.src)
@@ -5335,7 +5331,7 @@ i # post
         self.assertEqual('i', a.body[0].value.f.copy(precomms=False, postcomms=False).src)
         self.assertEqual('( i )', a.body[0].value.f.copy(precomms=False, postcomms=False, pars=True).src)
 
-        if _PY_VERSION >= (3, 12):
+        if PYGE12:
             f = FST.fromsrc('a[*b]').a.body[0].value.slice.f.copy()
             self.assertEqual('*b,', f.src)
 
@@ -6618,7 +6614,7 @@ def func():
         self.assertEqual(0, FST('for i in j', comprehension).get('is_async'))
         self.assertEqual(1, FST('async for i in j', comprehension).get('is_async'))
 
-        if _PY_VERSION >= (3, 14):
+        if PYGE14:
             self.assertEqual('blah', FST('t"{blah}"').values[0].get('str'))
 
     def test_get_one_ctx(self):
@@ -6752,14 +6748,14 @@ def func():
         self.assertEqual('ident', FST('match a:\n case (*ident,): pass').cases[0].pattern.patterns[0].get('name'))
         self.assertEqual('ident', FST('match a:\n case 1 as ident: pass').cases[0].pattern.get('name'))
 
-        if _PY_VERSION >= (3, 12):
+        if PYGE12:
             self.assertEqual('ident', FST('type t[ident] = ...').type_params[0].get('name'))
             self.assertEqual('ident', FST('type t[*ident] = ...').type_params[0].get('name'))
             self.assertEqual('ident', FST('type t[**ident] = ...').type_params[0].get('name'))
 
         # FormattedValue/Interpolation conversion and format_spec, JoinedStr/TemplateStr values
 
-        if _PY_VERSION >= (3, 12):
+        if PYGE12:
             self.assertIsNone(None, FST('f"{a}"').values[0].get('conversion'))
             self.assertEqual("'a'", FST('f"{a!a}"').values[0].get('conversion').src)
             self.assertEqual("'r'", FST('f"{a!r}"').values[0].get('conversion').src)
@@ -6819,7 +6815,7 @@ if 1:
             self.assertEqual("""f'{d : {"0.5f<12"} }'""", g.src)
             g.verify()
 
-        if _PY_VERSION >= (3, 14):
+        if PYGE14:
             self.assertIsNone(None, FST('t"{a}"').values[0].get('conversion'))
             self.assertEqual("'a'", FST('t"{a!a}"').values[0].get('conversion').src)
             self.assertEqual("'r'", FST('t"{a!r}"').values[0].get('conversion').src)
@@ -6895,7 +6891,7 @@ if 1:
             self.assertEqual("'abc'", (g := f.get(0)).src)
             g.verify()
 
-        if _PY_VERSION < (3, 12):
+        if PYLT12:
             self.assertEqual('(a,)', FST('f"{a,}"').values[0].get().src)
             self.assertEqual('(a, b)', FST('f"{a, b}"').values[0].get().src)
             self.assertEqual('( a, b )', FST('f"{ a, b }"').values[0].get().src)
@@ -7824,7 +7820,7 @@ match a:
 
         # misc
 
-        if not _PYLT12:
+        if not PYLT12:
             m = (o := FST(r'''
 if 1:
     "a\n"
@@ -8097,7 +8093,7 @@ if 1:
         self.assertEqual("f'b{b}c{c}c{c}'", f.src.rstrip())
         f.verify()
 
-        if not _PYLT12:
+        if not PYLT12:
             m = (o := FST('def f[T,U,V](): pass', 'exec')).mark()
             o.a.body[0].type_params[0] = o.a.body[0].type_params[1]
             o.a.body[0].type_params[1] = o.a.body[0].type_params[2]
@@ -8126,7 +8122,7 @@ if 1:
             self.assertEqual('type t[U,V,V] = ...', f.src)
             f.verify()
 
-        if not _PYLT14:
+        if not PYLT14:
             m = (o := FST("t'a{a}b{b}c{c}'", 'exec')).mark()
             o.a.body[0].value.values[0] = o.a.body[0].value.values[2]
             o.a.body[0].value.values[1] = o.a.body[0].value.values[3]
@@ -8503,14 +8499,14 @@ if 1:
         self.assertEqual('1 | 2 | 3', test(FST('a.b | c.d', MatchOr), 'patterns', '1 | 2 | 3', fstview,
                                            '<<MatchOr ROOT 0,0..0,9>.patterns[0:2] [<MatchValue 0,0..0,3>, <MatchValue 0,6..0,9>]>').src)
 
-        if not _PYLT11:
+        if not PYLT11:
             f = FST('try: pass\nexcept* Exception: pass\nelse: pass\nfinally: pass')
             self.assertEqual('try:\n    return\nexcept* Exception: pass\nelse: pass\nfinally: pass', test(f, 'body', 'return', fstview, 'pass').src)
             self.assertEqual('try:\n    return\nexcept* Exception as e: continue\nelse: pass\nfinally: pass', test(f, 'handlers', 'except* Exception as e: continue', fstview, 'except* Exception: pass').src)
             self.assertEqual('try:\n    return\nexcept* Exception as e: continue\nelse:\n    break\nfinally: pass', test(f, 'orelse', 'break', fstview, 'pass').src)
             self.assertEqual('try:\n    return\nexcept* Exception as e: continue\nelse:\n    break\nfinally:\n    f()\n', test(f, 'finalbody', 'f()', fstview, 'pass').src)
 
-        if not _PYLT12:
+        if not PYLT12:
             self.assertEqual('def func[U](): pass', test(FST('def func[T](): pass'), 'type_params', 'U', fstview,
                                                          '<<FunctionDef ROOT 0,0..0,19>.type_params[0:1] [<TypeVar 0,9..0,10>]>').src)
 
@@ -8552,12 +8548,12 @@ if 1:
             self.assertEqual('new', test(FST('f"{a}"'), 'values', 'new', fstview,
                                          '<<JoinedStr ROOT 0,0..0,6>.values[0:1] [<FormattedValue 0,0..0,6>]>').src)  # TODO: the result of this put is incorrect because it is not implemented yet, and will probably not be implemented for py < 3.12
 
-        if not _PYLT13:
+        if not PYLT13:
             self.assertEqual('T = str', test(FST('T = int', TypeVar), 'default_value', 'str', FST, 'int').src)
             self.assertEqual('*T = str', test(FST('*T = int', TypeVarTuple), 'default_value', 'str', FST, 'int').src)
             self.assertEqual('**T = str', test(FST('**T = int', ParamSpec), 'default_value', 'str', FST, 'int').src)
 
-        if not _PYLT14:
+        if not PYLT14:
             # (Interpolation, 'value'):             _get_one_default, # expr
             # (Interpolation, 'str'):               _get_one_constant, # constant
             # (Interpolation, 'conversion'):        _get_one_conversion, # int
@@ -8582,7 +8578,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     if any(getattr(args, n) for n in dir(args) if n.startswith('regen_')):
-        if _PY_VERSION < (3, 12):
+        if PYLT12:
             raise RuntimeError('cannot regenerate on python version < 3.12')
 
     if args.regen_pars or args.regen_all:

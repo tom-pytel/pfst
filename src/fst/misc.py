@@ -19,6 +19,16 @@ except ImportError:  # for py 3.10
 __all__ = ['Code', 'Mode', 'NodeError', 'astfield', 'fstloc']
 
 
+PYVER  = sys.version_info[:2]
+PYLT11 = PYVER < (3, 11)
+PYLT12 = PYVER < (3, 12)
+PYLT13 = PYVER < (3, 13)
+PYLT14 = PYVER < (3, 14)
+PYGE11 = PYVER >= (3, 11)
+PYGE12 = PYVER >= (3, 12)
+PYGE13 = PYVER >= (3, 13)
+PYGE14 = PYVER >= (3, 14)
+
 EXPRISH                  = (expr, comprehension, arguments, arg, keyword)  # can be in expression chain (have expressions above)
 EXPRISH_ALL              = EXPRISH + (expr_context, boolop, operator, unaryop, cmpop)
 STMTISH                  = (stmt, ExceptHandler, match_case)  # always in lists, cannot be inside multilines

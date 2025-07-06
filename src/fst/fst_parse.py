@@ -6,7 +6,6 @@ This module contains functions which are imported as methods in the `FST` class.
 from __future__ import annotations
 
 import re
-import sys
 from ast import *
 from ast import parse as ast_parse, unparse as ast_unparse, fix_missing_locations as ast_fix_missing_locations
 from typing import Any, Callable
@@ -21,11 +20,8 @@ from .astutil import (
 )
 
 from .misc import (
-    Code, Mode, NodeError, _next_src, _shortstr
+    PYGE11, Code, Mode, NodeError, _next_src, _shortstr
 )
-
-_PY_VERSION = sys.version_info[:2]
-_PYLT11     = _PY_VERSION < (3, 11)
 
 _re_first_src = re.compile(r'^[^\S\n]*(?:[^\s\\#]|(?<!^)\\)', re.M)  # or first \ not on start of line
 _re_except    = re.compile(r'except\b')
@@ -1076,7 +1072,7 @@ def _code_as_expr_slice(code: Code, parse_params: dict = {}) -> fst.FST:
     """Convert `code` to a Slice `FST` if possible (or anthing else that can serve in `Subscript.slice`, like any old
     generic `expr`)."""
 
-    strip_tup_pars = not _PYLT11 or (isinstance(code, Tuple) and any(isinstance(e, Slice) for e in code.elts))
+    strip_tup_pars = PYGE11 or (isinstance(code, Tuple) and any(isinstance(e, Slice) for e in code.elts))
 
     ret = _code_as(code, expr, parse_params, _parse_expr_slice, strip_tup_pars=strip_tup_pars)
 

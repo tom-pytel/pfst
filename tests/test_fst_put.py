@@ -9,17 +9,12 @@ from random import randint, seed, shuffle
 from fst import *
 
 from fst.astutil import compare_asts
+from fst.misc import PYVER, PYLT11, PYLT12, PYGE12, PYGE14
 
 from data_put_one import PUT_ONE_DATA
 from data_other import (GET_SLICE_SEQ_DATA, GET_SLICE_STMT_DATA, GET_SLICE_STMT_NOVERIFY_DATA,
                         PUT_SLICE_SEQ_DATA, PUT_SLICE_STMT_DATA, PUT_SLICE_DATA, PUT_SRC_DATA,
                         REPLACE_EXISTING_ONE_DATA)
-
-_PY_VERSION = sys.version_info[:2]
-_PYLT11     = _PY_VERSION < (3, 11)
-_PYLT12     = _PY_VERSION < (3, 12)
-_PYLT13     = _PY_VERSION < (3, 13)
-_PYLT14     = _PY_VERSION < (3, 14)
 
 def read(fnm):
     with open(fnm) as f:
@@ -1822,7 +1817,7 @@ class cls:
                 raise
 
     def test_put_slice_special(self):
-        if _PY_VERSION >= (3, 14):  # make sure parent Interpolation.str gets modified
+        if PYGE14:  # make sure parent Interpolation.str gets modified
             f = FST('t"{(1, 2)}"', 'exec').body[0].value.copy()
             f.values[0].value.put_slice("()")
             self.assertEqual('()', f.values[0].value.src)
@@ -1875,7 +1870,8 @@ class cls:
         self.assertEqual('[*{}]', FST('[1, 2]').put_slice('{*{}}', raw=False, empty_set=False).src)
 
     def test_put_one(self):
-        ver = _PY_VERSION[1]
+        ver = PYVER[1]
+
         for i, (dst, attr, idx, field, options, src, put_src, put_dump) in enumerate(PUT_ONE_DATA):
             if options.get('_ver', 0) > ver:
                 continue
@@ -1909,7 +1905,7 @@ class cls:
 
                 self.assertEqual(tdst, put_src)
 
-                if (vd := options.get('_verdump')) and _PY_VERSION < (3, vd):
+                if (vd := options.get('_verdump')) and PYVER < (3, vd):
                     continue
 
                 self.assertEqual(tdump, put_dump.strip().split('\n'))
@@ -1926,7 +1922,8 @@ class cls:
                 raise
 
     def test_put_one_raw(self):
-        ver = _PY_VERSION[1]
+        ver = PYVER[1]
+
         for i, (dst, attr, idx, field, options, src, put_src, put_dump) in enumerate(PUT_ONE_DATA):
             if options.get('_ver', 0) > ver:
                 continue
@@ -1958,7 +1955,7 @@ class cls:
 
                 self.assertEqual(tdst.rstrip(), put_src.rstrip())
 
-                if (vd := options.get('_verdump')) and _PY_VERSION < (3, vd):
+                if (vd := options.get('_verdump')) and PYVER < (3, vd):
                     continue
 
                 # self.assertEqual(tdump, put_dump.strip().split('\n'))  # don't compare this because of the trailing newline difference
@@ -1989,7 +1986,7 @@ class cls:
             self.assertEqual(f'case {value}: pass', f.src)
             self.assertIs(f.pattern.value, value)
 
-        # if _PY_VERSION >= (3, 14):
+        # if PYGE14:
         #     f = FST('t"{blah}"')
 
         #     self.assertEqual(f.values[0], f.values[0].put('blah', 'str'))
@@ -2318,7 +2315,7 @@ class cls:
         f.body[0].targets[0].put(g.a, 1, raw=False)
         self.assertEqual('a, *b = c', f.src)
 
-        if _PY_VERSION >= (3, 12):
+        if PYGE12:
             # except vs. except*
 
             f = FST('try:\n    pass\nexcept Exception:\n    pass', 'exec').body[0].handlers[0].copy()
@@ -2454,7 +2451,7 @@ except* (TypeError, ExceptionGroup):
         self.assertEqual('with (a): pass', f.src)
         f.verify()
 
-        if _PY_VERSION >= (3, 14):
+        if PYGE14:
             # make sure TemplateStr.str gets modified
 
             f = FST('''
@@ -2550,7 +2547,7 @@ a
 
         # FormattedValue/Interpolation conversion and format_spec, JoinedStr/TemplateStr values
 
-        if _PY_VERSION >= (3, 12):
+        if PYGE12:
             self.assertRaises(NotImplementedError, FST('f"{a}"').values[0].put, '"s"', 'conversion', raw=False)  # not implemented yet
             self.assertRaises(NotImplementedError, FST('f"{a}"').values[0].put, 'f"0.5f"', 'format_spec', raw=False)  # not implemented yet
             self.assertRaises(NotImplementedError, FST('f"{a}"').put, '"s"', 0, 'values', raw=False)  # not implemented yet
@@ -2626,7 +2623,7 @@ a
             self.assertEqual('f"{a=}"', f.src)
             f.verify()
 
-        if _PY_VERSION >= (3, 14):
+        if PYGE14:
             self.assertRaises(NotImplementedError, FST('t"{a}"').values[0].put, '"s"', 'conversion', raw=False)  # not implemented yet
             self.assertRaises(NotImplementedError, FST('t"{a}"').values[0].put, 'f"0.5f"', 'format_spec', raw=False)  # not implemented yet
             self.assertRaises(NotImplementedError, FST('t"{a}"').put, '"s"', 0, 'values', raw=False)  # not implemented yet
@@ -2731,7 +2728,7 @@ a
         f.put('1', 'value', raw=False)
         self.assertEqual('(1).b', f.src)
 
-        if _PY_VERSION >= (3, 12):
+        if PYGE12:
             f = FST('f"a{b}"')
             f.values[1].put('{1}', 'value', raw=False)
             self.assertEqual('f"a{ {1}}"', f.src)
@@ -2822,7 +2819,7 @@ a
         self.assertEqual('a: int', f.src)
         self.assertEqual(1, f.a.simple)
 
-        if _PY_VERSION >= (3, 12):
+        if PYGE12:
             f = FST('f"{a if b else c}"')
             f.values[0].value.orelse.replace('lambda: None', raw=False)
             self.assertEqual('f"{a if b else (lambda: None)}"', f.src)
@@ -3036,7 +3033,7 @@ a
 
         self.assertRaises(NodeError, FST('def f(a): pass').args.args[0].put, '*ann', 'annotation', raw=False)
 
-        if _PY_VERSION < (3, 11):
+        if PYLT11:
             self.assertRaises(NodeError, FST('def f(*a): pass').args.vararg.put, '*ann', 'annotation', raw=False)
         else:
             self.assertEqual('def f(*a: *ann): pass', FST('def f(*a): pass').args.vararg.put('*ann', 'annotation', raw=False).root.src)
@@ -3126,7 +3123,7 @@ a
         self.assertEqual(f.a.simple, 1)
         f.verify()
 
-        if not _PYLT12:
+        if not PYLT12:
             # gh-135148 behavior, should verify regardless of if bug is present or not
 
             f = FST('f"{a=}"')
@@ -3167,7 +3164,7 @@ c, # c
         self.assertEqual('a[(c.d,)]', f.src)
         f.verify()
 
-        if not _PYLT12:
+        if not PYLT12:
             f = FST(['a[*b,]'])
             f.slice.elts[0].replace('c.d', raw=False)
             self.assertEqual('a[c.d,]', f.src)
@@ -3180,7 +3177,7 @@ c, # c
 
         # no Starred in unparenthesized slice Tuple
 
-        if _PYLT11:
+        if PYLT11:
             f = FST('a: b[c, d]')
             self.assertRaises(NodeError, f.annotation.slice.elts[1].replace, '*s', raw=False)
 
@@ -3190,7 +3187,7 @@ c, # c
 
         # don't allow vararg with starred annotation into normal args
 
-        if not _PYLT11:
+        if not PYLT11:
             f = FST('def f(a, /, b, *v: *s, c): pass')
             self.assertRaises(NodeError, f.args.posonlyargs[0].replace, f.args.vararg.copy(), raw=False)
             self.assertRaises(NodeError, f.args.args[0].replace, f.args.vararg.copy(), raw=False)
@@ -4220,7 +4217,7 @@ if u:
         self.assertEqual('(1, (a, b), 3)', f.src)
 
     def test_modify_parent_fmtvals_and_interpolations(self):
-        if _PY_VERSION >= (3, 12):
+        if PYGE12:
             f = FST('f"{a=}"')
             f.values[-1].value.replace('b')
             self.assertEqual('b=', f.values[0].value)
@@ -4257,7 +4254,7 @@ f'd{f"e{f=!s:0.1f<1}"=}'
             self.assertEqual('c\n\n\nf\'d{f"e{z=!s:0.1f<1}"=}\'\n\n=\n\n', f.values[0].value)
             f.verify()
 
-        if _PY_VERSION >= (3, 14):
+        if PYGE14:
             f = FST('''t"""c
 {
 # 1
@@ -4367,7 +4364,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     if any(getattr(args, n) for n in dir(args) if n.startswith('regen_')):
-        if _PY_VERSION < (3, 12):
+        if PYLT12:
             raise RuntimeError('cannot regenerate on python version < 3.12')
 
     if args.regen_put_slice_seq or args.regen_all:

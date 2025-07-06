@@ -14,15 +14,10 @@ from typing import Any, Generator, Iterable, Literal
 
 from .astutil import *
 from .astutil import TypeAlias, TemplateStr, Interpolation
-from .misc import astfield
+from .misc import PYLT11, PYLT12, PYLT14, astfield
 from .fst import FST, NodeError, fstview
 
-PROGRAM     = 'python -m fst.fuzz'
-
-_PY_VERSION = sys.version_info[:2]
-_PYLT11     = _PY_VERSION < (3, 11)
-_PYLT12     = _PY_VERSION < (3, 12)
-_PYLT14     = _PY_VERSION < (3, 14)
+PROGRAM = 'python -m fst.fuzz'
 
 EXPRS = [
     'a or b',
@@ -146,7 +141,7 @@ EXPRS = [
     '\na\n,\nb\n',
 ]
 
-if not _PYLT14:
+if not PYLT14:
     EXPRS.extend([
         "t'{a}'",
         't"{a}"',
@@ -414,7 +409,7 @@ def can_replace(tgt: FST, repl: FST) -> bool:  # assuming ASTCat has already bee
         tgt_field, _        = tgt.pfield
         repl_field, _       = repl.pfield
 
-        if _PYLT12:
+        if PYLT12:
             if any(isinstance(f.a, (JoinedStr, TemplateStr)) for f in tgt.parents()):
                 return False
 
@@ -457,7 +452,7 @@ def can_replace(tgt: FST, repl: FST) -> bool:  # assuming ASTCat has already bee
         if repl_field == 'vararg' and isinstance(repla.annotation, Starred) and tgt_field != 'vararg':  # because could have Starred annotation headed for a non-vararg field
             return False
 
-        if _PYLT11:
+        if PYLT11:
             if isinstance(tgt_parenta, Tuple) and isinstance(repla, Starred) and tgt.parent.pfield == ('slice', None):
                 return False
 
@@ -525,7 +520,7 @@ def can_replace(tgt: FST, repl: FST) -> bool:  # assuming ASTCat has already bee
 
 def can_replace_ast(tgta: AST, tgt_parenta: AST, tgt_field: str, repla: AST, repl_parenta: AST, repl_field: str) -> bool:  # the best we can do for pure AST
     try:
-        if _PYLT12:
+        if PYLT12:
             # if any(isinstance(f.a, (JoinedStr, TemplateStr)) for f in tgt.parents()):
             #     return False
 
@@ -568,7 +563,7 @@ def can_replace_ast(tgta: AST, tgt_parenta: AST, tgt_field: str, repla: AST, rep
         if repl_field == 'vararg' and isinstance(repla.annotation, Starred) and tgt_field != 'vararg':  # because could have Starred annotation headed for a non-vararg field
             return False
 
-        # if _PYLT11:
+        # if PYLT11:
         #     if isinstance(tgt_parenta, Tuple) and isinstance(repla, Starred) and tgt.parent.pfield == ('slice', None):
         #         return False
 
@@ -747,7 +742,7 @@ class SynOrder(Fuzzy):
         bln, bcol = 0, 0
 
         for f in (gen := fst.walk(True)):
-            if _PYLT12 and isinstance(f.a, JoinedStr):  # these have no location info in py <3.12
+            if PYLT12 and isinstance(f.a, JoinedStr):  # these have no location info in py <3.12
                 gen.send(False)
 
                 continue
@@ -1488,7 +1483,7 @@ class Stmtish(Fuzzy):
 
         del containers[match_case][0]
 
-        if not _PYLT11:
+        if not PYLT11:
             containers[excepthandler] = c = FST('try: pass\nexcept* Exception: pass').handlers
 
             del c[0]
@@ -1499,7 +1494,7 @@ class Stmtish(Fuzzy):
         #     match_case:    FST('match _:\n  case _: pass').cases,
         # }
 
-        # if not _PYLT11:
+        # if not PYLT11:
         #     containers[excepthandler] = c = FST('try: pass\nexcept* Exception: pass').handlers
 
         stmtishs = []

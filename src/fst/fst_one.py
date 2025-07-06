@@ -5,7 +5,6 @@ This module contains functions which are imported as methods in the `FST` class.
 
 from __future__ import annotations
 
-import sys
 from ast import *
 from itertools import takewhile
 from types import FunctionType, NoneType
@@ -20,7 +19,7 @@ from .astutil import (
 )
 
 from .misc import (
-    Code, NodeError, astfield, fstloc, pyver,
+    PYLT11, PYLT12, Code, NodeError, astfield, fstloc, pyver,
     _next_src, _prev_src, _next_find, _prev_find, _next_find_re, _fixup_one_index,
 )
 
@@ -33,12 +32,8 @@ from .fst_parse import (
     _code_as_constant,
 )
 
-_PY_VERSION = sys.version_info[:2]
-_PYLT11     = _PY_VERSION < (3, 11)
-_PYLT12     = _PY_VERSION < (3, 12)
-
-_GetOneRet       = Union['fst.FST', None, str, constant]
-_PutOneCode      = Code | str | constant | None
+_GetOneRet  = Union['fst.FST', None, str, constant]
+_PutOneCode = Code | str | constant | None
 
 
 def _params_Compare_combined(self: fst.FST, idx: int | None) -> tuple[int, str, AST | list[AST]]:
@@ -1381,7 +1376,7 @@ def _put_one_Tuple_elts(self: fst.FST, code: _PutOneCode, idx: int | None, field
             raise ValueError(f"cannot put non-targetable expression to Tuple.elts[{idx}] "
                              "in this state (target expression)")
 
-    if _PYLT11:
+    if PYLT11:
         if isinstance(code.a, Starred) and pf == ('slice', None):
             raise NodeError('cannot put Starred to a slice Tuple.elts')
 
@@ -1818,7 +1813,7 @@ def _put_one(self: fst.FST, code: _PutOneCode, idx: int | None, field: str, **op
                                 f"{f'.{field}' if field else ' combined fields'}")
 
             else:
-                if _PYLT12:  # don't allow modification if inside an f-string because before 3.12 they were very fragile
+                if PYLT12:  # don't allow modification if inside an f-string because before 3.12 they were very fragile
                     f = child.f if isinstance(child, AST) else self
 
                     while not isinstance(a := f.a, (stmt, pattern, match_case, ExceptHandler)):

@@ -4,7 +4,6 @@ their respective `ast` module counterparts."""
 from __future__ import annotations
 
 import builtins  # because of the unfortunate choice for the name of an Interpolation field, '.str', we have a '.str' property in FST which messes with the type annotations
-import sys
 from ast import *
 from ast import dump as ast_dump, unparse as ast_unparse, mod as ast_mod
 from contextlib import contextmanager
@@ -17,9 +16,10 @@ from .astutil import (
 )
 
 from .misc import (
-    NodeError, astfield, fstloc, fstlocns, nspace,
+    PYLT13,
     EXPRISH_ALL, STMTISH, STMTISH_OR_MOD, BLOCK, BLOCK_OR_MOD, SCOPE, SCOPE_OR_MOD, NAMED_SCOPE,
     NAMED_SCOPE_OR_MOD, ANONYMOUS_SCOPE,
+    NodeError, astfield, fstloc, fstlocns, nspace,
     re_empty_line, re_line_continuation, re_line_end_cont_or_comment,
     Self, Code, Mode,
     _next_pars, _prev_pars,
@@ -33,9 +33,6 @@ from .reconcile import _Reconcile
 __all__ = [
     'parse', 'unparse', 'dump', 'FST',
 ]
-
-_PY_VERSION = sys.version_info[:2]
-_PYLT13     = _PY_VERSION < (3, 13)
 
 _DEFAULT_PARSE_PARAMS = dict(filename='<unknown>', type_comments=False, feature_version=None)
 _DEFAULT_INDENT       = '    '
@@ -180,7 +177,7 @@ def dump(node, annotate_fields=True, include_attributes=False, *, indent=None, s
     compatible on a default call with previous python versions (important for doctests). All arguments correspond to
     their respective `ast.dump()` arguments and `show_empty` is eaten on python versions below 3.13."""
 
-    if _PYLT13:
+    if PYLT13:
         return ast_dump(node, annotate_fields, include_attributes, indent=indent)
     else:
         return ast_dump(node, annotate_fields, include_attributes, indent=indent, show_empty=show_empty)
