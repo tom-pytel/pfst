@@ -116,10 +116,10 @@ y
 If you want to assign the element as a slice, you must use slice indexing.
 
 ```py
->>> f.elts[3:3] = '[a, b]'
+>>> f.elts[3:3] = '[c, d]'
 
 >>> print(f.src)
-[x, y, [a, b], a, b]
+[x, y, [a, b], c, d]
 ```
 
 Or assign directly to the field name, replacing the entire slice, but this is not a view operation but rather a property

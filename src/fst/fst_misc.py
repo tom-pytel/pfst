@@ -69,6 +69,8 @@ _GLOBALS = globals() | {'_GLOBALS': None}
 
 @pyver(ge=12)
 class _Modifying:
+    """Modification context manager. Updates some parent stuff after a successful modification."""
+
     root:  fst.FST                   # for updating _serial
     fst:   fst.FST | Literal[False]  # False indicates nothing to update on done()
     field: astfield
@@ -166,10 +168,6 @@ class _Modifying:
 
         elif fst_ is not self.fst:  # if parent of field changed then entire statement was reparsed and we have nothing to do
             return
-
-
-        # TODO: 'for in' check
-
 
         if data := self.data:
             first = data[0]
