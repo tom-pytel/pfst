@@ -3,6 +3,7 @@
 import re
 import sys
 from ast import *
+from functools import wraps
 from math import log10
 from typing import Any, Callable, ForwardRef, Literal, NamedTuple, TypeAlias, Union
 
@@ -342,24 +343,25 @@ def pyver(func: Callable | None = None, *, ge: int | None = None, lt: int | None
 
     def decorator(func: Callable) -> Callable:
         key = f'{func.__module__}.{func.__qualname__}'
+        ret = func
 
         if ge is None:
             newver = (func, -lt)
 
             if _pyver >= lt:
-                func = else_
+                ret = else_
 
         elif lt is None:
             newver = (func, ge)
 
             if _pyver < ge:
-                func = else_
+                ret = else_
 
         else:
             newver = (func, (ge, lt))
 
             if not ge <= _pyver < lt:
-                func = else_
+                ret = else_
 
         if not (vers := _pyver_registry.get(key)):
             _pyver_registry[key] = vers = [newver]
@@ -371,7 +373,7 @@ def pyver(func: Callable | None = None, *, ge: int | None = None, lt: int | None
                         raise ValueError(f"overlap with previously registered version range [3.{ver[0]}, 3.{ver[1]})")
 
                     if ver[0] <= _pyver < ver[1]:
-                        func = verfunc
+                        ret = verfunc
 
                 elif ver < 0:  # unbound less than minus this version
                     ver = -ver
@@ -380,22 +382,23 @@ def pyver(func: Callable | None = None, *, ge: int | None = None, lt: int | None
                         raise ValueError(f"overlap with previously registered version range < 3.{ver})")
 
                     if _pyver < ver:
-                        func = verfunc
+                        ret = verfunc
 
                 else:  # unbound greater than this version
                     if lt is None or lt > ver:
                         raise ValueError(f"overlap with previously registered version range >= 3.{ver})")
 
                     if ver <= _pyver:
-                        func = verfunc
+                        ret = verfunc
 
             vers.append(newver)
 
-        if func is None:
-            def func(*args, **kwargs):
+        if ret is None:
+            @wraps(func)
+            def ret(*args, **kwargs):
                 raise RuntimeError(f'missing version of {key} for this python version 3.{_pyver}')
 
-        return func
+        return ret
 
     return decorator if func is None else decorator(func)
 
