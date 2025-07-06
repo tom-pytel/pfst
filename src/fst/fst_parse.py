@@ -449,6 +449,9 @@ def _parse_expr(src: str, parse_params: dict = {}) -> AST:
         assert isinstance(ast, Starred) and len(elts) == 1
 
     else:
+        if isinstance(ast, GeneratorExp):  # wrapped something that looks like a GeneratorExp and turned it into that, bad
+            raise SyntaxError('expecting expression, got unparenthesized GeneratorExp')
+
         if isinstance(ast, Tuple) and ast.lineno == 1:  # tuple with newlines included grouping pars which are not in source, fix
             if not ast.elts:
                 raise SyntaxError('expecting expression')
@@ -470,8 +473,14 @@ def _parse_expr_slice(src: str, parse_params: dict = {}) -> AST:
     except SyntaxError:  # maybe 'yield', also could be unparenthesized 'tuple' containing 'Starred' on py 3.10
         ast = _ast_parse1(f'a[(\n{src})]', parse_params).value.slice
 
+        if isinstance(ast, GeneratorExp):  # wrapped something that looks like a GeneratorExp and turned it into that, bad
+            raise SyntaxError('expecting slice expression, got unparenthesized GeneratorExp')
+
         if isinstance(ast, Tuple):  # only py 3.10
-            raise SyntaxError('cannot have unparenthesized tuple containing Starred in slice')
+            if ast.elts:
+                raise SyntaxError('cannot have unparenthesized tuple containing Starred in slice')
+
+            raise SyntaxError('expecting slice expression')
 
     return _offset_linenos(_validate_indent(src, ast), -1)
 
@@ -514,7 +523,12 @@ def _parse_expr_callarg(src: str, parse_params: dict = {}) -> AST:
     if len(args) != 1:
         raise NodeError('expecting single call argument expression')
 
-    return _offset_linenos(_validate_indent(src, args[0]), -1)
+    ast = args[0]
+
+    if isinstance(ast, GeneratorExp):  # wrapped something that looks like a GeneratorExp and turned it into that, bad
+        raise SyntaxError('expecting call argument expression, got unparenthesized GeneratorExp')
+
+    return _offset_linenos(_validate_indent(src, ast), -1)
 
 
 @staticmethod
@@ -715,7 +729,16 @@ def _parse_withitem(src: str, parse_params: dict = {}) -> AST:
 
     items = _ast_parse1(f'with (\n{src}): pass', parse_params).items
 
-    if len(items) != 1:  # unparenthesized Tuple
+    if len(items) == 1:
+        ast = items[0].context_expr
+
+        if isinstance(ast, GeneratorExp):  # wrapped something that looks like a GeneratorExp and turned it into that, bad
+            raise SyntaxError('expecting withitem, got unparenthesized GeneratorExp')
+
+        if isinstance(ast, Tuple) and not ast.elts:
+            raise SyntaxError('expecting withitem')
+
+    else:  # unparenthesized Tuple
         if all(not i.optional_vars for i in items):
             items = _ast_parse1(f'with ((\n{src})): pass', parse_params).items
 

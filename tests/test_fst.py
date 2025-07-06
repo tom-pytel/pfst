@@ -2043,6 +2043,14 @@ def f():
 
                 raise
 
+    def test__parse_special(self):
+        self.assertRaises(SyntaxError, FST._parse_expr, 'i for i in j')
+        self.assertRaises(SyntaxError, FST._parse_expr_slice, 'i for i in j')
+        self.assertRaises(SyntaxError, FST._parse_expr_callarg, 'i for i in j')
+
+        self.assertRaises(SyntaxError, FST._parse_withitem, 'i for i in j')
+        self.assertRaises(SyntaxError, FST._parse_withitem, '')
+
     def test___new__(self):
         f = FST(None, 'exec')
         self.assertEqual('', f.src)
