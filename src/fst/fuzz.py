@@ -813,6 +813,26 @@ class SynOrder(Fuzzy):
             bln, bcol = f.bln, f.bcol
 
 
+class Reparse(Fuzzy):
+    name    = 'reparse'
+    forever = False
+
+    def fuzz_one(self, fst, fnm) -> bool:
+        for f in (gen := fst.walk()):
+            ast = f.a
+
+            if isinstance(ast, expr_context):
+                continue
+
+            if isinstance(ast, (JoinedStr, TemplateStr)):
+                gen.send(False)
+
+            f = f.copy()
+            a = FST._parse(f.src, f.a.__class__)
+
+            compare_asts(a, f.a, locs=True, ctx=True, raise_=True)
+
+
 class ReputSrc(Fuzzy):
     name    = 'reput_src'
     forever = True
