@@ -64,6 +64,7 @@ re_multiline_str_end_sq  = re.compile(r'(?:\\.|[^\\])*?  \'\'\'', re.VERBOSE)
 re_multiline_str_end_dq  = re.compile(r'(?:\\.|[^\\])*?  """', re.VERBOSE)
 re_any_str_or_fstr_start = re.compile(r'(?:b|r|rb|br|u|f|t|)  (\'\'\'|\'|"""|")', re.VERBOSE | re.IGNORECASE)
 
+re_empty_line_or_cont           = re.compile(r'[ \t]*(\\)?$')            # empty line or line continuation
 re_empty_line_cont_or_comment   = re.compile(r'[ \t]*(\\|#.*)?$')        # empty line or line continuation or a pure comment line
 re_line_end_cont_or_comment     = re.compile(r'.*?(\\|#.*)?$')           # line end line continuation or a comment
 
@@ -736,25 +737,85 @@ def _prev_pars(lines: list[str], bound_ln: int, bound_col: int, pars_ln: int, pa
         return pars
 
 
-def _lead_trivia(lines: list[str], bound_ln: int, bound_col: int, ln: int, col: int,
-                 comms: bool | Literal['all', 'block'] | int, space: bool | int,
-                 ) -> tuple[tuple[int, int], tuple[int, int] | None, str]:
-    """
+def _pre_trivia(lines: list[str], bound_ln: int, bound_col: int, ln: int, col: int,
+                comments: bool | Literal['all', 'block'] | int, space: bool | int,
+                ) -> tuple[tuple[int, int], tuple[int, int] | None, str | None]:
+    """Get locations of leading trivia / junk starting at the given bound up to (`ln`, `col`) where the element starts.
+    Can get location of a block of comments (no spaces between), all comments after start of bound (with spaces inside)
+    and any leading empty lines. Also returns the indentation of the element line if it starts the line.
 
-    The line number and column of the start of the trivia, or original (`ln`, `col`) if no leading trivia found. If the
-    returned `col` is 0 it means the block starts a newline.
-
+    **Parameters:**
+    - `bound_ln`: Preceding bounding line, other code assumed to end just here.
+    - `bound_col`: Preceding bounding column.
+    - `ln`: The start line of our element from which we will search back and upwards.
+    - `col`: The start column of our element.
+    - `comments`: What kind of comments to check for.
+        - `False`: No comments.
+        - `True`: Default, same as `'block'`.
+        - `'block'`: A single contiguous block of comments immediately above the element.
+        - `'all'`: A range of not-necessarily contiguous comments between the bound and the start of the element, will
+            return location of start of comments.
+        - `int`: An integer specifies return from this line number if possible. Possible means there are only comments
+            and / or empty lined between this line and the start of the element. Any extra empty space to retuyrn will
+            be searched for from this location, regardless of if there is other empty space below.
+    - `space`: How much preceding space to check for, will be returned as a separate location if present.
+        - `int`: Integer specifies maximum number of empty lines to return.
+        - `False`: Same as `0` which will not check for or return any empty space.
+        - `True`: Check all the way up to start of bound and return as much empty space as possible.
 
     **Returns:**
-    - (comment / element start (ln, col), space start (ln, col) or None if no space, str indent on element line)
+    - (comment / element start, space start, indent on element line): Leading trivia info:
+        - `[0]`: The start line and column of the first block of comments or the element. The column will be 0 if this
+            starts a new line.
+        - `[1]`: The start line and column (always 0) of any leading block of empty lines.
+        - `[2]`: The indentation of the element line if it starts its own line (and may or may not have preceding
+            comments and / or empty space). An empty string indicates the element starts the line at column 0 and `None`
+            indicates the element doesn't start the line.
     """
 
-    pass
+    if (bound_ln >= ln and bound_col) or not re_empty_line.match(l := lines[ln], 0, col):
+        return ((ln, col), None, None)
+
+    indent         = l[:col]
+    comments_ln    = ln
+    comments_is_ln = isinstance(comments, int)
+    top_ln         = bound_ln + bool(bound_col)
+    search_ln      = comments if comments_is_ln and comments > top_ln else top_ln
+
+    if comments == 'all':
+        while (ln := ln - 1) >= search_ln:
+            if not (m := re_empty_line_cont_or_comment.match(lines[ln])):
+                break
+
+            if (g := m.group(1)) and g.startswith('#'):
+                comments_ln = ln
+
+    elif comments is not False:
+        assert comments_is_ln or comments is True or comments == 'block'
+
+        re_pat = re_empty_line_cont_or_comment if comments_is_ln else re_comment_line_start
+
+        while (ln := ln - 1) >= search_ln:
+            if not (m := re_pat.match(lines[ln])):
+                break
+
+        comments_ln = ln + 1
+
+    if not space or comments_ln <= top_ln:
+        return ((comments_ln, 0), None, indent)
+
+    for ln in range(comments_ln - 1, max(top_ln - 1, -1 if space is True else comments_ln - 1 - space), -1):
+        if not (m := re_empty_line_or_cont.match(lines[ln])):
+            ln += 1
+
+            break
+
+    return ((comments_ln, 0), None, indent) if ln == comments_ln else ((comments_ln, 0), (ln, 0), indent)
 
 
-def _trail_trivia(lines: list[str], bound_end_ln: int, bound_end_col: int, end_ln: int, end_col: int,
-                  comms: bool | Literal['all', 'block', 'line'] | int, space: bool | int,
-                  ) -> tuple[tuple[int, int], tuple[int, int] | None]:
+def _post_trivia(lines: list[str], bound_end_ln: int, bound_end_col: int, end_ln: int, end_col: int,
+                 comments: bool | Literal['all', 'block', 'line'] | int, space: bool | int,
+                 ) -> tuple[tuple[int, int], tuple[int, int] | None, bool]:
     """
 
     **Returns:**

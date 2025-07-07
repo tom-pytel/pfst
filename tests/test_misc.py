@@ -195,6 +195,114 @@ b # word
         self.assertEqual((5, 0, 'b'), _next_find_re(lines, 4, 0, 6, 0, pat, False, comment=True, lcont=True))
         self.assertEqual(None, _next_find_re(lines, 4, 0, 6, 0, pat, True, comment=True, lcont=True))
 
+    def test__pre_trivia(self):
+        from fst.misc import _pre_trivia
+
+        ls = '''
+[a,
+
+# 1
+
+ \\
+# 2
+  # 3
+  b]
+        '''.strip().split('\n')
+
+        self.assertEqual(((7, 0), None, '  '), _pre_trivia(ls, 0, 3, 7, 2, False, 0))
+        self.assertEqual(((5, 0), None, '  '), _pre_trivia(ls, 0, 3, 7, 2, 'block', 0))
+        self.assertEqual(((5, 0), (4, 0), '  '), _pre_trivia(ls, 0, 3, 7, 2, 'block', 1))
+        self.assertEqual(((5, 0), (3, 0), '  '), _pre_trivia(ls, 0, 3, 7, 2, 'block', 2))
+        self.assertEqual(((5, 0), (3, 0), '  '), _pre_trivia(ls, 0, 3, 7, 2, 'block', 3))
+        self.assertEqual(((2, 0), None, '  '), _pre_trivia(ls, 0, 3, 7, 2, 'all', 0))
+        self.assertEqual(((2, 0), (1, 0), '  '), _pre_trivia(ls, 0, 3, 7, 2, 'all', 1))
+        self.assertEqual(((2, 0), (1, 0), '  '), _pre_trivia(ls, 0, 3, 7, 2, 'all', 2))
+
+        self.assertEqual(((7, 0), None, '  '), _pre_trivia(ls, 0, 3, 7, 2, 8, 0))
+        self.assertEqual(((7, 0), None, '  '), _pre_trivia(ls, 0, 3, 7, 2, 7, 0))
+        self.assertEqual(((6, 0), None, '  '), _pre_trivia(ls, 0, 3, 7, 2, 6, 0))
+        self.assertEqual(((5, 0), None, '  '), _pre_trivia(ls, 0, 3, 7, 2, 5, 0))
+        self.assertEqual(((4, 0), None, '  '), _pre_trivia(ls, 0, 3, 7, 2, 4, 0))
+        self.assertEqual(((3, 0), None, '  '), _pre_trivia(ls, 0, 3, 7, 2, 3, 0))
+        self.assertEqual(((2, 0), None, '  '), _pre_trivia(ls, 0, 3, 7, 2, 2, 0))
+        self.assertEqual(((1, 0), None, '  '), _pre_trivia(ls, 0, 3, 7, 2, 1, 0))
+        self.assertEqual(((1, 0), None, '  '), _pre_trivia(ls, 0, 3, 7, 2, 0, 0))
+        self.assertEqual(((1, 0), None, '  '), _pre_trivia(ls, 0, 3, 7, 2, -1, 0))
+
+        self.assertEqual(((7, 0), None, '  '), _pre_trivia(ls, 0, 3, 7, 2, 8, 1))
+        self.assertEqual(((7, 0), None, '  '), _pre_trivia(ls, 0, 3, 7, 2, 7, 1))
+        self.assertEqual(((6, 0), None, '  '), _pre_trivia(ls, 0, 3, 7, 2, 6, 1))
+        self.assertEqual(((5, 0), (4, 0), '  '), _pre_trivia(ls, 0, 3, 7, 2, 5, 1))
+        self.assertEqual(((4, 0), (3, 0), '  '), _pre_trivia(ls, 0, 3, 7, 2, 4, 1))
+        self.assertEqual(((3, 0), None, '  '), _pre_trivia(ls, 0, 3, 7, 2, 3, 1))
+        self.assertEqual(((2, 0), (1, 0), '  '), _pre_trivia(ls, 0, 3, 7, 2, 2, 1))
+        self.assertEqual(((1, 0), None, '  '), _pre_trivia(ls, 0, 3, 7, 2, 1, 1))
+        self.assertEqual(((1, 0), None, '  '), _pre_trivia(ls, 0, 3, 7, 2, 0, 1))
+        self.assertEqual(((1, 0), None, '  '), _pre_trivia(ls, 0, 3, 7, 2, -1, 1))
+
+        self.assertEqual(((7, 0), None, '  '), _pre_trivia(ls, 0, 3, 7, 2, 8, 2))
+        self.assertEqual(((7, 0), None, '  '), _pre_trivia(ls, 0, 3, 7, 2, 7, 2))
+        self.assertEqual(((6, 0), None, '  '), _pre_trivia(ls, 0, 3, 7, 2, 6, 2))
+        self.assertEqual(((5, 0), (3, 0), '  '), _pre_trivia(ls, 0, 3, 7, 2, 5, 2))
+        self.assertEqual(((4, 0), (3, 0), '  '), _pre_trivia(ls, 0, 3, 7, 2, 4, 2))
+        self.assertEqual(((3, 0), None, '  '), _pre_trivia(ls, 0, 3, 7, 2, 3, 2))
+        self.assertEqual(((2, 0), (1, 0), '  '), _pre_trivia(ls, 0, 3, 7, 2, 2, 2))
+        self.assertEqual(((1, 0), None, '  '), _pre_trivia(ls, 0, 3, 7, 2, 1, 2))
+        self.assertEqual(((1, 0), None, '  '), _pre_trivia(ls, 0, 3, 7, 2, 0, 2))
+        self.assertEqual(((1, 0), None, '  '), _pre_trivia(ls, 0, 3, 7, 2, -1, 2))
+
+        self.assertEqual(((7, 0), None, '  '), _pre_trivia(ls, 1, 0, 7, 2, False, 0))
+        self.assertEqual(((5, 0), None, '  '), _pre_trivia(ls, 1, 0, 7, 2, 'block', 0))
+        self.assertEqual(((5, 0), (4, 0), '  '), _pre_trivia(ls, 1, 0, 7, 2, 'block', 1))
+        self.assertEqual(((5, 0), (3, 0), '  '), _pre_trivia(ls, 1, 0, 7, 2, 'block', 2))
+        self.assertEqual(((5, 0), (3, 0), '  '), _pre_trivia(ls, 1, 0, 7, 2, 'block', 3))
+        self.assertEqual(((2, 0), None, '  '), _pre_trivia(ls, 1, 0, 7, 2, 'all', 0))
+        self.assertEqual(((2, 0), (1, 0), '  '), _pre_trivia(ls, 1, 0, 7, 2, 'all', 1))
+        self.assertEqual(((2, 0), (1, 0), '  '), _pre_trivia(ls, 1, 0, 7, 2, 'all', 2))
+
+        self.assertEqual(((7, 0), None, '  '), _pre_trivia(ls, 1, 0, 7, 2, 8, 0))
+        self.assertEqual(((7, 0), None, '  '), _pre_trivia(ls, 1, 0, 7, 2, 7, 0))
+        self.assertEqual(((6, 0), None, '  '), _pre_trivia(ls, 1, 0, 7, 2, 6, 0))
+        self.assertEqual(((5, 0), None, '  '), _pre_trivia(ls, 1, 0, 7, 2, 5, 0))
+        self.assertEqual(((4, 0), None, '  '), _pre_trivia(ls, 1, 0, 7, 2, 4, 0))
+        self.assertEqual(((3, 0), None, '  '), _pre_trivia(ls, 1, 0, 7, 2, 3, 0))
+        self.assertEqual(((2, 0), None, '  '), _pre_trivia(ls, 1, 0, 7, 2, 2, 0))
+        self.assertEqual(((1, 0), None, '  '), _pre_trivia(ls, 1, 0, 7, 2, 1, 0))
+        self.assertEqual(((1, 0), None, '  '), _pre_trivia(ls, 1, 0, 7, 2, 0, 0))
+        self.assertEqual(((1, 0), None, '  '), _pre_trivia(ls, 1, 0, 7, 2, -1, 0))
+
+        self.assertEqual(((7, 0), None, '  '), _pre_trivia(ls, 1, 0, 7, 2, 8, 1))
+        self.assertEqual(((7, 0), None, '  '), _pre_trivia(ls, 1, 0, 7, 2, 7, 1))
+        self.assertEqual(((6, 0), None, '  '), _pre_trivia(ls, 1, 0, 7, 2, 6, 1))
+        self.assertEqual(((5, 0), (4, 0), '  '), _pre_trivia(ls, 1, 0, 7, 2, 5, 1))
+        self.assertEqual(((4, 0), (3, 0), '  '), _pre_trivia(ls, 1, 0, 7, 2, 4, 1))
+        self.assertEqual(((3, 0), None, '  '), _pre_trivia(ls, 1, 0, 7, 2, 3, 1))
+        self.assertEqual(((2, 0), (1, 0), '  '), _pre_trivia(ls, 1, 0, 7, 2, 2, 1))
+        self.assertEqual(((1, 0), None, '  '), _pre_trivia(ls, 1, 0, 7, 2, 1, 1))
+        self.assertEqual(((1, 0), None, '  '), _pre_trivia(ls, 1, 0, 7, 2, 0, 1))
+        self.assertEqual(((1, 0), None, '  '), _pre_trivia(ls, 1, 0, 7, 2, -1, 1))
+
+        self.assertEqual(((7, 0), None, '  '), _pre_trivia(ls, 1, 0, 7, 2, 8, 2))
+        self.assertEqual(((7, 0), None, '  '), _pre_trivia(ls, 1, 0, 7, 2, 7, 2))
+        self.assertEqual(((6, 0), None, '  '), _pre_trivia(ls, 1, 0, 7, 2, 6, 2))
+        self.assertEqual(((5, 0), (3, 0), '  '), _pre_trivia(ls, 1, 0, 7, 2, 5, 2))
+        self.assertEqual(((4, 0), (3, 0), '  '), _pre_trivia(ls, 1, 0, 7, 2, 4, 2))
+        self.assertEqual(((3, 0), None, '  '), _pre_trivia(ls, 1, 0, 7, 2, 3, 2))
+        self.assertEqual(((2, 0), (1, 0), '  '), _pre_trivia(ls, 1, 0, 7, 2, 2, 2))
+        self.assertEqual(((1, 0), None, '  '), _pre_trivia(ls, 1, 0, 7, 2, 1, 2))
+        self.assertEqual(((1, 0), None, '  '), _pre_trivia(ls, 1, 0, 7, 2, 0, 2))
+        self.assertEqual(((1, 0), None, '  '), _pre_trivia(ls, 1, 0, 7, 2, -1, 2))
+
+        ls = '''
+[a,
+
+# 1
+   b, c]
+        '''.strip().split('\n')
+
+        self.assertEqual(((2, 0), (1, 0), '   '), _pre_trivia(ls, 0, 3, 3, 3, 'all', True))
+        self.assertEqual(((3, 6), None, None), _pre_trivia(ls, 0, 3, 3, 6, 'all', True))
+
     def test__multiline_str_continuation_lns(self):
         from fst.misc import _multiline_str_continuation_lns as mscl
 
