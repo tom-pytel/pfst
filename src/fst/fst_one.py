@@ -1813,16 +1813,6 @@ def _put_one(self: fst.FST, code: _PutOneCode, idx: int | None, field: str, **op
                                 f"{f'.{field}' if field else ' combined fields'}")
 
             else:
-                if PYLT12:  # don't allow modification if inside an f-string because before 3.12 they were very fragile
-                    f = child.f if isinstance(child, AST) else self
-
-                    while not isinstance(a := f.a, (stmt, pattern, match_case, ExceptHandler)):
-                        if isinstance(a, JoinedStr):
-                            raise NodeError('put inside JoinedStr not implemented on python < 3.12')
-
-                        if not (f := f.parent):
-                            break
-
                 with self._modifying(field):
                     ret = handler(self, code, idx, field, child, static, **options)
 

@@ -118,7 +118,7 @@ class _Modifying:
                 parent = fst_.parent
                 pfield = fst_.pfield
 
-                if field == 'value' and (strs := fst_._get_fmtval_interp_strs()):  # this will never proc for py < 3.12
+                if field == 'value' and (strs := fst_._get_fmtval_interp_strs()):  # this will never proc for py < 3.12, in case we ever make this code common
                     dbg_str, val_str, end_ln, end_col = strs
 
                     if (dbg_str is None or not parent or not (idx := pfield.idx) or
@@ -204,6 +204,14 @@ class _Modifying:
 
     def __init__(self, fst_: fst.FST, field: str | Literal[False] = False, raw: bool = False):
         self.root = fst_.root
+
+        if not raw:
+            while not isinstance(a := fst_.a, (stmt, pattern, match_case, ExceptHandler)):  # don't allow modification if inside an f-string because before 3.12 they were very fragile
+                if isinstance(a, JoinedStr):
+                    raise NotImplementedError('put inside JoinedStr not implemented on python < 3.12')
+
+                if not (fst_ := fst_.parent):
+                    break
 
     def __enter__(self):
         return self.enter()

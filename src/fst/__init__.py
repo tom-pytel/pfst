@@ -1,5 +1,5 @@
 """
-Version: {{VERSION}}
+Version {{VERSION}}
 
 # Overview
 

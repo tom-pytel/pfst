@@ -20,6 +20,12 @@ test:  ## Run basic unit tests
 	python -m unittest discover --verbose tests
 
 
+.PHONY: regen-tests
+regen-tests:  ## Regenerate test data
+	python tests/test_fst.py --regen-all
+	python tests/test_fst_put.py --regen-all
+
+
 .PHONY: docs
 docs:  ## Compile documentation
 	python make_docs.py

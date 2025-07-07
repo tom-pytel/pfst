@@ -8570,6 +8570,13 @@ if 1:
             self.assertEqual('t"new"', test(FST('t"{a}"'), 'values', 'new', fstview,
                                             '<<TemplateStr ROOT 0,0..0,6>.values[0:1] [<Interpolation 0,2..0,5>]>').src)  # TODO: the result of this put is incorrect because it is not implemented yet
 
+    @unittest.skipUnless(PYLT12, 'only valid for py < 3.12')
+    def test_disallow_put_JoinedStr_pylt12(self):
+        self.assertRaises(NotImplementedError, FST('i = f"a{b}c"', 'exec').body[0].value.values[1].value.replace, 'z')
+        self.assertRaises(NotImplementedError, FST('i = f"a{b}c"').value.values[1].value.replace, 'z')
+        self.assertRaises(NotImplementedError, FST('f"a{b}c"').values[1].value.replace, 'z')
+        self.assertRaises(NotImplementedError, FST('f"{a}"').values[0].value.replace, 'z')
+
 
 if __name__ == '__main__':
     import argparse

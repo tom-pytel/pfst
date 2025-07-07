@@ -121,7 +121,7 @@ if __name__ == "__main__":
         logo_link=None,
         math=False,
         mermaid=False,
-        search=True,
+        search=False,  # True,
         show_source=False,
         template_directory=None,
     )
