@@ -20,7 +20,7 @@ def read(fnm):
         return f.read()
 
 
-class TestUtil(unittest.TestCase):
+class TestASTUtil(unittest.TestCase):
     def test_bistr(self):
         s = bistr('\x7f' * 127)
 

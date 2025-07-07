@@ -736,6 +736,34 @@ def _prev_pars(lines: list[str], bound_ln: int, bound_col: int, pars_ln: int, pa
         return pars
 
 
+def _lead_trivia(lines: list[str], bound_ln: int, bound_col: int, ln: int, col: int,
+                 comms: bool | Literal['all', 'block'] | int, space: bool | int,
+                 ) -> tuple[tuple[int, int], tuple[int, int] | None, str]:
+    """
+
+    The line number and column of the start of the trivia, or original (`ln`, `col`) if no leading trivia found. If the
+    returned `col` is 0 it means the block starts a newline.
+
+
+    **Returns:**
+    - (comment / element start (ln, col), space start (ln, col) or None if no space, str indent on element line)
+    """
+
+    pass
+
+
+def _trail_trivia(lines: list[str], bound_end_ln: int, bound_end_col: int, end_ln: int, end_col: int,
+                  comms: bool | Literal['all', 'block', 'line'] | int, space: bool | int,
+                  ) -> tuple[tuple[int, int], tuple[int, int] | None]:
+    """
+
+    **Returns:**
+    - (comment / element end (end_ln, end_col), space end (end_ln, end_col) or None if no space)
+    """
+
+    pass
+
+
 def _params_offset(lines: list[bistr], put_lines: list[bistr], ln: int, col: int, end_ln: int, end_col: int,
                    ) -> tuple[int, int, int, int]:
     """Calculate location and delta parameters for the `_offset()` function. The `col` parameter is calculated as a byte
