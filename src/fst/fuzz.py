@@ -1603,6 +1603,8 @@ def main():
                         help='path of file or directory of files to use')
     parser.add_argument('-f', '--fuzz', action='append', default=[],
                         help='which fuzzies to run')
+    parser.add_argument('-F', '--fuzz-rnd', action='store_true', default=False,
+                        help='select all randomized fuzzies to run')
     parser.add_argument('-b', '--batch', type=int, default=None,
                         help='batch size override')
     parser.add_argument('-g', '--debug', default=False, action='store_true',
@@ -1621,9 +1623,18 @@ def main():
                         help='do more verifies, usually after everything (slower)')
 
     args = parser.parse_args()
-    fuzz = dict.fromkeys(sum((f.replace(',', ' ').split() for f in args.fuzz), start=[]) if args.fuzz else FUZZIES)
 
-    print(args)
+    print(f'{args = }')
+
+    fuzz = dict.fromkeys(sum((f.replace(',', ' ').split() for f in args.fuzz), start=[])
+                         if args.fuzz or args.fuzz_rnd else FUZZIES)
+
+    if args.fuzz_rnd:
+        for n, f in FUZZIES.items():
+            if f.forever:
+                fuzz[n] = f
+
+    print(f'fuzz = {", ".join(fuzz)}')
 
     if any((fuzzy := f) not in FUZZIES for f in fuzz):
         raise ValueError(f'invalid fuzzy: {fuzzy}')
@@ -1659,5 +1670,4 @@ def main():
 
 
 if __name__ == '__main__':
-    print('...', sys.argv)
     main()
