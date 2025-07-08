@@ -292,7 +292,7 @@ def _dump(self: fst.FST, st: nspace, cind: str = '', prefix: str = ''):
     tail = self._repr_tail()
     sind = ' ' * st.indent
 
-    if not st.src:  # nop
+    if not st.src:  # noop
         pass
 
     elif isinstance(ast, (stmt, ExceptHandler, match_case)):  # src = 'stmt' or 'all'

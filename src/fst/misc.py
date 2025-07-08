@@ -744,6 +744,9 @@ def _pre_trivia(lines: list[str], bound_ln: int, bound_col: int, ln: int, col: i
     Can get location of a block of comments (no spaces between), all comments after start of bound (with spaces inside)
     and any leading empty lines. Also returns the indentation of the element line if it starts the line.
 
+    Regardless of if no comments or space is requested, this function will always return whether the element starts the
+    line or not and the indentation if so.
+
     **Parameters:**
     - `bound_ln`: Preceding bounding line, other code assumed to end just here.
     - `bound_col`: Preceding bounding column.
@@ -751,7 +754,7 @@ def _pre_trivia(lines: list[str], bound_ln: int, bound_col: int, ln: int, col: i
     - `col`: The start column of our element.
     - `comments`: What kind of comments to check for.
         - `False`: No comments.
-        - `True`: Default, same as `'block'`.
+        - `True`: Same as `'block'`.
         - `'block'`: A single contiguous block of comments immediately above the element.
         - `'all'`: A range of not-necessarily contiguous comments between the bound and the start of the element, will
             return location of start of comments.
@@ -773,15 +776,15 @@ def _pre_trivia(lines: list[str], bound_ln: int, bound_col: int, ln: int, col: i
             indicates the element doesn't start the line.
     """
 
+    assert bound_ln <= ln
+
     if (bound_ln == ln and bound_col) or not re_empty_line.match(l := lines[ln], 0, col):
         return ((ln, col), None, None)
 
-    assert bound_ln <= ln
-
     indent         = l[:col]
-    comments_ln    = ln
     comments_is_ln = isinstance(comments, int) and not isinstance(comments, bool)
-    top_ln         = bound_ln + bool(bound_col)
+    comments_ln    = ln
+    top_ln         = bound_ln + bool(bound_col)  # topmost possible line to be considered, min return location is (top_ln, 0)
     search_ln      = comments if comments_is_ln and comments > top_ln else top_ln
 
     if comments == 'all':
@@ -792,7 +795,19 @@ def _pre_trivia(lines: list[str], bound_ln: int, bound_col: int, ln: int, col: i
             if (g := m.group(1)) and g.startswith('#'):
                 comments_ln = ln
 
-    elif comments is not False:
+        comments_pos = (comments_ln, 0)
+
+        if not space or comments_ln == ln + 1:  # no space requested or we reached top of search or non-comment/empty line right before comment
+            return (comments_pos, None, indent)
+
+        # space requested and there are some empty lines before first comment
+
+        if space is True:
+            return (comments_pos, (ln + 1, 0), indent)  # infinite space requested so return everything we got
+
+        return (comments_pos, (comments_ln - min(space, comments_ln - (ln + 1)), 0), indent)
+
+    if comments is not False:
         assert comments_is_ln or comments is True or comments == 'block'
 
         re_pat = re_empty_line_cont_or_comment if comments_is_ln else re_comment_line_start
@@ -801,18 +816,21 @@ def _pre_trivia(lines: list[str], bound_ln: int, bound_col: int, ln: int, col: i
             if not (m := re_pat.match(lines[ln])):
                 break
 
-        comments_ln = ln + 1
+        comments_pos = (comments_ln := ln + 1, 0)
 
-    if not space or comments_ln <= top_ln:
-        return ((comments_ln, 0), None, indent)
+    else:
+        comments_pos = (comments_ln, 0)
+
+    if not space or comments_ln == top_ln:
+        return (comments_pos, None, indent)
 
     for ln in range(comments_ln - 1, max(top_ln - 1, -1 if space is True else comments_ln - 1 - space), -1):
-        if not (m := re_empty_line_or_cont.match(lines[ln])):
+        if not re_empty_line_or_cont.match(lines[ln]):
             ln += 1
 
             break
 
-    return ((comments_ln, 0), None, indent) if ln == comments_ln else ((comments_ln, 0), (ln, 0), indent)
+    return (comments_pos, None, indent) if ln == comments_ln else (comments_pos, (ln, 0), indent)
 
 
 def _post_trivia(lines: list[str], bound_end_ln: int, bound_end_col: int, end_ln: int, end_col: int,
@@ -823,6 +841,16 @@ def _post_trivia(lines: list[str], bound_end_ln: int, bound_end_col: int, end_ln
     inside), a single comment on the ending line and any trailing empty lines. Also returns whether the element ends the
     line or not.
 
+    Regardless of if no comments or space is requested, this function will always return whether the element ends the
+    line or not.
+
+    A trailing line continuation on any line is considered empty space.
+
+    If `bound_end_ln == end_ln` then the element can never end the line, even if the bound is at the end of the line.
+
+    If a line number is passed for `comment` then this is the last line that will be CONSIDERED and the end location CAN
+    be on the next line if this line is an allowed comment or empty.
+
     **Parameters:**
     - `bound_end_ln`: Trailing bounding line, other code assumed to start just here.
     - `bound_end_col`: Trailing bounding column.
@@ -830,7 +858,7 @@ def _post_trivia(lines: list[str], bound_end_ln: int, bound_end_col: int, end_ln
     - `end_col`: The end column of our element.
     - `comments`: What kind of comments to check for.
         - `False`: No comments.
-        - `True`: Default, same as `'line'`.
+        - `True`: Same as `'line'`.
         - `'line'`: Only a possible comment on the element line. If present returns start of next line.
         - `'block'`: A single contiguous block of comments immediately below the element.
         - `'all'`: A range of not-necessarily contiguous comments between the element and the bound, will return
@@ -854,25 +882,76 @@ def _post_trivia(lines: list[str], bound_end_ln: int, bound_end_col: int, end_ln
             column 0 and the line will be after the element `end_ln`.
     """
 
+    assert bound_end_ln >= end_ln
 
-    pass
+    if bound_end_ln == end_ln:
+        assert bound_end_col >= end_col
 
+        if code := _next_src(lines, end_ln, end_col, end_ln, bound_end_col, True):
+            space_pos = None if (c := code.col) == end_col else (end_ln, c)
+        else:
+            space_pos = None if (c := min(bound_end_col, len(lines[end_ln]))) == end_col else (end_ln, c)
 
+        return ((end_ln, end_col), space_pos, False)
 
+    comments_is_ln = isinstance(comments, int) and not isinstance(comments, bool)
 
+    if code := _next_src(lines, end_ln, end_col, end_ln + 1, 0, True):
+        if not code.src.startswith('#') or (not comments_is_ln and not comments):
+            space_pos = None if (c := code.col) == end_col else (end_ln, c)
 
+            return ((end_ln, end_col), space_pos, False)
 
+    bottom_ln = bound_end_ln  # one past bottommost line to be considered, max return location is (bottom_ln, 0)
+    search_ln = comments + 1 if comments_is_ln and comments < bottom_ln else bottom_ln
 
+    if comments == 'all':
+        comments_ln = end_ln + 1
 
+        while (end_ln := end_ln + 1) < search_ln:
+            if not (m := re_empty_line_cont_or_comment.match(lines[end_ln])):
+                break
 
+            if (g := m.group(1)) and g.startswith('#'):
+                comments_ln = end_ln + 1
 
+        comments_pos = (comments_ln, 0)
 
+        if not space or comments_ln == end_ln:  # no space requested or we reached end of search or non-comment/empty line right after comment
+            return (comments_pos, None, True)
 
+        # space requested and there are some empty lines after last comment
 
+        if space is True:
+            return (comments_pos, (end_ln, 0), True)  # infinite space requested so return everything we got
 
+        return (comments_pos, (comments_ln + min(space, end_ln - comments_ln), 0), True)  # return only number of lines limited by finite requested space
 
+    if comments_is_ln or comments == 'block':
+        re_pat = re_empty_line_cont_or_comment if comments_is_ln else re_comment_line_start
 
+        while (end_ln := end_ln + 1) < search_ln:
+            if not (m := re_pat.match(lines[end_ln])):
+                break
 
+        comments_pos = (comments_ln := end_ln, 0)
+
+    else:
+        assert comments == 'line' or isinstance(comments, bool)
+
+        comments_pos = (comments_ln := end_ln + 1, 0)
+
+    if not space or comments_ln == bottom_ln:
+        return (comments_pos, None, True)
+
+    for end_ln in range(comments_ln, bottom_ln if space is True else min(comments_ln + space, bottom_ln)):
+        if not re_empty_line_or_cont.match(lines[end_ln]):
+            break
+
+    else:
+        end_ln += 1
+
+    return (comments_pos, None, True) if end_ln == comments_ln else (comments_pos, (end_ln, 0), True)
 
 
 def _params_offset(lines: list[bistr], put_lines: list[bistr], ln: int, col: int, end_ln: int, end_col: int,
