@@ -210,6 +210,10 @@ b # word
         '''.strip().split('\n')
 
         self.assertEqual(((7, 0), None, '  '), _pre_trivia(ls, 0, 3, 7, 2, False, 0))
+        self.assertEqual(((5, 0), None, '  '), _pre_trivia(ls, 0, 3, 7, 2, True, 0))
+        self.assertEqual(((5, 0), (4, 0), '  '), _pre_trivia(ls, 0, 3, 7, 2, True, 1))
+        self.assertEqual(((5, 0), (3, 0), '  '), _pre_trivia(ls, 0, 3, 7, 2, True, 2))
+        self.assertEqual(((5, 0), (3, 0), '  '), _pre_trivia(ls, 0, 3, 7, 2, True, 3))
         self.assertEqual(((5, 0), None, '  '), _pre_trivia(ls, 0, 3, 7, 2, 'block', 0))
         self.assertEqual(((5, 0), (4, 0), '  '), _pre_trivia(ls, 0, 3, 7, 2, 'block', 1))
         self.assertEqual(((5, 0), (3, 0), '  '), _pre_trivia(ls, 0, 3, 7, 2, 'block', 2))
@@ -252,6 +256,10 @@ b # word
         self.assertEqual(((1, 0), None, '  '), _pre_trivia(ls, 0, 3, 7, 2, -1, 2))
 
         self.assertEqual(((7, 0), None, '  '), _pre_trivia(ls, 1, 0, 7, 2, False, 0))
+        self.assertEqual(((5, 0), None, '  '), _pre_trivia(ls, 1, 0, 7, 2, True, 0))
+        self.assertEqual(((5, 0), (4, 0), '  '), _pre_trivia(ls, 1, 0, 7, 2, True, 1))
+        self.assertEqual(((5, 0), (3, 0), '  '), _pre_trivia(ls, 1, 0, 7, 2, True, 2))
+        self.assertEqual(((5, 0), (3, 0), '  '), _pre_trivia(ls, 1, 0, 7, 2, True, 3))
         self.assertEqual(((5, 0), None, '  '), _pre_trivia(ls, 1, 0, 7, 2, 'block', 0))
         self.assertEqual(((5, 0), (4, 0), '  '), _pre_trivia(ls, 1, 0, 7, 2, 'block', 1))
         self.assertEqual(((5, 0), (3, 0), '  '), _pre_trivia(ls, 1, 0, 7, 2, 'block', 2))

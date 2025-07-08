@@ -756,8 +756,8 @@ def _pre_trivia(lines: list[str], bound_ln: int, bound_col: int, ln: int, col: i
         - `'all'`: A range of not-necessarily contiguous comments between the bound and the start of the element, will
             return location of start of comments.
         - `int`: An integer specifies return from this line number if possible. Possible means there are only comments
-            and / or empty lined between this line and the start of the element. Any extra empty space to retuyrn will
-            be searched for from this location, regardless of if there is other empty space below.
+            and / or empty lined between this line and the start of the element. Any extra empty space to return will be
+            searched for from this location, regardless of if there is other empty space below.
     - `space`: How much preceding space to check for, will be returned as a separate location if present.
         - `int`: Integer specifies maximum number of empty lines to return.
         - `False`: Same as `0` which will not check for or return any empty space.
@@ -773,12 +773,14 @@ def _pre_trivia(lines: list[str], bound_ln: int, bound_col: int, ln: int, col: i
             indicates the element doesn't start the line.
     """
 
-    if (bound_ln >= ln and bound_col) or not re_empty_line.match(l := lines[ln], 0, col):
+    if (bound_ln == ln and bound_col) or not re_empty_line.match(l := lines[ln], 0, col):
         return ((ln, col), None, None)
+
+    assert bound_ln <= ln
 
     indent         = l[:col]
     comments_ln    = ln
-    comments_is_ln = isinstance(comments, int)
+    comments_is_ln = isinstance(comments, int) and not isinstance(comments, bool)
     top_ln         = bound_ln + bool(bound_col)
     search_ln      = comments if comments_is_ln and comments > top_ln else top_ln
 
@@ -816,13 +818,61 @@ def _pre_trivia(lines: list[str], bound_ln: int, bound_col: int, ln: int, col: i
 def _post_trivia(lines: list[str], bound_end_ln: int, bound_end_col: int, end_ln: int, end_col: int,
                  comments: bool | Literal['all', 'block', 'line'] | int, space: bool | int,
                  ) -> tuple[tuple[int, int], tuple[int, int] | None, bool]:
-    """
+    """Get locations of trailing trivia / junk starting at the element up to (`end_ln`, `end_col`) where the given bound
+    ends. Can get location of a block of comments (no spaces between), all comments after start of bound (with spaces
+    inside), a single comment on the ending line and any trailing empty lines. Also returns whether the element ends the
+    line or not.
+
+    **Parameters:**
+    - `bound_end_ln`: Trailing bounding line, other code assumed to start just here.
+    - `bound_end_col`: Trailing bounding column.
+    - `end_ln`: The end line of our element from which we will search forward and downward.
+    - `end_col`: The end column of our element.
+    - `comments`: What kind of comments to check for.
+        - `False`: No comments.
+        - `True`: Default, same as `'line'`.
+        - `'line'`: Only a possible comment on the element line. If present returns start of next line.
+        - `'block'`: A single contiguous block of comments immediately below the element.
+        - `'all'`: A range of not-necessarily contiguous comments between the element and the bound, will return
+            location of line just past end of comments.
+        - `int`: An integer specifies return to this line number if possible. Possible means there are only comments
+            and / or empty lined between the end of the element and this line (inclusive). Any extra empty space to
+            return will be searched for from this location, regardless of if there is other empty space above.
+    - `space`: How much trailing space to check for, will be returned as a separate location if present.
+        - `int`: Integer specifies maximum number of empty lines to return.
+        - `False`: Same as `0` which will not check for or return any empty space.
+        - `True`: Check all the way up to end of bound and return as much empty space as possible.
 
     **Returns:**
-    - (comment / element end (end_ln, end_col), space end (end_ln, end_col) or None if no space)
+    - (comment / element end, space end, whether the element ends the line or not): Trailing trivia info:
+        - `[0]`: The end line and column of the last block of comments or the element. The column will be 0 if this
+            ends a line.
+        - `[1]`: The end line and column (always 0) of any trailing block of empty lines. If the element does not end
+            its then this will be on the same line as the element end and will be the end of the space after the element
+            if any, otherwise `None`.
+        - `[2]`: Whether the element ends the line or not. If it ends the line then the first location will have a
+            column 0 and the line will be after the element `end_ln`.
     """
 
+
     pass
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 def _params_offset(lines: list[bistr], put_lines: list[bistr], ln: int, col: int, end_ln: int, end_col: int,

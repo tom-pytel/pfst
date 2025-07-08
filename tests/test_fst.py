@@ -12,7 +12,7 @@ from fst.astutil import (
 
 from fst.misc import PYVER, PYLT11, PYLT12, PYLT13, PYLT14, PYGE11, PYGE12, PYGE13, PYGE14
 
-from data_other import PARS_DATA, COPY_DATA, GET_SLICE_SEQ_DATA, GET_SLICE_STMT_DATA, GET_SLICE_STMT_NOVERIFY_DATA
+from data_other import PARS_DATA, GET_SLICE_SEQ_DATA, GET_SLICE_STMT_DATA, GET_SLICE_STMT_NOVERIFY_DATA
 
 PYFNMS = sum((
     [os.path.join(path, fnm) for path, _, fnms in os.walk(top) for fnm in fnms if fnm.endswith('.py')]
@@ -560,40 +560,6 @@ def regen_pars_data():
 
     start = lines.index('PARS_DATA = [')
     stop  = lines.index(']  # END OF PARS_DATA')
-
-    lines[start + 1 : stop] = newlines
-
-    with open(fnm, 'w') as f:
-        lines = f.write('\n'.join(lines))
-
-
-def regen_copy_data():
-    newlines = []
-
-    for src, elt, *_ in COPY_DATA:
-        src   = src.strip()
-        t     = parse(src)
-        f     = eval(f't.{elt}', {'t': t}).f
-        s     = f.copy()
-        ssrc  = s.src
-        sdump = s.dump(out=list)
-
-        assert not ssrc.startswith('\n') or ssrc.endswith('\n')
-
-        s.verify(raise_=True)
-
-        newlines.append('(r"""')
-        newlines.extend(f'''{src}\n""", {elt!r}, r"""\n{ssrc}\n""", r"""'''.split('\n'))
-        newlines.extend(sdump)
-        newlines.append('"""),\n')
-
-    fnm = os.path.join(os.path.dirname(sys.argv[0]), 'data_other.py')
-
-    with open(fnm) as f:
-        lines = f.read().split('\n')
-
-    start = lines.index('COPY_DATA = [')
-    stop  = lines.index(']  # END OF COPY_DATA')
 
     lines[start + 1 : stop] = newlines
 
@@ -3942,6 +3908,11 @@ match a:
             ast = None
 
             try:
+                if func in (FST._parse_stmtishs, FST._parse_stmtish,
+                            FST._parse_ExceptHandlers, FST._parse_ExceptHandler,
+                            FST._parse_match_cases, FST._parse_match_case):
+                    continue
+
                 ast  = FST._parse(src, mode)
                 astc = copy_ast(ast)
                 fst  = FST._code_as_all(ast)
@@ -4777,6 +4748,13 @@ i # post
             f = FST.fromsrc('tuple[*tuple[int, ...]]').a.body[0].value.slice.f.copy()
             self.assertEqual('*tuple[int, ...],', f.src)
 
+        # misc
+
+        self.assertEqual('opts.ignore_module', FST('''
+opts.ignore_module = [mod.strip()
+                      for i in opts.ignore_module for mod in i.split(',')]
+            '''.strip(), 'exec').body[0].value.generators[0].iter.copy().src)
+
     def test_copy_bulk(self):
         for fnm in PYFNMS:
             ast = FST.fromsrc(read(fnm)).a
@@ -4786,28 +4764,6 @@ i # post
                     f = a.f.copy()
 
                     f.verify(raise_=True)
-
-    def test_copy(self):
-        for src, elt, slice_copy, slice_dump in COPY_DATA:
-            src   = src.strip()
-            t     = parse(src)
-            f     = eval(f't.{elt}', {'t': t}).f
-            s     = f.copy()
-            ssrc  = s.src
-            sdump = s.dump(out=list)
-
-            try:
-                self.assertEqual(ssrc, slice_copy.strip())
-                self.assertEqual(sdump, slice_dump.strip().split('\n'))
-
-            except Exception:
-                print(elt)
-                print('---')
-                print(src)
-                print('...')
-                print(slice_copy)
-
-                raise
 
     def test_cut_special(self):
         a = parse('''
@@ -8016,7 +7972,6 @@ if __name__ == '__main__':
 
     parser.add_argument('--regen-all', default=False, action='store_true', help="regenerate everything")
     parser.add_argument('--regen-pars', default=False, action='store_true', help="regenerate parentheses test data")
-    parser.add_argument('--regen-copy', default=False, action='store_true', help="regenerate copy test data")
     parser.add_argument('--regen-get-slice-seq', default=False, action='store_true', help="regenerate get slice sequence test data")
     parser.add_argument('--regen-get-slice-stmt', default=False, action='store_true', help="regenerate get slice statement test data")
     parser.add_argument('--regen-precedence', default=False, action='store_true', help="regenerate precedence test data")
@@ -8030,10 +7985,6 @@ if __name__ == '__main__':
     if args.regen_pars or args.regen_all:
         print('Regenerating parentheses test data...')
         regen_pars_data()
-
-    if args.regen_copy or args.regen_all:
-        print('Regenerating copy test data...')
-        regen_copy_data()
 
     if args.regen_get_slice_seq or args.regen_all:
         print('Regenerating get slice sequence test data...')

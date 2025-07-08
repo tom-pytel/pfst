@@ -813,10 +813,10 @@ def _code_as_all(code: Code, parse_params: dict = {}) -> fst.FST:  # TODO: allow
         return code
 
     if isinstance(code, AST):
-        if (mode := code.__class__) is Module:  # override _parse_Module because that wouldn't handle slices stmtishs
-            mode = 'stmtishs'
+        # if (mode := code.__class__) is Module:  # override _parse_Module because that wouldn't handle slices stmtishs
+        #     mode = 'stmtishs'
 
-        # mode  = code.__class__
+        mode  = code.__class__
         code  = _unparse(code)
         lines = code.split('\n')
 

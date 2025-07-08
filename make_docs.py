@@ -7,7 +7,9 @@ from pdoc import doc
 from pdoc import extract
 from pdoc import render
 
-PRIVATE = ['fst_parse', 'fst_raw', 'fst_slice_old', 'fst_slice', 'fst_one', 'fst_misc', 'reconcile', 'srcedit_old']
+PRIVATE = ['misc', 'fst_misc', 'fst_parse', 'fst_one', 'fst_slice', 'fst_slice_old', 'fst_raw', 'srcedit_old',
+           'structure', 'reconcile',
+           ]
 
 
 def pdoc(*modules: Path | str, output_directory: Path | None = None) -> str | None:

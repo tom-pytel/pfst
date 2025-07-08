@@ -170,21 +170,6 @@ f(((i for i in j)))
 
 ]  # END OF PARS_DATA
 
-COPY_DATA = [
-(r"""
-opts.ignore_module = [mod.strip()
-                      for i in opts.ignore_module for mod in i.split(',')]
-""", 'body[0].value.generators[0].iter', r"""
-opts.ignore_module
-""", r"""
-Attribute - ROOT 0,0..0,18
-  .value Name 'opts' Load - 0,0..0,4
-  .attr 'ignore_module'
-  .ctx Load
-"""),
-
-]  # END OF COPY_DATA
-
 GET_SLICE_SEQ_DATA = [
 (r"""{1, 2}""", 'body[0].value', 0, 0, {}, r"""
 {1, 2}
