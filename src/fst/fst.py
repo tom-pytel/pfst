@@ -23,6 +23,7 @@ from .misc import (
     re_empty_line, re_line_continuation, re_line_end_cont_or_comment,
     Self, Code, Mode,
     _next_pars, _prev_pars,
+    _pre_trivia, _post_trivia,
     _swizzle_getput_params, _fixup_field_body, _multiline_str_continuation_lns, _multiline_fstr_continuation_lns,
 )
 
@@ -2195,6 +2196,92 @@ class FST:
             modifying.done()
 
         return self  # ret
+
+    def trivia(self, trivia: bool | str | tuple[bool | str | int | None, bool | str | int | None] | None = None,
+               as_put: bool = False) -> fstlocns | None:
+        r"""Return location of the trivia (comments and empty lines) surrounding this node. What is checked is controlled
+        by the `trivia` parameter and / or the global default `trivia` option. Currently only applies to statementish
+        nodes (`stmt`, `ExceptHandler` and `match_case`).
+
+        **TODO:** Trivia for non-statementish nodes.
+
+        **Parameters:**
+        - `trivia`: The specification for what trivia to return, see `options()` for meaning of values:
+            - `None`: Global default is used.
+            - `bool | str`: This is used for leading trivia and global default is used for trailing.
+            - `tuple`: Can specify leading and / or trailing trivia. A value of `None` for either selects the global
+                default for that trivia.
+        - `as_put`: Whether querying as a get or a put operation. Only affects how the `'-'` suffix is processed, used
+            if `True` and ignored if `False`.
+
+        **Returns:**
+        - `fstlocns`: The full location from the start of the leading trivia to the end of the trailing. If trivia
+            present then will start on column 0. If no trivia found then may just be the start and / or end location of
+            the node itself. Has two attributes `starts_line: bool` and `ends_line: bool` which specify whether the node
+            starts a new line and whether it ends one (line continuation end counts as ending the line). Also
+            `indent: str | None` gives the indentation for the node line if the node starts a new line (this is not
+            necessarily the statement block indentation), if the node does not start a line then this is `None`.
+        - `None`: If node is not a `stmt`, `ExceptHandler` or `match_case`.
+
+        **Examples:**
+        ```py
+        >>> f = FST('''
+        ... if 1:
+        ...   a
+        ...
+        ...   # 1
+        ...   \
+        ...
+        ...   # 2
+        ...   # 3
+        ...   b  # 4
+        ...   # 5
+        ...   # 6
+        ...
+        ...   \
+        ...   # 7
+        ...
+        ...   c
+        ... '''.strip())
+
+        >>> print(f.body[1].trivia())
+        fstlocns(5, 0, 8, 0, starts_line=True, ends_line=True, indent='  ')
+
+        >>> print(f.body[1].trivia('all'))
+        fstlocns(3, 0, 8, 0, starts_line=True, ends_line=True, indent='  ')
+
+        >>> print(f.body[1].trivia('all+1'))
+        fstlocns(2, 0, 8, 0, starts_line=True, ends_line=True, indent='  ')
+
+        >>> print(f.body[1].trivia(('all', 'block')))
+        fstlocns(3, 0, 10, 0, starts_line=True, ends_line=True, indent='  ')
+
+        >>> print(f.body[1].trivia((None, 13)))
+        fstlocns(5, 0, 13, 0, starts_line=True, ends_line=True, indent='  ')
+
+        >>> print(FST('a; b; c').body[1].trivia())
+        fstlocns(0, 3, 0, 4, starts_line=False, ends_line=False, indent=None)
+        ```
+        """
+
+        if not isinstance(self.a, STMTISH):
+            return None
+
+        pre_comments, pre_space, post_comments, post_space = FST._get_trivia_params(trivia, as_put)
+
+        lines = self.root.lines
+        loc   = self.bloc
+
+        pre_comments_pos,  pre_space_pos,  indent    = _pre_trivia(lines, *self._prev_bound(),
+                                                                   loc.ln, loc.col, pre_comments, pre_space)
+        post_comments_pos, post_space_pos, ends_line = _post_trivia(lines, *self._next_bound(),
+                                                                    loc.end_ln, loc.end_col, post_comments, post_space)
+
+        pre  = pre_space_pos or pre_comments_pos
+        post = post_comments_pos if not ends_line else post_space_pos or post_comments_pos
+
+        return fstlocns(*pre, *post, starts_line=indent is not None, ends_line=ends_line, indent=indent)
+
 
     # ------------------------------------------------------------------------------------------------------------------
     # Structure stuff

@@ -2831,6 +2831,21 @@ match a:
 
                 raise
 
+    def test_trivia(self):
+        pass
+
+
+        # TODO: this
+
+
+
+
+
+
+
+
+
+
     def test_par(self):
         f = parse('1,').body[0].value.f.copy()
         f.par()  # self.assertTrue(f.par())

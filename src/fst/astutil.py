@@ -1249,7 +1249,8 @@ def precedence_require_parens_by_type(child_type: type[AST], parent_type: type[A
             if `field` is `'value'`, otherwise no effect.
         - `matchas_pat_None`: Child is `MatchAs` and the `pattern` is `None` (just a name).
         - `attr_val_int`: Parent is `Attribute` and child `value` is a `Constant` integer.
-        - `star_call_arg`: Parent is `Starred` and it is a `Call` `args` argument, differnt rules for child parentheses.
+        - `star_call_arg`: Parent is `Starred` and it is a `Call` `args` argument, different rules for child
+            parentheses.
 
     **Returns:**
     - `bool`: Whether parentheses are needed around the child for correct parsing or not.

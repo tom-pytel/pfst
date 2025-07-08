@@ -228,7 +228,8 @@ class _Modifying:
 
 
 @staticmethod
-def _get_trivia_params(is_put: bool, options: dict[str, Any] = {},
+def _get_trivia_params(trivia: bool | str | tuple[bool | str | int | None, bool | str | int | None] | None = None,
+                       as_put: bool = False,
                        ) -> tuple[bool | Literal['all', 'block'] | int,
                                   bool | int,
                                   bool | Literal['all', 'block', 'line'] | int,
@@ -238,7 +239,7 @@ def _get_trivia_params(is_put: bool, options: dict[str, Any] = {},
     `_pre/post_trivia()`.
 
     **Parameters:**
-    - `is_put`: Whether the operation being done is a get or a put, determines how `'-'` suffix is processed.
+    - `as_put`: Whether the operation being done is a get or a put, determines how `'-'` suffix is processed.
     """
 
     if isinstance(pre_comments := fst._OPTIONS['trivia'], tuple):
@@ -246,16 +247,15 @@ def _get_trivia_params(is_put: bool, options: dict[str, Any] = {},
     else:
         post_comments = pre_comments
 
-    if (trivia := options.get('trivia', None)) is None:
-        pass  # noop
-    elif not isinstance(trivia, tuple):
-        pre_comments = trivia
+    if trivia is not None:
+        if not isinstance(trivia, tuple):
+            pre_comments = trivia
 
-    else:
-        if (t := trivia[0]) is not None:
-            pre_comments = t
-        if (t := trivia[1]) is not None:
-            post_comments = t
+        else:
+            if (t := trivia[0]) is not None:
+                pre_comments = t
+            if (t := trivia[1]) is not None:
+                post_comments = t
 
     pre_space = False
 
@@ -265,7 +265,7 @@ def _get_trivia_params(is_put: bool, options: dict[str, Any] = {},
             pre_comments = pre_comments[:i]
 
         elif (i := pre_comments.find('-')) != -1:
-            pre_space    = int(pre_comments[i + 1:]) if is_put else 0
+            pre_space    = int(pre_comments[i + 1:]) if as_put else 0
             pre_comments = pre_comments[:i]
 
     post_space = False
@@ -276,7 +276,7 @@ def _get_trivia_params(is_put: bool, options: dict[str, Any] = {},
             post_comments = post_comments[:i]
 
         elif (i := post_comments.find('-')) != -1:
-            post_space    = int(post_comments[i + 1:]) if is_put else 0
+            post_space    = int(post_comments[i + 1:]) if as_put else 0
             post_comments = post_comments[:i]
 
     return pre_comments, pre_space, post_comments, post_space

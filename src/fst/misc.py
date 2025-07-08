@@ -288,7 +288,7 @@ class fstlocns(fstloc):
 
     def __repr__(self) -> str:
         ln, col, end_ln, end_col = self
-        ns                       = ', '.join(f'{n}={v}' for n, v in self.__dict__.items())
+        ns                       = ', '.join(f'{n}={v!r}' for n, v in self.__dict__.items())
 
         return (f'fstlocns({ln}, {col}, {end_ln}, {end_col}, {ns})' if ns else
                 f'fstlocns({ln}, {col}, {end_ln}, {end_col})')

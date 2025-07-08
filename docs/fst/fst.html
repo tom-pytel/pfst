@@ -218,6 +218,9 @@
                                 <a class="function" href="#FST.unpar">unpar</a>
                         </li>
                         <li>
+                                <a class="function" href="#FST.trivia">trivia</a>
+                        </li>
+                        <li>
                                 <a class="function" href="#FST.next">next</a>
                         </li>
                         <li>
@@ -1461,7 +1464,7 @@ on put if not needed (removed from destination first if needed and present on bo
 <li><code>True</code>: Only do raw source operations.</li>
 <li><code>'auto'</code>: Only do raw source operations if the normal operation fails in a way that raw might not.</li>
 </ul></li>
-<li><code>trivia</code>: What comments and empty lines to copy / delete when doing operations on elements which may have
+<li><code><a href="#FST.trivia">trivia</a></code>: What comments and empty lines to copy / delete when doing operations on elements which may have
 leading or trailing lines of stuff.
 <ul>
 <li><code>False</code>: Don't copy / delete any trivia.</li>
@@ -1515,13 +1518,13 @@ type of empty sequence (tuple or list).</li>
 <li><code>True</code>: Two empty lines at module scope and one empty line in other scopes.</li>
 <li><code>1</code>: One empty line in all scopes.</li>
 </ul></li>
-<li><code>precomms</code>: Preceding comments.  - DEPRECATED, STILL USED FOR STMTS, WILL BE REPLACED WITH <code>trivia</code>!
+<li><code>precomms</code>: Preceding comments.  - DEPRECATED, STILL USED FOR STMTS, WILL BE REPLACED WITH <code><a href="#FST.trivia">trivia</a></code>!
 <ul>
 <li><code>False</code>: No preceding comments.</li>
 <li><code>True</code>: Single contiguous comment block immediately preceding position.</li>
 <li><code>'all'</code>: Comment blocks (possibly separated by empty lines) preceding position.</li>
 </ul></li>
-<li><code>postcomms</code>: Trailing comments.  - DEPRECATED, STILL USED FOR STMTS, WILL BE REPLACED WITH <code>trivia</code>!
+<li><code>postcomms</code>: Trailing comments.  - DEPRECATED, STILL USED FOR STMTS, WILL BE REPLACED WITH <code><a href="#FST.trivia">trivia</a></code>!
 <ul>
 <li><code>False</code>: No trailing comments.</li>
 <li><code>True</code>: Only comment trailing on line of position, nothing past that on its own lines.</li>
@@ -1529,14 +1532,14 @@ type of empty sequence (tuple or list).</li>
 <li><code>'all'</code>: Comment blocks (possibly separated by empty lines) following position.</li>
 </ul></li>
 <li><code>prespace</code>: Preceding empty lines (max of this and <code>pep8space</code> used).  - DEPRECATED, STILL USED FOR STMTS,
-WILL BE REPLACED WITH <code>trivia</code>!
+WILL BE REPLACED WITH <code><a href="#FST.trivia">trivia</a></code>!
 <ul>
 <li><code>False</code>: No empty lines.</li>
 <li><code>True</code>: All empty lines.</li>
 <li><code>int</code>: A maximum number of empty lines.</li>
 </ul></li>
 <li><code>postspace</code>: Same as <code>prespace</code> except for trailing empty lines.  - DEPRECATED, STILL USED FOR STMTS, WILL BE
-REPLACED WITH <code>trivia</code>!</li>
+REPLACED WITH <code><a href="#FST.trivia">trivia</a></code>!</li>
 </ul>
 
 <p><strong>Note:</strong> <code><a href="#FST.pars">pars</a></code> behavior:</p>
@@ -1549,7 +1552,7 @@ Remove unneeded pars from source on put:                     no        no       
 Add pars needed for parse / precedence to source on put:     no       yes       yes
 </code></pre>
 
-<p><strong>Note:</strong> <code>trivia</code> text suffix behavior:</p>
+<p><strong>Note:</strong> <code><a href="#FST.trivia">trivia</a></code> text suffix behavior:</p>
 
 <ul>
 <li><code>'+[#]'</code> Copy and delete an extra number of lines after any comments specified by the <code>#</code>. If no number is
@@ -2745,6 +2748,93 @@ belong to this node or not (meant for internal use).</li>
 <span class="o">&gt;&gt;&gt;</span> <span class="c1"># unless told not to</span>
 <span class="o">&gt;&gt;&gt;</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;call(((i for i in j)))&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">unpar</span><span class="p">(</span><span class="n">shared</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span><span class="o">.</span><span class="n">root</span><span class="o">.</span><span class="n">src</span>
 <span class="s1">&#39;call((i for i in j))&#39;</span>
+</code></pre>
+</div>
+</div>
+
+
+                            </div>
+                            <div id="FST.trivia" class="classattr">
+                                <div class="attr function">
+            
+        <span class="def">def</span>
+        <span class="name">trivia</span><span class="signature pdoc-code multiline">(<span class="param">	<span class="bp">self</span>,</span><span class="param">	<span class="n">trivia</span><span class="p">:</span> <span class="s1">&#39;bool | str | tuple[bool | str | int | None, bool | str | int | None] | None&#39;</span> <span class="o">=</span> <span class="kc">None</span>,</span><span class="param">	<span class="n">as_put</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span></span><span class="return-annotation">) -> <span class="n">fst</span><span class="o">.</span><span class="n">misc</span><span class="o">.</span><span class="n">fstlocns</span> <span class="o">|</span> <span class="kc">None</span>:</span></span>
+
+        
+    </div>
+    <a class="headerlink" href="#FST.trivia"></a>
+    
+            <div class="docstring"><p>Return location of the trivia (comments and empty lines) surrounding this node. What is checked is controlled
+by the <code><a href="#FST.trivia">trivia</a></code> parameter and / or the global default <code><a href="#FST.trivia">trivia</a></code> option. Currently only applies to statementish
+nodes (<code>stmt</code>, <code>ExceptHandler</code> and <code>match_case</code>).</p>
+
+<p><strong>TODO:</strong> Trivia for non-statementish nodes.</p>
+
+<p><strong>Parameters:</strong></p>
+
+<ul>
+<li><code><a href="#FST.trivia">trivia</a></code>: The specification for what trivia to return, see <code><a href="#FST.options">options()</a></code> for meaning of values:
+<ul>
+<li><code>None</code>: Global default is used.</li>
+<li><code>bool | str</code>: This is used for leading trivia and global default is used for trailing.</li>
+<li><code>tuple</code>: Can specify leading and / or trailing trivia. A value of <code>None</code> for either selects the global
+default for that trivia.</li>
+</ul></li>
+<li><code>as_put</code>: Whether querying as a get or a put operation. Only affects how the <code>'-'</code> suffix is processed, used
+if <code>True</code> and ignored if <code>False</code>.</li>
+</ul>
+
+<p><strong>Returns:</strong></p>
+
+<ul>
+<li><code>fstlocns</code>: The full location from the start of the leading trivia to the end of the trailing. If trivia
+present then will start on column 0. If no trivia found then may just be the start and / or end location of
+the node itself. Has two attributes <code>starts_line: bool</code> and <code>ends_line: bool</code> which specify whether the node
+starts a new line and whether it ends one (line continuation end counts as ending the line). Also
+<code>indent: str | None</code> gives the indentation for the node line if the node starts a new line (this is not
+necessarily the statement block indentation), if the node does not start a line then this is <code>None</code>.</li>
+<li><code>None</code>: If node is not a <code>stmt</code>, <code>ExceptHandler</code> or <code>match_case</code>.</li>
+</ul>
+
+<p><strong>Examples:</strong></p>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">f</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;&#39;&#39;</span>
+<span class="s1">... if 1:</span>
+<span class="s1">...   a</span>
+<span class="s1">...</span>
+<span class="s1">...   # 1</span>
+<span class="s1">...   </span><span class="se">\</span>
+<span class="s1">...</span>
+<span class="s1">...   # 2</span>
+<span class="s1">...   # 3</span>
+<span class="s1">...   b  # 4</span>
+<span class="s1">...   # 5</span>
+<span class="s1">...   # 6</span>
+<span class="s1">...</span>
+<span class="s1">...   </span><span class="se">\</span>
+<span class="s1">...   # 7</span>
+<span class="s1">...</span>
+<span class="s1">...   c</span>
+<span class="s1">... &#39;&#39;&#39;</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">trivia</span><span class="p">())</span>
+<span class="n">fstlocns</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">starts_line</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">ends_line</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="s1">&#39;  &#39;</span><span class="p">)</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">trivia</span><span class="p">(</span><span class="s1">&#39;all&#39;</span><span class="p">))</span>
+<span class="n">fstlocns</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">starts_line</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">ends_line</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="s1">&#39;  &#39;</span><span class="p">)</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">trivia</span><span class="p">(</span><span class="s1">&#39;all+1&#39;</span><span class="p">))</span>
+<span class="n">fstlocns</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">starts_line</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">ends_line</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="s1">&#39;  &#39;</span><span class="p">)</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">trivia</span><span class="p">((</span><span class="s1">&#39;all&#39;</span><span class="p">,</span> <span class="s1">&#39;block&#39;</span><span class="p">)))</span>
+<span class="n">fstlocns</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">starts_line</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">ends_line</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="s1">&#39;  &#39;</span><span class="p">)</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">trivia</span><span class="p">((</span><span class="kc">None</span><span class="p">,</span> <span class="mi">13</span><span class="p">)))</span>
+<span class="n">fstlocns</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">13</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">starts_line</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">ends_line</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="s1">&#39;  &#39;</span><span class="p">)</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;a; b; c&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">trivia</span><span class="p">())</span>
+<span class="n">fstlocns</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="n">starts_line</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">ends_line</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
 </code></pre>
 </div>
 </div>
