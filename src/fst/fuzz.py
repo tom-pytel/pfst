@@ -279,7 +279,7 @@ def fstcat(fst: FST) -> ASTCat:  # ast category (replacement compatibility)
         return ExceptHandler if isinstance(fst.parent.a, Try) else excepthandler  # Try vs. TryStar
     if isinstance(a, (Starred, Slice)):
         return a.__class__
-    if fst.is_slice:
+    if fst.has_Slice:
         return slice  # Tuple containing Slice
 
     return astbase(a.__class__)

@@ -970,6 +970,19 @@ def _params_offset(lines: list[bistr], put_lines: list[bistr], ln: int, col: int
     return end_ln, col_offset, dln, dcol_offset
 
 
+def _swizzle_getput_params(start: int | Literal['end'] | None, stop: int | None | Literal[False], field: str | None,
+                           default_stop: Literal[False] | None,
+                           ) -> tuple[int | Literal['end'] | None,int | None | Literal[False], str | None]:
+    """Allow passing `stop` and `field` for get/put() functions positionally."""
+
+    if isinstance(start, str) and start != 'end':
+        return None, default_stop, start
+    if isinstance(stop, str):
+        return start, default_stop, stop
+
+    return start, stop, field
+
+
 def _fixup_field_body(ast: AST, field: str | None = None, only_list: bool = True) -> tuple[str, 'AST']:
     """Get `AST` member list for specified `field` or default if `field=None`."""
 

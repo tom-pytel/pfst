@@ -278,7 +278,7 @@ class fstview:
         """Copy this slice to a new top-level tree, dedenting and fixing as necessary.
 
         **Parameters:**
-        - `options`: See `fst.fst.FST.get_options()`.
+        - `options`: See `fst.fst.FST.options()`.
 
         **Returns:**
         - `FST`: Copied slice.
@@ -297,7 +297,7 @@ class fstview:
         node.
 
         **Parameters:**
-        - `options`: See `fst.fst.FST.get_options()`.
+        - `options`: See `fst.fst.FST.options()`.
 
         **Returns:**
         - `FST`: Cut slice.
@@ -327,7 +327,7 @@ class fstview:
         - `code`: `FST`, `AST` or source `str` or `list[str]` to put. `None` to delete this slice.
         - `one`: If `True` then will replace the range of this slice with a single item. Otherwise `False` will attempt
             a slice replacement (type must be compatible).
-        - `options`: See `fst.fst.FST.get_options()`.
+        - `options`: See `fst.fst.FST.options()`.
 
         **Examples:**
         ```py
@@ -351,7 +351,7 @@ class fstview:
         """Delete this slice, equivalent to `replace(None, ...)`
 
         **Parameters:**
-        - `options`: See `fst.fst.FST.get_options()`.
+        - `options`: See `fst.fst.FST.options()`.
 
         **Returns:**
         - `self`
@@ -382,7 +382,7 @@ class fstview:
         - `idx`: Index to insert BEFORE. Can be `'end'` to indicate add at end of slice.
         - `one`: If `True` then will insert `code` as a single item. Otherwise `False` will attempt a slice insertion
             (type must be compatible).
-        - `options`: See `fst.fst.FST.get_options()`.
+        - `options`: See `fst.fst.FST.options()`.
 
         **Examples:**
         ```py
@@ -420,7 +420,7 @@ class fstview:
 
         **Parameters:**
         - `code`: `FST`, `AST` or source `str` or `list[str]` to append.
-        - `options`: See `fst.fst.FST.get_options()`.
+        - `options`: See `fst.fst.FST.options()`.
 
         **Examples:**
         ```py
@@ -446,7 +446,7 @@ class fstview:
 
         **Parameters:**
         - `code`: `FST`, `AST` or source `str` or `list[str]` slice to extend.
-        - `options`: See `fst.fst.FST.get_options()`.
+        - `options`: See `fst.fst.FST.options()`.
 
         **Examples:**
         ```py
@@ -474,7 +474,7 @@ class fstview:
 
         **Parameters:**
         - `code`: `FST`, `AST` or source `str` or `list[str]` to preappend.
-        - `options`: See `fst.fst.FST.get_options()`.
+        - `options`: See `fst.fst.FST.options()`.
 
         **Examples:**
         ```py
@@ -500,7 +500,7 @@ class fstview:
 
         **Parameters:**
         - `code`: `FST`, `AST` or source `str` or `list[str]` to extend at the start.
-        - `options`: See `fst.fst.FST.get_options()`.
+        - `options`: See `fst.fst.FST.options()`.
 
         **Examples:**
         ```py

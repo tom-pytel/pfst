@@ -9,7 +9,7 @@ import re
 import sys
 from ast import *
 from math import log10
-from typing import Callable, Literal
+from typing import Any, Callable, Literal
 
 from . import fst
 
@@ -24,9 +24,9 @@ from .misc import (
     _params_offset, _multiline_str_continuation_lns, _multiline_fstr_continuation_lns,
 )
 
-_HAS_FSTR_COMMENT_BUG = f'{"a#b"=}' != '"a#b"=\'a#b\''
+_HAS_FSTR_COMMENT_BUG  = f'{"a#b"=}' != '"a#b"=\'a#b\''
 
-_astfieldctx = astfield('ctx')
+_astfieldctx           = astfield('ctx')
 
 _re_fval_expr_equals   = re.compile(r'(?:\s*(?:#.*|\\)\n)*\s*=\s*(?:(?:#.*|\\)\n\s*)*')  # format string expression tail '=' indicating self-documentation
 
@@ -225,6 +225,61 @@ class _Modifying:
 
     def done(self, fst_: fst.FST | None | Literal[False] = False):
         self.root._serial += 1
+
+
+@staticmethod
+def _get_trivia_params(is_put: bool, options: dict[str, Any] = {},
+                       ) -> tuple[bool | Literal['all', 'block'] | int,
+                                  bool | int,
+                                  bool | Literal['all', 'block', 'line'] | int,
+                                  bool | int,
+                                  ]:
+    """Convert options from global defaults and possible passed options dict to parameters usable for
+    `_pre/post_trivia()`.
+
+    **Parameters:**
+    - `is_put`: Whether the operation being done is a get or a put, determines how `'-'` suffix is processed.
+    """
+
+    if isinstance(pre_comments := fst._OPTIONS['trivia'], tuple):
+        pre_comments, post_comments = pre_comments
+    else:
+        post_comments = pre_comments
+
+    if (trivia := options.get('trivia', None)) is None:
+        pass  # noop
+    elif not isinstance(trivia, tuple):
+        pre_comments = trivia
+
+    else:
+        if (t := trivia[0]) is not None:
+            pre_comments = t
+        if (t := trivia[1]) is not None:
+            post_comments = t
+
+    pre_space = False
+
+    if isinstance(pre_comments, str):
+        if (i := pre_comments.find('+')) != -1:
+            pre_space    = int(pre_comments[i + 1:])
+            pre_comments = pre_comments[:i]
+
+        elif (i := pre_comments.find('-')) != -1:
+            pre_space    = int(pre_comments[i + 1:]) if is_put else 0
+            pre_comments = pre_comments[:i]
+
+    post_space = False
+
+    if isinstance(post_comments, str):
+        if (i := post_comments.find('+')) != -1:
+            post_space    = int(post_comments[i + 1:])
+            post_comments = post_comments[:i]
+
+        elif (i := post_comments.find('-')) != -1:
+            post_space    = int(post_comments[i + 1:]) if is_put else 0
+            post_comments = post_comments[:i]
+
+    return pre_comments, pre_space, post_comments, post_space
 
 
 @staticmethod

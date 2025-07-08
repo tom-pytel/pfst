@@ -139,6 +139,7 @@ Or get all global options.
 >>> pp(FST.get_options())
 {'pars': 'auto',
  'raw': False,
+ 'trivia': True,
  'elif_': True,
  'docstr': True,
  'empty_set': True,

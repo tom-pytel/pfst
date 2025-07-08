@@ -23,7 +23,7 @@ from .misc import (
     re_empty_line, re_line_continuation, re_line_end_cont_or_comment,
     Self, Code, Mode,
     _next_pars, _prev_pars,
-    _fixup_field_body, _multiline_str_continuation_lns, _multiline_fstr_continuation_lns,
+    _swizzle_getput_params, _fixup_field_body, _multiline_str_continuation_lns, _multiline_fstr_continuation_lns,
 )
 
 from .view import fstview
@@ -40,6 +40,7 @@ _DEFAULT_INDENT       = '    '
 _OPTIONS = {
     'pars':        'auto', # True | False | 'auto'
     'raw':         False,  # True | False | 'auto'
+    'trivia':      True,   # True | False | 'all' | 'block' | (True | False | 'all' | 'block', True | False | 'all' | 'block' | 'line'), True means ('block', 'line')
     'elif_':       True,   # True | False
     'docstr':      True,   # True | False | 'strict'
     'empty_set':   True,   # True | False | 'seq' | 'call'
@@ -50,19 +51,6 @@ _OPTIONS = {
     'prespace':    False,  # True | False | int
     'postspace':   False,  # True | False | int
 }
-
-
-def _swizzle_getput_params(start: int | Literal['end'] | None, stop: int | None | Literal[False], field: str | None,
-                           default_stop: Literal[False] | None,
-                           ) -> tuple[int | Literal['end'] | None,int | None | Literal[False], str | None]:
-    """Allow passing `stop` and `field` positionally."""
-
-    if isinstance(start, str) and start != 'end':
-        return None, default_stop, start
-    if isinstance(stop, str):
-        return start, default_stop, stop
-
-    return start, stop, field
 
 
 # ----------------------------------------------------------------------------------------------------------------------
@@ -421,19 +409,19 @@ class FST:
         return isinstance(self.a, ANONYMOUS_SCOPE)
 
     @property
-    def is_slice(self) -> bool:
+    def has_Slice(self) -> bool:
         """Whether self is a `Slice` or a `Tuple` which directly contains any `Slice`.
 
         **Examples:**
         ```py
-        >>> FST('a:b:c', 'expr_slice').is_slice
+        >>> FST('a:b:c', 'expr_slice').has_Slice
         True
 
-        >>> FST('1, d:e', 'expr_slice').is_slice  # Tuple contains at least one Slice
+        >>> FST('1, d:e', 'expr_slice').has_Slice  # Tuple contains at least one Slice
         True
 
         >>> # b is in the .slice field but is not a Slice or Slice Tuple
-        >>> FST('a[b]').slice.is_slice
+        >>> FST('a[b]').slice.has_Slice
         False
         ```
         """
@@ -823,66 +811,8 @@ class FST:
         When these options are missing or `None` in a call to an operation, then the default option as specified here is
         used.
 
-        **Options:**
-        - `pars`: How parentheses are handled, can be `False`, `True` or `'auto'`. This is for individual puts, for
-            slices parentheses are always unchanged. Raw puts generally do not have parentheses added or removed
-            automatically, except removed from the destination node if putting to a node instead of a pure location.
-            - `False`: Parentheses are not MODIFIED, doesn't mean remove all parentheses. Not copied with nodes or
-                removed on put from source or destination.
-            - `True`: Parentheses are copied with nodes, added to copies if needed and not present, removed from
-                destination on put if not needed there (but not source).
-            - `'auto'`: Same as `True` except they are not returned with a copy and possibly removed from source
-                on put if not needed (removed from destination first if needed and present on both).
-        - `raw`: When to do raw source operations. This may result in more nodes changed than just the targeted one(s).
-            - `False`: Do not do raw source operations.
-            - `True`: Only do raw source operations.
-            - `'auto'`: Only do raw source operations if the normal operation fails in a way that raw might not.
-        - `elif_`: How to handle lone `If` statements as the only statements in an `If` statement `orelse` field.
-            - `True`: If putting a single `If` statement to an `orelse` field of a parent `If` statement then
-                put it as an `elif`.
-            - `False`: Always put as a standalone `If` statement.
-        - `docstr`: Which docstrings are indentable / dedentable.
-            - `False`: None.
-            - `True`: All `Expr` multiline strings (as they serve no coding purpose).
-            - `'strict'`: Only multiline strings in expected docstring positions (functions and classes).
-        - `empty_set`: Empty set source during a slice put (considered to have no elements).
-            - `False`: Nothing is considered an empty set and an empty set slice put is only possible using a non-set
-                type of empty sequence (tuple or list).
-            - `True`: `set()` call and `{*()}`, `{*[]}` and `{*{}}` starred sequences are considered empty.
-            - `'seq'`: Only starred sequences `{*()}`, `{*[]}` and `{*{}}` are considered empty.
-            - `'call'`: Only `set()` call is considered empty.
-        - `pars_walrus`: Whether to parenthesize copied `NamedExpr` nodes or not (only if `pars` is also not `False`).
-            - `False`: Do not parenthesize cut / copied `NamedExpr` walrus expressions.
-            - `True`: Parenthesize cut / copied `NamedExpr` walrus expressions.
-        - `pep8space`: Preceding and trailing empty lines for function and class definitions.
-            - `False`: No empty lines.
-            - `True`: Two empty lines at module scope and one empty line in other scopes.
-            - `1`: One empty line in all scopes.
-        - `precomms`: Preceding comments.  - WILL CHANGE IN FUTURE VERSIONS!
-            - `False`: No preceding comments.
-            - `True`: Single contiguous comment block immediately preceding position.
-            - `'all'`: Comment blocks (possibly separated by empty lines) preceding position.
-        - `postcomms`: Trailing comments.  - WILL CHANGE IN FUTURE VERSIONS!
-            - `False`: No trailing comments.
-            - `True`: Only comment trailing on line of position, nothing past that on its own lines.
-            - `'block'`: Single contiguous comment block following position.
-            - `'all'`: Comment blocks (possibly separated by empty lines) following position.
-        - `prespace`: Preceding empty lines (max of this and `pep8space` used).  - WILL CHANGE IN FUTURE VERSIONS!
-            - `False`: No empty lines.
-            - `True`: All empty lines.
-            - `int`: A maximum number of empty lines.
-        - `postspace`: Same as `prespace` except for trailing empty lines.  - WILL CHANGE IN FUTURE VERSIONS!
-
-        **Note:**
-        `pars` behavior (see Examples for more):
-        ```
-                                                                  False      True    'auto'
-        Copy pars from source on copy / cut:                         no       yes        no
-        Add pars needed for parsability to copy:                     no       yes       yes
-        Remove unneeded pars from destination on put:                no       yes       yes
-        Remove unneeded pars from source on put:                     no        no       yes
-        Add pars needed for parse / precedence to source on put:     no       yes       yes
-        ```
+        **Parameters:**
+        - `options`: Names / values of options to set temporarily, see `options()`.
 
         **Returns:**
         - `{option: value, ...}`: Dictionary of all global default options.
@@ -890,9 +820,11 @@ class FST:
         **Examples:**
         ```py
         >>> from pprint import pp
+
         >>> pp(FST.get_options())
         {'pars': 'auto',
          'raw': False,
+         'trivia': True,
          'elif_': True,
          'docstr': True,
          'empty_set': True,
@@ -910,10 +842,10 @@ class FST:
     @staticmethod
     def get_option(option: builtins.str, options: dict[builtins.str, Any] = {}) -> Any:
         """Get a single option from `options` dict or global default if option not in dict or is `None` there. For a
-        list of options used see `get_options()`.
+        list of options used see `options()`.
 
         **Parameters:**
-        - `option`: Name of option to get, see `get_options()`.
+        - `option`: Name of option to get, see `options()`.
         - `options`: Dictionary which may or may not contain the requested option.
 
         **Returns:**
@@ -941,7 +873,7 @@ class FST:
 
         **Parameters:**
         - `options`: Names / values of parameters to set. These can also be passed to various methods to override the
-            defaults set here for those individual operations, see `get_options()`.
+            defaults set here for those individual operations, see `options()`.
 
         **Returns:**
         - `options`: `dict` of previous values of changed parameters, reset with `set_options(**options)`.
@@ -979,20 +911,107 @@ class FST:
     def options(**options):
         """Context manager to temporarily set global options defaults for a group of operations.
 
-        **Parameters:**
-        - `options`: Names / values of options to set temporarily, see `get_options()`.
+        **WARNING!** Only the options specified in the call to this function will be returned to their original values
+        when the context manager exits.
+
+        **Options:**
+        - `pars`: How parentheses are handled, can be `False`, `True` or `'auto'`. This is for individual puts, for
+            slices parentheses are always unchanged. Raw puts generally do not have parentheses added or removed
+            automatically, except removed from the destination node if putting to a node instead of a pure location.
+            - `False`: Parentheses are not MODIFIED, doesn't mean remove all parentheses. Not copied with nodes or
+                removed on put from source or destination.
+            - `True`: Parentheses are copied with nodes, added to copies if needed and not present, removed from
+                destination on put if not needed there (but not source).
+            - `'auto'`: Same as `True` except they are not returned with a copy and possibly removed from source
+                on put if not needed (removed from destination first if needed and present on both).
+        - `raw`: When to do raw source operations. This may result in more nodes changed than just the targeted one(s).
+            - `False`: Do not do raw source operations.
+            - `True`: Only do raw source operations.
+            - `'auto'`: Only do raw source operations if the normal operation fails in a way that raw might not.
+        - `trivia`: What comments and empty lines to copy / delete when doing operations on elements which may have
+            leading or trailing lines of stuff.
+            - `False`: Don't copy / delete any trivia.
+            - `True`: Same as `('block', 'line')`.
+            - `'all'`: Same as `('all', 'all')`.
+            - `'block'`: Same as `('block', 'block')`.
+            - `(leading, trailing)`: Tuple specifying individual behavior for leading and trailing trivia. The text
+                options can also have a suffix of the form `'+/-[#]'`, meaning plus or minus an optional integer which
+                adds behavior for leading or trailing empty lines, explained below. The values for each element of the
+                tuple can be:
+                - `False`: Don't copy / delete any trivia.
+                - `True`: For leading means `'block'`, for trailing means `'line'`.
+                - `'all[+/-[#]]'`: Get all leading or trailing comments regardless of if they are contiguous or not.
+                - `'block[+/-[#]]'`: Get a single contiguous leading or trailing block of comments, an empty line ends
+                    the block.
+                - `'line[+/-[#]]'`: Valid for trailing trivia only, means just the comment on the last line of the
+                    element.
+                - `int`: A specific line number specifying the first or last line that can be returned as a comment or
+                    empty line. If not interrupted by other code, will always return up to this line.
+        - `elif_`: How to handle lone `If` statements as the only statements in an `If` statement `orelse` field.
+            - `True`: If putting a single `If` statement to an `orelse` field of a parent `If` statement then
+                put it as an `elif`.
+            - `False`: Always put as a standalone `If` statement.
+        - `docstr`: Which docstrings are indentable / dedentable.
+            - `False`: None.
+            - `True`: All `Expr` multiline strings (as they serve no coding purpose).
+            - `'strict'`: Only multiline strings in expected docstring positions (functions and classes).
+        - `empty_set`: Empty set source during a slice put (considered to have no elements).
+            - `False`: Nothing is considered an empty set and an empty set slice put is only possible using a non-set
+                type of empty sequence (tuple or list).
+            - `True`: `set()` call and `{*()}`, `{*[]}` and `{*{}}` starred sequences are considered empty.
+            - `'seq'`: Only starred sequences `{*()}`, `{*[]}` and `{*{}}` are considered empty.
+            - `'call'`: Only `set()` call is considered empty.
+        - `pars_walrus`: Whether to parenthesize copied `NamedExpr` nodes or not (only if `pars` is also not `False`).
+            - `False`: Do not parenthesize cut / copied `NamedExpr` walrus expressions.
+            - `True`: Parenthesize cut / copied `NamedExpr` walrus expressions.
+        - `pep8space`: Preceding and trailing empty lines for function and class definitions.
+            - `False`: No empty lines.
+            - `True`: Two empty lines at module scope and one empty line in other scopes.
+            - `1`: One empty line in all scopes.
+        - `precomms`: Preceding comments.  - DEPRECATED, STILL USED FOR STMTS, WILL BE REPLACED WITH `trivia`!
+            - `False`: No preceding comments.
+            - `True`: Single contiguous comment block immediately preceding position.
+            - `'all'`: Comment blocks (possibly separated by empty lines) preceding position.
+        - `postcomms`: Trailing comments.  - DEPRECATED, STILL USED FOR STMTS, WILL BE REPLACED WITH `trivia`!
+            - `False`: No trailing comments.
+            - `True`: Only comment trailing on line of position, nothing past that on its own lines.
+            - `'block'`: Single contiguous comment block following position.
+            - `'all'`: Comment blocks (possibly separated by empty lines) following position.
+        - `prespace`: Preceding empty lines (max of this and `pep8space` used).  - DEPRECATED, STILL USED FOR STMTS,
+            WILL BE REPLACED WITH `trivia`!
+            - `False`: No empty lines.
+            - `True`: All empty lines.
+            - `int`: A maximum number of empty lines.
+        - `postspace`: Same as `prespace` except for trailing empty lines.  - DEPRECATED, STILL USED FOR STMTS, WILL BE
+            REPLACED WITH `trivia`!
+
+        **Note:** `pars` behavior:
+        ```
+                                                                  False      True    'auto'
+        Copy pars from source on copy / cut:                         no       yes        no
+        Add pars needed for parsability to copy:                     no       yes       yes
+        Remove unneeded pars from destination on put:                no       yes       yes
+        Remove unneeded pars from source on put:                     no        no       yes
+        Add pars needed for parse / precedence to source on put:     no       yes       yes
+        ```
+
+        **Note:** `trivia` text suffix behavior:
+        - `'+[#]'` Copy and delete an extra number of lines after any comments specified by the `#`. If no number is
+            specified and just a `'+'` then all empty lines will be copied / deleted.
+        - `'-[#]'` Delete, but not copy, an extra number of lines after any comments specified by the `#`. If  no number
+            is specified and just a `'-'` then all empty lines will be deleted.
 
         **Examples:**
         ```py
-        >>> print(FST.get_option('pars'))
-        auto
+        >>> print(FST.get_option('pars'), FST.get_option('elif_'))
+        auto True
 
-        >>> with FST.options(pars=False):
-        ...     print(FST.get_option('pars'))
-        False
+        >>> with FST.options(pars=False, elif_=False):
+        ...     print(FST.get_option('pars'), FST.get_option('elif_'))
+        False False
 
-        >>> print(FST.get_option('pars'))
-        auto
+        >>> print(FST.get_option('pars'), FST.get_option('elif_'))
+        auto True
         ```
         """
 
@@ -1251,7 +1270,7 @@ class FST:
 
         **Parameters:**
         - `mark`: A previously marked snapshot of `self`. This object is not consumed on use, success or failure.
-        - `options`: See `get_options()`.
+        - `options`: See `options()`.
 
         **Returns:**
         - `FST`: A new valid reconciled `FST` if possible.
@@ -1331,7 +1350,7 @@ class FST:
         """Copy this node to a new top-level tree, dedenting and fixing as necessary.
 
         **Parameters:**
-        - `options`: See `get_options()`.
+        - `options`: See `options()`.
 
         **Returns:**
         - `FST`: Copied node.
@@ -1353,7 +1372,7 @@ class FST:
         node.
 
         **Parameters:**
-        - `options`: See `get_options()`.
+        - `options`: See `options()`.
 
         **Returns:**
         - `FST`: Cut node.
@@ -1381,7 +1400,7 @@ class FST:
 
         **Parameters:**
         - `code`: `FST`, `AST` or source `str` or `list[str]` to put at this location. `None` to delete this node.
-        - `options`: See `get_options()`.
+        - `options`: See `options()`.
             - `to`: Special option which only applies replacing in `raw` mode (either through `True` or `'auto'`).
                 Instead of replacing just this node, will replace the entire span from this node to the node specified
                 in `to` with the `code` passed.
@@ -1420,7 +1439,7 @@ class FST:
         """Delete this node if possible, equivalent to `replace(None, ...)`. Cannot delete root node.
 
         **Parameters:**
-        - `options`: See `get_options()`.
+        - `options`: See `options()`.
 
         **Examples:**
         ```py
@@ -1453,7 +1472,7 @@ class FST:
             have a common-sense default field, e.g. `body` for all block statements, `value` for things like `Return`
             and `Yield`. `Dict`, `MatchMapping` and `Compare` nodes have special-case handling for a `None` field.
         - `cut`: Whether to cut out the child node (if possible) or not (just copy).
-        - `options`: See `get_options()`.
+        - `options`: See `options()`.
 
         **Note:** The `field` value can be passed positionally in either the `idx` or `stop` parameter. If passed in
         `idx` then the field is assumed individual and if passed in `stop` then it is a list and an individual element
@@ -1558,7 +1577,7 @@ class FST:
         - `one`: Only has meaning if putting a slice, and in this case `True` specifies that the source should be  put
             as a single element to the range specified even if it is a valid slice. `False` indicates a true slice
             operation replacing the range with the slice passed, which must in this case be a compatible slice type.
-        - `options`: See `get_options()`.
+        - `options`: See `options()`.
             - `to`: Special option which only applies when putting a single element in `raw` mode (either through `True`
                 or `'auto'`). Instead of replacing just the target node, will replace the entire span from the target
                 node to the node specified in `to` with the `code` passed.
@@ -1648,7 +1667,7 @@ class FST:
             have a common-sense default field, e.g. `body` for all block statements, `elts` for things like `List` and
             `Tuple`. `MatchMapping` and `Compare` nodes have special-case handling for a `None` field.
         - `cut`: Whether to cut out the slice or not (just copy).
-        - `options`: See `get_options()`.
+        - `options`: See `options()`.
 
         **Note:** The `field` value can be passed positionally in either the `start` or `stop` parameter. If passed in
         `start` then the slice is assumed to be the entire range, and if passed in `stop` then the slice goes from
@@ -1712,7 +1731,7 @@ class FST:
             type is used. Most node types have a common-sense default field, e.g. `body` for all block statements,
             `elts` for things like `List` and `Tuple`. `MatchMapping` and `Compare` nodes have special-case handling for
             a `None` field.
-        - `options`: See `get_options()`.
+        - `options`: See `options()`.
 
         **Note:** The `field` value can be passed positionally in either the `start` or `stop` parameter. If passed in
         `start` then the slice is assumed to be the entire range, and if passed in `stop` then the slice goes from
@@ -4706,6 +4725,7 @@ class FST:
     # Private and other misc stuff
 
     from .fst_misc import (
+        _get_trivia_params,
         _new_empty_module,
         _new_empty_tuple,
         _new_empty_list,
