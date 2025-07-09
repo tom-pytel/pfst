@@ -23,7 +23,7 @@ from .misc import (
     re_empty_line, re_line_continuation, re_line_end_cont_or_comment,
     Self, Code, Mode,
     _next_pars, _prev_pars,
-    _pre_trivia, _post_trivia,
+    _leading_trivia, _trailing_trivia,
     _swizzle_getput_params, _fixup_field_body, _multiline_str_continuation_lns, _multiline_fstr_continuation_lns,
 )
 
@@ -2267,20 +2267,21 @@ class FST:
         if not isinstance(self.a, STMTISH):
             return None
 
-        pre_comments, pre_space, post_comments, post_space = FST._get_trivia_params(trivia, as_put)
+        ld_comments, ld_space, tr_comments, tr_space = FST._get_trivia_params(trivia, as_put)
 
         lines = self.root.lines
         loc   = self.bloc
 
-        pre_comments_pos,  pre_space_pos,  indent    = _pre_trivia(lines, *self._prev_bound(),
-                                                                   loc.ln, loc.col, pre_comments, pre_space)
-        post_comments_pos, post_space_pos, ends_line = _post_trivia(lines, *self._next_bound(),
-                                                                    loc.end_ln, loc.end_col, post_comments, post_space)
+        ld_comments_pos, ld_space_pos, indent    = _leading_trivia(lines, *self._prev_bound(),
+                                                                   loc.ln, loc.col, ld_comments, ld_space)
+        tr_comments_pos, tr_space_pos, ends_line = _trailing_trivia(lines, *self._next_bound(),
+                                                                    loc.end_ln, loc.end_col, tr_comments, tr_space)
 
-        pre  = pre_space_pos or pre_comments_pos
-        post = post_comments_pos if not ends_line else post_space_pos or post_comments_pos
+        lead  = ld_space_pos or ld_comments_pos
+        trail = tr_space_pos or tr_comments_pos
+        # trail = tr_comments_pos if not ends_line else tr_space_pos or tr_comments_pos
 
-        return fstlocns(*pre, *post, starts_line=indent is not None, ends_line=ends_line, indent=indent)
+        return fstlocns(*lead, *trail, starts_line=indent is not None, ends_line=ends_line, indent=indent)
 
 
     # ------------------------------------------------------------------------------------------------------------------

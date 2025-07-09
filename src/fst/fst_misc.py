@@ -236,50 +236,50 @@ def _get_trivia_params(trivia: bool | str | tuple[bool | str | int | None, bool 
                                   bool | int,
                                   ]:
     """Convert options from global defaults and possible passed options dict to parameters usable for
-    `_pre/post_trivia()`.
+    `_leading/trailing_trivia()`.
 
     **Parameters:**
     - `as_put`: Whether the operation being done is a get or a put, determines how `'-'` suffix is processed.
     """
 
-    if isinstance(pre_comments := fst._OPTIONS['trivia'], tuple):
-        pre_comments, post_comments = pre_comments
+    if isinstance(lead_comments := fst._OPTIONS['trivia'], tuple):
+        lead_comments, trail_comments = lead_comments
     else:
-        post_comments = pre_comments
+        trail_comments = lead_comments
 
     if trivia is not None:
         if not isinstance(trivia, tuple):
-            pre_comments = trivia
+            lead_comments = trivia
 
         else:
             if (t := trivia[0]) is not None:
-                pre_comments = t
+                lead_comments = t
             if (t := trivia[1]) is not None:
-                post_comments = t
+                trail_comments = t
 
-    pre_space = False
+    lead_space = False
 
-    if isinstance(pre_comments, str):
-        if (i := pre_comments.find('+')) != -1:
-            pre_space    = int(pre_comments[i + 1:])
-            pre_comments = pre_comments[:i]
+    if isinstance(lead_comments, str):
+        if (i := lead_comments.find('+')) != -1:
+            lead_space    = int(n) if (n := lead_comments[i + 1:]) else True
+            lead_comments = lead_comments[:i]
 
-        elif (i := pre_comments.find('-')) != -1:
-            pre_space    = int(pre_comments[i + 1:]) if as_put else 0
-            pre_comments = pre_comments[:i]
+        elif (i := lead_comments.find('-')) != -1:
+            lead_space    = (int(n) if (n := lead_comments[i + 1:]) else True) if as_put else 0
+            lead_comments = lead_comments[:i]
 
-    post_space = False
+    trail_space = False
 
-    if isinstance(post_comments, str):
-        if (i := post_comments.find('+')) != -1:
-            post_space    = int(post_comments[i + 1:])
-            post_comments = post_comments[:i]
+    if isinstance(trail_comments, str):
+        if (i := trail_comments.find('+')) != -1:
+            trail_space    = int(n) if (n := trail_comments[i + 1:]) else True
+            trail_comments = trail_comments[:i]
 
-        elif (i := post_comments.find('-')) != -1:
-            post_space    = int(post_comments[i + 1:]) if as_put else 0
-            post_comments = post_comments[:i]
+        elif (i := trail_comments.find('-')) != -1:
+            trail_space    = (int(n) if (n := trail_comments[i + 1:]) else True) if as_put else 0
+            trail_comments = trail_comments[:i]
 
-    return pre_comments, pre_space, post_comments, post_space
+    return lead_comments, lead_space, trail_comments, trail_space
 
 
 @staticmethod
