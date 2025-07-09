@@ -851,6 +851,11 @@ def _post_trivia(lines: list[str], bound_end_ln: int, bound_end_col: int, end_ln
     If a line number is passed for `comment` then this is the last line that will be CONSIDERED and the end location CAN
     be on the next line if this line is an allowed comment or empty.
 
+    If the end bound is at the end of a line then that line can be considered and the location returned can be the end
+    bound and even if on first line it can be marked as ending the line (even though there may be no next line at EOF).
+    This may make some returned locations not start at column 0 even if it is a complete line, especially at the end of
+    source without a trailing newline.
+
     **Parameters:**
     - `bound_end_ln`: Trailing bounding line, other code assumed to start just here.
     - `bound_end_col`: Trailing bounding column.
@@ -878,8 +883,10 @@ def _post_trivia(lines: list[str], bound_end_ln: int, bound_end_col: int, end_ln
         - `[1]`: The end line and column (always 0) of any trailing block of empty lines. If the element does not end
             its then this will be on the same line as the element end and will be the end of the space after the element
             if any, otherwise `None`.
-        - `[2]`: Whether the element ends the line or not. If it ends the line then the first location will have a
-            column 0 and the line will be after the element `end_ln`.
+        - `[2]`: Whether the element ends its line or not, NOT whether the last line found ends ITS line. If it ends the
+            line then the first location will most likely have a column 0 and the returned line number will be after the
+            element `end_ln`. But not always if the end bound was at the end of a line like can happen at the end of
+            source if it doesn't have a trailing newline.
     """
 
     assert bound_end_ln >= end_ln
@@ -887,12 +894,17 @@ def _post_trivia(lines: list[str], bound_end_ln: int, bound_end_col: int, end_ln
     if bound_end_ln == end_ln:
         assert bound_end_col >= end_col
 
-        if code := _next_src(lines, end_ln, end_col, end_ln, bound_end_col, True):
-            space_pos = None if (c := code.col) == end_col else (end_ln, c)
-        else:
-            space_pos = None if (c := min(bound_end_col, len(lines[end_ln]))) == end_col else (end_ln, c)
+        len_line = len(lines[end_ln])
 
-        return ((end_ln, end_col), space_pos, False)
+        if (code := _next_src(lines, end_ln, end_col, end_ln, bound_end_col, True)):
+            space_col = code.col
+        else:
+            space_col = min(bound_end_col, len_line)
+
+        if space_col == end_col:
+            return ((end_ln, end_col), None, end_col == len_line)
+        else:
+            return ((end_ln, end_col), (end_ln, space_col), space_col == len_line)
 
     comments_is_ln = isinstance(comments, int) and not isinstance(comments, bool)
 
@@ -902,7 +914,15 @@ def _post_trivia(lines: list[str], bound_end_ln: int, bound_end_col: int, end_ln
 
             return ((end_ln, end_col), space_pos, False)
 
-    bottom_ln = bound_end_ln  # one past bottommost line to be considered, max return location is (bottom_ln, 0)
+    past_bound_ln = bound_end_ln + 1
+
+    if bound_end_col >= (ll := len(lines[bound_end_ln])):  # special stuff happens if bound is at EOL
+        bound_end_pos = (bound_end_ln, ll)  # this is only used if bound_at_eol so doesn't need to be set if not
+        bottom_ln     = past_bound_ln  # one past one past bottommost line to be considered, max return location is bound_end_pos
+
+    else:
+        bottom_ln     = bound_end_ln  # one past bottommost line to be considered, max return location is (bottom_ln, 0)
+
     search_ln = comments + 1 if comments_is_ln and comments < bottom_ln else bottom_ln
 
     if comments == 'all':
@@ -915,17 +935,21 @@ def _post_trivia(lines: list[str], bound_end_ln: int, bound_end_col: int, end_ln
             if (g := m.group(1)) and g.startswith('#'):
                 comments_ln = end_ln + 1
 
-        comments_pos = (comments_ln, 0)
+        comments_pos = (comments_ln, 0) if comments_ln < past_bound_ln else bound_end_pos
+        space_pos    = (end_ln, 0) if end_ln < past_bound_ln else bound_end_pos
 
-        if not space or comments_ln == end_ln:  # no space requested or we reached end of search or non-comment/empty line right after comment
+        if not space or space_pos == comments_pos:  # no space requested or we reached end of search or non-comment/empty line right after comment
             return (comments_pos, None, True)
 
         # space requested and there are some empty lines after last comment
 
         if space is True:
-            return (comments_pos, (end_ln, 0), True)  # infinite space requested so return everything we got
+            return (comments_pos, space_pos, True)  # infinite space requested so return everything we got
 
-        return (comments_pos, (comments_ln + min(space, end_ln - comments_ln), 0), True)  # return only number of lines limited by finite requested space
+        space_ln  = comments_ln + min(space, end_ln - comments_ln)
+        space_pos = (space_ln, 0) if space_ln < past_bound_ln else bound_end_pos
+
+        return (comments_pos, space_pos, True)  # return only number of lines limited by finite requested space
 
     if comments_is_ln or comments == 'block':
         re_pat = re_empty_line_cont_or_comment if comments_is_ln else re_comment_line_start
@@ -934,12 +958,14 @@ def _post_trivia(lines: list[str], bound_end_ln: int, bound_end_col: int, end_ln
             if not (m := re_pat.match(lines[end_ln])):
                 break
 
-        comments_pos = (comments_ln := end_ln, 0)
+        comments_ln  = end_ln
+        comments_pos = (comments_ln, 0) if comments_ln < past_bound_ln else bound_end_pos
 
     else:
         assert comments == 'line' or isinstance(comments, bool)
 
-        comments_pos = (comments_ln := end_ln + 1, 0)
+        comments_ln  = end_ln + 1
+        comments_pos = (comments_ln, 0) if comments_ln < past_bound_ln else bound_end_pos
 
     if not space or comments_ln == bottom_ln:
         return (comments_pos, None, True)
@@ -951,7 +977,9 @@ def _post_trivia(lines: list[str], bound_end_ln: int, bound_end_col: int, end_ln
     else:
         end_ln += 1
 
-    return (comments_pos, None, True) if end_ln == comments_ln else (comments_pos, (end_ln, 0), True)
+    space_pos = (end_ln, 0) if end_ln < past_bound_ln else bound_end_pos
+
+    return (comments_pos, None, True) if space_pos == comments_pos else (comments_pos, space_pos, True)
 
 
 def _params_offset(lines: list[bistr], put_lines: list[bistr], ln: int, col: int, end_ln: int, end_col: int,

@@ -349,8 +349,8 @@ b # word
     def test__post_trivia(self):
         from fst.misc import _post_trivia
 
-        self.assertEqual(((0, 1), (0, 4), False), _post_trivia(['a   '], 0, 4, 0, 1, 'all', True))
-        self.assertEqual(((0, 1), (0, 4), False), _post_trivia(['a  \\'], 0, 4, 0, 1, 'all', True))
+        self.assertEqual(((0, 1), (0, 4), True), _post_trivia(['a   '], 0, 4, 0, 1, 'all', True))
+        self.assertEqual(((0, 1), (0, 4), True), _post_trivia(['a  \\'], 0, 4, 0, 1, 'all', True))
         self.assertEqual(((0, 1), (0, 3), False), _post_trivia(['a  b'], 0, 4, 0, 1, 'all', True))
         self.assertEqual(((0, 1), (0, 2), False), _post_trivia(['a #c'], 0, 4, 0, 1, 'all', True))
         self.assertEqual(((0, 1), None, False), _post_trivia(['a# c'], 0, 4, 0, 1, 'all', True))
@@ -358,7 +358,7 @@ b # word
         self.assertRaises(AssertionError, _post_trivia, ['a   '], -1, 4, 0, 1, 'all', True)
         self.assertRaises(AssertionError, _post_trivia, ['a   '], 0, 0, 0, 1, 'all', True)
 
-        self.assertEqual(((0, 1), None, False), _post_trivia(['a'], 0, 1, 0, 1, 'all', True))
+        self.assertEqual(((0, 1), None, True), _post_trivia(['a'], 0, 1, 0, 1, 'all', True))
         self.assertEqual(((0, 1), None, False), _post_trivia(['a   '], 0, 1, 0, 1, 'all', True))
         self.assertEqual(((0, 1), (0, 2), False), _post_trivia(['a   '], 0, 2, 0, 1, 'all', True))
 
@@ -368,7 +368,7 @@ b # word
         self.assertEqual(((0, 1), (0, 2), False), _post_trivia(['a # c'], 0, 5, 0, 1, False, True))
 
         self.assertEqual(((1, 0), None, True), _post_trivia(['a ', ' b'], 1, 2, 0, 1, 'line', True))
-        self.assertEqual(((1, 0), None, True), _post_trivia(['a # c', ''], 1, 2, 0, 1, 'line', True))
+        self.assertEqual(((1, 0), None, True), _post_trivia(['a # c', ''], 1, 0, 0, 1, 'line', True))
         self.assertEqual(((1, 0), None, True), _post_trivia(['a # c', ' b'], 1, 2, 0, 1, 'line', True))
         self.assertEqual(((1, 0), None, True), _post_trivia(['a # c', '', ' b'], 2, 2, 0, 1, 'line', False))
 
@@ -510,6 +510,33 @@ b # word
         self.assertEqual(((4, 0), None, True), _post_trivia(ls, 4, 0, 0, 2, 3, 1))
         self.assertEqual(((4, 0), None, True), _post_trivia(ls, 4, 0, 0, 2, 3, 2))
         self.assertEqual(((4, 0), None, True), _post_trivia(ls, 4, 0, 0, 2, 3, 3))
+
+        # ends line on first line if hit bound and bound at end
+
+        self.assertEqual(((0, 1), None, True), _post_trivia(['a'], 0, 1, 0, 1, 'all', 0))
+        self.assertEqual(((0, 1), None, False), _post_trivia(['a '], 0, 1, 0, 1, 'all', 0))
+        self.assertEqual(((0, 1), (0, 2), True), _post_trivia(['a '], 0, 2, 0, 1, 'all', 0))
+        self.assertEqual(((0, 1), (0, 2), False), _post_trivia(['a  '], 0, 2, 0, 1, 'all', 0))
+        self.assertEqual(((0, 1), (0, 3), True), _post_trivia(['a  '], 0, 3, 0, 1, 'all', 0))
+
+        # hit bound not non-start line
+
+        self.assertEqual(((1, 0), None, True), _post_trivia(['a ', ''], 1, 1, 0, 1, 'all', 0))
+
+        self.assertEqual(((1, 0), None, True), _post_trivia(['a', ''], 1, 0, 0, 1, 'all', 0))
+        self.assertEqual(((1, 0), None, True), _post_trivia(['a', ' '], 1, 1, 0, 1, 'all', 0))
+
+        self.assertEqual(((1, 0), None, True), _post_trivia(['a', ''], 1, 0, 0, 1, 'all', 1))
+        self.assertEqual(((1, 0), (1, 1), True), _post_trivia(['a', ' '], 1, 1, 0, 1, 'all', 1))
+
+        self.assertEqual(((1, 3), None, True), _post_trivia(['a', '# c'], 1, 3, 0, 1, 'all', 0))
+        self.assertEqual(((2, 0), None, True), _post_trivia(['a', '# c', ''], 2, 0, 0, 1, 'all', 0))
+        self.assertEqual(((2, 0), None, True), _post_trivia(['a', '# c', ''], 2, 0, 0, 1, 'all', 1))
+        self.assertEqual(((2, 0), (2, 1), True), _post_trivia(['a', '# c', ' '], 2, 1, 0, 1, 'all', 1))
+        self.assertEqual(((2, 0), (3, 0), True), _post_trivia(['a', '# c', ' ', ''], 3, 0, 0, 1, 'all', 1))
+        self.assertEqual(((2, 0), (3, 0), True), _post_trivia(['a', '# c', ' ', ' '], 3, 1, 0, 1, 'all', 1))
+        self.assertEqual(((2, 0), (3, 1), True), _post_trivia(['a', '# c', ' ', ' '], 3, 1, 0, 1, 'all', 2))
+        self.assertEqual(((2, 0), (4, 0), True), _post_trivia(['a', '# c', ' ', ' ', ''], 4, 0, 0, 1, 'all', 2))
 
     def test__multiline_str_continuation_lns(self):
         from fst.misc import _multiline_str_continuation_lns as mscl
