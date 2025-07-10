@@ -221,7 +221,7 @@ b # word
   b]
         '''.strip().split('\n')
 
-        self.assertEqual(((7, 0), None, '  '), _leading_trivia(ls, 0, 3, 7, 2, False, 0))
+        self.assertEqual(((7, 2), (7, 0), '  '), _leading_trivia(ls, 0, 3, 7, 2, False, 0))
         self.assertEqual(((5, 0), None, '  '), _leading_trivia(ls, 0, 3, 7, 2, True, 0))
         self.assertEqual(((5, 0), (4, 0), '  '), _leading_trivia(ls, 0, 3, 7, 2, True, 1))
         self.assertEqual(((5, 0), (3, 0), '  '), _leading_trivia(ls, 0, 3, 7, 2, True, 2))
@@ -234,8 +234,8 @@ b # word
         self.assertEqual(((2, 0), (1, 0), '  '), _leading_trivia(ls, 0, 3, 7, 2, 'all', 1))
         self.assertEqual(((2, 0), (1, 0), '  '), _leading_trivia(ls, 0, 3, 7, 2, 'all', 2))
 
-        self.assertEqual(((7, 0), None, '  '), _leading_trivia(ls, 0, 3, 7, 2, 8, 0))
-        self.assertEqual(((7, 0), None, '  '), _leading_trivia(ls, 0, 3, 7, 2, 7, 0))
+        self.assertEqual(((7, 2), (7, 0), '  '), _leading_trivia(ls, 0, 3, 7, 2, 8, 0))
+        self.assertEqual(((7, 2), (7, 0), '  '), _leading_trivia(ls, 0, 3, 7, 2, 7, 0))
         self.assertEqual(((6, 0), None, '  '), _leading_trivia(ls, 0, 3, 7, 2, 6, 0))
         self.assertEqual(((5, 0), None, '  '), _leading_trivia(ls, 0, 3, 7, 2, 5, 0))
         self.assertEqual(((4, 0), None, '  '), _leading_trivia(ls, 0, 3, 7, 2, 4, 0))
@@ -245,8 +245,8 @@ b # word
         self.assertEqual(((1, 0), None, '  '), _leading_trivia(ls, 0, 3, 7, 2, 0, 0))
         self.assertEqual(((1, 0), None, '  '), _leading_trivia(ls, 0, 3, 7, 2, -1, 0))
 
-        self.assertEqual(((7, 0), None, '  '), _leading_trivia(ls, 0, 3, 7, 2, 8, 1))
-        self.assertEqual(((7, 0), None, '  '), _leading_trivia(ls, 0, 3, 7, 2, 7, 1))
+        self.assertEqual(((7, 2), (7, 0), '  '), _leading_trivia(ls, 0, 3, 7, 2, 8, 1))
+        self.assertEqual(((7, 2), (7, 0), '  '), _leading_trivia(ls, 0, 3, 7, 2, 7, 1))
         self.assertEqual(((6, 0), None, '  '), _leading_trivia(ls, 0, 3, 7, 2, 6, 1))
         self.assertEqual(((5, 0), (4, 0), '  '), _leading_trivia(ls, 0, 3, 7, 2, 5, 1))
         self.assertEqual(((4, 0), (3, 0), '  '), _leading_trivia(ls, 0, 3, 7, 2, 4, 1))
@@ -256,8 +256,8 @@ b # word
         self.assertEqual(((1, 0), None, '  '), _leading_trivia(ls, 0, 3, 7, 2, 0, 1))
         self.assertEqual(((1, 0), None, '  '), _leading_trivia(ls, 0, 3, 7, 2, -1, 1))
 
-        self.assertEqual(((7, 0), None, '  '), _leading_trivia(ls, 0, 3, 7, 2, 8, 2))
-        self.assertEqual(((7, 0), None, '  '), _leading_trivia(ls, 0, 3, 7, 2, 7, 2))
+        self.assertEqual(((7, 2), (7, 0), '  '), _leading_trivia(ls, 0, 3, 7, 2, 8, 2))
+        self.assertEqual(((7, 2), (7, 0), '  '), _leading_trivia(ls, 0, 3, 7, 2, 7, 2))
         self.assertEqual(((6, 0), None, '  '), _leading_trivia(ls, 0, 3, 7, 2, 6, 2))
         self.assertEqual(((5, 0), (3, 0), '  '), _leading_trivia(ls, 0, 3, 7, 2, 5, 2))
         self.assertEqual(((4, 0), (3, 0), '  '), _leading_trivia(ls, 0, 3, 7, 2, 4, 2))
@@ -267,7 +267,7 @@ b # word
         self.assertEqual(((1, 0), None, '  '), _leading_trivia(ls, 0, 3, 7, 2, 0, 2))
         self.assertEqual(((1, 0), None, '  '), _leading_trivia(ls, 0, 3, 7, 2, -1, 2))
 
-        self.assertEqual(((7, 0), None, '  '), _leading_trivia(ls, 1, 0, 7, 2, False, 0))
+        self.assertEqual(((7, 2), (7, 0), '  '), _leading_trivia(ls, 1, 0, 7, 2, False, 0))
         self.assertEqual(((5, 0), None, '  '), _leading_trivia(ls, 1, 0, 7, 2, True, 0))
         self.assertEqual(((5, 0), (4, 0), '  '), _leading_trivia(ls, 1, 0, 7, 2, True, 1))
         self.assertEqual(((5, 0), (3, 0), '  '), _leading_trivia(ls, 1, 0, 7, 2, True, 2))
@@ -280,8 +280,8 @@ b # word
         self.assertEqual(((2, 0), (1, 0), '  '), _leading_trivia(ls, 1, 0, 7, 2, 'all', 1))
         self.assertEqual(((2, 0), (1, 0), '  '), _leading_trivia(ls, 1, 0, 7, 2, 'all', 2))
 
-        self.assertEqual(((7, 0), None, '  '), _leading_trivia(ls, 1, 0, 7, 2, 8, 0))
-        self.assertEqual(((7, 0), None, '  '), _leading_trivia(ls, 1, 0, 7, 2, 7, 0))
+        self.assertEqual(((7, 2), (7, 0), '  '), _leading_trivia(ls, 1, 0, 7, 2, 8, 0))
+        self.assertEqual(((7, 2), (7, 0), '  '), _leading_trivia(ls, 1, 0, 7, 2, 7, 0))
         self.assertEqual(((6, 0), None, '  '), _leading_trivia(ls, 1, 0, 7, 2, 6, 0))
         self.assertEqual(((5, 0), None, '  '), _leading_trivia(ls, 1, 0, 7, 2, 5, 0))
         self.assertEqual(((4, 0), None, '  '), _leading_trivia(ls, 1, 0, 7, 2, 4, 0))
@@ -291,8 +291,8 @@ b # word
         self.assertEqual(((1, 0), None, '  '), _leading_trivia(ls, 1, 0, 7, 2, 0, 0))
         self.assertEqual(((1, 0), None, '  '), _leading_trivia(ls, 1, 0, 7, 2, -1, 0))
 
-        self.assertEqual(((7, 0), None, '  '), _leading_trivia(ls, 1, 0, 7, 2, 8, 1))
-        self.assertEqual(((7, 0), None, '  '), _leading_trivia(ls, 1, 0, 7, 2, 7, 1))
+        self.assertEqual(((7, 2), (7, 0), '  '), _leading_trivia(ls, 1, 0, 7, 2, 8, 1))
+        self.assertEqual(((7, 2), (7, 0), '  '), _leading_trivia(ls, 1, 0, 7, 2, 7, 1))
         self.assertEqual(((6, 0), None, '  '), _leading_trivia(ls, 1, 0, 7, 2, 6, 1))
         self.assertEqual(((5, 0), (4, 0), '  '), _leading_trivia(ls, 1, 0, 7, 2, 5, 1))
         self.assertEqual(((4, 0), (3, 0), '  '), _leading_trivia(ls, 1, 0, 7, 2, 4, 1))
@@ -302,8 +302,8 @@ b # word
         self.assertEqual(((1, 0), None, '  '), _leading_trivia(ls, 1, 0, 7, 2, 0, 1))
         self.assertEqual(((1, 0), None, '  '), _leading_trivia(ls, 1, 0, 7, 2, -1, 1))
 
-        self.assertEqual(((7, 0), None, '  '), _leading_trivia(ls, 1, 0, 7, 2, 8, 2))
-        self.assertEqual(((7, 0), None, '  '), _leading_trivia(ls, 1, 0, 7, 2, 7, 2))
+        self.assertEqual(((7, 2), (7, 0), '  '), _leading_trivia(ls, 1, 0, 7, 2, 8, 2))
+        self.assertEqual(((7, 2), (7, 0), '  '), _leading_trivia(ls, 1, 0, 7, 2, 7, 2))
         self.assertEqual(((6, 0), None, '  '), _leading_trivia(ls, 1, 0, 7, 2, 6, 2))
         self.assertEqual(((5, 0), (3, 0), '  '), _leading_trivia(ls, 1, 0, 7, 2, 5, 2))
         self.assertEqual(((4, 0), (3, 0), '  '), _leading_trivia(ls, 1, 0, 7, 2, 4, 2))
@@ -346,14 +346,126 @@ b # word
         self.assertEqual(((1, 0), None, ''), _leading_trivia(ls, 0, 2, 4, 0, 1, 2))
         self.assertEqual(((1, 0), None, ''), _leading_trivia(ls, 0, 2, 4, 0, 1, 3))
 
+        # special empty space handling
+
+        self.assertEqual(((2, 3), None, None), _leading_trivia([' ', ' ', 'a; b'], 0, 0, 2, 3, False, True))
+        self.assertEqual(((2, 3), None, None), _leading_trivia([' ', ' ', 'a; b'], 0, 0, 2, 3, 'all', True))
+        self.assertEqual(((2, 3), None, None), _leading_trivia([' ', ' ', 'a; b'], 0, 0, 2, 3, 'block', True))
+        self.assertEqual(((2, 3), None, None), _leading_trivia([' ', ' ', 'a; b'], 0, 0, 2, 3, True, True))
+
+        self.assertEqual(((2, 0), None, ''), _leading_trivia([' ', ' ', 'a'], 0, 0, 2, 0, 'all', False))
+        self.assertEqual(((2, 0), None, ''), _leading_trivia([' ', ' ', 'a'], 0, 0, 2, 0, 'all', 0))
+        self.assertEqual(((2, 0), (1, 0), ''), _leading_trivia([' ', ' ', 'a'], 0, 0, 2, 0, 'all', 1))
+        self.assertEqual(((2, 0), (0, 0), ''), _leading_trivia([' ', ' ', 'a'], 0, 0, 2, 0, 'all', 2))
+        self.assertEqual(((2, 0), (0, 0), ''), _leading_trivia([' ', ' ', 'a'], 0, 0, 2, 0, 'all', 3))
+        self.assertEqual(((2, 0), (0, 0), ''), _leading_trivia([' ', ' ', 'a'], 0, 0, 2, 0, 'all', True))
+
+        self.assertEqual(((2, 1), (2, 0), ' '), _leading_trivia([' ', ' ', ' a'], 0, 0, 2, 1, 'all', False))
+        self.assertEqual(((2, 1), (2, 0), ' '), _leading_trivia([' ', ' ', ' a'], 0, 0, 2, 1, 'all', 0))
+        self.assertEqual(((2, 1), (1, 0), ' '), _leading_trivia([' ', ' ', ' a'], 0, 0, 2, 1, 'all', 1))
+        self.assertEqual(((2, 1), (0, 0), ' '), _leading_trivia([' ', ' ', ' a'], 0, 0, 2, 1, 'all', 2))
+        self.assertEqual(((2, 1), (0, 0), ' '), _leading_trivia([' ', ' ', ' a'], 0, 0, 2, 1, 'all', 3))
+        self.assertEqual(((2, 1), (0, 0), ' '), _leading_trivia([' ', ' ', ' a'], 0, 0, 2, 1, 'all', True))
+
+        self.assertEqual(((2, 1), (2, 0), ' '), _leading_trivia([' ', ' ', ' a'], 0, 0, 2, 1, 'block', False))
+        self.assertEqual(((2, 1), (2, 0), ' '), _leading_trivia([' ', ' ', ' a'], 0, 0, 2, 1, 'block', 0))
+        self.assertEqual(((2, 1), (1, 0), ' '), _leading_trivia([' ', ' ', ' a'], 0, 0, 2, 1, 'block', 1))
+        self.assertEqual(((2, 1), (0, 0), ' '), _leading_trivia([' ', ' ', ' a'], 0, 0, 2, 1, 'block', 2))
+        self.assertEqual(((2, 1), (0, 0), ' '), _leading_trivia([' ', ' ', ' a'], 0, 0, 2, 1, 'block', 3))
+        self.assertEqual(((2, 1), (0, 0), ' '), _leading_trivia([' ', ' ', ' a'], 0, 0, 2, 1, 'block', True))
+
+        self.assertEqual(((2, 1), (2, 0), ' '), _leading_trivia([' ', ' ', ' a'], 0, 0, 2, 1, False, False))
+        self.assertEqual(((2, 1), (2, 0), ' '), _leading_trivia([' ', ' ', ' a'], 0, 0, 2, 1, False, 0))
+        self.assertEqual(((2, 1), (1, 0), ' '), _leading_trivia([' ', ' ', ' a'], 0, 0, 2, 1, False, 1))
+        self.assertEqual(((2, 1), (0, 0), ' '), _leading_trivia([' ', ' ', ' a'], 0, 0, 2, 1, False, 2))
+        self.assertEqual(((2, 1), (0, 0), ' '), _leading_trivia([' ', ' ', ' a'], 0, 0, 2, 1, False, 3))
+        self.assertEqual(((2, 1), (0, 0), ' '), _leading_trivia([' ', ' ', ' a'], 0, 0, 2, 1, False, True))
+
+        self.assertEqual(((2, 1), (2, 0), ' '), _leading_trivia([' ', ' ', ' a'], 0, 0, 2, 1, 2, False))
+        self.assertEqual(((2, 1), (2, 0), ' '), _leading_trivia([' ', ' ', ' a'], 0, 0, 2, 1, 2, 0))
+        self.assertEqual(((2, 1), (1, 0), ' '), _leading_trivia([' ', ' ', ' a'], 0, 0, 2, 1, 2, 1))
+        self.assertEqual(((2, 1), (0, 0), ' '), _leading_trivia([' ', ' ', ' a'], 0, 0, 2, 1, 2, 2))
+        self.assertEqual(((2, 1), (0, 0), ' '), _leading_trivia([' ', ' ', ' a'], 0, 0, 2, 1, 2, 3))
+        self.assertEqual(((2, 1), (0, 0), ' '), _leading_trivia([' ', ' ', ' a'], 0, 0, 2, 1, 2, True))
+
+        self.assertEqual(((1, 0), None, ' '), _leading_trivia([' ', ' ', ' a'], 0, 0, 2, 1, 1, False))
+        self.assertEqual(((1, 0), None, ' '), _leading_trivia([' ', ' ', ' a'], 0, 0, 2, 1, 1, 0))
+        self.assertEqual(((1, 0), (0, 0), ' '), _leading_trivia([' ', ' ', ' a'], 0, 0, 2, 1, 1, 1))
+        self.assertEqual(((1, 0), (0, 0), ' '), _leading_trivia([' ', ' ', ' a'], 0, 0, 2, 1, 1, 2))
+        self.assertEqual(((1, 0), (0, 0), ' '), _leading_trivia([' ', ' ', ' a'], 0, 0, 2, 1, 1, 3))
+        self.assertEqual(((1, 0), (0, 0), ' '), _leading_trivia([' ', ' ', ' a'], 0, 0, 2, 1, 1, True))
+
+        self.assertEqual(((0, 0), None, ' '), _leading_trivia([' ', ' ', ' a'], 0, 0, 2, 1, 0, False))
+        self.assertEqual(((0, 0), None, ' '), _leading_trivia([' ', ' ', ' a'], 0, 0, 2, 1, 0, 0))
+        self.assertEqual(((0, 0), None, ' '), _leading_trivia([' ', ' ', ' a'], 0, 0, 2, 1, 0, 1))
+        self.assertEqual(((0, 0), None, ' '), _leading_trivia([' ', ' ', ' a'], 0, 0, 2, 1, 0, 2))
+        self.assertEqual(((0, 0), None, ' '), _leading_trivia([' ', ' ', ' a'], 0, 0, 2, 1, 0, 3))
+        self.assertEqual(((0, 0), None, ' '), _leading_trivia([' ', ' ', ' a'], 0, 0, 2, 1, 0, True))
+
+        # special empty space handling with comment
+
+        self.assertEqual(((2, 3), None, None), _leading_trivia([' ', '# c', 'a; b'], 0, 0, 2, 3, False, True))
+        self.assertEqual(((2, 3), None, None), _leading_trivia([' ', '# c', 'a; b'], 0, 0, 2, 3, 'all', True))
+        self.assertEqual(((2, 3), None, None), _leading_trivia([' ', '# c', 'a; b'], 0, 0, 2, 3, 'block', True))
+        self.assertEqual(((2, 3), None, None), _leading_trivia([' ', '# c', 'a; b'], 0, 0, 2, 3, True, True))
+
+        self.assertEqual(((1, 0), None, ''), _leading_trivia([' ', '# c', 'a'], 0, 0, 2, 0, 'all', False))
+        self.assertEqual(((1, 0), None, ''), _leading_trivia([' ', '# c', 'a'], 0, 0, 2, 0, 'all', 0))
+        self.assertEqual(((1, 0), (0, 0), ''), _leading_trivia([' ', '# c', 'a'], 0, 0, 2, 0, 'all', 1))
+        self.assertEqual(((1, 0), (0, 0), ''), _leading_trivia([' ', '# c', 'a'], 0, 0, 2, 0, 'all', 2))
+        self.assertEqual(((1, 0), (0, 0), ''), _leading_trivia([' ', '# c', 'a'], 0, 0, 2, 0, 'all', 3))
+        self.assertEqual(((1, 0), (0, 0), ''), _leading_trivia([' ', '# c', 'a'], 0, 0, 2, 0, 'all', True))
+
+        self.assertEqual(((1, 0), None, ' '), _leading_trivia([' ', '# c', ' a'], 0, 0, 2, 1, 'all', False))
+        self.assertEqual(((1, 0), None, ' '), _leading_trivia([' ', '# c', ' a'], 0, 0, 2, 1, 'all', 0))
+        self.assertEqual(((1, 0), (0, 0), ' '), _leading_trivia([' ', '# c', ' a'], 0, 0, 2, 1, 'all', 1))
+        self.assertEqual(((1, 0), (0, 0), ' '), _leading_trivia([' ', '# c', ' a'], 0, 0, 2, 1, 'all', 2))
+        self.assertEqual(((1, 0), (0, 0), ' '), _leading_trivia([' ', '# c', ' a'], 0, 0, 2, 1, 'all', 3))
+        self.assertEqual(((1, 0), (0, 0), ' '), _leading_trivia([' ', '# c', ' a'], 0, 0, 2, 1, 'all', True))
+
+        self.assertEqual(((1, 0), None, ' '), _leading_trivia([' ', '# c', ' a'], 0, 0, 2, 1, 'block', False))
+        self.assertEqual(((1, 0), None, ' '), _leading_trivia([' ', '# c', ' a'], 0, 0, 2, 1, 'block', 0))
+        self.assertEqual(((1, 0), (0, 0), ' '), _leading_trivia([' ', '# c', ' a'], 0, 0, 2, 1, 'block', 1))
+        self.assertEqual(((1, 0), (0, 0), ' '), _leading_trivia([' ', '# c', ' a'], 0, 0, 2, 1, 'block', 2))
+        self.assertEqual(((1, 0), (0, 0), ' '), _leading_trivia([' ', '# c', ' a'], 0, 0, 2, 1, 'block', 3))
+        self.assertEqual(((1, 0), (0, 0), ' '), _leading_trivia([' ', '# c', ' a'], 0, 0, 2, 1, 'block', True))
+
+        self.assertEqual(((2, 1), (2, 0), ' '), _leading_trivia([' ', '# c', ' a'], 0, 0, 2, 1, False, False))
+        self.assertEqual(((2, 1), (2, 0), ' '), _leading_trivia([' ', '# c', ' a'], 0, 0, 2, 1, False, 0))
+        self.assertEqual(((2, 1), (2, 0), ' '), _leading_trivia([' ', '# c', ' a'], 0, 0, 2, 1, False, 1))
+        self.assertEqual(((2, 1), (2, 0), ' '), _leading_trivia([' ', '# c', ' a'], 0, 0, 2, 1, False, 2))
+        self.assertEqual(((2, 1), (2, 0), ' '), _leading_trivia([' ', '# c', ' a'], 0, 0, 2, 1, False, 3))
+        self.assertEqual(((2, 1), (2, 0), ' '), _leading_trivia([' ', '# c', ' a'], 0, 0, 2, 1, False, True))
+
+        self.assertEqual(((2, 1), (2, 0), ' '), _leading_trivia([' ', '# c', ' a'], 0, 0, 2, 1, 2, False))
+        self.assertEqual(((2, 1), (2, 0), ' '), _leading_trivia([' ', '# c', ' a'], 0, 0, 2, 1, 2, 0))
+        self.assertEqual(((2, 1), (2, 0), ' '), _leading_trivia([' ', '# c', ' a'], 0, 0, 2, 1, 2, 1))
+        self.assertEqual(((2, 1), (2, 0), ' '), _leading_trivia([' ', '# c', ' a'], 0, 0, 2, 1, 2, 2))
+        self.assertEqual(((2, 1), (2, 0), ' '), _leading_trivia([' ', '# c', ' a'], 0, 0, 2, 1, 2, 3))
+        self.assertEqual(((2, 1), (2, 0), ' '), _leading_trivia([' ', '# c', ' a'], 0, 0, 2, 1, 2, True))
+
+        self.assertEqual(((1, 0), None, ' '), _leading_trivia([' ', '# c', ' a'], 0, 0, 2, 1, 1, False))
+        self.assertEqual(((1, 0), None, ' '), _leading_trivia([' ', '# c', ' a'], 0, 0, 2, 1, 1, 0))
+        self.assertEqual(((1, 0), (0, 0), ' '), _leading_trivia([' ', '# c', ' a'], 0, 0, 2, 1, 1, 1))
+        self.assertEqual(((1, 0), (0, 0), ' '), _leading_trivia([' ', '# c', ' a'], 0, 0, 2, 1, 1, 2))
+        self.assertEqual(((1, 0), (0, 0), ' '), _leading_trivia([' ', '# c', ' a'], 0, 0, 2, 1, 1, 3))
+        self.assertEqual(((1, 0), (0, 0), ' '), _leading_trivia([' ', '# c', ' a'], 0, 0, 2, 1, 1, True))
+
+        self.assertEqual(((0, 0), None, ' '), _leading_trivia([' ', '# c', ' a'], 0, 0, 2, 1, 0, False))
+        self.assertEqual(((0, 0), None, ' '), _leading_trivia([' ', '# c', ' a'], 0, 0, 2, 1, 0, 0))
+        self.assertEqual(((0, 0), None, ' '), _leading_trivia([' ', '# c', ' a'], 0, 0, 2, 1, 0, 1))
+        self.assertEqual(((0, 0), None, ' '), _leading_trivia([' ', '# c', ' a'], 0, 0, 2, 1, 0, 2))
+        self.assertEqual(((0, 0), None, ' '), _leading_trivia([' ', '# c', ' a'], 0, 0, 2, 1, 0, 3))
+        self.assertEqual(((0, 0), None, ' '), _leading_trivia([' ', '# c', ' a'], 0, 0, 2, 1, 0, True))
+
     def test__trailing_trivia(self):
         from fst.misc import _trailing_trivia
 
         self.assertEqual(((0, 1), (0, 4), True), _trailing_trivia(['a   '], 0, 4, 0, 1, 'all', True))
         self.assertEqual(((0, 1), (0, 4), True), _trailing_trivia(['a  \\'], 0, 4, 0, 1, 'all', True))
         self.assertEqual(((0, 1), (0, 3), False), _trailing_trivia(['a  b'], 0, 4, 0, 1, 'all', True))
-        self.assertEqual(((0, 1), (0, 2), False), _trailing_trivia(['a #c'], 0, 4, 0, 1, 'all', True))
-        self.assertEqual(((0, 1), None, False), _trailing_trivia(['a# c'], 0, 4, 0, 1, 'all', True))
+        self.assertEqual(((0, 4), None, True), _trailing_trivia(['a #c'], 0, 4, 0, 1, 'all', True))
+        self.assertEqual(((0, 4), None, True), _trailing_trivia(['a# c'], 0, 4, 0, 1, 'all', True))
 
         self.assertRaises(AssertionError, _trailing_trivia, ['a   '], -1, 4, 0, 1, 'all', True)
         self.assertRaises(AssertionError, _trailing_trivia, ['a   '], 0, 0, 0, 1, 'all', True)
@@ -367,7 +479,7 @@ b # word
         self.assertEqual(((0, 1), None, False), _trailing_trivia(['a#c'], 0, 3, 0, 1, False, True))
         self.assertEqual(((0, 1), (0, 2), False), _trailing_trivia(['a # c'], 0, 5, 0, 1, False, True))
 
-        self.assertEqual(((1, 0), None, True), _trailing_trivia(['a ', ' b'], 1, 2, 0, 1, 'line', True))
+        self.assertEqual(((0, 1), (1, 0), True), _trailing_trivia(['a ', ' b'], 1, 2, 0, 1, 'line', True))
         self.assertEqual(((1, 0), None, True), _trailing_trivia(['a # c', ''], 1, 0, 0, 1, 'line', True))
         self.assertEqual(((1, 0), None, True), _trailing_trivia(['a # c', ' b'], 1, 2, 0, 1, 'line', True))
         self.assertEqual(((1, 0), None, True), _trailing_trivia(['a # c', '', ' b'], 2, 2, 0, 1, 'line', False))
@@ -486,15 +598,15 @@ b # word
 ]
         '''.strip().split('\n')
 
-        self.assertEqual(((1, 0), None, True), _trailing_trivia(ls, 4, 0, 0, 2, 'all', 0))
-        self.assertEqual(((1, 0), (2, 0), True), _trailing_trivia(ls, 4, 0, 0, 2, 'all', 1))
-        self.assertEqual(((1, 0), (3, 0), True), _trailing_trivia(ls, 4, 0, 0, 2, 'all', 2))
-        self.assertEqual(((1, 0), (4, 0), True), _trailing_trivia(ls, 4, 0, 0, 2, 'all', 3))
+        self.assertEqual(((0, 2), (1, 0), True), _trailing_trivia(ls, 4, 0, 0, 2, 'all', 0))
+        self.assertEqual(((0, 2), (2, 0), True), _trailing_trivia(ls, 4, 0, 0, 2, 'all', 1))
+        self.assertEqual(((0, 2), (3, 0), True), _trailing_trivia(ls, 4, 0, 0, 2, 'all', 2))
+        self.assertEqual(((0, 2), (4, 0), True), _trailing_trivia(ls, 4, 0, 0, 2, 'all', 3))
 
-        self.assertEqual(((1, 0), None, True), _trailing_trivia(ls, 4, 0, 0, 2, 0, 0))
-        self.assertEqual(((1, 0), (2, 0), True), _trailing_trivia(ls, 4, 0, 0, 2, 0, 1))
-        self.assertEqual(((1, 0), (3, 0), True), _trailing_trivia(ls, 4, 0, 0, 2, 0, 2))
-        self.assertEqual(((1, 0), (4, 0), True), _trailing_trivia(ls, 4, 0, 0, 2, 0, 3))
+        self.assertEqual(((0, 2), (1, 0), True), _trailing_trivia(ls, 4, 0, 0, 2, 0, 0))
+        self.assertEqual(((0, 2), (2, 0), True), _trailing_trivia(ls, 4, 0, 0, 2, 0, 1))
+        self.assertEqual(((0, 2), (3, 0), True), _trailing_trivia(ls, 4, 0, 0, 2, 0, 2))
+        self.assertEqual(((0, 2), (4, 0), True), _trailing_trivia(ls, 4, 0, 0, 2, 0, 3))
 
         self.assertEqual(((2, 0), None, True), _trailing_trivia(ls, 4, 0, 0, 2, 1, 0))
         self.assertEqual(((2, 0), (3, 0), True), _trailing_trivia(ls, 4, 0, 0, 2, 1, 1))
@@ -521,13 +633,13 @@ b # word
 
         # hit bound not non-start line
 
-        self.assertEqual(((1, 0), None, True), _trailing_trivia(['a ', ''], 1, 1, 0, 1, 'all', 0))
+        self.assertEqual(((0, 1), (1, 0), True), _trailing_trivia(['a ', ''], 1, 1, 0, 1, 'all', 0))
 
-        self.assertEqual(((1, 0), None, True), _trailing_trivia(['a', ''], 1, 0, 0, 1, 'all', 0))
-        self.assertEqual(((1, 0), None, True), _trailing_trivia(['a', ' '], 1, 1, 0, 1, 'all', 0))
+        self.assertEqual(((0, 1), (1, 0), True), _trailing_trivia(['a', ''], 1, 0, 0, 1, 'all', 0))
+        self.assertEqual(((0, 1), (1, 0), True), _trailing_trivia(['a', ' '], 1, 1, 0, 1, 'all', 0))
 
-        self.assertEqual(((1, 0), None, True), _trailing_trivia(['a', ''], 1, 0, 0, 1, 'all', 1))
-        self.assertEqual(((1, 0), (1, 1), True), _trailing_trivia(['a', ' '], 1, 1, 0, 1, 'all', 1))
+        self.assertEqual(((0, 1), (1, 0), True), _trailing_trivia(['a', ''], 1, 0, 0, 1, 'all', 1))
+        self.assertEqual(((0, 1), (1, 1), True), _trailing_trivia(['a', ' '], 1, 1, 0, 1, 'all', 1))
 
         self.assertEqual(((1, 3), None, True), _trailing_trivia(['a', '# c'], 1, 3, 0, 1, 'all', 0))
         self.assertEqual(((2, 0), None, True), _trailing_trivia(['a', '# c', ''], 2, 0, 0, 1, 'all', 0))
@@ -537,6 +649,78 @@ b # word
         self.assertEqual(((2, 0), (3, 0), True), _trailing_trivia(['a', '# c', ' ', ' '], 3, 1, 0, 1, 'all', 1))
         self.assertEqual(((2, 0), (3, 1), True), _trailing_trivia(['a', '# c', ' ', ' '], 3, 1, 0, 1, 'all', 2))
         self.assertEqual(((2, 0), (4, 0), True), _trailing_trivia(['a', '# c', ' ', ' ', ''], 4, 0, 0, 1, 'all', 2))
+
+        # returning end of element if trailing space on element line, bound on same line
+
+        self.assertEqual(((0, 1), (0, 3), True), _trailing_trivia(['a  '], 0, 3, 0, 1, 'all', False))
+        self.assertEqual(((0, 1), (0, 3), True), _trailing_trivia(['a \\'], 0, 3, 0, 1, 'all', False))
+        self.assertEqual(((0, 3), None, True), _trailing_trivia(['a #'], 0, 3, 0, 1, 'all', False))
+        self.assertEqual(((0, 1), (0, 3), True), _trailing_trivia(['a  '], 0, 3, 0, 1, 'block', False))
+        self.assertEqual(((0, 1), (0, 3), True), _trailing_trivia(['a \\'], 0, 3, 0, 1, 'block', False))
+        self.assertEqual(((0, 3), None, True), _trailing_trivia(['a #'], 0, 3, 0, 1, 'block', False))
+        self.assertEqual(((0, 1), (0, 3), True), _trailing_trivia(['a  '], 0, 3, 0, 1, 'line', False))
+        self.assertEqual(((0, 1), (0, 3), True), _trailing_trivia(['a \\'], 0, 3, 0, 1, 'line', False))
+        self.assertEqual(((0, 3), None, True), _trailing_trivia(['a #'], 0, 3, 0, 1, 'line', False))
+        self.assertEqual(((0, 1), (0, 3), True), _trailing_trivia(['a  '], 0, 3, 0, 1, False, False))
+        self.assertEqual(((0, 1), (0, 3), True), _trailing_trivia(['a \\'], 0, 3, 0, 1, False, False))
+        self.assertEqual(((0, 1), (0, 2), False), _trailing_trivia(['a #'], 0, 3, 0, 1, False, False))
+
+        # returning end of element if trailing space on element line, bound not on same line
+
+        self.assertEqual(((0, 1), (1, 0), True), _trailing_trivia(['a  ', ' ', ''], 2, 0, 0, 1, 'all', False))
+        self.assertEqual(((0, 1), (1, 0), True), _trailing_trivia(['a \\', ' ', ''], 2, 0, 0, 1, 'all', False))
+        self.assertEqual(((1, 0), None, True), _trailing_trivia(['a #', ' ', ''], 2, 0, 0, 1, 'all', False))
+        self.assertEqual(((0, 1), (1, 0), True), _trailing_trivia(['a  ', ' ', ''], 2, 0, 0, 1, 'block', False))
+        self.assertEqual(((0, 1), (1, 0), True), _trailing_trivia(['a \\', ' ', ''], 2, 0, 0, 1, 'block', False))
+        self.assertEqual(((1, 0), None, True), _trailing_trivia(['a #', ' ', ''], 2, 0, 0, 1, 'block', False))
+        self.assertEqual(((0, 1), (1, 0), True), _trailing_trivia(['a  ', ' ', ''], 2, 0, 0, 1, 'line', False))
+        self.assertEqual(((0, 1), (1, 0), True), _trailing_trivia(['a \\', ' ', ''], 2, 0, 0, 1, 'line', False))
+        self.assertEqual(((1, 0), None, True), _trailing_trivia(['a #', ' ', ''], 2, 0, 0, 1, 'line', False))
+        self.assertEqual(((0, 1), (1, 0), True), _trailing_trivia(['a  ', ' ', ''], 2, 0, 0, 1, False, False))
+        self.assertEqual(((0, 1), (1, 0), True), _trailing_trivia(['a \\', ' ', ''], 2, 0, 0, 1, False, False))
+        self.assertEqual(((0, 1), (0, 2), False), _trailing_trivia(['a #', ' ', ''], 2, 0, 0, 1, False, False))
+        self.assertEqual(((0, 1), (1, 0), True), _trailing_trivia(['a  ', ' ', ''], 2, 0, 0, 1, 0, False))
+        self.assertEqual(((2, 0), None, True), _trailing_trivia(['a \\', ' ', ''], 2, 0, 0, 1, 1, False))
+        self.assertEqual(((2, 0), None, True), _trailing_trivia(['a #', ' ', ''], 2, 0, 0, 1, 2, False))
+
+        self.assertEqual(((0, 1), (1, 0), True), _trailing_trivia(['a  ', ' ', ''], 2, 0, 0, 1, 'all', 0))
+        self.assertEqual(((0, 1), (1, 0), True), _trailing_trivia(['a \\', ' ', ''], 2, 0, 0, 1, 'all', 0))
+        self.assertEqual(((1, 0), None, True), _trailing_trivia(['a #', ' ', ''], 2, 0, 0, 1, 'all', 0))
+        self.assertEqual(((0, 1), (1, 0), True), _trailing_trivia(['a  ', ' ', ''], 2, 0, 0, 1, 'block', 0))
+        self.assertEqual(((0, 1), (1, 0), True), _trailing_trivia(['a \\', ' ', ''], 2, 0, 0, 1, 'block', 0))
+        self.assertEqual(((1, 0), None, True), _trailing_trivia(['a #', ' ', ''], 2, 0, 0, 1, 'block', 0))
+        self.assertEqual(((0, 1), (1, 0), True), _trailing_trivia(['a  ', ' ', ''], 2, 0, 0, 1, 'line', 0))
+        self.assertEqual(((0, 1), (1, 0), True), _trailing_trivia(['a \\', ' ', ''], 2, 0, 0, 1, 'line', 0))
+        self.assertEqual(((1, 0), None, True), _trailing_trivia(['a #', ' ', ''], 2, 0, 0, 1, 'line', 0))
+        self.assertEqual(((0, 1), (1, 0), True), _trailing_trivia(['a  ', ' ', ''], 2, 0, 0, 1, False, 0))
+        self.assertEqual(((0, 1), (1, 0), True), _trailing_trivia(['a \\', ' ', ''], 2, 0, 0, 1, False, 0))
+        self.assertEqual(((0, 1), (0, 2), False), _trailing_trivia(['a #', ' ', ''], 2, 0, 0, 1, False, 0))
+        self.assertEqual(((0, 1), (1, 0), True), _trailing_trivia(['a  ', ' ', ''], 2, 0, 0, 1, 0, 0))
+        self.assertEqual(((2, 0), None, True), _trailing_trivia(['a \\', ' ', ''], 2, 0, 0, 1, 1, 0))
+        self.assertEqual(((2, 0), None, True), _trailing_trivia(['a #', ' ', ''], 2, 0, 0, 1, 2, 0))
+
+        self.assertEqual(((0, 1), (2, 0), True), _trailing_trivia(['a  ', ' ', ''], 2, 0, 0, 1, 'all', 1))
+        self.assertEqual(((0, 1), (2, 0), True), _trailing_trivia(['a \\', ' ', ''], 2, 0, 0, 1, 'all', 1))
+        self.assertEqual(((1, 0), (2, 0), True), _trailing_trivia(['a #', ' ', ''], 2, 0, 0, 1, 'all', 1))
+        self.assertEqual(((0, 1), (2, 0), True), _trailing_trivia(['a  ', ' ', ''], 2, 0, 0, 1, 'block', 1))
+        self.assertEqual(((0, 1), (2, 0), True), _trailing_trivia(['a \\', ' ', ''], 2, 0, 0, 1, 'block', 1))
+        self.assertEqual(((1, 0), (2, 0), True), _trailing_trivia(['a #', ' ', ''], 2, 0, 0, 1, 'block', 1))
+        self.assertEqual(((0, 1), (2, 0), True), _trailing_trivia(['a  ', ' ', ''], 2, 0, 0, 1, 'line', 1))
+        self.assertEqual(((0, 1), (2, 0), True), _trailing_trivia(['a \\', ' ', ''], 2, 0, 0, 1, 'line', 1))
+        self.assertEqual(((1, 0), (2, 0), True), _trailing_trivia(['a #', ' ', ''], 2, 0, 0, 1, 'line', 1))
+        self.assertEqual(((0, 1), (2, 0), True), _trailing_trivia(['a  ', ' ', ''], 2, 0, 0, 1, False, 1))
+        self.assertEqual(((0, 1), (2, 0), True), _trailing_trivia(['a \\', ' ', ''], 2, 0, 0, 1, False, 1))
+        self.assertEqual(((0, 1), (0, 2), False), _trailing_trivia(['a #', ' ', ''], 2, 0, 0, 1, False, 1))
+        self.assertEqual(((0, 1), (2, 0), True), _trailing_trivia(['a  ', ' ', ''], 2, 0, 0, 1, 0, 1))
+        self.assertEqual(((2, 0), None, True), _trailing_trivia(['a \\', ' ', ''], 2, 0, 0, 1, 1, 1))
+        self.assertEqual(((2, 0), None, True), _trailing_trivia(['a #', ' ', ''], 2, 0, 0, 1, 2, 1))
+
+        # misc
+
+        self.assertEqual(((2, 0), (2, 1), True), _trailing_trivia(['a ', '# c', ' '], 2, 1, 0, 1, 1, 1))
+        self.assertEqual(((2, 1), None, True), _trailing_trivia(['a ', '   ', ' '], 2, 1, 0, 1, 2, 2))
+        self.assertEqual(((2, 1), None, True), _trailing_trivia(['a ', '   ', ' '], 2, 1, 0, 1, 2, 0))
+        self.assertEqual(((0, 1), (2, 1), True), _trailing_trivia(['a ', '   ', ' '], 2, 1, 0, 1, 'block', 2))
 
     def test__multiline_str_continuation_lns(self):
         from fst.misc import _multiline_str_continuation_lns as mscl

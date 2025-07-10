@@ -2855,8 +2855,10 @@ match a:
         self.assertEqual("fstlocns(0, 0, 0, 4, starts_line=True, ends_line=True, indent='')", str(FST('a   ', stmt).trivia((False, 'all'))))
         self.assertEqual("fstlocns(0, 0, 1, 0, starts_line=True, ends_line=True, indent='')", str(FST('a  \\\n ', stmt).trivia((False, 'all'))))
         self.assertEqual("fstlocns(0, 0, 0, 3, starts_line=True, ends_line=False, indent='')", str(FST('a  ;', stmt).trivia((False, 'all'))))
-        self.assertEqual("fstlocns(0, 0, 0, 2, starts_line=True, ends_line=False, indent='')", str(FST('a #c', stmt).trivia((False, 'all'))))
-        self.assertEqual("fstlocns(0, 0, 0, 1, starts_line=True, ends_line=False, indent='')", str(FST('a# c', stmt).trivia((False, 'all'))))
+        self.assertEqual("fstlocns(0, 0, 0, 4, starts_line=True, ends_line=True, indent='')", str(FST('a #c', stmt).trivia((False, 'all'))))
+        self.assertEqual("fstlocns(0, 0, 0, 4, starts_line=True, ends_line=True, indent='')", str(FST('a# c', stmt).trivia((False, 'all'))))
+        self.assertEqual("fstlocns(0, 0, 0, 2, starts_line=True, ends_line=False, indent='')", str(FST('a #c', stmt).trivia((False, False))))
+        self.assertEqual("fstlocns(0, 0, 0, 1, starts_line=True, ends_line=False, indent='')", str(FST('a# c', stmt).trivia((False, False))))
 
         self.assertEqual("fstlocns(0, 0, 0, 1, starts_line=True, ends_line=True, indent='')", str(FST('a', stmt).trivia((False, 'all+'))))
         self.assertEqual("fstlocns(0, 0, 0, 4, starts_line=True, ends_line=True, indent='')", str(FST('a   ', stmt).trivia((False, 'all+'))))

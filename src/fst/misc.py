@@ -739,10 +739,10 @@ def _prev_pars(lines: list[str], bound_ln: int, bound_col: int, pars_ln: int, pa
 
 def _leading_trivia(lines: list[str], bound_ln: int, bound_col: int, ln: int, col: int,
                     comments: bool | Literal['all', 'block'] | int, space: bool | int,
-                    ) -> tuple[tuple[int, int], tuple[int, int] | None, str | None]:
-    """Get locations of leading trivia / junk starting at the given bound up to (`ln`, `col`) where the element starts.
-    Can get location of a block of comments (no spaces between), all comments after start of bound (with spaces inside)
-    and any leading empty lines. Also returns the indentation of the element line if it starts the line.
+                    ) -> tuple[tuple[int, int], tuple[int, int] | None, str | None]:  # TODO: clean this up
+    """Get locations of leading trivia starting at the given bound up to (`ln`, `col`) where the element starts. Can get
+    location of a block of comments (no spaces between), all comments after start of bound (with spaces inside) and any
+    leading empty lines. Also returns the indentation of the element line if it starts the line.
 
     Regardless of if no comments or space is requested, this function will always return whether the element starts the
     line or not and the indentation if so.
@@ -786,6 +786,8 @@ def _leading_trivia(lines: list[str], bound_ln: int, bound_col: int, ln: int, co
     comments_ln    = ln
     top_ln         = bound_ln + bool(bound_col)  # topmost possible line to be considered, min return location is (top_ln, 0)
     search_ln      = comments if comments_is_ln and comments > top_ln else top_ln
+    pos            = (ln, col)
+    no_comments_ln = ln
 
     if comments == 'all':
         while (ln := ln - 1) >= search_ln:
@@ -795,17 +797,19 @@ def _leading_trivia(lines: list[str], bound_ln: int, bound_col: int, ln: int, co
             if (g := m.group(1)) and g.startswith('#'):
                 comments_ln = ln
 
-        comments_pos = (comments_ln, 0)
+        ln                += 1
+        comments_line_pos  = (comments_ln, 0)
+        comments_pos       = pos if comments_ln == no_comments_ln else comments_line_pos
 
-        if not space or comments_ln == ln + 1:  # no space requested or we reached top of search or non-comment/empty line right before comment
-            return (comments_pos, None, indent)
+        if not space or comments_ln == ln:  # no space requested or we reached top of search or non-comment/empty line right before comment
+            return (comments_pos, None if comments_line_pos == comments_pos else comments_line_pos, indent)
 
         # space requested and there are some empty lines before first comment
 
         if space is True:
-            return (comments_pos, (ln + 1, 0), indent)  # infinite space requested so return everything we got
+            return (comments_pos, (ln, 0), indent)  # infinite space requested so return everything we got
 
-        return (comments_pos, (comments_ln - min(space, comments_ln - (ln + 1)), 0), indent)
+        return (comments_pos, (comments_ln - min(space, comments_ln - ln), 0), indent)
 
     if comments is not False:
         assert comments_is_ln or comments is True or comments == 'block'
@@ -816,13 +820,15 @@ def _leading_trivia(lines: list[str], bound_ln: int, bound_col: int, ln: int, co
             if not (m := re_pat.match(lines[ln])):
                 break
 
-        comments_pos = (comments_ln := ln + 1, 0)
+        comments_line_pos = (comments_ln := ln + 1, 0)
+        comments_pos      = pos if comments_ln == no_comments_ln else comments_line_pos
 
     else:
-        comments_pos = (comments_ln, 0)
+        comments_line_pos = (comments_ln, 0)
+        comments_pos      = pos
 
     if not space or comments_ln == top_ln:
-        return (comments_pos, None, indent)
+        return (comments_pos, None if comments_line_pos == comments_pos else comments_line_pos, indent)
 
     for ln in range(comments_ln - 1, max(top_ln - 1, -1 if space is True else comments_ln - 1 - space), -1):
         if not re_empty_line_or_cont.match(lines[ln]):
@@ -830,16 +836,19 @@ def _leading_trivia(lines: list[str], bound_ln: int, bound_col: int, ln: int, co
 
             break
 
-    return (comments_pos, None, indent) if ln == comments_ln else (comments_pos, (ln, 0), indent)
+    if ln == comments_ln:
+        return (comments_pos, None if comments_line_pos == comments_pos else comments_line_pos, indent)
+
+    return (comments_pos, (ln, 0), indent)
 
 
 def _trailing_trivia(lines: list[str], bound_end_ln: int, bound_end_col: int, end_ln: int, end_col: int,
                      comments: bool | Literal['all', 'block', 'line'] | int, space: bool | int,
-                     ) -> tuple[tuple[int, int], tuple[int, int] | None, bool]:
-    """Get locations of trailing trivia / junk starting at the element up to (`end_ln`, `end_col`) where the given bound
-    ends. Can get location of a block of comments (no spaces between), all comments after start of bound (with spaces
-    inside), a single comment on the ending line and any trailing empty lines. Also returns whether the element ends the
-    line or not.
+                     ) -> tuple[tuple[int, int], tuple[int, int] | None, bool]:  # TODO: clean this up
+    """Get locations of trailing trivia starting at the element up to (`end_ln`, `end_col`) where the given bound ends.
+    Can get location of a block of comments (no spaces between), all comments after start of bound (with spaces inside),
+    a single comment on the ending line and any trailing empty lines. Also returns whether the element ends the line or
+    not.
 
     Regardless of if no comments or space is requested, this function will always return whether the element ends the
     line or not.
@@ -896,15 +905,17 @@ def _trailing_trivia(lines: list[str], bound_end_ln: int, bound_end_col: int, en
 
         len_line = len(lines[end_ln])
 
-        if (code := _next_src(lines, end_ln, end_col, end_ln, bound_end_col, True)):
+        if not (code := _next_src(lines, end_ln, end_col, end_ln, bound_end_col, True)):
+            space_col = min(bound_end_col, len_line)
+        elif not comments or not code.src.startswith('#'):
             space_col = code.col
         else:
-            space_col = min(bound_end_col, len_line)
+            return ((end_ln, len_line), None, True)
 
         if space_col == end_col:
-            return ((end_ln, end_col), None, end_col == len_line)
-        else:
-            return ((end_ln, end_col), (end_ln, space_col), space_col == len_line)
+            return ((end_ln, end_col), None, space_col == len_line)
+
+        return ((end_ln, end_col), (end_ln, space_col), space_col == len_line)
 
     comments_is_ln = isinstance(comments, int) and not isinstance(comments, bool)
 
@@ -914,19 +925,25 @@ def _trailing_trivia(lines: list[str], bound_end_ln: int, bound_end_col: int, en
 
             return ((end_ln, end_col), space_pos, False)
 
-    past_bound_ln = bound_end_ln + 1
+        end_pos = (end_ln + 1, 0)  # comment on line so comment pos must be one past
+
+    else:
+        end_pos = (end_ln, end_col)  # no comment on line so default comment pos is end of element unless other comments found
+
+    past_bound_end_ln = bound_end_ln + 1
 
     if bound_end_col >= (ll := len(lines[bound_end_ln])):  # special stuff happens if bound is at EOL
         bound_end_pos = (bound_end_ln, ll)  # this is only used if bound is at EOL so doesn't need to be set if not
-        bottom_ln     = past_bound_ln  # one past one past bottommost line to be considered, max return location is bound_end_pos
+        bottom_ln     = past_bound_end_ln  # two past bottommost line to be considered, max return location is bound_end_pos
 
     else:
         bottom_ln     = bound_end_ln  # one past bottommost line to be considered, max return location is (bottom_ln, 0)
 
-    search_ln = comments + 1 if comments_is_ln and comments < bottom_ln else bottom_ln
+    search_ln      = comments + 1 if comments_is_ln and comments < bottom_ln else bottom_ln
+    no_comments_ln = end_ln + 1
 
     if comments == 'all':
-        comments_ln = end_ln + 1
+        comments_ln = no_comments_ln
 
         while (end_ln := end_ln + 1) < search_ln:
             if not (m := re_empty_line_cont_or_comment.match(lines[end_ln])):
@@ -935,10 +952,15 @@ def _trailing_trivia(lines: list[str], bound_end_ln: int, bound_end_col: int, en
             if (g := m.group(1)) and g.startswith('#'):
                 comments_ln = end_ln + 1
 
-        comments_pos = (comments_ln, 0) if comments_ln < past_bound_ln else bound_end_pos
-        space_pos    = (end_ln, 0) if end_ln < past_bound_ln else bound_end_pos
+        comments_line_pos = (comments_ln, 0) if comments_ln < past_bound_end_ln else bound_end_pos
+        comments_pos      = end_pos if comments_ln == no_comments_ln else comments_line_pos
 
-        if not space or space_pos == comments_pos:  # no space requested or we reached end of search or non-comment/empty line right after comment
+        if not space:  # no space requested
+            return (comments_pos, None if comments_line_pos == comments_pos else comments_line_pos, True)
+
+        space_pos = (end_ln, 0) if end_ln < past_bound_end_ln else bound_end_pos
+
+        if space_pos == comments_pos:  # we reached end of search or non-comment/empty line right after comment
             return (comments_pos, None, True)
 
         # space requested and there are some empty lines after last comment
@@ -947,7 +969,7 @@ def _trailing_trivia(lines: list[str], bound_end_ln: int, bound_end_col: int, en
             return (comments_pos, space_pos, True)  # infinite space requested so return everything we got
 
         space_ln  = comments_ln + min(space, end_ln - comments_ln)
-        space_pos = (space_ln, 0) if space_ln < past_bound_ln else bound_end_pos
+        space_pos = (space_ln, 0) if space_ln < past_bound_end_ln else bound_end_pos
 
         return (comments_pos, space_pos, True)  # return only number of lines limited by finite requested space
 
@@ -965,9 +987,13 @@ def _trailing_trivia(lines: list[str], bound_end_ln: int, bound_end_col: int, en
 
         comments_ln = end_ln + 1
 
-    comments_pos = (comments_ln, 0) if comments_ln < past_bound_ln else bound_end_pos
+    comments_line_pos = (comments_ln, 0) if comments_ln < past_bound_end_ln else bound_end_pos
+    comments_pos      = end_pos if comments_ln == no_comments_ln else comments_line_pos
 
-    if not space or comments_ln == bottom_ln:
+    if not space:
+        return (comments_pos, None if comments_line_pos == comments_pos else comments_line_pos, True)
+
+    if comments_ln == bottom_ln:
         return (comments_pos, None, True)
 
     for end_ln in range(comments_ln, bottom_ln if space is True else min(comments_ln + space, bottom_ln)):
@@ -977,7 +1003,7 @@ def _trailing_trivia(lines: list[str], bound_end_ln: int, bound_end_col: int, en
     else:
         end_ln += 1
 
-    space_pos = (end_ln, 0) if end_ln < past_bound_ln else bound_end_pos
+    space_pos = (end_ln, 0) if end_ln < past_bound_end_ln else bound_end_pos
 
     return (comments_pos, None, True) if space_pos == comments_pos else (comments_pos, space_pos, True)
 
@@ -1025,7 +1051,7 @@ def _fixup_field_body(ast: AST, field: str | None = None, only_list: bool = True
         raise ValueError(f"{ast.__class__.__name__} has no field '{field}'")
 
     if only_list and not isinstance(body, list):
-        raise ValueError(f"invalid {ast.__class__.__name__} field '{field}', must be a list")
+        raise ValueError(f"cannot perform slice oparations on {ast.__class__.__name__}{f'.{field}' if field else ''}")
 
     return field, body
 
