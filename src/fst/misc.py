@@ -990,11 +990,8 @@ def _trailing_trivia(lines: list[str], bound_end_ln: int, bound_end_col: int, en
     comments_line_pos = (comments_ln, 0) if comments_ln < past_bound_end_ln else bound_end_pos
     comments_pos      = end_pos if comments_ln == no_comments_ln else comments_line_pos
 
-    if not space:
+    if not space or comments_ln == bottom_ln:
         return (comments_pos, None if comments_line_pos == comments_pos else comments_line_pos, True)
-
-    if comments_ln == bottom_ln:
-        return (comments_pos, None, True)
 
     for end_ln in range(comments_ln, bottom_ln if space is True else min(comments_ln + space, bottom_ln)):
         if not re_empty_line_or_cont.match(lines[end_ln]):

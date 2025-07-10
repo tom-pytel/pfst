@@ -18,8 +18,6 @@ from .misc import (
     _prev_find, _next_find, _fixup_slice_indices,
 )
 
-from .fst_slice_old import _get_slice_dict, _get_slice_stmtish, _get_slice_tuple_list_or_set
-
 
 # * Keep src same.
 # * Use normal AST and src where possible.
@@ -238,11 +236,6 @@ def _get_slice_NOT_IMPLEMENTED_YET(self: fst.FST, start: int | Literal['end'] | 
     raise NotImplementedError('this is not implemented yet')
 
 
-def _get_slice_stmtish_legacy(self: fst.FST, start: int | Literal['end'] | None, stop: int | None, field: str,
-                              **options) -> fst.FST:
-    return self._get_slice_stmtish(start, stop, field, cut=False, **options)
-
-
 def _get_slice_dict_legacy(self: fst.FST, start: int | Literal['end'] | None, stop: int | None, field: str,
                            **options) -> fst.FST:
     return self._get_slice_dict(start, stop, field, cut=False, **options)
@@ -259,6 +252,10 @@ def _get_slice(self: fst.FST, start: int | Literal['end'] | None, stop: int | No
                **options) -> fst.FST:
     """Get a slice of child nodes from `self`."""
 
+    if isinstance(self.a, STMTISH_OR_STMTMOD):  # statements are special for now
+        if field in STMTISH_FIELDS:
+            return self._get_slice_stmtish(start, stop, field, cut, **options)
+
     if not (handler := _GET_SLICE_HANDLERS.get((self.a.__class__, field))):
         raise ValueError(f"cannot get slice from {self.a.__class__.__name__}{f'.{field}' if field else ''}")
 
@@ -271,35 +268,35 @@ def _get_slice(self: fst.FST, start: int | Literal['end'] | None, stop: int | No
 
 
 _GET_SLICE_HANDLERS = {
-    (Module, 'body'):                     _get_slice_stmtish_legacy,  # stmt*
-    (Interactive, 'body'):                _get_slice_stmtish_legacy,  # stmt*
-    (FunctionDef, 'body'):                _get_slice_stmtish_legacy,  # stmt*
-    (AsyncFunctionDef, 'body'):           _get_slice_stmtish_legacy,  # stmt*
-    (ClassDef, 'body'):                   _get_slice_stmtish_legacy,  # stmt*
-    (For, 'body'):                        _get_slice_stmtish_legacy,  # stmt*
-    (For, 'orelse'):                      _get_slice_stmtish_legacy,  # stmt*
-    (AsyncFor, 'body'):                   _get_slice_stmtish_legacy,  # stmt*
-    (AsyncFor, 'orelse'):                 _get_slice_stmtish_legacy,  # stmt*
-    (While, 'body'):                      _get_slice_stmtish_legacy,  # stmt*
-    (While, 'orelse'):                    _get_slice_stmtish_legacy,  # stmt*
-    (If, 'body'):                         _get_slice_stmtish_legacy,  # stmt*
-    (If, 'orelse'):                       _get_slice_stmtish_legacy,  # stmt*
-    (With, 'body'):                       _get_slice_stmtish_legacy,  # stmt*
-    (AsyncWith, 'body'):                  _get_slice_stmtish_legacy,  # stmt*
-    (Try, 'body'):                        _get_slice_stmtish_legacy,  # stmt*
-    (Try, 'orelse'):                      _get_slice_stmtish_legacy,  # stmt*
-    (Try, 'finalbody'):                   _get_slice_stmtish_legacy,  # stmt*
-    (TryStar, 'body'):                    _get_slice_stmtish_legacy,  # stmt*
-    (TryStar, 'orelse'):                  _get_slice_stmtish_legacy,  # stmt*
-    (TryStar, 'finalbody'):               _get_slice_stmtish_legacy,  # stmt*
-    (ExceptHandler, 'body'):              _get_slice_stmtish_legacy,  # stmt*
-    (match_case, 'body'):                 _get_slice_stmtish_legacy,  # stmt*
+    # (Module, 'body'):                     _get_slice_stmtish_legacy,  # stmt*
+    # (Interactive, 'body'):                _get_slice_stmtish_legacy,  # stmt*
+    # (FunctionDef, 'body'):                _get_slice_stmtish_legacy,  # stmt*
+    # (AsyncFunctionDef, 'body'):           _get_slice_stmtish_legacy,  # stmt*
+    # (ClassDef, 'body'):                   _get_slice_stmtish_legacy,  # stmt*
+    # (For, 'body'):                        _get_slice_stmtish_legacy,  # stmt*
+    # (For, 'orelse'):                      _get_slice_stmtish_legacy,  # stmt*
+    # (AsyncFor, 'body'):                   _get_slice_stmtish_legacy,  # stmt*
+    # (AsyncFor, 'orelse'):                 _get_slice_stmtish_legacy,  # stmt*
+    # (While, 'body'):                      _get_slice_stmtish_legacy,  # stmt*
+    # (While, 'orelse'):                    _get_slice_stmtish_legacy,  # stmt*
+    # (If, 'body'):                         _get_slice_stmtish_legacy,  # stmt*
+    # (If, 'orelse'):                       _get_slice_stmtish_legacy,  # stmt*
+    # (With, 'body'):                       _get_slice_stmtish_legacy,  # stmt*
+    # (AsyncWith, 'body'):                  _get_slice_stmtish_legacy,  # stmt*
+    # (Try, 'body'):                        _get_slice_stmtish_legacy,  # stmt*
+    # (Try, 'orelse'):                      _get_slice_stmtish_legacy,  # stmt*
+    # (Try, 'finalbody'):                   _get_slice_stmtish_legacy,  # stmt*
+    # (TryStar, 'body'):                    _get_slice_stmtish_legacy,  # stmt*
+    # (TryStar, 'orelse'):                  _get_slice_stmtish_legacy,  # stmt*
+    # (TryStar, 'finalbody'):               _get_slice_stmtish_legacy,  # stmt*
+    # (ExceptHandler, 'body'):              _get_slice_stmtish_legacy,  # stmt*
+    # (match_case, 'body'):                 _get_slice_stmtish_legacy,  # stmt*
 
-    (Match, 'cases'):                     _get_slice_stmtish_legacy,  # match_case*
-    (Try, 'handlers'):                    _get_slice_stmtish_legacy,  # excepthandler*
-    (TryStar, 'handlers'):                _get_slice_stmtish_legacy,  # excepthandlerstar*
+    # (Match, 'cases'):                     _get_slice_stmtish_legacy,  # match_case*
+    # (Try, 'handlers'):                    _get_slice_stmtish_legacy,  # excepthandler*
+    # (TryStar, 'handlers'):                _get_slice_stmtish_legacy,  # excepthandlerstar*
 
-    (Dict, ''):                           _get_slice_dict_legacy,  # expr*
+    (Dict, ''):                           _get_slice_dict_legacy,  # key:value*
 
     (Set, 'elts'):                        _get_slice_tuple_list_or_set_legacy,  # expr*
     (List, 'elts'):                       _get_slice_tuple_list_or_set_legacy,  # expr*
@@ -331,7 +328,7 @@ _GET_SLICE_HANDLERS = {
     (AsyncWith, 'items'):                 _get_slice_NOT_IMPLEMENTED_YET,  # withitem*
 
     (MatchSequence, 'patterns'):          _get_slice_NOT_IMPLEMENTED_YET,  # pattern*
-    (MatchMapping, ''):                   _get_slice_NOT_IMPLEMENTED_YET,  # pattern*
+    (MatchMapping, ''):                   _get_slice_NOT_IMPLEMENTED_YET,  # key:pattern*
     (MatchClass, 'patterns'):             _get_slice_NOT_IMPLEMENTED_YET,  # pattern*
     (MatchOr, 'patterns'):                _get_slice_NOT_IMPLEMENTED_YET,  # pattern*
 
@@ -533,45 +530,45 @@ def _put_slice(self: fst.FST, code: Code | None, start: int | Literal['end'] | N
 
 
             if (ast.__class__, field) in [
-                (FunctionDef, 'decorator_list'),      # expr*
+                (FunctionDef, 'decorator_list'),       # expr*
                 (AsyncFunctionDef, 'decorator_list'),  # expr*
-                (ClassDef, 'decorator_list'),         # expr*
-                (ClassDef, 'bases'),                  # expr*
-                (Delete, 'targets'),                  # expr*
-                (Assign, 'targets'),                  # expr*
-                (BoolOp, 'values'),                   # expr*
-                (Call, 'args'),                       # expr*
-                (comprehension, 'ifs'),               # expr*
+                (ClassDef, 'decorator_list'),          # expr*
+                (ClassDef, 'bases'),                   # expr*
+                (Delete, 'targets'),                   # expr*
+                (Assign, 'targets'),                   # expr*
+                (BoolOp, 'values'),                    # expr*
+                (Call, 'args'),                        # expr*
+                (comprehension, 'ifs'),                # expr*
 
-                (ListComp, 'generators'),             # comprehension*
-                (SetComp, 'generators'),              # comprehension*
-                (DictComp, 'generators'),             # comprehension*
-                (GeneratorExp, 'generators'),         # comprehension*
+                (ListComp, 'generators'),              # comprehension*
+                (SetComp, 'generators'),               # comprehension*
+                (DictComp, 'generators'),              # comprehension*
+                (GeneratorExp, 'generators'),          # comprehension*
 
-                (ClassDef, 'keywords'),               # keyword*
-                (Call, 'keywords'),                   # keyword*
+                (ClassDef, 'keywords'),                # keyword*
+                (Call, 'keywords'),                    # keyword*
 
-                (Import, 'names'),                    # alias*
-                (ImportFrom, 'names'),                # alias*
+                (Import, 'names'),                     # alias*
+                (ImportFrom, 'names'),                 # alias*
 
-                (With, 'items'),                      # withitem*
-                (AsyncWith, 'items'),                 # withitem*
+                (With, 'items'),                       # withitem*
+                (AsyncWith, 'items'),                  # withitem*
 
-                (MatchSequence, 'patterns'),          # pattern*
-                (MatchMapping, 'patterns'),           # pattern*
-                (MatchClass, 'patterns'),             # pattern*
-                (MatchOr, 'patterns'),                # pattern*
+                (MatchSequence, 'patterns'),           # pattern*
+                (MatchMapping, 'patterns'),            # pattern*
+                (MatchClass, 'patterns'),              # pattern*
+                (MatchOr, 'patterns'),                 # pattern*
 
-                (FunctionDef, 'type_params'),         # type_param*
-                (AsyncFunctionDef, 'type_params'),    # type_param*
-                (ClassDef, 'type_params'),            # type_param*
-                (TypeAlias, 'type_params'),           # type_param*
+                (FunctionDef, 'type_params'),          # type_param*
+                (AsyncFunctionDef, 'type_params'),     # type_param*
+                (ClassDef, 'type_params'),             # type_param*
+                (TypeAlias, 'type_params'),            # type_param*
 
-                (Global, 'names'),                    # identifier*
-                (Nonlocal, 'names'),                  # identifier*
+                (Global, 'names'),                     # identifier*
+                (Nonlocal, 'names'),                   # identifier*
 
-                (JoinedStr, 'values'),                # expr*
-                (TemplateStr, 'values'),              # expr*
+                (JoinedStr, 'values'),                 # expr*
+                (TemplateStr, 'values'),               # expr*
 
             ]:
                 raise NotImplementedError("not implemented yet, try with option raw='auto'")
