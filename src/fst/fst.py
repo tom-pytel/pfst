@@ -290,7 +290,11 @@ class FST:
     def bloc(self) -> fstloc | None:
         """Bounding location of node, including any preceding decorators. Not all nodes have locations but any node
         which has a `loc` will have a `bloc`. Will be same as `loc` for all nodes except those that have decorators, in
-        which case it will start at the first decorator."""
+        which case it will start at the first decorator.
+
+        **Note:** This may be changed in the future to include trailing comments belonging to last elements of block
+        statements.
+        """
 
         try:
             return self._cache['bloc']
@@ -2203,7 +2207,11 @@ class FST:
         by the `trivia` parameter and / or the global default `trivia` option. Currently only applies to statementish
         nodes (`stmt`, `ExceptHandler` and `match_case`).
 
-        **TODO:** Trivia for non-statementish nodes.
+        **Note:** Currently the trivia past the end of the last statement in a block belongs to the whole block and not
+        to the last statement itself. As this is counterintuitive it may be changed in the future along with `.bloc`
+        encompassing trailing comments.
+
+        **TODO:** Trivia for non-statementish nodes (like elements of a list on their own lines).
 
         **Parameters:**
         - `trivia`: The specification for what trivia to return, see `options()` for meaning of values:

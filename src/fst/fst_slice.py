@@ -18,6 +18,8 @@ from .misc import (
     _prev_find, _next_find, _fixup_slice_indices,
 )
 
+from .fst_slice_old import _get_slice_dict, _get_slice_stmtish, _get_slice_tuple_list_or_set
+
 
 # * Keep src same.
 # * Use normal AST and src where possible.
@@ -206,7 +208,7 @@ _SLICE_COMAPTIBILITY = {
     # (Global, 'names'):                    'identifier*',
     # (Nonlocal, 'names'):                  'identifier*',
     # (BoolOp, 'values'):                   'expr*',
-    # (Dict, ''):                           'expr*',
+    (Dict, ''):                           'key:value*',
     (Set, 'elts'):                        'expr*',
     # (ListComp, 'generators'):             'comprehension*',
     # (SetComp, 'generators'):              'comprehension*',
@@ -229,77 +231,121 @@ _SLICE_COMAPTIBILITY = {
 
 
 # ----------------------------------------------------------------------------------------------------------------------
+# get
+
+def _get_slice_NOT_IMPLEMENTED_YET(self: fst.FST, start: int | Literal['end'] | None, stop: int | None, field: str,
+                                   **options) -> fst.FST:
+    raise NotImplementedError('this is not implemented yet')
+
+
+def _get_slice_stmtish_legacy(self: fst.FST, start: int | Literal['end'] | None, stop: int | None, field: str,
+                              **options) -> fst.FST:
+    return self._get_slice_stmtish(start, stop, field, cut=False, **options)
+
+
+def _get_slice_dict_legacy(self: fst.FST, start: int | Literal['end'] | None, stop: int | None, field: str,
+                           **options) -> fst.FST:
+    return self._get_slice_dict(start, stop, field, cut=False, **options)
+
+
+def _get_slice_tuple_list_or_set_legacy(self: fst.FST, start: int | Literal['end'] | None, stop: int | None, field: str,
+                                        **options) -> fst.FST:
+    return self._get_slice_tuple_list_or_set(start, stop, field, cut=False, **options)
+
+
+# ......................................................................................................................
 
 def _get_slice(self: fst.FST, start: int | Literal['end'] | None, stop: int | None, field: str, cut: bool,
                **options) -> fst.FST:
     """Get a slice of child nodes from `self`."""
 
-    ast = self.a
+    if not (handler := _GET_SLICE_HANDLERS.get((self.a.__class__, field))):
+        raise ValueError(f"cannot get slice from {self.a.__class__.__name__}{f'.{field}' if field else ''}")
 
-    if isinstance(ast, STMTISH_OR_STMTMOD):
-        if field in STMTISH_FIELDS:
-            return self._get_slice_stmtish(start, stop, field, cut, **options)
+    ret = handler(self, start, stop, field, **options)
 
-    elif isinstance(ast, (Tuple, List, Set)):
-        return self._get_slice_tuple_list_or_set(start, stop, field, cut, **options)
+    if cut:
+        self._put_slice(None, start, stop, field, **options)
 
-    elif isinstance(ast, Dict):
-        return self._get_slice_dict(start, stop, field, cut, **options)
-
-    # elif self.is_empty_set_seq():  # or self.is_empty_set_call():
-    #     return self._get_slice_empty_set(start, stop, field, cut, **options)
+    return ret
 
 
-    # TODO: more individual specialized slice gets
+_GET_SLICE_HANDLERS = {
+    (Module, 'body'):                     _get_slice_stmtish_legacy,  # stmt*
+    (Interactive, 'body'):                _get_slice_stmtish_legacy,  # stmt*
+    (FunctionDef, 'body'):                _get_slice_stmtish_legacy,  # stmt*
+    (AsyncFunctionDef, 'body'):           _get_slice_stmtish_legacy,  # stmt*
+    (ClassDef, 'body'):                   _get_slice_stmtish_legacy,  # stmt*
+    (For, 'body'):                        _get_slice_stmtish_legacy,  # stmt*
+    (For, 'orelse'):                      _get_slice_stmtish_legacy,  # stmt*
+    (AsyncFor, 'body'):                   _get_slice_stmtish_legacy,  # stmt*
+    (AsyncFor, 'orelse'):                 _get_slice_stmtish_legacy,  # stmt*
+    (While, 'body'):                      _get_slice_stmtish_legacy,  # stmt*
+    (While, 'orelse'):                    _get_slice_stmtish_legacy,  # stmt*
+    (If, 'body'):                         _get_slice_stmtish_legacy,  # stmt*
+    (If, 'orelse'):                       _get_slice_stmtish_legacy,  # stmt*
+    (With, 'body'):                       _get_slice_stmtish_legacy,  # stmt*
+    (AsyncWith, 'body'):                  _get_slice_stmtish_legacy,  # stmt*
+    (Try, 'body'):                        _get_slice_stmtish_legacy,  # stmt*
+    (Try, 'orelse'):                      _get_slice_stmtish_legacy,  # stmt*
+    (Try, 'finalbody'):                   _get_slice_stmtish_legacy,  # stmt*
+    (TryStar, 'body'):                    _get_slice_stmtish_legacy,  # stmt*
+    (TryStar, 'orelse'):                  _get_slice_stmtish_legacy,  # stmt*
+    (TryStar, 'finalbody'):               _get_slice_stmtish_legacy,  # stmt*
+    (ExceptHandler, 'body'):              _get_slice_stmtish_legacy,  # stmt*
+    (match_case, 'body'):                 _get_slice_stmtish_legacy,  # stmt*
 
+    (Match, 'cases'):                     _get_slice_stmtish_legacy,  # match_case*
+    (Try, 'handlers'):                    _get_slice_stmtish_legacy,  # excepthandler*
+    (TryStar, 'handlers'):                _get_slice_stmtish_legacy,  # excepthandlerstar*
 
+    (Dict, ''):                           _get_slice_dict_legacy,  # expr*
 
-    if (ast.__class__, field) in [
-        (FunctionDef, 'decorator_list'),      # expr*
-        (AsyncFunctionDef, 'decorator_list'), # expr*
-        (ClassDef, 'decorator_list'),         # expr*
-        (ClassDef, 'bases'),                  # expr*
-        (Delete, 'targets'),                  # expr*
-        (Assign, 'targets'),                  # expr*
-        (BoolOp, 'values'),                   # expr*
-        (Call, 'args'),                       # expr*
-        (comprehension, 'ifs'),               # expr*
+    (Set, 'elts'):                        _get_slice_tuple_list_or_set_legacy,  # expr*
+    (List, 'elts'):                       _get_slice_tuple_list_or_set_legacy,  # expr*
+    (Tuple, 'elts'):                      _get_slice_tuple_list_or_set_legacy,  # expr*
 
-        (ListComp, 'generators'),             # comprehension*
-        (SetComp, 'generators'),              # comprehension*
-        (DictComp, 'generators'),             # comprehension*
-        (GeneratorExp, 'generators'),         # comprehension*
+    (FunctionDef, 'decorator_list'):      _get_slice_NOT_IMPLEMENTED_YET,  # expr*
+    (AsyncFunctionDef, 'decorator_list'): _get_slice_NOT_IMPLEMENTED_YET,  # expr*
+    (ClassDef, 'decorator_list'):         _get_slice_NOT_IMPLEMENTED_YET,  # expr*
+    (ClassDef, 'bases'):                  _get_slice_NOT_IMPLEMENTED_YET,  # expr*
+    (Delete, 'targets'):                  _get_slice_NOT_IMPLEMENTED_YET,  # expr*
+    (Assign, 'targets'):                  _get_slice_NOT_IMPLEMENTED_YET,  # expr*
+    (BoolOp, 'values'):                   _get_slice_NOT_IMPLEMENTED_YET,  # expr*
+    (Compare, ''):                        _get_slice_NOT_IMPLEMENTED_YET,  # expr*
+    (Call, 'args'):                       _get_slice_NOT_IMPLEMENTED_YET,  # expr*
+    (comprehension, 'ifs'):               _get_slice_NOT_IMPLEMENTED_YET,  # expr*
 
-        (ClassDef, 'keywords'),               # keyword*
-        (Call, 'keywords'),                   # keyword*
+    (ListComp, 'generators'):             _get_slice_NOT_IMPLEMENTED_YET,  # comprehension*
+    (SetComp, 'generators'):              _get_slice_NOT_IMPLEMENTED_YET,  # comprehension*
+    (DictComp, 'generators'):             _get_slice_NOT_IMPLEMENTED_YET,  # comprehension*
+    (GeneratorExp, 'generators'):         _get_slice_NOT_IMPLEMENTED_YET,  # comprehension*
 
-        (Import, 'names'),                    # alias*
-        (ImportFrom, 'names'),                # alias*
+    (ClassDef, 'keywords'):               _get_slice_NOT_IMPLEMENTED_YET,  # keyword*
+    (Call, 'keywords'):                   _get_slice_NOT_IMPLEMENTED_YET,  # keyword*
 
-        (With, 'items'),                      # withitem*
-        (AsyncWith, 'items'),                 # withitem*
+    (Import, 'names'):                    _get_slice_NOT_IMPLEMENTED_YET,  # alias*
+    (ImportFrom, 'names'):                _get_slice_NOT_IMPLEMENTED_YET,  # alias*
 
-        (MatchSequence, 'patterns'),          # pattern*
-        (MatchMapping, 'patterns'),           # pattern*
-        (MatchClass, 'patterns'),             # pattern*
-        (MatchOr, 'patterns'),                # pattern*
+    (With, 'items'):                      _get_slice_NOT_IMPLEMENTED_YET,  # withitem*
+    (AsyncWith, 'items'):                 _get_slice_NOT_IMPLEMENTED_YET,  # withitem*
 
-        (FunctionDef, 'type_params'),         # type_param*
-        (AsyncFunctionDef, 'type_params'),    # type_param*
-        (ClassDef, 'type_params'),            # type_param*
-        (TypeAlias, 'type_params'),           # type_param*
+    (MatchSequence, 'patterns'):          _get_slice_NOT_IMPLEMENTED_YET,  # pattern*
+    (MatchMapping, ''):                   _get_slice_NOT_IMPLEMENTED_YET,  # pattern*
+    (MatchClass, 'patterns'):             _get_slice_NOT_IMPLEMENTED_YET,  # pattern*
+    (MatchOr, 'patterns'):                _get_slice_NOT_IMPLEMENTED_YET,  # pattern*
 
-        (Global, 'names'),                    # identifier*
-        (Nonlocal, 'names'),                  # identifier*
+    (FunctionDef, 'type_params'):         _get_slice_NOT_IMPLEMENTED_YET,  # type_param*
+    (AsyncFunctionDef, 'type_params'):    _get_slice_NOT_IMPLEMENTED_YET,  # type_param*
+    (ClassDef, 'type_params'):            _get_slice_NOT_IMPLEMENTED_YET,  # type_param*
+    (TypeAlias, 'type_params'):           _get_slice_NOT_IMPLEMENTED_YET,  # type_param*
 
-        (JoinedStr, 'values'),                # expr*
-        (TemplateStr, 'values'),              # expr*
+    (Global, 'names'):                    _get_slice_NOT_IMPLEMENTED_YET,  # identifier*
+    (Nonlocal, 'names'):                  _get_slice_NOT_IMPLEMENTED_YET,  # identifier*
 
-    ]:
-        raise NotImplementedError('not implemented yet')
-
-
-    raise ValueError(f"cannot get slice from {ast.__class__.__name__}.{field}")
+    (JoinedStr, 'values'):                _get_slice_NOT_IMPLEMENTED_YET,  # expr*
+    (TemplateStr, 'values'):              _get_slice_NOT_IMPLEMENTED_YET,  # expr*
+}
 
 
 # ----------------------------------------------------------------------------------------------------------------------
@@ -488,7 +534,7 @@ def _put_slice(self: fst.FST, code: Code | None, start: int | Literal['end'] | N
 
             if (ast.__class__, field) in [
                 (FunctionDef, 'decorator_list'),      # expr*
-                (AsyncFunctionDef, 'decorator_list'), # expr*
+                (AsyncFunctionDef, 'decorator_list'),  # expr*
                 (ClassDef, 'decorator_list'),         # expr*
                 (ClassDef, 'bases'),                  # expr*
                 (Delete, 'targets'),                  # expr*

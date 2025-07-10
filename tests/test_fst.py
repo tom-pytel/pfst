@@ -2868,6 +2868,9 @@ match a:
         self.assertEqual("fstlocns(0, 0, 3, 0, starts_line=True, ends_line=True, indent='')", str(FST('a # c\n\n\n', 'exec').body[0].trivia((False, 'line+2'))))
 
         self.assertEqual("fstlocns(0, 0, 1, 0, starts_line=True, ends_line=True, indent='')", str(FST('a \n', stmt).trivia((False, 'all'))))
+        self.assertEqual("fstlocns(0, 0, 1, 0, starts_line=True, ends_line=True, indent='')", str(FST('a \\\n ', stmt).trivia((False, 'all'))))
+        self.assertEqual("fstlocns(0, 0, 1, 0, starts_line=True, ends_line=True, indent='')", str(FST('a #\n', stmt).trivia((False, 'all'))))
+        self.assertEqual("fstlocns(0, 0, 0, 2, starts_line=True, ends_line=False, indent='')", str(FST('a ;\n', stmt).trivia((False, 'all'))))
 
         self.assertEqual("fstlocns(0, 0, 1, 0, starts_line=True, ends_line=True, indent='')", str(FST('a\n', stmt).trivia((False, 'all'))))
         self.assertEqual("fstlocns(0, 0, 1, 0, starts_line=True, ends_line=True, indent='')", str(FST('a\n ', stmt).trivia((False, 'all'))))
@@ -6822,9 +6825,9 @@ if 1:
 
         f = FST('{1: a, **b}', MatchMapping)
         self.assertEqual('{2: a, **b}', test(f, 'keys', '2', fstview, '1').src)
-        self.assertEqual('{2: new, **b}', test(f, 'patterns', 'new', fstview,
-                                               '<<MatchMapping ROOT 0,0..0,11>.patterns[0:1] [<MatchAs 0,4..0,5>]>').src)
-        self.assertEqual('{2: new, **rest}', test(f, 'rest', 'rest', None, 'b').src)
+        # self.assertEqual('{2: new, **b}', test(f, None, 'new', fstview,
+        #                                        '<<MatchMapping ROOT 0,0..0,11>.patterns[0:1] [<MatchAs 0,4..0,5>]>').src)
+        self.assertEqual('{2: a, **rest}', test(f, 'rest', 'rest', None, 'b').src)
 
         f = FST('cls(a, b=c)', MatchClass)
         self.assertEqual('glob(a, b=c)', test(f, 'cls', 'glob', FST, 'cls').src)

@@ -249,10 +249,8 @@ def _get_one_JoinedStr_TemplateStr_values(self: fst.FST, idx: int | None, field:
 def _get_one(self: fst.FST, idx: int | None, field: str, cut: bool, **options) -> _GetOneRet:
     """Copy or cut (if possible) a node or non-node from a field of `self`."""
 
-    ast = self.a
-
-    if not (handler := _GET_ONE_HANDLERS.get((ast.__class__, field))):
-        raise NodeError(f"cannot get from {ast.__class__.__name__}{f'.{field}' if field else ''}")
+    if not (handler := _GET_ONE_HANDLERS.get((self.a.__class__, field))):
+        raise NodeError(f"cannot get from {self.a.__class__.__name__}{f'.{field}' if field else ''}")
 
     ret = handler(self, idx, field, cut, **options)
 
@@ -271,212 +269,212 @@ def _get_one(self: fst.FST, idx: int | None, field: str, cut: bool, **options) -
 # ......................................................................................................................
 
 _GET_ONE_HANDLERS = {
-    (Module, 'body'):                     _get_one_stmtish, # stmt*
-    (Interactive, 'body'):                _get_one_stmtish, # stmt*
-    (Expression, 'body'):                 _get_one_default, # expr
-    (FunctionDef, 'decorator_list'):      _get_one_default, # expr*
-    (FunctionDef, 'name'):                _get_one_identifier, # identifier
-    (FunctionDef, 'type_params'):         _get_one_default, # type_param*
-    (FunctionDef, 'args'):                _get_one_arguments, # arguments
-    (FunctionDef, 'returns'):             _get_one_default, # expr?
-    (FunctionDef, 'body'):                _get_one_stmtish, # stmt*
-    (AsyncFunctionDef, 'decorator_list'): _get_one_default, # expr*
-    (AsyncFunctionDef, 'name'):           _get_one_identifier, # identifier
-    (AsyncFunctionDef, 'type_params'):    _get_one_default, # type_param*
-    (AsyncFunctionDef, 'args'):           _get_one_arguments, # arguments
-    (AsyncFunctionDef, 'returns'):        _get_one_default, # expr?
-    (AsyncFunctionDef, 'body'):           _get_one_stmtish, # stmt*
-    (ClassDef, 'decorator_list'):         _get_one_default, # expr*
-    (ClassDef, 'name'):                   _get_one_identifier, # identifier
-    (ClassDef, 'type_params'):            _get_one_default, # type_param*
-    (ClassDef, 'bases'):                  _get_one_default, # expr*
-    (ClassDef, 'keywords'):               _get_one_default, # keyword*
-    (ClassDef, 'body'):                   _get_one_stmtish, # stmt*
-    (Return, 'value'):                    _get_one_default, # expr?
-    (Delete, 'targets'):                  _get_one_default, # expr*
-    (Assign, 'targets'):                  _get_one_default, # expr*
-    (Assign, 'value'):                    _get_one_default, # expr
-    (TypeAlias, 'name'):                  _get_one_default, # expr
-    (TypeAlias, 'type_params'):           _get_one_default, # type_param*
-    (TypeAlias, 'value'):                 _get_one_default, # expr
-    (AugAssign, 'target'):                _get_one_default, # expr
-    (AugAssign, 'op'):                    _get_one_default, # operator
-    (AugAssign, 'value'):                 _get_one_default, # expr
-    (AnnAssign, 'target'):                _get_one_default, # expr
-    (AnnAssign, 'annotation'):            _get_one_default, # expr
-    (AnnAssign, 'value'):                 _get_one_default, # expr?
-    (AnnAssign, 'simple'):                _get_one_constant, # int
-    (For, 'target'):                      _get_one_default, # expr
-    (For, 'iter'):                        _get_one_default, # expr
-    (For, 'body'):                        _get_one_stmtish, # stmt*
-    (For, 'orelse'):                      _get_one_stmtish, # stmt*
-    (AsyncFor, 'target'):                 _get_one_default, # expr
-    (AsyncFor, 'iter'):                   _get_one_default, # expr
-    (AsyncFor, 'body'):                   _get_one_stmtish, # stmt*
-    (AsyncFor, 'orelse'):                 _get_one_stmtish, # stmt*
-    (While, 'test'):                      _get_one_default, # expr
-    (While, 'body'):                      _get_one_stmtish, # stmt*
-    (While, 'orelse'):                    _get_one_stmtish, # stmt*
-    (If, 'test'):                         _get_one_default, # expr
-    (If, 'body'):                         _get_one_stmtish, # stmt*
-    (If, 'orelse'):                       _get_one_stmtish, # stmt*
-    (With, 'items'):                      _get_one_default, # withitem*
-    (With, 'body'):                       _get_one_stmtish, # stmt*
-    (AsyncWith, 'items'):                 _get_one_default, # withitem*
-    (AsyncWith, 'body'):                  _get_one_stmtish, # stmt*
-    (Match, 'subject'):                   _get_one_default, # expr
-    (Match, 'cases'):                     _get_one_stmtish, # match_case*
-    (Raise, 'exc'):                       _get_one_default, # expr?
-    (Raise, 'cause'):                     _get_one_default, # expr?
-    (Try, 'body'):                        _get_one_stmtish, # stmt*
-    (Try, 'handlers'):                    _get_one_stmtish, # excepthandler*
-    (Try, 'orelse'):                      _get_one_stmtish, # stmt*
-    (Try, 'finalbody'):                   _get_one_stmtish, # stmt*
-    (TryStar, 'body'):                    _get_one_stmtish, # stmt*
-    (TryStar, 'handlers'):                _get_one_stmtish, # excepthandler*
-    (TryStar, 'orelse'):                  _get_one_stmtish, # stmt*
-    (TryStar, 'finalbody'):               _get_one_stmtish, # stmt*
-    (Assert, 'test'):                     _get_one_default, # expr
-    (Assert, 'msg'):                      _get_one_default, # expr?
-    (Import, 'names'):                    _get_one_default, # alias*
-    (ImportFrom, 'module'):               _get_one_identifier, # identifier? (dotted)
-    (ImportFrom, 'names'):                _get_one_default, # alias*
-    (ImportFrom, 'level'):                _get_one_constant, # int?
-    (Global, 'names'):                    _get_one_identifier, # identifier*
-    (Nonlocal, 'names'):                  _get_one_identifier, # identifier*
-    (Expr, 'value'):                      _get_one_default, # expr
-    (BoolOp, 'op'):                       _get_one_BoolOp_op, # boolop
-    (BoolOp, 'values'):                   _get_one_default, # expr*
-    (NamedExpr, 'target'):                _get_one_default, # expr
-    (NamedExpr, 'value'):                 _get_one_default, # expr
-    (BinOp, 'left'):                      _get_one_default, # expr
-    (BinOp, 'op'):                        _get_one_default, # operator
-    (BinOp, 'right'):                     _get_one_default, # expr
-    (UnaryOp, 'op'):                      _get_one_default, # unaryop
-    (UnaryOp, 'operand'):                 _get_one_default, # expr
-    (Lambda, 'args'):                     _get_one_arguments, # arguments
-    (Lambda, 'body'):                     _get_one_default, # expr
-    (IfExp, 'body'):                      _get_one_default, # expr
-    (IfExp, 'test'):                      _get_one_default, # expr
-    (IfExp, 'orelse'):                    _get_one_default, # expr
-    (Dict, 'keys'):                       _get_one_default, # expr*
-    (Dict, 'values'):                     _get_one_default, # expr*
-    (Dict, ''):                           _get_one_invalid_combined, # expr*
-    (Set, 'elts'):                        _get_one_default, # expr*
-    (ListComp, 'elt'):                    _get_one_default, # expr
-    (ListComp, 'generators'):             _get_one_default, # comprehension*
-    (SetComp, 'elt'):                     _get_one_default, # expr
-    (SetComp, 'generators'):              _get_one_default, # comprehension*
-    (DictComp, 'key'):                    _get_one_default, # expr
-    (DictComp, 'value'):                  _get_one_default, # expr
-    (DictComp, 'generators'):             _get_one_default, # comprehension*
-    (GeneratorExp, 'elt'):                _get_one_default, # expr
-    (GeneratorExp, 'generators'):         _get_one_default, # comprehension*
-    (Await, 'value'):                     _get_one_default, # expr
-    (Yield, 'value'):                     _get_one_default, # expr?
-    (YieldFrom, 'value'):                 _get_one_default, # expr
-    (Compare, 'left'):                    _get_one_default, # expr
-    (Compare, 'ops'):                     _get_one_default, # cmpop*
-    (Compare, 'comparators'):             _get_one_default, # expr*
-    (Compare, ''):                        _get_one_Compare_combined, # expr*
-    (Call, 'func'):                       _get_one_default, # expr
-    (Call, 'args'):                       _get_one_default, # expr*
-    (Call, 'keywords'):                   _get_one_default, # keyword*
-    (FormattedValue, 'value'):            _get_one_FormattedValue_value, # expr
-    (FormattedValue, 'conversion'):       _get_one_conversion, # int
-    (FormattedValue, 'format_spec'):      _get_one_format_spec, # expr?  - no location on py < 3.12
-    (Interpolation, 'value'):             _get_one_default, # expr
-    (Interpolation, 'str'):               _get_one_constant, # constant
-    (Interpolation, 'conversion'):        _get_one_conversion, # int
-    (Interpolation, 'format_spec'):       _get_one_format_spec, # expr?  - no location on py < 3.12
-    (JoinedStr, 'values'):                _get_one_JoinedStr_TemplateStr_values, # expr*  - no location on py < 3.12
-    (TemplateStr, 'values'):              _get_one_JoinedStr_TemplateStr_values, # expr*  - no location on py < 3.12
-    (Constant, 'value'):                  _get_one_constant, # constant
-    (Constant, 'kind'):                   _get_one_constant, # string?
-    (Attribute, 'value'):                 _get_one_default, # expr
-    (Attribute, 'attr'):                  _get_one_identifier, # identifier
-    (Attribute, 'ctx'):                   _get_one_ctx, # expr_context
-    (Subscript, 'value'):                 _get_one_default, # expr
-    (Subscript, 'slice'):                 _get_one_default, # expr
-    (Subscript, 'ctx'):                   _get_one_ctx, # expr_context
-    (Starred, 'value'):                   _get_one_default, # expr
-    (Starred, 'ctx'):                     _get_one_ctx, # expr_context
-    (Name, 'id'):                         _get_one_identifier, # identifier
-    (Name, 'ctx'):                        _get_one_ctx, # expr_context
-    (List, 'elts'):                       _get_one_default, # expr*
-    (List, 'ctx'):                        _get_one_ctx, # expr_context
-    (Tuple, 'elts'):                      _get_one_default, # expr*
-    (Tuple, 'ctx'):                       _get_one_ctx, # expr_context
-    (Slice, 'lower'):                     _get_one_default, # expr?
-    (Slice, 'upper'):                     _get_one_default, # expr?
-    (Slice, 'step'):                      _get_one_default, # expr?
-    (comprehension, 'target'):            _get_one_default, # expr
-    (comprehension, 'iter'):              _get_one_default, # expr
-    (comprehension, 'ifs'):               _get_one_default, # expr*
-    (comprehension, 'is_async'):          _get_one_constant, # int
-    (ExceptHandler, 'type'):              _get_one_default, # expr?
-    (ExceptHandler, 'name'):              _get_one_identifier, # identifier?
-    (ExceptHandler, 'body'):              _get_one_stmtish, # stmt*
-    (arguments, 'posonlyargs'):           _get_one_default, # arg*
-    (arguments, 'args'):                  _get_one_default, # arg*
-    (arguments, 'defaults'):              _get_one_default, # expr*
-    (arguments, 'vararg'):                _get_one_default, # arg?
-    (arguments, 'kwonlyargs'):            _get_one_default, # arg*
-    (arguments, 'kw_defaults'):           _get_one_default, # expr*
-    (arguments, 'kwarg'):                 _get_one_default, # arg?
-    (arg, 'arg'):                         _get_one_identifier, # identifier
-    (arg, 'annotation'):                  _get_one_default, # expr?
-    (keyword, 'arg'):                     _get_one_identifier, # identifier?
-    (keyword, 'value'):                   _get_one_default, # expr
-    (alias, 'name'):                      _get_one_identifier, # identifier
-    (alias, 'asname'):                    _get_one_identifier, # identifier?
-    (withitem, 'context_expr'):           _get_one_default, # expr
-    (withitem, 'optional_vars'):          _get_one_default, # expr?
-    (match_case, 'pattern'):              _get_one_default, # pattern
-    (match_case, 'guard'):                _get_one_default, # expr?
-    (match_case, 'body'):                 _get_one_stmtish, # stmt*
-    (MatchValue, 'value'):                _get_one_default, # expr
-    (MatchSingleton, 'value'):            _get_one_constant, # constant
-    (MatchSequence, 'patterns'):          _get_one_default, # pattern*
-    (MatchMapping, 'keys'):               _get_one_default, # expr*
-    (MatchMapping, 'patterns'):           _get_one_default, # pattern*
-    (MatchMapping, 'rest'):               _get_one_identifier, # identifier?
-    (MatchMapping, ''):                   _get_one_invalid_combined, # expr*
-    (MatchClass, 'cls'):                  _get_one_default, # expr
-    (MatchClass, 'patterns'):             _get_one_default, # pattern*
-    (MatchClass, 'kwd_attrs'):            _get_one_identifier, # identifier*
-    (MatchClass, 'kwd_patterns'):         _get_one_default, # pattern*
-    (MatchStar, 'name'):                  _get_one_identifier, # identifier?
-    (MatchAs, 'pattern'):                 _get_one_default, # pattern?
-    (MatchAs, 'name'):                    _get_one_identifier, # identifier?
-    (MatchOr, 'patterns'):                _get_one_default, # pattern*
-    (TypeVar, 'name'):                    _get_one_identifier, # identifier
-    (TypeVar, 'bound'):                   _get_one_default, # expr?
-    (TypeVar, 'default_value'):           _get_one_default, # expr?
-    (ParamSpec, 'name'):                  _get_one_identifier, # identifier
-    (ParamSpec, 'default_value'):         _get_one_default, # expr?
-    (TypeVarTuple, 'name'):               _get_one_identifier, # identifier
-    (TypeVarTuple, 'default_value'):      _get_one_default, # expr?
+    (Module, 'body'):                     _get_one_stmtish,  # stmt*
+    (Interactive, 'body'):                _get_one_stmtish,  # stmt*
+    (Expression, 'body'):                 _get_one_default,  # expr
+    (FunctionDef, 'decorator_list'):      _get_one_default,  # expr*
+    (FunctionDef, 'name'):                _get_one_identifier,  # identifier
+    (FunctionDef, 'type_params'):         _get_one_default,  # type_param*
+    (FunctionDef, 'args'):                _get_one_arguments,  # arguments
+    (FunctionDef, 'returns'):             _get_one_default,  # expr?
+    (FunctionDef, 'body'):                _get_one_stmtish,  # stmt*
+    (AsyncFunctionDef, 'decorator_list'): _get_one_default,  # expr*
+    (AsyncFunctionDef, 'name'):           _get_one_identifier,  # identifier
+    (AsyncFunctionDef, 'type_params'):    _get_one_default,  # type_param*
+    (AsyncFunctionDef, 'args'):           _get_one_arguments,  # arguments
+    (AsyncFunctionDef, 'returns'):        _get_one_default,  # expr?
+    (AsyncFunctionDef, 'body'):           _get_one_stmtish,  # stmt*
+    (ClassDef, 'decorator_list'):         _get_one_default,  # expr*
+    (ClassDef, 'name'):                   _get_one_identifier,  # identifier
+    (ClassDef, 'type_params'):            _get_one_default,  # type_param*
+    (ClassDef, 'bases'):                  _get_one_default,  # expr*
+    (ClassDef, 'keywords'):               _get_one_default,  # keyword*
+    (ClassDef, 'body'):                   _get_one_stmtish,  # stmt*
+    (Return, 'value'):                    _get_one_default,  # expr?
+    (Delete, 'targets'):                  _get_one_default,  # expr*
+    (Assign, 'targets'):                  _get_one_default,  # expr*
+    (Assign, 'value'):                    _get_one_default,  # expr
+    (TypeAlias, 'name'):                  _get_one_default,  # expr
+    (TypeAlias, 'type_params'):           _get_one_default,  # type_param*
+    (TypeAlias, 'value'):                 _get_one_default,  # expr
+    (AugAssign, 'target'):                _get_one_default,  # expr
+    (AugAssign, 'op'):                    _get_one_default,  # operator
+    (AugAssign, 'value'):                 _get_one_default,  # expr
+    (AnnAssign, 'target'):                _get_one_default,  # expr
+    (AnnAssign, 'annotation'):            _get_one_default,  # expr
+    (AnnAssign, 'value'):                 _get_one_default,  # expr?
+    (AnnAssign, 'simple'):                _get_one_constant,  # int
+    (For, 'target'):                      _get_one_default,  # expr
+    (For, 'iter'):                        _get_one_default,  # expr
+    (For, 'body'):                        _get_one_stmtish,  # stmt*
+    (For, 'orelse'):                      _get_one_stmtish,  # stmt*
+    (AsyncFor, 'target'):                 _get_one_default,  # expr
+    (AsyncFor, 'iter'):                   _get_one_default,  # expr
+    (AsyncFor, 'body'):                   _get_one_stmtish,  # stmt*
+    (AsyncFor, 'orelse'):                 _get_one_stmtish,  # stmt*
+    (While, 'test'):                      _get_one_default,  # expr
+    (While, 'body'):                      _get_one_stmtish,  # stmt*
+    (While, 'orelse'):                    _get_one_stmtish,  # stmt*
+    (If, 'test'):                         _get_one_default,  # expr
+    (If, 'body'):                         _get_one_stmtish,  # stmt*
+    (If, 'orelse'):                       _get_one_stmtish,  # stmt*
+    (With, 'items'):                      _get_one_default,  # withitem*
+    (With, 'body'):                       _get_one_stmtish,  # stmt*
+    (AsyncWith, 'items'):                 _get_one_default,  # withitem*
+    (AsyncWith, 'body'):                  _get_one_stmtish,  # stmt*
+    (Match, 'subject'):                   _get_one_default,  # expr
+    (Match, 'cases'):                     _get_one_stmtish,  # match_case*
+    (Raise, 'exc'):                       _get_one_default,  # expr?
+    (Raise, 'cause'):                     _get_one_default,  # expr?
+    (Try, 'body'):                        _get_one_stmtish,  # stmt*
+    (Try, 'handlers'):                    _get_one_stmtish,  # excepthandler*
+    (Try, 'orelse'):                      _get_one_stmtish,  # stmt*
+    (Try, 'finalbody'):                   _get_one_stmtish,  # stmt*
+    (TryStar, 'body'):                    _get_one_stmtish,  # stmt*
+    (TryStar, 'handlers'):                _get_one_stmtish,  # excepthandler*
+    (TryStar, 'orelse'):                  _get_one_stmtish,  # stmt*
+    (TryStar, 'finalbody'):               _get_one_stmtish,  # stmt*
+    (Assert, 'test'):                     _get_one_default,  # expr
+    (Assert, 'msg'):                      _get_one_default,  # expr?
+    (Import, 'names'):                    _get_one_default,  # alias*
+    (ImportFrom, 'module'):               _get_one_identifier,  # identifier? (dotted)
+    (ImportFrom, 'names'):                _get_one_default,  # alias*
+    (ImportFrom, 'level'):                _get_one_constant,  # int?
+    (Global, 'names'):                    _get_one_identifier,  # identifier*
+    (Nonlocal, 'names'):                  _get_one_identifier,  # identifier*
+    (Expr, 'value'):                      _get_one_default,  # expr
+    (BoolOp, 'op'):                       _get_one_BoolOp_op,  # boolop
+    (BoolOp, 'values'):                   _get_one_default,  # expr*
+    (NamedExpr, 'target'):                _get_one_default,  # expr
+    (NamedExpr, 'value'):                 _get_one_default,  # expr
+    (BinOp, 'left'):                      _get_one_default,  # expr
+    (BinOp, 'op'):                        _get_one_default,  # operator
+    (BinOp, 'right'):                     _get_one_default,  # expr
+    (UnaryOp, 'op'):                      _get_one_default,  # unaryop
+    (UnaryOp, 'operand'):                 _get_one_default,  # expr
+    (Lambda, 'args'):                     _get_one_arguments,  # arguments
+    (Lambda, 'body'):                     _get_one_default,  # expr
+    (IfExp, 'body'):                      _get_one_default,  # expr
+    (IfExp, 'test'):                      _get_one_default,  # expr
+    (IfExp, 'orelse'):                    _get_one_default,  # expr
+    (Dict, 'keys'):                       _get_one_default,  # expr*
+    (Dict, 'values'):                     _get_one_default,  # expr*
+    (Dict, ''):                           _get_one_invalid_combined,  # expr*
+    (Set, 'elts'):                        _get_one_default,  # expr*
+    (ListComp, 'elt'):                    _get_one_default,  # expr
+    (ListComp, 'generators'):             _get_one_default,  # comprehension*
+    (SetComp, 'elt'):                     _get_one_default,  # expr
+    (SetComp, 'generators'):              _get_one_default,  # comprehension*
+    (DictComp, 'key'):                    _get_one_default,  # expr
+    (DictComp, 'value'):                  _get_one_default,  # expr
+    (DictComp, 'generators'):             _get_one_default,  # comprehension*
+    (GeneratorExp, 'elt'):                _get_one_default,  # expr
+    (GeneratorExp, 'generators'):         _get_one_default,  # comprehension*
+    (Await, 'value'):                     _get_one_default,  # expr
+    (Yield, 'value'):                     _get_one_default,  # expr?
+    (YieldFrom, 'value'):                 _get_one_default,  # expr
+    (Compare, 'left'):                    _get_one_default,  # expr
+    (Compare, 'ops'):                     _get_one_default,  # cmpop*
+    (Compare, 'comparators'):             _get_one_default,  # expr*
+    (Compare, ''):                        _get_one_Compare_combined,  # expr*
+    (Call, 'func'):                       _get_one_default,  # expr
+    (Call, 'args'):                       _get_one_default,  # expr*
+    (Call, 'keywords'):                   _get_one_default,  # keyword*
+    (FormattedValue, 'value'):            _get_one_FormattedValue_value,  # expr
+    (FormattedValue, 'conversion'):       _get_one_conversion,  # int
+    (FormattedValue, 'format_spec'):      _get_one_format_spec,  # expr?  - no location on py < 3.12
+    (Interpolation, 'value'):             _get_one_default,  # expr
+    (Interpolation, 'str'):               _get_one_constant,  # constant
+    (Interpolation, 'conversion'):        _get_one_conversion,  # int
+    (Interpolation, 'format_spec'):       _get_one_format_spec,  # expr?  - no location on py < 3.12
+    (JoinedStr, 'values'):                _get_one_JoinedStr_TemplateStr_values,  # expr*  - no location on py < 3.12
+    (TemplateStr, 'values'):              _get_one_JoinedStr_TemplateStr_values,  # expr*  - no location on py < 3.12
+    (Constant, 'value'):                  _get_one_constant,  # constant
+    (Constant, 'kind'):                   _get_one_constant,  # string?
+    (Attribute, 'value'):                 _get_one_default,  # expr
+    (Attribute, 'attr'):                  _get_one_identifier,  # identifier
+    (Attribute, 'ctx'):                   _get_one_ctx,  # expr_context
+    (Subscript, 'value'):                 _get_one_default,  # expr
+    (Subscript, 'slice'):                 _get_one_default,  # expr
+    (Subscript, 'ctx'):                   _get_one_ctx,  # expr_context
+    (Starred, 'value'):                   _get_one_default,  # expr
+    (Starred, 'ctx'):                     _get_one_ctx,  # expr_context
+    (Name, 'id'):                         _get_one_identifier,  # identifier
+    (Name, 'ctx'):                        _get_one_ctx,  # expr_context
+    (List, 'elts'):                       _get_one_default,  # expr*
+    (List, 'ctx'):                        _get_one_ctx,  # expr_context
+    (Tuple, 'elts'):                      _get_one_default,  # expr*
+    (Tuple, 'ctx'):                       _get_one_ctx,  # expr_context
+    (Slice, 'lower'):                     _get_one_default,  # expr?
+    (Slice, 'upper'):                     _get_one_default,  # expr?
+    (Slice, 'step'):                      _get_one_default,  # expr?
+    (comprehension, 'target'):            _get_one_default,  # expr
+    (comprehension, 'iter'):              _get_one_default,  # expr
+    (comprehension, 'ifs'):               _get_one_default,  # expr*
+    (comprehension, 'is_async'):          _get_one_constant,  # int
+    (ExceptHandler, 'type'):              _get_one_default,  # expr?
+    (ExceptHandler, 'name'):              _get_one_identifier,  # identifier?
+    (ExceptHandler, 'body'):              _get_one_stmtish,  # stmt*
+    (arguments, 'posonlyargs'):           _get_one_default,  # arg*
+    (arguments, 'args'):                  _get_one_default,  # arg*
+    (arguments, 'defaults'):              _get_one_default,  # expr*
+    (arguments, 'vararg'):                _get_one_default,  # arg?
+    (arguments, 'kwonlyargs'):            _get_one_default,  # arg*
+    (arguments, 'kw_defaults'):           _get_one_default,  # expr*
+    (arguments, 'kwarg'):                 _get_one_default,  # arg?
+    (arg, 'arg'):                         _get_one_identifier,  # identifier
+    (arg, 'annotation'):                  _get_one_default,  # expr?
+    (keyword, 'arg'):                     _get_one_identifier,  # identifier?
+    (keyword, 'value'):                   _get_one_default,  # expr
+    (alias, 'name'):                      _get_one_identifier,  # identifier
+    (alias, 'asname'):                    _get_one_identifier,  # identifier?
+    (withitem, 'context_expr'):           _get_one_default,  # expr
+    (withitem, 'optional_vars'):          _get_one_default,  # expr?
+    (match_case, 'pattern'):              _get_one_default,  # pattern
+    (match_case, 'guard'):                _get_one_default,  # expr?
+    (match_case, 'body'):                 _get_one_stmtish,  # stmt*
+    (MatchValue, 'value'):                _get_one_default,  # expr
+    (MatchSingleton, 'value'):            _get_one_constant,  # constant
+    (MatchSequence, 'patterns'):          _get_one_default,  # pattern*
+    (MatchMapping, 'keys'):               _get_one_default,  # expr*
+    (MatchMapping, 'patterns'):           _get_one_default,  # pattern*
+    (MatchMapping, 'rest'):               _get_one_identifier,  # identifier?
+    (MatchMapping, ''):                   _get_one_invalid_combined,  # expr*
+    (MatchClass, 'cls'):                  _get_one_default,  # expr
+    (MatchClass, 'patterns'):             _get_one_default,  # pattern*
+    (MatchClass, 'kwd_attrs'):            _get_one_identifier,  # identifier*
+    (MatchClass, 'kwd_patterns'):         _get_one_default,  # pattern*
+    (MatchStar, 'name'):                  _get_one_identifier,  # identifier?
+    (MatchAs, 'pattern'):                 _get_one_default,  # pattern?
+    (MatchAs, 'name'):                    _get_one_identifier,  # identifier?
+    (MatchOr, 'patterns'):                _get_one_default,  # pattern*
+    (TypeVar, 'name'):                    _get_one_identifier,  # identifier
+    (TypeVar, 'bound'):                   _get_one_default,  # expr?
+    (TypeVar, 'default_value'):           _get_one_default,  # expr?
+    (ParamSpec, 'name'):                  _get_one_identifier,  # identifier
+    (ParamSpec, 'default_value'):         _get_one_default,  # expr?
+    (TypeVarTuple, 'name'):               _get_one_identifier,  # identifier
+    (TypeVarTuple, 'default_value'):      _get_one_default,  # expr?
 
 
     # NOT DONE:
     # =========
 
-    # (Module, 'type_ignores'):             (), # type_ignore*
+    # (Module, 'type_ignores'):             (),  # type_ignore*
 
-    # (FunctionType, 'argtypes'):           (), # expr*
-    # (FunctionType, 'returns'):            (), # expr
-    # (TypeIgnore, 'lineno'):               (), # int
-    # (TypeIgnore, 'tag'):                  (), # string
+    # (FunctionType, 'argtypes'):           (),  # expr*
+    # (FunctionType, 'returns'):            (),  # expr
+    # (TypeIgnore, 'lineno'):               (),  # int
+    # (TypeIgnore, 'tag'):                  (),  # string
 
-    # (FunctionDef, 'type_comment'):        (), # string?
-    # (AsyncFunctionDef, 'type_comment'):   (), # string?
-    # (Assign, 'type_comment'):             (), # string?
-    # (For, 'type_comment'):                (), # string?
-    # (AsyncFor, 'type_comment'):           (), # string?
-    # (With, 'type_comment'):               (), # string?
-    # (AsyncWith, 'type_comment'):          (), # string?
-    # (arg, 'type_comment'):                (), # string?
+    # (FunctionDef, 'type_comment'):        (),  # string?
+    # (AsyncFunctionDef, 'type_comment'):   (),  # string?
+    # (Assign, 'type_comment'):             (),  # string?
+    # (For, 'type_comment'):                (),  # string?
+    # (AsyncFor, 'type_comment'):           (),  # string?
+    # (With, 'type_comment'):               (),  # string?
+    # (AsyncWith, 'type_comment'):          (),  # string?
+    # (arg, 'type_comment'):                (),  # string?
 }
 
 # ----------------------------------------------------------------------------------------------------------------------
@@ -2392,212 +2390,212 @@ def _one_info_conversion(self: fst.FST, static: onestatic, idx: int | None, fiel
 
 
 _PUT_ONE_HANDLERS = {
-    (Module, 'body'):                     (True,  None, None), # stmt*  - all stmtishs have sliceable True and handler None to force always use slice operation (because of evil semicolons handled there)
-    (Interactive, 'body'):                (True,  None, None), # stmt*
-    (Expression, 'body'):                 (False, _put_one_exprish_required, _onestatic_expr_required), # expr
-    (FunctionDef, 'decorator_list'):      (True,  _put_one_exprish_required, _onestatic_expr_required), # expr*
-    (FunctionDef, 'name'):                (False, _put_one_identifier_required, _onestatic_FunctionDef_name), # identifier
-    (FunctionDef, 'type_params'):         (True,  _put_one_exprish_required, _onestatic_type_param_required), # type_param*
-    (FunctionDef, 'args'):                (False, _put_one_FunctionDef_arguments, _onestatic_arguments_required), # arguments
-    (FunctionDef, 'returns'):             (False, _put_one_exprish_optional, _onestatic_FunctionDef_returns), # expr?
-    (FunctionDef, 'body'):                (True,  None, None), # stmt*
-    (AsyncFunctionDef, 'decorator_list'): (True,  _put_one_exprish_required, _onestatic_expr_required), # expr*
-    (AsyncFunctionDef, 'name'):           (False, _put_one_identifier_required, _onestatic_FunctionDef_name), # identifier
-    (AsyncFunctionDef, 'type_params'):    (True,  _put_one_exprish_required, _onestatic_type_param_required), # type_param*
-    (AsyncFunctionDef, 'args'):           (False, _put_one_FunctionDef_arguments, _onestatic_arguments_required), # arguments
-    (AsyncFunctionDef, 'returns'):        (False, _put_one_exprish_optional, _onestatic_FunctionDef_returns), # expr?
-    (AsyncFunctionDef, 'body'):           (True,  None, None), # stmt*
-    (ClassDef, 'decorator_list'):         (True,  _put_one_exprish_required, _onestatic_expr_required), # expr*
-    (ClassDef, 'name'):                   (False, _put_one_identifier_required, onestatic(_one_info_ClassDef_name, _restrict_default, code_as=_code_as_identifier)), # identifier
-    (ClassDef, 'type_params'):            (True,  _put_one_exprish_required, _onestatic_type_param_required), # type_param*
-    (ClassDef, 'bases'):                  (True,  _put_one_ClassDef_bases, _onestatic_expr_required_starred), # expr*
-    (ClassDef, 'keywords'):               (True,  _put_one_ClassDef_keywords, _onestatic_keyword_required), # keyword*
-    (ClassDef, 'body'):                   (True,  None, None), # stmt*
-    (Return, 'value'):                    (False, _put_one_exprish_optional, onestatic(_one_info_Return_value, _restrict_default)), # expr?
-    (Delete, 'targets'):                  (True,  _put_one_exprish_required, _onestatic_target), # expr*
-    (Assign, 'targets'):                  (True,  _put_one_exprish_required, _onestatic_target), # expr*
-    (Assign, 'value'):                    (False, _put_one_exprish_required, _onestatic_expr_required), # expr
-    (TypeAlias, 'name'):                  (False, _put_one_exprish_required, _onestatic_target_Name), # expr
-    (TypeAlias, 'type_params'):           (True,  _put_one_exprish_required, _onestatic_type_param_required), # type_param*
-    (TypeAlias, 'value'):                 (False, _put_one_exprish_required, _onestatic_expr_required), # expr
-    (AugAssign, 'target'):                (False, _put_one_exprish_required, _onestatic_target_single), # expr
-    (AugAssign, 'op'):                    (False, _put_one_op, onestatic(None, code_as=_code_as_augop)), # operator
-    (AugAssign, 'value'):                 (False, _put_one_exprish_required, _onestatic_expr_required), # expr
-    (AnnAssign, 'target'):                (False, _put_one_AnnAssign_target, _onestatic_target_single), # expr
-    (AnnAssign, 'annotation'):            (False, _put_one_exprish_required, onestatic(_one_info_exprish_required, _restrict_default)), # expr  - exclude [Lambda, Yield, YieldFrom, Await, NamedExpr]?
-    (AnnAssign, 'value'):                 (False, _put_one_exprish_optional, onestatic(_one_info_AnnAssign_value, _restrict_default)), # expr?
-    (AnnAssign, 'simple'):                (False, _put_one_AnnAssign_simple, onestatic(None, int)), # int
-    (For, 'target'):                      (False, _put_one_exprish_required, _onestatic_target), # expr
-    (For, 'iter'):                        (False, _put_one_exprish_required, _onestatic_expr_required), # expr
-    (For, 'body'):                        (True,  None, None), # stmt*
-    (For, 'orelse'):                      (True,  None, None), # stmt*
-    (AsyncFor, 'target'):                 (False, _put_one_exprish_required, _onestatic_target), # expr
-    (AsyncFor, 'iter'):                   (False, _put_one_exprish_required, _onestatic_expr_required), # expr
-    (AsyncFor, 'body'):                   (True,  None, None), # stmt*
-    (AsyncFor, 'orelse'):                 (True,  None, None), # stmt*
-    (While, 'test'):                      (False, _put_one_exprish_required, _onestatic_expr_required), # expr
-    (While, 'body'):                      (True,  None, None), # stmt*
-    (While, 'orelse'):                    (True,  None, None), # stmt*
-    (If, 'test'):                         (False, _put_one_exprish_required, _onestatic_expr_required), # expr
-    (If, 'body'):                         (True,  None, None), # stmt*
-    (If, 'orelse'):                       (True,  None, None), # stmt*
-    (With, 'items'):                      (True,  _put_one_with_items, _onestatic_withitem_required), # withitem*
-    (With, 'body'):                       (True,  None, None), # stmt*
-    (AsyncWith, 'items'):                 (True,  _put_one_exprish_required, _onestatic_withitem_required), # withitem*
-    (AsyncWith, 'body'):                  (True,  None, None), # stmt*
-    (Match, 'subject'):                   (False, _put_one_exprish_required, _onestatic_expr_required), # expr
-    (Match, 'cases'):                     (True,  None, None), # match_case*
-    (Raise, 'exc'):                       (False, _put_one_exprish_optional, onestatic(_one_info_Raise_exc, _restrict_default)), # expr?
-    (Raise, 'cause'):                     (False, _put_one_exprish_optional, onestatic(_one_info_Raise_cause, _restrict_default)), # expr?
-    (Try, 'body'):                        (True,  None, None), # stmt*
-    (Try, 'handlers'):                    (True,  None, None), # excepthandler*
-    (Try, 'orelse'):                      (True,  None, None), # stmt*
-    (Try, 'finalbody'):                   (True,  None, None), # stmt*
-    (TryStar, 'body'):                    (True,  None, None), # stmt*
-    (TryStar, 'handlers'):                (True,  None, None), # excepthandler*
-    (TryStar, 'orelse'):                  (True,  None, None), # stmt*
-    (TryStar, 'finalbody'):               (True,  None, None), # stmt*
-    (Assert, 'test'):                     (False, _put_one_exprish_required, _onestatic_expr_required), # expr
-    (Assert, 'msg'):                      (False, _put_one_exprish_optional, onestatic(_one_info_Assert_msg, _restrict_default)), # expr?
-    (Import, 'names'):                    (True,  _put_one_exprish_required, onestatic(_one_info_exprish_required, _restrict_default, code_as=_code_as_alias_dotted)), # alias*
-    (ImportFrom, 'module'):               (False, _put_one_identifier_optional, onestatic(_one_info_ImportFrom_module, _restrict_default, code_as=_code_as_identifier_dotted)), # identifier? (dotted)
-    (ImportFrom, 'names'):                (True,  _put_one_ImportFrom_names, onestatic(_one_info_exprish_required, _restrict_default, code_as=_code_as_alias_star)), # alias*
-    (ImportFrom, 'level'):                (False, _put_one_ImportFrom_level, None), # int?
-    (Global, 'names'):                    (True,  _put_one_identifier_required, _onestatic_Global_Nonlocal_names), # identifier*
-    (Nonlocal, 'names'):                  (True,  _put_one_identifier_required, _onestatic_Global_Nonlocal_names), # identifier*
-    (Expr, 'value'):                      (False, _put_one_exprish_required, _onestatic_expr_required), # expr
-    (BoolOp, 'op'):                       (False, _put_one_BoolOp_op, onestatic(None)), # boolop  - very special case gets handled entirely in _put_one_BoolOp_op
-    (BoolOp, 'values'):                   (True,  _put_one_exprish_required, _onestatic_expr_required), # expr*
-    (NamedExpr, 'target'):                (False, _put_one_exprish_required, _onestatic_target_Name), # expr
-    (NamedExpr, 'value'):                 (False, _put_one_exprish_required, _onestatic_expr_required), # expr
-    (BinOp, 'left'):                      (False, _put_one_BinOp_left_right, _onestatic_expr_required), # expr
-    (BinOp, 'op'):                        (False, _put_one_op, onestatic(None, code_as=_code_as_binop)), # operator
-    (BinOp, 'right'):                     (False, _put_one_BinOp_left_right, _onestatic_expr_required), # expr
-    (UnaryOp, 'op'):                      (False, _put_one_op, onestatic(None, code_as=_code_as_unaryop)), # unaryop
-    (UnaryOp, 'operand'):                 (False, _put_one_UnaryOp_operand, _onestatic_expr_required), # expr
-    (Lambda, 'args'):                     (False, _put_one_Lambda_arguments, _onestatic_arguments_lambda_required), # arguments
-    (Lambda, 'body'):                     (False, _put_one_exprish_required, _onestatic_expr_required), # expr
-    (IfExp, 'body'):                      (False, _put_one_exprish_required, _onestatic_expr_required), # expr
-    (IfExp, 'test'):                      (False, _put_one_exprish_required, _onestatic_expr_required), # expr
-    (IfExp, 'orelse'):                    (False, _put_one_exprish_required, _onestatic_expr_required), # expr
-    (Dict, 'keys'):                       (False, _put_one_Dict_keys, onestatic(_one_info_Dict_key, _restrict_default)), # expr*
-    (Dict, 'values'):                     (False, _put_one_exprish_required, _onestatic_expr_required), # expr*
-    (Dict, ''):                           (True,  None, None), # expr*
-    (Set, 'elts'):                        (True,  _put_one_exprish_required, _onestatic_expr_required_starred), # expr*
-    (ListComp, 'elt'):                    (False, _put_one_exprish_required, _onestatic_expr_required), # expr
-    (ListComp, 'generators'):             (True,  _put_one_exprish_required, _onestatic_comprehension_required), # comprehension*
-    (SetComp, 'elt'):                     (False, _put_one_exprish_required, _onestatic_expr_required), # expr
-    (SetComp, 'generators'):              (True,  _put_one_exprish_required, _onestatic_comprehension_required), # comprehension*
-    (DictComp, 'key'):                    (False, _put_one_exprish_required, _onestatic_expr_required), # expr
-    (DictComp, 'value'):                  (False, _put_one_exprish_required, _onestatic_expr_required), # expr
-    (DictComp, 'generators'):             (True,  _put_one_exprish_required, _onestatic_comprehension_required), # comprehension*
-    (GeneratorExp, 'elt'):                (False, _put_one_exprish_required, _onestatic_expr_required), # expr
-    (GeneratorExp, 'generators'):         (True,  _put_one_exprish_required, _onestatic_comprehension_required), # comprehension*
-    (Await, 'value'):                     (False, _put_one_exprish_required, _onestatic_expr_required), # expr
-    (Yield, 'value'):                     (False, _put_one_exprish_optional, onestatic(_one_info_Yield_value, _restrict_default)), # expr?
-    (YieldFrom, 'value'):                 (False, _put_one_exprish_required, _onestatic_expr_required), # expr
-    (Compare, 'left'):                    (False, _put_one_exprish_required, _onestatic_expr_required), # expr
-    (Compare, 'ops'):                     (False, _put_one_op, onestatic(None, code_as=_code_as_cmpop)), # cmpop*
-    (Compare, 'comparators'):             (False, _put_one_exprish_required, _onestatic_expr_required), # expr*
-    (Compare, ''):                        (True,  _put_one_Compare_combined, _onestatic_expr_required), # expr*
-    (Call, 'func'):                       (False, _put_one_exprish_required, _onestatic_expr_required), # expr
-    (Call, 'args'):                       (True,  _put_one_Call_args, onestatic(_one_info_exprish_required, _restrict_fmtval_slice, code_as=_code_as_expr_callarg)), # expr*
-    (Call, 'keywords'):                   (True,  _put_one_Call_keywords, _onestatic_keyword_required), # keyword*
-    (FormattedValue, 'value'):            (False, _put_one_exprish_required, _onestatic_expr_required), # expr
-    (FormattedValue, 'conversion'):       (False, _put_one_NOT_IMPLEMENTED_YET_12, onestatic(_one_info_conversion, Constant)), # int  # onestatic only here for info for raw put, Constant must be str
-    (FormattedValue, 'format_spec'):      (False, _put_one_NOT_IMPLEMENTED_YET_12, onestatic(_one_info_format_spec, JoinedStr)), # expr?  # onestatic only here for info for raw put
-    (Interpolation, 'value'):             (False, _put_one_exprish_required, _onestatic_expr_required), # expr
-    (Interpolation, 'str'):               (False, _put_one_NOT_IMPLEMENTED_YET_14, onestatic(None, str)), # constant
-    (Interpolation, 'conversion'):        (False, _put_one_NOT_IMPLEMENTED_YET_14, onestatic(_one_info_conversion, Constant)), # int  # onestatic only here for info for raw put, Constant must be str
-    (Interpolation, 'format_spec'):       (False, _put_one_NOT_IMPLEMENTED_YET_14, onestatic(_one_info_format_spec, JoinedStr)), # expr?  # onestatic only here for info for raw put
-    (JoinedStr, 'values'):                (True,  _put_one_NOT_IMPLEMENTED_YET_12, None), # expr*
-    (TemplateStr, 'values'):              (True,  _put_one_NOT_IMPLEMENTED_YET_12, None), # expr*
-    (Constant, 'value'):                  (False, _put_one_constant, onestatic(None, constant)), # constant
-    (Constant, 'kind'):                   (False, _put_one_Constant_kind, None), # string?
-    (Attribute, 'value'):                 (False, _put_one_Attribute_value, _onestatic_expr_required), # expr
-    (Attribute, 'attr'):                  (False, _put_one_identifier_required, onestatic(_one_info_Attribute_attr, _restrict_default, code_as=_code_as_identifier)), # identifier
-    (Attribute, 'ctx'):                   (False, _put_one_ctx, _onestatic_ctx), # expr_context
-    (Subscript, 'value'):                 (False, _put_one_Subscript_value, _onestatic_expr_required), # expr
-    (Subscript, 'slice'):                 (False, _put_one_Subscript_slice, onestatic(_one_info_exprish_required, _restrict_fmtval_starred, code_as=_code_as_expr_slice)), # expr
-    (Subscript, 'ctx'):                   (False, _put_one_ctx, _onestatic_ctx), # expr_context
-    (Starred, 'value'):                   (False, _put_one_exprish_required, _onestatic_expr_required), # expr
-    (Starred, 'ctx'):                     (False, _put_one_ctx, _onestatic_ctx), # expr_context
-    (Name, 'id'):                         (False, _put_one_identifier_required, _onestatic_identifier_required), # identifier
-    (Name, 'ctx'):                        (False, _put_one_ctx, _onestatic_ctx), # expr_context
-    (List, 'elts'):                       (True,  _put_one_List_elts, _onestatic_expr_required_starred), # expr*
-    (List, 'ctx'):                        (False, _put_one_ctx, _onestatic_ctx), # expr_context
-    (Tuple, 'elts'):                      (True,  _put_one_Tuple_elts, onestatic(_one_info_exprish_required, _restrict_fmtval, code_as=_code_as_expr_sliceelt)), # expr*  - special handling because Tuples can contain Slices in an unparenthesized .slice field
-    (Tuple, 'ctx'):                       (False, _put_one_ctx, _onestatic_ctx), # expr_context
-    (Slice, 'lower'):                     (False, _put_one_exprish_optional, _onestatic_Slice_lower), # expr?
-    (Slice, 'upper'):                     (False, _put_one_exprish_optional, _onestatic_Slice_upper), # expr?
-    (Slice, 'step'):                      (False, _put_one_exprish_optional, _onestatic_Slice_step), # expr?
-    (comprehension, 'target'):            (False, _put_one_exprish_required, _onestatic_target), # expr
-    (comprehension, 'iter'):              (False, _put_one_exprish_required, _onestatic_expr_required), # expr
-    (comprehension, 'ifs'):               (True,  _put_one_exprish_required, _onestatic_expr_required), # expr*
-    (comprehension, 'is_async'):          (False, _put_one_comprehension_is_async, None), # int
-    (ExceptHandler, 'type'):              (False, _put_one_exprish_optional, onestatic(_one_info_ExceptHandler_type, _restrict_default)), # expr?
-    (ExceptHandler, 'name'):              (False, _put_one_ExceptHandler_name, onestatic(_one_info_ExceptHandler_name, _restrict_default, code_as=_code_as_identifier)), # identifier?
-    (ExceptHandler, 'body'):              (True,  None, None), # stmt*
-    (arguments, 'posonlyargs'):           (False, _put_one_arg, _onestatic_arg_required), # arg*
-    (arguments, 'args'):                  (False, _put_one_arg, _onestatic_arg_required), # arg*
-    (arguments, 'defaults'):              (False, _put_one_exprish_required, _onestatic_expr_required), # expr*
-    (arguments, 'vararg'):                (False, _put_one_exprish_optional, onestatic(_one_info_arguments_vararg, _restrict_default, code_as=_code_as_arg)), # arg?
-    (arguments, 'kwonlyargs'):            (False, _put_one_arg, _onestatic_arg_required), # arg*
-    (arguments, 'kw_defaults'):           (False, _put_one_exprish_optional, onestatic(_one_info_arguments_kw_defaults, _restrict_default)), # expr*
-    (arguments, 'kwarg'):                 (False, _put_one_exprish_optional, onestatic(_one_info_arguments_kwarg, _restrict_default, code_as=_code_as_arg)), # arg?
-    (arg, 'arg'):                         (False, _put_one_identifier_required, _onestatic_identifier_required), # identifier
-    (arg, 'annotation'):                  (False, _put_one_arg_annotation, onestatic(_one_info_arg_annotation, _restrict_default)), # expr?  - exclude [Lambda, Yield, YieldFrom, Await, NamedExpr]?
-    (keyword, 'arg'):                     (False, _put_one_keyword_arg, onestatic(_one_info_keyword_arg, _restrict_default, code_as=_code_as_identifier)), # identifier?
-    (keyword, 'value'):                   (False, _put_one_exprish_required, _onestatic_expr_required), # expr
-    (alias, 'name'):                      (False, _put_one_identifier_required, onestatic(_one_info_identifier_alias, _restrict_default, code_as=_code_as_identifier_alias)), # identifier  - alias star or dotted not valid for all uses but being general here (and lazy, don't feel like checking parent)
-    (alias, 'asname'):                    (False, _put_one_identifier_optional, onestatic(_one_info_alias_asname, _restrict_default, code_as=_code_as_identifier)), # identifier?
-    (withitem, 'context_expr'):           (False, _put_one_withitem_context_expr, _onestatic_expr_required), # expr
-    (withitem, 'optional_vars'):          (False, _put_one_withitem_optional_vars, onestatic(_one_info_withitem_optional_vars, (Name, Tuple, List, Attribute, Subscript), ctx=Store)), # expr?
-    (match_case, 'pattern'):              (False, _put_one_pattern, _onestatic_pattern_required), # pattern
-    (match_case, 'guard'):                (False, _put_one_exprish_optional, onestatic(_one_info_match_case_guard, _restrict_default)), # expr?
-    (match_case, 'body'):                 (True,  None, None), # stmt*
-    (MatchValue, 'value'):                (False, _put_one_MatchValue_value, onestatic(_one_info_exprish_required, _is_valid_MatchValue_value)), # expr
-    (MatchSingleton, 'value'):            (False, _put_one_constant, onestatic(None, (bool, NoneType))), # constant
-    (MatchSequence, 'patterns'):          (True,  _put_one_pattern, _onestatic_pattern_required), # pattern*
-    (MatchMapping, 'keys'):               (False, _put_one_exprish_required, onestatic(_one_info_exprish_required, _is_valid_MatchMapping_key)), # expr*  Ops for `-1` or `2+3j`
-    (MatchMapping, 'patterns'):           (False, _put_one_pattern, _onestatic_pattern_required), # pattern*
-    (MatchMapping, 'rest'):               (False, _put_one_identifier_optional, onestatic(_one_info_MatchMapping_rest, _restrict_default, code_as=_code_as_identifier)), # identifier?
-    (MatchMapping, ''):                   (True,  None, None), # expr*
-    (MatchClass, 'cls'):                  (False, _put_one_exprish_required, onestatic(_one_info_exprish_required, _is_valid_MatchClass_cls)), # expr
-    (MatchClass, 'patterns'):             (True,  _put_one_pattern, _onestatic_pattern_required), # pattern*
-    (MatchClass, 'kwd_attrs'):            (False, _put_one_identifier_required, onestatic(_one_info_MatchClass_kwd_attrs, _restrict_default, code_as=_code_as_identifier)), # identifier*
-    (MatchClass, 'kwd_patterns'):         (False, _put_one_pattern, _onestatic_pattern_required), # pattern*
-    (MatchStar, 'name'):                  (False, _put_one_MatchStar_name, onestatic(_one_info_MatchStar_name, _restrict_default, code_as=_code_as_identifier)), # identifier?
-    (MatchAs, 'pattern'):                 (False, _put_one_MatchAs_pattern, onestatic(_one_info_MatchAs_pattern, _restrict_default, code_as=_code_as_pattern)), # pattern?
-    (MatchAs, 'name'):                    (False, _put_one_MatchAs_name, onestatic(_one_info_MatchAs_name, _restrict_default, code_as=_code_as_identifier)), # identifier?
-    (MatchOr, 'patterns'):                (True,  _put_one_pattern, _onestatic_pattern_required), # pattern*
-    (TypeVar, 'name'):                    (False, _put_one_identifier_required, _onestatic_identifier_required), # identifier
-    (TypeVar, 'bound'):                   (False, _put_one_exprish_optional, onestatic(_one_info_TypeVar_bound, _restrict_default)), # expr?
-    (TypeVar, 'default_value'):           (False, _put_one_exprish_optional, onestatic(_one_info_TypeVar_default_value, _restrict_default)), # expr?
-    (ParamSpec, 'name'):                  (False, _put_one_identifier_required, onestatic(_one_info_ParamSpec_name, _restrict_default, code_as=_code_as_identifier)), # identifier
-    (ParamSpec, 'default_value'):         (False, _put_one_exprish_optional, onestatic(_one_info_ParamSpec_default_value, _restrict_default)), # expr?
-    (TypeVarTuple, 'name'):               (False, _put_one_identifier_required, onestatic(_one_info_TypeVarTuple_name, _restrict_default, code_as=_code_as_identifier)), # identifier
-    (TypeVarTuple, 'default_value'):      (False, _put_one_exprish_optional, onestatic(_one_info_TypeVarTuple_default_value, _restrict_default)), # expr?
+    (Module, 'body'):                     (True,  None, None),  # stmt*  - all stmtishs have sliceable True and handler None to force always use slice operation (because of evil semicolons handled there)
+    (Interactive, 'body'):                (True,  None, None),  # stmt*
+    (Expression, 'body'):                 (False, _put_one_exprish_required, _onestatic_expr_required),  # expr
+    (FunctionDef, 'decorator_list'):      (True,  _put_one_exprish_required, _onestatic_expr_required),  # expr*
+    (FunctionDef, 'name'):                (False, _put_one_identifier_required, _onestatic_FunctionDef_name),  # identifier
+    (FunctionDef, 'type_params'):         (True,  _put_one_exprish_required, _onestatic_type_param_required),  # type_param*
+    (FunctionDef, 'args'):                (False, _put_one_FunctionDef_arguments, _onestatic_arguments_required),  # arguments
+    (FunctionDef, 'returns'):             (False, _put_one_exprish_optional, _onestatic_FunctionDef_returns),  # expr?
+    (FunctionDef, 'body'):                (True,  None, None),  # stmt*
+    (AsyncFunctionDef, 'decorator_list'): (True,  _put_one_exprish_required, _onestatic_expr_required),  # expr*
+    (AsyncFunctionDef, 'name'):           (False, _put_one_identifier_required, _onestatic_FunctionDef_name),  # identifier
+    (AsyncFunctionDef, 'type_params'):    (True,  _put_one_exprish_required, _onestatic_type_param_required),  # type_param*
+    (AsyncFunctionDef, 'args'):           (False, _put_one_FunctionDef_arguments, _onestatic_arguments_required),  # arguments
+    (AsyncFunctionDef, 'returns'):        (False, _put_one_exprish_optional, _onestatic_FunctionDef_returns),  # expr?
+    (AsyncFunctionDef, 'body'):           (True,  None, None),  # stmt*
+    (ClassDef, 'decorator_list'):         (True,  _put_one_exprish_required, _onestatic_expr_required),  # expr*
+    (ClassDef, 'name'):                   (False, _put_one_identifier_required, onestatic(_one_info_ClassDef_name, _restrict_default, code_as=_code_as_identifier)),  # identifier
+    (ClassDef, 'type_params'):            (True,  _put_one_exprish_required, _onestatic_type_param_required),  # type_param*
+    (ClassDef, 'bases'):                  (True,  _put_one_ClassDef_bases, _onestatic_expr_required_starred),  # expr*
+    (ClassDef, 'keywords'):               (True,  _put_one_ClassDef_keywords, _onestatic_keyword_required),  # keyword*
+    (ClassDef, 'body'):                   (True,  None, None),  # stmt*
+    (Return, 'value'):                    (False, _put_one_exprish_optional, onestatic(_one_info_Return_value, _restrict_default)),  # expr?
+    (Delete, 'targets'):                  (True,  _put_one_exprish_required, _onestatic_target),  # expr*
+    (Assign, 'targets'):                  (True,  _put_one_exprish_required, _onestatic_target),  # expr*
+    (Assign, 'value'):                    (False, _put_one_exprish_required, _onestatic_expr_required),  # expr
+    (TypeAlias, 'name'):                  (False, _put_one_exprish_required, _onestatic_target_Name),  # expr
+    (TypeAlias, 'type_params'):           (True,  _put_one_exprish_required, _onestatic_type_param_required),  # type_param*
+    (TypeAlias, 'value'):                 (False, _put_one_exprish_required, _onestatic_expr_required),  # expr
+    (AugAssign, 'target'):                (False, _put_one_exprish_required, _onestatic_target_single),  # expr
+    (AugAssign, 'op'):                    (False, _put_one_op, onestatic(None, code_as=_code_as_augop)),  # operator
+    (AugAssign, 'value'):                 (False, _put_one_exprish_required, _onestatic_expr_required),  # expr
+    (AnnAssign, 'target'):                (False, _put_one_AnnAssign_target, _onestatic_target_single),  # expr
+    (AnnAssign, 'annotation'):            (False, _put_one_exprish_required, onestatic(_one_info_exprish_required, _restrict_default)),  # expr  - exclude [Lambda, Yield, YieldFrom, Await, NamedExpr]?
+    (AnnAssign, 'value'):                 (False, _put_one_exprish_optional, onestatic(_one_info_AnnAssign_value, _restrict_default)),  # expr?
+    (AnnAssign, 'simple'):                (False, _put_one_AnnAssign_simple, onestatic(None, int)),  # int
+    (For, 'target'):                      (False, _put_one_exprish_required, _onestatic_target),  # expr
+    (For, 'iter'):                        (False, _put_one_exprish_required, _onestatic_expr_required),  # expr
+    (For, 'body'):                        (True,  None, None),  # stmt*
+    (For, 'orelse'):                      (True,  None, None),  # stmt*
+    (AsyncFor, 'target'):                 (False, _put_one_exprish_required, _onestatic_target),  # expr
+    (AsyncFor, 'iter'):                   (False, _put_one_exprish_required, _onestatic_expr_required),  # expr
+    (AsyncFor, 'body'):                   (True,  None, None),  # stmt*
+    (AsyncFor, 'orelse'):                 (True,  None, None),  # stmt*
+    (While, 'test'):                      (False, _put_one_exprish_required, _onestatic_expr_required),  # expr
+    (While, 'body'):                      (True,  None, None),  # stmt*
+    (While, 'orelse'):                    (True,  None, None),  # stmt*
+    (If, 'test'):                         (False, _put_one_exprish_required, _onestatic_expr_required),  # expr
+    (If, 'body'):                         (True,  None, None),  # stmt*
+    (If, 'orelse'):                       (True,  None, None),  # stmt*
+    (With, 'items'):                      (True,  _put_one_with_items, _onestatic_withitem_required),  # withitem*
+    (With, 'body'):                       (True,  None, None),  # stmt*
+    (AsyncWith, 'items'):                 (True,  _put_one_exprish_required, _onestatic_withitem_required),  # withitem*
+    (AsyncWith, 'body'):                  (True,  None, None),  # stmt*
+    (Match, 'subject'):                   (False, _put_one_exprish_required, _onestatic_expr_required),  # expr
+    (Match, 'cases'):                     (True,  None, None),  # match_case*
+    (Raise, 'exc'):                       (False, _put_one_exprish_optional, onestatic(_one_info_Raise_exc, _restrict_default)),  # expr?
+    (Raise, 'cause'):                     (False, _put_one_exprish_optional, onestatic(_one_info_Raise_cause, _restrict_default)),  # expr?
+    (Try, 'body'):                        (True,  None, None),  # stmt*
+    (Try, 'handlers'):                    (True,  None, None),  # excepthandler*
+    (Try, 'orelse'):                      (True,  None, None),  # stmt*
+    (Try, 'finalbody'):                   (True,  None, None),  # stmt*
+    (TryStar, 'body'):                    (True,  None, None),  # stmt*
+    (TryStar, 'handlers'):                (True,  None, None),  # excepthandler*
+    (TryStar, 'orelse'):                  (True,  None, None),  # stmt*
+    (TryStar, 'finalbody'):               (True,  None, None),  # stmt*
+    (Assert, 'test'):                     (False, _put_one_exprish_required, _onestatic_expr_required),  # expr
+    (Assert, 'msg'):                      (False, _put_one_exprish_optional, onestatic(_one_info_Assert_msg, _restrict_default)),  # expr?
+    (Import, 'names'):                    (True,  _put_one_exprish_required, onestatic(_one_info_exprish_required, _restrict_default, code_as=_code_as_alias_dotted)),  # alias*
+    (ImportFrom, 'module'):               (False, _put_one_identifier_optional, onestatic(_one_info_ImportFrom_module, _restrict_default, code_as=_code_as_identifier_dotted)),  # identifier? (dotted)
+    (ImportFrom, 'names'):                (True,  _put_one_ImportFrom_names, onestatic(_one_info_exprish_required, _restrict_default, code_as=_code_as_alias_star)),  # alias*
+    (ImportFrom, 'level'):                (False, _put_one_ImportFrom_level, None),  # int?
+    (Global, 'names'):                    (True,  _put_one_identifier_required, _onestatic_Global_Nonlocal_names),  # identifier*
+    (Nonlocal, 'names'):                  (True,  _put_one_identifier_required, _onestatic_Global_Nonlocal_names),  # identifier*
+    (Expr, 'value'):                      (False, _put_one_exprish_required, _onestatic_expr_required),  # expr
+    (BoolOp, 'op'):                       (False, _put_one_BoolOp_op, onestatic(None)),  # boolop  - very special case gets handled entirely in _put_one_BoolOp_op
+    (BoolOp, 'values'):                   (True,  _put_one_exprish_required, _onestatic_expr_required),  # expr*
+    (NamedExpr, 'target'):                (False, _put_one_exprish_required, _onestatic_target_Name),  # expr
+    (NamedExpr, 'value'):                 (False, _put_one_exprish_required, _onestatic_expr_required),  # expr
+    (BinOp, 'left'):                      (False, _put_one_BinOp_left_right, _onestatic_expr_required),  # expr
+    (BinOp, 'op'):                        (False, _put_one_op, onestatic(None, code_as=_code_as_binop)),  # operator
+    (BinOp, 'right'):                     (False, _put_one_BinOp_left_right, _onestatic_expr_required),  # expr
+    (UnaryOp, 'op'):                      (False, _put_one_op, onestatic(None, code_as=_code_as_unaryop)),  # unaryop
+    (UnaryOp, 'operand'):                 (False, _put_one_UnaryOp_operand, _onestatic_expr_required),  # expr
+    (Lambda, 'args'):                     (False, _put_one_Lambda_arguments, _onestatic_arguments_lambda_required),  # arguments
+    (Lambda, 'body'):                     (False, _put_one_exprish_required, _onestatic_expr_required),  # expr
+    (IfExp, 'body'):                      (False, _put_one_exprish_required, _onestatic_expr_required),  # expr
+    (IfExp, 'test'):                      (False, _put_one_exprish_required, _onestatic_expr_required),  # expr
+    (IfExp, 'orelse'):                    (False, _put_one_exprish_required, _onestatic_expr_required),  # expr
+    (Dict, 'keys'):                       (False, _put_one_Dict_keys, onestatic(_one_info_Dict_key, _restrict_default)),  # expr*
+    (Dict, 'values'):                     (False, _put_one_exprish_required, _onestatic_expr_required),  # expr*
+    (Dict, ''):                           (True,  None, None),  # expr*
+    (Set, 'elts'):                        (True,  _put_one_exprish_required, _onestatic_expr_required_starred),  # expr*
+    (ListComp, 'elt'):                    (False, _put_one_exprish_required, _onestatic_expr_required),  # expr
+    (ListComp, 'generators'):             (True,  _put_one_exprish_required, _onestatic_comprehension_required),  # comprehension*
+    (SetComp, 'elt'):                     (False, _put_one_exprish_required, _onestatic_expr_required),  # expr
+    (SetComp, 'generators'):              (True,  _put_one_exprish_required, _onestatic_comprehension_required),  # comprehension*
+    (DictComp, 'key'):                    (False, _put_one_exprish_required, _onestatic_expr_required),  # expr
+    (DictComp, 'value'):                  (False, _put_one_exprish_required, _onestatic_expr_required),  # expr
+    (DictComp, 'generators'):             (True,  _put_one_exprish_required, _onestatic_comprehension_required),  # comprehension*
+    (GeneratorExp, 'elt'):                (False, _put_one_exprish_required, _onestatic_expr_required),  # expr
+    (GeneratorExp, 'generators'):         (True,  _put_one_exprish_required, _onestatic_comprehension_required),  # comprehension*
+    (Await, 'value'):                     (False, _put_one_exprish_required, _onestatic_expr_required),  # expr
+    (Yield, 'value'):                     (False, _put_one_exprish_optional, onestatic(_one_info_Yield_value, _restrict_default)),  # expr?
+    (YieldFrom, 'value'):                 (False, _put_one_exprish_required, _onestatic_expr_required),  # expr
+    (Compare, 'left'):                    (False, _put_one_exprish_required, _onestatic_expr_required),  # expr
+    (Compare, 'ops'):                     (False, _put_one_op, onestatic(None, code_as=_code_as_cmpop)),  # cmpop*
+    (Compare, 'comparators'):             (False, _put_one_exprish_required, _onestatic_expr_required),  # expr*
+    (Compare, ''):                        (True,  _put_one_Compare_combined, _onestatic_expr_required),  # expr*
+    (Call, 'func'):                       (False, _put_one_exprish_required, _onestatic_expr_required),  # expr
+    (Call, 'args'):                       (True,  _put_one_Call_args, onestatic(_one_info_exprish_required, _restrict_fmtval_slice, code_as=_code_as_expr_callarg)),  # expr*
+    (Call, 'keywords'):                   (True,  _put_one_Call_keywords, _onestatic_keyword_required),  # keyword*
+    (FormattedValue, 'value'):            (False, _put_one_exprish_required, _onestatic_expr_required),  # expr
+    (FormattedValue, 'conversion'):       (False, _put_one_NOT_IMPLEMENTED_YET_12, onestatic(_one_info_conversion, Constant)),  # int  # onestatic only here for info for raw put, Constant must be str
+    (FormattedValue, 'format_spec'):      (False, _put_one_NOT_IMPLEMENTED_YET_12, onestatic(_one_info_format_spec, JoinedStr)),  # expr?  # onestatic only here for info for raw put
+    (Interpolation, 'value'):             (False, _put_one_exprish_required, _onestatic_expr_required),  # expr
+    (Interpolation, 'str'):               (False, _put_one_NOT_IMPLEMENTED_YET_14, onestatic(None, str)),  # constant
+    (Interpolation, 'conversion'):        (False, _put_one_NOT_IMPLEMENTED_YET_14, onestatic(_one_info_conversion, Constant)),  # int  # onestatic only here for info for raw put, Constant must be str
+    (Interpolation, 'format_spec'):       (False, _put_one_NOT_IMPLEMENTED_YET_14, onestatic(_one_info_format_spec, JoinedStr)),  # expr?  # onestatic only here for info for raw put
+    (JoinedStr, 'values'):                (True,  _put_one_NOT_IMPLEMENTED_YET_12, None),  # expr*
+    (TemplateStr, 'values'):              (True,  _put_one_NOT_IMPLEMENTED_YET_12, None),  # expr*
+    (Constant, 'value'):                  (False, _put_one_constant, onestatic(None, constant)),  # constant
+    (Constant, 'kind'):                   (False, _put_one_Constant_kind, None),  # string?
+    (Attribute, 'value'):                 (False, _put_one_Attribute_value, _onestatic_expr_required),  # expr
+    (Attribute, 'attr'):                  (False, _put_one_identifier_required, onestatic(_one_info_Attribute_attr, _restrict_default, code_as=_code_as_identifier)),  # identifier
+    (Attribute, 'ctx'):                   (False, _put_one_ctx, _onestatic_ctx),  # expr_context
+    (Subscript, 'value'):                 (False, _put_one_Subscript_value, _onestatic_expr_required),  # expr
+    (Subscript, 'slice'):                 (False, _put_one_Subscript_slice, onestatic(_one_info_exprish_required, _restrict_fmtval_starred, code_as=_code_as_expr_slice)),  # expr
+    (Subscript, 'ctx'):                   (False, _put_one_ctx, _onestatic_ctx),  # expr_context
+    (Starred, 'value'):                   (False, _put_one_exprish_required, _onestatic_expr_required),  # expr
+    (Starred, 'ctx'):                     (False, _put_one_ctx, _onestatic_ctx),  # expr_context
+    (Name, 'id'):                         (False, _put_one_identifier_required, _onestatic_identifier_required),  # identifier
+    (Name, 'ctx'):                        (False, _put_one_ctx, _onestatic_ctx),  # expr_context
+    (List, 'elts'):                       (True,  _put_one_List_elts, _onestatic_expr_required_starred),  # expr*
+    (List, 'ctx'):                        (False, _put_one_ctx, _onestatic_ctx),  # expr_context
+    (Tuple, 'elts'):                      (True,  _put_one_Tuple_elts, onestatic(_one_info_exprish_required, _restrict_fmtval, code_as=_code_as_expr_sliceelt)),  # expr*  - special handling because Tuples can contain Slices in an unparenthesized .slice field
+    (Tuple, 'ctx'):                       (False, _put_one_ctx, _onestatic_ctx),  # expr_context
+    (Slice, 'lower'):                     (False, _put_one_exprish_optional, _onestatic_Slice_lower),  # expr?
+    (Slice, 'upper'):                     (False, _put_one_exprish_optional, _onestatic_Slice_upper),  # expr?
+    (Slice, 'step'):                      (False, _put_one_exprish_optional, _onestatic_Slice_step),  # expr?
+    (comprehension, 'target'):            (False, _put_one_exprish_required, _onestatic_target),  # expr
+    (comprehension, 'iter'):              (False, _put_one_exprish_required, _onestatic_expr_required),  # expr
+    (comprehension, 'ifs'):               (True,  _put_one_exprish_required, _onestatic_expr_required),  # expr*
+    (comprehension, 'is_async'):          (False, _put_one_comprehension_is_async, None),  # int
+    (ExceptHandler, 'type'):              (False, _put_one_exprish_optional, onestatic(_one_info_ExceptHandler_type, _restrict_default)),  # expr?
+    (ExceptHandler, 'name'):              (False, _put_one_ExceptHandler_name, onestatic(_one_info_ExceptHandler_name, _restrict_default, code_as=_code_as_identifier)),  # identifier?
+    (ExceptHandler, 'body'):              (True,  None, None),  # stmt*
+    (arguments, 'posonlyargs'):           (False, _put_one_arg, _onestatic_arg_required),  # arg*
+    (arguments, 'args'):                  (False, _put_one_arg, _onestatic_arg_required),  # arg*
+    (arguments, 'defaults'):              (False, _put_one_exprish_required, _onestatic_expr_required),  # expr*
+    (arguments, 'vararg'):                (False, _put_one_exprish_optional, onestatic(_one_info_arguments_vararg, _restrict_default, code_as=_code_as_arg)),  # arg?
+    (arguments, 'kwonlyargs'):            (False, _put_one_arg, _onestatic_arg_required),  # arg*
+    (arguments, 'kw_defaults'):           (False, _put_one_exprish_optional, onestatic(_one_info_arguments_kw_defaults, _restrict_default)),  # expr*
+    (arguments, 'kwarg'):                 (False, _put_one_exprish_optional, onestatic(_one_info_arguments_kwarg, _restrict_default, code_as=_code_as_arg)),  # arg?
+    (arg, 'arg'):                         (False, _put_one_identifier_required, _onestatic_identifier_required),  # identifier
+    (arg, 'annotation'):                  (False, _put_one_arg_annotation, onestatic(_one_info_arg_annotation, _restrict_default)),  # expr?  - exclude [Lambda, Yield, YieldFrom, Await, NamedExpr]?
+    (keyword, 'arg'):                     (False, _put_one_keyword_arg, onestatic(_one_info_keyword_arg, _restrict_default, code_as=_code_as_identifier)),  # identifier?
+    (keyword, 'value'):                   (False, _put_one_exprish_required, _onestatic_expr_required),  # expr
+    (alias, 'name'):                      (False, _put_one_identifier_required, onestatic(_one_info_identifier_alias, _restrict_default, code_as=_code_as_identifier_alias)),  # identifier  - alias star or dotted not valid for all uses but being general here (and lazy, don't feel like checking parent)
+    (alias, 'asname'):                    (False, _put_one_identifier_optional, onestatic(_one_info_alias_asname, _restrict_default, code_as=_code_as_identifier)),  # identifier?
+    (withitem, 'context_expr'):           (False, _put_one_withitem_context_expr, _onestatic_expr_required),  # expr
+    (withitem, 'optional_vars'):          (False, _put_one_withitem_optional_vars, onestatic(_one_info_withitem_optional_vars, (Name, Tuple, List, Attribute, Subscript), ctx=Store)),  # expr?
+    (match_case, 'pattern'):              (False, _put_one_pattern, _onestatic_pattern_required),  # pattern
+    (match_case, 'guard'):                (False, _put_one_exprish_optional, onestatic(_one_info_match_case_guard, _restrict_default)),  # expr?
+    (match_case, 'body'):                 (True,  None, None),  # stmt*
+    (MatchValue, 'value'):                (False, _put_one_MatchValue_value, onestatic(_one_info_exprish_required, _is_valid_MatchValue_value)),  # expr
+    (MatchSingleton, 'value'):            (False, _put_one_constant, onestatic(None, (bool, NoneType))),  # constant
+    (MatchSequence, 'patterns'):          (True,  _put_one_pattern, _onestatic_pattern_required),  # pattern*
+    (MatchMapping, 'keys'):               (False, _put_one_exprish_required, onestatic(_one_info_exprish_required, _is_valid_MatchMapping_key)),  # expr*  Ops for `-1` or `2+3j`
+    (MatchMapping, 'patterns'):           (False, _put_one_pattern, _onestatic_pattern_required),  # pattern*
+    (MatchMapping, 'rest'):               (False, _put_one_identifier_optional, onestatic(_one_info_MatchMapping_rest, _restrict_default, code_as=_code_as_identifier)),  # identifier?
+    (MatchMapping, ''):                   (True,  None, None),  # expr*
+    (MatchClass, 'cls'):                  (False, _put_one_exprish_required, onestatic(_one_info_exprish_required, _is_valid_MatchClass_cls)),  # expr
+    (MatchClass, 'patterns'):             (True,  _put_one_pattern, _onestatic_pattern_required),  # pattern*
+    (MatchClass, 'kwd_attrs'):            (False, _put_one_identifier_required, onestatic(_one_info_MatchClass_kwd_attrs, _restrict_default, code_as=_code_as_identifier)),  # identifier*
+    (MatchClass, 'kwd_patterns'):         (False, _put_one_pattern, _onestatic_pattern_required),  # pattern*
+    (MatchStar, 'name'):                  (False, _put_one_MatchStar_name, onestatic(_one_info_MatchStar_name, _restrict_default, code_as=_code_as_identifier)),  # identifier?
+    (MatchAs, 'pattern'):                 (False, _put_one_MatchAs_pattern, onestatic(_one_info_MatchAs_pattern, _restrict_default, code_as=_code_as_pattern)),  # pattern?
+    (MatchAs, 'name'):                    (False, _put_one_MatchAs_name, onestatic(_one_info_MatchAs_name, _restrict_default, code_as=_code_as_identifier)),  # identifier?
+    (MatchOr, 'patterns'):                (True,  _put_one_pattern, _onestatic_pattern_required),  # pattern*
+    (TypeVar, 'name'):                    (False, _put_one_identifier_required, _onestatic_identifier_required),  # identifier
+    (TypeVar, 'bound'):                   (False, _put_one_exprish_optional, onestatic(_one_info_TypeVar_bound, _restrict_default)),  # expr?
+    (TypeVar, 'default_value'):           (False, _put_one_exprish_optional, onestatic(_one_info_TypeVar_default_value, _restrict_default)),  # expr?
+    (ParamSpec, 'name'):                  (False, _put_one_identifier_required, onestatic(_one_info_ParamSpec_name, _restrict_default, code_as=_code_as_identifier)),  # identifier
+    (ParamSpec, 'default_value'):         (False, _put_one_exprish_optional, onestatic(_one_info_ParamSpec_default_value, _restrict_default)),  # expr?
+    (TypeVarTuple, 'name'):               (False, _put_one_identifier_required, onestatic(_one_info_TypeVarTuple_name, _restrict_default, code_as=_code_as_identifier)),  # identifier
+    (TypeVarTuple, 'default_value'):      (False, _put_one_exprish_optional, onestatic(_one_info_TypeVarTuple_default_value, _restrict_default)),  # expr?
 
 
     # NOT DONE:
     # =========
 
-    # (Module, 'type_ignores'):             (), # type_ignore*
+    # (Module, 'type_ignores'):             (),  # type_ignore*
 
-    # (FunctionType, 'argtypes'):           (), # expr*
-    # (FunctionType, 'returns'):            (), # expr
-    # (TypeIgnore, 'lineno'):               (), # int
-    # (TypeIgnore, 'tag'):                  (), # string
+    # (FunctionType, 'argtypes'):           (),  # expr*
+    # (FunctionType, 'returns'):            (),  # expr
+    # (TypeIgnore, 'lineno'):               (),  # int
+    # (TypeIgnore, 'tag'):                  (),  # string
 
-    # (FunctionDef, 'type_comment'):        (), # string?
-    # (AsyncFunctionDef, 'type_comment'):   (), # string?
-    # (Assign, 'type_comment'):             (), # string?
-    # (For, 'type_comment'):                (), # string?
-    # (AsyncFor, 'type_comment'):           (), # string?
-    # (With, 'type_comment'):               (), # string?
-    # (AsyncWith, 'type_comment'):          (), # string?
-    # (arg, 'type_comment'):                (), # string?
+    # (FunctionDef, 'type_comment'):        (),  # string?
+    # (AsyncFunctionDef, 'type_comment'):   (),  # string?
+    # (Assign, 'type_comment'):             (),  # string?
+    # (For, 'type_comment'):                (),  # string?
+    # (AsyncFor, 'type_comment'):           (),  # string?
+    # (With, 'type_comment'):               (),  # string?
+    # (AsyncWith, 'type_comment'):          (),  # string?
+    # (arg, 'type_comment'):                (),  # string?
 }
 
 # ----------------------------------------------------------------------------------------------------------------------
