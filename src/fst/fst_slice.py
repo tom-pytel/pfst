@@ -236,6 +236,11 @@ def _get_slice_NOT_IMPLEMENTED_YET(self: fst.FST, start: int | Literal['end'] | 
     raise NotImplementedError('this is not implemented yet')
 
 
+def _get_slice_stmtish_legacy(self: fst.FST, start: int | Literal['end'] | None, stop: int | None, field: str,
+                              **options) -> fst.FST:
+    return self._get_slice_stmtish(start, stop, field, cut=False, **options)
+
+
 def _get_slice_dict_legacy(self: fst.FST, start: int | Literal['end'] | None, stop: int | None, field: str,
                            **options) -> fst.FST:
     return self._get_slice_dict(start, stop, field, cut=False, **options)
@@ -252,9 +257,13 @@ def _get_slice(self: fst.FST, start: int | Literal['end'] | None, stop: int | No
                **options) -> fst.FST:
     """Get a slice of child nodes from `self`."""
 
-    if isinstance(self.a, STMTISH_OR_STMTMOD):  # statements are special for now
+    # TODO: For now we do it this way, it returns the actual ASTs currently in the tree on cut. The old fuzzer code
+    # depends on this at the moment, need to update at some point. On update, remove and statements will be done the
+    # same way as all other slices.
+    if isinstance(self.a, STMTISH_OR_STMTMOD):
         if field in STMTISH_FIELDS:
             return self._get_slice_stmtish(start, stop, field, cut, **options)
+    # end of TODO
 
     if not (handler := _GET_SLICE_HANDLERS.get((self.a.__class__, field))):
         raise ValueError(f"cannot get slice from {self.a.__class__.__name__}{f'.{field}' if field else ''}")
@@ -268,33 +277,33 @@ def _get_slice(self: fst.FST, start: int | Literal['end'] | None, stop: int | No
 
 
 _GET_SLICE_HANDLERS = {
-    # (Module, 'body'):                     _get_slice_stmtish_legacy,  # stmt*
-    # (Interactive, 'body'):                _get_slice_stmtish_legacy,  # stmt*
-    # (FunctionDef, 'body'):                _get_slice_stmtish_legacy,  # stmt*
-    # (AsyncFunctionDef, 'body'):           _get_slice_stmtish_legacy,  # stmt*
-    # (ClassDef, 'body'):                   _get_slice_stmtish_legacy,  # stmt*
-    # (For, 'body'):                        _get_slice_stmtish_legacy,  # stmt*
-    # (For, 'orelse'):                      _get_slice_stmtish_legacy,  # stmt*
-    # (AsyncFor, 'body'):                   _get_slice_stmtish_legacy,  # stmt*
-    # (AsyncFor, 'orelse'):                 _get_slice_stmtish_legacy,  # stmt*
-    # (While, 'body'):                      _get_slice_stmtish_legacy,  # stmt*
-    # (While, 'orelse'):                    _get_slice_stmtish_legacy,  # stmt*
-    # (If, 'body'):                         _get_slice_stmtish_legacy,  # stmt*
-    # (If, 'orelse'):                       _get_slice_stmtish_legacy,  # stmt*
-    # (With, 'body'):                       _get_slice_stmtish_legacy,  # stmt*
-    # (AsyncWith, 'body'):                  _get_slice_stmtish_legacy,  # stmt*
-    # (Try, 'body'):                        _get_slice_stmtish_legacy,  # stmt*
-    # (Try, 'orelse'):                      _get_slice_stmtish_legacy,  # stmt*
-    # (Try, 'finalbody'):                   _get_slice_stmtish_legacy,  # stmt*
-    # (TryStar, 'body'):                    _get_slice_stmtish_legacy,  # stmt*
-    # (TryStar, 'orelse'):                  _get_slice_stmtish_legacy,  # stmt*
-    # (TryStar, 'finalbody'):               _get_slice_stmtish_legacy,  # stmt*
-    # (ExceptHandler, 'body'):              _get_slice_stmtish_legacy,  # stmt*
-    # (match_case, 'body'):                 _get_slice_stmtish_legacy,  # stmt*
+    (Module, 'body'):                     _get_slice_stmtish_legacy,  # stmt*
+    (Interactive, 'body'):                _get_slice_stmtish_legacy,  # stmt*
+    (FunctionDef, 'body'):                _get_slice_stmtish_legacy,  # stmt*
+    (AsyncFunctionDef, 'body'):           _get_slice_stmtish_legacy,  # stmt*
+    (ClassDef, 'body'):                   _get_slice_stmtish_legacy,  # stmt*
+    (For, 'body'):                        _get_slice_stmtish_legacy,  # stmt*
+    (For, 'orelse'):                      _get_slice_stmtish_legacy,  # stmt*
+    (AsyncFor, 'body'):                   _get_slice_stmtish_legacy,  # stmt*
+    (AsyncFor, 'orelse'):                 _get_slice_stmtish_legacy,  # stmt*
+    (While, 'body'):                      _get_slice_stmtish_legacy,  # stmt*
+    (While, 'orelse'):                    _get_slice_stmtish_legacy,  # stmt*
+    (If, 'body'):                         _get_slice_stmtish_legacy,  # stmt*
+    (If, 'orelse'):                       _get_slice_stmtish_legacy,  # stmt*
+    (With, 'body'):                       _get_slice_stmtish_legacy,  # stmt*
+    (AsyncWith, 'body'):                  _get_slice_stmtish_legacy,  # stmt*
+    (Try, 'body'):                        _get_slice_stmtish_legacy,  # stmt*
+    (Try, 'orelse'):                      _get_slice_stmtish_legacy,  # stmt*
+    (Try, 'finalbody'):                   _get_slice_stmtish_legacy,  # stmt*
+    (TryStar, 'body'):                    _get_slice_stmtish_legacy,  # stmt*
+    (TryStar, 'orelse'):                  _get_slice_stmtish_legacy,  # stmt*
+    (TryStar, 'finalbody'):               _get_slice_stmtish_legacy,  # stmt*
+    (ExceptHandler, 'body'):              _get_slice_stmtish_legacy,  # stmt*
+    (match_case, 'body'):                 _get_slice_stmtish_legacy,  # stmt*
 
-    # (Match, 'cases'):                     _get_slice_stmtish_legacy,  # match_case*
-    # (Try, 'handlers'):                    _get_slice_stmtish_legacy,  # excepthandler*
-    # (TryStar, 'handlers'):                _get_slice_stmtish_legacy,  # excepthandlerstar*
+    (Match, 'cases'):                     _get_slice_stmtish_legacy,  # match_case*
+    (Try, 'handlers'):                    _get_slice_stmtish_legacy,  # excepthandler*
+    (TryStar, 'handlers'):                _get_slice_stmtish_legacy,  # excepthandlerstar*
 
     (Dict, ''):                           _get_slice_dict_legacy,  # key:value*
 

@@ -4076,7 +4076,7 @@ class FST:
 
     def get_indent(self) -> builtins.str:
         r"""Determine proper indentation of node at `stmt` (or other similar) level at or above `self`. Even if it is a
-        continuation or on same line as block statement. If indentation is impossible to determine because is solo
+        continuation or on same line as block header. If indentation is impossible to determine because is solo
         statement on same line as parent block then the current tree default indentation is added to the parent block
         indentation and returned.
 
@@ -4215,7 +4215,7 @@ class FST:
         return True
 
     def is_parenthesizable(self) -> bool:
-        """Whether `self` is parenthesizable with grouping parentheses or now. Essentially all `expr`s and `pattern`s
+        """Whether `self` is parenthesizable with grouping parentheses or not. Essentially all `expr`s and `pattern`s
         except for `Slice`.
 
         **Returns:**

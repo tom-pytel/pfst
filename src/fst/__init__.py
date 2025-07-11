@@ -67,9 +67,6 @@ anything about `fst` to maybe gain the ability to preserve some existing formatt
 * `JoinedStr` and `TemplateStr` internal accesses are not quite finished yet. You can get and put `FormattedValue.value`
 a `Interpolation.value` on python >= 3.12 fine, but the other fields may or may not work putting in raw mode as
 prescribed operations are not done yet.
-
-* `fst` is eventually intended to run with the global option `raw` set to `'auto'` but is currently set to `False`. See
-`fst.docs.d06_raw` for more details.
 """
 
 import ast
