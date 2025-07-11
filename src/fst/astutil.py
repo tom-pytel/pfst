@@ -1,11 +1,11 @@
 """Standalone AST utilities."""
 
-from keyword import iskeyword as keyword_iskeyword
 import re
 import sys
 from array import array
 from ast import *
 from itertools import chain
+from keyword import iskeyword as keyword_iskeyword
 from types import  EllipsisType, NoneType
 from typing import Any, Callable, Iterable, Iterator, Literal
 from enum import IntEnum, auto
@@ -30,7 +30,7 @@ __all__ = [
 
 
 if sys.version_info[:2] < (3, 11):  # for isinstance() checks
-    class TryStar(AST): pass
+    class TryStar(AST): pass  # should we try to duplicate params? opening up possible can of descent into madness there
 
 if sys.version_info[:2] < (3, 12):
     class TypeAlias(AST): pass

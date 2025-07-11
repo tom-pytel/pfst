@@ -71,6 +71,7 @@ prescribed operations are not done yet.
 
 import ast
 from ast import *
+from .astutil import TryStar, TypeAlias, type_param, TypeVar, ParamSpec, TypeVarTuple, TemplateStr, Interpolation  # so at least the classes exist to be isinstance()d on pythons which don't have them
 from .misc import NodeError, fstloc, astfield
 from .view import fstview
 from .fst import parse, unparse, dump, FST

@@ -11,7 +11,7 @@ from typing import Literal, Union
 from . import fst
 
 from .astutil import *
-from .astutil import TypeAlias, TryStar, TemplateStr, type_param
+from .astutil import TypeAlias, TryStar, TemplateStr
 
 from .misc import (
     Self, Code, NodeError, fstloc,
@@ -101,7 +101,6 @@ from .fst_slice_old import (
 #                 (TemplateStr, 'values'):                # expr*
 
 
-
 # Tuple[expr]            _parse_expr_sliceelts
 # Tuple[expr]            _parse_expr_callargs
 # Tuple[keyword]         _parse_keywords
@@ -109,6 +108,16 @@ from .fst_slice_old import (
 # Tuple[withitem]        _parse_withitems
 # Tuple[alias]           _parse_aliases_dotted
 # Tuple[alias]           _parse_aliases_star
+
+
+# --- NOT CONTIGUOUS! -------------------------------
+
+# (arguments, 'posonlyargs'):           # arg*
+# (arguments, 'args'):                  # arg*
+# (arguments, 'kwonlyargs'):            # arg*
+
+# (MatchClass, 'kwd_attrs'):            # identifier*
+# (MatchClass, 'kwd_patterns'):         # pattern*
 
 
 
