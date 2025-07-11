@@ -14,8 +14,13 @@ from .astutil import *
 from .astutil import TypeAlias, TryStar, TemplateStr, type_param
 
 from .misc import (
-    Self, STMTISH_OR_STMTMOD, STMTISH_FIELDS, Code, NodeError, fstloc,
+    Self, Code, NodeError, fstloc,
     _prev_find, _next_find, _fixup_slice_indices,
+)
+
+from .fst_slice_old import (
+    _get_slice_stmtish, _get_slice_dict, _get_slice_tuple_list_or_set,
+    _put_slice_stmtish, _put_slice_dict, _put_slice_tuple_list_or_set,
 )
 
 
@@ -109,77 +114,19 @@ from .misc import (
 
 # ----------------------------------------------------------------------------------------------------------------------
 
-def _coerce_ast(ast, coerce: Literal['expr', 'exprish', 'mod'] | None = None) -> AST:  # legacy, to be replaced
-    """Reduce an AST to a simplest representation based on coercion rule.
-
-    **Parameters:**
-    - `coerce`: What kind of coercion to apply (if any):
-        - `'expr'`: Want `ast.expr` if possible. Returns `Expression.body` or `Module|Interactive.body[0].value` or
-            `ast` if is `ast.expr`.
-        - `'exprish'`: Same as `'expr'` but also some other expression-like nodes (for raw).
-        - `'mod'`: Want `ast.Module`, expressions are wrapped in `Expr` and put into this and all other types are put
-            directly into this.
-        - `None`: Will pull expression out of `Expression` and convert `Interactive` to `Module`, otherwise will return
-            node as is.
-
-    **Returns:**
-    - `AST`: Reduced node.
-    """
-
-    if isinstance(ast, Expression):
-        ast = ast.body
-
-    elif coerce in ('expr', 'exprish'):
-        if isinstance(ast, (Module, Interactive)):
-            if len(body := ast.body) != 1 or not isinstance(ast := body[0], Expr):
-                raise NodeError(f'expecting single expression')
-
-            ast = ast.value
-
-        if not isinstance(ast, expr if (is_expr := coerce == 'expr') else
-                          (expr, arg, alias, withitem, pattern, type_param)):
-            raise NodeError('expecting expression' if is_expr else 'expecting expressionish node')
-
-        return ast
-
-    elif isinstance(ast, Interactive):
-        return Module(body=ast.body, type_ignores=[])
-
-    if coerce == 'mod' and not isinstance(ast, Module):
-        if isinstance(ast, expr):
-            ast = Expr(value=ast, lineno=ast.lineno, col_offset=ast.col_offset,
-                       end_lineno=ast.end_lineno, end_col_offset=ast.end_col_offset)
-
-        ast = Module(body=[ast], type_ignores=[])
-
-    return ast
-
-
 @staticmethod
 def _is_slice_compatible(sig1: tuple[type[AST], str], sig2: tuple[type[AST], str]) -> bool:  # sig = (AST type, field)
     """Whether slices are compatible between these type / fields."""
 
-    return ((v := _SLICE_COMAPTIBILITY.get(sig1)) == _SLICE_COMAPTIBILITY.get(sig2) and
-            v is not None)
+    return ((v := _SLICE_COMAPTIBILITY.get(sig1)) == _SLICE_COMAPTIBILITY.get(sig2) and v is not None)
 
 
 _SLICE_COMAPTIBILITY = {
     (Module, 'body'):                     'stmt*',
     (Interactive, 'body'):                'stmt*',
-    # (FunctionDef, 'decorator_list'):      'expr*',
-    # (FunctionDef, 'type_params'):         'type_param*',
     (FunctionDef, 'body'):                'stmt*',
-    # (AsyncFunctionDef, 'decorator_list'): 'expr*',
-    # (AsyncFunctionDef, 'type_params'):    'type_param*',
     (AsyncFunctionDef, 'body'):           'stmt*',
-    # (ClassDef, 'decorator_list'):         'expr*',
-    # (ClassDef, 'type_params'):            'type_param*',
-    # (ClassDef, 'bases'):                  'expr*',
-    # (ClassDef, 'keywords'):               'keyword*',
     (ClassDef, 'body'):                   'stmt*',
-    # (Delete, 'targets'):                  'expr*',
-    # (Assign, 'targets'):                  'expr*',
-    # (TypeAlias, 'type_params'):           'type_param*',
     (For, 'body'):                        'stmt*',
     (For, 'orelse'):                      'stmt*',
     (AsyncFor, 'body'):                   'stmt*',
@@ -188,43 +135,67 @@ _SLICE_COMAPTIBILITY = {
     (While, 'orelse'):                    'stmt*',
     (If, 'body'):                         'stmt*',
     (If, 'orelse'):                       'stmt*',
-    # (With, 'items'):                      'withitem*',
     (With, 'body'):                       'stmt*',
-    # (AsyncWith, 'items'):                 'withitem*',
     (AsyncWith, 'body'):                  'stmt*',
-    (Match, 'cases'):                     'match_case*',
     (Try, 'body'):                        'stmt*',
-    (Try, 'handlers'):                    'excepthandler*',
     (Try, 'orelse'):                      'stmt*',
     (Try, 'finalbody'):                   'stmt*',
     (TryStar, 'body'):                    'stmt*',
-    (TryStar, 'handlers'):                'excepthandlerstar*',
     (TryStar, 'orelse'):                  'stmt*',
     (TryStar, 'finalbody'):               'stmt*',
-    # (Import, 'names'):                    'alias*',
-    # (ImportFrom, 'names'):                'alias*',
-    # (Global, 'names'):                    'identifier*',
-    # (Nonlocal, 'names'):                  'identifier*',
-    # (BoolOp, 'values'):                   'expr*',
+    (ExceptHandler, 'body'):              'stmt*',
+    (match_case, 'body'):                 'stmt*',
+
+    (Match, 'cases'):                     'match_case*',
+    (Try, 'handlers'):                    'excepthandler*',
+    (TryStar, 'handlers'):                'excepthandlerstar*',
+
     (Dict, ''):                           'key:value*',
+
     (Set, 'elts'):                        'expr*',
+    (List, 'elts'):                       'expr*',
+    (Tuple, 'elts'):                      'expr*',
+
+    # (FunctionDef, 'decorator_list'):      'expr*',
+    # (AsyncFunctionDef, 'decorator_list'): 'expr*',
+    # (ClassDef, 'decorator_list'):         'expr*',
+    # (ClassDef, 'bases'):                  'expr*',
+    # (Delete, 'targets'):                  'expr*',
+    # (Assign, 'targets'):                  'expr*',
+    # (BoolOp, 'values'):                   'expr*',
+    # (Compare, ''):                        'expr*',
+    # (Call, 'args'):                       'expr*',
+    # (comprehension, 'ifs'):               'expr*',
+
     # (ListComp, 'generators'):             'comprehension*',
     # (SetComp, 'generators'):              'comprehension*',
     # (DictComp, 'generators'):             'comprehension*',
     # (GeneratorExp, 'generators'):         'comprehension*',
-    # (Compare, ''):                        'expr*',
-    # (Call, 'args'):                       'expr*',
+
+    # (ClassDef, 'keywords'):               'keyword*',
     # (Call, 'keywords'):                   'keyword*',
+
+    # (Import, 'names'):                    'alias*',
+    # (ImportFrom, 'names'):                'alias*',
+
+    # (With, 'items'):                      'withitem*',
+    # (AsyncWith, 'items'):                 'withitem*',
+
+    # (MatchSequence, 'patterns'):          'pattern*',
+    # (MatchMapping, ''):                   'key:pattern*',
+    # (MatchOr, 'patterns'):                'pattern*',
+    # (MatchClass, 'patterns'):             'pattern*',
+
+    # (FunctionDef, 'type_params'):         'type_param*',
+    # (AsyncFunctionDef, 'type_params'):    'type_param*',
+    # (ClassDef, 'type_params'):            'type_param*',
+    # (TypeAlias, 'type_params'):           'type_param*',
+
+    # (Global, 'names'):                    'identifier*',
+    # (Nonlocal, 'names'):                  'identifier*',
+
     # (JoinedStr, 'values'):                'expr*',
     # (TemplateStr, 'values'):              'expr*',
-    (List, 'elts'):                       'expr*',
-    (Tuple, 'elts'):                      'expr*',
-    # (comprehension, 'ifs'):               'expr*',
-    (ExceptHandler, 'body'):              'stmt*',
-    (match_case, 'body'):                 'stmt*',
-    # (MatchSequence, 'patterns'):          'pattern*',
-    # (MatchMapping, ''):                   'expr*',
-    # (MatchOr, 'patterns'):                'pattern*',
 }
 
 
@@ -232,23 +203,8 @@ _SLICE_COMAPTIBILITY = {
 # get
 
 def _get_slice_NOT_IMPLEMENTED_YET(self: fst.FST, start: int | Literal['end'] | None, stop: int | None, field: str,
-                                   **options) -> fst.FST:
+                                   cut: bool, **options) -> fst.FST:
     raise NotImplementedError('this is not implemented yet')
-
-
-def _get_slice_stmtish_legacy(self: fst.FST, start: int | Literal['end'] | None, stop: int | None, field: str,
-                              **options) -> fst.FST:
-    return self._get_slice_stmtish(start, stop, field, cut=False, **options)
-
-
-def _get_slice_dict_legacy(self: fst.FST, start: int | Literal['end'] | None, stop: int | None, field: str,
-                           **options) -> fst.FST:
-    return self._get_slice_dict(start, stop, field, cut=False, **options)
-
-
-def _get_slice_tuple_list_or_set_legacy(self: fst.FST, start: int | Literal['end'] | None, stop: int | None, field: str,
-                                        **options) -> fst.FST:
-    return self._get_slice_tuple_list_or_set(start, stop, field, cut=False, **options)
 
 
 # ......................................................................................................................
@@ -257,59 +213,46 @@ def _get_slice(self: fst.FST, start: int | Literal['end'] | None, stop: int | No
                **options) -> fst.FST:
     """Get a slice of child nodes from `self`."""
 
-    # TODO: For now we do it this way, it returns the actual ASTs currently in the tree on cut. The old fuzzer code
-    # depends on this at the moment, need to update at some point. On update, remove and statements will be done the
-    # same way as all other slices.
-    if isinstance(self.a, STMTISH_OR_STMTMOD):
-        if field in STMTISH_FIELDS:
-            return self._get_slice_stmtish(start, stop, field, cut, **options)
-    # end of TODO
-
     if not (handler := _GET_SLICE_HANDLERS.get((self.a.__class__, field))):
         raise ValueError(f"cannot get slice from {self.a.__class__.__name__}{f'.{field}' if field else ''}")
 
-    ret = handler(self, start, stop, field, **options)
-
-    if cut:
-        self._put_slice(None, start, stop, field, **options)
-
-    return ret
+    return handler(self, start, stop, field, cut, **options)
 
 
 _GET_SLICE_HANDLERS = {
-    (Module, 'body'):                     _get_slice_stmtish_legacy,  # stmt*
-    (Interactive, 'body'):                _get_slice_stmtish_legacy,  # stmt*
-    (FunctionDef, 'body'):                _get_slice_stmtish_legacy,  # stmt*
-    (AsyncFunctionDef, 'body'):           _get_slice_stmtish_legacy,  # stmt*
-    (ClassDef, 'body'):                   _get_slice_stmtish_legacy,  # stmt*
-    (For, 'body'):                        _get_slice_stmtish_legacy,  # stmt*
-    (For, 'orelse'):                      _get_slice_stmtish_legacy,  # stmt*
-    (AsyncFor, 'body'):                   _get_slice_stmtish_legacy,  # stmt*
-    (AsyncFor, 'orelse'):                 _get_slice_stmtish_legacy,  # stmt*
-    (While, 'body'):                      _get_slice_stmtish_legacy,  # stmt*
-    (While, 'orelse'):                    _get_slice_stmtish_legacy,  # stmt*
-    (If, 'body'):                         _get_slice_stmtish_legacy,  # stmt*
-    (If, 'orelse'):                       _get_slice_stmtish_legacy,  # stmt*
-    (With, 'body'):                       _get_slice_stmtish_legacy,  # stmt*
-    (AsyncWith, 'body'):                  _get_slice_stmtish_legacy,  # stmt*
-    (Try, 'body'):                        _get_slice_stmtish_legacy,  # stmt*
-    (Try, 'orelse'):                      _get_slice_stmtish_legacy,  # stmt*
-    (Try, 'finalbody'):                   _get_slice_stmtish_legacy,  # stmt*
-    (TryStar, 'body'):                    _get_slice_stmtish_legacy,  # stmt*
-    (TryStar, 'orelse'):                  _get_slice_stmtish_legacy,  # stmt*
-    (TryStar, 'finalbody'):               _get_slice_stmtish_legacy,  # stmt*
-    (ExceptHandler, 'body'):              _get_slice_stmtish_legacy,  # stmt*
-    (match_case, 'body'):                 _get_slice_stmtish_legacy,  # stmt*
+    (Module, 'body'):                     _get_slice_stmtish,  # stmt*
+    (Interactive, 'body'):                _get_slice_stmtish,  # stmt*
+    (FunctionDef, 'body'):                _get_slice_stmtish,  # stmt*
+    (AsyncFunctionDef, 'body'):           _get_slice_stmtish,  # stmt*
+    (ClassDef, 'body'):                   _get_slice_stmtish,  # stmt*
+    (For, 'body'):                        _get_slice_stmtish,  # stmt*
+    (For, 'orelse'):                      _get_slice_stmtish,  # stmt*
+    (AsyncFor, 'body'):                   _get_slice_stmtish,  # stmt*
+    (AsyncFor, 'orelse'):                 _get_slice_stmtish,  # stmt*
+    (While, 'body'):                      _get_slice_stmtish,  # stmt*
+    (While, 'orelse'):                    _get_slice_stmtish,  # stmt*
+    (If, 'body'):                         _get_slice_stmtish,  # stmt*
+    (If, 'orelse'):                       _get_slice_stmtish,  # stmt*
+    (With, 'body'):                       _get_slice_stmtish,  # stmt*
+    (AsyncWith, 'body'):                  _get_slice_stmtish,  # stmt*
+    (Try, 'body'):                        _get_slice_stmtish,  # stmt*
+    (Try, 'orelse'):                      _get_slice_stmtish,  # stmt*
+    (Try, 'finalbody'):                   _get_slice_stmtish,  # stmt*
+    (TryStar, 'body'):                    _get_slice_stmtish,  # stmt*
+    (TryStar, 'orelse'):                  _get_slice_stmtish,  # stmt*
+    (TryStar, 'finalbody'):               _get_slice_stmtish,  # stmt*
+    (ExceptHandler, 'body'):              _get_slice_stmtish,  # stmt*
+    (match_case, 'body'):                 _get_slice_stmtish,  # stmt*
 
-    (Match, 'cases'):                     _get_slice_stmtish_legacy,  # match_case*
-    (Try, 'handlers'):                    _get_slice_stmtish_legacy,  # excepthandler*
-    (TryStar, 'handlers'):                _get_slice_stmtish_legacy,  # excepthandlerstar*
+    (Match, 'cases'):                     _get_slice_stmtish,  # match_case*
+    (Try, 'handlers'):                    _get_slice_stmtish,  # excepthandler*
+    (TryStar, 'handlers'):                _get_slice_stmtish,  # excepthandlerstar*
 
-    (Dict, ''):                           _get_slice_dict_legacy,  # key:value*
+    (Dict, ''):                           _get_slice_dict,  # key:value*
 
-    (Set, 'elts'):                        _get_slice_tuple_list_or_set_legacy,  # expr*
-    (List, 'elts'):                       _get_slice_tuple_list_or_set_legacy,  # expr*
-    (Tuple, 'elts'):                      _get_slice_tuple_list_or_set_legacy,  # expr*
+    (Set, 'elts'):                        _get_slice_tuple_list_or_set,  # expr*
+    (List, 'elts'):                       _get_slice_tuple_list_or_set,  # expr*
+    (Tuple, 'elts'):                      _get_slice_tuple_list_or_set,  # expr*
 
     (FunctionDef, 'decorator_list'):      _get_slice_NOT_IMPLEMENTED_YET,  # expr*
     (AsyncFunctionDef, 'decorator_list'): _get_slice_NOT_IMPLEMENTED_YET,  # expr*
@@ -355,6 +298,7 @@ _GET_SLICE_HANDLERS = {
 
 
 # ----------------------------------------------------------------------------------------------------------------------
+# put
 
 def _raw_slice_loc(self: fst.FST, start: int | Literal['end'] | None, stop: int | None, field: str) -> fstloc:
     """Get location of a raw slice. Sepcial cases for decorators, comprehension ifs and other weird nodes."""
@@ -428,12 +372,11 @@ def _raw_slice_loc(self: fst.FST, start: int | Literal['end'] | None, stop: int 
     body        = getattr(ast, field)  # field must be valid by here
     start, stop = fixup_slice_index_for_raw(len(body), start, stop)
 
-    return fstloc(*body[start].f.pars(False)[:2],
-                  *body[stop - 1].f.pars(False)[2:])
+    return fstloc(*body[start].f.pars(False)[:2], *body[stop - 1].f.pars(False)[2:])
 
 
 def _put_slice_raw(self: fst.FST, code: Code | None, start: int | Literal['end'] | None, stop: int | None, field: str,
-                   *, one: bool = False, **options) -> Union[Self, None]:  # -> Self or reparsed Self
+                   *, one: bool = False, **options) -> Union[Self, fst.FST, None]:  # -> Self or reparsed Self
     """Put a raw slice of child nodes to `self`."""
 
     if code is None:
@@ -441,68 +384,68 @@ def _put_slice_raw(self: fst.FST, code: Code | None, start: int | Literal['end']
 
     if isinstance(code, AST):
         if not one:
-            try:
-                ast = _coerce_ast(code, 'exprish')
-            except Exception:
-                pass
+            ast = reduce_ast(code, True)
 
-            else:
-                if isinstance(ast, Tuple):  # strip delimiters because we want CONTENTS of slice for raw put, not the slice object itself
-                    code = fst.FST._unparse(ast)[1 : (-2 if len(ast.elts) == 1 else -1)]  # also remove singleton Tuple trailing comma
-                elif isinstance(ast, (List, Dict, Set, MatchSequence, MatchMapping)):
-                    code = fst.FST._unparse(ast)[1 : -1]
+            if isinstance(ast, Tuple):  # strip delimiters because we want CONTENTS of slice for raw put, not the slice object itself
+                code = fst.FST._unparse(ast)[1 : (-2 if len(ast.elts) == 1 else -1)]  # also remove singleton Tuple trailing comma
+            elif isinstance(ast, (List, Dict, Set, MatchSequence, MatchMapping)):
+                code = fst.FST._unparse(ast)[1 : -1]
 
     elif isinstance(code, fst.FST):
         if not code.is_root:
             raise ValueError('expecting root node')
 
-        try:
-            ast = _coerce_ast(code.a, 'exprish')
-        except Exception:
-            pass
+        ast  = reduce_ast(code.a, True)
+        fst_ = ast.f
 
-        else:
-            fst_ = ast.f
+        if one:
+            if (is_par_tup := fst_.is_parenthesized_tuple()) is None:  # only need to parenthesize this, others are already enclosed
+                if isinstance(ast, MatchSequence) and not fst_._is_parenthesized_seq('patterns'):
+                    fst_._parenthesize_grouping()
 
-            if one:
-                if (is_par_tup := fst_.is_parenthesized_tuple()) is None:  # only need to parenthesize this, others are already enclosed
-                    if isinstance(ast, MatchSequence) and not fst_._is_parenthesized_seq('patterns'):
-                        fst_._parenthesize_grouping()
+            elif is_par_tup is False:
+                fst_._parenthesize_node()
 
-                elif is_par_tup is False:
-                    fst_._parenthesize_node()
-
-            elif ((is_dict := isinstance(ast, Dict)) or
-                  (is_match := isinstance(ast, (MatchSequence, MatchMapping))) or
-                  isinstance(ast, (Tuple, List, Set))
+        elif ((is_dict := isinstance(ast, Dict)) or
+                (is_match := isinstance(ast, (MatchSequence, MatchMapping))) or
+                isinstance(ast, (Tuple, List, Set))
+        ):
+            if not ((is_par_tup := fst_.is_parenthesized_tuple()) is False or  # don't strip nonexistent delimiters if is unparenthesized Tuple or MatchSequence
+                    (is_par_tup is None and isinstance(ast, MatchSequence) and
+                        not fst_._is_parenthesized_seq('patterns'))
             ):
-                if not ((is_par_tup := fst_.is_parenthesized_tuple()) is False or  # don't strip nonexistent delimiters if is unparenthesized Tuple or MatchSequence
-                        (is_par_tup is None and isinstance(ast, MatchSequence) and
-                            not fst_._is_parenthesized_seq('patterns'))
-                ):
-                    code._put_src(None, end_ln := code.end_ln, (end_col := code.end_col) - 1, end_ln, end_col, True)  # strip enclosing delimiters
-                    code._put_src(None, ln := code.ln, col := code.col, ln, col + 1, False)
+                code._put_src(None, end_ln := code.end_ln, (end_col := code.end_col) - 1, end_ln, end_col, True)  # strip enclosing delimiters
+                code._put_src(None, ln := code.ln, col := code.col, ln, col + 1, False)
 
-                if elts := ast.values if is_dict else ast.patterns if is_match else ast.elts:
-                    if comma := _next_find(code.root._lines, (l := elts[-1].f.loc).end_ln, l.end_col, code.end_ln,
-                                            code.end_col, ','):  # strip trailing comma
-                        ln, col = comma
+            if elts := ast.values if is_dict else ast.patterns if is_match else ast.elts:
+                if comma := _next_find(code.root._lines, (l := elts[-1].f.loc).end_ln, l.end_col, code.end_ln,
+                                        code.end_col, ','):  # strip trailing comma
+                    ln, col = comma
 
-                        code._put_src(None, ln, col, ln, col + 1, False)
+                    code._put_src(None, ln, col, ln, col + 1, False)
 
     self._reparse_raw(code, *_raw_slice_loc(self, start, stop, field))
 
     return self.repath()
 
 
+# ......................................................................................................................
+
+def _put_slice_NOT_IMPLEMENTED_YET(self: fst.FST, code: Code | None, start: int | Literal['end'] | None,
+                                   stop: int | None, field: str, one: bool = False, **options,
+                                   ) -> Union[Self, fst.FST, None]:
+    raise NotImplementedError("not implemented yet, try with option raw='auto'")
+
+
+# ......................................................................................................................
+
 def _put_slice(self: fst.FST, code: Code | None, start: int | Literal['end'] | None, stop: int | None, field: str,
-               one: bool = False, **options) -> Union[Self, None]:  # -> Self or reparsed Self or could disappear due to raw
+               one: bool = False, **options) -> Union[Self, fst.FST, None]:  # -> Self or reparsed Self or could disappear due to raw
     """Put an a slice of child nodes to `self`."""
 
     if code is self.root:  # don't allow own root to be put to self
         raise NodeError('circular put detected')
 
-    ast = self.a
     raw = fst.FST.get_option('raw', options)
 
     if options.get('to') is not None:
@@ -510,88 +453,98 @@ def _put_slice(self: fst.FST, code: Code | None, start: int | Literal['end'] | N
 
     if raw is not True:
         try:
-            if isinstance(ast, STMTISH_OR_STMTMOD):
-                if field in STMTISH_FIELDS:
-                    with self._modifying(field):
-                        self._put_slice_stmtish(code, start, stop, field, one, **options)
+            if not (handler := _PUT_SLICE_HANDLERS.get((self.a.__class__, field))):  # allow raw to handle some non-contiguous list fields
+                raise NodeError(f"cannot put slice to {self.a.__class__.__name__}{f'.{field}' if field else ''}")
 
-                    return self
+            with self._modifying(field):
+                handler(self, code, start, stop, field, one, **options)
 
-            elif isinstance(ast, (Tuple, List, Set)):
-                with self._modifying(field):
-                    self._put_slice_tuple_list_or_set(code, start, stop, field, one, **options)
-
-                return self
-
-            elif isinstance(ast, Dict):
-                with self._modifying(field):
-                    self._put_slice_dict(code, start, stop, field, one, **options)
-
-                return self
-
-            # elif self.is_empty_set_seq():  # or self.is_empty_set_call():
-            #     self._put_slice_empty_set(code, start, stop, field, one, **options)
-
-            #     return self
-
-
-            # TODO: more individual specialized slice puts
-
-
-            if (ast.__class__, field) in [
-                (FunctionDef, 'decorator_list'),       # expr*
-                (AsyncFunctionDef, 'decorator_list'),  # expr*
-                (ClassDef, 'decorator_list'),          # expr*
-                (ClassDef, 'bases'),                   # expr*
-                (Delete, 'targets'),                   # expr*
-                (Assign, 'targets'),                   # expr*
-                (BoolOp, 'values'),                    # expr*
-                (Call, 'args'),                        # expr*
-                (comprehension, 'ifs'),                # expr*
-
-                (ListComp, 'generators'),              # comprehension*
-                (SetComp, 'generators'),               # comprehension*
-                (DictComp, 'generators'),              # comprehension*
-                (GeneratorExp, 'generators'),          # comprehension*
-
-                (ClassDef, 'keywords'),                # keyword*
-                (Call, 'keywords'),                    # keyword*
-
-                (Import, 'names'),                     # alias*
-                (ImportFrom, 'names'),                 # alias*
-
-                (With, 'items'),                       # withitem*
-                (AsyncWith, 'items'),                  # withitem*
-
-                (MatchSequence, 'patterns'),           # pattern*
-                (MatchMapping, 'patterns'),            # pattern*
-                (MatchClass, 'patterns'),              # pattern*
-                (MatchOr, 'patterns'),                 # pattern*
-
-                (FunctionDef, 'type_params'),          # type_param*
-                (AsyncFunctionDef, 'type_params'),     # type_param*
-                (ClassDef, 'type_params'),             # type_param*
-                (TypeAlias, 'type_params'),            # type_param*
-
-                (Global, 'names'),                     # identifier*
-                (Nonlocal, 'names'),                   # identifier*
-
-                (JoinedStr, 'values'),                 # expr*
-                (TemplateStr, 'values'),               # expr*
-
-            ]:
-                raise NotImplementedError("not implemented yet, try with option raw='auto'")
+            return self
 
         except (NodeError, SyntaxError, NotImplementedError):
             if not raw:
                 raise
 
-        else:
-            if not raw:
-                raise ValueError(f"cannot put slice to {ast.__class__.__name__}.{field}")
-
     with self._modifying(field, True):
         return _put_slice_raw(self, code, start, stop, field, one=one, **options)
+
+
+_PUT_SLICE_HANDLERS = {
+    (Module, 'body'):                     _put_slice_stmtish,  # stmt*
+    (Interactive, 'body'):                _put_slice_stmtish,  # stmt*
+    (FunctionDef, 'body'):                _put_slice_stmtish,  # stmt*
+    (AsyncFunctionDef, 'body'):           _put_slice_stmtish,  # stmt*
+    (ClassDef, 'body'):                   _put_slice_stmtish,  # stmt*
+    (For, 'body'):                        _put_slice_stmtish,  # stmt*
+    (For, 'orelse'):                      _put_slice_stmtish,  # stmt*
+    (AsyncFor, 'body'):                   _put_slice_stmtish,  # stmt*
+    (AsyncFor, 'orelse'):                 _put_slice_stmtish,  # stmt*
+    (While, 'body'):                      _put_slice_stmtish,  # stmt*
+    (While, 'orelse'):                    _put_slice_stmtish,  # stmt*
+    (If, 'body'):                         _put_slice_stmtish,  # stmt*
+    (If, 'orelse'):                       _put_slice_stmtish,  # stmt*
+    (With, 'body'):                       _put_slice_stmtish,  # stmt*
+    (AsyncWith, 'body'):                  _put_slice_stmtish,  # stmt*
+    (Try, 'body'):                        _put_slice_stmtish,  # stmt*
+    (Try, 'orelse'):                      _put_slice_stmtish,  # stmt*
+    (Try, 'finalbody'):                   _put_slice_stmtish,  # stmt*
+    (TryStar, 'body'):                    _put_slice_stmtish,  # stmt*
+    (TryStar, 'orelse'):                  _put_slice_stmtish,  # stmt*
+    (TryStar, 'finalbody'):               _put_slice_stmtish,  # stmt*
+    (ExceptHandler, 'body'):              _put_slice_stmtish,  # stmt*
+    (match_case, 'body'):                 _put_slice_stmtish,  # stmt*
+
+    (Match, 'cases'):                     _put_slice_stmtish,  # match_case*
+    (Try, 'handlers'):                    _put_slice_stmtish,  # excepthandler*
+    (TryStar, 'handlers'):                _put_slice_stmtish,  # excepthandlerstar*
+
+    (Dict, ''):                           _put_slice_dict,  # key:value*
+
+    (Set, 'elts'):                        _put_slice_tuple_list_or_set,  # expr*
+    (List, 'elts'):                       _put_slice_tuple_list_or_set,  # expr*
+    (Tuple, 'elts'):                      _put_slice_tuple_list_or_set,  # expr*
+
+    (FunctionDef, 'decorator_list'):      _put_slice_NOT_IMPLEMENTED_YET,  # expr*
+    (AsyncFunctionDef, 'decorator_list'): _put_slice_NOT_IMPLEMENTED_YET,  # expr*
+    (ClassDef, 'decorator_list'):         _put_slice_NOT_IMPLEMENTED_YET,  # expr*
+    (ClassDef, 'bases'):                  _put_slice_NOT_IMPLEMENTED_YET,  # expr*
+    (Delete, 'targets'):                  _put_slice_NOT_IMPLEMENTED_YET,  # expr*
+    (Assign, 'targets'):                  _put_slice_NOT_IMPLEMENTED_YET,  # expr*
+    (BoolOp, 'values'):                   _put_slice_NOT_IMPLEMENTED_YET,  # expr*
+    (Compare, ''):                        _put_slice_NOT_IMPLEMENTED_YET,  # expr*
+    (Call, 'args'):                       _put_slice_NOT_IMPLEMENTED_YET,  # expr*
+    (comprehension, 'ifs'):               _put_slice_NOT_IMPLEMENTED_YET,  # expr*
+
+    (ListComp, 'generators'):             _put_slice_NOT_IMPLEMENTED_YET,  # comprehension*
+    (SetComp, 'generators'):              _put_slice_NOT_IMPLEMENTED_YET,  # comprehension*
+    (DictComp, 'generators'):             _put_slice_NOT_IMPLEMENTED_YET,  # comprehension*
+    (GeneratorExp, 'generators'):         _put_slice_NOT_IMPLEMENTED_YET,  # comprehension*
+
+    (ClassDef, 'keywords'):               _put_slice_NOT_IMPLEMENTED_YET,  # keyword*
+    (Call, 'keywords'):                   _put_slice_NOT_IMPLEMENTED_YET,  # keyword*
+
+    (Import, 'names'):                    _put_slice_NOT_IMPLEMENTED_YET,  # alias*
+    (ImportFrom, 'names'):                _put_slice_NOT_IMPLEMENTED_YET,  # alias*
+
+    (With, 'items'):                      _put_slice_NOT_IMPLEMENTED_YET,  # withitem*
+    (AsyncWith, 'items'):                 _put_slice_NOT_IMPLEMENTED_YET,  # withitem*
+
+    (MatchSequence, 'patterns'):          _put_slice_NOT_IMPLEMENTED_YET,  # pattern*
+    (MatchMapping, ''):                   _put_slice_NOT_IMPLEMENTED_YET,  # key:pattern*
+    (MatchClass, 'patterns'):             _put_slice_NOT_IMPLEMENTED_YET,  # pattern*
+    (MatchOr, 'patterns'):                _put_slice_NOT_IMPLEMENTED_YET,  # pattern*
+
+    (FunctionDef, 'type_params'):         _put_slice_NOT_IMPLEMENTED_YET,  # type_param*
+    (AsyncFunctionDef, 'type_params'):    _put_slice_NOT_IMPLEMENTED_YET,  # type_param*
+    (ClassDef, 'type_params'):            _put_slice_NOT_IMPLEMENTED_YET,  # type_param*
+    (TypeAlias, 'type_params'):           _put_slice_NOT_IMPLEMENTED_YET,  # type_param*
+
+    (Global, 'names'):                    _put_slice_NOT_IMPLEMENTED_YET,  # identifier*
+    (Nonlocal, 'names'):                  _put_slice_NOT_IMPLEMENTED_YET,  # identifier*
+
+    (JoinedStr, 'values'):                _put_slice_NOT_IMPLEMENTED_YET,  # expr*
+    (TemplateStr, 'values'):              _put_slice_NOT_IMPLEMENTED_YET,  # expr*
+}
 
 
 # ----------------------------------------------------------------------------------------------------------------------

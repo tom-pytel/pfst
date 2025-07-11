@@ -1810,11 +1810,8 @@ def _put_one(self: fst.FST, code: _PutOneCode, idx: int | None, field: str, **op
                 raise NodeError(f"cannot {'delete' if code is None else 'replace'} {ast.__class__.__name__}"
                                 f"{f'.{field}' if field else ' combined fields'}")
 
-            else:
-                with self._modifying(field):
-                    ret = handler(self, code, idx, field, child, static, **options)
-
-                return ret
+            with self._modifying(field):
+                return handler(self, code, idx, field, child, static, **options)
 
         except (NodeError, SyntaxError, NotImplementedError):
             if not raw:
