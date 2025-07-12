@@ -2201,7 +2201,8 @@ class FST:
 
         return self  # ret
 
-    def trivia(self, trivia: bool | str | tuple[bool | str | int | None, bool | str | int | None] | None = None,
+    def trivia(self, trivia: bool | builtins.str | tuple[bool | builtins.str | int | None,
+                                                         bool | builtins.str | int | None] | None = None,
                as_put: bool = False) -> fstlocns | None:
         r"""Return location of the trivia (comments and empty lines) surrounding this node. What is checked is controlled
         by the `trivia` parameter and / or the global default `trivia` option. Currently only applies to statementish
@@ -2275,19 +2276,17 @@ class FST:
         if not isinstance(self.a, STMTISH):
             return None
 
-        ld_comments, ld_space, tr_comments, tr_space = FST._get_trivia_params(trivia, as_put)
+        lines                                  = self.root.lines
+        ln, col, end_ln, end_col               = self.bloc
+        ld_comms, ld_space, tr_comms, tr_space = FST._get_trivia_params(trivia, as_put)
+        ld_text_pos, ld_space_pos, indent      = _leading_trivia(lines, *self._prev_bound(),
+                                                                 ln, col, ld_comms, ld_space)
+        tr_text_pos, tr_space_pos, ends_line   = _trailing_trivia(lines, *self._next_bound(),
+                                                                  end_ln, end_col, tr_comms, tr_space)
 
-        lines = self.root.lines
-        loc   = self.bloc
-
-        ld_comments_pos, ld_space_pos, indent    = _leading_trivia(lines, *self._prev_bound(),
-                                                                   loc.ln, loc.col, ld_comments, ld_space)
-        tr_comments_pos, tr_space_pos, ends_line = _trailing_trivia(lines, *self._next_bound(),
-                                                                    loc.end_ln, loc.end_col, tr_comments, tr_space)
-
-        lead  = ld_space_pos or ld_comments_pos
-        trail = tr_space_pos or tr_comments_pos
-        # trail = tr_comments_pos if not ends_line else tr_space_pos or tr_comments_pos
+        lead  = ld_space_pos or ld_text_pos
+        trail = tr_space_pos or tr_text_pos
+        # trail = tr_text_pos if not ends_line else tr_space_pos or tr_text_pos
 
         return fstlocns(*lead, *trail, starts_line=indent is not None, ends_line=ends_line, indent=indent)
 

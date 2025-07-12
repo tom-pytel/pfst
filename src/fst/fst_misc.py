@@ -235,8 +235,7 @@ def _get_trivia_params(trivia: bool | str | tuple[bool | str | int | None, bool 
                                   bool | Literal['all', 'block', 'line'] | int,
                                   bool | int,
                                   ]:
-    """Convert options from global defaults and possible passed options dict to parameters usable for
-    `_leading/trailing_trivia()`.
+    """Convert options compact human representation to parameters usable for `_leading/trailing_trivia()`.
 
     **Parameters:**
     - `as_put`: Whether the operation being done is a get or a put, determines how `'-'` suffix is processed.

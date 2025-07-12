@@ -74,3 +74,6 @@ def _with_loc(fst_: fst.FST, with_loc: bool | Literal['all', 'own'] = True) -> b
                     not a.kwonlyargs and not a.kwarg))
 
     return fst_.has_own_loc  # with_loc == 'own'
+
+
+__all_private__ = ['_with_loc']

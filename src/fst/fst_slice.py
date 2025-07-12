@@ -15,7 +15,8 @@ from .astutil import TypeAlias, TryStar, TemplateStr
 
 from .misc import (
     Self, Code, NodeError, fstloc,
-    _prev_find, _next_find, _fixup_slice_indices,
+    _next_src, _prev_find, _next_find, _fixup_slice_indices,
+    _leading_trivia, _trailing_trivia,
 )
 
 from .fst_slice_old import (
@@ -121,6 +122,7 @@ from .fst_slice_old import (
 
 
 
+
 # ----------------------------------------------------------------------------------------------------------------------
 
 _SLICE_COMAPTIBILITY = {
@@ -152,7 +154,7 @@ _SLICE_COMAPTIBILITY = {
     (Try, 'handlers'):                    'excepthandler*',
     (TryStar, 'handlers'):                'excepthandlerstar*',
 
-    (Dict, ''):                           'key:value*',
+    (Dict, ''):                           'expr:expr*',
 
     (Set, 'elts'):                        'expr*',
     (List, 'elts'):                       'expr*',
@@ -184,7 +186,7 @@ _SLICE_COMAPTIBILITY = {
     # (AsyncWith, 'items'):                 'withitem*',
 
     # (MatchSequence, 'patterns'):          'pattern*',
-    # (MatchMapping, ''):                   'key:pattern*',
+    # (MatchMapping, ''):                   'expr:pattern*',
     # (MatchOr, 'patterns'):                'pattern*',
     # (MatchClass, 'patterns'):             'pattern*',
 
@@ -207,12 +209,109 @@ def _is_slice_compatible(sig1: tuple[type[AST], str], sig2: tuple[type[AST], str
     return ((v := _SLICE_COMAPTIBILITY.get(sig1)) == _SLICE_COMAPTIBILITY.get(sig2) and v is not None)
 
 
-def _slice_seq_locs(self: fst.FST, cut: bool,
-                    trivia: bool | str | tuple[bool | str | int | None, bool | str | int | None] | None, as_put: bool,
-                    ) -> tuple[fstloc, fstloc | None, list[str] | None]:  # (copy_loc, put_loc, put_lines)
-    pass
+# ----------------------------------------------------------------------------------------------------------------------
+
+def _slice_seq_locs_get(self: fst.FST,
+                        bound_ln: int, bound_col: int, bound_end_ln: int, bound_end_col: int,
+                        ln: int, col: int, end_ln: int, end_col: int,
+                        is_first: bool, is_last: bool,
+                        trivia: bool | str | tuple[bool | str | int | None, bool | str | int | None] | None,
+                        trivia_as_put: bool = False, sep: str = ',',
+                        ) -> tuple[fstloc, fstloc, tuple[int, int] | None, str | None]:  # (copy_loc, del_loc, sep_end_pos, indent)
+    r"""Slice get locations for both copy and delete after cut. Parentheses should already have been taken into accound
+    for the bounds and location. This function will find the separator if present and go from there for the trailing
+    trivia.
+
+    ```py
+    + = copy_loc
+    - = del_loc
+
+    ............................................................
+    [  GET,  ]
+     ++++++++
+     --------
+
+    ............................................................
+    [PRE, GET, POST]
+          ++++
+          -----
+
+    ............................................................
+    [PRE, GET,\n
+          ++++
+         -----
+     POST]
+
+    ............................................................
+    [PRE, GET,\n
+          ++++++
+         -------
+     # trivia\n
+     ++++++++++
+     --------
+     POST]
+
+    ............................................................
+    [PRE,\n
+     GET, POST]
+     ++++
+     -----
+
+    ............................................................
+    [PRE,\n
+    # trivia\n
+    ++++++++++
+    ----------
+     GET, POST] + indent (space before the GET)
+    +++++
+    ------
+
+    ............................................................
+    [PRE,\n
+     GET,\n
+    +++++++
+    -------
+     POST]
+    ```
+    """
+
+    if is_first and is_last:
+        return (l := fstloc(bound_ln, bound_col, bound_end_ln, bound_end_col)), l, None
+
+    lines = self.root.lines
+
+    if (code := _next_src(lines, end_ln, end_col, bound_end_ln, bound_end_col)) and code.src.startswith(sep):  # if separator present then set end of element to just past it
+        sep_end_pos = (end_ln := code.ln, end_col := code.col + len(sep))
+    else:
+        sep_end_pos = None
+
+    ld_comms, ld_space, tr_comms, tr_space = fst.FST._get_trivia_params(trivia, trivia_as_put)
+    ld_text_pos, ld_space_pos, indent      = _leading_trivia(lines, bound_ln, bound_col,
+                                                             ln, col, ld_comms, ld_space)
+    tr_text_pos, tr_space_pos, ends_line   = _trailing_trivia(lines, bound_end_ln, bound_end_col,
+                                                              end_ln, end_col, tr_comms, tr_space)
+
+    # ld_ln, ld_col = ld_space_pos or ld_text_pos
+    # tr_ln, tr_col = tr_space_pos or tr_text_pos
+
+    # tr_text_ln , tr_text_col  = tr_text_pos
+    tr_space_ln, tr_space_col = tr_space_pos or tr_text_pos
+
+    if indent is None:  # does not start line, no preceding trivia
+        if tr_space_ln == end_ln:  # does not end line (different condition than returned from _trailing_trivia())
+            return fstloc(ln, col, end_ln, end_col), fstloc(ln, col, tr_space_ln, tr_space_col), sep_end_pos, indent
 
 
+
+
+
+
+
+
+
+
+
+    return None, None, sep_end_pos, indent
 
 
 # ----------------------------------------------------------------------------------------------------------------------
@@ -564,4 +663,7 @@ _PUT_SLICE_HANDLERS = {
 
 
 # ----------------------------------------------------------------------------------------------------------------------
-__all_private__ = ['_is_slice_compatible', '_get_slice', '_put_slice']  # used by make_docs.py
+__all_private__ = [
+    '_slice_seq_locs_get',
+    '_is_slice_compatible', '_get_slice', '_put_slice',
+]  # used by make_docs.py

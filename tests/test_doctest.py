@@ -1,11 +1,22 @@
 #!/usr/bin/env python
 
 import doctest
+import os
 import sys
 import unittest
 from types import FunctionType, ModuleType
 
 import fst
+
+
+# def load_tests(loader, tests, ignore):
+#     print(loader)
+#     print(tests)
+#     print(ignore)
+#     print(__file__)
+#     print(__path__)
+
+#     return tests
 
 
 def cleanup_docstrs_recurse(obj, exclude: set[str] = set()):
@@ -72,6 +83,12 @@ class TestDocTest(unittest.TestCase):
 
         finally:
             fst.FST.set_options(**options)
+
+    def test_standalone(self):
+        for dir, _, fnms in os.walk(os.path.join(os.path.split(__file__)[0], 'doctests')):
+            for fnm in sorted(fnms):
+                if fnm.startswith('test_') and fnm.endswith('.txt'):
+                    doctest.testfile(os.path.join(dir, fnm), module_relative=False)
 
 
 if __name__ == '__main__':

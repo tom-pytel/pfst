@@ -1,5 +1,16 @@
 ## 0.2.0 - ????-??-??
 
+### Fixed
+
+- get stmtish cut marks tree as modified
+
+### Added
+
+### Updated
+
+- split out tests into separate files
+
+
 ## 0.1.1 - 2025-07-07
 
 ### Fixed

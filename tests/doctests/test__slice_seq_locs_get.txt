@@ -1,0 +1,6 @@
+>>> from fst import *
+>>> from fst.fst_slice import _slice_seq_locs_get
+
+>>> _slice_seq_locs_get(FST('[PRE, GET, POST]'),
+...                     0, 1, 0, 15, 0, 6, 0, 9, False, False, (False, False))
+(fstloc(0, 6, 0, 10), fstloc(0, 6, 0, 11), (0, 10), None)
