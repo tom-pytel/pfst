@@ -9,8 +9,8 @@ from fst import *
 from fst.misc import PYLT12, PYGE14
 
 from data_other import (
-    GET_SLICE_SEQ_DATA, GET_SLICE_STMT_DATA, GET_SLICE_STMT_NOVERIFY_DATA,
-    PUT_SLICE_SEQ_DATA, PUT_SLICE_STMT_DATA, PUT_SLICE_DATA,
+    GET_SLICE_EXPRISH_DATA, GET_SLICE_STMTISH_DATA,
+    PUT_SLICE_EXPRISH_DATA, PUT_SLICE_STMTISH_DATA, PUT_SLICE_DATA,
 )
 
 
@@ -27,7 +27,7 @@ def regen_get_slice_seq():
     with open(fnm) as f:
         lines = f.read().split('\n')
 
-    for name in ('GET_SLICE_SEQ_DATA',):
+    for name in ('GET_SLICE_EXPRISH_DATA',):
         for src, elt, start, stop, options, *_ in globals()[name]:
             t     = parse(src)
             f     = eval(f't.{elt}', {'t': t}).f
@@ -65,33 +65,31 @@ def regen_get_slice_stmt():
     with open(fnm) as f:
         lines = f.read().split('\n')
 
-    for name in ('GET_SLICE_STMT_DATA', 'GET_SLICE_STMT_NOVERIFY_DATA'):
-        verify   = 'NOVERIFY' not in name
-        newlines = []
+    newlines = []
 
-        for src, elt, start, stop, field, options, *_ in globals()[name]:
-            t     = parse(src)
-            f     = (eval(f't.{elt}', {'t': t}) if elt else t).f
-            s     = f.get_slice(start, stop, field, cut=True, **options)
-            tsrc  = t.f.src
-            ssrc  = s.src
-            tdump = t.f.dump(out=list)
-            sdump = s.dump(out=list)
+    for src, elt, start, stop, field, options, *_ in GET_SLICE_STMTISH_DATA:
+        t     = parse(src)
+        f     = (eval(f't.{elt}', {'t': t}) if elt else t).f
+        s     = f.get_slice(start, stop, field, cut=True, **options)
+        tsrc  = t.f.src
+        ssrc  = s.src
+        tdump = t.f.dump(out=list)
+        sdump = s.dump(out=list)
 
-            if verify:
-                t.f.verify(raise_=True)
-                s.verify(raise_=True)
+        if options.get('_verify', True):
+            t.f.verify(raise_=True)
+            s.verify(raise_=True)
 
-            newlines.extend(f'''(r"""{src}""", {elt!r}, {start}, {stop}, {field!r}, {options}, r"""{tsrc}""", r"""{ssrc}""", r"""'''.split('\n'))
-            newlines.extend(tdump)
-            newlines.append('""", r"""')
-            newlines.extend(sdump)
-            newlines.append('"""),\n')
+        newlines.extend(f'''(r"""{src}""", {elt!r}, {start}, {stop}, {field!r}, {options}, r"""{tsrc}""", r"""{ssrc}""", r"""'''.split('\n'))
+        newlines.extend(tdump)
+        newlines.append('""", r"""')
+        newlines.extend(sdump)
+        newlines.append('"""),\n')
 
-        start = lines.index(f'{name} = [')
-        stop  = lines.index(f']  # END OF {name}')
+    start = lines.index(f'GET_SLICE_STMTISH_DATA = [')
+    stop  = lines.index(f']  # END OF GET_SLICE_STMTISH_DATA')
 
-        lines[start + 1 : stop] = newlines
+    lines[start + 1 : stop] = newlines
 
     with open(fnm, 'w') as f:
         lines = f.write('\n'.join(lines))
@@ -101,7 +99,7 @@ def regen_put_slice_seq():
     newlines = []
 
     try:
-        for dst, elt, start, stop, src, put_src, put_dump in PUT_SLICE_SEQ_DATA:
+        for dst, elt, start, stop, src, put_src, put_dump in PUT_SLICE_EXPRISH_DATA:
             t = parse(dst)
             f = eval(f't.{elt}', {'t': t}).f
 
@@ -129,8 +127,8 @@ def regen_put_slice_seq():
     with open(fnm) as f:
         lines = f.read().split('\n')
 
-    start = lines.index('PUT_SLICE_SEQ_DATA = [')
-    stop  = lines.index(']  # END OF PUT_SLICE_SEQ_DATA')
+    start = lines.index('PUT_SLICE_EXPRISH_DATA = [')
+    stop  = lines.index(']  # END OF PUT_SLICE_EXPRISH_DATA')
 
     lines[start + 1 : stop] = newlines
 
@@ -141,7 +139,7 @@ def regen_put_slice_seq():
 def regen_put_slice_stmt():
     newlines = []
 
-    for dst, stmt, start, stop, field, options, src, put_src, put_dump in PUT_SLICE_STMT_DATA:
+    for dst, stmt, start, stop, field, options, src, put_src, put_dump in PUT_SLICE_STMTISH_DATA:
         t = parse(dst)
         f = (eval(f't.{stmt}', {'t': t}) if stmt else t).f
 
@@ -161,8 +159,8 @@ def regen_put_slice_stmt():
     with open(fnm) as f:
         lines = f.read().split('\n')
 
-    start = lines.index('PUT_SLICE_STMT_DATA = [')
-    stop  = lines.index(']  # END OF PUT_SLICE_STMT_DATA')
+    start = lines.index('PUT_SLICE_STMTISH_DATA = [')
+    stop  = lines.index(']  # END OF PUT_SLICE_STMTISH_DATA')
 
     lines[start + 1 : stop] = newlines
 
@@ -1306,7 +1304,7 @@ def func():
                 a.f.parent.put_slice(None, idx, idx + 1, field)
 
     def test_get_slice_seq_copy(self):
-        for src, elt, start, stop, options, src_cut, slice_copy, src_dump, slice_dump in GET_SLICE_SEQ_DATA:
+        for src, elt, start, stop, options, src_cut, slice_copy, src_dump, slice_dump in GET_SLICE_EXPRISH_DATA:
             t = parse(src)
             f = eval(f't.{elt}', {'t': t}).f
 
@@ -1330,7 +1328,7 @@ def func():
                 raise
 
     def test_get_slice_seq_cut(self):
-        for i, (src, elt, start, stop, options, src_cut, slice_copy, src_dump, slice_dump) in enumerate(GET_SLICE_SEQ_DATA):
+        for i, (src, elt, start, stop, options, src_cut, slice_copy, src_dump, slice_dump) in enumerate(GET_SLICE_EXPRISH_DATA):
             t = parse(src)
             f = eval(f't.{elt}', {'t': t}).f
 
@@ -1365,73 +1363,67 @@ def func():
                 raise
 
     def test_get_slice_stmt_copy(self):
-        for name in ('GET_SLICE_STMT_DATA', 'GET_SLICE_STMT_NOVERIFY_DATA'):
-            verify = 'NOVERIFY' not in name
+        for src, elt, start, stop, field, options, _, slice_cut, _, slice_dump in GET_SLICE_STMTISH_DATA:
+            t = parse(src)
+            f = (eval(f't.{elt}', {'t': t}) if elt else t).f
 
-            for src, elt, start, stop, field, options, _, slice_cut, _, slice_dump in globals()[name]:
-                t = parse(src)
-                f = (eval(f't.{elt}', {'t': t}) if elt else t).f
+            try:
+                s     = f.get_slice(start, stop, field, cut=False, **options)
+                tsrc  = t.f.src
+                ssrc  = s.src
+                sdump = s.dump(out=list)
 
-                try:
-                    s     = f.get_slice(start, stop, field, cut=False, **options)
-                    tsrc  = t.f.src
-                    ssrc  = s.src
-                    sdump = s.dump(out=list)
+                if options.get('_verify', True):
+                    t.f.verify(raise_=True)
+                    s.verify(raise_=True)
 
-                    if verify:
-                        t.f.verify(raise_=True)
-                        s.verify(raise_=True)
+                self.assertEqual(tsrc, src)
+                self.assertEqual(ssrc, slice_cut)
+                self.assertEqual(sdump, slice_dump.strip().split('\n'))
 
-                    self.assertEqual(tsrc, src)
-                    self.assertEqual(ssrc, slice_cut)
-                    self.assertEqual(sdump, slice_dump.strip().split('\n'))
+            except Exception:
+                print(elt, start, stop)
+                print('---')
+                print(src)
+                print('...')
+                print(slice_cut)
 
-                except Exception:
-                    print(elt, start, stop)
-                    print('---')
-                    print(src)
-                    print('...')
-                    print(slice_cut)
-
-                    raise
+                raise
 
     def test_get_slice_stmt_cut(self):
-        for name in ('GET_SLICE_STMT_DATA', 'GET_SLICE_STMT_NOVERIFY_DATA'):
-            verify = 'NOVERIFY' not in name
+        for src, elt, start, stop, field, options, src_cut, slice_cut, src_dump, slice_dump in GET_SLICE_STMTISH_DATA:
+            t = parse(src)
+            f = (eval(f't.{elt}', {'t': t}) if elt else t).f
 
-            for src, elt, start, stop, field, options, src_cut, slice_cut, src_dump, slice_dump in globals()[name]:
-                t = parse(src)
-                f = (eval(f't.{elt}', {'t': t}) if elt else t).f
+            try:
+                s     = f.get_slice(start, stop, field, cut=True, **options)
+                tsrc  = t.f.src
+                ssrc  = s.src
+                tdump = t.f.dump(out=list)
+                sdump = s.dump(out=list)
 
-                try:
-                    s     = f.get_slice(start, stop, field, cut=True, **options)
-                    tsrc  = t.f.src
-                    ssrc  = s.src
-                    tdump = t.f.dump(out=list)
-                    sdump = s.dump(out=list)
+                if options.get('_verify', True):
+                    t.f.verify(raise_=True)
+                    s.verify(raise_=True)
 
-                    if verify:
-                        t.f.verify(raise_=True)
-                        s.verify(raise_=True)
+                self.assertEqual(tsrc, src_cut)
+                self.assertEqual(ssrc, slice_cut)
+                self.assertEqual(tdump, src_dump.strip().split('\n'))
+                self.assertEqual(sdump, slice_dump.strip().split('\n'))
 
-                    self.assertEqual(tsrc, src_cut)
-                    self.assertEqual(ssrc, slice_cut)
-                    self.assertEqual(tdump, src_dump.strip().split('\n'))
-                    self.assertEqual(sdump, slice_dump.strip().split('\n'))
+            except Exception:
+                print(elt, start, stop)
+                print('---')
+                print(src)
+                print('...')
+                print(src_cut)
+                print('...')
+                print(slice_cut)
 
-                except Exception:
-                    print(elt, start, stop)
-                    print('---')
-                    print(src)
-                    print('...')
-                    print(src_cut)
-                    print('...')
-                    print(slice_cut)
-
-                    raise
+                raise
 
     def test_put_slice_seq_del(self):
-        for i, (src, elt, start, stop, options, src_cut, slice_copy, src_dump, slice_dump) in enumerate(GET_SLICE_SEQ_DATA):
+        for i, (src, elt, start, stop, options, src_cut, slice_copy, src_dump, slice_dump) in enumerate(GET_SLICE_EXPRISH_DATA):
             t = parse(src)
             f = eval(f't.{elt}', {'t': t}).f
 
@@ -1452,7 +1444,7 @@ def func():
                 raise
 
     def test_put_slice_seq(self):
-        for i, (dst, elt, start, stop, src, put_src, put_dump) in enumerate(PUT_SLICE_SEQ_DATA):
+        for i, (dst, elt, start, stop, src, put_src, put_dump) in enumerate(PUT_SLICE_EXPRISH_DATA):
             t = parse(dst)
             f = eval(f't.{elt}', {'t': t}).f
 
@@ -1477,36 +1469,33 @@ def func():
                 raise
 
     def test_put_slice_stmt_del(self):
-        for name in ('GET_SLICE_STMT_DATA', 'GET_SLICE_STMT_NOVERIFY_DATA'):
-            verify = 'NOVERIFY' not in name
+        for src, elt, start, stop, field, options, src_cut, _, src_dump, _ in GET_SLICE_STMTISH_DATA:
+            t = parse(src)
+            f = (eval(f't.{elt}', {'t': t}) if elt else t).f
 
-            for i, (src, elt, start, stop, field, options, src_cut, _, src_dump, _) in enumerate(globals()[name]):
-                t = parse(src)
-                f = (eval(f't.{elt}', {'t': t}) if elt else t).f
+            try:
+                f.put_slice(None, start, stop, field, **options)
 
-                try:
-                    f.put_slice(None, start, stop, field, **options)
+                tsrc  = t.f.src
+                tdump = t.f.dump(out=list)
 
-                    tsrc  = t.f.src
-                    tdump = t.f.dump(out=list)
+                if options.get('_verify', True):
+                    t.f.verify(raise_=True)
 
-                    if verify:
-                        t.f.verify(raise_=True)
+                self.assertEqual(tsrc, src_cut)
+                self.assertEqual(tdump, src_dump.strip().split('\n'))
 
-                    self.assertEqual(tsrc, src_cut)
-                    self.assertEqual(tdump, src_dump.strip().split('\n'))
+            except Exception:
+                print(elt, start, stop)
+                print('---')
+                print(src)
+                print('...')
+                print(src_cut)
 
-                except Exception:
-                    print(i, name, elt, start, stop)
-                    print('---')
-                    print(src)
-                    print('...')
-                    print(src_cut)
-
-                    raise
+                raise
 
     def test_put_slice_stmt(self):
-        for i, (dst, stmt, start, stop, field, options, src, put_src, put_dump) in enumerate(PUT_SLICE_STMT_DATA):
+        for i, (dst, stmt, start, stop, field, options, src, put_src, put_dump) in enumerate(PUT_SLICE_STMTISH_DATA):
             t = parse(dst)
             f = (eval(f't.{stmt}', {'t': t}) if stmt else t).f
 

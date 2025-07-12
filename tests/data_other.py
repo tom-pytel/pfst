@@ -170,7 +170,7 @@ f(((i for i in j)))
 
 ]  # END OF PARS_DATA
 
-GET_SLICE_SEQ_DATA = [
+GET_SLICE_EXPRISH_DATA = [
 (r"""{1, 2}""", 'body[0].value', 0, 0, {}, r"""
 {1, 2}
 """, r"""
@@ -1719,9 +1719,9 @@ Tuple - ROOT 0,0..0,10
   .ctx Load
 """),
 
-]  # END OF GET_SLICE_SEQ_DATA
+]  # END OF GET_SLICE_EXPRISH_DATA
 
-GET_SLICE_STMT_DATA = [
+GET_SLICE_STMTISH_DATA = [
 (r"""
 if 1:
     i
@@ -3927,12 +3927,9 @@ Module - ROOT 0,0..0,5
     0] Name 'x' Del - 0,4..0,5
 """),
 
-]  # END OF GET_SLICE_STMT_DATA
-
-GET_SLICE_STMT_NOVERIFY_DATA = [
 (r"""
 if 1: i
-""", 'body[0]', 0, 1, None, {'precomms': True, 'postcomms': True}, r"""
+""", 'body[0]', 0, 1, None, {'_verify': False, 'precomms': True, 'postcomms': True}, r"""
 if 1:
 """, r"""i""", r"""
 Module - ROOT 0,0..2,0
@@ -3947,7 +3944,7 @@ Module - ROOT 0,0..0,1
 """),
 
 (r"""
-if 1: i""", 'body[0]', 0, 1, None, {'precomms': True, 'postcomms': True}, r"""
+if 1: i""", 'body[0]', 0, 1, None, {'_verify': False, 'precomms': True, 'postcomms': True}, r"""
 if 1:""", r"""i""", r"""
 Module - ROOT 0,0..1,5
   .body[1]
@@ -3962,7 +3959,7 @@ Module - ROOT 0,0..0,1
 
 (r"""
 if 1: i  # post
-""", 'body[0]', 0, 1, None, {'precomms': True, 'postcomms': True}, r"""
+""", 'body[0]', 0, 1, None, {'_verify': False, 'precomms': True, 'postcomms': True}, r"""
 if 1:
 """, r"""i  # post
 """, r"""
@@ -3978,7 +3975,7 @@ Module - ROOT 0,0..1,0
 """),
 
 (r"""
-if 1: i  # post""", 'body[0]', 0, 1, None, {'precomms': True, 'postcomms': True}, r"""
+if 1: i  # post""", 'body[0]', 0, 1, None, {'_verify': False, 'precomms': True, 'postcomms': True}, r"""
 if 1:""", r"""i  # post""", r"""
 Module - ROOT 0,0..1,5
   .body[1]
@@ -3993,7 +3990,7 @@ Module - ROOT 0,0..0,9
 
 (r"""
 if 1: i  # post
-""", 'body[0]', 0, 1, None, {'precomms': False, 'postcomms': False, 'pep8space': False}, r"""
+""", 'body[0]', 0, 1, None, {'_verify': False, 'precomms': False, 'postcomms': False, 'pep8space': False}, r"""
 if 1: # post
 """, r"""i""", r"""
 Module - ROOT 0,0..2,0
@@ -4008,7 +4005,7 @@ Module - ROOT 0,0..0,1
 """),
 
 (r"""
-if 1: i  # post""", 'body[0]', 0, 1, None, {'precomms': False, 'postcomms': False, 'pep8space': False}, r"""
+if 1: i  # post""", 'body[0]', 0, 1, None, {'_verify': False, 'precomms': False, 'postcomms': False, 'pep8space': False}, r"""
 if 1: # post""", r"""i""", r"""
 Module - ROOT 0,0..1,12
   .body[1]
@@ -4023,7 +4020,7 @@ Module - ROOT 0,0..0,1
 
 (r"""
 if 1: i ;
-""", 'body[0]', 0, 1, None, {'precomms': True, 'postcomms': True}, r"""
+""", 'body[0]', 0, 1, None, {'_verify': False, 'precomms': True, 'postcomms': True}, r"""
 if 1:
 
 """, r"""i""", r"""
@@ -4039,7 +4036,7 @@ Module - ROOT 0,0..0,1
 """),
 
 (r"""
-if 1: i ;""", 'body[0]', 0, 1, None, {'precomms': True, 'postcomms': True}, r"""
+if 1: i ;""", 'body[0]', 0, 1, None, {'_verify': False, 'precomms': True, 'postcomms': True}, r"""
 if 1:""", r"""i""", r"""
 Module - ROOT 0,0..1,5
   .body[1]
@@ -4054,7 +4051,7 @@ Module - ROOT 0,0..0,1
 
 (r"""
 if 1: i ;  # post
-""", 'body[0]', 0, 1, None, {'precomms': True, 'postcomms': True}, r"""
+""", 'body[0]', 0, 1, None, {'_verify': False, 'precomms': True, 'postcomms': True}, r"""
 if 1: # post
 """, r"""i""", r"""
 Module - ROOT 0,0..2,0
@@ -4069,7 +4066,7 @@ Module - ROOT 0,0..0,1
 """),
 
 (r"""
-if 1: i ;  # post""", 'body[0]', 0, 1, None, {'precomms': True, 'postcomms': True}, r"""
+if 1: i ;  # post""", 'body[0]', 0, 1, None, {'_verify': False, 'precomms': True, 'postcomms': True}, r"""
 if 1: # post""", r"""i""", r"""
 Module - ROOT 0,0..1,12
   .body[1]
@@ -4084,7 +4081,7 @@ Module - ROOT 0,0..0,1
 
 (r"""
 if 1: i ;  # post
-""", 'body[0]', 0, 1, None, {'precomms': False, 'postcomms': False, 'pep8space': False}, r"""
+""", 'body[0]', 0, 1, None, {'_verify': False, 'precomms': False, 'postcomms': False, 'pep8space': False}, r"""
 if 1: # post
 """, r"""i""", r"""
 Module - ROOT 0,0..2,0
@@ -4099,7 +4096,7 @@ Module - ROOT 0,0..0,1
 """),
 
 (r"""
-if 1: i ;  # post""", 'body[0]', 0, 1, None, {'precomms': False, 'postcomms': False, 'pep8space': False}, r"""
+if 1: i ;  # post""", 'body[0]', 0, 1, None, {'_verify': False, 'precomms': False, 'postcomms': False, 'pep8space': False}, r"""
 if 1: # post""", r"""i""", r"""
 Module - ROOT 0,0..1,12
   .body[1]
@@ -4118,7 +4115,7 @@ if 1: pass
 # pre
 else: pass
 j
-""", 'body[0]', 0, 1, 'orelse', {'precomms': False, 'postcomms': False, 'pep8space': False}, r"""
+""", 'body[0]', 0, 1, 'orelse', {'_verify': False, 'precomms': False, 'postcomms': False, 'pep8space': False}, r"""
 if 1: pass
 
 # pre
@@ -4144,7 +4141,7 @@ if 1: pass
 # pre
 else: pass
 j
-""", 'body[0]', 0, 1, 'orelse', {'precomms': True, 'postcomms': False, 'pep8space': False}, r"""
+""", 'body[0]', 0, 1, 'orelse', {'_verify': False, 'precomms': True, 'postcomms': False, 'pep8space': False}, r"""
 if 1: pass
 
 j
@@ -4169,7 +4166,7 @@ if 1: pass
 # pre
 else: pass
 j
-""", 'body[0]', 0, 1, 'orelse', {'precomms': True, 'postcomms': False, 'pep8space': False, 'prespace': True}, r"""
+""", 'body[0]', 0, 1, 'orelse', {'_verify': False, 'precomms': True, 'postcomms': False, 'pep8space': False, 'prespace': True}, r"""
 if 1: pass
 j
 """, r"""pass""", r"""
@@ -4193,7 +4190,7 @@ if 1: pass
 # pre
 else: pass
 j
-""", 'body[0]', 0, 1, 'orelse', {'precomms': False, 'postcomms': False, 'pep8space': False, 'prespace': True}, r"""
+""", 'body[0]', 0, 1, 'orelse', {'_verify': False, 'precomms': False, 'postcomms': False, 'pep8space': False, 'prespace': True}, r"""
 if 1: pass
 
 # pre
@@ -4219,7 +4216,7 @@ if 1: pass
 # pre
 else: pass  # post
 j
-""", 'body[0]', 0, 1, 'orelse', {'precomms': True, 'postcomms': False, 'pep8space': False, 'prespace': True}, r"""
+""", 'body[0]', 0, 1, 'orelse', {'_verify': False, 'precomms': True, 'postcomms': False, 'pep8space': False, 'prespace': True}, r"""
 if 1: pass
 # post
 j
@@ -4244,7 +4241,7 @@ if 1: pass
 # pre
 else: pass  # post
 j
-""", 'body[0]', 0, 1, 'orelse', {'precomms': True, 'postcomms': True, 'pep8space': False, 'prespace': True}, r"""
+""", 'body[0]', 0, 1, 'orelse', {'_verify': False, 'precomms': True, 'postcomms': True, 'pep8space': False, 'prespace': True}, r"""
 if 1: pass
 j
 """, r"""pass  # post
@@ -4269,7 +4266,7 @@ try: pass
 # pre
 finally: pass
 j
-""", 'body[0]', 0, 1, 'finalbody', {'precomms': False, 'postcomms': False, 'pep8space': False}, r"""
+""", 'body[0]', 0, 1, 'finalbody', {'_verify': False, 'precomms': False, 'postcomms': False, 'pep8space': False}, r"""
 try: pass
 
 # pre
@@ -4294,7 +4291,7 @@ try: pass
 # pre
 finally: pass
 j
-""", 'body[0]', 0, 1, 'finalbody', {'precomms': True, 'postcomms': False, 'pep8space': False}, r"""
+""", 'body[0]', 0, 1, 'finalbody', {'_verify': False, 'precomms': True, 'postcomms': False, 'pep8space': False}, r"""
 try: pass
 
 j
@@ -4318,7 +4315,7 @@ try: pass
 # pre
 finally: pass
 j
-""", 'body[0]', 0, 1, 'finalbody', {'precomms': True, 'postcomms': False, 'pep8space': False, 'prespace': True}, r"""
+""", 'body[0]', 0, 1, 'finalbody', {'_verify': False, 'precomms': True, 'postcomms': False, 'pep8space': False, 'prespace': True}, r"""
 try: pass
 j
 """, r"""pass""", r"""
@@ -4341,7 +4338,7 @@ try: pass
 # pre
 finally: pass
 j
-""", 'body[0]', 0, 1, 'finalbody', {'precomms': False, 'postcomms': False, 'pep8space': False, 'prespace': True}, r"""
+""", 'body[0]', 0, 1, 'finalbody', {'_verify': False, 'precomms': False, 'postcomms': False, 'pep8space': False, 'prespace': True}, r"""
 try: pass
 
 # pre
@@ -4366,7 +4363,7 @@ try: pass
 # pre
 finally: pass  # post
 j
-""", 'body[0]', 0, 1, 'finalbody', {'precomms': True, 'postcomms': False, 'pep8space': False, 'prespace': True}, r"""
+""", 'body[0]', 0, 1, 'finalbody', {'_verify': False, 'precomms': True, 'postcomms': False, 'pep8space': False, 'prespace': True}, r"""
 try: pass
 # post
 j
@@ -4390,7 +4387,7 @@ try: pass
 # pre
 finally: pass  # post
 j
-""", 'body[0]', 0, 1, 'finalbody', {'precomms': True, 'postcomms': True, 'pep8space': False, 'prespace': True}, r"""
+""", 'body[0]', 0, 1, 'finalbody', {'_verify': False, 'precomms': True, 'postcomms': True, 'pep8space': False, 'prespace': True}, r"""
 try: pass
 j
 """, r"""pass  # post
@@ -4420,7 +4417,7 @@ else:
 
   # pre 2
   j
-""", 'body[0]', 0, 1, 'orelse', {'precomms': 'all', 'postcomms': False, 'pep8space': False}, r"""
+""", 'body[0]', 0, 1, 'orelse', {'_verify': False, 'precomms': 'all', 'postcomms': False, 'pep8space': False}, r"""
 if 1: i
 
 """, r"""# pre 1
@@ -4453,7 +4450,7 @@ else:
 
   # pre 2
   j
-""", 'body[0]', 0, 1, 'orelse', {'precomms': 'all', 'postcomms': False, 'pep8space': False, 'prespace': True}, r"""
+""", 'body[0]', 0, 1, 'orelse', {'_verify': False, 'precomms': 'all', 'postcomms': False, 'pep8space': False, 'prespace': True}, r"""
 if 1: i
 """, r"""# pre 1
 
@@ -4477,7 +4474,7 @@ Module - ROOT 0,0..3,1
 try:
     pass
 finally: pass
-""", 'body[0]', 0, 1, None, {'precomms': True, 'postcomms': True}, r"""
+""", 'body[0]', 0, 1, None, {'_verify': False, 'precomms': True, 'postcomms': True}, r"""
 try:
 finally: pass
 """, r"""pass""", r"""
@@ -4495,7 +4492,7 @@ Module - ROOT 0,0..0,4
 (r"""
 try: pass
 finally: pass
-""", 'body[0]', 0, 1, None, {'precomms': True, 'postcomms': True}, r"""
+""", 'body[0]', 0, 1, None, {'_verify': False, 'precomms': True, 'postcomms': True}, r"""
 try:
 finally: pass
 """, r"""pass""", r"""
@@ -4514,7 +4511,7 @@ Module - ROOT 0,0..0,4
 try: i = \
   2
 finally: pass
-""", 'body[0]', 0, 1, None, {'precomms': True, 'postcomms': True}, r"""
+""", 'body[0]', 0, 1, None, {'_verify': False, 'precomms': True, 'postcomms': True}, r"""
 try:
 finally: pass
 """, r"""i = \
@@ -4536,7 +4533,7 @@ Module - ROOT 0,0..1,1
 (r"""
 try: pass  # post
 finally: pass
-""", 'body[0]', 0, 1, None, {'precomms': True, 'postcomms': True}, r"""
+""", 'body[0]', 0, 1, None, {'_verify': False, 'precomms': True, 'postcomms': True}, r"""
 try:
 finally: pass
 """, r"""pass  # post
@@ -4555,7 +4552,7 @@ Module - ROOT 0,0..1,0
 (r"""
 try: pass  # post
 finally: pass
-""", 'body[0]', 0, 1, None, {'precomms': False, 'postcomms': False, 'pep8space': False}, r"""
+""", 'body[0]', 0, 1, None, {'_verify': False, 'precomms': False, 'postcomms': False, 'pep8space': False}, r"""
 try: # post
 finally: pass
 """, r"""pass""", r"""
@@ -4576,7 +4573,7 @@ except: pass
 else:
     pass
 finally: pass
-""", 'body[0]', 0, 1, 'orelse', {'precomms': True, 'postcomms': True}, r"""
+""", 'body[0]', 0, 1, 'orelse', {'_verify': False, 'precomms': True, 'postcomms': True}, r"""
 try: pass
 except: pass
 finally: pass
@@ -4603,7 +4600,7 @@ try: pass
 except: pass
 else: pass
 finally: pass
-""", 'body[0]', 0, 1, 'orelse', {'precomms': True, 'postcomms': True}, r"""
+""", 'body[0]', 0, 1, 'orelse', {'_verify': False, 'precomms': True, 'postcomms': True}, r"""
 try: pass
 except: pass
 finally: pass
@@ -4631,7 +4628,7 @@ except:
     pass
 else: pass
 finally: pass
-""", 'body[0]', 0, 1, 'handlers', {'precomms': True, 'postcomms': True}, r"""
+""", 'body[0]', 0, 1, 'handlers', {'_verify': False, 'precomms': True, 'postcomms': True}, r"""
 try: pass
 else: pass
 finally: pass
@@ -4659,7 +4656,7 @@ try: pass
 except: pass
 else: pass
 finally: pass
-""", 'body[0]', 0, 1, 'handlers', {'precomms': True, 'postcomms': True}, r"""
+""", 'body[0]', 0, 1, 'handlers', {'_verify': False, 'precomms': True, 'postcomms': True}, r"""
 try: pass
 else: pass
 finally: pass
@@ -4686,7 +4683,7 @@ try: pass
 except: pass  # post
 else: pass
 finally: pass
-""", 'body[0]', 0, 1, 'handlers', {'precomms': False, 'postcomms': False, 'pep8space': False}, r"""
+""", 'body[0]', 0, 1, 'handlers', {'_verify': False, 'precomms': False, 'postcomms': False, 'pep8space': False}, r"""
 try: pass
 # post
 else: pass
@@ -4715,7 +4712,7 @@ except: pass  \
 
 else: pass
 finally: pass
-""", 'body[0]', 0, 1, 'handlers', {'precomms': False, 'postcomms': False, 'pep8space': False}, r"""
+""", 'body[0]', 0, 1, 'handlers', {'_verify': False, 'precomms': False, 'postcomms': False, 'pep8space': False}, r"""
 try: pass
 \
 
@@ -4745,7 +4742,7 @@ except:
     pass
 else: pass
 finally: pass
-""", 'body[0].handlers[0]', 0, 1, None, {'precomms': True, 'postcomms': True}, r"""
+""", 'body[0].handlers[0]', 0, 1, None, {'_verify': False, 'precomms': True, 'postcomms': True}, r"""
 try: pass
 except:
 else: pass
@@ -4773,7 +4770,7 @@ try: pass
 except: pass
 else: pass
 finally: pass
-""", 'body[0].handlers[0]', 0, 1, None, {'precomms': True, 'postcomms': True}, r"""
+""", 'body[0].handlers[0]', 0, 1, None, {'_verify': False, 'precomms': True, 'postcomms': True}, r"""
 try: pass
 except:
 else: pass
@@ -4801,7 +4798,7 @@ try: pass
 except: pass  # post
 else: pass
 finally: pass
-""", 'body[0].handlers[0]', 0, 1, None, {'precomms': False, 'postcomms': False, 'pep8space': False}, r"""
+""", 'body[0].handlers[0]', 0, 1, None, {'_verify': False, 'precomms': False, 'postcomms': False, 'pep8space': False}, r"""
 try: pass
 except: # post
 else: pass
@@ -4830,7 +4827,7 @@ except: pass \
 
 else: pass
 finally: pass
-""", 'body[0].handlers[0]', 0, 1, None, {'precomms': False, 'postcomms': False, 'pep8space': False}, r"""
+""", 'body[0].handlers[0]', 0, 1, None, {'_verify': False, 'precomms': False, 'postcomms': False, 'pep8space': False}, r"""
 try: pass
 except: \
 
@@ -4857,7 +4854,7 @@ Module - ROOT 0,0..0,4
 (r"""
 if type in ('d', 'D'): cmd = 'TYPE A'; isdir = 1
 else: cmd = 'TYPE ' + type; isdir = 0
-""", 'body[0]', 0, 2, None, {}, r"""
+""", 'body[0]', 0, 2, None, {'_verify': False}, r"""
 if type in ('d', 'D'):
 else: cmd = 'TYPE ' + type; isdir = 0
 """, r"""cmd = 'TYPE A'; isdir = 1""", r"""
@@ -4902,7 +4899,7 @@ Module - ROOT 0,0..0,25
 (r"""
 if type in ('d', 'D'): cmd = 'TYPE A'
 else: cmd = 'TYPE ' + type; isdir = 0
-""", 'body[0]', 0, 2, None, {}, r"""
+""", 'body[0]', 0, 2, None, {'_verify': False}, r"""
 if type in ('d', 'D'):
 else: cmd = 'TYPE ' + type; isdir = 0
 """, r"""cmd = 'TYPE A'""", r"""
@@ -4940,9 +4937,9 @@ Module - ROOT 0,0..0,14
     .value Constant 'TYPE A' - 0,6..0,14
 """),
 
-]  # END OF GET_SLICE_STMT_NOVERIFY_DATA
+]  # END OF GET_SLICE_STMTISH_DATA
 
-PUT_SLICE_SEQ_DATA = [
+PUT_SLICE_EXPRISH_DATA = [
 (r"""{
     a: 1
 }""", 'body[0].value', 0, 1, r"""{}""", r"""
@@ -7422,9 +7419,9 @@ Module - ROOT 0,0..0,2
       .ctx Load
 """),
 
-]  # END OF PUT_SLICE_SEQ_DATA
+]  # END OF PUT_SLICE_EXPRISH_DATA
 
-PUT_SLICE_STMT_DATA = [
+PUT_SLICE_STMTISH_DATA = [
 (r"""
 if 1:
     i
@@ -14790,7 +14787,7 @@ Module - ROOT 0,0..9,0
     0] Pass - 8,4..8,8
 """),
 
-]  # END OF PUT_SLICE_STMT_DATA
+]  # END OF PUT_SLICE_STMTISH_DATA
 
 PUT_SLICE_DATA = [
 (r"""(1, 2, 3)""", 'body[0].value', 1, 2, None, {'raw': True}, r"""*z""", r"""(1, *z, 3)""", r"""
@@ -17924,5 +17921,4 @@ REPLACE_EXISTING_ONE_DATA = [
 
 # MatchOr
 ("match s:\n case 1 | 2: pass", 'body[0].cases[0].pattern.patterns[0].value', {}, "3", "3", "match s:\n case 3 | 2: pass"),
-
 ]

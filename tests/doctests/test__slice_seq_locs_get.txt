@@ -1,27 +1,167 @@
 >>> from fst import *
 >>> from fst.fst_slice import _slice_seq_locs_get
 
+
 >>> _slice_seq_locs_get(FST("""
 ... [PRE, GET, POST]
 ... """.strip()), 0, 1, 0, 15, 0, 6, 0, 9, False, False, (False, False))
 (fstloc(0, 6, 0, 10), fstloc(0, 6, 0, 11), (0, 10), None)
 
+
 >>> _slice_seq_locs_get(FST("""
 ... [PRE, GET,
 ...  POST]
 ... """.strip()), 0, 1, 1, 5, 0, 6, 0, 9, False, False, (False, False))
-(fstloc(0, 6, 0, 10), fstloc(0, 5, 1, 0), (0, 10), None)
+(fstloc(0, 6, 0, 10), fstloc(0, 5, 0, 10), (0, 10), None)
 
 >>> _slice_seq_locs_get(FST("""
 ... [PRE, GET,
 ...
 ...  POST]
 ... """.strip()), 0, 1, 2, 5, 0, 6, 0, 9, False, False, (False, False))
-(fstloc(0, 6, 0, 10), fstloc(0, 5, 1, 0), (0, 10), None)
+(fstloc(0, 6, 0, 10), fstloc(0, 5, 0, 10), (0, 10), None)
 
 >>> _slice_seq_locs_get(FST("""
 ... [PRE, GET,
 ...
 ...  POST]
 ... """.strip()), 0, 1, 2, 5, 0, 6, 0, 9, False, False, (False, 'none+1'))
-(fstloc(0, 6, 0, 10), fstloc(0, 5, 2, 0), (0, 10), None)
+(fstloc(0, 6, 2, 0), fstloc(0, 5, 1, 0), (0, 10), None)
+
+>>> _slice_seq_locs_get(FST("""
+... [PRE, GET,  # trivia
+...
+...  POST]
+... """.strip()), 0, 1, 2, 5, 0, 6, 0, 9, False, False, (False, 'line'))
+(fstloc(0, 6, 1, 0), fstloc(0, 5, 0, 20), (0, 10), None)
+
+>>> _slice_seq_locs_get(FST("""
+... [PRE, GET,  # trivia
+...
+...  POST]
+... """.strip()), 0, 1, 2, 5, 0, 6, 0, 9, False, False, (False, 'line+1'))
+(fstloc(0, 6, 2, 0), fstloc(0, 5, 1, 0), (0, 10), None)
+
+>>> _slice_seq_locs_get(FST("""
+... [PRE, GET,
+...  # trivia
+...
+...  POST]
+... """.strip()), 0, 1, 3, 5, 0, 6, 0, 9, False, False, (False, 'line'))
+(fstloc(0, 6, 0, 10), fstloc(0, 5, 0, 10), (0, 10), None)
+
+>>> _slice_seq_locs_get(FST("""
+... [PRE, GET,
+...  # trivia
+...
+...  POST]
+... """.strip()), 0, 1, 3, 5, 0, 6, 0, 9, False, False, (False, 'line+1'))
+(fstloc(0, 6, 0, 10), fstloc(0, 5, 0, 10), (0, 10), None)
+
+>>> _slice_seq_locs_get(FST("""
+... [PRE, GET,
+...  # trivia
+...
+...  POST]
+... """.strip()), 0, 1, 3, 5, 0, 6, 0, 9, False, False, (False, 'block'))
+(fstloc(0, 6, 2, 0), fstloc(0, 5, 1, 9), (0, 10), None)
+
+>>> _slice_seq_locs_get(FST("""
+... [PRE, GET,
+...  # trivia
+...
+...  POST]
+... """.strip()), 0, 1, 3, 5, 0, 6, 0, 9, False, False, (False, 'block+1'))
+(fstloc(0, 6, 3, 0), fstloc(0, 5, 2, 0), (0, 10), None)
+
+
+>>> _slice_seq_locs_get(FST(r"""
+... [PRE, GET, \
+...  POST]
+... """.strip()), 0, 1, 1, 5, 0, 6, 0, 9, False, False, (False, False))
+(fstloc(0, 6, 0, 10), fstloc(0, 5, 0, 10), (0, 10), None)
+
+>>> _slice_seq_locs_get(FST(r"""
+... [PRE, GET, \
+...
+...  POST]
+... """.strip()), 0, 1, 2, 5, 0, 6, 0, 9, False, False, (False, False))
+(fstloc(0, 6, 0, 10), fstloc(0, 5, 0, 10), (0, 10), None)
+
+>>> _slice_seq_locs_get(FST(r"""
+... [PRE, GET, \
+...
+...  POST]
+... """.strip()), 0, 1, 2, 5, 0, 6, 0, 9, False, False, (False, 'none+1'))
+(fstloc(0, 6, 2, 0), fstloc(0, 5, 1, 0), (0, 10), None)
+
+>>> _slice_seq_locs_get(FST(r"""
+... [PRE, GET, \
+...  \
+...  POST]
+... """.strip()), 0, 1, 2, 5, 0, 6, 0, 9, False, False, (False, 'none+1'))
+(fstloc(0, 6, 2, 0), fstloc(0, 5, 1, 2), (0, 10), None)
+
+>>> _slice_seq_locs_get(FST(r"""
+... [PRE, GET, \
+...  # trivia
+...
+...  POST]
+... """.strip()), 0, 1, 3, 5, 0, 6, 0, 9, False, False, (False, 'line'))
+(fstloc(0, 6, 0, 10), fstloc(0, 5, 0, 10), (0, 10), None)
+
+>>> _slice_seq_locs_get(FST(r"""
+... [PRE, GET, \
+...  # trivia
+...
+...  POST]
+... """.strip()), 0, 1, 3, 5, 0, 6, 0, 9, False, False, (False, 'line+1'))
+(fstloc(0, 6, 0, 10), fstloc(0, 5, 0, 10), (0, 10), None)
+
+>>> _slice_seq_locs_get(FST(r"""
+... [PRE, GET, \
+...  # trivia
+...
+...  POST]
+... """.strip()), 0, 1, 3, 5, 0, 6, 0, 9, False, False, (False, 'block'))
+(fstloc(0, 6, 2, 0), fstloc(0, 5, 1, 9), (0, 10), None)
+
+>>> _slice_seq_locs_get(FST(r"""
+... [PRE, GET, \
+...  # trivia
+...  \
+...  POST]
+... """.strip()), 0, 1, 3, 5, 0, 6, 0, 9, False, False, (False, 'block'))
+(fstloc(0, 6, 2, 0), fstloc(0, 5, 1, 9), (0, 10), None)
+
+>>> _slice_seq_locs_get(FST(r"""
+... [PRE, GET, \
+...  # trivia
+...
+...  POST]
+... """.strip()), 0, 1, 3, 5, 0, 6, 0, 9, False, False, (False, 'block+1'))
+(fstloc(0, 6, 3, 0), fstloc(0, 5, 2, 0), (0, 10), None)
+
+>>> _slice_seq_locs_get(FST(r"""
+... [PRE, GET, \
+...  # trivia
+...  \
+...  POST]
+... """.strip()), 0, 1, 3, 5, 0, 6, 0, 9, False, False, (False, 'block+1'))
+(fstloc(0, 6, 3, 0), fstloc(0, 5, 2, 2), (0, 10), None)
+
+
+>>> _slice_seq_locs_get(FST("""
+... [PRE, GET]
+... """.strip()), 0, 1, 0, 9, 0, 6, 0, 9, False, True, (False, 'block+1'))
+(fstloc(0, 6, 0, 9), fstloc(0, 5, 0, 9), None, None)
+
+>>> _slice_seq_locs_get(FST("""
+... [PRE, GET,]
+... """.strip()), 0, 1, 0, 10, 0, 6, 0, 9, False, True, (False, 'block+1'))
+(fstloc(0, 6, 0, 10), fstloc(0, 5, 0, 10), (0, 10), None)
+
+>>> _slice_seq_locs_get(FST("""
+... [PRE, GET, ]
+... """.strip()), 0, 1, 0, 11, 0, 6, 0, 9, False, True, (False, 'block+1'))
+(fstloc(0, 6, 0, 10), fstloc(0, 5, 0, 11), (0, 10), None)

@@ -8,7 +8,7 @@ from types import FunctionType, ModuleType
 
 import fst
 
-VERBOSE = any(arg == '-v' for arg in sys.argv)
+# VERBOSE = any(arg == '-v' for arg in sys.argv)
 
 
 def cleanup_docstrs_recurse(obj, exclude: set[str] = set()):
@@ -34,6 +34,19 @@ def cleanup_docstrs(obj, exclude: set[str] = set()):
         obj.__doc__ = doc.replace('```', '')
 
     cleanup_docstrs_recurse(obj, exclude)
+
+
+def load_tests(loader, tests, ignore):
+    path_doctests = os.path.join(os.path.split(__file__)[0], 'doctests')
+
+    for dir, _, fnms in os.walk(path_doctests):
+        for fnm in sorted(fnms):
+            if fnm.startswith('test_') and fnm.endswith('.txt'):
+                full_fnm = os.path.join(dir, fnm)
+
+                tests.addTests(doctest.DocFileSuite(full_fnm[len(path_doctests) - 8:]))
+
+    return tests
 
 
 class TestDocTest(unittest.TestCase):
@@ -76,22 +89,22 @@ class TestDocTest(unittest.TestCase):
         finally:
             fst.FST.set_options(**options)
 
-    def test_standalone(self):
-        if VERBOSE:
-            print()
+    # def test_standalone(self):
+    #     if VERBOSE:
+    #         print()
 
-        path_doctests = os.path.join(os.path.split(__file__)[0], 'doctests')
+    #     path_doctests = os.path.join(os.path.split(__file__)[0], 'doctests')
 
-        for dir, _, fnms in os.walk(path_doctests):
-            for fnm in sorted(fnms):
-                if fnm.startswith('test_') and fnm.endswith('.txt'):
-                    full_fnm = os.path.join(dir, fnm)
+    #     for dir, _, fnms in os.walk(path_doctests):
+    #         for fnm in sorted(fnms):
+    #             if fnm.startswith('test_') and fnm.endswith('.txt'):
+    #                 full_fnm = os.path.join(dir, fnm)
 
-                    if VERBOSE:
-                        print('......................................................................')
-                        print(full_fnm[len(path_doctests) - 8:])
+    #                 if VERBOSE:
+    #                     print('......................................................................')
+    #                     print(full_fnm[len(path_doctests) - 8:])
 
-                    doctest.testfile(full_fnm, module_relative=False)
+    #                 doctest.testfile(full_fnm, module_relative=False)
 
 
 if __name__ == '__main__':

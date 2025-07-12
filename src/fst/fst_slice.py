@@ -276,16 +276,17 @@ def _slice_seq_locs_get(self: fst.FST,
     ```
     """
 
-    if is_first and is_last:
-        return (l := fstloc(bound_ln, bound_col, bound_end_ln, bound_end_col)), l, None
-
     lines = self.root.lines
 
     if (code := _next_src(lines, end_ln, end_col, bound_end_ln, bound_end_col)) and code.src.startswith(sep):  # if separator present then set end of element to just past it
         sep_end_pos = end_pos = (end_ln := code.ln, end_col := code.col + len(sep))
+
     else:
         sep_end_pos = None
         end_pos     = (end_ln, end_col)
+
+    if is_first and is_last:
+        return (l := fstloc(bound_ln, bound_col, bound_end_ln, bound_end_col)), l, sep_end_pos, None
 
     ld_comms, ld_space, tr_comms, tr_space = fst.FST._get_trivia_params(trivia, trivia_as_put)
     ld_text_pos, ld_space_pos, indent      = _leading_trivia(lines, bound_ln, bound_col,
@@ -300,13 +301,23 @@ def _slice_seq_locs_get(self: fst.FST,
     tr_space_ln, tr_space_col = tr_space_pos or tr_text_pos
 
     if indent is None:  # does not start line, no preceding trivia
-        if tr_space_ln == end_ln:  # does not end line (different condition than returned from _trailing_trivia())
-            return fstloc(ln, col, end_ln, end_col), fstloc(ln, col, tr_space_ln, tr_space_col), sep_end_pos, indent
-
         del_col = re_line_trailing_space.match(lines[ln], 0, col).start(1)
 
-        if tr_text_pos == end_pos:  # no comments, maybe trailing space
-            return fstloc(ln, col, end_ln, end_col), fstloc(ln, del_col, tr_space_ln, tr_space_col), sep_end_pos, indent
+        if tr_space_ln == end_ln:  # does not end line (different condition than returned from _trailing_trivia())
+            return (fstloc(ln, col, end_ln, end_col),
+                    fstloc(ln, del_col if is_last else col, end_ln, tr_space_col),
+                    sep_end_pos, indent)
+
+        if tr_text_pos == end_pos and tr_space_ln == end_ln + 1:  # no comments, maybe trailing space on line, treat as if doesn't end line
+            return (fstloc(ln, col, end_ln, end_col),
+                    fstloc(ln, del_col, end_ln, end_col),
+                    sep_end_pos, indent)
+
+        return (fstloc(ln, col, tr_space_ln, tr_space_col),
+                fstloc(ln, del_col, ln_ := tr_space_ln - 1, len(lines[ln_])),
+                sep_end_pos, indent)
+
+
 
 
 
