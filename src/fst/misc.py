@@ -738,7 +738,7 @@ def _prev_pars(lines: list[str], bound_ln: int, bound_col: int, pars_ln: int, pa
 
 
 def _leading_trivia(lines: list[str], bound_ln: int, bound_col: int, ln: int, col: int,
-                    comments: bool | Literal['all', 'block'] | int, space: bool | int,
+                    comments: Literal['none', 'all', 'block'] | int, space: bool | int,
                     ) -> tuple[tuple[int, int], tuple[int, int] | None, str | None]:
     """Get locations of leading trivia starting at the given bound up to (`ln`, `col`) where the element starts. Can get
     location of a block of comments (no spaces between), all comments after start of bound (with spaces inside) and any
@@ -753,11 +753,10 @@ def _leading_trivia(lines: list[str], bound_ln: int, bound_col: int, ln: int, co
     - `ln`: The start line of our element from which we will search back and upwards.
     - `col`: The start column of our element.
     - `comments`: What kind of comments to check for.
-        - `False`: No comments.
-        - `True`: Same as `'block'`.
-        - `'block'`: A single contiguous block of comments immediately above the element.
+        - `'none'`: No comments.
         - `'all'`: A range of not-necessarily contiguous comments between the bound and the start of the element, will
             return location of start of comments.
+        - `'block'`: A single contiguous block of comments immediately above the element.
         - `int`: An integer specifies return from this line number if possible. Possible means there are only comments
             and / or empty lined between this line and the start of the element. Any extra empty space to return will be
             searched for from this location, regardless of if there is other empty space below.
@@ -782,7 +781,7 @@ def _leading_trivia(lines: list[str], bound_ln: int, bound_col: int, ln: int, co
         return ((ln, col), None, None)
 
     indent    = l[:col]
-    is_lineno = isinstance(comments, int) and not isinstance(comments, bool)
+    is_lineno = isinstance(comments, int)
     text_pos  = (ln, col)  # start of comments or start of element
     top_ln    = bound_ln + bool(bound_col)  # topmost possible line to be considered, min return location is (top_ln, 0)
     stop_ln   = comments if is_lineno and comments > top_ln else top_ln
@@ -814,8 +813,8 @@ def _leading_trivia(lines: list[str], bound_ln: int, bound_col: int, ln: int, co
 
         return (text_pos, (comments_ln - min(space, comments_ln - ln), 0), indent)
 
-    if comments is not False:
-        assert is_lineno or comments is True or comments == 'block'
+    if comments != 'none':
+        assert is_lineno or comments == 'block'
 
         re_pat = re_empty_line_cont_or_comment if is_lineno else re_comment_line_start
 
@@ -847,7 +846,7 @@ def _leading_trivia(lines: list[str], bound_ln: int, bound_col: int, ln: int, co
 
 
 def _trailing_trivia(lines: list[str], bound_end_ln: int, bound_end_col: int, end_ln: int, end_col: int,
-                     comments: bool | Literal['all', 'block', 'line'] | int, space: bool | int,
+                     comments: Literal['none', 'all', 'block', 'line'] | int, space: bool | int,
                      ) -> tuple[tuple[int, int], tuple[int, int] | None, bool]:
     """Get locations of trailing trivia starting at the element up to (`end_ln`, `end_col`) where the given bound ends.
     Can get location of a block of comments (no spaces between), all comments after start of bound (with spaces inside),
@@ -875,12 +874,11 @@ def _trailing_trivia(lines: list[str], bound_end_ln: int, bound_end_col: int, en
     - `end_ln`: The end line of our element from which we will search forward and downward.
     - `end_col`: The end column of our element.
     - `comments`: What kind of comments to check for.
-        - `False`: No comments.
-        - `True`: Same as `'line'`.
-        - `'line'`: Only a possible comment on the element line. If present returns start of next line.
-        - `'block'`: A single contiguous block of comments immediately below the element.
+        - `'none'`: No comments.
         - `'all'`: A range of not-necessarily contiguous comments between the element and the bound, will return
             location of line just past end of comments.
+        - `'block'`: A single contiguous block of comments immediately below the element.
+        - `'line'`: Only a possible comment on the element line. If present returns start of next line.
         - `int`: An integer specifies return to this line number if possible. Possible means there are only comments
             and / or empty lined between the end of the element and this line (inclusive). Any extra empty space to
             return will be searched for from this location, regardless of if there is other empty space above.
@@ -911,17 +909,17 @@ def _trailing_trivia(lines: list[str], bound_end_ln: int, bound_end_col: int, en
 
         if not (code := _next_src(lines, end_ln, end_col, end_ln, bound_end_col, True)):
             space_col = min(bound_end_col, len_line)
-        elif not comments or not code.src.startswith('#'):
+        elif comments == 'none' or not code.src.startswith('#'):
             space_col = code.col
         else:
             return ((end_ln, len_line), None, True)
 
         return ((end_ln, end_col), None if space_col == end_col else (end_ln, space_col), space_col == len_line)
 
-    is_lineno = isinstance(comments, int) and not isinstance(comments, bool)
+    is_lineno = isinstance(comments, int)
 
     if code := _next_src(lines, end_ln, end_col, end_ln + 1, 0, True):
-        if not code.src.startswith('#') or (not is_lineno and not comments):
+        if not code.src.startswith('#') or (not is_lineno and comments == 'none'):
             space_pos = None if (c := code.col) == end_col else (end_ln, c)
 
             return ((end_ln, end_col), space_pos, False)
@@ -986,7 +984,7 @@ def _trailing_trivia(lines: list[str], bound_end_ln: int, bound_end_col: int, en
         comments_ln = end_ln
 
     else:
-        assert comments == 'line' or isinstance(comments, bool)
+        assert comments in ('none', 'line')
 
         comments_ln = end_ln + 1
 

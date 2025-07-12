@@ -1,6 +1,27 @@
 >>> from fst import *
 >>> from fst.fst_slice import _slice_seq_locs_get
 
->>> _slice_seq_locs_get(FST('[PRE, GET, POST]'),
-...                     0, 1, 0, 15, 0, 6, 0, 9, False, False, (False, False))
+>>> _slice_seq_locs_get(FST("""
+... [PRE, GET, POST]
+... """.strip()), 0, 1, 0, 15, 0, 6, 0, 9, False, False, (False, False))
 (fstloc(0, 6, 0, 10), fstloc(0, 6, 0, 11), (0, 10), None)
+
+>>> _slice_seq_locs_get(FST("""
+... [PRE, GET,
+...  POST]
+... """.strip()), 0, 1, 1, 5, 0, 6, 0, 9, False, False, (False, False))
+(fstloc(0, 6, 0, 10), fstloc(0, 5, 1, 0), (0, 10), None)
+
+>>> _slice_seq_locs_get(FST("""
+... [PRE, GET,
+...
+...  POST]
+... """.strip()), 0, 1, 2, 5, 0, 6, 0, 9, False, False, (False, False))
+(fstloc(0, 6, 0, 10), fstloc(0, 5, 1, 0), (0, 10), None)
+
+>>> _slice_seq_locs_get(FST("""
+... [PRE, GET,
+...
+...  POST]
+... """.strip()), 0, 1, 2, 5, 0, 6, 0, 9, False, False, (False, 'none+1'))
+(fstloc(0, 6, 0, 10), fstloc(0, 5, 2, 0), (0, 10), None)

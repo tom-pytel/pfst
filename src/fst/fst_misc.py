@@ -230,12 +230,14 @@ class _Modifying:
 @staticmethod
 def _get_trivia_params(trivia: bool | str | tuple[bool | str | int | None, bool | str | int | None] | None = None,
                        as_put: bool = False,
-                       ) -> tuple[bool | Literal['all', 'block'] | int,
+                       ) -> tuple[Literal['none', 'all', 'block'] | int,
                                   bool | int,
-                                  bool | Literal['all', 'block', 'line'] | int,
+                                  Literal['none', 'all', 'block', 'line'] | int,
                                   bool | int,
                                   ]:
     """Convert options compact human representation to parameters usable for `_leading/trailing_trivia()`.
+
+    This conversion is fairly loose and will accept shorthand '+/-#' for 'none+/-#'.
 
     **Parameters:**
     - `as_put`: Whether the operation being done is a get or a put, determines how `'-'` suffix is processed.
@@ -258,25 +260,31 @@ def _get_trivia_params(trivia: bool | str | tuple[bool | str | int | None, bool 
 
     lead_space = False
 
-    if isinstance(lead_comments, str):
+    if isinstance(lead_comments, bool):
+        lead_comments = 'block' if lead_comments else 'none'
+
+    elif isinstance(lead_comments, str):
         if (i := lead_comments.find('+')) != -1:
             lead_space    = int(n) if (n := lead_comments[i + 1:]) else True
-            lead_comments = lead_comments[:i]
+            lead_comments = lead_comments[:i] or 'none'
 
         elif (i := lead_comments.find('-')) != -1:
             lead_space    = (int(n) if (n := lead_comments[i + 1:]) else True) if as_put else 0
-            lead_comments = lead_comments[:i]
+            lead_comments = lead_comments[:i] or 'none'
 
     trail_space = False
 
-    if isinstance(trail_comments, str):
+    if isinstance(trail_comments, bool):
+        trail_comments = 'line' if trail_comments else 'none'
+
+    elif isinstance(trail_comments, str):
         if (i := trail_comments.find('+')) != -1:
             trail_space    = int(n) if (n := trail_comments[i + 1:]) else True
-            trail_comments = trail_comments[:i]
+            trail_comments = trail_comments[:i] or 'none'
 
         elif (i := trail_comments.find('-')) != -1:
             trail_space    = (int(n) if (n := trail_comments[i + 1:]) else True) if as_put else 0
-            trail_comments = trail_comments[:i]
+            trail_comments = trail_comments[:i] or 'none'
 
     return lead_comments, lead_space, trail_comments, trail_space
 
