@@ -24,6 +24,7 @@ test:  ## Run basic unit tests
 regen-tests:  ## Regenerate test data
 	python tests/test_fst.py --regen-all
 	python tests/test_fst_put.py --regen-all
+	python tests/test_fst_slice.py --regen-all
 
 
 .PHONY: docs

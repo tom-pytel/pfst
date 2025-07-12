@@ -123,13 +123,6 @@ from .fst_slice_old import (
 
 # ----------------------------------------------------------------------------------------------------------------------
 
-@staticmethod
-def _is_slice_compatible(sig1: tuple[type[AST], str], sig2: tuple[type[AST], str]) -> bool:  # sig = (AST type, field)
-    """Whether slices are compatible between these type / fields."""
-
-    return ((v := _SLICE_COMAPTIBILITY.get(sig1)) == _SLICE_COMAPTIBILITY.get(sig2) and v is not None)
-
-
 _SLICE_COMAPTIBILITY = {
     (Module, 'body'):                     'stmt*',
     (Interactive, 'body'):                'stmt*',
@@ -206,6 +199,20 @@ _SLICE_COMAPTIBILITY = {
     # (JoinedStr, 'values'):                'expr*',
     # (TemplateStr, 'values'):              'expr*',
 }
+
+@staticmethod
+def _is_slice_compatible(sig1: tuple[type[AST], str], sig2: tuple[type[AST], str]) -> bool:  # sig = (AST type, field)
+    """Whether slices are compatible between these type / fields."""
+
+    return ((v := _SLICE_COMAPTIBILITY.get(sig1)) == _SLICE_COMAPTIBILITY.get(sig2) and v is not None)
+
+
+def _slice_seq_locs(self: fst.FST, cut: bool,
+                    trivia: bool | str | tuple[bool | str | int | None, bool | str | int | None] | None, as_put: bool,
+                    ) -> tuple[fstloc, fstloc | None, list[str] | None]:  # (copy_loc, put_loc, put_lines)
+    pass
+
+
 
 
 # ----------------------------------------------------------------------------------------------------------------------

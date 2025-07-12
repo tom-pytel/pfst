@@ -12,124 +12,11 @@ from fst.astutil import compare_asts
 from fst.misc import PYVER, PYLT11, PYLT12, PYGE12, PYGE14
 
 from data_put_one import PUT_ONE_DATA
-from data_other import (GET_SLICE_SEQ_DATA, GET_SLICE_STMT_DATA, GET_SLICE_STMT_NOVERIFY_DATA,
-                        PUT_SLICE_SEQ_DATA, PUT_SLICE_STMT_DATA, PUT_SLICE_DATA, PUT_SRC_DATA,
-                        REPLACE_EXISTING_ONE_DATA)
+from data_other import PUT_SLICE_DATA, PUT_SRC_DATA, REPLACE_EXISTING_ONE_DATA
 
 def read(fnm):
     with open(fnm) as f:
         return f.read()
-
-
-def regen_put_slice_seq():
-    newlines = []
-
-    try:
-        for dst, elt, start, stop, src, put_src, put_dump in PUT_SLICE_SEQ_DATA:
-            t = parse(dst)
-            f = eval(f't.{elt}', {'t': t}).f
-
-            f.put_slice(None if src == '**DEL**' else src, start, stop)
-
-            tdst  = t.f.src
-            tdump = t.f.dump(out=list)
-
-            assert not tdst.startswith('\n') or tdst.endswith('\n')
-
-            t.f.verify(raise_=True)
-
-            newlines.extend(f'''(r"""{dst}""", {elt!r}, {start}, {stop}, r"""{src}""", r"""\n{tdst}\n""", r"""'''.split('\n'))
-            newlines.extend(tdump)
-            newlines.append('"""),\n')
-
-    except Exception:
-        print(dst, elt, start, stop, src, put_src)
-        print(t.f.src)
-
-        raise
-
-    fnm = os.path.join(os.path.dirname(sys.argv[0]), 'data_other.py')
-
-    with open(fnm) as f:
-        lines = f.read().split('\n')
-
-    start = lines.index('PUT_SLICE_SEQ_DATA = [')
-    stop  = lines.index(']  # END OF PUT_SLICE_SEQ_DATA')
-
-    lines[start + 1 : stop] = newlines
-
-    with open(fnm, 'w') as f:
-        lines = f.write('\n'.join(lines))
-
-
-def regen_put_slice_stmt():
-    newlines = []
-
-    for dst, stmt, start, stop, field, options, src, put_src, put_dump in PUT_SLICE_STMT_DATA:
-        t = parse(dst)
-        f = (eval(f't.{stmt}', {'t': t}) if stmt else t).f
-
-        f.put_slice(None if src == '**DEL**' else src, start, stop, field, **options)
-
-        tdst  = t.f.src
-        tdump = t.f.dump(out=list)
-
-        t.f.verify(raise_=True)
-
-        newlines.extend(f'''(r"""{dst}""", {stmt!r}, {start}, {stop}, {field!r}, {options!r}, r"""{src}""", r"""{tdst}""", r"""'''.split('\n'))
-        newlines.extend(tdump)
-        newlines.append('"""),\n')
-
-    fnm = os.path.join(os.path.dirname(sys.argv[0]), 'data_other.py')
-
-    with open(fnm) as f:
-        lines = f.read().split('\n')
-
-    start = lines.index('PUT_SLICE_STMT_DATA = [')
-    stop  = lines.index(']  # END OF PUT_SLICE_STMT_DATA')
-
-    lines[start + 1 : stop] = newlines
-
-    with open(fnm, 'w') as f:
-        lines = f.write('\n'.join(lines))
-
-
-def regen_put_slice():
-    newlines = []
-
-    for dst, attr, start, stop, field, options, src, put_src, put_dump in PUT_SLICE_DATA:
-        t = parse(dst)
-        f = (eval(f't.{attr}', {'t': t}) if attr else t).f
-
-        try:
-            f.put_slice(None if src == '**DEL**' else src, start, stop, field, **options)
-
-        except NotImplementedError as exc:
-            tdst  = f'**{exc!r}**'
-            tdump = ''
-
-        else:
-            tdst  = t.f.src
-            tdump = t.f.dump(out=list)
-
-            t.f.verify(raise_=True)
-
-        newlines.extend(f'''(r"""{dst}""", {attr!r}, {start}, {stop}, {field!r}, {options!r}, r"""{src}""", r"""{tdst}""", r"""'''.split('\n'))
-        newlines.extend(tdump)
-        newlines.append('"""),\n')
-
-    fnm = os.path.join(os.path.dirname(sys.argv[0]), 'data_other.py')
-
-    with open(fnm) as f:
-        lines = f.read().split('\n')
-
-    start = lines.index('PUT_SLICE_DATA = [')
-    stop  = lines.index(']  # END OF PUT_SLICE_DATA')
-
-    lines[start + 1 : stop] = newlines
-
-    with open(fnm, 'w') as f:
-        lines = f.write('\n'.join(lines))
 
 
 def regen_put_one():
@@ -1686,188 +1573,6 @@ class cls:
         self.assertEqual('{a: b, e: f}', FST('{a: b, c: d, e: f}', 'exec').body[0].value.put(None, 1, raw=False).root.src)
 
         FST.set_options(**old_options)
-
-    def test_put_slice_seq_del(self):
-        for i, (src, elt, start, stop, options, src_cut, slice_copy, src_dump, slice_dump) in enumerate(GET_SLICE_SEQ_DATA):
-            t = parse(src)
-            f = eval(f't.{elt}', {'t': t}).f
-
-            try:
-                f.put_slice(None, start, stop, **options)
-
-                tdst  = t.f.src
-                tdump = t.f.dump(out=list)
-
-                self.assertEqual(tdst, src_cut.strip())
-                self.assertEqual(tdump, src_dump.strip().split('\n'))
-
-            except Exception:
-                print(i, elt, start, stop)
-                print('---')
-                print(src)
-
-                raise
-
-    def test_put_slice_seq(self):
-        for i, (dst, elt, start, stop, src, put_src, put_dump) in enumerate(PUT_SLICE_SEQ_DATA):
-            t = parse(dst)
-            f = eval(f't.{elt}', {'t': t}).f
-
-            try:
-                f.put_slice(None if src == '**DEL**' else src, start, stop)
-
-                tdst  = t.f.src
-                tdump = t.f.dump(out=list)
-
-                self.assertEqual(tdst, put_src.strip())
-                self.assertEqual(tdump, put_dump.strip().split('\n'))
-
-            except Exception:
-                print(i, elt, start, stop)
-                print('---')
-                print(dst)
-                print('...')
-                print(src)
-                print('...')
-                print(put_src)
-
-                raise
-
-    def test_put_slice_stmt_del(self):
-        for name in ('GET_SLICE_STMT_DATA', 'GET_SLICE_STMT_NOVERIFY_DATA'):
-            verify = 'NOVERIFY' not in name
-
-            for i, (src, elt, start, stop, field, options, src_cut, _, src_dump, _) in enumerate(globals()[name]):
-                t = parse(src)
-                f = (eval(f't.{elt}', {'t': t}) if elt else t).f
-
-                try:
-                    f.put_slice(None, start, stop, field, **options)
-
-                    tsrc  = t.f.src
-                    tdump = t.f.dump(out=list)
-
-                    if verify:
-                        t.f.verify(raise_=True)
-
-                    self.assertEqual(tsrc, src_cut)
-                    self.assertEqual(tdump, src_dump.strip().split('\n'))
-
-                except Exception:
-                    print(i, name, elt, start, stop)
-                    print('---')
-                    print(src)
-                    print('...')
-                    print(src_cut)
-
-                    raise
-
-    def test_put_slice_stmt(self):
-        for i, (dst, stmt, start, stop, field, options, src, put_src, put_dump) in enumerate(PUT_SLICE_STMT_DATA):
-            t = parse(dst)
-            f = (eval(f't.{stmt}', {'t': t}) if stmt else t).f
-
-            try:
-                f.put_slice(None if src == '**DEL**' else src, start, stop, field, **options)
-
-                tdst  = t.f.src
-                tdump = t.f.dump(out=list)
-
-                t.f.verify(raise_=True)
-
-                self.assertEqual(tdst, put_src)
-                self.assertEqual(tdump, put_dump.strip().split('\n'))
-
-            except Exception:
-                print(i, stmt, start, stop, options)
-                print('---')
-                print(repr(dst))
-                print('...')
-                print(src)
-                print('...')
-                print(put_src)
-
-                raise
-
-    def test_put_slice(self):
-        for i, (dst, attr, start, stop, field, options, src, put_src, put_dump) in enumerate(PUT_SLICE_DATA):
-            t = parse(dst)
-            f = (eval(f't.{attr}', {'t': t}) if attr else t).f
-
-            try:
-                f.put_slice(None if src == '**DEL**' else src, start, stop, field, **options)
-
-                tdst  = t.f.src
-                tdump = t.f.dump(out=list)
-
-                t.f.verify(raise_=True)
-
-                self.assertEqual(tdst, put_src)
-                self.assertEqual(tdump, put_dump.strip().split('\n'))
-
-            except Exception:
-                print(i, src, start, stop, options)
-                print('---')
-                print(repr(dst))
-                print('...')
-                print(src)
-                print('...')
-                print(put_src)
-
-                raise
-
-    def test_put_slice_special(self):
-        if PYGE14:  # make sure parent Interpolation.str gets modified
-            f = FST('t"{(1, 2)}"', 'exec').body[0].value.copy()
-            f.values[0].value.put_slice("()")
-            self.assertEqual('()', f.values[0].value.src)
-            self.assertEqual('()', f.values[0].str)
-
-            f = FST('t"{(1, 2)}"', 'exec').body[0].value.copy()
-            f.values[0].value.put("()", None, None, one=False)
-            self.assertEqual('()', f.values[0].value.src)
-            self.assertEqual('()', f.values[0].str)
-
-        f = FST('a, b = c')
-        f.targets[0].put_slice('{z}', 1, 2)
-        self.assertEqual('a, z = c', f.src)
-        f.verify()
-
-        f = FST('a, b = c, d')
-        f.value.put_slice('(e := ((b + 1), 2))', 1, 2, one=True)
-        self.assertEqual('a, b = c, (e := ((b + 1), 2))', f.src)
-        f.verify()
-
-        f = FST('a, b = c, d')
-        f.value.put_slice('e := f', 1, 2, one=True)
-        self.assertEqual('a, b = c, (e := f)', f.src)
-        f.verify()
-
-        f = FST('a, b')
-        f.put_slice('end := self.Label(),', 1, 2, raw=False)
-        self.assertEqual('(a, end := self.Label(),)', f.src)
-        f.verify()
-
-    def test_put_slice_empty_set(self):
-        self.assertEqual('[]', FST('[1, 2]').put_slice('set()', raw=False, empty_set=True).src)
-        self.assertEqual('[]', FST('[1, 2]').put_slice('{*()}', raw=False, empty_set=True).src)
-        self.assertEqual('[]', FST('[1, 2]').put_slice('{*[]}', raw=False, empty_set=True).src)
-        self.assertEqual('[]', FST('[1, 2]').put_slice('{*{}}', raw=False, empty_set=True).src)
-
-        self.assertRaises(ValueError, FST('[1, 2]').put_slice, 'set()', raw=False, empty_set='seq')
-        self.assertEqual('[]', FST('[1, 2]').put_slice('{*()}', raw=False, empty_set='seq').src)
-        self.assertEqual('[]', FST('[1, 2]').put_slice('{*[]}', raw=False, empty_set='seq').src)
-        self.assertEqual('[]', FST('[1, 2]').put_slice('{*{}}', raw=False, empty_set='seq').src)
-
-        self.assertEqual('[]', FST('[1, 2]').put_slice('set()', raw=False, empty_set='call').src)
-        self.assertEqual('[*()]', FST('[1, 2]').put_slice('{*()}', raw=False, empty_set='call').src)
-        self.assertEqual('[*[]]', FST('[1, 2]').put_slice('{*[]}', raw=False, empty_set='call').src)
-        self.assertEqual('[*{}]', FST('[1, 2]').put_slice('{*{}}', raw=False, empty_set='call').src)
-
-        self.assertRaises(ValueError, FST('[1, 2]').put_slice, 'set()', raw=False, empty_set=False)
-        self.assertEqual('[*()]', FST('[1, 2]').put_slice('{*()}', raw=False, empty_set=False).src)
-        self.assertEqual('[*[]]', FST('[1, 2]').put_slice('{*[]}', raw=False, empty_set=False).src)
-        self.assertEqual('[*{}]', FST('[1, 2]').put_slice('{*{}}', raw=False, empty_set=False).src)
 
     def test_put_one(self):
         ver = PYVER[1]
@@ -4271,37 +3976,6 @@ f'd{t"e{f=!s:0.1f<1}"=}'
             self.assertEqual('\n\nf\'d{t"e{z=!s:0.1f<1}"=}\'', f.values[-1].str)
             f.verify()
 
-    def test_empty_set_slice(self):
-        # f = parse('set()').body[0].value.f
-        # self.assertEqual('{*()}', f.get_slice(0, 0, cut=True).src)
-        # self.assertEqual('set()', f.src)
-        # self.assertEqual('set()', f.put_slice('{*()}', 0, 0).src)
-        # f.root.verify()
-
-        f = parse('{*()}').body[0].value.f
-        self.assertEqual('{*()}', f.get_slice(0, 0, cut=True).src)
-        self.assertEqual('{*()}', f.src)
-        self.assertEqual('{*()}', f.put_slice('{*()}', 0, 0).src)
-        f.root.verify()
-
-        f = parse('{*[]}').body[0].value.f
-        self.assertEqual('{*()}', f.get_slice(0, 0, cut=True).src)
-        self.assertEqual('{*[]}', f.src)
-        self.assertEqual('{*[]}', f.put_slice('{*()}', 0, 0).src)
-        f.root.verify()
-
-        f = parse('{*{}}').body[0].value.f
-        self.assertEqual('{*()}', f.get_slice(0, 0, cut=True).src)
-        self.assertEqual('{*{}}', f.src)
-        self.assertEqual('{*{}}', f.put_slice('{*()}', 0, 0).src)
-        f.root.verify()
-
-        f = parse('{ * ( ) }').body[0].value.f
-        self.assertEqual('{*()}', f.get_slice(0, 0, cut=True).src)
-        self.assertEqual('{ * ( ) }', f.src)
-        self.assertEqual('{ * ( ) }', f.put_slice('{*()}', 0, 0).src)
-        f.root.verify()
-
     def test_ctx_change(self):
         a = parse('a, b = x, y').body[0]
         a.targets[0].f.put(a.value.f.get())
@@ -4355,9 +4029,6 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(prog='test_fst.py')
 
     parser.add_argument('--regen-all', default=False, action='store_true', help="regenerate everything")
-    parser.add_argument('--regen-put-slice-seq', default=False, action='store_true', help="regenerate put slice sequence test data")
-    parser.add_argument('--regen-put-slice-stmt', default=False, action='store_true', help="regenerate put slice statement test data")
-    parser.add_argument('--regen-put-slice', default=False, action='store_true', help="regenerate put slice test data")
     parser.add_argument('--regen-put-one', default=False, action='store_true', help="regenerate put one test data")
     parser.add_argument('--regen-put-src', default=False, action='store_true', help="regenerate put src test data")
 
@@ -4366,18 +4037,6 @@ if __name__ == '__main__':
     if any(getattr(args, n) for n in dir(args) if n.startswith('regen_')):
         if PYLT12:
             raise RuntimeError('cannot regenerate on python version < 3.12')
-
-    if args.regen_put_slice_seq or args.regen_all:
-        print('Regenerating put slice sequence test data...')
-        regen_put_slice_seq()
-
-    if args.regen_put_slice_stmt or args.regen_all:
-        print('Regenerating put slice statement test data...')
-        regen_put_slice_stmt()
-
-    if args.regen_put_slice or args.regen_all:
-        print('Regenerating put slice test data...')
-        regen_put_slice()
 
     if args.regen_put_one or args.regen_all:
         print('Regenerating put one test data...')
