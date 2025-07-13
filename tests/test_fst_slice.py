@@ -1645,7 +1645,7 @@ if __name__ == '__main__':
     parser.add_argument('--regen-put-slice-stmt', default=False, action='store_true', help="regenerate put slice statement test data")
     parser.add_argument('--regen-put-slice', default=False, action='store_true', help="regenerate put slice test data")
 
-    args = parser.parse_args()
+    args, _ = parser.parse_known_args()
 
     if any(getattr(args, n) for n in dir(args) if n.startswith('regen_')):
         if PYLT12:

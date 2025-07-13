@@ -4032,7 +4032,7 @@ if __name__ == '__main__':
     parser.add_argument('--regen-put-one', default=False, action='store_true', help="regenerate put one test data")
     parser.add_argument('--regen-put-src', default=False, action='store_true', help="regenerate put src test data")
 
-    args = parser.parse_args()
+    args, _ = parser.parse_known_args()
 
     if any(getattr(args, n) for n in dir(args) if n.startswith('regen_')):
         if PYLT12:

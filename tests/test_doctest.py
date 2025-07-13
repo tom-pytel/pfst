@@ -37,6 +37,14 @@ def cleanup_docstrs(obj, exclude: set[str] = set()):
 
 
 def load_tests(loader, tests, ignore):
+    if '-k' in sys.argv:
+        for i, a in enumerate(sys.argv):
+            if a == '-k' and i < len(sys.argv) - 1 and sys.argv[i + 1] == 'doctests':
+                break
+
+        else:
+            return tests
+
     path_doctests = os.path.join(os.path.split(__file__)[0], 'doctests')
 
     for dir, _, fnms in os.walk(path_doctests):
