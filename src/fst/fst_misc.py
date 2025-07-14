@@ -1252,6 +1252,8 @@ def _maybe_fix_tuple(self: fst.FST, is_parenthesized: bool | None = None):
     elif not is_parenthesized:  # if is unparenthesized tuple and empty left then need to add parentheses
         ln, col, end_ln, end_col = self.loc
 
+        # TODO: if there are comments in there then parenthesize the space instead of replacing with '()'?
+
         self._put_src(['()'], ln, col, end_ln, end_col, True, False)  # WARNING! `tail=True` may not be safe if another preceding non-containing node ends EXACTLY where the unparenthesized tuple starts, but haven't found a case where this can happen
 
 

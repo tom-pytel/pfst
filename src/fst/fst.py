@@ -2290,7 +2290,6 @@ class FST:
 
         return fstlocns(*lead, *trail, starts_line=indent is not None, ends_line=ends_line, indent=indent)
 
-
     # ------------------------------------------------------------------------------------------------------------------
     # Structure stuff
 

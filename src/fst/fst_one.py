@@ -880,8 +880,8 @@ def _put_one_NOT_IMPLEMENTED_YET_14(self: fst.FST, code: _PutOneCode, idx: int |
 def _make_exprish_fst(self: fst.FST, code: _PutOneCode, idx: int | None, field: str, static: onestatic,
                       target: fst.FST | fstloc, ctx: type[expr_context], prefix: str  = '', suffix: str = '',
                       validated: int = 0, **options) -> fst.FST:
-    """Make an expression `FST` from `Code` for a field/idx containing an existing node creating a new one. Takes care
-    of parenthesizing, indenting and offsetting."""
+    """Make an expression `FST` from `Code` for a field/idx containing an existing node or creating a new one. Takes
+    care of parenthesizing, indenting and offsetting."""
 
     put_fst = static.code_as(code, self.root.parse_params) if validated < 2 else code
     put_ast = put_fst.a
