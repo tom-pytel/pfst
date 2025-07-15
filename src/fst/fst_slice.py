@@ -11,12 +11,12 @@ from typing import Literal, Union
 from . import fst
 
 from .astutil import *
-from .astutil import TypeAlias, TryStar, TemplateStr
+from .astutil import re_identifier, TypeAlias, TryStar, TemplateStr
 
 from .misc import (
     Self, Code, NodeError, astfield, fstloc,
     re_line_trailing_space,
-    _next_src, _prev_find, _next_find, _fixup_slice_indices,
+    _next_src, _prev_find, _next_find, _next_find_re, _fixup_slice_indices,
     _leading_trivia, _trailing_trivia,
 )
 
@@ -45,11 +45,6 @@ from .fst_slice_old import (
 #                                                                            .
 # N ,     {}      (Dict, 'keys':'values')                 # expr:expr*       -> Dict                   _parse_expr / restrict dict
 #                                                                            .
-# N ,             (ClassDef, 'bases'):                    # expr*            -> Tuple                  _parse_expr_callargs
-# N ,             (Delete, 'targets'):                    # expr*            -> Tuple[target]          _parse_expr / restrict targets
-# N ,             (Assign, 'targets'):                    # expr*            -> Tuple[target]          _parse_expr / restrict targets
-# N ,             (Call, 'args'):                         # expr*            -> Tuple[expr_callarg]    _parse_expr_callargs
-#                                                                            .
 # N ,     []      (MatchSequence, 'patterns'):            # pattern*         -> MatchSequence          _parse_pattern / restrict MatchSequence
 # N ,     {}      (MatchMapping, 'keys':'patterns'):      # expr:pattern*    -> MatchMapping           _parse_pattern / restrict MatchMapping
 #                                                                            .
@@ -57,7 +52,15 @@ from .fst_slice_old import (
 #                                                                            .
 #                                                                            .
 #                                                                            .
+# N ,             (ClassDef, 'bases'):                    # expr*            -> Tuple[expr_callarg]    _parse_expr_callargs
+# N ,             (Call, 'args'):                         # expr*            -> Tuple[expr_callarg]    _parse_expr_callargs
+#
+# N ,             (Delete, 'targets'):                    # expr*            -> Tuple[target]          _parse_expr / restrict targets
+# N ,             (Assign, 'targets'):                    # expr*            -> Tuple[target]          _parse_expr / restrict targets
+#                                                                            .
 # S ,             (MatchClass, 'patterns'):               # pattern*         -> Tuple[pattern]         _parse_pattern / restrict MatchSequence
+#                                                                            .
+#                                                                            .
 #                                                                            .
 # S ,             (ClassDef, 'keywords'):                 # keyword*         -> Tuple[keyword]         _parse_keywords
 # S ,             (Call, 'keywords'):                     # keyword*         -> Tuple[keyword]         _parse_keywords
@@ -75,8 +78,8 @@ from .fst_slice_old import (
 #                                                                            .
 #                                                                            .
 #                                                                            .
-# N ,             (Global, 'names'):                      # identifier*,     -> Tuple[Name]            _parse_expr / restrict Names   - no trailing commas
-# N ,             (Nonlocal, 'names'):                    # identifier*,     -> Tuple[Name]            _parse_expr / restrict Names   - no trailing commas
+# N ,             (Global, 'names'):                      # identifier*,     -> Tuple[Name]            _parse_expr / restrict Names   - no trailing commas, unparenthesized
+# N ,             (Nonlocal, 'names'):                    # identifier*,     -> Tuple[Name]            _parse_expr / restrict Names   - no trailing commas, unparenthesized
 #                                                                            .
 #                                                                            .
 #                                                                            .
@@ -99,8 +102,8 @@ from .fst_slice_old import (
 #
 #
 #
-#                 (JoinedStr, 'values'):                  # expr*
-#                 (TemplateStr, 'values'):                # expr*
+#                 (JoinedStr, 'values'):                  # Constant|FormattedValue*  -> JoinedStr
+#                 (TemplateStr, 'values'):                # Constant|Interpolation*   -> TemplateStr
 
 
 # Tuple[expr]            _parse_expr_sliceelts
@@ -338,10 +341,9 @@ def _get_slice_seq_sep_and_dedent(self: fst.FST, start: int, stop: int, len_: in
                                   bound_ln: int, bound_col: int, bound_end_ln: int, bound_end_col: int,
                                   ln: int, col: int, end_ln: int, end_col: int,
                                   trivia: bool | str | tuple[bool | str | int | None, bool | str | int | None] | None,
-                                  prefix: str = '', suffix: str = '', sep: str = ',',
-                                  *,
-                                  need_self_tail_sep: bool | Literal[0] | None = None,
-                                  need_ret_tail_sep: bool | Literal[0] | None = None,
+                                  field: str = 'elts', prefix: str = '', suffix: str = '', sep: str = ',',
+                                  self_tail_sep: bool | Literal[0] | None = None,
+                                  ret_tail_sep: bool | Literal[0] | None = None,
                                   ) -> fst.FST:
     """Copy slice comma sequence source, dedent it, and create a new `FST` from that source and the new `AST` already
     made with the old locations (which will be updated). If the operation is a cut then the source in `self` will also
@@ -360,12 +362,12 @@ def _get_slice_seq_sep_and_dedent(self: fst.FST, start: int, stop: int, len_: in
     - `trivia`: Standard option on how to handle leading and trailing comments and space.
     - `prefix`, `suffix`: What delimiters to add to copied / cut span of elements (pars, brackets, curlies).
     - `sep`: The separator to use and check, comma for everything except maybe `'|'` for MatchOr.
-    - `need_self_tail_sep`: Whether self needs a trailing separator after cut or no (including if end was not cut).
+    - `self_tail_sep`: Whether self needs a trailing separator after cut or no (including if end was not cut).
         - `None`: Leave it up to function (aesthetic decision).
         - `True`: Always add if not present.
         - `False`: Always remove if present.
         - `0`: Remove if present on same line as end of element, otherwise leave, aesthetic misc.
-    - `need_ret_tail_sep`: Whether cut or copied slice needs a trailing separator or not.
+    - `ret_tail_sep`: Whether returned cut or copied slice needs a trailing separator or not.
         - `None`: Figure it out from length and if `ast` is `Tuple`.
         - `True`: Always add if not present.
         - `False`: Always remove if present.
@@ -377,8 +379,8 @@ def _get_slice_seq_sep_and_dedent(self: fst.FST, start: int, stop: int, len_: in
     is_last         = stop == len_
     len_self_suffix = self.end_col - bound_end_col  # will be 1 or 0 depending on if enclosed container or unparenthesized tuple
 
-    if need_ret_tail_sep is None:
-        need_ret_tail_sep = (stop - start) == 1 and isinstance(ast, Tuple)  # if would result in signleton tuple then will need trailing separator
+    if ret_tail_sep is None:
+        ret_tail_sep = ((stop - start) == 1 and isinstance(ast, Tuple)) or 0  # if would result in signleton tuple then will need trailing separator
 
     # action_self_sep == None means exactly that, do nothing, no add OR delete, will always be this if cutting everything
     # action_self_tail_sep == True means delete trailing separator from what is left after cut (implies something is left)
@@ -386,9 +388,9 @@ def _get_slice_seq_sep_and_dedent(self: fst.FST, start: int, stop: int, len_: in
 
     if not cut:
         action_self_tail_sep = None
-    elif need_self_tail_sep:
+    elif self_tail_sep:
         action_self_tail_sep = False if not is_last else None
-    elif need_self_tail_sep is not None:  # is False:
+    elif self_tail_sep is not None:  # is False:
         action_self_tail_sep = True if start else None
     elif not isinstance(self.a, Tuple):
         action_self_tail_sep = (start and is_last) or None
@@ -405,13 +407,13 @@ def _get_slice_seq_sep_and_dedent(self: fst.FST, start: int, stop: int, len_: in
 
     copy_ln, copy_col, copy_end_ln, copy_end_col = copy_loc
 
-    if not need_ret_tail_sep and sep_end_pos:
+    if not ret_tail_sep and sep_end_pos:
         if is_last:  # if is last element and already had trailing separator then keep it
-            need_ret_tail_sep = True  # this along with sep_end_pos != None will turn the need_ret_tail_sep checks below into noop
+            ret_tail_sep = True  # this along with sep_end_pos != None will turn the ret_tail_sep checks below into noop
 
         elif sep_end_pos[0] == copy_end_ln == end_ln and sep_end_pos[1] == copy_end_col:  # optimization, we can get rid of unneeded trailing separator in copy by just not copying it if it is at end of copy range on same line as end of element
             copy_loc          = fstloc(copy_ln, copy_col, copy_end_ln, copy_end_col := end_col)
-            need_ret_tail_sep = True
+            ret_tail_sep = True
 
     if action_self_tail_sep:
         del_ln, _, del_end_ln, del_end_col = del_loc
@@ -438,27 +440,28 @@ def _get_slice_seq_sep_and_dedent(self: fst.FST, start: int, stop: int, len_: in
     # add / remove trailing separators as needed
 
     def get_end_locs(fst_: fst.FST, pars: bool, end_col_off: int = 0):
-        last = (l if (l := getattr(fst_.a, 'elts', None)) is not None else  # Tuple, List, Set  - easiest way to get copied location
-                l if (l := getattr(fst_.a, 'values', None)) is not None else  # Dict
-                getattr(fst_.a, 'patterns', None))[-1].f  # Match*, we expect one of these to exist
+        _, _, fst_end_ln, fst_end_col  = fst_.loc
+        fst_end_col                   -= end_col_off
 
-        _, _, last_end_ln, last_end_col = last.pars() if pars else last.loc
-        _, _, fst_end_ln,  fst_end_col  = fst_.loc
+        if not isinstance(last := getattr(fst_.a, field)[-1], AST):  # Globals or Locals names or something like that
+            return fst_end_ln, fst_end_col, fst_end_ln, fst_end_col
 
-        return last_end_ln, last_end_col, fst_end_ln, fst_end_col - end_col_off
+        _, _, last_end_ln, last_end_col = last.f.pars() if pars else last.f.loc
 
-    if not need_ret_tail_sep:
+        return last_end_ln, last_end_col, fst_end_ln, fst_end_col
+
+    if not ret_tail_sep:
         if sep_end_pos:
             if sep_end_pos[0] == end_ln:  # must be on end line to allow aesthetic removal, otherwise considered "artisanal" separator and left in place
                 last_end_ln, last_end_col, fst_end_ln, fst_end_col = get_end_locs(fst_, True, len(suffix))
 
-                # this deletes separator even if there is a comment following it
-                # if fst_end_ln != last_end_ln:  # if not this then there can only be separator and whitespace between end of last element and end of element container
-                #     fst_end_col = sep_end_pos[1] + (last_end_col - end_col)  # use delta between original and copied last element as offset for separator end position in origianl code to copied position due to dedent and copy offset
+                if ret_tail_sep is False:  # this deletes separator even if there is a comment following it
+                    if fst_end_ln != last_end_ln:  # if not this then there can only be separator and whitespace between end of last element and end of element container
+                        fst_end_col = sep_end_pos[1] + (last_end_col - end_col)  # use delta between original and copied last element as offset for separator end position in origianl code to copied position due to dedent and copy offset
 
-                # fst_._put_src(None, last_end_ln, last_end_col, last_end_ln, fst_end_col, True)
+                    fst_._put_src(None, last_end_ln, last_end_col, last_end_ln, fst_end_col, True)
 
-                if fst_end_ln == last_end_ln:  # if same line then there can only be separator and whitespace between end of last element and end of element container
+                elif fst_end_ln == last_end_ln:  # if same line then there can only be separator and whitespace between end of last element and end of element container
                     fst_._put_src(None, last_end_ln, last_end_col, last_end_ln, fst_end_col, True)
 
                 else:
@@ -468,7 +471,7 @@ def _get_slice_seq_sep_and_dedent(self: fst.FST, start: int, stop: int, len_: in
                     if not _next_src(fst_lines, last_end_ln, del_end_col, last_end_ln, 0x7fffffffffffffff, True, True):  # if anything (comment) on line after separator then don't delete separator
                         fst_._put_src(None, last_end_ln, last_end_col, last_end_ln, len(fst_lines[last_end_ln]), True)
 
-            elif need_ret_tail_sep is False:  # forcing removal of separator not on same line as end of element
+            elif ret_tail_sep is False:  # forcing removal of separator not on same line as end of element
                 last_end_ln, last_end_col, fst_end_ln, fst_end_col = get_end_locs(fst_, True, len(suffix))
 
                 if ((code := _next_src(fst_._lines, last_end_ln, last_end_col, fst_end_ln, fst_end_col)) and  # search for separator on any line and delete if found
@@ -478,7 +481,7 @@ def _get_slice_seq_sep_and_dedent(self: fst.FST, start: int, stop: int, len_: in
 
                     fst_._put_src(None, cln, ccol, cln, ccol + len(sep), True)  # currently we just delete it but there may be more aesthetic things that can be done
 
-    elif not sep_end_pos:  # need_ret_tail_sep and don't have it
+    elif not sep_end_pos:  # ret_tail_sep and don't have it
         last_end_ln, last_end_col, fst_end_ln, fst_end_col = get_end_locs(fst_, False, len(suffix))
 
         fst_._maybe_add_comma(last_end_ln, last_end_col, False, False, fst_end_ln, fst_end_col)
@@ -498,7 +501,7 @@ def _get_slice_seq_sep_and_dedent(self: fst.FST, start: int, stop: int, len_: in
         ):
             del_end_col = code.col + len(sep)
 
-            if need_self_tail_sep is False:  # force delete? could be None, but not True
+            if self_tail_sep is False:  # force delete? could be None, but not True
                 if ((code := _next_src(lines, last_end_ln, del_end_col, last_end_ln, same_end_col)) and  # if comment after separator then don't delete space between separator and comment
                     not code.src.startswith('#')
                 ):
@@ -513,7 +516,7 @@ def _get_slice_seq_sep_and_dedent(self: fst.FST, start: int, stop: int, len_: in
                 if not code or not code.src.startswith('#'):
                     self._put_src(None, last_end_ln, last_end_col, last_end_ln, del_end_col, True)
 
-        elif need_self_tail_sep is False:  # force delete of separator not on same line as end of element
+        elif self_tail_sep is False:  # force delete of separator not on same line as end of element
             if ((code := _next_src(lines, last_end_ln, last_end_col, self_end_ln, self_end_col)) and  # search for separator on any line and delete if found
                 code.src.startswith(sep)
             ):
@@ -524,6 +527,21 @@ def _get_slice_seq_sep_and_dedent(self: fst.FST, start: int, stop: int, len_: in
     return fst_
 
 
+def _cut_or_copy_asts(start: int, stop: int, field: str, cut: bool, body: list[AST]) -> list[AST]:
+    if not cut:
+        asts = [copy_ast(body[i]) for i in range(start, stop)]
+
+    else:
+        asts = body[start : stop]
+
+        del body[start : stop]
+
+        for i in range(start, len(body)):
+            body[i].f.pfield = astfield(field, i)
+
+    return asts
+
+
 # ----------------------------------------------------------------------------------------------------------------------
 # get
 
@@ -532,12 +550,10 @@ def _get_slice_NOT_IMPLEMENTED_YET(self: fst.FST, start: int | Literal['end'] | 
     raise NotImplementedError('this is not implemented yet')
 
 
-def _get_slice_list(self: fst.FST, start: int | Literal['end'] | None, stop: int | None, field: str, cut: bool,
-                    **options) -> fst.FST:
-    ast         = self.a
-    elts        = ast.elts
-    len_        = len(elts)
-    start, stop = _fixup_slice_indices(len_, start, stop)
+def _get_slice_List_elts(self: fst.FST, start: int | Literal['end'] | None, stop: int | None, field: str, cut: bool,
+                         **options) -> fst.FST:
+    len_body    = len(body := (ast := self.a).elts)
+    start, stop = _fixup_slice_indices(len_body, start, stop)
 
     if start == stop:
         return self._new_empty_list(from_=self)
@@ -546,35 +562,100 @@ def _get_slice_list(self: fst.FST, start: int | Literal['end'] | None, stop: int
     bound_end_col                                    -= 1
 
     if start:
-        _, _, bound_ln, bound_col = elts[start - 1].f.pars()
+        _, _, bound_ln, bound_col = body[start - 1].f.pars()
     else:
         bound_col += 1
 
-    ln, col, end_ln, end_col = elts[start].f.pars()
+    ln, col, end_ln, end_col = body[start].f.pars()
 
     if (last := stop - 1) != start:
-        _, _, end_ln, end_col = elts[last].f.pars()
+        _, _, end_ln, end_col = body[last].f.pars()
 
-    if not cut:
-        asts = [copy_ast(elts[i]) for i in range(start, stop)]
-
-    else:
-        asts = elts[start : stop]
-
-        del elts[start : stop]
-
-        for i in range(start, len(elts)):
-            elts[i].f.pfield = astfield('elts', i)
-
+    asts    = _cut_or_copy_asts(start, stop, field, cut, body)
     ctx     = ast.ctx.__class__
-    ret_ast = ast.__class__(elts=asts, ctx=ctx())
+    ret_ast = List(elts=asts, ctx=ctx())
 
     if not issubclass(ctx, Load):  # new List root object must have ctx=Load
         set_ctx(ret_ast, Load)
 
-    return _get_slice_seq_sep_and_dedent(self, start, stop, len_, cut, ret_ast,
+    return _get_slice_seq_sep_and_dedent(self, start, stop, len_body, cut, ret_ast,
                                          bound_ln, bound_col, bound_end_ln, bound_end_col, ln, col, end_ln, end_col,
-                                         fst.FST.get_option('trivia', options), '[', ']')
+                                         fst.FST.get_option('trivia', options), 'elts', '[', ']')
+
+
+# PROVISIONAL, testing
+def _get_slice_Import_names(self: fst.FST, start: int | Literal['end'] | None, stop: int | None, field: str, cut: bool,
+                            **options) -> fst.FST:
+    len_body    = len(body := self.a.names)
+    start, stop = _fixup_slice_indices(len_body, start, stop)
+
+    if start == stop:
+        return self._new_empty_tuple(from_=self)
+    if cut and not start and stop == len_body:
+        raise ValueError('cannot cut all Import.names')
+
+    _, _, bound_end_ln, bound_end_col = body[-1].f.loc
+
+    if start:
+        _, _, bound_ln, bound_col = body[start - 1].f.loc
+    else:
+        bound_ln, bound_col, _, _ = body[0].f.loc
+
+    ln, col, end_ln, end_col = body[start].f.loc
+
+    if (last := stop - 1) != start:
+        _, _, end_ln, end_col = body[last].f.loc
+
+    asts    = _cut_or_copy_asts(start, stop, field, cut, body)
+    ret_ast = Tuple(elts=asts, ctx=Load())
+
+    return _get_slice_seq_sep_and_dedent(self, start, stop, len_body, cut, ret_ast,
+                                         bound_ln, bound_col, bound_end_ln, bound_end_col, ln, col, end_ln, end_col,
+                                         fst.FST.get_option('trivia', options), 'names', '', '', ',', False, False)
+
+
+# PROVISIONAL, testing
+def _get_slice_Global_Local_names(self: fst.FST, start: int | Literal['end'] | None, stop: int | None, field: str,
+                                  cut: bool, **options) -> fst.FST:
+    len_body    = len((ast := self.a).names)
+    start, stop = _fixup_slice_indices(len_body, start, stop)
+
+    if start == stop:
+        return self._new_empty_tuple(from_=self)
+    if cut and not start and stop == len_body:
+        raise ValueError(f'cannot cut all {ast.__class__.__name__}.names')
+
+    ln, col, end_ln, end_col = self.loc
+
+    col      += 6 if isinstance(ast, Global) else 8
+    lines     = self.root._lines
+    ret_elts  = []
+    ret_ast   = Tuple(elts=ret_elts, ctx=Load())
+
+    for _ in range(start):
+        ln, col  = _next_find(lines, ln, col, end_ln, end_col, ',')  # must be there
+        col     += 1
+
+    for i in range(stop - start):  # create tuple of Names from identifiers
+        ln, col, src = _next_find_re(lines, ln, col, end_ln, end_col, re_identifier)  # must be there
+        next_col     = col + len(src)
+        lineno       = ln + 1
+
+        if not i:
+            bound_ln  = ln
+            bound_col = col
+
+        ret_elts.append(Name(id=src, ctx=Load(), lineno=lineno, col_offset=(l := lines[ln]).c2b(col), end_lineno=lineno,
+                             end_col_offset=l.c2b(next_col)))
+
+        col = next_col + 1  # + 1 probably skip comma
+
+    bound_end_ln  = ln
+    bound_end_col = col
+
+    return _get_slice_seq_sep_and_dedent(self, start, stop, len_body, cut, ret_ast,
+                                         bound_ln, bound_col, bound_end_ln, bound_end_col, ln, col, end_ln, end_col,
+                                         fst.FST.get_option('trivia', options), 'names', '', '', ',', False, False)
 
 
 # ......................................................................................................................
@@ -621,7 +702,7 @@ _GET_SLICE_HANDLERS = {
     (Dict, ''):                           _get_slice_dict,  # key:value*
 
     (Set, 'elts'):                        _get_slice_tuple_list_or_set,  # expr*
-    (List, 'elts'):                       _get_slice_list,  # expr*
+    (List, 'elts'):                       _get_slice_List_elts,  # expr*
     (Tuple, 'elts'):                      _get_slice_tuple_list_or_set,  # expr*
 
     (FunctionDef, 'decorator_list'):      _get_slice_NOT_IMPLEMENTED_YET,  # expr*
