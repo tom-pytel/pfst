@@ -161,6 +161,24 @@ two  # fake comment start""", **b
             }''').body[0].value
         self.assertEqual((1, 19, 1, 21), a.f._dict_key_or_mock_loc(a.keys[1], a.values[1].f))
 
+    def test__maybe_fix_tuple(self):
+        # parenthesize naked tuple preserve comments if present
+
+        f = FST(Tuple(elts=[], ctx=Load(), lineno=1, col_offset=0, end_lineno=2, end_col_offset=0), ['# comment', ''])
+        f._maybe_fix_tuple()
+        self.assertEqual('(# comment\n)', f.src)
+        f.verify()
+
+        f = FST(Tuple(elts=[], ctx=Load(), lineno=1, col_offset=0, end_lineno=2, end_col_offset=1), [' # comment', ' '])
+        f._maybe_fix_tuple()
+        self.assertEqual('(# comment\n)', f.src)
+        f.verify()
+
+        f = FST(Tuple(elts=[], ctx=Load(), lineno=1, col_offset=0, end_lineno=2, end_col_offset=0), ['         ', ''])
+        f._maybe_fix_tuple()
+        self.assertEqual('()', f.src)
+        f.verify()
+
     def test__maybe_fix_copy(self):
         f = FST.fromsrc('if 1:\n a\nelif 2:\n b')
         fc = f.a.body[0].orelse[0].f.copy()

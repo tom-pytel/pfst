@@ -1250,11 +1250,24 @@ def _maybe_fix_tuple(self: fst.FST, is_parenthesized: bool | None = None):
                                 self._touchall(True)
 
     elif not is_parenthesized:  # if is unparenthesized tuple and empty left then need to add parentheses
+        lines                    = self.root._lines
         ln, col, end_ln, end_col = self.loc
 
-        # TODO: if there are comments in there then parenthesize the space instead of replacing with '()'?
+        if not _next_src(lines, ln, col, end_ln, end_col, True):  # if no comments in tuple area then just replace with '()'
+            self._put_src(['()'], ln, col, end_ln, end_col, True, False)  # WARNING! `tail=True` may not be safe if another preceding non-containing node ends EXACTLY where the unparenthesized tuple starts, but haven't found a case where this can happen
 
-        self._put_src(['()'], ln, col, end_ln, end_col, True, False)  # WARNING! `tail=True` may not be safe if another preceding non-containing node ends EXACTLY where the unparenthesized tuple starts, but haven't found a case where this can happen
+        else:  # otherwise preserve comments by parenthesizing whole area
+            if end_col and (l := lines[end_ln]).endswith(' ', 0, end_col):
+                lines[end_ln] = bistr(f'{l[:end_col - 1]}){l[end_col:]}')
+            else:
+                self._put_src([')'], end_ln, end_col, end_ln, end_col, True)
+
+            if (l := lines[ln]).startswith(' ', col):
+                lines[ln] = bistr(f'{l[:col]}({l[col + 1:]}')
+            else:
+                self._put_src(['('], ln, col, ln, col, False, False)
+
+        # TODO: if there are comments in there then parenthesize the space instead of replacing with '()'?
 
 
 def _maybe_fix_set(self: fst.FST):
