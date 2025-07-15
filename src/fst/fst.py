@@ -2203,7 +2203,7 @@ class FST:
 
     def trivia(self, trivia: bool | builtins.str | tuple[bool | builtins.str | int | None,
                                                          bool | builtins.str | int | None] | None = None,
-               as_put: bool = False) -> fstlocns | None:
+               neg: bool = False) -> fstlocns | None:
         r"""Return location of the trivia (comments and empty lines) surrounding this node. What is checked is controlled
         by the `trivia` parameter and / or the global default `trivia` option. Currently only applies to statementish
         nodes (`stmt`, `ExceptHandler` and `match_case`).
@@ -2220,8 +2220,7 @@ class FST:
             - `bool | str`: This is used for leading trivia and global default is used for trailing.
             - `tuple`: Can specify leading and / or trailing trivia. A value of `None` for either selects the global
                 default for that trivia.
-        - `as_put`: Whether querying as a get or a put operation. Only affects how the `'-'` suffix is processed, used
-            if `True` and ignored if `False`.
+        - `neg`: Whether to use `'-#'` negative space indicator suffix values or not.
 
         **Returns:**
         - `fstlocns`: The full location from the start of the leading trivia to the end of the trailing. If trivia
@@ -2276,13 +2275,13 @@ class FST:
         if not isinstance(self.a, STMTISH):
             return None
 
-        lines                                  = self.root.lines
-        ln, col, end_ln, end_col               = self.bloc
-        ld_comms, ld_space, tr_comms, tr_space = FST._get_trivia_params(trivia, as_put)
-        ld_text_pos, ld_space_pos, indent      = _leading_trivia(lines, *self._prev_bound(),
-                                                                 ln, col, ld_comms, ld_space)
-        tr_text_pos, tr_space_pos, ends_line   = _trailing_trivia(lines, *self._next_bound(),
-                                                                  end_ln, end_col, tr_comms, tr_space)
+        lines                                        = self.root.lines
+        ln, col, end_ln, end_col                     = self.bloc
+        ld_comms, ld_space, _, tr_comms, tr_space, _ = FST._get_trivia_params(trivia, neg)
+        ld_text_pos, ld_space_pos, indent            = _leading_trivia(lines, *self._prev_bound(),
+                                                                       ln, col, ld_comms, ld_space)
+        tr_text_pos, tr_space_pos, ends_line         = _trailing_trivia(lines, *self._next_bound(),
+                                                                        end_ln, end_col, tr_comms, tr_space)
 
         lead  = ld_space_pos or ld_text_pos
         trail = tr_space_pos or tr_text_pos

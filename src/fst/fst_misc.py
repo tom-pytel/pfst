@@ -229,18 +229,25 @@ class _Modifying:
 
 @staticmethod
 def _get_trivia_params(trivia: bool | str | tuple[bool | str | int | None, bool | str | int | None] | None = None,
-                       as_put: bool = False,
+                       neg: bool = False,
                        ) -> tuple[Literal['none', 'all', 'block'] | int,
                                   bool | int,
+                                  bool,
                                   Literal['none', 'all', 'block', 'line'] | int,
                                   bool | int,
+                                  bool,
                                   ]:
     """Convert options compact human representation to parameters usable for `_leading/trailing_trivia()`.
 
     This conversion is fairly loose and will accept shorthand '+/-#' for 'none+/-#'.
 
     **Parameters:**
-    - `as_put`: Whether the operation being done is a get or a put, determines how `'-'` suffix is processed.
+    - `neg`: Whether to use `'-#'` suffix numbers or not (will still return `_neg` as `True` but `_space` will be 0).
+
+    **Returns:**
+    - (`lead_comments`, `lead_space`, `lead_neg`, `trail_comments`, `trail_space`, `trail_neg`): Two sets of parameters
+        for the trivia functions along with the `_neg` indicators of whether the `_space` params came from negative
+        space specifiers `'-#'` or not.
     """
 
     if isinstance(lead_comments := fst._OPTIONS['trivia'], tuple):
@@ -258,7 +265,7 @@ def _get_trivia_params(trivia: bool | str | tuple[bool | str | int | None, bool 
             if (t := trivia[1]) is not None:
                 trail_comments = t
 
-    lead_space = False
+    lead_space = lead_neg = False
 
     if isinstance(lead_comments, bool):
         lead_comments = 'block' if lead_comments else 'none'
@@ -269,10 +276,11 @@ def _get_trivia_params(trivia: bool | str | tuple[bool | str | int | None, bool 
             lead_comments = lead_comments[:i] or 'none'
 
         elif (i := lead_comments.find('-')) != -1:
-            lead_space    = (int(n) if (n := lead_comments[i + 1:]) else True) if as_put else 0
+            lead_neg      = True
+            lead_space    = (int(n) if (n := lead_comments[i + 1:]) else True) if neg else 0
             lead_comments = lead_comments[:i] or 'none'
 
-    trail_space = False
+    trail_space = trail_neg = False
 
     if isinstance(trail_comments, bool):
         trail_comments = 'line' if trail_comments else 'none'
@@ -283,10 +291,11 @@ def _get_trivia_params(trivia: bool | str | tuple[bool | str | int | None, bool 
             trail_comments = trail_comments[:i] or 'none'
 
         elif (i := trail_comments.find('-')) != -1:
-            trail_space    = (int(n) if (n := trail_comments[i + 1:]) else True) if as_put else 0
+            trail_neg      = True
+            trail_space    = (int(n) if (n := trail_comments[i + 1:]) else True) if neg else 0
             trail_comments = trail_comments[:i] or 'none'
 
-    return lead_comments, lead_space, trail_comments, trail_space
+    return lead_comments, lead_space, lead_neg, trail_comments, trail_space, trail_neg
 
 
 @staticmethod

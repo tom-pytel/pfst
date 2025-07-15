@@ -1632,6 +1632,75 @@ def func():
         self.assertEqual('{ * ( ) }', f.put_slice('{*()}', 0, 0).src)
         f.root.verify()
 
+    def test_cut_slice_neg_space(self):
+        f = FST('''[
+
+# pre
+    a,  # line
+# post
+
+    b
+]           '''.strip())
+        self.assertEqual(f.get_slice(0, 1, trivia=('all+', 'all+')).src, '''[
+
+# pre
+    a,  # line
+# post
+
+]           '''.strip())
+        self.assertEqual(f.get_slice(0, 1, trivia=('all-', 'all-')).src, '''[
+# pre
+    a,  # line
+# post
+]           '''.strip())
+
+        self.assertEqual(f.get_slice(0, 1, cut=True, trivia=('all-', 'all-')).src, '''[
+# pre
+    a,  # line
+# post
+]           '''.strip())
+        self.assertEqual(f.src, '''[
+    b
+]           '''.strip())
+
+        f = FST('''[
+
+# pre
+    a,  # line
+# post
+
+    b
+]           '''.strip())
+        self.assertEqual(f.get_slice(0, 1, cut=True, trivia=('all+', 'all+')).src, '''[
+
+# pre
+    a,  # line
+# post
+
+]           '''.strip())
+        self.assertEqual(f.src, '''[
+    b
+]           '''.strip())
+
+        f = FST('''[
+
+# pre
+    a,  # line
+# post
+
+    b
+]           '''.strip())
+        self.assertEqual(f.get_slice(0, 1, cut=True, trivia=('all', 'all')).src, '''[
+# pre
+    a,  # line
+# post
+]           '''.strip())
+        self.assertEqual(f.src, '''[
+
+
+    b
+]           '''.strip())
+
 
 if __name__ == '__main__':
     import argparse

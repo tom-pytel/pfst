@@ -10,42 +10,42 @@ from fst.misc import PYGE12
 class TestFSTMisc(unittest.TestCase):
     def test__get_trivia_params(self):
         with FST.options(trivia=False):
-            self.assertEqual(('none', False, 'none', False), FST._get_trivia_params(as_put=False))
-            self.assertEqual(('block', False, 'none', False), FST._get_trivia_params(trivia=True, as_put=False))
-            self.assertEqual(('block', False, 'line', False), FST._get_trivia_params(trivia=(True, True), as_put=False))
+            self.assertEqual(('none', False, False, 'none', False, False), FST._get_trivia_params(neg=False))
+            self.assertEqual(('block', False, False, 'none', False, False), FST._get_trivia_params(trivia=True, neg=False))
+            self.assertEqual(('block', False, False, 'line', False, False), FST._get_trivia_params(trivia=(True, True), neg=False))
 
         with FST.options(trivia=(False, False)):
-            self.assertEqual(('none', False, 'none', False), FST._get_trivia_params(as_put=False))
-            self.assertEqual(('block', False, 'none', False), FST._get_trivia_params(trivia=True, as_put=False))
-            self.assertEqual(('block', False, 'line', False), FST._get_trivia_params(trivia=(True, True), as_put=False))
+            self.assertEqual(('none', False, False, 'none', False, False), FST._get_trivia_params(neg=False))
+            self.assertEqual(('block', False, False, 'none', False, False), FST._get_trivia_params(trivia=True, neg=False))
+            self.assertEqual(('block', False, False, 'line', False, False), FST._get_trivia_params(trivia=(True, True), neg=False))
 
         with FST.options(trivia=(False, True)):
-            self.assertEqual(('none', False, 'line', False), FST._get_trivia_params(as_put=False))
-            self.assertEqual(('block', False, 'line', False), FST._get_trivia_params(trivia=True, as_put=False))
-            self.assertEqual(('block', False, 'line', False), FST._get_trivia_params(trivia=(True, True), as_put=False))
-            self.assertEqual(('block', False, 'none', False), FST._get_trivia_params(trivia=(True, False), as_put=False))
+            self.assertEqual(('none', False, False, 'line', False, False), FST._get_trivia_params(neg=False))
+            self.assertEqual(('block', False, False, 'line', False, False), FST._get_trivia_params(trivia=True, neg=False))
+            self.assertEqual(('block', False, False, 'line', False, False), FST._get_trivia_params(trivia=(True, True), neg=False))
+            self.assertEqual(('block', False, False, 'none', False, False), FST._get_trivia_params(trivia=(True, False), neg=False))
 
         with FST.options(trivia='all+1'):
-            self.assertEqual(('all', 1, 'all', 1), FST._get_trivia_params(as_put=False))
-            self.assertEqual(('all', 1, 'all', 1), FST._get_trivia_params(as_put=True))
+            self.assertEqual(('all', 1, False, 'all', 1, False), FST._get_trivia_params(neg=False))
+            self.assertEqual(('all', 1, False, 'all', 1, False), FST._get_trivia_params(neg=True))
 
         with FST.options(trivia='all-1'):
-            self.assertEqual(('all', False, 'all', False), FST._get_trivia_params(as_put=False))
-            self.assertEqual(('all', 1, 'all', 1), FST._get_trivia_params(as_put=True))
+            self.assertEqual(('all', False, True, 'all', False, True), FST._get_trivia_params(neg=False))
+            self.assertEqual(('all', 1, True, 'all', 1, True), FST._get_trivia_params(neg=True))
 
         with FST.options(trivia='all-1'):
-            self.assertEqual(('block', 2, 'all', False), FST._get_trivia_params(trivia='block+2', as_put=False))
-            self.assertEqual(('block', 2, 'all', 1), FST._get_trivia_params(trivia='block+2', as_put=True))
-            self.assertEqual(('block', 2, 'line', 3), FST._get_trivia_params(trivia=('block+2', 'line+3'), as_put=False))
-            self.assertEqual(('block', 2, 'line', 3), FST._get_trivia_params(trivia=('block+2', 'line+3'), as_put=True))
-            self.assertEqual(('block', 2, 'line', 3), FST._get_trivia_params(trivia=('block+2', 'line-3'), as_put=True))
-            self.assertEqual(('block', 2, 'line', False), FST._get_trivia_params(trivia=('block+2', 'line-3'), as_put=False))
-            self.assertEqual(('block', False, 'line', False), FST._get_trivia_params(trivia=('block-2', 'line-3'), as_put=False))
+            self.assertEqual(('block', 2, False, 'all', False, True), FST._get_trivia_params(trivia='block+2', neg=False))
+            self.assertEqual(('block', 2, False, 'all', 1, True), FST._get_trivia_params(trivia='block+2', neg=True))
+            self.assertEqual(('block', 2, False, 'line', 3, False), FST._get_trivia_params(trivia=('block+2', 'line+3'), neg=False))
+            self.assertEqual(('block', 2, False, 'line', 3, False), FST._get_trivia_params(trivia=('block+2', 'line+3'), neg=True))
+            self.assertEqual(('block', 2, False, 'line', 3, True), FST._get_trivia_params(trivia=('block+2', 'line-3'), neg=True))
+            self.assertEqual(('block', 2, False, 'line', False, True), FST._get_trivia_params(trivia=('block+2', 'line-3'), neg=False))
+            self.assertEqual(('block', False, True, 'line', False, True), FST._get_trivia_params(trivia=('block-2', 'line-3'), neg=False))
 
         with FST.options(trivia=1):
-            self.assertEqual((1, False, 1, False), FST._get_trivia_params(as_put=False))
-            self.assertEqual((2, False, 1, False), FST._get_trivia_params(trivia=2, as_put=False))
-            self.assertEqual((2, False, 3, False), FST._get_trivia_params(trivia=(2, 3), as_put=False))
+            self.assertEqual((1, False, False, 1, False, False), FST._get_trivia_params(neg=False))
+            self.assertEqual((2, False, False, 1, False, False), FST._get_trivia_params(trivia=2, neg=False))
+            self.assertEqual((2, False, False, 3, False, False), FST._get_trivia_params(trivia=(2, 3), neg=False))
 
     def test__loc_block_header_end(self):
         self.assertEqual((0, 16), parse('def f(a) -> int: pass').body[0].f._loc_block_header_end())
