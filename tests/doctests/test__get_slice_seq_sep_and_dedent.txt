@@ -28,9 +28,14 @@ basic
 ... *f.elts[1].loc, (False, False), prefix='(', suffix=')').src, f.src)
 (GET,) (PRE, POST)
 
+>>> print(_get_slice_seq_sep_and_dedent(f := FST(r"""
+... [PRE, GET ,  POST]
+... """.strip()), i:=1, j:=2, len(f.elts), True, List(elts=f.a.elts[i:j]), 0, 4, f.end_ln, f.end_col - 1,
+...     *f.elts[1].loc, (False, False), prefix='[', suffix=']').src, f.src)
+[GET] [PRE, POST]
 
 
-# don't need tailing copy separator and have (list, two element tuple)
+# don't need trailing copy separator and have (list, two element tuple)
 
 >>> print(_get_slice_seq_sep_and_dedent(f := FST(r"""
 ... [PRE, GET ,  POST]
@@ -99,11 +104,19 @@ basic
  POST)
 
 >>> print(_get_slice_seq_sep_and_dedent(f := FST(r"""
+... (PRE, GET,  # trivia
+...  POST)
+... """.strip()), i:=1, j:=2, len(f.elts), True, Tuple(elts=f.a.elts[i:j]), 0, 4, f.end_ln, f.end_col - 1,
+... *f.elts[1].loc, (False, False), prefix='(', suffix=')').src, f.src)
+(GET,) (PRE, # trivia
+ POST)
+
+>>> print(_get_slice_seq_sep_and_dedent(f := FST(r"""
 ... [PRE, GET,  # trivia
 ...  POST]
 ... """.strip()), i:=1, j:=2, len(f.elts), True, List(elts=f.a.elts[i:j]), 0, 4, f.end_ln, f.end_col - 1,
 ... *f.elts[1].loc, (False, 'line'), prefix='[', suffix=']').src, f.src)
-[GET  # trivia
+[GET,  # trivia
 ] [PRE,
  POST]
 
@@ -121,7 +134,7 @@ basic
 ...  POST)
 ... """.strip()), i:=1, j:=3, len(f.elts), True, Tuple(elts=f.a.elts[i:j]), 0, 4, f.end_ln, f.end_col - 1,
 ... *f.elts[i].loc[:2], *f.elts[j-1].loc[2:], (False, 'line'), prefix='(', suffix=')').src, f.src)
-(GET0, GET1  # trivia
+(GET0, GET1 ,  # trivia
 ) (PRE,
  POST)
 
@@ -202,7 +215,7 @@ need to delete own trialing separator (list)
 ... """.strip()),
 ...     i:=1, j:=2, len(f.elts), True, List(elts=f.a.elts[i:j]), 0, 4, f.end_ln, f.end_col - 1,
 ...     *f.elts[i].loc[:2], *f.elts[j-1].loc[2:], (False, False), prefix='[', suffix=']').src, f.src)
-[GET] [PRE  # trivia
+[GET] [PRE ,  # trivia
  ]
 
 
@@ -240,3 +253,82 @@ need to add trailing separator to what is left (tuple)
 (GET ,  # trivia
 ) (
  POST,)
+
+
+trailing copy separator override
+
+>>> print(_get_slice_seq_sep_and_dedent(f := FST(r"""
+... (PRE, GET ,  POST)
+... """.strip()), i:=1, j:=2, len(f.elts), True, Tuple(elts=f.a.elts[i:j]), 0, 4, f.end_ln, f.end_col - 1,
+... *f.elts[1].loc, (False, False), prefix='(', suffix=')', need_ret_tail_sep=False).src, f.src)
+(GET) (PRE, POST)
+
+>>> print(_get_slice_seq_sep_and_dedent(f := FST(r"""
+... [PRE, GET ,  POST]
+... """.strip()), i:=1, j:=2, len(f.elts), True, List(elts=f.a.elts[i:j]), 0, 4, f.end_ln, f.end_col - 1,
+... *f.elts[1].loc, (False, False), prefix='[', suffix=']', need_ret_tail_sep=True).src, f.src)
+[GET ,] [PRE, POST]
+
+>>> print(_get_slice_seq_sep_and_dedent(f := FST(r"""
+... [PRE, GET ,  POST]
+... """.strip()), i:=1, j:=2, len(f.elts), True, List(elts=f.a.elts[i:j]), 0, 4, f.end_ln, f.end_col - 1,
+... *f.elts[1].loc, (False, False), prefix='[', suffix=']', need_ret_tail_sep=0).src, f.src)
+[GET] [PRE, POST]
+
+>>> print(_get_slice_seq_sep_and_dedent(f := FST(r"""
+... [PRE, GET
+...  ,  POST]
+... """.strip()), i:=1, j:=2, len(f.elts), True, List(elts=f.a.elts[i:j]), 0, 4, f.end_ln, f.end_col - 1,
+... *f.elts[1].loc, (False, False), prefix='[', suffix=']', need_ret_tail_sep=0).src, f.src)
+[GET
+ ,] [PRE, POST]
+
+>>> print(_get_slice_seq_sep_and_dedent(f := FST(r"""
+... [PRE, GET
+...  ,  POST]
+... """.strip()), i:=1, j:=2, len(f.elts), True, List(elts=f.a.elts[i:j]), 0, 4, f.end_ln, f.end_col - 1,
+... *f.elts[1].loc, (False, False), prefix='[', suffix=']', need_ret_tail_sep=False).src, f.src)
+[GET
+ ] [PRE, POST]
+
+
+trailing self separator override
+
+>>> print(_get_slice_seq_sep_and_dedent(f := FST(r"""
+... (PRE, GET)
+... """.strip()),
+...     i:=1, j:=2, len(f.elts), True, Tuple(elts=f.a.elts[i:j]), 0, 4, f.end_ln, f.end_col - 1,
+...     *f.elts[i].loc[:2], *f.elts[j-1].loc[2:], (False, False), prefix='(', suffix=')', need_self_tail_sep=False).src, f.src)
+(GET,) (PRE)
+
+>>> print(_get_slice_seq_sep_and_dedent(f := FST(r"""
+... [PRE, GET]
+... """.strip()),
+...     i:=1, j:=2, len(f.elts), True, List(elts=f.a.elts[i:j]), 0, 4, f.end_ln, f.end_col - 1,
+...     *f.elts[i].loc[:2], *f.elts[j-1].loc[2:], (False, False), prefix='[', suffix=']', need_self_tail_sep=True).src, f.src)
+[GET] [PRE,]
+
+>>> print(_get_slice_seq_sep_and_dedent(f := FST(r"""
+... [PRE, GET]
+... """.strip()),
+...     i:=1, j:=2, len(f.elts), True, List(elts=f.a.elts[i:j]), 0, 4, f.end_ln, f.end_col - 1,
+...     *f.elts[i].loc[:2], *f.elts[j-1].loc[2:], (False, False), prefix='[', suffix=']', need_self_tail_sep=0).src, f.src)
+[GET] [PRE]
+
+>>> print(_get_slice_seq_sep_and_dedent(f := FST(r"""
+... [PRE
+...  , GET]
+... """.strip()),
+...     i:=1, j:=2, len(f.elts), True, List(elts=f.a.elts[i:j]), 0, 4, f.end_ln, f.end_col - 1,
+...     *f.elts[i].loc[:2], *f.elts[j-1].loc[2:], (False, False), prefix='[', suffix=']', need_self_tail_sep=0).src, f.src)
+[GET] [PRE
+ ,]
+
+>>> print(_get_slice_seq_sep_and_dedent(f := FST(r"""
+... [PRE
+...  , GET]
+... """.strip()),
+...     i:=1, j:=2, len(f.elts), True, List(elts=f.a.elts[i:j]), 0, 4, f.end_ln, f.end_col - 1,
+...     *f.elts[i].loc[:2], *f.elts[j-1].loc[2:], (False, False), prefix='[', suffix=']', need_self_tail_sep=False).src, f.src)
+[GET] [PRE
+ ]

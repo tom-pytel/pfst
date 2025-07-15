@@ -936,7 +936,7 @@ List - ROOT 0,0..4,1
 """, r"""
 [
     1,
-    2,
+    2
 ]
 """, r"""
 Module - ROOT 0,0..2,1
@@ -965,7 +965,7 @@ List - ROOT 0,0..3,1
 ]
 """, r"""
 [
-    2,
+    2
 ]
 """, r"""
 Module - ROOT 0,0..3,1
@@ -990,7 +990,7 @@ List - ROOT 0,0..2,1
 ]""", 'body[0].value', 2, None, {}, r"""
 [
     1,
-    2,
+    2
 ]
 """, r"""
 [
@@ -1017,23 +1017,23 @@ List - ROOT 0,0..2,1
     4
 ]""", 'body[0].value', 2, 3, {}, r"""
 [            # hello
-    1, 2, 4
+    1, 2,
+    4
 ]
 """, r"""
-[3,
-]
+[3]
 """, r"""
-Module - ROOT 0,0..2,1
+Module - ROOT 0,0..3,1
   .body[1]
-  0] Expr - 0,0..2,1
-    .value List - 0,0..2,1
+  0] Expr - 0,0..3,1
+    .value List - 0,0..3,1
       .elts[3]
       0] Constant 1 - 1,4..1,5
       1] Constant 2 - 1,7..1,8
-      2] Constant 4 - 1,10..1,11
+      2] Constant 4 - 2,4..2,5
       .ctx Load
 """, r"""
-List - ROOT 0,0..1,1
+List - ROOT 0,0..0,3
   .elts[1]
   0] Constant 3 - 0,1..0,2
   .ctx Load
@@ -1098,21 +1098,21 @@ List - ROOT 0,0..1,7
      ), 4
 ]""", 'body[0].value', 1, None, {}, r"""
 [            # hello
-    1]
-""", r"""
-[2, ( 3
-     ), 4
+    1
 ]
 """, r"""
-Module - ROOT 0,0..1,6
+[2, ( 3
+     ), 4]
+""", r"""
+Module - ROOT 0,0..2,1
   .body[1]
-  0] Expr - 0,0..1,6
-    .value List - 0,0..1,6
+  0] Expr - 0,0..2,1
+    .value List - 0,0..2,1
       .elts[1]
       0] Constant 1 - 1,4..1,5
       .ctx Load
 """, r"""
-List - ROOT 0,0..2,1
+List - ROOT 0,0..1,10
   .elts[3]
   0] Constant 2 - 0,1..0,2
   1] Constant 3 - 0,6..0,7

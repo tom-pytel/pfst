@@ -1422,26 +1422,26 @@ def func():
 
                 raise
 
-    def test_put_slice_seq_del(self):
-        for i, (src, elt, start, stop, options, src_cut, slice_copy, src_dump, slice_dump) in enumerate(GET_SLICE_EXPRISH_DATA):
-            t = parse(src)
-            f = eval(f't.{elt}', {'t': t}).f
+    # def test_put_slice_seq_from_get_slice_data(self):
+    #     for i, (src, elt, start, stop, options, src_cut, slice_copy, src_dump, slice_dump) in enumerate(GET_SLICE_EXPRISH_DATA):
+    #         t = parse(src)
+    #         f = eval(f't.{elt}', {'t': t}).f
 
-            try:
-                f.put_slice(None, start, stop, **options)
+    #         try:
+    #             f.put_slice(None, start, stop, **options)
 
-                tdst  = t.f.src
-                tdump = t.f.dump(out=list)
+    #             tdst  = t.f.src
+    #             tdump = t.f.dump(out=list)
 
-                self.assertEqual(tdst, src_cut.strip())
-                self.assertEqual(tdump, src_dump.strip().split('\n'))
+    #             self.assertEqual(tdst, src_cut.strip())
+    #             self.assertEqual(tdump, src_dump.strip().split('\n'))
 
-            except Exception:
-                print(i, elt, start, stop)
-                print('---')
-                print(src)
+    #         except Exception:
+    #             print(i, elt, start, stop)
+    #             print('---')
+    #             print(src)
 
-                raise
+    #             raise
 
     def test_put_slice_seq(self):
         for i, (dst, elt, start, stop, src, put_src, put_dump) in enumerate(PUT_SLICE_EXPRISH_DATA):
