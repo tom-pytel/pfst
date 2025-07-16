@@ -221,13 +221,26 @@ def _locs_slice_seq_get(self: fst.FST, is_first: bool, is_last: bool,
                         ln: int, col: int, end_ln: int, end_col: int,
                         trivia: bool | str | tuple[bool | str | int | None, bool | str | int | None] | None,
                         sep: str = ',', neg: bool = False,
-                        ) -> tuple[fstloc, fstloc, str | None, tuple[int, int] | None]:  # (copy_loc, del_loc, del_indent, sep_end_pos)
+                        ) -> tuple[fstloc, fstloc, str | None, tuple[int, int] | None]:
     r"""Slice get locations for both copy and delete after cut. Parentheses should already have been taken into account
     for the bounds and location. This function will find the separator if present and go from there for the trailing
-    trivia.
+    trivia. If trivia specifier has a `'-#'` for space in it and `neg` here is true then the copy location will not have
+    extra space added but the delete location will.
+
+    In the returned copy location, a leading newline means the slice wants to start on its own line and a trailing
+    newline means the slice wants to end its own line. Both mean it wants to live on its own line.
 
     **Notes:** If `neg` is `True` (used for cut) and there was negative space found then the delete location will
     include the space but the copy location will not.
+
+    **Returns:**
+    - (`copy_loc`, `del_loc`, `del_indent`, `sep_end_pos`):
+        - `copy_loc`: Where to copy.
+        - `del_loc`: Where to remove (cut or delete or replace).
+        - `del_indent`: String to put at start of `del_loc` after removal or `None` if original (`ln`, `col`) start
+            location did not start its own line. Will be empty string if start location starts right at beginning of
+            line.
+        - `sep_end_pos`: Position right after separator `sep` if found after (`end_ln`, `end_col`), else `None`.
 
     ```py
     '+' = copy_loc
@@ -345,6 +358,8 @@ def _locs_slice_seq_get(self: fst.FST, is_first: bool, is_last: bool,
     tr_ln, tr_col = tr_space_pos or tr_text_pos
 
     cut_locs = calc_locs(ld_ln, ld_col, tr_ln, tr_col)
+
+    # here we could just return cut_locs, the rest of the code differentiates between '-#' and '+#' locations if neg is True
 
     if ld_different := ld_space_pos and ld_neg and ld_space:
         if ld_text_pos[0] == ld_ln:  # if on same line then space was at start of line and there should be no difference
@@ -619,6 +634,7 @@ def _get_slice_List_elts(self: fst.FST, start: int | Literal['end'] | None, stop
                                          fst.FST.get_option('trivia', options), 'elts', '[', ']')
 
 
+# TODO: handle trailing line continuation backslashes
 def _get_slice_Import_names(self: fst.FST, start: int | Literal['end'] | None, stop: int | None, field: str, cut: bool,
                             **options) -> fst.FST:
     len_body    = len(body := self.a.names)
@@ -649,6 +665,7 @@ def _get_slice_Import_names(self: fst.FST, start: int | Literal['end'] | None, s
                                          fst.FST.get_option('trivia', options), 'names', '', '', ',', False, False)
 
 
+# TODO: handle trailing line continuation backslashes
 def _get_slice_Global_Local_names(self: fst.FST, start: int | Literal['end'] | None, stop: int | None, field: str,
                                   cut: bool, **options) -> fst.FST:
     len_body    = len((ast := self.a).names)
@@ -785,6 +802,16 @@ _GET_SLICE_HANDLERS = {
 # ----------------------------------------------------------------------------------------------------------------------
 # put
 
+def _loc_slice_seq_put(self: fst.FST, fst_: fst.FST, is_first: bool, is_last: bool,
+                       bound_ln: int, bound_col: int, bound_end_ln: int, bound_end_col: int,
+                       ln: int, col: int, end_ln: int, end_col: int,
+                       trivia: bool | str | tuple[bool | str | int | None, bool | str | int | None] | None,
+                       sep: str = ',', neg: bool = False,
+                       ) -> fstloc:
+    pass
+
+
+
 # def _put_slice_seq_and_indent(self: fst.FST, put_fst: fst.FST | None, seq_loc: fstloc,
 #                               ffirst: fst.FST | fstloc | None, flast: fst.FST | fstloc | None,
 #                               fpre: fst.FST | fstloc | None, fpost: fst.FST | fstloc | None,
@@ -835,6 +862,11 @@ def _put_slice_NOT_IMPLEMENTED_YET(self: fst.FST, code: Code | None, start: int 
                                    stop: int | None, field: str, one: bool = False, **options,
                                    ) -> Union[Self, fst.FST, None]:
     raise NotImplementedError("not implemented yet, try with option raw='auto'")
+
+
+def _put_slice_List_elts(self: fst.FST, code: Code | None, start: int | Literal['end'] | None, stop: int | None,
+                         field: str, one: bool = False, **options) -> Union[Self, fst.FST, None]:
+    pass
 
 
 # ......................................................................................................................

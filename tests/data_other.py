@@ -1719,6 +1719,343 @@ Tuple - ROOT 0,0..0,10
   .ctx Load
 """),
 
+(r"""[
+    1,
+
+    # pre
+    2, # line
+    # post
+
+    3,
+]""", 'body[0].value', 1, 2, {'trivia': ('-1', '-1')}, r"""
+[
+    1,
+
+    # pre
+    # line
+    # post
+
+    3,
+]
+""", r"""
+[2]
+""", r"""
+Module - ROOT 0,0..8,1
+  .body[1]
+  0] Expr - 0,0..8,1
+    .value List - 0,0..8,1
+      .elts[2]
+      0] Constant 1 - 1,4..1,5
+      1] Constant 3 - 7,4..7,5
+      .ctx Load
+""", r"""
+List - ROOT 0,0..0,3
+  .elts[1]
+  0] Constant 2 - 0,1..0,2
+  .ctx Load
+"""),
+
+(r"""[
+    1,
+
+    # pre
+    2, # line
+    # post
+
+    3,
+]""", 'body[0].value', 1, 2, {'trivia': ('block-1', 'line-1')}, r"""
+[
+    1,
+    # post
+
+    3,
+]
+""", r"""
+[
+    # pre
+    2, # line
+]
+""", r"""
+Module - ROOT 0,0..5,1
+  .body[1]
+  0] Expr - 0,0..5,1
+    .value List - 0,0..5,1
+      .elts[2]
+      0] Constant 1 - 1,4..1,5
+      1] Constant 3 - 4,4..4,5
+      .ctx Load
+""", r"""
+List - ROOT 0,0..3,1
+  .elts[1]
+  0] Constant 2 - 2,4..2,5
+  .ctx Load
+"""),
+
+(r"""[
+    1,
+    # prepre
+
+    # pre
+    2, # line
+    # post
+
+    3,
+]""", 'body[0].value', 1, 2, {'trivia': ('block+1', 'line+1')}, r"""
+[
+    1,
+    # prepre
+    # post
+
+    3,
+]
+""", r"""
+[
+
+    # pre
+    2, # line
+]
+""", r"""
+Module - ROOT 0,0..6,1
+  .body[1]
+  0] Expr - 0,0..6,1
+    .value List - 0,0..6,1
+      .elts[2]
+      0] Constant 1 - 1,4..1,5
+      1] Constant 3 - 5,4..5,5
+      .ctx Load
+""", r"""
+List - ROOT 0,0..4,1
+  .elts[1]
+  0] Constant 2 - 3,4..3,5
+  .ctx Load
+"""),
+
+(r"""[
+    1,
+    # prepre
+
+    # pre
+    2, # line
+    # post
+
+    3,
+]""", 'body[0].value', 1, 2, {'trivia': ('all-1', 'block-1')}, r"""
+[
+    1,
+    3,
+]
+""", r"""
+[
+    # prepre
+
+    # pre
+    2, # line
+    # post
+]
+""", r"""
+Module - ROOT 0,0..3,1
+  .body[1]
+  0] Expr - 0,0..3,1
+    .value List - 0,0..3,1
+      .elts[2]
+      0] Constant 1 - 1,4..1,5
+      1] Constant 3 - 2,4..2,5
+      .ctx Load
+""", r"""
+List - ROOT 0,0..6,1
+  .elts[1]
+  0] Constant 2 - 4,4..4,5
+  .ctx Load
+"""),
+
+(r"""[
+    1,
+
+    # prepre
+
+    # pre
+    2, # line
+    # post
+
+    # postpost
+
+    3,
+]""", 'body[0].value', 1, 2, {'trivia': ('all-1', 'all-1')}, r"""
+[
+    1,
+    3,
+]
+""", r"""
+[
+    # prepre
+
+    # pre
+    2, # line
+    # post
+
+    # postpost
+]
+""", r"""
+Module - ROOT 0,0..3,1
+  .body[1]
+  0] Expr - 0,0..3,1
+    .value List - 0,0..3,1
+      .elts[2]
+      0] Constant 1 - 1,4..1,5
+      1] Constant 3 - 2,4..2,5
+      .ctx Load
+""", r"""
+List - ROOT 0,0..8,1
+  .elts[1]
+  0] Constant 2 - 4,4..4,5
+  .ctx Load
+"""),
+
+(r"""[
+    1,
+
+    # prepre
+
+    # pre
+    2, # line
+    # post
+
+    # postpost
+
+    3,
+]""", 'body[0].value', 1, 2, {'trivia': ('all+1', 'all+1')}, r"""
+[
+    1,
+    3,
+]
+""", r"""
+[
+
+    # prepre
+
+    # pre
+    2, # line
+    # post
+
+    # postpost
+
+]
+""", r"""
+Module - ROOT 0,0..3,1
+  .body[1]
+  0] Expr - 0,0..3,1
+    .value List - 0,0..3,1
+      .elts[2]
+      0] Constant 1 - 1,4..1,5
+      1] Constant 3 - 2,4..2,5
+      .ctx Load
+""", r"""
+List - ROOT 0,0..10,1
+  .elts[1]
+  0] Constant 2 - 5,4..5,5
+  .ctx Load
+"""),
+
+(r"""[
+    1,
+    \
+    # prepre
+    \
+    # pre
+    2, # line
+    # post
+    \
+    # postpost
+    \
+    3,
+]""", 'body[0].value', 1, 2, {'trivia': ('all+1', 'all+1')}, r"""
+[
+    1,
+    3,
+]
+""", r"""
+[
+    \
+    # prepre
+    \
+    # pre
+    2, # line
+    # post
+    \
+    # postpost
+    \
+]
+""", r"""
+Module - ROOT 0,0..3,1
+  .body[1]
+  0] Expr - 0,0..3,1
+    .value List - 0,0..3,1
+      .elts[2]
+      0] Constant 1 - 1,4..1,5
+      1] Constant 3 - 2,4..2,5
+      .ctx Load
+""", r"""
+List - ROOT 0,0..10,1
+  .elts[1]
+  0] Constant 2 - 5,4..5,5
+  .ctx Load
+"""),
+
+(r"""[
+    1, \
+    2, \
+    3,
+]""", 'body[0].value', 1, 2, {}, r"""
+[
+    1, \
+    3,
+]
+""", r"""
+[
+    2, \
+]
+""", r"""
+Module - ROOT 0,0..3,1
+  .body[1]
+  0] Expr - 0,0..3,1
+    .value List - 0,0..3,1
+      .elts[2]
+      0] Constant 1 - 1,4..1,5
+      1] Constant 3 - 2,4..2,5
+      .ctx Load
+""", r"""
+List - ROOT 0,0..2,1
+  .elts[1]
+  0] Constant 2 - 1,4..1,5
+  .ctx Load
+"""),
+
+(r"""[
+    1, 2, \
+    3,
+]""", 'body[0].value', 1, 2, {}, r"""
+[
+    1, \
+    3,
+]
+""", r"""
+[2]
+""", r"""
+Module - ROOT 0,0..3,1
+  .body[1]
+  0] Expr - 0,0..3,1
+    .value List - 0,0..3,1
+      .elts[2]
+      0] Constant 1 - 1,4..1,5
+      1] Constant 3 - 2,4..2,5
+      .ctx Load
+""", r"""
+List - ROOT 0,0..0,3
+  .elts[1]
+  0] Constant 2 - 0,1..0,2
+  .ctx Load
+"""),
+
 ]  # END OF GET_SLICE_EXPRISH_DATA
 
 GET_SLICE_STMTISH_DATA = [

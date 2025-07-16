@@ -1304,7 +1304,7 @@ def func():
                 a.f.parent.put_slice(None, idx, idx + 1, field)
 
     def test_get_slice_seq_copy(self):
-        for src, elt, start, stop, options, src_cut, slice_copy, src_dump, slice_dump in GET_SLICE_EXPRISH_DATA:
+        for i, (src, elt, start, stop, options, src_cut, slice_copy, src_dump, slice_dump) in enumerate(GET_SLICE_EXPRISH_DATA):
             t = parse(src)
             f = eval(f't.{elt}', {'t': t}).f
 
@@ -1319,7 +1319,7 @@ def func():
                 self.assertEqual(sdump, slice_dump.strip().split('\n'))
 
             except Exception:
-                print(elt, start, stop)
+                print('copy:', i, elt, start, stop)
                 print('---')
                 print(src)
                 print('...')
@@ -1328,7 +1328,7 @@ def func():
                 raise
 
     def test_get_slice_seq_cut(self):
-        for i, (src, elt, start, stop, options, src_cut, slice_copy, src_dump, slice_dump) in enumerate(GET_SLICE_EXPRISH_DATA):
+        for i, (src, elt, start, stop, options, src_cut, slice_copy, src_cut_dump, slice_dump) in enumerate(GET_SLICE_EXPRISH_DATA):
             t = parse(src)
             f = eval(f't.{elt}', {'t': t}).f
 
@@ -1342,11 +1342,11 @@ def func():
 
                 self.assertEqual(tsrc, src_cut.strip())
                 self.assertEqual(ssrc, slice_copy.strip())
-                self.assertEqual(tdump, src_dump.strip().split('\n'))
+                self.assertEqual(tdump, src_cut_dump.strip().split('\n'))
                 self.assertEqual(sdump, slice_dump.strip().split('\n'))
 
             except Exception:
-                print(i, elt, start, stop)
+                print('cut:', i, elt, start, stop)
                 print('---')
                 print(src)
                 print('...')
@@ -1357,7 +1357,7 @@ def func():
                 print('='*80)
                 print('\n'.join(tdump))
                 print('-'*80)
-                print('\n'.join(src_dump.strip().split('\n')))
+                print('\n'.join(src_cut_dump.strip().split('\n')))
                 print('.'*80)
 
                 raise
