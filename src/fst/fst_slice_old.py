@@ -174,7 +174,7 @@ def _get_slice_tuple_list_or_set(self: fst.FST, start: int | Literal['end'] | No
         self._maybe_fix_set()
 
     elif is_tuple:
-        fst_._maybe_add_singleton_tuple_comma(False)  # maybe need to add a postfix comma to copied single element tuple if is not already there
+        fst_._maybe_add_singleton_tuple_comma()  # maybe need to add a postfix comma to copied single element tuple if is not already there
         self._maybe_fix_tuple(is_paren)
 
     return fst_

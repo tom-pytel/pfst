@@ -1166,7 +1166,7 @@ def _maybe_del_separator(self: fst.FST, ln: int, col: int, force: bool = False,
     return True
 
 
-def _maybe_add_comma(self: fst.FST, ln: int, col: int, offset: bool, space: bool,
+def _maybe_add_comma(self: fst.FST, ln: int, col: int, space: bool,
                      end_ln: int | None = None, end_col: int | None = None) -> bool:
     """Maybe add comma at start of span if not already present as first code in span. Will skip any closing
     parentheses for check and add. Is meant for adding at the end of a sequence. We specifically don't use `pars()` here
@@ -1175,20 +1175,16 @@ def _maybe_add_comma(self: fst.FST, ln: int, col: int, offset: bool, space: bool
     **Parameters:**
     - `ln`: Line start of span.
     - `col`: Column start of span.
-    - `offset`: If `True` then will apply `offset()` to entire tree for new comma. If `False` then will just offset
-        the end of self, use this when self is at top level.
     - `space`: Whether to add a space IF the span is zero length.
 
     **Returns:**
     - `bool`: Whether a comma was added or not (if wasn't present before or was).
     """
 
-    root  = self.root
-    lines = root._lines
-
     if end_ln is None:
-        end_ln  = self.end_ln
-        end_col = self.end_col
+        _, _, end_ln, end_col = self.loc
+
+    lines = self.root._lines
 
     while code := _next_src(lines, ln, col, end_ln, end_col):  # find comma or something else, skipping close parens
         cln, ccol, src = code
@@ -1210,33 +1206,21 @@ def _maybe_add_comma(self: fst.FST, ln: int, col: int, offset: bool, space: bool
 
         break
 
-    comma     = ', ' if space and ln == end_ln and col == end_col else ','
-    lines[ln] = bistr(f'{(l := lines[ln])[:col]}{comma}{l[col:]}')
+    comma = ', ' if space and ln == end_ln and col == end_col else ','
 
-    if offset:
-        root._offset(ln, col, 0, len(comma), True, exclude=self)
-
-    elif ln == end_ln:
-        self.a.end_col_offset += len(comma)
-
-        self._touchall(True)
+    self._put_src([comma], ln, col, ln, col, True, exclude=self)
 
     return True
 
 
-def _maybe_add_singleton_tuple_comma(self: fst.FST, offset: bool = True):
+def _maybe_add_singleton_tuple_comma(self: fst.FST):
     """Maybe add comma to tuple if is singleton and comma not already there, parenthesization not checked or taken
-    into account. `self.a` must be a `Tuple`.
-
-    **Parameters:**
-    - `offset`: If `True` then will apply `offset()` to entire tree for new comma. If `False` then will just offset
-        the end of the `Tuple`, use this when `Tuple` is at top level.
-    """
+    into account. `self.a` must be a `Tuple`."""
 
     # assert isinstance(self.a, Tuple)
 
     if (elts := self.a.elts) and len(elts) == 1:
-        return self._maybe_add_comma((f := elts[0].f).end_ln, f.end_col, offset, False, self.end_ln,
+        return self._maybe_add_comma((f := elts[0].f).end_ln, f.end_col, False, self.end_ln,
                                      self.end_col - self._is_parenthesized_seq())
 
 
@@ -1249,7 +1233,7 @@ def _maybe_fix_tuple(self: fst.FST, is_parenthesized: bool | None = None):
         is_parenthesized = self._is_parenthesized_seq()
 
     if elts := ast.elts:
-        self._maybe_add_singleton_tuple_comma(True)
+        self._maybe_add_singleton_tuple_comma()
 
         lines                    = self.root._lines
         ln, col, end_ln, end_col = self.loc
@@ -1389,7 +1373,7 @@ def _maybe_fix_copy(self: fst.FST, pars: bool = True, pars_walrus: bool = False)
             elif any(isinstance(e, NamedExpr) and not e.f.pars().n for e in ast.elts):  # unparenthesized walrus in naked tuple?
                 need_paren = True
 
-            self._maybe_add_singleton_tuple_comma(False)  # this exists because of copy lone Starred out of a Subscript.slice
+            self._maybe_add_singleton_tuple_comma()  # this exists because of copy lone Starred out of a Subscript.slice
 
         elif isinstance(ast, NamedExpr):  # naked walrus
             need_paren = pars_walrus

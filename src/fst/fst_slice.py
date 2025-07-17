@@ -430,12 +430,12 @@ def _get_slice_seq_sep_and_dedent(self: fst.FST, start: int, stop: int, len_: in
     elif not sep_end_pos:  # need return trailing separator and don't have it
         last_end_ln, last_end_col, fst_end_ln, fst_end_col = _get_end_locs(fst_, field, len(suffix))
 
-        fst_._maybe_add_comma(last_end_ln, last_end_col, False, False, fst_end_ln, fst_end_col)
+        fst_._maybe_add_comma(last_end_ln, last_end_col, False, fst_end_ln, fst_end_col)
 
     if self_tail_sep:  # last element needs a trailing separator (singleton tuple maybe, requested by user)
         last_end_ln, last_end_col, self_end_ln, self_end_col = _get_end_locs(self, field, len_self_suffix)
 
-        self._maybe_add_comma(last_end_ln, last_end_col, False, False, self_end_ln, self_end_col)
+        self._maybe_add_comma(last_end_ln, last_end_col, False, self_end_ln, self_end_col)
 
     elif self_tail_sep is not None:  # removed tail element(s) and what is left doesn't need its trailing separator
         last_end_ln, last_end_col, self_end_ln, self_end_col = _get_end_locs(self, field, len_self_suffix)  # will work without len_self_suffix, but consistency

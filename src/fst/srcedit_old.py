@@ -440,7 +440,7 @@ class SrcEdit:
                 put_fst._put_src([', ' if put_lines[0] else ','], 0, 0, 0, 0, False)
 
         if fpost:
-            if not put_fst._maybe_add_comma(plast.end_ln, plast.end_col, False, True):
+            if not put_fst._maybe_add_comma(plast.end_ln, plast.end_col, True):
                 if put_lines[-1].endswith(',', -1):  # slice being put ends on comma without a space, add one
                     put_fst._put_src([' '], ln := put_fst.end_ln, col := put_fst.end_col, ln, col, True, put_fst)
 
