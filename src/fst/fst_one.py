@@ -812,7 +812,7 @@ def _put_one_Constant_kind(self: fst.FST, code: _PutOneCode, idx: int | None, fi
         raise ValueError(f'cannot set kind of non-str Constant')
 
     ln, col, _, _ = self.loc
-    lines         = self.root.lines
+    lines         = self.root._lines
 
     if value != child:
         if value is None:

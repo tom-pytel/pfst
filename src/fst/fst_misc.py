@@ -6,10 +6,9 @@ This module contains functions which are imported as methods in the `FST` class.
 from __future__ import annotations
 
 import re
-import sys
 from ast import *
 from math import log10
-from typing import Any, Callable, Literal
+from typing import Callable, Literal
 
 from . import fst
 
@@ -19,7 +18,7 @@ from .astutil import re_identifier, OPCLS2STR, Interpolation, TemplateStr
 from .misc import (
     Self, astfield, fstloc, nspace, pyver,
     EXPRISH, STMTISH, BLOCK, HAS_DOCSTRING,
-    re_empty_line_start, re_line_end_cont_or_comment,
+    re_empty_line_start, re_line_trailing_space, re_line_end_cont_or_comment,
     _next_src, _prev_src, _next_find, _prev_find, _next_pars, _prev_pars, _next_find_re,
     _params_offset, _multiline_str_continuation_lns, _multiline_fstr_continuation_lns,
 )
@@ -1122,10 +1121,56 @@ def _set_block_end_from_last_child(self: fst.FST, bound_ln: int, bound_col: int,
     self._set_end_pos(end_lineno, end_col_offset)
 
 
+def _maybe_del_separator(self: fst.FST, ln: int, col: int, force: bool = False,
+                         end_ln: int | None = None, end_col: int | None = None, sep: str = ',') -> bool:
+    """Maybe delete a separator if present. Can be always deleted or allow function to decide aeshtetically. We
+    specifically don't use `pars()` here because is meant to be used where the element is being modified and may not be
+    valid for that. This is meant to work with potential closing parentheses present after (`ln`, `col`) and expects
+    that if the separator is present in the span that it is the valid separator we are looking for. If no separator
+    found then nothing is deleted.
+
+    **Parameters:**
+    - `force`: Whether to always delete a separator if it is present or maybe leave based on aesthetics.
+
+    **Returns:**
+    - `bool`: Whether a separator was deleted or not
+    """
+
+    if end_ln is None:
+        _, _, end_ln, end_col = self.loc
+
+    lines = self.root._lines
+
+    if not (pos := _next_find(lines, ln, col, end_ln, end_col, sep)):
+        return False
+
+    sep_ln, sep_col = pos
+    sep_end_col     = sep_col + len(sep)
+    sep_on_end_ln   = sep_ln == end_ln
+    line_sep        = lines[sep_ln]
+
+    if not (code := _next_src(lines, sep_ln, sep_end_col, sep_ln, end_col if sep_on_end_ln else 0x7fffffffffffffff,
+                              True, True)):  # nothing on rest of line after separator?
+        sep_end_col = end_col if sep_on_end_ln else len(line_sep)
+
+    elif code.src[0] not in '#\\':  # not a comment or line continuation, closing delimiter or next element if being used that way
+        sep_end_col = code.col
+
+    elif not force:  # comment or line continuation follows, leave separator for aesthetic reasons if allowed
+        return False
+
+    del_col = re_line_trailing_space.match(line_sep, col if sep_ln == ln else 0, sep_col).start(1)
+
+    self._put_src(None, sep_ln, del_col or sep_col, sep_ln, sep_end_col, True)
+
+    return True
+
+
 def _maybe_add_comma(self: fst.FST, ln: int, col: int, offset: bool, space: bool,
                      end_ln: int | None = None, end_col: int | None = None) -> bool:
     """Maybe add comma at start of span if not already present as first code in span. Will skip any closing
-    parentheses for check and add.
+    parentheses for check and add. Is meant for adding at the end of a sequence. We specifically don't use `pars()` here
+    because is meant to be used where the element is being modified and may not be valid for that.
 
     **Parameters:**
     - `ln`: Line start of span.
@@ -1145,7 +1190,7 @@ def _maybe_add_comma(self: fst.FST, ln: int, col: int, offset: bool, space: bool
         end_ln  = self.end_ln
         end_col = self.end_col
 
-    while code := _next_src(lines, ln, col, end_ln, end_col):  # find comma or parens or something else
+    while code := _next_src(lines, ln, col, end_ln, end_col):  # find comma or something else, skipping close parens
         cln, ccol, src = code
 
         for c in src:
@@ -1275,8 +1320,6 @@ def _maybe_fix_tuple(self: fst.FST, is_parenthesized: bool | None = None):
                 lines[ln] = bistr(f'{l[:col]}({l[col + 1:]}')
             else:
                 self._put_src(['('], ln, col, ln, col, False, False)
-
-        # TODO: if there are comments in there then parenthesize the space instead of replacing with '()'?
 
 
 def _maybe_fix_set(self: fst.FST):

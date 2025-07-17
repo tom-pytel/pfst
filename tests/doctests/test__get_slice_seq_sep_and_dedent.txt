@@ -1,5 +1,5 @@
 >>> from fst import *
->>> from fst.fst_slice import _get_slice_seq_sep_and_dedent, _locs_slice_seq_get
+>>> from fst.fst_slice import _get_slice_seq_sep_and_dedent
 
 
 basic
@@ -281,7 +281,7 @@ trailing copy separator override
 ... """.strip()), i:=1, j:=2, len(f.elts), True, List(elts=f.a.elts[i:j]), 0, 4, f.end_ln, f.end_col - 1,
 ... *f.elts[1].loc, (False, False), prefix='[', suffix=']', ret_tail_sep=0).src, f.src)
 [GET
- ,] [PRE, POST]
+ ] [PRE, POST]
 
 >>> print(_get_slice_seq_sep_and_dedent(f := FST(r"""
 ... [PRE, GET
@@ -340,7 +340,7 @@ trailing self separator override
 ...     i:=1, j:=2, len(f.elts), True, List(elts=f.a.elts[i:j]), 0, 4, f.end_ln, f.end_col - 1,
 ...     *f.elts[i].loc[:2], *f.elts[j-1].loc[2:], (False, False), prefix='[', suffix=']', self_tail_sep=0).src, f.src)
 [GET] [PRE
- ,]
+ ]
 
 >>> print(_get_slice_seq_sep_and_dedent(f := FST(r"""
 ... [PRE
@@ -350,3 +350,19 @@ trailing self separator override
 ...     *f.elts[i].loc[:2], *f.elts[j-1].loc[2:], (False, False), prefix='[', suffix=']', self_tail_sep=False).src, f.src)
 [GET] [PRE
  ]
+
+>>> print(_get_slice_seq_sep_and_dedent(f := FST(r"""
+... (PRE, GET, POST)
+... """.strip()),
+...     i:=1, j:=2, len(f.elts), True, Tuple(elts=f.a.elts[i:j]), 0, 4, f.end_ln, f.end_col - 1,
+...     *f.elts[i].loc[:2], *f.elts[j-1].loc[2:], (False, False), prefix='(', suffix=')', self_tail_sep=False).src, f.src)
+(GET,) (PRE, POST)
+
+>>> print(_get_slice_seq_sep_and_dedent(f := FST(r"""
+... (PRE, GET,
+...  POST)
+... """.strip()),
+...     i:=1, j:=2, len(f.elts), True, Tuple(elts=f.a.elts[i:j]), 0, 4, f.end_ln, f.end_col - 1,
+...     *f.elts[i].loc[:2], *f.elts[j-1].loc[2:], (False, False), prefix='(', suffix=')', self_tail_sep=False).src, f.src)
+(GET,) (PRE,
+ POST)

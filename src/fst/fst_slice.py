@@ -128,92 +128,6 @@ from .fst_slice_old import (
 
 
 # ----------------------------------------------------------------------------------------------------------------------
-
-_SLICE_COMAPTIBILITY = {
-    (Module, 'body'):                     'stmt*',
-    (Interactive, 'body'):                'stmt*',
-    (FunctionDef, 'body'):                'stmt*',
-    (AsyncFunctionDef, 'body'):           'stmt*',
-    (ClassDef, 'body'):                   'stmt*',
-    (For, 'body'):                        'stmt*',
-    (For, 'orelse'):                      'stmt*',
-    (AsyncFor, 'body'):                   'stmt*',
-    (AsyncFor, 'orelse'):                 'stmt*',
-    (While, 'body'):                      'stmt*',
-    (While, 'orelse'):                    'stmt*',
-    (If, 'body'):                         'stmt*',
-    (If, 'orelse'):                       'stmt*',
-    (With, 'body'):                       'stmt*',
-    (AsyncWith, 'body'):                  'stmt*',
-    (Try, 'body'):                        'stmt*',
-    (Try, 'orelse'):                      'stmt*',
-    (Try, 'finalbody'):                   'stmt*',
-    (TryStar, 'body'):                    'stmt*',
-    (TryStar, 'orelse'):                  'stmt*',
-    (TryStar, 'finalbody'):               'stmt*',
-    (ExceptHandler, 'body'):              'stmt*',
-    (match_case, 'body'):                 'stmt*',
-
-    (Match, 'cases'):                     'match_case*',
-    (Try, 'handlers'):                    'excepthandler*',
-    (TryStar, 'handlers'):                'excepthandlerstar*',
-
-    (Dict, ''):                           'expr:expr*',
-
-    (Set, 'elts'):                        'expr*',
-    (List, 'elts'):                       'expr*',
-    (Tuple, 'elts'):                      'expr*',
-
-    # (FunctionDef, 'decorator_list'):      'expr*',
-    # (AsyncFunctionDef, 'decorator_list'): 'expr*',
-    # (ClassDef, 'decorator_list'):         'expr*',
-    # (ClassDef, 'bases'):                  'expr*',
-    # (Delete, 'targets'):                  'expr*',
-    # (Assign, 'targets'):                  'expr*',
-    # (BoolOp, 'values'):                   'expr*',
-    # (Compare, ''):                        'expr*',
-    # (Call, 'args'):                       'expr*',
-    # (comprehension, 'ifs'):               'expr*',
-
-    # (ListComp, 'generators'):             'comprehension*',
-    # (SetComp, 'generators'):              'comprehension*',
-    # (DictComp, 'generators'):             'comprehension*',
-    # (GeneratorExp, 'generators'):         'comprehension*',
-
-    # (ClassDef, 'keywords'):               'keyword*',
-    # (Call, 'keywords'):                   'keyword*',
-
-    # (Import, 'names'):                    'alias*',
-    # (ImportFrom, 'names'):                'alias*',
-
-    # (With, 'items'):                      'withitem*',
-    # (AsyncWith, 'items'):                 'withitem*',
-
-    # (MatchSequence, 'patterns'):          'pattern*',
-    # (MatchMapping, ''):                   'expr:pattern*',
-    # (MatchOr, 'patterns'):                'pattern*',
-    # (MatchClass, 'patterns'):             'pattern*',
-
-    # (FunctionDef, 'type_params'):         'type_param*',
-    # (AsyncFunctionDef, 'type_params'):    'type_param*',
-    # (ClassDef, 'type_params'):            'type_param*',
-    # (TypeAlias, 'type_params'):           'type_param*',
-
-    # (Global, 'names'):                    'identifier*',
-    # (Nonlocal, 'names'):                  'identifier*',
-
-    # (JoinedStr, 'values'):                'expr*',
-    # (TemplateStr, 'values'):              'expr*',
-}
-
-@staticmethod
-def _is_slice_compatible(sig1: tuple[type[AST], str], sig2: tuple[type[AST], str]) -> bool:  # sig = (AST type, field)
-    """Whether slices are compatible between these type / fields."""
-
-    return ((v := _SLICE_COMAPTIBILITY.get(sig1)) == _SLICE_COMAPTIBILITY.get(sig2) and v is not None)
-
-
-# ----------------------------------------------------------------------------------------------------------------------
 # get
 
 def _locs_slice_seq_get(self: fst.FST, is_first: bool, is_last: bool,
@@ -388,6 +302,21 @@ def _locs_slice_seq_get(self: fst.FST, is_first: bool, is_last: bool,
     return copy_locs[:1] + cut_locs[1:]  # copy location from copy_locs and delete location and indent from cut_locs
 
 
+def _get_end_locs(self: fst.FST, field: str, len_suffix: int = 0):
+    """Get position of end of self minus length of delimiter suffix and position of last element past pars, assumed to
+    exist."""
+
+    _, _, end_ln, end_col  = self.loc
+    end_col               -= len_suffix
+
+    if not isinstance(last := getattr(self.a, field)[-1], AST):  # Globals or Locals names or something like that
+        return end_ln, end_col, end_ln, end_col
+
+    _, _, last_end_ln, last_end_col = last.f.loc
+
+    return last_end_ln, last_end_col, end_ln, end_col
+
+
 def _get_slice_seq_sep_and_dedent(self: fst.FST, start: int, stop: int, len_: int, cut: bool, ast: AST,
                                   bound_ln: int, bound_col: int, bound_end_ln: int, bound_end_col: int,
                                   ln: int, col: int, end_ln: int, end_col: int,
@@ -409,20 +338,21 @@ def _get_slice_seq_sep_and_dedent(self: fst.FST, start: int, stop: int, len_: in
     - (`bound_ln`, `bound_col`): End of previous element (past pars) or start of container (just past
         delimiters) if no previous element.
     - (`bound_end_ln`, `bound_end_col`): End of container (just before delimiters).
-    - (`ln`, `col`, `end_ln`, `end_col`): Location of single or span of elements being copied or cut (including pars).
+    - (`ln`, `col`, `end_ln`, `end_col`): Location of single or span of elements being copied or cut (including pars but
+        not trailing separator).
     - `trivia`: Standard option on how to handle leading and trailing comments and space.
     - `prefix`, `suffix`: What delimiters to add to copied / cut span of elements (pars, brackets, curlies).
     - `sep`: The separator to use and check, comma for everything except maybe `'|'` for MatchOr.
     - `self_tail_sep`: Whether self needs a trailing separator after cut or no (including if end was not cut).
-        - `None`: Leave it up to function (aesthetic decision).
+        - `None`: Leave it up to function (tuple singleton check or aesthetic decision).
         - `True`: Always add if not present.
         - `False`: Always remove if present.
-        - `0`: Remove if present on same line as end of element, otherwise leave, aesthetic misc.
+        - `0`: Remove if not aesthetically significant (present on same line as end of element), otherwise leave.
     - `ret_tail_sep`: Whether returned cut or copied slice needs a trailing separator or not.
         - `None`: Figure it out from length and if `ast` is `Tuple`.
         - `True`: Always add if not present.
         - `False`: Always remove if present.
-        - `0`: Remove if present on same line as end of element, otherwise leave, aesthetic misc.
+        - `0`: Remove if not aesthetically significant (present on same line as end of element), otherwise leave.
     """
 
     lines           = self.root._lines
@@ -433,23 +363,23 @@ def _get_slice_seq_sep_and_dedent(self: fst.FST, start: int, stop: int, len_: in
     if ret_tail_sep is None:
         ret_tail_sep = ((stop - start) == 1 and isinstance(ast, Tuple)) or 0  # if would result in signleton tuple then will need trailing separator
 
-    # action_self_sep:
+    # self_tail_sep:
     #   None: Means exactly that, do nothing, no add OR delete, will always be this if cutting everything.
-    #   True: Means delete trailing separator from what is left after cut (implies something is left).
-    #   False: Means add trailing separator to last element of what is left in self if it does not have one (implies something is left)
+    #   True: Means add trailing separator to last element of what is left in self if it does not have one (implies something is left)
+    #   False: Means delete trailing separator from what is left after cut (implies something is left).
 
     if not cut:
-        action_self_tail_sep = None
+        self_tail_sep = None
     elif self_tail_sep:
-        action_self_tail_sep = False if not is_last else None
-    elif self_tail_sep is not None:  # is False:
-        action_self_tail_sep = True if start else None
+        self_tail_sep = True if not is_last else None
+    elif self_tail_sep is not None:  # is False or == 0
+        self_tail_sep = self_tail_sep if (start and is_last) else None
     elif not isinstance(self.a, Tuple):
-        action_self_tail_sep = (start and is_last) or None
+        self_tail_sep = 0 if (start and is_last) else None
     elif is_last:
-        action_self_tail_sep = start >= 2 or None
+        self_tail_sep = 0 if start >= 2 else None
     else:
-        action_self_tail_sep = False if is_first and stop == len_ - 1 else None
+        self_tail_sep = True if is_first and stop == len_ - 1 else None
 
     # get locations and adjust for trailing separator keep or delete if possible to optimize
 
@@ -463,16 +393,16 @@ def _get_slice_seq_sep_and_dedent(self: fst.FST, start: int, stop: int, len_: in
         if is_last:  # if is last element and already had trailing separator then keep it
             ret_tail_sep = True  # this along with sep_end_pos != None will turn the ret_tail_sep checks below into noop
 
-        elif sep_end_pos[0] == copy_end_ln == end_ln and sep_end_pos[1] == copy_end_col:  # optimization, we can get rid of unneeded trailing separator in copy by just not copying it if it is at end of copy range on same line as end of element
+        elif sep_end_pos[0] == copy_end_ln == end_ln and sep_end_pos[1] == copy_end_col:  # optimization common case, we can get rid of unneeded trailing separator in copy by just not copying it if it is at end of copy range on same line as end of element
             copy_loc     = fstloc(copy_ln, copy_col, copy_end_ln, copy_end_col := end_col)
             ret_tail_sep = True
 
-    if action_self_tail_sep:
+    if self_tail_sep == 0:  # (also False), optimization common case, we can get rid of unneeded trailing separator in self by adding it to the delete block if del block starts on same line as previous element ends and there is not a comment on the line
         del_ln, _, del_end_ln, del_end_col = del_loc
 
-        if del_ln == bound_ln and (del_end_ln != bound_ln or not lines[bound_ln].startswith('#', del_end_col)):  # optimization, we can get rid of unneeded trailing separator in self by adding it to the delete block if del block starts on same line as previous element ends and there is not a comment on the line
+        if del_ln == bound_ln and (del_end_ln != bound_ln or not lines[bound_ln].startswith('#', del_end_col)):
             del_loc              = fstloc(bound_ln, bound_col, del_end_ln, del_end_col)  # there can be nothing but a separator and whitespace between these locations
-            action_self_tail_sep = None
+            self_tail_sep = None
 
     # set location of root node and make the actual FST
 
@@ -491,90 +421,26 @@ def _get_slice_seq_sep_and_dedent(self: fst.FST, start: int, stop: int, len_: in
 
     # add / remove trailing separators as needed
 
-    def get_end_locs(fst_: fst.FST, pars: bool, end_col_off: int = 0):
-        _, _, fst_end_ln, fst_end_col  = fst_.loc
-        fst_end_col                   -= end_col_off
+    if not ret_tail_sep:  # don't need or want return trailing separator
+        if sep_end_pos:  # but have it
+            last_end_ln, last_end_col, fst_end_ln, fst_end_col = _get_end_locs(fst_, field, len(suffix))
 
-        if not isinstance(last := getattr(fst_.a, field)[-1], AST):  # Globals or Locals names or something like that
-            return fst_end_ln, fst_end_col, fst_end_ln, fst_end_col
+            fst_._maybe_del_separator(last_end_ln, last_end_col, ret_tail_sep is False, fst_end_ln, fst_end_col, sep)
 
-        _, _, last_end_ln, last_end_col = last.f.pars() if pars else last.f.loc
-
-        return last_end_ln, last_end_col, fst_end_ln, fst_end_col
-
-    if not ret_tail_sep:
-        if sep_end_pos:
-            if sep_end_pos[0] == end_ln:  # must be on end line to allow aesthetic removal, otherwise considered "artisanal" separator and left in place
-                last_end_ln, last_end_col, fst_end_ln, fst_end_col = get_end_locs(fst_, True, len(suffix))
-
-                if ret_tail_sep is False:  # this deletes separator even if there is a comment following it
-                    if fst_end_ln != last_end_ln:  # if not this then there can only be separator and whitespace between end of last element and end of element container
-                        fst_end_col = sep_end_pos[1] + (last_end_col - end_col)  # use delta between original and copied last element as offset for separator end position in origianl code to copied position due to dedent and copy offset
-
-                    fst_._put_src(None, last_end_ln, last_end_col, last_end_ln, fst_end_col, True)
-
-                elif fst_end_ln == last_end_ln:  # if same line then there can only be separator and whitespace between end of last element and end of element container
-                    fst_._put_src(None, last_end_ln, last_end_col, last_end_ln, fst_end_col, True)
-
-                else:
-                    del_end_col = sep_end_pos[1] + (last_end_col - end_col)  # use delta between original and copied last element as offset for separator end position in origianl code to copied position due to dedent and copy offset
-                    fst_lines   = fst_._lines
-
-                    if not _next_src(fst_lines, last_end_ln, del_end_col, last_end_ln, 0x7fffffffffffffff, True, True):  # if anything (comment) on line after separator then don't delete separator
-                        fst_._put_src(None, last_end_ln, last_end_col, last_end_ln, len(fst_lines[last_end_ln]), True)
-
-            elif ret_tail_sep is False:  # forcing removal of separator not on same line as end of element
-                last_end_ln, last_end_col, fst_end_ln, fst_end_col = get_end_locs(fst_, True, len(suffix))
-
-                if ((code := _next_src(fst_._lines, last_end_ln, last_end_col, fst_end_ln, fst_end_col)) and  # search for separator on any line and delete if found
-                    code.src.startswith(sep)
-                ):
-                    cln, ccol, _ = code
-
-                    fst_._put_src(None, cln, ccol, cln, ccol + len(sep), True)  # currently we just delete it but there may be more aesthetic things that can be done
-
-    elif not sep_end_pos:  # ret_tail_sep and don't have it
-        last_end_ln, last_end_col, fst_end_ln, fst_end_col = get_end_locs(fst_, False, len(suffix))
+    elif not sep_end_pos:  # need return trailing separator and don't have it
+        last_end_ln, last_end_col, fst_end_ln, fst_end_col = _get_end_locs(fst_, field, len(suffix))
 
         fst_._maybe_add_comma(last_end_ln, last_end_col, False, False, fst_end_ln, fst_end_col)
 
-    if action_self_tail_sep is False:  # last element needs a trailing separator (singleton tuple maybe, requested by user)
-        last_end_ln, last_end_col, fst_end_ln, fst_end_col = get_end_locs(self, False, len_self_suffix)
+    if self_tail_sep:  # last element needs a trailing separator (singleton tuple maybe, requested by user)
+        last_end_ln, last_end_col, self_end_ln, self_end_col = _get_end_locs(self, field, len_self_suffix)
 
-        self._maybe_add_comma(last_end_ln, last_end_col, False, False, fst_end_ln, fst_end_col)
+        self._maybe_add_comma(last_end_ln, last_end_col, False, False, self_end_ln, self_end_col)
 
-    elif action_self_tail_sep:  # removed tail element(s) and what is left doesn't need its trailing separator
-        last_end_ln, last_end_col, self_end_ln, self_end_col = get_end_locs(self, True, len_self_suffix)  # will work without len_self_suffix, but consistency
+    elif self_tail_sep is not None:  # removed tail element(s) and what is left doesn't need its trailing separator
+        last_end_ln, last_end_col, self_end_ln, self_end_col = _get_end_locs(self, field, len_self_suffix)  # will work without len_self_suffix, but consistency
 
-        same_end_col = self_end_col if self_end_ln == last_end_ln else 0x7fffffffffffffff
-
-        if ((code := _next_src(lines, last_end_ln, last_end_col, last_end_ln, same_end_col)) and  # separator present on line?
-              code.src.startswith(sep)
-        ):
-            del_end_col = code.col + len(sep)
-
-            if self_tail_sep is False:  # force delete? could be None, but not True
-                if ((code := _next_src(lines, last_end_ln, del_end_col, last_end_ln, same_end_col)) and  # if comment after separator then don't delete space between separator and comment
-                    not code.src.startswith('#')
-                ):
-                    del_end_col = code.col
-
-                self._put_src(None, last_end_ln, last_end_col, last_end_ln, del_end_col, True)
-
-            else:
-                if code := _next_src(lines, last_end_ln, del_end_col, last_end_ln, same_end_col, True, True):  # if comment after separator then don't delete separator
-                    del_end_col = code.col
-
-                if not code or not code.src.startswith('#'):
-                    self._put_src(None, last_end_ln, last_end_col, last_end_ln, del_end_col, True)
-
-        elif self_tail_sep is False:  # force delete of separator not on same line as end of element
-            if ((code := _next_src(lines, last_end_ln, last_end_col, self_end_ln, self_end_col)) and  # search for separator on any line and delete if found
-                code.src.startswith(sep)
-            ):
-                cln, ccol, _ = code
-
-                self._put_src(None, cln, ccol, cln, ccol + len(sep), True)  # currently we just delete it but there may be more aesthetic things that can be done
+        self._maybe_del_separator(last_end_ln, last_end_col, self_tail_sep is False, self_end_ln, self_end_col, sep)
 
     return fst_
 
@@ -802,13 +668,102 @@ _GET_SLICE_HANDLERS = {
 # ----------------------------------------------------------------------------------------------------------------------
 # put
 
-def _loc_slice_seq_put(self: fst.FST, fst_: fst.FST, is_first: bool, is_last: bool,
-                       bound_ln: int, bound_col: int, bound_end_ln: int, bound_end_col: int,
-                       ln: int, col: int, end_ln: int, end_col: int,
-                       trivia: bool | str | tuple[bool | str | int | None, bool | str | int | None] | None,
-                       sep: str = ',', neg: bool = False,
-                       ) -> fstloc:
-    pass
+def _put_slice_seq(self: fst.FST, start: int, stop: int, len_: int, fst_: fst.FST | None,
+                   bound_ln: int, bound_col: int, bound_end_ln: int, bound_end_col: int,
+                   ln: int, col: int, end_ln: int, end_col: int,
+                   trivia: bool | str | tuple[bool | str | int | None, bool | str | int | None] | None,
+                   field: str = 'elts', sep: str = ',',
+                   self_tail_sep: bool | Literal[0] | None = None,
+                   ) -> fst.FST:
+    r"""
+
+
+    **Parameters:**
+    - (`bound_ln`, `bound_col`): End of previous element (past pars) or start of container (just past
+        delimiters) if no previous element.
+    - (`bound_end_ln`, `bound_end_col`): End of container (just before delimiters).
+    - (`ln`, `col`, `end_ln`, `end_col`): Location of single or span of elements being replaced or deleted (including
+        pars but not trailing separator). If pure insertion then location where to put
+    - `trivia`: Standard option on how to handle leading and trailing comments and space.
+    - `sep`: The separator to use and check, comma for everything except maybe `'|'` for MatchOr.
+    - `self_tail_sep`: Whether self needs a trailing separator or no.
+        - `None`: Leave it up to function (tuple singleton check or aesthetic decision).
+        - `True`: Always add if not present.
+        - `False`: Always remove if present.
+        - `0`: Remove if not aesthetically significant (present on same line as end of element), otherwise leave.
+    """
+
+    lines           = self.root._lines
+    is_first        = not start
+    is_last         = stop == len_
+    is_del          = fst_ is None
+    len_self_suffix = self.end_col - bound_end_col  # will be 1 or 0 depending on if enclosed container or unparenthesized tuple
+
+    copy_loc, del_loc, del_indent, sep_end_pos = _locs_slice_seq_get(self, is_first, is_last,
+        bound_ln, bound_col, bound_end_ln, bound_end_col, ln, col, end_ln, end_col, trivia, sep, is_del,
+    )
+
+    if is_del:
+        put_ln, put_col, put_end_ln, put_end_col = del_loc
+
+        put_lines = [del_indent] if del_indent else None
+
+
+        if self_tail_sep:
+            self_tail_sep = True if not is_last else None
+        elif self_tail_sep is not None:  # is False or == 0
+            self_tail_sep = self_tail_sep if (start and is_last) else None
+        elif not isinstance(self.a, Tuple):
+            self_tail_sep = 0 if (start and is_last) else None
+
+        # if self_tail_sep:
+        #     self_tail_sep = True if not is_last else None
+        # elif self_tail_sep is not None:  # is False or == 0
+        #     self_tail_sep = False if (start and is_last) else None
+        # elif not isinstance(self.a, Tuple):
+        #     self_tail_sep = False if (start and is_last) else None
+        # elif is_last:
+        #     self_tail_sep = False if start >= 2 else None
+        # else:
+        #     self_tail_sep = True if is_first and stop == len_ - 1 else None
+
+
+
+
+
+
+    else:
+        raise NotImplementedError
+
+
+
+
+    if self_tail_sep == 0:  # (also False), optimization, we can get rid of unneeded trailing separator in self by adding it to the delete block if del block starts on same line as previous element ends and there is not a comment on the line
+        if put_ln == bound_ln and (put_end_ln != bound_ln or not lines[bound_ln].startswith('#', put_end_col)):
+            put_ln        = bound_ln  # there can be nothing but a separator and whitespace between these locations
+            put_col       = bound_col
+            self_tail_sep = None
+
+
+
+
+    self_ln, self_col, _, _ = self.loc
+
+    if put_col == self_col and put_ln == self_ln:  # put at beginning of unenclosed sequence
+        self._offset(
+            *self._put_src(put_lines, put_ln, put_col, put_end_ln, put_end_col, is_last, False, self),
+            True, True, self_=False)
+
+    elif not is_last:
+        self._put_src(put_lines, put_ln, put_col, put_end_ln, put_end_col, False)
+    else:
+        self._put_src(put_lines, put_ln, put_col, put_end_ln, put_end_col, True, True, self)  # because of insertion at end and maybe unenclosed sequence
+
+
+
+    # _add_or_remove_tail_sep(self, field, self_tail_sep, len_self_suffix, sep)
+
+
 
 
 
@@ -860,12 +815,12 @@ def _loc_slice_seq_put(self: fst.FST, fst_: fst.FST, is_first: bool, is_last: bo
 
 def _put_slice_NOT_IMPLEMENTED_YET(self: fst.FST, code: Code | None, start: int | Literal['end'] | None,
                                    stop: int | None, field: str, one: bool = False, **options,
-                                   ) -> Union[Self, fst.FST, None]:
+                                   ):
     raise NotImplementedError("not implemented yet, try with option raw='auto'")
 
 
 def _put_slice_List_elts(self: fst.FST, code: Code | None, start: int | Literal['end'] | None, stop: int | None,
-                         field: str, one: bool = False, **options) -> Union[Self, fst.FST, None]:
+                         field: str, one: bool = False, **options):
     pass
 
 
@@ -1112,7 +1067,94 @@ def _put_slice_raw(self: fst.FST, code: Code | None, start: int | Literal['end']
 
 
 # ----------------------------------------------------------------------------------------------------------------------
+
+_SLICE_COMAPTIBILITY = {
+    (Module, 'body'):                     'stmt*',
+    (Interactive, 'body'):                'stmt*',
+    (FunctionDef, 'body'):                'stmt*',
+    (AsyncFunctionDef, 'body'):           'stmt*',
+    (ClassDef, 'body'):                   'stmt*',
+    (For, 'body'):                        'stmt*',
+    (For, 'orelse'):                      'stmt*',
+    (AsyncFor, 'body'):                   'stmt*',
+    (AsyncFor, 'orelse'):                 'stmt*',
+    (While, 'body'):                      'stmt*',
+    (While, 'orelse'):                    'stmt*',
+    (If, 'body'):                         'stmt*',
+    (If, 'orelse'):                       'stmt*',
+    (With, 'body'):                       'stmt*',
+    (AsyncWith, 'body'):                  'stmt*',
+    (Try, 'body'):                        'stmt*',
+    (Try, 'orelse'):                      'stmt*',
+    (Try, 'finalbody'):                   'stmt*',
+    (TryStar, 'body'):                    'stmt*',
+    (TryStar, 'orelse'):                  'stmt*',
+    (TryStar, 'finalbody'):               'stmt*',
+    (ExceptHandler, 'body'):              'stmt*',
+    (match_case, 'body'):                 'stmt*',
+
+    (Match, 'cases'):                     'match_case*',
+    (Try, 'handlers'):                    'excepthandler*',
+    (TryStar, 'handlers'):                'excepthandlerstar*',
+
+    (Dict, ''):                           'expr:expr*',
+
+    (Set, 'elts'):                        'expr*',
+    (List, 'elts'):                       'expr*',
+    (Tuple, 'elts'):                      'expr*',
+
+    # (FunctionDef, 'decorator_list'):      'expr*',
+    # (AsyncFunctionDef, 'decorator_list'): 'expr*',
+    # (ClassDef, 'decorator_list'):         'expr*',
+    # (ClassDef, 'bases'):                  'expr*',
+    # (Delete, 'targets'):                  'expr*',
+    # (Assign, 'targets'):                  'expr*',
+    # (BoolOp, 'values'):                   'expr*',
+    # (Compare, ''):                        'expr*',
+    # (Call, 'args'):                       'expr*',
+    # (comprehension, 'ifs'):               'expr*',
+
+    # (ListComp, 'generators'):             'comprehension*',
+    # (SetComp, 'generators'):              'comprehension*',
+    # (DictComp, 'generators'):             'comprehension*',
+    # (GeneratorExp, 'generators'):         'comprehension*',
+
+    # (ClassDef, 'keywords'):               'keyword*',
+    # (Call, 'keywords'):                   'keyword*',
+
+    # (Import, 'names'):                    'alias*',
+    # (ImportFrom, 'names'):                'alias*',
+
+    # (With, 'items'):                      'withitem*',
+    # (AsyncWith, 'items'):                 'withitem*',
+
+    # (MatchSequence, 'patterns'):          'pattern*',
+    # (MatchMapping, ''):                   'expr:pattern*',
+    # (MatchOr, 'patterns'):                'pattern*',
+    # (MatchClass, 'patterns'):             'pattern*',
+
+    # (FunctionDef, 'type_params'):         'type_param*',
+    # (AsyncFunctionDef, 'type_params'):    'type_param*',
+    # (ClassDef, 'type_params'):            'type_param*',
+    # (TypeAlias, 'type_params'):           'type_param*',
+
+    # (Global, 'names'):                    'identifier*',
+    # (Nonlocal, 'names'):                  'identifier*',
+
+    # (JoinedStr, 'values'):                'expr*',
+    # (TemplateStr, 'values'):              'expr*',
+}
+
+@staticmethod
+def _is_slice_compatible(sig1: tuple[type[AST], str], sig2: tuple[type[AST], str]) -> bool:  # sig = (AST type, field)
+    """Whether slices are compatible between these type / fields."""
+
+    return ((v := _SLICE_COMAPTIBILITY.get(sig1)) == _SLICE_COMAPTIBILITY.get(sig2) and v is not None)
+
+
+# ----------------------------------------------------------------------------------------------------------------------
 __all_private__ = [
-    '_is_slice_compatible', '_slice_seq_locs_get',
+    '_locs_slice_seq_get', '_get_slice_seq_sep_and_dedent', '_put_slice_seq',
     '_get_slice', '_put_slice',
+    '_is_slice_compatible',
 ]  # used by make_docs.py

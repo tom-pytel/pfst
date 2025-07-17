@@ -2275,7 +2275,7 @@ class FST:
         if not isinstance(self.a, STMTISH):
             return None
 
-        lines                                        = self.root.lines
+        lines                                        = self.root._lines
         ln, col, end_ln, end_col                     = self.bloc
         ld_comms, ld_space, _, tr_comms, tr_space, _ = FST._get_trivia_params(trivia, neg)
         ld_text_pos, ld_space_pos, indent            = _leading_trivia(lines, *self._prev_bound(),
@@ -4855,6 +4855,7 @@ class FST:
         _dict_key_or_mock_loc,
         _set_end_pos,
         _set_block_end_from_last_child,
+        _maybe_del_separator,
         _maybe_add_comma,
         _maybe_add_singleton_tuple_comma,
         _maybe_fix_tuple,

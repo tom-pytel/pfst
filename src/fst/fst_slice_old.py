@@ -726,7 +726,7 @@ def _put_slice_stmtish(self: fst.FST, code: Code | None, start: int | Literal['e
                                            ffirst, flast, fpre, fpost, **options)
 
         put_fst._offset(0, 0, put_loc.ln, 0 if put_fst.bln or put_fst.bcol else lines[put_loc.ln].c2b(put_loc.col))
-        self._put_src(put_fst.lines, *put_loc, False)
+        self._put_src(put_fst._lines, *put_loc, False)
         self._unmake_fst_tree(body[start : stop])
         put_fst._unmake_fst_parents(True)
 

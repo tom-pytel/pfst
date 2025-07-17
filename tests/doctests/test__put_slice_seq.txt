@@ -1,0 +1,84 @@
+>>> from pprint import pp
+>>> from fst import *
+>>> from fst.fst_slice import _put_slice_seq
+
+
+delete
+
+>>> def test_simple_delete(fst_, start, stop, trivia=None, off=1, field='elts', sep=',', self_tail_sep=None):
+...     body = getattr(fst_.a, field)
+...
+...     if start:
+...         _, _, bound_ln, bound_col = body[start - 1].f.pars()
+...     else:
+...         bound_ln  = fst_.ln
+...         bound_col = fst_.col + off
+...
+...     ln, col, _, _         = body[start].f.pars()
+...     _, _, end_ln, end_col = body[stop - 1].f.pars()
+...
+...     _put_slice_seq(fst_, start, stop, len(body), None,
+...                    bound_ln, bound_col, fst_.end_ln, fst_.end_col - off,
+...                    ln, col, end_ln, end_col, trivia, field, sep, self_tail_sep)
+...
+...     return fst_
+
+>>> print(test_simple_delete(FST('[a, b, c]'), 0, 1).src)
+[b, c]
+
+>>> print(test_simple_delete(FST('[a, b, c]'), 1, 2).src)
+[a, c]
+
+>>> print(test_simple_delete(FST('[a, b, c]'), 2, 3).src)
+[a, b]
+
+>>> print(test_simple_delete(FST('[a, b, c]'), 0, 2).src)
+[c]
+
+>>> print(test_simple_delete(FST('[a, b, c]'), 1, 3).src)
+[a]
+
+>>> print(test_simple_delete(FST('[a, b, c]'), 0, 3).src)
+[]
+
+>>> print(test_simple_delete(FST('''
+... [a,
+...  b]
+... '''.strip()), 1, 2).src)
+[a
+ ]
+
+>>> print(test_simple_delete(FST('''
+... [a,
+...  b]
+... '''.strip()), 1, 2, self_tail_sep=False).src)
+[a
+ ]
+
+>>> print(test_simple_delete(FST('''
+... [a,
+...  b]
+... '''.strip()), 1, 2, self_tail_sep=True).src)
+[a,
+ ]
+
+>>> print(test_simple_delete(FST('''
+... [a,  # trivia
+...  b]
+... '''.strip()), 1, 2).src)
+[a,  # trivia
+ ]
+
+>>> print(test_simple_delete(FST('''
+... [a,  # trivia
+...  b]
+... '''.strip()), 1, 2, self_tail_sep=False).src)
+[a  # trivia
+ ]
+
+>>> print(test_simple_delete(FST('''
+... [a,  # trivia
+...  b]
+... '''.strip()), 1, 2, self_tail_sep=True).src)
+[a,  # trivia
+ ]
