@@ -243,28 +243,28 @@
 ...  # trivia
 ...  GET, POST]
 ... """.strip()), False, False, 0, 1, 2, 10, 2, 1, 2, 4, ('block', False))
-(fstloc(1, 0, 2, 5), fstloc(1, 0, 2, 6), ' ', (2, 5))
+(fstloc(0, 5, 2, 5), fstloc(1, 0, 2, 6), ' ', (2, 5))
 
 >>> _locs_slice_seq_get(FST("""
 ... [PRE,
 ...  # trivia
 ...  GET]
 ... """.strip()), False, False, 0, 1, 2, 4, 2, 1, 2, 4, ('block', False))
-(fstloc(1, 0, 2, 4), fstloc(1, 0, 2, 4), ' ', None)
+(fstloc(0, 5, 2, 4), fstloc(1, 0, 2, 4), ' ', None)
 
 >>> _locs_slice_seq_get(FST("""
 ... [PRE,
 ...  # trivia
 ...  GET,]
 ... """.strip()), False, False, 0, 1, 2, 5, 2, 1, 2, 4, ('block', False))
-(fstloc(1, 0, 2, 5), fstloc(1, 0, 2, 5), ' ', (2, 5))
+(fstloc(0, 5, 2, 5), fstloc(1, 0, 2, 5), ' ', (2, 5))
 
 >>> _locs_slice_seq_get(FST("""
 ... [PRE,
 ...  # trivia
 ...  GET, ]
 ... """.strip()), False, False, 0, 1, 2, 6, 2, 1, 2, 4, ('block', False))
-(fstloc(1, 0, 2, 5), fstloc(1, 0, 2, 6), ' ', (2, 5))
+(fstloc(0, 5, 2, 5), fstloc(1, 0, 2, 6), ' ', (2, 5))
 
 
 >>> _locs_slice_seq_get(FST("""
@@ -274,7 +274,7 @@
 ...  # post
 ...  POST]
 ... """.strip()), False, False, 0, 1, 4, 5, 2, 1, 2, 4, (False, 'line'))
-(fstloc(1, 6, 3, 0), fstloc(2, 0, 3, 0), None, (2, 5))
+(fstloc(1, 6, 3, 0), fstloc(2, 0, 3, 0), ' ', (2, 5))
 
 >>> _locs_slice_seq_get(FST("""
 ... [PRE,
@@ -283,7 +283,7 @@
 ...  # post
 ...  POST]
 ... """.strip()), False, False, 0, 1, 4, 5, 2, 1, 2, 4, (False, 'block'))
-(fstloc(1, 6, 4, 0), fstloc(2, 0, 4, 0), None, (2, 5))
+(fstloc(1, 6, 4, 0), fstloc(2, 0, 4, 0), ' ', (2, 5))
 
 >>> _locs_slice_seq_get(FST("""
 ... [PRE,
@@ -292,7 +292,7 @@
 ...  # post
 ...  POST]
 ... """.strip()), False, False, 0, 1, 4, 5, 2, 1, 2, 4, ('block', 'line'))
-(fstloc(0, 5, 3, 0), fstloc(1, 0, 3, 0), None, (2, 5))
+(fstloc(0, 5, 3, 0), fstloc(1, 0, 3, 0), ' ', (2, 5))
 
 >>> _locs_slice_seq_get(FST("""
 ... [PRE,
@@ -301,14 +301,14 @@
 ...  # post
 ...  POST]
 ... """.strip()), False, False, 0, 1, 4, 5, 2, 1, 2, 4, ('block', 'block'))
-(fstloc(0, 5, 4, 0), fstloc(1, 0, 4, 0), None, (2, 5))
+(fstloc(0, 5, 4, 0), fstloc(1, 0, 4, 0), ' ', (2, 5))
 
 
 >>> _locs_slice_seq_get(FST(r"""
 ... GET, \
 ... POST
 ... """.strip()), True, False, 0, 0, 1, 4, 0, 0, 0, 3, (False, False))
-(fstloc(0, 0, 1, 0), fstloc(0, 0, 1, 0), None, (0, 4))
+(fstloc(0, 0, 1, 0), fstloc(0, 0, 1, 0), '', (0, 4))
 
 >>> _locs_slice_seq_get(FST(r"""
 ... [GET,

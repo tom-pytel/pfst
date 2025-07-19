@@ -1167,7 +1167,7 @@ def _maybe_del_separator(self: fst.FST, ln: int, col: int, force: bool = False,
 
 
 def _maybe_add_comma(self: fst.FST, ln: int, col: int, space: bool,
-                     end_ln: int | None = None, end_col: int | None = None) -> bool:
+                     end_ln: int | None = None, end_col: int | None = None) -> bool | None:
     """Maybe add comma at start of span if not already present as first code in span. Will skip any closing
     parentheses for check and add. Is meant for adding at the end of a sequence. We specifically don't use `pars()` here
     because is meant to be used where the element is being modified and may not be valid for that.
@@ -1175,10 +1175,11 @@ def _maybe_add_comma(self: fst.FST, ln: int, col: int, space: bool,
     **Parameters:**
     - `ln`: Line start of span.
     - `col`: Column start of span.
-    - `space`: Whether to add a space IF the span is zero length.
+    - `space`: Whether to add a space to new comma or existing comma IF the span is zero length.
 
     **Returns:**
-    - `bool`: Whether a comma was added or not (if wasn't present before or was).
+    - `bool`: Whether a comma was added or not (if wasn't present before or was). If `None` is returned then a comma was
+        not added but a space was added just past an existing comma.
     """
 
     if end_ln is None:
@@ -1196,10 +1197,16 @@ def _maybe_add_comma(self: fst.FST, ln: int, col: int, space: bool,
                 ln  = cln
                 col = ccol
 
-            elif c == ',':
-                return False
-            else:
+            elif c != ',':
                 break
+
+            else:
+                if space and cln == end_ln and ccol == end_col:
+                    self._put_src([' '], cln, ccol, cln, ccol, True, exclude=self)
+
+                    return None
+
+                return False
 
         else:
             continue

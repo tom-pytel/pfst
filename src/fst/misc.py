@@ -53,6 +53,7 @@ re_empty_line            = re.compile(r'[ \t]*$')    # completely empty or space
 re_comment_line_start    = re.compile(r'[ \t]*#')    # empty line preceding a comment
 re_line_continuation     = re.compile(r'[^#]*\\$')   # line continuation with backslash not following a comment start '#' (from start pos, assumed no asts contained in line)
 re_line_trailing_space   = re.compile(r'.*?(\s*)$')  # location of trailing whitespace at the end of a line
+re_empty_space           = re.compile(r'\s*$')       # completely empty or space-filled line (from start pos, start of line indentation, any space, not just line indenting space)
 
 re_oneline_str           = re.compile(r'(?:b|r|rb|br|u|)  (?:  \'(?:\\.|[^\\\'])*?\'  |  "(?:\\.|[^\\"])*?"  )',   # I f'])*?\'ng hate these!
                                      re.VERBOSE | re.IGNORECASE)

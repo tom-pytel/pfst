@@ -15,7 +15,7 @@ from .astutil import re_identifier, TypeAlias, TryStar, TemplateStr
 
 from .misc import (
     Self, Code, NodeError, astfield, fstloc,
-    re_line_trailing_space,
+    re_line_trailing_space, re_empty_space,
     _next_src, _prev_find, _next_find, _next_find_re, _fixup_slice_indices,
     _leading_trivia, _trailing_trivia,
 )
@@ -125,10 +125,25 @@ from .fst_slice_old import (
 # (MatchClass, 'kwd_patterns'):         # pattern*
 
 
-
-
 # ----------------------------------------------------------------------------------------------------------------------
 # get
+
+def _fixup_self_tail_sep_del(self: fst.FST, self_tail_sep: bool | Literal[0] | None, start: int, stop: int,
+                             len_body: int) -> bool | Literal[0] | None:
+    is_last = stop == len_body
+
+    if self_tail_sep:
+        # return None if is_last or (start + (len_body - stop)) > 1 else self_tail_sep  # only adds if single element remains
+        return None if is_last else self_tail_sep
+    elif self_tail_sep is not None:  # is False or == 0
+        return self_tail_sep if (start and is_last) else None
+    elif not isinstance(self.a, Tuple):
+        return 0 if (start and is_last) else None
+    elif is_last:
+        return 0 if start >= 2 else None
+    else:
+        return True if not start and stop == len_body - 1 else None
+
 
 def _locs_slice_seq_get(self: fst.FST, is_first: bool, is_last: bool,
                         bound_ln: int, bound_col: int, bound_end_ln: int, bound_end_col: int,
@@ -195,6 +210,7 @@ def _locs_slice_seq_get(self: fst.FST, is_first: bool, is_last: bool,
 
     ... case 5 ...........................................................
     [PRE,\n        [PRE,\n       [PRE,\n       [PRE,\n
+         ++             ++            ++            ++
      # trivia\n     # trivia\n    # trivia\n    # trivia\n
     +++++++++++    +++++++++++   +++++++++++   +++++++++++
     -----------    -----------   -----------   -----------
@@ -207,7 +223,7 @@ def _locs_slice_seq_get(self: fst.FST, is_first: bool, is_last: bool,
          ++
      GET,\n
     +++++++
-    -------
+    =------
      POST]
     ```
     """
@@ -260,13 +276,13 @@ def _locs_slice_seq_get(self: fst.FST, is_first: bool, is_last: bool,
                         fstloc(ln, ld_col, end_ln, tr_col),
                         indent, sep_end_pos)  # case 4, we do it this way to return this specific information that it starts a line but doesn't end one
 
-            return (fstloc(ld_ln, ld_col, end_ln, end_col),
+            return (fstloc((l := ld_ln - 1), len(lines[l]), end_ln, end_col) if ld_ln else fstloc(ld_ln, ld_col, end_ln, end_col),
                     fstloc(ld_ln, ld_col, end_ln, tr_col),
                     indent, sep_end_pos)  # case 5
 
         return (fstloc((l := ld_ln - 1), len(lines[l]), tr_ln, tr_col) if ld_ln else fstloc(ld_ln, ld_col, tr_ln, tr_col),
                 fstloc(ld_ln, ld_col, tr_ln, tr_col),
-                None, sep_end_pos)  # case 6
+                indent, sep_end_pos)  # case 6
 
     ld_ln, ld_col = ld_space_pos or ld_text_pos
     tr_ln, tr_col = tr_space_pos or tr_text_pos
@@ -302,7 +318,7 @@ def _locs_slice_seq_get(self: fst.FST, is_first: bool, is_last: bool,
     return copy_locs[:1] + cut_locs[1:]  # copy location from copy_locs and delete location and indent from cut_locs
 
 
-def _get_end_locs(self: fst.FST, field: str, len_suffix: int = 0):
+def _poss_end(self: fst.FST, field: str, len_suffix: int = 0):
     """Get position of end of self minus length of delimiter suffix and position of last element past pars, assumed to
     exist."""
 
@@ -317,7 +333,7 @@ def _get_end_locs(self: fst.FST, field: str, len_suffix: int = 0):
     return last_end_ln, last_end_col, end_ln, end_col
 
 
-def _get_slice_seq_sep_and_dedent(self: fst.FST, start: int, stop: int, len_: int, cut: bool, ast: AST,
+def _get_slice_seq_sep_and_dedent(self: fst.FST, start: int, stop: int, len_body: int, cut: bool, ast: AST,
                                   bound_ln: int, bound_col: int, bound_end_ln: int, bound_end_col: int,
                                   ln: int, col: int, end_ln: int, end_col: int,
                                   trivia: bool | str | tuple[bool | str | int | None, bool | str | int | None] | None,
@@ -330,11 +346,19 @@ def _get_slice_seq_sep_and_dedent(self: fst.FST, start: int, stop: int, len_: in
     be deleted. Trailing separators will be added / removed as needed and according to if they are in normal positions.
     If cut from `self` leaves an empty unparenthesized tuple then parentheses will NOT be added here.
 
+    **Note:** Will NOT remove existing trailing separator from `self` sequence if it is not touched even if
+    `self_tail_sep=False`. Will ADD trailing separator to sequence if `self_tail_sep=False` if it is not there because
+    this is a case for singleton tuples that may be left (even though that is detected here, allow override to force
+    it).
+
     **WARNING!** (`bound_ln`, `bound_col`) is expected to be exactly the end of the previous element (past any closing
     pars) or the start of the container (past any opening delimiters) if no previous element.
     (`bound_end_ln`, `bound_end_col`) must be end of container just before closing delimiters.
 
     **Parameters:**
+    - `start`, `stop`, `len_body`: Slice parameters, `len_body` being current length of field.
+    - `ast`: The already build new `AST` that is being gotten. The elements being gotten must be in this with their
+        current locations in the `self`.
     - (`bound_ln`, `bound_col`): End of previous element (past pars) or start of container (just past
         delimiters) if no previous element.
     - (`bound_end_ln`, `bound_end_col`): End of container (just before delimiters).
@@ -345,8 +369,8 @@ def _get_slice_seq_sep_and_dedent(self: fst.FST, start: int, stop: int, len_: in
     - `sep`: The separator to use and check, comma for everything except maybe `'|'` for MatchOr.
     - `self_tail_sep`: Whether self needs a trailing separator after cut or no (including if end was not cut).
         - `None`: Leave it up to function (tuple singleton check or aesthetic decision).
-        - `True`: Always add if not present.
-        - `False`: Always remove if present.
+        - `True`: Add if not present.
+        - `False`: Remove from remaining sequence if tail removed but not from remaining tail if it was not removed.
         - `0`: Remove if not aesthetically significant (present on same line as end of element), otherwise leave.
     - `ret_tail_sep`: Whether returned cut or copied slice needs a trailing separator or not.
         - `None`: Figure it out from length and if `ast` is `Tuple`.
@@ -357,7 +381,7 @@ def _get_slice_seq_sep_and_dedent(self: fst.FST, start: int, stop: int, len_: in
 
     lines           = self.root._lines
     is_first        = not start
-    is_last         = stop == len_
+    is_last         = stop == len_body
     len_self_suffix = self.end_col - bound_end_col  # will be 1 or 0 depending on if enclosed container or unparenthesized tuple
 
     if ret_tail_sep is None:
@@ -370,16 +394,8 @@ def _get_slice_seq_sep_and_dedent(self: fst.FST, start: int, stop: int, len_: in
 
     if not cut:
         self_tail_sep = None
-    elif self_tail_sep:
-        self_tail_sep = True if not is_last else None
-    elif self_tail_sep is not None:  # is False or == 0
-        self_tail_sep = self_tail_sep if (start and is_last) else None
-    elif not isinstance(self.a, Tuple):
-        self_tail_sep = 0 if (start and is_last) else None
-    elif is_last:
-        self_tail_sep = 0 if start >= 2 else None
     else:
-        self_tail_sep = True if is_first and stop == len_ - 1 else None
+        self_tail_sep = _fixup_self_tail_sep_del(self, self_tail_sep, start, stop, len_body)
 
     # get locations and adjust for trailing separator keep or delete if possible to optimize
 
@@ -397,7 +413,7 @@ def _get_slice_seq_sep_and_dedent(self: fst.FST, start: int, stop: int, len_: in
             copy_loc     = fstloc(copy_ln, copy_col, copy_end_ln, copy_end_col := end_col)
             ret_tail_sep = True
 
-    if self_tail_sep == 0:  # (also False), optimization common case, we can get rid of unneeded trailing separator in self by adding it to the delete block if del block starts on same line as previous element ends and there is not a comment on the line
+    if self_tail_sep == 0:  # (or False), optimization common case, we can get rid of unneeded trailing separator in self by adding it to the delete block if del block starts on same line as previous element ends and there is not a comment on the line
         del_ln, _, del_end_ln, del_end_col = del_loc
 
         if del_ln == bound_ln and (del_end_ln != bound_ln or not lines[bound_ln].startswith('#', del_end_col)):
@@ -412,7 +428,7 @@ def _get_slice_seq_sep_and_dedent(self: fst.FST, start: int, stop: int, len_: in
     ast.end_col_offset = lines[copy_end_ln].c2b(copy_end_col)
 
     fst_ = self._make_fst_and_dedent(self, ast, copy_loc, prefix, suffix,
-                                     del_loc if cut else None, del_indent and [del_indent])
+                                     del_loc if cut else None, [del_indent] if del_indent and del_loc.end_col else None)
 
     ast.col_offset     = 0  # before prefix
     ast.end_col_offset = fst_._lines[-1].lenbytes  # after suffix
@@ -423,22 +439,22 @@ def _get_slice_seq_sep_and_dedent(self: fst.FST, start: int, stop: int, len_: in
 
     if not ret_tail_sep:  # don't need or want return trailing separator
         if sep_end_pos:  # but have it
-            last_end_ln, last_end_col, fst_end_ln, fst_end_col = _get_end_locs(fst_, field, len(suffix))
+            last_end_ln, last_end_col, fst_end_ln, fst_end_col = _poss_end(fst_, field, len(suffix))
 
             fst_._maybe_del_separator(last_end_ln, last_end_col, ret_tail_sep is False, fst_end_ln, fst_end_col, sep)
 
     elif not sep_end_pos:  # need return trailing separator and don't have it
-        last_end_ln, last_end_col, fst_end_ln, fst_end_col = _get_end_locs(fst_, field, len(suffix))
+        last_end_ln, last_end_col, fst_end_ln, fst_end_col = _poss_end(fst_, field, len(suffix))
 
         fst_._maybe_add_comma(last_end_ln, last_end_col, False, fst_end_ln, fst_end_col)
 
     if self_tail_sep:  # last element needs a trailing separator (singleton tuple maybe, requested by user)
-        last_end_ln, last_end_col, self_end_ln, self_end_col = _get_end_locs(self, field, len_self_suffix)
+        last_end_ln, last_end_col, self_end_ln, self_end_col = _poss_end(self, field, len_self_suffix)
 
         self._maybe_add_comma(last_end_ln, last_end_col, False, self_end_ln, self_end_col)
 
     elif self_tail_sep is not None:  # removed tail element(s) and what is left doesn't need its trailing separator
-        last_end_ln, last_end_col, self_end_ln, self_end_col = _get_end_locs(self, field, len_self_suffix)  # will work without len_self_suffix, but consistency
+        last_end_ln, last_end_col, self_end_ln, self_end_col = _poss_end(self, field, len_self_suffix)  # will work without len_self_suffix, but consistency
 
         self._maybe_del_separator(last_end_ln, last_end_col, self_tail_sep is False, self_end_ln, self_end_col, sep)
 
@@ -668,17 +684,25 @@ _GET_SLICE_HANDLERS = {
 # ----------------------------------------------------------------------------------------------------------------------
 # put
 
-def _put_slice_seq(self: fst.FST, start: int, stop: int, len_: int, fst_: fst.FST | None,
+def _put_slice_seq(self: fst.FST, start: int, stop: int, len_body: int, fst_: fst.FST | None,
+                   fst_first: fst.FST | None, fst_last: fst.FST | None,
                    bound_ln: int, bound_col: int, bound_end_ln: int, bound_end_col: int,
                    ln: int, col: int, end_ln: int, end_col: int,
                    trivia: bool | str | tuple[bool | str | int | None, bool | str | int | None] | None,
                    field: str = 'elts', sep: str = ',',
                    self_tail_sep: bool | Literal[0] | None = None,
-                   ) -> fst.FST:
+                   ):
     r"""
 
 
+    If an empty slice was going to be put we expect that it will be converted to a put `None` delete of existing
+    elements. If an `fst_` is provided then it is assumed it has at least one element. No empty put to empty location.
+
     **Parameters:**
+    - `start`, `stop`, `len_body`: Slice parameters, `len_body` being current length of field.
+    - `fst_`: The slice being put to `self` with delimiters stripped, or `None` for delete.
+    - `fst_first`: The first element of the slice `FST` being put, or `None` if delete.
+    - `fst_last`: The last element of the slice `FST` being put, or `None` if delete.
     - (`bound_ln`, `bound_col`): End of previous element (past pars) or start of container (just past
         delimiters) if no previous element.
     - (`bound_end_ln`, `bound_end_col`): End of container (just before delimiters).
@@ -695,57 +719,160 @@ def _put_slice_seq(self: fst.FST, start: int, stop: int, len_: int, fst_: fst.FS
 
     lines           = self.root._lines
     is_first        = not start
-    is_last         = stop == len_
+    is_last         = stop == len_body
     is_del          = fst_ is None
+    body            = getattr(self.a, field)
     len_self_suffix = self.end_col - bound_end_col  # will be 1 or 0 depending on if enclosed container or unparenthesized tuple
+    last            = None  # means body[-1]
 
     copy_loc, del_loc, del_indent, sep_end_pos = _locs_slice_seq_get(self, is_first, is_last,
         bound_ln, bound_col, bound_end_ln, bound_end_col, ln, col, end_ln, end_col, trivia, sep, is_del,
     )
 
+    put_ln, put_col, put_end_ln, put_end_col = del_loc
+
+    # delete
+
     if is_del:
-        put_ln, put_col, put_end_ln, put_end_col = del_loc
+        put_lines     = [del_indent] if del_indent else None
+        self_tail_sep = _fixup_self_tail_sep_del(self, self_tail_sep, start, stop, len_body)
 
-        put_lines = [del_indent] if del_indent else None
+        if self_tail_sep == 0:  # (or False), optimization, we can get rid of unneeded trailing separator in self by adding it to the delete block if del block starts on same line as previous element ends and there is not a comment on the line
+            if put_ln == bound_ln and (put_end_ln != bound_ln or not lines[bound_ln].startswith('#', put_end_col)):
+                put_ln        = bound_ln  # there can be nothing but a separator and whitespace between these locations
+                put_col       = bound_col
+                self_tail_sep = None
 
-
-        if self_tail_sep:
-            self_tail_sep = True if not is_last else None
-        elif self_tail_sep is not None:  # is False or == 0
-            self_tail_sep = self_tail_sep if (start and is_last) else None
-        elif not isinstance(self.a, Tuple):
-            self_tail_sep = 0 if (start and is_last) else None
-
-        # if self_tail_sep:
-        #     self_tail_sep = True if not is_last else None
-        # elif self_tail_sep is not None:  # is False or == 0
-        #     self_tail_sep = False if (start and is_last) else None
-        # elif not isinstance(self.a, Tuple):
-        #     self_tail_sep = False if (start and is_last) else None
-        # elif is_last:
-        #     self_tail_sep = False if start >= 2 else None
-        # else:
-        #     self_tail_sep = True if is_first and stop == len_ - 1 else None
-
-
-
-
-
+            elif is_last:
+                last = body[start - 1].f  # if deleted tail then new last element is this
 
     else:
-        raise NotImplementedError
+        copy_ln, copy_col, _, _ = copy_loc
+
+
+        # TODO: if last line of fst_ is a comment without a newline then add one
+
+
+        # replace
+
+        if start != stop:
+            put_lines = fst_._lines
+            skip      = 1
+
+            # newlines
+
+            if not put_lines[0]:  # slice to put start with pure newline?
+                if not put_col:  # start element being put to starts a new line?
+                    skip = 0
+
+                    fst_._put_src(None, 0, 0, 1, 0, False)  # delete leading pure newline in slice being put
+
+                else:  # does not start a new line
+                    put_col = re_line_trailing_space.match(lines[put_ln], 0, put_col).start(1)  # eat whitespace before put newline
+
+            elif not put_col:
+                fst_._put_src(del_indent, 0, 0, 0, 0, False)  # add indent to start of first put line
+
+            else:  # leave the space between previous separator and self intact
+                assert put_ln == copy_ln
+
+                put_col = copy_col
+
+            if not put_lines[-1]:  # slice put ends with pure newline?
+                if not re_empty_space.match(lines[put_end_ln], put_end_col):  # something at end of put end line?
+                    if put_end_col and del_indent:  # put doesn't end exactly on a brand new line and there is an indent?
+                        put_lines[-1] = bistr(del_indent)  # modify directly because we don't need to do any offset here
+
+                else:  # nothing (or whitespace) at end of put end line, remove fst_ trailing newline to not duplicate and remove trailing space from self if present
+                    fst_._put_src(None, l := len(ls := fst_._lines) - 2, len(ls[l]), l + 1, 0, True)
+
+                    if put_end_col != (ec := len(lines[put_end_ln])):
+                        self._put_src(None, put_end_ln, put_end_col, put_end_ln, ec, True)
+
+            # trailing separator
+
+            if is_last:
+                last = fst_last
+
+                if self_tail_sep is None:
+                    if isinstance(self.a, Tuple) and is_first and fst_last is fst_first:  # if single element overwriting all elements of tuple then make sure has trailing separator
+                        self_tail_sep = True
+                    else:
+                        self_tail_sep = 0
+
+            elif self_tail_sep == 0:  # don't remove from tail if tail not touched
+                self_tail_sep = None
+
+            # indent and offset source to put
+
+            fst_._indent_lns(self.get_indent(), skip=skip, docstr=None)
+            fst_._offset(0, 0, put_ln, lines[put_ln].c2b(put_col))
+
+            fst_._lines = lines  # for potential fst_ .loc access below when adjusting trailing separator, this must be done after the fst_ modifications just above because those need the actual fst_ lines
 
 
 
+        # if not put_fst or not pfirst:  # `pfirst` may be None and `put_fst` not if assigning empty sequence, regardless, pure delete (or assign empty sequence, ALMOST exactly same thing), fflrst/last guaranteed to exist
+        #     return self._expr_src_edit_locs(tgt_fst.root._lines,
+        #                                     fstloc(ffirst.ln, ffirst.col, flast.end_ln, flast.end_col),
+        #                                     bound, not fpost)[1]
 
-    if self_tail_sep == 0:  # (also False), optimization, we can get rid of unneeded trailing separator in self by adding it to the delete block if del block starts on same line as previous element ends and there is not a comment on the line
-        if put_ln == bound_ln and (put_end_ln != bound_ln or not lines[bound_ln].startswith('#', put_end_col)):
-            put_ln        = bound_ln  # there can be nothing but a separator and whitespace between these locations
-            put_col       = bound_col
-            self_tail_sep = None
+        # if ffirst:  # flast also exists, replacement
+        #     put_ln      = ffirst.ln
+        #     put_col     = ffirst.col
+        #     put_end_ln  = flast.end_ln
+        #     put_end_col = flast.end_col
+
+        # elif fpost:  # insertion
+        #     put_end_ln  = put_ln  = fpost.ln
+        #     put_end_col = put_col = fpost.col
+
+        # else:  # fpre guaranteed to exist, insertion
+        #     put_end_ln  = put_ln  = fpre.end_ln
+        #     put_end_col = put_col = fpre.end_col
+
+        # put_lines = put_fst._lines
+        # del_loc   = self._expr_src_edit_locs(tgt_fst.root._lines,
+        #                                      fstloc(put_ln, put_col, put_end_ln, put_end_col), bound)[1]
+
+        # if not put_lines[0]:
+        #     if re_empty_line.match(l := lines[put_ln], 0, put_col):  # strip leading newline from `put_fst` if location being put already has one - NOTE: could also check re_empty_line.match(put_lines[0]) instead of just put_lines[0]
+        #         put_fst._put_src(None, 0, 0, 1, re_empty_line_start.match(put_lines[1]).end(), False)
+
+        #     elif (new_del_col := re_line_trailing_space.match(l,
+        #                                                       bound.col if put_ln == bound.ln else 0,
+        #                                                       del_col := del_loc.col).start(1)) < del_col:  # move del start to beginning of any trailing whitespace from put location before newline
+        #         del_loc = fstloc(del_loc.ln, new_del_col, del_loc.end_ln, del_loc.end_col)
+
+        # if not put_lines[-1] and not re_empty_line.match(lines[(end_ln := del_loc.end_ln)], del_loc.end_col,  # add indentation to trailing newline in `put_fst` if there is stuff on the starting line of `put_loc` past the start point
+        #     seq_loc.end_col if seq_loc.end_ln == end_ln else 0x7fffffffffffffff
+        # ):
+        #     put_fst._put_src([re_empty_line_start.match(lines[put_ln]).group()], ln := put_fst.end_ln, 0, ln, 0,
+        #                        True, put_fst)
+
+        # if fpre:
+        #     if (not (code := _next_src(lines, fpre.end_ln, fpre.end_col, del_loc.ln, del_loc.col)) or
+        #         not code.src.startswith(',')
+        #     ):
+        #         put_fst._put_src([', ' if put_lines[0] else ','], 0, 0, 0, 0, False)
+
+        # if fpost:
+        #     if not put_fst._maybe_add_comma(plast.end_ln, plast.end_col, True):
+        #         if put_lines[-1].endswith(',', -1):  # slice being put ends on comma without a space, add one
+        #             put_fst._put_src([' '], ln := put_fst.end_ln, col := put_fst.end_col, ln, col, True, put_fst)
+
+        # return del_loc
 
 
 
+        # insert
+
+        else:
+            raise NotImplementedError
+
+
+
+    # put source
 
     self_ln, self_col, _, _ = self.loc
 
@@ -761,54 +888,25 @@ def _put_slice_seq(self: fst.FST, start: int, stop: int, len_: int, fst_: fst.FS
 
 
 
-    # _add_or_remove_tail_sep(self, field, self_tail_sep, len_self_suffix, sep)
+    # trailing and internal separator
+
+    if self_tail_sep is not None:  # trailing
+        _, _, last_end_ln, last_end_col  = (last or body[-1].f).loc
+        _, _, self_end_ln, self_end_col  = self.loc
+        self_end_col                    -= len_self_suffix
+
+        if self_tail_sep:
+            self._maybe_add_comma(last_end_ln, last_end_col, False, self_end_ln, self_end_col)
+        else:  # self_tail_sep is False or == 0
+            self._maybe_del_separator(last_end_ln, last_end_col, self_tail_sep is False, self_end_ln, self_end_col, sep)
+
+    if not is_del and not is_last:  # internal
+        stop_ln, stop_col, _, _ = body[stop].f.loc
+
+        self._maybe_add_comma(fst_last.end_ln, fst_last.end_col, True, stop_ln, stop_col)
 
 
 
-
-
-# def _put_slice_seq_and_indent(self: fst.FST, put_fst: fst.FST | None, seq_loc: fstloc,
-#                               ffirst: fst.FST | fstloc | None, flast: fst.FST | fstloc | None,
-#                               fpre: fst.FST | fstloc | None, fpost: fst.FST | fstloc | None,
-#                               pfirst: fst.FST | fstloc | None, plast: fst.FST | fstloc | None,
-#                               docstr: bool | Literal['strict']) -> fst.FST:
-#     root = self.root
-
-#     if not put_fst:  # delete
-#         # put_ln, put_col, put_end_ln, put_end_col = (
-#         #     _src_edit.put_slice_seq(self, None, '', seq_loc, ffirst, flast, fpre, fpost, None, None))
-#         _, (put_ln, put_col, put_end_ln, put_end_col), _ = (
-#             _src_edit.get_slice_seq(self, True, seq_loc, ffirst, flast, fpre, fpost))
-
-#         put_lines = None
-
-#     else:  # replace or insert
-#         assert put_fst.is_root
-
-#         indent = self.get_indent()
-
-#         put_fst._indent_lns(indent, docstr=docstr)
-
-#         put_ln, put_col, put_end_ln, put_end_col = (
-#             _src_edit.put_slice_seq(self, put_fst, indent, seq_loc, ffirst, flast, fpre, fpost, pfirst, plast))
-
-#         lines           = root._lines
-#         put_lines       = put_fst._lines
-#         fst_dcol_offset = lines[put_ln].c2b(put_col)
-
-#         put_fst._offset(0, 0, put_ln, fst_dcol_offset)
-
-#     self_ln, self_col, _, _ = self.loc
-
-#     if put_col == self_col and put_ln == self_ln:  # unenclosed sequence
-#         self._offset(
-#             *root._put_src(put_lines, put_ln, put_col, put_end_ln, put_end_col, not fpost, False, self),
-#             True, True, self_=False)
-
-#     elif fpost:
-#         root._put_src(put_lines, put_ln, put_col, put_end_ln, put_end_col, False)
-#     else:
-#         root._put_src(put_lines, put_ln, put_col, put_end_ln, put_end_col, True, True, self)  # because of insertion at end and unparenthesized tuple
 
 
 # ......................................................................................................................

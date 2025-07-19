@@ -5,7 +5,7 @@
 
 delete
 
->>> def test_simple_delete(fst_, start, stop, trivia=None, off=1, field='elts', sep=',', self_tail_sep=None):
+>>> def test_delete(fst_, start, stop, trivia=None, off=1, field='elts', sep=',', self_tail_sep=None):
 ...     body = getattr(fst_.a, field)
 ...
 ...     if start:
@@ -17,68 +17,431 @@ delete
 ...     ln, col, _, _         = body[start].f.pars()
 ...     _, _, end_ln, end_col = body[stop - 1].f.pars()
 ...
-...     _put_slice_seq(fst_, start, stop, len(body), None,
+...     _put_slice_seq(fst_, start, stop, len(body), None, None, None,
 ...                    bound_ln, bound_col, fst_.end_ln, fst_.end_col - off,
 ...                    ln, col, end_ln, end_col, trivia, field, sep, self_tail_sep)
 ...
 ...     return fst_
 
->>> print(test_simple_delete(FST('[a, b, c]'), 0, 1).src)
-[b, c]
+>>> print('\n'.join(repr(l) for l in test_delete(FST('[a, b, c]'), 0, 1).lines))
+'[b, c]'
 
->>> print(test_simple_delete(FST('[a, b, c]'), 1, 2).src)
-[a, c]
+>>> print('\n'.join(repr(l) for l in test_delete(FST('[a, b, c]'), 1, 2).lines))
+'[a, c]'
 
->>> print(test_simple_delete(FST('[a, b, c]'), 2, 3).src)
-[a, b]
+>>> print('\n'.join(repr(l) for l in test_delete(FST('[a, b, c]'), 2, 3).lines))
+'[a, b]'
 
->>> print(test_simple_delete(FST('[a, b, c]'), 0, 2).src)
-[c]
+>>> print('\n'.join(repr(l) for l in test_delete(FST('[a, b, c]'), 0, 2).lines))
+'[c]'
 
->>> print(test_simple_delete(FST('[a, b, c]'), 1, 3).src)
-[a]
+>>> print('\n'.join(repr(l) for l in test_delete(FST('[a, b, c]'), 1, 3).lines))
+'[a]'
 
->>> print(test_simple_delete(FST('[a, b, c]'), 0, 3).src)
-[]
+>>> print('\n'.join(repr(l) for l in test_delete(FST('[a, b, c]'), 0, 3).lines))
+'[]'
 
->>> print(test_simple_delete(FST('''
+>>> print('\n'.join(repr(l) for l in test_delete(FST('''
 ... [a,
 ...  b]
-... '''.strip()), 1, 2).src)
-[a
- ]
+... '''.strip()), 1, 2).lines))
+'[a'
+' ]'
 
->>> print(test_simple_delete(FST('''
+>>> print('\n'.join(repr(l) for l in test_delete(FST('''
 ... [a,
 ...  b]
-... '''.strip()), 1, 2, self_tail_sep=False).src)
-[a
- ]
+... '''.strip()), 1, 2, self_tail_sep=False).lines))
+'[a'
+' ]'
 
->>> print(test_simple_delete(FST('''
+>>> print('\n'.join(repr(l) for l in test_delete(FST('''
 ... [a,
 ...  b]
-... '''.strip()), 1, 2, self_tail_sep=True).src)
-[a,
- ]
+... '''.strip()), 1, 2, self_tail_sep=True).lines))
+'[a,'
+' ]'
 
->>> print(test_simple_delete(FST('''
+>>> print('\n'.join(repr(l) for l in test_delete(FST('''
 ... [a,  # trivia
 ...  b]
-... '''.strip()), 1, 2).src)
-[a,  # trivia
- ]
+... '''.strip()), 1, 2).lines))
+'[a,  # trivia'
+' ]'
 
->>> print(test_simple_delete(FST('''
+>>> print('\n'.join(repr(l) for l in test_delete(FST('''
 ... [a,  # trivia
 ...  b]
-... '''.strip()), 1, 2, self_tail_sep=False).src)
-[a  # trivia
- ]
+... '''.strip()), 1, 2, self_tail_sep=False).lines))
+'[a  # trivia'
+' ]'
 
->>> print(test_simple_delete(FST('''
+>>> print('\n'.join(repr(l) for l in test_delete(FST('''
 ... [a,  # trivia
 ...  b]
-... '''.strip()), 1, 2, self_tail_sep=True).src)
-[a,  # trivia
- ]
+... '''.strip()), 1, 2, self_tail_sep=True).lines))
+'[a,  # trivia'
+' ]'
+
+
+>>> print('\n'.join(repr(l) for l in test_delete(FST('(a, b, c)'), 1, 3).lines))
+'(a,)'
+
+>>> print('\n'.join(repr(l) for l in test_delete(FST('(a, b, c)'), 1, 3, self_tail_sep=True).lines))
+'(a,)'
+
+>>> print('\n'.join(repr(l) for l in test_delete(FST('(a, b, c)'), 1, 3, self_tail_sep=False).lines))
+'(a)'
+
+>>> print('\n'.join(repr(l) for l in test_delete(FST('(a, b, c)'), 2, 3).lines))
+'(a, b)'
+
+>>> print('\n'.join(repr(l) for l in test_delete(FST('(a, b, c)'), 2, 3, self_tail_sep=True).lines))
+'(a, b,)'
+
+>>> print('\n'.join(repr(l) for l in test_delete(FST('(a, b, c)'), 2, 3, self_tail_sep=False).lines))
+'(a, b)'
+
+>>> print('\n'.join(repr(l) for l in test_delete(FST('(a, b, c)'), 1, 2).lines))
+'(a, c)'
+
+>>> print('\n'.join(repr(l) for l in test_delete(FST('(a, b, c)'), 1, 2, self_tail_sep=True).lines))
+'(a, c,)'
+
+>>> print('\n'.join(repr(l) for l in test_delete(FST('(a, b, c)'), 1, 2, self_tail_sep=False).lines))
+'(a, c)'
+
+
+>>> print('\n'.join(repr(l) for l in test_delete(FST('a, b, c'), 1, 3, off=0).lines))
+'a,'
+
+>>> print('\n'.join(repr(l) for l in test_delete(FST('a, b, c'), 1, 3, off=0, self_tail_sep=True).lines))
+'a,'
+
+>>> print('\n'.join(repr(l) for l in test_delete(FST('a, b, c'), 1, 3, off=0, self_tail_sep=False).lines))
+'a'
+
+>>> print('\n'.join(repr(l) for l in test_delete(FST('a, b, c'), 2, 3, off=0).lines))
+'a, b'
+
+>>> print('\n'.join(repr(l) for l in test_delete(FST('a, b, c'), 2, 3, off=0, self_tail_sep=True).lines))
+'a, b,'
+
+>>> print('\n'.join(repr(l) for l in test_delete(FST('a, b, c'), 2, 3, off=0, self_tail_sep=False).lines))
+'a, b'
+
+>>> print('\n'.join(repr(l) for l in test_delete(FST('a, b, c'), 1, 2, off=0).lines))
+'a, c'
+
+>>> print('\n'.join(repr(l) for l in test_delete(FST('a, b, c'), 1, 2, off=0, self_tail_sep=True).lines))
+'a, c,'
+
+>>> print('\n'.join(repr(l) for l in test_delete(FST('a, b, c'), 1, 2, off=0, self_tail_sep=False).lines))
+'a, c'
+
+
+
+
+replace
+
+>>> def test_replace(fst_, start, stop, new, trivia=None, off=1, field='elts', sep=',', self_tail_sep=None):
+...     body = getattr(fst_.a, field)
+...
+...     if start:
+...         _, _, bound_ln, bound_col = body[start - 1].f.pars()
+...     else:
+...         bound_ln  = fst_.ln
+...         bound_col = fst_.col + off
+...
+...     ln, col, _, _         = body[start].f.pars()
+...     _, _, end_ln, end_col = body[stop - 1].f.pars()
+...
+...     new_body = getattr(new.a, field)
+...
+...     _put_slice_seq(fst_, start, stop, len(body), new, new_body[0].f, new_body[-1].f,
+...                    bound_ln, bound_col, fst_.end_ln, fst_.end_col - off,
+...                    ln, col, end_ln, end_col, trivia, field, sep, self_tail_sep)
+...
+...     return fst_
+
+>>> new000 = FST(Tuple(elts=[Name(id='NEW', ctx=Load(), lineno=1, col_offset=0, end_lineno=1, end_col_offset=3)],
+...                                         ctx=Load(), lineno=1, col_offset=0, end_lineno=1, end_col_offset=3),
+...              ['NEW'])
+
+>>> new010 = FST(Tuple(elts=[Name(id='NEW', ctx=Load(), lineno=1, col_offset=0, end_lineno=1, end_col_offset=3)],
+...                                         ctx=Load(), lineno=1, col_offset=0, end_lineno=2, end_col_offset=0),
+...              ['NEW', ''])
+
+>>> new100 = FST(Tuple(elts=[Name(id='NEW', ctx=Load(), lineno=2, col_offset=0, end_lineno=2, end_col_offset=3)],
+...                                         ctx=Load(), lineno=1, col_offset=0, end_lineno=2, end_col_offset=3),
+...              ['', 'NEW'])
+
+>>> new110 = FST(Tuple(elts=[Name(id='NEW', ctx=Load(), lineno=2, col_offset=0, end_lineno=2, end_col_offset=3)],
+...                                         ctx=Load(), lineno=1, col_offset=0, end_lineno=3, end_col_offset=0),
+...              ['', 'NEW', ''])
+
+
+leading newlines
+
+>>> print('\n'.join(repr(l) for l in test_replace(FST('''
+... [a,
+...  b]
+... '''.strip()), 1, 2, new100.copy()).lines))
+'[a,'
+'NEW]'
+
+>>> print('\n'.join(repr(l) for l in test_replace(FST('''
+... [a, b]
+... '''.strip()), 1, 2, new100.copy()).lines))
+'[a,'
+'NEW]'
+
+>>> print('\n'.join(repr(l) for l in test_replace(FST('''
+... [a, b, c]
+... '''.strip()), 1, 2, new100.copy()).lines))
+'[a,'
+'NEW, c]'
+
+>>> print('\n'.join(repr(l) for l in test_replace(FST('''
+... [a, b, c]
+... '''.strip()), 1, 2, new110.copy()).lines))
+'[a,'
+'NEW,'
+'c]'
+
+>>> print('\n'.join(repr(l) for l in test_replace(FST('''
+... [a,
+...  b]
+... '''.strip()), 1, 2, new000.copy()).lines))
+'[a,'
+' NEW]'
+
+>>> print('\n'.join(repr(l) for l in test_replace(FST('''
+... [a, b, c]
+... '''.strip()), 1, 2, new000.copy()).lines))
+'[a, NEW, c]'
+
+
+trailing newlines
+
+>>> print('\n'.join(repr(l) for l in test_replace(FST('''
+... [a, b]
+... '''.strip()), 1, 2, new010.copy()).lines))
+'[a, NEW'
+']'
+
+>>> print('\n'.join(repr(l) for l in test_replace(FST('''
+... [a, b, c]
+... '''.strip()), 1, 2, new010.copy()).lines))
+'[a, NEW,'
+'c]'
+
+>>> print('\n'.join(repr(l) for l in test_replace(FST('''
+... [a, b
+...  ]
+... '''.strip()), 1, 2, new010.copy()).lines))
+'[a, NEW'
+' ]'
+
+>>> print('\n'.join(repr(l) for l in test_replace(FST('''
+... [a, b,
+...  c]
+... '''.strip()), 1, 2, new010.copy()).lines))
+'[a, NEW,'
+' c]'
+
+>>> print('\n'.join(repr(l) for l in test_replace(FST('''
+... [a, b, c]
+... '''.strip()), 1, 2, new110.copy()).lines))
+'[a,'
+'NEW,'
+'c]'
+
+>>> print('\n'.join(repr(l) for l in test_replace(FST('''
+... [a, b,
+...  c]
+... '''.strip()), 1, 2, new110.copy()).lines))
+'[a,'
+'NEW,'
+' c]'
+
+>>> print('\n'.join(repr(l) for l in test_replace(FST('''
+... [a,
+...  b,
+...  c]
+... '''.strip()), 1, 2, new110.copy()).lines))
+'[a,'
+'NEW,'
+' c]'
+
+
+
+# same but with new slice having trailing comma
+
+>>> new001 = FST(Tuple(elts=[Name(id='NEW', ctx=Load(), lineno=1, col_offset=0, end_lineno=1, end_col_offset=3)],
+...                                         ctx=Load(), lineno=1, col_offset=0, end_lineno=1, end_col_offset=3),
+...              ['NEW,'])
+
+>>> new011 = FST(Tuple(elts=[Name(id='NEW', ctx=Load(), lineno=1, col_offset=0, end_lineno=1, end_col_offset=3)],
+...                                         ctx=Load(), lineno=1, col_offset=0, end_lineno=2, end_col_offset=0),
+...              ['NEW,', ''])
+
+>>> new101 = FST(Tuple(elts=[Name(id='NEW', ctx=Load(), lineno=2, col_offset=0, end_lineno=2, end_col_offset=3)],
+...                                         ctx=Load(), lineno=1, col_offset=0, end_lineno=2, end_col_offset=3),
+...              ['', 'NEW,'])
+
+>>> new111 = FST(Tuple(elts=[Name(id='NEW', ctx=Load(), lineno=2, col_offset=0, end_lineno=2, end_col_offset=3)],
+...                                         ctx=Load(), lineno=1, col_offset=0, end_lineno=3, end_col_offset=0),
+...              ['', 'NEW,', ''])
+
+
+leading newlines
+
+>>> print('\n'.join(repr(l) for l in test_replace(FST('''
+... [a,
+...  b]
+... '''.strip()), 1, 2, new101.copy()).lines))
+'[a,'
+'NEW]'
+
+>>> print('\n'.join(repr(l) for l in test_replace(FST('''
+... [a, b]
+... '''.strip()), 1, 2, new101.copy()).lines))
+'[a,'
+'NEW]'
+
+>>> print('\n'.join(repr(l) for l in test_replace(FST('''
+... [a, b, c]
+... '''.strip()), 1, 2, new101.copy()).lines))
+'[a,'
+'NEW, c]'
+
+>>> print('\n'.join(repr(l) for l in test_replace(FST('''
+... [a, b, c]
+... '''.strip()), 1, 2, new111.copy()).lines))
+'[a,'
+'NEW,'
+'c]'
+
+>>> print('\n'.join(repr(l) for l in test_replace(FST('''
+... [a,
+...  b]
+... '''.strip()), 1, 2, new001.copy()).lines))
+'[a,'
+' NEW]'
+
+>>> print('\n'.join(repr(l) for l in test_replace(FST('''
+... [a, b, c]
+... '''.strip()), 1, 2, new001.copy()).lines))
+'[a, NEW, c]'
+
+
+trailing newlines
+
+>>> print('\n'.join(repr(l) for l in test_replace(FST('''
+... [a, b]
+... '''.strip()), 1, 2, new011.copy()).lines))
+'[a, NEW'
+']'
+
+>>> print('\n'.join(repr(l) for l in test_replace(FST('''
+... [a, b, c]
+... '''.strip()), 1, 2, new011.copy()).lines))
+'[a, NEW,'
+'c]'
+
+>>> print('\n'.join(repr(l) for l in test_replace(FST('''
+... [a, b
+...  ]
+... '''.strip()), 1, 2, new011.copy()).lines))
+'[a, NEW'
+' ]'
+
+>>> print('\n'.join(repr(l) for l in test_replace(FST('''
+... [a, b,
+...  c]
+... '''.strip()), 1, 2, new011.copy()).lines))
+'[a, NEW,'
+' c]'
+
+>>> print('\n'.join(repr(l) for l in test_replace(FST('''
+... [a, b, c]
+... '''.strip()), 1, 2, new111.copy()).lines))
+'[a,'
+'NEW,'
+'c]'
+
+>>> print('\n'.join(repr(l) for l in test_replace(FST('''
+... [a, b,
+...  c]
+... '''.strip()), 1, 2, new111.copy()).lines))
+'[a,'
+'NEW,'
+' c]'
+
+>>> print('\n'.join(repr(l) for l in test_replace(FST('''
+... [a,
+...  b,
+...  c]
+... '''.strip()), 1, 2, new111.copy()).lines))
+'[a,'
+'NEW,'
+' c]'
+
+
+
+# self_tail_sep and tuples
+
+>>> new = FST(Tuple(elts=[Name(id='NEW', ctx=Load(), lineno=1, col_offset=0, end_lineno=1, end_col_offset=3)],
+...                                      ctx=Load(), lineno=1, col_offset=0, end_lineno=1, end_col_offset=3),
+...           ['NEW'])
+
+>>> print('\n'.join(repr(l) for l in test_replace(FST('''
+... (a, b, c)
+... '''.strip()), 0, 3, new.copy()).lines))
+'(NEW,)'
+
+>>> print('\n'.join(repr(l) for l in test_replace(FST('''
+... (a, b, c)
+... '''.strip()), 0, 3, new.copy(), self_tail_sep=True).lines))
+'(NEW,)'
+
+>>> print('\n'.join(repr(l) for l in test_replace(FST('''
+... (a, b, c)
+... '''.strip()), 0, 3, new.copy(), self_tail_sep=False).lines))
+'(NEW)'
+
+>>> print('\n'.join(repr(l) for l in test_replace(FST('''
+... (a, b, c)
+... '''.strip()), 1, 3, new.copy()).lines))
+'(a, NEW)'
+
+>>> print('\n'.join(repr(l) for l in test_replace(FST('''
+... (a, b, c)
+... '''.strip()), 1, 3, new.copy(), self_tail_sep=True).lines))
+'(a, NEW,)'
+
+>>> print('\n'.join(repr(l) for l in test_replace(FST('''
+... (a, b, c)
+... '''.strip()), 1, 3, new.copy(), self_tail_sep=False).lines))
+'(a, NEW)'
+
+>>> print('\n'.join(repr(l) for l in test_replace(FST('''
+... (a, b, c)
+... '''.strip()), 0, 2, new.copy()).lines))
+'(NEW, c)'
+
+>>> print('\n'.join(repr(l) for l in test_replace(FST('''
+... (a, b, c)
+... '''.strip()), 0, 2, new.copy(), self_tail_sep=True).lines))
+'(NEW, c,)'
+
+>>> print('\n'.join(repr(l) for l in test_replace(FST('''
+... (a, b, c)
+... '''.strip()), 0, 2, new.copy(), self_tail_sep=False).lines))
+'(NEW, c)'
+
+>>> print('\n'.join(repr(l) for l in test_replace(FST('''
+... (a, b, c,)
+... '''.strip()), 0, 2, new.copy(), self_tail_sep=False).lines))
+'(NEW, c,)'

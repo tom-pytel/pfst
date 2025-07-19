@@ -327,6 +327,21 @@ trailing self separator override
 [GET] [PRE,]
 
 >>> print(_get_slice_seq_sep_and_dedent(f := FST(r"""
+... [PRE, GET, POST]
+... """.strip()),
+...     i:=1, j:=2, len(f.elts), True, List(elts=f.a.elts[i:j]), 0, 4, f.end_ln, f.end_col - 1,
+...     *f.elts[i].loc[:2], *f.elts[j-1].loc[2:], (False, False), prefix='[', suffix=']', self_tail_sep=True).src, f.src)
+[GET] [PRE, POST,]
+
+# don't remove existing trailing separator from end of sequence if tail not touched
+>>> print(_get_slice_seq_sep_and_dedent(f := FST(r"""
+... [PRE, GET, POST,]
+... """.strip()),
+...     i:=1, j:=2, len(f.elts), True, List(elts=f.a.elts[i:j]), 0, 4, f.end_ln, f.end_col - 1,
+...     *f.elts[i].loc[:2], *f.elts[j-1].loc[2:], (False, False), prefix='[', suffix=']', self_tail_sep=False).src, f.src)
+[GET] [PRE, POST,]
+
+>>> print(_get_slice_seq_sep_and_dedent(f := FST(r"""
 ... [PRE, GET]
 ... """.strip()),
 ...     i:=1, j:=2, len(f.elts), True, List(elts=f.a.elts[i:j]), 0, 4, f.end_ln, f.end_col - 1,
