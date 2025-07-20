@@ -392,56 +392,377 @@ trailing newlines
 
 # self_tail_sep and tuples
 
->>> new = FST(Tuple(elts=[Name(id='NEW', ctx=Load(), lineno=1, col_offset=0, end_lineno=1, end_col_offset=3)],
-...                                      ctx=Load(), lineno=1, col_offset=0, end_lineno=1, end_col_offset=3),
-...           ['NEW'])
-
 >>> print('\n'.join(repr(l) for l in test_replace(FST('''
 ... (a, b, c)
-... '''.strip()), 0, 3, new.copy()).lines))
+... '''.strip()), 0, 3, new000.copy()).lines))
 '(NEW,)'
 
 >>> print('\n'.join(repr(l) for l in test_replace(FST('''
 ... (a, b, c)
-... '''.strip()), 0, 3, new.copy(), self_tail_sep=True).lines))
+... '''.strip()), 0, 3, new000.copy(), self_tail_sep=True).lines))
 '(NEW,)'
 
 >>> print('\n'.join(repr(l) for l in test_replace(FST('''
 ... (a, b, c)
-... '''.strip()), 0, 3, new.copy(), self_tail_sep=False).lines))
+... '''.strip()), 0, 3, new000.copy(), self_tail_sep=False).lines))
 '(NEW)'
 
 >>> print('\n'.join(repr(l) for l in test_replace(FST('''
 ... (a, b, c)
-... '''.strip()), 1, 3, new.copy()).lines))
+... '''.strip()), 1, 3, new000.copy()).lines))
 '(a, NEW)'
 
 >>> print('\n'.join(repr(l) for l in test_replace(FST('''
 ... (a, b, c)
-... '''.strip()), 1, 3, new.copy(), self_tail_sep=True).lines))
+... '''.strip()), 1, 3, new000.copy(), self_tail_sep=True).lines))
 '(a, NEW,)'
 
 >>> print('\n'.join(repr(l) for l in test_replace(FST('''
 ... (a, b, c)
-... '''.strip()), 1, 3, new.copy(), self_tail_sep=False).lines))
+... '''.strip()), 1, 3, new000.copy(), self_tail_sep=False).lines))
 '(a, NEW)'
 
 >>> print('\n'.join(repr(l) for l in test_replace(FST('''
 ... (a, b, c)
-... '''.strip()), 0, 2, new.copy()).lines))
+... '''.strip()), 0, 2, new000.copy()).lines))
 '(NEW, c)'
 
 >>> print('\n'.join(repr(l) for l in test_replace(FST('''
 ... (a, b, c)
-... '''.strip()), 0, 2, new.copy(), self_tail_sep=True).lines))
+... '''.strip()), 0, 2, new000.copy(), self_tail_sep=True).lines))
 '(NEW, c,)'
 
 >>> print('\n'.join(repr(l) for l in test_replace(FST('''
 ... (a, b, c)
-... '''.strip()), 0, 2, new.copy(), self_tail_sep=False).lines))
+... '''.strip()), 0, 2, new000.copy(), self_tail_sep=False).lines))
 '(NEW, c)'
 
 >>> print('\n'.join(repr(l) for l in test_replace(FST('''
 ... (a, b, c,)
-... '''.strip()), 0, 2, new.copy(), self_tail_sep=False).lines))
+... '''.strip()), 0, 2, new000.copy(), self_tail_sep=False).lines))
 '(NEW, c,)'
+
+
+
+
+replace
+
+>>> def test_insert(fst_, idx, new, trivia=None, off=1, field='elts', sep=',', self_tail_sep=None):
+...     body = getattr(fst_.a, field)
+...
+...     if idx:
+...         _, _, bound_ln, bound_col = body[idx - 1].f.pars()
+...     else:
+...         bound_ln  = fst_.ln
+...         bound_col = fst_.col + off
+...
+...     _, _, bound_end_ln, bound_end_col  = fst_.loc
+...     bound_end_col                     -= off
+...
+...     if idx < len(body):
+...         end_ln, end_col, _, _ = body[idx].f.pars()
+...     else:
+...         end_ln  = bound_end_ln
+...         end_col = bound_end_col
+...
+...     new_body = getattr(new.a, field)
+...
+...     _put_slice_seq(fst_, idx, idx, len(body), new, new_body[0].f, new_body[-1].f,
+...                    bound_ln, bound_col, bound_end_ln, bound_end_col,
+...                    -1, -1, end_ln, end_col, trivia, field, sep, self_tail_sep)
+...
+...     return fst_
+
+
+>>> print('\n'.join(repr(l) for l in test_insert(FST('''
+... []
+... '''.strip()), 0, new000.copy()).lines))
+'[NEW]'
+
+>>> print('\n'.join(repr(l) for l in test_insert(FST('''
+... [a, b]
+... '''.strip()), 0, new000.copy()).lines))
+'[NEW, a, b]'
+
+>>> print('\n'.join(repr(l) for l in test_insert(FST('''
+... [a, b]
+... '''.strip()), 1, new000.copy()).lines))
+'[a, NEW, b]'
+
+>>> print('\n'.join(repr(l) for l in test_insert(FST('''
+... [a, b]
+... '''.strip()), 2, new000.copy()).lines))
+'[a, b, NEW]'
+
+>>> print('\n'.join(repr(l) for l in test_insert(FST('''
+... [a, b]
+... '''.strip()), 0, new001.copy()).lines))
+'[NEW, a, b]'
+
+>>> print('\n'.join(repr(l) for l in test_insert(FST('''
+... [a, b]
+... '''.strip()), 1, new001.copy()).lines))
+'[a, NEW, b]'
+
+>>> print('\n'.join(repr(l) for l in test_insert(FST('''
+... [a, b]
+... '''.strip()), 2, new001.copy()).lines))
+'[a, b, NEW]'
+
+>>> print('\n'.join(repr(l) for l in test_insert(FST('''
+... [a, b]
+... '''.strip()), 0, new110.copy()).lines))
+'['
+'NEW,'
+'a, b]'
+
+>>> print('\n'.join(repr(l) for l in test_insert(FST('''
+... [a, b]
+... '''.strip()), 1, new110.copy()).lines))
+'[a,'
+'NEW,'
+'b]'
+
+>>> print('\n'.join(repr(l) for l in test_insert(FST('''
+... [a, b]
+... '''.strip()), 2, new110.copy()).lines))
+'[a, b,'
+'NEW'
+']'
+
+>>> print('\n'.join(repr(l) for l in test_insert(FST('''
+... [a, b]
+... '''.strip()), 0, new111.copy()).lines))
+'['
+'NEW,'
+'a, b]'
+
+>>> print('\n'.join(repr(l) for l in test_insert(FST('''
+... [a, b]
+... '''.strip()), 1, new111.copy()).lines))
+'[a,'
+'NEW,'
+'b]'
+
+>>> print('\n'.join(repr(l) for l in test_insert(FST('''
+... [a, b]
+... '''.strip()), 2, new111.copy()).lines))
+'[a, b,'
+'NEW'
+']'
+
+
+# trailing separators
+
+>>> print('\n'.join(repr(l) for l in test_insert(FST('''
+... ()
+... '''.strip()), 0, new000.copy()).lines))
+'(NEW,)'
+
+>>> print('\n'.join(repr(l) for l in test_insert(FST('''
+... ()
+... '''.strip()), 0, new001.copy()).lines))
+'(NEW,)'
+
+>>> print('\n'.join(repr(l) for l in test_insert(FST('''
+... ()
+... '''.strip()), 0, new000.copy(), self_tail_sep=False).lines))
+'(NEW)'
+
+>>> print('\n'.join(repr(l) for l in test_insert(FST('''
+... ()
+... '''.strip()), 0, new001.copy(), self_tail_sep=False).lines))
+'(NEW)'
+
+>>> print('\n'.join(repr(l) for l in test_insert(FST('''
+... ()
+... '''.strip()), 0, new000.copy(), self_tail_sep=True).lines))
+'(NEW,)'
+
+>>> print('\n'.join(repr(l) for l in test_insert(FST('''
+... ()
+... '''.strip()), 0, new001.copy(), self_tail_sep=True).lines))
+'(NEW,)'
+
+>>> print('\n'.join(repr(l) for l in test_insert(FST('''
+... []
+... '''.strip()), 0, new000.copy()).lines))
+'[NEW]'
+
+>>> print('\n'.join(repr(l) for l in test_insert(FST('''
+... []
+... '''.strip()), 0, new001.copy()).lines))
+'[NEW]'
+
+>>> print('\n'.join(repr(l) for l in test_insert(FST('''
+... []
+... '''.strip()), 0, new000.copy(), self_tail_sep=False).lines))
+'[NEW]'
+
+>>> print('\n'.join(repr(l) for l in test_insert(FST('''
+... []
+... '''.strip()), 0, new001.copy(), self_tail_sep=False).lines))
+'[NEW]'
+
+>>> print('\n'.join(repr(l) for l in test_insert(FST('''
+... []
+... '''.strip()), 0, new000.copy(), self_tail_sep=True).lines))
+'[NEW,]'
+
+>>> print('\n'.join(repr(l) for l in test_insert(FST('''
+... []
+... '''.strip()), 0, new001.copy(), self_tail_sep=True).lines))
+'[NEW,]'
+
+
+>>> print('\n'.join(repr(l) for l in test_insert(FST('''
+... (a,)
+... '''.strip()), 0, new000.copy()).lines))
+'(NEW, a,)'
+
+>>> print('\n'.join(repr(l) for l in test_insert(FST('''
+... (a,)
+... '''.strip()), 0, new001.copy()).lines))
+'(NEW, a,)'
+
+>>> print('\n'.join(repr(l) for l in test_insert(FST('''
+... (a,)
+... '''.strip()), 0, new000.copy(), self_tail_sep=False).lines))
+'(NEW, a,)'
+
+>>> print('\n'.join(repr(l) for l in test_insert(FST('''
+... (a,)
+... '''.strip()), 0, new001.copy(), self_tail_sep=False).lines))
+'(NEW, a,)'
+
+>>> print('\n'.join(repr(l) for l in test_insert(FST('''
+... (a,)
+... '''.strip()), 0, new000.copy(), self_tail_sep=True).lines))
+'(NEW, a,)'
+
+>>> print('\n'.join(repr(l) for l in test_insert(FST('''
+... (a,)
+... '''.strip()), 0, new001.copy(), self_tail_sep=True).lines))
+'(NEW, a,)'
+
+>>> print('\n'.join(repr(l) for l in test_insert(FST('''
+... [a,]
+... '''.strip()), 0, new000.copy()).lines))
+'[NEW, a,]'
+
+>>> print('\n'.join(repr(l) for l in test_insert(FST('''
+... [a,]
+... '''.strip()), 0, new001.copy()).lines))
+'[NEW, a,]'
+
+>>> print('\n'.join(repr(l) for l in test_insert(FST('''
+... [a,]
+... '''.strip()), 0, new000.copy(), self_tail_sep=False).lines))
+'[NEW, a,]'
+
+>>> print('\n'.join(repr(l) for l in test_insert(FST('''
+... [a,]
+... '''.strip()), 0, new001.copy(), self_tail_sep=False).lines))
+'[NEW, a,]'
+
+>>> print('\n'.join(repr(l) for l in test_insert(FST('''
+... [a,]
+... '''.strip()), 0, new000.copy(), self_tail_sep=True).lines))
+'[NEW, a,]'
+
+>>> print('\n'.join(repr(l) for l in test_insert(FST('''
+... [a,]
+... '''.strip()), 0, new001.copy(), self_tail_sep=True).lines))
+'[NEW, a,]'
+
+
+>>> print('\n'.join(repr(l) for l in test_insert(FST('''
+... [a]
+... '''.strip()), 0, new000.copy()).lines))
+'[NEW, a]'
+
+>>> print('\n'.join(repr(l) for l in test_insert(FST('''
+... [a]
+... '''.strip()), 0, new001.copy()).lines))
+'[NEW, a]'
+
+>>> print('\n'.join(repr(l) for l in test_insert(FST('''
+... [a]
+... '''.strip()), 0, new000.copy(), self_tail_sep=False).lines))
+'[NEW, a]'
+
+>>> print('\n'.join(repr(l) for l in test_insert(FST('''
+... [a]
+... '''.strip()), 0, new001.copy(), self_tail_sep=False).lines))
+'[NEW, a]'
+
+>>> print('\n'.join(repr(l) for l in test_insert(FST('''
+... [a]
+... '''.strip()), 0, new000.copy(), self_tail_sep=True).lines))
+'[NEW, a,]'
+
+>>> print('\n'.join(repr(l) for l in test_insert(FST('''
+... [a]
+... '''.strip()), 0, new001.copy(), self_tail_sep=True).lines))
+'[NEW, a,]'
+
+
+>>> print('\n'.join(repr(l) for l in test_insert(FST('''
+... (a,)
+... '''.strip()), 1, new000.copy()).lines))
+'(a, NEW)'
+
+>>> print('\n'.join(repr(l) for l in test_insert(FST('''
+... (a,)
+... '''.strip()), 1, new001.copy()).lines))
+'(a, NEW)'
+
+>>> print('\n'.join(repr(l) for l in test_insert(FST('''
+... (a,)
+... '''.strip()), 1, new000.copy(), self_tail_sep=False).lines))
+'(a, NEW)'
+
+>>> print('\n'.join(repr(l) for l in test_insert(FST('''
+... (a,)
+... '''.strip()), 1, new001.copy(), self_tail_sep=False).lines))
+'(a, NEW)'
+
+>>> print('\n'.join(repr(l) for l in test_insert(FST('''
+... (a,)
+... '''.strip()), 1, new000.copy(), self_tail_sep=True).lines))
+'(a, NEW,)'
+
+>>> print('\n'.join(repr(l) for l in test_insert(FST('''
+... (a,)
+... '''.strip()), 1, new001.copy(), self_tail_sep=True).lines))
+'(a, NEW,)'
+
+>>> print('\n'.join(repr(l) for l in test_insert(FST('''
+... [a,]
+... '''.strip()), 1, new000.copy()).lines))
+'[a, NEW]'
+
+>>> print('\n'.join(repr(l) for l in test_insert(FST('''
+... [a,]
+... '''.strip()), 1, new001.copy()).lines))
+'[a, NEW]'
+
+>>> print('\n'.join(repr(l) for l in test_insert(FST('''
+... [a,]
+... '''.strip()), 1, new000.copy(), self_tail_sep=False).lines))
+'[a, NEW]'
+
+>>> print('\n'.join(repr(l) for l in test_insert(FST('''
+... [a,]
+... '''.strip()), 1, new001.copy(), self_tail_sep=False).lines))
+'[a, NEW]'
+
+>>> print('\n'.join(repr(l) for l in test_insert(FST('''
+... [a,]
+... '''.strip()), 1, new000.copy(), self_tail_sep=True).lines))
+'[a, NEW,]'
+
+>>> print('\n'.join(repr(l) for l in test_insert(FST('''
+... [a,]
+... '''.strip()), 1, new001.copy(), self_tail_sep=True).lines))
+'[a, NEW,]'
