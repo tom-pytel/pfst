@@ -19,7 +19,7 @@ delete
 ...
 ...     _put_slice_seq(fst_, start, stop, len(body), None, None, None,
 ...                    bound_ln, bound_col, fst_.end_ln, fst_.end_col - off,
-...                    ln, col, end_ln, end_col, trivia, field, sep, self_tail_sep)
+...                    ln, col, end_ln, end_col, trivia, True, field, sep, self_tail_sep)
 ...
 ...     return fst_
 
@@ -160,7 +160,7 @@ replace
 ...
 ...     _put_slice_seq(fst_, start, stop, len(body), new, new_body[0].f, new_body[-1].f,
 ...                    bound_ln, bound_col, fst_.end_ln, fst_.end_col - off,
-...                    ln, col, end_ln, end_col, trivia, field, sep, self_tail_sep)
+...                    ln, col, end_ln, end_col, trivia, True, field, sep, self_tail_sep)
 ...
 ...     return fst_
 
@@ -469,7 +469,7 @@ replace
 ...
 ...     _put_slice_seq(fst_, idx, idx, len(body), new, new_body[0].f, new_body[-1].f,
 ...                    bound_ln, bound_col, bound_end_ln, bound_end_col,
-...                    -1, -1, end_ln, end_col, trivia, field, sep, self_tail_sep)
+...                    -1, -1, end_ln, end_col, trivia, True, field, sep, self_tail_sep)
 ...
 ...     return fst_
 
@@ -675,7 +675,6 @@ replace
 ... '''.strip()), 0, new001.copy(), self_tail_sep=True).lines))
 '[NEW, a,]'
 
-
 >>> print('\n'.join(repr(l) for l in test_insert(FST('''
 ... [a]
 ... '''.strip()), 0, new000.copy()).lines))
@@ -766,3 +765,57 @@ replace
 ... [a,]
 ... '''.strip()), 1, new001.copy(), self_tail_sep=True).lines))
 '[a, NEW,]'
+
+>>> print('\n'.join(repr(l) for l in test_insert(FST('''
+... [a]
+... '''.strip()), 1, new000.copy()).lines))
+'[a, NEW]'
+
+>>> print('\n'.join(repr(l) for l in test_insert(FST('''
+... [a]
+... '''.strip()), 1, new001.copy()).lines))
+'[a, NEW]'
+
+>>> print('\n'.join(repr(l) for l in test_insert(FST('''
+... [a]
+... '''.strip()), 1, new000.copy(), self_tail_sep=False).lines))
+'[a, NEW]'
+
+>>> print('\n'.join(repr(l) for l in test_insert(FST('''
+... [a]
+... '''.strip()), 1, new001.copy(), self_tail_sep=False).lines))
+'[a, NEW]'
+
+>>> print('\n'.join(repr(l) for l in test_insert(FST('''
+... [a]
+... '''.strip()), 1, new000.copy(), self_tail_sep=True).lines))
+'[a, NEW,]'
+
+>>> print('\n'.join(repr(l) for l in test_insert(FST('''
+... [a]
+... '''.strip()), 1, new001.copy(), self_tail_sep=True).lines))
+'[a, NEW,]'
+
+
+
+# fix comment or line continuation backslash without trailing newline
+
+>>> comment = FST(Tuple(elts=[Name(id='NEW', ctx=Load(), lineno=1, col_offset=0, end_lineno=1, end_col_offset=3)],
+...                                          ctx=Load(), lineno=1, col_offset=0, end_lineno=1, end_col_offset=3),
+...               ['NEW#'])
+
+>>> linecont = FST(Tuple(elts=[Name(id='NEW', ctx=Load(), lineno=1, col_offset=0, end_lineno=1, end_col_offset=3)],
+...                                           ctx=Load(), lineno=1, col_offset=0, end_lineno=1, end_col_offset=3),
+...                ['NEW\\'])
+
+>>> print('\n'.join(repr(l) for l in test_replace(FST('''
+... [a, b, c]
+... '''.strip()), 1, 2, comment.copy()).lines))
+'[a, NEW,#'
+'c]'
+
+>>> print('\n'.join(repr(l) for l in test_replace(FST('''
+... [a, b, c]
+... '''.strip()), 1, 2, linecont.copy()).lines))
+'[a, NEW,\\'
+'c]'

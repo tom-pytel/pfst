@@ -249,7 +249,7 @@ def _get_trivia_params(trivia: bool | str | tuple[bool | str | int | None, bool 
         space specifiers `'-#'` or not.
     """
 
-    if isinstance(lead_comments := fst._OPTIONS['trivia'], tuple):
+    if isinstance(lead_comments := fst.FST.get_option('trivia'), tuple):
         lead_comments, trail_comments = lead_comments
     else:
         trail_comments = lead_comments

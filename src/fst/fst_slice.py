@@ -15,7 +15,7 @@ from .astutil import re_identifier, TypeAlias, TryStar, TemplateStr
 
 from .misc import (
     Self, Code, NodeError, astfield, fstloc,
-    re_line_trailing_space, re_empty_space,
+    re_line_trailing_space, re_empty_space, re_line_end_cont_or_comment,
     _next_src, _prev_find, _next_find, _next_find_re, _fixup_slice_indices,
     _leading_trivia, _trailing_trivia,
 )
@@ -52,15 +52,15 @@ from .fst_slice_old import (
 #                                                                            .
 #                                                                            .
 #                                                                            .
-# N ,             (ClassDef, 'bases'):                    # expr*            -> Tuple[expr_callarg]    _parse_expr_callargs
-# N ,             (Call, 'args'):                         # expr*            -> Tuple[expr_callarg]    _parse_expr_callargs
+# S ,             (ClassDef, 'bases'):                    # expr*            -> Tuple[expr_callarg]    _parse_expr_callargs
+# S ,             (Call, 'args'):                         # expr*            -> Tuple[expr_callarg]    _parse_expr_callargs
 #
-# N ,             (Delete, 'targets'):                    # expr*            -> Tuple[target]          _parse_expr / restrict targets
-# N ,             (Assign, 'targets'):                    # expr*            -> Tuple[target]          _parse_expr / restrict targets
+# S ,             (Delete, 'targets'):                    # expr*            -> Tuple[target]          _parse_expr / restrict targets
+# S ,             (Assign, 'targets'):                    # expr*            -> Tuple[target]          _parse_expr / restrict targets
+#                                                                            .
+#                                                                            .
 #                                                                            .
 # S ,             (MatchClass, 'patterns'):               # pattern*         -> Tuple[pattern]         _parse_pattern / restrict MatchSequence
-#                                                                            .
-#                                                                            .
 #                                                                            .
 # S ,             (ClassDef, 'keywords'):                 # keyword*         -> Tuple[keyword]         _parse_keywords
 # S ,             (Call, 'keywords'):                     # keyword*         -> Tuple[keyword]         _parse_keywords
@@ -78,8 +78,8 @@ from .fst_slice_old import (
 #                                                                            .
 #                                                                            .
 #                                                                            .
-# N ,             (Global, 'names'):                      # identifier*,     -> Tuple[Name]            _parse_expr / restrict Names   - no trailing commas, unparenthesized
-# N ,             (Nonlocal, 'names'):                    # identifier*,     -> Tuple[Name]            _parse_expr / restrict Names   - no trailing commas, unparenthesized
+# S ,             (Global, 'names'):                      # identifier*,     -> Tuple[Name]            _parse_expr / restrict Names   - no trailing commas, unparenthesized
+# S ,             (Nonlocal, 'names'):                    # identifier*,     -> Tuple[Name]            _parse_expr / restrict Names   - no trailing commas, unparenthesized
 #                                                                            .
 #                                                                            .
 #                                                                            .
@@ -126,7 +126,6 @@ from .fst_slice_old import (
 
 
 # ----------------------------------------------------------------------------------------------------------------------
-# get
 
 def _fixup_self_tail_sep_del(self: fst.FST, self_tail_sep: bool | Literal[0] | None, start: int, stop: int,
                              len_body: int) -> bool | Literal[0] | None:
@@ -144,12 +143,12 @@ def _fixup_self_tail_sep_del(self: fst.FST, self_tail_sep: bool | Literal[0] | N
         return True if not start and stop == len_body - 1 else None
 
 
-def _locs_slice_seq_get(self: fst.FST, is_first: bool, is_last: bool,
-                        bound_ln: int, bound_col: int, bound_end_ln: int, bound_end_col: int,
-                        ln: int, col: int, end_ln: int, end_col: int,
-                        trivia: bool | str | tuple[bool | str | int | None, bool | str | int | None] | None,
-                        sep: str = ',', neg: bool = False,
-                        ) -> tuple[fstloc, fstloc, str | None, tuple[int, int] | None]:
+def _locs_slice_seq(self: fst.FST, is_first: bool, is_last: bool,
+                    bound_ln: int, bound_col: int, bound_end_ln: int, bound_end_col: int,
+                    ln: int, col: int, end_ln: int, end_col: int,
+                    trivia: bool | str | tuple[bool | str | int | None, bool | str | int | None],
+                    sep: str = ',', neg: bool = False,
+                    ) -> tuple[fstloc, fstloc, str | None, tuple[int, int] | None]:
     r"""Slice get locations for both copy and delete after cut. Parentheses should already have been taken into account
     for the bounds and location. This function will find the separator if present and go from there for the trailing
     trivia. If trivia specifier has a `'-#'` for space in it and `neg` here is true then the copy location will not have
@@ -317,6 +316,9 @@ def _locs_slice_seq_get(self: fst.FST, is_first: bool, is_last: bool,
     return copy_locs[:1] + cut_locs[1:]  # copy location from copy_locs and delete location and indent from cut_locs
 
 
+# ----------------------------------------------------------------------------------------------------------------------
+# get
+
 def _poss_end(self: fst.FST, field: str, len_suffix: int = 0):
     """Get position of end of self minus length of delimiter suffix and position of last element past pars, assumed to
     exist."""
@@ -332,14 +334,15 @@ def _poss_end(self: fst.FST, field: str, len_suffix: int = 0):
     return last_end_ln, last_end_col, end_ln, end_col
 
 
-def _get_slice_seq_sep_and_dedent(self: fst.FST, start: int, stop: int, len_body: int, cut: bool, ast: AST,
-                                  bound_ln: int, bound_col: int, bound_end_ln: int, bound_end_col: int,
-                                  ln: int, col: int, end_ln: int, end_col: int,
-                                  trivia: bool | str | tuple[bool | str | int | None, bool | str | int | None] | None,
-                                  field: str = 'elts', prefix: str = '', suffix: str = '', sep: str = ',',
-                                  self_tail_sep: bool | Literal[0] | None = None,
-                                  ret_tail_sep: bool | Literal[0] | None = None,
-                                  ) -> fst.FST:
+def _get_slice_seq(self: fst.FST, start: int, stop: int, len_body: int, cut: bool, ast: AST,
+                   bound_ln: int, bound_col: int, bound_end_ln: int, bound_end_col: int,
+                   ln: int, col: int, end_ln: int, end_col: int,
+                   trivia: bool | str | tuple[bool | str | int | None, bool | str | int | None] | None = None,
+                   docstr: bool | Literal['strict'] | None = None,
+                   field: str = 'elts', prefix: str = '', suffix: str = '', sep: str = ',',
+                   self_tail_sep: bool | Literal[0] | None = None,
+                   ret_tail_sep: bool | Literal[0] | None = None,
+                   ) -> fst.FST:
     """Copy slice sequence source, dedent it, and create a new `FST` from that source and the new `AST` already made
     with the old locations (which will be updated). If the operation is a cut then the source in `self` will also be
     deleted. Trailing separators will be added / removed as needed and according to if they are in normal positions. If
@@ -363,7 +366,9 @@ def _get_slice_seq_sep_and_dedent(self: fst.FST, start: int, stop: int, len_body
     - (`bound_end_ln`, `bound_end_col`): End of container (just before delimiters).
     - (`ln`, `col`, `end_ln`, `end_col`): Location of single or span of elements being copied or cut (including pars but
         not trailing separator).
-    - `trivia`: Standard option on how to handle leading and trailing comments and space.
+    - `trivia`: Standard option on how to handle leading and trailing comments and space, `None` means global default.
+    - `docstr`: Option for docstring handling on dedent, `None` means global default.
+    - `field`: Which field of is being gotten from.
     - `prefix`, `suffix`: What delimiters to add to copied / cut span of elements (pars, brackets, curlies).
     - `sep`: The separator to use and check, comma for everything except maybe `'|'` for MatchOr.
     - `self_tail_sep`: Whether self needs a trailing separator after cut or no (including if end was not cut).
@@ -398,7 +403,7 @@ def _get_slice_seq_sep_and_dedent(self: fst.FST, start: int, stop: int, len_body
 
     # get locations and adjust for trailing separator keep or delete if possible to optimize
 
-    copy_loc, del_loc, del_indent, sep_end_pos = _locs_slice_seq_get(self, is_first, is_last,
+    copy_loc, del_loc, del_indent, sep_end_pos = _locs_slice_seq(self, is_first, is_last,
         bound_ln, bound_col, bound_end_ln, bound_end_col, ln, col, end_ln, end_col, trivia, sep, cut,
     )
 
@@ -427,7 +432,8 @@ def _get_slice_seq_sep_and_dedent(self: fst.FST, start: int, stop: int, len_body
     ast.end_col_offset = lines[copy_end_ln].c2b(copy_end_col)
 
     fst_ = self._make_fst_and_dedent(self, ast, copy_loc, prefix, suffix,
-                                     del_loc if cut else None, [del_indent] if del_indent and del_loc.end_col else None)
+                                     del_loc if cut else None, [del_indent] if del_indent and del_loc.end_col else None,
+                                     docstr=fst.FST.get_option('docstr') if docstr is None else docstr)
 
     ast.col_offset     = 0  # before prefix
     ast.end_col_offset = fst_._lines[-1].lenbytes  # after suffix
@@ -510,9 +516,10 @@ def _get_slice_List_elts(self: fst.FST, start: int | Literal['end'] | None, stop
     if not issubclass(ctx, Load):  # new List root object must have ctx=Load
         set_ctx(ret_ast, Load)
 
-    return _get_slice_seq_sep_and_dedent(self, start, stop, len_body, cut, ret_ast,
-                                         bound_ln, bound_col, bound_end_ln, bound_end_col, ln, col, end_ln, end_col,
-                                         fst.FST.get_option('trivia', options), 'elts', '[', ']')
+    return _get_slice_seq(self, start, stop, len_body, cut, ret_ast,
+                          bound_ln, bound_col, bound_end_ln, bound_end_col, ln, col, end_ln, end_col,
+                          options.get('trivia'), options.get('docstr'),
+                          'elts', '[', ']')
 
 
 # TODO: handle trailing line continuation backslashes
@@ -541,9 +548,10 @@ def _get_slice_Import_names(self: fst.FST, start: int | Literal['end'] | None, s
     asts    = _cut_or_copy_asts(start, stop, field, cut, body)
     ret_ast = Tuple(elts=asts, ctx=Load())
 
-    return _get_slice_seq_sep_and_dedent(self, start, stop, len_body, cut, ret_ast,
-                                         bound_ln, bound_col, bound_end_ln, bound_end_col, ln, col, end_ln, end_col,
-                                         fst.FST.get_option('trivia', options), 'names', '', '', ',', False, False)
+    return _get_slice_seq(self, start, stop, len_body, cut, ret_ast,
+                          bound_ln, bound_col, bound_end_ln, bound_end_col, ln, col, end_ln, end_col,
+                          options.get('trivia'), options.get('docstr'),
+                          'names', '', '', ',', False, False)
 
 
 # TODO: handle trailing line continuation backslashes
@@ -585,9 +593,10 @@ def _get_slice_Global_Local_names(self: fst.FST, start: int | Literal['end'] | N
     bound_end_ln  = ln
     bound_end_col = col
 
-    return _get_slice_seq_sep_and_dedent(self, start, stop, len_body, cut, ret_ast,
-                                         bound_ln, bound_col, bound_end_ln, bound_end_col, ln, col, end_ln, end_col,
-                                         fst.FST.get_option('trivia', options), 'names', '', '', ',', False, False)
+    return _get_slice_seq(self, start, stop, len_body, cut, ret_ast,
+                          bound_ln, bound_col, bound_end_ln, bound_end_col, ln, col, end_ln, end_col,
+                          options.get('trivia'), options.get('docstr'),
+                          'names', '', '', ',', False, False)
 
 
 # ......................................................................................................................
@@ -688,6 +697,7 @@ def _put_slice_seq(self: fst.FST, start: int, stop: int, len_body: int, fst_: fs
                    bound_ln: int, bound_col: int, bound_end_ln: int, bound_end_col: int,
                    ln: int, col: int, end_ln: int, end_col: int,
                    trivia: bool | str | tuple[bool | str | int | None, bool | str | int | None] | None,
+                   docstr: bool | Literal['strict'] | None,
                    field: str = 'elts', sep: str = ',',
                    self_tail_sep: bool | Literal[0] | None = None,
                    ):
@@ -711,7 +721,9 @@ def _put_slice_seq(self: fst.FST, start: int, stop: int, len_body: int, fst_: fs
     - (`ln`, `col`, `end_ln`, `end_col`): Location of single or span of elements being replaced or deleted (including
         pars but not trailing separator). If pure insertion then `ln` and `col` are not used and (`end_ln`, `end_col`)
         is the start position of the `stop` element in `self` if there is one, otherwise same as bound end.
-    - `trivia`: Standard option on how to handle leading and trailing comments and space.
+    - `trivia`: Standard option on how to handle leading and trailing comments and space, `None` means global default.
+    - `docstr`: Option for docstring handling on indent, `None` means global default.
+    - `field`: Which field of `self` is being deleted / replaced / inserted to.
     - `sep`: The separator to use and check, comma for everything except maybe `'|'` for MatchOr.
     - `self_tail_sep`: Whether self needs a trailing separator or no.
         - `None`: Leave it up to function (tuple singleton check or aesthetic decision).
@@ -730,6 +742,11 @@ def _put_slice_seq(self: fst.FST, start: int, stop: int, len_body: int, fst_: fs
     len_self_suffix = self.end_col - bound_end_col  # will be 1 or 0 depending on if enclosed container or unparenthesized tuple
 
     if is_ins:  # insert, figure out location
+
+
+        # TODO: ln / pos option to specify line where should insert
+
+
         if not is_last:  # just before next element
             ln  = end_ln
             col = end_col
@@ -742,7 +759,7 @@ def _put_slice_seq(self: fst.FST, start: int, stop: int, len_body: int, fst_: fs
             ln  = bound_ln
             col = bound_col
 
-    copy_loc, del_loc, del_indent, _ = _locs_slice_seq_get(self, is_first, is_last,
+    copy_loc, del_loc, del_indent, _ = _locs_slice_seq(self, is_first, is_last,
         bound_ln, bound_col, bound_end_ln, bound_end_col, ln, col, end_ln, end_col, trivia, sep, is_del,
     )
 
@@ -768,14 +785,12 @@ def _put_slice_seq(self: fst.FST, start: int, stop: int, len_body: int, fst_: fs
     else:
         copy_ln, copy_col, _, _ = copy_loc
 
-
-
-        # TODO: if last line of fst_ is a comment or line continuation without a newline then add one
-
-
-
         put_lines = fst_._lines
         skip      = 1
+
+        if re_line_end_cont_or_comment.match(put_lines[l := len(put_lines) - 1],  # if last line of fst_ is a comment or line continuation without a newline then add one
+                                             0 if l > fst_last.end_ln else fst_last.end_col).group(1):
+            put_lines.append(bistr(''))
 
         # newlines
 
@@ -823,7 +838,8 @@ def _put_slice_seq(self: fst.FST, start: int, stop: int, len_body: int, fst_: fs
 
         # indent and offset source to put
 
-        fst_._indent_lns(self.get_indent(), skip=skip, docstr=None)
+        fst_._indent_lns(self.get_indent(), skip=skip,
+                         docstr=fst.FST.get_option('docstr') if docstr is None else docstr)
         fst_._offset(0, 0, put_ln, lines[put_ln].c2b(put_col))
 
         fst_._lines = lines  # SPECIAL! for potential fst_ .loc access below when adjusting trailing separator, this must be done after the fst_ modifications just above because those need the actual fst_ lines
@@ -851,7 +867,7 @@ def _put_slice_seq(self: fst.FST, start: int, stop: int, len_body: int, fst_: fs
 
         if self_tail_sep:
             self._maybe_add_comma(last_end_ln, last_end_col, False, self_end_ln, self_end_col)
-        else:  # self_tail_sep is False or == 0
+        else:
             self._maybe_del_separator(last_end_ln, last_end_col, self_tail_sep is False, self_end_ln, self_end_col, sep)
 
     if not is_del:  # internal
@@ -1123,6 +1139,13 @@ def _put_slice_raw(self: fst.FST, code: Code | None, start: int | Literal['end']
 
 # ----------------------------------------------------------------------------------------------------------------------
 
+@staticmethod
+def _is_slice_compatible(sig1: tuple[type[AST], str], sig2: tuple[type[AST], str]) -> bool:  # sig = (AST type, field)
+    """Whether slices are compatible between these type / fields."""
+
+    return ((v := _SLICE_COMAPTIBILITY.get(sig1)) == _SLICE_COMAPTIBILITY.get(sig2) and v is not None)
+
+
 _SLICE_COMAPTIBILITY = {
     (Module, 'body'):                     'stmt*',
     (Interactive, 'body'):                'stmt*',
@@ -1200,16 +1223,10 @@ _SLICE_COMAPTIBILITY = {
     # (TemplateStr, 'values'):              'expr*',
 }
 
-@staticmethod
-def _is_slice_compatible(sig1: tuple[type[AST], str], sig2: tuple[type[AST], str]) -> bool:  # sig = (AST type, field)
-    """Whether slices are compatible between these type / fields."""
-
-    return ((v := _SLICE_COMAPTIBILITY.get(sig1)) == _SLICE_COMAPTIBILITY.get(sig2) and v is not None)
-
 
 # ----------------------------------------------------------------------------------------------------------------------
 __all_private__ = [
-    '_locs_slice_seq_get', '_get_slice_seq_sep_and_dedent', '_put_slice_seq',
+    '_locs_slice_seq', '_get_slice_seq', '_put_slice_seq',
     '_get_slice', '_put_slice',
     '_is_slice_compatible',
 ]  # used by make_docs.py
