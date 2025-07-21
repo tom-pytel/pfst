@@ -6,7 +6,7 @@ This module contains functions which are imported as methods in the `FST` class.
 from __future__ import annotations
 
 from ast import *
-from typing import Literal, Union
+from typing import Any, Literal, Union
 
 from . import fst
 
@@ -15,7 +15,7 @@ from .astutil import re_identifier, TypeAlias, TryStar, TemplateStr
 
 from .misc import (
     Self, Code, NodeError, astfield, fstloc,
-    re_line_trailing_space, re_empty_space, re_line_end_cont_or_comment,
+    re_empty_line, re_line_trailing_space, re_empty_space, re_line_end_cont_or_comment,
     _next_src, _prev_find, _next_find, _next_find_re, _fixup_slice_indices,
     _leading_trivia, _trailing_trivia,
 )
@@ -319,21 +319,6 @@ def _locs_slice_seq(self: fst.FST, is_first: bool, is_last: bool,
 # ----------------------------------------------------------------------------------------------------------------------
 # get
 
-def _poss_end(self: fst.FST, field: str, len_suffix: int = 0):
-    """Get position of end of self minus length of delimiter suffix and position of last element past pars, assumed to
-    exist."""
-
-    _, _, end_ln, end_col  = self.loc
-    end_col               -= len_suffix
-
-    if not isinstance(last := getattr(self.a, field)[-1], AST):  # Globals or Locals names or something like that
-        return end_ln, end_col, end_ln, end_col
-
-    _, _, last_end_ln, last_end_col = last.f.loc
-
-    return last_end_ln, last_end_col, end_ln, end_col
-
-
 def _get_slice_seq(self: fst.FST, start: int, stop: int, len_body: int, cut: bool, ast: AST,
                    bound_ln: int, bound_col: int, bound_end_ln: int, bound_end_col: int,
                    ln: int, col: int, end_ln: int, end_col: int,
@@ -354,8 +339,8 @@ def _get_slice_seq(self: fst.FST, start: int, stop: int, len_body: int, cut: boo
     it).
 
     **WARNING!** (`bound_ln`, `bound_col`) is expected to be exactly the end of the previous element (past any closing
-    pars) or the start of the container (past any opening delimiters) if no previous element.
-    (`bound_end_ln`, `bound_end_col`) must be end of container just before closing delimiters.
+    pars) or the start of the container (past any opening delimiters) if no previous element. (`bound_end_ln`,
+    `bound_end_col`) must be end of container just before closing delimiters.
 
     **Parameters:**
     - `start`, `stop`, `len_body`: Slice parameters, `len_body` being current length of field.
@@ -464,6 +449,21 @@ def _get_slice_seq(self: fst.FST, start: int, stop: int, len_body: int, cut: boo
         self._maybe_del_separator(last_end_ln, last_end_col, self_tail_sep is False, self_end_ln, self_end_col, sep)
 
     return fst_
+
+
+def _poss_end(self: fst.FST, field: str, len_suffix: int = 0):
+    """Get position of end of self minus length of delimiter suffix and position of last element past pars, assumed to
+    exist."""
+
+    _, _, end_ln, end_col  = self.loc
+    end_col               -= len_suffix
+
+    if not isinstance(last := getattr(self.a, field)[-1], AST):  # Globals or Locals names or something like that
+        return end_ln, end_col, end_ln, end_col
+
+    _, _, last_end_ln, last_end_col = last.f.loc
+
+    return last_end_ln, last_end_col, end_ln, end_col
 
 
 def _cut_or_copy_asts(start: int, stop: int, field: str, cut: bool, body: list[AST]) -> list[AST]:
@@ -740,6 +740,7 @@ def _put_slice_seq(self: fst.FST, start: int, stop: int, len_body: int, fst_: fs
     body            = getattr(self.a, field)
     last            = None  # means body[-1]
     len_self_suffix = self.end_col - bound_end_col  # will be 1 or 0 depending on if enclosed container or unparenthesized tuple
+    self_indent     = self.get_indent()
 
     if is_ins:  # insert, figure out location
 
@@ -785,16 +786,17 @@ def _put_slice_seq(self: fst.FST, start: int, stop: int, len_body: int, fst_: fs
     else:
         copy_ln, copy_col, _, _ = copy_loc
 
-        put_lines = fst_._lines
-        skip      = 1
+        put_lines   = fst_._lines
+        skip        = 1
+        post_indent = None
 
         if re_line_end_cont_or_comment.match(put_lines[l := len(put_lines) - 1],  # if last line of fst_ is a comment or line continuation without a newline then add one
                                              0 if l > fst_last.end_ln else fst_last.end_col).group(1):
             put_lines.append(bistr(''))
 
-        # newlines
+        # newlines and indentation
 
-        if not put_lines[0]:  # slice to put start with pure newline?
+        if fst_starts_nl :=  not put_lines[0]:  # slice to put start with pure newline?
             if not put_col:  # start element being put to starts a new line?
                 skip = 0
 
@@ -804,7 +806,7 @@ def _put_slice_seq(self: fst.FST, start: int, stop: int, len_body: int, fst_: fs
                 put_col = re_line_trailing_space.match(lines[put_ln], 0,  put_col).start(1)  # eat whitespace before put newline
 
         elif not put_col:
-            fst_._put_src(del_indent, 0, 0, 0, 0, False)  # add indent to start of first put line
+            fst_._put_src(del_indent, 0, 0, 0, 0, False)  # add indent to start of first put line, this del_indent will not be indented by self_indent because of skip == 1
 
         else:  # leave the space between previous separator and self intact
             assert put_ln == copy_ln
@@ -813,11 +815,22 @@ def _put_slice_seq(self: fst.FST, start: int, stop: int, len_body: int, fst_: fs
 
         if not put_lines[-1]:  # slice put ends with pure newline?
             if not re_empty_space.match(lines[put_end_ln], put_end_col):  # something at end of put end line?
-                if put_end_col and del_indent:  # put doesn't end exactly on a brand new line and there is an indent?
-                    put_lines[-1] = bistr(del_indent)  # modify directly because we don't need to do any offset here
+                if put_end_col:  # put doesn't end exactly on a brand new line so there is stuff to indent on line
+                    if is_last and put_end_ln == self.end_ln:  # just the end of the container, put at same indent as open
+                        post_indent = self_indent + ' ' * (self.col - len(self_indent))
+                    elif del_indent is not None:  # have indent from locs function
+                        post_indent = del_indent
+                    elif (post_indent := _get_element_indent(self, body, start)) is not None:  # indentation from other elements in self
+                        pass  # noop
+                    elif fst_starts_nl:  # match indentation of first fst_ element on new line
+                        post_indent = self_indent + put_lines[fst_first.ln][:fst_first.pars().col]
+                    elif body:  # match indentation of our own first element
+                        post_indent = self_indent + ' ' * (body[0].f.pars().col - len(self_indent))
+                    else:
+                        post_indent = self_indent + self.root.indent  # default
 
             else:  # nothing (or whitespace) at end of put end line, remove fst_ trailing newline to not duplicate and remove trailing space from self if present
-                fst_._put_src(None, l := len(ls := fst_._lines) - 2, len(ls[l]), l + 1, 0, True)
+                fst_._put_src(None, l := len(put_lines) - 2, len(put_lines[l]), l + 1, 0, True)
 
                 if put_end_col != (ec := len(lines[put_end_ln])):
                     self._put_src(None, put_end_ln, put_end_col, put_end_ln, ec, True)
@@ -828,21 +841,25 @@ def _put_slice_seq(self: fst.FST, start: int, stop: int, len_body: int, fst_: fs
             last = fst_last
 
             if self_tail_sep is None:
-                if isinstance(self.a, Tuple) and is_first and fst_last is fst_first:  # if single element overwriting all elements of tuple then make sure has trailing separator
+                if isinstance(self.a, Tuple) and is_first and fst_last is fst_first:  # if single element overwriting all elements of a tuple then make sure has trailing separator
                     self_tail_sep = True
-                else:
-                    self_tail_sep = 0
+
+                elif pos := _next_find(put_lines, fst_last.end_ln, fst_last.end_col, fst_.end_ln, fst_.end_col, sep):  # only remove if slice being put actually has trailing separator
+                    if re_empty_space.match(put_lines[pos[0]], pos[1] + len(sep)):  # which doesn't have stuff following it
+                        self_tail_sep = 0
 
         elif self_tail_sep == 0:  # don't remove from tail if tail not touched
             self_tail_sep = None
 
         # indent and offset source to put
 
-        fst_._indent_lns(self.get_indent(), skip=skip,
-                         docstr=fst.FST.get_option('docstr') if docstr is None else docstr)
+        fst_._indent_lns(self_indent, skip=skip, docstr=fst.FST.get_option('docstr') if docstr is None else docstr)
         fst_._offset(0, 0, put_ln, lines[put_ln].c2b(put_col))
 
-        fst_._lines = lines  # SPECIAL! for potential fst_ .loc access below when adjusting trailing separator, this must be done after the fst_ modifications just above because those need the actual fst_ lines
+        if post_indent:  # we do this here like this because otherwise a completely empty line at the end of fst_ will not be indented at all in _indent_lns()
+            put_lines[-1] = bistr(post_indent)
+
+        fst_._lines = lines  # SPECIAL! for potential fst_ last element .loc access below when adjusting trailing separator, this must be done after the fst_ modifications just above because those need the actual fst_ lines
 
     # put source
 
@@ -874,12 +891,102 @@ def _put_slice_seq(self: fst.FST, start: int, stop: int, len_body: int, fst_: fs
         if not is_last:  # past the newly put slice
             stop_ln, stop_col, _, _ = body[stop].f.loc
 
-            self._maybe_add_comma(fst_last.end_ln, fst_last.end_col, True, stop_ln, stop_col)
+            self._maybe_add_comma(fst_last.end_ln, fst_last.end_col, True, stop_ln, stop_col, False)  # last False is because elements of self are now past comma point so will need to be offset
 
-        elif is_ins and not is_first:  # before newly inserted slice at end
+        elif is_ins and not is_first:  # before newly appended slice at end
             _, _, stop_end_ln, stop_end_col = body[stop - 1].f.loc
+            len_stop_end_line               = len(lines[stop_end_ln])
 
-            self._maybe_add_comma(stop_end_ln, stop_end_col, True, fst_first.ln, fst_first.col)
+            if self._maybe_add_comma(stop_end_ln, stop_end_col, True, fst_first.ln, fst_first.col) is not False:  # if line changed (separator and / or space) then we need to explicitly offset the fst_ elements as well since they don't live in self yet but in fst_
+                fst_._offset(stop_end_ln, stop_end_col, 0, len(lines[stop_end_ln]) - len_stop_end_line)
+
+
+def _get_element_indent(self: fst.FST, body: list[AST], start: int) -> str | None:
+    """Get first exprish element indentation found for an element which starts its own line.
+
+    **Returns:**
+    - `str`: Indent found.
+    - `None`: No explicit indent found.
+    """
+
+    lines = self.root._lines
+
+    if start >= 1:  # first search backwards for an element which starts its own line
+        prev_elt_loc = body[start - 1].f.loc
+
+        for i in range(start - 2, -1, -1):
+            loc = prev_elt_loc
+
+            if (ln := loc.ln) != (prev_elt_loc := body[i].f.loc).end_ln:  # only consider elements which start on a different line than the previous element ends on
+                if re_empty_line.match(l := lines[ln], 0, col := body[i + 1].f.pars().col):
+                    return l[:col]
+
+        if (ln := prev_elt_loc.ln) != self.ln:  # only consider element 0 if it is not on same line as self starts
+            if re_empty_line.match(l := lines[ln], 0, col := body[0].f.pars().col):
+                return l[:col]
+
+    else:
+        prev_elt_loc = fstloc(-1, -1, -1, -1)  # dummy
+
+    for i in range(start, len(body)):
+        if (ln := (loc := (f := body[i].f).loc).ln) != prev_elt_loc.end_ln:  # only consider elements which start on a different line than the previous element ends on
+            if re_empty_line.match(l := lines[ln], 0, col := f.pars().col):
+                return l[:col]
+
+        prev_elt_loc = loc
+
+    return None
+
+
+def _code_as_put_slice_fst(self: fst.FST, code: Code | None, one: bool, options: dict[str, Any]) -> fst.FST | None:
+    if code is None:
+        return None
+
+    fst_ = self._code_as_expr(code, self.root.parse_params)
+
+    if one:
+        if (b := fst_.is_parenthesized_tuple()) is False:  # don't put unparenthesized tuple source as one into sequence, it would merge into the sequence
+            fst_._parenthesize_node()
+        elif b is None and precedence_require_parens(fst_.a, self.a, 'elts', 0) and not fst_.pars().n:
+            fst_._parenthesize_grouping()
+
+        ls  = fst_._lines
+        ast = Set(elts=[fst_.a], lineno=1, col_offset=0, end_lineno=len(ls), end_col_offset=ls[-1].lenbytes)  # because in this case all we need is the `elts` container (without `ctx`)
+
+        return fst.FST(ast, ls, from_=self, lcopy=False)
+
+    if empty_set := self.get_option('empty_set', options):
+        if ((fst_.is_empty_set_seq() or fst_.is_empty_set_call()) if empty_set is True else
+            fst_.is_empty_set_seq() if empty_set == 'seq' else fst_.is_empty_set_call()  # else 'call'
+        ):
+            return None
+
+    ast = fst_.a
+
+    if not isinstance(ast, (Tuple, List, Set)):
+        raise NodeError(f"slice being assigned to a {self.a.__class__.__name__} "
+                        f"must be a Tuple, List or Set, not a '{ast.__class__.__name__}'")
+
+    if not ast.elts:  # put empty sequence is same as delete
+        return None
+
+    fst_._sanitize()
+
+    if fst_.is_parenthesized_tuple() is not False:  # strip enclosing parentheses, brackets or curlies from List, Set or parenthesized Tuple
+        # ln, col, end_ln, end_col = fst_.loc
+
+        # fst_._put_src(None, end_ln, end_col - 1, end_ln, end_col, True, exclude=fst_)
+        # fst_._put_src(None, ln, col, ln, col + 1, True)
+
+        fst_.a.end_col_offset -= 1
+        fst_lines              = fst_._lines
+
+        fst_._offset(0, 1, 0, -1)
+
+        fst_lines[-1] = bistr(fst_lines[-1][:-1])
+        fst_lines[0]  = bistr(fst_lines[0][1:])
+
+    return fst_
 
 
 # ......................................................................................................................
@@ -892,7 +999,79 @@ def _put_slice_NOT_IMPLEMENTED_YET(self: fst.FST, code: Code | None, start: int 
 
 def _put_slice_List_elts(self: fst.FST, code: Code | None, start: int | Literal['end'] | None, stop: int | None,
                          field: str, one: bool = False, **options):
-    pass
+    fst_        = _code_as_put_slice_fst(self, code, one, options)
+    len_body    = len(body := (ast := self.a).elts)
+    start, stop = _fixup_slice_indices(len_body, start, stop)
+    is_ins      = start == stop
+
+    if not fst_ and is_ins:  # deleting or assigning empty seq to empty slice of seq, noop
+        return
+
+
+
+    bound_ln, bound_col, bound_end_ln, bound_end_col  = self.loc
+    bound_end_col                                    -= 1
+
+    if start:
+        _, _, bound_ln, bound_col = body[start - 1].f.pars()
+    else:
+        bound_col += 1
+
+    if not is_ins:
+        ln, col, end_ln, end_col = body[start].f.pars()
+
+        if start != stop - 1:
+            _, _, end_ln, end_col = body[stop - 1].f.pars()
+
+    else:
+        ln = col = -1
+
+        if stop < len_body:
+            end_ln, end_col, _, _ = body[stop].f.pars()
+
+        else:
+            end_ln  = bound_end_ln
+            end_col = bound_end_col
+
+
+
+
+    if not fst_:
+        _put_slice_seq(self, start, stop, len_body, None, None, None,
+                       bound_ln, bound_col, bound_end_ln, bound_end_col,
+                       ln, col, end_ln, end_col,
+                       options.get('trivia'), options.get('docstr'))
+
+        self._unmake_fst_tree(body[start : stop])
+
+        del body[start : stop]
+
+        len_fst_body = 0
+
+    else:
+        fst_body = fst_.a.elts
+
+        _put_slice_seq(self, start, stop, len_body, fst_, fst_body[0].f, fst_body[-1].f,
+                       bound_ln, bound_col, bound_end_ln, bound_end_col,
+                       ln, col, end_ln, end_col,
+                       options.get('trivia'), options.get('docstr'))
+
+        self._unmake_fst_tree(body[start : stop])
+        fst_._unmake_fst_parents(True)
+
+        body[start : stop] = fst_body
+
+        len_fst_body = len(fst_body)
+        FST          = fst.FST
+        stack        = [FST(body[i], self, astfield('elts', i)) for i in range(start, start + len_fst_body)]
+
+        if stack:
+            set_ctx([f.a for f in stack], ast.ctx.__class__)
+
+        self._make_fst_tree(stack)
+
+    for i in range(start + len_fst_body, len(body)):
+        body[i].f.pfield = astfield('elts', i)
 
 
 # ......................................................................................................................
@@ -959,7 +1138,7 @@ _PUT_SLICE_HANDLERS = {
     (Dict, ''):                           _put_slice_dict,  # key:value*
 
     (Set, 'elts'):                        _put_slice_tuple_list_or_set,  # expr*
-    (List, 'elts'):                       _put_slice_tuple_list_or_set,  # expr*
+    (List, 'elts'):                       _put_slice_List_elts,  # expr*
     (Tuple, 'elts'):                      _put_slice_tuple_list_or_set,  # expr*
 
     (FunctionDef, 'decorator_list'):      _put_slice_NOT_IMPLEMENTED_YET,  # expr*
@@ -1014,7 +1193,7 @@ def _loc_slice_raw_put(self: fst.FST, start: int | Literal['end'] | None, stop: 
     def fixup_slice_index_for_raw(len_, start, stop):
         start, stop = _fixup_slice_indices(len_, start, stop)
 
-        if stop == start:
+        if start == stop:
             raise ValueError(f"invalid slice for raw operation")
 
         return start, stop

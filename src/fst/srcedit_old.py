@@ -431,7 +431,7 @@ class SrcEdit:
             seq_loc.end_col if seq_loc.end_ln == end_ln else 0x7fffffffffffffff
         ):
             put_fst._put_src([re_empty_line_start.match(lines[put_ln]).group()], ln := put_fst.end_ln, 0, ln, 0,
-                               True, put_fst)
+                             True, put_fst)
 
         if fpre:
             if (not (code := _next_src(lines, fpre.end_ln, fpre.end_col, del_loc.ln, del_loc.col)) or

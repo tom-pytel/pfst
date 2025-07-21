@@ -1,4 +1,4 @@
-## 0.2.0 - ????-??-??
+## 0.2.0 alpha - ????-??-??
 
 ### Fixed
 
@@ -6,12 +6,15 @@
 
 ### Added
 
+- trivia (comments and space) specification for expressionish slices
+
 ### Updated
 
-- split out tests into separate files
+- split out more tests into separate files
+- preserve comments on parenthesize tuple
 
 
-## 0.1.1 - 2025-07-07
+## 0.1.1 alpha - 2025-07-07
 
 ### Fixed
 
@@ -28,7 +31,7 @@
 
 - lots of code cleanups
 
-## 0.1.0 - 2025-06-28
+## 0.1.0 alpha - 2025-06-28
 
 ### Added
 

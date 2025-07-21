@@ -1167,7 +1167,7 @@ def _maybe_del_separator(self: fst.FST, ln: int, col: int, force: bool = False,
 
 
 def _maybe_add_comma(self: fst.FST, ln: int, col: int, space: bool,
-                     end_ln: int | None = None, end_col: int | None = None) -> bool | None:
+                     end_ln: int | None = None, end_col: int | None = None, exclude_self: bool = True) -> bool | None:
     """Maybe add comma at start of span if not already present as first code in span. Will skip any closing
     parentheses for check and add. Is meant for adding at the end of a sequence. We specifically don't use `pars()` here
     because is meant to be used where the element is being modified and may not be valid for that.
@@ -1176,6 +1176,7 @@ def _maybe_add_comma(self: fst.FST, ln: int, col: int, space: bool,
     - `ln`: Line start of span.
     - `col`: Column start of span.
     - `space`: Whether to add a space to new comma or existing comma IF the span is zero length.
+    - `exclude_self`: Should be `True` if comma is for sure being put past all elements of `self`, otherwise `False`.
 
     **Returns:**
     - `bool`: Whether a comma was added or not (if wasn't present before or was). If `None` is returned then a comma was
@@ -1202,7 +1203,7 @@ def _maybe_add_comma(self: fst.FST, ln: int, col: int, space: bool,
 
             else:
                 if space and cln == end_ln and ccol == end_col:
-                    self._put_src([' '], cln, ccol, cln, ccol, True, exclude=self)
+                    self._put_src([' '], cln, ccol, cln, ccol, True, exclude=self if exclude_self else None)
 
                     return None
 
@@ -1215,7 +1216,7 @@ def _maybe_add_comma(self: fst.FST, ln: int, col: int, space: bool,
 
     comma = ', ' if space and ln == end_ln and col == end_col else ','
 
-    self._put_src([comma], ln, col, ln, col, True, exclude=self)
+    self._put_src([comma], ln, col, ln, col, True, exclude=self if exclude_self else None)
 
     return True
 
@@ -1227,8 +1228,8 @@ def _maybe_add_singleton_tuple_comma(self: fst.FST):
     # assert isinstance(self.a, Tuple)
 
     if (elts := self.a.elts) and len(elts) == 1:
-        return self._maybe_add_comma((f := elts[0].f).end_ln, f.end_col, False, self.end_ln,
-                                     self.end_col - self._is_parenthesized_seq())
+        self._maybe_add_comma((f := elts[0].f).end_ln, f.end_col, False, self.end_ln,
+                              self.end_col - self._is_parenthesized_seq())
 
 
 def _maybe_fix_tuple(self: fst.FST, is_parenthesized: bool | None = None):

@@ -67,7 +67,7 @@ re_any_str_or_fstr_start = re.compile(r'(?:b|r|rb|br|u|f|t|)  (\'\'\'|\'|"""|")'
 
 re_empty_line_or_cont           = re.compile(r'[ \t]*(\\)?$')            # empty line or line continuation
 re_empty_line_cont_or_comment   = re.compile(r'[ \t]*(\\|#.*)?$')        # empty line or line continuation or a pure comment line
-re_line_end_cont_or_comment     = re.compile(r'.*?(\\|#.*)?$')           # line end line continuation or a comment
+re_line_end_cont_or_comment     = re.compile(r'.*?(\\|#.*)?$')           # line end line continuation or a comment, the first part is mostly meant to skip closing parentheses and separators, not expression stuff
 
 re_next_src                     = re.compile(r'\s*([^\s#\\]+)')          # next non-space non-continuation non-comment code text, don't look into strings with this!
 re_next_src_or_comment          = re.compile(r'\s*([^\s#\\]+|#.*)')      # next non-space non-continuation code or comment text, don't look into strings with this!

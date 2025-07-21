@@ -140,7 +140,7 @@ def _get_one_FormattedValue_value(self: fst.FST, idx: int | None, field: str, cu
 
     if isinstance(ret.a, Tuple):
         ln, col, end_ln, end_col = ret.loc
-        lines                    = ret.lines
+        lines                    = ret._lines
 
         if lines[ln].startswith('{', col) and (l := lines[end_ln]).endswith('}', 0, end_col):  # if curlies then replace them with parentheses
             lines[end_ln] = bistr(f'{l[:end_col - 1]}){l[end_col:]}')

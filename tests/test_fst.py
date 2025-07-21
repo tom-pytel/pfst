@@ -4658,7 +4658,7 @@ match a:
         o.a = List(elts=[o.a.elts[0]])
         o.a.elts.extend(FST('[2,#2\n3,#3\n4,#4\n]').a.elts)
         f = o.reconcile(m)
-        self.assertEqual('[1,#1\n2,#2\n3,#3\n4,#4\n]', f.src)
+        self.assertEqual('[1,#1\n 2,#2\n3,#3\n4,#4\n]', f.src)
         f.verify()
 
         m = (o := FST('{a: b, **c}')).mark()

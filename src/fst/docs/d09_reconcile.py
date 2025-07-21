@@ -53,10 +53,12 @@ True
 >>> print(f.src.rstrip())
 if i:  # 1
   j = [pure_ast, # 2
-       g(), 'pure_ast']
+       g(), 'pure_ast'
+      ]
   k = 3
   j = [pure_ast, # 2
-       g(), 'pure_ast']
+       g(), 'pure_ast'
+      ]
 
 >>> f.a.body[0] is f.a.body[2]  # the same AST used in two places is deduplicated
 False
@@ -78,10 +80,12 @@ original tree that was marked, for now.
 >>> print(f.src.rstrip())
 if i:  # 1
   j = [pure_ast, # 2
-       g(), 'pure_ast']
+       g(), 'pure_ast'
+      ]
   k = 3
   j = [pure_ast, # 2
-       g(), 'pure_ast']
+       g(), 'pure_ast'
+      ]
   l="formatting"  # stays
   m = 'formatting'
 ```

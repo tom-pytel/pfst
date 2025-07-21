@@ -234,7 +234,7 @@ trailing newlines
 ... [a, b, c]
 ... '''.strip()), 1, 2, new010.copy()).lines))
 '[a, NEW,'
-'c]'
+' c]'
 
 >>> print('\n'.join(repr(l) for l in test_replace(FST('''
 ... [a, b
@@ -279,7 +279,7 @@ trailing newlines
 # same but with new slice having trailing comma
 
 >>> new001 = FST(Tuple(elts=[Name(id='NEW', ctx=Load(), lineno=1, col_offset=0, end_lineno=1, end_col_offset=3)],
-...                                         ctx=Load(), lineno=1, col_offset=0, end_lineno=1, end_col_offset=3),
+...                                         ctx=Load(), lineno=1, col_offset=0, end_lineno=1, end_col_offset=4),
 ...              ['NEW,'])
 
 >>> new011 = FST(Tuple(elts=[Name(id='NEW', ctx=Load(), lineno=1, col_offset=0, end_lineno=1, end_col_offset=3)],
@@ -287,7 +287,7 @@ trailing newlines
 ...              ['NEW,', ''])
 
 >>> new101 = FST(Tuple(elts=[Name(id='NEW', ctx=Load(), lineno=2, col_offset=0, end_lineno=2, end_col_offset=3)],
-...                                         ctx=Load(), lineno=1, col_offset=0, end_lineno=2, end_col_offset=3),
+...                                         ctx=Load(), lineno=1, col_offset=0, end_lineno=2, end_col_offset=4),
 ...              ['', 'NEW,'])
 
 >>> new111 = FST(Tuple(elts=[Name(id='NEW', ctx=Load(), lineno=2, col_offset=0, end_lineno=2, end_col_offset=3)],
@@ -348,7 +348,7 @@ trailing newlines
 ... [a, b, c]
 ... '''.strip()), 1, 2, new011.copy()).lines))
 '[a, NEW,'
-'c]'
+' c]'
 
 >>> print('\n'.join(repr(l) for l in test_replace(FST('''
 ... [a, b
@@ -798,24 +798,37 @@ replace
 
 
 
-# fix comment or line continuation backslash without trailing newline
+fix comment or line continuation backslash without trailing newline
 
->>> comment = FST(Tuple(elts=[Name(id='NEW', ctx=Load(), lineno=1, col_offset=0, end_lineno=1, end_col_offset=3)],
-...                                          ctx=Load(), lineno=1, col_offset=0, end_lineno=1, end_col_offset=3),
+>>> new = FST(Tuple(elts=[Name(id='NEW', ctx=Load(), lineno=1, col_offset=0, end_lineno=1, end_col_offset=3)],
+...                                      ctx=Load(), lineno=1, col_offset=0, end_lineno=1, end_col_offset=3),
 ...               ['NEW#'])
 
->>> linecont = FST(Tuple(elts=[Name(id='NEW', ctx=Load(), lineno=1, col_offset=0, end_lineno=1, end_col_offset=3)],
-...                                           ctx=Load(), lineno=1, col_offset=0, end_lineno=1, end_col_offset=3),
+>>> print('\n'.join(repr(l) for l in test_replace(FST('''
+... [a, b, c]
+... '''.strip()), 1, 2, new.copy()).lines))
+'[a, NEW,#'
+' c]'
+
+>>> new = FST(Tuple(elts=[Name(id='NEW', ctx=Load(), lineno=1, col_offset=0, end_lineno=1, end_col_offset=3)],
+...                                      ctx=Load(), lineno=1, col_offset=0, end_lineno=1, end_col_offset=3),
 ...                ['NEW\\'])
 
 >>> print('\n'.join(repr(l) for l in test_replace(FST('''
 ... [a, b, c]
-... '''.strip()), 1, 2, comment.copy()).lines))
-'[a, NEW,#'
-'c]'
+... '''.strip()), 1, 2, new.copy()).lines))
+'[a, NEW,\\'
+' c]'
+
+
+don't remove comma with stuff after it
+
+>>> new = FST(Tuple(elts=[Name(id='NEW', ctx=Load(), lineno=1, col_offset=0, end_lineno=1, end_col_offset=3)],
+...                                      ctx=Load(), lineno=1, col_offset=0, end_lineno=2, end_col_offset=0),
+...               ['NEW, #', ''])
 
 >>> print('\n'.join(repr(l) for l in test_replace(FST('''
 ... [a, b, c]
-... '''.strip()), 1, 2, linecont.copy()).lines))
-'[a, NEW,\\'
-'c]'
+... '''.strip()), 1, 3, new.copy()).lines))
+'[a, NEW, #'
+']'
