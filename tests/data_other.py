@@ -5457,13 +5457,12 @@ Module - ROOT 0,0..1,7
     a: 1
 }""", 'body[0].value', 0, 1, r"""{
 }""", r"""
-{
-}
+{}
 """, r"""
-Module - ROOT 0,0..1,1
+Module - ROOT 0,0..0,2
   .body[1]
-  0] Expr - 0,0..1,1
-    .value Dict - 0,0..1,1
+  0] Expr - 0,0..0,2
+    .value Dict - 0,0..0,2
 """),
 
 (r"""{a: 1}""", 'body[0].value', 0, 1, r"""{}""", r"""
@@ -5477,13 +5476,12 @@ Module - ROOT 0,0..0,2
 
 (r"""{a: 1}""", 'body[0].value', 0, 1, r"""{
 }""", r"""
-{
-}
+{}
 """, r"""
-Module - ROOT 0,0..1,1
+Module - ROOT 0,0..0,2
   .body[1]
-  0] Expr - 0,0..1,1
-    .value Dict - 0,0..1,1
+  0] Expr - 0,0..0,2
+    .value Dict - 0,0..0,2
 """),
 
 (r"""(1, 2)""", 'body[0].value', 1, 2, r"""()""", r"""
@@ -7418,12 +7416,13 @@ Module - ROOT 0,0..2,1
 {
     'message': ('An open stream was garbage collected prior to '
                 'establishing network connection; '
-                'call "stream.close()" explicitly.'), i: j}
+                'call "stream.close()" explicitly.'), i: j
+}
 """, r"""
-Module - ROOT 0,0..3,59
+Module - ROOT 0,0..4,1
   .body[1]
-  0] Expr - 0,0..3,59
-    .value Dict - 0,0..3,59
+  0] Expr - 0,0..4,1
+    .value Dict - 0,0..4,1
       .keys[2]
       0] Constant 'message' - 1,4..1,13
       1] Name 'i' Load - 3,54..3,55
@@ -8051,22 +8050,22 @@ Module - ROOT 0,0..3,5
   [1,  [
     2,
     3, 4],
-  6]""", 'body[0].body[0].value.elts[1]', 1, 3, r"""[5,
+   6]""", 'body[0].body[0].value.elts[1]', 1, 3, r"""[5,
 ]""", r"""
 if 1:
   [1,  [
     2,
     5
        ],
-  6]
+   6]
 """, r"""
-Module - ROOT 0,0..5,4
+Module - ROOT 0,0..5,5
   .body[1]
-  0] If - 0,0..5,4
+  0] If - 0,0..5,5
     .test Constant 1 - 0,3..0,4
     .body[1]
-    0] Expr - 1,2..5,4
-      .value List - 1,2..5,4
+    0] Expr - 1,2..5,5
+      .value List - 1,2..5,5
         .elts[3]
         0] Constant 1 - 1,3..1,4
         1] List - 1,7..4,8
@@ -8074,7 +8073,185 @@ Module - ROOT 0,0..5,4
           0] Constant 2 - 2,4..2,5
           1] Constant 5 - 3,4..3,5
           .ctx Load
-        2] Constant 6 - 5,2..5,3
+        2] Constant 6 - 5,3..5,4
+        .ctx Load
+"""),
+
+(r"""if 1:
+  [1,  {
+        2:2, 3:3, 4:4}]""", 'body[0].body[0].value.elts[1]', 1, 2, r"""{5:5,
+}""", r"""
+if 1:
+  [1,  {
+        2:2, 5:5,
+        4:4}]
+""", r"""
+Module - ROOT 0,0..3,13
+  .body[1]
+  0] If - 0,0..3,13
+    .test Constant 1 - 0,3..0,4
+    .body[1]
+    0] Expr - 1,2..3,13
+      .value List - 1,2..3,13
+        .elts[2]
+        0] Constant 1 - 1,3..1,4
+        1] Dict - 1,7..3,12
+          .keys[3]
+          0] Constant 2 - 2,8..2,9
+          1] Constant 5 - 2,13..2,14
+          2] Constant 4 - 3,8..3,9
+          .values[3]
+          0] Constant 2 - 2,10..2,11
+          1] Constant 5 - 2,15..2,16
+          2] Constant 4 - 3,10..3,11
+        .ctx Load
+"""),
+
+(r"""if 1:
+  [1,  {
+        2:2,
+        3:3, 4:4}]""", 'body[0].body[0].value.elts[1]', 2, 3, r"""{5:5,
+}""", r"""
+if 1:
+  [1,  {
+        2:2,
+        3:3, 5:5
+       }]
+""", r"""
+Module - ROOT 0,0..4,9
+  .body[1]
+  0] If - 0,0..4,9
+    .test Constant 1 - 0,3..0,4
+    .body[1]
+    0] Expr - 1,2..4,9
+      .value List - 1,2..4,9
+        .elts[2]
+        0] Constant 1 - 1,3..1,4
+        1] Dict - 1,7..4,8
+          .keys[3]
+          0] Constant 2 - 2,8..2,9
+          1] Constant 3 - 3,8..3,9
+          2] Constant 5 - 3,13..3,14
+          .values[3]
+          0] Constant 2 - 2,10..2,11
+          1] Constant 3 - 3,10..3,11
+          2] Constant 5 - 3,15..3,16
+        .ctx Load
+"""),
+
+(r"""if 1:
+  [1,  {
+        2:2, 3:3, 4:4}]""", 'body[0].body[0].value.elts[1]', 0, 2, r"""{5:5,
+}""", r"""
+if 1:
+  [1,  {
+        5:5,
+        4:4}]
+""", r"""
+Module - ROOT 0,0..3,13
+  .body[1]
+  0] If - 0,0..3,13
+    .test Constant 1 - 0,3..0,4
+    .body[1]
+    0] Expr - 1,2..3,13
+      .value List - 1,2..3,13
+        .elts[2]
+        0] Constant 1 - 1,3..1,4
+        1] Dict - 1,7..3,12
+          .keys[2]
+          0] Constant 5 - 2,8..2,9
+          1] Constant 4 - 3,8..3,9
+          .values[2]
+          0] Constant 5 - 2,10..2,11
+          1] Constant 4 - 3,10..3,11
+        .ctx Load
+"""),
+
+(r"""if 1:
+  [1,  {
+        2:2,
+        3:3, 4:4}]""", 'body[0].body[0].value.elts[1]', 0, 3, r"""{5:5,
+}""", r"""
+if 1:
+  [1,  {5:5
+       }]
+""", r"""
+Module - ROOT 0,0..2,9
+  .body[1]
+  0] If - 0,0..2,9
+    .test Constant 1 - 0,3..0,4
+    .body[1]
+    0] Expr - 1,2..2,9
+      .value List - 1,2..2,9
+        .elts[2]
+        0] Constant 1 - 1,3..1,4
+        1] Dict - 1,7..2,8
+          .keys[1]
+          0] Constant 5 - 1,8..1,9
+          .values[1]
+          0] Constant 5 - 1,10..1,11
+        .ctx Load
+"""),
+
+(r"""if 1:
+  [1,  {
+        2:2,
+        3:3, 4:4},
+   6]""", 'body[0].body[0].value.elts[1]', 0, 3, r"""{5:5,
+}""", r"""
+if 1:
+  [1,  {5:5
+       },
+   6]
+""", r"""
+Module - ROOT 0,0..3,5
+  .body[1]
+  0] If - 0,0..3,5
+    .test Constant 1 - 0,3..0,4
+    .body[1]
+    0] Expr - 1,2..3,5
+      .value List - 1,2..3,5
+        .elts[3]
+        0] Constant 1 - 1,3..1,4
+        1] Dict - 1,7..2,8
+          .keys[1]
+          0] Constant 5 - 1,8..1,9
+          .values[1]
+          0] Constant 5 - 1,10..1,11
+        2] Constant 6 - 3,3..3,4
+        .ctx Load
+"""),
+
+(r"""if 1:
+  [1,  {
+    2:2,
+    3:3, 4:4},
+   6]""", 'body[0].body[0].value.elts[1]', 1, 3, r"""{5:5,
+}""", r"""
+if 1:
+  [1,  {
+    2:2,
+    5:5
+       },
+   6]
+""", r"""
+Module - ROOT 0,0..5,5
+  .body[1]
+  0] If - 0,0..5,5
+    .test Constant 1 - 0,3..0,4
+    .body[1]
+    0] Expr - 1,2..5,5
+      .value List - 1,2..5,5
+        .elts[3]
+        0] Constant 1 - 1,3..1,4
+        1] Dict - 1,7..4,8
+          .keys[2]
+          0] Constant 2 - 2,4..2,5
+          1] Constant 5 - 3,4..3,5
+          .values[2]
+          0] Constant 2 - 2,6..2,7
+          1] Constant 5 - 3,6..3,7
+        2] Constant 6 - 5,3..5,4
         .ctx Load
 """),
 

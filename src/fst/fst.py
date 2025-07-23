@@ -4848,7 +4848,7 @@ class FST:
         _loc_Subscript_brackets,
         _loc_MatchClass_pars,
         _loc_Global_Nonlocal_names,
-        _loc_Dict_key,
+        _loc_maybe_dict_key,
         _is_arguments_empty,
         _is_parenthesized_ImportFrom_names,
         _is_parenthesized_With_items,

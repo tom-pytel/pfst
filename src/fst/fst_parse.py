@@ -1049,13 +1049,7 @@ def _code_as_match_cases(code: Code, parse_params: dict = {}) -> fst.FST:
 
 @staticmethod
 def _code_as_expr(code: Code, parse_params: dict = {}, parse: Callable[[Code, dict], fst.FST] = _parse_expr) -> fst.FST:
-    """Convert `code` to an `expr` or optionally `Slice` `FST` if possible.
-
-    **Parameters:**
-    - `orslice`: If `True` then will try to get `expr` or `Slice`. Useful for parsing elements of `Tuple`s which could
-        be used inside a `Subscript.slice`. Do not use for parsing `Subscript.slice` field itself because that behaves
-        different with respect to naked `Starred` elements, for that use `_code_as_expr_slice`.
-    """
+    """Convert `code` to an `expr` or optionally `Slice` `FST` if possible."""
 
     if isinstance(code, fst.FST):
         if not code.is_root:
@@ -1106,7 +1100,7 @@ def _code_as_expr_slice(code: Code, parse_params: dict = {}) -> fst.FST:
 
 
 @staticmethod
-def _code_as_expr_sliceelt(code: Code, parse_params: dict = {}, orslice: bool = False) -> fst.FST:
+def _code_as_expr_sliceelt(code: Code, parse_params: dict = {}) -> fst.FST:
     """Convert `code` to an `expr` or `Slice` `FST` if possible. This exists because of the behavior of naked `Starred`
     expressions in a `Subscript` `slice` field."""
 
@@ -1114,7 +1108,7 @@ def _code_as_expr_sliceelt(code: Code, parse_params: dict = {}, orslice: bool = 
 
 
 @staticmethod
-def _code_as_expr_callarg(code: Code, parse_params: dict = {}, orslice: bool = False) -> fst.FST:
+def _code_as_expr_callarg(code: Code, parse_params: dict = {}) -> fst.FST:
     """Convert `code` to an `expr` in the context of a `Call.args` which has special parse rules for `Starred`."""
 
     return _code_as_expr(code, parse_params, _parse_expr_callarg)

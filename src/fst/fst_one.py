@@ -1951,7 +1951,7 @@ _onestatic_Global_Nonlocal_names = onestatic(_one_info_Global_Nonlocal_names, _r
 
 def _one_info_Dict_key(self: fst.FST, static: onestatic, idx: int | None, field: str) -> oneinfo:
     end_ln, end_col, _, _ = self.a.values[idx].f.pars()
-    ln, col, _, _         = self._loc_Dict_key(idx, True)
+    ln, col, _, _         = self._loc_maybe_dict_key(idx, True)
 
     return oneinfo('', fstloc(ln, col, end_ln, end_col), None, ': ', '**')
 

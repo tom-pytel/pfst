@@ -479,26 +479,26 @@ def _cut_or_copy_asts(start: int, stop: int, field: str, cut: bool, body: list[A
     return asts
 
 
-def _cut_or_copy_asts2(start: int, stop: int, field0: str, field1: str, cut: bool, body0: list[AST], body1: list[AST],
+def _cut_or_copy_asts2(start: int, stop: int, field: str, field2: str, cut: bool, body: list[AST], body2: list[AST],
                        ) -> tuple[list[AST], list[AST]]:
     if not cut:
-        asts0 = [copy_ast(body0[i]) for i in range(start, stop)]
-        asts1 = [copy_ast(body1[i]) for i in range(start, stop)]
+        asts  = [copy_ast(body[i]) for i in range(start, stop)]
+        asts2 = [copy_ast(body2[i]) for i in range(start, stop)]
 
     else:
-        asts0 = body0[start : stop]
-        asts1 = body1[start : stop]
+        asts  = body[start : stop]
+        asts2 = body2[start : stop]
 
-        del body0[start : stop]
-        del body1[start : stop]
+        del body[start : stop]
+        del body2[start : stop]
 
-        for i in range(start, len(body0)):
-            body1[i].f.pfield = astfield(field1, i)
+        for i in range(start, len(body)):
+            body2[i].f.pfield = astfield(field2, i)
 
-            if ast := body0[i]:  # could be None from Dict **
-                ast.f.pfield = astfield(field0, i)
+            if ast := body[i]:  # could be None from Dict **
+                ast.f.pfield = astfield(field, i)
 
-    return asts0, asts1
+    return asts, asts2
 
 
 # ......................................................................................................................
@@ -510,8 +510,8 @@ def _get_slice_NOT_IMPLEMENTED_YET(self: fst.FST, start: int | Literal['end'] | 
 
 def _get_slice_Dict(self: fst.FST, start: int | Literal['end'] | None, stop: int | None, field: str, cut: bool,
                     **options) -> fst.FST:
-    len_body    = len(body0 := (ast := self.a).keys)
-    body1       = ast.values
+    len_body    = len(body := (ast := self.a).keys)
+    body2       = ast.values
     start, stop = _fixup_slice_indices(len_body, start, stop)
 
     if start == stop:
@@ -521,15 +521,15 @@ def _get_slice_Dict(self: fst.FST, start: int | Literal['end'] | None, stop: int
     bound_end_col                                    -= 1
 
     if start:
-        _, _, bound_ln, bound_col = body1[start - 1].f.pars()
+        _, _, bound_ln, bound_col = body2[start - 1].f.pars()
     else:
         bound_col += 1
 
-    ln, col, _, _         = self._loc_Dict_key(start, True)
-    _, _, end_ln, end_col = body1[stop - 1].f.pars()
+    ln, col, _, _         = self._loc_maybe_dict_key(start, True)
+    _, _, end_ln, end_col = body2[stop - 1].f.pars()
 
-    asts0, asts1 = _cut_or_copy_asts2(start, stop, 'keys', 'values', cut, body0, body1)
-    ret_ast      = Dict(keys=asts0, values=asts1)
+    asts, asts2 = _cut_or_copy_asts2(start, stop, 'keys', 'values', cut, body, body2)
+    ret_ast     = Dict(keys=asts, values=asts2)
 
     return _get_slice_seq(self, start, stop, len_body, cut, ret_ast,
                           bound_ln, bound_col, bound_end_ln, bound_end_col, ln, col, end_ln, end_col,
@@ -557,7 +557,7 @@ def _get_slice_List_elts(self: fst.FST, start: int | Literal['end'] | None, stop
     if (last := stop - 1) != start:
         _, _, end_ln, end_col = body[last].f.pars()
 
-    asts    = _cut_or_copy_asts(start, stop, field, cut, body)
+    asts    = _cut_or_copy_asts(start, stop, 'elts', cut, body)
     ctx     = ast.ctx.__class__
     ret_ast = List(elts=asts, ctx=ctx())
 
@@ -592,7 +592,7 @@ def _get_slice_Import_names(self: fst.FST, start: int | Literal['end'] | None, s
     if (last := stop - 1) != start:
         _, _, end_ln, end_col = body[last].f.loc
 
-    asts    = _cut_or_copy_asts(start, stop, field, cut, body)
+    asts    = _cut_or_copy_asts(start, stop, 'names', cut, body)
     ret_ast = Tuple(elts=asts, ctx=Load())
 
     return _get_slice_seq(self, start, stop, len_body, cut, ret_ast,
@@ -742,7 +742,7 @@ def _put_slice_seq(self: fst.FST, start: int, stop: int, len_body: int, fst_: fs
                    bound_ln: int, bound_col: int, bound_end_ln: int, bound_end_col: int,
                    ln: int, col: int, end_ln: int, end_col: int,
                    trivia: bool | str | tuple[bool | str | int | None, bool | str | int | None] | None,
-                   field: str = 'elts', sep: str = ',',
+                   field: str = 'elts', field2: str | None = None, sep: str = ',',
                    self_tail_sep: bool | Literal[0] | None = None,
                    ):
     r"""Indent a sequence source and put it to a location in existing sequence `self`. If `fst_` is `None` then will
@@ -757,8 +757,8 @@ def _put_slice_seq(self: fst.FST, start: int, stop: int, len_body: int, fst_: fs
     **Parameters:**
     - `start`, `stop`, `len_body`: Slice parameters, `len_body` being current length of field.
     - `fst_`: The slice being put to `self` with delimiters stripped, or `None` for delete.
-    - `fst_first`: The first element of the slice `FST` being put, an `fstloc` if that is not possible (dict `**`), or
-        `None` if delete.
+    - `fst_first`: The first element of the slice `FST` being put, or `None` if delete. Can be an `fstloc` for
+        two-element slices (dict `**`, or even for a normal element (pars included)).
     - `fst_last`: The last element of the slice `FST` being put, or `None` if delete.
     - (`bound_ln`, `bound_col`): End of previous element (past pars) or start of container (just past
         delimiters) if no previous element.
@@ -768,6 +768,8 @@ def _put_slice_seq(self: fst.FST, start: int, stop: int, len_body: int, fst_: fs
         is the start position of the `stop` element in `self` if there is one, otherwise same as bound end.
     - `trivia`: Standard option on how to handle leading and trailing comments and space, `None` means global default.
     - `field`: Which field of `self` is being deleted / replaced / inserted to.
+    - `field2`: If `self` is a two element sequence like `Dict` or `MatchMapping` then this should be the second field
+        of each element, `values` or `patterns`.
     - `sep`: The separator to use and check, comma for everything except maybe `'|'` for MatchOr.
     - `self_tail_sep`: Whether self needs a trailing separator or no.
         - `None`: Leave it up to function (tuple singleton check or aesthetic decision).
@@ -782,6 +784,7 @@ def _put_slice_seq(self: fst.FST, start: int, stop: int, len_body: int, fst_: fs
     is_del          = fst_ is None
     is_ins          = start == stop  # will never be true if fst_ is None
     body            = getattr(self.a, field)
+    body2           = body if field2 is None else getattr(self.a, field2)
     last            = None  # means body[-1]
     len_self_suffix = self.end_col - bound_end_col  # will be 1 or 0 depending on if enclosed container or unparenthesized tuple
     self_indent     = self.get_indent()
@@ -823,7 +826,7 @@ def _put_slice_seq(self: fst.FST, start: int, stop: int, len_body: int, fst_: fs
                 self_tail_sep = None
 
             elif is_last:
-                last = body[start - 1].f  # if deleted tail then new last element is this
+                last = body2[start - 1].f  # if deleted tail then new last element is this
 
     # insert or replace
 
@@ -864,14 +867,15 @@ def _put_slice_seq(self: fst.FST, start: int, stop: int, len_body: int, fst_: fs
                         post_indent = self_indent + ' ' * (self.col - len(self_indent))
                     elif del_indent is not None:  # have indent from locs function
                         post_indent = del_indent
-                    elif (post_indent := _get_element_indent(self, body, start)) is not None:  # indentation from other elements in self
+                    elif (post_indent := _get_element_indent(self, body, body2, start)) is not None:  # indentation from other elements in self
                         pass  # noop
                     elif fst_starts_nl:  # match indentation of first fst_ element on new line
                         post_indent = (self_indent +
                                        put_lines[(l := fst_first.pars() if fst_first.is_FST else fst_first).ln]
                                                 [:l.col])
                     elif body:  # match indentation of our own first element
-                        post_indent = self_indent + ' ' * (body[0].f.pars().col - len(self_indent))
+                        post_indent = self_indent + ' ' * (self._loc_maybe_dict_key(0, True, body).col -
+                                                           len(self_indent))
                     else:
                         post_indent = self_indent + self.root.indent  # default
 
@@ -902,7 +906,7 @@ def _put_slice_seq(self: fst.FST, start: int, stop: int, len_body: int, fst_: fs
         fst_._indent_lns(self_indent, skip=skip)
         fst_._offset(0, 0, put_ln, lines[put_ln].c2b(put_col))
 
-        if post_indent:  # we do this here like this because otherwise a completely empty line at the end of fst_ will not be indented at all in _indent_lns()
+        if post_indent:  # we do this here like this because otherwise a completely empty line at the end of fst_ will not be indented at all in _indent_lns() which we may need to add self_indent alone
             put_lines[-1] = bistr(post_indent)
 
         fst_._lines = lines  # SPECIAL! for potential fst_ last element .loc access below when adjusting trailing separator, this must be done after the fst_ modifications just above because those need the actual fst_ lines
@@ -924,7 +928,7 @@ def _put_slice_seq(self: fst.FST, start: int, stop: int, len_body: int, fst_: fs
     # trailing and internal separator
 
     if self_tail_sep is not None:  # trailing
-        _, _, last_end_ln, last_end_col  = (last or body[-1].f).loc
+        _, _, last_end_ln, last_end_col  = (last or body2[-1].f).loc
         _, _, self_end_ln, self_end_col  = self.loc
         self_end_col                    -= len_self_suffix
 
@@ -935,20 +939,26 @@ def _put_slice_seq(self: fst.FST, start: int, stop: int, len_body: int, fst_: fs
 
     if not is_del:  # internal
         if not is_last:  # past the newly put slice
-            stop_ln, stop_col, _, _ = body[stop].f.loc
+            stop_ln, stop_col, _, _ = self._loc_maybe_dict_key(stop, False, body)
 
             self._maybe_add_comma(fst_last.end_ln, fst_last.end_col, True, stop_ln, stop_col, False)  # last False is because elements of self are now past comma point so will need to be offset
 
         elif is_ins and not is_first:  # before newly appended slice at end
-            _, _, stop_end_ln, stop_end_col = body[stop - 1].f.loc
+            _, _, stop_end_ln, stop_end_col = body2[stop - 1].f.loc
             len_stop_end_line               = len(lines[stop_end_ln])
+
+            if not fst_first.is_FST:  # special case, has to be None dict key, don't like this is messy
+                fst_first = fst_._loc_maybe_dict_key(0)
 
             if self._maybe_add_comma(stop_end_ln, stop_end_col, True, fst_first.ln, fst_first.col) is not False:  # if line changed (separator and / or space) then we need to explicitly offset the fst_ elements as well since they don't live in self yet but in fst_
                 fst_._offset(stop_end_ln, stop_end_col, 0, len(lines[stop_end_ln]) - len_stop_end_line)
 
 
-def _get_element_indent(self: fst.FST, body: list[AST], start: int) -> str | None:
+def _get_element_indent(self: fst.FST, body: list[AST], body2: list[AST], start: int) -> str | None:
     """Get first exprish element indentation found for an element which starts its own line.
+
+    **Parameters:**
+    - `start`: The index of the element to start the search with (closest to area we want to indent).
 
     **Returns:**
     - `str`: Indent found.
@@ -957,34 +967,58 @@ def _get_element_indent(self: fst.FST, body: list[AST], start: int) -> str | Non
 
     lines = self.root._lines
 
-    if start >= 1:  # first search backwards for an element which starts its own line
-        prev_elt_loc = body[start - 1].f.pars()
+    if body is body2:  # single element sequence
+        if start >= 1:  # first search backward for an element which starts its own line (if there are elements before)
+            loc = start_prev_loc = body[start - 1].f.pars()
 
-        for i in range(start - 2, -1, -1):
-            loc = prev_elt_loc
+            for i in range(start - 2, -1, -1):
+                if loc.ln != (prev_loc := body[i].f.pars()).end_ln:  # only consider elements which start on a different line than the previous element ends on
+                    if re_empty_line.match(l := lines[loc.ln], 0, loc.col):
+                        return l[:loc.col]
 
-            if (ln := loc.ln) != (prev_elt_loc := body[i].f.pars()).end_ln:  # only consider elements which start on a different line than the previous element ends on
-                if re_empty_line.match(l := lines[ln], 0, col := body[i + 1].f.pars().col):
-                    return l[:col]
+                loc = prev_loc
 
-        if (ln := prev_elt_loc.ln) != self.ln:  # only consider element 0 if it is not on same line as self starts
-            if re_empty_line.match(l := lines[ln], 0, col := body[0].f.pars().col):
-                return l[:col]
+            if loc.ln != self.ln:  # only consider element 0 if it is not on same line as self starts
+                if re_empty_line.match(l := lines[loc.ln], 0, loc.col):
+                    return l[:loc.col]
 
-    else:
-        prev_elt_loc = fstloc(-1, -1, -1, -1)  # dummy
+            loc = start_prev_loc
 
-    for i in range(start, len(body)):
-        if (ln := (loc := (f := body[i].f).pars()).ln) != prev_elt_loc.end_ln:  # only consider elements which start on a different line than the previous element ends on
-            if re_empty_line.match(l := lines[ln], 0, col := f.pars().col):
-                return l[:col]
+        else:
+            loc = fstloc(-1, -1, -1, -1)  # dummy
 
-        prev_elt_loc = loc
+        for i in range(start, len(body)):  # now search forward
+            prev_loc = loc
+
+            if (loc := body[i].f.pars()).ln != prev_loc.end_ln:  # only consider elements which start on a different line than the previous element ends on
+                if re_empty_line.match(l := lines[loc.ln], 0, loc.col):
+                    return l[:loc.col]
+
+    else:  # two-element sequence (Dict, MatchMapping)
+        if start >= 1:  # first search backward for an element which starts its own line (if there are elements before)
+            for i in range(start - 2, -1, -1):
+                if (loc := self._loc_maybe_dict_key(i + 1, True, body)).ln != body2[i].f.pars().end_ln:  # only consider elements which start on a different line than the previous element ends on
+                    if re_empty_line.match(l := lines[loc.ln], 0, loc.col):
+                        return l[:loc.col]
+
+            if (loc := self._loc_maybe_dict_key(0, True, body)).ln != self.ln:  # only consider element 0 if it is not on same line as self starts
+                if re_empty_line.match(l := lines[loc.ln], 0, loc.col):
+                    return l[:loc.col]
+
+            loc = start_prev_loc
+
+        else:
+            loc = fstloc(-1, -1, -1, -1)  # dummy
+
+        for i in range(start, len(body)):  # now search forward
+            if (loc := self._loc_maybe_dict_key(i, True, body)).ln != body2[i - 1].f.pars().end_ln:  # only consider elements which start on a different line than the previous element ends on
+                if re_empty_line.match(l := lines[loc.ln], 0, loc.col):
+                    return l[:loc.col]
 
     return None
 
 
-def _code_as_put_slice_fst(self: fst.FST, code: Code | None, one: bool, options: dict[str, Any]) -> fst.FST | None:
+def _code_as_seq(self: fst.FST, code: Code | None, one: bool, options: dict[str, Any]) -> fst.FST | None:
     if code is None:
         return None
 
@@ -1007,13 +1041,13 @@ def _code_as_put_slice_fst(self: fst.FST, code: Code | None, one: bool, options:
         ):
             return None
 
-    ast = fst_.a
+    ast_ = fst_.a
 
-    if not isinstance(ast, (Tuple, List, Set)):
+    if not isinstance(ast_, (Tuple, List, Set)):
         raise NodeError(f"slice being assigned to a {self.a.__class__.__name__} "
-                        f"must be a Tuple, List or Set, not a '{ast.__class__.__name__}'")
+                        f"must be a Tuple, List or Set, not a {ast_.__class__.__name__}")
 
-    if not ast.elts:  # put empty sequence is same as delete
+    if not ast_.elts:  # put empty sequence is same as delete
         return None
 
     fst_._sanitize()
@@ -1026,6 +1060,36 @@ def _code_as_put_slice_fst(self: fst.FST, code: Code | None, one: bool, options:
 
         fst_lines[-1] = bistr(fst_lines[-1][:-1])
         fst_lines[0]  = bistr(fst_lines[0][1:])
+
+    return fst_
+
+
+def _code_as_seq2(self: fst.FST, code: Code | None, one: bool, options: dict[str, Any]) -> fst.FST | None:
+    if code is None:
+        return None
+
+    if one:
+        raise ValueError(f'cannot put a single item to a {self.a.__class__.__name__} slice')
+
+    fst_ = self._code_as_expr(code, self.root.parse_params)
+    ast_ = fst_.a
+
+    if ast_.__class__ is not self.a.__class__:
+        raise ValueError(f"slice being assigned to a {self.a.__class__.__name__} must be a {self.a.__class__.__name__}"
+                         f", not a {ast_.__class__.__name__}")
+
+    if not ast_.keys:  # put empty sequence is same as delete
+        return None
+
+    fst_._sanitize()
+
+    fst_.a.end_col_offset -= 1
+    fst_lines              = fst_._lines
+
+    fst_._offset(0, 1, 0, -1)  # guaranteed to start here because of _sanitize()
+
+    fst_lines[-1] = bistr(fst_lines[-1][:-1])
+    fst_lines[0]  = bistr(fst_lines[0][1:])
 
     return fst_
 
@@ -1058,6 +1122,33 @@ def _locs_put_seq(self, start: int, stop: int, body: list[AST]) -> tuple[int, in
     return bound_ln, bound_col, bound_end_ln, bound_end_col, ln, col, end_ln, end_col
 
 
+def _locs_put_seq2(self, start: int, stop: int, body: list[AST], body2: list[AST],
+                   ) -> tuple[int, int, int, int, int, int, int, int]:
+    bound_ln, bound_col, bound_end_ln, bound_end_col  = self.loc
+    bound_end_col                                    -= 1
+
+    if start:
+        _, _, bound_ln, bound_col = body2[start - 1].f.pars()
+    else:
+        bound_col += 1
+
+    if start != stop:
+        ln, col, _, _         = self._loc_maybe_dict_key(start, True, body)
+        _, _, end_ln, end_col = body2[stop - 1].f.pars()
+
+    else:
+        ln = col = -1
+
+        if stop < len(body):
+            end_ln, end_col, _, _ = self._loc_maybe_dict_key(stop, True, body)
+
+        else:
+            end_ln  = bound_end_ln
+            end_col = bound_end_col
+
+    return bound_ln, bound_col, bound_end_ln, bound_end_col, ln, col, end_ln, end_col
+
+
 # ......................................................................................................................
 
 def _put_slice_NOT_IMPLEMENTED_YET(self: fst.FST, code: Code | None, start: int | Literal['end'] | None,
@@ -1066,9 +1157,70 @@ def _put_slice_NOT_IMPLEMENTED_YET(self: fst.FST, code: Code | None, start: int 
     raise NotImplementedError("not implemented yet, try with option raw='auto'")
 
 
+def _put_slice_Dict(self: fst.FST, code: Code | None, start: int | Literal['end'] | None, stop: int | None,
+                    field: str, one: bool = False, **options):
+    fst_        = _code_as_seq2(self, code, one, options)
+    len_body    = len(body := (ast := self.a).keys)
+    body2       = ast.values
+    start, stop = _fixup_slice_indices(len_body, start, stop)
+
+    if not fst_ and start == stop:  # deleting or assigning empty seq to empty slice of seq, noop
+        return
+
+    bound_ln, bound_col, bound_end_ln, bound_end_col, ln, col, end_ln, end_col = _locs_put_seq2(
+        self, start, stop, body, body2)
+
+    if not fst_:
+        _put_slice_seq(self, start, stop, len_body, None, None, None,
+                       bound_ln, bound_col, bound_end_ln, bound_end_col,
+                       ln, col, end_ln, end_col, options.get('trivia'), 'keys', 'values')
+
+        self._unmake_fst_tree(body[start : stop] + body2[start : stop])
+
+        del body[start : stop]
+        del body2[start : stop]
+
+        len_fst_body = 0
+
+    else:
+        ast_      = fst_.a
+        fst_body  = ast_.keys
+        fst_body2 = ast_.values
+        fst_first = a.f if (a := fst_body[0]) else fst_._loc_maybe_dict_key(0)
+
+        _put_slice_seq(self, start, stop, len_body, fst_, fst_first, fst_body2[-1].f,
+                       bound_ln, bound_col, bound_end_ln, bound_end_col,
+                       ln, col, end_ln, end_col, options.get('trivia'), 'keys', 'values')
+
+        self._unmake_fst_tree(body[start : stop] + body2[start : stop])
+        fst_._unmake_fst_parents(True)
+
+        body[start : stop]  = fst_body
+        body2[start : stop] = fst_body2
+
+        len_fst_body = len(fst_body)
+        stack        = []
+
+        for i in range(len_fst_body):
+            startplusi = start + i
+
+            stack.append(fst.FST(body2[startplusi], self, astfield('values', startplusi)))
+
+            if key := body[startplusi]:
+                stack.append(fst.FST(key, self, astfield('keys', startplusi)))
+
+        self._make_fst_tree(stack)
+
+    for i in range(start + len_fst_body, len(body)):
+        body2[i].f.pfield = astfield('values', i)
+
+        if key := body[i]:  # could be None from **
+            key.f.pfield = astfield('keys', i)
+
+
 def _put_slice_List_elts(self: fst.FST, code: Code | None, start: int | Literal['end'] | None, stop: int | None,
                          field: str, one: bool = False, **options):
-    fst_        = _code_as_put_slice_fst(self, code, one, options)
+    fst_        = _code_as_seq(self, code, one, options)
     len_body    = len(body := (ast := self.a).elts)
     start, stop = _fixup_slice_indices(len_body, start, stop)
 
@@ -1174,7 +1326,7 @@ _PUT_SLICE_HANDLERS = {
     (Try, 'handlers'):                    _put_slice_stmtish,  # excepthandler*
     (TryStar, 'handlers'):                _put_slice_stmtish,  # excepthandlerstar*
 
-    (Dict, ''):                           _put_slice_dict,  # key:value*
+    (Dict, ''):                           _put_slice_Dict,  # key:value*
 
     (Set, 'elts'):                        _put_slice_tuple_list_or_set,  # expr*
     (List, 'elts'):                       _put_slice_List_elts,  # expr*
@@ -1244,7 +1396,7 @@ def _loc_slice_raw_put(self: fst.FST, start: int | Literal['end'] | None, stop: 
             raise ValueError(f"cannot specify a field '{field}' to assign slice to a Dict")
 
         start, stop = fixup_slice_index_for_raw(len(values := ast.values), start, stop)
-        start_loc   = self._loc_Dict_key(start, True)
+        start_loc   = self._loc_maybe_dict_key(start, True)
 
         return fstloc(start_loc.ln, start_loc.col, *values[stop - 1].f.pars()[2:])
 

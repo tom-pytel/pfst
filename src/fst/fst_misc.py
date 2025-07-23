@@ -976,16 +976,17 @@ def _loc_Global_Nonlocal_names(self: fst.FST, first: int, last: int | None = Non
     return first_loc, fstloc(ln, col, ln, col + len(src))
 
 
-def _loc_Dict_key(self: fst.FST, idx: int, pars: bool = False) -> fstloc:
+def _loc_maybe_dict_key(self: fst.FST, idx: int, pars: bool = False, body: list[AST] | None = None) -> fstloc:
     """Return location of dictionary key even if it is `**` specified by a `None`. Optionally return the location of the
-    grouping parentheses if key actually present."""
+    grouping parentheses if key actually present. Can also be used to get the location (parenthesized or not) from any
+    list of `AST`s which is not a `Dict.keys` if an explicit `body` is passed in (assuming none of the are `None`)."""
 
     # assert isinstance(self.a, Dict)
 
-    if key := (ast := self.a).keys[idx]:
+    if key := (body or self.a.keys)[idx]:
         return key.f.pars() if pars else key.f.loc
 
-    val_ln, val_col, _, _ = (values := ast.values)[idx].f.loc
+    val_ln, val_col, _, _ = (values := self.a.values)[idx].f.loc
 
     if idx:
         _, _, ln, col = values[idx - 1].f.loc
