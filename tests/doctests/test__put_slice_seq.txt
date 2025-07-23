@@ -19,7 +19,7 @@ delete
 ...
 ...     _put_slice_seq(fst_, start, stop, len(body), None, None, None,
 ...                    bound_ln, bound_col, fst_.end_ln, fst_.end_col - off,
-...                    ln, col, end_ln, end_col, trivia, True, field, sep, self_tail_sep)
+...                    ln, col, end_ln, end_col, trivia, field, sep, self_tail_sep)
 ...
 ...     return fst_
 
@@ -160,7 +160,7 @@ replace
 ...
 ...     _put_slice_seq(fst_, start, stop, len(body), new, new_body[0].f, new_body[-1].f,
 ...                    bound_ln, bound_col, fst_.end_ln, fst_.end_col - off,
-...                    ln, col, end_ln, end_col, trivia, True, field, sep, self_tail_sep)
+...                    ln, col, end_ln, end_col, trivia, field, sep, self_tail_sep)
 ...
 ...     return fst_
 
@@ -469,7 +469,7 @@ replace
 ...
 ...     _put_slice_seq(fst_, idx, idx, len(body), new, new_body[0].f, new_body[-1].f,
 ...                    bound_ln, bound_col, bound_end_ln, bound_end_col,
-...                    -1, -1, end_ln, end_col, trivia, True, field, sep, self_tail_sep)
+...                    -1, -1, end_ln, end_col, trivia, field, sep, self_tail_sep)
 ...
 ...     return fst_
 

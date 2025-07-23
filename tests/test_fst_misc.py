@@ -148,18 +148,18 @@ class TestFSTMisc(unittest.TestCase):
         self.assertEqual((1, 0, 1, 3), FST(FloorDiv(), ['# pre', '//= # post', '# next']).loc)
         self.assertEqual((1, 0, 1, 3), FST(Pow(), ['# pre', '**= # post', '# next']).loc)
 
-    def test__dict_key_or_mock_loc(self):
+    def test__loc_Dict_key(self):
         a = parse('''{
     a: """test
 two  # fake comment start""", **b
             }''').body[0].value
-        self.assertEqual((2, 30, 2, 32), a.f._dict_key_or_mock_loc(a.keys[1], a.values[1].f))
+        self.assertEqual((2, 30, 2, 32), a.f._loc_Dict_key(1))
 
         a = parse('''{
     a: """test""", **  # comment
     b
             }''').body[0].value
-        self.assertEqual((1, 19, 1, 21), a.f._dict_key_or_mock_loc(a.keys[1], a.values[1].f))
+        self.assertEqual((1, 19, 1, 21), a.f._loc_Dict_key(1))
 
     def test__maybe_fix_tuple(self):
         # parenthesize naked tuple preserve comments if present

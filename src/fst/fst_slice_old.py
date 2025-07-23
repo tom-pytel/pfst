@@ -23,6 +23,26 @@ from .misc import (
 from .srcedit_old import _src_edit
 
 
+def _dict_key_or_mock_loc(self: fst.FST, key: AST | None, value: fst.FST) -> fst.FST | fstloc:
+    """Return same dictionary key `FST` if exists, otherwise return a location for the preceding '**' code."""
+
+    if key:
+        return key.f
+
+    if idx := value.pfield.idx:
+        f   = value.parent.a.values[idx - 1].f  # because of multiline strings, could be a fake comment start inside one which hides a valid '**'
+        ln  = f.end_ln
+        col = f.end_col
+
+    else:
+        ln  = self.ln
+        col = self.col
+
+    ln, col = _prev_find(self.root._lines, ln, col, value.ln, value.col, '**')  # '**' must be there
+
+    return fstloc(ln, col, ln, col + 2)
+
+
 def _get_slice_seq_and_dedent(self: fst.FST, get_ast: AST, cut: bool, seq_loc: fstloc,
                               ffirst: fst.FST | fstloc, flast: fst.FST | fstloc,
                               fpre: fst.FST | fstloc | None, fpost: fst.FST | fstloc | None,
@@ -204,10 +224,10 @@ def _get_slice_dict(self: fst.FST, start: int | Literal['end'] | None, stop: int
         return self._new_empty_dict(from_=self)
 
     keys   = ast.keys
-    ffirst = self._dict_key_or_mock_loc(keys[start], values[start].f)
+    ffirst = _dict_key_or_mock_loc(self, keys[start], values[start].f)
     flast  = values[stop - 1].f
     fpre   = values[start - 1].f if start else None
-    fpost  = self._dict_key_or_mock_loc(keys[stop], values[stop].f) if stop < len(keys) else None
+    fpost  = _dict_key_or_mock_loc(self, keys[stop], values[stop].f) if stop < len(keys) else None
 
     if not cut:
         akeys   = [copy_ast(keys[i]) for i in range(start, stop)]
@@ -462,14 +482,14 @@ def _put_slice_dict(self: fst.FST, code: Code | None, start: int | Literal['end'
 
     keys    = ast.keys
     fpre    = values[start - 1].f if start else None
-    fpost   = None if stop == len(keys) else self._dict_key_or_mock_loc(keys[stop], values[stop].f)
+    fpost   = None if stop == len(keys) else _dict_key_or_mock_loc(self, keys[stop], values[stop].f)
     seq_loc = fstloc(self.ln, self.col + 1, self.end_ln, self.end_col - 1)
 
     if not slice_len:
         ffirst = flast = None
 
     else:
-        ffirst = self._dict_key_or_mock_loc(keys[start], values[start].f)
+        ffirst = _dict_key_or_mock_loc(self, keys[start], values[start].f)
         flast  = values[stop - 1].f
 
     if not put_fst:
@@ -497,7 +517,7 @@ def _put_slice_dict(self: fst.FST, code: Code | None, start: int | Literal['end'
             pfirst = plast = None
 
         else:
-            pfirst = put_fst._dict_key_or_mock_loc(skeys[0], put_ast.values[0].f)
+            pfirst = _dict_key_or_mock_loc(put_fst, skeys[0], put_ast.values[0].f)
             plast  = put_ast.values[-1].f
 
         _put_slice_seq_and_indent(self, put_fst, seq_loc, ffirst, flast, fpre, fpost, pfirst, plast, options.get('docstr'))

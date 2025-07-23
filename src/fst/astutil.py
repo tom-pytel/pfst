@@ -726,7 +726,7 @@ def copy_attributes(src: AST, dst: AST, *, compare: bool = True, type_comments: 
     return True
 
 
-def copy_ast(ast: AST | None) -> AST:
+def copy_ast(ast: AST | None) -> AST | None:
     """Copy a whole tree."""
 
     if ast is None:

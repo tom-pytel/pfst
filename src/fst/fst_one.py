@@ -1950,10 +1950,8 @@ def _one_info_Global_Nonlocal_names(self: fst.FST, static: onestatic, idx: int |
 _onestatic_Global_Nonlocal_names = onestatic(_one_info_Global_Nonlocal_names, _restrict_default, code_as=_code_as_identifier)
 
 def _one_info_Dict_key(self: fst.FST, static: onestatic, idx: int | None, field: str) -> oneinfo:
-    key                   = (a := self.a).keys[idx]
-    value                 = a.values[idx].f
-    end_ln, end_col, _, _ = value.pars()
-    ln, col, _, _         = self._dict_key_or_mock_loc(key, value) if key is None else key.f.pars()
+    end_ln, end_col, _, _ = self.a.values[idx].f.pars()
+    ln, col, _, _         = self._loc_Dict_key(idx, True)
 
     return oneinfo('', fstloc(ln, col, end_ln, end_col), None, ': ', '**')
 

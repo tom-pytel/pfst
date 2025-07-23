@@ -1188,27 +1188,27 @@ Tuple - ROOT 0,0..2,1
 
 (r"""i = namespace = {**__main__.__builtins__.__dict__,
              **__main__.__dict__}""", 'body[0].value', 0, 1, {}, r"""
-i = namespace = {**__main__.__dict__}
+i = namespace = {
+             **__main__.__dict__}
 """, r"""
-{**__main__.__builtins__.__dict__,
-}
+{**__main__.__builtins__.__dict__}
 """, r"""
-Module - ROOT 0,0..0,37
+Module - ROOT 0,0..1,33
   .body[1]
-  0] Assign - 0,0..0,37
+  0] Assign - 0,0..1,33
     .targets[2]
     0] Name 'i' Store - 0,0..0,1
     1] Name 'namespace' Store - 0,4..0,13
-    .value Dict - 0,16..0,37
+    .value Dict - 0,16..1,33
       .keys[1]
       0] None
       .values[1]
-      0] Attribute - 0,19..0,36
-        .value Name '__main__' Load - 0,19..0,27
+      0] Attribute - 1,15..1,32
+        .value Name '__main__' Load - 1,15..1,23
         .attr '__dict__'
         .ctx Load
 """, r"""
-Dict - ROOT 0,0..1,1
+Dict - ROOT 0,0..0,34
   .keys[1]
   0] None
   .values[1]
@@ -1236,7 +1236,7 @@ env = {
 """, r"""
 {
     **{k.upper(): v for k, v in os.environ.items() if k.upper() not in ignore},
-    "PYLAUNCHER_DEBUG": "1",
+    "PYLAUNCHER_DEBUG": "1"
 }
 """, r"""
 Module - ROOT 0,0..4,1
@@ -1417,7 +1417,7 @@ List - ROOT 0,0..0,3
             'message': ('GetQueuedCompletionStatus() returned an '
                         'unexpected event'),
             'status': ('err=%s transferred=%s key=%#x address=%#x'
-                       % (err, transferred, key, address),),
+                       % (err, transferred, key, address),)
 }
 """, r"""
 Module - ROOT 0,0..2,65
@@ -2091,6 +2091,101 @@ List - ROOT 0,0..0,3
   .elts[1]
   0] Constant 2 - 0,1..0,2
   .ctx Load
+"""),
+
+(r"""{a: b,
+
+    # pre
+    c: d,  # line
+    # post
+
+    e: f}""", 'body[0].value', 1, 2, {}, r"""
+{a: b,
+
+    # post
+
+    e: f}
+""", r"""
+{
+    # pre
+    c: d,  # line
+}
+""", r"""
+Module - ROOT 0,0..4,9
+  .body[1]
+  0] Expr - 0,0..4,9
+    .value Dict - 0,0..4,9
+      .keys[2]
+      0] Name 'a' Load - 0,1..0,2
+      1] Name 'e' Load - 4,4..4,5
+      .values[2]
+      0] Name 'b' Load - 0,4..0,5
+      1] Name 'f' Load - 4,7..4,8
+""", r"""
+Dict - ROOT 0,0..3,1
+  .keys[1]
+  0] Name 'c' Load - 2,4..2,5
+  .values[1]
+  0] Name 'd' Load - 2,7..2,8
+"""),
+
+(r"""{a: b,
+
+    # pre
+    c: d,  # line
+    # post
+
+    e: f}""", 'body[0].value', 1, 2, {'trivia': (False, 'block+1')}, r"""
+{a: b,
+
+    # pre
+    e: f}
+""", r"""
+{
+    c: d,  # line
+    # post
+
+}
+""", r"""
+Module - ROOT 0,0..3,9
+  .body[1]
+  0] Expr - 0,0..3,9
+    .value Dict - 0,0..3,9
+      .keys[2]
+      0] Name 'a' Load - 0,1..0,2
+      1] Name 'e' Load - 3,4..3,5
+      .values[2]
+      0] Name 'b' Load - 0,4..0,5
+      1] Name 'f' Load - 3,7..3,8
+""", r"""
+Dict - ROOT 0,0..4,1
+  .keys[1]
+  0] Name 'c' Load - 1,4..1,5
+  .values[1]
+  0] Name 'd' Load - 1,7..1,8
+"""),
+
+(r"""{**a, **b, **c}""", 'body[0].value', 1, 2, {}, r"""
+{**a, **c}
+""", r"""
+{**b}
+""", r"""
+Module - ROOT 0,0..0,10
+  .body[1]
+  0] Expr - 0,0..0,10
+    .value Dict - 0,0..0,10
+      .keys[2]
+      0] None
+      1] None
+      .values[2]
+      0] Name 'a' Load - 0,3..0,4
+      1] Name 'c' Load - 0,8..0,9
+""", r"""
+Dict - ROOT 0,0..0,5
+  .keys[1]
+  0] None
+  .values[1]
+  0] Name 'b' Load - 0,3..0,4
 """),
 
 ]  # END OF GET_SLICE_EXPRISH_DATA

@@ -976,6 +976,27 @@ def _loc_Global_Nonlocal_names(self: fst.FST, first: int, last: int | None = Non
     return first_loc, fstloc(ln, col, ln, col + len(src))
 
 
+def _loc_Dict_key(self: fst.FST, idx: int, pars: bool = False) -> fstloc:
+    """Return location of dictionary key even if it is `**` specified by a `None`. Optionally return the location of the
+    grouping parentheses if key actually present."""
+
+    # assert isinstance(self.a, Dict)
+
+    if key := (ast := self.a).keys[idx]:
+        return key.f.pars() if pars else key.f.loc
+
+    val_ln, val_col, _, _ = (values := ast.values)[idx].f.loc
+
+    if idx:
+        _, _, ln, col = values[idx - 1].f.loc
+    else:
+        ln, col, _, _ = self.loc
+
+    ln, col = _prev_find(self.root._lines, ln, col, val_ln, val_col, '**')  # '**' must be there
+
+    return fstloc(ln, col, ln, col + 2)
+
+
 def _is_arguments_empty(self: fst.FST) -> bool:
     """Is this `arguments` node empty?"""
 
@@ -1042,26 +1063,6 @@ def _is_parenthesized_seq(self: fst.FST, field: str = 'elts', lpar: str = '(', r
     nparens -= len(_next_pars(lines, f0_end_ln, f0_end_col, self_end_ln, self_end_col, rpar)) - 1
 
     return nparens > 0  # don't want to fiddle with checking if f0 is a parenthesized tuple
-
-
-def _dict_key_or_mock_loc(self: fst.FST, key: AST | None, value: fst.FST) -> fst.FST | fstloc:
-    """Return same dictionary key `FST` if exists, otherwise return a location for the preceding '**' code."""
-
-    if key:
-        return key.f
-
-    if idx := value.pfield.idx:
-        f   = value.parent.a.values[idx - 1].f  # because of multiline strings, could be a fake comment start inside one which hides a valid '**'
-        ln  = f.end_ln
-        col = f.end_col
-
-    else:
-        ln  = self.ln
-        col = self.col
-
-    ln, col = _prev_find(self.root._lines, ln, col, value.ln, value.col, '**')  # '**' must be there
-
-    return fstloc(ln, col, ln, col + 2)
 
 
 def _set_end_pos(self: fst.FST, end_lineno: int, end_col_offset: int, self_: bool = True):  # because of trailing non-AST junk in last statements
