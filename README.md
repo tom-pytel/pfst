@@ -142,24 +142,47 @@ For more examples see the documentation in `docs/`, or if you're feeling particu
 
 This package is not finished but functional enough that it can be useful.
 
-* Put one (non-raw) to `FormattedValue` / `Interpolation` `conversion` and `format_spec`, `JoinedStr` / `TemplateStr` `values`.
+* Put one (non-raw) to:
+  * `FormattedValue.conversion`
+  * `FormattedValue.format_spec`
+  * `Interpolation.str`
+  * `Interpolation.conversion`
+  * `Interpolation.format_spec`
 
 * Prescribed (non-raw) get / put slice from / to:
-  * `FunctionDef` / `AsyncFunctionDef` / `ClassDef.decorator_list`
+  * `FunctionDef.decorator_list`
+  * `AsyncFunctionDef.decorator_list`
+  * `ClassDef.decorator_list`
   * `ClassDef.bases`
-  * `Delete` / `Assign.targets`
+  * `Delete.targets`
+  * `Assign.targets`
   * `BoolOp.values`
+  * `Compare`
   * `Call.args`
   * `comprehension.ifs`
-  * `ListComp` / `SetComp` / `DictComp` / `GeneratorExp.generators`
-  * `ClassDef` / `Call.keywords`
-  * `Import` / `ImportFrom.names`
-  * `With` / `AsyncWith.items`
-  * `MatchMapping.keys` / `.patterns`
-  * `MatchSequence` / `MatchClass` / `MatchOr.patterns`
-  * `FunctionDef` / `AsyncFunctionDef` / `ClassDef` / `TypeAlias.type_params`
-  * `Global.names` / `Nonlocal.names`
-  * `JoinedStr` / `TemplateStr.values`
+  * `ListComp.generators`
+  * `SetComp.generators`
+  * `DictComp.generators`
+  * `GeneratorExp.generators`
+  * `ClassDef.keywords`
+  * `Call.keywords`
+  * `Import.names`
+  * `ImportFrom.names`
+  * `With.items`
+  * `AsyncWith.items`
+  * `MatchSequence.patterns`
+  * `MatchMapping`
+  * `MatchClass.patterns`
+  * `MatchOr.patterns`
+  * `FunctionDef.type_params`
+  * `AsyncFunctionDef.type_params`
+  * `ClassDef.type_params`
+  * `TypeAlias.type_params`
+  * `Global.names`
+  * `Nonlocal.names`
+  * `JoinedStr.values`
+  * `TemplateStr.values`
+
 
 * Improve comment handling and get/put specification and get rid of ugly trailing newlines.
 

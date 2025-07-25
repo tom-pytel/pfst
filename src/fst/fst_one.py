@@ -149,11 +149,6 @@ def _get_one_FormattedValue_value(self: fst.FST, idx: int | None, field: str, cu
     return ret
 
 
-@pyver(lt=12)
-def _get_one_conversion(self: fst.FST, idx: int | None, field: str, cut: bool, **options) -> _GetOneRet:
-    raise NotImplementedError('get FormattedValue.conversion not implemented on python < 3.12')
-
-@pyver(ge=12)
 def _get_one_conversion(self: fst.FST, idx: int | None, field: str, cut: bool, **options) -> _GetOneRet:
     child, _ = _validate_get(self, idx, field)
 
@@ -237,9 +232,9 @@ def _get_one_JoinedStr_TemplateStr_values(self: fst.FST, idx: int | None, field:
                                                 docstr=options.get('docstr'))
         lprefix = len(prefix)
         ret     = fst.FST((JoinedStr if typ == 'f' else TemplateStr)
-                            (values=[fmt.a], lineno=fmt.lineno, col_offset=fmt.col_offset - lprefix,
-                            end_lineno=fmt.end_lineno, end_col_offset=fmt.end_col_offset + lprefix - 1),
-                            fmt._lines, from_=self, lcopy=False)
+                          (values=[fmt.a], lineno=fmt.lineno, col_offset=fmt.col_offset - lprefix,
+                           end_lineno=fmt.end_lineno, end_col_offset=fmt.end_col_offset + lprefix - 1),
+                          fmt._lines, from_=self, lcopy=False)
 
     return ret
 

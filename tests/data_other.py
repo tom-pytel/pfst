@@ -8255,6 +8255,51 @@ Module - ROOT 0,0..5,5
         .ctx Load
 """),
 
+(r"""[
+    1,
+    2,
+    3,
+]""", 'body[0].value', 1, 2, r"""**DEL**""", r"""
+[
+    1,
+    3,
+]
+""", r"""
+Module - ROOT 0,0..3,1
+  .body[1]
+  0] Expr - 0,0..3,1
+    .value List - 0,0..3,1
+      .elts[2]
+      0] Constant 1 - 1,4..1,5
+      1] Constant 3 - 2,4..2,5
+      .ctx Load
+"""),
+
+(r"""[
+    1,
+    2,
+    3,
+]""", 'body[0].value', 1, 2, r"""[e,
+    None]""", r"""
+[
+    1,
+    e,
+    None,
+    3,
+]
+""", r"""
+Module - ROOT 0,0..5,1
+  .body[1]
+  0] Expr - 0,0..5,1
+    .value List - 0,0..5,1
+      .elts[4]
+      0] Constant 1 - 1,4..1,5
+      1] Name 'e' Load - 2,4..2,5
+      2] Constant None - 3,4..3,8
+      3] Constant 3 - 4,4..4,5
+      .ctx Load
+"""),
+
 ]  # END OF PUT_SLICE_EXPRISH_DATA
 
 PUT_SLICE_STMTISH_DATA = [

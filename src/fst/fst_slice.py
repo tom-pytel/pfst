@@ -145,7 +145,7 @@ def _fixup_self_tail_sep_del(self: fst.FST, self_tail_sep: bool | Literal[0] | N
 
 def _locs_slice_seq(self: fst.FST, is_first: bool, is_last: bool,
                     bound_ln: int, bound_col: int, bound_end_ln: int, bound_end_col: int,
-                    ln: int, col: int, end_ln: int, end_col: int,
+                    first_ln: int, first_col: int, last_end_ln: int, last_end_col: int,
                     trivia: bool | str | tuple[bool | str | int | None, bool | str | int | None],
                     sep: str = ',', neg: bool = False,
                     ) -> tuple[fstloc, fstloc, str | None, tuple[int, int] | None]:
@@ -164,10 +164,11 @@ def _locs_slice_seq(self: fst.FST, is_first: bool, is_last: bool,
     - (`copy_loc`, `del_loc`, `del_indent`, `sep_end_pos`):
         - `copy_loc`: Where to copy.
         - `del_loc`: Where to remove (cut or delete or replace).
-        - `del_indent`: String to put at start of `del_loc` after removal or `None` if original (`ln`, `col`) start
-            location did not start its own line. Will be empty string if start location starts right at beginning of
-            line.
-        - `sep_end_pos`: Position right after separator `sep` if found after (`end_ln`, `end_col`), else `None`.
+        - `del_indent`: String to put at start of `del_loc` after removal or `None` if original (`first_ln`,
+            `first_col`) start location did not start its own line. Will be empty string if start location starts right
+            at beginning of line.
+        - `sep_end_pos`: Position right after separator `sep` if found after (`last_end_ln`, `last_end_col`), else
+            `None`.
 
     ```py
     '+' = copy_loc
@@ -228,57 +229,63 @@ def _locs_slice_seq(self: fst.FST, is_first: bool, is_last: bool,
 
     lines = self.root._lines
 
-    if sep and (code := _next_src(lines, end_ln, end_col, bound_end_ln, bound_end_col)) and code.src.startswith(sep):  # if separator present then set end of element to just past it
-        sep_end_pos = end_pos = (end_ln := code.ln, end_col := code.col + len(sep))
+    if (sep and (code := _next_src(lines, last_end_ln, last_end_col, bound_end_ln, bound_end_col)) and
+        code.src.startswith(sep)
+    ):  # if separator present then set end of element to just past it
+        sep_end_pos = end_pos = (last_end_ln := code.ln, last_end_col := code.col + len(sep))
 
     else:
         sep_end_pos = None
-        end_pos     = (end_ln, end_col)
+        end_pos     = (last_end_ln, last_end_col)
 
     if is_first and is_last:
         return ((l := fstloc(bound_ln, bound_col, bound_end_ln, bound_end_col)), l, None, sep_end_pos)  # case 0
 
     ld_comms, ld_space, ld_neg, tr_comms, tr_space, tr_neg = fst.FST._get_trivia_params(trivia, neg)
 
-    ld_text_pos, ld_space_pos, indent = _leading_trivia(lines, bound_ln, bound_col,
-                                                        ln, col, ld_comms, ld_space)
-    tr_text_pos, tr_space_pos, _      = _trailing_trivia(lines, bound_end_ln, bound_end_col,
-                                                         end_ln, end_col, tr_comms, tr_space)
+    ld_text_pos, ld_space_pos, indent = _leading_trivia(lines, bound_ln, bound_col,  # start of text / space
+                                                        first_ln, first_col, ld_comms, ld_space)
+    tr_text_pos, tr_space_pos, _      = _trailing_trivia(lines, bound_end_ln, bound_end_col,  # END of text / space
+                                                         last_end_ln, last_end_col, tr_comms, tr_space)
 
     def calc_locs(ld_ln: int, ld_col: int, tr_ln: int, tr_col: int):
         if indent is None:  # does not start line, no preceding trivia
-            del_col = re_line_trailing_space.match(lines[ln], 0, col).start(1)
+            del_col = re_line_trailing_space.match(lines[first_ln], 0, first_col).start(1)
 
-            if tr_ln == end_ln:  # does not extend past end of line (different from _trailing_trivia() 'ends_line')
-                if not is_last or lines[end_ln].startswith('#', tr_col):  # if there is a next element or trailing line comment then don't delete space before this element
-                    del_col = col
+            if tr_ln == last_end_ln:  # does not extend past end of line (different from _trailing_trivia() 'ends_line')
+                if not is_last or lines[last_end_ln].startswith('#', tr_col):  # if there is a next element or trailing line comment then don't delete space before this element
+                    del_col = first_col
 
-                return (fstloc(ln, col, end_ln, end_col),
-                        fstloc(ln, del_col, end_ln, tr_col),
+                return (fstloc(first_ln, first_col, last_end_ln, last_end_col),
+                        fstloc(first_ln, del_col, last_end_ln, tr_col),
                         None, sep_end_pos)  # case 1
 
-            if tr_text_pos == end_pos and tr_ln == end_ln + 1:  # no comments, maybe trailing space on line, treat as if doesn't end line
-                return (fstloc(ln, col, end_ln, end_col),
-                        fstloc(ln, del_col, end_ln, end_col),
+            if tr_text_pos == end_pos and tr_ln == last_end_ln + 1:  # no comments, maybe trailing space on line, treat as if doesn't end line
+                return (fstloc(first_ln, first_col, last_end_ln, last_end_col),
+                        fstloc(first_ln, del_col, last_end_ln, last_end_col),
                         None, sep_end_pos)  # case 2
 
-            return (fstloc(ln, col, tr_ln, tr_col),
-                    fstloc(ln, del_col, l := tr_ln - 1, len(lines[l])),
+            return (fstloc(first_ln, first_col, tr_ln, tr_col),
+                    fstloc(first_ln, del_col, l := tr_ln - 1, len(lines[l])),
                     None, sep_end_pos)  # case 3
 
         assert ld_col == 0
 
-        if tr_ln == end_ln:  # does not extend past end of line (different from _trailing_trivia() 'ends_line')
-            if ld_ln == ln:  # starts on first line which is copied / deleted
-                return (fstloc(ln, col, end_ln, end_col),
-                        fstloc(ln, ld_col, end_ln, tr_col),
+        if tr_ln == last_end_ln:  # does not extend past end of line (different from _trailing_trivia() 'ends_line')
+            if ld_ln == first_ln:  # starts on first line which is copied / deleted
+                return (fstloc(first_ln, first_col, last_end_ln, last_end_col),
+                        fstloc(first_ln, ld_col, last_end_ln, tr_col),
                         indent, sep_end_pos)  # case 4, we do it this way to return this specific information that it starts a line but doesn't end one
 
-            return (fstloc((l := ld_ln - 1), len(lines[l]), end_ln, end_col) if ld_ln else fstloc(ld_ln, ld_col, end_ln, end_col),
-                    fstloc(ld_ln, ld_col, end_ln, tr_col),
+            return ((fstloc((l := ld_ln - 1), len(lines[l]), last_end_ln, last_end_col)
+                     if ld_ln else
+                     fstloc(ld_ln, ld_col, last_end_ln, last_end_col)),
+                    fstloc(ld_ln, ld_col, last_end_ln, tr_col),
                     indent, sep_end_pos)  # case 5
 
-        return (fstloc((l := ld_ln - 1), len(lines[l]), tr_ln, tr_col) if ld_ln else fstloc(ld_ln, ld_col, tr_ln, tr_col),
+        return ((fstloc((l := ld_ln - 1), len(lines[l]), tr_ln, tr_col)
+                 if ld_ln else
+                 fstloc(ld_ln, ld_col, tr_ln, tr_col)),
                 fstloc(ld_ln, ld_col, tr_ln, tr_col),
                 indent, sep_end_pos)  # case 6
 
@@ -321,7 +328,7 @@ def _locs_slice_seq(self: fst.FST, is_first: bool, is_last: bool,
 
 def _get_slice_seq(self: fst.FST, start: int, stop: int, len_body: int, cut: bool, ast: AST,
                    bound_ln: int, bound_col: int, bound_end_ln: int, bound_end_col: int,
-                   ln: int, col: int, end_ln: int, end_col: int,
+                   first_ln: int, first_col: int, last_end_ln: int, last_end_col: int,
                    trivia: bool | str | tuple[bool | str | int | None, bool | str | int | None] | None = None,
                    field: str = 'elts', prefix: str = '', suffix: str = '', sep: str = ',',
                    self_tail_sep: bool | Literal[0] | None = None,
@@ -348,8 +355,8 @@ def _get_slice_seq(self: fst.FST, start: int, stop: int, len_body: int, cut: boo
     - (`bound_ln`, `bound_col`): End of previous element (past pars) or start of container (just past
         delimiters) if no previous element.
     - (`bound_end_ln`, `bound_end_col`): End of container (just before delimiters).
-    - (`ln`, `col`, `end_ln`, `end_col`): Location of single or span of elements being copied or cut (including pars but
-        not trailing separator).
+    - (`first_ln`, `first_col`, `last_end_ln`, `last_end_col`): Location of single or span of elements being copied or
+        cut (including pars but not trailing separator).
     - `trivia`: Standard option on how to handle leading and trailing comments and space, `None` means global default.
     - `field`: Which field of is being gotten from. In the case of two-field sequences like `Dict` this should be the
         last field syntactically, `value` in the case of `Dict` and should always have valid entries and not `None`.
@@ -388,7 +395,8 @@ def _get_slice_seq(self: fst.FST, start: int, stop: int, len_body: int, cut: boo
     # get locations and adjust for trailing separator keep or delete if possible to optimize
 
     copy_loc, del_loc, del_indent, sep_end_pos = _locs_slice_seq(self, is_first, is_last,
-        bound_ln, bound_col, bound_end_ln, bound_end_col, ln, col, end_ln, end_col, trivia, sep, cut,
+        bound_ln, bound_col, bound_end_ln, bound_end_col, first_ln, first_col, last_end_ln, last_end_col,
+        trivia, sep, cut,
     )
 
     copy_ln, copy_col, copy_end_ln, copy_end_col = copy_loc
@@ -397,8 +405,8 @@ def _get_slice_seq(self: fst.FST, start: int, stop: int, len_body: int, cut: boo
         if is_last:  # if is last element and already had trailing separator then keep it
             ret_tail_sep = True  # this along with sep_end_pos != None will turn the ret_tail_sep checks below into noop
 
-        elif sep_end_pos[0] == copy_end_ln == end_ln and sep_end_pos[1] == copy_end_col:  # optimization common case, we can get rid of unneeded trailing separator in copy by just not copying it if it is at end of copy range on same line as end of element
-            copy_loc     = fstloc(copy_ln, copy_col, copy_end_ln, copy_end_col := end_col)
+        elif sep_end_pos[0] == copy_end_ln == last_end_ln and sep_end_pos[1] == copy_end_col:  # optimization common case, we can get rid of unneeded trailing separator in copy by just not copying it if it is at end of copy range on same line as end of element
+            copy_loc     = fstloc(copy_ln, copy_col, copy_end_ln, copy_end_col := last_end_col)
             ret_tail_sep = True
 
     if self_tail_sep == 0:  # (or False), optimization common case, we can get rid of unneeded trailing separator in self by adding it to the delete block if del block starts on same line as previous element ends and there is not a comment on the line
@@ -740,7 +748,7 @@ _GET_SLICE_HANDLERS = {
 def _put_slice_seq(self: fst.FST, start: int, stop: int, len_body: int, fst_: fst.FST | None,
                    fst_first: fst.FST | fstloc | None, fst_last: fst.FST | None,
                    bound_ln: int, bound_col: int, bound_end_ln: int, bound_end_col: int,
-                   ln: int, col: int, end_ln: int, end_col: int,
+                   first_ln: int, first_col: int, last_end_ln: int, last_end_col: int,
                    trivia: bool | str | tuple[bool | str | int | None, bool | str | int | None] | None,
                    field: str = 'elts', field2: str | None = None, sep: str = ',',
                    self_tail_sep: bool | Literal[0] | None = None,
@@ -757,15 +765,16 @@ def _put_slice_seq(self: fst.FST, start: int, stop: int, len_body: int, fst_: fs
     **Parameters:**
     - `start`, `stop`, `len_body`: Slice parameters, `len_body` being current length of field.
     - `fst_`: The slice being put to `self` with delimiters stripped, or `None` for delete.
-    - `fst_first`: The first element of the slice `FST` being put, or `None` if delete. Can be an `fstloc` for
-        two-element slices (dict `**`, or even for a normal element (pars included)).
+    - `fst_first`: The first element of the slice `FST` being put, or `None` if delete. Must be an `fstloc` for `Dict`
+        key which is `None`.
     - `fst_last`: The last element of the slice `FST` being put, or `None` if delete.
-    - (`bound_ln`, `bound_col`): End of previous element (past pars) or start of container (just past
-        delimiters) if no previous element.
+    - (`bound_ln`, `bound_col`): End of previous element (past pars) or start of container (just past delimiters) if no
+        previous element.
     - (`bound_end_ln`, `bound_end_col`): End of container (just before delimiters).
-    - (`ln`, `col`, `end_ln`, `end_col`): Location of single or span of elements being replaced or deleted (including
-        pars but not trailing separator). If pure insertion then `ln` and `col` are not used and (`end_ln`, `end_col`)
-        is the start position of the `stop` element in `self` if there is one, otherwise same as bound end.
+    - (`first_ln`, `first_col`, `last_end_ln`, `last_end_col`): Location of single or span of elements being replaced or
+        deleted (including pars but not trailing separator). If pure insertion then `first_ln` and `first_col` are not
+        used and (`last_end_ln`, `last_end_col`) is the start position of the `stop` element in `self` if there is one,
+        otherwise same as bound end.
     - `trivia`: Standard option on how to handle leading and trailing comments and space, `None` means global default.
     - `field`: Which field of `self` is being deleted / replaced / inserted to.
     - `field2`: If `self` is a two element sequence like `Dict` or `MatchMapping` then this should be the second field
@@ -796,19 +805,20 @@ def _put_slice_seq(self: fst.FST, start: int, stop: int, len_body: int, fst_: fs
 
 
         if not is_last:  # just before next element
-            ln  = end_ln
-            col = end_col
+            first_ln  = last_end_ln
+            first_col = last_end_col
 
         elif not is_first:  # just past previous element
-            ln  = end_ln  = bound_ln
-            col = end_col = bound_col
+            first_ln  = last_end_ln  = bound_ln
+            first_col = last_end_col = bound_col
 
         else:  # whole area
-            ln  = bound_ln
-            col = bound_col
+            first_ln  = bound_ln
+            first_col = bound_col
 
     copy_loc, del_loc, del_indent, _ = _locs_slice_seq(self, is_first, is_last,
-        bound_ln, bound_col, bound_end_ln, bound_end_col, ln, col, end_ln, end_col, trivia, sep, is_del,
+        bound_ln, bound_col, bound_end_ln, bound_end_col, first_ln, first_col, last_end_ln, last_end_col,
+        trivia, sep, is_del,
     )
 
     put_ln, put_col, put_end_ln, put_end_col = del_loc
@@ -816,7 +826,7 @@ def _put_slice_seq(self: fst.FST, start: int, stop: int, len_body: int, fst_: fs
     # delete
 
     if is_del:
-        put_lines     = [del_indent] if del_indent else None
+        put_lines     = [del_indent] if del_indent and put_end_col else None
         self_tail_sep = _fixup_self_tail_sep_del(self, self_tail_sep, start, stop, len_body)
 
         if self_tail_sep == 0:  # (or False), optimization, we can get rid of unneeded trailing separator in self by adding it to the delete block if del block starts on same line as previous element ends and there is not a comment on the line
@@ -837,13 +847,13 @@ def _put_slice_seq(self: fst.FST, start: int, stop: int, len_body: int, fst_: fs
         skip        = 1
         post_indent = None
 
-        if re_line_end_cont_or_comment.match(put_lines[l := len(put_lines) - 1],  # if last line of fst_ is a comment or line continuation without a newline then add one
+        if re_line_end_cont_or_comment.match(put_lines[l := len(put_lines) - 1],  # if last line of fst_ is a comment or line continuation without a newline then add one (don't need to check pars for last line)
                                              0 if l > fst_last.end_ln else fst_last.end_col).group(1):
             put_lines.append(bistr(''))
 
         # newlines and indentation
 
-        if fst_starts_nl :=  not put_lines[0]:  # slice to put start with pure newline?
+        if fst_starts_nl := not put_lines[0]:  # slice to put start with pure newline?
             if not put_col:  # start element being put to starts a new line?
                 skip = 0
 
@@ -884,6 +894,12 @@ def _put_slice_seq(self: fst.FST, start: int, stop: int, len_body: int, fst_: fs
 
                 if put_end_col != (ec := len(lines[put_end_ln])):
                     self._put_src(None, put_end_ln, put_end_col, put_end_ln, ec, True)
+
+        elif not put_end_col:  # we are putting slice before an element which starts a newline and slice doesn't have trailing newline
+            if put_end_ln > put_ln:  # change put end to not delete last newline if possible
+                put_end_col = len(lines[put_end_ln := put_end_ln - 1])
+            else:  # otherwise add newline to slice
+                put_lines.append(bistr(''))  # this doesn't need to be post_indent-ed because its just a newline, doesn't do indentation of following text
 
         # trailing separator
 
@@ -937,17 +953,23 @@ def _put_slice_seq(self: fst.FST, start: int, stop: int, len_body: int, fst_: fs
         else:
             self._maybe_del_separator(last_end_ln, last_end_col, self_tail_sep is False, self_end_ln, self_end_col, sep)
 
-    if not is_del:  # internal
+    if not is_del:  # internal, this is messy because the source has been put but the ASTs have not, so locations have to be gotten from and updated in two trees
         if not is_last:  # past the newly put slice
-            stop_ln, stop_col, _, _ = self._loc_maybe_dict_key(stop, False, body)
+            _, _, fst_last_end_ln, fst_last_end_col = fst_last.pars()
 
-            self._maybe_add_comma(fst_last.end_ln, fst_last.end_col, True, stop_ln, stop_col, False)  # last False is because elements of self are now past comma point so will need to be offset
+            if a := body[stop]:  # explicit _loc_maybe_dict_key() logic because self AST tree is not complete
+                stop_ln, stop_col, _, _ = a.f.loc
+            else:
+                stop_ln, stop_col = _prev_find(lines, fst_last_end_ln, fst_last_end_col,
+                                               (l := body2[stop].f.loc).end_ln, l.end_col, '**')  # '**' must be there
+
+            self._maybe_add_comma(fst_last_end_ln, fst_last_end_col, True, stop_ln, stop_col, False)  # last False is because elements of self are now past comma point so will need to be offset
 
         elif is_ins and not is_first:  # before newly appended slice at end
-            _, _, stop_end_ln, stop_end_col = body2[stop - 1].f.loc
+            _, _, stop_end_ln, stop_end_col = body2[stop - 1].f.pars()
             len_stop_end_line               = len(lines[stop_end_ln])
 
-            if not fst_first.is_FST:  # special case, has to be None dict key, don't like this is messy
+            if not fst_first.is_FST:  # special case, should only happend for Dict None key, don't like this is messy
                 fst_first = fst_._loc_maybe_dict_key(0)
 
             if self._maybe_add_comma(stop_end_ln, stop_end_col, True, fst_first.ln, fst_first.col) is not False:  # if line changed (separator and / or space) then we need to explicitly offset the fst_ elements as well since they don't live in self yet but in fst_
@@ -1004,8 +1026,6 @@ def _get_element_indent(self: fst.FST, body: list[AST], body2: list[AST], start:
             if (loc := self._loc_maybe_dict_key(0, True, body)).ln != self.ln:  # only consider element 0 if it is not on same line as self starts
                 if re_empty_line.match(l := lines[loc.ln], 0, loc.col):
                     return l[:loc.col]
-
-            loc = start_prev_loc
 
         else:
             loc = fstloc(-1, -1, -1, -1)  # dummy
@@ -1094,14 +1114,15 @@ def _code_as_seq2(self: fst.FST, code: Code | None, one: bool, options: dict[str
     return fst_
 
 
-def _locs_put_seq(self, start: int, stop: int, body: list[AST]) -> tuple[int, int, int, int, int, int, int, int]:
-    bound_ln, bound_col, bound_end_ln, bound_end_col  = self.loc
-    bound_end_col                                    -= 1
+def _locs_put_seq(self, start: int, stop: int, body: list[AST], off: int = 1) -> tuple[int, int, int, int, int, int, int, int]:
+    bound_ln, bound_col, bound_end_ln, bound_end_col = self.loc
+
+    bound_end_col -= off
 
     if start:
         _, _, bound_ln, bound_col = body[start - 1].f.pars()
     else:
-        bound_col += 1
+        bound_col += off
 
     if start != stop:
         ln, col, end_ln, end_col = body[start].f.pars()
@@ -1124,8 +1145,9 @@ def _locs_put_seq(self, start: int, stop: int, body: list[AST]) -> tuple[int, in
 
 def _locs_put_seq2(self, start: int, stop: int, body: list[AST], body2: list[AST],
                    ) -> tuple[int, int, int, int, int, int, int, int]:
-    bound_ln, bound_col, bound_end_ln, bound_end_col  = self.loc
-    bound_end_col                                    -= 1
+    bound_ln, bound_col, bound_end_ln, bound_end_col = self.loc
+
+    bound_end_col -= 1
 
     if start:
         _, _, bound_ln, bound_col = body2[start - 1].f.pars()
@@ -1167,13 +1189,11 @@ def _put_slice_Dict(self: fst.FST, code: Code | None, start: int | Literal['end'
     if not fst_ and start == stop:  # deleting or assigning empty seq to empty slice of seq, noop
         return
 
-    bound_ln, bound_col, bound_end_ln, bound_end_col, ln, col, end_ln, end_col = _locs_put_seq2(
-        self, start, stop, body, body2)
+    locs = _locs_put_seq2(self, start, stop, body, body2)
 
     if not fst_:
-        _put_slice_seq(self, start, stop, len_body, None, None, None,
-                       bound_ln, bound_col, bound_end_ln, bound_end_col,
-                       ln, col, end_ln, end_col, options.get('trivia'), 'keys', 'values')
+        _put_slice_seq(self, start, stop, len_body, None, None, None, *locs,
+                       options.get('trivia'), 'keys', 'values')
 
         self._unmake_fst_tree(body[start : stop] + body2[start : stop])
 
@@ -1188,9 +1208,8 @@ def _put_slice_Dict(self: fst.FST, code: Code | None, start: int | Literal['end'
         fst_body2 = ast_.values
         fst_first = a.f if (a := fst_body[0]) else fst_._loc_maybe_dict_key(0)
 
-        _put_slice_seq(self, start, stop, len_body, fst_, fst_first, fst_body2[-1].f,
-                       bound_ln, bound_col, bound_end_ln, bound_end_col,
-                       ln, col, end_ln, end_col, options.get('trivia'), 'keys', 'values')
+        _put_slice_seq(self, start, stop, len_body, fst_, fst_first, fst_body2[-1].f, *locs,
+                       options.get('trivia'), 'keys', 'values')
 
         self._unmake_fst_tree(body[start : stop] + body2[start : stop])
         fst_._unmake_fst_parents(True)
@@ -1227,12 +1246,10 @@ def _put_slice_List_elts(self: fst.FST, code: Code | None, start: int | Literal[
     if not fst_ and start == stop:  # deleting or assigning empty seq to empty slice of seq, noop
         return
 
-    bound_ln, bound_col, bound_end_ln, bound_end_col, ln, col, end_ln, end_col = _locs_put_seq(self, start, stop, body)
+    locs = _locs_put_seq(self, start, stop, body)
 
     if not fst_:
-        _put_slice_seq(self, start, stop, len_body, None, None, None,
-                       bound_ln, bound_col, bound_end_ln, bound_end_col,
-                       ln, col, end_ln, end_col, options.get('trivia'))
+        _put_slice_seq(self, start, stop, len_body, None, None, None, *locs, options.get('trivia'))
 
         self._unmake_fst_tree(body[start : stop])
 
@@ -1243,9 +1260,7 @@ def _put_slice_List_elts(self: fst.FST, code: Code | None, start: int | Literal[
     else:
         fst_body = fst_.a.elts
 
-        _put_slice_seq(self, start, stop, len_body, fst_, fst_body[0].f, fst_body[-1].f,
-                       bound_ln, bound_col, bound_end_ln, bound_end_col,
-                       ln, col, end_ln, end_col, options.get('trivia'))
+        _put_slice_seq(self, start, stop, len_body, fst_, fst_body[0].f, fst_body[-1].f, *locs, options.get('trivia'))
 
         self._unmake_fst_tree(body[start : stop])
         fst_._unmake_fst_parents(True)

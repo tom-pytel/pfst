@@ -2,14 +2,15 @@
 
 ### Fixed
 
-- get stmtish cut marks tree as modified
+- statementish cut marks tree as modified
 
 ### Added
 
-- trivia (comments and space) specification for expressionish slices
+- trivia (comments and space) specification for slices
 
 ### Updated
 
+- redid expressionish slices
 - split out more tests into separate files
 - preserve comments on parenthesize tuple
 

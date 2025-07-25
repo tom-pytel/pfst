@@ -10,7 +10,7 @@ from itertools import repeat
 from math import log10
 from random import choice, randint, random, seed, shuffle
 from types import NoneType
-from typing import Any, Generator, Iterable, Literal
+from typing import Any, Generator, Iterable, Literal, NamedTuple
 
 from .astutil import *
 from .astutil import TypeAlias, TemplateStr, Interpolation
@@ -1456,10 +1456,10 @@ class ReconcileSame(Fuzzy):
                 print(fst.src)
 
 
-class Stmtish(Fuzzy):
+class SliceStmtish(Fuzzy):
     """Test moving around stmtishs, empty bodies, fstview, stmtish FST identity stability and unmarking deleted FSTs."""
 
-    name    = 'stmtish'
+    name    = 'slice_stmtish'
     forever = True
 
     @staticmethod
@@ -1570,6 +1570,161 @@ class Stmtish(Fuzzy):
 
                     if self.verify:
                         fst.verify()
+
+                except Exception:
+                    print()
+
+                    if self.verbose:
+                        print(fst.src)
+
+                    raise
+
+            fst.verify()
+
+        finally:
+            print()
+
+            if self.verbose:
+                print(fst.src)
+
+
+class SliceExprish(Fuzzy):
+    """Test moving around exprish slices, empty bodies, fstview, exprish FST identity stability and unmarking deleted FSTs."""
+
+    name    = 'slice_exprish'
+    forever = True
+
+    class Container(NamedTuple):
+        field: str | None
+        fst:   FST
+
+    @staticmethod
+    def do_move(src: FST, dst: FST, field: str | None):
+        cut       = bool(randint(0, 1))
+        src_len   = len(getattr(src.a, field or 'keys'))
+        dst_len   = len(getattr(dst.a, field or 'keys'))
+        src_start = randint(0, src_len)
+        src_stop  = randint(src_start, src_len)
+        dst_start = randint(0, dst_len)
+        dst_stop  = randint(dst_start, dst_len)
+
+        if not src_start and src_stop == src_len:
+            cut = False
+
+        if not dst_start and dst_stop == dst_len:
+            if dst_start != dst_stop:
+                if src_start == src_stop:  # don't delete entire destination
+                    if random() < 0.5:
+                        dst_start += 1
+                    else:
+                        dst_stop -= 1
+
+        # if src_start == src_stop:
+        #     return
+
+        # print(f'\x08{src_start = }, {src_stop = }, {dst_start = }, {dst_stop = }, {cut = }')
+
+
+        s = src.get_slice(src_start, src_stop, field=field, cut=cut, trivia=('all-', 'all-'))  # ('block-', 'line-'))
+
+
+        # VVV--- THIS ---VVV
+
+        # assert all(f is g for f, g in zip(cut.body, org_fsts))
+        # assert all(f is g for f, g in zip(dst_container[to_start : to_start + (from_stop - from_start)], org_fsts))
+
+        # ^^^--- THIS ---^^^
+
+
+        try:
+            dst.put_slice(s, dst_start, dst_stop, field=field, trivia=('all-', 'all-'))  # ('block-', 'line-'))
+        except NotImplementedError:
+            return
+
+
+        # if src_start == src_stop:
+        #     if dst_len == 1:
+        #         return
+
+        #     dst_start = randint(0, dst_len - 1)
+        #     dst_stop  = randint(dst_start + 1, dst_len)
+
+        # else:
+
+        # if random() < 0.5 or not dst_container:
+        #     dst_start = dst_stop = randint(0, len(dst_container))
+        # else:
+        #     dst_start = randint(0, len(dst_container) - 1)
+        #     dst_stop  = randint(dst_start + 1, len(dst_container))
+
+        # fs         = exprish_container[from_start : from_stop]
+        # org_fsts   = list(fs)
+        # cut        = fs.cut()
+
+        # assert all(f is g for f, g in zip(cut.body, org_fsts))
+
+        # dst_container[to_start : to_stop] = cut
+
+        # assert all(f is g for f, g in zip(dst_container[to_start : to_start + (from_stop - from_start)], org_fsts))
+
+    def fuzz_one(self, fst, fnm) -> bool:
+        containers = {
+            Dict: SliceExprish.Container(None, FST('{None: None}')),
+            # Tuple: ('elts', FST('(None,)')),
+            # slice: ('elts', FST('(None,)')),
+            List: SliceExprish.Container('elts', FST('[None]')),
+        }
+
+        exprishs = []
+
+        for f in fst.walk(True):
+            if isinstance(f.a, (Dict,)) or (isinstance(f.a, (List,)) and isinstance(f.a.ctx, Load)):
+            # if isinstance(f.a, (List,)) and isinstance(f.a.ctx, Load):
+            # if isinstance(f.a, (Dict,)):
+                exprishs.append(f)
+
+        if not exprishs:
+            return
+
+        try:
+            for count in range(self.batch or 1000):
+                try:
+                    if not (count % 20):
+                        sys.stdout.write('.'); sys.stdout.flush()
+
+                    for _ in range(10):
+                        while exprishs:
+                            if (exprish := exprishs[i := randint(0, len(exprishs) - 1)]).a is None:  # if removed completely then forget about it
+                                del exprishs[i]
+                            else:
+                                break
+
+                        else:
+                            raise RuntimeError('this should not happen')
+
+                        container = containers[exprish.a.__class__]
+
+                        if exprish.root is container.fst:
+                            continue
+
+                        break
+
+                    else:
+                        continue
+
+                    self.do_move(exprish, container.fst, container.field)
+
+                    if self.verify:
+                        fst.verify()
+
+                    self.do_move(container.fst, exprish, container.field)
+
+                    if self.verify:
+                        fst.verify()
+
+
+
+
 
                 except Exception:
                     print()
