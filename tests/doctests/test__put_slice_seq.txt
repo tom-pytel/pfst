@@ -6,20 +6,9 @@
 delete
 
 >>> def test_delete(fst_, start, stop, trivia=None, off=1, field='elts', sep=',', self_tail_sep=None):
-...     body = getattr(fst_.a, field)
-...
-...     if start:
-...         _, _, bound_ln, bound_col = body[start - 1].f.pars()
-...     else:
-...         bound_ln  = fst_.ln
-...         bound_col = fst_.col + off
-...
-...     ln, col, _, _         = body[start].f.pars()
-...     _, _, end_ln, end_col = body[stop - 1].f.pars()
-...
-...     _put_slice_seq(fst_, start, stop, len(body), None, None, None,
-...                    bound_ln, bound_col, fst_.end_ln, fst_.end_col - off,
-...                    ln, col, end_ln, end_col, trivia, field, None, sep, self_tail_sep)
+...     _put_slice_seq(fst_, start, stop, None, None, None,
+...                    fst_.ln, fst_.col + off, fst_.end_ln, fst_.end_col - off,
+...                    trivia, field, None, sep, self_tail_sep)
 ...
 ...     return fst_
 
@@ -145,22 +134,11 @@ delete
 replace
 
 >>> def test_replace(fst_, start, stop, new, trivia=None, off=1, field='elts', sep=',', self_tail_sep=None):
-...     body = getattr(fst_.a, field)
-...
-...     if start:
-...         _, _, bound_ln, bound_col = body[start - 1].f.pars()
-...     else:
-...         bound_ln  = fst_.ln
-...         bound_col = fst_.col + off
-...
-...     ln, col, _, _         = body[start].f.pars()
-...     _, _, end_ln, end_col = body[stop - 1].f.pars()
-...
 ...     new_body = getattr(new.a, field)
 ...
-...     _put_slice_seq(fst_, start, stop, len(body), new, new_body[0].f, new_body[-1].f,
-...                    bound_ln, bound_col, fst_.end_ln, fst_.end_col - off,
-...                    ln, col, end_ln, end_col, trivia, field, None, sep, self_tail_sep)
+...     _put_slice_seq(fst_, start, stop, new, new_body[0].f, new_body[-1].f,
+...                    fst_.ln, fst_.col + off, fst_.end_ln, fst_.end_col - off,
+...                    trivia, field, None, sep, self_tail_sep)
 ...
 ...     return fst_
 
@@ -448,28 +426,11 @@ trailing newlines
 replace
 
 >>> def test_insert(fst_, idx, new, trivia=None, off=1, field='elts', sep=',', self_tail_sep=None):
-...     body = getattr(fst_.a, field)
-...
-...     if idx:
-...         _, _, bound_ln, bound_col = body[idx - 1].f.pars()
-...     else:
-...         bound_ln  = fst_.ln
-...         bound_col = fst_.col + off
-...
-...     _, _, bound_end_ln, bound_end_col  = fst_.loc
-...     bound_end_col                     -= off
-...
-...     if idx < len(body):
-...         end_ln, end_col, _, _ = body[idx].f.pars()
-...     else:
-...         end_ln  = bound_end_ln
-...         end_col = bound_end_col
-...
 ...     new_body = getattr(new.a, field)
 ...
-...     _put_slice_seq(fst_, idx, idx, len(body), new, new_body[0].f, new_body[-1].f,
-...                    bound_ln, bound_col, bound_end_ln, bound_end_col,
-...                    -1, -1, end_ln, end_col, trivia, field, None, sep, self_tail_sep)
+...     _put_slice_seq(fst_, idx, idx, new, new_body[0].f, new_body[-1].f,
+...                    fst_.ln, fst_.col + off, fst_.end_ln, fst_.end_col - off,
+...                    trivia, field, None, sep, self_tail_sep)
 ...
 ...     return fst_
 
@@ -838,21 +799,9 @@ don't remove comma with stuff after it
 delete (two-element sequence)
 
 >>> def test_delete2(fst_, start, stop, trivia=None, off=1, field='keys', field2='values', sep=',', self_tail_sep=None):
-...     body  = getattr(fst_.a, field)
-...     body2 = getattr(fst_.a, field2)
-...
-...     if start:
-...         _, _, bound_ln, bound_col = body2[start - 1].f.pars()
-...     else:
-...         bound_ln  = fst_.ln
-...         bound_col = fst_.col + off
-...
-...     ln, col, _, _         = fst_._loc_maybe_dict_key(start, True, body)
-...     _, _, end_ln, end_col = body2[stop - 1].f.pars()
-...
-...     _put_slice_seq(fst_, start, stop, len(body), None, None, None,
-...                    bound_ln, bound_col, fst_.end_ln, fst_.end_col - off,
-...                    ln, col, end_ln, end_col, trivia, field, field2, sep, self_tail_sep)
+...     _put_slice_seq(fst_, start, stop, None, None, None,
+...                    fst_.ln, fst_.col + off, fst_.end_ln, fst_.end_col - off,
+...                    trivia, field, field2, sep, self_tail_sep)
 ...
 ...     return fst_
 

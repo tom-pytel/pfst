@@ -5406,6 +5406,52 @@ Module - ROOT 0,0..0,14
     .value Constant 'TYPE A' - 0,6..0,14
 """),
 
+(r"""[
+    a, b,
+    c
+]""", 'body[0].value', 1, 3, None, {}, r"""[
+    a
+]""", r"""[b,
+    c
+]""", r"""
+Module - ROOT 0,0..2,1
+  .body[1]
+  0] Expr - 0,0..2,1
+    .value List - 0,0..2,1
+      .elts[1]
+      0] Name 'a' Load - 1,4..1,5
+      .ctx Load
+""", r"""
+List - ROOT 0,0..2,1
+  .elts[2]
+  0] Name 'b' Load - 0,1..0,2
+  1] Name 'c' Load - 1,4..1,5
+  .ctx Load
+"""),
+
+(r"""[
+    a,
+    b, c
+]""", 'body[0].value', 0, 2, None, {}, r"""[
+    c
+]""", r"""[
+    a,
+    b]""", r"""
+Module - ROOT 0,0..2,1
+  .body[1]
+  0] Expr - 0,0..2,1
+    .value List - 0,0..2,1
+      .elts[1]
+      0] Name 'c' Load - 1,4..1,5
+      .ctx Load
+""", r"""
+List - ROOT 0,0..2,6
+  .elts[2]
+  0] Name 'a' Load - 1,4..1,5
+  1] Name 'b' Load - 2,4..2,5
+  .ctx Load
+"""),
+
 ]  # END OF GET_SLICE_STMTISH_DATA
 
 PUT_SLICE_EXPRISH_DATA = [

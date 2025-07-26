@@ -21,7 +21,8 @@
 ...         bound_col += off
 ...
 ...     return _get_slice_seq(fst_, start, stop, len(fst_.elts), True, ast_type(elts=fst_.a.elts[start : stop]),
-...         bound_ln, bound_col, fst_.end_ln, fst_.end_col - 1, *f.elts[start].loc[:2], *f.elts[stop - 1].loc[2:],
+...         elts[stop - 1], elts[start].f.pars(), elts[stop - 1].f.pars(),
+...         bound_ln, bound_col, fst_.end_ln, fst_.end_col - 1,
 ...         trivia, prefix=prefix, suffix=suffix, self_tail_sep=self_tail_sep, ret_tail_sep=ret_tail_sep)
 
 
