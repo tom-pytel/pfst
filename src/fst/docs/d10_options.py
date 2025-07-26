@@ -78,10 +78,10 @@ def f():
 ```
 
 ```py
->>> print(FST('{a, b}').put_slice('{*()}', 1, 1, empty_set=False).src)
+>>> print(FST('{a, b}').put_slice('{*()}', 1, 1, empty_set_put=False).src)
 {a, *(), b}
 
->>> print(FST('{a, b}').put_slice('{*()}', 1, 1, empty_set=True).src)
+>>> print(FST('{a, b}').put_slice('{*()}', 1, 1, empty_set_put=True).src)
 {a, b}
 ```
 
@@ -142,8 +142,9 @@ Or get all global options.
  'trivia': True,
  'elif_': True,
  'docstr': True,
- 'empty_set': True,
  'pars_walrus': False,
+ 'empty_set_get': True,
+ 'empty_set_put': True,
  'pep8space': True,
  'precomms': True,
  'postcomms': True,

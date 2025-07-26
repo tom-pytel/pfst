@@ -130,7 +130,7 @@ def _get_slice_tuple_list_or_set(self: fst.FST, start: int | Literal['end'] | No
 
     if start == stop:
         if is_set:
-            return self._new_empty_set(from_=self)
+            return self._new_empty_set_star(from_=self)
         elif is_tuple:
             return self._new_empty_tuple(from_=self)
         else:
@@ -208,7 +208,7 @@ def _get_slice_tuple_list_or_set(self: fst.FST, start: int | Literal['end'] | No
 #     if stop or (start and start != 'end'):
 #         raise IndexError(f"Set.{field} index out of range")
 
-#     return self._new_empty_set(from_=self)
+#     return self._new_empty_set_star(from_=self)
 
 
 def _get_slice_dict(self: fst.FST, start: int | Literal['end'] | None, stop: int | None, field: str, cut: bool,
@@ -336,9 +336,9 @@ def _put_slice_tuple_list_or_set(self: fst.FST, code: Code | None, start: int | 
             is_tuple = is_set = False  # that's right, an `ast.Set` with `is_set=False` because in this case all we need is the `elts` container (without `ctx`)
 
         else:
-            if empty_set := self.get_option('empty_set', options):
+            if empty_set := self.get_option('empty_set_put', options):
                 if ((put_fst.is_empty_set_seq() or put_fst.is_empty_set_call()) if empty_set is True else
-                    put_fst.is_empty_set_seq() if empty_set == 'seq' else put_fst.is_empty_set_call()  # else 'call'
+                    put_fst.is_empty_set_seq() if empty_set == 'star' else put_fst.is_empty_set_call()  # else 'call'
                 ):
                     put_fst = self._new_empty_set_curlies(from_=self)
 

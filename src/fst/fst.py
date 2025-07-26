@@ -39,18 +39,19 @@ _DEFAULT_PARSE_PARAMS = dict(filename='<unknown>', type_comments=False, feature_
 _DEFAULT_INDENT       = '    '
 
 _OPTIONS = {
-    'pars':        'auto', # True | False | 'auto'
-    'raw':         False,  # True | False | 'auto'
-    'trivia':      True,   # True | False | 'all' | 'block' | (True | False | 'all' | 'block', True | False | 'all' | 'block' | 'line'), True means ('block', 'line')
-    'elif_':       True,   # True | False
-    'docstr':      True,   # True | False | 'strict'
-    'empty_set':   True,   # True | False | 'seq' | 'call'
-    'pars_walrus': False,  # True | False
-    'pep8space':   True,   # True | False | 1
-    'precomms':    True,   # True | False | 'all'
-    'postcomms':   True,   # True | False | 'all' | 'block'
-    'prespace':    False,  # True | False | int
-    'postspace':   False,  # True | False | int
+    'pars':          'auto', # True | False | 'auto'
+    'raw':           False,  # True | False | 'auto'
+    'trivia':        True,   # True | False | 'all' | 'block' | (True | False | 'all' | 'block', True | False | 'all' | 'block' | 'line'), True means ('block', 'line')
+    'elif_':         True,   # True | False
+    'docstr':        True,   # True | False | 'strict'
+    'pars_walrus':   False,  # True | False
+    'empty_set_get': True,   # True | False | 'star' | 'call' | 'tuple'
+    'empty_set_put': True,   # True | False | 'star' | 'call'
+    'pep8space':     True,   # True | False | 1
+    'precomms':      True,   # True | False | 'all'
+    'postcomms':     True,   # True | False | 'all' | 'block'
+    'prespace':      False,  # True | False | int
+    'postspace':     False,  # True | False | int
 }
 
 
@@ -412,49 +413,6 @@ class FST:
         `GeneratorExp`."""
 
         return isinstance(self.a, ANONYMOUS_SCOPE)
-
-    @property
-    def has_Slice(self) -> bool:
-        """Whether self is a `Slice` or a `Tuple` which directly contains any `Slice`.
-
-        **Examples:**
-        ```py
-        >>> FST('a:b:c', 'expr_slice').has_Slice
-        True
-
-        >>> FST('1, d:e', 'expr_slice').has_Slice  # Tuple contains at least one Slice
-        True
-
-        >>> # b is in the .slice field but is not a Slice or Slice Tuple
-        >>> FST('a[b]').slice.has_Slice
-        False
-        ```
-        """
-
-        return isinstance(a := self.a, Slice) or (isinstance(a, Tuple) and
-                                                  any(isinstance(e, Slice) for e in a.elts))
-
-    @property
-    def is_augop(self) -> bool | None:
-        """Whether `self` is an augmented `operator` or not, or not an `operator` at all.
-
-        **Returns:**
-        - `True` if is augmented `operator`, `False` if non-augmented `operator` and `None` if is not `operator` at all.
-
-        **Examples:**
-        ```py
-        >>> FST('+').is_augop
-        False
-
-        >>> FST('+=').is_augop
-        True
-
-        >>> repr(FST('~').is_augop)
-        'None'
-        ```
-        """
-
-        return None if not isinstance(self.a, operator) else self.get_src(*self.loc) in OPSTR2CLS_AUG
 
     @property
     def f(self):
@@ -832,8 +790,9 @@ class FST:
          'trivia': True,
          'elif_': True,
          'docstr': True,
-         'empty_set': True,
          'pars_walrus': False,
+         'empty_set_get': True,
+         'empty_set_put': True,
          'pep8space': True,
          'precomms': True,
          'postcomms': True,
@@ -960,15 +919,21 @@ class FST:
             - `False`: None.
             - `True`: All `Expr` multiline strings (as they serve no coding purpose).
             - `'strict'`: Only multiline strings in expected docstring positions (functions and classes).
-        - `empty_set`: Empty set source during a slice put (considered to have no elements).
-            - `False`: Nothing is considered an empty set and an empty set slice put is only possible using a non-set
-                type of empty sequence (tuple or list).
-            - `True`: `set()` call and `{*()}`, `{*[]}` and `{*{}}` starred sequences are considered empty.
-            - `'seq'`: Only starred sequences `{*()}`, `{*[]}` and `{*{}}` are considered empty.
-            - `'call'`: Only `set()` call is considered empty.
         - `pars_walrus`: Whether to parenthesize copied `NamedExpr` nodes or not (only if `pars` is also not `False`).
             - `False`: Do not parenthesize cut / copied `NamedExpr` walrus expressions.
             - `True`: Parenthesize cut / copied `NamedExpr` walrus expressions.
+        - `empty_set_get`: Empty set to return when getting an empty slice from a set (considered to have no elements).
+            - `False`: Return an invalid `Set` element with just curlies (where the source parses to a `Dict`).
+            - `True`: Same as `'star'`.
+            - `'star'`: Starred sequence `{*()}`.
+            - `'call'`: `set()` call.
+            - `'tuple'`: Empty tuple `()`.
+        - `empty_set_put`: Empty set source during a slice put (considered to have no elements).
+            - `False`: Nothing is considered an empty set and an empty set slice put is only possible using a non-set
+                type of empty sequence (tuple or list).
+            - `True`: `set()` call and `{*()}`, `{*[]}` and `{*{}}` starred sequences are considered empty.
+            - `'star'`: Only starred sequences `{*()}`, `{*[]}` and `{*{}}` are considered empty.
+            - `'call'`: Only `set()` call is considered empty.
         - `pep8space`: Preceding and trailing empty lines for function and class definitions.
             - `False`: No empty lines.
             - `True`: Two empty lines at module scope and one empty line in other scopes.
@@ -4814,6 +4779,47 @@ class FST:
         return ((parent := self.parent) and self.pfield.name == 'patterns' and
                 isinstance(parenta := parent.a, MatchClass) and not parenta.kwd_patterns and len(parenta.patterns) == 1)
 
+    def is_augop(self) -> bool | None:
+        """Whether `self` is an augmented `operator` or not, or not an `operator` at all.
+
+        **Returns:**
+        - `True` if is augmented `operator`, `False` if non-augmented `operator` and `None` if is not `operator` at all.
+
+        **Examples:**
+        ```py
+        >>> FST('+').is_augop()
+        False
+
+        >>> FST('+=').is_augop()
+        True
+
+        >>> repr(FST('~').is_augop())
+        'None'
+        ```
+        """
+
+        return None if not isinstance(self.a, operator) else self.get_src(*self.loc) in OPSTR2CLS_AUG
+
+    def has_Slice(self) -> bool:
+        """Whether self is a `Slice` or a `Tuple` which directly contains any `Slice`.
+
+        **Examples:**
+        ```py
+        >>> FST('a:b:c', 'expr_slice').has_Slice()
+        True
+
+        >>> FST('1, d:e', 'expr_slice').has_Slice()  # Tuple contains at least one Slice
+        True
+
+        >>> # b is in the .slice field but is not a Slice or Slice Tuple
+        >>> FST('a[b]').slice.has_Slice()
+        False
+        ```
+        """
+
+        return isinstance(a := self.a, Slice) or (isinstance(a, Tuple) and
+                                                  any(isinstance(e, Slice) for e in a.elts))
+
     # ------------------------------------------------------------------------------------------------------------------
     # Private and other misc stuff
 
@@ -4823,7 +4829,8 @@ class FST:
         _new_empty_tuple,
         _new_empty_list,
         _new_empty_dict,
-        _new_empty_set,
+        _new_empty_set_star,
+        _new_empty_set_call,
         _new_empty_set_curlies,
         _make_fst_tree,
         _unmake_fst_tree,

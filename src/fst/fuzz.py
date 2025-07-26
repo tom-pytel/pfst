@@ -509,7 +509,7 @@ def can_replace(tgt: FST, repl: FST) -> bool:  # assuming ASTCat has already bee
             if not allowed or not isinstance(repla, allowed):
                 return False
 
-        if isinstance(tgta, operator) and isinstance(repla, operator) and tgt.is_augop ^ repl.is_augop:
+        if isinstance(tgta, operator) and isinstance(repla, operator) and tgt.is_augop() ^ repl.is_augop():
             return False
 
     except Exception:
@@ -1673,12 +1673,14 @@ class SliceExprish(Fuzzy):
             # Tuple: ('elts', FST('(None,)')),
             # slice: ('elts', FST('(None,)')),
             List: SliceExprish.Container('elts', FST('[None]')),
+            Set: SliceExprish.Container('elts', FST('{None}')),
         }
 
         exprishs = []
 
         for f in fst.walk(True):
-            if isinstance(f.a, (Dict,)) or (isinstance(f.a, (List,)) and isinstance(f.a.ctx, Load)):
+            if isinstance(f.a, (Dict, Set)) or (isinstance(f.a, (List,)) and isinstance(f.a.ctx, Load)):
+            # if isinstance(f.a, (Dict,)) or (isinstance(f.a, (List,)) and isinstance(f.a.ctx, Load)):
             # if isinstance(f.a, (List,)) and isinstance(f.a.ctx, Load):
             # if isinstance(f.a, (Dict,)):
                 exprishs.append(f)
@@ -1712,15 +1714,17 @@ class SliceExprish(Fuzzy):
                     else:
                         continue
 
-                    self.do_move(exprish, container.fst, container.field)
 
-                    if self.verify:
-                        fst.verify()
+                    with FST.options(empty_set_get='tuple'):
+                        self.do_move(exprish, container.fst, container.field)
 
-                    self.do_move(container.fst, exprish, container.field)
+                        if self.verify:
+                            fst.verify()
 
-                    if self.verify:
-                        fst.verify()
+                        self.do_move(container.fst, exprish, container.field)
+
+                        if self.verify:
+                            fst.verify()
 
 
 

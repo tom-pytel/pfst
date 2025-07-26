@@ -594,7 +594,7 @@ def _get_slice_Dict(self: fst.FST, start: int | Literal['end'] | None, stop: int
     start, stop = _fixup_slice_indices(len_body, start, stop)
 
     if start == stop:
-        return self._new_empty_dict(from_=self)
+        return fst.FST._new_empty_dict(from_=self)
 
     locs        = _locs_and_bound_get(self, start, stop, body, body2)
     asts, asts2 = _cut_or_copy_asts2(start, stop, 'keys', 'values', cut, body, body2)
@@ -610,7 +610,7 @@ def _get_slice_List_elts(self: fst.FST, start: int | Literal['end'] | None, stop
     start, stop = _fixup_slice_indices(len_body, start, stop)
 
     if start == stop:
-        return self._new_empty_list(from_=self)
+        return fst.FST._new_empty_list(from_=self)
 
     locs    = _locs_and_bound_get(self, start, stop, body, body)
     asts    = _cut_or_copy_asts(start, stop, 'elts', cut, body)
@@ -622,6 +622,31 @@ def _get_slice_List_elts(self: fst.FST, start: int | Literal['end'] | None, stop
 
     return _get_slice_seq(self, start, stop, len_body, cut, ret_ast, asts[-1], *locs,
                           options.get('trivia'), 'elts', '[', ']')
+
+
+def _get_slice_Set_elts(self: fst.FST, start: int | Literal['end'] | None, stop: int | None, field: str, cut: bool,
+                         **options) -> fst.FST:
+    len_body    = len(body := self.a.elts)
+    start, stop = _fixup_slice_indices(len_body, start, stop)
+
+    if start == stop:
+        return (
+            fst.FST._new_empty_set_curlies() if not (empty_set := self.get_option('empty_set_get', options)) else
+            fst.FST._new_empty_set_call() if empty_set == 'call' else
+            fst.FST._new_empty_tuple() if empty_set == 'tuple' else
+            fst.FST._new_empty_set_star()  # True, 'star'
+        )
+
+    locs    = _locs_and_bound_get(self, start, stop, body, body)
+    asts    = _cut_or_copy_asts(start, stop, 'elts', cut, body)
+    ret_ast = Set(elts=asts)
+
+    fst_ = _get_slice_seq(self, start, stop, len_body, cut, ret_ast, asts[-1], *locs,
+                          options.get('trivia'), 'elts', '{', '}')
+
+    self._maybe_fix_set()
+
+    return fst_
 
 
 # TODO: handle trailing line continuation backslashes
@@ -742,7 +767,7 @@ _GET_SLICE_HANDLERS = {
 
     (Dict, ''):                           _get_slice_Dict,  # key:value*
 
-    (Set, 'elts'):                        _get_slice_tuple_list_or_set,  # expr*
+    (Set, 'elts'):                        _get_slice_Set_elts,  # expr*
     (List, 'elts'):                       _get_slice_List_elts,  # expr*
     (Tuple, 'elts'):                      _get_slice_tuple_list_or_set,  # expr*
 
@@ -1102,9 +1127,9 @@ def _code_as_seq(self: fst.FST, code: Code | None, one: bool, options: dict[str,
 
         return fst.FST(ast, ls, from_=self, lcopy=False)
 
-    if empty_set := self.get_option('empty_set', options):
+    if empty_set := self.get_option('empty_set_put', options):
         if ((fst_.is_empty_set_seq() or fst_.is_empty_set_call()) if empty_set is True else
-            fst_.is_empty_set_seq() if empty_set == 'seq' else fst_.is_empty_set_call()  # else 'call'
+            fst_.is_empty_set_seq() if empty_set == 'star' else fst_.is_empty_set_call()  # else 'call'
         ):
             return None
 
@@ -1282,6 +1307,55 @@ def _put_slice_List_elts(self: fst.FST, code: Code | None, start: int | Literal[
         body[i].f.pfield = astfield('elts', i)
 
 
+def _put_slice_Set_elts(self: fst.FST, code: Code | None, start: int | Literal['end'] | None, stop: int | None,
+                        field: str, one: bool = False, **options):
+    fst_        = _code_as_seq(self, code, one, options)
+    body        = self.a.elts
+    start, stop = _fixup_slice_indices(len(body), start, stop)
+
+    if not fst_ and start == stop:  # deleting or assigning empty seq to empty slice of seq, noop
+        return
+
+    bound_ln, bound_col, bound_end_ln, bound_end_col = self.loc
+
+    bound_col     += 1
+    bound_end_col -= 1
+
+    if not fst_:
+        _put_slice_seq(self, start, stop, None, None, None,
+                       bound_ln, bound_col, bound_end_ln, bound_end_col,
+                       options.get('trivia'))
+
+        self._unmake_fst_tree(body[start : stop])
+
+        del body[start : stop]
+
+        len_fst_body = 0
+
+    else:
+        fst_body = fst_.a.elts
+
+        _put_slice_seq(self, start, stop, fst_, fst_body[0].f, fst_body[-1].f,
+                       bound_ln, bound_col, bound_end_ln, bound_end_col,
+                       options.get('trivia'))
+
+        self._unmake_fst_tree(body[start : stop])
+        fst_._unmake_fst_parents(True)
+
+        body[start : stop] = fst_body
+
+        len_fst_body = len(fst_body)
+        FST          = fst.FST
+        stack        = [FST(body[i], self, astfield('elts', i)) for i in range(start, start + len_fst_body)]
+
+        self._make_fst_tree(stack)
+
+    for i in range(start + len_fst_body, len(body)):
+        body[i].f.pfield = astfield('elts', i)
+
+    self._maybe_fix_set()
+
+
 # ......................................................................................................................
 
 def _put_slice(self: fst.FST, code: Code | None, start: int | Literal['end'] | None, stop: int | None, field: str,
@@ -1345,7 +1419,7 @@ _PUT_SLICE_HANDLERS = {
 
     (Dict, ''):                           _put_slice_Dict,  # key:value*
 
-    (Set, 'elts'):                        _put_slice_tuple_list_or_set,  # expr*
+    (Set, 'elts'):                        _put_slice_Set_elts,  # expr*
     (List, 'elts'):                       _put_slice_List_elts,  # expr*
     (Tuple, 'elts'):                      _put_slice_tuple_list_or_set,  # expr*
 

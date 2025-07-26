@@ -3894,9 +3894,9 @@ if 1:
 
             f = FST(r'''
 t'\
-{a:0.5f<12}a' "b" \
- "c" \
-f"{d : {"0.5f<12"} }"
+{a:0.5f<12}a' t"b" \
+ t"c" \
+t"{d : {"0.5f<12"} }"
                 '''.strip())
             g = f.get(1, 'values')
             self.assertEqual("'abc'", g.src)
@@ -3905,15 +3905,15 @@ f"{d : {"0.5f<12"} }"
             self.assertEqual("t'{a:0.5f<12}'", g.src)
             g.verify()
             g = f.get(2, 'values')
-            self.assertEqual("""f'{d : {"0.5f<12"} }'""", g.src)
+            self.assertEqual("""t'{d : {"0.5f<12"} }'""", g.src)
             g.verify()
 
             f = FST(r'''
 if 1:
     t'\
-    {a:0.5f<12}a' "b" \
-     "c" \
-    f"{d : {"0.5f<12"} }"
+    {a:0.5f<12}a' t"b" \
+     t"c" \
+    t"{d : {"0.5f<12"} }"
                 '''.strip())
             g = f.body[0].value.get(2, 'values')
             self.assertEqual("'abc'", g.src)
@@ -3922,7 +3922,7 @@ if 1:
             self.assertEqual("t'{a:0.5f<12}'", g.src)
             g.verify()
             g = f.body[0].value.get(3, 'values')
-            self.assertEqual("""f'{d : {"0.5f<12"} }'""", g.src)
+            self.assertEqual("""t'{d : {"0.5f<12"} }'""", g.src)
             g.verify()
 
             f = FST("f'a{b:<3}'")

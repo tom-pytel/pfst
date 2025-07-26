@@ -324,22 +324,32 @@ def _new_empty_dict(*, from_: fst.FST | None = None) -> fst.FST:
 
 
 @staticmethod
-def _new_empty_set(only_ast: bool = False, lineno: int = 1, col_offset: int = 0, *,
-                   from_: fst.FST | None = None) -> fst.FST | AST:
-    ast = Set(elts=[
-        Starred(value=Tuple(elts=[], ctx=Load(), lineno=lineno, col_offset=col_offset+2,
-                            end_lineno=lineno, end_col_offset=col_offset+4),
-                ctx=Load(), lineno=lineno, col_offset=col_offset+1, end_lineno=lineno, end_col_offset=col_offset+4)
-    ], lineno=lineno, col_offset=col_offset, end_lineno=lineno, end_col_offset=col_offset+5)
+def _new_empty_set_star(only_ast: bool = False, lineno: int = 1, col_offset: int = 0, *,
+                        from_: fst.FST | None = None) -> fst.FST | AST:
+    ast = Set(elts=[Starred(value=Tuple(elts=[], ctx=Load(), lineno=lineno, col_offset=col_offset+2,
+                                        end_lineno=lineno, end_col_offset=col_offset+4),
+                            ctx=Load(),
+                            lineno=lineno, col_offset=col_offset+1, end_lineno=lineno, end_col_offset=col_offset+4)],
+              lineno=lineno, col_offset=col_offset, end_lineno=lineno, end_col_offset=col_offset+5)
 
     return ast if only_ast else fst.FST(ast, ['{*()}'], from_=from_)
+
+
+@staticmethod
+def _new_empty_set_call(lineno: int = 1, col_offset: int = 0, *, from_: fst.FST | None = None) -> fst.FST:
+    ast = Call(func=Name(id='set', ctx=Load(),
+                         lineno=lineno, col_offset=col_offset, end_lineno=lineno, end_col_offset=col_offset+3),
+               args=[], keywords=[],
+               lineno=lineno, col_offset=col_offset, end_lineno=lineno, end_col_offset=col_offset+5)
+
+    return fst.FST(ast, ['set()'], from_=from_)
 
 
 @staticmethod
 def _new_empty_set_curlies(only_ast: bool = False, lineno: int = 1, col_offset: int = 0, *,
                            from_: fst.FST | None = None) -> fst.FST | AST:
     ast = Set(elts=[], lineno=lineno, col_offset=col_offset, end_lineno=lineno,
-            end_col_offset=col_offset + 2)
+              end_col_offset=col_offset + 2)
 
     return ast if only_ast else fst.FST(ast, ['{}'], from_=from_)
 
@@ -1323,7 +1333,7 @@ def _maybe_fix_set(self: fst.FST):
         ln, col, end_ln, end_col = self.loc
 
         self._put_src(['{*()}'], ln, col, end_ln, end_col, True)
-        self._set_ast(self._new_empty_set(True, (a := self.a).lineno, a.col_offset))
+        self._set_ast(self._new_empty_set_star(True, (a := self.a).lineno, a.col_offset))
 
 
 def _maybe_fix_elif(self: fst.FST):

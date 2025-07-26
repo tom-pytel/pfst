@@ -1581,25 +1581,25 @@ def func():
         f.verify()
 
     def test_put_slice_empty_set(self):
-        self.assertEqual('[]', FST('[1, 2]').put_slice('set()', raw=False, empty_set=True).src)
-        self.assertEqual('[]', FST('[1, 2]').put_slice('{*()}', raw=False, empty_set=True).src)
-        self.assertEqual('[]', FST('[1, 2]').put_slice('{*[]}', raw=False, empty_set=True).src)
-        self.assertEqual('[]', FST('[1, 2]').put_slice('{*{}}', raw=False, empty_set=True).src)
+        self.assertEqual('[]', FST('[1, 2]').put_slice('set()', raw=False, empty_set_put=True).src)
+        self.assertEqual('[]', FST('[1, 2]').put_slice('{*()}', raw=False, empty_set_put=True).src)
+        self.assertEqual('[]', FST('[1, 2]').put_slice('{*[]}', raw=False, empty_set_put=True).src)
+        self.assertEqual('[]', FST('[1, 2]').put_slice('{*{}}', raw=False, empty_set_put=True).src)
 
-        self.assertRaises(ValueError, FST('[1, 2]').put_slice, 'set()', raw=False, empty_set='seq')
-        self.assertEqual('[]', FST('[1, 2]').put_slice('{*()}', raw=False, empty_set='seq').src)
-        self.assertEqual('[]', FST('[1, 2]').put_slice('{*[]}', raw=False, empty_set='seq').src)
-        self.assertEqual('[]', FST('[1, 2]').put_slice('{*{}}', raw=False, empty_set='seq').src)
+        self.assertRaises(ValueError, FST('[1, 2]').put_slice, 'set()', raw=False, empty_set_put='star')
+        self.assertEqual('[]', FST('[1, 2]').put_slice('{*()}', raw=False, empty_set_put='star').src)
+        self.assertEqual('[]', FST('[1, 2]').put_slice('{*[]}', raw=False, empty_set_put='star').src)
+        self.assertEqual('[]', FST('[1, 2]').put_slice('{*{}}', raw=False, empty_set_put='star').src)
 
-        self.assertEqual('[]', FST('[1, 2]').put_slice('set()', raw=False, empty_set='call').src)
-        self.assertEqual('[*()]', FST('[1, 2]').put_slice('{*()}', raw=False, empty_set='call').src)
-        self.assertEqual('[*[]]', FST('[1, 2]').put_slice('{*[]}', raw=False, empty_set='call').src)
-        self.assertEqual('[*{}]', FST('[1, 2]').put_slice('{*{}}', raw=False, empty_set='call').src)
+        self.assertEqual('[]', FST('[1, 2]').put_slice('set()', raw=False, empty_set_put='call').src)
+        self.assertEqual('[*()]', FST('[1, 2]').put_slice('{*()}', raw=False, empty_set_put='call').src)
+        self.assertEqual('[*[]]', FST('[1, 2]').put_slice('{*[]}', raw=False, empty_set_put='call').src)
+        self.assertEqual('[*{}]', FST('[1, 2]').put_slice('{*{}}', raw=False, empty_set_put='call').src)
 
-        self.assertRaises(ValueError, FST('[1, 2]').put_slice, 'set()', raw=False, empty_set=False)
-        self.assertEqual('[*()]', FST('[1, 2]').put_slice('{*()}', raw=False, empty_set=False).src)
-        self.assertEqual('[*[]]', FST('[1, 2]').put_slice('{*[]}', raw=False, empty_set=False).src)
-        self.assertEqual('[*{}]', FST('[1, 2]').put_slice('{*{}}', raw=False, empty_set=False).src)
+        self.assertRaises(ValueError, FST('[1, 2]').put_slice, 'set()', raw=False, empty_set_put=False)
+        self.assertEqual('[*()]', FST('[1, 2]').put_slice('{*()}', raw=False, empty_set_put=False).src)
+        self.assertEqual('[*[]]', FST('[1, 2]').put_slice('{*[]}', raw=False, empty_set_put=False).src)
+        self.assertEqual('[*{}]', FST('[1, 2]').put_slice('{*{}}', raw=False, empty_set_put=False).src)
 
     def test_empty_set_slice(self):
         # f = parse('set()').body[0].value.f
