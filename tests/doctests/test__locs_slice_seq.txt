@@ -5,7 +5,7 @@
 >>> _locs_slice_seq(FST("""
 ... [  GET,  ]
 ... """.strip()), True, True, (l := fstloc(0, 3, 0, 6)), l, 0, 1, 0, 9, (False, False))
-(fstloc(0, 1, 0, 9), fstloc(0, 1, 0, 9), None, (0, 7))
+(fstloc(0, 3, 0, 7), fstloc(0, 1, 0, 9), None, (0, 7))
 
 
 >>> _locs_slice_seq(FST("""

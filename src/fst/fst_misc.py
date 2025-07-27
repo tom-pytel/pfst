@@ -8,6 +8,7 @@ from __future__ import annotations
 import re
 from ast import *
 from math import log10
+from types import EllipsisType
 from typing import Callable, Literal
 
 from . import fst
@@ -16,7 +17,7 @@ from .astutil import *
 from .astutil import re_identifier, OPCLS2STR, Interpolation, TemplateStr
 
 from .misc import (
-    Self, astfield, fstloc, nspace, pyver,
+    Self, astfield, fstloc, srcwpos, nspace, pyver,
     EXPRISH, STMTISH, BLOCK, HAS_DOCSTRING,
     re_empty_line_start, re_line_trailing_space, re_line_end_cont_or_comment,
     _next_src, _prev_src, _next_find, _prev_find, _next_pars, _prev_pars, _next_find_re,
@@ -26,6 +27,8 @@ from .misc import (
 _HAS_FSTR_COMMENT_BUG  = f'{"a#b"=}' != '"a#b"=\'a#b\''
 
 _astfieldctx           = astfield('ctx')
+
+_re_one_space_or_end   = re.compile(r'\s|$')
 
 _re_fval_expr_equals   = re.compile(r'(?:\s*(?:#.*|\\)\n)*\s*=\s*(?:(?:#.*|\\)\n\s*)*')  # format string expression tail '=' indicating self-documentation
 
@@ -1178,8 +1181,9 @@ def _maybe_del_separator(self: fst.FST, ln: int, col: int, force: bool = False,
     return True
 
 
-def _maybe_add_comma(self: fst.FST, ln: int, col: int, space: bool,
-                     end_ln: int | None = None, end_col: int | None = None, exclude_self: bool = True) -> bool | None:
+def _maybe_add_comma(self: fst.FST, ln: int, col: int, space: bool, end_ln: int | None = None,
+                     end_col: int | None = None, exclude: fst.FST | None | EllipsisType = ...,
+                     offset_excluded: bool = True) -> srcwpos | None:
     """Maybe add comma at start of span if not already present as first code in span. Will skip any closing
     parentheses for check and add. Is meant for adding at the end of a sequence. We specifically don't use `pars()` here
     because is meant to be used where the element is being modified and may not be valid for that.
@@ -1187,16 +1191,22 @@ def _maybe_add_comma(self: fst.FST, ln: int, col: int, space: bool,
     **Parameters:**
     - `ln`: Line start of span.
     - `col`: Column start of span.
-    - `space`: Whether to add a space to new comma or existing comma IF the span is zero length.
-    - `exclude_self`: Should be `True` if comma is for sure being put past all elements of `self`, otherwise `False`.
+    - `space`: Whether to add a space to new comma or existing comma IF the span is zero length or if following
+        character exists and is not a space.
+    - `exclude`: `...` means exclude `self`, `None` excludes nothing and any other `FST` excludes that `FST`. Should be
+        `...` if comma is for sure being put past all elements of `self`.
+    - `offset_excluded`: Parameter to `_offset()`.
 
     **Returns:**
-    - `bool`: Whether a comma was added or not (if wasn't present before or was). If `None` is returned then a comma was
-        not added but a space was added just past an existing comma.
+    - `srcwpos`: If something was put then returns location and what was put (comma, space or both).
+    - `None`: Nothing was put.
     """
 
     if end_ln is None:
         _, _, end_ln, end_col = self.loc
+
+    if exclude is ...:
+        exclude = self
 
     lines = self.root._lines
 
@@ -1214,23 +1224,25 @@ def _maybe_add_comma(self: fst.FST, ln: int, col: int, space: bool,
                 break
 
             else:
-                if space and cln == end_ln and ccol == end_col:
-                    self._put_src([' '], cln, ccol, cln, ccol, True, exclude=self if exclude_self else None)
+                if space and ((cln == end_ln and ccol == end_col) or
+                              not _re_one_space_or_end.match(lines[cln], ccol)):
+                    self._put_src([' '], cln, ccol, cln, ccol, True, exclude=exclude, offset_excluded=offset_excluded)
 
-                    return None
+                    return srcwpos(cln, ccol, ' ')
 
-                return False
+                return None
 
         else:
             continue
 
         break
 
-    comma = ', ' if space and ln == end_ln and col == end_col else ','
+    comma = ', ' if space and ((ln == end_ln and col == end_col) or
+                               not _re_one_space_or_end.match(lines[ln], col)) else ','
 
-    self._put_src([comma], ln, col, ln, col, True, exclude=self if exclude_self else None)
+    self._put_src([comma], ln, col, ln, col, True, exclude=exclude, offset_excluded=offset_excluded)
 
-    return True
+    return srcwpos(ln, col, comma)
 
 
 def _maybe_add_singleton_tuple_comma(self: fst.FST):
@@ -1778,8 +1790,6 @@ def _get_fmtval_interp_strs(self: fst.FST) -> tuple[str | None, str | None, int,
 
                 if (m := re_line_end_cont_or_comment.match(l, c)) and (g := m.group(1)) and g.startswith('#'):  # line ends in comment, nuke it
                     lines[i] = l[:m.start(1)]
-
-        print()
 
     dbg_str = '\n'.join(lines) if get_dbg else None
 

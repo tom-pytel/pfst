@@ -161,6 +161,31 @@ two  # fake comment start""", **b
             }''').body[0].value
         self.assertEqual((1, 19, 1, 21), a.f._loc_maybe_dict_key(1))
 
+    def test__maybe_add_comma(self):
+        f = FST('[a#c\n]')
+        f._maybe_add_comma(0, 2, False, 0, 2)
+        self.assertEqual('[a,#c\n]', f.src)
+
+        f = FST('[a#c\n]')
+        f._maybe_add_comma(0, 2, True, 0, 2)
+        self.assertEqual('[a, #c\n]', f.src)
+
+        f = FST('[a#c\n]')
+        f._maybe_add_comma(0, 2, False, 0, 6)
+        self.assertEqual('[a,#c\n]', f.src)
+
+        f = FST('[a#c\n]')
+        f._maybe_add_comma(0, 2, True, 0, 6)
+        self.assertEqual('[a, #c\n]', f.src)
+
+        f = FST('[a#c\n]')
+        f._maybe_add_comma(0, 2, False, 1, 0)
+        self.assertEqual('[a,#c\n]', f.src)
+
+        f = FST('[a#c\n]')
+        f._maybe_add_comma(0, 2, True, 1, 0)
+        self.assertEqual('[a, #c\n]', f.src)
+
     def test__maybe_fix_tuple(self):
         # parenthesize naked tuple preserve comments if present
 

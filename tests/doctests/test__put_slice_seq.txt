@@ -8,7 +8,7 @@ delete
 >>> def test_delete(fst_, start, stop, trivia=None, off=1, field='elts', sep=',', self_tail_sep=None):
 ...     _put_slice_seq(fst_, start, stop, None, None, None,
 ...                    fst_.ln, fst_.col + off, fst_.end_ln, fst_.end_col - off,
-...                    trivia, field, None, sep, self_tail_sep)
+...                    trivia, None, field, None, sep, self_tail_sep)
 ...
 ...     return fst_
 
@@ -138,7 +138,7 @@ replace
 ...
 ...     _put_slice_seq(fst_, start, stop, new, new_body[0].f, new_body[-1].f,
 ...                    fst_.ln, fst_.col + off, fst_.end_ln, fst_.end_col - off,
-...                    trivia, field, None, sep, self_tail_sep)
+...                    trivia, None, field, None, sep, self_tail_sep)
 ...
 ...     return fst_
 
@@ -430,7 +430,7 @@ replace
 ...
 ...     _put_slice_seq(fst_, idx, idx, new, new_body[0].f, new_body[-1].f,
 ...                    fst_.ln, fst_.col + off, fst_.end_ln, fst_.end_col - off,
-...                    trivia, field, None, sep, self_tail_sep)
+...                    trivia, None, field, None, sep, self_tail_sep)
 ...
 ...     return fst_
 
@@ -768,7 +768,7 @@ fix comment or line continuation backslash without trailing newline
 >>> print('\n'.join(repr(l) for l in test_replace(FST('''
 ... [a, b, c]
 ... '''.strip()), 1, 2, new.copy()).lines))
-'[a, NEW,#'
+'[a, NEW, #'
 ' c]'
 
 >>> new = FST(Tuple(elts=[Name(id='NEW', ctx=Load(), lineno=1, col_offset=0, end_lineno=1, end_col_offset=3)],
@@ -778,7 +778,7 @@ fix comment or line continuation backslash without trailing newline
 >>> print('\n'.join(repr(l) for l in test_replace(FST('''
 ... [a, b, c]
 ... '''.strip()), 1, 2, new.copy()).lines))
-'[a, NEW,\\'
+'[a, NEW, \\'
 ' c]'
 
 
@@ -801,7 +801,7 @@ delete (two-element sequence)
 >>> def test_delete2(fst_, start, stop, trivia=None, off=1, field='keys', field2='values', sep=',', self_tail_sep=None):
 ...     _put_slice_seq(fst_, start, stop, None, None, None,
 ...                    fst_.ln, fst_.col + off, fst_.end_ln, fst_.end_col - off,
-...                    trivia, field, field2, sep, self_tail_sep)
+...                    trivia, None, field, field2, sep, self_tail_sep)
 ...
 ...     return fst_
 

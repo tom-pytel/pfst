@@ -171,22 +171,33 @@ def regen_put_slice_stmt():
 def regen_put_slice():
     newlines = []
 
-    for dst, attr, start, stop, field, options, src, put_src, put_dump in PUT_SLICE_DATA:
+    for i, (dst, attr, start, stop, field, options, src, put_src, put_dump) in enumerate(PUT_SLICE_DATA):
         t = parse(dst)
         f = (eval(f't.{attr}', {'t': t}) if attr else t).f
 
         try:
-            f.put_slice(None if src == '**DEL**' else src, start, stop, field, **options)
+            try:
+                f.put_slice(None if src == '**DEL**' else src, start, stop, field, **options)
 
-        except NotImplementedError as exc:
-            tdst  = f'**{exc!r}**'
-            tdump = ''
+            except NotImplementedError as exc:
+                tdst  = f'**{exc!r}**'
+                tdump = ''
 
-        else:
-            tdst  = t.f.src
-            tdump = t.f.dump(out=list)
+            else:
+                tdst  = t.f.src
+                tdump = t.f.dump(out=list)
 
-            t.f.verify(raise_=True)
+                t.f.verify(raise_=True)
+
+        except Exception:
+            print(i, attr, start, stop, field, options)
+            print(dst)
+            print('...')
+            print(src)
+            print('...')
+            print('\n'.join(repr(l) for l in t.f.lines))
+
+            raise
 
         newlines.extend(f'''(r"""{dst}""", {attr!r}, {start}, {stop}, {field!r}, {options!r}, r"""{src}""", r"""{tdst}""", r"""'''.split('\n'))
         newlines.extend(tdump)
