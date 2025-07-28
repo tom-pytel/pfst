@@ -197,18 +197,19 @@ Set - ROOT 0,0..0,5
     2,  # second line
     3,  # third line
 )""", 'body[0].value', None, None, {}, r"""
-()
-""", r"""
 (       # hello
+)
+""", r"""
+(
     1,  # last line
     2,  # second line
     3,  # third line
 )
 """, r"""
-Module - ROOT 0,0..0,2
+Module - ROOT 0,0..1,1
   .body[1]
-  0] Expr - 0,0..0,2
-    .value Tuple - 0,0..0,2
+  0] Expr - 0,0..1,1
+    .value Tuple - 0,0..1,1
       .ctx Load
 """, r"""
 Tuple - ROOT 0,0..4,1
@@ -309,16 +310,17 @@ Tuple - ROOT 0,0..2,1
 (r"""(           # hello
     1, 2, 3 # last line
 )""", 'body[0].value', None, None, {}, r"""
-()
-""", r"""
 (           # hello
+)
+""", r"""
+(
     1, 2, 3 # last line
 )
 """, r"""
-Module - ROOT 0,0..0,2
+Module - ROOT 0,0..1,1
   .body[1]
-  0] Expr - 0,0..0,2
-    .value Tuple - 0,0..0,2
+  0] Expr - 0,0..1,1
+    .value Tuple - 0,0..1,1
       .ctx Load
 """, r"""
 Tuple - ROOT 0,0..2,1
@@ -336,8 +338,7 @@ Tuple - ROOT 0,0..2,1
     3, # last line
 )
 """, r"""
-(
-    1, 2)
+(1, 2)
 """, r"""
 Module - ROOT 0,0..2,1
   .body[1]
@@ -347,10 +348,10 @@ Module - ROOT 0,0..2,1
       0] Constant 3 - 1,4..1,5
       .ctx Load
 """, r"""
-Tuple - ROOT 0,0..1,9
+Tuple - ROOT 0,0..0,6
   .elts[2]
-  0] Constant 1 - 1,4..1,5
-  1] Constant 2 - 1,7..1,8
+  0] Constant 1 - 0,1..0,2
+  1] Constant 2 - 0,4..0,5
   .ctx Load
 """),
 
@@ -382,15 +383,16 @@ Tuple - ROOT 0,0..0,4
     1, 2, 3 # last line
 )""", 'body[0].value', 2, None, {}, r"""
 (           # hello
-    1, 2)
+    1, 2
+)
 """, r"""
 (3, # last line
 )
 """, r"""
-Module - ROOT 0,0..1,9
+Module - ROOT 0,0..2,1
   .body[1]
-  0] Expr - 0,0..1,9
-    .value Tuple - 0,0..1,9
+  0] Expr - 0,0..2,1
+    .value Tuple - 0,0..2,1
       .elts[2]
       0] Constant 1 - 1,4..1,5
       1] Constant 2 - 1,7..1,8
@@ -405,7 +407,7 @@ Tuple - ROOT 0,0..1,1
 (r"""1, 2, 3, 4""", 'body[0].value', 1, 3, {}, r"""
 1, 4
 """, r"""
-(2, 3)
+2, 3
 """, r"""
 Module - ROOT 0,0..0,4
   .body[1]
@@ -416,17 +418,17 @@ Module - ROOT 0,0..0,4
       1] Constant 4 - 0,3..0,4
       .ctx Load
 """, r"""
-Tuple - ROOT 0,0..0,6
+Tuple - ROOT 0,0..0,4
   .elts[2]
-  0] Constant 2 - 0,1..0,2
-  1] Constant 3 - 0,4..0,5
+  0] Constant 2 - 0,0..0,1
+  1] Constant 3 - 0,3..0,4
   .ctx Load
 """),
 
 (r"""1, 2, 3, 4""", 'body[0].value', -1, None, {}, r"""
 1, 2, 3
 """, r"""
-(4,)
+4,
 """, r"""
 Module - ROOT 0,0..0,7
   .body[1]
@@ -438,16 +440,16 @@ Module - ROOT 0,0..0,7
       2] Constant 3 - 0,6..0,7
       .ctx Load
 """, r"""
-Tuple - ROOT 0,0..0,4
+Tuple - ROOT 0,0..0,2
   .elts[1]
-  0] Constant 4 - 0,1..0,2
+  0] Constant 4 - 0,0..0,1
   .ctx Load
 """),
 
 (r"""1, 2, 3, 4""", 'body[0].value', None, None, {}, r"""
 ()
 """, r"""
-(1, 2, 3, 4)
+1, 2, 3, 4
 """, r"""
 Module - ROOT 0,0..0,2
   .body[1]
@@ -455,12 +457,12 @@ Module - ROOT 0,0..0,2
     .value Tuple - 0,0..0,2
       .ctx Load
 """, r"""
-Tuple - ROOT 0,0..0,12
+Tuple - ROOT 0,0..0,10
   .elts[4]
-  0] Constant 1 - 0,1..0,2
-  1] Constant 2 - 0,4..0,5
-  2] Constant 3 - 0,7..0,8
-  3] Constant 4 - 0,10..0,11
+  0] Constant 1 - 0,0..0,1
+  1] Constant 2 - 0,3..0,4
+  2] Constant 3 - 0,6..0,7
+  3] Constant 4 - 0,9..0,10
   .ctx Load
 """),
 
@@ -487,7 +489,7 @@ Tuple - ROOT 0,0..0,2
 (r"""1, 2, 3, 4""", 'body[0].value', 1, None, {}, r"""
 1,
 """, r"""
-(2, 3, 4)
+2, 3, 4
 """, r"""
 Module - ROOT 0,0..0,2
   .body[1]
@@ -497,18 +499,18 @@ Module - ROOT 0,0..0,2
       0] Constant 1 - 0,0..0,1
       .ctx Load
 """, r"""
-Tuple - ROOT 0,0..0,9
+Tuple - ROOT 0,0..0,7
   .elts[3]
-  0] Constant 2 - 0,1..0,2
-  1] Constant 3 - 0,4..0,5
-  2] Constant 4 - 0,7..0,8
+  0] Constant 2 - 0,0..0,1
+  1] Constant 3 - 0,3..0,4
+  2] Constant 4 - 0,6..0,7
   .ctx Load
 """),
 
 (r"""1, 2, 3, 4""", 'body[0].value', 0, 3, {}, r"""
 4,
 """, r"""
-(1, 2, 3)
+1, 2, 3
 """, r"""
 Module - ROOT 0,0..0,2
   .body[1]
@@ -518,31 +520,32 @@ Module - ROOT 0,0..0,2
       0] Constant 4 - 0,0..0,1
       .ctx Load
 """, r"""
-Tuple - ROOT 0,0..0,9
+Tuple - ROOT 0,0..0,7
   .elts[3]
-  0] Constant 1 - 0,1..0,2
-  1] Constant 2 - 0,4..0,5
-  2] Constant 3 - 0,7..0,8
+  0] Constant 1 - 0,0..0,1
+  1] Constant 2 - 0,3..0,4
+  2] Constant 3 - 0,6..0,7
   .ctx Load
 """),
 
 (r"""(1, 2
   ,  # comment
 3, 4)""", 'body[0].value', 1, 2, {}, r"""
-(1, 3, 4)
+(1,
+3, 4)
 """, r"""
 (2
   ,  # comment
 )
 """, r"""
-Module - ROOT 0,0..0,9
+Module - ROOT 0,0..1,5
   .body[1]
-  0] Expr - 0,0..0,9
-    .value Tuple - 0,0..0,9
+  0] Expr - 0,0..1,5
+    .value Tuple - 0,0..1,5
       .elts[3]
       0] Constant 1 - 0,1..0,2
-      1] Constant 3 - 0,4..0,5
-      2] Constant 4 - 0,7..0,8
+      1] Constant 3 - 1,0..1,1
+      2] Constant 4 - 1,3..1,4
       .ctx Load
 """, r"""
 Tuple - ROOT 0,0..2,1
@@ -554,23 +557,23 @@ Tuple - ROOT 0,0..2,1
 (r"""(1, 2
   ,
   3, 4)""", 'body[0].value', 1, 2, {}, r"""
-(1, 3, 4)
+(1,
+  3, 4)
 """, r"""
 (2
-  ,
-)
+  ,)
 """, r"""
-Module - ROOT 0,0..0,9
+Module - ROOT 0,0..1,7
   .body[1]
-  0] Expr - 0,0..0,9
-    .value Tuple - 0,0..0,9
+  0] Expr - 0,0..1,7
+    .value Tuple - 0,0..1,7
       .elts[3]
       0] Constant 1 - 0,1..0,2
-      1] Constant 3 - 0,4..0,5
-      2] Constant 4 - 0,7..0,8
+      1] Constant 3 - 1,2..1,3
+      2] Constant 4 - 1,5..1,6
       .ctx Load
 """, r"""
-Tuple - ROOT 0,0..2,1
+Tuple - ROOT 0,0..1,4
   .elts[1]
   0] Constant 2 - 0,1..0,2
   .ctx Load
@@ -579,23 +582,23 @@ Tuple - ROOT 0,0..2,1
 (r"""(1, 2 \
   , \
   3, 4)""", 'body[0].value', 1, 2, {}, r"""
-(1, 3, 4)
+(1, \
+  3, 4)
 """, r"""
 (2 \
-  , \
-)
+  ,)
 """, r"""
-Module - ROOT 0,0..0,9
+Module - ROOT 0,0..1,7
   .body[1]
-  0] Expr - 0,0..0,9
-    .value Tuple - 0,0..0,9
+  0] Expr - 0,0..1,7
+    .value Tuple - 0,0..1,7
       .elts[3]
       0] Constant 1 - 0,1..0,2
-      1] Constant 3 - 0,4..0,5
-      2] Constant 4 - 0,7..0,8
+      1] Constant 3 - 1,2..1,3
+      2] Constant 4 - 1,5..1,6
       .ctx Load
 """, r"""
-Tuple - ROOT 0,0..2,1
+Tuple - ROOT 0,0..1,4
   .elts[1]
   0] Constant 2 - 0,1..0,2
   .ctx Load
@@ -604,23 +607,23 @@ Tuple - ROOT 0,0..2,1
 (r"""(1, 2  # comment
   , \
   3, 4)""", 'body[0].value', 1, 2, {}, r"""
-(1, 3, 4)
+(1, \
+  3, 4)
 """, r"""
 (2  # comment
-  , \
-)
+  ,)
 """, r"""
-Module - ROOT 0,0..0,9
+Module - ROOT 0,0..1,7
   .body[1]
-  0] Expr - 0,0..0,9
-    .value Tuple - 0,0..0,9
+  0] Expr - 0,0..1,7
+    .value Tuple - 0,0..1,7
       .elts[3]
       0] Constant 1 - 0,1..0,2
-      1] Constant 3 - 0,4..0,5
-      2] Constant 4 - 0,7..0,8
+      1] Constant 3 - 1,2..1,3
+      2] Constant 4 - 1,5..1,6
       .ctx Load
 """, r"""
-Tuple - ROOT 0,0..2,1
+Tuple - ROOT 0,0..1,4
   .elts[1]
   0] Constant 2 - 0,1..0,2
   .ctx Load
@@ -629,23 +632,23 @@ Tuple - ROOT 0,0..2,1
 (r"""(1, 2
   ,
 3, 4)""", 'body[0].value', 1, 2, {}, r"""
-(1, 3, 4)
+(1,
+3, 4)
 """, r"""
 (2
-  ,
-)
+  ,)
 """, r"""
-Module - ROOT 0,0..0,9
+Module - ROOT 0,0..1,5
   .body[1]
-  0] Expr - 0,0..0,9
-    .value Tuple - 0,0..0,9
+  0] Expr - 0,0..1,5
+    .value Tuple - 0,0..1,5
       .elts[3]
       0] Constant 1 - 0,1..0,2
-      1] Constant 3 - 0,4..0,5
-      2] Constant 4 - 0,7..0,8
+      1] Constant 3 - 1,0..1,1
+      2] Constant 4 - 1,3..1,4
       .ctx Load
 """, r"""
-Tuple - ROOT 0,0..2,1
+Tuple - ROOT 0,0..1,4
   .elts[1]
   0] Constant 2 - 0,1..0,2
   .ctx Load
@@ -704,21 +707,22 @@ Tuple - ROOT 0,0..1,4
         3,  # third line
     )""", 'body[0].body[0].value', None, None, {}, r"""
 if 1:
-    ()
+    (       # hello
+    )
 """, r"""
-(       # hello
+(
     1,  # last line
     2,  # second line
     3,  # third line
 )
 """, r"""
-Module - ROOT 0,0..1,6
+Module - ROOT 0,0..2,5
   .body[1]
-  0] If - 0,0..1,6
+  0] If - 0,0..2,5
     .test Constant 1 - 0,3..0,4
     .body[1]
-    0] Expr - 1,4..1,6
-      .value Tuple - 1,4..1,6
+    0] Expr - 1,4..2,5
+      .value Tuple - 1,4..2,5
         .ctx Load
 """, r"""
 Tuple - ROOT 0,0..4,1
@@ -1124,35 +1128,36 @@ List - ROOT 0,0..1,10
 (r"""i =                (self.__class__.__name__, self._name,
                 (self._handle & (_sys.maxsize*2 + 1)),
                 id(self) & (_sys.maxsize*2 + 1))""", 'body[0].value', 0, 3, {}, r"""
-i =                (id(self) & (_sys.maxsize*2 + 1),)
+i =                (
+                id(self) & (_sys.maxsize*2 + 1),)
 """, r"""
 (self.__class__.__name__, self._name,
-                (self._handle & (_sys.maxsize*2 + 1)),
+                (self._handle & (_sys.maxsize*2 + 1))
 )
 """, r"""
-Module - ROOT 0,0..0,53
+Module - ROOT 0,0..1,49
   .body[1]
-  0] Assign - 0,0..0,53
+  0] Assign - 0,0..1,49
     .targets[1]
     0] Name 'i' Store - 0,0..0,1
-    .value Tuple - 0,19..0,53
+    .value Tuple - 0,19..1,49
       .elts[1]
-      0] BinOp - 0,20..0,51
-        .left Call - 0,20..0,28
-          .func Name 'id' Load - 0,20..0,22
+      0] BinOp - 1,16..1,47
+        .left Call - 1,16..1,24
+          .func Name 'id' Load - 1,16..1,18
           .args[1]
-          0] Name 'self' Load - 0,23..0,27
-        .op BitAnd - 0,29..0,30
-        .right BinOp - 0,32..0,50
-          .left BinOp - 0,32..0,46
-            .left Attribute - 0,32..0,44
-              .value Name '_sys' Load - 0,32..0,36
+          0] Name 'self' Load - 1,19..1,23
+        .op BitAnd - 1,25..1,26
+        .right BinOp - 1,28..1,46
+          .left BinOp - 1,28..1,42
+            .left Attribute - 1,28..1,40
+              .value Name '_sys' Load - 1,28..1,32
               .attr 'maxsize'
               .ctx Load
-            .op Mult - 0,44..0,45
-            .right Constant 2 - 0,45..0,46
-          .op Add - 0,47..0,48
-          .right Constant 1 - 0,49..0,50
+            .op Mult - 1,40..1,41
+            .right Constant 2 - 1,41..1,42
+          .op Add - 1,43..1,44
+          .right Constant 1 - 1,45..1,46
       .ctx Load
 """, r"""
 Tuple - ROOT 0,0..2,1
@@ -1509,7 +1514,7 @@ Dict - ROOT 0,0..0,10
 class cls:
     () = c
 """, r"""
-(a, b)
+a, b
 """, r"""
 Module - ROOT 0,0..1,10
   .body[1]
@@ -1522,10 +1527,10 @@ Module - ROOT 0,0..1,10
         .ctx Store
       .value Name 'c' Load - 1,9..1,10
 """, r"""
-Tuple - ROOT 0,0..0,6
+Tuple - ROOT 0,0..0,4
   .elts[2]
-  0] Name 'a' Load - 0,1..0,2
-  1] Name 'b' Load - 0,4..0,5
+  0] Name 'a' Load - 0,0..0,1
+  1] Name 'b' Load - 0,3..0,4
   .ctx Load
 """),
 
@@ -1534,7 +1539,7 @@ Tuple - ROOT 0,0..0,6
 if 1:
     yy, = tm, yy
 """, r"""
-(tm,)
+tm,
 """, r"""
 Module - ROOT 0,0..1,16
   .body[1]
@@ -1553,9 +1558,9 @@ Module - ROOT 0,0..1,16
         1] Name 'yy' Load - 1,14..1,16
         .ctx Load
 """, r"""
-Tuple - ROOT 0,0..0,5
+Tuple - ROOT 0,0..0,3
   .elts[1]
-  0] Name 'tm' Load - 0,1..0,3
+  0] Name 'tm' Load - 0,0..0,2
   .ctx Load
 """),
 
@@ -1604,7 +1609,7 @@ Set - ROOT 0,0..0,5
 (r"""1, 2, 3,""", 'body[0].value', 0, 1, {}, r"""
 2, 3,
 """, r"""
-(1,)
+1,
 """, r"""
 Module - ROOT 0,0..0,5
   .body[1]
@@ -1615,16 +1620,16 @@ Module - ROOT 0,0..0,5
       1] Constant 3 - 0,3..0,4
       .ctx Load
 """, r"""
-Tuple - ROOT 0,0..0,4
+Tuple - ROOT 0,0..0,2
   .elts[1]
-  0] Constant 1 - 0,1..0,2
+  0] Constant 1 - 0,0..0,1
   .ctx Load
 """),
 
 (r"""1, 2, 3,""", 'body[0].value', 1, 2, {}, r"""
 1, 3,
 """, r"""
-(2,)
+2,
 """, r"""
 Module - ROOT 0,0..0,5
   .body[1]
@@ -1635,36 +1640,36 @@ Module - ROOT 0,0..0,5
       1] Constant 3 - 0,3..0,4
       .ctx Load
 """, r"""
-Tuple - ROOT 0,0..0,4
+Tuple - ROOT 0,0..0,2
   .elts[1]
-  0] Constant 2 - 0,1..0,2
+  0] Constant 2 - 0,0..0,1
   .ctx Load
 """),
 
 (r"""1, 2, 3,""", 'body[0].value', 2, 3, {}, r"""
-1, 2,
+1, 2
 """, r"""
-(3,)
+3,
 """, r"""
-Module - ROOT 0,0..0,5
+Module - ROOT 0,0..0,4
   .body[1]
-  0] Expr - 0,0..0,5
-    .value Tuple - 0,0..0,5
+  0] Expr - 0,0..0,4
+    .value Tuple - 0,0..0,4
       .elts[2]
       0] Constant 1 - 0,0..0,1
       1] Constant 2 - 0,3..0,4
       .ctx Load
 """, r"""
-Tuple - ROOT 0,0..0,4
+Tuple - ROOT 0,0..0,2
   .elts[1]
-  0] Constant 3 - 0,1..0,2
+  0] Constant 3 - 0,0..0,1
   .ctx Load
 """),
 
 (r"""1, 2, 3,""", 'body[0].value', 0, 2, {}, r"""
 3,
 """, r"""
-(1, 2)
+1, 2
 """, r"""
 Module - ROOT 0,0..0,2
   .body[1]
@@ -1674,17 +1679,17 @@ Module - ROOT 0,0..0,2
       0] Constant 3 - 0,0..0,1
       .ctx Load
 """, r"""
-Tuple - ROOT 0,0..0,6
+Tuple - ROOT 0,0..0,4
   .elts[2]
-  0] Constant 1 - 0,1..0,2
-  1] Constant 2 - 0,4..0,5
+  0] Constant 1 - 0,0..0,1
+  1] Constant 2 - 0,3..0,4
   .ctx Load
 """),
 
 (r"""1, 2, 3,""", 'body[0].value', 1, 3, {}, r"""
 1,
 """, r"""
-(2, 3)
+2, 3,
 """, r"""
 Module - ROOT 0,0..0,2
   .body[1]
@@ -1694,17 +1699,17 @@ Module - ROOT 0,0..0,2
       0] Constant 1 - 0,0..0,1
       .ctx Load
 """, r"""
-Tuple - ROOT 0,0..0,6
+Tuple - ROOT 0,0..0,5
   .elts[2]
-  0] Constant 2 - 0,1..0,2
-  1] Constant 3 - 0,4..0,5
+  0] Constant 2 - 0,0..0,1
+  1] Constant 3 - 0,3..0,4
   .ctx Load
 """),
 
 (r"""1, 2, 3,""", 'body[0].value', 0, 3, {}, r"""
 ()
 """, r"""
-(1, 2, 3,)
+1, 2, 3,
 """, r"""
 Module - ROOT 0,0..0,2
   .body[1]
@@ -1712,11 +1717,11 @@ Module - ROOT 0,0..0,2
     .value Tuple - 0,0..0,2
       .ctx Load
 """, r"""
-Tuple - ROOT 0,0..0,10
+Tuple - ROOT 0,0..0,8
   .elts[3]
-  0] Constant 1 - 0,1..0,2
-  1] Constant 2 - 0,4..0,5
-  2] Constant 3 - 0,7..0,8
+  0] Constant 1 - 0,0..0,1
+  1] Constant 2 - 0,3..0,4
+  2] Constant 3 - 0,6..0,7
   .ctx Load
 """),
 
@@ -7527,12 +7532,12 @@ Module - ROOT 0,0..4,1
 """),
 
 (r"""(IndexError, KeyError, isinstance,)""", 'body[0].value', 2, 3, r"""()""", r"""
-(IndexError, KeyError,)
+(IndexError, KeyError)
 """, r"""
-Module - ROOT 0,0..0,23
+Module - ROOT 0,0..0,22
   .body[1]
-  0] Expr - 0,0..0,23
-    .value Tuple - 0,0..0,23
+  0] Expr - 0,0..0,22
+    .value Tuple - 0,0..0,22
       .elts[2]
       0] Name 'IndexError' Load - 0,1..0,11
       1] Name 'KeyError' Load - 0,13..0,21
@@ -7587,14 +7592,14 @@ Module - ROOT 0,0..1,46
     pass""", 'body[0].iter', 1, 2, r"""(
 c,)""", r"""
 for a in (a,
-c,):
+c):
     pass
 """, r"""
 Module - ROOT 0,0..2,8
   .body[1]
   0] For - 0,0..2,8
     .target Name 'a' Store - 0,4..0,5
-    .iter Tuple - 0,9..1,3
+    .iter Tuple - 0,9..1,2
       .elts[2]
       0] Name 'a' Load - 0,10..0,11
       1] Name 'c' Load - 1,0..1,1
@@ -7721,12 +7726,12 @@ Module - ROOT 0,0..0,11
 """),
 
 (r"""1, 2, 3,""", 'body[0].value', 3, 3, r"""a,""", r"""
-1, 2, 3, a,
+1, 2, 3, a
 """, r"""
-Module - ROOT 0,0..0,11
+Module - ROOT 0,0..0,10
   .body[1]
-  0] Expr - 0,0..0,11
-    .value Tuple - 0,0..0,11
+  0] Expr - 0,0..0,10
+    .value Tuple - 0,0..0,10
       .elts[4]
       0] Constant 1 - 0,0..0,1
       1] Constant 2 - 0,3..0,4
@@ -7764,12 +7769,12 @@ Module - ROOT 0,0..0,8
 """),
 
 (r"""1, 2, 3,""", 'body[0].value', 2, 3, r"""a,""", r"""
-1, 2, a,
+1, 2, a
 """, r"""
-Module - ROOT 0,0..0,8
+Module - ROOT 0,0..0,7
   .body[1]
-  0] Expr - 0,0..0,8
-    .value Tuple - 0,0..0,8
+  0] Expr - 0,0..0,7
+    .value Tuple - 0,0..0,7
       .elts[3]
       0] Constant 1 - 0,0..0,1
       1] Constant 2 - 0,3..0,4
@@ -7791,12 +7796,12 @@ Module - ROOT 0,0..0,5
 """),
 
 (r"""1, 2, 3,""", 'body[0].value', 1, 3, r"""a,""", r"""
-1, a,
+1, a
 """, r"""
-Module - ROOT 0,0..0,5
+Module - ROOT 0,0..0,4
   .body[1]
-  0] Expr - 0,0..0,5
-    .value Tuple - 0,0..0,5
+  0] Expr - 0,0..0,4
+    .value Tuple - 0,0..0,4
       .elts[2]
       0] Constant 1 - 0,0..0,1
       1] Name 'a' Load - 0,3..0,4
@@ -7914,12 +7919,12 @@ Module - ROOT 0,0..0,5
 """),
 
 (r"""1, 2, 3,""", 'body[0].value', 2, 3, r"""**DEL**""", r"""
-1, 2,
+1, 2
 """, r"""
-Module - ROOT 0,0..0,5
+Module - ROOT 0,0..0,4
   .body[1]
-  0] Expr - 0,0..0,5
-    .value Tuple - 0,0..0,5
+  0] Expr - 0,0..0,4
+    .value Tuple - 0,0..0,4
       .elts[2]
       0] Constant 1 - 0,0..0,1
       1] Constant 2 - 0,3..0,4
@@ -8350,6 +8355,30 @@ Module - ROOT 0,0..5,1
       1] Name 'e' Load - 2,4..2,5
       2] Constant None - 3,4..3,8
       3] Constant 3 - 4,4..4,5
+      .ctx Load
+"""),
+
+(r"""Tuple[(r & ((1 << 32) - 1)), (r & ((1 << 32) - 1))]""", 'body[0].value.slice', 1, 2, r"""()""", r"""
+Tuple[(r & ((1 << 32) - 1)),]
+""", r"""
+Module - ROOT 0,0..0,29
+  .body[1]
+  0] Expr - 0,0..0,29
+    .value Subscript - 0,0..0,29
+      .value Name 'Tuple' Load - 0,0..0,5
+      .slice Tuple - 0,6..0,28
+        .elts[1]
+        0] BinOp - 0,7..0,26
+          .left Name 'r' Load - 0,7..0,8
+          .op BitAnd - 0,9..0,10
+          .right BinOp - 0,12..0,25
+            .left BinOp - 0,13..0,20
+              .left Constant 1 - 0,13..0,14
+              .op LShift - 0,15..0,17
+              .right Constant 32 - 0,18..0,20
+            .op Sub - 0,22..0,23
+            .right Constant 1 - 0,24..0,25
+        .ctx Load
       .ctx Load
 """),
 

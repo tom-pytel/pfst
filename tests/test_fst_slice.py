@@ -28,27 +28,39 @@ def regen_get_slice_seq():
         lines = f.read().split('\n')
 
     for name in ('GET_SLICE_EXPRISH_DATA',):
-        for src, elt, start, stop, options, *_ in globals()[name]:
-            t     = parse(src)
-            f     = eval(f't.{elt}', {'t': t}).f
-            s     = f.get_slice(start, stop, cut=True, **options)
-            tsrc  = t.f.src
-            ssrc  = s.src
-            tdump = t.f.dump(out=list)
-            sdump = s.dump(out=list)
+        for i, (src, elt, start, stop, options, *_) in enumerate(globals()[name]):
+            try:
+                t     = parse(src)
+                f     = eval(f't.{elt}', {'t': t}).f
+                s     = f.get_slice(start, stop, cut=True, **options)
+                tsrc  = t.f.src
+                ssrc  = s.src
+                tdump = t.f.dump(out=list)
+                sdump = s.dump(out=list)
 
-            assert not tsrc.startswith('\n') or tsrc.endswith('\n')
-            assert not ssrc.startswith('\n') or ssrc.endswith('\n')
+                assert not tsrc.startswith('\n') or tsrc.endswith('\n')
+                assert not ssrc.startswith('\n') or ssrc.endswith('\n')
 
-            if options.get('_verify', True):
-                t.f.verify(raise_=True)
-                s.verify(raise_=True)
+                if options.get('_verify', True):
+                    t.f.verify(raise_=True)
+                    s.verify(raise_=True)
 
-            newlines.extend(f'''(r"""{src}""", {elt!r}, {start}, {stop}, {options}, r"""\n{tsrc}\n""", r"""\n{ssrc}\n""", r"""'''.split('\n'))
-            newlines.extend(tdump)
-            newlines.append('""", r"""')
-            newlines.extend(sdump)
-            newlines.append('"""),\n')
+                newlines.extend(f'''(r"""{src}""", {elt!r}, {start}, {stop}, {options}, r"""\n{tsrc}\n""", r"""\n{ssrc}\n""", r"""'''.split('\n'))
+                newlines.extend(tdump)
+                newlines.append('""", r"""')
+                newlines.extend(sdump)
+                newlines.append('"""),\n')
+
+            except Exception:
+                print(i, elt, start, stop, options)
+                print('...')
+                print(src)
+                print('...')
+                print(tsrc)
+                print('...')
+                print(ssrc)
+
+                raise
 
         start = lines.index(f'{name} = [')
         stop  = lines.index(f']  # END OF {name}')
@@ -99,7 +111,7 @@ def regen_put_slice_seq():
     newlines = []
 
     try:
-        for dst, elt, start, stop, src, put_src, put_dump in PUT_SLICE_EXPRISH_DATA:
+        for i, (dst, elt, start, stop, src, put_src, put_dump) in enumerate(PUT_SLICE_EXPRISH_DATA):
             t = parse(dst)
             f = eval(f't.{elt}', {'t': t}).f
 
@@ -117,7 +129,14 @@ def regen_put_slice_seq():
             newlines.append('"""),\n')
 
     except Exception:
-        print(dst, elt, start, stop, src, put_src)
+        print(i, elt, start, stop)
+        print('...')
+        print(dst)
+        print('...')
+        print(src)
+        print('...')
+        print(put_src)
+        print('...')
         print(t.f.src)
 
         raise
@@ -1588,7 +1607,7 @@ def func():
 
         f = FST('a, b')
         f.put_slice('end := self.Label(),', 1, 2, raw=False)
-        self.assertEqual('(a, end := self.Label(),)', f.src)
+        self.assertEqual('(a, end := self.Label())', f.src)
         f.verify()
 
     def test_put_slice_empty_set(self):

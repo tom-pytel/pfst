@@ -1599,6 +1599,13 @@ class SliceExprish(Fuzzy):
         fst:   FST
 
     @staticmethod
+    def rnd_trivia():
+        return (
+            choice(('none', 'block', 'all')) + choice(('', '', '', '', '-', '+', '-', '+', '-1', '-2', '-3', '+1', '+2', '+3')),
+            choice(('none', 'block', 'all', 'line')) + choice(('', '', '', '', '-', '+', '-', '+', '-1', '-2', '-3', '+1', '+2', '+3')),
+        )
+
+    @staticmethod
     def do_move(src: FST, dst: FST, field: str | None):
         cut       = bool(randint(0, 1))
         src_len   = len(getattr(src.a, field or 'keys'))
@@ -1625,7 +1632,8 @@ class SliceExprish(Fuzzy):
         # print(f'\x08{src_start = }, {src_stop = }, {dst_start = }, {dst_stop = }, {cut = }')
 
 
-        s = src.get_slice(src_start, src_stop, field=field, cut=cut, trivia=('all-', 'all-'))  # ('block-', 'line-'))
+        # s = src.get_slice(src_start, src_stop, field=field, cut=cut, trivia=('all-', 'all-'))  # ('block-', 'line-'))
+        s = src.get_slice(src_start, src_stop, field=field, cut=cut, trivia=SliceExprish.rnd_trivia())  # ('block-', 'line-'))
 
 
         # VVV--- THIS ---VVV
@@ -1636,8 +1644,13 @@ class SliceExprish(Fuzzy):
         # ^^^--- THIS ---^^^
 
 
+        if PYLT11 and dst.is_parenthesized_tuple() is False and dst.pfield == ('slice', None) and s.has_Starred():
+            return
+
+
         try:
-            dst.put_slice(s, dst_start, dst_stop, field=field, trivia=('all-', 'all-'))  # ('block-', 'line-'))
+            # dst.put_slice(s, dst_start, dst_stop, field=field, trivia=('all-', 'all-'))  # ('block-', 'line-'))
+            dst.put_slice(s, dst_start, dst_stop, field=field, trivia=SliceExprish.rnd_trivia())  # ('block-', 'line-'))
         except NotImplementedError:
             return
 
@@ -1670,8 +1683,8 @@ class SliceExprish(Fuzzy):
     def fuzz_one(self, fst, fnm) -> bool:
         containers = {
             Dict: SliceExprish.Container(None, FST('{None: None}')),
-            # Tuple: ('elts', FST('(None,)')),
-            # slice: ('elts', FST('(None,)')),
+            Tuple: SliceExprish.Container('elts', FST('(None,)')),
+            slice: SliceExprish.Container('elts', FST('(None,)')),
             List: SliceExprish.Container('elts', FST('[None]')),
             Set: SliceExprish.Container('elts', FST('{None}')),
         }
@@ -1679,10 +1692,11 @@ class SliceExprish(Fuzzy):
         exprishs = []
 
         for f in fst.walk(True):
-            if isinstance(f.a, (Dict, Set)) or (isinstance(f.a, (List,)) and isinstance(f.a.ctx, Load)):
+            if isinstance(f.a, (Dict, Set)) or (isinstance(f.a, (List, Tuple)) and isinstance(f.a.ctx, Load)):
             # if isinstance(f.a, (Dict,)) or (isinstance(f.a, (List,)) and isinstance(f.a.ctx, Load)):
             # if isinstance(f.a, (List,)) and isinstance(f.a.ctx, Load):
             # if isinstance(f.a, (Dict,)):
+            # if isinstance(f.a, (Tuple,)) and isinstance(f.a.ctx, Load):
                 exprishs.append(f)
 
         if not exprishs:
@@ -1704,7 +1718,7 @@ class SliceExprish(Fuzzy):
                         else:
                             raise RuntimeError('this should not happen')
 
-                        container = containers[exprish.a.__class__]
+                        container = containers[slice if exprish.has_Slice() else exprish.a.__class__]
 
                         if exprish.root is container.fst:
                             continue
@@ -1762,8 +1776,10 @@ def main():
                         help='path of file or directory of files to use')
     parser.add_argument('-f', '--fuzz', action='append', default=[],
                         help='which fuzzies to run')
-    parser.add_argument('-F', '--fuzz-rnd', action='store_true', default=False,
+    parser.add_argument('-R', '--fuzz-rnd', action='store_true', default=False,
                         help='select all randomized fuzzies to run')
+    parser.add_argument('-D', '--fuzz-det', action='store_true', default=False,
+                        help='select all deterministic fuzzies to run')
     parser.add_argument('-b', '--batch', type=int, default=None,
                         help='batch size override')
     parser.add_argument('-g', '--debug', default=False, action='store_true',
@@ -1786,11 +1802,16 @@ def main():
     print(f'{args = }')
 
     fuzz = dict.fromkeys(sum((f.replace(',', ' ').split() for f in args.fuzz), start=[])
-                         if args.fuzz or args.fuzz_rnd else FUZZIES)
+                         if args.fuzz or args.fuzz_rnd or args.fuzz_det else FUZZIES)
 
     if args.fuzz_rnd:
         for n, f in FUZZIES.items():
             if f.forever:
+                fuzz[n] = f
+
+    if args.fuzz_det:
+        for n, f in FUZZIES.items():
+            if not f.forever:
                 fuzz[n] = f
 
     print(f'fuzz = {", ".join(fuzz)}')

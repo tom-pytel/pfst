@@ -3849,7 +3849,7 @@ if u:
         a = parse('1, \\\n2, \\\n3')
         s = a.body[0].value.f.get_slice(0, 1, cut=True)
         self.assertEqual(a.f.src, '2, \\\n3')
-        self.assertEqual(s.src, '(1, \\\n)')
+        self.assertEqual(s.src, '1,')
 
         a = parse('1, \\\n2, \\\n3')
         s = a.body[0].value.f.get_slice(1, 2, cut=True)
@@ -3859,12 +3859,12 @@ if u:
         a = parse('1, \\\n2, \\\n3')
         s = a.body[0].value.f.get_slice(2, 3, cut=True)
         self.assertEqual(a.f.src, '1, \\\n2,')
-        self.assertEqual(s.src, '(\n3,)')
+        self.assertEqual(s.src, '3,')
 
         a = parse('1, \\\n2, \\\n3')
         s = a.body[0].value.f.get_slice(0, 2, cut=True)
         self.assertEqual(a.f.src, '3,')
-        self.assertEqual(s.src, '(1, \\\n2, \\\n)')
+        self.assertEqual(s.src, '1, \\\n2,')
 
         a = parse('1, \\\n2, \\\n3')
         s = a.body[0].value.f.get_slice(1, 3, cut=True)
@@ -3874,7 +3874,7 @@ if u:
         a = parse('1, \\\n2, \\\n3')
         s = a.body[0].value.f.get_slice(0, 3, cut=True)
         self.assertEqual(a.f.src, '()')
-        self.assertEqual(s.src, '(1, \\\n2, \\\n3)')
+        self.assertEqual(s.src, '1, \\\n2, \\\n3')
 
         a = parse('1, \\\n2, \\\n3')
         a.body[0].value.f.put_slice('(a, \\\n)', 0, 0)

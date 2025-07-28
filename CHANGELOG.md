@@ -10,7 +10,7 @@
 
 ### Updated
 
-- redid expressionish slices
+- redid expressionish slices to use new trivia
 - split out more tests into separate files
 - preserve comments on parenthesize tuple
 

@@ -4820,6 +4820,22 @@ class FST:
         return isinstance(a := self.a, Slice) or (isinstance(a, Tuple) and
                                                   any(isinstance(e, Slice) for e in a.elts))
 
+    def has_Starred(self) -> bool:
+        """Whether self is a `Starred` or a `Tuple`, `List` or `Set` which directly contains any `Starred`.
+
+        **Examples:**
+        ```py
+        >>> FST('*a').has_Starred()
+        True
+
+        >>> FST('1, *a').has_Starred()  # Tuple contains at least one Starred
+        True
+        ```
+        """
+
+        return isinstance(a := self.a, Starred) or (isinstance(a, (Tuple, List, Set)) and
+                                                    any(isinstance(e, Starred) for e in a.elts))
+
     # ------------------------------------------------------------------------------------------------------------------
     # Private and other misc stuff
 

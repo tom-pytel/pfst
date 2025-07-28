@@ -263,7 +263,8 @@ def _locs_slice_seq(self: fst.FST, is_first: bool, is_last: bool, loc_first: fst
 
     def calc_locs(ld_ln: int, ld_col: int, tr_ln: int, tr_col: int):
         if indent is None:  # does not start line, no preceding trivia
-            del_col = re_line_trailing_space.match(lines[first_ln], 0, first_col).start(1)
+            del_col = re_line_trailing_space.match(lines[first_ln], 0 if first_ln > bound_ln else bound_col,
+                                                   first_col).start(1)
 
             if tr_ln == last_end_ln:  # does not extend past end of line (different from _trailing_trivia() 'ends_line')
                 if not is_last or lines[last_end_ln].startswith('#', tr_col):  # if there is a next element or trailing line comment then don't delete space before this element
@@ -274,7 +275,7 @@ def _locs_slice_seq(self: fst.FST, is_first: bool, is_last: bool, loc_first: fst
                         None, sep_end_pos)  # case 1
 
             if tr_text_pos == end_pos and tr_ln == last_end_ln + 1:  # no comments, maybe trailing space on line, treat as if doesn't end line
-                if single or not re_empty_line.match(lines[loc_last.ln], 0, loc_last.col):  # if multiple elements and last element starts its own line then fall through to next case, yes the re match can extend beyond starting bound (its fine)
+                if single or not re_empty_line.match(lines[loc_last.ln], 0, loc_last.col):  # if multiple elements and last element starts its own line then fall through to next case, yes the re match can extend beyond starting bound (its fine since its just informative)
                     return (fstloc(first_ln, first_col, last_end_ln, last_end_col),
                             fstloc(first_ln, del_col, last_end_ln, last_end_col),
                             None, sep_end_pos)  # case 2
@@ -287,7 +288,7 @@ def _locs_slice_seq(self: fst.FST, is_first: bool, is_last: bool, loc_first: fst
 
         if tr_ln == last_end_ln:  # does not extend past end of line (different from _trailing_trivia() 'ends_line')
             if ld_ln == first_ln:  # starts on first line which is copied / deleted
-                if single or not _re_sep_line_nonexpr_end[sep].match(lines[loc_first.end_ln], loc_first.end_col):  # if multiple elements and first element ends its own line then fall through to next case, yes the re match can extend beyond ending bound (its fine)
+                if single or not _re_sep_line_nonexpr_end[sep].match(lines[loc_first.end_ln], loc_first.end_col):  # if multiple elements and first element ends its own line then fall through to next case, yes the re match can extend beyond ending bound (its fine since its just informative)
                     return (fstloc(first_ln, first_col, last_end_ln, last_end_col),
                             fstloc(first_ln, ld_col, last_end_ln, tr_col),
                             indent, sep_end_pos)  # case 4, we do it this way to return this specific information that it starts a line but doesn't end one
@@ -610,6 +611,39 @@ def _get_slice_Dict(self: fst.FST, start: int | Literal['end'] | None, stop: int
                           options.get('trivia'), 'values', '{', '}')
 
 
+def _get_slice_Tuple_elts(self: fst.FST, start: int | Literal['end'] | None, stop: int | None, field: str, cut: bool,
+                          **options) -> fst.FST:
+    len_body    = len(body := (ast := self.a).elts)
+    start, stop = _fixup_slice_indices(len_body, start, stop)
+
+    if start == stop:
+        return fst.FST._new_empty_tuple(from_=self)
+
+    is_par  = self._is_parenthesized_seq()
+    locs    = _locs_and_bound_get(self, start, stop, body, body, is_par)
+    asts    = _cut_or_copy_asts(start, stop, 'elts', cut, body)
+    ctx     = ast.ctx.__class__
+    ret_ast = Tuple(elts=asts, ctx=ctx())
+
+    if not issubclass(ctx, Load):  # new Tuple root object must have ctx=Load
+        set_ctx(ret_ast, Load)
+
+    if is_par:
+        prefix, suffix = '()'
+    else:
+        prefix = suffix = ''
+
+    fst_ = _get_slice_seq(self, start, stop, len_body, cut, ret_ast, asts[-1], *locs,
+                          options.get('trivia'), 'elts', prefix, suffix)
+
+    if not is_par:
+        fst_._maybe_fix_tuple(False)
+
+    self._maybe_fix_tuple(is_par)
+
+    return fst_
+
+
 def _get_slice_List_elts(self: fst.FST, start: int | Literal['end'] | None, stop: int | None, field: str, cut: bool,
                          **options) -> fst.FST:
     len_body    = len(body := (ast := self.a).elts)
@@ -775,7 +809,7 @@ _GET_SLICE_HANDLERS = {
 
     (Set, 'elts'):                        _get_slice_Set_elts,  # expr*
     (List, 'elts'):                       _get_slice_List_elts,  # expr*
-    (Tuple, 'elts'):                      _get_slice_tuple_list_or_set,  # expr*
+    (Tuple, 'elts'):                      _get_slice_Tuple_elts,  # expr*
 
     (FunctionDef, 'decorator_list'):      _get_slice_NOT_IMPLEMENTED_YET,  # expr*
     (AsyncFunctionDef, 'decorator_list'): _get_slice_NOT_IMPLEMENTED_YET,  # expr*
@@ -832,7 +866,7 @@ def _put_slice_seq(self: fst.FST, start: int, stop: int, fst_: fst.FST | None,
                    self_tail_sep: bool | Literal[0] | None = None,
                    ):
     r"""Indent a sequence source and put it to a location in existing sequence `self`. If `fst_` is `None` then will
-    just delete in the same way that a cut operation would. Trailing separators will be added  / removed as needed and
+    just delete in the same way that a cut operation would. Trailing separators will be added / removed as needed and
     according to if they are in normal positions. If delete from `self` leaves an empty unparenthesized tuple then
     parentheses will NOT be added here.
 
@@ -967,7 +1001,8 @@ def _put_slice_seq(self: fst.FST, start: int, stop: int, fst_: fst.FST | None,
                 fst_._put_src(None, 0, 0, 1, 0, False)  # delete leading pure newline in slice being put
 
             else:  # does not start a new line
-                put_col = re_line_trailing_space.match(lines[put_ln], 0,  put_col).start(1)  # eat whitespace before put newline
+                put_col = re_line_trailing_space.match(lines[put_ln], 0 if put_ln > bound_ln else bound_col,
+                                                       put_col).start(1)  # eat whitespace before put newline
 
         elif not put_col:
             if del_indent:
@@ -984,7 +1019,7 @@ def _put_slice_seq(self: fst.FST, start: int, stop: int, fst_: fst.FST | None,
                     if is_last and put_end_ln == self.end_ln:  # just the end of the container, smaller of start of its line or open indent
                         post_indent = _shorter_str(re_empty_line_start.match(lines[put_end_ln]).group(0),
                                                    self_indent + ' ' * (self.col - len(self_indent)))
-                    elif is_ins_ln and not (put_col or put_end_ln != put_ln):  # not insert to zero-length location at exact start of line
+                    elif is_ins_ln and not (put_col or put_end_ln != put_ln):  # don't insert to zero-length location at exact start of line
                         put_end_col = copy_loc.end_col
                     elif del_indent is not None:  # have indent from locs function
                         post_indent = del_indent
@@ -1000,14 +1035,14 @@ def _put_slice_seq(self: fst.FST, start: int, stop: int, fst_: fst.FST | None,
                     else:
                         post_indent = self_indent + self.root.indent  # default
 
-            else:  # nothing (or whitespace) at end of put end line, remove fst_ trailing newline to not duplicate and remove trailing space from self if present
-                fst_._put_src(None, l := len(put_lines) - 2, len(put_lines[l]), l + 1, 0, True)
+            else:  # nothing (or whitespace) at end of put end line
+                if put_end_ln < bound_end_ln:  # only do this if we are not at end of container
+                    fst_._put_src(None, l := len(put_lines) - 2, len(put_lines[l]), l + 1, 0, True)  # remove fst_ trailing newline to not duplicate and remove trailing space from self if present
 
-                if put_end_col != (ec := len(lines[put_end_ln])):
-                    self._put_src(None, put_end_ln, put_end_col, put_end_ln, ec, True)
+                    if put_end_col != (ec := len(lines[put_end_ln])):
+                        self._put_src(None, put_end_ln, put_end_col, put_end_ln, ec, True)
 
-        # elif not put_end_col:  # we are putting slice before an element which starts a newline and slice doesn't have trailing newline
-        elif not put_end_col and (not is_ins_ln or put_col or put_end_ln != put_ln):  # we are putting slice before an element which starts a newline and slice doesn't have trailing newline (but not insert to zero-length location at exact start of line)
+        elif not put_end_col and (put_col or put_end_ln != put_ln):  # we are putting slice before an element which starts a newline and slice doesn't have trailing newline (but not insert to zero-length location at exact start of line)
             if put_end_ln != put_ln:  # change put end to not delete last newline if possible
                 put_end_col = len(lines[put_end_ln := put_end_ln - 1])
             else:  # otherwise add newline to slice
@@ -1312,6 +1347,61 @@ def _put_slice_Dict(self: fst.FST, code: Code | None, start: int | Literal['end'
             key.f.pfield = astfield('keys', i)
 
 
+# TODO: validate put
+def _put_slice_Tuple_elts(self: fst.FST, code: Code | None, start: int | Literal['end'] | None, stop: int | None,
+                          field: str, one: bool = False, **options):
+    fst_        = _code_as_seq(self, code, one, options)
+    body        = (ast := self.a).elts
+    start, stop = _fixup_slice_indices(len(body), start, stop)
+
+    if not fst_ and start == stop:  # deleting or assigning empty seq to empty slice of seq, noop
+        return
+
+    bound_ln, bound_col, bound_end_ln, bound_end_col = self.loc
+
+    if is_par := self._is_parenthesized_seq():
+        bound_col     += 1
+        bound_end_col -= 1
+
+    if not fst_:
+        _put_slice_seq(self, start, stop, None, None, None,
+                       bound_ln, bound_col, bound_end_ln, bound_end_col,
+                       options.get('trivia'), options.get('ins_ln'))
+
+        self._unmake_fst_tree(body[start : stop])
+
+        del body[start : stop]
+
+        len_fst_body = 0
+
+    else:
+        fst_body = fst_.a.elts
+
+        _put_slice_seq(self, start, stop, fst_, fst_body[0].f, fst_body[-1].f,
+                       bound_ln, bound_col, bound_end_ln, bound_end_col,
+                       options.get('trivia'), options.get('ins_ln'))
+
+        self._unmake_fst_tree(body[start : stop])
+        fst_._unmake_fst_parents(True)
+
+        body[start : stop] = fst_body
+
+        len_fst_body = len(fst_body)
+        FST          = fst.FST
+        stack        = [FST(body[i], self, astfield('elts', i)) for i in range(start, start + len_fst_body)]
+
+        if stack:
+            set_ctx([f.a for f in stack], ast.ctx.__class__)
+
+        self._make_fst_tree(stack)
+
+    for i in range(start + len_fst_body, len(body)):
+        body[i].f.pfield = astfield('elts', i)
+
+    self._maybe_fix_tuple(is_par)
+
+
+# TODO: validate put
 def _put_slice_List_elts(self: fst.FST, code: Code | None, start: int | Literal['end'] | None, stop: int | None,
                          field: str, one: bool = False, **options):
     fst_        = _code_as_seq(self, code, one, options)
@@ -1362,6 +1452,7 @@ def _put_slice_List_elts(self: fst.FST, code: Code | None, start: int | Literal[
         body[i].f.pfield = astfield('elts', i)
 
 
+# TODO: validate put
 def _put_slice_Set_elts(self: fst.FST, code: Code | None, start: int | Literal['end'] | None, stop: int | None,
                         field: str, one: bool = False, **options):
     fst_        = _code_as_seq(self, code, one, options)
@@ -1476,7 +1567,7 @@ _PUT_SLICE_HANDLERS = {
 
     (Set, 'elts'):                        _put_slice_Set_elts,  # expr*
     (List, 'elts'):                       _put_slice_List_elts,  # expr*
-    (Tuple, 'elts'):                      _put_slice_tuple_list_or_set,  # expr*
+    (Tuple, 'elts'):                      _put_slice_Tuple_elts,  # expr*
 
     (FunctionDef, 'decorator_list'):      _put_slice_NOT_IMPLEMENTED_YET,  # expr*
     (AsyncFunctionDef, 'decorator_list'): _put_slice_NOT_IMPLEMENTED_YET,  # expr*
