@@ -1357,12 +1357,15 @@ def _put_one_Tuple_elts(self: fst.FST, code: _PutOneCode, idx: int | None, field
     """Disallow non-targetable expressions in targets. If not an unparenthesized top level or slice tuple then disallow
     Slices."""
 
-    ast   = self.a
-    child = _validate_put(self, code, idx, field, child)  # we want to do it in same order as all other puts
-    code  = static.code_as(code, self.root.parse_params)
+    ast      = self.a
+    child    = _validate_put(self, code, idx, field, child)  # we want to do it in same order as all other puts
+    code     = static.code_as(code, self.root.parse_params)
+    pfield   = self.pfield
+    is_slice = pfield == ('slice', None)
+    is_par   = None
 
-    if ((pf := self.pfield) and pf.name != 'slice') or self._is_parenthesized_seq():
-        static = _onestatic_expr_required_starred  # default static allows slices
+    if (pfield and not is_slice) or (is_par := self._is_parenthesized_seq()):  # only allow slice in unparenthesized tuple, in slice or at root
+        static = _onestatic_expr_required_starred  # default static allows slices, this disallows it
 
     if not isinstance(ast.ctx, Load):  # only allow possible expression targets into an expression target
         if not hasattr(code.a, 'ctx'):
@@ -1370,16 +1373,26 @@ def _put_one_Tuple_elts(self: fst.FST, code: _PutOneCode, idx: int | None, field
                              "in this state (target expression)")
 
     if PYLT11:
-        if isinstance(code.a, Starred) and pf == ('slice', None):
-            raise NodeError('cannot put Starred to a slice Tuple.elts')
+        if (put_star_to_unpar_slice := is_slice and isinstance(code.a, Starred) and
+            (is_par is False or (is_par is None and not self._is_parenthesized_seq()))
+        ):
+            r = (elts := ast.elts)[idx]
 
-    is_starred_in_slice = (len(elts := ast.elts) == 1 and isinstance(elts[0], Starred) and
-                           (pf := self.pfield) and pf.name == 'slice')  # because of replacing the Starred in 'a[*i_am_really_a_tuple]'
+            if any(isinstance(e, Slice) for e in elts if e is not r):
+                raise NodeError('cannot put Starred to a slice Tuple containing Slices')
 
-    ret = _put_one_exprish_required(self, code, idx, field, child, static, 2, **options)
+        ret = _put_one_exprish_required(self, code, idx, field, child, static, 2, **options)
 
-    if is_starred_in_slice:
-        self._maybe_add_singleton_tuple_comma()
+        if put_star_to_unpar_slice:
+            self._parenthesize_node()
+
+    else:
+        self_is_solo_star_in_slice = is_slice and len(elts := ast.elts) == 1 and isinstance(elts[0], Starred)  # because of replacing the Starred in 'a[*i_am_really_a_tuple]'
+
+        ret = _put_one_exprish_required(self, code, idx, field, child, static, 2, **options)
+
+        if self_is_solo_star_in_slice:
+            self._maybe_add_singleton_tuple_comma()
 
     return ret
 

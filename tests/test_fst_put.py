@@ -2884,11 +2884,27 @@ c, # c
 
         if PYLT11:
             f = FST('a: b[c, d]')
-            self.assertRaises(NodeError, f.annotation.slice.elts[1].replace, '*s', raw=False)
+            f.annotation.slice.elts[1].replace('*s', raw=False)
+            self.assertEqual('a: b[(c, *s)]', f.src)
 
             f = FST('a: b[c, d]')
             g = FST('for a, *s in b: pass').target.copy()
             self.assertRaises(NodeError, f.annotation.slice.replace, g, raw=False)
+
+            f = FST('a[b,]')
+            f.slice.put('*st', 0, raw=False)
+            self.assertEqual('a[(*st,)]', f.src)
+
+            f = FST('a[b:c:d,]')
+            f.slice.put('*st', 0, raw=False)
+            self.assertEqual('a[(*st,)]', f.src)
+
+            f = FST('a[b:c:d, e]')
+            f.slice.put('*st', 0, raw=False)
+            self.assertEqual('a[(*st, e)]', f.src)
+
+            f = FST('a[b:c:d, e]')
+            self.assertRaises(NodeError, f.slice.put, '*st', 1, raw=False)
 
         # don't allow vararg with starred annotation into normal args
 
