@@ -1616,6 +1616,11 @@ def func():
         self.assertEqual('[]', FST('[1, 2]').put_slice('{*[]}', raw=False, empty_set_put=True).src)
         self.assertEqual('[]', FST('[1, 2]').put_slice('{*{}}', raw=False, empty_set_put=True).src)
 
+        self.assertEqual('[]', FST('[1, 2]').put_slice('set()', raw=False, empty_set_put='both').src)
+        self.assertEqual('[]', FST('[1, 2]').put_slice('{*()}', raw=False, empty_set_put='both').src)
+        self.assertEqual('[]', FST('[1, 2]').put_slice('{*[]}', raw=False, empty_set_put='both').src)
+        self.assertEqual('[]', FST('[1, 2]').put_slice('{*{}}', raw=False, empty_set_put='both').src)
+
         self.assertRaises(ValueError, FST('[1, 2]').put_slice, 'set()', raw=False, empty_set_put='star')
         self.assertEqual('[]', FST('[1, 2]').put_slice('{*()}', raw=False, empty_set_put='star').src)
         self.assertEqual('[]', FST('[1, 2]').put_slice('{*[]}', raw=False, empty_set_put='star').src)
@@ -1630,6 +1635,15 @@ def func():
         self.assertEqual('[*()]', FST('[1, 2]').put_slice('{*()}', raw=False, empty_set_put=False).src)
         self.assertEqual('[*[]]', FST('[1, 2]').put_slice('{*[]}', raw=False, empty_set_put=False).src)
         self.assertEqual('[*{}]', FST('[1, 2]').put_slice('{*{}}', raw=False, empty_set_put=False).src)
+
+    def test_get_slice_empty_set(self):
+        set_ = FST('{1}')
+
+        self.assertEqual('{*()}', set_.get(0, 0, empty_set_get=True).src)
+        self.assertEqual('{*()}', set_.get(0, 0, empty_set_get='star').src)
+        self.assertEqual('set()', set_.get(0, 0, empty_set_get='call').src)
+        self.assertEqual('()', set_.get(0, 0, empty_set_get='tuple').src)
+        self.assertEqual('{}', set_.get(0, 0, empty_set_get=False).src)
 
     def test_empty_set_slice(self):
         # f = parse('set()').body[0].value.f

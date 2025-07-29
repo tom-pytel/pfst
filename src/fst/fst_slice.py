@@ -21,10 +21,7 @@ from .misc import (
     _leading_trivia, _trailing_trivia,
 )
 
-from .fst_slice_old import (
-    _get_slice_stmtish, _get_slice_dict, _get_slice_tuple_list_or_set,
-    _put_slice_stmtish, _put_slice_dict, _put_slice_tuple_list_or_set,
-)
+from .fst_slice_old import _get_slice_stmtish, _put_slice_stmtish
 
 _re_one_space            = re.compile(r'\s')
 _re_close_delim_or_end   = re.compile(r'[)}\]]|$')
@@ -931,7 +928,7 @@ def _put_slice_seq(self: fst.FST, start: int, stop: int, fst_: fst.FST | None,
                 if ins_ln >= ln:
                     loc_first = fstloc(ln, col, ln, col)
 
-                else:  # TODO: this part changes if we do alignment of fst_ to element indentation
+                else:  # TODO: this part changes if we do alignment of fst_ to self element indentation
                     if not fst_._lines[0]:  # fst_ starts new line?
                         loc_first = fstloc(ins_ln, 0, ins_ln, 0)
 
@@ -1218,8 +1215,9 @@ def _code_as_seq(self: fst.FST, code: Code | None, one: bool, options: dict[str,
         return fst.FST(ast, ls, from_=self, lcopy=False)
 
     if empty_set := self.get_option('empty_set_put', options):
-        if ((fst_.is_empty_set_seq() or fst_.is_empty_set_call()) if empty_set is True else
-            fst_.is_empty_set_seq() if empty_set == 'star' else fst_.is_empty_set_call()  # else 'call'
+        if (fst_.is_empty_set_star() if empty_set == 'star' else
+            fst_.is_empty_set_call() if empty_set == 'call' else
+            fst_.is_empty_set_star() or fst_.is_empty_set_call()  # True or 'both'
         ):
             return None
 

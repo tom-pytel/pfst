@@ -46,7 +46,7 @@ _OPTIONS = {
     'docstr':        True,   # True | False | 'strict'
     'pars_walrus':   False,  # True | False
     'empty_set_get': True,   # True | False | 'star' | 'call' | 'tuple'
-    'empty_set_put': True,   # True | False | 'star' | 'call'
+    'empty_set_put': True,   # True | False | 'star' | 'call' | 'both'
     'pep8space':     True,   # True | False | 1
     'precomms':      True,   # True | False | 'all'
     'postcomms':     True,   # True | False | 'all' | 'block'
@@ -931,7 +931,8 @@ class FST:
         - `empty_set_put`: Empty set source during a slice put (considered to have no elements).
             - `False`: Nothing is considered an empty set and an empty set slice put is only possible using a non-set
                 type of empty sequence (tuple or list).
-            - `True`: `set()` call and `{*()}`, `{*[]}` and `{*{}}` starred sequences are considered empty.
+            - `True`: Same a `'both'`.
+            - `'both'`: `set()` call and `{*()}`, `{*[]}` and `{*{}}` starred sequences are considered empty.
             - `'star'`: Only starred sequences `{*()}`, `{*[]}` and `{*{}}` are considered empty.
             - `'call'`: Only `set()` call is considered empty.
         - `pep8space`: Preceding and trailing empty lines for function and class definitions.
@@ -4643,19 +4644,19 @@ class FST:
         return (isinstance(ast := self.a, Call) and not ast.args and not ast.keywords and
                 isinstance(func := ast.func, Name) and func.id == 'set' and isinstance(func.ctx, Load))
 
-    def is_empty_set_seq(self) -> bool:
+    def is_empty_set_star(self) -> bool:
         """Whether `self` is an empty `Set` from an empty `Starred` `Constant` sequence, recognized are `{*()}`, `{*[]}`
         and `{*{}}`.
 
         **Examples:**
         ```py
-        >>> FST('{1}').is_empty_set_seq()
+        >>> FST('{1}').is_empty_set_star()
         False
 
-        >>> FST('{*()}').is_empty_set_seq()
+        >>> FST('{*()}').is_empty_set_star()
         True
 
-        >>> FST('set()').is_empty_set_seq()
+        >>> FST('set()').is_empty_set_star()
         False
         ```
         """

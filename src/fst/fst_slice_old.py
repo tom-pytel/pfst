@@ -337,8 +337,8 @@ def _put_slice_tuple_list_or_set(self: fst.FST, code: Code | None, start: int | 
 
         else:
             if empty_set := self.get_option('empty_set_put', options):
-                if ((put_fst.is_empty_set_seq() or put_fst.is_empty_set_call()) if empty_set is True else
-                    put_fst.is_empty_set_seq() if empty_set == 'star' else put_fst.is_empty_set_call()  # else 'call'
+                if ((put_fst.is_empty_set_star() or put_fst.is_empty_set_call()) if empty_set is True else
+                    put_fst.is_empty_set_star() if empty_set == 'star' else put_fst.is_empty_set_call()  # else 'call'
                 ):
                     put_fst = self._new_empty_set_curlies(from_=self)
 
