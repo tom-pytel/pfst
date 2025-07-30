@@ -2063,9 +2063,9 @@ class FST:
 
         with self._modifying():
             if isinstance(self.a, Tuple):
-                self._parenthesize_node(whole)
+                self._delimit_node(whole)
             elif isinstance(self.a, MatchSequence):
-                self._parenthesize_node(whole, '[]')
+                self._delimit_node(whole, '[]')
             else:
                 self._parenthesize_grouping(whole)
 
@@ -2155,105 +2155,17 @@ class FST:
             if isinstance(self.a, Tuple):
                 modifying = modifying or self._modifying().enter()
 
-                self._unparenthesize_node()  # ret = self._unparenthesize_node() or ret
+                self._undelimit_node()
 
             elif isinstance(self.a, MatchSequence):
                 modifying = modifying or self._modifying().enter()
 
-                self._unparenthesize_node('patterns')  # ret = self._unparenthesize_node() or ret
+                self._undelimit_node('patterns')
 
         if modifying:
             modifying.done()
 
         return self  # ret
-
-    def trivia(self, trivia: bool | builtins.str | tuple[bool | builtins.str | int | None,
-                                                         bool | builtins.str | int | None] | None = None,
-               neg: bool = False) -> fstlocns | None:
-        r"""Return location of the trivia (comments and empty lines) surrounding this node. What is checked is controlled
-        by the `trivia` parameter and / or the global default `trivia` option. Currently only applies to statementish
-        nodes (`stmt`, `ExceptHandler` and `match_case`).
-
-        **Note:** Currently the trivia past the end of the last statement in a block belongs to the whole block and not
-        to the last statement itself. As this is counterintuitive it may be changed in the future along with `.bloc`
-        encompassing trailing comments.
-
-        **TODO:** Trivia for non-statementish nodes (like elements of a list on their own lines).
-
-        **Parameters:**
-        - `trivia`: The specification for what trivia to return, see `options()` for meaning of values:
-            - `None`: Global default is used.
-            - `bool | str`: This is used for leading trivia and global default is used for trailing.
-            - `tuple`: Can specify leading and / or trailing trivia. A value of `None` for either selects the global
-                default for that trivia.
-        - `neg`: Whether to use `'-#'` negative space indicator suffix values or not.
-
-        **Returns:**
-        - `fstlocns`: The full location from the start of the leading trivia to the end of the trailing. If trivia
-            present then will start on column 0. If no trivia found then may just be the start and / or end location of
-            the node itself. Has two attributes `starts_line: bool` and `ends_line: bool` which specify whether the node
-            starts a new line and whether it ends one (line continuation end counts as ending the line). Also
-            `indent: str | None` gives the indentation for the node line if the node starts a new line (this is not
-            necessarily the statement block indentation), if the node does not start a line then this is `None`.
-        - `None`: If node is not a `stmt`, `ExceptHandler` or `match_case`.
-
-        **Examples:**
-        ```py
-        >>> f = FST('''
-        ... if 1:
-        ...   a
-        ...
-        ...   # 1
-        ...   \
-        ...
-        ...   # 2
-        ...   # 3
-        ...   b  # 4
-        ...   # 5
-        ...   # 6
-        ...
-        ...   \
-        ...   # 7
-        ...
-        ...   c
-        ... '''.strip())
-
-        >>> print(f.body[1].trivia())
-        fstlocns(5, 0, 8, 0, starts_line=True, ends_line=True, indent='  ')
-
-        >>> print(f.body[1].trivia('all'))
-        fstlocns(3, 0, 8, 0, starts_line=True, ends_line=True, indent='  ')
-
-        >>> print(f.body[1].trivia('all+1'))
-        fstlocns(2, 0, 8, 0, starts_line=True, ends_line=True, indent='  ')
-
-        >>> print(f.body[1].trivia(('all', 'block')))
-        fstlocns(3, 0, 10, 0, starts_line=True, ends_line=True, indent='  ')
-
-        >>> print(f.body[1].trivia((None, 13)))
-        fstlocns(5, 0, 13, 0, starts_line=True, ends_line=True, indent='  ')
-
-        >>> print(FST('a; b; c').body[1].trivia())
-        fstlocns(0, 3, 0, 4, starts_line=False, ends_line=False, indent=None)
-        ```
-        """
-
-        if not isinstance(self.a, STMTISH):
-            return None
-
-        lines                                        = self.root._lines
-        ln, col, end_ln, end_col                     = self.bloc
-        ld_comms, ld_space, _, tr_comms, tr_space, _ = FST._get_trivia_params(trivia, neg)
-        ld_text_pos, ld_space_pos, indent            = _leading_trivia(lines, *self._prev_bound(),
-                                                                       ln, col, ld_comms, ld_space)
-        tr_text_pos, tr_space_pos, ends_line         = _trailing_trivia(lines, *self._next_bound(),
-                                                                        end_ln, end_col, tr_comms, tr_space)
-
-        lead  = ld_space_pos or ld_text_pos
-        trail = tr_space_pos or tr_text_pos
-        # trail = tr_text_pos if not ends_line else tr_space_pos or tr_text_pos
-
-        return fstlocns(*lead, *trail, starts_line=indent is not None, ends_line=ends_line, indent=indent)
 
     # ------------------------------------------------------------------------------------------------------------------
     # Structure stuff
@@ -4106,6 +4018,44 @@ class FST:
 
         return indent
 
+    def get_matchseq_delimiters(self) -> Literal['', '[]', '()'] | None:
+        r"""Whether `self` is a delimited `MatchSequence` or not (parenthesized or bracketed), or not a `MatchSequence`
+        at all.
+
+        **Returns:**
+        - `None`: If is not `MatchSequence` at all.
+        - `''`: If is undelimited `MatchSequence`.
+        - `'()'` or `'[]'`: Is delimited with these delimiters.
+
+        **Examples:**
+        ```py
+        >>> FST('match a:\n  case 1, 2: pass').cases[0].pattern.get_matchseq_delimiters()
+        ''
+
+        >>> FST('match a:\n  case [1, 2]: pass').cases[0].pattern.get_matchseq_delimiters()
+        '[]'
+
+        >>> FST('match a:\n  case (1, 2): pass').cases[0].pattern.get_matchseq_delimiters()
+        '()'
+
+        >>> print(FST('match a:\n  case 1: pass').cases[0].pattern.get_matchseq_delimiters())
+        None
+        ```
+        """
+
+        if not isinstance(self.a, MatchSequence):
+            return None
+
+        ln, col, _, _ = self.loc
+        lpar          = self.root._lines[ln][col : col + 1]  # could be end of line
+
+        if lpar == '(':
+            return '()' if self._is_delimited_seq('patterns', '()') else ''
+        if lpar == '[':
+            return '[]' if self._is_delimited_seq('patterns', '[]') else ''
+
+        return ''
+
     def is_parsable(self) -> bool:
         r"""Whether the source for this node is parsable by `FST` or not (if properly dedented for top level). This is
         different from `astutil.is_parsable` because that one indicates what is parsable by the python `ast` module,
@@ -4309,8 +4259,8 @@ class FST:
         if (ret := self.is_parenthesized_tuple()) is not None:  # if this is False then cannot be enclosed in grouping pars because that would reparse to a parenthesized Tuple and so is inconsistent
             return ret
 
-        if (ret := self.is_enclosed_matchseq()) is not None:  # like Tuple, cannot be enclosed in grouping pars
-            return ret
+        if (ret := self.get_matchseq_delimiters()) is not None:  # like Tuple, cannot be enclosed in grouping pars
+            return bool(ret)
 
         assert isinstance(ast, (expr, pattern))
 
@@ -4410,7 +4360,7 @@ class FST:
             if ret:
                 return True
 
-        elif (ret := self.is_enclosed_matchseq()) is not None:
+        elif (ret := self.get_matchseq_delimiters()) is not None:
             if ret:
                 return True
 
@@ -4419,13 +4369,13 @@ class FST:
 
         if isinstance(ast, Call):
             children = [ast.func,
-                        nspace(f=nspace(pars=lambda: self._loc_Call_pars(), is_enclosed=lambda **kw: True))]
+                        nspace(f=nspace(pars=lambda: self._loc_call_pars(), is_enclosed=lambda **kw: True))]
         elif isinstance(ast, Subscript):
             children = [ast.value,
-                        nspace(f=nspace(pars=lambda: self._loc_Subscript_brackets(), is_enclosed=lambda **kw: True))]
+                        nspace(f=nspace(pars=lambda: self._loc_subscript_brackets(), is_enclosed=lambda **kw: True))]
         elif isinstance(ast, MatchClass):
             children = [ast.cls,
-                        nspace(f=nspace(pars=lambda: self._loc_MatchClass_pars(), is_enclosed=lambda **kw: True))]
+                        nspace(f=nspace(pars=lambda: self._loc_matchcls_pars(), is_enclosed=lambda **kw: True))]
         else:  # we don't check always-enclosed statement fields here because statements will never get here
             children = syntax_ordered_children(ast)
 
@@ -4553,7 +4503,7 @@ class FST:
                 if ret:
                     return True
 
-            elif (ret := parent.is_enclosed_matchseq()) is not None:
+            elif (ret := parent.get_matchseq_delimiters()) is not None:
                 if ret:
                     return True
 
@@ -4583,44 +4533,7 @@ class FST:
         ```
         """
 
-        return self._is_parenthesized_seq() if isinstance(self.a, Tuple) else None
-
-    def is_enclosed_matchseq(self) -> bool | None:
-        r"""Whether `self` is an enclosed `MatchSequence` or not, or not a `MatchSequence` at all (can be pars `()` or
-        brackets `[]`).
-
-        **Returns:**
-        - `True` if is enclosed `MatchSequence`, `False` if is unparenthesized `MatchSequence`, `None` if is not
-            `MatchSequence` at all.
-
-        **Examples:**
-        ```py
-        >>> FST('match a:\n  case 1, 2: pass').cases[0].pattern.is_enclosed_matchseq()
-        False
-
-        >>> FST('match a:\n  case [1, 2]: pass').cases[0].pattern.is_enclosed_matchseq()
-        True
-
-        >>> FST('match a:\n  case (1, 2): pass').cases[0].pattern.is_enclosed_matchseq()
-        True
-
-        >>> print(FST('match a:\n  case 1: pass').cases[0].pattern.is_enclosed_matchseq())
-        None
-        ```
-        """
-
-        if not isinstance(self.a, MatchSequence):
-            return None
-
-        ln, col, _, _ = self.loc
-        lpar          = self.root._lines[ln][col : col + 1]  # could be end of line
-
-        if lpar == '(':
-            return self._is_parenthesized_seq('patterns')
-        if lpar == '[':
-            return self._is_parenthesized_seq('patterns', '[', ']')
-
-        return False
+        return self._is_delimited_seq() if isinstance(self.a, Tuple) else None
 
     def is_empty_set_call(self) -> bool:
         """Whether `self` is an empty `set()` call.
@@ -4841,7 +4754,6 @@ class FST:
     # Private and other misc stuff
 
     from .fst_misc import (
-        _get_trivia_params,
         _new_empty_module,
         _new_empty_tuple,
         _new_empty_list,
@@ -4849,6 +4761,9 @@ class FST:
         _new_empty_set_star,
         _new_empty_set_call,
         _new_empty_set_curlies,
+        _new_empty_matchseq,
+        _new_empty_matchmap,
+        _new_empty_matchor,
         _make_fst_tree,
         _unmake_fst_tree,
         _unmake_fst_parents,
@@ -4868,21 +4783,23 @@ class FST:
         _loc_lambda_args_entire,
         _loc_withitem,
         _loc_match_case,
-        _loc_Call_pars,
-        _loc_Subscript_brackets,
-        _loc_MatchClass_pars,
-        _loc_Global_Nonlocal_names,
+        _loc_call_pars,
+        _loc_subscript_brackets,
+        _loc_matchcls_pars,
+        _loc_global_nonlocal_names,
         _loc_maybe_dict_key,
         _is_arguments_empty,
         _is_parenthesized_ImportFrom_names,
         _is_parenthesized_With_items,
-        _is_parenthesized_seq,
+        _is_delimited_seq,
         _set_end_pos,
         _set_block_end_from_last_child,
         _maybe_del_separator,
-        _maybe_add_comma,
+        _maybe_ins_separator,
         _maybe_add_singleton_tuple_comma,
+        _maybe_fix_naked_seq,
         _maybe_fix_tuple,
+        _maybe_fix_matchseq,
         _maybe_fix_set,
         _maybe_fix_elif,
         _maybe_fix_with_items,
@@ -4890,9 +4807,9 @@ class FST:
         _touch,
         _sanitize,
         _parenthesize_grouping,
-        _parenthesize_node,
         _unparenthesize_grouping,
-        _unparenthesize_node,
+        _delimit_node,
+        _undelimit_node,
         _normalize_block,
         _elif_to_else_if,
         _reparse_docstrings,
@@ -4906,6 +4823,7 @@ class FST:
         _offset_lns,
         _indent_lns,
         _dedent_lns,
+        _get_trivia_params,
     )
 
     from .fst_parse import (
@@ -4983,13 +4901,13 @@ class FST:
     )
 
     from .fst_slice_old import (
-        _get_slice_tuple_list_or_set,
+        # _get_slice_tuple_list_or_set,
         # _get_slice_empty_set,
-        _get_slice_dict,
+        # _get_slice_dict,
         _get_slice_stmtish,
-        _put_slice_tuple_list_or_set,
+        # _put_slice_tuple_list_or_set,
         # _put_slice_empty_set,
-        _put_slice_dict,
+        # _put_slice_dict,
         _put_slice_stmtish,
     )
 

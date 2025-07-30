@@ -230,77 +230,6 @@ class _Modifying:
 
 
 @staticmethod
-def _get_trivia_params(trivia: bool | str | tuple[bool | str | int | None, bool | str | int | None] | None = None,
-                       neg: bool = False,
-                       ) -> tuple[Literal['none', 'all', 'block'] | int,
-                                  bool | int,
-                                  bool,
-                                  Literal['none', 'all', 'block', 'line'] | int,
-                                  bool | int,
-                                  bool,
-                                  ]:
-    """Convert options compact human representation to parameters usable for `_leading/trailing_trivia()`.
-
-    This conversion is fairly loose and will accept shorthand '+/-#' for 'none+/-#'.
-
-    **Parameters:**
-    - `neg`: Whether to use `'-#'` suffix numbers or not (will still return `_neg` as `True` but `_space` will be 0).
-
-    **Returns:**
-    - (`lead_comments`, `lead_space`, `lead_neg`, `trail_comments`, `trail_space`, `trail_neg`): Two sets of parameters
-        for the trivia functions along with the `_neg` indicators of whether the `_space` params came from negative
-        space specifiers `'-#'` or not.
-    """
-
-    if isinstance(lead_comments := fst.FST.get_option('trivia'), tuple):
-        lead_comments, trail_comments = lead_comments
-    else:
-        trail_comments = lead_comments
-
-    if trivia is not None:
-        if not isinstance(trivia, tuple):
-            lead_comments = trivia
-
-        else:
-            if (t := trivia[0]) is not None:
-                lead_comments = t
-            if (t := trivia[1]) is not None:
-                trail_comments = t
-
-    lead_space = lead_neg = False
-
-    if isinstance(lead_comments, bool):
-        lead_comments = 'block' if lead_comments else 'none'
-
-    elif isinstance(lead_comments, str):
-        if (i := lead_comments.find('+')) != -1:
-            lead_space    = int(n) if (n := lead_comments[i + 1:]) else True
-            lead_comments = lead_comments[:i] or 'none'
-
-        elif (i := lead_comments.find('-')) != -1:
-            lead_neg      = True
-            lead_space    = (int(n) if (n := lead_comments[i + 1:]) else True) if neg else 0
-            lead_comments = lead_comments[:i] or 'none'
-
-    trail_space = trail_neg = False
-
-    if isinstance(trail_comments, bool):
-        trail_comments = 'line' if trail_comments else 'none'
-
-    elif isinstance(trail_comments, str):
-        if (i := trail_comments.find('+')) != -1:
-            trail_space    = int(n) if (n := trail_comments[i + 1:]) else True
-            trail_comments = trail_comments[:i] or 'none'
-
-        elif (i := trail_comments.find('-')) != -1:
-            trail_neg      = True
-            trail_space    = (int(n) if (n := trail_comments[i + 1:]) else True) if neg else 0
-            trail_comments = trail_comments[:i] or 'none'
-
-    return lead_comments, lead_space, lead_neg, trail_comments, trail_space, trail_neg
-
-
-@staticmethod
 def _new_empty_module(*, from_: fst.FST | None = None) -> fst.FST:
     return fst.FST(Module(body=[], type_ignores=[]), [''], from_=from_)
 
@@ -355,6 +284,27 @@ def _new_empty_set_curlies(only_ast: bool = False, lineno: int = 1, col_offset: 
               end_col_offset=col_offset + 2)
 
     return ast if only_ast else fst.FST(ast, ['{}'], from_=from_)
+
+
+@staticmethod
+def _new_empty_matchseq(lineno: int = 1, col_offset: int = 0, *, from_: fst.FST | None = None) -> fst.FST:
+    return fst.FST(MatchSequence(patterns=[], lineno=lineno, col_offset=col_offset,
+                                 end_lineno=lineno, end_col_offset=col_offset + 2),
+                   ['[]'], from_=from_)
+
+
+@staticmethod
+def _new_empty_matchmap(lineno: int = 1, col_offset: int = 0, *, from_: fst.FST | None = None) -> fst.FST:
+    return fst.FST(MatchMapping(keys=[], patterns=[], rest=None, lineno=lineno, col_offset=col_offset,
+                                end_lineno=lineno, end_col_offset=col_offset + 2),
+                   ['{}'], from_=from_)
+
+
+@staticmethod
+def _new_empty_matchor(lineno: int = 1, col_offset: int = 0, *, from_: fst.FST | None = None) -> fst.FST:
+    return fst.FST(MatchOr(patterns=[], lineno=lineno, col_offset=col_offset,
+                           end_lineno=lineno, end_col_offset=col_offset),
+                   [''], from_=from_)
 
 
 def _repr_tail(self: fst.FST) -> str:
@@ -917,7 +867,7 @@ def _loc_match_case(self: fst.FST) -> fstloc:
     return fstloc(*start, end_ln, end_col + 1)
 
 
-def _loc_Call_pars(self: fst.FST) -> fstloc:
+def _loc_call_pars(self: fst.FST) -> fstloc:
     # assert isinstance(self.s, Call)
 
     ast                   = self.a
@@ -929,7 +879,7 @@ def _loc_Call_pars(self: fst.FST) -> fstloc:
     return fstloc(ln, col, end_ln, end_col)
 
 
-def _loc_Subscript_brackets(self: fst.FST) -> fstloc:
+def _loc_subscript_brackets(self: fst.FST) -> fstloc:
     # assert isinstance(self.s, Subscript)
 
     ast                   = self.a
@@ -941,7 +891,7 @@ def _loc_Subscript_brackets(self: fst.FST) -> fstloc:
     return fstloc(ln, col, end_ln, end_col)
 
 
-def _loc_MatchClass_pars(self: fst.FST) -> fstloc:
+def _loc_matchcls_pars(self: fst.FST) -> fstloc:
     # assert isinstance(self.s, MatchClass)
 
     ast                   = self.a
@@ -953,7 +903,7 @@ def _loc_MatchClass_pars(self: fst.FST) -> fstloc:
     return fstloc(ln, col, end_ln, end_col)
 
 
-def _loc_Global_Nonlocal_names(self: fst.FST, first: int, last: int | None = None) -> fstloc | tuple[fstloc, fstloc]:
+def _loc_global_nonlocal_names(self: fst.FST, first: int, last: int | None = None) -> fstloc | tuple[fstloc, fstloc]:
     """We assume `first` and optionally `last` are in [0..len(names)), no negative or out-of-bounds and `last` follows
     or equals `first` if present."""
 
@@ -1037,22 +987,23 @@ def _is_parenthesized_With_items(self: fst.FST) -> bool:
     return _prev_src(self.root._lines, ln, col, end_ln, end_col).src.endswith('(')  # something is there for sure
 
 
-def _is_parenthesized_seq(self: fst.FST, field: str = 'elts', lpar: str = '(', rpar: str = ')') -> bool:
-    """Whether `self` is a parenthesized sequence of `field` or not. Makes sure the entire node is surrounded by a
-    balanced pair of `lpar` and `rpar`. Functions as `is_parenthesized_tuple()` if already know is a Tuple. Other use is
-    for `MatchSequence`, whether parenthesized or bracketed."""
+def _is_delimited_seq(self: fst.FST, field: str = 'elts', delims: str | tuple[str, str] = '()') -> bool:
+    """Whether `self` is a delimited (parenthesized or bracketeed) sequence of `field` or not. Makes sure the entire
+    node is surrounded by a balanced pair of delimiters. Functions as `is_parenthesized_tuple()` if already know is a
+    Tuple. Other use is for `MatchSequence`, whether parenthesized or bracketed."""
+
+    ldelim, rdelim = delims
+    lines          = self.root._lines
 
     self_ln, self_col, self_end_ln, self_end_col = self.loc
 
-    lines = self.root._lines
-
-    if not lines[self_end_ln].startswith(rpar, self_end_col - 1):
+    if not lines[self_end_ln].startswith(rdelim, self_end_col - 1):
         return False
 
     if not (asts := getattr(self.a, field)):
         return True  # return True if no children because assume '()' in this case
 
-    if not lines[self_ln].startswith(lpar, self_col):
+    if not lines[self_ln].startswith(ldelim, self_col):
         return False
 
     f0_ln, f0_col, f0_end_ln, f0_end_col = asts[0].f.loc
@@ -1069,12 +1020,12 @@ def _is_parenthesized_seq(self: fst.FST, field: str = 'elts', lpar: str = '(', r
 
     self_end_col -= 1  # because for sure there is a comma between end of first element and end of tuple, so at worst we exclude either the tuple closing paren or a comma
 
-    nparens = len(_next_pars(lines, self_ln, self_col, self_end_ln, self_end_col, lpar)) - 1  # yes, we use _next_pars() to count opening parens because we know conditions allow it
+    nparens = len(_next_pars(lines, self_ln, self_col, self_end_ln, self_end_col, ldelim)) - 1  # yes, we use _next_pars() to count opening parens because we know conditions allow it
 
     if not nparens:
         return False
 
-    nparens -= len(_next_pars(lines, f0_end_ln, f0_end_col, self_end_ln, self_end_col, rpar)) - 1
+    nparens -= len(_next_pars(lines, f0_end_ln, f0_end_col, self_end_ln, self_end_col, rdelim)) - 1
 
     return nparens > 0  # don't want to fiddle with checking if f0 is a parenthesized tuple
 
@@ -1181,24 +1132,26 @@ def _maybe_del_separator(self: fst.FST, ln: int, col: int, force: bool = False,
     return True
 
 
-def _maybe_add_comma(self: fst.FST, ln: int, col: int, space: bool, end_ln: int | None = None,
-                     end_col: int | None = None, exclude: fst.FST | None | EllipsisType = ...,
-                     offset_excluded: bool = True) -> srcwpos | None:
-    """Maybe add comma at start of span if not already present as first code in span. Will skip any closing
-    parentheses for check and add. Is meant for adding at the end of a sequence. We specifically don't use `pars()` here
-    because is meant to be used where the element is being modified and may not be valid for that.
+def _maybe_ins_separator(self: fst.FST, ln: int, col: int, space: bool,
+                         end_ln: int | None = None, end_col: int | None = None, sep: str = ',',
+                         exclude: fst.FST | None | EllipsisType = ..., offset_excluded: bool = True) -> srcwpos | None:
+    """Maybe insert separator at start of span if not already present as first code in span. Will skip any closing
+    parentheses for check and add. We specifically don't use `pars()` here because is meant to be used where the element
+    is being modified and may not be valid for that.
 
     **Parameters:**
-    - `ln`: Line start of span.
-    - `col`: Column start of span.
-    - `space`: Whether to add a space to new comma or existing comma IF the span is zero length or if following
-        character exists and is not a space.
+    - (`ln`, `col`): Location of start of span.
+    - (`end_ln`, `end_col`): Location of end of span, otherwise gotten from end of `self`.
+    - `space`: Whether to add a space to new separator or existing separator IF the span is zero length or if following
+        character exists and is not a space. Will add space before a separator being put if is not a comma. Will not
+        insert space before an existing found separator if is not there.
+    - `sep`: String separator to use. Any separator which is not a comma will have a space prepended to it if adding.
     - `exclude`: `...` means exclude `self`, `None` excludes nothing and any other `FST` excludes that `FST`. Should be
-        `...` if comma is for sure being put past all elements of `self`.
+        `...` if separator is for sure being put past all elements of `self`.
     - `offset_excluded`: Parameter to `_offset()`.
 
     **Returns:**
-    - `srcwpos`: If something was put then returns location and what was put (comma, space or both).
+    - `srcwpos`: If something was put then returns location and what was put (separator, space or both).
     - `None`: Nothing was put.
     """
 
@@ -1220,7 +1173,7 @@ def _maybe_add_comma(self: fst.FST, ln: int, col: int, space: bool, end_ln: int 
                 ln  = cln
                 col = ccol
 
-            elif c != ',':
+            elif c != sep:
                 break
 
             else:
@@ -1237,105 +1190,138 @@ def _maybe_add_comma(self: fst.FST, ln: int, col: int, space: bool, end_ln: int 
 
         break
 
-    comma = ', ' if space and ((ln == end_ln and col == end_col) or
-                               not _re_one_space_or_end.match(lines[ln], col)) else ','
+    if space:
+        if (ln == end_ln and col == end_col) or not _re_one_space_or_end.match(lines[ln], col):
+            sep = ', ' if sep == ',' else f' {sep} '
+        elif sep != ',':
+            sep = ' ' + sep
 
-    self._put_src([comma], ln, col, ln, col, True, exclude=exclude, offset_excluded=offset_excluded)
+    self._put_src([sep], ln, col, ln, col, True, exclude=exclude, offset_excluded=offset_excluded)
 
-    return srcwpos(ln, col, comma)
+    return srcwpos(ln, col, sep)
 
 
-def _maybe_add_singleton_tuple_comma(self: fst.FST):
+def _maybe_add_singleton_tuple_comma(self: fst.FST, is_par: bool | None = None):
     """Maybe add comma to tuple if is singleton and comma not already there, parenthesization not checked or taken
     into account. `self.a` must be a `Tuple`."""
 
     # assert isinstance(self.a, Tuple)
 
     if (elts := self.a.elts) and len(elts) == 1:
-        self._maybe_add_comma((f := elts[0].f).end_ln, f.end_col, False, self.end_ln,
-                              self.end_col - self._is_parenthesized_seq())
+        self._maybe_ins_separator((f := elts[0].f).end_ln, f.end_col, False, self.end_ln,
+                                  self.end_col - (self._is_delimited_seq() if is_par is None else is_par))
 
 
-def _maybe_fix_tuple(self: fst.FST, is_parenthesized: bool | None = None):
-    # assert isinstance(self.a, Tuple)
+def _maybe_fix_naked_seq(self: fst.FST, body: list[AST], delims: str = '()') -> bool:
+    """Fix naked `Tuple` or `MatchSequence` if needed. Don't call on unnaked sequence."""
 
-    ast = self.a
+    # assert isinstance(self.a, (Tuple, MatchSequence))
 
-    if is_parenthesized is None:
-        is_parenthesized = self._is_parenthesized_seq()
-
-    if elts := ast.elts:
-        self._maybe_add_singleton_tuple_comma()
-
-        lines                    = self.root._lines
-        ln, col, end_ln, end_col = self.loc
-
-        if not is_parenthesized:
-            encpar = None
-
-            if ((end_ln != ln and not self.is_enclosed(pars=False) and not (encpar := self.is_enclosed_in_parents())) or  # could have line continuations
-                (any(isinstance(e, NamedExpr) and not e.f.pars().n for e in elts))  # yeah, this is fine in parenthesized tuples but not in naked ones
-            ):
-                self._parenthesize_node()
-
-            else:
-                eln, ecol, _, _ = elts[0].f.pars()
-
-                if ecol != col or eln != ln:  # to be super safe we enforce that an unparenthesized tuple must start at the first element
-                    self._put_src(None, ln, col, eln, ecol, False)
-
-                    ln, col, end_ln, end_col = self.loc
-
-                _, _, eend_ln, eend_col = elts[-1].f.pars()
-
-                if comma := _next_find(lines, eend_ln, eend_col, end_ln, end_col, ','):  # could be closing grouping pars before comma
-                    eend_ln, eend_col  = comma
-                    eend_col          += 1
-
-                if end_col != eend_col or end_ln != eend_ln:  # need to update end position because it had some whitespace after which will not be enclosed by parentheses
-                    # self._put_src(None, eend_ln, eend_col, end_ln, end_col, True)  # be safe, nuke everything after last element since we won't have parentheses or parent to delimit it
-
-                    if not (encpar or self.is_enclosed_in_parents()):
-                        self._put_src(None, eend_ln, eend_col, end_ln, end_col, True)  # be safe, nuke everything after last element since we won't have parentheses or parent to delimit it
-
-                    else:  # enclosed in parents so we can leave crap at the end
-                        a                  = self.a
-                        cur_end_lineno     = a.end_lineno
-                        cur_end_col_offset = a.end_col_offset
-                        end_lineno         = a.end_lineno     = eend_ln + 1
-                        end_col_offset     = a.end_col_offset = lines[eend_ln].c2b(eend_col)
-
-                        self._touch()
-
-                        while ((self := self.parent) and getattr(a := self.a, 'end_col_offset', -1) == cur_end_col_offset and  # update parents, only as long as they end exactly where we end
-                            a.end_lineno == cur_end_lineno
-                        ):
-                            a.end_lineno     = end_lineno
-                            a.end_col_offset = end_col_offset
-
-                            self._touch()
-
-                        else:
-                            if self:
-                                self._touchall(True)
-
-    elif not is_parenthesized:  # if is unparenthesized tuple and empty left then need to add parentheses
+    if not body:  # if is empty then just need to delimit
         lines                    = self.root._lines
         ln, col, end_ln, end_col = self.loc
 
         if not _next_src(lines, ln, col, end_ln, end_col, True):  # if no comments in tuple area then just replace with '()'
-            self._put_src(['()'], ln, col, end_ln, end_col, True, False)  # WARNING! `tail=True` may not be safe if another preceding non-containing node ends EXACTLY where the unparenthesized tuple starts, but haven't found a case where this can happen
+            self._put_src([delims], ln, col, end_ln, end_col, True, False)  # WARNING! `tail=True` may not be safe if another preceding non-containing node ends EXACTLY where the unparenthesized tuple starts, but haven't found a case where this can happen
 
         else:  # otherwise preserve comments by parenthesizing whole area
+            ldelim, rdelim = delims
+
             if end_col and (l := lines[end_ln]).endswith(' ', 0, end_col):
-                lines[end_ln] = bistr(f'{l[:end_col - 1]}){l[end_col:]}')
+                lines[end_ln] = bistr(f'{l[:end_col - 1]}{rdelim}{l[end_col:]}')
             else:
-                self._put_src([')'], end_ln, end_col, end_ln, end_col, True)
+                self._put_src([rdelim], end_ln, end_col, end_ln, end_col, True)
 
             if (l := lines[ln]).startswith(' ', col):
-                lines[ln] = bistr(f'{l[:col]}({l[col + 1:]}')
+                lines[ln] = bistr(f'{l[:col]}{ldelim}{l[col + 1:]}')
             else:
-                self._put_src(['('], ln, col, ln, col, False, False)
+                self._put_src([ldelim], ln, col, ln, col, False, False)
+
+        return True
+
+    ln, col, end_ln, end_col = self.loc
+    encpar                   = None
+
+    if ((end_ln != ln and not self.is_enclosed(pars=False) and not (encpar := self.is_enclosed_in_parents())) or  # could have line continuations
+        (any(isinstance(e, NamedExpr) and not e.f.pars().n for e in body))  # yeah, this is fine in parenthesized tuples but not in naked ones, only applies to tuples and not MatchSequence obviously
+    ):
+        self._delimit_node(delims=delims)
+
+        return True
+
+    eln, ecol, _, _ = body[0].f.pars()
+    lines           = self.root._lines
+
+    if ecol != col or eln != ln:  # to be super safe we enforce that an unparenthesized tuple must start at the first element
+        self._put_src(None, ln, col, eln, ecol, False)
+
+        ln, col, end_ln, end_col = self.loc
+
+    _, _, eend_ln, eend_col = body[-1].f.pars()
+
+    if comma := _next_find(lines, eend_ln, eend_col, end_ln, end_col, ','):  # could be closing grouping pars before comma
+        eend_ln, eend_col  = comma
+        eend_col          += 1
+
+    if end_col != eend_col or end_ln != eend_ln:  # need to update end position because it had some whitespace after which will not be enclosed by parentheses
+        # self._put_src(None, eend_ln, eend_col, end_ln, end_col, True)  # be safe, nuke everything after last element since we won't have parentheses or parent to delimit it
+
+        if not (encpar or self.is_enclosed_in_parents()):
+            self._put_src(None, eend_ln, eend_col, end_ln, end_col, True)  # be safe, nuke everything after last element since we won't have parentheses or parent to delimit it
+
+        else:  # enclosed in parents so we can leave crap at the end
+            a                  = self.a
+            cur_end_lineno     = a.end_lineno
+            cur_end_col_offset = a.end_col_offset
+            end_lineno         = a.end_lineno     = eend_ln + 1
+            end_col_offset     = a.end_col_offset = lines[eend_ln].c2b(eend_col)
+
+            self._touch()
+
+            while ((self := self.parent) and
+                    getattr(a := self.a, 'end_col_offset', -1) == cur_end_col_offset and
+                    a.end_lineno == cur_end_lineno
+            ):  # update parents, only as long as they end exactly where we end
+                a.end_lineno     = end_lineno
+                a.end_col_offset = end_col_offset
+
+                self._touch()
+
+            else:
+                if self:
+                    self._touchall(True)
+
+    return False
+
+
+def _maybe_fix_tuple(self: fst.FST, is_par: bool | None = None) -> bool:
+    # assert isinstance(self.a, Tuple)
+
+    if is_par is None:
+        is_par = self._is_delimited_seq()
+
+    if body := self.a.elts:
+        self._maybe_add_singleton_tuple_comma(is_par)
+
+    if not is_par:
+        return self._maybe_fix_naked_seq(body)
+
+    return is_par
+
+
+def _maybe_fix_matchseq(self: fst.FST, delims: Literal['', '[]', '()'] | None = None) -> str:
+    # assert isinstance(self.a, MatchSequence)
+
+    if delims is None:
+        delims = self.get_matchseq_delimiters()
+
+    if len(body := self.a.patterns) == 1 and not delims.startswith('['):
+        self._maybe_ins_separator((f := body[0].f).end_ln, f.end_col, False, self.end_ln, self.end_col - bool(delims))
+
+    if not delims:
+        return self._maybe_fix_naked_seq(body, '[]')
+
+    return delims
 
 
 def _maybe_fix_set(self: fst.FST):
@@ -1368,7 +1354,7 @@ def _maybe_fix_with_items(self: fst.FST):
         (is_par := (cef := i0a.context_expr.f).is_parenthesized_tuple()) is not None
     ):
         if not is_par:
-            cef._parenthesize_node()
+            cef._delimit_node()
 
         if len(_prev_pars(self.root._lines, self.ln, self.col, cef.ln, cef.col)) == 1:  # no pars between start of `with` and start of tuple?
             cef._parenthesize_grouping()  # these will wind up belonging to outer With
@@ -1400,12 +1386,12 @@ def _maybe_fix_copy(self: fst.FST, pars: bool = True, pars_walrus: bool = False)
         need_paren = None
 
         if is_tuple := isinstance(ast, Tuple):
-            if self._is_parenthesized_seq():
+            if is_par := self._is_delimited_seq():
                 need_paren = False
             elif any(isinstance(e, NamedExpr) and not e.f.pars().n for e in ast.elts):  # unparenthesized walrus in naked tuple?
                 need_paren = True
 
-            self._maybe_add_singleton_tuple_comma()  # this exists because of copy lone Starred out of a Subscript.slice
+            self._maybe_add_singleton_tuple_comma(is_par)  # this exists because of copy lone Starred out of a Subscript.slice
 
         elif isinstance(ast, NamedExpr):  # naked walrus
             need_paren = pars_walrus
@@ -1415,7 +1401,7 @@ def _maybe_fix_copy(self: fst.FST, pars: bool = True, pars_walrus: bool = False)
 
         if need_paren:
             if is_tuple:
-                self._parenthesize_node()
+                self._delimit_node()
             else:
                 self._parenthesize_grouping()
 
@@ -1474,33 +1460,6 @@ def _parenthesize_grouping(self: fst.FST, whole: bool = True, *, star_child: boo
     self._offset(*self._put_src(['('], ln, col, ln, col, False, False, self, offset_excluded=False))
 
 
-def _parenthesize_node(self: fst.FST, whole: bool = True, pars: str = '()'):
-    """Parenthesize (delimit) a node (`Tuple` or `MatchSequence`, but could be others) with appropriate delimiters which
-    are passed in and extend the range of the node to include those delimiters.
-
-    **WARNING!** No checks are done so make sure to call where it is appropriate!
-
-    **Parameters:**
-    - `whole`: If at root then parenthesize whole source instead of just node.
-    """
-
-    # assert isinstance(self.a, Tuple)
-
-    ln, col, end_ln, end_col = self.whole_loc if whole and self.is_root else self.loc
-
-    self._put_src([pars[1]], end_ln, end_col, end_ln, end_col, True, False, self)
-
-    lines            = self.root._lines
-    a                = self.a
-    a.end_lineno     = end_ln + 1  # yes this can change
-    a.end_col_offset = lines[end_ln].c2b(end_col + 1)  # can't count on this being set by put_src() because end of `whole` could be past end of tuple
-
-    self._offset(*self._put_src([pars[0]], ln, col, ln, col, False, False, self), self_=False)
-
-    a.lineno     = ln + 1
-    a.col_offset = lines[ln].c2b(col)  # ditto on the `whole` thing
-
-
 def _unparenthesize_grouping(self: fst.FST, shared: bool | None = True, *, star_child: bool = True) -> bool:
     """Remove grouping parentheses from anything if present. Just remove text parens around node and everything between
     them and node adjusting parent locations but not the node itself.
@@ -1556,27 +1515,54 @@ def _unparenthesize_grouping(self: fst.FST, shared: bool | None = True, *, star_
     return True
 
 
-def _unparenthesize_node(self: fst.FST, field: str = 'elts') -> bool:
-    """Unparenthesize a parenthesized `Tuple` or `MatchSequence` or unbracketize the latter if is that, shrinking node
-    location for the removed delimiters. Will not unparenthesize an empty `Tuple` or `MatchSequence`. Removes everything
-    between the parentheses and the actual tuple, e.g. `(  1, 2  # yay \\n)` -> `1, 2`.
+def _delimit_node(self: fst.FST, whole: bool = True, delims: str = '()'):
+    """Delimit (parenthesize or bracket) a node (`Tuple` or `MatchSequence`, but could be others) with appropriate
+    delimiters which are passed in and extend the range of the node to include those delimiters.
+
+    **WARNING!** No checks are done so make sure to call where it is appropriate!
+
+    **Parameters:**
+    - `whole`: If at root then delimit whole source instead of just node.
+    """
+
+    # assert isinstance(self.a, Tuple)
+
+    ln, col, end_ln, end_col = self.whole_loc if whole and self.is_root else self.loc
+
+    self._put_src([delims[1]], end_ln, end_col, end_ln, end_col, True, False, self)
+
+    lines            = self.root._lines
+    a                = self.a
+    a.end_lineno     = end_ln + 1  # yes this can change
+    a.end_col_offset = lines[end_ln].c2b(end_col + 1)  # can't count on this being set by put_src() because end of `whole` could be past end of tuple
+
+    self._offset(*self._put_src([delims[0]], ln, col, ln, col, False, False, self), self_=False)
+
+    a.lineno     = ln + 1
+    a.col_offset = lines[ln].c2b(col)  # ditto on the `whole` thing
+
+
+def _undelimit_node(self: fst.FST, field: str = 'elts') -> bool:
+    """Unparenthesize or unbracketize a parenthesized / bracketed `Tuple` or `MatchSequence`, shrinking node location
+    for the removed delimiters. Will not undelimit an empty `Tuple` or `MatchSequence`. Removes everything between the
+    delimiters and the actual sequence, e.g. `(  1, 2  # yay \\n)` -> `1, 2`.
 
     **WARNING!** No checks are done so make sure to call where it is appropriate! Does not check to see if node is
     properly paren/bracketized so make sure of this before calling!
 
     **Returns:**
-    - `bool`: Whether parentheses (or brackets) were removed or not (they may not be for an empty tuple).
+    - `bool`: Whether delimiters were removed or not (they may not be for an empty tuple).
     """
 
     # assert isinstance(self.a, Tuple)
 
-    if not (elts := getattr(self.a, field, None)):
+    if not (body := getattr(self.a, field, None)):
         return False
 
     ln, col, end_ln, end_col = self.loc
     lines                    = self.root._lines
 
-    if comma := _next_find(self.root._lines, en_end_ln := (en := elts[-1].f).end_ln, en_end_col := en.end_col,
+    if comma := _next_find(self.root._lines, en_end_ln := (en := body[-1].f).end_ln, en_end_col := en.end_col,
                            end_ln, end_col, ','):  # need to leave trailing comma if its there
         en_end_ln, en_end_col  = comma
         en_end_col            += 1
@@ -1588,7 +1574,7 @@ def _unparenthesize_node(self: fst.FST, field: str = 'elts') -> bool:
     head_alnums = col and _re_delim_open_alnums.match(lines[ln], col - 1)  # if open has alnumns on both sides then insert space there too
 
     self._put_src(None, en_end_ln, en_end_col, end_ln, end_col, True, self)
-    self._put_src(None, ln, col, (e0 := elts[0].f).ln, e0.col, False)
+    self._put_src(None, ln, col, (e0 := body[0].f).ln, e0.col, False)
 
     if head_alnums:  # but put after delete par to keep locations same
         self._put_src(' ', ln, col, ln, col, False)
@@ -2284,6 +2270,77 @@ def _dedent_lns(self: fst.FST, indent: str | None = None, lns: set[int] | None =
     self._reparse_docstrings(docstr)
 
     return lns
+
+
+@staticmethod
+def _get_trivia_params(trivia: bool | str | tuple[bool | str | int | None, bool | str | int | None] | None = None,
+                       neg: bool = False,
+                       ) -> tuple[Literal['none', 'all', 'block'] | int,
+                                  bool | int,
+                                  bool,
+                                  Literal['none', 'all', 'block', 'line'] | int,
+                                  bool | int,
+                                  bool,
+                                  ]:
+    """Convert options compact human representation to parameters usable for `_leading/trailing_trivia()`.
+
+    This conversion is fairly loose and will accept shorthand '+/-#' for 'none+/-#'.
+
+    **Parameters:**
+    - `neg`: Whether to use `'-#'` suffix numbers or not (will still return `_neg` as `True` but `_space` will be 0).
+
+    **Returns:**
+    - (`lead_comments`, `lead_space`, `lead_neg`, `trail_comments`, `trail_space`, `trail_neg`): Two sets of parameters
+        for the trivia functions along with the `_neg` indicators of whether the `_space` params came from negative
+        space specifiers `'-#'` or not.
+    """
+
+    if isinstance(lead_comments := fst.FST.get_option('trivia'), tuple):
+        lead_comments, trail_comments = lead_comments
+    else:
+        trail_comments = lead_comments
+
+    if trivia is not None:
+        if not isinstance(trivia, tuple):
+            lead_comments = trivia
+
+        else:
+            if (t := trivia[0]) is not None:
+                lead_comments = t
+            if (t := trivia[1]) is not None:
+                trail_comments = t
+
+    lead_space = lead_neg = False
+
+    if isinstance(lead_comments, bool):
+        lead_comments = 'block' if lead_comments else 'none'
+
+    elif isinstance(lead_comments, str):
+        if (i := lead_comments.find('+')) != -1:
+            lead_space    = int(n) if (n := lead_comments[i + 1:]) else True
+            lead_comments = lead_comments[:i] or 'none'
+
+        elif (i := lead_comments.find('-')) != -1:
+            lead_neg      = True
+            lead_space    = (int(n) if (n := lead_comments[i + 1:]) else True) if neg else 0
+            lead_comments = lead_comments[:i] or 'none'
+
+    trail_space = trail_neg = False
+
+    if isinstance(trail_comments, bool):
+        trail_comments = 'line' if trail_comments else 'none'
+
+    elif isinstance(trail_comments, str):
+        if (i := trail_comments.find('+')) != -1:
+            trail_space    = int(n) if (n := trail_comments[i + 1:]) else True
+            trail_comments = trail_comments[:i] or 'none'
+
+        elif (i := trail_comments.find('-')) != -1:
+            trail_neg      = True
+            trail_space    = (int(n) if (n := trail_comments[i + 1:]) else True) if neg else 0
+            trail_comments = trail_comments[:i] or 'none'
+
+    return lead_comments, lead_space, lead_neg, trail_comments, trail_space, trail_neg
 
 
 # ----------------------------------------------------------------------------------------------------------------------

@@ -1364,7 +1364,7 @@ def _put_one_Tuple_elts(self: fst.FST, code: _PutOneCode, idx: int | None, field
     is_slice = pfield == ('slice', None)
     is_par   = None
 
-    if (pfield and not is_slice) or (is_par := self._is_parenthesized_seq()):  # only allow slice in unparenthesized tuple, in slice or at root
+    if (pfield and not is_slice) or (is_par := self._is_delimited_seq()):  # only allow slice in unparenthesized tuple, in slice or at root
         static = _onestatic_expr_required_starred  # default static allows slices, this disallows it
 
     if not isinstance(ast.ctx, Load):  # only allow possible expression targets into an expression target
@@ -1374,7 +1374,7 @@ def _put_one_Tuple_elts(self: fst.FST, code: _PutOneCode, idx: int | None, field
 
     if PYLT11:
         if (put_star_to_unpar_slice := is_slice and isinstance(code.a, Starred) and
-            (is_par is False or (is_par is None and not self._is_parenthesized_seq()))
+            (is_par is False or (is_par is None and not self._is_delimited_seq()))
         ):
             r = (elts := ast.elts)[idx]
 
@@ -1384,7 +1384,7 @@ def _put_one_Tuple_elts(self: fst.FST, code: _PutOneCode, idx: int | None, field
         ret = _put_one_exprish_required(self, code, idx, field, child, static, 2, **options)
 
         if put_star_to_unpar_slice:
-            self._parenthesize_node()
+            self._delimit_node()
 
     else:
         self_is_solo_star_in_slice = is_slice and len(elts := ast.elts) == 1 and isinstance(elts[0], Starred)  # because of replacing the Starred in 'a[*i_am_really_a_tuple]'
@@ -1392,7 +1392,7 @@ def _put_one_Tuple_elts(self: fst.FST, code: _PutOneCode, idx: int | None, field
         ret = _put_one_exprish_required(self, code, idx, field, child, static, 2, **options)
 
         if self_is_solo_star_in_slice:
-            self._maybe_add_singleton_tuple_comma()
+            self._maybe_add_singleton_tuple_comma(is_par)
 
     return ret
 
@@ -1489,8 +1489,8 @@ def _put_one_MatchAs_pattern(self: fst.FST, code: _PutOneCode, idx: int | None, 
         if isinstance(code.a, MatchStar):
             raise NodeError(f'cannot put a MatchStar to MatchAs.pattern')
 
-        if code.is_enclosed_matchseq() is False:
-            code._parenthesize_node(pars='[]')
+        if code.get_matchseq_delimiters() == '':
+            code._delimit_node(delims='[]')
 
     return _put_one_exprish_optional(self, code, idx, field, child, static, 2, **options)
 
@@ -1506,8 +1506,8 @@ def _put_one_pattern(self: fst.FST, code: _PutOneCode, idx: int | None, field: s
         if not isinstance(self.a, MatchSequence):
             raise NodeError(f'cannot put a MatchStar to {self.a.__class__.__name__}.{field}')
 
-    elif code.is_enclosed_matchseq() is False:
-        code._parenthesize_node(pars='[]')
+    elif code.get_matchseq_delimiters() == '':
+        code._delimit_node(delims='[]')
 
     return _put_one_exprish_required(self, code, idx, field, child, static, 2, **options)
 
@@ -1576,7 +1576,7 @@ def _put_one_ExceptHandler_name(self: fst.FST, code: _PutOneCode, idx: int | Non
     ret = _put_one_identifier_optional(self, code, idx, field, child, static, **options)
 
     if ret and (typef := self.a.type.f).is_parenthesized_tuple() is False:
-        typef._parenthesize_node()
+        typef._delimit_node()
 
     return ret
 
@@ -1953,7 +1953,7 @@ def _one_info_Global_Nonlocal_names(self: fst.FST, static: onestatic, idx: int |
 
     idx = _fixup_one_index(len(self.a.names), idx)
 
-    return oneinfo('', None, self._loc_Global_Nonlocal_names(idx))
+    return oneinfo('', None, self._loc_global_nonlocal_names(idx))
 
 _onestatic_Global_Nonlocal_names = onestatic(_one_info_Global_Nonlocal_names, _restrict_default, code_as=_code_as_identifier)
 

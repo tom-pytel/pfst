@@ -2753,64 +2753,6 @@ match a:
 
                 raise
 
-    def test_trivia(self):
-        # leading
-
-        self.assertEqual("fstlocns(0, 0, 0, 1, starts_line=True, ends_line=True, indent='')", str(FST('a', stmt).trivia('all')))
-        self.assertEqual("fstlocns(0, 0, 1, 1, starts_line=True, ends_line=True, indent='')", str(FST('# c\na', stmt).trivia('all')))
-        self.assertEqual("fstlocns(0, 0, 2, 1, starts_line=True, ends_line=True, indent='')", str(FST('# c\n# c\na', stmt).trivia('all')))
-
-        self.assertEqual("fstlocns(0, 0, 3, 1, starts_line=True, ends_line=True, indent='')", str(FST('# c\n\n# c\na', stmt).trivia('all')))
-        self.assertEqual("fstlocns(2, 0, 3, 1, starts_line=True, ends_line=True, indent='')", str(FST('# c\n\n# c\na', stmt).trivia('block')))
-        self.assertEqual("fstlocns(1, 0, 3, 1, starts_line=True, ends_line=True, indent='')", str(FST('# c\n\n# c\na', stmt).trivia('block+1')))
-        self.assertEqual("fstlocns(1, 0, 3, 1, starts_line=True, ends_line=True, indent='')", str(FST('# c\n\n# c\na', stmt).trivia('block+2')))
-        self.assertEqual("fstlocns(1, 0, 3, 1, starts_line=True, ends_line=True, indent='')", str(FST('# c\n\n# c\na', stmt).trivia('block+')))
-        self.assertEqual("fstlocns(3, 0, 3, 1, starts_line=True, ends_line=True, indent='')", str(FST('# c\n\n# c\na', stmt).trivia(False)))
-
-        self.assertEqual("fstlocns(0, 0, 2, 1, starts_line=True, ends_line=False, indent='')", str(FST('# c\n# c\na; b', 'exec').body[0].trivia('all')))
-        self.assertEqual("fstlocns(2, 3, 2, 4, starts_line=False, ends_line=True, indent=None)", str(FST('# c\n# c\na; b', 'exec').body[1].trivia('all')))
-        self.assertEqual("fstlocns(2, 3, 2, 4, starts_line=False, ends_line=False, indent=None)", str(FST('# c\n# c\na; b; c', 'exec').body[1].trivia('all')))
-        self.assertEqual("fstlocns(2, 6, 2, 7, starts_line=False, ends_line=True, indent=None)", str(FST('# c\n# c\na; b; c', 'exec').body[2].trivia('all')))
-
-        # trailing
-
-        self.assertEqual("fstlocns(0, 0, 0, 4, starts_line=True, ends_line=True, indent='')", str(FST('a   ', stmt).trivia((False, 'all'))))
-        self.assertEqual("fstlocns(0, 0, 1, 0, starts_line=True, ends_line=True, indent='')", str(FST('a  \\\n ', stmt).trivia((False, 'all'))))
-        self.assertEqual("fstlocns(0, 0, 0, 3, starts_line=True, ends_line=False, indent='')", str(FST('a  ;', stmt).trivia((False, 'all'))))
-        self.assertEqual("fstlocns(0, 0, 0, 4, starts_line=True, ends_line=True, indent='')", str(FST('a #c', stmt).trivia((False, 'all'))))
-        self.assertEqual("fstlocns(0, 0, 0, 4, starts_line=True, ends_line=True, indent='')", str(FST('a# c', stmt).trivia((False, 'all'))))
-        self.assertEqual("fstlocns(0, 0, 0, 2, starts_line=True, ends_line=False, indent='')", str(FST('a #c', stmt).trivia((False, False))))
-        self.assertEqual("fstlocns(0, 0, 0, 1, starts_line=True, ends_line=False, indent='')", str(FST('a# c', stmt).trivia((False, False))))
-
-        self.assertEqual("fstlocns(0, 0, 0, 1, starts_line=True, ends_line=True, indent='')", str(FST('a', stmt).trivia((False, 'all+'))))
-        self.assertEqual("fstlocns(0, 0, 0, 4, starts_line=True, ends_line=True, indent='')", str(FST('a   ', stmt).trivia((False, 'all+'))))
-
-        self.assertEqual("fstlocns(0, 0, 2, 0, starts_line=True, ends_line=True, indent='')", str(FST('a # c\n\nb', 'exec').body[0].trivia((False, 'line+'))))
-        self.assertEqual("fstlocns(0, 0, 2, 0, starts_line=True, ends_line=True, indent='')", str(FST('a # c\n\n', 'exec').body[0].trivia((False, 'line+'))))
-        self.assertEqual("fstlocns(0, 0, 2, 0, starts_line=True, ends_line=True, indent='')", str(FST('a # c\n\n# c', 'exec').body[0].trivia((False, 'line+'))))
-        self.assertEqual("fstlocns(0, 0, 2, 0, starts_line=True, ends_line=True, indent='')", str(FST('a # c\n\n\n', 'exec').body[0].trivia((False, 'line+1'))))
-        self.assertEqual("fstlocns(0, 0, 3, 0, starts_line=True, ends_line=True, indent='')", str(FST('a # c\n\n\n', 'exec').body[0].trivia((False, 'line+2'))))
-
-        self.assertEqual("fstlocns(0, 0, 1, 0, starts_line=True, ends_line=True, indent='')", str(FST('a \n', stmt).trivia((False, 'all'))))
-        self.assertEqual("fstlocns(0, 0, 1, 0, starts_line=True, ends_line=True, indent='')", str(FST('a \\\n ', stmt).trivia((False, 'all'))))
-        self.assertEqual("fstlocns(0, 0, 1, 0, starts_line=True, ends_line=True, indent='')", str(FST('a #\n', stmt).trivia((False, 'all'))))
-        self.assertEqual("fstlocns(0, 0, 0, 2, starts_line=True, ends_line=False, indent='')", str(FST('a ;\n', stmt).trivia((False, 'all'))))
-
-        self.assertEqual("fstlocns(0, 0, 1, 0, starts_line=True, ends_line=True, indent='')", str(FST('a\n', stmt).trivia((False, 'all'))))
-        self.assertEqual("fstlocns(0, 0, 1, 0, starts_line=True, ends_line=True, indent='')", str(FST('a\n ', stmt).trivia((False, 'all'))))
-
-        self.assertEqual("fstlocns(0, 0, 1, 0, starts_line=True, ends_line=True, indent='')", str(FST('a\n', stmt).trivia((False, 'all+1'))))
-        self.assertEqual("fstlocns(0, 0, 1, 1, starts_line=True, ends_line=True, indent='')", str(FST('a\n ', stmt).trivia((False, 'all+1'))))
-
-        self.assertEqual("fstlocns(0, 0, 1, 3, starts_line=True, ends_line=True, indent='')", str(FST('a\n# c', stmt).trivia((False, 'all'))))
-        self.assertEqual("fstlocns(0, 0, 2, 0, starts_line=True, ends_line=True, indent='')", str(FST('a\n# c\n', stmt).trivia((False, 'all'))))
-        self.assertEqual("fstlocns(0, 0, 2, 0, starts_line=True, ends_line=True, indent='')", str(FST('a\n# c\n', stmt).trivia((False, 'all+1'))))
-        self.assertEqual("fstlocns(0, 0, 2, 1, starts_line=True, ends_line=True, indent='')", str(FST('a\n# c\n ', stmt).trivia((False, 'all+1'))))
-        self.assertEqual("fstlocns(0, 0, 3, 0, starts_line=True, ends_line=True, indent='')", str(FST('a\n# c\n \n', stmt).trivia((False, 'all+1'))))
-        self.assertEqual("fstlocns(0, 0, 3, 0, starts_line=True, ends_line=True, indent='')", str(FST('a\n# c\n \n ', stmt).trivia((False, 'all+1'))))
-        self.assertEqual("fstlocns(0, 0, 3, 1, starts_line=True, ends_line=True, indent='')", str(FST('a\n# c\n \n ', stmt).trivia((False, 'all+2'))))
-        self.assertEqual("fstlocns(0, 0, 4, 0, starts_line=True, ends_line=True, indent='')", str(FST('a\n# c\n \n \n', stmt).trivia((False, 'all+2'))))
-
     def test_par(self):
         f = parse('1,').body[0].value.f.copy()
         f.par()  # self.assertTrue(f.par())
@@ -5523,8 +5465,7 @@ if 1:
 
         self.assertEqual('True', test(FST('False', MatchSingleton), 'value', True, None, False).src)
 
-        self.assertEqual('[a, b, c]', test(FST('[x, y]', MatchSequence), 'patterns', 'a, b, c', fstview,
-                                           '<<MatchSequence ROOT 0,0..0,6>.patterns[0:2] [<MatchAs 0,1..0,2>, <MatchAs 0,4..0,5>]>').src)
+        self.assertEqual('[a, b, c]', test(FST('[x, y]', MatchSequence), 'patterns', 'a, b, c', fstview, '[x, y]').src)
 
         f = FST('{1: a, **b}', MatchMapping)
         self.assertEqual('{2: a, **b}', test(f, 'keys', '2', fstview, '1').src)

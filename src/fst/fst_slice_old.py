@@ -136,7 +136,7 @@ def _get_slice_tuple_list_or_set(self: fst.FST, start: int | Literal['end'] | No
         else:
             return self._new_empty_list(from_=self)
 
-    is_paren = is_tuple and self._is_parenthesized_seq()
+    is_paren = is_tuple and self._is_delimited_seq()
     ffirst   = elts[start].f
     flast    = elts[stop - 1].f
     fpre     = elts[start - 1].f if start else None
@@ -326,7 +326,7 @@ def _put_slice_tuple_list_or_set(self: fst.FST, code: Code | None, start: int | 
 
         if one:
             if (b := put_fst.is_parenthesized_tuple()) is False:  # don't put unparenthesized tuple source as one into sequence, it would merge into the sequence
-                put_fst._parenthesize_node()
+                put_fst._delimit_node()
             elif b is None and precedence_require_parens(put_fst.a, self.a, 'elts', 0) and not put_fst.pars().n:
                 put_fst._parenthesize_grouping()
 
@@ -360,7 +360,7 @@ def _put_slice_tuple_list_or_set(self: fst.FST, code: Code | None, start: int | 
 
     is_self_tuple    = isinstance(ast, Tuple)
     is_self_set      = not is_self_tuple and isinstance(ast, Set)
-    is_self_enclosed = not is_self_tuple or self._is_parenthesized_seq()
+    is_self_enclosed = not is_self_tuple or self._is_delimited_seq()
     fpre             = elts[start - 1].f if start else None
     fpost            = None if stop == len(elts) else elts[stop].f
     seq_loc          = fstloc(self.ln, self.col + is_self_enclosed, self.end_ln, self.end_col - is_self_enclosed)
@@ -397,7 +397,7 @@ def _put_slice_tuple_list_or_set(self: fst.FST, code: Code | None, start: int | 
             put_lines[-1] = bistr(put_lines[-1][:-1])
             put_lines[0]  = bistr(put_lines[0][1:])
 
-        elif put_fst._is_parenthesized_seq():
+        elif put_fst._is_delimited_seq():
             put_ast.end_col_offset -= 1  # strip enclosing parentheses from source tuple
 
             put_fst._offset(0, 1, 0, -1)

@@ -80,29 +80,29 @@ class TestFSTMisc(unittest.TestCase):
             self.assertEqual((1, 40), parse('try: pass\nexcept* (Exception, BaseException) as e: pass\nelse: pass\nfinally: pass').body[0].handlers[0].f._loc_block_header_end())
             self.assertEqual((0, 13), parse('class cls[T]: pass').body[0].f._loc_block_header_end())
 
-    def test__loc_Call_pars(self):
-        self.assertEqual((0, 4, 0, 6), FST('call()', 'exec').body[0].value._loc_Call_pars())
-        self.assertEqual((0, 4, 0, 7), FST('call(a)', 'exec').body[0].value._loc_Call_pars())
-        self.assertEqual((0, 4, 2, 1), FST('call(\na\n)', 'exec').body[0].value._loc_Call_pars())
-        self.assertEqual((0, 4, 2, 1), FST('call(\na, b=2\n)', 'exec').body[0].value._loc_Call_pars())
-        self.assertEqual((0, 4, 0, 12), FST('call(c="()")', 'exec').body[0].value._loc_Call_pars())
-        self.assertEqual((1, 0, 8, 1), FST('call\\\n(\nc\n=\n"\\\n(\\\n)\\\n"\n)', 'exec').body[0].value._loc_Call_pars())
-        self.assertEqual((1, 0, 8, 1), FST('"()("\\\n(\nc\n=\n"\\\n(\\\n)\\\n"\n)', 'exec').body[0].value._loc_Call_pars())
+    def test__loc_call_pars(self):
+        self.assertEqual((0, 4, 0, 6), FST('call()', 'exec').body[0].value._loc_call_pars())
+        self.assertEqual((0, 4, 0, 7), FST('call(a)', 'exec').body[0].value._loc_call_pars())
+        self.assertEqual((0, 4, 2, 1), FST('call(\na\n)', 'exec').body[0].value._loc_call_pars())
+        self.assertEqual((0, 4, 2, 1), FST('call(\na, b=2\n)', 'exec').body[0].value._loc_call_pars())
+        self.assertEqual((0, 4, 0, 12), FST('call(c="()")', 'exec').body[0].value._loc_call_pars())
+        self.assertEqual((1, 0, 8, 1), FST('call\\\n(\nc\n=\n"\\\n(\\\n)\\\n"\n)', 'exec').body[0].value._loc_call_pars())
+        self.assertEqual((1, 0, 8, 1), FST('"()("\\\n(\nc\n=\n"\\\n(\\\n)\\\n"\n)', 'exec').body[0].value._loc_call_pars())
 
-    def test__loc_Subscript_brackets(self):
-        self.assertEqual((0, 1, 0, 4), FST('a[b]', 'exec').body[0].value._loc_Subscript_brackets())
-        self.assertEqual((0, 1, 0, 8), FST('a[b:c:d]', 'exec').body[0].value._loc_Subscript_brackets())
-        self.assertEqual((0, 1, 0, 7), FST('a["[]"]', 'exec').body[0].value._loc_Subscript_brackets())
-        self.assertEqual((1, 0, 7, 1), FST('a\\\n[\nb\n:\nc\n:\nd\n]', 'exec').body[0].value._loc_Subscript_brackets())
-        self.assertEqual((1, 0, 7, 1), FST('"[]["\\\n[\nb\n:\nc\n:\nd\n]', 'exec').body[0].value._loc_Subscript_brackets())
+    def test__loc_subscript_brackets(self):
+        self.assertEqual((0, 1, 0, 4), FST('a[b]', 'exec').body[0].value._loc_subscript_brackets())
+        self.assertEqual((0, 1, 0, 8), FST('a[b:c:d]', 'exec').body[0].value._loc_subscript_brackets())
+        self.assertEqual((0, 1, 0, 7), FST('a["[]"]', 'exec').body[0].value._loc_subscript_brackets())
+        self.assertEqual((1, 0, 7, 1), FST('a\\\n[\nb\n:\nc\n:\nd\n]', 'exec').body[0].value._loc_subscript_brackets())
+        self.assertEqual((1, 0, 7, 1), FST('"[]["\\\n[\nb\n:\nc\n:\nd\n]', 'exec').body[0].value._loc_subscript_brackets())
 
-    def test__loc_MatchClass_pars(self):
-        self.assertEqual((1, 9, 1, 11), FST('match a:\n case cls(): pass', 'exec').body[0].cases[0].pattern._loc_MatchClass_pars())
-        self.assertEqual((1, 9, 1, 12), FST('match a:\n case cls(a): pass', 'exec').body[0].cases[0].pattern._loc_MatchClass_pars())
-        self.assertEqual((1, 9, 3, 1), FST('match a:\n case cls(\na\n): pass', 'exec').body[0].cases[0].pattern._loc_MatchClass_pars())
-        self.assertEqual((1, 9, 3, 1), FST('match a:\n case cls(\na, b=2\n): pass', 'exec').body[0].cases[0].pattern._loc_MatchClass_pars())
-        self.assertEqual((1, 9, 1, 17), FST('match a:\n case cls(c="()"): pass', 'exec').body[0].cases[0].pattern._loc_MatchClass_pars())
-        self.assertEqual((2, 0, 9, 1), FST('match a:\n case cls\\\n(\nc\n=\n"\\\n(\\\n)\\\n"\n): pass', 'exec').body[0].cases[0].pattern._loc_MatchClass_pars())
+    def test__loc_matchcls_pars(self):
+        self.assertEqual((1, 9, 1, 11), FST('match a:\n case cls(): pass', 'exec').body[0].cases[0].pattern._loc_matchcls_pars())
+        self.assertEqual((1, 9, 1, 12), FST('match a:\n case cls(a): pass', 'exec').body[0].cases[0].pattern._loc_matchcls_pars())
+        self.assertEqual((1, 9, 3, 1), FST('match a:\n case cls(\na\n): pass', 'exec').body[0].cases[0].pattern._loc_matchcls_pars())
+        self.assertEqual((1, 9, 3, 1), FST('match a:\n case cls(\na, b=2\n): pass', 'exec').body[0].cases[0].pattern._loc_matchcls_pars())
+        self.assertEqual((1, 9, 1, 17), FST('match a:\n case cls(c="()"): pass', 'exec').body[0].cases[0].pattern._loc_matchcls_pars())
+        self.assertEqual((2, 0, 9, 1), FST('match a:\n case cls\\\n(\nc\n=\n"\\\n(\\\n)\\\n"\n): pass', 'exec').body[0].cases[0].pattern._loc_matchcls_pars())
 
     def test__loc_operator_no_parent(self):
         self.assertEqual((1, 0, 1, 1), FST(Invert(), ['# pre', '~ # post', '# next']).loc)
@@ -161,29 +161,29 @@ two  # fake comment start""", **b
             }''').body[0].value
         self.assertEqual((1, 19, 1, 21), a.f._loc_maybe_dict_key(1))
 
-    def test__maybe_add_comma(self):
+    def test__maybe_ins_separator(self):
         f = FST('[a#c\n]')
-        f._maybe_add_comma(0, 2, False, 0, 2)
+        f._maybe_ins_separator(0, 2, False, 0, 2)
         self.assertEqual('[a,#c\n]', f.src)
 
         f = FST('[a#c\n]')
-        f._maybe_add_comma(0, 2, True, 0, 2)
+        f._maybe_ins_separator(0, 2, True, 0, 2)
         self.assertEqual('[a, #c\n]', f.src)
 
         f = FST('[a#c\n]')
-        f._maybe_add_comma(0, 2, False, 0, 6)
+        f._maybe_ins_separator(0, 2, False, 0, 6)
         self.assertEqual('[a,#c\n]', f.src)
 
         f = FST('[a#c\n]')
-        f._maybe_add_comma(0, 2, True, 0, 6)
+        f._maybe_ins_separator(0, 2, True, 0, 6)
         self.assertEqual('[a, #c\n]', f.src)
 
         f = FST('[a#c\n]')
-        f._maybe_add_comma(0, 2, False, 1, 0)
+        f._maybe_ins_separator(0, 2, False, 1, 0)
         self.assertEqual('[a,#c\n]', f.src)
 
         f = FST('[a#c\n]')
-        f._maybe_add_comma(0, 2, True, 1, 0)
+        f._maybe_ins_separator(0, 2, True, 1, 0)
         self.assertEqual('[a, #c\n]', f.src)
 
     def test__maybe_fix_tuple(self):
@@ -351,11 +351,11 @@ two  # fake comment start""", **b
         f._parenthesize_grouping(star_child=False)
         self.assertEqual('(*\na)', f.src)
 
-    def test__parenthesize_node(self):
+    def test__delimit_node(self):
         # Tuple
 
         f = parse('i,').f
-        f.body[0].value._parenthesize_node()
+        f.body[0].value._delimit_node()
         self.assertEqual('(i,)', f.src)
         self.assertEqual((0, 0, 0, 4), f.loc)
         self.assertEqual((0, 0, 0, 4), f.body[0].loc)
@@ -363,7 +363,7 @@ two  # fake comment start""", **b
         self.assertEqual((0, 1, 0, 2), f.body[0].value.elts[0].loc)
 
         f = parse('a, b').f
-        f.body[0].value._parenthesize_node()
+        f.body[0].value._delimit_node()
         self.assertEqual('(a, b)', f.src)
         self.assertEqual((0, 0, 0, 6), f.loc)
         self.assertEqual((0, 0, 0, 6), f.body[0].loc)
@@ -374,27 +374,27 @@ two  # fake comment start""", **b
         f = parse('i,').body[0].value.f.copy()
         f._put_src('\n# post', 0, 2, 0, 2, False)
         f._put_src('# pre\n', 0, 0, 0, 0, False)
-        f._parenthesize_node(whole=True)
+        f._delimit_node(whole=True)
         self.assertEqual((0, 0, 2, 7), f.loc)
         self.assertEqual(f.src, '(# pre\ni,\n# post)')
 
         f = parse('i,').body[0].value.f.copy()
         f._put_src('\n# post', 0, 2, 0, 2, False)
         f._put_src('# pre\n', 0, 0, 0, 0, False)
-        f._parenthesize_node(whole=False)
+        f._delimit_node(whole=False)
         self.assertEqual((1, 0, 1, 4), f.loc)
         self.assertEqual(f.src, '# pre\n(i,)\n# post')
 
         # MatchSequence
 
         f = FST('i,', pattern)
-        f._parenthesize_node(pars='[]')
+        f._delimit_node(delims='[]')
         self.assertEqual('[i,]', f.src)
         self.assertEqual((0, 0, 0, 4), f.loc)
         self.assertEqual((0, 1, 0, 2), f.patterns[0].loc)
 
         f = FST('a, b', pattern)
-        f._parenthesize_node(pars='[]')
+        f._delimit_node(delims='[]')
         self.assertEqual('[a, b]', f.src)
         self.assertEqual((0, 0, 0, 6), f.loc)
         self.assertEqual((0, 1, 0, 2), f.patterns[0].loc)
@@ -403,14 +403,14 @@ two  # fake comment start""", **b
         f = FST('i,', pattern)
         f._put_src('\n# post', 0, 2, 0, 2, False)
         f._put_src('# pre\n', 0, 0, 0, 0, False)
-        f._parenthesize_node(whole=True, pars='[]')
+        f._delimit_node(whole=True, delims='[]')
         self.assertEqual((0, 0, 2, 7), f.loc)
         self.assertEqual(f.src, '[# pre\ni,\n# post]')
 
         f = FST('i,', pattern)
         f._put_src('\n# post', 0, 2, 0, 2, False)
         f._put_src('# pre\n', 0, 0, 0, 0, False)
-        f._parenthesize_node(whole=False, pars='[]')
+        f._delimit_node(whole=False, delims='[]')
         self.assertEqual((1, 0, 1, 4), f.loc)
         self.assertEqual(f.src, '# pre\n[i,]\n# post')
 
@@ -566,18 +566,18 @@ two  # fake comment start""", **b
         self.assertEqual('*\na', f.src)
         f.verify()
 
-    def test__unparenthesize_node(self):
+    def test__undelimit_node(self):
         # Tuple
 
         f = parse('()').f
-        f.body[0].value._unparenthesize_node()
+        f.body[0].value._undelimit_node()
         self.assertEqual('()', f.src)
         self.assertEqual((0, 0, 0, 2), f.loc)
         self.assertEqual((0, 0, 0, 2), f.body[0].loc)
         self.assertEqual((0, 0, 0, 2), f.body[0].value.loc)
 
         f = parse('(i,)').f
-        f.body[0].value._unparenthesize_node()
+        f.body[0].value._undelimit_node()
         self.assertEqual('i,', f.src)
         self.assertEqual((0, 0, 0, 2), f.loc)
         self.assertEqual((0, 0, 0, 2), f.body[0].loc)
@@ -585,7 +585,7 @@ two  # fake comment start""", **b
         self.assertEqual((0, 0, 0, 1), f.body[0].value.elts[0].loc)
 
         f = parse('(a, b)').f
-        f.body[0].value._unparenthesize_node()
+        f.body[0].value._undelimit_node()
         self.assertEqual('a, b', f.src)
         self.assertEqual((0, 0, 0, 4), f.loc)
         self.assertEqual((0, 0, 0, 4), f.body[0].loc)
@@ -594,7 +594,7 @@ two  # fake comment start""", **b
         self.assertEqual((0, 3, 0, 4), f.body[0].value.elts[1].loc)
 
         f = parse('( # pre\ni,\n# post\n)').f
-        f.body[0].value._unparenthesize_node()
+        f.body[0].value._undelimit_node()
         self.assertEqual('i,', f.src)
         self.assertEqual((0, 0, 0, 2), f.loc)
         self.assertEqual((0, 0, 0, 2), f.body[0].loc)
@@ -602,7 +602,7 @@ two  # fake comment start""", **b
         self.assertEqual((0, 0, 0, 1), f.body[0].value.elts[0].loc)
 
         f = parse('( # pre\ni,\n# post\n)').body[0].value.f.copy()
-        f._unparenthesize_node()
+        f._undelimit_node()
         self.assertEqual('i,', f.src)
         self.assertEqual((0, 0, 0, 2), f.loc)
         self.assertEqual((0, 0, 0, 1), f.elts[0].loc)
@@ -610,63 +610,63 @@ two  # fake comment start""", **b
         # MatchSequence
 
         f = FST('()', pattern)
-        f._unparenthesize_node('patterns')
+        f._undelimit_node('patterns')
         self.assertEqual('()', f.src)
         self.assertEqual((0, 0, 0, 2), f.loc)
 
         f = FST('[i,]', pattern)
-        f._unparenthesize_node('patterns')
+        f._undelimit_node('patterns')
         self.assertEqual('i,', f.src)
         self.assertEqual((0, 0, 0, 2), f.loc)
         self.assertEqual((0, 0, 0, 1), f.patterns[0].loc)
 
         f = FST('(a, b)', pattern)
-        f._unparenthesize_node('patterns')
+        f._undelimit_node('patterns')
         self.assertEqual('a, b', f.src)
         self.assertEqual((0, 0, 0, 4), f.loc)
         self.assertEqual((0, 0, 0, 1), f.patterns[0].loc)
         self.assertEqual((0, 3, 0, 4), f.patterns[1].loc)
 
         f = FST('[ # pre\ni,\n# post\n]', pattern)
-        f._unparenthesize_node('patterns')
+        f._undelimit_node('patterns')
         self.assertEqual('i,', f.src)
         self.assertEqual((0, 0, 0, 2), f.loc)
         self.assertEqual((0, 0, 0, 1), f.patterns[0].loc)
 
         f = FST('( # pre\ni,\n# post\n)', pattern)
-        f._unparenthesize_node('patterns')
+        f._undelimit_node('patterns')
         self.assertEqual('i,', f.src)
         self.assertEqual((0, 0, 0, 1), f.patterns[0].loc)
 
         # replace with space where directly touching other text
 
         f = FST('[a for a in b if(a,b)if(a,)if(a,b)]', 'exec')
-        f.body[0].value.generators[0].ifs[0]._unparenthesize_node()
-        f.body[0].value.generators[0].ifs[1]._unparenthesize_node()
-        f.body[0].value.generators[0].ifs[2]._unparenthesize_node()
+        f.body[0].value.generators[0].ifs[0]._undelimit_node()
+        f.body[0].value.generators[0].ifs[1]._undelimit_node()
+        f.body[0].value.generators[0].ifs[2]._undelimit_node()
         self.assertEqual('[a for a in b if a,b if a,if a,b]', f.src)
-        f.body[0].value.generators[0].ifs[0]._parenthesize_node()  # so that it will verify
-        f.body[0].value.generators[0].ifs[1]._parenthesize_node()
-        f.body[0].value.generators[0].ifs[2]._parenthesize_node()
+        f.body[0].value.generators[0].ifs[0]._delimit_node()  # so that it will verify
+        f.body[0].value.generators[0].ifs[1]._delimit_node()
+        f.body[0].value.generators[0].ifs[2]._delimit_node()
         self.assertEqual('[a for a in b if (a,b) if (a,)if (a,b)]', f.src)
         f.verify()
 
         f = FST('for(a,b)in b: pass', 'exec')
-        f.body[0].target._unparenthesize_node()
+        f.body[0].target._undelimit_node()
         self.assertEqual('for a,b in b: pass', f.src)
         f.verify()
 
         f = FST('for(a,)in b: pass', 'exec')
-        f.body[0].target._unparenthesize_node()
+        f.body[0].target._undelimit_node()
         self.assertEqual('for a,in b: pass', f.src)
         f.verify()
 
         f = FST('case[1,2]as c: pass')
-        f.pattern.pattern._unparenthesize_node('patterns')
+        f.pattern.pattern._undelimit_node('patterns')
         self.assertEqual('case 1,2 as c: pass', f.src)
 
         f = FST('case(1,2)as c: pass')
-        f.pattern.pattern._unparenthesize_node('patterns')
+        f.pattern.pattern._undelimit_node('patterns')
         self.assertEqual('case 1,2 as c: pass', f.src)
 
     def test__normalize_block(self):

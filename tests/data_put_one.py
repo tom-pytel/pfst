@@ -6422,7 +6422,39 @@ Module - ROOT 0,0..0,20
 """),
 
 (r"""match a:
- case 1 as b, (2): pass""", 'body[0].cases[0].pattern', 0, None, {}, r"""**DEL**""", r"""**NotImplementedError("not implemented yet, try with option raw='auto'")**""", r"""
+ case 1 as b, (2): pass""", 'body[0].cases[0].pattern', 0, None, {}, r"""**DEL**""", r"""match a:
+ case 2,: pass""", r"""
+Module - ROOT 0,0..1,14
+  .body[1]
+  0] Match - 0,0..1,14
+    .subject Name 'a' Load - 0,6..0,7
+    .cases[1]
+    0] match_case - 1,1..1,14
+      .pattern MatchSequence - 1,6..1,8
+        .patterns[1]
+        0] MatchValue - 1,6..1,7
+          .value Constant 2 - 1,6..1,7
+      .body[1]
+      0] Pass - 1,10..1,14
+"""),
+
+(r"""match a:
+ case 1 as b, (2): pass""", 'body[0].cases[0].pattern', 1, None, {}, r"""**DEL**""", r"""match a:
+ case 1 as b,: pass""", r"""
+Module - ROOT 0,0..1,19
+  .body[1]
+  0] Match - 0,0..1,19
+    .subject Name 'a' Load - 0,6..0,7
+    .cases[1]
+    0] match_case - 1,1..1,19
+      .pattern MatchSequence - 1,6..1,13
+        .patterns[1]
+        0] MatchAs - 1,6..1,12
+          .pattern MatchValue - 1,6..1,7
+            .value Constant 1 - 1,6..1,7
+          .name 'b'
+      .body[1]
+      0] Pass - 1,15..1,19
 """),
 
 (r"""match a:

@@ -321,7 +321,7 @@ trailing self separator override
 ... [PRE, GET, POST]
 ... """.strip()),
 ...     1, 2, (False, False), self_tail_sep=True).src, f.src)
-[GET] [PRE, POST,]
+[GET] [PRE, POST]
 
 # don't remove existing trailing separator from end of sequence if tail not touched
 >>> print(test_cut(f := FST(r"""

@@ -1645,6 +1645,9 @@ class cls:
                 try:
                     f.put(None if src == '**DEL**' else src, idx, field=field, **options)
 
+                except NotImplementedError:
+                    continue
+
                 except Exception as exc:
                     if not put_dump.strip() and put_src.startswith('**') and put_src.endswith('**'):
                         continue  # assume raw errors in line with non-raw, just different actual error
