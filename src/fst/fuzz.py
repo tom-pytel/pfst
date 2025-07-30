@@ -1688,17 +1688,19 @@ class SliceExprish(Fuzzy):
             List:          SliceExprish.Container('elts', FST('[None]')),
             Set:           SliceExprish.Container('elts', FST('{None}')),
             MatchSequence: SliceExprish.Container('patterns', FST('[None]', pattern)),
+            MatchMapping:  SliceExprish.Container(None, FST('{None: None}', pattern)),
         }
 
         exprishs = []
 
         for f in fst.walk(True):
-            if isinstance(f.a, (Dict, Set, MatchSequence)) or (isinstance(f.a, (List, Tuple)) and isinstance(f.a.ctx, Load)):
+            if isinstance(f.a, (Dict, Set, MatchSequence, MatchMapping)) or (isinstance(f.a, (List, Tuple)) and isinstance(f.a.ctx, Load)):
             # if isinstance(f.a, (Dict,)) or (isinstance(f.a, (List,)) and isinstance(f.a.ctx, Load)):
             # if isinstance(f.a, (List,)) and isinstance(f.a.ctx, Load):
             # if isinstance(f.a, (Dict,)):
             # if isinstance(f.a, (Tuple,)) and isinstance(f.a.ctx, Load):
             # if isinstance(f.a, (MatchSequence,)):
+            # if isinstance(f.a, (MatchMapping,)):
                 exprishs.append(f)
 
         if not exprishs:

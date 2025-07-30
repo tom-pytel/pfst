@@ -6423,19 +6423,19 @@ Module - ROOT 0,0..0,20
 
 (r"""match a:
  case 1 as b, (2): pass""", 'body[0].cases[0].pattern', 0, None, {}, r"""**DEL**""", r"""match a:
- case 2,: pass""", r"""
-Module - ROOT 0,0..1,14
+ case (2),: pass""", r"""
+Module - ROOT 0,0..1,16
   .body[1]
-  0] Match - 0,0..1,14
+  0] Match - 0,0..1,16
     .subject Name 'a' Load - 0,6..0,7
     .cases[1]
-    0] match_case - 1,1..1,14
-      .pattern MatchSequence - 1,6..1,8
+    0] match_case - 1,1..1,16
+      .pattern MatchSequence - 1,6..1,10
         .patterns[1]
-        0] MatchValue - 1,6..1,7
-          .value Constant 2 - 1,6..1,7
+        0] MatchValue - 1,7..1,8
+          .value Constant 2 - 1,7..1,8
       .body[1]
-      0] Pass - 1,10..1,14
+      0] Pass - 1,12..1,16
 """),
 
 (r"""match a:

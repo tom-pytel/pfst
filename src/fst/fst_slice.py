@@ -7,7 +7,7 @@ from __future__ import annotations
 
 import re
 from ast import *
-from typing import Any, Literal, Union
+from typing import Any, Callable, Literal, Union
 
 from . import fst
 
@@ -21,6 +21,7 @@ from .misc import (
     _leading_trivia, _trailing_trivia,
 )
 
+from .fst_parse import _code_as_expr, _code_as_pattern
 from .fst_slice_old import _get_slice_stmtish, _put_slice_stmtish
 
 _re_one_space            = re.compile(r'\s')
@@ -359,12 +360,14 @@ def _locs_first_and_last(self, start: int, stop: int, body: list[AST], body2: li
     return loc_first, loc_last
 
 
-def _fixup_self_tail_sep_del(self: fst.FST, self_tail_sep: bool | Literal[0] | None, start: int, stop: int,
-                             len_body: int) -> bool | Literal[0] | None:
+def _fixup_self_tail_sep_del(self: fst.FST, self_tail_sep: bool | Literal[0, 1] | None, start: int, stop: int,
+                             len_body: int) -> bool | Literal[0, 1] | None:
     is_last = stop == len_body
 
-    if self_tail_sep:
-        return (None if is_last else True) if len_body - (stop - start) == 1 else (0 if is_last else None)
+    if self_tail_sep is True:
+        return None if is_last else True
+    elif self_tail_sep:  # only adds if single element remains
+        return (None if is_last else 1) if len_body - (stop - start) == 1 else (0 if is_last else None)
     elif self_tail_sep is not None:  # is False or == 0
         return self_tail_sep if (start and is_last) else None
     elif not isinstance(self.a, Tuple):
@@ -387,8 +390,8 @@ def _get_slice_seq(self: fst.FST, start: int, stop: int, len_body: int, cut: boo
                    bound_ln: int, bound_col: int, bound_end_ln: int, bound_end_col: int,
                    trivia: bool | str | tuple[bool | str | int | None, bool | str | int | None] | None = None,
                    field: str = 'elts', prefix: str = '', suffix: str = '', sep: str = ',',
-                   self_tail_sep: bool | Literal[0] | None = None,
-                   ret_tail_sep: bool | Literal[0] | None = None,
+                   self_tail_sep: bool | Literal[0, 1] | None = None,
+                   ret_tail_sep: bool | Literal[0, 1] | None = None,
                    ) -> fst.FST:
     """Copy slice sequence source, dedent it, and create a new `FST` from that source and the new `AST` already made
     with the old locations (which will be updated). If the operation is a cut then the source in `self` will also be
@@ -421,13 +424,15 @@ def _get_slice_seq(self: fst.FST, start: int, stop: int, len_body: int, cut: boo
     - `sep`: The separator to use and check, comma for everything except maybe `'|'` for MatchOr.
     - `self_tail_sep`: Whether self needs a trailing separator after cut or no (including if end was not cut).
         - `None`: Leave it up to function (tuple singleton check or aesthetic decision).
-        - `True`: Add if not present and single element.
+        - `True`: Always add if not present.
         - `False`: Remove from remaining sequence if tail removed but not from remaining tail if it was not removed.
+        - `1`: Add if not present and single element.
         - `0`: Remove if not aesthetically significant (present on same line as end of element), otherwise leave.
     - `ret_tail_sep`: Whether returned cut or copied slice needs a trailing separator or not.
         - `None`: Figure it out from length and if `ast` is `Tuple`.
-        - `True`: Add if not present and single element.
+        - `True`: Always add if not present.
         - `False`: Always remove if present.
+        - `1`: Add if not present and single element.
         - `0`: Remove if not aesthetically significant (present on same line as end of element), otherwise leave.
     """
 
@@ -438,7 +443,7 @@ def _get_slice_seq(self: fst.FST, start: int, stop: int, len_body: int, cut: boo
 
     if ret_tail_sep is None:
         ret_tail_sep = ((stop - start) == 1 and isinstance(ast, Tuple)) or 0  # if would result in signleton tuple then will need trailing separator
-    elif ret_tail_sep and (stop - start) != 1:
+    elif ret_tail_sep and ret_tail_sep is not True and (stop - start) != 1:
         ret_tail_sep = 0
 
     # self_tail_sep:
@@ -460,7 +465,7 @@ def _get_slice_seq(self: fst.FST, start: int, stop: int, len_body: int, cut: boo
     copy_ln, copy_col, copy_end_ln, copy_end_col = copy_loc
 
     if not ret_tail_sep and sep_end_pos:
-        if is_last:  # if is last element and already had trailing separator then keep it
+        if is_last and ret_tail_sep is not False:  # if is last element and already had trailing separator then keep it but not if explicitly forcing no tail sep
             ret_tail_sep = True  # this along with sep_end_pos != None will turn the ret_tail_sep checks below into noop
 
         elif sep_end_pos[0] == copy_end_ln == loc_last.end_ln and sep_end_pos[1] == copy_end_col:  # optimization common case, we can get rid of unneeded trailing separator in copy by just not copying it if it is at end of copy range on same line as end of element
@@ -703,16 +708,60 @@ def _get_slice_MatchSequence_patterns(self: fst.FST, start: int | Literal['end']
 
     if delims:
         prefix, suffix = delims
-        tail_sep       = (delims == '()') or 0
+        tail_sep       = 1 if delims == '()' else 0
 
     else:
         prefix   = suffix = delims = ''
-        tail_sep = True
+        tail_sep = 1
 
     fst_ = _get_slice_seq(self, start, stop, len_body, cut, ret_ast, asts[-1], *locs,
                           options.get('trivia'), 'patterns', prefix, suffix, ',', tail_sep, tail_sep)
 
     self._maybe_fix_matchseq(delims)
+
+    return fst_
+
+
+def _get_slice_MatchMapping(self: fst.FST, start: int | Literal['end'] | None, stop: int | None, field: str, cut: bool,
+                            **options) -> fst.FST:
+    len_body    = len(body := (ast := self.a).keys)
+    body2       = ast.patterns
+    start, stop = _fixup_slice_indices(len_body, start, stop)
+
+    if start == stop:
+        return fst.FST._new_empty_matchmap(from_=self)
+
+    locs        = _locs_and_bound_get(self, start, stop, body, body2, 1)
+    asts, asts2 = _cut_or_copy_asts2(start, stop, 'keys', 'patterns', cut, body, body2)
+    ret_ast     = MatchMapping(keys=asts, patterns=asts2, rest=None)
+
+    # locs          = _locs_and_bound_get(self, start, stop, body, body2, 1)
+    # asts, asts2   = _cut_or_copy_asts2(start, stop, 'keys', 'patterns', cut, body, body2)
+    # ret_ast       = MatchMapping(keys=asts, patterns=asts2, rest=None)
+    # have_rest     = ast.rest is not None
+    # self_tail_sep = (have_rest and cut) or None
+    # ret_tail_sep  = False if have_rest and stop == len_body else None
+
+    # fst_ = _get_slice_seq(self, start, stop, len_body, cut, ret_ast, asts2[-1], *locs,
+    #                       options.get('trivia'), 'patterns', '{', '}', ',', self_tail_sep, ret_tail_sep)
+
+    # if self_tail_sep and start and stop == len_body:  # if there is a **rest and we removed tail element so here we make sure there is a space between comma of the new last element and the **rest
+    #     self._maybe_ins_separator(*body2[-1].f.loc[2:], True)  # this will only maybe add a space, comma is already there
+
+    # return fst_
+
+    if ast.rest is None or stop < len_body:
+        fst_ = _get_slice_seq(self, start, stop, len_body, cut, ret_ast, asts2[-1], *locs,
+                              options.get('trivia'), 'patterns', '{', '}', ',', None, None)
+
+    else:  # HACK to get trailing comma behavior same as if it was a longer list (because the **rest looks like its part of the list but is not)
+        cut_and_start = cut and start
+
+        fst_ = _get_slice_seq(self, start, stop, len_body + 1, cut, ret_ast, asts2[-1], *locs,
+                              options.get('trivia'), 'patterns', '{', '}', ',', True if cut_and_start else None, None)
+
+        if cut_and_start and stop == len_body:  # if there is a **rest and we removed tail element so here we make sure there is a space between comma of the new last element and the **rest
+            self._maybe_ins_separator(*body2[-1].f.loc[2:], True)  # this will only maybe add a space, comma is already there
 
     return fst_
 
@@ -881,7 +930,7 @@ _GET_SLICE_HANDLERS = {
     (AsyncWith, 'items'):                 _get_slice_NOT_IMPLEMENTED_YET,  # withitem*
 
     (MatchSequence, 'patterns'):          _get_slice_MatchSequence_patterns,  # pattern*
-    (MatchMapping, ''):                   _get_slice_NOT_IMPLEMENTED_YET,  # key:pattern*
+    (MatchMapping, ''):                   _get_slice_MatchMapping,  # key:pattern*
     (MatchClass, 'patterns'):             _get_slice_NOT_IMPLEMENTED_YET,  # pattern*
     (MatchOr, 'patterns'):                _get_slice_NOT_IMPLEMENTED_YET,  # pattern*
 
@@ -902,12 +951,12 @@ _GET_SLICE_HANDLERS = {
 # put
 
 def _put_slice_seq(self: fst.FST, start: int, stop: int, fst_: fst.FST | None,
-                   fst_first: fst.FST | fstloc | None, fst_last: fst.FST | None,
+                   fst_first: fst.FST | fstloc | None, fst_last: fst.FST | None, len_fst: int,
                    bound_ln: int, bound_col: int, bound_end_ln: int, bound_end_col: int,
                    trivia: bool | str | tuple[bool | str | int | None, bool | str | int | None] | None,
                    ins_ln: int | None = None,
                    field: str = 'elts', field2: str | None = None, sep: str = ',',
-                   self_tail_sep: bool | Literal[0] | None = None,
+                   self_tail_sep: bool | Literal[0, 1] | None = None,
                    ):
     r"""Indent a sequence source and put it to a location in existing sequence `self`. If `fst_` is `None` then will
     just delete in the same way that a cut operation would. Trailing separators will be added / removed as needed and
@@ -933,8 +982,9 @@ def _put_slice_seq(self: fst.FST, start: int, stop: int, fst_: fst.FST | None,
     - `sep`: The separator to use and check, comma for everything except maybe `'|'` for MatchOr.
     - `self_tail_sep`: Whether self needs a trailing separator or no.
         - `None`: Leave it up to function (tuple singleton check or aesthetic decision).
-        - `True`: Add if not present and single element.
+        - `True`: Always add if not present.
         - `False`: Always remove if present.
+        - `1`: Add if not present and single element.
         - `0`: Remove if not aesthetically significant (present on same line as end of element), otherwise leave.
     """
 
@@ -1103,7 +1153,7 @@ def _put_slice_seq(self: fst.FST, start: int, stop: int, fst_: fst.FST | None,
             last = fst_last
 
             if self_tail_sep is None:
-                if isinstance(self.a, Tuple) and is_first and fst_last is fst_first:  # if single element overwriting all elements of a tuple then make sure has trailing separator
+                if isinstance(self.a, Tuple) and is_first and len_fst == 1:  # if single element overwriting all elements of a tuple then make sure has trailing separator
                     self_tail_sep = True
 
                 elif pos := _next_find(put_lines, fst_last.end_ln, fst_last.end_col, fst_.end_ln, fst_.end_col, sep):  # only remove if slice being put actually has trailing separator
@@ -1111,6 +1161,9 @@ def _put_slice_seq(self: fst.FST, start: int, stop: int, fst_: fst.FST | None,
                         self_tail_sep = 0
 
         elif self_tail_sep == 0:  # don't remove from tail if tail not touched
+            self_tail_sep = None
+
+        if self_tail_sep and self_tail_sep is not True and not (is_first and is_last and len_fst == 1):  # if want to add separator if only one element is left and not only one element is left then do nothing
             self_tail_sep = None
 
         # indent and offset source and FST to put
@@ -1248,7 +1301,7 @@ def _code_to_slice_seq(self: fst.FST, code: Code | None, one: bool, options: dic
     if code is None:
         return None
 
-    fst_ = self._code_as_expr(code, self.root.parse_params)
+    fst_ = _code_as_expr(code, self.root.parse_params)
 
     if one:
         if (b := fst_.is_parenthesized_tuple()) is False:  # don't put unparenthesized tuple source as one into sequence, it would merge into the sequence
@@ -1291,14 +1344,15 @@ def _code_to_slice_seq(self: fst.FST, code: Code | None, one: bool, options: dic
     return fst_
 
 
-def _code_to_slice_seq2(self: fst.FST, code: Code | None, one: bool, options: dict[str, Any]) -> fst.FST | None:
+def _code_to_slice_seq2(self: fst.FST, code: Code | None, one: bool, options: dict[str, Any], code_as: Callable,
+                        ) -> fst.FST | None:
     if code is None:
         return None
 
     if one:
         raise ValueError(f'cannot put a single item to a {self.a.__class__.__name__} slice')
 
-    fst_ = self._code_as_expr(code, self.root.parse_params)
+    fst_ = code_as(code, self.root.parse_params)
     ast_ = fst_.a
 
     if ast_.__class__ is not self.a.__class__:
@@ -1326,7 +1380,7 @@ def _code_to_slice_MatchSequence(self: fst.FST, code: Code | None, one: bool, op
     if code is None:
         return None
 
-    fst_ = self._code_as_pattern(code, self.root.parse_params)
+    fst_ = _code_as_pattern(code, self.root.parse_params)
 
     if one:
         if fst_.get_matchseq_delimiters() == '':
@@ -1367,7 +1421,7 @@ def _code_to_slice_MatchOr(self: fst.FST, code: Code | None, one: bool, options:
 
     raise NotImplementedError
 
-    fst_        = fst.FST._code_as_pattern(code, self.root.parse_params)
+    fst_        = _code_as_pattern(code, self.root.parse_params)
     assert isinstance(fst_.a, MatchOr)
 
     return fst_
@@ -1383,7 +1437,7 @@ def _put_slice_NOT_IMPLEMENTED_YET(self: fst.FST, code: Code | None, start: int 
 
 def _put_slice_Dict(self: fst.FST, code: Code | None, start: int | Literal['end'] | None, stop: int | None,
                     field: str, one: bool = False, **options):
-    fst_        = _code_to_slice_seq2(self, code, one, options)
+    fst_        = _code_to_slice_seq2(self, code, one, options, _code_as_expr)
     body        = (ast := self.a).keys
     body2       = ast.values
     start, stop = _fixup_slice_indices(len(body), start, stop)
@@ -1397,7 +1451,7 @@ def _put_slice_Dict(self: fst.FST, code: Code | None, start: int | Literal['end'
     bound_end_col -= 1
 
     if not fst_:
-        _put_slice_seq(self, start, stop, None, None, None,
+        _put_slice_seq(self, start, stop, None, None, None, 0,
                        bound_ln, bound_col, bound_end_ln, bound_end_col,
                        options.get('trivia'), options.get('ins_ln'), 'keys', 'values')
 
@@ -1414,7 +1468,7 @@ def _put_slice_Dict(self: fst.FST, code: Code | None, start: int | Literal['end'
         fst_body2 = ast_.values
         fst_first = a.f if (a := fst_body[0]) else fst_._loc_maybe_dict_key(0)
 
-        _put_slice_seq(self, start, stop, fst_, fst_first, fst_body2[-1].f,
+        _put_slice_seq(self, start, stop, fst_, fst_first, fst_body2[-1].f, len(fst_body),
                        bound_ln, bound_col, bound_end_ln, bound_end_col,
                        options.get('trivia'), options.get('ins_ln'), 'keys', 'values')
 
@@ -1461,7 +1515,7 @@ def _put_slice_Tuple_elts(self: fst.FST, code: Code | None, start: int | Literal
         bound_end_col -= 1
 
     if not fst_:
-        _put_slice_seq(self, start, stop, None, None, None,
+        _put_slice_seq(self, start, stop, None, None, None, 0,
                        bound_ln, bound_col, bound_end_ln, bound_end_col,
                        options.get('trivia'), options.get('ins_ln'))
 
@@ -1474,7 +1528,7 @@ def _put_slice_Tuple_elts(self: fst.FST, code: Code | None, start: int | Literal
     else:
         fst_body = fst_.a.elts
 
-        _put_slice_seq(self, start, stop, fst_, fst_body[0].f, fst_body[-1].f,
+        _put_slice_seq(self, start, stop, fst_, fst_body[0].f, fst_body[-1].f, len(fst_body),
                        bound_ln, bound_col, bound_end_ln, bound_end_col,
                        options.get('trivia'), options.get('ins_ln'))
 
@@ -1514,7 +1568,7 @@ def _put_slice_List_elts(self: fst.FST, code: Code | None, start: int | Literal[
     bound_end_col -= 1
 
     if not fst_:
-        _put_slice_seq(self, start, stop, None, None, None,
+        _put_slice_seq(self, start, stop, None, None, None, 0,
                        bound_ln, bound_col, bound_end_ln, bound_end_col,
                        options.get('trivia'), options.get('ins_ln'))
 
@@ -1527,7 +1581,7 @@ def _put_slice_List_elts(self: fst.FST, code: Code | None, start: int | Literal[
     else:
         fst_body = fst_.a.elts
 
-        _put_slice_seq(self, start, stop, fst_, fst_body[0].f, fst_body[-1].f,
+        _put_slice_seq(self, start, stop, fst_, fst_body[0].f, fst_body[-1].f, len(fst_body),
                        bound_ln, bound_col, bound_end_ln, bound_end_col,
                        options.get('trivia'), options.get('ins_ln'))
 
@@ -1565,7 +1619,7 @@ def _put_slice_Set_elts(self: fst.FST, code: Code | None, start: int | Literal['
     bound_end_col -= 1
 
     if not fst_:
-        _put_slice_seq(self, start, stop, None, None, None,
+        _put_slice_seq(self, start, stop, None, None, None, 0,
                        bound_ln, bound_col, bound_end_ln, bound_end_col,
                        options.get('trivia'), options.get('ins_ln'))
 
@@ -1578,7 +1632,7 @@ def _put_slice_Set_elts(self: fst.FST, code: Code | None, start: int | Literal['
     else:
         fst_body = fst_.a.elts
 
-        _put_slice_seq(self, start, stop, fst_, fst_body[0].f, fst_body[-1].f,
+        _put_slice_seq(self, start, stop, fst_, fst_body[0].f, fst_body[-1].f, len(fst_body),
                        bound_ln, bound_col, bound_end_ln, bound_end_col,
                        options.get('trivia'), options.get('ins_ln'))
 
@@ -1616,7 +1670,7 @@ def _put_slice_MatchSequence_patterns(self: fst.FST, code: Code | None, start: i
         bound_end_col -= 1
 
     if not fst_:
-        _put_slice_seq(self, start, stop, None, None, None,
+        _put_slice_seq(self, start, stop, None, None, None, 0,
                        bound_ln, bound_col, bound_end_ln, bound_end_col,
                        options.get('trivia'), options.get('ins_ln'), 'patterns', None, ',', 0)
 
@@ -1629,7 +1683,7 @@ def _put_slice_MatchSequence_patterns(self: fst.FST, code: Code | None, start: i
     else:
         fst_body = fst_.a.patterns
 
-        _put_slice_seq(self, start, stop, fst_, fst_body[0].f, fst_body[-1].f,
+        _put_slice_seq(self, start, stop, fst_, fst_body[0].f, fst_body[-1].f, len(fst_body),
                        bound_ln, bound_col, bound_end_ln, bound_end_col,
                        options.get('trivia'), options.get('ins_ln'), 'patterns', None, ',', 0)
 
@@ -1650,6 +1704,72 @@ def _put_slice_MatchSequence_patterns(self: fst.FST, code: Code | None, start: i
     self._maybe_fix_matchseq(delims)
 
 
+def _put_slice_MatchMapping(self: fst.FST, code: Code | None, start: int | Literal['end'] | None, stop: int | None,
+                            field: str, one: bool = False, **options):
+    fst_        = _code_to_slice_seq2(self, code, one, options, _code_as_pattern)
+    len_body    = len(body := (ast := self.a).keys)
+    body2       = ast.patterns
+    start, stop = _fixup_slice_indices(len_body, start, stop)
+
+    if not fst_ and start == stop:
+        return
+
+    bound_ln, bound_col, bound_end_ln, bound_end_col = self.loc
+
+    bound_col     += 1
+    bound_end_col -= 1
+
+    if not fst_:
+        tail_space = (start and stop == len_body and ast.rest is not None) or None
+
+        _put_slice_seq(self, start, stop, None, None, None, 0,
+                       bound_ln, bound_col, bound_end_ln, bound_end_col,
+                       options.get('trivia'), options.get('ins_ln'), 'keys', 'patterns',
+                       self_tail_sep=tail_space)
+
+        self._unmake_fst_tree(body[start : stop] + body2[start : stop])
+
+        del body[start : stop]
+        del body2[start : stop]
+
+        len_fst_body = 0
+
+    else:
+        ast_       = fst_.a
+        fst_body   = ast_.keys
+        fst_body2  = ast_.patterns
+        tail_space = False
+
+        _put_slice_seq(self, start, stop, fst_, fst_body[0].f, fst_body2[-1].f, len(fst_body),
+                       bound_ln, bound_col, bound_end_ln, bound_end_col,
+                       options.get('trivia'), options.get('ins_ln'), 'keys', 'patterns',
+                       self_tail_sep=ast.rest is not None)
+
+        self._unmake_fst_tree(body[start : stop] + body2[start : stop])
+        fst_._unmake_fst_parents(True)
+
+        body[start : stop]  = fst_body
+        body2[start : stop] = fst_body2
+
+        len_fst_body = len(fst_body)
+        stack        = []
+
+        for i in range(len_fst_body):
+            startplusi = start + i
+
+            stack.append(fst.FST(body[startplusi], self, astfield('keys', startplusi)))
+            stack.append(fst.FST(body2[startplusi], self, astfield('patterns', startplusi)))
+
+        self._make_fst_tree(stack)
+
+    for i in range(start + len_fst_body, len(body)):
+        body[i].f.pfield  = astfield('keys', i)
+        body2[i].f.pfield = astfield('patterns', i)
+
+    if tail_space:  # if there is a **rest and we removed tail element so here we make sure there is a space between comma of the new last element and the **rest
+        self._maybe_ins_separator(*body2[-1].f.loc[2:], True)  # this will only maybe add a space, comma is already there
+
+
 # TODO: validate put
 def _put_slice_MatchOr_patterns(self: fst.FST, code: Code | None, start: int | Literal['end'] | None, stop: int | None,
                                 field: str, one: bool = False, **options):
@@ -1661,7 +1781,7 @@ def _put_slice_MatchOr_patterns(self: fst.FST, code: Code | None, start: int | L
         return
 
     if not fst_:
-        _put_slice_seq(self, start, stop, None, None, None, *self.loc,
+        _put_slice_seq(self, start, stop, None, None, None, 0, *self.loc,
                        options.get('trivia'), options.get('ins_ln'), 'patterns', None, '|', False)
 
         self._unmake_fst_tree(body[start : stop])
@@ -1673,7 +1793,7 @@ def _put_slice_MatchOr_patterns(self: fst.FST, code: Code | None, start: int | L
     else:
         fst_body = fst_.a.patterns
 
-        _put_slice_seq(self, start, stop, fst_, fst_body[0].f, fst_body[-1].f, *self.loc,
+        _put_slice_seq(self, start, stop, fst_, fst_body[0].f, fst_body[-1].f, len(fst_body), *self.loc,
                        options.get('trivia'), options.get('ins_ln'), 'patterns', None, '|', False)
 
         self._unmake_fst_tree(body[start : stop])
@@ -1784,7 +1904,7 @@ _PUT_SLICE_HANDLERS = {
     (AsyncWith, 'items'):                 _put_slice_NOT_IMPLEMENTED_YET,  # withitem*
 
     (MatchSequence, 'patterns'):          _put_slice_MatchSequence_patterns,  # pattern*
-    (MatchMapping, ''):                   _put_slice_NOT_IMPLEMENTED_YET,  # key:pattern*
+    (MatchMapping, ''):                   _put_slice_MatchMapping,  # key:pattern*
     (MatchClass, 'patterns'):             _put_slice_NOT_IMPLEMENTED_YET,  # pattern*
     (MatchOr, 'patterns'):                _put_slice_NOT_IMPLEMENTED_YET,  # pattern*
 

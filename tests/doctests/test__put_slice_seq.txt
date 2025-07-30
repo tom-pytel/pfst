@@ -6,7 +6,7 @@
 delete
 
 >>> def test_delete(fst_, start, stop, trivia=None, off=1, field='elts', sep=',', self_tail_sep=None):
-...     _put_slice_seq(fst_, start, stop, None, None, None,
+...     _put_slice_seq(fst_, start, stop, None, None, None, 0,
 ...                    fst_.ln, fst_.col + off, fst_.end_ln, fst_.end_col - off,
 ...                    trivia, None, field, None, sep, self_tail_sep)
 ...
@@ -76,6 +76,9 @@ delete
 >>> print('\n'.join(repr(l) for l in test_delete(FST('(a, b, c)'), 1, 3).lines))
 '(a,)'
 
+>>> print('\n'.join(repr(l) for l in test_delete(FST('(a, b, c)'), 1, 3, self_tail_sep=1).lines))
+'(a,)'
+
 >>> print('\n'.join(repr(l) for l in test_delete(FST('(a, b, c)'), 1, 3, self_tail_sep=True).lines))
 '(a,)'
 
@@ -85,8 +88,11 @@ delete
 >>> print('\n'.join(repr(l) for l in test_delete(FST('(a, b, c)'), 2, 3).lines))
 '(a, b)'
 
->>> print('\n'.join(repr(l) for l in test_delete(FST('(a, b, c)'), 2, 3, self_tail_sep=True).lines))
+>>> print('\n'.join(repr(l) for l in test_delete(FST('(a, b, c)'), 2, 3, self_tail_sep=1).lines))
 '(a, b)'
+
+>>> print('\n'.join(repr(l) for l in test_delete(FST('(a, b, c)'), 2, 3, self_tail_sep=True).lines))
+'(a, b,)'
 
 >>> print('\n'.join(repr(l) for l in test_delete(FST('(a, b, c)'), 2, 3, self_tail_sep=False).lines))
 '(a, b)'
@@ -94,14 +100,20 @@ delete
 >>> print('\n'.join(repr(l) for l in test_delete(FST('(a, b, c)'), 1, 2).lines))
 '(a, c)'
 
->>> print('\n'.join(repr(l) for l in test_delete(FST('(a, b, c)'), 1, 2, self_tail_sep=True).lines))
+>>> print('\n'.join(repr(l) for l in test_delete(FST('(a, b, c)'), 1, 2, self_tail_sep=1).lines))
 '(a, c)'
+
+>>> print('\n'.join(repr(l) for l in test_delete(FST('(a, b, c)'), 1, 2, self_tail_sep=True).lines))
+'(a, c,)'
 
 >>> print('\n'.join(repr(l) for l in test_delete(FST('(a, b, c)'), 1, 2, self_tail_sep=False).lines))
 '(a, c)'
 
 
 >>> print('\n'.join(repr(l) for l in test_delete(FST('a, b, c'), 1, 3, off=0).lines))
+'a,'
+
+>>> print('\n'.join(repr(l) for l in test_delete(FST('a, b, c'), 1, 3, off=0, self_tail_sep=1).lines))
 'a,'
 
 >>> print('\n'.join(repr(l) for l in test_delete(FST('a, b, c'), 1, 3, off=0, self_tail_sep=True).lines))
@@ -113,8 +125,11 @@ delete
 >>> print('\n'.join(repr(l) for l in test_delete(FST('a, b, c'), 2, 3, off=0).lines))
 'a, b'
 
->>> print('\n'.join(repr(l) for l in test_delete(FST('a, b, c'), 2, 3, off=0, self_tail_sep=True).lines))
+>>> print('\n'.join(repr(l) for l in test_delete(FST('a, b, c'), 2, 3, off=0, self_tail_sep=1).lines))
 'a, b'
+
+>>> print('\n'.join(repr(l) for l in test_delete(FST('a, b, c'), 2, 3, off=0, self_tail_sep=True).lines))
+'a, b,'
 
 >>> print('\n'.join(repr(l) for l in test_delete(FST('a, b, c'), 2, 3, off=0, self_tail_sep=False).lines))
 'a, b'
@@ -122,8 +137,11 @@ delete
 >>> print('\n'.join(repr(l) for l in test_delete(FST('a, b, c'), 1, 2, off=0).lines))
 'a, c'
 
->>> print('\n'.join(repr(l) for l in test_delete(FST('a, b, c'), 1, 2, off=0, self_tail_sep=True).lines))
+>>> print('\n'.join(repr(l) for l in test_delete(FST('a, b, c'), 1, 2, off=0, self_tail_sep=1).lines))
 'a, c'
+
+>>> print('\n'.join(repr(l) for l in test_delete(FST('a, b, c'), 1, 2, off=0, self_tail_sep=True).lines))
+'a, c,'
 
 >>> print('\n'.join(repr(l) for l in test_delete(FST('a, b, c'), 1, 2, off=0, self_tail_sep=False).lines))
 'a, c'
@@ -136,7 +154,7 @@ replace
 >>> def test_replace(fst_, start, stop, new, trivia=None, off=1, field='elts', sep=',', self_tail_sep=None):
 ...     new_body = getattr(new.a, field)
 ...
-...     _put_slice_seq(fst_, start, stop, new, new_body[0].f, new_body[-1].f,
+...     _put_slice_seq(fst_, start, stop, new, new_body[0].f, new_body[-1].f, len(new_body),
 ...                    fst_.ln, fst_.col + off, fst_.end_ln, fst_.end_col - off,
 ...                    trivia, None, field, None, sep, self_tail_sep)
 ...
@@ -377,6 +395,11 @@ trailing newlines
 
 >>> print('\n'.join(repr(l) for l in test_replace(FST('''
 ... (a, b, c)
+... '''.strip()), 0, 3, new000.copy(), self_tail_sep=1).lines))
+'(NEW,)'
+
+>>> print('\n'.join(repr(l) for l in test_replace(FST('''
+... (a, b, c)
 ... '''.strip()), 0, 3, new000.copy(), self_tail_sep=True).lines))
 '(NEW,)'
 
@@ -392,6 +415,11 @@ trailing newlines
 
 >>> print('\n'.join(repr(l) for l in test_replace(FST('''
 ... (a, b, c)
+... '''.strip()), 1, 3, new000.copy(), self_tail_sep=1).lines))
+'(a, NEW)'
+
+>>> print('\n'.join(repr(l) for l in test_replace(FST('''
+... (a, b, c)
 ... '''.strip()), 1, 3, new000.copy(), self_tail_sep=True).lines))
 '(a, NEW,)'
 
@@ -403,6 +431,11 @@ trailing newlines
 >>> print('\n'.join(repr(l) for l in test_replace(FST('''
 ... (a, b, c)
 ... '''.strip()), 0, 2, new000.copy()).lines))
+'(NEW, c)'
+
+>>> print('\n'.join(repr(l) for l in test_replace(FST('''
+... (a, b, c)
+... '''.strip()), 0, 2, new000.copy(), self_tail_sep=1).lines))
 '(NEW, c)'
 
 >>> print('\n'.join(repr(l) for l in test_replace(FST('''
@@ -428,7 +461,7 @@ replace
 >>> def test_insert(fst_, idx, new, trivia=None, off=1, field='elts', sep=',', self_tail_sep=None):
 ...     new_body = getattr(new.a, field)
 ...
-...     _put_slice_seq(fst_, idx, idx, new, new_body[0].f, new_body[-1].f,
+...     _put_slice_seq(fst_, idx, idx, new, new_body[0].f, new_body[-1].f, len(new_body),
 ...                    fst_.ln, fst_.col + off, fst_.end_ln, fst_.end_col - off,
 ...                    trivia, None, field, None, sep, self_tail_sep)
 ...
@@ -799,7 +832,7 @@ don't remove comma with stuff after it
 delete (two-element sequence)
 
 >>> def test_delete2(fst_, start, stop, trivia=None, off=1, field='keys', field2='values', sep=',', self_tail_sep=None):
-...     _put_slice_seq(fst_, start, stop, None, None, None,
+...     _put_slice_seq(fst_, start, stop, None, None, None, 0,
 ...                    fst_.ln, fst_.col + off, fst_.end_ln, fst_.end_col - off,
 ...                    trivia, None, field, field2, sep, self_tail_sep)
 ...

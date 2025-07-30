@@ -1333,7 +1333,7 @@ def func():
 
                 a.f.parent.put_slice(None, idx, idx + 1, field)
 
-    def test_cut_slice_matchseq(self):
+    def test_cut_and_del_slice_matchseq(self):
         f = FST('[a, b, c]', pattern)
         self.assertEqual('[c]', f.get_slice(2, None, cut=True).src)
         self.assertEqual('[a, b]', f.src)
@@ -1358,7 +1358,6 @@ def func():
         self.assertEqual('a,', f.get_slice(0, None, cut=True).src)
         self.assertEqual('[]', f.src)
 
-    def test_del_slice_matchseq(self):
         f = FST('[a, b, c]', pattern)
         f.put_slice(None, 2, None)
         self.assertEqual('[a, b]', f.src)
@@ -1390,6 +1389,55 @@ def func():
         self.assertEqual('c,', f.src)
         f.put_slice(None, None, 1)
         self.assertEqual('[]', f.src)
+
+    def test_cut_and_del_slice_matchmap(self):
+        f = FST('{1: a, 2: b, **z}', pattern)
+        self.assertEqual('{2: b}', f.get_slice(1, 2, cut=True).src)
+        self.assertEqual('{1: a, **z}', f.src)
+
+        f = FST('{1: a, 2: b, **z}', pattern)
+        f.put_slice(None, 1, 2)
+        self.assertEqual('{1: a, **z}', f.src)
+
+        f = FST('{1: a, **z}', pattern)
+        self.assertEqual('{1: a}', f.get_slice(0, 1, cut=True).src)
+        self.assertEqual('{**z}', f.src)
+
+        f = FST('{1: a, **z}', pattern)
+        f.put_slice(None, 0, 1)
+        self.assertEqual('{**z}', f.src)
+
+        f = FST('{1: a, **z}', pattern)
+        f.put_slice('{2: b}', 0, 1)
+        self.assertEqual('{2: b, **z}', f.src)
+
+        f = FST('{1: a, **z}', pattern)
+        f.put_slice('{2: b}', 1, 1)
+        self.assertEqual('{1: a, 2: b, **z}', f.src)
+
+        f = FST('{1: a, 2: b}', pattern)
+        self.assertEqual('{2: b}', f.get_slice(1, 2, cut=True).src)
+        self.assertEqual('{1: a}', f.src)
+
+        f = FST('{1: a, 2: b}', pattern)
+        f.put_slice(None, 1, 2)
+        self.assertEqual('{1: a}', f.src)
+
+        f = FST('{1: a}', pattern)
+        self.assertEqual('{1: a}', f.get_slice(0, 1, cut=True).src)
+        self.assertEqual('{}', f.src)
+
+        f = FST('{1: a}', pattern)
+        f.put_slice(None, 0, 1)
+        self.assertEqual('{}', f.src)
+
+        f = FST('{1: a}', pattern)
+        f.put_slice('{2: b}', 0, 1)
+        self.assertEqual('{2: b}', f.src)
+
+        f = FST('{1: a}', pattern)
+        f.put_slice('{2: b}', 1, 1)
+        self.assertEqual('{1: a, 2: b}', f.src)
 
     def test_get_slice_seq_copy(self):
         for i, (src, elt, start, stop, options, src_cut, slice_copy, src_dump, slice_dump) in enumerate(GET_SLICE_EXPRISH_DATA):
