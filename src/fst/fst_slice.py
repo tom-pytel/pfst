@@ -1577,7 +1577,7 @@ def _put_slice_Dict(self: fst.FST, code: Code | None, start: int | Literal['end'
             key.f.pfield = astfield('keys', i)
 
 
-# TODO: validate put: Slices, Starred to slice field on py 3.10
+# TODO: validate put: Slices, Starred to slice field on py < 3.11, Starred to unpar ExceptHandler.type on py >= 3.14
 def _put_slice_Tuple_elts(self: fst.FST, code: Code | None, start: int | Literal['end'] | None, stop: int | None,
                           field: str, one: bool = False, **options):
     fst_        = _code_to_slice_seq(self, code, one, options)

@@ -2980,6 +2980,13 @@ c, # c
         f.put(FST('*', alias), 0, 'names')
         self.assertEqual('from a import *', f.src)
 
+        if PYGE14:
+            # parenthesize ExceptHandler.type Tuple if put Starred to it
+
+            f = FST('except a, b: pass')
+            f.type.put('*c', 1)
+            self.assertEqual('except (a, *c): pass', f.src)
+
     def test_put_one_op_pars(self):
         # boolop
 

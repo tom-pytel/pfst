@@ -19,7 +19,7 @@ from .astutil import (
 )
 
 from .misc import (
-    PYLT11, PYLT12, Code, NodeError, astfield, fstloc, pyver,
+    PYLT11, PYGE14, Code, NodeError, astfield, fstloc, pyver,
     _next_src, _prev_src, _next_find, _prev_find, _next_find_re, _fixup_one_index,
 )
 
@@ -1387,6 +1387,11 @@ def _put_one_Tuple_elts(self: fst.FST, code: _PutOneCode, idx: int | None, field
             self._delimit_node()
 
     else:
+        if (PYGE14 and self.pfield == ('type', None) and isinstance(code.a, Starred) and
+            (is_par is False or (is_par is None and not self._is_delimited_seq()))
+        ):  # if putting Starred to unparenthesized ExceptHandler.type Tuple then parenthesize it
+            self._delimit_node()
+
         self_is_solo_star_in_slice = is_slice and len(elts := ast.elts) == 1 and isinstance(elts[0], Starred)  # because of replacing the Starred in 'a[*i_am_really_a_tuple]'
 
         ret = _put_one_exprish_required(self, code, idx, field, child, static, 2, **options)
