@@ -5487,8 +5487,7 @@ if 1:
         self.assertEqual('new as b', test(f, 'pattern', 'new', FST, 'a').src)
         self.assertEqual('new as grog', test(f, 'name', 'grog', None, 'b').src)
 
-        self.assertEqual('1 | 2 | 3', test(FST('a.b | c.d', MatchOr), 'patterns', '1 | 2 | 3', fstview,
-                                           '<<MatchOr ROOT 0,0..0,9>.patterns[0:2] [<MatchValue 0,0..0,3>, <MatchValue 0,6..0,9>]>').src)
+        self.assertEqual('1 | 2 | 3', test(FST('a.b | c.d', MatchOr), 'patterns', '1 | 2 | 3', fstview, 'a.b | c.d').src)
 
         if not PYLT11:
             f = FST('try: pass\nexcept* Exception: pass\nelse: pass\nfinally: pass')

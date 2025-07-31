@@ -6878,7 +6878,18 @@ Module - ROOT 0,0..1,32
 """),
 
 (r"""match a:
- case {1: c} | (d()): pass""", 'body[0].cases[0].pattern', 0, None, {}, r"""**DEL**""", r"""**NotImplementedError("not implemented yet, try with option raw='auto'")**""", r"""
+ case {1: c} | (d()): pass""", 'body[0].cases[0].pattern', 0, None, {}, r"""**DEL**""", r"""match a:
+ case (d()): pass""", r"""
+Module - ROOT 0,0..1,17
+  .body[1]
+  0] Match - 0,0..1,17
+    .subject Name 'a' Load - 0,6..0,7
+    .cases[1]
+    0] match_case - 1,1..1,17
+      .pattern MatchClass - 1,7..1,10
+        .cls Name 'd' Load - 1,7..1,8
+      .body[1]
+      0] Pass - 1,13..1,17
 """),
 
 (r"""match a:

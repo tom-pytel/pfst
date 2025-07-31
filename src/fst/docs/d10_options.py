@@ -145,6 +145,7 @@ Or get all global options.
  'pars_walrus': False,
  'empty_set_get': True,
  'empty_set_put': True,
+ 'slice_matchor': True,
  'pep8space': True,
  'precomms': True,
  'postcomms': True,

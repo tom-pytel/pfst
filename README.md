@@ -170,8 +170,6 @@ This package is not finished but functional enough that it can be useful.
   * `ImportFrom.names`
   * `With.items`
   * `AsyncWith.items`
-  * `MatchSequence.patterns`
-  * `MatchMapping`
   * `MatchClass.patterns`
   * `MatchOr.patterns`
   * `FunctionDef.type_params`

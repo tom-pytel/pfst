@@ -198,7 +198,7 @@ def regen_put_slice():
             try:
                 f.put_slice(None if src == '**DEL**' else src, start, stop, field, **options)
 
-            except NotImplementedError as exc:
+            except (NotImplementedError, NodeError) as exc:
                 tdst  = f'**{exc!r}**'
                 tdump = ''
 
@@ -206,7 +206,8 @@ def regen_put_slice():
                 tdst  = t.f.src
                 tdump = t.f.dump(out=list)
 
-                t.f.verify(raise_=True)
+                if options.get('_verify', True):
+                    t.f.verify(raise_=True)
 
         except Exception:
             print(i, attr, start, stop, field, options)
@@ -237,6 +238,75 @@ def regen_put_slice():
 
 
 class TestFSTSlice(unittest.TestCase):
+    def test_cut_slice_neg_space(self):
+        f = FST('''[
+
+# pre
+    a,  # line
+# post
+
+    b
+]           '''.strip())
+        self.assertEqual(f.get_slice(0, 1, trivia=('all+', 'all+')).src, '''[
+
+# pre
+    a,  # line
+# post
+
+]           '''.strip())
+        self.assertEqual(f.get_slice(0, 1, trivia=('all-', 'all-')).src, '''[
+# pre
+    a,  # line
+# post
+]           '''.strip())
+
+        self.assertEqual(f.get_slice(0, 1, cut=True, trivia=('all-', 'all-')).src, '''[
+# pre
+    a,  # line
+# post
+]           '''.strip())
+        self.assertEqual(f.src, '''[
+    b
+]           '''.strip())
+
+        f = FST('''[
+
+# pre
+    a,  # line
+# post
+
+    b
+]           '''.strip())
+        self.assertEqual(f.get_slice(0, 1, cut=True, trivia=('all+', 'all+')).src, '''[
+
+# pre
+    a,  # line
+# post
+
+]           '''.strip())
+        self.assertEqual(f.src, '''[
+    b
+]           '''.strip())
+
+        f = FST('''[
+
+# pre
+    a,  # line
+# post
+
+    b
+]           '''.strip())
+        self.assertEqual(f.get_slice(0, 1, cut=True, trivia=('all', 'all')).src, '''[
+# pre
+    a,  # line
+# post
+]           '''.strip())
+        self.assertEqual(f.src, '''[
+
+
+    b
+]           '''.strip())
+
     def test_cut_special(self):  # TODO: redo in a better way
         a = parse('''
 # prepre
@@ -1666,12 +1736,19 @@ def func():
             f = (eval(f't.{attr}', {'t': t}) if attr else t).f
 
             try:
-                f.put_slice(None if src == '**DEL**' else src, start, stop, field, **options)
+                try:
+                    f.put_slice(None if src == '**DEL**' else src, start, stop, field, **options)
 
-                tdst  = t.f.src
-                tdump = t.f.dump(out=list)
+                except (NotImplementedError, NodeError) as exc:
+                    tdst  = f'**{exc!r}**'
+                    tdump = ['']
 
-                t.f.verify(raise_=True)
+                else:
+                    tdst  = t.f.src
+                    tdump = t.f.dump(out=list)
+
+                if options.get('_verify', True):
+                    t.f.verify(raise_=True)
 
                 self.assertEqual(tdst, put_src)
                 self.assertEqual(tdump, put_dump.strip().split('\n'))
@@ -1785,74 +1862,34 @@ def func():
         self.assertEqual('{ * ( ) }', f.put_slice('{*()}', 0, 0).src)
         f.root.verify()
 
-    def test_cut_slice_neg_space(self):
-        f = FST('''[
+    def test_slice_matchor(self):
+        with FST.options(slice_matchor=False):
+            self.assertEqual('', (f := FST('a | b', pattern)).get_slice(0, 0, cut=True).src)
+            self.assertEqual('a | b', f.src)
+            self.assertEqual('a', (f := FST('a | b', pattern)).get_slice(0, 1, cut=True).src)
+            self.assertEqual('b', f.src)
+            self.assertEqual('a | b', (f := FST('a | b', pattern)).get_slice(0, 2, cut=True).src)
+            self.assertEqual('', f.src)
 
-# pre
-    a,  # line
-# post
+            self.assertEqual('b', FST('a | b', pattern).put_slice(None, 0, 1).src)
+            self.assertEqual('', FST('a | b', pattern).put_slice(None, 0, 2).src)
 
-    b
-]           '''.strip())
-        self.assertEqual(f.get_slice(0, 1, trivia=('all+', 'all+')).src, '''[
+        with FST.options(slice_matchor=True):
+            self.assertRaises(NodeError, (f := FST('a | b', pattern)).get_slice, 0, 0, cut=True)
+            self.assertEqual('a', (f := FST('a | b', pattern)).get_slice(0, 1, cut=True).src)
+            self.assertEqual('b', f.src)
+            self.assertRaises(NodeError, (f := FST('a | b', pattern)).get_slice, 0, 2, cut=True)
 
-# pre
-    a,  # line
-# post
+            self.assertEqual('b', FST('a | b', pattern).put_slice(None, 0, 1).src)
+            self.assertRaises(NodeError, FST('a | b', pattern).put_slice, None, 0, 2)
 
-]           '''.strip())
-        self.assertEqual(f.get_slice(0, 1, trivia=('all-', 'all-')).src, '''[
-# pre
-    a,  # line
-# post
-]           '''.strip())
+        with FST.options(slice_matchor='strict'):
+            self.assertRaises(NodeError, (f := FST('a | b', pattern)).get_slice, 0, 0, cut=True)
+            self.assertRaises(NodeError, (f := FST('a | b', pattern)).get_slice, 0, 1, cut=True)
+            self.assertRaises(NodeError, (f := FST('a | b', pattern)).get_slice, 0, 2, cut=True)
 
-        self.assertEqual(f.get_slice(0, 1, cut=True, trivia=('all-', 'all-')).src, '''[
-# pre
-    a,  # line
-# post
-]           '''.strip())
-        self.assertEqual(f.src, '''[
-    b
-]           '''.strip())
-
-        f = FST('''[
-
-# pre
-    a,  # line
-# post
-
-    b
-]           '''.strip())
-        self.assertEqual(f.get_slice(0, 1, cut=True, trivia=('all+', 'all+')).src, '''[
-
-# pre
-    a,  # line
-# post
-
-]           '''.strip())
-        self.assertEqual(f.src, '''[
-    b
-]           '''.strip())
-
-        f = FST('''[
-
-# pre
-    a,  # line
-# post
-
-    b
-]           '''.strip())
-        self.assertEqual(f.get_slice(0, 1, cut=True, trivia=('all', 'all')).src, '''[
-# pre
-    a,  # line
-# post
-]           '''.strip())
-        self.assertEqual(f.src, '''[
-
-
-    b
-]           '''.strip())
+            self.assertRaises(NodeError, FST('a | b', pattern).put_slice, None, 0, 1)
+            self.assertRaises(NodeError, FST('a | b', pattern).put_slice, None, 0, 2)
 
 
 if __name__ == '__main__':

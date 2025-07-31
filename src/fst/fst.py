@@ -47,6 +47,7 @@ _OPTIONS = {
     'pars_walrus':   False,  # True | False
     'empty_set_get': True,   # True | False | 'star' | 'call' | 'tuple'
     'empty_set_put': True,   # True | False | 'star' | 'call' | 'both'
+    'slice_matchor': True,   # True | False | 'strict'
     'pep8space':     True,   # True | False | 1
     'precomms':      True,   # True | False | 'all'
     'postcomms':     True,   # True | False | 'all' | 'block'
@@ -793,6 +794,7 @@ class FST:
          'pars_walrus': False,
          'empty_set_get': True,
          'empty_set_put': True,
+         'slice_matchor': True,
          'pep8space': True,
          'precomms': True,
          'postcomms': True,
@@ -912,9 +914,9 @@ class FST:
                 - `int`: A specific line number specifying the first or last line that can be returned as a comment or
                     empty line. If not interrupted by other code, will always return up to this line.
         - `elif_`: How to handle lone `If` statements as the only statements in an `If` statement `orelse` field.
+            - `False`: Always put as a standalone `If` statement.
             - `True`: If putting a single `If` statement to an `orelse` field of a parent `If` statement then
                 put it as an `elif`.
-            - `False`: Always put as a standalone `If` statement.
         - `docstr`: Which docstrings are indentable / dedentable.
             - `False`: None.
             - `True`: All `Expr` multiline strings (as they serve no coding purpose).
@@ -938,6 +940,13 @@ class FST:
             - `'both'`: `set()` call and `{*()}`, `{*[]}` and `{*{}}` starred sequences are considered empty.
             - `'star'`: Only starred sequences `{*()}`, `{*[]}` and `{*{}}` are considered empty.
             - `'call'`: Only `set()` call is considered empty.
+        - `slice_matchor`: How to handle `MatchOr` slices.
+            - `False`: Allow invalid one and zero-length `MatchOr` to be returned or left in place after a cut or del.
+            - `True`: Do not allow invalid zero-length `MatchOr` and anytime a one-length `MatchOr` would be returned
+                or left after a cut or del then just convert it to the single element. Slice puts accept invalid one
+                or zero-length `MatchOr` nodes.
+            - `'strict'`: Do not allow one or zero-length `MatchOr` operations to be returned or accepted for put and
+                do not accept or return anything other than at least two-elemenmt `MatchOr` nodes.
         - `pep8space`: Preceding and trailing empty lines for function and class definitions.
             - `False`: No empty lines.
             - `True`: Two empty lines at module scope and one empty line in other scopes.
