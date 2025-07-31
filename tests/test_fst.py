@@ -1530,12 +1530,12 @@ with a as b, c as d:
         # alias
         # withitem
 
-        self.assertTrue(FST('f(a, b=1)', 'exec').body[0].value.copy(pars=False).is_enclosed())
-        self.assertTrue(FST('f\\\n(a, b=1)', 'exec').body[0].copy(pars=False).value.is_enclosed())
-        self.assertTrue(FST('(f\\\n(a, b=1))', 'exec').body[0].value.copy(pars=False).is_enclosed())
-        self.assertFalse(FST('(f\n(a, b=1))', 'exec').body[0].value.copy(pars=False).is_enclosed())
-        self.assertTrue(FST('(f(\na\n,\nb\n=\n1))', 'exec').body[0].value.copy(pars=False).is_enclosed())
-        self.assertTrue(FST('(f(\na\n,\nb\n=\n"()"))', 'exec').body[0].value.copy(pars=False).is_enclosed())
+        self.assertTrue(FST('f(a, b=1)', 'exec').body[0].value.copy(pars=False).is_enclosed_or_line())
+        self.assertTrue(FST('f\\\n(a, b=1)', 'exec').body[0].copy(pars=False).value.is_enclosed_or_line())
+        self.assertTrue(FST('(f\\\n(a, b=1))', 'exec').body[0].value.copy(pars=False).is_enclosed_or_line())
+        self.assertFalse(FST('(f\n(a, b=1))', 'exec').body[0].value.copy(pars=False).is_enclosed_or_line())
+        self.assertTrue(FST('(f(\na\n,\nb\n=\n1))', 'exec').body[0].value.copy(pars=False).is_enclosed_or_line())
+        self.assertTrue(FST('(f(\na\n,\nb\n=\n"()"))', 'exec').body[0].value.copy(pars=False).is_enclosed_or_line())
 
         if PYGE12:
             self.assertTrue(FST(r'''
@@ -1546,7 +1546,7 @@ with a as b, c as d:
 {4}
 {5}""" f"x\
 y")
-                '''.strip(), 'exec').body[0].value.copy(pars=False).is_enclosed())
+                '''.strip(), 'exec').body[0].value.copy(pars=False).is_enclosed_or_line())
             self.assertFalse(FST(r'''
 (f"a{(1,
 
@@ -1556,14 +1556,14 @@ y")
 {5}"""
 f"x\
 y")
-                '''.strip(), 'exec').body[0].value.copy(pars=False).is_enclosed())
+                '''.strip(), 'exec').body[0].value.copy(pars=False).is_enclosed_or_line())
 
             self.assertTrue(FST(r'''
 (f"a" f"""c
 b""" f"d\
 \
 e")
-                '''.strip(), 'exec').body[0].value.copy(pars=False).is_enclosed())
+                '''.strip(), 'exec').body[0].value.copy(pars=False).is_enclosed_or_line())
 
             self.assertFalse(FST(r'''
 (f"a" f"""c
@@ -1572,69 +1572,69 @@ b"""
 f"d\
 \
 e")
-                '''.strip(), 'exec').body[0].value.copy(pars=False).is_enclosed())
+                '''.strip(), 'exec').body[0].value.copy(pars=False).is_enclosed_or_line())
 
-        self.assertTrue(FST('a.b', 'exec').body[0].value.copy(pars=False).is_enclosed())
-        self.assertFalse(FST('(a\n.\nb)', 'exec').body[0].value.copy(pars=False).is_enclosed())
-        self.assertTrue(FST('(a\\\n.\\\nb)', 'exec').body[0].value.copy(pars=False).is_enclosed())
+        self.assertTrue(FST('a.b', 'exec').body[0].value.copy(pars=False).is_enclosed_or_line())
+        self.assertFalse(FST('(a\n.\nb)', 'exec').body[0].value.copy(pars=False).is_enclosed_or_line())
+        self.assertTrue(FST('(a\\\n.\\\nb)', 'exec').body[0].value.copy(pars=False).is_enclosed_or_line())
 
-        self.assertTrue(FST('a[b]', 'exec').body[0].value.copy(pars=False).is_enclosed())
-        self.assertFalse(FST('(a\n[\nb\n])', 'exec').body[0].value.copy(pars=False).is_enclosed())
-        self.assertFalse(FST('(a\n[(\nb\n)])', 'exec').body[0].value.copy(pars=False).is_enclosed())
-        self.assertTrue(FST('(a\\\n[(\nb\n)])', 'exec').body[0].value.copy(pars=False).is_enclosed())
-        self.assertTrue(FST('(a\\\n[\\\nb\\\n])', 'exec').body[0].value.copy(pars=False).is_enclosed())
+        self.assertTrue(FST('a[b]', 'exec').body[0].value.copy(pars=False).is_enclosed_or_line())
+        self.assertFalse(FST('(a\n[\nb\n])', 'exec').body[0].value.copy(pars=False).is_enclosed_or_line())
+        self.assertFalse(FST('(a\n[(\nb\n)])', 'exec').body[0].value.copy(pars=False).is_enclosed_or_line())
+        self.assertTrue(FST('(a\\\n[(\nb\n)])', 'exec').body[0].value.copy(pars=False).is_enclosed_or_line())
+        self.assertTrue(FST('(a\\\n[\\\nb\\\n])', 'exec').body[0].value.copy(pars=False).is_enclosed_or_line())
 
-        self.assertTrue(FST('match a:\n case f(a, b=1): pass', 'exec').body[0].cases[0].pattern.is_enclosed())
-        self.assertTrue(FST('match a:\n case f\\\n(a, b=1): pass', 'exec').body[0].cases[0].pattern.is_enclosed())
-        self.assertTrue(FST('match a:\n case (f\\\n(a, b=1)): pass', 'exec').body[0].cases[0].pattern.copy(pars=False).is_enclosed())
-        self.assertFalse(FST('match a:\n case (f\n(a, b=1)): pass', 'exec').body[0].cases[0].pattern.copy(pars=False).is_enclosed())
-        self.assertTrue(FST('match a:\n case (f(\na\n,\nb\n=\n1)): pass', 'exec').body[0].cases[0].pattern.copy(pars=False).is_enclosed())
-        self.assertTrue(FST('match a:\n case (f(\na\n,\nb\n=\n"()")): pass', 'exec').body[0].cases[0].pattern.copy(pars=False).is_enclosed())
+        self.assertTrue(FST('match a:\n case f(a, b=1): pass', 'exec').body[0].cases[0].pattern.is_enclosed_or_line())
+        self.assertTrue(FST('match a:\n case f\\\n(a, b=1): pass', 'exec').body[0].cases[0].pattern.is_enclosed_or_line())
+        self.assertTrue(FST('match a:\n case (f\\\n(a, b=1)): pass', 'exec').body[0].cases[0].pattern.copy(pars=False).is_enclosed_or_line())
+        self.assertFalse(FST('match a:\n case (f\n(a, b=1)): pass', 'exec').body[0].cases[0].pattern.copy(pars=False).is_enclosed_or_line())
+        self.assertTrue(FST('match a:\n case (f(\na\n,\nb\n=\n1)): pass', 'exec').body[0].cases[0].pattern.copy(pars=False).is_enclosed_or_line())
+        self.assertTrue(FST('match a:\n case (f(\na\n,\nb\n=\n"()")): pass', 'exec').body[0].cases[0].pattern.copy(pars=False).is_enclosed_or_line())
 
-        self.assertTrue(FST('match a:\n case *s,: pass', 'exec').body[0].cases[0].pattern.patterns[0].is_enclosed())
-        self.assertFalse(FST('match a:\n case (*\ns,): pass', 'exec').body[0].cases[0].pattern.patterns[0].copy(pars=False).is_enclosed())
-        self.assertTrue(FST('match a:\n case *\\\ns,: pass', 'exec').body[0].cases[0].pattern.patterns[0].copy(pars=False).is_enclosed())
-        self.assertTrue(FST('match a:\n case (*\\\ns,): pass', 'exec').body[0].cases[0].pattern.patterns[0].copy(pars=False).is_enclosed())
+        self.assertTrue(FST('match a:\n case *s,: pass', 'exec').body[0].cases[0].pattern.patterns[0].is_enclosed_or_line())
+        self.assertFalse(FST('match a:\n case (*\ns,): pass', 'exec').body[0].cases[0].pattern.patterns[0].copy(pars=False).is_enclosed_or_line())
+        self.assertTrue(FST('match a:\n case *\\\ns,: pass', 'exec').body[0].cases[0].pattern.patterns[0].copy(pars=False).is_enclosed_or_line())
+        self.assertTrue(FST('match a:\n case (*\\\ns,): pass', 'exec').body[0].cases[0].pattern.patterns[0].copy(pars=False).is_enclosed_or_line())
 
-        self.assertTrue(FST('match a:\n case a as b: pass', 'exec').body[0].cases[0].pattern.copy(pars=False).is_enclosed())
-        self.assertTrue(FST('match a:\n case (a as b): pass', 'exec').body[0].cases[0].pattern.copy(pars=False).is_enclosed())
-        self.assertFalse(FST('match a:\n case (a\nas b): pass', 'exec').body[0].cases[0].pattern.copy(pars=False).is_enclosed())
-        self.assertTrue(FST('match a:\n case (a\\\nas b): pass', 'exec').body[0].cases[0].pattern.copy(pars=False).is_enclosed())
-        self.assertFalse(FST('match a:\n case (a\\\nas\nb): pass', 'exec').body[0].cases[0].pattern.copy(pars=False).is_enclosed())
-        self.assertTrue(FST('match a:\n case (a\\\nas\\\nb): pass', 'exec').body[0].cases[0].pattern.copy(pars=False).is_enclosed())
-        self.assertFalse(FST('match a:\n case (a\\\nas\n\\\nb): pass', 'exec').body[0].cases[0].pattern.copy(pars=False).is_enclosed())
+        self.assertTrue(FST('match a:\n case a as b: pass', 'exec').body[0].cases[0].pattern.copy(pars=False).is_enclosed_or_line())
+        self.assertTrue(FST('match a:\n case (a as b): pass', 'exec').body[0].cases[0].pattern.copy(pars=False).is_enclosed_or_line())
+        self.assertFalse(FST('match a:\n case (a\nas b): pass', 'exec').body[0].cases[0].pattern.copy(pars=False).is_enclosed_or_line())
+        self.assertTrue(FST('match a:\n case (a\\\nas b): pass', 'exec').body[0].cases[0].pattern.copy(pars=False).is_enclosed_or_line())
+        self.assertFalse(FST('match a:\n case (a\\\nas\nb): pass', 'exec').body[0].cases[0].pattern.copy(pars=False).is_enclosed_or_line())
+        self.assertTrue(FST('match a:\n case (a\\\nas\\\nb): pass', 'exec').body[0].cases[0].pattern.copy(pars=False).is_enclosed_or_line())
+        self.assertFalse(FST('match a:\n case (a\\\nas\n\\\nb): pass', 'exec').body[0].cases[0].pattern.copy(pars=False).is_enclosed_or_line())
 
-        self.assertTrue(FST('a not in b', 'exec').body[0].value.ops[0].copy(pars=False).is_enclosed())
-        self.assertTrue(FST('(a not in b)', 'exec').body[0].value.ops[0].copy(pars=False).is_enclosed())
-        self.assertFalse(FST('(a not\nin b)', 'exec').body[0].value.ops[0].copy(pars=False).is_enclosed())
-        self.assertTrue(FST('(a not\\\nin b)', 'exec').body[0].value.ops[0].copy(pars=False).is_enclosed())
-        self.assertFalse(FST('(a is\nnot b)', 'exec').body[0].value.ops[0].copy(pars=False).is_enclosed())
-        self.assertTrue(FST('(a is\\\nnot b)', 'exec').body[0].value.ops[0].copy(pars=False).is_enclosed())
+        self.assertTrue(FST('a not in b', 'exec').body[0].value.ops[0].copy(pars=False).is_enclosed_or_line())
+        self.assertTrue(FST('(a not in b)', 'exec').body[0].value.ops[0].copy(pars=False).is_enclosed_or_line())
+        self.assertFalse(FST('(a not\nin b)', 'exec').body[0].value.ops[0].copy(pars=False).is_enclosed_or_line())
+        self.assertTrue(FST('(a not\\\nin b)', 'exec').body[0].value.ops[0].copy(pars=False).is_enclosed_or_line())
+        self.assertFalse(FST('(a is\nnot b)', 'exec').body[0].value.ops[0].copy(pars=False).is_enclosed_or_line())
+        self.assertTrue(FST('(a is\\\nnot b)', 'exec').body[0].value.ops[0].copy(pars=False).is_enclosed_or_line())
 
-        self.assertTrue(FST('[i for i in j]', 'exec').body[0].value.generators[0].copy(pars=False).is_enclosed())
-        self.assertFalse(FST('[i for\n i in j]', 'exec').body[0].value.generators[0].copy(pars=False).is_enclosed())
-        self.assertFalse(FST('[i for i\n in j]', 'exec').body[0].value.generators[0].copy(pars=False).is_enclosed())
-        self.assertFalse(FST('[i for i in\n j]', 'exec').body[0].value.generators[0].copy(pars=False).is_enclosed())
-        self.assertTrue(FST('[i for\\\n i in j]', 'exec').body[0].value.generators[0].copy(pars=False).is_enclosed())
-        self.assertTrue(FST('[i for i\\\n in j]', 'exec').body[0].value.generators[0].copy(pars=False).is_enclosed())
-        self.assertTrue(FST('[i for i in\\\n j]', 'exec').body[0].value.generators[0].copy(pars=False).is_enclosed())
+        self.assertTrue(FST('[i for i in j]', 'exec').body[0].value.generators[0].copy(pars=False).is_enclosed_or_line())
+        self.assertFalse(FST('[i for\n i in j]', 'exec').body[0].value.generators[0].copy(pars=False).is_enclosed_or_line())
+        self.assertFalse(FST('[i for i\n in j]', 'exec').body[0].value.generators[0].copy(pars=False).is_enclosed_or_line())
+        self.assertFalse(FST('[i for i in\n j]', 'exec').body[0].value.generators[0].copy(pars=False).is_enclosed_or_line())
+        self.assertTrue(FST('[i for\\\n i in j]', 'exec').body[0].value.generators[0].copy(pars=False).is_enclosed_or_line())
+        self.assertTrue(FST('[i for i\\\n in j]', 'exec').body[0].value.generators[0].copy(pars=False).is_enclosed_or_line())
+        self.assertTrue(FST('[i for i in\\\n j]', 'exec').body[0].value.generators[0].copy(pars=False).is_enclosed_or_line())
 
-        self.assertTrue(FST('def f(a, b=1): pass', 'exec').body[0].args.copy(pars=False).is_enclosed())
-        self.assertFalse(FST('def f(a,\n b=1): pass', 'exec').body[0].args.copy(pars=False).is_enclosed())
-        self.assertTrue(FST('def f(a,\\\n b=1): pass', 'exec').body[0].args.copy(pars=False).is_enclosed())
-        self.assertTrue(FST('def f(a, b=(1,\n2)): pass', 'exec').body[0].args.copy(pars=False).is_enclosed())
+        self.assertTrue(FST('def f(a, b=1): pass', 'exec').body[0].args.copy(pars=False).is_enclosed_or_line())
+        self.assertFalse(FST('def f(a,\n b=1): pass', 'exec').body[0].args.copy(pars=False).is_enclosed_or_line())
+        self.assertTrue(FST('def f(a,\\\n b=1): pass', 'exec').body[0].args.copy(pars=False).is_enclosed_or_line())
+        self.assertTrue(FST('def f(a, b=(1,\n2)): pass', 'exec').body[0].args.copy(pars=False).is_enclosed_or_line())
 
-        self.assertTrue(FST('def f(a: int): pass', 'exec').body[0].args.args[0].copy(pars=False).is_enclosed())
-        self.assertFalse(FST('def f(a:\n int): pass', 'exec').body[0].args.args[0].copy(pars=False).is_enclosed())
-        self.assertTrue(FST('def f(a:\\\n int): pass', 'exec').body[0].args.args[0].copy(pars=False).is_enclosed())
+        self.assertTrue(FST('def f(a: int): pass', 'exec').body[0].args.args[0].copy(pars=False).is_enclosed_or_line())
+        self.assertFalse(FST('def f(a:\n int): pass', 'exec').body[0].args.args[0].copy(pars=False).is_enclosed_or_line())
+        self.assertTrue(FST('def f(a:\\\n int): pass', 'exec').body[0].args.args[0].copy(pars=False).is_enclosed_or_line())
 
-        self.assertTrue(FST('from a import (b as c)', 'exec').body[0].names[0].copy(pars=False).is_enclosed())
-        self.assertFalse(FST('from a import (b\n as c)', 'exec').body[0].names[0].copy(pars=False).is_enclosed())
-        self.assertTrue(FST('from a import (b\\\n as c)', 'exec').body[0].names[0].copy(pars=False).is_enclosed())
+        self.assertTrue(FST('from a import (b as c)', 'exec').body[0].names[0].copy(pars=False).is_enclosed_or_line())
+        self.assertFalse(FST('from a import (b\n as c)', 'exec').body[0].names[0].copy(pars=False).is_enclosed_or_line())
+        self.assertTrue(FST('from a import (b\\\n as c)', 'exec').body[0].names[0].copy(pars=False).is_enclosed_or_line())
 
-        self.assertTrue(FST('with (b as c): pass', 'exec').body[0].items[0].copy(pars=False).is_enclosed())
-        self.assertFalse(FST('with (b\n as c): pass', 'exec').body[0].items[0].copy(pars=False).is_enclosed())
-        self.assertTrue(FST('with (b\\\n as c): pass', 'exec').body[0].items[0].copy(pars=False).is_enclosed())
+        self.assertTrue(FST('with (b as c): pass', 'exec').body[0].items[0].copy(pars=False).is_enclosed_or_line())
+        self.assertFalse(FST('with (b\n as c): pass', 'exec').body[0].items[0].copy(pars=False).is_enclosed_or_line())
+        self.assertTrue(FST('with (b\\\n as c): pass', 'exec').body[0].items[0].copy(pars=False).is_enclosed_or_line())
 
         if PYGE14:
             self.assertTrue(FST(r'''
@@ -1645,7 +1645,7 @@ e")
 {4}
 {5}""" t"x\
 y")
-                '''.strip(), 'exec').body[0].value.copy(pars=False).is_enclosed())
+                '''.strip(), 'exec').body[0].value.copy(pars=False).is_enclosed_or_line())
             self.assertFalse(FST(r'''
 (t"a{(1,
 
@@ -1655,31 +1655,31 @@ y")
 {5}"""
 t"x\
 y")
-                '''.strip(), 'exec').body[0].value.copy(pars=False).is_enclosed())
+                '''.strip(), 'exec').body[0].value.copy(pars=False).is_enclosed_or_line())
 
     def test_is_enclosed_general(self):
-        self.assertTrue(FST('a < b', 'exec').body[0].value.copy(pars=False).is_enclosed())
-        self.assertFalse(FST('(a\n< b)', 'exec').body[0].value.copy(pars=False).is_enclosed())
-        self.assertTrue(FST('(a\\\n< b)', 'exec').body[0].value.copy(pars=False).is_enclosed())
-        self.assertFalse(FST('(a\\\n<\nb)', 'exec').body[0].value.copy(pars=False).is_enclosed())
-        self.assertTrue(FST('(a\\\n<\\\nb)', 'exec').body[0].value.copy(pars=False).is_enclosed())
-        self.assertFalse(FST('(a\\\n<\n\\\nb)', 'exec').body[0].value.copy(pars=False).is_enclosed())
+        self.assertTrue(FST('a < b', 'exec').body[0].value.copy(pars=False).is_enclosed_or_line())
+        self.assertFalse(FST('(a\n< b)', 'exec').body[0].value.copy(pars=False).is_enclosed_or_line())
+        self.assertTrue(FST('(a\\\n< b)', 'exec').body[0].value.copy(pars=False).is_enclosed_or_line())
+        self.assertFalse(FST('(a\\\n<\nb)', 'exec').body[0].value.copy(pars=False).is_enclosed_or_line())
+        self.assertTrue(FST('(a\\\n<\\\nb)', 'exec').body[0].value.copy(pars=False).is_enclosed_or_line())
+        self.assertFalse(FST('(a\\\n<\n\\\nb)', 'exec').body[0].value.copy(pars=False).is_enclosed_or_line())
 
-        self.assertTrue(FST('a, b, c', 'exec').body[0].value.copy(pars=False).is_enclosed())
-        self.assertTrue(FST('a, b\\\n, c', 'exec').body[0].value.copy(pars=False).is_enclosed())
-        self.assertTrue(FST('a, [\nb\n], c', 'exec').body[0].value.copy(pars=False).is_enclosed())
+        self.assertTrue(FST('a, b, c', 'exec').body[0].value.copy(pars=False).is_enclosed_or_line())
+        self.assertTrue(FST('a, b\\\n, c', 'exec').body[0].value.copy(pars=False).is_enclosed_or_line())
+        self.assertTrue(FST('a, [\nb\n], c', 'exec').body[0].value.copy(pars=False).is_enclosed_or_line())
 
-        self.assertTrue(FST('a, {\nx: y\n}, c', 'exec').body[0].value.copy(pars=False).is_enclosed())
-        self.assertTrue(FST('a, {\nb\n}, c', 'exec').body[0].value.copy(pars=False).is_enclosed())
-        self.assertTrue(FST('a, [\ni for i in j\n], c', 'exec').body[0].value.copy(pars=False).is_enclosed())
-        self.assertTrue(FST('a, {\ni for i in j\n}, c', 'exec').body[0].value.copy(pars=False).is_enclosed())
-        self.assertTrue(FST('a, {\ni: j for i, j in k\n}, c', 'exec').body[0].value.copy(pars=False).is_enclosed())
-        self.assertTrue(FST('a, (\ni for i in j\n), c', 'exec').body[0].value.copy(pars=False).is_enclosed())
-        self.assertTrue(FST('a, [i,\nj], c', 'exec').body[0].value.copy(pars=False).is_enclosed())
-        self.assertTrue(FST('a, b[\ni:j:k\n], c', 'exec').body[0].value.copy(pars=False).is_enclosed())
+        self.assertTrue(FST('a, {\nx: y\n}, c', 'exec').body[0].value.copy(pars=False).is_enclosed_or_line())
+        self.assertTrue(FST('a, {\nb\n}, c', 'exec').body[0].value.copy(pars=False).is_enclosed_or_line())
+        self.assertTrue(FST('a, [\ni for i in j\n], c', 'exec').body[0].value.copy(pars=False).is_enclosed_or_line())
+        self.assertTrue(FST('a, {\ni for i in j\n}, c', 'exec').body[0].value.copy(pars=False).is_enclosed_or_line())
+        self.assertTrue(FST('a, {\ni: j for i, j in k\n}, c', 'exec').body[0].value.copy(pars=False).is_enclosed_or_line())
+        self.assertTrue(FST('a, (\ni for i in j\n), c', 'exec').body[0].value.copy(pars=False).is_enclosed_or_line())
+        self.assertTrue(FST('a, [i,\nj], c', 'exec').body[0].value.copy(pars=False).is_enclosed_or_line())
+        self.assertTrue(FST('a, b[\ni:j:k\n], c', 'exec').body[0].value.copy(pars=False).is_enclosed_or_line())
 
         if PYGE12:
-            self.assertTrue(FST('a, f"{(1,\n2)}", c', 'exec').body[0].value.copy(pars=False).is_enclosed())
+            self.assertTrue(FST('a, f"{(1,\n2)}", c', 'exec').body[0].value.copy(pars=False).is_enclosed_or_line())
 
     def test_is_enclosed_in_parents(self):
         self.assertFalse(FST('i', 'exec').body[0].is_enclosed_in_parents())

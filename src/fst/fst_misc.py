@@ -1242,7 +1242,7 @@ def _maybe_fix_naked_seq(self: fst.FST, body: list[AST], delims: str = '()') -> 
     ln, col, end_ln, end_col = self.loc
     encpar                   = None
 
-    if ((end_ln != ln and not self.is_enclosed(pars=False) and not (encpar := self.is_enclosed_in_parents())) or  # could have line continuations
+    if ((end_ln != ln and not self.is_enclosed_or_line(pars=False) and not (encpar := self.is_enclosed_in_parents())) or  # could have line continuations
         (any(isinstance(e, NamedExpr) and not e.f.pars().n for e in body))  # yeah, this is fine in parenthesized tuples but not in naked ones, only applies to tuples and not MatchSequence obviously
     ):
         self._delimit_node(delims=delims)
@@ -1397,7 +1397,7 @@ def _maybe_fix_copy(self: fst.FST, pars: bool = True, pars_walrus: bool = False)
             need_paren = pars_walrus
 
         if need_paren is None:
-            need_paren = not self.is_enclosed()
+            need_paren = not self.is_enclosed_or_line()
 
         if need_paren:
             if is_tuple:

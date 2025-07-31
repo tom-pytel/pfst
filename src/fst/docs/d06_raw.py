@@ -31,7 +31,7 @@ this turned on for all operations without having to specify anything then do `FS
 ... except Exception as exc:
 ...     print(str(exc))
 ...
-cannot put a single item to a Dict slice
+cannot put as 'one' item to a Dict slice
 
 >>> f.put('**g', 1, raw=True)
 <Dict ROOT 0,0..0,17>

@@ -923,14 +923,17 @@ class FST:
             - `False`: Do not parenthesize cut / copied `NamedExpr` walrus expressions.
             - `True`: Parenthesize cut / copied `NamedExpr` walrus expressions.
         - `empty_set_get`: Empty set to return when getting an empty slice from a set (considered to have no elements).
-            - `False`: Return an invalid `Set` element with just curlies (where the source parses to a `Dict`).
+            - `False`: Return an invalid `Set` element with zero elements and curlies as delimiters (would parse to a
+                `Dict`).
             - `True`: Same as `'star'`.
             - `'star'`: Starred sequence `{*()}`.
             - `'call'`: `set()` call.
             - `'tuple'`: Empty tuple `()`.
-        - `empty_set_put`: Empty set source during a slice put (considered to have no elements).
+        - `empty_set_put`: What to consider an empty set during a slice put (considered to have no elements). This
+            applies to puts to any type which takes a sequence as source and not just `Set`, so puts to `Tuple` and
+            `List` as well.
             - `False`: Nothing is considered an empty set and an empty set slice put is only possible using a non-set
-                type of empty sequence (tuple or list).
+                type of empty sequence (tuple or list), or an invalid `Set` object with zero elements.
             - `True`: Same a `'both'`.
             - `'both'`: `set()` call and `{*()}`, `{*[]}` and `{*{}}` starred sequences are considered empty.
             - `'star'`: Only starred sequences `{*()}`, `{*[]}` and `{*{}}` are considered empty.
@@ -2057,7 +2060,7 @@ class FST:
 
         if not force:
             if (not self.is_parenthesizable() or (is_atom := self.is_atom()) in (True, 'pars') or
-                (is_atom and self.is_enclosed())  # 'unenclosable'
+                (is_atom and self.is_enclosed_or_line())  # 'unenclosable'
             ):
                 return self
 
@@ -4059,7 +4062,8 @@ class FST:
     def is_parsable(self) -> bool:
         r"""Whether the source for this node is parsable by `FST` or not (if properly dedented for top level). This is
         different from `astutil.is_parsable` because that one indicates what is parsable by the python `ast` module,
-        while `FST` can parse more things.
+        while `FST` can parse more things. For example, an unparenthesized `NamedExpr` is considered parsable even
+        though it would not parse directly using `ast.parse()`.
 
         **Returns:**
         - `bool`: Whether is parsable by `FST` from a string or not.
@@ -4116,12 +4120,12 @@ class FST:
         if isinstance(ast, (expr_context, TypeIgnore, FormattedValue, Interpolation)):
             return False
 
-        elif parent := self.parent:
+        if parent := self.parent:
             if isinstance(ast, JoinedStr):  # TemplateStr doesn't go into a .format_spec, '.1f' type strings without quote delimiters
                 if self.pfield.name == 'format_spec':  # isinstance(parent.a, (FormattedValue, Interpolation)):
                     return False
 
-            elif isinstance(ast, Constant):  # string parts of f-string without quote delimiters
+            elif isinstance(ast, Constant):  # string parts of f-string without quote delimiters (probably, unless parts of implicit strings)
                 if self.pfield.name == 'values' and isinstance(parent.a, (JoinedStr, TemplateStr)):  # isinstance(ast.value, str)
                     return False
 
@@ -4176,7 +4180,7 @@ class FST:
 
         Being atomic precedence-wise does not guarantee parsability as an otherwise atomic node could be spread across
         multiple lines without line continuations or grouping parentheses, in this case `'unenclosable'` is returned (if
-        these nodes are not excluded altogether with `always_enclosed=True`). Also see `is_enclosed()`.
+        these nodes are not excluded altogether with `always_enclosed=True`). Also see `is_enclosed_or_line()`.
 
         If this function returns `'pars'` then `self` is enclosed due to the grouping parentheses.
 
@@ -4266,10 +4270,12 @@ class FST:
 
         return 'pars' if pars and self.pars().n else False
 
-    def is_enclosed(self, *, pars: bool = True) -> bool | Literal['pars']:
-        r"""Whether `self` lives on a single line or is otherwise enclosed in some kind of delimiters `()`, `[]`, `{}` or
-        entirely terminated with line continuations so that it can be parsed without error due to being spread across
-        multiple lines. This does not mean it can't have other errors, such as a `Slice` outside of `Subscript.slice`.
+    def is_enclosed_or_line(self, *, pars: bool = True) -> bool | Literal['pars']:
+        r"""Whether `self` lives on a single line or logical line (entirely terminated with line continuations) or is
+        otherwise enclosed in some kind of delimiters `()`, `[]`, `{}` so that it can be parsed without error due to
+        being spread across multiple lines. If logical line then internal enclosed elements spread over multiple lines
+        without line continuations are fine. This does not mean it can't have other errors, such as a `Slice` outside of
+        `Subscript.slice`.
 
         Node types where this doesn't normally apply like `stmt`, `ExceptHandler`, `boolop`, `expr_context`, etc...
         return `True`. Node types that are not enclosed but which are never used without being enclosed by a parent like
@@ -4291,38 +4297,38 @@ class FST:
 
         **Examples:**
         ```py
-        >>> FST('a').is_enclosed()
+        >>> FST('a').is_enclosed_or_line()
         True
 
-        >>> FST('a + \\\n b').is_enclosed()  # because of the line continuation
+        >>> FST('a + \\\n b').is_enclosed_or_line()  # because of the line continuation
         True
 
-        >>> FST('(a + \n b)').is_enclosed()
+        >>> FST('(a + \n b)').is_enclosed_or_line()
         'pars'
 
-        >>> FST('a + \n b').is_enclosed()
+        >>> FST('a + \n b').is_enclosed_or_line()
         False
 
-        >>> FST('[a + \n b]').elts[0].is_enclosed()
+        >>> FST('[a + \n b]').elts[0].is_enclosed_or_line()
         False
 
         >>> FST('[a + \n b]').elts[0].is_enclosed_in_parents()
         True
 
-        >>> FST('def f(a, b): pass').args.is_enclosed()
+        >>> FST('def f(a, b): pass').args.is_enclosed_or_line()
         True
 
         >>> # because the parentheses belong to the FunctionDef
-        >>> FST('def f(a,\n b): pass').args.is_enclosed()
+        >>> FST('def f(a,\n b): pass').args.is_enclosed_or_line()
         False
 
         >>> FST('def f(a,\n b): pass').args.is_enclosed_in_parents()
         True
 
-        >>> FST('(a is not b)').ops[0].is_enclosed()
+        >>> FST('(a is not b)').ops[0].is_enclosed_or_line()
         True
 
-        >>> FST('(a is \n not b)').ops[0].is_enclosed()
+        >>> FST('(a is \n not b)').ops[0].is_enclosed_or_line()
         False
         ```
         """
@@ -4369,13 +4375,14 @@ class FST:
 
         if isinstance(ast, Call):
             children = [ast.func,
-                        nspace(f=nspace(pars=lambda: self._loc_call_pars(), is_enclosed=lambda **kw: True))]
+                        nspace(f=nspace(pars=lambda: self._loc_call_pars(), is_enclosed_or_line=lambda **kw: True))]
         elif isinstance(ast, Subscript):
             children = [ast.value,
-                        nspace(f=nspace(pars=lambda: self._loc_subscript_brackets(), is_enclosed=lambda **kw: True))]
+                        nspace(f=nspace(pars=lambda: self._loc_subscript_brackets(),
+                                        is_enclosed_or_line=lambda **kw: True))]
         elif isinstance(ast, MatchClass):
             children = [ast.cls,
-                        nspace(f=nspace(pars=lambda: self._loc_matchcls_pars(), is_enclosed=lambda **kw: True))]
+                        nspace(f=nspace(pars=lambda: self._loc_matchcls_pars(), is_enclosed_or_line=lambda **kw: True))]
         else:  # we don't check always-enclosed statement fields here because statements will never get here
             children = syntax_ordered_children(ast)
 
@@ -4387,7 +4394,7 @@ class FST:
                 if re_line_end_cont_or_comment.match(lines[ln]).group(1) != '\\':
                     return False
 
-            if not getattr(loc, 'n', 0) and not childf.is_enclosed(pars=False):
+            if not getattr(loc, 'n', 0) and not childf.is_enclosed_or_line(pars=False):
                 return False
 
             last_ln = child_end_ln
@@ -4399,19 +4406,19 @@ class FST:
         return True
 
     def is_enclosed_in_parents(self, field: builtins.str | None = None) -> bool:
-        """Whether `self` is enclosed by some parent up the tree. This is different from `is_enclosed()` as it does not
-        check for line continuations or anyting like that, just enclosing delimiters like from `Call` or `FunctionDef`
-        arguments parentheses, `List` brackets, `FormattedValue`, parent grouping parentheses, etc... Statements do not
-        generally enclose except for a few parts of things like `FunctionDef.args` or `type_params`, `ClassDef.bases`,
-        etc...
+        """Whether `self` is enclosed by some parent up the tree. This is different from `is_enclosed_or_line()` as it
+        does not check for line continuations or anyting like that, just enclosing delimiters like from `Call` or
+        `FunctionDef` arguments parentheses, `List` brackets, `FormattedValue`, parent grouping parentheses, etc...
+        Statements do not generally enclose except for a few parts of things like `FunctionDef.args` or `type_params`,
+        `ClassDef.bases`, etc...
 
         **Parameters:**
         - `field`: This is meant to allow check for nonexistent child which would go into this field of `self`. If this
             is not `None` then `self` is considered the first parent with an imaginary child being checked at `field`.
 
-        **WARNING!** This will not pick up parentheses which belong to `self` and the rules for this can be confusing. E.g.
-        in `with (x): pass` the parentheses belong to the variable `x` while `with (x as y): pass` they belong to the
-        `with` because `alias`es cannot be parenthesized.
+        **WARNING!** This will not pick up parentheses which belong to `self` and the rules for this can be confusing.
+        E.g. in `with (x): pass` the parentheses belong to the variable `x` while `with (x as y): pass` they belong to
+        the `with` because `alias`es cannot be parenthesized.
 
         Will pick up parentheses which belong to `self` if `field` is passed because in that case `self` is considered
         the first parent and we are really considering the node which would live at `field`, whether it exists or not.

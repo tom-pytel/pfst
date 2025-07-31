@@ -30,7 +30,7 @@ b
 ...     FST('{a: b}').put('**c', raw=False)
 ... except Exception as exc:
 ...     print(exc)
-cannot put a single item to a Dict slice
+cannot put as 'one' item to a Dict slice
 ```
 
 ```py

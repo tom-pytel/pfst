@@ -1390,6 +1390,9 @@ def func():
         f.put_slice(None, None, 1)
         self.assertEqual('[]', f.src)
 
+        f = FST('1,\\\n2,\\\n3,\\\n4,\\\n', pattern)
+        self.assertEqual('[\n2,\\\n3,\\\n]', f.get_slice(1, 3).src)
+
     def test_cut_and_del_slice_matchmap(self):
         f = FST('{1: a, 2: b, **z}', pattern)
         self.assertEqual('{2: b}', f.get_slice(1, 2, cut=True).src)

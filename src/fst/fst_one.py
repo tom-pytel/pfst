@@ -905,7 +905,7 @@ def _make_exprish_fst(self: fst.FST, code: _PutOneCode, idx: int | None, field: 
               (tgt_parent := target.parent) and isinstance(tgt_parent.a, Attribute)):
             return True
 
-        if not self.is_enclosed_in_parents(field) and not put_fst.is_enclosed(pars=adding):
+        if not self.is_enclosed_in_parents(field) and not put_fst.is_enclosed_or_line(pars=adding):
             return True
 
         if isinstance(put_ast, Lambda):  # Lambda inside FormattedValue/Interpolation needs pars

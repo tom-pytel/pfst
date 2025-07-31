@@ -717,6 +717,9 @@ def _get_slice_MatchSequence_patterns(self: fst.FST, start: int | Literal['end']
     fst_ = _get_slice_seq(self, start, stop, len_body, cut, ret_ast, asts[-1], *locs,
                           options.get('trivia'), 'patterns', prefix, suffix, ',', tail_sep, tail_sep)
 
+    if not delims:
+        fst_._maybe_fix_matchseq('')
+
     self._maybe_fix_matchseq(delims)
 
     return fst_
@@ -1350,7 +1353,7 @@ def _code_to_slice_seq2(self: fst.FST, code: Code | None, one: bool, options: di
         return None
 
     if one:
-        raise ValueError(f'cannot put a single item to a {self.a.__class__.__name__} slice')
+        raise ValueError(f"cannot put as 'one' item to a {self.a.__class__.__name__} slice")
 
     fst_ = code_as(code, self.root.parse_params)
     ast_ = fst_.a
@@ -1498,7 +1501,7 @@ def _put_slice_Dict(self: fst.FST, code: Code | None, start: int | Literal['end'
             key.f.pfield = astfield('keys', i)
 
 
-# TODO: validate put
+# TODO: validate put: Slices, Starred to slice field on py 3.10
 def _put_slice_Tuple_elts(self: fst.FST, code: Code | None, start: int | Literal['end'] | None, stop: int | None,
                           field: str, one: bool = False, **options):
     fst_        = _code_to_slice_seq(self, code, one, options)
@@ -1552,7 +1555,7 @@ def _put_slice_Tuple_elts(self: fst.FST, code: Code | None, start: int | Literal
     self._maybe_fix_tuple(is_par)
 
 
-# TODO: validate put
+# TODO: validate put, Slices
 def _put_slice_List_elts(self: fst.FST, code: Code | None, start: int | Literal['end'] | None, stop: int | None,
                          field: str, one: bool = False, **options):
     fst_        = _code_to_slice_seq(self, code, one, options)
@@ -1603,7 +1606,7 @@ def _put_slice_List_elts(self: fst.FST, code: Code | None, start: int | Literal[
         body[i].f.pfield = astfield('elts', i)
 
 
-# TODO: validate put
+# TODO: validate put, Slices
 def _put_slice_Set_elts(self: fst.FST, code: Code | None, start: int | Literal['end'] | None, stop: int | None,
                         field: str, one: bool = False, **options):
     fst_        = _code_to_slice_seq(self, code, one, options)
@@ -1770,7 +1773,7 @@ def _put_slice_MatchMapping(self: fst.FST, code: Code | None, start: int | Liter
         self._maybe_ins_separator(*body2[-1].f.loc[2:], True)  # this will only maybe add a space, comma is already there
 
 
-# TODO: validate put
+# TODO: validate put, parenthesize
 def _put_slice_MatchOr_patterns(self: fst.FST, code: Code | None, start: int | Literal['end'] | None, stop: int | None,
                                 field: str, one: bool = False, **options):
     fst_        = _code_to_slice_MatchOr(self, code, one, options)

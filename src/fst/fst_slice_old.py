@@ -460,7 +460,7 @@ def _put_slice_dict(self: fst.FST, code: Code | None, start: int | Literal['end'
     if field:
         raise ValueError(f"cannot specify a field '{field}' to assign slice to a Dict")
     if one and code is not None:
-        raise ValueError(f'cannot put a single item to a Dict slice')
+        raise ValueError(f"cannot as 'one' item to a Dict slice")
 
     if code is None:
         put_fst = None
