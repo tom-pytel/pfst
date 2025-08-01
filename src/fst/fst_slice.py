@@ -1005,6 +1005,8 @@ def _put_slice_seq(self: fst.FST, start: int, stop: int, fst_: fst.FST | None,
     elements. If an `fst_` is provided then it is assumed it has at least one element. No empty put to empty location,
     likewise no delete from empty location.
 
+    BE WARNED! Here there be dragons!
+
     **Parameters:**
     - `start`, `stop`: Slice parameters.
     - `fst_`: The slice being put to `self` with delimiters stripped, or `None` for delete.
@@ -1181,7 +1183,8 @@ def _put_slice_seq(self: fst.FST, start: int, stop: int, fst_: fst.FST | None,
                 put_lines.append(bistr(''))  # this doesn't need to be post_indent-ed because its just a newline, doesn't do indentation of following text
 
         elif (not _re_one_space.match(put_lines[-1][-1]) and   # putting something that ends with non-space to something that starts with not a closing delimiter, put space between
-              not _re_close_delim_or_end.match(lines[put_end_ln], put_end_col)
+              not _re_close_delim_or_end.match(lines[put_end_ln], put_end_col) and
+              (put_end_ln < self.end_ln or put_end_col < self.end_col)  # but not at the very end of self
         ):
             put_lines[-1] = bistr(put_lines[-1] + ' ')
 

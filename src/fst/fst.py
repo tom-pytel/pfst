@@ -950,7 +950,8 @@ class FST:
             - `True`: Same as `'star'`.
             - `'star'`: Starred sequence `{*()}`.
             - `'call'`: `set()` call.
-        - `matchor_get`: How to handle zero or length 1 slice gets from a `MatchOr`.
+        - `matchor_get`: How to handle zero or length 1 slice gets from a `MatchOr`. Zero-length `MatchOr`s, or any
+            zero-length source spans really can be problematic, try not to hang on to them for too long.
             - `False`: Return invalid one and zero-length `MatchOr`.
             - `True`: Error on zero-length get, return single pattern element (not `MatchOr`) for length 1.
             - `'strict'`: Only allow get length 2+ `MatchOr`, error otherwise.

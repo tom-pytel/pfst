@@ -17614,19 +17614,19 @@ Module - ROOT 0,0..1,17
 
 (r"""match a:
  case a | b: pass""", 'body[0].cases[0].pattern', 0, 2, None, {'matchor_del': False, '_verify': False}, r"""z""", r"""match a:
- case z : pass""", r"""
-Module - ROOT 0,0..1,14
+ case z: pass""", r"""
+Module - ROOT 0,0..1,13
   .body[1]
-  0] Match - 0,0..1,14
+  0] Match - 0,0..1,13
     .subject Name 'a' Load - 0,6..0,7
     .cases[1]
-    0] match_case - 1,1..1,14
-      .pattern MatchOr - 1,6..1,8
+    0] match_case - 1,1..1,13
+      .pattern MatchOr - 1,6..1,7
         .patterns[1]
         0] MatchAs - 1,6..1,7
           .name 'z'
       .body[1]
-      0] Pass - 1,10..1,14
+      0] Pass - 1,9..1,13
 """),
 
 (r"""match a:
@@ -17650,17 +17650,17 @@ Module - ROOT 0,0..1,17
 
 (r"""match a:
  case a | b: pass""", 'body[0].cases[0].pattern', 0, 2, None, {'matchor_del': True, '_verify': False}, r"""z""", r"""match a:
- case z : pass""", r"""
-Module - ROOT 0,0..1,14
+ case z: pass""", r"""
+Module - ROOT 0,0..1,13
   .body[1]
-  0] Match - 0,0..1,14
+  0] Match - 0,0..1,13
     .subject Name 'a' Load - 0,6..0,7
     .cases[1]
-    0] match_case - 1,1..1,14
+    0] match_case - 1,1..1,13
       .pattern MatchAs - 1,6..1,7
         .name 'z'
       .body[1]
-      0] Pass - 1,10..1,14
+      0] Pass - 1,9..1,13
 """),
 
 (r"""match a:

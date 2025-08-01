@@ -1965,6 +1965,19 @@ def func():
             self.assertRaises(NodeError, (f := FST('a | b', pattern)).put_slice, None, 0, 2, matchor_del=True)
             self.assertRaises(NodeError, (f := FST('a | b', pattern)).put_slice, None, 0, 2, matchor_del='strict')
 
+    def test_put_slice_special(self):
+        f = FST('case a | b: pass')
+        g = f.pattern.get_slice(cut=True, matchor_del=False)
+        f.pattern.put_slice(g)
+        self.assertEqual('case a | b: pass', f.src)
+        f.verify()
+
+        f = FST('a | b', pattern)
+        g = f.get_slice(cut=True, matchor_del=False)
+        f.put_slice(g)
+        self.assertEqual('a | b', f.src)
+        f.verify()
+
 
 if __name__ == '__main__':
     import argparse
