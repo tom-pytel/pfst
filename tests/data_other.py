@@ -2195,7 +2195,7 @@ Dict - ROOT 0,0..0,5
 """),
 
 (r"""match a:
- case a | b: pass""", 'body[0].cases[0].pattern', 0, 0, {'slice_matchor': False, '_verify': False}, r"""
+ case a | b: pass""", 'body[0].cases[0].pattern', 0, 0, {'matchor_get': False, '_verify': False}, r"""
 match a:
  case a | b: pass
 """, r"""
@@ -2220,7 +2220,7 @@ MatchOr - ROOT 0,0..0,0
 """),
 
 (r"""match a:
- case a | b: pass""", 'body[0].cases[0].pattern', 0, 1, {'slice_matchor': False, '_verify': False}, r"""
+ case a | b: pass""", 'body[0].cases[0].pattern', 0, 1, {'matchor_get': False, 'matchor_del': False, '_verify': False}, r"""
 match a:
  case b: pass
 """, r"""
@@ -2246,7 +2246,7 @@ MatchOr - ROOT 0,0..0,1
 """),
 
 (r"""match a:
- case a | b: pass""", 'body[0].cases[0].pattern', 0, 2, {'slice_matchor': False, '_verify': False}, r"""
+ case a | b: pass""", 'body[0].cases[0].pattern', 0, 2, {'matchor_del': False, '_verify': False}, r"""
 match a:
  case : pass
 """, r"""
@@ -2271,7 +2271,7 @@ MatchOr - ROOT 0,0..0,5
 """),
 
 (r"""match a:
- case a | b: pass""", 'body[0].cases[0].pattern', 0, 1, {'slice_matchor': True, '_verify': False}, r"""
+ case a | b: pass""", 'body[0].cases[0].pattern', 0, 1, {'matchor_get': True, 'matchor_del': True, '_verify': False}, r"""
 match a:
  case b: pass
 """, r"""
@@ -17544,7 +17544,7 @@ Module - ROOT 0,0..4,11
 """),
 
 (r"""match a:
- case a | b: pass""", 'body[0].cases[0].pattern', 0, 1, None, {'slice_matchor': False, '_verify': False}, r"""**DEL**""", r"""match a:
+ case a | b: pass""", 'body[0].cases[0].pattern', 0, 1, None, {'matchor_del': False, '_verify': False}, r"""**DEL**""", r"""match a:
  case b: pass""", r"""
 Module - ROOT 0,0..1,13
   .body[1]
@@ -17561,7 +17561,7 @@ Module - ROOT 0,0..1,13
 """),
 
 (r"""match a:
- case a | b: pass""", 'body[0].cases[0].pattern', 0, 2, None, {'slice_matchor': False, '_verify': False}, r"""**DEL**""", r"""match a:
+ case a | b: pass""", 'body[0].cases[0].pattern', 0, 2, None, {'matchor_del': False, '_verify': False}, r"""**DEL**""", r"""match a:
  case : pass""", r"""
 Module - ROOT 0,0..1,12
   .body[1]
@@ -17575,7 +17575,7 @@ Module - ROOT 0,0..1,12
 """),
 
 (r"""match a:
- case a | b: pass""", 'body[0].cases[0].pattern', 0, 1, None, {'slice_matchor': True, '_verify': False}, r"""**DEL**""", r"""match a:
+ case a | b: pass""", 'body[0].cases[0].pattern', 0, 1, None, {'matchor_del': True, '_verify': False}, r"""**DEL**""", r"""match a:
  case b: pass""", r"""
 Module - ROOT 0,0..1,13
   .body[1]
@@ -17590,11 +17590,11 @@ Module - ROOT 0,0..1,13
 """),
 
 (r"""match a:
- case a | b: pass""", 'body[0].cases[0].pattern', 0, 2, None, {'slice_matchor': True, '_verify': False}, r"""**DEL**""", r"""**NodeError('cannot del MatchOr to empty without slice_matchor=False')**""", r"""
+ case a | b: pass""", 'body[0].cases[0].pattern', 0, 2, None, {'matchor_del': True, '_verify': False}, r"""**DEL**""", r"""**NodeError('cannot del MatchOr to empty without matchor_del=False')**""", r"""
 """),
 
 (r"""match a:
- case a | b: pass""", 'body[0].cases[0].pattern', 0, 1, None, {'slice_matchor': False, '_verify': False}, r"""z""", r"""match a:
+ case a | b: pass""", 'body[0].cases[0].pattern', 0, 1, None, {'matchor_del': False, '_verify': False}, r"""z""", r"""match a:
  case z | b: pass""", r"""
 Module - ROOT 0,0..1,17
   .body[1]
@@ -17613,7 +17613,7 @@ Module - ROOT 0,0..1,17
 """),
 
 (r"""match a:
- case a | b: pass""", 'body[0].cases[0].pattern', 0, 2, None, {'slice_matchor': False, '_verify': False}, r"""z""", r"""match a:
+ case a | b: pass""", 'body[0].cases[0].pattern', 0, 2, None, {'matchor_del': False, '_verify': False}, r"""z""", r"""match a:
  case z : pass""", r"""
 Module - ROOT 0,0..1,14
   .body[1]
@@ -17630,7 +17630,7 @@ Module - ROOT 0,0..1,14
 """),
 
 (r"""match a:
- case a | b: pass""", 'body[0].cases[0].pattern', 0, 1, None, {'slice_matchor': True, '_verify': False}, r"""z""", r"""match a:
+ case a | b: pass""", 'body[0].cases[0].pattern', 0, 1, None, {'matchor_del': True, '_verify': False}, r"""z""", r"""match a:
  case z | b: pass""", r"""
 Module - ROOT 0,0..1,17
   .body[1]
@@ -17649,7 +17649,7 @@ Module - ROOT 0,0..1,17
 """),
 
 (r"""match a:
- case a | b: pass""", 'body[0].cases[0].pattern', 0, 2, None, {'slice_matchor': True, '_verify': False}, r"""z""", r"""match a:
+ case a | b: pass""", 'body[0].cases[0].pattern', 0, 2, None, {'matchor_del': True, '_verify': False}, r"""z""", r"""match a:
  case z : pass""", r"""
 Module - ROOT 0,0..1,14
   .body[1]
@@ -17664,11 +17664,30 @@ Module - ROOT 0,0..1,14
 """),
 
 (r"""match a:
- case a | b: pass""", 'body[0].cases[0].pattern', 0, 1, None, {'slice_matchor': 'strict', '_verify': False}, r"""z""", r"""**NodeError("slice being assigned to a MatchOr must be a MatchOr with slice_matchor='strict', not a MatchAs")**""", r"""
+ case a | b: pass""", 'body[0].cases[0].pattern', 0, 1, None, {'matchor_del': 'strict', '_verify': False}, r"""z""", r"""match a:
+ case z | b: pass""", r"""
+Module - ROOT 0,0..1,17
+  .body[1]
+  0] Match - 0,0..1,17
+    .subject Name 'a' Load - 0,6..0,7
+    .cases[1]
+    0] match_case - 1,1..1,17
+      .pattern MatchOr - 1,6..1,11
+        .patterns[2]
+        0] MatchAs - 1,6..1,7
+          .name 'z'
+        1] MatchAs - 1,10..1,11
+          .name 'b'
+      .body[1]
+      0] Pass - 1,13..1,17
 """),
 
 (r"""match a:
- case a | b: pass""", 'body[0].cases[0].pattern', 0, 2, None, {'slice_matchor': 'strict', '_verify': False}, r"""z""", r"""**NodeError("slice being assigned to a MatchOr must be a MatchOr with slice_matchor='strict', not a MatchAs")**""", r"""
+ case a | b: pass""", 'body[0].cases[0].pattern', 0, 1, None, {'matchor_put': False, '_verify': False}, r"""z""", r"""**NodeError('slice being assigned to a MatchOr must be a MatchOr with matchor_put=False, not a MatchAs')**""", r"""
+"""),
+
+(r"""match a:
+ case a | b: pass""", 'body[0].cases[0].pattern', 0, 2, None, {'matchor_del': 'strict', '_verify': False}, r"""z""", r"""**NodeError("cannot put MatchOr to length 1 with matchor_del='strict'")**""", r"""
 """),
 
 ]  # END OF PUT_SLICE_DATA

@@ -231,7 +231,7 @@ class _Modifying:
 
 @staticmethod
 def _new_empty_module(*, from_: fst.FST | None = None) -> fst.FST:
-    return fst.FST(Module(body=[], type_ignores=[]), [''], from_=from_)
+    return fst.FST(Module(body=[], type_ignores=[]), [''], from_=from_, lcopy=False)
 
 
 @staticmethod
@@ -256,34 +256,36 @@ def _new_empty_dict(*, from_: fst.FST | None = None) -> fst.FST:
 
 
 @staticmethod
-def _new_empty_set_star(only_ast: bool = False, lineno: int = 1, col_offset: int = 0, *,
-                        from_: fst.FST | None = None) -> fst.FST | AST:
+def _new_empty_set_star(lineno: int = 1, col_offset: int = 0, *, from_: fst.FST | None = None, as_fst: bool = True,
+                        ) -> fst.FST | AST:
+    src = ['{*()}']
     ast = Set(elts=[Starred(value=Tuple(elts=[], ctx=Load(), lineno=lineno, col_offset=col_offset+2,
                                         end_lineno=lineno, end_col_offset=col_offset+4),
                             ctx=Load(),
                             lineno=lineno, col_offset=col_offset+1, end_lineno=lineno, end_col_offset=col_offset+4)],
               lineno=lineno, col_offset=col_offset, end_lineno=lineno, end_col_offset=col_offset+5)
 
-    return ast if only_ast else fst.FST(ast, ['{*()}'], from_=from_)
+    return fst.FST(ast, src, from_=from_) if as_fst else (ast, src)
 
 
 @staticmethod
-def _new_empty_set_call(lineno: int = 1, col_offset: int = 0, *, from_: fst.FST | None = None) -> fst.FST:
+def _new_empty_set_call(lineno: int = 1, col_offset: int = 0, *, from_: fst.FST | None = None, as_fst: bool = True,
+                        ) -> fst.FST:
+    src = ['set()']
     ast = Call(func=Name(id='set', ctx=Load(),
                          lineno=lineno, col_offset=col_offset, end_lineno=lineno, end_col_offset=col_offset+3),
                args=[], keywords=[],
                lineno=lineno, col_offset=col_offset, end_lineno=lineno, end_col_offset=col_offset+5)
 
-    return fst.FST(ast, ['set()'], from_=from_)
+    return fst.FST(ast, src, from_=from_) if as_fst else (ast, src)
 
 
 @staticmethod
-def _new_empty_set_curlies(only_ast: bool = False, lineno: int = 1, col_offset: int = 0, *,
-                           from_: fst.FST | None = None) -> fst.FST | AST:
+def _new_empty_set_curlies(lineno: int = 1, col_offset: int = 0, *, from_: fst.FST | None = None) -> fst.FST | AST:
     ast = Set(elts=[], lineno=lineno, col_offset=col_offset, end_lineno=lineno,
               end_col_offset=col_offset + 2)
 
-    return ast if only_ast else fst.FST(ast, ['{}'], from_=from_)
+    return fst.FST(ast, ['{}'], from_=from_)
 
 
 @staticmethod
@@ -480,11 +482,7 @@ def _set_ast(self: fst.FST, ast: AST, valid_fst: bool = False, unmake: bool = Tr
 
     else:
         root = self.root
-
-        # for a in walk(ast):
-        #     a.f.root = root
-
-        itr = walk(ast)
+        itr  = walk(ast)
 
         try:
             if (f := next(itr).f).root is not root:  # if tree already has same root then we don't need to do this
@@ -493,7 +491,7 @@ def _set_ast(self: fst.FST, ast: AST, valid_fst: bool = False, unmake: bool = Tr
                 for a in itr:
                     a.f.root = root
 
-        except StopIteration:  # from the next()
+        except StopIteration:  # from the next() if empty
             pass
 
         for a in iter_child_nodes(ast):
@@ -1336,14 +1334,19 @@ def _maybe_fix_matchseq(self: fst.FST, delims: Literal['', '[]', '()'] | None = 
     return delims
 
 
-def _maybe_fix_set(self: fst.FST):
+def _maybe_fix_set(self: fst.FST, empty: bool | Literal['star', 'call'] = True):
     # assert isinstance(self.a, Set)
 
-    if not self.a.elts:
+    if empty and not (a := self.a).elts:
+        if empty == 'call':
+            ast, src = _new_empty_set_call(a.lineno, a.col_offset, as_fst=False)
+        else:  # True, 'star'
+            ast, src = _new_empty_set_star(a.lineno, a.col_offset, as_fst=False)
+
         ln, col, end_ln, end_col = self.loc
 
-        self._put_src(['{*()}'], ln, col, end_ln, end_col, True)
-        self._set_ast(self._new_empty_set_star(True, (a := self.a).lineno, a.col_offset))
+        self._put_src(src, ln, col, end_ln, end_col, True)
+        self._set_ast(ast)
 
 
 def _maybe_fix_elif(self: fst.FST):
@@ -1949,10 +1952,8 @@ def _put_src(self, src: str | list[str] | None, ln: int, col: int, end_ln: int, 
         lines = [bistr('')]
     elif isinstance(src, str):
         lines = [bistr(s) for s in src.split('\n')]
-    elif not isinstance(src[0], bistr):  # lines is list[str]
-        lines = [bistr(s) for s in src]
     else:
-        lines = src
+        lines = [bistr(s) for s in src]
 
     if tail is not ...:  # possibly offset nodes
         ret = _params_offset(ls, lines, ln, col, end_ln, end_col)

@@ -45,9 +45,12 @@ _OPTIONS = {
     'elif_':         True,   # True | False
     'docstr':        True,   # True | False | 'strict'
     'pars_walrus':   False,  # True | False
-    'empty_set_get': True,   # True | False | 'star' | 'call' | 'tuple'
-    'empty_set_put': True,   # True | False | 'star' | 'call' | 'both'
-    'slice_matchor': True,   # True | False | 'strict'
+    'set_get':       True,   # True | False | 'star' | 'call' | 'tuple'
+    'set_put':       True,   # True | False | 'star' | 'call' | 'both'
+    'set_del':       True,   # True | False | 'star' | 'call'
+    'matchor_get':   True,   # True | False | 'strict'
+    'matchor_put':   True,   # True | False | 'strict'
+    'matchor_del':   True,   # True | False | 'strict'
     'pep8space':     True,   # True | False | 1
     'precomms':      True,   # True | False | 'all'
     'postcomms':     True,   # True | False | 'all' | 'block'
@@ -792,9 +795,12 @@ class FST:
          'elif_': True,
          'docstr': True,
          'pars_walrus': False,
-         'empty_set_get': True,
-         'empty_set_put': True,
-         'slice_matchor': True,
+         'set_get': True,
+         'set_put': True,
+         'set_del': True,
+         'matchor_get': True,
+         'matchor_put': True,
+         'matchor_del': True,
          'pep8space': True,
          'precomms': True,
          'postcomms': True,
@@ -924,29 +930,37 @@ class FST:
         - `pars_walrus`: Whether to parenthesize copied `NamedExpr` nodes or not (only if `pars` is also not `False`).
             - `False`: Do not parenthesize cut / copied `NamedExpr` walrus expressions.
             - `True`: Parenthesize cut / copied `NamedExpr` walrus expressions.
-        - `empty_set_get`: Empty set to return when getting an empty slice from a set (considered to have no elements).
-            - `False`: Return an invalid `Set` element with zero elements and curlies as delimiters (would parse to a
-                `Dict`).
+        - `set_get`: Empty set to return when getting an empty slice from a set.
+            - `False`: Return an invalid `Set` with zero elements and curlies as delimiters (would parse to a `Dict`).
             - `True`: Same as `'star'`.
             - `'star'`: Starred sequence `{*()}`.
             - `'call'`: `set()` call.
             - `'tuple'`: Empty tuple `()`.
-        - `empty_set_put`: What to consider an empty set during a slice put (considered to have no elements). This
-            applies to puts to any type which takes a sequence as source and not just `Set`, so puts to `Tuple` and
-            `List` as well.
-            - `False`: Nothing is considered an empty set and an empty set slice put is only possible using a non-set
-                type of empty sequence (tuple or list), or an invalid `Set` object with zero elements.
+        - `set_put`: What to consider an empty set that is being put (not the target of the put). This applies to puts
+            to any types which take a sequence as a source and not just puts to a `Set`, so puts to `Tuple` and `List`
+            as well.
+            - `False`: Nothing is considered an empty set, `set()` is not considered a sequence and a `{*()}` set is put
+                verbatim.
             - `True`: Same a `'both'`.
-            - `'both'`: `set()` call and `{*()}`, `{*[]}` and `{*{}}` starred sequences are considered empty.
             - `'star'`: Only starred sequences `{*()}`, `{*[]}` and `{*{}}` are considered empty.
             - `'call'`: Only `set()` call is considered empty.
-        - `slice_matchor`: How to handle `MatchOr` slices.
-            - `False`: Allow invalid one and zero-length `MatchOr` to be returned or left in place after a cut or del.
-            - `True`: Do not allow invalid zero-length `MatchOr` and anytime a one-length `MatchOr` would be returned
-                or left after a cut or del then just convert it to the single element. Slice puts accept invalid one
-                or zero-length `MatchOr` nodes.
-            - `'strict'`: Do not allow one or zero-length `MatchOr` operations to be returned or accepted for put and
-                do not accept or return anything other than at least two-elemenmt `MatchOr` nodes.
+            - `'both'`: `set()` call and `{*()}`, `{*[]}` and `{*{}}` starred sequences are considered empty.
+        - `set_del`: What to leave for an empty set if a `Set` gets everything cut or deleted from it.
+            - `False`: Leave an invalid `Set` with zero elements and curlies as delimiters (would parse to a `Dict`).
+            - `True`: Same as `'star'`.
+            - `'star'`: Starred sequence `{*()}`.
+            - `'call'`: `set()` call.
+        - `matchor_get`: How to handle zero or length 1 slice gets from a `MatchOr`.
+            - `False`: Return invalid one and zero-length `MatchOr`.
+            - `True`: Error on zero-length get, return single pattern element (not `MatchOr`) for length 1.
+            - `'strict'`: Only allow get length 2+ `MatchOr`, error otherwise.
+        - `matchor_put`: How to handle slice puts to `MatchOr`
+            - `False`: Accept one or zero-length `MatchOr`, do not accept single element pattern as length 1.
+            - `True`: Accept one or zero-length `MatchOr` as well as single element pattern as length 1.
+        - `matchor_del`: How to handle zero or length 1 `MatchOr` objects when a cut or del reduces them to this length.
+            - `False`: Leave one or zero-length `MatchOr`.
+            - `True`: Error on zero-length, convert to single element if length 1.
+            - `'strict'`: Only allow length 2+ `MatchOr`, error otherwise.
         - `pep8space`: Preceding and trailing empty lines for function and class definitions.
             - `False`: No empty lines.
             - `True`: Two empty lines at module scope and one empty line in other scopes.

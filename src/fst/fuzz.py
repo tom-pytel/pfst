@@ -1733,7 +1733,8 @@ class SliceExprish(Fuzzy):
                         continue
 
 
-                    with FST.options(empty_set_get='tuple'):
+                    # with FST.options(set_get='tuple'):
+                    with FST.options(set_get=False, set_put=False, set_del=False):
                         self.do_move(exprish, container.fst, container.field)
 
                         if self.verify:

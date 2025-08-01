@@ -336,9 +336,9 @@ def _put_slice_tuple_list_or_set(self: fst.FST, code: Code | None, start: int | 
             is_tuple = is_set = False  # that's right, an `ast.Set` with `is_set=False` because in this case all we need is the `elts` container (without `ctx`)
 
         else:
-            if empty_set := self.get_option('empty_set_put', options):
-                if ((put_fst.is_empty_set_star() or put_fst.is_empty_set_call()) if empty_set is True else
-                    put_fst.is_empty_set_star() if empty_set == 'star' else put_fst.is_empty_set_call()  # else 'call'
+            if set_put := self.get_option('set_put', options):
+                if ((put_fst.is_empty_set_star() or put_fst.is_empty_set_call()) if set_put is True else
+                    put_fst.is_empty_set_star() if set_put == 'star' else put_fst.is_empty_set_call()  # else 'call'
                 ):
                     put_fst = self._new_empty_set_curlies(from_=self)
 
@@ -440,7 +440,7 @@ def _put_slice_tuple_list_or_set(self: fst.FST, code: Code | None, start: int | 
 #                          field: str, one: bool, **options):
 #     ln, col, end_ln, end_col = self.loc
 
-#     empty   = self._new_empty_set_curlies(False, (a := self.a).lineno, a.col_offset, from_=self)
+#     empty   = self._new_empty_set_curlies((a := self.a).lineno, a.col_offset, from_=self)
 #     old_src = self.get_src(ln, col, end_ln, end_col, True)
 #     old_ast = self._set_ast(empty.a)
 

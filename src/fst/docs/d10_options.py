@@ -78,10 +78,10 @@ def f():
 ```
 
 ```py
->>> print(FST('{a, b}').put_slice('{*()}', 1, 1, empty_set_put=False).src)
+>>> print(FST('{a, b}').put_slice('{*()}', 1, 1, set_put=False).src)
 {a, *(), b}
 
->>> print(FST('{a, b}').put_slice('{*()}', 1, 1, empty_set_put=True).src)
+>>> print(FST('{a, b}').put_slice('{*()}', 1, 1, set_put=True).src)
 {a, b}
 ```
 
@@ -143,9 +143,12 @@ Or get all global options.
  'elif_': True,
  'docstr': True,
  'pars_walrus': False,
- 'empty_set_get': True,
- 'empty_set_put': True,
- 'slice_matchor': True,
+ 'set_get': True,
+ 'set_put': True,
+ 'set_del': True,
+ 'matchor_get': True,
+ 'matchor_put': True,
+ 'matchor_del': True,
  'pep8space': True,
  'precomms': True,
  'postcomms': True,
