@@ -44,10 +44,8 @@ running any specific verison of Python).
 handlers or match cases, by wrapping them in corresponding code then pulling out and adjusting the locations of the
 parsed `AST`s. `fst.docs.d01_parse`.
 
-`fst` does basic validation but will not prevent you from burning yourself if you really want to. For example, it won't
-let you add a `Slice` to a `Tuple` which is not directly in a `Subscript.slice` field or at the root level of a tree,
-but you can take a `Tuple` with a `Slice` in it already and put it somewhere else where it doesn't belong (there is a
-function to make sure you didn't do something silly like this `fst.fst.FST.verify()`).
+`fst` validates for parsability, not compilability. This means that for `fst`, `*a, *b = c` and `def f(a, a): pass` are
+both valid even though they are uncompilable.
 
 Format preserving native operations exist in two flavors (see the documentation on how to use either):
 

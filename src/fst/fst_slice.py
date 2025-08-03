@@ -12,9 +12,10 @@ from typing import Any, Callable, Literal, Union
 from . import fst
 
 from .astutil import *
-from .astutil import re_identifier, TypeAlias, TryStar, TemplateStr, precedence_require_parens_by_type
+from .astutil import re_identifier, TypeAlias, TryStar, TemplateStr, is_valid_target
 
 from .misc import (
+    PYLT11, PYGE14,
     Self, Code, NodeError, astfield, fstloc,
     re_empty_line_start, re_empty_line, re_line_trailing_space, re_empty_space, re_line_end_cont_or_comment,
     _next_src, _prev_find, _next_find, _next_find_re, _fixup_slice_indices,
@@ -1351,7 +1352,8 @@ def _code_to_slice_seq(self: fst.FST, code: Code | None, one: bool, options: dic
             fst_._parenthesize_grouping()
 
         ls  = fst_._lines
-        ast = Set(elts=[fst_.a], lineno=1, col_offset=0, end_lineno=len(ls), end_col_offset=ls[-1].lenbytes)  # because in this case all we need is the `elts` container (without `ctx`)
+        ast = List(elts=[fst_.a], ctx=Load(),
+                   lineno=1, col_offset=0, end_lineno=len(ls), end_col_offset=ls[-1].lenbytes)  # because List is valid target if checked in validate
 
         return fst.FST(ast, ls, from_=fst_, lcopy=False)
 
@@ -1371,11 +1373,14 @@ def _code_to_slice_seq(self: fst.FST, code: Code | None, one: bool, options: dic
     if not ast_.elts:  # put empty sequence is same as delete
         return None
 
-    fst_._sanitize()
+    # fst_._sanitize()
+    assert (ast_.lineno == 1 and ast_.col_offset == 0 and
+            ast_.end_lineno == len(ls := fst_.lines) and ast_.end_col_offset == ls[-1].lenbytes)
 
     if fst_.is_parenthesized_tuple() is not False:  # strip enclosing parentheses, brackets or curlies from List, Set or parenthesized Tuple
-        fst_.a.end_col_offset -= 1
-        fst_lines              = fst_._lines
+
+        ast_.end_col_offset -= 1
+        fst_lines            = fst_._lines
 
         fst_._offset(0, 1, 0, -1)  # guaranteed to start here because of _sanitize()
 
@@ -1383,6 +1388,20 @@ def _code_to_slice_seq(self: fst.FST, code: Code | None, one: bool, options: dic
         fst_lines[0]  = bistr(fst_lines[0][1:])
 
     return fst_
+
+
+def _validate_put_seq(self: fst.FST, fst_: fst.FST, non_slice: str, *, check_target: bool = False):
+    if not fst_:
+        return
+
+    ast  = self.a
+    ast_ = fst_.a
+
+    if non_slice and isinstance(ast_, Tuple) and any(isinstance(e, Slice) for e in ast_.elts):
+        raise ValueError(f'cannot put Slice into a {non_slice}')
+
+    if check_target and not isinstance(ctx := ast.ctx, Load) and not is_valid_target(ast_):
+        raise ValueError(f'invalid slice for {ast.__class__.__name__} {ctx.__class__.__name__} target')
 
 
 def _code_to_slice_seq2(self: fst.FST, code: Code | None, one: bool, options: dict[str, Any], code_as: Callable,
@@ -1403,7 +1422,9 @@ def _code_to_slice_seq2(self: fst.FST, code: Code | None, one: bool, options: di
     if not ast_.keys:  # put empty sequence is same as delete
         return None
 
-    fst_._sanitize()
+    # fst_._sanitize()
+    assert (ast_.lineno == 1 and ast_.col_offset == 0 and
+            ast_.end_lineno == len(ls := fst_.lines) and ast_.end_col_offset == ls[-1].lenbytes)
 
     fst_.a.end_col_offset -= 1
     fst_lines              = fst_._lines
@@ -1442,7 +1463,9 @@ def _code_to_slice_MatchSequence(self: fst.FST, code: Code | None, one: bool, op
     if not ast_.patterns:  # put empty sequence is same as delete
         return None
 
-    fst_._sanitize()
+    # fst_._sanitize()
+    assert (ast_.lineno == 1 and ast_.col_offset == 0 and
+            ast_.end_lineno == len(ls := fst_.lines) and ast_.end_col_offset == ls[-1].lenbytes)
 
     if fst_.get_matchseq_delimiters():  # strip enclosing parentheses / brackets
         fst_.a.end_col_offset -= 1
@@ -1580,7 +1603,6 @@ def _put_slice_Dict(self: fst.FST, code: Code | None, start: int | Literal['end'
             key.f.pfield = astfield('keys', i)
 
 
-# TODO: validate put: Slices, Starred to slice field on py < 3.11, Starred to unpar ExceptHandler.type on py >= 3.14
 def _put_slice_Tuple_elts(self: fst.FST, code: Code | None, start: int | Literal['end'] | None, stop: int | None,
                           field: str, one: bool = False, **options):
     fst_        = _code_to_slice_seq(self, code, one, options)
@@ -1590,9 +1612,31 @@ def _put_slice_Tuple_elts(self: fst.FST, code: Code | None, start: int | Literal
     if not fst_ and start == stop:
         return
 
+    is_par   = self._is_delimited_seq()
+    is_slice = (pfield := self.pfield) and pfield.name == 'slice'
+    need_par = False
+
+    if fst_:
+        len_fst_body = len(fst_body := fst_.a.elts)
+
+        if PYLT11:
+            if is_slice and not is_par and any(isinstance(e, Starred) for e in fst_body):
+                if any(isinstance(e, Slice) for i, e in enumerate(body) if i < start or i >= stop):
+                    raise ValueError('cannot put Starred to a slice Tuple containing Slices')
+
+                need_par = True
+
+        elif PYGE14:
+            if not is_par and pfield == ('type', None) and any(isinstance(e, Starred) for e in fst_body):  # if putting Starred to unparenthesized ExceptHandler.type Tuple then parenthesize it
+                need_par = True
+
+    _validate_put_seq(self, fst_,
+                      '' if not is_par and (not pfield or is_slice) else 'non-slice Tuple',
+                      check_target=True)
+
     bound_ln, bound_col, bound_end_ln, bound_end_col = self.loc
 
-    if is_par := self._is_delimited_seq():
+    if is_par:
         bound_col     += 1
         bound_end_col -= 1
 
@@ -1608,8 +1652,6 @@ def _put_slice_Tuple_elts(self: fst.FST, code: Code | None, start: int | Literal
         len_fst_body = 0
 
     else:
-        len_fst_body = len(fst_body := fst_.a.elts)
-
         _put_slice_seq(self, start, stop, fst_, fst_body[0].f, fst_body[-1].f, len_fst_body,
                        bound_ln, bound_col, bound_end_ln, bound_end_col,
                        options.get('trivia'), options.get('ins_ln'))
@@ -1630,10 +1672,12 @@ def _put_slice_Tuple_elts(self: fst.FST, code: Code | None, start: int | Literal
     for i in range(start + len_fst_body, len(body)):
         body[i].f.pfield = astfield('elts', i)
 
-    self._maybe_fix_tuple(is_par)
+    is_par = self._maybe_fix_tuple(is_par)
+
+    if need_par and not is_par:
+        self._delimit_node()
 
 
-# TODO: validate put, Slices
 def _put_slice_List_elts(self: fst.FST, code: Code | None, start: int | Literal['end'] | None, stop: int | None,
                          field: str, one: bool = False, **options):
     fst_        = _code_to_slice_seq(self, code, one, options)
@@ -1642,6 +1686,8 @@ def _put_slice_List_elts(self: fst.FST, code: Code | None, start: int | Literal[
 
     if not fst_ and start == stop:
         return
+
+    _validate_put_seq(self, fst_, 'List', check_target=True)
 
     bound_ln, bound_col, bound_end_ln, bound_end_col = self.loc
 
@@ -1683,7 +1729,6 @@ def _put_slice_List_elts(self: fst.FST, code: Code | None, start: int | Literal[
         body[i].f.pfield = astfield('elts', i)
 
 
-# TODO: validate put, Slices
 def _put_slice_Set_elts(self: fst.FST, code: Code | None, start: int | Literal['end'] | None, stop: int | None,
                         field: str, one: bool = False, **options):
     fst_        = _code_to_slice_seq(self, code, one, options)
@@ -1692,6 +1737,8 @@ def _put_slice_Set_elts(self: fst.FST, code: Code | None, start: int | Literal['
 
     if not fst_ and start == stop:
         return
+
+    _validate_put_seq(self, fst_, 'Set')
 
     bound_ln, bound_col, bound_end_ln, bound_end_col = self.loc
 
@@ -1732,9 +1779,9 @@ def _put_slice_Set_elts(self: fst.FST, code: Code | None, start: int | Literal['
     self._maybe_fix_set(self.get_option('set_del', options))
 
 
-# TODO: validate put
 def _put_slice_MatchSequence_patterns(self: fst.FST, code: Code | None, start: int | Literal['end'] | None,
                                       stop: int | None, field: str, one: bool = False, **options):
+    # NOTE: we allow multiple MatchStars to be put to the same MatchSequence
     fst_        = _code_to_slice_MatchSequence(self, code, one, options)
     body        = self.a.patterns
     start, stop = _fixup_slice_indices(len(body), start, stop)

@@ -520,8 +520,9 @@ def _validate_put_ast(self: fst.FST, put_ast: AST, idx: int | None, field: str, 
 
         elif isinstance(restrict, FunctionType):
             if not restrict(put_ast):  # not "restrict" meaning is inverted here, really means "not allow"
-                raise NodeError(f'invalid value for {self.a.__class__.__name__}.{field}' +
-                                ('' if idx is None else f'[{idx}]'))
+                raise NodeError(f'invalid value for {self.a.__class__.__name__}.{field}'
+                                f'{("" if idx is None else f"[{idx}]")}'
+                                f', got {put_ast.__class__.__name__}')
 
         elif not isinstance(put_ast, restrict):  # single AST type or tuple means only these allowed
             raise NodeError((f'expecting a {restrict.__name__} for {self.a.__class__.__name__}.{field}'
@@ -1344,10 +1345,9 @@ def _put_one_List_elts(self: fst.FST, code: _PutOneCode, idx: int | None, field:
     child = _validate_put(self, code, idx, field, child)  # we want to do it in same order as all other puts
     code  = static.code_as(code, self.root.parse_params)
 
-    if not isinstance(self.a.ctx, Load):  # only allow possible expression targets into an expression target
-        if not hasattr(code.a, 'ctx'):
-            raise ValueError(f"cannot put non-targetable expression to List.elts[{idx}] "
-                             "in this state (target expression)")
+    if not isinstance(ctx := self.a.ctx, Load):  # only allow possible expression targets into an expression target
+        if not is_valid_target(code.a):
+            raise ValueError(f"invalid expression for List {ctx.__class__.__name__} target")
 
     return _put_one_exprish_required(self, code, idx, field, child, static, 2, **options)
 
@@ -1367,10 +1367,9 @@ def _put_one_Tuple_elts(self: fst.FST, code: _PutOneCode, idx: int | None, field
     if (pfield and not is_slice) or (is_par := self._is_delimited_seq()):  # only allow slice in unparenthesized tuple, in slice or at root
         static = _onestatic_expr_required_starred  # default static allows slices, this disallows it
 
-    if not isinstance(ast.ctx, Load):  # only allow possible expression targets into an expression target
-        if not hasattr(code.a, 'ctx'):
-            raise ValueError(f"cannot put non-targetable expression to Tuple.elts[{idx}] "
-                             "in this state (target expression)")
+    if not isinstance(ctx := ast.ctx, Load):  # only allow possible expression targets into an expression target
+        if not is_valid_target(code.a):
+            raise ValueError(f"invalid expression for Tuple {ctx.__class__.__name__} target")
 
     if PYLT11:
         if (put_star_to_unpar_slice := is_slice and isinstance(code.a, Starred) and
@@ -1861,7 +1860,7 @@ _onestatic_pattern_required          = onestatic(_one_info_exprish_required, _re
 _onestatic_type_param_required       = onestatic(_one_info_exprish_required, _restrict_default, code_as=_code_as_type_param)
 _onestatic_target_Name               = onestatic(_one_info_exprish_required, Name, ctx=Store)
 _onestatic_target_single             = onestatic(_one_info_exprish_required, (Name, Attribute, Subscript), ctx=Store)
-_onestatic_target                    = onestatic(_one_info_exprish_required, (Name, Attribute, Subscript, Tuple, List), ctx=Store)
+_onestatic_target                    = onestatic(_one_info_exprish_required, is_valid_target, ctx=Store)  # (Name, Attribute, Subscript, Tuple, List)
 _onestatic_ctx                       = onestatic(None, expr_context)
 
 def _one_info_identifier_required(self: fst.FST, static: onestatic, idx: int | None, field: str,  # required, cannot delete or put new

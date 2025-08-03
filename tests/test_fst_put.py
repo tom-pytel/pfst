@@ -2987,6 +2987,22 @@ c, # c
             f.type.put('*c', 1)
             self.assertEqual('except (a, *c): pass', f.src)
 
+        # proper Store / Del targets
+
+        f = FST('[a,] = b')
+        self.assertRaises(ValueError, f.targets[0].put, '2', 0, 'elts')
+
+        f = FST('del [a]')
+        self.assertRaises(ValueError, f.targets[0].put, '2', 0, 'elts')
+
+        f = FST('(a,) = b')
+        self.assertRaises(ValueError, f.targets[0].put, '2', 0, 'elts')
+        f = FST('a, = b')
+        self.assertRaises(ValueError, f.targets[0].put, '2', 0, 'elts')
+
+        f = FST('del (a,)')
+        self.assertRaises(ValueError, f.targets[0].put, '2', 0, 'elts')
+
     def test_put_one_op_pars(self):
         # boolop
 

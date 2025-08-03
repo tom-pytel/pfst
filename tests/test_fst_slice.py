@@ -6,7 +6,7 @@ import unittest
 
 from fst import *
 
-from fst.misc import PYLT12, PYGE14
+from fst.misc import PYLT11, PYLT12, PYGE14
 
 from data_other import (
     GET_SLICE_EXPRISH_DATA, GET_SLICE_STMTISH_DATA,
@@ -1977,6 +1977,75 @@ def func():
         f.put_slice(g)
         self.assertEqual('a | b', f.src)
         f.verify()
+
+        f = FST('{1, 2}')
+        self.assertRaises(ValueError, f.put_slice, FST('x:y:z,', 'expr_slice'))
+
+        f = FST('[1, 2]')
+        self.assertRaises(ValueError, f.put_slice, FST('x:y:z,', 'expr_slice'))
+
+        f = FST('[a,] = b')
+        self.assertRaises(ValueError, f.targets[0].put_slice, '2,')
+
+        f = FST('del [a]')
+        self.assertRaises(ValueError, f.targets[0].put_slice, '2,')
+
+        f = FST('(1, 2)')
+        self.assertRaises(ValueError, f.put_slice, FST('x:y:z,', 'expr_slice'))
+
+        f = FST('(a,) = b')
+        self.assertRaises(ValueError, f.targets[0].put_slice, '2,')
+        f = FST('a, = b')
+        self.assertRaises(ValueError, f.targets[0].put_slice, '2,')
+
+        f = FST('del (a,)')
+        self.assertRaises(ValueError, f.targets[0].put_slice, '2,')
+
+        if PYLT11:
+            f = FST('a[b, c]')
+            self.assertEqual('a[(*x,)]', f.slice.put_slice('*x,').root.src)
+            f.verify()
+
+            f = FST('a[b, c:d]')
+            self.assertEqual('a[(*x,)]', f.slice.put_slice('*x,').root.src)
+            f.verify()
+
+            f = FST('a[b, c:d]')
+            self.assertEqual('a[(b, *x)]', f.slice.put_slice('*x,', 1, 2).root.src)
+            f.verify()
+
+            f = FST('a[b, c:d]')
+            self.assertRaises(ValueError, f.slice.put_slice, '*x,', 0, 1)
+
+        else:
+            f = FST('a[b, c]')
+            self.assertEqual('a[*x,]', f.slice.put_slice('*x,').root.src)
+            f.verify()
+
+            f = FST('a[b, c:d]')
+            self.assertEqual('a[*x,]', f.slice.put_slice('*x,').root.src)
+            f.verify()
+
+            f = FST('a[b, c:d]')
+            self.assertEqual('a[b, *x]', f.slice.put_slice('*x,', 1, 2).root.src)
+            f.verify()
+
+            f = FST('a[b, c:d]')
+            self.assertEqual('a[*x, c:d]', f.slice.put_slice('*x,', 0, 1).root.src)
+            f.verify()
+
+        if PYGE14:
+            f = FST('except a,: pass')
+            self.assertEqual('except (*x,): pass', f.type.put_slice('*x,').root.src)
+            f.verify()
+
+            f = FST('except a,: pass')
+            self.assertEqual('except (a, *x): pass', f.type.put_slice('*x,', 1, 1).root.src)
+            f.verify()
+
+            f = FST('except a, b: pass')
+            self.assertEqual('except (a, b, *x): pass', f.type.put_slice('*x,', 2, 2).root.src)
+            f.verify()
 
 
 if __name__ == '__main__':

@@ -21,7 +21,7 @@ __all__ = [
     # 're_identifier_or_star', 're_identifier_or_star_only', 're_identifier_alias', 're_identifier_alias_only',
     'bistr', 'constant',
     'is_valid_identifier', 'is_valid_identifier_dotted', 'is_valid_identifier_star', 'is_valid_identifier_alias',
-    'is_valid_MatchSingleton_value', 'is_valid_MatchValue_value', 'is_valid_MatchMapping_key',
+    'is_valid_MatchSingleton_value', 'is_valid_MatchValue_value', 'is_valid_MatchMapping_key', 'is_valid_target',
     'reduce_ast', 'get_field', 'set_field', 'has_type_comments', 'is_parsable', 'get_parse_mode',
     'WalkFail', 'walk2', 'compare_asts', 'copy_attributes', 'copy_ast', 'set_ctx',
     'get_func_class_or_ass_by_name', 'syntax_ordered_children', 'last_block_header_child', 'is_atom',
@@ -421,6 +421,21 @@ def is_valid_MatchMapping_key(ast: AST) -> bool:
     """Check if `ast` is a valid node for a `MatchMapping.keys` field."""
 
     return is_valid_MatchValue_value(ast, (str, bytes, int, float, complex, bool, NoneType))
+
+
+def is_valid_target(ast: AST) -> bool:
+    """Check if `ast` is a valid target for `Assign`, `Delete` or `For` operations. Must be `Name`, `Attribute`,
+    `Subscript`, `Starred` and / or possibly nested `Tuple` and `List`."""
+
+    stack = [ast]
+
+    while stack:
+        if isinstance(a := stack.pop(), (Tuple, List)):
+            stack.extend(a.elts)
+        elif not isinstance(a, (Name, Attribute, Subscript, Starred)):
+            return False
+
+    return True
 
 
 def reduce_ast(ast: AST, multi_mod: bool | type[Exception] = False, reduce_Expr: bool = True) -> AST | None:

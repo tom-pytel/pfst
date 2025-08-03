@@ -3296,7 +3296,7 @@ Module - ROOT 0,0..1,15
 """),
 
 (r"""match a:
- case 1: pass""", 'body[0].cases[0].pattern', None, None, {'raw': False}, r"""b""", r"""**NodeError('invalid value for MatchValue.value')**""", r"""
+ case 1: pass""", 'body[0].cases[0].pattern', None, None, {'raw': False}, r"""b""", r"""**NodeError('invalid value for MatchValue.value, got Name')**""", r"""
 """),
 
 (r"""match a:
@@ -5772,7 +5772,7 @@ Module - ROOT 0,0..0,18
       .ctx Del
 """),
 
-(r"""del a, (b), c""", 'body[0]', -1, None, {}, r"""f()""", r"""**NodeError('expecting one of (Name, Attribute, Subscript, Tuple, List) for Delete.targets[-1], got Call')**""", r"""
+(r"""del a, (b), c""", 'body[0]', -1, None, {}, r"""f()""", r"""**NodeError('invalid value for Delete.targets[-1], got Call')**""", r"""
 """),
 
 (r"""del a, (b), c""", 'body[0]', -4, None, {}, r"""new""", r"""**IndexError('index out of range')**""", r"""
@@ -5856,7 +5856,7 @@ Module - ROOT 0,0..0,21
     .value Name 'z' Load - 0,20..0,21
 """),
 
-(r"""del a, (b, c), d""", 'body[0]', -1, 'targets', {}, r"""f()""", r"""**NodeError('expecting one of (Name, Attribute, Subscript, Tuple, List) for Delete.targets[-1], got Call')**""", r"""
+(r"""del a, (b, c), d""", 'body[0]', -1, 'targets', {}, r"""f()""", r"""**NodeError('invalid value for Delete.targets[-1], got Call')**""", r"""
 """),
 
 (r"""del a, (b, c), d""", 'body[0]', -4, 'targets', {}, r"""new""", r"""**IndexError('index out of range')**""", r"""
@@ -10369,16 +10369,16 @@ Module - ROOT 0,0..0,13
           0] Constant '.1f' - 0,8..0,11
 """),
 
-(r"""(a, b) = c""", 'body[0].targets[0]', 0, 'elts', {}, r"""i in j""", r"""**ValueError('cannot put non-targetable expression to Tuple.elts[0] in this state (target expression)')**""", r"""
+(r"""(a, b) = c""", 'body[0].targets[0]', 0, 'elts', {}, r"""i in j""", r"""**ValueError('invalid expression for Tuple Store target')**""", r"""
 """),
 
-(r"""[a, b] = c""", 'body[0].targets[0]', 0, 'elts', {}, r"""i in j""", r"""**ValueError('cannot put non-targetable expression to List.elts[0] in this state (target expression)')**""", r"""
+(r"""[a, b] = c""", 'body[0].targets[0]', 0, 'elts', {}, r"""i in j""", r"""**ValueError('invalid expression for List Store target')**""", r"""
 """),
 
-(r"""del (a, b)""", 'body[0].targets[0]', 0, 'elts', {}, r"""i in j""", r"""**ValueError('cannot put non-targetable expression to Tuple.elts[0] in this state (target expression)')**""", r"""
+(r"""del (a, b)""", 'body[0].targets[0]', 0, 'elts', {}, r"""i in j""", r"""**ValueError('invalid expression for Tuple Del target')**""", r"""
 """),
 
-(r"""del [a, b]""", 'body[0].targets[0]', 0, 'elts', {}, r"""i in j""", r"""**ValueError('cannot put non-targetable expression to List.elts[0] in this state (target expression)')**""", r"""
+(r"""del [a, b]""", 'body[0].targets[0]', 0, 'elts', {}, r"""i in j""", r"""**ValueError('invalid expression for List Del target')**""", r"""
 """),
 
 ]  # END OF PUT_ONE_DATA

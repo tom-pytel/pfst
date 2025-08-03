@@ -1305,6 +1305,10 @@ def _maybe_fix_naked_seq(self: fst.FST, body: list[AST], delims: str = '()') -> 
 
 
 def _maybe_fix_tuple(self: fst.FST, is_par: bool | None = None) -> bool:
+    """
+    **Returns:**
+    - `bool`: Whether the tuple is parenthesized or not (after the fix, regardless of if fix was done or not).
+    """
     # assert isinstance(self.a, Tuple)
 
     if is_par is None:
@@ -1434,8 +1438,7 @@ def _sanitize(self: fst.FST) -> Self:
     extra junk in the source and that the parenthesized location matches the whole location of the source. If not then
     fix by removing the junk."""
 
-    if not self.is_root:
-        raise ValueError('can only be called on root node')
+    assert self.is_root
 
     if not (loc := self.pars()) or loc == self.whole_loc:
         return self
