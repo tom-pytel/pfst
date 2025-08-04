@@ -368,7 +368,7 @@ def _fixup_self_tail_sep_del(self: fst.FST, self_tail_sep: bool | Literal[0, 1] 
     if self_tail_sep is True:
         return None if is_last else True
     elif self_tail_sep:  # only adds if single element remains
-        return (None if is_last else 1) if len_body - (stop - start) == 1 else (0 if is_last else None)
+        return (None if is_last else 1) if len_body - (stop - start) == 1 else (0 if is_last and start else None)
     elif self_tail_sep is not None:  # is False or == 0
         return self_tail_sep if (start and is_last) else None
     elif not isinstance(self.a, Tuple):
@@ -381,14 +381,6 @@ def _fixup_self_tail_sep_del(self: fst.FST, self_tail_sep: bool | Literal[0, 1] 
 
 def _shorter_str(a: str, b: str) -> str:
     return a if len(a) < len(b) else b
-
-
-def _fix_len1_matchor(self: fst.FST):
-    pat0 = (ast := self.a).patterns[0]
-
-    del ast.patterns[0]
-
-    self._set_ast(pat0, True)
 
 
 # ----------------------------------------------------------------------------------------------------------------------
@@ -812,11 +804,8 @@ def _get_slice_MatchOr_patterns(self: fst.FST, start: int | Literal['end'] | Non
     fst_ = _get_slice_seq(self, start, stop, len_body, cut, ret_ast, asts[-1], *locs,
                           options.get('trivia'), 'patterns', '', '', '|', False, False)
 
-    if len1_get and matchor_get:
-        _fix_len1_matchor(fst_)
-
-    if len1_del and matchor_del:
-        _fix_len1_matchor(self)
+    fst_._maybe_fix_matchor(bool(matchor_get))
+    self._maybe_fix_matchor(bool(matchor_del))
 
     return fst_
 
@@ -1487,18 +1476,12 @@ def _code_to_slice_MatchOr(self: fst.FST, code: Code | None, one: bool, options:
         fst_ = _code_as_pattern(code, self.root.parse_params)
 
     except (NodeError, SyntaxError):
-        if isinstance(code, list):
-            if _next_src(code, 0, 0, len(code) - 1, len(code[-1])):  # if anything present other than comments or line continuations then valid error
-                raise
+        if (not (isinstance(code, list) or (isinstance(code, str) and (code := code.split('\n')))) or
+            not _next_src(code, 0, 0, len(code) - 1, len(code[-1]))
+        ):  # nothing other than maybe comments or line continuations present, empty pattern, not an error but delete
+            return None
 
-        elif isinstance(code, str):
-            if _next_src((ls := code.split('\n')), 0, 0, len(ls) - 1, len(ls[-1])):
-                raise
-
-        else:
-            raise
-
-        return None
+        raise
 
     matchor_put = self.get_option('matchor_put', options)
     ast         = fst_.a
@@ -1507,10 +1490,15 @@ def _code_to_slice_MatchOr(self: fst.FST, code: Code | None, one: bool, options:
         if not (patterns := ast.patterns):
             return None
 
+        fst_pars = fst_.pars()
+
         if not one or len(patterns) == 1:
+            if fst_pars.n:
+                fst_._unparenthesize_grouping()
+
             return fst_
 
-        if not fst_.pars().n:
+        if not fst_pars.n:
             fst_._parenthesize_grouping()
 
     else:
@@ -1911,7 +1899,7 @@ def _put_slice_MatchOr_patterns(self: fst.FST, code: Code | None, start: int | L
             if matchor_del:
                 raise NodeError("cannot del MatchOr to empty without matchor_del=False")
 
-        elif (left1 := len_left == 1) and matchor_del == 'strict':
+        elif len_left == 1 and matchor_del == 'strict':
             raise NodeError("cannot del MatchOr to length 1 with matchor_del='strict'")
 
         _put_slice_seq(self, start, stop, None, None, None, 0, *self.loc,
@@ -1926,7 +1914,7 @@ def _put_slice_MatchOr_patterns(self: fst.FST, code: Code | None, start: int | L
     else:
         len_fst_body = len(fst_body := fst_.a.patterns)
 
-        if (left1 := (len_body - len_slice + len_fst_body) == 1) and matchor_del == 'strict':
+        if (len_body - len_slice + len_fst_body) == 1 and matchor_del == 'strict':
             raise NodeError("cannot put MatchOr to length 1 with matchor_del='strict'")
 
         _put_slice_seq(self, start, stop, fst_, fst_body[0].f, fst_body[-1].f, len_fst_body, *self.loc,
@@ -1945,8 +1933,7 @@ def _put_slice_MatchOr_patterns(self: fst.FST, code: Code | None, start: int | L
     for i in range(start + len_fst_body, len(body)):
         body[i].f.pfield = astfield('patterns', i)
 
-    if matchor_del and left1:
-        _fix_len1_matchor(self)
+    self._maybe_fix_matchor(matchor_del)
 
 
 # ......................................................................................................................

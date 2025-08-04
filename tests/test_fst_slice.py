@@ -45,7 +45,7 @@ def regen_get_slice_seq():
                     t.f.verify(raise_=True)
                     s.verify(raise_=True)
 
-                newlines.extend(f'''(r"""{src}""", {elt!r}, {start}, {stop}, {options}, r"""\n{tsrc}\n""", r"""\n{ssrc}\n""", r"""'''.split('\n'))
+                newlines.extend(f'''(r"""{src}""", {elt!r}, {start}, {stop}, {options}, r"""{tsrc}""", r"""{ssrc}""", r"""'''.split('\n'))
                 newlines.extend(tdump)
                 newlines.append('""", r"""')
                 newlines.extend(sdump)
@@ -1523,8 +1523,8 @@ def func():
                 ssrc  = s.src
                 sdump = s.dump(out=list)
 
-                self.assertEqual(tsrc, src.strip())
-                self.assertEqual(ssrc, slice_copy.strip())
+                self.assertEqual(tsrc, src)
+                self.assertEqual(ssrc, slice_copy)
                 self.assertEqual(sdump, slice_dump.strip().split('\n'))
 
             except Exception:
@@ -1549,8 +1549,8 @@ def func():
                 tdump = t.f.dump(out=list)
                 sdump = s.dump(out=list)
 
-                self.assertEqual(tsrc, src_cut.strip())
-                self.assertEqual(ssrc, slice_copy.strip())
+                self.assertEqual(tsrc, src_cut)
+                self.assertEqual(ssrc, slice_copy)
                 self.assertEqual(tdump, src_cut_dump.strip().split('\n'))
                 self.assertEqual(sdump, slice_dump.strip().split('\n'))
 
@@ -1964,6 +1964,14 @@ def func():
 
             self.assertRaises(NodeError, (f := FST('a | b', pattern)).put_slice, None, 0, 2, matchor_del=True)
             self.assertRaises(NodeError, (f := FST('a | b', pattern)).put_slice, None, 0, 2, matchor_del='strict')
+
+    def test_get_slice_special(self):
+        f = FST('''(
+            TI(string="case"),
+            )''', pattern)
+        g = f.get_slice(0, 1, cut=True)
+        self.assertEqual('(\n            )', f.src)
+        self.assertEqual('(\n            TI(string="case"),\n)', g.src)
 
     def test_put_slice_special(self):
         f = FST('case a | b: pass')

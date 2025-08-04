@@ -171,11 +171,7 @@ f(((i for i in j)))
 ]  # END OF PARS_DATA
 
 GET_SLICE_EXPRISH_DATA = [
-(r"""{1, 2}""", 'body[0].value', 0, 0, {}, r"""
-{1, 2}
-""", r"""
-{*()}
-""", r"""
+(r"""{1, 2}""", 'body[0].value', 0, 0, {}, r"""{1, 2}""", r"""{*()}""", r"""
 Module - ROOT 0,0..0,6
   .body[1]
   0] Expr - 0,0..0,6
@@ -196,16 +192,12 @@ Set - ROOT 0,0..0,5
     1,  # last line
     2,  # second line
     3,  # third line
-)""", 'body[0].value', None, None, {}, r"""
-(       # hello
-)
-""", r"""
-(
+)""", 'body[0].value', None, None, {}, r"""(       # hello
+)""", r"""(
     1,  # last line
     2,  # second line
     3,  # third line
-)
-""", r"""
+)""", r"""
 Module - ROOT 0,0..1,1
   .body[1]
   0] Expr - 0,0..1,1
@@ -224,16 +216,12 @@ Tuple - ROOT 0,0..4,1
     1,  # last line
     2,  # second line
     3,  # third line
-)""", 'body[0].value', 0, 2, {}, r"""
-(       # hello
+)""", 'body[0].value', 0, 2, {}, r"""(       # hello
     3,  # third line
-)
-""", r"""
-(
+)""", r"""(
     1,  # last line
     2,  # second line
-)
-""", r"""
+)""", r"""
 Module - ROOT 0,0..2,1
   .body[1]
   0] Expr - 0,0..2,1
@@ -253,16 +241,12 @@ Tuple - ROOT 0,0..3,1
     1,  # last line
     2,  # second line
     3,  # third line
-)""", 'body[0].value', 1, 2, {}, r"""
-(       # hello
+)""", 'body[0].value', 1, 2, {}, r"""(       # hello
     1,  # last line
     3,  # third line
-)
-""", r"""
-(
+)""", r"""(
     2,  # second line
-)
-""", r"""
+)""", r"""
 Module - ROOT 0,0..3,1
   .body[1]
   0] Expr - 0,0..3,1
@@ -282,16 +266,12 @@ Tuple - ROOT 0,0..2,1
     1,  # last line
     2,  # second line
     3,  # third line
-)""", 'body[0].value', 2, None, {}, r"""
-(       # hello
+)""", 'body[0].value', 2, None, {}, r"""(       # hello
     1,  # last line
     2,  # second line
-)
-""", r"""
-(
+)""", r"""(
     3,  # third line
-)
-""", r"""
+)""", r"""
 Module - ROOT 0,0..3,1
   .body[1]
   0] Expr - 0,0..3,1
@@ -309,14 +289,10 @@ Tuple - ROOT 0,0..2,1
 
 (r"""(           # hello
     1, 2, 3 # last line
-)""", 'body[0].value', None, None, {}, r"""
-(           # hello
-)
-""", r"""
-(
+)""", 'body[0].value', None, None, {}, r"""(           # hello
+)""", r"""(
     1, 2, 3 # last line
-)
-""", r"""
+)""", r"""
 Module - ROOT 0,0..1,1
   .body[1]
   0] Expr - 0,0..1,1
@@ -333,13 +309,9 @@ Tuple - ROOT 0,0..2,1
 
 (r"""(           # hello
     1, 2, 3 # last line
-)""", 'body[0].value', 0, 2, {}, r"""
-(           # hello
+)""", 'body[0].value', 0, 2, {}, r"""(           # hello
     3, # last line
-)
-""", r"""
-(1, 2)
-""", r"""
+)""", r"""(1, 2)""", r"""
 Module - ROOT 0,0..2,1
   .body[1]
   0] Expr - 0,0..2,1
@@ -357,13 +329,9 @@ Tuple - ROOT 0,0..0,6
 
 (r"""(           # hello
     1, 2, 3 # last line
-)""", 'body[0].value', 1, 2, {}, r"""
-(           # hello
+)""", 'body[0].value', 1, 2, {}, r"""(           # hello
     1, 3 # last line
-)
-""", r"""
-(2,)
-""", r"""
+)""", r"""(2,)""", r"""
 Module - ROOT 0,0..2,1
   .body[1]
   0] Expr - 0,0..2,1
@@ -381,14 +349,10 @@ Tuple - ROOT 0,0..0,4
 
 (r"""(           # hello
     1, 2, 3 # last line
-)""", 'body[0].value', 2, None, {}, r"""
-(           # hello
+)""", 'body[0].value', 2, None, {}, r"""(           # hello
     1, 2
-)
-""", r"""
-(3, # last line
-)
-""", r"""
+)""", r"""(3, # last line
+)""", r"""
 Module - ROOT 0,0..2,1
   .body[1]
   0] Expr - 0,0..2,1
@@ -404,11 +368,7 @@ Tuple - ROOT 0,0..1,1
   .ctx Load
 """),
 
-(r"""1, 2, 3, 4""", 'body[0].value', 1, 3, {}, r"""
-1, 4
-""", r"""
-2, 3
-""", r"""
+(r"""1, 2, 3, 4""", 'body[0].value', 1, 3, {}, r"""1, 4""", r"""2, 3""", r"""
 Module - ROOT 0,0..0,4
   .body[1]
   0] Expr - 0,0..0,4
@@ -425,11 +385,7 @@ Tuple - ROOT 0,0..0,4
   .ctx Load
 """),
 
-(r"""1, 2, 3, 4""", 'body[0].value', -1, None, {}, r"""
-1, 2, 3
-""", r"""
-4,
-""", r"""
+(r"""1, 2, 3, 4""", 'body[0].value', -1, None, {}, r"""1, 2, 3""", r"""4,""", r"""
 Module - ROOT 0,0..0,7
   .body[1]
   0] Expr - 0,0..0,7
@@ -446,11 +402,7 @@ Tuple - ROOT 0,0..0,2
   .ctx Load
 """),
 
-(r"""1, 2, 3, 4""", 'body[0].value', None, None, {}, r"""
-()
-""", r"""
-1, 2, 3, 4
-""", r"""
+(r"""1, 2, 3, 4""", 'body[0].value', None, None, {}, r"""()""", r"""1, 2, 3, 4""", r"""
 Module - ROOT 0,0..0,2
   .body[1]
   0] Expr - 0,0..0,2
@@ -466,11 +418,7 @@ Tuple - ROOT 0,0..0,10
   .ctx Load
 """),
 
-(r"""1, 2, 3, 4""", 'body[0].value', 1, 1, {}, r"""
-1, 2, 3, 4
-""", r"""
-()
-""", r"""
+(r"""1, 2, 3, 4""", 'body[0].value', 1, 1, {}, r"""1, 2, 3, 4""", r"""()""", r"""
 Module - ROOT 0,0..0,10
   .body[1]
   0] Expr - 0,0..0,10
@@ -486,11 +434,7 @@ Tuple - ROOT 0,0..0,2
   .ctx Load
 """),
 
-(r"""1, 2, 3, 4""", 'body[0].value', 1, None, {}, r"""
-1,
-""", r"""
-2, 3, 4
-""", r"""
+(r"""1, 2, 3, 4""", 'body[0].value', 1, None, {}, r"""1,""", r"""2, 3, 4""", r"""
 Module - ROOT 0,0..0,2
   .body[1]
   0] Expr - 0,0..0,2
@@ -507,11 +451,7 @@ Tuple - ROOT 0,0..0,7
   .ctx Load
 """),
 
-(r"""1, 2, 3, 4""", 'body[0].value', 0, 3, {}, r"""
-4,
-""", r"""
-1, 2, 3
-""", r"""
+(r"""1, 2, 3, 4""", 'body[0].value', 0, 3, {}, r"""4,""", r"""1, 2, 3""", r"""
 Module - ROOT 0,0..0,2
   .body[1]
   0] Expr - 0,0..0,2
@@ -530,14 +470,10 @@ Tuple - ROOT 0,0..0,7
 
 (r"""(1, 2
   ,  # comment
-3, 4)""", 'body[0].value', 1, 2, {}, r"""
-(1,
-3, 4)
-""", r"""
-(2
+3, 4)""", 'body[0].value', 1, 2, {}, r"""(1,
+3, 4)""", r"""(2
   ,  # comment
-)
-""", r"""
+)""", r"""
 Module - ROOT 0,0..1,5
   .body[1]
   0] Expr - 0,0..1,5
@@ -556,13 +492,9 @@ Tuple - ROOT 0,0..2,1
 
 (r"""(1, 2
   ,
-  3, 4)""", 'body[0].value', 1, 2, {}, r"""
-(1,
-  3, 4)
-""", r"""
-(2
-  ,)
-""", r"""
+  3, 4)""", 'body[0].value', 1, 2, {}, r"""(1,
+  3, 4)""", r"""(2
+  ,)""", r"""
 Module - ROOT 0,0..1,7
   .body[1]
   0] Expr - 0,0..1,7
@@ -581,13 +513,9 @@ Tuple - ROOT 0,0..1,4
 
 (r"""(1, 2 \
   , \
-  3, 4)""", 'body[0].value', 1, 2, {}, r"""
-(1, \
-  3, 4)
-""", r"""
-(2 \
-  ,)
-""", r"""
+  3, 4)""", 'body[0].value', 1, 2, {}, r"""(1, \
+  3, 4)""", r"""(2 \
+  ,)""", r"""
 Module - ROOT 0,0..1,7
   .body[1]
   0] Expr - 0,0..1,7
@@ -606,13 +534,9 @@ Tuple - ROOT 0,0..1,4
 
 (r"""(1, 2  # comment
   , \
-  3, 4)""", 'body[0].value', 1, 2, {}, r"""
-(1, \
-  3, 4)
-""", r"""
-(2  # comment
-  ,)
-""", r"""
+  3, 4)""", 'body[0].value', 1, 2, {}, r"""(1, \
+  3, 4)""", r"""(2  # comment
+  ,)""", r"""
 Module - ROOT 0,0..1,7
   .body[1]
   0] Expr - 0,0..1,7
@@ -631,13 +555,9 @@ Tuple - ROOT 0,0..1,4
 
 (r"""(1, 2
   ,
-3, 4)""", 'body[0].value', 1, 2, {}, r"""
-(1,
-3, 4)
-""", r"""
-(2
-  ,)
-""", r"""
+3, 4)""", 'body[0].value', 1, 2, {}, r"""(1,
+3, 4)""", r"""(2
+  ,)""", r"""
 Module - ROOT 0,0..1,5
   .body[1]
   0] Expr - 0,0..1,5
@@ -655,12 +575,8 @@ Tuple - ROOT 0,0..1,4
 """),
 
 (r"""(1, 2
-  , 3, 4)""", 'body[0].value', 1, 2, {}, r"""
-(1, 3, 4)
-""", r"""
-(2
-  ,)
-""", r"""
+  , 3, 4)""", 'body[0].value', 1, 2, {}, r"""(1, 3, 4)""", r"""(2
+  ,)""", r"""
 Module - ROOT 0,0..0,9
   .body[1]
   0] Expr - 0,0..0,9
@@ -678,12 +594,8 @@ Tuple - ROOT 0,0..1,4
 """),
 
 (r"""(1, 2  # comment
-  , 3, 4)""", 'body[0].value', 1, 2, {}, r"""
-(1, 3, 4)
-""", r"""
-(2  # comment
-  ,)
-""", r"""
+  , 3, 4)""", 'body[0].value', 1, 2, {}, r"""(1, 3, 4)""", r"""(2  # comment
+  ,)""", r"""
 Module - ROOT 0,0..0,9
   .body[1]
   0] Expr - 0,0..0,9
@@ -705,17 +617,13 @@ Tuple - ROOT 0,0..1,4
         1,  # last line
         2,  # second line
         3,  # third line
-    )""", 'body[0].body[0].value', None, None, {}, r"""
-if 1:
+    )""", 'body[0].body[0].value', None, None, {}, r"""if 1:
     (       # hello
-    )
-""", r"""
-(
+    )""", r"""(
     1,  # last line
     2,  # second line
     3,  # third line
-)
-""", r"""
+)""", r"""
 Module - ROOT 0,0..2,5
   .body[1]
   0] If - 0,0..2,5
@@ -738,17 +646,13 @@ Tuple - ROOT 0,0..4,1
         1,  # last line
         2,  # second line
         3,  # third line
-    )""", 'body[0].body[0].value', 0, 2, {}, r"""
-if 1:
+    )""", 'body[0].body[0].value', 0, 2, {}, r"""if 1:
     (       # hello
         3,  # third line
-    )
-""", r"""
-(
+    )""", r"""(
     1,  # last line
     2,  # second line
-)
-""", r"""
+)""", r"""
 Module - ROOT 0,0..3,5
   .body[1]
   0] If - 0,0..3,5
@@ -772,17 +676,13 @@ Tuple - ROOT 0,0..3,1
         1,  # last line
         2,  # second line
         3,  # third line
-    )""", 'body[0].body[0].value', 1, 2, {}, r"""
-if 1:
+    )""", 'body[0].body[0].value', 1, 2, {}, r"""if 1:
     (       # hello
         1,  # last line
         3,  # third line
-    )
-""", r"""
-(
+    )""", r"""(
     2,  # second line
-)
-""", r"""
+)""", r"""
 Module - ROOT 0,0..4,5
   .body[1]
   0] If - 0,0..4,5
@@ -806,17 +706,13 @@ Tuple - ROOT 0,0..2,1
         1,  # last line
         2,  # second line
         3,  # third line
-    )""", 'body[0].body[0].value', 2, None, {}, r"""
-if 1:
+    )""", 'body[0].body[0].value', 2, None, {}, r"""if 1:
     (       # hello
         1,  # last line
         2,  # second line
-    )
-""", r"""
-(
+    )""", r"""(
     3,  # third line
-)
-""", r"""
+)""", r"""
 Module - ROOT 0,0..4,5
   .body[1]
   0] If - 0,0..4,5
@@ -835,11 +731,7 @@ Tuple - ROOT 0,0..2,1
   .ctx Load
 """),
 
-(r"""{1: 2, **b, **c}""", 'body[0].value', 1, 2, {}, r"""
-{1: 2, **c}
-""", r"""
-{**b}
-""", r"""
+(r"""{1: 2, **b, **c}""", 'body[0].value', 1, 2, {}, r"""{1: 2, **c}""", r"""{**b}""", r"""
 Module - ROOT 0,0..0,11
   .body[1]
   0] Expr - 0,0..0,11
@@ -858,11 +750,7 @@ Dict - ROOT 0,0..0,5
   0] Name 'b' Load - 0,3..0,4
 """),
 
-(r"""{1: 2, **b, **c}""", 'body[0].value', None, None, {}, r"""
-{}
-""", r"""
-{1: 2, **b, **c}
-""", r"""
+(r"""{1: 2, **b, **c}""", 'body[0].value', None, None, {}, r"""{}""", r"""{1: 2, **b, **c}""", r"""
 Module - ROOT 0,0..0,2
   .body[1]
   0] Expr - 0,0..0,2
@@ -879,11 +767,7 @@ Dict - ROOT 0,0..0,16
   2] Name 'c' Load - 0,14..0,15
 """),
 
-(r"""{1: 2, **b, **c}""", 'body[0].value', 2, None, {}, r"""
-{1: 2, **b}
-""", r"""
-{**c}
-""", r"""
+(r"""{1: 2, **b, **c}""", 'body[0].value', 2, None, {}, r"""{1: 2, **b}""", r"""{**c}""", r"""
 Module - ROOT 0,0..0,11
   .body[1]
   0] Expr - 0,0..0,11
@@ -906,16 +790,12 @@ Dict - ROOT 0,0..0,5
     1,
     2,
     3,
-]""", 'body[0].value', None, None, {}, r"""
-[
-]
-""", r"""
-[
+]""", 'body[0].value', None, None, {}, r"""[
+]""", r"""[
     1,
     2,
     3,
-]
-""", r"""
+]""", r"""
 Module - ROOT 0,0..1,1
   .body[1]
   0] Expr - 0,0..1,1
@@ -934,16 +814,12 @@ List - ROOT 0,0..4,1
     1,
     2,
     3,
-]""", 'body[0].value', 0, 2, {}, r"""
-[
+]""", 'body[0].value', 0, 2, {}, r"""[
     3,
-]
-""", r"""
-[
+]""", r"""[
     1,
     2
-]
-""", r"""
+]""", r"""
 Module - ROOT 0,0..2,1
   .body[1]
   0] Expr - 0,0..2,1
@@ -963,16 +839,12 @@ List - ROOT 0,0..3,1
     1,
     2,
     3,
-]""", 'body[0].value', 1, 2, {}, r"""
-[
+]""", 'body[0].value', 1, 2, {}, r"""[
     1,
     3,
-]
-""", r"""
-[
+]""", r"""[
     2
-]
-""", r"""
+]""", r"""
 Module - ROOT 0,0..3,1
   .body[1]
   0] Expr - 0,0..3,1
@@ -992,16 +864,12 @@ List - ROOT 0,0..2,1
     1,
     2,
     3,
-]""", 'body[0].value', 2, None, {}, r"""
-[
+]""", 'body[0].value', 2, None, {}, r"""[
     1,
     2
-]
-""", r"""
-[
+]""", r"""[
     3,
-]
-""", r"""
+]""", r"""
 Module - ROOT 0,0..3,1
   .body[1]
   0] Expr - 0,0..3,1
@@ -1020,14 +888,10 @@ List - ROOT 0,0..2,1
 (r"""[            # hello
     1, 2, 3,
     4
-]""", 'body[0].value', 2, 3, {}, r"""
-[            # hello
+]""", 'body[0].value', 2, 3, {}, r"""[            # hello
     1, 2,
     4
-]
-""", r"""
-[3]
-""", r"""
+]""", r"""[3]""", r"""
 Module - ROOT 0,0..3,1
   .body[1]
   0] Expr - 0,0..3,1
@@ -1047,14 +911,10 @@ List - ROOT 0,0..0,3
 (r"""[            # hello
     1, 2, ( 3
      ), 4
-]""", 'body[0].value', 2, 3, {}, r"""
-[            # hello
+]""", 'body[0].value', 2, 3, {}, r"""[            # hello
     1, 2, 4
-]
-""", r"""
-[( 3
-     )]
-""", r"""
+]""", r"""[( 3
+     )]""", r"""
 Module - ROOT 0,0..2,1
   .body[1]
   0] Expr - 0,0..2,1
@@ -1074,14 +934,10 @@ List - ROOT 0,0..1,7
 (r"""[            # hello
     1, 2, ( 3
      ), 4
-]""", 'body[0].value', 1, 3, {}, r"""
-[            # hello
+]""", 'body[0].value', 1, 3, {}, r"""[            # hello
     1, 4
-]
-""", r"""
-[2, ( 3
-     )]
-""", r"""
+]""", r"""[2, ( 3
+     )]""", r"""
 Module - ROOT 0,0..2,1
   .body[1]
   0] Expr - 0,0..2,1
@@ -1101,14 +957,10 @@ List - ROOT 0,0..1,7
 (r"""[            # hello
     1, 2, ( 3
      ), 4
-]""", 'body[0].value', 1, None, {}, r"""
-[            # hello
+]""", 'body[0].value', 1, None, {}, r"""[            # hello
     1
-]
-""", r"""
-[2, ( 3
-     ), 4]
-""", r"""
+]""", r"""[2, ( 3
+     ), 4]""", r"""
 Module - ROOT 0,0..2,1
   .body[1]
   0] Expr - 0,0..2,1
@@ -1127,14 +979,10 @@ List - ROOT 0,0..1,10
 
 (r"""i =                (self.__class__.__name__, self._name,
                 (self._handle & (_sys.maxsize*2 + 1)),
-                id(self) & (_sys.maxsize*2 + 1))""", 'body[0].value', 0, 3, {}, r"""
-i =                (
-                id(self) & (_sys.maxsize*2 + 1),)
-""", r"""
-(self.__class__.__name__, self._name,
+                id(self) & (_sys.maxsize*2 + 1))""", 'body[0].value', 0, 3, {}, r"""i =                (
+                id(self) & (_sys.maxsize*2 + 1),)""", r"""(self.__class__.__name__, self._name,
                 (self._handle & (_sys.maxsize*2 + 1))
-)
-""", r"""
+)""", r"""
 Module - ROOT 0,0..1,49
   .body[1]
   0] Assign - 0,0..1,49
@@ -1193,12 +1041,8 @@ Tuple - ROOT 0,0..2,1
 """),
 
 (r"""i = namespace = {**__main__.__builtins__.__dict__,
-             **__main__.__dict__}""", 'body[0].value', 0, 1, {}, r"""
-i = namespace = {
-             **__main__.__dict__}
-""", r"""
-{**__main__.__builtins__.__dict__}
-""", r"""
+             **__main__.__dict__}""", 'body[0].value', 0, 1, {}, r"""i = namespace = {
+             **__main__.__dict__}""", r"""{**__main__.__builtins__.__dict__}""", r"""
 Module - ROOT 0,0..1,33
   .body[1]
   0] Assign - 0,0..1,33
@@ -1233,18 +1077,14 @@ Dict - ROOT 0,0..0,34
     "PYLAUNCHER_DRYRUN": "1",
     "PYLAUNCHER_LIMIT_TO_COMPANY": "",
     **{k.upper(): v for k, v in (env or {}).items()},
-}""", 'body[0].value', None, 2, {}, r"""
-env = {
+}""", 'body[0].value', None, 2, {}, r"""env = {
     "PYLAUNCHER_DRYRUN": "1",
     "PYLAUNCHER_LIMIT_TO_COMPANY": "",
     **{k.upper(): v for k, v in (env or {}).items()},
-}
-""", r"""
-{
+}""", r"""{
     **{k.upper(): v for k, v in os.environ.items() if k.upper() not in ignore},
     "PYLAUNCHER_DEBUG": "1"
-}
-""", r"""
+}""", r"""
 Module - ROOT 0,0..4,1
   .body[1]
   0] Assign - 0,0..4,1
@@ -1327,13 +1167,9 @@ Dict - ROOT 0,0..3,1
 
 (r"""(None, False, True, 12345, 123.45, 'abcde', 'абвгд', b'abcde',
             datetime.datetime(2004, 10, 26, 10, 33, 33),
-            bytearray(b'abcde'), [12, 345], (12, 345), {'12': 345})""", 'body[0].value', 5, 7, {}, r"""
-(None, False, True, 12345, 123.45, b'abcde',
+            bytearray(b'abcde'), [12, 345], (12, 345), {'12': 345})""", 'body[0].value', 5, 7, {}, r"""(None, False, True, 12345, 123.45, b'abcde',
             datetime.datetime(2004, 10, 26, 10, 33, 33),
-            bytearray(b'abcde'), [12, 345], (12, 345), {'12': 345})
-""", r"""
-('abcde', 'абвгд')
-""", r"""
+            bytearray(b'abcde'), [12, 345], (12, 345), {'12': 345})""", r"""('abcde', 'абвгд')""", r"""
 Module - ROOT 0,0..2,67
   .body[1]
   0] Expr - 0,0..2,67
@@ -1385,11 +1221,7 @@ Tuple - ROOT 0,0..0,18
   .ctx Load
 """),
 
-(r"""[a, b] = c""", 'body[0].targets[0]', 1, 2, {}, r"""
-[a] = c
-""", r"""
-[b]
-""", r"""
+(r"""[a, b] = c""", 'body[0].targets[0]', 1, 2, {}, r"""[a] = c""", r"""[b]""", r"""
 Module - ROOT 0,0..0,7
   .body[1]
   0] Assign - 0,0..0,7
@@ -1413,19 +1245,15 @@ List - ROOT 0,0..0,3
                         'unexpected event'),
             'status': ('err=%s transferred=%s key=%#x address=%#x'
                        % (err, transferred, key, address),),
-                                                 'addr': address}""", 'body[0].value', 1, 4, {}, r"""
-{
+                                                 'addr': address}""", 'body[0].value', 1, 4, {}, r"""{
             'exception': exc,
-                                                 'addr': address}
-""", r"""
-{
+                                                 'addr': address}""", r"""{
             'future': fut,
             'message': ('GetQueuedCompletionStatus() returned an '
                         'unexpected event'),
             'status': ('err=%s transferred=%s key=%#x address=%#x'
                        % (err, transferred, key, address),)
-}
-""", r"""
+}""", r"""
 Module - ROOT 0,0..2,65
   .body[1]
   0] Expr - 0,0..2,65
@@ -1460,11 +1288,7 @@ Dict - ROOT 0,0..6,1
     .ctx Load
 """),
 
-(r"""(1, (2), 3)""", 'body[0].value', 1, 2, {}, r"""
-(1, 3)
-""", r"""
-((2),)
-""", r"""
+(r"""(1, (2), 3)""", 'body[0].value', 1, 2, {}, r"""(1, 3)""", r"""((2),)""", r"""
 Module - ROOT 0,0..0,6
   .body[1]
   0] Expr - 0,0..0,6
@@ -1481,12 +1305,8 @@ Tuple - ROOT 0,0..0,6
 """),
 
 (r"""@patch.dict({'a': 'b'})
-class cls: pass""", 'body[0].decorator_list[0].args[0]', 0, 1, {}, r"""
-@patch.dict({})
-class cls: pass
-""", r"""
-{'a': 'b'}
-""", r"""
+class cls: pass""", 'body[0].decorator_list[0].args[0]', 0, 1, {}, r"""@patch.dict({})
+class cls: pass""", r"""{'a': 'b'}""", r"""
 Module - ROOT 0,0..1,15
   .body[1]
   0] ClassDef - 1,0..1,15
@@ -1510,12 +1330,8 @@ Dict - ROOT 0,0..0,10
 """),
 
 (r"""class cls:
-    a, b = c""", 'body[0].body[0].targets[0]', 0, 2, {}, r"""
-class cls:
-    () = c
-""", r"""
-a, b
-""", r"""
+    a, b = c""", 'body[0].body[0].targets[0]', 0, 2, {}, r"""class cls:
+    () = c""", r"""a, b""", r"""
 Module - ROOT 0,0..1,10
   .body[1]
   0] ClassDef - 0,0..1,10
@@ -1535,12 +1351,8 @@ Tuple - ROOT 0,0..0,4
 """),
 
 (r"""if 1:
-    yy, tm, = tm, yy""", 'body[0].body[0].targets[0]', 1, 2, {}, r"""
-if 1:
-    yy, = tm, yy
-""", r"""
-tm,
-""", r"""
+    yy, tm, = tm, yy""", 'body[0].body[0].targets[0]', 1, 2, {}, r"""if 1:
+    yy, = tm, yy""", r"""tm,""", r"""
 Module - ROOT 0,0..1,16
   .body[1]
   0] If - 0,0..1,16
@@ -1564,11 +1376,7 @@ Tuple - ROOT 0,0..0,3
   .ctx Load
 """),
 
-(r"""{1, 2}""", 'body[0].value', 0, 2, {}, r"""
-{*()}
-""", r"""
-{1, 2}
-""", r"""
+(r"""{1, 2}""", 'body[0].value', 0, 2, {}, r"""{*()}""", r"""{1, 2}""", r"""
 Module - ROOT 0,0..0,5
   .body[1]
   0] Expr - 0,0..0,5
@@ -1585,11 +1393,7 @@ Set - ROOT 0,0..0,6
   1] Constant 2 - 0,4..0,5
 """),
 
-(r"""{1, 2}""", 'body[0].value', 0, 0, {}, r"""
-{1, 2}
-""", r"""
-{*()}
-""", r"""
+(r"""{1, 2}""", 'body[0].value', 0, 0, {}, r"""{1, 2}""", r"""{*()}""", r"""
 Module - ROOT 0,0..0,6
   .body[1]
   0] Expr - 0,0..0,6
@@ -1606,11 +1410,7 @@ Set - ROOT 0,0..0,5
     .ctx Load
 """),
 
-(r"""1, 2, 3,""", 'body[0].value', 0, 1, {}, r"""
-2, 3,
-""", r"""
-1,
-""", r"""
+(r"""1, 2, 3,""", 'body[0].value', 0, 1, {}, r"""2, 3,""", r"""1,""", r"""
 Module - ROOT 0,0..0,5
   .body[1]
   0] Expr - 0,0..0,5
@@ -1626,11 +1426,7 @@ Tuple - ROOT 0,0..0,2
   .ctx Load
 """),
 
-(r"""1, 2, 3,""", 'body[0].value', 1, 2, {}, r"""
-1, 3,
-""", r"""
-2,
-""", r"""
+(r"""1, 2, 3,""", 'body[0].value', 1, 2, {}, r"""1, 3,""", r"""2,""", r"""
 Module - ROOT 0,0..0,5
   .body[1]
   0] Expr - 0,0..0,5
@@ -1646,11 +1442,7 @@ Tuple - ROOT 0,0..0,2
   .ctx Load
 """),
 
-(r"""1, 2, 3,""", 'body[0].value', 2, 3, {}, r"""
-1, 2
-""", r"""
-3,
-""", r"""
+(r"""1, 2, 3,""", 'body[0].value', 2, 3, {}, r"""1, 2""", r"""3,""", r"""
 Module - ROOT 0,0..0,4
   .body[1]
   0] Expr - 0,0..0,4
@@ -1666,11 +1458,7 @@ Tuple - ROOT 0,0..0,2
   .ctx Load
 """),
 
-(r"""1, 2, 3,""", 'body[0].value', 0, 2, {}, r"""
-3,
-""", r"""
-1, 2
-""", r"""
+(r"""1, 2, 3,""", 'body[0].value', 0, 2, {}, r"""3,""", r"""1, 2""", r"""
 Module - ROOT 0,0..0,2
   .body[1]
   0] Expr - 0,0..0,2
@@ -1686,11 +1474,7 @@ Tuple - ROOT 0,0..0,4
   .ctx Load
 """),
 
-(r"""1, 2, 3,""", 'body[0].value', 1, 3, {}, r"""
-1,
-""", r"""
-2, 3,
-""", r"""
+(r"""1, 2, 3,""", 'body[0].value', 1, 3, {}, r"""1,""", r"""2, 3,""", r"""
 Module - ROOT 0,0..0,2
   .body[1]
   0] Expr - 0,0..0,2
@@ -1706,11 +1490,7 @@ Tuple - ROOT 0,0..0,5
   .ctx Load
 """),
 
-(r"""1, 2, 3,""", 'body[0].value', 0, 3, {}, r"""
-()
-""", r"""
-1, 2, 3,
-""", r"""
+(r"""1, 2, 3,""", 'body[0].value', 0, 3, {}, r"""()""", r"""1, 2, 3,""", r"""
 Module - ROOT 0,0..0,2
   .body[1]
   0] Expr - 0,0..0,2
@@ -1733,8 +1513,7 @@ Tuple - ROOT 0,0..0,8
     # post
 
     3,
-]""", 'body[0].value', 1, 2, {'trivia': ('-1', '-1')}, r"""
-[
+]""", 'body[0].value', 1, 2, {'trivia': ('-1', '-1')}, r"""[
     1,
 
     # pre
@@ -1742,10 +1521,7 @@ Tuple - ROOT 0,0..0,8
     # post
 
     3,
-]
-""", r"""
-[2]
-""", r"""
+]""", r"""[2]""", r"""
 Module - ROOT 0,0..8,1
   .body[1]
   0] Expr - 0,0..8,1
@@ -1769,19 +1545,15 @@ List - ROOT 0,0..0,3
     # post
 
     3,
-]""", 'body[0].value', 1, 2, {'trivia': ('block-1', 'line-1')}, r"""
-[
+]""", 'body[0].value', 1, 2, {'trivia': ('block-1', 'line-1')}, r"""[
     1,
     # post
 
     3,
-]
-""", r"""
-[
+]""", r"""[
     # pre
     2, # line
-]
-""", r"""
+]""", r"""
 Module - ROOT 0,0..5,1
   .body[1]
   0] Expr - 0,0..5,1
@@ -1806,21 +1578,17 @@ List - ROOT 0,0..3,1
     # post
 
     3,
-]""", 'body[0].value', 1, 2, {'trivia': ('block+1', 'line+1')}, r"""
-[
+]""", 'body[0].value', 1, 2, {'trivia': ('block+1', 'line+1')}, r"""[
     1,
     # prepre
     # post
 
     3,
-]
-""", r"""
-[
+]""", r"""[
 
     # pre
     2, # line
-]
-""", r"""
+]""", r"""
 Module - ROOT 0,0..6,1
   .body[1]
   0] Expr - 0,0..6,1
@@ -1845,20 +1613,16 @@ List - ROOT 0,0..4,1
     # post
 
     3,
-]""", 'body[0].value', 1, 2, {'trivia': ('all-1', 'block-1')}, r"""
-[
+]""", 'body[0].value', 1, 2, {'trivia': ('all-1', 'block-1')}, r"""[
     1,
     3,
-]
-""", r"""
-[
+]""", r"""[
     # prepre
 
     # pre
     2, # line
     # post
-]
-""", r"""
+]""", r"""
 Module - ROOT 0,0..3,1
   .body[1]
   0] Expr - 0,0..3,1
@@ -1886,13 +1650,10 @@ List - ROOT 0,0..6,1
     # postpost
 
     3,
-]""", 'body[0].value', 1, 2, {'trivia': ('all-1', 'all-1')}, r"""
-[
+]""", 'body[0].value', 1, 2, {'trivia': ('all-1', 'all-1')}, r"""[
     1,
     3,
-]
-""", r"""
-[
+]""", r"""[
     # prepre
 
     # pre
@@ -1900,8 +1661,7 @@ List - ROOT 0,0..6,1
     # post
 
     # postpost
-]
-""", r"""
+]""", r"""
 Module - ROOT 0,0..3,1
   .body[1]
   0] Expr - 0,0..3,1
@@ -1929,13 +1689,10 @@ List - ROOT 0,0..8,1
     # postpost
 
     3,
-]""", 'body[0].value', 1, 2, {'trivia': ('all+1', 'all+1')}, r"""
-[
+]""", 'body[0].value', 1, 2, {'trivia': ('all+1', 'all+1')}, r"""[
     1,
     3,
-]
-""", r"""
-[
+]""", r"""[
 
     # prepre
 
@@ -1945,8 +1702,7 @@ List - ROOT 0,0..8,1
 
     # postpost
 
-]
-""", r"""
+]""", r"""
 Module - ROOT 0,0..3,1
   .body[1]
   0] Expr - 0,0..3,1
@@ -1974,13 +1730,10 @@ List - ROOT 0,0..10,1
     # postpost
     \
     3,
-]""", 'body[0].value', 1, 2, {'trivia': ('all+1', 'all+1')}, r"""
-[
+]""", 'body[0].value', 1, 2, {'trivia': ('all+1', 'all+1')}, r"""[
     1,
     3,
-]
-""", r"""
-[
+]""", r"""[
     \
     # prepre
     \
@@ -1990,8 +1743,7 @@ List - ROOT 0,0..10,1
     \
     # postpost
     \
-]
-""", r"""
+]""", r"""
 Module - ROOT 0,0..3,1
   .body[1]
   0] Expr - 0,0..3,1
@@ -2015,20 +1767,16 @@ List - ROOT 0,0..10,1
     # post
     # postpost
     3,
-]""", 'body[0].value', 1, 2, {'trivia': (3, 5)}, r"""
-[
+]""", 'body[0].value', 1, 2, {'trivia': (3, 5)}, r"""[
     1,
     # prepre
     # postpost
     3,
-]
-""", r"""
-[
+]""", r"""[
     # pre
     2, # line
     # post
-]
-""", r"""
+]""", r"""
 Module - ROOT 0,0..5,1
   .body[1]
   0] Expr - 0,0..5,1
@@ -2048,16 +1796,12 @@ List - ROOT 0,0..4,1
     1, \
     2, \
     3,
-]""", 'body[0].value', 1, 2, {}, r"""
-[
+]""", 'body[0].value', 1, 2, {}, r"""[
     1, \
     3,
-]
-""", r"""
-[
+]""", r"""[
     2, \
-]
-""", r"""
+]""", r"""
 Module - ROOT 0,0..3,1
   .body[1]
   0] Expr - 0,0..3,1
@@ -2076,14 +1820,10 @@ List - ROOT 0,0..2,1
 (r"""[
     1, 2, \
     3,
-]""", 'body[0].value', 1, 2, {}, r"""
-[
+]""", 'body[0].value', 1, 2, {}, r"""[
     1, \
     3,
-]
-""", r"""
-[2]
-""", r"""
+]""", r"""[2]""", r"""
 Module - ROOT 0,0..3,1
   .body[1]
   0] Expr - 0,0..3,1
@@ -2105,18 +1845,14 @@ List - ROOT 0,0..0,3
     c: d,  # line
     # post
 
-    e: f}""", 'body[0].value', 1, 2, {}, r"""
-{a: b,
+    e: f}""", 'body[0].value', 1, 2, {}, r"""{a: b,
 
     # post
 
-    e: f}
-""", r"""
-{
+    e: f}""", r"""{
     # pre
     c: d,  # line
-}
-""", r"""
+}""", r"""
 Module - ROOT 0,0..4,9
   .body[1]
   0] Expr - 0,0..4,9
@@ -2141,18 +1877,14 @@ Dict - ROOT 0,0..3,1
     c: d,  # line
     # post
 
-    e: f}""", 'body[0].value', 1, 2, {'trivia': (False, 'block+1')}, r"""
-{a: b,
+    e: f}""", 'body[0].value', 1, 2, {'trivia': (False, 'block+1')}, r"""{a: b,
 
     # pre
-    e: f}
-""", r"""
-{
+    e: f}""", r"""{
     c: d,  # line
     # post
 
-}
-""", r"""
+}""", r"""
 Module - ROOT 0,0..3,9
   .body[1]
   0] Expr - 0,0..3,9
@@ -2171,11 +1903,7 @@ Dict - ROOT 0,0..4,1
   0] Name 'd' Load - 1,7..1,8
 """),
 
-(r"""{**a, **b, **c}""", 'body[0].value', 1, 2, {}, r"""
-{**a, **c}
-""", r"""
-{**b}
-""", r"""
+(r"""{**a, **b, **c}""", 'body[0].value', 1, 2, {}, r"""{**a, **c}""", r"""{**b}""", r"""
 Module - ROOT 0,0..0,10
   .body[1]
   0] Expr - 0,0..0,10
@@ -2195,12 +1923,8 @@ Dict - ROOT 0,0..0,5
 """),
 
 (r"""match a:
- case a | b: pass""", 'body[0].cases[0].pattern', 0, 0, {'matchor_get': False, '_verify': False}, r"""
-match a:
- case a | b: pass
-""", r"""
-
-""", r"""
+ case a | b: pass""", 'body[0].cases[0].pattern', 0, 0, {'matchor_get': False, '_verify': False}, r"""match a:
+ case a | b: pass""", r"""""", r"""
 Module - ROOT 0,0..1,17
   .body[1]
   0] Match - 0,0..1,17
@@ -2220,12 +1944,8 @@ MatchOr - ROOT 0,0..0,0
 """),
 
 (r"""match a:
- case a | b: pass""", 'body[0].cases[0].pattern', 0, 1, {'matchor_get': False, 'matchor_del': False, '_verify': False}, r"""
-match a:
- case b: pass
-""", r"""
-a
-""", r"""
+ case a | b: pass""", 'body[0].cases[0].pattern', 0, 1, {'matchor_get': False, 'matchor_del': False, '_verify': False}, r"""match a:
+ case b: pass""", r"""a""", r"""
 Module - ROOT 0,0..1,13
   .body[1]
   0] Match - 0,0..1,13
@@ -2246,12 +1966,8 @@ MatchOr - ROOT 0,0..0,1
 """),
 
 (r"""match a:
- case a | b: pass""", 'body[0].cases[0].pattern', 0, 2, {'matchor_del': False, '_verify': False}, r"""
-match a:
- case : pass
-""", r"""
-a | b
-""", r"""
+ case a | b: pass""", 'body[0].cases[0].pattern', 0, 2, {'matchor_del': False, '_verify': False}, r"""match a:
+ case : pass""", r"""a | b""", r"""
 Module - ROOT 0,0..1,12
   .body[1]
   0] Match - 0,0..1,12
@@ -2271,12 +1987,8 @@ MatchOr - ROOT 0,0..0,5
 """),
 
 (r"""match a:
- case a | b: pass""", 'body[0].cases[0].pattern', 0, 1, {'matchor_get': True, 'matchor_del': True, '_verify': False}, r"""
-match a:
- case b: pass
-""", r"""
-a
-""", r"""
+ case a | b: pass""", 'body[0].cases[0].pattern', 0, 1, {'matchor_get': True, 'matchor_del': True, '_verify': False}, r"""match a:
+ case b: pass""", r"""a""", r"""
 Module - ROOT 0,0..1,13
   .body[1]
   0] Match - 0,0..1,13
@@ -2290,6 +2002,78 @@ Module - ROOT 0,0..1,13
 """, r"""
 MatchAs - ROOT 0,0..0,1
   .name 'a'
+"""),
+
+(r"""match a:
+ case (a |
+# pre
+b | # line1
+c | # line2
+# post
+d): pass""", 'body[0].cases[0].pattern', 1, 2, {}, r"""match a:
+ case (a |
+c | # line2
+# post
+d): pass""", r"""
+# pre
+b # line1
+""", r"""
+Module - ROOT 0,0..4,8
+  .body[1]
+  0] Match - 0,0..4,8
+    .subject Name 'a' Load - 0,6..0,7
+    .cases[1]
+    0] match_case - 1,1..4,8
+      .pattern MatchOr - 1,7..4,1
+        .patterns[3]
+        0] MatchAs - 1,7..1,8
+          .name 'a'
+        1] MatchAs - 2,0..2,1
+          .name 'c'
+        2] MatchAs - 4,0..4,1
+          .name 'd'
+      .body[1]
+      0] Pass - 4,4..4,8
+""", r"""
+MatchAs - ROOT 2,0..2,1
+  .name 'b'
+"""),
+
+(r"""match a:
+ case (a |
+# pre
+b | # line1
+c | # line2
+# post
+d): pass""", 'body[0].cases[0].pattern', 1, 3, {'trivia': (None, 'block')}, r"""match a:
+ case (a |
+d): pass""", r"""(
+# pre
+b | # line1
+c # line2
+# post
+)""", r"""
+Module - ROOT 0,0..2,8
+  .body[1]
+  0] Match - 0,0..2,8
+    .subject Name 'a' Load - 0,6..0,7
+    .cases[1]
+    0] match_case - 1,1..2,8
+      .pattern MatchOr - 1,7..2,1
+        .patterns[2]
+        0] MatchAs - 1,7..1,8
+          .name 'a'
+        1] MatchAs - 2,0..2,1
+          .name 'd'
+      .body[1]
+      0] Pass - 2,4..2,8
+""", r"""
+MatchOr - ROOT 2,0..3,1
+  .patterns[2]
+  0] MatchAs - 2,0..2,1
+    .name 'b'
+  1] MatchAs - 3,0..3,1
+    .name 'c'
 """),
 
 ]  # END OF GET_SLICE_EXPRISH_DATA

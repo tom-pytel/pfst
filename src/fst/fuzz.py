@@ -1589,14 +1589,31 @@ class SliceStmtish(Fuzzy):
 
 
 class SliceExprish(Fuzzy):
-    """Test moving around exprish slices, empty bodies, fstview, exprish FST identity stability and unmarking deleted FSTs."""
+    """Test moving around exprish slices, empty bodies, exprish FST identity stability and unmarking deleted FSTs."""
 
     name    = 'slice_exprish'
     forever = True
 
-    class Container(NamedTuple):
-        field: str | None
-        fst:   FST
+    class Bucket(NamedTuple):
+        field:      str | type[AST] | None
+        min_script: int
+        min_tmp:    int
+        fst:        FST
+
+    @staticmethod
+    def cat(fst: FST) -> str | type[AST] | None:
+        ast = fst.a
+
+        if isinstance(getattr(ast, 'ctx', None), (Store, Del)):
+            return 'target' if isinstance(ast, (Tuple, List)) else None
+        if isinstance(ast, Tuple):
+            return 'slice' if fst.has_Slice() else 'seq'
+        if isinstance(ast, (List, Set)):
+            return 'seq'
+        if isinstance(ast, (Dict, MatchSequence, MatchMapping, MatchOr)):
+            return ast.__class__
+
+        return None
 
     @staticmethod
     def rnd_trivia():
@@ -1605,103 +1622,93 @@ class SliceExprish(Fuzzy):
             choice(('none', 'block', 'all', 'line')) + choice(('', '', '', '', '-', '+', '-', '+', '-1', '-2', '-3', '+1', '+2', '+3')),
         )
 
-    @staticmethod
-    def do_move(src: FST, dst: FST, field: str | None):
-        cut       = bool(randint(0, 1))
-        src_len   = len(getattr(src.a, field or 'keys'))
-        dst_len   = len(getattr(dst.a, field or 'keys'))
-        src_start = randint(0, src_len)
-        src_stop  = randint(src_start, src_len)
-        dst_start = randint(0, dst_len)
-        dst_stop  = randint(dst_start, dst_len)
+    def transfer(self, dir: str, cat: str, field: str | None, src: FST, dst: FST, min_src: int, min_dst: int):
+        src_len    = len(src_body := getattr(src.a, field or 'keys'))
+        dst_len    = len(dst_body := getattr(dst.a, field or 'keys'))
+        src_start  = randint(0, src_len)
+        src_stop   = randint(src_start, src_len)
+        dst_start  = randint(0, dst_len)
+        dst_stop   = randint(dst_start, dst_len)
+        src_trivia = SliceExprish.rnd_trivia()
+        dst_trivia = SliceExprish.rnd_trivia()
 
-        if not src_start and src_stop == src_len:
-            cut = False
+        while dst_len - (dst_stop - dst_start) + (src_stop - src_start) < min_dst:  # make sure to respect min_dst (we assume src has enough elements to reach min_dst if necessary)
+            if dst_stop != dst_start:  # first reduce size being overwritten if possible
+                dst_start += (i := randint(0, 1))
+                dst_stop  -= i ^ 1
 
-        if not dst_start and dst_stop == dst_len:
-            if dst_start != dst_stop:
-                if src_start == src_stop:  # don't delete entire destination
-                    if random() < 0.5:
-                        dst_start += 1
-                    else:
-                        dst_stop -= 1
+            else:  # can't reduce any more
+                if src_start and (randint(0, 1) or src_stop == src_len):
+                    src_start -= 1
+                elif src_stop < src_len:
+                    src_stop += 1
+                else:
+                    break  # can actually get here because of initially lower length containers than we allow
 
-        # if src_start == src_stop:
-        #     return
+        cut = False if src_len - (src_stop - src_start) < min_src else bool(randint(0, 1))
 
-        # print(f'\x08{src_start = }, {src_stop = }, {dst_start = }, {dst_stop = }, {cut = }')
+        if self.debug:  # isinstance(src.a, Set) or isinstance(dst.a, Set):
+            print(f'\x08... {dir} {cat = }, {cut = }')
+            print(f'    {src_start = }, {src_stop = }, {src_len = }, {min_src = }, {src_trivia = }')
+            print(f'    {dst_start = }, {dst_stop = }, {dst_len = }, {min_dst = }, {dst_trivia = }')
+            print('   PRE SRC: ', src, src.src)
+            print('   PRE DST: ', dst, dst.src)
+            # src.dump()
 
+        src_elts = src_body[src_start : src_stop]
 
-        # s = src.get_slice(src_start, src_stop, field=field, cut=cut, trivia=('all-', 'all-'))  # ('block-', 'line-'))
-        s = src.get_slice(src_start, src_stop, field=field, cut=cut, trivia=SliceExprish.rnd_trivia())  # ('block-', 'line-'))
+        if not field:  # Dict or MatchMapping
+            src_elts.extend(getattr(src.a, 'values' if isinstance(src.a, Dict) else 'patterns')[src_start : src_stop])
 
+        slice = src.get_slice(src_start, src_stop, field=field, cut=cut, trivia=src_trivia)  # ('block-', 'line-'))
 
-        # VVV--- THIS ---VVV
+        slice_elts = getattr(slice.a, field or 'keys')[:]
 
-        # assert all(f is g for f, g in zip(cut.body, org_fsts))
-        # assert all(f is g for f, g in zip(dst_container[to_start : to_start + (from_stop - from_start)], org_fsts))
+        if not field:  # Dict or MatchMapping
+            slice_elts.extend(getattr(slice.a, 'values' if isinstance(src.a, Dict) else 'patterns'))
 
-        # ^^^--- THIS ---^^^
+        if cut:
+            assert all(a is b for a, b in zip(src_elts, slice_elts))  # identity check
 
+        if self.debug:  # isinstance(src.a, Set) or isinstance(dst.a, Set):
+            print('   SLICE:   ', slice, slice.src)
 
-        if PYLT11 and dst.is_parenthesized_tuple() is False and dst.pfield == ('slice', None) and s.has_Starred():
-            return
+        dst.put_slice(slice, dst_start, dst_stop, field=field, trivia=dst_trivia)  # ('block-', 'line-'))
 
+        dst_elts = dst_body[dst_start : dst_start + (src_stop - src_start)]
 
-        try:
-            # dst.put_slice(s, dst_start, dst_stop, field=field, trivia=('all-', 'all-'))  # ('block-', 'line-'))
-            dst.put_slice(s, dst_start, dst_stop, field=field, trivia=SliceExprish.rnd_trivia())  # ('block-', 'line-'))
-        except NotImplementedError:
-            return
+        if not field:  # Dict or MatchMapping
+            dst_elts.extend(getattr(dst.a, 'values' if isinstance(dst.a, Dict) else 'patterns')[dst_start : dst_start + (src_stop - src_start)])
 
+        assert all(a is b for a, b in zip(dst_elts, slice_elts))  # identity check
 
-        # if src_start == src_stop:
-        #     if dst_len == 1:
-        #         return
-
-        #     dst_start = randint(0, dst_len - 1)
-        #     dst_stop  = randint(dst_start + 1, dst_len)
-
-        # else:
-
-        # if random() < 0.5 or not dst_container:
-        #     dst_start = dst_stop = randint(0, len(dst_container))
-        # else:
-        #     dst_start = randint(0, len(dst_container) - 1)
-        #     dst_stop  = randint(dst_start + 1, len(dst_container))
-
-        # fs         = exprish_container[from_start : from_stop]
-        # org_fsts   = list(fs)
-        # cut        = fs.cut()
-
-        # assert all(f is g for f, g in zip(cut.body, org_fsts))
-
-        # dst_container[to_start : to_stop] = cut
-
-        # assert all(f is g for f, g in zip(dst_container[to_start : to_start + (from_stop - from_start)], org_fsts))
+        if self.debug:  # isinstance(src.a, Set) or isinstance(dst.a, Set):
+            print('   POST SRC:', src, src.src)
+            print('   POST DST:', dst, dst.src)
+            # dst.dump()
+            print()
 
     def fuzz_one(self, fst, fnm) -> bool:
-        containers = {
-            Dict:          SliceExprish.Container(None, FST('{None: None}')),
-            Tuple:         SliceExprish.Container('elts', FST('(None,)')),
-            slice:         SliceExprish.Container('elts', FST('(None,)')),
-            List:          SliceExprish.Container('elts', FST('[None]')),
-            Set:           SliceExprish.Container('elts', FST('{None}')),
-            MatchSequence: SliceExprish.Container('patterns', FST('[None]', pattern)),
-            MatchMapping:  SliceExprish.Container(None, FST('{None: None}', pattern)),
+        buckets = {
+            'slice':       self.Bucket('elts', 1, 1, FST('a[1,]').slice),  # 1 because of "a[b, c]", must always leave at least 1 element so it doesn't get parentheses
+            'target':      self.Bucket('elts', 0, 0, FST('()')),
+            'seq':         self.Bucket('elts', 1, 0, FST('()')), # 1 because of Set
+            Dict:          self.Bucket(None, 0, 0, FST('{}')),
+            MatchSequence: self.Bucket('patterns', 0, 0, FST('[]', pattern)),
+            MatchMapping:  self.Bucket(None, 0, 0, FST('{}', pattern)),
+            MatchOr:       self.Bucket('patterns', 2, 2, FST('(a | b)', pattern)),
         }
 
-        exprishs = []
+        exprishs = []  # [('cat', FST), ...]
 
-        for f in fst.walk(True):
-            if isinstance(f.a, (Dict, Set, MatchSequence, MatchMapping)) or (isinstance(f.a, (List, Tuple)) and isinstance(f.a.ctx, Load)):
-            # if isinstance(f.a, (Dict,)) or (isinstance(f.a, (List,)) and isinstance(f.a.ctx, Load)):
-            # if isinstance(f.a, (List,)) and isinstance(f.a.ctx, Load):
-            # if isinstance(f.a, (Dict,)):
-            # if isinstance(f.a, (Tuple,)) and isinstance(f.a.ctx, Load):
-            # if isinstance(f.a, (MatchSequence,)):
-            # if isinstance(f.a, (MatchMapping,)):
-                exprishs.append(f)
+        for f in (gen := fst.walk(True)):
+            if PYLT12 and isinstance(f.a, JoinedStr):
+                gen.send(False)
+
+                continue
+
+            if (cat := self.cat(f)) in buckets:
+                exprishs.append((cat, f))
 
         if not exprishs:
             return
@@ -1714,17 +1721,19 @@ class SliceExprish(Fuzzy):
 
                     for _ in range(10):
                         while exprishs:
-                            if (exprish := exprishs[i := randint(0, len(exprishs) - 1)]).a is None:  # if removed completely then forget about it
+                            cat, exprish = exprishs[i := randint(0, len(exprishs) - 1)]
+
+                            if exprish.a is None:  # if removed completely then forget about it
                                 del exprishs[i]
                             else:
                                 break
 
                         else:
-                            raise RuntimeError('this should not happen')
+                            raise RuntimeError('should not get here')
 
-                        container = containers[slice if exprish.has_Slice() else exprish.a.__class__]
+                        bucket = buckets[cat]
 
-                        if exprish.root is container.fst:
+                        if exprish.root is bucket.fst:
                             continue
 
                         break
@@ -1732,38 +1741,27 @@ class SliceExprish(Fuzzy):
                     else:
                         continue
 
+                    with FST.options(set_get=False, set_put=False, set_del=False, matchor_get=False, matchor_put=False, matchor_del=False):
+                        self.transfer('>', cat, bucket.field, exprish, bucket.fst, bucket.min_script, bucket.min_tmp)
+                        self.transfer('<', cat, bucket.field, bucket.fst, exprish, bucket.min_tmp, bucket.min_script)
 
-                    # with FST.options(set_get='tuple'):
-                    with FST.options(set_get=False, set_put=False, set_del=False):
-                        self.do_move(exprish, container.fst, container.field)
-
-                        if self.verify:
-                            fst.verify()
-
-                        self.do_move(container.fst, exprish, container.field)
-
-                        if self.verify:
-                            fst.verify()
-
-
-
-
+                    if self.verify:
+                        fst.verify()
 
                 except Exception:
                     print()
 
-                    if self.verbose:
-                        print(fst.src)
-
                     raise
 
-            fst.verify()
-
-        finally:
             print()
 
             if self.verbose:
                 print(fst.src)
+
+            fst.verify()
+
+        finally:
+            pass
 
 
 # ----------------------------------------------------------------------------------------------------------------------

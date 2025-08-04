@@ -1097,6 +1097,43 @@ def _set_block_end_from_last_child(self: fst.FST, bound_ln: int, bound_col: int,
     self._set_end_pos(end_lineno, end_col_offset)
 
 
+def _update_loc_up_parents(self: fst.FST, lineno: int, col_offset: int, end_lineno: int, end_col_offset: int):
+    """Change own location adn walk up parent chain changing any start or end locations which coincide with our own old
+    location to the new one."""
+
+    ast                = self.a
+    old_lineno         = ast.lineno
+    old_col_offset     = ast.col_offset
+    old_end_lineno     = ast.end_lineno
+    old_end_col_offset = ast.end_col_offset
+    ast.lineno         = lineno
+    ast.col_offset     = col_offset
+    ast.end_lineno     = end_lineno
+    ast.end_col_offset = end_col_offset
+
+    self._touch()
+
+    while self := self.parent:
+        if (self_end_col_offset := getattr(a := self.a, 'end_col_offset', None)) is None:
+            break
+
+        if n := self_end_col_offset == old_end_col_offset and a.end_lineno == old_end_lineno:  # only change if matches old location
+            a.end_lineno     = end_lineno
+            a.end_col_offset = end_col_offset
+
+        if a.col_offset == old_col_offset and a.lineno == old_lineno:
+            a.lineno     = lineno
+            a.col_offset = col_offset
+
+        elif not n:
+            break
+
+        self._touch()
+
+    if self:
+        self._touchall(True)
+
+
 def _maybe_del_separator(self: fst.FST, ln: int, col: int, force: bool = False,
                          end_ln: int | None = None, end_col: int | None = None, sep: str = ',') -> bool:
     """Maybe delete a separator if present. Can be always deleted or allow function to decide aeshtetically. We
@@ -1336,6 +1373,38 @@ def _maybe_fix_matchseq(self: fst.FST, delims: Literal['', '[]', '()'] | None = 
         return self._maybe_fix_naked_seq(body, '[]')
 
     return delims
+
+
+def _maybe_fix_matchor(self: fst.FST, fix1: bool = False):
+    """Maybe fix a `MatchOr` object that may have the wrong location. Will do nothing to a zero-length `MatchOr` and
+    will convert a length 1 `MatchOr` to just its single element if `fix1=True`."""
+
+    # assert isinstance(self.a, MatchOr)
+
+    if not (patterns := self.a.patterns):
+        return
+
+    if (len_patterns := len(patterns)) == 1 and fix1:
+        pat0 = patterns[0]
+
+        del patterns[0]
+
+        self._set_ast(pat0, True)
+
+    else:
+        ln, col, end_ln, end_col = patterns[0].f.pars()
+
+        if len_patterns > 1:
+            _, _, end_ln, end_col = patterns[-1].f.pars()
+
+        lines          = self.root._lines
+        col_offset     = lines[ln].c2b(col)
+        end_col_offset = lines[end_ln].c2b(end_col)
+
+        _update_loc_up_parents(self, ln + 1, col_offset, end_ln + 1, end_col_offset)
+
+    if not self.is_enclosed_or_line() and not self.is_enclosed_in_parents():
+        self._parenthesize_grouping()  # we do this instead or _sanitize() to keep any trivia
 
 
 def _maybe_fix_set(self: fst.FST, empty: bool | Literal['star', 'call'] = True):

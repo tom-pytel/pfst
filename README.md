@@ -181,10 +181,9 @@ This package is not finished but functional enough that it can be useful.
   * `JoinedStr.values`
   * `TemplateStr.values`
 
+* Improve comment handling and get/put specification and get rid of ugly trailing newlines in statement slices.
 
-* Improve comment handling and get/put specification and get rid of ugly trailing newlines.
-
-* Lots of other stuff...
+* Lots of code cleanup.
 
 
 ## Trivia

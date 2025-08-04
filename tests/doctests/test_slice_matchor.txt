@@ -1,0 +1,51 @@
+>>> from fst import *
+
+
+>>> f = FST('a | b', pattern)
+>>> print(f.put_slice('( # pre\nc | # line\nd # line\n# post\n)', 1, 1, one=True).src)
+a | ( # pre
+c | # line
+d # line
+# post
+) | b
+>>> f.verify()
+<MatchOr ROOT 0,0..4,5>
+
+
+>>> f = FST('a | b', pattern)
+>>> print(f.put_slice('# pre\nc | # line\nd # line\n# post\n', 1, 1, one=True).src)
+a | (c | # line
+d) | b
+>>> f.verify()
+<MatchOr ROOT 0,0..1,6>
+
+>>> f = FST('a | b', pattern)
+>>> print(f.put_slice('# pre\nc | # line\nd # line\n# post\n', 1, 1).src)
+(a | c | # line
+d | b)
+>>> f.verify()
+<MatchOr ROOT 0,1..1,5>
+
+
+>>> f = FST('a |\n# pre\nc | # line\nd # line\n# post\n| b', pattern)
+>>> print((g := f.get_slice(1, 3, cut=True, trivia=('all', 'all'))).src)
+(
+# pre
+c | # line
+d # line
+# post
+)
+>>> g.verify()
+<MatchOr ROOT 2,0..3,1>
+>>> print(f.src)
+(a |
+b)
+>>> f.verify()
+<MatchOr ROOT 0,1..1,1>
+
+>>> print(f.put_slice(g, 1, 1).src)
+(a |
+c | # line
+d | b)
+>>> f.verify()
+<MatchOr ROOT 0,1..2,5>
