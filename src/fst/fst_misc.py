@@ -2385,7 +2385,7 @@ def _get_trivia_params(trivia: bool | str | tuple[bool | str | int | None, bool 
     if isinstance(lead_comments := fst.FST.get_option('trivia'), tuple):
         lead_comments, trail_comments = lead_comments
     else:
-        trail_comments = lead_comments
+        trail_comments = True
 
     if trivia is not None:
         if not isinstance(trivia, tuple):
@@ -2411,6 +2411,8 @@ def _get_trivia_params(trivia: bool | str | tuple[bool | str | int | None, bool 
             lead_neg      = True
             lead_space    = (int(n) if (n := lead_comments[i + 1:]) else True) if neg else 0
             lead_comments = lead_comments[:i] or 'none'
+
+        assert lead_comments != 'line'
 
     trail_space = trail_neg = False
 

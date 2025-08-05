@@ -15,7 +15,7 @@ from .astutil import TryStar
 
 from .misc import (
     astfield, fstloc,
-    Code, NodeError,
+    Code,
     _next_find, _prev_find,
     _fixup_slice_indices
 )
