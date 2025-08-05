@@ -4934,13 +4934,7 @@ class FST:
     )
 
     from .fst_slice_old import (
-        # _get_slice_tuple_list_or_set,
-        # _get_slice_empty_set,
-        # _get_slice_dict,
         _get_slice_stmtish,
-        # _put_slice_tuple_list_or_set,
-        # _put_slice_empty_set,
-        # _put_slice_dict,
         _put_slice_stmtish,
     )
 
