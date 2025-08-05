@@ -138,7 +138,7 @@ def _code_as_op(code: Code, ast_type: type[AST], parse_params: dict, parse: Call
 
 
 def _code_as(code: Code, ast_type: type[AST], parse_params: dict, parse: Callable[[fst.FST, Code], fst.FST], *,
-             strip_tup_pars: bool = False) -> fst.FST:
+             strip_tup_pars: bool = False, sanitize: bool = True) -> fst.FST:
     if isinstance(code, fst.FST):
         if not code.is_root:
             raise ValueError('expecting root node')
@@ -146,7 +146,7 @@ def _code_as(code: Code, ast_type: type[AST], parse_params: dict, parse: Callabl
         if not isinstance(code.a, ast_type):
             raise NodeError(f'expecting {ast_type.__name__}, got {code.a.__class__.__name__}')
 
-        return code._sanitize()
+        return code._sanitize() if sanitize else code
 
     if isinstance(code, AST):
         if not isinstance(code, ast_type):
@@ -161,7 +161,9 @@ def _code_as(code: Code, ast_type: type[AST], parse_params: dict, parse: Callabl
     else:  # str
         lines = code.split('\n')
 
-    return fst.FST(parse(code, parse_params), lines, parse_params=parse_params)._sanitize()
+    code = fst.FST(parse(code, parse_params), lines, parse_params=parse_params)
+
+    return code._sanitize() if sanitize else code
 
 
 _GLOBALS = globals() | {'_GLOBALS': None}
@@ -1048,7 +1050,8 @@ def _code_as_match_cases(code: Code, parse_params: dict = {}) -> fst.FST:
 
 
 @staticmethod
-def _code_as_expr(code: Code, parse_params: dict = {}, parse: Callable[[Code, dict], fst.FST] = _parse_expr) -> fst.FST:
+def _code_as_expr(code: Code, parse_params: dict = {}, *, parse: Callable[[Code, dict], fst.FST] = _parse_expr,
+                  sanitize: bool = True) -> fst.FST:
     """Convert `code` to an `expr` or optionally `Slice` `FST` if possible."""
 
     if isinstance(code, fst.FST):
@@ -1061,11 +1064,13 @@ def _code_as_expr(code: Code, parse_params: dict = {}, parse: Callable[[Code, di
                 f'expression, got {ast.__class__.__name__}')
 
         if ast is codea:
-            return code._sanitize()
+            return code._sanitize() if sanitize else code
 
         ast.f._unmake_fst_parents()
 
-        return fst.FST(ast, code._lines, from_=code, lcopy=False)._sanitize()
+        code = fst.FST(ast, code._lines, from_=code, lcopy=False)
+
+        return code._sanitize() if sanitize else code
 
     if isinstance(code, AST):
         if not isinstance(code, expr):
@@ -1081,17 +1086,19 @@ def _code_as_expr(code: Code, parse_params: dict = {}, parse: Callable[[Code, di
     else:  # str
         lines = code.split('\n')
 
-    return fst.FST(parse(code, parse_params), lines, parse_params=parse_params)._sanitize()
+    code = fst.FST(parse(code, parse_params), lines, parse_params=parse_params)
+
+    return code._sanitize() if sanitize else code
 
 
 @staticmethod
-def _code_as_expr_slice(code: Code, parse_params: dict = {}) -> fst.FST:
+def _code_as_expr_slice(code: Code, parse_params: dict = {}, *, sanitize: bool = True) -> fst.FST:
     """Convert `code` to a Slice `FST` if possible (or anthing else that can serve in `Subscript.slice`, like any old
     generic `expr`)."""
 
     strip_tup_pars = PYGE11 or (isinstance(code, Tuple) and any(isinstance(e, Slice) for e in code.elts))
 
-    ret = _code_as(code, expr, parse_params, _parse_expr_slice, strip_tup_pars=strip_tup_pars)
+    ret = _code_as(code, expr, parse_params, _parse_expr_slice, strip_tup_pars=strip_tup_pars, sanitize=sanitize)
 
     if isinstance(code, AST) and not isinstance(ret.a, code.__class__):  # because could reparse Starred into a single element Tuple with Starred
         raise NodeError(f'cannot reparse {code.__class__.__name__} in slice as {code.__class__.__name__}')
@@ -1104,14 +1111,14 @@ def _code_as_expr_sliceelt(code: Code, parse_params: dict = {}) -> fst.FST:
     """Convert `code` to an `expr` or `Slice` `FST` if possible. This exists because of the behavior of naked `Starred`
     expressions in a `Subscript` `slice` field."""
 
-    return _code_as_expr(code, parse_params, _parse_expr_sliceelt)
+    return _code_as_expr(code, parse_params, parse=_parse_expr_sliceelt)
 
 
 @staticmethod
 def _code_as_expr_callarg(code: Code, parse_params: dict = {}) -> fst.FST:
     """Convert `code` to an `expr` in the context of a `Call.args` which has special parse rules for `Starred`."""
 
-    return _code_as_expr(code, parse_params, _parse_expr_callarg)
+    return _code_as_expr(code, parse_params, parse=_parse_expr_callarg)
 
 
 @staticmethod
@@ -1150,52 +1157,52 @@ def _code_as_cmpop(code: Code, parse_params: dict = {}) -> fst.FST:
 
 
 @staticmethod
-def _code_as_comprehension(code: Code, parse_params: dict = {}) -> fst.FST:
+def _code_as_comprehension(code: Code, parse_params: dict = {}, *, sanitize: bool = True) -> fst.FST:
     """Convert `code` to a comprehension `FST` if possible."""
 
-    return _code_as(code, comprehension, parse_params, _parse_comprehension)
+    return _code_as(code, comprehension, parse_params, _parse_comprehension, sanitize=sanitize)
 
 
 @staticmethod
-def _code_as_arguments(code: Code, parse_params: dict = {}) -> fst.FST:
+def _code_as_arguments(code: Code, parse_params: dict = {}, *, sanitize: bool = True) -> fst.FST:
     """Convert `code` to a arguments `FST` if possible."""
 
-    return _code_as(code, arguments, parse_params, _parse_arguments)
+    return _code_as(code, arguments, parse_params, _parse_arguments, sanitize=sanitize)
 
 
 @staticmethod
-def _code_as_arguments_lambda(code: Code, parse_params: dict = {}) -> fst.FST:
+def _code_as_arguments_lambda(code: Code, parse_params: dict = {}, *, sanitize: bool = True) -> fst.FST:
     """Convert `code` to a lambda arguments `FST` if possible (no annotations allowed)."""
 
-    return _code_as(code, arguments, parse_params, _parse_arguments_lambda)
+    return _code_as(code, arguments, parse_params, _parse_arguments_lambda, sanitize=sanitize)
 
 
 @staticmethod
-def _code_as_arg(code: Code, parse_params: dict = {}) -> fst.FST:
+def _code_as_arg(code: Code, parse_params: dict = {}, *, sanitize: bool = True) -> fst.FST:
     """Convert `code` to an arg `FST` if possible."""
 
-    return _code_as(code, arg, parse_params, _parse_arg)
+    return _code_as(code, arg, parse_params, _parse_arg, sanitize=sanitize)
 
 
 @staticmethod
-def _code_as_keyword(code: Code, parse_params: dict = {}) -> fst.FST:
+def _code_as_keyword(code: Code, parse_params: dict = {}, *, sanitize: bool = True) -> fst.FST:
     """Convert `code` to a keyword `FST` if possible."""
 
-    return _code_as(code, keyword, parse_params, _parse_keyword)
+    return _code_as(code, keyword, parse_params, _parse_keyword, sanitize=sanitize)
 
 
 @staticmethod
-def _code_as_alias(code: Code, parse_params: dict = {}) -> fst.FST:
+def _code_as_alias(code: Code, parse_params: dict = {}, *, sanitize: bool = True) -> fst.FST:
     """Convert `code` to a alias `FST` if possible, star or dotted."""
 
-    return _code_as(code, alias, parse_params, _parse_alias)
+    return _code_as(code, alias, parse_params, _parse_alias, sanitize=sanitize)
 
 
 @staticmethod
-def _code_as_alias_dotted(code: Code, parse_params: dict = {}) -> fst.FST:
+def _code_as_alias_dotted(code: Code, parse_params: dict = {}, *, sanitize: bool = True) -> fst.FST:
     """Convert `code` to a alias `FST` if possible, dotted as in `alias` for `Import.names`."""
 
-    ret = _code_as(code, alias, parse_params, _parse_alias_dotted)
+    ret = _code_as(code, alias, parse_params, _parse_alias_dotted, sanitize=sanitize)
 
     if '*' in ret.a.name:
         raise NodeError("'*' not allowed in this alias")
@@ -1204,10 +1211,10 @@ def _code_as_alias_dotted(code: Code, parse_params: dict = {}) -> fst.FST:
 
 
 @staticmethod
-def _code_as_alias_star(code: Code, parse_params: dict = {}) -> fst.FST:
+def _code_as_alias_star(code: Code, parse_params: dict = {}, *, sanitize: bool = True) -> fst.FST:
     """Convert `code` to a alias `FST` if possible, possibly star as in `alias` for `FromImport.names`."""
 
-    ret = _code_as(code, alias, parse_params, _parse_alias_star)
+    ret = _code_as(code, alias, parse_params, _parse_alias_star, sanitize=sanitize)
 
     if '.' in ret.a.name:
         raise NodeError("'.' not allowed in this alias")
@@ -1216,24 +1223,24 @@ def _code_as_alias_star(code: Code, parse_params: dict = {}) -> fst.FST:
 
 
 @staticmethod
-def _code_as_withitem(code: Code, parse_params: dict = {}) -> fst.FST:
+def _code_as_withitem(code: Code, parse_params: dict = {}, *, sanitize: bool = True) -> fst.FST:
     """Convert `code` to a withitem `FST` if possible."""
 
-    return _code_as(code, withitem, parse_params, _parse_withitem)
+    return _code_as(code, withitem, parse_params, _parse_withitem, sanitize=sanitize)
 
 
 @staticmethod
-def _code_as_pattern(code: Code, parse_params: dict = {}) -> fst.FST:
+def _code_as_pattern(code: Code, parse_params: dict = {}, *, sanitize: bool = True) -> fst.FST:
     """Convert `code` to a pattern `FST` if possible."""
 
-    return _code_as(code, pattern, parse_params, _parse_pattern)
+    return _code_as(code, pattern, parse_params, _parse_pattern, sanitize=sanitize)
 
 
 @staticmethod
-def _code_as_type_param(code: Code, parse_params: dict = {}) -> fst.FST:
+def _code_as_type_param(code: Code, parse_params: dict = {}, *, sanitize: bool = True) -> fst.FST:
     """Convert `code` to a type_param `FST` if possible."""
 
-    return _code_as(code, type_param, parse_params, _parse_type_param)
+    return _code_as(code, type_param, parse_params, _parse_type_param, sanitize=sanitize)
 
 
 @staticmethod
