@@ -1318,17 +1318,44 @@ def _get_element_indent(self: fst.FST, body: list[AST], body2: list[AST], start:
     return None
 
 
+def _trim_delimiters(self: fst.FST):
+    lines                     = self._lines
+    ast                       = self.a
+    ln, col, end_ln, end_col  = self.loc
+    col                      += 1
+    end_col                  -= 1
+    ast.col_offset           += 1
+    ast.end_col_offset       -= 1
+
+    self._offset(ln, col, -ln, -lines[ln].c2b(col))
+
+    lines[end_ln] = bistr(lines[end_ln][:end_col])
+    lines[ln]     = bistr(lines[ln][col:])
+
+    del lines[end_ln + 1:], lines[:ln]
+
+
+def _set_loc_whole(self: fst.FST):
+    ast                = self.a
+    ast.lineno         = 1
+    ast.col_offset     = 0
+    ast.end_lineno     = len(ls := self._lines)
+    ast.end_col_offset = ls[-1].lenbytes
+
+    self._touch()
+
+
 def _code_to_slice_seq(self: fst.FST, code: Code | None, one: bool, options: dict[str, Any]) -> fst.FST | None:
     if code is None:
         return None
 
-    fst_ = _code_as_expr(code, self.root.parse_params)
+    fst_ = _code_as_expr(code, self.root.parse_params, sanitize=False)
 
     if one:
-        if (b := fst_.is_parenthesized_tuple()) is False:  # don't put unparenthesized tuple source as one into sequence, it would merge into the sequence
+        if fst_.is_parenthesized_tuple() is False:  # don't put unparenthesized tuple source as one into sequence, it would merge into the sequence
             fst_._delimit_node()
-        elif b is None and precedence_require_parens(fst_.a, self.a, 'elts', 0) and not fst_.pars().n:
-            fst_._parenthesize_grouping()
+        elif isinstance(fst_.a, Set) and (empty := self.get_option('set_del', options)):  # putting an invalid empty Set as one, make it valid according to options
+            fst_._maybe_fix_set(empty)
 
         ls  = fst_._lines
         ast = List(elts=[fst_.a], ctx=Load(),
@@ -1352,18 +1379,10 @@ def _code_to_slice_seq(self: fst.FST, code: Code | None, one: bool, options: dic
     if not ast_.elts:  # put empty sequence is same as delete
         return None
 
-    # fst_._sanitize()
-    assert (ast_.lineno == 1 and ast_.col_offset == 0 and
-            ast_.end_lineno == len(ls := fst_.lines) and ast_.end_col_offset == ls[-1].lenbytes)
-
-    if fst_.is_parenthesized_tuple() is not False:  # strip enclosing parentheses, brackets or curlies from List, Set or parenthesized Tuple
-        ast_.end_col_offset -= 1
-        fst_lines            = fst_._lines
-
-        fst_._offset(0, 1, 0, -1)  # guaranteed to start here because of _sanitize()
-
-        fst_lines[-1] = bistr(fst_lines[-1][:-1])
-        fst_lines[0]  = bistr(fst_lines[0][1:])
+    if fst_.is_parenthesized_tuple() is not False:  # anything that is not an unparenthesize tuple is restricted to the inside of the delimiters, which are removed
+        _trim_delimiters(fst_)
+    else:  # if unparenthesized tuple then use whole source, including leading and trailing trivia not included
+        _set_loc_whole(fst_)
 
     return fst_
 
@@ -1376,7 +1395,7 @@ def _code_to_slice_seq2(self: fst.FST, code: Code | None, one: bool, options: di
     if one:
         raise ValueError(f"cannot put as 'one' item to a {self.a.__class__.__name__} slice")
 
-    fst_ = code_as(code, self.root.parse_params)
+    fst_ = code_as(code, self.root.parse_params, sanitize=False)
     ast_ = fst_.a
 
     if ast_.__class__ is not self.a.__class__:
@@ -1386,17 +1405,7 @@ def _code_to_slice_seq2(self: fst.FST, code: Code | None, one: bool, options: di
     if not ast_.keys:  # put empty sequence is same as delete
         return None
 
-    # fst_._sanitize()
-    assert (ast_.lineno == 1 and ast_.col_offset == 0 and
-            ast_.end_lineno == len(ls := fst_.lines) and ast_.end_col_offset == ls[-1].lenbytes)
-
-    fst_.a.end_col_offset -= 1
-    fst_lines              = fst_._lines
-
-    fst_._offset(0, 1, 0, -1)  # guaranteed to start here because of _sanitize()
-
-    fst_lines[-1] = bistr(fst_lines[-1][:-1])
-    fst_lines[0]  = bistr(fst_lines[0][1:])
+    _trim_delimiters(fst_)
 
     return fst_
 
@@ -1406,7 +1415,7 @@ def _code_to_slice_MatchSequence(self: fst.FST, code: Code | None, one: bool, op
     if code is None:
         return None
 
-    fst_ = _code_as_pattern(code, self.root.parse_params)
+    fst_ = _code_as_pattern(code, self.root.parse_params, sanitize=False)
 
     if one:
         if fst_.get_matchseq_delimiters() == '':
@@ -1427,18 +1436,10 @@ def _code_to_slice_MatchSequence(self: fst.FST, code: Code | None, one: bool, op
     if not ast_.patterns:  # put empty sequence is same as delete
         return None
 
-    # fst_._sanitize()
-    assert (ast_.lineno == 1 and ast_.col_offset == 0 and
-            ast_.end_lineno == len(ls := fst_.lines) and ast_.end_col_offset == ls[-1].lenbytes)
-
-    if fst_.get_matchseq_delimiters():  # strip enclosing parentheses / brackets
-        fst_.a.end_col_offset -= 1
-        fst_lines              = fst_._lines
-
-        fst_._offset(0, 1, 0, -1)  # guaranteed to start here because of _sanitize()
-
-        fst_lines[-1] = bistr(fst_lines[-1][:-1])
-        fst_lines[0]  = bistr(fst_lines[0][1:])
+    if fst_.get_matchseq_delimiters():  # delimited is restricted to the inside of the delimiters, which are removed
+        _trim_delimiters(fst_)
+    else:  # if undelimited then use whole source, including leading and trailing trivia not included
+        _set_loc_whole(fst_)
 
     return fst_
 
@@ -1448,7 +1449,7 @@ def _code_to_slice_MatchOr(self: fst.FST, code: Code | None, one: bool, options:
         return None
 
     try:
-        fst_ = _code_as_pattern(code, self.root.parse_params)
+        fst_ = _code_as_pattern(code, self.root.parse_params, sanitize=False)
 
     except (NodeError, SyntaxError):
         if (not (isinstance(code, list) or (isinstance(code, str) and (code := code.split('\n')))) or
@@ -1458,11 +1459,10 @@ def _code_to_slice_MatchOr(self: fst.FST, code: Code | None, one: bool, options:
 
         raise
 
-    matchor_put = self.get_option('matchor_put', options)
-    ast         = fst_.a
+    ast_ = fst_.a
 
-    if isinstance(ast, MatchOr):
-        if not (patterns := ast.patterns):
+    if isinstance(ast_, MatchOr):
+        if not (patterns := ast_.patterns):
             return None
 
         fst_pars = fst_.pars()
@@ -1471,28 +1471,30 @@ def _code_to_slice_MatchOr(self: fst.FST, code: Code | None, one: bool, options:
             if fst_pars.n:
                 fst_._unparenthesize_grouping()
 
+            _set_loc_whole(fst_)
+
             return fst_
 
         if not fst_pars.n:
             fst_._parenthesize_grouping()
 
     else:
-        if not one and not matchor_put:
+        if not one and not self.get_option('matchor_put', options):
             raise NodeError(f"slice being assigned to a MatchOr "
-                            f"must be a MatchOr with matchor_put=False, not a {ast.__class__.__name__}")
+                            f"must be a MatchOr with matchor_put=False, not a {ast_.__class__.__name__}")
 
-        if isinstance(ast, MatchAs):
-            if ast.pattern is not None and not fst_.pars().n:
+        if isinstance(ast_, MatchAs):
+            if ast_.pattern is not None and not fst_.pars().n:
                 fst_._parenthesize_grouping()
 
-        elif isinstance(ast, MatchSequence):
+        elif isinstance(ast_, MatchSequence):
             if not fst_.get_matchseq_delimiters():
                 fst_._delimit_node(delims='[]')
 
     ls  = fst_._lines
-    ast = MatchOr(patterns=[fst_.a], lineno=1, col_offset=0, end_lineno=len(ls), end_col_offset=ls[-1].lenbytes)
+    ast_ = MatchOr(patterns=[fst_.a], lineno=1, col_offset=0, end_lineno=len(ls), end_col_offset=ls[-1].lenbytes)
 
-    return fst.FST(ast, ls, from_=fst_, lcopy=False)
+    return fst.FST(ast_, ls, from_=fst_, lcopy=False)
 
 
 def _validate_put_seq(self: fst.FST, fst_: fst.FST, non_slice: str, *, check_target: bool = False):

@@ -945,7 +945,8 @@ class FST:
             - `'star'`: Only starred sequences `{*()}`, `{*[]}` and `{*{}}` are considered empty.
             - `'call'`: Only `set()` call is considered empty.
             - `'both'`: `set()` call and `{*()}`, `{*[]}` and `{*{}}` starred sequences are considered empty.
-        - `set_del`: What to leave for an empty set if a `Set` gets everything cut or deleted from it.
+        - `set_del`: What to leave for an empty set if a `Set` gets everything cut or deleted from it. This is also what
+            gets put if you put an invalid empty set with `one=True`.
             - `False`: Leave an invalid `Set` with zero elements and curlies as delimiters (would parse to a `Dict`).
             - `True`: Same as `'star'`.
             - `'star'`: Starred sequence `{*()}`.

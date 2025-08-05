@@ -1865,6 +1865,17 @@ def func():
         self.assertEqual('{ * ( ) }', f.put_slice('{*()}', 0, 0).src)
         f.root.verify()
 
+        # put as one
+
+        self.assertEqual('[1, {*()}, 2]', (f := FST('[1, 2]')).put_slice(FST._new_empty_set_curlies(), 1, 1, one=True).src)
+        f.verify()
+
+        self.assertEqual('[1, set(), 2]', (f := FST('[1, 2]')).put_slice(FST._new_empty_set_curlies(), 1, 1, one=True, set_del='call').src)
+        f.verify()
+
+        self.assertEqual('[1, {}, 2]', (f := FST('[1, 2]')).put_slice(FST._new_empty_set_curlies(), 1, 1, one=True, set_del=False).src)
+        self.assertIsNone(f.verify(raise_=False))
+
     def test_slice_matchor_empty_or_len1(self):
         self.assertEqual('', FST('a | b', pattern).get_slice(0, 0, matchor_get=False).src)
         self.assertRaises(NodeError, FST('a | b', pattern).get_slice, 0, 0, matchor_get=True)
@@ -2072,26 +2083,37 @@ def func():
         g.put_slice(f, 1, 2)
         self.assertEqual('(x, a, b,  # comment\n z)', g.src)
 
-    def test_slice_trivia_and_pars(self):
+    def test_slice_trivia_pars_and_one(self):
+        # matchor
+
         f = FST('a | b', pattern)
         self.assertEqual(f.put_slice('( # pre\nc | # line\nd # line\n# post\n)', 1, 1, one=True).src, '''
 a | ( # pre
 c | # line
 d # line
 # post
-) | b'''.strip())
+) | b
+            '''.strip())
         f.verify()
 
         f = FST('a | b', pattern)
         self.assertEqual(f.put_slice('# pre\nc | # line\nd # line\n# post\n', 1, 1).src, '''
-(a | c | # line
-d | b)'''.strip())
+(a | # pre
+c | # line
+d | # line
+# post
+b)
+            '''.strip())
         f.verify()
 
         f = FST('a | b', pattern)
         self.assertEqual(f.put_slice('# pre\nc | # line\nd # line\n# post\n', 1, 1, one=True).src, '''
-a | (c | # line
-d) | b'''.strip())
+a | (# pre
+c | # line
+d # line
+# post
+) | b
+            '''.strip())
         f.verify()
 
         f = FST('a |\n# pre\nc | # line\nd # line\n# post\n| b', pattern)
@@ -2115,11 +2137,145 @@ c | # line
 d | b)'''.strip())
         f.verify()
 
-        self.assertEqual('1, a,\\\nb, 2', FST('1, 2').put_slice('a,\\\nb,\\\n', 1, 1).src)
-        self.assertEqual('1, (a,\\\nb,), 2', FST('1, 2').put_slice('a,\\\nb,\\\n', 1, 1, one=True).src)
+        self.assertEqual('''
+(a |
+# pre
+c | d | # line
+# post
+b)
+            '''.strip(), (f := FST('a | b', pattern)).put_slice('\n# pre\nc | d # line\n# post\n', 1, 1).src)
+        f.verify()
 
-        self.assertEqual('(1, a, # comment\nb, 2)', FST('1, 2').put_slice('a, # comment\nb,\\\n', 1, 1).src)
-        self.assertEqual('1, (a, # comment\nb,), 2', FST('1, 2').put_slice('a, # comment\nb,\\\n', 1, 1, one=True).src)
+        self.assertEqual('''
+a | (
+# pre
+c | d # line
+# post
+) | b
+            '''.strip(), (f := FST('a | b', pattern)).put_slice('\n# pre\nc | d # line\n# post\n', 1, 1, one=True).src)
+        f.verify()
+
+        self.assertEqual('''
+(a |
+# pre
+c | d | # post
+b)
+            '''.strip(), (f := FST('a | b', pattern)).put_slice('\n# pre\n(c | d # line\n) # post\n', 1, 1).src)
+        f.verify()
+
+        self.assertEqual('''
+(a |
+# pre
+(c | d # line
+) | # post
+b)
+            '''.strip(), (f := FST('a | b', pattern)).put_slice('\n# pre\n(c | d # line\n) # post\n', 1, 1, one=True).src)
+        f.verify()
+
+        self.assertEqual('''
+(a |
+(# pre
+(c | d # line
+)) | # post
+b)
+            '''.strip(), (f := FST('a | b', pattern)).put_slice('\n(# pre\n(c | d # line\n)) # post\n', 1, 1, one=True).src)
+        f.verify()
+
+        self.assertEqual('''
+a | (
+# pre
+(c | d # line
+) # post
+) | b
+            '''.strip(), (f := FST('a | b', pattern)).put_slice('(\n# pre\n(c | d # line\n) # post\n)', 1, 1, one=True).src)
+        f.verify()
+
+        # Tuple (and list and Set)
+
+        self.assertEqual('1, a,\\\nb, \\\n2', (f := FST('1, 2').put_slice('a,\\\nb,\\\n', 1, 1)).src)
+        f.verify()
+        self.assertEqual('1, (a,\\\nb,\\\n), 2', (f := FST('1, 2').put_slice('a,\\\nb,\\\n', 1, 1, one=True)).src)
+        f.verify()
+
+        self.assertEqual('(1, a, # comment\nb, \\\n2)', (f := FST('1, 2').put_slice('a, # comment\nb,\\\n', 1, 1)).src)
+        f.verify()
+        self.assertEqual('1, (a, # comment\nb,\\\n), 2', (f := FST('1, 2').put_slice('a, # comment\nb,\\\n', 1, 1, one=True)).src)
+        f.verify()
+
+        self.assertEqual('(a,\n# pre\nc, # line\n# post\nb)', (f := FST('a, b').put_slice('\n# pre\nc, # line\n# post\n', 1, 1)).src)
+        f.verify()
+        self.assertEqual('a, (\n# pre\nc, # line\n# post\n), b', (f := FST('a, b').put_slice('\n# pre\nc, # line\n# post\n', 1, 1, one=True)).src)
+        f.verify()
+
+        self.assertEqual('(a, c, # line\nb)', (f := FST('a, b').put_slice('\n# pre\n[c, # line\n]# post\n', 1, 1)).src)
+        f.verify()
+        self.assertEqual('(a,\n# pre\n[c, # line\n], # post\nb)', (f := FST('a, b').put_slice('\n# pre\n[c, # line\n]# post\n', 1, 1, one=True)).src)
+        f.verify()
+        self.assertEqual('(a,\n(# pre\n[c, # line\n]), # post\nb)', (f := FST('a, b').put_slice('\n(# pre\n[c, # line\n])# post\n', 1, 1, one=True)).src)
+        f.verify()
+        self.assertEqual('a, (\n# pre\n[c, # line\n]# post\n), b', (f := FST('a, b').put_slice('(\n# pre\n[c, # line\n]# post\n)', 1, 1, one=True)).src)
+        f.verify()
+
+        # List (for the brackets)
+
+        self.assertEqual('[1, a,\\\nb, \\\n 2]', (f := FST('[1, 2]').put_slice('a,\\\nb,\\\n', 1, 1)).src)
+        f.verify()
+        self.assertEqual('[1, (a,\\\nb,\\\n), 2]', (f := FST('[1, 2]').put_slice('a,\\\nb,\\\n', 1, 1, one=True)).src)
+        f.verify()
+
+        self.assertEqual('[1, a, # comment\nb, \\\n 2]', (f := FST('[1, 2]').put_slice('a, # comment\nb,\\\n', 1, 1)).src)
+        f.verify()
+        self.assertEqual('[1, (a, # comment\nb,\\\n), 2]', (f := FST('[1, 2]').put_slice('a, # comment\nb,\\\n', 1, 1, one=True)).src)
+        f.verify()
+
+        self.assertEqual('[a,\n# pre\nc, # line\n# post\nb]', (f := FST('[a, b]').put_slice('\n# pre\nc, # line\n# post\n', 1, 1)).src)
+        f.verify()
+        self.assertEqual('[a, (\n# pre\nc, # line\n# post\n), b]', (f := FST('[a, b]').put_slice('\n# pre\nc, # line\n# post\n', 1, 1, one=True)).src)
+        f.verify()
+
+        self.assertEqual('[a, c, # line\n b]', (f := FST('[a, b]').put_slice('\n# pre\n[c, # line\n]# post\n', 1, 1)).src)
+        f.verify()
+        self.assertEqual('[a,\n# pre\n[c, # line\n], # post\nb]', (f := FST('[a, b]').put_slice('\n# pre\n[c, # line\n]# post\n', 1, 1, one=True)).src)
+        f.verify()
+        self.assertEqual('[a,\n(# pre\n[c, # line\n]), # post\nb]', (f := FST('[a, b]').put_slice('\n(# pre\n[c, # line\n])# post\n', 1, 1, one=True)).src)
+        f.verify()
+        self.assertEqual('[a, (\n# pre\n[c, # line\n]# post\n), b]', (f := FST('[a, b]').put_slice('(\n# pre\n[c, # line\n]# post\n)', 1, 1, one=True)).src)
+        f.verify()
+
+        # Dict
+
+        self.assertEqual('{a: a,\n# pre\nc: c, # line\n# post\nb: b}', (f := FST('{a: a, b: b}').put_slice('{\n# pre\nc: c, # line\n# post\n}', 1, 1)).src)
+        f.verify()
+        self.assertEqual('{a: a, c: c, # line\n b: b}', (f := FST('{a: a, b: b}').put_slice('\n# pre\n{c: c, # line\n}# post\n', 1, 1)).src)
+        f.verify()
+        self.assertEqual('{a: a, c: c, b: b}', (f := FST('{a: a, b: b}').put_slice('\n# pre\n{c: c} # line\n# post\n', 1, 1)).src)
+        f.verify()
+
+        # MatchSequence
+
+        self.assertEqual('1, a,\\\nb, \\\n2', (f := FST('1, 2', pattern).put_slice('a,\\\nb,\\\n', 1, 1)).src)
+        f.verify()
+        self.assertEqual('1, [a,\\\nb,\\\n], 2', (f := FST('1, 2', pattern).put_slice('a,\\\nb,\\\n', 1, 1, one=True)).src)
+        f.verify()
+
+        self.assertEqual('[1, a, # comment\nb, \\\n2]', (f := FST('1, 2', pattern).put_slice('a, # comment\nb,\\\n', 1, 1)).src)
+        f.verify()
+        self.assertEqual('1, [a, # comment\nb,\\\n], 2', (f := FST('1, 2', pattern).put_slice('a, # comment\nb,\\\n', 1, 1, one=True)).src)
+        f.verify()
+
+        self.assertEqual('[a,\n# pre\nc, # line\n# post\nb]', (f := FST('a, b', pattern).put_slice('\n# pre\nc, # line\n# post\n', 1, 1)).src)
+        f.verify()
+        self.assertEqual('a, [\n# pre\nc, # line\n# post\n], b', (f := FST('a, b', pattern).put_slice('\n# pre\nc, # line\n# post\n', 1, 1, one=True)).src)
+        f.verify()
+
+        self.assertEqual('[a, c, # line\nb]', (f := FST('a, b', pattern).put_slice('\n# pre\n[c, # line\n]# post\n', 1, 1)).src)
+        f.verify()
+        self.assertEqual('[a,\n# pre\n[c, # line\n], # post\nb]', (f := FST('a, b', pattern).put_slice('\n# pre\n[c, # line\n]# post\n', 1, 1, one=True)).src)
+        f.verify()
+        self.assertEqual('[a,\n(# pre\n[c, # line\n]), # post\nb]', (f := FST('a, b', pattern).put_slice('\n(# pre\n[c, # line\n])# post\n', 1, 1, one=True)).src)
+        f.verify()
+        self.assertEqual('a, (\n# pre\n[c, # line\n]# post\n), b', (f := FST('a, b', pattern).put_slice('(\n# pre\n[c, # line\n]# post\n)', 1, 1, one=True)).src)
+        f.verify()
 
 
 if __name__ == '__main__':

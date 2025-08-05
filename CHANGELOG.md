@@ -1,4 +1,4 @@
-## 0.2.0 alpha - ????-??-??
+## 0.2.0 - alpha - ????-??-??
 
 ### Fixed
 
@@ -6,16 +6,20 @@
 
 ### Added
 
-- trivia (comments and space) specification for slices
+- trivia (comments and space) specification
+- prescribed slicing for `MatchSequence.patterns`
+- prescribed slicing for `MatchMapping.keys:patterns`
+- prescribed slicing for `MatchOr.patterns`
 
 ### Updated
 
-- redid expressionish slices to use new trivia
+- redid expressionish slicing to use new trivia
 - split out more tests into separate files
 - preserve comments on parenthesize tuple
+- lots of code cleanups
 
 
-## 0.1.1 alpha - 2025-07-07
+## 0.1.1 - alpha - 2025-07-07
 
 ### Fixed
 
@@ -32,7 +36,7 @@
 
 - lots of code cleanups
 
-## 0.1.0 alpha - 2025-06-28
+## 0.1.0 - alpha - 2025-06-28
 
 ### Added
 
