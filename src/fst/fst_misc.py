@@ -1529,6 +1529,8 @@ def _parenthesize_grouping(self: fst.FST, whole: bool = True, *, star_child: boo
     """Parenthesize anything with non-node grouping parentheses. Just adds text parens around node adjusting parent
     locations but not the node itself.
 
+    WARNING! DO NOT parenthesize an unparenthesized `Tuple` or undelimited `MatchSequence`.
+
     **Parameters:**
     - `whole`: If at root then parenthesize whole source instead of just node.
     - `star_child`: `Starred` expressions cannot be parenthesized, so when this is `True` the parentheses are applied to

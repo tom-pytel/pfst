@@ -1598,6 +1598,7 @@ class SliceExprish(Fuzzy):
         field:      str | type[AST] | None
         min_script: int
         min_tmp:    int
+        one:        bool
         fst:        FST
 
     @staticmethod
@@ -1622,7 +1623,7 @@ class SliceExprish(Fuzzy):
             choice(('none', 'block', 'all', 'line')) + choice(('', '', '', '', '-', '+', '-', '+', '-1', '-2', '-3', '+1', '+2', '+3')),
         )
 
-    def transfer(self, dir: str, cat: str, field: str | None, src: FST, dst: FST, min_src: int, min_dst: int):
+    def transfer(self, dir: str, cat: str, field: str | None, src: FST, dst: FST, min_src: int, min_dst: int, one: bool):
         src_len    = len(src_body := getattr(src.a, field or 'keys'))
         dst_len    = len(dst_body := getattr(dst.a, field or 'keys'))
         src_start  = randint(0, src_len)
@@ -1646,6 +1647,12 @@ class SliceExprish(Fuzzy):
                     break  # can actually get here because of initially lower length containers than we allow
 
         cut = False if src_len - (src_stop - src_start) < min_src else bool(randint(0, 1))
+
+        if one:
+            if src_stop - src_start == 0 and isinstance(src.a, Set):
+                one = False
+            else:
+                one = False if dst_len - (dst_stop - dst_start) + 1 < min_dst else bool(randint(0, 1))
 
         if self.debug:  # isinstance(src.a, Set) or isinstance(dst.a, Set):
             print(f'\x08... {dir} {cat = }, {cut = }')
@@ -1673,14 +1680,15 @@ class SliceExprish(Fuzzy):
         if self.debug:  # isinstance(src.a, Set) or isinstance(dst.a, Set):
             print('   SLICE:   ', slice, slice.src)
 
-        dst.put_slice(slice, dst_start, dst_stop, field=field, trivia=dst_trivia)  # ('block-', 'line-'))
+        dst.put_slice(slice, dst_start, dst_stop, field=field, one=one, trivia=dst_trivia)  # ('block-', 'line-'))
 
-        dst_elts = dst_body[dst_start : dst_start + (src_stop - src_start)]
+        if not one:
+            dst_elts = dst_body[dst_start : dst_start + (src_stop - src_start)]
 
-        if not field:  # Dict or MatchMapping
-            dst_elts.extend(getattr(dst.a, 'values' if isinstance(dst.a, Dict) else 'patterns')[dst_start : dst_start + (src_stop - src_start)])
+            if not field:  # Dict or MatchMapping
+                dst_elts.extend(getattr(dst.a, 'values' if isinstance(dst.a, Dict) else 'patterns')[dst_start : dst_start + (src_stop - src_start)])
 
-        assert all(a is b for a, b in zip(dst_elts, slice_elts))  # identity check
+            assert all(a is b for a, b in zip(dst_elts, slice_elts))  # identity check
 
         if self.debug:  # isinstance(src.a, Set) or isinstance(dst.a, Set):
             print('   POST SRC:', src, src.src)
@@ -1690,13 +1698,13 @@ class SliceExprish(Fuzzy):
 
     def fuzz_one(self, fst, fnm) -> bool:
         buckets = {
-            'slice':       self.Bucket('elts', 1, 1, FST('a[1,]').slice),  # 1 because of "a[b, c]", must always leave at least 1 element so it doesn't get parentheses
-            'target':      self.Bucket('elts', 0, 0, FST('()')),
-            'seq':         self.Bucket('elts', 1, 0, FST('()')), # 1 because of Set
-            Dict:          self.Bucket(None, 0, 0, FST('{}')),
-            MatchSequence: self.Bucket('patterns', 0, 0, FST('[]', pattern)),
-            MatchMapping:  self.Bucket(None, 0, 0, FST('{}', pattern)),
-            MatchOr:       self.Bucket('patterns', 2, 2, FST('(a | b)', pattern)),
+            'slice':       self.Bucket('elts', 1, 1, False, FST('a[1,]').slice,),  # 1 because of "a[b, c]", must always leave at least 1 element so it doesn't get parentheses
+            'target':      self.Bucket('elts', 0, 0, True, FST('()')),
+            'seq':         self.Bucket('elts', 1, 0, True, FST('()')), # 1 because of Set
+            Dict:          self.Bucket(None, 0, 0, False, FST('{}')),
+            MatchSequence: self.Bucket('patterns', 0, 0, True, FST('[]', pattern)),
+            MatchMapping:  self.Bucket(None, 0, 0, False, FST('{}', pattern)),
+            MatchOr:       self.Bucket('patterns', 2, 2, True, FST('(a | b)', pattern)),
         }
 
         exprishs = []  # [('cat', FST), ...]
@@ -1742,8 +1750,8 @@ class SliceExprish(Fuzzy):
                         continue
 
                     with FST.options(set_get=False, set_put=False, set_del=False, matchor_get=False, matchor_put=False, matchor_del=False):
-                        self.transfer('>', cat, bucket.field, exprish, bucket.fst, bucket.min_script, bucket.min_tmp)
-                        self.transfer('<', cat, bucket.field, bucket.fst, exprish, bucket.min_tmp, bucket.min_script)
+                        self.transfer('>', cat, bucket.field, exprish, bucket.fst, bucket.min_script, bucket.min_tmp, bucket.one)
+                        self.transfer('<', cat, bucket.field, bucket.fst, exprish, bucket.min_tmp, bucket.min_script, bucket.one)
 
                     if self.verify:
                         fst.verify()

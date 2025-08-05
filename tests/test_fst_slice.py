@@ -2055,6 +2055,64 @@ def func():
             self.assertEqual('except (a, b, *x): pass', f.type.put_slice('*x,', 2, 2).root.src)
             f.verify()
 
+        # add newline to trailing comment without newline
+
+        f = FST('a, b  # comment')
+        g = FST('(x, y, z)')
+        f.a.end_col_offset = 15
+        f._touch()
+        g.put_slice(f, 1, 2)
+        self.assertEqual('(x, a, b,  # comment\n z)', g.src)
+
+    def test_slice_trivia_and_pars(self):
+        f = FST('a | b', pattern)
+        self.assertEqual(f.put_slice('( # pre\nc | # line\nd # line\n# post\n)', 1, 1, one=True).src, '''
+a | ( # pre
+c | # line
+d # line
+# post
+) | b'''.strip())
+        f.verify()
+
+        f = FST('a | b', pattern)
+        self.assertEqual(f.put_slice('# pre\nc | # line\nd # line\n# post\n', 1, 1).src, '''
+(a | c | # line
+d | b)'''.strip())
+        f.verify()
+
+        f = FST('a | b', pattern)
+        self.assertEqual(f.put_slice('# pre\nc | # line\nd # line\n# post\n', 1, 1, one=True).src, '''
+a | (c | # line
+d) | b'''.strip())
+        f.verify()
+
+        f = FST('a |\n# pre\nc | # line\nd # line\n# post\n| b', pattern)
+        self.assertEqual((g := f.get_slice(1, 3, cut=True, trivia=('all', 'all'))).src, '''
+(
+# pre
+c | # line
+d # line
+# post
+)'''.strip())
+        g.verify()
+
+        self.assertEqual(f.src, '''
+(a |
+b)'''.strip())
+        f.verify()
+
+        self.assertEqual(f.put_slice(g, 1, 1).src, '''
+(a |
+c | # line
+d | b)'''.strip())
+        f.verify()
+
+        self.assertEqual('1, a,\\\nb, 2', FST('1, 2').put_slice('a,\\\nb,\\\n', 1, 1).src)
+        self.assertEqual('1, (a,\\\nb,), 2', FST('1, 2').put_slice('a,\\\nb,\\\n', 1, 1, one=True).src)
+
+        self.assertEqual('(1, a, # comment\nb, 2)', FST('1, 2').put_slice('a, # comment\nb,\\\n', 1, 1).src)
+        self.assertEqual('1, (a, # comment\nb,), 2', FST('1, 2').put_slice('a, # comment\nb,\\\n', 1, 1, one=True).src)
+
 
 if __name__ == '__main__':
     import argparse

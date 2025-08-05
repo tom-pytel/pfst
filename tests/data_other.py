@@ -8264,6 +8264,51 @@ Module - ROOT 0,0..0,29
       .ctx Load
 """),
 
+(r"""match a:
+    case list([({-0-0j: int(real=0+0j, imag=0-0j) | 1 |
+                  (g, b) | (1) as z},)]): pass""", 'body[0].cases[0].pattern.patterns[0].patterns[0].patterns[0].patterns[0].pattern', 0, 2, r"""**DEL**""", r"""
+match a:
+    case list([({-0-0j: 
+                  (g, b) | (1) as z},)]): pass
+""", r"""
+Module - ROOT 0,0..2,46
+  .body[1]
+  0] Match - 0,0..2,46
+    .subject Name 'a' Load - 0,6..0,7
+    .cases[1]
+    0] match_case - 1,4..2,46
+      .pattern MatchClass - 1,9..2,40
+        .cls Name 'list' Load - 1,9..1,13
+        .patterns[1]
+        0] MatchSequence - 1,14..2,39
+          .patterns[1]
+          0] MatchSequence - 1,15..2,38
+            .patterns[1]
+            0] MatchMapping - 1,16..2,36
+              .keys[1]
+              0] BinOp - 1,17..1,22
+                .left UnaryOp - 1,17..1,19
+                  .op USub - 1,17..1,18
+                  .operand Constant 0 - 1,18..1,19
+                .op Sub - 1,19..1,20
+                .right Constant 0j - 1,20..1,22
+              .patterns[1]
+              0] MatchAs - 2,18..2,35
+                .pattern MatchOr - 2,18..2,30
+                  .patterns[2]
+                  0] MatchSequence - 2,18..2,24
+                    .patterns[2]
+                    0] MatchAs - 2,19..2,20
+                      .name 'g'
+                    1] MatchAs - 2,22..2,23
+                      .name 'b'
+                  1] MatchValue - 2,28..2,29
+                    .value Constant 1 - 2,28..2,29
+                .name 'z'
+      .body[1]
+      0] Pass - 2,42..2,46
+"""),
+
 ]  # END OF PUT_SLICE_EXPRISH_DATA
 
 PUT_SLICE_STMTISH_DATA = [

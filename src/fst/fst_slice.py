@@ -784,17 +784,15 @@ def _get_slice_MatchOr_patterns(self: fst.FST, start: int | Literal['end'] | Non
 
         return fst.FST._new_empty_matchor(from_=self)
 
-    if (len1_get := len_slice == 1) and matchor_get == 'strict':
+    if len_slice == 1 and matchor_get == 'strict':
         raise NodeError("cannot get length 1 slice from MatchOr with matchor_get='strict'")
-
-    len1_del = False
 
     if cut:
         if not (len_left := len_body - len_slice):
             if matchor_del:
                 raise NodeError("cannot cut MatchOr to empty without matchor_get=False")
 
-        elif (len1_del := len_left == 1) and matchor_del == 'strict':
+        elif len_left == 1 and matchor_del == 'strict':
             raise NodeError("cannot cut MatchOr to length 1 with matchor_get='strict'")
 
     locs    = _locs_and_bound_get(self, start, stop, body, body, 0)
@@ -1367,7 +1365,6 @@ def _code_to_slice_seq(self: fst.FST, code: Code | None, one: bool, options: dic
             ast_.end_lineno == len(ls := fst_.lines) and ast_.end_col_offset == ls[-1].lenbytes)
 
     if fst_.is_parenthesized_tuple() is not False:  # strip enclosing parentheses, brackets or curlies from List, Set or parenthesized Tuple
-
         ast_.end_col_offset -= 1
         fst_lines            = fst_._lines
 
@@ -1377,20 +1374,6 @@ def _code_to_slice_seq(self: fst.FST, code: Code | None, one: bool, options: dic
         fst_lines[0]  = bistr(fst_lines[0][1:])
 
     return fst_
-
-
-def _validate_put_seq(self: fst.FST, fst_: fst.FST, non_slice: str, *, check_target: bool = False):
-    if not fst_:
-        return
-
-    ast  = self.a
-    ast_ = fst_.a
-
-    if non_slice and isinstance(ast_, Tuple) and any(isinstance(e, Slice) for e in ast_.elts):
-        raise ValueError(f'cannot put Slice into a {non_slice}')
-
-    if check_target and not isinstance(ctx := ast.ctx, Load) and not is_valid_target(ast_):
-        raise ValueError(f'invalid slice for {ast.__class__.__name__} {ctx.__class__.__name__} target')
 
 
 def _code_to_slice_seq2(self: fst.FST, code: Code | None, one: bool, options: dict[str, Any], code_as: Callable,
@@ -1518,6 +1501,20 @@ def _code_to_slice_MatchOr(self: fst.FST, code: Code | None, one: bool, options:
     ast = MatchOr(patterns=[fst_.a], lineno=1, col_offset=0, end_lineno=len(ls), end_col_offset=ls[-1].lenbytes)
 
     return fst.FST(ast, ls, from_=fst_, lcopy=False)
+
+
+def _validate_put_seq(self: fst.FST, fst_: fst.FST, non_slice: str, *, check_target: bool = False):
+    if not fst_:
+        return
+
+    ast  = self.a
+    ast_ = fst_.a
+
+    if non_slice and isinstance(ast_, Tuple) and any(isinstance(e, Slice) for e in ast_.elts):
+        raise ValueError(f'cannot put Slice into a {non_slice}')
+
+    if check_target and not isinstance(ctx := ast.ctx, Load) and not is_valid_target(ast_):
+        raise ValueError(f'invalid slice for {ast.__class__.__name__} {ctx.__class__.__name__} target')
 
 
 # ......................................................................................................................
