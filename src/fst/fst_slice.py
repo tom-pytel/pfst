@@ -338,7 +338,8 @@ def _locs_slice_seq(self: fst.FST, is_first: bool, is_last: bool, loc_first: fst
     return copy_locs[:1] + cut_locs[1:]  # copy location from copy_locs and delete location and indent from cut_locs
 
 
-def _locs_first_and_last(self, start: int, stop: int, body: list[AST], body2: list[AST]) -> tuple[fstloc, fstloc]:
+def _locs_first_and_last(self: fst.FST, start: int, stop: int, body: list[AST], body2: list[AST],
+                         ) -> tuple[fstloc, fstloc]:
     stop_1 = stop - 1
 
     if body2 is body:
@@ -365,18 +366,16 @@ def _fixup_self_tail_sep_del(self: fst.FST, self_tail_sep: bool | Literal[0, 1] 
                              len_body: int) -> bool | Literal[0, 1] | None:
     is_last = stop == len_body
 
-    if self_tail_sep is True:
-        return None if is_last else True
-    elif self_tail_sep:  # only adds if single element remains
-        return (None if is_last else 1) if len_body - (stop - start) == 1 else (0 if is_last and start else None)
-    elif self_tail_sep is not None:  # is False or == 0
-        return self_tail_sep if (start and is_last) else None
-    elif not isinstance(self.a, Tuple):
+    if self_tail_sep is None:
         return 0 if (start and is_last) else None
-    elif is_last:
-        return 0 if start >= 2 else None
+    elif not self_tail_sep:  # is False or == 0
+        return self_tail_sep if (start and is_last) else None
+    elif self_tail_sep is True:
+        return None if is_last else True
+    elif len_body - (stop - start) == 1:  # self_tail_sep == 1, only adds if single element remains otherwise noop
+        return (None if is_last else 1)
     else:
-        return True if not start and stop == len_body - 1 else None
+        return (0 if is_last and start else None)
 
 
 def _shorter_str(a: str, b: str) -> str:
@@ -442,15 +441,8 @@ def _get_slice_seq(self: fst.FST, start: int, stop: int, len_body: int, cut: boo
     is_last         = stop == len_body
     len_self_suffix = self.end_col - bound_end_col  # will be 1 or 0 depending on if enclosed container or unparenthesized tuple
 
-    if ret_tail_sep is None:
-        ret_tail_sep = ((stop - start) == 1 and isinstance(ast, Tuple)) or 0  # if would result in signleton tuple then will need trailing separator
-    elif ret_tail_sep and ret_tail_sep is not True and (stop - start) != 1:
+    if ret_tail_sep and ret_tail_sep is not True and (stop - start) != 1:  # if ret_tail_sel == 1 and length will not be 1 then remove
         ret_tail_sep = 0
-
-    # self_tail_sep:
-    #   None: Means exactly that, do nothing, no add OR delete, will always be this if cutting everything.
-    #   True: Means add trailing separator to last element of what is left in self if it does not have one (implies something is left)
-    #   False: Means delete trailing separator from what is left after cut (implies something is left).
 
     if not cut:
         self_tail_sep = None
@@ -639,7 +631,7 @@ def _get_slice_Tuple_elts(self: fst.FST, start: int | Literal['end'] | None, sto
         prefix = suffix = ''
 
     fst_ = _get_slice_seq(self, start, stop, len_body, cut, ret_ast, asts[-1], *locs,
-                          options.get('trivia'), 'elts', prefix, suffix)
+                          options.get('trivia'), 'elts', prefix, suffix, ',', 1, 1)
 
     if not is_par:
         fst_._maybe_fix_tuple(False)
@@ -1182,12 +1174,12 @@ def _put_slice_seq(self: fst.FST, start: int, stop: int, fst_: fst.FST | None,
             last = fst_last
 
             if self_tail_sep is None:
-                if isinstance(self.a, Tuple) and is_first and len_fst == 1:  # if single element overwriting all elements of a tuple then make sure has trailing separator
-                    self_tail_sep = True
-
-                elif pos := _next_find(put_lines, fst_last.end_ln, fst_last.end_col, fst_.end_ln, fst_.end_col, sep):  # only remove if slice being put actually has trailing separator
+                if pos := _next_find(put_lines, fst_last.end_ln, fst_last.end_col, fst_.end_ln, fst_.end_col, sep):  # only remove if slice being put actually has trailing separator
                     if re_empty_space.match(put_lines[pos[0]], pos[1] + len(sep)):  # which doesn't have stuff following it
                         self_tail_sep = 0
+
+            elif self_tail_sep == 1 and self_tail_sep is not True and (start or len_fst > 1):  # if 1 and length will not be 1 then remove
+                self_tail_sep = 0
 
         elif self_tail_sep == 0:  # don't remove from tail if tail not touched
             self_tail_sep = None
@@ -1628,7 +1620,7 @@ def _put_slice_Tuple_elts(self: fst.FST, code: Code | None, start: int | Literal
     if not fst_:
         _put_slice_seq(self, start, stop, None, None, None, 0,
                        bound_ln, bound_col, bound_end_ln, bound_end_col,
-                       options.get('trivia'), options.get('ins_ln'))
+                       options.get('trivia'), options.get('ins_ln'), self_tail_sep=1)
 
         self._unmake_fst_tree(body[start : stop])
 
@@ -1639,7 +1631,7 @@ def _put_slice_Tuple_elts(self: fst.FST, code: Code | None, start: int | Literal
     else:
         _put_slice_seq(self, start, stop, fst_, fst_body[0].f, fst_body[-1].f, len_fst_body,
                        bound_ln, bound_col, bound_end_ln, bound_end_col,
-                       options.get('trivia'), options.get('ins_ln'))
+                       options.get('trivia'), options.get('ins_ln'), self_tail_sep=1)
 
         self._unmake_fst_tree(body[start : stop])
         fst_._unmake_fst_parents(True)

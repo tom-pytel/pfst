@@ -1974,6 +1974,7 @@ def func():
         self.assertEqual('(\n            TI(string="case"),\n)', g.src)
 
     def test_put_slice_special(self):
+        # patterns
         f = FST('case a | b: pass')
         g = f.pattern.get_slice(cut=True, matchor_del=False)
         f.pattern.put_slice(g)
@@ -1985,6 +1986,13 @@ def func():
         f.put_slice(g)
         self.assertEqual('a | b', f.src)
         f.verify()
+
+        f = FST('{0: a, **r}', pattern)
+        f.put_slice('{1: b, 2: c}', 0, 1)
+        self.assertEqual('{1: b, 2: c, **r}', f.src)
+        f.verify()
+
+        # stars and slices
 
         f = FST('{1, 2}')
         self.assertRaises(ValueError, f.put_slice, FST('x:y:z,', 'expr_slice'))
@@ -2055,7 +2063,7 @@ def func():
             self.assertEqual('except (a, b, *x): pass', f.type.put_slice('*x,', 2, 2).root.src)
             f.verify()
 
-        # add newline to trailing comment without newline
+        # trailing comment without newline
 
         f = FST('a, b  # comment')
         g = FST('(x, y, z)')

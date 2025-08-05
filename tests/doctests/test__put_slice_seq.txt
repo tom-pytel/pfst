@@ -6,6 +6,8 @@
 delete
 
 >>> def test_delete(fst_, start, stop, trivia=None, off=1, field='elts', sep=',', self_tail_sep=None):
+...     self_tail_sep = 1 if self_tail_sep is None and isinstance(fst_.a, Tuple) else self_tail_sep
+...
 ...     _put_slice_seq(fst_, start, stop, None, None, None, 0,
 ...                    fst_.ln, fst_.col + off, fst_.end_ln, fst_.end_col - off,
 ...                    trivia, None, field, None, sep, self_tail_sep)
@@ -152,7 +154,8 @@ delete
 replace
 
 >>> def test_replace(fst_, start, stop, new, trivia=None, off=1, field='elts', sep=',', self_tail_sep=None):
-...     new_body = getattr(new.a, field)
+...     new_body      = getattr(new.a, field)
+...     self_tail_sep = 1 if self_tail_sep is None and isinstance(fst_.a, Tuple) else self_tail_sep
 ...
 ...     _put_slice_seq(fst_, start, stop, new, new_body[0].f, new_body[-1].f, len(new_body),
 ...                    fst_.ln, fst_.col + off, fst_.end_ln, fst_.end_col - off,
@@ -459,7 +462,8 @@ trailing newlines
 replace
 
 >>> def test_insert(fst_, idx, new, trivia=None, off=1, field='elts', sep=',', self_tail_sep=None):
-...     new_body = getattr(new.a, field)
+...     new_body      = getattr(new.a, field)
+...     self_tail_sep = 1 if self_tail_sep is None and isinstance(fst_.a, Tuple) else self_tail_sep
 ...
 ...     _put_slice_seq(fst_, idx, idx, new, new_body[0].f, new_body[-1].f, len(new_body),
 ...                    fst_.ln, fst_.col + off, fst_.end_ln, fst_.end_col - off,
@@ -832,6 +836,8 @@ don't remove comma with stuff after it
 delete (two-element sequence)
 
 >>> def test_delete2(fst_, start, stop, trivia=None, off=1, field='keys', field2='values', sep=',', self_tail_sep=None):
+...     self_tail_sep = 1 if self_tail_sep is None and isinstance(fst_.a, Tuple) else self_tail_sep
+...
 ...     _put_slice_seq(fst_, start, stop, None, None, None, 0,
 ...                    fst_.ln, fst_.col + off, fst_.end_ln, fst_.end_col - off,
 ...                    trivia, None, field, field2, sep, self_tail_sep)
