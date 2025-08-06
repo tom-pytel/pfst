@@ -2047,12 +2047,12 @@ c | # line2
 # post
 d): pass""", 'body[0].cases[0].pattern', 1, 3, {'trivia': (None, 'block')}, r"""match a:
  case (a |
-d): pass""", r"""(
+d): pass""", r"""
 # pre
-b | # line1
-c # line2
+(b | # line1
+c) # line2
 # post
-)""", r"""
+""", r"""
 Module - ROOT 0,0..2,8
   .body[1]
   0] Match - 0,0..2,8
@@ -2068,9 +2068,9 @@ Module - ROOT 0,0..2,8
       .body[1]
       0] Pass - 2,4..2,8
 """, r"""
-MatchOr - ROOT 2,0..3,1
+MatchOr - ROOT 2,1..3,1
   .patterns[2]
-  0] MatchAs - 2,0..2,1
+  0] MatchAs - 2,1..2,2
     .name 'b'
   1] MatchAs - 3,0..3,1
     .name 'c'
@@ -8268,7 +8268,7 @@ Module - ROOT 0,0..0,29
     case list([({-0-0j: int(real=0+0j, imag=0-0j) | 1 |
                   (g, b) | (1) as z},)]): pass""", 'body[0].cases[0].pattern.patterns[0].patterns[0].patterns[0].patterns[0].pattern', 0, 2, r"""**DEL**""", r"""
 match a:
-    case list([({-0-0j: 
+    case list([({-0-0j:_
                   (g, b) | (1) as z},)]): pass
 """, r"""
 Module - ROOT 0,0..2,46

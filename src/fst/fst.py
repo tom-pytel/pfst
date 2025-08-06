@@ -887,9 +887,10 @@ class FST:
         when the context manager exits.
 
         **Options:**
-        - `pars`: How parentheses are handled, can be `False`, `True` or `'auto'`. This is for individual puts, for
-            slices parentheses are always unchanged. Raw puts generally do not have parentheses added or removed
-            automatically, except removed from the destination node if putting to a node instead of a pure location.
+        - `pars`: How parentheses are handled, can be `False`, `True` or `'auto'`. This is for individual element
+            operations, slice operations ignore this as parentheses usually cannot be removed or may need to be added to
+            keep the slices usable. Raw puts generally do not have parentheses added or removed automatically, except
+            maybe removed according to this from the destination node if putting to a node instead of a pure location.
             - `False`: Parentheses are not MODIFIED, doesn't mean remove all parentheses. Not copied with nodes or
                 removed on put from source or destination.
             - `True`: Parentheses are copied with nodes, added to copies if needed and not present, removed from

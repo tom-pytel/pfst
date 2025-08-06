@@ -1,0 +1,67 @@
+Miscellaneous console sessions mostly meant to screen for random errors.
+
+>>> from fst import *
+
+
+>>> f = FST('''
+... class cls:
+...     def __init__(self):
+...         pass
+...
+...     def meth(self, a):
+...         return a
+... ''')
+>>> f
+<ClassDef ROOT 1,0..6,16>
+>>> f.src
+'\nclass cls:\n    def __init__(self):\n        pass\n\n    def meth(self, a):\n        return a\n'
+>>> print(_)
+<BLANKLINE>
+class cls:
+    def __init__(self):
+        pass
+<BLANKLINE>
+    def meth(self, a):
+        return a
+<BLANKLINE>
+>>> f.body['meth']
+<FunctionDef 5,4..6,16>
+>>> _.src
+'def meth(self, a):\n        return a'
+>>> f.body['meth']
+<FunctionDef 5,4..6,16>
+>>> print(f.body['meth'].src)
+def meth(self, a):
+        return a
+>>> print(f.body['meth'].copy().src)
+def meth(self, a):
+    return a
+>>> f.body.append(f.body['meth'].copy())
+<<ClassDef ROOT 1,0..9,16>.body[0:3] [<FunctionDef 2,4..3,12>, <FunctionDef 5,4..6,16>, <FunctionDef 8,4..9,16>]>
+>>> print(f.src)
+<BLANKLINE>
+class cls:
+    def __init__(self):
+        pass
+<BLANKLINE>
+    def meth(self, a):
+        return a
+<BLANKLINE>
+    def meth(self, a):
+        return a
+<BLANKLINE>
+>>> f.body[-1]
+<FunctionDef 8,4..9,16>
+>>> f.body[-1].name = 'blahblahblah'
+>>> print(f.src)
+<BLANKLINE>
+class cls:
+    def __init__(self):
+        pass
+<BLANKLINE>
+    def meth(self, a):
+        return a
+<BLANKLINE>
+    def blahblahblah(self, a):
+        return a
+<BLANKLINE>

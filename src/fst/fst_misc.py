@@ -1384,6 +1384,10 @@ def _maybe_fix_matchor(self: fst.FST, fix1: bool = False):
     if not (patterns := self.a.patterns):
         return
 
+    if not (is_root := self.is_root):  # if not root then it needs ot be fixed here
+        if not self.is_enclosed_or_line() and not self.is_enclosed_in_parents():
+            self._parenthesize_grouping()  # we do this instead or _sanitize() to keep any trivia, and we do it first to make sure we don't introduce any unenclosed newlines
+
     if (len_patterns := len(patterns)) == 1 and fix1:
         pat0 = patterns[0]
 
@@ -1403,8 +1407,9 @@ def _maybe_fix_matchor(self: fst.FST, fix1: bool = False):
 
         _update_loc_up_parents(self, ln + 1, col_offset, end_ln + 1, end_col_offset)
 
-    if not self.is_enclosed_or_line() and not self.is_enclosed_in_parents():
-        self._parenthesize_grouping()  # we do this instead or _sanitize() to keep any trivia
+    if is_root:
+        if not self.is_enclosed_or_line() and not self.is_enclosed_in_parents():
+            self._parenthesize_grouping(False)
 
 
 def _maybe_fix_set(self: fst.FST, empty: bool | Literal['star', 'call'] = True):

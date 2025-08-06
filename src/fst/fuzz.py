@@ -1655,7 +1655,7 @@ class SliceExprish(Fuzzy):
                 one = False if dst_len - (dst_stop - dst_start) + 1 < min_dst else bool(randint(0, 1))
 
         if self.debug:  # isinstance(src.a, Set) or isinstance(dst.a, Set):
-            print(f'\x08... {dir} {cat = }, {cut = }')
+            print(f'\x08... {dir} {cat = }, {cut = }, {one = }')
             print(f'    {src_start = }, {src_stop = }, {src_len = }, {min_src = }, {src_trivia = }')
             print(f'    {dst_start = }, {dst_stop = }, {dst_len = }, {min_dst = }, {dst_trivia = }')
             print('   PRE SRC: ', src, src.src)
@@ -1667,7 +1667,7 @@ class SliceExprish(Fuzzy):
         if not field:  # Dict or MatchMapping
             src_elts.extend(getattr(src.a, 'values' if isinstance(src.a, Dict) else 'patterns')[src_start : src_stop])
 
-        slice = src.get_slice(src_start, src_stop, field=field, cut=cut, trivia=src_trivia)  # ('block-', 'line-'))
+        slice = src.get_slice(src_start, src_stop, field=field, cut=cut, trivia=src_trivia)
 
         slice_elts = getattr(slice.a, field or 'keys')[:]
 
@@ -1680,7 +1680,7 @@ class SliceExprish(Fuzzy):
         if self.debug:  # isinstance(src.a, Set) or isinstance(dst.a, Set):
             print('   SLICE:   ', slice, slice.src)
 
-        dst.put_slice(slice, dst_start, dst_stop, field=field, one=one, trivia=dst_trivia)  # ('block-', 'line-'))
+        dst.put_slice(slice, dst_start, dst_stop, field=field, one=one, trivia=dst_trivia)
 
         if not one:
             dst_elts = dst_body[dst_start : dst_start + (src_stop - src_start)]

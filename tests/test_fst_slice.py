@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import os
+import re
 import sys
 import unittest
 
@@ -12,6 +13,10 @@ from data_other import (
     GET_SLICE_EXPRISH_DATA, GET_SLICE_STMTISH_DATA,
     PUT_SLICE_EXPRISH_DATA, PUT_SLICE_STMTISH_DATA, PUT_SLICE_DATA,
 )
+
+
+def fixtailspace(s, r='_'):
+    return re.sub(r'[ ]+$', lambda m: r * len(m.group()), s, flags=re.MULTILINE)
 
 
 def read(fnm):
@@ -124,7 +129,7 @@ def regen_put_slice_seq():
 
             t.f.verify(raise_=True)
 
-            newlines.extend(f'''(r"""{dst}""", {elt!r}, {start}, {stop}, r"""{src}""", r"""\n{tdst}\n""", r"""'''.split('\n'))
+            newlines.extend(f'''(r"""{dst}""", {elt!r}, {start}, {stop}, r"""{src}""", r"""\n{fixtailspace(tdst)}\n""", r"""'''.split('\n'))
             newlines.extend(tdump)
             newlines.append('"""),\n')
 
@@ -1663,7 +1668,7 @@ def func():
                 tdst  = t.f.src
                 tdump = t.f.dump(out=list)
 
-                self.assertEqual(tdst, put_src.strip())
+                self.assertEqual(fixtailspace(tdst), put_src.strip())
                 self.assertEqual(tdump, put_dump.strip().split('\n'))
 
             except Exception:
@@ -1986,6 +1991,7 @@ def func():
 
     def test_put_slice_special(self):
         # patterns
+
         f = FST('case a | b: pass')
         g = f.pattern.get_slice(cut=True, matchor_del=False)
         f.pattern.put_slice(g)
@@ -2083,6 +2089,28 @@ def func():
         g.put_slice(f, 1, 2)
         self.assertEqual('(x, a, b,  # comment\n z)', g.src)
 
+        # enclose leading / traling newlines
+
+        self.assertEqual('z = (\n\nc, \nd, b)', (f := FST('z = a, b')).value.put_slice('\n\nc, \nd', 0, 1).root.src)
+        f.verify()
+
+        self.assertEqual('case [\n\nc, \nd, b]: pass', (f := FST('case a, b: pass')).pattern.put_slice('\n\nc, \nd', 0, 1).root.src)
+        f.verify()
+
+        self.assertEqual('case (\n\nc | \nd | b): pass', (f := FST('case a | b: pass')).pattern.put_slice('\n\nc | \nd', 0, 1).root.src)
+        f.verify()
+
+        f = FST('case a | b: pass')
+        self.assertEqual('\n\n# pre\ny # line\n# post\n', (g := FST('(x |\n\n# pre\ny | # line\n# post\n z)', pattern).get_slice(1, 2, trivia=('all+', 'all'))).src)
+        self.assertEqual('case (\n\n# pre\ny | # line\n# post\nb): pass', (f := FST('case a | b: pass')).pattern.put_slice(g, 0, 1).root.src)
+        f.verify()
+
+        f = FST('case a | b: pass')
+        self.assertEqual('\n\n# pre\n(y | # line\n# post\n z)', (g := FST('(x |\n\n# pre\ny | # line\n# post\n z)', pattern).get_slice(1, 3, trivia=('all+', 'all'))).src)
+        self.assertEqual('case (\n\n# pre\ny | # line\n# post\n z | b): pass', (f := FST('case a | b: pass')).pattern.put_slice(g, 0, 1).root.src)
+        f.verify()
+
+
     def test_slice_trivia_pars_and_one(self):
         # matchor
 
@@ -2118,12 +2146,11 @@ d # line
 
         f = FST('a |\n# pre\nc | # line\nd # line\n# post\n| b', pattern)
         self.assertEqual((g := f.get_slice(1, 3, cut=True, trivia=('all', 'all'))).src, '''
-(
 # pre
-c | # line
-d # line
+(c | # line
+d) # line
 # post
-)'''.strip())
+''')
         g.verify()
 
         self.assertEqual(f.src, '''
@@ -2133,8 +2160,11 @@ b)'''.strip())
 
         self.assertEqual(f.put_slice(g, 1, 1).src, '''
 (a |
+# pre
 c | # line
-d | b)'''.strip())
+d | # line
+# post
+b)'''.strip())
         f.verify()
 
         self.assertEqual('''

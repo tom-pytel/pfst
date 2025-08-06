@@ -1491,8 +1491,8 @@ def _code_to_slice_MatchOr(self: fst.FST, code: Code | None, one: bool, options:
             if not fst_.get_matchseq_delimiters():
                 fst_._delimit_node(delims='[]')
 
-    ls  = fst_._lines
-    ast_ = MatchOr(patterns=[fst_.a], lineno=1, col_offset=0, end_lineno=len(ls), end_col_offset=ls[-1].lenbytes)
+    ls   = fst_._lines
+    ast_ = MatchOr(patterns=[ast_], lineno=1, col_offset=0, end_lineno=len(ls), end_col_offset=ls[-1].lenbytes)
 
     return fst.FST(ast_, ls, from_=fst_, lcopy=False)
 
