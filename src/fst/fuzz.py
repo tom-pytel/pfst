@@ -185,7 +185,7 @@ PATS = [FST(e, 'pattern') for e in PATS]
 
 
 def minify_src(source_code):
-    tokens   = tokenize.tokenize(BytesIO(source_code.encode('utf-8')).readline)
+    tokens   = tokenize.tokenize(BytesIO(source_code.encode()).readline)
     result   = []
     prev_end = (1, 0)
     prev_str = ''

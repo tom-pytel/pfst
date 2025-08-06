@@ -6,7 +6,9 @@ This module contains functions which are imported as methods in the `FST` class.
 from __future__ import annotations
 
 from ast import *
+from io import BytesIO
 from itertools import takewhile
+from tokenize import tokenize as tokenize_tokenize, ENDMARKER, STRING
 from types import FunctionType, NoneType
 from typing import Callable, NamedTuple, Union
 
@@ -31,6 +33,13 @@ from .fst_parse import (
     _code_as_withitem, _code_as_type_param, _code_as_identifier, _code_as_identifier_dotted, _code_as_identifier_alias,
     _code_as_constant,
 )
+
+FSTRING_END = TSTRING_END = None
+
+try:
+    from tokenize import FSTRING_END, TSTRING_END  # may not be present, ORDER MATTERS!
+except ImportError:
+    pass
 
 _GetOneRet  = Union['fst.FST', None, str, constant]
 _PutOneCode = Code | str | constant | None
@@ -169,13 +178,53 @@ def _get_one_format_spec(self: fst.FST, idx: int | None, field: str, cut: bool, 
 def _get_one_format_spec(self: fst.FST, idx: int | None, field: str, cut: bool, **options) -> _GetOneRet:
     child, _ = _validate_get(self, idx, field)
     childf   = child.f
-    ret      = childf._make_fst_and_dedent(childf, copy_ast(child), childf.loc, "f", "'",
-                                            docstr=options.get('docstr'))
-    ls[0]    = bistr("f'" + (ls := ret._lines)[0][2:])
+    loc      = childf.loc
+    src      = childf.get_src(*loc)
 
-    reta                 = ret.a
+    if "'" not in src:  # early out for quotes
+        prefix = 'f'
+        quotes = "'"
+
+    else:  # figure out which quotes to use by process of elimination
+        quotes = {"'": True, '"': True, '"""': True, "'''": True}
+
+        if src.endswith('"'):
+            del quotes['"""']
+
+        if src.endswith("'"):
+            del quotes["'''"]
+
+        for token in tokenize_tokenize(BytesIO(src.encode()).readline):
+            if (ttype := token.type) == STRING:
+                if (q := token.string[-3:]) not in ('"""', "'''"):
+                    q = q[-1:]
+
+            elif ttype == FSTRING_END or ttype == TSTRING_END:
+                q = token.string
+            else:
+                continue
+
+            try:
+                del quotes[q]
+            except KeyError:
+                pass
+
+        if not quotes:
+            raise RuntimeError('too may quotes, cannot figure out which to use')
+
+        quotes = next(iter(quotes))
+        prefix = 'f' + quotes[2:]
+
+    ret  = childf._make_fst_and_dedent(childf, copy_ast(child), loc, prefix, quotes, docstr=options.get('docstr'))
+    reta = ret.a
+
+    if len(quotes) == 1:
+        ls[0] = bistr(f"f{quotes}" + (ls := ret._lines)[0][2:])
+    else:
+        ret._put_src([f'f{quotes}'], 0, 0, 0, 3, False)
+
     reta.col_offset      = 0
-    reta.end_col_offset += 1
+    reta.end_col_offset += len(quotes)
 
     ret._touch()
 

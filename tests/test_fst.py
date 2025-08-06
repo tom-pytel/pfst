@@ -3755,11 +3755,11 @@ opts.ignore_module = [mod.strip()
             self.assertEqual("'r'", FST('f"{a=}"').values[1].get('conversion').src)
 
             f = FST('if 1:\n    f"{a!r\n : {\'0.5f<12\'} }"').body[0].value.values[0].get('format_spec')
-            self.assertEqual("f' {'0.5f<12'} '", f.src)
+            self.assertEqual('''f" {'0.5f<12'} "''', f.src)
             f.verify()
 
             f = FST('f"{a!r\n : {\'0.5f<12\'} }"').values[0].get('format_spec')
-            self.assertEqual("f' {'0.5f<12'} '", f.src)
+            self.assertEqual('''f" {'0.5f<12'} "''', f.src)
             f.verify()
 
             f = FST('f"{a!r\n : 0.5f<12 }"').values[0].get('format_spec')
@@ -3815,11 +3815,11 @@ if 1:
             self.assertEqual("'r'", FST('t"{a=}"').values[1].get('conversion').src)
 
             f = FST('if 1:\n    t"{a!r\n : {\'0.5f<12\'} }"').body[0].value.values[0].get('format_spec')
-            self.assertEqual("f' {'0.5f<12'} '", f.src)
+            self.assertEqual('''f" {'0.5f<12'} "''', f.src)
             f.verify()
 
             f = FST('t"{a!r\n : {\'0.5f<12\'} }"').values[0].get('format_spec')
-            self.assertEqual("f' {'0.5f<12'} '", f.src)
+            self.assertEqual('''f" {'0.5f<12'} "''', f.src)
             f.verify()
 
             f = FST('t"{a!r\n : 0.5f<12 }"').values[0].get('format_spec')
@@ -3888,6 +3888,51 @@ if 1:
             self.assertEqual('(a, b)', FST('f"{a, b}"').values[0].get().src)
             self.assertEqual('( a, b )', FST('f"{ a, b }"').values[0].get().src)
             self.assertEqual('(a, b)', FST('f"{ (a, b) }"').values[0].get().src)
+
+    @unittest.skipUnless(PYGE12, 'only valid for py >= 3.12')
+    def test_get_format_spec(self):
+        self.assertEqual('''f" {a}, 'b': {b}, 'c': {c}"''', (f := FST('''f"{'a': {a}, 'b': {b}, 'c': {c}}"''').values[0].format_spec.copy()).src)
+        f.verify()
+
+        self.assertEqual('''f""" '2', "3" """''', (f := FST('''f"""{1: '2', "3" }"""''').values[0].format_spec.copy()).src)
+        f.verify()
+
+        self.assertEqual('''f""" f'2', f"3" """''', (f := FST('''f"""{1: f'2', f"3" }"""''').values[0].format_spec.copy()).src)
+        f.verify()
+
+        self.assertEqual("""f''' '2', "3"'''""", (f := FST('''f"""{1: '2', "3"}"""''').values[0].format_spec.copy()).src)
+        f.verify()
+
+        self.assertEqual("""f''' f'2', f"3"'''""", (f := FST('''f"""{1: f'2', f"3"}"""''').values[0].format_spec.copy()).src)
+        f.verify()
+
+        self.assertEqual('''f""""2", '3'"""''', (f := FST('''f"""{1:"2", '3'}"""''').values[0].format_spec.copy()).src)
+        f.verify()
+
+        self.assertEqual("""f'''"2", '3', "4"'''""", (f := FST('''f"""{1:"2", '3', "4"}"""''').values[0].format_spec.copy()).src)
+        f.verify()
+
+        if PYGE14:
+            self.assertEqual('''f" {a}, 'b': {b}, 'c': {c}"''', (f := FST('''t"{'a': {a}, 'b': {b}, 'c': {c}}"''').values[0].format_spec.copy()).src)
+            f.verify()
+
+            self.assertEqual('''f""" '2', "3" """''', (f := FST('''t"""{1: '2', "3" }"""''').values[0].format_spec.copy()).src)
+            f.verify()
+
+            self.assertEqual('''f""" t'2', t"3" """''', (f := FST('''t"""{1: t'2', t"3" }"""''').values[0].format_spec.copy()).src)
+            f.verify()
+
+            self.assertEqual("""f''' '2', "3"'''""", (f := FST('''t"""{1: '2', "3"}"""''').values[0].format_spec.copy()).src)
+            f.verify()
+
+            self.assertEqual("""f''' t'2', t"3"'''""", (f := FST('''t"""{1: t'2', t"3"}"""''').values[0].format_spec.copy()).src)
+            f.verify()
+
+            self.assertEqual('''f""""2", '3'"""''', (f := FST('''t"""{1:"2", '3'}"""''').values[0].format_spec.copy()).src)
+            f.verify()
+
+            self.assertEqual("""f'''"2", '3', "4"'''""", (f := FST('''t"""{1:"2", '3', "4"}"""''').values[0].format_spec.copy()).src)
+            f.verify()
 
     def test_find_loc(self):
         f    = parse('abc += xyz').f
