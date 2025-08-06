@@ -1311,8 +1311,6 @@ def _maybe_fix_naked_seq(self: fst.FST, body: list[AST], delims: str = '()') -> 
         eend_col          += 1
 
     if end_col != eend_col or end_ln != eend_ln:  # need to update end position because it had some whitespace after which will not be enclosed by delimiters
-        # self._put_src(None, eend_ln, eend_col, end_ln, end_col, True)  # be safe, nuke everything after last element since we won't have delimiters or parent to delimit it
-
         if not (encpar or self.is_enclosed_in_parents()):
             self._put_src(None, eend_ln, eend_col, end_ln, end_col, True)  # be safe, nuke everything after last element since we won't have delimiters or parent to delimit it
 
@@ -1337,6 +1335,11 @@ def _maybe_fix_naked_seq(self: fst.FST, body: list[AST], delims: str = '()') -> 
             else:
                 if self:
                     self._touchall(True)
+
+        _, _, end_ln, end_col = self.loc
+
+    if re_two_alnum.match(lines[end_ln], end_col):  # make sure last element didn't wind up joining two alphanumerics, and if so separate
+        self._put_src([' '], end_ln, end_col, end_ln, end_col, False)
 
     if col and re_two_alnum.match(lines[ln], col - 1):  # make sure first element didn't wind up joining two alphanumerics, and if so separate
         self._put_src([' '], ln, col, ln, col, False)
@@ -1380,7 +1383,11 @@ def _maybe_fix_matchseq(self: fst.FST, delims: Literal['', '[]', '()'] | None = 
 
 def _maybe_fix_matchor(self: fst.FST, fix1: bool = False):
     """Maybe fix a `MatchOr` object that may have the wrong location. Will do nothing to a zero-length `MatchOr` and
-    will convert a length 1 `MatchOr` to just its single element if `fix1=True`."""
+    will convert a length 1 `MatchOr` to just its single element if `fix1=True`.
+
+    WARNING! This is currently expecting to be called from slice operations with specific conditions, not guaranteed
+    will work on any-old `MatchOr`.
+    """
 
     # assert isinstance(self.a, MatchOr)
 
