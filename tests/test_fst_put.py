@@ -3003,6 +3003,13 @@ c, # c
         f = FST('del (a,)')
         self.assertRaises(ValueError, f.targets[0].put, '2', 0, 'elts')
 
+        # ImportFrom dot schenanigans
+
+        self.assertEqual('from.ConsoleOptions import Text', (f := FST('from.text import Text')).put('ConsoleOptions', 'module').src)
+        self.assertEqual('from.ConsoleOptions import Text', (f := FST('from. import Text')).put('ConsoleOptions', 'module').src)
+
+        self.assertRaises(NotImplementedError, FST('from . a . b import c').put, 'd', 'module')
+
     def test_put_one_op_pars(self):
         # boolop
 

@@ -1949,7 +1949,10 @@ def _one_info_ImportFrom_module(self: fst.FST, static: onestatic, idx: int | Non
     ln, col                 = _prev_find(self.root._lines, self_ln, self_col, *self.a.names[0].f.loc[:2], 'import')
     ln, col, src            = _prev_src(self.root._lines, self_ln, self_col, ln, col)  # must be there, the module name with any/some/all preceding '.' level indicators
     end_col                 = col + len(src)
-    col                     = end_col - len(src.lstrip('.'))
+    col                     = end_col - len((src[4:] if col == self_col and ln == self_ln else src).lstrip('.'))  # may be special case, dot right after 'from', e.g. 'from.something import ...'
+
+    if (lines[ln][col : end_col] or None) != self.a.module:
+        raise NotImplementedError('ImportFrom.module not a contiguous string')
 
     return oneinfo('', loc := fstloc(ln, col, ln, end_col), loc)
 

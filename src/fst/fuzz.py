@@ -4,8 +4,10 @@ import argparse
 import os
 import sys
 import sysconfig
+import tokenize
 from ast import *
 from collections import defaultdict
+from io import BytesIO
 from itertools import repeat
 from math import log10
 from random import choice, randint, random, seed, shuffle
@@ -13,7 +15,7 @@ from types import NoneType
 from typing import Any, Generator, Iterable, Literal, NamedTuple
 
 from .astutil import *
-from .astutil import TypeAlias, TemplateStr, Interpolation
+from .astutil import re_alnum, TypeAlias, TemplateStr, Interpolation
 from .misc import PYLT11, PYLT12, PYLT14, astfield
 from .fst import FST, NodeError, fstview
 
@@ -181,6 +183,35 @@ PATS = [
 
 PATS = [FST(e, 'pattern') for e in PATS]
 
+
+def minify_src(source_code):
+    tokens   = tokenize.tokenize(BytesIO(source_code.encode('utf-8')).readline)
+    result   = []
+    prev_end = (1, 0)
+    prev_str = ''
+
+    for token in tokens:
+        tok_type   = token.type
+        tok_str    = token.string
+        start, end = token.start, token.end
+
+        if tok_type == tokenize.ENCODING:
+            continue
+        if tok_type == tokenize.ENDMARKER:
+            break
+
+        if start > prev_end:
+            if start[0] > prev_end[0]:
+                result.append(' ' * start[1])
+            elif re_alnum.match(tok_str) and re_alnum.match(prev_str[-1:]):
+                result.append(' ')
+
+        result.append(tok_str)
+
+        prev_end = end
+        prev_str = tok_str
+
+    return ''.join(result)
 
 
 def find_pys(path) -> list[str]:
@@ -632,14 +663,16 @@ class Fuzzy:
     forever   = False
 
     def __init__(self, args: dict[str, Any]):
-        self.args    = args
-        self.batch   = args.get('batch')
-        self.debug   = args.get('debug')
-        self.loop    = args.get('loop')
-        self.seed    = args.get('seed')
-        self.shuffle = args.get('shuffle')
-        self.verbose = args.get('verbose')
-        self.verify  = args.get('verify')
+        self.args       = args
+        self.batch      = args.get('batch')
+        self.debug      = args.get('debug')
+        self.loop       = args.get('loop')
+        self.minify     = args.get('minify')
+        self.minify_rnd = args.get('minify_rnd')
+        self.seed       = args.get('seed')
+        self.shuffle    = args.get('shuffle')
+        self.verbose    = args.get('verbose')
+        self.verify     = args.get('verify')
 
         if paths := args.get('PATH'):
             fnms = sum((find_pys(path) for path in paths), start=[])
@@ -666,7 +699,12 @@ class Fuzzy:
 
             try:
                 with open(fnm) as f:
-                    fst = FST.fromsrc(f.read())
+                    src = f.read()
+
+                if self.args['minify'] or (self.args['minify_rnd'] and randint(0, 1)):
+                    src = minify_src(src)
+
+                fst = FST.fromsrc(src)
 
             except (NodeError, SyntaxError, UnicodeDecodeError) as exc:
                 print(f'{head} - read/parse fail: **{exc.__class__.__name__}**')
@@ -1797,6 +1835,10 @@ def main():
                         help='debug mode, print info, do more debug stuff')
     parser.add_argument('-l', '--loop', type=int, default=None,
                         help='number of times to loop, default forever')
+    parser.add_argument('-m', '--minify', default=False, action='store_true',
+                        help='minify all source')
+    parser.add_argument('-M', '--minify-rnd', default=False, action='store_true',
+                        help='randomly minify source')
     parser.add_argument('-s', '--seed', type=int, default=None,
                         help='random seed (set per file)')
     parser.add_argument('-u', '--shuffle', default=False, action='store_true',
