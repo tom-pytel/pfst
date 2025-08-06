@@ -3,6 +3,8 @@
 ### Fixed
 
 - statementish cut marks tree as modified
+- undelimited sequence operations joining alphanumerics
+- `ImportFrom` with dot following directly after 'from'
 
 ### Added
 

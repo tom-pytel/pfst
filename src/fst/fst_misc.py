@@ -14,7 +14,7 @@ from typing import Callable, Literal
 from . import fst
 
 from .astutil import *
-from .astutil import re_identifier, OPCLS2STR, Interpolation, TemplateStr
+from .astutil import re_two_alnum, re_identifier, OPCLS2STR, Interpolation, TemplateStr
 
 from .misc import (
     Self, astfield, fstloc, srcwpos, nspace, pyver,
@@ -1299,7 +1299,7 @@ def _maybe_fix_naked_seq(self: fst.FST, body: list[AST], delims: str = '()') -> 
     eln, ecol, _, _ = body[0].f.pars()
     lines           = self.root._lines
 
-    if ecol != col or eln != ln:  # to be super safe we enforce that an unparenthesized tuple must start at the first element
+    if ecol != col or eln != ln:  # to be super safe we enforce that an undelimited node must start at the first element
         self._put_src(None, ln, col, eln, ecol, False)
 
         ln, col, end_ln, end_col = self.loc
@@ -1310,11 +1310,11 @@ def _maybe_fix_naked_seq(self: fst.FST, body: list[AST], delims: str = '()') -> 
         eend_ln, eend_col  = comma
         eend_col          += 1
 
-    if end_col != eend_col or end_ln != eend_ln:  # need to update end position because it had some whitespace after which will not be enclosed by parentheses
-        # self._put_src(None, eend_ln, eend_col, end_ln, end_col, True)  # be safe, nuke everything after last element since we won't have parentheses or parent to delimit it
+    if end_col != eend_col or end_ln != eend_ln:  # need to update end position because it had some whitespace after which will not be enclosed by delimiters
+        # self._put_src(None, eend_ln, eend_col, end_ln, end_col, True)  # be safe, nuke everything after last element since we won't have delimiters or parent to delimit it
 
         if not (encpar or self.is_enclosed_in_parents()):
-            self._put_src(None, eend_ln, eend_col, end_ln, end_col, True)  # be safe, nuke everything after last element since we won't have parentheses or parent to delimit it
+            self._put_src(None, eend_ln, eend_col, end_ln, end_col, True)  # be safe, nuke everything after last element since we won't have delimiters or parent to delimit it
 
         else:  # enclosed in parents so we can leave crap at the end
             a                  = self.a
@@ -1337,6 +1337,9 @@ def _maybe_fix_naked_seq(self: fst.FST, body: list[AST], delims: str = '()') -> 
             else:
                 if self:
                     self._touchall(True)
+
+    if col and re_two_alnum.match(lines[ln], col - 1):  # make sure first element didn't wind up joining two alphanumerics, and if so separate
+        self._put_src([' '], ln, col, ln, col, False)
 
     return False
 
@@ -1384,9 +1387,14 @@ def _maybe_fix_matchor(self: fst.FST, fix1: bool = False):
     if not (patterns := self.a.patterns):
         return
 
+    lines   = self.root._lines
+    did_par = False
+
     if not (is_root := self.is_root):  # if not root then it needs ot be fixed here
         if not self.is_enclosed_or_line() and not self.is_enclosed_in_parents():
             self._parenthesize_grouping()  # we do this instead or _sanitize() to keep any trivia, and we do it first to make sure we don't introduce any unenclosed newlines
+
+            did_par = True
 
     if (len_patterns := len(patterns)) == 1 and fix1:
         pat0 = patterns[0]
@@ -1401,7 +1409,6 @@ def _maybe_fix_matchor(self: fst.FST, fix1: bool = False):
         if len_patterns > 1:
             _, _, end_ln, end_col = patterns[-1].f.pars()
 
-        lines          = self.root._lines
         col_offset     = lines[ln].c2b(col)
         end_col_offset = lines[end_ln].c2b(end_col)
 
@@ -1410,6 +1417,17 @@ def _maybe_fix_matchor(self: fst.FST, fix1: bool = False):
     if is_root:
         if not self.is_enclosed_or_line() and not self.is_enclosed_in_parents():
             self._parenthesize_grouping(False)
+
+            did_par = True
+
+    if not did_par and not self.pars().n:  # make sure first or last element didn't wind up joining two alphanumerics, and if so separate
+        ln, col, end_ln, end_col = self.loc
+
+        if re_two_alnum.match(lines[end_ln], end_col):
+            self._put_src([' '], end_ln, end_col, end_ln, end_col, False)
+
+        if col and re_two_alnum.match(lines[ln], col - 1):
+            self._put_src([' '], ln, col, ln, col, False)
 
 
 def _maybe_fix_set(self: fst.FST, empty: bool | Literal['star', 'call'] = True):

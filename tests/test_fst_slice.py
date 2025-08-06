@@ -2110,6 +2110,23 @@ def func():
         self.assertEqual('case (\n\n# pre\ny | # line\n# post\n z | b): pass', (f := FST('case a | b: pass')).pattern.put_slice(g, 0, 1).root.src)
         f.verify()
 
+        # unparenthesized tuple joined alnum by operation
+
+        self.assertEqual('for i in b, 2: pass', (f := FST('for i in"a", 2: pass')).iter.put_slice('b,', 0, 1).root.src)
+        f.verify()
+
+        # undelimited matchsequence joined alnum by operation
+
+        self.assertEqual('case b, 2: pass', (f := FST('case"a", 2: pass')).pattern.put_slice('b,', 0, 1).root.src)
+        f.verify()
+
+        # matchor joined alnum by operation
+
+        self.assertEqual('case b | 2: pass', (f := FST('case"a" | 2: pass')).pattern.put_slice('b', 0, 1).root.src)
+        f.verify()
+
+        self.assertEqual('case 1 | c as b: pass', (f := FST('case 1 | "a"as b: pass')).pattern.pattern.put_slice('c', 1, 2).root.src)
+        f.verify()
 
     def test_slice_trivia_pars_and_one(self):
         # matchor
